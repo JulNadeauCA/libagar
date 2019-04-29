@@ -9,15 +9,15 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_checkbox {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Checkbox */
 	Uint flags;
 #define AG_CHECKBOX_HFILL	0x01
 #define AG_CHECKBOX_VFILL	0x02
 #define AG_CHECKBOX_EXPAND	(AG_CHECKBOX_HFILL|AG_CHECKBOX_VFILL)
 #define AG_CHECKBOX_SET		0x04
-	int state;		/* Default "state" binding */
-	int spacing;		/* Spacing in pixels */
-	AG_Label *_Nullable lbl; /* Text label */
+	int state;			/* Default "state" binding */
+	int spacing;			/* Spacing in pixels */
+	AG_Label *_Nullable lbl;	/* Text label */
 } AG_Checkbox;
 
 #define AGCHECKBOX(p) ((AG_Checkbox *)(p))

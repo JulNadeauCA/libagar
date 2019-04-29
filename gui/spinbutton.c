@@ -542,11 +542,11 @@ AG_WidgetClass agSpinbuttonClass = {
 		sizeof(AG_Spinbutton),
 		{ 0,0 },
 		Init,
-		NULL,			/* free */
-		NULL,			/* destroy */
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,		/* reset */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	Draw,
 	SizeRequest,

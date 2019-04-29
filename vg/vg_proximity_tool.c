@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,12 +60,11 @@ MouseButtonDown(void *_Nonnull obj, VG_Vector v, int button)
 static void
 PostDraw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	AG_Rect r;
-	VG_Color c;
 	VG_Node *vn;
+	AG_Rect r;
 	VG_Vector v;
-	float prox;
-	float vRange = 80.0f;
+	VG_Color c;
+	float prox, vRange = 80.0f;
 	Uint w = WIDGET(vv)->w;
 	Uint h = WIDGET(vv)->h;
 
@@ -86,6 +85,8 @@ PostDraw(void *_Nonnull obj, VG_View *_Nonnull vv)
 				break;
 			}
 			if (prox < vRange) {
+				AG_Color ac;
+
 				if (prox == 0.0f) {
 					c.r = 200;
 					c.g = 200;
@@ -96,7 +97,8 @@ PostDraw(void *_Nonnull obj, VG_View *_Nonnull vv)
 					c.b = 0;
 				}
 				c.a = 255;
-				AG_DrawRectFilled(vv, r, VG_MapColorRGB(c));
+				ac = VG_MapColorRGB(c);
+				AG_DrawRectFilled(vv, &r, &ac);
 			}
 		}
 	}

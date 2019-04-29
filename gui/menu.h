@@ -69,7 +69,7 @@ enum ag_menu_style {
 };
 
 typedef struct ag_menu {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Menu */
 	Uint flags;
 #define AG_MENU_HFILL	 	0x01
 #define AG_MENU_VFILL	 	0x02
@@ -97,7 +97,7 @@ typedef struct ag_popup_menu {
 } AG_PopupMenu;
 
 typedef struct ag_menu_view {
-	struct ag_widget wid;		/* AG_Widget(3) -> AG_MenuView */
+	struct ag_widget wid;		/* AG_Widget -> AG_MenuView */
 
 	AG_Menu     *_Nullable pmenu;	/* Associated menu */
 	AG_MenuItem *_Nullable pitem;	/* Associated menu item */

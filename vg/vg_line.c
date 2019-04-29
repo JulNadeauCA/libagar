@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -142,7 +142,7 @@ Draw(void *_Nonnull obj, VG_View *_Nonnull vv)
 	VG_GetViewCoords(vv, VG_Pos(vl->p2), &x2, &y2);
 
 	/* XXX TODO: endpoint style */
-	AG_DrawLine(vv, x1,y1, x2,y2, c);
+	AG_DrawLine(vv, x1,y1, x2,y2, &c);
 }
 
 static void

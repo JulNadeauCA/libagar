@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2019 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -127,7 +127,10 @@ Init(void *_Nonnull obj)
 	mv->nPre = 0;
 	mv->numFmt = "%g";
 	mv->tCache = AG_TextCacheNew(mv, 64, 2);
-	mv->r = AG_RECT(0,0,0,0);
+	mv->r.x = 0;
+	mv->r.y = 0;
+	mv->r.w = 0;
+	mv->r.h = 0;
 	
 	AG_BindInt(mv->hBar, "value", &mv->xOffs);
 	AG_BindInt(mv->vBar, "value", &mv->yOffs);
@@ -223,11 +226,11 @@ DrawNumerical(M_Matview *_Nonnull mv)
 	int xInc = mv->wEnt + mv->hSpacing;
 	int xEnd = mv->r.w, yEnd = mv->r.h;
 
-	AG_DrawBox(mv, mv->r, -1, WCOLOR(mv,0));
-	AG_PushClipRect(mv, mv->r);
+	AG_DrawBox(mv, &mv->r, -1, &WCOLOR(mv,0));
+	AG_PushClipRect(mv, &mv->r);
 	
 	AG_PushTextState();
-	AG_TextColor(WCOLOR(mv,TEXT_COLOR));
+	AG_TextColor(&WCOLOR(mv,TEXT_COLOR));
 
 	for (m=0, y=yOffs;
 	     m < MROWS(M) && y < yEnd;
@@ -244,8 +247,8 @@ DrawNumerical(M_Matview *_Nonnull mv)
 		}
 	}
 	
-	AG_DrawLineV(mv, xMin-2, 2, y, WCOLOR(mv,LINE_COLOR));
-	AG_DrawLineV(mv, xMax+4, 2, y, WCOLOR(mv,LINE_COLOR));
+	AG_DrawLineV(mv, xMin-2, 2, y, &WCOLOR(mv,LINE_COLOR));
+	AG_DrawLineV(mv, xMax+4, 2, y, &WCOLOR(mv,LINE_COLOR));
 
 	AG_PopTextState();
 	AG_PopClipRect(mv);
@@ -263,8 +266,8 @@ DrawGreyscale(M_Matview *_Nonnull mv)
 	int yOffs = -mv->yOffs*scale;
 	int xEnd = mv->r.w, yEnd = mv->r.h;
 
-	AG_DrawBox(mv, mv->r, -1, WCOLOR(mv,0));
-	AG_PushClipRect(mv, mv->r);
+	AG_DrawBox(mv, &mv->r, -1, &WCOLOR(mv,0));
+	AG_PushClipRect(mv, &mv->r);
 
 	for (m = 0; m < MROWS(A); m++) {
 		for (n = 0; n < MCOLS(A); n++) {
@@ -281,6 +284,7 @@ DrawGreyscale(M_Matview *_Nonnull mv)
 		for (n=0, x=xOffs;
 		     n < MCOLS(A) && x < xEnd;
 		     n++, x += scale) {
+			AG_Rect r;
 		     	M_Real dv = M_Get(A,m,n);
 			AG_Color c;
 			Uint8 v;
@@ -289,17 +293,21 @@ DrawGreyscale(M_Matview *_Nonnull mv)
 				continue;
 			}
 			if (dv == HUGE_VAL) {
-				c = AG_ColorRGB(200,0,0);
+				AG_ColorRGB_8(&c, 200,0,0);
 			} else {
 				if (dv >= 0.0) {
 					v = 127 + (Uint8)(dv*127.0/big);
-					c = AG_ColorRGB(v,0,0);
+					AG_ColorRGB_8(&c, v,0,0);
 				} else {
 					v = 127 + (Uint8)(Fabs(dv)*127.0/big);
-					c = AG_ColorRGB(0,0,v);
+					AG_ColorRGB(&c, 0,0,v);
 				}
 			}
-			AG_DrawRectFilled(mv, AG_RECT(x,y,scale,scale), c);
+			r.x = x;
+			r.y = y;
+			r.w = scale;
+			r.h = scale;
+			AG_DrawRectFilled(mv, &r, &c);
 		}
 	}
 	AG_PopClipRect(mv);
@@ -325,7 +333,7 @@ AG_WidgetClass mMatviewClass = {
 		sizeof(M_Matview),
 		{ 0,0 },
 		Init,
-		NULL,			/* free */
+		NULL,			/* reset */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */

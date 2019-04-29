@@ -193,7 +193,7 @@ AG_WidgetClass agObjectSelectorClass = {
 		sizeof(AG_ObjectSelector),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

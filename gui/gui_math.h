@@ -77,6 +77,8 @@ AG_PowOf2i(int i)
 	while (val < i) { val <<= 1; }
 	return (val);
 }
+
+#ifdef AG_HAVE_FLOAT
 static __inline__ float
 AG_Hypot(float x, float y)
 {
@@ -97,6 +99,7 @@ AG_FracInvf(double d)
 {
 	return (1 - (d - floor(d)));
 }
+#endif /* AG_HAVE_FLOAT */
 __END_DECLS
 
 #include <agar/gui/close.h>

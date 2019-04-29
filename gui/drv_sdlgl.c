@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -192,6 +192,7 @@ SDLGL_BeginRendering(void *_Nonnull obj)
 	             GL_ENABLE_BIT);
 	
 	if (AGDRIVER_SW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
+		AG_Rect r;
 		AG_Driver *drv = obj;
 
 		/* Reinitialize Agar's OpenGL context. */
@@ -201,10 +202,13 @@ SDLGL_BeginRendering(void *_Nonnull obj)
 		if (AG_GL_InitContext(drv, gl) == -1) {
 			AG_FatalError(NULL);
 		}
-		AG_GL_SetViewport(gl,
-		    AG_RECT(0, 0, AGDRIVER_SW(sgl)->w, AGDRIVER_SW(sgl)->h));
+		r.x = 0;
+		r.y = 0;
+		r.w = AGDRIVER_SW(sgl)->w;
+		r.h = AGDRIVER_SW(sgl)->h;
+		AG_GL_SetViewport(gl, &r);
 	} else {
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
 	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
@@ -224,18 +228,20 @@ SDLGL_CaptureOutput(AG_DriverSDLGL *_Nonnull sgl)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_DriverSw *dsw = (AG_DriverSw *)sgl;
+	int w = dsw->w;
+	int h = dsw->h;
 	AG_Surface *s;
 
 	Snprintf(path, sizeof(path), sgl->outPath, sgl->outFrame);
-	glReadPixels(0, 0, dsw->w, dsw->h, GL_RGBA, GL_UNSIGNED_BYTE,
-	    sgl->outBuf);
+	glReadPixels(0,0, w,h, GL_RGBA, GL_UNSIGNED_BYTE, sgl->outBuf);
 
-	if (AG_PackedPixelFlip(sgl->outBuf, dsw->h, dsw->w*4) == -1) {
+	if (AG_PackedPixelFlip(sgl->outBuf, h,w*4) == -1) {
 		goto fail_disable;
 	}
-	s = AG_SurfaceFromPixelsRGBA(sgl->outBuf,
-	    dsw->w, dsw->h, 32,
-	    0x000000ff, 0x0000ff00, 0x00ff0000, 0);
+	s = AG_SurfaceFromPixelsRGBA(sgl->outBuf, w,h, 32,
+	    0x000000ff,
+	    0x0000ff00,
+	    0x00ff0000, 0);
 	if (s == NULL)
 		goto fail;
 
@@ -310,13 +316,14 @@ ClearBackground(AG_DriverSw *_Nonnull dsw)
 	             dsw->bgColor.g/AG_COLOR_LASTF,
 		     dsw->bgColor.b/AG_COLOR_LASTF, 1.0);
 
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 static int
 SDLGL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 {
 	char buf[256];
+	AG_Rect rVP;
 	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLGL *sgl = obj;
@@ -417,7 +424,11 @@ SDLGL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 	if (AG_GL_InitContext(sgl, &sgl->gl) == -1) {
 		goto fail;
 	}
-	AG_GL_SetViewport(&sgl->gl, AG_RECT(0, 0, dsw->w, dsw->h));
+	rVP.x = 0;
+	rVP.y = 0;
+	rVP.w = dsw->w;
+	rVP.h = dsw->h;
+	AG_GL_SetViewport(&sgl->gl, &rVP);
 
 	if (!(dsw->flags & AG_DRIVER_SW_OVERLAY))
 		ClearBackground(dsw);
@@ -451,6 +462,7 @@ SDLGL_OpenVideoContext(void *_Nonnull obj, void *_Nonnull ctx, Uint flags)
 	AG_DriverSDLGL *sgl = obj;
 	AG_DriverSw *dsw = obj;
 	AG_Driver *drv = obj;
+	AG_Rect rVP;
 	SDL_Surface *ctxSu = (SDL_Surface *)ctx;
 
 	if (!(ctxSu->flags & SDL_OPENGL)) {
@@ -480,7 +492,11 @@ SDLGL_OpenVideoContext(void *_Nonnull obj, void *_Nonnull ctx, Uint flags)
 	if (AG_GL_InitContext(sgl, &sgl->gl) == -1) {
 		goto fail;
 	}
-	AG_GL_SetViewport(&sgl->gl, AG_RECT(0, 0, dsw->w, dsw->h));
+	rVP.x = 0;
+	rVP.y = 0;
+	rVP.w = dsw->w;
+	rVP.h = dsw->h;
+	AG_GL_SetViewport(&sgl->gl, &rVP);
 
 	/* Create the cursors. */
 	if (AG_SDL_InitDefaultCursor(sgl) == -1 ||
@@ -512,6 +528,7 @@ SDLGL_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLGL *sgl = obj;
+	AG_Rect rVP;
 	Uint32 sFlags;
 	SDL_Surface *su;
 	AG_Window *win;
@@ -551,7 +568,11 @@ SDLGL_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 	}
 
 	/* Update the viewport coordinates. */
-	AG_GL_SetViewport(&sgl->gl, AG_RECT(0, 0, dsw->w, dsw->h));
+	rVP.x = 0;
+	rVP.y = 0;
+	rVP.w = dsw->w;
+	rVP.h = dsw->h;
+	AG_GL_SetViewport(&sgl->gl, &rVP);
 	
 	/* Regenerate all widget textures. */
 	AG_FOREACH_WINDOW(win, sgl) {
@@ -578,9 +599,13 @@ SDLGL_VideoCapture(void *_Nonnull obj)
 }
 
 static void
-SDLGL_VideoClear(void *_Nonnull obj, AG_Color c)
+SDLGL_VideoClear(void *_Nonnull obj, const AG_Color *_Nonnull c)
 {
-	ClearBackground(obj);
+	glClearColor(c->r/AG_COLOR_LASTF,
+	             c->g/AG_COLOR_LASTF,
+		     c->b/AG_COLOR_LASTF, 1.0);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 static int
@@ -603,7 +628,13 @@ SDLGL_SetVideoContext(void *_Nonnull obj, void *_Nonnull pSurface)
 		cr0->r.w = su->w;
 		cr0->r.h = su->h;
 	} else {
-		AG_GL_SetViewport(gl, AG_RECT(0, 0, su->w, su->h));
+		AG_Rect rVP;
+
+		rVP.x = 0;
+		rVP.y = 0;
+		rVP.w = su->w;
+		rVP.h = su->h;
+		AG_GL_SetViewport(gl, &rVP);
 	}
 	return (0);
 }
@@ -615,16 +646,16 @@ AG_DriverSwClass agDriverSDLGL = {
 			sizeof(AG_DriverSDLGL),
 			{ 1,6 },
 			Init,
-			NULL,	/* reset */
-			NULL,	/* destroy */
-			NULL,	/* load */
-			NULL,	/* save */
-			NULL,	/* edit */
+			NULL,		/* reset */
+			NULL,		/* destroy */
+			NULL,		/* load */
+			NULL,		/* save */
+			NULL,		/* edit */
 		},
 		"sdlgl",
 		AG_VECTOR,
 		AG_WM_SINGLE,
-		AG_DRIVER_SDL|AG_DRIVER_OPENGL|AG_DRIVER_TEXTURES,
+		AG_DRIVER_SDL | AG_DRIVER_OPENGL | AG_DRIVER_TEXTURES,
 		SDLGL_Open,
 		SDLGL_Close,
 		AG_SDL_GetDisplaySize,
@@ -656,9 +687,11 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_SDL_SetCursorVisibility,
 		AG_GL_BlitSurface,
 		AG_GL_BlitSurfaceFrom,
+#ifdef HAVE_OPENGL
 		AG_GL_BlitSurfaceGL,
 		AG_GL_BlitSurfaceFromGL,
 		AG_GL_BlitSurfaceFlippedGL,
+#endif
 		AG_GL_BackupSurfaces,
 		AG_GL_RestoreSurfaces,
 		AG_GL_RenderToSurface,

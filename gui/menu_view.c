@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -296,7 +296,7 @@ Draw(void *_Nonnull obj)
 	r.h = itemh;
 
 	TAILQ_FOREACH(mi, &miRoot->subItems, items) {
-		AG_Color C;
+		AG_Color c;
 		int x = mv->lPad;
 		int boolState;
 		int fState = mi->stateFn ? mi->stateFn->fn.fnInt(mi->stateFn) :
@@ -307,7 +307,7 @@ Draw(void *_Nonnull obj)
 
 		/* Indicate active item selection */
 		if (mi == miRoot->sel_subitem && fState)
-			AG_DrawRect(mv, r, WCOLOR_SEL(mv,0));
+			AG_DrawRect(mv, &r, &WCOLOR_SEL(mv,0));
 
 		/* Render the menu item's icon */
 		if (mi->icon == -1 && mi->iconSrc != NULL) {
@@ -323,12 +323,17 @@ Draw(void *_Nonnull obj)
 			boolState = (mi->value != -1) ? mi->value :
 			                                GetItemBoolValue(mi);
 			if (boolState) {
-				AG_Rect rFrame = AG_RECT(x, r.y+2, r.h, r.h-2);
+				AG_Rect rFrame;
 
-				C = AG_ColorRGB(223,207,128);	/* XXX */
-				AG_DrawFrame(mv, rFrame, 1, C);
-				C.a = AG_OPAQUE/4;
-				AG_DrawRectBlended(mv, rFrame, C, AG_ALPHA_SRC);
+				rFrame.x = x;
+				rFrame.y = r.y + 2;
+				rFrame.w = r.h;
+				rFrame.h = r.h - 2;
+
+				AG_ColorRGB_8(&c, 223,207,128);	/* XXX */
+				AG_DrawFrame(mv, &rFrame, 1, &c);
+				c.a = AG_OPAQUE/4;
+				AG_DrawRectBlended(mv, &rFrame, &c, AG_ALPHA_SRC);
 			}
 		}
 
@@ -341,27 +346,26 @@ Draw(void *_Nonnull obj)
 			int x2 = WIDTH(mv) - mv->rPad - 1;
 			AG_Color c[2];
 	
-			c[0] = AG_ColorAdd(WCOLOR(mv,0), agLowColor);
-			c[1] = AG_ColorAdd(WCOLOR(mv,0), agHighColor);
+			AG_ColorAdd(&c[0], &WCOLOR(mv,0), &agLowColor);
+			AG_ColorAdd(&c[1], &WCOLOR(mv,0), &agHighColor);
 
-			AG_DrawLineH(mv, x1, x2, (r.y + itemh_2 - 1), c[0]);
-			AG_DrawLineH(mv, x1, x2, (r.y + itemh_2),     c[1]);
+			AG_DrawLineH(mv, x1, x2, (r.y + itemh_2 - 1), &c[0]);
+			AG_DrawLineH(mv, x1, x2, (r.y + itemh_2),     &c[1]);
 		} else {
 			int lbl = fState ? mi->lblView[1] : mi->lblView[0];
 
 			/* Render the menu item's text string */
 			if (fState) {
 				if (mi->lblView[1] == -1) {
-					AG_TextColor(WCOLOR(mv,TEXT_COLOR));
-					mi->lblView[1] =
-					    (mi->text == NULL) ? -1 :
+					AG_TextColor(&WCOLOR(mv,TEXT_COLOR));
+					mi->lblView[1] = (mi->text==NULL) ? -1 :
 					    AG_WidgetMapSurface(mv,
 					    AG_TextRender(mi->text));
 				}
 				lbl = mi->lblView[1];
 			} else {
 				if (mi->lblView[0] == -1) {
-					AG_TextColor(WCOLOR_DIS(mv,TEXT_COLOR));
+					AG_TextColor(&WCOLOR_DIS(mv,TEXT_COLOR));
 					mi->lblView[0] =
 					    (mi->text == NULL) ? -1 :
 					    AG_WidgetMapSurface(mv,
@@ -369,8 +373,7 @@ Draw(void *_Nonnull obj)
 				}
 				lbl = mi->lblView[0];
 			}
-			AG_WidgetBlitSurface(mv, lbl, x,
-			    r.y + itemh_2 - fonth_2 + 1);
+			AG_WidgetBlitSurface(mv, lbl, x, r.y+itemh_2-fonth_2+1);
 			x += WSURFACE(mv,lbl)->w;
 		}
 
@@ -436,7 +439,7 @@ AG_WidgetClass agMenuViewClass = {
 		sizeof(AG_MenuView),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

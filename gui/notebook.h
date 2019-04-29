@@ -22,13 +22,13 @@ enum ag_notebook_tab_alignment {
 };
 
 typedef struct ag_notebook_tab {
-	struct ag_box box;
+	struct ag_box box;			/* AG_Box -> AG_NotebookTab */
 	AG_Label *_Nullable lbl;		/* Optional text label */
 	AG_TAILQ_ENTRY(ag_notebook_tab) tabs;
 } AG_NotebookTab;
 
 typedef struct ag_notebook {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Notebook */
 	enum ag_notebook_tab_alignment tab_align;
 	Uint flags;
 #define AG_NOTEBOOK_HFILL 	0x01	/* Expand to fill available width */
@@ -37,7 +37,8 @@ typedef struct ag_notebook {
 #define AG_NOTEBOOK_EXPAND	(AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL)
 	int bar_w, bar_h;		/* Dimensions of tab button bar */
 	int cont_w, cont_h;		/* Dimensions of largest container */
-	int spacing, padding;		/* Spacing for tabs */
+	int spacing, padding;		/* Spacing for tab boxes */
+	int tabspacing;			/* Spacing between tabs */
 
 	struct ag_notebook_tab *_Nullable sel_tab;	/* Active tab */
 	AG_TAILQ_HEAD_(ag_notebook_tab) tabs;		/* All tabs */

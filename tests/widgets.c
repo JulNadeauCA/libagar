@@ -118,11 +118,12 @@ TestGUI(void *obj, AG_Window *win)
 				for (y = 0; y < S->h; y++) {
 					for (x = 0; x < S->w; x++) {
 						AG_Pixel px = AG_SurfaceGet(S, x,y);
-						AG_Color c  = AG_GetColor(px, &S->format);
-
+						AG_Color c ;
+						
+						AG_GetColor(&c, px, &S->format);
 						c.a = i*(AG_OPAQUE >> 2);
 						AG_SurfacePut(S, x,y,
-						    AG_MapPixel(&S->format, c));
+						    AG_MapPixel(&S->format, &c));
 					}
 				}
 				px = AG_PixmapFromSurface(hBox, 0, S);

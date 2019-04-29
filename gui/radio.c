@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -226,6 +226,7 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Radio *rad = obj;
+	AG_Rect r;
 	int xPadding = rad->xPadding;
 	int radius = rad->radius;
 	int x = xPadding + (radius << 1) + rad->xSpacing;
@@ -233,12 +234,15 @@ Draw(void *_Nonnull obj)
 	int itemHeight = rad->itemHeight, itemHeight_2 = (itemHeight >> 1);
 	int ySpacing_2 = (rad->ySpacing >> 1);
 	int value, i;
-	
-	AG_DrawBox(rad, AG_RECT(0,0,WIDTH(rad),HEIGHT(rad)), -1,
-	    WCOLOR(rad,AG_COLOR));
+
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(rad);
+	r.h = HEIGHT(rad);
+	AG_DrawBox(rad, &r, -1, &WCOLOR(rad,AG_COLOR));
 	
 	value = AG_GetInt(rad, "value");
-	AG_PushClipRect(rad, rad->r);
+	AG_PushClipRect(rad, &rad->r);
 
 	for (i = 0; i < rad->nItems; i++) {
 		AG_RadioItem *ri = &rad->items[i];
@@ -249,28 +253,30 @@ Draw(void *_Nonnull obj)
 			    AG_TextRender(ri->text));
 		}
 		if (i == rad->oversel) {
-			AG_Rect r = AG_RECT(xPadding, y,
-			                    WIDGET(rad)->w - (xPadding << 1),
-					    itemHeight);
-			AG_DrawRectBlended(rad, r, WCOLOR_HOV(rad,0),
+			r.x = xPadding;
+			r.y = y;
+			r.w = WIDTH(rad) - (xPadding << 1);
+			r.h = itemHeight;
+			AG_DrawRectBlended(rad, &r, &WCOLOR_HOV(rad,0),
 			    AG_ALPHA_SRC);
 		}
 
 		xc = xPadding + radius;
 		yc = y + itemHeight_2;
 
-		AG_DrawCircleFilled(rad, xc,yc, radius, WCOLOR(rad,SHAPE_COLOR));
-		AG_DrawCircle(rad, xc,yc, radius, WCOLOR(rad,LINE_COLOR));
+		AG_DrawCircleFilled(rad, xc,yc, radius, &WCOLOR(rad,SHAPE_COLOR));
+		AG_DrawCircle(rad, xc,yc, radius, &WCOLOR(rad,LINE_COLOR));
 
 		if (i == value) {
 			AG_DrawCircleFilled(rad, xc,yc, (radius >> 1),
-			    WCOLOR_SEL(rad,SHAPE_COLOR));
+			    &WCOLOR_SEL(rad,SHAPE_COLOR));
 		}
 		if (i == rad->oversel) {
 			AG_DrawCircle(rad, xc,yc, radius-2,
-			    WCOLOR_HOV(rad,LINE_COLOR));
+			    &WCOLOR_HOV(rad,LINE_COLOR));
 		}
 		AG_WidgetBlitSurface(rad, ri->surface, x, y+ySpacing_2);
+
 		y += itemHeight;
 	}
 	AG_PopClipRect(rad);
@@ -453,7 +459,10 @@ Init(void *_Nonnull obj)
 	rad->radius = MAX(0, (agTextFontHeight >> 1)-1);
 	rad->items = NULL;
 	rad->nItems = 0;
-	rad->r = AG_RECT(0,0,0,0);
+	rad->r.x = 0;
+	rad->r.y = 0;
+	rad->r.w = 0;
+	rad->r.h = 0;
 
 	AG_AddEvent(rad, "font-changed", OnFontChange, NULL);
 	AG_SetEvent(rad, "mouse-button-down", MouseButtonDown, NULL);
@@ -470,7 +479,7 @@ AG_WidgetClass agRadioClass = {
 		sizeof(AG_Radio),
 		{ 0,0, },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

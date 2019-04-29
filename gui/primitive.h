@@ -11,11 +11,12 @@ __BEGIN_DECLS
 # define AG_INLINE_HEADER
 # include <agar/gui/inline_primitive.h>
 #else /* !AG_INLINE_WIDGET */
-void ag_put_pixel(void *_Nonnull, int,int, AG_Color);
+void ag_put_pixel(void *_Nonnull, int,int, const AG_Color *_Nonnull);
 void ag_put_pixel_32(void *_Nonnull, int,int, Uint32);
 void ag_put_pixel_rgb_8(void *_Nonnull, int,int, Uint8,Uint8,Uint8);
-void ag_put_pixel_rgb(void *_Nonnull, int,int, AG_Component, AG_Component, AG_Component);
-void ag_blend_pixel(void *_Nonnull, int,int, AG_Color, AG_AlphaFn);
+void ag_put_pixel_rgb(void *_Nonnull, int,int, AG_Component, AG_Component,
+                      AG_Component);
+void ag_blend_pixel(void *_Nonnull, int,int, const AG_Color *_Nonnull,  AG_AlphaFn);
 void ag_blend_pixel_32(void *_Nonnull, int,int, Uint32, AG_AlphaFn);
 void ag_blend_pixel_rgba(void *_Nonnull, int,int, Uint8 [_Nonnull 4], AG_AlphaFn);
 # if AG_MODEL == AG_LARGE
@@ -23,31 +24,45 @@ void ag_put_pixel_64(void *_Nonnull, int,int, Uint64);
 void ag_put_pixel_rgb_16(void *_Nonnull, int,int, Uint16,Uint16,Uint16);
 void ag_blend_pixel_64(void *_Nonnull, int,int, Uint64, AG_AlphaFn);
 # endif
-void ag_draw_line(void *_Nonnull, int,int, int,int, AG_Color);
-void ag_draw_line_h(void *_Nonnull, int,int, int, AG_Color);
-void ag_draw_line_v(void *_Nonnull, int, int,int, AG_Color);
-void ag_draw_line_blended(void *_Nonnull, int,int, int,int, AG_Color, AG_AlphaFn);
-void ag_draw_triangle(void *_Nonnull, AG_Pt,AG_Pt,AG_Pt, AG_Color);
-void ag_draw_arrow_up(void *_Nonnull, int,int, int, AG_Color);
-void ag_draw_arrow_right(void *_Nonnull, int,int, int, AG_Color);
-void ag_draw_arrow_down(void *_Nonnull, int,int, int, AG_Color);
-void ag_draw_arrow_left(void *_Nonnull, int,int, int, AG_Color);
-void ag_draw_box_rounded(void *_Nonnull, AG_Rect, int, int, AG_Color);
-void ag_draw_box_rounded_top(void *_Nonnull, AG_Rect, int, int, AG_Color);
-void ag_draw_circle(void *_Nonnull, int,int, int, AG_Color);
-void ag_draw_circle_filled(void *_Nonnull, int,int, int, AG_Color);
-void ag_draw_rect(void *_Nonnull, AG_Rect, AG_Color);
-void ag_draw_rect_filled(void *_Nonnull, AG_Rect, AG_Color);
-void ag_draw_rect_blended(void *_Nonnull, AG_Rect, AG_Color, AG_AlphaFn);
-void ag_draw_rect_dithered(void *_Nonnull, AG_Rect, AG_Color);
-void ag_draw_frame(void *_Nonnull, AG_Rect, int, AG_Color);
-void ag_draw_box(void *_Nonnull, AG_Rect, int, AG_Color);
-void ag_draw_box_disabled(void *_Nonnull, AG_Rect, int, AG_Color, AG_Color);
-void ag_draw_frame_blended(void *_Nonnull, AG_Rect, AG_Color, AG_AlphaFn);
-void ag_draw_rect_outline(void *_Nonnull, AG_Rect, AG_Color);
-void ag_draw_plus(void *_Nonnull, AG_Rect, AG_Color, AG_AlphaFn);
-void ag_draw_minus(void *_Nonnull, AG_Rect, AG_Color, AG_AlphaFn);
-void ag_draw_line_2(void *_Nonnull, int,int, int,int, AG_Color);
+void ag_draw_line(void *_Nonnull, int,int, int,int, const AG_Color *_Nonnull);
+void ag_draw_line_h(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_line_v(void *_Nonnull, int, int,int, const AG_Color *_Nonnull);
+void ag_draw_line_blended(void *_Nonnull, int,int, int,int,
+                          const AG_Color *_Nonnull, AG_AlphaFn);
+void ag_draw_triangle(void *_Nonnull, const AG_Pt *, const AG_Pt *, const AG_Pt *,
+                      const AG_Color *_Nonnull);
+void ag_draw_arrow_up(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_arrow_right(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_arrow_down(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_arrow_left(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_box_rounded(void *_Nonnull, const AG_Rect *_Nonnull, int, int,
+                         const AG_Color *_Nonnull);
+void ag_draw_box_rounded_top(void *_Nonnull, const AG_Rect *_Nonnull, int, int,
+                             const AG_Color *_Nonnull);
+void ag_draw_circle(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_circle_filled(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_rect(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull);
+void ag_draw_rect_filled(void *_Nonnull, const AG_Rect *_Nonnull,
+                         const AG_Color *_Nonnull);
+void ag_draw_rect_blended(void *_Nonnull, const AG_Rect *_Nonnull,
+                          const AG_Color *_Nonnull, AG_AlphaFn);
+void ag_draw_rect_dithered(void *_Nonnull, const AG_Rect *_Nonnull,
+                           const AG_Color *_Nonnull);
+void ag_draw_frame(void *_Nonnull, const AG_Rect *_Nonnull, int,
+                   const AG_Color *_Nonnull);
+void ag_draw_box(void *_Nonnull, const AG_Rect *_Nonnull, int,
+                 const AG_Color *_Nonnull);
+void ag_draw_box_disabled(void *_Nonnull, const AG_Rect *_Nonnull, int,
+                          const AG_Color *_Nonnull, const AG_Color *_Nonnull);
+void ag_draw_frame_blended(void *_Nonnull, const AG_Rect *_Nonnull,
+                           const AG_Color *_Nonnull, AG_AlphaFn);
+void ag_draw_rect_outline(void *_Nonnull, const AG_Rect *_Nonnull,
+                          const AG_Color *_Nonnull);
+void ag_draw_plus(void *_Nonnull, const AG_Rect *_Nonnull,
+                  const AG_Color *_Nonnull, AG_AlphaFn);
+void ag_draw_minus(void *_Nonnull, const AG_Rect *_Nonnull,
+                   const AG_Color *_Nonnull, AG_AlphaFn);
+void ag_draw_line_2(void *_Nonnull, int,int, int,int, const AG_Color *_Nonnull);
 
 # define AG_PutPixel(o,x,y,c)			ag_put_pixel((o),(x),(y),(c))
 # define AG_PutPixel32(o,x,y,c)			ag_put_pixel_32((o),(x),(y),(c))
@@ -85,7 +100,8 @@ void ag_draw_line_2(void *_Nonnull, int,int, int,int, AG_Color);
 # define AG_DrawLine2(o,x1,y1,x2,y2,c)		ag_draw_line_2((o),(x1),(y1),(x2),(y2),(c))
 #endif /* !AG_INLINE_WIDGET */
 
-void AG_DrawTiling(void *_Nonnull, AG_Rect, int, int, AG_Color, AG_Color);
+void AG_DrawTiling(void *_Nonnull, const AG_Rect *_Nonnull, int, int,
+                   const AG_Color *_Nonnull, const AG_Color *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/close.h>

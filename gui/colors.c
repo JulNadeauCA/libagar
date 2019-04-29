@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,11 +43,16 @@ AG_ColorOffset agSunkColor   = { -2500, -2500, -5100 };
 AG_ColorOffset agRaisedColor = {  7700,  7700,  5100 };
 AG_ColorOffset agLowColor    = { -7700, -7700, -5100 };
 AG_ColorOffset agHighColor   = { 10000, 10000, 10000 };
-#else
+#elif AG_MODEL == AG_MEDIUM
 AG_ColorOffset agSunkColor   = { -10, -10, -20 };
 AG_ColorOffset agRaisedColor = {  10,  10,  20 };
 AG_ColorOffset agLowColor    = { -20, -20, -10 };
 AG_ColorOffset agHighColor   = {  40,  40,  40 };
+#elif AG_MODEL == AG_SMALL
+AG_ColorOffset agSunkColor   = { -1, -1, -2 };
+AG_ColorOffset agRaisedColor = {  1,  1,  2 };
+AG_ColorOffset agLowColor    = { -2, -2, -1 };
+AG_ColorOffset agHighColor   = {  4,  4,  4 };
 #endif
 
 /* Import inlinables */
@@ -105,12 +110,11 @@ PctRGB(AG_Component c, Uint32 v)
  * Components with terminating '%' character are interpreted as percentage
  * of a parent color pColor.
  */
-AG_Color
-AG_ColorFromString(const char *s, const AG_Color *pColor)
+void
+AG_ColorFromString(AG_Color *cOut, const char *s, const AG_Color *pColor)
 {
 	char buf[AG_STYLE_VALUE_MAX];
-	AG_Color cIn = (pColor != NULL) ? *pColor : AG_ColorRGB(0,0,0);
- 	AG_Color cOut = cIn;
+	AG_Color cIn;
 #ifdef HAVE_FLOAT
 	double v[4];
 #else
@@ -119,6 +123,12 @@ AG_ColorFromString(const char *s, const AG_Color *pColor)
 	int isPct[4], isHSV = 0;
  	char *c, *pc;
 	int i, argc;
+
+	if (pColor != NULL) {
+		cIn = *pColor;
+	} else {
+		AG_ColorBlack(&cIn);
+	}
 
 	Strlcpy(buf, s, sizeof(buf));
 	
@@ -138,18 +148,18 @@ AG_ColorFromString(const char *s, const AG_Color *pColor)
 		c[0] = '0';
 		c[1] = 'x';
 		hexVal = (Uint32)strtoul(c, NULL, 16);
-		cOut.r = AG_8toH((hexVal >> 16) & 0xff);
-		cOut.g = AG_8toH((hexVal >> 8)  & 0xff);
-		cOut.b = AG_8toH((hexVal)       & 0xff);
-		cOut.a = AG_OPAQUE;
-		return (cOut);
+		cOut->r = AG_8toH((hexVal >> 16) & 0xff);
+		cOut->g = AG_8toH((hexVal >> 8)  & 0xff);
+		cOut->b = AG_8toH((hexVal)       & 0xff);
+		cOut->a = AG_OPAQUE;
+		return;
 	    } /* case */
 	}
 	if (*c == 'r' || *c == 'h') {
 		for (; *c != '\0' && *c != '('; c++)
 			;;
 		if (*c == '\0' || c[1] == '\0') {
-			goto out;
+			return;
 		}
 		pc = &c[1];
 	} else {
@@ -169,31 +179,29 @@ AG_ColorFromString(const char *s, const AG_Color *pColor)
 		argc++;
 	}
 	if (argc < 3) {
-		goto out;
+		return;
 	}
 	if (isHSV) {
 #ifdef HAVE_FLOAT
 		float hue, sat, val;
 
-		AG_Color2HSV(cIn, &hue, &sat, &val);
+		AG_Color2HSV(&cIn, &hue, &sat, &val);
 		hue = isPct[0] ? PctHSV(hue, v[0]) : v[0];
 		sat = isPct[1] ? PctHSV(sat, v[1]) : v[1];
 		val = isPct[2] ? PctHSV(val, v[2]) : v[2];
-		AG_HSV2Color(hue, sat, val, &cOut);
-		cOut.a = (argc >= 4) ?
-		         (isPct[3] ? PctHSV(cIn.a,v[3]) : AG_8toH(v[3])) :
-			 AG_OPAQUE;
+		AG_HSV2Color(hue, sat, val, cOut);
+		cOut->a = (argc >= 4) ?
+		          (isPct[3] ? PctHSV(cIn.a,v[3]) : AG_8toH(v[3])) :
+		          AG_OPAQUE;
 #endif /* HAVE_FLOAT */
 	} else {
-		cOut.r = isPct[0] ? PctRGB(cIn.r,v[0]) : AG_8toH(v[0]);
-		cOut.g = isPct[1] ? PctRGB(cIn.g,v[1]) : AG_8toH(v[1]);
-		cOut.b = isPct[2] ? PctRGB(cIn.b,v[2]) : AG_8toH(v[2]);
-		cOut.a = (argc >= 4) ?
+		cOut->r = isPct[0] ? PctRGB(cIn.r,v[0]) : AG_8toH(v[0]);
+		cOut->g = isPct[1] ? PctRGB(cIn.g,v[1]) : AG_8toH(v[1]);
+		cOut->b = isPct[2] ? PctRGB(cIn.b,v[2]) : AG_8toH(v[2]);
+		cOut->a = (argc >= 4) ?
 		         (isPct[3] ? PctRGB(cIn.a,v[3]) : AG_8toH(v[3])) :
 			 AG_OPAQUE;
 	}
-out:
-	return (cOut);
 }
 
 /*

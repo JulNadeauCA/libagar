@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -191,8 +191,8 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 	edge = Malloc(sizeof(AG_GraphEdge));
 	edge->labelTxt[0] = '\0';
 	edge->labelSu = -1;
-	edge->edgeColor = AG_ColorRGB(0,0,0);
-	edge->labelColor = AG_ColorRGB(0,0,0);
+	AG_ColorBlack(&edge->edgeColor);
+	AG_ColorBlack(&edge->labelColor);
 	edge->flags = 0;
 	edge->v1 = v1;
 	edge->v2 = v2;
@@ -231,7 +231,7 @@ AG_GraphEdgeLabelS(AG_GraphEdge *ge, const char *s)
 	if (ge->labelSu >= 0) {
 		AG_WidgetUnmapSurface(ge->graph, ge->labelSu);
 	}
-	AG_TextColor(ge->labelColor);
+	AG_TextColor(&ge->labelColor);
 	ge->labelSu = AG_WidgetMapSurface(ge->graph, AG_TextRender(ge->labelTxt));
 	AG_ObjectUnlock(ge->graph);
 	AG_Redraw(ge->graph);
@@ -249,7 +249,7 @@ AG_GraphEdgeLabel(AG_GraphEdge *ge, const char *fmt, ...)
 	if (ge->labelSu >= 0) {
 		AG_WidgetUnmapSurface(ge->graph, ge->labelSu);
 	}
-	AG_TextColor(ge->labelColor);
+	AG_TextColor(&ge->labelColor);
 	ge->labelSu = AG_WidgetMapSurface(ge->graph, AG_TextRender(ge->labelTxt));
 	AG_ObjectUnlock(ge->graph);
 	AG_Redraw(ge->graph);
@@ -259,7 +259,7 @@ void
 AG_GraphEdgeColorLabel(AG_GraphEdge *edge, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ObjectLock(edge->graph);
-	edge->labelColor = AG_ColorRGB(r,g,b);
+	AG_ColorRGB_8(&edge->labelColor, r,g,b);
 	AG_ObjectUnlock(edge->graph);
 	AG_Redraw(edge->graph);
 }
@@ -268,7 +268,7 @@ void
 AG_GraphEdgeColor(AG_GraphEdge *edge, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ObjectLock(edge->graph);
-	edge->edgeColor = AG_ColorRGB(r,g,b);
+	AG_ColorRGB_8(&edge->edgeColor, r,g,b);
 	AG_ObjectUnlock(edge->graph);
 	AG_Redraw(edge->graph);
 }
@@ -459,7 +459,10 @@ Init(void *obj)
 	gf->pxMax = 0;
 	gf->pyMin = 0;
 	gf->pyMax = 0;
-	gf->r = AG_RECT(0,0,0,0);
+	gf->r.x = 0;
+	gf->r.y = 0;
+	gf->r.w = 0;
+	gf->r.h = 0;
 
 	AG_SetEvent(gf, "key-down", KeyDown, NULL);
 	AG_SetEvent(gf, "mouse-button-down", MouseButtonDown, NULL);
@@ -535,7 +538,11 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 
 	gf->xOffs = -(a->w >> 1);
 	gf->yOffs = -(a->h >> 1);
-	gf->r = AG_RECT(0, 0, a->w, a->h);
+
+	gf->r.x = 0;
+	gf->r.y = 0;
+	gf->r.w = a->w;
+	gf->r.h = a->h;
 
 	return (0);
 }
@@ -546,14 +553,20 @@ Draw(void *obj)
 	AG_Graph *gf = obj;
 	AG_GraphVertex *vtx;
 	AG_GraphEdge *edge;
+	AG_Rect r;
+	AG_Color c;
+	int xOffs = gf->xOffs;
+	int yOffs = gf->yOffs;
 
-	AG_PushClipRect(gf, gf->r);
+	AG_PushClipRect(gf, &gf->r);
 
 	/* Draw the bounding box */
-	AG_DrawRectOutline(gf,
-	    AG_RECT(gf->pxMin - gf->xOffs, gf->pyMin - gf->yOffs, 
-	            gf->pxMax - gf->pxMin, gf->pyMax - gf->pyMin),
-	    AG_ColorRGB(128,128,128)); 
+	r.x = gf->pxMin - xOffs;
+	r.y = gf->pyMin - yOffs;
+	r.w = gf->pxMax - gf->pxMin;
+	r.h = gf->pyMax - gf->pyMin;
+	AG_ColorRGB_8(&c, 128,128,128);
+	AG_DrawRectOutline(gf, &r, &c);
 
 	/* Draw the edges */
 	TAILQ_FOREACH(edge, &gf->edges, edges) {
@@ -561,83 +574,94 @@ Draw(void *obj)
 			continue;
 		}
 		AG_DrawLine(gf,
-		    edge->v1->x - gf->xOffs,
-		    edge->v1->y - gf->yOffs,
-		    edge->v2->x - gf->xOffs,
-		    edge->v2->y - gf->yOffs,
-		    edge->edgeColor);
+		    edge->v1->x - xOffs,
+		    edge->v1->y - yOffs,
+		    edge->v2->x - xOffs,
+		    edge->v2->y - yOffs,
+		    &edge->edgeColor);
 
 		if (edge->labelSu >= 0) {
 			AG_Surface *su = WSURFACE(gf,edge->labelSu);
 			int lblX, lblY;
 
 			GetEdgeLabelCoords(edge, &lblX, &lblY);
-			lblX -= gf->xOffs + su->w/2;
-			lblY -= gf->yOffs + su->h/2;
+			lblX -= xOffs + (su->w >> 1);
+			lblY -= yOffs + (su->h >> 1);
 
 			if (edge->flags & AG_GRAPH_SELECTED) {
-				AG_DrawRectOutline(gf,
-				    AG_RECT(lblX-1, lblY-1,
-				            su->w+2, su->h+2),
-				    edge->labelColor);
+				r.x = lblX - 1;
+				r.y = lblY - 1;
+				r.w = su->w + 2;
+				r.h = su->h + 2;
+				AG_DrawRectOutline(gf, &r, &edge->labelColor);
 			}
 			if (edge->flags & AG_GRAPH_MOUSEOVER) {
-				AG_DrawRectOutline(gf,
-				    AG_RECT(lblX-2, lblY-2,
-				            su->w+4, su->h+4),
-				    WCOLOR_HOV(gf,LINE_COLOR));
+				r.x = lblX - 2;
+				r.y = lblY - 2;
+				r.w = su->w + 4;
+				r.h = su->h + 4;
+				AG_DrawRectOutline(gf, &r,
+				    &WCOLOR_HOV(gf,LINE_COLOR));
 			}
-			AG_DrawRect(gf,
-			    AG_RECT(lblX, lblY, su->w, su->h),
-			    AG_ColorRGBA(128,128,128,128));
-			AG_WidgetBlitSurface(gf, edge->labelSu, lblX, lblY);
+			r.x = lblX;
+			r.y = lblY;
+			r.w = su->w;
+			r.h = su->h;
+			AG_ColorRGBA_8(&c, 128,128,128, 128);
+			AG_DrawRect(gf, &r, &c);
+			AG_WidgetBlitSurface(gf, edge->labelSu, lblX,lblY);
 		}
 	}
 
 	/* Draw the vertices. */
 	TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
 		AG_Surface *lbl = WSURFACE(gf,vtx->labelSu);
+		int x,y, w,h;
 
 		if (vtx->flags & AG_GRAPH_HIDDEN) {
 			continue;
 		}
+		x = vtx->x;
+		y = vtx->y;
+		w = vtx->w;
+		h = vtx->h;
 		switch (vtx->style) {
 		case AG_GRAPH_RECTANGLE:
-			AG_DrawRect(gf,
-			    AG_RECT(vtx->x - vtx->w/2 - gf->xOffs,
-			            vtx->y - vtx->h/2 - gf->yOffs,
-				    vtx->w,
-				    vtx->h),
-			    vtx->bgColor);
+			r.x = x - (w >> 1) - xOffs;
+			r.y = y - (h >> 1) - yOffs;
+			r.w = w;
+			r.h = h;
+			AG_DrawRect(gf, &r, &vtx->bgColor);
+
 			if (vtx->flags & AG_GRAPH_SELECTED) {
-				AG_DrawRectOutline(gf,
-				    AG_RECT(vtx->x - vtx->w/2 - gf->xOffs - 1,
-				            vtx->y - vtx->h/2 - gf->yOffs - 1,
-				            vtx->w + 2,
-				            vtx->h + 2),
-				    AG_ColorRGB(0,0,255));
+				r.x--;
+				r.y--;
+				r.w += 2;
+				r.h += 2;
+				AG_ColorRGB_8(&c, 0,0,255);
+				AG_DrawRectOutline(gf, &r, &c);
 			}
 			if (vtx->flags & AG_GRAPH_MOUSEOVER) {
-				AG_DrawRectOutline(gf,
-				    AG_RECT(vtx->x - vtx->w/2 - gf->xOffs - 2,
-				            vtx->y - vtx->h/2 - gf->yOffs - 2,
-				            vtx->w + 4,
-				            vtx->h + 4),
-				    AG_ColorRGB(255,0,0));
+				r.x--;
+				r.y--;
+				r.w += 2;
+				r.h += 2;
+				AG_ColorRGB_8(&c, 255,0,0);
+				AG_DrawRectOutline(gf, &r, &c);
 			}
 			break;
 		case AG_GRAPH_CIRCLE:
 			AG_DrawCircle(gf,
-			    vtx->x - gf->xOffs,
-			    vtx->y - gf->yOffs,
-			    MAX(vtx->w,vtx->h)/2,
-			    vtx->bgColor);
+			    x - xOffs,
+			    y - yOffs,
+			    MAX(w,h) >> 1,
+			    &vtx->bgColor);
 			break;
 		}
 		if (vtx->labelSu >= 0) {
 			AG_WidgetBlitSurface(gf, vtx->labelSu,
-			    vtx->x - lbl->w/2 - gf->xOffs,
-			    vtx->y - lbl->h/2 - gf->yOffs);
+			    x - (lbl->w >> 1) - xOffs,
+			    y - (lbl->h >> 1) - yOffs);
 		}
 	}
 
@@ -665,8 +689,8 @@ AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 	vtx = Malloc(sizeof(AG_GraphVertex));
 	vtx->labelTxt[0] = '\0';
 	vtx->labelSu = -1;
-	vtx->labelColor = AG_ColorRGB(0,0,0);
-	vtx->bgColor = AG_ColorRGBA(255,255,255,128);
+	AG_ColorBlack(&vtx->labelColor);
+	AG_ColorRGBA_8(&vtx->bgColor, 255,255,255, 128);
 	vtx->style = AG_GRAPH_RECTANGLE;
 	vtx->flags = 0;
 	vtx->x = 0;
@@ -702,7 +726,7 @@ void
 AG_GraphVertexColorLabel(AG_GraphVertex *vtx, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ObjectLock(vtx->graph);
-	vtx->labelColor = AG_ColorRGB(r,g,b);
+	AG_ColorRGB_8(&vtx->labelColor, r,g,b);
 	AG_ObjectUnlock(vtx->graph);
 	AG_Redraw(vtx->graph);
 }
@@ -711,7 +735,7 @@ void
 AG_GraphVertexColorBG(AG_GraphVertex *vtx, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ObjectLock(vtx->graph);
-	vtx->bgColor = AG_ColorRGB(r,g,b);
+	AG_ColorRGB_8(&vtx->bgColor, r,g,b);
 	AG_ObjectUnlock(vtx->graph);
 	AG_Redraw(vtx->graph);
 }
@@ -737,7 +761,7 @@ AG_GraphVertexLabelS(AG_GraphVertex *vtx, const char *s)
 	if (vtx->labelSu >= 0) {
 		AG_WidgetUnmapSurface(vtx->graph, vtx->labelSu);
 	}
-	AG_TextColor(vtx->labelColor);
+	AG_TextColor(&vtx->labelColor);
 	vtx->labelSu = AG_WidgetMapSurface(vtx->graph, AG_TextRender(vtx->labelTxt));
 	AG_ObjectUnlock(vtx->graph);
 	AG_Redraw(vtx->graph);
@@ -921,11 +945,11 @@ AG_WidgetClass agGraphClass = {
 		sizeof(AG_Graph),
 		{ 0,0 },
 		Init,
-		NULL,			/* free */
+		NULL,		/* reset */
 		Destroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	Draw,
 	SizeRequest,

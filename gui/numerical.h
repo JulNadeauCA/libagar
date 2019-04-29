@@ -12,7 +12,7 @@
 #include <agar/gui/begin.h>
 	
 typedef struct ag_numerical {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Numerical */
 	Uint flags;
 #define AG_NUMERICAL_HFILL	0x01
 #define AG_NUMERICAL_VFILL	0x02
@@ -60,13 +60,14 @@ AG_Numerical *_Nonnull AG_NumericalNewFlt(void *_Nullable, Uint, const char *_Nu
 AG_Numerical *_Nonnull AG_NumericalNewFltR(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, float *_Nonnull, float,float);
 AG_Numerical *_Nonnull AG_NumericalNewDbl(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, double *_Nonnull);
 AG_Numerical *_Nonnull AG_NumericalNewDblR(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, double *_Nonnull, double,double);
-float	               AG_NumericalGetFlt(AG_Numerical *_Nonnull);
-double	               AG_NumericalGetDbl(AG_Numerical *_Nonnull);
 # ifdef AG_HAVE_LONG_DOUBLE
 AG_Numerical *_Nonnull AG_NumericalNewLdbl(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, long double *_Nonnull);
 AG_Numerical *_Nonnull AG_NumericalNewLdblR(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, long double *_Nonnull, long double,long double);
-long double            AG_NumericalGetLdbl(AG_Numerical *_Nonnull);
+
+long double AG_NumericalGetLdbl(AG_Numerical *_Nonnull);
 # endif
+float       AG_NumericalGetFlt(AG_Numerical *_Nonnull);
+double      AG_NumericalGetDbl(AG_Numerical *_Nonnull);
 #endif /* AG_HAVE_FLOAT */
 
 void AG_NumericalSizeHint(AG_Numerical *_Nonnull, const char *_Nullable);

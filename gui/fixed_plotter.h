@@ -33,7 +33,7 @@ enum ag_fixed_plotter_type {
 };
 
 typedef struct ag_fixed_plotter {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_FixedPlotter */
 
 	enum ag_fixed_plotter_type type;
 	Uint flags;

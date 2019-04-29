@@ -10,7 +10,7 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_glview {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_GLView */
 	Uint flags;
 #define AG_GLVIEW_HFILL		0x01
 #define AG_GLVIEW_VFILL		0x02
@@ -52,7 +52,7 @@ void AG_GLViewDraw(void *_Nonnull);
 void AG_GLViewSizeRequest(void *_Nonnull, AG_SizeReq *_Nonnull);
 int  AG_GLViewSizeAllocate(void *_Nonnull, const AG_SizeAlloc *_Nonnull);
 
-void AG_GLViewSetBgColor(AG_GLView *_Nonnull, AG_Color);
+void AG_GLViewSetBgColor(AG_GLView *_Nonnull, const AG_Color *_Nonnull);
 void AG_GLViewSizeHint(AG_GLView *_Nonnull, int,int);
 void AG_GLViewReshape(AG_GLView *_Nonnull);
 void AG_GLViewDrawFn(void *_Nonnull, _Nonnull AG_EventFn, const char *_Nullable, ...);

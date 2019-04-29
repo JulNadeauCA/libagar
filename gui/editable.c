@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -760,7 +760,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 		} else if (ch == '\t') {
 			if (ON_LINE(yMouse,y) &&
 			    mx >= x && mx <= x+agTextTabWidth) {
-				*pos = (mx < x + agTextTabWidth/2) ? i : i+1;
+				*pos = (mx < x + (agTextTabWidth >> 1)) ? i : i+1;
 				goto out;
 			}
 			x += agTextTabWidth;
@@ -781,7 +781,8 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 				glyph = ttf->current;
 
 				if (ON_LINE(yMouse,y) && ON_CHAR(mx,x,glyph)) {
-					*pos = (mx < x+glyph->advance/2) ? i : i+1;
+					*pos = (mx < x+(glyph->advance >> 1)) ?
+					       i : i+1;
 					goto out;
 				}
 				x += glyph->advance;
@@ -793,7 +794,9 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 				AG_Glyph *gl;
 			
 				gl = AG_TextRenderGlyph(drv, ch);
-				if (ON_LINE(yMouse,y) && mx >= x && mx <= x+gl->su->w) {
+				if (ON_LINE(yMouse,y) &&
+				    mx >= x &&
+				    mx <= x+gl->su->w) {
 					*pos = i;
 					goto out;
 				}
@@ -894,13 +897,13 @@ Draw(void *_Nonnull obj)
 	AG_EditableValidateSelection(ed, buf);
 	
 	rClip = WIDGET(ed)->rView;
-	rClip.x1 -= ed->fontMaxHeight*2;
+	rClip.x1 -= (ed->fontMaxHeight << 1);
 	rClip.y1 -= ed->lineSkip;
-	rClip.x2 += ed->fontMaxHeight*2;
+	rClip.x2 += (ed->fontMaxHeight << 1);
 	rClip.y2 += ed->lineSkip;
 
 	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
-	AG_PushClipRect(ed, ed->r);
+	AG_PushClipRect(ed, &ed->r);
 
 	x = 0;
 	y = -ed->y * ed->lineSkip;
@@ -918,7 +921,7 @@ Draw(void *_Nonnull obj)
 				AG_DrawLineV(ed,
 				    x - ed->x, (y + 1),
 				    (y + ed->lineSkip - 1),
-				    WCOLOR(ed,TEXT_COLOR));
+				    &WCOLOR(ed,TEXT_COLOR));
 			}
 			ed->xCurs = x;
 			if (ed->flags & AG_EDITABLE_MARKPREF) {
@@ -958,11 +961,13 @@ Draw(void *_Nonnull obj)
 			continue;
 		} else if (c == '\t') {
 			if (inSel) {
-				AG_DrawRectFilled(ed,
-				    AG_RECT(x - ed->x, y,
-				            agTextTabWidth+1,
-					    ed->lineSkip+1),
-				    WCOLOR_SEL(ed,0));
+				AG_Rect r;
+
+				r.x = x - ed->x;
+				r.y = y;
+				r.w = agTextTabWidth + 1;
+				r.h = ed->lineSkip + 1;
+				AG_DrawRectFilled(ed, &r, &WCOLOR_SEL(ed,0));
 			}
 			x += agTextTabWidth;
 			continue;
@@ -978,9 +983,13 @@ Draw(void *_Nonnull obj)
 			continue;
 		}
 		if (inSel) {
-			AG_DrawRectFilled(ed,
-			    AG_RECT(x - ed->x, y, gl->su->w + 1, gl->su->h),
-			    WCOLOR_SEL(ed,0));
+			AG_Rect r;
+
+			r.x = x - ed->x;
+			r.y = y;
+			r.w = gl->su->w + 1;
+			r.h = gl->su->h;
+			AG_DrawRectFilled(ed, &r, &WCOLOR_SEL(ed,0));
 		}
 		drvOps->drawGlyph(drv, gl, dx,dy);
 		x += gl->advance;
@@ -1071,16 +1080,24 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Editable *ed = obj;
 	AG_Rect r;
+	int w = a->w;
+	int h = a->h;
 
-	if (a->w < 2 || a->h < 2) {
+	if (w < 2 || h < 2) {
 		return (-1);
 	}
-	ed->yVis = a->h/ed->lineSkip;
-	ed->r = AG_RECT(-1, -1, a->w-1, a->h-1);
+	ed->yVis = h / ed->lineSkip;
+	ed->r.x = -1;
+	ed->r.y = -1;
+	ed->r.w = w-1;
+	ed->r.h = h-1;
 
 	/* Map cursor-change area */
-	r = AG_RECT(0, 0, a->w, a->h);
-	AG_SetStockCursor(ed, &ed->ca, r, AG_TEXT_CURSOR);
+	r.w = 0;
+	r.h = 0;
+	r.w = w;
+	r.h = h;
+	AG_SetStockCursor(ed, &ed->ca, &r, AG_TEXT_CURSOR);
 	return (0);
 }
 
@@ -1190,8 +1207,8 @@ NormSelection(AG_Editable *_Nonnull ed)
 
 /* Copy specified range to specified clipboard. */
 void
-AG_EditableCopyChunk(AG_Editable *ed, AG_EditableClipboard *cb,
-    Uint32 *s, AG_Size len)
+AG_EditableCopyChunk(AG_Editable *ed, AG_EditableClipboard *cb, Uint32 *s,
+    AG_Size len)
 {
 	Uint32 *sNew;
 
@@ -1876,7 +1893,10 @@ Init(void *_Nonnull obj)
 	ed->yMax = 1;
 	ed->yVis = 1;
 	ed->wheelTicks = 0;
-	ed->r = AG_RECT(0,0,0,0);
+	ed->r.x = 0;
+	ed->r.y = 0;
+	ed->r.w = 0;
+	ed->r.h = 0;
 	ed->ca = NULL;
 	ed->fontMaxHeight = agTextFontHeight;
 	ed->lineSkip = agTextFontLineSkip;
@@ -2020,7 +2040,7 @@ AG_WidgetClass agEditableClass = {
 		sizeof(AG_Editable),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

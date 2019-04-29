@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,9 +50,8 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 {
 	SDL_Surface *display = pDisplay;
 	AG_Driver *drv = NULL;
-	AG_DriverClass *dc = NULL;
+	AG_DriverClass *dc = NULL, **pd;
 	int useGL = 0;
-	int i;
 
 	if (AG_InitGUIGlobals() == -1)
 		return (-1);
@@ -76,29 +75,27 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 			goto fail;
 		}
 	}
-	for (i = 0; i < agDriverListSize; i++) {
-		dc = agDriverList[i];
-		if ((dc->wm == AG_WM_SINGLE) &&
-		    (dc->flags & AG_DRIVER_SDL)) {
+	for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+		if (((*pd)->wm == AG_WM_SINGLE) &&
+		    ((*pd)->flags & AG_DRIVER_SDL)) {
 			if (useGL) {
-				if (!(dc->flags & AG_DRIVER_OPENGL))
+				if (!((*pd)->flags & AG_DRIVER_OPENGL))
 					continue;
 			} else {
-				if (dc->flags & AG_DRIVER_OPENGL)
+				if ((*pd)->flags & AG_DRIVER_OPENGL)
 					continue;
 			}
+			dc = *pd;
 			break;
 		}
 	}
-	if (i == agDriverListSize) {
+	if (dc == NULL) {
 		AG_SetError("No compatible %s driver is available",
 		    useGL ? "SDL/OpenGL" : "SDL");
 		goto fail;
 	}
-	dc = agDriverList[i];
-	if ((drv = AG_DriverOpen(dc)) == NULL) {
+	if ((drv = AG_DriverOpen(dc)) == NULL)
 		goto fail;
-	}
 
 	/* Open a video display. */
 	if (AGDRIVER_SW_CLASS(drv)->openVideoContext(drv, (void *)display,
@@ -319,7 +316,7 @@ AG_SDL_SoftBlit_Colorkey(const AG_Surface *_Nonnull ss, AG_Rect sr,
 				pDst += dsBytesPerPixel;
 				continue;
 			}
-			c = AG_GetColor(px, &ss->format);
+			AG_GetColor(&c, px, &ss->format);
 			if (c.a < AG_OPAQUE) {
 				AG_SDL_SurfaceBlend(ds, pDst, c, AG_ALPHA_SRC);
 			} else {
@@ -354,8 +351,9 @@ AG_SDL_SoftBlit_NoColorkey(const AG_Surface *_Nonnull ss, AG_Rect sr,
 	for (y = 0; y < dr.h; y++) {
 		for (x = 0; x < dr.w; x++) {
 			AG_Pixel px = AG_SurfaceGet_At(ss,pSrc);
-			AG_Color c = AG_GetColor(px, &ss->format);
-
+			AG_Color c;
+		
+			AG_GetColor(&c, px, &ss->format);
 			if (c.a < AG_OPAQUE) {
 				AG_SDL_SurfaceBlend(ds, pDst, c, AG_ALPHA_SRC);
 			} else {
@@ -484,14 +482,14 @@ out:
 
 /* Convert a SDL surface to Agar surface. */
 AG_Surface *
-AG_SurfaceFromSDL(void *_Nonnull p)
+AG_SurfaceFromSDL(void *p)
 {
 	return AG_SDL_ImportSurface((SDL_Surface *)p);
 }
 
 /* Export an AG_Surface to a newly-created SDL_Surface. */
 void *
-AG_SurfaceExportSDL(const AG_Surface * _Nonnull ss)
+AG_SurfaceExportSDL(const AG_Surface *ss)
 {
 	Uint32 sdlFlags = SDL_SWSURFACE;
 	SDL_Surface *ds;
@@ -729,7 +727,8 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 #endif /* !HAVE_FLOAT */
 	}
 	if (AG_Defined(drv, "bgColor")) {
-		dsw->bgColor = AG_ColorFromString(AG_GetStringP(drv,"bgColor"), NULL);
+		AG_ColorFromString(&dsw->bgColor, AG_GetStringP(drv,"bgColor"),
+		    NULL);
 	}
 	if (AG_Defined(drv, "bgPopup"))
 		dsw->flags |= AG_DRIVER_SW_BGPOPUP;

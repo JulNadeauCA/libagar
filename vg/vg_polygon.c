@@ -152,11 +152,11 @@ DrawOutline(VG_Polygon *_Nonnull vp, VG_View *_Nonnull vv)
 	Cy = Ay;
 	for (i = 1; i < vp->nPts; i++) {
 		VG_GetViewCoords(vv, VG_Pos(vp->pts[i]), &Bx,&By);
-		AG_DrawLine(vv, Ax,Ay, Bx,By, c);
+		AG_DrawLine(vv, Ax,Ay, Bx,By, &c);
 		Ax = Bx;
 		Ay = By;
 	}
-	AG_DrawLine(vv, Cx,Cy, Ax,Ay, c);
+	AG_DrawLine(vv, Cx,Cy, Ax,Ay, &c);
 }
 
 static void
@@ -235,7 +235,7 @@ DrawFB(VG_Polygon *_Nonnull vp, VG_View *_Nonnull vv)
 			xa = (xa >> 16) + ((xa & 0x8000) >> 15);
 			xb = vp->ints[i+1] - 1;
 			xb = (xb >> 16) + ((xb & 0x8000) >> 15);
-			AG_DrawLineH(vv, xa, xb, y, c);
+			AG_DrawLineH(vv, xa, xb, y, &c);
 		}
 	}
 }

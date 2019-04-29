@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -297,11 +297,12 @@ WGL_GetWndRect(AG_Window *_Nonnull win, AG_Rect *_Nonnull r)
 }
 
 static int
-WGL_OpenWindow(AG_Window *_Nonnull win, AG_Rect r, int depthReq, Uint mwFlags)
+WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
+    Uint mwFlags)
 {
+	char wndClassName[32]; 
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 	AG_Driver *drv = WIDGET(win)->drv;
-	char wndClassName[64]; 
 	GLuint pixelFormat;	
 	WNDCLASSEX wndClass;
 	DWORD wndStyle, wndStyleEx;
@@ -357,16 +358,16 @@ WGL_OpenWindow(AG_Window *_Nonnull win, AG_Rect r, int depthReq, Uint mwFlags)
 		Uint wDisp, hDisp;
 
 		if (WGL_GetDisplaySize(&wDisp, &hDisp) == 0) {
-			r.x = wDisp/2 - r.w/2;
-			r.y = hDisp/2 - r.h/2;
+			r->x = wDisp/2 - r->w/2;
+			r->y = hDisp/2 - r->h/2;
 		}
 	}
 	
 	/* Adjust window with account for window borders, if any */
-	wndRect.left = r.x;
-	wndRect.top = r.y;
-	wndRect.right = r.x + r.w;
-	wndRect.bottom = r.y + r.h;
+	wndRect.left   = r->x;
+	wndRect.top    = r->y;
+	wndRect.right  = r->x + r->w;
+	wndRect.bottom = r->y + r->h;
 	AdjustWindowRectEx(&wndRect, wndStyle, 0, wndStyleEx);
 
 	/* Create OpenGL Window */
@@ -444,10 +445,10 @@ WGL_OpenWindow(AG_Window *_Nonnull win, AG_Rect r, int depthReq, Uint mwFlags)
 		goto fail;
 
 	/* Update agar's idea of the actual window coordinates. */
-	a.x = r.x;
-	a.y = r.y;
-	a.w = r.w;
-	a.h = r.h;
+	a.x = r->x;
+	a.y = r->y;
+	a.w = r->w;
+	a.h = r->h;
 	AG_WidgetSizeAlloc(win, &a);
 	AG_WidgetUpdateCoords(win, a.x, a.y);
 
@@ -1339,12 +1340,12 @@ AG_DriverMwClass agDriverWGL = {
 			"AG_Driver:AG_DriverMw:AG_DriverWGL",
 			sizeof(AG_DriverWGL),
 			{ 1,6 },
-			NULL,	/* init */
-			NULL,	/* reset */
-			NULL,	/* destroy */
-			NULL,	/* load */
-			NULL,	/* save */
-			NULL,	/* edit */
+			NULL,		/* init */
+			NULL,		/* reset */
+			NULL,		/* destroy */
+			NULL,		/* load */
+			NULL,		/* save */
+			NULL,		/* edit */
 		},
 		"wgl",
 		AG_VECTOR,
@@ -1381,9 +1382,11 @@ AG_DriverMwClass agDriverWGL = {
 		WGL_SetCursorVisibility,
 		AG_GL_BlitSurface,
 		AG_GL_BlitSurfaceFrom,
+#ifdef HAVE_OPENGL
 		AG_GL_BlitSurfaceGL,
 		AG_GL_BlitSurfaceFromGL,
 		AG_GL_BlitSurfaceFlippedGL,
+#endif
 		AG_GL_BackupSurfaces,
 		AG_GL_RestoreSurfaces,
 		AG_GL_RenderToSurface,

@@ -33,7 +33,9 @@ extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval,
 extern int agTextComposition, agTextBidi, agTextCache, agTextTabWidth,
            agTextBlinkRate, agTextSymbols, agPageIncrement;
 extern int agScreenshotQuality;
+#ifdef AG_HAVE_FLOAT
 extern double agZoomValues[AG_ZOOM_RANGE];
+#endif
 
 int   AG_InitGraphics(const char *_Nullable);
 void  AG_DestroyGraphics(void);

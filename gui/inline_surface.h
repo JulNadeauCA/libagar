@@ -143,16 +143,16 @@ ag_surface_put8(AG_Surface *S, int x, int y, Uint8 px)
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ Uint32 _Pure_Attribute
-AG_MapPixel32(const AG_PixelFormat *_Nonnull pf, AG_Color c)
+AG_MapPixel32(const AG_PixelFormat *_Nonnull pf, const AG_Color *_Nonnull c)
 #else
 Uint32
-ag_map_pixel32(const AG_PixelFormat *pf, AG_Color c)
+ag_map_pixel32(const AG_PixelFormat *pf, const AG_Color *c)
 #endif
 {
 #if AG_MODEL == AG_LARGE
-	return AG_MapPixel32_RGBA16(pf, c.r, c.g, c.b, c.a);
+	return AG_MapPixel32_RGBA16(pf, c->r, c->g, c->b, c->a);
 #else
-	return AG_MapPixel32_RGBA8(pf, c.r, c.g, c.b, c.a);
+	return AG_MapPixel32_RGBA8(pf, c->r, c->g, c->b, c->a);
 #endif
 }
 
@@ -215,13 +215,13 @@ ag_map_pixel64_rgba16(const AG_PixelFormat *pf,
 /* Map an AG_Color to a 64-bit pixel. */
 #ifdef AG_INLINE_HEADER
 static __inline__ Uint64 _Pure_Attribute
-AG_MapPixel64(const AG_PixelFormat *_Nonnull pf, AG_Color c)
+AG_MapPixel64(const AG_PixelFormat *_Nonnull pf, const AG_Color *_Nonnull c)
 #else
 Uint64
-ag_map_pixel64(const AG_PixelFormat *pf, AG_Color c)
+ag_map_pixel64(const AG_PixelFormat *pf, const AG_Color *c)
 #endif
 {
-	return AG_MapPixel64_RGBA16(pf, c.r, c.g, c.b, c.a);
+	return AG_MapPixel64_RGBA16(pf, c->r, c->g, c->b, c->a);
 }
 
 /* Extract 16-bit RGB(A) components from a 64-bit pixel. */
@@ -334,36 +334,34 @@ ag_get_color64_rgba8(Uint64 px, const AG_PixelFormat *pf,
 
 /* Extract an AG_Color from a 64-bit pixel */
 #ifdef AG_INLINE_HEADER
-static __inline__ AG_Color _Pure_Attribute
-AG_GetColor64(Uint64 px, const AG_PixelFormat *_Nonnull pf)
+static __inline__ void
+AG_GetColor64(AG_Color *_Nonnull c, Uint64 px, const AG_PixelFormat *_Nonnull pf)
 #else
-AG_Color
-ag_get_color64(Uint64 px, const AG_PixelFormat *pf)
+void
+ag_get_color64(AG_Color *c, Uint64 px, const AG_PixelFormat *pf)
 #endif
 {
-	AG_Color C;
-
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED: {
 		Uint64 tmp;
-		AG_EXTRACT_COMPONENT(C.r, pf->Rmask, pf->Rshift, pf->Rloss, 16);
-		AG_EXTRACT_COMPONENT(C.g, pf->Gmask, pf->Gshift, pf->Gloss, 16);
-		AG_EXTRACT_COMPONENT(C.b, pf->Bmask, pf->Bshift, pf->Bloss, 16);
+		AG_EXTRACT_COMPONENT(c->r, pf->Rmask, pf->Rshift, pf->Rloss, 16);
+		AG_EXTRACT_COMPONENT(c->g, pf->Gmask, pf->Gshift, pf->Gloss, 16);
+		AG_EXTRACT_COMPONENT(c->b, pf->Bmask, pf->Bshift, pf->Bloss, 16);
 		if (pf->Amask != 0) {
-			AG_EXTRACT_COMPONENT(C.a, pf->Amask, pf->Ashift, pf->Aloss, 16);
+			AG_EXTRACT_COMPONENT(c->a, pf->Amask, pf->Ashift, pf->Aloss, 16);
 		} else {
-			C.a = AG_OPAQUE;
+			c->a = AG_OPAQUE;
 		}
 		break;
 	}
 	case AG_SURFACE_INDEXED:
-		C = pf->palette->colors[px % pf->palette->nColors];
+		memcpy(c, &pf->palette->colors[px % pf->palette->nColors],
+		    sizeof(AG_Color));
 		break;
 	case AG_SURFACE_GRAYSCALE:
-		C = AG_GetColor64_Gray(px, pf->graymode);
+		AG_GetColor64_Gray(c, px, pf->graymode);
 		break;
 	}
-	return (C);
 }
 
 #undef AG_EXTRACT_COMPONENT
@@ -385,8 +383,12 @@ ag_surface_get32_at(const AG_Surface *S, const Uint8 *p)
 #if AG_MODEL == AG_LARGE
 	case 64:
 	case 48:
-		return AG_MapPixel32(&S->format,
-		    AG_GetColor64(*(Uint64 *)p, &S->format));
+		{
+			AG_Color c;
+
+			AG_GetColor64(&c, *(Uint64 *)p, &S->format);
+			return AG_MapPixel32(&S->format, &c);
+		}
 #endif
 	case 32:
 		return (*(Uint32 *)p);
@@ -504,8 +506,12 @@ ag_surface_put32_at(AG_Surface *S, Uint8 *p, Uint32 px)
 #if AG_MODEL == AG_LARGE
 	case 64:                                             /* Decompressed */
 	case 48:
-		*(Uint64 *)p = AG_MapPixel64(&S->format,
-		    AG_GetColor32(px, &S->format));
+		{
+			AG_Color c;
+
+			AG_GetColor32(&c, px, &S->format);
+			*(Uint64 *)p = AG_MapPixel64(&S->format, &c);
+		}
 		break;
 #endif
 	case 32:
@@ -612,39 +618,41 @@ ag_surface_put64(AG_Surface *S, int x, int y, Uint64 px)
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
-AG_SurfaceBlend_At(AG_Surface *_Nonnull S, Uint8 *_Nonnull p, AG_Color c,
-    AG_AlphaFn fn)
+AG_SurfaceBlend_At(AG_Surface *_Nonnull S, Uint8 *_Nonnull p,
+    const AG_Color *_Nonnull c, AG_AlphaFn fn)
 #else
 void
-ag_surface_blend_at(AG_Surface *S, Uint8 *p, AG_Color c, AG_AlphaFn fn)
+ag_surface_blend_at(AG_Surface *S, Uint8 *p, const AG_Color *_Nonnull c,
+    AG_AlphaFn fn)
 #endif
 {
 	AG_Pixel px = AG_SurfaceGet_At(S,p);
 	AG_Color pc;
+	AG_Component ca;
 
 	if ((S->flags & AG_SURFACE_COLORKEY) &&		/* No blending needed */
 	    (px == S->colorkey)) {
 		AG_SurfacePut_At(S, p, AG_MapPixel(&S->format, c));
 		return;
 	}
-	pc = AG_GetColor(px, &S->format);
+	AG_GetColor(&pc, px, &S->format);
+	ca = c->a;
 	switch (fn) {
 	case AG_ALPHA_OVERLAY:
-		pc.a = ((pc.a + c.a) > AG_COLOR_LAST) ? AG_COLOR_LAST :
-		                                        (pc.a + c.a);
+		pc.a = ((pc.a+ca) > AG_COLOR_LAST) ? AG_COLOR_LAST : (pc.a+ca);
 		break;
-	case AG_ALPHA_DST:        /* pc.a = pc.a */        break;
-	case AG_ALPHA_SRC:           pc.a = c.a;           break;
-	case AG_ALPHA_ZERO:          pc.a = 0;             break;
-	case AG_ALPHA_ONE_MINUS_DST: pc.a = AG_COLOR_LAST - pc.a; break;
-	case AG_ALPHA_ONE_MINUS_SRC: pc.a = AG_COLOR_LAST - c.a;  break;
-	case AG_ALPHA_ONE: default:  pc.a = AG_COLOR_LAST;        break;
+	case AG_ALPHA_DST:        /* pc.a = pc.a */			break;
+	case AG_ALPHA_SRC:           pc.a = ca;				break;
+	case AG_ALPHA_ZERO:          pc.a = 0;				break;
+	case AG_ALPHA_ONE_MINUS_DST: pc.a = AG_COLOR_LAST - pc.a;	break;
+	case AG_ALPHA_ONE_MINUS_SRC: pc.a = AG_COLOR_LAST - ca;		break;
+	case AG_ALPHA_ONE: default:  pc.a = AG_COLOR_LAST;		break;
 	}
 	AG_SurfacePut_At(S, p,
 	    AG_MapPixel_RGBA(&S->format,
-	        pc.r + (((c.r - pc.r)*c.a) >> AG_COMPONENT_BITS),
-	        pc.g + (((c.g - pc.g)*c.a) >> AG_COMPONENT_BITS),
-	        pc.b + (((c.b - pc.b)*c.a) >> AG_COMPONENT_BITS),
+	        pc.r + (((c->r - pc.r)*ca) >> AG_COMPONENT_BITS),
+	        pc.g + (((c->g - pc.g)*ca) >> AG_COMPONENT_BITS),
+	        pc.b + (((c->b - pc.b)*ca) >> AG_COMPONENT_BITS),
 	        pc.a));
 }
 
@@ -654,10 +662,11 @@ ag_surface_blend_at(AG_Surface *S, Uint8 *p, AG_Color c, AG_AlphaFn fn)
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
-AG_SurfaceBlend(AG_Surface *_Nonnull S, int x, int y, AG_Color c, AG_AlphaFn fn)
+AG_SurfaceBlend(AG_Surface *_Nonnull S, int x, int y, const AG_Color *_Nonnull c,
+    AG_AlphaFn fn)
 #else
 void
-ag_surface_blend(AG_Surface *S, int x, int y, AG_Color c, AG_AlphaFn fn)
+ag_surface_blend(AG_Surface *S, int x, int y, const AG_Color *c, AG_AlphaFn fn)
 #endif
 {
 	AG_SurfaceBlend_At(S, S->pixels +
@@ -666,7 +675,7 @@ ag_surface_blend(AG_Surface *S, int x, int y, AG_Color c, AG_AlphaFn fn)
 	    c, fn);
 }
 
-#if AG_MODEL == AG_LARGE
+#if AG_MODEL == AG_LARGE					/* LG */
 /*
  * Blend 16-bit RGBA components with the pixel at x,y and overwrite it with
  * the result. No clipping. Target pixel alpha is set according to fn.
@@ -686,7 +695,7 @@ ag_surface_blend_rgb16(AG_Surface *S, int x, int y,
 	AG_SurfaceBlend_At(S, S->pixels +
 	    y*S->pitch +
 	    x*S->format.BytesPerPixel,
-	    c, fn);
+	    &c, fn);
 }
 
 /*
@@ -705,11 +714,13 @@ ag_surface_blend_rgb16_at(AG_Surface *S, Uint8 *p,
 {
 	AG_Color c = { r,g,b,a };
 
-	AG_SurfaceBlend_At(S,p, c, fn);
+	AG_SurfaceBlend_At(S,p, &c, fn);
 }
-#endif /* AG_LARGE */
 
-/* Initialize a packed-pixel format from RGB component masks (no alpha channel) */
+/*
+ * Initialize a packed-pixel format from RGB component masks (no alpha).
+ * Maximum depth 64-bpp.
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_PixelFormatRGB(AG_PixelFormat *_Nonnull pf, int BitsPerPixel,
@@ -722,6 +733,27 @@ ag_pixel_format_rgb(AG_PixelFormat *pf, int BitsPerPixel,
 {
 	AG_PixelFormatRGBA(pf, BitsPerPixel, Rmask, Gmask, Bmask, 0);
 }
+
+#else								/* SM or MD */
+
+/*
+ * Initialize a packed-pixel format from RGB component masks (no alpha)
+ * Maximum depth 32-bpp.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_PixelFormatRGB(AG_PixelFormat *_Nonnull pf, int BitsPerPixel,
+    Uint32 Rmask, Uint32 Gmask, Uint32 Bmask)
+#else
+void
+ag_pixel_format_rgb(AG_PixelFormat *pf, int BitsPerPixel,
+    Uint32 Rmask, Uint32 Gmask, Uint32 Bmask)
+#endif
+{
+	AG_PixelFormatRGBA(pf, BitsPerPixel, Rmask, Gmask, Bmask, 0);
+}
+
+#endif /* SMALL or MEDIUM */
 
 /*
  * Test whether two pixel formats are identical.

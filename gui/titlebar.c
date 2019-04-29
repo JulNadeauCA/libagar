@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -182,11 +182,16 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Titlebar *tbar = obj;
+	AG_Rect r;
 
-	AG_DrawBox(tbar,
-	    AG_RECT(0, 0, WIDTH(tbar), HEIGHT(tbar)),
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(tbar);
+	r.h = HEIGHT(tbar);
+	AG_DrawBox(tbar, &r,
 	    (tbar->flags & AG_TITLEBAR_PRESSED) ? -1 : 1,
-	    AG_WindowIsFocused(tbar->win) ? WCOLOR(tbar,0) : WCOLOR_DIS(tbar,0));
+	    AG_WindowIsFocused(tbar->win) ? &WCOLOR(tbar,0) :
+	                                    &WCOLOR_DIS(tbar,0));
 
 	WIDGET_SUPER_OPS(tbar)->draw(tbar);
 }
@@ -197,7 +202,7 @@ AG_WidgetClass agTitlebarClass = {
 		sizeof(AG_Titlebar),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

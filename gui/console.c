@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -439,7 +439,10 @@ Init(void *_Nonnull obj)
 	cons->pm = NULL;
 	cons->pos = -1;
 	cons->sel = 0;
-	cons->r = AG_RECT(0,0,0,0);
+	cons->r.x = 0;
+	cons->r.y = 0;
+	cons->r.w = 0;
+	cons->r.h = 0;
 	cons->scrollTo = NULL;
 
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT,
@@ -513,7 +516,10 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 	aBar.h = a->h;
 	AG_WidgetSizeAlloc(cons->vBar, &aBar);
 	
-	cons->r = AG_RECT(0, 0, (a->w - aBar.w), a->h);
+	cons->r.x = 0;
+	cons->r.y = 0;
+	cons->r.w = (a->w - aBar.w);
+	cons->r.h = a->h;
 	
 	AG_WidgetSizeReq(cons->hBar, &rBar);
 	aBar.x = 0;
@@ -533,13 +539,15 @@ Draw(void *_Nonnull p)
 {
 	AG_Console *cons = p;
 	AG_Surface *su;
-	AG_Rect rDst;
+	AG_Rect r;
 	Uint lnIdx;
 	int pos, sel;
 
-	AG_DrawRect(cons,
-	    AG_RECT(0, 0, WIDTH(cons), HEIGHT(cons)),
-	    WCOLOR(cons,AG_COLOR));
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(cons);
+	r.h = HEIGHT(cons);
+	AG_DrawRect(cons, &r, &WCOLOR(cons,AG_COLOR));
 
 	if (cons->nLines == 0)
 		goto out;
@@ -549,40 +557,40 @@ Draw(void *_Nonnull p)
 		cons->scrollTo = NULL;
 		ClampVisible(cons);
 	}
-	AG_PushClipRect(cons, cons->r);
-	rDst.x = cons->padding - cons->xOffs;
-	rDst.y = cons->padding;
-	rDst.w = WIDGET(cons)->w - (cons->padding << 1);
-	rDst.h = cons->lineskip + 1;
+	AG_PushClipRect(cons, &cons->r);
+	r.x = cons->padding - cons->xOffs;
+	r.y = cons->padding;
+	r.w = WIDGET(cons)->w - (cons->padding << 1);
+	r.h = cons->lineskip + 1;
 	pos = cons->pos;
 	sel = cons->sel;
 
 	for (lnIdx = cons->rOffs;
-	     lnIdx < cons->nLines && rDst.y < WIDGET(cons)->h;
+	     lnIdx < cons->nLines && r.y < WIDGET(cons)->h;
 	     lnIdx++) {
 		AG_ConsoleLine *ln = cons->lines[lnIdx];
-		AG_Color cTxt = WCOLOR(cons,AG_TEXT_COLOR);
+		AG_Color *cTxt = &WCOLOR(cons,AG_TEXT_COLOR);
 		int suIdx = 0;
 
 		if (pos != -1) {
 			if ((lnIdx == pos) ||
 			    ((sel > 0 && lnIdx > pos && lnIdx < pos+sel+1) ||
 			     (sel < 0 && lnIdx < pos && lnIdx > pos+sel-1))) {
-				AG_DrawRectFilled(cons, rDst,
-				    WCOLOR_SEL(cons,AG_COLOR));
-				cTxt = WCOLOR_SEL(cons,AG_TEXT_COLOR);
+				AG_DrawRectFilled(cons, &r,
+				    &WCOLOR_SEL(cons,AG_COLOR));
+				cTxt = &WCOLOR_SEL(cons,AG_TEXT_COLOR);
 				suIdx = 1;
 			}
 		}
 		if (ln->surface[suIdx] == -1) {
-			AG_TextColor((ln->c.a != 0) ? ln->c : cTxt);
+			AG_TextColor((ln->c.a != 0) ? &ln->c : cTxt);
 			if ((su = AG_TextRender(ln->text)) == NULL) {
 				continue;
 			}
 			ln->surface[suIdx] = AG_WidgetMapSurface(cons, su);
 		}
-		AG_WidgetBlitSurface(cons, ln->surface[suIdx], rDst.x, rDst.y);
-		rDst.y += cons->lineskip;
+		AG_WidgetBlitSurface(cons, ln->surface[suIdx], r.x, r.y);
+		r.y += cons->lineskip;
 	}
 	AG_PopClipRect(cons);
 out:
@@ -650,7 +658,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	ln->p = NULL;
 	ln->surface[0] = -1;
 	ln->surface[1] = -1;
-	ln->c = AG_ColorNone();		/* Inherit default */
+	AG_ColorNone(&ln->c);			/* Inherit default */
 
 	if ((cons->flags & AG_CONSOLE_NOAUTOSCROLL) == 0) {
 		cons->scrollTo = &cons->nLines;
@@ -729,10 +737,10 @@ AG_ConsoleMsgPtr(AG_ConsoleLine *ln, void *p)
 }
 
 void
-AG_ConsoleMsgColor(AG_ConsoleLine *ln, AG_Color c)
+AG_ConsoleMsgColor(AG_ConsoleLine *ln, const AG_Color *c)
 {
 	AG_ObjectLock(ln->cons);
-	ln->c = c;
+	memcpy(&ln->c, c, sizeof(AG_Color));
 	AG_ObjectUnlock(ln->cons);
 }
 
@@ -754,7 +762,7 @@ AG_WidgetClass agConsoleClass = {
 		sizeof(AG_Console),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

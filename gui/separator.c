@@ -130,17 +130,17 @@ Draw(void *_Nonnull obj)
 	if (!sep->visible)
 		return;
 
-	c[0] = AG_ColorAdd(WCOLOR(sep,0), agLowColor);
-	c[1] = AG_ColorAdd(WCOLOR(sep,0), agHighColor);
+	AG_ColorAdd(&c[0], &WCOLOR(sep,0), &agLowColor);
+	AG_ColorAdd(&c[1], &WCOLOR(sep,0), &agHighColor);
 
 	switch (sep->type) {
 	case AG_SEPARATOR_HORIZ:
-		AG_DrawLineH(sep, 0, WIDTH(sep), sep->padding, c[0]);
-		AG_DrawLineH(sep, 0, WIDTH(sep), sep->padding+1, c[1]);
+		AG_DrawLineH(sep, 0, WIDTH(sep), sep->padding,   &c[0]);
+		AG_DrawLineH(sep, 0, WIDTH(sep), sep->padding+1, &c[1]);
 		break;
 	case AG_SEPARATOR_VERT:
-		AG_DrawLineV(sep, sep->padding, 0, HEIGHT(sep), c[0]);
-		AG_DrawLineV(sep, sep->padding+1, 0, HEIGHT(sep), c[1]);
+		AG_DrawLineV(sep, sep->padding, 0, HEIGHT(sep),   &c[0]);
+		AG_DrawLineV(sep, sep->padding+1, 0, HEIGHT(sep), &c[1]);
 		break;
 	}
 }
@@ -160,7 +160,7 @@ AG_WidgetClass agSeparatorClass = {
 		sizeof(AG_Separator),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

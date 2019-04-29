@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@ AG_GLViewNew(void *parent, Uint flags)
 
 /* Initialize an OpenGL matrix to identity. GL must be locked. */
 static void
-SetIdentity(GLfloat *M, GLenum which)
+SetIdentity(GLfloat *_Nonnull M, GLenum which)
 {
 	glMatrixMode(which);
 	glPushMatrix();
@@ -62,7 +62,7 @@ SetIdentity(GLfloat *M, GLenum which)
 }
 
 static void
-WidgetMoved(AG_Event *event)
+WidgetMoved(AG_Event *_Nonnull event)
 {
 	AG_GLView *glv = AG_SELF();
 
@@ -70,7 +70,7 @@ WidgetMoved(AG_Event *event)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_GLView *glv = AG_SELF();
 
@@ -79,7 +79,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-OnAttach(AG_Event *event)
+OnAttach(AG_Event *_Nonnull event)
 {
 	AG_Widget *parent = AG_SENDER();
 
@@ -89,7 +89,7 @@ OnAttach(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_GLView *glv = obj;
 
@@ -97,7 +97,8 @@ Init(void *obj)
 
 	glv->wPre = 100;
 	glv->hPre = 100;
-	glv->bgColor = AG_ColorRGB(0,0,0);
+
+	AG_ColorBlack(&glv->bgColor);
 
 	glv->flags = AG_GLVIEW_INIT_MATRICES;
 	glv->draw_ev = NULL;
@@ -268,10 +269,10 @@ AG_GLViewSizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 void
-AG_GLViewSetBgColor(AG_GLView *glv, AG_Color c)
+AG_GLViewSetBgColor(AG_GLView *glv, const AG_Color *c)
 {
 	AG_ObjectLock(glv);
-	glv->bgColor = c;
+	memcpy(&glv->bgColor, c, sizeof(AG_Color));
 	AG_ObjectUnlock(glv);
 }
 
@@ -283,9 +284,13 @@ AG_GLViewDraw(void *obj)
 	Uint hView;
 	
 	if (glv->flags & AG_GLVIEW_BGFILL) {
-		AG_DrawRect(glv,
-		    AG_RECT(0,0, WIDTH(glv), HEIGHT(glv)),
-		    glv->bgColor);
+		AG_Rect r;
+
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(glv);
+		r.h = HEIGHT(glv);
+		AG_DrawRect(glv, &r, &glv->bgColor);
 	}
 	if (glv->underlay_ev != NULL)
 		glv->underlay_ev->fn.fnVoid(glv->underlay_ev);
@@ -355,7 +360,7 @@ AG_WidgetClass agGLViewClass = {
 		sizeof(AG_GLView),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,8 +51,7 @@ ClipWidgets(AG_Scrollview *_Nonnull sv, AG_Widget *_Nonnull wt)
 	if (rView.w < 0 || rView.h < 0)
 		return;
 
-	rx = AG_RectIntersect2(&rView, &wt->rView);
-	if (rx.w == 0 || rx.h == 0) {
+	if (!AG_RectIntersect2(&rx, &rView, &wt->rView)) {
 		AG_WidgetHideAll(wt);
 	} else {
 		AG_WidgetShowAll(wt);
@@ -282,7 +281,10 @@ Init(void *_Nonnull obj)
 	sv->wBar = 0;
 	sv->hBar = 0;
 	sv->pack = AG_PACK_VERT;
-	sv->r = AG_RECT(0,0,0,0);
+	sv->r.x = 0;
+	sv->r.y = 0;
+	sv->r.w = 0;
+	sv->r.h = 0;
 	sv->incr = 10;
 #if 0
 	AG_BindInt(sv, "xOffs", &sv->xOffs);
@@ -411,17 +413,25 @@ Draw(void *_Nonnull p)
 {
 	AG_Scrollview *sv = p;
 	AG_Widget *chld;
+	int x2,y2;
 
 	if (sv->flags & AG_SCROLLVIEW_FRAME) {
-		AG_DrawBox(sv,
-		    AG_RECT(0, 0, WIDTH(sv), HEIGHT(sv)), -1,
-		    WCOLOR(sv,0));
+		AG_Rect r;
+
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(sv);
+		r.h = HEIGHT(sv);
+		AG_DrawBox(sv, &r, -1, &WCOLOR(sv,0));
 	}
 
 	if (sv->hbar != NULL) { AG_WidgetDraw(sv->hbar); }
 	if (sv->vbar != NULL) { AG_WidgetDraw(sv->vbar); }
-	
-	AG_PushClipRect(sv, sv->r);
+
+	x2 = WIDGET(sv)->rView.x2 - sv->wBar;
+	y2 = WIDGET(sv)->rView.y2 - sv->hBar;
+
+	AG_PushClipRect(sv, &sv->r);
 	OBJECT_FOREACH_CHILD(chld, sv, ag_widget) {
 		if (!(chld->flags & AG_WIDGET_VISIBLE) ||
 		    chld == WIDGET(sv->hbar) ||
@@ -430,21 +440,19 @@ Draw(void *_Nonnull p)
 		}
 		AG_WidgetDraw(chld);
 	
-		if (chld->rView.x2 > WIDGET(sv)->rView.x2 - sv->wBar) {
-			chld->rSens.w = WIDGET(sv)->rView.x2 - sv->wBar -
-			                WIDGET(chld)->rView.x1;
+		if (chld->rView.x2 > x2) {
+			chld->rSens.w = x2 - WIDGET(chld)->rView.x1;
 		} else {
 			chld->rSens.w = chld->w;
 		}
-		chld->rSens.x2 = chld->rSens.x1+chld->rSens.w;
+		chld->rSens.x2 = chld->rSens.x1 + chld->rSens.w;
 		
-		if (chld->rView.y2 > WIDGET(sv)->rView.y2 - sv->hBar) {
-			chld->rSens.h = WIDGET(sv)->rView.y2 - sv->hBar -
-			                WIDGET(chld)->rView.y1;
+		if (chld->rView.y2 > y2) {
+			chld->rSens.h = y2 - WIDGET(chld)->rView.y1;
 		} else {
 			chld->rSens.h = chld->h;
 		}
-		chld->rSens.y2 = chld->rSens.y1+chld->rSens.h;
+		chld->rSens.y2 = chld->rSens.y1 + chld->rSens.h;
 	}
 	AG_PopClipRect(sv);
 }
@@ -455,11 +463,11 @@ AG_WidgetClass agScrollviewClass = {
 		sizeof(AG_Scrollview),
 		{ 0,0 },
 		Init,
-		NULL,			/* free */
-		NULL,			/* destroy */
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,		/* reset */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	Draw,
 	SizeRequest,

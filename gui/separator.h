@@ -12,7 +12,7 @@ enum ag_separator_type {
 };
 
 typedef struct ag_separator {
-	struct ag_widget wid;
+	struct ag_widget wid;			/* AG_Widget -> AG_Separator */
 	enum ag_separator_type type;
 	Uint padding;				/* Padding in pixels */
 	int visible;				/* Visible flag */

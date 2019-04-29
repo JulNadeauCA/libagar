@@ -871,7 +871,7 @@ AG_WidgetClass agDirDlgClass = {
 		sizeof(AG_DirDlg),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

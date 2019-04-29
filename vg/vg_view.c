@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -460,7 +460,10 @@ Init(void *_Nonnull obj)
 	vv->tCache = AG_TextCacheNew(vv, 64, 2);
 	vv->editAreas = NULL;
 	vv->nEditAreas = 0;
-	vv->r = AG_RECT(0,0,0,0);
+	vv->r.x = 0;
+	vv->r.y = 0;
+	vv->r.w = 0;
+	vv->r.h = 0;
 	TAILQ_INIT(&vv->tools);
 
 	vv->nGrids = 0;
@@ -683,11 +686,12 @@ DrawGrid(VG_View *_Nonnull vv, const VG_Grid *_Nonnull grid)
 		y  = (int)vv->y % ival;
 		x2 = WIDGET(vv)->rView.x2;
 		y2 = WIDGET(vv)->rView.y2;
+
 		c = VG_MapColorRGB(grid->color);
 
 		for (; y < y2; y += ival)
 			for (x = x0; x < x2; x += ival)
-				AG_PutPixel(vv, x,y, c);
+				AG_PutPixel(vv, x,y, &c);
 	}
 }
 
@@ -695,18 +699,21 @@ DrawGrid(VG_View *_Nonnull vv, const VG_Grid *_Nonnull grid)
 static void
 DrawNodeExtent(VG_Node *_Nonnull vn, VG_View *_Nonnull vv)
 {
-	AG_Rect rExt;
+	AG_Rect r;
 	VG_Vector a, b;
+	AG_Color c;
 
 	if (vn->ops->extent == NULL) {
 		return;
 	}
 	vn->ops->extent(vn, vv, &a, &b);
 
-	VG_GetViewCoords(vv, a, &rExt.x, &rExt.y);
-	rExt.w = (int)((b.x - a.x)*vv->scale);
-	rExt.h = (int)((b.y - a.y)*vv->scale);
-	AG_DrawRectOutline(vv, rExt, AG_ColorRGB(250,0,0));
+	VG_GetViewCoords(vv, a, &r.x, &r.y);
+	r.w = (int)((b.x - a.x)*vv->scale);
+	r.h = (int)((b.y - a.y)*vv->scale);
+
+	AG_ColorRGB_8(&c, 250,0,0);
+	AG_DrawRectOutline(vv, &r, &c);
 }
 #endif /* AG_DEBUG */
 
@@ -744,15 +751,18 @@ Draw(void *_Nonnull obj)
 	VG_View *vv = obj;
 	VG *vg = vv->vg;
 	VG_Tool *curtool = vv->curtool;
+	AG_Color c;
 	int su, i;
 
 	if (vg == NULL)
 		return;
 
-	if (!(vv->flags & VG_VIEW_DISABLE_BG))
-		AG_DrawRect(vv, vv->r, VG_MapColorRGBA(vg->fillColor));
+	if (!(vv->flags & VG_VIEW_DISABLE_BG)) {
+		c = VG_MapColorRGBA(vg->fillColor);
+		AG_DrawRect(vv, &vv->r, &c);
+	}
 	
-	AG_PushClipRect(vv, vv->r);
+	AG_PushClipRect(vv, &vv->r);
 
 	if (vv->flags & VG_VIEW_GRID) {
 		for (i = 0; i < vv->nGrids; i++)
@@ -777,7 +787,7 @@ Draw(void *_Nonnull obj)
 
 	if (vv->status[0] != '\0') {
 		AG_PushTextState();
-		AG_TextColor(WCOLOR(vv,TEXT_COLOR));
+		AG_TextColor(&WCOLOR(vv,TEXT_COLOR));
 		if ((su = AG_TextCacheGet(vv->tCache, vv->status)) != -1) {
 			AG_WidgetBlitSurface(vv, su,
 			    0,
@@ -1072,7 +1082,7 @@ AG_WidgetClass vgViewClass = {
 		sizeof(VG_View),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

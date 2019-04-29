@@ -209,6 +209,15 @@ member of the structure.
 .Ft void
 .Fn AG_NumericalDecrement "AG_Numerical *num"
 .Pp
+.Ft "float"
+.Fn AG_NumericalGetFlt "AG_Numerical *num"
+.Pp
+.Ft "double"
+.Fn AG_NumericalGetDbl "AG_Numerical *num"
+.Pp
+.Ft "long double"
+.Fn AG_NumericalGetLdbl "AG_Numerical *num"
+.Pp
 .nr nS 0
 The
 .Fn AG_NumericalIncrement
@@ -219,6 +228,12 @@ functions increment and decrement the bound
 by the interval specified as the
 .Va inc
 binding (which defaults to 1).
+.Pp
+.Fn AG_NumericalGetFlt ,
+.Fn AG_NumericalGetDbl
+and
+.Fn AG_NumericalGetLdbl
+return a representation of the current numerical value.
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Numerical
@@ -315,5 +330,5 @@ widget first appeared in Agar 1.2 as a replacement for
 and
 .Sq AG_FSpinbutton
 that can handle both floating-point and integer values.
-As of Agar 1.5.0, support was added for 64-bit types and
+Agar 1.5 added support for 64-bit types and
 .Ft long double .

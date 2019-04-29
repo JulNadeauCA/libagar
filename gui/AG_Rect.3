@@ -47,9 +47,18 @@ typedef struct ag_rect {
 } AG_Rect;
 .Ed
 .Pp
-The alternate
+Normalized rectangles have non-negative
+.Fa w
+and
+.Fa h .
+Rectangles are serialized using signed 16-bit coordinates, and
+unsigned 16-bit sizes.
+.Pp
+The
 .Ft AG_Rect2
-structure also stores the two endpoints explicitely:
+variant includes a redundant endpoint (or alternatively, a redundant size
+implied by the two endpoints).
+This uses more space, but allows for faster intersection tests:
 .Bd -literal
 typedef struct ag_rect2 {
 	int x1, y1;
@@ -59,44 +68,44 @@ typedef struct ag_rect2 {
 .Ed
 .Sh INTERFACE
 .nr nS 1
-.Ft AG_Rect
-.Fn AG_RECT "int x" "int y" "int w" "int h"
-.Pp
-.Ft AG_Rect2
-.Fn AG_RECT2 "int x" "int y" "int w" "int h"
-.Pp
-.Ft AG_Rect
-.Fn AG_ReadRect "AG_DataSource *ds"
-.Pp
-.Ft AG_Rect2
-.Fn AG_ReadRect2 "AG_DataSource *ds"
+.Ft void
+.Fn AG_RectInit "AG_Rect *rd" "int x" "int y" "int w" "int h"
 .Pp
 .Ft void
-.Fn AG_WriteRect "AG_DataSource *ds" "AG_Rect r"
+.Fn AG_Rect2Init "AG_Rect2 *rd" "int x" "int y" "int w" "int h"
 .Pp
 .Ft void
-.Fn AG_WriteRect2 "AG_DataSource *ds" "AG_Rect2 r"
+.Fn AG_ReadRect "AG_Rect *rd" "AG_DataSource *ds"
 .Pp
-.Ft AG_Rect
-.Fn AG_Rect2ToRect "AG_Rect2 r"
+.Ft void
+.Fn AG_ReadRect2 "AG_Rect2 *rd" "AG_DataSource *ds"
 .Pp
-.Ft AG_Rect2
-.Fn AG_RectToRect2 "AG_Rect r"
+.Ft void
+.Fn AG_WriteRect "AG_DataSource *ds" "const AG_Rect *r"
 .Pp
-.Ft AG_Rect
-.Fn AG_RectIntersect "AG_Rect a" "AG_Rect b"
+.Ft void
+.Fn AG_WriteRect2 "AG_DataSource *ds" "const AG_Rect2 *r"
 .Pp
-.Ft AG_Rect2
-.Fn AG_RectIntersect2 "const AG_Rect2 *a" "const AG_Rect2 *b"
+.Ft void
+.Fn AG_Rect2ToRect "AG_Rect *rd" "AG_Rect2 r"
+.Pp
+.Ft void
+.Fn AG_RectToRect2 "AG_Rect2 *rd" "AG_Rect *r"
 .Pp
 .Ft int
-.Fn AG_RectInside "AG_Rect r" "int x" "int y"
+.Fn AG_RectIntersect "AG_Rect *rd" "const AG_Rect *a" "const AG_Rect *b"
+.Pp
+.Ft int
+.Fn AG_RectIntersect2 "AG_Rect2 *rd" "const AG_Rect2 *a" "const AG_Rect2 *b"
+.Pp
+.Ft int
+.Fn AG_RectInside "const AG_Rect *r" "int x" "int y"
 .Pp
 .Ft int
 .Fn AG_RectInside2 "const AG_Rect2 *r" "int x" "int y"
 .Pp
 .Ft int
-.Fn AG_RectCompare "AG_Rect a" "AG_Rect b"
+.Fn AG_RectCompare "const AG_Rect *a" "const AG_Rect *b"
 .Pp
 .Ft int
 .Fn AG_RectCompare2 "const AG_Rect2 *a" "const AG_Rect2 *b"
@@ -114,20 +123,22 @@ typedef struct ag_rect2 {
 .Fn AG_RectTranslate2 "AG_Rect2 *r" "int x" "int y"
 .nr nS 0
 .Pp
-The
-.Fn AG_RECT
-routine returns an
+.Fn AG_RectInit
+initializes an
 .Ft AG_Rect
-structure initialized to the given coordinates
+to coordinates
 .Fa x ,
 .Fa y
 and dimensions
 .Fa w ,
 .Fa h .
-The
-.Fn AG_RECT2
-variant returns an
-.Ft AG_Rect2 .
+.Pp
+.Fn AG_Rect2Init
+initializes an
+.Ft AG_Rect2
+to coordinates and dimensions and implicitely computes the endpoint
+.Va x2 ,
+.Va y2 .
 .Pp
 The
 .Fn AG_ReadRect
@@ -136,11 +147,10 @@ function loads a rectangle from the given
 .Fn AG_WriteRect
 writes a rectangle to a data source.
 .Pp
-The
 .Fn AG_RectToRect2
 and
 .Fn AG_Rect2ToRect
-routines convert between the
+convert between the
 .Ft AG_Rect
 and
 .Ft AG_Rect2
@@ -156,25 +166,22 @@ and
 .Pp
 .Fn AG_RectInside
 and
-.Fn AG_RectInside
+.Fn AG_RectInside2
 return 1 if the point
 .Fa x ,
 .Fa y
 lies inside of rectangle
 .Fa r .
 .Pp
-The
 .Fn AG_RectCompare
 and
 .Fn AG_RectCompare2
-routines return 0 if both rectangles possess the same coordinates and
-dimensions.
+return 0 if both rectangles possess the same coordinates and dimensions.
 .Pp
-The
 .Fn AG_RectSize
 and
 .Fn AG_RectSize2
-routines resize a rectangle to the specified dimensions.
+resize a rectangle to the specified dimensions.
 .Pp
 .Fn AG_RectTranslate
 and

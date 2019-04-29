@@ -286,14 +286,20 @@ VG_GetColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 static __inline__ AG_Color
 VG_MapColorRGB(VG_Color vc)
 {
-	return AG_ColorRGB(vc.r, vc.g, vc.b);
+	AG_Color c;
+
+	AG_ColorRGB(&c, vc.r, vc.g, vc.b);
+	return (c);
 }
 
 /* Convert a VG_Color to AG_Color */
 static __inline__ AG_Color
 VG_MapColorRGBA(VG_Color vc)
 {
-	return AG_ColorRGBA(vc.r, vc.g, vc.b, vc.a);
+	AG_Color c;
+
+	AG_ColorRGBA(&c, vc.r, vc.g, vc.b, vc.a);
+	return (c);
 }
 
 /* Alpha-blend colors cDst and cSrc and return in cDst. */

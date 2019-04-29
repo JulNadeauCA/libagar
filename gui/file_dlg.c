@@ -1511,7 +1511,7 @@ AG_WidgetClass agFileDlgClass = {
 		sizeof(AG_FileDlg),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

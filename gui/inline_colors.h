@@ -59,192 +59,177 @@ ag_grayscale_32(Uint32 v, Uint32 a)
 
 /* Return AG_Color from 8- or 16-bit RGB (or RGB + alpha) components. */
 #ifdef AG_INLINE_HEADER
-static __inline__ AG_Color _Const_Attribute
-AG_ColorRGB_8(Uint8 r, Uint8 g, Uint8 b)
+static __inline__ void
+AG_ColorRGB_8(AG_Color *_Nonnull c, Uint8 r, Uint8 g, Uint8 b)
 #else
-AG_Color
-ag_color_rgb_8(Uint8 r, Uint8 g, Uint8 b)
+void
+ag_color_rgb_8(AG_Color *c, Uint8 r, Uint8 g, Uint8 b)
 #endif
 {
-	AG_Color c;
 #if (AG_MODEL == AG_LARGE)
-	c.r = AG_8to16(r);
-	c.g = AG_8to16(g);
-	c.b = AG_8to16(b);
+	c->r = AG_8to16(r);
+	c->g = AG_8to16(g);
+	c->b = AG_8to16(b);
 #else
-	c.r = r;
-	c.g = g;
-	c.b = b;
+	c->r = r;
+	c->g = g;
+	c->b = b;
 #endif
-	c.a = AG_OPAQUE;
-	return (c);
+	c->a = AG_OPAQUE;
 }
 
 #ifdef AG_INLINE_HEADER
-static __inline__ AG_Color _Const_Attribute
-AG_ColorRGBA_8(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+static __inline__ void
+AG_ColorRGBA_8(AG_Color *_Nonnull c, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 #else
-AG_Color
-ag_color_rgba_8(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+void
+ag_color_rgba_8(AG_Color *c, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 #endif
 {
-	AG_Color c;
 #if (AG_MODEL == AG_LARGE)
-	c.r = AG_8to16(r);
-	c.g = AG_8to16(g);
-	c.b = AG_8to16(b);
-	c.a = AG_8to16(a);
+	c->r = AG_8to16(r);
+	c->g = AG_8to16(g);
+	c->b = AG_8to16(b);
+	c->a = AG_8to16(a);
 #else
-	c.r = r;
-	c.g = g;
-	c.b = b;
-	c.a = a;
+	c->r = r;
+	c->g = g;
+	c->b = b;
+	c->a = a;
 #endif
-	return (c);
 }
 
 #ifdef AG_INLINE_HEADER
-static __inline__ AG_Color _Const_Attribute
-AG_ColorRGB_16(Uint16 r, Uint16 g, Uint16 b)
+static __inline__ void
+AG_ColorRGB_16(AG_Color *_Nonnull c, Uint16 r, Uint16 g, Uint16 b)
 #else
-AG_Color
-ag_color_rgb_16(Uint16 r, Uint16 g, Uint16 b)
+void
+ag_color_rgb_16(AG_Color *c, Uint16 r, Uint16 g, Uint16 b)
 #endif
 {
-	AG_Color c;
 #if (AG_MODEL == AG_LARGE)
-	c.r = r;
-	c.g = g;
-	c.b = b;
+	c->r = r;
+	c->g = g;
+	c->b = b;
 #else
-	c.r = AG_16to8(r);
-	c.g = AG_16to8(g);
-	c.b = AG_16to8(b);
+	c->r = AG_16to8(r);
+	c->g = AG_16to8(g);
+	c->b = AG_16to8(b);
 #endif
-	c.a = AG_OPAQUE;
-	return (c);
+	c->a = AG_OPAQUE;
 }
 
 #ifdef AG_INLINE_HEADER
-static __inline__ AG_Color _Const_Attribute
-AG_ColorRGBA_16(Uint16 r, Uint16 g, Uint16 b, Uint16 a)
+static __inline__ void
+AG_ColorRGBA_16(AG_Color *_Nonnull c, Uint16 r, Uint16 g, Uint16 b, Uint16 a)
 #else
-AG_Color
-ag_color_rgba_16(Uint16 r, Uint16 g, Uint16 b, Uint16 a)
+void
+ag_color_rgba_16(AG_Color *c, Uint16 r, Uint16 g, Uint16 b, Uint16 a)
 #endif
 {
-	AG_Color c;
 #if (AG_MODEL == AG_LARGE)
-	c.r = r;
-	c.g = g;
-	c.b = b;
-	c.a = a;
+	c->r = r;
+	c->g = g;
+	c->b = b;
+	c->a = a;
 #else
-	c.r = AG_16to8(r);
-	c.g = AG_16to8(g);
-	c.b = AG_16to8(b);
-	c.a = AG_16to8(a);
+	c->r = AG_16to8(r);
+	c->g = AG_16to8(g);
+	c->b = AG_16to8(b);
+	c->a = AG_16to8(a);
 #endif
-	return (c);
 }
 
 /* Return AG_Color from 4-bit components packed as 0xRGBA. */
 #ifdef AG_INLINE_HEADER
-static __inline__ AG_Color _Const_Attribute
-AG_ColorHex16(Uint16 h)
+static __inline__ void
+AG_ColorHex16(AG_Color *_Nonnull c, Uint16 h)
 #else
-AG_Color
-ag_color_hex_16(Uint16 h)
+void
+ag_color_hex_16(AG_Color *c, Uint16 h)
 #endif
 {
-	AG_Color c;
 #if (AG_MODEL == AG_LARGE)
-	c.r = AG_4to16((h & 0xf000) >> 3);
-	c.g = AG_4to16((h & 0x0f00) >> 2);
-	c.b = AG_4to16((h & 0x00f0) >> 1);
-	c.a = AG_4to16((h & 0x000f));
+	c->r = AG_4to16((h & 0xf000) >> 3);
+	c->g = AG_4to16((h & 0x0f00) >> 2);
+	c->b = AG_4to16((h & 0x00f0) >> 1);
+	c->a = AG_4to16((h & 0x000f));
 #else
-	c.r = AG_4to8((h & 0xf000) >> 3);
-	c.g = AG_4to8((h & 0x0f00) >> 2);
-	c.b = AG_4to8((h & 0x00f0) >> 1);
-	c.a = AG_4to8((h & 0x000f));
+	c->r = AG_4to8((h & 0xf000) >> 3);
+	c->g = AG_4to8((h & 0x0f00) >> 2);
+	c->b = AG_4to8((h & 0x00f0) >> 1);
+	c->a = AG_4to8((h & 0x000f));
 #endif
-	return (c);
 }
 
 /* Return AG_Color from 8-bit components packed as 0xRRGGBBAA. */
 #ifdef AG_INLINE_HEADER
-static __inline__ AG_Color _Const_Attribute
-AG_ColorHex32(Uint32 h)
+static __inline__ void
+AG_ColorHex32(AG_Color *_Nonnull c, Uint32 h)
 #else
-AG_Color
-ag_color_hex_32(Uint32 h)
+void
+ag_color_hex_32(AG_Color *c, Uint32 h)
 #endif
 {
-	AG_Color c;
 #if (AG_MODEL == AG_LARGE)
-	c.r = AG_8to16((h & 0xff000000) >> 24);
-	c.g = AG_8to16((h & 0x00ff0000) >> 16);
-	c.b = AG_8to16((h & 0x0000ff00) >> 8);
-	c.a = AG_8to16((h & 0x000000ff));
+	c->r = AG_8to16((h & 0xff000000) >> 24);
+	c->g = AG_8to16((h & 0x00ff0000) >> 16);
+	c->b = AG_8to16((h & 0x0000ff00) >> 8);
+	c->a = AG_8to16((h & 0x000000ff));
 #else
-	c.r = (h & 0xff000000) >> 24;
-	c.g = (h & 0x00ff0000) >> 16;
-	c.b = (h & 0x0000ff00) >> 8;
-	c.a = (h & 0x000000ff);
+	c->r = (h & 0xff000000) >> 24;
+	c->g = (h & 0x00ff0000) >> 16;
+	c->b = (h & 0x0000ff00) >> 8;
+	c->a = (h & 0x000000ff);
 #endif
-	return (c);
 }
 
 #if AG_MODEL == AG_LARGE
 /* Return AG_Color from 16-bit components packed as 0xRRRRGGGGBBBBAAAA. */
 # ifdef AG_INLINE_HEADER
-static __inline__ AG_Color _Const_Attribute
-AG_ColorHex64(Uint64 h)
+static __inline__ void
+AG_ColorHex64(AG_Color *_Nonnull c, Uint64 h)
 # else
-AG_Color
-ag_color_hex_64(Uint64 h)
+void
+ag_color_hex_64(AG_Color *c, Uint64 h)
 # endif
 {
-	AG_Color c;
-	c.r = (h & 0xffff000000000000) >> 48;
-	c.g = (h & 0x0000ffff00000000) >> 32;
-	c.b = (h & 0x00000000ffff0000) >> 16;
-	c.a = (h & 0x000000000000ffff);
-	return (c);
+	c->r = (h & 0xffff000000000000) >> 48;
+	c->g = (h & 0x0000ffff00000000) >> 32;
+	c->b = (h & 0x00000000ffff0000) >> 16;
+	c->a = (h & 0x000000000000ffff);
 }
 #endif /* AG_LARGE */
 
 /* Component-wise clamped addition */
 #ifdef AG_INLINE_HEADER
-static __inline__ AG_Color _Const_Attribute
-AG_ColorAdd(AG_Color c, AG_ColorOffset offs)
+static __inline__ void
+AG_ColorAdd(AG_Color *_Nonnull dst, const AG_Color *_Nonnull c,
+    const AG_ColorOffset *_Nonnull offs)
 #else
-AG_Color
-ag_color_add(AG_Color c, AG_ColorOffset offs)
+void
+ag_color_add(AG_Color *dst, const AG_Color *c, const AG_ColorOffset *offs)
 #endif
 {
-	AG_Color out;
-	out.r = AG_MIN(AG_COLOR_LAST, c.r + offs.r);
-	out.g = AG_MIN(AG_COLOR_LAST, c.g + offs.g);
-	out.b = AG_MIN(AG_COLOR_LAST, c.b + offs.b);
-	out.a = AG_MIN(AG_COLOR_LAST, c.a + offs.a);
-	return (out);
+	dst->r = AG_MIN(AG_COLOR_LAST, c->r + offs->r);
+	dst->g = AG_MIN(AG_COLOR_LAST, c->g + offs->g);
+	dst->b = AG_MIN(AG_COLOR_LAST, c->b + offs->b);
+	dst->a = AG_MIN(AG_COLOR_LAST, c->a + offs->a);
 }
 
 /* Compare two colors. */
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Const_Attribute
-AG_ColorCompare(AG_Color A, AG_Color B)
+AG_ColorCompare(const AG_Color *_Nonnull A, const AG_Color *_Nonnull B)
 #else
 int
-ag_color_compare(AG_Color A, AG_Color B)
+ag_color_compare(const AG_Color *A, const AG_Color *B)
 #endif
 {
-	return !(A.r == B.r &&
-	         A.g == B.g &&
-	         A.b == B.b &&
-	         A.a == B.a);
+	return !(A->r == B->r &&
+	         A->g == B->g &&
+	         A->b == B->b &&
+	         A->a == B->a);
 }
 
 #ifdef AG_HAVE_FLOAT
@@ -254,13 +239,14 @@ ag_color_compare(AG_Color A, AG_Color B)
  */
 # ifdef AG_INLINE_HEADER
 static __inline__ void
-AG_Color2HSV(AG_Color c, float *_Nonnull h, float *_Nonnull s, float *_Nonnull v)
+AG_Color2HSV(const AG_Color *_Nonnull c, float *_Nonnull h, float *_Nonnull s,
+    float *_Nonnull v)
 # else
 void
-ag_color_2_hsv(AG_Color c, float *h, float *s, float *v)
+ag_color_2_hsv(const AG_Color *c, float *h, float *s, float *v)
 # endif
 {
-	AG_MapRGB_HSVf(c.r, c.g, c.b, h,s,v);
+	AG_MapRGB_HSVf(c->r, c->g, c->b, h,s,v);
 }
 
 # ifdef AG_INLINE_HEADER

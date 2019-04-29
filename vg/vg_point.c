@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,12 +80,12 @@ Draw(void *_Nonnull obj, VG_View *_Nonnull vv)
 		int x, y;
 
 		VG_GetViewCoords(vv, VG_Pos(pt), &x, &y);
-		AG_PutPixel(vv, x, y, c);
+		AG_PutPixel(vv, x, y, &c);
 		for (i = 0; i < size; i += 1.0f) {
-			AG_PutPixel(vv, x-i, y, c);
-			AG_PutPixel(vv, x+i, y, c);
-			AG_PutPixel(vv, x, y-i, c);
-			AG_PutPixel(vv, x, y+i, c);
+			AG_PutPixel(vv, x-i, y, &c);
+			AG_PutPixel(vv, x+i, y, &c);
+			AG_PutPixel(vv, x, y-i, &c);
+			AG_PutPixel(vv, x, y+i, &c);
 		}
 	}
 }

@@ -178,7 +178,7 @@ AG_WidgetClass agMPaneClass = {
 		sizeof(AG_MPane),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

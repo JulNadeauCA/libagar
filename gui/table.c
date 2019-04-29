@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -169,7 +169,7 @@ void
 AG_TableSetSelectionColor(AG_Table *t, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	AG_ObjectLock(t);
-	t->selColor = AG_ColorRGBA(r,g,b,a);
+	AG_ColorRGBA_8(&t->selColor, r,g,b,a);
 	AG_ObjectUnlock(t);
 	AG_Redraw(t);
 }
@@ -287,7 +287,7 @@ SizeColumns(AG_Table *_Nonnull t)
 		
 		r.x = x - (COLUMN_RESIZE_RANGE >> 1);
 		r.w = COLUMN_RESIZE_RANGE;
-		AG_SetStockCursor(t, &tc->ca, r, AG_HRESIZE_CURSOR);
+		AG_SetStockCursor(t, &tc->ca, &r, AG_HRESIZE_CURSOR);
 		x += tc->w;
 	}
 }
@@ -674,10 +674,14 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Table *t = obj;
-	AG_Rect rCol, rCell;
+	AG_Rect r, rCol, rCell;
 	int n, m;
 
-	AG_DrawBox(t, AG_RECT(0,0,WIDTH(t),HEIGHT(t)), -1, WCOLOR(t,0));
+	r.x = 0;					/* Background */
+	r.y = 0;
+	r.w = WIDTH(t);
+	r.h = HEIGHT(t);
+	AG_DrawBox(t, &r, -1, &WCOLOR(t,0));
 	
 	AG_WidgetDraw(t->vbar);
 	AG_WidgetDraw(t->hbar);
@@ -693,7 +697,7 @@ Draw(void *_Nonnull obj)
 	rCol.h = t->hCol + t->r.h - 2;
 	rCell.h = t->hRow;
 
-	AG_PushClipRect(t, AG_RECT(0,0,WIDTH(t),HEIGHT(t)));
+	AG_PushClipRect(t, &r);
 
 	for (n = 0, rCell.x = -t->xOffs;
 	     n < t->n && rCell.x < t->r.w;
@@ -714,14 +718,16 @@ Draw(void *_Nonnull obj)
 			    rCol.x - 1,
 			    t->hCol - 1,
 			    rCol.h,
-			    WCOLOR(t,LINE_COLOR));
+			    &WCOLOR(t,LINE_COLOR));
 		}
-		AG_PushClipRect(t, rCol);
+		AG_PushClipRect(t, &rCol);
 
-		AG_DrawBox(t,
-		    AG_RECT(rCol.x, 0, rCol.w+1, t->hCol),
-		    col->selected ? -1 : 1,
-		    col->selected ? WCOLOR_SEL(t,0) : WCOLOR(t,0));
+		r.x = rCol.x;
+		r.y = 0;
+		r.w = rCol.w+1;
+		r.h = t->hCol;
+		AG_DrawBox(t, &r, col->selected ? -1 : 1,
+		    col->selected ? &WCOLOR_SEL(t,0) : &WCOLOR(t,0));
 
 		/* Column header label */
 		if (col->name[0] != '\0') {
@@ -738,13 +744,13 @@ Draw(void *_Nonnull obj)
 				    rCell.x + col->w - 10,
 				    t->hCol >> 1,
 				    10,
-				    WCOLOR(t,SHAPE_COLOR));
+				    &WCOLOR(t,SHAPE_COLOR));
 			} else if (col->flags & AG_TABLE_SORT_DESCENDING) {
 				AG_DrawArrowDown(t,
 				    rCell.x + col->w - 10,
 				    t->hCol >> 1,
 				    10,
-				    WCOLOR(t,SHAPE_COLOR));
+				    &WCOLOR(t,SHAPE_COLOR));
 			}
 		}
 
@@ -756,18 +762,20 @@ Draw(void *_Nonnull obj)
 
 			DrawCell(t, c, rCell);
 			if (c->selected) {
-				AG_DrawRectBlended(t, rCell, t->selColor,
+				AG_DrawRectBlended(t, &rCell, &t->selColor,
 				    AG_ALPHA_SRC);
 			}
 			rCell.y += t->hRow;
-			AG_DrawLineH(t, 0, t->r.w - 1, rCell.y, WCOLOR(t,LINE_COLOR));
+			AG_DrawLineH(t, 0, t->r.w - 1, rCell.y,
+			    &WCOLOR(t,LINE_COLOR));
 		}
 
 		/* Indicate column selection. */
 		if ((t->flags & AG_TABLE_HIGHLIGHT_COLS) && col->selected) {
-			AG_DrawRectBlended(t, rCol,
-			    AG_ColorRGBA(0,0,250,32),
-			    AG_ALPHA_SRC);
+			AG_Color c;
+
+			AG_ColorRGBA_8(&c, 0,0,250, 32);
+			AG_DrawRectBlended(t, &rCol, &c, AG_ALPHA_SRC);
 		}
 
 		AG_PopClipRect(t);
@@ -782,7 +790,7 @@ Draw(void *_Nonnull obj)
 		    rCell.x,
 		    t->hCol - 1,
 		    rCol.h,
-		    WCOLOR(t,LINE_COLOR));
+		    &WCOLOR(t,LINE_COLOR));
 	}
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);
 }
@@ -2319,9 +2327,12 @@ Init(void *_Nonnull obj)
 	t->wColDefault = 80;
 	t->wHint = -1;				/* Use column size specs */
 	t->hHint = t->hCol + (t->hRow << 1);
-	t->r = AG_RECT(0,0,0,0);
+	t->r.x = 0;
+	t->r.y = 0;
+	t->r.w = 0;
+	t->r.h = 0;
 	t->selMode = AG_TABLE_SEL_ROWS;
-	t->selColor = AG_ColorRGBA(0,0,250,32);
+	AG_ColorRGBA_8(&t->selColor, 0,0,250, 32);
 	t->wTot = 0;
 	t->xOffs = 0;
 	t->mOffs = 0;
@@ -2438,7 +2449,7 @@ AG_WidgetClass agTableClass = {
 		sizeof(AG_Table),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

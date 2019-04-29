@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -160,7 +160,7 @@ M_PlotUpdateLabel(M_Plot *pl)
 		AG_WidgetUnmapSurface(ptr, pl->label);
 	}
 	AG_TextFont(ptr->font);
-	AG_TextColor(pl->color);
+	AG_TextColor(&pl->color);
 	pl->label = (pl->label_txt[0] != '\0') ? -1 :
 	    AG_WidgetMapSurface(ptr, AG_TextRender(pl->label_txt));
 	AG_Redraw(ptr);
@@ -354,7 +354,10 @@ Init(void *_Nonnull obj)
 	ptr->xScale = 1.0;
 	ptr->yScale = 1.0;
 	ptr->font = agDefaultFont;
-	ptr->r = AG_RECT(0,0,0,0);
+	ptr->r.x = 0;
+	ptr->r.y = 0;
+	ptr->r.w = 0;
+	ptr->r.h = 0;
 	TAILQ_INIT(&ptr->plots);
 	
 	ptr->vMin = M_New(3,1);
@@ -363,22 +366,23 @@ Init(void *_Nonnull obj)
 	M_SetZero(ptr->vMax);
 
 	ptr->curColor = 0;
-	ptr->colors[0] = AG_ColorRGB(255, 255, 255);
-	ptr->colors[1] = AG_ColorRGB(0, 250, 0); 
-	ptr->colors[2] = AG_ColorRGB(250, 250, 0);
-	ptr->colors[3] = AG_ColorRGB(0, 118, 163);
-	ptr->colors[4] = AG_ColorRGB(175, 143, 44);
-	ptr->colors[5] = AG_ColorRGB(169, 172, 182);
-	ptr->colors[6] = AG_ColorRGB(255, 255, 255);
-	ptr->colors[7] = AG_ColorRGB(59, 122, 87);
-	ptr->colors[8] = AG_ColorRGB(163, 151, 180);
-	ptr->colors[9] = AG_ColorRGB(249, 234, 243);
-	ptr->colors[10] = AG_ColorRGB(157, 229, 255);
-	ptr->colors[11] = AG_ColorRGB(223, 190, 111);
-	ptr->colors[12] = AG_ColorRGB(79, 168, 61);
-	ptr->colors[13] = AG_ColorRGB(234, 147, 115);
-	ptr->colors[14] = AG_ColorRGB(127, 255, 212);
-	ptr->colors[15] = AG_ColorRGB(218, 99, 4);
+
+	AG_ColorRGB_8(&ptr->colors[0],  255, 255, 255);
+	AG_ColorRGB_8(&ptr->colors[1],  0,   250, 0); 
+	AG_ColorRGB_8(&ptr->colors[2],  250, 250, 0);
+	AG_ColorRGB_8(&ptr->colors[3],  0,   118, 163);
+	AG_ColorRGB_8(&ptr->colors[4],  175, 143, 44);
+	AG_ColorRGB_8(&ptr->colors[5],  169, 172, 182);
+	AG_ColorRGB_8(&ptr->colors[6],  255, 255, 255);
+	AG_ColorRGB_8(&ptr->colors[7],  59,  122, 87);
+	AG_ColorRGB_8(&ptr->colors[8],  163, 151, 180);
+	AG_ColorRGB_8(&ptr->colors[9],  249, 234, 243);
+	AG_ColorRGB_8(&ptr->colors[10], 157, 229, 255);
+	AG_ColorRGB_8(&ptr->colors[11], 223, 190, 111);
+	AG_ColorRGB_8(&ptr->colors[12], 79,  168, 61);
+	AG_ColorRGB_8(&ptr->colors[13], 234, 147, 115);
+	AG_ColorRGB_8(&ptr->colors[14], 127, 255, 212);
+	AG_ColorRGB_8(&ptr->colors[15], 218, 99,  4);
 	
 	ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
 	ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
@@ -488,20 +492,25 @@ static void
 Draw(void *_Nonnull obj)
 {
 	M_Plotter *ptr = obj;
-	AG_Rect rw = AG_RECT(1, 1, WIDTH(ptr)-2, HEIGHT(ptr)-2);
 	M_Plot *pl;
 	M_PlotLabel *plbl;
+	AG_Rect r;
 	Uint i;
 	int h = ptr->r.h, h_2 = (h >> 1);
 	int w = ptr->r.w;
 	int y0 = h_2;
 
-	AG_DrawBox(ptr, rw, -1, WCOLOR(ptr,0));
+	r.x = 1;
+	r.y = 1;
+	r.w = WIDTH(ptr)-2;
+	r.h = HEIGHT(ptr)-2;
+
+	AG_DrawBox(ptr, &r, -1, &WCOLOR(ptr,0));
+
+	AG_PushClipRect(ptr, &r);
 	
-	AG_PushClipRect(ptr, rw);
-	
-	AG_DrawLineH(ptr, 1, w-2, y0, ptr->colors[0]);
-	AG_DrawLineV(ptr, ptr->xMax-1, 30, h-30, ptr->colors[0]);
+	AG_DrawLineH(ptr, 1, w-2, y0,            &ptr->colors[0]);
+	AG_DrawLineV(ptr, ptr->xMax-1, 30, h-30, &ptr->colors[0]);
 
 	/* First pass */
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
@@ -512,22 +521,21 @@ Draw(void *_Nonnull obj)
 
 		if (pl->label >= 0) {
 			AG_Surface *su = WSURFACE(ptr,pl->label);
+			int xLabel = pl->xLabel;
+			int yLabel = pl->yLabel;
+
+			r.x = xLabel - 2;
+			r.y = yLabel - 2;
+			r.w = su->w + 4;
+			r.h = su->h + 4;
 
 			if (pl->flags & M_PLOT_SELECTED) {
-				AG_DrawRectOutline(ptr,
-				    AG_RECT(pl->xLabel - 2,
-				            pl->yLabel - 2,
-				            su->w + 4,
-					    su->h + 4), color);
+				AG_DrawRectOutline(ptr, &r, &color);
 			} else if (pl->flags & M_PLOT_MOUSEOVER) {
-				AG_DrawRectOutline(ptr,
-				    AG_RECT(pl->xLabel - 2,
-				            pl->yLabel - 2,
-				            su->w + 4,
-					    su->h + 4), WCOLOR(ptr,TEXT_COLOR));
+				AG_DrawRectOutline(ptr, &r,
+				    &WCOLOR(ptr,TEXT_COLOR));
 			}
-			AG_WidgetBlitSurface(ptr, pl->label, pl->xLabel,
-			    pl->yLabel);
+			AG_WidgetBlitSurface(ptr, pl->label, xLabel, yLabel);
 		}
 		if (pl->flags & M_PLOT_HIDDEN) {
 			continue;
@@ -537,7 +545,7 @@ Draw(void *_Nonnull obj)
 			for (i = 0; i < pl->n; i++, x++) {
 				if (x < 0) { continue; }
 				y = ScaleReal(ptr, pl, pl->data.r[i]);
-				AG_PutPixel(ptr, x, y0-y+yOffs, color);
+				AG_PutPixel(ptr, x, y0-y+yOffs, &color);
 				if (x > w) { break; }
 			}
 			break;
@@ -546,7 +554,7 @@ Draw(void *_Nonnull obj)
 			for (i = 0; i < pl->n; i++, x++) {
 				if (x < 0) { continue; }
 				y = ScaleReal(ptr, pl, pl->data.r[i]);
-				AG_DrawLine(ptr, x-1, py, x, y0-y+yOffs, color);
+				AG_DrawLine(ptr, x-1, py, x, y0-y+yOffs, &color);
 				py = y0-y+yOffs;
 				if (x > w) { break; }
 			}
@@ -576,7 +584,7 @@ Draw(void *_Nonnull obj)
 				colLine = pl->color;
 				colLine.a >>= 1;
 				AG_DrawLineBlended(ptr, xLbl,1, xLbl,h-2,
-				    colLine, AG_ALPHA_SRC);
+				    &colLine, AG_ALPHA_SRC);
 				break;
 			case M_LABEL_Y:
 				xLbl = plbl->x - xOffs;
@@ -593,10 +601,12 @@ Draw(void *_Nonnull obj)
 			}
 			colBG = WCOLOR(ptr,0);
 			colBG.a = 200;
-			AG_DrawRect(ptr, AG_RECT(xLbl+2, yLbl, su->w, su->h),
-			    colBG);
-			AG_WidgetBlitSurface(ptr, plbl->text_surface,
-			    xLbl+2, yLbl);
+			r.x = xLbl + 2;
+			r.y = yLbl;
+			r.w = su->w;
+			r.h = su->h;
+			AG_DrawRect(ptr, &r, &colBG);
+			AG_WidgetBlitSurface(ptr, plbl->text_surface, r.x, r.y);
 		}
 	}
 
@@ -810,7 +820,7 @@ M_PlotLabelNew(M_Plot *pl, enum m_plot_label_type type, Uint x, Uint y,
 
 	AG_PushTextState();
 	AG_TextFont(ptr->font);
-	AG_TextColor(pl->color);
+	AG_TextColor(&pl->color);
 	plbl->text_surface = AG_WidgetMapSurface(ptr, AG_TextRender(plbl->text));
 	AG_PopTextState();
 
@@ -832,7 +842,7 @@ M_PlotLabelSetText(M_Plot *pl, M_PlotLabel *plbl, const char *fmt, ...)
 
 	AG_WidgetUnmapSurface(ptr, plbl->text_surface);
 	AG_TextFont(ptr->font);
-	AG_TextColor(pl->color);
+	AG_TextColor(&pl->color);
 	plbl->text_surface = AG_WidgetMapSurface(ptr, AG_TextRender(plbl->text));
 	AG_Redraw(ptr);
 }
@@ -995,7 +1005,7 @@ M_PlotFromInt(M_Plotter *ptr, enum m_plot_type type, const char *label,
 void
 M_PlotSetColor(M_Plot *pl, Uint8 r, Uint8 g, Uint8 b)
 {
-	pl->color = AG_ColorRGB(r,g,b);
+	AG_ColorRGB_8(&pl->color, r,g,b);
 	AG_Redraw(pl->plotter);
 }
 
@@ -1046,7 +1056,7 @@ M_PlotterSetDefaultFont(M_Plotter *ptr, const char *face, int size)
 void
 M_PlotterSetDefaultColor(M_Plotter *ptr, int i, Uint8 r, Uint8 g, Uint8 b)
 {
-	ptr->colors[i] = AG_ColorRGB(r,g,b);
+	AG_ColorRGB_8(&ptr->colors[i], r,g,b);
 	AG_Redraw(ptr);
 }
 
@@ -1064,7 +1074,7 @@ AG_WidgetClass mPlotterClass = {
 		sizeof(M_Plotter),
 		{ 0,0 },
 		Init,
-		NULL,			/* free */
+		NULL,			/* reset */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */

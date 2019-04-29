@@ -12,7 +12,7 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_mfspinbutton {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_MFSpinbutton */
 	Uint flags;
 #define AG_MFSPINBUTTON_NOHFILL	0x01
 #define AG_MFSPINBUTTON_VFILL	0x02

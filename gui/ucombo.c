@@ -279,11 +279,11 @@ AG_WidgetClass agUComboClass = {
 		sizeof(AG_UCombo),
 		{ 0,0 },
 		Init,
-		NULL,			/* free */
+		NULL,		/* reset */
 		Destroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	Draw,
 	SizeRequest,

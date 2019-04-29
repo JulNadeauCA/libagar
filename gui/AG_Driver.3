@@ -167,29 +167,29 @@ typedef struct ag_driver_class {
     int  (*getDisplaySize)(Uint *w, Uint *h);
 
     /* Event processing */
-    void (*_Nullable beginEventProcessing)(void *d);
+    void (*beginEventProcessing)(void *d);
     int  (*pendingEvents)(void *d);
     int  (*getNextEvent)(void *d, AG_DriverEvent *dev);
     int  (*processEvent)(void *d, AG_DriverEvent *dev);
-    void (*_Nullable genericEventLoop)(void *d);
-    void (*_Nullable endEventProcessing)(void *d);
-    void (*_Nullable terminate)(void);
+    void (*genericEventLoop)(void *d);
+    void (*endEventProcessing)(void *d);
+    void (*terminate)(void);
 
     /* Rendering and texture management */
     void (*beginRendering)(void *d);
     void (*renderWindow)(AG_Window *w);
     void (*endRendering)(void *d);
-    void (*fillRect)(void *d, AG_Rect r, AG_Color c);
-    void (*_Nullable updateRegion)(void *d, AG_Rect r);
-    void (*_Nullable uploadTexture)(void *d, Uint *id, AG_Surface *s,
+    void (*fillRect)(void *d, const AG_Rect *r, const AG_Color *c);
+    void (*updateRegion)(void *d, const AG_Rect *r);
+    void (*uploadTexture)(void *d, Uint *id, AG_Surface *s,
                                     AG_TexCoord *tc);
-    int  (*_Nullable updateTexture)(void *d, Uint id, AG_Surface *s,
+    int  (*updateTexture)(void *d, Uint id, AG_Surface *s,
                                     AG_TexCoord *tc);
-    void (*_Nullable deleteTexture)(void *d, Uint id);
-    int (*_Nullable setRefreshRate)(void *d, int fps);
+    void (*deleteTexture)(void *d, Uint id);
+    int (*setRefreshRate)(void *d, int fps);
 
     /* Clipping and blending control (rendering context) */
-    void (*pushClipRect)(void *d, AG_Rect r);
+    void (*pushClipRect)(void *d, const AG_Rect *r);
     void (*popClipRect)(void *d);
     void (*pushBlendingMode)(void *d, AG_AlphaFn s, AG_AlphaFn d);
     void (*popBlendingMode)(void *d);
@@ -208,20 +208,21 @@ typedef struct ag_driver_class {
     void (*blitSurface)(void *d, AG_Widget *wid, AG_Surface *s,
                         int x, int y);
     void (*blitSurfaceFrom)(void *d, AG_Widget *wid, int s,
-                            const AG_Rect *_Nullable r,
-                            int x, int y);
+                            const AG_Rect *r, int x, int y);
+#ifdef HAVE_OPENGL
     void (*blitSurfaceGL)(void *d, AG_Widget *wid, AG_Surface *s,
                           float w, float h);
-    void (*blitSurfaceFromGL)(void *d, AG_Widget *wid, int s, float w,
-                              float h);
-    void (*blitSurfaceFlippedGL)(void *d, AG_Widget *wid, int s, float w,
-                                 float h);
-    void (*_Nullable backupSurfaces)(void *d, AG_Widget *wid);
-    void (*_Nullable restoreSurfaces)(void *d, AG_Widget *wid);
-    int  (*_Nullable renderToSurface)(void *d, AG_Widget *wid, AG_Surface **s);
+    void (*blitSurfaceFromGL)(void *d, AG_Widget *wid, int s,
+                              float w, float h);
+    void (*blitSurfaceFlippedGL)(void *d, AG_Widget *wid, int s,
+                                 float w, float h);
+#endif
+    void (*backupSurfaces)(void *d, AG_Widget *wid);
+    void (*restoreSurfaces)(void *d, AG_Widget *wid);
+    int  (*renderToSurface)(void *d, AG_Widget *wid, AG_Surface **s);
 
     /* Rendering operations (rendering context) */
-    void (*putPixel)(void *d, int x, int y, AG_Color c);
+    void (*putPixel)(void *d, int x, int y, const AG_Color *c);
     void (*putPixel32)(void *d, int x, int y, Uint32 px);
     void (*putPixelRGB8)(void *d, int x, int y, Uint8 r, Uint8 g, Uint8 b);
 #if AG_MODEL == AG_LARGE
@@ -229,30 +230,32 @@ typedef struct ag_driver_class {
     void (*putPixelRGB16)(void *d, int x, int y, Uint16 r, Uint16 g,
                           Uint16 b);
 #endif
-    void (*blendPixel)(void *d, int x, int y, AG_Color c,
+    void (*blendPixel)(void *d, int x, int y, const AG_Color *c,
                        AG_AlphaFn fnSrc, AG_AlphaFn fnDst);
-    void (*drawLine)(void *d, int x1, int y1, int x2, int y2, AG_Color C);
-    void (*drawLineH)(void *d, int x1, int x2, int y, AG_Color C);
-    void (*drawLineV)(void *d, int x, int y1, int y2, AG_Color C);
+    void (*drawLine)(void *d, int x1, int y1, int x2, int y2, const AG_Color *c);
+    void (*drawLineH)(void *d, int x1, int x2, int y, const AG_Color *c);
+    void (*drawLineV)(void *d, int x, int y1, int y2, const AG_Color *c);
     void (*drawLineBlended)(void *d, int x1, int y1, int x2, int y2,
-                            AG_Color C, AG_AlphaFn fnSrc, AG_AlphaFn fnDst);
-    void (*drawArrow)(void *d, float angle, int x, int y, int h,
-                      AG_Color c1, AG_Color c2);
-    void (*drawBoxRounded)(void *d, AG_Rect r, int z, int rad,
-                           AG_Color c1, AG_Color c2);
-    void (*drawBoxRoundedTop)(void *d, AG_Rect r, int z, int rad,
-                              AG_Color c1, AG_Color c2, AG_Color c3);
-    void (*drawCircle)(void *d, int x, int y, int r, AG_Color C);
-    void (*drawCircle2)(void *d, int x, int y, int r, AG_Color C);
-    void (*drawRectFilled)(void *d, AG_Rect r, AG_Color C);
-    void (*drawRectBlended)(void *d, AG_Rect r, AG_Color C,
+                            const AG_Color *c,
                             AG_AlphaFn fnSrc, AG_AlphaFn fnDst);
-    void (*drawRectDithered)(void *d, AG_Rect r, AG_Color C);
+    void (*drawArrow)(void *d, float angle, int x, int y, int h,
+                      const AG_Color *c1, const AG_Color *c2);
+    void (*drawBoxRounded)(void *d, const AG_Rect *r, int z, int rad,
+                           const AG_Color *c1, const AG_Color *c2);
+    void (*drawBoxRoundedTop)(void *d, const AG_Rect *r, int z, int rad,
+                              const AG_Color *c1, const AG_Color *c2,
+                              const AG_Color *c3);
+    void (*drawCircle)(void *d, int x, int y, int r, const AG_Color *c);
+    void (*drawCircle2)(void *d, int x, int y, int r, const AG_Color *c);
+    void (*drawRectFilled)(void *d, const AG_Rect *r, const AG_Color *c);
+    void (*drawRectBlended)(void *d, const AG_Rect *r, const AG_Color *c,
+                            AG_AlphaFn fnSrc, AG_AlphaFn fnDst);
+    void (*drawRectDithered)(void *d, const AG_Rect *r, const AG_Color *c);
     void (*updateGlyph)(void *d, AG_Glyph *gl);
     void (*drawGlyph)(void *d, const AG_Glyph *gl, int x, int y);
 
     /* Display list management (GL driver specific) */
-    void (*_Nullable deleteList)(void *d, Uint listID);
+    void (*deleteList)(void *d, Uint listID);
 } AG_DriverClass;
 .Ed
 .Pp

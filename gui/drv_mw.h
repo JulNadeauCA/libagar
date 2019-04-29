@@ -12,8 +12,9 @@ typedef struct ag_driver_mw_class {
 	struct ag_driver_class _inherit;
 
 	/* Open/close native windows */
-	int  (*_Nonnull openWindow)(struct ag_window *_Nonnull, AG_Rect r,
-	                            int bpp, Uint flags);
+	int  (*_Nonnull openWindow)(struct ag_window *_Nonnull,
+	                            const AG_Rect *_Nonnull,
+	                            int, Uint);
 	void (*_Nonnull closeWindow)(struct ag_window *_Nonnull);
 
 	/* Show and hide window */

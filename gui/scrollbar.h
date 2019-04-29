@@ -19,7 +19,7 @@ enum ag_scrollbar_button {
 };
 
 typedef struct ag_scrollbar {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Scrollbar */
 	Uint flags;
 #define AG_SCROLLBAR_HFILL	0x01
 #define AG_SCROLLBAR_VFILL	0x02

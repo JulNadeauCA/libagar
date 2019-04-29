@@ -14,13 +14,14 @@ enum ag_progress_bar_type {
 struct ag_text_cache;
 
 typedef struct ag_progress_bar {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_ProgressBar */
 	Uint flags;
-#define AG_PROGRESS_BAR_HFILL		0x01
-#define AG_PROGRESS_BAR_VFILL		0x02
-#define AG_PROGRESS_BAR_SHOW_PCT	0x04	/* Show percent% text */
-#define AG_PROGRESS_BAR_EXCL		0x08	/* Exclusive binding access */
-#define AG_PROGRESS_BAR_EXPAND	(AG_PROGRESS_BAR_HFILL|AG_PROGRESS_BAR_VFILL)
+#define AG_PROGRESS_BAR_HFILL	 0x01
+#define AG_PROGRESS_BAR_VFILL	 0x02
+#define AG_PROGRESS_BAR_SHOW_PCT 0x04	/* Show percent% text */
+#define AG_PROGRESS_BAR_EXCL	 0x08	/* Exclusive binding access */
+#define AG_PROGRESS_BAR_EXPAND	 (AG_PROGRESS_BAR_HFILL|AG_PROGRESS_BAR_VFILL)
+
 	int value;			/* Default value binding */
 	int min, max;			/* Default range binding */
 	enum ag_progress_bar_type type;	/* Style */

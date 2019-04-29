@@ -64,7 +64,7 @@ typedef struct ag_graph_edge {
 } AG_GraphEdge;
 
 typedef struct ag_graph {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Graph */
 
 	Uint flags;
 #define AG_GRAPH_HFILL		0x01

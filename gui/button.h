@@ -9,7 +9,8 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_button {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Button */
+
 	int state;			/* Default state binding */
 	AG_Label *_Nullable lbl;	/* Text label */
 	int surface;			/* Icon surface handle */

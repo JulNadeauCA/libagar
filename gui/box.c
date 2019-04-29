@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -183,9 +183,13 @@ Draw(void *_Nonnull obj)
 	AG_Widget *chld;
 
 	if (box->flags & AG_BOX_FRAME) {
-		AG_DrawBox(box,
-		    AG_RECT(0, 0, WIDTH(box), HEIGHT(box)),
-		    box->depth, WCOLOR(box,AG_COLOR));
+		AG_Rect r;
+
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(box);
+		r.h = HEIGHT(box);
+		AG_DrawBox(box, &r, box->depth, &WCOLOR(box,AG_COLOR));
 	}
 	OBJECT_FOREACH_CHILD(chld, box, ag_widget)
 		AG_WidgetDraw(chld);
@@ -502,7 +506,7 @@ AG_WidgetClass agBoxClass = {
 		sizeof(AG_Box),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

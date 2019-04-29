@@ -127,7 +127,7 @@ Draw(void *p, VG_View *vv)
 		x = ((long)vg_cos_tbl[a % 360]*(long)r/1024) + xPos;
 		y = ((long)vg_sin_tbl[a % 360]*(long)r/1024) + yPos;
 		if (a != a1) {
-			AG_DrawLine(vv, xPrev, yPrev, x, y, c);
+			AG_DrawLine(vv, xPrev, yPrev, x, y, &c);
 		}
 		xPrev = x;
 		yPrev = y;

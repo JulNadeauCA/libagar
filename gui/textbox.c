@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -270,43 +270,45 @@ Draw(void *_Nonnull p)
 {
 	AG_Textbox *tb = p;
 	
-	if (AG_WidgetDisabled(tb)) {
-		AG_DrawBoxDisabled(tb, tb->r,
+	if (AG_WidgetDisabled(tb)) {			/* Background */
+		AG_DrawBoxDisabled(tb, &tb->r,
 		    (tb->flags & AG_TEXTBOX_COMBO) ? 1 : -1,
-		    WCOLOR_DEF(tb,AG_COLOR),
-		    WCOLOR_DIS(tb,AG_COLOR));
+		    &WCOLOR_DEF(tb,AG_COLOR),
+		    &WCOLOR_DIS(tb,AG_COLOR));
 	} else {
-		AG_DrawBox(tb, tb->r,
+		AG_DrawBox(tb, &tb->r,
 		    (tb->flags & AG_TEXTBOX_COMBO) ? 1 : -1,
-		    WCOLOR(tb,AG_COLOR));
+		    &WCOLOR(tb,AG_COLOR));
 	}
 
-	if (tb->lbl != NULL)
+	if (tb->lbl != NULL)				/* Label, if any */
 		AG_WidgetDraw(tb->lbl);
 
-	AG_PushClipRect(tb, tb->r);
+	AG_PushClipRect(tb, &tb->r);
 
-	if (tb->flags & AG_TEXTBOX_MULTILINE) {
-		int d;
+	if (tb->flags & AG_TEXTBOX_MULTILINE) {		/* Multiline box */
+		AG_Rect r;
 
 		if (tb->vBar != NULL && AG_ScrollbarVisible(tb->vBar)) {
-			d = WIDTH(tb->vBar);
-			AG_DrawBox(tb,
-			    AG_RECT(WIDTH(tb)-d, HEIGHT(tb)-d, d, d), -1,
-			    WCOLOR(tb,0));
+			int d = WIDTH(tb->vBar);
+			r.x = WIDTH(tb) - d;
+			r.y = HEIGHT(tb) - d;
+			r.w = d;
+			r.h = d;
 		} else if (tb->hBar != NULL && AG_ScrollbarVisible(tb->hBar)) {
-			d = HEIGHT(tb->hBar);
-			AG_DrawBox(tb,
-			    AG_RECT(WIDTH(tb)-d, HEIGHT(tb)-d, d, d), -1,
-			    WCOLOR(tb,0));
+			int d = HEIGHT(tb->hBar);
+			r.x = WIDTH(tb) - d;
+			r.y = HEIGHT(tb) - d;
+			r.w = d;
+			r.h = d;
 		}
+		AG_DrawBox(tb, &r, -1, &WCOLOR(tb,0));
 		AG_WidgetUpdate(tb);
 	}
 
-	/* Render the Editable widget. */
-	AG_WidgetDraw(tb->ed);
+	AG_WidgetDraw(tb->ed);				/* Edit area itself */
 
-	if (tb->hBar != NULL)
+	if (tb->hBar != NULL)				/* Scrollbars */
 		AG_WidgetDraw(tb->hBar);
 	if (tb->vBar != NULL)
 		AG_WidgetDraw(tb->vBar);
@@ -323,8 +325,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 
 	AG_WidgetSizeReq(tb->ed, &rEd);
 
-	r->w = tb->boxPadX*2 + rEd.w + 2;
-	r->h = tb->boxPadY*2 + rEd.h + 2;
+	r->w = (tb->boxPadX << 1) + rEd.w + 2;
+	r->h = (tb->boxPadY << 1) + rEd.h + 2;
 
 	if (tb->lbl != NULL) {
 		AG_WidgetSizeReq(tb->lbl, &rLbl);
@@ -337,13 +339,15 @@ static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Textbox *tb = obj;
-	int boxPadW = tb->boxPadX*2;
-	int boxPadH = tb->boxPadY*2;
+	AG_Editable *ed = tb->ed;
+	int boxPadW = (tb->boxPadX << 1);
+	int boxPadH = (tb->boxPadY << 1);
 	int wBar = 0, hBar = 0, wBarSz = 0, hBarSz = 0;
 	AG_SizeAlloc aLbl, aEd, aSb;
 	AG_SizeReq r;
 
-	if (a->w < boxPadW*2 || a->h < boxPadH*2)
+	if (a->w < (boxPadW << 1) ||
+	   (a->h < (boxPadH << 1)))
 		return (-1);
 
 	if (tb->lbl != NULL) {
@@ -395,13 +399,13 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	aEd.y = tb->boxPadY;
 	aEd.w = a->w - boxPadW - aEd.x - wBar;
 	aEd.h = a->h - boxPadH - hBar;
-	AG_WidgetSizeAlloc(tb->ed, &aEd);
+	AG_WidgetSizeAlloc(ed, &aEd);
 
-	if (tb->ed->x + WIDTH(tb->ed) >= tb->ed->xMax) {
-		tb->ed->x = MAX(0, tb->ed->xMax - WIDTH(tb->ed));
+	if (ed->x + WIDTH(ed) >= ed->xMax) {
+		ed->x = MAX(0, ed->xMax - WIDTH(ed));
 	}
-	if (tb->ed->y + tb->ed->yVis > tb->ed->yMax) {
-		tb->ed->y = MAX(0, tb->ed->yMax - tb->ed->yVis);
+	if (ed->y + ed->yVis > ed->yMax) {
+		ed->y = MAX(0, ed->yMax - ed->yVis);
 	}
 	return (0);
 }
@@ -551,7 +555,10 @@ Init(void *_Nonnull obj)
 	tb->flags = 0;
 	tb->hBar = NULL;
 	tb->vBar = NULL;
-	tb->r = AG_RECT(0,0,0,0);
+	tb->r.x = 0;
+	tb->r.y = 0;
+	tb->r.w = 0;
+	tb->r.h = 0;
 	tb->text = tb->ed->text;
 
 	AG_SetEvent(tb, "mouse-button-down", MouseButtonDown, NULL);
@@ -570,7 +577,7 @@ AG_WidgetClass agTextboxClass = {
 		sizeof(AG_Textbox),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

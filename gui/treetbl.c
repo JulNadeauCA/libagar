@@ -530,7 +530,10 @@ Init(void *_Nonnull obj)
 	tt->cellDataFn = NULL;
 	tt->sortFn = NULL;
 	tt->flags = 0;
-	tt->r = AG_RECT(0,0,0,0);
+	tt->r.x = 0;
+	tt->r.y = 0;
+	tt->r.w = 0;
+	tt->r.h = 0;
 
 	tt->hCol = agTextFontHeight;
 	tt->hRow = agTextFontHeight+2;
@@ -1234,11 +1237,10 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	if (a->h < tt->hCol || a->w < 8)
 		return (-1);
 
-	tt->r = AG_RECT(
-	    0,
-	    tt->hCol,
-	    WIDTH(tt),
-	    HEIGHT(tt) - tt->hCol);
+	tt->r.x = 0;
+	tt->r.y = tt->hCol;
+	tt->r.w = WIDTH(tt);
+	tt->r.h = HEIGHT(tt) - tt->hCol;
 
 	/* Size vertical scroll bar. */
 	AG_WidgetSizeReq(tt->vBar, &rBar);
@@ -1337,24 +1339,28 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 }
 
 static void
-DrawSubnodeIndicator(void *_Nonnull wid, AG_Rect r, int isExpanded)
+DrawSubnodeIndicator(void *_Nonnull wid, const AG_Rect *_Nonnull r,
+    int isExpanded)
 {
-	AG_Color C;
+	AG_Rect rd;
+	AG_Color c;
 
-	AG_DrawRectBlended(wid,
-	    AG_RECT(r.x-1, r.y, r.w+2, r.h),
-	    AG_ColorRGBA(0,0,0,64),
-	    AG_ALPHA_SRC);
+	rd.x = r->x - 1;
+	rd.y = r->y;
+	rd.w = r->w + 2;
+	rd.h = r->h;
+	AG_ColorRGBA_8(&c, 0,0,0, 64);
+	AG_DrawRectBlended(wid, &rd, &c, AG_ALPHA_SRC);
 
-	C = AG_ColorRGBA(255,255,255,100);
+	rd.x += 3;
+	rd.y += 2;
+	rd.w -= 6;
+	rd.h -= 4;
+	AG_ColorRGBA_8(&c, 255,255,255, 100);
 	if (isExpanded) {
-		AG_DrawMinus(wid,
-		    AG_RECT(r.x+2, r.y+2, r.w-4, r.h-4),
-		    C, AG_ALPHA_SRC);
+		AG_DrawMinus(wid, &rd, &c, AG_ALPHA_SRC);
 	} else {
-		AG_DrawPlus(wid,
-		    AG_RECT(r.x+2, r.y+2, r.w-4, r.h-4),
-		    C, AG_ALPHA_SRC);
+		AG_DrawPlus(wid, &rd, &c, AG_ALPHA_SRC);
 	}
 }
 static void
@@ -1404,19 +1410,20 @@ DrawColumn(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 {
 	const int *update = (int *)arg1;
 	AG_TreetblCol *col = &tt->column[idx];
+	AG_Rect rd;
 	Uint j;
 	int y;
 
 	/* Render the column header. */
 	if (tt->hCol > 0) {
+		rd.x = x1;
+		rd.y = 0;
+		rd.w = col->w;
+		rd.h = tt->hCol;
 		if ((col->flags & (AG_TREETBL_COL_SELECTED|AG_TREETBL_COL_SORTING))) {
-			AG_DrawBox(tt,
-			    AG_RECT(x1, 0, col->w, tt->hCol),
-			    -1, WCOLOR_SEL(tt,0));
+			AG_DrawBox(tt, &rd, -1, &WCOLOR_SEL(tt,0));
 		} else {
-			AG_DrawBox(tt,
-			    AG_RECT(x1, 0, col->w, tt->hCol),
-			    1, WCOLOR(tt,0));
+			AG_DrawBox(tt, &rd, 1, &WCOLOR(tt,0));
 		}
 
 		if (col->label[0] != '\0') {
@@ -1426,7 +1433,9 @@ DrawColumn(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 				col->labelSu = AG_WidgetMapSurface(tt,
 				    AG_TextRender(col->label));
 			}
-			xLbl = col->w/2 - WSURFACE(tt,col->labelSu)->w/2;
+			xLbl = (col->w >> 1) -
+			       (WSURFACE(tt,col->labelSu)->w >> 1);
+
 			AG_WidgetBlitSurface(tt, col->labelSu, x1+xLbl, 0);
 		}
 	}
@@ -1436,7 +1445,7 @@ DrawColumn(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 		DrawDynamicColumn(tt, idx);
 
 	/* Draw the cells under this column */
-	AG_PushClipRect(tt, tt->r);
+	AG_PushClipRect(tt, &tt->r);
 	y = tt->hCol;
 	for (j = 0; j < tt->visible.count; j++) {
 		int x = x1+4;
@@ -1446,12 +1455,15 @@ DrawColumn(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 			break;
 		}
 		if (col->flags & AG_TREETBL_COL_EXPANDER) {
-			int tw = tt->hRow/2 + 1;
+			int tw = (tt->hRow >> 1) + 1;
 
 			x += VISDEPTH(tt,j)*(tw+4);
 			if (!TAILQ_EMPTY(&VISROW(tt,j)->children)) {
-				DrawSubnodeIndicator(tt,
-				    AG_RECT(x, y+tw/2, tw, tw),
+				rd.x = x;
+				rd.y = y + (tw >> 1);
+				rd.w = tw;
+				rd.h = tw;
+				DrawSubnodeIndicator(tt, &rd,
 				    (VISROW(tt,j)->flags & AG_TREETBL_ROW_EXPANDED));
 			}
 			x += tw+4;
@@ -1469,13 +1481,15 @@ DrawColumn(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 	}
 	AG_PopClipRect(tt);
 
-	/* Fill the Remaining space in column heading */
+	/* Fill the remaining space in column heading */
 	if (tt->hCol > 0 &&
 	    idx == tt->n-1 &&
 	    x2 < tt->r.w) {
-		AG_DrawBox(tt,
-		    AG_RECT(x2, 0, tt->r.w-x2, tt->hCol),
-		    1, WCOLOR(tt,0));
+		rd.x = x2;
+		rd.y = 0;
+		rd.w = tt->r.w - x2;
+		rd.h = tt->hCol;
+		AG_DrawBox(tt, &rd, 1, &WCOLOR(tt,0));
 	}
 	return (1);
 }
@@ -1573,7 +1587,7 @@ Draw(void *_Nonnull obj)
 {
 	AG_Treetbl *tt = obj;
 	Uint i;
-	int y, update = 0;
+	int w, hRow, y, update = 0;
 
 	/* Before we draw, update if needed */
 	if (tt->visible.dirty) {
@@ -1583,7 +1597,10 @@ Draw(void *_Nonnull obj)
 	    AG_GetTicks() > tt->visible.redraw_last + tt->visible.redraw_rate)
 		update = 1;
 	
-	AG_DrawBox(tt, tt->r, -1, WCOLOR(tt,0));
+	AG_DrawBox(tt, &tt->r, -1, &WCOLOR(tt,0));
+
+	w = tt->r.w;
+	hRow = tt->hRow;
 	
 	AG_WidgetDraw(tt->vBar);
 	if (tt->hBar != NULL)
@@ -1596,11 +1613,15 @@ Draw(void *_Nonnull obj)
 			break;
 		}
 		if (VISROW(tt,i)->flags & AG_TREETBL_ROW_SELECTED) {
-			AG_DrawBox(tt,
-			    AG_RECT(1, y, tt->r.w-2, tt->hRow),
-			    1, WCOLOR_SEL(tt,0));
+			AG_Rect rd;
+
+			rd.x = 1;
+			rd.y = y;
+			rd.w = w-2;
+			rd.h = hRow;
+			AG_DrawBox(tt, &rd, 1, &WCOLOR_SEL(tt,0));
 		}
-		y += tt->hRow;
+		y += hRow;
 	}
 
 	/* draw columns */
@@ -1633,11 +1654,11 @@ AG_WidgetClass agTreetblClass = {
 		sizeof(AG_Treetbl),
 		{ 0,0 },
 		Init,
-		NULL,			/* free */
+		NULL,		/* reset */
 		Destroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	Draw,
 	SizeRequest,

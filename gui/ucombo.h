@@ -10,7 +10,7 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_ucombo {
-	struct ag_widget wid;		/* AG_Widget(3) -> AG_UCombo */
+	struct ag_widget wid;		/* AG_Widget -> AG_UCombo */
 	Uint flags;
 #define AG_UCOMBO_HFILL	  	0x01
 #define AG_UCOMBO_VFILL	  	0x02

@@ -19,7 +19,7 @@ enum ag_slider_button {
 };
 
 typedef struct ag_slider {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Slider */
 	Uint flags;
 #define AG_SLIDER_HFILL		0x01
 #define AG_SLIDER_VFILL		0x02

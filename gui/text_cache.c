@@ -136,8 +136,8 @@ static __inline__ int
 CompareTextStates(const AG_TextState *_Nonnull a, const AG_TextState *_Nonnull b)
 {
 	if (a->font == b->font &&
-	    AG_ColorCompare(a->color,b->color) == 0 &&
-	    AG_ColorCompare(a->colorBG,b->colorBG) == 0 &&
+	    AG_ColorCompare(&a->color, &b->color) == 0 &&
+	    AG_ColorCompare(&a->colorBG, &b->colorBG) == 0 &&
 	    a->justify == b->justify &&
 	    a->valign == b->valign &&
 	    a->tabWd == b->tabWd) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -87,7 +87,7 @@ AG_GL_InitContext(void *obj, AG_GL_Context *gl)
 
 	/* Initialize the first clipping rectangle. */
 	cr = &gl->clipRects[0];
-	cr->r = AG_RECT(0,0,0,0);
+	AG_RectInit(&cr->r, 0,0,0,0);
 	cr->eqns[0][0] = 1.0;	cr->eqns[0][1] = 0.0;
 	cr->eqns[0][2] = 0.0;	cr->eqns[0][3] = 0.0;
 	cr->eqns[1][0] = 0.0;	cr->eqns[1][1] = 1.0;
@@ -105,21 +105,23 @@ AG_GL_InitContext(void *obj, AG_GL_Context *gl)
  * Size or resize an OpenGL context to specified dimensions.
  */
 void
-AG_GL_SetViewport(AG_GL_Context *gl, AG_Rect vp)
+AG_GL_SetViewport(AG_GL_Context *gl, const AG_Rect *vp)
 {
 	AG_ClipRect *cr = &gl->clipRects[0];
+	int w = vp->w;
+	int h = vp->h;
 
 	/* Set up the view port and projection */
-	glViewport(vp.x, vp.y, vp.w, vp.h);
+	glViewport(vp->x, vp->y, w,h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0, vp.w, vp.h, 0, -1.0, 1.0);
+	glOrtho(0, w, h, 0, -1.0, 1.0);
 
 	/* Update clipping rectangle 0. */
-	cr->r.w = vp.w;
-	cr->r.h = vp.h;
-	cr->eqns[2][3] = (double)vp.w;
-	cr->eqns[3][3] = (double)vp.h;
+	cr->r.w = w;
+	cr->r.h = h;
+	cr->eqns[2][3] = (double)w;
+	cr->eqns[3][3] = (double)h;
 }
 
 /* Destroy an OpenGL rendering context. */
@@ -173,39 +175,41 @@ AG_GL_DestroyContext(void *obj)
 
 /* Push/pop clipping rectangle, setting GL_CLIP_PLANE[0-3]. */
 void
-AG_GL_StdPushClipRect(void *obj, AG_Rect r)
+AG_GL_StdPushClipRect(void *obj, const AG_Rect *r)
 {
 	AG_Driver *drv = obj;
 	AG_GL_Context *gl = drv->gl;
 	AG_ClipRect *cr, *crPrev;
+	int x = r->x;
+	int y = r->y;
 
-	gl->clipRects = Realloc(gl->clipRects, (gl->nClipRects+1)*
-	                                         sizeof(AG_ClipRect));
+	gl->clipRects = Realloc(gl->clipRects, (gl->nClipRects + 1) *
+                                               sizeof(AG_ClipRect));
 	crPrev = &gl->clipRects[gl->nClipRects-1];
 	cr = &gl->clipRects[gl->nClipRects++];
 
 	cr->eqns[0][0] = 1.0;
 	cr->eqns[0][1] = 0.0;
 	cr->eqns[0][2] = 0.0;
-	cr->eqns[0][3] = MIN(crPrev->eqns[0][3], -(double)(r.x));
+	cr->eqns[0][3] = MIN(crPrev->eqns[0][3], -(double)(x));
 	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
 	
 	cr->eqns[1][0] = 0.0;
 	cr->eqns[1][1] = 1.0;
 	cr->eqns[1][2] = 0.0;
-	cr->eqns[1][3] = MIN(crPrev->eqns[1][3], -(double)(r.y));
+	cr->eqns[1][3] = MIN(crPrev->eqns[1][3], -(double)(y));
 	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
 		
 	cr->eqns[2][0] = -1.0;
 	cr->eqns[2][1] = 0.0;
 	cr->eqns[2][2] = 0.0;
-	cr->eqns[2][3] = MIN(crPrev->eqns[2][3], (double)(r.x+r.w));
+	cr->eqns[2][3] = MIN(crPrev->eqns[2][3], (double)(x + r->w));
 	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
 		
 	cr->eqns[3][0] = 0.0;
 	cr->eqns[3][1] = -1.0;
 	cr->eqns[3][2] = 0.0;
-	cr->eqns[3][3] = MIN(crPrev->eqns[3][3], (double)(r.y+r.h));
+	cr->eqns[3][3] = MIN(crPrev->eqns[3][3], (double)(y + r->h));
 	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
 }
 void
@@ -714,10 +718,10 @@ fail:
 
 /* Put pixel of color c at x,y. */
 void
-AG_GL_PutPixel(void *obj, int x, int y, AG_Color c)
+AG_GL_PutPixel(void *obj, int x, int y, const AG_Color *c)
 {
 	glBegin(GL_POINTS);
-	GL_Color3uH(c.r, c.g, c.b);
+	GL_Color3uH(c->r, c->g, c->b);
 	glVertex2i(x, y);
 	glEnd();
 }
@@ -779,7 +783,7 @@ AG_GL_PutPixelRGB16(void *obj, int x, int y, Uint16 r, Uint16 g, Uint16 b)
  * destination blending factors.
  */
 void
-AG_GL_BlendPixel(void *obj, int x, int y, AG_Color c, AG_AlphaFn fnSrc,
+AG_GL_BlendPixel(void *obj, int x, int y, const AG_Color *c, AG_AlphaFn fnSrc,
     AG_AlphaFn fnDst)
 {
 	AG_Driver *drv = obj;
@@ -789,7 +793,7 @@ AG_GL_BlendPixel(void *obj, int x, int y, AG_Color c, AG_AlphaFn fnSrc,
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv, fnSrc, fnDst);
 
 	glBegin(GL_POINTS);
-	GL_Color4uH(c.r, c.g, c.b, c.a);
+	GL_Color4uH(c->r, c->g, c->b, c->a);
 	glVertex2i(x,y);
 	glEnd();
 
@@ -798,10 +802,10 @@ AG_GL_BlendPixel(void *obj, int x, int y, AG_Color c, AG_AlphaFn fnSrc,
 
 /* Draw a solid line from (x1,y1) to (x2,y2) */
 void
-AG_GL_DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color c)
+AG_GL_DrawLine(void *obj, int x1, int y1, int x2, int y2, const AG_Color *c)
 {
 	glBegin(GL_LINES);
-	GL_Color3uH(c.r, c.g, c.b);
+	GL_Color3uH(c->r, c->g, c->b);
 	glVertex2s(x1, y1);
 	glVertex2s(x2, y2);
 	glEnd();
@@ -809,10 +813,10 @@ AG_GL_DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color c)
 
 /* Draw a solid horizontal line from (x1,y) to (x2,y). */
 void
-AG_GL_DrawLineH(void *obj, int x1, int x2, int y, AG_Color c)
+AG_GL_DrawLineH(void *obj, int x1, int x2, int y, const AG_Color *c)
 {
 	glBegin(GL_LINES);
-	GL_Color3uH(c.r, c.g, c.b);
+	GL_Color3uH(c->r, c->g, c->b);
 	glVertex2s(x1, y);
 	glVertex2s(x2, y);
 	glEnd();
@@ -820,10 +824,10 @@ AG_GL_DrawLineH(void *obj, int x1, int x2, int y, AG_Color c)
 
 /* Draw a solid vertical line from (x,y1) to (x,y2). */
 void
-AG_GL_DrawLineV(void *obj, int x, int y1, int y2, AG_Color c)
+AG_GL_DrawLineV(void *obj, int x, int y1, int y2, const AG_Color *c)
 {
 	glBegin(GL_LINES);
-	GL_Color3uH(c.r, c.g, c.b);
+	GL_Color3uH(c->r, c->g, c->b);
 	glVertex2s(x, y1);
 	glVertex2s(x, y2);
 	glEnd();
@@ -831,40 +835,43 @@ AG_GL_DrawLineV(void *obj, int x, int y1, int y2, AG_Color c)
 
 /* Draw a alpha-blended line from (x1,y1) to (x2,y2). */
 void
-AG_GL_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color c,
-    AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
+AG_GL_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2,
+    const AG_Color *c, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 {
-	if (c.a < AG_OPAQUE)
+	int a = c->a;
+
+	if (a < AG_OPAQUE)
 		AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst);
 
 	glBegin(GL_LINES);
-	GL_Color4uH(c.r, c.g, c.b, c.a);
+	GL_Color4uH(c->r, c->g, c->b, a);
 	glVertex2s(x1, y1);
 	glVertex2s(x2, y2);
 	glEnd();
 	
-	if (c.a < AG_OPAQUE)
+	if (a < AG_OPAQUE)
 		AGDRIVER_CLASS(obj)->popBlendingMode(obj);
 }
 
 void
-AG_GL_DrawTriangle(void *obj, AG_Pt v1, AG_Pt v2, AG_Pt v3, AG_Color c)
+AG_GL_DrawTriangle(void *obj, const AG_Pt *v1, const AG_Pt *v2, const AG_Pt *v3,
+    const AG_Color *c)
 {
 	glBegin(GL_TRIANGLES);
-	GL_Color3uH(c.r, c.g, c.b);
-	glVertex2i(v1.x, v1.y);
-	glVertex2i(v2.x, v2.y);
-	glVertex2i(v3.x, v3.y);
+	GL_Color3uH(c->r, c->g, c->b);
+	glVertex2i(v1->x, v1->y);
+	glVertex2i(v2->x, v2->y);
+	glVertex2i(v3->x, v3->y);
 	glEnd();
 }
 
 static void
-AG_GL_DrawArrow_Up(int x, int y, int h, AG_Color c)
+AG_GL_DrawArrow_Up(int x, int y, int h, const AG_Color *c)
 {
 	int h_2 = h >> 1;
 
 	glBegin(GL_TRIANGLES);
-	GL_Color3uH(c.r, c.g, c.b);
+	GL_Color3uH(c->r, c->g, c->b);
 	glVertex2i(x - 1,       y - h_2);
 	glVertex2i(x - h_2 - 1, y - h_2 + h + 1);
 	glVertex2i(x + h_2 - 1, y - h_2 + h + 1);
@@ -872,22 +879,22 @@ AG_GL_DrawArrow_Up(int x, int y, int h, AG_Color c)
 }
 
 static void
-AG_GL_DrawArrow_Right(int x, int y, int h, AG_Color c)
+AG_GL_DrawArrow_Right(int x, int y, int h, const AG_Color *c)
 {
 	int h_2 = (h >> 1);
 	int x1 = x - h_2 - 1;
 	int x2 = x1 + h + 1;
 
 	glBegin(GL_TRIANGLES);
-	GL_Color3uH(c.r, c.g, c.b);
+	GL_Color3uH(c->r, c->g, c->b);
 	glVertex2i(x2, y);
-	glVertex2i(x1, y-h_2);
-	glVertex2i(x1, y+h_2);
+	glVertex2i(x1, y - h_2);
+	glVertex2i(x1, y + h_2);
 	glEnd();
 }
 
 static void
-AG_GL_DrawArrow_Down(int x, int y, int h, AG_Color c)
+AG_GL_DrawArrow_Down(int x, int y, int h, const AG_Color *c)
 {
 	int h_2 = (h >> 1);
 	int x1 = x - 1;
@@ -895,22 +902,22 @@ AG_GL_DrawArrow_Down(int x, int y, int h, AG_Color c)
 	int y2 = y1 + h + 1;
 
 	glBegin(GL_TRIANGLES);
-	GL_Color3uH(c.r, c.g, c.b);
-	glVertex2i(x1,     y2);
-	glVertex2i(x1+h_2, y1);
-	glVertex2i(x1-h_2, y1);
+	GL_Color3uH(c->r, c->g, c->b);
+	glVertex2i(x1,       y2);
+	glVertex2i(x1 + h_2, y1);
+	glVertex2i(x1 - h_2, y1);
 	glEnd();
 }
 
 static void
-AG_GL_DrawArrow_Left(int x, int y, int h, AG_Color c)
+AG_GL_DrawArrow_Left(int x, int y, int h, const AG_Color *c)
 {
 	int h_2 = (h >> 1);
 	int x1 = x - h_2 - 1;
 	int x2 = x1 + h;
 
 	glBegin(GL_TRIANGLES);
-	GL_Color3uH(c.r, c.g, c.b);
+	GL_Color3uH(c->r, c->g, c->b);
 	glVertex2i(x1, y);
 	glVertex2i(x2, y+h_2);
 	glVertex2i(x2, y-h_2);
@@ -919,9 +926,9 @@ AG_GL_DrawArrow_Left(int x, int y, int h, AG_Color c)
 
 /* Draw an arrow of height h at (x,y), rotated by a given angle. */
 void
-AG_GL_DrawArrow(void *obj, Uint8 angle, int x0, int y0, int h, AG_Color c)
+AG_GL_DrawArrow(void *obj, Uint8 angle, int x0, int y0, int h, const AG_Color *c)
 {
-	static void (*pf[])(int,int, int, AG_Color) = {
+	static void (*pf[])(int,int, int, const AG_Color *) = {
 		AG_GL_DrawArrow_Up,
 		AG_GL_DrawArrow_Right,
 		AG_GL_DrawArrow_Down,
@@ -935,23 +942,25 @@ AG_GL_DrawArrow(void *obj, Uint8 angle, int x0, int y0, int h, AG_Color c)
 
 /* Solid rectangle fill with color c. */
 void
-AG_GL_FillRect(void *obj, AG_Rect r, AG_Color c)
+AG_GL_FillRect(void *obj, const AG_Rect *r, const AG_Color *c)
 {
-	int x2 = r.x + r.w - 1;
-	int y2 = r.y + r.h - 1;
+	int x = r->x;
+	int y = r->y;
+	int x2 = x + r->w - 1;
+	int y2 = y + r->h - 1;
 	
 	glBegin(GL_POLYGON);
-	GL_Color3uH(c.r, c.g, c.b);
-	glVertex2i(r.x, r.y);
-	glVertex2i(x2, r.y);
+	GL_Color3uH(c->r, c->g, c->b);
+	glVertex2i(x,  y);
+	glVertex2i(x2, y);
 	glVertex2i(x2, y2);
-	glVertex2i(r.x, y2);
+	glVertex2i(x,  y2);
 	glEnd();
 }
 
 /* Solid rectangle fill with color c + dithering. */
 void
-AG_GL_DrawRectDithered(void *obj, AG_Rect r, AG_Color c)
+AG_GL_DrawRectDithered(void *obj, const AG_Rect *r, const AG_Color *c)
 {
 	AG_Driver *drv = obj;
 	AG_GL_Context *gl = drv->gl;
@@ -968,20 +977,24 @@ AG_GL_DrawRectDithered(void *obj, AG_Rect r, AG_Color c)
 
 /* Draw a box with all rounded corners. */
 void
-AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius,
-    AG_Color c1, AG_Color c2, AG_Color c3)
+AG_GL_DrawBoxRounded(void *obj, const AG_Rect *r, int z, int radius,
+    const AG_Color *c1, const AG_Color *c2, const AG_Color *c3)
 {
 	float rad = (float)radius, rad2 = 2.0f*rad;
 	float t, i, nFull = 10.0f, nQuart = nFull/4.0f;
+	float w, h;
 	
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 
-	glTranslatef((float)r.x + rad,
-	             (float)r.y + rad, 0.0f);
+	glTranslatef((float)r->x + rad,
+	             (float)r->y + rad, 0.0f);
+
+ 	w = (float)r->w;
+	h = (float)r->h;
 
 	glBegin(GL_POLYGON);
-	GL_Color3uH(c1.r, c1.g, c1.b);
+	GL_Color3uH(c1->r, c1->g, c1->b);
 	{
 		for (i = 0.0f; i < nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
@@ -989,50 +1002,50 @@ AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius,
 		}
 		for (i = nQuart-1; i > 0.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(r.w - rad2 + rad*Cos(t/nFull),
+			glVertex2f(w - rad2 + rad*Cos(t/nFull),
 			           -rad*Sin(t/nFull));
 		}
 		for (i = 0.0f; i < nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(r.w - rad2 + rad*Cos(t),
-			           r.h - rad2 + rad*Sin(t));
+			glVertex2f(w - rad2 + rad*Cos(t),
+			           h - rad2 + rad*Sin(t));
 		}
 		for (i = nQuart; i > 0.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(- rad*Cos(t),
-			           r.h - rad2 + rad*Sin(t));
+			glVertex2f(-rad*Cos(t),
+			           h - rad2 + rad*Sin(t));
 		}
 	}
 	glEnd();
 	
 	glBegin(GL_LINE_STRIP);
 	{
-		GL_Color3uH(c2.r, c2.g, c2.b);
+		GL_Color3uH(c2->r, c2->g, c2->b);
 		for (i = 0.0f; i < nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(-rad*Cos(t),
 			           -rad*Sin(t));
 		}
 		t = 2.0f*AG_PI*nQuart;
-		glVertex2f((r.w - rad2 + rad*Cos(t/nFull)),
+		glVertex2f((w - rad2 + rad*Cos(t/nFull)),
 		           -rad*Sin(t/nFull));
 
-		GL_Color3uH(c3.r, c3.g, c3.b);
+		GL_Color3uH(c3->r, c3->g, c3->b);
 		for (i = nQuart-1; i > 0.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(r.w - rad2 + rad*Cos(t), -rad*Sin(t));
+			glVertex2f(w - rad2 + rad*Cos(t), -rad*Sin(t));
 		}
 		for (i = 0.0f; i < nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(r.w - rad2 + rad*Cos(t),
-			           r.h - rad2 + rad*Sin(t));
+			glVertex2f(w - rad2 + rad*Cos(t),
+			           h - rad2 + rad*Sin(t));
 		}
 		for (i = nQuart; i > 0.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(-rad*Cos(t),
-			           r.h - rad2 + rad*Sin(t));
+			           h - rad2 + rad*Sin(t));
 		}
-		GL_Color3uH(c2.r, c2.g, c2.b);
+		GL_Color3uH(c2->r, c2->g, c2->b);
 		glVertex2f(-rad, 0.0f);
 	}
 	glEnd();
@@ -1041,57 +1054,56 @@ AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius,
 
 /* Draw a box with top rounded corners. */
 void
-AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int radius,
-    AG_Color c1, AG_Color c2, AG_Color c3)
+AG_GL_DrawBoxRoundedTop(void *obj, const AG_Rect *r, int z, int radius,
+    const AG_Color *c1, const AG_Color *c2, const AG_Color *c3)
 {
-	float rad = (float)radius;
+	float rad = (float)radius, dia = rad*2.0f;
 	float t, i, nFull = 10.0f, nQuart = nFull/4.0f;
+	float w,h;
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 
-	glTranslatef((float)r.x + rad,
-	             (float)r.y + rad, 0.0f);
+	glTranslatef((float)r->x + rad,
+	             (float)r->y + rad, 0.0f);
+	w = (float)r->w;
+	h = (float)r->h;
 
 	glBegin(GL_POLYGON);
-	GL_Color3uH(c1.r, c1.g, c1.b);
 	{
-		glVertex2f(-rad, (float)r.h - rad);
+		GL_Color3uH(c1->r, c1->g, c1->b);
+		glVertex2f(-rad, h - rad);
 		for (i = 0.0f; i < nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(-rad*Cos(t), -rad*Sin(t));
 		}
 		glVertex2f(0.0f, -rad);
-
 		for (i = nQuart; i > 0.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(r.w - rad*2.0f + rad*Cos(t),
-			           -rad*Sin(t));
+			glVertex2f(w - dia + rad*Cos(t), -rad*Sin(t));
 		}
-		glVertex2f((float)r.w - rad,
-		           (float)r.h - rad);
+		glVertex2f(w-rad, h-rad);
 	}
 	glEnd();
 	
 	glBegin(GL_LINE_STRIP);
 	{
-		GL_Color3uH(c2.r, c2.g, c2.b);
-		glVertex2i(-rad, r.h-rad);
+		GL_Color3uH(c2->r, c2->g, c2->b);
+		glVertex2i(-rad, h-rad);
 		for (i = 0.0f; i < nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(-(float)rad*Cos(t), -(float)rad*Sin(t));
 		}
 		glVertex2f(0.0f, -rad);
 		t = (2.0f*AG_PI*nQuart)/nFull;
-		glVertex2f(r.w - rad*2 + rad*Cos(t), -rad*Sin(t));
+		glVertex2f(w - dia + rad*Cos(t), -rad*Sin(t));
 
-		GL_Color3uH(c3.r, c3.g, c3.b);
+		GL_Color3uH(c3->r, c3->g, c3->b);
 		for (i = nQuart-1; i > 0.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(r.w - rad*2 + rad*Cos(t), -rad*Sin(t));
+			glVertex2f(w - dia + rad*Cos(t), -rad*Sin(t));
 		}
-		glVertex2f((float)r.w - rad,
-		           (float)r.h - rad);
+		glVertex2f(w-rad, h-rad);
 	}
 	glEnd();
 	glPopMatrix();
@@ -1099,7 +1111,7 @@ AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int radius,
 
 /* Draw (an approximation of) a circle of radius r centered at x,y. */
 void
-AG_GL_DrawCircle(void *obj, int x, int y, int r, AG_Color c)
+AG_GL_DrawCircle(void *obj, int x, int y, int r, const AG_Color *c)
 {
 	float i, nEdges = r*2;
 	float R = (float)r;
@@ -1109,7 +1121,7 @@ AG_GL_DrawCircle(void *obj, int x, int y, int r, AG_Color c)
 	glTranslatef((float)x, (float)y, 0.0f);
 	
 	glBegin(GL_LINE_LOOP);
-	GL_Color3uH(c.r, c.g, c.b);
+	GL_Color3uH(c->r, c->g, c->b);
 	for (i = 0; i < nEdges; i++) {
 		float t = (2.0f * AG_PI * i)/nEdges;
 
@@ -1123,7 +1135,7 @@ AG_GL_DrawCircle(void *obj, int x, int y, int r, AG_Color c)
 
 /* Draw (an approximation of) a filled circle of radius r centered at x,y. */
 void
-AG_GL_DrawCircleFilled(void *obj, int x, int y, int r, AG_Color c)
+AG_GL_DrawCircleFilled(void *obj, int x, int y, int r, const AG_Color *c)
 {
 	float i, nEdges = r*2;
 	float R = (float)r;
@@ -1133,7 +1145,7 @@ AG_GL_DrawCircleFilled(void *obj, int x, int y, int r, AG_Color c)
 	glTranslatef((float)x, (float)y, 0.0f);
 	
 	glBegin(GL_POLYGON);
-	GL_Color3uH(c.r, c.g, c.b);
+	GL_Color3uH(c->r, c->g, c->b);
 	for (i = 0; i < nEdges; i++) {
 		float t = (2.0f * AG_PI * i)/nEdges;
 
@@ -1147,7 +1159,7 @@ AG_GL_DrawCircleFilled(void *obj, int x, int y, int r, AG_Color c)
 
 /* Variant of AG_GL_DrawCircle() */
 void
-AG_GL_DrawCircle2(void *obj, int x, int y, int r, AG_Color c)
+AG_GL_DrawCircle2(void *obj, int x, int y, int r, const AG_Color *c)
 {
 	float i, nEdges = r*2;
 	float R = (float)r;
@@ -1157,7 +1169,7 @@ AG_GL_DrawCircle2(void *obj, int x, int y, int r, AG_Color c)
 	glTranslatef((float)x, (float)y, 0.0f);
 	
 	glBegin(GL_LINE_LOOP);
-	GL_Color3uH(c.r, c.g, c.b);
+	GL_Color3uH(c->r, c->g, c->b);
 	for (i = 0; i < nEdges; i++) {
 		float t = (2.0f * AG_PI * i)/nEdges;
 
@@ -1173,42 +1185,44 @@ AG_GL_DrawCircle2(void *obj, int x, int y, int r, AG_Color c)
 
 /* Draw a rectangle r filled with solid color c (ignore any alpha) */
 void
-AG_GL_DrawRectFilled(void *obj, AG_Rect r, AG_Color c)
+AG_GL_DrawRectFilled(void *obj, const AG_Rect *r, const AG_Color *c)
 {
-	int x2 = r.x + r.w - 1;
-	int y2 = r.y + r.h - 1;
+	int x = r->x;
+	int y = r->y;
+	int x2 = x + r->w - 1;
+	int y2 = y + r->h - 1;
 	
 	glBegin(GL_POLYGON);
-	GL_Color3uH(c.r, c.g, c.b);
-	glVertex2i(r.x, r.y);
-	glVertex2i(x2, r.y);
+	GL_Color3uH(c->r, c->g, c->b);
+	glVertex2i(x, y);
+	glVertex2i(x2, y);
 	glVertex2i(x2, y2);
-	glVertex2i(r.x, y2);
+	glVertex2i(x, y2);
 	glEnd();
 }
 
 /* Draw a rectangle r filled with color c (blend according to c's alpha). */
 void
-AG_GL_DrawRectBlended(void *obj, AG_Rect r, AG_Color c, AG_AlphaFn fnSrc,
-    AG_AlphaFn fnDst)
+AG_GL_DrawRectBlended(void *obj, const AG_Rect *r, const AG_Color *c,
+    AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 {
-	int x1 = r.x;
-	int y1 = r.y;
-	int x2 = x1+r.w;
-	int y2 = y1+r.h;
+	int x1 = r->x;
+	int y1 = r->y;
+	int x2 = x1 + r->w;
+	int y2 = y1 + r->h;
 
-	if (c.a < AG_OPAQUE)
+	if (c->a < AG_OPAQUE)
 		AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst);
 
 	glBegin(GL_POLYGON);
-	glColor4us(c.r, c.g, c.b, c.a);
+	glColor4us(c->r, c->g, c->b, c->a);
 	glVertex2i(x1, y1);
 	glVertex2i(x2, y1);
 	glVertex2i(x2, y2);
 	glVertex2i(x1, y2);
 	glEnd();
 	
-	if (c.a < AG_OPAQUE)
+	if (c->a < AG_OPAQUE)
 		AGDRIVER_CLASS(obj)->popBlendingMode(obj);
 }
 

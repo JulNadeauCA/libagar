@@ -31,7 +31,7 @@
 #include <agar/gui/surface.h>
 
 void
-AG_WriteColor(AG_DataSource *ds, AG_Color C)
+AG_WriteColor(AG_DataSource *ds, const AG_Color *_Nonnull c)
 {
 #ifdef AG_DEBUG
 	if (ds->debug)
@@ -39,23 +39,22 @@ AG_WriteColor(AG_DataSource *ds, AG_Color C)
 #endif
 #if AG_MODEL == AG_LARGE
 	AG_WriteUint8(ds, 16);
-	AG_WriteUint16(ds, C.r);
-	AG_WriteUint16(ds, C.g);
-	AG_WriteUint16(ds, C.b);
-	AG_WriteUint16(ds, C.a);
+	AG_WriteUint16(ds, c->r);
+	AG_WriteUint16(ds, c->g);
+	AG_WriteUint16(ds, c->b);
+	AG_WriteUint16(ds, c->a);
 #else
 	AG_WriteUint8(ds, 8);
-	AG_WriteUint8(ds, C.r);
-	AG_WriteUint8(ds, C.g);
-	AG_WriteUint8(ds, C.b);
-	AG_WriteUint8(ds, C.a);
+	AG_WriteUint8(ds, c->r);
+	AG_WriteUint8(ds, c->g);
+	AG_WriteUint8(ds, c->b);
+	AG_WriteUint8(ds, c->a);
 #endif
 }
 
-AG_Color
-AG_ReadColor(AG_DataSource *ds)
+void
+AG_ReadColor(AG_Color *c, AG_DataSource *ds)
 {
-	AG_Color C;
 	Uint8 depth;
 
 #ifdef AG_DEBUG
@@ -65,30 +64,29 @@ AG_ReadColor(AG_DataSource *ds)
 	depth = AG_ReadUint8(ds);
 	if (depth == 16) {
 #if AG_MODEL == AG_LARGE
-		C.r = AG_ReadUint16(ds);
-		C.g = AG_ReadUint16(ds);
-		C.b = AG_ReadUint16(ds);
-		C.a = AG_ReadUint16(ds);
+		c->r = AG_ReadUint16(ds);
+		c->g = AG_ReadUint16(ds);
+		c->b = AG_ReadUint16(ds);
+		c->a = AG_ReadUint16(ds);
 #else
-		C.r = AG_16to8(AG_ReadUint16(ds));
-		C.g = AG_16to8(AG_ReadUint16(ds));
-		C.b = AG_16to8(AG_ReadUint16(ds));
-		C.a = AG_16to8(AG_ReadUint16(ds));
+		c->r = AG_16to8(AG_ReadUint16(ds));
+		c->g = AG_16to8(AG_ReadUint16(ds));
+		c->b = AG_16to8(AG_ReadUint16(ds));
+		c->a = AG_16to8(AG_ReadUint16(ds));
 #endif
 	} else if (depth == 8) {
 #if AG_MODEL == AG_LARGE
-		C.r = AG_8to16(AG_ReadUint8(ds));
-		C.g = AG_8to16(AG_ReadUint8(ds));
-		C.b = AG_8to16(AG_ReadUint8(ds));
-		C.a = AG_8to16(AG_ReadUint8(ds));
+		c->r = AG_8to16(AG_ReadUint8(ds));
+		c->g = AG_8to16(AG_ReadUint8(ds));
+		c->b = AG_8to16(AG_ReadUint8(ds));
+		c->a = AG_8to16(AG_ReadUint8(ds));
 #else
-		C.r = AG_ReadUint8(ds);
-		C.g = AG_ReadUint8(ds);
-		C.b = AG_ReadUint8(ds);
-		C.a = AG_ReadUint8(ds);
+		c->r = AG_ReadUint8(ds);
+		c->g = AG_ReadUint8(ds);
+		c->b = AG_ReadUint8(ds);
+		c->a = AG_ReadUint8(ds);
 #endif
 	} else {
 		AG_FatalError("Bad depth");
 	}
-	return (C);
 }

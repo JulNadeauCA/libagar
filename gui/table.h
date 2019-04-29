@@ -124,7 +124,7 @@ typedef struct ag_table_col {
 } AG_TableCol;
 
 typedef struct ag_table {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Table */
 	Uint flags;
 #define AG_TABLE_MULTI		0x001	/* Multiple selections (ctrl/shift) */
 #define AG_TABLE_MULTITOGGLE	0x002	/* Toggle multiple selections */

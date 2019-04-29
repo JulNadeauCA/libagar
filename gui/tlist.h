@@ -46,7 +46,7 @@ typedef struct ag_tlist_item {
 typedef AG_TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item) AG_TlistItemQ;
 
 typedef struct ag_tlist {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Tlist */
 	Uint flags;
 #define AG_TLIST_MULTI		0x001	/* Multiple selections (ctrl/shift) */
 #define AG_TLIST_MULTITOGGLE	0x002	/* Multiple toggle-style selections */

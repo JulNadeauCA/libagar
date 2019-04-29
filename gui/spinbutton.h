@@ -9,7 +9,7 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_spinbutton {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Spinbutton */
 	int value;			/* Default value binding */
 	int min, max;			/* Default range bindings */
 	int incr;			/* Increment for buttons */

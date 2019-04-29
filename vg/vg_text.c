@@ -182,6 +182,7 @@ RenderText(VG_Text *_Nonnull vt, char *_Nonnull sIn, VG_View *_Nonnull vv)
 {
 	char sSubst[VG_TEXT_MAX], *s;
 	VG_Vector v1, v2, vMid;
+	AG_Color c;
 	int x, y;
 	int su;
 
@@ -199,7 +200,8 @@ RenderText(VG_Text *_Nonnull vt, char *_Nonnull sIn, VG_View *_Nonnull vv)
 	    (vgGUI && vt->fontFlags != agDefaultFont->flags))) {
 		AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags);
 	}
-	AG_TextColor(VG_MapColorRGB(VGNODE(vt)->color));
+	c = VG_MapColorRGB(VGNODE(vt)->color);
+	AG_TextColor(&c);
 
 	v1 = VG_Pos(vt->p1);
 	v2 = VG_Pos(vt->p2);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -293,7 +293,10 @@ Init(void *_Nonnull obj)
 	lbl->justify = AG_TEXT_LEFT;
 	lbl->valign = AG_TEXT_TOP;
 	lbl->tCache = NULL;
-	lbl->rClip = AG_RECT(0,0,0,0);		/* Initialized in SizeAlloc() */
+	lbl->rClip.x = 0;
+	lbl->rClip.y = 0;
+	lbl->rClip.w = 0;
+	lbl->rClip.h = 0;
 	lbl->pollBuf = NULL;
 	lbl->pollBufSize = 0;
 
@@ -417,28 +420,36 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Label *lbl = obj;
-	int x, y, cw = 0;			/* make compiler happy */
 	AG_Surface *suNew;
+	AG_Rect r;
+	int x, y, cw = 0;			/* make compiler happy */
 
 	if (lbl->flags & AG_LABEL_FRAME) {
-		AG_DrawFrame(lbl,
-		    AG_RECT(0, 0, WIDTH(lbl), HEIGHT(lbl)), -1,
-		    WCOLOR(lbl,0));
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(lbl);
+		r.h = HEIGHT(lbl);
+		AG_DrawFrame(lbl, &r, -1, &WCOLOR(lbl,0));
 	}
 	if ((lbl->flags & AG_LABEL_PARTIAL) && lbl->surfaceCont != -1) {
 		cw = WSURFACE(lbl,lbl->surfaceCont)->w;
 		if (WIDTH(lbl) <= cw) {
-			AG_PushClipRect(lbl,
-			    AG_RECT(0, 0, WIDTH(lbl), HEIGHT(lbl)));
-			AG_WidgetBlitSurface(lbl, lbl->surfaceCont,
-			    0, lbl->tPad);
+			r.x = 0;
+			r.y = 0;
+			r.w = WIDTH(lbl);
+			r.h = HEIGHT(lbl);
+			AG_PushClipRect(lbl, &r);
+			AG_WidgetBlitSurface(lbl, lbl->surfaceCont, 0, lbl->tPad);
 			AG_PopClipRect(lbl);
 			return;
 		}
-		AG_PushClipRect(lbl,
-		    AG_RECT(0, 0, WIDTH(lbl)-cw, HEIGHT(lbl)));
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(lbl) - cw;
+		r.h = HEIGHT(lbl);
+		AG_PushClipRect(lbl, &r);
 	} else {
-		AG_PushClipRect(lbl, lbl->rClip);
+		AG_PushClipRect(lbl, &lbl->rClip);
 	}
 	
 	AG_TextJustify(lbl->justify);
@@ -473,9 +484,7 @@ Draw(void *_Nonnull obj)
 	
 	if ((lbl->flags & AG_LABEL_PARTIAL) && lbl->surfaceCont != -1) {
 		GetPosition(lbl, WSURFACE(lbl,lbl->surfaceCont), &x, &y);
-		AG_WidgetBlitSurface(lbl, lbl->surfaceCont,
-		    WIDTH(lbl) - cw,
-		    y);
+		AG_WidgetBlitSurface(lbl, lbl->surfaceCont, WIDTH(lbl)-cw, y);
 	}
 }
 
@@ -500,7 +509,7 @@ AG_WidgetClass agLabelClass = {
 		sizeof(AG_Label),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

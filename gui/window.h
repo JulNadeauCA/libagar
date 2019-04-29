@@ -74,7 +74,7 @@ typedef struct ag_window_pvt {
 
 /* Window instance */
 typedef struct ag_window {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Window */
 
 	Uint flags;
 #define AG_WINDOW_MODAL		0x00000001 /* Application-modal window */
@@ -190,7 +190,7 @@ void AG_WindowSetMinSizePct(AG_Window *_Nonnull, int);
 
 int  AG_WindowSetGeometry(AG_Window *_Nonnull, int,int, int,int);
 int  AG_WindowSetGeometryBounded(AG_Window *_Nonnull, int,int, int,int);
-int  AG_WindowSetGeometryRect(AG_Window *_Nonnull, AG_Rect, int);
+int  AG_WindowSetGeometryRect(AG_Window *_Nonnull, const AG_Rect *_Nonnull, int);
 int  AG_WindowSetGeometryAligned(AG_Window *_Nonnull, enum ag_window_alignment, int, int);
 int  AG_WindowSetGeometryAlignedPct(AG_Window *_Nonnull, enum ag_window_alignment,
                                     int,int);
@@ -244,11 +244,14 @@ void AG_WindowProcessShowQueue(void);
 void AG_WindowProcessHideQueue(void);
 void AG_WindowProcessDetachQueue(void);
 
-AG_CursorArea *_Nullable AG_MapCursor(void *_Nonnull, AG_Rect,
+AG_CursorArea *_Nullable AG_MapCursor(void *_Nonnull, const AG_Rect *_Nonnull,
                                       struct ag_cursor *_Nonnull);
-AG_CursorArea *_Nullable AG_MapStockCursor(void *_Nonnull, AG_Rect, int);
-void                     AG_UnmapCursor(void *_Nonnull, AG_CursorArea *_Nonnull);
-void                     AG_UnmapAllCursors(AG_Window *_Nonnull, void *_Nullable);
+
+AG_CursorArea *_Nullable AG_MapStockCursor(void *_Nonnull,
+                                           const AG_Rect *_Nonnull, int);
+
+void AG_UnmapCursor(void *_Nonnull, AG_CursorArea *_Nonnull);
+void AG_UnmapAllCursors(AG_Window *_Nonnull, void *_Nullable);
 
 void AG_WindowDraw(AG_Window *_Nonnull);
 void AG_WindowUpdate(AG_Window *_Nonnull);
@@ -259,17 +262,17 @@ AG_Window *_Nullable AG_ParentWindow(void *_Nonnull);
 int  AG_WidgetIsFocused(void *_Nonnull) _Pure_Attribute;
 void AG_WidgetSetPosition(void *_Nonnull, int,int);
 void AG_WidgetSetSize(void *_Nonnull, int, int);
-void AG_WidgetSetGeometry(void *_Nonnull, AG_Rect);
+void AG_WidgetSetGeometry(void *_Nonnull, const AG_Rect *_Nonnull);
 
 void AG_WindowSetGeometryMax(AG_Window *_Nonnull);
 
 void AG_Redraw(void *_Nonnull);
 
 void AG_SetCursor(void *_Nonnull, AG_CursorArea *_Nonnull *_Nullable,
-                  AG_Rect, struct ag_cursor *_Nonnull);
+                  const AG_Rect *_Nonnull, struct ag_cursor *_Nonnull);
 
 void AG_SetStockCursor(void *_Nonnull, AG_CursorArea *_Nonnull *_Nullable,
-                       AG_Rect, int);
+                       const AG_Rect *_Nonnull, int);
 
 void AG_WindowProcessQueued(void);
 

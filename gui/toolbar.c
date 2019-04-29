@@ -277,7 +277,7 @@ AG_WidgetClass agToolbarClass = {
 		sizeof(AG_Toolbar),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

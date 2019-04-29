@@ -90,7 +90,7 @@ AG_WidgetClass agStatusbarClass = {
 		sizeof(AG_Statusbar),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

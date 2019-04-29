@@ -46,7 +46,7 @@ MyWidgetNew(void *parent, const char *foo)
  * used here.
  */
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
 	MyWidget *my = p;
 	
@@ -74,7 +74,7 @@ SizeRequest(void *p, AG_SizeReq *r)
  * geometry can be handled by Draw().
  */
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 {
 	MyWidget *my = p;
 
@@ -92,18 +92,21 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
  * on widget coordinates.
  */
 static void
-Draw(void *p)
+Draw(void *_Nonnull p)
 {
 	MyWidget *my = p;
 	AG_Color c;
+	AG_Rect r;
 	
 	/*
 	 * Draw a box spanning the widget area. Use the widget's
 	 * default color (the "color" style property).
 	 */
-	AG_DrawBox(my,
-	    AG_RECT(0, 0, AGWIDGET(my)->w, AGWIDGET(my)->h), 1,
-	    AG_WCOLOR(my,0));
+	r.x = 0;
+	r.y = 0;
+	r.w = AGWIDGET(my)->w;
+	r.h = AGWIDGET(my)->h;
+	AG_DrawBox(my, &r, 1, &AG_WCOLOR(my,0));
 
 	/*
 	 * Render some text onto a surface. The default text color
@@ -114,12 +117,14 @@ Draw(void *p)
 		    AG_TextRender("Custom widget!"));
 	}
 
-	c = AG_ColorRGB(250, 250, 0);
-	AG_DrawLine(my, 0, 0,					my->x, my->y, c);
-	AG_DrawLine(my, AGWIDGET(my)->w, 0,			my->x, my->y, c);
-	AG_DrawLine(my, 0, AGWIDGET(my)->h,			my->x, my->y, c);
-	AG_DrawLine(my, AGWIDGET(my)->w, AGWIDGET(my)->h,	my->x, my->y, c);
-	AG_DrawCircle(my, my->x, my->y, 50, c);
+	AG_ColorRGB_8(&c, 250,250,0);
+
+	AG_DrawLine(my, 0,   0,   my->x, my->y, &c);
+	AG_DrawLine(my, r.w, 0,   my->x, my->y, &c);
+	AG_DrawLine(my, 0,   r.h, my->x, my->y, &c);
+	AG_DrawLine(my, r.w, r.h, my->x, my->y, &c);
+
+	AG_DrawCircle(my, my->x, my->y, 50, &c);
 
 	/* Draw the mapped surface centered around the cursor. */
 	AG_WidgetBlitSurface(my, my->mySurface,
@@ -129,7 +134,7 @@ Draw(void *p)
 
 /* Mouse motion event handler */
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	MyWidget *my = AG_SELF();
 	int x = AG_INT(1);
@@ -144,7 +149,7 @@ MouseMotion(AG_Event *event)
 
 /* Mouse click event handler */
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	MyWidget *my = AG_SELF();
 	int button = AG_INT(1);
@@ -160,7 +165,7 @@ MouseButtonDown(AG_Event *event)
 
 /* Mouse click event handler */
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
 /*	MyWidget *my = AG_SELF(); */
 /*	int button = AG_INT(1); */
@@ -172,7 +177,7 @@ MouseButtonUp(AG_Event *event)
 
 /* Keystroke event handler */
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
 	MyWidget *my = AG_SELF();
 	int keysym = AG_INT(1);
@@ -184,7 +189,7 @@ KeyDown(AG_Event *event)
 
 /* Keystroke event handler */
 static void
-KeyUp(AG_Event *event)
+KeyUp(AG_Event *_Nonnull event)
 {
 /*	MyWidget *my = AG_SELF(); */
 /*	int keysym = AG_INT(1); */
@@ -197,7 +202,7 @@ KeyUp(AG_Event *event)
  * invoke the initialization routines of the parent classes first.
  */
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	MyWidget *my = obj;
 

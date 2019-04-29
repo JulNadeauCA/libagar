@@ -707,11 +707,11 @@ AG_WidgetClass agMFSpinbuttonClass = {
 		sizeof(AG_MFSpinbutton),
 		{ 0,0 },
 		Init,
-		NULL,			/* free */
-		NULL,			/* destroy */
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,		/* reset */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	Draw,
 	SizeRequest,

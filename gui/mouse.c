@@ -109,7 +109,7 @@ AG_MouseCursorUpdate(AG_Window *win, int x, int y)
 		r.y = ca->r.y + ca->wid->rView.y1;
 		r.w = ca->r.w;
 		r.h = ca->r.h;
-		if (AG_RectInside(r, x,y))
+		if (AG_RectInside(&r, x,y))
 			break;
 	}
 	if (ca == NULL) {

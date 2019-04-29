@@ -31,10 +31,12 @@ typedef struct ag_size_alloc {
 
 /* Widget class description. */
 typedef struct ag_widget_class {
-	struct ag_object_class _inherit;
+	struct ag_object_class _inherit;     /* [AG_Object] -> [AG_Widget] */
+
 	void (*_Nullable draw)(void *_Nonnull);
 	void (*_Nullable size_request)(void *_Nonnull, AG_SizeReq *_Nonnull);
-	int  (*_Nullable size_allocate)(void *_Nonnull, const AG_SizeAlloc *_Nonnull);
+	int  (*_Nullable size_allocate)(void *_Nonnull,
+	                                const AG_SizeAlloc *_Nonnull);
 } AG_WidgetClass;
 
 /* Relative size specification of visual element. */
@@ -158,11 +160,13 @@ typedef struct {
 #define AG_WCOLOR_HOV(wid,which) AGWIDGET(wid)->pal.c[AG_HOVER_STATE][which]
 #define AG_WCOLOR_SEL(wid,which) AGWIDGET(wid)->pal.c[AG_SELECTED_STATE][which]
 
+#ifdef HAVE_OPENGL
 /* Saved OpenGL context (for WIDGET_USE_OPENGL) */
 typedef struct ag_widget_gl {
 	float mProjection[16];				/* Projection matrix */
 	float mModelview[16];				/* Modelview matrix */
 } AG_WidgetGL;
+#endif
 
 typedef struct ag_widget_pvt {
 	AG_Tbl actions;				 	/* Registered actions */
@@ -174,7 +178,7 @@ typedef struct ag_widget_pvt {
 
 /* Agar widget instance */
 typedef struct ag_widget {
-	struct ag_object obj;			/* Object -> Widget */
+	struct ag_object obj;			/* AG_Object -> AG_Widget */
 
 	Uint flags;
 #define AG_WIDGET_FOCUSABLE		0x000001 /* Can grab focus */
@@ -225,8 +229,9 @@ typedef struct ag_widget {
 	enum ag_widget_color_state cState; /* Current CSS color state */
 	struct ag_font *_Nullable font;    /* Computed font reference */
 	AG_WidgetPalette pal;              /* Computed color palette */
-
+#ifdef HAVE_OPENGL
 	AG_WidgetGL *_Nullable gl;      /* Saved GL context (for USE_OPENGL) */
+#endif
 	AG_WidgetPvt pvt;               /* Private data */
 } AG_Widget;
 
@@ -294,11 +299,13 @@ void AG_WidgetUpdateSurface(void *_Nonnull, int);
 void AG_WidgetUnmapSurface(void *_Nonnull, int);
 void AG_WidgetBlitSurface(void *_Nonnull, int, int,int);
 
+#ifdef HAVE_OPENGL
 void AG_WidgetBlitGL(void *_Nonnull, AG_Surface *_Nonnull, float,float);
 void AG_WidgetBlitSurfaceGL(void *_Nonnull, int, float,float);
 void AG_WidgetBlitSurfaceFlippedGL(void *_Nonnull, int, float,float);
 void AG_WidgetFreeResourcesGL(void *_Nonnull);
 void AG_WidgetRegenResourcesGL(void *_Nonnull);
+#endif
 
 int         AG_WidgetSensitive(void *_Nonnull, int,int);
 AG_SizeSpec AG_WidgetParseSizeSpec(const char *_Nonnull, int *_Nonnull);
@@ -358,6 +365,9 @@ void AG_WidgetFreeStyle(void *_Nonnull);
 void AG_SetFont(void *_Nonnull, const struct ag_font *_Nonnull);
 void AG_SetStyle(void *_Nonnull, const char *_Nonnull, const char *_Nullable);
 
+/*
+ * Inlinables
+ */
 #ifdef AG_INLINE_WIDGET
 # define AG_INLINE_HEADER
 # include <agar/gui/inline_widget.h>
@@ -373,7 +383,7 @@ void ag_expand(void *_Nonnull);
 void ag_expand_horiz(void *_Nonnull);
 void ag_expand_vert(void *_Nonnull);
 void ag_widget_update(void *_Nonnull);
-void ag_push_clip_rect(void *_Nonnull, AG_Rect);
+void ag_push_clip_rect(void *_Nonnull, const AG_Rect *_Nonnull);
 void ag_pop_clip_rect(void *_Nonnull);
 void ag_push_blending_mode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn);
 void ag_pop_blending_mode(void *_Nonnull);

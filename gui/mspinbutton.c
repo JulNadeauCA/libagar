@@ -639,7 +639,7 @@ AG_WidgetClass agMSpinbuttonClass = {
 		sizeof(AG_MSpinbutton),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

@@ -188,6 +188,7 @@ Draw(void *_Nonnull obj)
 	AG_Socket *sock = obj;
 	AG_Variable *binding;
 	void *pBinding;
+	AG_Rect r;
 	int state;
 	
 	binding = AG_GetVariable(sock, "state", &pBinding);
@@ -204,19 +205,23 @@ Draw(void *_Nonnull obj)
 		AG_WidgetBlitSurface(sock, sock->bgData.pixmap.s, 0, 0);
 		break;
 	case AG_SOCKET_RECT:
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(sock);
+		r.h = HEIGHT(sock);
 		if (AG_WidgetEnabled(sock)) {
-			AG_DrawBox(sock,
-			    AG_RECT(0, 0, WIDTH(sock), HEIGHT(sock)), -1,
-			    WCOLOR(sock,0));
+			AG_DrawBox(sock, &r, -1, &WCOLOR(sock,0));
 		} else {
-			AG_DrawBoxDisabled(sock,
-			    AG_RECT(0, 0, WIDTH(sock), HEIGHT(sock)), -1,
-			    WCOLOR(sock,0), WCOLOR_DIS(sock,0));
+			AG_DrawBoxDisabled(sock, &r, -1,
+			    &WCOLOR(sock,0),
+			    &WCOLOR_DIS(sock,0));
 		}
 		break;
 	case AG_SOCKET_CIRCLE:
-		AG_DrawCircle(sock, WIDTH(sock)/2, HEIGHT(sock)/2,
-		    sock->bgData.circle.r, WCOLOR(sock,0));
+		AG_DrawCircle(sock,
+		    WIDTH(sock) >> 1,
+		    HEIGHT(sock) >> 1,
+		    sock->bgData.circle.r, &WCOLOR(sock,0));
 		break;
 	}
 
@@ -231,18 +236,21 @@ Draw(void *_Nonnull obj)
 			/* TODO */
 		case AG_SOCKET_RECT:
 			if (state) {
-				AG_DrawRectOutline(sock,
-				    AG_RECT(sock->lPad, sock->tPad,
-				            WIDTH(sock) - sock->lPad - sock->rPad,
-					    HEIGHT(sock) - sock->tPad - sock->bPad),
-				    WCOLOR_SEL(sock,LINE_COLOR));
+				r.x = sock->lPad;
+				r.y = sock->tPad;
+				r.w = WIDTH(sock) - sock->lPad - sock->rPad;
+				r.h = HEIGHT(sock) - sock->tPad - sock->bPad;
+				AG_DrawRectOutline(sock, &r,
+				    &WCOLOR_SEL(sock,LINE_COLOR));
 			}
 			break;
 		case AG_SOCKET_CIRCLE:
 			if (state) {
-				AG_DrawCircle(sock, WIDTH(sock)/2, HEIGHT(sock)/2,
+				AG_DrawCircle(sock,
+				    WIDTH(sock) >> 1,
+				    HEIGHT(sock) >> 1,
 				    sock->bgData.circle.r - sock->lPad,
-				    WCOLOR_SEL(sock,LINE_COLOR));
+				    &WCOLOR_SEL(sock,LINE_COLOR));
 			}
 			break;
 		}
@@ -340,12 +348,13 @@ IconMotion(AG_Event *_Nonnull event)
 	int xRel = AG_INT(4);
 	int yRel = AG_INT(5);
 	AG_Window *wDND = icon->wDND;
+	AG_Rect r;
 
-	AG_WindowSetGeometryRect(wDND,
-	    AG_RECT(WIDGET(wDND)->x + xRel,
-	            WIDGET(wDND)->y + yRel,
-	            WIDTH(wDND),
-	            HEIGHT(wDND)), 1);
+	r.x = WIDGET(wDND)->x + xRel;
+	r.y = WIDGET(wDND)->y + yRel;
+	r.w = WIDTH(wDND);
+	r.h = HEIGHT(wDND);
+	AG_WindowSetGeometryRect(wDND, &r, 1);
 }
 
 static void
@@ -596,7 +605,7 @@ AG_WidgetClass agSocketClass = {
 		sizeof(AG_Socket),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

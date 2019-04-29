@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -213,9 +213,14 @@ Draw(void *_Nonnull obj)
 	AG_Font *font = WIDGET(cb)->font;
 	AG_Variable *stateb;
 	void *p;
+	AG_Rect r;
 	int state;
 
-	AG_PushClipRect(cb, AG_RECT(0,0,WIDTH(cb),HEIGHT(cb)));
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(cb);
+	r.h = HEIGHT(cb);
+	AG_PushClipRect(cb, &r);
 
 	stateb = AG_GetVariable(cb, "state", &p);
 	switch (AG_VARIABLE_TYPE(stateb)) {
@@ -253,23 +258,28 @@ Draw(void *_Nonnull obj)
 	}
 
 	if (WIDGET(cb)->flags & AG_WIDGET_MOUSEOVER) {
-		AG_Rect r = AG_RECT(0,0,WIDGET(cb)->w,WIDGET(cb)->h-1);
-		AG_DrawRectBlended(cb, r,
-		    AG_ColorRGBA(255,255,255,25),
-		    AG_ALPHA_SRC);
+		AG_Color c;
+
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(cb);
+		r.h = HEIGHT(cb)-1;
+		AG_ColorRGBA_8(&c, 255,255,255, 25);
+		AG_DrawRectBlended(cb, &r, &c, AG_ALPHA_SRC);
 	}
 
+	r.x = 0;
+	r.y = 0;
+	r.w = font->height;
+	r.h = r.w;
+
 	if (AG_WidgetEnabled(cb)) {
-		AG_DrawBox(cb,
-		    AG_RECT(0, 0, font->height, font->height),
-		    state ? -1 : 1,
-		    WCOLOR(cb,0));
+		AG_DrawBox(cb, &r, state ? -1 : 1,
+		    &WCOLOR(cb,0));
 	} else {
-		AG_DrawBoxDisabled(cb,
-		    AG_RECT(0, 0, font->height, font->height),
-		    state ? -1 : 1,
-		    WCOLOR(cb,0),
-		    WCOLOR_DIS(cb,0));
+		AG_DrawBoxDisabled(cb, &r, state ? -1 : 1,
+		    &WCOLOR(cb,0),
+		    &WCOLOR_DIS(cb,0));
 	}
 
 	if (cb->lbl != NULL) {
@@ -409,11 +419,11 @@ AG_WidgetClass agCheckboxClass = {
 		sizeof(AG_Checkbox),
 		{ 0,0 },
 		Init,
-		NULL,			/* free */
-		NULL,			/* destroy */
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,		/* reset */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	Draw,
 	SizeRequest,

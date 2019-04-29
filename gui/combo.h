@@ -12,7 +12,7 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_combo {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Combo */
 
 	Uint flags;
 #define AG_COMBO_POLL	  	0x01	/* Polled list */

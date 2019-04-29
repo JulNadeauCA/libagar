@@ -12,7 +12,7 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_file_selector {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_FileSelector */
 	Uint flags;
 #define AG_FILE_SELECTOR_HFILL	  0x01
 #define AG_FILE_SELECTOR_VFILL	  0x02

@@ -13,7 +13,8 @@
 #define AG_MSPINBUTTON_VFILL	0x02
 
 typedef struct ag_mspinbutton {
-	struct ag_widget wid;
+	struct ag_widget wid;			/* AG_Widget -> AG_MSpinbutton */
+
 	const char *_Nonnull sep;		/* X,Y value separator */
 	int xvalue, yvalue;			/* Default X,Y bindings */
 	int min, max;				/* Default range bindings */

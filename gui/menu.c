@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -494,7 +494,10 @@ Init(void *_Nonnull obj)
 	m->rPadLbl = 7;
 	m->tPadLbl = 3;
 	m->bPadLbl = 3;
-	m->r = AG_RECT(0,0,0,0);
+	m->r.x = 0;
+	m->r.y = 0;
+	m->r.w = 0;
+	m->r.h = 0;
 
 	m->curToolbar = NULL;
 	m->curState = 1;
@@ -1112,30 +1115,33 @@ Draw(void *_Nonnull obj)
 {
 	AG_Menu *m = obj;
 	AG_MenuItem *mi;
+	AG_Rect r;
 	int lbl, wLbl, hLbl;
 
-	AG_DrawBox(m,
-	    AG_RECT(0, 0, WIDTH(m), HEIGHT(m)), 1,
-	    WCOLOR(m,0));
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(m);
+	r.h = HEIGHT(m);
+	AG_DrawBox(m, &r, 1, &WCOLOR(m,0));
 
 	if (m->root == NULL)
 		return;
 
-	AG_PushClipRect(m, m->r);
+	AG_PushClipRect(m, &m->r);
 
 	TAILQ_FOREACH(mi, &m->root->subItems, items) {
 		int activeState = mi->stateFn ? mi->stateFn->fn.fnInt(mi->stateFn) :
 		                                mi->state;
 		if (activeState) {
 			if (mi->lblMenu[1] == -1) {
-				AG_TextColor(WCOLOR(m,TEXT_COLOR));
+				AG_TextColor(&WCOLOR(m,TEXT_COLOR));
 				mi->lblMenu[1] = (mi->text == NULL) ? -1 :
 				    AG_WidgetMapSurface(m, AG_TextRender(mi->text));
 			}
 			lbl = mi->lblMenu[1];
 		} else {
 			if (mi->lblMenu[0] == -1) {
-				AG_TextColor(WCOLOR_DIS(m,TEXT_COLOR));
+				AG_TextColor(&WCOLOR_DIS(m,TEXT_COLOR));
 				mi->lblMenu[0] = (mi->text == NULL) ? -1 :
 				    AG_WidgetMapSurface(m, AG_TextRender(mi->text));
 			}
@@ -1144,11 +1150,11 @@ Draw(void *_Nonnull obj)
 		wLbl = WSURFACE(m,lbl)->w;
 		hLbl = WSURFACE(m,lbl)->h;
 		if (mi == m->itemSel) {
-			AG_DrawRect(m,
-			    AG_RECT(mi->x, mi->y,
-	    		            m->lPadLbl + wLbl + m->rPadLbl,
-	    		            m->tPadLbl + hLbl + m->bPadLbl),
-			    WCOLOR_SEL(m,0));
+			r.x = mi->x;
+			r.y = mi->y;
+			r.w = m->lPadLbl + wLbl + m->rPadLbl;
+			r.h = m->tPadLbl + hLbl + m->bPadLbl;
+			AG_DrawRect(m, &r, &WCOLOR_SEL(m,0));
 		}
 		AG_WidgetBlitSurface(m, lbl,
 		    mi->x + m->lPadLbl,
@@ -1337,11 +1343,11 @@ AG_WidgetClass agMenuClass = {
 		sizeof(AG_Menu),
 		{ 0,0 },
 		Init,
-		NULL,			/* free */
+		NULL,		/* reset */
 		Destroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	Draw,
 	SizeRequest,

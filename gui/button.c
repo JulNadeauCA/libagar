@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -490,23 +490,25 @@ Draw(void *_Nonnull p)
 	AG_Button *bu = p;
 	AG_Variable *binding;
 	void *pState;
+	AG_Rect rd;
 	int pressed;
 	
 	binding = AG_GetVariable(bu, "state", &pState);
 	pressed = GetState(bu, binding, pState);
 	AG_UnlockVariable(binding);
 
+	rd.x = 0;
+	rd.y = 0;
+	rd.w = WIDTH(bu);
+	rd.h = HEIGHT(bu);
+
 	if (AG_WidgetEnabled(bu)) {
-		AG_DrawBox(bu,
-		    AG_RECT(0, 0, WIDTH(bu), HEIGHT(bu)),
-		    pressed ? -1 : 1,
-		    WCOLOR(bu,0));
+		AG_DrawBox(bu, &rd, pressed ? -1 : 1,
+		    &WCOLOR(bu,0));
 	} else {
-		AG_DrawBoxDisabled(bu,
-		    AG_RECT(0, 0, WIDTH(bu), HEIGHT(bu)),
-		    pressed ? -1 : 1,
-		    WCOLOR_DEF(bu,0),
-		    WCOLOR_DIS(bu,0));
+		AG_DrawBoxDisabled(bu, &rd, pressed ? -1 : 1,
+		    &WCOLOR_DEF(bu,0),
+		    &WCOLOR_DIS(bu,0));
 	}
 
 	if (bu->lbl != NULL) {
@@ -518,19 +520,19 @@ Draw(void *_Nonnull p)
 
 		switch (bu->justify) {
 		case AG_TEXT_LEFT:	x = bu->lPad;			break;
-		case AG_TEXT_CENTER:	x = WIDTH(bu)/2 - w/2;		break;
+		case AG_TEXT_CENTER:	x = (WIDTH(bu) >> 1)-(w >> 1);	break;
 		case AG_TEXT_RIGHT:	x = WIDTH(bu) - w - bu->rPad;	break;
 		}
 		switch (bu->valign) {
 		case AG_TEXT_TOP:	y = bu->tPad;			break;
-		case AG_TEXT_MIDDLE:	y = HEIGHT(bu)/2 - h/2;		break;
+		case AG_TEXT_MIDDLE:	y = (HEIGHT(bu) >> 1)-(h >> 1);	break;
 		case AG_TEXT_BOTTOM:	y = HEIGHT(bu) - h - bu->bPad;	break;
 		}
 		if (pressed) {
 			x++;
 			y++;
 		}
-		AG_WidgetBlitSurface(bu, bu->surface, x, y);
+		AG_WidgetBlitSurface(bu, bu->surface, x,y);
 	}
 }
 
@@ -688,7 +690,7 @@ AG_WidgetClass agButtonClass = {
 		sizeof(AG_Button),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

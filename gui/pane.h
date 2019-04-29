@@ -21,7 +21,7 @@ enum ag_pane_resize_action {
 };
 
 typedef struct ag_pane {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Pane */
 	enum ag_pane_type type;
 	Uint flags;
 #define AG_PANE_HFILL		0x001

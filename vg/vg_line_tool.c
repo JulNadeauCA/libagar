@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -92,10 +92,12 @@ static void
 PostDraw(void *_Nonnull obj, VG_View *vv)
 {
 	VG_LineTool *t = obj;
+	AG_Color c;
 	int x, y;
 
 	VG_GetViewCoords(vv, VGTOOL(t)->vCursor, &x,&y);
-	AG_DrawCircle(vv, x,y, 3, VG_MapColorRGB(vv->vg->selectionColor));
+	c = VG_MapColorRGB(vv->vg->selectionColor);
+	AG_DrawCircle(vv, x,y, 3, &c);
 }
 
 static int

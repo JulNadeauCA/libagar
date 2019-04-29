@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,14 +70,14 @@ AG_PaneNewVert(void *parent, Uint flags)
 }
 
 static __inline__ int
-OverDivControl(AG_Pane *pa, int pos)
+OverDivControl(AG_Pane *_Nonnull pa, int pos)
 {
 	return (pos >= pa->dx &&
 	        pos < (pa->dx+MAX(pa->wDiv,4)));
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Pane *pa = AG_SELF();
 	int button = AG_INT(1);
@@ -141,7 +141,7 @@ AG_PaneMoveDividerPct(AG_Pane *pa, int pct)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Pane *pa = AG_SELF();
 	int x = AG_INT(1);
@@ -176,7 +176,7 @@ MouseMotion(AG_Event *event)
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Pane *pa = AG_SELF();
 
@@ -191,7 +191,7 @@ MouseButtonUp(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Pane *pa = obj;
 	int i;
@@ -295,37 +295,47 @@ AG_PaneResizeAction(AG_Pane *pa, enum ag_pane_resize_action ra)
 }
 
 static void
-DrawHorizDivider(AG_Pane *pa, int x, int y)
+DrawHorizDivider(AG_Pane *_Nonnull pa, int x, int y)
 {
-	int xMid = x + pa->wDiv/2;
+	AG_Color *cShape;
+	AG_Rect r;
+	int wDiv = pa->wDiv;
+	int xMid = x + (wDiv >> 1);
 
-	AG_DrawBox(pa,
-	    AG_RECT(x+1, 0, pa->wDiv-2, HEIGHT(pa)),
-	    pa->dmoving ? -1 : 1,
-	    WCOLOR(pa,0));
-	
-	AG_PutPixel(pa, xMid, y, WCOLOR(pa,SHAPE_COLOR));
-	AG_PutPixel(pa, xMid, y-5, WCOLOR(pa,SHAPE_COLOR));
-	AG_PutPixel(pa, xMid, y+5, WCOLOR(pa,SHAPE_COLOR));
+	r.x = x+1;
+	r.y = 0;
+	r.w = wDiv-2;
+	r.h = HEIGHT(pa);
+	AG_DrawBox(pa, &r, pa->dmoving ? -1 : 1, &WCOLOR(pa,0));
+
+	cShape = &WCOLOR(pa,SHAPE_COLOR);
+	AG_PutPixel(pa, xMid, y,   cShape);
+	AG_PutPixel(pa, xMid, y-5, cShape);
+	AG_PutPixel(pa, xMid, y+5, cShape);
 }
 
 static void
-DrawVertDivider(AG_Pane *pa, int x, int y)
+DrawVertDivider(AG_Pane *_Nonnull pa, int x, int y)
 {
-	int yMid = y + pa->wDiv/2;
+	AG_Color *cShape;
+	AG_Rect r;
+	int wDiv = pa->wDiv;
+	int yMid = y + (wDiv >> 1);
 
-	AG_DrawBox(pa,
-	    AG_RECT(0, y+1, WIDTH(pa), pa->wDiv-2),
-	    pa->dmoving ? -1 : 1,
-	    WCOLOR(pa,0));
+	r.x = 0;
+	r.y = y+1;
+	r.w = WIDTH(pa);
+	r.h = wDiv-2;
+	AG_DrawBox(pa, &r, pa->dmoving ? -1 : 1, &WCOLOR(pa,0));
 
-	AG_PutPixel(pa, x, yMid, WCOLOR(pa,SHAPE_COLOR));
-	AG_PutPixel(pa, x-5, yMid, WCOLOR(pa,SHAPE_COLOR));
-	AG_PutPixel(pa, x+5, yMid, WCOLOR(pa,SHAPE_COLOR));
+	cShape = &WCOLOR(pa,SHAPE_COLOR);
+	AG_PutPixel(pa, x, yMid,   cShape);
+	AG_PutPixel(pa, x-5, yMid, cShape);
+	AG_PutPixel(pa, x+5, yMid, cShape);
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Pane *pa = obj;
 	
@@ -335,17 +345,17 @@ Draw(void *obj)
 	if (pa->wDiv > 0) {
 		switch (pa->type) {
 		case AG_PANE_HORIZ:
-			DrawHorizDivider(pa, pa->dx, HEIGHT(pa)/2);
+			DrawHorizDivider(pa, pa->dx, HEIGHT(pa) >> 1);
 			break;
 		case AG_PANE_VERT:
-			DrawVertDivider(pa, WIDTH(pa)/2, pa->dx);
+			DrawVertDivider(pa, WIDTH(pa) >> 1, pa->dx);
 			break;
 		}
 	}
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Pane *pa = obj;
 	AG_SizeReq rDiv;
@@ -387,7 +397,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Pane *pa = obj;
 	AG_SizeReq r1, r2;
@@ -451,7 +461,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		r.y = 0;
 		r.w = pa->wDiv;
 		r.h = a->h;
-		AG_SetStockCursor(pa, &pa->ca, r, AG_HRESIZE_CURSOR);
+		AG_SetStockCursor(pa, &pa->ca, &r, AG_HRESIZE_CURSOR);
 		break;
 	case AG_PANE_VERT:
 		if (pa->dx == 0 && pa->rx == -1) {
@@ -503,7 +513,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		r.y = pa->dx;
 		r.w = a->w;
 		r.h = pa->wDiv;
-		AG_SetStockCursor(pa, &pa->ca, r, AG_VRESIZE_CURSOR);
+		AG_SetStockCursor(pa, &pa->ca, &r, AG_VRESIZE_CURSOR);
 		break;
 	}
 	AG_WidgetSizeAlloc(pa->div[0], &a1);
@@ -517,7 +527,7 @@ AG_WidgetClass agPaneClass = {
 		sizeof(AG_Pane),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

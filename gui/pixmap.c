@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -322,7 +322,10 @@ Init(void *_Nonnull obj)
 	px->t = 0;
 	px->pre_w = 64;
 	px->pre_h = 64;
-	px->rClip = AG_RECT(0,0,0,0);
+	px->rClip.x = 0;
+	px->rClip.y = 0;
+	px->rClip.w = 0;
+	px->rClip.h = 0;
 	px->sScaled = -1;
 #if 0
 	AG_BindInt(px, "n", &px->n);
@@ -399,7 +402,7 @@ Draw(void *_Nonnull obj)
 		}
 		AG_WidgetBlitSurface(px, px->sScaled, px->s, px->t);
 	} else {
-		AG_PushClipRect(px, px->rClip);
+		AG_PushClipRect(px, &px->rClip);
 		AG_WidgetBlitSurface(px, px->n, px->s, px->t);
 		AG_PopClipRect(px);
 	}
@@ -411,7 +414,7 @@ AG_WidgetClass agPixmapClass = {
 		sizeof(AG_Pixmap),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@ AG_WritePalette(AG_DataSource *ds, const AG_Palette *pal)
 
 	AG_WriteUint16(ds, pal->nColors);
 	for (i = 0; i < pal->nColors; i++)
-		AG_WriteColor(ds, pal->colors[i]);
+		AG_WriteColor(ds, &pal->colors[i]);
 }
 
 int
@@ -56,7 +56,7 @@ AG_ReadPalette(AG_Palette *pal, AG_DataSource *ds)
 		return (-1);
 	}
 	for (i = 0; i < pal->nColors; i++) {
-		pal->colors[i] = AG_ReadColor(ds);
+		AG_ReadColor(&pal->colors[i], ds);
 	}
 	return (0);
 }
@@ -104,7 +104,7 @@ AG_WriteSurface(AG_DataSource *ds, AG_Surface *s)
 		break;
 	}
 
-	AG_WriteRect(ds, s->clipRect);
+	AG_WriteRect(ds, &s->clipRect);
 
 #if AG_MODEL == AG_LARGE
 	if (s->colorkey > 0xffffffff) {
@@ -199,7 +199,7 @@ AG_ReadSurface(AG_DataSource *ds)
 	if ((s = AG_SurfaceNew(&pf, w,h, flags)) == NULL) {
 		return (NULL);
 	}
-	s->clipRect = AG_ReadRect(ds);
+	AG_ReadRect(&s->clipRect, ds);
 
 	if ((size = AG_ReadUint8(ds)) == 64) {
 #if AG_MODEL == AG_LARGE

@@ -21,7 +21,7 @@ typedef struct ag_driver_sw_class {
 	AG_Surface *_Nullable (*_Nonnull videoCapture)(void *_Nonnull);
 
 	/* Clear the background */
-	void (*_Nonnull videoClear)(void *_Nonnull, AG_Color);
+	void (*_Nonnull videoClear)(void *_Nonnull, const AG_Color *_Nonnull);
 } AG_DriverSwClass;
 
 struct ag_style;

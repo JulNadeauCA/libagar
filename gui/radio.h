@@ -18,8 +18,7 @@ typedef struct ag_radio_item {
 } AG_RadioItem;
 
 typedef struct ag_radio {
-	struct ag_widget wid;
-
+	struct ag_widget wid;		/* AG_Widget -> AG_Radio */
 	Uint flags;
 #define AG_RADIO_HFILL	0x01
 #define AG_RADIO_VFILL	0x02

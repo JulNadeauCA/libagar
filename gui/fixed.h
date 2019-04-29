@@ -8,7 +8,7 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_fixed {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Fixed */
 	Uint flags;
 #define AG_FIXED_HFILL		0x01	/* Expand to fill available width */
 #define AG_FIXED_VFILL		0x02	/* Expand to fill available height */

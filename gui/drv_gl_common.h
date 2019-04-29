@@ -34,10 +34,10 @@ typedef struct ag_gl_context {
 
 __BEGIN_DECLS
 int  AG_GL_InitContext(void *_Nonnull, AG_GL_Context *_Nonnull);
-void AG_GL_SetViewport(AG_GL_Context *_Nonnull, AG_Rect);
+void AG_GL_SetViewport(AG_GL_Context *_Nonnull, const AG_Rect *_Nonnull);
 void AG_GL_DestroyContext(void *_Nonnull);
 
-void AG_GL_StdPushClipRect(void *_Nonnull, AG_Rect);
+void AG_GL_StdPushClipRect(void *_Nonnull, const AG_Rect *_Nonnull);
 void AG_GL_StdPopClipRect(void *_Nonnull);
 void AG_GL_StdPushBlendingMode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn);
 void AG_GL_StdPopBlendingMode(void *_Nonnull);
@@ -66,28 +66,42 @@ void AG_GL_RestoreSurfaces(void *_Nonnull, AG_Widget *_Nonnull);
 int  AG_GL_RenderToSurface(void *_Nonnull, AG_Widget *_Nonnull,
                            AG_Surface *_Nonnull *_Nullable);
 
-void AG_GL_FillRect(void *_Nonnull, AG_Rect, AG_Color);
-void AG_GL_PutPixel(void *_Nonnull, int,int, AG_Color);
+void AG_GL_FillRect(void *_Nonnull, const AG_Rect *_Nonnull,
+                    const AG_Color *_Nonnull);
+void AG_GL_PutPixel(void *_Nonnull, int,int, const AG_Color *_Nonnull);
 void AG_GL_PutPixel32(void *_Nonnull, int,int, Uint32);
 void AG_GL_PutPixel64(void *_Nonnull, int,int, Uint64);
 void AG_GL_PutPixelRGB8(void *_Nonnull, int,int, Uint8,Uint8,Uint8);
 void AG_GL_PutPixelRGB16(void *_Nonnull, int,int, Uint16,Uint16,Uint16);
-void AG_GL_BlendPixel(void *_Nonnull, int,int, AG_Color, AG_AlphaFn, AG_AlphaFn);
-void AG_GL_DrawLine(void *_Nonnull, int,int, int,int, AG_Color);
-void AG_GL_DrawLineH(void *_Nonnull, int,int, int, AG_Color);
-void AG_GL_DrawLineV(void *_Nonnull, int, int,int, AG_Color);
-void AG_GL_DrawLineBlended(void *_Nonnull, int,int, int,int, AG_Color,
-                           AG_AlphaFn, AG_AlphaFn);
-void AG_GL_DrawTriangle(void *_Nonnull, AG_Pt,AG_Pt,AG_Pt, AG_Color);
-void AG_GL_DrawArrow(void *_Nonnull, Uint8, int,int, int, AG_Color);
-void AG_GL_DrawRectDithered(void *_Nonnull, AG_Rect, AG_Color);
-void AG_GL_DrawBoxRounded(void *_Nonnull, AG_Rect, int, int, AG_Color,AG_Color,AG_Color);
-void AG_GL_DrawBoxRoundedTop(void *_Nonnull, AG_Rect, int, int, AG_Color,AG_Color,AG_Color);
-void AG_GL_DrawCircle(void *_Nonnull, int,int, int, AG_Color);
-void AG_GL_DrawCircle2(void *_Nonnull, int,int, int, AG_Color);
-void AG_GL_DrawCircleFilled(void *_Nonnull, int,int, int, AG_Color);
-void AG_GL_DrawRectFilled(void *_Nonnull, AG_Rect, AG_Color);
-void AG_GL_DrawRectBlended(void *_Nonnull, AG_Rect, AG_Color, AG_AlphaFn, AG_AlphaFn);
+void AG_GL_BlendPixel(void *_Nonnull, int,int, const AG_Color *_Nonnull,
+                      AG_AlphaFn, AG_AlphaFn);
+void AG_GL_DrawLine(void *_Nonnull, int,int, int,int, const AG_Color *_Nonnull);
+void AG_GL_DrawLineH(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void AG_GL_DrawLineV(void *_Nonnull, int, int,int, const AG_Color *_Nonnull);
+void AG_GL_DrawLineBlended(void *_Nonnull, int,int, int,int,
+                           const AG_Color *_Nonnull, AG_AlphaFn, AG_AlphaFn);
+void AG_GL_DrawTriangle(void *_Nonnull, const AG_Pt *_Nonnull,
+                        const AG_Pt *_Nonnull, const AG_Pt *_Nonnull,
+                        const AG_Color *_Nonnull);
+void AG_GL_DrawArrow(void *_Nonnull, Uint8, int,int, int,
+                     const AG_Color *_Nonnull);
+void AG_GL_DrawRectDithered(void *_Nonnull, const AG_Rect *_Nonnull,
+                            const AG_Color *_Nonnull);
+void AG_GL_DrawBoxRounded(void *_Nonnull, const AG_Rect *_Nonnull, int, int,
+                          const AG_Color *_Nonnull,
+			  const AG_Color *_Nonnull,
+			  const AG_Color *_Nonnull);
+void AG_GL_DrawBoxRoundedTop(void *_Nonnull, const AG_Rect *_Nonnull, int, int,
+                             const AG_Color *_Nonnull,
+			     const AG_Color *_Nonnull,
+			     const AG_Color *_Nonnull);
+void AG_GL_DrawCircle(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void AG_GL_DrawCircle2(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void AG_GL_DrawCircleFilled(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void AG_GL_DrawRectFilled(void *_Nonnull, const AG_Rect *_Nonnull,
+                          const AG_Color *_Nonnull);
+void AG_GL_DrawRectBlended(void *_Nonnull, const AG_Rect *_Nonnull,
+                           const AG_Color *_Nonnull, AG_AlphaFn, AG_AlphaFn);
 void AG_GL_UpdateGlyph(void *_Nonnull, struct ag_glyph *_Nonnull);
 void AG_GL_DrawGlyph(void *_Nonnull, const struct ag_glyph *_Nonnull, int,int);
 

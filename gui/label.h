@@ -26,7 +26,7 @@ enum ag_label_type {
 };
 
 typedef struct ag_label {
-	struct ag_widget wid;
+	struct ag_widget wid;			/* AG_Widget -> AG_Label */
 	enum ag_label_type type;
 	Uint flags;
 #define AG_LABEL_HFILL		0x01		/* Fill horizontal space */
@@ -66,14 +66,14 @@ void AG_LabelTextS(AG_Label *_Nonnull, const char *_Nonnull);
 void AG_LabelText(AG_Label *_Nonnull, const char *_Nonnull, ...)
                  FORMAT_ATTRIBUTE(printf,2,3);
 
-void	 AG_LabelSetPadding(AG_Label *_Nonnull, int,int,int,int);
-void	 AG_LabelJustify(AG_Label *_Nonnull, enum ag_text_justify);
-void	 AG_LabelValign(AG_Label *_Nonnull, enum ag_text_valign);
-#define	 AG_LabelSetPaddingLeft(lbl,v)   AG_LabelSetPadding((lbl),(v),-1,-1,-1)
-#define	 AG_LabelSetPaddingRight(lbl,v)  AG_LabelSetPadding((lbl),-1,(v),-1,-1)
-#define	 AG_LabelSetPaddingTop(lbl,v)    AG_LabelSetPadding((lbl),-1,-1,(v),-1)
-#define	 AG_LabelSetPaddingBottom(lbl,v) AG_LabelSetPadding((lbl),-1,-1,-1,(v))
-void	 AG_LabelSizeHint(AG_Label *_Nonnull, Uint, const char *_Nullable);
+void	AG_LabelSetPadding(AG_Label *_Nonnull, int,int,int,int);
+void	AG_LabelJustify(AG_Label *_Nonnull, enum ag_text_justify);
+void	AG_LabelValign(AG_Label *_Nonnull, enum ag_text_valign);
+#define	AG_LabelSetPaddingLeft(lbl,v)   AG_LabelSetPadding((lbl),(v),-1,-1,-1)
+#define	AG_LabelSetPaddingRight(lbl,v)  AG_LabelSetPadding((lbl),-1,(v),-1,-1)
+#define	AG_LabelSetPaddingTop(lbl,v)    AG_LabelSetPadding((lbl),-1,-1,(v),-1)
+#define	AG_LabelSetPaddingBottom(lbl,v) AG_LabelSetPadding((lbl),-1,-1,-1,(v))
+void	AG_LabelSizeHint(AG_Label *_Nonnull, Uint, const char *_Nullable);
 
 #ifdef AG_LEGACY
 # define AG_LabelNewStatic	AG_LabelNew

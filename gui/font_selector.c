@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -297,7 +297,10 @@ Init(void *obj)
 	fs->curFace[0] = '\0';
 	fs->curStyle = 0;
 	fs->curSize = 0;
-	fs->rPreview = AG_RECT(0,0,0,64);
+	fs->rPreview.x = 0;
+	fs->rPreview.y = 0;
+	fs->rPreview.w = 0;
+	fs->rPreview.h = 64;
 	fs->sPreview = -1;
 
 	AG_TlistSizeHint(fs->tlFaces, "XXXXXXXXXXXXXXX", 8);
@@ -324,12 +327,13 @@ Draw(void *obj)
 	OBJECT_FOREACH_CHILD(chld, obj, ag_widget) {
 		AG_WidgetDraw(chld);
 	}
-	AG_DrawBox(fs, fs->rPreview, -1, WCOLOR(fs,0));
+	AG_DrawBox(fs, &fs->rPreview, -1, &WCOLOR(fs,0));
 	if (fs->sPreview != -1) {
 		AG_Surface *su = WSURFACE(fs,fs->sPreview);
+
 		AG_WidgetBlitSurface(fs, fs->sPreview,
-		    fs->rPreview.x + fs->rPreview.w/2 - su->w/2,
-		    fs->rPreview.y + fs->rPreview.h/2 - su->h/2);
+		    fs->rPreview.x + (fs->rPreview.w >> 1) - (su->w >> 1),
+		    fs->rPreview.y + (fs->rPreview.h >> 1) - (su->h >> 1));
 	}
 }
 
@@ -369,7 +373,7 @@ AG_WidgetClass agFontSelectorClass = {
 		sizeof(AG_FontSelector),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

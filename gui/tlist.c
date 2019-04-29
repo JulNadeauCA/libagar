@@ -409,24 +409,28 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 }
 
 static void
-DrawSubnodeIndicator(void *_Nonnull wid, AG_Rect r, int isExpanded)
+DrawSubnodeIndicator(void *_Nonnull wid, const AG_Rect *_Nonnull r,
+    int isExpanded)
 {
-	AG_Color C;
+	AG_Rect rd;
+	AG_Color c;
 
-	AG_DrawRectBlended(wid,
-	    AG_RECT(r.x-1, r.y, r.w+2, r.h),
-	    AG_ColorRGBA(0,0,0,64),
-	    AG_ALPHA_SRC);
+	rd.x = r->x - 1;
+	rd.y = r->y;
+	rd.w = r->w + 2;
+	rd.h = r->h;
+	AG_ColorRGBA_8(&c, 0,0,0, 64);
+	AG_DrawRectBlended(wid, &rd, &c, AG_ALPHA_SRC);
 
-	C = AG_ColorRGBA(255,255,255,100);
+	AG_ColorRGBA_8(&c, 255,255,255, 100);
+	rd.x += 3;
+	rd.y += 2;
+	rd.w -= 6;
+	rd.h -= 4;
 	if (isExpanded) {
-		AG_DrawMinus(wid,
-		    AG_RECT(r.x+2, r.y+2, r.w-4, r.h-4),
-		    C, AG_ALPHA_SRC);
+		AG_DrawMinus(wid, &rd, &c, AG_ALPHA_SRC);
 	} else {
-		AG_DrawPlus(wid,
-		    AG_RECT(r.x+2, r.y+2, r.w-4, r.h-4),
-		    C, AG_ALPHA_SRC);
+		AG_DrawPlus(wid, &rd, &c, AG_ALPHA_SRC);
 	}
 }
 
@@ -435,16 +439,17 @@ Draw(void *_Nonnull obj)
 {
 	AG_Tlist *tl = obj;
 	AG_TlistItem *it;
+	AG_Rect r;
 	AG_Color cSel;
 	int x, y=0, i=0, selSeen=0, selPos=1, h=HEIGHT(tl);
 	int hItem, wIcon, wSpace, yLast, wRow, rOffs;
 	
 	UpdatePolled(tl);
 
-	AG_DrawBox(tl, tl->r, -1, WCOLOR(tl,AG_COLOR));
+	AG_DrawBox(tl, &tl->r, -1, &WCOLOR(tl,AG_COLOR));
 	cSel = WCOLOR_SEL(tl,AG_COLOR);
 	AG_WidgetDraw(tl->sbar);
-	AG_PushClipRect(tl, tl->r);
+	AG_PushClipRect(tl, &tl->r);
 
 	wSpace = tl->wSpace;
 	hItem = tl->item_h;
@@ -472,7 +477,7 @@ Draw(void *_Nonnull obj)
 			rSel.y = y + 1;
 			rSel.w = wRow - x - wIcon - 1;
 			rSel.h = hItem;
-			AG_DrawRect(tl, rSel, cSel);
+			AG_DrawRect(tl, &rSel, &cSel);
 			selSeen = 1;
 		}
 		if (it->iconsrc != NULL) {
@@ -489,20 +494,26 @@ Draw(void *_Nonnull obj)
 
 			if (it->selected) {
 				cSel.a >>= 1;
-				AG_DrawRectBlended(tl,
-				    AG_RECT(x, y, wIcon, hItem), cSel,
-				    AG_ALPHA_SRC);
+				r.x = x;
+				r.y = y;
+				r.w = wIcon;
+				r.h = hItem;
+				AG_DrawRectBlended(tl, &r, &cSel, AG_ALPHA_SRC);
 				cSel.a <<= 1;
 			}
 		}
 		if (it->flags & AG_TLIST_HAS_CHILDREN) {
-			DrawSubnodeIndicator(tl, AG_RECT(x,y, wIcon, hItem),
+			r.x = x;
+			r.y = y;
+			r.w = wIcon;
+			r.h = hItem;
+			DrawSubnodeIndicator(tl, &r,
 			    (it->flags & AG_TLIST_VISIBLE_CHILDREN));
 		}
 		if (it->label == -1) {
 			AG_TextColor(it->selected ?
-			             WCOLOR_SEL(tl,AG_TEXT_COLOR) :
-				     WCOLOR(tl,AG_TEXT_COLOR));
+			             &WCOLOR_SEL(tl,AG_TEXT_COLOR) :
+				     &WCOLOR(tl,AG_TEXT_COLOR));
 
 			it->label = AG_WidgetMapSurface(tl,
 			    AG_TextRender(it->text));
@@ -515,7 +526,7 @@ Draw(void *_Nonnull obj)
 		y += hItem;
 		
 		if (y < h)
-			AG_DrawLineH(tl, 0, wRow-2, y, WCOLOR(tl,AG_LINE_COLOR));
+			AG_DrawLineH(tl, 0, wRow-2, y, &WCOLOR(tl,AG_LINE_COLOR));
 	}
 	if (!selSeen && (tl->flags & AG_TLIST_SCROLLTOSEL)) {
 		if (selPos == -1) {
@@ -1167,7 +1178,10 @@ Init(void *_Nonnull obj)
 	tl->changedEv = NULL;
 	tl->dblClickEv = NULL;
 	tl->wheelTicks = 0;
-	tl->r = AG_RECT(0,0,0,0);
+	tl->r.x = 0;
+	tl->r.y = 0;
+	tl->r.w = 0;
+	tl->r.h = 0;
 	tl->rOffs = 0;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
@@ -1498,7 +1512,7 @@ AG_WidgetClass agTlistClass = {
 		sizeof(AG_Tlist),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

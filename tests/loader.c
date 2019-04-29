@@ -49,8 +49,9 @@ LoadImage(AG_Event *event)
 		Uint8 *pEnd = &S->pixels[S->h*S->pitch];
 
 		while (pSrc < pEnd) {
-			AG_Color c = AG_GetColor(AG_SurfaceGet_At(S,pSrc),
-			                         &S->format);
+			AG_Color c;
+			
+			AG_GetColor(&c, AG_SurfaceGet_At(S,pSrc), &S->format);
 			c.r = AG_COLOR_LAST - c.r;
 			c.g = AG_COLOR_LAST - c.g;
 			c.b = AG_COLOR_LAST - c.b;

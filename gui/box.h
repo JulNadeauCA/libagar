@@ -24,7 +24,7 @@ enum ag_box_align {
 struct ag_label;
 
 typedef struct ag_box {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Box */
 	enum ag_box_type type;
 	Uint flags;
 #define AG_BOX_HOMOGENOUS	0x01	/* Divide space evenly */
@@ -56,7 +56,6 @@ __BEGIN_DECLS
 extern AG_WidgetClass agBoxClass;
 
 AG_Box *_Nonnull  AG_BoxNew(void *_Nullable, enum ag_box_type, Uint);
-
 AG_Box *_Nonnull  AG_BoxNewHoriz(void *_Nullable, Uint);
 AG_Box *_Nonnull  AG_BoxNewHorizNS(void *_Nullable, Uint);
 AG_Box *_Nonnull  AG_BoxNewVert(void *_Nullable, Uint);

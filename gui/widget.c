@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -336,8 +336,18 @@ Init(void *_Nonnull obj)
 	OBJECT(wid)->flags |= AG_OBJECT_NAME_ONATTACH;
 
 	wid->flags = 0;
-	wid->rView = AG_RECT2(-1,-1,-1,-1);
-	wid->rSens = AG_RECT2(0,0,0,0);
+	wid->rView.x1 = -1;
+	wid->rView.y1 = -1;
+	wid->rView.w = -1;
+	wid->rView.h = -1;
+	wid->rView.x2 = -1;
+	wid->rView.y2 = -1;
+	wid->rSens.x1 = 0;
+	wid->rSens.y1 = 0;
+	wid->rSens.w = 0;
+	wid->rSens.h = 0;
+	wid->rSens.x2 = 0;
+	wid->rSens.y2 = 0;
 	wid->x = -1;
 	wid->y = -1;
 	wid->w = -1;
@@ -359,7 +369,9 @@ Init(void *_Nonnull obj)
 	wid->cState = AG_DEFAULT_STATE;
 	wid->font = agDefaultFont;
 	wid->pal = agDefaultPalette;
+#ifdef HAVE_OPENGL
 	wid->gl = NULL;
+#endif
 
 	AG_SetEvent(wid, "attached", OnAttach, NULL);
 	AG_SetEvent(wid, "detached", OnDetach, NULL);
@@ -1016,6 +1028,7 @@ Destroy(void *_Nonnull obj)
 	Free(wid->texcoords);
 }
 
+#ifdef HAVE_OPENGL
 /*
  * Coordinate-free variants of AG_WidgetBlit*() for OpenGL-only widgets.
  * Rely on GL transformations instead of coordinates.
@@ -1023,26 +1036,20 @@ Destroy(void *_Nonnull obj)
 void
 AG_WidgetBlitGL(void *obj, AG_Surface *su, float w, float h)
 {
-#ifdef HAVE_OPENGL
 	AG_Widget *wid = obj;
 	wid->drvOps->blitSurfaceGL(wid->drv, wid, su, w, h);
-#endif
 }
 void
 AG_WidgetBlitSurfaceGL(void *obj, int name, float w, float h)
 {
-#ifdef HAVE_OPENGL
 	AG_Widget *wid = obj;
 	wid->drvOps->blitSurfaceFromGL(wid->drv, wid, name, w, h);
-#endif
 }
 void
 AG_WidgetBlitSurfaceFlippedGL(void *obj, int name, float w, float h)
 {
-#ifdef HAVE_OPENGL
 	AG_Widget *wid = obj;
 	wid->drvOps->blitSurfaceFlippedGL(wid->drv, wid, name, w, h);
-#endif
 }
 
 /*
@@ -1056,7 +1063,6 @@ AG_WidgetBlitSurfaceFlippedGL(void *obj, int name, float w, float h)
 void
 AG_WidgetFreeResourcesGL(void *obj)
 {
-#ifdef HAVE_OPENGL
 	AG_Widget *wid = obj, *cwid;
 
 	if (wid->drvOps->backupSurfaces != NULL) {
@@ -1064,12 +1070,10 @@ AG_WidgetFreeResourcesGL(void *obj)
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		AG_WidgetFreeResourcesGL(cwid);
-#endif
 }
 void
 AG_WidgetRegenResourcesGL(void *obj)
 {
-#ifdef HAVE_OPENGL
 	AG_Widget *wid = obj, *cwid;
 
 	if (wid->drvOps->restoreSurfaces != NULL) {
@@ -1077,8 +1081,8 @@ AG_WidgetRegenResourcesGL(void *obj)
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		AG_WidgetRegenResourcesGL(cwid);
-#endif
 }
+#endif /* HAVE_OPENGL */
 
 /* Acquire widget focus */
 static __inline__ void
@@ -1283,7 +1287,7 @@ AG_WidgetDraw(void *p)
 	if (wid->flags & AG_WIDGET_USE_TEXT) {
 		AG_PushTextState();
 		AG_TextFont(wid->font);
-		AG_TextColor(wid->pal.c[wid->cState][AG_TEXT_COLOR]);
+		AG_TextColor(&wid->pal.c[wid->cState][AG_TEXT_COLOR]);
 	}
 #ifdef HAVE_OPENGL
 	if (wid->flags & AG_WIDGET_USE_OPENGL)
@@ -1384,14 +1388,16 @@ AG_WidgetSensitive(void *obj, int x, int y)
 {
 	AG_Widget *wt = WIDGET(obj);
 	AG_Widget *wtParent = wt;
-	AG_Rect2 rx = wt->rSens;
+	AG_Rect2 rx;
+
+	memcpy(&rx, &wt->rSens, sizeof(AG_Rect2));
 
 	/* XXX why not use widget's window pointer? */
 	while ((wtParent = OBJECT(wtParent)->parent) != NULL) {
 		if (AG_OfClass(wtParent, "AG_Widget:AG_Window:*")) {
 			break;
 		}
-		rx = AG_RectIntersect2(&rx, &wtParent->rSens);
+		AG_RectIntersect2(&rx, &rx, &wtParent->rSens);
 	}
 	return AG_RectInside2(&rx, x,y);
 }
@@ -1485,37 +1491,32 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 
 /* Parse a generic size specification. */
 enum ag_widget_sizespec
-AG_WidgetParseSizeSpec(const char *input, int *w)
+AG_WidgetParseSizeSpec(const char *s, int *w)
 {
-	char spec[1024], *p;
+	const char *p;
 	size_t len;
 
-	Strlcpy(spec, input, sizeof(spec));
-	len = strlen(spec);
+	len = strlen(s);
 	if (len == 0) { goto syntax; }
-	p = &spec[len-1];
+	p = &s[len-1];
 
 	switch (*p) {
 	case '-':
 		*w = 0;
 		return (AG_WIDGET_FILL);
 	case '%':
-		*p = '\0';
-		*w = (int)strtol(spec, NULL, 10);
+		*w = (int)strtol(s, NULL, 10);
 		return (AG_WIDGET_PERCENT);
 	case '>':
-		if (spec[0] != '<') { goto syntax; }
-		*p = '\0';
-		AG_TextSize(&spec[1], w, NULL);
+		if (s[0] != '<') { goto syntax; }
+		AG_TextSize(&s[1], w, NULL);
 		return (AG_WIDGET_STRINGLEN);
 	case 'x':
-		if (p > &spec[0] && p[-1] != 'p') { goto syntax; }
-		p[-1] = '\0';
-		*w = (int)strtol(spec, NULL, 10);
+		if (p > &s[0] && p[-1] != 'p') { goto syntax; }
+		*w = (int)strtol(s, NULL, 10);
 		return (AG_WIDGET_PIXELS);
 	}
 syntax:
-	Verbose("Warning: Bad SizeSpec: \"%s\"\n", input);
 	*w = 0;
 	return (AG_WIDGET_BAD_SPEC);
 }
@@ -1838,7 +1839,7 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
 static void
 CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
     double parentPtSize, Uint parentFlags,
-    AG_WidgetPalette parentPalette)
+    const AG_WidgetPalette *parentPalette)
 {
 	AG_StyleSheet *css = &agDefaultCSS;
 	char face[256];
@@ -1907,23 +1908,23 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	/* Set the color attributes. */
 	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
 		for (j = 0; j < AG_WIDGET_NCOLORS; j++) {
-			AG_Color *parentColor = &parentPalette.c[i][j];
+			const AG_Color *parentColor = &parentPalette->c[i][j];
 			char vName[AG_VARIABLE_NAME_MAX];
 
 			Strlcpy(vName, agWidgetColorNames[j], sizeof(vName));
 			Strlcat(vName, agWidgetStateNames[i], sizeof(vName));
 			if ((V = AG_AccessVariable(wid, vName)) != NULL) {
-				wid->pal.c[i][j] = AG_ColorFromString(V->data.s,
-				    parentColor);
+				AG_ColorFromString(&wid->pal.c[i][j],
+				    V->data.s, parentColor);
 				AG_UnlockVariable(V);
 			} else if (AG_LookupStyleSheet(css, wid, vName, &cssData)) {
-				wid->pal.c[i][j] = AG_ColorFromString(cssData,
+				AG_ColorFromString(&wid->pal.c[i][j], cssData,
 				    parentColor);
 			} else {
 				Strlcpy(vName, agWidgetColorNames[j], sizeof(vName));
 				if (AG_LookupStyleSheet(css, wid, vName, &cssData)) {
-					wid->pal.c[i][j] = AG_ColorFromString(cssData,
-					    parentColor);
+					AG_ColorFromString(&wid->pal.c[i][j],
+					    cssData, parentColor);
 				} else {
 					wid->pal.c[i][j] = *parentColor;
 				}
@@ -1957,7 +1958,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	}
 
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
-		CompileStyleRecursive(chld, face, ptSize, flags, wid->pal);
+		CompileStyleRecursive(chld, face, ptSize, flags, &wid->pal);
 }
 void
 AG_WidgetCompileStyle(void *obj)
@@ -1974,13 +1975,13 @@ AG_WidgetCompileStyle(void *obj)
 		CompileStyleRecursive(wid, OBJECT(parent->font)->name,
 		    parent->font->spec.size,
 		    parent->font->flags,
-		    parent->pal);
+		    &parent->pal);
 	} else {
 
 		CompileStyleRecursive(wid, OBJECT(agDefaultFont)->name,
 		    agDefaultFont->spec.size,
 		    agDefaultFont->flags,
-		    agDefaultPalette);
+		    &agDefaultPalette);
 	}
 
 	AG_MutexUnlock(&agTextLock);
@@ -2072,7 +2073,7 @@ AG_WidgetClass agWidgetClass = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	NULL,			/* draw */
+	NULL,		/* draw */
 	SizeRequest,
 	SizeAllocate
 };

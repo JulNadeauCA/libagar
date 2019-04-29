@@ -22,7 +22,8 @@ typedef struct ag_console_line {
 } AG_ConsoleLine;
 
 typedef struct ag_console {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Console */
+
 	Uint flags;
 #define AG_CONSOLE_HFILL	0x01	/* Fill available width */
 #define AG_CONSOLE_VFILL	0x02	/* Fill available height */
@@ -60,11 +61,11 @@ AG_ConsoleLine *_Nonnull AG_ConsoleMsgS(AG_Console *_Nonnull, const char *_Nonnu
 AG_ConsoleLine *_Nonnull AG_ConsoleMsg(AG_Console *_Nonnull, const char *_Nonnull, ...)
                                       FORMAT_ATTRIBUTE(printf,2,3);
 
-void    AG_ConsoleSetPadding(AG_Console *_Nonnull, int);
-void    AG_ConsoleMsgEdit(AG_ConsoleLine *_Nonnull, const char *_Nonnull);
-void    AG_ConsoleMsgPtr(AG_ConsoleLine *_Nonnull, void *_Nullable);
-void    AG_ConsoleMsgColor(AG_ConsoleLine *_Nonnull, AG_Color);
-void    AG_ConsoleClear(AG_Console *_Nonnull);
+void AG_ConsoleSetPadding(AG_Console *_Nonnull, int);
+void AG_ConsoleMsgEdit(AG_ConsoleLine *_Nonnull, const char *_Nonnull);
+void AG_ConsoleMsgPtr(AG_ConsoleLine *_Nonnull, void *_Nullable);
+void AG_ConsoleMsgColor(AG_ConsoleLine *_Nonnull, const AG_Color *_Nonnull);
+void AG_ConsoleClear(AG_Console *_Nonnull);
 
 char *_Nullable AG_ConsoleExportText(AG_Console *_Nonnull, int);
 

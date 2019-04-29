@@ -193,20 +193,20 @@ ag_widget_update(void *obj)
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
-AG_PushClipRect(void *_Nonnull obj, AG_Rect pr)
+AG_PushClipRect(void *_Nonnull obj, const AG_Rect *_Nonnull pr)
 #else
 void
-ag_push_clip_rect(void *obj, AG_Rect pr)
+ag_push_clip_rect(void *obj, const AG_Rect *_Nonnull pr)
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Rect r;
 
-	r.x = wid->rView.x1 + pr.x;
-	r.y = wid->rView.y1 + pr.y;
-	r.w = pr.w;
-	r.h = pr.h;
-	wid->drvOps->pushClipRect(wid->drv, r);
+	r.x = wid->rView.x1 + pr->x;
+	r.y = wid->rView.y1 + pr->y;
+	r.w = pr->w;
+	r.h = pr->h;
+	wid->drvOps->pushClipRect(wid->drv, &r);
 }
 
 /*

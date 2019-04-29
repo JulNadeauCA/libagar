@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -217,14 +217,14 @@ AG_SetVideoResizeCallback(void (*fn)(Uint w, Uint h))
 	agVideoResizeCallback = fn;
 }
 
-/* Process a window move initiated by the WM. */
+/* Handle a window displacement initiated by the WM. */
 static void
 WM_Move(AG_Window *_Nonnull win, int xRel, int yRel)
 {
 	AG_DriverSw *dsw = (AG_DriverSw *)WIDGET(win)->drv;
 	AG_DriverClass *dc = AGDRIVER_CLASS(dsw);
 	AG_Rect rPrev, rNew;
-	AG_Rect rFill1, rFill2;
+	AG_Rect a, b;
 
 	rPrev.x = WIDGET(win)->x;
 	rPrev.y = WIDGET(win)->y;
@@ -243,39 +243,39 @@ WM_Move(AG_Window *_Nonnull win, int xRel, int yRel)
 		rNew.y = WIDGET(win)->y;
 		rNew.w = WIDTH(win);
 		rNew.h = HEIGHT(win);
-		rFill1.w = 0;
-		rFill2.w = 0;
-		if (rNew.x > rPrev.x) {		/* Right */
-			rFill1.x = rPrev.x;
-			rFill1.y = rPrev.y;
-			rFill1.w = rNew.x - rPrev.x;
-			rFill1.h = rNew.h;
-		} else if (rNew.x < rPrev.x) {	/* Left */
-			rFill1.x = rNew.x + rNew.w;
-			rFill1.y = rNew.y;
-			rFill1.w = rPrev.x - rNew.x;
-			rFill1.h = rPrev.h;
+		a.w = 0;
+		b.w = 0;
+		if (rNew.x > rPrev.x) {				/* Right */
+			a.x = rPrev.x;
+			a.y = rPrev.y;
+			a.w = rNew.x - rPrev.x;
+			a.h = rNew.h;
+		} else if (rNew.x < rPrev.x) {			/* Left */
+			a.x = rNew.x + rNew.w;
+			a.y = rNew.y;
+			a.w = rPrev.x - rNew.x;
+			a.h = rPrev.h;
 		}
-		if (rNew.y > rPrev.y) {		/* Downward */
-			rFill2.x = rPrev.x;
-			rFill2.y = rPrev.y;
-			rFill2.w = rNew.w;
-			rFill2.h = rNew.y - rPrev.y;
-		} else if (rNew.y < rPrev.y) {	/* Upward */
-			rFill2.x = rPrev.x;
-			rFill2.y = rNew.y + rNew.h;
-			rFill2.w = rPrev.w;
-			rFill2.h = rPrev.y - rNew.y;
+		if (rNew.y > rPrev.y) {				/* Down */
+			b.x = rPrev.x;
+			b.y = rPrev.y;
+			b.w = rNew.w;
+			b.h = rNew.y - rPrev.y;
+		} else if (rNew.y < rPrev.y) {			/* Up */
+			b.x = rPrev.x;
+			b.y = rNew.y + rNew.h;
+			b.w = rPrev.w;
+			b.h = rPrev.y - rNew.y;
 		}
-		if (rFill1.w > 0) {
-			AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill1, dsw->bgColor);
+		if (a.w > 0) {
+			AGDRIVER_CLASS(dsw)->fillRect(dsw, &a, &dsw->bgColor);
 			if (AGDRIVER_CLASS(dsw)->updateRegion != NULL)
-				AGDRIVER_CLASS(dsw)->updateRegion(dsw, rFill1);
+				AGDRIVER_CLASS(dsw)->updateRegion(dsw, &a);
 		}
-		if (rFill2.w > 0) {
-			AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill2, dsw->bgColor);
+		if (b.w > 0) {
+			AGDRIVER_CLASS(dsw)->fillRect(dsw, &b, &dsw->bgColor);
 			if (AGDRIVER_CLASS(dsw)->updateRegion != NULL)
-				AGDRIVER_CLASS(dsw)->updateRegion(dsw, rFill2);
+				AGDRIVER_CLASS(dsw)->updateRegion(dsw, &b);
 		}
 	}
 
@@ -284,7 +284,7 @@ WM_Move(AG_Window *_Nonnull win, int xRel, int yRel)
 	AG_WindowMovePinned(win, xRel, yRel);
 }
 
-/* Process a window resize operation initiated by the WM. */
+/* Handle a window resize operation initiated by the WM. */
 static void
 WM_Resize(int op, AG_Window *_Nonnull win, int xRel, int yRel)
 {
@@ -482,27 +482,30 @@ GetTilingPosition(AG_Window *_Nonnull win, int *_Nonnull xDst,
 	AG_Window *wOther;
 	const int maxTests = 10000, dx = 16;
 	int nTest = 0;
-	int x = 0, y = 0, xo, yo, wo, ho;
-	int xd = 0, yd = 0;
+	int dw = dsw->w;
+	int dh = dsw->h;
+	int x,y, xd, yd;
 
 	switch (win->alignment) {
-	case AG_WINDOW_TL:	xd = 0;			yd = 0;			break;
-	case AG_WINDOW_TC:	xd = dsw->w/2 - w/2;	yd = 0;			break;
-	case AG_WINDOW_TR:	xd = dsw->w - w;	yd = 0;			break;
-	case AG_WINDOW_ML:	xd = 0;			yd = dsw->h/2 - h/2;	break;
-	case AG_WINDOW_MR:	xd = dsw->w - w;	yd = dsw->h/2 - h/2;	break;
-	case AG_WINDOW_BL:	xd = 0;			yd = dsw->h - h;	break;
-	case AG_WINDOW_BC:	xd = dsw->w/2 - w/2;	yd = dsw->h - h;	break;
-	case AG_WINDOW_BR:	xd = dsw->w - w;	yd = dsw->h - h;	break;
+	case AG_WINDOW_TL: xd = 0;		yd = 0;			break;
+	case AG_WINDOW_TC: xd = (dw>>1)-(w>>1);	yd = 0;			break;
+	case AG_WINDOW_TR: xd = dw-w;		yd = 0;			break;
+	case AG_WINDOW_ML: xd = 0;		yd = (dh>>1)-(h>>1);	break;
+	case AG_WINDOW_MR: xd = dw-w;		yd = (dh>>1)-(h>>1);	break;
+	case AG_WINDOW_BL: xd = 0;		yd = dh - h;		break;
+	case AG_WINDOW_BC: xd = (dw>>1)-(w>>1);	yd = dh - h;		break;
+	case AG_WINDOW_BR: xd = dw-w;		yd = dh - h;		break;
 	default:
 	case AG_WINDOW_ALIGNMENT_NONE:
-	case AG_WINDOW_MC:	xd = dsw->w/2 - w/2;	yd = dsw->h/2 - h/2;	break;
+	case AG_WINDOW_MC: xd = (dw>>1)-(w>>1);	yd = (dh>>1)-(h>>1);	break;
 	}
 	x = xd;
 	y = yd;
 
 	for (;;) {
 		OBJECT_FOREACH_CHILD(wOther, dsw, ag_window) {
+			int xo,yo, wo,ho;
+
 			if (wOther == win ||
 			    (wOther->flags & AG_WINDOW_TILING) == 0) {
 				continue;
@@ -520,10 +523,10 @@ GetTilingPosition(AG_Window *_Nonnull win, int *_Nonnull xDst,
 				case AG_WINDOW_MC:
 				default:
 					x += dx;
-					if (x+w > dsw->w) {
+					if (x+w > dw) {
 						x = 0;
 						y += dx;
-						if (y > dsw->h)
+						if (y > dh)
 							goto fail;
 					}
 					break;
@@ -531,16 +534,16 @@ GetTilingPosition(AG_Window *_Nonnull win, int *_Nonnull xDst,
 				case AG_WINDOW_MR:
 					x -= dx;
 					if (x < 0) {
-						x = dsw->w - w;
+						x = dw - w;
 						y += dx;
-						if (y > dsw->h)
+						if (y > dh)
 							goto fail;
 					}
 					break;
 				case AG_WINDOW_BL:
 				case AG_WINDOW_BC:
 					x += dx;
-					if (x+w > dsw->w) {
+					if (x+w > dw) {
 						x = 0;
 						y -= dx;
 						if (y < 0)
@@ -550,7 +553,7 @@ GetTilingPosition(AG_Window *_Nonnull win, int *_Nonnull xDst,
 				case AG_WINDOW_BR:
 					x -= dx;
 					if (x < 0) {
-						x = dsw->w - w;
+						x = dw - w;
 						y -= dx;
 						if (y < 0)
 							goto fail;
@@ -633,10 +636,12 @@ AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y, int w, int h)
 void
 AG_ClearBackground(void)
 {
-	if (agDriverSw != NULL) {
-		AG_Color c = { 0,0,0,0 };
-		AGDRIVER_SW_CLASS(agDriverSw)->videoClear(agDriverSw, c);
+	AG_DriverSw *dsw;
+
+	if ((dsw = agDriverSw) == NULL) {
+		return;
 	}
+	AGDRIVER_SW_CLASS(dsw)->videoClear(dsw, &dsw->bgColor);
 }
 
 /* Configure the display refresh rate (driver-dependent). */

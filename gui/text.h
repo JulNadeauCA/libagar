@@ -222,11 +222,11 @@ AG_Surface *_Nonnull AG_TextRender(const char *_Nonnull)
 AG_Glyph *_Nonnull AG_TextRenderGlyph(AG_Driver *_Nonnull, Uint32)
                                      _Warn_Unused_Result;
 
-void AG_TextColor(AG_Color);
+void AG_TextColor(const AG_Color *_Nonnull);
 void AG_TextColorRGB(Uint8, Uint8, Uint8);
 void AG_TextColorRGBA(Uint8, Uint8, Uint8, Uint8);
 void AG_TextColorHex(Uint32);
-void AG_TextBGColor(AG_Color);
+void AG_TextBGColor(const AG_Color *_Nonnull);
 void AG_TextBGColorRGB(Uint8, Uint8, Uint8);
 void AG_TextBGColorRGBA(Uint8, Uint8, Uint8, Uint8);
 void AG_TextBGColorHex(Uint32);

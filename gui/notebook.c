@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,6 @@
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
 
-#define SPACING 8
-
 AG_Notebook *
 AG_NotebookNew(void *parent, Uint flags)
 {
@@ -52,14 +50,16 @@ MouseButtonDown(AG_Event *event)
 	AG_Notebook *nb = AG_SELF();
 	int x = AG_INT(2);
 	int y = AG_INT(3);
+	int ts = nb->tabspacing;
+	int ts2 = (ts << 1);
 
 	if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0 &&
 	    y <= nb->bar_h) {
 		AG_NotebookTab *tab;
-		int tx = SPACING;
+		int tx = ts;
 
 		TAILQ_FOREACH(tab, &nb->tabs, tabs) {
-			int wTab = (tab->lbl ? WIDTH(tab->lbl) : 0) + SPACING*2;
+			int wTab = (tab->lbl ? WIDTH(tab->lbl) : 0) + ts2;
 
 			if (x >= tx && x < tx+wTab) {
 				AG_NotebookSelect(nb, tab);
@@ -104,7 +104,11 @@ Init(void *obj)
 	nb->cont_h = -1;
 	nb->spacing = -1;
 	nb->padding = -1;
-	nb->r = AG_RECT(0,0,0,0);
+	nb->tabspacing = 8;	/* TODO adjust */
+	nb->r.x = 0;
+	nb->r.y = 0;
+	nb->r.w = 0;
+	nb->r.h = 0;
 	nb->nTabs = 0;
 	TAILQ_INIT(&nb->tabs);
 
@@ -119,14 +123,14 @@ Draw(void *obj)
 	AG_Notebook *nb = obj;
 	AG_Font *font = WIDGET(nb)->font;
 	AG_NotebookTab *tab;
-	int x = SPACING;
-	int y = SPACING;
 	AG_Rect r;
+	int ts = nb->tabspacing, ts_2 = (ts << 1);
+	int x = ts, y = ts;
 
-	AG_DrawRectFilled(nb, nb->r, WCOLOR_HOV(nb,0));
+	AG_DrawRectFilled(nb, &nb->r, &WCOLOR_HOV(nb,0));
 	
 	if (nb->sel_tab != NULL) {
-		AG_PushClipRect(nb, nb->r);
+		AG_PushClipRect(nb, &nb->r);
 		AG_WidgetDraw(nb->sel_tab);
 		AG_PopClipRect(nb);
 	}
@@ -140,18 +144,19 @@ Draw(void *obj)
 
 		r.x = x;
 		r.y = y;
-		r.w = wLbl + SPACING*2;
-		r.h = nb->bar_h - SPACING;
+		r.w = wLbl + ts_2;
+		r.h = nb->bar_h - ts;
 	
 		if (r.x+r.w > WIDTH(nb)) {
 			r.w = WIDTH(nb) - r.x;
-			if (r.w <= SPACING*4)
+			if (r.w <= (ts << 2))
 				break;
 		}
-		AG_DrawBoxRoundedTop(nb, r,
+		AG_DrawBoxRoundedTop(nb, &r,
 		    isSelected ? -1 : 1, (int)(font->height/1.5),
-		    isSelected ? WCOLOR_HOV(nb,0) :
-	 	                 WCOLOR(nb,0));
+		    isSelected ? &WCOLOR_HOV(nb,0) :
+	 	                 &WCOLOR(nb,0));
+
 		if (tab->lbl != NULL) {
 			AG_WidgetDraw(tab->lbl);
 		}
@@ -166,10 +171,11 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	AG_Font *font = WIDGET(nb)->font;
 	AG_NotebookTab *tab;
 	AG_SizeReq rTab;
+	int ts2 = nb->tabspacing << 1;
 
 	if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0) {
-		nb->bar_h = font->height + SPACING*2;
-		nb->bar_w = SPACING*2;
+		nb->bar_h = font->height + ts2;
+		nb->bar_w = ts2;
 	} else {
 		nb->bar_h = 0;
 		nb->bar_w = 0;
@@ -182,7 +188,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		nb->cont_w = MAX(nb->cont_w,rTab.w);
 		nb->cont_h = MAX(nb->cont_h,rTab.h);
 		if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0) {
-			nb->bar_w += SPACING*2;
+			nb->bar_w += ts2;
 			if (tab->lbl != NULL)
 				nb->bar_w += WIDTH(tab->lbl);
 		}
@@ -198,25 +204,26 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_NotebookTab *tab;
 	AG_SizeAlloc aTab, aLbl;
 	AG_SizeReq rLbl;
-
-	int x = nb->padding+SPACING;
-	int y = nb->padding+SPACING;
+	int ts = nb->tabspacing;
+	int x = nb->padding + ts;
+	int y = x;
 
 	if (a->h < nb->bar_h) {
 		return (-1);
 	}
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
 		if (tab->lbl == NULL) {
-			x += SPACING*4;
+			x += (ts << 2);
 			continue;
 		}
 		AG_WidgetSizeReq(tab->lbl, &rLbl);
-		aLbl.x = x+SPACING;
-		aLbl.y = y+SPACING;
-		aLbl.w = MIN(rLbl.w, WIDTH(nb)-SPACING-x);
+		aLbl.x = x + ts;
+		aLbl.y = y + ts;
+		aLbl.w = MIN(rLbl.w, WIDTH(nb) - ts - x);
 		aLbl.h = rLbl.h;
 		AG_WidgetSizeAlloc(tab->lbl, &aLbl);
-		x += aLbl.w + SPACING*2;
+
+		x += aLbl.w + (ts << 1);
 	}
 	if ((tab = nb->sel_tab) != NULL) {
 		aTab.x = 0;
@@ -365,7 +372,7 @@ AG_WidgetClass agNotebookClass = {
 		sizeof(AG_Notebook),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
@@ -381,12 +388,12 @@ AG_WidgetClass agNotebookTabClass = {
 		"AG_Widget:AG_Box:AG_NotebookTab",
 		sizeof(AG_NotebookTab),
 		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* free */
-		NULL,			/* destroy */
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,		/* reset */
+		NULL,		/* free */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	AG_WidgetInheritDraw,
 	AG_WidgetInheritSizeRequest,

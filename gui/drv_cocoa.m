@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2012-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -947,13 +947,13 @@ COCOA_EndRendering(void *obj)
  */
 
 static void
-SetBackgroundColor(AG_DriverCocoa *co, AG_Color c)
+SetBackgroundColor(AG_DriverCocoa *co, const AG_Color *c)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	CGFloat r = (CGFloat)(c.r / AG_COLOR_LASTF);
-	CGFloat g = (CGFloat)(c.g / AG_COLOR_LASTF);
-	CGFloat b = (CGFloat)(c.b / AG_COLOR_LASTF);
-	CGFloat a = (CGFloat)(c.a / AG_COLOR_LASTF);
+	CGFloat r = (CGFloat)(c->r / AG_COLOR_LASTF);
+	CGFloat g = (CGFloat)(c->g / AG_COLOR_LASTF);
+	CGFloat b = (CGFloat)(c->b / AG_COLOR_LASTF);
+	CGFloat a = (CGFloat)(c->a / AG_COLOR_LASTF);
 	NSColor *bgColor;
 
 	bgColor = [NSColor colorWithCalibratedRed:r green:g blue:b alpha:a];
@@ -963,7 +963,8 @@ SetBackgroundColor(AG_DriverCocoa *co, AG_Color c)
 }
 
 static int
-COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
+COCOA_OpenWindow(AG_Window *win, const AG_Rect *_Nonnull r, int depthReq,
+    Uint mwFlags)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -991,10 +992,10 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	}
 
 	/* Set the window coordinates. */
-	winRect.origin.x = r.x;
-	winRect.origin.y = r.y;
-	winRect.size.width = r.w;
-	winRect.size.height = r.h;
+	winRect.origin.x    = r->x;
+	winRect.origin.y    = r->y;
+	winRect.size.width  = r->w;
+	winRect.size.height = r->h;
 	ConvertNSRect(&winRect);
 
 	/* Select a screen. */
@@ -1029,7 +1030,7 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 					          screen:selScreen];
 	}
 	co->win->_agarWindow = win;
-	SetBackgroundColor(co, WCOLOR(win,0));
+	SetBackgroundColor(co, &WCOLOR(win,0));
 
 	if (win->flags & AG_WINDOW_MAIN)
 		[co->win makeMainWindow];
@@ -1311,9 +1312,10 @@ COCOA_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverCocoa *co = (AG_DriverCocoa *)drv;
+	AG_Rect r;
+	NSRect trackRect;
 	int x = a->x;
 	int y = a->y;
-	NSRect trackRect;
 	
 	AG_MutexLock(&co->lock);
 
@@ -1325,7 +1327,11 @@ COCOA_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 
 	/* The viewport coordinates have changed. */
 	[co->glCtx makeCurrentContext];
-	AG_GL_SetViewport(&co->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(win);
+	r.h = HEIGHT(win);
+	AG_GL_SetViewport(&co->gl, &r);
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
 	/* Update the tracking rectangle. */
@@ -1620,11 +1626,11 @@ AG_DriverMwClass agDriverCocoa = {
 			sizeof(AG_DriverCocoa),
 			{ 1,6 },
 			Init,
-			NULL,	/* reset */
+			NULL,		/* reset */
 			Destroy,
-			NULL,	/* load */
-			NULL,	/* save */
-			NULL,	/* edit */
+			NULL,		/* load */
+			NULL,		/* save */
+			NULL,		/* edit */
 		},
 		"cocoa",
 		AG_VECTOR,
@@ -1661,15 +1667,21 @@ AG_DriverMwClass agDriverCocoa = {
 		COCOA_SetCursorVisibility,
 		AG_GL_BlitSurface,
 		AG_GL_BlitSurfaceFrom,
+#ifdef HAVE_OPENGL
 		AG_GL_BlitSurfaceGL,
 		AG_GL_BlitSurfaceFromGL,
 		AG_GL_BlitSurfaceFlippedGL,
+#endif
 		AG_GL_BackupSurfaces,
 		AG_GL_RestoreSurfaces,
 		AG_GL_RenderToSurface,
 		AG_GL_PutPixel,
 		AG_GL_PutPixel32,
-		AG_GL_PutPixelRGB,
+		AG_GL_PutPixelRGB8,
+#if AG_MODEL == AG_LARGE
+		AG_GL_PutPixel64,
+		AG_GL_PutPixelRGB16,
+#endif
 		AG_GL_BlendPixel,
 		AG_GL_DrawLine,
 		AG_GL_DrawLineH,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -596,25 +596,29 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Slider *sl = obj;
+	AG_Rect r;
 	int x;
 
-	if (GetPosition(sl, &x) == -1) {
+	if (GetPosition(sl, &x) == -1)
 		return;
-	}
+
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(sl);
+	r.h = HEIGHT(sl);
+
 	switch (sl->type) {
 	case AG_SLIDER_VERT:
-		AG_DrawBox(sl, AG_RECT(0,0,WIDTH(sl),HEIGHT(sl)), -1, WCOLOR(sl,0));
-		AG_DrawBox(sl,
-		    AG_RECT(0, x, WIDTH(sl), sl->wControl),
-		    sl->ctlPressed ? -1 : 1,
-		    WCOLOR(sl,0));
+		AG_DrawBox(sl, &r, -1, &WCOLOR(sl,0));
+		r.y = x;
+		r.h = sl->wControl;
+		AG_DrawBox(sl, &r, sl->ctlPressed ? -1 : 1, &WCOLOR(sl,0));
 		break;
 	case AG_SLIDER_HORIZ:
-		AG_DrawBox(sl, AG_RECT(0,0,WIDTH(sl),HEIGHT(sl)), -1, WCOLOR(sl,0));
-		AG_DrawBox(sl,
-		    AG_RECT(x, 0, sl->wControl, HEIGHT(sl)),
-		    sl->ctlPressed ? -1 : 1,
-		    WCOLOR(sl,0));
+		AG_DrawBox(sl, &r, -1, &WCOLOR(sl,0));
+		r.x = x;
+		r.w = sl->wControl;
+		AG_DrawBox(sl, &r, sl->ctlPressed ? -1 : 1, &WCOLOR(sl,0));
 		break;
 	}
 }
@@ -625,7 +629,7 @@ AG_WidgetClass agSliderClass = {
 		sizeof(AG_Slider),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

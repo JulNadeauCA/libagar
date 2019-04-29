@@ -684,7 +684,7 @@ should be considered valid only for as long as the parent VFS is locked.
 .Sh RENDERING CONTROL
 .nr nS 1
 .Ft void
-.Fn AG_PushClipRect "AG_Widget *widget" "AG_Rect r"
+.Fn AG_PushClipRect "AG_Widget *widget" "const AG_Rect *r"
 .Pp
 .Ft void
 .Fn AG_PopClipRect "AG_Widget *widget"

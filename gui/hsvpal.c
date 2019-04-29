@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -685,7 +685,7 @@ OnAttach(AG_Event *_Nonnull event)
 	AG_HSVPal *pal = AG_SELF();
 	
 	pal->pixel = AG_MapPixel32_RGBA8(agSurfaceFmt, 0,0,0,255);
-	pal->color = AG_ColorRGBA(0,0,0,255);
+	AG_ColorRGBA_8(&pal->color, 0,0,0, 255);
 	AG_BindPointer(pal, "pixel-format", (void *)&agSurfaceFmt);
 }
 
@@ -702,7 +702,7 @@ Init(void *_Nonnull obj)
 	pal->v = 0.0f;
 	pal->a = 1.0f;
 	pal->pixel = 0;
-	pal->color = AG_ColorRGBA(0,0,0,255);
+	AG_ColorBlack(&pal->color);
 	pal->circle.spacing = 10;
 	pal->state = AG_HSVPAL_SEL_NONE;
 	pal->surface = NULL;
@@ -710,7 +710,7 @@ Init(void *_Nonnull obj)
 	pal->menu = NULL;
 	pal->menu_item = NULL;
 	pal->menu_win = NULL;
-	pal->cTile = AG_ColorRGB(140,140,140);
+	AG_ColorRGB_8(&pal->cTile, 140,140,140);
 
 	AG_SetEvent(pal, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(pal, "mouse-button-down", MouseButtonDown, NULL);
@@ -738,7 +738,8 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 	AG_Pixel px;
 	int x, y, i;
 
-	AG_FillRect(S, NULL, AG_ColorRGB(0,0,0));
+	AG_ColorBlack(&c);
+	AG_FillRect(S, NULL, &c);
 	/* XXX overdraw */
 
 	hue = (AG_GetFloat(pal, "hue")/360.0f) * 2.0f*AG_PI;
@@ -752,7 +753,7 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 		               &c.r, &c.g, &c.b);
 		c.a = AG_OPAQUE;
 
-		px = AG_MapPixel(&S->format, c);
+		px = AG_MapPixel(&S->format, &c);
 
 		for (i = 0; i < pal->circle.width; i++) {
 			x = (pal->circle.rOut - i)*Cos(h);
@@ -777,13 +778,13 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 			    1.0f - ((float)x/(float)pal->triangle.h),
 			    &c.r, &c.g, &c.b);
 
-			px = AG_MapPixel(&S->format, c);
+			px = AG_MapPixel(&S->format, &c);
 			AG_SurfacePut(S,
-			    pal->triangle.x + x - y/2,
+			    pal->triangle.x + x - (y >> 1),
 			    pal->triangle.y + y,
 			    px);
 			AG_SurfacePut(S,
-			    pal->triangle.x + x - y/2,
+			    pal->triangle.x + x - (y >> 1),
 			    pal->triangle.y + y + 1,
 			    px);
 		}
@@ -800,7 +801,7 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 				rd.h = 8;
 				rd.x = pal->rPrev.x+x;
 				rd.y = pal->rPrev.y+y;
-				AG_FillRect(S, &rd, pal->cTile);
+				AG_FillRect(S, &rd, &pal->cTile);
 			}
 			y += 8;
 			for (x = 8; x < pal->rPrev.w; x+=16) {
@@ -808,7 +809,7 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 				rd.h = 8;
 				rd.x = pal->rPrev.x+x;
 				rd.y = pal->rPrev.y+y;
-				AG_FillRect(S, &rd, pal->cTile);
+				AG_FillRect(S, &rd, &pal->cTile);
 			}
 		}
 
@@ -888,6 +889,7 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_HSVPal *pal = obj;
+	AG_Color c;
 	float hue, sat, val;
 	Uint8 r, g, b, a;
 	int w = WIDTH(pal);
@@ -913,11 +915,12 @@ Draw(void *_Nonnull obj)
 	/* Indicate the current selection. */
 	/* TODO xor */
 	rad = pal->circle.rIn + (pal->circle.width >> 1);
+	AG_ColorBlack(&c);
 	AG_DrawCircle(pal,
 	    pal->circle.x + rad*Cos(hue),
 	    pal->circle.y + rad*Sin(hue),
 	    pal->selcircle_r,
-	    AG_ColorRGB(0,0,0));
+	    &c);
 	
 	/* The rendering routine uses (v = 1 - x/h), so (x = -v*h + h). */
 	y = (int)((1.0 - sat) * (float)pal->triangle.h);
@@ -928,15 +931,17 @@ Draw(void *_Nonnull obj)
 	    pal->triangle.x + x - y/2,
 	    pal->triangle.y + y,
 	    pal->selcircle_r,
-	    AG_ColorRGB(0,0,0));
+	    &c);
 
 	AG_MapHSVf_RGB8((hue * 360.0f)/(2.0f*AG_PI), sat, val, &r,&g,&b);
 
 	/* Draw the color preview rectangle. */
 	if (!(pal->flags & AG_HSVPAL_NOPREVIEW)) {
 		AG_Rect rPrev = pal->rPrev;
+
 		rPrev.h >>= 1;
-		AG_DrawRectFilled(pal, rPrev, AG_ColorRGB(r,g,b));
+		AG_ColorRGB_8(&c, r,g,b);
+		AG_DrawRectFilled(pal, &rPrev, &c);
 	}
 
 	/* Overlay the slider over the trasparency preview. */
@@ -946,8 +951,9 @@ Draw(void *_Nonnull obj)
 		int ly2 = pal->rPrev.y + pal->rPrev.h;
 
 		if (lx > w-2) { lx = w-2; }
-		AG_DrawLineV(pal, lx,   ly1, ly2, AG_ColorBlack());
-		AG_DrawLineV(pal, lx+2, ly1, ly2, AG_ColorBlack());
+		AG_ColorBlack(&c);
+		AG_DrawLineV(pal, lx,   ly1, ly2, &c);
+		AG_DrawLineV(pal, lx+2, ly1, ly2, &c);
 	}
 
 	/* Display RGB/HSV values */
@@ -984,7 +990,7 @@ AG_WidgetClass agHSVPalClass = {
 		sizeof(AG_HSVPal),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

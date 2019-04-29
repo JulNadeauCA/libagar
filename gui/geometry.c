@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2011-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,85 +27,82 @@
 #include <agar/gui/gui.h>
 #include <agar/gui/geometry.h>
 
-AG_Rect
-AG_ReadRect(AG_DataSource *_Nonnull ds)
+void
+AG_ReadRect(AG_Rect *r, AG_DataSource *_Nonnull ds)
 {
-	AG_Rect r;
-
-	r.x = AG_ReadSint16(ds);
-	r.y = AG_ReadSint16(ds);
-	r.w = AG_ReadUint16(ds);
-	r.h = AG_ReadUint16(ds);
-	return (r);
-}
-
-AG_Rect2
-AG_ReadRect2(AG_DataSource *_Nonnull ds)
-{
-	return AG_RectToRect2(AG_ReadRect(ds));
+	r->x = AG_ReadSint16(ds);
+	r->y = AG_ReadSint16(ds);
+	r->w = AG_ReadUint16(ds);
+	r->h = AG_ReadUint16(ds);
 }
 
 void
-AG_WriteRect(AG_DataSource *_Nonnull ds, AG_Rect r)
+AG_ReadRect2(AG_Rect2 *r, AG_DataSource *_Nonnull ds)
 {
-	AG_WriteSint16(ds, r.x);
-	AG_WriteSint16(ds, r.y);
-	AG_WriteUint16(ds, r.w);
-	AG_WriteUint16(ds, r.h);
+	r->x1 = AG_ReadSint16(ds);
+	r->y1 = AG_ReadSint16(ds);
+	r->w  = AG_ReadUint16(ds);
+	r->h  = AG_ReadUint16(ds);
+	r->x2 = r->x1 + r->w;
+	r->y2 = r->y1 + r->h;
 }
 
 void
-AG_WriteRect2(AG_DataSource *_Nonnull ds, AG_Rect2 r)
+AG_WriteRect(AG_DataSource *_Nonnull ds, const AG_Rect *_Nonnull r)
 {
-	AG_WriteRect(ds, AG_Rect2ToRect(r));
+	AG_WriteSint16(ds, r->x);
+	AG_WriteSint16(ds, r->y);
+	AG_WriteUint16(ds, r->w);
+	AG_WriteUint16(ds, r->h);
+}
+
+void
+AG_WriteRect2(AG_DataSource *_Nonnull ds, const AG_Rect2 *_Nonnull r)
+{
+	AG_WriteSint16(ds, r->x1);
+	AG_WriteSint16(ds, r->y1);
+	AG_WriteUint16(ds, r->w);
+	AG_WriteUint16(ds, r->h);
 }
 
 /* Return a Point at x,y. */
-AG_Pt
-AG_POINT(int x, int y)
+void
+AG_PtInit(AG_Pt *pt, int x, int y)
 {
-	AG_Pt pt;
-	pt.x = x;
-	pt.y = y;
-	return (pt);
+	pt->x = x;
+	pt->y = y;
 }
 
 /* Return a Rect of dimensions w,h at position x,y. */
-AG_Rect
-AG_RECT(int x, int y, int w, int h)
+void
+AG_RectInit(AG_Rect *rd, int x, int y, int w, int h)
 {
-	AG_Rect r;
-	r.x = x;
-	r.y = y;
-	r.w = w;
-	r.h = h;
-	return (r);
+	rd->x = x;
+	rd->y = y;
+	rd->w = w;
+	rd->h = h;
 }
 
 /* Return a Rect2 of dimensions w,h at position x,y. */
-AG_Rect2
-AG_RECT2(int x, int y, int w, int h)
+void
+AG_Rect2Init(AG_Rect2 *rd, int x, int y, int w, int h)
 {
-	AG_Rect2 r;
-	r.x1 = x;
-	r.y1 = y;
-	r.w = w;
-	r.h = h;
-	r.x2 = x+w;
-	r.y2 = y+h;
-	return (r);
+	rd->x1 = x;
+	rd->y1 = y;
+	rd->w = w;
+	rd->h = h;
+	rd->x2 = x + w;
+	rd->y2 = y + h;
 }
 
 /* Convert a Rect2 to a Rect. */
-AG_Rect
-AG_Rect2ToRect(AG_Rect2 r2)
+void
+AG_Rect2ToRect(AG_Rect *rd, const AG_Rect2 *r2)
 {
-	AG_Rect r;
-	r.x = r2.x1;
-	r.y = r2.y1;
-	r.w = r2.w;
-	r.h = r2.h;
-	return (r);
+	rd->x = r2->x1;
+	rd->y = r2->y1;
+	rd->w = r2->w;
+	rd->h = r2->h;
 }
 
 /* Resize a Rect. */
@@ -145,58 +142,76 @@ AG_RectTranslate2(AG_Rect2 *_Nonnull r, int x, int y)
 }
 
 /* Convert a Rect to a Rect2. */
-AG_Rect2
-AG_RectToRect2(AG_Rect r)
+void
+AG_RectToRect2(AG_Rect2 *rd, const AG_Rect *r)
 {
-	AG_Rect2 r2;
-	r2.x1 = r.x;
-	r2.y1 = r.y;
-	r2.w = r.w;
-	r2.h = r.h;
-	r2.x2 = r.x+r.w;
-	r2.y2 = r.y+r.h;
-	return (r2);
+	int x = r->x;
+	int y = r->y;
+	int w = r->w;
+	int h = r->h;
+
+	rd->x1 = x;
+	rd->y1 = y;
+	rd->w = w;
+	rd->h = h;
+	rd->x2 = x+w;
+	rd->y2 = y+h;
 }
 
 /* Return the intersection of two Rect's. */
-AG_Rect
-AG_RectIntersect(AG_Rect a, AG_Rect b)
+int
+AG_RectIntersect(AG_Rect *rd, const AG_Rect *a, const AG_Rect *b)
 {
-	AG_Rect x;
-	x.x = AG_MAX(a.x, b.x);
-	x.y = AG_MAX(a.y, b.y);
-	x.w = AG_MIN((a.x + a.w), (b.x + b.w)) - x.x;
-	x.h = AG_MIN((a.y + a.h), (b.y + b.h)) - x.y;
-	if (x.w < 0) { x.w = 0; }
-	if (x.h < 0) { x.h = 0; }
-	return (x);
+	int ax = a->x, ay = a->y;
+	int bx = b->x, by = b->y;
+	AG_Rect r;
+
+	r.x = AG_MAX(ax, bx);
+	r.y = AG_MAX(ay, by);
+
+	r.w = AG_MIN((ax + a->w), (bx + b->w)) - r.x;
+	if (r.w < 0) { r.w = 0; }
+
+	r.h = AG_MIN((ay + a->h), (by + b->h)) - r.y;
+	if (r.h < 0) { r.h = 0; }
+
+	*rd = r;
+	return (r.w > 0 && r.h > 0);
 }
 
 /* Return the intersection of two Rect2's. */
-AG_Rect2
-AG_RectIntersect2(const AG_Rect2 *a, const AG_Rect2 *b)
+int
+AG_RectIntersect2(AG_Rect2 *rd, const AG_Rect2 *a, const AG_Rect2 *b)
 {
-	AG_Rect2 rx;
+	int ax1 = a->x1, ay1 = a->y1;
+	int ax2 = a->x2, ay2 = a->y2;
+	int bx1 = b->x1, bx2 = b->x2;
+	int by1 = b->y1, by2 = b->y2;
+	AG_Rect2 r;
 
-	rx.x1 = AG_MAX(a->x1, b->x1);
-	rx.y1 = AG_MAX(a->y1, b->y1);
-	rx.w = AG_MIN(a->x2, b->x2) - rx.x1;
-	if (rx.w < 0) { rx.w = 0; }
-	rx.h = AG_MIN(a->y2, b->y2) - rx.y1;
-	if (rx.h < 0) { rx.h = 0; }
-	rx.x2 = rx.x1 + rx.w;
-	rx.y2 = rx.y1 + rx.h;
-	return (rx);
+	r.x1 = AG_MAX(ax1, bx1);
+	r.y1 = AG_MAX(ay1, by1);
+
+	r.w = AG_MIN(ax2, bx2) - r.x1;
+	if (r.w < 0) { r.w = 0; }
+	r.x2 = r.x1 + r.w;
+
+	r.h = AG_MIN(ay2, by2) - r.y1;
+	if (r.h < 0) { r.h = 0; }
+	r.y2 = r.y1 + r.h;
+
+	*rd = r;
+	return (r.w > 0 && r.h > 0);
 }
 
 /* Test whether two Rect's are the same. */
 int
-AG_RectCompare(AG_Rect a, AG_Rect b)
+AG_RectCompare(const AG_Rect *a, const AG_Rect *b)
 {
-	return !(a.x == b.x &&
-	         a.y == b.y &&
-		 a.w == b.w &&
-		 a.h == b.h);
+	return !(a->x == b->x &&
+	         a->y == b->y &&
+		 a->w == b->w &&
+		 a->h == b->h);
 }
 
 /* Test whether two (valid) Rect2's are the same. */
@@ -211,12 +226,15 @@ AG_RectCompare2(const AG_Rect2 *a, const AG_Rect2 *b)
 
 /* Test whether a point intersects a Rect. */
 int
-AG_RectInside(AG_Rect r, int x, int y)
+AG_RectInside(const AG_Rect *r, int x, int y)
 {
-	return (x >= r.x &&
-	        y >= r.y &&
-		x <  r.x + r.w &&
-		y <  r.y + r.h); 
+	int rx = r->x;
+	int ry = r->y;
+
+	return (x >= rx &&
+	        y >= ry &&
+		x <  rx + r->w &&
+		y <  ry + r->h); 
 }
 
 /* Test whether a point intersects a Rect2. */

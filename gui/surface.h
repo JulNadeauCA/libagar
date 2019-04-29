@@ -29,11 +29,11 @@
 #include <agar/gui/geometry.h>
 #include <agar/gui/colors.h>
 #include <agar/gui/begin.h>
-                                 /* Bits per pixel: | 1 2 4 8  16 24 32 64 | */
-typedef enum ag_surface_mode {   /* --------------- |----------------------| */
-	AG_SURFACE_PACKED,       /* Packed RGB(A)   |       X  X  X  X  LG | */
-	AG_SURFACE_INDEXED,      /* Palettized      | X X X X              | */
-	AG_SURFACE_GRAYSCALE     /* Grayscale+Alpha |                X  LG | */
+			       /* Bits per pixel: | 1  2  4  8  16 24 32 64 |*/
+typedef enum ag_surface_mode { /* --------------- |-------------------------|*/
+	AG_SURFACE_PACKED,     /* Packed RGB(A)   |       SM    SM MD MD LG |*/
+	AG_SURFACE_INDEXED,    /* Palettized      | SM SM SM SM             |*/
+	AG_SURFACE_GRAYSCALE   /* Grayscale+Alpha |             SM    MD LG |*/
 } AG_SurfaceMode;
 
 typedef enum ag_grayscale_mode {
@@ -237,7 +237,7 @@ void AG_SurfaceSetAddress(AG_Surface *_Nonnull, Uint8 *_Nonnull);
 void AG_SurfaceSetColors(AG_Surface *_Nonnull, AG_Color *_Nonnull, Uint, Uint);
 void AG_SurfaceSetPalette(AG_Surface *_Nonnull, const AG_Palette *_Nonnull);
 void AG_SurfaceCopyPixels(AG_Surface *_Nonnull, const Uint8 *_Nonnull);
-void AG_SurfaceSetPixels(AG_Surface *_Nonnull, AG_Color);
+void AG_SurfaceSetPixels(AG_Surface *_Nonnull, const AG_Color *_Nonnull);
 
 void AG_SurfaceBlit(const AG_Surface *_Nonnull, const AG_Rect *_Nullable,
 		    AG_Surface *_Nonnull, int,int);
@@ -298,7 +298,8 @@ void AG_SurfaceBlendRGB8(AG_Surface *_Nonnull, int, int,
 void AG_SurfaceBlendRGB8_At(AG_Surface *_Nonnull, Uint8 *_Nonnull,
 			    Uint8,Uint8,Uint8,Uint8, AG_AlphaFn);
 
-void  AG_FillRect(AG_Surface *_Nonnull, const AG_Rect *_Nullable, AG_Color);
+void  AG_FillRect(AG_Surface *_Nonnull, const AG_Rect *_Nullable,
+                  const AG_Color *_Nonnull);
 
 Uint8 AG_SurfaceGet8(const AG_Surface *_Nonnull, int,int)
                     _Pure_Attribute;
@@ -319,33 +320,31 @@ AG_Pixel AG_MapPixelGrayscale(const AG_PixelFormat *_Nonnull,
                               AG_Component,AG_Component,AG_Component,AG_Component)
                              _Pure_Attribute;
 
-AG_Color AG_GetColor32(Uint32, const AG_PixelFormat *_Nonnull)
-                      _Pure_Attribute;
-void     AG_GetColor32_RGB8(Uint32, const AG_PixelFormat *_Nonnull,
-                            Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull);
-void     AG_GetColor32_RGB16(Uint32, const AG_PixelFormat *_Nonnull,
-                             Uint16 *_Nonnull, Uint16 *_Nonnull, Uint16 *_Nonnull);
-void     AG_GetColor32_RGBA8(Uint32, const AG_PixelFormat *_Nonnull,
-                             Uint8 *_Nonnull, Uint8 *_Nonnull,
-                             Uint8 *_Nonnull, Uint8 *_Nonnull);
-void     AG_GetColor32_RGBA16(Uint32, const AG_PixelFormat *_Nonnull,
-                              Uint16 *_Nonnull, Uint16 *_Nonnull,
-                              Uint16 *_Nonnull, Uint16 *_Nonnull);
+void AG_GetColor32(AG_Color *_Nonnull, Uint32, const AG_PixelFormat *_Nonnull);
+void AG_GetColor32_RGB8(Uint32, const AG_PixelFormat *_Nonnull,
+                        Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull);
+void AG_GetColor32_RGB16(Uint32, const AG_PixelFormat *_Nonnull,
+                         Uint16 *_Nonnull, Uint16 *_Nonnull, Uint16 *_Nonnull);
+void AG_GetColor32_RGBA8(Uint32, const AG_PixelFormat *_Nonnull,
+                         Uint8 *_Nonnull, Uint8 *_Nonnull,
+                         Uint8 *_Nonnull, Uint8 *_Nonnull);
+void AG_GetColor32_RGBA16(Uint32, const AG_PixelFormat *_Nonnull,
+                          Uint16 *_Nonnull, Uint16 *_Nonnull,
+                          Uint16 *_Nonnull, Uint16 *_Nonnull);
  
-AG_Color AG_GetColor32_Gray(Uint32, AG_GrayscaleMode)
-                           _Const_Attribute;
-void     AG_GetColor32_Gray8(Uint32, AG_GrayscaleMode,
-                             Uint8 *_Nonnull, Uint8 *_Nonnull,
-                             Uint8 *_Nonnull, Uint8 *_Nonnull);
-void     AG_GetColor32_Gray16(Uint32, AG_GrayscaleMode,
-                              Uint16 *_Nonnull, Uint16 *_Nonnull,
-                              Uint16 *_Nonnull, Uint16 *_Nonnull);
+void AG_GetColor32_Gray(AG_Color *_Nonnull, Uint32, AG_GrayscaleMode);
+void AG_GetColor32_Gray8(Uint32, AG_GrayscaleMode,
+                         Uint8 *_Nonnull, Uint8 *_Nonnull,
+                         Uint8 *_Nonnull, Uint8 *_Nonnull);
+void AG_GetColor32_Gray16(Uint32, AG_GrayscaleMode,
+                          Uint16 *_Nonnull, Uint16 *_Nonnull,
+                          Uint16 *_Nonnull, Uint16 *_Nonnull);
 
 #if AG_MODEL == AG_LARGE
 
 # define AG_SurfaceGet(S,x,y)                 AG_SurfaceGet64((S),(x),(y))
 # define AG_SurfaceGet_At(S,p)                AG_SurfaceGet64_At((S),(p))
-# define AG_GetColor(px,pf)                   AG_GetColor64((px),(pf))
+# define AG_GetColor(c,px,pf)                 AG_GetColor64((c),(px),(pf))
 # define AG_SurfacePut(S,x,y,px)              AG_SurfacePut64((S),(x),(y),(px))
 # define AG_SurfacePut_At(S,p,px)             AG_SurfacePut64_At((S),(p),(px))
 # define AG_MapPixel(pf,px)                   AG_MapPixel64((pf),(px))
@@ -365,16 +364,15 @@ Uint64 AG_MapPixel64_RGB8(const AG_PixelFormat *_Nonnull, Uint8,Uint8,Uint8)
                          _Pure_Attribute;
 Uint64 AG_MapPixel64_RGBA8(const AG_PixelFormat *_Nonnull, Uint8,Uint8,Uint8,Uint8)
                           _Pure_Attribute;
-AG_Color AG_GetColor64_Gray(Uint64, AG_GrayscaleMode)
-                           _Const_Attribute;
-void     AG_GetColor64_Gray16(Uint64, AG_GrayscaleMode,
-                              Uint16 *_Nonnull, Uint16 *_Nonnull,
-                              Uint16 *_Nonnull, Uint16 *_Nonnull);
+void AG_GetColor64_Gray(AG_Color *_Nonnull, Uint64, AG_GrayscaleMode);
+void AG_GetColor64_Gray16(Uint64, AG_GrayscaleMode,
+                          Uint16 *_Nonnull, Uint16 *_Nonnull,
+                          Uint16 *_Nonnull, Uint16 *_Nonnull);
 #else /* !AG_LARGE */
 
 # define AG_SurfaceGet(S,x,y)                 AG_SurfaceGet32((S),(x),(y))
 # define AG_SurfaceGet_At(S,p)                AG_SurfaceGet32_At((S),(p))
-# define AG_GetColor(px,pf)                   AG_GetColor32((px),(pf))
+# define AG_GetColor(c,px,pf)                 AG_GetColor32((c),(px),(pf))
 # define AG_SurfacePut(S,x,y,px)              AG_SurfacePut32((S),(x),(y),(px))
 # define AG_SurfacePut_At(S,p,px)             AG_SurfacePut32_At((S),(p),(px))
 # define AG_MapPixel(pf,px)                   AG_MapPixel32((pf),(px))
@@ -402,27 +400,30 @@ void AG_AnimStop(AG_AnimState *_Nonnull);
 int AG_SurfaceAddFrame(AG_Surface *_Nonnull, const AG_Surface *_Nonnull,
                        const AG_Rect *_Nullable, AG_AnimDispose, Uint, Uint);
 
+/*
+ * Inlinables
+ */
 #ifdef AG_INLINE_SURFACE
 # define AG_INLINE_HEADER
 # include <agar/gui/inline_surface.h>
 #else /* !AG_INLINE_SURFACE */
 
-int ag_pixel_format_is_supported(AG_SurfaceMode, int)
-                                _Const_Attribute;
-int ag_surface_clipped(const AG_Surface *_Nonnull, int,int)
-                      _Pure_Attribute;
-void ag_surface_put8(AG_Surface *_Nonnull, int,int, Uint8);
+int    ag_pixel_format_is_supported(AG_SurfaceMode, int) _Const_Attribute;
+int    ag_surface_clipped(const AG_Surface *_Nonnull, int,int) _Pure_Attribute;
+void   ag_surface_put8(AG_Surface *_Nonnull, int,int, Uint8);
 
-Uint32 ag_map_pixel32(const AG_PixelFormat *_Nonnull, AG_Color)
+Uint32 ag_map_pixel32(const AG_PixelFormat *_Nonnull, const AG_Color *_Nonnull)
+                     _Pure_Attribute;
+# if AG_MODEL == AG_LARGE						/* LG */
+Uint64 ag_map_pixel64(const AG_PixelFormat *_Nonnull, const AG_Color *_Nonnull)
                      _Pure_Attribute;
 Uint64 ag_map_pixel64_rgb16(const AG_PixelFormat *_Nonnull,
-                            Uint16,Uint16,Uint16)
-			   _Pure_Attribute;
+                            Uint16,Uint16,Uint16) _Pure_Attribute;
 Uint64 ag_map_pixel64_rgba16(const AG_PixelFormat *_Nonnull,
-                             Uint16,Uint16,Uint16,Uint16)
-			    _Pure_Attribute;
-Uint64 ag_map_pixel64(const AG_PixelFormat *_Nonnull, AG_Color)
-                     _Pure_Attribute;
+                             Uint16,Uint16,Uint16,Uint16) _Pure_Attribute;
+
+void ag_get_color64(AG_Color *_Nonnull, Uint64, const AG_PixelFormat *_Nonnull)
+                   _Pure_Attribute;
 
 void ag_get_color64_rgb16(Uint64, const AG_PixelFormat *_Nonnull,
                           Uint16 *_Nonnull, Uint16 *_Nonnull, Uint16 *_Nonnull);
@@ -433,65 +434,73 @@ void ag_get_color64_rgb8(Uint64, const AG_PixelFormat *_Nonnull,
                          Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull);
 void ag_get_color64_rgba8(Uint64, const AG_PixelFormat *_Nonnull,
                           Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull,
-			  Uint8 *_Nonnull);
+                          Uint8 *_Nonnull);
 
-AG_Color ag_get_color64(Uint64, const AG_PixelFormat *_Nonnull)
-                       _Pure_Attribute;
+Uint64 ag_surface_get64_at(const AG_Surface *_Nonnull, const Uint8 *_Nonnull)
+                          _Pure_Attribute;
+Uint64 ag_surface_get64(const AG_Surface *_Nonnull, int,int) _Pure_Attribute;
+
+void ag_surface_put64_at(AG_Surface *_Nonnull, Uint8 *_Nonnull, Uint64);
+void ag_surface_put64(AG_Surface *_Nonnull, int,int, Uint64);
+
+void ag_pixel_format_rgb(AG_PixelFormat *, int, Uint64,Uint64,Uint64);
+
+# else								/* SM or MD */
+
+void ag_pixel_format_rgb(AG_PixelFormat *, int, Uint32,Uint32,Uint32);
+
+# endif /* SMALL or MEDIUM */
 
 Uint32 ag_surface_get32_at(const AG_Surface *_Nonnull, const Uint8 *_Nonnull)
                           _Pure_Attribute;
-Uint32 ag_surface_get32(const AG_Surface *_Nonnull, int,int)
-                       _Pure_Attribute;
-Uint64 ag_surface_get64_at(const AG_Surface *_Nonnull, const Uint8 *_Nonnull)
-                          _Pure_Attribute;
-Uint64 ag_surface_get64(const AG_Surface *_Nonnull, int,int)
-                       _Pure_Attribute;
-void   ag_surface_put32_at(AG_Surface *_Nonnull, Uint8 *_Nonnull, Uint32);
-void   ag_surface_put32(AG_Surface *_Nonnull, int,int, Uint32);
-void   ag_surface_put64_at(AG_Surface *_Nonnull, Uint8 *_Nonnull, Uint64);
-void   ag_surface_put64(AG_Surface *_Nonnull, int,int, Uint64);
-void   ag_surface_blend_at(AG_Surface *_Nonnull, Uint8 *_Nonnull, AG_Color,
-                           AG_AlphaFn);
-void   ag_surface_blend(AG_Surface *_Nonnull, int,int, AG_Color, AG_AlphaFn);
-void   ag_surface_blend_rgb16(AG_Surface *_Nonnull, int,int,
-                              Uint16,Uint16,Uint16,Uint16, AG_AlphaFn);
-void   ag_surface_blend_rgb16_at(AG_Surface *_Nonnull, Uint8 *_Nonnull,
-                                 Uint16,Uint16,Uint16,Uint16, AG_AlphaFn);
-void   ag_pixel_format_rgb(AG_PixelFormat *, int, Uint64,Uint64,Uint64);
-int    ag_pixel_format_compare(const AG_PixelFormat *, const AG_PixelFormat *);
-void   ag_pixel_format_free(AG_PixelFormat *);
-void   ag_surface_set_alpha(AG_Surface *_Nonnull, Uint, AG_Component);
-void   ag_surface_set_colorkey(AG_Surface *_Nonnull, Uint, AG_Pixel);
+Uint32 ag_surface_get32(const AG_Surface *_Nonnull, int,int) _Pure_Attribute;
 
-# define AG_PixelFormatIsSupported(m,bpp) ag_pixel_format_is_supported((m),(bpp))
-# define AG_SurfaceClipped(S,x,y) ag_surface_clipped((S),(x),(y))
-# define AG_SurfacePut8(S,x,y,px) ag_surface_put8((S),(x),(y),(px))
-# define AG_MapPixel32(pf,c)              ag_map_pixel32((pf),(c))
-# define AG_MapPixel64_RGB16(pf,r,g,b)    ag_map_pixel64_rgb16((pf),(r),(g),(b))
-# define AG_MapPixel64_RGBA16(pf,r,g,b,a) ag_map_pixel64_rgba16((pf),(r),(g),(b),(a))
-# define AG_MapPixel64(pf,c)              ag_map_pixel64((pf),(c))
-# define AG_GetColor64_RGB16(px,pf,r,g,b)    ag_get_color64_rgb16((px),(pf),(r),(g),(b))
-# define AG_GetColor64_RGBA16(px,pf,r,g,b,a) ag_get_color64_rgba16((px),(pf),(r),(g),(b),(a))
-# define AG_GetColor64_RGB8(px,pf,r,g,b)     ag_get_color64_rgb8((px),(pf),(r),(g),(b))
-# define AG_GetColor64_RGBA8(px,pf,r,g,b,a)  ag_get_color64_rgba8((px),(pf),(r),(g),(b),(a))
-# define AG_GetColor64(px,pf)                ag_get_color64((px),(pf))
-# define AG_SurfaceGet32_At(S,p)      ag_surface_get32_at((S),(p))
-# define AG_SurfaceGet32(S,x,y)       ag_surface_get32((S),(x),(y))
-# define AG_SurfaceGet64_At(S,p)      ag_surface_get64_at((S),(p))
-# define AG_SurfaceGet64(S,x,y)       ag_surface_get64((S),(x),(y))
-# define AG_SurfacePut32_At(S,p,px)   ag_surface_put32_at((S),(p),(px))
-# define AG_SurfacePut32(S,x,y,px)    ag_surface_put32((S),(x),(y),(px))
-# define AG_SurfacePut64_At(S,p,px)   ag_surface_put64_at((S),(p),(px))
-# define AG_SurfacePut64(S,x,y,px)    ag_surface_put64((S),(x),(y),(px))
-# define AG_SurfaceBlend_At(S,p,c,fn) ag_surface_blend_at((S),(p),(c),(fn))
-# define AG_SurfaceBlend(S,x,y,c,fn)  ag_surface_blend((S),(x),(y),(c),(fn))
-# define AG_SurfaceBlendRGB16(S,x,y,r,g,b,a,fn)  ag_surface_blend_rgb16((S),(x),(y),(r),(g),(b),(a),(fn))
+void ag_surface_put32_at(AG_Surface *_Nonnull, Uint8 *_Nonnull, Uint32);
+void ag_surface_put32(AG_Surface *_Nonnull, int,int, Uint32);
+void ag_surface_blend_at(AG_Surface *_Nonnull, Uint8 *_Nonnull,
+                         const AG_Color *_Nonnull, AG_AlphaFn);
+void ag_surface_blend(AG_Surface *_Nonnull, int,int, const AG_Color *_Nonnull,
+                      AG_AlphaFn);
+void ag_surface_blend_rgb16(AG_Surface *_Nonnull, int,int,
+                            Uint16,Uint16,Uint16,Uint16, AG_AlphaFn);
+void ag_surface_blend_rgb16_at(AG_Surface *_Nonnull, Uint8 *_Nonnull,
+                               Uint16,Uint16,Uint16,Uint16, AG_AlphaFn);
+int  ag_pixel_format_compare(const AG_PixelFormat *_Nonnull,
+                             const AG_PixelFormat *_Nonnull);
+void ag_pixel_format_free(AG_PixelFormat *_Nonnull);
+
+void ag_surface_set_alpha(AG_Surface *_Nonnull, Uint, AG_Component);
+void ag_surface_set_colorkey(AG_Surface *_Nonnull, Uint, AG_Pixel);
+
+# define AG_PixelFormatIsSupported(m,bpp)	ag_pixel_format_is_supported((m),(bpp))
+# define AG_SurfaceClipped(S,x,y)		ag_surface_clipped((S),(x),(y))
+# define AG_SurfacePut8(S,x,y,px)		ag_surface_put8((S),(x),(y),(px))
+# define AG_MapPixel32(pf,c)			ag_map_pixel32((pf),(c))
+# define AG_MapPixel64_RGB16(pf,r,g,b)		ag_map_pixel64_rgb16((pf),(r),(g),(b))
+# define AG_MapPixel64_RGBA16(pf,r,g,b,a)	ag_map_pixel64_rgba16((pf),(r),(g),(b),(a))
+# define AG_MapPixel64(pf,c)			ag_map_pixel64((pf),(c))
+# define AG_GetColor64_RGB16(px,pf,r,g,b)	ag_get_color64_rgb16((px),(pf),(r),(g),(b))
+# define AG_GetColor64_RGBA16(px,pf,r,g,b,a)	ag_get_color64_rgba16((px),(pf),(r),(g),(b),(a))
+# define AG_GetColor64_RGB8(px,pf,r,g,b)	ag_get_color64_rgb8((px),(pf),(r),(g),(b))
+# define AG_GetColor64_RGBA8(px,pf,r,g,b,a)	ag_get_color64_rgba8((px),(pf),(r),(g),(b),(a))
+# define AG_GetColor64(c,px,pf)			ag_get_color64((c),(px),(pf))
+# define AG_SurfaceGet32_At(S,p)		ag_surface_get32_at((S),(p))
+# define AG_SurfaceGet32(S,x,y)			ag_surface_get32((S),(x),(y))
+# define AG_SurfaceGet64_At(S,p)		ag_surface_get64_at((S),(p))
+# define AG_SurfaceGet64(S,x,y)			ag_surface_get64((S),(x),(y))
+# define AG_SurfacePut32_At(S,p,px)		ag_surface_put32_at((S),(p),(px))
+# define AG_SurfacePut32(S,x,y,px)		ag_surface_put32((S),(x),(y),(px))
+# define AG_SurfacePut64_At(S,p,px)		ag_surface_put64_at((S),(p),(px))
+# define AG_SurfacePut64(S,x,y,px)		ag_surface_put64((S),(x),(y),(px))
+# define AG_SurfaceBlend_At(S,p,c,fn)		ag_surface_blend_at((S),(p),(c),(fn))
+# define AG_SurfaceBlend(S,x,y,c,fn)		ag_surface_blend((S),(x),(y),(c),(fn))
+# define AG_SurfaceBlendRGB16(S,x,y,r,g,b,a,fn)	ag_surface_blend_rgb16((S),(x),(y),(r),(g),(b),(a),(fn))
 # define AG_SurfaceBlendRGB16_At(S,p,r,g,b,a,fn) ag_surface_blend_rgb16_at((S),(p),(r),(g),(b),(a),(fn))
-# define AG_PixelFormatRGB(pf,bpp,r,g,b)  ag_pixel_format_rgb((pf),(bpp),(r),(g),(b))
-# define AG_PixelFormatCompare(a,b)       ag_pixel_format_compare((a),(b))
-# define AG_PixelFormatFree(pf)           ag_pixel_format_free(pf)
-# define AG_SurfaceSetAlpha(S,fl,alpha)   ag_surface_set_alpha((S),(fl),(alpha))
-# define AG_SurfaceSetColorKey(S,fl,ckey) ag_surface_set_colorkey((S),(fl),(ckey))
+# define AG_PixelFormatRGB(pf,bpp,r,g,b)	ag_pixel_format_rgb((pf),(bpp),(r),(g),(b))
+# define AG_PixelFormatCompare(a,b)		ag_pixel_format_compare((a),(b))
+# define AG_PixelFormatFree(pf)			ag_pixel_format_free(pf)
+# define AG_SurfaceSetAlpha(S,fl,alpha)		ag_surface_set_alpha((S),(fl),(alpha))
+# define AG_SurfaceSetColorKey(S,fl,ckey)	ag_surface_set_colorkey((S),(fl),(ckey))
 #endif /* !AG_INLINE_SURFACE */
 
 #ifdef AG_LEGACY

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -216,7 +216,8 @@ Draw(void *_Nonnull obj)
 {
 	AG_ProgressBar *pb = obj;
 	AG_Rect rd;
-	int min, max, val, wAvail;
+	int min, max, val;
+	int pad, pad2;
 
 	min = AG_GetInt(pb, "min");
 	max = AG_GetInt(pb, "max");
@@ -224,31 +225,33 @@ Draw(void *_Nonnull obj)
 	if (val < min) { val = min; }
 	if (val > max) { val = max; }
 
-	AG_DrawBox(pb,
-	    AG_RECT(0, 0, WIDTH(pb), HEIGHT(pb)), -1,
-	    WCOLOR(pb,0));
+	rd.x = 0;
+	rd.y = 0;
+	rd.w = WIDTH(pb);
+	rd.h = HEIGHT(pb);
+	AG_DrawBox(pb, &rd, -1, &WCOLOR(pb,0));
 
-	if ((max - min) <= 0) {
+	if ((max - min) <= 0)
 		return;
-	}
+	
+	pad = pb->pad;
+	pad2 = pad << 1;
+
 	switch (pb->type) {
 	case AG_PROGRESS_BAR_VERT:
-		wAvail = WIDGET(pb)->h - pb->pad*2;
-		rd.x = pb->pad;
-		rd.y = pb->pad + (val - min)*wAvail/(max - min);
-		rd.w = WIDGET(pb)->w - pb->pad*2;
-		rd.h = WIDGET(pb)->h;
+		rd.x = pad;
+		rd.y = pad + (val - min)*(rd.h - pad2)/(max - min);
+		rd.w -= pad2;
 		break;
 	case AG_PROGRESS_BAR_HORIZ:
 	default:
-		wAvail = WIDGET(pb)->w - pb->pad*2;
-		rd.x = pb->pad;
-		rd.y = pb->pad;
-		rd.w = (val - min)*wAvail/(max - min);
-		rd.h = WIDGET(pb)->h - pb->pad*2;
+		rd.x = pad;
+		rd.y = pad;
+		rd.w = (val - min)*(rd.w - pad2)/(max - min);
+		rd.h -= pad2;
 		break;
 	}
-	AG_DrawRect(pb, rd, WCOLOR_SEL(pb,0));
+	AG_DrawRect(pb, &rd, &WCOLOR_SEL(pb,0));
 
 	if (pb->flags & AG_PROGRESS_BAR_SHOW_PCT)
 		DrawPercentText(pb);
@@ -260,7 +263,7 @@ AG_WidgetClass agProgressBarClass = {
 		sizeof(AG_ProgressBar),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

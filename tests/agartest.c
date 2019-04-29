@@ -602,24 +602,27 @@ main(int argc, char *argv[])
 		const char *memory_model = "LARGE";
 #endif
 		AG_ConsoleLine *ln;
+		AG_Color col;
 
 		AG_GetVersion(&av);
 		ln = AG_ConsoleMsg(console, _("Agar %d.%d.%d (\"%s\")"),
 		    av.major, av.minor, av.patch, av.release);
-		AG_ConsoleMsgColor(ln, AG_ColorRGB(0,255,120));
+		AG_ColorRGB_8(&col, 0,255,120);
+		AG_ConsoleMsgColor(ln, &col);
 
 		ln = AG_ConsoleMsg(console, _("Target: %s (%s)"), agCPU.arch,
 		    memory_model);
-		AG_ConsoleMsgColor(ln, AG_ColorRGB(0,255,120));
+		AG_ConsoleMsgColor(ln, &col);
 		    
 		ln = AG_ConsoleMsg(console, _("Current AG_Driver: %s (%s)"),
 		    AGWIDGET(win)->drvOps->name,
 		    (AGWIDGET(win)->drvOps->type == AG_FRAMEBUFFER) ?
 		    _("framebuffer-based") : _("vector-based"));
-		AG_ConsoleMsgColor(ln, AG_ColorRGB(255,255,0));
+		AG_ColorRGB_8(&col, 255,255,0);
+		AG_ConsoleMsgColor(ln, &col);
 		AG_ListDriverNames(drvNames, sizeof(drvNames));
 		ln = AG_ConsoleMsg(console, _("Compiled AG_Drivers: %s"), drvNames);
-		AG_ConsoleMsgColor(ln, AG_ColorRGB(255,255,0));
+		AG_ConsoleMsgColor(ln, &col);
 
 #ifdef __APPLE__
 		AG_ConsoleMsg(console, _("Press Command-[-] and Command-[=] to zoom"));

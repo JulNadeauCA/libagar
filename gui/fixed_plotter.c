@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -173,32 +173,34 @@ Draw(void *obj)
 {
 	AG_FixedPlotter *fpl = obj;
 	AG_FixedPlotterItem *gi;
+	AG_FixedPlotterValue oval;
+	AG_Rect r;
 	int x, y, ox = 0, oy;
 	Uint32 i, yOrigin;
-	AG_FixedPlotterValue oval;
 
 	yOrigin = WIDGET(fpl)->h * fpl->yOrigin / 100;
-	
-	AG_DrawBox(fpl,
-	    AG_RECT(0, 0, WIDTH(fpl), HEIGHT(fpl)), 0,
-	    WCOLOR(fpl,0));
-	if (fpl->flags & AG_FIXED_PLOTTER_XAXIS) {
-		AG_DrawLineH(fpl, 0, WIDTH(fpl)-1, yOrigin+1, WCOLOR(fpl,LINE_COLOR));
-	}
+
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(fpl);
+	r.h = HEIGHT(fpl);
+	AG_DrawBox(fpl, &r, 0, &WCOLOR(fpl,0));
+
+	if (fpl->flags & AG_FIXED_PLOTTER_XAXIS)
+		AG_DrawLineH(fpl, 0, r.w-1, yOrigin+1, &WCOLOR(fpl,LINE_COLOR));
 
 	TAILQ_FOREACH(gi, &fpl->items, items) {
 		if (fpl->xoffs > gi->nvals || fpl->xoffs < 0)
 			continue;
 
 		for (x = 2, ox = 0, i = fpl->xoffs;
-		     ++i < gi->nvals && x < WIDGET(fpl)->w;
+		     ++i < gi->nvals && x < r.w;
 		     ox = x, x += 2) {
 
-			oval = gi->vals[i] * WIDGET(fpl)->h / fpl->yrange;
+			oval = gi->vals[i] * r.h / fpl->yrange;
 			y = yOrigin - oval;
 			if (i > 1) {
-				oval = gi->vals[i-1] * WIDGET(fpl)->h /
-				       fpl->yrange;
+				oval = gi->vals[i-1] * r.h / fpl->yrange;
 				oy = yOrigin - oval;
 			} else {
 				oy = yOrigin;
@@ -206,15 +208,15 @@ Draw(void *obj)
 
 			if (y < 0) { y = 0; }
 			if (oy < 0) { oy = 0; }
-			if (y > WIDGET(fpl)->h) { y = WIDGET(fpl)->h; }
-			if (oy > WIDGET(fpl)->h) { oy = WIDGET(fpl)->h; }
+			if (y > r.h) { y = r.h; }
+			if (oy > r.h) { oy = r.h; }
 
 			switch (fpl->type) {
 			case AG_FIXED_PLOTTER_POINTS:
-				AG_PutPixel(fpl, x, y, gi->color);
+				AG_PutPixel(fpl, x,y, &gi->color);
 				break;
 			case AG_FIXED_PLOTTER_LINES:
-				AG_DrawLine(fpl, ox, oy, x, y, gi->color);
+				AG_DrawLine(fpl, ox,oy, x,y, &gi->color);
 				break;
 			}
 		}
@@ -229,7 +231,7 @@ AG_FixedPlotterCurve(AG_FixedPlotter *fpl, const char *name,
 
  	gi = Malloc(sizeof(AG_FixedPlotterItem));
 	Strlcpy(gi->name, name, sizeof(gi->name));
-	gi->color = AG_ColorRGB(r,g,b);
+	AG_ColorRGB_8(&gi->color, r,g,b);
 	gi->vals = Malloc(NITEMS_INIT*sizeof(AG_FixedPlotterValue));
 	gi->maxvals = NITEMS_INIT;
 	gi->nvals = 0;
@@ -315,7 +317,7 @@ AG_WidgetClass agFixedPlotterClass = {
 		sizeof(AG_FixedPlotter),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -98,16 +98,21 @@ Draw(void *_Nonnull obj)
 {
 	AG_Fixed *fx = obj;
 	AG_Widget *chld;
-	AG_Rect r = AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx));
+	AG_Rect r;
+
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(fx);
+	r.h = HEIGHT(fx);
 
 	if (fx->flags & AG_FIXED_BOX) {
-		AG_DrawBox(fx, r, -1, WCOLOR(fx,0));
+		AG_DrawBox(fx, &r, -1, &WCOLOR(fx,0));
 	} else if (fx->flags & AG_FIXED_INVBOX) {
-		AG_DrawBox(fx, r, -1, WCOLOR(fx,0));
+		AG_DrawBox(fx, &r, -1, &WCOLOR(fx,0));
 	} else if (fx->flags & AG_FIXED_FRAME) {
-		AG_DrawFrame(fx, r, -1, WCOLOR(fx,0));
+		AG_DrawFrame(fx, &r, -1, &WCOLOR(fx,0));
 	} else if (fx->flags & AG_FIXED_FILLBG) {
-		AG_DrawRect(fx, r, WCOLOR(fx,0));
+		AG_DrawRect(fx, &r, &WCOLOR(fx,0));
 	}
 
 	OBJECT_FOREACH_CHILD(chld, fx, ag_widget)
@@ -210,7 +215,7 @@ AG_WidgetClass agFixedClass = {
 		sizeof(AG_Fixed),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

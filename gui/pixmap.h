@@ -8,7 +8,7 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_pixmap {
-	struct ag_widget wid;		/* AG_Widget(3) -> AG_Pixmap */
+	struct ag_widget wid;	/* AG_Widget -> AG_Pixmap */
 	Uint flags;
 #define AG_PIXMAP_HFILL		0x01
 #define AG_PIXMAP_VFILL		0x02

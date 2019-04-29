@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2006-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -51,16 +51,14 @@ structure is declared as:
 .Bd -literal
 typedef struct ag_color {
 #if AG_MODEL == AG_LARGE
-	Uint16 r,g,b,a;
-#else
-	Uint8  r,g,b,a;
+	Uint16 r,g,b,a;			/* LG (16-bit color) */
+#elif AG_MODEL == AG_MEDIUM
+	Uint8  r,g,b,a;			/* MD (8-bit color) */
+#elif AG_MODEL == AG_SMALL
+	Uint8  rg,ba;			/* SM (4-bit color) */
 #endif
 } AG_Color;
 .Ed
-.Pp
-Support for 16-bit component depth requires the
-.Dv AG_LARGE
-memory model which can handle 64-bit wide pixels.
 .Pp
 The alpha component may or may not be used in a given context.
 A value of 0 (or
@@ -74,41 +72,50 @@ is fully transparent, while
 is fully opaque.
 .Sh INTERFACE
 .nr nS 1
-.Ft AG_Color
-.Fn AG_ColorRGB_8 "Uint8 r" "Uint8 g" "Uint8 b"
-.Pp
-.Ft AG_Color
-.Fn AG_ColorRGBA_8 "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
-.Pp
-.Ft AG_Color
-.Fn AG_ColorRGB_16 "Uint16 r" "Uint16 g" "Uint16 b"
-.Pp
-.Ft AG_Color
-.Fn AG_ColorRGBA_16 "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
+.Ft void
+.Fn AG_ColorRGB_8 "AG_Color *c" "Uint8 r" "Uint8 g" "Uint8 b"
 .Pp
 .Ft void
-.Fn AG_HSV2Color "float hue" "float sat" "float val" "AG_Color *C"
+.Fn AG_ColorRGBA_8 "AG_Color *c" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
 .Ft void
-.Fn AG_Color2HSV "AG_Color c" "float *hue" "float *sat" "float *val"
+.Fn AG_ColorRGB_16 "AG_Color *c" "Uint16 r" "Uint16 g" "Uint16 b"
 .Pp
-.Ft AG_Color
-.Fn AG_ColorHex16 "Uint16 hex"
+.Ft void
+.Fn AG_ColorRGBA_16 "AG_Color *c" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
 .Pp
-.Ft AG_Color
-.Fn AG_ColorHex32 "Uint32 hex"
+.Ft void
+.Fn AG_HSV2Color "float hue" "float sat" "float val" "AG_Color *c"
 .Pp
-.Ft AG_Color
-.Fn AG_ColorHex64 "Uint64 hex"
+.Ft void
+.Fn AG_Color2HSV "AG_Color *c" "float *hue" "float *sat" "float *val"
 .Pp
-.Ft AG_Color
-.Fn AG_ColorFromString "const char *spec" "const AG_Color *parentColor"
+.Ft void
+.Fn AG_ColorHex16 "AG_Color *c" "Uint16 hex"
 .Pp
-.Ft AG_Color
-.Fn AG_ColorAdd "AG_Color c" "AG_ColorOffset offs"
+.Ft void
+.Fn AG_ColorHex32 "AG_Color *c" "Uint32 hex"
+.Pp
+.Ft void
+.Fn AG_ColorHex64 "AG_Color *c" "Uint64 hex"
+.Pp
+.Ft void
+.Fn AG_ColorFromString "AG_Color *c" "const char *spec" "const AG_Color *parentColor"
+.Pp
+.Ft void
+.Fn AG_ColorNone "AG_Color *c"
+.Pp
+.Ft void
+.Fn AG_ColorBlack "AG_Color *c"
+.Pp
+.Ft void
+.Fn AG_ColorWhite "AG_Color *c"
+.Pp
+.Ft void
+.Fn AG_ColorAdd "AG_Color *sum" "const AG_Color *c" "const AG_ColorOffset *offs"
 .Pp
 .Ft int
-.Fn AG_ColorCompare "AG_Color a" "AG_Color b"
+.Fn AG_ColorCompare "const AG_Color *a" "const AG_Color *b"
 .Pp
 .nr nS 0
 .Fn AG_ColorRGB_8
@@ -165,6 +172,13 @@ of the corresponding component in
 .Fa parentColor
 (if non-NULL).
 .Pp
+.Fn AG_ColorNone
+initializes the color to fully transparent black (0,0,0,0).
+.Fn AG_ColorBlack
+and
+.Fn AG_ColorWhite
+initialize the respective fully opaque color.
+.Pp
 .Fn AG_ColorAdd
 adds the components of a color
 .Fa c
@@ -194,8 +208,7 @@ returns non-zero if the two colors differ.
 .Xr AG_MapPixelRGBA 3 ,
 .Xr AG_Widget 3
 .Sh HISTORY
+Agar originally used packed pixels in a reference format to describe colors.
 .Nm
-was introduced in Agar 1.4 (previously only 32-bit packed pixel values in a
-reference surface format were used).
-Agar 1.6 added support for 16-bit component depth under the AG_LARGE memory
-model, and increased the maximum packed-pixel width to 64-bit.
+was introduced in Agar 1.4.
+Agar 1.6 added support for 4-bit/component and 16-bit/component color.

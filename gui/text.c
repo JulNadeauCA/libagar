@@ -492,8 +492,8 @@ static void
 InitTextState(void)
 {
 	agTextState->font = agDefaultFont;
-	agTextState->color = AG_ColorWhite();
-	agTextState->colorBG = AG_ColorNone();
+	AG_ColorWhite(&agTextState->color);
+	AG_ColorNone(&agTextState->colorBG);
 	agTextState->justify = AG_TEXT_LEFT;
 	agTextState->valign = AG_TEXT_TOP;
 	agTextState->tabWd = agTextTabWidth;
@@ -946,14 +946,17 @@ static void
 TextRenderFT_Underline(AG_TTFFont *_Nonnull ftFont, AG_Surface *_Nonnull S,
     int nLines)
 {
-	AG_Color c = agTextState->color;
-	AG_Pixel px = AG_MapPixel(&S->format, c);
 	Uint8 *pDst;
+	AG_Color c;
+	AG_Pixel px;
 	const int pad = 2;
 	int w = S->w - pad;
 	int lh = ftFont->underline_height;
 	int incr = ftFont->ascent - ftFont->underline_offset - lh;
 	int line, y0, lineskip = ftFont->lineskip;
+
+	c = agTextState->color;
+	px = AG_MapPixel(&S->format, &c);
 
 	for (line=0, y0=incr; line < nLines; line++) {
 		int x, y;
@@ -983,7 +986,7 @@ TextRenderFT(const Uint32 *_Nonnull ucs)
 {
 	AG_TextMetrics tm;
 	AG_Font *font = agTextState->font;
-	AG_Color cBg, c;
+	AG_Color cBG, c;
 	AG_TTFFont *ftFont = font->ttf;
 	AG_TTFGlyph *G;
 	const Uint32 *ch;
@@ -1000,15 +1003,15 @@ TextRenderFT(const Uint32 *_Nonnull ucs)
 		goto empty;
 	}
 	S = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
-	cBg = agTextState->colorBG;
-	AG_FillRect(S, NULL, cBg);
-	if (cBg.a == AG_TRANSPARENT) {
+	cBG = agTextState->colorBG;
+	AG_FillRect(S, NULL, &cBG);
+	if (cBG.a == AG_TRANSPARENT) {
 		/*
 		 * Set a colorkey to avoid some unnecessary blending (and also
 		 * provide transparency in case agSurfaceFmt lacks alpha).
 		 */
 		AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
-		    AG_MapPixel(&S->format, cBg));
+		    AG_MapPixel(&S->format, &cBG));
 	}
 
 	c = agTextState->color;
@@ -1073,17 +1076,17 @@ TextRenderFT(const Uint32 *_Nonnull ucs)
 			                G->pixmap.pitch*y);
 
 			/* XXX TODO separate routine to avoid branch */
-			if (cBg.a == AG_TRANSPARENT) {
+			if (cBG.a == AG_TRANSPARENT) {
 				for (x = 0; x < w; x++) {
 					c.a = AG_8toH(*src++);
 					AG_SurfacePut_At(S, dst,
-					    AG_MapPixel(&S->format, c));
+					    AG_MapPixel(&S->format, &c));
 					dst += BytesPerPixel;
 				}
 			} else {
 				for (x = 0; x < w; x++) {
 					c.a = AG_8toH(*src++);
-					AG_SurfaceBlend_At(S, dst, c,
+					AG_SurfaceBlend_At(S, dst, &c,
 					    AG_ALPHA_DST);
 					dst += BytesPerPixel;
 				}
@@ -1127,11 +1130,11 @@ TextSizeBitmap(const Uint32 *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 {
 	AG_Font *font = agTextState->font;
 	const Uint32 *c;
-	AG_Surface *sGlyph;
+	AG_Surface *Sglyph;
 	int wLine = 0, lineSkip = font->lineskip;
 
 	for (c = &ucs[0]; *c != '\0'; c++) {
-		sGlyph = GetBitmapGlyph(font, *c);
+		Sglyph = GetBitmapGlyph(font, *c);
 		if (*c == '\n') {
 			if (extended) {
 				tm->wLines = Realloc(tm->wLines,
@@ -1147,9 +1150,9 @@ TextSizeBitmap(const Uint32 *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 			tm->w += agTextState->tabWd;
 			continue;
 		}
-		wLine += sGlyph->w;
-		tm->w += sGlyph->w;
-		tm->h = MAX(tm->h, sGlyph->h);
+		wLine += Sglyph->w;
+		tm->w += Sglyph->w;
+		tm->h = MAX(tm->h, Sglyph->h);
 	}
 	if (*c != '\n' && extended) {
 		if (tm->nLines > 0) {
@@ -1167,16 +1170,18 @@ TextRenderBitmap(const Uint32 *_Nonnull ucs)
 {
 	AG_TextMetrics tm;
 	AG_Font *font = agTextState->font;
-	AG_Surface *sGlyph, *s;
+	AG_Surface *Sglyph, *S;
 	AG_Rect rd;
+	AG_Color cBG;
 	const Uint32 *c;
 	int line;
 
 	InitMetrics(&tm);
 	TextSizeBitmap(ucs, &tm, 1);
 
-	s = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
-	AG_FillRect(s, NULL, AG_ColorRGBA(0,0,0,0));
+	S = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
+	AG_ColorBlack(&cBG);
+	AG_FillRect(S, NULL, &cBG);
 
 	line = 0;
 	rd.x = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
@@ -1192,19 +1197,18 @@ TextRenderBitmap(const Uint32 *_Nonnull ucs)
 			rd.x += agTextState->tabWd;
 			continue;
 		}
-		sGlyph = GetBitmapGlyph(font, *c);
+		Sglyph = GetBitmapGlyph(font, *c);
 		if (*c != ' ') {
-			AG_SurfaceBlit(sGlyph, NULL, s, rd.x, rd.y);
+			AG_SurfaceBlit(Sglyph, NULL, S, rd.x, rd.y);
 		}
-		rd.x += sGlyph->w;
+		rd.x += Sglyph->w;
 	}
-	AG_SurfaceSetColorKey(s, AG_SURFACE_COLORKEY,
-	    AG_MapPixel_RGBA(&s->format, 0,0,0,0));
-	AG_SurfaceSetAlpha(s, AG_SURFACE_ALPHA,
-	    font->bglyphs[0]->alpha);
+	AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
+	    AG_MapPixel_RGBA(&S->format, 0,0,0,0));
+	AG_SurfaceSetAlpha(S, AG_SURFACE_ALPHA, font->bglyphs[0]->alpha);
 
 	FreeMetrics(&tm);
-	return (s);
+	return (S);
 }
 
 /* Render an UCS-4 text string onto a new 8-bit surface. */
@@ -1802,7 +1806,7 @@ AG_TextRenderGlyph(AG_Driver *drv, Uint32 ch)
 	AG_SLIST_FOREACH(gl, &drv->glyphCache[h].glyphs, glyphs) {
 		if (ch == gl->ch &&
 		    agTextState->font == gl->font &&
-		    AG_ColorCompare(agTextState->color,gl->color) == 0)
+		    AG_ColorCompare(&agTextState->color, &gl->color) == 0)
 			break;
 	}
 	if (gl == NULL) {
@@ -1814,24 +1818,24 @@ AG_TextRenderGlyph(AG_Driver *drv, Uint32 ch)
 
 /* Set active text color. */
 void
-AG_TextColor(AG_Color c)
+AG_TextColor(const AG_Color *c)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->color = c;
+	memcpy(&agTextState->color, c, sizeof(AG_Color));
 	AG_MutexUnlock(&agTextLock);
 }
 void
 AG_TextColorRGB(Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->color = AG_ColorRGB_8(r,g,b);
+	AG_ColorRGB_8(&agTextState->color, r,g,b);
 	AG_MutexUnlock(&agTextLock);
 }
 void
 AG_TextColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->color = AG_ColorRGBA_8(r,g,b,a);
+	AG_ColorRGBA_8(&agTextState->color, r,g,b,a);
 	AG_MutexUnlock(&agTextLock);
 }
 
@@ -1840,30 +1844,30 @@ void
 AG_TextColorHex(Uint32 c)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->color = AG_ColorHex32(c);
+	AG_ColorHex32(&agTextState->color, c);
 	AG_MutexUnlock(&agTextLock);
 }
 
 /* Set active text background color. */
 void
-AG_TextBGColor(AG_Color C)
+AG_TextBGColor(const AG_Color *c)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = C;
+	memcpy(&agTextState->colorBG, c, sizeof(AG_Color));
 	AG_MutexUnlock(&agTextLock);
 }
 void
 AG_TextBGColorRGB(Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = AG_ColorRGB_8(r,g,b);
+	AG_ColorRGB_8(&agTextState->colorBG, r,g,b);
 	AG_MutexUnlock(&agTextLock);
 }
 void
 AG_TextBGColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = AG_ColorRGBA_8(r,g,b,a);
+	AG_ColorRGBA_8(&agTextState->colorBG, r,g,b,a);
 	AG_MutexUnlock(&agTextLock);
 }
 
@@ -1872,7 +1876,7 @@ void
 AG_TextBGColorHex(Uint32 c)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = AG_ColorHex(c);
+	AG_ColorHex(&agTextState->colorBG, c);
 	AG_MutexUnlock(&agTextLock);
 }
 

@@ -94,11 +94,13 @@ Draw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
 	VG_Circle *vc = obj;
 	VG_Vector vCenter = VG_Pos(vc->p);
+	AG_Color c;
 	int x, y, r;
 
 	VG_GetViewCoords(vv, vCenter, &x, &y);
 	r = (int)(vc->r*vv->scale);
-	AG_DrawCircle(vv, x, y, r, VG_MapColorRGB(VGNODE(vc)->color));
+	c = VG_MapColorRGB(VGNODE(vc)->color);
+	AG_DrawCircle(vv, x, y, r, &c);
 }
 
 static void

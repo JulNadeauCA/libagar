@@ -66,7 +66,7 @@ typedef struct ag_treetbl_row {
 } AG_TreetblRow;
 
 typedef struct ag_treetbl {
-	struct ag_widget _inherit;	/* AG_Widget(3) -> AG_Treetbl */
+	struct ag_widget _inherit;	/* AG_Widget -> AG_Treetbl */
 	Uint flags;
 #define AG_TREETBL_MULTI	0x001	/* Allow multiple selections */
 #define AG_TREETBL_MULTITOGGLE  0x002

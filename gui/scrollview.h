@@ -8,8 +8,7 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_scrollview {
-	struct ag_widget wid;
-
+	struct ag_widget wid;		/* AG_Widget -> AG_Scrollview */
 	Uint flags;
 #define AG_SCROLLVIEW_HFILL        0x001
 #define AG_SCROLLVIEW_VFILL        0x002

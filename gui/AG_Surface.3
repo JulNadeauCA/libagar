@@ -490,9 +490,9 @@ structure describes how pixels are encoded in memory:
 .Bd -literal
                                /* Bits per pixel: | 1 2 4 8 16 24 32 64 |*/
 typedef enum ag_surface_mode { /* --------------- |---------------------|*/
-	AG_SURFACE_PACKED,     /* Packed RGB(A)   |       X X  X  X  LG |*/
-	AG_SURFACE_INDEXED,    /* Palettized      | X X X X             |*/
-	AG_SURFACE_GRAYSCALE   /* Grayscale+Alpha |               X  LG |*/
+	AG_SURFACE_PACKED,     /* Packed RGB(A)   |     S   S  M  M  L  |*/
+	AG_SURFACE_INDEXED,    /* Palettized      | S S S S             |*/
+	AG_SURFACE_GRAYSCALE   /* Grayscale+Alpha |            M  M  L  |*/
 } AG_SurfaceMode;
 
 typedef struct ag_pixel_format {
@@ -870,8 +870,7 @@ The
 structure first appeared in Agar 1.3.3.
 It was first modeled after the
 .Ft SDL_Surface
-of
-.Lk http://libsdl.org/ SDL .
+of SDL.
 Agar 1.6 introduced support for 48- and 64-bit color (16-bit per
 .Ft AG_Color
 component precision).

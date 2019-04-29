@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1343,13 +1343,15 @@ InitExposeTimeout(AG_Timer *_Nonnull timer, AG_Event *_Nonnull event)
 }
 
 static int
-GLX_OpenWindow(AG_Window *_Nonnull win, AG_Rect r, int depthReq, Uint mwFlags)
+GLX_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
+    Uint mwFlags)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	AG_Driver *drv = WIDGET(win)->drv;
+	int glxAttrs[16];
+	AG_Rect rVP;
 	XSetWindowAttributes xwAttrs;
 	XVisualInfo *xvi;
-	int glxAttrs[16];
 	int i = 0;
 	Ulong valuemask;
 	int depth;
@@ -1408,12 +1410,12 @@ GLX_OpenWindow(AG_Window *_Nonnull win, AG_Rect r, int depthReq, Uint mwFlags)
 	/* Create a new window. */
 	depth = (depthReq >= 1) ? depthReq : xvi->depth;
 	Debug(glx, "Creating %ux%ux%dbpp window at %d,%d\n",
-	    r.w, r.h, depth,
-	    r.x, r.y);
+	    r->w, r->h, depth,
+	    r->x, r->y);
 	glx->w = XCreateWindow(agDisplay,
 	    RootWindow(agDisplay,agScreen),
-	    r.x, r.y,
-	    r.w, r.h, 0, depth,
+	    r->x, r->y,
+	    r->w, r->h, 0, depth,
 	    InputOutput,
 	    xvi->visual,
 	    valuemask,
@@ -1431,7 +1433,7 @@ GLX_OpenWindow(AG_Window *_Nonnull win, AG_Rect r, int depthReq, Uint mwFlags)
 	 * Set WM_NORMAL_HINTS now (other WM hints will be passed in
 	 * the MapWindow() function).
 	 */
-	SetWmNormalHints(win, &r, mwFlags);
+	SetWmNormalHints(win, r, mwFlags);
 
 	/* Create the GLX rendering context. */
 	glx->glxCtx = glXCreateContext(agDisplay, xvi, 0, GL_TRUE);
@@ -1439,7 +1441,11 @@ GLX_OpenWindow(AG_Window *_Nonnull win, AG_Rect r, int depthReq, Uint mwFlags)
 	if (AG_GL_InitContext(glx, &glx->gl) == -1) {
 		goto fail_win;
 	}
-	AG_GL_SetViewport(&glx->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	rVP.x = 0;
+	rVP.y = 0;
+	rVP.w = WIDTH(win);
+	rVP.h = HEIGHT(win);
+	AG_GL_SetViewport(&glx->gl, &rVP);
 	
 	/* Set the pixel formats. */
 	if ((drv->videoFmt = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
@@ -1543,6 +1549,7 @@ GLX_MapWindow(AG_Window *_Nonnull win)
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
 	AG_SizeAlloc a;
+	AG_Rect rVP;
 	int x, y;
 
 	AG_MutexLock(&agDisplayLock);
@@ -1647,7 +1654,11 @@ GLX_MapWindow(AG_Window *_Nonnull win)
 
 	/* Set the GL viewport. */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
-	AG_GL_SetViewport(&glx->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	rVP.x = 0;
+	rVP.y = 0;
+	rVP.w = WIDTH(win);
+	rVP.h = HEIGHT(win);
+	AG_GL_SetViewport(&glx->gl, &rVP);
 
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
@@ -1787,6 +1798,7 @@ GLX_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
 	AG_SizeAlloc aNew;
+	AG_Rect rVP;
 	
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
@@ -1804,7 +1816,11 @@ GLX_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 
 	/* Update the viewport. */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
-	AG_GL_SetViewport(&glx->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	rVP.x = 0;
+	rVP.y = 0;
+	rVP.w = WIDTH(win);
+	rVP.h = HEIGHT(win);
+	AG_GL_SetViewport(&glx->gl, &rVP);
 	
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
@@ -2143,16 +2159,16 @@ AG_DriverMwClass agDriverGLX = {
 			sizeof(AG_DriverGLX),
 			{ 1,6 },
 			Init,
-			NULL,	/* reset */
+			NULL,		/* reset */
 			Destroy,
-			NULL,	/* load */
-			NULL,	/* save */
-			NULL,	/* edit */
+			NULL,		/* load */
+			NULL,		/* save */
+			NULL,		/* edit */
 		},
 		"glx",
 		AG_VECTOR,
 		AG_WM_MULTIPLE,
-		AG_DRIVER_OPENGL|AG_DRIVER_TEXTURES,
+		AG_DRIVER_OPENGL | AG_DRIVER_TEXTURES,
 		GLX_Open,
 		GLX_Close,
 		GLX_GetDisplaySize,
@@ -2184,9 +2200,11 @@ AG_DriverMwClass agDriverGLX = {
 		GLX_SetCursorVisibility,
 		AG_GL_BlitSurface,
 		AG_GL_BlitSurfaceFrom,
+#ifdef HAVE_OPENGL
 		AG_GL_BlitSurfaceGL,
 		AG_GL_BlitSurfaceFromGL,
 		AG_GL_BlitSurfaceFlippedGL,
+#endif
 		AG_GL_BackupSurfaces,
 		AG_GL_RestoreSurfaces,
 		AG_GL_RenderToSurface,

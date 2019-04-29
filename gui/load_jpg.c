@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -178,7 +178,8 @@ AG_SurfaceExportJPEG(const AG_Surface *_Nonnull S, const char *_Nonnull path,
 		for (x = 0; x < S->w; x++) {
 			AG_Color c;
 			
-			c = AG_GetColor(AG_SurfaceGet_At(S,p), &S->format);
+			AG_GetColor(&c, AG_SurfaceGet_At(S,p), &S->format);
+
 			*jp++ = c.r;
 			*jp++ = c.g;
 			*jp++ = c.b;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -87,7 +87,7 @@ Init(void *obj)
 	icon->ySaved = -1;
 	icon->wSaved = -1;
 	icon->hSaved = -1;
-	icon->cBackground = AG_ColorRGBA(0,0,0,0);
+	AG_ColorNone(&icon->cBackground);
 	AG_InitTimer(&icon->toDblClick, "dblClick", 0);
 }
 
@@ -128,14 +128,19 @@ static void
 Draw(void *obj)
 {
 	AG_Icon *icon = obj;
-	int hIcon;
+	AG_Rect r;
+	int hIcon, w_2;
 
-	if (icon->surface == -1) {
+	if (icon->surface == -1)
 		return;
-	}
+
+	r.w = WIDTH(icon);
+	w_2 = r.w >> 1;
+
 	AG_WidgetBlitSurface(icon, icon->surface,
-	    WIDGET(icon)->w/2 - WSURFACE(icon,icon->surface)->w/2,
+	    w_2 - (WSURFACE(icon,icon->surface)->w >> 1),
 	    0);
+
 	if (icon->labelTxt[0] != '\0') {
 		if (icon->labelSurface != -1 &&
 		    icon->flags & AG_ICON_REGEN_LABEL) {
@@ -148,21 +153,22 @@ Draw(void *obj)
 		}
 		hIcon = WSURFACE(icon,icon->surface)->h;
 		if (icon->flags & AG_ICON_BGFILL) {
-			AG_DrawRect(icon,
-			    AG_RECT(0, hIcon, WIDTH(icon), HEIGHT(icon)-hIcon),
-			    icon->cBackground);
+			r.x = 0;
+			r.y = hIcon;
+			r.h = HEIGHT(icon) - hIcon;
+			AG_DrawRect(icon, &r, &icon->cBackground);
 		}
 		AG_WidgetBlitSurface(icon, icon->labelSurface,
-		    WIDTH(icon)/2 - WSURFACE(icon,icon->labelSurface)->w/2,
+		    w_2 - (WSURFACE(icon,icon->labelSurface)->w >> 1),
 		    WSURFACE(icon,icon->surface)->h + icon->labelPad);
 	}
 }
 
 void
-AG_IconSetBackgroundFill(AG_Icon *icon, int enable, AG_Color C)
+AG_IconSetBackgroundFill(AG_Icon *icon, int enable, const AG_Color *c)
 {
 	AG_SETFLAGS(icon->flags, AG_ICON_BGFILL, enable);
-	icon->cBackground = C;
+	memcpy(&icon->cBackground, c, sizeof(AG_Color));
 	AG_Redraw(icon);
 }
 
@@ -236,7 +242,7 @@ AG_WidgetClass agIconClass = {
 		sizeof(AG_Icon),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

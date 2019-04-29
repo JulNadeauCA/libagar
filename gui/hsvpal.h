@@ -10,7 +10,7 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_hsvpal {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_HSVPal */
 	Uint flags;
 #define AG_HSVPAL_PIXEL		0x01	/* Bound to a pixel/pixel format */
 #define AG_HSVPAL_DIRTY		0x02	/* Redraw the palette */

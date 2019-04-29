@@ -13,7 +13,7 @@ struct ag_window;
 struct ag_socket;
 
 typedef struct ag_icon {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Icon */
 	Uint flags;
 #define AG_ICON_REGEN_LABEL	0x01	/* Update text label */
 #define AG_ICON_DND		0x02	/* Drag-and-drop in progress */
@@ -43,7 +43,7 @@ void AG_IconSetSurfaceNODUP(AG_Icon *_Nonnull, AG_Surface *_Nonnull);
 void AG_IconSetTextS(AG_Icon *_Nonnull, const char *_Nullable);
 void AG_IconSetText(AG_Icon *_Nonnull, const char *_Nonnull, ...)
                    FORMAT_ATTRIBUTE(printf,2,3);
-void AG_IconSetBackgroundFill(AG_Icon *_Nonnull, int, AG_Color);
+void AG_IconSetBackgroundFill(AG_Icon *_Nonnull, int, const AG_Color *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/close.h>

@@ -16,7 +16,7 @@ enum ag_socket_bg_type {
 };
 
 typedef struct ag_socket {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Socket */
 	int state;			/* Default boolean state binding */
 	int count;			/* Default stack count binding */
 	Uint flags;
