@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -189,11 +189,14 @@ int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
 int agTextSymbols = 1;			/* Process special symbols in text */
 int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
 int agScreenshotQuality = 100;		/* JPEG quality in % */
+
+#ifdef AG_HAVE_FLOAT
 double agZoomValues[AG_ZOOM_RANGE] = {	/* Scale values for zoom */
 	30.00, 50.00, 67.00, 80.00, 90.00,
 	100.00,
 	110.00, 120.00, 133.00, 150.00, 170.00, 200.00, 240.00, 300.00
 };
+#endif
 
 /*
  * Initialize the Agar-GUI globals and built-in classes. This function
@@ -204,6 +207,7 @@ AG_InitGUIGlobals(void)
 {
 	AG_Config *cfg;
 	void **cl;
+	AG_DriverClass **pd;
 	Uint i;
 
 	if (initedGlobals++ > 0) {
@@ -211,8 +215,8 @@ AG_InitGUIGlobals(void)
 	}
 	for (cl = &agStdClasses[0]; *cl != NULL; cl++)
 		AG_RegisterClass(*cl);
-	for (i = 0; i < agDriverListSize; i++)
-		AG_RegisterClass(agDriverList[i]);
+	for (pd = &agDriverList[0]; *pd != NULL; pd++)
+		AG_RegisterClass(*pd);
 
 	AG_InitGlobalKeys();
 	AG_EditableInitClipboards();
@@ -253,7 +257,8 @@ void
 AG_DestroyGUIGlobals(void)
 {
 	AG_Config *cfg;
-	void **cl;
+	AG_DriverClass **pd;
+	void **pcl;
 	Uint i;
 	
 	if (--initedGlobals > 0)
@@ -277,10 +282,11 @@ AG_DestroyGUIGlobals(void)
 	AG_EditableDestroyClipboards();
 	AG_DestroyGlobalKeys();
 	
-	for (i = 0; i < agDriverListSize; i++)
-		AG_UnregisterClass(agDriverList[i]);
-	for (cl = &agStdClasses[0]; *cl != NULL; cl++)
-		AG_UnregisterClass(*cl);
+	for (pd = &agDriverList[0]; *pd != NULL; pd++)
+		AG_UnregisterClass(*pd);
+
+	for (pcl = &agStdClasses[0]; *pcl != NULL; pcl++)
+		AG_UnregisterClass(*pcl);
 
 	agRenderingContext = 0;
 	agGUI = 0;
@@ -388,8 +394,7 @@ AG_InitGraphics(const char *spec)
 {
 	char specBuf[128], *s, *sOpts = "", *tok;
 	AG_Driver *drv = NULL;
-	AG_DriverClass *dc = NULL;
-	int i;
+	AG_DriverClass *dc = NULL, **pd;
 	
 	if (AG_InitGUIGlobals() == -1)
 		return (-1);
@@ -407,13 +412,14 @@ AG_InitGraphics(const char *spec)
 			 * Select preferred OpenGL-compatible driver.
 			 */
 			sOpts = &s[8];
-			for (i = 0; i < agDriverListSize; i++) {
-				dc = agDriverList[i];
-				if (dc->flags & AG_DRIVER_OPENGL &&
-				   (drv = AG_DriverOpen(dc)) != NULL)
+			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+				if ((*pd)->flags & AG_DRIVER_OPENGL &&
+				   (drv = AG_DriverOpen(*pd)) != NULL) {
+				   	dc = *pd;
 					break;
+				}
 			}
-			if (i == agDriverListSize) {
+			if (dc == NULL) {
 				AG_SetError(_("No OpenGL drivers are available"));
 				goto fail;
 			}
@@ -422,13 +428,14 @@ AG_InitGraphics(const char *spec)
 			 * Select preferred SDL-compatible driver.
 			 */
 			sOpts = &s[5];
-			for (i = 0; i < agDriverListSize; i++) {
-				dc = agDriverList[i];
-				if (dc->flags & AG_DRIVER_SDL &&
-				   (drv = AG_DriverOpen(dc)) != NULL)
+			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+				if ((*pd)->flags & AG_DRIVER_SDL &&
+				   (drv = AG_DriverOpen(*pd)) != NULL) {
+					dc = *pd;
 					break;
+				}
 			}
-			if (i == agDriverListSize) {
+			if (dc == NULL) {
 				AG_SetError(_("No SDL drivers are available"));
 				goto fail;
 			}
@@ -437,33 +444,34 @@ AG_InitGraphics(const char *spec)
 			 * Try explicit list of preferred drivers.
 			 */
 			while ((tok = AG_Strsep(&s, ",;")) != NULL) {
-				for (i = 0; i < agDriverListSize; i++) {
-					size_t len;
+				for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+					size_t len = strlen((*pd)->name);
 
-					dc = agDriverList[i];
-					len = strlen(dc->name);
-					if (strncmp(dc->name, tok, len) == 0 &&
+					if (strncmp((*pd)->name, tok, len) == 0 &&
 					    (tok[len] == '\0' || tok[len] == '(') &&
-					    (drv = AG_DriverOpen(dc)) != NULL) {
+					    (drv = AG_DriverOpen(*pd)) != NULL) {
 						sOpts = &tok[len];
+						dc = *pd;
 						break;
 					}
 				}
-				if (i < agDriverListSize)
+				if (dc != NULL)
 					break;
 			}
 			if (tok == NULL) {
-				char availDrvs[256];
-
-				for (availDrvs[0] = '\0', i = 0;
-				     i < agDriverListSize; i++) {
-					dc = agDriverList[i];
-					Strlcat(availDrvs, " ", sizeof(availDrvs));
-					Strlcat(availDrvs, dc->name, sizeof(availDrvs));
+#if AG_MODEL == AG_SMALL
+				AG_SetErrorS(_("No such Agar driver"));
+#else
+				char av[256];
+				
+				for (pd = &agDriverList[0], av[0] = '\0';
+				    *pd != NULL; pd++) {
+					Strlcat(av, " ", sizeof(av));
+					Strlcat(av, (*pd)->name, sizeof(av));
 				}
-				AG_SetError(_("Agar driver is not available: \"%s\"\n"
-				              "(compiled-in drivers: <%s >)"),
-					      specBuf, availDrvs);
+				AG_SetError(_("No such Agar driver: \"%s\"\n"
+				              "(available: <%s >)"), specBuf, av);
+#endif
 				goto fail;
 			}
 		}
@@ -471,12 +479,13 @@ AG_InitGraphics(const char *spec)
 		/*
 		 * Auto-select best available driver.
 		 */
-		for (i = 0; i < agDriverListSize; i++) {
-			dc = agDriverList[i];
-			if ((drv = AG_DriverOpen(dc)) != NULL)
+		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+			if ((drv = AG_DriverOpen(*pd)) != NULL) {
+				dc = *pd;
 				break;
+			}
 		}
-		if (i == agDriverListSize) {
+		if (dc == NULL) {
 			AG_SetError(_("No graphics drivers are available"));
 			goto fail;
 		}
@@ -605,7 +614,7 @@ int
 AG_InitVideo(int w, int h, int depth, Uint flags)
 {
 	AG_Driver *drv = NULL;
-	AG_DriverClass *dc = NULL;
+	AG_DriverClass *dc = NULL, **pd;
 	int i;
 	
 	if (AG_InitGUIGlobals() == -1) {
@@ -620,23 +629,25 @@ AG_InitVideo(int w, int h, int depth, Uint flags)
 		goto fail;
 	}
 	if (flags & (AG_VIDEO_OPENGL|AG_VIDEO_OPENGL_OR_SDL)) {
-		for (i = 0; i < agDriverListSize; i++) {
-			dc = agDriverList[i];
-			if (dc->wm == AG_WM_SINGLE &&
-			    (dc->flags & AG_DRIVER_OPENGL) &&
-			    (drv = AG_DriverOpen(dc)) != NULL)
+		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+			if ((*pd)->wm == AG_WM_SINGLE &&
+			   ((*pd)->flags & AG_DRIVER_OPENGL) &&
+			    (drv = AG_DriverOpen(*pd)) != NULL) {
+				dc = *pd;
 				break;
+			}
 		}
-		if (i == agDriverListSize) {
+		if (dc == NULL) {
 			if (flags & AG_VIDEO_OPENGL_OR_SDL) {
-				for (i = 0; i < agDriverListSize; i++) {
-					dc = agDriverList[i];
-					if (dc->wm == AG_WM_SINGLE &&
-					    (dc->flags & AG_DRIVER_SDL) &&
-					    (drv = AG_DriverOpen(dc)) != NULL)
+				for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+					if ((*pd)->wm == AG_WM_SINGLE &&
+					    ((*pd)->flags & AG_DRIVER_SDL) &&
+					    (drv = AG_DriverOpen(*pd)) != NULL) {
+						dc = *pd;
 						break;
+					}
 				}
-				if (i == agDriverListSize) {
+				if (dc == NULL) {
 					AG_SetError("SDL/GL not available");
 					goto fail;
 				}
@@ -646,25 +657,27 @@ AG_InitVideo(int w, int h, int depth, Uint flags)
 			}
 		}
 	} else if (flags & AG_VIDEO_SDL) {
-		for (i = 0; i < agDriverListSize; i++) {
-			dc = agDriverList[i];
-			if (dc->wm == AG_WM_SINGLE &&
-			    (dc->flags & AG_DRIVER_SDL) &&
-			    (drv = AG_DriverOpen(dc)) != NULL)
+		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+			if ((*pd)->wm == AG_WM_SINGLE &&
+			   ((*pd)->flags & AG_DRIVER_SDL) &&
+			    (drv = AG_DriverOpen(*pd)) != NULL) {
+				dc = *pd;
 				break;
+			}
 		}
-		if (i == agDriverListSize) {
+		if (dc == NULL) {
 			AG_SetError("SDL not available");
 			goto fail;
 		}
 	} else {
-		for (i = 0; i < agDriverListSize; i++) {
-			dc = agDriverList[i];
-			if (dc->wm == AG_WM_SINGLE &&
-			    (drv = AG_DriverOpen(dc)) != NULL)
+		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+			if ((*pd)->wm == AG_WM_SINGLE &&
+			    (drv = AG_DriverOpen(*pd)) != NULL) {
+				dc = *pd;
 				break;
+			}
 		}
-		if (i == agDriverListSize) {
+		if (dc == NULL) {
 			AG_SetError("No graphics drivers are available");
 			goto fail;
 		}

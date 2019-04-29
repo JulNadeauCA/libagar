@@ -31,7 +31,8 @@ struct ag_driver_event;
 
 /* Generic graphics driver class */
 typedef struct ag_driver_class {
-	struct ag_object_class _inherit;
+	struct ag_object_class _inherit;	/* [AG_Object] -> [AG_Driver] */
+
 	const char *_Nonnull name;		/* Short name */
 	enum ag_driver_type type;		/* Driver type */
 	enum ag_driver_wm_type wm;		/* Window manager type */
@@ -60,16 +61,19 @@ typedef struct ag_driver_class {
 	void (*_Nonnull  beginRendering)(void *_Nonnull);
 	void (*_Nonnull  renderWindow)(struct ag_window *_Nonnull);
 	void (*_Nonnull  endRendering)(void *_Nonnull);
-	void (*_Nonnull  fillRect)(void *_Nonnull, AG_Rect, AG_Color);
-	void (*_Nullable updateRegion)(void *_Nonnull, AG_Rect);
+	void (*_Nonnull  fillRect)(void *_Nonnull, const AG_Rect *_Nonnull,
+	                           const AG_Color *_Nonnull);
+	void (*_Nullable updateRegion)(void *_Nonnull, const AG_Rect *_Nonnull);
 	void (*_Nullable uploadTexture)(void *_Nonnull, Uint *_Nonnull,
-					AG_Surface *_Nonnull, AG_TexCoord *_Nullable);
+	                                AG_Surface *_Nonnull,
+	                                AG_TexCoord *_Nullable);
 	int  (*_Nullable updateTexture)(void *_Nonnull, Uint,
-	                                AG_Surface *_Nonnull, AG_TexCoord *_Nullable);
+	                                AG_Surface *_Nonnull,
+	                                AG_TexCoord *_Nullable);
 	void (*_Nullable deleteTexture)(void *_Nonnull, Uint);
 	int  (*_Nullable setRefreshRate)(void *_Nonnull, int);
 
-	void (*_Nonnull  pushClipRect)(void *_Nonnull, AG_Rect);
+	void (*_Nonnull  pushClipRect)(void *_Nonnull, const AG_Rect *_Nonnull);
 	void (*_Nonnull  popClipRect)(void *_Nonnull);
 	void (*_Nonnull  pushBlendingMode)(void *_Nonnull, AG_AlphaFn, AG_AlphaFn);
 	void (*_Nonnull  popBlendingMode)(void *_Nonnull);
@@ -101,32 +105,50 @@ typedef struct ag_driver_class {
 	int  (*_Nullable renderToSurface)(void *_Nonnull, struct ag_widget *_Nonnull,
 	                                  AG_Surface *_Nonnull *_Nullable);
 	/* GUI Rendering Primitives */
-	void (*_Nonnull putPixel)(void *_Nonnull, int,int, AG_Color);
+	void (*_Nonnull putPixel)(void *_Nonnull, int,int,
+	                          const AG_Color *_Nonnull);
 	void (*_Nonnull putPixel32)(void *_Nonnull, int,int, Uint32);
 	void (*_Nonnull putPixelRGB8)(void *_Nonnull, int,int, Uint8,Uint8,Uint8);
 #if AG_MODEL == AG_LARGE
 	void (*_Nonnull putPixel64)(void *_Nonnull, int,int, Uint64);
 	void (*_Nonnull putPixelRGB16)(void *_Nonnull, int,int, Uint16,Uint16,Uint16);
 #endif
-	void (*_Nonnull blendPixel)(void *_Nonnull, int,int, AG_Color,
+	void (*_Nonnull blendPixel)(void *_Nonnull, int,int,
+	                            const AG_Color *_Nonnull,
 	                            AG_AlphaFn, AG_AlphaFn);
-	void (*_Nonnull drawLine)(void *_Nonnull, int,int, int,int, AG_Color);
-	void (*_Nonnull drawLineH)(void *_Nonnull, int,int, int, AG_Color);
-	void (*_Nonnull drawLineV)(void *_Nonnull, int, int,int, AG_Color);
+	void (*_Nonnull drawLine)(void *_Nonnull, int,int, int,int,
+	                          const AG_Color *_Nonnull);
+	void (*_Nonnull drawLineH)(void *_Nonnull, int,int, int,
+	                           const AG_Color *_Nonnull);
+	void (*_Nonnull drawLineV)(void *_Nonnull, int, int,int,
+	                           const AG_Color *_Nonnull);
 	void (*_Nonnull drawLineBlended)(void *_Nonnull, int,int, int,int,
-	                                 AG_Color, AG_AlphaFn, AG_AlphaFn);
-	void (*_Nonnull drawTriangle)(void *_Nonnull, AG_Pt,AG_Pt,AG_Pt, AG_Color);
-	void (*_Nonnull drawArrow)(void *_Nonnull, Uint8, int,int, int, AG_Color);
-	void (*_Nonnull drawBoxRounded)(void *_Nonnull, AG_Rect, int, int,
-	                                AG_Color, AG_Color, AG_Color);
-	void (*_Nonnull drawBoxRoundedTop)(void *_Nonnull, AG_Rect, int, int,
-	                                   AG_Color, AG_Color, AG_Color);
-	void (*_Nonnull drawCircle)(void *_Nonnull, int,int, int, AG_Color);
-	void (*_Nonnull drawCircleFilled)(void *_Nonnull, int,int, int, AG_Color);
-	void (*_Nonnull drawRectFilled)(void *_Nonnull, AG_Rect, AG_Color);
-	void (*_Nonnull drawRectBlended)(void *_Nonnull, AG_Rect, AG_Color,
+	                                 const AG_Color *_Nonnull,
 	                                 AG_AlphaFn, AG_AlphaFn);
-	void (*_Nonnull drawRectDithered)(void *_Nonnull, AG_Rect, AG_Color);
+	void (*_Nonnull drawTriangle)(void *_Nonnull, const AG_Pt *_Nonnull,
+	                              const AG_Pt *_Nonnull, const AG_Pt *_Nonnull,
+	                              const AG_Color *_Nonnull);
+	void (*_Nonnull drawArrow)(void *_Nonnull, Uint8, int,int, int,
+	                           const AG_Color *_Nonnull);
+	void (*_Nonnull drawBoxRounded)(void *_Nonnull, const AG_Rect *_Nonnull,
+	                                int, int, const AG_Color *_Nonnull,
+					const AG_Color *_Nonnull,
+					const AG_Color *_Nonnull);
+	void (*_Nonnull drawBoxRoundedTop)(void *_Nonnull, const AG_Rect *_Nonnull,
+	                                   int, int, const AG_Color *_Nonnull,
+	                                   const AG_Color *_Nonnull,
+	                                   const AG_Color *_Nonnull);
+	void (*_Nonnull drawCircle)(void *_Nonnull, int,int, int,
+	                            const AG_Color *_Nonnull);
+	void (*_Nonnull drawCircleFilled)(void *_Nonnull, int,int, int,
+	                                  const AG_Color *_Nonnull);
+	void (*_Nonnull drawRectFilled)(void *_Nonnull, const AG_Rect *_Nonnull,
+	                                const AG_Color *_Nonnull);
+	void (*_Nonnull drawRectBlended)(void *_Nonnull, const AG_Rect *_Nonnull,
+	                                 const AG_Color *_Nonnull,
+	                                 AG_AlphaFn, AG_AlphaFn);
+	void (*_Nonnull drawRectDithered)(void *_Nonnull, const AG_Rect *_Nonnull,
+	                                  const AG_Color *_Nonnull);
 
 	/* Font engine operations */
 	void (*_Nonnull updateGlyph)(void *_Nonnull, struct ag_glyph *_Nonnull);
@@ -138,19 +160,19 @@ typedef struct ag_driver_class {
 
 /* Generic driver instance. */
 typedef struct ag_driver {
-	struct ag_object _inherit;
-	Uint id;                   	     /* Numerical instance ID */
+	struct ag_object _inherit;		/* AG_Object -> AG_Driver */
+	Uint id;				/* Numerical instance ID */
 	Uint flags;
-#define AG_DRIVER_WINDOW_BG 0x02             /* Managed window background */
+#define AG_DRIVER_WINDOW_BG 0x02		/* Managed window background */
 
-	AG_Surface *_Nonnull sRef;           /* Standard reference surface */
-	AG_PixelFormat *_Nullable videoFmt;  /* Video pixel format (FB modes) */
+	AG_Surface *_Nonnull sRef;		/* Standard reference surface */
+	AG_PixelFormat *_Nullable videoFmt;	/* Video pixel format (FB modes) */
 
-	struct ag_keyboard *_Nullable kbd;   /* Primary keyboard device */
-	struct ag_mouse    *_Nullable mouse; /* Primary mouse device */
+	struct ag_keyboard *_Nullable kbd;	/* Primary keyboard device */
+	struct ag_mouse    *_Nullable mouse;	/* Primary mouse device */
 
-	struct ag_cursor *_Nullable activeCursor;  /* Current cursor */
-	AG_TAILQ_HEAD_(ag_cursor) cursors;         /* Available cursors */
+	struct ag_cursor *_Nullable activeCursor; /* Current cursor */
+	AG_TAILQ_HEAD_(ag_cursor) cursors;	  /* Available cursors */
 	Uint                     nCursors;
 
 	struct ag_glyph_cache *_Nonnull glyphCache; /* For text rendering */
@@ -210,8 +232,7 @@ extern AG_ObjectClass            agDriverClass;	/* Base AG_Driver class */
 extern AG_Object                 agDrivers;	/* Drivers VFS Root */
 extern AG_DriverClass *_Nullable agDriverOps;	/* Current driver class */
 
-extern void *_Nonnull agDriverList[];		/* Available driver classes */
-extern Uint           agDriverListSize;
+extern AG_DriverClass *_Nonnull agDriverList[];	/* Available driver classes */
 
 #include <agar/config/have_clock_gettime.h>
 #include <agar/config/have_pthreads.h>

@@ -39,25 +39,25 @@
 #include <agar/gui/text.h>
 
 #if defined(HAVE_GLX)
-extern AG_Driver agDriverGLX;
+extern AG_DriverClass agDriverGLX;
 #endif
 #if defined(HAVE_SDL)
-extern AG_Driver agDriverSDLFB;
+extern AG_DriverClass agDriverSDLFB;
 #endif
 #if defined(HAVE_SDL) && defined(HAVE_OPENGL)
-extern AG_Driver agDriverSDLGL;
+extern AG_DriverClass agDriverSDLGL;
 #endif
 #if defined(HAVE_WGL)
-extern AG_Driver agDriverWGL;
+extern AG_DriverClass agDriverWGL;
 #endif
 #if defined(HAVE_COCOA)
-extern AG_Driver agDriverCocoa;
+extern AG_DriverClass agDriverCocoa;
 #endif
 
-AG_Object         agDrivers;			/* Drivers VFS */
-AG_DriverClass   *agDriverOps = NULL;		/* Current driver class */
+AG_Object       agDrivers;			/* Drivers VFS */
+AG_DriverClass *agDriverOps = NULL;		/* Current driver class */
 
-void *agDriverList[] = {
+AG_DriverClass *agDriverList[] = {
 #if defined(HAVE_GLX)
 	&agDriverGLX,
 #endif
@@ -73,27 +73,25 @@ void *agDriverList[] = {
 #if defined(HAVE_SDL)
 	&agDriverSDLFB,
 #endif
+	NULL
 };
-Uint agDriverListSize = sizeof(agDriverList) / sizeof(agDriverList[0]);
 
 /* Return a string with the available drivers. */
 void
 AG_ListDriverNames(char *buf, AG_Size buf_len)
 {
-	Uint i;
+	AG_DriverClass **pd;
 
 	if (buf_len == 0) {
 		return;
 	}
-	buf[0] = '\0';
-
-	for (i = 0; i < agDriverListSize; i++) {
-		AG_DriverClass *drvClass = agDriverList[i];
-
-		Strlcat(buf, drvClass->name, buf_len);
-		if (i < agDriverListSize-1)
-			Strlcat(buf, " ", buf_len);
+	for (pd = &agDriverList[0], buf[0] = '\0';
+	    *pd != NULL;
+	     pd++) {
+		Strlcat(buf, (*pd)->name, buf_len);
+		Strlcat(buf, " ", buf_len);
 	}
+	buf[strlen(buf)-1] = '\0';
 }
 
 /* Create a new driver instance. */
