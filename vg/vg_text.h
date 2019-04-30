@@ -1,5 +1,7 @@
 /*	Public domain	*/
 
+#include <agar/gui/text.h>
+
 #define VG_TEXT_MAX       256
 #define VG_TEXT_MAX_PTRS  32
 #define VG_FONT_FACE_MAX  32
@@ -13,9 +15,10 @@ typedef struct vg_text {
 	VG_Point *_Nullable p2;		/* Second line endpoint */
 	enum vg_alignment align;	/* Text alignment around line */
 
-	char fontFace[VG_FONT_FACE_MAX]; /* Font face */
-	int  fontSize;			 /* Font size */
-	Uint fontFlags;			 /* Font flags */
+	char       fontFace[VG_FONT_FACE_MAX];   /* Font face */
+	AG_FontPts fontSize;			 /* Font size */
+	Uint       fontFlags;			 /* Font flags */
+
 #define VG_TEXT_BOLD      0x01		 /* Bold style */
 #define VG_TEXT_ITALIC    0x02		 /* Italic style */
 #define VG_TEXT_UNDERLINE 0x04		 /* Underlined */

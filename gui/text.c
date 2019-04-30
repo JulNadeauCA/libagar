@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -90,6 +90,9 @@
 #include <agar/gui/fonts.h>
 #include <agar/gui/fonts_data.h>
 #include <agar/gui/packedpixel.h>
+#if defined(HAVE_FONTCONFIG) && defined(HAVE_FLOAT)
+#include <agar/gui/gui_math.h>
+#endif
 
 #include <string.h>
 #include <stdarg.h>
@@ -155,12 +158,15 @@ FontInit(void *_Nonnull obj)
 	font->spec.sourceType = AG_FONT_SOURCE_FILE;
 	font->spec.source.file[0] = '\0';
 	font->spec.index = 0;
+#ifdef HAVE_FLOAT
 	font->spec.size = 0.0;
 	font->spec.matrix.xx = 1.0;
 	font->spec.matrix.yy = 1.0;
 	font->spec.matrix.xy = 0.0;
 	font->spec.matrix.yx = 0.0;
-
+#else
+	font->spec.size = 0;
+#endif
 	font->flags = 0;
 	font->c0 = 0;
 	font->c1 = 0;
@@ -269,7 +275,7 @@ OpenBitmapFont(AG_Font *_Nonnull font)
 	font->c0 = (Uint32)strtol(c0, NULL, 10);
 	font->c1 = (Uint32)strtol(c1, NULL, 10);
 	if (font->nglyphs < (font->c1 - font->c0)) {
-		AG_SetError("XCF has inconsistent bitmap fontspec");
+		AG_SetErrorS("XCF has inconsistent bitmap fontspec");
 		return (-1);
 	}
 	font->height = font->bglyphs[0]->h;
@@ -281,19 +287,23 @@ OpenBitmapFont(AG_Font *_Nonnull font)
 
 /*
  * Load the given font (or return a pointer to an existing one), with the
- * given specifications.
+ * given specifications. Size may be fractional except in integer-only build.
  */
 AG_Font *
-AG_FetchFont(const char *face, int psize, Uint flags)
+AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 {
 	char name[AG_OBJECT_NAME_MAX];
 	AG_Config *cfg = AG_ConfigObject();
-	int ptsize = (psize >= 0) ? psize : AG_GetInt(cfg,"font.size");
 	AG_StaticFont *builtin = NULL;
 	AG_Font *font;
 	AG_FontSpec *spec;
+	AG_FontPts myFontSize;
 	int i;
 
+	if (fontSize == NULL) {
+		myFontSize = (AG_FontPts)AG_GetInt(cfg, "font.size");
+		fontSize = &myFontSize;
+	}
 	if (face != NULL) {
 		Strlcpy(name, face, sizeof(name));
 	} else {
@@ -303,10 +313,17 @@ AG_FetchFont(const char *face, int psize, Uint flags)
 	AG_MutexLock(&agTextLock);
 
 	TAILQ_FOREACH(font, &fonts, fonts) {
-		if (font->spec.size == (double)ptsize &&
+#ifdef HAVE_FLOAT
+		if (Fabs(font->spec.size - *fontSize) < AG_FONT_PTS_EPSILON &&
 		    font->flags == flags &&
 		    strcmp(OBJECT(font)->name, name) == 0)
 			break;
+#else
+		if (font->spec.size == *fontSize &&
+		    font->flags == flags &&
+		    strcmp(OBJECT(font)->name, name) == 0)
+			break;
+#endif
 	}
 	if (font != NULL)
 		goto out;
@@ -318,7 +335,7 @@ AG_FetchFont(const char *face, int psize, Uint flags)
 	AG_ObjectInit(font, &agFontClass);
 	AG_ObjectSetNameS(font, name);
 	spec = &font->spec;
-	spec->size = (double)ptsize;
+	spec->size = *fontSize;
 	font->flags = flags;
 
 	if (name[0] == '_') {
@@ -336,15 +353,20 @@ AG_FetchFont(const char *face, int psize, Uint flags)
 		spec->source.mem.data = builtin->data;
 		spec->source.mem.size = builtin->size;
 	} else {
-#ifdef HAVE_FONTCONFIG
+#if defined(HAVE_FONTCONFIG) && defined(HAVE_FLOAT)
 		if (agFontconfigInited) {
 			FcPattern *pattern, *fpat;
 			FcResult fres = FcResultMatch;
-			char *nameIn;
 			FcChar8 *filename;
 			FcMatrix *mat;
+			char *nameIn;
 
-			Asprintf(&nameIn, "%s-%u", name, ptsize);
+			if ((*fontSize - floor(*fontSize)) > 0.0) {
+				Asprintf(&nameIn, "%s-%.2f", name, *fontSize);
+			} else {
+				Asprintf(&nameIn, "%s-%.0f", name, *fontSize);
+			}
+			Debug(font, "fontconfig query \"%s\"\n", nameIn);
 			if ((pattern = FcNameParse((FcChar8 *)nameIn)) == NULL ||
 			    !FcConfigSubstitute(NULL, pattern, FcMatchPattern)) {
 				AG_SetError(_("Fontconfig failed to parse: %s"), name);
@@ -361,7 +383,7 @@ AG_FetchFont(const char *face, int psize, Uint flags)
 			}
 			if (FcPatternGetString(fpat, FC_FILE, 0,
 			    &filename) != FcResultMatch) {
-				AG_SetError("Fontconfig FC_FILE missing");
+				AG_SetErrorS("Fontconfig FC_FILE missing");
 				goto fail;
 			}
 			Strlcpy(spec->source.file, (const char *)filename,
@@ -369,12 +391,12 @@ AG_FetchFont(const char *face, int psize, Uint flags)
 	
 			if (FcPatternGetInteger(fpat, FC_INDEX, 0, &spec->index) 
 			    != FcResultMatch) {
-				AG_SetError("Fontconfig FC_INDEX missing");
+				AG_SetErrorS("Fontconfig FC_INDEX missing");
 				goto fail;
 			}
 			if (FcPatternGetDouble(fpat, FC_SIZE, 0, &spec->size)
 			    != FcResultMatch) {
-				AG_SetError("Fontconfig FC_SIZE missing");
+				AG_SetErrorS("Fontconfig FC_SIZE missing");
 				goto fail;
 			}
 			if (FcPatternGetMatrix(fpat, FC_MATRIX, 0, &mat) == FcResultMatch) {
@@ -387,7 +409,7 @@ AG_FetchFont(const char *face, int psize, Uint flags)
 			FcPatternDestroy(fpat);
 			FcPatternDestroy(pattern);
 		} else
-#endif /* HAVE_FONTCONFIG */
+#endif /* HAVE_FONTCONFIG and HAVE_FLOAT */
 		{
 			if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, name,
 			    spec->source.file, sizeof(spec->source.file)) == -1) {
@@ -410,7 +432,7 @@ AG_FetchFont(const char *face, int psize, Uint flags)
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
 		if (!agFreetypeInited) {
-			AG_SetError("FreeType is not initialized");
+			AG_SetErrorS("FreeType is not initialized");
 			goto fail;
 		}
 		if (AG_TTFOpenFont(font) == -1) {
@@ -424,7 +446,7 @@ AG_FetchFont(const char *face, int psize, Uint flags)
 		}
 		break;
 	default:
-		AG_SetError("Unsupported font type");
+		AG_SetErrorS("Unsupported font type");
 		goto fail;
 	}
 	TAILQ_INSERT_HEAD(&fonts, font, fonts);
@@ -466,7 +488,7 @@ AG_SetDefaultFont(AG_Font *font)
 	agTextState->font = font;
 	cfg = AG_ConfigObject();
 	AG_SetString(cfg, "font.face", OBJECT(font)->name);
-	AG_SetInt(cfg, "font.size", font->spec.size);
+	AG_SetInt(cfg, "font.size", (int)font->spec.size);
 	AG_SetInt(cfg, "font.flags", font->flags);
 	AG_MutexUnlock(&agTextLock);
 }
@@ -577,7 +599,7 @@ AG_InitTextSubsystem(void)
 	AG_ObjectUnlock(cfg);
 
 	/* Load the default font. */
-	if ((agDefaultFont = AG_FetchFont(NULL, -1, 0)) == NULL) {
+	if ((agDefaultFont = AG_FetchFont(NULL, NULL, 0)) == NULL) {
 		goto fail;
 	}
 	agTextFontHeight = agDefaultFont->height;
@@ -733,7 +755,7 @@ AG_PopTextState(void)
 
 /* Select the font face to use in rendering text. */
 AG_Font *
-AG_TextFontLookup(const char *face, int size, Uint flags)
+AG_TextFontLookup(const char *face, const AG_FontPts *size, Uint flags)
 {
 	AG_Font *newFont;
 
@@ -751,17 +773,17 @@ fail:
 
 /* Set font size in points. */
 AG_Font *
-AG_TextFontPts(int pts)
+AG_TextFontPts(const AG_FontPts *size)
 {
-	AG_Font *font, *newFont;
+	AG_Font *font, *fontNew;
 
 	AG_MutexLock(&agTextLock);
 	font = agTextState->font;
-	newFont = AG_FetchFont(OBJECT(font)->name, pts, font->flags);
-	if (newFont == NULL) {
+	fontNew = AG_FetchFont(OBJECT(font)->name, size, font->flags);
+	if (fontNew == NULL) {
 		goto fail;
 	}
-	agTextState->font = newFont;
+	agTextState->font = fontNew;
 	AG_MutexUnlock(&agTextLock);
 	return (agTextState->font);
 fail:
@@ -773,16 +795,21 @@ fail:
 AG_Font *
 AG_TextFontPct(int pct)
 {
-	AG_Font *font, *newFont;
+	AG_Font *font, *fontNew;
+	AG_FontPts size;
 
 	AG_MutexLock(&agTextLock);
 	font = agTextState->font;
-	newFont = AG_FetchFont(OBJECT(font)->name, font->spec.size*pct/100,
-	    font->flags);
-	if (newFont == NULL) {
+#ifdef HAVE_FLOAT
+	size = font->spec.size*pct/100.0;
+#else
+	size = font->spec.size*pct/100;
+#endif
+	fontNew = AG_FetchFont(OBJECT(font)->name, &size, font->flags);
+	if (fontNew == NULL) {
 		goto fail;
 	}
-	agTextState->font = newFont;
+	agTextState->font = fontNew;
 	AG_MutexUnlock(&agTextLock);
 	return (agTextState->font);
 fail:
@@ -1642,6 +1669,7 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	return (win);
 }
 
+#ifdef HAVE_FLOAT
 /* Prompt the user for a floating-point value. */
 void
 AG_TextEditFloat(double *fp, double min, double max, const char *unit,
@@ -1680,6 +1708,7 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 	AG_WidgetFocus(num);
 	AG_WindowShow(win);
 }
+#endif
 
 /* Create a dialog to edit a string value. */
 void
@@ -1921,7 +1950,7 @@ AG_ObjectClass agFontClass = {
 	sizeof(AG_Font),
 	{ 0, 0 },
 	FontInit,
-	NULL,		/* free */
+	NULL,		/* reset */
 	FontDestroy,
 	NULL,		/* load */
 	NULL,		/* save */

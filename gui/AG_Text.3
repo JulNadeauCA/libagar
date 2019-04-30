@@ -62,13 +62,13 @@ rendering attributes.
 .Fn AG_TextFont "AG_Font *font"
 .Pp
 .Ft "AG_Font *"
-.Fn AG_TextFontLookup "const char *face" "int size" "Uint flags"
+.Fn AG_TextFontLookup "const char *face" "const AG_FontPts *size" "Uint flags"
 .Pp
 .Ft "AG_Font *"
 .Fn AG_TextFontPct "int size_pct"
 .Pp
 .Ft "AG_Font *"
-.Fn AG_TextFontPts "int points"
+.Fn AG_TextFontPts "const AG_FontPts *size"
 .Pp
 .Ft void
 .Fn AG_TextJustify "enum ag_text_justify mode"
@@ -126,6 +126,17 @@ If no match is found, the function returns NULL.
 .Pp
 .Fn AG_TextFontPts
 sets the size of the active font in points.
+The
+.Ft AG_FontPts
+type is either
+.Fa double
+or
+.Fa int
+depending on
+.Dv AG_HAVE_FLOAT .
+If the argument is NULL, then the
+.Xr AG_Config 3
+defaults are used.
 .Pp
 .Fn AG_TextFontPct
 sets the size of the active font, specified as percentage of current font
@@ -362,7 +373,7 @@ is the size of the buffer.
 .Sh FONT SELECTION
 .nr nS 1
 .Ft "AG_Font *"
-.Fn AG_FetchFont "const char *face" "int size" "Uint flags"
+.Fn AG_FetchFont "const char *face" "const AG_FontPts *size" "Uint flags"
 .Pp
 .Ft void
 .Fn AG_UnusedFont "AG_Font *font"
@@ -382,9 +393,21 @@ loads (or retrieves from cache) the font corresponding to the specified
 .Fa face
 and
 .Fa size
-in points.
+(in points).
+The
+.Ft AG_FontPts
+type is either
+.Ft double
+or
+.Ft int
+depending on
+.Dv AG_HAVE_FLOAT .
+Fractional point sizes are supported except in integer-only builds.
+.Pp
 Recognized
 .Fa flags
+by
+.Fn AG_FetchFont
 include
 .Dv AG_FONT_BOLD
 and
@@ -394,16 +417,19 @@ library is available, the font file should reside in one of the directories
 specified in the
 .Va font-path
 setting).
-If
+.Pp
+If the
 .Fa face
-is NULL or
+or
 .Fa size
-is -1, the
-.Xr AG_Config 3
-defaults "font.face" and "font.size" are used.
+arguments are NULL then
 .Fn AG_FetchFont
-returns a pointer to the font object, incrementing its reference count.
-If the font cannot be loaded, the function returns NULL.
+uses the
+.Xr AG_Config 3
+defaults `font.face' and `font.size'.
+.Fn AG_FetchFont
+returns a pointer to the font object and increments its reference count.
+If the font cannot be loaded, it returns NULL.
 .Pp
 The
 .Fn AG_UnusedFont
@@ -439,9 +465,15 @@ This function is typically called prior to
 .Lk http://www.freetype.org/ FreeType
 .Pp
 .Lk http://www.unicode.org/ Unicode
+.Pp
+.Lk https://www.freedesktop.org/wiki/Software/fontconfig/ Fontconfig
 .Sh HISTORY
 The
 .Nm
 interface first appeared in Agar 1.0.
-The stack of rendering attributes was added in Agar 1.3.
-Right-to-left rendering first appeared in Agar 1.4.1.
+Rendering attributes were introduced in Agar 1.3.
+RTL attribute was added in Agar 1.4.
+Fontconfig support was added in Agar 1.5.
+Agar 1.6 introduced the
+.Ft AG_FontPts
+abstraction to allow for integer-only builds.

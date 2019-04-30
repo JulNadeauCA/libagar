@@ -45,6 +45,17 @@ enum ag_font_spec_source {
 	AG_FONT_SOURCE_FILE,			/* Load from file */
 	AG_FONT_SOURCE_MEMORY			/* Read from memory */
 };
+
+#ifdef AG_HAVE_FLOAT
+typedef double AG_FontPts;
+#else
+typedef int AG_FontPts;
+#endif
+
+#ifndef AG_FONT_PTS_EPSILON
+#define AG_FONT_PTS_EPSILON 0.01
+#endif
+
 typedef struct ag_font_spec {
 	enum ag_font_type type;
 	enum ag_font_spec_source sourceType;
@@ -56,11 +67,13 @@ typedef struct ag_font_spec {
 		} mem;
 	} source;
 	int index;				/* Font index */
-	double size;				/* Font size */
+	AG_FontPts size;			/* Font size */
+#ifdef AG_HAVE_FLOAT
 	struct {				/* Transform matrix */
 		double xx, xy;
 		double yx, yy;
 	} matrix;
+#endif
 } AG_FontSpec;
 
 /* Cached glyph surface/texture information. */
@@ -156,11 +169,15 @@ void AG_SetRTL(int);
 void AG_PushTextState(void);
 void AG_PopTextState(void);
 
-AG_Font	*_Nullable AG_FetchFont(const char *_Nullable, int, Uint);
+AG_Font	*_Nullable AG_FetchFont(const char *_Nullable,
+                                const AG_FontPts *_Nullable, Uint)
+                               _Warn_Unused_Result;
 void               AG_UnusedFont(AG_Font *_Nonnull);
 
-AG_Font *_Nullable AG_TextFontLookup(const char *_Nullable, int, Uint);
-AG_Font *_Nullable AG_TextFontPts(int);
+AG_Font *_Nullable AG_TextFontLookup(const char *_Nullable,
+                                     const AG_FontPts *_Nullable, Uint);
+
+AG_Font *_Nullable AG_TextFontPts(const AG_FontPts *_Nullable);
 AG_Font *_Nullable AG_TextFontPct(int);
 
 void AG_TextSize(const char *_Nullable, int *_Nullable, int *_Nullable);
@@ -194,9 +211,11 @@ void AG_TextErrorS(const char *_Nonnull);
 void AG_TextError(const char *_Nonnull, ...)
                  FORMAT_ATTRIBUTE(printf,1,2);
 
+#ifdef AG_HAVE_FLOAT
 void AG_TextEditFloat(double *_Nonnull, double, double, const char *_Nonnull,
                       const char *_Nonnull, ...)
                      FORMAT_ATTRIBUTE(printf,5,6);
+#endif
 
 void AG_TextEditString(char *_Nonnull, AG_Size, const char *_Nonnull, ...)
                       FORMAT_ATTRIBUTE(printf,3,4);

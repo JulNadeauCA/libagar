@@ -42,6 +42,10 @@
 #include <agar/gui/ttf.h>
 #include <agar/gui/gui_math.h>
 
+# ifndef AG_HAVE_FLOAT
+# error "FreeType should require float support"
+# endif
+
 #include <stdio.h>
 #include <string.h>
 
@@ -146,7 +150,6 @@ AG_TTFOpenFont(AG_Font *font)
 		vec.y = 0.0;
 		FT_Set_Transform(face, &m, &vec);
 	}
-	  
 	if (FT_IS_SCALABLE(face)) {
 		if ((rv = FT_Set_Char_Size(face, 0, spec->size*64, 0, 0)) != 0) {
 			AG_SetError("FreeType FT_Set_Char_Size failed (0x%x)", rv);

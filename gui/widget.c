@@ -1832,26 +1832,59 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
 	AG_ObjectUnlock(wid);
 }
 
+static void
+Apply_Font_Size(AG_FontPts *fontSize, AG_FontPts parentFontSize, const char *spec)
+{
+	char *ep;
+#ifdef HAVE_FLOAT
+	double v;
+
+	v = strtod(spec, &ep);
+	*fontSize = (*ep == '%') ? parentFontSize * (v / 100.0) :  v;
+#else
+	*fontSize = (int)strtol(spec, &ep, 10);
+	if (*ep == '%')
+		*fontSize = parentFontSize * (*fontSize) / 100;
+#endif
+}
+
+static void
+Apply_Font_Weight(Uint *fontFlags, const char *spec)
+{
+	if (AG_Strcasecmp(spec, "bold") == 0) {
+		*fontFlags |= AG_FONT_BOLD;
+	} else if (AG_Strcasecmp(spec, "normal") == 0) {
+		*fontFlags &= ~(AG_FONT_BOLD);
+	}
+}
+	
+static void
+Apply_Font_Style(Uint *fontFlags, const char *spec)
+{
+	if (AG_Strcasecmp(spec, "italic") == 0) {
+		*fontFlags |= AG_FONT_ITALIC;
+	} else if (AG_Strcasecmp(spec, "normal") == 0) {
+		*fontFlags &= ~(AG_FONT_ITALIC);
+	}
+}
+
 /*
  * Apply the style attributes of a widget and its descendants. Creates the
  * effective color palettes. Loads any required fonts in the process.
  */
 static void
 CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
-    double parentPtSize, Uint parentFlags,
+    AG_FontPts parentFontSize, Uint parentFontFlags,
     const AG_WidgetPalette *parentPalette)
 {
 	AG_StyleSheet *css = &agDefaultCSS;
-	char face[256];
-	double ptSize;
-	Uint flags = parentFlags;
+	char *fontFace, *cssData;
 	AG_Widget *chld;
 	AG_Variable *V;
-	int i, j;
 	AG_Object *po;
-	char *cssData;
-	double v;
-	char *ep;
+	AG_FontPts fontSize;
+	Uint fontFlags = parentFontFlags;
+	int i, j;
 
 	/* Select the effective style sheet for this widget. */
 	for (po = OBJECT(wid);
@@ -1863,46 +1896,46 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		}
 	}
 
-	/* Set the font attributes. */
+	/*
+	 * Set the font attributes. Per-widget instance variables override
+	 * stylesheet-specified attributes. Otherwise, inherit from parent.
+	 */
 	if ((V = AG_AccessVariable(wid, "font-family")) != NULL) {
-		Strlcpy(face, V->data.s, sizeof(face));
+		fontFace = Strdup(V->data.s);
 		AG_UnlockVariable(V);
 	} else if (AG_LookupStyleSheet(css, wid, "font-family", &cssData)) {
-		Strlcpy(face, cssData, sizeof(face));
+		fontFace = Strdup(cssData);
 	} else {
-		Strlcpy(face, parentFace, sizeof(face));
+		fontFace = Strdup(parentFace);
 	}
+
 	if ((V = AG_AccessVariable(wid, "font-size")) != NULL) {
-		v = strtod(V->data.s, &ep);
-		ptSize = (*ep == '%') ? parentPtSize*(v/100.0) : v;
+		Apply_Font_Size(&fontSize, parentFontSize, V->data.s);
 		AG_UnlockVariable(V);
 	} else if (AG_LookupStyleSheet(css, wid, "font-size", &cssData)) {
-		v = strtod(cssData, &ep);
-		ptSize = (*ep == '%') ? parentPtSize*(v/100.0) : v;
+		Apply_Font_Size(&fontSize, parentFontSize, cssData);
 	} else {
-		ptSize = parentPtSize;
+		fontSize = parentFontSize;
 	}
+
 	if ((V = AG_AccessVariable(wid, "font-weight")) != NULL) {
-		if (AG_Strcasecmp(V->data.s, "bold") == 0) {
-			flags |= AG_FONT_BOLD;
-		} else if (AG_Strcasecmp(V->data.s, "normal") == 0) {
-			flags &= ~(AG_FONT_BOLD);
-		}
+		Apply_Font_Weight(&fontFlags, V->data.s);
 		AG_UnlockVariable(V);
 	} else if (AG_LookupStyleSheet(css, wid, "font-weight", &cssData)) {
-		if (AG_Strcasecmp(cssData, "bold") == 0) {
-			flags |= AG_FONT_BOLD;
-		} else if (AG_Strcasecmp(cssData, "normal") == 0) {
-			flags &= ~(AG_FONT_BOLD);
-		}
+		Apply_Font_Weight(&fontFlags, cssData);
+	} else {
+		fontFlags &= ~(AG_FONT_BOLD);
+		fontFlags |= (parentFontFlags & AG_FONT_BOLD);
 	}
+
 	if ((V = AG_AccessVariable(wid, "font-style")) != NULL) {
-		if (AG_Strcasecmp(V->data.s, "italic") == 0) {
-			flags |= AG_FONT_ITALIC;
-		} else if (AG_Strcasecmp(V->data.s, "normal") == 0) {
-			flags &= ~(AG_FONT_ITALIC);
-		}
+		Apply_Font_Style(&fontFlags, V->data.s);
 		AG_UnlockVariable(V);
+	} else if (AG_LookupStyleSheet(css, wid, "font-style", &cssData)) {
+		Apply_Font_Style(&fontFlags, cssData);
+	} else {
+		fontFlags &= ~(AG_FONT_ITALIC);
+		fontFlags |= (parentFontFlags & AG_FONT_ITALIC);
 	}
 	
 	/* Set the color attributes. */
@@ -1914,8 +1947,8 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 			Strlcpy(vName, agWidgetColorNames[j], sizeof(vName));
 			Strlcat(vName, agWidgetStateNames[i], sizeof(vName));
 			if ((V = AG_AccessVariable(wid, vName)) != NULL) {
-				AG_ColorFromString(&wid->pal.c[i][j],
-				    V->data.s, parentColor);
+				AG_ColorFromString(&wid->pal.c[i][j], V->data.s,
+				    parentColor);
 				AG_UnlockVariable(V);
 			} else if (AG_LookupStyleSheet(css, wid, vName, &cssData)) {
 				AG_ColorFromString(&wid->pal.c[i][j], cssData,
@@ -1933,16 +1966,16 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	}
 
 	if (wid->flags & AG_WIDGET_USE_TEXT) {
-		char *pFace = face, *tok;
+		char *pFace = fontFace, *tok;
 		AG_Font *fontNew = NULL;
 
 		while ((tok = AG_Strsep(&pFace, ",")) != NULL) {
-			fontNew = AG_FetchFont(face, (int)ptSize, flags);
+			fontNew = AG_FetchFont(fontFace, &fontSize, fontFlags);
 			if (fontNew != NULL)
 				break;
 		}
 		if (fontNew == NULL) {
-			fontNew = AG_FetchFont(NULL, (int)ptSize, flags);
+			fontNew = AG_FetchFont(NULL, &fontSize, fontFlags);
 		}
 		if (fontNew != NULL && wid->font != fontNew) {
 			if (wid->font != NULL) {
@@ -1957,28 +1990,35 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		}
 	}
 
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
-		CompileStyleRecursive(chld, face, ptSize, flags, &wid->pal);
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		CompileStyleRecursive(chld,
+		    fontFace, fontSize, fontFlags,
+		    &wid->pal);
+	}
+	
+	free(fontFace);
 }
 void
 AG_WidgetCompileStyle(void *obj)
 {
 	AG_Widget *wid = obj;
 	AG_Widget *parent;
+	AG_Font *parentFont;
 
 	AG_LockVFS(wid);
 	AG_MutexLock(&agTextLock);
 
 	if ((parent = OBJECT(wid)->parent) != NULL &&
 	    AG_OfClass(parent, "AG_Widget:*") &&
-	    parent->font != NULL) {
-		CompileStyleRecursive(wid, OBJECT(parent->font)->name,
-		    parent->font->spec.size,
-		    parent->font->flags,
+	    (parentFont = parent->font) != NULL) {
+		CompileStyleRecursive(wid,
+		    OBJECT(parentFont)->name,
+		    parentFont->spec.size,
+		    parentFont->flags,
 		    &parent->pal);
 	} else {
-
-		CompileStyleRecursive(wid, OBJECT(agDefaultFont)->name,
+		CompileStyleRecursive(wid,
+		    OBJECT(agDefaultFont)->name,
 		    agDefaultFont->spec.size,
 		    agDefaultFont->flags,
 		    &agDefaultPalette);

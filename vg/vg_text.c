@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,7 +78,7 @@ void
 VG_TextFontSize(VG_Text *vt, int size)
 {
 	VG_Lock(VGNODE(vt)->vg);
-	vt->fontSize = size;
+	vt->fontSize = (AG_FontPts)size;
 	VG_Unlock(VGNODE(vt)->vg);
 }
 
@@ -107,7 +107,7 @@ Init(void *_Nonnull obj)
 	vt->p1 = NULL;
 	vt->p2 = NULL;
 	vt->align = VG_ALIGN_MC;
-	vt->fontSize = vgGUI ? (int)agDefaultFont->spec.size : 12;
+	vt->fontSize = (AG_FontPts)(vgGUI ? agDefaultFont->spec.size : 12);
 	vt->fontFlags = vgGUI ? agDefaultFont->flags : 0;
 	vt->fontFace[0] = '\0';
 	vt->args = NULL;
@@ -127,7 +127,7 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
 
 	vt->align = (enum vg_alignment)AG_ReadUint8(ds);
 	AG_CopyString(vt->fontFace, ds, sizeof(vt->fontFace));
-	vt->fontSize = (int)AG_ReadUint8(ds);
+	vt->fontSize = (AG_FontPts)AG_ReadUint8(ds);
 	vt->fontFlags = (Uint)AG_ReadUint16(ds);
 	AG_CopyString(vt->text, ds, sizeof(vt->text));
 	return (0);
@@ -196,9 +196,9 @@ RenderText(VG_Text *_Nonnull vt, char *_Nonnull sIn, VG_View *_Nonnull vv)
 	AG_PushTextState();
 
 	if (vt->fontFace[0] != '\0' &&
-	   ((vgGUI && vt->fontSize != (int)agDefaultFont->spec.size) ||
+	   ((vgGUI && vt->fontSize  != agDefaultFont->spec.size) ||
 	    (vgGUI && vt->fontFlags != agDefaultFont->flags))) {
-		AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags);
+		AG_TextFontLookup(vt->fontFace, &vt->fontSize, vt->fontFlags);
 	}
 	c = VG_MapColorRGB(VGNODE(vt)->color);
 	AG_TextColor(&c);

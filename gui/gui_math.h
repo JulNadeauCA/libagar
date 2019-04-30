@@ -4,7 +4,6 @@
 #define _AGAR_GUI_MATH_H_
 
 #include <agar/config/have_math.h>
-#include <agar/config/have_math_c99.h>
 #ifdef HAVE_MATH
 #include <math.h>
 #endif
@@ -12,61 +11,49 @@
 #include <agar/gui/begin.h>
 
 #ifdef M_PI
-#define AG_PI M_PI
+# define AG_PI M_PI
 #else
-#define	AG_PI 3.14159265358979323846
+# define AG_PI 3.14159265358979323846
 #endif
 
-#ifdef HAVE_MATH_C99
-# define AG_Sin(x) sinf(x)
-# define AG_Cos(x) cosf(x)
-# define AG_Tan(x) tanf(x)
-# define AG_Mod(x,y) fmodf((x),(y))
-# define AG_Sqrt(x) sqrtf(x)
-# define AG_Atan2(y,x) atan2f((y),(x))
-# define AG_Floor(x) floorf(x)
-# define AG_Ceil(x) ceilf(x)
-# define AG_Fabs(x) fabsf(x)
-#else
-# define AG_Sin(x) ((float)sin((double)x))
-# define AG_Cos(x) ((float)cos((double)x))
-# define AG_Tan(x) ((float)tan((double)x))
-# define AG_Mod(x,y) ((float)fmod((double)(x),(double)(y)))
-# define AG_Sqrt(x) ((float)sqrt((double)x))
-# define AG_Atan2(y,x) ((float)atan2((double)(y),(double)(x)))
-# define AG_Floor(x) ((float)floor((double)x))
-# define AG_Ceil(x) ((float)ceil((double)x))
-# define AG_Fabs(x) ((float)fabs((double)x))
-#endif /* HAVE_MATH_C99 */
+#define AG_Sin(x)     sin(x)
+#define AG_Cos(x)     cos(x)
+#define AG_Tan(x)     tan(x)
+#define AG_Mod(x,y)   fmod((x),(y))
+#define AG_Sqrt(x)    sqrt(x)
+#define AG_Atan2(y,x) atan2((y),(x))
+#define AG_Floor(x)   floor(x)
+#define AG_Ceil(x)    ceil(x)
+#define AG_Fabs(x)    fabs(x)
 
-#define AG_Degrees(x) ((x)/(2.0*AG_PI)*360.0)
-#define AG_Radians(x) (((x)/360.0)*(2.0*AG_PI))
+#define AG_Degrees(x)            ((x)/(2.0*AG_PI)*360.0)
+#define AG_Radians(x)            (((x)/360.0)*(2.0*AG_PI))
 #define AG_DotProd2(ax,ay,bx,by) ((ax)*(bx) + (ay)*(by))
-#define AG_Norm2(ax,ay)	AG_Sqrt(AG_DotProd2((ax),(ay),(ax),(ay)))
-#define AG_Distance2(ax,ay,bx,by) AG_Norm2((float)((ax)-(bx)),\
-                                           (float)((ay)-(by)))
+#define AG_Norm2(ax,ay)           AG_Sqrt(AG_DotProd2((ax),(ay),(ax),(ay)))
+#define AG_Distance2(ax,ay,bx,by) AG_Norm2(((ax)-(bx)), ((ay)-(by)))
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_GUI_MATH)
-#define Sin(x) AG_Sin(x)
-#define Cos(x) AG_Cos(x)
-#define Tan(x) AG_Tan(x)
-#define Mod(x,y) AG_Mod((x),(y))
-#define Sqrt(x) AG_Sqrt(x)
-#define Atan2(y,x) AG_Atan2((y),(x))
-#define Floor(x) AG_Floor(x)
-#define Ceil(x) AG_Ceil(x)
-#define Fabs(x) AG_Fabs(x)
+# define Sin(x)     AG_Sin(x)
+# define Cos(x)     AG_Cos(x)
+# define Tan(x)     AG_Tan(x)
+# define Mod(x,y)   AG_Mod((x),(y))
+# define Sqrt(x)    AG_Sqrt(x)
+# define Atan2(y,x) AG_Atan2((y),(x))
+# define Floor(x)   AG_Floor(x)
+# define Ceil(x)    AG_Ceil(x)
+# define Fabs(x)    AG_Fabs(x)
 
-#define Degrees(x) AG_Degrees(x)
-#define Radians(x) AG_Radians(x)
-#define DotProd2(ax,ay,bx,by) AG_DotProd2((ax),(ay),(bx),(by))
-#define DotNorm2(ax,ay) AG_Norm2((ax),(ay))
-#define Distance2(ax,ay,bx,by) AG_Distance2((ax),(ay),(bx),(by))
-#define PowOf2i(x) AG_PowOf2i(x)
-#define Hypot(x,y) AG_Hypot(x,y)
-#define Truncf(x) AG_Truncf(x)
-#define Fracf(x) AG_Fracf(x)
-#define FracInvf(x) AG_FracInvf(x)
+# define Degrees(x)         AG_Degrees(x)
+# define Radians(x)         AG_Radians(x)
+# define DotProd2(a,b,c,d)  AG_DotProd2((a),(b),(c),(d))
+# define DotNorm2(ax,ay)    AG_Norm2((ax),(ay))
+# define Distance2(a,b,c,d) AG_Distance2((a),(b),(c),(d))
+# define PowOf2i(x)         AG_PowOf2i(x)
+# define Hypot(x,y)         AG_Hypot(x,y)
+# define Truncf(x)          AG_Truncf(x)
+# define Fracf(x)           AG_Fracf(x)
+# define FracInvf(x)        AG_FracInvf(x)
+
 #endif /* _AGAR_INTERNAL or _USE_AGAR_GUI_MATH */
 
 __BEGIN_DECLS

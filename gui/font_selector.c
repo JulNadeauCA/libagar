@@ -82,7 +82,7 @@ UpdateFontSelection(AG_FontSelector *fs)
 	AG_Variable *bFont;
 	AG_Font *font, **pFont;
 
-	font = AG_FetchFont(fs->curFace, fs->curSize, fs->curStyle);
+	font = AG_FetchFont(fs->curFace, &fs->curSize, fs->curStyle);
 	if (font == NULL) {
 		AG_TextError(_("Error opening font: %s"), AG_GetError());
 		return;
@@ -274,7 +274,11 @@ SelectedSize(AG_Event *event)
 	AG_FontSelector *fs = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
 
-	fs->curSize = atoi(it->text);
+#ifdef HAVE_FLOAT
+	fs->curSize = strtod(it->text, NULL);
+#else
+	fs->curSize = (int)strtol(it->text, NULL, 10);
+#endif
 	UpdateFontSelection(fs);
 	UpdatePreview(fs);
 }
@@ -296,7 +300,11 @@ Init(void *obj)
 	fs->font = NULL;
 	fs->curFace[0] = '\0';
 	fs->curStyle = 0;
+#ifdef HAVE_FLOAT
+	fs->curSize = 0.0;
+#else
 	fs->curSize = 0;
+#endif
 	fs->rPreview.x = 0;
 	fs->rPreview.y = 0;
 	fs->rPreview.w = 0;
