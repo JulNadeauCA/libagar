@@ -787,11 +787,15 @@ AG_ObjectDestroy(void *p)
 	AG_ObjectClass **hier;
 	int i, nHier;
 
-#ifdef AG_DEBUG_CORE
+#ifdef AG_DEBUG
 	if (ob->parent != NULL) {
-		AG_FatalError("ob still attached to ob->parent");
+		AG_Debug(ob, "Still attached to %s\n",
+		    OBJECT(ob->parent)->name);
+		AG_FatalError("Object is still attached");
 	}
+# ifdef AG_DEBUG_CORE
 	Debug(ob, "Destroying\n");
+# endif
 #endif
 	AG_ObjectFreeChildren(ob);
 	AG_ObjectReset(ob);
