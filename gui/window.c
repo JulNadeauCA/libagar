@@ -2112,10 +2112,6 @@ AG_WindowProcessDetachQueue(void)
 			}
 		} else {
 			win->tbar = NULL;
-			if (win->icon != NULL) {
-				AG_ObjectDestroy(win->icon);
-				win->icon = NULL;
-			}
 			AGDRIVER_SW(drv)->flags |= AG_DRIVER_SW_REDRAW;
 		}
 
