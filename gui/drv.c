@@ -76,6 +76,15 @@ AG_DriverClass *agDriverList[] = {
 	NULL
 };
 
+const char *agDriverTypeNames[] = {
+	"Framebuffer",
+	"Vector"
+};
+const char *agDriverWmTypeNames[] = {
+	"Single-window",
+	"Multi-window"
+};
+
 /* Return a string with the available drivers. */
 void
 AG_ListDriverNames(char *buf, AG_Size buf_len)

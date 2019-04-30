@@ -234,6 +234,9 @@ extern AG_DriverClass *_Nullable agDriverOps;	/* Current driver class */
 
 extern AG_DriverClass *_Nonnull agDriverList[];	/* Available driver classes */
 
+extern const char *_Nonnull agDriverTypeNames[];
+extern const char *_Nonnull agDriverWmTypeNames[];
+
 #include <agar/config/have_clock_gettime.h>
 #include <agar/config/have_pthreads.h>
 #if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)

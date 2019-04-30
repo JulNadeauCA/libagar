@@ -592,7 +592,6 @@ main(int argc, char *argv[])
 	console = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
 	AG_SetStyle(console, "font-family", "Courier");
 	{
-		char drvNames[256];
 		AG_AgarVersion av;
 #if AG_MODEL == AG_SMALL
 		const char *memory_model = "SMALL";
@@ -601,6 +600,7 @@ main(int argc, char *argv[])
 #else
 		const char *memory_model = "LARGE";
 #endif
+		AG_DriverClass **pd;
 		AG_ConsoleLine *ln;
 		AG_Color col;
 
@@ -610,20 +610,32 @@ main(int argc, char *argv[])
 		AG_ColorRGB_8(&col, 0,255,120);
 		AG_ConsoleMsgColor(ln, &col);
 
-		ln = AG_ConsoleMsg(console, _("Target: %s (%s)"), agCPU.arch,
-		    memory_model);
+		ln = AG_ConsoleMsg(console, _("Target: %s (%s)"),
+		    agCPU.arch, memory_model);
 		AG_ConsoleMsgColor(ln, &col);
 		    
-		ln = AG_ConsoleMsg(console, _("Current AG_Driver: %s (%s)"),
-		    AGWIDGET(win)->drvOps->name,
-		    (AGWIDGET(win)->drvOps->type == AG_FRAMEBUFFER) ?
-		    _("framebuffer-based") : _("vector-based"));
 		AG_ColorRGB_8(&col, 255,255,0);
 		AG_ConsoleMsgColor(ln, &col);
-		AG_ListDriverNames(drvNames, sizeof(drvNames));
-		ln = AG_ConsoleMsg(console, _("Compiled AG_Drivers: %s"), drvNames);
+		ln = AG_ConsoleMsg(console, _("Available drivers:"));
 		AG_ConsoleMsgColor(ln, &col);
 
+		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+			AG_DriverClass *dc = *pd;
+
+			ln = AG_ConsoleMsg(console,
+			    " -d %5s # %s; %s, %s %s(3)\n",
+			    dc->name,
+			    agDriverTypeNames[dc->type],
+			    agDriverWmTypeNames[dc->wm],
+			    _("see"), AGCLASS(dc)->name);
+
+			AG_ConsoleMsgColor(ln, &col);
+		}
+		
+		ln = AG_ConsoleMsg(console, _("Current driver: %s"),
+		    AGWIDGET(win)->drvOps->name);
+		AG_ColorRGB_8(&col, 0,255,0);
+		AG_ConsoleMsgColor(ln, &col);
 #ifdef __APPLE__
 		AG_ConsoleMsg(console, _("Press Command-[-] and Command-[=] to zoom"));
 # ifdef AG_DEBUG
