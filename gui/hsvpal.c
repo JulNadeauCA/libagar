@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_float.h>
+#if defined(HAVE_FLOAT)
+
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
 #include <agar/gui/hsvpal.h>
@@ -1000,3 +1003,5 @@ AG_WidgetClass agHSVPalClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* HAVE_FLOAT */

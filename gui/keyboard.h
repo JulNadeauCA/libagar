@@ -296,14 +296,11 @@ AG_Keyboard *_Nullable AG_KeyboardNew(void *_Nonnull, const char *_Nonnull);
 
 int AG_KeyboardUpdate(AG_Keyboard *_Nonnull, AG_KeyboardAction, AG_KeySym,
                       Uint32);
-
 int AG_ProcessKey(AG_Keyboard *_Nonnull, struct ag_window *_Nonnull,
                   AG_KeyboardAction, AG_KeySym, Uint32);
 
-const char *_Nullable AG_LookupKeyName(AG_KeySym)
-                                      _Pure_Attribute;
-AG_KeySym             AG_LookupKeySym(const char *_Nonnull)
-                                     _Pure_Attribute;
+const char *_Nullable AG_LookupKeyName(AG_KeySym) _Pure_Attribute;
+AG_KeySym             AG_LookupKeySym(const char *_Nonnull) _Pure_Attribute;
 
 void AG_InitGlobalKeys(void);
 void AG_DestroyGlobalKeys(void);
@@ -313,43 +310,7 @@ void AG_BindGlobalKeyEv(AG_KeySym, AG_KeyMod, void (*_Nonnull)(AG_Event *_Nonnul
 int  AG_UnbindGlobalKey(AG_KeySym, AG_KeyMod);
 void AG_ClearGlobalKeys(void);
 int  AG_ExecGlobalKeys(AG_KeySym, AG_KeyMod);
-
-/* Compare unsided modifier state against a string of flags. */
-static __inline__ int _Pure_Attribute
-AG_CompareKeyMods(Uint modState, const char *_Nonnull flags)
-{
-	const char *c;
-
-	for (c = &flags[0]; *c != '\0'; c++) {
-		switch (*c) {
-		case 'C':
-			if (modState & AG_KEYMOD_LCTRL ||
-			    modState & AG_KEYMOD_RCTRL) {
-				return (1);
-			}
-			break;
-		case 'A':
-			if (modState & AG_KEYMOD_LALT ||
-			    modState & AG_KEYMOD_RALT) {
-				return (1);
-			}
-			break;
-		case 'S':
-			if (modState & AG_KEYMOD_LSHIFT ||
-			    modState & AG_KEYMOD_RSHIFT) {
-				return (1);
-			}
-			break;
-		case 'M':
-			if (modState & AG_KEYMOD_LMETA ||
-			    modState & AG_KEYMOD_RMETA) {
-				return (1);
-			}
-			break;
-		}
-	}
-	return (0);
-}
+int  AG_CompareKeyMods(Uint, const char *_Nonnull) _Pure_Attribute;
 __END_DECLS
 
 #include <agar/gui/close.h>

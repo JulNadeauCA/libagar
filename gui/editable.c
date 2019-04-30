@@ -475,7 +475,7 @@ ProcessKey(AG_Editable *_Nonnull ed, AG_KeySym ks, AG_KeyMod kmod,
 		return (0);
 
 	if (kmod == AG_KEYMOD_NONE &&
-	    isascii((int)ks) &&
+	    (ks & ~0x7f) == 0 &&				/* is ascii */
 	    isprint((int)ks)) {
 		if ((ed->flags & AG_EDITABLE_INT_ONLY) &&
 		    !CharIsIntOnly((Uint32)ks)) {
@@ -1808,6 +1808,7 @@ AG_EditableInt(AG_Editable *ed)
 	return (i);
 }
 
+#ifdef HAVE_FLOAT
 /* Perform trivial conversion from string to float . */
 float
 AG_EditableFlt(AG_Editable *ed)
@@ -1845,6 +1846,7 @@ AG_EditableDbl(AG_Editable *ed)
 	AG_ObjectUnlock(ed);
 	return (flt);
 }
+#endif /* HAVE_FLOAT */
 
 static void
 OnBindingChange(AG_Event *_Nonnull event)

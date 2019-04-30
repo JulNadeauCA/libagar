@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,12 +43,16 @@ AG_WriteColor(AG_DataSource *ds, const AG_Color *_Nonnull c)
 	AG_WriteUint16(ds, c->g);
 	AG_WriteUint16(ds, c->b);
 	AG_WriteUint16(ds, c->a);
-#else
+#elif AG_MODEL == AG_MEDIUM
 	AG_WriteUint8(ds, 8);
 	AG_WriteUint8(ds, c->r);
 	AG_WriteUint8(ds, c->g);
 	AG_WriteUint8(ds, c->b);
 	AG_WriteUint8(ds, c->a);
+#elif AG_MODEL == AG_SMALL
+	AG_WriteUint8(ds, 4);
+	AG_WriteUint8(ds, (c->r << 4) | c->g);
+	AG_WriteUint8(ds, (c->b << 4) | c->a);
 #endif
 }
 
@@ -68,11 +72,16 @@ AG_ReadColor(AG_Color *c, AG_DataSource *ds)
 		c->g = AG_ReadUint16(ds);
 		c->b = AG_ReadUint16(ds);
 		c->a = AG_ReadUint16(ds);
-#else
+#elif AG_MODEL == AG_MEDIUM
 		c->r = AG_16to8(AG_ReadUint16(ds));
 		c->g = AG_16to8(AG_ReadUint16(ds));
 		c->b = AG_16to8(AG_ReadUint16(ds));
 		c->a = AG_16to8(AG_ReadUint16(ds));
+#elif AG_MODEL == AG_SMALL
+		c->r = AG_16to4(AG_ReadUint16(ds));
+		c->g = AG_16to4(AG_ReadUint16(ds));
+		c->b = AG_16to4(AG_ReadUint16(ds));
+		c->a = AG_16to4(AG_ReadUint16(ds));
 #endif
 	} else if (depth == 8) {
 #if AG_MODEL == AG_LARGE
@@ -80,11 +89,35 @@ AG_ReadColor(AG_Color *c, AG_DataSource *ds)
 		c->g = AG_8to16(AG_ReadUint8(ds));
 		c->b = AG_8to16(AG_ReadUint8(ds));
 		c->a = AG_8to16(AG_ReadUint8(ds));
-#else
+#elif AG_MODEL == AG_MEDIUM
 		c->r = AG_ReadUint8(ds);
 		c->g = AG_ReadUint8(ds);
 		c->b = AG_ReadUint8(ds);
 		c->a = AG_ReadUint8(ds);
+#elif AG_MODEL == AG_SMALL
+		c->r = AG_8to4(AG_ReadUint8(ds));
+		c->g = AG_8to4(AG_ReadUint8(ds));
+		c->b = AG_8to4(AG_ReadUint8(ds));
+		c->a = AG_8to4(AG_ReadUint8(ds));
+#endif
+	} else if (depth == 4) {
+		Uint8 rg = AG_ReadUint8(ds);
+		Uint8 ba = AG_ReadUint8(ds);
+#if AG_MODEL == AG_LARGE
+		c->r = AG_4to16((rg & 0xf0) >> 4);
+		c->g = AG_4to16((rg & 0x0f));
+		c->b = AG_4to16((ba & 0xf0) >> 4);
+		c->a = AG_4to16((ba & 0x0f));
+#elif AG_MODEL == AG_MEDIUM
+		c->r = AG_4to8((rg & 0xf0) >> 4);
+		c->g = AG_4to8((rg & 0x0f));
+		c->b = AG_4to8((ba & 0xf0) >> 4);
+		c->a = AG_4to8((ba & 0x0f));
+#elif AG_MODEL == AG_SMALL
+		c->r = (rg & 0xf0) >> 4;
+		c->g = (rg & 0x0f);
+		c->b = (ba & 0xf0) >> 4;
+		c->a = (ba & 0x0f);
 #endif
 	} else {
 		AG_FatalError("Bad depth");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,17 +30,20 @@
 AG_Combo *
 AG_ComboNew(void *parent, Uint flags, const char *fmt, ...)
 {
-	char s[AG_LABEL_MAX];
+	AG_Combo *com;
+	char *s;
 	va_list ap;
 
 	if (fmt != NULL) {
 		va_start(ap, fmt);
-		Vsnprintf(s, sizeof(s), fmt, ap);
+		Vasprintf(&s, fmt, ap);
 		va_end(ap);
-		return AG_ComboNewS(parent, flags, s);
+		com = AG_ComboNewS(parent, flags, s);
+		free(s);
 	} else {
-		return AG_ComboNewS(parent, flags, NULL);
+		com = AG_ComboNewS(parent, flags, NULL);
 	}
+	return (com);
 }
 
 AG_Combo *

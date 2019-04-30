@@ -135,8 +135,11 @@ AG_Size        AG_EditableCopyString(AG_Editable *_Nonnull, char *_Nonnull,
                                      AG_Size);
 
 int    AG_EditableInt(AG_Editable *_Nonnull);
+
+#ifdef AG_HAVE_FLOAT
 float  AG_EditableFlt(AG_Editable *_Nonnull);
 double AG_EditableDbl(AG_Editable *_Nonnull);
+#endif
 
 void AG_EditableInitClipboards(void);
 void AG_EditableDestroyClipboards(void);

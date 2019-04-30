@@ -834,6 +834,9 @@ VertexAtCoords(AG_Graph *gf, int x, int y)
 	return (NULL);
 }
 
+#ifdef HAVE_FLOAT
+
+/* TODO: an integer-only version of this */
 static void
 PlaceVertex(AG_Graph *gf, AG_GraphVertex *vtx, AG_GraphVertex **vSorted,
     int x, int y)
@@ -938,6 +941,8 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 	AG_Redraw(gf);
 	Free(vSorted);
 }
+
+#endif /* HAVE_FLOAT */
 
 AG_WidgetClass agGraphClass = {
 	{

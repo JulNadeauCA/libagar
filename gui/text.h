@@ -159,7 +159,6 @@ extern AG_TextState *_Nonnull  agTextState;
 extern _Nonnull_Mutex AG_Mutex agTextLock;
 
 extern AG_StaticFont *_Nonnull agBuiltinFonts[];
-extern const int               agBuiltinFontCount;
 
 int  AG_InitTextSubsystem(void);
 void AG_DestroyTextSubsystem(void);

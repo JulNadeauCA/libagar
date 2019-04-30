@@ -316,9 +316,11 @@ Uint32 AG_MapPixel32_RGBA16(const AG_PixelFormat *_Nonnull, Uint16,Uint16,Uint16
 AG_Pixel AG_MapPixelIndexed(const AG_PixelFormat *_Nonnull,
                             AG_Component,AG_Component,AG_Component,AG_Component)
                            _Pure_Attribute;
+#ifdef HAVE_FLOAT
 AG_Pixel AG_MapPixelGrayscale(const AG_PixelFormat *_Nonnull,
                               AG_Component,AG_Component,AG_Component,AG_Component)
                              _Pure_Attribute;
+#endif
 
 void AG_GetColor32(AG_Color *_Nonnull, Uint32, const AG_PixelFormat *_Nonnull);
 void AG_GetColor32_RGB8(Uint32, const AG_PixelFormat *_Nonnull,
@@ -331,7 +333,8 @@ void AG_GetColor32_RGBA8(Uint32, const AG_PixelFormat *_Nonnull,
 void AG_GetColor32_RGBA16(Uint32, const AG_PixelFormat *_Nonnull,
                           Uint16 *_Nonnull, Uint16 *_Nonnull,
                           Uint16 *_Nonnull, Uint16 *_Nonnull);
- 
+
+#ifdef AG_HAVE_FLOAT
 void AG_GetColor32_Gray(AG_Color *_Nonnull, Uint32, AG_GrayscaleMode);
 void AG_GetColor32_Gray8(Uint32, AG_GrayscaleMode,
                          Uint8 *_Nonnull, Uint8 *_Nonnull,
@@ -339,6 +342,7 @@ void AG_GetColor32_Gray8(Uint32, AG_GrayscaleMode,
 void AG_GetColor32_Gray16(Uint32, AG_GrayscaleMode,
                           Uint16 *_Nonnull, Uint16 *_Nonnull,
                           Uint16 *_Nonnull, Uint16 *_Nonnull);
+#endif
 
 #if AG_MODEL == AG_LARGE
 

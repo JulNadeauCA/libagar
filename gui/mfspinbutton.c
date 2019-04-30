@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,6 +22,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <agar/config/have_float.h>
+#if defined(HAVE_FLOAT)
 
 #include <agar/core/core.h>
 #include <agar/gui/mfspinbutton.h>
@@ -717,3 +720,5 @@ AG_WidgetClass agMFSpinbuttonClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* HAVE_FLOAT */

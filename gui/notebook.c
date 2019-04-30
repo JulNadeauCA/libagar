@@ -153,7 +153,7 @@ Draw(void *obj)
 				break;
 		}
 		AG_DrawBoxRoundedTop(nb, &r,
-		    isSelected ? -1 : 1, (int)(font->height/1.5),
+		    isSelected ? -1 : 1, font->height >> 1,
 		    isSelected ? &WCOLOR_HOV(nb,0) :
 	 	                 &WCOLOR(nb,0));
 

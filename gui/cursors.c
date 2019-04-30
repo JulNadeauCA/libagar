@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,10 +85,14 @@ AG_CursorFree(void *obj, AG_Cursor *ac)
 AG_Cursor *
 AG_CursorFromXPM(void *drv, char *xpm[], int xHot, int yHot)
 {
-	int i = -1, x, y;
-	Uint8 data[4*AG_CURSOR_MAX_W*AG_CURSOR_MAX_H];
-	Uint8 mask[4*AG_CURSOR_MAX_W*AG_CURSOR_MAX_H];
-	int w, h;
+	int i = -1, x,y, size;
+	Uint8 *data, *mask;
+	AG_Cursor *curs;
+	int w,h;
+
+	size = (AG_CURSOR_MAX_W * AG_CURSOR_MAX_H * 4);
+	data = Malloc(size);
+	mask = Malloc(size);
 
 	sscanf(xpm[0], "%d %d", &w, &h);
 
@@ -115,7 +119,10 @@ AG_CursorFromXPM(void *drv, char *xpm[], int xHot, int yHot)
 			}
 		}
 	}
-	return AG_CursorNew(drv, w,h, data, mask, xHot,yHot);
+	curs = AG_CursorNew(drv, w,h, data, mask, xHot,yHot);
+	free(data);
+	free(mask);
+	return (curs);
 }
 
 /* Initialize Agar's set of built-in cursors. */

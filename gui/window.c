@@ -349,7 +349,7 @@ Detach(AG_Event *_Nonnull event)
 	AG_UnlockVFS(&agDrivers);
 }
 
-/* Timer callback for fade-in/fade-out */
+#ifdef HAVE_FLOAT
 static Uint32
 FadeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -380,6 +380,7 @@ FadeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 		}
 	}
 }
+#endif /* HAVE_FLOAT */
 
 /*
  * Make a window a logical child of the specified window. If the logical
@@ -714,9 +715,10 @@ OnShow(AG_Event *_Nonnull event)
 			}
 			dmw->flags |= AG_DRIVER_MW_OPEN;
 		}
-		if (win->flags & AG_WINDOW_FADEIN) {
+#ifdef HAVE_FLOAT
+		if (win->flags & AG_WINDOW_FADEIN)
 			AG_WindowSetOpacity(win, 0.0);
-		}
+#endif
 		if (AGDRIVER_MW_CLASS(drv)->mapWindow(win) == -1) {
 			AG_FatalError(NULL);
 		}
@@ -739,13 +741,15 @@ OnShow(AG_Event *_Nonnull event)
 
 	/* We can now allow cursor changes. */
 	win->flags &= ~(AG_WINDOW_NOCURSORCHG);
-	
+
+#ifdef HAVE_FLOAT
 	if (win->flags & AG_WINDOW_FADEIN) {
 		AG_AddTimer(win, &win->pvt.fadeTo,
 		    (Uint32)((win->pvt.fadeInTime*1000.0) /
 		             (1.0/win->pvt.fadeInIncr)),
 		    FadeTimeout, "%i", 1);
 	}
+#endif
 }
 
 static void
@@ -913,13 +917,16 @@ AG_WindowHide(AG_Window *win)
 	if (!win->visible) {
 		goto out;
 	}
+#ifdef HAVE_FLOAT
 	if ((win->flags & AG_WINDOW_FADEOUT) &&
 	   !(win->flags & AG_WINDOW_DETACHING)) {
 		AG_AddTimer(win, &win->pvt.fadeTo,
 		    (Uint32)((win->pvt.fadeOutTime * 1000.0) /
 		             (1.0 / win->pvt.fadeOutIncr)),
 		    FadeTimeout, "%i", -1);
-	} else {
+	} else
+#endif
+	{
 #ifdef AG_THREADS
 		if (!AG_ThreadEqual(AG_ThreadSelf(), agEventThread)) {
 			AG_LockVFS(&agDrivers);
@@ -1976,14 +1983,16 @@ AG_WindowSetCaptionS(AG_Window *win, const char *s)
 void
 AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 {
-	char s[AG_LABEL_MAX];
+	char *s;
 	va_list ap;
 	
 	va_start(ap, fmt);
-	Vsnprintf(s, sizeof(s), fmt, ap);
+	Vasprintf(&s, fmt, ap);
 	va_end(ap);
 
 	AG_WindowSetCaptionS(win, s);
+
+	free(s);
 }
 
 /* Set the icon of a window from the contents of a surface. */
@@ -2290,6 +2299,7 @@ scan:
 	}
 }
 
+#ifdef HAVE_FLOAT
 /* Configure per-window opacity (for compositing window managers). */
 int
 AG_WindowSetOpacity(AG_Window *win, float f)
@@ -2326,6 +2336,7 @@ AG_WindowSetFadeOut(AG_Window *win, float fadeTime, float fadeIncr)
 	win->pvt.fadeOutIncr = fadeIncr;
 	AG_ObjectUnlock(win);
 }
+#endif /* HAVE_FLOAT */
 
 /* Set the window zoom level. The scales are defined in agZoomValues[]. */
 void
@@ -2625,19 +2636,19 @@ Init(void *_Nonnull obj)
 	win->pinnedTo = NULL;
 	win->widExclMotion = NULL;
 	win->zoom = AG_ZOOM_DEFAULT;
-
+#ifdef HAVE_FLOAT
 	win->pvt.fadeInTime = 0.06f;
 	win->pvt.fadeInIncr = 0.2f;
 	win->pvt.fadeOutTime = 0.06f;
 	win->pvt.fadeOutIncr = 0.2f;
 	win->pvt.fadeOpacity = 1.0f;
+	AG_InitTimer(&win->pvt.fadeTo, "fade", 0);
+#endif
 	TAILQ_INIT(&win->pvt.subwins);
 	TAILQ_INIT(&win->pvt.cursorAreas);
 
 	for (i = 0; i < 5; i++)
 		win->pvt.caResize[i] = NULL;
-
-	AG_InitTimer(&win->pvt.fadeTo, "fade", 0);
 
 	AG_SetEvent(win, "window-gainfocus", OnGainFocus, NULL);
 	AG_SetEvent(win, "window-lostfocus", OnLostFocus, NULL);

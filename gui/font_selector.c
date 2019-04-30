@@ -123,6 +123,7 @@ OnShow(AG_Event *event)
 	AG_Font **pFont;
 	AG_FontSelector *fs = AG_SELF();
 	char fontPath[AG_PATHNAME_MAX], *pFontPath = &fontPath[0];
+	AG_StaticFont **pbf;
 	AG_TlistItem *ti;
 	char *s;
 	int i;
@@ -135,11 +136,10 @@ OnShow(AG_Event *event)
 
 	fs->flags &= ~(AG_FONTSELECTOR_UPDATE);
 
-	for (i = 0; i < agBuiltinFontCount; i++) {
-		AG_StaticFont *font = agBuiltinFonts[i];
+	for (pbf = &agBuiltinFonts[0]; *pbf != NULL; pbf++) {
+		ti = AG_TlistAdd(fs->tlFaces, NULL, "_%s", (*pbf)->name);
+		ti->p1 = *pbf;
 
-		ti = AG_TlistAdd(fs->tlFaces, NULL, "_%s", font->name);
-		ti->p1 = font;
 		if (*pFont != NULL &&
 		    strcmp(ti->text, OBJECT(*pFont)->name) == 0)
 			ti->selected++;

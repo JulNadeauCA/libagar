@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@ AG_ObjectSelector *
 AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
     const char *fmt, ...)
 {
-	char label[AG_LABEL_MAX];
+	char *label;
 	AG_ObjectSelector *os;
 	va_list ap;
 
@@ -48,9 +48,10 @@ AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
 	os->root = root;
 
 	va_start(ap, fmt);
-	Vsnprintf(label, sizeof(label), fmt, ap);
+	Vasprintf(&label, fmt, ap);
 	va_end(ap);
 	AG_TextboxSetLabelS(os->com.tbox, label);
+	free(label);
 
 	AG_ObjectAttach(parent, os);
 	return (os);

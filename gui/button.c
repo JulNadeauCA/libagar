@@ -675,13 +675,14 @@ AG_ButtonTextS(AG_Button *bu, const char *label)
 void
 AG_ButtonText(AG_Button *bu, const char *fmt, ...)
 {
-	char s[AG_LABEL_MAX];
+	char *s;
 	va_list ap;
 
 	va_start(ap, fmt);
-	Vsnprintf(s, sizeof(s), fmt, ap);
+	Vasprintf(&s, fmt, ap);
 	va_end(ap);
 	AG_ButtonTextS(bu, s);
+	free(s);
 }
 
 AG_WidgetClass agButtonClass = {

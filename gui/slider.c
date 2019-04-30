@@ -91,6 +91,8 @@ AG_SliderNewUintR(void *parent, enum ag_slider_type type, Uint flags,
 	return (sl);
 }
 
+#ifdef HAVE_FLOAT
+
 AG_Slider *
 AG_SliderNewFlt(void *parent, enum ag_slider_type type, Uint flags,
     float *val, float *min, float *max)
@@ -135,6 +137,8 @@ AG_SliderNewDblR(void *parent, enum ag_slider_type type, Uint flags,
 	return (sl);
 }
 
+#endif /* HAVE_FLOAT */
+
 /* Set the size of the control in pixels. */
 void
 AG_SliderSetControlSize(AG_Slider *sl, int size)
@@ -177,10 +181,12 @@ GetPosition(AG_Slider *_Nonnull sl, int *_Nonnull x)
 	bMax = AG_GetVariable(sl, "max", &pMax);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
+#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		GET_POSITION(float);		break;
 	case AG_VARIABLE_DOUBLE:	GET_POSITION(double);		break;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	GET_POSITION(long double);	break;
+# endif
 #endif
 	case AG_VARIABLE_INT:		GET_POSITION(int);		break;
 	case AG_VARIABLE_UINT:		GET_POSITION(Uint);		break;
@@ -233,10 +239,12 @@ SeekToPosition(AG_Slider *_Nonnull sl, int x)
 	bMax = AG_GetVariable(sl, "max", &pMax);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
+#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		SEEK_TO_POSITION(float);	break;
 	case AG_VARIABLE_DOUBLE:	SEEK_TO_POSITION(double);	break;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	SEEK_TO_POSITION(long double);	break;
+# endif
 #endif
 	case AG_VARIABLE_INT:		SEEK_TO_POSITION(int);		break;
 	case AG_VARIABLE_UINT:		SEEK_TO_POSITION(Uint);		break;
@@ -289,10 +297,12 @@ Increment(AG_Slider *_Nonnull sl)
 	bInc = AG_GetVariable(sl, "inc", &pInc);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
+#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		INCREMENT(float);		break;
 	case AG_VARIABLE_DOUBLE:	INCREMENT(double);	break;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	INCREMENT(long double);	break;
+# endif
 #endif
 	case AG_VARIABLE_INT:		INCREMENT(int);		break;
 	case AG_VARIABLE_UINT:		INCREMENT(Uint);		break;
@@ -329,10 +339,12 @@ Decrement(AG_Slider *_Nonnull sl)
 	bInc = AG_GetVariable(sl, "inc", &pInc);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
+#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		DECREMENT(float);		break;
 	case AG_VARIABLE_DOUBLE:	DECREMENT(double);	break;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	DECREMENT(long double);	break;
+# endif
 #endif
 	case AG_VARIABLE_INT:		DECREMENT(int);		break;
 	case AG_VARIABLE_UINT:		DECREMENT(Uint);		break;
@@ -499,10 +511,12 @@ OnShow(AG_Event *_Nonnull event)
 		AG_LockVariable(V);
 	}
 	switch (AG_VARIABLE_TYPE(V)) {
+#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:  SET_DEF(AG_SetFloat, 0.0f, 1.0f, 0.1f); break;
 	case AG_VARIABLE_DOUBLE: SET_DEF(AG_SetDouble, 0.0, 1.0, 0.1); break;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE: SET_DEF(AG_SetLongDouble, 0.0l, 1.0l, 0.1l); break;
+# endif
 #endif
 	case AG_VARIABLE_INT:    SET_DEF(AG_SetInt, AG_INT_MIN+1, AG_INT_MAX-1, 1); break;
 	case AG_VARIABLE_UINT:   SET_DEF(AG_SetUint, 0U, AG_UINT_MAX-1, 1U); break;

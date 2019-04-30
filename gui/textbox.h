@@ -86,8 +86,10 @@ char *_Nonnull AG_TextboxDupString(AG_Textbox *_Nonnull);
 AG_Size        AG_TextboxCopyString(AG_Textbox *_Nonnull, char *_Nonnull,
                                     AG_Size);
 int            AG_TextboxInt(AG_Textbox *_Nonnull);
+#ifdef AG_HAVE_FLOAT
 float          AG_TextboxFloat(AG_Textbox *_Nonnull);
 double         AG_TextboxDouble(AG_Textbox *_Nonnull);
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

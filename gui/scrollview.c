@@ -39,9 +39,10 @@
 static void
 ClipWidgets(AG_Scrollview *_Nonnull sv, AG_Widget *_Nonnull wt)
 {
+	AG_Rect2 rView, rx;
 	AG_Widget *chld;
-	AG_Rect2 rView = WIDGET(sv)->rView;
-	AG_Rect2 rx;
+
+	memcpy(&rView, &WIDGET(sv)->rView, sizeof(AG_Rect2));
 
 	rView.w -= sv->wBar;
 	rView.h -= sv->hBar;
@@ -123,7 +124,6 @@ MouseMotion(AG_Event *_Nonnull event)
 	AG_Scrollview *sv = AG_SELF();
 	int dx = AG_INT(3);
 	int dy = AG_INT(4);
-	AG_Event ev;
 
 	if (sv->flags & AG_SCROLLVIEW_PANNING) {
 		sv->xOffs -= dx;
@@ -138,9 +138,25 @@ MouseMotion(AG_Event *_Nonnull event)
 		if (sv->yOffs < 0)
 			sv->yOffs = 0;
 	}
-	AG_EventInit(&ev);
-	AG_EventPushPointer(&ev, NULL, sv);
-	PanView(&ev);
+#if AG_MODEL == AG_SMALL
+	{
+		AG_Event *ev;
+		
+		ev = Malloc(sizeof(AG_Event));
+		AG_EventInit(ev);
+		AG_EventPushPointer(ev, NULL, sv);
+		PanView(ev);
+		free(ev);
+	}
+#else
+	{
+		AG_Event ev;
+
+		AG_EventInit(&ev);
+		AG_EventPushPointer(&ev, NULL, sv);
+		PanView(&ev);
+	}
+#endif
 }
 
 static void
@@ -202,11 +218,18 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	}
 
 	if (update) {
+#if AG_MODEL == AG_SMALL
+		AG_Event *ev = Malloc(sizeof(AG_Event));
+		AG_EventInit(ev);
+		AG_EventPushPointer(ev, NULL, sv);
+		PanView(ev);
+		free(ev);
+#else
 		AG_Event ev;
-
 		AG_EventInit(&ev);
 		AG_EventPushPointer(&ev, NULL, sv);
 		PanView(&ev);
+#endif
 	}
 }
 

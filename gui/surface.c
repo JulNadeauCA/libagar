@@ -765,17 +765,19 @@ AG_SurfaceCopy(AG_Surface *D, const AG_Surface *S)
  */
 static void
 AG_SurfaceBlit_AlCo(const AG_Surface *_Nonnull S, AG_Surface *_Nonnull D,
-    AG_Rect dr)
+    const AG_Rect *_Nonnull dr)
 {
 	AG_Pixel srcColorkey = S->colorkey;
-	int x, y;
+	int x,y;
+	int w = dr->w;
+	int h = dr->h;
 
 #ifdef AG_DEBUG
 	if (S->flags & AG_SURFACE_TRACE)
 		Debug(NULL, "Surface <%p>: Blit with Alpha & Colorkey\n", S);
 #endif
-	for (y = 0; y < dr.h; y++) {
-		for (x = 0; x < dr.w; x++) {
+	for (y = 0; y < h; y++) {
+		for (x = 0; x < w; x++) {
 			AG_Pixel px = AG_SurfaceGet(S, x,y);
 			AG_Color c;
 
@@ -798,17 +800,19 @@ AG_SurfaceBlit_AlCo(const AG_Surface *_Nonnull S, AG_Surface *_Nonnull D,
  */
 static void
 AG_SurfaceBlit_Co(const AG_Surface *_Nonnull S, AG_Surface *_Nonnull D,
-    AG_Rect dr)
+    const AG_Rect *_Nonnull dr)
 {
 	AG_Pixel srcColorkey = S->colorkey;
 	int x, y;
+	int w = dr->w;
+	int h = dr->h;
 
 #ifdef AG_DEBUG
 	if (S->flags & AG_SURFACE_TRACE)
 		Debug(NULL, "Surface <%p>: Blit with Colorkey only\n", S);
 #endif
-	for (y = 0; y < dr.h; y++) {
-		for (x = 0; x < dr.w; x++) {
+	for (y = 0; y < h; y++) {
+		for (x = 0; x < w; x++) {
 			AG_Pixel px = AG_SurfaceGet(S, x,y);
 			AG_Color c;
 
@@ -900,7 +904,7 @@ AG_SurfaceBlit(const AG_Surface *S, const AG_Rect *srcRect,
 
 	if (S->alpha < AG_OPAQUE) {
 		if (S->flags & AG_SURFACE_COLORKEY) {
-			AG_SurfaceBlit_AlCo(S, D, dr);
+			AG_SurfaceBlit_AlCo(S, D, &dr);
 			return;
 		}
 		for (y = 0; y < dr.h; y++) {
@@ -919,7 +923,7 @@ AG_SurfaceBlit(const AG_Surface *S, const AG_Rect *srcRect,
 		return;
 	}
 	if (S->flags & AG_SURFACE_COLORKEY) {
-		AG_SurfaceBlit_Co(S, D, dr);
+		AG_SurfaceBlit_Co(S, D, &dr);
 		return;
 	}
 	if (S->format.Amask != 0) {
@@ -1049,7 +1053,6 @@ AG_Surface *
 AG_SurfaceScale(const AG_Surface *S, Uint w, Uint h, Uint flags)
 {
 	AG_Surface *D;
-	float xf, yf;
 	int x,y;
 
 #ifdef AG_DEBUG
@@ -1071,16 +1074,36 @@ AG_SurfaceScale(const AG_Surface *S, Uint w, Uint h, Uint flags)
 		return (D);
 	}
 
-	xf = (float)(S->w - 1) / (float)(D->w - 1);
-	yf = (float)(S->h - 1) / (float)(D->h - 1);
-	for (y = 0; y < D->h; y++) {
-		for (x = 0; x < D->w; x++) {
-			AG_SurfacePut(D, x,y,
-			    AG_SurfaceGet(S, 
-			        (int)((float)x * xf),
-				(int)((float)y * yf)));
+#ifdef HAVE_FLOAT
+	{
+		float xf = (float)(S->w - 1) / (float)(D->w - 1);
+		float yf = (float)(S->h - 1) / (float)(D->h - 1);
+
+		for (y = 0; y < D->h; y++) {
+			for (x = 0; x < D->w; x++) {
+				AG_SurfacePut(D, x,y,
+				    AG_SurfaceGet(S, 
+				        (int)((float)x * xf),
+					(int)((float)y * yf)));
+			}
 		}
 	}
+#else
+	{
+		int xf = (S->w - 1) / (D->w - 1);
+		int yf = (S->h - 1) / (D->h - 1);
+
+		for (y = 0; y < D->h; y++) {
+			for (x = 0; x < D->w; x++) {
+				AG_SurfacePut(D, x,y,
+				    AG_SurfaceGet(S, 
+				        (x * xf),
+					(y * yf)));
+			}
+		}
+	}
+#endif /* HAVE_FLOAT */
+
 	return (D);
 }
 
@@ -1183,12 +1206,14 @@ AG_MapPixel32_RGB8(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b)
 		    AG_8toH(g),
 		    AG_8toH(b),
 		    AG_OPAQUE);
+#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf,
 		    AG_8toH(r),
 		    AG_8toH(g),
 		    AG_8toH(b),
 		    AG_OPAQUE);
+#endif
 	}
 }
 Uint32
@@ -1208,12 +1233,14 @@ AG_MapPixel32_RGBA8(const AG_PixelFormat *pf,
 		    AG_8toH(g),
 		    AG_8toH(b),
 		    AG_8toH(a));
+#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf,
 		    AG_8toH(r),
 		    AG_8toH(g),
 		    AG_8toH(b),
 		    AG_8toH(a));
+#endif
 	}
 }
 
@@ -1235,12 +1262,14 @@ AG_MapPixel32_RGB16(const AG_PixelFormat *pf,
 		    AG_16toH(g),
 		    AG_16toH(b),
 		    AG_OPAQUE);
+#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf,
 		    AG_16toH(r),
 		    AG_16toH(g),
 		    AG_16toH(b),
 		    AG_OPAQUE);
+#endif
 	}
 }
 
@@ -1258,8 +1287,10 @@ AG_MapPixel32_RGBA16(const AG_PixelFormat *pf,
 		      ((AG_16to8(a) >> pf->Aloss) << pf->Ashift & (Uint32)pf->Amask);
 	case AG_SURFACE_INDEXED:
 		return AG_MapPixelIndexed(pf, r,g,b,a);
+#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf, r,g,b,a);
+#endif
 	}
 }
 
@@ -1283,12 +1314,14 @@ AG_MapPixel64_RGB8(const AG_PixelFormat *pf,
 		    AG_16toH(g),
 		    AG_16toH(b),
 		    AG_OPAQUE);
+# ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf,
 		    AG_16toH(r),
 		    AG_16toH(g),
 		    AG_16toH(b),
 		    AG_OPAQUE);
+# endif
 	}
 }
 
@@ -1310,12 +1343,14 @@ AG_MapPixel64_RGBA8(const AG_PixelFormat *pf,
 		    AG_8toH(g),
 		    AG_8toH(b),
 		    AG_8toH(a));
+# ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf,
 		    AG_8toH(r),
 		    AG_8toH(g),
 		    AG_8toH(b),
 		    AG_8toH(a));
+# endif
 	}
 }
 
@@ -1346,11 +1381,13 @@ AG_GetColor32_RGB8(Uint32 px, const AG_PixelFormat *pf,
 		*b = AG_Hto8(c->b);
 		break;
 	}
+#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE: {
 		Uint8 dummy;
 		AG_GetColor32_Gray8(px, pf->graymode, r,g,b,&dummy);
 		break;
 	}
+#endif
 	/* pf->mode */
 	}
 }
@@ -1375,9 +1412,11 @@ AG_GetColor32_RGBA8(Uint32 px, const AG_PixelFormat *pf,
 		*b = AG_Hto8(c->b);
 		*a = AG_Hto8(c->a);
 		break;
+#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		AG_GetColor32_Gray8(px, pf->graymode, r,g,b,a);
 		break;
+#endif
 	}
 }
 
@@ -1405,11 +1444,13 @@ AG_GetColor32_RGB16(Uint32 px, const AG_PixelFormat *pf,
 		*g = c->g;
 		*b = c->b;
 		break;
+#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE: {
 		Uint16 dummy;
 		AG_GetColor32_Gray16(px, pf->graymode, r,g,b,&dummy);
 		break;
 	}
+#endif
 	/* pf->mode */
 	}
 }
@@ -1441,9 +1482,11 @@ AG_GetColor32_RGBA16(Uint32 px, const AG_PixelFormat *pf,
 		*b = c->b;
 		*a = c->a;
 		break;
+#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		AG_GetColor32_Gray16(px, pf->graymode, r,g,b,a);
 		break;
+#endif
 	}
 }
 
@@ -1476,9 +1519,11 @@ AG_GetColor32(AG_Color *c, Uint32 px, const AG_PixelFormat *pf)
 		memcpy(c, &pf->palette->colors[(Uint)px % pf->palette->nColors],
 		    sizeof(AG_Color));
 		break;
+#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		AG_GetColor32_Gray(c, px, pf->graymode);
 		break;
+#endif
 	}
 }
 
@@ -1509,6 +1554,7 @@ AG_MapPixelIndexed(const AG_PixelFormat *pf,
 	return (Uint8)iMin;
 }
 
+#ifdef HAVE_FLOAT
 /* Convert RGBA components to packed grayscale+alpha by luminosity. */
 /* TODO integer-only version */
 AG_Pixel
@@ -1626,7 +1672,7 @@ AG_GetColor32_Gray16(Uint32 px, AG_GrayscaleMode grayMode,
 	*a = (px & 0xffff);
 }
 
-#if AG_MODEL == AG_LARGE
+# if AG_MODEL == AG_LARGE
 /*
  * Convert a 64-bit grayscale+alpha pixel to 16-bit RGBA by luminosity
  * (with compressed alpha).
@@ -1689,7 +1735,8 @@ AG_GetColor64_Gray(AG_Color *c, Uint64 G, AG_GrayscaleMode mode)
 	}
 	c->a = AG_32to16(G & 0xffffffff);
 }
-#endif /* AG_LARGE */
+# endif /* AG_LARGE */
+#endif /* HAVE_FLOAT */
 
 /*
  * Blend 8-bit RGBA components with the pixel at x,y and overwrite it with
@@ -1700,12 +1747,13 @@ void
 AG_SurfaceBlendRGB8(AG_Surface *S, int x, int y,
     Uint8 r, Uint8 g, Uint8 b, Uint8 a, AG_AlphaFn fn)
 {
-	AG_Color c = {
-	    AG_8toH(r),
-	    AG_8toH(g),
-	    AG_8toH(b),
-	    AG_8toH(a)
-	};
+	AG_Color c;
+
+	c.r = AG_8toH(r);
+	c.g = AG_8toH(g);
+	c.b = AG_8toH(b);
+	c.a = AG_8toH(a);
+
 	AG_SurfaceBlend_At(S, S->pixels +
 	    y*S->pitch +
 	    x*S->format.BytesPerPixel,
@@ -1721,12 +1769,12 @@ void
 AG_SurfaceBlendRGB8_At(AG_Surface *S, Uint8 *p,
     Uint8 r, Uint8 g, Uint8 b, Uint8 a, AG_AlphaFn fn)
 {
-	AG_Color c = {
-	    AG_8toH(r),
-	    AG_8toH(g),
-	    AG_8toH(b),
-	    AG_8toH(a)
-	};
+	AG_Color c;
+
+	c.r = AG_8toH(r);
+	c.g = AG_8toH(g);
+	c.b = AG_8toH(b);
+	c.a = AG_8toH(a);
 	AG_SurfaceBlend_At(S, p, &c, fn);
 }
 

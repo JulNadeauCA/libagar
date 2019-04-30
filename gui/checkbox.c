@@ -35,17 +35,20 @@
 AG_Checkbox *
 AG_CheckboxNew(void *parent, Uint flags, const char *fmt, ...)
 {
-	char s[AG_LABEL_MAX];
+	char *s;
 	va_list ap;
+	AG_Checkbox *cb;
 
 	if (fmt != NULL) {
 		va_start(ap, fmt);
-		Vsnprintf(s, sizeof(s), fmt, ap);
+		Vasprintf(&s, fmt, ap);
 		va_end(ap);
-		return AG_CheckboxNewS(parent, flags, s);
+		cb = AG_CheckboxNewS(parent, flags, s);
+		free(s);
 	} else {
-		return AG_CheckboxNewS(parent, flags, NULL);
+		cb = AG_CheckboxNewS(parent, flags, NULL);
 	}
+	return (cb);
 }
 
 AG_Checkbox *

@@ -32,8 +32,10 @@ typedef struct ag_file_type_option {
 	enum ag_file_type_option_type type;
 	union {
 		struct { int val, min, max; } i;
+#ifdef AG_HAVE_FLOAT
 		struct { float val, min, max; } flt;
 		struct { double val, min, max; } dbl;
+#endif
 		char s[128];
 	} data;
 	AG_TAILQ_ENTRY(ag_file_type_option) opts;
@@ -128,6 +130,7 @@ AG_FileOption *_Nonnull AG_FileOptionNewInt(AG_FileType *_Nonnull,
 					    const char *_Nonnull,
 					    int, int,int);
 
+#ifdef AG_HAVE_FLOAT
 AG_FileOption *_Nonnull AG_FileOptionNewFlt(AG_FileType *_Nonnull,
                                             const char *_Nonnull,
 					    const char *_Nonnull,
@@ -139,6 +142,7 @@ AG_FileOption *_Nonnull AG_FileOptionNewDbl(AG_FileType *_Nonnull,
 					    const char *_Nonnull,
                                             double, double,double,
 					    const char *_Nullable);
+#endif
 
 AG_FileOption *_Nonnull AG_FileOptionNewString(AG_FileType *_Nonnull,
                                                const char *_Nonnull,
@@ -154,11 +158,12 @@ int AG_FileOptionInt(AG_FileType *_Nonnull, const char *_Nonnull)
 int AG_FileOptionBool(AG_FileType *_Nonnull, const char *_Nonnull)
                      _Pure_Attribute_If_Unthreaded;
 
+#ifdef AG_HAVE_FLOAT
 float  AG_FileOptionFlt(AG_FileType *_Nonnull, const char *_Nonnull)
                        _Pure_Attribute_If_Unthreaded;
 double AG_FileOptionDbl(AG_FileType *_Nonnull, const char *_Nonnull)
                        _Pure_Attribute_If_Unthreaded;
-
+#endif
 char *_Nonnull AG_FileOptionString(AG_FileType *_Nonnull, const char *_Nonnull);
                                   _Pure_Attribute_If_Unthreaded;
 __END_DECLS

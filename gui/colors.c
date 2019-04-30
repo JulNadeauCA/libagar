@@ -82,13 +82,14 @@ PctHSV(float c, double v)
 
 #else /* !HAVE_FLOAT */
 
-static __inline__ Uint32
+static __inline__ AG_Component
 PctRGB(AG_Component c, Uint32 v)
 {
-	double x = ((double)c)*v/100.0;
+	Sint32 x = c*v/100;
 
-	if (x <= 0.0)            { return (0); }
-	if (x >= AG_COLOR_LASTD) { return (AG_COLOR_LAST); }
+	if (x < 0) { return (0); }
+	if (x > AG_COLOR_LAST) { return (AG_COLOR_LAST); }
+
 	return (AG_Component)(x);
 }
 

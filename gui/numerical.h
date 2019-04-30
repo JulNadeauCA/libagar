@@ -20,11 +20,13 @@ typedef struct ag_numerical {
 #define AG_NUMERICAL_EXCL	0x08	/* Exclusive access to bindings */
 
 	char format[32];		/* Print format (for reals) */
+#ifdef AG_HAVE_FLOAT
 	const AG_Unit *_Nonnull unit;	/* Conversion unit in use */
+	AG_UCombo *_Nullable units;	/* Unit selector */
+#endif
 	int writeable;			/* 0 = read-only */
 	char inTxt[64];			/* Input text buffer */
 	AG_Textbox *_Nonnull input;	/* Input textbox */
-	AG_UCombo *_Nullable units;	/* Unit selector */
 	AG_Button *_Nonnull incbu;	/* Increment button */
 	AG_Button *_Nonnull decbu;	/* Decrement button */
 	int wUnitSel, hUnitSel;		/* Size hints for entry box */
@@ -74,8 +76,12 @@ void AG_NumericalSizeHint(AG_Numerical *_Nonnull, const char *_Nullable);
 void AG_NumericalIncrement(AG_Numerical *_Nonnull);
 void AG_NumericalDecrement(AG_Numerical *_Nonnull);
 void AG_NumericalUpdate(AG_Numerical *_Nonnull);
+
+#ifdef AG_HAVE_FLOAT
 void AG_NumericalSelectUnit(AG_Numerical *_Nonnull, const char *_Nonnull);
 int  AG_NumericalSetUnitSystem(AG_Numerical *_Nonnull, const char *_Nonnull);
+#endif
+
 void AG_NumericalSetWriteable(AG_Numerical *_Nonnull, int);
 void AG_NumericalSetPrecision(AG_Numerical *_Nonnull, const char *_Nonnull, int);
 

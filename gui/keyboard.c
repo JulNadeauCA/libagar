@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -492,6 +492,43 @@ AG_LookupKeySym(const char *name)
 		}
 	}
 	return (AG_KEY_NONE);
+}
+
+/* Compare unsided modifier state against a string of flags. */
+int
+AG_CompareKeyMods(Uint modState, const char *flags)
+{
+	const char *c;
+
+	for (c = &flags[0]; *c != '\0'; c++) {
+		switch (*c) {
+		case 'C':
+			if (modState & AG_KEYMOD_LCTRL ||
+			    modState & AG_KEYMOD_RCTRL) {
+				return (1);
+			}
+			break;
+		case 'A':
+			if (modState & AG_KEYMOD_LALT ||
+			    modState & AG_KEYMOD_RALT) {
+				return (1);
+			}
+			break;
+		case 'S':
+			if (modState & AG_KEYMOD_LSHIFT ||
+			    modState & AG_KEYMOD_RSHIFT) {
+				return (1);
+			}
+			break;
+		case 'M':
+			if (modState & AG_KEYMOD_LMETA ||
+			    modState & AG_KEYMOD_RMETA) {
+				return (1);
+			}
+			break;
+		}
+	}
+	return (0);
 }
 
 AG_ObjectClass agKeyboardClass = {

@@ -82,8 +82,11 @@
 #include <agar/gui/cursors.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/icons.h>
-#include <agar/gui/icons_data.h>
 #include <agar/gui/text.h>
+
+#if AG_MODEL != AG_SMALL
+#include <agar/gui/icons_data.h>
+#endif
 
 static struct {
 	const char *_Nonnull key;
@@ -129,7 +132,9 @@ void *agStdWidgets[] = {
 	&agFileDlgClass,
 	&agFileSelectorClass,
 	&agFixedClass,
+#if defined(HAVE_FLOAT) && defined(AG_LEGACY)
 	&agFSpinbuttonClass,
+#endif
 	&agFixedPlotterClass,
 	&agGraphClass,
 #ifdef HAVE_OPENGL
@@ -140,7 +145,9 @@ void *agStdWidgets[] = {
 	&agLabelClass,
 	&agMenuClass,
 	&agMenuViewClass,
+#ifdef HAVE_FLOAT
 	&agMFSpinbuttonClass,
+#endif
 	&agMPaneClass,
 	&agMSpinbuttonClass,
 	&agNotebookClass,
@@ -307,8 +314,9 @@ AG_InitGUI(Uint flags)
 	for (ops = &agStdWidgets[0]; *ops != NULL; ops++) {
 		AG_RegisterClass(*ops);
 	}
+#if AG_MODEL != AG_SMALL
 	agIcon_Init();
-	
+#endif
 	if (AG_InitTextSubsystem() == -1) {
 		return (-1);
 	}
@@ -365,8 +373,9 @@ AG_DestroyGUI(void)
 	AG_DestroyAppMenu();
 	AG_DestroyWindowSystem();
 	AG_DestroyTextSubsystem();
+#if AG_MODEL != AG_SMALL
 	agIcon_Destroy();
-
+#endif
 	for (ops = &agStdWidgets[0]; *ops != NULL; ops++)
 		AG_UnregisterClass(*ops);
 	

@@ -33,9 +33,9 @@ typedef Uint32 AG_Pixel;
 # define AG_COLOR_LAST  15
 # define AG_COLOR_LASTF 15.0f
 # define AG_COLOR_LASTD 15.0
-typedef struct ag_color { Uint8 rg,ba; } AG_Color;
+typedef struct ag_color { Uint8 r,g,b,a; } AG_Color;
 typedef struct ag_color_offset { Sint8 r,g,b,a; } AG_ColorOffset;
-typedef Uint16 AG_Grayscale;
+typedef struct ag_grayscale { Uint8 v,a; } AG_Grayscale;
 typedef Uint8  AG_Component;
 typedef Sint8  AG_ComponentOffset;
 typedef Uint8  AG_GrayComponent;
@@ -54,18 +54,33 @@ typedef struct ag_color_hsv {
 #endif
 } AG_ColorHSV;
 
-#define AG_4to8(c)    (Uint8)((float)(c)/15.0f * 255.0f)
-#define AG_4to16(c)  (Uint16)((float)(c)/15.0f * 65535.0f)
-#define AG_4to32(c)  (Uint32)((float)(c)/15.0f * 4294967295.0f)
-#define AG_8to4(c)    (Uint8)((float)(c)/255.0f * 15.0f)
-#define AG_8to16(c)  (Uint16)((float)(c)/255.0f * 65535.0f)
-#define AG_8to32(c)  (Uint32)((float)(c)/255.0f * 4294967295.0f)
-#define AG_16to4(c)   (Uint8)((float)(c)/65535.0f * 15.0f)
-#define AG_16to8(c)   (Uint8)((float)(c)/65535.0f * 255.0f)
-#define AG_16to32(c) (Uint32)((float)(c)/65535.0f * 4294967295.0f)
-#define AG_32to4(c)   (Uint8)((float)(c)/4294967295.0f * 15.0f)
-#define AG_32to8(c)   (Uint8)((float)(c)/4294967295.0f * 255.0f)
-#define AG_32to16(c) (Uint16)((float)(c)/4294967295.0f * 65535.0f)
+#ifdef AG_HAVE_FLOAT
+# define AG_4to8(c)    (Uint8)((float)(c)/15.0f * 255.0f)
+# define AG_4to16(c)  (Uint16)((float)(c)/15.0f * 65535.0f)
+# define AG_4to32(c)  (Uint32)((float)(c)/15.0f * 4294967295.0f)
+# define AG_8to4(c)    (Uint8)((float)(c)/255.0f * 15.0f)
+# define AG_8to16(c)  (Uint16)((float)(c)/255.0f * 65535.0f)
+# define AG_8to32(c)  (Uint32)((float)(c)/255.0f * 4294967295.0f)
+# define AG_16to4(c)   (Uint8)((float)(c)/65535.0f * 15.0f)
+# define AG_16to8(c)   (Uint8)((float)(c)/65535.0f * 255.0f)
+# define AG_16to32(c) (Uint32)((float)(c)/65535.0f * 4294967295.0f)
+# define AG_32to4(c)   (Uint8)((float)(c)/4294967295.0f * 15.0f)
+# define AG_32to8(c)   (Uint8)((float)(c)/4294967295.0f * 255.0f)
+# define AG_32to16(c) (Uint16)((float)(c)/4294967295.0f * 65535.0f)
+#else
+# define AG_4to8(c)    (Uint8)((c)/15 * 255)
+# define AG_4to16(c)  (Uint16)((c)/15 * 65535)
+# define AG_4to32(c)  (Uint32)((c)/15 * 4294967295)
+# define AG_8to4(c)    (Uint8)((c)/255 * 15)
+# define AG_8to16(c)  (Uint16)((c)/255 * 65535)
+# define AG_8to32(c)  (Uint32)((c)/255 * 4294967295)
+# define AG_16to4(c)   (Uint8)((c)/65535 * 15)
+# define AG_16to8(c)   (Uint8)((c)/65535 * 255)
+# define AG_16to32(c) (Uint32)((c)/65535 * 4294967295)
+# define AG_32to4(c)   (Uint8)((c)/4294967295 * 15)
+# define AG_32to8(c)   (Uint8)((c)/4294967295 * 255)
+# define AG_32to16(c) (Uint16)((c)/4294967295 * 65535)
+#endif
 
 #if AG_MODEL == AG_LARGE
 
@@ -107,18 +122,6 @@ typedef struct ag_color_hsv {
 #define AG_ColorRGBA(c,r,g,b,a)  AG_ColorRGBA_8((c),(r),(g),(b),(a))
 #define AG_RGB2HSV(r,g,b, h,s,v) AG_MapRGB8_HSVf((r),(g),(b),(h),(s),(v))
 #define AG_HSV2RGB(h,s,v, r,g,b) AG_MapHSVf_RGB8((h),(s),(v),(r),(g),(b))
-
-#if AG_MODEL == AG_SMALL
-# define AG_ColorRed(c)  (((c)->rg & 0xf0) >> 4)
-# define AG_ColorGreen(c) ((c)->rg & 0x0f)
-# define AG_ColorBlue(c) (((c)->ba & 0xf0) >> 4)
-# define AG_ColorAlpha(c) ((c)->ba & 0x0f)
-#else
-# define AG_ColorRed(c)   ((c)->r)
-# define AG_ColorGreen(c) ((c)->g)
-# define AG_ColorBlue(c)  ((c)->b)
-# define AG_ColorAlpha(c) ((c)->a)
-#endif
 
 __BEGIN_DECLS
 extern AG_ColorOffset agSunkColor, agRaisedColor, agLowColor, agHighColor;

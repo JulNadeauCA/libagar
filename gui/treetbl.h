@@ -7,10 +7,6 @@
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/begin.h>
 
-#ifndef AG_TREETBL_LABEL_MAX
-#define AG_TREETBL_LABEL_MAX AG_LABEL_MAX
-#endif
-
 struct ag_treetbl;
 
 typedef char *_Nullable (*AG_TreetblDataFn)(struct ag_treetbl *_Nonnull, int,int);
@@ -37,8 +33,9 @@ typedef struct ag_treetbl_col {
 #define AG_TREETBL_COL_SELECTED		0x40	/* Column is selected */
 #define AG_TREETBL_COL_SORTING		0x80	/* Controls sorting */
 
-	char label[AG_TREETBL_LABEL_MAX];	/* Header text */
-	int labelSu;				/* Cached text surface or -1 */
+	char *label;				/* Header text */
+	int   labelSu;				/* Cached text surface or -1 */
+
 	int w;					/* Column width */
 } AG_TreetblCol;
 

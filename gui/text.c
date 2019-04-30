@@ -88,10 +88,12 @@
 #include <agar/gui/iconmgr.h>
 #include <agar/gui/icons.h>
 #include <agar/gui/fonts.h>
-#include <agar/gui/fonts_data.h>
 #include <agar/gui/packedpixel.h>
 #if defined(HAVE_FONTCONFIG) && defined(HAVE_FLOAT)
 #include <agar/gui/gui_math.h>
+#endif
+#if AG_MODEL != AG_SMALL
+#include <agar/gui/fonts_data.h>
 #endif
 
 #include <string.h>
@@ -104,10 +106,12 @@ const char *agDefaultFaceBitmap = "_agFontMinimal";
 
 /* Statically compiled fonts */
 AG_StaticFont *agBuiltinFonts[] = {
+#if AG_MODEL != AG_SMALL
 	&agFontVera,
-	&agFontMinimal
+	&agFontMinimal,
+#endif
+	NULL
 };
-const int agBuiltinFontCount = sizeof(agBuiltinFonts)/sizeof(agBuiltinFonts[0]);
 
 int agTextFontHeight = 0;		/* Default font height (px) */
 int agTextFontAscent = 0;		/* Default font ascent (px) */
@@ -298,7 +302,6 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 	AG_Font *font;
 	AG_FontSpec *spec;
 	AG_FontPts myFontSize;
-	int i;
 
 	if (fontSize == NULL) {
 		myFontSize = (AG_FontPts)AG_GetInt(cfg, "font.size");
@@ -339,15 +342,18 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 	font->flags = flags;
 
 	if (name[0] == '_') {
-		for (i = 0; i < agBuiltinFontCount; i++) {
-			if (strcmp(agBuiltinFonts[i]->name, &name[1]) == 0)
+		AG_StaticFont **pbf;
+
+		for (pbf = &agBuiltinFonts[0]; *pbf != NULL; pbf++) {
+			if (strcmp((*pbf)->name, &name[1]) == 0) {
+				builtin = *pbf;
 				break;
+			}
 		}
-		if (i == agBuiltinFontCount) {
+		if (builtin == NULL) {
 			AG_SetError(_("No such builtin font: %s"), name);
 			goto fail;
 		}
-		builtin = agBuiltinFonts[i];
 		spec->type = builtin->type;
 		spec->sourceType = AG_FONT_SOURCE_MEMORY;
 		spec->source.mem.data = builtin->data;
@@ -1641,14 +1647,14 @@ AG_TextErrorS(const char *s)
 AG_Window *
 AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 {
-	char text[AG_LABEL_MAX];
+	char *text;
 	AG_Window *win;
 	AG_Box *bo;
 	va_list ap;
 	Uint i;
 
 	va_start(ap, fmt);
-	Vsnprintf(text, sizeof(text), fmt, ap);
+	Vasprintf(&text, fmt, ap);
 	va_end(ap);
 
 	if ((win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
@@ -1660,6 +1666,7 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	AG_WindowSetSpacing(win, 8);
 
 	AG_LabelNewS(win, 0, text);
+	free(text);
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	for (i = 0; i < nbOpts; i++) {
@@ -1714,14 +1721,14 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 void
 AG_TextEditString(char *sp, AG_Size len, const char *msgfmt, ...)
 {
-	char msg[AG_LABEL_MAX];
+	char *msg;
 	AG_Window *win;
 	AG_VBox *vb;
 	va_list args;
 	AG_Textbox *tb;
 
 	va_start(args, msgfmt);
-	Vsnprintf(msg, sizeof(msg), msgfmt, args);
+	Vasprintf(&msg, msgfmt, args);
 	va_end(args);
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
@@ -1730,6 +1737,7 @@ AG_TextEditString(char *sp, AG_Size len, const char *msgfmt, ...)
 
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	AG_LabelNewS(vb, 0, msg);
+	free(msg);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_EXPAND);
 	tb = AG_TextboxNewS(vb, AG_TEXTBOX_EXCL|AG_TEXTBOX_MULTILINE, NULL);

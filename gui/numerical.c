@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,17 +46,20 @@ AG_Numerical *
 AG_NumericalNew(void *parent, Uint flags, const char *unit, const char *fmt,
     ...)
 {
-	char s[AG_LABEL_MAX];
+	AG_Numerical *num;
+	char *s;
 	va_list ap;
 
 	if (fmt != NULL) {
 		va_start(ap, fmt);
-		Vsnprintf(s, sizeof(s), fmt, ap);
+		Vasprintf(&s, fmt, ap);
 		va_end(ap);
-		return AG_NumericalNewS(parent, flags, unit, s);
+		num = AG_NumericalNewS(parent, flags, unit, s);
+		free(s);
 	} else {
-		return AG_NumericalNewS(parent, flags, unit, NULL);
+		num = AG_NumericalNewS(parent, flags, unit, NULL);
 	}
+	return (num);
 }
 
 AG_Numerical *
@@ -72,6 +75,7 @@ AG_NumericalNewS(void *parent, Uint flags, const char *unit, const char *label)
 	if (label != NULL) {
 		AG_TextboxSetLabelS(num->input, label);
 	}
+#ifdef HAVE_FLOAT
 	if (unit != NULL) {
 		num->units = AG_UComboNew(num, 0);
 		AG_SetEvent(num->units, "ucombo-selected",
@@ -79,7 +83,7 @@ AG_NumericalNewS(void *parent, Uint flags, const char *unit, const char *label)
 		AG_NumericalSetUnitSystem(num, unit);
 		AG_WidgetSetFocusable(num->units, 0);
 	}
-
+#endif
 	AG_ObjectAttach(parent, num);
 	return (num);
 }
@@ -221,9 +225,12 @@ OnShow(AG_Event *_Nonnull event)
 	if ((V = AG_AccessVariable(num, "value")) == NULL) {
 		if (num->flags & AG_NUMERICAL_INT) {
 			V = AG_SetInt(num, "value", 0);
-		} else {
+		}
+#ifdef HAVE_FLOAT
+		else {
 			V = AG_SetDouble(num, "value", 0.0);
 		}
+#endif
 		AG_LockVariable(V);
 	}
 	switch (AG_VARIABLE_TYPE(V)) {
@@ -255,11 +262,11 @@ OnShow(AG_Event *_Nonnull event)
 	case AG_VARIABLE_LONG_DOUBLE:
 		AG_TextboxSetFltOnly(num->input, 1);
 		break;
+#endif
 	default:
 		AG_TextboxSetIntOnly(num->input, 1);
 		break;
 	}
-#endif
 	AG_UnlockVariable(V);
 
 	AG_NumericalUpdate(num);
@@ -376,6 +383,7 @@ DecrementValue(AG_Event *_Nonnull event)
 	AG_NumericalDecrement(num);
 }
 
+#ifdef HAVE_FLOAT
 static void
 UpdateUnitSelector(AG_Numerical *_Nonnull num)
 {
@@ -384,7 +392,6 @@ UpdateUnitSelector(AG_Numerical *_Nonnull num)
 	    WIDGET(num)->window->visible)
 		AG_NumericalUpdate(num);
 }
-
 static void
 UnitSelected(AG_Event *_Nonnull event)
 {
@@ -396,7 +403,6 @@ UnitSelected(AG_Event *_Nonnull event)
 	UpdateUnitSelector(num);
 	AG_ObjectUnlock(num);
 }
-
 int
 AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 {
@@ -462,6 +468,7 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	AG_ObjectUnlock(num);
 	return (0);
 }
+#endif /* HAVE_FLOAT */
 
 /* Update the input text from the binding value. */
 void
@@ -522,10 +529,12 @@ Init(void *_Nonnull obj)
 	num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
 	AG_TextboxBindASCII(num->input, num->inTxt, sizeof(num->inTxt));
 	AG_TextboxSizeHint(num->input, "8888.88");
-	
+
+#ifdef HAVE_FLOAT
 	num->unit = AG_FindUnit("identity");
 	num->units = NULL;
-	
+#endif
+
 	num->incbu = AG_ButtonNewS(num, AG_BUTTON_REPEAT, _("+"));
 	AG_ButtonSetPadding(num->incbu, 0,0,0,0);
 	AG_LabelSetPadding(num->incbu->lbl, 0,0,0,0);
@@ -580,6 +589,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	if (a->h < 4 || a->w < szBtn+4)
 		return (-1);
 
+#ifdef HAVE_FLOAT
 	if (num->units != NULL) {
 		if (wUnitSel > a->w - szBtn-4) {
 			wUnitSel = a->w - szBtn-4;
@@ -587,7 +597,9 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		if (hUnitSel > a->h) {
 			hUnitSel = a->h;
 		}
-	} else {
+	} else
+#endif
+	{
 		wUnitSel = 0;
 		hUnitSel = 0;
 	}
@@ -601,12 +613,14 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	aChld.x += aChld.w + 2;
 
 	/* Size unit selector */
+#ifdef HAVE_FLOAT
 	if (num->units != NULL) {
 		aChld.w = wUnitSel;
 		aChld.h = a->h;
 		AG_WidgetSizeAlloc(num->units, &aChld);
 		aChld.x += aChld.w + 2;
 	}
+#endif
 
 	/* Size increment buttons */
 	aChld.w = szBtn;
@@ -626,7 +640,10 @@ Draw(void *_Nonnull obj)
 	AG_Numerical *num = obj;
 
 	AG_WidgetDraw(num->input);
-	if (num->units != NULL) { AG_WidgetDraw(num->units); }
+#ifdef HAVE_FLOAT
+	if (num->units != NULL)
+		AG_WidgetDraw(num->units);
+#endif
 	AG_WidgetDraw(num->incbu);
 	AG_WidgetDraw(num->decbu);
 }
@@ -672,10 +689,12 @@ AG_NumericalIncrement(AG_Numerical *num)
 	incb = AG_GetVariable(num, "inc", &inc);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
+#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		ADD_REAL(float);	break;
 	case AG_VARIABLE_DOUBLE:	ADD_REAL(double);	break;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	ADD_LDBL(long double);	break;
+# endif
 #endif
 	case AG_VARIABLE_INT:		ADD_INT(int);		break;
 	case AG_VARIABLE_UINT:		ADD_INT(Uint);		break;
@@ -746,10 +765,12 @@ AG_NumericalDecrement(AG_Numerical *num)
 	incb = AG_GetVariable(num, "inc", &inc);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
+#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		SUB_REAL(float);	break;
 	case AG_VARIABLE_DOUBLE:	SUB_REAL(double);	break;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	SUB_LDBL(long double);	break;
+# endif
 #endif
 	case AG_VARIABLE_INT:		SUB_INT(int);		break;
 	case AG_VARIABLE_UINT:		SUB_INT(Uint);		break;
@@ -792,6 +813,7 @@ AG_NumericalSetPrecision(AG_Numerical *num, const char *mode, int precision)
 	AG_ObjectUnlock(num);
 }
 
+#ifdef HAVE_FLOAT
 void
 AG_NumericalSelectUnit(AG_Numerical *num, const char *uname)
 {
@@ -813,6 +835,7 @@ AG_NumericalSelectUnit(AG_Numerical *num, const char *uname)
 	AG_ObjectUnlock(num->units->list);
 	AG_ObjectUnlock(num);
 }
+#endif /* HAVE_FLOAT */
 
 void
 AG_NumericalSetWriteable(AG_Numerical *num, int writeable)

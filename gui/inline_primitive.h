@@ -519,7 +519,7 @@ ag_draw_rect(void *obj, const AG_Rect *r, const AG_Color *c)
 	rd.w = r->w;
 	rd.h = r->h;
 
-	if (AG_ColorAlpha(c) < AG_OPAQUE) {
+	if (c->a < AG_OPAQUE) {
 		wid->drvOps->drawRectBlended(wid->drv, &rd, c,
 		    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	} else {
@@ -627,14 +627,14 @@ ag_draw_frame(void *obj, const AG_Rect *r, int z, const AG_Color *cBase)
 	x2 = rd.x + r->w - 1;
 	y2 = rd.y + r->h - 1;
 
-	if (AG_ColorAlpha(&c[0]) < AG_OPAQUE) {
+	if (c[0].a < AG_OPAQUE) {
 		drvOps->drawLineBlended(drv, rd.x, rd.y, x2,   rd.y, &c[0], AG_ALPHA_SRC, AG_ALPHA_ZERO);
 		drvOps->drawLineBlended(drv, rd.x, rd.y, rd.x, y2,   &c[0], AG_ALPHA_SRC, AG_ALPHA_ZERO);
 	} else {
 		drvOps->drawLineH(drv, rd.x, x2,   rd.y, &c[0]);
 		drvOps->drawLineV(drv, rd.x, rd.y, y2,   &c[0]);
 	}
-	if (AG_ColorAlpha(&c[1]) < AG_OPAQUE) {
+	if (c[1].a < AG_OPAQUE) {
 		drvOps->drawLineBlended(drv, rd.x, y2,   x2, y2, &c[1], AG_ALPHA_SRC, AG_ALPHA_ZERO);
 		drvOps->drawLineBlended(drv, x2,   rd.y, x2, y2, &c[1], AG_ALPHA_SRC, AG_ALPHA_ZERO);
 	} else {
@@ -667,7 +667,7 @@ ag_draw_box(void *obj, const AG_Rect *r, int z, const AG_Color *C)
 
 	AG_ColorAdd(&c, C, (z < 0) ? &agSunkColor : &agRaisedColor);
 
-	if (AG_ColorAlpha(&c) < AG_OPAQUE) {
+	if (c.a < AG_OPAQUE) {
 		wid->drvOps->drawRectBlended(drv, &rd, &c, AG_ALPHA_SRC,
 		    AG_ALPHA_ONE_MINUS_SRC);
 	} else {
@@ -751,7 +751,7 @@ ag_draw_rect_outline(void *obj, const AG_Rect *r, const AG_Color *_Nonnull c)
 	int x2 = x + r->w - 1;
 	int y2 = y + r->h - 1;
 
-	if (AG_ColorAlpha(c) < AG_OPAQUE) {
+	if (c->a < AG_OPAQUE) {
 		drvOps->drawLineBlended(drv, x,  y, x2, y,  c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
 		drvOps->drawLineBlended(drv, x,  y, x2, y2, c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
 		drvOps->drawLineBlended(drv, x,  y, x,  y2, c, AG_ALPHA_SRC, AG_ALPHA_ZERO);

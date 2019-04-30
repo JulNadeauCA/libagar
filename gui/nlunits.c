@@ -1,5 +1,8 @@
 /*	Public domain	*/
 
+#include <agar/config/have_float.h>
+#ifdef HAVE_FLOAT
+
 #include <agar/core/core.h>
 #include <agar/gui/units.h>
 
@@ -22,3 +25,5 @@ AG_UnitCelsius(double n, int c2k)
 		return (n-273.15);
 	}
 }
+
+#endif /* HAVE_FLOAT */

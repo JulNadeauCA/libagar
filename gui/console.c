@@ -391,8 +391,12 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 ComputeVisible(AG_Console *_Nonnull cons)
 {
+#ifdef HAVE_FLOAT
 	cons->rVisible = (int)AG_Floor((float)(cons->r.h - (cons->padding << 1)) /
 	                               (float)cons->lineskip);
+#else
+	cons->rVisible = (cons->r.h - (cons->padding << 1)) / cons->lineskip;
+#endif
 	if (cons->rVisible > 0)
 		cons->rVisible--;
 }

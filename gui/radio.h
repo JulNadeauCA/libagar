@@ -45,13 +45,16 @@ __BEGIN_DECLS
 extern AG_WidgetClass agRadioClass;
 
 AG_Radio *_Nonnull AG_RadioNew(void *_Nullable, Uint,
-                               const char *_Nullable [_Nullable]);
+                               const char *_Nullable *_Nullable);
+
 AG_Radio *_Nonnull AG_RadioNewFn(void *_Nullable, Uint,
                                  const char *_Nullable *_Nullable,
                                  _Nonnull AG_EventFn, const char *_Nullable, ...);
+
 AG_Radio *_Nonnull AG_RadioNewInt(void *_Nullable, Uint,
                                   const char *_Nullable *_Nullable,
                                   int *_Nonnull);
+
 AG_Radio *_Nonnull AG_RadioNewUint(void *_Nullable, Uint,
                                    const char *_Nullable *_Nullable,
                                    Uint *_Nonnull);

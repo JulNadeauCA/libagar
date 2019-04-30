@@ -650,10 +650,10 @@ AG_TreetblAddCol(AG_Treetbl *tt, int colID, const char *width, const char *text,
 
 	/* Format the column header text. */
 	if (text == NULL) {
-		col->label[0] = '\0';
+		col->label = Strdup("");
 	} else {
 		va_start(args, text);
-		Vsnprintf(col->label, sizeof(col->label), text, args);
+		Vasprintf(&col->label, text, args);
 		va_end(args);
 	}
 

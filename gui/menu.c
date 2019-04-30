@@ -419,7 +419,11 @@ CreateItem(AG_MenuItem *_Nullable miParent, const char *_Nullable text,
 	mi->bind_flags = 0;
 	mi->bind_invert = 0;
 	mi->bind_lock = NULL;
-	mi->text = Strdup((text != NULL) ? text : "");
+	if (text != NULL) {
+		mi->text = Strdup(text);
+	} else {
+		mi->text = Strdup("");
+	}
 	mi->lblMenu[0] = -1;
 	mi->lblMenu[1] = -1;
 	mi->lblView[0] = -1;
@@ -615,18 +619,20 @@ AG_MenuSeparator(AG_MenuItem *pitem)
 AG_MenuItem *
 AG_MenuSection(AG_MenuItem *pitem, const char *fmt, ...)
 {
-	char text[AG_LABEL_MAX];
+	char *text;
 	AG_MenuItem *mi;
 	va_list ap;
 
 	va_start(ap, fmt);
-	Vsnprintf(text, sizeof(text), fmt, ap);
+	Vasprintf(&text, fmt, ap);
 	va_end(ap);
 
 	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, text, NULL);
 	mi->flags |= AG_MENU_ITEM_NOSELECT;
 	AG_ObjectUnlock(pitem->pmenu);
+
+	free(text);
 	return (mi);
 }
 

@@ -50,17 +50,20 @@
 AG_Textbox *
 AG_TextboxNew(void *parent, Uint flags, const char *fmt, ...)
 {
-	char s[AG_LABEL_MAX];
+	AG_Textbox *tb;
+	char *s;
 	va_list ap;
 
 	if (fmt != NULL) {
 		va_start(ap, fmt);
-		Vsnprintf(s, sizeof(s), fmt, ap);
+		Vasprintf(&s, fmt, ap);
 		va_end(ap);
-		return AG_TextboxNewS(parent, flags, s);
+		tb = AG_TextboxNewS(parent, flags, s);
+		free(s);
 	} else {
-		return AG_TextboxNewS(parent, flags, NULL);
+		tb = AG_TextboxNewS(parent, flags, NULL);
 	}
+	return (tb);
 }
 
 AG_Textbox *
@@ -253,6 +256,7 @@ AG_TextboxInt(AG_Textbox *tb)
 	return AG_EditableInt(tb->ed);
 }
 
+#ifdef HAVE_FLOAT
 float
 AG_TextboxFloat(AG_Textbox *tb)
 {
@@ -264,6 +268,7 @@ AG_TextboxDouble(AG_Textbox *tb)
 {
 	return AG_EditableDbl(tb->ed);
 }
+#endif
 
 static void
 Draw(void *_Nonnull p)

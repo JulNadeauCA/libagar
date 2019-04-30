@@ -3,6 +3,8 @@
 /*
  * Built-in unit conversion routines.
  */
+#include <agar/config/have_float.h>
+#ifdef HAVE_FLOAT
 
 /* TODO handle SI generically; registration interface */
 
@@ -580,3 +582,5 @@ const AG_Unit agDensityUnits[] = {
 	{ "kg/cm^3", "kg/cm\xc2\xb3", N_("Kilograms per cubic centimeters"), 1e3  },
 	{ NULL, NULL, NULL,                                                  0    }
 };
+
+#endif /* HAVE_FLOAT */

@@ -3,6 +3,10 @@
 #ifndef _AGAR_WIDGET_FSPINBUTTON_H_
 #define _AGAR_WIDGET_FSPINBUTTON_H_
 
+#include <agar/config/have_float.h>
+#include <agar/config/ag_legacy.h>
+#if defined(HAVE_FLOAT) && defined(AG_LEGACY)
+
 #include <agar/gui/widget.h>
 #include <agar/gui/textbox.h>
 #include <agar/gui/button.h>
@@ -56,4 +60,5 @@ void AG_FSpinbuttonSetWriteable(AG_FSpinbutton *_Nonnull, int);
 __END_DECLS
 
 #include <agar/gui/close.h>
+#endif /* HAVE_FLOAT and AG_LEGACY */
 #endif /* _AGAR_WIDGET_FSPINBUTTON_H_ */

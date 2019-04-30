@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,9 @@
 /*
  * LEGACY: Use AG_Numerical(3) instead of this widget.
  */
+#include <agar/config/ag_legacy.h>
+#include <agar/config/have_float.h>
+#if defined(AG_LEGACY) && defined(HAVE_FLOAT)
 
 #include <agar/config/_mk_have_strtoll.h>
 #include <agar/core/core.h>
@@ -658,3 +661,5 @@ AG_WidgetClass agFSpinbuttonClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_LEGACY and HAVE_FLOAT */

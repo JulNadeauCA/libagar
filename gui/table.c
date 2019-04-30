@@ -481,6 +481,7 @@ AG_TablePrintCell(const AG_TableCell *c, char *buf, AG_Size bufsz)
 	case AG_CELL_PULONG:
 		Snprintf(buf, bufsz, c->fmt, *(Ulong *)c->data.p);
 		break;
+#ifdef HAVE_FLOAT
 	case AG_CELL_FLOAT:
 		Snprintf(buf, bufsz, c->fmt, (float)c->data.f);
 		break;
@@ -493,6 +494,7 @@ AG_TablePrintCell(const AG_TableCell *c, char *buf, AG_Size bufsz)
 	case AG_CELL_PDOUBLE:
 		Snprintf(buf, bufsz, c->fmt, *(double *)c->data.p);
 		break;
+#endif
 #ifdef HAVE_64BIT
 	case AG_CELL_INT64:
 	case AG_CELL_UINT64:
@@ -544,7 +546,7 @@ AG_TablePrintCell(const AG_TableCell *c, char *buf, AG_Size bufsz)
 }
 
 static __inline__ void
-DrawCell(AG_Table *_Nonnull t, AG_TableCell *_Nonnull c, AG_Rect rd)
+DrawCell(AG_Table *_Nonnull t, AG_TableCell *_Nonnull c, const AG_Rect *rd)
 {
 	char txt[AG_TABLE_TXT_MAX];
 
@@ -567,11 +569,11 @@ DrawCell(AG_Table *_Nonnull t, AG_TableCell *_Nonnull c, AG_Rect rd)
 		goto blit;
 	case AG_CELL_FN_SU:
 		c->surface = AG_WidgetMapSurface(t,
-		    c->fnSu(c->data.p, rd.x, rd.y));
+		    c->fnSu(c->data.p, rd->x, rd->y));
 		goto blit;
 	case AG_CELL_FN_SU_NODUP:
 		c->surface = AG_WidgetMapSurfaceNODUP(t,
-		    c->fnSu(c->data.p, rd.x, rd.y));
+		    c->fnSu(c->data.p, rd->x, rd->y));
 		goto blit;
 	case AG_CELL_WIDGET:
 		if (WIDGET_OPS(c->data.p)->draw != NULL) {
@@ -594,8 +596,8 @@ DrawCell(AG_Table *_Nonnull t, AG_TableCell *_Nonnull c, AG_Rect rd)
 	c->surface = AG_WidgetMapSurface(t, AG_TextRender(txt));
 blit:
 	AG_WidgetBlitSurface(t, c->surface,
-	    rd.x,
-	    rd.y + (t->hRow >> 1) - (WSURFACE(t,c->surface)->h >> 1));
+	    rd->x,
+	    rd->y + (t->hRow >> 1) - (WSURFACE(t,c->surface)->h >> 1));
 }
 
 static void
@@ -760,7 +762,7 @@ Draw(void *_Nonnull obj)
 		     m++) {
 			AG_TableCell *c = &t->cells[m][n];
 
-			DrawCell(t, c, rCell);
+			DrawCell(t, c, &rCell);
 			if (c->selected) {
 				AG_DrawRectBlended(t, &rCell, &t->selColor,
 				    AG_ALPHA_SRC);
@@ -993,9 +995,11 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 		return (c1->data.l - c2->data.l);
 	case AG_CELL_ULONG:
 		return ((Ulong)c1->data.l - (Ulong)c2->data.l);
+#ifdef HAVE_FLOAT
 	case AG_CELL_FLOAT:
 	case AG_CELL_DOUBLE:
 		return (c1->data.f != c2->data.f);
+#endif
 #ifdef HAVE_64BIT
 	case AG_CELL_INT64:
 	case AG_CELL_UINT64:
@@ -1019,10 +1023,12 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 	case AG_CELL_PUINT32:
 	case AG_CELL_PSINT32:
 		return (*(Uint32 *)c1->data.p - *(Uint32 *)c2->data.p);
+#ifdef HAVE_FLOAT
 	case AG_CELL_PFLOAT:
 		return (*(float *)c1->data.p - *(float *)c2->data.p);
 	case AG_CELL_PDOUBLE:
 		return (*(double *)c1->data.p - *(double *)c2->data.p);
+#endif
 	case AG_CELL_POINTER:
 		return (c1->data.p != c2->data.p);
 	case AG_CELL_FN_SU:
@@ -2240,6 +2246,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				}
 			}
 			break;
+#ifdef HAVE_FLOAT
 		case 'f':
 		case 'g':
 			if (lflag) {
@@ -2258,6 +2265,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				}
 			}
 			break;
+#endif /* HAVE_FLOAT */
 		case 'p':
 			c->type = AG_CELL_POINTER;
 			c->data.p = va_arg(ap, void *);

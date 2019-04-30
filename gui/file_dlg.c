@@ -51,7 +51,6 @@
 # include <agar/core/win32.h>
 #else
 # include <sys/types.h>
-# include <sys/stat.h>
 # include <unistd.h>
 # include <string.h>
 # include <errno.h>
@@ -772,10 +771,16 @@ SelectedType(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
-	AG_FileType *ft = (it != NULL) ? it->p1 : TAILQ_FIRST(&fd->types);
+	AG_FileType *ft;
 	AG_FileOption *fo;
 	AG_Numerical *num;
 	AG_Textbox *tbox;
+
+	if (it != NULL) {
+		ft = it->p1;
+	} else {
+		ft = TAILQ_FIRST(&fd->types);
+	}
 
 	AG_ObjectLock(fd);
 	if (fd->optsCtr == NULL) {
@@ -798,6 +803,7 @@ SelectedType(AG_Event *_Nonnull event)
 			AG_BindInt(num, "min", &fo->data.i.min);
 			AG_BindInt(num, "max", &fo->data.i.max);
 			break;
+#ifdef HAVE_FLOAT
 		case AG_FILEDLG_FLOAT:
 			num = AG_NumericalNewS(fd->optsCtr, AG_NUMERICAL_HFILL,
 			    fo->unit, fo->descr);
@@ -812,6 +818,7 @@ SelectedType(AG_Event *_Nonnull event)
 			AG_BindDouble(num, "min", &fo->data.dbl.min);
 			AG_BindDouble(num, "max", &fo->data.dbl.max);
 			break;
+#endif
 		case AG_FILEDLG_STRING:
 			tbox = AG_TextboxNewS(fd->optsCtr,
 			    AG_TEXTBOX_EXCL|AG_TEXTBOX_HFILL,
@@ -1373,6 +1380,8 @@ AG_FileOptionNewInt(AG_FileType *ft, const char *descr, const char *key,
 	return (fto);
 }
 
+#ifdef HAVE_FLOAT
+
 AG_FileOption *
 AG_FileOptionNewFlt(AG_FileType *ft, const char *descr, const char *key,
     float dflt, float min, float max, const char *unit)
@@ -1414,6 +1423,8 @@ AG_FileOptionNewDbl(AG_FileType *ft, const char *descr, const char *key,
 	AG_ObjectUnlock(ft->fd);
 	return (fto);
 }
+
+#endif /* HAVE_FLOAT */
 
 AG_FileOption *
 AG_FileOptionNewString(AG_FileType *ft, const char *descr, const char *key,
@@ -1466,6 +1477,8 @@ AG_FileOptionBool(AG_FileType *ft, const char *key)
 	return AG_FileOptionInt(ft, key);
 }
 
+#ifdef HAVE_FLOAT
+
 float
 AG_FileOptionFlt(AG_FileType *ft, const char *key)
 {
@@ -1491,6 +1504,8 @@ AG_FileOptionDbl(AG_FileType *ft, const char *key)
 	AG_ObjectUnlock(ft->fd);
 	return (rv);
 }
+
+#endif /* HAVE_FLOAT */
 
 char *
 AG_FileOptionString(AG_FileType *ft, const char *key)

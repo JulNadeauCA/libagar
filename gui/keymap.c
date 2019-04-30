@@ -79,7 +79,7 @@ Insert(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, U
 	if (uch == '\r') { uch = '\n'; }
 
 	if (Strcasecmp(ed->encoding, "US-ASCII") == 0 &&
-	    !isascii((int)uch))
+	    (uch & ~0x7f) != 0)
 		return (0);
 
 	if (agTextComposition) {
