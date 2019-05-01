@@ -3,6 +3,8 @@
 #ifndef _AGAR_VG_H_
 #define _AGAR_VG_H_
 
+#include <agar/gui/text.h>
+
 #include <agar/vg/begin.h>
 
 #define VG_NAME_MAX		128

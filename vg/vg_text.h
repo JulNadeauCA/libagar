@@ -1,7 +1,5 @@
 /*	Public domain	*/
 
-#include <agar/gui/text.h>
-
 #define VG_TEXT_MAX       256
 #define VG_TEXT_MAX_PTRS  32
 #define VG_FONT_FACE_MAX  32
