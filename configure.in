@@ -135,12 +135,8 @@ c64 | c128 | geos | nes)
 	hdefine(_MK_LITTLE_ENDIAN, "yes")
 	hundef(_MK_BIG_ENDIAN)
 	;;
-*-darwin*)
-	# The native Cocoa driver requires Objective C.
-	check(objc)
-	;;
 *)
-	disable(objc)
+	check(objc)
 	if [ "${HAVE_FLOAT}" = "yes" -a "${with_float}" = "no" ]; then
 		echo "disabling floating-point support"
 		mdefine(HAVE_FLOAT, "no")

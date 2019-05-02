@@ -1576,7 +1576,7 @@ echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
 echo '#undef _MK_BIG_ENDIAN' >$bb_incdir/_mk_big_endian.h
 echo 'hdefs["_MK_BIG_ENDIAN"] = nil' >>configure.lua
 	;;
-*-darwin*)
+*)
 $ECHO_N 'checking for Objective-C compiler...'
 $ECHO_N 'checking for Objective-C compiler...' >>config.log
 # BEGIN objc
@@ -1756,17 +1756,6 @@ echo '#undef HAVE_OBJC_WARNINGS' >$bb_incdir/have_objc_warnings.h
 echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
 fi
 # END objc
-	;;
-*)
-echo 'not enabling Objective-C compiler'
-echo 'not enabling Objective-C compiler' >>config.log
-HAVE_OBJC="no"
-HAVE_OBJC_WARNINGS="no"
-TEST_OBJCFLAGS=""
-echo '#undef HAVE_OBJC' >$bb_incdir/have_objc.h
-echo 'hdefs["HAVE_OBJC"] = nil' >>configure.lua
-echo '#undef HAVE_OBJC_WARNINGS' >$bb_incdir/have_objc_warnings.h
-echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
 	if [ "${HAVE_FLOAT}" = "yes" -a "${with_float}" = "no" ]
  then
 		echo "disabling floating-point support"
