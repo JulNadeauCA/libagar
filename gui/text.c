@@ -89,7 +89,7 @@
 #include <agar/gui/icons.h>
 #include <agar/gui/fonts.h>
 #include <agar/gui/packedpixel.h>
-#if defined(HAVE_FONTCONFIG) && defined(HAVE_FLOAT)
+#ifdef HAVE_FLOAT
 #include <agar/gui/gui_math.h>
 #endif
 #if AG_MODEL != AG_SMALL
