@@ -168,7 +168,7 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 		colorkey = AG_MapPixel_RGB16(&S->format,
 		    tc->red, tc->green, tc->blue);
 #if AG_MODEL == AG_LARGE
-		Debug(NULL, "PNG transparent colorkey: 0x%lx\n", colorkey);
+		Debug(NULL, "PNG transparent colorkey: 0x%llx\n", colorkey);
 #else
 		Debug(NULL, "PNG transparent colorkey: 0x%x\n", colorkey);
 #endif

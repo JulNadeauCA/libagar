@@ -1471,7 +1471,7 @@ SDLFB_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 	dsw->depth = (Uint)drv->videoFmt->BitsPerPixel;
 
 #if AG_MODEL == AG_LARGE
-	Verbose(_("SDLFB: New display (%d-bpp; %08lx,%08lx,%08lx)\n"),
+	Verbose(_("SDLFB: New display (%d-bpp; %08llx,%08llx,%08llx)\n"),
 	     drv->videoFmt->BitsPerPixel, 
 	     drv->videoFmt->Rmask,
 	     drv->videoFmt->Gmask,
@@ -1539,7 +1539,7 @@ SDLFB_OpenVideoContext(void *_Nonnull obj, void *_Nonnull ctx, Uint flags)
 	dsw->depth = (Uint)pf->BitsPerPixel;
 
 #if AG_MODEL == AG_LARGE
-	Verbose(_("SDLFB: Using existing display (%d-bpp; %08lx,%08lx,%08lx)\n"),
+	Verbose(_("SDLFB: Using existing display (%d-bpp; %08llx,%08llx,%08llx)\n"),
 	     (int)pf->BitsPerPixel, 
 	     pf->Rmask,
 	     pf->Gmask,

@@ -992,7 +992,7 @@ AG_GetUint64(void *obj, const char *name)
 AG_Variable *
 AG_SetUint64(void *obj, const char *name, Uint64 v)
 {
-	Debug(obj, "Set \"%s\" -> (Sint64) 0x%lx\n", name, v);
+	Debug(obj, "Set \"%s\" -> (Sint64) 0x%llx\n", name, v);
 	FN_VARIABLE_SET(u64, Uint64, AG_VARIABLE_UINT64);
 }
 void
@@ -1004,7 +1004,7 @@ AG_InitUint64(AG_Variable *V, Uint64 v)
 AG_Variable *
 AG_BindUint64(void *obj, const char *name, Uint64 *v)
 {
-	Debug(obj, "Bind \"%s\" -> *(Sint64)%p (= 0x%lx)\n", name, v, *v);
+	Debug(obj, "Bind \"%s\" -> *(Sint64)%p (= 0x%llx)\n", name, v, *v);
 	FN_VARIABLE_BIND(AG_VARIABLE_P_UINT64);
 }
 AG_Variable *
@@ -1016,7 +1016,7 @@ AG_Variable *
 AG_BindUint64Mp(void *obj, const char *name, Uint64 *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_UINT64);
-	Debug(obj, "Bind \"%s\" -> *(Sint64)%p (= 0x%lx) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"%s\" -> *(Sint64)%p (= 0x%llx) mutex %p\n", name, v, *v, mutex);
 	return (V);
 }
 
@@ -1036,7 +1036,7 @@ AG_GetSint64(void *obj, const char *name)
 AG_Variable *
 AG_SetSint64(void *obj, const char *name, Sint64 v)
 {
-	Debug(obj, "Set \"%s\" -> (Sint64) 0x%lx\n", name, v);
+	Debug(obj, "Set \"%s\" -> (Sint64) 0x%llx\n", name, v);
 	FN_VARIABLE_SET(s64, Sint64, AG_VARIABLE_SINT64);
 }
 void
@@ -1048,7 +1048,7 @@ AG_InitSint64(AG_Variable *V, Sint64 v)
 AG_Variable *
 AG_BindSint64(void *obj, const char *name, Sint64 *v)
 {
-	Debug(obj, "Bind \"%s\" -> *(Sint64)%p (= 0x%lx)\n", name, v, *v);
+	Debug(obj, "Bind \"%s\" -> *(Sint64)%p (= 0x%llx)\n", name, v, *v);
 	FN_VARIABLE_BIND(AG_VARIABLE_P_SINT64);
 }
 AG_Variable *
@@ -1060,7 +1060,7 @@ AG_Variable *
 AG_BindSint64Mp(void *obj, const char *name, Sint64 *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_SINT64);
-	Debug(obj, "Bind \"%s\" -> *(Sint64)%p (= 0x%lx) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"%s\" -> *(Sint64)%p (= 0x%llx) mutex %p\n", name, v, *v, mutex);
 	return (V);
 }
 #endif /* HAVE_64BIT */
