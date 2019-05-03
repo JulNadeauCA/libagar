@@ -71,7 +71,7 @@ install-includes:
 
 deinstall-includes:
 	@echo "rm -rf ${INCLDIR}/agar"
-	${SUDO} rm -rf ${INCLDIR}/agar
+	@${SUDO} rm -rf ${INCLDIR}/agar
 	@echo "${DEINSTALL_INCL_DIR} ${INCLDIR}"
 	@-${SUDO} ${DEINSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}
 

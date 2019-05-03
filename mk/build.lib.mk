@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+# Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -326,7 +326,7 @@ lib${LIB}.so: ${SRCS_GENERATED} _lib_objs ${OBJS}
 	      -a "${USE_LIBTOOL}" = "No" -a "${SRCS}" != "" ]; then \
 	    case "${HOST}" in \
 	    *-darwin*) \
-	        _libout="lib${LIB}.dylib.${LIB_CURRENT}"; \
+	        _libout="lib${LIB}.${LIB_CURRENT}.dylib"; \
 	        _libnames="$$_libout lib${LIB}.dylib"; \
 		;; \
 	    *-mingw*) \
@@ -742,7 +742,21 @@ deinstall-lib: check-libtool
 	        ${SUDO} ${LIBTOOL} ${LIBTOOLOPTS} --mode=uninstall rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la; \
 	    else \
 	    	if [ "${LIB_SHARED}" = "Yes" ]; then \
-		    for F in lib${LIB}.so lib${LIB}.so.${LIB_CURRENT} lib${LIB}.so.${LIB_CURRENT}.${LIB_REVISION}.${LIB_AGE}; do \
+	            case "${HOST}" in \
+	            *-darwin*) \
+	                _libout="lib${LIB}.${LIB_CURRENT}.dylib"; \
+	                _libnames="$$_libout lib${LIB}.dylib"; \
+		        ;; \
+	            *-mingw*) \
+	                _libout="${LIB}.dll"; \
+	                _libnames="$$_libout"; \
+		        ;; \
+	            *) \
+	                _libout="lib${LIB}.so.${LIB_CURRENT}.${LIB_REVISION}.${LIB_AGE}"; \
+	                _libnames="$$_libout lib${LIB}.so.${LIB_CURRENT} lib${LIB}.so"; \
+	                ;; \
+	            esac; \
+		    for F in $$_libnames; do \
 	                echo "${DEINSTALL_LIB} ${LIBDIR}/$$F"; \
 	                ${SUDO} ${DEINSTALL_LIB} ${DESTDIR}${LIBDIR}/$$F; \
 		    done; \
