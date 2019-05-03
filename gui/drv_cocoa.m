@@ -979,6 +979,9 @@ COCOA_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r,
 	int i, count;
 	AG_SizeAlloc a;
 
+	if (depthReq == 0)
+		depthReq = 24;
+
 	AG_MutexLock(&co->lock);
 
 	/* Set the window style. */
@@ -1075,10 +1078,8 @@ COCOA_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r,
 
 	/* Create an OpenGL rendering context. */
 	i = 0;
-	if (depthReq != 0) {
-		pfAttr[i++] = NSOpenGLPFADepthSize;
-		pfAttr[i++] = depthReq;
-	}
+	pfAttr[i++] = NSOpenGLPFADepthSize;
+	pfAttr[i++] = depthReq;
 	pfAttr[i++] = NSOpenGLPFADoubleBuffer;
 	if (agStereo) { pfAttr[i++] = NSOpenGLPFAStereo; }
 	pfAttr[i] = 0;
