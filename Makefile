@@ -70,22 +70,8 @@ install-includes:
 	@${SUDO} ${INSTALL_INCL} include/agar/core/web.h ${DESTDIR}${INCLDIR}/agar/web.h
 
 deinstall-includes:
-	@-(cd include/agar && for DIR in ${INCDIR} config; do \
-	    echo "${SH} mk/deinstall-includes.sh $$DIR ${INCLDIR}/agar"; \
-	    ${SUDO} env \
-	      DESTDIR="${DESTDIR}" \
-	      DEINSTALL_INCL_DIR="${DEINSTALL_INCL_DIR}" \
-	      DEINSTALL_INCL="${DEINSTALL_INCL}" \
-	      ${SH} ${SRCDIR}/mk/deinstall-includes.sh $$DIR ${INCLDIR}/agar; \
-	done)
-	@for INC in ${INCDIR}; do \
-		echo "${DEINSTALL_INCL} ${INCLDIR}/agar/$${INC}.h"; \
-		${SUDO} ${DEINSTALL_INCL} ${DESTDIR}${INCLDIR}/agar/$${INC}.h; \
-	done
-	@echo "${DEINSTALL_INCL} ${INCLDIR}/agar/web.h"
-	@${SUDO} ${DEINSTALL_INCL} ${DESTDIR}${INCLDIR}/agar/web.h
-	@echo "${DEINSTALL_INCL_DIR} ${INCLDIR}/agar"
-	@-${SUDO} ${DEINSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}/agar
+	@echo "rm -rf ${INCLDIR}/agar"
+	${SUDO} rm -rf ${INCLDIR}/agar
 	@echo "${DEINSTALL_INCL_DIR} ${INCLDIR}"
 	@-${SUDO} ${DEINSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}
 
