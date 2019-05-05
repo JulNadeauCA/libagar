@@ -999,19 +999,15 @@ bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for i in $PATH; do
 if [ -x "${i}/cc65" ]; then
-if ${i}/cc65 -V |grep ^cc65; then
 CC="${i}/cc65"
 HAVE_CC65="yes"
 CROSS_COMPILING="yes"
 break
-fi
 elif [ -x "${i}/cc65.exe" ]; then
-if ${i}/cc65.exe -V |grep ^cc65; then
 CC="${i}/cc65.exe"
 HAVE_CC65="yes"
 CROSS_COMPILING="yes"
 break
-fi
 fi
 done
 IFS=$bb_save_IFS

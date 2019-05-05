@@ -132,11 +132,19 @@ regress: regress-subdir
 
 # Compile C code into an object file
 .c.o:
-	@_cflags=""; \
+	@_cflags=""; _out="$@"; \
 	if [ "${LIB_SHARED}" = "Yes" ]; then _cflags="${PICFLAGS}"; fi; \
 	if [ "${LIB_PROFILE}" = "Yes" ]; then _cflags="$$_cflags -pg -DPROF"; fi; \
-	echo "${CC} ${CFLAGS} ${CPPFLAGS} $$_cflags -o $@ ${CC_COMPILE} $<"; \
-	${CC} ${CFLAGS} ${CPPFLAGS} $$_cflags -o $@ ${CC_COMPILE} $<
+	if [ "${HAVE_CC65}" = "yes" ]; then _out=`echo "$@" | sed 's/.o$$/.s/'`; fi; \
+	\
+	echo "${CC} ${CFLAGS} ${CPPFLAGS} $$_cflags -o $$_out ${CC_COMPILE} $<"; \
+	${CC} ${CFLAGS} ${CPPFLAGS} $$_cflags -o $$_out ${CC_COMPILE} $<; \
+	\
+	if [ "${HAVE_CC65}" = "yes" ]; then \
+		echo "ca65 -o $@ $$_out"; \
+		ca65 -o $@ $$_out; \
+	fi
+
 .c.lo:
 	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
 	    ${CC} ${LIBTOOLFLAGS} ${CFLAGS} ${CPPFLAGS} -o $@ ${CC_COMPILE} $<
@@ -314,10 +322,17 @@ lib${LIB}.a: ${SRCS_GENERATED} _lib_objs ${OBJS}
 	    	    _objs="$$_objs $$F"; \
                 done; \
 	    fi; \
-	    echo "${AR} -cru lib${LIB}.a $$_objs"; \
-	    ${AR} -cru lib${LIB}.a $$_objs; \
-	    echo "${RANLIB} lib${LIB}.a"; \
-	    (${RANLIB} lib${LIB}.a || exit 0); \
+	    if [ "${HAVE_CC65}" = "yes" ]; then \
+	        echo "ar65 a ${LIB}.lib $$_objs"; \
+	        ar65 a ${LIB}.lib $$_objs; \
+		echo "cp ${LIB}.lib lib${LIB}.a"; \
+		cp ${LIB}.lib lib${LIB}.a; \
+	    else \
+	        echo "${AR} -cru lib${LIB}.a $$_objs"; \
+	        ${AR} -cru lib${LIB}.a $$_objs; \
+	        echo "${RANLIB} lib${LIB}.a"; \
+	        (${RANLIB} lib${LIB}.a || exit 0); \
+	    fi; \
 	fi
 
 # Build a shared library (without Libtool)
@@ -542,6 +557,10 @@ clean-lib:
 	@if [ "${SRCS_GENERATED}" != "" ]; then \
 	    echo "rm -f ${SRCS_GENERATED}"; \
 	    rm -f ${SRCS_GENERATED}; \
+	fi
+	@if [ "${HAVE_CC65}" = "yes" ]; then \
+	    echo "rm -f *.s"; \
+	    rm -f *.s; \
 	fi
 
 cleandir-lib:
