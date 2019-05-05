@@ -69,7 +69,6 @@
 #include <agar/core/snprintf.h>
 #include <agar/core/vsnprintf.h>
 #include <agar/core/vasprintf.h>
-#include <agar/core/asprintf.h>
 
 /* Internal MIN and MAX macros (note: inline code should use AG_{MIN,MAX}) */
 #ifndef MIN

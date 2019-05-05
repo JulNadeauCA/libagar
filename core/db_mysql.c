@@ -150,12 +150,14 @@ EncodeKey(const AG_Dbt *_Nonnull key)
 static int
 Exists(void *_Nonnull obj, const AG_Dbt *_Nonnull key)
 {
+	char q[64];
 	AG_DbMySQL *db = obj;
 	char *ks, *q;
 
 	ks = EncodeKey(key);
-	Asprintf(&q, AG_GetStringP(db,"get-cmd"), ks);
+	Snprintf(q, sizeof(q), AG_GetStringP(db,"get-cmd"), ks);
 	free(ks);
+
 	if (mysql_query(db->my, q) != 0) {
 		AG_SetError("Get: %s", mysql_error(db->my));
 		return (-1);

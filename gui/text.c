@@ -366,11 +366,16 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 			FcChar8 *filename;
 			FcMatrix *mat;
 			char *nameIn;
+			size_t nameLen;
 
+			nameLen = strlen(name)+8;
+			nameIn = Malloc(nameLen);
 			if ((*fontSize - floor(*fontSize)) > 0.0) {
-				Asprintf(&nameIn, "%s-%.2f", name, *fontSize);
+				Snprintf(nameIn, nameLen, "%s-%.2f",
+				    name, *fontSize);
 			} else {
-				Asprintf(&nameIn, "%s-%.0f", name, *fontSize);
+				Snprintf(nameIn, nameLen, "%s-%.0f",
+				    name, *fontSize);
 			}
 			Debug(font, "fontconfig query \"%s\"\n", nameIn);
 			if ((pattern = FcNameParse((FcChar8 *)nameIn)) == NULL ||

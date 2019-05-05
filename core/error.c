@@ -228,10 +228,17 @@ AG_Debug(void *p, const char *fmt, ...)
 		char *buf;
 
 		if (obj != NULL) {
+			size_t bufLen;
+
 			if (obj->name[0] != '\0') {
-				Asprintf(&buf, "%s: ", obj->name);
+				bufLen = strlen(obj->name)+3;
+				buf = Malloc(bufLen);
+				Strlcpy(buf, obj->name, bufLen);
+				Strlcat(buf, ": ", bufLen);
 			} else {
-				Asprintf(&buf, "<%p>: ", obj);
+				bufLen = strlen(obj->name)+5;
+				buf = Malloc(bufLen);
+				Snprintf(buf, bufLen, "<%p>: ", obj);
 			}
 			agDebugCallback(buf);
 			free(buf);

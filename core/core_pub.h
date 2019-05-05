@@ -11,7 +11,6 @@
 # include <agar/core/snprintf.h>
 # include <agar/core/vsnprintf.h>
 # include <agar/core/vasprintf.h>
-# include <agar/core/asprintf.h>
 #endif
 
 #include <agar/core/data_source.h>
