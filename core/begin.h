@@ -147,6 +147,18 @@
 #  define _AGAR_CORE_DEFINED_NULL
 # endif
 #endif
+#if !defined(AG_NULL)
+# if !defined(__MACH__)
+#  ifdef __cplusplus
+#   define AG_NULL 0
+#  else
+#   define AG_NULL ((void *)0)
+#  endif
+# else
+#  define AG_NULL NULL
+# endif
+#endif
+
 #if defined(__GNUC__) || defined(__CC65__)
 # define _Nonnull
 # define _Nullable
