@@ -255,14 +255,13 @@ fail:
 	return;
 }
 
-static int
+static void
 SaveObjectToFile(AG_Event *_Nonnull event)
 {
 	AG_Object *ob = AG_PTR(1);
 	char *path = AG_STRING(2);
 	int loadedTmp = 0;
 	int dataFound;
-	int rv = 0;
 
 	Verbose("Saving <%s> %s to %s...", OBJECT_CLASS(ob)->name,
 	    OBJECT(ob)->name, (path[0] != '\0') ? path : "VFS");
@@ -271,14 +270,14 @@ SaveObjectToFile(AG_Event *_Nonnull event)
 	if (!OBJECT_RESIDENT(ob)) {
 		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
 			if (dataFound)
-				return (-1);
+				goto fail;
 		}
 		AG_PostEvent(NULL, ob, "edit-post-load", NULL);
 		loadedTmp = 1;
 	}
 	if (AG_ObjectSaveToFile(ob, path) == -1) {
 		AG_SetError("%s: %s", ob->name, AG_GetError());
-		rv = -1;
+		goto fail;
 	}
 
 	Verbose("OK\n");
@@ -286,10 +285,12 @@ SaveObjectToFile(AG_Event *_Nonnull event)
 	if (loadedTmp) {
 		AG_ObjectReset(ob);
 	}
-	return (rv);
+	return;
+fail:
+	AG_TextMsgFromError();
 }
 
-static int
+static void
 ImportObject(AG_Event *_Nonnull event)
 {
 	AG_Object *ob = AG_PTR(1);
@@ -304,20 +305,23 @@ ImportObject(AG_Event *_Nonnull event)
 	if (!OBJECT_RESIDENT(ob)) {
 		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
 			if (dataFound)
-				return (-1);
+				goto fail;
 		}
 		loadedTmp = 1;
 		AG_PostEvent(NULL, ob, "edit-post-load", NULL);
 	}
 	if (AG_ObjectLoadFromFile(ob, path) == -1) {
 		AG_SetError("%s: %s", ob->name, AG_GetError());
+		goto fail;
 	}
 	Verbose("OK\n");
 
 	if (loadedTmp) {
 		AG_ObjectReset(ob);
 	}
-	return (0);
+	return;
+fail:
+	AG_TextMsgFromError();
 }
 
 AG_Window *
@@ -361,7 +365,7 @@ DEV_BrowserLoadFromDlg(void *p, const char *name)
 	}
 	AG_WindowSetCaption(win, _("Load %s from..."), ob->name);
 	fd = AG_FileDlgNewMRU(win, "dev.mru.object-import",
-	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_LOAD|AG_FILEDLG_EXPAND);
+	    AG_FILEDLG_CLOSEWIN | AG_FILEDLG_LOAD | AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, name, ext, ImportObject, "%p", ob);
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->cls->name);
 	AG_WindowShow(win);

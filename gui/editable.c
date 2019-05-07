@@ -1362,11 +1362,13 @@ MenuCut(AG_Event *_Nonnull event)
 		ReleaseBuffer(ed, buf);
 	}
 }
-static int
+static void
 MenuCutActive(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
-	return (!AG_EditableReadOnly(ed) && ed->sel != 0);
+	int *enable = AG_PTR(2);
+
+	*enable = (!AG_EditableReadOnly(ed) && ed->sel != 0);
 }
 
 static void
@@ -1380,11 +1382,13 @@ MenuCopy(AG_Event *_Nonnull event)
 		ReleaseBuffer(ed, buf);
 	}
 }
-static int
+static void
 MenuCopyActive(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
-	return (ed->sel != 0);
+	int *enable = AG_PTR(2);
+
+	*enable = (ed->sel != 0);
 }
 
 static void
@@ -1400,11 +1404,13 @@ MenuPaste(AG_Event *_Nonnull event)
 		ReleaseBuffer(ed, buf);
 	}
 }
-static int
+static void
 MenuPasteActive(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
-	return !AG_EditableReadOnly(ed) && agEditableClipbrd.len > 0;
+	int *enable = AG_PTR(2);
+
+	*enable = (!AG_EditableReadOnly(ed) && agEditableClipbrd.len > 0);
 }
 
 static void
@@ -1420,11 +1426,13 @@ MenuDelete(AG_Event *_Nonnull event)
 		ReleaseBuffer(ed, buf);
 	}
 }
-static int
+static void
 MenuDeleteActive(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
-	return (!AG_EditableReadOnly(ed) && ed->sel != 0);
+	int *enable = AG_PTR(2);
+
+	*enable = (!AG_EditableReadOnly(ed) && ed->sel != 0);
 }
 
 static void
@@ -1458,13 +1466,16 @@ PopupMenu(AG_Editable *_Nonnull ed)
 		return (NULL);
 	}
 	mi = AG_MenuAction(pm->root, _("Cut"), NULL, MenuCut, "%p", ed);
-	mi->stateFn = AG_SetIntFn(pm->menu, NULL, MenuCutActive, "%p", ed);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCutActive, "%p", ed);
+
 	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy, "%p", ed);
-	mi->stateFn = AG_SetIntFn(pm->menu, NULL, MenuCopyActive, "%p", ed);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCopyActive, "%p", ed);
+
 	mi = AG_MenuAction(pm->root, _("Paste"), NULL, MenuPaste, "%p", ed);
-	mi->stateFn = AG_SetIntFn(pm->menu, NULL, MenuPasteActive, "%p", ed);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuPasteActive, "%p", ed);
+
 	mi = AG_MenuAction(pm->root, _("Delete"), NULL, MenuDelete, "%p", ed);
-	mi->stateFn = AG_SetIntFn(pm->menu, NULL, MenuDeleteActive, "%p", ed);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuDeleteActive, "%p", ed);
 
 	AG_MenuSeparator(pm->root);
 

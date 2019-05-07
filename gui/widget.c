@@ -722,7 +722,7 @@ AG_ExecAction(void *obj, AG_Action *a)
 	switch (a->type) {
 	case AG_ACTION_FN:
 		if (a->fn != NULL) {
-			a->fn->fn.fnVoid(a->fn);
+			a->fn->fn(a->fn);
 			return (1);
 		}
 		return (0);

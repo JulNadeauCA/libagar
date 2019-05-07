@@ -11,7 +11,7 @@
 #include "config/datadir.h"
 
 /* Callback routine for AG_FileDlg. */
-static int
+static void
 LoadImage(AG_Event *event)
 {
 /*	AG_FileDlg *fd = AG_SELF(); */
@@ -29,15 +29,18 @@ LoadImage(AG_Event *event)
 	} else if (strcmp(ft->exts[0], "*.png") == 0) {
 		S = AG_SurfaceFromPNG(file);
 	} else {
-		AG_SetError("Unrecognized format: %s", ft->exts[0]);
-		return (-1);
+		AG_TextMsg(AG_MSG_ERROR, "Unrecognized format: %s", ft->exts[0]);
+		return;
 	}
-	if (S == NULL)
-		return (-1);
+	if (S == NULL) {
+		AG_TextMsgFromError();
+		return;
+	}
 
 	if ((win = AG_WindowNew(0)) == NULL) {
 		AG_SurfaceFree(S);
-		return (-1);
+		AG_TextMsgFromError();
+		return;
 	}
 	AG_WindowSetCaption(win, "Image <%s>", AG_ShortFilename(file));
 
@@ -72,7 +75,6 @@ LoadImage(AG_Event *event)
 	AG_WindowSetGeometry(win, -1, -1, 320, 240);
 	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
-	return (0);
 }
 
 static int

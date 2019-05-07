@@ -118,7 +118,8 @@ int  AG_FileDlgCheckWriteAccess(AG_FileDlg *_Nonnull);
 void AG_FileDlgRefresh(AG_FileDlg *_Nonnull);
 
 AG_FileType *_Nonnull AG_FileDlgAddType(AG_FileDlg *_Nonnull, const char *_Nonnull,
-					const char *_Nonnull, _Nullable AG_IntFn,
+					const char *_Nonnull,
+                                        _Nullable AG_EventFn,
 					const char *_Nullable, ...);
 			       
 AG_FileOption *_Nonnull AG_FileOptionNewBool(AG_FileType *_Nonnull,

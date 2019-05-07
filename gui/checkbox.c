@@ -214,7 +214,7 @@ Draw(void *_Nonnull obj)
 {
 	AG_Checkbox *cb = obj;
 	AG_Font *font = WIDGET(cb)->font;
-	AG_Variable *stateb;
+	AG_Variable *V;
 	void *p;
 	AG_Rect r;
 	int state;
@@ -225,23 +225,23 @@ Draw(void *_Nonnull obj)
 	r.h = HEIGHT(cb);
 	AG_PushClipRect(cb, &r);
 
-	stateb = AG_GetVariable(cb, "state", &p);
-	switch (AG_VARIABLE_TYPE(stateb)) {
+	V = AG_GetVariable(cb, "state", &p);
+	switch (AG_VARIABLE_TYPE(V)) {
 	case AG_VARIABLE_INT:
 	case AG_VARIABLE_UINT:
 		state = *(int *)p;
 		break;
 	case AG_VARIABLE_P_FLAG:
-		state = *(int *)p & (int)stateb->info.bitmask;
+		state = *(Uint *)p & V->info.bitmask.u;
 		break;
 	case AG_VARIABLE_P_FLAG8:
-		state = *(Uint8 *)p & (Uint8)stateb->info.bitmask;
+		state = *(Uint8 *)p & V->info.bitmask.u8;
 		break;
 	case AG_VARIABLE_P_FLAG16:
-		state = *(Uint16 *)p & (Uint16)stateb->info.bitmask;
+		state = *(Uint16 *)p & V->info.bitmask.u16;
 		break;
 	case AG_VARIABLE_P_FLAG32:
-		state = *(Uint32 *)p & (Uint32)stateb->info.bitmask;
+		state = *(Uint32 *)p & V->info.bitmask.u32;
 		break;
 	case AG_VARIABLE_UINT8:
 	case AG_VARIABLE_SINT8:
@@ -288,7 +288,7 @@ Draw(void *_Nonnull obj)
 	if (cb->lbl != NULL) {
 		AG_WidgetDraw(cb->lbl);
 	}
-	AG_UnlockVariable(stateb);
+	AG_UnlockVariable(V);
 
 	AG_PopClipRect(cb);
 }
@@ -334,12 +334,12 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 void
 AG_CheckboxToggle(AG_Checkbox *cb)
 {
-	AG_Variable *stateb;
+	AG_Variable *V;
 	void *p;
 
 	AG_ObjectLock(cb);
-	stateb = AG_GetVariable(cb, "state", &p);
-	switch (AG_VARIABLE_TYPE(stateb)) {
+	V = AG_GetVariable(cb, "state", &p);
+	switch (AG_VARIABLE_TYPE(V)) {
 	case AG_VARIABLE_INT:
 	case AG_VARIABLE_UINT:
 		{
@@ -351,16 +351,16 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 		break;
 	case AG_VARIABLE_P_FLAG:
 		{
-			int *state = (int *)p;
-			AG_INVFLAGS(*state, (int)stateb->info.bitmask);
+			Uint *state = (Uint *)p;
+			AG_INVFLAGS(*state, V->info.bitmask.u);
 			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
-			    (int)*state);
+			    (Uint)*state);
 		}
 		break;
 	case AG_VARIABLE_P_FLAG8:
 		{
 			Uint8 *state = (Uint8 *)p;
-			AG_INVFLAGS(*state, (Uint8)stateb->info.bitmask);
+			AG_INVFLAGS(*state, V->info.bitmask.u8);
 			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (Uint8)*state);
 		}
@@ -368,7 +368,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	case AG_VARIABLE_P_FLAG16:
 		{
 			Uint16 *state = (Uint16 *)p;
-			AG_INVFLAGS(*state, (Uint16)stateb->info.bitmask);
+			AG_INVFLAGS(*state, V->info.bitmask.u16);
 			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (Uint16)*state);
 		}
@@ -376,7 +376,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	case AG_VARIABLE_P_FLAG32:
 		{
 			Uint32 *state = (Uint32 *)p;
-			AG_INVFLAGS(*state, (Uint32)stateb->info.bitmask);
+			AG_INVFLAGS(*state, V->info.bitmask.u32);
 			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (Uint32)*state);
 		}
@@ -411,7 +411,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	default:
 		break;
 	}
-	AG_UnlockVariable(stateb);
+	AG_UnlockVariable(V);
 	AG_ObjectUnlock(cb);
 	AG_Redraw(cb);
 }

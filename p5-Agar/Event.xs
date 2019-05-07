@@ -74,8 +74,8 @@ void AP_EventHandlerDecRef(AG_Event *event)
 SV * AP_RetrieveEventPV(AG_Event *event)
 {
 	if (event == NULL) { return NULL; }
-	if (event->fn.fnVoid == AP_EventHandler ||
-	    event->fn.fnVoid == AP_EventHandlerDecRef) {
+	if (event->fn == AP_EventHandler ||
+	    event->fn == AP_EventHandlerDecRef) {
 		return AG_PTR(1);
 	}
 	return NULL;

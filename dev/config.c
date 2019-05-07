@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -113,12 +113,13 @@ DEV_ConfigShow(void)
 }
 
 #if 0
-static int
+static void
 LoadColorSchemeFromACS(AG_Event *_Nonnull event)
 {
 	char *file = AG_STRING(1);
 
-	return AG_ColorsLoad(file);
+	if (AG_ColorsLoad(file) == -1)
+		AG_TextMsgFromError();
 }
 
 static void
@@ -126,7 +127,8 @@ SaveColorSchemeToACS(AG_Event *_Nonnull event)
 {
 	char *file = AG_STRING(1);
 
-	return AG_ColorsSave(file);
+	if (AG_ColorsSave(file) == -1)
+		AG_TextMsgFromError();
 }
 
 static void

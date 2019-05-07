@@ -12,6 +12,7 @@
 #include "config/have_agar_au.h"
 #include "config/datadir.h"
 
+extern const AG_TestCase checkboxTest;
 extern const AG_TestCase charsetsTest;
 extern const AG_TestCase compositingTest;
 extern const AG_TestCase configSettingsTest;
@@ -52,6 +53,7 @@ extern const AG_TestCase windowsTest;
 
 const AG_TestCase *testCases[] = {
 	&charsetsTest,
+	&checkboxTest,
 	&compositingTest,
 	&configSettingsTest,
 	&consoleTest,

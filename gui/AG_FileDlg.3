@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2006-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -84,7 +84,7 @@ widget may be used instead.
 .Fn AG_FileDlgSetFilenameS "AG_FileDlg *file_dlg" "const char *filename"
 .Pp
 .Ft "AG_FileType *"
-.Fn AG_FileDlgAddType "AG_FileDlg *file_dlg" "const char *descr" "const char *exts" "int (*fn)(AG_Event *)" "const char *fnArgs" "..."
+.Fn AG_FileDlgAddType "AG_FileDlg *file_dlg" "const char *descr" "const char *exts" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
 .Ft "void"
 .Fn AG_FileDlgRefresh "AG_FileDlg *file_dlg"
@@ -171,17 +171,17 @@ The
 function sets the filename to initially display in the textbox.
 It is typically used in file saving dialogs.
 .Pp
-The
 .Fn AG_FileDlgAddType
-function registers a file format/extension, optionally associated with an
-event handler function (see
-.Xr AG_Event 3 )
-to invoke when a file of that type if selected.
+registers a new file format to recognize.
+If
+.Fa fn
+is non-NULL, it specifies the callback routine to be invoked whenever
+a file of this type is selected by the user.
 .Ft descr
 is a description of the file format and
 .Ft exts
-is a comma-separated list of file extensions to associate with the type, or
-an empty string.
+is a comma-separated list of file extensions to associate with the type
+(or otherwise an empty string).
 .Pp
 The
 .Fn AG_FileDlgRefresh
@@ -356,13 +356,17 @@ The
 .Nm
 widget generates the following events:
 .Bl -tag -width 2n
-.It Fn file-chosen "char *path" "AG_FileType *type"
+.It Fn file-chosen "char *path" "AG_FileType *type" "int *status"
 User has selected the given file.
 .Fa path
 is the full pathname to the file.
 If not NULL,
 .Fa type
-describes the file type that was selected by the user.
+describes the matching type of the file.
+If an error occurs,
+.Fa status
+may be set to -1 (and error text indicated by
+.Xr AG_SetError 3 ) .
 .It Fn file-selected "char *path"
 User has moved selection over the given file, where
 .Fa path

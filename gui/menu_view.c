@@ -201,21 +201,27 @@ MouseButtonUp(AG_Event *_Nonnull event)
 
 		y += m->itemh;
 		if (my < y && mx >= 0 && mx <= WIDTH(mview)) {
-			int fState = mi->stateFn ? mi->stateFn->fn.fnInt(mi->stateFn) :
-			                           mi->state;
+			int fState = mi->state;
+
+			if (mi->stateFn != NULL) {
+				AG_PostEventByPtr(NULL, m, mi->stateFn, "%p",
+				    &fState);
+			}
 			if (!fState) {
 				/* Nothing to do */
 			} else if (mi->clickFn != NULL) {
 				AG_MenuCollapseAll(m);
-				mi->clickFn->fn.fnVoid(mi->clickFn);
+				mi->clickFn->fn(mi->clickFn);
 			} else if (mi->bind_type != AG_MENU_NO_BINDING) {
-				if (mi->bind_lock != NULL) {
+#ifdef AG_THREADS
+				if (mi->bind_lock != NULL)
 					AG_MutexLock(mi->bind_lock);
-				}
+#endif
 				SetItemBoolValue(mi);
-				if (mi->bind_lock != NULL) {
+#ifdef AG_THREADS
+				if (mi->bind_lock != NULL)
 					AG_MutexUnlock(mi->bind_lock);
-				}
+#endif
 				AG_MenuCollapseAll(m);
 			}
 			AG_Redraw(mview);
@@ -299,8 +305,10 @@ Draw(void *_Nonnull obj)
 		AG_Color c;
 		int x = mv->lPad;
 		int boolState;
-		int fState = mi->stateFn ? mi->stateFn->fn.fnInt(mi->stateFn) :
-		                           mi->state;
+		int fState = mi->state;
+
+		if (mi->stateFn != NULL)
+			AG_PostEventByPtr(NULL, m, mi->stateFn, "%p", &fState);
 
 		/* Update dynamic item if needed. */
 		AG_MenuUpdateItem(mi);

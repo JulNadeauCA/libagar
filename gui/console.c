@@ -233,33 +233,37 @@ MenuCopy(AG_Event *_Nonnull event)
 	}
 	free(s);
 }
-static int
+static void
 MenuCopyActive(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_PTR(1);
-	return (cons->pos != -1) ? 1 : 0;
+	int *status = AG_PTR(2);
+
+	*status = (cons->pos != -1) ? 1 : 0;
 }
 
-static int
+static void
 MenuExportToFileTXT(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_PTR(1);
-	char *path = AG_STRING(2);
-	char *s;
+	char *path = AG_STRING(2), *s;
 	FILE *f;
 
 	if ((s = AG_ConsoleExportText(cons, 1)) == NULL) {
-		return (-1);
+		goto fail;
 	}
 	if ((f = fopen(path, "wb")) == NULL) {
 		AG_SetError("%s: %s", path, AG_Strerror(errno));
 		free(s);
-		return (-1);
+		goto fail;
 	}
 	fwrite(s, strlen(s), 1, f);
 	fclose(f);
 	free(s);
-	return (0);
+	AG_TextTmsg(AG_MSG_INFO, 2000, _("Saved successfully to %s"), path);
+	return;
+fail:
+	AG_TextMsgFromError();
 }
 static void
 MenuExportToFileDlg(AG_Event *_Nonnull event)
@@ -274,9 +278,11 @@ MenuExportToFileDlg(AG_Event *_Nonnull event)
 	}
 	AG_WindowSetCaptionS(win, _("Export to text file..."));
 
-	fd = AG_FileDlgNew(win, AG_FILEDLG_SAVE|AG_FILEDLG_CLOSEWIN|
+	fd = AG_FileDlgNew(win, AG_FILEDLG_SAVE | AG_FILEDLG_CLOSEWIN |
 	                        AG_FILEDLG_EXPAND);
+
 	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));
+
 	AG_GetString(AG_ConfigObject(), "save-path", path, sizeof(path));
 	AG_FileDlgSetDirectoryMRU(fd, "agar.console.export-dir", path);
 	
@@ -347,7 +353,7 @@ PopupMenu(AG_Event *_Nonnull event)
 		return;
 	}
 	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy, "%p", cons);
-	mi->stateFn = AG_SetIntFn(pm->menu, NULL, MenuCopyActive, "%p", cons);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCopyActive, "%p", cons);
 
 	AG_MenuAction(pm->root, _("Export to file..."), NULL,
 	    MenuExportToFileDlg, "%p", cons);

@@ -12,6 +12,7 @@
 struct ag_console;
 struct ag_popup_menu;
 
+/* TODO: timestamps, markup */
 typedef struct ag_console_line {
 	char *_Nonnull text;		  /* Line text */
 	AG_Size len;			  /* Size in bytes excluding NUL */

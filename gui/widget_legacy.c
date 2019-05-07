@@ -176,7 +176,7 @@ AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
 	}
 	V->type = type;
 	V->mutex = NULL;
-	V->fn.fnVoid = NULL;
+	V->fn = NULL;
 	
 	va_start(ap, type);
 	switch (type) {

@@ -46,15 +46,16 @@ typedef struct ag_menu_item {
 		AG_MENU_INT16_FLAGS,
 		AG_MENU_INT32_FLAGS
 	} bind_type;
-	void *_Nullable bind_p;			       /* Pointer to data */
-	Uint32 bind_flags;			       /* Bitmask (for FLAGS) */
-	int bind_invert;			       /* Inverted value */
+	void *_Nullable bind_p;	       /* Pointer to data */
+	Uint32 bind_flags;	       /* Bitmask (for FLAGS) */
+	int bind_invert;	       /* Inverted value */
+#ifdef AG_THREADS
 	_Nullable_Mutex AG_Mutex *_Nullable bind_lock; /* Lock on data */
-
-	struct ag_menu_view *_Nullable view;        /* Back pointer to view (subitems) */
+#endif
+	struct ag_menu_view *_Nullable view;        /* Parent view (subitems) */
 	struct ag_menu *_Nullable      pmenu;       /* Parent menu */
 	struct ag_menu_item *_Nullable sel_subitem; /* Selected subitem */
-	struct ag_button *_Nullable    tbButton;    /* Associated toolbar button */
+	struct ag_button *_Nullable    tbButton;    /* Related toolbar button */
 	struct ag_menu_item *_Nullable parent;      /* Parent MenuItem if any */
 
 	AG_TAILQ_ENTRY(ag_menu_item) items;	/* In parent */

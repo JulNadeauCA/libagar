@@ -428,16 +428,16 @@ GetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull binding,
 		v = (int)(*(Uint32 *)p);
 		break;
 	case AG_VARIABLE_P_FLAG:
-		v = (*(int *)p & (int)binding->info.bitmask);
+		v = (int)(*(Uint *)p & binding->info.bitmask.u);
 		break;
 	case AG_VARIABLE_P_FLAG8:
-		v = (int)(*(Uint8 *)p & (Uint8)binding->info.bitmask);
+		v = (int)(*(Uint8 *)p & binding->info.bitmask.u8);
 		break;
 	case AG_VARIABLE_P_FLAG16:
-		v = (int)(*(Uint16 *)p & (Uint16)binding->info.bitmask);
+		v = (int)(*(Uint16 *)p & binding->info.bitmask.u16);
 		break;
 	case AG_VARIABLE_P_FLAG32:
-		v = (int)(*(Uint32 *)p & (Uint32)binding->info.bitmask);
+		v = (int)(*(Uint32 *)p & binding->info.bitmask.u32);
 		break;
 	default:
 		v = 0;
@@ -467,16 +467,16 @@ SetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull binding,
 		*(Uint32 *)p = v;
 		break;
 	case AG_VARIABLE_P_FLAG:
-		AG_SETFLAGS(*(int *)p, (int)binding->info.bitmask, v);
+		AG_SETFLAGS(*(Uint *)p, binding->info.bitmask.u, v);
 		break;
 	case AG_VARIABLE_P_FLAG8:
-		AG_SETFLAGS(*(Uint8 *)p, (Uint8)binding->info.bitmask, v);
+		AG_SETFLAGS(*(Uint8 *)p, binding->info.bitmask.u8, v);
 		break;
 	case AG_VARIABLE_P_FLAG16:
-		AG_SETFLAGS(*(Uint16 *)p, (Uint16)binding->info.bitmask, v);
+		AG_SETFLAGS(*(Uint16 *)p, binding->info.bitmask.u16, v);
 		break;
 	case AG_VARIABLE_P_FLAG32:
-		AG_SETFLAGS(*(Uint32 *)p, (Uint32)binding->info.bitmask, v);
+		AG_SETFLAGS(*(Uint32 *)p, binding->info.bitmask.u32, v);
 		break;
 	default:
 		break;

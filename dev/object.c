@@ -88,6 +88,7 @@ PollDeps(AG_Event *_Nonnull event)
 static void
 PollVariables(AG_Event *_Nonnull event)
 {
+	char val[64];
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *ob = AG_PTR(1);
 	AG_Variable *V;
@@ -97,14 +98,8 @@ PollVariables(AG_Event *_Nonnull event)
 		AG_TlistItem *ti;
 
 		AG_LockVariable(V);
-		if (V->fn.fnVoid != NULL &&
-		    AG_EvalVariable(ob, V) == -1) {
-			ti = AG_TlistAdd(tl, NULL, "%s = <eval failed>", V->name);
-		} else {
-			char val[256];
-			AG_PrintVariable(val, sizeof(val), V);
-			ti = AG_TlistAdd(tl, NULL, "%s = %s", V->name, val);
-		}
+		AG_PrintVariable(val, sizeof(val), V);
+		ti = AG_TlistAdd(tl, NULL, "%s = %s", V->name, val);
 		ti->p1 = V;
 		AG_UnlockVariable(V);
 	}

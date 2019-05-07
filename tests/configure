@@ -840,19 +840,15 @@ bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for i in $PATH; do
 if [ -x "${i}/cc65" ]; then
-if ${i}/cc65 -V |grep ^cc65; then
 CC="${i}/cc65"
 HAVE_CC65="yes"
 CROSS_COMPILING="yes"
 break
-fi
 elif [ -x "${i}/cc65.exe" ]; then
-if ${i}/cc65.exe -V |grep ^cc65; then
 CC="${i}/cc65.exe"
 HAVE_CC65="yes"
 CROSS_COMPILING="yes"
 break
-fi
 fi
 done
 IFS=$bb_save_IFS
@@ -1385,17 +1381,24 @@ fi
 if [ "${HAVE_CC}" != "yes" ]; then
 echo '* '
 echo '* ' >>config.log
-echo '* This software requires cc installed on your system.'
-echo '* This software requires cc installed on your system.' >>config.log
+echo '* This software requires a C compiler'
+echo '* This software requires a C compiler' >>config.log
 echo '* '
 echo '* ' >>config.log
-echo "configure failed!"
+echo "Required dependency cc not found"
 exit 1
 fi
 $ECHO_N 'checking for Agar...'
 $ECHO_N 'checking for Agar...' >>config.log
 # BEGIN agar(1.5.0 ${prefix_agar})
 AGAR_VERSION=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_VERSION=`${prefix_agar}/bin/agar-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -1412,6 +1415,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 if [ "${AGAR_VERSION}" != "" ]; then
 if [ "${prefix_agar}" != "" ]; then
 echo "yes ($AGAR_VERSION in ${prefix_agar})"
@@ -1465,6 +1469,13 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether Agar works...'
 $ECHO_N 'checking whether Agar works...' >>config.log
 AGAR_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -1481,7 +1492,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 AGAR_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -1498,6 +1517,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.c
 #include <agar/core.h>
@@ -1507,7 +1527,7 @@ int
 main(int argc, char *argv[])
 {
 	AG_InitCore("conf-test", 0);
-	AG_InitGraphics(NULL);
+	AG_InitGraphics(AG_NULL);
 	AG_EventLoop();
 	AG_Quit();
 	return (0);
@@ -1571,13 +1591,13 @@ fi
 if [ "${HAVE_AGAR}" != "yes" ]; then
 echo '* '
 echo '* ' >>config.log
-echo '* This software requires agar installed on your system.'
-echo '* This software requires agar installed on your system.' >>config.log
-echo '* It is available from: http://libagar.org'
-echo '* It is available from: http://libagar.org' >>config.log
+echo "* $PACKAGE requires Agar (version 1.5.0 or newer)."
+echo "* $PACKAGE requires Agar (version 1.5.0 or newer)." >>config.log
+echo '* WWW: http://libagar.org'
+echo '* WWW: http://libagar.org' >>config.log
 echo '* '
 echo '* ' >>config.log
-echo "configure failed!"
+echo "Required dependency agar not found"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -1585,19 +1605,26 @@ echo '* '
 echo '* ' >>config.log
 echo '* This software requires agar version >= 1.5.0,'
 echo '* This software requires agar version >= 1.5.0,' >>config.log
-echo '* please upgrade and try again.'
-echo '* please upgrade and try again.' >>config.log
-echo '* agar should be available from: http://libagar.org'
-echo '* agar should be available from: http://libagar.org' >>config.log
+echo '* please update that package and try again.'
+echo '* please update that package and try again.' >>config.log
+echo '* WWW: http://libagar.org'
+echo '* WWW: http://libagar.org' >>config.log
 echo '* '
 echo '* ' >>config.log
-echo "configure failed!"
+echo "Required dependency agar version mismatch"
 exit 1
 fi
 $ECHO_N 'checking for Agar-DEV...'
 $ECHO_N 'checking for Agar-DEV...' >>config.log
 # BEGIN agar-dev(1.5.0 ${prefix_agar})
 AGAR_DEV_VERSION=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-dev-config" ]; then
+AGAR_DEV_VERSION=`${prefix_agar}/bin/agar-dev-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-dev-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -1614,6 +1641,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 if [ "${AGAR_DEV_VERSION}" != "" ]; then
 if [ "${prefix_agar}" != "" ]; then
 echo "yes ($AGAR_DEV_VERSION in ${prefix_agar})"
@@ -1667,6 +1695,13 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether Agar-DEV works...'
 $ECHO_N 'checking whether Agar-DEV works...' >>config.log
 AGAR_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -1683,7 +1718,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 AGAR_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -1700,7 +1743,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 AGAR_DEV_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-dev-config" ]; then
+AGAR_DEV_CFLAGS=`${prefix_agar}/bin/agar-dev-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-dev-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -1717,7 +1768,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 AGAR_DEV_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-dev-config" ]; then
+AGAR_DEV_LIBS=`${prefix_agar}/bin/agar-dev-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-dev-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -1734,6 +1793,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.c
 #include <agar/core.h>
@@ -1808,13 +1868,13 @@ fi
 if [ "${HAVE_AGAR_DEV}" != "yes" ]; then
 echo '* '
 echo '* ' >>config.log
-echo '* This software requires agar-dev installed on your system.'
-echo '* This software requires agar-dev installed on your system.' >>config.log
-echo '* It is available from: http://libagar.org'
-echo '* It is available from: http://libagar.org' >>config.log
+echo "* $PACKAGE requires Agar-DEV (version 1.5.0 or newer)."
+echo "* $PACKAGE requires Agar-DEV (version 1.5.0 or newer)." >>config.log
+echo '* WWW: http://libagar.org'
+echo '* WWW: http://libagar.org' >>config.log
 echo '* '
 echo '* ' >>config.log
-echo "configure failed!"
+echo "Required dependency agar-dev not found"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -1822,19 +1882,26 @@ echo '* '
 echo '* ' >>config.log
 echo '* This software requires agar-dev version >= 1.5.0,'
 echo '* This software requires agar-dev version >= 1.5.0,' >>config.log
-echo '* please upgrade and try again.'
-echo '* please upgrade and try again.' >>config.log
-echo '* agar-dev should be available from: http://libagar.org'
-echo '* agar-dev should be available from: http://libagar.org' >>config.log
+echo '* please update that package and try again.'
+echo '* please update that package and try again.' >>config.log
+echo '* WWW: http://libagar.org'
+echo '* WWW: http://libagar.org' >>config.log
 echo '* '
 echo '* ' >>config.log
-echo "configure failed!"
+echo "Required dependency agar-dev version mismatch"
 exit 1
 fi
 $ECHO_N 'checking for Agar-Math...'
 $ECHO_N 'checking for Agar-Math...' >>config.log
 # BEGIN agar-math(1.5.0 ${prefix_agar})
 AGAR_MATH_VERSION=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-math-config" ]; then
+AGAR_MATH_VERSION=`${prefix_agar}/bin/agar-math-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-math-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -1851,6 +1918,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 if [ "${AGAR_MATH_VERSION}" != "" ]; then
 if [ "${prefix_agar}" != "" ]; then
 echo "yes ($AGAR_MATH_VERSION in ${prefix_agar})"
@@ -1904,6 +1972,13 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether Agar-Math works...'
 $ECHO_N 'checking whether Agar-Math works...' >>config.log
 AGAR_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -1920,7 +1995,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 AGAR_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -1937,7 +2020,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 AGAR_MATH_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-math-config" ]; then
+AGAR_MATH_CFLAGS=`${prefix_agar}/bin/agar-math-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-math-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -1954,7 +2045,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 AGAR_MATH_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-math-config" ]; then
+AGAR_MATH_LIBS=`${prefix_agar}/bin/agar-math-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-math-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -1971,6 +2070,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.c
 #include <agar/core.h>
@@ -2043,13 +2143,13 @@ fi
 if [ "${HAVE_AGAR_MATH}" != "yes" ]; then
 echo '* '
 echo '* ' >>config.log
-echo '* This software requires agar-math installed on your system.'
-echo '* This software requires agar-math installed on your system.' >>config.log
-echo '* It is available from: http://libagar.org'
-echo '* It is available from: http://libagar.org' >>config.log
+echo "* $PACKAGE requires Agar-Math (version 1.5.0 or newer)."
+echo "* $PACKAGE requires Agar-Math (version 1.5.0 or newer)." >>config.log
+echo '* WWW: http://libagar.org'
+echo '* WWW: http://libagar.org' >>config.log
 echo '* '
 echo '* ' >>config.log
-echo "configure failed!"
+echo "Required dependency agar-math not found"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -2057,19 +2157,26 @@ echo '* '
 echo '* ' >>config.log
 echo '* This software requires agar-math version >= 1.5.0,'
 echo '* This software requires agar-math version >= 1.5.0,' >>config.log
-echo '* please upgrade and try again.'
-echo '* please upgrade and try again.' >>config.log
-echo '* agar-math should be available from: http://libagar.org'
-echo '* agar-math should be available from: http://libagar.org' >>config.log
+echo '* please update that package and try again.'
+echo '* please update that package and try again.' >>config.log
+echo '* WWW: http://libagar.org'
+echo '* WWW: http://libagar.org' >>config.log
 echo '* '
 echo '* ' >>config.log
-echo "configure failed!"
+echo "Required dependency agar-math version mismatch"
 exit 1
 fi
 $ECHO_N 'checking for Agar-VG...'
 $ECHO_N 'checking for Agar-VG...' >>config.log
 # BEGIN agar-vg(1.5.0 ${prefix_agar})
 AGAR_VG_VERSION=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-vg-config" ]; then
+AGAR_VG_VERSION=`${prefix_agar}/bin/agar-vg-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-vg-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -2086,6 +2193,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 if [ "${AGAR_VG_VERSION}" != "" ]; then
 if [ "${prefix_agar}" != "" ]; then
 echo "yes ($AGAR_VG_VERSION in ${prefix_agar})"
@@ -2139,6 +2247,13 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether agar-vg works...'
 $ECHO_N 'checking whether agar-vg works...' >>config.log
 AGAR_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -2155,7 +2270,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 AGAR_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -2172,7 +2295,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 AGAR_VG_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-vg-config" ]; then
+AGAR_VG_CFLAGS=`${prefix_agar}/bin/agar-vg-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-vg-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -2189,7 +2320,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 AGAR_VG_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-vg-config" ]; then
+AGAR_VG_LIBS=`${prefix_agar}/bin/agar-vg-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-vg-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -2206,6 +2345,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.c
 #include <agar/core.h>
@@ -2276,6 +2416,13 @@ $ECHO_N 'checking for Agar-AU...'
 $ECHO_N 'checking for Agar-AU...' >>config.log
 # BEGIN agar-au(1.5.0 ${prefix_agar})
 AGAR_AU_VERSION=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-au-config" ]; then
+AGAR_AU_VERSION=`${prefix_agar}/bin/agar-au-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-au-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -2292,6 +2439,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 if [ "${AGAR_AU_VERSION}" != "" ]; then
 if [ "${prefix_agar}" != "" ]; then
 echo "yes ($AGAR_AU_VERSION in ${prefix_agar})"
@@ -2345,6 +2493,13 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether agar-au works...'
 $ECHO_N 'checking whether agar-au works...' >>config.log
 AGAR_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -2361,7 +2516,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 AGAR_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -2378,7 +2541,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 AGAR_AU_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-au-config" ]; then
+AGAR_AU_CFLAGS=`${prefix_agar}/bin/agar-au-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-au-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -2395,7 +2566,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 AGAR_AU_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-au-config" ]; then
+AGAR_AU_LIBS=`${prefix_agar}/bin/agar-au-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-au-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -2412,6 +2591,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.c
 #include <agar/core.h>

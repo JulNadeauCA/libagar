@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -366,9 +366,11 @@ ReplaceFileDlg(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull pwin)
 	AG_Button *btn;
 	AG_HBox *hb;
 
-	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOTITLE);
+	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
+
 	AG_LabelNew(win, 0, _("File %s exists. Overwrite?"), fd->cfile);
+
 	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 	{
 		AG_ButtonNewFn(hb, 0, _("Yes"),
@@ -1023,8 +1025,7 @@ AG_FileDlgNew(void *parent, Uint flags)
 	/* File type selector */
 	if (!(flags & AG_FILEDLG_NOTYPESELECT)) {
 		fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
-		AG_SetEvent(fd->comTypes, "combo-selected",
-		    SelectedType, "%p", fd);
+		AG_SetEvent(fd->comTypes, "combo-selected", SelectedType,"%p",fd);
 	}
 	/* "Mask files" checkboxes. */
 	if (!(flags & AG_FILEDLG_NOMASKOPTS)) {
@@ -1045,6 +1046,7 @@ AG_FileDlgNew(void *parent, Uint flags)
 	if (!(flags & AG_FILEDLG_NOBUTTONS)) {
 		fd->btnOk = AG_ButtonNewS(fd, 0, _("OK"));
 		AG_SetEvent(fd->btnOk, "button-pushed", PressedOK, "%p", fd);
+
 		fd->btnCancel = AG_ButtonNewS(fd, 0, _("Cancel"));
 		AG_SetEvent(fd->btnCancel, "button-pushed", PressedCancel, "%p", fd);
 	}
@@ -1214,7 +1216,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_FileDlg *fd = obj;
 	AG_SizeReq r;
 	AG_SizeAlloc aChld;
-	int hBtn = 0, wBtn = a->w/2;
+	int hBtn = 0, wBtn = (a->w >> 1);
 
 	if (!(fd->flags & AG_FILEDLG_NOBUTTONS)) {
 		AG_WidgetSizeReq(fd->btnOk, &r);
@@ -1285,17 +1287,17 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		aChld.h = hBtn;
 		AG_WidgetSizeAlloc(fd->btnOk, &aChld);
 		aChld.x = wBtn;
-		if (wBtn*2 < a->w) { aChld.w++; }
+		if ((wBtn << 1) < a->w) { aChld.w++; }
 		aChld.h = hBtn;
 		AG_WidgetSizeAlloc(fd->btnCancel, &aChld);
 	}
 	return (0);
 }
 
-/* Register a new file type. */
+/* Register a new file type and callback function. */
 AG_FileType *
 AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
-    AG_IntFn fn, const char *fmt, ...)
+    AG_EventFn fn, const char *fmt, ...)
 {
 	AG_FileType *ft;
 	char *dexts, *ds, *ext;
@@ -1318,7 +1320,7 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 	AG_ObjectLock(fd);
 
 	if (fn != NULL) {
-		ft->action = AG_SetIntFn(fd, NULL, fn, NULL);
+		ft->action = AG_SetEvent(fd, NULL, fn, NULL);
 		AG_EVENT_GET_ARGS(ft->action, fmt);
 #ifdef AG_THREADS
 		if (fd->flags & AG_FILEDLG_ASYNC)

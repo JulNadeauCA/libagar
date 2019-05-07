@@ -418,7 +418,9 @@ CreateItem(AG_MenuItem *_Nullable miParent, const char *_Nullable text,
 	mi->bind_type = AG_MENU_NO_BINDING;
 	mi->bind_flags = 0;
 	mi->bind_invert = 0;
+#ifdef AG_THREADS
 	mi->bind_lock = NULL;
+#endif
 	if (text != NULL) {
 		mi->text = Strdup(text);
 	} else {
@@ -830,12 +832,17 @@ AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	mi->bind_type = AG_MENU_INT_BOOL;
 	mi->bind_p = (void *)pBool;
 	mi->bind_invert = inv;
+#ifdef AG_THREADS
 	mi->bind_lock = lock;
+#endif
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
+#ifdef AG_THREADS
 		if (lock != NULL) {
 			AG_BindIntMp(mi->tbButton, "state", pBool, lock);
-		} else {
+		} else
+#endif
+		{
 			AG_BindInt(mi->tbButton, "state", pBool);
 		}
 		AG_ButtonInvertState(mi->tbButton, inv);
@@ -855,12 +862,17 @@ AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	mi->bind_type = AG_MENU_INT8_BOOL;
 	mi->bind_p = (void *)pBool;
 	mi->bind_invert = inv;
+#ifdef AG_THREADS
 	mi->bind_lock = lock;
+#endif
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
+#ifdef AG_THREADS
 		if (lock != NULL) {
 			AG_BindUint8Mp(mi->tbButton, "state", pBool, lock);
-		} else {
+		} else
+#endif
+		{
 			AG_BindUint8(mi->tbButton, "state", pBool);
 		}
 		AG_ButtonInvertState(mi->tbButton, inv);
@@ -881,13 +893,18 @@ AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	mi->bind_p = (void *)pFlags;
 	mi->bind_flags = flags;
 	mi->bind_invert = inv;
+#ifdef AG_THREADS
 	mi->bind_lock = lock;
+#endif
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
+#ifdef AG_THREADS
 		if (lock != NULL) {
 			AG_BindFlagMp(mi->tbButton, "state", (Uint *)pFlags,
 			    (Uint)flags, lock);
-		} else {
+		} else
+#endif
+		{
 			AG_BindFlag(mi->tbButton, "state", (Uint *)pFlags,
 			    (Uint)flags);
 		}
@@ -909,12 +926,17 @@ AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	mi->bind_p = (void *)pFlags;
 	mi->bind_flags = flags;
 	mi->bind_invert = inv;
+#ifdef AG_THREADS
 	mi->bind_lock = lock;
+#endif
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
+#ifdef AG_THREADS
 		if (lock != NULL) {
 			AG_BindFlag8Mp(mi->tbButton, "state", pFlags, flags, lock);
-		} else {
+		} else
+#endif
+		{
 			AG_BindFlag8(mi->tbButton, "state", pFlags, flags);
 		}
 		AG_ButtonInvertState(mi->tbButton, inv);
@@ -935,13 +957,18 @@ AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 	mi->bind_p = (void *)pFlags;
 	mi->bind_flags = flags;
 	mi->bind_invert = inv;
+#ifdef AG_THREADS
 	mi->bind_lock = lock;
+#endif
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
+#ifdef AG_THREADS
 		if (lock != NULL) {
 			AG_BindFlag16Mp(mi->tbButton, "state", pFlags, flags,
 			    lock);
-		} else {
+		} else
+#endif
+		{
 			AG_BindFlag16(mi->tbButton, "state", pFlags, flags);
 		}
 		AG_ButtonInvertState(mi->tbButton, inv);
@@ -962,13 +989,18 @@ AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 	mi->bind_p = (void *)pFlags;
 	mi->bind_flags = flags;
 	mi->bind_invert = inv;
+#ifdef AG_THREADS
 	mi->bind_lock = lock;
+#endif
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
+#ifdef AG_THREADS
 		if (lock != NULL) {
 			AG_BindFlag32Mp(mi->tbButton, "state", pFlags, flags,
 			    lock);
-		} else {
+		} else
+#endif
+		{
 			AG_BindFlag32(mi->tbButton, "state", pFlags, flags);
 		}
 		AG_ButtonInvertState(mi->tbButton, inv);
@@ -984,11 +1016,16 @@ AG_MenuSetIntBoolMp(AG_MenuItem *mi, int *pBool, int inv, AG_Mutex *lock)
 	mi->bind_type = AG_MENU_INT_BOOL;
 	mi->bind_p = (void *)pBool;
 	mi->bind_invert = inv;
+#ifdef AG_THREADS
 	mi->bind_lock = lock;
+#endif
 	if (mi->tbButton != NULL) {
+#ifdef AG_THREADS
 		if (lock != NULL) {
 			AG_BindIntMp(mi->tbButton, "state", pBool, lock);
-		} else {
+		} else
+#endif
+		{
 			AG_BindInt(mi->tbButton, "state", pBool);
 		}
 		AG_ButtonInvertState(mi->tbButton, inv);
@@ -1006,12 +1043,17 @@ AG_MenuSetIntFlagsMp(AG_MenuItem *mi, int *pFlags, int flags, int inv,
 	mi->bind_p = (void *)pFlags;
 	mi->bind_flags = flags;
 	mi->bind_invert = inv;
+#ifdef AG_THREADS
 	mi->bind_lock = lock;
+#endif
 	if (mi->tbButton != NULL) {
+#ifdef AG_THREADS
 		if (lock != NULL) {
 			AG_BindFlagMp(mi->tbButton, "state", (Uint *)pFlags,
 			    (Uint)flags, lock);
-		} else {
+		} else
+#endif
+		{
 			AG_BindFlag(mi->tbButton, "state", (Uint *)pFlags,
 			    (Uint)flags);
 		}
@@ -1136,8 +1178,12 @@ Draw(void *_Nonnull obj)
 	AG_PushClipRect(m, &m->r);
 
 	TAILQ_FOREACH(mi, &m->root->subItems, items) {
-		int activeState = mi->stateFn ? mi->stateFn->fn.fnInt(mi->stateFn) :
-		                                mi->state;
+		int activeState = mi->state;
+
+		if (mi->stateFn != NULL) {
+			AG_PostEventByPtr(NULL, m, mi->stateFn, "%p",
+			    &activeState);
+		}
 		if (activeState) {
 			if (mi->lblMenu[1] == -1) {
 				AG_TextColor(&WCOLOR(m,TEXT_COLOR));

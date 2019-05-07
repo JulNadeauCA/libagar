@@ -94,7 +94,7 @@ AG_SocketOverlayFn(AG_Socket *sock, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(sock);
 	if (fn != NULL) {
-		sock->overlayFn = AG_SetVoidFn(sock, NULL, fn, NULL);
+		sock->overlayFn = AG_SetEvent(sock, NULL, fn, NULL);
 		AG_EVENT_GET_ARGS(sock->overlayFn, fmt);
 	} else {
 		sock->overlayFn = NULL;
@@ -150,13 +150,13 @@ GetState(AG_Variable *_Nonnull binding, void *_Nonnull p)
 	case AG_VARIABLE_UINT32:
 		return (int)(*(Uint32 *)p);
 	case AG_VARIABLE_P_FLAG:
-		return (*(int *)p & (int)binding->info.bitmask);
+		return (int)(*(Uint *)p & binding->info.bitmask.u);
 	case AG_VARIABLE_P_FLAG8:
-		return (int)(*(Uint8 *)p & (Uint8)binding->info.bitmask);
+		return (int)(*(Uint8 *)p & binding->info.bitmask.u8);
 	case AG_VARIABLE_P_FLAG16:
-		return (int)(*(Uint16 *)p & (Uint16)binding->info.bitmask);
+		return (int)(*(Uint16 *)p & binding->info.bitmask.u16);
 	case AG_VARIABLE_P_FLAG32:
-		return (int)(*(Uint32 *)p & (Uint32)binding->info.bitmask);
+		return (int)(*(Uint32 *)p & binding->info.bitmask.u32);
 	default:
 		return (0);
 	}
@@ -275,16 +275,16 @@ SetState(AG_Socket *_Nonnull sock, AG_Variable *_Nonnull binding,
 		*(Uint32 *)p = v;
 		break;
 	case AG_VARIABLE_P_FLAG:
-		AG_SETFLAGS(*(int *)p, (int)binding->info.bitmask, v);
+		AG_SETFLAGS(*(int *)p, binding->info.bitmask.u, v);
 		break;
 	case AG_VARIABLE_P_FLAG8:
-		AG_SETFLAGS(*(Uint8 *)p, (Uint8)binding->info.bitmask, v);
+		AG_SETFLAGS(*(Uint8 *)p, binding->info.bitmask.u8, v);
 		break;
 	case AG_VARIABLE_P_FLAG16:
-		AG_SETFLAGS(*(Uint16 *)p, (Uint16)binding->info.bitmask, v);
+		AG_SETFLAGS(*(Uint16 *)p, binding->info.bitmask.u16, v);
 		break;
 	case AG_VARIABLE_P_FLAG32:
-		AG_SETFLAGS(*(Uint32 *)p, (Uint32)binding->info.bitmask, v);
+		AG_SETFLAGS(*(Uint32 *)p, binding->info.bitmask.u32, v);
 		break;
 	default:
 		break;
@@ -297,14 +297,14 @@ static void
 SetCount(AG_Variable *_Nonnull binding, void *_Nonnull p, int v)
 {
 	switch (AG_VARIABLE_TYPE(binding)) {
-	case AG_VARIABLE_UINT:	*(Uint *)p = v;		break;
-	case AG_VARIABLE_INT:	*(int *)p = v;		break;
-	case AG_VARIABLE_UINT8:	*(Uint8 *)p = v;	break;
-	case AG_VARIABLE_SINT8:	*(Sint8 *)p = v;	break;
-	case AG_VARIABLE_UINT16:	*(Uint16 *)p = v;	break;
-	case AG_VARIABLE_SINT16:	*(Sint16 *)p = v;	break;
-	case AG_VARIABLE_UINT32:	*(Uint32 *)p = v;	break;
-	case AG_VARIABLE_SINT32:	*(Sint32 *)p = v;	break;
+	case AG_VARIABLE_UINT:	 *(Uint *)p = v;	break;
+	case AG_VARIABLE_INT:	 *(int *)p = v;		break;
+	case AG_VARIABLE_UINT8:	 *(Uint8 *)p = v;	break;
+	case AG_VARIABLE_SINT8:	 *(Sint8 *)p = v;	break;
+	case AG_VARIABLE_UINT16: *(Uint16 *)p = v;	break;
+	case AG_VARIABLE_SINT16: *(Sint16 *)p = v;	break;
+	case AG_VARIABLE_UINT32: *(Uint32 *)p = v;	break;
+	case AG_VARIABLE_SINT32: *(Sint32 *)p = v;	break;
 	}
 }
 #endif

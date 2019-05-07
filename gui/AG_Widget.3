@@ -71,10 +71,11 @@ Object operations specific to the
 class are defined as follows:
 .Bd -literal
 typedef struct ag_widget_class {
-	struct ag_object_class _inherit;
-	void (*draw)(AG_Widget *w);
-	void (*size_request)(AG_Widget *w, AG_SizeReq *req);
-	int  (*size_allocate)(AG_Widget *w, const AG_SizeAlloc *alloc);
+	struct ag_object_class _inherit;  /* [AG_Object] -> [AG_Widget] */
+	
+	void (*draw)(void *obj);
+	void (*size_request)(void *obj, AG_SizeReq *req);
+	int  (*size_allocate)(void *obj, const AG_SizeAlloc *alloc);
 } AG_WidgetClass;
 .Ed
 .Pp
