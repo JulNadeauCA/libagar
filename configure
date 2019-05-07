@@ -4823,6 +4823,13 @@ $ECHO_N 'checking for SDL 1.2...' >>config.log
 # BEGIN sdl(1.2.0 ${prefix_sdl})
 if [ "${prefix_sdl}" != "" ]; then
 SDL_PREFIX=
+if [ "${prefix_sdl}" != "" ]; then
+if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
+SDL_PREFIX=`${prefix_sdl}/bin/sdl-config --prefix`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_sdl}/bin/sdl-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -4839,7 +4846,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 SDL_VERSION=
+if [ "${prefix_sdl}" != "" ]; then
+if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
+SDL_VERSION=`${prefix_sdl}/bin/sdl-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_sdl}/bin/sdl-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -4856,7 +4871,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 SDL_CFLAGS=
+if [ "${prefix_sdl}" != "" ]; then
+if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
+SDL_CFLAGS=`${prefix_sdl}/bin/sdl-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_sdl}/bin/sdl-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -4873,7 +4896,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 SDL_LIBS=
+if [ "${prefix_sdl}" != "" ]; then
+if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
+SDL_LIBS=`${prefix_sdl}/bin/sdl-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_sdl}/bin/sdl-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -4890,6 +4921,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 else
 case "${host}" in
 *-*-darwin*)
@@ -6770,6 +6802,13 @@ fi
 FREETYPE_LIBS=`$PKGCONFIG freetype2 --libs 2>/dev/null`
 else
 FREETYPE_VERSION=
+if [ "${prefix_freetype}" != "" ]; then
+if [ -e "${prefix_freetype}/bin/freetype-config" ]; then
+FREETYPE_VERSION=`${prefix_freetype}/bin/freetype-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_freetype}/bin/freetype-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -6786,7 +6825,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 FREETYPE_CFLAGS=
+if [ "${prefix_freetype}" != "" ]; then
+if [ -e "${prefix_freetype}/bin/freetype-config" ]; then
+FREETYPE_CFLAGS=`${prefix_freetype}/bin/freetype-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_freetype}/bin/freetype-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -6803,7 +6850,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 FREETYPE_LIBS=
+if [ "${prefix_freetype}" != "" ]; then
+if [ -e "${prefix_freetype}/bin/freetype-config" ]; then
+FREETYPE_LIBS=`${prefix_freetype}/bin/freetype-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_freetype}/bin/freetype-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -6820,6 +6875,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 fi
 case "${host}" in
 *-*-irix*)
@@ -7374,6 +7430,13 @@ $ECHO_N 'checking for libpng...'
 $ECHO_N 'checking for libpng...' >>config.log
 # BEGIN png(1.2.49 ${prefix_png})
 PNG_VERSION=
+if [ "${prefix_png}" != "" ]; then
+if [ -e "${prefix_png}/bin/libpng-config" ]; then
+PNG_VERSION=`${prefix_png}/bin/libpng-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_png}/bin/libpng-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -7390,7 +7453,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 PNG_CFLAGS=
+if [ "${prefix_png}" != "" ]; then
+if [ -e "${prefix_png}/bin/libpng-config" ]; then
+PNG_CFLAGS=`${prefix_png}/bin/libpng-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_png}/bin/libpng-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -7407,7 +7478,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 PNG_LOPTS=
+if [ "${prefix_png}" != "" ]; then
+if [ -e "${prefix_png}/bin/libpng-config" ]; then
+PNG_LOPTS=`${prefix_png}/bin/libpng-config --L_opts`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_png}/bin/libpng-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -7424,7 +7503,15 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 PNG_LIBS=
+if [ "${prefix_png}" != "" ]; then
+if [ -e "${prefix_png}/bin/libpng-config" ]; then
+PNG_LIBS=`${prefix_png}/bin/libpng-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_png}/bin/libpng-config"
+fi
+else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
@@ -7441,6 +7528,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+fi
 PNG_LIBS="${PNG_LOPTS} ${PNG_LIBS}"
 if [ "${PNG_VERSION}" != "" ]; then
 if [ "${prefix_png}" != "" ]; then
@@ -11308,11 +11396,30 @@ CFLAGS="$CFLAGS -I$BLD/include"
 CXXFLAGS="$CXXFLAGS -I$BLD/include"
 config_script_out="agar-config"
 config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}"
+if [ "${HAVE_CC65}" = "yes" ]; then
 config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}"
+config_libs_cc65=""
+bb_save_IFS=$IFS
+IFS=" "
+for lib in $config_script_libs; do
+case "$lib" in
+-l*)
+lib_bare=`echo "$lib" |sed "s/^-l//"`
+config_libs_cc65="${config_libs_cc65} ${prefix}/lib/${lib_bare}.lib"
+;;
+esac
+done
+IFS=$bb_save_IFS
+config_script_libs="$config_libs_cc65"
+else
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}"
+fi
 cat << EOT > $config_script_out
 #!/bin/sh
-# Generated by ${PACKAGE}'s BSDBuild-based script.
-# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/).
+# Generated by ${PACKAGE}'s BSDBuild configure script.
+#
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/)
+# ${PACKAGE} ${VERSION}
 
 prefix='${PREFIX}'
 exec_prefix='${EXEC_PREFIX}'
@@ -11320,7 +11427,7 @@ exec_prefix_set='no'
 libdir='${LIBDIR}'
 
 usage='\
-Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs]'
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
 
 if test \$# -eq 0; then
 	echo "\${usage}" 1>&2
@@ -11354,8 +11461,14 @@ while test \$# -gt 0; do
 	--exec-prefix)
 		echo "\$exec_prefix"
 		;;
+	--host)
+		echo '${host}'
+		;;
 	--version)
 		echo '${VERSION}'
+		;;
+	--release)
+		echo '${RELEASE}'
 		;;
 	--cflags)
 		echo '$config_script_cflags'
@@ -11402,11 +11515,30 @@ EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar.pc"
 config_script_out="agar-core-config"
 config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}"
+if [ "${HAVE_CC65}" = "yes" ]; then
 config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}"
+config_libs_cc65=""
+bb_save_IFS=$IFS
+IFS=" "
+for lib in $config_script_libs; do
+case "$lib" in
+-l*)
+lib_bare=`echo "$lib" |sed "s/^-l//"`
+config_libs_cc65="${config_libs_cc65} ${prefix}/lib/${lib_bare}.lib"
+;;
+esac
+done
+IFS=$bb_save_IFS
+config_script_libs="$config_libs_cc65"
+else
+config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}"
+fi
 cat << EOT > $config_script_out
 #!/bin/sh
-# Generated by ${PACKAGE}'s BSDBuild-based script.
-# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/).
+# Generated by ${PACKAGE}'s BSDBuild configure script.
+#
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/)
+# ${PACKAGE} ${VERSION}
 
 prefix='${PREFIX}'
 exec_prefix='${EXEC_PREFIX}'
@@ -11414,7 +11546,7 @@ exec_prefix_set='no'
 libdir='${LIBDIR}'
 
 usage='\
-Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs]'
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
 
 if test \$# -eq 0; then
 	echo "\${usage}" 1>&2
@@ -11448,8 +11580,14 @@ while test \$# -gt 0; do
 	--exec-prefix)
 		echo "\$exec_prefix"
 		;;
+	--host)
+		echo '${host}'
+		;;
 	--version)
 		echo '${VERSION}'
+		;;
+	--release)
+		echo '${RELEASE}'
 		;;
 	--cflags)
 		echo '$config_script_cflags'
@@ -11496,11 +11634,30 @@ EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-core.pc"
 config_script_out="agar-dev-config"
 config_script_cflags="-I${INCLDIR}"
+if [ "${HAVE_CC65}" = "yes" ]; then
 config_script_libs="-L${LIBDIR} -lag_dev"
+config_libs_cc65=""
+bb_save_IFS=$IFS
+IFS=" "
+for lib in $config_script_libs; do
+case "$lib" in
+-l*)
+lib_bare=`echo "$lib" |sed "s/^-l//"`
+config_libs_cc65="${config_libs_cc65} ${prefix}/lib/${lib_bare}.lib"
+;;
+esac
+done
+IFS=$bb_save_IFS
+config_script_libs="$config_libs_cc65"
+else
+config_script_libs="-L${LIBDIR} -lag_dev"
+fi
 cat << EOT > $config_script_out
 #!/bin/sh
-# Generated by ${PACKAGE}'s BSDBuild-based script.
-# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/).
+# Generated by ${PACKAGE}'s BSDBuild configure script.
+#
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/)
+# ${PACKAGE} ${VERSION}
 
 prefix='${PREFIX}'
 exec_prefix='${EXEC_PREFIX}'
@@ -11508,7 +11665,7 @@ exec_prefix_set='no'
 libdir='${LIBDIR}'
 
 usage='\
-Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs]'
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
 
 if test \$# -eq 0; then
 	echo "\${usage}" 1>&2
@@ -11542,8 +11699,14 @@ while test \$# -gt 0; do
 	--exec-prefix)
 		echo "\$exec_prefix"
 		;;
+	--host)
+		echo '${host}'
+		;;
 	--version)
 		echo '${VERSION}'
+		;;
+	--release)
+		echo '${RELEASE}'
 		;;
 	--cflags)
 		echo '$config_script_cflags'
@@ -11590,11 +11753,30 @@ EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-dev.pc"
 config_script_out="agar-math-config"
 config_script_cflags="-I${INCLDIR} ${MATH_CFLAGS} ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}"
+if [ "${HAVE_CC65}" = "yes" ]; then
 config_script_libs="-L${LIBDIR} -lag_math ${MATH_LIBS}"
+config_libs_cc65=""
+bb_save_IFS=$IFS
+IFS=" "
+for lib in $config_script_libs; do
+case "$lib" in
+-l*)
+lib_bare=`echo "$lib" |sed "s/^-l//"`
+config_libs_cc65="${config_libs_cc65} ${prefix}/lib/${lib_bare}.lib"
+;;
+esac
+done
+IFS=$bb_save_IFS
+config_script_libs="$config_libs_cc65"
+else
+config_script_libs="-L${LIBDIR} -lag_math ${MATH_LIBS}"
+fi
 cat << EOT > $config_script_out
 #!/bin/sh
-# Generated by ${PACKAGE}'s BSDBuild-based script.
-# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/).
+# Generated by ${PACKAGE}'s BSDBuild configure script.
+#
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/)
+# ${PACKAGE} ${VERSION}
 
 prefix='${PREFIX}'
 exec_prefix='${EXEC_PREFIX}'
@@ -11602,7 +11784,7 @@ exec_prefix_set='no'
 libdir='${LIBDIR}'
 
 usage='\
-Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs]'
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
 
 if test \$# -eq 0; then
 	echo "\${usage}" 1>&2
@@ -11636,8 +11818,14 @@ while test \$# -gt 0; do
 	--exec-prefix)
 		echo "\$exec_prefix"
 		;;
+	--host)
+		echo '${host}'
+		;;
 	--version)
 		echo '${VERSION}'
+		;;
+	--release)
+		echo '${RELEASE}'
 		;;
 	--cflags)
 		echo '$config_script_cflags'
@@ -11690,11 +11878,30 @@ EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-math.pc"
 config_script_out="agar-vg-config"
 config_script_cflags="-I${INCLDIR}"
+if [ "${HAVE_CC65}" = "yes" ]; then
 config_script_libs="-L${LIBDIR} -lag_vg"
+config_libs_cc65=""
+bb_save_IFS=$IFS
+IFS=" "
+for lib in $config_script_libs; do
+case "$lib" in
+-l*)
+lib_bare=`echo "$lib" |sed "s/^-l//"`
+config_libs_cc65="${config_libs_cc65} ${prefix}/lib/${lib_bare}.lib"
+;;
+esac
+done
+IFS=$bb_save_IFS
+config_script_libs="$config_libs_cc65"
+else
+config_script_libs="-L${LIBDIR} -lag_vg"
+fi
 cat << EOT > $config_script_out
 #!/bin/sh
-# Generated by ${PACKAGE}'s BSDBuild-based script.
-# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/).
+# Generated by ${PACKAGE}'s BSDBuild configure script.
+#
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/)
+# ${PACKAGE} ${VERSION}
 
 prefix='${PREFIX}'
 exec_prefix='${EXEC_PREFIX}'
@@ -11702,7 +11909,7 @@ exec_prefix_set='no'
 libdir='${LIBDIR}'
 
 usage='\
-Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs]'
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
 
 if test \$# -eq 0; then
 	echo "\${usage}" 1>&2
@@ -11736,8 +11943,14 @@ while test \$# -gt 0; do
 	--exec-prefix)
 		echo "\$exec_prefix"
 		;;
+	--host)
+		echo '${host}'
+		;;
 	--version)
 		echo '${VERSION}'
+		;;
+	--release)
+		echo '${RELEASE}'
 		;;
 	--cflags)
 		echo '$config_script_cflags'
@@ -11784,11 +11997,30 @@ EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-vg.pc"
 config_script_out="agar-au-config"
 config_script_cflags="-I${INCLDIR} ${PORTAUDIO_CFLAGS} ${SNDFILE_CFLAGS}"
+if [ "${HAVE_CC65}" = "yes" ]; then
 config_script_libs="-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}"
+config_libs_cc65=""
+bb_save_IFS=$IFS
+IFS=" "
+for lib in $config_script_libs; do
+case "$lib" in
+-l*)
+lib_bare=`echo "$lib" |sed "s/^-l//"`
+config_libs_cc65="${config_libs_cc65} ${prefix}/lib/${lib_bare}.lib"
+;;
+esac
+done
+IFS=$bb_save_IFS
+config_script_libs="$config_libs_cc65"
+else
+config_script_libs="-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}"
+fi
 cat << EOT > $config_script_out
 #!/bin/sh
-# Generated by ${PACKAGE}'s BSDBuild-based script.
-# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/).
+# Generated by ${PACKAGE}'s BSDBuild configure script.
+#
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/)
+# ${PACKAGE} ${VERSION}
 
 prefix='${PREFIX}'
 exec_prefix='${EXEC_PREFIX}'
@@ -11796,7 +12028,7 @@ exec_prefix_set='no'
 libdir='${LIBDIR}'
 
 usage='\
-Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs]'
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
 
 if test \$# -eq 0; then
 	echo "\${usage}" 1>&2
@@ -11830,8 +12062,14 @@ while test \$# -gt 0; do
 	--exec-prefix)
 		echo "\$exec_prefix"
 		;;
+	--host)
+		echo '${host}'
+		;;
 	--version)
 		echo '${VERSION}'
+		;;
+	--release)
+		echo '${RELEASE}'
 		;;
 	--cflags)
 		echo '$config_script_cflags'

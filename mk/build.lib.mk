@@ -67,7 +67,7 @@ OBJCFLAGS?=
 PICFLAGS?=	-fPIC
 YFLAGS?=	-d
 
-USE_LIBTOOL?=	Yes
+USE_LIBTOOL?=	No
 LTBASE?=	${TOP}/mk/libtool
 LIBTOOL_COOKIE?=${TOP}/mk/libtool.ok
 LIBTOOL?=	${LTBASE}/libtool
@@ -559,8 +559,8 @@ clean-lib:
 	    rm -f ${SRCS_GENERATED}; \
 	fi
 	@if [ "${HAVE_CC65}" = "yes" ]; then \
-	    echo "rm -f *.s"; \
-	    rm -f *.s; \
+	    echo "rm -f ${LIB}.lib *.s"; \
+	    rm -f ${LIB}.lib *.s; \
 	fi
 
 cleandir-lib:
@@ -651,8 +651,13 @@ install-lib: check-libtool
 	            ${SUDO} ${INSTALL_LIB} lib${LIB}.la.$$$$ ${DESTDIR}${LIBDIR}/lib${LIB}.la; \
 		    rm -f lib${LIB}.la.$$$$; \
 		fi; \
-	        echo "${INSTALL_LIB} lib${LIB}.a ${LIBDIR}"; \
-	        ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${DESTDIR}${LIBDIR}; \
+	        if [ "${HAVE_CC65}" = "yes" ]; then \
+	            echo "${INSTALL_LIB} ${LIB}.lib ${LIBDIR}"; \
+	            ${SUDO} ${INSTALL_LIB} ${LIB}.lib ${DESTDIR}${LIBDIR}; \
+	        else \
+	            echo "${INSTALL_LIB} lib${LIB}.a ${LIBDIR}"; \
+	            ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${DESTDIR}${LIBDIR}; \
+	        fi; \
 	    fi; \
 	    for F in ${SRCS}; do \
 	        if echo $$F | grep -q '.ad[bs]$$'; then \
@@ -780,8 +785,13 @@ deinstall-lib: check-libtool
 	                ${SUDO} ${DEINSTALL_LIB} ${DESTDIR}${LIBDIR}/$$F; \
 		    done; \
 		fi; \
-	        echo "${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a"; \
-	        ${SUDO} ${DEINSTALL_LIB} ${DESTDIR}${LIBDIR}/lib${LIB}.a; \
+	        if [ "${HAVE_CC65}" = "yes" ]; then \
+	            echo "${DEINSTALL_LIB} ${LIBDIR}/${LIB}.lib"; \
+	            ${SUDO} ${DEINSTALL_LIB} ${DESTDIR}${LIBDIR}/${LIB}.lib; \
+	        else \
+	            echo "${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a"; \
+	            ${SUDO} ${DEINSTALL_LIB} ${DESTDIR}${LIBDIR}/lib${LIB}.a; \
+	        fi; \
 	        echo "${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.la"; \
 	        ${SUDO} ${DEINSTALL_LIB} ${DESTDIR}${LIBDIR}/lib${LIB}.la; \
 	    fi; \

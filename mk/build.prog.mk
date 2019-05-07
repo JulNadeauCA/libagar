@@ -124,10 +124,17 @@ regress: regress-subdir
 
 # Compile C code into an object file
 .c.o:
-	@_cflags=""; \
+	@_cflags=""; _out="$@"; \
 	if [ "${PROG_PROFILE}" = "Yes" ]; then _cflags="-pg -DPROF"; fi; \
-	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $<"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $<
+	if [ "${HAVE_CC65}" = "yes" ]; then _out=`echo "$@" | sed 's/.o$$/.s/'`; fi; \
+	\
+	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $$_out ${CC_COMPILE} $<"; \
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $$_out ${CC_COMPILE} $<; \
+	\
+	if [ "${HAVE_CC65}" = "yes" ]; then \
+		echo "ca65 -o $@ $$_out"; \
+		ca65 -o $@ $$_out; \
+	fi
 
 # Compile C++ code into an object file
 .cc.o .cpp.o:
@@ -264,12 +271,16 @@ ${PROG}: ${SRCS_GENERATED} _prog_objs ${OBJS}
 	    fi; \
 	    _linker_type="${LINKER_TYPE}"; \
 	    if [ "$$_linker_type" = "" ]; then \
-                for F in ${SRCS}; do \
-	            if echo "$$F" | grep -q '.ad[bs]$$'; then \
-		        _linker_type="ADA"; \
-			break; \
-		    fi; \
-	        done; \
+	    	if [ "${HAVE_CC65}" = "yes" ]; then \
+		    _linker_type="CL65"; \
+		else \
+                    for F in ${SRCS}; do \
+	                if echo "$$F" | grep -q '.ad[bs]$$'; then \
+		            _linker_type="ADA"; \
+	                    break; \
+			fi; \
+	            done; \
+	        fi; \
 	    fi; \
 	    _objs="${OBJS}"; \
 	    if [ "${OBJS}" = "" ]; then \
@@ -307,6 +318,10 @@ ${PROG}: ${SRCS_GENERATED} _prog_objs ${OBJS}
 	        echo "${ADALINK} ${LDFLAGS} ${ADALFLAGS} $$_ada_cflags $$_prog_ldflags ${PROG} ${LIBS}"; \
 	        ${ADALINK} ${LDFLAGS} ${ADALFLAGS} $$_ada_cflags $$_prog_ldflags ${PROG} ${LIBS}; \
 		;; \
+	    CL65) \
+	        echo "cl65 ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}"; \
+	        cl65 ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}; \
+	        ;; \
 	    *) \
 	        echo "${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}"; \
 	        ${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}; \
