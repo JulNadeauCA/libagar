@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -98,8 +98,9 @@ InitPointerArg(AG_Variable *_Nonnull V, void *_Nullable p)
 {
 	V->name[0] = '\0';
 	V->type = AG_VARIABLE_POINTER;
-	V->fn.fnVoid = NULL;
+#ifdef AG_THREADS
 	V->mutex = NULL;
+#endif
 	V->data.p = p;
 }
 
@@ -114,7 +115,7 @@ InitEvent(AG_Event *_Nonnull ev, AG_Object *_Nullable ob)
 	ev->flags = 0;
 	ev->argc = 1;
 	ev->argc0 = 1;
-	ev->fn.fnVoid = NULL;
+	ev->fn = NULL;
 	InitPointerArg(&ev->argv[0], ob);
 }
 
@@ -167,7 +168,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 		ev->argc0 = 1;
 	}
 	InitPointerArg(&ev->argv[0], ob);
-	ev->fn.fnVoid = fn;
+	ev->fn = fn;
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
 
@@ -203,7 +204,7 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 		ev->name[0] = '\0';
 	}
 
-	ev->fn.fnVoid = fn;
+	ev->fn = fn;
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
 
@@ -211,55 +212,6 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectUnlock(ob);
 	return (ev);
 }
-
-/*
- * AG_Set<Type>Fn() creates a typed virtual function with optional name
- * and optional arguments.
- */
-#undef  AG_SET_TYPED_FN
-#define AG_SET_TYPED_FN(memb)					\
-	AG_Object *ob = p;					\
-	AG_Event *ev;						\
-								\
-	ev = Malloc(sizeof(AG_Event));				\
-	InitEvent(ev, ob);					\
-	if (name != NULL) {					\
-		AG_Strlcpy(ev->name, name, sizeof(ev->name));	\
-	} else {						\
-		ev->name[0] = '\0';				\
-	}							\
-	ev->fn.memb = fn;					\
-	InitPointerArg(&ev->argv[0], ob);			\
-	AG_EVENT_GET_ARGS(ev, fmt);				\
-	AG_ObjectLock(ob);					\
-	TAILQ_INSERT_TAIL(&ob->events, ev, events);		\
-	ev->argc0 = ev->argc;					\
-	AG_ObjectUnlock(ob);					\
-	return (AG_Function *)ev
-
-AG_Function *AG_SetVoidFn(void *p, const char *name, AG_VoidFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnVoid); }
-AG_Function *AG_SetIntFn(void *p, const char *name, AG_IntFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnInt); }
-AG_Function *AG_SetUint8Fn(void *p, const char *name, AG_Uint8Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnUint8); }
-AG_Function *AG_SetSint8Fn(void *p, const char *name, AG_Sint8Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnSint8); }
-AG_Function *AG_SetUint16Fn(void *p, const char *name, AG_Uint16Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnUint16); }
-AG_Function *AG_SetSint16Fn(void *p, const char *name, AG_Sint16Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnSint16); }
-AG_Function *AG_SetUint32Fn(void *p, const char *name, AG_Uint32Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnUint32); }
-AG_Function *AG_SetSint32Fn(void *p, const char *name, AG_Sint32Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnSint32); }
-#ifdef AG_HAVE_64BIT
-AG_Function *AG_SetUint64Fn(void *p, const char *name, AG_Uint64Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnUint64); }
-AG_Function *AG_SetSint64Fn(void *p, const char *name, AG_Sint64Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnSint64); }
-#endif
-#ifdef AG_HAVE_FLOAT
-AG_Function *AG_SetFloatFn(void *p, const char *name, AG_FloatFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnFloat); }
-AG_Function *AG_SetDoubleFn(void *p, const char *name, AG_DoubleFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnDouble); }
-# ifdef AG_HAVE_LONG_DOUBLE
-AG_Function *AG_SetLongDoubleFn(void *p, const char *name, AG_LongDoubleFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnLongDouble); }
-# endif
-#endif
-AG_Function *AG_SetStringFn(void *p, const char *name, AG_StringFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnString); }
-AG_Function *AG_SetPointerFn(void *p, const char *name, AG_PointerFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnPointer); }
-
-#undef AG_SET_TYPED_FN
 
 /* Delete an event handler by name. */
 void
@@ -349,8 +301,8 @@ EventTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	}
 
 	/* Invoke the event handler routine. */
-	if (ev->fn.fnVoid != NULL) {
-		ev->fn.fnVoid(ev);
+	if (ev->fn != NULL) {
+		ev->fn(ev);
 	}
 	return (0);
 }
@@ -376,8 +328,8 @@ EventThread(void *_Nonnull p)
 	if (agDebugLvl >= 2)
 		Debug(rcvr, "BEGIN event thread for <%s>\n", eev->name);
 #endif
-	if (eev->fn.fnVoid != NULL) {
-		eev->fn.fnVoid(eev);
+	if (eev->fn != NULL) {
+		eev->fn(eev);
 	}
 #ifdef AG_DEBUG_CORE
 	if (agDebugLvl >= 2)
@@ -467,7 +419,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 				}
 				AG_UnlockVFS(rcvr);
 			}
-			if (evTmp->fn.fnVoid != NULL) { evTmp->fn.fnVoid(evTmp); }
+			if (evTmp->fn != NULL) { evTmp->fn(evTmp); }
 			free(evTmp);
 		}
 #else /* MEDIUM or LARGE */
@@ -485,7 +437,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 				}
 				AG_UnlockVFS(rcvr);
 			}
-			if (evTmp.fn.fnVoid != NULL) { evTmp.fn.fnVoid(&evTmp); }
+			if (evTmp.fn != NULL) { evTmp.fn(&evTmp); }
 		}
 #endif /* MEDIUM or LARGE */
 	}
@@ -493,8 +445,8 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 }
 
 /*
- * Variant of AG_PostEvent() which accepts an AG_Event argument instead
- * of looking up the event handler by name.
+ * Variant of AG_PostEvent() which accepts an AG_Event pointer
+ * (as opposed to a string identifier).
  */
 void
 AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
@@ -532,7 +484,7 @@ AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
 			}
 			AG_UnlockVFS(rcvr);
 		}
-		if (evTmp->fn.fnVoid != NULL) { evTmp->fn.fnVoid(evTmp); }
+		if (evTmp->fn != NULL) { evTmp->fn(evTmp); }
 		free(evTmp);
 	}
 #else /* MEDIUM or LARGE */
@@ -549,7 +501,7 @@ AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
 			}
 			AG_UnlockVFS(rcvr);
 		}
-		if (evTmp.fn.fnVoid != NULL) { evTmp.fn.fnVoid(&evTmp); }
+		if (evTmp.fn != NULL) { evTmp.fn(&evTmp); }
 	}
 #endif /* MEDIUM or LARGE */
 
@@ -650,8 +602,8 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 				AG_UnlockVFS(rcvr);
 			}
 			/* XXX AG_EVENT_ASYNC.. */
-			if (ev->fn.fnVoid != NULL) {
-				ev->fn.fnVoid(evTmp);
+			if (ev->fn != NULL) {
+				ev->fn(evTmp);
 			}
 			free(evTmp);
 		}
@@ -674,8 +626,8 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 				AG_UnlockVFS(rcvr);
 			}
 			/* XXX AG_EVENT_ASYNC.. */
-			if (ev->fn.fnVoid != NULL)
-				ev->fn.fnVoid(&evTmp);
+			if (ev->fn != NULL)
+				ev->fn(&evTmp);
 		}
 #endif /* MEDIUM or LARGE */
 	}

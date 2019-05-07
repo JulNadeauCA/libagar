@@ -16,7 +16,7 @@ CFLAGS+=	-D_AGAR_CORE_INTERNAL ${CORE_CFLAGS}
 SRCS=	byteswap.c class.c config.c core.c cpuinfo.c data_source.c \
 	db.c dir.c dso.c error.c event.c exec.c file.c getopt.c list.c \
 	load_integral.c load_real.c load_string.c load_version.c \
-	object.c prop.c string.c tbl.c text.c time.c time_dummy.c timeout.c \
+	object.c string.c tbl.c text.c time.c time_dummy.c timeout.c \
 	threads.c tree.c vasprintf.c vsnprintf.c user.c user_dummy.c \
 	user_getenv.c variable.c \
 	${SRCS_CORE}

@@ -414,7 +414,7 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	
 	/* Call the attach function if one is defined. */
 	if (chld->pvt.attachFn != NULL)  {
-		chld->pvt.attachFn->fn.fnVoid(chld->pvt.attachFn);
+		chld->pvt.attachFn->fn(chld->pvt.attachFn);
 		goto out;
 	}
 
@@ -507,7 +507,7 @@ AG_ObjectDetach(void *pChld)
 
 	/* Call the detach function if one is defined. */
 	if (chld->pvt.detachFn != NULL) {
-		chld->pvt.detachFn->fn.fnVoid(chld->pvt.detachFn);
+		chld->pvt.detachFn->fn(chld->pvt.detachFn);
 		goto out;
 	}
 
@@ -1245,14 +1245,6 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 		}
 
 		AG_LockVariable(V);
-		if (V->fn.fnVoid != NULL &&
-		    AG_EvalVariable(ob, V) == -1) {
-			Verbose("Save: eval %s failed (%s); ignoring\n", V->name,
-			    AG_GetError());
-			AG_UnlockVariable(V);
-			continue;
-		}
-
 		AG_WriteString(ds, (char *)V->name);
 		AG_WriteSint32(ds, Vt->code);
 

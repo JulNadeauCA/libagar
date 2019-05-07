@@ -19,8 +19,9 @@ ag_init_variable(AG_Variable *V, AG_VariableType type, const char *name)
 		V->name[0] = '\0';
 	}
 	V->type = type;
+#ifdef AG_THREADS
 	V->mutex = NULL;
-	V->fn.fnVoid = NULL;
+#endif
 	V->info.size = 0;
 	V->info.varName = NULL;
 	V->data.s = NULL;
@@ -37,10 +38,6 @@ ag_lock_variable(AG_Variable *V)
 {
 #ifdef AG_THREADS
 	if (V->mutex != NULL) { AG_MutexLock(V->mutex); }
-#else
-# ifdef __CC65__
-	if (V != NULL) { /* Unused */ }
-# endif
 #endif
 }
 
@@ -55,10 +52,6 @@ ag_unlock_variable(AG_Variable *V)
 {
 #ifdef AG_THREADS
 	if (V->mutex != NULL) { AG_MutexUnlock(V->mutex); }
-#else
-# ifdef __CC65__
-	if (V != NULL) { /* Unused */ }
-# endif
 #endif
 }
 

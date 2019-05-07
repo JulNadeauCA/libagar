@@ -418,18 +418,6 @@ void AG_ObjectGenName(void *_Nonnull, AG_ObjectClass *_Nonnull, char *_Nonnull,
 void AG_ObjectGenNamePfx(void *_Nonnull, const char *_Nonnull, char *_Nonnull,
                          AG_Size);
 
-#ifdef AG_THREADS
-# define AG_ObjectLock(ob)   AG_MutexLock(&AGOBJECT(ob)->pvt.lock)
-# define AG_ObjectUnlock(ob) AG_MutexUnlock(&AGOBJECT(ob)->pvt.lock)
-# define AG_LockVFS(ob)      AG_ObjectLock(AGOBJECT(ob)->root)
-# define AG_UnlockVFS(ob)    AG_ObjectUnlock(AGOBJECT(ob)->root)
-#else /* !AG_THREADS */
-# define AG_ObjectLock(ob)
-# define AG_ObjectUnlock(ob)
-# define AG_LockVFS(ob)
-# define AG_UnlockVFS(ob)
-#endif /* AG_THREADS */
-
 /*
  * Inlinables
  */
@@ -476,12 +464,22 @@ AG_Variable *_Nonnull ag_fetch_variable_of_type(void *_Nonnull,
                                                _Warn_Unused_Result;
 
 AG_Variable *_Nullable ag_access_variable(void *_Nonnull, const char *_Nonnull)
+                                         _Pure_Attribute_If_Unthreaded
                                          _Warn_Unused_Result;
 
 void *_Nonnull ag_get_named_object(AG_Event *_Nonnull, const char *_Nonnull,
                                    const char *_Nonnull)
                                   _Pure_Attribute
                                   _Warn_Unused_Result;
+
+
+void ag_object_lock(void *_Nonnull);
+void ag_object_unlock(void *_Nonnull);
+void ag_lock_vfs(void *_Nonnull);
+void ag_unlock_vfs(void *_Nonnull);
+void ag_lock_timers(void *_Nullable);
+void ag_unlock_timers(void *_Nullable);
+
 #ifdef AG_INLINE_OBJECT
 # define AG_INLINE_HEADER
 # include <agar/core/inline_object.h>
@@ -494,13 +492,26 @@ void *_Nonnull ag_get_named_object(AG_Event *_Nonnull, const char *_Nonnull,
 # define AG_ObjectDelete(o)		ag_object_delete(o)
 # define AG_ObjectFindChild(o,n)	ag_object_find_child((o),(n))
 # define AG_ObjectSuperclass(o)		ag_object_superclass(o)
-# define AG_LockTimers(o)		ag_lock_timers(o)
-# define AG_UnlockTimers(o)		ag_unlock_timers(o)
 # define AG_Defined(o,n)		ag_defined((o),(n))
 # define AG_FetchVariable(o,n,t)	ag_fetch_variable((o),(n),(t))
 # define AG_FetchVariableOfType(o,n,t)	ag_fetch_variable_of_type((o),(n),(t))
 # define AG_AccessVariable(o,n)		ag_access_variable((o),(n))
 # define AG_GetNamedObject(e,k,s)	ag_get_named_object((e),(k),(s))
+# ifdef AG_THREADS
+#  define AG_ObjectLock(o)		ag_object_lock(o)
+#  define AG_ObjectUnlock(o)		ag_object_unlock(o)
+#  define AG_LockVFS(o)			ag_lock_vfs(o)
+#  define AG_UnlockVFS(o)		ag_unlock_vfs(o)
+#  define AG_LockTimers(o)		ag_lock_timers(o)
+#  define AG_UnlockTimers(o)		ag_unlock_timers(o)
+# else
+#  define AG_ObjectLock(o)
+#  define AG_ObjectUnlock(o)
+#  define AG_LockVFS(o)
+#  define AG_UnlockVFS(o)
+#  define AG_LockTimers(o)
+#  define AG_UnlockTimers(o)
+# endif
 #endif /* !AG_INLINE_OBJECT */
 __END_DECLS
 #ifdef AG_LEGACY

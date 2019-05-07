@@ -61,7 +61,7 @@ typedef struct ag_event {
 	Uint flags;
 #define	AG_EVENT_ASYNC     0x01			/* Service in separate thread */
 #define AG_EVENT_PROPAGATE 0x02			/* Forward to child objs */
-	union ag_function fn;			/* Callback function */
+	AG_VoidFn fn;				/* Callback function */
 	int argc, argc0;			/* Argument count & offset */
 	AG_Variable argv[AG_EVENT_ARGS_MAX];	/* Argument values */
 	AG_TAILQ_ENTRY(ag_event) events;	/* Entry in Object */
@@ -143,7 +143,8 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 /*
  * Implementation of AG_EventPushTYPE() and AG_EventPopTYPE().
  */
-#define AG_EVENT_PUSH_FN(ev, tname, aname, member, val) {		\
+#ifdef AG_THREADS
+# define AG_EVENT_PUSH_FN(ev, tname, aname, member, val) {		\
 	AG_EVENT_PUSH_ARG_PRECOND(ev)					\
 	(ev)->argv[(ev)->argc].type = (tname);				\
 	if ((aname) != NULL) {						\
@@ -154,9 +155,23 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 	}								\
 	(ev)->argv[(ev)->argc].mutex = NULL;				\
 	(ev)->argv[(ev)->argc].data.member = (val);			\
-	(ev)->argv[(ev)->argc].fn.fnVoid = NULL;			\
 	(ev)->argc++;							\
 }
+#else /* !AG_THREADS */
+# define AG_EVENT_PUSH_FN(ev, tname, aname, member, val) {		\
+	AG_EVENT_PUSH_ARG_PRECOND(ev)					\
+	(ev)->argv[(ev)->argc].type = (tname);				\
+	if ((aname) != NULL) {						\
+		AG_Strlcpy((ev)->argv[(ev)->argc].name, (aname),	\
+		        AG_VARIABLE_NAME_MAX);				\
+	} else {							\
+		(ev)->argv[(ev)->argc].name[0] = '\0';			\
+	}								\
+	(ev)->argv[(ev)->argc].data.member = (val);			\
+	(ev)->argc++;							\
+}
+#endif /* !AG_THREADS */
+
 #define AG_EVENT_POP_FN(vtype, memb)		\
 	AG_Variable *V;				\
 	AG_EVENT_POP_ARG_PRECOND(ev)		\
@@ -168,15 +183,24 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
  * Inline implementation of the varargs argument parser, AG_EVENT_GET_ARGS().
  * Used by AG_{Set,Add,Post}Event() and AG_EventArgs().
  */
-#define AG_EVENT_INS_ARG(eev, ap, tname, member, t) {	\
+#ifdef AG_THREADS
+# define AG_EVENT_INS_ARG(eev, ap, tname, member, t) {	\
 	V = &(eev)->argv[(eev)->argc];			\
 	AG_EVENT_PUSH_ARG_PRECOND(eev)			\
 	V->type = (tname);				\
 	V->mutex = NULL;				\
 	V->data.member = va_arg(ap,t);			\
-	V->fn.fnVoid = NULL;				\
 	(eev)->argc++;					\
 }
+#else /* !AG_THREADS */
+# define AG_EVENT_INS_ARG(eev, ap, tname, member, t) {	\
+	V = &(eev)->argv[(eev)->argc];			\
+	AG_EVENT_PUSH_ARG_PRECOND(eev)			\
+	V->type = (tname);				\
+	V->data.member = va_arg(ap,t);			\
+	(eev)->argc++;					\
+}
+#endif /* !AG_THREADS */
 
 #ifdef AG_HAVE_FLOAT
 # define AG_EVENT_PUSH_ARG_CASE_FLT(ev)					\
@@ -278,31 +302,6 @@ AG_Event *_Nonnull AG_SetEvent(void *_Nonnull, const char *_Nullable ,
                                _Nullable AG_EventFn, const char *_Nullable, ...);
 AG_Event *_Nonnull AG_AddEvent(void *_Nonnull, const char *_Nullable,
 			       _Nullable AG_EventFn, const char *_Nullable, ...);
-
-AG_Function *_Nonnull AG_SetVoidFn(void *_Nonnull, const char *_Nullable, _Nullable AG_VoidFn, const char *_Nullable, ...);
-AG_Function *_Nonnull AG_SetIntFn(void *_Nonnull, const char *_Nullable, _Nullable AG_IntFn, const char *_Nullable, ...);
-AG_Function *_Nonnull AG_SetUintFn(void *_Nonnull, const char *_Nullable, _Nullable AG_UintFn, const char *_Nullable, ...);
-AG_Function *_Nonnull AG_SetLongFn(void *_Nonnull, const char *_Nullable, _Nullable AG_LongFn, const char *_Nullable, ...);
-AG_Function *_Nonnull AG_SetUlongFn(void *_Nonnull, const char *_Nullable, _Nullable AG_UlongFn, const char *_Nullable, ...);
-AG_Function *_Nonnull AG_SetUint8Fn(void *_Nonnull, const char *_Nullable, _Nullable AG_Uint8Fn, const char *_Nullable, ...);
-AG_Function *_Nonnull AG_SetSint8Fn(void *_Nonnull, const char *_Nullable, _Nullable AG_Sint8Fn, const char *_Nullable, ...);
-AG_Function *_Nonnull AG_SetUint16Fn(void *_Nonnull, const char *_Nullable, _Nullable AG_Uint16Fn, const char *_Nullable, ...);
-AG_Function *_Nonnull AG_SetSint16Fn(void *_Nonnull, const char *_Nullable, _Nullable AG_Sint16Fn, const char *_Nullable, ...);
-AG_Function *_Nonnull AG_SetUint32Fn(void *_Nonnull, const char *_Nullable, _Nullable AG_Uint32Fn, const char *_Nullable, ...);
-AG_Function *_Nonnull AG_SetSint32Fn(void *_Nonnull, const char *_Nullable, _Nullable AG_Sint32Fn, const char *_Nullable, ...);
-#ifdef AG_HAVE_64BIT
-AG_Function *_Nonnull AG_SetUint64Fn(void *_Nonnull, const char *_Nullable, _Nullable AG_Uint64Fn, const char *_Nullable, ...);
-AG_Function *_Nonnull AG_SetSint64Fn(void *_Nonnull, const char *_Nullable, _Nullable AG_Sint64Fn, const char *_Nullable , ...);
-#endif
-#ifdef AG_HAVE_FLOAT
-AG_Function *_Nonnull AG_SetFloatFn(void *_Nonnull, const char *_Nullable, _Nullable AG_FloatFn, const char *_Nullable, ...);
-AG_Function *_Nonnull AG_SetDoubleFn(void *_Nonnull, const char *_Nullable, _Nullable AG_DoubleFn, const char *_Nullable, ...);
-# ifdef AG_HAVE_LONG_DOUBLE
-AG_Function *_Nonnull AG_SetLongDoubleFn(void *_Nonnull, const char *_Nullable, _Nullable AG_LongDoubleFn, const char *_Nullable, ...);
-# endif
-#endif
-AG_Function *_Nonnull AG_SetStringFn(void *_Nonnull, const char *_Nullable, _Nullable AG_StringFn, const char *_Nullable, ...);
-AG_Function *_Nonnull AG_SetPointerFn(void *_Nonnull, const char *_Nullable, _Nullable AG_PointerFn, const char *_Nullable, ...);
 
 void AG_UnsetEvent(void *_Nonnull, const char *_Nonnull);
 
