@@ -236,7 +236,11 @@ AG_Debug(void *p, const char *fmt, ...)
 				Strlcpy(buf, obj->name, bufLen);
 				Strlcat(buf, ": ", bufLen);
 			} else {
-				bufLen = strlen(obj->name)+5;
+#if AG_MODEL == AG_LARGE
+				bufLen = strlen(obj->name)+23;
+#else
+				bufLen = strlen(obj->name)+15;
+#endif
 				buf = Malloc(bufLen);
 				Snprintf(buf, bufLen, "<%p>: ", obj);
 			}
