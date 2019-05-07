@@ -145,13 +145,18 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull 
 #else
 	(void)AG_ReadUint8(ds);
 #endif
-	/* For backward compatibility with <9.5 (pre-1.4.2) saves. */
-	if (ver->minor < 2) { AG_ReadUint8(ds); }
+#ifdef AG_LEGACY
+	if (ver->minor < 2) { AG_ReadUint8(ds); } /* r<9.5 (pre-1.4.2) compat */
+#endif
 	(void)AG_ReadUint8(ds);
+#ifdef AG_LEGACY
 	if (ver->minor >= 3) { AG_ReadUint8(ds); }
 	if (ver->minor >= 4) { AG_ReadUint32(ds); }
+#endif
 	AG_Seek(ds, 22, AG_SEEK_CUR);
+#ifdef AG_LEGACY
 	if (ver->minor >= 1) { AG_ReadUint8(ds); }
+#endif
 	(void)AG_ReadUint8(ds);				/* agRcsMode */
 	AG_SkipString(ds);				/* agRcsHostname */
 	(void)AG_ReadUint16(ds);			/* agRcsPort */
