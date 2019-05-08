@@ -2,6 +2,8 @@
 
 #ifndef _AGAR_CORE_DSO_H_
 #define _AGAR_CORE_DSO_H_
+
+#ifdef AG_ENABLE_DSO
 #include <agar/core/begin.h>
 
 #ifndef AG_DSONAME_MAX
@@ -46,4 +48,5 @@ void                      AG_FreeDSOList(char *_Nonnull *_Nullable, Uint);
 __END_DECLS
 
 #include <agar/core/close.h>
+#endif /* AG_ENABLE_DSO */
 #endif /* _AGAR_CORE_DSO_H_ */

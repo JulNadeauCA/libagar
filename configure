@@ -451,6 +451,7 @@ echo '    --with-inline               Inline functions [yes]'
 echo ''
 echo 'Options specific to CORE library:'
 echo '    --enable-debug-core         Expensive AG_Object debugging [no]'
+echo '    --enable-dso                Dynamically loaded modules [check]'
 echo '    --enable-network            Network interface [check]'
 echo '    --enable-web                Web application server [no]'
 echo '    --with-db[45][=PREFIX]      AG_Db: Berkeley DB backend [no]'
@@ -933,7 +934,6 @@ echo '  / _ \   / _ \   / _ \  |  _ \'
 echo ' | |_| | | (_| | | |_| | | |_) |'
 echo ' |_| |_|  \__, | |_| |_| |_| |_|'
 echo '          |___/                 '
-require_freetype="yes"
 if [ "${with_memory_model}" = '' ]
  then
 	case "${host}" in
@@ -942,7 +942,6 @@ if [ "${with_memory_model}" = '' ]
 	    ;;
 	c64 | c128 | geos | nes)
 	    with_memory_model="S"
-	    require_freetype="no"
 	    ;;
 	*)
 	    with_memory_model="M"
@@ -1558,9 +1557,11 @@ echo '#undef HAVE_OBJC' >$bb_incdir/have_objc.h
 echo 'hdefs["HAVE_OBJC"] = nil' >>configure.lua
 echo '#undef HAVE_OBJC_WARNINGS' >$bb_incdir/have_objc_warnings.h
 echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
+	recommend_freetype="no"
 	with_attributes="no"
 	enable_shared="no"
 	with_float="no"
+	enable_dso="no"
 	echo "checking for byte order...little-endian (${host})"
 _MK_BYTE_ORDER="LE"
 _MK_LITTLE_ENDIAN="yes"
@@ -1573,6 +1574,7 @@ echo '#undef _MK_BIG_ENDIAN' >$bb_incdir/_mk_big_endian.h
 echo 'hdefs["_MK_BIG_ENDIAN"] = nil' >>configure.lua
 	;;
 *)
+	recommend_freetype="yes"
 $ECHO_N 'checking for Objective-C compiler...'
 $ECHO_N 'checking for Objective-C compiler...' >>config.log
 # BEGIN objc
@@ -4795,6 +4797,17 @@ else
 echo '#undef AG_DEBUG_GUI' >$bb_incdir/ag_debug_gui.h
 echo 'hdefs["AG_DEBUG_GUI"] = nil' >>configure.lua
 fi
+if [ "${enable_dso}" != 'no' ]; then
+AG_ENABLE_DSO="yes"
+bb_o=$bb_incdir/ag_enable_dso.h
+echo '#ifndef AG_ENABLE_DSO' >$bb_o
+echo "#define AG_ENABLE_DSO \"$AG_ENABLE_DSO\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_ENABLE_DSO\"] = \"$AG_ENABLE_DSO\"" >>configure.lua
+else
+echo '#undef AG_ENABLE_DSO' >$bb_incdir/ag_enable_dso.h
+echo 'hdefs["AG_ENABLE_DSO"] = nil' >>configure.lua
+fi
 if [ "${enable_legacy}" = 'yes' ]; then
 AG_LEGACY="yes"
 bb_o=$bb_incdir/ag_legacy.h
@@ -6734,7 +6747,7 @@ echo '#undef HAVE_WGL' >$bb_incdir/have_wgl.h
 echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
 	fi
 	
-	if [ "${with_freetype}" != 'no' -a "${require_freetype}" = "yes" ]
+	if [ "${with_freetype}" != 'no' -a "${recommend_freetype}" = "yes" ]
  then
 $ECHO_N 'checking for FreeType...'
 $ECHO_N 'checking for FreeType...' >>config.log

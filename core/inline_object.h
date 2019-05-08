@@ -133,7 +133,7 @@ ag_object_delete(void *pObj)
 }
 
 /*
- * Return a child object by name.
+ * Lookup a direct child object by name.
  * Result is valid as long as parent object's VFS is locked.
  */
 #ifdef AG_INLINE_HEADER

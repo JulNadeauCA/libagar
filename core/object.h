@@ -60,9 +60,11 @@ struct ag_dbt;
 /* Object class specification */
 typedef struct ag_object_class_spec {
 	char hier[AG_OBJECT_HIER_MAX];		/* Inheritance hierarchy */
-	char libs[AG_OBJECT_LIBS_MAX];		/* Library list */
 	char spec[AG_OBJECT_HIER_MAX];		/* Full class specification */
 	char name[AG_OBJECT_NAME_MAX];		/* Short name */
+#ifdef AG_ENABLE_DSO
+	char libs[AG_OBJECT_LIBS_MAX];		/* Library list */
+#endif
 } AG_ObjectClassSpec;
 
 /* Global name space registration */
@@ -269,9 +271,12 @@ extern int                       agModuleDirCount;
 void AG_InitClassTbl(void);
 void AG_DestroyClassTbl(void);
 
-AG_ObjectClass *_Nullable AG_LoadClass(const char *_Nonnull);
 AG_ObjectClass *_Nullable AG_LookupClass(const char *_Nonnull);
+
+#ifdef AG_ENABLE_DSO
+AG_ObjectClass *_Nullable AG_LoadClass(const char *_Nonnull);
 void                      AG_UnloadClass(AG_ObjectClass *_Nonnull);
+#endif
 
 AG_Namespace *_Nonnull AG_RegisterNamespace(const char *_Nonnull,
                                             const char *_Nonnull,

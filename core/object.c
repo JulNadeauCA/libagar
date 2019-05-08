@@ -1059,13 +1059,18 @@ AG_ObjectReadHeader(AG_DataSource *ds, AG_ObjectHeader *oh)
 		char *c;
 
 		AG_CopyString(cs->hier, ds, sizeof(cs->hier));
+#ifdef AG_ENABLE_DSO
 		AG_CopyString(cs->libs, ds, sizeof(cs->libs));
-
+#else
+		AG_SkipString(ds);
+#endif
 		Strlcpy(cs->spec, cs->hier, sizeof(cs->spec));
+#ifdef AG_ENABLE_DSO
 		if (cs->libs[0] != '\0') {
 			Strlcat(cs->spec, "@", sizeof(cs->spec));
 			Strlcat(cs->spec, cs->libs, sizeof(cs->spec));
 		}
+#endif
 		if ((c = strrchr(cs->hier, ':')) != NULL && c[1] != '\0') {
 			Strlcpy(cs->name, &c[1], sizeof(cs->name));
 		} else {
@@ -1073,9 +1078,11 @@ AG_ObjectReadHeader(AG_DataSource *ds, AG_ObjectHeader *oh)
 		}
 	} else {
 		oh->cs.hier[0] = '\0';
-		oh->cs.libs[0] = '\0';
 		oh->cs.spec[0] = '\0';
 		oh->cs.name[0] = '\0';
+#ifdef AG_ENABLE_DSO
+		oh->cs.libs[0] = '\0';
+#endif
 	}
 
 	/* Dataset start offset */
@@ -1394,7 +1401,12 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		}
 
 		/* Create a new child object. */
-		if ((C = AG_LoadClass(hier)) == NULL) {
+#ifdef AG_ENABLE_DSO
+		C = AG_LoadClass(hier);
+#else
+		C = AG_LookupClass(hier);
+#endif
+		if (C == NULL) {
 			AG_SetError("%s: %s", ob->name, AG_GetError());
 			if (agObjectIgnoreUnknownObjs) {
 #ifdef AG_DEBUG_CORE
@@ -1578,7 +1590,11 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 	/* Header */
 	AG_WriteVersion(ds, agObjectClass.name, &agObjectClass.ver);
 	AG_WriteString(ds, ob->cls->hier);
+#ifdef AG_ENABLE_DSO
 	AG_WriteString(ds, ob->cls->pvt.libs);
+#else
+	AG_WriteString(ds, "");
+#endif
 	dataOffs = AG_Tell(ds);
 	AG_WriteUint32(ds, 0);					/* Data offs */
 	AG_WriteUint32(ds, (Uint32)(ob->flags & AG_OBJECT_SAVED_FLAGS));

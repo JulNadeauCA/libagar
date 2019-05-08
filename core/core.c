@@ -120,7 +120,9 @@ AG_InitCore(const char *progname, Uint flags)
 	pthread_mutexattr_settype(&agRecursiveMutexAttr,
 	    PTHREAD_MUTEX_RECURSIVE);
 # endif
+# ifdef AG_ENABLE_DSO
 	AG_MutexInitRecursive(&agDSOLock);
+# endif
 #endif /* AG_THREADS */
 
 	/* Register the object classes from ag_core. */
@@ -246,7 +248,9 @@ AG_Destroy(void)
 
 #ifdef AG_THREADS
 	pthread_mutexattr_destroy(&agRecursiveMutexAttr);
+# ifdef AG_ENABLE_DSO
 	AG_MutexDestroy(&agDSOLock);
+# endif
 #endif
 	AG_DestroyEventSubsystem();
 	AG_DestroyStringSubsystem();

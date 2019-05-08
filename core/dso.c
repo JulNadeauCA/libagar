@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,9 @@
 /*
  * Cross-platform interface to dynamic linking loader.
  */
+
+#include <agar/config/ag_enable_dso.h>
+#ifdef AG_ENABLE_DSO
  
 #include <agar/config/have_dlopen.h>
 #include <agar/config/have_dyld.h>
@@ -796,3 +799,5 @@ AG_FreeDSOList(char **list, Uint count)
 	}
 	free(list);
 }
+
+#endif /* AG_ENABLE_DSO */

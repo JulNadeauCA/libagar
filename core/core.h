@@ -28,6 +28,7 @@
 #include <agar/config/ag_legacy.h>
 #include <agar/config/ag_threads.h>
 #include <agar/config/ag_type_safety.h>
+#include <agar/config/ag_enable_dso.h>
 
 /* Define byte order (AG_BYTEORDER = AG_{LITTLE,BIG}_ENDIAN) */
 #define AG_BIG_ENDIAN 4321

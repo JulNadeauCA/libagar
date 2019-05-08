@@ -44,14 +44,11 @@ int              agModuleDirCount = 0;
 AG_Mutex	 agClassLock;			/* Lock on class table */
 
 static void
-InitClass(AG_ObjectClass *_Nonnull C, const char *_Nonnull hier,
-    const char *_Nonnull libs)
+InitClass(AG_ObjectClass *_Nonnull C, const char *_Nonnull hier)
 {
 	const char *c;
 
 	Strlcpy(C->hier, hier, sizeof(C->hier));
-	Strlcpy(C->pvt.libs, libs, sizeof(C->pvt.libs));
-
 	if ((c = strrchr(hier, ':')) != NULL && c[1] != '\0') {
 		Strlcpy(C->name, &c[1], sizeof(C->name));
 	} else {
@@ -77,7 +74,10 @@ AG_InitClassTbl(void)
 	AG_RegisterNamespace("Agar", "AG_", "http://libagar.org/");
 
 	/* Initialize the class tree */
-	InitClass(&agObjectClass, "AG_Object", "");
+	InitClass(&agObjectClass, "AG_Object");
+#ifdef AG_ENABLE_DSO
+	agObjectClass.pvt.libs[0] = '\0';
+#endif
 	agClassTree = &agObjectClass;
 
 	/* Initialize the class table. */
@@ -132,7 +132,9 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 
 	/* Parse the inheritance hierarchy and library list. */
 	cs->hier[0] = '\0';
+#ifdef AG_ENABLE_DSO
 	cs->libs[0] = '\0';
+#endif
 	cs->name[0] = '\0';
 	*pNsName = '\0';
 	for (s = &spec[0]; *s != '\0'; s++) {
@@ -149,8 +151,10 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 				*pNsName = *s;
 				pNsName++;
 			}
+#ifdef AG_ENABLE_DSO
 			if (s[0] == '@' && s[1] != '\0')
 				Strlcpy(cs->libs, &s[1], sizeof(cs->libs));
+#endif
 		}
 		if (*s == ')') {
 			if ((s - pOpen) == 0) {
@@ -207,9 +211,10 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 	
 	/* Fill in the "spec" field. */
 	Strlcpy(cs->spec, cs->hier, sizeof(cs->spec));
-	if (cs->libs[0] != '\0') {
+#ifdef AG_ENABLE_DSO
+	if (cs->libs[0] != '\0')
 		Strlcat(cs->spec, cs->libs, sizeof(cs->spec));
-	}
+#endif
 	return (0);
 }
 
@@ -226,13 +231,13 @@ AG_RegisterClass(void *p)
 	if (AG_ParseClassSpec(&cs, C->hier) == -1) {
 		AG_FatalError(NULL);
 	}
-	InitClass(C, cs.hier, cs.libs);
-	
-#ifdef AG_DEBUG_CORE
-	Debug(NULL, "Registered class: %s: %s (%s)\n", cs.name, cs.hier,
-	    cs.libs);
+	InitClass(C, cs.hier);
+#ifdef AG_ENABLE_DSO
+	Strlcpy(C->pvt.libs, cs.libs, sizeof(C->pvt.libs));
 #endif
-
+#ifdef AG_DEBUG_CORE
+	Debug(NULL, "Registered class: %s: %s %s\n", cs.name, cs.hier, cs.libs);
+#endif
 	AG_MutexLock(&agClassLock);
 
 	/* Insert into the class tree. */
@@ -355,7 +360,10 @@ AG_LookupClass(const char *inSpec)
 	return (NULL);
 }
 
-/* Convert "PFX_Foo" to "pfxFooClass". */
+#ifdef AG_ENABLE_DSO
+/*
+ * Transform "PFX_Foo" string to "pfxFooClass".
+ */
 static int
 GetClassSymbol(char *_Nonnull sym, AG_Size len,
     const AG_ObjectClassSpec *_Nonnull cs)
@@ -409,9 +417,8 @@ AG_LoadClass(const char *classSpec)
 	void *pClass = NULL;
 	int i;
 
-	if (AG_ParseClassSpec(&cs, classSpec) == -1) {
+	if (AG_ParseClassSpec(&cs, classSpec) == -1)
 		return (NULL);
-	}
 	
 	AG_MutexLock(&agClassLock);
 
@@ -429,9 +436,9 @@ AG_LoadClass(const char *classSpec)
 	for (i = 0, s = cs.libs;
 	    (lib = Strsep(&s, ", ")) != NULL;
 	    i++) {
-#ifdef AG_DEBUG_CORE
+# ifdef AG_DEBUG_CORE
 		Debug(NULL, "<%s>: Linking %s...", classSpec, lib);
-#endif
+# endif
 		if ((dso = AG_LoadDSO(lib, 0)) == NULL) {
 			AG_SetError("Loading <%s>: %s", classSpec, AG_GetError());
 			goto fail;
@@ -447,9 +454,9 @@ AG_LoadClass(const char *classSpec)
 				goto fail;
 			}
 		}
-#ifdef AG_DEBUG_CORE
+# ifdef AG_DEBUG_CORE
 		Debug(NULL, "OK\n");
-#endif
+# endif
 	}
 	if (pClass == NULL) {
 		AG_SetError("Loading <%s>: No library specified", classSpec);
@@ -460,9 +467,9 @@ AG_LoadClass(const char *classSpec)
 	AG_MutexUnlock(&agClassLock);
 	return (pClass);
 fail:
-#ifdef AG_DEBUG_CORE
+# ifdef AG_DEBUG_CORE
 	Debug(NULL, "%s\n", AG_GetError());
-#endif
+# endif
 	AG_MutexUnlock(&agClassLock);
 	return (pClass);
 }
@@ -484,6 +491,7 @@ AG_UnloadClass(AG_ObjectClass *C)
 			AG_UnloadDSO(dso);
 	}
 }
+#endif /* AG_ENABLE_DSO */
 
 /* Register a new namespace. */
 AG_Namespace *
