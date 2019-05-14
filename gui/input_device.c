@@ -17,7 +17,6 @@ Init(void *obj)
 	id->flags = 0;
 	id->drv = NULL;
 	id->desc = NULL;
-	AG_InitEventQ(&id->events);
 }
 
 static void
@@ -26,7 +25,6 @@ Destroy(void *obj)
 	AG_InputDevice *id = obj;
 
 	Free(id->desc);
-	AG_FreeEventQ(&id->events);
 }
 
 AG_ObjectClass agInputDeviceClass = {

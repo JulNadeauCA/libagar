@@ -9,7 +9,6 @@ typedef struct ag_input_device {
 	Uint flags;
 	void *_Nullable drv;	/* Associated graphics driver */
 	char *_Nullable desc;	/* User description */
-	AG_EventQ events;	/* Queue of input events */
 } AG_InputDevice;
 
 #define AGINPUTDEV(obj) ((AG_InputDevice *)(obj))
