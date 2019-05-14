@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -39,12 +39,12 @@
 .\" IMAGE(http://libagar.org/widgets/AG_Console.png, "The AG_Console widget")
 The
 .Nm
-widget displays a scrollable list of messages in log format.
-Messages may be copied to the clipboard or exported to a file.
-After a message has been appended to the log, its text (and other
-attributes) can be changed.
-By default, the display automatically scrolls down to make new messages
-visible.
+widget displays a scrollable list of messages in a log format.
+Log entries can be copied to the clipboard or written to a file.
+The
+.Nm
+interface allows the contents and attributes of existing log entries to be
+dynamically updated.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -56,9 +56,6 @@ visible.
 .Pp
 .Ft "void"
 .Fn AG_ConsoleSetPadding "AG_Console *cons" "int padding"
-.Pp
-.Ft "void"
-.Fn AG_ConsoleSetFont "AG_Console *cons" "AG_Font *font"
 .Pp
 .nr nS 0
 The
@@ -73,7 +70,7 @@ include:
 .It AG_CONSOLE_NOAUTOSCROLL
 Don't scroll automatically to make newly inserted lines visible.
 .It AG_CONSOLE_NOPOPUP
-Disable contextual popup menus.
+Disable the right-click contextual popup menu (with Copy, Select All and Export functions).
 .It AG_CONSOLE_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -87,23 +84,20 @@ Shorthand for
 .Pp
 The
 .Fn AG_ConsoleSetPadding
-function sets the padding around messages in pixels.
-.Pp
-.Fn AG_ConsoleSetFont
-configures an alternate font for the
-.Nm
-messages (see
-.Xr AG_FetchFont 3 ) .
+function sets the padding around log entries in pixels.
 .Sh MESSAGES
 .nr nS 1
 .Ft "AG_ConsoleLine *"
 .Fn AG_ConsoleMsg "AG_Console *cons" "const char *format" "..."
 .Pp
 .Ft "AG_ConsoleLine *"
-.Fn AG_ConsoleMsgS "AG_Console *cons" "const char *text"
+.Fn AG_ConsoleMsgS "AG_Console *cons" "const char *s"
 .Pp
 .Ft "void"
-.Fn AG_ConsoleMsgEdit "AG_ConsoleLine *line" "const char *newText"
+.Fn AG_ConsoleMsgEdit "AG_ConsoleLine *line" "const char *s"
+.Pp
+.Ft "void"
+.Fn AG_ConsoleMsgCatS "AG_ConsoleLine *line" "const char *s"
 .Pp
 .Ft "void"
 .Fn AG_ConsoleMsgPtr "AG_ConsoleLine *line" "void *ptr"
@@ -138,13 +132,17 @@ the function prints the message with
 .Xr AG_Verbose 3
 before returning NULL.
 .Pp
-The
 .Fn AG_ConsoleMsgEdit
-routine replaces the text of an existing message.
+replaces an existing log entry's text with the given string.
+.Pp
+.Fn AG_ConsoleMsgCatS
+appends the given string to an existing log entry's text.
+.Pp
 .Fn AG_ConsoleMsgPtr
-associates an arbitrary user pointer with the given message.
+sets an optional user pointer for this log entry.
+.Pp
 .Fn AG_ConsoleMsgColor
-an alternate, line-specific text color.
+sets an alternate, line-specific color for this log entry.
 .Pp
 .Fn AG_ConsoleClear
 clears all messages from the console.
@@ -191,10 +189,6 @@ Length of string in characters.
 Line selection flag.
 .It Ft int icon
 Icon surface to display.
-.It Ft AG_Font *font
-Alternate font (if NULL, the default font is used).
-Usually set with
-.Fn AG_ConsoleSetFont .
 .It Ft AG_Color cFg
 Foreground color.
 .It Ft AG_Color cBg

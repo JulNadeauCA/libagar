@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Basic console widget.
+ */
+
 #include <agar/core/core.h>
 #include <agar/core/config.h>
 #include <agar/gui/console.h>
@@ -226,11 +230,18 @@ MenuCopy(AG_Event *_Nonnull event)
 	if ((s = AG_ConsoleExportText(cons, 0)) == NULL) {
 		return;
 	}
+#ifdef AG_UNICODE
 	Strlcpy(cb->encoding, "UTF-8", sizeof(cb->encoding));
 	Free(cb->s);
-	if ((cb->s = AG_ImportUnicode("UTF-8", s, &cb->len, NULL)) == NULL) {
+	if ((cb->s = AG_ImportUnicode("UTF-8", s, &cb->len, NULL)) == NULL)
 		cb->len = 0;
-	}
+#else
+	Strlcpy(cb->encoding, "US-ASCII", sizeof(cb->encoding));
+	Free(cb->s);
+	if ((cb->s = (Uint8 *)TryStrdup(s)) == NULL)
+		cb->len = 0;
+
+#endif
 	free(s);
 }
 static void
@@ -242,6 +253,7 @@ MenuCopyActive(AG_Event *_Nonnull event)
 	*status = (cons->pos != -1) ? 1 : 0;
 }
 
+#ifdef AG_SERIALIZATION
 static void
 MenuExportToFileTXT(AG_Event *_Nonnull event)
 {
@@ -260,7 +272,9 @@ MenuExportToFileTXT(AG_Event *_Nonnull event)
 	fwrite(s, strlen(s), 1, f);
 	fclose(f);
 	free(s);
+#ifdef AG_TIMERS
 	AG_TextTmsg(AG_MSG_INFO, 2000, _("Saved successfully to %s"), path);
+#endif
 	return;
 fail:
 	AG_TextMsgFromError();
@@ -291,6 +305,7 @@ MenuExportToFileDlg(AG_Event *_Nonnull event)
 
 	AG_WindowShow(win);
 }
+#endif /* AG_SERIALIZATION */
 
 static void
 MenuSelectAll(AG_Event *_Nonnull event)
@@ -354,10 +369,10 @@ PopupMenu(AG_Event *_Nonnull event)
 	}
 	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy, "%p", cons);
 	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCopyActive, "%p", cons);
-
+#ifdef AG_SERIALIZATION
 	AG_MenuAction(pm->root, _("Export to file..."), NULL,
 	    MenuExportToFileDlg, "%p", cons);
-
+#endif
 	AG_MenuSeparator(pm->root);
 
 	AG_MenuAction(pm->root, _("Select All"), NULL,
@@ -684,20 +699,26 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 {
 	AG_ConsoleLine *ln;
 	va_list args;
+	AG_Size len;
 
 	AG_ObjectLock(cons);
-	if ((ln = AG_ConsoleAppendLine(cons, NULL)) != NULL) {
-		va_start(args, fmt);
-		AG_Vasprintf(&ln->text, fmt, args);
-		va_end(args);
-		ln->len = strlen(ln->text);
-		if (ln->len > 1 && ln->text[ln->len - 1] == '\n') {
-			ln->text[ln->len - 1] = '\0';
-			ln->len--;
-		}
+	if ((ln = AG_ConsoleAppendLine(cons, NULL)) == NULL) {
+		goto fail;
+	}
+	va_start(args, fmt);
+	AG_Vasprintf(&ln->text, fmt, args);
+	va_end(args);
+
+	len = ln->len = strlen(ln->text);
+	if (len > 1 && ln->text[len-1] == '\n') {
+		ln->text[len-1] = '\0';
+		ln->len--;
 	}
 	AG_ObjectUnlock(cons);
 	return (ln);
+fail:
+	AG_ObjectUnlock(cons);
+	return (NULL);
 }
 
 /* Append a message to the console (C string). */
@@ -705,29 +726,29 @@ AG_ConsoleLine *
 AG_ConsoleMsgS(AG_Console *cons, const char *s)
 {
 	AG_ConsoleLine *ln;
+	AG_Size len;
 	
 	AG_ObjectLock(cons);
-	if ((ln = AG_ConsoleAppendLine(cons, s)) != NULL) {
-		if (ln->len > 1 && ln->text[ln->len - 1] == '\n') {
-			ln->text[ln->len - 1] = '\0';
-			ln->len--;
-		}
+	if ((ln = AG_ConsoleAppendLine(cons, s)) == NULL) {
+		goto fail;
+	}
+	len = ln->len;
+	if (len > 1 && ln->text[len-1] == '\n') {
+		ln->text[len-1] = '\0';
+		ln->len--;
 	}
 	AG_ObjectUnlock(cons);
 	return (ln);
+fail:
+	AG_ObjectUnlock(cons);
+	return (NULL);
 }
 
-/* Change the text of an existing line. */
-void
-AG_ConsoleMsgEdit(AG_ConsoleLine *ln, const char *s)
+static void
+InvalidateCachedLabel(AG_Console *cons, AG_ConsoleLine *ln)
 {
-	AG_Console *cons = ln->cons;
 	int i;
-
-	AG_ObjectLock(cons);
-	free(ln->text);
-	ln->text = Strdup(s);
-	ln->len = strlen(s);
+	
 	for (i = 0; i < 2; i++) {
 		if (ln->surface[i] != -1) {
 			AG_WidgetUnmapSurface(cons, ln->surface[i]);
@@ -735,9 +756,41 @@ AG_ConsoleMsgEdit(AG_ConsoleLine *ln, const char *s)
 		}
 	}
 	AG_Redraw(cons);
+}
+
+/* Replace the text of a log entry. */
+void
+AG_ConsoleMsgEdit(AG_ConsoleLine *ln, const char *s)
+{
+	AG_Console *cons = ln->cons;
+
+	AG_ObjectLock(cons);
+	free(ln->text);
+	ln->text = Strdup(s);
+	ln->len = strlen(s);
+	InvalidateCachedLabel(cons, ln);
 	AG_ObjectUnlock(cons);
 }
 
+/* Append a string to the text of a log entry. */
+void
+AG_ConsoleMsgCatS(AG_ConsoleLine *ln, const char *s)
+{
+	AG_Console *cons = ln->cons;
+	AG_Size sLen, newLen;
+
+	sLen = strlen(s);
+
+	AG_ObjectLock(cons);
+	newLen = ln->len + sLen + 1;
+	ln->text = Realloc(ln->text, newLen);
+	ln->len = newLen;
+	Strlcat(ln->text, s, newLen);
+	InvalidateCachedLabel(cons, ln);
+	AG_ObjectUnlock(cons);
+}
+
+/* Assign a user pointer to a log entry. */
 void
 AG_ConsoleMsgPtr(AG_ConsoleLine *ln, void *p)
 {
@@ -746,6 +799,7 @@ AG_ConsoleMsgPtr(AG_ConsoleLine *ln, void *p)
 	AG_ObjectUnlock(ln->cons);
 }
 
+/* Assign an alternate color to a log entry. */
 void
 AG_ConsoleMsgColor(AG_ConsoleLine *ln, const AG_Color *c)
 {
@@ -754,6 +808,7 @@ AG_ConsoleMsgColor(AG_ConsoleLine *ln, const AG_Color *c)
 	AG_ObjectUnlock(ln->cons);
 }
 
+/* Delete all log entries. */
 void
 AG_ConsoleClear(AG_Console *cons)
 {

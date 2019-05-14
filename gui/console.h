@@ -64,6 +64,7 @@ AG_ConsoleLine *_Nonnull AG_ConsoleMsg(AG_Console *_Nonnull, const char *_Nonnul
 
 void AG_ConsoleSetPadding(AG_Console *_Nonnull, int);
 void AG_ConsoleMsgEdit(AG_ConsoleLine *_Nonnull, const char *_Nonnull);
+void AG_ConsoleMsgCatS(AG_ConsoleLine *_Nonnull, const char *_Nonnull);
 void AG_ConsoleMsgPtr(AG_ConsoleLine *_Nonnull, void *_Nullable);
 void AG_ConsoleMsgColor(AG_ConsoleLine *_Nonnull, const AG_Color *_Nonnull);
 void AG_ConsoleClear(AG_Console *_Nonnull);
