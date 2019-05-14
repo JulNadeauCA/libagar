@@ -106,7 +106,6 @@ typedef struct ag_menu_view {
 	int spIconLbl;			/* Icon and label spacing */
 	int spLblArrow;			/* Label and submenu arrow spacing */
 	int lPad, rPad, tPad, bPad;	/* Padding in pixels */
-	AG_Timer submenuTo;		/* For sub-menu popup delay */
 	int arrowRight;			/* Right arrow surface handle */
 } AG_MenuView;
 
@@ -234,11 +233,14 @@ AG_MenuItem *_Nonnull AG_MenuInt16FlagsMp(AG_MenuItem *_Nonnull,
 					 Uint16 *_Nonnull, Uint16, int,
 					 _Nonnull_Mutex AG_Mutex *_Nullable);
 
+#if AG_MODEL != AG_SMALL
 AG_MenuItem *_Nonnull AG_MenuInt32FlagsMp(AG_MenuItem *_Nonnull,
 					  const char *_Nullable,
 					  const AG_Surface *_Nullable,
 					  Uint32 *_Nonnull, Uint32, int,
 					  _Nonnull_Mutex AG_Mutex *_Nullable);
+#endif
+
 #define	AG_MenuIntBool(mi,t,i,p,inv) \
 	AG_MenuIntBoolMp((mi),(t),(i),(p),(inv),NULL)
 #define AG_MenuInt8Bool(mi,t,i,p,inv) \

@@ -28,24 +28,7 @@
 #include <agar/gui/primitive.h>
 #include <agar/gui/icons.h>
 
-static Uint32
-SubmenuTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
-{
-	AG_MenuView *mview = AG_SELF();
-	AG_MenuItem *item = AG_PTR(1);
-
-#ifdef AG_DEBUG
-	if (item != mview->pitem->sel_subitem)
-		AG_FatalError("AG_Menu: Subitem mismatch in timeout");
-#endif
-	AG_MenuExpand(mview, item, WIDTH(mview), item->y);
-	return (0);
-}
-
-/*
- * Selection has moved over the specified subitem. If the subitem is
- * a submenu, the submenu timer is initiated.
- */
+/* Selection has moved over the specified item. */
 static void
 SelectItem(AG_MenuItem *_Nonnull mi, AG_MenuItem *_Nullable subitem)
 {
@@ -58,14 +41,7 @@ SelectItem(AG_MenuItem *_Nonnull mi, AG_MenuItem *_Nullable subitem)
 	if (subitem != NULL) {
 		AG_MenuView *mview = mi->view;
 
-		AG_LockTimers(mview);
-		if (subitem != NULL && subitem->nSubItems > 0) {
-			AG_AddTimer(mview, &mview->submenuTo, 200,
-			    SubmenuTimeout, "%p", subitem);
-		} else {
-			AG_DelTimer(mview, &mview->submenuTo);
-		}
-		AG_UnlockTimers(mview);
+		AG_MenuExpand(mview, subitem, WIDTH(mview), subitem->y);
 	}
 }
 
@@ -277,7 +253,6 @@ Init(void *_Nonnull obj)
 	mview->tPad = 4;
 	mview->bPad = 4;
 	mview->arrowRight = -1;
-	AG_InitTimer(&mview->submenuTo, "submenu", 0);
 
 	AG_SetEvent(mview, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(mview, "mouse-button-up", MouseButtonUp, NULL);
