@@ -104,6 +104,7 @@ AG_CheckboxNewFlag(void *parent, Uint flags, const char *label, Uint *pFlags,
 	return (cb);
 }
 
+#if AG_MODEL != AG_SMALL
 AG_Checkbox *
 AG_CheckboxNewFlag32(void *parent, Uint flags, const char *label,
     Uint32 *pFlags, Uint32 bitmask)
@@ -114,6 +115,7 @@ AG_CheckboxNewFlag32(void *parent, Uint flags, const char *label,
 	AG_BindFlag32(cb, "state", pFlags, bitmask);
 	return (cb);
 }
+#endif /* !AG_SMALL */
 
 /* Create a set of checkboxes for the given set of flags. */
 void
@@ -133,6 +135,7 @@ AG_CheckboxSetFromFlags(void *parent, Uint flags, Uint *pFlags,
 	}
 }
 
+#if AG_MODEL != AG_SMALL
 /* Create a set of checkboxes for the given set of flags. */
 void
 AG_CheckboxSetFromFlags32(void *parent, Uint flags, Uint32 *pFlags,
@@ -150,6 +153,7 @@ AG_CheckboxSetFromFlags32(void *parent, Uint flags, Uint32 *pFlags,
 			AG_WidgetDisable(cb);
 	}
 }
+#endif /* !AG_SMALL */
 
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
@@ -226,9 +230,9 @@ Draw(void *_Nonnull obj)
 	AG_PushClipRect(cb, &r);
 
 	V = AG_GetVariable(cb, "state", &p);
-	switch (AG_VARIABLE_TYPE(V)) {
-	case AG_VARIABLE_INT:
-	case AG_VARIABLE_UINT:
+	switch (V->type) {
+	case AG_VARIABLE_P_INT:
+	case AG_VARIABLE_P_UINT:
 		state = *(int *)p;
 		break;
 	case AG_VARIABLE_P_FLAG:
@@ -240,21 +244,25 @@ Draw(void *_Nonnull obj)
 	case AG_VARIABLE_P_FLAG16:
 		state = *(Uint16 *)p & V->info.bitmask.u16;
 		break;
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_FLAG32:
 		state = *(Uint32 *)p & V->info.bitmask.u32;
 		break;
-	case AG_VARIABLE_UINT8:
-	case AG_VARIABLE_SINT8:
+#endif
+	case AG_VARIABLE_P_UINT8:
+	case AG_VARIABLE_P_SINT8:
 		state = *(Uint8 *)p;
 		break;
-	case AG_VARIABLE_UINT16:
-	case AG_VARIABLE_SINT16:
+	case AG_VARIABLE_P_UINT16:
+	case AG_VARIABLE_P_SINT16:
 		state = *(Uint16 *)p;
 		break;
-	case AG_VARIABLE_UINT32:
-	case AG_VARIABLE_SINT32:
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_P_UINT32:
+	case AG_VARIABLE_P_SINT32:
 		state = *(Uint32 *)p;
 		break;
+#endif
 	default:
 		state = 0;
 		break;
@@ -339,9 +347,9 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 
 	AG_ObjectLock(cb);
 	V = AG_GetVariable(cb, "state", &p);
-	switch (AG_VARIABLE_TYPE(V)) {
-	case AG_VARIABLE_INT:
-	case AG_VARIABLE_UINT:
+	switch (V->type) {
+	case AG_VARIABLE_P_INT:
+	case AG_VARIABLE_P_UINT:
 		{
 			int *state = (int *)p;
 			*state = !(*state);
@@ -373,6 +381,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			    (Uint16)*state);
 		}
 		break;
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_FLAG32:
 		{
 			Uint32 *state = (Uint32 *)p;
@@ -381,8 +390,9 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			    (Uint32)*state);
 		}
 		break;
-	case AG_VARIABLE_UINT8:
-	case AG_VARIABLE_SINT8:
+#endif
+	case AG_VARIABLE_P_UINT8:
+	case AG_VARIABLE_P_SINT8:
 		{
 			Uint8 *state = (Uint8 *)p;
 			*state = !(*state);
@@ -390,8 +400,8 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			    (int)*state);
 		}
 		break;
-	case AG_VARIABLE_UINT16:
-	case AG_VARIABLE_SINT16:
+	case AG_VARIABLE_P_UINT16:
+	case AG_VARIABLE_P_SINT16:
 		{
 			Uint16 *state = (Uint16 *)p;
 			*state = !(*state);
@@ -399,8 +409,9 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			    (int)*state);
 		}
 		break;
-	case AG_VARIABLE_UINT32:
-	case AG_VARIABLE_SINT32:
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_P_UINT32:
+	case AG_VARIABLE_P_SINT32:
 		{
 			Uint32 *state = (Uint32 *)p;
 			*state = !(*state);
@@ -408,6 +419,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			    (int)*state);
 		}
 		break;
+#endif
 	default:
 		break;
 	}
