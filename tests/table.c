@@ -140,6 +140,8 @@ CreateStaticTable(AG_Event *event)
 	AG_WindowShow(win);
 }
 
+#ifdef AG_TIMERS
+
 /* This is our callback function for updating our dynamic table (Ex.2) */
 static void
 UpdateTable(AG_Event *event)
@@ -207,6 +209,7 @@ CreatePolledTable(AG_Event *event)
 	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
+#endif /* AG_TIMERS */
 
 /* Report on the status of our test array (Ex.3) */
 static void
@@ -300,7 +303,11 @@ static int
 TestGUI(void *obj, AG_Window *win)
 {
 	AG_ButtonNewFn(win, 0, "Create static table", CreateStaticTable, "%p", win);
+#ifdef AG_TIMERS
 	AG_ButtonNewFn(win, 0, "Create polled table", CreatePolledTable, "%p", win);
+#else
+	AG_WidgetDisable(AG_ButtonNewS(win, 0, "Create polled table"));
+#endif
 	AG_ButtonNewFn(win, 0, "Create table with controls", CreateTableWithControls, "%p", win);
 	return (0);
 }

@@ -318,7 +318,7 @@ function releases all resources allocated by the given surface.
 .Sh SURFACE OPERATIONS
 .nr nS 1
 .Ft void
-.Fn AG_FillRect "AG_Surface *s" "const AG_Rect *r" "AG_Color c"
+.Fn AG_FillRect "AG_Surface *s" "const AG_Rect *r" "const AG_Color *c"
 .Pp
 .Ft void
 .Fn AG_SurfaceBlit "const AG_Surface *src" "const AG_Rect *rSrc" "AG_Surface *dst" "int x" "int y"
@@ -523,6 +523,9 @@ typedef struct ag_pixel_format {
 .Pp
 .Ed
 .nr nS 1
+.Ft "int"
+.Fn AG_PixelFormatIsSupported "AG_SurfaceMode mode" "int BitsPerPixel"
+.Pp
 .Ft "AG_PixelFormat *"
 .Fn AG_PixelFormatRGB "Uint8 bitsPerPixel" "AG_Pixel Rmask" "AG_Pixel Gmask" "AG_Pixel Bmask"
 .Pp
@@ -540,6 +543,10 @@ typedef struct ag_pixel_format {
 .Pp
 .nr nS 0
 .\" MANLINK(AG_PixelFormat)
+.Pp
+.Fn AG_PixelFormatIsSupported
+returns 1 if the given combination of encoding and bits per pixel is supported
+by the present Agar build.
 .Pp
 The
 .Fn AG_PixelFormatRGB
@@ -615,10 +622,10 @@ frees all resources allocated by an
 .Fn AG_SurfacePut64_At "AG_Surface *s" "Uint8 *p" "Uint64 px"
 .Pp
 .Ft "void"
-.Fn AG_SurfaceBlend "AG_Surface *s" "int x" "int y" "AG_Color c" "AG_AlphaFn fn"
+.Fn AG_SurfaceBlend "AG_Surface *s" "int x" "int y" "const AG_Color *c" "AG_AlphaFn fn"
 .Pp
 .Ft "void"
-.Fn AG_SurfaceBlend_At "AG_Surface *s" "Uint8 *p" "AG_Color c" "AG_AlphaFn fn"
+.Fn AG_SurfaceBlend_At "AG_Surface *s" "Uint8 *p" "const AG_Color *c" "AG_AlphaFn fn"
 .Pp
 .Ft "void"
 .Fn AG_SurfaceBlendRGB8 "AG_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "AG_AlphaFn fn"
@@ -632,14 +639,14 @@ frees all resources allocated by an
 .Ft "void"
 .Fn AG_SurfaceBlendRGB16_At "AG_Surface *s" "Uint8 *p" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a" "AG_AlphaFn fn"
 .Pp
-.Ft AG_Color
-.Fn AG_GetColor "AG_Pixel px" "const AG_PixelFormat *pf"
+.Ft void
+.Fn AG_GetColor "AG_Color *dst" "AG_Pixel px" "const AG_PixelFormat *pf"
 .Pp
-.Ft AG_Color
-.Fn AG_GetColor32 "Uint32 px" "const AG_PixelFormat *pf"
+.Ft void
+.Fn AG_GetColor32 "AG_Color *dst" "Uint32 px" "const AG_PixelFormat *pf"
 .Pp
-.Ft AG_Color
-.Fn AG_GetColor64 "Uint64 px" "const AG_PixelFormat *pf"
+.Ft void
+.Fn AG_GetColor64 "AG_Color *dst" "Uint64 px" "const AG_PixelFormat *pf"
 .Pp
 .Ft void
 .Fn AG_GetColor_RGB8 "AG_Pixel px" "const AG_PixelFormat *pf" "Uint8 *r" "Uint8 *g" "Uint8 *b" "Uint8 *a"
@@ -660,13 +667,13 @@ frees all resources allocated by an
 .Fn AG_GetColor64_RGB16 "Uint64 px" "const AG_PixelFormat *pf" "Uint16 *r" "Uint16 *g" "Uint16 *b" "Uint16 *a"
 .Pp
 .Ft AG_Pixel
-.Fn AG_MapPixel "const AG_PixelFormat *pf" "AG_Color c"
+.Fn AG_MapPixel "const AG_PixelFormat *pf" "const AG_Color *c"
 .Pp
 .Ft Uint32
-.Fn AG_MapPixel32 "const AG_PixelFormat *pf" "AG_Color c"
+.Fn AG_MapPixel32 "const AG_PixelFormat *pf" "const AG_Color *c"
 .Pp
 .Ft Uint64
-.Fn AG_MapPixel64 "const AG_PixelFormat *pf" "AG_Color c"
+.Fn AG_MapPixel64 "const AG_PixelFormat *pf" "const AG_Color *c"
 .Pp
 .Ft AG_Pixel
 .Fn AG_MapPixel_RGB8 "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
@@ -804,7 +811,9 @@ forms accept discrete 8- and 16-bit components instead of an
 .Fn AG_GetColor32
 extracts RGBA components from a 32-bit pixel in specified format and
 returns the corresponding
-.Xr AG_Color 3 .
+.Xr AG_Color 3
+into
+.Fa dst .
 The procedural forms
 .Fn AG_GetColor32_RGB{8,16} ,
 return the color components into separate arguments.

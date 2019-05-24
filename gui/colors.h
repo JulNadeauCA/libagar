@@ -128,8 +128,11 @@ extern AG_ColorOffset agSunkColor, agRaisedColor, agLowColor, agHighColor;
 
 void AG_ColorFromString(AG_Color *_Nonnull, const char *_Nonnull,
                         const AG_Color *_Nullable);
+
+#ifdef AG_SERIALIZATION
 void AG_ReadColor(AG_Color *_Nonnull, AG_DataSource *_Nonnull);
 void AG_WriteColor(AG_DataSource *_Nonnull, const AG_Color *_Nonnull);
+#endif
 
 #ifdef AG_HAVE_FLOAT
 void  AG_MapRGB8_HSVf(Uint8,Uint8,Uint8,

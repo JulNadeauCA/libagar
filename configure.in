@@ -28,8 +28,16 @@ register("--with-inline",		"Inline functions [yes]")
 register_section("Options specific to CORE library:")
 register("--enable-debug-core",		"Expensive AG_Object debugging [no]")
 register("--enable-dso",		"Dynamically loaded modules [check]")
-register("--enable-network",		"Network interface [check]")
-register("--enable-web",		"Web application server [no]")
+register("--enable-exec",		"The AG_Execute(3) interface [check]")
+register("--enable-namespaces",		"Namespaces for object classes [check]")
+register("--enable-network",		"The AG_Net(3) network interface [check]")
+register("--enable-serialization",	"File I/O and serialization [check]")
+register("--enable-string",		"AG_Printf(3) formatting engine [check]")
+register("--enable-timers",		"The AG_Timer(3) interface [check]")
+register("--enable-unicode",		"Support for Unicode [check]")
+register("--enable-user",		"The AG_User(3) interface [check]")
+register("--enable-verbosity",		"Verbose error messages [check]")
+register("--enable-web",		"HTTP/1.1 application server [no]")
 register("--with-db[45][=PREFIX]",	"AG_Db: Berkeley DB backend [no]")
 register("--with-mysql[=PREFIX]",	"AG_Db: MySQL backend [no]")
 register("--with-iconv[=PREFIX]",	"Character set conversion [check]")
@@ -131,6 +139,17 @@ c64 | c128 | geos | nes)
 	enable_shared="no"
 	with_float="no"
 	enable_dso="no"
+	enable_exec="no"
+	enable_namespaces="no"
+	enable_network="no"
+	enable_serialization="no"
+	enable_string="no"
+	enable_threads="no"
+	enable_timers="no"
+	enable_type_safety="no"
+	enable_unicode="no"
+	enable_user="no"
+	enable_verbosity="no"
 	echo "checking for byte order...little-endian (${host})"
 	mdefine(_MK_BYTE_ORDER, "LE")
 	hdefine(_MK_LITTLE_ENDIAN, "yes")
@@ -266,10 +285,18 @@ else
 	hundef(AG_DEBUG)
 	hdefine_if("${enable_type_safety}" = 'yes', AG_TYPE_SAFETY)
 fi
-hdefine_if("${enable_debug_core}" = 'yes', AG_DEBUG_CORE)
-hdefine_if("${enable_debug_gui}" = 'yes',  AG_DEBUG_GUI)
-hdefine_if("${enable_dso}" != 'no',        AG_ENABLE_DSO)
-hdefine_if("${enable_legacy}" = 'yes',     AG_LEGACY)
+hdefine_if("${enable_debug_core}" = 'yes',    AG_DEBUG_CORE)
+hdefine_if("${enable_debug_gui}" = 'yes',     AG_DEBUG_GUI)
+hdefine_if("${enable_dso}" != 'no',           AG_ENABLE_DSO)
+hdefine_if("${enable_exec}" != 'no',          AG_ENABLE_EXEC)
+hdefine_if("${enable_legacy}" = 'yes',        AG_LEGACY)
+hdefine_if("${enable_namespaces}" != 'no',    AG_NAMESPACES)
+hdefine_if("${enable_serialization}" != 'no', AG_SERIALIZATION)
+hdefine_if("${enable_string}" != 'no',        AG_ENABLE_STRING)
+hdefine_if("${enable_timers}" != 'no',        AG_TIMERS)
+hdefine_if("${enable_unicode}" != 'no',       AG_UNICODE)
+hdefine_if("${enable_user}" != 'no',          AG_USER)
+hdefine_if("${enable_verbosity}" != 'no',     AG_VERBOSITY)
 
 #
 # Options specific to the Agar-GUI library.

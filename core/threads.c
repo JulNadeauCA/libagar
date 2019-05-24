@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,8 +29,8 @@
 
 #include <agar/core/core.h>
 
-/*
- * Import inlinables (or no-ops if threads are disabled).
- */
-#undef AG_INLINE_HEADER
-#include <agar/core/inline_threads.h>
+#ifdef AG_THREADS
+/* Import inlinables */
+# undef AG_INLINE_HEADER
+# include <agar/core/inline_threads.h>
+#endif /* AG_THREADS */

@@ -5,6 +5,7 @@
  */
 
 #include "agartest.h"
+#if defined(AG_TIMERS) && defined(AG_HAVE_FLOAT)
 
 #include <string.h>
 
@@ -73,3 +74,5 @@ const AG_TestCase compositingTest = {
 	TestGUI,
 	NULL		/* bench */
 };
+
+#endif /* AG_TIMERS and AG_HAVE_FLOAT */

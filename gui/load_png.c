@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,9 @@
 /*
  * Loader for PNG images via libpng.
  */
+
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
 
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
@@ -168,7 +171,8 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 		colorkey = AG_MapPixel_RGB16(&S->format,
 		    tc->red, tc->green, tc->blue);
 #if AG_MODEL == AG_LARGE
-		Debug(NULL, "PNG transparent colorkey: 0x%llx\n", colorkey);
+		Debug(NULL, "PNG transparent colorkey: 0x%llx\n",
+		    (unsigned long long)colorkey);
 #else
 		Debug(NULL, "PNG transparent colorkey: 0x%x\n", colorkey);
 #endif
@@ -222,11 +226,9 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	for (row = 0; row < (int)height; row++)
 		pData[row] = (png_bytep)S->pixels + row*S->pitch;
 
-	Debug(NULL, "Reading %ux%ux%dbpp %s PNG at 0x%lx (->%p) via libpng (%s)\n",
-	    width, height, depth*channels,
-	    agSurfaceModeNames[S->format.mode],
-	    (long)start, S,
-	    PNG_LIBPNG_VER_STRING);
+	Debug(NULL, "PNG image (%ux%u; %d-bpp %s at 0x%lx (->%p) via libpng (%s)\n",
+	    width, height, depth*channels, agSurfaceModeNames[S->format.mode],
+	    (long)start, S, PNG_LIBPNG_VER_STRING);
 
 	png_read_image(png, pData);
 
@@ -575,3 +577,4 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 }
 
 #endif /* HAVE_PNG */
+#endif /* AG_SERIALIZATION */

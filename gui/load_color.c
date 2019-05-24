@@ -26,6 +26,8 @@
 /*
  * Serialization of colors in RGBA format.
  */
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
 
 #include <agar/core/core.h>
 #include <agar/gui/surface.h>
@@ -123,3 +125,5 @@ AG_ReadColor(AG_Color *c, AG_DataSource *ds)
 		AG_FatalError("Bad depth");
 	}
 }
+
+#endif /* AG_SERIALIZATION */

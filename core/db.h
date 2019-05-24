@@ -2,6 +2,10 @@
 
 #ifndef _AGAR_CORE_DB_H_
 #define _AGAR_CORE_DB_H_
+
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/core/begin.h>
 
 struct ag_db;
@@ -72,4 +76,5 @@ int AG_DbIterate(AG_Db *_Nonnull, _Nonnull AG_DbIterateFn, void *_Nullable);
 __END_DECLS
 
 #include <agar/core/close.h>
+#endif /* AG_SERIALIZATION */
 #endif /* _AGAR_CORE_DB_H_ */

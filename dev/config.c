@@ -169,8 +169,10 @@ SaveConfig(AG_Event *_Nonnull event)
 	if (AG_ObjectSave(agConfig) == -1) {
 		AG_TextMsgFromError();
 	} else {
+#ifdef AG_TIMERS
 		AG_TextTmsg(AG_MSG_INFO, 750,
 		    _("Configuration settings saved successfully."));
+#endif
 	}
 }
 
@@ -235,11 +237,12 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 
 	tab = AG_NotebookAdd(nb, _("GUI"), AG_BOX_VERT);
 	{
+#ifdef AG_UNICODE
 		AG_CheckboxNewInt(tab, 0, _("Built-in key composition"),
 		    &agTextComposition);
 		AG_CheckboxNewInt(tab, 0, _("Bidirectional"),
 		    &agTextBidi);
-		
+#endif
 		AG_SeparatorNewHoriz(tab);
 		AG_LabelNewS(tab, 0, _("Timer settings (milliseconds):"));
 		AG_NumericalNewIntR(tab, 0, NULL, _("Double click delay: "),

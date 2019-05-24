@@ -4,6 +4,9 @@
  * different character set encodings.
  */
 
+#include <agar/config/ag_unicode.h>
+#ifdef AG_UNICODE
+
 #include "agartest.h"
 
 #include <string.h>
@@ -100,3 +103,5 @@ const AG_TestCase charsetsTest = {
 	TestGUI,
 	NULL		/* bench */
 };
+
+#endif /* AG_UNICODE */

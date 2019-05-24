@@ -59,6 +59,7 @@ AG_SocketFromSurface(void *parent, Uint flags, AG_Surface *su)
 	return (sock);
 }
 
+#ifdef AG_SERIALIZATION
 AG_Socket *
 AG_SocketFromBMP(void *parent, Uint flags, const char *bmpfile)
 {
@@ -72,6 +73,7 @@ AG_SocketFromBMP(void *parent, Uint flags, const char *bmpfile)
 	AG_SocketBgPixmapNODUP(sock, bmp);
 	return (sock);
 }
+#endif /* AG_SERIALIZATION */
 
 void
 AG_SocketInsertFn(AG_Socket *sock, int (*fn)(AG_Socket *, AG_Icon *))
@@ -155,8 +157,10 @@ GetState(AG_Variable *_Nonnull binding, void *_Nonnull p)
 		return (int)(*(Uint8 *)p & binding->info.bitmask.u8);
 	case AG_VARIABLE_P_FLAG16:
 		return (int)(*(Uint16 *)p & binding->info.bitmask.u16);
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_FLAG32:
 		return (int)(*(Uint32 *)p & binding->info.bitmask.u32);
+#endif
 	default:
 		return (0);
 	}
@@ -283,9 +287,11 @@ SetState(AG_Socket *_Nonnull sock, AG_Variable *_Nonnull binding,
 	case AG_VARIABLE_P_FLAG16:
 		AG_SETFLAGS(*(Uint16 *)p, binding->info.bitmask.u16, v);
 		break;
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_FLAG32:
 		AG_SETFLAGS(*(Uint32 *)p, binding->info.bitmask.u32, v);
 		break;
+#endif
 	default:
 		break;
 	}

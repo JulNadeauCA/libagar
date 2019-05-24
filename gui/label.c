@@ -33,6 +33,7 @@
 #include <string.h>
 #include <stdarg.h>
 
+#ifdef AG_ENABLE_STRING
 /*
  * Create a new polled label (AG_LEGACY: API predates the generalization of
  * the formatting engine, in 2.0 this will take an AG_FmtString argument).
@@ -150,6 +151,7 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mu, const char *fmt, ...
 	AG_ObjectAttach(parent, lbl);
 	return (lbl);
 }
+#endif /* AG_ENABLE_STRING */
 
 /* Create a static label (format string). */
 AG_Label *
@@ -280,7 +282,6 @@ Init(void *_Nonnull obj)
 
 	lbl->type = AG_LABEL_STATIC;
 	lbl->flags = 0;
-	lbl->fmt = NULL;
 	lbl->text = NULL;
 	lbl->surface = -1;
 	lbl->surfaceCont = -1;
@@ -297,9 +298,11 @@ Init(void *_Nonnull obj)
 	lbl->rClip.y = 0;
 	lbl->rClip.w = 0;
 	lbl->rClip.h = 0;
+#ifdef AG_ENABLE_STRING
+	lbl->fmt = NULL;
 	lbl->pollBuf = NULL;
 	lbl->pollBufSize = 0;
-
+#endif
 	AG_SetEvent(lbl, "font-changed", OnFontChange, NULL);
 }
 
@@ -384,7 +387,7 @@ GetPosition(AG_Label *_Nonnull lbl, AG_Surface *_Nonnull su,
 	     AG_TextValignOffset(HEIGHT(lbl) - (lbl->tPad+lbl->bPad), su->h);
 }
 
-/* Render a polled label. */
+#ifdef AG_ENABLE_STRING
 static void
 DrawPolled(AG_Label *_Nonnull lbl)
 {
@@ -415,6 +418,7 @@ DrawPolled(AG_Label *_Nonnull lbl)
 		AG_WidgetBlitSurface(lbl, su, x, y);
 	}
 }
+#endif /* AG_ENABLE_STRING */
 
 static void
 Draw(void *_Nonnull obj)
@@ -476,7 +480,9 @@ Draw(void *_Nonnull obj)
 		}
 		break;
 	case AG_LABEL_POLLED:
+#ifdef AG_ENABLE_STRING
 		DrawPolled(lbl);
+#endif
 		break;
 	}
 	
@@ -493,12 +499,14 @@ Destroy(void *_Nonnull p)
 {
 	AG_Label *lbl = p;
 
+	Free(lbl->text);
+
+#ifdef AG_ENABLE_STRING
 	if (lbl->fmt != NULL) {
 		AG_FreeFmtString(lbl->fmt);
 	}
-	Free(lbl->text);
 	Free(lbl->pollBuf);
-
+#endif
 	if (lbl->tCache != NULL)
 		AG_TextCacheDestroy(lbl->tCache);
 }

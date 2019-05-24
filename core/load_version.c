@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,9 @@
  * Routines for reading and writing signature and version information
  * from archive data.
  */
+
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
 
 #include <agar/core/core.h>
 
@@ -109,3 +112,5 @@ AG_WriteObjectVersion(AG_DataSource *_Nonnull ds, void *_Nonnull p)
 
 	AG_WriteVersion(ds, C->name, &C->ver);
 }
+
+#endif /* AG_SERIALIZATION */

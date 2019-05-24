@@ -27,6 +27,7 @@
 #include <agar/gui/gui.h>
 #include <agar/gui/geometry.h>
 
+#ifdef AG_SERIALIZATION
 void
 AG_ReadRect(AG_Rect *r, AG_DataSource *_Nonnull ds)
 {
@@ -64,6 +65,7 @@ AG_WriteRect2(AG_DataSource *_Nonnull ds, const AG_Rect2 *_Nonnull r)
 	AG_WriteUint16(ds, r->w);
 	AG_WriteUint16(ds, r->h);
 }
+#endif /* AG_SERIALIZATION */
 
 /* Return a Point at x,y. */
 void

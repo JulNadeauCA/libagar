@@ -55,9 +55,12 @@ __BEGIN_DECLS
 extern AG_WidgetClass agSocketClass;
 
 AG_Socket *_Nonnull AG_SocketNew(void *_Nullable, Uint);
+#ifdef AG_SERIALIZATION
 AG_Socket *_Nonnull AG_SocketFromBMP(void *_Nullable, Uint, const char *_Nonnull);
+#endif
 AG_Socket *_Nonnull AG_SocketFromSurface(void *_Nullable, Uint,
                                          AG_Surface *_Nullable);
+
 void AG_SocketInsertFn(AG_Socket *_Nonnull,
                        int (*_Nullable)(AG_Socket *_Nonnull, struct ag_icon *_Nonnull));
 void AG_SocketRemoveFn(AG_Socket *_Nonnull,

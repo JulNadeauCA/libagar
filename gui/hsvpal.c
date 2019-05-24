@@ -969,14 +969,14 @@ Draw(void *_Nonnull obj)
 		AG_TextColorRGB(255,255,255);
 		if ((pal->flags & AG_HSVPAL_SHOW_RGB) &&
 		    (pal->flags & AG_HSVPAL_SHOW_HSV)) {
-			s = AG_TextRenderf(
+			s = AG_TextRenderF(
 			    "RGB: %u,%u,%u\n"
 			    "HSV: %.02f,%.02f,%.02f",
 			    r,g,b, (hue*360.0f) / (2.0f*AG_PI), sat, val);
 		} else if (pal->flags & AG_HSVPAL_SHOW_RGB) {
-			s = AG_TextRenderf("RGB: %u,%u,%u", r, g, b);
+			s = AG_TextRenderF("RGB: %u,%u,%u", r, g, b);
 		} else {
-			s = AG_TextRenderf("HSV: %.01f,%.02f,%.02f",
+			s = AG_TextRenderF("HSV: %.01f,%.02f,%.02f",
 			    (hue*360.0f) / (2.0f*AG_PI), sat, val);
 		}
 		AG_WidgetBlit(pal, s,

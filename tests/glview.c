@@ -190,6 +190,7 @@ MyDrawFunction(AG_Event *event)
 	glPopAttrib();
 }
 
+#ifdef AG_TIMERS
 static Uint32
 UpdateRotation(AG_Timer *to, AG_Event *event)
 {
@@ -198,6 +199,7 @@ UpdateRotation(AG_Timer *to, AG_Event *event)
 	if (++ti->spin > 360.0f) { ti->spin -= 360.0f; }
 	return (to->ival);
 }
+#endif /* AG_TIMERS */
 
 /*
  * Overlay callback function. This type of callback is useful for rendering
@@ -213,7 +215,7 @@ MyOverlayFunction(AG_Event *event)
 	/* Render a text string using the font engine. */
 	AG_PushTextState();
 	AG_TextColorRGB(255, 255, 125);
-	myText = AG_TextRenderf("Zoom using mouse wheel\n"
+	myText = AG_TextRenderF("Zoom using mouse wheel\n"
 	                        "Spin = %.0f degrees, z = %.02f",
 				ti->spin, ti->vz);
 	AG_PopTextState();
@@ -294,6 +296,7 @@ TestGUI(void *obj, AG_Window *win)
 		
 			/* Create the AG_GLView widget. */
 			glv = AG_GLViewNew(ntab, AG_GLVIEW_EXPAND);
+			AG_GLViewSizeHint(glv, 320,320);
 
 			/* Set a periodic redraw at 60fps. */
 			AG_RedrawOnTick(glv, 1000/60);
@@ -303,10 +306,11 @@ TestGUI(void *obj, AG_Window *win)
 			AG_GLViewDrawFn(glv, MyDrawFunction, "%p", ti);
 			AG_GLViewOverlayFn(glv, MyOverlayFunction, "%p", ti);
 			AG_GLViewButtondownFn(glv, ButtonDown, "%p", ti);
-
+#ifdef AG_TIMERS
 			/* Update the rotation 30 times per second. */
 			AG_AddTimerAuto(win, 1000/30, 
 			    UpdateRotation, "%p", ti);
+#endif
 		}
 
 		/* Edit ambient and diffuse color components. */

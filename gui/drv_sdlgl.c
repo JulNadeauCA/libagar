@@ -416,9 +416,8 @@ SDLGL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 	     (int)drv->videoFmt->BitsPerPixel);
 	
 	/* Create the cursors. */
-	if (AG_SDL_InitDefaultCursor(sgl) == -1 ||
-	    AG_InitStockCursors(drv) == -1)
-		goto fail;
+	AG_SDL_InitDefaultCursor(sgl);
+	AG_InitStockCursors(drv);
 	
 	/* Initialize our OpenGL context and viewport. */
 	if (AG_GL_InitContext(sgl, &sgl->gl) == -1) {
@@ -499,9 +498,8 @@ SDLGL_OpenVideoContext(void *_Nonnull obj, void *_Nonnull ctx, Uint flags)
 	AG_GL_SetViewport(&sgl->gl, &rVP);
 
 	/* Create the cursors. */
-	if (AG_SDL_InitDefaultCursor(sgl) == -1 ||
-	    AG_InitStockCursors(drv) == -1)
-		goto fail;
+	AG_SDL_InitDefaultCursor(sgl);
+	AG_InitStockCursors(drv);
 	
 	return (0);
 fail:

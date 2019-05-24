@@ -6,6 +6,7 @@
  */
 
 #include "agartest.h"
+#ifdef AG_TIMERS
 
 #include <agar/dev.h>
 
@@ -93,3 +94,4 @@ const AG_TestCase objSystemTest = {
 	TestGUI,
 	NULL		/* bench */
 };
+#endif /* AG_TIMERS */

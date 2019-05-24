@@ -45,9 +45,11 @@ typedef struct ag_label {
 	enum ag_text_valign valign;		/* Vertical alignment */
 	struct ag_text_cache *_Nonnull tCache;	/* Cache for polled labels */
 	AG_Rect rClip;				/* Clipping rectangle */
+#ifdef AG_ENABLE_STRING
 	AG_FmtString *_Nullable fmt;		/* Polled label data */
 	char *_Nullable pollBuf;		/* Buffer for polled labels */
 	AG_Size         pollBufSize;
+#endif
 } AG_Label;
 
 __BEGIN_DECLS
@@ -56,11 +58,13 @@ extern AG_WidgetClass agLabelClass;
 AG_Label *_Nonnull AG_LabelNewS(void *_Nullable, Uint, const char *_Nullable);
 AG_Label *_Nonnull AG_LabelNew(void *_Nullable, Uint, const char *_Nullable, ...)
                                FORMAT_ATTRIBUTE(printf,3,4);
+#ifdef AG_ENABLE_STRING
 AG_Label *_Nonnull AG_LabelNewPolled(void *_Nullable, Uint,
                                      const char *_Nonnull, ...);
 AG_Label *_Nonnull AG_LabelNewPolledMT(void *_Nullable, Uint,
                                        _Nonnull_Mutex AG_Mutex *_Nonnull,
 				       const char *_Nonnull, ...);
+#endif
 
 void AG_LabelTextS(AG_Label *_Nonnull, const char *_Nonnull);
 void AG_LabelText(AG_Label *_Nonnull, const char *_Nonnull, ...)

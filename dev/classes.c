@@ -28,6 +28,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_TIMERS
+
 #include <agar/gui/window.h>
 #include <agar/gui/table.h>
 #include <agar/dev/dev.h>
@@ -39,7 +41,7 @@ GenClassTable(AG_Table *_Nonnull tbl, AG_ObjectClass *_Nonnull C)
 	
 	AG_TableAddRow(tbl, "%s:%d:%s:%s",
 	    C->name, C->size,
-	    C->pvt.libs[0] != '\0' ? C->pvt.libs : "(none)",
+	    C->pvt.libs[0] != '\0' ? C->pvt.libs : "",
 	    C->hier);
 
 	TAILQ_FOREACH(Csub, &C->pvt.sub, pvt.subclasses)
@@ -53,7 +55,7 @@ PollClasses(AG_Event *_Nonnull event)
 
 	/* XXX tree */
 	AG_TableBegin(tbl);
-	GenClassTable(tbl, agClassTree);
+	GenClassTable(tbl, &agObjectClass);
 	AG_TableEnd(tbl);
 }
 
@@ -68,8 +70,7 @@ DEV_ClassInfo(void)
 	}
 	AG_WindowSetCaptionS(win, _("Registered classes"));
 
-	tbl = AG_TableNewPolled(win, AG_TABLE_EXPAND,
-	    PollClasses, NULL);
+	tbl = AG_TableNewPolled(win, AG_TABLE_EXPAND, PollClasses, NULL);
 	AG_TableAddCol(tbl, _("Name"), "<XXXXXXXXXXXXXXX>", NULL);
 	AG_TableAddCol(tbl, _("Size"), "<XXXX>", NULL);
 	AG_TableAddCol(tbl, _("Modules"), "<XXXXXXX>", NULL);
@@ -78,3 +79,5 @@ DEV_ClassInfo(void)
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 60);
 	return (win);
 }
+
+#endif /* AG_TIMERS */

@@ -194,8 +194,10 @@ GetPosition(AG_Slider *_Nonnull sl, int *_Nonnull x)
 	case AG_VARIABLE_SINT8:		GET_POSITION(Sint8);		break;
 	case AG_VARIABLE_UINT16:	GET_POSITION(Uint16);		break;
 	case AG_VARIABLE_SINT16:	GET_POSITION(Sint16);		break;
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32:	GET_POSITION(Uint32);		break;
 	case AG_VARIABLE_SINT32:	GET_POSITION(Sint32);		break;
+#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:	GET_POSITION(Uint64);		break;
 	case AG_VARIABLE_SINT64:	GET_POSITION(Sint64);		break;
@@ -252,8 +254,10 @@ SeekToPosition(AG_Slider *_Nonnull sl, int x)
 	case AG_VARIABLE_SINT8:		SEEK_TO_POSITION(Sint8);	break;
 	case AG_VARIABLE_UINT16:	SEEK_TO_POSITION(Uint16);	break;
 	case AG_VARIABLE_SINT16:	SEEK_TO_POSITION(Sint16);	break;
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32:	SEEK_TO_POSITION(Uint32);	break;
 	case AG_VARIABLE_SINT32:	SEEK_TO_POSITION(Sint32);	break;
+#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:	SEEK_TO_POSITION(Uint64);	break;
 	case AG_VARIABLE_SINT64:	SEEK_TO_POSITION(Sint64);	break;
@@ -298,20 +302,22 @@ Increment(AG_Slider *_Nonnull sl)
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
 #ifdef HAVE_FLOAT
-	case AG_VARIABLE_FLOAT:		INCREMENT(float);		break;
+	case AG_VARIABLE_FLOAT:		INCREMENT(float);	break;
 	case AG_VARIABLE_DOUBLE:	INCREMENT(double);	break;
 # ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	INCREMENT(long double);	break;
 # endif
 #endif
 	case AG_VARIABLE_INT:		INCREMENT(int);		break;
-	case AG_VARIABLE_UINT:		INCREMENT(Uint);		break;
-	case AG_VARIABLE_UINT8:		INCREMENT(Uint8);		break;
-	case AG_VARIABLE_SINT8:		INCREMENT(Sint8);		break;
+	case AG_VARIABLE_UINT:		INCREMENT(Uint);	break;
+	case AG_VARIABLE_UINT8:		INCREMENT(Uint8);	break;
+	case AG_VARIABLE_SINT8:		INCREMENT(Sint8);	break;
 	case AG_VARIABLE_UINT16:	INCREMENT(Uint16);	break;
 	case AG_VARIABLE_SINT16:	INCREMENT(Sint16);	break;
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32:	INCREMENT(Uint32);	break;
 	case AG_VARIABLE_SINT32:	INCREMENT(Sint32);	break;
+#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:	INCREMENT(Uint64);	break;
 	case AG_VARIABLE_SINT64:	INCREMENT(Sint64);	break;
@@ -340,20 +346,22 @@ Decrement(AG_Slider *_Nonnull sl)
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
 #ifdef HAVE_FLOAT
-	case AG_VARIABLE_FLOAT:		DECREMENT(float);		break;
+	case AG_VARIABLE_FLOAT:		DECREMENT(float);	break;
 	case AG_VARIABLE_DOUBLE:	DECREMENT(double);	break;
 # ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	DECREMENT(long double);	break;
 # endif
 #endif
 	case AG_VARIABLE_INT:		DECREMENT(int);		break;
-	case AG_VARIABLE_UINT:		DECREMENT(Uint);		break;
-	case AG_VARIABLE_UINT8:		DECREMENT(Uint8);		break;
-	case AG_VARIABLE_SINT8:		DECREMENT(Sint8);		break;
+	case AG_VARIABLE_UINT:		DECREMENT(Uint);	break;
+	case AG_VARIABLE_UINT8:		DECREMENT(Uint8);	break;
+	case AG_VARIABLE_SINT8:		DECREMENT(Sint8);	break;
 	case AG_VARIABLE_UINT16:	DECREMENT(Uint16);	break;
 	case AG_VARIABLE_SINT16:	DECREMENT(Sint16);	break;
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32:	DECREMENT(Uint32);	break;
 	case AG_VARIABLE_SINT32:	DECREMENT(Sint32);	break;
+#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:	DECREMENT(Uint64);	break;
 	case AG_VARIABLE_SINT64:	DECREMENT(Sint64);	break;
@@ -435,6 +443,7 @@ MouseMotion(AG_Event *_Nonnull event)
 	                    AG_INT(1):AG_INT(2)) - sl->xOffs);
 }
 
+#ifdef AG_TIMERS
 /* Timer callback for keyboard motion. */
 static Uint32
 MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -449,6 +458,7 @@ MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	}
 	return (agKbdRepeat);
 }
+#endif /* AG_TIMERS */
 
 static void
 KeyDown(AG_Event *_Nonnull event)
@@ -460,16 +470,21 @@ KeyDown(AG_Event *_Nonnull event)
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
 		Decrement(sl);
+#ifdef AG_TIMERS
 		AG_AddTimer(sl, &sl->moveTo, agKbdDelay, MoveTimeout, "%i", -1);
+#endif
 		break;
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
 		Increment(sl);
+#ifdef AG_TIMERS
 		AG_AddTimer(sl, &sl->moveTo, agKbdDelay, MoveTimeout, "%i", +1);
+#endif
 		break;
 	}
 }
 
+#ifdef AG_TIMERS
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
@@ -493,6 +508,7 @@ OnFocusLoss(AG_Event *_Nonnull event)
 
 	AG_DelTimer(sl, &sl->moveTo);
 }
+#endif /* AG_TIMERS */
 
 #undef SET_DEF
 #define SET_DEF(fn,dmin,dmax,dinc) { 					\
@@ -524,8 +540,10 @@ OnShow(AG_Event *_Nonnull event)
 	case AG_VARIABLE_SINT8:  SET_DEF(AG_SetSint8, -0x7f, 0x7f, 1); break;
 	case AG_VARIABLE_UINT16: SET_DEF(AG_SetUint16, 0U, 0xffffU, 1U); break;
 	case AG_VARIABLE_SINT16: SET_DEF(AG_SetSint16, -0x7fff, 0x7fff, 1); break;
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32: SET_DEF(AG_SetUint32, 0UL, 0xffffffffUL, 1UL); break;
 	case AG_VARIABLE_SINT32: SET_DEF(AG_SetSint32, -0x7fffffffL, 0x7fffffffL, 1L); break;
+#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64: SET_DEF(AG_SetUint64, 0ULL, 0xffffffffffffffffULL, 1ULL); break;
 	case AG_VARIABLE_SINT64: SET_DEF(AG_SetSint64, -0x7fffffffffffffffLL, 0x7fffffffffffffffLL, 1LL); break;
@@ -534,11 +552,13 @@ OnShow(AG_Event *_Nonnull event)
 	}
 	AG_UnlockVariable(V);
 
+#ifdef AG_TIMERS
 	if ((sl->flags & AG_SLIDER_EXCL) == 0) {
 		AG_RedrawOnChange(sl, 100, "value");
 		AG_RedrawOnChange(sl, 1000, "min");
 		AG_RedrawOnChange(sl, 1000, "max");
 	}
+#endif
 }
 #undef SET_DEF
 
@@ -559,16 +579,17 @@ Init(void *_Nonnull obj)
 	sl->wControl = sl->wControlPref;
 	sl->xOffs = 0;
 	
-	AG_InitTimer(&sl->moveTo, "move", 0);
-
 	AG_AddEvent(sl, "widget-shown", OnShow, NULL);
-	AG_AddEvent(sl, "widget-hidden", OnFocusLoss, NULL);
-	AG_SetEvent(sl, "widget-lostfocus", OnFocusLoss, NULL);
 	AG_SetEvent(sl, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(sl, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(sl, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(sl, "key-down", KeyDown, NULL);
+#ifdef AG_TIMERS
 	AG_SetEvent(sl, "key-up", KeyUp, NULL);
+	AG_AddEvent(sl, "widget-hidden", OnFocusLoss, NULL);
+	AG_SetEvent(sl, "widget-lostfocus", OnFocusLoss, NULL);
+	AG_InitTimer(&sl->moveTo, "move", 0);
+#endif
 #if 0
 	AG_BindInt(sl, "xOffs", &sl->xOffs);
 	AG_BindInt(sl, "extent", &sl->extent);

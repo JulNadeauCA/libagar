@@ -152,8 +152,12 @@ Edit(void *_Nonnull obj, VG_View *_Nonnull vv)
 	AG_Textbox *tb;
 
 	AG_LabelNew(box, 0, _("Text: "));
-	tb = AG_TextboxNewS(box, AG_TEXTBOX_MULTILINE|AG_TEXTBOX_HFILL, NULL);
+	tb = AG_TextboxNewS(box, AG_TEXTBOX_MULTILINE | AG_TEXTBOX_HFILL, NULL);
+#ifdef AG_UNICODE
 	AG_TextboxBindUTF8(tb, t->text, sizeof(t->text));
+#else
+	AG_TextboxBindASCII(tb, t->text, sizeof(t->text));
+#endif
 	return (box);
 }
 

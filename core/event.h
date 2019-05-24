@@ -38,6 +38,12 @@
 # define AG_LONG_DOUBLE(v) (event->argv[v].data.ldbl)
 #endif /* !AG_TYPE_SAFETY */
 
+#ifdef AG_UNICODE
+# define AG_CHAR(v) ((AG_Char)AG_ULONG(v))
+#else
+# define AG_CHAR(v) ((AG_Char)AG_UINT(v))
+#endif
+
 #define AG_SELF()	AG_PTR(0)
 #define AG_SENDER()	AG_PTR(event->argc)
 
@@ -111,19 +117,15 @@ typedef struct ag_event_source {
 	int  breakReq;				/* Break from event loop */
 	int  returnCode;			/* AG_EventLoop() return code */
 	int  (*_Nonnull sinkFn)(void);
+#ifdef AG_TIMERS
 	int  (*_Nullable addTimerFn)(struct ag_timer *_Nonnull, Uint32, int);
 	void (*_Nullable delTimerFn)(struct ag_timer *_Nonnull);
+#endif
 	AG_TAILQ_HEAD_(ag_event_sink) prologues;   /* Event prologues */
 	AG_TAILQ_HEAD_(ag_event_sink) epilogues;   /* Event sink epilogues */
 	AG_TAILQ_HEAD_(ag_event_sink) spinners;	   /* Spinning sinks */
 	AG_TAILQ_HEAD_(ag_event_sink) sinks;	   /* Normal event sinks */
 } AG_EventSource;
-
-/* Queue of events */
-typedef struct ag_event_queue {
-	Uint               nEvents;
-	AG_Event *_Nullable events;
-} AG_EventQ;
 
 typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 
@@ -202,6 +204,18 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 }
 #endif /* !AG_THREADS */
 
+#if AG_MODEL != AG_SMALL
+# define AG_EVENT_PUSH_ARG_CASE_LONG(ev)					\
+	  case 'i':								\
+	    AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_LONG, li, long);		\
+	    break;								\
+	  case 'u':								\
+	    AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_ULONG, uli, unsigned long);	\
+	    break;
+#else
+# define AG_EVENT_PUSH_ARG_CASE_LONG(ev)
+#endif
+
 #ifdef AG_HAVE_FLOAT
 # define AG_EVENT_PUSH_ARG_CASE_FLT(ev)					\
 	case 'f':							\
@@ -226,6 +240,7 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 
 #define AG_EVENT_PUSH_ARG(ap,ev) {					\
 	AG_Variable *V;							\
+									\
 	switch (*c) {							\
 	case 'p':							\
 	  AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_POINTER, p, void *);	\
@@ -242,16 +257,10 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 	  break;							\
 	case 'l':							\
 	  switch (c[1]) {						\
-	  case 'i':							\
-	    AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_LONG, li, long);	\
-	    break;							\
-	  case 'u':							\
-	    AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_ULONG, uli,		\
-	        unsigned long);						\
-	    break;							\
+	  AG_EVENT_PUSH_ARG_CASE_LONG(ev)				\
 	  AG_EVENT_PUSH_ARG_CASE_LDBL(ev)				\
 	  default:							\
-	    AG_FatalError("AG_Event: Bad format (l[iud]?)");		\
+	    AG_FatalError("E3");					\
 	  }								\
 	  c++;								\
 	  break;							\
@@ -261,7 +270,7 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 	  c++;								\
 	  continue;							\
 	default:							\
-	  AG_FatalError("AG_Event: Bad format");			\
+	  AG_FatalError("E3");						\
 	}								\
 	c++;								\
 	if (*c == '(' && c[1] != '\0') {				\
@@ -270,7 +279,7 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 		for (cEnd = V->name; *cEnd != '\0'; cEnd++) {		\
 			if (*cEnd == ')') {				\
 				*cEnd = '\0';				\
-				c+=2;					\
+				c += 2;					\
 				break;					\
 			}						\
 			c++;						\
@@ -313,50 +322,55 @@ void AG_PostEventByPtr(void *_Nullable, void *_Nonnull, AG_Event *_Nonnull,
 
 AG_Event *_Nullable AG_FindEventHandler(void *_Nonnull, const char *_Nonnull);
 
-void AG_InitEventQ(AG_EventQ *_Nonnull);
-void AG_FreeEventQ(AG_EventQ *_Nonnull);
-
-void AG_QueueEvent(AG_EventQ  *_Nonnull, const char *_Nonnull,
-                   const char *_Nullable, ...);
-
+#ifdef AG_TIMERS
 int  AG_SchedEvent(void *_Nullable, void *_Nonnull, Uint32,
                    const char *_Nullable, const char *_Nullable, ...);
-
+#endif
 void AG_ForwardEvent(void *_Nullable, void *_Nonnull, AG_Event *_Nonnull);
 
 AG_EventSource *_Nonnull AG_GetEventSource(void);
 
+#if AG_MODEL != AG_SMALL
 AG_EventSink *_Nullable AG_AddEventPrologue(_Nonnull AG_EventSinkFn,
                                              const char *_Nullable, ...);
+void                    AG_DelEventPrologue(AG_EventSink *_Nonnull);
+#endif /* !AG_SMALL */
 
 AG_EventSink *_Nullable AG_AddEventEpilogue(_Nonnull AG_EventSinkFn,
                                              const char *_Nullable, ...);
+void                    AG_DelEventEpilogue(AG_EventSink *_Nonnull);
 
 AG_EventSink *_Nullable AG_AddEventSpinner(_Nonnull AG_EventSinkFn,
                                             const char *_Nullable, ...);
+void                    AG_DelEventSpinner(AG_EventSink *_Nonnull);
 
 AG_EventSink *_Nullable AG_AddEventSink(enum ag_event_sink_type, int, Uint,
                                          _Nonnull AG_EventSinkFn,
 					 const char *_Nullable, ...);
+void                    AG_DelEventSink(AG_EventSink *_Nonnull);
+#if AG_MODEL != AG_SMALL
+void                    AG_DelEventSinksByIdent(enum ag_event_sink_type, int,
+                                                Uint);
+#endif
 
 int  AG_EventLoop(void);
-void AG_DelEventPrologue(AG_EventSink *_Nonnull);
-void AG_DelEventEpilogue(AG_EventSink *_Nonnull);
-void AG_DelEventSpinner(AG_EventSink *_Nonnull);
-void AG_DelEventSink(AG_EventSink *_Nonnull);
-void AG_DelEventSinksByIdent(enum ag_event_sink_type, int, Uint);
+
 void AG_Terminate(int);
 void AG_TerminateEv(AG_Event *_Nonnull);
+
+#ifdef AG_TIMERS
 int  AG_AddTimerKQUEUE(struct ag_timer *_Nonnull, Uint32, int);
 void AG_DelTimerKQUEUE(struct ag_timer *_Nonnull);
 int  AG_AddTimerTIMERFD(struct ag_timer *_Nonnull, Uint32, int);
 void AG_DelTimerTIMERFD(struct ag_timer *_Nonnull);
+#endif
 int  AG_EventSinkKQUEUE(void);
 int  AG_EventSinkTIMERFD(void);
 int  AG_EventSinkTIMEDSELECT(void);
 int  AG_EventSinkSELECT(void);
 int  AG_EventSinkSPINNER(void);
 
+#if AG_MODEL != AG_SMALL
 /*
  * Inlinables
  */
@@ -366,34 +380,39 @@ void ag_event_push_int(AG_Event *_Nonnull, const char *_Nullable, int);
 void ag_event_push_uint(AG_Event *_Nonnull, const char *_Nullable, Uint);
 void ag_event_push_long(AG_Event *_Nonnull, const char *_Nullable, long);
 void ag_event_push_ulong(AG_Event *_Nonnull, const char *_Nullable, Ulong);
-#ifdef AG_HAVE_FLOAT
+# ifdef AG_HAVE_FLOAT
 void ag_event_push_float(AG_Event *_Nonnull, const char *_Nullable, float);
 void ag_event_push_double(AG_Event *_Nonnull, const char *_Nullable, double);
-# ifdef AG_HAVE_LONG_DOUBLE
+#  ifdef AG_HAVE_LONG_DOUBLE
 void ag_event_push_long_double(AG_Event *_Nonnull, const char *_Nullable, long double);
-# endif
-#endif
+#  endif
+# endif /* AG_HAVE_FLOAT */
+
 void *_Nullable ag_event_pop_pointer(AG_Event *_Nonnull);
 char *_Nonnull  ag_event_pop_string(AG_Event *_Nonnull);
 int             ag_event_pop_int(AG_Event *_Nonnull);
 Uint            ag_event_pop_uint(AG_Event *_Nonnull);
 long            ag_event_pop_long(AG_Event *_Nonnull);
 Ulong           ag_event_pop_ulong(AG_Event *_Nonnull);
-#ifdef AG_HAVE_FLOAT
+# ifdef AG_HAVE_FLOAT
 float           ag_event_pop_float(AG_Event *_Nonnull);
 double          ag_event_pop_double(AG_Event *_Nonnull);
-# ifdef AG_HAVE_LONG_DOUBLE
+#  ifdef AG_HAVE_LONG_DOUBLE
 long double     ag_event_pop_long_double(AG_Event *_Nonnull);
+#  endif
 # endif
-#endif
+#endif /* !AG_SMALL */
+
 AG_Variable *_Nonnull ag_get_named_event_arg(AG_Event *_Nonnull, const char *_Nonnull)
                                             _Pure_Attribute;
 void *_Nullable ag_get_named_ptr(AG_Event *_Nonnull, const char *_Nonnull)    _Pure_Attribute;
 char *_Nonnull  ag_get_named_string(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
 int             ag_get_named_int(AG_Event *_Nonnull, const char *_Nonnull)    _Pure_Attribute;
 Uint            ag_get_named_uint(AG_Event *_Nonnull, const char *_Nonnull)   _Pure_Attribute;
+#if AG_MODEL != AG_SMALL
 long            ag_get_named_long(AG_Event *_Nonnull, const char *_Nonnull)   _Pure_Attribute;
 Ulong           ag_get_named_ulong(AG_Event *_Nonnull, const char *_Nonnull)  _Pure_Attribute;
+#endif
 #ifdef AG_HAVE_FLOAT
 float           ag_get_named_flt(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
 double          ag_get_named_dbl(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;

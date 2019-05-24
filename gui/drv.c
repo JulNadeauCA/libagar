@@ -174,6 +174,7 @@ AG_EndRendering(void *drv)
 #endif
 }
 
+#ifdef AG_SERIALIZATION
 /*
  * Dump the display surface(s) to a jpeg in ~/.appname/screenshot/.
  * It is customary to assign a AG_GlobalKeys(3) shortcut for this function.
@@ -226,6 +227,7 @@ AG_ViewCapture(void)
 out:
 	AG_UnlockVFS(&agDrivers);
 }
+#endif /* AG_SERIALIZATION */
 
 /* Return whether Agar is using OpenGL. */
 int

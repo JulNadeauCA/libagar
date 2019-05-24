@@ -240,6 +240,7 @@ TestGUI(void *obj, AG_Window *win)
 		}
 
 		AG_SeparatorNewHoriz(box);
+#ifdef AG_ENABLE_STRING
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "Aref: %lf", &Aref);
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "v1: %lf", &v1);
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "v2: %lf", &v2);
@@ -247,7 +248,7 @@ TestGUI(void *obj, AG_Window *win)
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "Ts: %lf", &Ts);
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "Ta: %lf", &Ta);
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "To: %lf", &To);
-
+#endif
 		AG_ButtonNewFn(box, AG_BUTTON_HFILL, "Generate",
 		    GeneratePlot, "%p", plt);
 	}

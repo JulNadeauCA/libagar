@@ -3,6 +3,9 @@
 #ifndef _AGAR_WIDGET_FILE_SELECTOR_H_
 #define _AGAR_WIDGET_FILE_SELECTOR_H_
 
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/gui/widget.h>
 #include <agar/gui/textbox.h>
 #include <agar/gui/button.h>
@@ -39,4 +42,5 @@ void AG_FileSelectorSetDirectory(AG_FileSelector *_Nonnull, const char *_Nonnull
 __END_DECLS
 
 #include <agar/gui/close.h>
+#endif /* AG_SERIALIZATION */
 #endif /* _AGAR_WIDGET_FILE_SELECTOR_H_ */

@@ -32,8 +32,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_PixelFormat pfTest;
 	int i;
 
-	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND|
-	                           AG_SCROLLVIEW_BY_MOUSE|
+	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND | AG_SCROLLVIEW_BY_MOUSE |
 	                           AG_SCROLLVIEW_PAN_RIGHT);
 	hBox = AG_BoxNewHoriz(sv, AG_BOX_FRAME);
 	vBox = AG_BoxNewVert(hBox, AG_BOX_FRAME);
@@ -42,6 +41,7 @@ TestGUI(void *obj, AG_Window *win)
 	 * Load BMP files in different flavors of the format.
 	 */
 	for (i = 1; i <= 4; i++) {
+#ifdef AG_ENABLE_STRING
 		if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, AG_Printf("agar-%d.bmp",i),
 		    path, sizeof(path))) {
 			AG_LabelNew(vBox, 0, "Here is %s:", path);
@@ -51,7 +51,9 @@ TestGUI(void *obj, AG_Window *win)
 			} else {
 				AG_LabelNew(vBox, 0, "%s: %s", path, AG_GetError());
 			}
-		} else {
+		} else
+#endif
+		{
 			AG_LabelNewS(vBox, 0, AG_GetError());
 		}
 	}
@@ -114,7 +116,6 @@ TestGUI(void *obj, AG_Window *win)
 				    0xff000000, 0x00ff0000, 0x0000ff00);
 				Test_Format(S, &pfTest, box);
 			}
-
 #if AG_MODEL == AG_LARGE
 			AG_LabelNewS(vBox, 0, "Converted to {48,64}bpp:");
 			box = AG_BoxNewHoriz(vBox, 0);
@@ -231,7 +232,7 @@ TestGUI(void *obj, AG_Window *win)
 		AG_LabelNewS(vBox, 0, AG_GetError());
 	}
 	
-	AG_WindowSetGeometry(win, -1, -1, 500, 480);
+	AG_WindowSetGeometry(win, -1, -1, 500, 800);
 	return (0);
 }
 

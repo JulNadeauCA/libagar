@@ -16,7 +16,9 @@ SelectedFont(AG_Event *event)
 	AG_SetInt(agConfig, "font.size", agDefaultFont->spec.size);
 	AG_SetUint(agConfig, "font.flags", agDefaultFont->flags);
 	if (AG_ConfigSave() == 0) {
+#ifdef AG_TIMERS
 		AG_TextTmsg(AG_MSG_INFO, 1000, "Default font has changed.");
+#endif
 	} else {
 		AG_TextMsgFromError();
 	}
@@ -54,20 +56,20 @@ TextSize_UTF8(void *obj)
 }
 
 static void
-TextSize_UCS4(void *obj)
+TextSize_Nat(void *obj)
 {
-	Uint32 ucs4[] = { 'T','h','e',' ','Q','u','i','c','k',' ',
-	                  'B','r','o','w','n',' ','F','o','x',' ',
-	                  'J','u','m','p','s',' ','O','v','e','r',' ',
-	                  'T','h','e',' ','L','a','z','y',' ',
-			  'D','o','g', '\0' };
+	AG_Char text[] = { 'T','h','e',' ','Q','u','i','c','k',' ',
+	                   'B','r','o','w','n',' ','F','o','x',' ',
+	                   'J','u','m','p','s',' ','O','v','e','r',' ',
+	                   'T','h','e',' ','L','a','z','y',' ',
+	                   'D','o','g', '\0' };
 	MyTestInstance *ti = obj;
 	int w, h;
 	int i;
 
 	AG_MutexLock(&ti->lock);
 	for (i = 0; i < 50; i++) {
-		AG_TextSizeUCS4(ucs4, &w, &h);
+		AG_TextSizeNat(text, &w, &h);
 	}
 	AG_MutexUnlock(&ti->lock);
 }
@@ -85,18 +87,18 @@ TextRender_UTF8(void *obj)
 }
 
 static void
-TextRender_UCS4(void *obj)
+TextRender_Nat(void *obj)
 {
-	Uint32 ucs4[] = { 'T','h','e',' ','Q','u','i','c','k',' ',
-	                  'B','r','o','w','n',' ','F','o','x',' ',
-	                  'J','u','m','p','s',' ','O','v','e','r',' ',
-	                  'T','h','e',' ','L','a','z','y',' ','D','o','g',
-			  '\0' };
+	AG_Char text[] = { 'T','h','e',' ','Q','u','i','c','k',' ',
+	                   'B','r','o','w','n',' ','F','o','x',' ',
+	                   'J','u','m','p','s',' ','O','v','e','r',' ',
+	                   'T','h','e',' ','L','a','z','y',' ','D','o','g',
+	                   '\0' };
 	MyTestInstance *ti = obj;
 	AG_Surface *S;
 
 	AG_MutexLock(&ti->lock);
-	S = AG_TextRenderUCS4(ucs4);
+	S = AG_TextRenderNat(text);
 	AG_MutexUnlock(&ti->lock);
 	AG_SurfaceFree(S);
 }
@@ -144,9 +146,9 @@ TextRender_4L(void *obj)
 }
 
 static struct ag_benchmark_fn fontBenchFns[] = {
-	{ "TextSize_UCS4",	TextSize_UCS4 },
+	{ "TextSize_Nat",	TextSize_Nat },
 	{ "TextSize_UTF8",	TextSize_UTF8 },
-	{ "TextRender_UCS4",	TextRender_UCS4 },
+	{ "TextRender_Nat",	TextRender_Nat },
 	{ "TextRender_UTF8",	TextRender_UTF8 },
 	{ "TextRender_2L",	TextRender_2L },
 	{ "TextRender_3L",	TextRender_3L },
@@ -183,7 +185,7 @@ Init(void *obj)
 const AG_TestCase fontsTest = {
 	"fonts",
 	N_("Test font engine and AG_FontSelector(3)"),
-	"1.5.0",
+	"1.6.0",
 	0,
 	sizeof(MyTestInstance),
 	Init,

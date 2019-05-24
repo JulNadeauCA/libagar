@@ -368,9 +368,13 @@ Edit(void *_Nonnull obj, VG_View *_Nonnull vv)
 
 	AG_LabelNew(vPane->div[0], 0, _("Text: "));
 	tb = AG_TextboxNewS(vPane->div[0],
-	    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND,
+	    AG_TEXTBOX_MULTILINE | AG_TEXTBOX_EXPAND,
 	    NULL);
+#ifdef AG_UNICODE
 	AG_TextboxBindUTF8(tb, vt->text, sizeof(vt->text));
+#else
+	AG_TextboxBindASCII(tb, vt->text, sizeof(vt->text));
+#endif
 
 	bAlv = AG_BoxNewVertNS(vPane->div[1], AG_BOX_HFILL|AG_BOX_FRAME);
 	AG_LabelNew(bAlv, 0, _("Alignment: "));

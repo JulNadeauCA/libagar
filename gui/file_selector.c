@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,6 +22,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
 
 #include <agar/core/core.h>
 #include <agar/gui/file_selector.h>
@@ -200,7 +202,11 @@ Init(void *_Nonnull obj)
 
 	/* XXX TODO: Check for UTF-8 support in filesystem. */
 	fs->tbox = AG_TextboxNewS(fs, AG_TEXTBOX_COMBO|AG_TEXTBOX_EXCL, NULL);
+#ifdef AG_UNICODE
 	AG_TextboxBindUTF8(fs->tbox, fs->inTxt, sizeof(fs->inTxt));
+#else
+	AG_TextboxBindASCII(fs->tbox, fs->inTxt, sizeof(fs->inTxt));
+#endif
 
 	fs->button = AG_ButtonNewS(fs, AG_BUTTON_STICKY, _("Browse..."));
 	AG_ButtonSetPadding(fs->button, 1,1,1,1);
@@ -289,3 +295,4 @@ AG_WidgetClass agFileSelectorClass = {
 	SizeRequest,
 	SizeAllocate
 };
+#endif /* AG_SERIALIZATION */

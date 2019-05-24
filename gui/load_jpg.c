@@ -27,6 +27,9 @@
  * Loader for JPEG images via libjpeg.
  */
 
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/core/core.h>
 
 #include <agar/gui/gui.h>
@@ -240,8 +243,8 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 	sm->pub.next_input_byte = NULL;
 
 	jpeg_read_header(&cinfo, TRUE);
-
-	if (cinfo.num_components == 4) {
+	
+	if (cinfo.num_components == 4) {		/* CMYK -> RGBA */
 		cinfo.out_color_space = JCS_CMYK;
 		cinfo.quantize_colors = FALSE;
 		jpeg_calc_output_dimensions(&cinfo);
@@ -254,8 +257,11 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 		    0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000
 #endif
 		);
+		Debug(NULL,
+		    "JPEG image (%ux%u RGBA) at 0x%lx (->%p) via libjpeg-%d\n",
+		    S->w, S->w, (Ulong)AG_Tell(ds), S, JPEG_LIB_VERSION);
 	} else {
-		cinfo.out_color_space = JCS_RGB;
+		cinfo.out_color_space = JCS_RGB;		/* RGB */
 		cinfo.quantize_colors = FALSE;
 		jpeg_calc_output_dimensions(&cinfo);
 
@@ -266,7 +272,10 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 #else
 		    0x0000ff, 0x00ff00, 0xff0000
 #endif
-		    );
+		);
+		Debug(NULL,
+		    "JPEG image (%ux%u RGB) at 0x%lx (->%p) via libjpeg-%d\n",
+		    S->w, S->w, (Ulong)AG_Tell(ds), S, JPEG_LIB_VERSION);
 	}
 	if (S == NULL) {
 		jpeg_destroy_decompress(&cinfo);
@@ -310,3 +319,4 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 }
 
 #endif /* HAVE_JPEG */
+#endif /* AG_SERIALIZATION */

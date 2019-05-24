@@ -18,7 +18,7 @@ typedef struct ag_button {
 	enum ag_text_valign valign;	/* Vertical alignment */
 	Uint flags;
 #define AG_BUTTON_STICKY	0x0002	/* Toggle state */
-#define AG_BUTTON_REPEAT	0x0008	/* Repeat button-pushed event */
+#define AG_BUTTON_REPEAT	0x0008	/* Repeat button-pushed (needs TIMERS) */
 #define AG_BUTTON_HFILL		0x0010	/* Fill available width */
 #define AG_BUTTON_VFILL		0x0020	/* Fill available height */
 #define AG_BUTTON_INVSTATE	0x0400	/* Invert value of "state" binding */
@@ -28,7 +28,9 @@ typedef struct ag_button {
 #define AG_BUTTON_EXPAND	(AG_BUTTON_HFILL|AG_BUTTON_VFILL)
 
 	int lPad, rPad, tPad, bPad;	/* Padding in pixels */
+#ifdef AG_TIMERS
 	AG_Timer delayTo, repeatTo;	/* For AG_BUTTON_REPEAT */
+#endif
 } AG_Button;
 
 #define AGBUTTON(p) ((AG_Button *)(p))
@@ -49,8 +51,10 @@ AG_Button *_Nonnull AG_ButtonNewUint8(void *_Nullable, Uint,
                                       const char *_Nullable, Uint8 *_Nonnull);
 AG_Button *_Nonnull AG_ButtonNewUint16(void *_Nullable, Uint,
                                        const char *_Nullable, Uint16 *_Nonnull);
+#if AG_MODEL != AG_SMALL
 AG_Button *_Nonnull AG_ButtonNewUint32(void *_Nullable, Uint,
                                        const char *_Nullable, Uint32 *_Nonnull);
+#endif
 AG_Button *_Nonnull AG_ButtonNewFlag(void *_Nullable, Uint,
                                      const char *_Nullable, Uint *_Nonnull,
 				     Uint);
@@ -60,10 +64,11 @@ AG_Button *_Nonnull AG_ButtonNewFlag8(void *_Nullable, Uint,
 AG_Button *_Nonnull AG_ButtonNewFlag16(void *_Nullable, Uint,
                                        const char *_Nullable, Uint16 *_Nonnull,
 				       Uint16);
+#if AG_MODEL != AG_SMALL
 AG_Button *_Nonnull AG_ButtonNewFlag32(void *_Nullable, Uint,
                                        const char *_Nullable, Uint32 *_Nonnull,
 				       Uint32);
-
+#endif
 void    AG_ButtonSetPadding(AG_Button *_Nonnull, int,int,int,int);
 #define	AG_ButtonSetPaddingLeft(b,v)   AG_ButtonSetPadding((b),(v),-1,-1,-1)
 #define	AG_ButtonSetPaddingRight(b,v)  AG_ButtonSetPadding((b),-1,(v),-1,-1)

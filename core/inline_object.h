@@ -1,5 +1,6 @@
 /*	Public domain	*/
 
+#ifdef AG_NAMESPACES
 /*
  * Lookup a registered namespace by name.
  */
@@ -20,6 +21,7 @@ ag_get_namespace(const char *ns)
 	AG_SetError("No such namespace: %s", ns);
 	return (NULL);
 }
+#endif /* AG_NAMESPACES */
 
 /*
  * Compare the inheritance hierarchy of a class against a given pattern.
@@ -168,10 +170,9 @@ ag_object_superclass(void *p)
 	return AGOBJECT(p)->cls->super;
 }
 
-/*
- * Acquire the mutex protecting all resources owned by an object.
- * No-op in unthreaded builds.
- */
+#ifdef AG_THREADS
+
+/* Acquire the mutex protecting all resources owned by an object. */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_ObjectLock(void *_Nonnull p)
@@ -180,15 +181,10 @@ void
 ag_object_lock(void *p)
 #endif
 {
-#ifdef AG_THREADS
 	AG_MutexLock(&AGOBJECT(p)->pvt.lock);
-#endif
 }
 
-/*
- * Release the mutex protecting all resources owned by an object.
- * No-op in unthreaded builds.
- */
+/* Release the mutex protecting all resources owned by an object. */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_ObjectUnlock(void *_Nonnull p)
@@ -197,15 +193,10 @@ void
 ag_object_unlock(void *p)
 #endif
 {
-#ifdef AG_THREADS
 	AG_MutexUnlock(&AGOBJECT(p)->pvt.lock);
-#endif
 }
 
-/*
- * Acquire the mutex protecting all resources owned by an object.
- * No-op in unthreaded builds.
- */
+/* Acquire the mutex protecting all resources owned by an object. */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_LockVFS(void *_Nonnull p)
@@ -214,15 +205,10 @@ void
 ag_lock_vfs(void *p)
 #endif
 {
-#ifdef AG_THREADS
 	AG_ObjectLock(AGOBJECT(p)->root);
-#endif
 }
 
-/*
- * Release the mutex protecting all resources owned by an object.
- * No-op in unthreaded builds.
- */
+/* Release the mutex protecting all resources owned by an object. */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_UnlockVFS(void *_Nonnull p)
@@ -231,15 +217,12 @@ void
 ag_unlock_vfs(void *p)
 #endif
 {
-#ifdef AG_THREADS
 	AG_ObjectUnlock(AGOBJECT(p)->root);
-#endif
 }
 
-/*
- * Lock the timer queue (and optionally all timers owned by a given object).
- * No-op in unthreaded builds.
- */
+#ifdef AG_TIMERS
+
+/* Lock the timer queue (and optionally all timers owned by a given object). */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_LockTimers(void *_Nullable p)
@@ -248,18 +231,13 @@ void
 ag_lock_timers(void *p)
 #endif
 {
-#ifdef AG_THREADS
 	AG_Object *ob = (p != NULL) ? AGOBJECT(p) : &agTimerMgr;
 
 	AG_ObjectLock(ob);
 	AG_LockTiming();
-#endif
 }
 
-/*
- * Unlock the timer queue (and optionally all timers owned by a given object).
- * No-op in unthreaded builds.
- */
+/* Unlock the timer queue (and optionally all timers owned by a given object). */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_UnlockTimers(void *_Nullable p)
@@ -268,13 +246,14 @@ void
 ag_unlock_timers(void *p)
 #endif
 {
-#ifdef AG_THREADS
 	AG_Object *ob = (p != NULL) ? AGOBJECT(p) : &agTimerMgr;
 
 	AG_UnlockTiming();
 	AG_ObjectUnlock(ob);
-#endif
 }
+#endif /* AG_TIMERS */
+
+#endif /* AG_THREADS */
 
 /*
  * Evaluate whether the named object variable exists.
@@ -344,9 +323,11 @@ ag_fetch_variable_of_type(void *obj, const char *name,
 
 	V = AG_FetchVariable(obj, name, type);
 	if (V->type != type) {
+#ifdef AG_DEBUG
 		AG_Debug(obj, "Mutating \"%s\": From (%s) to (%s)\n", name,
 		    agVariableTypes[V->type].name,
 		    agVariableTypes[type].name);
+#endif
 		AG_FreeVariable(V);
 		AG_InitVariable(V, type, name);
 	}
@@ -400,10 +381,13 @@ void *
 ag_get_named_object(AG_Event *event, const char *key, const char *classSpec)
 #endif
 {
-	AG_Variable *V = AG_GetNamedEventArg(event, key);
+	AG_Variable *V;
 
+	V = AG_GetNamedEventArg(event, key);
+#ifdef AG_TYPE_SAFETY
 	if (!AG_OfClass((struct ag_object *)V->data.p, classSpec)) {
 		AG_FatalError("Illegal AG_OBJECT_NAMED() access");
 	}
+#endif
 	return (V->data.p);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,6 +22,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
 
 #ifdef _WIN32
 # include <agar/core/queue_close.h>			/* Conflicts */
@@ -284,3 +287,5 @@ AG_RegisterFileExtMappings(const AG_FileExtMapping *femNew, Uint count)
 	agFileExtMap = fem;
 	agFileExtCount += count;
 }
+
+#endif /* AG_SERIALIZATION */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,9 +37,9 @@
 #include <agar/config/ag_debug_core.h>
 
 AG_ObjectClass agObjectClass = {
-	"Agar(Object)",
+	"AG_Object",
 	sizeof(AG_Object),
-	{ 7, 2 },
+	{ 7,3 },
 	NULL,	/* init */
 	NULL,	/* reset */
 	NULL,	/* destroy */
@@ -47,11 +47,14 @@ AG_ObjectClass agObjectClass = {
 	NULL,	/* save */
 	NULL	/* edit */
 };
+
+#ifdef AG_SERIALIZATION
 const AG_Version agPropTblVer = { 2, 1 };
 	
 int agObjectIgnoreDataErrors = 0;  /* Don't fail on a data load failure. */
 int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
 int agObjectBackups = 1;	   /* Backup object save files. */
+#endif
 
 /* Import inlinables */
 #undef AG_INLINE_HEADER
@@ -70,12 +73,14 @@ AG_ObjectInit(void *p, void *cl)
 #else
 	ob->name[0] = '\0';
 #endif
-#if defined(_WIN32) || defined(_XBOX)
+#ifdef AG_SERIALIZATION
+# if defined(_WIN32) || defined(_XBOX)
 	ob->save_pfx = "\\world";
-#else
+# else
 	ob->save_pfx = "/world";
-#endif
+# endif
 	ob->archivePath = NULL;
+#endif
 	ob->cls = (cl != NULL) ? (AG_ObjectClass *)cl : &agObjectClass;
 	ob->parent = NULL;
 	ob->root = ob;
@@ -85,21 +90,24 @@ AG_ObjectInit(void *p, void *cl)
 	ob->pvt.detachFn = NULL;
 	AG_MutexInitRecursive(&ob->pvt.lock);
 	
-	TAILQ_INIT(&ob->vars);
-	TAILQ_INIT(&ob->deps);
-	TAILQ_INIT(&ob->children);
 	TAILQ_INIT(&ob->events);
+#ifdef AG_TIMERS
 	TAILQ_INIT(&ob->timers);
+#endif
+	TAILQ_INIT(&ob->vars);
+#ifdef AG_SERIALIZATION
+	TAILQ_INIT(&ob->deps);
+#endif
+	TAILQ_INIT(&ob->children);
 	
-	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
-		for (i = 0; i < nHier; i++) {
-			if (hier[i]->init != NULL)
-				hier[i]->init(ob);
-		}
-		free(hier);
-	} else {
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) != 0) {
 		AG_FatalError(NULL);
 	}
+	for (i = 0; i < nHier; i++) {
+		if (hier[i]->init != NULL)
+			hier[i]->init(ob);
+	}
+	free(hier);
 }
 
 /* Initialize an AG_Object instance (name argument variant). */
@@ -137,8 +145,7 @@ AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *C)
 	} else {
 		if (parent != NULL &&
 		    AG_ObjectFindChild(parent, name) != NULL) {
-			AG_SetError(_("%s: Existing child object %s"),
-			    OBJECT(parent)->name, name);
+			AG_SetErrorV("E7", _("Existing child object"));
 			return (NULL);
 		}
 	}
@@ -154,21 +161,6 @@ AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *C)
 	return (obj);
 }
 
-/* Specify the dataset release policy. */
-void
-AG_ObjectRemain(void *p, Uint flags)
-{
-	AG_Object *ob = p;
-
-	AG_ObjectLock(ob);
-	if (flags & AG_OBJECT_REMAIN_DATA) {
-		ob->flags |= (AG_OBJECT_REMAIN_DATA);
-	} else {
-		ob->flags &= ~AG_OBJECT_REMAIN_DATA;
-	}
-	AG_ObjectUnlock(ob);
-}
-
 /*
  * Restore an object to an initial state prior to deserialization or release.
  * Dependencies are preserved, but are all assumed to have 0 refcounts.
@@ -182,17 +174,19 @@ AG_ObjectReset(void *p)
 	int i, nHier;
 
 	AG_ObjectLock(ob);
+
 	preserveDeps = (ob->flags & AG_OBJECT_PRESERVE_DEPS);
 	ob->flags |= AG_OBJECT_PRESERVE_DEPS;
-	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
-		for (i = nHier-1; i >= 0; i--) {
-			if (hier[i]->reset != NULL)
-				hier[i]->reset(ob);
-		}
-		free(hier);
-	} else {
+
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) != 0) {
 		AG_FatalError(NULL);
 	}
+	for (i = nHier-1; i >= 0; i--) {
+		if (hier[i]->reset != NULL)
+			hier[i]->reset(ob);
+	}
+	free(hier);
+
 	if (!preserveDeps) {
 		ob->flags &= ~(AG_OBJECT_PRESERVE_DEPS);
 	}
@@ -216,8 +210,7 @@ GenerateObjectPath(void *_Nonnull obj, char *_Nonnull path, AG_Size path_len)
 	name_len = strlen(ob->name);
 	
 	if (name_len+cur_len+1 > path_len) {
-		AG_SetError("Path buffer is %lu bytes (required = %lu)",
-		    (Ulong)path_len, (Ulong)(name_len+cur_len+1));
+		AG_SetErrorV("E4", _("Path buffer overflow"));
 		AG_ObjectUnlock(ob);
 		return (-1);
 	}
@@ -245,7 +238,7 @@ AG_ObjectCopyName(void *obj, char *path, AG_Size path_len)
 	int rv = 0;
 
 	if (path_len < 2) {
-		AG_SetError("Buffer too small");
+		AG_SetErrorV("E5", _("Path buffer overflow"));
 		return (-1);
 	}
 	path[0] = AG_PATHSEPCHAR;
@@ -303,6 +296,7 @@ fail:
 	return (NULL);
 }
 
+#ifdef AG_SERIALIZATION
 /*
  * Search an object and its children for a dependency upon robj.
  * The object's VFS must be locked.
@@ -356,6 +350,7 @@ used:
 	AG_UnlockVFS(ob);
 	return (1);
 }
+#endif /* AG_SERIALIZATION */
 
 /* Configure a custom "attach" function. */
 void
@@ -399,7 +394,8 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	if (parent == NULL)
 		return;
 #ifdef AG_DEBUG
-	if (parent == chld) { AG_FatalError("parent == chld"); }
+	if (parent == chld)
+		AG_FatalErrorV("E31", "parent == chld");
 #endif
 	AG_LockVFS(parent);
 	AG_ObjectLock(parent);
@@ -450,44 +446,6 @@ out:
 	AG_UnlockVFS(parent);
 }
 
-/*
- * Attach an object to some other object specified by a pathname specific
- * to the given VFS.
- */
-int
-AG_ObjectAttachToNamed(void *vfsRoot, const char *path, void *child)
-{
-	char ppath[AG_PATHNAME_MAX];
-	void *parent;
-	char *p;
-
-	if (Strlcpy(ppath, path, sizeof(ppath)) >= sizeof(ppath)) {
-		AG_SetError(_("Path name overflow"));
-		return (-1);
-	}
-	if ((p = strrchr(ppath, AG_PATHSEPCHAR)) != NULL) {
-		*p = '\0';
-	} else {
-		AG_SetError(_("Not an absolute path: %s"), path);
-		return (-1);
-	}
-
-	AG_LockVFS(vfsRoot);
-	if (ppath[0] == '\0') {
-		AG_ObjectAttach(vfsRoot, child);
-	} else {
-		if ((parent = AG_ObjectFindS(vfsRoot, ppath)) == NULL) {
-			AG_SetError(_("%s: Cannot attach to %s (%s)"),
-			    OBJECT(child)->name, ppath, AG_GetError());
-			AG_UnlockVFS(vfsRoot);
-			return (-1);
-		}
-		AG_ObjectAttach(parent, child);
-	}
-	AG_UnlockVFS(vfsRoot);
-	return (0);
-}
-
 /* Detach a child object from its parent. */
 void
 AG_ObjectDetach(void *pChld)
@@ -497,7 +455,9 @@ AG_ObjectDetach(void *pChld)
 	AG_Object *root = chld->root;
 #endif
 	AG_Object *parent = chld->parent;
+#ifdef AG_TIMERS
 	AG_Timer *to, *toNext;
+#endif
 
 #ifdef AG_THREADS
 	AG_LockVFS(root);
@@ -510,7 +470,7 @@ AG_ObjectDetach(void *pChld)
 		chld->pvt.detachFn->fn(chld->pvt.detachFn);
 		goto out;
 	}
-
+#ifdef AG_TIMERS
 	/* Cancel any running timer associated with the object. */
 	AG_LockTiming();
 	for (to = TAILQ_FIRST(&chld->timers);
@@ -520,7 +480,7 @@ AG_ObjectDetach(void *pChld)
 		AG_DelTimer(chld, to);
 	}
 	AG_UnlockTiming();
-
+#endif
 	/* Detach the object. */
 	TAILQ_REMOVE(&parent->children, chld, cobjs);
 	chld->parent = NULL;
@@ -591,7 +551,8 @@ AG_ObjectFindS(void *vfsRoot, const char *name)
 	void *rv;
 
 #ifdef AG_DEBUG
-	if (name[0] != AG_PATHSEPCHAR) { AG_FatalError("Not an absolute path"); }
+	if (name[0] != AG_PATHSEPCHAR)
+		AG_FatalErrorV("E32", "Not an absolute path");
 #endif
 	if (name[0] == AG_PATHSEPCHAR && name[1] == '\0') {
 		return (vfsRoot);
@@ -619,7 +580,8 @@ AG_ObjectFind(void *vfsRoot, const char *fmt, ...)
 	Vsnprintf(path, sizeof(path), fmt, ap);
 	va_end(ap);
 #ifdef AG_DEBUG
-	if (path[0] != AG_PATHSEPCHAR) { AG_FatalError("Not an absolute path"); }
+	if (path[0] != AG_PATHSEPCHAR)
+		AG_FatalErrorV("E32", "Not an absolute path");
 #endif
 	AG_LockVFS(vfsRoot);
 	rv = FindObjectByName(vfsRoot, &path[1]);
@@ -655,6 +617,7 @@ fail:
 	return (NULL);
 }
 
+#ifdef AG_SERIALIZATION
 /* Clear the dependency table. */
 void
 AG_ObjectFreeDeps(AG_Object *ob)
@@ -697,6 +660,7 @@ AG_ObjectFreeDummyDeps(AG_Object *ob)
 	}
 	AG_ObjectUnlock(ob);
 }
+#endif /* AG_SERIALIZATION */
 
 /* Detach and free all children. None of them must be in use. */
 static void
@@ -789,9 +753,9 @@ AG_ObjectDestroy(void *p)
 
 #ifdef AG_DEBUG
 	if (ob->parent != NULL) {
-		AG_Debug(ob, "Still attached to %s\n",
+		AG_Debug(ob, "I'm still attached to %s\n",
 		    OBJECT(ob->parent)->name);
-		AG_FatalError("Object is still attached");
+		AG_FatalErrorV("E33", "Object is still attached");
 	}
 # ifdef AG_DEBUG_CORE
 	Debug(ob, "Destroying\n");
@@ -799,26 +763,29 @@ AG_ObjectDestroy(void *p)
 #endif
 	AG_ObjectFreeChildren(ob);
 	AG_ObjectReset(ob);
+#ifdef AG_SERIALIZATION
 	AG_ObjectFreeDeps(ob);
-
-	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
-		for (i = nHier-1; i >= 0; i--) {
-			if (hier[i]->destroy != NULL)
-				hier[i]->destroy(ob);
-		}
-		free(hier);
-	} else {
+#endif
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) != 0) {
 		AG_FatalError(NULL);
 	}
+	for (i = nHier-1; i >= 0; i--) {
+		if (hier[i]->destroy != NULL)
+			hier[i]->destroy(ob);
+	}
+	free(hier);
 	
 	AG_ObjectFreeVariables(ob);
 	AG_ObjectFreeEvents(ob);
 	AG_MutexDestroy(&ob->pvt.lock);
+#ifdef AG_SERIALIZATION
 	Free(ob->archivePath);
-	
+#endif
 	if ((ob->flags & AG_OBJECT_STATIC) == 0)
 		free(ob);
 }
+
+#ifdef AG_SERIALIZATION
 
 /*
  * Copy the full pathname to an object's data file to a fixed-size buffer.
@@ -854,10 +821,13 @@ AG_ObjectCopyFilename(void *p, char *path, AG_Size pathSize)
 		if (AG_FileExists(path))
 			goto out;
 	}
+# ifdef AG_VERBOSITY
 	AG_SetError(_("The %s%s%c%s.%s file is not in load-path."),
 	    ob->save_pfx != NULL ? ob->save_pfx : "",
 	    objName, AG_PATHSEPCHAR, ob->name, ob->cls->name);
-
+# else
+	AG_SetErrorS("E5");
+# endif
 	AG_ObjectUnlock(ob);
 	return (-1);
 out:
@@ -892,7 +862,11 @@ AG_ObjectCopyDirname(void *p, char *path, AG_Size pathSize)
 			goto out;
 		}
 	}
+#ifdef AG_VERBOSITY
 	AG_SetError(_("The %s directory is not in load-path."), objName);
+#else
+	AG_SetErrorS("E6");
+#endif
 	AG_ObjectUnlock(ob);
 	return (-1);
 out:
@@ -1015,8 +989,12 @@ AG_ObjectResolveDeps(void *p)
 			continue;
 		}
 		if ((dep->obj = AG_ObjectFindS(ob->root, dep->path)) == NULL) {
+#ifdef AG_VERBOSITY
 			AG_SetError(_("%s: Cannot resolve dependency `%s'"),
 			    ob->name, dep->path);
+#else
+			AG_SetErrorS("E6");
+#endif
 			goto fail;
 		}
 #ifdef AG_DEBUG_CORE
@@ -1153,20 +1131,24 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 	count = (Uint)AG_ReadUint32(ds);
 #if AG_MODEL != AG_SMALL
 	if (count > AG_OBJECT_MAX_VARIABLES) {
-		AG_SetErrorS("Too many variables");
+		AG_SetErrorS(_("Too many variables"));
 		return (-1);
 	}
 #endif
 	for (i = 0; i < count; i++) {
 		char key[64];
-		Sint32 code;
+		Sint8 code;
 		char *s;
 
 		if (AG_CopyString(key, ds, sizeof(key)) >= sizeof(key)) {
-			AG_SetError("Variable name too long: %s", key);
+#ifdef AG_VERBOSITY
+			AG_SetError(_("Variable name too long: %s"), key);
+#else
+			AG_SetErrorS("E8");
+#endif
 			goto fail;
 		}
-		code = AG_ReadSint32(ds);
+		code = (Sint8)AG_ReadSint32(ds);		/* XXX */
 #if 0
 		Verbose("%s: %s (code %d)\n", ob->name, key, (int)code);
 #endif
@@ -1175,27 +1157,29 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 				break;
 		}
 		if (j == AG_VARIABLE_TYPE_LAST) {
-			AG_SetError("Unknown variable code: %u", (Uint)code);
+#ifdef AG_VERBOSITY
+			AG_SetError(_("Unknown variable code: %u"), (Uint)code);
+#else
+			AG_SetErrorS("E9");
+#endif
 			goto fail;
 		}
 		switch (agVariableTypes[j].typeTgt) {
 #if AG_MODEL == AG_SMALL
 		case AG_VARIABLE_UINT:   AG_SetUint(ob,  key, AG_ReadUint16(ds));	break;
 		case AG_VARIABLE_INT:    AG_SetInt(ob,   key, AG_ReadSint16(ds));	break;
-		case AG_VARIABLE_ULONG:  AG_SetUlong(ob, key, AG_ReadUint32(ds));	break;
-		case AG_VARIABLE_LONG:   AG_SetLong(ob,  key, AG_ReadSint32(ds));	break;
-#else /* MEDIUM or LARGE */
+#else
 		case AG_VARIABLE_UINT:   AG_SetUint(ob,  key,  (Uint)AG_ReadUint32(ds)); break;
 		case AG_VARIABLE_INT:    AG_SetInt(ob,   key,   (int)AG_ReadSint32(ds)); break;
 		case AG_VARIABLE_ULONG:  AG_SetUlong(ob, key, (Ulong)AG_ReadUint64(ds)); break;
 		case AG_VARIABLE_LONG:   AG_SetLong(ob,  key,  (long)AG_ReadSint64(ds)); break;
-#endif
+		case AG_VARIABLE_UINT32: AG_SetUint32(ob, key, AG_ReadUint32(ds));	break;
+		case AG_VARIABLE_SINT32: AG_SetSint32(ob, key, AG_ReadSint32(ds));	break;
+#endif /* MD or LG */
 		case AG_VARIABLE_UINT8:  AG_SetUint8(ob,  key, AG_ReadUint8(ds));	break;
 		case AG_VARIABLE_SINT8:  AG_SetSint8(ob,  key, AG_ReadSint8(ds));	break;
 		case AG_VARIABLE_UINT16: AG_SetUint16(ob, key, AG_ReadUint16(ds));	break;
 		case AG_VARIABLE_SINT16: AG_SetSint16(ob, key, AG_ReadSint16(ds));	break;
-		case AG_VARIABLE_UINT32: AG_SetUint32(ob, key, AG_ReadUint32(ds));	break;
-		case AG_VARIABLE_SINT32: AG_SetSint32(ob, key, AG_ReadSint32(ds));	break;
 #ifdef AG_HAVE_64BIT
 		case AG_VARIABLE_UINT64: AG_SetUint64(ob, key, AG_ReadUint64(ds));	break;
 		case AG_VARIABLE_SINT64: AG_SetSint64(ob, key, AG_ReadSint64(ds));	break;
@@ -1215,8 +1199,12 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 			}
 			break;
 		default:
-			AG_SetError("Attempt to load variable of type %s",
+#ifdef AG_VERBOSITY
+			AG_SetError(_("Attempt to load variable of type %s"),
 			    agVariableTypes[j].name);
+#else
+			AG_SetErrorS("E10");
+#endif
 			goto fail;
 		}
 	}
@@ -1253,7 +1241,7 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 
 		AG_LockVariable(V);
 		AG_WriteString(ds, (char *)V->name);
-		AG_WriteSint32(ds, Vt->code);
+		AG_WriteSint32(ds, (Sint32)Vt->code);		/* XXX */
 
 		p = (agVariableTypes[V->type].indirLvl > 0) ?
 		    V->data.p : (void *)&V->data;
@@ -1262,8 +1250,6 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 #if AG_MODEL == AG_SMALL
 		case AG_VARIABLE_UINT:	 AG_WriteUint16(ds, *(Uint *)p);	break;
 		case AG_VARIABLE_INT:	 AG_WriteSint16(ds, *(int *)p);		break;
-		case AG_VARIABLE_ULONG:	 AG_WriteUint32(ds, *(Ulong *)p);	break;
-		case AG_VARIABLE_LONG:	 AG_WriteSint32(ds, *(long *)p);	break;
 #else /* MEDIUM or LARGE */
 		case AG_VARIABLE_UINT:	 AG_WriteUint32(ds, (Uint32)*(Uint *)p);	break;
 		case AG_VARIABLE_INT:	 AG_WriteSint32(ds, (Sint32)*(int *)p);		break;
@@ -1274,8 +1260,10 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 		case AG_VARIABLE_SINT8:	 AG_WriteSint8(ds, *(Sint8 *)p);		break;
 		case AG_VARIABLE_UINT16: AG_WriteUint16(ds, *(Uint16 *)p);		break;
 		case AG_VARIABLE_SINT16: AG_WriteSint16(ds, *(Sint16 *)p);		break;
+#if AG_MODEL != AG_SMALL
 		case AG_VARIABLE_UINT32: AG_WriteUint32(ds, *(Uint32 *)p);		break;
 		case AG_VARIABLE_SINT32: AG_WriteSint32(ds, *(Sint32 *)p);		break;
+#endif
 #ifdef AG_HAVE_64BIT
 		case AG_VARIABLE_UINT64: AG_WriteUint64(ds, *(Uint64 *)p);		break;
 		case AG_VARIABLE_SINT64: AG_WriteSint64(ds, *(Sint64 *)p);		break;
@@ -1293,7 +1281,7 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 		AG_UnlockVariable(V);
 
 		if (++count > AG_OBJECT_MAX_VARIABLES) {
-			AG_FatalError("Too many variables to save");
+			AG_FatalErrorV("E34", "Too many variables to save");
 		/*	break; */
 		}
 	}
@@ -1322,7 +1310,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	Uint32 count, i;
 	
 	if (!OBJECT_PERSISTENT(ob)) {
-		AG_SetError(_("Object is non-persistent"));
+		AG_SetErrorV("E11", _("Object is non-persistent"));
 		return (-1);
 	}
 	AG_LockVFS(ob);
@@ -1383,15 +1371,23 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		/* Look for an existing object of the given name. */
 		if ((chld = AG_ObjectFindChild(ob, cname)) != NULL) {
 			if (strcmp(chld->cls->hier, hier) != 0) {
-				AG_SetError("Archived object `%s' clashes with "
-				            "existing object of different type",
-					    cname);
+#ifdef AG_VERBOSITY
+				AG_SetError(_("Archived object `%s' clashes with "
+				              "existing object of different type"),
+					      cname);
+#else
+				AG_SetErrorS("E12");
+#endif
 				goto fail;
 			}
 			if (!OBJECT_PERSISTENT(chld)) {
-				AG_SetError("Archived object `%s' clashes with "
-				            "existing non-persistent object",
-					    cname);
+#ifdef AG_VERBOSITY
+				AG_SetError(_("Archived object `%s' clashes with "
+				              "existing non-persistent object"),
+					      cname);
+#else
+				AG_SetErrorS("E13");
+#endif
 				goto fail;
 			}
 			if (AG_ObjectLoadGeneric(chld) == -1) {
@@ -1407,7 +1403,11 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		C = AG_LookupClass(hier);
 #endif
 		if (C == NULL) {
+#ifdef AG_VERBOSITY
 			AG_SetError("%s: %s", ob->name, AG_GetError());
+#else
+			AG_SetErrorS("E14");
+#endif
 			if (agObjectIgnoreUnknownObjs) {
 #ifdef AG_DEBUG_CORE
 				Debug(ob, "%s; ignoring\n", AG_GetError());
@@ -1487,7 +1487,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 #ifdef AG_DEBUG
 		AG_SetSourceDebug(ds, 1);
 #else
-		AG_SetErrorS("Can't read without AG_DEBUG");
+		AG_SetErrorV("E15", _("Can't read without DEBUG"));
 		goto fail;
 #endif
 	}
@@ -1503,8 +1503,12 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 		if (hier[i]->load == NULL)
 			continue;
 		if (hier[i]->load(ob, ds, &ver) == -1) {
-			AG_SetError("<0x%x>:%s", (Uint)AG_Tell(ds),
+#ifdef AG_VERBOSITY
+			AG_SetError("<0x%x>: %s", (Uint)AG_Tell(ds),
 			    AG_GetError());
+#else
+			AG_SetErrorS("E16");
+#endif
 			free(hier);
 			goto fail;
 		}
@@ -1709,7 +1713,7 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 
 	/* Table of child objects, expected empty. */
 	if (AG_ReadUint32(ds) != 0) {
-		AG_SetError("Archived object has children");
+		AG_SetErrorV("E17", "nChildren != 0");
 		goto fail;
 	}
 
@@ -1721,7 +1725,7 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 #ifdef AG_DEBUG
 		debugSave = AG_SetSourceDebug(ds, 1);
 #else
-		AG_SetErrorS("Can't read without AG_DEBUG");
+		AG_SetErrorV("E15", _("Can't read without DEBUG"));
 		goto fail;
 #endif
 	} else {
@@ -1739,7 +1743,11 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 		if (hier[i]->load == NULL)
 			continue;
 		if (hier[i]->load(ob, ds, &ver) == -1) {
-			AG_SetError("<0x%x>:%s", (Uint)AG_Tell(ds), AG_GetError());
+#ifdef AG_VERBOSITY
+			AG_SetError("<0x%x>: %s", (Uint)AG_Tell(ds), AG_GetError());
+#else
+			AG_SetErrorS("E18");
+#endif
 			free(hier);
 			goto fail_dbg;
 		}
@@ -1776,7 +1784,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	AG_ObjectLock(ob);
 
 	if (!OBJECT_PERSISTENT(ob)) {
-		AG_SetError("Object (%s) is non-persistent", ob->name);
+		AG_SetErrorV("E19", _("Non-persistent object"));
 		goto fail_unlock;
 	}
 
@@ -1834,7 +1842,11 @@ fail_unlock:
 }
 
 /* Shorthand for AG_ObjectSaveToFile() */
-int AG_ObjectSave(void *p) { return AG_ObjectSaveToFile(p, NULL); }
+int
+AG_ObjectSave(void *p)
+{
+	return AG_ObjectSaveToFile(p, NULL);
+}
 
 /* Load an object from an AG_Db database entry. */
 int
@@ -1889,6 +1901,8 @@ fail:
 	return (-1);
 }
 
+#endif /* AG_SERIALIZATION */
+
 /*
  * Change the name of an object (C string).
  * The parent VFS, if any, must be locked.
@@ -1938,39 +1952,7 @@ AG_ObjectSetName(void *p, const char *fmt, ...)
 	AG_ObjectUnlock(ob);
 }
 
-/*
- * Return the archive path of an object into a fixed buffer. Returned path
- * is valid as long as the object is locked.
- */
-void
-AG_ObjectGetArchivePath(void *p, char *buf, AG_Size buf_len)
-{
-	AG_Object *ob = p;
-
-	AG_ObjectLock(ob);
-	Strlcpy(buf, ob->archivePath, buf_len);
-	AG_ObjectUnlock(ob);
-}
-
-/* Set the default path to use with ObjectLoad() and ObjectSave(). */
-void
-AG_ObjectSetArchivePath(void *p, const char *path)
-{
-	AG_Object *ob = p;
-
-	AG_ObjectLock(ob);
-	Free(ob->archivePath);
-	ob->archivePath = Strdup(path);
-	AG_ObjectUnlock(ob);
-}
-
-/* Change an object's class (thread-unsafe). */
-void
-AG_ObjectSetClass(void *p, void *C)
-{
-	OBJECT(p)->cls = C;
-}
-
+#ifdef AG_SERIALIZATION
 /* Add a new dependency or increment the reference count on one. */
 AG_ObjectDep *
 AG_ObjectAddDep(void *p, void *depobj, int persistent)
@@ -2063,7 +2045,7 @@ AG_ObjectEncodeName(void *p, const void *depobjp)
 		}
 	}
 	AG_ObjectUnlock(ob);
-	AG_FatalError("Bad dependency");
+	AG_FatalErrorV("E35", "Bad dependency");
 	return (0);
 }
 
@@ -2097,14 +2079,16 @@ AG_ObjectDelDep(void *p, const void *depobj)
 			dep->count = 0;
 		}
 	} else if (dep->count == 0) {
-		AG_FatalError("Bad refcount");
+		AG_FatalErrorV("E36", "Bad refcount");
 	} else {
 		dep->count--;
 	}
 out:
 	AG_ObjectUnlock(ob);
 }
+#endif /* AG_SERIALIZATION */
 
+#if AG_MODEL != AG_SMALL
 /* Move an object towards the head of its parent's children list. */
 void
 AG_ObjectMoveUp(void *p)
@@ -2151,6 +2135,7 @@ AG_ObjectMoveToHead(void *p)
 	}
 	AG_UnlockVFS(parent);
 }
+#endif /* !AG_SMALL */
 
 /* Move an object to the tail of its parent's children list. */
 void
@@ -2167,22 +2152,7 @@ AG_ObjectMoveToTail(void *p)
 	AG_UnlockVFS(parent);
 }
 
-/* Change the save prefix of an object and its children. */
-void
-AG_ObjectSetSavePfx(void *p, char *path)
-{
-	AG_Object *ob = p, *cob;
-
-	AG_LockVFS(ob);
-	AG_ObjectLock(ob);
-	ob->save_pfx = path;
-	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		AG_ObjectSetSavePfx(cob, path);
-	}
-	AG_ObjectUnlock(ob);
-	AG_UnlockVFS(ob);
-}
-
+#ifdef AG_SERIALIZATION
 /*
  * Remove the data files of an object and its children.
  * The object's VFS must be locked.
@@ -2313,6 +2283,7 @@ out:
 #endif
 	return (rv);
 }
+#endif /* AG_SERIALIZATION */
 
 /*
  * Generate an object name that is unique in the given parent object. The
@@ -2344,6 +2315,7 @@ tryname:
 	}
 }
 
+#if AG_MODEL != AG_SMALL
 /* Generate a unique object name using the specified prefix. */
 void
 AG_ObjectGenNamePfx(void *p, const char *pfx, char *name, AG_Size len)
@@ -2368,3 +2340,4 @@ tryname:
 		}
 	}
 }
+#endif /* !AG_SMALL */

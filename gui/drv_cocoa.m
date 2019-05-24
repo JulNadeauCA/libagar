@@ -734,7 +734,7 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 				}
 			}
 			if (ks != AG_KEY_NONE) {
-				AG_KeyboardUpdate(drv->kbd, kbdAction, ks, 0);
+				AG_KeyboardUpdate(drv->kbd, kbdAction, ks);
 				dev->type = evType;
 				dev->win = win;
 				dev->data.key.ks = ks;
@@ -754,8 +754,7 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 				c = [characters characterAtIndex: i];
 				ks = (c <= AG_KEY_ASCII_END) ?
 				    (AG_KeySym)c : AG_KEY_NONE;
-				AG_KeyboardUpdate(drv->kbd, kbdAction, ks,
-				    (Uint32)c);
+				AG_KeyboardUpdate(drv->kbd, kbdAction, ks);
 
 				if (i == 0) {
 					dev->type = evType;
@@ -782,12 +781,12 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 			
 				if ((modFlags & kmEnt->keyMask) &&
 				     !(co->modFlags & kmEnt->keyMask)) {
-					AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED, kmEnt->keySym, 0);
+					AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED, kmEnt->keySym);
 					QueueKeyEvent(co, AG_DRIVER_KEY_DOWN, kmEnt->keySym, 0);
 					nChanged++;
 				} else if (!(modFlags & kmEnt->keyMask) &&
 				    (co->modFlags & kmEnt->keyMask)) {
-					AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED, kmEnt->keySym, 0);
+					AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED, kmEnt->keySym);
 					QueueKeyEvent(co, AG_DRIVER_KEY_UP, kmEnt->keySym, 0);
 					nChanged++;
 				}

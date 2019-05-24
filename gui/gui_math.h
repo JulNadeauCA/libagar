@@ -48,7 +48,6 @@
 # define DotProd2(a,b,c,d)  AG_DotProd2((a),(b),(c),(d))
 # define DotNorm2(ax,ay)    AG_Norm2((ax),(ay))
 # define Distance2(a,b,c,d) AG_Distance2((a),(b),(c),(d))
-# define PowOf2i(x)         AG_PowOf2i(x)
 # define Hypot(x,y)         AG_Hypot(x,y)
 # define Truncf(x)          AG_Truncf(x)
 # define Fracf(x)           AG_Fracf(x)
@@ -57,14 +56,6 @@
 #endif /* _AGAR_INTERNAL or _USE_AGAR_GUI_MATH */
 
 __BEGIN_DECLS
-static __inline__ int _Const_Attribute
-AG_PowOf2i(int i)
-{
-	int val = 1;
-	while (val < i) { val <<= 1; }
-	return (val);
-}
-
 #ifdef AG_HAVE_FLOAT
 static __inline__ float
 AG_Hypot(float x, float y)

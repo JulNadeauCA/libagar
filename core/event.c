@@ -113,9 +113,9 @@ InitEvent(AG_Event *_Nonnull ev, AG_Object *_Nullable ob)
 	ev->name[0] = '\0';
 #endif
 	ev->flags = 0;
+	ev->fn = NULL;
 	ev->argc = 1;
 	ev->argc0 = 1;
-	ev->fn = NULL;
 	InitPointerArg(&ev->argv[0], ob);
 }
 
@@ -263,6 +263,7 @@ PropagateEvent(AG_Object *_Nonnull sndr, AG_Object *_Nonnull rcvr,
 	AG_ForwardEvent(sndr, rcvr, ev);
 }
 
+#ifdef AG_TIMERS
 /* Timeout callback for scheduled events. */
 static Uint32
 EventTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -272,11 +273,11 @@ EventTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	char *eventName = AG_STRING(2);
 	AG_Event *ev;
 
-#ifdef AG_DEBUG_CORE
+# ifdef AG_DEBUG_CORE
 	if (agDebugLvl >= 2)
 		Debug(ob, "Event <%s> timeout (%u ticks)\n", eventName,
 		(Uint)to->ival);
-#endif
+# endif
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(eventName, ev->name) == 0)
 			break;
@@ -289,10 +290,10 @@ EventTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	/* Propagate event to children. */
 	if (ev->flags & AG_EVENT_PROPAGATE) {
 		AG_Object *child;
-#ifdef AG_DEBUG_CORE
+# ifdef AG_DEBUG_CORE
 		if (agDebugLvl >= 2)
 			Debug(ob, "Propagate <%s> (timeout)\n", ev->name);
-#endif
+# endif
 		AG_LockVFS(ob);
 		OBJECT_FOREACH_CHILD(child, ob, ag_object) {
 			PropagateEvent(ob, child, ev);
@@ -306,7 +307,7 @@ EventTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	}
 	return (0);
 }
-
+#endif /* AG_TIMERS */
 
 #ifdef AG_THREADS
 /* Invoke an event handler routine asynchronously. */
@@ -339,35 +340,6 @@ EventThread(void *_Nonnull p)
 	return (NULL);
 }
 #endif /* AG_THREADS */
-
-void
-AG_InitEventQ(AG_EventQ *eq)
-{
-	eq->nEvents = 0;
-	eq->events = NULL;
-}
-
-void
-AG_FreeEventQ(AG_EventQ *eq)
-{
-	Free(eq->events);
-	eq->nEvents = 0;
-	eq->events = NULL;
-}
-
-/* Add a new entry to an event queue. */
-void
-AG_QueueEvent(AG_EventQ *eq, const char *name, const char *fmt, ...)
-{
-	AG_Event *ev;
-
-	eq->events = Realloc(eq->events, (eq->nEvents+1)*sizeof(AG_Event));
-	ev = &eq->events[eq->nEvents++];
-	InitEvent(ev, NULL);
-	AG_EVENT_GET_ARGS(ev, fmt);
-	ev->argc0 = ev->argc;
-	Strlcpy(ev->name, name, sizeof(ev->name));
-}
 
 /*
  * Raise the specified event. Configured event handler routines may be
@@ -508,6 +480,7 @@ AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
 	AG_ObjectUnlock(rcvr);
 }
 
+#ifdef AG_TIMERS
 /*
  * Schedule the execution of the named event in the given number
  * of AG_Time(3) ticks.
@@ -533,8 +506,7 @@ AG_SchedEvent(void *pSndr, void *pRcvr, Uint32 ticks, const char *evname,
 	AG_LockTiming();
 	AG_ObjectLock(rcvr);
 	
-	if (AG_AddTimer(rcvr, to, ticks,
-	    EventTimeout, "%p,%s", sndr, evname) == -1) {
+	if (AG_AddTimer(rcvr, to, ticks, EventTimeout,"%p,%s",sndr,evname) == -1) {
 		free(to);
 		goto fail;
 	}
@@ -552,6 +524,7 @@ fail:
 	AG_ObjectUnlock(rcvr);
 	return (-1);
 }
+#endif /* AG_TIMERS */
 
 /*
  * Forward an event, without modifying the original event structure, except
@@ -667,8 +640,10 @@ CreateEventSource(void)
 		return (NULL);
 	}
 	src->flags = 0;
+#ifdef AG_TIMERS
 	src->addTimerFn = NULL;
 	src->delTimerFn = NULL;
+#endif
 	src->breakReq = 0;
 	src->returnCode = 0;
 	TAILQ_INIT(&src->prologues);
@@ -687,8 +662,10 @@ CreateEventSource(void)
 	kq->maxChanges = 0;
 	memset(kq->events, 0, EVBUFSIZE*sizeof(struct kevent));
 	src->sinkFn = AG_EventSinkKQUEUE;
+#ifdef AG_TIMERS
 	src->addTimerFn = AG_AddTimerKQUEUE;
 	src->delTimerFn = AG_DelTimerKQUEUE;
+#endif
 	src->caps[AG_SINK_TIMER] = 1;		/* Provides timers internally */
 	src->caps[AG_SINK_READ] = 1;
 	src->caps[AG_SINK_WRITE] = 1;
@@ -697,8 +674,10 @@ CreateEventSource(void)
 	GrowKqChangelist(kq, 64);		/* Preallocate */
 #elif defined(HAVE_TIMERFD)
 	src->sinkFn = AG_EventSinkTIMERFD;
+# ifdef AG_TIMERS
 	src->addTimerFn = AG_AddTimerTIMERFD;
 	src->delTimerFn = AG_DelTimerTIMERFD;
+# endif
 	src->caps[AG_SINK_TIMER] = 1;		/* Provides timers internally */
 	src->caps[AG_SINK_READ] = 1;
 	src->caps[AG_SINK_WRITE] = 1;
@@ -713,11 +692,15 @@ CreateEventSource(void)
 #else
 	src->sinkFn = AG_EventSinkSPINNER;
 #endif
+#ifdef AG_TIMERS
 	if (agSoftTimers) {			/* Force soft timers */
 		src->addTimerFn = NULL;
 		src->delTimerFn = NULL;
 		src->caps[AG_SINK_TIMER] = 0;
 	}
+#else
+	src->caps[AG_SINK_TIMER] = 0;
+#endif
 	return (src);
 }
 
@@ -864,6 +847,7 @@ GetSinkFlags(Uint fflags)
 }
 #endif /* HAVE_KQUEUE */
 
+#if AG_MODEL != AG_SMALL
 /*
  * Add/remove an event processing prologue. The function will be invoked
  * only once at the beginning of AG_EventLoop().
@@ -890,13 +874,14 @@ AG_DelEventPrologue(AG_EventSink *es)
 {
 	AG_EventSource *src = AG_GetEventSource();
 
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	if (es->type != AG_SINK_PROLOGUE)
 		AG_FatalError("AG_DelEventPrologue");
-#endif
+# endif
 	TAILQ_REMOVE(&src->prologues, es, sinks);
 	free(es);
 }
+#endif /* !AG_SMALL */
 
 /*
  * Add/remove an event sink epilogue. The function will be invoked
@@ -982,7 +967,7 @@ AG_AddEventSink(enum ag_event_sink_type type, int ident, Uint flags,
 	struct kevent *kev;
 #endif
 	if (type >= AG_SINK_LAST || !src->caps[type]) {
-		AG_SetError("Unsupported event type: %u", (Uint)type);
+		AG_SetErrorV("E1", "No such event type");
 		return (NULL);
 	}
 	if ((es = TryMalloc(sizeof(AG_EventSink))) == NULL) {
@@ -1063,6 +1048,8 @@ AG_DelEventSink(AG_EventSink *es)
 	TAILQ_REMOVE(&src->sinks, es, sinks);
 	free(es);
 }
+
+#if AG_MODEL != AG_SMALL
 void
 AG_DelEventSinksByIdent(enum ag_event_sink_type type, int ident, Uint flags)
 {
@@ -1077,6 +1064,7 @@ AG_DelEventSinksByIdent(enum ag_event_sink_type type, int ident, Uint flags)
 			AG_DelEventSink(es);
 	}
 }
+#endif /* !AG_SMALL */
 
 #ifdef HAVE_KQUEUE
 /*
@@ -1098,7 +1086,7 @@ restart:
 	} else {
 		pTimeo = NULL;
 	}
-#ifdef DEBUG_TIMERS
+# ifdef DEBUG_TIMERS
 	for (i = 0; i < kq->nChanges; i++) {
 		struct kevent *chg = &kq->changes[i];
 		Verbose("changes[%d]: f=%d i=%u f=0x%x ff=0x%x u=%p\n",
@@ -1106,7 +1094,7 @@ restart:
 		    (Uint)chg->ident, chg->flags, chg->fflags,
 		    chg->udata);
 	}
-#endif
+# endif
 	rv = kevent(kq->fd, kq->changes, kq->nChanges, kq->events, EVBUFSIZE,
 	    pTimeo);
 	if (rv < 0) {
@@ -1118,6 +1106,7 @@ restart:
 	}
 	kq->nChanges = 0;
 
+# ifdef AG_TIMERS
 	/* 1. Process timer expirations. */
 	AG_LockTiming();
 	for (i = 0; i < rv; i++) {
@@ -1139,9 +1128,10 @@ restart:
 		rvt = to->fn(to, &to->fnEvent);
 		if (rvt > 0) {				/* Restart timer */
 			struct kevent *kev;
-#ifdef DEBUG_TIMERS
-			Verbose("TIMER[%d] resetting t=+%u\n", to->id, (Uint)rvt);
-#endif
+# ifdef DEBUG_TIMERS
+			Verbose("TIMER[%d] resetting t=+%u\n", to->id,
+			    (Uint)rvt);
+# endif
 			if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
 				AG_UnlockTiming();
 				return (-1);
@@ -1151,9 +1141,9 @@ restart:
 			    EV_ADD|EV_ENABLE|EV_ONESHOT, 0, (int)rvt, to);
 			to->ival = rvt;
 		} else {				/* Expire */
-#ifdef DEBUG_TIMERS
+# ifdef DEBUG_TIMERS
 			Verbose("TIMER[%d] expired\n", to->id);
-#endif
+# endif
 			if ((ob = to->obj) == NULL) {
 				continue;
 			}
@@ -1172,6 +1162,7 @@ restart:
 		}
 	}
 	AG_UnlockTiming();
+# endif /* AG_TIMERS */
 
 	/* 2. Process I/O and other events. */
 	for (i = 0; i < rv; i++) {
@@ -1198,6 +1189,7 @@ restart:
 	return (0);
 }
 
+# ifdef AG_TIMERS
 /*
  * Add/remove a kqueue(2) based timer.
  */
@@ -1213,10 +1205,10 @@ GenerateTimerID(AG_Timer *_Nonnull to)
 	int id;
 
 gen_id:
-#ifdef AG_DEBUG
+#  ifdef AG_DEBUG
 	if (agTimerCount+1 >= (AG_INT_MAX-1))
 		AG_FatalError("agTimerCount");
-#endif
+#  endif
 	id = (int)++agTimerCount;			/* XXX */
 	TAILQ_FOREACH(obOther, &agTimerObjQ, pvt.tobjs) {
 		TAILQ_FOREACH(toOther, &obOther->timers, pvt.timers) {
@@ -1229,20 +1221,21 @@ gen_id:
 	}
 	return (id);
 }
+
+/* Create a new kernel-based timer with kqueue(2). */
 int
 AG_AddTimerKQUEUE(AG_Timer *to, Uint32 ival, int newTimer)
 {
 	AG_EventSourceKQUEUE *kq = (AG_EventSourceKQUEUE *)agEventSource;
 	
-	/* Create a kernel-based timer with kqueue. */
 	if (newTimer) {
 		to->id = GenerateTimerID(to);
 	}
 	if (newTimer || to->ival != ival) {
 		struct kevent *kev;
-#ifdef DEBUG_TIMERS
+#  ifdef DEBUG_TIMERS
 		Verbose("kevent: creating timer ID=%d ival=%d\n", to->id, (int)ival);
-#endif
+#  endif
 		if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
 			return (-1);
 		}
@@ -1253,6 +1246,8 @@ AG_AddTimerKQUEUE(AG_Timer *to, Uint32 ival, int newTimer)
 	}
 	return (0);
 }
+
+/* Delete an active kqueue(2) timer. */
 void
 AG_DelTimerKQUEUE(AG_Timer *to)
 {
@@ -1267,7 +1262,7 @@ AG_DelTimerKQUEUE(AG_Timer *to)
 	    0, 0, NULL);
 	agTimerCount--;
 }
-
+# endif /* AG_TIMERS */
 #endif /* HAVE_KQUEUE */
 
 #ifdef HAVE_TIMERFD
@@ -1301,12 +1296,14 @@ restart:
 			break;
 		}
 	}
+# ifdef AG_TIMERS
 	TAILQ_FOREACH(ob, &agTimerObjQ, pvt.tobjs) {
 		TAILQ_FOREACH(to, &ob->timers, pvt.timers) {
 			FD_SET(to->id, &rdFds);
 			if (to->id > nFds) { nFds = to->id; }
 		}
 	}
+# endif
 	if (!TAILQ_EMPTY(&agEventSource->spinners)) {
 		timeo.tv_sec = 0;
 		timeo.tv_usec = 0;
@@ -1322,10 +1319,10 @@ restart:
 		AG_SetError("select: %s", AG_Strerror(errno));
 		return (-1);
 	}
-	
-	AG_LockTiming();
 
+# ifdef AG_TIMERS
 	/* 1. Process timer expirations. */
+	AG_LockTiming();
 	for (ob = TAILQ_FIRST(&agTimerObjQ);
 	     ob != TAILQ_END(&agTimerObjQ);
 	     ob = obNext) {
@@ -1359,6 +1356,8 @@ restart:
 		}
 		AG_ObjectUnlock(ob);
 	}
+	AG_UnlockTiming();
+# endif /* AG_TIMERS */
 	
 	/* 2. Process I/O events. */
 	TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
@@ -1376,10 +1375,10 @@ restart:
 		}
 	}
 
-	AG_UnlockTiming();
 	return (0);
 }
 
+# ifdef AG_TIMERS
 /*
  * Add/remove a fd-based timer.
  */
@@ -1410,11 +1409,13 @@ AG_AddTimerTIMERFD(AG_Timer *to, Uint32 ival, int newTimer)
 void
 AG_DelTimerTIMERFD(AG_Timer *to)
 {
-#ifdef AG_DEBUG
-	if (to->id == -1) { AG_FatalError("timerfd inconsistency"); }
-#endif
+# ifdef AG_DEBUG
+	if (to->id == -1)
+		AG_FatalError("timerfd inconsistency");
+# endif
 	close(to->id);
 }
+# endif /* AG_TIMERS */
 #endif /* HAVE_TIMERFD */
 
 #if defined(HAVE_SELECT) && !defined(AG_THREADS)
@@ -1430,10 +1431,12 @@ AG_EventSinkTIMEDSELECT(void)
 	fd_set rdFds, wrFds;
 	int i, nFds, rv;
 	AG_EventSink *es;
+# ifdef AG_TIMERS
 	AG_Object *ob, *obNext;
 	AG_Timer *to, *toNext;
 	struct timeval timeo, *pTimeo;
 	Uint32 t, tSoonest;
+# endif
 
 restart:
 	nFds = 0;
@@ -1451,7 +1454,7 @@ restart:
 			break;
 		}
 	}
-
+# ifdef AG_TIMERS
 	if (!TAILQ_EMPTY(&agEventSource->spinners)) {
 		timeo.tv_sec = 0;
 		timeo.tv_usec = 0;
@@ -1469,6 +1472,10 @@ restart:
 		timeo.tv_usec = (tSoonest % 1000)*1000;
 		AG_UnlockTiming();
 	}
+# else /* !AG_TIMERS */
+	timeo.tv_sec = 0;
+	timeo.tv_usec = 0;
+# endif /* AG_TIMERS */
 	rv = select(nFds+1, &rdFds, &wrFds, NULL, &timeo);
 	if (rv == -1) {
 		if (errno == EINTR) {
@@ -1477,10 +1484,11 @@ restart:
 		AG_SetError("select: %s", AG_Strerror(errno));
 		return (-1);
 	}
-	
+# ifdef AG_TIMERS
 	AG_LockTiming();
 	/* 1. Process timer expirations. */
 	AG_ProcessTimeouts(t);
+# endif
 	if (rv > 0) {
 		/* 2. Process I/O events */
 		TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
@@ -1498,7 +1506,9 @@ restart:
 			}
 		}
 	}
+# ifdef AG_TIMERS
 	AG_UnlockTiming();
+# endif
 	return (0);
 }
 #endif /* HAVE_SELECT and !AG_THREADS */
@@ -1547,10 +1557,11 @@ restart:
 		AG_SetError("select: %s", AG_Strerror(errno));
 		return (-1);
 	}
-	
+# ifdef AG_TIMERS
 	AG_LockTiming();
 	/* 1. Process timer expirations. */
 	AG_ProcessTimeouts(AG_GetTicks());
+# endif
 	if (rv > 0) {
 		/* 2. Process I/O events. */
 		TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
@@ -1568,8 +1579,9 @@ restart:
 			}
 		}
 	}
+# ifdef AG_TIMERS
 	AG_UnlockTiming();
-	
+# endif
 	if (TAILQ_EMPTY(&agEventSource->spinners)) {
 		AG_Delay(1);
 	}
@@ -1584,7 +1596,9 @@ restart:
 int
 AG_EventSinkSPINNER(void)
 {
+#ifdef AG_TIMERS
 	AG_ProcessTimeouts(AG_GetTicks());
+#endif
 	AG_Delay(1);
 	return (0);
 }

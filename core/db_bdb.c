@@ -261,7 +261,7 @@ Iterate(void *_Nonnull obj, AG_DbIterateFn fn, void *_Nullable arg)
 
 AG_DbClass agDbHashClass = {
 	{
-		"Agar(Db:DbHash)",
+		"AG_Db:AG_DbHash",
 		sizeof(AG_DbHashBT),
 		{ 0,0 },
 		Init,
@@ -286,7 +286,7 @@ AG_DbClass agDbHashClass = {
 };
 AG_DbClass agDbBtreeClass = {
 	{
-		"Agar(Db:DbBtree)",
+		"AG_Db:AG_DbBtree",
 		sizeof(AG_DbHashBT),
 		{ 0,0 },
 		Init,

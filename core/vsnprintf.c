@@ -681,7 +681,7 @@ AG_TryVsnprintf(char *str, AG_Size count, const char *fmt, va_list ap)
 	rv = vsnprintf(str, count, fmt, ap);
 #endif
 	if (rv == -1) {
-		AG_SetError("vsnprintf: Out of memory");
+		AG_SetErrorV("E0", "Out of memory");
 		return (-1);
 	}
 	return (0);

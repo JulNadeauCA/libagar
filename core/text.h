@@ -169,6 +169,9 @@ typedef struct ag_text {
 #define AGTEXT(p) ((AG_Text *)(p))
 
 __BEGIN_DECLS
+#include <agar/config/ag_unicode.h>
+#ifdef AG_UNICODE
+
 extern const char *_Nonnull agLanguageCodes[];
 extern const char *_Nonnull agLanguageNames[];
 
@@ -193,12 +196,17 @@ int  AG_TextSetEnt(AG_Text *_Nonnull, AG_Language,
 int                  AG_TextSetLangISO(AG_Text *_Nonnull, const char *_Nonnull);
 const char *_Nonnull AG_TextGetLangISO(AG_Text *_Nonnull);
 
+#ifdef AG_SERIALIZATION
 int  AG_TextLoad(AG_Text *_Nonnull, AG_DataSource *_Nonnull);
 void AG_TextSave(AG_DataSource *_Nonnull, AG_Text *_Nonnull);
+#endif
 
 void        AG_TextSetLang(AG_Text *_Nonnull, AG_Language);
 AG_Language AG_TextGetLang(AG_Text *_Nonnull)
                           _Pure_Attribute_If_Unthreaded;
+
+#endif /* AG_UNICODE */
+
 __END_DECLS
 
 #include <agar/core/close.h>

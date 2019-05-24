@@ -38,7 +38,11 @@ InsertHelmet(AG_Socket *sock, AG_Icon *icon)
 		}
 		AG_SocketInsertIcon(sock, icon);
 	} else {
+#ifdef AG_TIMERS
 		AG_TextTmsg(AG_MSG_ERROR, 1000, "Not a helmet!");
+#else
+		AG_TextMsg(AG_MSG_ERROR, "Not a helmet!");
+#endif
 	}
 	return (1);
 }
@@ -56,7 +60,11 @@ InsertWeapon(AG_Socket *sock, AG_Icon *icon)
 		}
 		AG_SocketInsertIcon(sock, icon);
 	} else {
+#ifdef AG_TIMERS
 		AG_TextTmsg(AG_MSG_ERROR, 1000, "Not a weapon!");
+#else
+		AG_TextMsg(AG_MSG_ERROR, "Not a weapon!");
+#endif
 	}
 	return (1);
 }

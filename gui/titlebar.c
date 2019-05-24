@@ -47,7 +47,7 @@ MaximizeWindow(AG_Event *_Nonnull event)
 static void
 CreateMaximizeButton(AG_Titlebar *_Nonnull tbar)
 {
-	tbar->maximize_btn = AG_ButtonNewS(tbar, 0, NULL);
+	tbar->maximize_btn = AG_ButtonNewS(tbar, AG_BUTTON_VFILL, NULL);
 	AG_ButtonJustify(tbar->maximize_btn, AG_TEXT_LEFT);
 	AG_ButtonSetFocusable(tbar->maximize_btn, 0);
 	AG_ButtonSurface(tbar->maximize_btn, agIconWinMaximize.s);
@@ -67,7 +67,7 @@ MinimizeWindow(AG_Event *_Nonnull event)
 static void
 CreateMinimizeButton(AG_Titlebar *_Nonnull tbar)
 {
-	tbar->minimize_btn = AG_ButtonNewS(tbar, 0, NULL);
+	tbar->minimize_btn = AG_ButtonNewS(tbar, AG_BUTTON_VFILL, NULL);
 	AG_ButtonJustify(tbar->minimize_btn, AG_TEXT_LEFT);
 	AG_ButtonSetFocusable(tbar->minimize_btn, 0);
 	AG_ButtonSurface(tbar->minimize_btn, agIconWinMinimize.s);
@@ -87,7 +87,7 @@ CloseWindow(AG_Event *_Nonnull event)
 static void
 CreateCloseButton(AG_Titlebar *_Nonnull tbar)
 {
-	tbar->close_btn = AG_ButtonNewS(tbar, 0, NULL);
+	tbar->close_btn = AG_ButtonNewS(tbar, AG_BUTTON_VFILL, NULL);
 	AG_ButtonJustify(tbar->close_btn, AG_TEXT_LEFT);
 	AG_ButtonSetFocusable(tbar->close_btn, 0);
 	AG_ButtonSurface(tbar->close_btn, agIconWinClose.s);

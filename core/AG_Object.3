@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2018 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>.
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -95,9 +95,6 @@ will autoload any required DSOs).
 .Pp
 .Ft "void"
 .Fn AG_ObjectAttach "AG_Object *new_parent" "AG_Object *obj"
-.Pp
-.Ft "void"
-.Fn AG_ObjectAttachToNamed "AG_Object *vfsRoot" "const char *path" "AG_Object *child"
 .Pp
 .Ft "void"
 .Fn AG_ObjectDetach "AG_Object *obj"
@@ -275,12 +272,6 @@ routine invokes
 .Fn AG_ObjectDetach
 if the object is attached to a parent, followed by
 .Fn AG_ObjectDestroy .
-.Pp
-.Fn AG_ObjectAttachToNamed
-is a variant of
-.Fn AG_ObjectAttach
-which looks up the parent inside the specified VFS using the pathname
-.Fa path .
 .Pp
 .Fn AG_ObjectRoot
 returns a pointer to the root of the VFS which the given object is attached to.
@@ -490,7 +481,7 @@ For example:
 .Bd -literal
 AG_WidgetClass agButtonClass = {
 	{
-		"Agar(Widget:Button)",
+		"AG_Widget:AG_Button",  /* or "Agar(Widget:Button)" */
 		sizeof(AG_Button),
 		{ 0,0 },
 		Init,
@@ -506,21 +497,33 @@ AG_WidgetClass agButtonClass = {
 };
 .Ed
 .Pp
-The
-.Va hier
-field of
-.Ft AG_ObjectClass
-specifies a inheritance hierarchy, in the form "MY_Superclass:MY_Subclass",
-or "MyNamespace(Superclass:Subclass)" .
+The first field of
+.Ft AG_ObjectClass ,
+.Va hier ,
+specifies the inheritance hierarchy.
+For instance, "AG_Widget:AG_Button" indicates that
+.Ft AG_Button
+is a direct subclass of
+.Ft AG_Widget
+(and
+.Ft AG_Widget
+is implicitely a subclass of the base
+.Ft AG_Object
+class).
+.Pp
+Alternatively, if a namespace called "Agar" exists and is mapped to the
+"AG_" prefix then the inheritance hierarchy can be also written as
+"Agar(Widget:Button)".
 If implementing the class requires specific libraries available as dynamically
 loaded modules via
 .Xr AG_DSO 3 ,
-they may be appended to
+this can be indicated in the
 .Va hier
-as a comma-separated list of library names preceded by "@".
+string by a terminating "@" followed by one or more library names, separated
+by commas.
 For example:
 .Bd -literal
-MyNamespace(Superclass:Subclass)@module1,module2
+    "AG_Widget:MY_Widget@myLib,myOtherLib"
 .Ed
 .Pp
 The
@@ -611,9 +614,7 @@ format:
 Agar(Widget:Button):MyLib(MyButton)
 .Ed
 .Pp
-or the equivalent
-.Em expanded
-format:
+which is equivalent to the conventional format:
 .Bd -literal -offset indent
 AG_Widget:AG_Button:MY_Button
 .Ed
@@ -805,9 +806,6 @@ and the function returns 0.
 .Ft "void"
 .Fn AG_ObjectFreeChildren "AG_Object *obj"
 .Pp
-.Ft void
-.Fn AG_ObjectRemain "AG_Object *obj" "Uint policy"
-.Pp
 .nr nS 0
 The
 .Fn AG_ObjectReset
@@ -864,15 +862,6 @@ cleans up the dependency table, removing any entry with a reference count
 of zero (which occurs in objects with
 .Dv AG_OBJECT_PRESERVE_DEPS
 set).
-.Pp
-.Fn AG_ObjectRemain
-specifies the behavior of
-.Fn AG_ObjectPageOut
-once the object's data is no longer in use.
-The default behavior is to free the data.
-If an argument of
-.Dv AG_OBJECT_REMAIN_DATA
-is passed, the data will be kept in memory.
 .Sh SERIALIZATION
 .nr nS 1
 .Ft "int"
@@ -922,12 +911,6 @@ is passed, the data will be kept in memory.
 .Pp
 .Ft "int"
 .Fn AG_ObjectPageOut "AG_Object *obj"
-.Pp
-.Ft "void"
-.Fn AG_ObjectSetArchivePath "AG_Object *obj" "const char *path"
-.Pp
-.Ft "void"
-.Fn AG_ObjectGetArchivePath "AG_Object *obj" "char *buf" "AG_Size buf_len"
 .Pp
 .nr nS 0
 These functions implement serialization, or archiving of the state of an
@@ -1030,16 +1013,6 @@ memory and
 .Dv AG_OBJECT_RESIDENT
 is cleared.
 Both functions return 0 on success or -1 if an error has occurred.
-.Pp
-.Fn AG_ObjectSetArchivePath
-sets the application-specific Archive Path attribute.
-For example, the "Save" feature of an editor application might use the
-Archive Path to remember an object's last successful Save or Export location,
-and
-.Fn AG_ObjectGetArchivePath
-to later retrieve it.
-The Archive Path is a run-time attribute ignored by
-.Fn AG_ObjectSave .
 .Sh FLAGS
 The following public
 .Nm
@@ -1093,8 +1066,6 @@ Prevent the object's data from being freed by
 when a
 .Fn AG_ObjectPageOut
 call is made and the reference count reaches zero.
-This is set by
-.Fn AG_ObjectRemain .
 .It AG_OBJECT_DEBUG
 Application-specific debugging flag.
 .It AG_OBJECT_NAME_ONATTACH
@@ -1193,10 +1164,8 @@ Unique (in parent) identifier for this object instance.
 May not contain
 .Sq / .
 .It Ft char *archivePath
-Application-specific path accessed by
-.Fn AG_Object{Get,Set}ArchivePath .
-Typical application: Remember the last successful location for an editor's
-"Save" function.
+Application-specific path, used to remember the last successful location for
+an editor's "Save" function.
 .It Ft char *save_pfx
 Path name prefix when saving to disk (after
 .Pa dir/
@@ -1239,6 +1208,8 @@ macros can be used to iterate over this list.
 .El
 .Sh EXAMPLES
 See
+.Pa core/dummy_object.[ch]
+and
 .Pa tests/objsystem.c
 in the Agar source distribution.
 .Sh SEE ALSO

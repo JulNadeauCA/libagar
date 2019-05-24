@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,9 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
 
 #include <sys/types.h>
 
@@ -324,3 +327,5 @@ AG_GetCWD(char *buf, AG_Size len)
 	return (0);
 #endif
 }
+
+#endif /* AG_SERIALIZATION */

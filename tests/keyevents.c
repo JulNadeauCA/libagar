@@ -17,11 +17,17 @@ MyKeyboardHandler(AG_Event *event)
 	AG_Console *cons = AG_PTR(1);
 	int sym = AG_INT(2);
 	int mod = AG_INT(3);
-	Uint32 unicode = (Uint32)AG_ULONG(4);
+	AG_Char ch = AG_CHAR(4);
 
+#ifdef AG_UNICODE
 	AG_ConsoleMsg(cons,
-	    "%s: sym=%d, modifier=0x%x, unicode=0x%lx",
-	    event->name, sym, (unsigned)mod, (long unsigned int)unicode);
+	    "%s: sym=%d, modifier=0x%x, ch=0x%lx",
+	    event->name, sym, (unsigned)mod, (long unsigned int)ch);
+#else
+	AG_ConsoleMsg(cons,
+	    "%s: sym=%d, modifier=0x%x, ch=%d ('%c')",
+	    event->name, sym, (unsigned)mod, ch, ch);
+#endif
 }
 
 static int

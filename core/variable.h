@@ -67,12 +67,21 @@ typedef enum ag_variable_type {
 
 /* Information about an AG_Variable type */
 typedef struct ag_variable_type_info {
+#if AG_MODEL == AG_SMALL
+	Uint8 type;                /* Variable type */
+	Uint8 indirLvl;            /* Level of indirection (0 = none) */
+	const char *_Nonnull name; /* Name string */
+	Uint8 typeTgt;             /* Pointer target type (if indirLvl > 0) */
+	Sint8 code;                /* Numerical code (-1 = not serializable) */
+	Uint8 size;                /* Size in bytes */
+#else
 	AG_VariableType type;      /* Variable type */
 	int indirLvl;              /* Level of indirection (0 = none) */
 	const char *_Nonnull name; /* Name string */
 	AG_VariableType typeTgt;   /* Pointer target type (if indirLvl > 0) */
-	Sint32 code;               /* Numerical code (-1 = not serializable) */
+	Sint8 code;                /* Numerical code (-1 = not serializable) */
 	AG_Size size;              /* Size in bytes */
+#endif /* !AG_SMALL */
 } AG_VariableTypeInfo;
 
 /* Variable-stored data */
@@ -83,14 +92,16 @@ union ag_variable_data {
 	const char *_Nullable Cs;
 	int            i;
 	Uint           u;
-	long          li;
-	Ulong        uli;
 	Uint8         u8;
 	Sint8         s8;
 	Uint16       u16;
 	Sint16       s16;
+#if AG_MODEL != AG_SMALL
+	long          li;
+	Ulong        uli;
 	Uint32       u32;
 	Sint32       s32;
+#endif
 #ifdef AG_HAVE_64BIT
 	Uint64       u64;
 	Sint64       s64;
@@ -143,7 +154,9 @@ typedef struct ag_variable {
 			Uint u;
 			Uint8 u8;
 			Uint16 u16;
+#if AG_MODEL != AG_SMALL
 			Uint32 u32;
+#endif
 		} bitmask;
 		AG_Size size;            /* Length/buffer size (for STRING_*) */
 		char *_Nullable varName; /* Variable name (for P_VARIABLE) */
@@ -159,29 +172,27 @@ typedef struct ag_variable {
 __BEGIN_DECLS
 extern const AG_VariableTypeInfo agVariableTypes[];
 
-void AG_PrintVariable(char *_Nonnull, AG_Size, AG_Variable *_Nonnull);
-
-AG_Variable *_Nullable AG_GetVariableVFS(void *_Nonnull, const char *_Nonnull)
-                                        _Warn_Unused_Result;
-
 AG_Variable *_Nullable AG_GetVariable(void *_Nonnull, const char *_Nonnull, ...)
                                      _Pure_Attribute_If_Unthreaded
                                      _Warn_Unused_Result;
 
-int AG_CopyVariable(AG_Variable *_Nonnull _Restrict,
-                    const AG_Variable *_Nonnull _Restrict);
+#ifdef AG_ENABLE_STRING
+void AG_PrintVariable(char *_Nonnull, AG_Size, AG_Variable *_Nonnull);
+#endif
 
-int AG_DerefVariable(AG_Variable *_Nonnull _Restrict,
+int  AG_CopyVariable(AG_Variable *_Nonnull _Restrict,
                      const AG_Variable *_Nonnull _Restrict);
-
-int AG_CompareVariables(const AG_Variable *_Nonnull,
-                        const AG_Variable *_Nonnull)
-                       _Pure_Attribute;
-
+int  AG_DerefVariable(AG_Variable *_Nonnull _Restrict,
+                      const AG_Variable *_Nonnull _Restrict);
+int  AG_CompareVariables(const AG_Variable *_Nonnull,
+                         const AG_Variable *_Nonnull)
+                        _Pure_Attribute;
 void AG_Unset(void *_Nonnull, const char *_Nonnull);
 
+#ifdef AG_ENABLE_STRING
 void AG_VariableSubst(void *_Nonnull, const char *_Nonnull, char *_Nonnull,
                       AG_Size);
+#endif
 
 /*
  * UINT: Natural unsigned integer
@@ -311,6 +322,7 @@ AG_Variable *_Nonnull AG_BindSint16Mp(void *_Nonnull, const char *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
 #endif
 
+#if AG_MODEL != AG_SMALL
 /*
  * UINT32: Unsigned 32-bit integer
  */
@@ -339,7 +351,8 @@ AG_Variable *_Nonnull AG_BindSint32(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindSint32Mp(void *_Nonnull, const char *_Nonnull,
                                       Sint32 *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
-#endif
+#endif /* AG_THREADS */
+#endif /* !AG_SMALL */
 
 #ifdef AG_HAVE_64BIT
 /*
@@ -435,15 +448,14 @@ char *_Nullable AG_GetStringP(void *_Nonnull, const char *_Nonnull);
 
 AG_Variable *_Nonnull AG_SetString(void *_Nonnull, const char *_Nonnull,
                                    const char *_Nonnull);
+AG_Variable *_Nonnull AG_SetStringF(void *_Nonnull, const char *_Nonnull,
+                                    const char *_Nonnull, ...)
+		                   FORMAT_ATTRIBUTE(printf,3,4);
 AG_Variable *_Nonnull AG_SetStringNODUP(void *_Nonnull, const char *_Nonnull,
                                         char *_Nonnull);
 
 void AG_InitString(AG_Variable *_Nonnull, const char *_Nonnull);
 void AG_InitStringNODUP(AG_Variable *_Nonnull, char *_Nonnull);
-
-AG_Variable *_Nonnull AG_PrtString(void *_Nonnull, const char *_Nonnull,
-                                   const char *_Nonnull, ...)
-		                  FORMAT_ATTRIBUTE(printf,3,4);
 
 AG_Variable *_Nonnull AG_BindString(void *_Nonnull, const char *_Nonnull,
                                     char *_Nonnull, AG_Size);
@@ -484,8 +496,10 @@ AG_Variable *_Nonnull AG_BindFlag8(void *_Nonnull, const char *_Nonnull,
 				   Uint8 *_Nonnull, Uint8);
 AG_Variable *_Nonnull AG_BindFlag16(void *_Nonnull, const char *_Nonnull,
 				    Uint16 *_Nonnull, Uint16);
+#if AG_MODEL != AG_SMALL
 AG_Variable *_Nonnull AG_BindFlag32(void *_Nonnull, const char *_Nonnull,
 				    Uint32 *_Nonnull, Uint32);
+#endif
 #ifdef AG_THREADS
 AG_Variable *_Nonnull AG_BindFlag8Mp(void *_Nonnull, const char *_Nonnull,
 				     Uint8 *_Nonnull, Uint8,

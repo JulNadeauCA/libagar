@@ -296,4 +296,4 @@ ag_hsv_2_color(float h, float s, float v, AG_Color *c)
 {
 	AG_MapHSVf_RGB(h,s,v, &c->r, &c->g, &c->b);
 }
-#endif /* HAVE_FLOAT */
+#endif /* AG_HAVE_FLOAT */

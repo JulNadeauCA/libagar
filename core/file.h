@@ -2,6 +2,10 @@
 
 #ifndef _AGAR_CORE_FILE_H_
 #define _AGAR_CORE_FILE_H_
+
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/core/begin.h>
 
 enum ag_file_info_type {
@@ -50,4 +54,5 @@ void AG_RegisterFileExtMappings(const AG_FileExtMapping *_Nonnull, Uint);
 __END_DECLS
 
 #include <agar/core/close.h>
+#endif /* AG_SERIALIZATION */
 #endif /* _AGAR_CORE_FILE_H_ */

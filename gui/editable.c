@@ -69,6 +69,8 @@ GetBuffer(AG_Editable *_Nonnull ed)
 		buf->len = 0;
 		buf->maxLen = 0;
 	}
+
+#ifdef AG_UNICODE
 	if (AG_Defined(ed, "text")) {			/* AG_Text element */
 		AG_Text *txt;
 
@@ -85,8 +87,8 @@ GetBuffer(AG_Editable *_Nonnull ed)
 				buf->s = AG_ImportUnicode("UTF-8", te->buf,
 				    &buf->len, &buf->maxLen);
 			} else {
-				if ((buf->s = TryMalloc(sizeof(Uint32))) != NULL) {
-					buf->s[0] = (Uint32)'\0';
+				if ((buf->s = TryMalloc(sizeof(AG_Char))) != NULL) {
+					buf->s[0] = (AG_Char)'\0';
 				}
 				buf->len = 0;
 			}
@@ -97,7 +99,9 @@ GetBuffer(AG_Editable *_Nonnull ed)
 				goto fail;
 			}
 		}
-	} else {					/* Fixed-size buffer */
+	} else
+#endif /* AG_UNICODE */
+	{					/* Fixed-size buffer */
 		char *s;
 
 		buf->var = AG_GetVariable(ed, "string", &s);
@@ -105,8 +109,13 @@ GetBuffer(AG_Editable *_Nonnull ed)
 
 		if ((ed->flags & AG_EDITABLE_EXCL) == 0 ||
 		    buf->s == NULL) {
+#ifdef AG_UNICODE
 			buf->s = AG_ImportUnicode(ed->encoding, s, &buf->len,
 			    &buf->maxLen);
+#else
+			buf->s = (Uint8 *)TryStrdup(s);
+			buf->maxLen = buf->len = strlen(s);
+#endif
 			if (buf->s == NULL) {
 				AG_UnlockVariable(buf->var);
 				goto fail;
@@ -133,6 +142,7 @@ ClearBuffer(AG_EditableBuffer *_Nonnull buf)
 static void
 CommitBuffer(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf)
 {
+#ifdef AG_UNICODE
 	if (AG_Defined(ed, "text")) {			/* AG_Text binding */
 		AG_Text *txt = buf->var->data.p;
 		AG_TextEnt *te = &txt->ent[ed->lang];
@@ -156,21 +166,31 @@ CommitBuffer(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf)
 		    buf->var->info.size) == -1)
 			goto fail;
 	}
+#else  /* !AG_UNICODE */
+
+	Strlcpy(buf->var->data.s, (const char *)buf->s, buf->var->info.size);
+
+#endif /* !AG_UNICODE */
+
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	AG_PostEvent(NULL, ed, "editable-postchg", NULL);
 	return;
+#ifdef AG_UNICODE
 fail:
 	Verbose("CommitBuffer: %s; ignoring\n", AG_GetError());
+#endif
 }
 
 /* Release the working buffer. */
 static __inline__ void
 ReleaseBuffer(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf)
 {
+#ifdef AG_UNICODE
 	if (AG_Defined(ed, "text")) {
 		AG_Text *txt = buf->var->data.p;
 		AG_MutexUnlock(&txt->lock);
 	}
+#endif
 	if (buf->var != NULL) {
 		AG_UnlockVariable(buf->var);
 		buf->var = NULL;
@@ -203,15 +223,16 @@ AG_EditableClearBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
 
 /* Increase the working buffer size to accomodate new characters. */
 int
-AG_EditableGrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, Uint32 *ins,
+AG_EditableGrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, AG_Char *ins,
     AG_Size nIns)
 {
-	AG_Size ucsSize;		/* UCS-4 buffer size in bytes */
+	AG_Size newLen;		/* UCS-4 buffer size in bytes */
 	AG_Size convLen;		/* Converted string length in bytes */
-	Uint32 *sNew;
+	AG_Char *sNew;
 
-	ucsSize = (buf->len + nIns + 1)*sizeof(Uint32);
+	newLen = (buf->len + nIns + 1)*sizeof(AG_Char);
 
+#ifdef AG_UNICODE
 	if (Strcasecmp(ed->encoding, "UTF-8") == 0) {
 		AG_Size sLen, insLen;
 
@@ -224,21 +245,28 @@ AG_EditableGrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, Uint32 *ins,
 		convLen = AG_LengthUCS4(buf->s) + nIns + 1;
 	} else {
 		/* TODO Proper estimates for other charsets */
-		convLen = ucsSize;
+		convLen = newLen;
 	}
-	
+#else /* !AG_UNICODE */
+	if (Strcasecmp(ed->encoding, "US-ASCII") == 0) {
+		convLen = strlen((const char *)buf->s) + nIns + 1;
+	} else {
+		convLen = newLen;
+	}
+#endif /* AG_UNICODE */
+
 	if (!buf->reallocable) {
 		if (convLen > buf->var->info.size) {
 			AG_SetError("%u > %u bytes", (Uint)convLen, (Uint)buf->var->info.size);
 			return (-1);
 		}
 	}
-	if (ucsSize > buf->maxLen) {
-		if ((sNew = TryRealloc(buf->s, ucsSize)) == NULL) {
+	if (newLen > buf->maxLen) {
+		if ((sNew = TryRealloc(buf->s, newLen)) == NULL) {
 			return (-1);
 		}
 		buf->s = sNew;
-		buf->maxLen = ucsSize;
+		buf->maxLen = newLen;
 	}
 	return (0);
 }
@@ -275,17 +303,6 @@ AG_EditableNew(void *parent, Uint flags)
 	return (ed);
 }
 
-/* Bind to a C string containing UTF-8 encoded text. */
-void
-AG_EditableBindUTF8(AG_Editable *ed, char *buf, AG_Size bufSize)
-{
-	AG_ObjectLock(ed);
-	AG_Unset(ed, "text");
-	AG_BindString(ed, "string", buf, bufSize);
-	ed->encoding = "UTF-8";
-	AG_ObjectUnlock(ed);
-}
-
 /* Bind to a C string containing ASCII text. */
 void
 AG_EditableBindASCII(AG_Editable *ed, char *buf, AG_Size bufSize)
@@ -294,6 +311,18 @@ AG_EditableBindASCII(AG_Editable *ed, char *buf, AG_Size bufSize)
 	AG_Unset(ed, "text");
 	AG_BindString(ed, "string", buf, bufSize);
 	ed->encoding = "US-ASCII";
+	AG_ObjectUnlock(ed);
+}
+
+#ifdef AG_UNICODE
+/* Bind to a C string containing UTF-8 encoded text. */
+void
+AG_EditableBindUTF8(AG_Editable *ed, char *buf, AG_Size bufSize)
+{
+	AG_ObjectLock(ed);
+	AG_Unset(ed, "text");
+	AG_BindString(ed, "string", buf, bufSize);
+	ed->encoding = "UTF-8";
 	AG_ObjectUnlock(ed);
 }
 
@@ -331,6 +360,7 @@ AG_EditableSetLang(AG_Editable *ed, enum ag_language lang)
 	AG_ObjectUnlock(ed);
 	AG_Redraw(ed);
 }
+#endif /* AG_UNICODE */
 
 /* Enable or disable password entry mode. */
 void
@@ -374,6 +404,7 @@ AG_EditableSetExcl(AG_Editable *ed, int enable)
 	AG_ObjectUnlock(ed);
 }
 
+#ifdef HAVE_FLOAT
 /* Toggle floating-point only input */
 void
 AG_EditableSetFltOnly(AG_Editable *ed, int enable)
@@ -387,6 +418,7 @@ AG_EditableSetFltOnly(AG_Editable *ed, int enable)
 	}
 	AG_ObjectUnlock(ed);
 }
+#endif /* HAVE_FLOAT */
 
 /* Toggle integer only input */
 void
@@ -404,7 +436,7 @@ AG_EditableSetIntOnly(AG_Editable *ed, int enable)
 
 /* Evaluate if a character is acceptable in integer-only mode. */
 static __inline__ _Const_Attribute int
-CharIsIntOnly(Uint32 c)
+CharIsIntOnly(AG_Char c)
 {
 	switch (c) {
 	case '0':
@@ -425,9 +457,10 @@ CharIsIntOnly(Uint32 c)
 	}
 }
 
+#ifdef HAVE_FLOAT
 /* Evaluate if a character is acceptable in float-only mode. */
 static __inline__ int
-CharIsFltOnly(Uint32 c)
+CharIsFltOnly(AG_Char c)
 {
 	switch (c) {
 	case '0':
@@ -454,6 +487,7 @@ CharIsFltOnly(Uint32 c)
 		return (0);
 	}
 }
+#endif /* HAVE_FLOAT */
 
 /*
  * Process a keystroke. May be invoked from the repeat timeout routine or
@@ -461,8 +495,7 @@ CharIsFltOnly(Uint32 c)
  * be maintained, otherwise it will be cancelled.
  */
 static int
-ProcessKey(AG_Editable *_Nonnull ed, AG_KeySym ks, AG_KeyMod kmod,
-    Uint32 unicode)
+ProcessKey(AG_Editable *_Nonnull ed, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
 	AG_EditableBuffer *buf;
 	int i, rv = 0;
@@ -478,12 +511,15 @@ ProcessKey(AG_Editable *_Nonnull ed, AG_KeySym ks, AG_KeyMod kmod,
 	    (ks & ~0x7f) == 0 &&				/* is ascii */
 	    isprint((int)ks)) {
 		if ((ed->flags & AG_EDITABLE_INT_ONLY) &&
-		    !CharIsIntOnly((Uint32)ks)) {
-			return (0);
-		} else if ((ed->flags & AG_EDITABLE_FLT_ONLY) &&
-		           !CharIsFltOnly((Uint32)ks)) {
+		    !CharIsIntOnly((AG_Char)ks)) {
 			return (0);
 		}
+#ifdef HAVE_FLOAT
+		else if ((ed->flags & AG_EDITABLE_FLT_ONLY) &&
+		           !CharIsFltOnly((AG_Char)ks)) {
+			return (0);
+		}
+#endif
 	}
 
 	if ((buf = GetBuffer(ed)) == NULL)
@@ -518,7 +554,7 @@ ProcessKey(AG_Editable *_Nonnull ed, AG_KeySym ks, AG_KeyMod kmod,
 			}
 		}
 		AG_PostEvent(NULL, ed, "editable-prechg", NULL);
-		rv = kc->func(ed, buf, ks, kmod, unicode);
+		rv = kc->func(ed, buf, ks, kmod, ch);
 		break;
 	}
 out:
@@ -529,6 +565,7 @@ out:
 	return (1);
 }
 
+#ifdef AG_TIMERS
 /* Timer callback for handling key repeat */
 static Uint32
 KeyRepeatTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -536,9 +573,9 @@ KeyRepeatTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	AG_Editable *ed = AG_SELF();
 	int keysym = AG_INT(1);
 	int keymod = AG_INT(2);
-	Uint32 unicode = AG_ULONG(3);
+	AG_Char ch = AG_CHAR(3);
 	
-	if (ProcessKey(ed, keysym, keymod, unicode) == 0) {
+	if (ProcessKey(ed, keysym, keymod, ch) == 0) {
 		return (0);
 	}
 	ed->flags |= AG_EDITABLE_BLINK_ON;
@@ -582,11 +619,12 @@ OnFocusLoss(AG_Event *_Nonnull event)
 	AG_DelTimer(ed, &ed->toRepeat);
 	AG_DelTimer(ed, &ed->toCursorBlink);
 	AG_DelTimer(ed, &ed->toDblClick);
-	ed->flags &= ~(AG_EDITABLE_BLINK_ON|AG_EDITABLE_CURSOR_MOVING);
+	ed->flags &= ~(AG_EDITABLE_BLINK_ON | AG_EDITABLE_CURSOR_MOVING);
 	AG_UnlockTimers(ed);
 
 	AG_Redraw(ed);
 }
+#endif /* AG_TIMERS */
 
 static void
 OnHide(AG_Event *_Nonnull event)
@@ -596,7 +634,9 @@ OnHide(AG_Event *_Nonnull event)
 	if (ed->pm != NULL) {
 		AG_PopupHide(ed->pm);
 	}
+#ifdef AG_TIMERS
 	OnFocusLoss(event);
+#endif
 }
 
 static void
@@ -615,11 +655,13 @@ OnFontChange(AG_Event *_Nonnull event)
  * a space for word wrapping and word selection.
  */
 static __inline__ int
-IsSpaceUCS4(Uint32 c)
+IsSpaceNat(AG_Char c)
 {
 	switch (c) {
 	case ' ':		/* SPACE */
 	case '\t':		/* TAB */
+		return (1);
+#ifdef AG_UNICODE
 	case 0x00a0:		/* NO-BREAK SPACE */
 	case 0x1680:		/* OGHAM SPACE MARK */
 	case 0x180e:		/* MONGOLIAN VOWEL SEPARATOR */
@@ -628,25 +670,26 @@ IsSpaceUCS4(Uint32 c)
 	case 0x3000:		/* IDEOGRAPHIC SPACE */
 	case 0xfeff:		/* ZERO WIDTH NO-BREAK SPACE */
 		return (1);
+#endif
 	}
-	if (c >= 0x2000 && c <= 0x200b) {
-		/* EN/EM SPACES */
+#ifdef AG_UNICODE
+	if (c >= 0x2000 && c <= 0x200b)	/* EN/EM SPACES */
 		return (1);
-	}
+#endif
 	return (0);
 }
 
 /* Evaluate word wrapping at given character. */
 static __inline__ int
-WrapAtChar(AG_Editable *_Nonnull ed, int x, Uint32 *_Nonnull s)
+WrapAtChar(AG_Editable *_Nonnull ed, int x, AG_Char *_Nonnull s)
 {
 	AG_Driver *drv = WIDGET(ed)->drv;
 	AG_Glyph *gl;
-	Uint32 *t;
+	AG_Char *t;
 	int x2;
 
 	if (!(ed->flags & AG_EDITABLE_WORDWRAP) ||
-	    x == 0 || !IsSpaceUCS4(*s)) {
+	    x == 0 || !IsSpaceNat(*s)) {
 		return (0);
 	}
 	for (t = &s[1], x2 = x;
@@ -654,7 +697,7 @@ WrapAtChar(AG_Editable *_Nonnull ed, int x, Uint32 *_Nonnull s)
 	     t++) {
 		gl = AG_TextRenderGlyph(drv, *t);
 		x2 += gl->advance;
-		if (IsSpaceUCS4(*t) || *t == '\n') {
+		if (IsSpaceNat(*t) || *t == '\n') {
 			if (x2 > WIDTH(ed)) {
 				return (1);
 			} else {
@@ -676,7 +719,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 {
 	AG_Driver *drv = WIDGET(ed)->drv;
 	AG_Font *font = WIDGET(ed)->font;
-	Uint32 ch;
+	AG_Char ch;
 	int i, x, y, line = 0;
 	int nLines = 1;
 	int yMouse;
@@ -692,7 +735,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 	x = 0;
 	y = 0;
  	for (i = 0; i < buf->len; i++) {
-		Uint32 ch = buf->s[i];
+		AG_Char ch = buf->s[i];
 
 		if (WrapAtChar(ed, x, &buf->s[i])) {
 			x = 0;
@@ -720,6 +763,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 				}
 				break;
 #endif /* HAVE_FREETYPE */
+#ifdef AG_SERIALIZATION
 			case AG_FONT_BITMAP:
 				{
 					AG_Glyph *gl;
@@ -727,6 +771,9 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 					gl = AG_TextRenderGlyph(drv, ch);
 					x += gl->su->w;
 				}
+				break;
+#endif /* AG_SERIALIZATION */
+			case AG_FONT_DUMMY:
 				break;
 			}
 		}
@@ -789,6 +836,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			}
 			break;
 #endif /* HAVE_FREETYPE */
+#ifdef AG_SERIALIZATION
 		case AG_FONT_BITMAP:
 			{
 				AG_Glyph *gl;
@@ -803,8 +851,9 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 				x += gl->su->w;
 			}
 			break;
-		default:
-			AG_FatalError("AG_Editable: Unknown font format");
+#endif /* AG_SERIALIZATION */
+		case AG_FONT_DUMMY:
+			break;
 		}
 	}
 	*pos = buf->len;
@@ -911,7 +960,7 @@ Draw(void *_Nonnull obj)
 	ed->yMax = 1;
 	for (i = 0; i <= buf->len; i++) {
 		AG_Glyph *gl;
-		Uint32 c = buf->s[i];
+		AG_Char c = buf->s[i];
 
 		if (i == ed->pos) {			/* At cursor */
 			if (ed->sel == 0 &&
@@ -1092,9 +1141,8 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	ed->r.w = w-1;
 	ed->r.h = h-1;
 
-	/* Map cursor-change area */
-	r.w = 0;
-	r.h = 0;
+	r.x = 0;
+	r.y = 0;
 	r.w = w;
 	r.h = h;
 	AG_SetStockCursor(ed, &ed->ca, &r, AG_TEXT_CURSOR);
@@ -1107,7 +1155,7 @@ KeyDown(AG_Event *_Nonnull event)
 	AG_Editable *ed = AG_SELF();
 	int keysym = AG_INT(1);
 	int keymod = AG_INT(2);
-	Uint32 unicode = (Uint32)AG_ULONG(3);
+	AG_Char ch = AG_CHAR(3);
 
 	switch (keysym) {
 	case AG_KEY_LSHIFT:
@@ -1128,13 +1176,16 @@ KeyDown(AG_Event *_Nonnull event)
 
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 
-	if (ProcessKey(ed, keysym, keymod, unicode) == 1) {
+	if (ProcessKey(ed, keysym, keymod, ch) == 1) {
+#ifdef AG_TIMERS
 		AG_AddTimer(ed, &ed->toRepeat, agKbdDelay,
-		    KeyRepeatTimeout, "%i,%i,%lu", keysym, keymod, unicode);
+		    KeyRepeatTimeout, "%i,%i,%lu", keysym, keymod, ch);
+#endif
 	} else {
+#ifdef AG_TIMERS
 		AG_DelTimer(ed, &ed->toRepeat);
+#endif
 	}
-
 	AG_Redraw(ed);
 }
 
@@ -1143,9 +1194,10 @@ KeyUp(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 	int keysym = AG_INT(1);
-	
-	AG_DelTimer(ed, &ed->toRepeat);
 
+#ifdef AG_TIMERS
+	AG_DelTimer(ed, &ed->toRepeat);
+#endif
 	if ((keysym == AG_KEY_RETURN || keysym == AG_KEY_KP_ENTER) &&
 	   (ed->flags & AG_EDITABLE_MULTILINE) == 0) {
 		if (ed->flags & AG_EDITABLE_ABANDON_FOCUS) {
@@ -1160,9 +1212,11 @@ static void
 MouseDoubleClick(AG_Editable *_Nonnull ed)
 {
 	AG_EditableBuffer *buf;
-	Uint32 *c;
+	AG_Char *c;
 
+#ifdef AG_TIMERS
 	AG_DelTimer(ed, &ed->toDblClick);
+#endif
 	ed->selDblClick = -1;
 	ed->flags |= AG_EDITABLE_WORDSELECT;
 
@@ -1173,20 +1227,20 @@ MouseDoubleClick(AG_Editable *_Nonnull ed)
 		ed->sel = 0;
 
 		c = &buf->s[ed->pos];
-		if (*c == (Uint32)('\n')) {
+		if (*c == '\n') {
 			goto out;
 		}
 		for (;
 		     ed->pos > 0;
 		     ed->pos--, c--) {
-			if (IsSpaceUCS4(*c) && ed->pos < buf->len) {
+			if (IsSpaceNat(*c) && ed->pos < buf->len) {
 				c++;
 				ed->pos++;
 				break;
 			}
 		}
 		while ((ed->pos + ed->sel) < buf->len &&
-		    !IsSpaceUCS4(*c)) {
+		    !IsSpaceNat(*c)) {
 			c++;
 			ed->sel++;
 		}
@@ -1207,16 +1261,16 @@ NormSelection(AG_Editable *_Nonnull ed)
 
 /* Copy specified range to specified clipboard. */
 void
-AG_EditableCopyChunk(AG_Editable *ed, AG_EditableClipboard *cb, Uint32 *s,
+AG_EditableCopyChunk(AG_Editable *ed, AG_EditableClipboard *cb, AG_Char *s,
     AG_Size len)
 {
-	Uint32 *sNew;
+	AG_Char *sNew;
 
 	AG_MutexLock(&cb->lock);
-	sNew = TryRealloc(cb->s, (len+1)*sizeof(Uint32));
+	sNew = TryRealloc(cb->s, (len+1)*sizeof(AG_Char));
 	if (sNew != NULL) {
 		cb->s = sNew;
-		memcpy(cb->s, s, len*sizeof(Uint32));
+		memcpy(cb->s, s, len*sizeof(AG_Char));
 		cb->s[len] = '\0';
 		cb->len = len;
 	}
@@ -1256,7 +1310,7 @@ int
 AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
     AG_EditableClipboard *cb)
 {
-	Uint32 *c;
+	AG_Char *c;
 
 	if (AG_EditableReadOnly(ed))
 		return (0);
@@ -1286,10 +1340,12 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 		}
 	} else if (ed->flags & AG_EDITABLE_FLT_ONLY) {
 		for (c = &cb->s[0]; *c != '\0'; c++) {
+#ifdef HAVE_FLOAT
 			if (!CharIsFltOnly(*c)) {
 				AG_SetError(_("Non-float input near `%c'"), (char)*c);
 				goto fail;
 			}
+#endif
 		}
 	}
 
@@ -1298,9 +1354,9 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 	}
 	if (ed->pos < buf->len) {
 		memmove(&buf->s[ed->pos + cb->len], &buf->s[ed->pos],
-		    (buf->len - ed->pos)*sizeof(Uint32));
+		    (buf->len - ed->pos)*sizeof(AG_Char));
 	}
-	memcpy(&buf->s[ed->pos], cb->s, cb->len*sizeof(Uint32));
+	memcpy(&buf->s[ed->pos], cb->s, cb->len*sizeof(AG_Char));
 	buf->len += cb->len;
 	buf->s[buf->len] = '\0';
 	ed->pos += cb->len;
@@ -1328,7 +1384,7 @@ AG_EditableDelete(AG_Editable *ed, AG_EditableBuffer *buf)
 		buf->s[ed->pos] = '\0';
 	} else {
 		memmove(&buf->s[ed->pos], &buf->s[ed->pos + ed->sel],
-		    (buf->len - ed->sel + 1 - ed->pos)*sizeof(Uint32));
+		    (buf->len - ed->sel + 1 - ed->pos)*sizeof(AG_Char));
 	}
 	buf->len -= ed->sel;
 	ed->sel = 0;
@@ -1446,6 +1502,8 @@ MenuSelectAll(AG_Event *_Nonnull event)
 		ReleaseBuffer(ed, buf);
 	}
 }
+
+#ifdef AG_UNICODE
 static void
 MenuSetLang(AG_Event *_Nonnull event)
 {
@@ -1454,14 +1512,17 @@ MenuSetLang(AG_Event *_Nonnull event)
 
 	AG_EditableSetLang(ed, lang);
 }
+#endif
+
 static AG_PopupMenu *_Nullable
 PopupMenu(AG_Editable *_Nonnull ed)
 {
 	AG_PopupMenu *pm;
 	AG_MenuItem *mi;
+#ifdef AG_UNICODE
 	AG_Variable *vText;
 	AG_Text *txt;
-
+#endif
 	if ((pm = AG_PopupNew(ed)) == NULL) {
 		return (NULL);
 	}
@@ -1481,6 +1542,7 @@ PopupMenu(AG_Editable *_Nonnull ed)
 
 	AG_MenuAction(pm->root, _("Select All"), NULL, MenuSelectAll, "%p", ed);
 
+#ifdef AG_UNICODE
 	if ((ed->flags & AG_EDITABLE_MULTILINGUAL) &&
 	    AG_Defined(ed, "text") &&
 	    (vText = AG_GetVariable(ed, "text", &txt)) != NULL) {
@@ -1500,9 +1562,12 @@ PopupMenu(AG_Editable *_Nonnull ed)
 		}
 		AG_UnlockVariable(vText);
 	}
+#endif /* AG_UNICODE */
+
 	return (pm);
 }
 
+#ifdef AG_TIMERS
 /* Timer for detecting double clicks. */
 static Uint32
 DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -1512,6 +1577,7 @@ DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	ed->selDblClick = -1;
 	return (0);
 }
+#endif /* AG_TIMERS */
 
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
@@ -1530,7 +1596,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		if (ed->pm != NULL) {
 			AG_PopupHide(ed->pm);
 		}
-		ed->flags |= AG_EDITABLE_CURSOR_MOVING|AG_EDITABLE_BLINK_ON;
+		ed->flags |= AG_EDITABLE_CURSOR_MOVING | AG_EDITABLE_BLINK_ON;
 		mx += ed->x;
 		if ((buf = GetBuffer(ed)) == NULL) {
 			return;
@@ -1544,8 +1610,10 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			MouseDoubleClick(ed);
 		} else {
 			ed->selDblClick = ed->pos;
+#ifdef AG_TIMERS
 			AG_AddTimer(ed, &ed->toDblClick, agMouseDblclickDelay,
 			    DoubleClickTimeout, NULL);
+#endif
 		}
 		break;
 	case AG_MOUSE_RIGHT:
@@ -1609,10 +1677,10 @@ MouseMotion(AG_Event *_Nonnull event)
 		goto out;
 
 	if (ed->flags & AG_EDITABLE_WORDSELECT) {
-		Uint32 *c;
+		AG_Char *c;
 
 		c = &buf->s[newPos];
-		if (*c == (Uint32)('\n')) {
+		if (*c == '\n') {
 			goto out;
 		}
 		if (newPos > ed->pos) {
@@ -1622,7 +1690,7 @@ MouseMotion(AG_Event *_Nonnull event)
 			}
 			ed->sel = newPos - ed->pos;
 			while (c < &buf->s[buf->len] &&
-			    !IsSpaceUCS4(*c) && *c != (Uint32)'\n') {
+			    !IsSpaceNat(*c) && *c != '\n') {
 				c++;
 				ed->sel++;
 			}
@@ -1635,11 +1703,11 @@ MouseMotion(AG_Event *_Nonnull event)
 			}
 			ed->sel = newPos - ed->pos;
 			while (c > &buf->s[0] &&
-			    !IsSpaceUCS4(*c) && *c != (Uint32)'\n') {
+			    !IsSpaceNat(*c) && *c != '\n') {
 				c--;
 				ed->sel--;
 			}
-			if (IsSpaceUCS4(buf->s[ed->pos + ed->sel])) {
+			if (IsSpaceNat(buf->s[ed->pos + ed->sel])) {
 				ed->sel++;
 			}
 			ed->xScrollTo = &ed->xSelStart;
@@ -1662,8 +1730,7 @@ out:
 }
 
 /*
- * Overwrite the contents of the text buffer with the given string
- * (supplied in UTF-8).
+ * Overwrite the contents of the text buffer with the given string.
  */
 void
 AG_EditableSetString(AG_Editable *ed, const char *text)
@@ -1676,14 +1743,19 @@ AG_EditableSetString(AG_Editable *ed, const char *text)
 	}
 	if (text != NULL) {
 		Free(buf->s);
+#ifdef AG_UNICODE
 		buf->s = AG_ImportUnicode("UTF-8", text, &buf->len, &buf->maxLen);
+#else
+		buf->s = (Uint8 *)TryStrdup(text);
+		buf->maxLen = buf->len = strlen(text);
+#endif
 		if (buf->s != NULL) {
 			ed->pos = buf->len;
 		} else {
 			buf->len = 0;
 		}
 	} else {
-		if (buf->maxLen >= sizeof(Uint32)) {
+		if (buf->maxLen >= sizeof(AG_Char)) {
 			buf->s[0] = '\0';
 			ed->pos = 0;
 			buf->len = 0;
@@ -1731,7 +1803,12 @@ AG_EditablePrintf(void *obj, const char *fmt, ...)
 		va_end(ap);
 
 		Free(buf->s);
+#ifdef AG_UNICODE
 		buf->s = AG_ImportUnicode("UTF-8", s, &buf->len, &buf->maxLen);
+#else
+		buf->s = (Uint8 *)TryStrdup(s);
+		buf->maxLen = buf->len = strlen(s);
+#endif
 		free(s);
 
 		if (buf->s != NULL) {
@@ -1741,7 +1818,7 @@ AG_EditablePrintf(void *obj, const char *fmt, ...)
 		}
 	} else {
 		Free(buf->s);
-		if ((buf->s = TryMalloc(sizeof(Uint32))) != NULL) {
+		if ((buf->s = TryMalloc(sizeof(AG_Char))) != NULL) {
 			buf->s[0] = '\0';
 		}
 		ed->pos = 0;
@@ -1812,7 +1889,11 @@ AG_EditableInt(AG_Editable *ed)
 	if ((buf = GetBuffer(ed)) == NULL) {
 		AG_FatalError(NULL);
 	}
+#ifdef AG_UNICODE
 	AG_ExportUnicode("UTF-8", abuf, buf->s, sizeof(abuf));
+#else
+	Strlcpy(abuf, (const char *)buf->s, sizeof(abuf));
+#endif
 	i = atoi(abuf);
 	ReleaseBuffer(ed, buf);
 	AG_ObjectUnlock(ed);
@@ -1832,7 +1913,11 @@ AG_EditableFlt(AG_Editable *ed)
 	if ((buf = GetBuffer(ed)) == NULL) {
 		AG_FatalError(NULL);
 	}
+# ifdef AG_UNICODE
 	AG_ExportUnicode("UTF-8", abuf, buf->s, sizeof(abuf));
+# else
+	Strlcpy(abuf, (const char *)buf->s, sizeof(abuf));
+# endif
 	flt = (float)strtod(abuf, NULL);
 	ReleaseBuffer(ed, buf);
 	AG_ObjectUnlock(ed);
@@ -1851,7 +1936,11 @@ AG_EditableDbl(AG_Editable *ed)
 	if ((buf = GetBuffer(ed)) == NULL) {
 		AG_FatalError(NULL);
 	}
+# ifdef AG_UNICODE
 	AG_ExportUnicode("UTF-8", abuf, buf->s, sizeof(abuf));
+#else
+	Strlcpy(abuf, (const char *)buf->s, sizeof(abuf));
+#endif
 	flt = strtod(abuf, NULL);
 	ReleaseBuffer(ed, buf);
 	AG_ObjectUnlock(ed);
@@ -1877,16 +1966,17 @@ Init(void *_Nonnull obj)
 {
 	AG_Editable *ed = obj;
 
-	WIDGET(ed)->flags |= AG_WIDGET_FOCUSABLE|
-	                     AG_WIDGET_UNFOCUSED_MOTION|
-			     AG_WIDGET_TABLE_EMBEDDABLE|
-			     AG_WIDGET_USE_TEXT|
+	WIDGET(ed)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_UNFOCUSED_MOTION |
+			     AG_WIDGET_TABLE_EMBEDDABLE | AG_WIDGET_USE_TEXT |
 			     AG_WIDGET_USE_MOUSEOVER;
-
+#ifdef AG_UNICODE
 	ed->encoding = "UTF-8";
-
 	ed->text = AG_TextNew(0);
-	ed->flags = AG_EDITABLE_BLINK_ON|AG_EDITABLE_MARKPREF;
+#else
+	ed->encoding = "US-ASCII";
+	ed->text[0] = '\0';
+#endif
+	ed->flags = AG_EDITABLE_BLINK_ON | AG_EDITABLE_MARKPREF;
 	ed->pos = 0;
 	ed->sel = 0;
 	ed->selDblClick = -1;
@@ -1924,26 +2014,29 @@ Init(void *_Nonnull obj)
 	ed->sBuf.maxLen = 0;
 	ed->sBuf.reallocable = 0;
 
-	AG_InitTimer(&ed->toRepeat, "repeat", 0);
-	AG_InitTimer(&ed->toCursorBlink, "cursorBlink", 0);
-	AG_InitTimer(&ed->toDblClick, "dblClick", 0);
-
 	AG_SetEvent(ed, "bound", OnBindingChange, NULL);
 	OBJECT(ed)->flags |= AG_OBJECT_BOUND_EVENTS;
+
 	AG_AddEvent(ed, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(ed, "widget-hidden", OnHide, NULL);
-	AG_SetEvent(ed, "widget-lostfocus", OnFocusLoss, NULL);
 	AG_SetEvent(ed, "key-down", KeyDown, NULL);
 	AG_SetEvent(ed, "key-up", KeyUp, NULL);
 	AG_SetEvent(ed, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(ed, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(ed, "mouse-motion", MouseMotion, NULL);
+#ifdef AG_TIMERS
 	AG_SetEvent(ed, "widget-gainfocus", OnFocusGain, NULL);
-
+	AG_SetEvent(ed, "widget-lostfocus", OnFocusLoss, NULL);
+	AG_InitTimer(&ed->toRepeat, "repeat", 0);
+	AG_InitTimer(&ed->toCursorBlink, "cursorBlink", 0);
+	AG_InitTimer(&ed->toDblClick, "dblClick", 0);
+#endif
+#ifdef AG_UNICODE
 	AG_BindPointer(ed, "text", (void *)ed->text);
-
+#else
+	AG_BindString(ed, "string", ed->text, sizeof(ed->text));
+#endif
 	AG_RedrawOnTick(ed, 1000);
-
 #if 0
 	AG_BindInt(ed, "pos", &ed->pos);
 	AG_BindInt(ed, "sel", &ed->sel);
@@ -1969,7 +2062,9 @@ Destroy(void *_Nonnull obj)
 	if (ed->flags & AG_EDITABLE_EXCL)
 		Free(ed->sBuf.s);
 
+#ifdef AG_UNICODE
 	AG_TextFree(ed->text);
+#endif
 }
 
 /* Initialize/release the global clipboards. */
@@ -1977,7 +2072,11 @@ static void
 InitClipboard(AG_EditableClipboard *_Nonnull cb)
 {
 	AG_MutexInit(&cb->lock);
+#ifdef AG_UNICODE
 	Strlcpy(cb->encoding, "UTF-8", sizeof(cb->encoding));
+#else
+	Strlcpy(cb->encoding, "US-ASCII", sizeof(cb->encoding));
+#endif
 	cb->s = NULL;
 	cb->len = 0;
 }

@@ -4,7 +4,13 @@
 # error "Must be included by object.h"
 #endif
 
-#define AG_TIMER_NAME_MAX 16
+#ifndef AG_TIMER_NAME_MAX
+# if AG_MODEL == AG_SMALL
+#  define AG_TIMER_NAME_MAX 16
+# else
+#  define AG_TIMER_NAME_MAX 8
+# endif
+#endif
 
 typedef struct ag_timer_pvt {
 	AG_TAILQ_ENTRY(ag_timer) timers;
@@ -44,49 +50,53 @@ typedef struct ag_time_ops {
 	void   (*_Nonnull delay) (Uint32);
 } AG_TimeOps;
 
-#define AG_LockTiming()		AG_MutexLock(&agTimerLock)
-#define AG_UnlockTiming()	AG_MutexUnlock(&agTimerLock)
-#define AG_GetTicks		agTimeOps->getTicks
+#if defined(AG_TIMERS) && defined(AG_THREADS)
+# define AG_LockTiming()	AG_MutexLock(&agTimerLock)
+# define AG_UnlockTiming()	AG_MutexUnlock(&agTimerLock)
+#else
+# define AG_LockTiming()
+# define AG_UnlockTiming()
+#endif
+#define AG_GetTicks()		agTimeOps->getTicks()
 #define AG_Delay(t)		agTimeOps->delay(t)
 
-#ifdef AG_LEGACY
-typedef AG_Timer AG_Timeout;
-#endif
-
 __BEGIN_DECLS
+/* Time backends for basic GetTicks() and Delay() operations */
+extern const AG_TimeOps *_Nullable agTimeOps;
+extern const AG_TimeOps agTimeOps_dummy;
+extern const AG_TimeOps agTimeOps_gettimeofday;
+extern const AG_TimeOps agTimeOps_posix;
+extern const AG_TimeOps agTimeOps_win32;
+extern const AG_TimeOps agTimeOps_renderer;
+
+void AG_SetTimeOps(const AG_TimeOps *_Nullable);
+
+#ifdef AG_TIMERS
+/*
+ * Managed timers which can be owned by objects and mapped to either
+ * kernel/hardware timers, or entries in a software timing wheel.
+ */
 extern struct ag_objectq       agTimerObjQ;
 extern Uint                    agTimerCount;
 extern struct ag_object        agTimerMgr;
 extern _Nonnull_Mutex AG_Mutex agTimerLock;
 
-extern const AG_TimeOps *_Nullable agTimeOps;
-extern const AG_TimeOps  agTimeOps_dummy;
-extern const AG_TimeOps  agTimeOps_gettimeofday;
-extern const AG_TimeOps  agTimeOps_posix;
-extern const AG_TimeOps  agTimeOps_win32;
-extern const AG_TimeOps  agTimeOps_renderer;
-
-void AG_SetTimeOps(const AG_TimeOps *_Nullable);
 void AG_InitTimers(void);
 void AG_DestroyTimers(void);
-
 void AG_InitTimer(AG_Timer *_Nonnull, const char *_Nonnull, Uint);
+
+AG_Timer *_Nullable AG_AddTimerAuto(void *_Nullable, Uint32, _Nonnull AG_TimerFn,
+				    const char *_Nullable, ...);
 
 int  AG_AddTimer(void *_Nullable, AG_Timer *_Nonnull, Uint32,
                  _Nonnull AG_TimerFn,
-		 const char *_Nullable, ...);
-
-AG_Timer *_Nullable AG_AddTimerAuto(void *_Nullable, Uint32,
-                                    _Nonnull AG_TimerFn,
-				    const char *_Nullable, ...);
-
+                 const char *_Nullable, ...);
 void AG_DelTimer(void *_Nullable, AG_Timer *_Nonnull);
 void AG_DelTimers(void *_Nonnull);
 int  AG_ResetTimer(void *_Nullable, AG_Timer *_Nonnull, Uint32);
-
 int  AG_TimerIsRunning(void *_Nullable, AG_Timer *_Nonnull)
                       _Pure_Attribute;
-
 int  AG_TimerWait(void *_Nullable, AG_Timer *_Nonnull, Uint32);
 void AG_ProcessTimeouts(Uint32);
+#endif /* AG_TIMERS */
 __END_DECLS

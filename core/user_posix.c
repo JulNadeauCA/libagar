@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2014-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_USER
 
 #include <unistd.h>
 #include <pwd.h>
@@ -160,3 +161,4 @@ const AG_UserOps agUserOps_posix = {
 	GetRealUser,
 	GetEffectiveUser,
 };
+#endif /* AG_USER */

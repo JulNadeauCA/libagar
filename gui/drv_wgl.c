@@ -84,7 +84,7 @@ struct ag_windows_key_mapping {
 #include <agar/gui/drv_wgl_keymaps.h>
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-static int       InitDefaultCursors(AG_DriverWGL *_Nonnull);
+static void      WGL_InitDefaultCursor(AG_DriverWGL *_Nonnull);
 static void      WGL_PostResizeCallback(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
 static int       WGL_RaiseWindow(AG_Window *_Nonnull);
 static int       WGL_SetInputFocus(AG_Window *_Nonnull);
@@ -441,8 +441,8 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 		goto fail;
 
 	/* Create the built-in cursors */
-	if (InitDefaultCursors(wgl) == -1 || AG_InitStockCursors(drv) == -1)
-		goto fail;
+	WGL_InitDefaultCursor(wgl);
+	AG_InitStockCursors(drv);
 
 	/* Update agar's idea of the actual window coordinates. */
 	a.x = r->x;
@@ -684,7 +684,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			case VK_RETURN:
 				if (IN_KEYPAD(scan)) {
 					AG_KeyboardUpdate(drv->kbd, ka,
-					    AG_KEY_KP_ENTER, 0);
+					    AG_KEY_KP_ENTER);
 					dev->data.key.ks = AG_KEY_KP_ENTER;
 					goto out;
 				}
@@ -701,8 +701,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			} else if (ToUnicode((UINT)vKey, scan, keyState, wc,2, 0) > 0) {
 				dev->data.key.ucs = wc[0];
 			}
-			AG_KeyboardUpdate(drv->kbd, ka, dev->data.key.ks,
-			    dev->data.key.ucs);
+			AG_KeyboardUpdate(drv->kbd, ka, dev->data.key.ks);
 		}
 		break;
 	case WM_SETFOCUS:
@@ -1119,25 +1118,21 @@ WGL_TweakAlignment(AG_Window *win, AG_SizeAlloc *a, Uint wMax, Uint hMax)
  */
 
 /* Initialize the default cursor. */
-static int
-InitDefaultCursors(AG_DriverWGL *wgl)
+static void
+WGL_InitDefaultCursor(AG_DriverWGL *wgl)
 {
 	AG_Driver *drv = AGDRIVER(wgl);
 	const int nStockCursors = 1; /* TODO map */
 	int i;
 
 	for (i = 0; i < nStockCursors; i++) {
-		AG_Cursor *ac;
 		AG_CursorWGL *acWGL;
 	
-		if ((acWGL = TryMalloc(sizeof(AG_CursorWGL))) == NULL) {
-			return (-1);
-		}
-		ac = (AG_Cursor *)acWGL;
+		acWGL = Malloc(sizeof(AG_CursorWGL));
 		acWGL->shared = 1;
 		acWGL->cursor = LoadCursor(NULL, IDC_ARROW);
-		AG_CursorInit(ac);
-		TAILQ_INSERT_HEAD(&drv->cursors, ac, cursors);
+		AG_CursorInit(AGCURSOR(acWGL));
+		TAILQ_INSERT_HEAD(&drv->cursors, AGCURSOR(acWGL), cursors);
 		drv->nCursors++;
 	}
 	return (0);

@@ -13,7 +13,7 @@ struct ag_popup_menu;
 /* Working UCS-4 text buffer for internal use */
 typedef struct ag_editable_buffer {
 	AG_Variable *_Nullable var;	/* Variable binding (if any) */
-	Uint32 *_Nullable s;		/* String buffer (UCS-4 encoding) */
+	AG_Char *_Nullable s;		/* Buffer contents */
 	AG_Size len;			/* String length (chars) */
 	AG_Size maxLen;			/* Available buffer size (bytes) */
 	int reallocable;		/* Buffer can be realloc'd */
@@ -23,7 +23,7 @@ typedef struct ag_editable_buffer {
 typedef struct ag_editable_clipboard {
 	_Nonnull_Mutex AG_Mutex lock;
 	char encoding[32];		/* Character set encoding */
-	Uint32 *_Nullable s;		/* UCS-4 buffer */
+	AG_Char *_Nullable s;		/* Clipboard contents */
 	AG_Size len;			/* Length in characters */
 } AG_EditableClipboard;
 
@@ -53,13 +53,18 @@ typedef struct ag_editable {
 #define AG_EDITABLE_READONLY	  0x200000 /* Disable user input */
 #define AG_EDITABLE_MULTILINGUAL  0x400000 /* Multilingual edition */
 
-	const char *_Nonnull encoding;	/* Character set (default "UTF-8") */
+	const char *_Nonnull encoding;	/* Character set (default "US-ASCII"
+	                                   or "UTF-8" if Unicode supported) */
+#ifdef AG_UNICODE
 	AG_Text *_Nonnull text;		/* Default binding */
+#else
+	char text[6];
+#endif
 	int wPre, hPre;			/* Size hint */
 	int pos;			/* Cursor position */
 	int sel;			/* Selection offset / range */
 	int selDblClick;		/* Double click position */
-	Uint32 compose;			/* For input composition */
+	AG_Char compose;		/* For input composition */
 	int xCurs, yCurs;		/* Last cursor position */
 	int xSelStart, ySelStart;	/* Last selection start position */
 	int xSelEnd, ySelEnd;		/* Last selection end position */
@@ -93,25 +98,28 @@ extern AG_EditableClipboard agEditableClipbrd;
 extern AG_EditableClipboard agEditableKillring;
 
 AG_Editable *_Nonnull AG_EditableNew(void *_Nullable , Uint);
-void AG_EditableBindUTF8(AG_Editable *_Nonnull, char *_Nonnull, AG_Size);
+
 void AG_EditableBindASCII(AG_Editable *_Nonnull, char *_Nonnull, AG_Size);
+#ifdef AG_UNICODE
+void AG_EditableBindUTF8(AG_Editable *_Nonnull, char *_Nonnull, AG_Size);
 void AG_EditableBindEncoded(AG_Editable *_Nonnull, const char *_Nonnull,
                             char *_Nonnull, AG_Size);
 void AG_EditableBindText(AG_Editable *_Nonnull, AG_Text *_Nonnull);
 void AG_EditableSetLang(AG_Editable *_Nonnull, enum ag_language);
+#endif
 
 AG_EditableBuffer *_Nullable AG_EditableGetBuffer(AG_Editable *_Nonnull);
 void AG_EditableReleaseBuffer(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
 void AG_EditableClearBuffer(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
 int  AG_EditableGrowBuffer(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
-                           Uint32 *_Nonnull, AG_Size);
+                           AG_Char *_Nonnull, AG_Size);
 
 int  AG_EditableCut(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                     AG_EditableClipboard *_Nonnull);
 int  AG_EditableCopy(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                      AG_EditableClipboard *_Nonnull);
 void AG_EditableCopyChunk(AG_Editable *_Nonnull, AG_EditableClipboard *_Nonnull,
-                          Uint32 *_Nonnull, AG_Size);
+                          AG_Char *_Nonnull, AG_Size);
 int  AG_EditablePaste(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                       AG_EditableClipboard *_Nonnull);
 int  AG_EditableDelete(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
@@ -123,8 +131,6 @@ void AG_EditableSizeHintLines(AG_Editable *_Nonnull, Uint);
 void AG_EditableSetPassword(AG_Editable *_Nonnull, int);
 void AG_EditableSetWordWrap(AG_Editable *_Nonnull, int);
 void AG_EditableSetExcl(AG_Editable *_Nonnull, int);
-void AG_EditableSetFltOnly(AG_Editable *_Nonnull, int);
-void AG_EditableSetIntOnly(AG_Editable *_Nonnull, int);
 
 void AG_EditableSetString(AG_Editable *_Nonnull, const char *_Nullable);
 void AG_EditableClearString(AG_Editable *_Nonnull);
@@ -135,10 +141,11 @@ AG_Size        AG_EditableCopyString(AG_Editable *_Nonnull, char *_Nonnull,
                                      AG_Size);
 
 int    AG_EditableInt(AG_Editable *_Nonnull);
-
+void   AG_EditableSetIntOnly(AG_Editable *_Nonnull, int);
 #ifdef AG_HAVE_FLOAT
 float  AG_EditableFlt(AG_Editable *_Nonnull);
 double AG_EditableDbl(AG_Editable *_Nonnull);
+void   AG_EditableSetFltOnly(AG_Editable *_Nonnull, int);
 #endif
 
 void AG_EditableInitClipboards(void);

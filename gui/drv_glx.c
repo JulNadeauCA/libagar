@@ -539,7 +539,7 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	int x, y;
 	AG_KeySym ks;
 	AG_Window *win;
-	Uint32 ucs;
+	AG_Char ch;
 
 	AG_MutexLock(&agDisplayLock);
 	XNextEvent(agDisplay, &xev);
@@ -611,9 +611,9 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		AG_MutexLock(&agDisplayLock);
 		if (XLookupString(&xev.xkey, xkbBuf, sizeof(xkbBuf),
 		    NULL, &xkbCompStatus) >= 1) {
-			ucs = (Uint8)xkbBuf[0];	/* XXX */
+			ch = (Uint8)xkbBuf[0];	/* XXX */
 		} else {
-			ucs = 0;
+			ch = 0;
 		}
 		if (!LookupKeyCode(xev.xkey.keycode, &ks)) {
 			AG_SetError("Keyboard event: Unknown keycode: %d",
@@ -631,13 +631,13 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 #endif
 		AG_KeyboardUpdate(WIDGET(win)->drv->kbd,
 		    (xev.type == KeyPress) ? AG_KEY_PRESSED : AG_KEY_RELEASED,
-		    ks, ucs);
+		    ks);
 
 		dev->type = (xev.type == KeyPress) ? AG_DRIVER_KEY_DOWN :
 		                                     AG_DRIVER_KEY_UP;
 		dev->win = win;
 		dev->data.key.ks = ks;
-		dev->data.key.ucs = ucs;
+		dev->data.key.ucs = ch;
 		break;
 	case EnterNotify:
 		if ((win = LookupWindowByID(xev.xcrossing.window)) == NULL) {
@@ -914,9 +914,6 @@ GLX_CreateCursor(void *_Nonnull obj, Uint w, Uint h, const Uint8 *_Nonnull data,
 	XImage *dataImg, *maskImg;
 	Pixmap dataPixmap, maskPixmap;
 
-	/*
-	 * Initialize generic Agar cursor part.
-	 */
 	if ((acGLX = TryMalloc(sizeof(AG_CursorGLX))) == NULL) {
 		return (NULL);
 	}
@@ -947,7 +944,7 @@ GLX_CreateCursor(void *_Nonnull obj, Uint w, Uint h, const Uint8 *_Nonnull data,
 	acGLX->white.green = 0xffff;
 	acGLX->white.blue = 0xffff;
 
-	dataSize = (ac->w / 8) * ac->h;
+	dataSize = (w >> 3) * h;
 	if ((xData = TryMalloc(dataSize)) == NULL) {
 		goto fail;
 	}
@@ -964,24 +961,20 @@ GLX_CreateCursor(void *_Nonnull obj, Uint w, Uint h, const Uint8 *_Nonnull data,
 	AG_MutexLock(&glx->lock);
 
 	/* Create the data image */
-	dataImg = XCreateImage(agDisplay,
-	    DefaultVisual(agDisplay,agScreen),
-	    1, XYBitmap, 0, xData, ac->w,ac->h, 8, ac->w/8);
+	dataImg = XCreateImage(agDisplay, DefaultVisual(agDisplay,agScreen),
+	    1, XYBitmap, 0, xData, w, h, 8, (w >> 3));
 	dataImg->byte_order = MSBFirst;
 	dataImg->bitmap_bit_order = MSBFirst;
-	dataPixmap = XCreatePixmap(agDisplay,
-	    RootWindow(agDisplay,agScreen),
-	    ac->w,ac->h, 1);
+	dataPixmap = XCreatePixmap(agDisplay, RootWindow(agDisplay,agScreen),
+	    w, h, 1);
 
 	/* Create the mask image */
-	maskImg = XCreateImage(agDisplay,
-	    DefaultVisual(agDisplay,agScreen),
-	    1, XYBitmap, 0, xMask, ac->w,ac->h, 8, ac->w/8);
+	maskImg = XCreateImage(agDisplay, DefaultVisual(agDisplay,agScreen),
+	    1, XYBitmap, 0, xMask, w, h, 8, (w >> 3));
 	maskImg->byte_order = MSBFirst;
 	maskImg->bitmap_bit_order = MSBFirst;
-	maskPixmap = XCreatePixmap(agDisplay,
-	    RootWindow(agDisplay,agScreen),
-	    ac->w,ac->h,1);
+	maskPixmap = XCreatePixmap(agDisplay, RootWindow(agDisplay,agScreen),
+	    w, h, 1);
 
 	/* Blit the data and mask to the pixmaps */
 	gcVals.function = GXcopy;
@@ -989,10 +982,10 @@ GLX_CreateCursor(void *_Nonnull obj, Uint w, Uint h, const Uint8 *_Nonnull data,
 	gcVals.background =  0;
 	gcVals.plane_mask = AllPlanes;
 	gc = XCreateGC(agDisplay, dataPixmap,
-	    GCFunction|GCForeground|GCBackground|GCPlaneMask,
+	    GCFunction | GCForeground | GCBackground | GCPlaneMask,
 	    &gcVals);
-	XPutImage(agDisplay, dataPixmap, gc, dataImg, 0,0, 0,0, ac->w,ac->h);
-	XPutImage(agDisplay, maskPixmap, gc, maskImg, 0,0, 0,0, ac->w,ac->h);
+	XPutImage(agDisplay, dataPixmap, gc, dataImg, 0,0, 0,0, w,h);
+	XPutImage(agDisplay, maskPixmap, gc, maskImg, 0,0, 0,0, w,h);
 	XFreeGC(agDisplay, gc);
 	XDestroyImage(dataImg);
 	XDestroyImage(maskImg);
@@ -1121,26 +1114,22 @@ WaitUnmapNotify(Display *d, XEvent *xe, char *arg) {
 }
 
 /* Initialize the default cursor. */
-static int
+static void
 InitDefaultCursor(AG_DriverGLX *_Nonnull glx)
 {
 	AG_Driver *drv = AGDRIVER(glx);
 	AG_Cursor *ac;
 	AG_CursorGLX *acGLX;
 	
-	if ((acGLX = TryMalloc(sizeof(AG_CursorGLX))) == NULL) {
-		return (-1);
-	}
-	ac = (AG_Cursor *)acGLX;
+	acGLX = Malloc(sizeof(AG_CursorGLX));
+	ac = AGCURSOR(acGLX);
 	AG_CursorInit(ac);
-
 	acGLX->xc = XCreateFontCursor(agDisplay, XC_left_ptr);
 	acGLX->visible = 1;
 	acGLX->shared = 1;
 
 	TAILQ_INSERT_HEAD(&drv->cursors, ac, cursors);
 	drv->nCursors++;
-	return (0);
 }
 
 /* Set WM_NORMAL_HINTS */
@@ -1333,6 +1322,7 @@ SetAboveBelowHints(AG_Window *_Nonnull win)
 	}
 }
 
+#ifdef AG_TIMERS
 static Uint32
 InitExposeTimeout(AG_Timer *_Nonnull timer, AG_Event *_Nonnull event)
 {
@@ -1341,6 +1331,7 @@ InitExposeTimeout(AG_Timer *_Nonnull timer, AG_Event *_Nonnull event)
 	win->dirty = 1;
 	return (0);
 }
+#endif /* AG_TIMERS */
 
 static int
 GLX_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
@@ -1409,7 +1400,7 @@ GLX_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 
 	/* Create a new window. */
 	depth = (depthReq >= 1) ? depthReq : xvi->depth;
-	Debug(glx, "Creating %ux%ux%dbpp window at %d,%d\n",
+	Debug(glx, "Creating %ux%u %d-bpp window at %d,%d\n",
 	    r->w, r->h, depth,
 	    r->x, r->y);
 	glx->w = XCreateWindow(agDisplay,
@@ -1481,14 +1472,12 @@ GLX_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	}
 
 	/* Create the built-in cursors. */
-	if (InitDefaultCursor(glx) == -1 ||
-	    AG_InitStockCursors(drv) == -1) {
-		goto fail_ctx;
-	}
-
+	InitDefaultCursor(glx);
+	AG_InitStockCursors(drv);
+#ifdef AG_TIMERS
 	AG_InitTimer(&glx->toInitExpose, "init", 0);
 	AG_AddTimer(glx, &glx->toInitExpose, 1, InitExposeTimeout, "%p", win);
-
+#endif
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
 	

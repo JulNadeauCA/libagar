@@ -38,6 +38,16 @@
 #  define AG_OBJECT_LIBS_MAX 32
 # endif
 #endif
+#ifndef AG_OBJECT_CLASSTBLSIZE
+# if AG_MODEL == AG_SMALL
+#  define AG_OBJECT_CLASSTBLSIZE 32
+# elif AG_MODEL == AG_MEDIUM
+#  define AG_OBJECT_CLASSTBLSIZE 128
+# else
+#  define AG_OBJECT_CLASSTBLSIZE 256
+# endif
+#endif
+
 #ifndef AG_OBJECT_DEP_MAX
 # define AG_OBJECT_DEP_MAX (0xffffffff-2)
 #endif
@@ -57,44 +67,46 @@ struct ag_tbl;
 struct ag_db;
 struct ag_dbt;
 
-/* Object class specification */
+/* Agar Object class specification */
 typedef struct ag_object_class_spec {
-	char hier[AG_OBJECT_HIER_MAX];		/* Inheritance hierarchy */
-	char spec[AG_OBJECT_HIER_MAX];		/* Full class specification */
-	char name[AG_OBJECT_NAME_MAX];		/* Short name */
+	char hier[AG_OBJECT_HIER_MAX];	/* Inheritance hierarchy (normalized) */
+	char spec[AG_OBJECT_HIER_MAX];	/* Full class string + optional @libs */
+	char name[AG_OBJECT_NAME_MAX];	/* Name of the last class in hierarchy */
 #ifdef AG_ENABLE_DSO
-	char libs[AG_OBJECT_LIBS_MAX];		/* Library list */
+	char libs[AG_OBJECT_LIBS_MAX];	/* Optional comma-separated libs */
 #endif
 } AG_ObjectClassSpec;
 
-/* Global name space registration */
+/* Global name space registration (for NAMESPACES) */
 typedef struct ag_namespace {
-	const char *_Nonnull name;		/* Name string */
-	const char *_Nonnull pfx;		/* Prefix string */
-	const char *_Nonnull url;		/* URL of package */
+	const char *_Nonnull name;	/* Name string */
+	const char *_Nonnull pfx;	/* Prefix string */
+	const char *_Nonnull url;	/* URL of package */
 } AG_Namespace;
 
-typedef void  (*AG_ObjectInitFn)    (void *_Nonnull);
-typedef void  (*AG_ObjectResetFn)   (void *_Nonnull);
-typedef void  (*AG_ObjectDestroyFn) (void *_Nonnull);
-
-typedef int   (*AG_ObjectLoadFn) (void             *_Nonnull,
-                                  AG_DataSource    *_Nonnull,
-                                  const AG_Version *_Nonnull);
-
-typedef int   (*AG_ObjectSaveFn) (void          *_Nonnull,
-                                  AG_DataSource *_Nonnull);
-
+/* Convenient typedefs for base AG_Object methods */
+typedef void (*AG_ObjectInitFn)(void *_Nonnull);
+typedef void (*AG_ObjectResetFn)(void *_Nonnull);
+typedef void (*AG_ObjectDestroyFn)(void *_Nonnull);
+#ifdef AG_SERIALIZATION
+typedef int (*AG_ObjectLoadFn)(void *_Nonnull, AG_DataSource *_Nonnull,
+                               const AG_Version *_Nonnull);
+typedef int (*AG_ObjectSaveFn)(void *_Nonnull, AG_DataSource *_Nonnull);
+#else
+typedef int (*AG_ObjectLoadFn)(void *_Nonnull, void *_Nonnull,
+                               const AG_Version *_Nonnull);
+typedef int (*AG_ObjectSaveFn)(void *_Nonnull, void *_Nonnull);
+#endif
 typedef void *_Nullable (*AG_ObjectEditFn) (void *_Nonnull);
 
-/* Object class description (generated part) */
+/* Agar Object class description (internally-generated part) */
 typedef struct ag_object_class_pvt {
 	char libs[AG_OBJECT_LIBS_MAX];              /* List of required modules */
 	AG_TAILQ_HEAD_(ag_object_class) sub;        /* Direct subclasses */
 	AG_TAILQ_ENTRY(ag_object_class) subclasses; /* Subclass entry */
 } AG_ObjectClassPvt;
 
-/* Object class description. */
+/* Agar Object class description. */
 typedef struct ag_object_class {
 	char       hier[AG_OBJECT_HIER_MAX];	/* Inheritance hierarchy */
 	AG_Size    size;			/* Structure size */
@@ -125,7 +137,9 @@ typedef struct ag_object_dep {
 
 /* Object private data */
 typedef struct ag_object_pvt {
+#ifdef AG_TIMERS
 	AG_TAILQ_ENTRY(ag_object) tobjs;	/* Entry in agTimerObjQ */
+#endif
 	/* TODO 1.6: store these as AG_Variables */
 	AG_Event *_Nullable attachFn;		/* Attach hook */
 	AG_Event *_Nullable detachFn;		/* Detach hook */
@@ -135,11 +149,13 @@ typedef struct ag_object_pvt {
 /* Object instance */
 typedef struct ag_object {
 	char name[AG_OBJECT_NAME_MAX];	/* Object ID (unique in parent) */
+#ifdef AG_SERIALIZATION
 	/*
 	 * XXX TODO 1.6: we can store archivePath and save_pfx as AG_Variables.
 	 */
 	char *_Nullable archivePath;	/* Application-specific archive path */
 	char *_Nullable save_pfx;	/* Prefix for default save paths */
+#endif
 	AG_ObjectClass *_Nonnull cls;	/* Class description */
 	Uint flags;
 #define AG_OBJECT_FLOATING_VARS	 0x00001  /* Clear variables before load */
@@ -170,14 +186,17 @@ typedef struct ag_object {
 				 AG_OBJECT_BOUND_EVENTS)
 
 	AG_TAILQ_HEAD_(ag_event) events;	/* Event handlers/virtual fns */
-	AG_TAILQ_HEAD_(ag_timer) timers;	/* Running timers (read-only or
-						   R/W under AG_LockTiming()) */
+#ifdef AG_TIMERS
+	AG_TAILQ_HEAD_(ag_timer) timers;	/* Running timers */
+#endif
 	AG_TAILQ_HEAD_(ag_variable) vars;	/* Named variables / bindings */
+#ifdef AG_SERIALIZATION
 	/*
 	 * TODO 1.6: represent deps as AG_Variables (of P_OBJECT type) and
 	 * remove this list entirely.
 	 */
 	AG_TAILQ_HEAD_(ag_object_dep) deps;	/* Object dependencies */
+#endif
 	struct ag_objectq children;		/* Child objects */
 	AG_TAILQ_ENTRY(ag_object) cobjs;	/* Entry in parent */
 
@@ -239,7 +258,6 @@ typedef struct ag_object_header {
 # define AG_ASSERT_CLASS(obj,class)
 #endif
 
-
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_CORE)
 # define OBJECT(ob)              AGOBJECT(ob)
 # define OBJECT_CLASS(ob)        AGOBJECT_CLASS(ob)
@@ -258,37 +276,41 @@ typedef struct ag_object_header {
 __BEGIN_DECLS
 extern AG_ObjectClass agObjectClass;              /* Base Object class */
 
+#ifdef AG_THREADS
 extern _Nonnull_Mutex AG_Mutex agClassLock;       /* Lock on class table */
+#endif
 extern struct ag_tbl  *_Nullable agClassTbl;      /* Classes in hash table */
-extern AG_ObjectClass *_Nullable agClassTree;     /* Classes in tree format */
-
+#ifdef AG_NAMESPACES
 extern AG_Namespace *_Nullable agNamespaceTbl;    /* Registered namespaces */
 extern int                     agNamespaceCount;
-
+#endif
+#ifdef AG_ENABLE_DSO
 extern char *_Nullable *_Nonnull agModuleDirs;    /* Module search dirs */
 extern int                       agModuleDirCount;
+#endif
 
 void AG_InitClassTbl(void);
 void AG_DestroyClassTbl(void);
 
 AG_ObjectClass *_Nullable AG_LookupClass(const char *_Nonnull);
-
 #ifdef AG_ENABLE_DSO
 AG_ObjectClass *_Nullable AG_LoadClass(const char *_Nonnull);
 void                      AG_UnloadClass(AG_ObjectClass *_Nonnull);
+void                      AG_RegisterModuleDirectory(const char *_Nonnull);
+void                      AG_UnregisterModuleDirectory(const char *_Nonnull);
 #endif
 
+#ifdef AG_NAMESPACES
 AG_Namespace *_Nonnull AG_RegisterNamespace(const char *_Nonnull,
                                             const char *_Nonnull,
                                             const char *_Nonnull);
 void                   AG_UnregisterNamespace(const char *_Nonnull);
-
-void AG_RegisterModuleDirectory(const char *_Nonnull);
-void AG_UnregisterModuleDirectory(const char *_Nonnull);
+#endif
 
 void AG_RegisterClass(void *_Nonnull);
 void AG_UnregisterClass(void *_Nonnull);
 
+#if AG_MODEL != AG_SMALL
 void *_Nullable AG_CreateClass(const char *_Nonnull, AG_Size, AG_Size, Uint, Uint);
 void            AG_DestroyClass(void *_Nonnull);
 
@@ -298,6 +320,7 @@ _Nullable AG_ObjectDestroyFn AG_ClassSetDestroy(void *_Nonnull, _Nullable AG_Obj
 _Nullable AG_ObjectLoadFn    AG_ClassSetLoad(void *_Nonnull, _Nullable AG_ObjectLoadFn);
 _Nullable AG_ObjectSaveFn    AG_ClassSetSave(void *_Nonnull, _Nullable AG_ObjectSaveFn);
 _Nullable AG_ObjectEditFn    AG_ClassSetEdit(void *_Nonnull, _Nullable AG_ObjectEditFn);
+#endif /* !AG_SMALL */
 
 int AG_ParseClassSpec(AG_ObjectClassSpec *_Nonnull, const char *_Nonnull);
 int AG_ClassIsNamedGeneral(const AG_ObjectClass *_Nonnull, const char *_Nonnull);
@@ -311,9 +334,6 @@ void *_Nullable AG_ObjectNew(void *_Nullable, const char *_Nullable,
 
 void AG_ObjectAttach(void *_Nullable _Restrict, void *_Nonnull _Restrict);
 
-int  AG_ObjectAttachToNamed(void *_Nonnull, const char *_Nonnull,
-                            void *_Nonnull);
-
 void AG_ObjectInit(void *_Nonnull _Restrict, void *_Nullable _Restrict);
 void AG_ObjectInitStatic(void *_Nonnull _Restrict, void *_Nullable _Restrict);
 void AG_ObjectInitNamed(void *_Nonnull _Restrict, void *_Nonnull _Restrict,
@@ -321,17 +341,9 @@ void AG_ObjectInitNamed(void *_Nonnull _Restrict, void *_Nonnull _Restrict,
 
 void AG_ObjectDetach(void *_Nonnull);
 void AG_ObjectReset(void *_Nonnull);
-void AG_ObjectRemain(void *_Nonnull, Uint);
 
-char *_Nullable AG_ObjectGetName(void *_Nonnull)
-                                _Warn_Unused_Result;
-
-int AG_ObjectCopyName(void *_Nonnull, char *_Nonnull, AG_Size);
-int AG_ObjectCopyDirname(void *_Nonnull, char *_Nonnull, AG_Size);
-int AG_ObjectCopyFilename(void *_Nonnull, char *_Nonnull, AG_Size);
-
-int AG_ObjectChanged(void *_Nonnull);
-int AG_ObjectChangedAll(void *_Nonnull);
+char *_Nullable AG_ObjectGetName(void *_Nonnull) _Warn_Unused_Result;
+int             AG_ObjectCopyName(void *_Nonnull, char *_Nonnull, AG_Size);
 
 void *_Nullable AG_ObjectFindS(void *_Nonnull, const char *_Nonnull)
                               _Pure_Attribute_If_Unthreaded
@@ -346,18 +358,9 @@ void *_Nullable AG_ObjectFindParent(void *_Nonnull, const char *_Nonnull,
 				    const char *_Nonnull)
 				   _Warn_Unused_Result;
 
-int AG_ObjectInUse(void *_Nonnull)
-                  _Pure_Attribute_If_Unthreaded
-		  _Warn_Unused_Result;
-
 void AG_ObjectSetNameS(void *_Nonnull, const char *_Nullable);
 void AG_ObjectSetName(void *_Nonnull, const char *_Nullable, ...)
                      FORMAT_ATTRIBUTE(printf,2,3);
-
-void AG_ObjectSetArchivePath(void *_Nonnull, const char *_Nonnull);
-void AG_ObjectGetArchivePath(void *_Nonnull, char *_Nonnull, AG_Size);
-
-void AG_ObjectSetClass(void *_Nonnull, void *_Nonnull);
 
 void AG_ObjectSetAttachFn(void *_Nonnull,
                           void (*_Nullable fn)(AG_Event *_Nonnull),
@@ -367,18 +370,29 @@ void AG_ObjectSetDetachFn(void *_Nonnull,
                           void (*_Nullable fn)(AG_Event *_Nonnull),
 			  const char *_Nullable, ...);
 
+#if AG_MODEL != AG_SMALL
 void AG_ObjectMoveUp(void *_Nonnull);
 void AG_ObjectMoveDown(void *_Nonnull);
 void AG_ObjectMoveToHead(void *_Nonnull);
+#endif
 void AG_ObjectMoveToTail(void *_Nonnull);
 
 void AG_ObjectDestroy(void *_Nonnull);
-void AG_ObjectUnlinkDatafiles(void *_Nonnull);
-void AG_ObjectSetSavePfx(void *_Nonnull, char *_Nullable);
-
 void AG_ObjectFreeVariables(void *_Nonnull);
 void AG_ObjectFreeChildren(void *_Nonnull);
 void AG_ObjectFreeEvents(AG_Object *_Nonnull);
+
+#ifdef AG_SERIALIZATION
+int AG_ObjectCopyDirname(void *_Nonnull, char *_Nonnull, AG_Size);
+int AG_ObjectCopyFilename(void *_Nonnull, char *_Nonnull, AG_Size);
+int AG_ObjectChanged(void *_Nonnull);
+int AG_ObjectChangedAll(void *_Nonnull);
+
+int AG_ObjectInUse(void *_Nonnull)
+                  _Pure_Attribute_If_Unthreaded
+		  _Warn_Unused_Result;
+
+void AG_ObjectUnlinkDatafiles(void *_Nonnull);
 void AG_ObjectFreeDeps(AG_Object *_Nonnull);
 void AG_ObjectFreeDummyDeps(AG_Object *_Nonnull);
 
@@ -418,10 +432,14 @@ Uint32 AG_ObjectEncodeName(void *_Nonnull, const void *_Nullable)
                           _Pure_Attribute_If_Unthreaded
                           _Warn_Unused_Result;
 
+#endif /* AG_SERIALIZATION */
+
 void AG_ObjectGenName(void *_Nonnull, AG_ObjectClass *_Nonnull, char *_Nonnull,
                       AG_Size);
+#if AG_MODEL != AG_SMALL
 void AG_ObjectGenNamePfx(void *_Nonnull, const char *_Nonnull, char *_Nonnull,
                          AG_Size);
+#endif
 
 /*
  * Inlinables
@@ -437,8 +455,10 @@ AG_Object *_Nullable ag_object_parent(const void *_Nonnull)
                                      _Pure_Attribute
                                      _Warn_Unused_Result;
 
+#ifdef AG_NAMESPACES
 AG_Namespace *_Nullable ag_get_namespace(const char *_Nonnull)
                                         _Warn_Unused_Result;
+#endif
 
 int ag_class_is_named(const void *_Nonnull, const char *_Nonnull)
                      _Warn_Unused_Result;
@@ -452,8 +472,6 @@ AG_ObjectClass *_Nullable ag_object_superclass(void *_Nonnull)
 					      _Warn_Unused_Result;
 
 void ag_object_delete(void *_Nonnull);
-void ag_lock_timers(void *_Nullable);
-void ag_unlock_timers(void *_Nullable);
 
 int ag_defined(void *_Nonnull, const char *_Nonnull)
               _Pure_Attribute
@@ -476,14 +494,14 @@ void *_Nonnull ag_get_named_object(AG_Event *_Nonnull, const char *_Nonnull,
                                    const char *_Nonnull)
                                   _Pure_Attribute
                                   _Warn_Unused_Result;
-
-
+#ifdef AG_THREADS
 void ag_object_lock(void *_Nonnull);
 void ag_object_unlock(void *_Nonnull);
 void ag_lock_vfs(void *_Nonnull);
 void ag_unlock_vfs(void *_Nonnull);
 void ag_lock_timers(void *_Nullable);
 void ag_unlock_timers(void *_Nullable);
+#endif
 
 #ifdef AG_INLINE_OBJECT
 # define AG_INLINE_HEADER
@@ -507,8 +525,13 @@ void ag_unlock_timers(void *_Nullable);
 #  define AG_ObjectUnlock(o)		ag_object_unlock(o)
 #  define AG_LockVFS(o)			ag_lock_vfs(o)
 #  define AG_UnlockVFS(o)		ag_unlock_vfs(o)
-#  define AG_LockTimers(o)		ag_lock_timers(o)
-#  define AG_UnlockTimers(o)		ag_unlock_timers(o)
+#  ifdef AG_TIMERS
+#   define AG_LockTimers(o)		ag_lock_timers(o)
+#   define AG_UnlockTimers(o)		ag_unlock_timers(o)
+#  else
+#   define AG_LockTimers(o)
+#   define AG_UnlockTimers(o)
+#  endif
 # else
 #  define AG_ObjectLock(o)
 #  define AG_ObjectUnlock(o)

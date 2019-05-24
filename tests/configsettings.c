@@ -71,9 +71,11 @@ TestGUI(void *obj, AG_Window *win)
 	AG_NumericalNewInt(win, 0, NULL, "Some int: ", &someInt);
 	AG_CheckboxNewInt(win, 0, "Some bool", &someBool);
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Some string: ");
+#ifdef AG_UNICODE
 	AG_TextboxBindUTF8(tb, someString, sizeof(someString));
-
-	
+#else
+	AG_TextboxBindASCII(tb, someString, sizeof(someString));
+#endif
 	box = AG_BoxNewVert(win, AG_BOX_EXPAND|AG_BOX_FRAME);
 	AG_BoxSetLabelS(box, "AG_ConfigFind() search paths:");
 	AG_SetStyle(box, "font-size", "90%");

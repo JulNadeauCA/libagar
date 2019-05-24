@@ -271,8 +271,7 @@ Destroy(void *_Nonnull obj)
  * AG_KEY_ASCII_START to AG_KEY_ASCII_END range, as well as modifier keys.
  */
 int
-AG_KeyboardUpdate(AG_Keyboard *kbd, AG_KeyboardAction action, AG_KeySym ks,
-    Uint32 ucs)
+AG_KeyboardUpdate(AG_Keyboard *kbd, AG_KeyboardAction action, AG_KeySym ks)
 {
 	Uint ms = kbd->modState;
 
@@ -338,18 +337,24 @@ AG_KeyboardUpdate(AG_Keyboard *kbd, AG_KeyboardAction action, AG_KeySym ks,
 /* Post a key-up event to widgets with the UNFOCUSED_KEYUP flag set. */
 static void
 PostUnfocusedKeyUp(AG_Widget *_Nonnull wid, AG_KeySym ks, Uint kmod,
-    Uint32 unicode)
+    AG_Char ch)
 {
 	AG_Widget *cwid;
 
 	AG_ObjectLock(wid);
 	if (wid->flags & AG_WIDGET_UNFOCUSED_KEYUP) {
+#ifdef AG_UNICODE
 		AG_PostEvent(NULL, wid,  "key-up",
-		    "%i(key),%i(mod),%lu(unicode)",
-		    (int)ks, (int)kmod, (Ulong)unicode);
+		    "%i(key),%i(mod),%lu(ch)",
+		    (int)ks, (int)kmod, (Ulong)ch);
+#else
+		AG_PostEvent(NULL, wid,  "key-up",
+		    "%i(key),%i(mod),%u(ch)",
+		    (int)ks, (int)kmod, (Uint)ch);
+#endif
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
-		PostUnfocusedKeyUp(cwid, ks, kmod, unicode);
+		PostUnfocusedKeyUp(cwid, ks, kmod, ch);
 	}
 	AG_ObjectUnlock(wid);
 }
@@ -357,18 +362,24 @@ PostUnfocusedKeyUp(AG_Widget *_Nonnull wid, AG_KeySym ks, Uint kmod,
 /* Post a key-down event to widgets with the UNFOCUSED_KEYDOWN flag set. */
 static void
 PostUnfocusedKeyDown(AG_Widget *_Nonnull wid, AG_KeySym ks, Uint kmod,
-    Uint32 unicode)
+    AG_Char ch)
 {
 	AG_Widget *cwid;
 
 	AG_ObjectLock(wid);
 	if (wid->flags & AG_WIDGET_UNFOCUSED_KEYDOWN) {
+#ifdef AG_UNICODE
 		AG_PostEvent(NULL, wid,  "key-down",
-		    "%i(key),%i(mod),%lu(unicode)",
-		    (int)ks, (int)kmod, (Ulong)unicode);
+		    "%i(key),%i(mod),%lu(ch)",
+		    (int)ks, (int)kmod, (Ulong)ch);
+#else
+		AG_PostEvent(NULL, wid,  "key-down",
+		    "%i(key),%i(mod),%u(ch)",
+		    (int)ks, (int)kmod, (Uint)ch);
+#endif
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
-		PostUnfocusedKeyDown(cwid, ks, kmod, unicode);
+		PostUnfocusedKeyDown(cwid, ks, kmod, ch);
 	}
 	AG_ObjectUnlock(wid);
 }
@@ -379,11 +390,11 @@ PostUnfocusedKeyDown(AG_Widget *_Nonnull wid, AG_KeySym ks, Uint kmod,
  * invoked from the ProcessEvent() routine of a driver.
  *
  * Unicode characters without related keysym (or vice-versa) are allowed.
- * The ks argument can be AG_KEY_NONE, or the unicode argument can be 0.
+ * The ks argument can be AG_KEY_NONE, or the ch argument can be 0.
  */
 int
 AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
-    AG_KeySym ks, Uint32 unicode)
+    AG_KeySym ks, AG_Char ch)
 {
 	AG_Driver *drv = AGINPUTDEV(kbd)->drv;
 	AG_Widget *wFoc;
@@ -395,23 +406,23 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 	if ((keyname = AG_LookupKeyName(ks)) != NULL) {
 		printf("Key%s: [%s:0x%x]\n",
 		    (action == AG_KEY_PRESSED) ? "Down" : "Up",
-		    keyname, (int)unicode);
+		    keyname, (int)ch);
 	} else {
 		printf("Key%s: [0x%x:0x%x]\n",
 		    (action == AG_KEY_PRESSED) ? "Down" : "Up",
-		    (int)ks, (int)unicode);
+		    (int)ks, (int)ch);
 	}
 #endif
 
 	switch (action) {
 	case AG_KEY_RELEASED:
-		PostUnfocusedKeyUp(WIDGET(win), ks, kbd->modState, unicode);
+		PostUnfocusedKeyUp(WIDGET(win), ks, kbd->modState, ch);
 		break;
 	case AG_KEY_PRESSED:
 		if (AG_ExecGlobalKeys(ks, kbd->modState)) {
 			return (1);
 		}
-		PostUnfocusedKeyDown(WIDGET(win), ks, kbd->modState, unicode);
+		PostUnfocusedKeyDown(WIDGET(win), ks, kbd->modState, ch);
 		break;
 	}
 
@@ -439,11 +450,19 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 			if (wFoc->flags & AG_WIDGET_CATCH_TAB) {
 				tabCycle = 0;
 			}
+#ifdef AG_UNICODE
 			AG_PostEvent(NULL, wFoc,
 			    (action == AG_KEY_RELEASED) ?
 			    "key-up" : "key-down",
-			    "%i(key),%i(mod),%lu(unicode)",
-			    (int)ks, (int)kbd->modState, (Ulong)unicode);
+			    "%i(key),%i(mod),%lu(ch)",
+			    (int)ks, (int)kbd->modState, (Ulong)ch);
+#else
+			AG_PostEvent(NULL, wFoc,
+			    (action == AG_KEY_RELEASED) ?
+			    "key-up" : "key-down",
+			    "%i(key),%i(mod),%u(ch)",
+			    (int)ks, (int)kbd->modState, (Uint)ch);
+#endif
 			if (AGDRIVER_SINGLE(drv)) {
 				/*
 				 * Ensure the keyup event is posted to

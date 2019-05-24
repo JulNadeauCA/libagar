@@ -108,14 +108,20 @@ PlaceWidgets(AG_Scrollview *_Nonnull sv, int *_Nullable wTot,
 }
 
 static void
-PanView(AG_Event *_Nonnull event)
+PanView(AG_Scrollview *_Nonnull sv)
 {
-	AG_Scrollview *sv = AG_PTR(1);
-
 	AG_WidgetUpdate(sv);
 	PlaceWidgets(sv, NULL, NULL);
 	AG_WidgetUpdate(sv);
 	AG_Redraw(sv);
+}
+
+static void
+ScrollbarChanged(AG_Event *_Nonnull event)
+{
+	AG_Scrollview *sv = AG_PTR(1);
+
+	PanView(sv);
 }
 
 static void
@@ -138,25 +144,7 @@ MouseMotion(AG_Event *_Nonnull event)
 		if (sv->yOffs < 0)
 			sv->yOffs = 0;
 	}
-#if AG_MODEL == AG_SMALL
-	{
-		AG_Event *ev;
-		
-		ev = Malloc(sizeof(AG_Event));
-		AG_EventInit(ev);
-		AG_EventPushPointer(ev, NULL, sv);
-		PanView(ev);
-		free(ev);
-	}
-#else
-	{
-		AG_Event ev;
-
-		AG_EventInit(&ev);
-		AG_EventPushPointer(&ev, NULL, sv);
-		PanView(&ev);
-	}
-#endif
+	PanView(sv);
 }
 
 static void
@@ -217,26 +205,15 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		break;
 	}
 
-	if (update) {
-#if AG_MODEL == AG_SMALL
-		AG_Event *ev = Malloc(sizeof(AG_Event));
-		AG_EventInit(ev);
-		AG_EventPushPointer(ev, NULL, sv);
-		PanView(ev);
-		free(ev);
-#else
-		AG_Event ev;
-		AG_EventInit(&ev);
-		AG_EventPushPointer(&ev, NULL, sv);
-		PanView(&ev);
-#endif
-	}
+	if (update)
+		PanView(sv);
 }
 
 AG_Scrollview *
 AG_ScrollviewNew(void *parent, Uint flags)
 {
 	AG_Scrollview *sv;
+	AG_Scrollbar *sb;
 
 	sv = Malloc(sizeof(AG_Scrollview));
 	AG_ObjectInit(sv, &agScrollviewClass);
@@ -246,22 +223,22 @@ AG_ScrollviewNew(void *parent, Uint flags)
 	if (flags & AG_SCROLLVIEW_VFILL) { AG_ExpandVert(sv); }
 
 	if (!(flags & AG_SCROLLVIEW_NOPAN_X)) {
-		sv->hbar = AG_ScrollbarNew(sv, AG_SCROLLBAR_HORIZ,
+		sb = sv->hbar = AG_ScrollbarNew(sv, AG_SCROLLBAR_HORIZ,
 		    AG_SCROLLBAR_EXCL);
-		AG_BindInt(sv->hbar, "min", &sv->xMin);
-		AG_BindInt(sv->hbar, "max", &sv->xMax);
-		AG_BindInt(sv->hbar, "visible", &sv->r.w);
-		AG_BindInt(sv->hbar, "value", &sv->xOffs);
-		AG_SetEvent(sv->hbar, "scrollbar-changed", PanView, "%p", sv);
+		AG_BindInt(sb, "min", &sv->xMin);
+		AG_BindInt(sb, "max", &sv->xMax);
+		AG_BindInt(sb, "visible", &sv->r.w);
+		AG_BindInt(sb, "value", &sv->xOffs);
+		AG_SetEvent(sb, "scrollbar-changed", ScrollbarChanged,"%p",sv);
 	}
 	if (!(flags & AG_SCROLLVIEW_NOPAN_Y)) {
-		sv->vbar = AG_ScrollbarNew(sv, AG_SCROLLBAR_VERT,
+		sv->vbar = sb = AG_ScrollbarNew(sv, AG_SCROLLBAR_VERT,
 		    AG_SCROLLBAR_EXCL);
-		AG_BindInt(sv->vbar, "min", &sv->yMin);
-		AG_BindInt(sv->vbar, "max", &sv->yMax);
-		AG_BindInt(sv->vbar, "visible", &sv->r.h);
-		AG_BindInt(sv->vbar, "value", &sv->yOffs);
-		AG_SetEvent(sv->vbar, "scrollbar-changed", PanView, "%p", sv);
+		AG_BindInt(sb, "min", &sv->yMin);
+		AG_BindInt(sb, "max", &sv->yMax);
+		AG_BindInt(sb, "visible", &sv->r.h);
+		AG_BindInt(sb, "value", &sv->yOffs);
+		AG_SetEvent(sb, "scrollbar-changed", ScrollbarChanged,"%p",sv);
 	}
 
 	if (flags & AG_SCROLLVIEW_BY_MOUSE) {

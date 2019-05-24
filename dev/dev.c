@@ -37,10 +37,16 @@ static const struct dev_tool_ent {
 	char *_Nonnull name;
 	AG_Window *_Nullable (*_Nonnull fn)(void);
 } devTools[] = {
+#ifdef AG_TIMERS
 	{ N_("Registered classes"),	DEV_ClassInfo },
+#endif
 	{ N_("Display Settings"),	DEV_DisplaySettings },
+#if defined(AG_TIMERS) && defined(AG_ENABLE_STRING)
 	{ N_("Timer Inspector"),	DEV_TimerInspector },
+#endif
+#ifdef AG_UNICODE
 	{ N_("Unicode Browser"),	DEV_UnicodeBrowser },
+#endif
 	{ N_("CPU Information"),	DEV_CPUInfo },
 };
 

@@ -26,6 +26,8 @@
 /*
  * Agar file browser widget.
  */
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
 
 #include <agar/core/core.h>
 #include <agar/core/config.h>
@@ -823,10 +825,13 @@ SelectedType(AG_Event *_Nonnull event)
 #endif
 		case AG_FILEDLG_STRING:
 			tbox = AG_TextboxNewS(fd->optsCtr,
-			    AG_TEXTBOX_EXCL|AG_TEXTBOX_HFILL,
+			    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
 			    fo->descr);
-			AG_TextboxBindUTF8(tbox, fo->data.s,
-			    sizeof(fo->data.s));
+#ifdef AG_UNICODE
+			AG_TextboxBindUTF8(tbox, fo->data.s, sizeof(fo->data.s));
+#else
+			AG_TextboxBindASCII(tbox, fo->data.s, sizeof(fo->data.s));
+#endif
 			break;
 		}
 	}
@@ -1094,10 +1099,12 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(fd->tlFiles, "tlist-selected", FileSelected, "%p", fd);
 	AG_SetEvent(fd->tlFiles, "tlist-dblclick", FileDblClicked, "%p", fd);
 
+#ifdef AG_ENABLE_STRING
 	/* Current directory label. */
 	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL, ("Directory: %s"), &fd->cwd[0]);
 	AG_LabelSizeHint(fd->lbCwd, 1, _("Directory: XXXXXXXXXXXXX"));
 	AG_SetStyle(fd->lbCwd, "font-size", "90%");
+#endif
 
 	/* Manual file/directory entry textbox. */
 	fd->tbFile = AG_TextboxNewS(fd, AG_TEXTBOX_EXCL, _("File: "));
@@ -1538,3 +1545,5 @@ AG_WidgetClass agFileDlgClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_SERIALIZATION */

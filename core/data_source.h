@@ -2,6 +2,8 @@
 
 #ifndef _AGAR_CORE_DATA_SOURCE_H_
 #define _AGAR_CORE_DATA_SOURCE_H_
+
+#ifdef AG_SERIALIZATION
 #include <agar/core/begin.h>
 
 struct ag_event;
@@ -169,4 +171,5 @@ void      AG_DataSourceDestroy(AG_DataSource *_Nonnull);
 __END_DECLS
 
 #include <agar/core/close.h>
+#endif /* AG_SERIALIZATION */
 #endif /* _AGAR_CORE_DATA_SOURCE_H_ */

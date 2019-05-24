@@ -35,8 +35,10 @@ typedef struct ag_cursor {
 	AG_TAILQ_ENTRY(ag_cursor) cursors;
 } AG_Cursor;
 
+#define AGCURSOR(p) ((AG_Cursor *)(p))
+
 __BEGIN_DECLS
-int  AG_InitStockCursors(struct ag_driver *_Nonnull);
+void AG_InitStockCursors(struct ag_driver *_Nonnull);
 void AG_FreeCursors(struct ag_driver *_Nonnull);
 
 AG_Cursor *_Nullable AG_CursorNew(void *_Nonnull, Uint,Uint,

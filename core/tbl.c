@@ -129,7 +129,7 @@ AG_TblInsertHash(AG_Tbl *tbl, Uint h, const char *key, const AG_Variable *V)
 			break;
 	}
 	if (!(tbl->flags & AG_TBL_DUPLICATES) && i < buck->nEnts) {
-		AG_SetError("Existing entry: %s", key);
+		AG_SetErrorV("E27", "Table entry exists");
 		return (-1);
 	}
 
@@ -162,7 +162,7 @@ AG_TblDeleteHash(AG_Tbl *tbl, Uint h, const char *key)
 			break;
 	}
 	if (i == buck->nEnts) {
-		AG_SetError("No such entry: %s", key);
+		AG_SetErrorV("E28", "No such table entry");
 		return (-1);
 	}
 

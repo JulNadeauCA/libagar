@@ -33,9 +33,11 @@ typedef struct ag_slider {
 	int ctlPressed;			/* Control is pressed */
 	int wControlPref;		/* Control size (preferred) */
 	int wControl;			/* Control size (effective) */
-	AG_Timer moveTo;		/* Timer for keyboard motion */
 	int xOffs;			/* Cursor offset for scrolling */
 	int extent;			/* Available area for scrolling */
+#ifdef AG_TIMERS
+	AG_Timer moveTo;		/* Timer for keyboard motion */
+#endif
 } AG_Slider;
 
 #define AGSLIDER(p) ((AG_Slider *)p)

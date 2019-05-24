@@ -1473,9 +1473,9 @@ SDLFB_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 #if AG_MODEL == AG_LARGE
 	Verbose(_("SDLFB: New display (%d-bpp; %08llx,%08llx,%08llx)\n"),
 	     drv->videoFmt->BitsPerPixel, 
-	     drv->videoFmt->Rmask,
-	     drv->videoFmt->Gmask,
-	     drv->videoFmt->Bmask);
+	     (unsigned long long)drv->videoFmt->Rmask,
+	     (unsigned long long)drv->videoFmt->Gmask,
+	     (unsigned long long)drv->videoFmt->Bmask);
 #else
 	Verbose(_("SDLFB: New display (%d-bpp; %04x,%04x,%04x)\n"),
 	     drv->videoFmt->BitsPerPixel, 
@@ -1489,9 +1489,8 @@ SDLFB_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 		goto fail;
 	
 	/* Create the cursors. */
-	if (AG_SDL_InitDefaultCursor(sfb) == -1 ||
-	    AG_InitStockCursors(drv) == -1)
-		goto fail;
+	AG_SDL_InitDefaultCursor(sfb);
+	AG_InitStockCursors(drv);
 
 	/* Set background color. */
 	SDL_FillRect(S, NULL, SDL_MapRGB(S->format,
@@ -1541,9 +1540,9 @@ SDLFB_OpenVideoContext(void *_Nonnull obj, void *_Nonnull ctx, Uint flags)
 #if AG_MODEL == AG_LARGE
 	Verbose(_("SDLFB: Using existing display (%d-bpp; %08llx,%08llx,%08llx)\n"),
 	     (int)pf->BitsPerPixel, 
-	     pf->Rmask,
-	     pf->Gmask,
-	     pf->Bmask);
+	     (unsigned long long)pf->Rmask,
+	     (unsigned long long)pf->Gmask,
+	     (unsigned long long)pf->Bmask);
 #else
 	Verbose(_("SDLFB: Using existing display (%d-bpp; %04x,%04x,%04x)\n"),
 	     (int)pf->BitsPerPixel, 
@@ -1557,10 +1556,9 @@ SDLFB_OpenVideoContext(void *_Nonnull obj, void *_Nonnull ctx, Uint flags)
 		goto fail;
 	
 	/* Create the cursors. */
-	if (AG_SDL_InitDefaultCursor(sfb) == -1 ||
-	    AG_InitStockCursors(drv) == -1)
-		goto fail;
-	
+	AG_SDL_InitDefaultCursor(sfb);
+	AG_InitStockCursors(drv);
+
 	return (0);
 fail:
 	if (drv->videoFmt) {

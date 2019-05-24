@@ -79,13 +79,14 @@ DebugStuff(AG_Box *win, AG_Textbox *textbox)
 
 	AG_SeparatorNewHoriz(win);
 
+#ifdef AG_ENABLE_STRING
 	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(ed)->pvt.lock,
 	    "Cursor at: %i", &ed->pos);
 	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(ed)->pvt.lock,
 	    "Selection: %i", &ed->sel);
 	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(ed)->pvt.lock,
 	    "x: %i", &ed->x);
-
+#endif
 	AG_SeparatorNewHoriz(win);
 
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
@@ -115,11 +116,12 @@ SingleLineExample(AG_Event *event)
 {
 	const char *text = "The Quick Brown Fox Jumps Over The Lazy Dog";
 	AG_Window *winParent = AG_PTR(1);
-	AG_Text *txt;
 	AG_Window *win;
 	AG_Box *hBox, *vBox;
 	AG_Textbox *textbox;
-
+#ifdef AG_UNICODE
+	AG_Text *txt;
+#endif
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
 	}
@@ -136,7 +138,11 @@ SingleLineExample(AG_Event *event)
 
 		textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL,
 		    "Fixed C buffer (shared): ");
+#ifdef AG_UNICODE
 		AG_TextboxBindUTF8(textbox, bufferShd, sizeof(bufferShd));
+#else
+		AG_TextboxBindASCII(textbox, bufferShd, sizeof(bufferShd));
+#endif
 		AG_TextboxSizeHint(textbox, "XXXXXXXXXXXXXXXXXXXXX");
 		AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
 		AG_WidgetFocus(textbox);
@@ -144,7 +150,11 @@ SingleLineExample(AG_Event *event)
 
 		textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL,
 		    "Fixed C buffer (shared): ");
+#ifdef AG_UNICODE
 		AG_TextboxBindUTF8(textbox, bufferShd, sizeof(bufferShd));
+#else
+		AG_TextboxBindASCII(textbox, bufferShd, sizeof(bufferShd));
+#endif
 		DebugStuff(vBox, textbox);
 	}
 
@@ -161,13 +171,18 @@ SingleLineExample(AG_Event *event)
 
 		textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
 		    "Fixed C buffer (excl): ");
+#ifdef AG_UNICODE
 		AG_TextboxBindUTF8(textbox, bufferExcl, sizeof(bufferExcl));
+#else
+		AG_TextboxBindASCII(textbox, bufferExcl, sizeof(bufferExcl));
+#endif
 		AG_TextboxSizeHint(textbox, "XXXXXXXXXXXXXXXXXXXXX");
 		AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
 		AG_WidgetFocus(textbox);
 		DebugStuff(vBox, textbox);
 	}
 
+#ifdef AG_UNICODE
 	/* Create a single-line Textbox bound to an AG_Text object. */
 	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL);
 	txt = AG_TextNew(0);
@@ -183,6 +198,7 @@ SingleLineExample(AG_Event *event)
 	AG_TextboxSizeHint(textbox, "XXXXXXXXXXXXXXXXXXXXX");
 	AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
 	DebugStuff(vBox, textbox);
+#endif
 
 	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
@@ -231,11 +247,15 @@ MultiLineExample(AG_Event *event)
 		bufSize = strlen(someText)+1;
 	}
 
+#ifdef AG_UNICODE
 	/*
 	 * Bind the buffer's contents to the Textbox. The size argument to
 	 * AG_TextboxBindUTF8() must include space for the terminating NUL.
 	 */
 	AG_TextboxBindUTF8(textbox, someText, bufSize);
+#else
+	AG_TextboxBindASCII(textbox, someText, bufSize);
+#endif
 
 	AG_CheckboxNewFlag(win, 0, "Read-only",
 	    &textbox->ed->flags, AG_EDITABLE_READONLY);
@@ -243,11 +263,12 @@ MultiLineExample(AG_Event *event)
 	AG_CheckboxNewFn(win, 0, "Word wrapping", SetWordWrap, "%p", textbox);
 	AG_SeparatorNewHoriz(win);
 	{
+#ifdef AG_ENABLE_STRING
 		AG_LabelNewPolled(win, AG_LABEL_HFILL,
 		    "Lines: %d", &textbox->ed->yMax);
-
 		AG_LabelNewPolled(win, AG_LABEL_HFILL,
 		    "Cursor position: %d", &textbox->ed->pos);
+#endif
 	}
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 540, 380);
 	AG_WindowAttach(winParent, win);

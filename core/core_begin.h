@@ -1,16 +1,10 @@
 /*	Public domain	*/
 
-#include <agar/config/ag_debug.h>
-#include <agar/config/ag_legacy.h>
-#include <agar/config/ag_threads.h>
-#include <agar/config/ag_type_safety.h>
-
+#include <agar/core/options.h>
 #include <agar/core/error.h>
 #include <agar/core/threads.h>
-
 #include <agar/core/types.h>
 #include <agar/core/attributes.h>
-
 #include <agar/core/limits.h>
 #include <agar/core/queue.h>
 #include <agar/core/cpuinfo.h>

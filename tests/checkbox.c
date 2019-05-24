@@ -10,18 +10,27 @@ typedef struct {
 static int
 TestGUI(void *obj, AG_Window *win)
 {
+	AG_Box *box;
+	AG_Label *lbl;
+#ifdef AG_ENABLE_STRING
 	MyTestInstance *ti = obj;
 	Uint mask;
-	AG_Box *box;
 	int i;
+#endif
 
-	/* AG_PushStyle("font-size", "120%%"); */
+	lbl = AG_LabelNewS(win, AG_LABEL_HFILL, "Checkbox test");
+	AG_LabelJustify(lbl, AG_TEXT_CENTER);
+	AG_SetStyle(lbl, "font-size", "200%");
+
 	AG_CheckboxNew(win, 0, "First unbounded checkbox");
 	AG_CheckboxNew(win, 0, "Second unbounded checkbox");
-	/* AG_PopStyle(); */
-	
-	AG_LabelNewS(win, 0, "Uint-bounded checkboxes:");
+	AG_SeparatorNewHoriz(win);
+	AG_NumericalNewUint(win, 0, NULL, "Bounded value: ", &ti->myFlags);
+	AG_SpacerNewHoriz(win);
+
+	AG_LabelNewS(win, 0, "Bounded checkboxes (bits):");
 	box = AG_BoxNewVert(win, AG_BOX_FRAME | AG_BOX_EXPAND);
+#ifdef AG_ENABLE_STRING
 	AG_LabelNewPolled(box, AG_LABEL_EXPAND, "Value: 0x%x", &ti->myFlags);
 	for (i = 0, mask = 0x0001; i < 16; i++) {
 		AG_CheckboxNewFlag(box, 0,
@@ -29,6 +38,12 @@ TestGUI(void *obj, AG_Window *win)
 		    &ti->myFlags, mask);
 		mask <<= 1;
 	}
+#else
+	AG_LabelNew(box, 0, "(Needs --enable-string)");
+#endif
+	AG_SpacerNewHoriz(win);
+	AG_CheckboxNewUint(win, 0, "Bounded checkbox (as bool)", &ti->myFlags);
+
 	return (0);
 }
 
@@ -37,7 +52,7 @@ Init(void *obj)
 {
 	MyTestInstance *ti = obj;
 
-	ti->myFlags = 0x4000;
+	ti->myFlags = 1;
 	return (0);
 }
 

@@ -100,9 +100,11 @@
 #include <stdarg.h>
 #include <ctype.h>
 
+#ifdef AG_SERIALIZATION
 /* Default fonts */
 const char *agDefaultFaceFT = "_agFontVera";
 const char *agDefaultFaceBitmap = "_agFontMinimal";
+#endif
 
 /* Statically compiled fonts */
 AG_StaticFont *agBuiltinFonts[] = {
@@ -119,7 +121,6 @@ int agTextFontDescent = 0;		/* Default font descent (px) */
 int agTextFontLineSkip = 0;		/* Default font line skip (px) */
 int agFreetypeInited = 0;		/* Initialized Freetype library */
 int agFontconfigInited = 0;		/* Initialized Fontconfig library */
-int agRTL = 0;				/* Right-to-left mode */
 
 static int agTextInitedSubsystem = 0;
 static AG_TextState states[AG_TEXT_STATES_MAX];
@@ -186,7 +187,6 @@ static void
 FontDestroy(void *_Nonnull obj)
 {
 	AG_Font *font = obj;
-	int i;
 
 	switch (font->spec.type) {
 #ifdef HAVE_FREETYPE
@@ -194,15 +194,24 @@ FontDestroy(void *_Nonnull obj)
 		AG_TTFCloseFont(font);
 		break;
 #endif
+#ifdef AG_SERIALIZATION
 	case AG_FONT_BITMAP:
-		for (i = 0; i < font->nglyphs; i++) {
-			AG_SurfaceFree(font->bglyphs[i]);
+		{
+			int i;
+
+			for (i = 0; i < font->nglyphs; i++) {
+				AG_SurfaceFree(font->bglyphs[i]);
+			}
+			Free(font->bglyphs);
 		}
-		Free(font->bglyphs);
+		break;
+#endif
+	case AG_FONT_DUMMY:
 		break;
 	}
 }
 
+#ifdef AG_SERIALIZATION
 static int
 GetFontTypeFromSignature(const char *_Nonnull path,
     enum ag_font_type *_Nonnull pType)
@@ -276,8 +285,8 @@ OpenBitmapFont(AG_Font *_Nonnull font)
 		AG_SetError("XCF is missing the \"MAP:x-y\" string");
 		return (-1);
 	}
-	font->c0 = (Uint32)strtol(c0, NULL, 10);
-	font->c1 = (Uint32)strtol(c1, NULL, 10);
+	font->c0 = (AG_Char)strtol(c0, NULL, 10);
+	font->c1 = (AG_Char)strtol(c1, NULL, 10);
 	if (font->nglyphs < (font->c1 - font->c0)) {
 		AG_SetErrorS("XCF has inconsistent bitmap fontspec");
 		return (-1);
@@ -285,9 +294,10 @@ OpenBitmapFont(AG_Font *_Nonnull font)
 	font->height = font->bglyphs[0]->h;
 	font->ascent = font->height;
 	font->descent = 0;
-	font->lineskip = font->height+2;
+	font->lineskip = font->height;
 	return (0);
 }
+#endif /* AG_SERIALIZATION */
 
 /*
  * Load the given font (or return a pointer to an existing one), with the
@@ -297,20 +307,30 @@ AG_Font *
 AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 {
 	char name[AG_OBJECT_NAME_MAX];
+#ifdef AG_SERIALIZATION
 	AG_Config *cfg = AG_ConfigObject();
+#endif
 	AG_StaticFont *builtin = NULL;
 	AG_Font *font;
 	AG_FontSpec *spec;
 	AG_FontPts myFontSize;
 
 	if (fontSize == NULL) {
+#ifdef AG_SERIALIZATION
 		myFontSize = (AG_FontPts)AG_GetInt(cfg, "font.size");
+#else
+		myFontSize = 12;
+#endif
 		fontSize = &myFontSize;
 	}
 	if (face != NULL) {
 		Strlcpy(name, face, sizeof(name));
 	} else {
+#ifdef AG_SERIALIZATION
 		AG_GetString(cfg, "font.face", name, sizeof(name));
+#else
+		name[0] = '\0';
+#endif
 	}
 
 	AG_MutexLock(&agTextLock);
@@ -421,6 +441,7 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 			FcPatternDestroy(pattern);
 		} else
 #endif /* HAVE_FONTCONFIG and HAVE_FLOAT */
+#ifdef AG_SERIALIZATION
 		{
 			if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, name,
 			    spec->source.file, sizeof(spec->source.file)) == -1) {
@@ -437,6 +458,9 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 				goto fail;
 		}
 		spec->sourceType = AG_FONT_SOURCE_FILE;
+#else
+		/* TODO */
+#endif
 	}
 
 	switch (spec->type) {
@@ -451,10 +475,14 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 		}
 		break;
 #endif
+#ifdef AG_SERIALIZATION
 	case AG_FONT_BITMAP:
 		if (OpenBitmapFont(font) == -1) {
 			goto fail;
 		}
+		break;
+#endif
+	case AG_FONT_DUMMY:
 		break;
 	default:
 		AG_SetErrorS("Unsupported font type");
@@ -485,6 +513,7 @@ AG_UnusedFont(AG_Font *font)
 	AG_MutexUnlock(&agTextLock);
 }
 
+#ifdef AG_SERIALIZATION
 void
 AG_SetDefaultFont(AG_Font *font)
 {
@@ -503,15 +532,9 @@ AG_SetDefaultFont(AG_Font *font)
 	AG_SetInt(cfg, "font.flags", font->flags);
 	AG_MutexUnlock(&agTextLock);
 }
+#endif /* AG_SERIALIZATION */
 
-void
-AG_SetRTL(int enable)
-{
-	AG_MutexLock(&agTextLock);
-	agRTL = enable;
-	AG_MutexUnlock(&agTextLock);
-}
-
+#ifdef AG_TIMERS
 static Uint32
 TextTmsgExpire(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -520,6 +543,7 @@ TextTmsgExpire(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	AG_ObjectDetach(win);
 	return (0);
 }
+#endif /* AG_TIMERS */
 
 static void
 InitTextState(void)
@@ -536,15 +560,17 @@ InitTextState(void)
 int
 AG_InitTextSubsystem(void)
 {
+#ifdef AG_SERIALIZATION
 	AG_Config *cfg = AG_ConfigObject();
 	AG_User *sysUser;
-
+#endif
 	if (agTextInitedSubsystem++ > 0)
 		return (0);
 
 	AG_MutexInitRecursive(&agTextLock);
 	TAILQ_INIT(&fonts);
 
+#ifdef AG_SERIALIZATION
 	/* Set the default font search path. */
 	AG_ObjectLock(cfg);
 	sysUser = AG_GetRealUser();
@@ -552,7 +578,7 @@ AG_InitTextSubsystem(void)
 	if (strcmp(TTFDIR, "NONE") != 0)
 		AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, TTFDIR);
 
-#if defined(__APPLE__)
+# if defined(__APPLE__)
 	if (sysUser != NULL &&
 	    sysUser->home != NULL) {
 		AG_ConfigAddPath(AG_CONFIG_PATH_FONTS, "%s/Library/Fonts",
@@ -560,7 +586,7 @@ AG_InitTextSubsystem(void)
 	}
 	AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, "/Library/Fonts");
 	AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, "/System/Library/Fonts");
-#elif defined(_WIN32)
+# elif defined(_WIN32)
 	{
 		char windir[AG_PATHNAME_MAX];
 
@@ -572,15 +598,17 @@ AG_InitTextSubsystem(void)
 			AG_ConfigAddPath(AG_CONFIG_PATH_FONTS, "%s\\Fonts",
 			    windir);
 	}
-#else /* !WIN32 & !APPLE */
+# else /* !WIN32 & !APPLE */
 	if (sysUser != NULL && sysUser->home != NULL) {
 		AG_ConfigAddPath(AG_CONFIG_PATH_FONTS, "%s%s.fonts",
 		    sysUser->home, AG_PATHSEP);
 	}
-#endif
+# endif
 	if (sysUser != NULL)
 		AG_UserFree(sysUser);
-	
+
+#endif /* AG_SERIALIZATION */
+
 #ifdef HAVE_FREETYPE
 	if (AG_TTFInit() == 0) {		/* Initialize FreeType */
 		agFreetypeInited = 1;
@@ -596,18 +624,24 @@ AG_InitTextSubsystem(void)
 		AG_Verbose("Failed to initialize fontconfig; ignoring\n");
 	}
 #endif
+#ifdef AG_SERIALIZATION
 	/* Load the default font. */
-	if (!AG_Defined(cfg,"font.face")) {
-		AG_SetString(cfg, "font.face",
-		    agFreetypeInited ? agDefaultFaceFT : agDefaultFaceBitmap);
-	}
-	if (!AG_Defined(cfg,"font.size")) {
-		AG_SetInt(cfg, "font.size", 14);
+	if (agFreetypeInited) {
+		if (!AG_Defined(cfg,"font.face"))
+			AG_SetString(cfg, "font.face", agDefaultFaceFT);
+		if (!AG_Defined(cfg,"font.size"))
+			AG_SetInt(cfg, "font.size", 14);
+	} else {
+		if (!AG_Defined(cfg,"font.face"))
+			AG_SetString(cfg, "font.face", agDefaultFaceBitmap);
+		if (!AG_Defined(cfg,"font.size"))
+			AG_SetInt(cfg, "font.size", 16);
 	}
 	if (!AG_Defined(cfg,"font.flags")) {
 		AG_SetUint(cfg, "font.flags", 0);
 	}
 	AG_ObjectUnlock(cfg);
+#endif /* AG_SERIALIZATION */
 
 	/* Load the default font. */
 	if ((agDefaultFont = AG_FetchFont(NULL, NULL, 0)) == NULL) {
@@ -698,45 +732,6 @@ AG_TextDestroyGlyphCache(AG_Driver *drv)
 	AG_TextClearGlyphCache(drv);
 	free(drv->glyphCache);
 	drv->glyphCache = NULL;
-}
-
-/* Render a glyph following a cache miss; called from AG_TextRenderGlyph(). */
-AG_Glyph *
-AG_TextRenderGlyphMiss(AG_Driver *drv, Uint32 ch)
-{
-	AG_Glyph *G;
-	Uint32 ucs[2];
-
-	G = Malloc(sizeof(AG_Glyph));
-	G->font = agTextState->font;
-	G->color = agTextState->color;
-	G->ch = ch;
-	ucs[0] = ch;
-	ucs[1] = '\0';
-	G->su = AG_TextRenderUCS4(ucs);
-
-	switch (agTextState->font->spec.type) {
-#ifdef HAVE_FREETYPE
-	case AG_FONT_VECTOR:
-		{
-			AG_TTFGlyph *Gttf;
-
-			if (AG_TTFFindGlyph(agTextState->font->ttf, ch,
-			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) == 0) {
-				Gttf = ((AG_TTFFont *)agTextState->font->ttf)->current;
-				G->advance = Gttf->advance;
-			} else {
-				G->advance = G->su->w;
-			}
-		}
-		break;
-#endif
-	case AG_FONT_BITMAP:
-		G->advance = G->su->w;
-		break;
-	}
-	AGDRIVER_CLASS(drv)->updateGlyph(drv, G);
-	return (G);
 }
 
 /* Save the current text rendering state. */
@@ -830,7 +825,7 @@ fail:
 
 /* Varargs variant of TextRender(). */
 AG_Surface *
-AG_TextRenderf(const char *fmt, ...)
+AG_TextRenderF(const char *fmt, ...)
 {
 	char *s;
 	va_list args;
@@ -846,7 +841,7 @@ AG_TextRenderf(const char *fmt, ...)
 }
 #ifdef SYMBOLS
 static __inline__ AG_Surface *_Nullable _Pure_Attribute
-GetSymbolSurface(Uint32 ch)
+GetSymbolSurface(AG_Char ch)
 {
 	switch (ch) {
 	case 'L': return agIconLeftButton.s;
@@ -880,12 +875,12 @@ FreeMetrics(AG_TextMetrics *_Nonnull tm)
  * is returned into wLines, and the number of lines into nLines.
  */
 static void
-TextSizeFT(const Uint32 *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extended)
+TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extended)
 {
 	AG_Font *font = agTextState->font;
 	AG_TTFFont *ftFont = font->ttf;
 	AG_TTFGlyph *G;
-	const Uint32 *ch;
+	const AG_Char *ch;
 	int xMin=0, xMax=0, yMin=0, yMax;
 	int xMinLine=0, xMaxLine=0;
 	int x, z;
@@ -950,11 +945,12 @@ TextRenderSymbol(Uint ch, AG_Surface *_Nonnull s, int x, int y)
 	AG_Surface *sym;
 	AG_Pixel colorkey;
 	Uint BytesPerPixel;
-	int row;
+	int row, wSym;
 
-	if ((sym = GetSymbolSurface(ch)) == NULL) {
+	If ((sym = GetSymbolSurface(ch)) == NULL) {
 		return (0);
 	}
+	wSym = sym->w;
 	colorkey = sym->colorkey;
 	BytesPerPixel = sym->format.BytesPerPixel;
 	for (row = 0; row < sym->h; row++) {
@@ -962,7 +958,7 @@ TextRenderSymbol(Uint ch, AG_Surface *_Nonnull s, int x, int y)
 		Uint8 *src = sym->pixels + row*sym->pitch;
 		int col;
 
-		for (col = 0; col < sym->w; col++) {
+		for (col = 0; col < wSym; col++) {
 			if (AG_SurfaceGet(sym,src) != colorkey) {
 				dst[0] = 0xff;
 				dst[1] = 0xff;
@@ -972,7 +968,7 @@ TextRenderSymbol(Uint ch, AG_Surface *_Nonnull s, int x, int y)
 			dst += 3;
 		}
 	}
-	return (sym->w + 4);
+	return (wSym + 4);
 }
 # endif /* SYMBOLS */
 
@@ -984,9 +980,9 @@ static void
 TextRenderFT_Underline(AG_TTFFont *_Nonnull ftFont, AG_Surface *_Nonnull S,
     int nLines)
 {
-	Uint8 *pDst;
 	AG_Color c;
 	AG_Pixel px;
+	Uint8 *pDst;
 	const int pad = 2;
 	int w = S->w - pad;
 	int lh = ftFont->underline_height;
@@ -1020,34 +1016,32 @@ TextRenderFT_Underline(AG_TTFFont *_Nonnull ftFont, AG_Surface *_Nonnull S,
  * agTextState->colorBG.
  */
 static AG_Surface *_Nonnull
-TextRenderFT(const Uint32 *_Nonnull ucs)
+TextRenderFT(const AG_Char *_Nonnull ucs)
 {
 	AG_TextMetrics tm;
-	AG_Font *font = agTextState->font;
 	AG_Color cBG, c;
-	AG_TTFFont *ftFont = font->ttf;
+	AG_Font *font = agTextState->font;
+	AG_TTFFont *ttf = font->ttf;
 	AG_TTFGlyph *G;
-	const Uint32 *ch;
+	const AG_Char *ch;
 	AG_Surface *S;
 	Uint8 *src, *dst;
 	FT_UInt prev_index = 0;
 	int xStart, yStart, line, x, y;
 	int w, BytesPerPixel;
 
-	/* Calculate the bounding box and allocate a surface its size. */
 	InitMetrics(&tm);
 	TextSizeFT(ucs, &tm, 1);
 	if (tm.w <= 0 || tm.h <= 0) {
 		goto empty;
 	}
+
 	S = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
 	cBG = agTextState->colorBG;
 	AG_FillRect(S, NULL, &cBG);
+
 	if (cBG.a == AG_TRANSPARENT) {
-		/*
-		 * Set a colorkey to avoid some unnecessary blending (and also
-		 * provide transparency in case agSurfaceFmt lacks alpha).
-		 */
+		/* Prevent unnecessary blending. */
 		AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
 		    AG_MapPixel(&S->format, &cBG));
 	}
@@ -1075,12 +1069,12 @@ TextRenderFT(const Uint32 *_Nonnull ucs)
 			continue;
 		}
 #endif
-		if (AG_TTFFindGlyph(ftFont, *ch,
+		if (AG_TTFFindGlyph(ttf, *ch,
 		    TTF_CACHED_METRICS|TTF_CACHED_PIXMAP)) {
 			AG_SurfaceFree(S);
 			goto empty;
 		}
-		G = ftFont->current;
+		G = ttf->current;
 		/*
 		 * Ensure the width of the pixmap is correct. On some cases,
 		 * freetype may report a larger pixmap than possible.
@@ -1089,9 +1083,9 @@ TextRenderFT(const Uint32 *_Nonnull ucs)
 		w = G->pixmap.width;
 		if (w > G->maxx - G->minx) { w = G->maxx - G->minx; }
 
-		if (FT_HAS_KERNING(ftFont->face) && prev_index && G->index) {
+		if (FT_HAS_KERNING(ttf->face) && prev_index && G->index) {
 			FT_Vector delta; 
-			FT_Get_Kerning(ftFont->face, prev_index, G->index,
+			FT_Get_Kerning(ttf->face, prev_index, G->index,
 			    ft_kerning_default, &delta); 
 			xStart += delta.x >> 6;
 		}
@@ -1131,13 +1125,13 @@ TextRenderFT(const Uint32 *_Nonnull ucs)
 			}
 		}
 		xStart += G->advance;
-		if (ftFont->style & AG_TTF_STYLE_BOLD) {
-			xStart += ftFont->glyph_overhang;
+		if (ttf->style & AG_TTF_STYLE_BOLD) {
+			xStart += ttf->glyph_overhang;
 		}
 		prev_index = G->index;
 	}
-	if (ftFont->style & AG_TTF_STYLE_UNDERLINE) {
-		TextRenderFT_Underline(ftFont, S, tm.nLines);
+	if (ttf->style & AG_TTF_STYLE_UNDERLINE) {
+		TextRenderFT_Underline(ttf, S, tm.nLines);
 	}
 	FreeMetrics(&tm);
 	return (S);
@@ -1149,11 +1143,11 @@ empty:
 #endif /* HAVE_FREETYPE */
 
 static __inline__ AG_Surface *_Nonnull
-GetBitmapGlyph(AG_Font *_Nonnull font, Uint32 c)
+GetBitmapGlyph(AG_Font *_Nonnull font, AG_Char c)
 {
 	if ((font->flags & AG_FONT_UPPERCASE) &&
-	    (isalpha(c) && islower(c))) {
-		c = toupper(c);
+	    (isalpha((int)c) && islower((int)c))) {
+		c = (AG_Char)toupper((int)c);
 	}
 	if (c < font->c0 || c > font->c1) {
 		return (agTextState->font->bglyphs[0]);
@@ -1161,18 +1155,18 @@ GetBitmapGlyph(AG_Font *_Nonnull font, Uint32 c)
 	return (font->bglyphs[c - font->c0 + 1]);
 }
 
+#ifdef AG_SERIALIZATION
 /* Compute the rendered size of UCS-4 text with a bitmap font. */
 static __inline__ void
-TextSizeBitmap(const Uint32 *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
+TextSizeBitmap(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
     int extended)
 {
 	AG_Font *font = agTextState->font;
-	const Uint32 *c;
+	const AG_Char *c;
 	AG_Surface *Sglyph;
 	int wLine = 0, lineSkip = font->lineskip;
 
 	for (c = &ucs[0]; *c != '\0'; c++) {
-		Sglyph = GetBitmapGlyph(font, *c);
 		if (*c == '\n') {
 			if (extended) {
 				tm->wLines = Realloc(tm->wLines,
@@ -1188,6 +1182,7 @@ TextSizeBitmap(const Uint32 *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 			tm->w += agTextState->tabWd;
 			continue;
 		}
+		Sglyph = GetBitmapGlyph(font, *c);
 		wLine += Sglyph->w;
 		tm->w += Sglyph->w;
 		tm->h = MAX(tm->h, Sglyph->h);
@@ -1204,28 +1199,31 @@ TextSizeBitmap(const Uint32 *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 
 /* Render UCS-4 text to a new surface using a bitmap font. */
 static AG_Surface *_Nonnull
-TextRenderBitmap(const Uint32 *_Nonnull ucs)
+TextRenderBitmap(const AG_Char *_Nonnull ucs)
 {
 	AG_TextMetrics tm;
+	AG_Rect rd;
 	AG_Font *font = agTextState->font;
 	AG_Surface *Sglyph, *S;
-	AG_Rect rd;
-	AG_Color cBG;
-	const Uint32 *c;
+	const AG_Char *c;
 	int line;
 
 	InitMetrics(&tm);
 	TextSizeBitmap(ucs, &tm, 1);
 
 	S = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
-	AG_ColorBlack(&cBG);
-	AG_FillRect(S, NULL, &cBG);
+	AG_FillRect(S, NULL, &agTextState->colorBG);
+	
+	if (agTextState->colorBG.a == AG_TRANSPARENT) {
+		/* Prevent unnecessary blending. */
+		AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
+		    AG_MapPixel(&S->format, &agTextState->colorBG));
+	}
 
-	line = 0;
 	rd.x = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
 	rd.y = 0;
 	
-	for (c = &ucs[0]; *c != '\0'; c++) {
+	for (c=&ucs[0], line=0; *c != '\0'; c++) {
 		if (*c == '\n') {
 			rd.y += font->lineskip;
 			rd.x = AG_TextJustifyOffset(tm.w, tm.wLines[++line]);
@@ -1248,26 +1246,29 @@ TextRenderBitmap(const Uint32 *_Nonnull ucs)
 	FreeMetrics(&tm);
 	return (S);
 }
+#endif /* AG_SERIALIZATION */
 
-/* Render an UCS-4 text string onto a new 8-bit surface. */
 AG_Surface *
-AG_TextRenderUCS4(const Uint32 *text)
+AG_TextRenderNat(const AG_Char *text)
 {
 	switch (agTextState->font->spec.type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
 		return TextRenderFT(text);
 #endif
+#ifdef AG_SERIALIZATION
 	case AG_FONT_BITMAP:
 		return TextRenderBitmap(text);
+#endif
+	case AG_FONT_DUMMY:
 	default:
 		return AG_SurfaceEmpty();
 	}
 }
 
-/* Return the rendered size in pixels of a UCS4-encoded string. */
+/* Return the rendered size in pixels of a natively-encoded string. */
 void
-AG_TextSizeUCS4(const Uint32 *ucs4, int *w, int *h)
+AG_TextSizeNat(const AG_Char *s, int *w, int *h)
 {
 	AG_TextMetrics tm;
 
@@ -1275,11 +1276,17 @@ AG_TextSizeUCS4(const Uint32 *ucs4, int *w, int *h)
 	switch (agTextState->font->spec.type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
-		TextSizeFT(ucs4, &tm, 0);
+		TextSizeFT(s, &tm, 0);
 		break;
 #endif
+#ifdef AG_SERIALIZATION
 	case AG_FONT_BITMAP:
-		TextSizeBitmap(ucs4, &tm, 0);
+		TextSizeBitmap(s, &tm, 0);
+		break;
+#endif
+	case AG_FONT_DUMMY:
+		tm.w = 8;
+		tm.h = 8;
 		break;
 	}
 	if (w != NULL) { *w = tm.w; }
@@ -1292,7 +1299,7 @@ AG_TextSizeUCS4(const Uint32 *ucs4, int *w, int *h)
  * a line count and the width of each line in an array.
  */
 void
-AG_TextSizeMultiUCS4(const Uint32 *ucs4, int *w, int *h, Uint **wLines,
+AG_TextSizeMultiNat(const AG_Char *s, int *w, int *h, Uint **wLines,
     Uint *nLines)
 {
 	AG_TextMetrics tm;
@@ -1301,11 +1308,17 @@ AG_TextSizeMultiUCS4(const Uint32 *ucs4, int *w, int *h, Uint **wLines,
 	switch (agTextState->font->spec.type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
-		TextSizeFT(ucs4, &tm, 1);
+		TextSizeFT(s, &tm, 1);
 		break;
 #endif
+#ifdef AG_SERIALIZATION
 	case AG_FONT_BITMAP:
-		TextSizeBitmap(ucs4, &tm, 1);
+		TextSizeBitmap(s, &tm, 1);
+		break;
+#endif
+	case AG_FONT_DUMMY:
+		tm.wLines = 0;
+		tm.nLines = 0;
 		break;
 	}
 	if (w != NULL) { *w = tm.w; }
@@ -1321,47 +1334,51 @@ AG_TextSizeMultiUCS4(const Uint32 *ucs4, int *w, int *h, Uint **wLines,
 
 /*
  * Return the expected size in pixels of a rendered C string.
- * The string may contain UTF-8 sequences.
+ * If Unicode is supported, the string may contain UTF-8.
  */
 void
 AG_TextSize(const char *text, int *w, int *h)
 {
-	Uint32 *ucs;
-
+#ifdef AG_UNICODE
+	AG_Char *s;
+#endif
 	if (text == NULL || text[0] == '\0') {
 		if (w != NULL) { *w = 0; }
 		if (h != NULL) { *h = 0; }
 		return;
 	}
-	if ((ucs = AG_ImportUnicode("UTF-8", text, NULL, NULL)) != NULL) {
-		AG_TextSizeUCS4(ucs, w, h);
-		Free(ucs);
-	} else {
-		*w = 0;
-		*h = 0;
+#ifdef AG_UNICODE
+	if ((s = AG_ImportUnicode("UTF-8", text, NULL, NULL)) != NULL) {
+		AG_TextSizeNat(s, w, h);
+		free(s);
 	}
+#else
+	AG_TextSizeNat((const Uint8 *)text, w, h);
+#endif
 }
 
 /*
- * Return the expected size in pixels of a rendered C string, along with
- * the line count and width of each line. The string may contain UTF-8
- * sequences.
+ * Return the expected size in pixels of a rendered C string,
+ * along with the line count and width of each line.
+ * If Unicode is supported, the string may contain UTF-8.
  */
 void
 AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
 {
-	Uint32 *ucs;
+#ifdef AG_UNICODE
+	AG_Char *s;
 
-	if ((ucs = AG_ImportUnicode("UTF-8", text, NULL, NULL)) != NULL) {
-		AG_TextSizeMultiUCS4(ucs, w, h, wLines, nLines);
-		free(ucs);
-	} else {
-		*w = 0;
-		*h = 0;
-		*nLines = 0;
+	if ((s = AG_ImportUnicode("UTF-8", text, NULL, NULL)) != NULL) {
+		AG_TextSizeMultiNat(s, w, h, wLines, nLines);
+		free(s);
+		return;
 	}
+#else
+	AG_TextSizeMultiNat((const Uint8 *)text, w, h, wLines, nLines);
+#endif
 }
 
+#ifdef AG_SERIALIZATION
 /*
  * Parse a command-line font specification and set the default font.
  * The format is <face>,<size>,<flags>. Acceptable flags include 'b'
@@ -1399,6 +1416,7 @@ AG_TextParseFontSpec(const char *fontspec)
 		AG_SetUint(cfg, "font.flags", flags);
 	}
 }
+#endif /* AG_SERIALIZATION */
 
 /*
  * Canned notification and dialog windows.
@@ -1425,8 +1443,9 @@ AG_TextMsgS(enum ag_text_msg_title title, const char *s)
 	AG_VBox *vb;
 	AG_Button *btnOK;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
-	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE);
+	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NORESIZE |
+	                   AG_WINDOW_NOCLOSE | AG_WINDOW_NOMINIMIZE |
+			   AG_WINDOW_NOMAXIMIZE);
 	if (win == NULL)
 		return;
 
@@ -1437,7 +1456,7 @@ AG_TextMsgS(enum ag_text_msg_title title, const char *s)
 	vb = AG_VBoxNew(win, 0);
 	AG_LabelNewS(vb, 0, s);
 
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_HFILL | AG_VBOX_VFILL);
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	AG_WidgetFocus(btnOK);
@@ -1451,6 +1470,7 @@ AG_TextMsgFromError(void)
 	AG_TextMsgS(AG_MSG_ERROR, AG_GetError());
 }
 
+#ifdef AG_TIMERS
 /* Display a message for a given period of time (format string). */
 void
 AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *fmt, ...)
@@ -1472,8 +1492,8 @@ AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
 	AG_VBox *vb;
 	AG_Timer *to;
 
-	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
-	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE);
+	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
+	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
 	if (win == NULL) {
 		return;
 	}
@@ -1489,6 +1509,7 @@ AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
 	if (to != NULL)
 		Strlcpy(to->name, "textTmsg", sizeof(to->name));
 }
+#endif /* AG_TIMERS */
 
 /*
  * Display an informational message with a "Don't tell me again" option.
@@ -1511,43 +1532,48 @@ AG_TextInfo(const char *key, const char *fmt, ...)
 void
 AG_TextInfoS(const char *key, const char *s)
 {
+#ifdef AG_SERIALIZATION
 	AG_Config *cfg = AG_ConfigObject();
 	char disableSw[64];
+	AG_Variable *Vdisable;
+#endif
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Checkbox *cb;
 	AG_Button *btnOK;
-	AG_Variable *Vdisable;
 	
+#ifdef AG_SERIALIZATION
 	Strlcpy(disableSw, "info.", sizeof(disableSw));
 	Strlcat(disableSw, key, sizeof(disableSw));
-
 	AG_ObjectLock(cfg);
-
-	if (AG_Defined(cfg,disableSw) &&
-	    AG_GetInt(cfg,disableSw) == 1)
+	if (AG_Defined(cfg,disableSw) && AG_GetInt(cfg,disableSw) == 1)
 		goto out;
+#endif
+	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
+	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
 
-	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
-	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE);
 	win->wmType = AG_WINDOW_WM_DIALOG;
+
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_INFO]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
 	AG_LabelNewS(vb, 0, s);
 
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_HFILL | AG_VBOX_VFILL);
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
-
+#ifdef AG_SERIALIZATION
 	cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
-	Vdisable = AG_SetInt(cfg,disableSw,0);
+	Vdisable = AG_SetInt(cfg, disableSw, 0);
 	AG_BindInt(cb, "state", &Vdisable->data.i);
-
+#endif
 	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
+
+#ifdef AG_SERIALIZATION
 out:
 	AG_ObjectUnlock(cfg);
+#endif
 }
 
 /*
@@ -1570,44 +1596,50 @@ AG_TextWarning(const char *key, const char *fmt, ...)
 void
 AG_TextWarningS(const char *key, const char *s)
 {
+#ifdef AG_SERIALIZATION
 	AG_Config *cfg = AG_ConfigObject();
 	char disableSw[64];
+	AG_Variable *Vdisable;
+#endif
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Checkbox *cb;
 	AG_Button *btnOK;
-	AG_Variable *Vdisable;
-	
+
+#ifdef AG_SERIALIZATION
 	Strlcpy(disableSw, "warn.", sizeof(disableSw));
 	Strlcat(disableSw, key, sizeof(disableSw));
-	
 	AG_ObjectLock(cfg);
-
-	if (AG_Defined(cfg,disableSw) &&
-	    AG_GetInt(cfg,disableSw) == 1)
+	if (AG_Defined(cfg,disableSw) && AG_GetInt(cfg,disableSw) == 1)
 		goto out;
-
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
-	                   AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|
+#endif
+	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NORESIZE |
+	                   AG_WINDOW_NOCLOSE | AG_WINDOW_NOMINIMIZE |
 			   AG_WINDOW_NOMAXIMIZE);
+
 	win->wmType = AG_WINDOW_WM_DIALOG;
+
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_WARNING]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
 	AG_LabelNewS(vb, 0, s);
 
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_HFILL | AG_VBOX_VFILL);
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
+#ifdef AG_SERIALIZATION
 	cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
-	Vdisable = AG_SetInt(cfg,disableSw,0);
+	Vdisable = AG_SetInt(cfg, disableSw, 0);
 	AG_BindInt(cb, "state", &Vdisable->data.i);
-
+#endif
 	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
+
+#ifdef AG_SERIALIZATION
 out:
 	AG_ObjectUnlock(cfg);
+#endif
 }
 
 /* Display an error message. */
@@ -1631,8 +1663,8 @@ AG_TextErrorS(const char *s)
 	AG_VBox *vb;
 	AG_Button *btnOK;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
-	                   AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|
+	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NORESIZE |
+	                   AG_WINDOW_NOCLOSE | AG_WINDOW_NOMINIMIZE |
 			   AG_WINDOW_NOMAXIMIZE);
 	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_ERROR]));
@@ -1662,7 +1694,7 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	Vasprintf(&text, fmt, ap);
 	va_end(ap);
 
-	if ((win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
+	if ((win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
 	                        AG_WINDOW_NORESIZE)) == NULL) {
 		AG_FatalError(NULL);
 	}
@@ -1673,7 +1705,7 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	AG_LabelNewS(win, 0, text);
 	free(text);
 
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 	for (i = 0; i < nbOpts; i++) {
 		bOpts[i] = AG_ButtonNewS(bo, 0, "XXXXXXXXXXX");
 	}
@@ -1712,7 +1744,7 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 		AG_SetEvent(num, "numerical-return", AGWINDETACH(win));
 	}
 	
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_HFILL | AG_VBOX_VFILL);
 	AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	/* TODO test type */
@@ -1720,7 +1752,7 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 	AG_WidgetFocus(num);
 	AG_WindowShow(win);
 }
-#endif
+#endif /* HAVE_FLOAT */
 
 /* Create a dialog to edit a string value. */
 void
@@ -1736,7 +1768,7 @@ AG_TextEditString(char *sp, AG_Size len, const char *msgfmt, ...)
 	Vasprintf(&msg, msgfmt, args);
 	va_end(args);
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
+	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE);
 	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -1745,12 +1777,16 @@ AG_TextEditString(char *sp, AG_Size len, const char *msgfmt, ...)
 	free(msg);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_EXPAND);
-	tb = AG_TextboxNewS(vb, AG_TEXTBOX_EXCL|AG_TEXTBOX_MULTILINE, NULL);
+	tb = AG_TextboxNewS(vb, AG_TEXTBOX_EXCL | AG_TEXTBOX_MULTILINE, NULL);
 	AG_Expand(tb);
+#ifdef AG_UNICODE
 	AG_TextboxBindUTF8(tb, sp, len);
+#else
+	AG_TextboxBindASCII(tb, sp, len);
+#endif
 	AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
 
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_HFILL);
 	AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	AG_WidgetFocus(tb);
@@ -1824,14 +1860,18 @@ AG_TextValignOffset(int h, int hLine)
 AG_Surface *
 AG_TextRender(const char *text)
 {
-	Uint32 *ucs;
 	AG_Surface *su;
-	
-	if ((ucs = AG_ImportUnicode("UTF-8", text, NULL, NULL)) == NULL) {
+#ifdef AG_UNICODE
+	AG_Char *s;
+
+	if ((s = AG_ImportUnicode("UTF-8", text, NULL, NULL)) == NULL) {
 		AG_FatalError(NULL);
 	}
-	su = AG_TextRenderUCS4(ucs);
-	AG_Free(ucs);
+	su = AG_TextRenderNat(s);
+	free(s);
+#else
+	su = AG_TextRenderNat((const Uint8 *)text);
+#endif
 	return (su);
 }
 
@@ -1840,7 +1880,7 @@ AG_TextRender(const char *text)
  * Must be called from GUI rendering context.
  */
 AG_Glyph *
-AG_TextRenderGlyph(AG_Driver *drv, Uint32 ch)
+AG_TextRenderGlyph(AG_Driver *drv, AG_Char ch)
 {
 	AG_Glyph *gl;
 	Uint h = (Uint)(ch % AG_GLYPH_NBUCKETS);
@@ -1856,6 +1896,50 @@ AG_TextRenderGlyph(AG_Driver *drv, Uint32 ch)
 		AG_SLIST_INSERT_HEAD(&drv->glyphCache[h].glyphs, gl, glyphs);
 	}
 	return (gl);
+}
+
+/* Render a glyph following a cache miss; called from AG_TextRenderGlyph(). */
+AG_Glyph *
+AG_TextRenderGlyphMiss(AG_Driver *drv, AG_Char ch)
+{
+	AG_Glyph *G;
+	AG_Char s[2];
+
+	G = Malloc(sizeof(AG_Glyph));
+	G->font = agTextState->font;
+	G->color = agTextState->color;
+	G->ch = ch;
+
+	s[0] = ch;
+	s[1] = '\0';
+	G->su = AG_TextRenderNat(s);
+
+	switch (agTextState->font->spec.type) {
+#ifdef HAVE_FREETYPE
+	case AG_FONT_VECTOR:
+		{
+			AG_TTFGlyph *Gttf;
+
+			if (AG_TTFFindGlyph(agTextState->font->ttf, ch,
+			    TTF_CACHED_METRICS | TTF_CACHED_BITMAP) == 0) {
+				Gttf = ((AG_TTFFont *)agTextState->font->ttf)->current;
+				G->advance = Gttf->advance;
+			} else {
+				G->advance = G->su->w;
+			}
+		}
+		break;
+#endif
+#ifdef AG_SERIALIZATION
+	case AG_FONT_BITMAP:
+		G->advance = G->su->w;
+		break;
+#endif
+	case AG_FONT_DUMMY:
+		break;
+	}
+	AGDRIVER_CLASS(drv)->updateGlyph(drv, G);
+	return (G);
 }
 
 /* Set active text color. */

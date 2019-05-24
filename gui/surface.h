@@ -230,8 +230,12 @@ AG_Surface *_Nonnull AG_SurfaceFromPixelsRGBA(const void *_Nonnull,
                                               Uint,Uint, Uint,
                                               AG_Pixel,AG_Pixel,AG_Pixel,AG_Pixel)
 	                                     _Warn_Unused_Result;
+
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
 AG_Surface *_Nonnull AG_SurfaceStdGL(Uint, Uint)
                                     _Warn_Unused_Result;
+#endif
 
 void AG_SurfaceSetAddress(AG_Surface *_Nonnull, Uint8 *_Nonnull);
 void AG_SurfaceSetColors(AG_Surface *_Nonnull, AG_Color *_Nonnull, Uint, Uint);
@@ -262,6 +266,7 @@ AG_Surface *_Nonnull AG_SurfaceFromSDL(void *_Nonnull)
 void *_Nullable      AG_SurfaceExportSDL(const AG_Surface *_Nonnull)
                                         _Warn_Unused_Result;
 
+#ifdef AG_SERIALIZATION
 AG_Surface *_Nullable AG_SurfaceFromFile(const char *_Nonnull)
                                         _Warn_Unused_Result;
 int                   AG_SurfaceExportFile(const AG_Surface *_Nonnull,
@@ -292,6 +297,7 @@ AG_Surface *_Nullable AG_SurfaceFromPNGs(const char *_Nonnull, int,int,
                                         _Warn_Unused_Result;
 int                   AG_SurfaceExportPNG(const AG_Surface *_Nonnull,
                                           const char *_Nonnull, Uint);
+#endif /* AG_SERIALIZATION */
 
 void AG_SurfaceBlendRGB8(AG_Surface *_Nonnull, int, int,
                          Uint8,Uint8,Uint8,Uint8, AG_AlphaFn);
@@ -303,6 +309,7 @@ void  AG_FillRect(AG_Surface *_Nonnull, const AG_Rect *_Nullable,
 
 Uint8 AG_SurfaceGet8(const AG_Surface *_Nonnull, int,int)
                     _Pure_Attribute;
+void  AG_SurfacePut8(AG_Surface *_Nonnull, int,int, Uint8);
 
 Uint32 AG_MapPixel32_RGB8(const AG_PixelFormat *_Nonnull, Uint8,Uint8,Uint8)
                          _Pure_Attribute;
@@ -368,6 +375,8 @@ Uint64 AG_MapPixel64_RGB8(const AG_PixelFormat *_Nonnull, Uint8,Uint8,Uint8)
                          _Pure_Attribute;
 Uint64 AG_MapPixel64_RGBA8(const AG_PixelFormat *_Nonnull, Uint8,Uint8,Uint8,Uint8)
                           _Pure_Attribute;
+
+void AG_GetColor64(AG_Color *_Nonnull, Uint64, const AG_PixelFormat *_Nonnull);
 void AG_GetColor64_Gray(AG_Color *_Nonnull, Uint64, AG_GrayscaleMode);
 void AG_GetColor64_Gray16(Uint64, AG_GrayscaleMode,
                           Uint16 *_Nonnull, Uint16 *_Nonnull,
@@ -414,7 +423,6 @@ int AG_SurfaceAddFrame(AG_Surface *_Nonnull, const AG_Surface *_Nonnull,
 
 int    ag_pixel_format_is_supported(AG_SurfaceMode, int) _Const_Attribute;
 int    ag_surface_clipped(const AG_Surface *_Nonnull, int,int) _Pure_Attribute;
-void   ag_surface_put8(AG_Surface *_Nonnull, int,int, Uint8);
 
 Uint32 ag_map_pixel32(const AG_PixelFormat *_Nonnull, const AG_Color *_Nonnull)
                      _Pure_Attribute;
@@ -425,9 +433,6 @@ Uint64 ag_map_pixel64_rgb16(const AG_PixelFormat *_Nonnull,
                             Uint16,Uint16,Uint16) _Pure_Attribute;
 Uint64 ag_map_pixel64_rgba16(const AG_PixelFormat *_Nonnull,
                              Uint16,Uint16,Uint16,Uint16) _Pure_Attribute;
-
-void ag_get_color64(AG_Color *_Nonnull, Uint64, const AG_PixelFormat *_Nonnull)
-                   _Pure_Attribute;
 
 void ag_get_color64_rgb16(Uint64, const AG_PixelFormat *_Nonnull,
                           Uint16 *_Nonnull, Uint16 *_Nonnull, Uint16 *_Nonnull);
@@ -478,7 +483,6 @@ void ag_surface_set_colorkey(AG_Surface *_Nonnull, Uint, AG_Pixel);
 
 # define AG_PixelFormatIsSupported(m,bpp)	ag_pixel_format_is_supported((m),(bpp))
 # define AG_SurfaceClipped(S,x,y)		ag_surface_clipped((S),(x),(y))
-# define AG_SurfacePut8(S,x,y,px)		ag_surface_put8((S),(x),(y),(px))
 # define AG_MapPixel32(pf,c)			ag_map_pixel32((pf),(c))
 # define AG_MapPixel64_RGB16(pf,r,g,b)		ag_map_pixel64_rgb16((pf),(r),(g),(b))
 # define AG_MapPixel64_RGBA16(pf,r,g,b,a)	ag_map_pixel64_rgba16((pf),(r),(g),(b),(a))
@@ -487,7 +491,6 @@ void ag_surface_set_colorkey(AG_Surface *_Nonnull, Uint, AG_Pixel);
 # define AG_GetColor64_RGBA16(px,pf,r,g,b,a)	ag_get_color64_rgba16((px),(pf),(r),(g),(b),(a))
 # define AG_GetColor64_RGB8(px,pf,r,g,b)	ag_get_color64_rgb8((px),(pf),(r),(g),(b))
 # define AG_GetColor64_RGBA8(px,pf,r,g,b,a)	ag_get_color64_rgba8((px),(pf),(r),(g),(b),(a))
-# define AG_GetColor64(c,px,pf)			ag_get_color64((c),(px),(pf))
 # define AG_SurfaceGet32_At(S,p)		ag_surface_get32_at((S),(p))
 # define AG_SurfaceGet32(S,x,y)			ag_surface_get32((S),(x),(y))
 # define AG_SurfaceGet64_At(S,p)		ag_surface_get64_at((S),(p))

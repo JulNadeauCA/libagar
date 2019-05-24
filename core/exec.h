@@ -4,8 +4,9 @@
 #define _AGAR_CORE_EXEC_H_
 #include <agar/core/begin.h>
 
-#include <agar/config/have_execvp.h>
+#ifdef AG_ENABLE_EXEC
 
+#include <agar/config/have_execvp.h>
 #if defined(HAVE_EXECVP) && !defined(_WIN32)
 # include <unistd.h>
 # include <sys/types.h>
@@ -29,5 +30,6 @@ AG_ProcessID AG_WaitOnProcess(AG_ProcessID, enum ag_exec_wait_type);
 int          AG_Kill(AG_ProcessID);
 __END_DECLS
 
+#endif /* AG_ENABLE_EXEC */
 #include <agar/core/close.h>
 #endif /* _AGAR_CORE_EXEC_H_ */

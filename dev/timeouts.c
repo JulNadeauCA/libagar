@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,8 @@
  */
 
 #include <agar/core/core.h>
+#if defined(AG_TIMERS) && defined(AG_ENABLE_STRING)
+
 #include <agar/gui/window.h>
 #include <agar/gui/treetbl.h>
 #include <agar/dev/dev.h>
@@ -101,3 +103,5 @@ DEV_TimerInspector(void)
 	AG_SetEvent(win, "window-close", CloseWindow, "%p", tt);
 	return (win);
 }
+
+#endif /* AG_TIMERS and AG_ENABLE_STRING */

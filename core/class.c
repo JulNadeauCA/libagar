@@ -36,12 +36,17 @@
 extern AG_ObjectClass agObjectClass;
 
 AG_Tbl          *agClassTbl = NULL;		/* Classes in hash table */
-AG_ObjectClass  *agClassTree = NULL;		/* Classes in tree format */
+#ifdef AG_THREADS
+AG_Mutex	 agClassLock;			/* Lock on class table */
+#endif
+#ifdef AG_NAMESPACES
 AG_Namespace    *agNamespaceTbl = NULL;		/* Registered namespaces */
 int              agNamespaceCount = 0;
+#endif
+#ifdef AG_ENABLE_DSO
 char           **agModuleDirs = NULL;		/* Module search directories */
 int              agModuleDirCount = 0;
-AG_Mutex	 agClassLock;			/* Lock on class table */
+#endif
 
 static void
 InitClass(AG_ObjectClass *_Nonnull C, const char *_Nonnull hier)
@@ -66,22 +71,24 @@ AG_InitClassTbl(void)
 {
 	AG_Variable V;
 
-	/* Initialize the namespaces */
+#ifdef AG_NAMESPACES
 	agNamespaceTbl = Malloc(sizeof(AG_Namespace));
 	agNamespaceCount = 0;
+	AG_RegisterNamespace("Agar", "AG_", "http://libagar.org/");
+#endif
+#ifdef AG_ENABLE_DSO
 	agModuleDirs = Malloc(sizeof(char *));
 	agModuleDirCount = 0;
-	AG_RegisterNamespace("Agar", "AG_", "http://libagar.org/");
-
+#endif
 	/* Initialize the class tree */
 	InitClass(&agObjectClass, "AG_Object");
 #ifdef AG_ENABLE_DSO
 	agObjectClass.pvt.libs[0] = '\0';
 #endif
-	agClassTree = &agObjectClass;
-
 	/* Initialize the class table. */
-	agClassTbl = AG_TblNew(256, 0);
+	agClassTbl = AG_TblNew(AG_OBJECT_CLASSTBLSIZE, 0);
+
+	/* AG_Object -> agObjectClass */
 	AG_InitPointer(&V, &agObjectClass);
 	if (AG_TblInsert(agClassTbl, "AG_Object", &V) == -1)
 		AG_FatalError(NULL);
@@ -96,25 +103,35 @@ AG_InitClassTbl(void)
 void
 AG_DestroyClassTbl(void)
 {
-	int i;
-
-	free(agNamespaceTbl); agNamespaceTbl = NULL;
+#ifdef AG_NAMESPACES
+	free(agNamespaceTbl);
+	agNamespaceTbl = NULL;
 	agNamespaceCount = 0;
+#endif
+#ifdef AG_ENABLE_DSO
+	{
+		int i;
 
-	for (i = 0; i < agModuleDirCount; i++) { free(agModuleDirs[i]); }
-	free(agModuleDirs);
-	agModuleDirs = NULL;
-	agModuleDirCount = 0;
-
-	agClassTree = NULL;
-	
+		for (i = 0; i < agModuleDirCount; i++) {
+			free(agModuleDirs[i]);
+		}
+		free(agModuleDirs);
+		agModuleDirs = NULL;
+		agModuleDirCount = 0;
+	}
+#endif
 	AG_TblDestroy(agClassTbl);
 	free(agClassTbl); agClassTbl = NULL;
 	
 	AG_MutexDestroy(&agClassLock);
 }
 
-/* Convert a class specification in "Namespace1(Class1:Class2)[@lib]" format. */
+#ifdef AG_NAMESPACES
+/*
+ * Parse a class specification string either in the conventional form
+ * "AG_Class1:AG_Class2:...[@lib]", or in "Agar(Class1:Class2:...)[@lib]"
+ * format if NAMESPACE is supported.
+ */
 int
 AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 {
@@ -122,25 +139,23 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 	char nsName[AG_OBJECT_HIER_MAX], *pNsName = nsName;
 	const char *s, *p, *pOpen = NULL;
 	char *c;
-	int iTok, i = 0;
+	int iTok, i=0, len=0;
 	AG_Namespace *ns;
 
-	if (strlen(spec) >= AG_OBJECT_HIER_MAX) {
-		AG_SetError("Hierarchy string too long");
-		return (-1);
-	}
-
-	/* Parse the inheritance hierarchy and library list. */
 	cs->hier[0] = '\0';
-#ifdef AG_ENABLE_DSO
-	cs->libs[0] = '\0';
-#endif
 	cs->name[0] = '\0';
+# ifdef AG_ENABLE_DSO
+	cs->libs[0] = '\0';
+# endif
 	*pNsName = '\0';
 	for (s = &spec[0]; *s != '\0'; s++) {
+		if (++len >= AG_OBJECT_HIER_MAX) {
+			AG_SetErrorV("E22", _("Class is too long"));
+			return (-1);
+		}
 		if (s[0] == '(' && s[1] != '\0') {
 			if (pOpen || nsName[0] == '\0') {
-				AG_SetError("Syntax error");
+				AG_SetErrorV("E23", _("Class syntax error"));
 				return (-1);
 			}
 			pOpen = &s[1];
@@ -151,10 +166,10 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 				*pNsName = *s;
 				pNsName++;
 			}
-#ifdef AG_ENABLE_DSO
+# ifdef AG_ENABLE_DSO
 			if (s[0] == '@' && s[1] != '\0')
 				Strlcpy(cs->libs, &s[1], sizeof(cs->libs));
-#endif
+# endif
 		}
 		if (*s == ')') {
 			if ((s - pOpen) == 0) {
@@ -164,8 +179,7 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 			*pNsName = '\0';
 			pNsName = &nsName[0];
 			if ((ns = AG_GetNamespace(nsName)) == NULL) {
-				AG_SetError("No such namespace: \"%s\"",
-				    nsName);
+				AG_SetErrorV("E24", _("No such namespace"));
 				return (-1);
 			}
 			for (p = pOpen, iTok = 0;
@@ -211,12 +225,44 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 	
 	/* Fill in the "spec" field. */
 	Strlcpy(cs->spec, cs->hier, sizeof(cs->spec));
-#ifdef AG_ENABLE_DSO
+# ifdef AG_ENABLE_DSO
 	if (cs->libs[0] != '\0')
 		Strlcat(cs->spec, cs->libs, sizeof(cs->spec));
-#endif
+# endif
 	return (0);
 }
+#else /* !AG_NAMESPACES */
+/*
+ * Parse a class specification string only in the conventional format
+ * "AG_Class1:AG_Class2:...[@lib]" (no namespace support).
+ */
+int
+AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
+{
+	char *c;
+
+	Strlcpy(cs->hier, spec, sizeof(cs->hier));
+	Strlcpy(cs->spec, spec, sizeof(cs->spec));
+	
+	if ((c = strchr(cs->hier, '@')) != NULL) {
+# ifdef AG_ENABLE_DSO
+		Strlcpy(cs->libs, &c[1], sizeof(cs->libs));
+# endif
+		*c = '\0';
+	}
+# ifdef AG_ENABLE_DSO
+	else {
+		cs->libs[0] = '\0';
+	}
+# endif
+	if ((c = strrchr(spec, ':')) != NULL && c[1] != '\0') {
+		Strlcpy(cs->name, &c[1], sizeof(cs->name));
+	} else {
+		Strlcpy(cs->name, spec, sizeof(cs->name));
+	}
+	return (0);
+}
+#endif /* !AG_NAMESPACES */
 
 /* Register object class as described by the given AG_ObjectClass structure. */
 void
@@ -246,7 +292,7 @@ AG_RegisterClass(void *p)
 		if ((C->super = AG_LookupClass(cs.hier)) == NULL)
 			AG_FatalError(NULL);
 	} else {
-		C->super = agClassTree;			/* Root */
+		C->super = &agObjectClass;	/* Base AG_Object class */
 	}
 	TAILQ_INSERT_TAIL(&C->super->pvt.sub, C, pvt.subclasses);
 
@@ -264,9 +310,10 @@ AG_UnregisterClass(void *p)
 {
 	AG_ObjectClass *C = p;
 	AG_ObjectClass *Csuper = C->super;
-	Uint h = AG_TblHash(agClassTbl, C->hier);
+	Uint h;
 
 	AG_MutexLock(&agClassLock);
+	h = AG_TblHash(agClassTbl, C->hier);
 	if (AG_TblExistsHash(agClassTbl, h, C->hier)) {
 #ifdef AG_DEBUG_CORE
 		Debug(NULL, "Unregistering class: %s\n", C->name);
@@ -281,6 +328,7 @@ AG_UnregisterClass(void *p)
 	AG_MutexUnlock(&agClassLock);
 }
 
+#if AG_MODEL != AG_SMALL
 /*
  * Allocate, initialize and zero an AG_ObjectClass (or derivative thereof).
  *
@@ -329,10 +377,11 @@ AG_DestroyClass(void *C)
 	AG_UnregisterClass(C);
 	free(C);
 }
+#endif /* !AG_SMALL */
 
 /*
- * Return information about the currently registered class matching the
- * given specification.
+ * Lookup information about a registered object class.
+ * Return a normalized class description (or NULL if no such class exists).
  */
 AG_ObjectClass *
 AG_LookupClass(const char *inSpec)
@@ -341,9 +390,11 @@ AG_LookupClass(const char *inSpec)
 	AG_Variable *V;
 
 	if (inSpec[0] == '\0' ||
+#ifdef AG_NAMESPACES
 	    strcmp(inSpec, "Agar(Object)") == 0 ||
+#endif
 	    strcmp(inSpec, "AG_Object") == 0)
-		return (agClassTree);				/* Root */
+		return (&agObjectClass);
 
 	if (AG_ParseClassSpec(&cs, inSpec) == -1)
 		return (NULL);
@@ -356,7 +407,7 @@ AG_LookupClass(const char *inSpec)
 	}
 	AG_MutexUnlock(&agClassLock);
 
-	AG_SetError("No such class: %s", inSpec);
+	AG_SetErrorV("E25", _("No such class"));
 	return (NULL);
 }
 
@@ -393,7 +444,7 @@ GetClassSymbol(char *_Nonnull sym, AG_Size len,
 	}
 	return (0);
 toolong:
-	AG_SetError("Symbol too long");
+	AG_SetErrorS(_("Symbol is too long"));
 	return (-1);
 }
 
@@ -427,7 +478,7 @@ AG_LoadClass(const char *classSpec)
 		return (C);
 	}
 	if (cs.libs[0] == '\0') {
-		AG_SetError("Class %s not found (and no modules specified)",
+		AG_SetError(_("Class %s not found (and no modules specified)"),
 		    cs.hier);
 		goto fail;
 	}
@@ -440,7 +491,7 @@ AG_LoadClass(const char *classSpec)
 		Debug(NULL, "<%s>: Linking %s...", classSpec, lib);
 # endif
 		if ((dso = AG_LoadDSO(lib, 0)) == NULL) {
-			AG_SetError("Loading <%s>: %s", classSpec, AG_GetError());
+			AG_SetError("DSO(%s): %s", classSpec, AG_GetError());
 			goto fail;
 		}
 		/* Look up "pfxFooClass" in the first library. */
@@ -459,7 +510,7 @@ AG_LoadClass(const char *classSpec)
 # endif
 	}
 	if (pClass == NULL) {
-		AG_SetError("Loading <%s>: No library specified", classSpec);
+		AG_SetError(_("<%s>: No library specified"), classSpec);
 		goto fail;
 	}
 	AG_RegisterClass(pClass);
@@ -493,6 +544,7 @@ AG_UnloadClass(AG_ObjectClass *C)
 }
 #endif /* AG_ENABLE_DSO */
 
+#ifdef AG_NAMESPACES
 /* Register a new namespace. */
 AG_Namespace *
 AG_RegisterNamespace(const char *name, const char *pfx, const char *url)
@@ -526,7 +578,9 @@ AG_UnregisterNamespace(const char *name)
 		agNamespaceCount--;
 	}
 }
+#endif /* AG_NAMESPACES */
 
+#ifdef AG_ENABLE_DSO
 /* Register a new module directory path. */
 void
 AG_RegisterModuleDirectory(const char *path)
@@ -559,6 +613,7 @@ AG_UnregisterModuleDirectory(const char *path)
 		agModuleDirCount--;
 	}
 }
+#endif /* AG_ENABLE_DSO */
 
 /* General case fallback for AG_ClassIsNamed() */
 int
@@ -594,7 +649,7 @@ int
 AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)
 {
 	char cname[AG_OBJECT_HIER_MAX], *c;
-	AG_ObjectClass *C;
+	AG_ObjectClass *C, **pHier;
 	int i, stop = 0;
 
 	if (AGOBJECT(obj)->cls->hier[0] == '\0') {
@@ -607,9 +662,8 @@ AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)
 		if (*c == ':')
 			(*nHier)++;
 	}
-	*hier = Malloc((*nHier)*sizeof(AG_ObjectClass *));
-	i = 0;
-	for (c = &cname[0];; c++) {
+	pHier = (*hier) = Malloc((*nHier)*sizeof(AG_ObjectClass *));
+	for (c = &cname[0], i = 0; ; c++) {
 		if (*c != ':' && *c != '\0') {
 			continue;
 		}
@@ -619,11 +673,11 @@ AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)
 			*c = '\0';
 		}
 		if ((C = AG_LookupClass(cname)) == NULL) {
-			Free(*hier);
+			free(pHier);
 			return (-1);
 		}
 		*c = ':';
-		(*hier)[i++] = C;
+		pHier[i++] = C;
 		
 		if (stop)
 			break;

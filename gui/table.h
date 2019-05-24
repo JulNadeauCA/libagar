@@ -166,12 +166,7 @@ typedef struct ag_table {
 	AG_Event *_Nullable dblClickRowEv;	/* Row double click callback */
 	AG_Event *_Nullable dblClickColEv;	/* Column double click callback */
 	AG_Event *_Nullable dblClickCellEv;	/* Cell double click callback */
-
-	int dblClickedRow;		/* For SEL_ROWS */
-	int dblClickedCol;		/* For SEL_COLS */
-	int dblClickedCell;		/* For SEL_CELLS */
 	Uint32 wheelTicks;		/* For wheel acceleration */
-	AG_Timer moveTo;		/* Timers for keyboard motion */
 	AG_Rect r;			/* View area */
 	int wTot;			/* Total width for all columns */
 	AG_Color selColor;		/* Selection color */
@@ -187,20 +182,29 @@ typedef struct ag_table {
 	AG_Event *_Nullable clickCellEv;	/* Cell double click callback */
 	Uint nSorting;				/* Index of sorting column
 						   (computed from flags) */
-	AG_Timer pollTo;			/* For polled table update */
-	AG_Timer dblClickTo;			/* For double click */
+#ifdef AG_TIMERS
+	int dblClickedRow;		/* For SEL_ROWS */
+	int dblClickedCol;		/* For SEL_COLS */
+	int dblClickedCell;		/* For SEL_CELLS */
+	AG_Timer moveTo;		/* For keyboard motion */
+	AG_Timer pollTo;		/* For polled table update */
+	AG_Timer dblClickTo;		/* For double click */
+#endif
 } AG_Table;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agTableClass;
 
 AG_Table *_Nonnull AG_TableNew(void *_Nullable, Uint);
+
+#ifdef AG_TIMERS
 AG_Table *_Nonnull AG_TableNewPolled(void *_Nullable, Uint,
                                      void (*_Nonnull fn)(AG_Event *_Nonnull),
 				     const char *_Nullable, ...);
+void               AG_TableSetPollInterval(AG_Table *_Nonnull, Uint);
+#endif
 
 void AG_TableSizeHint(AG_Table *_Nonnull, int, int);
-void AG_TableSetPollInterval(AG_Table *_Nonnull, Uint);
 void AG_TableSetSeparator(AG_Table *_Nonnull, const char *_Nonnull);
 void AG_TableSetRowClickFn(AG_Table *_Nonnull,
                            _Nonnull AG_EventFn, const char *_Nullable, ...);

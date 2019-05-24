@@ -285,7 +285,7 @@ ProcessNonScalablePixmap(FT_Bitmap *_Nonnull src, FT_Bitmap *_Nonnull dst,
 
 /* Render and cache the glyph corresponding to the given Unicode character. */
 static int
-LoadGlyph(AG_TTFFont *_Nonnull ttf, Uint32 ch, AG_TTFGlyph *_Nonnull cached,
+LoadGlyph(AG_TTFFont *_Nonnull ttf, AG_Char ch, AG_TTFGlyph *_Nonnull cached,
     int want)
 {
 	FT_Face face = ttf->face;
@@ -458,9 +458,13 @@ LoadGlyph(AG_TTFFont *_Nonnull ttf, Uint32 ch, AG_TTFGlyph *_Nonnull cached,
 
 /* Load the glyph corresponding to the specified Unicode character. */
 int
-AG_TTFFindGlyph(AG_TTFFont *font, Uint32 ch, int want)
+AG_TTFFindGlyph(AG_TTFFont *font, AG_Char ch, int want)
 {
+#ifdef AG_UNICODE
 	if (ch < 256) {
+#else
+	if (1) {
+#endif
 		font->current = &font->cache[ch];
 	} else {
 		if (font->scratch.cached != ch) {

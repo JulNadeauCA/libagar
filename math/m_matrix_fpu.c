@@ -218,8 +218,11 @@ M_FactorizeLU_FPU(void *pA)
 			if (a > big) { big = a; }
 		}
 		if (Fabs(big) <= M_MACHEP) {
-			AG_Verbose("Singular matrix: %s\n",
-			    AG_Printf("%[M]", A));
+#ifdef AG_ENABLE_STRING
+			AG_Verbose("Singular matrix: %s\n", AG_Printf("%[M]", A));
+#else
+			AG_Verbose("Singular matrix\n");
+#endif
 			AG_SetError("Singular matrix (no pivot in column %i)", i);
 			goto fail;
 		}

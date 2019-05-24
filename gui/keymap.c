@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,11 +40,11 @@
 
 /* Insert a new character at current cursor position. */
 static int
-Insert(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 ch)
+Insert(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	Uint32 ins[3];
+	AG_Char ins[3];
 	int i, nIns;
-	Uint32 uch = ch;
 
 	if (keysym == 0)
 		return (0);
@@ -54,6 +54,7 @@ Insert(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, U
 		return (0);
 #endif
 
+#ifdef AG_UNICODE
 	if (!(ed->flags & AG_EDITABLE_NOLATIN1)) {
 		for (i = 0; ; i++) {
 			const struct ag_key_mapping *km = &agKeymapLATIN1[i];
@@ -62,11 +63,11 @@ Insert(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, U
 				if (((keymod & AG_KEYMOD_ALT) &&
 				     (keymod & AG_KEYMOD_SHIFT) &&
 				     (km->modmask == (AG_KEYMOD_ALT|AG_KEYMOD_SHIFT)))) {
-					uch = km->unicode;
+					ch = km->ch;
 					break;
 				} else if (keymod & AG_KEYMOD_ALT &&
 				    km->modmask == AG_KEYMOD_ALT) {
-					uch = km->unicode;
+					ch = km->ch;
 					break;
 				}
 			} else if (km->key == AG_KEY_LAST) {
@@ -74,19 +75,23 @@ Insert(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, U
 			}
 		}
 	}
-	
-	if (uch == 0) { return (0); }
-	if (uch == '\r') { uch = '\n'; }
+#endif /* AG_UNICODE */
+
+	if (ch == 0) { return (0); }
+	if (ch == '\r') { ch = '\n'; }
 
 	if (Strcasecmp(ed->encoding, "US-ASCII") == 0 &&
-	    (uch & ~0x7f) != 0)
+	    (ch & ~0x7f) != 0)
 		return (0);
 
+#ifdef AG_UNICODE
 	if (agTextComposition) {
-		if ((nIns = AG_KeyInputCompose(ed, uch, ins)) == 0)
+		if ((nIns = AG_KeyInputCompose(ed, ch, ins)) == 0)
 			return (0);
-	} else {
-		ins[0] = uch;
+	} else
+#endif
+	{
+		ins[0] = ch;
 		nIns = 1;
 	}
 	ins[nIns] = '\0';
@@ -104,7 +109,7 @@ Insert(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, U
 			buf->s[buf->len + i] = ins[i];
 	} else {						/* Insert */
 		memmove(&buf->s[ed->pos + nIns], &buf->s[ed->pos],
-		       (buf->len - ed->pos)*sizeof(Uint32));
+		       (buf->len - ed->pos)*sizeof(AG_Char));
 		for (i = 0; i < nIns; i++)
 			buf->s[ed->pos + i] = ins[i];
 	}
@@ -112,11 +117,14 @@ Insert(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, U
 	buf->s[buf->len] = '\0';
 	ed->pos += nIns;
 
+#ifdef AG_UNICODE
 	if (!(ed->flags & AG_EDITABLE_MULTILINE)) {	/* Optimize case */
 		int wIns;
-		AG_TextSizeUCS4(ins, &wIns, NULL);
+		AG_TextSizeNat(ins, &wIns, NULL);
 		ed->xScrollPx += wIns;
-	} else {
+	} else
+#endif
+	{
 		ed->xScrollTo = &ed->xCurs;
 		ed->yScrollTo = &ed->yCurs;
 	}
@@ -126,10 +134,13 @@ Insert(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, U
 
 /* Delete the character at cursor, or the active selection. */
 static int
-Delete(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 unicode)
+Delete(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	Uint32 *c;
+	AG_Char *c;
+#ifdef AG_UNICODE
 	int wDel;
+#endif
 
 	if (buf->len == 0)
 		return (0);
@@ -149,8 +160,12 @@ Delete(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, U
 			ed->xScrollTo = &ed->xCurs;
 			ed->yScrollTo = &ed->yCurs;
 		} else {
-			AG_TextSizeUCS4(&buf->s[buf->len-1], &wDel, NULL);
+#ifdef AG_UNICODE
+			AG_TextSizeNat(&buf->s[buf->len-1], &wDel, NULL);
 			if (ed->x > 0) { ed->x -= wDel; }
+#else
+			/* TODO */
+#endif
 		}
 		return (1);
 	}
@@ -161,12 +176,16 @@ Delete(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, U
 		ed->xScrollTo = &ed->xCurs;
 		ed->yScrollTo = &ed->yCurs;
 	} else {
-		Uint32 cDel[2];
+#ifdef AG_UNICODE
+		AG_Char cDel[2];
 	
 		cDel[0] = buf->s[ed->pos];
 		cDel[1] = '\0';
-		AG_TextSizeUCS4(cDel, &wDel, NULL);
+		AG_TextSizeNat(cDel, &wDel, NULL);
 		if (ed->x > 0) { ed->x -= wDel; }
+#else
+		/* TODO */
+#endif
 	}
 
 	for (c = &buf->s[ed->pos];
@@ -182,7 +201,8 @@ Delete(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, U
 
 /* Copy the selection to clipboard. */
 static int
-Copy(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+Copy(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	AG_EditableCopy(ed, buf, &agEditableClipbrd);
 	return (0);
@@ -190,14 +210,16 @@ Copy(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uin
 
 /* Copy selection to clipboard and subsequently delete it. */
 static int
-Cut(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+Cut(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	return AG_EditableCut(ed, buf, &agEditableClipbrd);
 }
 
 /* Paste clipboard contents to current cursor position. */
 static int
-Paste(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+Paste(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	return AG_EditablePaste(ed, buf, &agEditableClipbrd);
 }
@@ -207,10 +229,9 @@ Paste(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Ui
  * characters up to the end of the line (Emacs-style).
  */
 static int
-Kill(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+Kill(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	Uint32 *c;
-	
 	if (ed->sel != 0) {
 		AG_EditableValidateSelection(ed, buf);
 		if (ed->sel < 0) {
@@ -218,6 +239,8 @@ Kill(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uin
 			ed->sel = -(ed->sel);
 		}
 	} else {
+		AG_Char *c;
+
 		for (c = &buf->s[ed->pos]; c < &buf->s[buf->len]; c++) {
 			if (*c == '\n') {
 				break;
@@ -235,22 +258,25 @@ Kill(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uin
 
 /* Paste the contents of the Emacs-style kill ring at cursor position. */
 static int
-Yank(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+Yank(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	return AG_EditablePaste(ed, buf, &agEditableKillring);
 }
 
 /* Seek one word backwards. */
 static int
-WordBack(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+WordBack(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	int newPos = ed->pos;
-	Uint32 *c;
+	AG_Char *c;
 
 	/* XXX: handle other types of spaces */
 	if (ed->pos > 1 && buf->s[newPos-1] == ' ') {
 		newPos -= 2;
 	}
+
 	for (c = &buf->s[newPos];
 	     c > &buf->s[0] && *c != ' ';
 	     c--, newPos--)
@@ -275,17 +301,18 @@ WordBack(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod,
 
 /* Seek one word forward. */
 static int
-WordForw(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+WordForw(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	int newPos = ed->pos;
-	Uint32 *c;
+	AG_Char *c;
 	
 	if (newPos == buf->len) {
 		return (0);
 	}
-	if (buf->len > 1 && buf->s[newPos] == ' ') {
+	if (buf->len > 1 && buf->s[newPos] == ' ')
 		newPos++;
-	}
+	
 	for (c = &buf->s[newPos];
 	     *c != '\0' && *c != ' ';
 	     c++, newPos++)
@@ -308,7 +335,8 @@ WordForw(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod,
 
 /* Select all. */
 static int
-SelectAll(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+SelectAll(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+   AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	AG_EditableSelectAll(ed, buf);
 	return (0);
@@ -316,10 +344,11 @@ SelectAll(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod
 
 /* Move cursor to beginning of line. */
 static int
-CursorHome(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+CursorHome(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	int newPos = ed->pos;
-	Uint32 *c;
+	AG_Char *c;
 
 	if (ed->flags & AG_EDITABLE_MULTILINE) {
 		if (newPos == 0) {
@@ -350,10 +379,11 @@ CursorHome(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymo
 
 /* Move cursor to end of line. */
 static int
-CursorEnd(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+CursorEnd(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	int newPos = ed->pos;
-	Uint32 *c;
+	AG_Char *c;
 
 	if (ed->flags & AG_EDITABLE_MULTILINE) {
 		if (newPos == buf->len || buf->s[newPos] == '\n') {
@@ -389,7 +419,8 @@ CursorEnd(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod
 
 /* Move cursor left. */
 static int
-CursorLeft(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+CursorLeft(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	if ((ed->pos - 1) >= 0) {
 		ed->pos--;
@@ -411,7 +442,8 @@ CursorLeft(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymo
 
 /* Move cursor right. */
 static int
-CursorRight(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+CursorRight(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	if (ed->pos < buf->len) {
 		ed->pos++;
@@ -431,7 +463,8 @@ CursorRight(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keym
 
 /* Move cursor up in a multi-line string. */
 static int
-CursorUp(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+CursorUp(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	int prevPos = ed->pos;
 	int prevSel = ed->sel;
@@ -457,7 +490,8 @@ CursorUp(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod,
 
 /* Move cursor down in a multi-line string. */
 static int
-CursorDown(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+CursorDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	int prevPos = ed->pos;
 	int prevSel = ed->sel;
@@ -483,7 +517,8 @@ CursorDown(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymo
 
 /* Move cursor one page up in a multi-line string. */
 static int
-PageUp(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+PageUp(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	int prevPos = ed->pos;
 	int prevSel = ed->sel;
@@ -508,7 +543,8 @@ PageUp(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, U
 
 /* Move cursor one page down in a multi-line string. */
 static int
-PageDown(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uint32 uch)
+PageDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	int prevPos = ed->pos;
 	int prevSel = ed->sel;

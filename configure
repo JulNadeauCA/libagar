@@ -452,8 +452,16 @@ echo ''
 echo 'Options specific to CORE library:'
 echo '    --enable-debug-core         Expensive AG_Object debugging [no]'
 echo '    --enable-dso                Dynamically loaded modules [check]'
+echo '    --enable-exec               AG_Execute(3) interface [check]'
+echo '    --enable-namespaces         AG_Object namespace support [check]'
 echo '    --enable-network            Network interface [check]'
-echo '    --enable-web                Web application server [no]'
+echo '    --enable-serialization      Serialization interfaces [check]'
+echo '    --enable-string             Enable AG_Printf(3) engine [check]'
+echo '    --enable-timers             Enable AG_Timer(3) interface [check]'
+echo '    --enable-unicode            Support Unicode characters [check]'
+echo '    --enable-user               User account interface [check]'
+echo '    --enable-verbosity          Verbose error messages [check]'
+echo '    --enable-web                HTTP/1.1 application server [no]'
 echo '    --with-db[45][=PREFIX]      AG_Db: Berkeley DB backend [no]'
 echo '    --with-mysql[=PREFIX]       AG_Db: MySQL backend [no]'
 echo '    --with-iconv[=PREFIX]       Character set conversion [check]'
@@ -1562,6 +1570,17 @@ echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
 	enable_shared="no"
 	with_float="no"
 	enable_dso="no"
+	enable_exec="no"
+	enable_namespaces="no"
+	enable_network="no"
+	enable_serialization="no"
+	enable_string="no"
+	enable_threads="no"
+	enable_timers="no"
+	enable_type_safety="no"
+	enable_unicode="no"
+	enable_user="no"
+	enable_verbosity="no"
 	echo "checking for byte order...little-endian (${host})"
 _MK_BYTE_ORDER="LE"
 _MK_LITTLE_ENDIAN="yes"
@@ -4808,6 +4827,17 @@ else
 echo '#undef AG_ENABLE_DSO' >$bb_incdir/ag_enable_dso.h
 echo 'hdefs["AG_ENABLE_DSO"] = nil' >>configure.lua
 fi
+if [ "${enable_exec}" != 'no' ]; then
+AG_ENABLE_EXEC="yes"
+bb_o=$bb_incdir/ag_enable_exec.h
+echo '#ifndef AG_ENABLE_EXEC' >$bb_o
+echo "#define AG_ENABLE_EXEC \"$AG_ENABLE_EXEC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_ENABLE_EXEC\"] = \"$AG_ENABLE_EXEC\"" >>configure.lua
+else
+echo '#undef AG_ENABLE_EXEC' >$bb_incdir/ag_enable_exec.h
+echo 'hdefs["AG_ENABLE_EXEC"] = nil' >>configure.lua
+fi
 if [ "${enable_legacy}" = 'yes' ]; then
 AG_LEGACY="yes"
 bb_o=$bb_incdir/ag_legacy.h
@@ -4818,6 +4848,83 @@ echo "hdefs[\"AG_LEGACY\"] = \"$AG_LEGACY\"" >>configure.lua
 else
 echo '#undef AG_LEGACY' >$bb_incdir/ag_legacy.h
 echo 'hdefs["AG_LEGACY"] = nil' >>configure.lua
+fi
+if [ "${enable_namespaces}" != 'no' ]; then
+AG_NAMESPACES="yes"
+bb_o=$bb_incdir/ag_namespaces.h
+echo '#ifndef AG_NAMESPACES' >$bb_o
+echo "#define AG_NAMESPACES \"$AG_NAMESPACES\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_NAMESPACES\"] = \"$AG_NAMESPACES\"" >>configure.lua
+else
+echo '#undef AG_NAMESPACES' >$bb_incdir/ag_namespaces.h
+echo 'hdefs["AG_NAMESPACES"] = nil' >>configure.lua
+fi
+if [ "${enable_serialization}" != 'no' ]; then
+AG_SERIALIZATION="yes"
+bb_o=$bb_incdir/ag_serialization.h
+echo '#ifndef AG_SERIALIZATION' >$bb_o
+echo "#define AG_SERIALIZATION \"$AG_SERIALIZATION\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_SERIALIZATION\"] = \"$AG_SERIALIZATION\"" >>configure.lua
+else
+echo '#undef AG_SERIALIZATION' >$bb_incdir/ag_serialization.h
+echo 'hdefs["AG_SERIALIZATION"] = nil' >>configure.lua
+fi
+if [ "${enable_string}" != 'no' ]; then
+AG_ENABLE_STRING="yes"
+bb_o=$bb_incdir/ag_enable_string.h
+echo '#ifndef AG_ENABLE_STRING' >$bb_o
+echo "#define AG_ENABLE_STRING \"$AG_ENABLE_STRING\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_ENABLE_STRING\"] = \"$AG_ENABLE_STRING\"" >>configure.lua
+else
+echo '#undef AG_ENABLE_STRING' >$bb_incdir/ag_enable_string.h
+echo 'hdefs["AG_ENABLE_STRING"] = nil' >>configure.lua
+fi
+if [ "${enable_timers}" != 'no' ]; then
+AG_TIMERS="yes"
+bb_o=$bb_incdir/ag_timers.h
+echo '#ifndef AG_TIMERS' >$bb_o
+echo "#define AG_TIMERS \"$AG_TIMERS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_TIMERS\"] = \"$AG_TIMERS\"" >>configure.lua
+else
+echo '#undef AG_TIMERS' >$bb_incdir/ag_timers.h
+echo 'hdefs["AG_TIMERS"] = nil' >>configure.lua
+fi
+if [ "${enable_unicode}" != 'no' ]; then
+AG_UNICODE="yes"
+bb_o=$bb_incdir/ag_unicode.h
+echo '#ifndef AG_UNICODE' >$bb_o
+echo "#define AG_UNICODE \"$AG_UNICODE\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_UNICODE\"] = \"$AG_UNICODE\"" >>configure.lua
+else
+echo '#undef AG_UNICODE' >$bb_incdir/ag_unicode.h
+echo 'hdefs["AG_UNICODE"] = nil' >>configure.lua
+fi
+if [ "${enable_user}" != 'no' ]; then
+AG_USER="yes"
+bb_o=$bb_incdir/ag_user.h
+echo '#ifndef AG_USER' >$bb_o
+echo "#define AG_USER \"$AG_USER\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_USER\"] = \"$AG_USER\"" >>configure.lua
+else
+echo '#undef AG_USER' >$bb_incdir/ag_user.h
+echo 'hdefs["AG_USER"] = nil' >>configure.lua
+fi
+if [ "${enable_verbosity}" != 'no' ]; then
+AG_VERBOSITY="yes"
+bb_o=$bb_incdir/ag_verbosity.h
+echo '#ifndef AG_VERBOSITY' >$bb_o
+echo "#define AG_VERBOSITY \"$AG_VERBOSITY\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_VERBOSITY\"] = \"$AG_VERBOSITY\"" >>configure.lua
+else
+echo '#undef AG_VERBOSITY' >$bb_incdir/ag_verbosity.h
+echo 'hdefs["AG_VERBOSITY"] = nil' >>configure.lua
 fi
 if [ "${enable_gui}" != 'no' ]
  then

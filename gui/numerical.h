@@ -31,7 +31,9 @@ typedef struct ag_numerical {
 	AG_Button *_Nonnull decbu;	/* Decrement button */
 	int wUnitSel, hUnitSel;		/* Size hints for entry box */
 	int wPreUnit;			/* Size hint for unit selector */
+#ifdef AG_TIMERS
 	AG_Timer updateTo;		/* Timer for non-EXCL mode */
+#endif
 } AG_Numerical;
 
 __BEGIN_DECLS

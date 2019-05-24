@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_TIMERS
 
 #include <agar/gui/gui.h>
 #include <agar/gui/window.h>
@@ -419,8 +420,8 @@ ObjectOp(AG_Event *_Nonnull event)
 				AG_Event ev;
 
 				AG_EventInit(&ev);
-				AG_EventPushPointer(&ev, "", ob);
-				AG_EventPushString(&ev, "", ob->archivePath ? ob->archivePath : "");
+				AG_EventArgs(&ev, "%s,%p", ob,
+				    (ob->archivePath != NULL) ? ob->archivePath : "");
 				SaveObjectToFile(&ev);
 			}
 			break;
@@ -744,7 +745,7 @@ DEV_Browser(void *vfsRoot)
 	mi = AG_MenuNode(me->root, _("File"), NULL);
 	{
 		mi_objs = AG_MenuNode(mi, _("New object"), NULL);
-		GenNewObjectMenu(mi_objs, agClassTree, vfsRoot, win);
+		GenNewObjectMenu(mi_objs, &agObjectClass, vfsRoot, win);
 
 		AG_MenuSeparator(mi);
 
@@ -977,3 +978,5 @@ DEV_BrowserCloseData(void *p)
 		AG_PostEvent(NULL, oent->win, "window-close", NULL);
 	}
 }
+
+#endif /* AG_TIMERS */

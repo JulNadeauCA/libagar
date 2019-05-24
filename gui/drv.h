@@ -252,7 +252,10 @@ AG_Driver *_Nullable AG_GetDriverByID(Uint) _Pure_Attribute;
 
 void AG_BeginRendering(void *_Nonnull);
 void AG_EndRendering(void *_Nonnull);
+
+#ifdef AG_SERIALIZATION
 void AG_ViewCapture(void);
+#endif
 
 int AG_UsingGL(void *_Nullable) _Pure_Attribute;
 int AG_UsingSDL(void *_Nullable) _Pure_Attribute;

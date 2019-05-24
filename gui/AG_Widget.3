@@ -789,6 +789,9 @@ Those properties should be set using the following functions:
 .Ft "void"
 .Fn AG_SetStyle "AG_Widget *widget" "const char *which" "const char *value"
 .Pp
+.Ft "void"
+.Fn AG_SetStyleF "AG_Widget *widget" "const char *which" "const char *fmt" "..."
+.Pp
 .nr nS 0
 The
 .Fn AG_SetFont
@@ -1105,30 +1108,24 @@ are the cursor coordinates in the widget's local coordinate system.
 The cursor has entered or is leaving the widget's allocated area and the
 .Dv AG_WIDGET_USE_MOUSEOVER
 option is set.
-.It Fn key-down "int key" "int mod" "Ulong unicode"
+.It Fn key-down "int key" "int mod" "Ulong ch"
 The widget is receiving keyboard events and
 .Fa key
 has been pressed.
-The
 .Fa mod
-argument is a bitmask representing the state of the current key modifiers and
-.Fa unicode
-is the corresponding Unicode character in UCS-4 format (or 0 if there are none).
-See
-.Xr AG_KeySym 3
-for details.
-.It Fn key-up "int key" "int mod" "Ulong unicode"
+is a bitmask representing the state of the current key modifiers.
+If non-zero,
+.Fa ch
+is the matching UCS-4 (or ASCII) character.
+.It Fn key-up "int key" "int mod" "Ulong ch"
 The widget is receiving keyboard events and
 .Fa key
 has been released.
-The
 .Fa mod
-argument is a bitmask representing the state of the current key modifiers and
-.Fa unicode
-is the corresponding Unicode character in UCS-4 format (or 0 if there are none).
-See
-.Xr AG_KeySym 3
-for details.
+is a bitmask representing the state of the current key modifiers.
+If non-zero,
+.Fa ch
+is the matching UCS-4 (or ASCII) character.
 .El
 .Sh STRUCTURE DATA
 For the

@@ -3,9 +3,10 @@
 /*
  * Agar memory model
  */
-#define AG_SMALL  16  /* 8- and 16-bit CPU with KBs of RAM, 4- or 8-bit color */
-#define AG_MEDIUM 32  /* 32- or 64-bit CPU with MBs of RAM, 8-bit color */
-#define AG_LARGE  64  /* 32- or 64-bit CPU with GBs of RAM, 16-bit color */
+#define AG_SMALL  16   /*  8-/16-bit CPU with KBs of RAM, 12-bit color */
+#define AG_MEDIUM 32   /* 32-/64-bit CPU with MBs of RAM, 24-bit color */
+#define AG_LARGE  64   /* 32-/64-bit CPU with GBs of RAM, 48-bit color */
+
 #include <agar/config/ag_model.h>
 
 #include <agar/config/have_cygwin.h>
@@ -184,6 +185,18 @@
 #endif /* MEDIUM or LARGE */
 
 /*
+ * Native Character Type
+ */
+#include <agar/config/ag_unicode.h>
+#ifdef AG_UNICODE
+# define AG_Char Uint32
+# define AG_CHAR_MAX 0x7fffffff
+#else
+# define AG_Char Uint8
+# define AG_CHAR_MAX 0x7f
+#endif
+
+/*
  * Size and Offset Types
  */
 #if AG_MODEL == AG_SMALL
@@ -204,4 +217,3 @@
 #else
 # error "Invalid AG_MODEL"
 #endif
-

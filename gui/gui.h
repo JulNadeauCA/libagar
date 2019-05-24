@@ -29,9 +29,11 @@ __BEGIN_DECLS
 extern int agGUI, agRenderingContext, agStereo, agXsync;
 extern int agKbdDelay, agKbdRepeat;
 extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval,
-           agMouseScrollDelay, agMouseScrollIval;
-extern int agTextComposition, agTextBidi, agTextCache, agTextTabWidth,
-           agTextBlinkRate, agTextSymbols, agPageIncrement;
+           agMouseScrollDelay, agMouseScrollIval, agPageIncrement;
+#ifdef AG_UNICODE
+extern int agTextComposition, agTextBidi;
+#endif
+extern int agTextCache, agTextTabWidth, agTextBlinkRate, agTextSymbols;
 extern int agScreenshotQuality;
 #ifdef AG_HAVE_FLOAT
 extern double agZoomValues[AG_ZOOM_RANGE];
@@ -47,7 +49,8 @@ void  AG_QuitGUI(void);
 void  AG_ZoomIn(void);
 void  AG_ZoomOut(void);
 void  AG_ZoomReset(void);
-#ifdef AG_DEBUG
+
+#if defined(AG_DEBUG) && defined(AG_TIMERS)
 void *_Nullable AG_GuiDebugger(void *_Nullable);
 #endif
 

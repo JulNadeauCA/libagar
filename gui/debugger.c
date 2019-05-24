@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 
 #include <agar/core/core.h>
 
-#ifdef AG_DEBUG
+#if defined(AG_DEBUG) && defined(AG_TIMERS)
 
 #include <agar/gui/gui.h>
 #include <agar/gui/box.h>
@@ -45,6 +45,7 @@
 #include <agar/gui/notebook.h>
 #include <agar/gui/pane.h>
 #include <agar/gui/scrollview.h>
+#include <agar/gui/cursors.h>
 
 #include <string.h>
 
@@ -66,6 +67,7 @@ FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
 	it = AG_TlistAddPtr(tl, NULL, text, wid);
 	it->depth = depth;
 	it->cat = "widget";
+	it->flags |= AG_TLIST_EXPANDED;
 	
 	if (!TAILQ_EMPTY(&OBJECT(wid)->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
@@ -100,6 +102,8 @@ FindWindows(AG_Tlist *_Nonnull tl, AG_Window *_Nonnull win, int depth)
 	it->p1 = win;
 	it->depth = depth;
 	it->cat = "window";
+	it->flags |= AG_TLIST_EXPANDED;
+
 	if (!TAILQ_EMPTY(&OBJECT(win)->children) ||
 	    !TAILQ_EMPTY(&win->pvt.subwins)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
@@ -174,7 +178,7 @@ PollVariables(AG_Event *_Nonnull event)
 
 	AG_TlistBegin(tl);
 	TAILQ_FOREACH(V, &obj->vars, vars) {
-		char val[1024];
+		char val[128];
 
 		if ((V->type == AG_VARIABLE_P_UINT ||
 		     V->type == AG_VARIABLE_P_INT) &&
@@ -184,7 +188,39 @@ PollVariables(AG_Event *_Nonnull event)
 		} else {
 			AG_PrintVariable(val, sizeof(val), V);
 		}
-		AG_TlistAdd(tl, NULL, "%s: %s", V->name, val);
+		switch (V->type) {
+		case AG_VARIABLE_P_FLAG:
+		case AG_VARIABLE_P_FLAG8:
+		case AG_VARIABLE_P_FLAG16:
+		case AG_VARIABLE_P_FLAG32:
+			AG_TlistAdd(tl, NULL, "%s%s [mask 0x%x] = %s",
+			    agVariableTypes[V->type].name, V->name,
+			        V->info.bitmask.u,
+			        val);
+			break;
+		default:
+			AG_TlistAdd(tl, NULL, "%s%s = %s",
+			    agVariableTypes[V->type].name, V->name, val);
+			break;
+		}
+	}
+	AG_TlistEnd(tl);
+}
+
+static void
+PollCursors(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_SELF();
+	AG_Widget *wid = AG_PTR(1);
+	AG_Driver *drv = wid->drv;
+	AG_TlistItem *it;
+	AG_Cursor *cu;
+
+	AG_TlistBegin(tl);
+	TAILQ_FOREACH(cu, &drv->cursors, cursors) {
+		it = AG_TlistAdd(tl, NULL, "%dx%d (%d,%d); p=%p", cu->w, cu->h, 
+		    cu->xHot, cu->yHot, cu->p);
+		it->p1 = cu;
 	}
 	AG_TlistEnd(tl);
 }
@@ -200,7 +236,6 @@ WidgetSelected(AG_Event *_Nonnull event)
 	AG_Textbox *tb;
 	AG_MSpinbutton *msb;
 	AG_Scrollview *sv;
-	AG_Tlist *tl;
 
 	AG_ObjectFreeChildren(box);
 
@@ -224,12 +259,19 @@ WidgetSelected(AG_Event *_Nonnull event)
 		};
 
 		tb = AG_TextboxNewS(nTab, AG_TEXTBOX_HFILL, _("Name: "));
+#ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tb, OBJECT(wid)->name,
 		    sizeof(OBJECT(wid)->name));
+#else
+		AG_TextboxBindASCII(tb, OBJECT(wid)->name,
+		    sizeof(OBJECT(wid)->name));
+#endif
 		AG_LabelNew(nTab, 0, _("Class: %s"), OBJECT(wid)->cls->name);
+#ifdef AG_ENABLE_STRING
 		AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Parent window: %p"), &wid->window);
 		AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Parent driver: %p"), &wid->drv);
 		AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Parent driver ops: %p"), &wid->drvOps);
+#endif
 		AG_SeparatorNewHoriz(nTab);
 
 		sv = AG_ScrollviewNew(nTab, AG_SCROLLVIEW_EXPAND);
@@ -240,13 +282,11 @@ WidgetSelected(AG_Event *_Nonnull event)
 		nTab = AG_NotebookAdd(nb, _("Widget-specific"), AG_BOX_VERT);
 		AG_ObjectAttach(nTab, AGOBJECT_CLASS(wid)->edit(wid));
 	}
-	
 	nTab = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
 	{
 		AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
 		    PollVariables, "%p", wid);
 	}
-
 	nTab = AG_NotebookAdd(nb, _("Geometry"), AG_BOX_VERT);
 	{
 		msb = AG_MSpinbuttonNew(nTab, 0, ",", "Container coords: ");
@@ -267,10 +307,25 @@ WidgetSelected(AG_Event *_Nonnull event)
 	}
 	nTab = AG_NotebookAdd(nb, _("Surfaces"), AG_BOX_VERT);
 	{
+		AG_Tlist *tl;
+
 		tl = AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
 		    PollSurfaces, "%p", wid);
 		AG_TlistSetItemHeight(tl, 32);
 		AG_TlistSetIconWidth(tl, 64);
+	}
+	nTab = AG_NotebookAdd(nb, _("Cursors"), AG_BOX_VERT);
+	{
+#ifdef AG_ENABLE_STRING
+		AG_Driver *drv = wid->drv;
+
+		AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Cursor driver: %s"),
+		    OBJECT(drv)->name);
+		AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Total cursors: %u"),
+		    &drv->nCursors);
+#endif
+		AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
+		    PollCursors, "%p", wid);
 	}
 
 	AG_WidgetShowAll(box);
@@ -323,17 +378,15 @@ AG_GuiDebugger(void *obj)
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 
 	tl = AG_TlistNewPolled(pane->div[0], 0, PollWidgets, "%p", obj);
-	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXX>", 10);
+	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 10);
 	AG_SetEvent(tl, "tlist-dblclick", WidgetSelected, "%p", pane->div[1]);
 	AG_Expand(tl);
 	AG_WidgetFocus(tl);
-
 	mi = AG_TlistSetPopup(tl, "window");
 	AG_MenuSetPollFn(mi, ContextualMenu, "%p", tl);
-
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MR, 640, 300);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_BR, 1000, 500);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	return (win);
 }
 
-#endif /* AG_DEBUG */
+#endif /* AG_DEBUG and AG_TIMERS */

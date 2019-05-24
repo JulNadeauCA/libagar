@@ -28,7 +28,9 @@ typedef struct ag_icon {
 	int xSaved, ySaved;		/* Saved coordinates */
 	int wSaved, hSaved;		/* Saved geometry */
 	AG_Color cBackground;		/* Background fill color */
-	AG_Timer toDblClick;		/* Timer for double click */
+#ifdef AG_TIMERS
+	AG_Timer toDblClick;		/* For double click detection */
+#endif
 } AG_Icon;
 
 __BEGIN_DECLS
@@ -36,7 +38,9 @@ extern AG_WidgetClass agIconClass;
 
 AG_Icon *_Nonnull  AG_IconNew(void *_Nullable, Uint);
 AG_Icon *_Nonnull  AG_IconFromSurface(AG_Surface *_Nonnull);
+#ifdef AG_SERIALIZATION
 AG_Icon *_Nullable AG_IconFromBMP(const char *_Nonnull);
+#endif
 
 void AG_IconSetSurface(AG_Icon *_Nonnull, const AG_Surface *_Nullable);
 void AG_IconSetSurfaceNODUP(AG_Icon *_Nonnull, AG_Surface *_Nonnull);

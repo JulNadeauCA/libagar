@@ -16,6 +16,7 @@ Init(void *obj)
 	return (0);
 }
 
+#ifdef AG_TIMERS
 static Uint32
 RotateHue(AG_Timer *t, AG_Event *event)
 {
@@ -45,19 +46,28 @@ SetRotateHue(AG_Event *event)
 			AG_DelTimer(pal, ti->tRotHue);
 	}
 }
+#endif /* AG_TIMERS */
 
 static int
 TestGUI(void *obj, AG_Window *win)
 {
+#ifdef AG_TIMERS
 	MyTestInstance *ti = obj;
+#endif
 	AG_HSVPal *pal;
 
 	pal = AG_HSVPalNew(win, AG_HSVPAL_EXPAND);
 	pal->h = 240.0f;
 	pal->s = 0.80f;
 	pal->v = 0.90f;
+
+#ifdef AG_TIMERS
 	AG_ButtonNewFn(win, AG_BUTTON_STICKY,
 	    "Rotate Hue", SetRotateHue, "%p,%p", ti, pal);
+#else
+	AG_WidgetDisable(AG_ButtonNewS(win, 0, "Rotate Hue"));
+#endif
+
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
 	return (0);
 }

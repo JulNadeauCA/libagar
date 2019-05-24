@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -2238,7 +2238,9 @@ WEB_Init(Uint clusterID, int eventSource)
 {
 	struct sigaction sa;
 
+#ifdef AG_NAMESPACES
 	AG_RegisterNamespace("Web", "WEB_", "http://libagar.org/");
+#endif
 	AG_RegisterClass(&webModuleClass);
 
 	Strlcpy(webLogFile, agProgName, sizeof(webLogFile));
@@ -2314,7 +2316,9 @@ WEB_Destroy(void)
 	}
 	
 	AG_UnregisterClass(&webModuleClass);
+#ifdef AG_NAMESPACES
 	AG_UnregisterNamespace("WEB");
+#endif
 }
 
 /* Set output log file path */

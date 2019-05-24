@@ -3,6 +3,9 @@
 #ifndef _AGAR_WIDGET_FONT_SELECTOR_H_
 #define _AGAR_WIDGET_FONT_SELECTOR_H_
 
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/gui/pane.h>
 #include <agar/gui/box.h>
 #include <agar/gui/tlist.h>
@@ -43,4 +46,5 @@ AG_FontSelector *_Nonnull AG_FontSelectorNew(void *_Nullable, Uint);
 __END_DECLS
 
 #include <agar/gui/close.h>
+#endif /* AG_SERIALIZATION */
 #endif /* _AGAR_WIDGET_FONT_SELECTOR_H_ */

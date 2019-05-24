@@ -114,6 +114,7 @@ AG_ButtonNewUint16(void *parent, Uint flags, const char *caption, Uint16 *v)
 	return (bu);
 }
 
+#if AG_MODEL != AG_SMALL
 AG_Button *
 AG_ButtonNewUint32(void *parent, Uint flags, const char *caption, Uint32 *v)
 {
@@ -121,6 +122,7 @@ AG_ButtonNewUint32(void *parent, Uint flags, const char *caption, Uint32 *v)
 	AG_BindUint32(bu, "state", v);
 	return (bu);
 }
+#endif
 
 AG_Button *
 AG_ButtonNewFlag(void *parent, Uint flags, const char *caption,
@@ -149,6 +151,7 @@ AG_ButtonNewFlag16(void *parent, Uint flags, const char *caption,
 	return (bu);
 }
 
+#if AG_MODEL != AG_SMALL
 AG_Button *
 AG_ButtonNewFlag32(void *parent, Uint flags, const char *caption,
     Uint32 *p, Uint32 bitmask)
@@ -157,7 +160,9 @@ AG_ButtonNewFlag32(void *parent, Uint flags, const char *caption,
 	AG_BindFlag32(bu, "state", p, bitmask);
 	return (bu);
 }
+#endif
 
+#ifdef AG_TIMERS
 /* Delay/repeat timer callbacks for AG_BUTTON_REPEAT */
 static Uint32
 ExpireRepeat(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -176,6 +181,7 @@ ExpireDelay(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	AG_AddTimer(bu, &bu->repeatTo, repeatIval, ExpireRepeat, NULL);
 	return (0);
 }
+#endif /* AG_TIMERS */
 
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
@@ -186,13 +192,14 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	void *pState;
 	int x = AG_INT(2);
 	int y = AG_INT(3);
-		
+
+#ifdef AG_TIMERS
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimer(bu, &bu->repeatTo);
 		AG_DelTimer(bu, &bu->delayTo);
 		return;
 	}
-	
+#endif
 	if (AG_WidgetDisabled(bu) ||
 	    x < 0 || y < 0 ||
 	    x > WIDGET(bu)->w || y > WIDGET(bu)->h) {
@@ -236,12 +243,14 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	}
 	AG_UnlockVariable(binding);
 
+#ifdef AG_TIMERS
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimer(bu, &bu->repeatTo);
 		AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
 		AG_AddTimer(bu, &bu->delayTo, agMouseSpinDelay,
 		    ExpireDelay, "%i", agMouseSpinIval);
 	}
+#endif
 }
 
 static void
@@ -277,10 +286,12 @@ KeyUp(AG_Event *_Nonnull event)
 	if (AG_WidgetDisabled(bu)) {
 		return;
 	}
+#ifdef AG_TIMERS
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimer(bu, &bu->delayTo);
 		AG_DelTimer(bu, &bu->repeatTo);
 	}
+#endif
 	if (keysym != AG_KEY_RETURN &&		/* TODO AG_Action */
 	    keysym != AG_KEY_KP_ENTER &&
 	    keysym != AG_KEY_SPACE) {
@@ -315,12 +326,13 @@ KeyDown(AG_Event *_Nonnull event)
 	SetState(bu, binding, pState, 1);
 	AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
 	bu->flags |= AG_BUTTON_KEYDOWN;
-
+#ifdef AG_TIMERS
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimer(bu, &bu->repeatTo);
 		AG_AddTimer(bu, &bu->delayTo, agKbdDelay,
 		    ExpireDelay, "%i", agKbdRepeat);
 	}
+#endif
 	AG_UnlockVariable(binding);
 }
 
@@ -355,9 +367,10 @@ Init(void *_Nonnull obj)
 	bu->rPad = 4;
 	bu->tPad = 3;
 	bu->bPad = 3;
+#ifdef AG_TIMERS
 	AG_InitTimer(&bu->delayTo, "delay", 0);
 	AG_InitTimer(&bu->repeatTo, "repeat", 0);
-
+#endif
 	AG_AddEvent(bu, "widget-shown", OnShow, NULL);
 	AG_SetEvent(bu, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(bu, "mouse-button-down", MouseButtonDown, NULL);
@@ -424,9 +437,6 @@ GetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull binding,
 	case AG_VARIABLE_UINT16:
 		v = (int)(*(Uint16 *)p);
 		break;
-	case AG_VARIABLE_UINT32:
-		v = (int)(*(Uint32 *)p);
-		break;
 	case AG_VARIABLE_P_FLAG:
 		v = (int)(*(Uint *)p & binding->info.bitmask.u);
 		break;
@@ -436,9 +446,14 @@ GetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull binding,
 	case AG_VARIABLE_P_FLAG16:
 		v = (int)(*(Uint16 *)p & binding->info.bitmask.u16);
 		break;
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_UINT32:
+		v = (int)(*(Uint32 *)p);
+		break;
 	case AG_VARIABLE_P_FLAG32:
 		v = (int)(*(Uint32 *)p & binding->info.bitmask.u32);
 		break;
+#endif
 	default:
 		v = 0;
 		break;
@@ -463,9 +478,6 @@ SetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull binding,
 	case AG_VARIABLE_UINT16:
 		*(Uint16 *)p = v;
 		break;
-	case AG_VARIABLE_UINT32:
-		*(Uint32 *)p = v;
-		break;
 	case AG_VARIABLE_P_FLAG:
 		AG_SETFLAGS(*(Uint *)p, binding->info.bitmask.u, v);
 		break;
@@ -475,9 +487,14 @@ SetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull binding,
 	case AG_VARIABLE_P_FLAG16:
 		AG_SETFLAGS(*(Uint16 *)p, binding->info.bitmask.u16, v);
 		break;
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_UINT32:
+		*(Uint32 *)p = v;
+		break;
 	case AG_VARIABLE_P_FLAG32:
 		AG_SETFLAGS(*(Uint32 *)p, binding->info.bitmask.u32, v);
 		break;
+#endif
 	default:
 		break;
 	}
@@ -645,8 +662,10 @@ AG_ButtonSetRepeatMode(AG_Button *bu, int repeat)
 	if (repeat) {
 		bu->flags |= (AG_BUTTON_REPEAT);
 	} else {
+#ifdef AG_TIMERS
 		AG_DelTimer(bu, &bu->repeatTo);
 		AG_DelTimer(bu, &bu->delayTo);
+#endif
 		bu->flags &= ~(AG_BUTTON_REPEAT);
 	}
 	AG_ObjectUnlock(bu);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  */
 
 /*
- * Core initialization routines.
+ * Agar-Core initialization routines.
  */
 
 #include <agar/config/version.h>
@@ -66,48 +66,63 @@ pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */
 AG_Thread agEventThread;			/* Event-processing thread */
 #endif
 
+#ifdef AG_SERIALIZATION
 AG_Config *agConfig = NULL;			/* Global Agar config data */
+#endif
+
 void (*agAtexitFunc)(void) = NULL;		/* User exit function */
 void (*agAtexitFuncEv)(AG_Event *) = NULL;	/* User exit handler */
 char *agProgName = NULL;			/* Optional application name */
 
+#ifdef AG_VERBOSITY
 int agVerbose = 0;				/* Verbose console output */
+#endif
+#ifdef AG_TIMERS
 int agSoftTimers = 0;				/* Disable hardware timers */
+#endif
 
+/* Initialize the Agar-Core library */
 int
 AG_InitCore(const char *progname, Uint flags)
 {
+#ifdef AG_SERIALIZATION
 	if (agConfig != NULL) {
 		AG_SetError("AG_Core already initialized");
 		return (-1);
 	}
+#endif
+#ifdef AG_VERBOSITY
 	if (flags & AG_VERBOSE)
 		agVerbose = 1;
+#endif
+#ifdef AG_TIMERS
 	if (flags & AG_SOFT_TIMERS)
 		agSoftTimers = 1;
-
+#endif
+	/* Copy in any specified program name. */
 	if (progname != NULL) {
 		if ((agProgName = TryStrdup(progname)) == NULL)
 			return (-1);
 	} else {
 		agProgName = NULL;
 	}
-
 #ifdef ENABLE_NLS
+	/* Bind to the proper translation */
 	bindtextdomain("agar", LOCALEDIR);
 	bind_textdomain_codeset("agar", "UTF-8");
 	textdomain("agar");
 #endif
-
+	/* Initialize AG_Error(3), AG_String(3) and AG_Event(3) interfaces. */
 	if (AG_InitErrorSubsystem() == -1 ||
 	    AG_InitStringSubsystem() == -1 ||
 	    AG_InitEventSubsystem(flags) == -1) {
 		return (-1);
 	}
+	/* Fetch CPU information. */
 	AG_GetCPUInfo(&agCPU);
 
-	/* Initialize the thread resources. */
 #ifdef AG_THREADS
+	/* Initialize threads. */
 	agEventThread = AG_ThreadSelf();		/* Main thread */
 # ifdef _XBOX
 	ptw32_processInitialize();
@@ -125,14 +140,16 @@ AG_InitCore(const char *progname, Uint flags)
 # endif
 #endif /* AG_THREADS */
 
-	/* Register the object classes from ag_core. */
+	/* Initialize object classes and register Agar-Core classes */
 	AG_InitClassTbl();
+#ifdef AG_SERIALIZATION
 	AG_RegisterClass(&agConfigClass);
 	AG_RegisterClass(&agDbClass);
-#if defined(HAVE_DB4) || defined(HAVE_DB5)
+# if defined(HAVE_DB4) || defined(HAVE_DB5)
 	AG_RegisterClass(&agDbHashClass);
 	AG_RegisterClass(&agDbBtreeClass);
-#endif
+# endif
+#endif /* AG_SERIALIZATION */
 
 	/* Select the default AG_Time(3) backend. */
 #if defined(_WIN32)
@@ -144,9 +161,8 @@ AG_InitCore(const char *progname, Uint flags)
 #else
 	AG_SetTimeOps(&agTimeOps_dummy);
 #endif
-	
-	/* Select the network access routines. */
 #ifdef AG_NETWORK
+	/* Select the network access routines. */
 	{
 		int rv;
 # if defined(HAVE_WINSOCK2)
@@ -161,38 +177,46 @@ AG_InitCore(const char *progname, Uint flags)
 		if (rv != 0)
 			return (-1);
 	}
-#endif
-	
-	/* Select the user account interface routines. */
-#if defined(_XBOX)
-	AG_SetUserOps(&agUserOps_xbox);
-#elif defined(_WIN32) && defined(HAVE_CSIDL)
-	AG_SetUserOps(&agUserOps_win32);
-#elif defined(HAVE_GETENV) || (defined(HAVE_GETPWUID) && defined(HAVE_GETUID))
-	if (flags & AG_POSIX_USERS) {			/* Prefer posix */
-# if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-		AG_SetUserOps(&agUserOps_posix);
-# else
-		AG_SetUserOps(&agUserOps_getenv);
-# endif
-	} else {					/* Prefer getenv */
-# if defined(HAVE_GETENV)
-		AG_SetUserOps(&agUserOps_getenv);
-# else
-		AG_SetUserOps(&agUserOps_posix);
-# endif
-	}
-#else
-	AG_SetUserOps(&agUserOps_dummy);
-#endif
+#endif /* AG_NETWORK */
 
+#ifdef AG_USER
+	/* Select the user account interface routines. */
+# if defined(_XBOX)
+	AG_SetUserOps(&agUserOps_xbox);
+# elif defined(_WIN32) && defined(HAVE_CSIDL)
+	AG_SetUserOps(&agUserOps_win32);
+# elif defined(HAVE_GETENV) || (defined(HAVE_GETPWUID) && defined(HAVE_GETUID))
+	if (flags & AG_POSIX_USERS) {			/* Prefer posix */
+#  if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
+		AG_SetUserOps(&agUserOps_posix);
+#  else
+		AG_SetUserOps(&agUserOps_getenv);
+#  endif
+	} else {					/* Prefer getenv */
+#  if defined(HAVE_GETENV)
+		AG_SetUserOps(&agUserOps_getenv);
+#  else
+		AG_SetUserOps(&agUserOps_posix);
+#  endif
+	}
+# else /* !AG_USER */
+	AG_SetUserOps(&agUserOps_dummy);
+# endif
+#endif /* AG_USER */
+
+#ifdef AG_TIMERS
+	/* Initialize the timer system */
 	AG_InitTimers();
+#endif
+#ifdef AG_SERIALIZATION
+	/* Initialize the AG_DataSource(3) interface */
 	AG_DataSourceInitSubsystem();
 
+	/* Initialize the global AG_Config(3) object. */
 	if ((agConfig = TryMalloc(sizeof(AG_Config))) == NULL ||
-	    AG_ConfigInit(agConfig, flags) == -1) {
+	    AG_ConfigInit(agConfig, flags) == -1)
 		return (-1);
-	}
+#endif
 	return (0);
 }
 
@@ -221,29 +245,32 @@ AG_Quit(void)
 void
 AG_Destroy(void)
 {
+#ifdef AG_SERIALIZATION
 	if (agConfig == NULL)
 		return;
-
+#endif
 	if (agAtexitFunc != NULL) { agAtexitFunc(); }
 	if (agAtexitFuncEv != NULL) { agAtexitFuncEv(NULL); }
+#ifdef AG_USER
 	if (agUserOps != NULL && agUserOps->destroy != NULL) {
 		agUserOps->destroy();
 		agUserOps = NULL;
 	}
-
+#endif
+#ifdef AG_SERIALIZATION
 	AG_ObjectDestroy(agConfig);
 	agConfig = NULL;
-
 	AG_DataSourceDestroySubsystem();
+#endif
+#ifdef AG_TIMERS
 	AG_DestroyTimers();
-
+#endif
 #ifdef AG_NETWORK
 	if (agNetOps != NULL && agNetOps->destroy != NULL) {
 		agNetOps->destroy();
 	}
 	agNetOps = NULL;
 #endif
-
 	AG_DestroyClassTbl();
 
 #ifdef AG_THREADS
@@ -255,7 +282,9 @@ AG_Destroy(void)
 	AG_DestroyEventSubsystem();
 	AG_DestroyStringSubsystem();
 	AG_DestroyErrorSubsystem();
-	Free(agProgName); agProgName = NULL;
+
+	Free(agProgName);
+	agProgName = NULL;
 }
 
 void

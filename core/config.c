@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,9 +25,11 @@
 
 /*
  * Global configuration object (agObject). Used to store Agar-related
- * settings, but applications are free to define new properties
- * (note: the "ag_" prefix is reserved for Agar settings).
+ * (ag_*) settings, but application-defined settings can also be created.
  */
+
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
 
 #include <agar/core/core.h>
 #include <agar/core/config.h>
@@ -195,6 +197,7 @@ AG_ConfigClearPaths(AG_Config *cfg)
 
 	for (i = 0; i < AG_CONFIG_PATH_LAST; i++) {
 		AG_ConfigPathQ *pathq = &cfg->paths[i];
+
 		for (cp = SLIST_FIRST(pathq);
 		     cp != SLIST_END(pathq);
 		     cp = cpNext) {
@@ -256,8 +259,9 @@ AG_ConfigObject(void)
 void
 AG_ConfigAddPathS(AG_ConfigPathGroup group, const char *_Nonnull s)
 {
-	AG_ConfigPath *loadPath = Malloc(sizeof(AG_ConfigPath));
+	AG_ConfigPath *loadPath;
 
+	loadPath = Malloc(sizeof(AG_ConfigPath));
 	loadPath->s = Strdup(s);
 #ifdef AG_DEBUG
 	if (group >= AG_CONFIG_PATH_LAST) { AG_FatalError("Bad group"); }
@@ -268,9 +272,10 @@ AG_ConfigAddPathS(AG_ConfigPathGroup group, const char *_Nonnull s)
 void
 AG_ConfigAddPath(AG_ConfigPathGroup group, const char *_Nonnull fmt, ...)
 {
-	AG_ConfigPath *loadPath = Malloc(sizeof(AG_ConfigPath));
+	AG_ConfigPath *loadPath;
 	va_list ap;
 	
+	loadPath = Malloc(sizeof(AG_ConfigPath));
 	va_start(ap, fmt);
 	Vasprintf(&loadPath->s, fmt, ap);
 	va_end(ap);
@@ -342,7 +347,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 #endif /* AG_LEGACY */
 
 AG_ObjectClass agConfigClass = {
-	"Agar(Config)",
+	"AG_Config",
 	sizeof(AG_Config),
 	{ 9, 5 },
 	Init,
@@ -352,3 +357,5 @@ AG_ObjectClass agConfigClass = {
 	Save,
 	NULL		/* edit */
 };
+
+#endif /* AG_SERIALIZATION */

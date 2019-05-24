@@ -192,7 +192,7 @@ Iterate(void *_Nonnull obj, AG_DbIterateFn fn, void *_Nullable arg)
 
 AG_DbClass agDbMySQLClass = {
 	{
-		"Agar(Db:DbMySQL)",
+		"AG_Db:AG_DbMySQL",
 		sizeof(AG_DbMySQL),
 		{ 0,0 },
 		Init,

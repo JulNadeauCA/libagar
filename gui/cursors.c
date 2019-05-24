@@ -38,18 +38,17 @@
 #include "cursors/text.xpm"
 
 static struct {
-	char *_Nullable *_Nonnull data;
-	int x, y;
+	char *_Nullable *_Nonnull data;	/* Start of XPM */
+	int x, y;			/* Hotspot */
 } builtins[] = {
-	{ NULL,		0,0 },
-	{ fill_xpm,	23,25 },
-	{ erase_xpm,	10,20 },
-	{ pick_xpm,	8,22 },
-	{ hresize_xpm,	16,17 },
-	{ vresize_xpm,	15,16 },
-	{ lldiag_xpm,	16,15 },
-	{ lrdiag_xpm,	16,15 },
-	{ text_xpm,	15,15 }
+	{ fill_xpm,	23,25 },	/* FILL */
+	{ erase_xpm,	10,20 },	/* ERASE */
+	{ pick_xpm,	8,22 },		/* PICK */
+	{ hresize_xpm,	16,17 },	/* HRESIZE */
+	{ vresize_xpm,	15,16 },	/* VRESIZE */
+	{ lrdiag_xpm,	16,15 },	/* LRDIAG */
+	{ lldiag_xpm,	16,15 },	/* LLDIAG */
+	{ text_xpm,	15,15 }		/* TEXT */
 };
 
 /* Create a new cursor from raw bitmap data and a transparency mask. */
@@ -60,8 +59,7 @@ AG_CursorNew(void *obj, Uint w, Uint h, const Uint8 *data, const Uint8 *mask,
 	AG_Driver *drv = obj;
 	AG_Cursor *ac;
 
-	ac = AGDRIVER_CLASS(drv)->createCursor(drv, w, h, data, mask,
-	    xHot, yHot);
+	ac = AGDRIVER_CLASS(drv)->createCursor(drv, w,h, data,mask, xHot,yHot);
 	if (ac == NULL) {
 		return (NULL);
 	}
@@ -126,22 +124,17 @@ AG_CursorFromXPM(void *drv, char *xpm[], int xHot, int yHot)
 }
 
 /* Initialize Agar's set of built-in cursors. */
-int
+void
 AG_InitStockCursors(AG_Driver *drv)
 {
-	AG_Cursor *ac;
 	int i;
 
-	for (i = 1; i < AG_LAST_CURSOR; i++) {
-		ac = AG_CursorFromXPM(drv, builtins[i].data,
-		    builtins[i].x, builtins[i].y);
-		if (ac == NULL)
-			goto fail;
+	for (i = 0; i < AG_LAST_CURSOR-1; i++) {
+		(void)AG_CursorFromXPM(drv,
+		    builtins[i].data,
+		    builtins[i].x,
+		    builtins[i].y);
 	}
-	return (0);
-fail:
-	AG_FreeCursors(drv);
-	return (-1);
 }
 
 /* Free all cursors allocated by a driver. */

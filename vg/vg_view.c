@@ -316,7 +316,7 @@ KeyDown(AG_Event *_Nonnull event)
 	VG_Tool *tool = VG_CURTOOL(vv);
 	int sym = AG_INT(1);
 	int mod = AG_INT(2);
-	Uint32 unicode = (Uint)AG_ULONG(3);
+	AG_Char ch = AG_CHAR(3);
 	VG_ToolCommand *cmd;
 	
 	if (vv->vg == NULL)
@@ -329,7 +329,7 @@ KeyDown(AG_Event *_Nonnull event)
 	}
 	AG_Redraw(vv);
 	if (tool->ops->keydown != NULL &&
-	    tool->ops->keydown(tool, sym, mod, unicode) == 1) {
+	    tool->ops->keydown(tool, sym, mod, ch) == 1) {
 		return;
 	}
 	TAILQ_FOREACH(cmd, &tool->cmds, cmds) {
@@ -348,7 +348,7 @@ KeyUp(AG_Event *_Nonnull event)
 	VG_Tool *tool = VG_CURTOOL(vv);
 	int sym = AG_INT(1);
 	int mod = AG_INT(2);
-	Uint32 unicode = (Uint32)AG_ULONG(3);
+	AG_Char ch = AG_CHAR(3);
 	
 	if (vv->vg == NULL)
 		return;
@@ -359,7 +359,7 @@ KeyUp(AG_Event *_Nonnull event)
 
 	if (tool != NULL &&
 	    tool->ops->keyup != NULL)
-		tool->ops->keyup(tool, sym, mod, unicode);
+		tool->ops->keyup(tool, sym, mod, ch);
 }
 
 static void
@@ -1078,7 +1078,7 @@ VG_DrawSurface(VG_View *vv, int x, int y, float degs, int su)
 
 AG_WidgetClass vgViewClass = {
 	{
-		"Agar(Widget):VG(View)",
+		"AG_Widget:VG_View",
 		sizeof(VG_View),
 		{ 0,0 },
 		Init,

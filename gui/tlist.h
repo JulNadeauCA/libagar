@@ -104,9 +104,11 @@ __BEGIN_DECLS
 extern AG_WidgetClass agTlistClass;
 
 AG_Tlist *_Nonnull AG_TlistNew(void *_Nullable, Uint);
+#ifdef AG_TIMERS
 AG_Tlist *_Nonnull AG_TlistNewPolled(void *_Nullable, Uint,
                                      _Nonnull AG_EventFn,
 				     const char *_Nullable, ...);
+#endif
 
 void AG_TlistSizeHint(AG_Tlist *_Nonnull, const char *_Nonnull, int);
 void AG_TlistSizeHintPixels(AG_Tlist *_Nonnull, int,int);
@@ -116,8 +118,9 @@ void AG_TlistSetItemHeight(AG_Tlist *_Nonnull, int);
 void AG_TlistSetIconWidth(AG_Tlist *_Nonnull, int);
 void AG_TlistSetIcon(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull,
                      const AG_Surface *_Nullable);
+#ifdef AG_TIMERS
 void AG_TlistSetRefresh(AG_Tlist *_Nonnull, int);
-
+#endif
 void AG_TlistUniq(AG_Tlist *_Nonnull);
 
 void AG_TlistClear(AG_Tlist *_Nonnull);

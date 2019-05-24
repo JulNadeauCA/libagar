@@ -96,7 +96,8 @@ and
 .Fn AG_MapStockCursor
 both return a pointer to the
 .Ft AG_CursorArea
-structure describing the cursor-change area, or NULL if an error has occurred.
+structure describing the cursor-change area, or NULL if an error has occurred
+(without setting an error message).
 .Pp
 The
 .Fn AG_SetCursor
@@ -111,6 +112,10 @@ If the pointer at
 is NULL, a new cursor area is mapped and returned into it.
 Otherwise, the rectangle of the existing cursor area is updated from
 .Fa r .
+If the given cursor doesn't exist (or doesn't exist yet, as for an
+.Xr AG_Window 3
+in the process of being setup), then NULL is returned into
+.Fa cursorArea .
 .Pp
 .Fn AG_UnmapCursor
 removes the specified cursor-change area.

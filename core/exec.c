@@ -55,6 +55,7 @@
 #include <errno.h>
 
 #include <agar/core/core.h>
+#ifdef AG_ENABLE_EXEC
 
 #if defined(_XBOX)
 # include <agar/core/xbox.h>
@@ -357,3 +358,4 @@ AG_Kill(AG_ProcessID pid)
 	AG_SetErrorS(_("AG_Kill() is not supported on this platform"));
 	return (-1);
 }
+#endif /* AG_ENABLE_EXEC */

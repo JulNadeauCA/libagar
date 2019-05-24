@@ -4,15 +4,16 @@
  * C-string related routines.
  */
 
+#ifdef AG_UNICODE
 /*
  * Return the length of a UCS-4 string in characters (not including NUL).
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ AG_Size _Pure_Attribute
-AG_LengthUCS4(const Uint32 *_Nonnull ucs)
+AG_LengthUCS4(const AG_Char *_Nonnull ucs)
 #else
 AG_Size
-ag_length_ucs4(const Uint32 *ucs)
+ag_length_ucs4(const AG_Char *ucs)
 #endif
 {
 	AG_Size len;
@@ -28,10 +29,10 @@ ag_length_ucs4(const Uint32 *ucs)
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Const_Attribute
-AG_CharLengthUTF8FromUCS4(Uint32 ch)
+AG_CharLengthUTF8FromUCS4(AG_Char ch)
 #else
 int
-ag_char_length_utf8_from_ucs4(Uint32 ch)
+ag_char_length_utf8_from_ucs4(AG_Char ch)
 #endif
 {
 	if      (ch <  0x80)		{ return (1); }
@@ -49,13 +50,13 @@ ag_char_length_utf8_from_ucs4(Uint32 ch)
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ int
-AG_LengthUTF8FromUCS4(const Uint32 *_Nonnull ucs4, AG_Size *_Nonnull rv)
+AG_LengthUTF8FromUCS4(const AG_Char *_Nonnull ucs4, AG_Size *_Nonnull rv)
 #else
 int
-ag_length_utf8_from_ucs4(const Uint32 *_Nonnull ucs4, AG_Size *_Nonnull rv)
+ag_length_utf8_from_ucs4(const AG_Char *_Nonnull ucs4, AG_Size *_Nonnull rv)
 #endif
 {
-	const Uint32 *c;
+	const AG_Char *c;
 	int cLen;
 
 	*rv = 0;
@@ -130,6 +131,7 @@ ag_length_utf8(const char *s)
 	}
 	return (rv);
 }
+#endif /* AG_UNICODE */
 
 /*
  * Compare two strings ignoring case.

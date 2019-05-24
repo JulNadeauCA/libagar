@@ -249,6 +249,7 @@ OnDetach(AG_Event *_Nonnull event)
 	}
 }
 
+#ifdef AG_TIMERS
 /* Timer callback for AG_RedrawOnTick(). */
 static Uint32
 RedrawOnTickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -282,18 +283,22 @@ RedrawOnChangeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	AG_UnlockVariable(V);
 	return (to->ival);
 }
+#endif /* AG_TIMERS */
 
 static void
 OnShow(AG_Event *_Nonnull event)
 {
 	AG_Widget *wid = AG_SELF();
+#ifdef AG_TIMERS
 	AG_RedrawTie *rt;
-
+#endif
 #ifdef AG_DEBUG
-	if (wid->font == NULL) { AG_FatalError("wid->font == NULL"); }
+	if (wid->font == NULL)
+		AG_FatalError("wid->font=NULL");
 #endif
 	wid->flags |= AG_WIDGET_VISIBLE;
 
+#ifdef AG_TIMERS
 	TAILQ_FOREACH(rt, &wid->pvt.redrawTies, redrawTies) {
 		switch (rt->type) {
 		case AG_REDRAW_ON_TICK:
@@ -306,16 +311,19 @@ OnShow(AG_Event *_Nonnull event)
 			break;
 		}
 	}
+#endif /* AG_TIMERS */
 }
 
 static void
 OnHide(AG_Event *_Nonnull event)
 {
 	AG_Widget *wid = AG_SELF();
+#ifdef AG_TIMERS
 	AG_RedrawTie *rt;
-
+#endif
 	wid->flags &= ~(AG_WIDGET_VISIBLE);
-	
+
+#ifdef AG_TIMERS
 	TAILQ_FOREACH(rt, &wid->pvt.redrawTies, redrawTies) {
 		switch (rt->type) {
 		case AG_REDRAW_ON_TICK:
@@ -324,6 +332,7 @@ OnHide(AG_Event *_Nonnull event)
 			break;
 		}
 	}
+#endif
 }
 
 static void
@@ -331,8 +340,9 @@ Init(void *_Nonnull obj)
 {
 	AG_Widget *wid = obj;
 	AG_Event *ev;
-
+#ifdef AG_SERIALIZATION
 	OBJECT(wid)->save_pfx = "/widgets";
+#endif
 	OBJECT(wid)->flags |= AG_OBJECT_NAME_ONATTACH;
 
 	wid->flags = 0;
@@ -379,8 +389,9 @@ Init(void *_Nonnull obj)
 	ev->flags |= AG_EVENT_PROPAGATE;
 	ev = AG_SetEvent(wid, "widget-hidden", OnHide, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
-
+#ifdef AG_TIMERS
 	TAILQ_INIT(&wid->pvt.redrawTies);
+#endif
 	TAILQ_INIT(&wid->pvt.cursorAreas);
 }
 
@@ -388,6 +399,7 @@ Init(void *_Nonnull obj)
 void
 AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
 {
+#ifdef AG_TIMERS
 	AG_Widget *wid = obj;
 	AG_RedrawTie *rt;
 	
@@ -418,12 +430,14 @@ AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
 	} else {
 		/* Fire from OnShow() */
 	}
+#endif /* AG_TIMERS */
 }
 
 /* Arrange for an unconditional redraw at a periodic interval. */
 void
 AG_RedrawOnTick(void *obj, int refresh_ms)
 {
+#ifdef AG_TIMERS
 	AG_Widget *wid = obj;
 	AG_RedrawTie *rt;
 
@@ -452,6 +466,7 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 	} else {
 		/* Fire from OnShow() */
 	}
+#endif /* AG_TIMERS */
 }
 
 /* Default event handler for "key-down" (for widgets using Actions). */
@@ -579,6 +594,7 @@ AG_ActionOnKeyUp(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 		AG_SetEvent(wid, "key-up", AG_WidgetStdKeyUp, NULL);
 }
 
+#ifdef AG_TIMERS
 /* Timer callback for AG_ACTION_ON_KEYREPEAT actions. */
 static Uint32
 ActionKeyRepeatTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -594,11 +610,13 @@ ActionKeyRepeatTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	(void)AG_ExecAction(wid, a);
 	return (agKbdRepeat);
 }
+#endif /* AG_TIMERS */
 
 /* Tie an action to a key-down event, with key repeat. */
 void
 AG_ActionOnKey(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 {
+#ifdef AG_TIMERS
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
 
@@ -607,10 +625,10 @@ AG_ActionOnKey(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
 	AG_InitTimer(&at->data.key.toRepeat, "actionKeyRepeat-", 0);
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	Strlcat(at->data.key.toRepeat.name, action,
 	    sizeof(at->data.key.toRepeat.name));
-#endif
+# endif
 	Strlcpy(at->action, action, sizeof(at->action));
 	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
 	
@@ -619,6 +637,11 @@ AG_ActionOnKey(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 		AG_SetEvent(wid, "key-up", AG_WidgetStdKeyUp, NULL);
 		AG_SetEvent(wid, "key-down", AG_WidgetStdKeyDown, NULL);
 	}
+#else /* AG_TIMERS */
+
+	AG_ActionOnKeyDown(obj, sym, mod, action);
+
+#endif /* AG_TIMERS */
 }
 
 /* Configure a widget action. */
@@ -803,10 +826,14 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 		AG_FatalError("AG_ExecKeyAction() type");
 #endif
 	TAILQ_FOREACH(at, &wid->pvt.keyActions, ties) {
+#ifdef AG_TIMERS
 		if (at->type != et &&
-		    at->type != AG_ACTION_ON_KEYREPEAT) {
+		    at->type != AG_ACTION_ON_KEYREPEAT)
 			continue;
-		}
+#else
+		if (at->type != et)
+			continue;
+#endif
 		if ((at->data.key.mod == AG_KEYMOD_ANY ||
 		     at->data.key.mod & mod) &&
 		    (at->data.key.sym == AG_KEY_ANY ||
@@ -821,7 +848,7 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 		return (0);
 
 	rv = AG_ExecAction(wid, a);
-
+#ifdef AG_TIMERS
 	if (at->type == AG_ACTION_ON_KEYREPEAT) {
 		if (et == AG_ACTION_ON_KEYDOWN) {
 			AG_AddTimer(wid, &at->data.key.toRepeat, agKbdDelay,
@@ -830,6 +857,7 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 			AG_DelTimer(wid, &at->data.key.toRepeat);
 		}
 	}
+#endif
 	return (rv);
 }
 
@@ -974,7 +1002,9 @@ Destroy(void *_Nonnull obj)
 {
 	AG_Widget *wid = obj;
 	AG_CursorArea *ca, *caNext;
+#ifdef AG_TIMERS
 	AG_RedrawTie *rt, *rtNext;
+#endif
 	AG_ActionTie *at, *atNext;
 	AG_Variable *V;
 	Uint i, j;
@@ -985,12 +1015,14 @@ Destroy(void *_Nonnull obj)
 		caNext = TAILQ_NEXT(ca, cursorAreas);
 		free(ca);
 	}
+#ifdef AG_TIMERS
 	for (rt = TAILQ_FIRST(&wid->pvt.redrawTies);
 	     rt != TAILQ_END(&wid->pvt.redrawTies);
 	     rt = rtNext) {
 		rtNext = TAILQ_NEXT(rt, redrawTies);
 		free(rt);
 	}
+#endif
 	for (at = TAILQ_FIRST(&wid->pvt.mouseActions);
 	     at != TAILQ_END(&wid->pvt.mouseActions);
 	     at = atNext) {
@@ -2081,16 +2113,36 @@ AG_SetFont(void *obj, const AG_Font *font)
 	AG_Widget *wid = obj;
 
 	AG_SetString(wid, "font-family", OBJECT(font)->name);
-	AG_SetString(wid, "font-size", AG_Printf("%.2fpts", font->spec.size));
+	AG_SetStringF(wid, "font-size", "%.2fpts", font->spec.size);
 	AG_SetString(wid, "font-weight", (font->flags & AG_FONT_BOLD) ? "bold" : "normal");
 	AG_SetString(wid, "font-style", (font->flags & AG_FONT_ITALIC) ? "italic" : "normal");
 	AG_WidgetCompileStyle(wid);
 	AG_Redraw(wid);
 }
+
+/* Set the value of a CSS parameter to the given formatted string. */
+void
+AG_SetStyleF(void *obj, const char *which, const char *fmt, ...)
+{
+	AG_Widget *wid = obj;
+	va_list ap;
+	char *val;
+
+	va_start(ap, fmt);
+	Vasprintf(&val, fmt, ap);
+	va_end(ap);
+
+	AG_SetStyle(wid, which, val);
+	free(val);
+}
+
+/* Set the value of a CSS parameter to the given string. */
 void
 AG_SetStyle(void *obj, const char *which, const char *value)
 {
 	AG_Widget *wid = obj;
+	
+	AG_ASSERT_CLASS(obj, "AG_Widget:*");
 
 	if (value != NULL) {
 		AG_SetString(wid, which, value);

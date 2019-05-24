@@ -35,13 +35,17 @@ AG_Pixmap *_Nonnull AG_PixmapFromSurfaceScaled(void *_Nullable, Uint,
 					       Uint,Uint);
 AG_Pixmap *_Nonnull AG_PixmapFromSurfaceNODUP(void *_Nullable, Uint,
                                               AG_Surface *_Nonnull);
+#ifdef AG_SERIALIZATION
 AG_Pixmap *_Nonnull AG_PixmapFromFile(void *_Nullable, Uint, const char *_Nonnull);
+#endif
 AG_Pixmap *_Nonnull AG_PixmapFromTexture(void *_Nullable, Uint, Uint, int);
 
 int AG_PixmapAddSurface(AG_Pixmap *_Nonnull, const AG_Surface *_Nonnull);
 int AG_PixmapAddSurfaceScaled(AG_Pixmap *_Nonnull, const AG_Surface *_Nonnull,
                               Uint,Uint);
+#ifdef AG_SERIALIZATION
 int AG_PixmapAddSurfaceFromFile(AG_Pixmap *_Nonnull, const char *_Nonnull);
+#endif
 
 void AG_PixmapReplaceSurface(AG_Pixmap *_Nonnull, int, AG_Surface *_Nonnull);
 void AG_PixmapUpdateSurface(AG_Pixmap *_Nonnull, int);

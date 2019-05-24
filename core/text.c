@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2012-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,9 @@
 /*
  * Dynamically-allocated, multilanguage text element.
  */
+
+#include <agar/config/ag_unicode.h>
+#ifdef AG_UNICODE
 
 #include <agar/core/core.h>
 
@@ -310,6 +313,7 @@ fail:
 	return (NULL);
 }
 
+#ifdef AG_SERIALIZATION
 /* Load text from a data source. */
 int
 AG_TextLoad(AG_Text *txt, AG_DataSource *ds)
@@ -370,6 +374,7 @@ AG_TextSave(AG_DataSource *ds, AG_Text *txt)
 	AG_WriteUint32(ds, (Uint32)txt->flags & AG_TEXT_SAVED_FLAGS);
 	AG_MutexUnlock(&txt->lock);
 }
+#endif /* AG_SERIALIZATION */
 
 /* Set the text of an element (in its active language) */
 int
@@ -461,3 +466,5 @@ AG_TextFree(AG_Text *_Nullable txt)
 	AG_TextDestroy(txt);
 	AG_Free(txt);
 }
+
+#endif /* AG_UNICODE */

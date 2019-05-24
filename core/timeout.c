@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,11 +28,14 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_TIMERS
 
 struct ag_objectq agTimerObjQ = TAILQ_HEAD_INITIALIZER(agTimerObjQ);
-Uint              agTimerCount = 0;
-AG_Object         agTimerMgr;
-AG_Mutex          agTimerLock;
+Uint agTimerCount = 0;
+AG_Object agTimerMgr;
+#ifdef AG_THREADS
+AG_Mutex agTimerLock;
+#endif
 
 void
 AG_InitTimers(void)
@@ -49,12 +52,42 @@ AG_DestroyTimers(void)
 }
 
 /*
- * Attach a timer to an object (or &agTimerMgr if object argument is NULL),
- * and schedule the execution of a timer callback routine fn, in ival ticks.
+ * Create a new anonymous auto-allocated timer and schedule the
+ * execution of a callback routine fn in ival ticks.
+ */
+AG_Timer *
+AG_AddTimerAuto(void *p, Uint32 ival, AG_TimerFn fn, const char *fmt, ...)
+{
+	AG_Object *ob = (p != NULL) ? OBJECT(p) : &agTimerMgr;
+	AG_Timer *to;
+	AG_Event *ev;
+
+	if ((to = TryMalloc(sizeof(AG_Timer))) == NULL) {
+		return (NULL);
+	}
+	AG_InitTimer(to, "auto", AG_TIMER_AUTO_FREE);
+	AG_LockTimers(ob);
+	if (AG_AddTimer(ob, to, ival, fn, NULL) == -1) {
+		goto fail;
+	}
+	ev = &to->fnEvent;
+	AG_EVENT_GET_ARGS(ev, fmt);
+	ev->argc0 = ev->argc;
+	AG_UnlockTimers(ob);
+	return (to);
+fail:
+	AG_UnlockTimers(ob);
+	free(to);
+	return (NULL);
+}
+
+/*
+ * Attach a timer to an object (or &agTimerMgr if object=NULL) and schedule
+ * the execution of a callback routine fn in ival ticks.
  *
- * The AG_Timer structure should have been previously initialized with
- * AG_InitTimer(). If the timer is already attached/scheduled, this function
- * may be used to change the interval or the callback function/arguments.
+ * The AG_Timer structure should have been initialized by AG_InitTimer().
+ * If the referenced timer is already running then AG_AddTimer() will update
+ * the interval / callback function & arguments of the existing timer entry.
  */
 int
 AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
@@ -146,39 +179,6 @@ AG_InitTimer(AG_Timer *to, const char *name, Uint flags)
 	to->ival = 0;
 	to->tSched = 0;
 	to->fn = NULL;
-}
-
-/*
- * Variant of AG_AddTimer() for an auto-allocated, anonymous timer. The
- * timer structure will be freed upon cancellation.
- *
- * The returned pointer is only safe to access as long as AG_LockTimers()
- * is in effect.
- */
-AG_Timer *
-AG_AddTimerAuto(void *p, Uint32 ival, AG_TimerFn fn, const char *fmt, ...)
-{
-	AG_Object *ob = (p != NULL) ? OBJECT(p) : &agTimerMgr;
-	AG_Timer *to;
-	AG_Event *ev;
-
-	if ((to = TryMalloc(sizeof(AG_Timer))) == NULL) {
-		return (NULL);
-	}
-	AG_InitTimer(to, "auto", AG_TIMER_AUTO_FREE);
-	AG_LockTimers(ob);
-	if (AG_AddTimer(ob, to, ival, fn, NULL) == -1) {
-		goto fail;
-	}
-	ev = &to->fnEvent;
-	AG_EVENT_GET_ARGS(ev, fmt);
-	ev->argc0 = ev->argc;
-	AG_UnlockTimers(ob);
-	return (to);
-fail:
-	AG_UnlockTimers(ob);
-	free(to);
-	return (NULL);
 }
 
 /*
@@ -286,30 +286,6 @@ AG_TimerIsRunning(void *p, AG_Timer *to)
 }
 
 /*
- * Block the calling thread until the given timer expires (and is not
- * immediately restarted), or the given delay (in ticks) is exceeded.
- * 
- * XXX TODO use a condition variable instead of a delay loop.
- */
-int
-AG_TimerWait(void *p, AG_Timer *to, Uint32 timeout)
-{
-	AG_Object *ob = (p != NULL) ? OBJECT(p) : &agTimerMgr;
-	Uint32 elapsed = 0;
-
-	for (;;) {
-		if (timeout > 0 && ++elapsed >= timeout) {
-			return (-1);
-		}
-		if (!AG_TimerIsRunning(ob, to)) {
-			break;
-		}
-		AG_Delay(1);
-	}
-	return (0);
-}
-
-/*
  * Execute the callback routines of expired timers using AG_GetTicks()
  * as a time source. This is used on platforms where system timers are not
  * available and delay loops are the only option.
@@ -352,27 +328,4 @@ rescan:
 	}
 	AG_UnlockTiming();
 }
-
-#ifdef AG_LEGACY
-static Uint32
-LegacyTimerCallback(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
-{
-	return to->pvt.fnLegacy(to->obj, to->ival, to->pvt.argLegacy);
-}
-void
-AG_SetTimeout(AG_Timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg,
-    Uint flags)
-{
-	AG_InitTimer((AG_Timer *)to, "legacy", 0);
-	to->pvt.fnLegacy = fn;
-	to->pvt.argLegacy = arg;
-}
-void
-AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 ival)
-{
-	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
-
-	if (AG_AddTimer(ob, to, ival, LegacyTimerCallback, NULL) == -1)
-		AG_FatalError(NULL);
-}
-#endif /* AG_LEGACY */
+#endif /* AG_TIMERS */

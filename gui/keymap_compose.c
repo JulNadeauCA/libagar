@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,13 +29,16 @@
  * Unicode keyboard translation is disabled for performance reasons.
  */
 
+#include <agar/config/ag_unicode.h>
+#ifdef AG_UNICODE
+
 #include <agar/core/core.h>
 #include <agar/gui/widget.h>
 #include <agar/gui/editable.h>
 #include <agar/gui/keymap.h>
 
 int
-AG_KeyInputCompose(AG_Editable *ed, Uint32 key, Uint32 *ins)
+AG_KeyInputCompose(AG_Editable *ed, AG_Char key, AG_Char *ins)
 {
 	int i;
 
@@ -148,3 +151,5 @@ const struct ag_key_composition agCompositionMap[] = {
 };
 const int agCompositionMapSize = sizeof(agCompositionMap) /
                                  sizeof(agCompositionMap[0]);
+
+#endif /* AG_UNICODE */

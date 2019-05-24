@@ -5,21 +5,24 @@
 #include <agar/core/core_begin.h>
 
 #include <agar/core/core_init.h>
-#include <agar/core/string.h>
 
+#include <agar/core/string.h>
 #ifdef _USE_AGAR_STD
 # include <agar/core/snprintf.h>
 # include <agar/core/vsnprintf.h>
 # include <agar/core/vasprintf.h>
 #endif
 
-#include <agar/core/data_source.h>
 #include <agar/core/byteswap.h>
-#include <agar/core/load_integral.h>
-#ifdef AG_HAVE_FLOAT
-#include <agar/core/load_real.h>
+
+#ifdef AG_SERIALIZATION
+# include <agar/core/data_source.h>
+# include <agar/core/load_integral.h>
+# ifdef AG_HAVE_FLOAT
+#  include <agar/core/load_real.h>
+# endif
+# include <agar/core/load_string.h>
 #endif
-#include <agar/core/load_string.h>
 #include <agar/core/load_version.h>
 
 #include <agar/core/version.h>

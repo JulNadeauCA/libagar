@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,11 @@
  * Basic I/O abstraction routines.
  */
 
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/core/core.h>
+
 #include <agar/config/have_fdclose.h>
 
 #include <stdio.h>
@@ -839,3 +843,4 @@ AG_WriteAtP(AG_DataSource *_Nonnull ds, const void *_Nonnull ptr, AG_Size size,
 	return (rv);
 }
 
+#endif /* AG_SERIALIZATION */

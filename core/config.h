@@ -2,6 +2,10 @@
 
 #ifndef _AGAR_CORE_CONFIG_H_
 #define _AGAR_CORE_CONFIG_H_
+
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/core/begin.h>
 
 typedef enum ag_config_path_group {
@@ -53,4 +57,5 @@ int  AG_ConfigFile(const char *_Nonnull, const char *_Nonnull,
 __END_DECLS
 
 #include <agar/core/close.h>
+#endif /* AG_SERIALIZATION */
 #endif /* _AGAR_CORE_CONFIG_H_ */

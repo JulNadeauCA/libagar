@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -71,18 +71,17 @@
 # include <iconv.h>
 #endif
 
-/* AG_Printf() buffers */
+#ifdef AG_ENABLE_STRING
 static char *_Nullable agPrintBuf[AG_STRING_BUFFERS_MAX];
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 static AG_ThreadKey agPrintBufKey[AG_STRING_BUFFERS_MAX];
-#endif
-
-/* Formatting engine extensions */
+# endif
 static AG_FmtStringExt *_Nullable agFmtExtensions = NULL;
-static Uint agFmtExtensionCount = 0;
-#ifdef AG_THREADS
-static _Nullable_Mutex AG_Mutex agFmtExtensionsLock;
-#endif
+static Uint                       agFmtExtensionCount = 0;
+# ifdef AG_THREADS
+static _Nullable_Mutex AG_Mutex   agFmtExtensionsLock;
+# endif
+#endif /* AG_ENABLE_STRING */
 
 #include <agar/core/string_strcasecmp.h>
 
@@ -90,6 +89,7 @@ static _Nullable_Mutex AG_Mutex agFmtExtensionsLock;
 #undef AG_INLINE_HEADER
 #include <agar/core/inline_string.h>
 
+#ifdef AG_ENABLE_STRING
 /*
  * Built-in extended format specifiers.
  */
@@ -714,6 +714,8 @@ AG_PrintfP(const char *_Nonnull fmt, ...)
 	return (fs);
 }
 
+#endif /* AG_ENABLE_STRING */
+
 /*
  * Copy src to string dst of size siz.  At most siz-1 characters
  * will be copied.  Always NUL terminates (unless siz == 0).
@@ -871,18 +873,20 @@ AG_Strcasestr(const char *s, const char *find)
 	return (s);
 }
 
-#ifdef HAVE_ICONV
+#ifdef AG_UNICODE
 
-static Uint32 *_Nullable
+# ifdef HAVE_ICONV
+
+static AG_Char *_Nullable
 ImportUnicodeICONV(const char *_Nonnull encoding,
     const char *_Nonnull s, AG_Size sLen,
     AG_Size *_Nullable pOutLen,
     AG_Size *_Nullable pOutSize)
 {
-	Uint32 *ucs, *ucsNew;
+	AG_Char *ucs, *ucsNew;
 	const char *inPtr;
 	char *wrPtr;
-	AG_Size outSize = (sLen+1)*sizeof(Uint32);
+	AG_Size outSize = (sLen+1)*sizeof(AG_Char);
 	iconv_t cd;
 
 	if ((ucs = TryMalloc(outSize)) == NULL) {
@@ -895,13 +899,13 @@ ImportUnicodeICONV(const char *_Nonnull encoding,
 	wrPtr = (char *)ucs;
 
 	inPtr = s;
-#ifdef HAVE_ICONV_CONST
+#  ifdef HAVE_ICONV_CONST
 	if (iconv(cd, &inPtr, &sLen, &wrPtr, &outSize) == (AG_Size)-1) {
 		AG_SetError("iconv: %s", strerror(errno));
 		iconv_close(cd);
 		goto fail;
 	}
-#else
+#  else
 	{
 		char *tmpBuf;
 		if ((tmpBuf = AG_TryStrdup(inPtr)) == NULL) {
@@ -916,83 +920,83 @@ ImportUnicodeICONV(const char *_Nonnull encoding,
 		}
 		free(tmpBuf);
 	}
-#endif /* !HAVE_ICONV_CONST */
+#  endif /* !HAVE_ICONV_CONST */
 
 	iconv_close(cd);
 
-	outSize = (wrPtr - (char *)ucs)/sizeof(Uint32);
+	outSize = (wrPtr - (char *)ucs) / sizeof(AG_Char);
 	if (pOutLen != NULL) { *pOutLen = outSize; }
 		
 	/* Shrink the buffer down to the actual string length. */
-	ucsNew = TryRealloc(ucs, (outSize+1)*sizeof(Uint32));
+	ucsNew = TryRealloc(ucs, (outSize+1)*sizeof(AG_Char));
 	if (ucsNew == NULL) {
 		goto fail;
 	}
 	ucs = ucsNew;
 	ucs[outSize] = '\0';
-	if (pOutSize != NULL) { *pOutSize = (outSize+1)*sizeof(Uint32); }
+	if (pOutSize != NULL) { *pOutSize = (outSize+1)*sizeof(AG_Char); }
 	return (ucs);
 fail:
 	Free(ucs);
 	return (NULL);
 }
 
-#endif /* HAVE_ICONV */
+# endif /* HAVE_ICONV */
 
 /*
  * Return an internal UCS-4 buffer from the given string and specified
  * encoding. Optionally returns number of characters converted in
  * pOutLen, and allocated buffer size in pOutSize.
  */
-Uint32 *
+AG_Char *
 AG_ImportUnicode(const char *encoding, const char *s, AG_Size *pOutLen,
     AG_Size *pOutSize)
 {
-	Uint32 *ucs;
+	AG_Char *ucs;
 	AG_Size i, j;
 	AG_Size sLen = strlen(s);
 	AG_Size bufLen, utf8len;
 
 	if (strcmp(encoding, "UTF-8") == 0) {
 		utf8len = AG_LengthUTF8(s);
-		bufLen = (utf8len + 1)*sizeof(Uint32);
+		bufLen = (utf8len + 1)*sizeof(AG_Char);
 		if ((ucs = TryMalloc(bufLen)) == NULL) {
 			return (NULL);
 		}
 		for (i = 0, j = 0; i < sLen; i++, j++) {
 			switch (AG_CharLengthUTF8(s[i])) {
 			case 1:
-				ucs[j] = (Uint32)s[i];
+				ucs[j] = (AG_Char)s[i];
 				break;
 			case 2:
-				ucs[j]  = (Uint32)(s[i]   & 0x1f) << 6;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f);
+				ucs[j]  = (AG_Char)(s[i]   & 0x1f) << 6;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f);
 				break;
 			case 3:
-				ucs[j]  = (Uint32)(s[i]   & 0x0f) << 12;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f);
+				ucs[j]  = (AG_Char)(s[i]   & 0x0f) << 12;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f) << 6;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f);
 				break;
 			case 4:
-				ucs[j]  = (Uint32)(s[i]   & 0x07) << 18;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 12;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f);
+				ucs[j]  = (AG_Char)(s[i]   & 0x07) << 18;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f) << 12;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f) << 6;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f);
 				break;
 			case 5:
-				ucs[j]  = (Uint32)(s[i]   & 0x03) << 24;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 18;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 12;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f);
+				ucs[j]  = (AG_Char)(s[i]   & 0x03) << 24;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f) << 18;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f) << 12;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f) << 6;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f);
 				break;
 			case 6:
-				ucs[j]  = (Uint32)(s[i]   & 0x01) << 30;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 24;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 18;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 12;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f);
+				ucs[j]  = (AG_Char)(s[i]   & 0x01) << 30;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f) << 24;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f) << 18;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f) << 12;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f) << 6;
+				ucs[j] |= (AG_Char)(s[++i] & 0x3f);
 				break;
 			case -1:
 				Free(ucs);
@@ -1003,7 +1007,7 @@ AG_ImportUnicode(const char *encoding, const char *s, AG_Size *pOutLen,
 		if (pOutLen != NULL) { *pOutLen = j; }
 		if (pOutSize != NULL) { *pOutSize = bufLen; }
 	} else if (strcmp(encoding, "US-ASCII") == 0) {
-		bufLen = (sLen + 1)*sizeof(Uint32);
+		bufLen = (sLen + 1)*sizeof(AG_Char);
 		if ((ucs = TryMalloc(bufLen)) == NULL) {
 			return (NULL);
 		}
@@ -1014,40 +1018,43 @@ AG_ImportUnicode(const char *encoding, const char *s, AG_Size *pOutLen,
 		if (pOutLen != NULL) { *pOutLen = i; }
 		if (pOutSize != NULL) { *pOutSize = bufLen; }
 	} else {
-#ifdef HAVE_ICONV
+# ifdef HAVE_ICONV
 		ucs = ImportUnicodeICONV(encoding, s, sLen, pOutLen, pOutSize);
-#else
+# else
 		AG_SetError("No such encoding: \"%s\"", encoding);
 		return (NULL);
-#endif
+# endif
 	}
 	return (ucs);
 }
 
-#ifdef HAVE_ICONV
+# ifdef HAVE_ICONV
 
 static int
 ExportUnicodeICONV(const char *_Nonnull encoding, char *_Nonnull dst,
-    const Uint32 *_Nonnull ucs, AG_Size dstSize)
+    const AG_Char *_Nonnull ucs, AG_Size dstSize)
 {
 	const char *inPtr = (const char *)ucs;
-	AG_Size inSize = AG_LengthUCS4(ucs)*sizeof(Uint32);
-	char *wrPtr = dst;
-	AG_Size outSize = dstSize;
+	AG_Size inSize, outSize;
+	char *wrPtr;
 	iconv_t cd;
-	
+
+	inSize = AG_LengthUCS4(ucs) * sizeof(AG_Char)
+	outSize = dstSize;
+	wrPtr = dst;
+
 	if ((cd = iconv_open(encoding, "UCS-4-INTERNAL")) == (iconv_t)-1) {
 		AG_SetError("iconv_open: %s", strerror(errno));
 		return (-1);
 	}
 
-#ifdef HAVE_ICONV_CONST
+#  ifdef HAVE_ICONV_CONST
 	if (iconv(cd, &inPtr, &inSize, &wrPtr, &outSize) == (AG_Size)-1) {
 		AG_SetError("iconv: %s", strerror(errno));
 		iconv_close(cd);
 		return (-1);
 	}
-#else
+#  else
 	{
 		char *tmpBuf;
 		if ((tmpBuf = AG_TryStrdup(inPtr)) == NULL) {
@@ -1062,7 +1069,7 @@ ExportUnicodeICONV(const char *_Nonnull encoding, char *_Nonnull dst,
 		}
 		free(tmpBuf);
 	}
-#endif
+#  endif /* !HAVE_ICONV_CONST */
 
 	iconv_close(cd);
 
@@ -1076,7 +1083,7 @@ ExportUnicodeICONV(const char *_Nonnull encoding, char *_Nonnull dst,
 	return (0);
 }
 
-#endif /* HAVE_ICONV */
+# endif /* HAVE_ICONV */
 
 /*
  * Convert an internal UCS-4 string to a fixed-size buffer using the specified
@@ -1084,14 +1091,14 @@ ExportUnicodeICONV(const char *_Nonnull encoding, char *_Nonnull dst,
  * NUL-terminated.
  */
 int
-AG_ExportUnicode(const char *encoding, char *dst, const Uint32 *ucs,
+AG_ExportUnicode(const char *encoding, char *dst, const AG_Char *ucs,
     AG_Size dstSize)
 {
 	AG_Size len;
 
 	if (strcmp(encoding, "UTF-8") == 0) {
 		for (len = 0; *ucs != '\0' && len < dstSize; ucs++) {
-			Uint32 uch = *ucs;
+			AG_Char uch = *ucs;
 			int chlen, ch1, i;
 
 			if (uch < 0x80) {
@@ -1143,14 +1150,16 @@ AG_ExportUnicode(const char *encoding, char *dst, const Uint32 *ucs,
 		*dst = '\0';
 		return (0);
 	} else {
-#ifdef HAVE_ICONV
+# ifdef HAVE_ICONV
 		return ExportUnicodeICONV(encoding, dst, ucs, dstSize);
-#else
+# else
 		AG_SetError("No such encoding: \"%s\"", encoding);
 		return (-1);
-#endif
+# endif
 	}
 }
+
+#endif /* AG_UNICODE */
 
 /* Reverse the characters of a string. */
 void
@@ -1321,26 +1330,30 @@ trunc:
 	return (i+1);
 }
 
-#ifdef AG_THREADS
-static void DestroyPrintBuffer(void *_Nullable buf) { Free(buf); }
-#endif /* AG_THREADS */
+#if defined(AG_ENABLE_STRING) && defined(AG_THREADS)
+static void
+DestroyPrintBuffer(void *_Nullable buf)
+{
+	Free(buf);
+}
+#endif
 
 int
 AG_InitStringSubsystem(void)
 {
+#ifdef AG_ENABLE_STRING
 	Uint i;
 
 	/* Initialize the AG_Printf() buffers. */
 	for (i = 0; i < AG_STRING_BUFFERS_MAX; i++) {
 		agPrintBuf[i] = NULL;
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 		if (AG_ThreadKeyTryCreate(&agPrintBufKey[i], DestroyPrintBuffer) == -1) {
 			return (-1);
 		}
 		AG_ThreadKeySet(agPrintBufKey[i], NULL);
-#endif
+# endif
 	}
-
 	/* Initialize the formatting engine extensions. */
 	AG_MutexInit(&agFmtExtensionsLock);
 	AG_RegisterFmtStringExt("u8", PrintU8);
@@ -1349,12 +1362,13 @@ AG_InitStringSubsystem(void)
 	AG_RegisterFmtStringExt("s16", PrintS16);
 	AG_RegisterFmtStringExt("u32", PrintU32);
 	AG_RegisterFmtStringExt("s32", PrintS32);
-#ifdef HAVE_64BIT
+# ifdef HAVE_64BIT
 	AG_RegisterFmtStringExt("u64", PrintU64);
 	AG_RegisterFmtStringExt("s64", PrintS64);
-#endif
+# endif
 	AG_RegisterFmtStringExt("objName", PrintOBJNAME);
 	AG_RegisterFmtStringExt("objType", PrintOBJTYPE);
+#endif /* AG_ENABLE_STRING */
 
 	return (0);
 }
@@ -1362,22 +1376,22 @@ AG_InitStringSubsystem(void)
 void
 AG_DestroyStringSubsystem(void)
 {
+#ifdef AG_ENABLE_STRING
 	Uint i;
 
 	/* Free the AG_Printf() buffers. */
 	for (i = 0; i < AG_STRING_BUFFERS_MAX; i++) {
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 		if ((agPrintBuf[i] = (char *)AG_ThreadKeyGet(agPrintBufKey[i]))
 		    != NULL) {
 			free(agPrintBuf[i]);
 		}
 		AG_ThreadKeyDelete(agPrintBufKey[i]);
-#else
+# else
 		Free(agPrintBuf[i]);
-#endif
+# endif
 		agPrintBuf[i] = NULL;
 	}
-	
 	/* Free the formatting engine extensions. */
 	for (i = 0; i < agFmtExtensionCount; i++) {
 		Free(agFmtExtensions[i].fmt);
@@ -1385,6 +1399,6 @@ AG_DestroyStringSubsystem(void)
 	Free(agFmtExtensions);
 	agFmtExtensions = NULL;
 	agFmtExtensionCount = 0;
-	
 	AG_MutexDestroy(&agFmtExtensionsLock);
+#endif /* AG_ENABLE_STRING */
 }

@@ -43,7 +43,7 @@ AG_Surface *_Nullable AG_SDL_ImportSurface(SDL_Surface *_Nonnull);
 
 int AG_SDL_SetRefreshRate(void *_Nonnull, int);
 
-int                  AG_SDL_InitDefaultCursor(void *_Nonnull);
+void                 AG_SDL_InitDefaultCursor(void *_Nonnull);
 int                  AG_SDL_SetCursor(void *_Nonnull, AG_Cursor *_Nonnull);
 void                 AG_SDL_UnsetCursor(void *_Nonnull);
 AG_Cursor *_Nullable AG_SDL_CreateCursor(void *_Nonnull, Uint,Uint,

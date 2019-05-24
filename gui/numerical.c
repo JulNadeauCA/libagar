@@ -196,6 +196,7 @@ AG_NumericalNewUintR(void *parent, Uint flags, const char *unit, const char *lab
 	return (num);
 }
 
+#ifdef AG_TIMERS
 static Uint32
 UpdateTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -206,6 +207,7 @@ UpdateTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	}
 	return (to->ival);
 }
+#endif /* AG_TIMERS */
 
 #undef SET_DEF
 #define SET_DEF(fn,dmin,dmax,dinc) { 					\
@@ -219,9 +221,10 @@ OnShow(AG_Event *_Nonnull event)
 	AG_Numerical *num = AG_SELF();
 	AG_Variable *V;
 
-	if ((num->flags & AG_NUMERICAL_EXCL) == 0) {
+#ifdef AG_TIMERS
+	if ((num->flags & AG_NUMERICAL_EXCL) == 0)
 		AG_AddTimer(num, &num->updateTo, 250, UpdateTimeout, NULL);
-	}
+#endif
 	if ((V = AG_AccessVariable(num, "value")) == NULL) {
 		if (num->flags & AG_NUMERICAL_INT) {
 			V = AG_SetInt(num, "value", 0);
@@ -247,8 +250,10 @@ OnShow(AG_Event *_Nonnull event)
 	case AG_VARIABLE_SINT8:  SET_DEF(AG_SetSint8, -0x7f, 0x7f, 1); break;
 	case AG_VARIABLE_UINT16: SET_DEF(AG_SetUint16, 0U, 0xffffU, 1U); break;
 	case AG_VARIABLE_SINT16: SET_DEF(AG_SetSint16, -0x7fff, 0x7fff, 1); break;
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32: SET_DEF(AG_SetUint32, 0UL, 0xffffffffUL, 1UL); break;
 	case AG_VARIABLE_SINT32: SET_DEF(AG_SetSint32, -0x7fffffffL, 0x7fffffffL, 1L); break;
+#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64: SET_DEF(AG_SetUint64, 0ULL, 0xffffffffffffffffULL, 1ULL); break;
 	case AG_VARIABLE_SINT64: SET_DEF(AG_SetSint64, -0x7fffffffffffffffLL, 0x7fffffffffffffffLL, 1LL); break;
@@ -335,8 +340,10 @@ UpdateFromText(AG_Event *_Nonnull event)
 	case AG_VARIABLE_SINT8:  SET_NUM(Sint8, strtol(num->inTxt,NULL,10));	break;
 	case AG_VARIABLE_UINT16: SET_NUM(Uint16, strtoul(num->inTxt,NULL,10));	break;
 	case AG_VARIABLE_SINT16: SET_NUM(Sint16, strtol(num->inTxt,NULL,10));	break;
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32: SET_NUM(Uint32, strtoul(num->inTxt,NULL,10));	break;
 	case AG_VARIABLE_SINT32: SET_NUM(Sint32, strtol(num->inTxt,NULL,10));	break;
+#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:
 # ifdef _MK_HAVE_STRTOLL
@@ -496,8 +503,10 @@ AG_NumericalUpdate(AG_Numerical *num)
 	case AG_VARIABLE_SINT8:	 StrlcpyInt(s, *(Sint8 *)value, sizeof(s));	break;
 	case AG_VARIABLE_UINT16: StrlcpyUint(s, *(Uint16 *)value, sizeof(s));	break;
 	case AG_VARIABLE_SINT16: StrlcpyInt(s, *(Sint16 *)value, sizeof(s));	break;
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32: Snprintf(s, sizeof(s), "%lu", (unsigned long)*(Uint32 *)value); break;
 	case AG_VARIABLE_SINT32: Snprintf(s, sizeof(s), "%ld", (long)*(Sint32 *)value);          break;
+#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64: Snprintf(s, sizeof(s), "%llu", (unsigned long long)*(Uint64 *)value); break;
 	case AG_VARIABLE_SINT64: Snprintf(s, sizeof(s), "%lld", (long long)*(Sint64 *)value);          break;
@@ -524,8 +533,9 @@ Init(void *_Nonnull obj)
 	num->hUnitSel = 0;
 	num->inTxt[0] = '\0';
 	Strlcpy(num->format, "%.02f", sizeof(num->format));
+#ifdef AG_TIMERS
 	AG_InitTimer(&num->updateTo, "update", 0);
-	
+#endif
 	num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
 	AG_TextboxBindASCII(num->input, num->inTxt, sizeof(num->inTxt));
 	AG_TextboxSizeHint(num->input, "8888.88");
@@ -702,8 +712,10 @@ AG_NumericalIncrement(AG_Numerical *num)
 	case AG_VARIABLE_SINT8:		ADD_INT(Sint8);		break;
 	case AG_VARIABLE_UINT16:	ADD_INT(Uint16);	break;
 	case AG_VARIABLE_SINT16:	ADD_INT(Sint16);	break;
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32:	ADD_INT(Uint32);	break;
 	case AG_VARIABLE_SINT32:	ADD_INT(Sint32);	break;
+#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:	ADD_INT(Uint64);	break;
 	case AG_VARIABLE_SINT64:	ADD_INT(Sint64);	break;
@@ -778,8 +790,10 @@ AG_NumericalDecrement(AG_Numerical *num)
 	case AG_VARIABLE_SINT8:		SUB_INT(Sint8);		break;
 	case AG_VARIABLE_UINT16:	SUB_INT(Uint16);	break;
 	case AG_VARIABLE_SINT16:	SUB_INT(Sint16);	break;
+#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32:	SUB_INT(Uint32);	break;
 	case AG_VARIABLE_SINT32:	SUB_INT(Sint32);	break;
+#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:	SUB_INT(Uint64);	break;
 	case AG_VARIABLE_SINT64:	SUB_INT(Sint64);	break;
@@ -866,21 +880,23 @@ AG_NumericalGetFlt(AG_Numerical *num)
 	switch (AG_VARIABLE_TYPE(bValue)) {
 	case AG_VARIABLE_FLOAT:		return *(float *)value;
 	case AG_VARIABLE_DOUBLE:	return (float)(*(double *)value);
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	return (float)(*(long double *)value);
-#endif
+# endif
 	case AG_VARIABLE_INT:		return (float)(*(int *)value);
 	case AG_VARIABLE_UINT:		return (float)(*(Uint *)value);
 	case AG_VARIABLE_UINT8:		return (float)(*(Uint8 *)value);
-	case AG_VARIABLE_UINT16:	return (float)(*(Uint16 *)value);
-	case AG_VARIABLE_UINT32:	return (float)(*(Uint32 *)value);
 	case AG_VARIABLE_SINT8:		return (float)(*(Sint8 *)value);
+	case AG_VARIABLE_UINT16:	return (float)(*(Uint16 *)value);
 	case AG_VARIABLE_SINT16:	return (float)(*(Sint16 *)value);
+# if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_UINT32:	return (float)(*(Uint32 *)value);
 	case AG_VARIABLE_SINT32:	return (float)(*(Sint32 *)value);
-#ifdef HAVE_64BIT
+# endif
+# ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:	return (float)(*(Uint64 *)value);
 	case AG_VARIABLE_SINT64:	return (float)(*(Sint64 *)value);
-#endif
+# endif
 	default:			return (0.0f);
 	}
 }
@@ -896,26 +912,28 @@ AG_NumericalGetDbl(AG_Numerical *num)
 	switch (AG_VARIABLE_TYPE(bValue)) {
 	case AG_VARIABLE_FLOAT:		return (double)(*(float *)value);
 	case AG_VARIABLE_DOUBLE:	return *(double *)value;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	return (double)(*(long double *)value);
-#endif
+# endif
 	case AG_VARIABLE_INT:		return (double)(*(int *)value);
 	case AG_VARIABLE_UINT:		return (double)(*(Uint *)value);
 	case AG_VARIABLE_UINT8:		return (double)(*(Uint8 *)value);
-	case AG_VARIABLE_UINT16:	return (double)(*(Uint16 *)value);
-	case AG_VARIABLE_UINT32:	return (double)(*(Uint32 *)value);
 	case AG_VARIABLE_SINT8:		return (double)(*(Sint8 *)value);
+	case AG_VARIABLE_UINT16:	return (double)(*(Uint16 *)value);
 	case AG_VARIABLE_SINT16:	return (double)(*(Sint16 *)value);
+# if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_UINT32:	return (double)(*(Uint32 *)value);
 	case AG_VARIABLE_SINT32:	return (double)(*(Sint32 *)value);
-#ifdef HAVE_64BIT
+# endif
+# ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:	return (double)(*(Uint64 *)value);
 	case AG_VARIABLE_SINT64:	return (double)(*(Sint64 *)value);
-#endif
+# endif
 	default:			return (0.0);
 	}
 }
 
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 /* Convert the bound value to a long double. */
 long double
 AG_NumericalGetLdbl(AG_Numerical *num)
@@ -931,19 +949,21 @@ AG_NumericalGetLdbl(AG_Numerical *num)
 	case AG_VARIABLE_INT:		return (long double)(*(int *)value);
 	case AG_VARIABLE_UINT:		return (long double)(*(Uint *)value);
 	case AG_VARIABLE_UINT8:		return (long double)(*(Uint8 *)value);
-	case AG_VARIABLE_UINT16:	return (long double)(*(Uint16 *)value);
-	case AG_VARIABLE_UINT32:	return (long double)(*(Uint32 *)value);
 	case AG_VARIABLE_SINT8:		return (long double)(*(Sint8 *)value);
+	case AG_VARIABLE_UINT16:	return (long double)(*(Uint16 *)value);
 	case AG_VARIABLE_SINT16:	return (long double)(*(Sint16 *)value);
+# if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_UINT32:	return (long double)(*(Uint32 *)value);
 	case AG_VARIABLE_SINT32:	return (long double)(*(Sint32 *)value);
-#ifdef HAVE_64BIT
+# endif
+#  ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:	return (long double)(*(Uint64 *)value);
 	case AG_VARIABLE_SINT64:	return (long double)(*(Sint64 *)value);
-#endif
+#  endif
 	default:			return (0.0L);
 	}
 }
-#endif /* HAVE_LONG_DOUBLE */
+# endif /* HAVE_LONG_DOUBLE */
 #endif /* HAVE_FLOAT */
 
 /* Convert the bound value to a natural integer. */
@@ -963,11 +983,13 @@ AG_NumericalGetInt(AG_Numerical *num)
 	case AG_VARIABLE_INT:		return *(int *)value;
 	case AG_VARIABLE_UINT:		return (int)(*(Uint *)value);
 	case AG_VARIABLE_UINT8:		return (int)(*(Uint8 *)value);
-	case AG_VARIABLE_UINT16:	return (int)(*(Uint16 *)value);
-	case AG_VARIABLE_UINT32:	return (int)(*(Uint32 *)value);
 	case AG_VARIABLE_SINT8:		return (int)(*(Sint8 *)value);
+	case AG_VARIABLE_UINT16:	return (int)(*(Uint16 *)value);
 	case AG_VARIABLE_SINT16:	return (int)(*(Sint16 *)value);
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_UINT32:	return (int)(*(Uint32 *)value);
 	case AG_VARIABLE_SINT32:	return (int)(*(Sint32 *)value);
+#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:	return (int)(*(Uint64 *)value);
 	case AG_VARIABLE_SINT64:	return (int)(*(Sint64 *)value);
@@ -993,11 +1015,13 @@ AG_NumericalGetUint32(AG_Numerical *num)
 	case AG_VARIABLE_INT:		return (Uint32)(*(int *)value);
 	case AG_VARIABLE_UINT:		return (Uint32)(*(Uint *)value);
 	case AG_VARIABLE_UINT8:		return (Uint32)(*(Uint8 *)value);
-	case AG_VARIABLE_UINT16:	return (Uint32)(*(Uint16 *)value);
-	case AG_VARIABLE_UINT32:	return *(Uint32 *)value;
 	case AG_VARIABLE_SINT8:		return (Uint32)(*(Sint8 *)value);
+	case AG_VARIABLE_UINT16:	return (Uint32)(*(Uint16 *)value);
 	case AG_VARIABLE_SINT16:	return (Uint32)(*(Sint16 *)value);
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_UINT32:	return *(Uint32 *)value;
 	case AG_VARIABLE_SINT32:	return (Uint32)(*(Sint32 *)value);
+#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:	return (Uint32)(*(Uint64 *)value);
 	case AG_VARIABLE_SINT64:	return (Uint32)(*(Sint64 *)value);
@@ -1018,18 +1042,18 @@ AG_NumericalGetUint64(AG_Numerical *num)
 	switch (AG_VARIABLE_TYPE(bValue)) {
 	case AG_VARIABLE_FLOAT:		return (Uint64)(*(float *)value);
 	case AG_VARIABLE_DOUBLE:	return (Uint64)(*(double *)value);
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	return (Uint64)(*(long double *)value);
-#endif
+# endif
 	case AG_VARIABLE_INT:		return (Uint64)(*(int *)value);
 	case AG_VARIABLE_UINT:		return (Uint64)(*(Uint *)value);
 	case AG_VARIABLE_UINT8:		return (Uint64)(*(Uint8 *)value);
-	case AG_VARIABLE_UINT16:	return (Uint64)(*(Uint16 *)value);
-	case AG_VARIABLE_UINT32:	return (Uint64)(*(Uint32 *)value);
-	case AG_VARIABLE_UINT64:	return *(Uint64 *)value;
 	case AG_VARIABLE_SINT8:		return (Uint64)(*(Sint8 *)value);
+	case AG_VARIABLE_UINT16:	return (Uint64)(*(Uint16 *)value);
 	case AG_VARIABLE_SINT16:	return (Uint64)(*(Sint16 *)value);
+	case AG_VARIABLE_UINT32:	return (Uint64)(*(Uint32 *)value);
 	case AG_VARIABLE_SINT32:	return (Uint64)(*(Sint32 *)value);
+	case AG_VARIABLE_UINT64:	return *(Uint64 *)value;
 	case AG_VARIABLE_SINT64:	return (Uint64)(*(Sint64 *)value);
 	default:			return (0ULL);
 	}

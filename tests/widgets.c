@@ -47,6 +47,14 @@ SetWordWrap(AG_Event *event)
 	AG_TextboxSetWordWrap(textbox, flag);
 }
 
+static void
+TestMenuFn(AG_Event *event)
+{
+	char *text = AG_STRING(1);
+
+	AG_TextMsgS(AG_MSG_INFO, text);
+}
+
 static int
 TestGUI(void *obj, AG_Window *win)
 {
@@ -70,26 +78,21 @@ TestGUI(void *obj, AG_Window *win)
 	div2 = pane->div[1];
 	{
 		char path[AG_PATHNAME_MAX];
-		const char *bmpRes[4] = {
-			"32bpp RGBA",
-			"24bpp RGB",
-			"16bpp RGBA",
-			"16bpp RGB",
-		};
 		AG_Pixmap *px;
 		AG_Surface *S;
-		AG_Label *lbl;
 		int i;
 
 		for (i = 1; i <= 4; i++) {
-			if (AG_ConfigFind(AG_CONFIG_PATH_DATA,
-			    AG_Printf("agar-%d.bmp", i),
+			char file[12];
+
+			AG_Snprintf(file, sizeof(file), "agar-%d.bmp", i);
+			AG_LabelNew(div1, 0, "%s:", file);
+
+			if (AG_ConfigFind(AG_CONFIG_PATH_DATA, file,
 			    path, sizeof(path)) == 0) {
 				if ((S = AG_SurfaceFromBMP(path)) != NULL) {
 					S->flags |= AG_SURFACE_TRACE;
-					px = AG_PixmapFromSurface(div1, 0, S);
-					AG_PrtString(px, "tooltip",
-					    "agar-%d.bmp (%s)", i, bmpRes[i-1]);
+					AG_PixmapFromSurface(div1, 0, S);
 				} else {
 					S = AG_TextRender(AG_GetError());
 					AG_PixmapFromSurface(div1, 0, S);
@@ -127,8 +130,9 @@ TestGUI(void *obj, AG_Window *win)
 					}
 				}
 				px = AG_PixmapFromSurface(hBox, 0, S);
-				AG_PrtString(px, "tooltip",
-				    "agar.png (with %d%% alpha)", i*25);
+				AG_SetStringF(px, "tooltip", "agar.png "
+				                             "(with %d%% alpha)",
+				                              i*25);
 			}
 		} else {
 			S = AG_TextRender(AG_GetError());
@@ -146,17 +150,25 @@ TestGUI(void *obj, AG_Window *win)
 		 */
 		AG_LabelNewS(div1, 0, "This is a static label");
 
-		lbl = AG_LabelNewPolled(div1, AG_LABEL_FRAME|AG_LABEL_EXPAND,
-		    "This is a polled label.\n"
-		    "Window is at %i,%i (%ux%u)",
-		    &AGWIDGET(win)->x,
-		    &AGWIDGET(win)->y,
-		    &AGWIDGET(win)->w,
-		    &AGWIDGET(win)->h);
-		AG_LabelSizeHint(lbl, 1,
-		    "This is a polled label\n"
-		    "Window is at 0000,0000 (0000x0000)");
-		AG_LabelJustify(lbl, AG_TEXT_CENTER);
+#ifdef AG_ENABLE_STRING
+		{
+			AG_Label *lbl;
+
+			lbl = AG_LabelNewPolled(div1, AG_LABEL_FRAME|AG_LABEL_EXPAND,
+			    "This is a polled label.\n"
+			    "Window is at %i,%i (%ux%u)",
+			    &AGWIDGET(win)->x,
+			    &AGWIDGET(win)->y,
+			    &AGWIDGET(win)->w,
+			    &AGWIDGET(win)->h);
+			AG_LabelSizeHint(lbl, 1,
+			    "This is a polled label\n"
+			    "Window is at 0000,0000 (0000x0000)");
+			AG_LabelJustify(lbl, AG_TEXT_CENTER);
+		}
+#else
+		AG_LabelNewS(div1, 0, "(polled labels require --enable-string)");
+#endif
 	}
 
 	/*
@@ -171,7 +183,11 @@ TestGUI(void *obj, AG_Window *win)
 		 * an boolean (integer) value or a bitmask.
 		 */
 		for (i = 0; i < 5; i++)
+#ifdef AG_ENABLE_STRING
 			AG_ButtonNewS(hBox, 0, AG_Printf("%c", 0x41+i));
+#else
+			AG_ButtonNewS(hBox, 0, "Hello");
+#endif
 	}
 
 	hBox = AG_BoxNewHoriz(div1, AG_BOX_HFILL);
@@ -263,13 +279,24 @@ TestGUI(void *obj, AG_Window *win)
 		tbox = AG_TextboxNew(div1,
 		    AG_TEXTBOX_EXCL|AG_TEXTBOX_HFILL,
 		    "Fixed text buffer: ");
+#ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tbox, ti->textBuffer, sizeof(ti->textBuffer));
+#else
+		AG_TextboxBindASCII(tbox, ti->textBuffer, sizeof(ti->textBuffer));
+#endif
 
+#ifdef AG_UNICODE
 		/* Create a textbox bound to a built-in AG_Text element */
 		tbox = AG_TextboxNew(div1,
 		    AG_TEXTBOX_EXCL|AG_TEXTBOX_MULTILINGUAL|AG_TEXTBOX_HFILL,
 		    "AG_Text element: ");
-		AG_TextboxSetString(tbox, "Foo");
+		AG_TextboxSetString(tbox, "Hello hello hello");
+		AG_TextSetEntS(tbox->text, AG_LANG_EN, "Hello");
+		AG_TextSetEntS(tbox->text, AG_LANG_FR, "Bonjour");
+		AG_TextSetEntS(tbox->text, AG_LANG_DE, "Guten tag");
+#else
+		AG_LabelNewS(tbox, 0, "(AG_Text needs --enable-unicode)");
+#endif
 	}
 
 	AG_SeparatorNewHoriz(div1);
@@ -316,7 +343,8 @@ TestGUI(void *obj, AG_Window *win)
 		AG_NotebookTab *ntab;
 		AG_Table *table;
 		AG_Menu *menu;
-		AG_MenuItem *m;
+		AG_MenuItem *m, *mSub;
+		static int myInt[2];
 	
 		/* Create a test menu */
 		menu = AG_MenuNew(div2, AG_MENU_HFILL);
@@ -327,12 +355,28 @@ TestGUI(void *obj, AG_Window *win)
 		}
 		m = AG_MenuNode(menu->root, "Test Menu", NULL);
 		{
-			AG_MenuNode(m, "Submenu A", NULL);
+			/* A disabled menu item */
+			AG_MenuState(m, 0);
+			AG_MenuNode(m, "Disabled Submenu A", agIconMagnifier.s);
+			AG_MenuState(m, 1);
 			AG_MenuSeparator(m);
-			m = AG_MenuNode(m, "Submenu B", NULL);
-			AG_MenuNode(m, "Submenu C", NULL);
-			AG_MenuNode(m, "Submenu D", NULL);
-			AG_MenuNode(m, "Submenu E", NULL);
+
+			/* Menu item with child entries */
+			mSub = AG_MenuNode(m, "Submenu B", agIconGear.s);
+			AG_MenuAction(mSub, "Submenu C", agIconLoad.s,
+			    TestMenuFn, "%s", "Submenu C selected!");
+			AG_MenuAction(mSub, "Submenu D", agIconSave.s,
+			    TestMenuFn, "%s", "Submenu D selected!");
+			AG_MenuAction(mSub, "Submenu E", agIconTrash.s,
+			    TestMenuFn, "%s", "Submenu E selected!");
+
+			AG_MenuSeparator(m);
+			AG_MenuSectionS(m, "Non-selectable text");
+			AG_MenuSeparator(m);
+
+			AG_MenuIntBool(m, "Togglable Binding #1", agIconUp.s, &myInt[0], 0);
+			AG_MenuIntBool(m, "Togglable Binding #2", agIconDown.s, &myInt[1], 0);
+			AG_MenuIntBool(m, "Inverted Binding #2", agIconDown.s, &myInt[1], 1);
 		}
 
 		nb = AG_NotebookNew(div2, AG_NOTEBOOK_EXPAND);
@@ -405,12 +449,16 @@ TestGUI(void *obj, AG_Window *win)
 				bufSize = strlen(ti->someText)+1;
 			}
 	
+#ifdef AG_UNICODE
 			/*
 			 * Bind the buffer's contents to the Textbox. The
 			 * size argument to AG_TextboxBindUTF8() must include
 			 * space for the terminating NUL.
 			 */
 			AG_TextboxBindUTF8(tbox, ti->someText, bufSize);
+#else
+			AG_TextboxBindASCII(tbox, ti->someText, bufSize);
+#endif
 	
 			/* Add a word wrapping control */
 			AG_CheckboxNewFn(ntab, 0, "Word wrapping",

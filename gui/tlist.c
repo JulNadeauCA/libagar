@@ -50,6 +50,7 @@ AG_TlistNew(void *parent, Uint flags)
 	return (tl);
 }
 
+#ifdef AG_TIMERS
 AG_Tlist *
 AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 {
@@ -76,6 +77,7 @@ UpdatePolled(AG_Tlist *_Nonnull tl)
 		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
 	}
 }
+#endif /* AG_TIMERS */
 
 /* Return 1 if at least one selected item is visible */
 static int
@@ -84,8 +86,9 @@ SelectionVisible(AG_Tlist *_Nonnull tl)
 	AG_TlistItem *it;
 	int y=0, i=0, rOffs, yLast, item_h;
 
+#ifdef AG_TIMERS
 	UpdatePolled(tl);
-
+#endif
 	item_h = tl->item_h;
 	yLast = HEIGHT(tl)-item_h;
 	rOffs = tl->rOffs;
@@ -212,6 +215,7 @@ IncrementSelection(AG_Tlist *_Nonnull tl, int inc)
 		ScrollToSelection(tl);
 }
 
+#ifdef AG_TIMERS
 static Uint32
 DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -240,6 +244,7 @@ PollRefreshTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	AG_Redraw(tl);
 	return (to->ival);
 }
+#endif /* AG_TIMERS */
 
 static void
 OnFontChange(AG_Event *_Nonnull event)
@@ -261,6 +266,7 @@ OnFontChange(AG_Event *_Nonnull event)
 	AG_TlistSetIconWidth(tl, tl->item_h + 1);
 }
 
+#ifdef AG_TIMERS
 static void
 OnShow(AG_Event *_Nonnull event)
 {
@@ -286,6 +292,7 @@ MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	}
 	return (agKbdRepeat);
 }
+#endif /* AG_TIMERS */
 
 void
 AG_TlistSizeHint(AG_Tlist *tl, const char *text, int nitems)
@@ -316,7 +323,9 @@ AG_TlistSizeHintLargest(AG_Tlist *tl, int nitems)
 	int w;
 
 	AG_ObjectLock(tl);
+#ifdef AG_TIMERS
 	UpdatePolled(tl);
+#endif
 	tl->wHint = 0;
 	AG_TLIST_FOREACH(it, tl) {
 		AG_TextSize(it->text, &w, NULL);
@@ -443,9 +452,10 @@ Draw(void *_Nonnull obj)
 	AG_Color cSel;
 	int x, y=0, i=0, selSeen=0, selPos=1, h=HEIGHT(tl);
 	int hItem, wIcon, wSpace, yLast, wRow, rOffs;
-	
-	UpdatePolled(tl);
 
+#ifdef AG_TIMERS
+	UpdatePolled(tl);
+#endif
 	AG_DrawBox(tl, &tl->r, -1, &WCOLOR(tl,AG_COLOR));
 	cSel = WCOLOR_SEL(tl,AG_COLOR);
 	AG_WidgetDraw(tl->sbar);
@@ -636,6 +646,7 @@ AG_TlistSetCompareFn(AG_Tlist *tl,
 	AG_ObjectUnlock(tl);
 }
 
+#ifdef AG_TIMERS
 /* Set the update rate for polled displays in ms (-1 = update explicitely). */
 void
 AG_TlistSetRefresh(AG_Tlist *tl, int ms)
@@ -648,6 +659,7 @@ AG_TlistSetRefresh(AG_Tlist *tl, int ms)
 	}
 	AG_ObjectUnlock(tl);
 }
+#endif /* AG_TIMERS */
 
 /* Restore previous item selection state. */
 void
@@ -850,7 +862,9 @@ AG_TlistSelectPtr(AG_Tlist *tl, void *p)
 	AG_TlistItem *it;
 
 	AG_ObjectLock(tl);
+#ifdef AG_TIMERS
 	UpdatePolled(tl);
+#endif
 	if ((tl->flags & AG_TLIST_MULTI) == 0) {
 		AG_TlistDeselectAll(tl);
 	}
@@ -871,7 +885,9 @@ AG_TlistSelectText(AG_Tlist *tl, const char *text)
 	AG_TlistItem *it;
 
 	AG_ObjectLock(tl);
+#ifdef AG_TIMERS
 	UpdatePolled(tl);
+#endif
 	if ((tl->flags & AG_TLIST_MULTI) == 0) {
 		AG_TlistDeselectAll(tl);
 	}
@@ -1060,7 +1076,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 
 		AG_TlistDeselectAll(tl);
 		SelectItem(tl, ti);
-
+#ifdef AG_TIMERS
 		/* Handle double clicks. */
 		/* XXX compare the args as well as p1 */
 		if (tl->dblClicked != NULL && tl->dblClicked == ti->p1) {
@@ -1076,6 +1092,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			AG_AddTimer(tl, &tl->dblClickTo, agMouseDblclickDelay,
 			    DoubleClickTimeout, NULL);
 		}
+#endif
 		break;
 	case AG_MOUSE_RIGHT:
 		if (ti->flags & AG_TLIST_NO_POPUP) {
@@ -1115,19 +1132,27 @@ KeyDown(AG_Event *_Nonnull event)
 	switch (keysym) {
 	case AG_KEY_UP:
 		DecrementSelection(tl, 1);
+#ifdef AG_TIMERS
 		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", -1);
+#endif
 		break;
 	case AG_KEY_DOWN:
 		IncrementSelection(tl, 1);
+#ifdef AG_TIMERS
 		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", +1);
+#endif
 		break;
 	case AG_KEY_PAGEUP:
 		DecrementSelection(tl, agPageIncrement);
+#ifdef AG_TIMERS
 		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", -agPageIncrement);
+#endif
 		break;
 	case AG_KEY_PAGEDOWN:
 		IncrementSelection(tl, agPageIncrement);
+#ifdef AG_TIMERS
 		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", +agPageIncrement);
+#endif
 		break;
 	case AG_KEY_RETURN:
 		if ((ti = AG_TlistSelectedItemPtr(tl)) != NULL) {
@@ -1138,6 +1163,7 @@ KeyDown(AG_Event *_Nonnull event)
 	tl->lastKeyDown = keysym;
 }
 
+#ifdef AG_TIMERS
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
@@ -1155,6 +1181,7 @@ KeyUp(AG_Event *_Nonnull event)
 		break;
 	}
 }
+#endif /* AG_TIMERS */
 
 static void
 Init(void *_Nonnull obj)
@@ -1186,11 +1213,11 @@ Init(void *_Nonnull obj)
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
-
+#ifdef AG_TIMERS
 	AG_InitTimer(&tl->moveTo, "move", 0);
 	AG_InitTimer(&tl->refreshTo, "refresh", 0);
 	AG_InitTimer(&tl->dblClickTo, "dblClick", 0);
-
+#endif
 	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
 	AG_SetInt(tl->sbar, "min", 0);
 	AG_BindInt(tl->sbar, "max", &tl->nitems);
@@ -1199,13 +1226,14 @@ Init(void *_Nonnull obj)
 	AG_WidgetSetFocusable(tl->sbar, 0);
 
 	AG_AddEvent(tl, "font-changed", OnFontChange, NULL);
+	AG_SetEvent(tl, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(tl, "key-down", KeyDown, NULL);
+#ifdef AG_TIMERS
 	AG_AddEvent(tl, "widget-shown", OnShow, NULL);
 	AG_AddEvent(tl, "widget-hidden", OnFocusLoss, NULL);
 	AG_SetEvent(tl, "widget-lostfocus", OnFocusLoss, NULL);
-	AG_SetEvent(tl, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(tl, "key-down", KeyDown, NULL);
 	AG_SetEvent(tl, "key-up", KeyUp, NULL);
-	
+#endif
 	AG_BindPointer(tl, "selected", &tl->selected);
 #if 0
 	AG_BindInt(tl, "nitems", &tl->nitems);

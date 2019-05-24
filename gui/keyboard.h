@@ -278,7 +278,7 @@ struct ag_window;
 typedef struct ag_key {
 	enum ag_key_sym sym;	/* Translated key */
 	int mod;		/* Key modifier */
-	Uint32 uch;		/* Corresponding Unicode character */
+	AG_Char uch;		/* Corresponding Unicode character */
 } AG_Key;
 
 typedef struct ag_keyboard {
@@ -294,10 +294,9 @@ extern AG_ObjectClass agKeyboardClass;
 
 AG_Keyboard *_Nullable AG_KeyboardNew(void *_Nonnull, const char *_Nonnull);
 
-int AG_KeyboardUpdate(AG_Keyboard *_Nonnull, AG_KeyboardAction, AG_KeySym,
-                      Uint32);
+int AG_KeyboardUpdate(AG_Keyboard *_Nonnull, AG_KeyboardAction, AG_KeySym);
 int AG_ProcessKey(AG_Keyboard *_Nonnull, struct ag_window *_Nonnull,
-                  AG_KeyboardAction, AG_KeySym, Uint32);
+                  AG_KeyboardAction, AG_KeySym, AG_Char);
 
 const char *_Nullable AG_LookupKeyName(AG_KeySym) _Pure_Attribute;
 AG_KeySym             AG_LookupKeySym(const char *_Nonnull) _Pure_Attribute;

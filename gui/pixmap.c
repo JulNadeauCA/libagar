@@ -29,6 +29,7 @@
 #include <agar/gui/window.h>
 #include <agar/gui/opengl.h>
 
+/* Create new, empty pixmap of the given size. */
 AG_Pixmap *
 AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
 {
@@ -49,6 +50,7 @@ AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
 	return (px);
 }
 
+/* Create new pixmap from the copy of the contents of a given surface. */
 AG_Pixmap *
 AG_PixmapFromSurface(void *parent, Uint flags, const AG_Surface *su)
 {
@@ -62,14 +64,13 @@ AG_PixmapFromSurface(void *parent, Uint flags, const AG_Surface *su)
 	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
 	
 	AG_ObjectAttach(parent, px);
-	if (su != NULL) {
-		AG_WidgetMapSurface(px, AG_SurfaceConvert(su, agSurfaceFmt));
-	} else {
-		AG_WidgetMapSurface(px, AG_SurfaceEmpty());
-	}
+
+	AG_WidgetMapSurface(px, (su) ? AG_SurfaceConvert(su, agSurfaceFmt) :
+	                               AG_SurfaceEmpty());
 	return (px);
 }
 
+/* Create new pixmap by mapping the given surface (potentially unsafe). */
 AG_Pixmap *
 AG_PixmapFromSurfaceNODUP(void *parent, Uint flags, AG_Surface *su)
 {
@@ -83,10 +84,12 @@ AG_PixmapFromSurfaceNODUP(void *parent, Uint flags, AG_Surface *su)
 	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
 	
 	AG_ObjectAttach(parent, px);
+
 	AG_WidgetMapSurfaceNODUP(px, su);
 	return (px);
 }
 
+/* Create a new pixmap from the contents of a surface scaled to w x h. */
 AG_Pixmap *
 AG_PixmapFromSurfaceScaled(void *parent, Uint flags, const AG_Surface *su,
     Uint w, Uint h)
@@ -102,6 +105,7 @@ AG_PixmapFromSurfaceScaled(void *parent, Uint flags, const AG_Surface *su,
 	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
 	
 	AG_ObjectAttach(parent, px);
+
 	if (su != NULL) {
 		if ((suScaled = AG_SurfaceScale(su, w,h, 0)) == NULL) {
 			AG_FatalError(NULL);
@@ -113,6 +117,8 @@ AG_PixmapFromSurfaceScaled(void *parent, Uint flags, const AG_Surface *su,
 	return (px);
 }
 
+#ifdef AG_SERIALIZATION
+/* Create a new pixmap from the given image file. */
 AG_Pixmap *
 AG_PixmapFromFile(void *parent, Uint flags, const char *file)
 {
@@ -147,9 +153,11 @@ AG_PixmapFromFile(void *parent, Uint flags, const char *file)
 	AG_WidgetMapSurface(px, su);
 	return (px);
 }
+#endif /* AG_SERIALIZATION */
 
 #ifdef HAVE_OPENGL
 
+/* Create a new pixmap from the given OpenGL texture by name and lod. */
 AG_Pixmap *
 AG_PixmapFromTexture(void *parent, Uint flags, Uint name, int lod)
 {
@@ -245,6 +253,7 @@ AG_PixmapAddSurfaceScaled(AG_Pixmap *px, const AG_Surface *suOrig,
 	return (name);
 }
 
+#ifdef AG_SERIALIZATION
 /*
  * Map a surface created from an image file (format autodetected).
  * Returned surface ID is valid as long as pixmap is locked.
@@ -271,7 +280,9 @@ AG_PixmapAddSurfaceFromFile(AG_Pixmap *px, const char *path)
 	AG_SurfaceFree(suFile);
 	return (name);
 }
+#endif /* AG_SERIALIZATION */
 
+/* Replace the contents of a mapped surface. */
 void
 AG_PixmapReplaceSurface(AG_Pixmap *px, int name, AG_Surface *s)
 {
@@ -279,6 +290,7 @@ AG_PixmapReplaceSurface(AG_Pixmap *px, int name, AG_Surface *s)
 	AG_Redraw(px);
 }
 
+/* Invalidate any cached/hardware copy of a mapped surface. */
 void
 AG_PixmapUpdateSurface(AG_Pixmap *px, int name)
 {
@@ -286,6 +298,7 @@ AG_PixmapUpdateSurface(AG_Pixmap *px, int name)
 	AG_Redraw(px);
 }
 
+/* Select the mapped surface to display. */
 int
 AG_PixmapSetSurface(AG_Pixmap *px, int name)
 {
@@ -300,6 +313,7 @@ AG_PixmapSetSurface(AG_Pixmap *px, int name)
 	return (0);
 }
 
+/* Set texture coordinates. */
 void
 AG_PixmapSetCoords(AG_Pixmap *px, int s, int t)
 {

@@ -150,25 +150,20 @@ AG_TextboxSetExcl(AG_Textbox *tb, int flag)
 	AG_EditableSetExcl(tb->ed, flag);
 }
 
+#ifdef AG_HAVE_FLOAT
 /* Clear or set the FLT_ONLY option. */
 void
 AG_TextboxSetFltOnly(AG_Textbox *tb, int flag)
 {
 	AG_EditableSetFltOnly(tb->ed, flag);
 }
+#endif
 
 /* Clear or set the INT_ONLY option. */
 void
 AG_TextboxSetIntOnly(AG_Textbox *tb, int flag)
 {
 	AG_EditableSetIntOnly(tb->ed, flag);
-}
-
-/* Set the active language (when bound to an AG_Text(3) element) */
-void
-AG_TextboxSetLang(AG_Textbox *tb, enum ag_language lang)
-{
-	AG_EditableSetLang(tb->ed, lang);
 }
 
 /* Toggle word wrapping */
@@ -201,29 +196,35 @@ AG_TextboxGetCursorPos(AG_Textbox *tb)
 	return AG_EditableGetCursorPos(tb->ed);
 }
 
+#ifdef AG_UNICODE
 void
 AG_TextboxBindUTF8(AG_Textbox *tb, char *buf, AG_Size bufSize)
 {
 	AG_EditableBindUTF8(tb->ed, buf, bufSize);
 }
-
-void
-AG_TextboxBindASCII(AG_Textbox *tb, char *buf, AG_Size bufSize)
-{
-	AG_EditableBindASCII(tb->ed, buf, bufSize);
-}
-
 void
 AG_TextboxBindEncoded(AG_Textbox *tb, const char *encoding, char *buf,
     AG_Size bufSize)
 {
 	AG_EditableBindEncoded(tb->ed, encoding, buf, bufSize);
 }
-
 void
 AG_TextboxBindText(AG_Textbox *tb, AG_Text *txt)
 {
 	AG_EditableBindText(tb->ed, txt);
+}
+/* Set the active language (when bound to an AG_Text(3) element) */
+void
+AG_TextboxSetLang(AG_Textbox *tb, enum ag_language lang)
+{
+	AG_EditableSetLang(tb->ed, lang);
+}
+#endif /* AG_UNICODE */
+
+void
+AG_TextboxBindASCII(AG_Textbox *tb, char *buf, AG_Size bufSize)
+{
+	AG_EditableBindASCII(tb->ed, buf, bufSize);
 }
 
 void
@@ -507,6 +508,7 @@ static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_SELF();
+
 	AG_WidgetFocus(tb);
 	AG_ForwardEvent(NULL, tb->ed, event);
 }
@@ -515,6 +517,7 @@ static void
 Disabled(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_SELF();
+
 	AG_WidgetDisable(tb->ed);
 }
 
@@ -522,6 +525,7 @@ static void
 Enabled(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_SELF();
+
 	AG_WidgetEnable(tb->ed);
 }
 
@@ -564,7 +568,11 @@ Init(void *_Nonnull obj)
 	tb->r.y = 0;
 	tb->r.w = 0;
 	tb->r.h = 0;
+#ifdef AG_UNICODE
 	tb->text = tb->ed->text;
+#else
+	tb->text[0] = '\0';
+#endif
 
 	AG_SetEvent(tb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tb, "widget-disabled", Disabled, NULL);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -239,7 +239,7 @@ AG_Debug(void *p, const char *fmt, ...)
 #if AG_MODEL == AG_LARGE
 				bufLen = strlen(obj->name)+23;
 #else
-				bufLen = strlen(obj->name)+15;
+				bufLen = strlen(obj->name)+16;
 #endif
 				buf = Malloc(bufLen);
 				Snprintf(buf, bufLen, "<%p>: ", obj);
@@ -317,6 +317,7 @@ AG_Debug(void *p, const char *fmt, ...)
 void
 AG_Verbose(const char *fmt, ...)
 {
+#ifdef AG_VERBOSITY
 	va_list args;
 
 	if (!agVerbose)
@@ -335,7 +336,7 @@ AG_Verbose(const char *fmt, ...)
 	}
 
 	va_start(args, fmt);
-#if defined(VERBOSE_TO_FILE)
+# if defined(VERBOSE_TO_FILE)
 	/* Redirect output to foo-out.txt */
 	{
 		char path[AG_FILENAME_MAX];
@@ -352,7 +353,7 @@ AG_Verbose(const char *fmt, ...)
 			fclose(f);
 		}
 	}
-#elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
+# elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
 	{
 		HANDLE cons;
 		char *buf;
@@ -364,10 +365,11 @@ AG_Verbose(const char *fmt, ...)
 			free(buf);
 		}
 	}
-#else
+# else
 	vprintf(fmt, args);
-#endif
+# endif
 	va_end(args);
+#endif /* AG_VERBOSITY */
 }
 
 /* Raise a fatal error condition. */
@@ -379,7 +381,9 @@ AG_FatalError(const char *msg)
 		agErrorCallback(msg ? msg : AG_GetError());
 		abort(); /* not reached */
 	} else {
+#ifdef AG_VERBOSITY
 		fputs("AG_FatalError: ", stderr);
+#endif
 		if (msg != NULL) {
 			fputs(msg, stderr);
 		} else {
@@ -408,17 +412,19 @@ AG_SetDebugCallback(int (*fn)(const char *))
 	agDebugCallback = fn;
 }
 
+#ifdef AG_TYPE_SAFETY
 /*
  * Raise fatal error condition due to a runtime type checking error
  * (if compiled with either --enable-debug or --enable-type-safety).
  */
-void  *AG_PtrMismatch(void)    { AG_FatalError("Illegal AG_PTR() access"); }
-char  *AG_StringMismatch(void) { AG_FatalError("Illegal AG_STRING() access"); }
-int    AG_IntMismatch(void)    { AG_FatalError("Illegal AG_[U]INT() access"); }
-long   AG_LongMismatch(void)   { AG_FatalError("Illegal AG_[U]LONG() access"); }
-float  AG_FloatMismatch(void)  { AG_FatalError("Illegal AG_FLOAT() access"); }
-double AG_DoubleMismatch(void) { AG_FatalError("Illegal AG_DOUBLE() access"); }
+void  *AG_PtrMismatch(void)    { AG_FatalErrorV("E29", "Illegal AG_PTR() access"); }
+char  *AG_StringMismatch(void) { AG_FatalErrorV("E29", "Illegal AG_STRING() access"); }
+int    AG_IntMismatch(void)    { AG_FatalErrorV("E29", "Illegal AG_[U]INT() access"); }
+long   AG_LongMismatch(void)   { AG_FatalErrorV("E29", "Illegal AG_[U]LONG() access"); }
+float  AG_FloatMismatch(void)  { AG_FatalErrorV("E29", "Illegal AG_FLOAT() access"); }
+double AG_DoubleMismatch(void) { AG_FatalErrorV("E29", "Illegal AG_DOUBLE() access"); }
 #ifdef AG_HAVE_LONG_DOUBLE
-long double AG_LongDoubleMismatch(void) { AG_FatalError("Illegal AG_LONG_DOUBLE() access"); }
+long double AG_LongDoubleMismatch(void) { AG_FatalErrorV("E29", "Illegal AG_LONG_DOUBLE() access"); }
 #endif
-void  *AG_ObjectMismatch(void) { AG_FatalError("Illegal AG_OBJECT() access"); }
+void  *AG_ObjectMismatch(void) { AG_FatalErrorV("E29", "Illegal AG_OBJECT() access"); }
+#endif /* AG_TYPE_SAFETY */

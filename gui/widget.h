@@ -172,7 +172,9 @@ typedef struct ag_widget_pvt {
 	AG_Tbl actions;				 	/* Registered actions */
 	AG_TAILQ_HEAD_(ag_action_tie) mouseActions;	/* Mouse action ties */
 	AG_TAILQ_HEAD_(ag_action_tie) keyActions;	/* Kbd action ties */
+#ifdef AG_TIMERS
 	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies;	/* For AG_RedrawOn*() */
+#endif
 	AG_TAILQ_HEAD_(ag_cursor_area) cursorAreas;	/* Cursor-change areas */
 } AG_WidgetPvt;
 
@@ -364,6 +366,8 @@ void AG_WidgetFreeStyle(void *_Nonnull);
 
 void AG_SetFont(void *_Nonnull, const struct ag_font *_Nonnull);
 void AG_SetStyle(void *_Nonnull, const char *_Nonnull, const char *_Nullable);
+void AG_SetStyleF(void *_Nonnull, const char *_Nonnull, const char *_Nullable, ...)
+		 FORMAT_ATTRIBUTE(printf,3,4);
 
 /*
  * Inlinables

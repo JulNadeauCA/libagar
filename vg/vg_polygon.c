@@ -352,7 +352,9 @@ Edit(void *_Nonnull obj, VG_View *_Nonnull vv)
 	VG_Polygon *vp = obj;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
+#ifdef AG_ENABLE_STRING
 	AG_LabelNewPolled(box, AG_LABEL_HFILL, _("Points: %d"), &vp->nPts);
+#endif
 	AG_SeparatorNewHoriz(box);
 	AG_CheckboxNewInt(box, 0, _("Render outline"), &vp->outline);
 	return (box);

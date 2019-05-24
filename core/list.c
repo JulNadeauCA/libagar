@@ -61,7 +61,11 @@ AG_ListInsert(AG_List *L, Uint pos, const AG_Variable *V)
 	AG_Size vLen;
 	
 	if (pos > L->n) {
+#if AG_MODEL != AG_SMALL
 		AG_FatalError("Bad index");
+#else
+		AG_FatalError("E3");
+#endif
 	}
 	vLen = (L->n+1)*sizeof(AG_Variable);
 	L->v = AG_Realloc(L->v, vLen);
@@ -95,7 +99,11 @@ AG_ListRemove(AG_List *L, Uint idx)
 	AG_Variable *V;
 
 	if (idx >= L->n) {
+#if AG_MODEL != AG_SMALL
 		AG_FatalError("Bad index");
+#else
+		AG_FatalError("E3");
+#endif
 	}
 	V = &L->v[idx];
 	if (V->type == AG_VARIABLE_STRING &&

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -43,6 +43,7 @@
 
 int mInitedSubsystem = 0;
 
+#ifdef AG_ENABLE_STRING
 /*
  * Math library extensions to AG_Printf(3) and AG_PrintfP(3).
  */
@@ -189,6 +190,7 @@ PrintMatrix44(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 	    M->m[2][0], M->m[2][1], M->m[2][2], M->m[2][3],
 	    M->m[3][0], M->m[3][1], M->m[3][2], M->m[3][3]);
 }
+#endif /* AG_ENABLE_STRING */
 
 /* Initialize the math library. */
 void
@@ -211,6 +213,7 @@ M_InitSubsystem(void)
 		AG_RegisterClass(&mMatviewClass);
 	}
 #endif
+#ifdef AG_ENABLE_STRING
 	AG_RegisterFmtStringExt("R", PrintReal);
 	AG_RegisterFmtStringExt("T", PrintTime);
 	AG_RegisterFmtStringExt("C", PrintComplex);
@@ -220,6 +223,7 @@ M_InitSubsystem(void)
 	AG_RegisterFmtStringExt("V", PrintVector);
 	AG_RegisterFmtStringExt("M44", PrintMatrix44);
 	AG_RegisterFmtStringExt("M", PrintMatrix);
+#endif
 }
 
 /* Release resources allocated by the math library. */
@@ -235,6 +239,7 @@ M_DestroySubsystem(void)
 		AG_UnregisterClass(&mMatviewClass);
 	}
 #endif
+#ifdef AG_ENABLE_STRING
 	AG_UnregisterFmtStringExt("R");
 	AG_UnregisterFmtStringExt("T");
 	AG_UnregisterFmtStringExt("C");
@@ -244,6 +249,7 @@ M_DestroySubsystem(void)
 	AG_UnregisterFmtStringExt("V");
 	AG_UnregisterFmtStringExt("M44");
 	AG_UnregisterFmtStringExt("M");
+#endif
 }
 
 /* Unserialize a real number. */

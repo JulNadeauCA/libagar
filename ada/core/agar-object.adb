@@ -69,15 +69,12 @@ package body Agar.Object is
   end;
   
   procedure Attach
-    (Root   : in Object_Not_Null_Access;
-     Parent : in String;
-     Object : in Object_Access)
+    (Parent : in Object_Access;
+     Child  : in Object_not_null_Access)
   is
-    Ch_Parent : aliased C.char_array := C.To_C(Parent);
   begin
-    AG_ObjectAttachToNamed
-      (Root   => Root,
-       Parent => CS.To_Chars_Ptr(Ch_Parent'Unchecked_Access),
+    AG_ObjectAttach
+      (Parent => Parent,
        Object => Object);
   end;
 

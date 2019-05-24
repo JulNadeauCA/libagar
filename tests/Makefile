@@ -65,6 +65,7 @@ SRCS=	agartest.c ${SRCS_EXTRA} \
 	threads.c \
 	timeouts.c \
 	unitconv.c \
+	user.c \
 	widgets.c \
 	windows.c
 

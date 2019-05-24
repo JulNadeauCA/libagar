@@ -27,6 +27,7 @@ ag_init_variable(AG_Variable *V, AG_VariableType type, const char *name)
 	V->data.s = NULL;
 }
 
+#ifdef AG_THREADS
 /* Acquire any locking device associated with a variable. */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
@@ -36,11 +37,9 @@ void
 ag_lock_variable(AG_Variable *V)
 #endif
 {
-#ifdef AG_THREADS
-	if (V->mutex != NULL) { AG_MutexLock(V->mutex); }
-#endif
+	if (V->mutex != NULL)
+		AG_MutexLock(V->mutex);
 }
-
 /* Release any locking device associated with a variable. */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
@@ -50,10 +49,10 @@ void
 ag_unlock_variable(AG_Variable *V)
 #endif
 {
-#ifdef AG_THREADS
-	if (V->mutex != NULL) { AG_MutexUnlock(V->mutex); }
-#endif
+	if (V->mutex != NULL)
+		AG_MutexUnlock(V->mutex);
 }
+#endif /* AG_THREADS */
 
 /* Release all resources allocated by a variable. */
 #ifdef AG_INLINE_HEADER

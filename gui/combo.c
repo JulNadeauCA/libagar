@@ -220,7 +220,11 @@ Return(AG_Event *_Nonnull event)
 	char *text;
 	
 	AG_ObjectLock(com->list);
+#ifdef AG_UNICODE
 	text = tbox->text->ent[0].buf;
+#else
+	text = tbox->text;
+#endif
 
 	if ((com->flags & AG_COMBO_ANY_TEXT) == 0) {
 		AG_TlistItem *it;

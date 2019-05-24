@@ -26,6 +26,8 @@
 /*
  * Loader for Gimp 1.x XCF image format.
  */
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
 
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
@@ -630,6 +632,11 @@ AG_XCFLoad(AG_DataSource *buf, AG_Offset xcf_offs,
 			break;
 		}
 	} while (prop.id != PROP_END);
+	
+	Debug(NULL, "XCF image (%ux%u; type %d; compression %d; colormap %d)\n",
+	    head->w, head->h, head->base_type, head->compression,
+	    head->colormap.size);
+	Debug(NULL, "XCF layers: ");
 
 	/* Reader the layer offsets. */
 	head->layer_offstable = NULL;
@@ -653,6 +660,8 @@ AG_XCFLoad(AG_DataSource *buf, AG_Offset xcf_offs,
 		layer->h = AG_ReadUint32(buf);
 		layer->layer_type = AG_ReadUint32(buf);
 		layer->name = AG_ReadNulString(buf);
+
+		Debug(NULL, "\"%s\" ", layer->name);
 
 		/* Read the layer properties. */
 		do {
@@ -688,9 +697,11 @@ AG_XCFLoad(AG_DataSource *buf, AG_Offset xcf_offs,
 		Free(layer->name);
 		Free(layer);
 	}
+	Debug(NULL, "\n");
 
 	Free(head->colormap.data);
 	Free(head->layer_offstable);
 	Free(head);
 	return (0);
 }
+#endif /* AG_SERIALIZATION */

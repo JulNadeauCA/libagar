@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2012-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,6 +22,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
 
 #include <agar/config/have_db4.h>
 #include <agar/config/have_db5.h>
@@ -180,7 +183,7 @@ Init(void *_Nonnull obj)
 
 AG_DbClass agDbClass = {
 	{
-		"Agar(Db)",
+		"AG_Db",
 		sizeof(AG_Db),
 		{ 0,0 },
 		Init,
@@ -203,3 +206,5 @@ AG_DbClass agDbClass = {
 	NULL,			/* del */
 	NULL			/* iterate */
 };
+
+#endif /* AG_SERIALIZATION */

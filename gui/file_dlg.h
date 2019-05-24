@@ -3,6 +3,9 @@
 #ifndef _AGAR_WIDGET_FILE_DLG_H_
 #define _AGAR_WIDGET_FILE_DLG_H_
 
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/gui/widget.h>
 #include <agar/gui/textbox.h>
 #include <agar/gui/button.h>
@@ -170,4 +173,5 @@ char *_Nonnull AG_FileOptionString(AG_FileType *_Nonnull, const char *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/close.h>
+#endif /* AG_SERIALIZATION */
 #endif /* _AGAR_WIDGET_FILE_DLG_H_ */

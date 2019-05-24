@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,8 @@
 #include <agar/core/core.h>
 #include <agar/gui/surface.h>
 #include <agar/gui/gui_math.h>
+
+#include <agar/config/have_opengl.h>
 
 #include <string.h>
 
@@ -100,7 +102,7 @@ AG_PixelFormatRGBA(AG_PixelFormat *pf, int BitsPerPixel,
 #else
 		AG_FatalError("Packed RGB surfaces must be "
 		              "8-, 16-, 24- or 32-bpp "
-			      "(48- and 64-bpp requires AG_LARGE)");
+			      "(48- or 64-bpp needs AG_LARGE)");
 #endif
 	}
 
@@ -115,7 +117,7 @@ AG_PixelFormatRGBA(AG_PixelFormat *pf, int BitsPerPixel,
 	if (Amask == 0) {
 		pf->Amask = 0;
 		pf->Ashift = 0;
-		pf->Aloss = 0;
+		pf->Aloss = AG_COMPONENT_BITS;
 	} else {
 		AG_GET_SHIFT_LOSS(Amask, pf->Ashift, pf->Aloss);
 		pf->Amask = Amask;
@@ -173,9 +175,11 @@ AG_PixelFormatGrayscale(AG_PixelFormat *pf, int BitsPerPixel)
 	pf->BytesPerPixel = (BitsPerPixel + 7)/8;
 
 	switch (BitsPerPixel) {
+#if 0
 	case 8:
 		pf->PixelsPerByte = 1;
 		break;
+#endif
 	case 16:
 	case 32:
 #if AG_MODEL == AG_LARGE
@@ -244,10 +248,11 @@ Get_Aligned_Pitch_Padding(const AG_Surface *_Nonnull S, Uint w,
     Uint *_Nonnull pitch, Uint *_Nonnull padding)
 {
 	const AG_PixelFormat *pf = &S->format;
+	int BitsPerPixel = pf->BitsPerPixel;
 	Uint len;
 
-	if (pf->BitsPerPixel < 8) {
-		switch (pf->BitsPerPixel) {
+	if (BitsPerPixel < 8) {
+		switch (BitsPerPixel) {
 		case 1:
 			if (w < 8) {
 				AG_SetErrorS("1bpp surfaces must be >7 px wide");
@@ -274,7 +279,7 @@ Get_Aligned_Pitch_Padding(const AG_Surface *_Nonnull S, Uint w,
 	} else {
 		len = w * pf->BytesPerPixel;
 	}
-	switch (pf->BitsPerPixel) {
+	switch (BitsPerPixel) {
 #if AG_MODEL == AG_LARGE
 	case 48:
 	case 64:
@@ -469,6 +474,8 @@ AG_SurfaceFromPixelsRGBA(const void *pixels, Uint w, Uint h, Uint BitsPerPixel,
 	return (S);
 }
 
+#ifdef AG_SERIALIZATION
+
 /* Load a surface from an image file. */
 AG_Surface *
 AG_SurfaceFromFile(const char *path)
@@ -516,6 +523,16 @@ AG_SurfaceExportFile(const AG_Surface *S, const char *path)
 	return (0);
 }
 
+#endif /* AG_SERIALIZATION */
+
+#ifdef HAVE_OPENGL
+static __inline__ int _Const_Attribute
+PowOf2i(int i)
+{
+	int val = 1;
+	while (val < i) { val <<= 1; }
+	return (val);
+}
 /*
  * Create a new surface suitable to be used as an OpenGL texture. The
  * returned surface size may be different from requested (unless the
@@ -549,6 +566,7 @@ AG_SurfaceStdGL(Uint rw, Uint rh)
 	Sgl->flags |= AG_SURFACE_GL_TEXTURE;
 	return (Sgl);
 }
+#endif /* HAVE_OPENGL */
 
 /* Set pixel data to an external address (or NULL = revert to auto-allocated) */
 void
@@ -635,7 +653,7 @@ AG_SurfaceCopyPixels(AG_Surface *S, const Uint8 *pixels)
 void
 AG_SurfaceSetPixels(AG_Surface *S, const AG_Color *c)
 {
-	AG_Pixel px = AG_MapPixel(&S->format, c);
+	AG_Pixel px;
 	Uint x, y;
 
 #ifdef AG_DEBUG
@@ -644,6 +662,7 @@ AG_SurfaceSetPixels(AG_Surface *S, const AG_Color *c)
 		    c->r, c->g, c->b, c->a);
 #endif
 	/* TODO optimized cases */
+	px = AG_MapPixel(&S->format, c);
 	for (y = 0; y < S->h; y++) {
 		for (x = 0; x < S->w; x++)
 			AG_SurfacePut(S, x,y, px);
@@ -704,9 +723,9 @@ AG_SurfaceCopy(AG_Surface *D, const AG_Surface *S)
 
 #ifdef AG_DEBUG
 	if (S->flags & AG_SURFACE_TRACE) {
-		Debug(NULL, "Surface <%p>: Copy([%dx%dx%d %s]->%p[%dx%dx%d %s])\n",
-		    S, S->w, S->h, S->format.BitsPerPixel, agSurfaceModeNames[S->format.mode],
-		    D, D->w, D->h, D->format.BitsPerPixel, agSurfaceModeNames[D->format.mode]);
+		Debug(NULL, "Surface <%p>: Copy([%dx%dx%d/%d %s]->%p[%dx%dx%d/%d %s])\n",
+		    S, S->w, S->h, S->format.BitsPerPixel, S->pitch, agSurfaceModeNames[S->format.mode],
+		    D, D->w, D->h, D->format.BitsPerPixel, D->pitch, agSurfaceModeNames[D->format.mode]);
 		D->flags |= AG_SURFACE_TRACE;
 	}
 #endif
@@ -738,16 +757,17 @@ AG_SurfaceCopy(AG_Surface *D, const AG_Surface *S)
 			pDst += pitch + Dpadding;
 		}
 	} else {                                                 /* Pixelwise */
-#ifdef AG_DEBUDG
+#ifdef AG_DEBUG
 		if (S->flags & AG_SURFACE_TRACE)
 			Debug(NULL, "Surface <%p>: Pixelwise Copy\n", S);
 #endif
 		/* TODO optimized cases */
 		for (y = 0; y < h; y++) {
 			for (x = 0; x < w; x++) {
-				AG_Pixel px = AG_SurfaceGet(S, x,y);
+				AG_Pixel px;
 				AG_Color c;
 				
+				px = AG_SurfaceGet(S, x,y);
 				AG_GetColor(&c, px, &S->format);
 				AG_SurfacePut(D, x,y,
 				    AG_MapPixel(&D->format, &c));
@@ -765,7 +785,7 @@ AG_SurfaceCopy(AG_Surface *D, const AG_Surface *S)
  */
 static void
 AG_SurfaceBlit_AlCo(const AG_Surface *_Nonnull S, AG_Surface *_Nonnull D,
-    const AG_Rect *_Nonnull dr)
+    const AG_Rect *_Nonnull dr, int xDst, int yDst)
 {
 	AG_Pixel srcColorkey = S->colorkey;
 	int x,y;
@@ -778,9 +798,10 @@ AG_SurfaceBlit_AlCo(const AG_Surface *_Nonnull S, AG_Surface *_Nonnull D,
 #endif
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			AG_Pixel px = AG_SurfaceGet(S, x,y);
+			AG_Pixel px;
 			AG_Color c;
 
+			px = AG_SurfaceGet(S, x,y);
 			if (px == srcColorkey) {
 				continue;
 			}
@@ -789,7 +810,7 @@ AG_SurfaceBlit_AlCo(const AG_Surface *_Nonnull S, AG_Surface *_Nonnull D,
 			if (c.a == AG_TRANSPARENT) {
 				continue;
 			}
-			AG_SurfaceBlend(D, x,y, &c, AG_ALPHA_OVERLAY);
+			AG_SurfaceBlend(D, xDst+x, yDst+y, &c, AG_ALPHA_OVERLAY);
 		}
 	}
 }
@@ -800,12 +821,12 @@ AG_SurfaceBlit_AlCo(const AG_Surface *_Nonnull S, AG_Surface *_Nonnull D,
  */
 static void
 AG_SurfaceBlit_Co(const AG_Surface *_Nonnull S, AG_Surface *_Nonnull D,
-    const AG_Rect *_Nonnull dr)
+    const AG_Rect *_Nonnull dr, int xDst, int yDst)
 {
 	AG_Pixel srcColorkey = S->colorkey;
-	int x, y;
 	int w = dr->w;
 	int h = dr->h;
+	int x, y;
 
 #ifdef AG_DEBUG
 	if (S->flags & AG_SURFACE_TRACE)
@@ -813,20 +834,23 @@ AG_SurfaceBlit_Co(const AG_Surface *_Nonnull S, AG_Surface *_Nonnull D,
 #endif
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			AG_Pixel px = AG_SurfaceGet(S, x,y);
+			AG_Pixel px;
 			AG_Color c;
 
+			px = AG_SurfaceGet(S, x,y);
 			if (px == srcColorkey) {
 				continue;
 			}
 			AG_GetColor(&c, px, &S->format);
 			if (c.a == AG_TRANSPARENT) {
 				continue;
-			} else if (c.a == AG_OPAQUE) {
-				AG_SurfacePut(D, x,y,
+			}
+			if (c.a == AG_OPAQUE) {
+				AG_SurfacePut(D, xDst+x, yDst+y,
 				    AG_MapPixel(&D->format, &c));
 			} else {
-				AG_SurfaceBlend(D, x,y, &c, AG_ALPHA_OVERLAY);
+				AG_SurfaceBlend(D, xDst+x, yDst+y, &c,
+				    AG_ALPHA_OVERLAY);
 			}
 		}
 	}
@@ -845,12 +869,11 @@ AG_SurfaceBlit_Co(const AG_Surface *_Nonnull S, AG_Surface *_Nonnull D,
  * If srcRect is NULL, the entire surface is copied.
  */
 void
-AG_SurfaceBlit(const AG_Surface *S, const AG_Rect *srcRect,
-    AG_Surface *D, int xDst, int yDst)
+AG_SurfaceBlit(const AG_Surface *S, const AG_Rect *srcRect, AG_Surface *D,
+    int xDst, int yDst)
 {
 	AG_Rect sr, dr;
 	Uint x, y;
-	int diff;
 
 #ifdef AG_DEBUG
 	if (S->flags & AG_SURFACE_TRACE) {
@@ -888,14 +911,14 @@ AG_SurfaceBlit(const AG_Surface *S, const AG_Rect *srcRect,
 		return;
 	}
 	if (dr.w < sr.w) {					/* Partial */
-		diff = (sr.w - dr.w);
+		int diff = (sr.w - dr.w);
 		if (xDst+sr.w < D->clipRect.x + D->clipRect.w) {
 			sr.x += diff;
 		}
 		sr.w -= diff;
 	}
 	if (dr.h < sr.h) {
-		diff = (sr.h - dr.h);
+		int diff = (sr.h - dr.h);
 		if (yDst+sr.h < D->clipRect.y + D->clipRect.h) {
 			sr.y += diff;
 		}
@@ -904,43 +927,48 @@ AG_SurfaceBlit(const AG_Surface *S, const AG_Rect *srcRect,
 
 	if (S->alpha < AG_OPAQUE) {
 		if (S->flags & AG_SURFACE_COLORKEY) {
-			AG_SurfaceBlit_AlCo(S, D, &dr);
+			AG_SurfaceBlit_AlCo(S, D, &dr, xDst,yDst);
 			return;
 		}
 		for (y = 0; y < dr.h; y++) {
 			for (x = 0; x < dr.w; x++) {
-				AG_Pixel px = AG_SurfaceGet(S, x,y);
+				AG_Pixel px;
 				AG_Color c;
-				
+			
+				px = AG_SurfaceGet(S, x,y);
 				AG_GetColor(&c, px, &S->format);
+
 				c.a = MIN(c.a, S->alpha);
 				if (c.a == AG_TRANSPARENT) {
 					continue;
 				}
-				AG_SurfaceBlend(D, x,y, &c, AG_ALPHA_OVERLAY);
+				AG_SurfaceBlend(D, xDst+x, yDst+y, &c,
+				    AG_ALPHA_OVERLAY);
 			}
 		}
 		return;
 	}
 	if (S->flags & AG_SURFACE_COLORKEY) {
-		AG_SurfaceBlit_Co(S, D, &dr);
+		AG_SurfaceBlit_Co(S, D, &dr, xDst,yDst);
 		return;
 	}
 	if (S->format.Amask != 0) {
 		for (y = 0; y < dr.h; y++) {
 			for (x = 0; x < dr.w; x++) {
-				AG_Pixel px = AG_SurfaceGet(S, x,y);
+				AG_Pixel px;
 				AG_Color c;
-				
+			
+				px = AG_SurfaceGet(S, x,y);
 				AG_GetColor(&c, px, &S->format);
+
 				if (c.a == AG_TRANSPARENT) {
 					continue;
 				}
 				if (c.a < AG_OPAQUE) {
-					AG_SurfaceBlend(D, x,y, &c,
+					AG_SurfaceBlend(D, xDst+x,yDst+y, &c,
 					    AG_ALPHA_OVERLAY);
 				} else {
-					AG_SurfacePut(D, x,y,
+					AG_SurfacePut(D, xDst+x,yDst+y,
 					    AG_MapPixel(&D->format, &c));
 				}
 			}
@@ -948,11 +976,12 @@ AG_SurfaceBlit(const AG_Surface *S, const AG_Rect *srcRect,
 	} else {
 		for (y = 0; y < dr.h; y++) {
 			for (x = 0; x < dr.w; x++) {
-				AG_Pixel px = AG_SurfaceGet(S, x,y);
+				AG_Pixel px;
 				AG_Color c;
-				
+
+				px = AG_SurfaceGet(S, x,y);
 				AG_GetColor(&c, px, &S->format);
-				AG_SurfacePut(D, x,y,
+				AG_SurfacePut(D, xDst+x, yDst+y,
 				    AG_MapPixel(&D->format, &c));
 			}
 		}
@@ -1107,7 +1136,7 @@ AG_SurfaceScale(const AG_Surface *S, Uint w, Uint h, Uint flags)
 	return (D);
 }
 
-/* Fill a rectangle with pixels of the specified color. */
+/* Fill a rectangle with pixels of a given color. */
 void
 AG_FillRect(AG_Surface *S, const AG_Rect *rDst, const AG_Color *c)
 {
@@ -1146,7 +1175,7 @@ AG_FillRect(AG_Surface *S, const AG_Rect *rDst, const AG_Color *c)
 			AG_SurfacePut(S, x, y, px);
 }
 
-/* Return the pixel at x,y in a 1- to 8-bpp surface. */
+/* Return the pixel at x,y in a 1- to 8-bpp surface S. */
 Uint8
 AG_SurfaceGet8(const AG_Surface *S, int x, int y)
 {
@@ -1189,7 +1218,60 @@ AG_SurfaceGet8(const AG_Surface *S, int x, int y)
 	return (0);
 }
 
-/* Map 8-bit RGB(A) components to a 32-bit pixel. */
+/* Write the pixel x,y in a 1-, 2-, 4-, or 8-bit surface S. */
+void
+AG_SurfacePut8(AG_Surface *_Nonnull S, int x, int y, Uint8 px)
+{
+	Uint8 *p = S->pixels + y*S->pitch +
+	                       x/S->format.PixelsPerByte;
+#ifdef AG_DEBUG
+	if (x < 0 || x >= S->w ||
+	    y < 0 || y >= S->h)
+		AG_FatalError("Illegal SurfacePut8");
+#endif
+	switch (S->format.BitsPerPixel) {
+	case 8:
+		*p = px;
+		break;
+	case 4:
+#ifdef AG_DEBUG
+		if (px > 0x0f) { AG_FatalError("Bad 4-bit pixel"); }
+#endif
+		switch (x % 2) {
+		case 0: *p = (*p & 0xf0) | px;		break;
+		case 1:	*p = (*p & 0x0f) | px << 4;	break;
+		}
+		break;
+	case 2:
+#ifdef AG_DEBUG
+		if (px > 0x03) { AG_FatalError("Bad 2-bit pixel"); }
+#endif
+		switch (x % 4) {
+		case 0:	*p = (*p & 0xfc) | px;		break;
+		case 1:	*p = (*p & 0xf3) | px << 2;	break;
+		case 2:	*p = (*p & 0xcf) | px << 4;	break;
+		case 3:	*p = (*p & 0x3f) | px << 6;	break;
+		}
+		break;
+	case 1:
+#ifdef AG_DEBUG
+		if (px > 0x01) { AG_FatalError("Bad 1-bit pixel"); }
+#endif
+		switch (x % 8) {
+		case 0:	*p = (*p & 0xfe) | px;		break;
+		case 1:	*p = (*p & 0xfd) | px << 1;	break;
+		case 2:	*p = (*p & 0xfb) | px << 2;	break;
+		case 3:	*p = (*p & 0xf7) | px << 3;	break;
+		case 4:	*p = (*p & 0xef) | px << 4;	break;
+		case 5:	*p = (*p & 0xdf) | px << 5;	break;
+		case 6:	*p = (*p & 0xbf) | px << 6;	break;
+		case 7:	*p = (*p & 0x7f) | px << 7;	break;
+		}
+		break;
+	}
+}
+
+/* Map 8-bit RGB components to an opaque 32-bit pixel. */
 Uint32
 AG_MapPixel32_RGB8(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b)
 {
@@ -1216,9 +1298,10 @@ AG_MapPixel32_RGB8(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b)
 #endif
 	}
 }
+
+/* Map 8-bit RGBA components to a 32-bit pixel. */
 Uint32
-AG_MapPixel32_RGBA8(const AG_PixelFormat *pf,
-    Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+AG_MapPixel32_RGBA8(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
@@ -1246,8 +1329,7 @@ AG_MapPixel32_RGBA8(const AG_PixelFormat *pf,
 
 /* Map (compressed) 16-bit RGB components to an opaque 32-bit pixel. */
 Uint32
-AG_MapPixel32_RGB16(const AG_PixelFormat *pf,
-    Uint16 r, Uint16 g, Uint16 b)
+AG_MapPixel32_RGB16(const AG_PixelFormat *pf, Uint16 r, Uint16 g, Uint16 b)
 {
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
@@ -1275,8 +1357,8 @@ AG_MapPixel32_RGB16(const AG_PixelFormat *pf,
 
 /* Map (compressed) 16-bit RGBA components to a 32-bit pixel. */
 Uint32
-AG_MapPixel32_RGBA16(const AG_PixelFormat *pf,
-    Uint16 r, Uint16 g, Uint16 b, Uint16 a)
+AG_MapPixel32_RGBA16(const AG_PixelFormat *pf, Uint16 r, Uint16 g, Uint16 b,
+    Uint16 a)
 {
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
@@ -1298,8 +1380,7 @@ AG_MapPixel32_RGBA16(const AG_PixelFormat *pf,
 
 /* Map (decompressed) 8-bit RGB components to an opaque 64-bit pixel. */
 Uint64
-AG_MapPixel64_RGB8(const AG_PixelFormat *pf,
-    Uint8 r, Uint8 g, Uint8 b)
+AG_MapPixel64_RGB8(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b)
 {
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
@@ -1325,10 +1406,10 @@ AG_MapPixel64_RGB8(const AG_PixelFormat *pf,
 	}
 }
 
-/* Map (decompressed) 8-bit RGB components to a 64-bit pixel. */
+/* Map (decompressed) 8-bit RGBA components to a 64-bit pixel. */
 Uint64
-AG_MapPixel64_RGBA8(const AG_PixelFormat *pf,
-    Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+AG_MapPixel64_RGBA8(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b,
+    Uint8 a)
 {
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
@@ -1361,7 +1442,7 @@ AG_MapPixel64_RGBA8(const AG_PixelFormat *pf,
 	tmp = (px & mask) >> shift;					\
 	(rv) = (tmp << loss) + (tmp >> (bits - (loss << 1)))
 
-/* Extract 8-bit RGB(A) components from a 32-bit pixel. */
+/* Extract 8-bit RGB components from a 32-bit pixel. */
 void
 AG_GetColor32_RGB8(Uint32 px, const AG_PixelFormat *pf,
     Uint8 *r, Uint8 *g, Uint8 *b)
@@ -1391,6 +1472,8 @@ AG_GetColor32_RGB8(Uint32 px, const AG_PixelFormat *pf,
 	/* pf->mode */
 	}
 }
+
+/* Extract 8-bit RGBA components from a 32-bit pixel. */
 void
 AG_GetColor32_RGBA8(Uint32 px, const AG_PixelFormat *pf,
     Uint8 *r, Uint8 *g, Uint8 *b, Uint8 *a)
@@ -1499,7 +1582,7 @@ AG_GetColor32(AG_Color *c, Uint32 px, const AG_PixelFormat *pf)
 {
 	Uint8 R,G,B,A;
 	Uint32 tmp;
-
+	
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
 		EXTRACT_COMPONENT(R, pf->Rmask, pf->Rshift, pf->Rloss, 8);
@@ -1526,6 +1609,38 @@ AG_GetColor32(AG_Color *c, Uint32 px, const AG_PixelFormat *pf)
 #endif
 	}
 }
+
+/* Extract an AG_Color from a 64-bit pixel */
+#if AG_MODEL == AG_LARGE
+void
+AG_GetColor64(AG_Color *c, Uint64 px, const AG_PixelFormat *pf)
+{
+	Uint64 tmp;
+
+	switch (pf->mode) {
+	case AG_SURFACE_PACKED:
+		EXTRACT_COMPONENT(c->r, pf->Rmask, pf->Rshift, pf->Rloss, 16);
+		EXTRACT_COMPONENT(c->g, pf->Gmask, pf->Gshift, pf->Gloss, 16);
+		EXTRACT_COMPONENT(c->b, pf->Bmask, pf->Bshift, pf->Bloss, 16);
+		if (pf->Amask != 0) {
+			EXTRACT_COMPONENT(c->a, pf->Amask, pf->Ashift,
+			    pf->Aloss, 16);
+		} else {
+			c->a = AG_OPAQUE;
+		}
+		break;
+	case AG_SURFACE_INDEXED:
+		memcpy(c, &pf->palette->colors[px % pf->palette->nColors],
+		    sizeof(AG_Color));
+		break;
+# ifdef AG_HAVE_FLOAT
+	case AG_SURFACE_GRAYSCALE:
+		AG_GetColor64_Gray(c, px, pf->graymode);
+		break;
+# endif
+	}
+}
+#endif /* AG_LARGE */
 
 #undef EXTRACT_COMPONENT
 
@@ -1556,7 +1671,6 @@ AG_MapPixelIndexed(const AG_PixelFormat *pf,
 
 #ifdef HAVE_FLOAT
 /* Convert RGBA components to packed grayscale+alpha by luminosity. */
-/* TODO integer-only version */
 AG_Pixel
 AG_MapPixelGrayscale(const AG_PixelFormat *pf,
     AG_Component r, AG_Component g, AG_Component b, AG_Component a)
@@ -1587,7 +1701,6 @@ AG_MapPixelGrayscale(const AG_PixelFormat *pf,
 }
 
 /* Convert a 32-bit grayscale+alpha pixel to an AG_Color by luminosity. */
-/* TODO integer-only version */
 void
 AG_GetColor32_Gray(AG_Color *c, Uint32 G, AG_GrayscaleMode mode)
 {
@@ -1615,7 +1728,6 @@ AG_GetColor32_Gray(AG_Color *c, Uint32 G, AG_GrayscaleMode mode)
 }
 
 /* Convert a 32-bit grayscale+alpha pixel to 8-bit RGBA by luminosity. */
-/* TODO integer-only version */
 void
 AG_GetColor32_Gray8(Uint32 G, AG_GrayscaleMode grayMode,
     Uint8 *r, Uint8 *g, Uint8 *b, Uint8 *a)
@@ -1644,7 +1756,6 @@ AG_GetColor32_Gray8(Uint32 G, AG_GrayscaleMode grayMode,
 }
 
 /* Convert a 32-bit grayscale+alpha pixel to 16-bit RGBA by luminosity. */
-/* TODO integer-only version */
 void
 AG_GetColor32_Gray16(Uint32 px, AG_GrayscaleMode grayMode,
     Uint16 *r, Uint16 *g, Uint16 *b, Uint16 *a)
@@ -1677,7 +1788,6 @@ AG_GetColor32_Gray16(Uint32 px, AG_GrayscaleMode grayMode,
  * Convert a 64-bit grayscale+alpha pixel to 16-bit RGBA by luminosity
  * (with compressed alpha).
  */
-/* TODO integer-only version */
 void
 AG_GetColor64_Gray16(Uint64 G, AG_GrayscaleMode grayMode,
     Uint16 *r, Uint16 *g, Uint16 *b, Uint16 *a)
@@ -1709,7 +1819,6 @@ AG_GetColor64_Gray16(Uint64 G, AG_GrayscaleMode grayMode,
  * Convert a 64-bit grayscale+alpha pixel to an AG_Color by luminosity.
  * Compress alpha down from 32- to 16-bit.
  */
-/* TODO integer-only version */
 void
 AG_GetColor64_Gray(AG_Color *c, Uint64 G, AG_GrayscaleMode mode)
 {

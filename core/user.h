@@ -2,10 +2,8 @@
 
 #include <agar/core/begin.h>
 
-#if AG_MODEL == AG_SMALL
-# define AG_USER_NAME_MAX 16
-#else
-# define AG_USER_NAME_MAX 73
+#ifndef AG_USER_NAME_MAX
+#define AG_USER_NAME_MAX 73
 #endif
 
 /* User account (POSIX-style, or otherwise) */
@@ -38,6 +36,8 @@ typedef struct ag_user_ops {
 	int  (*_Nonnull getEffectiveUser) (AG_User *_Nonnull);
 } AG_UserOps;
 
+#ifdef AG_USER
+
 __BEGIN_DECLS
 extern const AG_UserOps *_Nullable agUserOps;
 
@@ -56,4 +56,5 @@ AG_User *_Nullable AG_GetRealUser(void);
 AG_User *_Nullable AG_GetEffectiveUser(void);
 __END_DECLS
 
+#endif /* AG_USER */
 #include <agar/core/close.h>

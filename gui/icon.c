@@ -54,6 +54,7 @@ AG_IconFromSurface(AG_Surface *su)
 	return (icon);
 }
 
+#ifdef AG_SERIALIZATION
 AG_Icon *
 AG_IconFromBMP(const char *bmpfile)
 {
@@ -68,9 +69,10 @@ AG_IconFromBMP(const char *bmpfile)
 	AG_IconSetSurfaceNODUP(icon, bmp);
 	return (icon);
 }
+#endif /* AG_SERIALIZATION */
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Icon *icon = obj;
 
@@ -88,11 +90,10 @@ Init(void *obj)
 	icon->wSaved = -1;
 	icon->hSaved = -1;
 	AG_ColorNone(&icon->cBackground);
-	AG_InitTimer(&icon->toDblClick, "dblClick", 0);
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Icon *icon = obj;
 	int wLbl, hLbl;
@@ -116,7 +117,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	if (a->w < 1 || a->h < 1) {
 		return (-1);
@@ -125,7 +126,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Icon *icon = obj;
 	AG_Rect r;

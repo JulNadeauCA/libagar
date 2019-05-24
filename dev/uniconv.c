@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,9 @@
  * Unicode browser tool. Given a user-specified Unicode range, this displays
  * all the characters within that range. Useful for testing fonts.
  */
+
+#include <agar/config/ag_unicode.h>
+#ifdef AG_UNICODE
 
 #include <agar/core/core.h>
 #include <agar/gui/window.h>
@@ -244,3 +247,5 @@ DEV_UnicodeBrowser(void)
 	AG_WidgetFocus(comRange);
 	return (win);
 }
+
+#endif /* AG_UNICODE */

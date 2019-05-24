@@ -34,6 +34,9 @@
    This code currently supports Win32 DIBs in uncompressed 8 and 24 bpp.
 */
 
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
 #include <agar/gui/surface.h>
@@ -168,13 +171,13 @@ AG_Surface *
 AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 {
 	AG_Surface *S;
-	int i, pad, topDown, expandBMP, bmpPitch;
+	int i, pad, topDown, expandBMP;
 	AG_ByteOrder orderSaved;
 	AG_Offset bmpHeaderOffset;
-	Uint32 Rmask = 0;
-	Uint32 Gmask = 0;
-	Uint32 Bmask = 0;
-	Uint32 Amask = 0;
+	AG_Pixel Rmask = 0;
+	AG_Pixel Gmask = 0;
+	AG_Pixel Bmask = 0;
+	AG_Pixel Amask = 0;
 	Uint8 *bits, *top, *end;
 	int haveRGBMasks=0, haveAlphaMask=0, willCorrectAlpha=0;
 	/* The Win32 BMP file header (14 bytes) */
@@ -227,7 +230,7 @@ AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 		biHeight = AG_ReadUint32(ds);
 		/* biPlanes = */ AG_ReadUint16(ds);
 		biBitCount = AG_ReadUint16(ds);
-		biCompression = AG_ReadUint16(ds);
+		biCompression = AG_ReadUint32(ds);
 		/* biSizeImage     = */ AG_ReadUint32(ds);
 		/* biXPelsPerMeter = */ AG_ReadUint32(ds);
 		/* biYPelsPerMeter = */ AG_ReadUint32(ds);
@@ -377,15 +380,24 @@ AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 	case 4:
 	case 8:
 		S = AG_SurfaceIndexed(biWidth, biHeight, biBitCount, 0);
-		Debug(NULL, "Reading BMP (%ux%ux%u; INDEXED)\n",
+		Debug(NULL, "BMP image (%ux%u; %u-bpp; INDEXED)\n",
 		    biWidth, biHeight, biBitCount);
 		break;
 	default:
 		S = AG_SurfaceRGBA(biWidth, biHeight, biBitCount, 0,
 		    Rmask, Gmask, Bmask, Amask);
-		Debug(NULL, "Reading BMP (%ux%ux%u; RGBA %08x,%08x,%08x,%08x)\n",
-		    biWidth, biHeight, biBitCount,
-		    Rmask, Gmask, Bmask, Amask);
+#if AG_MODEL == AG_LARGE
+		Debug(NULL, "BMP image (%ux%u; %u-bpp; "
+		            "RGBA %08lx,%08lx,%08lx,%08lx)\n",
+			    biWidth, biHeight, biBitCount,
+			    (Ulong)Rmask, (Ulong)Gmask, (Ulong)Bmask,
+			    (Ulong)Amask);
+#else
+		Debug(NULL, "BMP image (%ux%u; %u-bpp; "
+		            "RGBA %08x,%08x,%08x,%08x)\n",
+			    biWidth, biHeight, biBitCount,
+			    Rmask, Gmask, Bmask, Amask);
+#endif
 		break;
 	}
 	if (S == NULL)
@@ -404,14 +416,16 @@ AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 	top = S->pixels;
 	end = S->pixels + (S->h * S->pitch);
 	switch (expandBMP) {
-	case 1:
-		bmpPitch = (biWidth + 7) >> 3;
+	case 1: {
+		int bmpPitch = (biWidth + 7) >> 3;
 		pad = (((bmpPitch) % 4) ? (4 - ((bmpPitch) % 4)) : 0);
 		break;
-	case 4:
-		bmpPitch = (biWidth + 1) >> 1;
+	}
+	case 4: {
+		int bmpPitch = (biWidth + 1) >> 1;
 		pad = (((bmpPitch) % 4) ? (4 - ((bmpPitch) % 4)) : 0);
 		break;
+	}
 	default:
 		pad = ((S->pitch % 4) ? (4 - (S->pitch % 4)) : 0);
 		break;
@@ -712,3 +726,5 @@ AG_SurfaceExportBMP(const AG_Surface *_Nonnull S, const char *_Nonnull path,
 	AG_CloseFile(ds);
 	return (0);
 }
+
+#endif /* AG_SERIALIZATION */

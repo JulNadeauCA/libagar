@@ -1,81 +1,83 @@
 /*	Public domain	*/
 
-#ifdef AG_INLINE_HEADER
+#if AG_MODEL != AG_SMALL
+
+# ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_EventPushPointer(AG_Event *_Nonnull ev, const char *_Nullable name,
     void *_Nullable val)
-#else
+# else
 void
 ag_event_push_pointer(AG_Event *ev, const char *name, void *val)
-#endif
+# endif
 {
 	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_POINTER, name, p, val);
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_EventPushString(AG_Event *_Nonnull ev, const char *_Nullable name,
     char *_Nonnull val)
-#else
+# else
 void
 ag_event_push_string(AG_Event *ev, const char *name, char *val)
-#endif
+# endif
 {
 	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_STRING, name, s, AG_Strdup(val));
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_EventPushInt(AG_Event *_Nonnull ev, const char *_Nullable name, int val)
-#else
+# else
 void
 ag_event_push_int(AG_Event *ev, const char *name, int val)
-#endif
+# endif
 {
 	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_INT, name, i, val);
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_EventPushUint(AG_Event *_Nonnull ev, const char *_Nullable name, Uint val)
-#else
+# else
 void
 ag_event_push_uint(AG_Event *ev, const char *name, Uint val)
-#endif
+# endif
 {
 	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_UINT, name, i, val);
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_EventPushLong(AG_Event *_Nonnull ev, const char *_Nullable name, long val)
-#else
+# else
 void
 ag_event_push_long(AG_Event *_Nonnull ev, const char *_Nullable name, long val)
-#endif
+# endif
 {
 	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_LONG, name, li, val);
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_EventPushUlong(AG_Event *_Nonnull ev, const char *_Nullable name, Ulong val)
-#else
+# else
 void
 ag_event_push_ulong(AG_Event *ev, const char *name, Ulong val)
-#endif
+# endif
 {
 	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_ULONG, name, uli, val)
 }
 
-#ifdef AG_HAVE_FLOAT
-# ifdef AG_INLINE_HEADER
+# ifdef AG_HAVE_FLOAT
+#  ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_EventPushFloat(AG_Event *_Nonnull ev, const char *_Nullable name, float val)
-# else
+#  else
 void
 ag_event_push_float(AG_Event *ev, const char *name, float val)
-# endif
+#  endif
 {
 	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_FLOAT, name, flt, val);
 }
@@ -91,126 +93,129 @@ ag_event_push_double(AG_Event *ev, const char *name, double val)
 	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_DOUBLE, name, dbl, val);
 }
 
-# ifdef AG_HAVE_LONG_DOUBLE
-#  ifdef AG_INLINE_HEADER
+#  ifdef AG_HAVE_LONG_DOUBLE
+#   ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_EventPushLongDouble(AG_Event *_Nonnull ev, const char *_Nullable name,
     long double val)
-#  else
+#   else
 void
 ag_event_push_long_double(AG_Event *ev, const char *name, long double val)
-#  endif
+#   endif
 {
 	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_LONG_DOUBLE, name, ldbl, val);
 }
-# endif
-#endif /* AG_HAVE_FLOAT */
+#  endif /* AG_HAVE_LONG_DOUBLE */
 
-#ifdef AG_INLINE_HEADER
+# endif /* AG_HAVE_FLOAT */
+
+# ifdef AG_INLINE_HEADER
 static __inline__ void *_Nullable
 AG_EventPopPointer(AG_Event *_Nonnull ev)
-#else
+# else
 void *
 ag_event_pop_pointer(AG_Event *ev)
-#endif
+# endif
 {
 	AG_EVENT_POP_FN(AG_VARIABLE_POINTER, p);
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ char *_Nonnull
 AG_EventPopString(AG_Event *_Nonnull ev)
-#else
+# else
 char *
 ag_event_pop_string(AG_Event *ev)
-#endif
+# endif
 {
 	AG_EVENT_POP_FN(AG_VARIABLE_STRING, s);
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ int
 AG_EventPopInt(AG_Event *_Nonnull ev)
-#else
+# else
 int
 ag_event_pop_int(AG_Event *ev)
-#endif
+# endif
 {
 	AG_EVENT_POP_FN(AG_VARIABLE_INT, i);
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ Uint
 AG_EventPopUint(AG_Event *_Nonnull ev)
-#else
+# else
 Uint
 ag_event_pop_uint(AG_Event *_Nonnull ev)
-#endif
+# endif
 {
 	AG_EVENT_POP_FN(AG_VARIABLE_UINT, u);
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ long
 AG_EventPopLong(AG_Event *_Nonnull ev)
-#else
+# else
 long
 ag_event_pop_long(AG_Event *_Nonnull ev)
-#endif
+# endif
 {
 	AG_EVENT_POP_FN(AG_VARIABLE_LONG, li);
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ Ulong
 AG_EventPopUlong(AG_Event *_Nonnull ev)
-#else
+# else
 Ulong
 ag_event_pop_ulong(AG_Event *_Nonnull ev)
-#endif
+# endif
 {
 	AG_EVENT_POP_FN(AG_VARIABLE_ULONG, uli);
 }
 
-#ifdef AG_HAVE_FLOAT
-# ifdef AG_INLINE_HEADER
+# ifdef AG_HAVE_FLOAT
+#  ifdef AG_INLINE_HEADER
 static __inline__ float
 AG_EventPopFloat(AG_Event *_Nonnull ev)
-# else
+#  else
 float
 ag_event_pop_float(AG_Event *_Nonnull ev)
-# endif
+#  endif
 {
 	AG_EVENT_POP_FN(AG_VARIABLE_FLOAT, flt);
 }
 
-# ifdef AG_INLINE_HEADER
+#  ifdef AG_INLINE_HEADER
 static __inline__ double
 AG_EventPopDouble(AG_Event *_Nonnull ev)
-# else
+#  else
 double
 ag_event_pop_double(AG_Event *_Nonnull ev)
-# endif
+#  endif
 {
 	AG_EVENT_POP_FN(AG_VARIABLE_DOUBLE, dbl);
 }
 
-# ifdef AG_HAVE_LONG_DOUBLE
-#  ifdef AG_INLINE_HEADER
+#  ifdef AG_HAVE_LONG_DOUBLE
+#   ifdef AG_INLINE_HEADER
 static __inline__ long double
 AG_EventPopLongDouble(AG_Event *_Nonnull ev)
-#  else
+#   else
 long double
 ag_event_pop_long_double(AG_Event *ev)
-#  endif
+#   endif
 {
 	AG_EVENT_POP_FN(AG_VARIABLE_LONG_DOUBLE, ldbl);
 }
-# endif
-#endif
+#  endif /* AG_HAVE_LONG_DOUBLE */
+# endif  /* AG_HAVE_FLOAT */
 
-#undef AG_EVENT_PUSH_FN
-#undef AG_EVENT_POP_FN
+# undef AG_EVENT_PUSH_FN
+# undef AG_EVENT_POP_FN
+
+#endif /* !AG_SMALL */
 
 /*
  * Extract Event argument by name (case-insensitive).
@@ -229,8 +234,12 @@ ag_get_named_event_arg(AG_Event *ev, const char *name)
 		if (AG_Strcasecmp(ev->argv[i].name, name) == 0)
 			return (&ev->argv[i]);
 	}
-	AG_SetError("Illegal AG_*_NAMED() access: No \"%s\"", name);
+#ifdef AG_VERBOSITY
+	AG_SetError("No \"%s\" argument", name);
 	AG_FatalError(NULL);
+#else
+	AG_FatalError("E26");
+#endif
 	return (&ev->argv[0]);
 }
 
@@ -242,10 +251,12 @@ void *
 ag_get_named_ptr(AG_Event *event, const char *name)
 #endif
 {
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
+	AG_Variable *V;
+
+	V = AG_GetNamedEventArg(event, name);
 #ifdef AG_TYPE_SAFETY
 	if (V->type != AG_VARIABLE_POINTER)
-		AG_FatalError("Illegal AG_PTR_NAMED() access");
+		AG_FatalErrorV("E26", "AG_PTR_NAMED()");
 #endif
 	return (V->data.p);
 }
@@ -258,10 +269,12 @@ char *
 ag_get_named_string(AG_Event *event, const char *name)
 #endif
 {
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
+	AG_Variable *V;
+
+	V = AG_GetNamedEventArg(event, name);
 #ifdef AG_TYPE_SAFETY
 	if (V->type != AG_VARIABLE_STRING)
-		AG_FatalError("Illegal AG_STRING_NAMED() access");
+		AG_FatalErrorV("E26", "AG_STRING_NAMED()");
 #endif
 	return (V->data.s);
 }
@@ -274,9 +287,12 @@ int
 ag_get_named_int(AG_Event *_Nonnull event, const char *_Nonnull name)
 #endif
 {
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
+	AG_Variable *V;
+
+	V = AG_GetNamedEventArg(event, name);
 #ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_INT) { AG_FatalError("Illegal AG_INT_NAMED() access"); }
+	if (V->type != AG_VARIABLE_INT)
+		AG_FatalErrorV("E26", "AG_INT_NAMED()");
 #endif
 	return (V->data.i);
 }
@@ -289,12 +305,17 @@ Uint
 ag_get_named_uint(AG_Event *event, const char *name)
 #endif
 {
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
+	AG_Variable *V;
+
+	V = AG_GetNamedEventArg(event, name);
 #ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_UINT) { AG_FatalError("Illegal AG_UINT_NAMED() access"); }
+	if (V->type != AG_VARIABLE_UINT)
+		AG_FatalErrorV("E26", "AG_UINT_NAMED()");
 #endif
 	return (V->data.u);
 }
+
+#if AG_MODEL != AG_SMALL
 
 #ifdef AG_INLINE_HEADER
 static __inline__ long _Pure_Attribute
@@ -304,9 +325,12 @@ long
 ag_get_named_long(AG_Event *event, const char *name)
 #endif
 {
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
+	AG_Variable *V;
+
+	V = AG_GetNamedEventArg(event, name);
 #ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_LONG) { AG_FatalError("Illegal AG_LONG_NAMED() access"); }
+	if (V->type != AG_VARIABLE_LONG)
+		AG_FatalErrorV("E26", "AG_LONG_NAMED()");
 #endif
 	return (V->data.li);
 }
@@ -319,15 +343,18 @@ Ulong
 ag_get_named_ulong(AG_Event *event, const char *name)
 #endif
 {
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
+	AG_Variable *V;
+
+	V = AG_GetNamedEventArg(event, name);
 #ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_ULONG) { AG_FatalError("Illegal AG_ULONG_NAMED() access"); }
+	if (V->type != AG_VARIABLE_ULONG)
+		AG_FatalErrorV("E26", "AG_ULONG_NAMED()");
 #endif
 	return (V->data.uli);
 }
+#endif /* !AG_SMALL */
 
 #ifdef AG_HAVE_FLOAT
-
 # ifdef AG_INLINE_HEADER
 static __inline__ float _Pure_Attribute
 AG_GetNamedFlt(AG_Event *_Nonnull event, const char *_Nonnull name)
@@ -336,9 +363,12 @@ float
 ag_get_named_flt(AG_Event *event, const char *name)
 # endif
 {
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
+	AG_Variable *V;
+
+	V = AG_GetNamedEventArg(event, name);
 # ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_FLOAT) { AG_FatalError("Illegal AG_FLOAT_NAMED() access"); }
+	if (V->type != AG_VARIABLE_FLOAT)
+		AG_FatalErrorV("E26", "AG_FLOAT_NAMED()");
 # endif
 	return (V->data.flt);
 }
@@ -351,9 +381,12 @@ double
 ag_get_named_dbl(AG_Event *event, const char *name)
 # endif
 {
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
+	AG_Variable *V;
+
+	V = AG_GetNamedEventArg(event, name);
 # ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_DOUBLE) { AG_FatalError("Illegal AG_DOUBLE_NAMED() access"); }
+	if (V->type != AG_VARIABLE_DOUBLE)
+		AG_FatalErrorV("E26", "AG_DOUBLE_NAMED()");
 # endif
 	return (V->data.dbl);
 }
@@ -367,12 +400,14 @@ long double
 ag_get_named_long_dbl(AG_Event *event, const char *name)
 #  endif
 {
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
+	AG_Variable *V;
+
+	V = AG_GetNamedEventArg(event, name);
 # ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_LONG_DOUBLE) { AG_FatalError("Illegal AG_LONG_DOUBLE_NAMED() access"); }
+	if (V->type != AG_VARIABLE_LONG_DOUBLE)
+		AG_FatalErrorV("E26", "AG_LONG_DOUBLE_NAMED()");
 # endif
 	return (V->data.ldbl);
 }
 # endif /* AG_HAVE_LONG_DOUBLE */
-
 #endif /* AG_HAVE_FLOAT */

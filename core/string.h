@@ -33,10 +33,15 @@
 #ifndef	_AGAR_CORE_STRING_H_
 #define	_AGAR_CORE_STRING_H_
 
-#define AG_STRING_BUFFERS_MAX	8			/* For AG_Printf() */
-#define AG_STRING_POINTERS_MAX	32			/* For AG_Printf */
-
 #include <agar/core/begin.h>
+
+#ifdef AG_ENABLE_STRING
+# ifndef AG_STRING_BUFFERS_MAX
+# define AG_STRING_BUFFERS_MAX	8			/* For AG_Printf() */
+# endif
+# ifndef AG_STRING_POINTERS_MAX
+# define AG_STRING_POINTERS_MAX	32			/* For AG_Printf */
+# endif
 
 typedef struct ag_fmt_string {
 	char *_Nonnull  s;			       /* Format string */
@@ -55,13 +60,15 @@ typedef struct ag_fmt_string_ext {
 	_Nonnull AG_FmtStringExtFn fn;	/* Callback function */
 } AG_FmtStringExt;
 
-#define AG_FMTSTRING_ARG(fs) ((fs)->p[fs->curArg++])
-#define AG_FMTSTRING_BUFFER_INIT 128
-#define AG_FMTSTRING_BUFFER_GROW 128
+# define AG_FMTSTRING_ARG(fs) ((fs)->p[fs->curArg++])
+# define AG_FMTSTRING_BUFFER_INIT 128
+# define AG_FMTSTRING_BUFFER_GROW 128
+#endif /* AG_ENABLE_STRING */
 
 __BEGIN_DECLS
 extern const unsigned char agStrcasecmpMapASCII[];
 
+#ifdef AG_ENABLE_STRING
 char *_Nonnull         AG_Printf(const char *_Nonnull, ...);
 char *_Nonnull         AG_PrintfN(Uint, const char *_Nonnull, ...);
 AG_FmtString *_Nonnull AG_PrintfP(const char *_Nonnull, ...);
@@ -70,6 +77,7 @@ void    AG_RegisterFmtStringExt(const char *_Nonnull, _Nonnull AG_FmtStringExtFn
 void    AG_UnregisterFmtStringExt(const char *_Nonnull);
 AG_Size AG_ProcessFmtString(AG_FmtString *_Nonnull, char *_Nonnull, AG_Size);
 void    AG_FreeFmtString(AG_FmtString *_Nonnull);
+#endif /* AG_ENABLE_STRING */
 
 char *_Nullable AG_Strsep(char *_Nonnull *_Nullable, const char *_Nonnull);
 char *_Nonnull  AG_Strdup(const char *_Nonnull);
@@ -89,10 +97,12 @@ const char *_Nullable AG_Strcasestr(const char *_Nonnull, const char *_Nonnull)
 
 void AG_StrReverse(char *_Nonnull);
 
-Uint32 *_Nullable AG_ImportUnicode(const char *_Nonnull, const char *_Nonnull,
-                                   AG_Size *_Nullable, AG_Size *_Nullable);
-int               AG_ExportUnicode(const char *_Nonnull, char *_Nonnull,
-                                   const Uint32 *_Nonnull, AG_Size);
+#ifdef AG_UNICODE
+AG_Char *_Nullable AG_ImportUnicode(const char *_Nonnull, const char *_Nonnull,
+                                    AG_Size *_Nullable, AG_Size *_Nullable);
+int                AG_ExportUnicode(const char *_Nonnull, char *_Nonnull,
+                                    const AG_Char *_Nonnull, AG_Size);
+#endif
 
 int  AG_InitStringSubsystem(void);
 void AG_DestroyStringSubsystem(void);
@@ -100,12 +110,15 @@ void AG_DestroyStringSubsystem(void);
 /*
  * Inlinables
  */
-AG_Size _Pure_Attribute ag_length_ucs4(const Uint32 *_Nonnull);
-int _Const_Attribute    ag_char_length_utf8_from_ucs4(Uint32);
-int                     ag_length_utf8_from_ucs4(const Uint32 *_Nonnull,
+#ifdef AG_UNICODE
+AG_Size _Pure_Attribute ag_length_ucs4(const AG_Char *_Nonnull);
+int _Const_Attribute    ag_char_length_utf8_from_ucs4(AG_Char);
+int                     ag_length_utf8_from_ucs4(const AG_Char *_Nonnull,
                                                  AG_Size *_Nonnull);
 int _Const_Attribute    ag_char_length_utf8(unsigned char);
 AG_Size _Pure_Attribute ag_length_utf8(const char *_Nonnull);
+#endif /* AG_UNICODE */
+
 int _Pure_Attribute     ag_strcasecmp(const char *_Nonnull, const char *_Nonnull);
 int _Pure_Attribute     ag_strncasecmp(const char *_Nonnull, const char *_Nonnull,
                                        AG_Size);

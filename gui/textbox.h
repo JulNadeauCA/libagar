@@ -40,7 +40,11 @@ typedef struct ag_textbox {
 	AG_Scrollbar *_Nullable hBar;	/* Horizontal bar (for MULTILINE) */
 	AG_Scrollbar *_Nullable vBar;	/* Vertical bar (for MULTILINE) */
 	AG_Rect r;			/* View area */
+#ifdef AG_UNICODE
 	AG_Text *_Nonnull text;		/* Pointer to default binding */
+#else
+	char text[6];
+#endif
 } AG_Textbox;
 
 #define AGTEXTBOX(p) ((AG_Textbox *)(p))
@@ -65,30 +69,33 @@ void AG_TextboxPrintf(AG_Textbox *_Nonnull, const char *_Nonnull, ...);
 
 void AG_TextboxSetPassword(AG_Textbox *, int);
 void AG_TextboxSetExcl(AG_Textbox *, int);
-void AG_TextboxSetFltOnly(AG_Textbox *, int);
-void AG_TextboxSetIntOnly(AG_Textbox *, int);
-void AG_TextboxSetLang(AG_Textbox *, enum ag_language);
 
 int  AG_TextboxMapPosition(AG_Textbox *_Nonnull, int,int, int *_Nonnull);
 void AG_TextboxMoveCursor(AG_Textbox *_Nonnull, int,int);
 void AG_TextboxSetCursorPos(AG_Textbox *_Nonnull, int);
 int  AG_TextboxGetCursorPos(AG_Textbox *_Nonnull);
 
-void AG_TextboxBindUTF8(AG_Textbox *_Nonnull, char *_Nonnull, AG_Size);
 void AG_TextboxBindASCII(AG_Textbox *_Nonnull, char *_Nonnull, AG_Size);
+#ifdef AG_UNICODE
+void AG_TextboxBindUTF8(AG_Textbox *_Nonnull, char *_Nonnull, AG_Size);
 void AG_TextboxBindEncoded(AG_Textbox *_Nonnull, const char *_Nonnull,
                            char *_Nonnull, AG_Size);
 void AG_TextboxBindText(AG_Textbox *_Nonnull, AG_Text *_Nonnull);
+void AG_TextboxSetLang(AG_Textbox *, enum ag_language);
+#endif /* AG_UNICODE */
 
 void           AG_TextboxSetString(AG_Textbox *_Nonnull, const char *_Nonnull);
 void           AG_TextboxClearString(AG_Textbox *_Nonnull);
 char *_Nonnull AG_TextboxDupString(AG_Textbox *_Nonnull);
 AG_Size        AG_TextboxCopyString(AG_Textbox *_Nonnull, char *_Nonnull,
                                     AG_Size);
-int            AG_TextboxInt(AG_Textbox *_Nonnull);
+
+int    AG_TextboxInt(AG_Textbox *_Nonnull);
+void   AG_TextboxSetIntOnly(AG_Textbox *, int);
 #ifdef AG_HAVE_FLOAT
-float          AG_TextboxFloat(AG_Textbox *_Nonnull);
-double         AG_TextboxDouble(AG_Textbox *_Nonnull);
+float  AG_TextboxFloat(AG_Textbox *_Nonnull);
+double AG_TextboxDouble(AG_Textbox *_Nonnull);
+void   AG_TextboxSetFltOnly(AG_Textbox *, int);
 #endif
 __END_DECLS
 

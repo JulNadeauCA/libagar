@@ -977,6 +977,7 @@ AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 	return (mi);
 }
 
+#if AG_MODEL != AG_SMALL
 AG_MenuItem *
 AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon, 
     Uint32 *pFlags, Uint32 flags, int inv, AG_Mutex *lock)
@@ -989,17 +990,17 @@ AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 	mi->bind_p = (void *)pFlags;
 	mi->bind_flags = flags;
 	mi->bind_invert = inv;
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 	mi->bind_lock = lock;
-#endif
+# endif
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 		if (lock != NULL) {
 			AG_BindFlag32Mp(mi->tbButton, "state", pFlags, flags,
 			    lock);
 		} else
-#endif
+# endif
 		{
 			AG_BindFlag32(mi->tbButton, "state", pFlags, flags);
 		}
@@ -1008,6 +1009,7 @@ AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
+#endif /* !AG_SMALL */
 
 void
 AG_MenuSetIntBoolMp(AG_MenuItem *mi, int *pBool, int inv, AG_Mutex *lock)

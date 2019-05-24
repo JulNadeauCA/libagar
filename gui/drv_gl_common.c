@@ -446,6 +446,14 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
 	AGDRIVER_CLASS(drv)->popBlendingMode(drv);
 }
 
+static __inline__ int _Const_Attribute
+PowOf2i(int i)
+{
+	int val = 1;
+	while (val < i) { val <<= 1; }
+	return (val);
+}
+
 /*
  * Perform an accelerated image transfer from a mapped surface (by name)
  * to target widget coordinates x,y.

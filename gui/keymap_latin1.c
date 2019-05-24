@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,14 +23,18 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/ag_unicode.h>
+#ifdef AG_UNICODE
+
 #include <agar/core/core.h>
 #include <agar/gui/widget.h>
 #include <agar/gui/editable.h>
 #include <agar/gui/keymap.h>
 
 /*
- * Traditional ISO-8859-1 keyboard input mapping to Unicode.
+ * Alternate (ALT+SHIFT) entry method for characters from ISO-8859-1.
  */
+
 const struct ag_key_mapping agKeymapLATIN1[] = {
 	{ AG_KEY_Q,		AG_KEYMOD_ALT|AG_KEYMOD_SHIFT,	0x00d1	},
 	{ AG_KEY_W,		AG_KEYMOD_ALT|AG_KEYMOD_SHIFT,	0x00d7	},
@@ -130,3 +134,5 @@ const struct ag_key_mapping agKeymapLATIN1[] = {
 	
 	{ AG_KEY_LAST,		0,			0x0	},
 };
+
+#endif /* AG_UNICODE */

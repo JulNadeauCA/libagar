@@ -305,7 +305,7 @@ AG_SDL_SoftBlit_Colorkey(const AG_Surface *_Nonnull ss, AG_Rect sr,
 	int ssPadding = ss->pitch - size;
 	int dsPadding = ds->pitch - size;
 	int x, y;
-	
+
 	for (y = 0; y < dr.h; y++) {
 		for (x = 0; x < dr.w; x++) {
 			AG_Pixel px = AG_SurfaceGet_At(ss,pSrc);
@@ -514,7 +514,7 @@ AG_SurfaceExportSDL(const AG_Surface *ss)
 }
 
 /* Initialize the default cursor. */
-int
+void
 AG_SDL_InitDefaultCursor(void *obj)
 {
 	AG_Driver *drv = AGDRIVER(obj);
@@ -522,12 +522,9 @@ AG_SDL_InitDefaultCursor(void *obj)
 	SDL_Cursor *sc;
 	
 	if ((sc = SDL_GetCursor()) == NULL) {
-		AG_SetError("SDL_GetCursor() returned NULL");
-		return (-1);
+		AG_FatalError("SDL_GetCursor");
 	}
-	if ((ac = TryMalloc(sizeof(AG_Cursor))) == NULL) {
-		return (-1);
-	}
+	ac = Malloc(sizeof(AG_Cursor));
 	AG_CursorInit(ac);
 #if SDL_COMPILEDVERSION < SDL_VERSIONNUM(1,3,0)
 	ac->w = (Uint)sc->area.w;
@@ -541,7 +538,6 @@ AG_SDL_InitDefaultCursor(void *obj)
 
 	TAILQ_INSERT_HEAD(&drv->cursors, ac, cursors);
 	drv->nCursors++;
-	return (0);
 }
 
 /* Change the cursor. */
@@ -785,23 +781,21 @@ AG_SDL_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		break;
 	case SDL_KEYDOWN:
 		AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED,
-		    (AG_KeySym)ev->key.keysym.sym,
-		    (Uint32)ev->key.keysym.unicode);
+		    (AG_KeySym)ev->key.keysym.sym);
 	
 		dev->type = AG_DRIVER_KEY_DOWN;
 		dev->win = NULL;
 		dev->data.key.ks = (AG_KeySym)ev->key.keysym.sym;
-		dev->data.key.ucs = (Uint32)ev->key.keysym.unicode;
+		dev->data.key.ucs = (AG_Char)ev->key.keysym.unicode;
 		break;
 	case SDL_KEYUP:
 		AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED,
-		    (AG_KeySym)ev->key.keysym.sym,
-		    (Uint32)ev->key.keysym.unicode);
+		    (AG_KeySym)ev->key.keysym.sym);
 
 		dev->type = AG_DRIVER_KEY_UP;
 		dev->win = NULL;
 		dev->data.key.ks = (AG_KeySym)ev->key.keysym.sym;
-		dev->data.key.ucs = (Uint32)ev->key.keysym.unicode;
+		dev->data.key.ucs = (AG_Char)ev->key.keysym.unicode;
 		break;
 	case SDL_VIDEORESIZE:
 		dev->type = AG_DRIVER_VIDEORESIZE;

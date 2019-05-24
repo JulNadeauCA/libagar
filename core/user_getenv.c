@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2018-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,8 @@
 #ifdef HAVE_GETENV
 
 #include <agar/core/core.h>
+#ifdef AG_USER
+
 #include <stdlib.h>
 
 static int
@@ -104,4 +106,5 @@ const AG_UserOps agUserOps_env = {
 	GetRealOrEffectiveUser
 };
 
+#endif /* AG_USER */
 #endif /* HAVE_GETENV */

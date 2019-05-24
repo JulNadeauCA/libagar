@@ -172,6 +172,7 @@ UpdateLabel(AG_Event *_Nonnull event)
 	M_PlotUpdateLabel(AG_PTR(1));
 }
 
+#ifdef AG_TIMERS
 static void
 UpdatePlotTbl(AG_Event *_Nonnull event)
 {
@@ -193,6 +194,7 @@ UpdatePlotTbl(AG_Event *_Nonnull event)
 	}
 	AG_TableEnd(tbl);
 }
+#endif /* AG_TIMERS */
 
 AG_Window *
 M_PlotSettings(M_Plot *pl)
@@ -232,15 +234,17 @@ M_PlotSettings(M_Plot *pl)
 		AG_SetEvent(pal, "h-changed", UpdateLabel, "%p", pl);
 		AG_SetEvent(pal, "sv-changed", UpdateLabel, "%p", pl);
 	}
+#ifdef AG_TIMERS
 	ntab = AG_NotebookAdd(nb, _("Table"), AG_BOX_VERT);
 	{
 		AG_Table *tbl;
 
-		tbl = AG_TableNewPolled(ntab, AG_TABLE_MULTI|AG_TABLE_EXPAND,
+		tbl = AG_TableNewPolled(ntab, AG_TABLE_MULTI | AG_TABLE_EXPAND,
 		    UpdatePlotTbl, "%p", pl);
 		AG_TableAddCol(tbl, _("#"), "<88888>", NULL);
 		AG_TableAddCol(tbl, _("Value"), NULL, NULL);
 	}
+#endif
 	AG_WindowShow(win);
 	return (win);
 }
@@ -733,12 +737,26 @@ M_PlotDerivative(M_Plotter *_Nonnull ptr, M_Plot *_Nonnull dp)
 static __inline__ M_Real
 PlotVariableVFS(M_Plotter *_Nonnull ptr, M_Plot *_Nonnull pl)
 {
+	char key[AG_OBJECT_PATH_MAX + 65];
+	char *s, *objName, *varName;
 	AG_Variable *V;
 	M_Real rv;
+	void *obj;
 
-	if ((V = AG_GetVariableVFS(pl->src.varVFS.vfs, pl->src.varVFS.key))
-	    == NULL) {
-		AG_Verbose("Plot \"%s\": %s\n", pl->src.varVFS.key,
+	Strlcpy(key, pl->src.varVFS.key, sizeof(key));
+	s = &key[0];
+	objName = Strsep(&s, ":");
+	varName = Strsep(&s, ":");
+	if (objName == NULL || varName == NULL ||
+	    objName[0] == '\0' || varName[0] == '\0') {
+		AG_Verbose("M_Plotter: Bad key \"%s\"\n", pl->src.varVFS.key);
+		return (0.0);
+	}
+	if ((obj = AG_ObjectFindS(pl->src.varVFS.vfs, objName)) == NULL) {
+		return (0.0);
+	}
+	if ((V = AG_AccessVariable(obj, varName)) == NULL) {
+		AG_Verbose("M_Plotter (\"%s\"): %s\n", pl->src.varVFS.key,
 		    AG_GetError());
 		return (0.0);
 	}
@@ -754,7 +772,8 @@ PlotVariableVFS(M_Plotter *_Nonnull ptr, M_Plot *_Nonnull pl)
 	case AG_VARIABLE_UINT32:	rv = (M_Real)V->data.u32;	break;
 	case AG_VARIABLE_SINT32:	rv = (M_Real)V->data.s32;	break;
 	default:
-		AG_Verbose("Plot \"%s\": Invalid type\n", pl->src.varVFS.key);
+		AG_Verbose("M_Plotter(\"%s\"): Unimplemented type\n",
+		    pl->src.varVFS.key);
 		rv = 0.0;
 		break;
 	}

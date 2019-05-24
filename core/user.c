@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2012-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_USER
 
 const AG_UserOps *agUserOps = NULL;
 
@@ -89,7 +90,12 @@ AG_GetUserByName(const char *_Nonnull name)
 	if ((u = AG_UserNew()) == NULL) {
 		return (NULL);
 	}
-	if (agUserOps->getUserByName(u, name) == -1) {
+	if (agUserOps->getUserByName(u, name) != 1) {
+#ifdef AG_VERBOSITY
+		AG_SetError("No such user \"%s\"", name);
+#else
+		AG_SetErrorS("E26");
+#endif
 		AG_UserFree(u);
 		return (NULL);
 	}
@@ -105,7 +111,12 @@ AG_GetUserByUID(Uint32 uid)
 	if ((u = AG_UserNew()) == NULL) {
 		return (NULL);
 	}
-	if (agUserOps->getUserByUID(u, uid) == -1) {
+	if (agUserOps->getUserByUID(u, uid) != 1) {
+#ifdef AG_VERBOSITY
+		AG_SetError("No such user (uid %lu)", (unsigned long)uid);
+#else
+		AG_SetErrorS("E26");
+#endif
 		AG_UserFree(u);
 		return (NULL);
 	}
@@ -121,7 +132,8 @@ AG_GetRealUser(void)
 	if ((u = AG_UserNew()) == NULL) {
 		return (NULL);
 	}
-	if (agUserOps->getRealUser(u) == -1) {
+	if (agUserOps->getRealUser(u) != 1) {
+		AG_SetErrorV("E27", "getRealUser() failed");
 		AG_UserFree(u);
 		return (NULL);
 	}
@@ -137,9 +149,11 @@ AG_GetEffectiveUser(void)
 	if ((u = AG_UserNew()) == NULL) {
 		return (NULL);
 	}
-	if (agUserOps->getEffectiveUser(u) == -1) {
+	if (agUserOps->getEffectiveUser(u) != 1) {
+		AG_SetErrorV("E28", "getEffectiveUser() failed");
 		AG_UserFree(u);
 		return (NULL);
 	}
 	return (u);
 }
+#endif /* AG_USER */

@@ -26,6 +26,8 @@
 /*
  * Agar directory browser widget.
  */
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
 
 #ifdef __NetBSD__
 #define _NETBSD_SOURCE
@@ -880,3 +882,4 @@ AG_WidgetClass agDirDlgClass = {
 	SizeRequest,
 	SizeAllocate
 };
+#endif /* AG_SERIALIZATION */

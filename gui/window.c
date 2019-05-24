@@ -278,8 +278,9 @@ Detach(AG_Event *_Nonnull event)
 	AG_Window *win = AG_SELF();
 	AG_Driver *drv;
 	AG_Window *other, *subwin;
+#ifdef AG_TIMERS
 	AG_Timer *to, *toNext;
-
+#endif
 #ifdef AG_DEBUG_GUI
 	Debug(NULL, "AG_ObjectDetach(Window %s, \"%s\")\n", OBJECT(win)->name,
 	    win->caption);
@@ -290,6 +291,7 @@ Detach(AG_Event *_Nonnull event)
 	/* Mark window detach in progress */
 	win->flags |= AG_WINDOW_DETACHING;
 
+#ifdef AG_TIMERS
 	/* Cancel any running timer attached to the window. */
 	AG_LockTiming();
 	for (to = TAILQ_FIRST(&OBJECT(win)->timers);
@@ -299,7 +301,7 @@ Detach(AG_Event *_Nonnull event)
 		AG_DelTimer(win, to);
 	}
 	AG_UnlockTiming();
-
+#endif
 	/* Implicitely detach window dependencies. */
 	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 		AG_FOREACH_WINDOW(other, drv) {
@@ -349,7 +351,7 @@ Detach(AG_Event *_Nonnull event)
 	AG_UnlockVFS(&agDrivers);
 }
 
-#ifdef HAVE_FLOAT
+#if defined(AG_TIMERS) && defined(HAVE_FLOAT)
 static Uint32
 FadeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -380,7 +382,7 @@ FadeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 		}
 	}
 }
-#endif /* HAVE_FLOAT */
+#endif /* AG_TIMERS and HAVE_FLOAT */
 
 /*
  * Make a window a logical child of the specified window. If the logical
@@ -489,8 +491,7 @@ AG_WindowUnpin(AG_Window *win)
 }
 
 static void
-MovePinnedRecursive(AG_Window *_Nonnull win, AG_Window *_Nonnull winParent,
-    int xRel, int yRel)
+MovePinnedRecursive(AG_Window *_Nonnull win, int xRel, int yRel)
 {
 	AG_Rect r;
 	AG_Window *winOther;
@@ -505,7 +506,7 @@ MovePinnedRecursive(AG_Window *_Nonnull win, AG_Window *_Nonnull winParent,
 	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 		AG_FOREACH_WINDOW(winOther, drv) {
 			if (winOther->pinnedTo == win)
-				MovePinnedRecursive(winOther, win, xRel,yRel);
+				MovePinnedRecursive(winOther, xRel,yRel);
 		}
 	}
 }
@@ -520,7 +521,7 @@ AG_WindowMovePinned(AG_Window *winParent, int xRel, int yRel)
 	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 		AG_FOREACH_WINDOW(win, drv) {
 			if (win->pinnedTo == winParent)
-				MovePinnedRecursive(win, winParent, xRel, yRel);
+				MovePinnedRecursive(win, xRel, yRel);
 		}
 	}
 	AG_UnlockVFS(&agDrivers);
@@ -715,7 +716,7 @@ OnShow(AG_Event *_Nonnull event)
 			}
 			dmw->flags |= AG_DRIVER_MW_OPEN;
 		}
-#ifdef HAVE_FLOAT
+#if defined(AG_TIMERS) && defined(HAVE_FLOAT)
 		if (win->flags & AG_WINDOW_FADEIN)
 			AG_WindowSetOpacity(win, 0.0);
 #endif
@@ -742,14 +743,14 @@ OnShow(AG_Event *_Nonnull event)
 	/* We can now allow cursor changes. */
 	win->flags &= ~(AG_WINDOW_NOCURSORCHG);
 
-#ifdef HAVE_FLOAT
+#if defined(AG_TIMERS) && defined(HAVE_FLOAT)
 	if (win->flags & AG_WINDOW_FADEIN) {
 		AG_AddTimer(win, &win->pvt.fadeTo,
 		    (Uint32)((win->pvt.fadeInTime*1000.0) /
 		             (1.0/win->pvt.fadeInIncr)),
 		    FadeTimeout, "%i", 1);
 	}
-#endif
+#endif /* AG_TIMERS and HAVE_FLOAT */
 }
 
 static void
@@ -917,7 +918,7 @@ AG_WindowHide(AG_Window *win)
 	if (!win->visible) {
 		goto out;
 	}
-#ifdef HAVE_FLOAT
+#if defined(AG_TIMERS) && defined(HAVE_FLOAT)
 	if ((win->flags & AG_WINDOW_FADEOUT) &&
 	   !(win->flags & AG_WINDOW_DETACHING)) {
 		AG_AddTimer(win, &win->pvt.fadeTo,
@@ -925,7 +926,7 @@ AG_WindowHide(AG_Window *win)
 		             (1.0 / win->pvt.fadeOutIncr)),
 		    FadeTimeout, "%i", -1);
 	} else
-#endif
+#endif /* AG_TIMERS and HAVE_FLOAT */
 	{
 #ifdef AG_THREADS
 		if (!AG_ThreadEqual(AG_ThreadSelf(), agEventThread)) {
@@ -1412,7 +1413,7 @@ AG_WindowComputeAlignment(AG_Window *win, AG_SizeAlloc *a)
 		a->y = 0;
 		break;
 	case AG_WINDOW_TC:
-		a->x = wMax/2 - w/2;
+		a->x = (wMax >> 1) - (w >> 1);
 		a->y = 0;
 		break;
 	case AG_WINDOW_TR:
@@ -1421,18 +1422,18 @@ AG_WindowComputeAlignment(AG_Window *win, AG_SizeAlloc *a)
 		break;
 	case AG_WINDOW_ML:
 		a->x = 0;
-		a->y = hMax/2 - h/2;
+		a->y = (hMax >> 1) - (h >> 1);
 		break;
 	case AG_WINDOW_MR:
 		a->x = wMax - w;
-		a->y = hMax/2 - h/2;
+		a->y = (hMax >> 1) - (h >> 1);
 		break;
 	case AG_WINDOW_BL:
 		a->x = 0;
 		a->y = hMax - h;
 		break;
 	case AG_WINDOW_BC:
-		a->x = wMax/2 - w/2;
+		a->x = (wMax >> 1) - (w >> 1);
 		a->y = hMax - h;
 		break;
 	case AG_WINDOW_BR:
@@ -1442,8 +1443,8 @@ AG_WindowComputeAlignment(AG_Window *win, AG_SizeAlloc *a)
 	case AG_WINDOW_MC:
 	case AG_WINDOW_ALIGNMENT_NONE:
 	default:
-		a->x = wMax/2 - w/2;
-		a->y = hMax/2 - h/2;
+		a->x = (wMax >> 1) - (w >> 1);
+		a->y = (hMax >> 1) - (h >> 1);
 		break;
 	}
 	if (AGDRIVER_MULTIPLE(drv) &&
@@ -1561,6 +1562,7 @@ IconMotion(AG_Event *_Nonnull event)
 	}
 }
 
+#ifdef AG_TIMERS
 /* Timer for double click on minimized icon. */
 static Uint32
 IconDoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -1570,16 +1572,19 @@ IconDoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	icon->flags &= ~(AG_ICON_DBLCLICKED);
 	return (0);
 }
+#endif /* AG_TIMERS */
 
 static void
 IconButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Icon *icon = AG_SELF();
-	AG_Window *win = AG_PTR(1);
 
 	WIDGET(icon)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
 	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
+#ifdef AG_TIMERS
 	if (icon->flags & AG_ICON_DBLCLICKED) {
+		AG_Window *win = AG_PTR(1);
+
 		AG_DelTimer(icon, &icon->toDblClick);
 		AG_WindowUnminimize(win);
 		AG_ObjectDetach(win->icon);
@@ -1591,6 +1596,7 @@ IconButtonDown(AG_Event *_Nonnull event)
 		AG_AddTimer(icon, &icon->toDblClick, agMouseDblclickDelay,
 		    IconDoubleClickTimeout, NULL);
 	}
+#endif /* AG_TIMERS */
 }
 
 static void
@@ -1703,7 +1709,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	int nWidgets;
 	int wTot;
 	
-	wTot = win->lPad + win->rPad + win->wBorderSide*2;
+	wTot = win->lPad + win->rPad + (win->wBorderSide << 1);
 	r->w = wTot;
 	r->h = win->bPad+win->tPad + win->wBorderBot;
 
@@ -1740,37 +1746,46 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_Widget *chld;
 	AG_SizeReq rChld;
 	AG_SizeAlloc aChld;
-	int wAvail, hAvail;
-	int totFixed;
-	int nWidgets;
 	AG_Rect r;
+	int wAvail, hAvail, totFixed, nWidgets;
+	int wBorderSide = win->wBorderSide;
+	int wBorderBot = win->wBorderBot;
 
-	if (win->wBorderSide > 0) {
+	if (wBorderSide > 0) {
 		r.x = 0;
 		r.y = 0;
-		r.w = win->wBorderSide;
-		r.h = a->h - win->wBorderBot;
-		AG_SetStockCursor(win, &win->pvt.caResize[0], &r, AG_HRESIZE_CURSOR);
-		r.x = a->w - win->wBorderSide;
-		AG_SetStockCursor(win, &win->pvt.caResize[4], &r, AG_HRESIZE_CURSOR);
+		r.w = wBorderSide;
+		r.h = a->h - wBorderBot;
+		AG_SetStockCursor(win, &win->pvt.caResize[0], &r,
+		    AG_HRESIZE_CURSOR);
+		r.x = a->w - wBorderSide;
+		AG_SetStockCursor(win, &win->pvt.caResize[4], &r,
+		    AG_HRESIZE_CURSOR);
 	}
-	if (win->wBorderBot > 0) {
+	if (wBorderBot > 0) {
+		int wResizeCtrl = win->wResizeCtrl;
+
 		r.x = 0;
-		r.y = a->h - win->wBorderBot;
-		r.w = win->wResizeCtrl;
-		r.h = win->wBorderBot;
-		AG_SetStockCursor(win, &win->pvt.caResize[1], &r, AG_LRDIAG_CURSOR);
-		r.x = win->wResizeCtrl;
-		r.w = a->w - win->wResizeCtrl*2;
-		AG_SetStockCursor(win, &win->pvt.caResize[2], &r, AG_VRESIZE_CURSOR);
-		r.x = a->w - win->wResizeCtrl;
-		r.w = win->wResizeCtrl;
-		AG_SetStockCursor(win, &win->pvt.caResize[3], &r, AG_LLDIAG_CURSOR);
+		r.y = a->h - wBorderBot;
+		r.w = wResizeCtrl;
+		r.h = wBorderBot;
+		AG_SetStockCursor(win, &win->pvt.caResize[1], &r,
+		    AG_LRDIAG_CURSOR);
+
+		r.x = wResizeCtrl;
+		r.w = a->w - (wResizeCtrl << 1);
+		AG_SetStockCursor(win, &win->pvt.caResize[2], &r,
+		    AG_VRESIZE_CURSOR);
+
+		r.x = a->w - wResizeCtrl;
+		r.w = wResizeCtrl;
+		AG_SetStockCursor(win, &win->pvt.caResize[3], &r,
+		    AG_LLDIAG_CURSOR);
 	}
 
 	/* Calculate total space available for widgets. */
-	wAvail = a->w - win->lPad - win->rPad - win->wBorderSide*2;
-	hAvail = a->h - win->bPad - win->tPad - win->wBorderBot;
+	wAvail = a->w - win->lPad - win->rPad - (wBorderSide << 1);
+	hAvail = a->h - win->bPad - win->tPad - wBorderBot;
 
 	/* Calculate the space occupied by non-fill widgets. */
 	nWidgets = 0;
@@ -1788,21 +1803,20 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	if (nWidgets > 0 && totFixed >= win->spacing)
 		totFixed -= win->spacing;
 
-	/* Position the widgets. */
-	if (win->tbar != NULL) {
+	if (win->tbar != NULL) {				/* Titlebar */
 		AG_WidgetSizeReq(win->tbar, &rChld);
 		aChld.x = 0;
 		aChld.y = 0;
 		aChld.w = a->w;
 		aChld.h = rChld.h;
 		AG_WidgetSizeAlloc(win->tbar, &aChld);
-		aChld.x = win->lPad + win->wBorderSide;
+		aChld.x = win->lPad + wBorderSide;
 		aChld.y = rChld.h + win->tPad;
 	} else {
-		aChld.x = win->lPad + win->wBorderSide;
+		aChld.x = win->lPad + wBorderSide;
 		aChld.y = win->tPad;
 	}
-	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
+	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {		/* Widgets */
 		AG_WidgetSizeReq(chld, &rChld);
 		if (chld == WIDGET(win->tbar)) {
 			continue;
@@ -1833,7 +1847,8 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		AG_WidgetSizeAlloc(chld, &aChld);
 		aChld.y += aChld.h + win->spacing;
 	}
-	if (AGDRIVER_SINGLE(drv))
+
+	if (AGDRIVER_SINGLE(drv))		/* Fit in frame buffer */
 		AG_WM_LimitWindowToView(win);
 
 	win->r.x = 0;
@@ -2201,18 +2216,17 @@ AG_MapStockCursor(void *obj, const AG_Rect *_Nonnull r, int name)
 {
 	AG_Widget *wid = obj;
 	AG_Window *win = wid->window;
+	AG_Driver *drv = wid->drv;
 	AG_Cursor *ac;
 	AG_CursorArea *ca;
 	int i = 0;
 
-	TAILQ_FOREACH(ac, &wid->drv->cursors, cursors) {
+	TAILQ_FOREACH(ac, &drv->cursors, cursors) {
 		if (i++ == name)
 			break;
 	}
-	if (ac == NULL) {
-		AG_SetError("No such cursor");
+	if (ac == NULL)
 		return (NULL);
-	}
 
 	if ((ca = TryMalloc(sizeof(AG_CursorArea))) == NULL) {
 		return (NULL);
@@ -2300,7 +2314,9 @@ scan:
 }
 
 #ifdef HAVE_FLOAT
-/* Configure per-window opacity (for compositing window managers). */
+/*
+ * Set the per-window opacity (for compositing window managers).
+ */
 int
 AG_WindowSetOpacity(AG_Window *win, float f)
 {
@@ -2308,18 +2324,26 @@ AG_WindowSetOpacity(AG_Window *win, float f)
 	int rv = -1;
 
 	AG_ObjectLock(win);
+# ifdef AG_TIMERS
 	win->pvt.fadeOpacity = (f > 1.0) ? 1.0 : f;
-
 	if (AGDRIVER_MULTIPLE(drv) &&
 	    AGDRIVER_MW_CLASS(drv)->setOpacity != NULL)
 		rv = AGDRIVER_MW_CLASS(drv)->setOpacity(win, win->pvt.fadeOpacity);
+# else
+	if (AGDRIVER_MULTIPLE(drv) &&
+	    AGDRIVER_MW_CLASS(drv)->setOpacity != NULL)
+		rv = AGDRIVER_MW_CLASS(drv)->setOpacity(win, f);
+# endif
 	
 	/* TODO: support compositing under single-window drivers. */
 	AG_ObjectUnlock(win);
 	return (rv);
 }
 
-/* Configure fade-in/fade-out parameters. */
+# ifdef AG_TIMERS
+/*
+ * Set window fade-in/out parameters (for compositing window managers).
+ */
 void
 AG_WindowSetFadeIn(AG_Window *win, float fadeTime, float fadeIncr)
 {
@@ -2336,6 +2360,7 @@ AG_WindowSetFadeOut(AG_Window *win, float fadeTime, float fadeIncr)
 	win->pvt.fadeOutIncr = fadeIncr;
 	AG_ObjectUnlock(win);
 }
+# endif /* AG_TIMERS */
 #endif /* HAVE_FLOAT */
 
 /* Set the window zoom level. The scales are defined in agZoomValues[]. */
@@ -2349,8 +2374,10 @@ AG_WindowSetZoom(AG_Window *win, int zoom)
 		AG_ObjectUnlock(win);
 		return;
 	}
-#ifdef AG_HAVE_FLOAT
-	AG_SetStyle(win, "font-size", AG_Printf("%.02f%%", agZoomValues[zoom]));
+#if defined(HAVE_FLOAT)
+	AG_SetStyleF(win, "font-size", "%.02f%%", agZoomValues[zoom]);
+#else
+	/* TODO */
 #endif
 	AG_WindowUpdate(win);
 	win->zoom = zoom;
@@ -2514,7 +2541,10 @@ AG_SetCursor(void *obj, AG_CursorArea **ca, const AG_Rect *_Nonnull r,
 	}
 }
 
-/* Select one of the standard cursors. */
+/*
+ * Select one of the standard cursors. If the given cursor doesn't exist,
+ * return NULL into *ca without any error message.
+ */
 void
 AG_SetStockCursor(void *obj, AG_CursorArea **ca, const AG_Rect *r, int cName)
 {
@@ -2598,45 +2628,48 @@ Init(void *_Nonnull obj)
 	AG_Event *ev;
 	int i;
 
-	win->wmType = AG_WINDOW_WM_NORMAL;
 	win->flags = AG_WINDOW_NOCURSORCHG;
-	win->visible = 0;
-	win->alignment = AG_WINDOW_ALIGNMENT_NONE;
-	win->spacing = 3;
-	win->lPad = 2;
-	win->rPad = 2;
-	win->tPad = 2;
-	win->bPad = 2;
-	win->wReq = 0;
-	win->hReq = 0;
-	win->wMin = win->lPad + win->rPad + 16;
-	win->hMin = win->tPad + win->bPad + 16;
-	win->minPct = 50;
-	win->wBorderBot = agWindowBotBorderDefault;
-	win->wBorderSide = agWindowSideBorderDefault;
-	win->wResizeCtrl = 16;
-	win->rSaved.x = -1;
-	win->rSaved.y = -1;
-	win->rSaved.w = -1;
-	win->rSaved.w = -1;
-	win->r.x = 0;
-	win->r.y = 0;
-	win->r.w = 0;
-	win->r.h = 0;
 #ifdef AG_DEBUG
 	memset(win->caption, 0, sizeof(win->caption));
 #else
 	win->caption[0] = '\0';
 #endif
+	win->visible = 0;
+	win->dirty = 0;
 	win->tbar = NULL;
 	win->icon = NULL;
+	win->alignment = AG_WINDOW_ALIGNMENT_NONE;
+	win->spacing = 3;
+	win->tPad = 2;
+	win->bPad = 2;
+	win->lPad = 2;
+	win->rPad = 2;
+	win->wReq = 0;
+	win->hReq = 0;
+	win->wMin = win->lPad + win->rPad + 16;
+	win->hMin = win->tPad + win->bPad + 16;
+	win->wBorderBot = agWindowBotBorderDefault;
+	win->wBorderSide = agWindowSideBorderDefault;
+	win->wResizeCtrl = 16;
+	win->r.x = 0;
+	win->r.y = 0;
+	win->r.w = 0;
+	win->r.h = 0;
+	win->rSaved.x = -1;
+	win->rSaved.y = -1;
+	win->rSaved.w = -1;
+	win->rSaved.w = -1;
+	win->minPct = 50;
 	win->nFocused = 0;
+	win->widExclMotion = NULL;
+	win->wmType = AG_WINDOW_WM_NORMAL;
+	win->zoom = AG_ZOOM_DEFAULT;
 	win->parent = NULL;
 	win->transientFor = NULL;
 	win->pinnedTo = NULL;
-	win->widExclMotion = NULL;
-	win->zoom = AG_ZOOM_DEFAULT;
-#ifdef HAVE_FLOAT
+
+	TAILQ_INIT(&win->pvt.subwins);
+#if defined(AG_TIMERS) && defined(HAVE_FLOAT)
 	win->pvt.fadeInTime = 0.06f;
 	win->pvt.fadeInIncr = 0.2f;
 	win->pvt.fadeOutTime = 0.06f;
@@ -2644,9 +2677,7 @@ Init(void *_Nonnull obj)
 	win->pvt.fadeOpacity = 1.0f;
 	AG_InitTimer(&win->pvt.fadeTo, "fade", 0);
 #endif
-	TAILQ_INIT(&win->pvt.subwins);
 	TAILQ_INIT(&win->pvt.cursorAreas);
-
 	for (i = 0; i < 5; i++)
 		win->pvt.caResize[i] = NULL;
 
@@ -2669,11 +2700,10 @@ Init(void *_Nonnull obj)
 	AG_ObjectSetDetachFn(win, Detach, NULL);
 	
 	/* Set the inheritable style defaults. */
-	AG_SetString(win, "font-family", OBJECT(agDefaultFont)->name);
-	AG_SetString(win, "font-size",
-	    AG_Printf("%.02fpts", agDefaultFont->spec.size));
-	AG_SetString(win, "font-weight", "normal");
-	AG_SetString(win, "font-style", "normal");
+	AG_SetString(win,  "font-family", OBJECT(agDefaultFont)->name);
+	AG_SetStringF(win, "font-size",   "%.02fpts", agDefaultFont->spec.size);
+	AG_SetString(win,  "font-weight", "normal");
+	AG_SetString(win,  "font-style",  "normal");
 
 	WIDGET(win)->font = agDefaultFont;
 	WIDGET(win)->pal = agDefaultPalette;

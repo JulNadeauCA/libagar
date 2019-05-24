@@ -39,7 +39,7 @@ ag_try_malloc(AG_Size len)
 	void *p;
 
 	if ((p = malloc(len)) == NULL) {
-		AG_SetErrorS("Out of memory");
+		AG_SetErrorV("E0", "Out of memory");
 		return (NULL);
 	}
 	return (p);
@@ -78,7 +78,7 @@ ag_try_realloc(void *pOld, AG_Size len)
 	void *p;
 
 	if ((p = realloc(pOld, len)) == NULL) {
-		AG_SetErrorS("Out of memory");
+		AG_SetErrorV("E0", "Out of memory");
 	}
 	return (p);
 }

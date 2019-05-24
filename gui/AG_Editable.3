@@ -364,13 +364,13 @@ for editing numbers.
 .Fn AG_EditableClearBuffer "AG_Editable *ed" "AG_EditableBuffer *buf"
 .Pp
 .Ft "int"
-.Fn AG_EditableGrowBuffer "AG_Editable *ed" "AG_EditableBuffer *buf" "Uint32 *ins" "AG_Size nIns"
+.Fn AG_EditableGrowBuffer "AG_Editable *ed" "AG_EditableBuffer *buf" "AG_Char *ins" "AG_Size nIns"
 .Pp
 .Ft "int"
 .Fn AG_EditableCut "AG_Editable *ed" "AG_EditableBuffer *buf" "AG_EditableClipboard *cb"
 .Pp
 .Ft "void"
-.Fn AG_EditableCopyChunk "AG_Editable *ed" "AG_EditableClipboard *cb" "Uint32 *s" "AG_Size len"
+.Fn AG_EditableCopyChunk "AG_Editable *ed" "AG_EditableClipboard *cb" "AG_Char *s" "AG_Size len"
 .Pp
 .Ft "int"
 .Fn AG_EditableCopy "AG_Editable *ed" "AG_EditableBuffer *buf" "AG_EditableClipboard *cb"
@@ -395,8 +395,8 @@ The buffer structure is defined as follows:
 .Bd -literal
 typedef struct ag_editable_buffer {
 	AG_Variable *var;            /* Variable binding (if any) */
-	Uint32 *s;                   /* String buffer (UCS-4 encoding) */
-	AG_Size len;                 /* String length (chars) */
+	AG_Char *s;                  /* Buffer contents */
+	AG_Size len;                 /* Length of string (chars) */
 	AG_Size maxLen;              /* Available buffer size (bytes) */
 	int reallocable;             /* Buffer can be realloc'd */
 } AG_EditableBuffer;

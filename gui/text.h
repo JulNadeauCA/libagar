@@ -39,7 +39,8 @@ struct ag_font;
 /* Font specification (may be obtained from fontconfig) */
 enum ag_font_type {
 	AG_FONT_VECTOR,				/* Vectorial font */
-	AG_FONT_BITMAP				/* Raw glyph pixmaps */
+	AG_FONT_BITMAP,				/* Raw glyph pixmaps */
+	AG_FONT_DUMMY				/* No font engine */
 };
 enum ag_font_spec_source {
 	AG_FONT_SOURCE_FILE,			/* Load from file */
@@ -80,7 +81,7 @@ typedef struct ag_font_spec {
 typedef struct ag_glyph {
 	struct ag_font *_Nonnull font;	/* Font face */
 	AG_Color color;			/* Base color */
-	Uint32 ch;			/* Unicode character */
+	AG_Char ch;			/* Native character */
 	AG_Surface *_Nonnull su;	/* Rendered surface */
 	int advance;			/* Pixel advance */
 	Uint texture;			/* Cached texture (driver-specific) */
@@ -107,7 +108,7 @@ typedef struct ag_font {
 	AG_Surface *_Nullable *_Nullable bglyphs; /* Glyph surfaces */
 	Uint                             nglyphs; /* Glyph count */
 
-	Uint32 c0, c1;			/* Glyph range */
+	AG_Char c0, c1;			/* Glyph range */
 	Uint nRefs;			/* Reference count */
 	AG_TAILQ_ENTRY(ag_font) fonts;
 } AG_Font;
@@ -153,7 +154,6 @@ extern int agTextFontAscent;
 extern int agTextFontDescent;
 extern int agTextFontLineSkip;
 extern int agFreetypeInited;
-extern int agRTL;
 
 extern AG_TextState *_Nonnull  agTextState;
 extern _Nonnull_Mutex AG_Mutex agTextLock;
@@ -162,11 +162,13 @@ extern AG_StaticFont *_Nonnull agBuiltinFonts[];
 
 int  AG_InitTextSubsystem(void);
 void AG_DestroyTextSubsystem(void);
-void AG_SetDefaultFont(AG_Font *_Nonnull);
-void AG_TextParseFontSpec(const char *_Nonnull);
-void AG_SetRTL(int);
 void AG_PushTextState(void);
 void AG_PopTextState(void);
+
+#ifdef AG_SERIALIZATION
+void AG_SetDefaultFont(AG_Font *_Nonnull);
+void AG_TextParseFontSpec(const char *_Nonnull);
+#endif
 
 AG_Font	*_Nullable AG_FetchFont(const char *_Nullable,
                                 const AG_FontPts *_Nullable, Uint)
@@ -182,23 +184,20 @@ AG_Font *_Nullable AG_TextFontPct(int);
 void AG_TextSize(const char *_Nullable, int *_Nullable, int *_Nullable);
 void AG_TextSizeMulti(const char *_Nonnull, int *_Nonnull, int *_Nonnull,
                       Uint *_Nullable *_Nonnull, Uint *_Nullable);
-void AG_TextSizeUCS4(const Uint32 *_Nonnull, int *_Nullable, int *_Nullable);
-void AG_TextSizeMultiUCS4(const Uint32 *_Nonnull, int *_Nullable,
-                          int *_Nullable, Uint *_Nullable *_Nonnull,
-			  Uint *_Nonnull);
-
-AG_Surface *_Nonnull AG_TextRenderf(const char *_Nonnull, ...) _Warn_Unused_Result;
-AG_Surface *_Nonnull AG_TextRenderUCS4(const Uint32 *_Nonnull) _Warn_Unused_Result;
+void AG_TextSizeNat(const AG_Char *_Nonnull, int *_Nullable, int *_Nullable);
+void AG_TextSizeMultiNat(const AG_Char *_Nonnull, int *_Nullable,
+                         int *_Nullable, Uint *_Nullable *_Nonnull, Uint *_Nonnull);
 
 void AG_TextMsgS(enum ag_text_msg_title, const char *_Nonnull);
 void AG_TextMsg(enum ag_text_msg_title, const char *_Nonnull, ...)
                FORMAT_ATTRIBUTE(printf,2,3);
 void AG_TextMsgFromError(void);
 
+#ifdef AG_TIMERS
 void AG_TextTmsgS(enum ag_text_msg_title, Uint32, const char *_Nonnull);
 void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *_Nonnull, ...)
                 FORMAT_ATTRIBUTE(printf,3,4);
-
+#endif
 void AG_TextInfoS(const char *_Nonnull, const char *_Nonnull);
 void AG_TextInfo(const char *_Nonnull, const char *_Nonnull, ...)
                 FORMAT_ATTRIBUTE(printf,2,3);
@@ -226,19 +225,19 @@ void AG_TextInitGlyphCache(AG_Driver *_Nonnull);
 void AG_TextClearGlyphCache(AG_Driver *_Nonnull);
 void AG_TextDestroyGlyphCache(AG_Driver *_Nonnull);
 
-AG_Glyph *_Nonnull AG_TextRenderGlyphMiss(AG_Driver *_Nonnull, Uint32);
-
 void AG_TextAlign(int *_Nonnull, int *_Nonnull, int,int, int,int,
                   int,int,int, int, enum ag_text_justify, enum ag_text_valign);
 
 int AG_TextJustifyOffset(int, int) _Pure_Attribute;
 int AG_TextValignOffset(int, int) _Pure_Attribute;
 
-AG_Surface *_Nonnull AG_TextRender(const char *_Nonnull)
-                                  _Warn_Unused_Result;
+AG_Surface *_Nonnull AG_TextRenderNat(const AG_Char *_Nonnull) _Warn_Unused_Result;
+AG_Surface *_Nonnull AG_TextRender(const char *_Nonnull) _Warn_Unused_Result;
+AG_Surface *_Nonnull AG_TextRenderF(const char *_Nonnull, ...) _Warn_Unused_Result;
 
-AG_Glyph *_Nonnull AG_TextRenderGlyph(AG_Driver *_Nonnull, Uint32)
+AG_Glyph *_Nonnull AG_TextRenderGlyph(AG_Driver *_Nonnull, AG_Char)
                                      _Warn_Unused_Result;
+AG_Glyph *_Nonnull AG_TextRenderGlyphMiss(AG_Driver *_Nonnull, AG_Char);
 
 void AG_TextColor(const AG_Color *_Nonnull);
 void AG_TextColorRGB(Uint8, Uint8, Uint8);
@@ -252,6 +251,12 @@ void AG_TextFont(AG_Font *_Nonnull);
 void AG_TextJustify(enum ag_text_justify);
 void AG_TextValign(enum ag_text_valign);
 void AG_TextTabWidth(int);
+
+#ifdef AG_LEGACY
+# define AG_TextRenderUCS4(s)                        AG_TextRenderNat(s)
+# define AG_TextSizeUCS4((s),(w),(h))                AG_TextSizeNat((s),(w),(h))
+# define AG_TextSizeMultiUCS4((s),(w),(h),(wL),(nL)) AG_TextSizeMultiNat((s),(w),(h),(wL),(nL))
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

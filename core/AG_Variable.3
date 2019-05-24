@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+.\" Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@hypertriton.com>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,7 @@ In the Agar object system, each
 .Xr AG_Object 3
 instance has a set of typed variables.
 Variables can be named (accessed by a string key), or anonymous (by pointer).
-Basic types are supported:
+Basic types include:
 .Pp
 .Bl -bullet -compact -offset indent
 .It
@@ -60,11 +60,11 @@ Unbounded C strings (auto-allocated)
 Generic pointers
 .El
 .Pp
-"Pointer" variables can also reference typed data.
+Typed references (or "pointer variables") are also supported.
 Optionally, pointer variables can be configured to acquire a
 .Xr AG_Mutex 3
 locking device prior to accessing the data.
-Supported reference types include:
+Reference types include:
 .Pp
 .Bl -bullet -compact -offset indent
 .It
@@ -85,7 +85,7 @@ Bits in a fixed-size word (per given bitmask)
 Bounded C strings (in fixed-size buffer)
 .It
 Agar objects (pointer to
-.Xr AG_Object 3 )
+.Xr AG_Object 3 ) .
 .It
 Proxy for a named
 .Nm
@@ -93,14 +93,11 @@ in an external
 .Xr AG_Object 3
 .El
 .Pp
-There are other uses for
-.Nm
-besides representing
+Besides representing
 .Xr AG_Object 3
-variables.
-For instance,
-.Nm
-is used to represent arguments passed to
+instance variables, there are many other uses for
+.Nm .
+For example, it is also used to represent arguments passed to
 .Xr AG_Event 3
 callback functions.
 In Agar-GUI, widgets use Agar variables to reference data in memory
@@ -138,12 +135,6 @@ and types supported.
 .Pp
 .Ft "void"
 .Fn AG_UnlockVariable "AG_Variable *var"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_GetVariableVFS "AG_Object *obj" "const char *path"
-.Pp
-.Ft int
-.Fn AG_EvalVariable "AG_Object *obj" "AG_Variable *var"
 .Pp
 .Ft void
 .Fn AG_PrintVariable "char *dst" "AG_Size len" "AG_Variable *var"
@@ -186,7 +177,6 @@ under
 and returns the matching
 .Ft AG_Variable
 in a locked condition (or NULL if undefined).
-If the variable is virtual function then it is evaluated implicitely.
 The caller must use
 .Fn AG_UnlockVariable
 when finished accessing the variable data.
@@ -205,11 +195,11 @@ in a locked condition.
 The caller must use
 .Fn AG_UnlockVariable
 when done accessing the data.
-Unlike
-.Fn AG_GetVariable ,
+Both
+.Fn AG_GetVariable
+and
 .Fn AG_AccessVariable
-does not evaluate virtual functions, and returns NULL if the variable is
-undefined.
+return NULL if the named variable is undefined.
 .Pp
 The
 .Fn AG_FetchVariable
@@ -249,32 +239,6 @@ and
 .Fn AG_UnlockVariable
 acquire and release any locking device associated with the
 specified variable.
-.Pp
-.Fn AG_GetVariableVFS
-searches through the VFS of
-.Xr AG_Object 3
-(which has
-.Fa obj
-as its root) for a variable by name.
-The
-.Fa path 
-argument is a string of the form
-"<object-path>:<variable-name>".
-If found, then the
-.Ft AG_Variable
-is returned in a locked condition.
-The caller must use
-.Fn AG_UnlockVariable
-when done accessing the variable's data.
-.Pp
-.Fn AG_EvalVariable
-evaluates a virtual function and copies the return value into the
-.Va data
-field.
-Return 0 on success or -1 if the virtual function is undefined.
-Note:
-.Fn AG_GetVariable
-calls this implicitely.
 .Pp
 .Fn AG_PrintVariable
 returns a string representation of the value of variable
@@ -342,7 +306,6 @@ under object
 .Fa obj
 with implicit dereferencing.
 If the variable is a pointer type then the value referenced by it is returned.
-If the variable is a virtual function, it is evaluated first.
 .Pp
 The
 .Fn AG_Init<Type>
@@ -380,16 +343,6 @@ or
 to be acquired whenever the data referenced by
 .Fa pVal
 will be accessed.
-.Pp
-.Fn AG_Bind<Type>Fn
-creates or modifies a variable, tying the variable to a virtual function
-.Fa fn ,
-which will be evaluated whenever the variable is read.
-Following the
-.F fn
-argument is a variable list of optional
-.Xr AG_Event 3
-style arguments to pass to the virtual function.
 .Sh INTEGERS
 .nr nS 1
 .Ft "Uint"
@@ -407,9 +360,6 @@ style arguments to pass to the virtual function.
 .Ft "AG_Variable *"
 .Fn AG_BindUintMp "AG_Object *obj" "const char *name" "Uint *pVal" "AG_Mutex *lock"
 .Pp
-.Ft "AG_Variable *"
-.Fn AG_BindUintFn "AG_Object *obj" "const char *name" "Uint (*fn)(AG_Event *)" "..."
-.Pp
 .Ft "int"
 .Fn AG_GetInt "AG_Object *obj" "const char *name"
 .Pp
@@ -424,9 +374,6 @@ style arguments to pass to the virtual function.
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_BindIntMp "AG_Object *obj" "const char *name" "int *pVal" "AG_Mutex *lock"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindIntFn "AG_Object *obj" "const char *name" "int (*fn)(AG_Event *)"
 .Pp
 .Ft "Uint8"
 .Fn AG_GetUint8 "AG_Object *obj" "const char *name"
@@ -443,9 +390,6 @@ style arguments to pass to the virtual function.
 .Ft "AG_Variable *"
 .Fn AG_BindUint8Mp "AG_Object *obj" "const char *name" "Uint8 *pVal" "AG_Mutex *lock"
 .Pp
-.Ft "AG_Variable *"
-.Fn AG_BindUint8Fn "AG_Object *obj" "const char *name" "Uint8 (*fn)(AG_Event *)"
-.Pp
 .Ft "Sint8"
 .Fn AG_GetSint8 "AG_Object *obj" "const char *name"
 .Pp
@@ -460,9 +404,6 @@ style arguments to pass to the virtual function.
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_BindSint8Mp "AG_Object *obj" "const char *name" "Sint8 *pVal" "AG_Mutex *lock"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindSint8Fn "AG_Object *obj" "const char *name" "Sint8 (*fn)(AG_Event *)"
 .Pp
 .Ft "Uint16"
 .Fn AG_GetUint16 "AG_Object *obj" "const char *name"
@@ -479,9 +420,6 @@ style arguments to pass to the virtual function.
 .Ft "AG_Variable *"
 .Fn AG_BindUint16Mp "AG_Object *obj" "const char *name" "Uint16 *pVal" "AG_Mutex *lock"
 .Pp
-.Ft "AG_Variable *"
-.Fn AG_BindUint16Fn "AG_Object *obj" "const char *name" "Uint16 (*fn)(AG_Event *)"
-.Pp
 .Ft "Sint16"
 .Fn AG_GetSint16 "AG_Object *obj" "const char *name"
 .Pp
@@ -496,9 +434,6 @@ style arguments to pass to the virtual function.
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_BindSint16Mp "AG_Object *obj" "const char *name" "Sint16 *pVal" "AG_Mutex *lock"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindSint16Fn "AG_Object *obj" "const char *name" "Sint16 (*fn)(AG_Event *)"
 .Pp
 .Ft "Uint32"
 .Fn AG_GetUint32 "AG_Object *obj" "const char *name"
@@ -515,9 +450,6 @@ style arguments to pass to the virtual function.
 .Ft "AG_Variable *"
 .Fn AG_BindUint32Mp "AG_Object *obj" "const char *name" "Uint32 *pVal" "AG_Mutex *lock"
 .Pp
-.Ft "AG_Variable *"
-.Fn AG_BindUint32Fn "AG_Object *obj" "const char *name" "Uint32 (*fn)(AG_Event *)"
-.Pp
 .Ft "Sint32"
 .Fn AG_GetSint32 "AG_Object *obj" "const char *name"
 .Pp
@@ -532,9 +464,6 @@ style arguments to pass to the virtual function.
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_BindSint32Mp "AG_Object *obj" "const char *name" "Sint32 *pVal" "AG_Mutex *lock"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindSint32Fn "AG_Object *obj" "const char *name" "Sint32 (*fn)(AG_Event *)"
 .Pp
 .Ft "Uint64"
 .Fn AG_GetUint64 "AG_Object *obj" "const char *name"
@@ -551,9 +480,6 @@ style arguments to pass to the virtual function.
 .Ft "AG_Variable *"
 .Fn AG_BindUint64Mp "AG_Object *obj" "const char *name" "Uint64 *pVal" "AG_Mutex *lock"
 .Pp
-.Ft "AG_Variable *"
-.Fn AG_BindUint64Fn "AG_Object *obj" "const char *name" "Uint64 (*fn)(AG_Event *)"
-.Pp
 .Ft "Sint64"
 .Fn AG_GetSint64 "AG_Object *obj" "const char *name"
 .Pp
@@ -568,9 +494,6 @@ style arguments to pass to the virtual function.
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_BindSint64Mp "AG_Object *obj" "const char *name" "Sint64 *pVal" "AG_Mutex *lock"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindSint64Fn "AG_Object *obj" "const char *name" "Sint64 (*fn)(AG_Event *)"
 .Pp
 .nr nS 0
 These functions provide an interface to both natural and fixed-size
@@ -599,9 +522,6 @@ is defined.
 .Ft "AG_Variable *"
 .Fn AG_BindFloatMp "AG_Object *obj" "const char *name" "float *pVal" "AG_Mutex *lock"
 .Pp
-.Ft "AG_Variable *"
-.Fn AG_BindFloatFn "AG_Object *obj" "const char *name" "float (*fn)(AG_Event *)"
-.Pp
 .Ft "double"
 .Fn AG_GetDouble "AG_Object *obj" "const char *name"
 .Pp
@@ -617,9 +537,6 @@ is defined.
 .Ft "AG_Variable *"
 .Fn AG_BindDoubleMp "AG_Object *obj" "const char *name" "double *pVal" "AG_Mutex *lock"
 .Pp
-.Ft "AG_Variable *"
-.Fn AG_BindDoubleFn "AG_Object *obj" "const char *name" "double (*fn)(AG_Event *)"
-.Pp
 .Ft "long double"
 .Fn AG_GetLongDouble "AG_Object *obj" "const char *name"
 .Pp
@@ -634,9 +551,6 @@ is defined.
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_BindLongDoubleMp "AG_Object *obj" "const char *name" "long double *pVal" "AG_Mutex *lock"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindLongDoubleFn "AG_Object *obj" "const char *name" "long double (*fn)(AG_Event *)"
 .Pp
 .nr nS 0
 These functions provide an interface to floating-point numbers.
@@ -659,17 +573,14 @@ is defined.
 .Ft "void"
 .Fn AG_InitString "AG_Variable *var" "const char *s"
 .Pp
-.Ft "void"
-.Fn AG_InitStringNODUP "AG_Variable *var" "const char *s"
-.Pp
 .Ft "AG_Variable *"
 .Fn AG_SetString "AG_Object *obj" "const char *name" "const char *s"
 .Pp
 .Ft "AG_Variable *"
-.Fn AG_SetStringNODUP "AG_Object *obj" "const char *name" "const char *s"
+.Fn AG_SetStringF "AG_Object *obj" "const char *name" "const char *fmt" "..."
 .Pp
 .Ft "AG_Variable *"
-.Fn AG_PrtString "AG_Object *obj" "const char *name" "const char *fmt" "..."
+.Fn AG_SetStringNODUP "AG_Object *obj" "const char *name" "const char *s"
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_BindString "AG_Object *obj" "const char *name" "char *s" "AG_Size len"
@@ -677,21 +588,17 @@ is defined.
 .Ft "AG_Variable *"
 .Fn AG_BindStringMp "AG_Object *obj" "const char *name" "char *s" "AG_Size len" "AG_Mutex *lock"
 .Pp
-.Ft "AG_Variable *"
-.Fn AG_BindStringFn "AG_Object *obj" "const char *name" "AG_Size (*fn)(AG_Event *, char *, AG_Size)"
-.Pp
 .nr nS 0
 These functions provide an interface to C strings.
 A string variable may contain an unbounded string, or reference an external
 fixed-size buffer.
 .Pp
 .Fn AG_GetString
-returns the contents of a string variable.
-The string is safely copied to fixed-size buffer
-.Fa dst ,
+copies the contents of a string variable to a fixed-size buffer
+.Fa dst
 of size
-.Fa dst_size .
-Return the number of bytes that would have been copied were
+.Fa dst_size
+and returns the number of bytes that would have been copied were
 .Fa dst_size
 unlimited.
 .Pp
@@ -699,67 +606,55 @@ unlimited.
 returns a newly-allocated copy of the string variable.
 If the string cannot be allocated, NULL is returned.
 .Pp
+The potentially-unsafe
 .Fn AG_GetStringP
 returns a direct pointer to the buffer containing the string.
-If the variable is a virtual function, it is not evaluated.
-Warning:
-.Fn AG_GetStringP
-is not free-threaded, so the object must be locked and calls should be
-protected by
-.Fn AG_LockVariable
-(exceptionally, discrete strings set by
+It is not free-threaded (so the object must be locked, and calls protected by
+.Fn AG_LockVariable ) .
+Note that discrete strings set by
 .Fn AG_SetString
-are safe to access without locking if the variable's parent object is locked).
+are safe to access without locking as long as the variable's parent object is
+itself locked.
 .Pp
 .Fn AG_InitString
 initializes a
 .Ft AG_Variable
 structure with the given string, which is copied from
 .Fa s .
-The
-.Fn AG_InitStringNODUP
-variant sets the
-.Fa s
-pointer without copying the string.
 .Pp
-The
 .Fn AG_SetString
-function creates or modifies a string variable.
+sets the value of a string variable (possibly creating a new variable).
 The
 .Fa s
-argument is a C string which will be duplicated or copied.
-If the variable exists as a reference to a fixed-size buffer (i.e.,
-it has been created by
-.Fn AG_BindString ) ,
-then the contents of
+argument is a C string which will be either duplicated or copied.
+If the given variable exists and is a reference to a fixed-size buffer
+(i.e., it was generated by a
+.Fn AG_BindString
+call), then the contents of
 .Fa s
-are copied to the buffer.
-If the buffer has insufficient space, the string is truncated.
+are copied to the the referenced buffer.
+If the buffer is too small to fit the string, the string is safely truncated.
 The
 .Fa s
 argument may be set to NULL (in which case further
 .Fn AG_GetString
-calls will return NULL).
-.Pp
+calls will also return NULL).
 The
-.Fn AG_SetStringNODUP
-variant accepts a pointer to a dynamically-allocated string buffer.
-This buffer will be freed automatically when the parent object is destroyed.
+.Fn AG_SetStringF
+variant accepts a
+.Xr printf 3
+style format string argument.
 .Pp
-.Fn AG_PrtString
-sets a string variable from a
-.Xr printf 3 
-style format.
+The potentially-unsafe
+.Fn AG_SetStringNODUP
+variant accepts a pointer to a dynamically-allocated string buffer which
+will be free'd whenever the parent object is destroyed.
 .Pp
 .Fn AG_BindString
 creates or modifies a variable referencing a fixed-size string buffer
 .Fa s ,
 of size
 .Fa len .
-The
-.Fn AG_BindStringFn
-variant ties the variable to a function
-.Fa fn .
 .Sh GENERIC POINTERS
 .nr nS 1
 .Ft "void *"
@@ -776,9 +671,6 @@ variant ties the variable to a function
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_BindPointerMp "AG_Object *obj" "const char *name" "void **pVal" "AG_Mutex *lock"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindPointerFn "AG_Object *obj" "const char *name" "void *(*fn)(AG_Event *)"
 .Pp
 .nr nS 0
 These functions provide an interface to generic pointer types.

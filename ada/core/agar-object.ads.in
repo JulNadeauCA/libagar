@@ -291,21 +291,12 @@ package Agar.Object is
      Static : in Boolean := False);
 
   --
-  -- Make Object a child of Parent (via parent access)
+  -- Make Object a child of Parent.
   --
   procedure Attach
     (Parent : in Object_Access;
      Object : in Object_not_null_Access)
     with Import, Convention => C, Link_Name => "AG_ObjectAttach";
-
-  --
-  -- Make Object a child of Parent (via parent name).
-  --
-  procedure Attach
-    (Root   : in Object_not_null_Access;
-     Parent : in String;
-     Object : in Object_Access);
-  -- Make Object a child of Parent by name.
 
   --
   -- Detach Object from its current Parent (if any).
@@ -823,11 +814,10 @@ package Agar.Object is
      Class  : in Class_not_null_Access)
     with Import, Convention => C, Link_Name => "AG_ObjectInitStatic";
   
-  procedure AG_ObjectAttachToNamed
-    (Root   : in Object_not_null_Access;
-     Parent : in CS.chars_ptr;
-     Object : in Object_Access)
-    with Import, Convention => C, Link_Name => "AG_ObjectAttachToNamed";
+  procedure AG_ObjectAttach
+    (Parent : in Object_Access;
+     Child  : in Object_not_null_Access)
+    with Import, Convention => C, Link_Name => "AG_ObjectAttach";
   
   function AG_ObjectFindS
     (Root : in Object_not_null_Access;
@@ -1115,11 +1105,6 @@ package Agar.Object is
      Name   : in CS.chars_ptr) return C.int
     with Import, Convention => C, Link_Name => "ag_defined";
 
-  function AG_EvalVariable
-    (Object   : in Object_not_null_Access;
-     Variable : in Variable_not_null_Access) return C.int
-    with Import, Convention => C, Link_Name => "AG_EvalVariable";
-
   procedure AG_CopyVariable
     (Destination : in Variable_not_null_Access;
      Source      : in Variable_not_null_Access)
@@ -1335,13 +1320,6 @@ package Agar.Object is
      Data     : in System.Address) return Variable_Access
     with Import, Convention => C, Link_Name => "AG_SetString";
 
-  function AG_SetStringFixed
-    (Variable : in Variable_not_null_Access;
-     Name     : in System.Address;
-     Data     : in System.Address;
-     Size     : in C.size_t) return Variable_Access
-    with Import, Convention => C, Link_Name => "AG_SetStringFixed";
-
   function AG_BindString
     (Variable : in Variable_not_null_Access;
      Name     : in System.Address;
@@ -1366,27 +1344,6 @@ package Agar.Object is
      Data     : access System.Address) return Variable_Access
     with Import, Convention => C, Link_Name => "AG_BindPointer";
   
-  function AG_SetVoidFn
-    (Object : in Object_not_null_Access;
-     Name   : in CS.chars_ptr;
-     Func   : in Pointer_Func_Access;
-     Format : in CS.chars_ptr) return Function_not_null_Access
-    with Import, Convention => C, Link_Name => "AG_SetVoidFn";
-  
-  function AG_SetIntFn
-    (Object : in Object_not_null_Access;
-     Name   : in CS.chars_ptr;
-     Func   : in Integer_Func_Access;
-     Format : in CS.chars_ptr) return Function_not_null_Access
-    with Import, Convention => C, Link_Name => "AG_SetIntFn";
-  
-  function AG_SetUintFn
-    (Object : in Object_not_null_Access;
-     Name   : in CS.chars_ptr;
-     Func   : in Unsigned_Func_Access;
-     Format : in CS.chars_ptr) return Function_not_null_Access
-    with Import, Convention => C, Link_Name => "AG_SetUintFn";
- 
   function AG_CompareVariables
     (Left, Right : in Variable_not_null_Access) return C.int
     with Import, Convention => C, Link_Name => "AG_CompareVariables";

@@ -97,8 +97,10 @@ static struct {
 	{ "ag_mouse_dblclick_delay",	&agMouseDblclickDelay	},
 	{ "ag_mouse_spin_delay",	&agMouseSpinDelay	},
 	{ "ag_mouse_spin_interval",	&agMouseSpinIval	},
+#ifdef AG_UNICODE
 	{ "ag_text_composition",	&agTextComposition	},
 	{ "ag_text_bidi",		&agTextBidi		},
+#endif
 	{ "ag_text_cache",		&agTextCache		},
 	{ "ag_text_tab_width",		&agTextTabWidth		},
 	{ "ag_text_blink_rate",		&agTextBlinkRate	},
@@ -126,11 +128,13 @@ void *agStdWidgets[] = {
 	&agCheckboxClass,
 	&agComboClass,
 	&agConsoleClass,
-	&agDirDlgClass,
 	&agEditableClass,
+#ifdef AG_SERIALIZATION
+	&agDirDlgClass,
 	&agFontSelectorClass,
 	&agFileDlgClass,
 	&agFileSelectorClass,
+#endif
 	&agFixedClass,
 #if defined(HAVE_FLOAT) && defined(AG_LEGACY)
 	&agFSpinbuttonClass,
@@ -188,8 +192,10 @@ int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
 int agMouseSpinIval = 50;		/* Spinbutton repeat interval */
 int agMouseScrollDelay = 200;		/* Scrollbar increment delay */
 int agMouseScrollIval = 1;		/* Scrollbar increment interval */
+#ifdef AG_UNICODE
 int agTextComposition = 1;		/* Built-in input composition */
 int agTextBidi = 0;			/* Bidirectionnal text display */
+#endif
 int agTextCache = 1;			/* Dynamic text caching */
 int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
@@ -212,7 +218,9 @@ double agZoomValues[AG_ZOOM_RANGE] = {	/* Scale values for zoom */
 int
 AG_InitGUIGlobals(void)
 {
+#ifdef AG_SERIALIZATION
 	AG_Config *cfg;
+#endif
 	void **cl;
 	AG_DriverClass **pd;
 	Uint i;
@@ -248,11 +256,13 @@ AG_InitGUIGlobals(void)
 	AG_ObjectInitStatic(&agInputDevices, &agObjectClass);
 	AG_ObjectSetName(&agInputDevices, "agInputDevices");
 
+#ifdef AG_SERIALIZATION
 	cfg = AG_ConfigObject();
-	for (i = 0; i < agGUIOptionCount; i++)
+	for (i = 0; i < agGUIOptionCount; i++) {
 		AG_BindInt(cfg, agGUIOptions[i].key, agGUIOptions[i].p);
-
+	}
 	AG_LoadStyleSheet(NULL, "_agStyleDefault");
+#endif
 	return (0);
 }
 
@@ -263,7 +273,9 @@ AG_InitGUIGlobals(void)
 void
 AG_DestroyGUIGlobals(void)
 {
+#ifdef AG_SERIALIZATION
 	AG_Config *cfg;
+#endif
 	AG_DriverClass **pd;
 	void **pcl;
 	Uint i;
@@ -272,11 +284,11 @@ AG_DestroyGUIGlobals(void)
 		return;
 
 	AG_DestroyStyleSheet(&agDefaultCSS);
-	
+#ifdef AG_SERIALIZATION
 	cfg = AG_ConfigObject();
 	for (i = 0; i < agGUIOptionCount; i++)
 		AG_Unset(cfg, agGUIOptions[i].key);
-
+#endif
 	AG_ObjectDestroy(&agInputDevices);
 #ifndef __APPLE__ /* XXX mutex issue */
 	AG_ObjectDestroy(&agDrivers);

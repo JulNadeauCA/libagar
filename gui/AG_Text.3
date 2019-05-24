@@ -185,48 +185,51 @@ rendering functions.
 .Fn AG_TextRender "const char *text"
 .Pp
 .Ft "AG_Surface *"
-.Fn AG_TextRenderUCS4 "const Uint32 *text"
+.Fn AG_TextRenderF "const char *fmt" "..."
 .Pp
 .Ft "AG_Surface *"
-.Fn AG_TextRenderf "const char *fmt" "..."
+.Fn AG_TextRenderNat "const AG_Char *text"
 .Pp
 .Ft "AG_Glyph *"
-.Fn AG_TextRenderGlyph "Uint32 uch"
+.Fn AG_TextRenderGlyph "AG_Char ch"
 .Pp
 .Ft "void"
 .Fn AG_TextSize "const char *text" "int *w" "int *h"
 .Pp
 .Ft "void"
-.Fn AG_TextSizeUCS4 "const Uint32 *text" "int *w" "int *h"
+.Fn AG_TextSizeNat "const AG_Char *text" "int *w" "int *h"
 .Pp
 .Ft "void"
 .Fn AG_TextSizeMulti "const char *text" "int *w" "int *h" "Uint **wLines" "Uint *nLines"
 .Pp
 .Ft "void"
-.Fn AG_TextSizeMultiUCS4 "const Uint32 *text" "int *w" "int *h" "Uint **wLines" "Uint *nLines"
+.Fn AG_TextSizeMultiNat "const AG_Char *text" "int *w" "int *h" "Uint **wLines" "Uint *nLines"
 .Pp
 .nr nS 0
 The
 .Fn AG_TextRender
 function renders text to a new, transparent surface.
-The input text may contain UTF-8 sequences.
+If
+.Dv AG_UNICODE
+is supported, the text may contain UTF-8 sequences.
 The
-.Fn AG_TextRenderf
+.Fn AG_TextRenderF
 variant accepts
 .Xr printf 3
 style arguments.
 .Pp
-.Fn AG_TextRenderUCS4
-renders text in UCS-4 format onto a new surface.
+.Fn AG_TextRenderNat
+renders text in native format (UCS-4 or ASCII).
+onto a new surface.
 .Fn AG_TextRenderGlyph
-renders the specified UCS-4 encoded Unicode character.
+renders the specified native character.
 The function returns an
 .Ft AG_Glyph
 structure, which has the following public (read-only) members:
 .Pp
 .Bl -tag -compact -width "float texcoord[4] "
-.It Uint32 ch
-Unicode character (UCS-4 encoded)
+.It AG_Char ch
+Native character (UCS-4 or ASCII)
 .It AG_Surface *su
 Pixel surface
 .It Uint texture
@@ -240,13 +243,13 @@ Amount of translation (in pixels) recommended to follow when rendering text
 The
 .Fn AG_TextSize
 and
-.Fn AG_TextSizeUCS4
+.Fn AG_TextSizeNat
 functions return the minimal bounding box in pixels required for rendering the
 given text.
 The
 .Fn AG_TextSizeMulti
 and
-.Fn AG_TextSizeMultiUCS4
+.Fn AG_TextSizeMultiNat
 variants also return the number of lines into
 .Fa nLines
 and the width in pixels of each line in the array

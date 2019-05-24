@@ -30,7 +30,17 @@ typedef enum ag_error_code {
 # define Free(p)           AG_Free(p)
 # define Realloc(p,len)    AG_Realloc((p),(len))
 # define TryRealloc(p,len) AG_TryRealloc((p),(len))
-# define Verbose           AG_Verbose
+
+# ifdef AG_VERBOSITY
+#  define Verbose AG_Verbose
+# else
+#  ifdef __GNUC__
+#   define Verbose(obj, arg...) ((void)0)
+#  else
+#   define Verbose AG_Verbose
+#  endif
+# endif
+
 # ifdef AG_DEBUG
 #  define Debug AG_Debug
 # else
@@ -52,15 +62,20 @@ AG_ErrorCode AG_GetErrorCode(void) _Pure_Attribute_If_Unthreaded;
 void         AG_SetErrorCode(AG_ErrorCode);
 
 const char *_Nullable AG_Strerror(int);
-const char *_Nonnull AG_GetError(void) _Pure_Attribute_If_Unthreaded;
+const char *_Nonnull  AG_GetError(void) _Pure_Attribute_If_Unthreaded;
 
 void AG_SetError(const char *_Nonnull, ...)
-                FORMAT_ATTRIBUTE(printf,1,2);
-
+                 FORMAT_ATTRIBUTE(printf,1,2);
 void AG_SetErrorS(const char *_Nonnull);
+void AG_FatalError(const char *_Nullable) _Noreturn_Attribute;
 
-void AG_FatalError(const char *_Nullable)
-                  _Noreturn_Attribute;
+#ifdef AG_VERBOSITY
+# define AG_SetErrorV(c,s)   AG_SetErrorS(s)
+# define AG_FatalErrorV(c,s) AG_FatalError(s)
+#else
+# define AG_SetErrorV(c,s)   AG_SetErrorS(c)
+# define AG_FatalErrorV(c,s) AG_FatalError(c)
+#endif
 
 void AG_SetFatalCallback(void (*_Nullable)(const char *_Nonnull));
 void AG_SetVerboseCallback(int (*_Nullable)(const char *_Nonnull));
