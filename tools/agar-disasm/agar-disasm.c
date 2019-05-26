@@ -26,24 +26,32 @@
 #include <agar/core.h>
 #include <agar/core/types.h>
 #include <agar/config/have_64bit.h>
+#include <agar/config/have_float.h>
 #include <agar/config/have_long_double.h>
 
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
 
 const struct {
 	enum ag_data_source_type type;
 	const char *name;
 } types[] = {
 	{ AG_SOURCE_UINT8,		"Uint8" },
+	{ AG_SOURCE_SINT8,		"Sint8" },
 	{ AG_SOURCE_UINT16,		"Uint16" },
+	{ AG_SOURCE_SINT16,		"Sint16" },
 	{ AG_SOURCE_UINT32,		"Uint32" },
+	{ AG_SOURCE_SINT32,		"Sint32" },
 	{ AG_SOURCE_UINT64,		"Uint64" },
+	{ AG_SOURCE_SINT64,		"Sint64" },
 	{ AG_SOURCE_FLOAT,		"Float" },
 	{ AG_SOURCE_DOUBLE,		"Double" },
 	{ AG_SOURCE_LONG_DOUBLE,	"LongDbl" },
 	{ AG_SOURCE_STRING,		"String" },
-	{ AG_SOURCE_COLOR_RGBA,		"ColorRGBA" }
+	{ AG_SOURCE_COLOR_RGBA,		"ColorRGBA" },
+	{ AG_SOURCE_STRING_PAD,		"StringPad" },
 };
 const int nTypes = sizeof(types) / sizeof(types[0]);
 
@@ -153,51 +161,52 @@ main(int argc, char *argv[])
 			printf("%u\n", *(Uint8 *)p);
 			FORWARD(1);
 			break;
+		case AG_SOURCE_SINT8:
+			printf("%d\n", *(Sint8 *)p);
+			FORWARD(1);
+			break;
 		case AG_SOURCE_UINT16:
-			{
-				Uint16 v = AG_SwapBE16(*(Uint16 *)p);
-				printf("%u\n", (unsigned)v);
-				FORWARD(2);
-			}
+			printf("%u\n", AG_SwapBE16(*(Uint16 *)p));
+			FORWARD(2);
+			break;
+		case AG_SOURCE_SINT16:
+			printf("%d\n", (Sint16)AG_SwapBE16(*(Uint16 *)p));
+			FORWARD(2);
 			break;
 		case AG_SOURCE_UINT32:
-			{
-				Uint32 v = AG_SwapBE32(*(Uint32 *)p);
-				printf("%lu\n", (unsigned long)v);
-				FORWARD(4);
-			}
+			printf("%u\n", AG_SwapBE32(*(Uint32 *)p));
+			FORWARD(2);
+			break;
+		case AG_SOURCE_SINT32:
+			printf("%u\n", AG_SwapBE32(*(Sint32 *)p));
+			FORWARD(2);
 			break;
 #ifdef HAVE_64BIT
 		case AG_SOURCE_UINT64:
-			{
-				Uint64 v = AG_SwapBE64(*(Uint64 *)p);
-				printf("%llu\n", (unsigned long long)v);
-				FORWARD(8);
-			}
+			printf("%llu\n",
+			    (unsigned long long)AG_SwapBE64(*(Uint64 *)p));
+			FORWARD(8);
+			break;
+		case AG_SOURCE_SINT64:
+			printf("%lld\n", (long long)AG_SwapBE64(*(Uint64 *)p));
+			FORWARD(8);
 			break;
 #endif
+#ifdef HAVE_FLOAT
 		case AG_SOURCE_FLOAT:
-			{
-				float f = AG_SwapBEFLT(*(float *)p);
-				printf("%f\n", f);
-				FORWARD(4);
-			}
+			printf("%f\n", *(float *)p);
+			FORWARD(4);
 			break;
 		case AG_SOURCE_DOUBLE:
-			{
-				double f = AG_SwapBEDBL(*(double *)p);
-				printf("%f\n", f);
-				FORWARD(8);
-			}
+			printf("%f\n", *(double *)p);
+			FORWARD(8);
 			break;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 		case AG_SOURCE_LONG_DOUBLE:
-			{
-				long double f=AG_SwapBELDBL(*(long double *)p);
-				printf("%Lf\n", f);
-				FORWARD(16);
-			}
+			printf("%Lf\n", *(long double *)p);
+			FORWARD(16);
 			break;
+# endif
 #endif
 		case AG_SOURCE_STRING:
 			if (AG_SwapBE32(*(Uint32 *)p) != AG_SOURCE_UINT32) {
@@ -216,6 +225,9 @@ main(int argc, char *argv[])
 			printf("\"%s\"\n", s);
 			free(s);
 			FORWARD(sLen);
+			break;
+		case AG_SOURCE_STRING_PAD:
+			/* TODO */
 			break;
 		default:
 			printf("(skipping)\n");
