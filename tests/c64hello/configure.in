@@ -1,0 +1,28 @@
+# Public domain
+#
+# A sample Agar program on the C64.
+#
+
+CONFIG_GUESS("../../mk/config.guess")
+
+REGISTER_SECTION("Options for this test program:")
+REGISTER("--with-agar-core[=PREFIX]",	"Location of Agar-Core library [check]")
+
+if [ "${host}" != "c64" ]; then
+	echo "*"
+	echo "* The only available target for this test program is: c64"
+	echo "* Please use ./configure --host=c64 --with-agar=/path/to/c64agar"
+	echo "*"
+	exit 1
+fi
+
+package("c64hello")
+version("1.6.0")
+
+require(cc)
+require(agar-core, 1.6, ${prefix_agar_core})
+
+mdefine(CFLAGS, "-Ors --codesize 500 -T -g -t c64")
+
+C_INCDIR($BLD)
+C_INCDIR_CONFIG($BLD/config)
