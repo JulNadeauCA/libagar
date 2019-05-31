@@ -8,25 +8,14 @@ include ${TOP}/math/Makefile.inc
 include ${TOP}/au/Makefile.inc
 
 PROJECT=	"agartest"
-PROG_TYPE=	"GUI"
-PROG_GUID=	"11D6C9FF-522E-43ed-B3EB-92A2C636CCA7"
 
+PROG=		agartest
+PROG_TYPE=	"GUI"
+PROG_GUID=	"11d6c9ff-522e-43ed-b3eb-92a2c636cca7"
 PROG_LINKS=	${AGMATH_LINKS} ${DEV_LINKS} ${GUI_LINKS} ${CORE_LINKS}
 CFLAGS+=	${AGAR_MATH_CFLAGS} ${AGAR_DEV_CFLAGS} ${AGAR_CFLAGS}
 LIBS+=		${AGAR_MATH_LIBS} ${AGAR_DEV_LIBS} ${AGAR_LIBS}
 
-DATAFILES=	loss.txt \
-		agar.png agar-index.png agar.bmp \
-		axe.bmp \
-		helmet.png helmet.bmp \
-		helmet-socket.bmp \
-		menubg.bmp \
-		pepe.jpg \
-		sword-socket.bmp \
-		sword.bmp \
-		axe.png
-
-PROG=	agartest
 SRCS=	agartest.c ${SRCS_EXTRA} \
 	charsets.c \
 	checkbox.c \
@@ -68,6 +57,11 @@ SRCS=	agartest.c ${SRCS_EXTRA} \
 	user.c \
 	widgets.c \
 	windows.c
+
+DATAFILES= agar.png agar-index.png agar.bmp agar-1.bmp agar-2.bmp \
+           agar-3.bmp agar-4.bmp axe.bmp axe.png helmet.png helmet.bmp \
+           helmet-socket.bmp loss.txt menubg.bmp pepe.jpg sword.bmp \
+           sword-socket.bmp
 
 all: all-subdir ${PROG}
 

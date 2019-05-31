@@ -1,42 +1,18 @@
 TOP=..
+
 include ${TOP}/Makefile.config
 include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
-
-SUBDIR=	fonts
 
 LIB=		ag_gui
 LIB_CURRENT=	6
 LIB_REVISION=	0
 LIB_AGE=	0
-
 LIB_INSTALL=	Yes
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
 LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LIBS}
-
-LIBS=		-L../core -lag_core \
-		${GUI_LIBS}
-
-CFLAGS+=	-D_AGAR_GUI_INTERNAL \
-		${CORE_CFLAGS} ${GUI_CFLAGS}
-
-DATAFILES_SRC= style.css
-
-SRCS=	${SRCS_GUI} drv.c drv_sw.c drv_mw.c primitive.c \
-	gui.c widget.c window.c iconmgr.c geometry.c \
-	colors.c cursors.c ttf.c text.c keymap.c keymap_latin1.c \
-	keymap_compose.c keysyms.c editable.c \
-	box.c label.c button.c checkbox.c textbox.c radio.c \
-	fixed_plotter.c tlist.c scrollbar.c spinbutton.c titlebar.c toolbar.c \
-	fspinbutton.c combo.c ucombo.c units.c nlunits.c hsvpal.c \
-	mspinbutton.c mfspinbutton.c statusbar.c menu.c menu_view.c \
-	treetbl.c separator.c notebook.c pixmap.c file_dlg.c objsel.c \
-	fixed.c numerical.c table.c glview.c mpane.c pane.c console.c graph.c \
-	socket.c icon.c progress_bar.c slider.c text_cache.c load_surface.c \
-	load_color.c load_xcf.c file_selector.c scrollview.c font_selector.c \
-	time_sdl.c debugger.c surface.c widget_legacy.c global_keys.c \
-	input_device.c mouse.c keyboard.c packedpixel.c load_bmp.c load_jpg.c \
-	load_png.c dir_dlg.c stylesheet.c
+DATAFILES_SRC=	style.css
+SUBDIR=		fonts
 
 MAN3=	AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_Label.3 AG_Radio.3 AG_Textbox.3 AG_Window.3 AG_Scrollbar.3 \
@@ -54,6 +30,28 @@ MAN3=	AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_DriverSDLFB.3 AG_DriverSDLGL.3 AG_GL.3 AG_DirDlg.3 \
 	AG_GlobalKeys.3 AG_Keyboard.3 AG_DriverCocoa.3 AG_InitVideoSDL.3 \
 	AG_StyleSheet.3
+
+SRCS=	${SRCS_GUI} drv.c drv_sw.c drv_mw.c primitive.c \
+	gui.c widget.c window.c iconmgr.c geometry.c \
+	colors.c cursors.c ttf.c text.c keymap.c keymap_latin1.c \
+	keymap_compose.c keysyms.c editable.c \
+	box.c label.c button.c checkbox.c textbox.c radio.c \
+	fixed_plotter.c tlist.c scrollbar.c spinbutton.c titlebar.c toolbar.c \
+	fspinbutton.c combo.c ucombo.c units.c nlunits.c hsvpal.c \
+	mspinbutton.c mfspinbutton.c statusbar.c menu.c menu_view.c \
+	treetbl.c separator.c notebook.c pixmap.c file_dlg.c objsel.c \
+	fixed.c numerical.c table.c glview.c mpane.c pane.c console.c graph.c \
+	socket.c icon.c progress_bar.c slider.c text_cache.c load_surface.c \
+	load_color.c load_xcf.c file_selector.c scrollview.c font_selector.c \
+	time_sdl.c debugger.c surface.c widget_legacy.c global_keys.c \
+	input_device.c mouse.c keyboard.c packedpixel.c load_bmp.c load_jpg.c \
+	load_png.c dir_dlg.c stylesheet.c
+
+CFLAGS+=${CORE_CFLAGS} \
+	${GUI_CFLAGS} -D_AGAR_GUI_INTERNAL
+
+LIBS=	-L../core -lag_core \
+	${GUI_LIBS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
