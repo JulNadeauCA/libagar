@@ -86,7 +86,7 @@ pane(self, index)
 	Agar::MPane self
 	Uint index
 CODE:
-	if (index >= self->npanes) {
+	if (index >= self->nPanes) {
 		Perl_croak(aTHX_ "Pane index out of bounds");
 	}
 	RETVAL = self->panes[index];
