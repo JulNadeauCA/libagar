@@ -114,7 +114,9 @@ main(int argc, char *argv[])
 	AG_ConfigLoad();
 
 	AG_BindStdGlobalKeys();
+#if defined(AG_DEBUG) && defined(AG_TIMERS)
 	AG_BindGlobalKey(AG_KEY_F7, AG_KEYMOD_ANY, DoDebugger);
+#endif
 
 	/* Initialize Agar-Math and Agar-SK */
 	M_InitSubsystem();
