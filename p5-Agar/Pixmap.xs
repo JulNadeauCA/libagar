@@ -21,6 +21,9 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * TODO: newFromFile(), newFromTexture(), addSurface, addSurfaceScaled(),
+ * addSurfaceFromFile(), replaceSurface(), updateSurface, setSurface().
  */
 
 #include "EXTERN.h"
@@ -49,7 +52,7 @@ CODE:
 	if (items == 4) {
 		AP_MapHashToFlags(SvRV(ST(3)), AP_WidgetFlagNames, &wflags);
 	}
-	RETVAL = AG_PixmapFromSurfaceCopy(parent, 0, surface);
+	RETVAL = AG_PixmapFromSurface(parent, 0, surface);
 	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
@@ -70,7 +73,7 @@ CODE:
 	if (items == 6) {
 		AP_MapHashToFlags(SvRV(ST(5)), AP_WidgetFlagNames, &wflags);
 	}
-	RETVAL = AG_PixmapFromSurfaceScaled(parent, 0, surface, w, h);
+	RETVAL = AG_PixmapFromSurfaceScaled(parent, 0, surface, w,h);
 	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL

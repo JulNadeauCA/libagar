@@ -131,7 +131,7 @@ Agar::Config
 getProps(self)
 	Agar::Object self
 CODE:
-	RETVAL = self;
+	RETVAL = (AG_Config *)self;
 OUTPUT:
 	RETVAL
 

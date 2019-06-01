@@ -73,8 +73,11 @@ PREINIT:
 CODE:
 	ds = AG_OpenFile(path, "w");
 	if (ds) {
+		if (AG_ObjectSerialize(self, ds) == -1) {
+			AG_CloseFile(ds);
+			XSRETURN_UNDEF;
+		}
 		RETVAL = 0;
-		AG_PropSave(self, ds);
 		AG_CloseFile(ds);
 	} else {
 		XSRETURN_UNDEF;

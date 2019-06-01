@@ -80,7 +80,7 @@ addHorizTab(self, label)
 	Agar::Notebook self
 	const char * label
 CODE:
-	RETVAL = AG_NotebookAddTab(self, label, AG_BOX_HORIZ);
+	RETVAL = AG_NotebookAdd(self, label, AG_BOX_HORIZ);
 OUTPUT:
 	RETVAL
 
@@ -89,7 +89,7 @@ addVertTab(self, label)
 	Agar::Notebook self
 	const char * label
 CODE:
-	RETVAL = AG_NotebookAddTab(self, label, AG_BOX_VERT);
+	RETVAL = AG_NotebookAdd(self, label, AG_BOX_VERT);
 OUTPUT:
 	RETVAL
 
@@ -98,14 +98,14 @@ delTab(self, tab)
 	Agar::Notebook self
 	Agar::NotebookTab tab
 CODE:
-	AG_NotebookDelTab(self, tab);
+	AG_NotebookDel(self, tab);
 
 void
 selectTab(self, tab)
 	Agar::Notebook self
 	Agar::NotebookTab tab
 CODE:
-	AG_NotebookSelectTab(self, tab);
+	AG_NotebookSelect(self, tab);
 
 void
 setFlag(self, name)

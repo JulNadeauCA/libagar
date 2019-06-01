@@ -22,6 +22,13 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * TODO: newFromPixelsRGB, newFromPixelsRGBA, newFromFile, exportFile,
+ * blendRGB8, blendRGB8_At, fillRect, get8, put8, mapPixel{32,64}_RGB{8,16},
+ * getColor{32,64}, animStateInit, animStateDestroy, animSetLoop, animSetPingPong,
+ * animPlay, animStop, addFrame, pixelFormatIsSupported, clipped, mapPixel{32,64},
+ * map_pixel_{32,64}_{rgb16,rgba16}, getColor{32,64}_{rgb8,rgb16}, get64_at,
+ * get64, put64_at, put64, 
  */
 
 #include "EXTERN.h"
@@ -35,6 +42,12 @@
 static const AP_FlagNames flagNames[] = {
 	{ "srcColorKey", AG_SURFACE_COLORKEY },
 	{ "srcAlpha",    AG_SURFACE_ALPHA },
+	{ "glTexture",   AG_SURFACE_GL_TEXTURE },
+	{ "mapped",      AG_SURFACE_MAPPED },
+	{ "static",      AG_SURFACE_STATIC },
+	{ "extPixels",   AG_SURFACE_EXT_PIXELS },
+	{ "animated",    AG_SURFACE_ANIMATED },
+	{ "trace",       AG_SURFACE_TRACE },
 	{ NULL,          0 }
 };
 
@@ -57,11 +70,7 @@ CODE:
 	if (items == 5) {
 		AP_MapHashToFlags(SvRV(ST(4)), flagNames, &flags);
 	}
-	if (pf->palette == NULL) {
-		RETVAL = AG_SurfaceNew(AG_SURFACE_PACKED, w, h, pf, flags);
-	} else {
-		RETVAL = AG_SurfaceNew(AG_SURFACE_INDEXED, w, h, pf, flags);
-	}
+	RETVAL = AG_SurfaceNew(pf, w,h, flags);
 OUTPUT:
 	RETVAL
 
@@ -81,10 +90,29 @@ CODE:
 	if (items == 5) {
 		AP_MapHashToFlags(SvRV(ST(4)), flagNames, &flags);
 	}
-	RETVAL = AG_SurfaceIndexed(w, h, bitsPerPixel, flags);
+	RETVAL = AG_SurfaceIndexed(w,h, bitsPerPixel, flags);
 OUTPUT:
 	RETVAL
 
+Agar::Surface
+newGrayscale(package, w, h, bitsPerPixel, ...)
+	const char *package
+	int w
+	int h
+	int bitsPerPixel
+PREINIT:
+	Uint flags = 0;
+CODE:
+	if ((items == 5 && SvTYPE(SvRV(ST(4))) != SVt_PVHV) || items > 5) {
+		Perl_croak(aTHX_ "Usage: Agar::Surface->newGrayscale(w,h,depth,"
+		           "[{opts}])");
+	}
+	if (items == 5) {
+		AP_MapHashToFlags(SvRV(ST(4)), flagNames, &flags);
+	}
+	RETVAL = AG_SurfaceGrayscale(w,h, bitsPerPixel, flags);
+OUTPUT:
+	RETVAL
 
 Agar::Surface
 newEmpty(package)

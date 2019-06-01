@@ -39,9 +39,9 @@ Agar::Font
 new(package, face, points)
 	const char * package
 	const char * face
-	int points
+	double points;
 CODE:
-	RETVAL = AG_FetchFont(face, points, 0);
+	RETVAL = AG_FetchFont(face, &points, 0);
 OUTPUT:
 	RETVAL
 

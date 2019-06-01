@@ -33,10 +33,7 @@
 
 static const AP_FlagNames flagNames[] = {
 	{ "div1Fill",		AG_PANE_DIV1FILL },
-	{ "forceDiv1Fill",	AG_PANE_FORCE_DIV1FILL },
 	{ "frame",		AG_PANE_FRAME },
-	{ "div",		AG_PANE_DIV },
-	{ "forceDiv",		AG_PANE_FORCE_DIV },
 	{ "unmovable",		AG_PANE_UNMOVABLE },
 	{ NULL,			0 }
 };
