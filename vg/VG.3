@@ -62,26 +62,8 @@ widget is almost always used to display
 .Nm
 drawings.
 .Ft VG_View
-also provides a handy "tool" registration interface which simplifies the
-development
-of editors.
-.Pp
-Note: While
-.Nm
-is general-purpose and designed for simplicity, a more CAD oriented
-alternative,
-.Ft SK ,
-is available in the FreeSG distribution
-.Pq Lk http://freesg.org/ .
-.Ft SK
-is similar to
-.Nm ,
-but it provides more advanced math and computational geometry features.
-Unlike
-.Nm
-which uses linear transformations to represent relative entity positions,
-.Ft SK
-uses systems of geometrical constraints (e.g., distances, angles, etc.).
+also provides a simple tool registration interface which allows the editor
+to be extended.
 .Sh BUILT-IN NODE CLASSES
 A number of simple primitives entities are built into the library:
 .Pp
@@ -858,6 +840,8 @@ returning the result in
 .Fa Mv .
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr SK 3 ,
+.Xr SK_View 3 ,
 .Xr VG_Arc 3 ,
 .Xr VG_Circle 3 ,
 .Xr VG_Line 3 ,

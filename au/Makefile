@@ -3,7 +3,6 @@ TOP=	..
 include ${TOP}/Makefile.config
 include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
-include ${TOP}/math/Makefile.inc
 include ${TOP}/au/Makefile.inc
 
 LIB=		ag_au

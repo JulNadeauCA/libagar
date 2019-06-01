@@ -1,0 +1,261 @@
+.\" Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 20, 2002
+.Dt MAP_VIEW 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm MAP_View
+.Nd editor and display widget for Agar-MAP maps
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/map.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget renders the contents of a
+.Xr MAP 3
+to the display.
+.Nm
+also provides a map editor with an extensible set of map edition tools.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft MAP_View *
+.Fn MAP_ViewNew "void *parent" "MAP *map" "Uint flags" "AG_Toolbar *toolbar" "AG_Statusbar *statbar"
+.Pp
+.Ft void
+.Fn MAP_ViewSizeHint "MAP_View *mv" "int w" "int h"
+.Pp
+.Ft void
+.Fn MAP_ViewSetScale "MAP_View *mv" "Uint zoom" "int adj_offs"
+.Pp
+.nr nS 0
+The
+.Fn MAP_ViewNew
+function allocates, initializes, and attaches a
+.Nm
+widget, displaying the given
+.Fa map .
+The
+.Fa flags
+may include:
+.Bl -tag -width "MAP_VIEW_NO_BMPSCALE "
+.It MAP_VIEW_EDIT
+Enable map edition tools.
+.It MAP_VIEW_GRID
+Display the standard tile grid.
+.It MAP_VIEW_CENTER
+When the widget is attached to a new map, center on its origin.
+.It MAP_VIEW_NO_CURSOR
+Disable the edition cursor.
+.It MAP_VIEW_NO_BMPSCALE
+Disable bitmap scaling on zoom.
+.It MAP_VIEW_NO_BG
+Disable background tiling.
+.It MAP_VIEW_NO_NODESEL
+Disable node selection functions.
+.It MAP_VIEW_SHOW_OFFSETS
+Show lines to indicate element offsets (debug only).
+.It MAP_VIEW_SHOW_ORIGIN
+Draw a circle at the origin.
+.El
+.Pp
+If
+.Fa toolbar
+is not NULL, the
+.Nm
+will automatically create buttons in it for each tool registered with
+.Fn MAP_ViewRegTool .
+If
+.Fa statbar
+is not NULL, it will be used to display status information.
+.Pp
+The
+.Fn MAP_ViewSizeHint
+function arranges for the
+.Nm
+to reserve enough space to display
+.Fa w
+by
+.Fa h
+nodes at the initial sizing stage.
+.Pp
+The
+.Fn MAP_ViewSetScale
+function sets the scaling factor to
+.Fa zoom ,
+given in % of the default tile geometry.
+If the
+.Fa adj_offs
+argument is nonzero, the camera is offset to preserve centering.
+.Sh SELECTIONS
+.nr nS 1
+.Ft void
+.Fn MAP_ViewSetSelection "MAP_View *mv" "int x" "int y" "int w" "int h"
+.Pp
+.Ft int
+.Fn MAP_ViewGetSelection "MAP_View *mv" "int *x" "int *y" "int *w" "int *h"
+.Pp
+.nr nS 0
+The
+.Fn MAP_ViewSetSelection
+function sets the active selection to
+.Fa w
+by
+.Fa h
+nodes at map position
+.Fa x ,
+.Fa y .
+.Fn MAP_ViewSetSelection
+also disables any mouse selection in progress.
+.Pp
+The
+.Fn MAP_ViewGetSelection
+returns 1 if there is an active selection or 0 if there is none.
+If there is no selection, no value is written to
+.Fa x ,
+.Fa y ,
+.Fa w
+and
+.Fa h .
+.Sh EXTENSIONS
+.nr nS 1
+.Ft void
+.Fn MAP_ViewRegTool "MAP_View *mv" "const MAP_Tool *toolspec" "void *arg"
+.Pp
+.Ft void
+.Fn MAP_ViewSetDefaultTool "MAP_View *mv" "MAP_Tool *tool"
+.Pp
+.Ft void
+.Fn MAP_ViewRegDrawCb "MAP_View *mv" "void (*f)(MAP_View *mv, void *p)"
+.Pp
+.nr nS 0
+The
+.Nm
+widget provides a generic interface for tools that must accomplish
+diverse map operations.
+.Fn MAP_ViewRegTool
+registers a tool for use from a
+.Nm .
+.Fa toolspec
+is assumed to point to a
+.Ft tool
+structure with the following fields properly initialized:
+.Bd -literal
+typedef struct map_tool {
+	const char *name;     /* Name of the tool */
+	const char *desc;     /* Short description */
+	AG_StaticIcon *icon;  /* Icon (or NULL) */
+	int cursor_index;     /* Static cursor (or -1) */
+
+	void (*init)(MAP_Tool *t);
+	void (*destroy)(MAP_Tool *t);
+	int  (*load)(MAP_Tool *t, AG_DataSource *ds);
+	int  (*save)(MAP_Tool *t, AG_DataSource *ds);
+	int  (*cursor)(MAP_Tool *t, AG_Rect *r);
+	void (*effect)(MAP_Tool *t, MAP_Node *n);
+	int (*mousemotion)(MAP_Tool *t, int x, int y, int xrel,
+	                  int yrel, int xo, int yo, int xorel,
+			  int yorel, int button_state);
+	int (*mousebuttondown)(MAP_Tool *t, int x, int y, int xoff,
+	                       int yoff, int button);
+	int (*mousebuttonup)(MAP_Tool *t, int x, int y, int xoff,
+	                     int yoff, int button);
+	int (*keydown)(MAP_Tool *t, int ksym, int kmod);
+	int (*keyup)(MAP_Tool *t, int ksym, int kmod);
+} MAP_Tool;
+.Ed
+.Pp
+The
+.Fn init ,
+.Fn destroy ,
+.Fn load
+and
+.Fn save
+operations are used to initialize, free, save and restore any private data
+structures needed by the tool.
+.Pp
+The
+.Fn cursor
+operation is expected to draw the current cursor at the screen coordinates
+given by the
+.Xr AG_Rect
+argument.
+.Pp
+The
+.Fn effect
+operation is executed on mouse click events, and on mouse motion events where
+the relative map (node) coordinates are >|1|.
+Typically, simple tools that perform node-specific operations such as the
+.Sq stamp
+and
+.Sq eraser
+tools will use this operation.
+.Pp
+Tools that perform more complex operations (such as vector graphics
+manipulations) will generally use the lower-level
+.Fn mousemotion ,
+.Fn mousebuttondown ,
+.Fn mousebuttonup ,
+.Fn keydown
+and
+.Fn keyup
+operations.
+If any of these functions return a value of 1, the given event will not be
+forwarded to the mouse/keyboard tool bindings and default operations.
+.Pp
+The
+.Fn MAP_ViewSetDefaultTool
+function configures a default tool which will receive all events that have
+not been processed by the active tool or a mouse event binding.
+.Pp
+The
+.Fn MAP_ViewRegDrawCb
+function registers a function to invoke every time the
+.Nm
+widget is redrawn.
+.Sh EVENTS
+The
+.Nm
+widget generates the following events:
+.Pp
+.Bl -tag -compact -width 2n
+.It Fn mapview-dblclick "int button" "int x" "int y" "int xoff" "int yoff"
+The user double clicked over the given tile.
+.El
+.Sh SEE ALSO
+.Xr AG_DataSource 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3 ,
+.Xr MAP 3 ,
+.Xr MAP_Actor 3 ,
+.Xr SG_Intro 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.0.

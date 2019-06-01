@@ -1289,7 +1289,7 @@ DrawEpilogueGL(AG_Widget *_Nonnull wid)
 	glMatrixMode(GL_PROJECTION);	glPopMatrix();
 	glMatrixMode(GL_TEXTURE);	glPopMatrix();
 
-	glPopAttrib(); /* GL_TRANSFORM_BIT | GL_VIEWPORT_BIT */
+	glPopAttrib(); /* GL_TRANSFORM_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT */
 	
 	AG_PostEvent(NULL, wid, "widget-overlay", NULL);
 }

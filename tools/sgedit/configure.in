@@ -1,0 +1,30 @@
+# Public domain
+
+CONFIG_GUESS("../../mk/config.guess")
+
+REGISTER_SECTION("sgedit options:")
+REGISTER("--with-agar[=PREFIX]",	"Location of Agar library [check]")
+REGISTER("--with-agar-math[=PREFIX]",	"Location of Agar-MATH library [check]")
+REGISTER("--with-agar-sg[=PREFIX]",	"Location of Agar-SG library [check]")
+
+PACKAGE("sgedit")
+VERSION("1.0")
+DEFAULT_DIR(DATADIR, "${PREFIX}/share/agar")
+
+REQUIRE(cc)
+REQUIRE(agar, 1.6.0, ${prefix_agar})
+REQUIRE(agar-math, 1.6.0, ${prefix_agar_math})
+REQUIRE(agar-sg, 1.6.0, ${prefix_agar_sg})
+
+if [ "${enable_nls}" = "yes" ]; then
+	REQUIRE(gettext)
+fi
+
+C_DEFINE(_USE_SG_MATH)
+C_DEFINE(_USE_AGAR_QUEUE)
+C_DEFINE(_USE_AGAR_STD)
+C_DEFINE(_USE_AGAR_TYPES)
+C_NO_SECURE_WARNINGS()
+
+C_INCDIR($BLD)
+C_INCDIR_CONFIG($BLD/config)

@@ -435,10 +435,20 @@ echo '    --with-libtool=STRING      Use GNU libtool [path or "bundled"]'
 echo '    --with-manlinks            Add manual entries for every function [no]'
 echo '    --with-manpages            Generate Unix manual pages [yes]'
 echo ''
+echo 'Libraries to build:'
+echo '    --enable-au                 AU: Audio and sound toolkit [yes]'
+echo '    --enable-dev                DEV: Debugger and developer tools [yes]'
+echo '    --enable-gui                GUI: The Agar GUI library [yes]'
+echo '    --enable-map                MAP: Feature-based 2D levels [yes]'
+echo '    --enable-math               MATH: Linear algebra operations [yes]'
+echo '    --enable-rg                 RG: Feature-based graphics packages [yes]'
+echo '    --enable-sg                 SG: Scene Graph and 3D engine toolkit [yes]'
+echo '    --enable-sk                 SK: 2D sketcher and constraint solver [yes]'
+echo '    --enable-vg                 VG: Simple 2D vector graphics [yes]'
+echo ''
 echo 'Global Agar options:'
 echo '    --with-memory-model=(S|M|L) Select Agar memory model [auto]'
 echo '    --with-float                Floating-point support [auto]'
-echo '    --enable-<library>          Build libraries (gui|vg|math|dev|au) [all]'
 echo '    --enable-shared             Build shared libraries [check]'
 echo '    --enable-type-safety        Run-time type safety checks [no]'
 echo '    --enable-debug              Debug build (implies type-safety) [no]'
@@ -452,14 +462,14 @@ echo ''
 echo 'Options specific to CORE library:'
 echo '    --enable-debug-core         Expensive AG_Object debugging [no]'
 echo '    --enable-dso                Dynamically loaded modules [check]'
-echo '    --enable-exec               AG_Execute(3) interface [check]'
-echo '    --enable-namespaces         AG_Object namespace support [check]'
-echo '    --enable-network            Network interface [check]'
-echo '    --enable-serialization      Serialization interfaces [check]'
-echo '    --enable-string             Enable AG_Printf(3) engine [check]'
-echo '    --enable-timers             Enable AG_Timer(3) interface [check]'
-echo '    --enable-unicode            Support Unicode characters [check]'
-echo '    --enable-user               User account interface [check]'
+echo '    --enable-exec               The AG_Execute(3) interface [check]'
+echo '    --enable-namespaces         Namespaces for object classes [check]'
+echo '    --enable-network            The AG_Net(3) network interface [check]'
+echo '    --enable-serialization      File I/O and serialization [check]'
+echo '    --enable-string             AG_Printf(3) formatting engine [check]'
+echo '    --enable-timers             The AG_Timer(3) interface [check]'
+echo '    --enable-unicode            Support for Unicode [check]'
+echo '    --enable-user               The AG_User(3) interface [check]'
 echo '    --enable-verbosity          Verbose error messages [check]'
 echo '    --enable-web                HTTP/1.1 application server [no]'
 echo '    --with-db[45][=PREFIX]      AG_Db: Berkeley DB backend [no]'
@@ -482,10 +492,6 @@ echo '    --with-altivec[=inline]     AltiVec-optimized routines [check]'
 echo '    --with-sse[=inline]         SSE-optimized routines [check]'
 echo '    --with-sse[234]             SSE2 SSE3 SSE4 routines [check]'
 echo ''
-echo 'Options specific to AU library:'
-echo '    --with-sndfile[=PREFIX]     Enable sndfile support [check]'
-echo '    --with-portaudio[=PREFIX]   Enable portaudio driver [check]'
-echo ''
 echo 'Options specific to GUI library:'
 echo '    --enable-debug-gui          Expensive GUI debugging [no]'
 echo '    --with-freetype[=PREFIX]    Enable FreeType support [check]'
@@ -501,6 +507,15 @@ echo '    --with-wgl                  Enable MS Windows driver [check]'
 echo '    --with-cocoa                Enable MacOS X Cocoa driver [check]'
 echo '    --with-inline-surface       Inline pixel access routines [yes]'
 echo '    --with-inline-widget        Inline some AG_Widget functions [yes]'
+echo ''
+echo 'Options specific to AU library:'
+echo '    --with-sndfile[=PREFIX]     Enable sndfile support [check]'
+echo '    --with-portaudio[=PREFIX]   Enable portaudio driver [check]'
+echo ''
+echo 'Options specific to SG library:'
+echo '    --with-cg[=PREFIX]          Cg shader support [default: check]'
+echo '    --with-glu[=PREFIX]         OpenGL Utility Library (GLU) [check]'
+echo '    --with-ode[=PREFIX]         ODE physics interface [default: check]'
 echo ''
 echo 'Some influential environment variables:'
 echo '    CC           C compiler command'
@@ -1581,6 +1596,14 @@ echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
 	enable_unicode="no"
 	enable_user="no"
 	enable_verbosity="no"
+	enable_au="no"
+	enable_dev="no"
+	enable_map="no"
+	enable_math="no"
+	enable_rg="no"
+	enable_sg="no"
+	enable_sk="no"
+	enable_vg="no"
 	echo "checking for byte order...little-endian (${host})"
 _MK_BYTE_ORDER="LE"
 _MK_LITTLE_ENDIAN="yes"
@@ -7925,6 +7948,17 @@ echo '#undef OPENGL_CFLAGS' >$bb_incdir/opengl_cflags.h
 echo 'hdefs["OPENGL_CFLAGS"] = nil' >>configure.lua
 echo '#undef OPENGL_LIBS' >$bb_incdir/opengl_libs.h
 echo 'hdefs["OPENGL_LIBS"] = nil' >>configure.lua
+echo 'not enabling GLU'
+echo 'not enabling GLU' >>config.log
+HAVE_GLU="no"
+GLU_CFLAGS=""
+GLU_LIBS=""
+echo '#undef HAVE_GLU' >$bb_incdir/have_glu.h
+echo 'hdefs["HAVE_GLU"] = nil' >>configure.lua
+echo '#undef GLU_CFLAGS' >$bb_incdir/glu_cflags.h
+echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
+echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
+echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
 echo 'not enabling the GLX interface'
 echo 'not enabling the GLX interface' >>config.log
 HAVE_GLX="no"
@@ -10909,7 +10943,7 @@ echo '#undef ENABLE_DEV' >$bb_incdir/enable_dev.h
 echo 'hdefs["ENABLE_DEV"] = nil' >>configure.lua
 SUBDIR_dev=""
 fi
-if [ "${enable_au}" != 'no' -a "${enable_audio}" != 'no' ]
+if [ "${enable_au}" != 'no' -a "${enable_gui}" != 'no' ]
  then
 ENABLE_AU="yes"
 bb_o=$bb_incdir/enable_au.h
@@ -11372,6 +11406,582 @@ echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
 echo '#undef PORTAUDIO_LIBS' >$bb_incdir/portaudio_libs.h
 echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
 fi
+if [ "${enable_sg}" != 'no' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' ]
+ then
+ENABLE_SG="yes"
+bb_o=$bb_incdir/enable_sg.h
+echo '#ifndef ENABLE_SG' >$bb_o
+echo "#define ENABLE_SG \"$ENABLE_SG\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"ENABLE_SG\"] = \"$ENABLE_SG\"" >>configure.lua
+SUBDIR_sg="sg"
+	if [ "${with_glu}" != 'no' ]
+ then
+$ECHO_N 'checking for GLU...'
+$ECHO_N 'checking for GLU...' >>config.log
+# BEGIN glu(0 ${prefix_glu})
+GLU_CFLAGS=""
+GLU_LIBS=""
+case "${host}" in
+*-*-darwin*)
+GLU_CFLAGS=""
+GLU_LIBS="-framework GLUT"
+;;
+*-*-cygwin* | *-*-mingw32*)
+if [ "${prefix_glu}" != "" ]; then
+GLU_CFLAGS="-I${prefix_glu}/include"
+GLU_LIBS="-L${prefix_glu}/lib -lglu32"
+else
+GLU_CFLAGS=""
+GLU_LIBS="-lglu32"
+fi
+;;
+*)
+if [ "${prefix_glu}" != "" ]; then
+if [ -e "${prefix_glu}/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I${prefix_glu}/include"
+GLU_LIBS="-L${prefix_glu}/lib -lGLU"
+fi
+else
+if [ -e "/usr/X11R6/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/X11R6/include"
+GLU_LIBS="-L/usr/X11R6/lib -lGLU"
+break
+fi
+if [ -e "/usr/include/X11R6/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/include/X11R6"
+GLU_LIBS="-L/usr/lib/X11R6 -lGLU"
+break
+fi
+if [ -e "/usr/local/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/local/include"
+GLU_LIBS="-L/usr/local/lib -lGLU"
+break
+fi
+if [ -e "/usr/X11/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/X11/include"
+GLU_LIBS="-L/usr/X11/lib -lGLU"
+break
+fi
+if [ -e "/usr/local/include/X11/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/local/include/X11"
+GLU_LIBS="-L/usr/local/lib/X11 -lGLU"
+break
+fi
+if [ -e "/usr/local/X11R6/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/local/X11R6/include"
+GLU_LIBS="-L/usr/local/X11R6/lib -lGLU"
+break
+fi
+if [ -e "/usr/include/X11/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/include/X11"
+GLU_LIBS="-L/usr/lib/X11 -lGLU"
+break
+fi
+if [ -e "/usr/local/include/X11R6/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/local/include/X11R6"
+GLU_LIBS="-L/usr/local/lib/X11R6 -lGLU"
+break
+fi
+if [ -e "/usr/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/include"
+GLU_LIBS="-L/usr/lib -lGLU"
+break
+fi
+if [ -e "/usr/local/X11/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/local/X11/include"
+GLU_LIBS="-L/usr/local/X11/lib -lGLU"
+break
+fi
+fi
+;;
+esac
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#else
+#include <GL/gl.h>
+#include <GL/glu.h>
+#endif
+int main(int argc, char *argv[]) {
+	GLUquadric *qd;
+	qd = gluNewQuadric();
+	gluDeleteQuadric(qd);
+	return (0);
+}
+EOT
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} ${GLU_LIBS} ${MATH_LIBS} 2>>config.log
+if [ "$?" != "0" ]; then
+echo "failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo 'yes' >>config.log
+HAVE_GLU=yes
+bb_o=$bb_incdir/have_glu.h
+echo '#ifndef HAVE_GLU' >$bb_o
+echo "#define HAVE_GLU \"$HAVE_GLU\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_GLU\"] = \"$HAVE_GLU\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >>config.log
+HAVE_GLU=no
+echo '#undef HAVE_GLU' >$bb_incdir/have_glu.h
+echo 'hdefs["HAVE_GLU"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_GLU}" = "yes" ]; then
+bb_o=$bb_incdir/glu_cflags.h
+echo '#ifndef GLU_CFLAGS' >$bb_o
+echo "#define GLU_CFLAGS \"$GLU_CFLAGS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"GLU_CFLAGS\"] = \"$GLU_CFLAGS\"" >>configure.lua
+bb_o=$bb_incdir/glu_libs.h
+echo '#ifndef GLU_LIBS' >$bb_o
+echo "#define GLU_LIBS \"$GLU_LIBS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"GLU_LIBS\"] = \"$GLU_LIBS\"" >>configure.lua
+else
+echo '#undef GLU_CFLAGS' >$bb_incdir/glu_cflags.h
+echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
+GLU_CFLAGS=""
+echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
+echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
+GLU_LIBS=""
+fi
+# END glu
+		if [ "${HAVE_GLU}" = 'yes' ]
+ then
+SDL_CFLAGS="$SDL_CFLAGS $GLU_CFLAGS"
+		else
+			if [ "${with_glu}" = 'yes' ]
+ then
+				echo "*"
+				echo "* --with-glu was requested, but no GLU"
+				echo "* library was found."
+				echo "*"
+				exit 1
+			fi
+echo 'not enabling GLU'
+echo 'not enabling GLU' >>config.log
+HAVE_GLU="no"
+GLU_CFLAGS=""
+GLU_LIBS=""
+echo '#undef HAVE_GLU' >$bb_incdir/have_glu.h
+echo 'hdefs["HAVE_GLU"] = nil' >>configure.lua
+echo '#undef GLU_CFLAGS' >$bb_incdir/glu_cflags.h
+echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
+echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
+echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
+		fi
+	else
+echo 'not enabling GLU'
+echo 'not enabling GLU' >>config.log
+HAVE_GLU="no"
+GLU_CFLAGS=""
+GLU_LIBS=""
+echo '#undef HAVE_GLU' >$bb_incdir/have_glu.h
+echo 'hdefs["HAVE_GLU"] = nil' >>configure.lua
+echo '#undef GLU_CFLAGS' >$bb_incdir/glu_cflags.h
+echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
+echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
+echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
+	fi
+	
+	if [ "${with_ode}" != "no" ]
+ then
+$ECHO_N 'checking for Open Dynamics Engine...'
+$ECHO_N 'checking for Open Dynamics Engine...' >>config.log
+# BEGIN ode(0 ${prefix_ode})
+ODE_VERSION=
+if [ "${prefix_ode}" != "" ]; then
+if [ -e "${prefix_ode}/bin/ode-config" ]; then
+ODE_VERSION=`${prefix_ode}/bin/ode-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_ode}/bin/ode-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/ode-config" ]; then
+ODE_VERSION=`${path}/ode-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/ode-config"
+break
+elif [ -e "${path}/ode-config.exe" ]; then
+ODE_VERSION=`${path}/ode-config.exe --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/ode-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+ODE_CFLAGS=
+if [ "${prefix_ode}" != "" ]; then
+if [ -e "${prefix_ode}/bin/ode-config" ]; then
+ODE_CFLAGS=`${prefix_ode}/bin/ode-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_ode}/bin/ode-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/ode-config" ]; then
+ODE_CFLAGS=`${path}/ode-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/ode-config"
+break
+elif [ -e "${path}/ode-config.exe" ]; then
+ODE_CFLAGS=`${path}/ode-config.exe --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/ode-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+ODE_LIBS=
+if [ "${prefix_ode}" != "" ]; then
+if [ -e "${prefix_ode}/bin/ode-config" ]; then
+ODE_LIBS=`${prefix_ode}/bin/ode-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_ode}/bin/ode-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/ode-config" ]; then
+ODE_LIBS=`${path}/ode-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/ode-config"
+break
+elif [ -e "${path}/ode-config.exe" ]; then
+ODE_LIBS=`${path}/ode-config.exe --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/ode-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+ODE_LIBS="${ODE_LIBS} -lstdc++ -lm"
+if [ "${ODE_VERSION}" != "" ]; then
+if [ "${prefix_ode}" != "" ]; then
+echo "yes ($ODE_VERSION in ${prefix_ode})"
+echo "yes ($ODE_VERSION in ${prefix_ode})" >>config.log
+else
+echo "yes ($ODE_VERSION)"
+echo "yes ($ODE_VERSION)" >>config.log
+fi
+if [ "${MK_VERSION_OK}" = "no" ]; then
+echo '*'
+echo '*' >>config.log
+echo "* Minimum required version is 0 (found $ODE_VERSION)"
+echo "* Minimum required version is 0 (found $ODE_VERSION)" >>config.log
+echo '*'
+echo '*' >>config.log
+fi
+else
+if [ "${prefix_ode}" != "" ]; then
+echo "no (not in ${prefix_ode})"
+echo "no (not in ${prefix_ode})" >>config.log
+else
+echo 'no'
+echo 'no' >>config.log
+fi
+MK_VERSION_OK="no"
+fi
+if [ "${MK_VERSION_OK}" = "yes" ]; then
+$ECHO_N 'checking whether ODE works...'
+$ECHO_N 'checking whether ODE works...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <ode/ode.h>
+
+int main(int argc, char *argv[]) {
+	dWorldID world;
+	dJointGroupID jgroup;
+	world = dWorldCreate();
+	jgroup = dJointGroupCreate(10000);
+	dWorldSetGravity(world, 0, 0, -0.5);
+	dJointGroupDestroy(jgroup);
+	dWorldDestroy(world);
+	return (0);
+}
+EOT
+$CC $CFLAGS $TEST_CFLAGS ${ODE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${ODE_LIBS} 2>>config.log
+if [ "$?" != "0" ]; then
+echo "failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo 'yes' >>config.log
+HAVE_ODE=yes
+bb_o=$bb_incdir/have_ode.h
+echo '#ifndef HAVE_ODE' >$bb_o
+echo "#define HAVE_ODE \"$HAVE_ODE\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_ODE\"] = \"$HAVE_ODE\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >>config.log
+HAVE_ODE=no
+echo '#undef HAVE_ODE' >$bb_incdir/have_ode.h
+echo 'hdefs["HAVE_ODE"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_ODE}" = "yes" ]; then
+bb_o=$bb_incdir/ode_cflags.h
+echo '#ifndef ODE_CFLAGS' >$bb_o
+echo "#define ODE_CFLAGS \"$ODE_CFLAGS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"ODE_CFLAGS\"] = \"$ODE_CFLAGS\"" >>configure.lua
+bb_o=$bb_incdir/ode_libs.h
+echo '#ifndef ODE_LIBS' >$bb_o
+echo "#define ODE_LIBS \"$ODE_LIBS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"ODE_LIBS\"] = \"$ODE_LIBS\"" >>configure.lua
+else
+echo '#undef ODE_CFLAGS' >$bb_incdir/ode_cflags.h
+echo 'hdefs["ODE_CFLAGS"] = nil' >>configure.lua
+ODE_CFLAGS=""
+echo '#undef ODE_LIBS' >$bb_incdir/ode_libs.h
+echo 'hdefs["ODE_LIBS"] = nil' >>configure.lua
+ODE_LIBS=""
+fi
+else
+echo '#undef HAVE_ODE' >$bb_incdir/have_ode.h
+echo 'hdefs["HAVE_ODE"] = nil' >>configure.lua
+fi
+# END ode
+		if [ "${HAVE_ODE}" != "yes" ]
+ then
+			if [ "${with_ode}" = "yes" ]
+ then
+				echo "*"
+				echo "* --with-ode was requested, but ODE was not"
+				echo "* found on this system."
+				echo "*"
+				exit 1
+			else
+echo 'not enabling Open Dynamics Engine'
+echo 'not enabling Open Dynamics Engine' >>config.log
+HAVE_ODE="no"
+ODE_CFLAGS=""
+ODE_LIBS=""
+echo '#undef HAVE_ODE' >$bb_incdir/have_ode.h
+echo 'hdefs["HAVE_ODE"] = nil' >>configure.lua
+echo '#undef ODE_CFLAGS' >$bb_incdir/ode_cflags.h
+echo 'hdefs["ODE_CFLAGS"] = nil' >>configure.lua
+echo '#undef ODE_LIBS' >$bb_incdir/ode_libs.h
+echo 'hdefs["ODE_LIBS"] = nil' >>configure.lua
+			fi
+		fi
+	else
+echo 'not enabling Open Dynamics Engine'
+echo 'not enabling Open Dynamics Engine' >>config.log
+HAVE_ODE="no"
+ODE_CFLAGS=""
+ODE_LIBS=""
+echo '#undef HAVE_ODE' >$bb_incdir/have_ode.h
+echo 'hdefs["HAVE_ODE"] = nil' >>configure.lua
+echo '#undef ODE_CFLAGS' >$bb_incdir/ode_cflags.h
+echo 'hdefs["ODE_CFLAGS"] = nil' >>configure.lua
+echo '#undef ODE_LIBS' >$bb_incdir/ode_libs.h
+echo 'hdefs["ODE_LIBS"] = nil' >>configure.lua
+	fi
+	
+	if [ "${with_cg}" != "no" ]
+ then
+$ECHO_N 'checking for Cg...'
+$ECHO_N 'checking for Cg...' >>config.log
+# BEGIN cg(0 ${prefix_cg})
+CG_CFLAGS=""
+CG_LIBS=""
+if [ "${prefix_cg}" != "" ]; then
+CG_CFLAGS="-I${prefix_cg}/include"
+CG_LIBS="-L${prefix_cg}/lib -lCgGL -lCg -lstdc++"
+else
+if [ -e "/usr/include/Cg" ]; then
+CG_CFLAGS="${CG_CFLAGS} -I/usr/include"
+fi
+if [ -e "/usr/local/include/Cg" ]; then
+CG_CFLAGS="${CG_CFLAGS} -I/usr/local/include"
+fi
+if [ -e "/usr/Cg/include/Cg" ]; then
+CG_CFLAGS="${CG_CFLAGS} -I/usr/Cg/include"
+fi
+if [ -e "/usr/local/Cg/include/Cg" ]; then
+CG_CFLAGS="${CG_CFLAGS} -I/usr/local/Cg/include"
+fi
+if [ -e "/usr/X11R6/include/Cg" ]; then
+CG_CFLAGS="${CG_CFLAGS} -I/usr/X11R6/include"
+fi
+if [ -e "/usr/X11R6/Cg/include/Cg" ]; then
+CG_CFLAGS="${CG_CFLAGS} -I/usr/X11R6/Cg/include"
+fi
+case "${host}" in
+*-*-darwin*)
+CG_LIBS="-F/System/Library/Frameworks -framework Cg"
+;;
+x86_64-*-linux*)
+CG_LIBS="-L/usr/X11R6/lib64 -L/usr/lib64 -lCgGL -lCg -lstdc++"
+;;
+*-*-linux*)
+CG_LIBS="-L/usr/X11R6/lib -lCgGL -lCg -lstdc++"
+;;
+*)
+CG_LIBS="-lCgGL -lCg -lstdc++"
+;;
+esac
+fi
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <Cg/cg.h>
+#include <Cg/cgGL.h>
+
+CGcontext context;
+CGeffect effect;
+CGtechnique technique;
+
+int main(int argc, char *argv[]) {
+	context = cgCreateContext();
+	return (0);
+}
+EOT
+$CC $CFLAGS $TEST_CFLAGS ${CG_CFLAGS} ${OPENGL_CFLAGS} ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${CG_LIBS} ${OPENGL_LIBS} ${PTHREADS_LIBS} 2>>config.log
+if [ "$?" != "0" ]; then
+echo "failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo 'yes' >>config.log
+HAVE_CG=yes
+bb_o=$bb_incdir/have_cg.h
+echo '#ifndef HAVE_CG' >$bb_o
+echo "#define HAVE_CG \"$HAVE_CG\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CG\"] = \"$HAVE_CG\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >>config.log
+HAVE_CG=no
+echo '#undef HAVE_CG' >$bb_incdir/have_cg.h
+echo 'hdefs["HAVE_CG"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_CG}" = "yes" ]; then
+bb_o=$bb_incdir/cg_cflags.h
+echo '#ifndef CG_CFLAGS' >$bb_o
+echo "#define CG_CFLAGS \"$CG_CFLAGS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"CG_CFLAGS\"] = \"$CG_CFLAGS\"" >>configure.lua
+bb_o=$bb_incdir/cg_libs.h
+echo '#ifndef CG_LIBS' >$bb_o
+echo "#define CG_LIBS \"$CG_LIBS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"CG_LIBS\"] = \"$CG_LIBS\"" >>configure.lua
+else
+echo '#undef CG_CFLAGS' >$bb_incdir/cg_cflags.h
+echo 'hdefs["CG_CFLAGS"] = nil' >>configure.lua
+CG_CFLAGS=""
+echo '#undef CG_LIBS' >$bb_incdir/cg_libs.h
+echo 'hdefs["CG_LIBS"] = nil' >>configure.lua
+CG_LIBS=""
+fi
+# END cg
+		if [ "${HAVE_CG}" != "yes" ]
+ then
+			if [ "${with_cg}" = "yes" ]
+ then
+				echo "*"
+				echo "* --with-cg was requested, but Cg was not"
+				echo "* found on this system."
+				echo "*"
+				exit 1
+			else
+echo 'not enabling Cg'
+echo 'not enabling Cg' >>config.log
+HAVE_CG="no"
+CG_CFLAGS=""
+CG_LIBS=""
+echo '#undef HAVE_CG' >$bb_incdir/have_cg.h
+echo 'hdefs["HAVE_CG"] = nil' >>configure.lua
+			fi
+		fi
+	else
+echo 'not enabling Cg'
+echo 'not enabling Cg' >>config.log
+HAVE_CG="no"
+CG_CFLAGS=""
+CG_LIBS=""
+echo '#undef HAVE_CG' >$bb_incdir/have_cg.h
+echo 'hdefs["HAVE_CG"] = nil' >>configure.lua
+	fi
+else
+echo '#undef ENABLE_SG' >$bb_incdir/enable_sg.h
+echo 'hdefs["ENABLE_SG"] = nil' >>configure.lua
+SUBDIR_sg=""
+echo 'not enabling GLU'
+echo 'not enabling GLU' >>config.log
+HAVE_GLU="no"
+GLU_CFLAGS=""
+GLU_LIBS=""
+echo '#undef HAVE_GLU' >$bb_incdir/have_glu.h
+echo 'hdefs["HAVE_GLU"] = nil' >>configure.lua
+echo '#undef GLU_CFLAGS' >$bb_incdir/glu_cflags.h
+echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
+echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
+echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
+echo 'not enabling Open Dynamics Engine'
+echo 'not enabling Open Dynamics Engine' >>config.log
+HAVE_ODE="no"
+ODE_CFLAGS=""
+ODE_LIBS=""
+echo '#undef HAVE_ODE' >$bb_incdir/have_ode.h
+echo 'hdefs["HAVE_ODE"] = nil' >>configure.lua
+echo '#undef ODE_CFLAGS' >$bb_incdir/ode_cflags.h
+echo 'hdefs["ODE_CFLAGS"] = nil' >>configure.lua
+echo '#undef ODE_LIBS' >$bb_incdir/ode_libs.h
+echo 'hdefs["ODE_LIBS"] = nil' >>configure.lua
+echo 'not enabling Cg'
+echo 'not enabling Cg' >>config.log
+HAVE_CG="no"
+CG_CFLAGS=""
+CG_LIBS=""
+echo '#undef HAVE_CG' >$bb_incdir/have_cg.h
+echo 'hdefs["HAVE_CG"] = nil' >>configure.lua
+fi
+if [ "${enable_sk}" != 'no' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' ]
+ then
+ENABLE_SK="yes"
+bb_o=$bb_incdir/enable_sk.h
+echo '#ifndef ENABLE_SK' >$bb_o
+echo "#define ENABLE_SK \"$ENABLE_SK\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"ENABLE_SK\"] = \"$ENABLE_SK\"" >>configure.lua
+SUBDIR_sk="sk"
+else
+echo '#undef ENABLE_SK' >$bb_incdir/enable_sk.h
+echo 'hdefs["ENABLE_SK"] = nil' >>configure.lua
+SUBDIR_sk=""
+fi
 SRCS_CORE=""
 if [ "${HAVE_SNPRINTF}" != 'yes' ]
  then
@@ -11752,6 +12362,125 @@ Libs.private: $pkgconfig_module_libs_pvt
 Cflags: $pkgconfig_module_cflags
 EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-core.pc"
+config_script_out="agar-au-config"
+config_script_cflags="-I${INCLDIR} ${PORTAUDIO_CFLAGS} ${SNDFILE_CFLAGS}"
+if [ "${HAVE_CC65}" = "yes" ]; then
+config_script_libs="-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}"
+config_libs_cc65=""
+bb_save_IFS=$IFS
+IFS=" "
+for lib in $config_script_libs; do
+case "$lib" in
+-l*)
+lib_bare=`echo "$lib" |sed "s/^-l//"`
+config_libs_cc65="${config_libs_cc65} ${prefix}/lib/${lib_bare}.lib"
+;;
+esac
+done
+IFS=$bb_save_IFS
+config_script_libs="$config_libs_cc65"
+else
+config_script_libs="-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}"
+fi
+cat << EOT > $config_script_out
+#!/bin/sh
+# Generated by ${PACKAGE}'s BSDBuild configure script.
+#
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/)
+# ${PACKAGE} ${VERSION}
+
+prefix='${PREFIX}'
+exec_prefix='${EXEC_PREFIX}'
+exec_prefix_set='no'
+libdir='${LIBDIR}'
+
+usage='\
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
+
+if test \$# -eq 0; then
+	echo "\${usage}" 1>&2
+	exit 1
+fi
+
+while test \$# -gt 0; do
+	case "\$1" in
+	-*=*)
+		optarg=\`echo "\$1" | LC_ALL='C' sed 's/[-_a-zA-Z0-9]*=//'\`
+		;;
+	*)
+		optarg=
+		;;
+	esac
+
+	case \$1 in
+	--prefix=*)
+		prefix=\$optarg
+		if test \$exec_prefix_set = no ; then
+			exec_prefix=\$optarg
+		fi
+		;;
+	--prefix)
+		echo "\$prefix"
+		;;
+	--exec-prefix=*)
+		exec_prefix=\$optarg
+		exec_prefix_set=yes
+		;;
+	--exec-prefix)
+		echo "\$exec_prefix"
+		;;
+	--host)
+		echo '${host}'
+		;;
+	--version)
+		echo '${VERSION}'
+		;;
+	--release)
+		echo '${RELEASE}'
+		;;
+	--cflags)
+		echo '$config_script_cflags'
+		;;
+	--libs | --static-libs)
+		echo '$config_script_libs'
+		;;
+	*)
+		echo "\${usage}" 1>&2
+		exit 1
+		;;
+	esac
+	shift
+done
+EOT
+AVAIL_CONFIGSCRIPTS="$AVAIL_CONFIGSCRIPTS agar-au-config"
+pkgconfig_module_out="agar-au"
+pkgconfig_module_desc="Agar audio library"
+pkgconfig_module_requires="agar ${PORTAUDIO_PC} ${SNDFILE_PC}"
+pkgconfig_module_conflicts=""
+pkgconfig_module_cflags="-I\${includedir}/agar"
+pkgconfig_module_libs="-L\${libdir} -lag_au"
+pkgconfig_module_libs_pvt="-lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}"
+cat << EOT > $pkgconfig_module_out.pc
+# ${PACKAGE} pkg-config source file.
+#
+# Generated by ${PACKAGE}'s BSDBuild-based configure script.
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/).
+
+prefix=${PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: $pkgconfig_module_out
+Description: $pkgconfig_module_desc
+Version: ${VERSION}
+Requires: $pkgconfig_module_requires
+Conflicts: $pkgconfig_module_conflicts
+Libs: $pkgconfig_module_libs
+Libs.private: $pkgconfig_module_libs_pvt
+Cflags: $pkgconfig_module_cflags
+EOT
+AVAIL_PCMODULES="$AVAIL_PCMODULES agar-au.pc"
 config_script_out="agar-dev-config"
 config_script_cflags="-I${INCLDIR}"
 if [ "${HAVE_CC65}" = "yes" ]; then
@@ -11844,7 +12573,7 @@ done
 EOT
 AVAIL_CONFIGSCRIPTS="$AVAIL_CONFIGSCRIPTS agar-dev-config"
 pkgconfig_module_out="agar-dev"
-pkgconfig_module_desc="Agar interface builder and developer tools"
+pkgconfig_module_desc="Agar extra developer tools"
 pkgconfig_module_requires="agar"
 pkgconfig_module_conflicts=""
 pkgconfig_module_cflags="-I\${includedir}/agar"
@@ -11871,6 +12600,129 @@ Libs.private: $pkgconfig_module_libs_pvt
 Cflags: $pkgconfig_module_cflags
 EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-dev.pc"
+if [ "${enable_map}" != "no" ]
+ then
+SUBDIR_map="map"
+fi
+config_script_out="agar-map-config"
+config_script_cflags="-I${INCLDIR}"
+if [ "${HAVE_CC65}" = "yes" ]; then
+config_script_libs="-L${LIBDIR} -lag_map"
+config_libs_cc65=""
+bb_save_IFS=$IFS
+IFS=" "
+for lib in $config_script_libs; do
+case "$lib" in
+-l*)
+lib_bare=`echo "$lib" |sed "s/^-l//"`
+config_libs_cc65="${config_libs_cc65} ${prefix}/lib/${lib_bare}.lib"
+;;
+esac
+done
+IFS=$bb_save_IFS
+config_script_libs="$config_libs_cc65"
+else
+config_script_libs="-L${LIBDIR} -lag_map"
+fi
+cat << EOT > $config_script_out
+#!/bin/sh
+# Generated by ${PACKAGE}'s BSDBuild configure script.
+#
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/)
+# ${PACKAGE} ${VERSION}
+
+prefix='${PREFIX}'
+exec_prefix='${EXEC_PREFIX}'
+exec_prefix_set='no'
+libdir='${LIBDIR}'
+
+usage='\
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
+
+if test \$# -eq 0; then
+	echo "\${usage}" 1>&2
+	exit 1
+fi
+
+while test \$# -gt 0; do
+	case "\$1" in
+	-*=*)
+		optarg=\`echo "\$1" | LC_ALL='C' sed 's/[-_a-zA-Z0-9]*=//'\`
+		;;
+	*)
+		optarg=
+		;;
+	esac
+
+	case \$1 in
+	--prefix=*)
+		prefix=\$optarg
+		if test \$exec_prefix_set = no ; then
+			exec_prefix=\$optarg
+		fi
+		;;
+	--prefix)
+		echo "\$prefix"
+		;;
+	--exec-prefix=*)
+		exec_prefix=\$optarg
+		exec_prefix_set=yes
+		;;
+	--exec-prefix)
+		echo "\$exec_prefix"
+		;;
+	--host)
+		echo '${host}'
+		;;
+	--version)
+		echo '${VERSION}'
+		;;
+	--release)
+		echo '${RELEASE}'
+		;;
+	--cflags)
+		echo '$config_script_cflags'
+		;;
+	--libs | --static-libs)
+		echo '$config_script_libs'
+		;;
+	*)
+		echo "\${usage}" 1>&2
+		exit 1
+		;;
+	esac
+	shift
+done
+EOT
+AVAIL_CONFIGSCRIPTS="$AVAIL_CONFIGSCRIPTS agar-map-config"
+pkgconfig_module_out="agar-map"
+pkgconfig_module_desc="Agar feature-based levels library"
+pkgconfig_module_requires="agar-rg agar-math agar"
+pkgconfig_module_conflicts=""
+pkgconfig_module_cflags="-I\${includedir}/agar"
+pkgconfig_module_libs="-L\${libdir} -lag_map"
+pkgconfig_module_libs_pvt="-lag_map"
+cat << EOT > $pkgconfig_module_out.pc
+# ${PACKAGE} pkg-config source file.
+#
+# Generated by ${PACKAGE}'s BSDBuild-based configure script.
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/).
+
+prefix=${PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: $pkgconfig_module_out
+Description: $pkgconfig_module_desc
+Version: ${VERSION}
+Requires: $pkgconfig_module_requires
+Conflicts: $pkgconfig_module_conflicts
+Libs: $pkgconfig_module_libs
+Libs.private: $pkgconfig_module_libs_pvt
+Cflags: $pkgconfig_module_cflags
+EOT
+AVAIL_PCMODULES="$AVAIL_PCMODULES agar-map.pc"
 config_script_out="agar-math-config"
 config_script_cflags="-I${INCLDIR} ${MATH_CFLAGS} ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}"
 if [ "${HAVE_CC65}" = "yes" ]; then
@@ -11973,7 +12825,7 @@ pkgconfig_module_desc="Agar math library"
 pkgconfig_module_requires="${AGAR_MATH_REQUIRES}"
 pkgconfig_module_conflicts=""
 pkgconfig_module_cflags="-I\${includedir}/agar ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}"
-pkgconfig_module_libs="-L\${libdir} -lag_math ${MATH_LIBS}"
+pkgconfig_module_libs="-L\${libdir} -lag_math"
 pkgconfig_module_libs_pvt="-lag_math ${MATH_LIBS}"
 cat << EOT > $pkgconfig_module_out.pc
 # ${PACKAGE} pkg-config source file.
@@ -11996,6 +12848,367 @@ Libs.private: $pkgconfig_module_libs_pvt
 Cflags: $pkgconfig_module_cflags
 EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-math.pc"
+if [ "${enable_rg}" != "no" ]
+ then
+SUBDIR_rg="rg"
+fi
+config_script_out="agar-rg-config"
+config_script_cflags="-I${INCLDIR}"
+if [ "${HAVE_CC65}" = "yes" ]; then
+config_script_libs="-L${LIBDIR} -lag_rg"
+config_libs_cc65=""
+bb_save_IFS=$IFS
+IFS=" "
+for lib in $config_script_libs; do
+case "$lib" in
+-l*)
+lib_bare=`echo "$lib" |sed "s/^-l//"`
+config_libs_cc65="${config_libs_cc65} ${prefix}/lib/${lib_bare}.lib"
+;;
+esac
+done
+IFS=$bb_save_IFS
+config_script_libs="$config_libs_cc65"
+else
+config_script_libs="-L${LIBDIR} -lag_rg"
+fi
+cat << EOT > $config_script_out
+#!/bin/sh
+# Generated by ${PACKAGE}'s BSDBuild configure script.
+#
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/)
+# ${PACKAGE} ${VERSION}
+
+prefix='${PREFIX}'
+exec_prefix='${EXEC_PREFIX}'
+exec_prefix_set='no'
+libdir='${LIBDIR}'
+
+usage='\
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
+
+if test \$# -eq 0; then
+	echo "\${usage}" 1>&2
+	exit 1
+fi
+
+while test \$# -gt 0; do
+	case "\$1" in
+	-*=*)
+		optarg=\`echo "\$1" | LC_ALL='C' sed 's/[-_a-zA-Z0-9]*=//'\`
+		;;
+	*)
+		optarg=
+		;;
+	esac
+
+	case \$1 in
+	--prefix=*)
+		prefix=\$optarg
+		if test \$exec_prefix_set = no ; then
+			exec_prefix=\$optarg
+		fi
+		;;
+	--prefix)
+		echo "\$prefix"
+		;;
+	--exec-prefix=*)
+		exec_prefix=\$optarg
+		exec_prefix_set=yes
+		;;
+	--exec-prefix)
+		echo "\$exec_prefix"
+		;;
+	--host)
+		echo '${host}'
+		;;
+	--version)
+		echo '${VERSION}'
+		;;
+	--release)
+		echo '${RELEASE}'
+		;;
+	--cflags)
+		echo '$config_script_cflags'
+		;;
+	--libs | --static-libs)
+		echo '$config_script_libs'
+		;;
+	*)
+		echo "\${usage}" 1>&2
+		exit 1
+		;;
+	esac
+	shift
+done
+EOT
+AVAIL_CONFIGSCRIPTS="$AVAIL_CONFIGSCRIPTS agar-rg-config"
+pkgconfig_module_out="agar-rg"
+pkgconfig_module_desc="Agar feature-based graphics library"
+pkgconfig_module_requires="agar-math agar"
+pkgconfig_module_conflicts=""
+pkgconfig_module_cflags="-I\${includedir}/agar ${OPENGL_CFLAGS}"
+pkgconfig_module_libs="-L\${libdir} -lag_rg"
+pkgconfig_module_libs_pvt="-lag_rg ${OPENGL_LIBS}"
+cat << EOT > $pkgconfig_module_out.pc
+# ${PACKAGE} pkg-config source file.
+#
+# Generated by ${PACKAGE}'s BSDBuild-based configure script.
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/).
+
+prefix=${PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: $pkgconfig_module_out
+Description: $pkgconfig_module_desc
+Version: ${VERSION}
+Requires: $pkgconfig_module_requires
+Conflicts: $pkgconfig_module_conflicts
+Libs: $pkgconfig_module_libs
+Libs.private: $pkgconfig_module_libs_pvt
+Cflags: $pkgconfig_module_cflags
+EOT
+AVAIL_PCMODULES="$AVAIL_PCMODULES agar-rg.pc"
+config_script_out="agar-sg-config"
+config_script_cflags="-I${INCLDIR} ${AGAR_MATH_CFLAGS} ${CG_CFLAGS} ${GLU_CFLAGS}"
+if [ "${HAVE_CC65}" = "yes" ]; then
+config_script_libs="-L${LIBDIR} -lag_sg ${AGAR_MATH_LIBS} ${CG_LIBS} ${GLU_LIBS}"
+config_libs_cc65=""
+bb_save_IFS=$IFS
+IFS=" "
+for lib in $config_script_libs; do
+case "$lib" in
+-l*)
+lib_bare=`echo "$lib" |sed "s/^-l//"`
+config_libs_cc65="${config_libs_cc65} ${prefix}/lib/${lib_bare}.lib"
+;;
+esac
+done
+IFS=$bb_save_IFS
+config_script_libs="$config_libs_cc65"
+else
+config_script_libs="-L${LIBDIR} -lag_sg ${AGAR_MATH_LIBS} ${CG_LIBS} ${GLU_LIBS}"
+fi
+cat << EOT > $config_script_out
+#!/bin/sh
+# Generated by ${PACKAGE}'s BSDBuild configure script.
+#
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/)
+# ${PACKAGE} ${VERSION}
+
+prefix='${PREFIX}'
+exec_prefix='${EXEC_PREFIX}'
+exec_prefix_set='no'
+libdir='${LIBDIR}'
+
+usage='\
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
+
+if test \$# -eq 0; then
+	echo "\${usage}" 1>&2
+	exit 1
+fi
+
+while test \$# -gt 0; do
+	case "\$1" in
+	-*=*)
+		optarg=\`echo "\$1" | LC_ALL='C' sed 's/[-_a-zA-Z0-9]*=//'\`
+		;;
+	*)
+		optarg=
+		;;
+	esac
+
+	case \$1 in
+	--prefix=*)
+		prefix=\$optarg
+		if test \$exec_prefix_set = no ; then
+			exec_prefix=\$optarg
+		fi
+		;;
+	--prefix)
+		echo "\$prefix"
+		;;
+	--exec-prefix=*)
+		exec_prefix=\$optarg
+		exec_prefix_set=yes
+		;;
+	--exec-prefix)
+		echo "\$exec_prefix"
+		;;
+	--host)
+		echo '${host}'
+		;;
+	--version)
+		echo '${VERSION}'
+		;;
+	--release)
+		echo '${RELEASE}'
+		;;
+	--cflags)
+		echo '$config_script_cflags'
+		;;
+	--libs | --static-libs)
+		echo '$config_script_libs'
+		;;
+	*)
+		echo "\${usage}" 1>&2
+		exit 1
+		;;
+	esac
+	shift
+done
+EOT
+AVAIL_CONFIGSCRIPTS="$AVAIL_CONFIGSCRIPTS agar-sg-config"
+pkgconfig_module_out="agar-sg"
+pkgconfig_module_desc="Agar 3D scene graph library"
+pkgconfig_module_requires="agar-math agar"
+pkgconfig_module_conflicts=""
+pkgconfig_module_cflags="-I\${includedir}/agar ${CG_CFLAGS} ${GLU_CFLAGS}"
+pkgconfig_module_libs="-L\${libdir} -lag_sg"
+pkgconfig_module_libs_pvt="-lag_sg ${AGAR_MATH_LIBS} ${CG_LIBS} ${GLU_LIBS}"
+cat << EOT > $pkgconfig_module_out.pc
+# ${PACKAGE} pkg-config source file.
+#
+# Generated by ${PACKAGE}'s BSDBuild-based configure script.
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/).
+
+prefix=${PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: $pkgconfig_module_out
+Description: $pkgconfig_module_desc
+Version: ${VERSION}
+Requires: $pkgconfig_module_requires
+Conflicts: $pkgconfig_module_conflicts
+Libs: $pkgconfig_module_libs
+Libs.private: $pkgconfig_module_libs_pvt
+Cflags: $pkgconfig_module_cflags
+EOT
+AVAIL_PCMODULES="$AVAIL_PCMODULES agar-sg.pc"
+config_script_out="agar-sk-config"
+config_script_cflags="-I${INCLDIR} ${AGAR_MATH_CFLAGS}"
+if [ "${HAVE_CC65}" = "yes" ]; then
+config_script_libs="-L${LIBDIR} -lag_sk ${AGAR_MATH_LIBS}"
+config_libs_cc65=""
+bb_save_IFS=$IFS
+IFS=" "
+for lib in $config_script_libs; do
+case "$lib" in
+-l*)
+lib_bare=`echo "$lib" |sed "s/^-l//"`
+config_libs_cc65="${config_libs_cc65} ${prefix}/lib/${lib_bare}.lib"
+;;
+esac
+done
+IFS=$bb_save_IFS
+config_script_libs="$config_libs_cc65"
+else
+config_script_libs="-L${LIBDIR} -lag_sk ${AGAR_MATH_LIBS}"
+fi
+cat << EOT > $config_script_out
+#!/bin/sh
+# Generated by ${PACKAGE}'s BSDBuild configure script.
+#
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/)
+# ${PACKAGE} ${VERSION}
+
+prefix='${PREFIX}'
+exec_prefix='${EXEC_PREFIX}'
+exec_prefix_set='no'
+libdir='${LIBDIR}'
+
+usage='\
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
+
+if test \$# -eq 0; then
+	echo "\${usage}" 1>&2
+	exit 1
+fi
+
+while test \$# -gt 0; do
+	case "\$1" in
+	-*=*)
+		optarg=\`echo "\$1" | LC_ALL='C' sed 's/[-_a-zA-Z0-9]*=//'\`
+		;;
+	*)
+		optarg=
+		;;
+	esac
+
+	case \$1 in
+	--prefix=*)
+		prefix=\$optarg
+		if test \$exec_prefix_set = no ; then
+			exec_prefix=\$optarg
+		fi
+		;;
+	--prefix)
+		echo "\$prefix"
+		;;
+	--exec-prefix=*)
+		exec_prefix=\$optarg
+		exec_prefix_set=yes
+		;;
+	--exec-prefix)
+		echo "\$exec_prefix"
+		;;
+	--host)
+		echo '${host}'
+		;;
+	--version)
+		echo '${VERSION}'
+		;;
+	--release)
+		echo '${RELEASE}'
+		;;
+	--cflags)
+		echo '$config_script_cflags'
+		;;
+	--libs | --static-libs)
+		echo '$config_script_libs'
+		;;
+	*)
+		echo "\${usage}" 1>&2
+		exit 1
+		;;
+	esac
+	shift
+done
+EOT
+AVAIL_CONFIGSCRIPTS="$AVAIL_CONFIGSCRIPTS agar-sk-config"
+pkgconfig_module_out="agar-sk"
+pkgconfig_module_desc="Agar sketch engine library"
+pkgconfig_module_requires="agar-math agar"
+pkgconfig_module_conflicts=""
+pkgconfig_module_cflags="-I\${includedir}/agar"
+pkgconfig_module_libs="-L\${libdir} -lag_sk"
+pkgconfig_module_libs_pvt="-lag_sk ${AGAR_MATH_LIBS}"
+cat << EOT > $pkgconfig_module_out.pc
+# ${PACKAGE} pkg-config source file.
+#
+# Generated by ${PACKAGE}'s BSDBuild-based configure script.
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/).
+
+prefix=${PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: $pkgconfig_module_out
+Description: $pkgconfig_module_desc
+Version: ${VERSION}
+Requires: $pkgconfig_module_requires
+Conflicts: $pkgconfig_module_conflicts
+Libs: $pkgconfig_module_libs
+Libs.private: $pkgconfig_module_libs_pvt
+Cflags: $pkgconfig_module_cflags
+EOT
+AVAIL_PCMODULES="$AVAIL_PCMODULES agar-sk.pc"
 config_script_out="agar-vg-config"
 config_script_cflags="-I${INCLDIR}"
 if [ "${HAVE_CC65}" = "yes" ]; then
@@ -12092,7 +13305,7 @@ pkgconfig_module_desc="Agar vector graphics library"
 pkgconfig_module_requires="agar"
 pkgconfig_module_conflicts=""
 pkgconfig_module_cflags="-I\${includedir}/agar ${MATH_CFLAGS}"
-pkgconfig_module_libs="-L\${libdir} -lag_vg ${MATH_LIBS}"
+pkgconfig_module_libs="-L\${libdir} -lag_vg"
 pkgconfig_module_libs_pvt="-lag_vg ${MATH_LIBS}"
 cat << EOT > $pkgconfig_module_out.pc
 # ${PACKAGE} pkg-config source file.
@@ -12115,125 +13328,6 @@ Libs.private: $pkgconfig_module_libs_pvt
 Cflags: $pkgconfig_module_cflags
 EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-vg.pc"
-config_script_out="agar-au-config"
-config_script_cflags="-I${INCLDIR} ${PORTAUDIO_CFLAGS} ${SNDFILE_CFLAGS}"
-if [ "${HAVE_CC65}" = "yes" ]; then
-config_script_libs="-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}"
-config_libs_cc65=""
-bb_save_IFS=$IFS
-IFS=" "
-for lib in $config_script_libs; do
-case "$lib" in
--l*)
-lib_bare=`echo "$lib" |sed "s/^-l//"`
-config_libs_cc65="${config_libs_cc65} ${prefix}/lib/${lib_bare}.lib"
-;;
-esac
-done
-IFS=$bb_save_IFS
-config_script_libs="$config_libs_cc65"
-else
-config_script_libs="-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}"
-fi
-cat << EOT > $config_script_out
-#!/bin/sh
-# Generated by ${PACKAGE}'s BSDBuild configure script.
-#
-# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/)
-# ${PACKAGE} ${VERSION}
-
-prefix='${PREFIX}'
-exec_prefix='${EXEC_PREFIX}'
-exec_prefix_set='no'
-libdir='${LIBDIR}'
-
-usage='\
-Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
-
-if test \$# -eq 0; then
-	echo "\${usage}" 1>&2
-	exit 1
-fi
-
-while test \$# -gt 0; do
-	case "\$1" in
-	-*=*)
-		optarg=\`echo "\$1" | LC_ALL='C' sed 's/[-_a-zA-Z0-9]*=//'\`
-		;;
-	*)
-		optarg=
-		;;
-	esac
-
-	case \$1 in
-	--prefix=*)
-		prefix=\$optarg
-		if test \$exec_prefix_set = no ; then
-			exec_prefix=\$optarg
-		fi
-		;;
-	--prefix)
-		echo "\$prefix"
-		;;
-	--exec-prefix=*)
-		exec_prefix=\$optarg
-		exec_prefix_set=yes
-		;;
-	--exec-prefix)
-		echo "\$exec_prefix"
-		;;
-	--host)
-		echo '${host}'
-		;;
-	--version)
-		echo '${VERSION}'
-		;;
-	--release)
-		echo '${RELEASE}'
-		;;
-	--cflags)
-		echo '$config_script_cflags'
-		;;
-	--libs | --static-libs)
-		echo '$config_script_libs'
-		;;
-	*)
-		echo "\${usage}" 1>&2
-		exit 1
-		;;
-	esac
-	shift
-done
-EOT
-AVAIL_CONFIGSCRIPTS="$AVAIL_CONFIGSCRIPTS agar-au-config"
-pkgconfig_module_out="agar-au"
-pkgconfig_module_desc="Agar audio library"
-pkgconfig_module_requires="agar ${PORTAUDIO_PC} ${SNDFILE_PC}"
-pkgconfig_module_conflicts=""
-pkgconfig_module_cflags="-I\${includedir}/agar"
-pkgconfig_module_libs="-L\${libdir} -lag_au"
-pkgconfig_module_libs_pvt="-lag_au ${MATH_LIBS}"
-cat << EOT > $pkgconfig_module_out.pc
-# ${PACKAGE} pkg-config source file.
-#
-# Generated by ${PACKAGE}'s BSDBuild-based configure script.
-# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/).
-
-prefix=${PREFIX}
-exec_prefix=\${prefix}
-libdir=\${exec_prefix}/lib
-includedir=\${prefix}/include
-
-Name: $pkgconfig_module_out
-Description: $pkgconfig_module_desc
-Version: ${VERSION}
-Requires: $pkgconfig_module_requires
-Conflicts: $pkgconfig_module_conflicts
-Libs: $pkgconfig_module_libs
-Libs.private: $pkgconfig_module_libs_pvt
-Cflags: $pkgconfig_module_cflags
-EOT
-AVAIL_PCMODULES="$AVAIL_PCMODULES agar-au.pc"
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
 echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
 echo "AVAIL_CONFIGSCRIPTS=$AVAIL_CONFIGSCRIPTS" >>Makefile.config
@@ -12248,6 +13342,10 @@ echo "CC_COMPILE=$CC_COMPILE" >>Makefile.config
 echo "mdefs[\"CC_COMPILE\"] = \"$CC_COMPILE\"" >>configure.lua
 echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "CG_CFLAGS=$CG_CFLAGS" >>Makefile.config
+echo "mdefs[\"CG_CFLAGS\"] = \"$CG_CFLAGS\"" >>configure.lua
+echo "CG_LIBS=$CG_LIBS" >>Makefile.config
+echo "mdefs[\"CG_LIBS\"] = \"$CG_LIBS\"" >>configure.lua
 echo "CLOCK_CFLAGS=$CLOCK_CFLAGS" >>Makefile.config
 echo "mdefs[\"CLOCK_CFLAGS\"] = \"$CLOCK_CFLAGS\"" >>configure.lua
 echo "CLOCK_LIBS=$CLOCK_LIBS" >>Makefile.config
@@ -12290,6 +13388,10 @@ echo "GETTEXT_CFLAGS=$GETTEXT_CFLAGS" >>Makefile.config
 echo "mdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
 echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
 echo "mdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
+echo "GLU_CFLAGS=$GLU_CFLAGS" >>Makefile.config
+echo "mdefs[\"GLU_CFLAGS\"] = \"$GLU_CFLAGS\"" >>configure.lua
+echo "GLU_LIBS=$GLU_LIBS" >>Makefile.config
+echo "mdefs[\"GLU_LIBS\"] = \"$GLU_LIBS\"" >>configure.lua
 echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
 echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
 echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
@@ -12312,6 +13414,8 @@ echo "HAVE_CC_MWINDOWS=$HAVE_CC_MWINDOWS" >>Makefile.config
 echo "mdefs[\"HAVE_CC_MWINDOWS\"] = \"$HAVE_CC_MWINDOWS\"" >>configure.lua
 echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
+echo "HAVE_CG=$HAVE_CG" >>Makefile.config
+echo "mdefs[\"HAVE_CG\"] = \"$HAVE_CG\"" >>configure.lua
 echo "HAVE_CLOCK_GETTIME=$HAVE_CLOCK_GETTIME" >>Makefile.config
 echo "mdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
 echo "HAVE_CLOCK_WIN32=$HAVE_CLOCK_WIN32" >>Makefile.config
@@ -12342,6 +13446,8 @@ echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
 echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
 echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
 echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
+echo "HAVE_GLU=$HAVE_GLU" >>Makefile.config
+echo "mdefs[\"HAVE_GLU\"] = \"$HAVE_GLU\"" >>configure.lua
 echo "HAVE_GLX=$HAVE_GLX" >>Makefile.config
 echo "mdefs[\"HAVE_GLX\"] = \"$HAVE_GLX\"" >>configure.lua
 echo "HAVE_ICONV=$HAVE_ICONV" >>Makefile.config
@@ -12376,6 +13482,8 @@ echo "HAVE_OBJC=$HAVE_OBJC" >>Makefile.config
 echo "mdefs[\"HAVE_OBJC\"] = \"$HAVE_OBJC\"" >>configure.lua
 echo "HAVE_OBJC_WARNINGS=$HAVE_OBJC_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_OBJC_WARNINGS\"] = \"$HAVE_OBJC_WARNINGS\"" >>configure.lua
+echo "HAVE_ODE=$HAVE_ODE" >>Makefile.config
+echo "mdefs[\"HAVE_ODE\"] = \"$HAVE_ODE\"" >>configure.lua
 echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
 echo "mdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
 echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >>Makefile.config
@@ -12474,6 +13582,10 @@ echo "MYSQL_CFLAGS=$MYSQL_CFLAGS" >>Makefile.config
 echo "mdefs[\"MYSQL_CFLAGS\"] = \"$MYSQL_CFLAGS\"" >>configure.lua
 echo "MYSQL_LIBS=$MYSQL_LIBS" >>Makefile.config
 echo "mdefs[\"MYSQL_LIBS\"] = \"$MYSQL_LIBS\"" >>configure.lua
+echo "ODE_CFLAGS=$ODE_CFLAGS" >>Makefile.config
+echo "mdefs[\"ODE_CFLAGS\"] = \"$ODE_CFLAGS\"" >>configure.lua
+echo "ODE_LIBS=$ODE_LIBS" >>Makefile.config
+echo "mdefs[\"ODE_LIBS\"] = \"$ODE_LIBS\"" >>configure.lua
 echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
 echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
 echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
@@ -12548,8 +13660,16 @@ echo "SUBDIR_dev=$SUBDIR_dev" >>Makefile.config
 echo "mdefs[\"SUBDIR_dev\"] = \"$SUBDIR_dev\"" >>configure.lua
 echo "SUBDIR_gui=$SUBDIR_gui" >>Makefile.config
 echo "mdefs[\"SUBDIR_gui\"] = \"$SUBDIR_gui\"" >>configure.lua
+echo "SUBDIR_map=$SUBDIR_map" >>Makefile.config
+echo "mdefs[\"SUBDIR_map\"] = \"$SUBDIR_map\"" >>configure.lua
 echo "SUBDIR_math=$SUBDIR_math" >>Makefile.config
 echo "mdefs[\"SUBDIR_math\"] = \"$SUBDIR_math\"" >>configure.lua
+echo "SUBDIR_rg=$SUBDIR_rg" >>Makefile.config
+echo "mdefs[\"SUBDIR_rg\"] = \"$SUBDIR_rg\"" >>configure.lua
+echo "SUBDIR_sg=$SUBDIR_sg" >>Makefile.config
+echo "mdefs[\"SUBDIR_sg\"] = \"$SUBDIR_sg\"" >>configure.lua
+echo "SUBDIR_sk=$SUBDIR_sk" >>Makefile.config
+echo "mdefs[\"SUBDIR_sk\"] = \"$SUBDIR_sk\"" >>configure.lua
 echo "SUBDIR_vg=$SUBDIR_vg" >>Makefile.config
 echo "mdefs[\"SUBDIR_vg\"] = \"$SUBDIR_vg\"" >>configure.lua
 echo "SYSCONFDIR=$SYSCONFDIR" >>Makefile.config

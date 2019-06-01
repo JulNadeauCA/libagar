@@ -1,4 +1,5 @@
-.\" Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+.\"
+.\" Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@hypertriton.com>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -119,11 +120,8 @@ object system which is used extensively by all other Agar libraries.
 It also provides cross-platform interfaces to operating system services
 (e.g., filesystems, network services, threads).
 .Pp
-To use this library, link against
-.Sq agar-config --libs
-(non-graphical applications can also link against
+To use this library (without GUI), link against
 .Sq agar-core-config --libs
-to avoid the GUI library).
 .Pp
 .\" SYNC WITH AG_Core(3) "SEE ALSO"
 .Bl -tag -width "AG_DataSource(3) " -compact
@@ -174,16 +172,12 @@ Datafile versioning.
 HTTP/1.1 application server (needs
 .Sq --enable-web ) .
 .El
-.Sh AGAR-GUI
+.Sh AGAR-GUI: BASE SYSTEM
 The
 .Em ag_gui
 library implements the Agar GUI system.
-It also includes a set of standard, built-in widgets.
-The Agar GUI is implemented in a fashion independent of the underlying graphics API
-(i.e., direct-video, OpenGL), and is designed to provide the highest
-performance and efficiency achievable with any given graphics system.
 .Pp
-To use this library, link against
+To use this library (and ag_core), link against
 .Sq agar-config --libs .
 .Pp
 .Bl -tag -width "AG_WidgetPrimitives(3) " -compact
@@ -225,12 +219,10 @@ Widget rendering primitives.
 Basic window / window manager interface.
 .El
 .Sh AGAR-GUI: STANDARD WIDGETS
-The standard Agar widget set provides the basic GUI functionality useful to
-the widest range of applications.
-Developers are encouraged to implement more specialized and
-application-specific widgets (this is made simple by use of the
-.Xr AG_Object 3
-system).
+The standard Agar widget set provides common GUI functionality useful
+to a wide range of applications.
+However, this collection is meant to be extended and developers are always
+encouraged to implement more specialized and application-specific widgets.
 .Pp
 .Bl -tag -width "AG_ObjectSelector(3) " -compact
 .It Xr AG_Box 3
@@ -323,52 +315,13 @@ which displays a button instead of a text input.
 Alternate interface to
 .Xr AG_Box 3 .
 .El
-.Sh AGAR-VG
-The
-.Em ag_vg
-library is a simple 2D vector graphics library which allows users to view and
-edit hierarchical sketches consisting of elements with attributes
-such as lines, curves and text.
-It uses linear transformations to define the placement of geometrical entities.
-.Pp
-Following the Agar design philosophy, the
-.Em ag_vg
-library only includes the most basic, generic entity classes (e.g., lines,
-arcs, text) as built-in types, but allows user and application-specific vector
-graphics entities through its class-registration interface.
-.Pp
-Recommendation: For vector graphics applications such as CAD systems,
-where placement of entities is best described using geometrical constraints
-(e.g., distances and angles), check out the Agar-based FreeSG library
-(http://freesg.org/).
-.Pp
-To use this library, link against
-.Sq agar-vg-config --libs .
-.Pp
-.Bl -tag -width "VG_Polygon(3) " -compact
-.It Xr VG 3
-Vector drawing object.
-.It Xr VG_View 3
-Agar widget for visualization and edition of drawings.
-.It Xr VG_Arc 3
-Arc entity.
-.It Xr VG_Circle 3
-Circle entity.
-.It Xr VG_Line 3
-Line entity.
-.It Xr VG_Polygon 3
-Polygon entity.
-.It Xr VG_Text 3
-Text entity.
-.El
 .Sh AGAR-MATH
 .Em ag_math
-is a general-purpose math library focused on providing consistent
-structures and highly optimized routines.
-In addition to linear algebra, ag_math also provides useful computational
-geometry structures and methods (e.g., intersections, tesselations), portable
-complex-number/quaternion routines and some useful Agar-GUI widgets and
-extensions.
+is a general-purpose math library focused on providing consistent structures
+and simple, optimized routines.
+In addition to basic linear algebra, ag_math also provides some computational
+geometry structures and methods (intersections, tesselations).
+It also extends Agar-GUI with math-oriented widgets and extensions.
 .Pp
 To use this library, link against
 .Sq agar-math-config --libs .
@@ -426,6 +379,107 @@ Basic linear algebra routines specific to vectors.
 In addition to vectors in R^n, specialized operations are provided for
 vectors in R^2, R^3 and R^4.
 .El
+.Sh AGAR-SG
+.Em ag_sg
+implements 3D scene-graph, rendering and geometry methods.
+.Pp
+To use this library, link against
+.Sq agar-sg-config --libs
+.Pp
+.Bl -tag -width "SG_CgProgram(3) " -compact
+.It Xr SG 3
+Base scene graph object.
+.It Xr SG_Image 3
+Textured polygon generated from an image surface.
+.It Xr SG_Camera 3
+Viewpoint in scene (tied to the
+.Xr SG_View 3
+widget).
+.It Xr SG_CgProgram 3
+Vertex/fragment program in the Cg language.
+.It Xr SG_Circle 3
+Circle (reference geometry).
+.It Xr SG_Geom 3
+Base class for reference geometry objects.
+.It Xr SG_Light 3
+Light source.
+.It Xr SG_Node 3
+Base class for all elements of a
+.Xr SG 3
+scene.
+.It Xr SG_Object 3
+Base class for polyhedral objects (using boundary representation).
+.It Xr SG_Plane 3
+Plane (reference geometry).
+.It Xr SG_Point 3
+Single point (reference geometry).
+.It Xr SG_Polygon 3
+Polygon (reference geometry).
+.It Xr SG_PolyBall 3
+Sphere (as polyhedral approximation).
+.It Xr SG_PolyBox 3
+Rectangular box (as polyhedron).
+.It Xr SG_Program 3
+Base class for vertex or fragment programs.
+.It Xr SG_Rectangle 3
+Rectangle (reference geometry).
+.It Xr SG_Sphere 3
+Sphere (reference geometry).
+.It Xr SG_Texture 3
+A texture compiled from a set of surfaces.
+May also be used to specify parameters for the fixed lighting model.
+.It Xr SG_Triangle 3
+Triangle (reference geometry).
+.It Xr SG_View 3
+Agar visualization and editor widget for
+.Xr SG 3
+scenes.
+.It Xr SG_Voxel 3
+Voxel object.
+.El
+.Sh AGAR-SK
+The
+.Em ag_sk
+library implements dimensioned 2D sketching and constraint solving.
+Sketches can contain sets of metric relations (i.e., distances, angles)
+and logical relations (i.e., coincidence, parallelism, tangency), and SK's
+attempts to find a solution using degree-of-freedom analysis.
+.Pp
+To use this library, link against
+.Sq agar-sk-config --libs .
+.Pp
+.Bl -tag -width "SK_View(3) " -compact
+.It Xr SK 3
+Base sketch object.
+.It Xr SK_View 3
+Agar visualization widget for sketch objects.
+.El
+.Sh AGAR-RG
+The
+.Em ag_rg
+library implements feature-based graphical tiles.
+.Pp
+To use this library, link against
+.Sq agar-rg-config --libs .
+.Pp
+.Bl -tag -width "RG_Tileview(3) " -compact
+.It Xr RG 3
+Feature-based pixel graphics.
+.It Xr RG_Anim 3
+Animation element
+.It Xr RG_Feature 3
+Feature framework
+.It Xr RG_Pixmap 3
+Pixmap image element
+.It Xr RG_Sketch 3
+Vector sketch element
+.It Xr RG_Texture 3
+Texture element
+.It Xr RG_Tile 3
+Base tile element
+.It Xr RG_Tileview 3
+Graphical edition and display widget
+.El
 .Sh AGAR-AU
 The
 .Em ag_au
@@ -441,4 +495,51 @@ Audio library initialization.
 Structure containing an audio stream.
 .It Xr AU_DevOut 3
 Interface to audio output device.
+.El
+.Sh AGAR-MAP
+The
+.Em ag_map
+library extends
+.Em RG
+to entire scenes / levels.
+.Pp
+To use this library, link against
+.Sq agar-map-config --libs .
+.Pp
+.Bl -tag -width "MAP_View (3) " -compact
+.It Xr MAP 3
+Base map object.
+.It Xr MAP_Actor 3
+Map object rendered dynamically.
+.It Xr MAP_View 3
+Editor and display widget.
+.El
+.Sh AGAR-VG
+The
+.Em ag_vg
+library is a simple 2D vector graphics library which allows users to view and
+edit hierarchical sketches consisting of elements with attributes
+such as lines, curves and text.
+It uses linear transformations to define the placement of geometrical entities.
+Following the Agar design philosophy, new entity classes can be defined through
+a class-registration interface.
+.Pp
+To use this library, link against
+.Sq agar-vg-config --libs .
+.Pp
+.Bl -tag -width "VG_Polygon(3) " -compact
+.It Xr VG 3
+Vector drawing object.
+.It Xr VG_View 3
+Agar widget for visualization and edition of drawings.
+.It Xr VG_Arc 3
+Arc entity.
+.It Xr VG_Circle 3
+Circle entity.
+.It Xr VG_Line 3
+Line entity.
+.It Xr VG_Polygon 3
+Polygon entity.
+.It Xr VG_Text 3
+Text entity.
 .El

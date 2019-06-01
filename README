@@ -72,17 +72,19 @@ How to contribute
 -----------------
 See: http://libagar.org/contribute.html.
 
-Libraries and toolkits based on Agar
-------------------------------------
-Here are some useful libraries which implement new Agar widgets and
-extend Agar's functionality toward more specific applications:
+Agar-based libraries and toolkits
+---------------------------------
+Here are some useful libraries built on top of ag_core and ag_gui which
+extend Agar's functionality towards more specific applications:
 
-Agar-AU		Portable audio interface (bundled, use `agar-au-config`)
-Agar-MATH	General-purpose math library (bundled, use `agar-math-config`)
-Agar-VG		Vector graphics library (bundled, use `agar-vg-config`)
-Agar-RG		Raster graphics library (bundled, use `agar-rg-config`)
-Agar-DEV	Developer/debugging tools (bundled, use `agar-dev-config`)
-FreeSG		2D/3D graphics engine (http://freesg.org/)
-Edacious	Electronics design (http://edacious.org/)
-CADTools	Computer-aided design (http://cadtools.hypertriton.com/)
+Agar-AU	   Portable audio interface        (bundled as `agar-au-config`)
+Agar-DEV   Developer/debugging tools       (bundled as `agar-dev-config`)
+Agar-MAP   Feature-based tile map engine   (bundled as `agar-map-config`)
+Agar-MATH  General-purpose math library    (bundled as `agar-math-config`)
+Agar-RG    Feature-based pixel graphics    (bundled as `agar-rg-config`)
+Agar-SG    Scene graph and 3D engine       (bundled as `agar-sg-config`)
+Agar-SK    Dimensioned 2D sketching engine (bundled as `agar-sk-config`)
+Agar-VG    Vector graphics library         (bundled as `agar-vg-config`)
+Edacious   Electronics design              (http://edacious.org/)
+CADTools   Computer-aided design           (http://cadtools.hypertriton.com/)
 

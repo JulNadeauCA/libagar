@@ -1,0 +1,16 @@
+
+sgedit
+======
+
+What is it?
+-----------
+sgedit is an editor for SG(3) scenes. It is meant as a convenient tool for
+editing scenes built into applications. The sgedit program itself is minimal,
+since most of the edition features are built into the SG node classes
+themselves.
+
+License
+-------
+sgedit is freely distributable under the same license as Agar itself,
+a revised two-clause BSD license (http://libagar.org/license.html).
+

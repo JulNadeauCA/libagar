@@ -1,0 +1,156 @@
+.\" Copyright (c) 2011-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd SEPTEMBER 1, 2010
+.Dt SG_INTRO 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm SG_Intro
+.Nd Agar-SG introduction
+.Sh DESCRIPTION
+Agar-SG is a general-purpose scene-graph library built on top of the Agar
+library (http://libagar.org/).
+Agar-SG implements a compact and easily extensible object/scene graph
+representation, designed to simplify such tasks as real-time rendering and
+geometrical queries.
+.Sh SG LIBRARY
+The scene-graph library
+.Em SG
+implements 3D rendering and geometry methods.
+.Pp
+To use this library, link against
+.Sq agar-sg-config --libs
+.Pp
+.Bl -tag -width "SG_CgProgram(3) " -compact
+.It Xr SG 3
+Base scene graph object.
+.It Xr SG_Image 3
+Textured polygon generated from an image surface.
+.It Xr SG_Camera 3
+Viewpoint in scene (tied to the
+.Xr SG_View 3
+widget).
+.It Xr SG_CgProgram 3
+Vertex/fragment program in the Cg language.
+.It Xr SG_Circle 3
+Circle (reference geometry).
+.It Xr SG_Geom 3
+Base class for reference geometry objects.
+.It Xr SG_Light 3
+Light source.
+.It Xr SG_Node 3
+Base class for all elements of a
+.Xr SG 3
+scene.
+.It Xr SG_Object 3
+Base class for polyhedral objects (using boundary representation).
+.It Xr SG_Plane 3
+Plane (reference geometry).
+.It Xr SG_Point 3
+Single point (reference geometry).
+.It Xr SG_Polygon 3
+Polygon (reference geometry).
+.It Xr SG_PolyBall 3
+Sphere (as polyhedral approximation).
+.It Xr SG_PolyBox 3
+Rectangular box (as polyhedron).
+.It Xr SG_Program 3
+Base class for vertex or fragment programs.
+.It Xr SG_Rectangle 3
+Rectangle (reference geometry).
+.It Xr SG_Sphere 3
+Sphere (reference geometry).
+.It Xr SG_Texture 3
+A texture compiled from a set of surfaces.
+May also be used to specify parameters for the fixed lighting model.
+.It Xr SG_Triangle 3
+Triangle (reference geometry).
+.It Xr SG_View 3
+Agar visualization widget for displaying a SG scene.
+.It Xr SG_Voxel 3
+Voxel object.
+.El
+.Sh SK LIBRARY
+The
+.Em SK
+library implements dimensioned 2D sketching and constraint solving.
+Sketches can contain sets of metric relations (i.e., distances, angles)
+and logical relations (i.e., coincidence, parallelism, tangency), and SK's
+attempts to find a solution using degree-of-freedom analysis.
+.Pp
+To use this library, link against
+.Sq agar-sk-config --libs .
+.Pp
+.Bl -tag -width "SK_View(3) " -compact
+.It Xr SK 3
+Base sketch object.
+.It Xr SK_View 3
+Agar visualization widget for sketch objects.
+.El
+.Sh RG LIBRARY
+The
+.Em RG
+library implements feature-based graphical tiles.
+.Pp
+To use this library, link against
+.Sq agar-rg-config --libs .
+.Pp
+.Bl -tag -width "RG_Tileview(3) " -compact
+.It Xr RG 3
+Feature-based pixel graphics.
+.It Xr RG_Anim 3
+Animation element
+.It Xr RG_Feature 3
+Feature framework
+.It Xr RG_Pixmap 3
+Pixmap image element
+.It Xr RG_Sketch 3
+Vector sketch element
+.It Xr RG_Texture 3
+Texture element
+.It Xr RG_Tile 3
+Base tile element
+.It Xr RG_Tileview 3
+Graphical edition and display widget
+.El
+.Sh MAP LIBRARY
+The
+.Em MAP
+library extends
+.Em RG
+to entire scenes / levels.
+.Pp
+To use this library, link against
+.Sq agar-map-config --libs .
+.Pp
+.Bl -tag -width "MAP_View (3) " -compact
+.It Xr MAP 3
+Base map object.
+.It Xr MAP_Actor 3
+Map object rendered dynamically.
+.It Xr MAP_View 3
+Editor and display widget.
+.El
