@@ -21,10 +21,8 @@ SRCS_GENERATED= agar-data_source.ads \
 		agar-object.ads \
 		agar-timer.ads
 
-SRCS=		ag_data_source.c \
-		ag_dso.c \
+SRCS=		ag_dso.c \
 		ag_event.c \
-		ag_object.c \
 		agar.ads \
 		agar-config.adb \
 		agar-data_source.adb \
@@ -62,9 +60,6 @@ agar-event.ads: agar-event.ads.in ${TYPEMAP}
 
 agar-timer.ads: agar-timer.ads.in ${TYPEMAP}
 	${TYPESUBST} agar-timer.ads.in ${TYPEMAP} > $@
-
-agar-variable.ads: agar-variable.ads.in ${TYPEMAP}
-	${TYPESUBST} agar-variable.ads.in ${TYPEMAP} > $@
 
 configure: configure.in
 	cat configure.in | mkconfigure > configure

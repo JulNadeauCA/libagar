@@ -1,7 +1,6 @@
 with Agar;
 with Agar.Object;
 with Agar.Data_Source;
-with Agar.Variable;
 with System.Address_To_Access_Conversions;
 with Interfaces.C;
 
@@ -12,7 +11,6 @@ with Interfaces.C;
 package Animal is
   package OBJ renames Agar.Object; 
   package DS renames Agar.Data_Source; 
-  package AV renames Agar.Variable; 
   package C renames Interfaces.C;
   
   use type C.int;

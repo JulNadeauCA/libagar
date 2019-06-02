@@ -109,6 +109,12 @@ package Agar.Event is
   procedure Push_Long_Long_Float
     (Event : in Event_not_null_Access;
      Value : in Long_Long_Float);
+  
+  --
+  -- Pop the last argument off an Event argument stack
+  --
+  function Pop_Address
+    (Event : in Event_not_null_Access) return System.Address;
 
   --
   -- Extract an argument by index.
@@ -180,7 +186,7 @@ package Agar.Event is
   -- Push argument
   --
 
-  procedure ag_event_push_ptr
+  procedure ag_event_push_pointer
     (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr;
      Value : in System.Address)
@@ -226,6 +232,10 @@ package Agar.Event is
     (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr;
      Value : in C.long_double)
+    with Import, Convention => C;
+  
+  function ag_event_pop_pointer
+    (Event : in Event_not_null_Access) return System.Address
     with Import, Convention => C;
   
   --

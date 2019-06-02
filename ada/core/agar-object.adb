@@ -75,7 +75,7 @@ package body Agar.Object is
   begin
     AG_ObjectAttach
       (Parent => Parent,
-       Object => Object);
+       Child  => Child);
   end;
 
   function Find
@@ -345,6 +345,17 @@ package body Agar.Object is
   end;
 
   function Is_Of_Class
+    (Object  : in Object_Not_Null_Access;
+     Pattern : in String) return Boolean
+  is
+    Ch_Pattern : aliased C.char_array := C.To_C(Pattern);
+  begin
+    return AG_OfClass
+      (Object  => Object,
+       Pattern => CS.To_Chars_Ptr(Ch_Pattern'Unchecked_Access)) = 1;
+  end;
+  
+  function Is_A
     (Object  : in Object_Not_Null_Access;
      Pattern : in String) return Boolean
   is

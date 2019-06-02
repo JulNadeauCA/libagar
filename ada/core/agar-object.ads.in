@@ -12,12 +12,16 @@ with Interfaces.C.Strings;
 with System;
 
 --
--- Interface to the Agar Object System. This defines the base type, Object
--- (which maps transparently to AG_Object(3) in C). This allows new Agar object
--- classes to be written in Ada.
+-- Interface to the Agar Object System. This defines the base type, Agar.Object.
+-- It maps transparently to AG_Object(3) in C. This allows new Agar object
+-- classes to be written in Ada (and subclasses of Ada-implemented classes
+-- to be written also in Ada, or again in C).
 --
--- Agar object instances are limited records derived from Object. Similarly,
--- class-wide data is represented by limited records derived from Class.
+-- In C, Agar objects are structs derived from AG_Object. Similarly in Ada,
+-- Agar object instances are limited records which derive from Agar.Object.
+--
+-- Shared, class-wide data is represented by limited records which derive
+-- from Agar.Class (equivalent to AG_ObjectClass in C).
 --
 
 package Agar.Object is
@@ -144,9 +148,11 @@ package Agar.Object is
   OBJECT_DEBUG_DATA            : constant C.unsigned := 16#0_4000#;
   OBJECT_IN_ATTACH_ROUTINE     : constant C.unsigned := 16#0_8000#;
   OBJECT_IN_DETACH_ROUTINE     : constant C.unsigned := 16#1_0000#;
+  OBJECT_BOUND_EVENTS          : constant C.unsigned := 16#2_0000#;
 
   type Object is limited record
     Name            : Object_Name;
+    -- TODO 1.6 archivePath/savePfx are going away
     Archive_Path    : CS.chars_ptr;
     Save_Prefix     : CS.chars_ptr;
     Class           : Class_not_null_Access;
@@ -295,8 +301,7 @@ package Agar.Object is
   --
   procedure Attach
     (Parent : in Object_Access;
-     Object : in Object_not_null_Access)
-    with Import, Convention => C, Link_Name => "AG_ObjectAttach";
+     Child  : in Object_not_null_Access);
 
   --
   -- Detach Object from its current Parent (if any).
@@ -533,6 +538,9 @@ package Agar.Object is
   -- "Vehicle:Car:*" <= True if this is a Car (or a subclass of Car).
   --
   function Is_Of_Class
+    (Object  : in Object_not_null_Access;
+     Pattern : in String) return Boolean;
+  function Is_A
     (Object  : in Object_not_null_Access;
      Pattern : in String) return Boolean;
 

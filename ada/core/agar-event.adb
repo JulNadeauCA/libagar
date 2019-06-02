@@ -21,7 +21,7 @@
 package body Agar.Event is
 
   ----------------------------------
-  -- Push Event Argument with tag --
+  -- Push a tagged Event Argument --
   ----------------------------------
   procedure Push_Address
     (Event : in Event_Not_Null_Access;
@@ -30,7 +30,7 @@ package body Agar.Event is
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);
   begin
-    ag_event_push_ptr
+    ag_event_push_pointer
       (Event => Event,
        Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access),
        Value => Value);
@@ -139,14 +139,14 @@ package body Agar.Event is
        Value => C.long_double(Value));
   end Push_Long_Long_Float;
  
-  ----------------------------------
-  -- Push untagged Event argument --
-  ----------------------------------
+  -------------------------------------
+  -- Push an untagged Event argument --
+  -------------------------------------
   procedure Push_Address
     (Event : in Event_Not_Null_Access;
      Value : in System.Address)
   is begin
-    ag_event_push_ptr
+    ag_event_push_pointer
       (Event => Event,
        Name  => CS.Null_Ptr,
        Value => Value);
@@ -223,6 +223,16 @@ package body Agar.Event is
        Name  => CS.Null_Ptr,
        Value => C.long_double(Value));
   end Push_Long_Long_Float;
+  
+  ------------------------------------
+  -- Pop an untagged Event Argument --
+  ------------------------------------
+  
+  function Pop_Address
+    (Event : in Event_Not_Null_Access) return System.Address
+  is begin
+    return ag_event_pop_pointer (Event => Event);
+  end Pop_Address;
  
   ----------------------------
   -- Extract Event Argument --
