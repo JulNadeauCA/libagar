@@ -2,8 +2,6 @@ TOP=	../..
 include Makefile.config
 include ${TOP}/core/Makefile.inc
 
-USE_LIBTOOL=	No
-
 LIB=		ag_ada_core
 LIB_CURRENT=	1
 LIB_REVISION=	0
@@ -31,7 +29,8 @@ SRCS=		ag_dso.c \
 		agar-event.adb \
 		agar-init.adb \
 		agar-object.adb \
-		agar-timer.adb
+		agar-timer.adb \
+		agar-types.ads
 
 CONFIGSCRIPTS=	agar-ada-core-config
 PCMODULES=	agar-ada-core.pc
@@ -39,10 +38,14 @@ PCMODULES=	agar-ada-core.pc
 TYPEMAP=	agar-core.types
 TYPESUBST=	${SH} ${TOP}/mk/typesubst.sh
 
-DATAFILES=	${TYPEMAP} \
-		LICENSE
+ADAPREPFILE=	agar-core.def
 
-CLEANFILES=	${SRCS_GENERATED}
+DATAFILES=	${TYPEMAP} \
+		LICENSE \
+		agar-core.def
+
+CLEANFILES+=	${SRCS_GENERATED}
+CLEANDIRFILES+=	${TYPEMAP} ${ADAPREPFILE}
 
 include ${TOP}/mk/build.lib.mk
 

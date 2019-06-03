@@ -226,46 +226,15 @@ package Agar.Object is
   type Header_Access is access all Object_Header with Convention => C;
   subtype Header_not_null_Access is not null Header_Access;
   
-  -----------------------------
-  -- Typed Virtual Functions --
-  -----------------------------
+  -----------------------
+  -- Virtual Functions --
+  -----------------------
   type Function_Access is access all EV.Event with Convention => C;
   subtype Function_not_null_Access is not null Function_Access;
-  
+
   type Event_Func_Access is not null access procedure
-    (Event : EV.Event_Access)                              with Convention => C;
-  type Unsigned_Func_Access is not null access function
-    (Event : EV.Event_Access) return C.unsigned            with Convention => C;
-  type Integer_Func_Access is not null access function
-    (Event : EV.Event_Access) return C.int                 with Convention => C;
-  type Unsigned_8_Func_Access is not null access function
-    (Event : EV.Event_Access) return Unsigned_8            with Convention => C;
-  type Signed_8_Func_Access is not null access function
-    (Event : EV.Event_Access) return Signed_8              with Convention => C;
-  type Unsigned_16_Func_Access is not null access function
-    (Event : EV.Event_Access) return Unsigned_16           with Convention => C;
-  type Signed_16_Func_Access is not null access function
-    (Event : EV.Event_Access) return Signed_16             with Convention => C;
-  type Unsigned_32_Func_Access is not null access function
-    (Event : EV.Event_Access) return Unsigned_32           with Convention => C;
-  type Signed_32_Func_Access is not null access function
-    (Event : EV.Event_Access) return Signed_32             with Convention => C;
-  type Unsigned_64_Func_Access is not null access function
-    (Event : EV.Event_Access) return Unsigned_64           with Convention => C;
-  type Signed_64_Func_Access is not null access function
-    (Event : EV.Event_Access) return Signed_64             with Convention => C;
-  type Float_Func_Access is not null access function
-    (Event : EV.Event_Access) return Float                 with Convention => C;
-  type Double_Func_Access is not null access function
-    (Event : EV.Event_Access) return Double                with Convention => C;
-  type Long_Double_Func_Access is not null access function
-    (Event : EV.Event_Access) return Long_Double           with Convention => C;
-  type String_Func_Access is not null access function
-    (Event  : EV.Event_Access;
-     Buffer : C.char_array;
-     Size   : C.size_t) return C.size_t                    with Convention => C;
-  type Pointer_Func_Access is not null access function
-    (Event : EV.Event_Access) return System.Address        with Convention => C;
+    (Event : EV.Event_Access)
+    with Convention => C;
 
   --
   -- Create a new instance of Class under Parent with the given name. Fail

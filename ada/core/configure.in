@@ -24,6 +24,7 @@ default_dir(INCLDIR, "${PREFIX}/include/agar/ada")
 require(cc)
 require(ada)
 require(agar-core, 1.6.0, ${prefix_agar})
+require(agar-core.defs, 1.6.0, ${prefix_agar})
 require(agar-core.types, 1.6.0, ${prefix_agar})
 
 c_incdir($SRC)
@@ -36,6 +37,7 @@ ada_option(-fstack-check)
 ada_option(-gnatVa)
 ada_option(-gnato)
 ada_option(-gnatE)
+ada_option(-gnatep=adaprep.def)
 
 if [ "${enable_warnings}" = "yes" ]; then
 	ada_option(-gnatwaleF)

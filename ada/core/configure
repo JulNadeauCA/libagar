@@ -2066,6 +2066,366 @@ echo '* ' >>config.log
 echo "Required dependency agar-core version mismatch"
 exit 1
 fi
+$ECHO_N 'checking for Agar-Core preprocessor defs...'
+$ECHO_N 'checking for Agar-Core preprocessor defs...' >>config.log
+# BEGIN agar-core.defs(1.6.0 ${prefix_agar})
+AGAR_VERSION=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-core-config" ]; then
+AGAR_VERSION=`${prefix_agar}/bin/agar-core-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-core-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/agar-core-config" ]; then
+AGAR_VERSION=`${path}/agar-core-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-core-config"
+break
+elif [ -e "${path}/agar-core-config.exe" ]; then
+AGAR_VERSION=`${path}/agar-core-config.exe --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-core-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+if [ "${AGAR_CORE_VERSION}" != "" ]; then
+if [ "${prefix_agar}" != "" ]; then
+echo "yes ($AGAR_CORE_VERSION in ${prefix_agar})"
+echo "yes ($AGAR_CORE_VERSION in ${prefix_agar})" >>config.log
+else
+echo "yes ($AGAR_CORE_VERSION)"
+echo "yes ($AGAR_CORE_VERSION)" >>config.log
+fi
+MK_VERSION_MAJOR=`echo "$AGAR_CORE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$AGAR_CORE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$AGAR_CORE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK=no
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+MK_VERSION_OK=yes
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+if [ "$MK_VERSION_MINOR" = '' ]; then
+MK_VERSION_OK=yes
+else
+if [ $MK_VERSION_MINOR -gt 6 ]; then
+MK_VERSION_OK=yes
+elif [ $MK_VERSION_MINOR -eq 6 ]; then
+if [ "$MK_VERSION_MICRO" = '' ]; then
+MK_VERSION_OK=yes
+else
+if [ $MK_VERSION_MICRO -ge 0 ]; then
+MK_VERSION_OK=yes
+fi
+fi
+fi
+fi
+fi
+if [ "${MK_VERSION_OK}" = "no" ]; then
+echo '*'
+echo '*' >>config.log
+echo "* Minimum required version is 1.6.0 (found $AGAR_CORE_VERSION)"
+echo "* Minimum required version is 1.6.0 (found $AGAR_CORE_VERSION)" >>config.log
+echo '*'
+echo '*' >>config.log
+fi
+else
+if [ "${prefix_agar}" != "" ]; then
+echo "no (not in ${prefix_agar})"
+echo "no (not in ${prefix_agar})" >>config.log
+else
+echo 'no'
+echo 'no' >>config.log
+fi
+MK_VERSION_OK="no"
+fi
+if [ "${MK_VERSION_OK}" = "yes" ]; then
+$ECHO_N 'checking Agar-Core definitions...'
+$ECHO_N 'checking Agar-Core definitions...' >>config.log
+AGAR_CORE_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-core-config" ]; then
+AGAR_CORE_CFLAGS=`${prefix_agar}/bin/agar-core-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-core-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/agar-core-config" ]; then
+AGAR_CORE_CFLAGS=`${path}/agar-core-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-core-config"
+break
+elif [ -e "${path}/agar-core-config.exe" ]; then
+AGAR_CORE_CFLAGS=`${path}/agar-core-config.exe --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-core-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+AGAR_CORE_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-core-config" ]; then
+AGAR_CORE_LIBS=`${prefix_agar}/bin/agar-core-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-core-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/agar-core-config" ]; then
+AGAR_CORE_LIBS=`${path}/agar-core-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-core-config"
+break
+elif [ -e "${path}/agar-core-config.exe" ]; then
+AGAR_CORE_LIBS=`${path}/agar-core-config.exe --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-core-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+MK_COMPILE_STATUS=OK
+MK_RUN_STATUS=OK
+cat << EOT >conftest$$.c
+#include <stdio.h>
+#include <string.h>
+
+#include <agar/core.h>
+
+static const struct {
+	const char *name;
+	const char *value;
+} booldefs[] = {
+#ifdef AG_DEBUG
+	{ "AG_DEBUG", "yes" },
+#else
+	{ "AG_DEBUG", "no" },
+#endif
+#ifdef AG_ENABLE_DSO
+	{ "AG_ENABLE_DSO", "yes" },
+#else
+	{ "AG_ENABLE_DSO", "no" },
+#endif
+#ifdef AG_ENABLE_EXEC
+	{ "AG_ENABLE_EXEC", "yes" },
+#else
+	{ "AG_ENABLE_EXEC", "no" },
+#endif
+#ifdef AG_ENABLE_STRING
+	{ "AG_ENABLE_STRING", "yes" },
+#else
+	{ "AG_ENABLE_STRING", "no" },
+#endif
+#ifdef AG_HAVE_64BIT
+	{ "AG_HAVE_64BIT", "yes" },
+#else
+	{ "AG_HAVE_64BIT", "no" },
+#endif
+#ifdef AG_HAVE_FLOAT
+	{ "AG_HAVE_FLOAT", "yes" },
+#else
+	{ "AG_HAVE_FLOAT", "no" },
+#endif
+#ifdef AG_HAVE_LONG_DOUBLE
+	{ "AG_HAVE_LONG_DOUBLE", "yes" },
+#else
+	{ "AG_HAVE_LONG_DOUBLE", "no" },
+#endif
+#ifdef AG_LEGACY
+	{ "AG_LEGACY", "yes" },
+#else
+	{ "AG_LEGACY", "no" },
+#endif
+#ifdef AG_NAMESPACES
+	{ "AG_NAMESPACES", "yes" },
+#else
+	{ "AG_NAMESPACES", "no" },
+#endif
+#ifdef AG_SERIALIZATION
+	{ "AG_SERIALIZATION", "yes" },
+#else
+	{ "AG_SERIALIZATION", "no" },
+#endif
+#ifdef AG_THREADS
+	{ "AG_THREADS", "yes" },
+#else
+	{ "AG_THREADS", "no" },
+#endif
+#ifdef AG_TIMERS
+	{ "AG_TIMERS", "yes" },
+#else
+	{ "AG_TIMERS", "no" },
+#endif
+#ifdef AG_TYPE_SAFETY
+	{ "AG_TYPE_SAFETY", "yes" },
+#else
+	{ "AG_TYPE_SAFETY", "no" },
+#endif
+#ifdef AG_UNICODE
+	{ "AG_UNICODE", "yes" },
+#else
+	{ "AG_UNICODE", "no" },
+#endif
+#ifdef AG_USER
+	{ "AG_USER", "yes" },
+#else
+	{ "AG_USER", "no" },
+#endif
+#ifdef AG_VERBOSITY
+	{ "AG_VERBOSITY", "yes" },
+#else
+	{ "AG_VERBOSITY", "no" },
+#endif
+};
+
+static const struct {
+	const char *name;
+#ifdef AG_HAVE_64BIT
+	unsigned long long value;
+#else
+	unsigned long value;
+#endif
+} constants[] = {
+	{ "AGAR_MAJOR_VERSION",	AGAR_MAJOR_VERSION },	/* version.h */
+	{ "AGAR_MINOR_VERSION",	AGAR_MINOR_VERSION },	/* version.h */
+	{ "AGAR_PATCHLEVEL",	AGAR_PATCHLEVEL},		/* version.h */
+	{ "AG_SMALL",			AG_SMALL },				/* types.h */
+	{ "AG_MEDIUM",			AG_MEDIUM },
+	{ "AG_LARGE",			AG_LARGE },
+	{ "AG_MODEL",			AG_MODEL },
+	{ "AG_CHAR_MAX",		AG_CHAR_MAX },
+	{ "AG_SIZE_MAX",		AG_SIZE_MAX },
+	{ "AG_OFFS_MAX",		AG_OFFS_MAX },
+	{ "AG_LITTLE_ENDIAN",	AG_LITTLE_ENDIAN },		/* core_begin.h */
+	{ "AG_BIG_ENDIAN",		AG_BIG_ENDIAN },
+	{ "AG_BYTEORDER",		AG_BYTEORDER },
+	{ "AG_PATHNAME_MAX",	AG_PATHNAME_MAX },		/* limits.h */
+	{ "AG_FILENAME_MAX",	AG_FILENAME_MAX },
+	{ "AG_ARG_MAX",			AG_ARG_MAX },
+	{ "AG_BUFFER_MIN",		AG_BUFFER_MIN },
+	{ "AG_BUFFER_MAX",		AG_BUFFER_MAX },
+};
+
+int
+main(int argc, char *argv[])
+{
+	AG_AgarVersion ver;
+	AG_CPUInfo cpuinfo;
+	unsigned int i;
+	FILE *f;
+
+	if ((f = fopen("agar-core.def", "w")) == NULL) {
+		printf("Cannot write agar-core.def\n");
+		return (1);
+	}
+
+	AG_InitCore("conf-test", 0);
+	fprintf(f, "-- Compiled Agar-Core definitions on this system\n-- ex:syn=ada\n--\n");
+	fprintf(f, "-- This file was generated by the agar-core.defs module of a\n");
+	fprintf(f, "-- BSDBuild configure script <http://bsdbuild.hypertriton.com>.\n--\n");
+	AG_GetVersion(&ver);
+	fprintf(f, "-- Agar Version %d.%d.%d\n", ver.major, ver.minor, ver.patch);
+	AG_GetCPUInfo(&cpuinfo);
+	fprintf(f, "-- Platform: %s (%s, 0x%x)\n--\n", cpuinfo.arch, cpuinfo.vendorID,
+	    cpuinfo.ext);
+	fprintf(f, "-- Agar-Core Build Definitions\n--\n");
+	for (i = 0; i < sizeof(booldefs) / sizeof(booldefs[0]); i++) {
+		fprintf(f, "%s := %s\n", booldefs[i].name,
+	        strcmp("yes", booldefs[i].value) == 0 ? "True" : "False");
+	}
+	fprintf(f, "--\n-- Agar-Core Constants\n--\n");
+	for (i = 0; i < sizeof(constants) / sizeof(constants[0]); i++) {
+#ifdef AG_HAVE_64BIT
+		fprintf(f, "%s := %llu\n", constants[i].name, constants[i].value);
+#else
+		fprintf(f, "%s := %lu\n", constants[i].name, constants[i].value);
+#endif
+	}
+	
+	fclose(f);
+	AG_Quit();
+	return (0);
+}
+EOT
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_CORE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_CORE_LIBS} 2>>config.log
+if [ "$?" != "0" ]; then
+echo "failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+(cd $testdir && ./conftest$$$EXECSUFFIX) >>config.log
+if [ "$?" = "0" ]; then
+echo 'yes'
+echo 'yes' >>config.log
+HAVE_AGAR_CORE_DEFS=yes
+bb_o=$bb_incdir/have_agar_core_defs.h
+echo '#ifndef HAVE_AGAR_CORE_DEFS' >$bb_o
+echo "#define HAVE_AGAR_CORE_DEFS \"$HAVE_AGAR_CORE_DEFS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_AGAR_CORE_DEFS\"] = \"$HAVE_AGAR_CORE_DEFS\"" >>configure.lua
+else
+echo 'no, test program failed'
+echo 'no, test program failed' >>config.log
+MK_RUN_STATUS="FAIL $?"
+HAVE_AGAR_CORE_DEFS=no
+echo '#undef HAVE_AGAR_CORE_DEFS' >$bb_incdir/have_agar_core_defs.h
+echo 'hdefs["HAVE_AGAR_CORE_DEFS"] = nil' >>configure.lua
+fi
+else
+echo 'no'
+echo 'no' >>config.log
+MK_RUN_STATUS="FAIL $?"
+HAVE_AGAR_CORE_DEFS=no
+echo '#undef HAVE_AGAR_CORE_DEFS' >$bb_incdir/have_agar_core_defs.h
+echo 'hdefs["HAVE_AGAR_CORE_DEFS"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+else
+HAVE_AGAR_CORE_DEFS="no"
+echo '#undef HAVE_AGAR_CORE_DEFS' >$bb_incdir/have_agar_core_defs.h
+echo 'hdefs["HAVE_AGAR_CORE_DEFS"] = nil' >>configure.lua
+fi
+# END agar-core.defs
+if [ "${HAVE_AGAR_CORE_DEFS}" != "yes" ]; then
+echo '* '
+echo '* ' >>config.log
+echo "* $PACKAGE requires Agar-Core preprocessor defs (version 1.6.0 or newer)."
+echo "* $PACKAGE requires Agar-Core preprocessor defs (version 1.6.0 or newer)." >>config.log
+echo '* WWW: http://libagar.org'
+echo '* WWW: http://libagar.org' >>config.log
+echo '* '
+echo '* ' >>config.log
+echo "Required dependency agar-core.defs not found"
+exit 1
+fi
+if [ "${MK_VERSION_OK}" != "yes" ]; then
+echo '* '
+echo '* ' >>config.log
+echo '* This software requires agar-core.defs version >= 1.6.0,'
+echo '* This software requires agar-core.defs version >= 1.6.0,' >>config.log
+echo '* please update that package and try again.'
+echo '* please update that package and try again.' >>config.log
+echo '* WWW: http://libagar.org'
+echo '* WWW: http://libagar.org' >>config.log
+echo '* '
+echo '* ' >>config.log
+echo "Required dependency agar-core.defs version mismatch"
+exit 1
+fi
 $ECHO_N 'checking for Agar-Core types...'
 $ECHO_N 'checking for Agar-Core types...' >>config.log
 # BEGIN agar-core.types(1.6.0 ${prefix_agar})
@@ -2204,7 +2564,7 @@ cat << EOT >conftest$$.c
 
 static const struct {
 	const char *name;
-	unsigned    value;
+	unsigned long value;
 } constants[] = {
 	{ "AG_OBJECT_NAME_MAX",		AG_OBJECT_NAME_MAX },		/* object.h */
 	{ "AG_OBJECT_TYPE_MAX",		AG_OBJECT_TYPE_MAX },
@@ -2308,8 +2668,8 @@ main(int argc, char *argv[])
 
 	AG_InitCore("conf-test", 0);
 	fprintf(f, "# Compiled Agar-Core type sizes on this system\n#\n");
-	fprintf(f, "# This file was generated by the agar-core.types module of a BSDBuild\n");
-	fprintf(f, "# based ./configure script <http://bsdbuild.hypertriton.com>.\n#\n");
+	fprintf(f, "# This file was generated by the agar-core.types module of a\n");
+	fprintf(f, "# BSDBuild configure script <http://bsdbuild.hypertriton.com>.\n#\n");
 	AG_GetVersion(&ver);
 	fprintf(f, "# Agar Version %d.%d.%d\n", ver.major, ver.minor, ver.patch);
 	AG_GetCPUInfo(&cpuinfo);
@@ -2317,7 +2677,7 @@ main(int argc, char *argv[])
 	    cpuinfo.ext);
 	fprintf(f, "# Agar-Core constants\n#\n");
 	for (i = 0; i < sizeof(constants) / sizeof(constants[0]); i++)
-		fprintf(f, "%s:%u\n", constants[i].name, constants[i].value);
+		fprintf(f, "%s:%lu\n", constants[i].name, constants[i].value);
 
 	fprintf(f, "#\n# Size of AG_Object(3) derived classes\n#\n");
 	PrintClass(f, &agObjectClass);
@@ -2412,6 +2772,7 @@ ADAFLAGS="$ADAFLAGS -fstack-check"
 ADAFLAGS="$ADAFLAGS -gnatVa"
 ADAFLAGS="$ADAFLAGS -gnato"
 ADAFLAGS="$ADAFLAGS -gnatE"
+ADAFLAGS="$ADAFLAGS -gnatep=adaprep.def"
 if [ "${enable_warnings}" = "yes" ]
  then
 ADAFLAGS="$ADAFLAGS -gnatwaleF"
@@ -2595,6 +2956,8 @@ echo "HAVE_ADA_MWINDOWS=$HAVE_ADA_MWINDOWS" >>Makefile.config
 echo "mdefs[\"HAVE_ADA_MWINDOWS\"] = \"$HAVE_ADA_MWINDOWS\"" >>configure.lua
 echo "HAVE_AGAR_CORE=$HAVE_AGAR_CORE" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR_CORE\"] = \"$HAVE_AGAR_CORE\"" >>configure.lua
+echo "HAVE_AGAR_CORE_DEFS=$HAVE_AGAR_CORE_DEFS" >>Makefile.config
+echo "mdefs[\"HAVE_AGAR_CORE_DEFS\"] = \"$HAVE_AGAR_CORE_DEFS\"" >>configure.lua
 echo "HAVE_AGAR_CORE_TYPES=$HAVE_AGAR_CORE_TYPES" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR_CORE_TYPES\"] = \"$HAVE_AGAR_CORE_TYPES\"" >>configure.lua
 echo "HAVE_CC=$HAVE_CC" >>Makefile.config
