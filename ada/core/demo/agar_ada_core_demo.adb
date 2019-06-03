@@ -7,6 +7,7 @@ with Agar.Error;
 with Agar.Object; use Agar.Object;
 with Agar.Event;
 with Agar.DSO;
+with Agar.Types; use Agar.Types;
 with Ada.Text_IO;
 with System;
 with myatexit;
@@ -52,6 +53,8 @@ begin
      Integer'Image(Major) & " ." &
      Integer'Image(Minor) & " ." &
      Integer'Image(Patch));
+  
+  T_IO.Put_Line ("Memory model: " & Natural'Image(AG_MODEL));
 
   -- Register the Agar object class "Animal" specified in animal.ads.
   T_IO.Put_Line("Registering Animal class (" &
