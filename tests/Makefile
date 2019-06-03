@@ -63,6 +63,8 @@ DATAFILES= agar.png agar-index.png agar.bmp agar-1.bmp agar-2.bmp \
            helmet-socket.bmp loss.txt menubg.bmp pepe.jpg sword.bmp \
            sword-socket.bmp
 
+CLEANFILES+=	agar-index-save.png agar-save.png axe-save.png pepe-save.jpg
+
 all: all-subdir ${PROG}
 
 configure: configure.in
