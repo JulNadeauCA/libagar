@@ -1,7 +1,10 @@
 TOP=	..
 include ${TOP}/Makefile.config
 
-SUBDIR=	agar-disasm
+SUBDIR=	agar-disasm \
+	rgedit \
+	sgedit \
+	skedit
 
 # For regenerating gui/*_data.h.
 #SUBDIR+=bundlefont bundlecss
