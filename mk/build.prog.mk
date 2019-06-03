@@ -69,6 +69,7 @@ CONF?=
 CONF_OVERWRITE?=No
 CONFIGSCRIPTS?=
 CLEANFILES?=
+CLEANDIRFILES?=
 CTAGS?=
 CTAGSFLAGS?=
 DATAFILES?=
@@ -398,6 +399,10 @@ cleandir-prog:
 	@if [ "${PCMODULES}" != "" ]; then \
 	    echo "rm -f ${PCMODULES}"; \
 	    rm -f ${PCMODULES}; \
+	fi
+	@if [ "${CLEANDIRFILES}" != "" ]; then \
+	    echo "rm -f ${CLEANDIRFILES}"; \
+	    rm -f ${CLEANDIRFILES}; \
 	fi
 	@if [ -e ".depend" ]; then \
 		echo "echo >.depend"; \

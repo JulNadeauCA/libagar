@@ -39,6 +39,9 @@ LIB_BUNDLE?=
 
 ADA?=		ada
 ADABIND?=	gnatbind
+ADAPREP?=	gnatprep
+ADAPREPFLAGS?=
+ADAPREPFILE?=
 AR?=		ar
 ASM?=		nasm
 CC?=		cc
@@ -88,6 +91,7 @@ CONFIGSCRIPTS?=
 CTAGS?=
 CTAGSFLAGS?=
 CLEANFILES?=
+CLEANDIRFILES?=
 DATAFILES?=
 DATAFILES_SRC?=
 INCL?=
@@ -581,6 +585,10 @@ cleandir-lib:
 	    echo "rm -f ${PCMODULES}"; \
 	    rm -f ${PCMODULES}; \
 	fi
+	@if [ "${CLEANDIRFILES}" != "" ]; then \
+	    echo "rm -f ${CLEANDIRFILES}"; \
+	    rm -f ${CLEANDIRFILES}; \
+	fi
 	@if [ -e ".depend" ]; then \
 	    echo "echo >.depend"; \
 	    echo >.depend; \
@@ -663,8 +671,13 @@ install-lib: check-libtool
 	        if echo $$F | grep -q '.ad[bs]$$'; then \
 		    FB=`echo "$$F" | sed 's/.ad[bs]$$//'`; \
 	            if [ -e "$$FB.ads" ]; then \
-	                echo "${INSTALL_INCL} $$FB.ads ${INCLDIR}"; \
-	                ${SUDO} ${INSTALL_INCL} $$FB.ads ${DESTDIR}${INCLDIR}; \
+			if [ "${ADAPREP}" != "" ]; then \
+				echo "${ADAPREP} ${ADAPREPFLAGS} $$FB.ads ${INCLDIR}/$$FB.ads ${ADAPREPFILE}"; \
+				${SUDO} ${ADAPREP} ${ADAPREPFLAGS} $$FB.ads ${INCLDIR}/$$FB.ads ${ADAPREPFILE}; \
+			else \
+	                	echo "${INSTALL_INCL} $$FB.ads ${INCLDIR}"; \
+	                	${SUDO} ${INSTALL_INCL} $$FB.ads ${DESTDIR}${INCLDIR}; \
+			fi; \
 		    fi; \
 	            echo "${INSTALL_DATA} $$FB.ali ${INCLDIR}"; \
 	            ${SUDO} ${INSTALL_DATA} $$FB.ali ${DESTDIR}${INCLDIR}; \
