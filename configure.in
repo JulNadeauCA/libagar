@@ -55,7 +55,7 @@ register("--with-z[=PREFIX]",		"zlib compression library [check]")
 register("--with-inline-byteswap",	"Inline endianness swaps [yes]")
 register("--with-inline-error",		"Inline malloc() wrappers [yes]")
 register("--with-inline-event",		"Inline event argument accessors [yes]")
-register("--with-inline-io",		"Inline serialization routines [yes]")
+register("--with-inline-io",		"Inline serialization frontends [yes]")
 register("--with-inline-object",	"Inline some AG_Object calls [yes]")
 register("--with-inline-string",	"Inline some string functions [yes]")
 register("--with-inline-tbl",		"Inline some AG_Tbl functions [yes]")
@@ -1012,8 +1012,7 @@ config_script(agar-config,\
 	 ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} \
 	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
 	 ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
-
-pkgconfig_module(agar, "Agar cross-platform GUI toolkit", \
+pkgconfig_mod(agar, "Agar cross-platform GUI toolkit", \
 	"${X11_PC} ${SDL_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} \
 	 ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}", \
 	"", \
@@ -1033,8 +1032,7 @@ config_script(agar-core-config,\
 	"-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} \
 	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
 	 ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
-
-pkgconfig_module(agar-core, "Agar object system and base library", "", "", \
+pkgconfig_mod(agar-core, "Agar object system and base library", "", "", \
 	"-I\${includedir}/agar ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS} \
 	 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} \
 	 ${MYSQL_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}", \
@@ -1049,8 +1047,7 @@ pkgconfig_module(agar-core, "Agar object system and base library", "", "", \
 config_script(agar-au-config,\
 	"-I${INCLDIR} ${PORTAUDIO_CFLAGS} ${SNDFILE_CFLAGS}",\
 	"-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}")
-
-pkgconfig_module(agar-au, "Agar audio library", \
+pkgconfig_mod(agar-au, "Agar audio library", \
 	"agar ${PORTAUDIO_PC} ${SNDFILE_PC}", "", \
 	"-I\${includedir}/agar", \
 	"-L\${libdir} -lag_au", \
@@ -1060,7 +1057,7 @@ pkgconfig_module(agar-au, "Agar audio library", \
 # Implies: GUI, CORE.
 #
 config_script(agar-dev-config, "-I${INCLDIR}", "-L${LIBDIR} -lag_dev")
-pkgconfig_module(agar-dev, "Agar extra developer tools", \
+pkgconfig_mod(agar-dev, "Agar extra developer tools", \
 	"agar", "", \
 	"-I\${includedir}/agar", \
 	"-L\${libdir} -lag_dev", \
@@ -1073,7 +1070,7 @@ if [ "${enable_map}" != "no" ]; then
 	MDEFINE(SUBDIR_map, "map")
 fi
 config_script(agar-map-config,"-I${INCLDIR}","-L${LIBDIR} -lag_map")
-pkgconfig_module(agar-map, "Agar feature-based levels library", \
+pkgconfig_mod(agar-map, "Agar feature-based levels library", \
 	"agar-rg agar-math agar", "", \
 	"-I\${includedir}/agar", \
 	"-L\${libdir} -lag_map", \
@@ -1092,7 +1089,7 @@ if [ "${enable_gui}" != 'no' ]; then
 else
 	AGAR_MATH_REQUIRES="agar-core"
 fi
-pkgconfig_module(agar-math, "Agar math library", "${AGAR_MATH_REQUIRES}",\
+pkgconfig_mod(agar-math, "Agar math library", "${AGAR_MATH_REQUIRES}",\
 	"", \
 	"-I\${includedir}/agar ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} \
 	 ${SSE3_CFLAGS} ${MATH_CFLAGS}", \
@@ -1106,7 +1103,7 @@ if [ "${enable_rg}" != "no" ]; then
 	MDEFINE(SUBDIR_rg, "rg")
 fi
 config_script(agar-rg-config,"-I${INCLDIR}","-L${LIBDIR} -lag_rg")
-pkgconfig_module(agar-rg, "Agar feature-based graphics library", \
+pkgconfig_mod(agar-rg, "Agar feature-based graphics library", \
 	"agar-math agar", "", \
 	"-I\${includedir}/agar ${OPENGL_CFLAGS}", \
 	"-L\${libdir} -lag_rg", \
@@ -1118,8 +1115,7 @@ pkgconfig_module(agar-rg, "Agar feature-based graphics library", \
 config_script(agar-sg-config,\
 	"-I${INCLDIR} ${AGAR_MATH_CFLAGS} ${CG_CFLAGS} ${GLU_CFLAGS}",\
 	"-L${LIBDIR} -lag_sg ${AGAR_MATH_LIBS} ${CG_LIBS} ${GLU_LIBS}")
-
-pkgconfig_module(agar-sg, "Agar 3D scene graph library", \
+pkgconfig_mod(agar-sg, "Agar 3D scene graph library", \
 	"agar-math agar", "", \
 	"-I\${includedir}/agar ${CG_CFLAGS} ${GLU_CFLAGS}", \
 	"-L\${libdir} -lag_sg", \
@@ -1131,8 +1127,7 @@ pkgconfig_module(agar-sg, "Agar 3D scene graph library", \
 config_script(agar-sk-config,\
 	"-I${INCLDIR} ${AGAR_MATH_CFLAGS}",\
 	"-L${LIBDIR} -lag_sk ${AGAR_MATH_LIBS}")
-
-pkgconfig_module(agar-sk, "Agar sketch engine library", \
+pkgconfig_mod(agar-sk, "Agar sketch engine library", \
 	"agar-math agar", "", \
 	"-I\${includedir}/agar", \
 	"-L\${libdir} -lag_sk", \
@@ -1142,7 +1137,7 @@ pkgconfig_module(agar-sk, "Agar sketch engine library", \
 # Implies: GUI, CORE.
 #
 config_script(agar-vg-config, "-I${INCLDIR}", "-L${LIBDIR} -lag_vg")
-pkgconfig_module(agar-vg, "Agar vector graphics library", "agar", "", \
+pkgconfig_mod(agar-vg, "Agar vector graphics library", "agar", "", \
 	"-I\${includedir}/agar ${MATH_CFLAGS}", \
 	"-L\${libdir} -lag_vg", \
 	"-lag_vg ${MATH_LIBS}")
