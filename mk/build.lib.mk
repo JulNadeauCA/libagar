@@ -671,7 +671,7 @@ install-lib: check-libtool
 	        if echo $$F | grep -q '.ad[bs]$$'; then \
 		    FB=`echo "$$F" | sed 's/.ad[bs]$$//'`; \
 	            if [ -e "$$FB.ads" ]; then \
-			if [ "${ADAPREP}" != "" ]; then \
+			if [ "${ADAPREPFILE}" != "" ]; then \
 				echo "${ADAPREP} ${ADAPREPFLAGS} $$FB.ads ${INCLDIR}/$$FB.ads ${ADAPREPFILE}"; \
 				${SUDO} ${ADAPREP} ${ADAPREPFLAGS} $$FB.ads ${INCLDIR}/$$FB.ads ${ADAPREPFILE}; \
 			else \
