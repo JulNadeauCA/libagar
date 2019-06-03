@@ -44,7 +44,7 @@ DATAFILES=	${TYPEMAP} \
 		LICENSE \
 		agar-core.def
 
-CLEANFILES+=	${SRCS_GENERATED}
+CLEANFILES+=	${SRCS_GENERATED} Cow.obj
 CLEANDIRFILES+=	${TYPEMAP} ${ADAPREPFILE}
 
 include ${TOP}/mk/build.lib.mk

@@ -8,6 +8,8 @@ SRCS=	agar_ada_core_demo.adb \
 	myeventhandler.adb \
 	animal.adb
 
+CLEANFILES+=	Cow.obj My_Parent.obj
+
 CFLAGS+=${AGAR_ADA_CORE_CFLAGS} ${AGAR_CORE_CFLAGS}
 LIBS+=	${AGAR_ADA_CORE_LIBS} ${AGAR_CORE_LIBS}
 
