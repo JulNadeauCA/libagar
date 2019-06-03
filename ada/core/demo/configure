@@ -1618,7 +1618,7 @@ if [ "$?" != "0" ]; then
 echo "compiler failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
 else
-$ADABIND $ADABFLAGS conftest 2>>config.log
+$ADABIND -x $ADABFLAGS conftest 2>>config.log
 if [ "$?" != "0" ]; then
 echo "binder failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1704,7 +1704,7 @@ if [ "$?" != "0" ]; then
 echo "compiler failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
 else
-$ADABIND $ADABFLAGS conftest 2>>config.log
+$ADABIND -x $ADABFLAGS conftest 2>>config.log
 if [ "$?" != "0" ]; then
 echo "binder failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1747,7 +1747,7 @@ if [ "$?" != "0" ]; then
 echo "compiler failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
 else
-$ADABIND $ADABFLAGS conftest 2>>config.log
+$ADABIND -x $ADABFLAGS conftest 2>>config.log
 if [ "$?" != "0" ]; then
 echo "binder failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2202,7 +2202,7 @@ echo "compiler failed $?"
 echo "compiler failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
 else
-$ADABIND $ADABFLAGS $ada_cflags conftest 2>>config.log
+$ADABIND -x $ADABFLAGS $ada_cflags conftest 2>>config.log
 if [ "$?" != "0" ]; then
 echo "binder failed $?"
 echo "binder failed $?" >>config.log
