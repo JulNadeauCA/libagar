@@ -17,9 +17,9 @@ package Agar.DSO is
   package C renames Interfaces.C;
   package CS renames Interfaces.C.Strings;
   
-  type DSO is array (1 .. %%sizeof(AG_DSO)%%) of aliased Interfaces.Unsigned_8
+  type DSO is array (1 .. $SIZEOF_AG_DSO) of aliased Interfaces.Unsigned_8
     with Convention => C;
-  for DSO'Size use %%sizeof(AG_DSO)%% * System.Storage_Unit;
+  for DSO'Size use $SIZEOF_AG_DSO * System.Storage_Unit;
 
   type DSO_Access             is access all DSO with Convention => C;
   subtype DSO_Not_Null_Access is not null DSO_Access;

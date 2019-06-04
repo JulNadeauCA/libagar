@@ -25,7 +25,6 @@ require(cc)
 require(ada)
 require(agar-core, 1.6.0, ${prefix_agar})
 require(agar-core.defs, 1.6.0, ${prefix_agar})
-require(agar-core.types, 1.6.0, ${prefix_agar})
 
 c_incdir($SRC)
 c_define(_USE_AGAR_STD)

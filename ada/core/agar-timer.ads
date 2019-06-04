@@ -25,11 +25,11 @@ package Agar.Timer is
   package CS renames Interfaces.C.Strings;
   package EV renames Agar.Event;
   
-  NAME_MAX : constant Natural := %%const(AG_TIMER_NAME_MAX)%%;
+  NAME_MAX : constant Natural := $AG_TIMER_NAME_MAX;
 
-  type Timer_Private is array (1 .. %%sizeof(AG_TimerPvt)%%)
+  type Timer_Private is array (1 .. $SIZEOF_AG_TimerPvt)
     of aliased Interfaces.Unsigned_8 with Convention => C;
-  for Timer_Private'Size use %%sizeof(AG_TimerPvt)%% * System.Storage_Unit;
+  for Timer_Private'Size use $SIZEOF_AG_TimerPvt * System.Storage_Unit;
   
   type Timer_Name is array (1 .. NAME_MAX) of aliased c.char
     with Convention => C;

@@ -21,12 +21,12 @@ package Agar.Event is
   package C renames Interfaces.C;
   package CS renames Interfaces.C.Strings;
 
-  ARGS_MAX : constant Natural := %%const(AG_EVENT_ARGS_MAX)%%;
-  NAME_MAX : constant Natural := %%const(AG_EVENT_NAME_MAX)%%;
+  ARGS_MAX : constant Natural := $AG_EVENT_ARGS_MAX;
+  NAME_MAX : constant Natural := $AG_EVENT_NAME_MAX;
   
-  type Event is array (1 .. %%sizeof(AG_Event)%%) of
+  type Event is array (1 .. $SIZEOF_AG_EVENT) of
     aliased Interfaces.Unsigned_8 with Convention => C;
-  for Event'Size use %%sizeof(AG_Event)%% * System.Storage_Unit;
+  for Event'Size use $SIZEOF_AG_EVENT * System.Storage_Unit;
 
   type Event_Access             is access all Event with Convention => C;
   subtype Event_not_null_Access is not null Event_Access;

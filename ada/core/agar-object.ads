@@ -31,10 +31,10 @@ package Agar.Object is
   package EV renames Agar.Event;
   package TMR renames Agar.Timer;
   
-  NAME_MAX      : constant Natural := %%const(AG_OBJECT_NAME_MAX)%%;
-  HIERARCHY_MAX : constant Natural := %%const(AG_OBJECT_HIER_MAX)%%;
-  TYPE_MAX      : constant Natural := %%const(AG_OBJECT_TYPE_MAX)%%;
-  LIBRARIES_MAX : constant Natural := %%const(AG_OBJECT_LIBS_MAX)%%;
+  NAME_MAX      : constant Natural := $AG_OBJECT_NAME_MAX;
+  HIERARCHY_MAX : constant Natural := $AG_OBJECT_HIER_MAX;
+  TYPE_MAX      : constant Natural := $AG_OBJECT_TYPE_MAX;
+  LIBRARIES_MAX : constant Natural := $AG_OBJECT_LIBS_MAX;
 
   ----------------
   -- Base Types --
@@ -59,9 +59,9 @@ package Agar.Object is
   --------------------------
   -- Agar Object variable --
   --------------------------
-  type Variable is array (1 .. %%sizeof(AG_Variable)%%) of
+  type Variable is array (1 .. $SIZEOF_AG_Variable) of
     aliased Interfaces.Unsigned_8 with Convention => C;
-  for Variable'Size use %%sizeof(AG_Variable)%% * System.Storage_Unit;
+  for Variable'Size use $SIZEOF_AG_Variable * System.Storage_Unit;
 
   type Variable_Access is access all Variable with Convention => C;
   subtype Variable_not_null_Access is not null Variable_Access;
@@ -91,9 +91,9 @@ package Agar.Object is
   type Class_Access is access all Class with Convention => C;
   subtype Class_not_null_Access is not null Class_Access;
 
-  type Dependency is array (1 .. %%sizeof(AG_ObjectDep)%%) of
+  type Dependency is array (1 .. $SIZEOF_AG_ObjectDep) of
     aliased Interfaces.Unsigned_8 with Convention => C;
-  for Dependency'Size use %%sizeof(AG_ObjectDep)%% * System.Storage_Unit;
+  for Dependency'Size use $SIZEOF_Ag_ObjectDep * System.Storage_Unit;
   type Dependency_Access is access all Dependency with Convention => C;
   subtype Dependency_not_null_Access is not null Dependency_Access;
 
@@ -128,9 +128,9 @@ package Agar.Object is
   end record
     with Convention => C;
 
-  type Object_Private is array (1 .. %%sizeof(AG_ObjectPvt)%%) of
+  type Object_Private is array (1 .. $SIZEOF_AG_ObjectPvt) of
     aliased Interfaces.Unsigned_8 with Convention => C;
-  for Object_Private'Size use %%sizeof(AG_ObjectPvt)%% * System.Storage_Unit;
+  for Object_Private'Size use $SIZEOF_AG_ObjectPvt * System.Storage_Unit;
   
   OBJECT_FLOATING_VARIABLES    : constant C.unsigned := 16#0_0001#;
   OBJECT_NON_PERSISTENT        : constant C.unsigned := 16#0_0002#;
@@ -195,9 +195,9 @@ package Agar.Object is
     with Convention => C;
   type Class_Hierarchy is array (1 .. HIERARCHY_MAX) of aliased c.char
     with Convention => C;
-  type Class_Private is array (1 .. %%sizeof(AG_ObjectClassPvt)%%) of
+  type Class_Private is array (1 .. $SIZEOF_AG_ObjectClassPvt) of
     aliased Interfaces.Unsigned_8 with Convention => C;
-  for Class_Private'Size use %%sizeof(AG_ObjectClassPvt)%% * System.Storage_Unit;
+  for Class_Private'Size use $SIZEOF_AG_ObjectClassPvt * System.Storage_Unit;
   type Class_Private_Access is access all Class_Private with Convention => C;
 
   type Class is limited record
@@ -220,9 +220,9 @@ package Agar.Object is
   ---------------------------------
   -- Serialized Object Signature --
   ---------------------------------
-  type Object_Header is array (1 .. %%sizeof(AG_ObjectHeader)%%) of
+  type Object_Header is array (1 .. $SIZEOF_AG_ObjectHeader) of
     aliased Interfaces.Unsigned_8 with Convention => C;
-  for Object_Header'Size use %%sizeof(AG_ObjectHeader)%% * System.Storage_Unit;
+  for Object_Header'Size use $SIZEOF_AG_ObjectHeader * System.Storage_Unit;
   type Header_Access is access all Object_Header with Convention => C;
   subtype Header_not_null_Access is not null Header_Access;
   

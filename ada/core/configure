@@ -2066,8 +2066,8 @@ echo '* ' >>config.log
 echo "Required dependency agar-core version mismatch"
 exit 1
 fi
-$ECHO_N 'checking for Agar-Core preprocessor defs...'
-$ECHO_N 'checking for Agar-Core preprocessor defs...' >>config.log
+$ECHO_N 'checking for Agar-Core definitions...'
+$ECHO_N 'checking for Agar-Core definitions...' >>config.log
 # BEGIN agar-core.defs(1.6.0 ${prefix_agar})
 AGAR_VERSION=
 if [ "${prefix_agar}" != "" ]; then
@@ -2201,9 +2201,23 @@ MK_RUN_STATUS=OK
 cat << EOT >conftest$$.c
 #include <stdio.h>
 #include <string.h>
-
 #include <agar/core.h>
-
+#include <agar/config/ag_debug.h>
+#include <agar/config/ag_enable_dso.h>
+#include <agar/config/ag_enable_exec.h>
+#include <agar/config/ag_enable_string.h>
+#include <agar/config/ag_legacy.h>
+#include <agar/config/ag_namespaces.h>
+#include <agar/config/ag_serialization.h>
+#include <agar/config/ag_threads.h>
+#include <agar/config/ag_timers.h>
+#include <agar/config/ag_type_safety.h>
+#include <agar/config/ag_unicode.h>
+#include <agar/config/ag_user.h>
+#include <agar/config/ag_verbosity.h>
+#include <agar/config/have_64bit.h>
+#include <agar/config/have_float.h>
+#include <agar/config/have_long_double.h>
 static const struct {
 	const char *name;
 	const char *value;
@@ -2227,21 +2241,6 @@ static const struct {
 	{ "AG_ENABLE_STRING", "yes" },
 #else
 	{ "AG_ENABLE_STRING", "no" },
-#endif
-#ifdef AG_HAVE_64BIT
-	{ "AG_HAVE_64BIT", "yes" },
-#else
-	{ "AG_HAVE_64BIT", "no" },
-#endif
-#ifdef AG_HAVE_FLOAT
-	{ "AG_HAVE_FLOAT", "yes" },
-#else
-	{ "AG_HAVE_FLOAT", "no" },
-#endif
-#ifdef AG_HAVE_LONG_DOUBLE
-	{ "AG_HAVE_LONG_DOUBLE", "yes" },
-#else
-	{ "AG_HAVE_LONG_DOUBLE", "no" },
 #endif
 #ifdef AG_LEGACY
 	{ "AG_LEGACY", "yes" },
@@ -2288,8 +2287,22 @@ static const struct {
 #else
 	{ "AG_VERBOSITY", "no" },
 #endif
+#ifdef HAVE_64BIT
+	{ "HAVE_64BIT", "yes" },
+#else
+	{ "HAVE_64BIT", "no" },
+#endif
+#ifdef HAVE_FLOAT
+	{ "HAVE_FLOAT", "yes" },
+#else
+	{ "HAVE_FLOAT", "no" },
+#endif
+#ifdef HAVE_LONG_DOUBLE
+	{ "HAVE_LONG_DOUBLE", "yes" },
+#else
+	{ "HAVE_LONG_DOUBLE", "no" },
+#endif
 };
-
 static const struct {
 	const char *name;
 #ifdef AG_HAVE_64BIT
@@ -2298,26 +2311,93 @@ static const struct {
 	unsigned long value;
 #endif
 } constants[] = {
-	{ "AGAR_MAJOR_VERSION",	AGAR_MAJOR_VERSION },	/* version.h */
-	{ "AGAR_MINOR_VERSION",	AGAR_MINOR_VERSION },	/* version.h */
-	{ "AGAR_PATCHLEVEL",	AGAR_PATCHLEVEL},		/* version.h */
-	{ "AG_SMALL",			AG_SMALL },				/* types.h */
-	{ "AG_MEDIUM",			AG_MEDIUM },
-	{ "AG_LARGE",			AG_LARGE },
-	{ "AG_MODEL",			AG_MODEL },
-	{ "AG_CHAR_MAX",		AG_CHAR_MAX },
-	{ "AG_SIZE_MAX",		AG_SIZE_MAX },
-	{ "AG_OFFS_MAX",		AG_OFFS_MAX },
-	{ "AG_LITTLE_ENDIAN",	AG_LITTLE_ENDIAN },		/* core_begin.h */
-	{ "AG_BIG_ENDIAN",		AG_BIG_ENDIAN },
-	{ "AG_BYTEORDER",		AG_BYTEORDER },
-	{ "AG_PATHNAME_MAX",	AG_PATHNAME_MAX },		/* limits.h */
-	{ "AG_FILENAME_MAX",	AG_FILENAME_MAX },
-	{ "AG_ARG_MAX",			AG_ARG_MAX },
-	{ "AG_BUFFER_MIN",		AG_BUFFER_MIN },
-	{ "AG_BUFFER_MAX",		AG_BUFFER_MAX },
+	{ "AG_SMALL", AG_SMALL },
+	{ "AG_MEDIUM", AG_MEDIUM },
+	{ "AG_LARGE", AG_LARGE },
+	{ "AG_MODEL", AG_MODEL },
+	{ "AGAR_MAJOR_VERSION", AGAR_MAJOR_VERSION },
+	{ "AGAR_MINOR_VERSION", AGAR_MINOR_VERSION },
+	{ "AGAR_PATCHLEVEL", AGAR_PATCHLEVEL },
+	{ "AG_ARG_MAX", AG_ARG_MAX },
+	{ "AG_BIG_ENDIAN", AG_BIG_ENDIAN },
+	{ "AG_BYTEORDER", AG_BYTEORDER },
+	{ "AG_BUFFER_MIN", AG_BUFFER_MIN },
+	{ "AG_BUFFER_MAX", AG_BUFFER_MAX },
+	{ "AG_CHAR_MAX", AG_CHAR_MAX },
+	{ "AG_DSONAME_MAX", AG_DSONAME_MAX },
+	{ "AG_EVENT_ARGS_MAX", AG_EVENT_ARGS_MAX },
+	{ "AG_EVENT_NAME_MAX", AG_EVENT_NAME_MAX },
+	{ "AG_FILENAME_MAX", AG_FILENAME_MAX },
+	{ "AG_LITTLE_ENDIAN", AG_LITTLE_ENDIAN },
+	{ "AG_LOAD_STRING_MAX", AG_LOAD_STRING_MAX },
+	{ "AG_OBJECT_HIER_MAX", AG_OBJECT_HIER_MAX },
+	{ "AG_OBJECT_LIBS_MAX", AG_OBJECT_LIBS_MAX },
+	{ "AG_OBJECT_NAME_MAX", AG_OBJECT_NAME_MAX },
+	{ "AG_OBJECT_PATH_MAX", AG_OBJECT_PATH_MAX },
+	{ "AG_OBJECT_TYPE_MAX", AG_OBJECT_TYPE_MAX },
+	{ "AG_OFFS_MAX", AG_OFFS_MAX },
+	{ "AG_PATHNAME_MAX", AG_PATHNAME_MAX },
+	{ "AG_SIZE_MAX", AG_SIZE_MAX },
+	{ "AG_TIMER_NAME_MAX", AG_TIMER_NAME_MAX },
+	{ "AG_USER_NAME_MAX", AG_USER_NAME_MAX },
+	{ "AG_VARIABLE_NAME_MAX", AG_VARIABLE_NAME_MAX },
+	{ "AG_VERSION_NAME_MAX", AG_VERSION_NAME_MAX },
+	{ "AG_VERSION_MAX", AG_VERSION_MAX },
 };
-
+static const struct {
+	const char *name;
+	unsigned long value;
+} sizeofs[] = {
+	{ "SIZEOF_AG_AGARVERSION", sizeof(AG_AgarVersion) },
+	{ "SIZEOF_AG_CPUINFO", sizeof(AG_CPUInfo) },
+	{ "SIZEOF_AG_COND", sizeof(AG_Cond) },
+	{ "SIZEOF_AG_CORESOURCE", sizeof(AG_CoreSource) },
+	{ "SIZEOF_AG_CONSTCORESOURCE", sizeof(AG_ConstCoreSource) },
+	{ "SIZEOF_AG_DSO", sizeof(AG_DSO) },
+	{ "SIZEOF_AG_DSOSYM", sizeof(AG_DSOSym) },
+	{ "SIZEOF_AG_DATASOURCE", sizeof(AG_DataSource) },
+	{ "SIZEOF_AG_DBT", sizeof(AG_Dbt) },
+	{ "SIZEOF_AG_DIR", sizeof(AG_Dir) },
+	{ "SIZEOF_AG_EVENT", sizeof(AG_Event) },
+	{ "SIZEOF_AG_EVENTSINK", sizeof(AG_EventSink) },
+	{ "SIZEOF_AG_EVENTSOURCE", sizeof(AG_EventSource) },
+	{ "SIZEOF_AG_FILEEXTMAPPING", sizeof(AG_FileExtMapping) },
+	{ "SIZEOF_AG_FILEINFO", sizeof(AG_FileInfo) },
+	{ "SIZEOF_AG_FILESOURCE", sizeof(AG_FileSource) },
+	{ "SIZEOF_AG_FMTSTRING", sizeof(AG_FmtString) },
+	{ "SIZEOF_AG_FMTSTRINGEXT", sizeof(AG_FmtStringExt) },
+	{ "SIZEOF_AG_FUNCTION", sizeof(AG_Function) },
+	{ "SIZEOF_AG_LIST", sizeof(AG_List) },
+	{ "SIZEOF_AG_MUTEX", sizeof(AG_Mutex) },
+	{ "SIZEOF_AG_MUTEXATTR", sizeof(AG_MutexAttr) },
+	{ "SIZEOF_AG_NAMESPACE", sizeof(AG_Namespace) },
+	{ "SIZEOF_AG_NETACCEPTFILTER", sizeof(AG_NetAcceptFilter) },
+	{ "SIZEOF_AG_NETADDR", sizeof(AG_NetAddr) },
+	{ "SIZEOF_AG_NETOPS", sizeof(AG_NetOps) },
+	{ "SIZEOF_AG_NETSOCKET", sizeof(AG_NetSocket) },
+	{ "SIZEOF_AG_NETSOCKETSOURCE", sizeof(AG_NetSocketSource) },
+	{ "SIZEOF_AG_OBJECTCLASS", sizeof(AG_ObjectClass) },
+	{ "SIZEOF_AG_OBJECTCLASSPVT", sizeof(AG_ObjectClassPvt) },
+	{ "SIZEOF_AG_OBJECTDEP", sizeof(AG_ObjectDep) },
+	{ "SIZEOF_AG_OBJECTHEADER", sizeof(AG_ObjectHeader) },
+	{ "SIZEOF_AG_OBJECTPVT", sizeof(AG_ObjectPvt) },
+	{ "SIZEOF_AG_TBL", sizeof(AG_Tbl) },
+	{ "SIZEOF_AG_TBLBUCKET", sizeof(AG_TblBucket) },
+	{ "SIZEOF_AG_TREE", sizeof(AG_Tree) },
+	{ "SIZEOF_AG_TREEITEM", sizeof(AG_TreeItem) },
+	{ "SIZEOF_AG_TEXT", sizeof(AG_Text) },
+	{ "SIZEOF_AG_TEXTELEMENT", sizeof(AG_TextElement) },
+	{ "SIZEOF_AG_TEXTENT", sizeof(AG_TextEnt) },
+	{ "SIZEOF_AG_THREAD", sizeof(AG_Thread) },
+	{ "SIZEOF_AG_THREADKEY", sizeof(AG_ThreadKey) },
+	{ "SIZEOF_AG_TIMER", sizeof(AG_Timer) },
+	{ "SIZEOF_AG_TIMERPVT", sizeof(AG_TimerPvt) },
+	{ "SIZEOF_AG_TIMEOPS", sizeof(AG_TimeOps) },
+	{ "SIZEOF_AG_USER", sizeof(AG_User) },
+	{ "SIZEOF_AG_USEROPS", sizeof(AG_UserOps) },
+	{ "SIZEOF_AG_VARIABLE", sizeof(AG_Variable) },
+	{ "SIZEOF_AG_VARIABLETYPEINFO", sizeof(AG_VariableTypeInfo) },
+};
 int
 main(int argc, char *argv[])
 {
@@ -2333,8 +2413,8 @@ main(int argc, char *argv[])
 
 	AG_InitCore(NULL, 0);
 	fprintf(f, "-- Compiled Agar-Core definitions on this system\n-- ex:syn=ada\n--\n");
-	fprintf(f, "-- This file was generated by the agar-core.defs module of a\n");
-	fprintf(f, "-- BSDBuild configure script <http://bsdbuild.hypertriton.com>.\n--\n");
+	fprintf(f, "-- This file was generated by the agar-core.defs module of a BSDBuild\n");
+	fprintf(f, "-- compiled configure script <http://bsdbuild.hypertriton.com>.\n--\n");
 	AG_GetVersion(&ver);
 	fprintf(f, "-- Agar Version %d.%d.%d\n", ver.major, ver.minor, ver.patch);
 	AG_GetCPUInfo(&cpuinfo);
@@ -2352,6 +2432,10 @@ main(int argc, char *argv[])
 #else
 		fprintf(f, "%s := %lu\n", constants[i].name, constants[i].value);
 #endif
+	}
+	fprintf(f, "--\n-- Agar-Core Sizes of Things\n--\n");
+	for (i = 0; i < sizeof(sizeofs) / sizeof(sizeofs[0]); i++) {
+		fprintf(f, "%s := %lu\n", sizeofs[i].name, sizeofs[i].value);
 	}
 	
 	fclose(f);
@@ -2403,8 +2487,8 @@ fi
 if [ "${HAVE_AGAR_CORE_DEFS}" != "yes" ]; then
 echo '* '
 echo '* ' >>config.log
-echo "* $PACKAGE requires Agar-Core preprocessor defs (version 1.6.0 or newer)."
-echo "* $PACKAGE requires Agar-Core preprocessor defs (version 1.6.0 or newer)." >>config.log
+echo "* $PACKAGE requires Agar-Core definitions (version 1.6.0 or newer)."
+echo "* $PACKAGE requires Agar-Core definitions (version 1.6.0 or newer)." >>config.log
 echo '* WWW: http://libagar.org'
 echo '* WWW: http://libagar.org' >>config.log
 echo '* '
@@ -2424,338 +2508,6 @@ echo '* WWW: http://libagar.org' >>config.log
 echo '* '
 echo '* ' >>config.log
 echo "Required dependency agar-core.defs version mismatch"
-exit 1
-fi
-$ECHO_N 'checking for Agar-Core types...'
-$ECHO_N 'checking for Agar-Core types...' >>config.log
-# BEGIN agar-core.types(1.6.0 ${prefix_agar})
-AGAR_VERSION=
-if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-core-config" ]; then
-AGAR_VERSION=`${prefix_agar}/bin/agar-core-config --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar}/bin/agar-core-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -e "${path}/agar-core-config" ]; then
-AGAR_VERSION=`${path}/agar-core-config --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-core-config"
-break
-elif [ -e "${path}/agar-core-config.exe" ]; then
-AGAR_VERSION=`${path}/agar-core-config.exe --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-core-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-if [ "${AGAR_CORE_VERSION}" != "" ]; then
-if [ "${prefix_agar}" != "" ]; then
-echo "yes ($AGAR_CORE_VERSION in ${prefix_agar})"
-echo "yes ($AGAR_CORE_VERSION in ${prefix_agar})" >>config.log
-else
-echo "yes ($AGAR_CORE_VERSION)"
-echo "yes ($AGAR_CORE_VERSION)" >>config.log
-fi
-MK_VERSION_MAJOR=`echo "$AGAR_CORE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
-MK_VERSION_MINOR=`echo "$AGAR_CORE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
-MK_VERSION_MICRO=`echo "$AGAR_CORE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
-MK_VERSION_OK=no
-if [ $MK_VERSION_MAJOR -gt 1 ]; then
-MK_VERSION_OK=yes
-elif [ $MK_VERSION_MAJOR -eq 1 ]; then
-if [ "$MK_VERSION_MINOR" = '' ]; then
-MK_VERSION_OK=yes
-else
-if [ $MK_VERSION_MINOR -gt 6 ]; then
-MK_VERSION_OK=yes
-elif [ $MK_VERSION_MINOR -eq 6 ]; then
-if [ "$MK_VERSION_MICRO" = '' ]; then
-MK_VERSION_OK=yes
-else
-if [ $MK_VERSION_MICRO -ge 0 ]; then
-MK_VERSION_OK=yes
-fi
-fi
-fi
-fi
-fi
-if [ "${MK_VERSION_OK}" = "no" ]; then
-echo '*'
-echo '*' >>config.log
-echo "* Minimum required version is 1.6.0 (found $AGAR_CORE_VERSION)"
-echo "* Minimum required version is 1.6.0 (found $AGAR_CORE_VERSION)" >>config.log
-echo '*'
-echo '*' >>config.log
-fi
-else
-if [ "${prefix_agar}" != "" ]; then
-echo "no (not in ${prefix_agar})"
-echo "no (not in ${prefix_agar})" >>config.log
-else
-echo 'no'
-echo 'no' >>config.log
-fi
-MK_VERSION_OK="no"
-fi
-if [ "${MK_VERSION_OK}" = "yes" ]; then
-$ECHO_N 'checking Agar-Core type sizes...'
-$ECHO_N 'checking Agar-Core type sizes...' >>config.log
-AGAR_CORE_CFLAGS=
-if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-core-config" ]; then
-AGAR_CORE_CFLAGS=`${prefix_agar}/bin/agar-core-config --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar}/bin/agar-core-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -e "${path}/agar-core-config" ]; then
-AGAR_CORE_CFLAGS=`${path}/agar-core-config --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-core-config"
-break
-elif [ -e "${path}/agar-core-config.exe" ]; then
-AGAR_CORE_CFLAGS=`${path}/agar-core-config.exe --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-core-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-AGAR_CORE_LIBS=
-if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-core-config" ]; then
-AGAR_CORE_LIBS=`${prefix_agar}/bin/agar-core-config --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar}/bin/agar-core-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -e "${path}/agar-core-config" ]; then
-AGAR_CORE_LIBS=`${path}/agar-core-config --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-core-config"
-break
-elif [ -e "${path}/agar-core-config.exe" ]; then
-AGAR_CORE_LIBS=`${path}/agar-core-config.exe --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-core-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-MK_COMPILE_STATUS=OK
-MK_RUN_STATUS=OK
-cat << EOT >conftest$$.c
-#include <stdio.h>
-#include <agar/core.h>
-
-static const struct {
-	const char *name;
-	unsigned long value;
-} constants[] = {
-	{ "AG_OBJECT_NAME_MAX",		AG_OBJECT_NAME_MAX },		/* object.h */
-	{ "AG_OBJECT_TYPE_MAX",		AG_OBJECT_TYPE_MAX },
-	{ "AG_OBJECT_HIER_MAX",		AG_OBJECT_HIER_MAX },
-	{ "AG_OBJECT_PATH_MAX",		AG_OBJECT_PATH_MAX },
-	{ "AG_OBJECT_LIBS_MAX",		AG_OBJECT_LIBS_MAX },
-	{ "AG_DSONAME_MAX",			AG_DSONAME_MAX },			/* dso.h */
-	{ "AG_EVENT_ARGS_MAX",		AG_EVENT_ARGS_MAX },		/* event.h */
-	{ "AG_EVENT_NAME_MAX",		AG_EVENT_NAME_MAX },
-	{ "AG_PATHNAME_MAX",		AG_PATHNAME_MAX },			/* limits.h */
-	{ "AG_FILENAME_MAX",		AG_FILENAME_MAX },
-	{ "AG_LOAD_STRING_MAX",		AG_LOAD_STRING_MAX },		/* load_string.h */
-	{ "AG_VERSION_NAME_MAX",	AG_VERSION_NAME_MAX },		/* load_version.h */
-	{ "AG_VERSION_MAX",			AG_VERSION_MAX },
-	{ "AG_TIMER_NAME_MAX",		AG_TIMER_NAME_MAX },		/* time.h */
-	{ "AG_USER_NAME_MAX",		AG_USER_NAME_MAX },			/* user.h */
-	{ "AG_VARIABLE_NAME_MAX",	AG_VARIABLE_NAME_MAX },		/* variable.h */
-};
-
-static const struct {
-	const char *name;
-	size_t      size;
-} nonobject_types[] = {
-	{ "AG_AgarVersion",		sizeof(AG_AgarVersion),		},
-	{ "AG_CPUInfo",			sizeof(AG_CPUInfo),			},
-	{ "AG_Cond",			sizeof(AG_Cond),			},
-	{ "AG_CoreSource",		sizeof(AG_CoreSource),		},
-	{ "AG_ConstCoreSource",	sizeof(AG_ConstCoreSource),	},
-	{ "AG_DSO",				sizeof(AG_DSO),				},
-	{ "AG_DSOSym",			sizeof(AG_DSOSym),			},
-	{ "AG_DataSource",		sizeof(AG_DataSource),		},
-	{ "AG_Dbt",				sizeof(AG_Dbt),				},
-	{ "AG_Dir",				sizeof(AG_Dir),				},
-	{ "AG_Event",			sizeof(AG_Event),			},
-	{ "AG_EventSink",		sizeof(AG_EventSink),		},
-	{ "AG_EventSource",		sizeof(AG_EventSource),		},
-	{ "AG_FileExtMapping",	sizeof(AG_FileExtMapping),	},
-	{ "AG_FileInfo",		sizeof(AG_FileInfo),		},
-	{ "AG_FileSource",		sizeof(AG_FileSource),		},
-	{ "AG_FmtString",		sizeof(AG_FmtString),		},
-	{ "AG_FmtStringExt",	sizeof(AG_FmtStringExt),	},
-	{ "AG_Function",		sizeof(AG_Function),		},
-	{ "AG_List",			sizeof(AG_List),			},
-	{ "AG_Mutex",			sizeof(AG_Mutex),			},
-	{ "AG_MutexAttr",		sizeof(AG_MutexAttr),		},
-	{ "AG_Namespace",		sizeof(AG_Namespace),		},
-	{ "AG_NetAcceptFilter",	sizeof(AG_NetAcceptFilter),	},
-	{ "AG_NetAddr",			sizeof(AG_NetAddr),			},
-	{ "AG_NetOps",			sizeof(AG_NetOps),			},
-	{ "AG_NetSocket",		sizeof(AG_NetSocket),		},
-	{ "AG_NetSocketSource",	sizeof(AG_NetSocketSource),	},
-	{ "AG_ObjectClass",		sizeof(AG_ObjectClass),		},
-	{ "AG_ObjectClassPvt",	sizeof(AG_ObjectClassPvt),	},
-	{ "AG_ObjectDep",		sizeof(AG_ObjectDep),		},
-	{ "AG_ObjectHeader",	sizeof(AG_ObjectHeader),	},
-	{ "AG_ObjectPvt",		sizeof(AG_ObjectPvt),		},
-	{ "AG_Tbl",				sizeof(AG_Tbl),				},
-	{ "AG_TblBucket",		sizeof(AG_TblBucket),		},
-	{ "AG_Tree",			sizeof(AG_Tree),			},
-	{ "AG_TreeItem",		sizeof(AG_TreeItem),		},
-	{ "AG_Text",			sizeof(AG_Text),			},
-	{ "AG_TextElement",		sizeof(AG_TextElement),		},
-	{ "AG_TextEnt",			sizeof(AG_TextEnt),			},
-	{ "AG_Thread",			sizeof(AG_Thread),			},
-	{ "AG_ThreadKey",		sizeof(AG_ThreadKey),		},
-	{ "AG_Timer",			sizeof(AG_Timer),			},
-	{ "AG_TimerPvt",		sizeof(AG_TimerPvt),		},
-	{ "AG_TimeOps",			sizeof(AG_TimeOps),			},
-	{ "AG_User",			sizeof(AG_User),			},
-	{ "AG_UserOps",			sizeof(AG_UserOps),			},
-	{ "AG_Variable",		sizeof(AG_Variable),		},
-	{ "AG_VariableTypeInfo",sizeof(AG_VariableTypeInfo),},
-};
-
-static void
-PrintClass(FILE *f, AG_ObjectClass *C)
-{
-	AG_ObjectClass *Csub;
-
-	fprintf(f, "# %s [%s]: %u.%u%s%s\n", C->name, C->hier,
-	    C->ver.major, C->ver.minor,
-		(C->pvt.libs[0] != '\0') ? " @" : "", C->pvt.libs);
-	fprintf(f, "%s:%lu\n", C->name, (unsigned long)C->size);
-
-	AG_TAILQ_FOREACH(Csub, &C->pvt.sub, pvt.subclasses)
-		PrintClass(f, Csub);
-}
-
-int
-main(int argc, char *argv[])
-{
-	AG_AgarVersion ver;
-	AG_CPUInfo cpuinfo;
-	unsigned int i;
-	FILE *f;
-
-	if ((f = fopen("agar-core.types", "w")) == NULL) {
-		printf("Cannot write agar-core.types\n");
-		return (1);
-	}
-
-	AG_InitCore("conf-test", 0);
-	fprintf(f, "# Compiled Agar-Core type sizes on this system\n#\n");
-	fprintf(f, "# This file was generated by the agar-core.types module of a\n");
-	fprintf(f, "# BSDBuild configure script <http://bsdbuild.hypertriton.com>.\n#\n");
-	AG_GetVersion(&ver);
-	fprintf(f, "# Agar Version %d.%d.%d\n", ver.major, ver.minor, ver.patch);
-	AG_GetCPUInfo(&cpuinfo);
-	fprintf(f, "# Platform: %s (%s, 0x%x)\n#\n", cpuinfo.arch, cpuinfo.vendorID,
-	    cpuinfo.ext);
-	fprintf(f, "# Agar-Core constants\n#\n");
-	for (i = 0; i < sizeof(constants) / sizeof(constants[0]); i++)
-		fprintf(f, "%s:%lu\n", constants[i].name, constants[i].value);
-
-	fprintf(f, "#\n# Size of AG_Object(3) derived classes\n#\n");
-	PrintClass(f, &agObjectClass);
-		
-	fprintf(f, "#\n# Size of other types\n#\n");
-	for (i = 0; i < sizeof(nonobject_types) / sizeof(nonobject_types[0]); i++)
-		fprintf(f, "%s:%lu\n", nonobject_types[i].name, nonobject_types[i].size);
-	
-	fclose(f);
-	AG_Quit();
-	return (0);
-}
-EOT
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_CORE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_CORE_LIBS} 2>>config.log
-if [ "$?" != "0" ]; then
-echo "failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-(cd $testdir && ./conftest$$$EXECSUFFIX) >>config.log
-if [ "$?" = "0" ]; then
-echo 'yes'
-echo 'yes' >>config.log
-HAVE_AGAR_CORE_TYPES=yes
-bb_o=$bb_incdir/have_agar_core_types.h
-echo '#ifndef HAVE_AGAR_CORE_TYPES' >$bb_o
-echo "#define HAVE_AGAR_CORE_TYPES \"$HAVE_AGAR_CORE_TYPES\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_AGAR_CORE_TYPES\"] = \"$HAVE_AGAR_CORE_TYPES\"" >>configure.lua
-else
-echo 'no, test program failed'
-echo 'no, test program failed' >>config.log
-MK_RUN_STATUS="FAIL $?"
-HAVE_AGAR_CORE_TYPES=no
-echo '#undef HAVE_AGAR_CORE_TYPES' >$bb_incdir/have_agar_core_types.h
-echo 'hdefs["HAVE_AGAR_CORE_TYPES"] = nil' >>configure.lua
-fi
-else
-echo 'no'
-echo 'no' >>config.log
-MK_RUN_STATUS="FAIL $?"
-HAVE_AGAR_CORE_TYPES=no
-echo '#undef HAVE_AGAR_CORE_TYPES' >$bb_incdir/have_agar_core_types.h
-echo 'hdefs["HAVE_AGAR_CORE_TYPES"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-else
-HAVE_AGAR_CORE_TYPES="no"
-echo '#undef HAVE_AGAR_CORE_TYPES' >$bb_incdir/have_agar_core_types.h
-echo 'hdefs["HAVE_AGAR_CORE_TYPES"] = nil' >>configure.lua
-fi
-# END agar-core.types
-if [ "${HAVE_AGAR_CORE_TYPES}" != "yes" ]; then
-echo '* '
-echo '* ' >>config.log
-echo "* $PACKAGE requires Agar-Core types (version 1.6.0 or newer)."
-echo "* $PACKAGE requires Agar-Core types (version 1.6.0 or newer)." >>config.log
-echo '* WWW: http://libagar.org'
-echo '* WWW: http://libagar.org' >>config.log
-echo '* '
-echo '* ' >>config.log
-echo "Required dependency agar-core.types not found"
-exit 1
-fi
-if [ "${MK_VERSION_OK}" != "yes" ]; then
-echo '* '
-echo '* ' >>config.log
-echo '* This software requires agar-core.types version >= 1.6.0,'
-echo '* This software requires agar-core.types version >= 1.6.0,' >>config.log
-echo '* please update that package and try again.'
-echo '* please update that package and try again.' >>config.log
-echo '* WWW: http://libagar.org'
-echo '* WWW: http://libagar.org' >>config.log
-echo '* '
-echo '* ' >>config.log
-echo "Required dependency agar-core.types version mismatch"
 exit 1
 fi
 CFLAGS="$CFLAGS -I$SRC"
@@ -2958,8 +2710,6 @@ echo "HAVE_AGAR_CORE=$HAVE_AGAR_CORE" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR_CORE\"] = \"$HAVE_AGAR_CORE\"" >>configure.lua
 echo "HAVE_AGAR_CORE_DEFS=$HAVE_AGAR_CORE_DEFS" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR_CORE_DEFS\"] = \"$HAVE_AGAR_CORE_DEFS\"" >>configure.lua
-echo "HAVE_AGAR_CORE_TYPES=$HAVE_AGAR_CORE_TYPES" >>Makefile.config
-echo "mdefs[\"HAVE_AGAR_CORE_TYPES\"] = \"$HAVE_AGAR_CORE_TYPES\"" >>configure.lua
 echo "HAVE_CC=$HAVE_CC" >>Makefile.config
 echo "mdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
 echo "HAVE_CC65=$HAVE_CC65" >>Makefile.config

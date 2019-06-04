@@ -13,12 +13,6 @@ LIB_LINKS=	${CORE_LINKS_STATIC}
 CFLAGS+=	${AGAR_CORE_CFLAGS}
 LIBS+=		${AGAR_CORE_LIBS}
 
-SRCS_GENERATED= agar-data_source.ads \
-		agar-dso.ads \
-		agar-event.ads \
-		agar-object.ads \
-		agar-timer.ads
-
 SRCS=		ag_dso.c \
 		ag_event.c \
 		agar.ads \
@@ -35,34 +29,15 @@ SRCS=		ag_dso.c \
 CONFIGSCRIPTS=	agar-ada-core-config
 PCMODULES=	agar-ada-core.pc
 
-TYPEMAP=	agar-core.types
-TYPESUBST=	${SH} ${TOP}/mk/typesubst.sh
-
 ADAPREPFILE=	agar-core.def
 
-DATAFILES=	${TYPEMAP} \
-		LICENSE \
+DATAFILES=	LICENSE \
 		agar-core.def
 
-CLEANFILES+=	${SRCS_GENERATED} Cow.obj
-CLEANDIRFILES+=	${TYPEMAP} ${ADAPREPFILE}
+CLEANFILES+=	Cow.obj
+CLEANDIRFILES+=	${ADAPREPFILE}
 
 include ${TOP}/mk/build.lib.mk
-
-agar-object.ads: agar-object.ads.in ${TYPEMAP}
-	${TYPESUBST} agar-object.ads.in ${TYPEMAP} > $@
-
-agar-data_source.ads: agar-data_source.ads.in ${TYPEMAP}
-	${TYPESUBST} agar-data_source.ads.in ${TYPEMAP} > $@
-
-agar-dso.ads: agar-dso.ads.in ${TYPEMAP}
-	${TYPESUBST} agar-dso.ads.in ${TYPEMAP} > $@
-
-agar-event.ads: agar-event.ads.in ${TYPEMAP}
-	${TYPESUBST} agar-event.ads.in ${TYPEMAP} > $@
-
-agar-timer.ads: agar-timer.ads.in ${TYPEMAP}
-	${TYPESUBST} agar-timer.ads.in ${TYPEMAP} > $@
 
 configure: configure.in
 	cat configure.in | mkconfigure > configure

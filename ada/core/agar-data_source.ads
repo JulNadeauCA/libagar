@@ -19,11 +19,11 @@ package Agar.Data_Source is
   package CS renames Interfaces.C.Strings;
   package ERR renames Agar.Error;
   
-  LOAD_STRING_MAX : constant Natural := %%const(AG_LOAD_STRING_MAX)%%;
+  LOAD_STRING_MAX : constant Natural := $AG_LOAD_STRING_MAX;
 
-  type Data_Source is array (1 .. %%sizeof(AG_DataSource)%%) of
+  type Data_Source is array (1 .. $SIZEOF_AG_DATASOURCE) of
     aliased Interfaces.Unsigned_8 with Convention => C;
-  for Data_Source'Size use %%sizeof(AG_DataSource)%% * System.Storage_Unit;
+  for Data_Source'Size use $SIZEOF_AG_DATASOURCE * System.Storage_Unit;
 
   type Data_Source_Access             is access all Data_Source with Convention => C;
   subtype Data_Source_Not_Null_Access is not null Data_Source_Access;
