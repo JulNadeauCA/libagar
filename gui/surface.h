@@ -196,6 +196,7 @@ extern AG_GrayscaleMode agGrayscaleMode;        /* Standard grayscale/RGB map */
 
 void AG_PixelFormatIndexed(AG_PixelFormat *_Nonnull, int);
 void AG_PixelFormatGrayscale(AG_PixelFormat *_Nonnull, int);
+void AG_PixelFormatRGB(AG_PixelFormat *_Nonnull, int, AG_Pixel,AG_Pixel,AG_Pixel);
 void AG_PixelFormatRGBA(AG_PixelFormat *_Nonnull, int,
                         AG_Pixel,AG_Pixel,AG_Pixel,AG_Pixel);
 
@@ -452,12 +453,6 @@ Uint64 ag_surface_get64(const AG_Surface *_Nonnull, int,int) _Pure_Attribute;
 void ag_surface_put64_at(AG_Surface *_Nonnull, Uint8 *_Nonnull, Uint64);
 void ag_surface_put64(AG_Surface *_Nonnull, int,int, Uint64);
 
-void ag_pixel_format_rgb(AG_PixelFormat *, int, Uint64,Uint64,Uint64);
-
-# else								/* SM or MD */
-
-void ag_pixel_format_rgb(AG_PixelFormat *, int, Uint32,Uint32,Uint32);
-
 # endif /* SMALL or MEDIUM */
 
 Uint32 ag_surface_get32_at(const AG_Surface *_Nonnull, const Uint8 *_Nonnull)
@@ -503,7 +498,6 @@ void ag_surface_set_colorkey(AG_Surface *_Nonnull, Uint, AG_Pixel);
 # define AG_SurfaceBlend(S,x,y,c,fn)		ag_surface_blend((S),(x),(y),(c),(fn))
 # define AG_SurfaceBlendRGB16(S,x,y,r,g,b,a,fn)	ag_surface_blend_rgb16((S),(x),(y),(r),(g),(b),(a),(fn))
 # define AG_SurfaceBlendRGB16_At(S,p,r,g,b,a,fn) ag_surface_blend_rgb16_at((S),(p),(r),(g),(b),(a),(fn))
-# define AG_PixelFormatRGB(pf,bpp,r,g,b)	ag_pixel_format_rgb((pf),(bpp),(r),(g),(b))
 # define AG_PixelFormatCompare(a,b)		ag_pixel_format_compare((a),(b))
 # define AG_PixelFormatFree(pf)			ag_pixel_format_free(pf)
 # define AG_SurfaceSetAlpha(S,fl,alpha)		ag_surface_set_alpha((S),(fl),(alpha))

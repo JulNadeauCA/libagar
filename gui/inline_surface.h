@@ -66,6 +66,48 @@ ag_pixel_format_is_supported(AG_SurfaceMode mode, int BitsPerPixel)
 	return (0);
 }
 
+/*
+ * Test whether two pixel formats are identical.
+ * In indexed mode, include both palettes in the comparison.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ int _Pure_Attribute
+AG_PixelFormatCompare(const AG_PixelFormat *_Nonnull a,
+                      const AG_PixelFormat *_Nonnull b)
+#else
+int
+ag_pixel_format_compare(const AG_PixelFormat *a, const AG_PixelFormat *b)
+#endif
+{
+	if (a->mode != b->mode ||
+	    a->BitsPerPixel != b->BitsPerPixel) {
+		return (1);
+	}
+	switch (a->mode) {
+	case AG_SURFACE_PACKED:
+	default:
+		return !(a->Rmask == b->Rmask &&
+			 a->Gmask == b->Gmask &&
+			 a->Bmask == b->Bmask &&
+			 a->Amask == b->Amask);
+	case AG_SURFACE_INDEXED:
+#ifdef AG_DEBUG
+		if (a->palette->nColors != b->palette->nColors)  {
+			AG_SetError("nColors %u != %u",
+			    a->palette->nColors,
+			    b->palette->nColors);
+			AG_FatalError(NULL);
+		}
+#endif
+		return memcmp(a->palette->colors, b->palette->colors,
+		              a->palette->nColors * sizeof(AG_Color));
+#ifdef AG_HAVE_FLOAT
+	case AG_SURFACE_GRAYSCALE:
+		return !(a->graymode == b->graymode);
+#endif
+	}
+}
+
 /* Test if x,y lies inside surface's clipping rectangle */
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Pure_Attribute
@@ -101,14 +143,12 @@ ag_map_pixel32(const AG_PixelFormat *pf, const AG_Color *c)
 }
 
 #if AG_MODEL == AG_LARGE
-/*
- * 64-bit Wide Pixel Access Methods
- */
 # define AG_EXTRACT_COMPONENT(rv, mask, shift, loss, bits)		\
 	tmp = (px & mask) >> shift;					\
 	(rv) = (tmp << loss) + (tmp >> (bits - (loss << 1)));
-
-/* Map 16-bit RGB(A) components and a 16-bit alpha to a 64-bit pixel. */
+/*
+ * Map 16-bit RGB components to a 64-bit (1- to 64-bpp) pixel.
+ */
 # ifdef AG_INLINE_HEADER
 static __inline__ Uint64 _Pure_Attribute
 AG_MapPixel64_RGB16(const AG_PixelFormat *_Nonnull pf,
@@ -134,6 +174,9 @@ ag_map_pixel64_rgb16(const AG_PixelFormat *pf, Uint16 r, Uint16 g, Uint16 b)
 	}
 }
 
+/*
+ * Map 16-bit RGBA components to a 64-bit (1- to 64-bpp) pixel.
+ */
 # ifdef AG_INLINE_HEADER
 static __inline__ Uint64 _Pure_Attribute
 AG_MapPixel64_RGBA16(const AG_PixelFormat *_Nonnull pf,
@@ -160,7 +203,9 @@ ag_map_pixel64_rgba16(const AG_PixelFormat *pf,
 	}
 }
 
-/* Map an AG_Color to a 64-bit pixel. */
+/*
+ * Map an AG_Color to a 64-bit (1- to 64-bpp) pixel.
+ */
 # ifdef AG_INLINE_HEADER
 static __inline__ Uint64 _Pure_Attribute
 AG_MapPixel64(const AG_PixelFormat *_Nonnull pf, const AG_Color *_Nonnull c)
@@ -172,7 +217,9 @@ ag_map_pixel64(const AG_PixelFormat *pf, const AG_Color *c)
 	return AG_MapPixel64_RGBA16(pf, c->r, c->g, c->b, c->a);
 }
 
-/* Extract 16-bit RGB(A) components from a 64-bit pixel. */
+/*
+ * Extract 16-bit RGB components from a 64-bit (1- to 64-bpp) pixel.
+ */
 # ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_GetColor64_RGB16(Uint64 px, const AG_PixelFormat *_Nonnull pf,
@@ -209,6 +256,9 @@ ag_get_color64_rgb16(Uint64 px, const AG_PixelFormat *pf,
 	}
 }
 
+/*
+ * Extract 16-bit RGBA components from a 64-bit (1- to 64-bpp) pixel.
+ */
 # ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_GetColor64_RGBA16(Uint64 px, const AG_PixelFormat *_Nonnull pf,
@@ -245,7 +295,9 @@ ag_get_color64_rgba16(Uint64 px, const AG_PixelFormat *pf,
 	}
 }
 
-/* Extract (compressed) 8-bit RGB(A) components from a 64-bit pixel. */
+/*
+ * Extract compressed 8-bit RGB components from a 64-bit (1- to 64-bpp) pixel.
+ */
 # ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_GetColor64_RGB8(Uint64 px, const AG_PixelFormat *_Nonnull pf,
@@ -264,6 +316,9 @@ ag_get_color64_rgb8(Uint64 px, const AG_PixelFormat *pf,
 	*b = AG_16to8(B);
 }
 
+/*
+ * Extract compressed 8-bit RGBA components from a 64-bit (1- to 64-bpp) pixel.
+ */
 # ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_GetColor64_RGBA8(Uint64 px, const AG_PixelFormat *_Nonnull pf,
@@ -286,6 +341,31 @@ ag_get_color64_rgba8(Uint64 px, const AG_PixelFormat *pf,
 
 # undef AG_EXTRACT_COMPONENT
 #endif /* AG_LARGE */
+
+/*
+ * Return the (1- to 64-bit) pixel at coordinates x,y in surface S.
+ * If S is > 32-bit, return a compressed 32-bit approximation.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ Uint32 _Pure_Attribute
+AG_SurfaceGet32(const AG_Surface *_Nonnull S, int x, int y)
+#else
+Uint32
+ag_surface_get32(const AG_Surface *S, int x, int y)
+#endif
+{
+#ifdef AG_DEBUG
+	if (x < 0 || y < 0 || x >= S->w || y >= S->h)
+		AG_FatalError("Illegal SurfaceGet32");
+#endif
+	if (S->format.BitsPerPixel < 8) {
+		return (Uint32)AG_SurfaceGet8(S, x,y);
+	} else {
+		return AG_SurfaceGet32_At(S, S->pixels +
+		    y*S->pitch +
+		    x*S->format.BytesPerPixel);
+	}
+}
 
 /*
  * Return the (8- to 64-bit) pixel at address p in surface S.
@@ -326,32 +406,34 @@ ag_surface_get32_at(const AG_Surface *S, const Uint8 *p)
 	return (*p);
 }
 	
+#if AG_MODEL == AG_LARGE
 /*
  * Return the (1- to 64-bit) pixel at coordinates x,y in surface S.
- * If S is > 32-bit, return a compressed 32-bit approximation.
  */
-#ifdef AG_INLINE_HEADER
-static __inline__ Uint32 _Pure_Attribute
-AG_SurfaceGet32(const AG_Surface *_Nonnull S, int x, int y)
-#else
-Uint32
-ag_surface_get32(const AG_Surface *S, int x, int y)
-#endif
+# ifdef AG_INLINE_HEADER
+static __inline__ Uint64 _Pure_Attribute
+AG_SurfaceGet64(const AG_Surface *_Nonnull S, int x, int y)
+# else
+Uint64
+ag_surface_get64(const AG_Surface *S, int x, int y)
+# endif
 {
-#ifdef AG_DEBUG
-	if (x < 0 || y < 0 || x >= S->w || y >= S->h)
-		AG_FatalError("Illegal SurfaceGet32");
-#endif
+# ifdef AG_DEBUG
+	if (x < 0 || y < 0 || x >= S->w || y >= S->h) {
+		AG_SetError("Illegal SurfaceGet64(%d,%d > %ux%u)", x,y,
+		    S->w, S->h);
+		AG_FatalError(NULL);
+	}
+# endif
 	if (S->format.BitsPerPixel < 8) {
-		return (Uint32)AG_SurfaceGet8(S, x,y);
+		return (Uint64)AG_SurfaceGet8(S, x,y);
 	} else {
-		return AG_SurfaceGet32_At(S, S->pixels +
+		return AG_SurfaceGet64_At(S, S->pixels +
 		    y*S->pitch +
 		    x*S->format.BytesPerPixel);
 	}
 }
 
-#if AG_MODEL == AG_LARGE
 /*
  * Return the (8- to 64-bit) pixel at address p in surface S.
  */
@@ -400,33 +482,31 @@ ag_surface_get64_at(const AG_Surface *S, const Uint8 *p)
 	return (*p);
 }
 
-/* Return the (1- to 64-bit) pixel at coordinates x,y in surface S. */
-# ifdef AG_INLINE_HEADER
-static __inline__ Uint64 _Pure_Attribute
-AG_SurfaceGet64(const AG_Surface *_Nonnull S, int x, int y)
-# else
-Uint64
-ag_surface_get64(const AG_Surface *S, int x, int y)
-# endif
-{
-# ifdef AG_DEBUG
-	if (x < 0 || y < 0 || x >= S->w || y >= S->h) {
-		AG_SetError("Illegal SurfaceGet64(%d,%d > %ux%u)", x,y,
-		    S->w, S->h);
-		AG_FatalError(NULL);
-	}
-# endif
-	if (S->format.BitsPerPixel < 8) {
-		return (Uint64)AG_SurfaceGet8(S, x,y);
-	} else {
-		return AG_SurfaceGet64_At(S, S->pixels +
-		    y*S->pitch +
-		    x*S->format.BytesPerPixel);
-	}
-}
 #endif /* AG_LARGE */
 
-/* Write to the (8- to 32-bit) pixel at address p in surface S. */
+/*
+ * Write to the (1- to 64-bit) pixel at coordinates x,y in surface S.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_SurfacePut32(AG_Surface *_Nonnull S, int x, int y, Uint32 px)
+#else
+void
+ag_surface_put32(AG_Surface *S, int x, int y, Uint32 px)
+#endif
+{
+	if (S->format.BitsPerPixel < 8) {
+		AG_SurfacePut8(S, x,y, (Uint8)px);
+	} else {
+		AG_SurfacePut32_At(S, S->pixels +
+		    y*S->pitch +
+		    x*S->format.BytesPerPixel, px);
+	}
+}
+
+/*
+ * Write to the (8- to 32-bit) pixel at address p in surface S.
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_SurfacePut32_At(AG_Surface *_Nonnull S, Uint8 *_Nonnull p, Uint32 px)
@@ -468,26 +548,30 @@ ag_surface_put32_at(AG_Surface *S, Uint8 *p, Uint32 px)
 	}
 }
 
-/* Write to the (1- to 64-bit) pixel at coordinates x,y in surface S. */
-#ifdef AG_INLINE_HEADER
+#if AG_MODEL == AG_LARGE
+/*
+ * Write the pixel at x,y in a (1- to 64-bit) surface S.
+ */
+# ifdef AG_INLINE_HEADER
 static __inline__ void
-AG_SurfacePut32(AG_Surface *_Nonnull S, int x, int y, Uint32 px)
-#else
+AG_SurfacePut64(AG_Surface *_Nonnull S, int x, int y, Uint64 px)
+# else
 void
-ag_surface_put32(AG_Surface *S, int x, int y, Uint32 px)
-#endif
+ag_surface_put64(AG_Surface *S, int x, int y, Uint64 px)
+# endif
 {
 	if (S->format.BitsPerPixel < 8) {
 		AG_SurfacePut8(S, x,y, (Uint8)px);
 	} else {
-		AG_SurfacePut32_At(S, S->pixels +
+		AG_SurfacePut64_At(S, S->pixels +
 		    y*S->pitch +
 		    x*S->format.BytesPerPixel, px);
 	}
 }
 
-#if AG_MODEL == AG_LARGE
-/* Write the pixel at address p in an (8- to 64-bpp) surface S. */
+/*
+ * Write the pixel at address p in an (8- to 64-bpp) surface S.
+ */
 # ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_SurfacePut64_At(AG_Surface *_Nonnull S, Uint8 *_Nonnull p, Uint64 px)
@@ -524,24 +608,66 @@ ag_surface_put64_at(AG_Surface *S, Uint8 *p, Uint64 px)
 	}
 }
 
-/* Write the pixel at x,y in a (1- to 64-bit) surface S. */
+/*
+ * Blend 16-bit RGBA components with the pixel at x,y and overwrite it with
+ * the result. No clipping. Target pixel alpha is set according to fn.
+ */
 # ifdef AG_INLINE_HEADER
 static __inline__ void
-AG_SurfacePut64(AG_Surface *_Nonnull S, int x, int y, Uint64 px)
+AG_SurfaceBlendRGB16(AG_Surface *_Nonnull S, int x, int y,
+    Uint16 r, Uint16 g, Uint16 b, Uint16 a, AG_AlphaFn fn)
 # else
 void
-ag_surface_put64(AG_Surface *S, int x, int y, Uint64 px)
+ag_surface_blend_rgb16(AG_Surface *S, int x, int y,
+    Uint16 r, Uint16 g, Uint16 b, Uint16 a, AG_AlphaFn fn)
 # endif
 {
-	if (S->format.BitsPerPixel < 8) {
-		AG_SurfacePut8(S, x,y, (Uint8)px);
-	} else {
-		AG_SurfacePut64_At(S, S->pixels +
-		    y*S->pitch +
-		    x*S->format.BytesPerPixel, px);
-	}
+	AG_Color c = { r,g,b,a };
+
+	AG_SurfaceBlend_At(S, S->pixels +
+	    y*S->pitch +
+	    x*S->format.BytesPerPixel,
+	    &c, fn);
+}
+
+/*
+ * Blend 16-bit RGBA components with the pixel at address p and overwrite it
+ * with the result.  No clipping is done. Set target alpha according to fn.
+ */
+# ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_SurfaceBlendRGB16_At(AG_Surface *_Nonnull S, Uint8 *_Nonnull p,
+    Uint16 r, Uint16 g, Uint16 b, Uint16 a, AG_AlphaFn fn)
+# else
+void
+ag_surface_blend_rgb16_at(AG_Surface *S, Uint8 *p,
+    Uint16 r, Uint16 g, Uint16 b, Uint16 a, AG_AlphaFn fn)
+# endif
+{
+	AG_Color c = { r,g,b,a };
+
+	AG_SurfaceBlend_At(S,p, &c, fn);
 }
 #endif /* AG_LARGE */
+
+/*
+ * Blend a color c with the pixel at x,y and overwrite it with the result.
+ * No clipping is done. Sets the pixel's alpha component according to fn.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_SurfaceBlend(AG_Surface *_Nonnull S, int x, int y, const AG_Color *_Nonnull c,
+    AG_AlphaFn fn)
+#else
+void
+ag_surface_blend(AG_Surface *S, int x, int y, const AG_Color *c, AG_AlphaFn fn)
+#endif
+{
+	AG_SurfaceBlend_At(S, S->pixels +
+	    y*S->pitch +
+	    x*S->format.BytesPerPixel,
+	    c, fn);
+}
 
 /*
  * Blend a color c with the pixel at address p and overwrite it with the result.
@@ -586,147 +712,6 @@ ag_surface_blend_at(AG_Surface *S, Uint8 *p, const AG_Color *_Nonnull c,
 	        pc.g + (((c->g - pc.g)*ca) >> AG_COMPONENT_BITS),
 	        pc.b + (((c->b - pc.b)*ca) >> AG_COMPONENT_BITS),
 	        pc.a));
-}
-
-/*
- * Blend a color c with the pixel at x,y and overwrite it with the result.
- * No clipping is done. Sets the pixel's alpha component according to fn.
- */
-#ifdef AG_INLINE_HEADER
-static __inline__ void
-AG_SurfaceBlend(AG_Surface *_Nonnull S, int x, int y, const AG_Color *_Nonnull c,
-    AG_AlphaFn fn)
-#else
-void
-ag_surface_blend(AG_Surface *S, int x, int y, const AG_Color *c, AG_AlphaFn fn)
-#endif
-{
-	AG_SurfaceBlend_At(S, S->pixels +
-	    y*S->pitch +
-	    x*S->format.BytesPerPixel,
-	    c, fn);
-}
-
-#if AG_MODEL == AG_LARGE					/* LG */
-/*
- * Blend 16-bit RGBA components with the pixel at x,y and overwrite it with
- * the result. No clipping. Target pixel alpha is set according to fn.
- */
-# ifdef AG_INLINE_HEADER
-static __inline__ void
-AG_SurfaceBlendRGB16(AG_Surface *_Nonnull S, int x, int y,
-    Uint16 r, Uint16 g, Uint16 b, Uint16 a, AG_AlphaFn fn)
-# else
-void
-ag_surface_blend_rgb16(AG_Surface *S, int x, int y,
-    Uint16 r, Uint16 g, Uint16 b, Uint16 a, AG_AlphaFn fn)
-# endif
-{
-	AG_Color c = { r,g,b,a };
-
-	AG_SurfaceBlend_At(S, S->pixels +
-	    y*S->pitch +
-	    x*S->format.BytesPerPixel,
-	    &c, fn);
-}
-
-/*
- * Blend 16-bit RGBA components with the pixel at address p and overwrite it
- * with the result.  No clipping is done. Set target alpha according to fn.
- */
-# ifdef AG_INLINE_HEADER
-static __inline__ void
-AG_SurfaceBlendRGB16_At(AG_Surface *_Nonnull S, Uint8 *_Nonnull p,
-    Uint16 r, Uint16 g, Uint16 b, Uint16 a, AG_AlphaFn fn)
-# else
-void
-ag_surface_blend_rgb16_at(AG_Surface *S, Uint8 *p,
-    Uint16 r, Uint16 g, Uint16 b, Uint16 a, AG_AlphaFn fn)
-# endif
-{
-	AG_Color c = { r,g,b,a };
-
-	AG_SurfaceBlend_At(S,p, &c, fn);
-}
-
-/*
- * Initialize a packed-pixel format from RGB component masks (no alpha).
- * Maximum depth 64-bpp.
- */
-#ifdef AG_INLINE_HEADER
-static __inline__ void
-AG_PixelFormatRGB(AG_PixelFormat *_Nonnull pf, int BitsPerPixel,
-    Uint64 Rmask, Uint64 Gmask, Uint64 Bmask)
-#else
-void
-ag_pixel_format_rgb(AG_PixelFormat *pf, int BitsPerPixel,
-    Uint64 Rmask, Uint64 Gmask, Uint64 Bmask)
-#endif
-{
-	AG_PixelFormatRGBA(pf, BitsPerPixel, Rmask, Gmask, Bmask, 0);
-}
-
-#else								/* SM or MD */
-
-/*
- * Initialize a packed-pixel format from RGB component masks (no alpha)
- * Maximum depth 32-bpp.
- */
-#ifdef AG_INLINE_HEADER
-static __inline__ void
-AG_PixelFormatRGB(AG_PixelFormat *_Nonnull pf, int BitsPerPixel,
-    Uint32 Rmask, Uint32 Gmask, Uint32 Bmask)
-#else
-void
-ag_pixel_format_rgb(AG_PixelFormat *pf, int BitsPerPixel,
-    Uint32 Rmask, Uint32 Gmask, Uint32 Bmask)
-#endif
-{
-	AG_PixelFormatRGBA(pf, BitsPerPixel, Rmask, Gmask, Bmask, 0);
-}
-
-#endif /* SMALL or MEDIUM */
-
-/*
- * Test whether two pixel formats are identical.
- * In indexed mode, include both palettes in the comparison.
- */
-#ifdef AG_INLINE_HEADER
-static __inline__ int _Pure_Attribute
-AG_PixelFormatCompare(const AG_PixelFormat *_Nonnull a,
-                      const AG_PixelFormat *_Nonnull b)
-#else
-int
-ag_pixel_format_compare(const AG_PixelFormat *a, const AG_PixelFormat *b)
-#endif
-{
-	if (a->mode != b->mode ||
-	    a->BitsPerPixel != b->BitsPerPixel) {
-		return (1);
-	}
-	switch (a->mode) {
-	case AG_SURFACE_PACKED:
-	default:
-		return !(a->Rmask == b->Rmask &&
-			 a->Gmask == b->Gmask &&
-			 a->Bmask == b->Bmask &&
-			 a->Amask == b->Amask);
-	case AG_SURFACE_INDEXED:
-#ifdef AG_DEBUG
-		if (a->palette->nColors != b->palette->nColors)  {
-			AG_SetError("nColors %u != %u",
-			    a->palette->nColors,
-			    b->palette->nColors);
-			AG_FatalError(NULL);
-		}
-#endif
-		return memcmp(a->palette->colors, b->palette->colors,
-		              a->palette->nColors * sizeof(AG_Color));
-#ifdef AG_HAVE_FLOAT
-	case AG_SURFACE_GRAYSCALE:
-		return !(a->graymode == b->graymode);
-#endif
-	}
 }
 
 /* Release all resources possibly allocated by an AG_PixelFormat. */

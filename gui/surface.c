@@ -71,6 +71,14 @@ enum ag_grayscale_mode agGrayscaleMode = AG_GRAYSCALE_BT709;
 		} \
 	}
 
+/* Initialize a packed-pixel format from RGB component masks */
+void
+AG_PixelFormatRGB(AG_PixelFormat *pf, int BitsPerPixel,
+    AG_Pixel Rmask, AG_Pixel Gmask, AG_Pixel Bmask)
+{
+	AG_PixelFormatRGBA(pf, BitsPerPixel, Rmask, Gmask, Bmask, 0);
+}
+
 /* Initialize a packed-pixel format from RGBA component masks */
 void
 AG_PixelFormatRGBA(AG_PixelFormat *pf, int BitsPerPixel,
