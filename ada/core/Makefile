@@ -3,7 +3,7 @@ include Makefile.config
 include ${TOP}/core/Makefile.inc
 
 LIB=		ag_ada_core
-LIB_CURRENT=	1
+LIB_CURRENT=	6
 LIB_REVISION=	0
 LIB_AGE=	0
 LIB_SHARED=	Yes

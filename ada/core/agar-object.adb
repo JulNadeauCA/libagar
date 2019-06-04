@@ -3,7 +3,7 @@
 --                          A G A R . O B J E C T                           --
 --                                 B o d y                                  --
 --                                                                          --
--- Copyright (c) 2018, Julien Nadeau Carriere (vedge@hypertriton.com)       --
+-- Copyright (c) 2018-2019, Julien Nadeau Carriere (vedge@csoft.net)        --
 -- Copyright (c) 2010, coreland (mark@coreland.ath.cx)                      --
 --                                                                          --
 -- Permission to use, copy, modify, and/or distribute this software for any --
