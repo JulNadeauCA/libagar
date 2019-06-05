@@ -74,7 +74,7 @@ DestroyErrorMsg(void *_Nullable msg)
 int
 AG_InitErrorSubsystem(void)
 {
-	agErrorMsg = NULL;
+	agErrorMsg = Strdup("No error");
 	agErrorCode = AG_EUNDEFINED;
 
 #ifdef AG_THREADS
@@ -82,7 +82,7 @@ AG_InitErrorSubsystem(void)
 	    AG_ThreadKeyTryCreate(&agErrorCodeKey, NULL) == -1) {
 		return (-1);
 	}
-	AG_ThreadKeySet(agErrorMsgKey, NULL);
+	AG_ThreadKeySet(agErrorMsgKey, Strdup("No error"));
 	AG_ThreadKeySet(agErrorCodeKey, NULL);
 #endif
 
