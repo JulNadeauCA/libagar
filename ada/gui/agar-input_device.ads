@@ -19,11 +19,11 @@ package Agar.Input_Device is
   use type C.unsigned;
 
   type Input_Device is limited record
-    Super   : Agar.Object.Object;        -- Object -> Input_Device
+    Super   : aliased Agar.Object.Object; -- Input_Device
     Flags   : C.unsigned;
-    Driver  : System.Address;            -- Agar.Driver.Driver_Access
-    Descr   : CS.chars_ptr;              -- Long description
-    Event_Q : Agar.Event.Event_Queue;    -- Queued events
+    Driver  : System.Address;             -- Agar.Driver.Driver_Access
+    Descr   : CS.chars_ptr;               -- Long description
+    Event_Q : Agar.Event.Event_Queue;     -- Queued events
   end record
     with Convention => C;
 

@@ -426,7 +426,7 @@ package Agar.Keyboard is
   ---------------------
   type Keyboard_Keys_Access is access all C.int with Convention => C;
   type Keyboard_Device is limited record
-    Super      : INDEV.Input_Device;      -- Object -> Input_Device -> Keyboard
+    Super      : aliased INDEV.Input_Device;       -- Input_Device -> Keyboard
     Flags      : C.unsigned;
     Keys       : Keyboard_Keys_Access;
     Key_Count  : C.unsigned;

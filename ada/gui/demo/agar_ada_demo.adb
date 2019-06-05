@@ -89,7 +89,8 @@ begin
           (Surface  => Surf,
            X        => X,
            Y        => Y,
-           Value    => Map_Pixel(Surf.Format'Unchecked_Access, Blue'Unchecked_Access),
+           Value    => Map_Pixel(Surf.Format'Unchecked_Access,
+                                 Blue'Unchecked_Access),
            Clipping => false);
       end loop;
     end loop;

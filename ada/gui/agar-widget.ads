@@ -10,6 +10,7 @@ with Agar.Object;
 with Agar.Event;
 with Agar.Surface;
 with Agar.Keyboard;
+with Agar.Mouse;
 
 --
 -- Base class for all Agar GUI widgets.
@@ -22,6 +23,7 @@ package Agar.Widget is
   package EV renames Agar.Event;
   package SU renames Agar.Surface;
   package KBD renames Agar.Keyboard;
+  package MSE renames Agar.Mouse;
 
   use type C.int;
   use type C.unsigned;
@@ -158,13 +160,13 @@ package Agar.Widget is
   -- Low Level Driver Instance --
   -------------------------------
   type Driver is limited record
-    Super         : OBJ.Object;                  -- Object -> Driver
+    Super         : aliased OBJ.Object;          -- [Driver]
     Instance_ID   : C.unsigned;                  -- Driver instance ID
     Flags         : C.unsigned;                  -- Flags (below)
     Ref_Surface   : SU.Surface_Access;           -- Standard surface format
     Video_Format  : SU.Pixel_Format;             -- Video format (FB modes only)
     Keyboard_Dev  : KBD.Keyboard_Device_Access;  -- Keyboard device
-    Mouse_Dev     : System.Address;              -- TODO: mouse dev
+    Mouse_Dev     : MSE.Mouse_Device_Access;     -- Mouse device
     Active_Cursor : Cursor_Access;               -- Effective cursor
     Cursors       : Cursor_List;                 -- All registered cursors
     Cursor_Count  : C.unsigned;                  -- Total cursor count
@@ -231,12 +233,12 @@ package Agar.Widget is
 
   type Fill_Rect_Func_Access is access procedure
     (Driver : Driver_not_null_Access;
-     Rect   : SU.Rect;
+     Rect   : SU.Rect_not_null_Access;
      Color  : SU.Color_not_null_Access) with Convention => C;
 
   type Update_Region_Func_Access is access procedure
     (Driver : Driver_not_null_Access;
-     Rect   : SU.Rect) with Convention => C;
+     Rect   : SU.Rect_not_null_Access) with Convention => C;
 
   type Upload_Texture_Func_Access is access procedure
     (Driver   : Driver_not_null_Access;
@@ -263,7 +265,7 @@ package Agar.Widget is
   ---------------------------
   type Push_Clip_Rect_Func_Access is access procedure
     (Driver : Driver_not_null_Access;
-     Rect   : SU.Rect) with Convention => C;
+     Rect   : SU.Rect_not_null_Access) with Convention => C;
 
   type Pop_Clip_Rect_Func_Access is access procedure
     (Driver : Driver_not_null_Access) with Convention => C;
@@ -424,7 +426,7 @@ package Agar.Widget is
 
   type Draw_Box_Rounded_Func_Access is access procedure
     (Driver  : Driver_not_null_Access;
-     Rect    : SU.Rect;
+     Rect    : SU.Rect_not_null_Access;
      Z       : C.int;
      Radius  : C.int;
      Color_A : SU.Color_not_null_Access;
@@ -432,7 +434,7 @@ package Agar.Widget is
 
   type Draw_Box_Rounded_Top_Func_Access is access procedure
     (Driver  : Driver_not_null_Access;
-     Rect    : SU.Rect;
+     Rect    : SU.Rect_not_null_Access;
      Z       : C.int;
      Radius  : C.int;
      Color_A : SU.Color_not_null_Access;
@@ -452,19 +454,19 @@ package Agar.Widget is
 
   type Draw_Rect_Filled_Func_Access is access procedure
     (Driver : Driver_not_null_Access;
-     Rect   : SU.Rect;
+     Rect   : SU.Rect_not_null_Access;
      Color  : SU.Color_not_null_Access) with Convention => C;
 
   type Draw_Rect_Blended_Func_Access is access procedure
     (Driver    : Driver_not_null_Access;
-     Rect      : SU.Rect;
+     Rect      : SU.Rect_not_null_Access;
      Color     : SU.Color_not_null_Access;
      Source_Fn : SU.Alpha_Func;
      Dest_Fn   : SU.Alpha_Func) with Convention => C;
 
   type Draw_Rect_Dithered_Func_Access is access procedure
     (Driver    : Driver_not_null_Access;
-     Rect      : SU.Rect;
+     Rect      : SU.Rect_not_null_Access;
      Color     : SU.Color_not_null_Access) with Convention => C;
 
   type Update_Glyph_Func_Access is access procedure
@@ -484,7 +486,7 @@ package Agar.Widget is
   -- Generic Driver Class --
   --------------------------
   type Driver_Class is limited record
-    Super       : OBJ.Class;                          -- Object -> Driver
+    Super       : aliased OBJ.Class;                  -- [Driver]
     Name        : CS.chars_ptr;
     Driver_Type : Driver_Type_t;
     WM_Type     : Driver_WM_Type_t;
@@ -503,6 +505,7 @@ package Agar.Widget is
     Terminate_Func         : Terminate_Func_Access;
     -- Rendering Ops --
     Begin_Rendering  : Begin_Rendering_Func_Access;
+    Render_Window    : Render_Window_Func_Access;
     End_Rendering    : End_Rendering_Func_Access;
     Fill_Rect        : Fill_Rect_Func_Access;
     Update_Region    : Update_Region_Func_Access;
@@ -572,7 +575,7 @@ package Agar.Widget is
 
   type Open_Window_Func_Access is access function
     (Window         : Window_not_null_Access;
-     Geometry       : SU.Rect;
+     Geometry       : SU.Rect_not_null_Access;
      Bits_per_Pixel : C.int;
      Flags          : C.unsigned) return C.int with Convention => C;
 
@@ -653,7 +656,7 @@ package Agar.Widget is
   -- Multi-Window Driver Class --
   -------------------------------
   type Driver_MW_Class is limited record
-    Super                : Driver_Class;        -- Object -> Driver -> DriverMW
+    Super                : aliased Driver_Class;       -- [Driver -> DriverMW]
     Open_Window          : Open_Window_Func_Access;
     Close_Window         : Close_Window_Func_Access;
     Map_Window           : Map_Window_Func_Access;
@@ -684,7 +687,7 @@ package Agar.Widget is
   -- Multi-Window Driver Instance --
   ----------------------------------
   type Driver_MW is limited record
-    Super  : Driver;                            -- Object -> Driver -> DriverMW
+    Super  : aliased Driver;                    -- [Driver -> DriverMW]
     Flags  : C.unsigned;                        -- DRIVER_MW_* flags (below)
     Window : Window_Access;                     -- Back reference to window
   end record
@@ -733,8 +736,8 @@ package Agar.Widget is
   -- Single-Window Driver Class --
   --------------------------------
   type Driver_SW_Class is limited record
-    Super              : Driver_Class;          -- Object -> Driver -> DriverSW
-    Flags              : C.unsigned;            -- DRIVER_SW_* flags (below)
+    Super              : aliased Driver_Class;    -- [Driver -> DriverSW]
+    Flags              : C.unsigned;              -- DRIVER_SW_* flags (below)
     Open_Video         : Open_Video_Func_Access;
     Open_Video_Context : Open_Video_Context_Func_Access;
     Set_Video_Context  : Set_Video_Context_Func_Access;
@@ -766,10 +769,10 @@ package Agar.Widget is
   -- Single-Window Driver Instance --
   -----------------------------------
   type Driver_SW is limited record
-    Super          : Driver;                    -- Object -> Driver -> DriverSW
-    W,H            : C.unsigned;                -- Resolution
-    Bits_per_Pixel : C.unsigned;                -- Depth
-    Flags          : C.unsigned;                -- Flags (none currently)
+    Super          : aliased Driver;              -- [Driver -> DriverSW]
+    W,H            : C.unsigned;                  -- Resolution
+    Bits_per_Pixel : C.unsigned;                  -- Depth
+    Flags          : C.unsigned;                  -- Flags (none currently)
 
     Selected_Window      : Window_Access;         -- Window being manipulated
     Last_Key_Down_Window : Window_Access;         -- Window with last kbd event
@@ -807,13 +810,6 @@ package Agar.Widget is
      CLOSE);
   for Driver_Event_Type'Size use C.int'Size;
 
-  type Mouse_Button is
-    (NONE,
-     LEFT, MIDDLE, RIGHT,
-     WHEEL_UP, WHEEL_DOWN,
-     X1, X2);
-  for Mouse_Button'Size use C.int'Size;
- 
   type Driver_Event_Entry is limited record
     Next : Driver_Event_Access;
     Prev : access Driver_Event_Access;
@@ -830,7 +826,7 @@ package Agar.Widget is
       when MOUSE_MOTION =>
         X,Y           : C.int;                        -- Mouse coordinates
       when MOUSE_BUTTON_DOWN | MOUSE_BUTTON_UP =>
-        Button        : Mouse_Button;                 -- Mouse button index
+        Button        : MSE.Mouse_Button;             -- Mouse button index
       when KEY_DOWN | KEY_UP =>
         Keysym        : Agar.Keyboard.Key_Sym;        -- Virtual keysym
         Unicode       : Interfaces.Unsigned_32;       -- Translated Unicode
@@ -853,7 +849,7 @@ package Agar.Widget is
 
   type Widget_Surface_Flags_Access is access all Interfaces.Unsigned_8 with Convention => C;
   type Widget is limited record
-    Super            : OBJ.Object;           -- Object -> Widget
+    Super            : aliased OBJ.Object;   -- [Widget]
     Flags            : C.unsigned;           -- WIDGET_* Flags (below)
     X,Y              : C.int;                -- Coordinates in parent widget
     W,H              : C.int;                -- Allocated size
@@ -863,6 +859,7 @@ package Agar.Widget is
     Surfaces         : access SU.Surface_Access;    -- Mapped surfaces
     Surface_Flags    : Widget_Surface_Flags_Access; -- Mapped surface flags
     Surface_Count    : C.unsigned;                  -- Mapped surface count
+
     Textures         : Texture_Handle_Access;       -- Mapped texture handles
     Texcoords        : Texture_Coord_Access;        -- Mapped texture coords
 
@@ -870,6 +867,7 @@ package Agar.Widget is
     Parent_Window    : Window_Access;            -- Parent window (if any)
     Driver           : Driver_Access;            -- Parent driver instance
     Driver_Ops       : Driver_Class_Access;      -- Parent driver class
+
     Stylesheet       : System.Address;           -- TODO Alternate CSS stylesheet
     Color_State      : Widget_Color_State;       -- Current CSS color state
     Font             : System.Address;           -- TODO Current font
@@ -1022,7 +1020,8 @@ package Agar.Widget is
     with Convention => C;
 
   type Window is limited record
-    Super     : Widget;                   -- Object -> Widget -> Window
+    Super     : aliased Widget;           -- [Widget -> Window]
+
     Flags     : C.unsigned;               -- WINDOW_* flags (below)
     Caption   : Window_Caption;           -- Window title
     Visible   : C.int;                    -- Visibility flag
@@ -1339,6 +1338,44 @@ package Agar.Widget is
   function Is_Sensitive
     (Widget : in Widget_not_null_Access;
      X,Y    : in Natural) return Boolean;
+
+  --
+  -- Create a new mouse instance under a Driver.
+  --
+  function New_Mouse
+    (Driver : in Driver_not_null_Access;
+     Descr  : in String) return MSE.Mouse_Device_not_null_Access;
+
+  --
+  -- Change the cursor if its coordinates overlap a registered cursor area.
+  -- Generally called from window/driver code following a mouse motion event.
+  --
+  procedure Mouse_Cursor_Update
+    (Window : in Window_not_null_Access;
+     X,Y    : in Natural);
+
+  --
+  -- Handle a mouse motion.
+  -- Called from Driver code (agDrivers must be locked).
+  --
+  procedure Process_Mouse_Motion
+    (Window    : in Window_not_null_Access;
+     X,Y       : in Natural;
+     Xrel,Yrel : in Integer;
+     Buttons   : in MSE.Mouse_Button);
+
+  --
+  -- Handle a mouse button press / release.
+  -- Called from Driver code (agDrivers must be locked).
+  --
+  procedure Process_Mouse_Button_Up
+    (Window : in Window_not_null_Access;
+     X,Y    : in Natural;
+     Button : in MSE.Mouse_Button);
+  procedure Process_Mouse_Button_Down
+    (Window : in Window_not_null_Access;
+     X,Y    : in Natural;
+     Button : in MSE.Mouse_Button);
   
   private
   
@@ -1350,11 +1387,6 @@ package Agar.Widget is
   function AG_WidgetSetFocusable
     (Widget : in Widget_not_null_Access;
      Enable : in C.int) return C.int
-    with Import, Convention => C, Link_Name => "AG_WidgetSetFocusable";
-
-  procedure AG_WidgetSetFocusable
-    (Widget : in Widget_not_null_Access;
-     Enable : in C.int)
     with Import, Convention => C, Link_Name => "AG_WidgetSetFocusable";
 
   function AG_WidgetFocus
@@ -1396,5 +1428,34 @@ package Agar.Widget is
     (Widget : in Widget_not_null_Access;
      X,Y    : in C.int) return C.int
     with Import, Convention => C, Link_Name => "AG_WidgetSensitive";
+
+  function AG_MouseNew
+    (Driver : in Driver_not_null_Access;
+     Descr  : in CS.chars_ptr) return MSE.Mouse_Device_not_null_Access
+    with Import, Convention => C, Link_Name => "AG_MouseNew";
+
+  procedure AG_MouseCursorUpdate
+    (Window : Window_not_null_Access;
+     X,Y    : C.int)
+    with Import, Convention => C, Link_Name => "AG_MouseCursorUpdate";
+  
+  procedure AG_ProcessMouseMotion
+    (Window    : Window_not_null_Access;
+     X,Y       : C.int;
+     Xrel,Yrel : C.int;
+     Buttons   : MSE.Mouse_Button)
+    with Import, Convention => C, Link_Name => "AG_ProcessMouseMotion";
+
+  procedure AG_ProcessMouseButtonUp
+    (Window    : Window_not_null_Access;
+     X,Y       : C.int;
+     Button    : MSE.Mouse_Button)
+    with Import, Convention => C, Link_Name => "AG_ProcessMouseButtonUp";
+
+  procedure AG_ProcessMouseButtonDown
+    (Window    : Window_not_null_Access;
+     X,Y       : C.int;
+     Button    : MSE.Mouse_Button)
+    with Import, Convention => C, Link_Name => "AG_ProcessMouseButtonDown";
 
 end Agar.Widget;

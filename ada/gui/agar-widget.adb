@@ -50,12 +50,14 @@ package body Agar.Widget is
   --
   procedure Set_Focusable
     (Widget : in Widget_not_null_Access;
-     Enable : in Boolean) is
+     Enable : in Boolean)
+  is
+    Former_Status : aliased C.int;
   begin
     if Enable then
-      AG_WidgetSetFocusable (Widget, C.int(1));
+      Former_Status := AG_WidgetSetFocusable (Widget, C.int(1));
     else
-      AG_WidgetSetFocusable (Widget, C.int(0));
+      Former_Status := AG_WidgetSetFocusable (Widget, C.int(0));
     end if;
   end;
 
@@ -215,5 +217,83 @@ package body Agar.Widget is
        X      => C.int(X),
        Y      => C.int(Y));
   end;
-  
+
+  --
+  -- Create a new mouse instance under a Driver.
+  --
+  function New_Mouse
+    (Driver : in Driver_not_null_Access;
+     Descr  : in String) return MSE.Mouse_Device_not_null_Access
+  is
+    Ch_Descr : aliased C.char_array := C.To_C(Descr);
+  begin
+    return AG_MouseNew
+      (Driver => Driver,
+       Descr  => CS.To_Chars_Ptr(Ch_Descr'Unchecked_Access));
+  end;
+
+  --
+  -- Change the cursor if its coordinates overlap a registered cursor area.
+  -- Generally called from window/driver code following a mouse motion event.
+  --
+  procedure Mouse_Cursor_Update
+    (Window : in Window_not_null_Access;
+     X,Y    : in Natural) is
+  begin
+    AG_MouseCursorUpdate
+      (Window => Window,
+       X      => C.int(X),
+       Y      => C.int(Y));
+  end;
+
+  --
+  -- Handle a mouse motion. Called from Driver code (agDrivers must be locked).
+  --
+  procedure Process_Mouse_Motion
+    (Window    : in Window_not_null_Access;
+     X,Y       : in Natural;
+     Xrel,Yrel : in Integer;
+     Buttons   : in MSE.Mouse_Button) is
+  begin
+    AG_ProcessMouseMotion
+      (Window  => Window,
+       X       => C.int(X),
+       Y       => C.int(Y),
+       Xrel    => C.int(Xrel),
+       Yrel    => C.int(Yrel),
+       Buttons => Buttons);
+  end;
+
+  --
+  -- Handle a mouse button release.
+  -- Called from Driver code (agDrivers must be locked).
+  --
+  procedure Process_Mouse_Button_Up
+    (Window    : in Window_not_null_Access;
+     X,Y       : in Natural;
+     Button    : in MSE.Mouse_Button) is
+  begin
+    AG_ProcessMouseButtonUp
+      (Window => Window,
+       X      => C.int(X),
+       Y      => C.int(Y),
+       Button => Button);
+  end;
+
+  --
+  -- Handle a mouse button press.
+  -- Called from Driver code (agDrivers must be locked).
+  --
+  procedure Process_Mouse_Button_Down
+    (Window    : in Window_not_null_Access;
+     X,Y       : in Natural;
+     Button    : in MSE.Mouse_Button) is
+  begin
+    AG_ProcessMouseButtonDown
+      (Window => Window,
+       X      => C.int(X),
+       Y      => C.int(Y),
+       Button => Button);
+  end;
+
 end Agar.Widget;

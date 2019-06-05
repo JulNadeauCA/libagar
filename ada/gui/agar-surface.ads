@@ -205,7 +205,7 @@ package Agar.Surface is
   -- Surface Instance --
   ----------------------
   type Surface is limited record
-    Format         : Pixel_Format;         -- Pixel format description
+    Format         : aliased Pixel_Format; -- Pixel format description
     Flags          : C.unsigned;           -- Surface Flags (below)
     W,H            : C.unsigned;           -- Size in pixels
     Pitch, Padding : C.unsigned;           -- Scanline byte length, end padding
