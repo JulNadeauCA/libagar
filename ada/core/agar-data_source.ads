@@ -4,10 +4,11 @@
 --                                 S p e c                                  --
 ------------------------------------------------------------------------------
 with System;
-with Interfaces;
+with Interfaces; use Interfaces;
 with Interfaces.C;
 with Interfaces.C.Strings; use Interfaces.C.Strings;
 with Agar.Error;
+with Agar.Types; use Agar.Types;
 
 --
 -- Data_Source provides basic I/O routines for serializing data to file,
@@ -27,7 +28,6 @@ package Agar.Data_Source is
 
   type Data_Source_Access             is access all Data_Source with Convention => C;
   subtype Data_Source_Not_Null_Access is not null Data_Source_Access;
-  subtype Byte_Offset is Interfaces.Unsigned_64;
 
   type IO_Status is (Success, EOF, Error, Unavailable) with Convention => C;
   for IO_Status use
@@ -59,15 +59,21 @@ package Agar.Data_Source is
   for Signed_16'Size use 16;
   type Signed_32 is range -(2 **31) .. +(2 **31 - 1) with Convention => C;
   for Signed_32'Size use 32;
-  type Signed_64 is range -(2 **63) .. +(2 **63 - 1) with Convention => C;
-  for Signed_64'Size use 64;
   subtype Unsigned_8  is Interfaces.Unsigned_8;
   subtype Unsigned_16 is Interfaces.Unsigned_16;
   subtype Unsigned_32 is Interfaces.Unsigned_32;
+#if HAVE_64BIT
+  type Signed_64 is range -(2 **63) .. +(2 **63 - 1) with Convention => C;
+  for Signed_64'Size use 64;
   subtype Unsigned_64 is Interfaces.Unsigned_64;
+#end if;
+#if HAVE_FLOAT
   subtype Float       is Interfaces.C.C_float;
   subtype Double      is Interfaces.C.double;
+# if HAVE_LONG_DOUBLE
   subtype Long_Double is Interfaces.C.long_double;
+# end if;
+#end if;
   
   --
   -- Create a new Data_Source by opening a file. Modes include "r" (reading),
@@ -83,7 +89,7 @@ package Agar.Data_Source is
   --
   function Open_Core
     (Core : in System.Address;
-     Size : in C.size_t) return Data_Source_Access
+     Size : in AG_Size) return Data_Source_Access
     with Import, Convention => C, Link_Name => "AG_OpenCore";
 
   --
@@ -91,7 +97,7 @@ package Agar.Data_Source is
   --
   function Open_Constant_Core
     (Core : in System.Address;
-     Size : in C.size_t) return Data_Source_Access
+     Size : in AG_Size) return Data_Source_Access
     with Import, Convention => C, Link_Name => "AG_OpenConstCore";
 
   --
@@ -119,7 +125,7 @@ package Agar.Data_Source is
   --
   -- Return the current position in the Data_Source.
   --
-  function Tell (Source : in Data_Source_Access) return C.size_t
+  function Tell (Source : in Data_Source_Access) return AG_Size
     with Import, Convention => C, Link_Name => "AG_Tell";
 
   --
@@ -129,7 +135,7 @@ package Agar.Data_Source is
   --
   function Seek
     (Source : in Data_Source_Access;
-     Offset : in C.size_t;
+     Offset : in AG_Offset;
      Mode   : in Seek_Mode) return C.int
     with Import, Convention => C, Link_Name => "AG_Seek";
 
@@ -196,12 +202,12 @@ package Agar.Data_Source is
   procedure Write_Unsigned_8_At
     (Source : in Data_Source_Access;
      Value  : in Interfaces.Unsigned_8;
-     Offset : in C.size_t)
+     Offset : in AG_Offset)
     with Import, Convention => C, Link_Name => "ag_write_uint8_at";
   procedure Write_Signed_8_At
     (Source : in Data_Source_Access;
      Value  : in Signed_8;
-     Offset : in C.size_t)
+     Offset : in AG_Offset)
     with Import, Convention => C, Link_Name => "ag_write_sint8_at";
 
   function Read_Unsigned_16
@@ -221,12 +227,12 @@ package Agar.Data_Source is
   procedure Write_Unsigned_16_At
     (Source : in Data_Source_Access;
      Value  : in Interfaces.Unsigned_16;
-     Offset : in C.size_t)
+     Offset : in AG_Offset)
     with Import, Convention => C, Link_Name => "ag_write_uint16_at";
   procedure Write_Signed_16_At
     (Source : in Data_Source_Access;
      Value  : in Signed_16;
-     Offset : in C.size_t)
+     Offset : in AG_Offset)
     with Import, Convention => C, Link_Name => "ag_write_sint16_at";
 
   function Read_Unsigned_32
@@ -246,14 +252,15 @@ package Agar.Data_Source is
   procedure Write_Unsigned_32_At
     (Source : in Data_Source_Access;
      Value  : in Interfaces.Unsigned_32;
-     Offset : in C.size_t)
+     Offset : in AG_Offset)
     with Import, Convention => C, Link_Name => "ag_write_uint32_at";
   procedure Write_Signed_32_At
     (Source : in Data_Source_Access;
      Value  : in Signed_32;
-     Offset : in C.size_t)
+     Offset : in AG_Offset)
     with Import, Convention => C, Link_Name => "ag_write_sint32_at";
 
+#if HAVE_64BIT
   function Read_Unsigned_64
     (Source : in Data_Source_Access) return Interfaces.Unsigned_64
     with Import, Convention => C, Link_Name => "ag_read_uint64";
@@ -271,18 +278,19 @@ package Agar.Data_Source is
   procedure Write_Unsigned_64_At
     (Source : in Data_Source_Access;
      Value  : in Interfaces.Unsigned_64;
-     Offset : in C.size_t)
+     Offset : in AG_Offset)
     with Import, Convention => C, Link_Name => "ag_write_uint64_at";
   procedure Write_Signed_64_At
     (Source : in Data_Source_Access;
      Value  : in Signed_64;
-     Offset : in C.size_t)
+     Offset : in AG_Offset)
     with Import, Convention => C, Link_Name => "ag_write_sint64_at";
-  
+#end if;
+ 
   ------------------------
   -- Floating-point I/O --
   ------------------------
-
+#if HAVE_FLOAT
   function Read_Float (Source : in Data_Source_Access) return Float
     with Import, Convention => C, Link_Name => "ag_read_float";
 
@@ -294,7 +302,7 @@ package Agar.Data_Source is
   procedure Write_Float_At
     (Source : in Data_Source_Access;
      Value  : in Float;
-     Offset : in C.size_t)
+     Offset : in AG_Offset)
     with Import, Convention => C, Link_Name => "ag_write_float_at";
 
   function Read_Double (Source : in Data_Source_Access) return Double
@@ -308,9 +316,10 @@ package Agar.Data_Source is
   procedure Write_Double_At
     (Source : in Data_Source_Access;
      Value  : in Double;
-     Offset : in C.size_t)
+     Offset : in AG_Offset)
     with Import, Convention => C, Link_Name => "ag_write_double_at";
 
+#if HAVE_LONG_DOUBLE
   function Read_Long_Double
     (Source : in Data_Source_Access) return Long_Double
     with Import, Convention => C, Link_Name => "ag_read_long_double";
@@ -323,8 +332,10 @@ package Agar.Data_Source is
   procedure Write_Long_Double_At
     (Source : in Data_Source_Access;
      Value  : in Long_Double;
-     Offset : in C.size_t)
+     Offset : in AG_Offset)
     with Import, Convention => C, Link_Name => "ag_write_long_double_at";
+# end if;
+#end if;
   
   ----------------
   -- String I/O --
@@ -377,7 +388,7 @@ package Agar.Data_Source is
        Status :    out IO_Status);
     procedure Read_At_Offset
       (Source : in     Data_Source_not_null_Access;
-       Offset : in     Byte_Offset;
+       Offset : in     AG_Offset;
        Buffer :    out Element_Array_Type;
        Read   :    out Element_Count_Type;
        Status :    out IO_Status);
@@ -388,7 +399,7 @@ package Agar.Data_Source is
        Status :    out IO_Status);
     procedure Write_At_Offset
       (Source : in     Data_Source_Not_Null_Access;
-       Offset : in     Byte_Offset;
+       Offset : in     AG_Offset;
        Buffer : in     Element_Array_Type;
        Wrote  :    out Element_Count_Type;
        Status :    out IO_Status);
@@ -404,48 +415,48 @@ package Agar.Data_Source is
   function AG_Read
     (Source  : in Data_Source_Access;
      Buffer  : in System.Address;
-     Size    : in C.size_t;
-     Members : in C.size_t) return IO_Status
+     Size    : in AG_Size;
+     Members : in AG_Size) return IO_Status
     with Import, Convention => C, Link_Name => "AG_Read";
 
   function AG_ReadAt
     (Source  : in Data_Source_Access;
      Buffer  : in System.Address;
-     Size    : in C.size_t;
-     Members : in C.size_t;
-     Offset  : in C.size_t) return IO_Status
+     Size    : in AG_Size;
+     Members : in AG_Size;
+     Offset  : in AG_Offset) return IO_Status
     with Import, Convention => C, Link_Name => "AG_ReadAt";
 
   function AG_Write
     (Source  : in Data_Source_Access;
      Buffer  : in System.Address;
-     Size    : in C.size_t;
-     Members : in C.size_t) return IO_Status
+     Size    : in AG_Size;
+     Members : in AG_Size) return IO_Status
     with Import, Convention => C, Link_Name => "AG_Write";
 
   function AG_WriteAt
     (Source  : in Data_Source_Access;
      Buffer  : in System.Address;
-     Size    : in C.size_t;
-     Members : in C.size_t;
-     Offset  : in C.size_t) return IO_Status
+     Size    : in AG_Size;
+     Members : in AG_Size;
+     Offset  : in AG_Offset) return IO_Status
     with Import, Convention => C, Link_Name => "AG_WriteAt";
   
   function AG_ReadStringLen
     (Source : in Data_Source_Access;
-     Max_Size : in C.size_t) return CS.chars_ptr
+     Max_Size : in AG_Size) return CS.chars_ptr
     with Import, Convention => C, Link_Name => "AG_ReadStringLen";
 
   function AG_CopyString
     (Buffer : in CS.chars_ptr;
      Source : in Data_Source_Access;
-     Size   : in C.size_t) return C.size_t
+     Size   : in AG_Size) return AG_Size
     with Import, Convention => C, Link_Name => "AG_CopyString";
   
   function AG_CopyStringPadded
     (Buffer : in CS.chars_ptr;
      Source : in Data_Source_Access;
-     Size   : in C.size_t) return C.size_t
+     Size   : in AG_Size) return AG_Size
     with Import, Convention => C, Link_Name => "AG_CopyStringPadded";
 
   procedure AG_WriteString
@@ -456,7 +467,7 @@ package Agar.Data_Source is
   procedure AG_WriteStringPadded
     (Source : in Data_Source_Access;
      Data   : in CS.chars_ptr;
-     Length : in C.size_t)
+     Length : in AG_Size)
     with Import, Convention => C, Link_Name => "AG_WriteStringPadded";
 
 end Agar.Data_Source;

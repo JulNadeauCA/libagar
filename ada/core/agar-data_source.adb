@@ -19,8 +19,6 @@
 -- OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.           --
 ------------------------------------------------------------------------------
 package body Agar.Data_Source is
-  use type C.size_t;
-
   procedure Open_File
     (Path   : in     String;
      Mode   : in     String;
@@ -36,7 +34,7 @@ package body Agar.Data_Source is
 
   package body IO is
 
-    Element_Bytes : constant C.size_t := Element_Type'Size / System.Storage_Unit;
+    Element_Bytes : constant AG_Size := Element_Type'Size / System.Storage_Unit;
 
     procedure Read
       (Source : in     Data_Source_Not_Null_Access;
@@ -56,7 +54,7 @@ package body Agar.Data_Source is
 
     procedure Read_At_Offset
       (Source : in     Data_Source_Not_Null_Access;
-       Offset : in     Byte_Offset;
+       Offset : in     AG_Offset;
        Buffer :    out Element_Array_Type;
        Read   :    out Element_Count_Type;
        Status :    out IO_Status) is
@@ -66,7 +64,7 @@ package body Agar.Data_Source is
          Buffer  => Buffer (Buffer'First)'Address,
          Size    => Element_Bytes,
          Members => Buffer'Length,
-         Offset  => C.size_t (Offset));
+         Offset  => Offset);
       if Status = Success then
         Read := Buffer'Length;
       end if;
@@ -90,7 +88,7 @@ package body Agar.Data_Source is
 
     procedure Write_At_Offset
       (Source : in     Data_Source_Not_Null_Access;
-       Offset : in     Byte_Offset;
+       Offset : in     AG_Offset;
        Buffer : in     Element_Array_Type;
        Wrote  :    out Element_Count_Type;
        Status :    out IO_Status) is
@@ -99,7 +97,7 @@ package body Agar.Data_Source is
         (Source  => Source,
          Buffer  => Buffer (Buffer'First)'Address,
          Size    => Element_Bytes,
-         Offset  => C.size_t (Offset),
+         Offset  => Offset,
          Members => Buffer'Length);
       if Status = Success then
         Wrote := Buffer'Length;
@@ -114,7 +112,7 @@ package body Agar.Data_Source is
   is
     Result : chars_ptr;
   begin
-    Result := AG_ReadStringLen(Source, C.size_t(LOAD_STRING_MAX));
+    Result := AG_ReadStringLen(Source, AG_Size(LOAD_STRING_MAX));
     if Result = Null_Ptr then
       raise Program_Error with ERR.Get_Error;
     end if;
@@ -128,7 +126,7 @@ package body Agar.Data_Source is
   is
     Result : chars_ptr;
   begin
-    Result := AG_ReadStringLen(Source, C.size_t(Max_Length));
+    Result := AG_ReadStringLen(Source, AG_Size(Max_Length));
     if Result = Null_Ptr then
       raise Program_Error with ERR.Get_Error;
     end if;
@@ -141,7 +139,7 @@ package body Agar.Data_Source is
      Length : in Natural) return String
   is
     Ch_Name : aliased C.char_array := (1 .. C.size_t(Length) => C.nul);
-    Result  : C.size_t;
+    Result  : AG_Size;
   begin
     Result := AG_CopyStringPadded
       (Buffer => To_Chars_Ptr(Ch_Name'Unchecked_Access),
@@ -174,7 +172,7 @@ package body Agar.Data_Source is
     AG_WriteStringPadded
       (Source => Source,
        Data   => To_Chars_Ptr(Ch_Data'Unchecked_Access),
-       Length => C.size_t(Length));
+       Length => AG_Size(Length));
   end;
 
 end Agar.Data_Source;

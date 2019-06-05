@@ -210,8 +210,8 @@ package body Agar.Object is
   begin
     Class := AG_CreateClass
       (Hierarchy   => CS.To_Chars_Ptr(Ch_Hierarchy'Unchecked_Access),
-       Object_Size => C.size_t(Object_Size / System.Storage_Unit),
-       Class_Size  => C.size_t(Class_Size / System.Storage_Unit),
+       Object_Size => AG_Size(Object_Size / System.Storage_Unit),
+       Class_Size  => AG_Size(Class_Size / System.Storage_Unit),
        Major       => C.unsigned(Major),
        Minor       => C.unsigned(Minor));
     if Class = null then

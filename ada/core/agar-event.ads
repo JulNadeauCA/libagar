@@ -69,6 +69,7 @@ package Agar.Event is
     (Event : in Event_not_null_Access;
      Name  : in String;
      Value : in Long_Integer);
+#if HAVE_FLOAT
   procedure Push_Float
     (Event : in Event_not_null_Access;
      Name  : in String;
@@ -77,11 +78,14 @@ package Agar.Event is
     (Event : in Event_not_null_Access;
      Name  : in String;
      Value : in Long_Float);
+# if HAVE_LONG_DOUBLE
   procedure Push_Long_Long_Float
     (Event : in Event_not_null_Access;
      Name  : in String;
      Value : in Long_Long_Float);
-  
+# end if;
+#end if;
+ 
   --
   -- Push an untagged Event argument.
   --
@@ -100,16 +104,20 @@ package Agar.Event is
   procedure Push_Long_Integer
     (Event : in Event_not_null_Access;
      Value : in Long_Integer);
+#if HAVE_FLOAT
   procedure Push_Float
     (Event : in Event_not_null_Access;
      Value : in Float);
   procedure Push_Long_Float
     (Event : in Event_not_null_Access;
      Value : in Long_Float);
+# if HAVE_LONG_DOUBLE
   procedure Push_Long_Long_Float
     (Event : in Event_not_null_Access;
      Value : in Long_Long_Float);
-  
+# end if;
+#end if; 
+ 
   --
   -- Pop the last argument off an Event argument stack
   --
@@ -134,16 +142,20 @@ package Agar.Event is
   function Get_Long_Integer
     (Event : in Event_not_null_Access;
      Index : in Natural) return Long_Integer;
+#if HAVE_FLOAT
   function Get_Float
     (Event : in Event_not_null_Access;
      Index : in Natural) return Float;
   function Get_Long_Float
     (Event : in Event_not_null_Access;
      Index : in Natural) return Long_Float;
+# if HAVE_LONG_DOUBLE
   function Get_Long_Long_Float
     (Event : in Event_not_null_Access;
      Index : in Natural) return Long_Long_Float;
-  
+# end if;
+#end if; 
+ 
   --
   -- Extract an argument by tag.
   --
@@ -162,15 +174,19 @@ package Agar.Event is
   function Get_Long_Integer
     (Event : in Event_not_null_Access;
      Name  : in String) return Long_Integer;
+#if HAVE_FLOAT
   function Get_Float
     (Event : in Event_not_null_Access;
      Name  : in String) return Float;
   function Get_Long_Float
     (Event : in Event_not_null_Access;
      Name  : in String) return Long_Float;
+# if HAVE_LONG_DOUBLE
   function Get_Long_Long_Float
     (Event : in Event_not_null_Access;
      Name  : in String) return Long_Long_Float;
+# end if;
+#end if;
 
   generic
   type Element_Type        is private;
@@ -216,6 +232,7 @@ package Agar.Event is
      Value : in C.long)
     with Import, Convention => C;
 
+#if HAVE_FLOAT
   procedure ag_event_push_float
     (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr;
@@ -227,13 +244,15 @@ package Agar.Event is
      Name  : in CS.chars_ptr;
      Value : in C.double)
     with Import, Convention => C;
-  
+# if HAVE_LONG_DOUBLE
   procedure ag_event_push_long_double
     (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr;
      Value : in C.long_double)
     with Import, Convention => C;
-  
+# end if;
+#end if;
+
   function ag_event_pop_pointer
     (Event : in Event_not_null_Access) return System.Address
     with Import, Convention => C;
@@ -266,7 +285,8 @@ package Agar.Event is
     (Event : in Event_not_null_Access;
      Index : in C.unsigned) return C.long
     with Import, Convention => C;
-  
+ 
+#if HAVE_FLOAT 
   function ag_event_get_float
     (Event : in Event_not_null_Access;
      Index : in C.unsigned) return C.C_float
@@ -276,12 +296,14 @@ package Agar.Event is
     (Event : in Event_not_null_Access;
      Index : in C.unsigned) return C.double
     with Import, Convention => C;
-  
+# if HAVE_LONG_DOUBLE 
   function ag_event_get_long_double
     (Event : in Event_not_null_Access;
      Index : in C.unsigned) return C.long_double
     with Import, Convention => C;
-  
+# end if;
+#end if;
+
   --
   -- Extract argument by name
   --
@@ -310,7 +332,8 @@ package Agar.Event is
     (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr) return C.long
     with Import, Convention => C;
-  
+ 
+#if HAVE_FLOAT 
   function ag_event_get_float_named
     (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr) return C.C_float
@@ -320,10 +343,12 @@ package Agar.Event is
     (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr) return C.double
     with Import, Convention => C;
-  
+# if HAVE_LONG_DOUBLE 
   function ag_event_get_long_double_named
     (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr) return C.long_double
     with Import, Convention => C;
+# end if;
+#end if;
 
 end Agar.Event;

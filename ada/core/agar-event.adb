@@ -100,6 +100,7 @@ package body Agar.Event is
        Value => C.long (Value));
   end Push_Long_Integer;
 
+#if HAVE_FLOAT
   procedure Push_Float
     (Event : in Event_Not_Null_Access;
      Name  : in String;
@@ -125,7 +126,8 @@ package body Agar.Event is
        Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access),
        Value => C.double(Value));
   end Push_Long_Float;
-  
+
+# if HAVE_LONG_DOUBLE 
   procedure Push_Long_Long_Float
     (Event : in Event_Not_Null_Access;
      Name  : in String;
@@ -138,6 +140,8 @@ package body Agar.Event is
        Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access),
        Value => C.long_double(Value));
   end Push_Long_Long_Float;
+# end if;
+#end if;
  
   -------------------------------------
   -- Push an untagged Event argument --
@@ -194,6 +198,7 @@ package body Agar.Event is
        Value => C.long (Value));
   end Push_Long_Integer;
 
+#if HAVE_FLOAT
   procedure Push_Float
     (Event : in Event_Not_Null_Access;
      Value : in Float)
@@ -213,7 +218,8 @@ package body Agar.Event is
        Name  => CS.Null_Ptr,
        Value => C.double(Value));
   end Push_Long_Float;
-  
+
+# if HAVE_LONG_DOUBLE
   procedure Push_Long_Long_Float
     (Event : in Event_Not_Null_Access;
      Value : in Long_Long_Float)
@@ -223,7 +229,9 @@ package body Agar.Event is
        Name  => CS.Null_Ptr,
        Value => C.long_double(Value));
   end Push_Long_Long_Float;
-  
+# end if;
+#end if;
+ 
   ------------------------------------
   -- Pop an untagged Event Argument --
   ------------------------------------
@@ -348,7 +356,8 @@ package body Agar.Event is
         (Event => Event,
          Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access)));
   end Get_Long_Integer;
-  
+
+#if HAVE_FLOAT 
   function Get_Float
     (Event : in Event_Not_Null_Access;
      Index : in Natural) return Float
@@ -392,7 +401,8 @@ package body Agar.Event is
         (Event => Event,
 	 Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access)));
   end Get_Long_Float;
-  
+
+# if HAVE_LONG_DOUBLE 
   function Get_Long_Long_Float
     (Event : in Event_Not_Null_Access;
      Index : in Natural) return Long_Long_Float
@@ -414,5 +424,7 @@ package body Agar.Event is
         (Event => Event,
 	 Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access)));
   end Get_Long_Long_Float;
+# end if;
+#end if;
 
 end Agar.Event;

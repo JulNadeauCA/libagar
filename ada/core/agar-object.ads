@@ -6,6 +6,7 @@
 with Agar.Data_Source;
 with Agar.Event;
 with Agar.Timer;
+with Agar.Types; use Agar.Types;
 with Interfaces;
 with Interfaces.C;
 with Interfaces.C.Strings;
@@ -52,9 +53,14 @@ package Agar.Object is
   subtype Unsigned_16 is Interfaces.Unsigned_16;
   subtype Unsigned_32 is Interfaces.Unsigned_32;
   subtype Unsigned_64 is Interfaces.Unsigned_64;
+
+#if HAVE_FLOAT
   subtype Float       is Interfaces.C.C_float;
   subtype Double      is Interfaces.C.double;
+# if HAVE_LONG_DOUBLE
   subtype Long_Double is Interfaces.C.long_double;
+# end if;
+#end if;
 
   --------------------------
   -- Agar Object variable --
@@ -202,7 +208,7 @@ package Agar.Object is
 
   type Class is limited record
     Hierarchy    : Class_Hierarchy;
-    Size         : C.size_t;
+    Size         : AG_Size;
     Version      : Version_t;
     Init_Func    : Init_Func_Access;
     Reset_Func   : Reset_Func_Access;
@@ -815,7 +821,7 @@ package Agar.Object is
   function AG_ObjectCopyName
     (Object : in Object_not_null_Access;
      Buffer : in System.Address;
-     Size   : in C.size_t) return C.int
+     Size   : in AG_Size) return C.int
     with Import, Convention => C, Link_Name => "AG_ObjectCopyName";
 
   procedure AG_ObjectSetNameS
@@ -827,20 +833,20 @@ package Agar.Object is
     (Object : in Object_not_null_Access;
      Class  : in Class_not_null_Access;
      Buffer : in System.Address;
-     Size   : in C.size_t)
+     Size   : in AG_Size)
     with Import, Convention => C, Link_Name => "AG_ObjectGenName";
 
   procedure AG_ObjectGenNamePfx
     (Object : in Object_not_null_Access;
      Prefix : in CS.chars_ptr;
      Buffer : in System.Address;
-     Size   : in C.size_t)
+     Size   : in AG_Size)
     with Import, Convention => C, Link_Name => "AG_ObjectGenNamePfx";
 
   function AG_CreateClass
     (Hierarchy   : in CS.chars_ptr;
-     Object_Size : in C.size_t;
-     Class_Size  : in C.size_t;
+     Object_Size : in AG_Size;
+     Class_Size  : in AG_Size;
      Major       : in C.unsigned;
      Minor       : in C.unsigned) return Class_not_null_Access
     with Import, Convention => C, Link_Name => "AG_CreateClass";
@@ -1194,6 +1200,7 @@ package Agar.Object is
      Value  : access Signed_32) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_BindSint32";
 
+#if HAVE_64BIT
   procedure AG_GetUint64
     (Object : in System.Address;
      Name   : in System.Address)
@@ -1227,7 +1234,9 @@ package Agar.Object is
      Name   : in System.Address;
      Value  : access Signed_64) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_BindSint64";
+#end if;
 
+#if HAVE_FLOAT
   function AG_GetFloat
     (Object : in System.Address;
      Name   : in System.Address) return Variable_not_null_Access
@@ -1261,7 +1270,8 @@ package Agar.Object is
      Name   : in System.Address;
      Value  : access Double) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_BindDouble";
-  
+
+# if HAVE_LONG_DOUBLE 
   function AG_GetLongDouble
     (Object : in System.Address;
      Name   : in System.Address) return Variable_not_null_Access
@@ -1278,12 +1288,14 @@ package Agar.Object is
      Name   : in System.Address;
      Value  : access Long_Double) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_BindLongDouble";
+# end if;
+#end if;
 
   function AG_GetString
     (Object : in System.Address;
      Name   : in System.Address;
      Buffer : in System.Address;
-     Size   : in C.size_t) return C.size_t
+     Size   : in AG_Size) return AG_Size
     with Import, Convention => C, Link_Name => "AG_GetString";
 
   function AG_GetStringDup
@@ -1301,7 +1313,7 @@ package Agar.Object is
     (Variable : in Variable_not_null_Access;
      Name     : in System.Address;
      Data     : in System.Address;
-     Size     : in C.size_t) return Variable_Access
+     Size     : in AG_Size) return Variable_Access
     with Import, Convention => C, Link_Name => "AG_BindString";
 
   function AG_GetPointer

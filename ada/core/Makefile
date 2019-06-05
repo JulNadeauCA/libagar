@@ -28,11 +28,10 @@ SRCS=		ag_dso.c \
 
 CONFIGSCRIPTS=	agar-ada-core-config
 PCMODULES=	agar-ada-core.pc
-
 ADAPREPFILE=	agar-core.def
 
 DATAFILES=	LICENSE \
-		agar-core.def
+		${ADAPREPFILE}
 
 CLEANFILES+=	Cow.obj
 CLEANDIRFILES+=	${ADAPREPFILE}
