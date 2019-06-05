@@ -91,13 +91,19 @@ Init(void *_Nonnull obj)
 	char path[AG_FILENAME_MAX];
 	AG_Config *cfg = obj;
 	AG_User *sysUser;
+#ifdef AG_DEBUG
+	int debugLvlSave;
+#endif
 	int i;
 	
 	OBJECT(cfg)->save_pfx = NULL;
 
 	for (i = 0; i < AG_CONFIG_PATH_LAST; i++)
 		SLIST_INIT(&cfg->paths[i]);
-
+#ifdef AG_DEBUG
+	debugLvlSave = agDebugLvl;
+	agDebugLvl = 0;
+#endif
 	AG_SetInt(cfg, "initial-run", 1);
 	AG_SetInt(cfg, "no-confirm-quit", 0);
 
@@ -137,6 +143,9 @@ Init(void *_Nonnull obj)
 		AG_SetString(cfg, "save-path", ".");
 		AG_SetString(cfg, "tmp-path", "tmp");
 	}
+#ifdef AG_DEBUG
+	agDebugLvl = debugLvlSave;
+#endif
 }
 
 static int

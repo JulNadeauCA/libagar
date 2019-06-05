@@ -625,20 +625,30 @@ AG_InitTextSubsystem(void)
 	}
 #endif
 #ifdef AG_SERIALIZATION
-	/* Load the default font. */
-	if (agFreetypeInited) {
-		if (!AG_Defined(cfg,"font.face"))
-			AG_SetString(cfg, "font.face", agDefaultFaceFT);
-		if (!AG_Defined(cfg,"font.size"))
-			AG_SetInt(cfg, "font.size", 14);
-	} else {
-		if (!AG_Defined(cfg,"font.face"))
-			AG_SetString(cfg, "font.face", agDefaultFaceBitmap);
-		if (!AG_Defined(cfg,"font.size"))
-			AG_SetInt(cfg, "font.size", 16);
-	}
-	if (!AG_Defined(cfg,"font.flags")) {
-		AG_SetUint(cfg, "font.flags", 0);
+	{
+# ifdef AG_DEBUG
+		int debugLvlSave = agDebugLvl;
+
+		agDebugLvl = 0;
+# endif
+
+		/* Load the default font. */
+		if (agFreetypeInited) {
+			if (!AG_Defined(cfg,"font.face"))
+				AG_SetString(cfg, "font.face", agDefaultFaceFT);
+			if (!AG_Defined(cfg,"font.size"))
+				AG_SetInt(cfg, "font.size", 14);
+		} else {
+			if (!AG_Defined(cfg,"font.face"))
+				AG_SetString(cfg, "font.face", agDefaultFaceBitmap);
+			if (!AG_Defined(cfg,"font.size"))
+				AG_SetInt(cfg, "font.size", 16);
+		}
+		if (!AG_Defined(cfg,"font.flags"))
+			AG_SetUint(cfg, "font.flags", 0);
+# ifdef AG_DEBUG
+		agDebugLvl = debugLvlSave;
+# endif
 	}
 	AG_ObjectUnlock(cfg);
 #endif /* AG_SERIALIZATION */
