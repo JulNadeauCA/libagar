@@ -16,7 +16,6 @@ use Ada.Numerics.Elementary_Functions;
 procedure agar_ada_demo is
   package T_IO renames Ada.Text_IO;
   package RT renames Ada.Real_Time;
-  package SU renames Agar.Surface;
   
   Epoch : constant RT.Time := RT.Clock;
 begin
@@ -41,8 +40,7 @@ begin
        Duration'Image(RT.To_Duration(RT.Clock - Epoch)) & "s");
   end;
 
-  T_IO.Put_Line("Size of AG_Surface = " &
-      Natural'Image(SU.Surface'Size));
+  T_IO.Put_Line("Size of AG_Surface = " & Natural'Image(Surface'Size));
 
   --
   -- Create a surface of pixels.
@@ -50,8 +48,8 @@ begin
   declare
     W        : constant Natural := 640;
     H        : constant Natural := 480;
-    Surf     : constant SU.Surface_Access := SU.New_Surface(W,H);
-    Blue     : aliased SU.Color := (0,0,200,255);
+    Surf     : constant Surface_Access := New_Surface(W,H);
+    Blue     : aliased AG_Color := Color_8(0,0,200,255);
     Border_W : constant Natural := 20;
   begin
     if Surf = null then
@@ -62,15 +60,15 @@ begin
     -- Fill the background
     --
     T_IO.Put_Line("Fill_Rect");
-    SU.Fill_Rect
+    Fill_Rect
       (Surface => Surf,
-       Color   => Blue'Unchecked_Access);        -- With a Color
+       Color   => Blue);        -- With a Color argument
 
-    SU.Fill_Rect
-      (Surface => Surf,
-       R       => 120,          -- With RGB[A] components
-       G       => 0,
-       B       => 0);
+--    Fill_Rect
+--      (Surface => Surf,
+--       R       => 200,        -- With RGB components
+--       G       => 0,
+--       B       => 0);
  
     --
     -- Use Put_Pixel to create a gradient.
@@ -85,11 +83,11 @@ begin
         if X rem 8 = 0 then
           Blue.G := Blue.G + 1;
         end if;
-        SU.Put_Pixel
+        Put_Pixel
           (Surface  => Surf,
            X        => X,
            Y        => Y,
-           Value    => Map_Pixel(Surf.Format'Unchecked_Access,
+           Pixel    => Map_Pixel(Surf.Format'Unchecked_Access,
                                  Blue'Unchecked_Access),
            Clipping => false);
       end loop;
@@ -100,11 +98,11 @@ begin
     --
     T_IO.Put_Line("Creating a 4-color indexed surface");
     declare
-      Bitmap     : SU.Surface_Access;
+      Bitmap     : Surface_Access;
     begin
       T_IO.Put_Line("Creating surface...");
       
-      Bitmap := SU.New_Surface
+      Bitmap := New_Surface
         (Mode           => INDEXED,
          Bits_per_Pixel => 2,
          W              => 128,
@@ -117,49 +115,49 @@ begin
       T_IO.Put_Line("Created bitmap successfully");
 
       T_IO.Put_Line("Setting color #1");
-      SU.Set_Color(Bitmap, 0, 0,  0,  0);
+      Set_Color(Bitmap, 0, 0,  0,  0);
       T_IO.Put_Line("Setting color #2");
-      SU.Set_Color(Bitmap, 1, 0,  100,0);
+      Set_Color(Bitmap, 1, 0,  100,0);
       T_IO.Put_Line("Setting color #3");
-      SU.Set_Color(Bitmap, 2, 150,0,  0);
+      Set_Color(Bitmap, 2, 150,0,  0);
       T_IO.Put_Line("Setting color #4");
-      SU.Set_Color(Bitmap, 3, 200,200,0);
+      Set_Color(Bitmap, 3, 200,200,0);
       
       T_IO.Put_Line("Creating pattern...");
 
       for Y in 0 .. Bitmap.H loop
         for X in 0 .. Bitmap.W loop
           if Natural(X) rem 16 = 0 then
-            SU.Put_Pixel
+            Put_Pixel
               (Surface  => Bitmap,
                X        => Integer(X),
                Y        => Integer(Y),
-               Value    => 1);
+               Pixel    => 1);
           else
             if Natural(Y) rem 8 = 0 then
-              SU.Put_Pixel
+              Put_Pixel
                 (Surface  => Bitmap,
                  X        => Integer(X),
                  Y        => Integer(Y),
-                 Value    => 1);
+                 Pixel    => 1);
             elsif Sqrt(Float(X)*Float(X) + Float(Y)*Float(Y)) < 50.0 then
-              SU.Put_Pixel
+              Put_Pixel
                 (Surface  => Bitmap,
                  X        => Integer(X),
                  Y        => Integer(Y),
-                 Value    => 2);
+                 Pixel    => 2);
             elsif Sqrt(Float(X)*Float(X) + Float(Y)*Float(Y)) > 150.0 then
-              SU.Put_Pixel
+              Put_Pixel
                 (Surface  => Bitmap,
                  X        => Integer(X),
                  Y        => Integer(Y),
-                 Value    => 3);
+                 Pixel    => 3);
             else
-              SU.Put_Pixel
+              Put_Pixel
                 (Surface  => Bitmap,
                  X        => Integer(X),
                  Y        => Integer(Y),
-                 Value    => 0);
+                 Pixel    => 0);
             end if;
           end if;
         end loop;
@@ -171,7 +169,7 @@ begin
       --
       T_IO.Put_Line("Writing indexed 2bpp surface to output-index.png");
       -- Export to an indexed PNG file.
-      if not SU.Export_PNG(Bitmap, "output-index.png") then
+      if not Export_PNG(Bitmap, "output-index.png") then
         T_IO.Put_Line ("output-index.png: " & Agar.Error.Get_Error);
       end if;
 
@@ -179,7 +177,7 @@ begin
       -- Conversion from indexed to RGBA is done implicitely by Blit.
       --
       T_IO.Put_Line("Testing blit conversion from indexed to packed");
-      SU.Blit_Surface
+      Blit_Surface
         (Source => Bitmap,
          Target => Surf,
          Dst_X  => 32,
@@ -188,23 +186,23 @@ begin
       -- 
       -- Blit our indexed surface again using a different palette.
       --
-      SU.Set_Color(Bitmap, 0, 255,255,255);
-      SU.Set_Color(Bitmap, 1, 100,100,180);
-      SU.Set_Color(Bitmap, 2, 120,0,0);
-      SU.Set_Color(Bitmap, 3, 0,0,150);
-      SU.Blit_Surface
+      Set_Color(Bitmap, 0, 255,255,255);
+      Set_Color(Bitmap, 1, 100,100,180);
+      Set_Color(Bitmap, 2, 120,0,0);
+      Set_Color(Bitmap, 3, 0,0,150);
+      Blit_Surface
         (Source => Bitmap,
          Target => Surf,
          Dst_X  => 200,
          Dst_Y  => 32);
 
-      SU.Free_Surface (Bitmap);
+      Free_Surface (Bitmap);
     end;
 
     --
     -- Set a clipping rectangle.
     --
-    SU.Set_Clipping_Rect
+    Set_Clipping_Rect
       (Surface => Surf,
        X       => 55,
        Y       => 220,
@@ -216,7 +214,7 @@ begin
     --
     T_IO.Put_Line("Testing clipping rectangles");
     declare
-      White  : constant Pixel := Map_Pixel(Surf.Format'Access, 255,255,255);
+      White  : constant AG_Pixel := Map_Pixel(Surf.Format'Access, 255,255,255);
       Clip_X : constant Integer := Integer(Surf.Clip_Rect.X);
       Clip_Y : constant Integer := Integer(Surf.Clip_Rect.Y);
       Clip_W : constant Integer := Integer(Surf.Clip_Rect.W);
@@ -224,13 +222,13 @@ begin
       procedure Put_Crosshairs
         (Surface : Surface_Access;
          X,Y     : Natural;
-         Value   : Pixel) is
+         Pixel   : AG_Pixel) is
       begin
         for Z in 1 .. 3 loop
-          SU.Put_Pixel (Surface, X+Z,Y, Value, Clipping => false);
-          SU.Put_Pixel (Surface, X-Z,Y, Value, Clipping => false);
-          SU.Put_Pixel (Surface, X,Y+Z, Value, Clipping => false);
-          SU.Put_Pixel (Surface, X,Y-Z, Value, Clipping => false);
+          Put_Pixel (Surface, X+Z,Y, Pixel, Clipping => false);
+          Put_Pixel (Surface, X-Z,Y, Pixel, Clipping => false);
+          Put_Pixel (Surface, X,Y+Z, Pixel, Clipping => false);
+          Put_Pixel (Surface, X,Y-Z, Pixel, Clipping => false);
         end loop;
       end;
     begin
@@ -256,9 +254,9 @@ begin
     --
     T_IO.Put_Line("Testing transparency");
     declare
-      Denis : constant SU.Surface_Access := New_Surface("axe.png");
+      Denis : constant Surface_Access := New_Surface("axe.png");
       Degs  : Float := 0.0;
-      Alpha : Component := 0;
+      Alpha : AG_Component := 0;
     begin
       if Denis /= null then
         T_IO.Put_Line
@@ -273,14 +271,14 @@ begin
         for Y in 1 .. 50 loop
           Degs := Degs + 30.0;
 
-          SU.Set_Alpha
+          Set_Alpha
 	         (Surface => Denis,
 	          Alpha   => Alpha);      -- Per-surface alpha
           Alpha := Alpha + 12;
 
           -- Render to target coordinates under Surf.
           for Z in 1 .. 3 loop
-            SU.Blit_Surface
+            Blit_Surface
               (Source => Denis,
                Target => Surf,
                Dst_X  => Y*25,
@@ -294,12 +292,12 @@ begin
     end;
         
     T_IO.Put_Line("Testing export to PNG");
-    if not SU.Export_PNG(Surf, "output.png") then
+    if not Export_PNG(Surf, "output.png") then
       raise program_error with Agar.Error.Get_Error;
     end if;
     T_IO.Put_Line ("Surface saved to output.png");
 
-    SU.Free_Surface(Surf);
+    Free_Surface(Surf);
   end;
 
   T_IO.Put_Line

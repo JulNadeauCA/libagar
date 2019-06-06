@@ -40,48 +40,48 @@ package Agar.Surface is
   -- Colors --
   ------------
 #if AG_MODEL = AG_LARGE
-  subtype Pixel     is Interfaces.Unsigned_64;
-  subtype Component is Interfaces.Unsigned_16;
-  type    Component_Offset is range -(2 **15) .. +(2 **15 - 1) with Convention => C;
-  for     Component_Offset'Size use 16;
-  type    Gray_Component   is range -(2 **31) .. +(2 **31 - 1) with Convention => C;
-  for     Gray_Component'Size use 32;
+  subtype AG_Pixel  is Interfaces.Unsigned_64;
+  subtype AG_Component is Interfaces.Unsigned_16;
+  type    AG_Component_Offset is range -(2 **15) .. +(2 **15 - 1) with Convention => C;
+  for     AG_Component_Offset'Size use 16;
+  type    AG_Gray_Component   is range -(2 **31) .. +(2 **31 - 1) with Convention => C;
+  for     AG_Gray_Component'Size use 32;
 #elsif AG_MODEL = AG_MEDIUM
-  subtype Pixel     is Interfaces.Unsigned_32;
-  subtype Component is Interfaces.Unsigned_8;
-  type    Component_Offset is range -127 .. 127 with Convention => C;
-  for     Component_Offset'Size use 8;
-  type    Gray_Component   is range -(2 **15) .. +(2 **15 - 1) with Convention => C;
-  for     Gray_Component'Size use 16;
+  subtype AG_Pixel  is Interfaces.Unsigned_32;
+  subtype AG_Component is Interfaces.Unsigned_8;
+  type    AG_Component_Offset is range -127 .. 127 with Convention => C;
+  for     AG_Component_Offset'Size use 8;
+  type    AG_Gray_Component   is range -(2 **15) .. +(2 **15 - 1) with Convention => C;
+  for     AG_Gray_Component'Size use 16;
 #elsif AG_MODEL = AG_SMALL
-  subtype Pixel     is Interfaces.Unsigned_16;
-  subtype Component is Interfaces.Unsigned_8;
-  type    Component_Offset is range -127 .. 127 with Convention => C;
-  for     Component_Offset'Size use 8;
-  type    Gray_Component   is range -127 .. +127 with Convention => C;
-  for     Gray_Component'Size use 8;
+  subtype AG_Pixel  is Interfaces.Unsigned_16;
+  subtype AG_Component is Interfaces.Unsigned_8;
+  type    AG_Component_Offset is range -127 .. 127 with Convention => C;
+  for     AG_Component_Offset'Size use 8;
+  type    AG_Gray_Component   is range -127 .. +127 with Convention => C;
+  for     AG_Gray_Component'Size use 8;
 #end if;
-  COMPONENT_BITS : constant C.unsigned := $AG_COMPONENT_BITS;
-  COLOR_FIRST    : constant Component := $AG_COLOR_FIRST;
-  COLOR_LAST     : constant Component := $AG_COLOR_LAST;
-  TRANSPARENT    : constant Component := $AG_TRANSPARENT;
-  OPAQUE         : constant Component := $AG_OPAQUE;
+  AG_COMPONENT_BITS : constant C.unsigned := $AG_COMPONENT_BITS;
+  AG_COLOR_FIRST    : constant AG_Component := $AG_COLOR_FIRST;
+  AG_COLOR_LAST     : constant AG_Component := $AG_COLOR_LAST;
+  AG_TRANSPARENT    : constant AG_Component := $AG_TRANSPARENT;
+  AG_OPAQUE         : constant AG_Component := $AG_OPAQUE;
 
   --------------------------
   -- Native Color in RGBA --
   --------------------------
-  type Color is record
-    R,G,B,A : Component;
+  type AG_Color is record
+    R,G,B,A : AG_Component;
   end record
     with Convention => C;
 
-  type Color_Access is access all Color with Convention => C;
+  type Color_Access is access all AG_Color with Convention => C;
   subtype Color_not_null_Access is not null Color_Access;
 
   --------------------------
   -- Native Color in HSVA --
   --------------------------
-  type Color_HSV is record
+  type AG_Color_HSV is record
 #if HAVE_FLOAT
     H,S,V,A : C.c_float;
 #else
@@ -92,64 +92,64 @@ package Agar.Surface is
   
   type Intensity is digits 6 range 0.0 .. 1.0;
 
-  type Color_HSV_Access is access all Color_HSV with Convention => C;
+  type Color_HSV_Access is access all AG_Color_HSV with Convention => C;
   subtype Color_HSV_not_null_Access is not null Color_HSV_Access;
   
   -------------------------
   -- Native Color Offset --
   -------------------------
-  type Color_Offset is record
-    R,G,B,A : Component_Offset;
+  type AG_Color_Offset is record
+    R,G,B,A : AG_Component_Offset;
   end record
     with Convention => C;
 
-  type Color_Offset_Access is access all Color_Offset with Convention => C;
+  type Color_Offset_Access is access all AG_Color_Offset with Convention => C;
   subtype Color_Offset_not_null_Access is not null Color_Offset_Access;
 
   -------------------------
   -- Rectangle of Pixels --
   -------------------------
-  type Rect is record
+  type AG_Rect is record
     X,Y : C.int;                 -- Upper-left corner
     W,H : C.int;                 -- Width, height
   end record
     with Convention => C;
 
-  type Rect_Access is access all Rect with Convention => C;
+  type Rect_Access is access all AG_Rect with Convention => C;
   subtype Rect_not_null_Access is not null Rect_Access;
   
   ----------------------------------------
   -- Rectangle of Pixels with Endpoints --
   ----------------------------------------
-  type Rect2 is record
+  type AG_Rect2 is record
     X1,Y1 : C.int;               -- Upper-left corner
     W,H   : C.int;               -- Width, height
     X2,Y2 : C.int;               -- Lower-right corner
   end record
     with Convention => C;
 
-  type Rect2_Access is access all Rect2 with Convention => C;
+  type Rect2_Access is access all AG_Rect2 with Convention => C;
   subtype Rect2_not_null_Access is not null Rect2_Access;
   
   --------------------------------------
   -- Clipping Rectangle (GL-optional) --
   --------------------------------------
-  type Clip_Equations is array (1 .. 16) of aliased C.double;
-  type Clip_Rect is record
-    R    : Rect;
+  type AG_Clip_Equations is array (1 .. 16) of aliased C.double;
+  type AG_Clip_Rect is record
+    R    : AG_Rect;
 #if HAVE_FLOAT
-    Eqns : Clip_Equations;
+    Eqns : AG_Clip_Equations;
 #end if;
   end record
     with Convention => C;
 
-  type Clip_Rect_Access is access all Clip_Rect with Convention => C;
+  type Clip_Rect_Access is access all AG_Clip_Rect with Convention => C;
   subtype Clip_Rect_not_null_Access is not null Clip_Rect_Access;
   
   --------------------------------------
   -- Texture Coordinate (GL-optional) --
   --------------------------------------
-  type Texture_Coordinate is record
+  type AG_Texcoord is record
 #if HAVE_FLOAT
     X,Y,W,H : C.C_float;
 #else
@@ -158,16 +158,19 @@ package Agar.Surface is
   end record
     with Convention => C;
 
+  type AG_Texcoord_Access is access all AG_Texcoord with Convention => C;
+  subtype AG_Texcoord_not_null_Access is not null AG_Texcoord_Access;
+
   ----------------------------------
   -- Palette for Indexed Surfaces --
   ----------------------------------
-  type Palette is limited record
+  type AG_Palette is limited record
     Colors : Color_Access;
     Count  : C.unsigned;
   end record
     with Convention => C;
 
-  type Palette_Access is access all Palette with Convention => C;
+  type Palette_Access is access all AG_Palette with Convention => C;
   subtype Palette_not_null_Access is not null Palette_Access;
   
   ------------------------------
@@ -189,7 +192,7 @@ package Agar.Surface is
     when PACKED =>
       R_Loss,  G_Loss,  B_Loss,  A_Loss  : Unsigned_8;  -- Bits lost by packing
       R_Shift, G_Shift, B_Shift, A_Shift : Unsigned_8;  -- Bits at right of each
-      R_Mask,  G_Mask,  B_Mask,  A_Mask  : Pixel;       -- Component masks
+      R_Mask,  G_Mask,  B_Mask,  A_Mask  : AG_Pixel;    -- Component masks
     end case;
   end record
     with Convention => C;
@@ -210,9 +213,9 @@ package Agar.Surface is
     W,H            : C.unsigned;           -- Size in pixels
     Pitch, Padding : C.unsigned;           -- Scanline byte length, end padding
     Pixels         : Pixel_Access;         -- Raw pixel data
-    Clip_Rect      : Rect;                 -- Destination clipping rectangle
-    Colorkey       : Pixel;                -- Color key pixel
-    Alpha          : Component;            -- Per-surface alpha
+    Clip_Rect      : AG_Rect;              -- Destination clipping rectangle
+    Colorkey       : AG_Pixel;             -- Color key pixel
+    Alpha          : AG_Component;         -- Per-surface alpha
     Frames         : System.Address;       -- TODO animation frames
     Frame_Count    : C.unsigned;           -- Animation frame count
   end record
@@ -261,14 +264,14 @@ package Agar.Surface is
     (Format         : in Pixel_Format_not_null_Access;
 #if AG_MODEL = AG_LARGE
      Bits_per_Pixel : in Positive := 64;
-     R_Mask         : in Pixel := 16#000000000000ffff#;
-     G_Mask         : in Pixel := 16#00000000ffff0000#;
-     B_Mask         : in Pixel := 16#0000ffff00000000#);
+     R_Mask         : in AG_Pixel := 16#000000000000ffff#;
+     G_Mask         : in AG_Pixel := 16#00000000ffff0000#;
+     B_Mask         : in AG_Pixel := 16#0000ffff00000000#);
 #else
      Bits_per_Pixel : in Positive := 32;
-     R_Mask         : in Pixel := 16#000000ff#;
-     G_Mask         : in Pixel := 16#0000ff00#;
-     B_Mask         : in Pixel := 16#00ff0000#);
+     R_Mask         : in AG_Pixel := 16#000000ff#;
+     G_Mask         : in AG_Pixel := 16#0000ff00#;
+     B_Mask         : in AG_Pixel := 16#00ff0000#);
 #end if;
   
   --
@@ -278,10 +281,10 @@ package Agar.Surface is
     (Format         : in Pixel_Format_not_null_Access;
 #if AG_MODEL = AG_LARGE
      Bits_per_Pixel : in Positive := 64;
-     R_Mask         : in Pixel := 16#000000000000ffff#;
-     G_Mask         : in Pixel := 16#00000000ffff0000#;
-     B_Mask         : in Pixel := 16#0000ffff00000000#;
-     A_Mask         : in Pixel := 16#ffff000000000000#);
+     R_Mask         : in AG_Pixel := 16#000000000000ffff#;
+     G_Mask         : in AG_Pixel := 16#00000000ffff0000#;
+     B_Mask         : in AG_Pixel := 16#0000ffff00000000#;
+     A_Mask         : in AG_Pixel := 16#ffff000000000000#);
 #else
      Bits_per_Pixel : in Positive := 32;
      R_Mask         : in Unsigned_32 := 16#000000ff#;
@@ -349,16 +352,16 @@ package Agar.Surface is
     (W,H            : in Natural := 0;
 #if AG_MODEL = AG_LARGE
      Bits_per_Pixel : in Positive := 64;
-     R_Mask         : in Pixel := 16#000000000000ffff#;
-     G_Mask         : in Pixel := 16#00000000ffff0000#;
-     B_Mask         : in Pixel := 16#0000ffff00000000#;
-     A_Mask         : in Pixel := 16#ffff000000000000#;
+     R_Mask         : in AG_Pixel := 16#000000000000ffff#;
+     G_Mask         : in AG_Pixel := 16#00000000ffff0000#;
+     B_Mask         : in AG_Pixel := 16#0000ffff00000000#;
+     A_Mask         : in AG_Pixel := 16#ffff000000000000#;
 #else
      Bits_per_Pixel : in Positive := 32;
-     R_Mask         : in Pixel := 16#000000ff#;
-     G_Mask         : in Pixel := 16#0000ff00#;
-     B_Mask         : in Pixel := 16#00ff0000#;
-     A_Mask         : in Pixel := 16#ff000000#;
+     R_Mask         : in AG_Pixel := 16#000000ff#;
+     G_Mask         : in AG_Pixel := 16#0000ff00#;
+     B_Mask         : in AG_Pixel := 16#00ff0000#;
+     A_Mask         : in AG_Pixel := 16#ff000000#;
 #end if;
      Src_Colorkey   : in Boolean := false;
      Src_Alpha      : in Boolean := false;
@@ -373,16 +376,16 @@ package Agar.Surface is
      W,H            : in Natural;
 #if AG_MODEL = AG_LARGE
      Bits_per_Pixel : in Positive := 64;
-     R_Mask         : in Pixel := 16#000000000000ffff#;
-     G_Mask         : in Pixel := 16#00000000ffff0000#;
-     B_Mask         : in Pixel := 16#0000ffff00000000#;
-     A_Mask         : in Pixel := 16#ffff000000000000#;
+     R_Mask         : in AG_Pixel := 16#000000000000ffff#;
+     G_Mask         : in AG_Pixel := 16#00000000ffff0000#;
+     B_Mask         : in AG_Pixel := 16#0000ffff00000000#;
+     A_Mask         : in AG_Pixel := 16#ffff000000000000#;
 #else
      Bits_per_Pixel : in Positive := 32;
-     R_Mask         : in Pixel := 16#000000ff#;
-     G_Mask         : in Pixel := 16#0000ff00#;
-     B_Mask         : in Pixel := 16#00ff0000#;
-     A_Mask         : in Pixel := 16#ff000000#;
+     R_Mask         : in AG_Pixel := 16#000000ff#;
+     G_Mask         : in AG_Pixel := 16#0000ff00#;
+     B_Mask         : in AG_Pixel := 16#00ff0000#;
+     A_Mask         : in AG_Pixel := 16#ff000000#;
 #end if;
      Src_Colorkey   : in Boolean := false;
      Src_Alpha      : in Boolean := false;
@@ -403,6 +406,16 @@ package Agar.Surface is
   function New_Surface_GL (W,H : in Natural) return Surface_Access;
 
   --
+  -- Return a Color from RGBA components.
+  --
+  function Color_8
+    (R,G,B : in Unsigned_8;
+     A     : in Unsigned_8 := 255) return AG_Color;
+  function Color_16
+    (R,G,B : in Unsigned_16;
+     A     : in Unsigned_16 := 65535) return AG_Color;
+
+  --
   -- Set a color palette entry of an Indexed surface
   --
   procedure Set_Color
@@ -412,8 +425,8 @@ package Agar.Surface is
   procedure Set_Color
     (Surface : in Surface_not_null_Access;
      Index   : in Natural;
-     R,G,B   : in Component;
-     A       : in Component := OPAQUE);
+     R,G,B   : in AG_Component;
+     A       : in AG_Component := AG_OPAQUE);
   procedure Set_Color
     (Surface : in Surface_not_null_Access;
      Index   : in Natural;
@@ -542,7 +555,7 @@ package Agar.Surface is
   --
   function Map_Pixel
     (Format : in Pixel_Format_not_null_Access;
-     Color  : in Color_not_null_Access) return Pixel
+     Color  : in Color_not_null_Access) return AG_Pixel
 #if AG_MODEL = AG_LARGE
     with Import, Convention => C, Link_Name => "ag_map_pixel64";
 #else
@@ -554,8 +567,8 @@ package Agar.Surface is
   --
   function Map_Pixel
     (Format : in Pixel_Format_not_null_Access;
-     R,G,B  : in Component;
-     A      : in Component := OPAQUE) return Pixel;
+     R,G,B  : in AG_Component;
+     A      : in AG_Component := AG_OPAQUE) return AG_Pixel;
 
   --
   -- Return the 32-bit packed pixel corresponding to a given color.
@@ -600,9 +613,9 @@ package Agar.Surface is
 #end if;
 
   procedure Unpack_Pixel
-    (Value   : in     Pixel;
+    (Pixel   : in     AG_Pixel;
      Format  : in     Pixel_Format_not_null_Access;
-     R,G,B,A :    out Component);
+     R,G,B,A :    out AG_Component);
 
   --
   -- Return a new surface generated by scaling an Input surface to specified
@@ -623,23 +636,22 @@ package Agar.Surface is
   procedure Fill_Rect
     (Surface : in Surface_not_null_Access;
      Rect    : in Rect_Access := null;
-     Color   : in Color_not_null_Access)
-    with Import, Convention => C, Link_Name => "AG_FillRect";
+     Color   : in AG_Color);
   procedure Fill_Rect
     (Surface : in Surface_not_null_Access;
      Rect    : in Rect_Access := null;
-     R,G,B   : in Component;
-     A       : in Component := OPAQUE);
+     R,G,B   : in AG_Component;
+     A       : in AG_Component := AG_OPAQUE);
 
   --
   -- Extract a native-width packed pixel from a surface.
   --
   function Get_Pixel
     (Surface : in Surface_not_null_Access;
-     X,Y     : in Natural) return Pixel;
+     X,Y     : in Natural) return AG_Pixel;
   function Get_Pixel
     (Surface : in Surface_not_null_Access;
-     Address : in Pixel_not_null_Access) return Pixel
+     Address : in Pixel_not_null_Access) return AG_Pixel
 #if AG_MODEL = AG_LARGE
     with Import, Convention => C, Link_Name => "ag_surface_get64_at";
 #else
@@ -676,12 +688,12 @@ package Agar.Surface is
   procedure Put_Pixel
     (Surface  : in Surface_not_null_Access;
      X,Y      : in Natural;
-     Value    : in Pixel;
+     Pixel    : in AG_Pixel;
      Clipping : in Boolean := true);
   procedure Put_Pixel
     (Surface : in Surface_not_null_Access;
      Address : in Pixel_not_null_Access;
-     Value   : in Pixel)
+     Pixel   : in AG_Pixel)
 #if AG_MODEL = AG_LARGE
     with Import, Convention => C, Link_Name => "ag_surface_put64_at";
 #else
@@ -695,12 +707,12 @@ package Agar.Surface is
   procedure Put_Pixel_32
     (Surface : in Surface_not_null_Access;
      Address : in Pixel_not_null_Access;
-     Value   : in Unsigned_32)
+     Pixel   : in Unsigned_32)
     with Import, Convention => C, Link_Name => "ag_surface_put32_at";
   procedure Put_Pixel_32
     (Surface  : in Surface_not_null_Access;
      X,Y      : in Natural;
-     Value    : in Unsigned_32;
+     Pixel    : in Unsigned_32;
      Clipping : in Boolean := true);
  
 #if AG_MODEL = AG_LARGE 
@@ -710,12 +722,12 @@ package Agar.Surface is
   procedure Put_Pixel_64
     (Surface : in Surface_not_null_Access;
      Address : in Pixel_not_null_Access;
-     Value   : in Unsigned_64)
+     Pixel   : in Unsigned_64)
     with Import, Convention => C, Link_Name => "ag_surface_put64_at";
   procedure Put_Pixel_64
     (Surface  : in Surface_not_null_Access;
      X,Y      : in Natural;
-     Value    : in Unsigned_64;
+     Pixel    : in Unsigned_64;
      Clipping : in Boolean := true);
 #end if;
 
@@ -725,7 +737,7 @@ package Agar.Surface is
   procedure Set_Alpha
     (Surface : in Surface_not_null_Access;
      Enable  : in Boolean := false;
-     Alpha   : in Component := OPAQUE);
+     Alpha   : in AG_Component := AG_OPAQUE);
   
   --
   -- Set source colorkey flag and surface colorkey value.
@@ -733,7 +745,7 @@ package Agar.Surface is
   procedure Set_Colorkey
     (Surface  : in Surface_not_null_Access;
      Enable   : in Boolean := false;
-     Colorkey : in Pixel := 0);
+     Colorkey : in AG_Pixel := 0);
 
   --
   -- Clipping rectangle.
@@ -751,13 +763,13 @@ package Agar.Surface is
   procedure AG_PixelFormatRGB
     (Format               : in Pixel_Format_not_null_Access;
      Bits_per_Pixel       : in C.int;
-     R_Mask,G_Mask,B_Mask : in Pixel)
+     R_Mask,G_Mask,B_Mask : in AG_Pixel)
     with Import, Convention => C, Link_Name => "AG_PixelFormatRGB";
 
   procedure AG_PixelFormatRGBA
     (Format                      : in Pixel_Format_not_null_Access;
      Bits_per_Pixel              : in C.int;
-     R_Mask,G_Mask,B_Mask,A_Mask : in Pixel)
+     R_Mask,G_Mask,B_Mask,A_Mask : in AG_Pixel)
     with Import, Convention => C, Link_Name => "AG_PixelFormatRGBA";
 
   procedure AG_PixelFormatIndexed
@@ -784,19 +796,19 @@ package Agar.Surface is
     (W,H            : in C.unsigned;
      Bits_per_Pixel : in C.unsigned;
      Flags          : in C.unsigned;
-     R_Mask         : in Pixel;
-     G_Mask         : in Pixel;
-     B_Mask         : in Pixel) return Surface_not_null_Access
+     R_Mask         : in AG_Pixel;
+     G_Mask         : in AG_Pixel;
+     B_Mask         : in AG_Pixel) return Surface_not_null_Access
     with Import, Convention => C, Link_Name => "AG_SurfaceRGB";
 
   function AG_SurfaceRGBA
     (W,H            : in C.unsigned;
      Bits_per_Pixel : in C.unsigned;
      Flags          : in C.unsigned;
-     R_Mask         : in Pixel;
-     G_Mask         : in Pixel;
-     B_Mask         : in Pixel;
-     A_Mask         : in Pixel) return Surface_not_null_Access
+     R_Mask         : in AG_Pixel;
+     G_Mask         : in AG_Pixel;
+     B_Mask         : in AG_Pixel;
+     A_Mask         : in AG_Pixel) return Surface_not_null_Access
     with Import, Convention => C, Link_Name => "AG_SurfaceRGBA";
   
   function AG_SurfaceIndexed
@@ -815,19 +827,19 @@ package Agar.Surface is
     (Pixels         : in Pixel_not_null_Access;
      W,H            : in C.unsigned;
      Bits_per_Pixel : in C.int;
-     R_Mask         : in Pixel;
-     G_Mask         : in Pixel;
-     B_Mask         : in Pixel) return Surface_Access
+     R_Mask         : in AG_Pixel;
+     G_Mask         : in AG_Pixel;
+     B_Mask         : in AG_Pixel) return Surface_Access
     with Import, Convention => C, Link_Name => "AG_SurfaceFromPixelsRGB";
   
   function AG_SurfaceFromPixelsRGBA
     (Pixels         : in Pixel_not_null_Access;
      W,H            : in C.unsigned;
      Bits_per_Pixel : in C.int;
-     R_Mask         : in Pixel;
-     G_Mask         : in Pixel;
-     B_Mask         : in Pixel;
-     A_Mask         : in Pixel) return Surface_Access
+     R_Mask         : in AG_Pixel;
+     G_Mask         : in AG_Pixel;
+     B_Mask         : in AG_Pixel;
+     A_Mask         : in AG_Pixel) return Surface_Access
     with Import, Convention => C, Link_Name => "AG_SurfaceFromPixelsRGBA";
 
   function AG_SurfaceStdGL
@@ -880,13 +892,13 @@ package Agar.Surface is
   procedure AG_SurfaceSetAlpha
     (Surface : in Surface_not_null_Access;
      Flags   : in C.unsigned;
-     Alpha   : in Component)
+     Alpha   : in AG_Component)
     with Import, Convention => C, Link_Name => "ag_surface_set_alpha";
   
   procedure AG_SurfaceSetColorkey
     (Surface  : in Surface_not_null_Access;
      Flags    : in C.unsigned;
-     Colorkey : in Pixel)
+     Colorkey : in AG_Pixel)
     with Import, Convention => C, Link_Name => "ag_surface_set_colorkey";
   
   procedure AG_HSV2Color
@@ -952,23 +964,23 @@ package Agar.Surface is
   procedure AG_SurfacePut32
     (Surface : in Surface_not_null_Access;
      X,Y     : in C.int;
-     Value   : in Unsigned_32)
+     Pixel   : in Unsigned_32)
     with Import, Convention => C, Link_Name => "ag_surface_put32";
 
   procedure AG_GetColor32
     (Color  : in Color_not_null_Access;
-     Value  : in Unsigned_32;
+     Pixel  : in Unsigned_32;
      Format : in Pixel_Format_not_null_Access)
     with Import, Convention => C, Link_Name => "AG_GetColor32";
 
   procedure AG_GetColor32_RGBA8
-    (Value   : in Unsigned_32;
+    (Pixel   : in Unsigned_32;
      Format  : in Pixel_Format_not_null_Access;
      R,G,B,A : in System.Address)
     with Import, Convention => C, Link_Name => "AG_GetColor32_RGBA8";
 
   procedure AG_GetColor32_RGBA16
-    (Value   : in Unsigned_32;
+    (Pixel   : in Unsigned_32;
      Format  : in Pixel_Format_not_null_Access;
      R,G,B,A : in System.Address)
     with Import, Convention => C, Link_Name => "AG_GetColor32_RGBA16";
@@ -987,23 +999,23 @@ package Agar.Surface is
   procedure AG_SurfacePut64
     (Surface : in Surface_not_null_Access;
      X,Y     : in C.int;
-     Value   : in Unsigned_64)
+     Pixel   : in Unsigned_64)
     with Import, Convention => C, Link_Name => "ag_surface_put64";
 
   procedure AG_GetColor64
     (Color  : in Color_not_null_Access;
-     Value  : in Unsigned_64;
+     Pixel  : in Unsigned_64;
      Format : in Pixel_Format_not_null_Access)
     with Import, Convention => C, Link_Name => "AG_GetColor64";
 
   procedure AG_GetColor64_RGBA8
-    (Value   : in Unsigned_64;
+    (Pixel   : in Unsigned_64;
      Format  : in Pixel_Format_not_null_Access;
      R,G,B,A : in System.Address)
     with Import, Convention => C, Link_Name => "ag_get_color64_rgba8";
 
   procedure AG_GetColor64_RGBA16
-    (Value   : in Unsigned_64;
+    (Pixel   : in Unsigned_64;
      Format  : in Pixel_Format_not_null_Access;
      R,G,B,A : in System.Address)
     with Import, Convention => C, Link_Name => "ag_get_color64_rgba16";

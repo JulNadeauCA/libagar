@@ -26,14 +26,14 @@ package body Agar.Surface is
     (Format         : in Pixel_Format_not_null_Access;
 #if AG_MODEL = AG_LARGE
      Bits_per_Pixel : in Positive := 64;
-     R_Mask         : in Pixel := 16#000000000000ffff#;
-     G_Mask         : in Pixel := 16#00000000ffff0000#;
-     B_Mask         : in Pixel := 16#0000ffff00000000#) is
+     R_Mask         : in AG_Pixel := 16#000000000000ffff#;
+     G_Mask         : in AG_Pixel := 16#00000000ffff0000#;
+     B_Mask         : in AG_Pixel := 16#0000ffff00000000#) is
 #else
      Bits_per_Pixel : in Positive := 32;
-     R_Mask         : in Pixel := 16#000000ff#;
-     G_Mask         : in Pixel := 16#0000ff00#;
-     B_Mask         : in Pixel := 16#00ff0000#) is
+     R_Mask         : in AG_Pixel := 16#000000ff#;
+     G_Mask         : in AG_Pixel := 16#0000ff00#;
+     B_Mask         : in AG_Pixel := 16#00ff0000#) is
 #end if;
   begin
     AG_PixelFormatRGB
@@ -48,16 +48,16 @@ package body Agar.Surface is
     (Format         : Pixel_Format_not_null_Access;
 #if AG_MODEL = AG_LARGE
      Bits_per_Pixel : in Positive := 64;
-     R_Mask         : in Pixel := 16#000000000000ffff#;
-     G_Mask         : in Pixel := 16#00000000ffff0000#;
-     B_Mask         : in Pixel := 16#0000ffff00000000#;
-     A_Mask         : in Pixel := 16#ffff000000000000#) is
+     R_Mask         : in AG_Pixel := 16#000000000000ffff#;
+     G_Mask         : in AG_Pixel := 16#00000000ffff0000#;
+     B_Mask         : in AG_Pixel := 16#0000ffff00000000#;
+     A_Mask         : in AG_Pixel := 16#ffff000000000000#) is
 #else
      Bits_per_Pixel : in Positive := 32;
-     R_Mask         : in Unsigned_32 := 16#000000ff#;
-     G_Mask         : in Unsigned_32 := 16#0000ff00#;
-     B_Mask         : in Unsigned_32 := 16#00ff0000#;
-     A_Mask         : in Unsigned_32 := 16#ff000000#) is
+     R_Mask         : in AG_Pixel := 16#000000ff#;
+     G_Mask         : in AG_Pixel := 16#0000ff00#;
+     B_Mask         : in AG_Pixel := 16#00ff0000#;
+     A_Mask         : in AG_Pixel := 16#ff000000#) is
 #end if;
   begin
     AG_PixelFormatRGBA
@@ -193,6 +193,17 @@ package body Agar.Surface is
                  G_Mask         => 16#00f0#,
                  B_Mask         => 16#0f00#,
                  A_Mask         => 16#f000#);
+            when 12 =>
+              Ada.Text_IO.Put_Line("12-bit RGB");
+              return AG_SurfaceRGBA
+                (W              => C.unsigned(W),
+                 H              => C.unsigned(H),
+                 Bits_per_Pixel => C.unsigned(Bits_per_Pixel),
+                 Flags          => Flags,
+                 R_Mask         => 16#000f#,
+                 G_Mask         => 16#00f0#,
+                 B_Mask         => 16#0f00#,
+                 A_Mask         => 0);
             when others =>
               null;
           end case;
@@ -213,8 +224,6 @@ package body Agar.Surface is
       end case;  -- Mode
     end if;      -- Format = null
 
-    Ada.Text_IO.Put_Line("Format is given, using it");
-
     return AG_SurfaceNew
       (Format => Format,
        W      => C.unsigned(W),
@@ -229,16 +238,16 @@ package body Agar.Surface is
     (W,H            : in Natural := 0;
 #if AG_MODEL = AG_LARGE
      Bits_per_Pixel : in Positive := 64;
-     R_Mask         : in Pixel := 16#000000000000ffff#;
-     G_Mask         : in Pixel := 16#00000000ffff0000#;
-     B_Mask         : in Pixel := 16#0000ffff00000000#;
-     A_Mask         : in Pixel := 16#ffff000000000000#;
+     R_Mask         : in AG_Pixel := 16#000000000000ffff#;
+     G_Mask         : in AG_Pixel := 16#00000000ffff0000#;
+     B_Mask         : in AG_Pixel := 16#0000ffff00000000#;
+     A_Mask         : in AG_Pixel := 16#ffff000000000000#;
 #else
      Bits_per_Pixel : in Positive := 32;
-     R_Mask         : in Pixel := 16#000000ff#;
-     G_Mask         : in Pixel := 16#0000ff00#;
-     B_Mask         : in Pixel := 16#00ff0000#;
-     A_Mask         : in Pixel := 16#ff000000#;
+     R_Mask         : in AG_Pixel := 16#000000ff#;
+     G_Mask         : in AG_Pixel := 16#0000ff00#;
+     B_Mask         : in AG_Pixel := 16#00ff0000#;
+     A_Mask         : in AG_Pixel := 16#ff000000#;
 #end if;
      Src_Colorkey   : in Boolean := false;
      Src_Alpha      : in Boolean := false;
@@ -281,16 +290,16 @@ package body Agar.Surface is
      W,H            : in Natural;
 #if AG_MODEL = AG_LARGE
      Bits_per_Pixel : in Positive := 64;
-     R_Mask         : in Pixel := 16#000000000000ffff#;
-     G_Mask         : in Pixel := 16#00000000ffff0000#;
-     B_Mask         : in Pixel := 16#0000ffff00000000#;
-     A_Mask         : in Pixel := 16#ffff000000000000#;
+     R_Mask         : in AG_Pixel := 16#000000000000ffff#;
+     G_Mask         : in AG_Pixel := 16#00000000ffff0000#;
+     B_Mask         : in AG_Pixel := 16#0000ffff00000000#;
+     A_Mask         : in AG_Pixel := 16#ffff000000000000#;
 #else
      Bits_per_Pixel : in Positive := 32;
-     R_Mask         : in Pixel := 16#000000ff#;
-     G_Mask         : in Pixel := 16#0000ff00#;
-     B_Mask         : in Pixel := 16#00ff0000#;
-     A_Mask         : in Pixel := 16#ff000000#;
+     R_Mask         : in AG_Pixel := 16#000000ff#;
+     G_Mask         : in AG_Pixel := 16#0000ff00#;
+     B_Mask         : in AG_Pixel := 16#00ff0000#;
+     A_Mask         : in AG_Pixel := 16#ff000000#;
 #end if;
      Src_Colorkey   : in Boolean := false;
      Src_Alpha      : in Boolean := false;
@@ -363,7 +372,45 @@ package body Agar.Surface is
   end;
   
   --
-  -- Set a color palette entry of an Indexed surface (Color argument)
+  -- Return a Color from 8-bit RGBA components.
+  --
+  function Color_8
+    (R,G,B : in Unsigned_8;
+     A     : in Unsigned_8 := 255) return AG_Color
+  is
+#if AG_MODEL = AG_LARGE
+    Color : constant AG_Color := (Unsigned_16(Float(R)/255.0*65535.0),
+                                  Unsigned_16(Float(G)/255.0*65535.0),
+                                  Unsigned_16(Float(B)/255.0*65535.0),
+                                  Unsigned_16(Float(A)/255.0*65535.0));
+#else
+    Color : constant AG_Color := (R,G,B,A);
+#end if;
+  begin
+    return Color;
+  end;
+
+  --
+  -- Return an AG_Color from 16-bit RGBA components.
+  --
+  function Color_16
+    (R,G,B : in Unsigned_16;
+     A     : in Unsigned_16 := 65535) return AG_Color
+  is
+#if AG_MODEL = AG_LARGE
+    Color : constant AG_Color := (R,G,B,A);
+#else
+    Color : constant AG_Color := (Unsigned_8(Float(R)/65535.0*255.0),
+                                  Unsigned_8(Float(G)/65535.0*255.0),
+                                  Unsigned_8(Float(B)/65535.0*255.0),
+                                  Unsigned_8(Float(A)/65535.0*255.0));
+#end if;
+  begin
+    return Color;
+  end;
+  
+  --
+  -- Set a color palette entry of an Indexed surface (AG_Color argument)
   --
   procedure Set_Color
     (Surface : in Surface_not_null_Access;
@@ -383,14 +430,14 @@ package body Agar.Surface is
   procedure Set_Color
     (Surface : in Surface_not_null_Access;
      Index   : in Natural;
-     R,G,B   : in Component;
-     A       : in Component := OPAQUE)
+     R,G,B   : in AG_Component;
+     A       : in AG_Component := AG_OPAQUE)
   is
-    New_Color : aliased Color := (R,G,B,A);
+    Color : aliased AG_Color := (R,G,B,A);
   begin
     AG_SurfaceSetColors
       (Surface => Surface,
-       Color   => New_Color'Unchecked_Access,
+       Color   => Color'Unchecked_Access,
        Offset  => C.unsigned(Index),
        Count   => 1);
   end;
@@ -404,23 +451,21 @@ package body Agar.Surface is
      H,S,V   : in Intensity;
      A       : in Intensity := 1.0)
   is
-    New_Color : aliased Color;
+    Color : aliased AG_Color;
   begin
     AG_HSV2Color
       (H     => C.c_float(H),
        S     => C.c_float(S),
        V     => C.c_float(V),
-       Color => New_Color'Unchecked_Access);
-
+       Color => Color'Unchecked_Access);
 #if AG_MODEL = AG_LARGE
-    New_Color.A := Component(A * 65535.0);
+    Color.A := AG_Component(A * 65535.0);
 #else
-    New_Color.A := Component(A * 255.0);
+    Color.A := AG_Component(A * 255.0);
 #end if;
-
     AG_SurfaceSetColors
       (Surface => Surface,
-       Color   => New_Color'Unchecked_Access,
+       Color   => Color'Unchecked_Access,
        Offset  => C.unsigned(Index),
        Count   => 1);
   end;
@@ -605,19 +650,19 @@ package body Agar.Surface is
   --
   function Map_Pixel
     (Format : in Pixel_Format_not_null_Access;
-     R,G,B  : in Component;
-     A      : in Component := OPAQUE) return Pixel
+     R,G,B  : in AG_Component;
+     A      : in AG_Component := AG_OPAQUE) return AG_Pixel
   is
-    Col : aliased Color := (R,G,B,A);
+    Color : aliased AG_Color := (R,G,B,A);
   begin
 #if AG_MODEL = AG_LARGE
     return AG_MapPixel64
       (Format => Format,
-       Color  => Col'Unchecked_Access);
+       Color  => Color'Unchecked_Access);
 #else
     return AG_MapPixel32
       (Format => Format,
-       Color  => Col'Unchecked_Access);
+       Color  => Color'Unchecked_Access);
 #end if;
   end;  
 
@@ -657,22 +702,38 @@ package body Agar.Surface is
     end if;
     Scaled := Result;
   end;
-  
+
   --
-  -- Fill a rectangle of pixels with a specified color (RGB-wise).
+  -- Fill a rectangle of pixels with a specified color (Color argument).
   --
   procedure Fill_Rect
     (Surface : in Surface_not_null_Access;
      Rect    : in Rect_Access := null;
-     R,G,B   : in Component;
-     A       : in Component := OPAQUE)
+     Color   : in AG_Color)
   is
-    Col : aliased Color := (R,G,B,A);
+    C : aliased AG_Color := Color;
   begin
     AG_FillRect
       (Surface => Surface,
        Rect    => Rect,
-       Color   => Col'Unchecked_Access);
+       Color   => C'Unchecked_Access);
+  end;
+  
+  --
+  -- Fill a rectangle of pixels with a specified color (RGB arguments).
+  --
+  procedure Fill_Rect
+    (Surface : in Surface_not_null_Access;
+     Rect    : in Rect_Access := null;
+     R,G,B   : in AG_Component;
+     A       : in AG_Component := AG_OPAQUE)
+  is
+    Color : aliased AG_Color := (R,G,B,A);
+  begin
+    AG_FillRect
+      (Surface => Surface,
+       Rect    => Rect,
+       Color   => Color'Unchecked_Access);
   end;
   
   --
@@ -680,7 +741,7 @@ package body Agar.Surface is
   --
   function Get_Pixel
     (Surface : in Surface_not_null_Access;
-     X,Y     : in Natural) return Pixel is
+     X,Y     : in Natural) return AG_Pixel is
   begin
 #if AG_MODEL = AG_LARGE
     return AG_SurfaceGet64
@@ -729,7 +790,7 @@ package body Agar.Surface is
   procedure Put_Pixel
     (Surface  : in Surface_not_null_Access;
      X,Y      : in Natural;
-     Value    : in Pixel;
+     Pixel    : in AG_Pixel;
      Clipping : in Boolean := true) is
   begin
     if Clipping then
@@ -745,13 +806,13 @@ package body Agar.Surface is
       (Surface => Surface,
        X       => C.int(X),
        Y       => C.int(Y),
-       Value   => Value);
+       Pixel   => Pixel);
 #else
     AG_SurfacePut32
       (Surface => Surface,
        X       => C.int(X),
        Y       => C.int(Y),
-       Value   => Value);
+       Pixel   => Pixel);
 #end if;
   end;
   
@@ -761,7 +822,7 @@ package body Agar.Surface is
   procedure Put_Pixel_32
     (Surface  : in Surface_not_null_Access;
      X,Y      : in Natural;
-     Value    : in Unsigned_32;
+     Pixel    : in Unsigned_32;
      Clipping : in Boolean := true) is
   begin
     if Clipping then
@@ -776,7 +837,7 @@ package body Agar.Surface is
       (Surface => Surface,
        X       => C.int(X),
        Y       => C.int(Y),
-       Value   => Value);
+       Pixel   => Pixel);
   end;
 
 #if AG_MODEL = AG_LARGE
@@ -786,7 +847,7 @@ package body Agar.Surface is
   procedure Put_Pixel_64
     (Surface  : in Surface_not_null_Access;
      X,Y      : in Natural;
-     Value    : in Unsigned_64;
+     Pixel    : in Unsigned_64;
      Clipping : in Boolean := true) is
   begin
     if Clipping then
@@ -801,32 +862,32 @@ package body Agar.Surface is
       (Surface => Surface,
        X       => C.int(X),
        Y       => C.int(Y),
-       Value   => Value);
+       Pixel   => Pixel);
   end;
 #end if;
  
   procedure Unpack_Pixel
-    (Value   : in     Pixel;
+    (Pixel   : in     AG_Pixel;
      Format  : in     Pixel_Format_not_null_Access;
-     R,G,B,A :    out Component)
+     R,G,B,A :    out AG_Component)
   is
-    Col : aliased Color;
+    Color : aliased AG_Color;
   begin
 #if AG_MODEL = AG_LARGE
     AG_GetColor64
-      (Color  => Col'Unchecked_Access,
-       Value  => Value,
+      (Color  => Color'Unchecked_Access,
+       Pixel  => Pixel,
        Format => Format);
 #else
     AG_GetColor32
-      (Color  => Col'Unchecked_Access,
-       Value  => Value,
+      (Color  => Color'Unchecked_Access,
+       Pixel  => Pixel,
        Format => Format);
 #end if;
-    R := Col.R;
-    G := Col.G;
-    B := Col.B;
-    A := Col.A;
+    R := Color.R;
+    G := Color.G;
+    B := Color.B;
+    A := Color.A;
   end;
 
   --
@@ -835,7 +896,7 @@ package body Agar.Surface is
   procedure Set_Alpha
     (Surface   : in Surface_not_null_Access;
      Enable    : in Boolean := false;
-     Alpha     : in Component := OPAQUE) is
+     Alpha     : in AG_Component := AG_OPAQUE) is
   begin
     if (Enable) then
       Surface.Flags := Surface.Flags or SURFACE_ALPHA;
@@ -851,7 +912,7 @@ package body Agar.Surface is
   procedure Set_Colorkey
     (Surface  : in Surface_not_null_Access;
      Enable   : in Boolean := false;
-     Colorkey : in Pixel := 0) is
+     Colorkey : in AG_Pixel := 0) is
   begin
     if (Enable) then
       Surface.Flags := Surface.Flags or SURFACE_COLORKEY;

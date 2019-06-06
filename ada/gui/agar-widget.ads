@@ -783,7 +783,7 @@ package Agar.Widget is
     Icon_W, Icon_H       : C.int;                 -- Window icon sizes
     Nominal_FPS          : C.unsigned;            -- Nominal frames/second
     Current_FPS          : C.int;                 -- Last calculated FPS
-    BG_Color             : SU.Color;              -- Background color
+    BG_Color             : SU.AG_Color;           -- Background color
     Refresh_Last         : C.unsigned;            -- Refresh rate timestamp
   end record
     with Convention => C;
@@ -849,19 +849,21 @@ package Agar.Widget is
 
   type Widget_Surface_Flags_Access is access all Interfaces.Unsigned_8 with Convention => C;
   type Widget is limited record
-    Super            : aliased OBJ.Object;   -- [Widget]
-    Flags            : C.unsigned;           -- WIDGET_* Flags (below)
-    X,Y              : C.int;                -- Coordinates in parent widget
-    W,H              : C.int;                -- Allocated size
-    View_Rect        : SU.Rect2;             -- Absolute view coordinates
-    Sensitivity_Rect : SU.Rect2;             -- Absolute sensitivity rectangle
+    Super            : aliased OBJ.Object;       -- [Widget]
+    Flags            : C.unsigned;               -- WIDGET_* Flags (below)
+
+    X,Y              : C.int;                    -- Coordinates in parent widget
+    W,H              : C.int;                    -- Allocated size in pixels
+
+    View_Rect        : SU.AG_Rect2;              -- Display coordinates
+    Sensitivity_Rect : SU.AG_Rect2;              -- Sensitivity rectangle
 
     Surfaces         : access SU.Surface_Access;    -- Mapped surfaces
     Surface_Flags    : Widget_Surface_Flags_Access; -- Mapped surface flags
     Surface_Count    : C.unsigned;                  -- Mapped surface count
 
-    Textures         : Texture_Handle_Access;       -- Mapped texture handles
-    Texcoords        : Texture_Coord_Access;        -- Mapped texture coords
+    Textures         : Texture_Handle_Access;    -- Mapped texture handles
+    Texcoords        : Texture_Coord_Access;     -- Mapped texture coords
 
     Forward_Focus_To : Widget_Access;            -- Forward focus to widget
     Parent_Window    : Window_Access;            -- Parent window (if any)
@@ -1041,8 +1043,8 @@ package Agar.Widget is
     Side_Borders_W   : C.int;             -- Side borders width (px)
     Resize_Control_W : C.int;             -- Resize control width (px)
 
-    Rect       : SU.Rect;                 -- Effective view rectangle
-    Rect_Saved : SU.Rect;                 -- For post-{min,max}imize restore
+    Rect       : SU.AG_Rect;              -- Effective view rectangle
+    Rect_Saved : SU.AG_Rect;              -- For post-{min,max}imize restore
 
     Min_Size_Pct         : C.int;         -- Size in % for MINSIZE_IS_PCT
     Focused_Widget_Count : C.int;         -- Number of focused widgets
