@@ -37,7 +37,7 @@ struct rg_texture;
 
 typedef struct rg_tileset {
 	struct ag_object obj;
-	_Nonnull AG_Mutex lock;
+	_Nonnull_Mutex AG_Mutex lock;
 	char tmpl[RG_TEMPLATE_NAME_MAX];
 	AG_PixelFormat *_Nonnull fmt;	/* Reference pixel format */
 	AG_Surface *_Nonnull icon;	/* Thumbnail */

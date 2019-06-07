@@ -186,7 +186,7 @@ typedef struct sk {
 	Uint flags;
 #define SK_SKIP_UNKNOWN_NODES	0x01		/* Ignore unimplemented nodes
 						   in load (otherwise fail) */
-	_Nonnull AG_Mutex lock;
+	_Nonnull_Mutex AG_Mutex lock;
 	const struct ag_unit *_Nonnull uLen;	/* Length unit */
 	SK_Node *_Nullable root;		/* Root node */
 	struct sk_nodeq nodes;			/* Flat node list */

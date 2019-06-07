@@ -152,3 +152,11 @@
 #  define _AGAR_RG_DEFINED_NULL
 # endif
 #endif
+#if defined(__GNUC__) || defined(__CC65__)
+# define _Nonnull
+# define _Nullable
+# define _Null_unspecified
+# define _AGAR_RG_DEFINED_NULLABILITY
+#else
+# include <agar/rg/nullability.h>
+#endif

@@ -151,6 +151,14 @@
 #  define _AGAR_SK_DEFINED_NULL
 # endif
 #endif
+#if defined(__GNUC__) || defined(__CC65__)
+# define _Nonnull
+# define _Nullable
+# define _Null_unspecified
+# define _AGAR_SK_DEFINED_NULLABILITY
+#else
+# include <agar/sk/nullability.h>
+#endif
 
 /* Expand FOO_ATTRIBUTE() to supported compiler attributes. */
 #include <agar/config/have_bounded_attribute.h>
