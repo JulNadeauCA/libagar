@@ -379,10 +379,10 @@ package body Agar.Surface is
      A     : in Unsigned_8 := 255) return AG_Color
   is
 #if AG_MODEL = AG_LARGE
-    Color : constant AG_Color := (Unsigned_16(Float(R)/255.0*65535.0),
-                                  Unsigned_16(Float(G)/255.0*65535.0),
-                                  Unsigned_16(Float(B)/255.0*65535.0),
-                                  Unsigned_16(Float(A)/255.0*65535.0));
+    Color : constant AG_Color := (Unsigned_16(Float(R) / 255.0 * 65535.0),
+                                  Unsigned_16(Float(G) / 255.0 * 65535.0),
+                                  Unsigned_16(Float(B) / 255.0 * 65535.0),
+                                  Unsigned_16(Float(A) / 255.0 * 65535.0));
 #else
     Color : constant AG_Color := (R,G,B,A);
 #end if;
@@ -400,56 +400,21 @@ package body Agar.Surface is
 #if AG_MODEL = AG_LARGE
     Color : constant AG_Color := (R,G,B,A);
 #else
-    Color : constant AG_Color := (Unsigned_8(Float(R)/65535.0*255.0),
-                                  Unsigned_8(Float(G)/65535.0*255.0),
-                                  Unsigned_8(Float(B)/65535.0*255.0),
-                                  Unsigned_8(Float(A)/65535.0*255.0));
+    Color : constant AG_Color := (Unsigned_8(Float(R) / 65535.0 * 255.0),
+                                  Unsigned_8(Float(G) / 65535.0 * 255.0),
+                                  Unsigned_8(Float(B) / 65535.0 * 255.0),
+                                  Unsigned_8(Float(A) / 65535.0 * 255.0));
 #end if;
   begin
     return Color;
   end;
-  
-  --
-  -- Set a color palette entry of an Indexed surface (AG_Color argument)
-  --
-  procedure Set_Color
-    (Surface : in Surface_not_null_Access;
-     Index   : in Natural;
-     Color   : in Color_not_null_Access) is
-  begin
-    AG_SurfaceSetColors
-      (Surface => Surface,
-       Color   => Color,
-       Offset  => C.unsigned(Index),
-       Count   => 1);
-  end;
-  
-  --
-  -- Set a color palette entry of an Indexed surface (RGBA arguments)
-  --
-  procedure Set_Color
-    (Surface : in Surface_not_null_Access;
-     Index   : in Natural;
-     R,G,B   : in AG_Component;
-     A       : in AG_Component := AG_OPAQUE)
-  is
-    Color : aliased AG_Color := (R,G,B,A);
-  begin
-    AG_SurfaceSetColors
-      (Surface => Surface,
-       Color   => Color'Unchecked_Access,
-       Offset  => C.unsigned(Index),
-       Count   => 1);
-  end;
 
   --
-  -- Set a color palette entry of an Indexed surface (HSVA arguments)
+  -- Return a Color from Hue, Saturation, Value and Alpha components.
   --
-  procedure Set_Color
-    (Surface : in Surface_not_null_Access;
-     Index   : in Natural;
-     H,S,V   : in Intensity;
-     A       : in Intensity := 1.0)
+  function Color_HSV
+    (H,S,V : in Intensity;
+     A     : in Intensity := 1.0) return AG_Color
   is
     Color : aliased AG_Color;
   begin
@@ -463,9 +428,63 @@ package body Agar.Surface is
 #else
     Color.A := AG_Component(A * 255.0);
 #end if;
+    return Color;
+  end;
+
+  --
+  -- Return a native component offset amount for a given 8-bit component.
+  --
+  function Component_Offset_8
+    (X : in Unsigned_8) return AG_Component is
+  begin
+#if AG_MODEL = AG_LARGE
+    return AG_Component(Float(X) / 255.0 * 65535.0);
+#else
+    return AG_Component(X);
+#end if;
+  end;
+
+  --
+  -- Return a native component offset amount for a given 16-bit component.
+  --
+  function Component_Offset_16
+    (X : in Unsigned_16) return AG_Component is
+  begin
+#if AG_MODEL = AG_LARGE
+    return AG_Component(X);
+#else
+    return AG_Component(Float(X) / 65535.0 * 255.0);
+#end if;
+  end;
+
+  --
+  -- Set a color palette entry of an Indexed surface (AG_Color argument)
+  --
+  procedure Set_Color
+    (Surface : in Surface_not_null_Access;
+     Index   : in Natural;
+     Color   : in AG_Color)
+  is
+    C_Color : aliased AG_Color := Color;
+  begin
     AG_SurfaceSetColors
       (Surface => Surface,
-       Color   => Color'Unchecked_Access,
+       Color   => C_Color'Unchecked_Access,
+       Offset  => C.unsigned(Index),
+       Count   => 1);
+  end;
+  
+  --
+  -- Set a color palette entry of an Indexed surface (AG_Color access argument)
+  --
+  procedure Set_Color
+    (Surface : in Surface_not_null_Access;
+     Index   : in Natural;
+     Color   : in Color_not_null_Access) is
+  begin
+    AG_SurfaceSetColors
+      (Surface => Surface,
+       Color   => Color,
        Offset  => C.unsigned(Index),
        Count   => 1);
   end;
@@ -645,27 +664,67 @@ package body Agar.Surface is
   end;
   
   --
-  -- Blend a target pixel against a specified color. The target pixel's
-  -- alpha component is computed according to Func (by X,Y coordinates).
+  -- Return the native-width packed pixel corresponding to an AG_Color
+  -- (under the pixel format of Surface).
+  --
+  function Map_Pixel
+    (Surface : in Surface_not_null_Access;
+     Color   : in AG_Color) return AG_Pixel
+  is
+    C_Color : aliased AG_Color := Color;
+  begin
+#if AG_MODEL = AG_LARGE
+    return AG_MapPixel64
+      (Format => Surface.Format'Access,
+       Color  => C_Color'Unchecked_Access);
+#else
+    return AG_MapPixel32
+      (Format => Surface.Format'Access,
+       Color  => C_Color'Unchecked_Access);
+#end if;
+  end;
+
+  --
+  -- Return the native-width packed pixel corresponding to an AG_Color
+  -- (under the specified pixel format).
   --
   function Map_Pixel
     (Format : in Pixel_Format_not_null_Access;
-     R,G,B  : in AG_Component;
-     A      : in AG_Component := AG_OPAQUE) return AG_Pixel
+     Color  : in AG_Color) return AG_Pixel
   is
-    Color : aliased AG_Color := (R,G,B,A);
+    C_Color : aliased AG_Color := Color;
   begin
 #if AG_MODEL = AG_LARGE
     return AG_MapPixel64
       (Format => Format,
-       Color  => Color'Unchecked_Access);
+       Color  => C_Color'Unchecked_Access);
 #else
     return AG_MapPixel32
       (Format => Format,
-       Color  => Color'Unchecked_Access);
+       Color  => C_Color'Unchecked_Access);
 #end if;
-  end;  
-
+  end;
+  
+  --
+  -- Return the native-width packed pixel corresponding to an AG_Color
+  -- (under the pixel format of Surface).
+  --
+  function Map_Pixel
+    (Surface : in Surface_not_null_Access;
+     Color   : in Color_not_null_access) return AG_Pixel is
+  begin
+#if AG_MODEL = AG_LARGE
+    return AG_MapPixel64
+      (Format => Surface.Format'Access,
+       Color  => Color);
+#else
+    return AG_MapPixel32
+      (Format => Surface.Format'Access,
+       Color  => Color);
+#end if;
+  end;
+  
+  
   --
   -- Return a new surface generated by scaling an Input surface to specified
   -- dimensions. Function form may fail and return null.
@@ -704,36 +763,19 @@ package body Agar.Surface is
   end;
 
   --
-  -- Fill a rectangle of pixels with a specified color (Color argument).
+  -- Fill a rectangle of pixels with a specified color (AG_Color argument).
   --
   procedure Fill_Rect
     (Surface : in Surface_not_null_Access;
      Rect    : in Rect_Access := null;
      Color   : in AG_Color)
   is
-    C : aliased AG_Color := Color;
+    C_Color : aliased AG_Color := Color;
   begin
     AG_FillRect
       (Surface => Surface,
        Rect    => Rect,
-       Color   => C'Unchecked_Access);
-  end;
-  
-  --
-  -- Fill a rectangle of pixels with a specified color (RGB arguments).
-  --
-  procedure Fill_Rect
-    (Surface : in Surface_not_null_Access;
-     Rect    : in Rect_Access := null;
-     R,G,B   : in AG_Component;
-     A       : in AG_Component := AG_OPAQUE)
-  is
-    Color : aliased AG_Color := (R,G,B,A);
-  begin
-    AG_FillRect
-      (Surface => Surface,
-       Rect    => Rect,
-       Color   => Color'Unchecked_Access);
+       Color   => C_Color'Unchecked_Access);
   end;
   
   --

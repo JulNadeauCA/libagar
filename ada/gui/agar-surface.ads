@@ -406,7 +406,7 @@ package Agar.Surface is
   function New_Surface_GL (W,H : in Natural) return Surface_Access;
 
   --
-  -- Return a Color from RGBA components.
+  -- Return an AG_Color from RGBA components.
   --
   function Color_8
     (R,G,B : in Unsigned_8;
@@ -414,6 +414,15 @@ package Agar.Surface is
   function Color_16
     (R,G,B : in Unsigned_16;
      A     : in Unsigned_16 := 65535) return AG_Color;
+  function Color_HSV
+    (H,S,V : in Intensity;
+     A     : in Intensity := 1.0) return AG_Color;
+
+  --
+  -- Return a native component offset amount for a given component.
+  --
+  function Component_Offset_8 (X : in Unsigned_8) return AG_Component;
+  function Component_Offset_16 (X : in Unsigned_16) return AG_Component;
 
   --
   -- Set a color palette entry of an Indexed surface
@@ -421,17 +430,11 @@ package Agar.Surface is
   procedure Set_Color
     (Surface : in Surface_not_null_Access;
      Index   : in Natural;
+     Color   : in AG_Color);
+  procedure Set_Color
+    (Surface : in Surface_not_null_Access;
+     Index   : in Natural;
      Color   : in Color_not_null_Access);
-  procedure Set_Color
-    (Surface : in Surface_not_null_Access;
-     Index   : in Natural;
-     R,G,B   : in AG_Component;
-     A       : in AG_Component := AG_OPAQUE);
-  procedure Set_Color
-    (Surface : in Surface_not_null_Access;
-     Index   : in Natural;
-     H,S,V   : in Intensity;
-     A       : in Intensity := 1.0);
 
   -- TODO: Set_Color from array of Color.
 
@@ -551,8 +554,18 @@ package Agar.Surface is
      Func     : in Alpha_Func := ALPHA_OVERLAY);
  
   --
-  -- Return the native-width packed pixel corresponding to a Color.
+  -- Return the native-width packed pixel corresponding to a Color
+  -- (under a given format, or the format of a given surface).
   --
+  function Map_Pixel
+    (Surface : in Surface_not_null_Access;
+     Color   : in AG_Color) return AG_Pixel;
+  function Map_Pixel
+    (Format : in Pixel_Format_not_null_Access;
+     Color  : in AG_Color) return AG_Pixel;
+  function Map_Pixel
+    (Surface : in Surface_not_null_Access;
+     Color   : in Color_not_null_Access) return AG_Pixel;
   function Map_Pixel
     (Format : in Pixel_Format_not_null_Access;
      Color  : in Color_not_null_Access) return AG_Pixel
@@ -561,14 +574,6 @@ package Agar.Surface is
 #else
     with Import, Convention => C, Link_Name => "ag_map_pixel32";
 #end if;
-
-  --
-  -- Return the native-width packed pixel corresponding to RGBA components.
-  --
-  function Map_Pixel
-    (Format : in Pixel_Format_not_null_Access;
-     R,G,B  : in AG_Component;
-     A      : in AG_Component := AG_OPAQUE) return AG_Pixel;
 
   --
   -- Return the 32-bit packed pixel corresponding to a given color.
@@ -640,8 +645,8 @@ package Agar.Surface is
   procedure Fill_Rect
     (Surface : in Surface_not_null_Access;
      Rect    : in Rect_Access := null;
-     R,G,B   : in AG_Component;
-     A       : in AG_Component := AG_OPAQUE);
+     Color   : in Color_not_null_Access)
+    with Import, Convention => C, Link_Name => "AG_FillRect";
 
   --
   -- Extract a native-width packed pixel from a surface.
