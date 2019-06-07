@@ -19,7 +19,8 @@ SRCS=		agar-init_gui.adb \
 		agar-keyboard.ads \
 		agar-mouse.adb \
 		agar-surface.adb \
-		agar-widget.adb
+		agar-widget.adb \
+		agar-text.adb
 
 CONFIGSCRIPTS=	agar-ada-config
 PCMODULES=	agar-ada.pc

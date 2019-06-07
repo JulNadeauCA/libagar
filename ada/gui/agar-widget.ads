@@ -3,6 +3,7 @@
 --                          A G A R  . W I D G E T                          --
 --                                 S p e c                                  --
 ------------------------------------------------------------------------------
+with Interfaces; use Interfaces;
 with Interfaces.C;
 with Interfaces.C.Strings;
 with System;
@@ -85,7 +86,7 @@ package Agar.Widget is
   type Cursor_Access is access all Cursor with Convention => C;
   subtype Cursor_not_null_Access is not null Cursor_Access;
 
-  type Cursor_Data_Access is access all Interfaces.Unsigned_8 with Convention => C;
+  type Cursor_Data_Access is access all Unsigned_8 with Convention => C;
   type Cursor_Entry is limited record
     Next : Cursor_Access;
     Prev : access Cursor_Access;
@@ -127,7 +128,7 @@ package Agar.Widget is
      COLOR_BORDER);			-- Cosmetic borders
   
   type Widget_Palette is array (1 .. $SIZEOF_AG_WidgetPalette)
-    of aliased Interfaces.Unsigned_8 with Convention => C;
+    of aliased Unsigned_8 with Convention => C;
   for Widget_Palette'Size use $SIZEOF_AG_WidgetPalette * System.Storage_Unit;
  
   -----------------------------
@@ -369,7 +370,7 @@ package Agar.Widget is
   type Put_Pixel_RGB8_Func_Access is access procedure
     (Driver  : Driver_not_null_Access;
      X,Y     : C.int;
-     R,G,B   : Interfaces.Unsigned_8) with Convention => C;
+     R,G,B   : Unsigned_8) with Convention => C;
 
 #if AG_MODEL = AG_LARGE
   type Put_Pixel_64_Func_Access is access procedure
@@ -844,10 +845,10 @@ package Agar.Widget is
   -- Widget Instance --
   ---------------------
   type Widget_Private_t is array (1 .. $SIZEOF_AG_WidgetPvt) of
-    aliased Interfaces.Unsigned_8 with Convention => C;
+    aliased Unsigned_8 with Convention => C;
   for Widget_Private_t'Size use $SIZEOF_AG_WidgetPvt * System.Storage_Unit;
 
-  type Widget_Surface_Flags_Access is access all Interfaces.Unsigned_8 with Convention => C;
+  type Widget_Surface_Flags_Access is access all Unsigned_8 with Convention => C;
   type Widget is limited record
     Super            : aliased OBJ.Object;       -- [Widget]
     Flags            : C.unsigned;               -- WIDGET_* Flags (below)
@@ -957,13 +958,13 @@ package Agar.Widget is
   subtype Action_not_null_Access is not null Action_Access;
 
   type Action_Tie is array (1 .. $SIZEOF_AG_ActionTie)
-    of aliased Interfaces.Unsigned_8 with Convention => C;
+    of aliased Unsigned_8 with Convention => C;
   for Action_Tie'Size use $SIZEOF_AG_ActionTie * System.Storage_Unit;
   type Action_Tie_Access is access all Action_Tie with Convention => C;
   subtype Action_Tie_not_null_Access is not null Action_Tie_Access;
   
   type Redraw_Tie is array (1 .. $SIZEOF_AG_RedrawTie)
-    of aliased Interfaces.Unsigned_8 with Convention => C;
+    of aliased Unsigned_8 with Convention => C;
   for Redraw_Tie'Size use $SIZEOF_AG_RedrawTie * System.Storage_Unit;
   type Redraw_Tie_Access is access all Redraw_Tie with Convention => C;
   subtype Redraw_Tie_not_null_Access is not null Redraw_Tie_Access;
@@ -972,7 +973,7 @@ package Agar.Widget is
   -- Cursor-Change Area --
   ------------------------
   type Cursor_Area is array (1 .. $SIZEOF_AG_CursorArea)
-    of aliased Interfaces.Unsigned_8 with Convention => C;
+    of aliased Unsigned_8 with Convention => C;
   for Cursor_Area'Size use $SIZEOF_AG_CursorArea * System.Storage_Unit;
   type Cursor_Area_Access is access all Cursor_Area with Convention => C;
   subtype Cursor_Area_not_null_Access is not null Cursor_Area_Access;
@@ -1012,7 +1013,7 @@ package Agar.Widget is
   type Window_Caption is array (1 .. CAPTION_MAX) of
     aliased C.char with Convention => C;
   type Window_Private_t is array (1 .. $SIZEOF_AG_WindowPvt) of
-    aliased Interfaces.Unsigned_8 with Convention => C;
+    aliased Unsigned_8 with Convention => C;
   for Window_Private_t'Size use $SIZEOF_AG_WindowPvt * System.Storage_Unit;
 
   type Entry_in_User_t is limited record

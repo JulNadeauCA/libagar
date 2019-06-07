@@ -5,9 +5,11 @@ with Agar.Init;
 with Agar.Init_GUI;
 with Agar.Error;
 with Agar.Surface; use Agar.Surface;
+with Agar.Text;
 with Interfaces; use Interfaces;
 --with Agar.Widget;
 
+with Ada.Characters.Latin_1;
 with Ada.Real_Time; use Ada.Real_Time;
 with Ada.Text_IO;
 with Ada.Numerics.Elementary_Functions;
@@ -16,6 +18,7 @@ use Ada.Numerics.Elementary_Functions;
 procedure agar_ada_demo is
   package T_IO renames Ada.Text_IO;
   package RT renames Ada.Real_Time;
+  package LAT1 renames Ada.Characters.Latin_1;
   
   Epoch : constant RT.Time := RT.Clock;
 begin
@@ -57,38 +60,43 @@ begin
     end if;
     
     --
-    -- Fill the background
+    -- Fill the background with a given color.
+    -- Here are different ways of specifying colors:
     --
-    T_IO.Put_Line("Fill_Rect");
     Fill_Rect
       (Surface => Surf,
-       Color   => Blue);        -- With a Color argument
+       Color   => Color_8(200,0,0));              -- 8-bit RGB components
+    Fill_Rect
+      (Surface => Surf,
+       Color   => Color_16(51400,0,0));           -- 16-bit RGB components
+    Fill_Rect
+      (Surface => Surf,
+       Color   => Color_HSV(0.9, 1.0, 1.0, 1.0)); -- Hue / Saturation / Value
+    Fill_Rect
+      (Surface => Surf,
+       Color   => Blue'Unchecked_Access);         -- AG_Color access
+    Fill_Rect
+      (Surface => Surf,
+       Color   => Blue);                          -- AG_Color argument
 
---    Fill_Rect
---      (Surface => Surf,
---       R       => 200,        -- With RGB components
---       G       => 0,
---       B       => 0);
- 
     --
     -- Use Put_Pixel to create a gradient.
     --
     T_IO.Put_Line("Creating gradient");
     for Y in Border_W .. H-Border_W loop
       if Y rem 4 = 0 then
-        Blue.B := Blue.B - 1;
+        Blue.B := Blue.B - Component_Offset_8(1);
       end if;
       Blue.G := 0;
       for X in Border_W .. W-Border_W loop
         if X rem 8 = 0 then
-          Blue.G := Blue.G + 1;
+          Blue.G := Blue.G + Component_Offset_8(1);
         end if;
         Put_Pixel
           (Surface  => Surf,
            X        => X,
            Y        => Y,
-           Pixel    => Map_Pixel(Surf.Format'Unchecked_Access,
-                                 Blue'Unchecked_Access),
+           Pixel    => Map_Pixel(Surf, Blue),
            Clipping => false);
       end loop;
     end loop;
@@ -112,16 +120,11 @@ begin
         Agar.Error.Fatal_Error ("null bitmap");
       end if;
       
-      T_IO.Put_Line("Created bitmap successfully");
-
-      T_IO.Put_Line("Setting color #1");
-      Set_Color(Bitmap, 0, 0,  0,  0);
-      T_IO.Put_Line("Setting color #2");
-      Set_Color(Bitmap, 1, 0,  100,0);
-      T_IO.Put_Line("Setting color #3");
-      Set_Color(Bitmap, 2, 150,0,  0);
-      T_IO.Put_Line("Setting color #4");
-      Set_Color(Bitmap, 3, 200,200,0);
+      T_IO.Put_Line("Initializing bitmap palette...");
+      Set_Color(Bitmap, 0, Color_8(0,  0,  0));
+      Set_Color(Bitmap, 1, Color_8(0,  100,0));
+      Set_Color(Bitmap, 2, Color_8(150,0,  0));
+      Set_Color(Bitmap, 3, Color_8(200,200,0));
       
       T_IO.Put_Line("Creating pattern...");
 
@@ -186,10 +189,10 @@ begin
       -- 
       -- Blit our indexed surface again using a different palette.
       --
-      Set_Color(Bitmap, 0, 255,255,255);
-      Set_Color(Bitmap, 1, 100,100,180);
-      Set_Color(Bitmap, 2, 120,0,0);
-      Set_Color(Bitmap, 3, 0,0,150);
+      Set_Color(Bitmap, 0, Color_8(255,255,255));
+      Set_Color(Bitmap, 1, Color_8(100,100,180));
+      Set_Color(Bitmap, 2, Color_8(120,0,0));
+      Set_Color(Bitmap, 3, Color_8(0,0,150));
       Blit_Surface
         (Source => Bitmap,
          Target => Surf,
@@ -197,6 +200,43 @@ begin
          Dst_Y  => 32);
 
       Free_Surface (Bitmap);
+    end;
+
+    --
+    -- Test the font engine by rendering text to a surface.
+    --
+    T_IO.Put_Line("Testing Agar's font engine");
+    declare
+--      Hello_Label    : aliased Surface := Agar.Text_Render_Text("Hello, world!");
+      Text_W, Text_H : Natural;
+      Line_Count     : Natural;
+    begin
+      Agar.Text.Size_Text
+        (Text => "Hello",
+         W    => Text_W,
+         H    => Text_H);
+      T_IO.Put_Line("Font engine says expected size of `Hello' line is: " &
+                    Natural'Image(Text_W) & " x " & Natural'Image(Text_H) & " pixels");
+
+      Agar.Text.Size_Text
+        (Text       => "Hello, one" & LAT1.CR & LAT1.LF &
+                       "two"        & LAT1.CR & LAT1.LF &
+                       "and three",
+         W          => Text_W,
+         H          => Text_H,
+         Line_Count => Line_Count);
+
+      T_IO.Put_Line("Font engine says expected size of three lines is " &
+                    Natural'Image(Text_W) & " x " & Natural'Image(Text_H) & " pixels and " &
+                    Natural'Image(Line_Count) & " lines");
+
+
+--      Blit_Surface
+--        (Source => Hello_Label,
+--         Target => Surf,
+--         Dst_X  => 64,
+--         Dst_Y  => 32);
+--      Free_Surface(Hello_Label);
     end;
 
     --
@@ -214,7 +254,7 @@ begin
     --
     T_IO.Put_Line("Testing clipping rectangles");
     declare
-      White  : constant AG_Pixel := Map_Pixel(Surf.Format'Access, 255,255,255);
+      White  : constant AG_Pixel := Map_Pixel(Surf, Color_8(255,255,255));
       Clip_X : constant Integer := Integer(Surf.Clip_Rect.X);
       Clip_Y : constant Integer := Integer(Surf.Clip_Rect.Y);
       Clip_W : constant Integer := Integer(Surf.Clip_Rect.W);
@@ -272,8 +312,8 @@ begin
           Degs := Degs + 30.0;
 
           Set_Alpha
-	         (Surface => Denis,
-	          Alpha   => Alpha);      -- Per-surface alpha
+            (Surface => Denis,
+             Alpha   => Alpha);       -- Per-surface alpha
           Alpha := Alpha + 12;
 
           -- Render to target coordinates under Surf.
