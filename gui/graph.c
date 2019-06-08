@@ -615,7 +615,6 @@ Draw(void *obj)
 
 	/* Draw the vertices. */
 	TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
-		AG_Surface *lbl = WSURFACE(gf,vtx->labelSu);
 		int x,y, w,h;
 
 		if (vtx->flags & AG_GRAPH_HIDDEN) {
@@ -659,6 +658,8 @@ Draw(void *obj)
 			break;
 		}
 		if (vtx->labelSu >= 0) {
+			AG_Surface *lbl = WSURFACE(gf,vtx->labelSu);
+
 			AG_WidgetBlitSurface(gf, vtx->labelSu,
 			    x - (lbl->w >> 1) - xOffs,
 			    y - (lbl->h >> 1) - yOffs);
