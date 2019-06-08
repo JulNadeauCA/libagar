@@ -421,7 +421,7 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 		SrcBytesPerPixel = S->format.BytesPerPixel;
 		Debug(NULL, "Saving %ux%u %dbpp surface <%p> to %s [RGB%d]\n",
 		    w,h, S->format.BitsPerPixel, S, path, depth);
-		for (y = 0; y < h; y++) {
+		for (y=0, pSrc=S->pixels; y < h; y++) {
 			if ((row = png_malloc(png, w*BytesPerPixel)) == NULL) {
 				goto fail_row;
 			}
