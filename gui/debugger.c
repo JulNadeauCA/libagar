@@ -163,6 +163,14 @@ PollSurfaces(AG_Event *_Nonnull event)
 	AG_TlistBegin(tl);
 	for (i = 0; i < wid->nSurfaces; i++) {
 		AG_Surface *su = WSURFACE(wid,i);
+
+		/* Sometimes WSURFACE returns NULL. This may be a bug
+		 * elsewhere, maybe in the glxdriver, causing wid->nSurfaces
+		 * to be inconsistent with the number of non-null surfaces.
+		 * Without this check, su will get DE referenced and cause
+		 * a segfault. */
+		if (su == NULL) { continue; }
+
 		AG_TlistAdd(tl, su, "Surface%u (%ux%u, %ubpp)",
 		    i, su->w, su->h, su->format.BitsPerPixel);
 	}
