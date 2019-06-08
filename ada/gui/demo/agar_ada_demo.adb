@@ -20,25 +20,23 @@ procedure agar_ada_demo is
   package RT renames Ada.Real_Time;
   package LAT1 renames Ada.Characters.Latin_1;
   
-  Epoch : constant RT.Time := RT.Clock;
+  Epoch               : constant RT.Time := RT.Clock;
+  Major, Minor, Patch : Natural;
 begin
   if not Agar.Init.Init_Core ("agar_ada_demo") then
     raise program_error with Agar.Error.Get_Error;
   end if;
-  if not Agar.Init_GUI.Init_GUI then
+  if not Agar.Init_GUI.Init_Graphics ("") then
     raise program_error with Agar.Error.Get_Error;
   end if;
 
   declare
-    Major : Natural;
-    Minor : Natural;
-    Patch : Natural;
   begin
     Agar.Init.Get_Version(Major, Minor, Patch);
     T_IO.Put_Line
-      ("Agar version" &
-       Integer'Image(Major) & " ." &
-       Integer'Image(Minor) & " ." &
+      ("Agar " &
+       Integer'Image(Major) & "." &
+       Integer'Image(Minor) & "." &
        Integer'Image(Patch) & " initialized in " &
        Duration'Image(RT.To_Duration(RT.Clock - Epoch)) & "s");
   end;
@@ -71,13 +69,13 @@ begin
        Color   => Color_16(51400,0,0));           -- 16-bit RGB components
     Fill_Rect
       (Surface => Surf,
-       Color   => Color_HSV(0.9, 1.0, 1.0, 1.0)); -- Hue / Saturation / Value
+       Color   => Color_HSV(0.9, 1.0, 1.0, 1.0)); -- Hue, Saturation & Value
     Fill_Rect
       (Surface => Surf,
-       Color   => Blue'Unchecked_Access);         -- AG_Color access
+       Color   => Blue);                          -- An AG_Color argument
     Fill_Rect
       (Surface => Surf,
-       Color   => Blue);                          -- AG_Color argument
+       Color   => Blue'Unchecked_Access);         -- An AG_Color access
 
     --
     -- Use Put_Pixel to create a gradient.
@@ -102,93 +100,80 @@ begin
     end loop;
 
     --
-    -- Generate a 2bpp indexed surface and initialize its 4-color palette.
+    -- Generate a 2-bit indexed surface and initialize its 4-color palette.
     --
-    T_IO.Put_Line("Creating a 4-color indexed surface");
     declare
-      Bitmap     : Surface_Access;
+      Bitmap : Surface_Access;
     begin
-      T_IO.Put_Line("Creating surface...");
-      
+      T_IO.Put_Line("Generating a 2-bpp (4-color) indexed surface");
       Bitmap := New_Surface
         (Mode           => INDEXED,
          Bits_per_Pixel => 2,
          W              => 128,
          H              => 128);
-   
-      if Bitmap = null then
-        Agar.Error.Fatal_Error ("null bitmap");
-      end if;
-      
-      T_IO.Put_Line("Initializing bitmap palette...");
+                                -- R   G   B --
       Set_Color(Bitmap, 0, Color_8(0,  0,  0));
       Set_Color(Bitmap, 1, Color_8(0,  100,0));
       Set_Color(Bitmap, 2, Color_8(150,0,  0));
       Set_Color(Bitmap, 3, Color_8(200,200,0));
       
-      T_IO.Put_Line("Creating pattern...");
-
       for Y in 0 .. Bitmap.H loop
         for X in 0 .. Bitmap.W loop
           if Natural(X) rem 16 = 0 then
             Put_Pixel
-              (Surface  => Bitmap,
-               X        => Integer(X),
-               Y        => Integer(Y),
-               Pixel    => 1);
+              (Surface => Bitmap,
+               X       => Integer(X),
+               Y       => Integer(Y),
+               Pixel   => 1);
           else
             if Natural(Y) rem 8 = 0 then
               Put_Pixel
-                (Surface  => Bitmap,
-                 X        => Integer(X),
-                 Y        => Integer(Y),
-                 Pixel    => 1);
+                (Surface => Bitmap,
+                 X       => Integer(X),
+                 Y       => Integer(Y),
+                 Pixel   => 1);
             elsif Sqrt(Float(X)*Float(X) + Float(Y)*Float(Y)) < 50.0 then
               Put_Pixel
-                (Surface  => Bitmap,
-                 X        => Integer(X),
-                 Y        => Integer(Y),
-                 Pixel    => 2);
+                (Surface => Bitmap,
+                 X       => Integer(X),
+                 Y       => Integer(Y),
+                 Pixel   => 2);
             elsif Sqrt(Float(X)*Float(X) + Float(Y)*Float(Y)) > 150.0 then
               Put_Pixel
-                (Surface  => Bitmap,
-                 X        => Integer(X),
-                 Y        => Integer(Y),
-                 Pixel    => 3);
+                (Surface => Bitmap,
+                 X       => Integer(X),
+                 Y       => Integer(Y),
+                 Pixel   => 3);
             else
               Put_Pixel
-                (Surface  => Bitmap,
-                 X        => Integer(X),
-                 Y        => Integer(Y),
-                 Pixel    => 0);
+                (Surface => Bitmap,
+                 X       => Integer(X),
+                 Y       => Integer(Y),
+                 Pixel   => 0);
             end if;
           end if;
         end loop;
-
       end loop;
       
       --
-      -- Export our 2bpp indexed surface to a PNG file.
+      -- Export our 2bpp bitmap to a PNG file.
       --
-      T_IO.Put_Line("Writing indexed 2bpp surface to output-index.png");
-      -- Export to an indexed PNG file.
+      T_IO.Put_Line("Writing 2bpp bitmap to output-index.png");
       if not Export_PNG(Bitmap, "output-index.png") then
         T_IO.Put_Line ("output-index.png: " & Agar.Error.Get_Error);
       end if;
 
       --
-      -- Conversion from indexed to RGBA is done implicitely by Blit.
+      -- Blit our 2bpp bitmap to Surf.
       --
-      T_IO.Put_Line("Testing blit conversion from indexed to packed");
+      T_IO.Put_Line("Blitting 2bpp bitmap, converting");
       Blit_Surface
         (Source => Bitmap,
          Target => Surf,
          Dst_X  => 32,
          Dst_Y  => 32);
     
-      -- 
-      -- Blit our indexed surface again using a different palette.
-      --
+      -- Blit again with a different palette.
       Set_Color(Bitmap, 0, Color_8(255,255,255));
       Set_Color(Bitmap, 1, Color_8(100,100,180));
       Set_Color(Bitmap, 2, Color_8(120,0,0));
@@ -207,15 +192,70 @@ begin
     --
     T_IO.Put_Line("Testing Agar's font engine");
     declare
---      Hello_Label    : aliased Surface := Agar.Text_Render_Text("Hello, world!");
+      Hello_Label    : Surface_Access;
       Text_W, Text_H : Natural;
       Line_Count     : Natural;
     begin
+      -- Push rendering attributes onto the stack.
+      Agar.Text.Push_Text_State;
+
+      -- Set the text color.
+      Agar.Text.Text_Set_Color_8(16#73fa00ff#);
+
+      -- Render some text.
+      Hello_Label := Agar.Text.Text_Render("Hello, world!");
+      T_IO.Put_Line("Rendered `Hello' is: " &
+                    C.unsigned'Image(Hello_Label.W) & "x" &
+                    C.unsigned'Image(Hello_Label.H) & "x"  &
+                    C.int'Image(Hello_Label.Format.Bits_per_Pixel) & "bpp");
+      Blit_Surface
+        (Source => Hello_Label,
+         Target => Surf,
+         Dst_X  => 0,
+         Dst_Y  => 0);
+      Free_Surface(Hello_Label);
+
+      -- Change some attributes and render text again.
+      Agar.Text.Text_Set_BG_Color_8(16#00ee00ff#);
+      Agar.Text.Text_Set_Color_8(16#000000ff#);
+      Agar.Text.Text_Set_Font
+        (Family => "Courier",
+         Size   => Agar.Text.AG_Font_Points(18),
+         Bold   => True);
+      Hello_Label := Agar.Text.Text_Render("Hello, world!");
+      Blit_Surface
+        (Source => Hello_Label,
+         Target => Surf,
+         Dst_X  => 100,
+         Dst_Y  => 0);
+      Free_Surface(Hello_Label);
+
+      -- Set to 150% of the current font size and dark green BG.
+      Agar.Text.Text_Set_Font
+        (Percent => 150);
+      Agar.Text.Text_Set_Color_8(255,150,150);
+      Agar.Text.Text_Set_BG_Color_8(16#005500ff#);
+      Hello_Label := Agar.Text.Text_Render
+        ("Agar v" &
+         Integer'Image(Major) & "." &
+         Integer'Image(Minor) & "." &
+         Integer'Image(Patch));
+      Blit_Surface
+        (Source => Hello_Label,
+         Target => Surf,
+         Dst_X  => 360,
+         Dst_Y  => 420);
+      Free_Surface(Hello_Label);
+
+      -- Calculate how large a surface needs to be to fit rendered text.
       Agar.Text.Size_Text
-        (Text => "Hello",
+        (Text => "Agar version " &
+                 Integer'Image(Major) & "." &
+                 Integer'Image(Minor) & "." &
+                 Integer'Image(Patch),
          W    => Text_W,
          H    => Text_H);
-      T_IO.Put_Line("Font engine says expected size of `Hello' line is: " &
+      T_IO.Put_Line("Font engine says `Hello' should take: " &
                     Natural'Image(Text_W) & " x " & Natural'Image(Text_H) & " pixels");
 
       Agar.Text.Size_Text
@@ -226,17 +266,30 @@ begin
          H          => Text_H,
          Line_Count => Line_Count);
 
-      T_IO.Put_Line("Font engine says expected size of three lines is " &
+      T_IO.Put_Line("Font engine says three lines should take: " &
                     Natural'Image(Text_W) & " x " & Natural'Image(Text_H) & " pixels and " &
                     Natural'Image(Line_Count) & " lines");
 
+      --
+      -- Calculate offsets needed to justify and align text in a given area.
+      --
+      declare
+        X,Y : Integer;
+      begin
+        Agar.Text.Text_Align
+          (W_Area  => 320,
+           H_Area  => 240,
+           W_Text  => Text_W,
+           H_Text  => Text_H,
+           X       => X,
+           Y       => Y);
+        T_IO.Put_Line("To center it in 320x240, offsets would be X=" &
+                      Natural'Image(X) & " Y=" &
+                      Natural'Image(Y));
+      end;      
 
---      Blit_Surface
---        (Source => Hello_Label,
---         Target => Surf,
---         Dst_X  => 64,
---         Dst_Y  => 32);
---      Free_Surface(Hello_Label);
+      -- Pop rendering attributes off the stack.
+      Agar.Text.Pop_Text_State;
     end;
 
     --

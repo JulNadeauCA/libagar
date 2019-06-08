@@ -11,12 +11,14 @@ with Interfaces.C.Strings;
 with Agar.Types; use Agar.Types;
 with Agar.Object;
 with Agar.Surface;
+with Agar.Widget;
 with System;
 
 package Agar.Text is
   package C renames Interfaces.C;
   package CS renames Interfaces.C.Strings;
   package SU renames Agar.Surface;
+  package WID renames Agar.Widget;
 
   use type C.int;
   use type C.unsigned;
@@ -174,6 +176,7 @@ package Agar.Text is
   ----------------------------------
   type AG_Glyph;
   type Glyph_Access is access all AG_Glyph with Convention => C;
+  subtype Glyph_not_null_Access is not null Glyph_Access;
   type AG_Glyph_Entry is limited record
     Next : Glyph_Access;
   end record
@@ -288,18 +291,24 @@ package Agar.Text is
   --
   -- Set the current font to the specified family+size+style (or just size).
   --
-  function Set_Font
+  procedure Text_Set_Font
     (Family     : in String;
      Size       : in AG_Font_Points := AG_Font_Points(12);
      Bold       : in Boolean := False;
      Italic     : in Boolean := False;
      Underlined : in Boolean := False;
-     Uppercase  : in Boolean := False) return Font_Access;
+     Uppercase  : in Boolean := False);
 
   --
   -- Set the current font to a given % of the current font size.
   --
-  function Set_Font (Percent : in Natural) return Font_Access;
+  procedure Text_Set_Font (Percent : in Natural);
+  
+  --
+  -- Set the current font to the referenced font.
+  --
+  procedure Text_Set_Font (Font : Font_not_null_Access)
+    with Import, Convention => C, Link_Name => "AG_TextFont";
   
   --
   -- Return the expected size in pixels of rendered (UTF-8) text.
@@ -318,17 +327,106 @@ package Agar.Text is
      Line_Widths :    out Text_Line_Widths);
 
   --
-  -- Display an informational message window (canned dialog).
+  -- Canned dialogs: Display an informational, warning or error message.
   --
-  procedure Message_Box
+  procedure Text_Msg
     (Title : in AG_Text_Message_Title := INFO;
      Text  : in String);
 #if AG_TIMERS
-  procedure Message_Box
+  procedure Text_Msg
     (Title : in AG_Text_Message_Title := INFO;
      Text  : in String;
      Time  : in Natural := 2000);
 #end if;
+  procedure Text_Msg_From_Error
+    with Import, Convention => C, Link_Name => "AG_TextMsgFromError";
+  procedure Text_Info (Key, Text : in String);
+  procedure Text_Warning (Key, Text : in String);
+  procedure Text_Error (Text : in String);
+
+  --
+  -- Calculate the X,Y offsets required to justify and vertically-align
+  -- a text surface of a given size within a given area of pixels.
+  --
+  procedure Text_Align
+    (W_Area, H_Area : in     Natural;
+     W_Text, H_Text : in     Natural;
+     L_Pad, R_Pad   : in     Natural := 0;
+     T_Pad, B_Pad   : in     Natural := 0;
+     Justify        : in     AG_Text_Justify := CENTER;
+     Valign         : in     AG_Text_Valign := MIDDLE;
+     X,Y            :    out Integer);
+  function Text_Justify (W_Area, W_Text : in Natural) return Integer;
+  function Text_Valign (H_Area, H_Text : in Natural) return Integer;
+
+  --
+  -- Render text to a new surface.
+  --
+  function Text_Render
+    (Text : in String) return SU.Surface_not_null_Access;
+  function Text_Render
+    (Text : in AG_Char_not_null_Access) return SU.Surface_not_null_Access
+    with Import, Convention => C, Link_Name => "AG_TextRenderNat";
+
+  --
+  -- Render text and blit it to an existing surface.
+  --
+  procedure Text_Render
+    (Text    : in String;                     -- UTF-8
+     Surface : in SU.Surface_not_null_Access;
+     X,Y     : in Natural := 0);
+  procedure Text_Render
+    (Text    : in AG_Char_not_null_Access;    -- UCS-4 (internal)
+     Surface : in SU.Surface_not_null_Access;
+     X,Y     : in Natural := 0);
+
+  --
+  -- Lookup (possibly bringing into cache), a glyph.
+  --
+  function Text_Render_Glyph
+    (Driver : in WID.Driver_not_null_Access;
+     Char   : in AG_Char) return Glyph_not_null_Access
+    with Import, Convention => C, Link_Name => "AG_TextRenderGlyph";
+
+  --
+  -- Set State Attribute: Foreground Color.
+  --
+  procedure Text_Set_Color
+    (Color : in SU.Color_not_null_Access)
+    with Import, Convention => C, Link_Name => "AG_TextColor";
+  procedure Text_Set_Color_8
+    (R,G,B : in Unsigned_8;
+     A     : in Unsigned_8 := 255)
+    with Import, Convention => C, Link_Name => "AG_TextColorRGBA";
+  procedure Text_Set_Color_8
+    (RGBA : in Unsigned_32)
+    with Import, Convention => C, Link_Name => "AG_TextColorHex";
+
+  --
+  -- Set State Attribute: Background Color.
+  --
+  procedure Text_Set_BG_Color
+    (Color : in SU.Color_not_null_Access)
+    with Import, Convention => C, Link_Name => "AG_TextBGColor";
+  procedure Text_Set_BG_Color_8
+    (R,G,B : in Unsigned_8;
+     A     : in Unsigned_8 := 255)
+    with Import, Convention => C, Link_Name => "AG_TextBGColorRGBA";
+  procedure Text_Set_BG_Color_8
+    (RGBA : in Unsigned_32)
+    with Import, Convention => C, Link_Name => "AG_TextBGColorHex";
+
+  --
+  -- Set State Attributes: Justification, Alignment, Tab width.
+  --
+  procedure Text_Set_Justify
+    (Justify : AG_Text_Justify)
+    with Import, Convention => C, Link_Name => "AG_TextJustify";
+  procedure Text_Set_Valign
+    (Valign : AG_Text_Valign)
+    with Import, Convention => C, Link_Name => "AG_TextValign";
+  procedure Text_Set_Tab_Width
+    (Width : Natural);
 
   private
 
@@ -390,5 +488,36 @@ package Agar.Text is
      Text  : in CS.chars_ptr)
     with Import, Convention => C, Link_Name => "AG_TextTmsgS";
 #end if;
+
+  procedure AG_TextInfoS (Key, Text : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_TextInfoS";
+
+  procedure AG_TextWarningS (Key, Text : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_TextWarningS";
+
+  procedure AG_TextErrorS (Text : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_TextErrorS";
+
+  procedure AG_TextAlign
+    (X,Y            : access C.int;
+     W_Area, H_Area : in C.int;
+     W_Text, H_Text : in C.int;
+     L_Pad, R_Pad   : in C.int;
+     T_Pad, B_Pad   : in C.int;
+     Justify        : in AG_Text_Justify;
+     Valign         : in AG_Text_Valign)
+    with Import, Convention => C, Link_Name => "AG_TextAlign";
+
+  function AG_TextJustifyOffset (W_Area, W_Text : in C.int) return C.int
+    with Import, Convention => C, Link_Name => "AG_TextJustifyOffset";
+
+  function AG_TextValignOffset (H_Area, H_Text : in C.int) return C.int
+    with Import, Convention => C, Link_Name => "AG_TextValignOffset";
+
+  procedure AG_TextTabWidth (Pixels : in C.int)
+    with Import, Convention => C, Link_Name => "AG_TextTabWidth";
+
+  function AG_TextRender (Text : in CS.chars_ptr) return SU.Surface_not_null_Access
+    with Import, Convention => C, Link_Name => "AG_TextRender";
 
 end Agar.Text;

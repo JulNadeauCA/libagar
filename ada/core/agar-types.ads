@@ -27,6 +27,9 @@ package Agar.Types is
 #else
   subtype AG_Char is Interfaces.Unsigned_8;
 #end if;
+  type AG_Char_Access is access all AG_Char with Convention => C;
+  subtype AG_Char_not_null_Access is not null AG_Char_Access;
+
   AG_CHAR_MAX : constant Natural := $AG_CHAR_MAX;
   
   -----------------------

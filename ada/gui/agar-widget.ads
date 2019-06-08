@@ -1379,6 +1379,13 @@ package Agar.Widget is
     (Window : in Window_not_null_Access;
      X,Y    : in Natural;
      Button : in MSE.Mouse_Button);
+
+  --
+  -- Clear the internal cache of rendered glyphs.
+  --
+  procedure Clear_Glyph_Cache
+    (Driver : in Driver_not_null_Access)
+    with Import, Convention => C, Link_Name => "AG_TextClearGlyphCache";
   
   private
   
