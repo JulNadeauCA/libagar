@@ -322,18 +322,24 @@ WidgetSelected(AG_Event *_Nonnull event)
 		AG_TlistSetItemHeight(tl, 32);
 		AG_TlistSetIconWidth(tl, 64);
 	}
-	nTab = AG_NotebookAdd(nb, _("Cursors"), AG_BOX_VERT);
-	{
-#ifdef AG_ENABLE_STRING
-		AG_Driver *drv = wid->drv;
 
-		AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Cursor driver: %s"),
-		    OBJECT(drv)->name);
-		AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Total cursors: %u"),
-		    &drv->nCursors);
+	/* Don't show the cursors tab if the widget doesn't have a driver (i.e.
+	 * if it is the driver), as this will cause a segfault when we try to
+	 * generate the cursor list. */
+	if (wid->drv != NULL) {
+		nTab = AG_NotebookAdd(nb, _("Cursors"), AG_BOX_VERT);
+		{
+#ifdef AG_ENABLE_STRING
+			AG_Driver *drv = wid->drv;
+
+			AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Cursor driver: %s"),
+			    OBJECT(drv)->name);
+			AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Total cursors: %u"),
+			    &drv->nCursors);
 #endif
-		AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
-		    PollCursors, "%p", wid);
+			AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
+			    PollCursors, "%p", wid);
+		}
 	}
 
 	AG_WidgetShowAll(box);
