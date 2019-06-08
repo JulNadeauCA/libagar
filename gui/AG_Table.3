@@ -310,6 +310,9 @@ Change the sort direction of the column.
 .Ft "void"
 .Fn AG_TableSort "AG_Table *tbl"
 .Pp
+.Ft "void"
+.Fn AG_TableClear "AG_Table *tbl"
+.Pp
 .nr nS 0
 Tables created with
 .Fn AG_TableNewPolled
@@ -339,6 +342,12 @@ function sorts the rows of the table.
 This function is useful in combination with the
 .Dv AG_TABLE_NOAUTOSORT
 option.
+.Pp
+The
+.Fn AG_TableClear
+routine clears the rows of the table.
+It is equivalent to calling
+.Fn AG_TableBegin .
 .Sh COLUMN FUNCTIONS
 .nr nS 1
 .Ft "int"

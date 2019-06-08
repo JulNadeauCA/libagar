@@ -929,6 +929,12 @@ HashPrevCell(AG_Table *_Nonnull t, const AG_TableCell *_Nonnull c)
 	return (h % t->nPrevBuckets);
 }
 
+void
+AG_TableClear(AG_Table *t)
+{
+	AG_TableBegin(t);
+}
+
 /*
  * Clear the items on the table and save the selection state. The function
  * returns with the table locked.
