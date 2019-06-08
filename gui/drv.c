@@ -270,6 +270,7 @@ static void
 Init(void *_Nonnull obj)
 {
 	AG_Driver *drv = obj;
+	Uint i;
 
 	drv->id = 0;
 	drv->flags = 0;
@@ -287,11 +288,13 @@ Init(void *_Nonnull obj)
 	drv->kbd = NULL;
 	drv->mouse = NULL;
 	drv->activeCursor = NULL;
-	drv->gl = NULL;
-	AG_TextInitGlyphCache(drv);
-
 	TAILQ_INIT(&drv->cursors);
 	drv->nCursors = 0;
+	drv->glyphCache = Malloc(AG_GLYPH_NBUCKETS*sizeof(AG_GlyphCache));
+	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
+		SLIST_INIT(&drv->glyphCache[i].glyphs);
+	}
+	drv->gl = NULL;
 }
 
 static void
@@ -306,7 +309,9 @@ Destroy(void *_Nonnull obj)
 		AG_PixelFormatFree(drv->videoFmt);
 		free(drv->videoFmt);
 	}
-	AG_TextDestroyGlyphCache(drv);
+	AG_TextClearGlyphCache(drv);
+	free(drv->glyphCache);
+	drv->glyphCache = NULL;
 }
 
 AG_ObjectClass agDriverClass = {

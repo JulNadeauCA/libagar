@@ -58,23 +58,23 @@ typedef int AG_FontPts;
 #endif
 
 typedef struct ag_font_spec {
-	enum ag_font_type type;
-	enum ag_font_spec_source sourceType;
-	union {
-		char file[AG_PATHNAME_MAX];	/* Font file */
-		struct {
-			const Uint8 *_Nonnull data;	/* Memory region */
-			AG_Size size;
-		} mem;
-	} source;
-	int index;				/* Font index */
-	AG_FontPts size;			/* Font size */
+	AG_FontPts size;			/* Font size in points */
+	int index;				/* Font index (FC_INDEX) */
+	enum ag_font_type type;			/* Font engine type */
+	enum ag_font_spec_source sourceType;	/* Source type */
 #ifdef AG_HAVE_FLOAT
 	struct {				/* Transform matrix */
 		double xx, xy;
 		double yx, yy;
 	} matrix;
 #endif
+	union {
+		char file[AG_PATHNAME_MAX];          /* Source font file */
+		struct {
+			const Uint8 *_Nonnull data;  /* Source memory region */
+			AG_Size size;                /* Size in bytes */
+		} mem;
+	} source;
 } AG_FontSpec;
 
 /* Cached glyph surface/texture information. */
@@ -105,11 +105,12 @@ typedef struct ag_font {
 	void *_Nonnull ttf;		/* AG_TTFFont object */
 	char bspec[32];			/* Bitmap font specification */
 
-	AG_Surface *_Nullable *_Nullable bglyphs; /* Glyph surfaces */
-	Uint                             nglyphs; /* Glyph count */
+	AG_Surface *_Nullable *_Nullable bglyphs; /* Bitmap glyph surfaces */
+	Uint nglyphs;                             /* Bitmap glyph count */
+	AG_Char c0, c1;			          /* Bitmap font spec */
 
-	AG_Char c0, c1;			/* Glyph range */
 	Uint nRefs;			/* Reference count */
+
 	AG_TAILQ_ENTRY(ag_font) fonts;
 } AG_Font;
 
@@ -160,26 +161,18 @@ extern _Nonnull_Mutex AG_Mutex agTextLock;
 
 extern AG_StaticFont *_Nonnull agBuiltinFonts[];
 
-int  AG_InitTextSubsystem(void);
-void AG_DestroyTextSubsystem(void);
-void AG_PushTextState(void);
-void AG_PopTextState(void);
-
-#ifdef AG_SERIALIZATION
-void AG_SetDefaultFont(AG_Font *_Nonnull);
-void AG_TextParseFontSpec(const char *_Nonnull);
-#endif
+void               AG_PushTextState(void);
+AG_Font *_Nullable AG_TextFontLookup(const char *_Nullable,
+                                     const AG_FontPts *_Nullable, Uint);
+AG_Font *_Nullable AG_TextFontPts(const AG_FontPts *_Nullable);
+AG_Font *_Nullable AG_TextFontPct(int);
 
 AG_Font	*_Nullable AG_FetchFont(const char *_Nullable,
                                 const AG_FontPts *_Nullable, Uint)
                                _Warn_Unused_Result;
 void               AG_UnusedFont(AG_Font *_Nonnull);
-
-AG_Font *_Nullable AG_TextFontLookup(const char *_Nullable,
-                                     const AG_FontPts *_Nullable, Uint);
-
-AG_Font *_Nullable AG_TextFontPts(const AG_FontPts *_Nullable);
-AG_Font *_Nullable AG_TextFontPct(int);
+void               AG_PopTextState(void);
+void               AG_TextClearGlyphCache(AG_Driver *_Nonnull);
 
 void AG_TextSize(const char *_Nullable, int *_Nullable, int *_Nullable);
 void AG_TextSizeMulti(const char *_Nonnull, int *_Nonnull, int *_Nonnull,
@@ -221,9 +214,6 @@ void AG_TextEditString(char *_Nonnull, AG_Size, const char *_Nonnull, ...)
 struct ag_window *_Nonnull AG_TextPromptOptions(struct ag_button *_Nonnull *_Nonnull ,
                                                 Uint, const char *_Nonnull, ...);
 
-void AG_TextInitGlyphCache(AG_Driver *_Nonnull);
-void AG_TextClearGlyphCache(AG_Driver *_Nonnull);
-void AG_TextDestroyGlyphCache(AG_Driver *_Nonnull);
 
 void AG_TextAlign(int *_Nonnull, int *_Nonnull, int,int, int,int,
                   int,int,int, int, enum ag_text_justify, enum ag_text_valign);
@@ -251,6 +241,13 @@ void AG_TextFont(AG_Font *_Nonnull);
 void AG_TextJustify(enum ag_text_justify);
 void AG_TextValign(enum ag_text_valign);
 void AG_TextTabWidth(int);
+
+#ifdef AG_SERIALIZATION
+void AG_SetDefaultFont(AG_Font *_Nonnull);
+void AG_TextParseFontSpec(const char *_Nonnull);
+#endif
+int  AG_InitTextSubsystem(void);
+void AG_DestroyTextSubsystem(void);
 
 #ifdef AG_LEGACY
 # define AG_TextRenderUCS4(s)                        AG_TextRenderNat(s)
