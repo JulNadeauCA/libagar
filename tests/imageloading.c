@@ -25,38 +25,59 @@ Test_Format(const AG_Surface *_Nonnull S, AG_PixelFormat *_Nonnull pf,
 static int
 TestGUI(void *obj, AG_Window *win)
 {
-	char path[AG_PATHNAME_MAX];
+	char path[AG_FILENAME_MAX];
 	AG_Surface *S, *D;
 	AG_Scrollview *sv;
 	AG_Box *hBox, *vBox, *box;
 	AG_PixelFormat pfTest;
 	int i;
 
-	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND | AG_SCROLLVIEW_BY_MOUSE |
-	                           AG_SCROLLVIEW_PAN_RIGHT);
+	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND |
+	                           AG_SCROLLVIEW_BY_MOUSE |
+				   AG_SCROLLVIEW_PAN_RIGHT);
+
 	hBox = AG_BoxNewHoriz(sv, AG_BOX_FRAME);
 	vBox = AG_BoxNewVert(hBox, AG_BOX_FRAME);
 	
+#ifdef AG_ENABLE_STRING
 	/*
 	 * Load BMP files in different flavors of the format.
+	 * Demonstrate how AG_Printf() can be used to construct path names.
 	 */
 	for (i = 1; i <= 4; i++) {
-#ifdef AG_ENABLE_STRING
-		if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, AG_Printf("agar-%d.bmp",i),
-		    path, sizeof(path))) {
+		char pathExp[AG_FILENAME_MAX];
+
+		if (AG_ConfigFind(AG_CONFIG_PATH_DATA,
+		                  AG_Printf("agar-%d.bmp", i),
+		                  path, sizeof(path)) == 0)
+		{
 			AG_LabelNew(vBox, 0, "Here is %s:", path);
 			if ((S = AG_SurfaceFromBMP(path)) != NULL) {
 				AG_PixmapFromSurface(vBox, 0, S);
+
+				Snprintf(pathExp, sizeof(pathExp),
+				    "agar-%d-save.png", i);
+				AG_LabelNew(vBox, 0, "Exported to %s:", pathExp);
+				if (AG_SurfaceExportPNG(S, pathExp, 0) == 0) {
+					if ((D = AG_SurfaceFromPNG(pathExp)) != NULL) {
+						AG_PixmapFromSurface(vBox, 0, D);
+						AG_SurfaceFree(D);
+					} else {
+						AG_LabelNew(vBox, 0, "Load failed: %s", AG_GetError());
+					}
+				} else {
+					AG_LabelNew(vBox, 0, "Save failed: %s", AG_GetError());
+				}
 				AG_SurfaceFree(S);
 			} else {
 				AG_LabelNew(vBox, 0, "%s: %s", path, AG_GetError());
 			}
 		} else
-#endif
 		{
 			AG_LabelNewS(vBox, 0, AG_GetError());
 		}
 	}
+#endif /* AG_ENABLE_STRING */
 
 	/*
 	 * Load, display and export a PNG file in RGBA format.
