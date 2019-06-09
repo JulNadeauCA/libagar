@@ -32,7 +32,22 @@
 #ifdef AG_DEBUG
 #include <agar/gui/numerical.h>
 #include <agar/gui/checkbox.h>
+#include <agar/gui/radio.h>
+#include <agar/gui/separator.h>
 #endif
+
+const char *agBoxHorizAlignNames[] = {
+	N_("Left"),
+	N_("Center"),
+	N_("Right"),
+	NULL
+};
+const char *agBoxVertAlignNames[] = {
+	_("Top"),
+	_("Middle"),
+	_("Bottom"),
+	NULL
+};
 
 AG_Box *
 AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
@@ -468,35 +483,54 @@ AG_BoxSetVertAlign(AG_Box *box, enum ag_box_align align)
 
 #ifdef AG_DEBUG
 static void
-UpdateWindow(AG_Event *_Nonnull event)
+UpdateWindowOf(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Box *box = AG_PTR(1);
+	AG_Window *win = AG_ParentWindow(box);
+
+	AG_Redraw(box);
 	AG_WindowUpdate(win);
 }
 
 static void *
 Edit(void *_Nonnull obj)
 {
-	AG_Box *ctr = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
-	AG_Box *box = obj;
+	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND), *hBox;
+	AG_Box *tgt = obj;
 	AG_Numerical *num;
-		
-	num = AG_NumericalNewIntR(ctr, 0, "px", _("Padding: "),
-	    &box->padding, 0, 255);
-	AG_SetEvent(num, "numerical-changed",
-	    UpdateWindow, "%p", AG_ParentWindow(box));
-		
-	num = AG_NumericalNewIntR(ctr, 0, "px", _("Spacing: "),
-	    &box->spacing, 0, 255);
-	AG_SetEvent(num, "numerical-changed",
-	    UpdateWindow, "%p", AG_ParentWindow(box));
-		
-	AG_CheckboxNewFlag(ctr, 0, _("Homogenous"),
-	    &box->flags, AG_BOX_HOMOGENOUS);
-	AG_CheckboxNewFlag(ctr, 0, _("Visual frame"),
-	    &box->flags, AG_BOX_FRAME);
+	AG_Checkbox *cb;
+	AG_Radio *rad;
 
-	return (ctr);
+	AG_LabelNewS(box, 0, _("Alignment:"));
+	hBox = AG_BoxNewHoriz(box, 0);
+	{
+		rad = AG_RadioNewUint(hBox, 0, agBoxHorizAlignNames, &tgt->hAlign);
+		AG_SetEvent(rad, "radio-changed", UpdateWindowOf,"%p",tgt);
+	
+		rad = AG_RadioNewUint(hBox, 0, agBoxVertAlignNames, &tgt->vAlign);
+		AG_SetEvent(rad, "radio-changed", UpdateWindowOf,"%p",tgt);
+	}
+
+	AG_SpacerNewHoriz(box);
+
+	num = AG_NumericalNewIntR(box, 0, "px", _("Padding: "), &tgt->padding, 0, 255);
+	AG_SetEvent(num, "numerical-changed", UpdateWindowOf,"%p",tgt);
+
+	num = AG_NumericalNewIntR(box, 0, "px", _("Spacing: "), &tgt->spacing, 0, 255);
+	AG_SetEvent(num, "numerical-changed", UpdateWindowOf,"%p",tgt);
+
+	num = AG_NumericalNewIntR(box, 0, "px", _("Depth: "), &tgt->depth, -127, 127);
+	AG_SetEvent(num, "numerical-changed", UpdateWindowOf,"%p",tgt);
+	
+	AG_SpacerNewHoriz(box);
+
+	cb = AG_CheckboxNewFlag(box, 0, _("Homogenous"), &tgt->flags, AG_BOX_HOMOGENOUS);
+	AG_SetEvent(cb, "checkbox-changed", UpdateWindowOf,"%p",tgt);
+
+	cb = AG_CheckboxNewFlag(box, 0, _("Visual frame"), &tgt->flags, AG_BOX_FRAME);
+	AG_SetEvent(cb, "checkbox-changed", UpdateWindowOf,"%p",tgt);
+
+	return (box);
 }
 #endif /* AG_DEBUG */
 

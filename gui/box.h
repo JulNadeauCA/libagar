@@ -53,6 +53,9 @@ typedef struct ag_box {
 #define AGBOX(p) ((AG_Box *)(p))
 
 __BEGIN_DECLS
+extern const char *agBoxHorizAlignNames[];
+extern const char *agBoxVertAlignNames[];
+
 extern AG_WidgetClass agBoxClass;
 
 AG_Box *_Nonnull  AG_BoxNew(void *_Nullable, enum ag_box_type, Uint);
