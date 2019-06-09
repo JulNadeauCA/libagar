@@ -217,17 +217,15 @@ struct ag_window *_Nonnull AG_TextPromptOptions(struct ag_button *_Nonnull *_Non
 
 void AG_TextAlign(int *_Nonnull, int *_Nonnull, int,int, int,int,
                   int,int,int, int, enum ag_text_justify, enum ag_text_valign);
+int  AG_TextJustifyOffset(int, int) _Pure_Attribute;
+int  AG_TextValignOffset(int, int) _Pure_Attribute;
 
-int AG_TextJustifyOffset(int, int) _Pure_Attribute;
-int AG_TextValignOffset(int, int) _Pure_Attribute;
-
-AG_Surface *_Nonnull AG_TextRenderNat(const AG_Char *_Nonnull) _Warn_Unused_Result;
-AG_Surface *_Nonnull AG_TextRender(const char *_Nonnull) _Warn_Unused_Result;
 AG_Surface *_Nonnull AG_TextRenderF(const char *_Nonnull, ...) _Warn_Unused_Result;
+AG_Surface *_Nonnull AG_TextRender(const char *_Nonnull) _Warn_Unused_Result;
+AG_Surface *_Nonnull AG_TextRenderNat(const AG_Char *_Nonnull) _Warn_Unused_Result;
 
 AG_Glyph *_Nonnull AG_TextRenderGlyph(AG_Driver *_Nonnull, AG_Char)
                                      _Warn_Unused_Result;
-AG_Glyph *_Nonnull AG_TextRenderGlyphMiss(AG_Driver *_Nonnull, AG_Char);
 
 void AG_TextColor(const AG_Color *_Nonnull);
 void AG_TextColorRGB(Uint8, Uint8, Uint8);

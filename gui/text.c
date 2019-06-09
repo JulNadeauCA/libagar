@@ -140,11 +140,12 @@ static TAILQ_HEAD(ag_fontq, ag_font) fonts;
 AG_Font *_Nullable agDefaultFont = NULL;
 
 static AG_Surface *_Nonnull TextRenderFT(const AG_Char *_Nonnull);
-static void TextRenderFT_Underline(AG_TTFFont *_Nonnull, AG_Surface *_Nonnull,
-                                   int);
+static void TextRenderFT_Underline(AG_TTFFont *_Nonnull, AG_Surface *_Nonnull, int);
 #ifdef SYMBOLS
 static int  TextRenderSymbol(Uint, AG_Surface *_Nonnull, int,int);
 #endif
+static AG_Glyph *_Nonnull TextRenderGlyph_Miss(AG_Driver *_Nonnull, AG_Char);
+
 static void InitTextState(void);
 
 /* Load an individual glyph from a bitmap font file. */
@@ -583,22 +584,6 @@ AG_TextClearGlyphCache(AG_Driver *drv)
 	}
 }
 
-/* Varargs variant of TextRender(). */
-AG_Surface *
-AG_TextRenderF(const char *fmt, ...)
-{
-	char *s;
-	va_list args;
-	AG_Surface *su;
-
-	va_start(args, fmt);
-	Vasprintf(&s, fmt, args);
-	va_end(args);
-
-	su = AG_TextRender(s);
-	free(s);
-	return (su);
-}
 #ifdef SYMBOLS
 static __inline__ AG_Surface *_Nullable _Pure_Attribute
 GetSymbolSurface(AG_Char ch)
@@ -1363,7 +1348,27 @@ AG_TextValignOffset(int h, int hLine)
 }
 
 /*
- * Allocate a transparent surface and render text from a C string.
+ * Allocate a transparent surface and render text on it (printf form).
+ * The string may contain UTF-8 sequences.
+ */
+AG_Surface *
+AG_TextRenderF(const char *fmt, ...)
+{
+	char *s;
+	va_list args;
+	AG_Surface *su;
+
+	va_start(args, fmt);
+	Vasprintf(&s, fmt, args);
+	va_end(args);
+
+	su = AG_TextRender(s);
+	free(s);
+	return (su);
+}
+
+/*
+ * Allocate a transparent surface and render text on it (string form).
  * The string may contain UTF-8 sequences.
  */
 AG_Surface *
@@ -1384,6 +1389,9 @@ AG_TextRender(const char *text)
 	return (su);
 }
 
+/*
+ * Allocate a transparent surface and render UCS-4 (internal) text on it.
+ */
 AG_Surface *
 AG_TextRenderNat(const AG_Char *text)
 {
@@ -1403,7 +1411,9 @@ AG_TextRenderNat(const AG_Char *text)
 }
 
 #ifdef HAVE_FREETYPE
-/* Render text to a surface with alpha blending. */
+/*
+ * Render text to a surface using FreeType.
+ */
 /*
  * TODO use a separate routine for transparent vs. non-transparent
  * agTextState->colorBG.
@@ -1628,15 +1638,15 @@ AG_TextRenderGlyph(AG_Driver *drv, AG_Char ch)
 			break;
 	}
 	if (gl == NULL) {
-		gl = AG_TextRenderGlyphMiss(drv, ch);
+		gl = TextRenderGlyph_Miss(drv, ch);
 		AG_SLIST_INSERT_HEAD(&drv->glyphCache[h].glyphs, gl, glyphs);
 	}
 	return (gl);
 }
 
 /* Render a glyph following a cache miss; called from AG_TextRenderGlyph(). */
-AG_Glyph *
-AG_TextRenderGlyphMiss(AG_Driver *drv, AG_Char ch)
+static AG_Glyph *_Nonnull
+TextRenderGlyph_Miss(AG_Driver *_Nonnull drv, AG_Char ch)
 {
 	AG_Glyph *G;
 	AG_Char s[2];
