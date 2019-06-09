@@ -52,10 +52,11 @@ widget implements a group of "radio" buttons.
 .Ft "AG_Radio *"
 .Fn AG_RadioNewFn "AG_Widget *parent" "Uint flags" "const char *items[]" "AG_EventFn fn" "const char *fmt" "..."
 .Pp
-.\" MANLINK(AG_RadioNewInt)
-.\" MANLINK(AG_RadioNewUint)
 .Ft "AG_Radio *"
-.Fn AG_RadioNew{Int,Uint} "AG_Widget *parent" "Uint flags" "const char *items[]" "<Type> *value"
+.Fn AG_RadioNewInt "AG_Widget *parent" "Uint flags" "const char *items[]" "int *value"
+.Pp
+.Ft "AG_Radio *"
+.Fn AG_RadioNewUint "AG_Widget *parent" "Uint flags" "const char *items[]" "Uint *value"
 .Pp
 .Ft void
 .Fn AG_RadioItemsFromArray "AG_Radio *radio" "const char *items[]"
