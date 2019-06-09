@@ -251,18 +251,29 @@ WidgetSelected(AG_Event *_Nonnull event)
 	nTab = AG_NotebookAdd(nb, _("General Settings"), AG_BOX_VERT);
 	{
 		static const AG_FlagDescr flagDescr[] = {
-		    { AG_WIDGET_FOCUSABLE,		"FOCUSABLE",1 },
-		    { AG_WIDGET_FOCUSED,		"FOCUSED",0 },
-		    { AG_WIDGET_UNFOCUSED_MOTION,     "UNFOCUSED_MOTION",1 },
-		    { AG_WIDGET_UNFOCUSED_BUTTONUP,   "UNFOCUSED_BUTTONUP",1 },
-		    { AG_WIDGET_UNFOCUSED_BUTTONDOWN, "UNFOCUSED_BUTTONDOWN",1},
-		    { AG_WIDGET_HFILL,			"HFILL",1 },
-		    { AG_WIDGET_VFILL,			"VFILL",1 },
-		    { AG_WIDGET_HIDE,			"HIDE",1 },
-		    { AG_WIDGET_DISABLED,		"DISABLED",1 },
-		    { AG_WIDGET_CATCH_TAB,		"CATCH_TAB",1 },
-		    { AG_WIDGET_UNDERSIZE,		"UNDERSIZE",0 },
-		    { AG_WIDGET_NOSPACING,		"NOSPACING",1 },
+		    { AG_WIDGET_FOCUSABLE,		"FOCUSABLE",		1 },
+		    { AG_WIDGET_FOCUSED,		"FOCUSED",		0 },
+		    { AG_WIDGET_DISABLED,		"DISABLED",		1 },
+		    { AG_WIDGET_HIDE,			"HIDE",			1 },
+		    { AG_WIDGET_VISIBLE,		"VISIBLE",		0 },
+		    { AG_WIDGET_UNDERSIZE,		"UNDERSIZE",		0 },
+		    { AG_WIDGET_UPDATE_WINDOW,		"UPDATE_WINDOW",	1 },
+		    { AG_WIDGET_HFILL,			"HFILL",		1 },
+		    { AG_WIDGET_VFILL,			"VFILL",		1 },
+		    { AG_WIDGET_USE_MOUSEOVER,		"USE_MOUSEOVER",	1 },
+		    { AG_WIDGET_MOUSEOVER,		"MOUSEOVER",		0 },
+		    { AG_WIDGET_USE_TEXT,		"USE_TEXT",		0 },
+		    { AG_WIDGET_CATCH_TAB,		"CATCH_TAB",		1 },
+		    { AG_WIDGET_USE_OPENGL,		"USE_OPENGL",		0 },
+		    { AG_WIDGET_GL_RESHAPE,		"GL_RESHAPE",		0 },
+		    { AG_WIDGET_NOSPACING,		"NOSPACING",		1 },
+		    { AG_WIDGET_UNFOCUSED_MOTION,	"UNFOCUSED_MOTION",	1 },
+		    { AG_WIDGET_UNFOCUSED_BUTTONUP,	"UNFOCUSED_BUTTONUP",	1 },
+		    { AG_WIDGET_UNFOCUSED_BUTTONDOWN,	"UNFOCUSED_BUTTONDOWN",	1 },
+		    { AG_WIDGET_UNFOCUSED_KEYDOWN,	"UNFOCUSED_KEYDOWN",	1 },
+		    { AG_WIDGET_UNFOCUSED_KEYUP,	"UNFOCUSED_KEYUP",	1 },
+		    { AG_WIDGET_TABLE_EMBEDDABLE,	"TABLE_EMBEDDABLE",	1 },
+		    { AG_WIDGET_QUEUE_SURFACE_BACKUP,	"QUEUE_SURFACE_BACKUP",	1 },
 		    { 0,				NULL,0 }
 		};
 
@@ -282,8 +293,10 @@ WidgetSelected(AG_Event *_Nonnull event)
 #endif
 		AG_SeparatorNewHoriz(nTab);
 
-		sv = AG_ScrollviewNew(nTab, AG_SCROLLVIEW_EXPAND);
+		sv = AG_ScrollviewNew(nTab, AG_SCROLLVIEW_BY_MOUSE |
+		                            AG_SCROLLVIEW_EXPAND);
 		AG_CheckboxSetFromFlags(sv, 0, &wid->flags, flagDescr);
+		AG_SetStyle(sv, "font-family", "Courier");
 	}
 
 	if (AGOBJECT_CLASS(wid)->edit != NULL) {
