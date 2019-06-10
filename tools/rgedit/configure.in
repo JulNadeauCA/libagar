@@ -4,7 +4,7 @@ CONFIG_GUESS("../../mk/config.guess")
 
 REGISTER_SECTION("rgedit options:")
 REGISTER("--with-agar[=PREFIX]",	"Location of Agar library [check]")
-REGISTER("--with-agar-rg[=PREFIX]",	"Location of Agar-SG library [check]")
+REGISTER("--with-agar-rg[=PREFIX]",	"Location of Agar-RG library [check]")
 
 PACKAGE("rgedit")
 VERSION("1.0")
