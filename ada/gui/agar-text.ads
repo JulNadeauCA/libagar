@@ -203,6 +203,7 @@ package Agar.Text is
     Justify  : AG_Text_Justify;         -- Justification mode
     Valign   : AG_Text_Valign;          -- Vertical alignment
     Tab_Wd   : C.int;                   -- Width of tabs in pixels
+    C_Pad1   : Unsigned_32;
   end record
     with Convention => C;
  
@@ -220,6 +221,7 @@ package Agar.Text is
     W, H        : C.int;                -- Dimensions in pixels
     Line_Widths : access C.unsigned;    -- Width of each line
     Line_Count  : C.unsigned;           -- Total line count
+    C_Pad1      : Unsigned_32;
   end record
     with Convention => C;
   type Text_Metrics_Access is access all AG_Text_Metrics with Convention => C;

@@ -211,13 +211,19 @@ package Agar.Surface is
     Format         : aliased Pixel_Format; -- Pixel format description
     Flags          : C.unsigned;           -- Surface Flags (below)
     W,H            : C.unsigned;           -- Size in pixels
-    Pitch, Padding : C.unsigned;           -- Scanline byte length, end padding
+    Pitch          : C.unsigned;           -- Scanline byte length
     Pixels         : Pixel_Access;         -- Raw pixel data
     Clip_Rect      : AG_Rect;              -- Destination clipping rectangle
-    Colorkey       : AG_Pixel;             -- Color key pixel
-    Alpha          : AG_Component;         -- Per-surface alpha
     Frames         : System.Address;       -- TODO animation frames
     Frame_Count    : C.unsigned;           -- Animation frame count
+    Padding        : C.unsigned;           -- Scanline end padding
+    Colorkey       : AG_Pixel;             -- Color key pixel
+    Alpha          : AG_Component;         -- Per-surface alpha
+#if AG_MODEL = AG_LARGE
+    Struct_Pad1    : Unsigned_32;
+#else
+    Struct_Pad1    : Unsigned_16;
+#end if;
   end record
     with Convention => C;
   
