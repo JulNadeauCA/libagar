@@ -740,7 +740,6 @@ main(int argc, char *argv[])
 # endif
 #endif
 	}
-	AG_ConsoleMsg(C, "");
 
 	AG_TlistSetChangedFn(tl, SelectedTest, NULL);
 	AG_TlistSetDblClickFn(tl, RunTest, "%p,%p", tl, win);
