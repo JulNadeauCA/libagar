@@ -506,6 +506,112 @@ echo "CROSS_COMPILING=${CROSS_COMPILING}" >> Makefile.config
 echo "SRCDIR=${SRC}" >> Makefile.config
 echo "BLDDIR=${BLD}" >> Makefile.config
 
+$ECHO_N 'env ' >>config.log
+$ECHO_N 'env ' >>config.status
+if [ "$CFLAGS" != "" ]; then
+$ECHO_N 'CFLAGS="' >> config.log
+$ECHO_N 'CFLAGS="' >> config.status
+$ECHO_N "${CFLAGS}" >> config.log
+$ECHO_N "${CFLAGS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$CPP" != "" ]; then
+$ECHO_N 'CPP="' >> config.log
+$ECHO_N 'CPP="' >> config.status
+$ECHO_N "${CPP}" >> config.log
+$ECHO_N "${CPP}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$ADAMKDEP" != "" ]; then
+$ECHO_N 'ADAMKDEP="' >> config.log
+$ECHO_N 'ADAMKDEP="' >> config.status
+$ECHO_N "${ADAMKDEP}" >> config.log
+$ECHO_N "${ADAMKDEP}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$CPPFLAGS" != "" ]; then
+$ECHO_N 'CPPFLAGS="' >> config.log
+$ECHO_N 'CPPFLAGS="' >> config.status
+$ECHO_N "${CPPFLAGS}" >> config.log
+$ECHO_N "${CPPFLAGS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$ADALFLAGS" != "" ]; then
+$ECHO_N 'ADALFLAGS="' >> config.log
+$ECHO_N 'ADALFLAGS="' >> config.status
+$ECHO_N "${ADALFLAGS}" >> config.log
+$ECHO_N "${ADALFLAGS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$ADABIND" != "" ]; then
+$ECHO_N 'ADABIND="' >> config.log
+$ECHO_N 'ADABIND="' >> config.status
+$ECHO_N "${ADABIND}" >> config.log
+$ECHO_N "${ADABIND}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$ADAFLAGS" != "" ]; then
+$ECHO_N 'ADAFLAGS="' >> config.log
+$ECHO_N 'ADAFLAGS="' >> config.status
+$ECHO_N "${ADAFLAGS}" >> config.log
+$ECHO_N "${ADAFLAGS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$LDFLAGS" != "" ]; then
+$ECHO_N 'LDFLAGS="' >> config.log
+$ECHO_N 'LDFLAGS="' >> config.status
+$ECHO_N "${LDFLAGS}" >> config.log
+$ECHO_N "${LDFLAGS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$CC" != "" ]; then
+$ECHO_N 'CC="' >> config.log
+$ECHO_N 'CC="' >> config.status
+$ECHO_N "${CC}" >> config.log
+$ECHO_N "${CC}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$ADABFLAGS" != "" ]; then
+$ECHO_N 'ADABFLAGS="' >> config.log
+$ECHO_N 'ADABFLAGS="' >> config.status
+$ECHO_N "${ADABFLAGS}" >> config.log
+$ECHO_N "${ADABFLAGS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$LIBS" != "" ]; then
+$ECHO_N 'LIBS="' >> config.log
+$ECHO_N 'LIBS="' >> config.status
+$ECHO_N "${LIBS}" >> config.log
+$ECHO_N "${LIBS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$ADA" != "" ]; then
+$ECHO_N 'ADA="' >> config.log
+$ECHO_N 'ADA="' >> config.status
+$ECHO_N "${ADA}" >> config.log
+$ECHO_N "${ADA}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$ADALINK" != "" ]; then
+$ECHO_N 'ADALINK="' >> config.log
+$ECHO_N 'ADALINK="' >> config.status
+$ECHO_N "${ADALINK}" >> config.log
+$ECHO_N "${ADALINK}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
 $ECHO_N './configure' >>config.log
 $ECHO_N './configure' >>config.status
 for arg

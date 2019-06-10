@@ -499,6 +499,56 @@ echo "CROSS_COMPILING=${CROSS_COMPILING}" >> Makefile.config
 echo "SRCDIR=${SRC}" >> Makefile.config
 echo "BLDDIR=${BLD}" >> Makefile.config
 
+$ECHO_N 'env ' >>config.log
+$ECHO_N 'env ' >>config.status
+if [ "$CPPFLAGS" != "" ]; then
+$ECHO_N 'CPPFLAGS="' >> config.log
+$ECHO_N 'CPPFLAGS="' >> config.status
+$ECHO_N "${CPPFLAGS}" >> config.log
+$ECHO_N "${CPPFLAGS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$CC" != "" ]; then
+$ECHO_N 'CC="' >> config.log
+$ECHO_N 'CC="' >> config.status
+$ECHO_N "${CC}" >> config.log
+$ECHO_N "${CC}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$LDFLAGS" != "" ]; then
+$ECHO_N 'LDFLAGS="' >> config.log
+$ECHO_N 'LDFLAGS="' >> config.status
+$ECHO_N "${LDFLAGS}" >> config.log
+$ECHO_N "${LDFLAGS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$CPP" != "" ]; then
+$ECHO_N 'CPP="' >> config.log
+$ECHO_N 'CPP="' >> config.status
+$ECHO_N "${CPP}" >> config.log
+$ECHO_N "${CPP}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$LIBS" != "" ]; then
+$ECHO_N 'LIBS="' >> config.log
+$ECHO_N 'LIBS="' >> config.status
+$ECHO_N "${LIBS}" >> config.log
+$ECHO_N "${LIBS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$CFLAGS" != "" ]; then
+$ECHO_N 'CFLAGS="' >> config.log
+$ECHO_N 'CFLAGS="' >> config.status
+$ECHO_N "${CFLAGS}" >> config.log
+$ECHO_N "${CFLAGS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
 $ECHO_N './configure' >>config.log
 $ECHO_N './configure' >>config.status
 for arg

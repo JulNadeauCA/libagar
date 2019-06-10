@@ -437,7 +437,7 @@ echo '    --with-manpages            Generate Unix manual pages [yes]'
 echo ''
 echo 'rgedit options:'
 echo '    --with-agar[=PREFIX]        Location of Agar library [check]'
-echo '    --with-agar-rg[=PREFIX]     Location of Agar-SG library [check]'
+echo '    --with-agar-rg[=PREFIX]     Location of Agar-RG library [check]'
 echo ''
 echo 'Some influential environment variables:'
 echo '    CC           C compiler command'
@@ -498,6 +498,56 @@ echo "CROSS_COMPILING=${CROSS_COMPILING}" >> Makefile.config
 echo "SRCDIR=${SRC}" >> Makefile.config
 echo "BLDDIR=${BLD}" >> Makefile.config
 
+$ECHO_N 'env ' >>config.log
+$ECHO_N 'env ' >>config.status
+if [ "$LIBS" != "" ]; then
+$ECHO_N 'LIBS="' >> config.log
+$ECHO_N 'LIBS="' >> config.status
+$ECHO_N "${LIBS}" >> config.log
+$ECHO_N "${LIBS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$CPP" != "" ]; then
+$ECHO_N 'CPP="' >> config.log
+$ECHO_N 'CPP="' >> config.status
+$ECHO_N "${CPP}" >> config.log
+$ECHO_N "${CPP}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$CFLAGS" != "" ]; then
+$ECHO_N 'CFLAGS="' >> config.log
+$ECHO_N 'CFLAGS="' >> config.status
+$ECHO_N "${CFLAGS}" >> config.log
+$ECHO_N "${CFLAGS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$LDFLAGS" != "" ]; then
+$ECHO_N 'LDFLAGS="' >> config.log
+$ECHO_N 'LDFLAGS="' >> config.status
+$ECHO_N "${LDFLAGS}" >> config.log
+$ECHO_N "${LDFLAGS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$CC" != "" ]; then
+$ECHO_N 'CC="' >> config.log
+$ECHO_N 'CC="' >> config.status
+$ECHO_N "${CC}" >> config.log
+$ECHO_N "${CC}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
+if [ "$CPPFLAGS" != "" ]; then
+$ECHO_N 'CPPFLAGS="' >> config.log
+$ECHO_N 'CPPFLAGS="' >> config.status
+$ECHO_N "${CPPFLAGS}" >> config.log
+$ECHO_N "${CPPFLAGS}" >> config.status
+$ECHO_N '" ' >> config.log
+$ECHO_N '" ' >> config.status
+fi
 $ECHO_N './configure' >>config.log
 $ECHO_N './configure' >>config.status
 for arg
@@ -1879,8 +1929,8 @@ echo '* '
 echo '* ' >>config.log
 echo "* $PACKAGE requires Agar-RG (version 1.6.0 or newer)."
 echo "* $PACKAGE requires Agar-RG (version 1.6.0 or newer)." >>config.log
-echo '* WWW: http://libagar.org/rg.html'
-echo '* WWW: http://libagar.org/rg.html' >>config.log
+echo '* WWW: http://libagar.org'
+echo '* WWW: http://libagar.org' >>config.log
 echo '* '
 echo '* ' >>config.log
 echo "Required dependency agar-rg not found"
@@ -1893,8 +1943,8 @@ echo '* This software requires agar-rg version >= 1.6.0,'
 echo '* This software requires agar-rg version >= 1.6.0,' >>config.log
 echo '* please update that package and try again.'
 echo '* please update that package and try again.' >>config.log
-echo '* WWW: http://libagar.org/rg.html'
-echo '* WWW: http://libagar.org/rg.html' >>config.log
+echo '* WWW: http://libagar.org'
+echo '* WWW: http://libagar.org' >>config.log
 echo '* '
 echo '* ' >>config.log
 echo "Required dependency agar-rg version mismatch"
