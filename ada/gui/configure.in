@@ -37,7 +37,7 @@ ada_option(-fstack-check)
 ada_option(-gnatVa)
 ada_option(-gnato)
 ada_option(-gnatE)
-ada_option(-gnatep=adaprep.def)
+ada_option(-gnatep=agar_gui_ada_prep.def)
 
 if [ "${enable_warnings}" = "yes" ]; then
 	ada_option(-gnatwaleF)
