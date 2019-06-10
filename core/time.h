@@ -6,40 +6,36 @@
 
 #ifndef AG_TIMER_NAME_MAX
 # if AG_MODEL == AG_SMALL
-#  define AG_TIMER_NAME_MAX 16
-# else
 #  define AG_TIMER_NAME_MAX 8
+# else
+#  define AG_TIMER_NAME_MAX 16
 # endif
 #endif
+
+struct ag_timer;
+
+typedef Uint32 (*AG_TimerFn)(struct ag_timer *_Nonnull, AG_Event *_Nonnull);
 
 typedef struct ag_timer_pvt {
 	AG_TAILQ_ENTRY(ag_timer) timers;
 	AG_TAILQ_ENTRY(ag_timer) change;
-#ifdef AG_LEGACY
-	Uint32 (*_Nullable fnLegacy)(void *_Nonnull p, Uint32 ival,
-	                             void *_Nullable arg);
-	void    *_Nullable argLegacy;
-#endif
 } AG_TimerPvt;
 
 typedef struct ag_timer {
-	int id;				/* Unique identifier */
+	AG_Event fnEvent;		/* Callback arguments */
+	AG_TimerFn fn;			/* Function callback */
+	AG_TimerPvt pvt;		/* Private data */
 	void *_Nullable obj;		/* Parent object */
 	Uint flags;
 #define AG_TIMER_SURVIVE_DETACH	0x01	/* Don't cancel on ObjectDetach() */
 #define AG_TIMER_AUTO_FREE	0x02	/* Free the timer structure on expire */
 #define AG_TIMER_EXECD		0x04	/* Callback was invoked manually */
 #define AG_TIMER_RESTART	0x08	/* Queue timer for restart (driver-specific) */
+	int id;				/* Unique identifier */
 	Uint32 tSched;			/* Scheduled expiration time (ticks) */
 	Uint32 ival;			/* Timer interval in ticks */
-	Uint32 (*_Nullable fn) (struct ag_timer *_Nonnull _Restrict,
-	                        AG_Event        *_Nonnull _Restrict);
-	AG_Event fnEvent;
 	char name[AG_TIMER_NAME_MAX];	/* Name string (optional) */
-	AG_TimerPvt pvt;		/* Private data */
 } AG_Timer;
-
-typedef Uint32 (*AG_TimerFn)(AG_Timer *_Nonnull, AG_Event *_Nonnull);
 
 typedef struct ag_time_ops {
 	const char *_Nonnull name;

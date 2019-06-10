@@ -21,18 +21,3 @@
 #define AG_BindConstPointer		AG_BindPointer
 #define AG_BindConstPointerFn		AG_BindPointerFn
 #define AG_BindConstPointerMp		AG_BindPointerMp
-
-#if 0
-/* Improved AG_Timer(3) API replaced AG_Timeout in 1.5.0 */
-#define AG_LockTimeouts(o)   AG_LockTimers(o)
-#define AG_UnlockTimeouts(o) AG_UnlockTimers(o)
-void AG_SetTimeout(AG_Timeout *_Nonnull, Uint32 (*_Nonnull)(void *_Nonnull, Uint32, void *_Nullable), void *_Nullable, Uint) DEPRECATED_ATTRIBUTE;
-void AG_ScheduleTimeout(void *_Nullable, AG_Timeout *_Nonnull, Uint32) DEPRECATED_ATTRIBUTE;
-#define AG_TIMEOUT_INITIALIZER        { -1, NULL, 0, 0, 0, NULL }
-#define AG_TIMEOUTS_QUEUED()          (!AG_TAILQ_EMPTY(&agTimerObjQ))
-#define AG_TimeoutIsScheduled(obj,to) AG_TimerIsRunning((obj),(to))
-#define AG_DelTimeout(obj,to)         AG_DelTimer((obj),(to))
-#define AG_ProcessTimeout(x)          AG_ProcessTimeouts(x)
-#define AG_AddTimeout(p,to,dt)	      AG_ScheduleTimeout((p),(to),(dt))
-#define AG_ReplaceTimeout(p,to,dt)    AG_ScheduleTimeout((p),(to),(dt))
-#endif
