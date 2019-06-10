@@ -2031,6 +2031,581 @@ echo '* ' >>config.log
 echo "Required dependency agar version mismatch"
 exit 1
 fi
+$ECHO_N 'checking for Agar definitions...'
+$ECHO_N 'checking for Agar definitions...' >>config.log
+# BEGIN agar.defs(1.6.0 ${prefix_agar})
+AGAR_VERSION=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_VERSION=`${prefix_agar}/bin/agar-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/agar-config" ]; then
+AGAR_VERSION=`${path}/agar-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-config"
+break
+elif [ -e "${path}/agar-config.exe" ]; then
+AGAR_VERSION=`${path}/agar-config.exe --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+if [ "${AGAR_VERSION}" != "" ]; then
+if [ "${prefix_agar}" != "" ]; then
+echo "yes ($AGAR_VERSION in ${prefix_agar})"
+echo "yes ($AGAR_VERSION in ${prefix_agar})" >>config.log
+else
+echo "yes ($AGAR_VERSION)"
+echo "yes ($AGAR_VERSION)" >>config.log
+fi
+MK_VERSION_MAJOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK=no
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+MK_VERSION_OK=yes
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+if [ "$MK_VERSION_MINOR" = '' ]; then
+MK_VERSION_OK=yes
+else
+if [ $MK_VERSION_MINOR -gt 6 ]; then
+MK_VERSION_OK=yes
+elif [ $MK_VERSION_MINOR -eq 6 ]; then
+if [ "$MK_VERSION_MICRO" = '' ]; then
+MK_VERSION_OK=yes
+else
+if [ $MK_VERSION_MICRO -ge 0 ]; then
+MK_VERSION_OK=yes
+fi
+fi
+fi
+fi
+fi
+if [ "${MK_VERSION_OK}" = "no" ]; then
+echo '*'
+echo '*' >>config.log
+echo "* Minimum required version is 1.6.0 (found $AGAR_VERSION)"
+echo "* Minimum required version is 1.6.0 (found $AGAR_VERSION)" >>config.log
+echo '*'
+echo '*' >>config.log
+fi
+else
+if [ "${prefix_agar}" != "" ]; then
+echo "no (not in ${prefix_agar})"
+echo "no (not in ${prefix_agar})" >>config.log
+else
+echo 'no'
+echo 'no' >>config.log
+fi
+MK_VERSION_OK="no"
+fi
+if [ "${MK_VERSION_OK}" = "yes" ]; then
+$ECHO_N 'checking Agar definitions...'
+$ECHO_N 'checking Agar definitions...' >>config.log
+AGAR_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/agar-config" ]; then
+AGAR_CFLAGS=`${path}/agar-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-config"
+break
+elif [ -e "${path}/agar-config.exe" ]; then
+AGAR_CFLAGS=`${path}/agar-config.exe --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+AGAR_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/agar-config" ]; then
+AGAR_LIBS=`${path}/agar-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-config"
+break
+elif [ -e "${path}/agar-config.exe" ]; then
+AGAR_LIBS=`${path}/agar-config.exe --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+MK_COMPILE_STATUS=OK
+MK_RUN_STATUS=OK
+cat << EOT >conftest$$.c
+#include <stdio.h>
+#include <string.h>
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/config/ag_debug.h>
+#include <agar/config/ag_enable_dso.h>
+#include <agar/config/ag_enable_exec.h>
+#include <agar/config/ag_enable_string.h>
+#include <agar/config/have_64bit.h>
+#include <agar/config/have_float.h>
+#include <agar/config/have_long_double.h>
+#include <agar/config/ag_legacy.h>
+#include <agar/config/ag_namespaces.h>
+#include <agar/config/ag_serialization.h>
+#include <agar/config/ag_threads.h>
+#include <agar/config/ag_timers.h>
+#include <agar/config/ag_type_safety.h>
+#include <agar/config/ag_unicode.h>
+#include <agar/config/ag_user.h>
+#include <agar/config/ag_verbosity.h>
+#include <agar/config/have_freetype.h>
+#include <agar/config/have_fontconfig.h>
+#include <agar/config/have_opengl.h>
+#include <agar/config/have_jpeg.h>
+#include <agar/config/have_png.h>
+#include <agar/config/have_x11.h>
+#include <agar/config/have_xinerama.h>
+#include <agar/config/have_glx.h>
+#include <agar/config/have_sdl.h>
+#include <agar/config/have_wgl.h>
+#include <agar/config/have_cocoa.h>
+static const struct {
+	const char *name;
+	const char *value;
+} booldefs[] = {
+#ifdef AG_DEBUG
+	{ "AG_DEBUG", "yes" },
+#else
+	{ "AG_DEBUG", "no" },
+#endif
+#ifdef AG_ENABLE_DSO
+	{ "AG_ENABLE_DSO", "yes" },
+#else
+	{ "AG_ENABLE_DSO", "no" },
+#endif
+#ifdef AG_ENABLE_EXEC
+	{ "AG_ENABLE_EXEC", "yes" },
+#else
+	{ "AG_ENABLE_EXEC", "no" },
+#endif
+#ifdef AG_ENABLE_STRING
+	{ "AG_ENABLE_STRING", "yes" },
+#else
+	{ "AG_ENABLE_STRING", "no" },
+#endif
+#ifdef HAVE_64BIT
+	{ "HAVE_64BIT", "yes" },
+#else
+	{ "HAVE_64BIT", "no" },
+#endif
+#ifdef HAVE_FLOAT
+	{ "HAVE_FLOAT", "yes" },
+#else
+	{ "HAVE_FLOAT", "no" },
+#endif
+#ifdef HAVE_LONG_DOUBLE
+	{ "HAVE_LONG_DOUBLE", "yes" },
+#else
+	{ "HAVE_LONG_DOUBLE", "no" },
+#endif
+#ifdef AG_LEGACY
+	{ "AG_LEGACY", "yes" },
+#else
+	{ "AG_LEGACY", "no" },
+#endif
+#ifdef AG_NAMESPACES
+	{ "AG_NAMESPACES", "yes" },
+#else
+	{ "AG_NAMESPACES", "no" },
+#endif
+#ifdef AG_SERIALIZATION
+	{ "AG_SERIALIZATION", "yes" },
+#else
+	{ "AG_SERIALIZATION", "no" },
+#endif
+#ifdef AG_THREADS
+	{ "AG_THREADS", "yes" },
+#else
+	{ "AG_THREADS", "no" },
+#endif
+#ifdef AG_TIMERS
+	{ "AG_TIMERS", "yes" },
+#else
+	{ "AG_TIMERS", "no" },
+#endif
+#ifdef AG_TYPE_SAFETY
+	{ "AG_TYPE_SAFETY", "yes" },
+#else
+	{ "AG_TYPE_SAFETY", "no" },
+#endif
+#ifdef AG_UNICODE
+	{ "AG_UNICODE", "yes" },
+#else
+	{ "AG_UNICODE", "no" },
+#endif
+#ifdef AG_USER
+	{ "AG_USER", "yes" },
+#else
+	{ "AG_USER", "no" },
+#endif
+#ifdef AG_VERBOSITY
+	{ "AG_VERBOSITY", "yes" },
+#else
+	{ "AG_VERBOSITY", "no" },
+#endif
+#ifdef HAVE_FREETYPE
+	{ "HAVE_FREETYPE", "yes" },
+#else
+	{ "HAVE_FREETYPE", "no" },
+#endif
+#ifdef HAVE_FONTCONFIG
+	{ "HAVE_FONTCONFIG", "yes" },
+#else
+	{ "HAVE_FONTCONFIG", "no" },
+#endif
+#ifdef HAVE_OPENGL
+	{ "HAVE_OPENGL", "yes" },
+#else
+	{ "HAVE_OPENGL", "no" },
+#endif
+#ifdef HAVE_JPEG
+	{ "HAVE_JPEG", "yes" },
+#else
+	{ "HAVE_JPEG", "no" },
+#endif
+#ifdef HAVE_PNG
+	{ "HAVE_PNG", "yes" },
+#else
+	{ "HAVE_PNG", "no" },
+#endif
+#ifdef HAVE_X11
+	{ "HAVE_X11", "yes" },
+#else
+	{ "HAVE_X11", "no" },
+#endif
+#ifdef HAVE_XINERAMA
+	{ "HAVE_XINERAMA", "yes" },
+#else
+	{ "HAVE_XINERAMA", "no" },
+#endif
+#ifdef HAVE_GLX
+	{ "HAVE_GLX", "yes" },
+#else
+	{ "HAVE_GLX", "no" },
+#endif
+#ifdef HAVE_SDL
+	{ "HAVE_SDL", "yes" },
+#else
+	{ "HAVE_SDL", "no" },
+#endif
+#ifdef HAVE_WGL
+	{ "HAVE_WGL", "yes" },
+#else
+	{ "HAVE_WGL", "no" },
+#endif
+#ifdef HAVE_COCOA
+	{ "HAVE_COCOA", "yes" },
+#else
+	{ "HAVE_COCOA", "no" },
+#endif
+};
+static const struct {
+	const char *name;
+#ifdef AG_HAVE_64BIT
+	unsigned long long value;
+#else
+	unsigned long value;
+#endif
+} constants[] = {
+	{ "AGAR_MAJOR_VERSION", AGAR_MAJOR_VERSION },
+	{ "AGAR_MINOR_VERSION", AGAR_MINOR_VERSION },
+	{ "AGAR_PATCHLEVEL", AGAR_PATCHLEVEL },
+	{ "AG_SMALL", AG_SMALL },
+	{ "AG_MEDIUM", AG_MEDIUM },
+	{ "AG_LARGE", AG_LARGE },
+	{ "AG_MODEL", AG_MODEL },
+	{ "AG_CHAR_MAX", AG_CHAR_MAX },
+	{ "AG_SIZE_MAX", AG_SIZE_MAX },
+	{ "AG_OFFS_MAX", AG_OFFS_MAX },
+	{ "AG_LITTLE_ENDIAN", AG_LITTLE_ENDIAN },
+	{ "AG_BIG_ENDIAN", AG_BIG_ENDIAN },
+	{ "AG_BYTEORDER", AG_BYTEORDER },
+	{ "AG_PATHNAME_MAX", AG_PATHNAME_MAX },
+	{ "AG_FILENAME_MAX", AG_FILENAME_MAX },
+	{ "AG_ARG_MAX", AG_ARG_MAX },
+	{ "AG_BUFFER_MIN", AG_BUFFER_MIN },
+	{ "AG_BUFFER_MAX", AG_BUFFER_MAX },
+	{ "AG_COMPONENT_BITS", AG_COMPONENT_BITS },
+	{ "AG_COLOR_FIRST", AG_COLOR_FIRST },
+	{ "AG_COLOR_LAST", AG_COLOR_LAST },
+	{ "AG_GRAPH_LABEL_MAX", AG_GRAPH_LABEL_MAX },
+	{ "AG_LABEL_MAX", AG_LABEL_MAX },
+	{ "AG_LABEL_MAX_POLLPTRS", AG_LABEL_MAX_POLLPTRS },
+	{ "AG_NOTEBOOK_LABEL_MAX", AG_NOTEBOOK_LABEL_MAX },
+	{ "AG_OPAQUE", AG_OPAQUE },
+	{ "AG_STATUSBAR_MAX_LABELS", AG_STATUSBAR_MAX_LABELS },
+	{ "AG_STYLE_VALUE_MAX", AG_STYLE_VALUE_MAX },
+	{ "AG_TABLE_TXT_MAX", AG_TABLE_TXT_MAX },
+	{ "AG_TABLE_FMT_MAX", AG_TABLE_FMT_MAX },
+	{ "AG_TABLE_COL_NAME_MAX", AG_TABLE_COL_NAME_MAX },
+	{ "AG_TABLE_HASHBUF_MAX", AG_TABLE_HASHBUF_MAX },
+	{ "AG_TEXT_STATES_MAX", AG_TEXT_STATES_MAX },
+	{ "AG_TRANSPARENT", AG_TRANSPARENT },
+	{ "AG_TLIST_LABEL_MAX", AG_TLIST_LABEL_MAX },
+	{ "AG_TOOLBAR_MAX_ROWS", AG_TOOLBAR_MAX_ROWS },
+	{ "AG_WINDOW_CAPTION_MAX", AG_WINDOW_CAPTION_MAX },
+	{ "AG_ZOOM_DEFAULT", AG_ZOOM_DEFAULT },
+	{ "AG_ZOOM_RANGE", AG_ZOOM_RANGE },
+};
+static const struct {
+	const char *name;
+	unsigned long value;
+} sizeofs[] = {
+	{ "SIZEOF_AG_AGARVERSION", sizeof(AG_AgarVersion) },
+	{ "SIZEOF_AG_CPUINFO", sizeof(AG_CPUInfo) },
+	{ "SIZEOF_AG_COND", sizeof(AG_Cond) },
+	{ "SIZEOF_AG_CONFIG", sizeof(AG_Config) },
+	{ "SIZEOF_AG_CONSTCORESOURCE", sizeof(AG_ConstCoreSource) },
+	{ "SIZEOF_AG_CORESOURCE", sizeof(AG_CoreSource) },
+	{ "SIZEOF_AG_DSO", sizeof(AG_DSO) },
+	{ "SIZEOF_AG_DSOSYM", sizeof(AG_DSOSym) },
+	{ "SIZEOF_AG_DATASOURCE", sizeof(AG_DataSource) },
+	{ "SIZEOF_AG_DB", sizeof(AG_Db) },
+	{ "SIZEOF_AG_DBT", sizeof(AG_Dbt) },
+	{ "SIZEOF_AG_DIR", sizeof(AG_Dir) },
+	{ "SIZEOF_AG_EVENT", sizeof(AG_Event) },
+	{ "SIZEOF_AG_EVENTSINK", sizeof(AG_EventSink) },
+	{ "SIZEOF_AG_EVENTSOURCE", sizeof(AG_EventSource) },
+	{ "SIZEOF_AG_FILEEXTMAPPING", sizeof(AG_FileExtMapping) },
+	{ "SIZEOF_AG_FILEINFO", sizeof(AG_FileInfo) },
+	{ "SIZEOF_AG_FILESOURCE", sizeof(AG_FileSource) },
+	{ "SIZEOF_AG_FMTSTRING", sizeof(AG_FmtString) },
+	{ "SIZEOF_AG_FMTSTRINGEXT", sizeof(AG_FmtStringExt) },
+	{ "SIZEOF_AG_FUNCTION", sizeof(AG_Function) },
+	{ "SIZEOF_AG_LIST", sizeof(AG_List) },
+	{ "SIZEOF_AG_MUTEX", sizeof(AG_Mutex) },
+	{ "SIZEOF_AG_MUTEXATTR", sizeof(AG_MutexAttr) },
+	{ "SIZEOF_AG_NAMESPACE", sizeof(AG_Namespace) },
+	{ "SIZEOF_AG_NETACCEPTFILTER", sizeof(AG_NetAcceptFilter) },
+	{ "SIZEOF_AG_NETADDR", sizeof(AG_NetAddr) },
+	{ "SIZEOF_AG_NETOPS", sizeof(AG_NetOps) },
+	{ "SIZEOF_AG_NETSOCKET", sizeof(AG_NetSocket) },
+	{ "SIZEOF_AG_NETSOCKETSOURCE", sizeof(AG_NetSocketSource) },
+	{ "SIZEOF_AG_OBJECT", sizeof(AG_Object) },
+	{ "SIZEOF_AG_OBJECTCLASS", sizeof(AG_ObjectClass) },
+	{ "SIZEOF_AG_OBJECTCLASSPVT", sizeof(AG_ObjectClassPvt) },
+	{ "SIZEOF_AG_OBJECTDEP", sizeof(AG_ObjectDep) },
+	{ "SIZEOF_AG_OBJECTHEADER", sizeof(AG_ObjectHeader) },
+	{ "SIZEOF_AG_OBJECTPVT", sizeof(AG_ObjectPvt) },
+	{ "SIZEOF_AG_TBL", sizeof(AG_Tbl) },
+	{ "SIZEOF_AG_TBLBUCKET", sizeof(AG_TblBucket) },
+	{ "SIZEOF_AG_TREE", sizeof(AG_Tree) },
+	{ "SIZEOF_AG_TREEITEM", sizeof(AG_TreeItem) },
+	{ "SIZEOF_AG_TEXT", sizeof(AG_Text) },
+	{ "SIZEOF_AG_TEXTELEMENT", sizeof(AG_TextElement) },
+	{ "SIZEOF_AG_TEXTENT", sizeof(AG_TextEnt) },
+	{ "SIZEOF_AG_THREAD", sizeof(AG_Thread) },
+	{ "SIZEOF_AG_THREADKEY", sizeof(AG_ThreadKey) },
+	{ "SIZEOF_AG_TIMER", sizeof(AG_Timer) },
+	{ "SIZEOF_AG_TIMERPVT", sizeof(AG_TimerPvt) },
+	{ "SIZEOF_AG_TIMEOPS", sizeof(AG_TimeOps) },
+	{ "SIZEOF_AG_USER", sizeof(AG_User) },
+	{ "SIZEOF_AG_USEROPS", sizeof(AG_UserOps) },
+	{ "SIZEOF_AG_VARIABLE", sizeof(AG_Variable) },
+	{ "SIZEOF_AG_VARIABLETYPEINFO", sizeof(AG_VariableTypeInfo) },
+	{ "SIZEOF_AG_ACTION", sizeof(AG_Action) },
+	{ "SIZEOF_AG_ACTIONTIE", sizeof(AG_ActionTie) },
+	{ "SIZEOF_AG_ANIMFRAME", sizeof(AG_AnimFrame) },
+	{ "SIZEOF_AG_CACHEDTEXT", sizeof(AG_CachedText) },
+	{ "SIZEOF_AG_COLOR", sizeof(AG_Color) },
+	{ "SIZEOF_AG_COLOROFFSET", sizeof(AG_ColorOffset) },
+	{ "SIZEOF_AG_CONSOLELINE", sizeof(AG_ConsoleLine) },
+	{ "SIZEOF_AG_CURSORAREA", sizeof(AG_CursorArea) },
+	{ "SIZEOF_AG_EDITABLECLIPBOARD", sizeof(AG_EditableClipboard) },
+	{ "SIZEOF_AG_EDITABLEBUFFER", sizeof(AG_EditableBuffer) },
+	{ "SIZEOF_AG_FILEOPTION", sizeof(AG_FileOption) },
+	{ "SIZEOF_AG_FILETYPE", sizeof(AG_FileType) },
+	{ "SIZEOF_AG_FIXEDPLOTTERITEM", sizeof(AG_FixedPlotterItem) },
+	{ "SIZEOF_AG_FLAGDESCR", sizeof(AG_FlagDescr) },
+	{ "SIZEOF_AG_FONT", sizeof(AG_Font) },
+	{ "SIZEOF_AG_FONTSPEC", sizeof(AG_FontSpec) },
+	{ "SIZEOF_AG_GLYPH", sizeof(AG_Glyph) },
+	{ "SIZEOF_AG_GLYPHCACHE", sizeof(AG_GlyphCache) },
+	{ "SIZEOF_AG_GRAPHEDGE", sizeof(AG_GraphEdge) },
+	{ "SIZEOF_AG_GRAPHVERTEX", sizeof(AG_GraphVertex) },
+	{ "SIZEOF_AG_MENUITEM", sizeof(AG_MenuItem) },
+	{ "SIZEOF_AG_PALETTE", sizeof(AG_Palette) },
+	{ "SIZEOF_AG_PIXELFORMAT", sizeof(AG_PixelFormat) },
+	{ "SIZEOF_AG_RADIOITEM", sizeof(AG_RadioItem) },
+	{ "SIZEOF_AG_RECT", sizeof(AG_Rect) },
+	{ "SIZEOF_AG_REDRAWTIE", sizeof(AG_RedrawTie) },
+	{ "SIZEOF_AG_SIZEREQ", sizeof(AG_SizeReq) },
+	{ "SIZEOF_AG_SIZEALLOC", sizeof(AG_SizeAlloc) },
+	{ "SIZEOF_AG_STATICFONT", sizeof(AG_StaticFont) },
+	{ "SIZEOF_AG_STATICICON", sizeof(AG_StaticIcon) },
+	{ "SIZEOF_AG_SURFACE", sizeof(AG_Surface) },
+	{ "SIZEOF_STRUCT_AG_KEYCODE", sizeof(struct ag_keycode) },
+	{ "SIZEOF_STRUCT_AG_KEY_COMPOSITION", sizeof(struct ag_key_composition) },
+	{ "SIZEOF_STRUCT_AG_KEY_MAPPING", sizeof(struct ag_key_mapping) },
+	{ "SIZEOF_AG_TABLEBUCKET", sizeof(AG_TableBucket) },
+	{ "SIZEOF_AG_TABLECELL", sizeof(AG_TableCell) },
+	{ "SIZEOF_AG_TABLECOL", sizeof(AG_TableCol) },
+	{ "SIZEOF_AG_TABLEPOPUP", sizeof(AG_TablePopup) },
+	{ "SIZEOF_AG_TEXTCACHEBUCKET", sizeof(AG_TextCacheBucket) },
+	{ "SIZEOF_AG_TEXTMETRICS", sizeof(AG_TextMetrics) },
+	{ "SIZEOF_AG_TEXTSTATE", sizeof(AG_TextState) },
+	{ "SIZEOF_AG_TLISTITEM", sizeof(AG_TlistItem) },
+	{ "SIZEOF_AG_TLISTITEMQ", sizeof(AG_TlistItemQ) },
+	{ "SIZEOF_AG_TLISTPOPUP", sizeof(AG_TlistPopup) },
+	{ "SIZEOF_AG_TREETBLCELL", sizeof(AG_TreetblCell) },
+	{ "SIZEOF_AG_TREETBLCOL", sizeof(AG_TreetblCol) },
+	{ "SIZEOF_AG_TREETBLROW", sizeof(AG_TreetblRow) },
+	{ "SIZEOF_AG_TREETBLROWQ", sizeof(AG_TreetblRowQ) },
+	{ "SIZEOF_AG_UNIT", sizeof(AG_Unit) },
+	{ "SIZEOF_AG_WIDGETGL", sizeof(AG_WidgetGL) },
+	{ "SIZEOF_AG_WIDGETPALETTE", sizeof(AG_WidgetPalette) },
+	{ "SIZEOF_AG_WIDGETPVT", sizeof(AG_WidgetPvt) },
+	{ "SIZEOF_AG_WINDOWPVT", sizeof(AG_WindowPvt) },
+};
+int
+main(int argc, char *argv[])
+{
+	AG_AgarVersion ver;
+	AG_CPUInfo cpuinfo;
+	unsigned int i;
+	FILE *f;
+
+	if ((f = fopen("agar.def", "w")) == NULL) {
+		printf("Cannot write agar.def\n");
+		return (1);
+	}
+
+	AG_InitCore(NULL, 0);
+
+	fprintf(f, "-- Compiled Agar definitions on this system\n-- ex:syn=ada\n--\n");
+	fprintf(f, "-- This file was generated by the agar.defs module of a BSDBuild\n");
+	fprintf(f, "-- compiled configure script <http://bsdbuild.hypertriton.com>.\n--\n");
+	AG_GetVersion(&ver);
+	fprintf(f, "-- Agar Version %d.%d.%d\n", ver.major, ver.minor, ver.patch);
+	AG_GetCPUInfo(&cpuinfo);
+	fprintf(f, "-- Platform: %s (%s, 0x%x)\n--\n", cpuinfo.arch, cpuinfo.vendorID,
+	    cpuinfo.ext);
+	fprintf(f, "-- Agar Build Definitions\n--\n");
+	for (i = 0; i < sizeof(booldefs) / sizeof(booldefs[0]); i++) {
+		fprintf(f, "%s := %s\n", booldefs[i].name,
+	        strcmp("yes", booldefs[i].value) == 0 ? "True" : "False");
+	}
+	fprintf(f, "--\n-- Agar Constants\n--\n");
+	for (i = 0; i < sizeof(constants) / sizeof(constants[0]); i++) {
+#ifdef AG_HAVE_64BIT
+		fprintf(f, "%s := %llu\n", constants[i].name, constants[i].value);
+#else
+		fprintf(f, "%s := %lu\n", constants[i].name, constants[i].value);
+#endif
+	}
+	fprintf(f, "--\n-- Agar Sizes of Things\n--\n");
+	for (i = 0; i < sizeof(sizeofs) / sizeof(sizeofs[0]); i++) {
+		fprintf(f, "%s := %lu\n", sizeofs[i].name, sizeofs[i].value);
+	}
+	
+	fclose(f);
+	AG_Quit();
+	return (0);
+}
+EOT
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 2>>config.log
+if [ "$?" != "0" ]; then
+echo "failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+(cd $testdir && ./conftest$$$EXECSUFFIX) >>config.log
+if [ "$?" = "0" ]; then
+echo 'yes'
+echo 'yes' >>config.log
+HAVE_AGAR_DEFS=yes
+bb_o=$bb_incdir/have_agar_defs.h
+echo '#ifndef HAVE_AGAR_DEFS' >$bb_o
+echo "#define HAVE_AGAR_DEFS \"$HAVE_AGAR_DEFS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_AGAR_DEFS\"] = \"$HAVE_AGAR_DEFS\"" >>configure.lua
+else
+echo 'no, test program failed'
+echo 'no, test program failed' >>config.log
+MK_RUN_STATUS="FAIL $?"
+HAVE_AGAR_DEFS=no
+echo '#undef HAVE_AGAR_DEFS' >$bb_incdir/have_agar_defs.h
+echo 'hdefs["HAVE_AGAR_DEFS"] = nil' >>configure.lua
+fi
+else
+echo 'no'
+echo 'no' >>config.log
+MK_RUN_STATUS="FAIL $?"
+HAVE_AGAR_DEFS=no
+echo '#undef HAVE_AGAR_DEFS' >$bb_incdir/have_agar_defs.h
+echo 'hdefs["HAVE_AGAR_DEFS"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+else
+HAVE_AGAR_DEFS="no"
+echo '#undef HAVE_AGAR_DEFS' >$bb_incdir/have_agar_defs.h
+echo 'hdefs["HAVE_AGAR_DEFS"] = nil' >>configure.lua
+fi
+# END agar.defs
+if [ "${HAVE_AGAR_DEFS}" != "yes" ]; then
+echo '* '
+echo '* ' >>config.log
+echo "* $PACKAGE requires Agar definitions (version 1.6.0 or newer)."
+echo "* $PACKAGE requires Agar definitions (version 1.6.0 or newer)." >>config.log
+echo '* WWW: http://libagar.org'
+echo '* WWW: http://libagar.org' >>config.log
+echo '* '
+echo '* ' >>config.log
+echo "Required dependency agar.defs not found"
+exit 1
+fi
+if [ "${MK_VERSION_OK}" != "yes" ]; then
+echo '* '
+echo '* ' >>config.log
+echo '* This software requires agar.defs version >= 1.6.0,'
+echo '* This software requires agar.defs version >= 1.6.0,' >>config.log
+echo '* please update that package and try again.'
+echo '* please update that package and try again.' >>config.log
+echo '* WWW: http://libagar.org'
+echo '* WWW: http://libagar.org' >>config.log
+echo '* '
+echo '* ' >>config.log
+echo "Required dependency agar.defs version mismatch"
+exit 1
+fi
 $ECHO_N 'checking for Ada bindings to Agar-Core...'
 $ECHO_N 'checking for Ada bindings to Agar-Core...' >>config.log
 # BEGIN agar-ada-core(1.6.0 ${prefix_agar_ada_core})
@@ -2528,10 +3103,12 @@ echo '* ' >>config.log
 echo "Required dependency agar-ada version mismatch"
 exit 1
 fi
+mv -f agar.def agar_ada_demo_agar.def
 ADAFLAGS="$ADAFLAGS -fstack-check"
 ADAFLAGS="$ADAFLAGS -gnatVa"
 ADAFLAGS="$ADAFLAGS -gnato"
 ADAFLAGS="$ADAFLAGS -gnatE"
+ADAFLAGS="$ADAFLAGS -gnatep=agar_ada_demo_prep.def"
 if [ "${enable_warnings}" = "yes" ]
  then
 ADAFLAGS="$ADAFLAGS -gnatwaleF"
@@ -2600,6 +3177,8 @@ echo "HAVE_AGAR_ADA=$HAVE_AGAR_ADA" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR_ADA\"] = \"$HAVE_AGAR_ADA\"" >>configure.lua
 echo "HAVE_AGAR_ADA_CORE=$HAVE_AGAR_ADA_CORE" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR_ADA_CORE\"] = \"$HAVE_AGAR_ADA_CORE\"" >>configure.lua
+echo "HAVE_AGAR_DEFS=$HAVE_AGAR_DEFS" >>Makefile.config
+echo "mdefs[\"HAVE_AGAR_DEFS\"] = \"$HAVE_AGAR_DEFS\"" >>configure.lua
 echo "HAVE_CC=$HAVE_CC" >>Makefile.config
 echo "mdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
 echo "HAVE_CC65=$HAVE_CC65" >>Makefile.config

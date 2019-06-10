@@ -21,13 +21,17 @@ register("--enable-debug",           "Enable debugging [no]")
 require(cc)
 require(ada)
 require(agar, 1.6.0, ${prefix_agar})
+require(agar.defs, 1.6.0, ${prefix_agar})
 require(agar-ada-core, 1.6.0, ${prefix_agar_ada_core})
 require(agar-ada, 1.6.0, ${prefix_agar_ada})
+
+mv -f agar.def agar_ada_demo_agar.def
 
 ada_option(-fstack-check)
 ada_option(-gnatVa)
 ada_option(-gnato)
 ada_option(-gnatE)
+ada_option(-gnatep=agar_ada_demo_prep.def)
 
 if [ "${enable_warnings}" = "yes" ]; then
 	ada_option(-gnatwaleF)
