@@ -180,14 +180,13 @@ PollSurfaces(AG_Event *_Nonnull event)
 static void
 PollVariables(AG_Event *_Nonnull event)
 {
+	char val[AG_LABEL_MAX];
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *obj = AG_PTR(1);
 	AG_Variable *V;
 
 	AG_TlistBegin(tl);
 	TAILQ_FOREACH(V, &obj->vars, vars) {
-		char val[128];
-
 		if ((V->type == AG_VARIABLE_P_UINT ||
 		     V->type == AG_VARIABLE_P_INT) &&
 		     strcmp(V->name, "flags") == 0) {
@@ -201,13 +200,13 @@ PollVariables(AG_Event *_Nonnull event)
 		case AG_VARIABLE_P_FLAG8:
 		case AG_VARIABLE_P_FLAG16:
 		case AG_VARIABLE_P_FLAG32:
-			AG_TlistAdd(tl, NULL, "%s%s [mask 0x%x] = %s",
+			AG_TlistAdd(tl, NULL, "%s %s [mask 0x%x] = %s",
 			    agVariableTypes[V->type].name, V->name,
 			        V->info.bitmask.u,
 			        val);
 			break;
 		default:
-			AG_TlistAdd(tl, NULL, "%s%s = %s",
+			AG_TlistAdd(tl, NULL, "%s %s = %s",
 			    agVariableTypes[V->type].name, V->name, val);
 			break;
 		}
