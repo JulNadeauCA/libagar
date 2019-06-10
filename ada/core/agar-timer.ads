@@ -25,32 +25,34 @@ package Agar.Timer is
   package CS renames Interfaces.C.Strings;
   package EV renames Agar.Event;
   
-  NAME_MAX : constant Natural := $AG_TIMER_NAME_MAX;
+  TIMER_NAME_MAX : constant Natural := $AG_TIMER_NAME_MAX;
 
   type Timer_Private is array (1 .. $SIZEOF_AG_TimerPvt)
     of aliased Interfaces.Unsigned_8 with Convention => C;
   for Timer_Private'Size use $SIZEOF_AG_TimerPvt * System.Storage_Unit;
   
-  type Timer_Name is array (1 .. NAME_MAX) of aliased c.char
-    with Convention => C;
+  type Timer_Name is array (1 .. TIMER_NAME_MAX)
+    of aliased c.char with Convention => C;
 
   type    Timer;
   type    Timer_Access          is access all Timer with Convention => C;
   subtype Timer_not_null_Access is not null Timer_Access;
-  type    Timer_Callback        is not null access function
+  type    Timer_Callback        is access function
     (Timer : Timer_Access;
      Event : EV.Event_Access) return Interfaces.Unsigned_32
      with Convention => C;
+  subtype Timer_not_null_Callback is not null Timer_Callback;  
+
   type Timer is limited record
-    Identifier      : C.int;
-    Parent_Object   : System.Address;
+    Callback_Args   : EV.Event;			-- Callback arguments
+    Callback_Func   : Timer_Callback;		-- Callback function
+    Private_Data    : Timer_Private;		-- Private data
+    Parent_Object   : System.Address;		-- Parent object
     Flags           : C.unsigned;
-    Expiration_Time : Interfaces.Unsigned_32;
-    Interval        : Interfaces.Unsigned_32;
-    Callback_Func   : Timer_Callback;
-    Callback_Args   : EV.Event;
-    Name            : Timer_Name;
-    Private_Data    : Timer_Private;
+    Identifier      : C.int;			-- Unique identifier
+    Expiration_Time : Interfaces.Unsigned_32;	-- Expires in this long (ticks)
+    Interval        : Interfaces.Unsigned_32;	-- Timer interval (ticks)
+    Name            : Timer_Name;		-- Optional name ID
   end record
     with Convention => C;
 

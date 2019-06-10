@@ -22,7 +22,7 @@ with System;
 -- Agar object instances are limited records which derive from Agar.Object.
 --
 -- Shared, class-wide data is represented by limited records which derive
--- from Agar.Class (equivalent to AG_ObjectClass in C).
+-- from Agar.Object.Class (which mirrors AG_ObjectClass in C).
 --
 
 package Agar.Object is

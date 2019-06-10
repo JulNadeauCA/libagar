@@ -2351,11 +2351,13 @@ static const struct {
 	{ "SIZEOF_AG_AGARVERSION", sizeof(AG_AgarVersion) },
 	{ "SIZEOF_AG_CPUINFO", sizeof(AG_CPUInfo) },
 	{ "SIZEOF_AG_COND", sizeof(AG_Cond) },
-	{ "SIZEOF_AG_CORESOURCE", sizeof(AG_CoreSource) },
+	{ "SIZEOF_AG_CONFIG", sizeof(AG_Config) },
 	{ "SIZEOF_AG_CONSTCORESOURCE", sizeof(AG_ConstCoreSource) },
+	{ "SIZEOF_AG_CORESOURCE", sizeof(AG_CoreSource) },
 	{ "SIZEOF_AG_DSO", sizeof(AG_DSO) },
 	{ "SIZEOF_AG_DSOSYM", sizeof(AG_DSOSym) },
 	{ "SIZEOF_AG_DATASOURCE", sizeof(AG_DataSource) },
+	{ "SIZEOF_AG_DB", sizeof(AG_Db) },
 	{ "SIZEOF_AG_DBT", sizeof(AG_Dbt) },
 	{ "SIZEOF_AG_DIR", sizeof(AG_Dir) },
 	{ "SIZEOF_AG_EVENT", sizeof(AG_Event) },
@@ -2376,6 +2378,7 @@ static const struct {
 	{ "SIZEOF_AG_NETOPS", sizeof(AG_NetOps) },
 	{ "SIZEOF_AG_NETSOCKET", sizeof(AG_NetSocket) },
 	{ "SIZEOF_AG_NETSOCKETSOURCE", sizeof(AG_NetSocketSource) },
+	{ "SIZEOF_AG_OBJECT", sizeof(AG_Object) },
 	{ "SIZEOF_AG_OBJECTCLASS", sizeof(AG_ObjectClass) },
 	{ "SIZEOF_AG_OBJECTCLASSPVT", sizeof(AG_ObjectClassPvt) },
 	{ "SIZEOF_AG_OBJECTDEP", sizeof(AG_ObjectDep) },
@@ -2524,7 +2527,7 @@ ADAFLAGS="$ADAFLAGS -fstack-check"
 ADAFLAGS="$ADAFLAGS -gnatVa"
 ADAFLAGS="$ADAFLAGS -gnato"
 ADAFLAGS="$ADAFLAGS -gnatE"
-ADAFLAGS="$ADAFLAGS -gnatep=adaprep.def"
+ADAFLAGS="$ADAFLAGS -gnatep=agar_core_ada_prep.def"
 if [ "${enable_warnings}" = "yes" ]
  then
 ADAFLAGS="$ADAFLAGS -gnatwaleF"
