@@ -138,16 +138,17 @@ typedef struct ag_surface {
 #define AG_SURFACE_EXT_PIXELS	0x20	/* Pixels are allocated externally */
 #define AG_SURFACE_ANIMATED	0x40	/* Is an animation */
 #define AG_SURFACE_TRACE	0x80	/* Enable debugging */
-#define AG_SAVED_SURFACE_FLAGS	(AG_SURFACE_COLORKEY|AG_SURFACE_ALPHA| \
+#define AG_SAVED_SURFACE_FLAGS	(AG_SURFACE_COLORKEY | AG_SURFACE_ALPHA | \
                                  AG_SURFACE_ANIMATED)
 	Uint w, h;			/* Size in pixels */
-	Uint pitch, padding;		/* Scanline byte length, end padding */
+	Uint pitch;			/* Scanline byte length */
 	Uint8 *_Nullable pixels;	/* Raw pixel data */
 	AG_Rect clipRect;		/* Clipping rect for blit as dst */
-	AG_Pixel colorkey;		/* Color key pixel */
-	AG_Component alpha;		/* Per-surface alpha */
 	AG_AnimFrame *_Nullable frames;	/* Animation frames */
 	Uint n;				/* Animation frame count */
+	Uint padding;			/* Scanline end padding */
+	AG_Pixel colorkey;		/* Color key pixel */
+	AG_Component alpha;		/* Per-surface alpha */
 } AG_Surface;
 
 /* Animation playback context */
