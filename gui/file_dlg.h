@@ -168,7 +168,7 @@ float  AG_FileOptionFlt(AG_FileType *_Nonnull, const char *_Nonnull)
 double AG_FileOptionDbl(AG_FileType *_Nonnull, const char *_Nonnull)
                        _Pure_Attribute_If_Unthreaded;
 #endif
-char *_Nonnull AG_FileOptionString(AG_FileType *_Nonnull, const char *_Nonnull);
+char *_Nonnull AG_FileOptionString(AG_FileType *_Nonnull, const char *_Nonnull)
                                   _Pure_Attribute_If_Unthreaded;
 __END_DECLS
 
