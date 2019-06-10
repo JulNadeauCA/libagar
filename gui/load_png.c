@@ -136,7 +136,9 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	png_infop info;
 	png_uint_32 width, height;
 	Uint32 Rmask=0, Gmask=0, Bmask=0, Amask=0;
+#ifdef AG_DEBUG
 	AG_Offset start = AG_Tell(ds);
+#endif
 	int depth, colorType, intlaceType, channels, row;
 
 	if ((png = png_create_read_struct(PNG_LIBPNG_VER_STRING,NULL,NULL,NULL))

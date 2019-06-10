@@ -221,12 +221,9 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
-	SG_View *sv = obj;
-
 	if (a->w < 4 || a->h < 4) {
 		return (-1);
 	}
-	Debug(sv, "SizeAllocate: %d x %d\n", a->w, a->h);
 	return (0);
 }
 
