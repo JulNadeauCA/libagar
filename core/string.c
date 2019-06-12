@@ -146,16 +146,22 @@ PrintS64(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 #endif /* HAVE_64BIT */
 
 static AG_Size
-PrintOBJNAME(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
+PrintObjName(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
-	AG_Object *ob = AG_FMTSTRING_ARG(fs);
-	return Strlcpy(dst, (ob != NULL) ? ob->name : "(null)", dstSize);
+	AG_Object **ob = AG_FMTSTRING_ARG(fs);
+	return Strlcpy(dst, (*ob != NULL) ? (*ob)->name : "NULL", dstSize);
 }
 static AG_Size
-PrintOBJTYPE(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
+PrintObjType(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
-	AG_Object *ob = AG_FMTSTRING_ARG(fs);
-	return Strlcpy(dst, (ob != NULL) ? ob->cls->name : "(null)", dstSize);
+	AG_Object **ob = AG_FMTSTRING_ARG(fs);
+	return Strlcpy(dst, (*ob != NULL) ? (*ob)->cls->name : "NULL", dstSize);
+}
+static AG_Size
+PrintObjClassName(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
+{
+	AG_ObjectClass **cls = AG_FMTSTRING_ARG(fs);
+	return Strlcpy(dst, (*cls != NULL) ? (*cls)->name : "NULL", dstSize);
 }
 
 /* Register a new extended format specifier. */
@@ -332,6 +338,9 @@ AG_ProcessFmtString(AG_FmtString *fs, char *dst, AG_Size dstSize)
 			break;
 		case 'X':
 			rv = Snprintf(pDst, (pEnd-pDst), "%X", FSARG(fs,Uint));
+			break;
+		case 'p':
+			rv = Snprintf(pDst, (pEnd-pDst), "%p", FSARG(fs,void *));
 			break;
 		case 'c':
 			*pDst = FSARG(fs,char);
@@ -1366,8 +1375,9 @@ AG_InitStringSubsystem(void)
 	AG_RegisterFmtStringExt("u64", PrintU64);
 	AG_RegisterFmtStringExt("s64", PrintS64);
 # endif
-	AG_RegisterFmtStringExt("objName", PrintOBJNAME);
-	AG_RegisterFmtStringExt("objType", PrintOBJTYPE);
+	AG_RegisterFmtStringExt("objName", PrintObjName);
+	AG_RegisterFmtStringExt("objType", PrintObjType);
+	AG_RegisterFmtStringExt("objClassName", PrintObjClassName);
 #endif /* AG_ENABLE_STRING */
 
 	return (0);
