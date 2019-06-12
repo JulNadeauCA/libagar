@@ -135,7 +135,7 @@ typedef struct ag_cursor_area {
  */
 #define AG_WIDGET_NSTATES 5
 #define AG_WIDGET_NCOLORS 5
-enum ag_widget_color_state {
+enum ag_widget_state {
 	AG_DEFAULT_STATE,		/* Unfocused state */
 	AG_DISABLED_STATE,		/* Inactive state (#disabled) */
 	AG_FOCUSED_STATE,		/* Active / focused state (#focused) */
@@ -143,7 +143,7 @@ enum ag_widget_color_state {
 	AG_SELECTED_STATE		/* "Selected" state (#selected) */
 };
 enum ag_widget_color {
-	AG_COLOR = 0,			/* Background ("color") */
+	AG_BG_COLOR = 0,		/* Background ("color") */
 	AG_TEXT_COLOR,			/* Rendered text ("text-color") */
 	AG_LINE_COLOR,			/* Line drawing ("line-color") */
 	AG_SHAPE_COLOR,			/* Filled shapes ("shape-color") */
@@ -154,7 +154,7 @@ typedef struct {
 	          [AG_WIDGET_NCOLORS];
 } AG_WidgetPalette;
 
-#define AG_WCOLOR(wid,which)	 AGWIDGET(wid)->pal.c[AGWIDGET(wid)->cState][which]
+#define AG_WCOLOR(wid,which)	 AGWIDGET(wid)->pal.c[AGWIDGET(wid)->state][which]
 #define AG_WCOLOR_DEF(wid,which) AGWIDGET(wid)->pal.c[AG_DEFAULT_STATE][which]
 #define AG_WCOLOR_DIS(wid,which) AGWIDGET(wid)->pal.c[AG_DISABLED_STATE][which]
 #define AG_WCOLOR_HOV(wid,which) AGWIDGET(wid)->pal.c[AG_HOVER_STATE][which]
@@ -228,7 +228,7 @@ typedef struct ag_widget {
 	struct ag_driver_class *_Nullable drvOps; /* Parent driver class (null = no parent window) */
 
 	AG_StyleSheet *_Nullable css;      /* Style sheet (null = use default) */
-	enum ag_widget_color_state cState; /* Current CSS color state */
+	enum ag_widget_state state;       /* Current state for styling */
 	struct ag_font *_Nullable font;    /* Computed font reference */
 	AG_WidgetPalette pal;              /* Computed color palette */
 #ifdef HAVE_OPENGL
@@ -277,7 +277,7 @@ AG_TAILQ_HEAD(ag_widgetq, ag_widget);
 
 __BEGIN_DECLS
 extern AG_WidgetClass agWidgetClass;
-extern const char *_Nullable agWidgetPropNames[];
+extern const char *_Nullable agWidgetStyleNames[];
 extern const char *_Nullable agWidgetStateNames[];
 extern const char *_Nullable agWidgetColorNames[];
 extern AG_WidgetPalette agDefaultPalette;

@@ -123,7 +123,7 @@ int agFreetypeInited = 0;		/* Initialized Freetype library */
 int agFontconfigInited = 0;		/* Initialized Fontconfig library */
 
 static int agTextInitedSubsystem = 0;
-static AG_TextState states[AG_TEXT_STATES_MAX];
+static AG_TextState agTextStateStack[AG_TEXT_STATES_MAX];
 static Uint curState = 0;
 AG_TextState *agTextState;
 
@@ -146,7 +146,7 @@ static int  TextRenderSymbol(Uint, AG_Surface *_Nonnull, int,int);
 #endif
 static AG_Glyph *_Nonnull TextRenderGlyph_Miss(AG_Driver *_Nonnull, AG_Char);
 
-static void InitTextState(void);
+static void AG_TextStateInit(void);
 
 /* Load an individual glyph from a bitmap font file. */
 static void
@@ -259,13 +259,15 @@ AG_PushTextState(void)
 	if ((curState+1) >= AG_TEXT_STATES_MAX) {
 		AG_FatalError("Text state stack overflow");
 	}
-	agTextState = &states[++curState];
-	InitTextState();
+	agTextState = &agTextStateStack[++curState];
+	memcpy(agTextState, &agTextStateStack[curState-1], sizeof(AG_TextState));
+//	AG_TextStateInit();
 	AG_MutexUnlock(&agTextLock);
 }
 
-static void
-InitTextState(void)
+/* Initialize the text state to default settings. */
+void
+AG_TextStateInit(void)
 {
 	agTextState->font = agDefaultFont;
 	AG_ColorWhite(&agTextState->color);
@@ -545,9 +547,9 @@ AG_PopTextState(void)
 {
 	AG_MutexLock(&agTextLock);
 	if (curState == 0) {
-		AG_FatalError("No text state to pop");
+		AG_FatalError("Unexpected AG_PopTextState()");
 	}
-	agTextState = &states[--curState];
+	agTextState = &agTextState[--curState];
 	AG_MutexUnlock(&agTextLock);
 }
 
@@ -2018,8 +2020,8 @@ AG_InitTextSubsystem(void)
 
 	/* Initialize the rendering state. */
 	curState = 0;
-	agTextState = &states[0];
-	InitTextState();
+	agTextState = &agTextStateStack[0];
+	AG_TextStateInit();
 	return (0);
 fail:
 #ifdef HAVE_FREETYPE

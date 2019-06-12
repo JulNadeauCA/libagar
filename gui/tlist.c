@@ -456,8 +456,8 @@ Draw(void *_Nonnull obj)
 #ifdef AG_TIMERS
 	UpdatePolled(tl);
 #endif
-	AG_DrawBox(tl, &tl->r, -1, &WCOLOR(tl,AG_COLOR));
-	cSel = WCOLOR_SEL(tl,AG_COLOR);
+	AG_DrawBox(tl, &tl->r, -1, &WCOLOR(tl,AG_BG_COLOR));
+	cSel = WCOLOR_SEL(tl,AG_BG_COLOR);
 	AG_WidgetDraw(tl->sbar);
 	AG_PushClipRect(tl, &tl->r);
 

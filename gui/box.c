@@ -204,7 +204,7 @@ Draw(void *_Nonnull obj)
 		r.y = 0;
 		r.w = WIDTH(box);
 		r.h = HEIGHT(box);
-		AG_DrawBox(box, &r, box->depth, &WCOLOR(box,AG_COLOR));
+		AG_DrawBox(box, &r, box->depth, &WCOLOR(box,AG_BG_COLOR));
 	}
 	OBJECT_FOREACH_CHILD(chld, box, ag_widget)
 		AG_WidgetDraw(chld);

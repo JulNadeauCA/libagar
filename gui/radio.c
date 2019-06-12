@@ -239,7 +239,7 @@ Draw(void *_Nonnull obj)
 	r.y = 0;
 	r.w = WIDTH(rad);
 	r.h = HEIGHT(rad);
-	AG_DrawBox(rad, &r, -1, &WCOLOR(rad,AG_COLOR));
+	AG_DrawBox(rad, &r, -1, &WCOLOR(rad,AG_BG_COLOR));
 	
 	value = AG_GetInt(rad, "value");
 	AG_PushClipRect(rad, &rad->r);

@@ -572,7 +572,7 @@ Draw(void *_Nonnull p)
 	r.y = 0;
 	r.w = WIDTH(cons);
 	r.h = HEIGHT(cons);
-	AG_DrawRect(cons, &r, &WCOLOR(cons,AG_COLOR));
+	AG_DrawRect(cons, &r, &WCOLOR(cons,AG_BG_COLOR));
 
 	if (cons->nLines == 0)
 		goto out;
@@ -602,7 +602,7 @@ Draw(void *_Nonnull p)
 			    ((sel > 0 && lnIdx > pos && lnIdx < pos+sel+1) ||
 			     (sel < 0 && lnIdx < pos && lnIdx > pos+sel-1))) {
 				AG_DrawRectFilled(cons, &r,
-				    &WCOLOR_SEL(cons,AG_COLOR));
+				    &WCOLOR_SEL(cons,AG_BG_COLOR));
 				cTxt = &WCOLOR_SEL(cons,AG_TEXT_COLOR);
 				suIdx = 1;
 			}

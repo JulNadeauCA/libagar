@@ -24,7 +24,7 @@
  */
 
 /*
- * Implementation of the AG_Widget(3) object.
+ * AG_Widget: The base class of all Agar widgets.
  */
 
 #include <agar/core/core.h>
@@ -43,7 +43,8 @@
 
 #include <agar/config/ag_debug_gui.h>
 
-const char *agWidgetPropNames[] = {
+/* Built-in style attributes */
+const char *agWidgetStyleNames[] = {
 	"font-family",
 	"font-size",
 	"font-weight",
@@ -55,14 +56,18 @@ const char *agWidgetPropNames[] = {
 	"border-color",
 	NULL
 };
+
+/* Possible style states */
 const char *agWidgetStateNames[] = {
-	"",
+	"",				/* #default */
 	"#disabled",
 	"#focused",
 	"#hover",
 	"#selected",
 	NULL
 };
+
+/* Names of palette entries */
 const char *agWidgetColorNames[] = {
 	"color",
 	"text-color",
@@ -71,6 +76,8 @@ const char *agWidgetColorNames[] = {
 	"border-color",
 	NULL
 };
+
+/* Initial color palette */
 AG_WidgetPalette agDefaultPalette = {{
 #if AG_MODEL == AG_SMALL
 # if defined(__C64__) || defined(__C128__)
@@ -376,7 +383,7 @@ Init(void *_Nonnull obj)
 	TAILQ_INIT(&wid->pvt.keyActions);
 	
 	wid->css = NULL;
-	wid->cState = AG_DEFAULT_STATE;
+	wid->state = AG_DEFAULT_STATE;
 	wid->font = agDefaultFont;
 	wid->pal = agDefaultPalette;
 #ifdef HAVE_OPENGL
@@ -1311,15 +1318,15 @@ AG_WidgetDraw(void *p)
 	     WIDGET_OPS(wid)->draw == NULL)
 		goto out;
 
-	if (wid->flags & AG_WIDGET_DISABLED) {       wid->cState = AG_DISABLED_STATE; }
-	else if (wid->flags & AG_WIDGET_MOUSEOVER) { wid->cState = AG_HOVER_STATE; }
-	else if (wid->flags & AG_WIDGET_FOCUSED) {   wid->cState = AG_FOCUSED_STATE; }
-	else {                                       wid->cState = AG_DEFAULT_STATE; }
+	if (wid->flags & AG_WIDGET_DISABLED) {       wid->state = AG_DISABLED_STATE; }
+	else if (wid->flags & AG_WIDGET_MOUSEOVER) { wid->state = AG_HOVER_STATE; }
+	else if (wid->flags & AG_WIDGET_FOCUSED) {   wid->state = AG_FOCUSED_STATE; }
+	else {                                       wid->state = AG_DEFAULT_STATE; }
 
 	if (wid->flags & AG_WIDGET_USE_TEXT) {
 		AG_PushTextState();
 		AG_TextFont(wid->font);
-		AG_TextColor(&wid->pal.c[wid->cState][AG_TEXT_COLOR]);
+		AG_TextColor(&wid->pal.c[wid->state][AG_TEXT_COLOR]);
 	}
 #ifdef HAVE_OPENGL
 	if (wid->flags & AG_WIDGET_USE_OPENGL)
@@ -1901,8 +1908,11 @@ Apply_Font_Style(Uint *fontFlags, const char *spec)
 }
 
 /*
- * Apply the style attributes of a widget and its descendants. Creates the
- * effective color palettes. Loads any required fonts in the process.
+ * Compile style attributes of a widget and its children. Generate color
+ * palette and load any required fonts in the process.
+ *
+ * Per-instance (AG_SetStyle()-set) attributes have precedence over those
+ * of the AG_Stylesheet(3). By default, attributes are inherited from parent.
  */
 static void
 CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
@@ -1929,8 +1939,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	}
 
 	/*
-	 * Set the font attributes. Per-widget instance variables override
-	 * stylesheet-specified attributes. Otherwise, inherit from parent.
+	 * Apply the font attributes.
 	 */
 	if ((V = AG_AccessVariable(wid, "font-family")) != NULL) {
 		fontFace = Strdup(V->data.s);
@@ -1940,7 +1949,6 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	} else {
 		fontFace = Strdup(parentFace);
 	}
-
 	if ((V = AG_AccessVariable(wid, "font-size")) != NULL) {
 		Apply_Font_Size(&fontSize, parentFontSize, V->data.s);
 		AG_UnlockVariable(V);
@@ -1949,7 +1957,6 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	} else {
 		fontSize = parentFontSize;
 	}
-
 	if ((V = AG_AccessVariable(wid, "font-weight")) != NULL) {
 		Apply_Font_Weight(&fontFlags, V->data.s);
 		AG_UnlockVariable(V);
@@ -1959,7 +1966,6 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		fontFlags &= ~(AG_FONT_BOLD);
 		fontFlags |= (parentFontFlags & AG_FONT_BOLD);
 	}
-
 	if ((V = AG_AccessVariable(wid, "font-style")) != NULL) {
 		Apply_Font_Style(&fontFlags, V->data.s);
 		AG_UnlockVariable(V);
@@ -1970,24 +1976,27 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		fontFlags |= (parentFontFlags & AG_FONT_ITALIC);
 	}
 	
-	/* Set the color attributes. */
+	/*
+	 * Compile the color palette.
+	 */
 	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
 		for (j = 0; j < AG_WIDGET_NCOLORS; j++) {
 			const AG_Color *parentColor = &parentPalette->c[i][j];
-			char vName[AG_VARIABLE_NAME_MAX];
+			char name[AG_VARIABLE_NAME_MAX];
 
-			Strlcpy(vName, agWidgetColorNames[j], sizeof(vName));
-			Strlcat(vName, agWidgetStateNames[i], sizeof(vName));
-			if ((V = AG_AccessVariable(wid, vName)) != NULL) {
-				AG_ColorFromString(&wid->pal.c[i][j], V->data.s,
-				    parentColor);
+			Strlcpy(name, agWidgetColorNames[j], sizeof(name));
+			Strlcat(name, agWidgetStateNames[i], sizeof(name));
+
+			if ((V = AG_AccessVariable(wid, name)) != NULL) {
+				AG_ColorFromString(&wid->pal.c[i][j],
+				    V->data.s, parentColor);
 				AG_UnlockVariable(V);
-			} else if (AG_LookupStyleSheet(css, wid, vName, &cssData)) {
-				AG_ColorFromString(&wid->pal.c[i][j], cssData,
-				    parentColor);
+			} else if (AG_LookupStyleSheet(css, wid, name, &cssData)) {
+				AG_ColorFromString(&wid->pal.c[i][j],
+				    cssData, parentColor);
 			} else {
-				Strlcpy(vName, agWidgetColorNames[j], sizeof(vName));
-				if (AG_LookupStyleSheet(css, wid, vName, &cssData)) {
+				Strlcpy(name, agWidgetColorNames[j], sizeof(name));
+				if (AG_LookupStyleSheet(css, wid, name, &cssData)) {
 					AG_ColorFromString(&wid->pal.c[i][j],
 					    cssData, parentColor);
 				} else {
@@ -1997,6 +2006,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		}
 	}
 
+	/* Load any font required */
 	if (wid->flags & AG_WIDGET_USE_TEXT) {
 		char *pFace = fontFace, *tok;
 		AG_Font *fontNew = NULL;
@@ -2089,7 +2099,7 @@ AG_WidgetCopyStyle(void *objDst, void *objSrc)
 
 	AG_ObjectLock(widSrc);
 	AG_ObjectLock(widDst);
-	for (s = &agWidgetPropNames[0]; *s != NULL; s++) {
+	for (s = &agWidgetStyleNames[0]; *s != NULL; s++) {
 		if ((V = AG_AccessVariable(widSrc, *s)) != NULL) {
 			AG_SetString(widDst, *s, V->data.s);
 			AG_UnlockVariable(V);

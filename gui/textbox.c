@@ -279,12 +279,12 @@ Draw(void *_Nonnull p)
 	if (AG_WidgetDisabled(tb)) {			/* Background */
 		AG_DrawBoxDisabled(tb, &tb->r,
 		    (tb->flags & AG_TEXTBOX_COMBO) ? 1 : -1,
-		    &WCOLOR_DEF(tb,AG_COLOR),
-		    &WCOLOR_DIS(tb,AG_COLOR));
+		    &WCOLOR_DEF(tb,AG_BG_COLOR),
+		    &WCOLOR_DIS(tb,AG_BG_COLOR));
 	} else {
 		AG_DrawBox(tb, &tb->r,
 		    (tb->flags & AG_TEXTBOX_COMBO) ? 1 : -1,
-		    &WCOLOR(tb,AG_COLOR));
+		    &WCOLOR(tb,AG_BG_COLOR));
 	}
 
 	if (tb->lbl != NULL)				/* Label, if any */
