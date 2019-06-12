@@ -33,6 +33,14 @@
 #include <agar/gui/icons.h>
 #include <agar/gui/cursors.h>
 #include <agar/gui/label.h>
+#ifdef AG_DEBUG
+#include <agar/gui/checkbox.h>
+#include <agar/gui/scrollview.h>
+#include <agar/gui/textbox.h>
+#include <agar/gui/radio.h>
+#include <agar/gui/numerical.h>
+#include <agar/gui/separator.h>
+#endif
 
 #include <agar/config/ag_debug_gui.h>
 
@@ -64,7 +72,22 @@ const char *agWindowWmTypeNames[] = {
 	"_NET_WM_WINDOW_TYPE_TOOLTIP",
 	"_NET_WM_WINDOW_TYPE_NOTIFICATION",
 	"_NET_WM_WINDOW_TYPE_COMBO",
-	"_NET_WM_WINDOW_TYPE_DND"
+	"_NET_WM_WINDOW_TYPE_DND",
+	NULL
+};
+
+const char *agWindowAlignmentNames[] = {
+	"None",
+	"Top Left",		/* TL */
+	"Top Center",		/* TC */
+	"Top Right",		/* TR */
+	"Middle Left",		/* ML */
+	"Middle Center",	/* MC */
+	"Middle Right",		/* MR */
+	"Bottom Left",		/* BL */
+	"Bottom Center",	/* BC */
+	"Bottom Right",		/* BR */
+	NULL
 };
 
 void
@@ -2658,7 +2681,7 @@ Init(void *_Nonnull obj)
 	win->rSaved.x = -1;
 	win->rSaved.y = -1;
 	win->rSaved.w = -1;
-	win->rSaved.w = -1;
+	win->rSaved.h = -1;
 	win->minPct = 50;
 	win->nFocused = 0;
 	win->widExclMotion = NULL;
@@ -2723,6 +2746,129 @@ Init(void *_Nonnull obj)
 #endif
 }
 
+#ifdef AG_DEBUG
+static void
+WindowCaptionChanged(AG_Event *event)
+{
+	char caption[AG_WINDOW_CAPTION_MAX];
+	AG_Textbox *tb = AG_SELF();
+	AG_Window *win = AG_PTR(1);
+
+	AG_TextboxCopyString(tb, caption, sizeof(caption));
+	AG_WindowSetCaptionS(win, caption);
+}
+
+static void *
+Edit(void *_Nonnull obj)
+{
+	static const AG_FlagDescr flagDescr[] = {
+	    { AG_WINDOW_MODAL,		"Is application-modal",		0 },
+	    { AG_WINDOW_MAXIMIZED,	"Is maximized",			0 },
+	    { AG_WINDOW_MINIMIZED,	"Is minimized",			0 },
+	    { AG_WINDOW_KEEPABOVE,	"Keep above others",		1 },
+	    { AG_WINDOW_KEEPBELOW,	"Keep below others",		1 },
+	    { AG_WINDOW_DENYFOCUS,	"Deny focus",			1 },
+	    { AG_WINDOW_NOTITLE,	"No titlebar",			0 },
+	    { AG_WINDOW_NOBORDERS,	"No borders",			0 },
+	    { AG_WINDOW_NOHRESIZE,	"No horizontal resize",		1 },
+	    { AG_WINDOW_NOVRESIZE,	"No vertical resize",		1 },
+	    { AG_WINDOW_NOCLOSE,	"No close button",		0 },
+	    { AG_WINDOW_NOMINIMIZE,	"No minimize button",		0 },
+	    { AG_WINDOW_NOMAXIMIZE,	"No maximize button",		0 },
+	    { AG_WINDOW_TILING,		"Tiling by WM",			1 },
+	    { AG_WINDOW_MINSIZEPCT,	"Minsize is in %",		0 },
+	    { AG_WINDOW_NOBACKGROUND,	"Disable background",		1 },
+	    { AG_WINDOW_MAIN,		"Main window",			1 },
+	    { AG_WINDOW_FOCUSONATTACH,	"Focus on attach",		0 },
+	    { AG_WINDOW_HMAXIMIZE,	"Keep horizontally maximized",	1 },
+	    { AG_WINDOW_VMAXIMIZE,	"Keep vertically maximized",	1 },
+	    { AG_WINDOW_NOMOVE,		"Unmoveable",			1 },
+	    { AG_WINDOW_NOCLIPPING,	"Disable over-window clipping", 1 },
+	    { AG_WINDOW_MODKEYEVENTS,	"Mod keys generate events",	1 },
+	    { AG_WINDOW_DETACHING,	"Is being detached",		0 },
+	    { AG_WINDOW_NOCURSORCHG,	"Inhibit cursor changes",	1 },
+	    { AG_WINDOW_FADEIN,		"Compositor fade-in",		0 },
+	    { AG_WINDOW_FADEOUT,	"Compositor fade-out",		0 },
+	    { AG_WINDOW_USE_TEXT,	"Is using the font engine",	0 },
+	    { 0,			NULL,				0 }
+	};
+	AG_Window *tgt = obj;
+	AG_Box *box, *hBox, *lBox, *rBox;
+	AG_Checkbox *cb;
+	AG_Textbox *tb;
+
+	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+
+	tb = AG_TextboxNewS(box, AG_TEXTBOX_HFILL, _("Caption: "));
+	AG_TextboxSizeHint(tb, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXX>");
+	AG_TextboxBindUTF8(tb, tgt->caption, sizeof(tgt->caption));
+	AG_SetEvent(tb, "textbox-postchg", WindowCaptionChanged, "%p", tgt);
+	AG_SetStyle(tb, "font-size", "140%");
+
+	hBox = AG_BoxNewHoriz(box, AG_BOX_EXPAND);
+	lBox = AG_BoxNewVert(hBox, 0);
+
+	cb = AG_CheckboxNewInt(lBox, 0, _("Is visible"), &tgt->visible);
+	AG_WidgetDisable(cb);
+	cb = AG_CheckboxNewInt(lBox, 0, _("Is dirty"), &tgt->dirty);
+	AG_WidgetDisable(cb);
+
+	AG_CheckboxSetFromFlags(lBox, 0, &tgt->flags, flagDescr);
+
+	rBox = AG_BoxNewVert(hBox, AG_BOX_EXPAND);
+
+	AG_LabelNewPolledMT(rBox, AG_LABEL_HFILL, &OBJECT(tgt)->pvt.lock,
+	    _("nFocused: %i"), &tgt->nFocused);
+	AG_LabelNewPolledMT(rBox, AG_LABEL_HFILL, &OBJECT(tgt)->pvt.lock,
+	    _("Zoom Level: %i"), &tgt->zoom);
+	AG_LabelNewPolledMT(rBox, AG_LABEL_HFILL, &OBJECT(tgt)->pvt.lock,
+	    _("Parent: %[objName] @ (AG_Window *)%p"),
+	    &tgt->parent, &tgt->parent);
+	AG_LabelNewPolledMT(rBox, AG_LABEL_HFILL, &OBJECT(tgt)->pvt.lock,
+	    _("Transient for: %[objName] @ (AG_Window *)%p"),
+	    &tgt->transientFor, &tgt->transientFor);
+	AG_LabelNewPolledMT(rBox, AG_LABEL_HFILL, &OBJECT(tgt)->pvt.lock,
+	    _("Pinned to: %[objName] @ (AG_Window *)%p"),
+	    &tgt->pinnedTo, &tgt->pinnedTo);
+
+	AG_NumericalNewInt(rBox, 0, NULL, _("View X: "), &tgt->r.x);
+	AG_NumericalNewInt(rBox, 0, NULL, _("View Y: "), &tgt->r.y);
+	AG_NumericalNewInt(rBox, 0, NULL, _("View W: "), &tgt->r.w);
+	AG_NumericalNewInt(rBox, 0, NULL, _("View H: "), &tgt->r.h);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Saved X: "), &tgt->rSaved.x);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Saved Y: "), &tgt->rSaved.y);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Saved W: "), &tgt->rSaved.w);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Saved H: "), &tgt->rSaved.h);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Spacing: "), &tgt->spacing);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Padding Left: "), &tgt->lPad);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Padding Right: "), &tgt->rPad);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Padding Top: "), &tgt->tPad);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Padding Bottom: "), &tgt->bPad);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Requested W: "), &tgt->wReq);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Requested H: "), &tgt->hReq);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Minimum W: "), &tgt->wMin);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Minimum H: "), &tgt->hMin);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Bottom Border W: "), &tgt->wBorderBot);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Side Border W: "), &tgt->wBorderSide);
+	AG_NumericalNewInt(rBox, 0, NULL, _("Resize Ctrl W: "), &tgt->wResizeCtrl);
+
+	if (tgt->flags & AG_WINDOW_MINSIZEPCT) {
+		AG_NumericalNewInt(rBox, 0, "%", _("Minimum size: "), &tgt->minPct);
+	}
+	
+	AG_SpacerNewHoriz(rBox);
+
+	AG_LabelNewS(rBox, 0, _("Initial window position:"));
+	AG_RadioNewUint(rBox, 0, agWindowAlignmentNames, &tgt->alignment);
+
+	AG_LabelNewS(rBox, 0, _("EWMH Window Type:"));
+	AG_RadioNewUint(rBox, AG_RADIO_HFILL, agWindowWmTypeNames, &tgt->wmType);
+
+	AG_SetStyle(box, "font-size", "80%");
+	return (box);
+}
+#endif /* AG_DEBUG */
+
 AG_WidgetClass agWindowClass = {
 	{
 		"Agar(Widget:Window)",
@@ -2733,7 +2879,11 @@ AG_WidgetClass agWindowClass = {
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
+#ifdef AG_DEBUG
+		Edit
+#else
 		NULL		/* edit */
+#endif
 	},
 	Draw,
 	SizeRequest,

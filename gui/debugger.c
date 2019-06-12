@@ -239,7 +239,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 	AG_TlistItem *ti = AG_PTR(2);
 	AG_Widget *wid = ti->p1;
 	AG_Notebook *nb;
-	AG_NotebookTab *nTab;
+	AG_NotebookTab *nt;
 	AG_Textbox *tb;
 	AG_MSpinbutton *msb;
 	AG_Scrollview *sv;
@@ -247,7 +247,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 	AG_ObjectFreeChildren(box);
 
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
-	nTab = AG_NotebookAdd(nb, _("General Settings"), AG_BOX_VERT);
+	nt = AG_NotebookAdd(nb, "AG_Widget", AG_BOX_VERT);
 	{
 		static const AG_FlagDescr flagDescr[] = {
 		    { AG_WIDGET_FOCUSABLE,		"FOCUSABLE",		1 },
@@ -276,7 +276,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 		    { 0,				NULL,0 }
 		};
 
-		tb = AG_TextboxNewS(nTab, AG_TEXTBOX_HFILL, _("Name: "));
+		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL, _("Name: "));
 #ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tb, OBJECT(wid)->name,
 		    sizeof(OBJECT(wid)->name));
@@ -284,52 +284,58 @@ WidgetSelected(AG_Event *_Nonnull event)
 		AG_TextboxBindASCII(tb, OBJECT(wid)->name,
 		    sizeof(OBJECT(wid)->name));
 #endif
-		AG_LabelNew(nTab, 0, _("Class: %s"), OBJECT(wid)->cls->name);
+		AG_LabelNew(nt, 0, _("Class: %s"), OBJECT(wid)->cls->name);
 #ifdef AG_ENABLE_STRING
-		AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Parent window: %p"), &wid->window);
-		AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Parent driver: %p"), &wid->drv);
-		AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Parent driver ops: %p"), &wid->drvOps);
+		AG_LabelNewPolledMT(nt, AG_LABEL_HFILL, &OBJECT(wid)->pvt.lock,
+		    _("Parent window: %[objName] @ (AG_Window *)%p"),
+		    &wid->window, &wid->window);
+		AG_LabelNewPolledMT(nt, AG_LABEL_HFILL, &OBJECT(wid)->pvt.lock,
+		    _("Parent driver: %[objName] @ (AG_Driver *)%p"),
+		    &wid->drv, &wid->drv);
+		AG_LabelNewPolledMT(nt, AG_LABEL_HFILL, &OBJECT(wid)->pvt.lock,
+		    _("Driver class: %[objClassName](3) @ (AG_DriverClass *)%p"),
+		    &wid->drvOps, &wid->drvOps);
 #endif
-		AG_SeparatorNewHoriz(nTab);
+		AG_SeparatorNewHoriz(nt);
 
-		sv = AG_ScrollviewNew(nTab, AG_SCROLLVIEW_BY_MOUSE |
-		                            AG_SCROLLVIEW_EXPAND);
+		sv = AG_ScrollviewNew(nt, AG_SCROLLVIEW_BY_MOUSE |
+		                          AG_SCROLLVIEW_EXPAND);
 		AG_CheckboxSetFromFlags(sv, 0, &wid->flags, flagDescr);
 		AG_SetStyle(sv, "font-family", "Courier");
 	}
 
-	if (AGOBJECT_CLASS(wid)->edit != NULL) {
-		nTab = AG_NotebookAdd(nb, _("Widget-specific"), AG_BOX_VERT);
-		AG_ObjectAttach(nTab, AGOBJECT_CLASS(wid)->edit(wid));
+	if (OBJECT_CLASS(wid)->edit != NULL) {
+		nt = AG_NotebookAdd(nb, OBJECT(wid)->cls->name, AG_BOX_VERT);
+		AG_ObjectAttach(nt, OBJECT_CLASS(wid)->edit(wid));
 	}
-	nTab = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
+	nt = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
 	{
-		AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
+		AG_TlistNewPolled(nt, AG_TLIST_EXPAND,
 		    PollVariables, "%p", wid);
 	}
-	nTab = AG_NotebookAdd(nb, _("Geometry"), AG_BOX_VERT);
+	nt = AG_NotebookAdd(nb, _("Geometry"), AG_BOX_VERT);
 	{
-		msb = AG_MSpinbuttonNew(nTab, 0, ",", "Container coords: ");
+		msb = AG_MSpinbuttonNew(nt, 0, ",", "Container coords: ");
 		AG_BindInt(msb, "xvalue", &wid->x);
 		AG_BindInt(msb, "yvalue", &wid->y);
 
-		msb = AG_MSpinbuttonNew(nTab, 0, "x", "Geometry: ");
+		msb = AG_MSpinbuttonNew(nt, 0, "x", "Geometry: ");
 		AG_BindInt(msb, "xvalue", &wid->w);
 		AG_BindInt(msb, "yvalue", &wid->h);
 		
-		msb = AG_MSpinbuttonNew(nTab, 0, ",", "View coords (UL): ");
+		msb = AG_MSpinbuttonNew(nt, 0, ",", "View coords (UL): ");
 		AG_BindInt(msb, "xvalue", &wid->rView.x1);
 		AG_BindInt(msb, "yvalue", &wid->rView.y1);
 		
-		msb = AG_MSpinbuttonNew(nTab, 0, ",", "View coords (LR): ");
+		msb = AG_MSpinbuttonNew(nt, 0, ",", "View coords (LR): ");
 		AG_BindInt(msb, "xvalue", &wid->rView.x2);
 		AG_BindInt(msb, "yvalue", &wid->rView.y2);
 	}
-	nTab = AG_NotebookAdd(nb, _("Surfaces"), AG_BOX_VERT);
+	nt = AG_NotebookAdd(nb, _("Surfaces"), AG_BOX_VERT);
 	{
 		AG_Tlist *tl;
 
-		tl = AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
+		tl = AG_TlistNewPolled(nt, AG_TLIST_EXPAND,
 		    PollSurfaces, "%p", wid);
 		AG_TlistSetItemHeight(tl, 32);
 		AG_TlistSetIconWidth(tl, 64);
@@ -339,17 +345,17 @@ WidgetSelected(AG_Event *_Nonnull event)
 	 * if it is the driver), as this will cause a segfault when we try to
 	 * generate the cursor list. */
 	if (wid->drv != NULL) {
-		nTab = AG_NotebookAdd(nb, _("Cursors"), AG_BOX_VERT);
+		nt = AG_NotebookAdd(nb, _("Cursors"), AG_BOX_VERT);
 		{
 #ifdef AG_ENABLE_STRING
 			AG_Driver *drv = wid->drv;
 
-			AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Cursor driver: %s"),
+			AG_LabelNewPolled(nt, AG_LABEL_HFILL, _("Cursor driver: %s"),
 			    OBJECT(drv)->name);
-			AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Total cursors: %u"),
+			AG_LabelNewPolled(nt, AG_LABEL_HFILL, _("Total cursors: %u"),
 			    &drv->nCursors);
 #endif
-			AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
+			AG_TlistNewPolled(nt, AG_TLIST_EXPAND,
 			    PollCursors, "%p", wid);
 		}
 	}

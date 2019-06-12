@@ -106,6 +106,7 @@ typedef struct ag_window {
 #define AG_WINDOW_NOCURSORCHG	0x04000000 /* Inhibit any cursor change */
 #define AG_WINDOW_FADEIN	0x08000000 /* Fade-in (compositing WMs) */
 #define AG_WINDOW_FADEOUT	0x10000000 /* Fade-out (compositing WMs) */
+#define AG_WINDOW_USE_TEXT	0x20000000 /* At least one widget has USE_TEXT */
 
 #define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
 #define AG_WINDOW_NOBUTTONS	(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|\
@@ -149,6 +150,7 @@ typedef AG_TAILQ_HEAD(ag_windowq, ag_window) AG_WindowQ;
 
 __BEGIN_DECLS
 extern const char *_Nonnull agWindowWmTypeNames[];
+extern const char *_Nonnull agWindowAlignmentNames[];
 extern AG_WidgetClass agWindowClass;
 
 /* Protected by agDrivers VFS lock */
