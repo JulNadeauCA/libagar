@@ -90,6 +90,9 @@ Init(void *_Nonnull obj)
 	icon->wSaved = -1;
 	icon->hSaved = -1;
 	AG_ColorNone(&icon->cBackground);
+#ifdef AG_TIMERS
+	AG_InitTimer(&icon->toDblClick, "dblClick", 0);
+#endif
 }
 
 static void
