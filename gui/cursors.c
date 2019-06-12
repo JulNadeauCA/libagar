@@ -46,8 +46,8 @@ static struct {
 	{ pick_xpm,	8,22 },		/* PICK */
 	{ hresize_xpm,	16,17 },	/* HRESIZE */
 	{ vresize_xpm,	15,16 },	/* VRESIZE */
-	{ lrdiag_xpm,	16,15 },	/* LRDIAG */
 	{ lldiag_xpm,	16,15 },	/* LLDIAG */
+	{ lrdiag_xpm,	16,15 },	/* LRDIAG */
 	{ text_xpm,	15,15 }		/* TEXT */
 };
 
