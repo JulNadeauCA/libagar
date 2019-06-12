@@ -936,10 +936,16 @@ Draw(void *_Nonnull obj)
 	AG_Driver *drv = WIDGET(ed)->drv;
 	AG_DriverClass *drvOps = WIDGET(ed)->drvOps;
 	AG_EditableBuffer *buf;
+	const AG_Color *bgColor = &WCOLOR(ed, AG_BG_COLOR);
+	const AG_Color *txColor = &WCOLOR(ed, AG_TEXT_COLOR);
 	AG_Rect2 rClip;
 	int i, dx, dy, x, y;
 	int inSel = 0;
 
+	if (bgColor->a != AG_TRANSPARENT) {
+		AG_Rect r = { 0, 0, WIDTH(ed), HEIGHT(ed) };
+		AG_DrawRectFilled(ed, &r, bgColor);
+	}
 	if ((buf = GetBuffer(ed)) == NULL) {
 		return;
 	}
@@ -969,8 +975,7 @@ Draw(void *_Nonnull obj)
 			    AG_WidgetIsFocused(ed)) {
 				AG_DrawLineV(ed,
 				    x - ed->x, (y + 1),
-				    (y + ed->lineSkip - 1),
-				    &WCOLOR(ed,TEXT_COLOR));
+				    (y + ed->lineSkip - 1), txColor);
 			}
 			ed->xCurs = x;
 			if (ed->flags & AG_EDITABLE_MARKPREF) {

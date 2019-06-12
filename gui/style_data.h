@@ -11,6 +11,13 @@ const char *agStyleDefault_Data =
 	"line-color#hover: rgb(70,70,70);\n"
 	"shape-color: rgb(100,100,100);\n"
 	"}\n"
+	"AG_Label {\n"
+	"color: rgb(0,0,0,0);\n"
+	"}\n"
+	"AG_Editable {\n"
+	"color: rgb(0,0,0,0);\n"
+	"color#selected: rgb(0,0,100);\n"
+	"}\n"
 	"AG_Window {\n"
 	"border-color: rgb(100,100,100);\n"
 	"}\n"
@@ -34,9 +41,6 @@ const char *agStyleDefault_Data =
 	"}\n"
 	"AG_Notebook {\n"
 	"color#selected: rgb(117,117,117);\n"
-	"}\n"
-	"AG_Editable {\n"
-	"color#selected: rgb(0,0,100);\n"
 	"}\n"
 	"AG_Tlist {\n"
 	"color: rgb(125,125,125);\n"
@@ -62,7 +66,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	1272,
+	1327,
 	&agStyleDefault_Data,
 	NULL
 };

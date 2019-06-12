@@ -424,6 +424,7 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Label *lbl = obj;
+	const AG_Color *bgColor = &WCOLOR(lbl, AG_BG_COLOR);
 	AG_Surface *suNew;
 	AG_Rect r;
 	int x, y, cw = 0;			/* make compiler happy */
@@ -458,6 +459,8 @@ Draw(void *_Nonnull obj)
 	
 	AG_TextJustify(lbl->justify);
 	AG_TextValign(lbl->valign);
+	if (bgColor->a != AG_TRANSPARENT)
+		AG_TextBGColor(bgColor);
 
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:

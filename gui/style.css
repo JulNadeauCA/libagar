@@ -14,6 +14,13 @@ AG_Widget {
 	line-color#hover: rgb(70,70,70);
 	shape-color: rgb(100,100,100);
 }
+AG_Label {
+	color: rgb(0,0,0,0);
+}
+AG_Editable {
+	color: rgb(0,0,0,0);
+	color#selected: rgb(0,0,100);
+}
 AG_Window {
 	border-color: rgb(100,100,100);
 }
@@ -37,9 +44,6 @@ AG_MenuView {
 }
 AG_Notebook {
 	color#selected: rgb(117,117,117);
-}
-AG_Editable {
-	color#selected: rgb(0,0,100);
 }
 AG_Tlist {
 	color: rgb(125,125,125);
