@@ -37,6 +37,7 @@ typedef struct ag_radio {
 	int radius;			/* Control radius in pixels */
 	int itemHeight;
 	AG_Rect r;			/* Display area */
+	int sizeHint;
 } AG_Radio;
 
 #define AGRADIO(p) ((AG_Radio *)(p))

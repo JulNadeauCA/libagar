@@ -293,7 +293,6 @@ Destroy(void *_Nonnull obj)
 static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
-	const int maxItems = 10;
 	AG_Radio *rad = obj;
 
 	if (rad->nItems == 0) {
@@ -304,7 +303,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		       (rad->xSpacing << 1) + rad->max_w;
 
 		r->h = (rad->yPadding << 1) +
-		       (MIN(maxItems,rad->nItems) * rad->itemHeight);
+		       (MIN(rad->sizeHint,rad->nItems) * rad->itemHeight);
 	}
 }
 
@@ -463,6 +462,7 @@ Init(void *_Nonnull obj)
 	rad->r.y = 0;
 	rad->r.w = 0;
 	rad->r.h = 0;
+	rad->sizeHint = 10;
 
 	AG_AddEvent(rad, "font-changed", OnFontChange, NULL);
 	AG_SetEvent(rad, "mouse-button-down", MouseButtonDown, NULL);
