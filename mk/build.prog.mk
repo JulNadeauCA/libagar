@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+# Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@hypertriton.com>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@ WINDRES?=
 YACC?=		yacc
 
 ADAFLAGS?=
-ADABFLAGS?=
+ADABFLAGS?=	-x
 ASMFLAGS?=	-g -w-orphan-labels
 CFLAGS?=	-O -g
 CPPFLAGS?=
@@ -128,10 +128,14 @@ regress: regress-subdir
 	@_cflags=""; _out="$@"; \
 	if [ "${PROG_PROFILE}" = "Yes" ]; then _cflags="-pg -DPROF"; fi; \
 	if [ "${HAVE_CC65}" = "yes" ]; then _out=`echo "$@" | sed 's/.o$$/.s/'`; fi; \
-	\
 	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $$_out ${CC_COMPILE} $<"; \
 	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $$_out ${CC_COMPILE} $<; \
-	\
+	if [ $$? != 0 ]; then \
+		echo "*"; \
+		echo "* $$_out compilation failed."; \
+		echo "*"; \
+		exit 1; \
+	fi; \
 	if [ "${HAVE_CC65}" = "yes" ]; then \
 		echo "ca65 -o $@ $$_out"; \
 		ca65 -o $@ $$_out; \
@@ -252,8 +256,11 @@ _prog_objs:
 		FLIST="$$FLIST $$F"; \
 	    done; \
 	    ${MAKE} $$FLIST; \
-	    if [ $$? != 0 ]; then \
-	        echo "${MAKE}: failure"; \
+	    _make_result="$$?"; \
+	    if [ $$_make_result != "0" ]; then \
+	        echo "*"; \
+	        echo "* Failed to make ${PROG} (${MAKE} returned $$_make_result)"; \
+	        echo "*"; \
 		exit 1; \
 	    fi; \
 	fi

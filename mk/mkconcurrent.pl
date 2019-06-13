@@ -55,7 +55,6 @@ my @MKFILES = (
 	'^gen-includes\.pl$',
 	'^gen-includelinks\.pl$',
 	'^install-manpages\.sh$',
-	'^typesubst\.sh$',
 );
 my %V = ();
 my $line = '';

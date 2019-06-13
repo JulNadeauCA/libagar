@@ -56,7 +56,7 @@ WINDRES?=
 YACC?=		yacc
 
 ADAFLAGS?=
-ADABFLAGS?=
+ADABFLAGS?=	-x
 ASMFLAGS?=	-g -w-orphan-labels
 CFLAGS?=
 CPPFLAGS?=
@@ -140,10 +140,14 @@ regress: regress-subdir
 	if [ "${LIB_SHARED}" = "Yes" ]; then _cflags="${PICFLAGS}"; fi; \
 	if [ "${LIB_PROFILE}" = "Yes" ]; then _cflags="$$_cflags -pg -DPROF"; fi; \
 	if [ "${HAVE_CC65}" = "yes" ]; then _out=`echo "$@" | sed 's/.o$$/.s/'`; fi; \
-	\
 	echo "${CC} ${CFLAGS} ${CPPFLAGS} $$_cflags -o $$_out ${CC_COMPILE} $<"; \
 	${CC} ${CFLAGS} ${CPPFLAGS} $$_cflags -o $$_out ${CC_COMPILE} $<; \
-	\
+	if [ $$? != 0 ]; then \
+		echo "*"; \
+		echo "* $$_out compilation failed."; \
+		echo "*"; \
+		exit 1; \
+	fi; \
 	if [ "${HAVE_CC65}" = "yes" ]; then \
 		echo "ca65 -o $@ $$_out"; \
 		ca65 -o $@ $$_out; \
