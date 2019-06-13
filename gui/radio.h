@@ -37,7 +37,7 @@ typedef struct ag_radio {
 	int radius;			/* Control radius in pixels */
 	int itemHeight;
 	AG_Rect r;			/* Display area */
-	int sizeHint;
+	int wPre, hPre;			/* Size hint */
 } AG_Radio;
 
 #define AGRADIO(p) ((AG_Radio *)(p))
@@ -70,6 +70,7 @@ int AG_RadioAddItemHK(AG_Radio *_Nonnull, AG_KeySym, const char *_Nonnull, ...)
                      FORMAT_ATTRIBUTE(printf,3,4);
 
 void AG_RadioClearItems(AG_Radio *_Nonnull);
+void AG_RadioSizeHint(AG_Radio *_Nonnull, int, const char *);
 __END_DECLS
 
 #include <agar/gui/close.h>

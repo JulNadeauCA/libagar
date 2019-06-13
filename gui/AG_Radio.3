@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -61,6 +61,9 @@ widget implements a group of "radio" buttons.
 .Ft void
 .Fn AG_RadioItemsFromArray "AG_Radio *radio" "const char *items[]"
 .Pp
+.Ft "void"
+.Fn AG_RadioSizeHint "AG_Radio *radio" "Uint nLines" "const char *text"
+.Pp
 .Ft int
 .Fn AG_RadioAddItem "AG_Radio *radio" "const char *format" "..."
 .Pp
@@ -118,6 +121,19 @@ The
 function inserts a set of radio buttons from the given NULL-terminated
 array of strings.
 If there are already buttons in the group, they are preserved.
+.Pp
+.Fn AG_RadioSizeHint
+specifies an alternate initial size requisition expressed as a number
+of lines
+.Fa nLines
+(or -1 = auto)
+and the rendered pixel width of
+.Fa text
+(or NULL = auto).
+By default,
+.Nm
+will auto-size based on the set of radio items at the time of the size
+requisition.
 .Pp
 .Fn AG_RadioAddItem
 inserts a single radio button.

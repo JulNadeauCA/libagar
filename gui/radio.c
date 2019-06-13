@@ -222,6 +222,16 @@ AG_RadioClearItems(AG_Radio *rad)
 	AG_Redraw(rad);
 }
 
+/* Specify an alternate initial size requisition. */
+void
+AG_RadioSizeHint(AG_Radio *rad, int nLines, const char *text)
+{
+	AG_ObjectLock(rad);
+	AG_TextSize(text, &rad->wPre, NULL);
+	rad->hPre = nLines;
+	AG_ObjectUnlock(rad);
+}
+
 static void
 Draw(void *_Nonnull obj)
 {
@@ -300,10 +310,19 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		r->h = 0;
 	} else {
 		r->w = (rad->xPadding << 1) + (rad->radius << 1) +
-		       (rad->xSpacing << 1) + rad->max_w;
+		       (rad->xSpacing << 1);
+		if (rad->wPre != -1) {
+			r->w += rad->wPre;
+		} else {
+			r->w += rad->max_w;
+		}
 
-		r->h = (rad->yPadding << 1) +
-		       (MIN(rad->sizeHint,rad->nItems) * rad->itemHeight);
+		r->h = (rad->yPadding << 1);
+		if (rad->hPre != -1) {
+			r->h += (rad->hPre * rad->itemHeight);
+		} else {
+			r->h += (rad->nItems * rad->itemHeight);
+		}
 	}
 }
 
@@ -462,7 +481,8 @@ Init(void *_Nonnull obj)
 	rad->r.y = 0;
 	rad->r.w = 0;
 	rad->r.h = 0;
-	rad->sizeHint = 10;
+	rad->wPre = -1;
+	rad->hPre = -1;
 
 	AG_AddEvent(rad, "font-changed", OnFontChange, NULL);
 	AG_SetEvent(rad, "mouse-button-down", MouseButtonDown, NULL);
