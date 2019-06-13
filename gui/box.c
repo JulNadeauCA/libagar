@@ -513,13 +513,13 @@ Edit(void *_Nonnull obj)
 
 	AG_SpacerNewHoriz(box);
 
-	num = AG_NumericalNewIntR(box, 0, "px", _("Padding: "), &tgt->padding, 0, 255);
+	num = AG_NumericalNewIntR(box, 0, NULL, _("Padding: "), &tgt->padding, 0, 255);
 	AG_SetEvent(num, "numerical-changed", UpdateWindowOf,"%p",tgt);
 
-	num = AG_NumericalNewIntR(box, 0, "px", _("Spacing: "), &tgt->spacing, 0, 255);
+	num = AG_NumericalNewIntR(box, 0, NULL, _("Spacing: "), &tgt->spacing, 0, 255);
 	AG_SetEvent(num, "numerical-changed", UpdateWindowOf,"%p",tgt);
 
-	num = AG_NumericalNewIntR(box, 0, "px", _("Depth: "), &tgt->depth, -127, 127);
+	num = AG_NumericalNewIntR(box, 0, NULL, _("Depth: "), &tgt->depth, -127, 127);
 	AG_SetEvent(num, "numerical-changed", UpdateWindowOf,"%p",tgt);
 	
 	AG_SpacerNewHoriz(box);
