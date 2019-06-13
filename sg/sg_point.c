@@ -74,14 +74,14 @@ static void *_Nullable
 Edit(void *_Nonnull p, SG_View *_Nullable sgv)
 {
 	SG_Point *pt = p;
-	AG_Mutex *lock = &OBJECT(pt)->pvt.lock;
 	AG_Box *box;
 	AG_Numerical *num;
 
 	box = AG_BoxNew(NULL, AG_BOX_VERT, AG_BOX_HFILL);
 	num = AG_NumericalNew(box, 0, "px", _("Point size"));
-	AG_BindFloatMp(num, "value", &pt->size, lock);
-
+#ifdef AG_THREADS
+	AG_BindFloatMp(num, "value", &pt->size, &OBJECT(pt)->pvt.lock);
+#endif
 	return (box);
 }
 

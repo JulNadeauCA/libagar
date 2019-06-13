@@ -152,7 +152,6 @@ AG_SetError(const char *fmt, ...)
 /* Retrieve the error message string. */
 const char *
 AG_GetError(void)
-    _Pure_Attribute_If_Unthreaded
 {
 #ifdef AG_THREADS
 	return ((const char *)AG_ThreadKeyGet(agErrorMsgKey));
@@ -207,7 +206,6 @@ AG_SetErrorCode(AG_ErrorCode code)
 /* Retrieve the symbolic error code. */
 AG_ErrorCode
 AG_GetErrorCode(void)
-    _Pure_Attribute_If_Unthreaded
 {
 #ifdef AG_THREADS
 	return (AG_ErrorCode)AG_ThreadKeyGet(agErrorCodeKey);

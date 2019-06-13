@@ -99,10 +99,11 @@ AU_OpenOut(const char *path, int rate, int ch)
 
 	for (i = 0; i < dev->bufMax*ch; i++)
 		buf[i] = 0.0f;
-
+#ifdef AG_THREADS
 	AG_MutexInit(&dev->lock);
 	AG_CondInit(&dev->wrRdy);
 	AG_CondInit(&dev->rdRdy);
+#endif
 	dev->chan = NULL;
 	dev->nChan = 0;
 
@@ -142,9 +143,11 @@ AU_CloseOut(AU_DevOut *dev)
 		dev->cls->Destroy(dev);
 	}
 	Free(dev->chan);
+#ifdef AG_THREADS
 	AG_CondDestroy(&dev->wrRdy);
 	AG_CondDestroy(&dev->rdRdy);
 	AG_MutexDestroy(&dev->lock);
+#endif
 	free(dev->buf);
 	free(dev);
 }

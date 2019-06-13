@@ -60,6 +60,7 @@ M_EditTranslate3(void *parent, const char *label, M_Matrix44 *T)
 	return (box);
 }
 
+# ifdef AG_THREADS
 /* Edit a 3-vector matrix translation (mutex-bound). */
 void *
 M_EditTranslate3Mp(void *parent, const char *label, M_Matrix44 *T,
@@ -85,5 +86,6 @@ M_EditTranslate3Mp(void *parent, const char *label, M_Matrix44 *T,
 	}
 	return (box);
 }
+# endif /* AG_THREADS */
 
 #endif /* ENABLE_GUI */

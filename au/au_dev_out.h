@@ -56,7 +56,9 @@ typedef struct au_channel {
 } AU_Channel;
 
 typedef struct au_dev_out {
+#ifdef AG_THREADS
 	_Nonnull_Mutex AG_Mutex lock;		/* Lock protecting access */
+#endif
 	const AU_DevOutClass *_Nonnull cls;	/* Class description */
 	Uint flags;
 #define AU_DEV_OUT_THREADED	0x01	/* Device uses separate threads */
@@ -70,8 +72,9 @@ typedef struct au_dev_out {
 	AG_Size bufSize;		/* Buffer content size (frames) */
 	AG_Size bufMax;			/* Total buffer size (frames) */
 	int nOverruns;			/* Overruns recorded */
+#ifdef AG_THREADS
 	_Nonnull AG_Cond wrRdy, rdRdy;	/* Buffer status */
-
+#endif
 	AU_Channel *_Nullable chan;	/* Virtual channels */
 	Uint                 nChan;
 } AU_DevOut;

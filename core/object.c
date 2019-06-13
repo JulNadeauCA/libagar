@@ -301,9 +301,8 @@ fail:
  * Search an object and its children for a dependency upon robj.
  * The object's VFS must be locked.
  */
-static int
+static int _Pure_Attribute_If_Unthreaded
 FindObjectInUse(void *_Nonnull p, void *_Nonnull robj)
-    _Pure_Attribute_If_Unthreaded
 {
 	AG_Object *ob = p, *cob;
 	AG_ObjectDep *dep;
