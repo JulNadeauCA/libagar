@@ -139,11 +139,13 @@ _Nonnull_Mutex AG_Mutex agTextLock;
 static TAILQ_HEAD(ag_fontq, ag_font) fonts;
 AG_Font *_Nullable agDefaultFont = NULL;
 
+#ifdef HAVE_FREETYPE
 static AG_Surface *_Nonnull TextRenderFT(const AG_Char *_Nonnull);
 static void TextRenderFT_Underline(AG_TTFFont *_Nonnull, AG_Surface *_Nonnull, int);
-#ifdef SYMBOLS
+# ifdef SYMBOLS
 static int  TextRenderSymbol(Uint, AG_Surface *_Nonnull, int,int);
-#endif
+# endif
+#endif /* HAVE_FREETYPE */
 static AG_Glyph *_Nonnull TextRenderGlyph_Miss(AG_Driver *_Nonnull, AG_Char);
 
 static void AG_TextStateInit(void);
