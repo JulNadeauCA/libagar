@@ -2040,13 +2040,6 @@ AG_WindowSetIcon(AG_Window *win, const AG_Surface *S)
 	AG_IconSetSurface(win->icon, S);
 }
 
-/* Set the icon of a window from the contents of a surface. */
-void
-AG_WindowSetIconNODUP(AG_Window *win, AG_Surface *S)
-{
-	AG_IconSetSurfaceNODUP(win->icon, S);
-}
-
 /* Commit any pending focus change. The agDrivers VFS must be locked. */
 void
 AG_WindowProcessFocusChange(void)
@@ -2831,8 +2824,8 @@ Edit(void *_Nonnull obj)
 	    _("Pinned to: %[objName] @ (AG_Window *)%p"),
 	    &tgt->pinnedTo, &tgt->pinnedTo);
 
-	AG_NumericalNewInt(rBox, 0, NULL, _("View X: "), &tgt->r.x);
-	AG_NumericalNewInt(rBox, 0, NULL, _("View Y: "), &tgt->r.y);
+	AG_NumericalNewInt(rBox, 0, NULL, _("View X: "), &WIDGET(tgt)->x);
+	AG_NumericalNewInt(rBox, 0, NULL, _("View Y: "), &WIDGET(tgt)->y);
 	AG_NumericalNewInt(rBox, 0, NULL, _("View W: "), &tgt->r.w);
 	AG_NumericalNewInt(rBox, 0, NULL, _("View H: "), &tgt->r.h);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Saved X: "), &tgt->rSaved.x);
@@ -2862,7 +2855,7 @@ Edit(void *_Nonnull obj)
 	AG_RadioNewUint(rBox, 0, agWindowAlignmentNames, &tgt->alignment);
 
 	AG_LabelNewS(rBox, 0, _("EWMH Window Type:"));
-	AG_RadioNewUint(rBox, AG_RADIO_HFILL, agWindowWmTypeNames, &tgt->wmType);
+	AG_RadioNewUint(rBox, 0, agWindowWmTypeNames, &tgt->wmType);
 
 	AG_SetStyle(box, "font-size", "80%");
 	return (box);

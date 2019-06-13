@@ -108,9 +108,6 @@ event is raised.
 .Fn AG_WindowSetIcon "AG_Window *win" "AG_Surface *surface"
 .Pp
 .Ft "void"
-.Fn AG_WindowSetIconNODUP "AG_Window *win" "AG_Surface *surface"
-.Pp
-.Ft "void"
 .Fn AG_WindowSetCloseAction "AG_Window *win" "eum ag_window_close_action action"
 .Pp
 .Ft "void"
@@ -254,10 +251,6 @@ function configures an alternate icon for the window.
 This icon will be used by Agar's internal window manager whenever the window
 is minimized.
 The given surface will be duplicated and rescaled if necessary.
-The
-.Fn AG_WindowSetIconNODUP
-variant does not duplicate the provided surface, which must remain valid until
-the window is destroyed.
 .Pp
 The
 .Fn AG_WindowSetCloseAction
