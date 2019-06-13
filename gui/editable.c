@@ -943,7 +943,11 @@ Draw(void *_Nonnull obj)
 	int inSel = 0;
 
 	if (bgColor->a != AG_TRANSPARENT) {
-		AG_Rect r = { 0, 0, WIDTH(ed), HEIGHT(ed) };
+		AG_Rect r;
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(ed);
+		r.h = HEIGHT(ed);
 		AG_DrawRectFilled(ed, &r, bgColor);
 	}
 	if ((buf = GetBuffer(ed)) == NULL) {
