@@ -1,7 +1,8 @@
 TOP=	..
 include ${TOP}/Makefile.config
 
-SUBDIR=	agar-disasm \
+SUBDIR=	agardb \
+	agar-disasm \
 	rgedit \
 	sgedit \
 	skedit
