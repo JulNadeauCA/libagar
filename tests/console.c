@@ -5,17 +5,16 @@
 
 #include "agartest.h"
 
-AG_Textbox *textbox;
-
 static void
 AppendLine(AG_Event *event)
 {
+	AG_Textbox *tb = AG_SELF();
 	AG_Console *cons = AG_PTR(1);
 	char *s;
 	
-	s = AG_TextboxDupString(textbox);
+	s = AG_TextboxDupString(tb);
 	AG_ConsoleMsgS(cons, s);
-	AG_TextboxSetString(textbox, "");
+	AG_TextboxSetString(tb, "");
 	Free(s);
 }
 
@@ -28,6 +27,47 @@ Enter100Lines(AG_Event *event)
 
 	for (i = 0; i <= 100; i++)
 		AG_ConsoleMsg(cons, "%d) %s", i, text);
+}
+
+static void
+FollowFile(AG_Event *event)
+{
+	AG_Button *btnOpen = AG_SELF();
+	AG_Console *cons = AG_PTR(1);
+	char *file = AG_STRING(2);
+	Uint flags = AG_UINT(3);
+	char *label = AG_STRING(4);
+	AG_ConsoleFile *cf;
+
+	if (AG_Defined(cons, file)) {
+		AG_ConsoleMsgS(cons, _("File is already open"));
+		return;
+	}
+	if ((cf = AG_ConsoleOpenFile(cons, label, file, 0, flags)) == NULL) {
+		AG_ConsoleMsgS(cons, AG_GetError());
+		return;
+	}
+	AG_ConsoleMsg(cons, _("Opened %s (fd = %d)"), cf->label, cf->fd);
+	AG_SetPointer(cons, file, cf);
+	AG_WidgetDisable(btnOpen);
+}
+
+static void
+CloseFile(AG_Event *event)
+{
+	AG_Console *cons = AG_PTR(1);
+	AG_Button *btnOpen = AG_PTR(2);
+	char *file = AG_STRING(3);
+	AG_ConsoleFile *cf;
+
+	if (!AG_Defined(cons, file) ||
+	    (cf = AG_GetPointer(cons, file)) == NULL) {
+		return;
+	}
+	AG_ConsoleMsg(cons, _("Closing %s"), cf->label);
+	AG_ConsoleClose(cons, cf);
+	AG_Unset(cons, file);
+	AG_WidgetEnable(btnOpen);
 }
 
 static void
@@ -44,24 +84,56 @@ TestGUI(void *obj, AG_Window *win)
 	AG_Console *cons;
 	AG_Box *box;
 	AG_Button *btn;
+	AG_Textbox *tb;
 
 	cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
+	AG_SetStyle(cons, "font-family", "Courier");
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	AG_SetStyle(box, "font-size", "200%");
 	{
-		textbox = AG_TextboxNew(box, AG_TEXTBOX_EXCL|AG_TEXTBOX_HFILL,
-		    "Input: ");
-		AG_SetEvent(textbox, "textbox-return", AppendLine, "%p", cons);
-		AG_WidgetFocus(textbox);
+		tb = AG_TextboxNew(box,
+		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
+		    _("Input: "));
+		AG_SetEvent(tb, "textbox-return", AppendLine, "%p", cons);
+		AG_WidgetFocus(tb);
 
 		btn = AG_ButtonNewFn(box, 0, "OK", AppendLine, "%p", cons);
 		AG_WidgetSetFocusable(btn, 0);
 	}
 
-	box = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
 	{
 		AG_ButtonNewFn(box, 0, "Clear", ClearLines, "%p", cons);
 		AG_ButtonNewFn(box, 0, "Enter 100 lines", Enter100Lines, "%p", cons);
+	}
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
+	{
+		const char *msglog = "/var/log/messages";
+
+		btn = AG_ButtonNewFn(box, 0, "Follow /var/log/messages",
+		    FollowFile, "%p,%s,%u,%s", cons, msglog, 0, "messages");
+		AG_ButtonNewFn(box, 0, "Close messages",
+		    CloseFile, "%p,%p,%s", cons, btn, msglog);
+	}
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
+	{
+		const char *utxlog = "/var/log/utx.log";
+
+		btn = AG_ButtonNewFn(box, 0, "Follow /var/log/utx.log",
+		    FollowFile, "%p,%s,%u,%s", cons, utxlog,
+		                               AG_CONSOLE_FILE_BINARY, "utxlog");
+		AG_ButtonNewFn(box, 0, "Close utx.log",
+		    CloseFile, "%p,%p,%s", cons, btn, utxlog);
+	}
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
+	{
+		const char *devurandom = "/dev/urandom";
+
+		btn = AG_ButtonNewFn(box, 0, "Follow /dev/urandom",
+		    FollowFile, "%p,%s,%u,%s", cons, devurandom,
+		                               AG_CONSOLE_FILE_BINARY, "urandom");
+		AG_ButtonNewFn(box, 0, "Close urandom",
+		    CloseFile, "%p,%p,%s", cons, btn, devurandom);
 	}
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 30, 30);
 	return (0);

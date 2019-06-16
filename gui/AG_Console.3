@@ -109,7 +109,7 @@ function sets the padding around log entries in pixels.
 .Fn AG_ConsoleClear "AG_Console *cons"
 .Pp
 .Ft "char *"
-.Fn AG_ConsoleExportText "AG_Console *cons" "int nativeNewlines"
+.Fn AG_ConsoleExportText "AG_Console *cons" "enum ag_newline_type newline"
 .Pp
 .nr nS 0
 The
@@ -149,11 +149,77 @@ clears all messages from the console.
 .Pp
 The
 .Fn AG_ConsoleExportText
-routine returns a C string containing the currently selected lines.
-The lines are joined with newlines.
+routine returns a C string containing all currently selected lines,
+joined by newlines of the given variety.
+.Sh FILE MONITORING
+.nr nS 1
+.Ft "AG_ConsoleFile *"
+.Fn AG_ConsoleOpenFile "AG_Console *cons" "const char *label" "const char *file" "enum ag_newline_type newline" "Uint flags"
+.Pp
+.Ft "AG_ConsoleFile *"
+.Fn AG_ConsoleOpenFD "AG_Console *cons" "const char *label" "int fd" "enum ag_newline_type newline" "Uint flags"
+.Pp
+.Ft "AG_ConsoleFile *"
+.Fn AG_ConsoleOpenStream "AG_Console *cons" "const char *label" "FILE *f" "enum ag_newline_type newline" "Uint flags"
+.Pp
+.Ft void
+.Fn AG_ConsoleClose "AG_Console *cons" "AG_ConsoleFile *cf"
+.Pp
+.nr nS 0
+.Fn AG_ConsoleOpenFile
+opens a file for reading, displays its contents on the console and then
+arranges for
+.Nm
+to follow changes made to the file (similar to "tail -f" in Unix).
+Internally the function uses
+.Xr AG_AddEventSink 3
+to set up an event sink of type
+.Dv AG_SINK_READ
+on the open file descriptor.
+.Pp
+The
+.Fa newline
+argument indicates the style of newline to use:
+.Bd -literal
+enum ag_newline_type {
+	AG_NEWLINE_LF,    /* Unix, Amiga, BeOS, Multics, RISC OS */
+	AG_NEWLINE_CR_LF, /* DOS/Windows, early non-Unix */
+	AG_NEWLINE_CR,    /* Commodore 8-bit machines (C64/128) */
+};
+.Ed
+.Pp
+Possible
+.Fa flags
+include:
+.Bd -literal
+#define AG_CONSOLE_FILE_BINARY     0x01  /* Binary hex dump */
+#define AG_CONSOLE_FILE_LEAVE_OPEN 0x02  /* Don't close fd on detach */
+.Ed
+.Pp
 If
-.Fa nativeNewlines
-is non-zero, platform-specific newlines are used.
+.Dv AG_CONSOLE_FILE_BINARY
+is used then
+.Nm
+produces a canonical hex+ASCII dump of the file (and any changes to it).
+.Pp
+The
+.Dv AG_CONSOLE_FILE_LEAVE_OPEN
+option causes
+.Fn AG_ConsoleClose
+to leave the file descriptor (or
+.Ft "FILE *"
+handle) open.
+.Pp
+The
+.Fn AG_ConsoleOpenFD
+variant accepts an integer file descriptor, and
+.Fn AG_ConsoleOpenFILE
+accepts the
+.Ft "FILE *"
+handle of an open stream.
+.Pp
+.Fn AG_ConsoleClose
+closes a file being followed.
 .Sh EVENTS
 The
 .Nm

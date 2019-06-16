@@ -39,7 +39,9 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <stdio.h>
 #include <errno.h>
+#include <ctype.h>
 
 AG_Console *
 AG_ConsoleNew(void *parent, Uint flags)
@@ -152,6 +154,28 @@ PageDown(AG_Event *_Nonnull event)
 }
 
 static void
+GoToTop(AG_Event *_Nonnull event)
+{
+	AG_Console *cons = AG_SELF();
+
+	cons->rOffs = 0;
+	AG_Redraw(cons);
+}
+
+static void
+GoToBottom(AG_Event *_Nonnull event)
+{
+	AG_Console *cons = AG_SELF();
+	int newOffs;
+
+	newOffs = cons->nLines - cons->rVisible;
+	if (newOffs < 0) { newOffs = 0; }
+	cons->rOffs = (Uint)newOffs;
+	AG_Redraw(cons);
+}
+
+/* Map mouse position to a line index. */
+static void
 MapLine(AG_Console *_Nonnull cons, int yMouse, int *_Nonnull nLine)
 {
 	Uint sel;
@@ -170,23 +194,33 @@ MapLine(AG_Console *_Nonnull cons, int yMouse, int *_Nonnull nLine)
 	}
 }
 
-/* Export selected lines to a single C string. */
+/*
+ * Merge all currently selected lines into a single C string, and
+ * separate the lines by newlines of the specified variety.
+ */
 char *
-AG_ConsoleExportText(AG_Console *cons, int nativeNL)
+AG_ConsoleExportText(AG_Console *cons, enum ag_newline_type nl)
 {
+	const AG_NewlineFormat *newline;
 	char *s, *ps;
-	AG_Size sizeReq = 1;
+	AG_Size sizeReq=1, newlineLen;
 	int i, dir;
 
-	if (cons->pos == -1) {
+	if (cons->pos == -1)
 		return (NULL);
-	}
+#ifdef AG_DEBUG
+	if (nl >= AG_NEWLINE_LAST) { AG_FatalError("newline arg"); }
+#endif
+	newline = &agNewlineFormats[nl];
+	newlineLen = newline->len;
+
 	dir = (cons->sel < 0) ? -1 : +1;
 	for (i = cons->pos;
 	     (i >= 0 && i < cons->nLines);
 	     i += dir) {
 		AG_ConsoleLine *ln = cons->lines[i];
-		sizeReq += ln->len + 2; /* \r\n */
+
+		sizeReq += ln->len + newlineLen;
 		if (i == cons->pos+cons->sel)
 			break;
 	}
@@ -198,22 +232,11 @@ AG_ConsoleExportText(AG_Console *cons, int nativeNL)
 	for (i = cons->pos;
 	     (i >= 0 && i < cons->nLines);
 	     i += dir) {
-		AG_ConsoleLine *ln = cons->lines[i];
+		const AG_ConsoleLine *ln = cons->lines[i];
 
 		memcpy(ps, ln->text, ln->len);
-#ifdef _WIN32
-		if (nativeNL) {
-			ps[ln->len] = '\r';
-			ps[ln->len+1] = '\n';
-			ps[ln->len+2] = '\0';
-			ps += ln->len + 2;
-		} else
-#endif
-		{
-			ps[ln->len] = '\n';
-			ps[ln->len+1] = '\0';
-			ps += ln->len + 1;
-		}
+		memcpy(&ps[ln->len], newline->s, newlineLen+1);
+		ps += newlineLen;
 		if (i == cons->pos+cons->sel)
 			break;
 	}
@@ -227,7 +250,7 @@ MenuCopy(AG_Event *_Nonnull event)
 	AG_EditableClipboard *cb = &agEditableClipbrd;
 	char *s;
 
-	if ((s = AG_ConsoleExportText(cons, 0)) == NULL) {
+	if ((s = AG_ConsoleExportText(cons, AG_NEWLINE_NATIVE)) == NULL) {
 		return;
 	}
 #ifdef AG_UNICODE
@@ -261,7 +284,7 @@ MenuExportToFileTXT(AG_Event *_Nonnull event)
 	char *path = AG_STRING(2), *s;
 	FILE *f;
 
-	if ((s = AG_ConsoleExportText(cons, 1)) == NULL) {
+	if ((s = AG_ConsoleExportText(cons, AG_NEWLINE_NATIVE)) == NULL) {
 		goto fail;
 	}
 	if ((f = fopen(path, "wb")) == NULL) {
@@ -450,8 +473,8 @@ Init(void *_Nonnull obj)
 {
 	AG_Console *cons = obj;
 
-	WIDGET(cons)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
-
+	WIDGET(cons)->flags |= AG_WIDGET_FOCUSABLE |
+	                       AG_WIDGET_USE_TEXT;
 	cons->flags = 0;
 	cons->padding = 4;
 	cons->lines = NULL;
@@ -469,33 +492,40 @@ Init(void *_Nonnull obj)
 	cons->r.w = 0;
 	cons->r.h = 0;
 	cons->scrollTo = NULL;
+	TAILQ_INIT(&cons->files);
 
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT,
-	    AG_SCROLLBAR_NOAUTOHIDE|AG_SCROLLBAR_EXCL);
-	AG_WidgetSetFocusable(cons->vBar, 0);
-	AG_SetUint(cons->vBar, "min", 0);
-	AG_BindUint(cons->vBar, "max", &cons->nLines);
-	AG_BindUint(cons->vBar, "visible", &cons->rVisible);
-	AG_BindUint(cons->vBar, "value", &cons->rOffs);
+	    AG_SCROLLBAR_NOAUTOHIDE | AG_SCROLLBAR_EXCL);
+	{
+		AG_WidgetSetFocusable(cons->vBar, 0);
+		AG_SetUint(cons->vBar, "min", 0);
+		AG_BindUint(cons->vBar, "max", &cons->nLines);
+		AG_BindUint(cons->vBar, "visible", &cons->rVisible);
+		AG_BindUint(cons->vBar, "value", &cons->rOffs);
+	}
 
 	cons->hBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_HORIZ,
-	    AG_SCROLLBAR_NOAUTOHIDE|AG_SCROLLBAR_EXCL);
-	AG_WidgetSetFocusable(cons->hBar, 0);
-	AG_SetInt(cons->hBar, "min", 0);
-	AG_BindInt(cons->hBar, "max", &cons->wMax);
-	AG_BindInt(cons->hBar, "visible", &WIDGET(cons)->w);
-	AG_BindInt(cons->hBar, "value", &cons->xOffs);
+	    AG_SCROLLBAR_NOAUTOHIDE | AG_SCROLLBAR_EXCL);
+	{
+		AG_WidgetSetFocusable(cons->hBar, 0);
+		AG_SetInt(cons->hBar, "min", 0);
+		AG_BindInt(cons->hBar, "max", &cons->wMax);
+		AG_BindInt(cons->hBar, "visible", &WIDGET(cons)->w);
+		AG_BindInt(cons->hBar, "value", &cons->xOffs);
+	}
 
 	AG_ActionFn(cons, "BeginSelect", BeginSelect, NULL);
 	AG_ActionFn(cons, "CloseSelect", CloseSelect, NULL);
-	AG_ActionFn(cons, "PopupMenu",	PopupMenu, NULL);
-	AG_ActionFn(cons, "ScrollUp",	ScrollUp, NULL);
-	AG_ActionFn(cons, "ScrollDown",	ScrollDown, NULL);
-	AG_ActionFn(cons, "PageUp",	PageUp, NULL);
-	AG_ActionFn(cons, "PageDown",   PageDown, NULL);
+	AG_ActionFn(cons, "PopupMenu", PopupMenu, NULL);
+	AG_ActionFn(cons, "ScrollUp", ScrollUp, NULL);
+	AG_ActionFn(cons, "ScrollDown", ScrollDown, NULL);
+	AG_ActionFn(cons, "PageUp", PageUp, NULL);
+	AG_ActionFn(cons, "PageDown", PageDown, NULL);
+	AG_ActionFn(cons, "GoToTop", GoToTop, NULL);
+	AG_ActionFn(cons, "GoToBottom", GoToBottom, NULL);
+
 	AG_ActionOnButtonDown(cons, AG_MOUSE_LEFT, "BeginSelect");
 	AG_ActionOnButtonUp(cons, AG_MOUSE_LEFT, "CloseSelect");
-
 	AG_ActionOnButtonDown(cons, AG_MOUSE_RIGHT, "PopupMenu");
 	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELUP, "ScrollUp");
 	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELDOWN, "ScrollDown");
@@ -504,17 +534,12 @@ Init(void *_Nonnull obj)
 	AG_ActionOnKey(cons, AG_KEY_DOWN, AG_KEYMOD_ANY, "ScrollDown");
 	AG_ActionOnKey(cons, AG_KEY_PAGEUP, AG_KEYMOD_ANY, "PageUp");
 	AG_ActionOnKey(cons, AG_KEY_PAGEDOWN, AG_KEYMOD_ANY, "PageDown");
+	AG_ActionOnKey(cons, AG_KEY_HOME, AG_KEYMOD_ANY, "GoToTop");
+	AG_ActionOnKey(cons, AG_KEY_END, AG_KEYMOD_ANY, "GoToBottom");
 
 	AG_SetEvent(cons, "mouse-motion", MouseMotion, NULL);
 	AG_AddEvent(cons, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(cons, "widget-shown", OnFontChange, NULL);
-#if 0
-	AG_BindUint(cons, "nLines", &cons->nLines);
-	AG_BindUint(cons, "rOffs", &cons->rOffs);
-	AG_BindUint(cons, "rVisible", &cons->rVisible);
-	AG_BindInt(cons, "pos", &cons->pos);
-	AG_BindInt(cons, "sel", &cons->sel);
-#endif
 }
 
 static void
@@ -744,6 +769,75 @@ fail:
 	return (NULL);
 }
 
+/*
+ * Produce formatted binary data on the console.
+ * The default format is "%02x " for base 16, hexadecimal output.
+ */
+void
+AG_ConsoleBinary(AG_Console *cons, const void *data, AG_Size size,
+    const char *label, const char *fmt)
+{
+	const int columnWd = 16;
+	AG_Size pos;
+	char *buf;
+	AG_Size bufSize = size*3 + 1 + (2+columnWd+1) + 1;	/* One line */
+	int lineWd = 0;
+
+	if (label) {
+		bufSize += 1+strlen(label)+2;
+	}
+	if ((buf = Malloc(bufSize)) == NULL) {
+		Verbose("Console: Out of memory");
+		return;
+	}
+	if (label) {
+		Strlcpy(buf, "[", bufSize);
+		Strlcat(buf, label, bufSize);
+		Strlcat(buf, "] ", bufSize);
+	} else {
+		buf[0] = '\0';
+	}
+	for (pos=0; pos < size; pos++) {
+		const Uint8 val = ((const Uint8 *)data)[pos];
+		char num[4];
+
+		snprintf(num, sizeof(num), fmt ? fmt : "%02x ", val);
+		AG_Strlcat(buf, num, bufSize);
+		if (++lineWd == columnWd) {
+			int i;
+			char cp[2];
+
+			Strlcat(buf, " |", bufSize);
+			for (i = 0; i <= lineWd; i++) {
+				const Uint8 pval = ((const Uint8 *)data)
+				                   [pos-lineWd+i];
+
+				cp[0] = isprint(pval) ? pval : '.';
+				cp[1] = '\0';
+				Strlcat(buf, cp, bufSize);
+			}
+			Strlcat(buf, "|", bufSize);
+
+			if (AG_ConsoleAppendLine(cons, buf) == NULL) {
+				Verbose("Console: %s", AG_GetError());
+				return;
+			}
+			lineWd = 0;
+			buf[0] = '\0';
+
+			if (label) {
+				Strlcpy(buf, "[", bufSize);
+				Strlcat(buf, label, bufSize);
+				Strlcat(buf, "] ", bufSize);
+			} else {
+				buf[0] = '\0';
+			}
+		} else if (lineWd == 8) {
+			AG_Strlcat(buf, " ", bufSize);
+		}
+	}
+}
+
 static void
 InvalidateCachedLabel(AG_Console *cons, AG_ConsoleLine *ln)
 {
@@ -819,6 +913,179 @@ AG_ConsoleClear(AG_Console *cons)
 	cons->sel = 0;
 	AG_Redraw(cons);
 	AG_ObjectUnlock(cons);
+}
+
+/*
+ * Process available data on a file we are following.
+ */
+static int
+ConsoleReadFile(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
+{
+	AG_Console *cons = AG_PTR(1);
+	AG_ConsoleFile *cf = AG_PTR(2);
+	FILE *f = cf->pFILE;
+	char *buf, *pLine, *line;
+#if AG_MODEL == AG_LARGE
+	const size_t bufferMax = AG_BUFFER_MAX*8;
+#else
+	const size_t bufferMax = AG_BUFFER_MAX*4;
+#endif
+	size_t bufSize = bufferMax, rv, nRead=0;
+
+	if ((buf = TryMalloc(bufSize+1)) == NULL) {
+		return (0);
+	}
+	for (;;) {
+		clearerr(f);
+		rv = fread(&buf[nRead], 1, bufSize-nRead, f);
+		if (ferror(f)) {
+			AG_ConsoleMsg(cons, _("(read error on %s)"), cf->label);
+			goto out;
+		}
+		if (rv == 0) {
+			break;
+		}
+		if (rv == bufSize-nRead) {
+			char *bufNew;
+
+			if ((bufNew = TryRealloc(buf, bufSize+bufferMax+1)) == NULL) {
+				AG_ConsoleMsg(cons, _("(out of memory for %s)"),
+				    cf->label);
+				goto out;
+			}
+			buf = bufNew;
+			bufSize += bufferMax;
+		}
+		nRead += rv;
+	}
+	buf[nRead] = '\0';
+	cf->offs += nRead;
+
+	if (nRead > 0) {
+		if (cf->flags & AG_CONSOLE_FILE_BINARY) {
+			AG_ConsoleBinary(cons, buf, nRead, cf->label, NULL);
+		} else {
+			const char *newline_s = cf->newline->s;
+			char sep[2];
+
+			switch (cf->newline->len) {
+			case 1:
+				for (pLine = buf;
+				     (line = AG_Strsep(&pLine, newline_s)) != NULL; ) {
+				     	if (line[0] == '\0') {
+						continue;
+					}
+					AG_ConsoleMsgS(cons, line);
+				}
+				break;
+			case 2:
+				sep[0] = newline_s[0];		/* Cheat */
+				sep[1] = '\0';
+				for (pLine = buf;
+				     (line = AG_Strsep(&pLine, sep)) != NULL; ) {
+					if (line[0] == '\0') {
+						continue;
+					}
+					line[strlen(line)-1] = '\0'; 
+					AG_ConsoleMsgS(cons, line);
+				}
+				break;
+			}
+		}
+	}
+out:
+	free(buf);
+	return (0);
+}
+
+/*
+ * Read, dump and follow a file.
+ *
+ * Files can contain text with UTF-8. AG_CONSOLE_FILE_BINARY may be used
+ * to display a binary hex dump as opposed to text.
+ *
+ * (TODO: for named files, set up an extra AG_SINK_FSEVENT to detect
+ * truncation and deletion).
+ */
+AG_ConsoleFile *
+AG_ConsoleOpenFD(AG_Console *cons, const char *lbl, int fd,
+    enum ag_newline_type newline, Uint flags)
+{
+	AG_ConsoleFile *mon;
+	FILE *f;
+
+	if ((f = fdopen(fd, "r")) == NULL) {
+		AG_SetErrorS("fdopen");
+		return (NULL);
+	}
+	if ((mon = AG_ConsoleOpenStream(cons, lbl ? lbl : "fd", NULL,
+	    newline, flags)) == NULL) {
+		return (NULL);
+	}
+	mon->pFILE = fdopen(fd, "r");
+	mon->fd = fd;
+	return (mon);
+}
+AG_ConsoleFile *
+AG_ConsoleOpenFile(AG_Console *cons, const char *lbl, const char *file,
+    enum ag_newline_type newline, Uint flags)
+{
+	FILE *f;
+
+	if ((f = fopen(file, "r")) == NULL) {
+		AG_SetError(_("Could not open %s"), file);
+		return (NULL);
+	}
+	return AG_ConsoleOpenStream(cons,
+	    lbl ? lbl : AG_ShortFilename(file),
+	    (void *)f,
+	    newline, flags);
+}
+AG_ConsoleFile *
+AG_ConsoleOpenStream(AG_Console *cons, const char *lbl, void *pFILE,
+    enum ag_newline_type newline, Uint flags)
+{
+	FILE *f = (FILE *)pFILE;
+	AG_ConsoleFile *cf;
+
+	if ((cf = TryMalloc(sizeof(AG_ConsoleFile))) == NULL) {
+		return (NULL);
+	}
+	cf->flags = flags;
+	if ((cf->label = TryStrdup(lbl ? lbl : "stream")) == NULL) {
+		free(cf);
+		return (NULL);
+	}
+	cf->pFILE = pFILE;
+	cf->fd = fileno(f);
+	cf->offs = 0;
+	cf->color = NULL;
+#ifdef AG_DEBUG
+	if (newline >= AG_NEWLINE_LAST) { AG_FatalError("newline arg"); }
+#endif
+	cf->newline = &agNewlineFormats[newline];
+
+	AG_AddEventSink(AG_SINK_READ, cf->fd, 0,
+	    ConsoleReadFile, "%p,%p", cons, cf);
+
+	TAILQ_INSERT_TAIL(&cons->files, cf, files);
+	return (cf);
+}
+
+void
+AG_ConsoleClose(AG_Console *cons, AG_ConsoleFile *cf)
+{
+	if ((cf->flags & AG_CONSOLE_FILE_LEAVE_OPEN) == 0) {
+		if (cf->pFILE != NULL) {
+			fclose((FILE *)cf->pFILE);
+		} else {
+			if (cf->fd != -1)
+				close(cf->fd);
+		}
+	}
+	TAILQ_REMOVE(&cons->files, cf, files);
+	Free(cf->label);
+	free(cf);
 }
 
 AG_WidgetClass agConsoleClass = {
