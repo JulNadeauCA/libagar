@@ -87,6 +87,12 @@ enum ag_newline_type {
 #define AG_NEWLINE_DOS  AG_NEWLINE_CR_LF
 #define AG_NEWLINE_UNIX AG_NEWLINE_LF
 
+#if defined(__MSDOS__) || defined(__WIN32__) || defined(__BEOS__) || defined(__RISCOS__)
+# define AG_NEWLINE_NATIVE AG_NEWLINE_CR_LF
+#else
+# define AG_NEWLINE_NATIVE AG_NEWLINE_LF
+#endif
+
 __BEGIN_DECLS
 extern const unsigned char agStrcasecmpMapASCII[];
 extern const AG_NewlineFormat agNewlineFormats[];
