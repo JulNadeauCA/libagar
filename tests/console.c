@@ -30,6 +30,16 @@ Enter100Lines(AG_Event *event)
 }
 
 static void
+DumpCoreOf(AG_Event *event)
+{
+	AG_Console *cons = AG_PTR(1);
+	AG_Object *obj = AG_PTR(2);
+	AG_Size objSize = AG_UINT(3);
+
+	AG_ConsoleBinary(cons, obj, objSize, obj->name, NULL);
+}
+
+static void
 FollowFile(AG_Event *event)
 {
 	AG_Button *btnOpen = AG_SELF();
@@ -103,9 +113,16 @@ TestGUI(void *obj, AG_Window *win)
 
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonNewFn(box, 0, "Clear", ClearLines, "%p", cons);
-		AG_ButtonNewFn(box, 0, "Enter 100 lines", Enter100Lines, "%p", cons);
+		AG_ButtonNewFn(box, 0, "Clear",
+		    ClearLines, "%p", cons);
+		AG_ButtonNewFn(box, 0, "100 Lines",
+		    Enter100Lines, "%p", cons);
+		AG_ButtonNewFn(box, 0, "Dump Own Core",
+		    DumpCoreOf, "%p,%p,%u", cons, cons, sizeof(AG_Console));
+		AG_ButtonNewFn(box, 0, "Dump Window's Core",
+		    DumpCoreOf, "%p,%p,%u", cons, win, sizeof(AG_Window));
 	}
+#if !defined(__WIN32__)
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
 	{
 		const char *msglog = "/var/log/messages";
@@ -125,16 +142,7 @@ TestGUI(void *obj, AG_Window *win)
 		AG_ButtonNewFn(box, 0, "Close utx.log",
 		    CloseFile, "%p,%p,%s", cons, btn, utxlog);
 	}
-	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
-	{
-		const char *devurandom = "/dev/urandom";
-
-		btn = AG_ButtonNewFn(box, 0, "Follow /dev/urandom",
-		    FollowFile, "%p,%s,%u,%s", cons, devurandom,
-		                               AG_CONSOLE_FILE_BINARY, "urandom");
-		AG_ButtonNewFn(box, 0, "Close urandom",
-		    CloseFile, "%p,%p,%s", cons, btn, devurandom);
-	}
+#endif
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 30, 30);
 	return (0);
 }
