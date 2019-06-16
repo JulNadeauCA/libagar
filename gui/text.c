@@ -801,6 +801,9 @@ AG_TextSizeNat(const AG_Char *s, int *w, int *h)
 {
 	AG_TextMetrics tm;
 
+	if (s == NULL) {
+		return;
+	}
 	InitMetrics(&tm);
 	switch (agTextState->font->spec.type) {
 #ifdef HAVE_FREETYPE
@@ -1041,11 +1044,13 @@ AG_TextInfoS(const char *key, const char *s)
 	AG_Button *btnOK;
 	
 #ifdef AG_SERIALIZATION
-	Strlcpy(disableSw, "info.", sizeof(disableSw));
-	Strlcat(disableSw, key, sizeof(disableSw));
-	AG_ObjectLock(cfg);
-	if (AG_Defined(cfg,disableSw) && AG_GetInt(cfg,disableSw) == 1)
-		goto out;
+	if (key != NULL) {
+		Strlcpy(disableSw, "info.", sizeof(disableSw));
+		Strlcat(disableSw, key, sizeof(disableSw));
+		AG_ObjectLock(cfg);
+		if (AG_Defined(cfg,disableSw) && AG_GetInt(cfg,disableSw) == 1)
+			goto out;
+	}
 #endif
 	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
 	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
@@ -1061,16 +1066,19 @@ AG_TextInfoS(const char *key, const char *s)
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_HFILL | AG_VBOX_VFILL);
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 #ifdef AG_SERIALIZATION
-	cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
-	Vdisable = AG_SetInt(cfg, disableSw, 0);
-	AG_BindInt(cb, "state", &Vdisable->data.i);
+	if (key != NULL) {
+		cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL,
+		    _("Don't tell me again"));
+		Vdisable = AG_SetInt(cfg, disableSw, 0);
+		AG_BindInt(cb, "state", &Vdisable->data.i);
+	}
 #endif
 	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
-
 #ifdef AG_SERIALIZATION
 out:
-	AG_ObjectUnlock(cfg);
+	if (key != NULL)
+		AG_ObjectUnlock(cfg);
 #endif
 }
 
@@ -1105,11 +1113,13 @@ AG_TextWarningS(const char *key, const char *s)
 	AG_Button *btnOK;
 
 #ifdef AG_SERIALIZATION
-	Strlcpy(disableSw, "warn.", sizeof(disableSw));
-	Strlcat(disableSw, key, sizeof(disableSw));
-	AG_ObjectLock(cfg);
-	if (AG_Defined(cfg,disableSw) && AG_GetInt(cfg,disableSw) == 1)
-		goto out;
+	if (key != NULL) {
+		Strlcpy(disableSw, "warn.", sizeof(disableSw));
+		Strlcat(disableSw, key, sizeof(disableSw));
+		AG_ObjectLock(cfg);
+		if (AG_Defined(cfg,disableSw) && AG_GetInt(cfg,disableSw) == 1)
+			goto out;
+	}
 #endif
 	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NORESIZE |
 	                   AG_WINDOW_NOCLOSE | AG_WINDOW_NOMINIMIZE |
@@ -1127,16 +1137,20 @@ AG_TextWarningS(const char *key, const char *s)
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
 #ifdef AG_SERIALIZATION
-	cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
-	Vdisable = AG_SetInt(cfg, disableSw, 0);
-	AG_BindInt(cb, "state", &Vdisable->data.i);
+	if (key != NULL) {
+		cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL,
+		    _("Don't tell me again"));
+		Vdisable = AG_SetInt(cfg, disableSw, 0);
+		AG_BindInt(cb, "state", &Vdisable->data.i);
+	}
 #endif
 	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
 
 #ifdef AG_SERIALIZATION
 out:
-	AG_ObjectUnlock(cfg);
+	if (key != NULL)
+		AG_ObjectUnlock(cfg);
 #endif
 }
 

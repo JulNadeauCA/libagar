@@ -319,7 +319,9 @@ displays a standard error message using the value of
 .Xr AG_GetError 3 .
 .Pp
 .Fn AG_TextWarning
-displays a standard warning message, but also provides the user
+displays a standard warning message, but if
+.Fa disableKey
+is non-NULL, it also provides the user
 with a
 .Dq Don't show again
 checkbox.
@@ -340,10 +342,11 @@ setting.
 displays an informational message.
 Similar to
 .Fn AG_TextWarning ,
-a
+if
+.Fa disableKey
+is non-NULL then a
 .Dq Don't show again
-option is provided to the user (and the setting is referenced by
-.Fa disableKey ) .
+option is also provided to the user.
 .Pp
 The
 .Fn AG_TextTmsg

@@ -177,7 +177,7 @@ void               AG_TextClearGlyphCache(AG_Driver *_Nonnull);
 void AG_TextSize(const char *_Nullable, int *_Nullable, int *_Nullable);
 void AG_TextSizeMulti(const char *_Nonnull, int *_Nonnull, int *_Nonnull,
                       Uint *_Nullable *_Nonnull, Uint *_Nullable);
-void AG_TextSizeNat(const AG_Char *_Nonnull, int *_Nullable, int *_Nullable);
+void AG_TextSizeNat(const AG_Char *_Nullable, int *_Nullable, int *_Nullable);
 void AG_TextSizeMultiNat(const AG_Char *_Nonnull, int *_Nullable,
                          int *_Nullable, Uint *_Nullable *_Nonnull, Uint *_Nonnull);
 
@@ -191,8 +191,8 @@ void AG_TextTmsgS(enum ag_text_msg_title, Uint32, const char *_Nonnull);
 void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *_Nonnull, ...)
                 FORMAT_ATTRIBUTE(printf,3,4);
 #endif
-void AG_TextInfoS(const char *_Nonnull, const char *_Nonnull);
-void AG_TextInfo(const char *_Nonnull, const char *_Nonnull, ...)
+void AG_TextInfoS(const char *_Nullable, const char *_Nonnull);
+void AG_TextInfo(const char *_Nullable, const char *_Nonnull, ...)
                 FORMAT_ATTRIBUTE(printf,2,3);
 
 void AG_TextWarningS(const char *_Nonnull, const char *_Nonnull);
