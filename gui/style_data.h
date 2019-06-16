@@ -54,6 +54,13 @@ const char *agStyleDefault_Data =
 	"color#selected: rgb(0,15,80);\n"
 	"text-color: rgb(240,240,240);\n"
 	"}\n"
+	"AG_Scrollbar {\n"
+	"color: rgb(125,125,125);\n"
+	"color#focused: rgb(200,0,0);\n"
+	"color#disabled: rgb(160,160,160);\n"
+	"color#hover: rgb(130,130,130);\n"
+	"color#selected: rgb(50,50,120);\n"
+	"}\n"
 	"AG_ProgressBar {\n"
 	"color#selected: rgb(50,50,120);\n"
 	"text-color#selected: rgb(255,255,255);\n"
@@ -66,7 +73,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	1327,
+	1495,
 	&agStyleDefault_Data,
 	NULL
 };
