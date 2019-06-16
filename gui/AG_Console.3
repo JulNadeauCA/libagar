@@ -93,6 +93,9 @@ function sets the padding around log entries in pixels.
 .Ft "AG_ConsoleLine *"
 .Fn AG_ConsoleMsgS "AG_Console *cons" "const char *s"
 .Pp
+.Ft "AG_ConsoleLine *"
+.Fn AG_ConsoleBinary "AG_Console *cons" "const void *data" "AG_Size data_size" "const char *label" "const char *format"
+.Pp
 .Ft "void"
 .Fn AG_ConsoleMsgEdit "AG_ConsoleLine *line" "const char *s"
 .Pp
@@ -126,11 +129,20 @@ As a special case, if a
 .Fa cons
 argument of NULL is passed to
 .Fn AG_ConsoleMsg
-or
-.Fn AG_ConsoleMsgS ,
-the function prints the message with
+then the message is passed to
 .Xr AG_Verbose 3
-before returning NULL.
+(and the function returns NULL).
+.Pp
+.Fn AG_ConsoleBinary
+displays binary data in canonical hex+ASCII format.
+If non-NULL,
+.Fa label
+is prepended to every line.
+If non-NULL,
+.Fa format
+specifies an alternate format string (such as "%02d " for decimal).
+The default format is "%02x ".
+The format string must generate 3 characters.
 .Pp
 .Fn AG_ConsoleMsgEdit
 replaces an existing log entry's text with the given string.
