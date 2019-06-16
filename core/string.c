@@ -71,6 +71,7 @@
 # include <iconv.h>
 #endif
 
+/* Print buffer and table of format extensions for AG_Printf() */
 #ifdef AG_ENABLE_STRING
 static char *_Nullable agPrintBuf[AG_STRING_BUFFERS_MAX];
 # ifdef AG_THREADS
@@ -82,6 +83,19 @@ static Uint                       agFmtExtensionCount = 0;
 static _Nullable_Mutex AG_Mutex   agFmtExtensionsLock;
 # endif
 #endif /* AG_ENABLE_STRING */
+
+/* Map character encodings to possible newlines and their values. */
+const AG_NewlineFormat agNewlineFormats[] = {
+  { "US-ASCII", "LF",    1, "\n" },   /* Unix, Amiga, BeOS, Multics */
+  { "US-ASCII", "CR+LF", 2, "\r\n" }, /* DOS/Windows, early non-Unix */
+  { "US-ASCII", "CR",    1, "\r" },   /* Commodore 8-bit machines (C64/128) */
+#if 0
+  { "US-ASCII", "LF+CR", 2, "\n\r" }, /* Acorn BBC and RISC OS */
+  { "ATASCII",  "ATACR", 1, "\x9b" }, /* Atari 8-bit machines */
+  { "EBCDIC",   "NL",    1, "\x15" }, /* IBM mainframes */
+#endif
+  { NULL,       NULL,    0, NULL }
+};
 
 #include <agar/core/string_strcasecmp.h>
 

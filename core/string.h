@@ -65,8 +65,31 @@ typedef struct ag_fmt_string_ext {
 # define AG_FMTSTRING_BUFFER_GROW 128
 #endif /* AG_ENABLE_STRING */
 
+/* Possible newline value in a given character encoding */
+typedef struct ag_newline_format {
+	const char *encoding;		/* Character encoding */
+	const char *abbr;		/* Abbreviation */
+	int len;			/* Length of sequence (1..2) */
+	const char *s;			/* The sequence */
+} AG_NewlineFormat;
+
+enum ag_newline_type {
+	AG_NEWLINE_LF,			/* Unix, Amiga, BeOS, Multics, RISC OS */
+	AG_NEWLINE_CR_LF,		/* DOS/Windows, early non-Unix */
+	AG_NEWLINE_CR,			/* Commodore 8-bit machines (C64/128) */
+#if 0
+	AG_NEWLINE_LF_CR,		/* Acorn BBC and RISC OS */
+	AG_NEWLINE_ATA_CR,		/* Atari 8-bit machines */
+	AG_NEWLINE_EBCDIC,		/* IBM mainframes */
+#endif
+	AG_NEWLINE_LAST
+};
+#define AG_NEWLINE_DOS  AG_NEWLINE_CR_LF
+#define AG_NEWLINE_UNIX AG_NEWLINE_LF
+
 __BEGIN_DECLS
 extern const unsigned char agStrcasecmpMapASCII[];
+extern const AG_NewlineFormat agNewlineFormats[];
 
 #ifdef AG_ENABLE_STRING
 char *_Nonnull         AG_Printf(const char *_Nonnull, ...);
