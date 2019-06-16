@@ -112,13 +112,13 @@ package Agar.Widget is
   -------------------
   -- Widget Colors --
   -------------------
-  type Widget_Color_State is
-    (COLOR_DEFAULT_STATE,
-     COLOR_DISABLED_STATE,		-- #disabled
-     COLOR_FOCUSED_STATE,		-- #focused
-     COLOR_HOVER_STATE,			-- #hover
-     COLOR_SELECTED_STATE);		-- #selected
-  for Widget_Color_State'Size use C.int'Size;
+  type Widget_State is
+    (DEFAULT_STATE,			-- The default state
+     DISABLED_STATE,			-- Disabled input (#disabled)
+     FOCUSED_STATE,			-- Holds focus (#focused)
+     HOVER_STATE,			-- Has mouseover (#hover)
+     SELECTED_STATE);			-- Is an active selection (#selected)
+  for Widget_State'Size use C.int'Size;
 
   type Widget_Color is
     (COLOR_BACKGROUND,			-- Background fill
