@@ -1,4 +1,4 @@
-.\" Copyright (c) 2014 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2014-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,11 @@
 The
 .Nm
 routine loops, continually checking for low-level events and processing them.
+Its operation is governed by a registered set of
+.Em Event Sinks
+which determine the type of low-level events to monitor, and the procedures
+to invoke in order to handle them.
+.Pp
 The most common type of low-level events are:
 .Pp
 .Bl -enum -compact
@@ -52,9 +57,11 @@ events).
 This includes filesystem events and process monitoring.
 .El
 .Pp
-If thread support is available, Agar allows multiple instances of
+Concurrent instances of
 .Fn AG_EventLoop
-running concurrently under different threads.
+are allowed in multithreaded builds.
+In threaded builds, event sinks are associated with running thread at
+the time of creation (in thread-local storage).
 .Sh MAIN INTERFACE
 .nr nS 1
 .Ft "int"
@@ -67,22 +74,10 @@ running concurrently under different threads.
 .Fn AG_TerminateEv "AG_Event *event"
 .Pp
 .nr nS 0
-The
 .Fn AG_EventLoop
-routine blocks the current thread, waiting for low-level events, and
-processing them.
-The operation of
-.Nm
-is governed by a set of thread-specific event
-.Em sinks .
-.Pp
-Agar-based libraries such as Agar-GUI will automatically register
-event sinks as appropriate upon initialization (for example, graphics
-drivers based on the X Windows system may set up an event sink of type
-.Dv AG_SINK_READ
-to monitor activity on the X file descriptor).
-Applications are free to register their own event sinks using
-.Fn AG_AddEventSink .
+blocks the current thread, waiting for low-level events, and processing them
+until termination is requested.
+Its operation is governed by the registered set of event sinks.
 .Pp
 The
 .Fn AG_Terminate
@@ -128,6 +123,7 @@ for the exit code.
 .Pp
 .Ft "void"
 .Fn AG_DelEventSpinner "AG_EventSink *sink"
+.nr nS 0
 .Pp
 The
 .Fn AG_AddEventSink
@@ -238,10 +234,39 @@ Monitored process has called
 Monitored process has called
 .Xr exec 3 .
 .El
+.Sh EXAMPLES
+Agar's X11 driver
+.Xr AG_DriverGLX 3
+sets up an event sink of type
+.Dv AG_SINK_READ
+in order to receive events from the X file descriptor.
+.Pp
+For directory listings to refresh automatically on platforms which offer
+filesystem monitoring capabilities,
+.Xr AG_FileDlg 3
+uses
+.Dv AG_SINK_FSEVENT .
+.Pp
+The
+.Xr AG_ConsoleOpenFile 3
+feature of
+.Xr AG_Console 3
+sets up an event sink of type
+.Dv AG_SINK_READ
+to monitor changes on a file or stream.
+.Pp
+The
+.Xr agardb 1
+debugger uses
+.Dv AG_SINK_PROCEVENT
+to monitor events related to processes being debugged.
 .Sh SEE ALSO
 .Xr AG_CustomEventLoop 3 ,
 .Xr AG_Event 3 ,
-.Xr AG_Intro 3
+.Xr AG_Intro 3 ,
+.Xr poll 2 ,
+.Xr select 2 ,
+.Xr kqueue 2
 .Sh HISTORY
 The
 .Nm
