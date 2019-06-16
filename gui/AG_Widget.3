@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -80,17 +80,19 @@ typedef struct ag_widget_class {
 .Ed
 .Pp
 .Fn draw
-renders the widget to the graphics display.
+renders the widget to the graphics display (using OpenGL,
+.Xr AG_WidgetPrimitives 3 ,
+or other methods).
 The code under
 .Fn draw
-is referred to as the
-.Dq Rendering Context .
-Some functions (such as
-.Fn AG_WidgetBlitSurface )
-are unsafe to call outside Rendering Context.
+is referred to as
+.Em Rendering Context .
+Widget primitives and functions such as
+.Fn AG_WidgetBlitSurface
+are unsafe to call outside of Rendering Context.
 .Pp
 .Fn size_request
-should return an initial, preferred geometry in px (without any guarantee
+should return an initial, preferred geometry in pixels (without any guarantee
 that the request will be satisfied).
 For example, an
 .Xr AG_Label 3 ,
@@ -121,51 +123,45 @@ will not run).
 .Sh SIZING
 .nr nS 1
 .Ft "void"
-.Fn AG_Expand "AG_Widget *widget"
+.Fn AG_Expand "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_ExpandHoriz "AG_Widget *widget"
+.Fn AG_ExpandHoriz "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_ExpandVert "AG_Widget *widget"
+.Fn AG_ExpandVert "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetSizeReq "AG_Widget *widget" "AG_SizeReq *req"
+.Fn AG_WidgetSizeReq "AG_Widget *obj" "AG_SizeReq *req"
 .Pp
 .Ft "void"
-.Fn AG_WidgetSizeAlloc "AG_Widget *widget" "AG_SizeAlloc *alloc"
+.Fn AG_WidgetSizeAlloc "AG_Widget *obj" "AG_SizeAlloc *alloc"
 .Pp
 .Ft void
-.Fn AG_WidgetSetPosition "AG_Widget *widget" "int x" "int y"
+.Fn AG_WidgetSetPosition "AG_Widget *obj" "int x" "int y"
 .Pp
 .Ft void
-.Fn AG_WidgetSetSize "AG_Widget *widget" "int w" "int h"
+.Fn AG_WidgetSetSize "AG_Widget *obj" "int w" "int h"
 .Pp
 .Ft void
-.Fn AG_WidgetSetGeometry "AG_Widget *widget" "AG_Rect rect"
+.Fn AG_WidgetSetGeometry "AG_Widget *obj" "AG_Rect rect"
 .Pp
 .Ft void
-.Fn AG_WidgetUpdate "AG_Widget *widget"
+.Fn AG_WidgetUpdate "AG_Widget *obj"
 .Pp
 .nr nS 0
 .Fn AG_Expand
-makes the widget fill all available space in the parent.
+makes the widget fill all available space in its parent.
 .Fn AG_ExpandHoriz
 and
 .Fn AG_ExpandVert
-makes the widget fill the available space horizontally or vertically.
-.Pp
-Note: Most widget constructors accept
+expands only in the given direction.
+Most widget constructors also accept
 .Dv EXPAND ,
 .Dv HFILL
 and
 .Dv VFILL
-as option flags.
-Setting them is equivalent to calling
-.Fn AG_Expand ,
-.Fn AG_ExpandHoriz
-and
-.Fn AG_ExpandVert .
+options.
 .Pp
 .Fn AG_WidgetSizeReq
 invokes the
@@ -243,19 +239,117 @@ calls made in event context, or manual modifications of the
 fields of the
 .Nm
 structure.
+.Sh STYLING
+Style attributes for widgets may be defined:
+.Bl -bullet -compact
+.It
+on a per-instance basis by calling
+.Fn AG_SetStyle .
+.It
+on a per-instance basis (by "#id") in an
+.Xr AG_Stylesheet 3 .
+.It
+on a per-class basis in an
+.Xr AG_Stylesheet 3 .
+.El
+.Pp
+Style attributes include fonts, colors and spacing (margins and padding).
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn AG_SetStyle "AG_Widget *obj" "const char *attr" "const char *value"
+.Pp
+.Ft "void"
+.Fn AG_SetStyleF "AG_Widget *obj" "const char *attr" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_SetFont "AG_Widget *obj" "const AG_Font *font"
+.Pp
+.nr nS 0
+The
+.Fn AG_SetStyle
+function sets the specified style attribute to the given value.
+Available attributes for
+.Fa attr
+include:
+.Pp
+.Bl -tag -compact -width "font-family "
+.It font-family
+Font face specification: "Courier", "Terminal"
+.It font-size
+Font size: "10pts", "10.5pts", "80%" (relative to parent)
+.It font-weight
+Font weight: "bold", "normal" or "!parent"
+.It font-style
+Font style: "italic", "normal" or "!parent"
+.It color
+Main (or background) color for the widget.
+Colors are:
+.Pp
+.Bl -tag -width "Real hue/saturation/value " -compact
+.It "8-bit Device RGB"
+"r,g,b[,a]" or "rgb(r,g,b[,a])"
+.It "16-bit Device RGB"
+"rgb16(r,g,b[,a])"
+.It "Real hue/saturation/value"
+"hsv(h,s,v[,a])"
+.It "16-bit hex"
+"#rgb[a]"
+.It "32-bit hex"
+"#rrggbb[aa]"
+.It "64-bit hex"
+"#rrrrggggbbbb[aaaa]"
+.It "Color identifier"
+"darkblue"
+.It "Color string (needs CMS)"
+"CIEXYZ:X/Y/Z"
+.El
+.Pp
+Both RGB and HSV components can be expressed in "%" of the same color
+in the parent widget's palette.
+.It text-color
+Color for rendered text (see above)
+.It line-color
+Color for line drawings (see above)
+.It shape-color
+Color for polygons and other filled shapes (see above)
+.It border-color
+Color for cosmetic borders (see above)
+.El
+.Pp
+An optional selector may be appended to the attribute names:
+.Pp
+.Bl -tag -compact -width "disabled "
+.It "(none)"
+Default, unfocused state.
+.It "#disabled"
+Widget is in disabled state (DISABLED is set).
+.It "#focused"
+Widget holds focus (FOCUSED is set).
+.It "#hover"
+Cursor is hovering over (USE_MOUSEOVER and MOUSEOVER are set).
+.It "#selected"
+Widget represents an active selection.
+.El
+.Pp
+.Fn AG_SetFont
+sets the widget's default font attributes to match those of the given font
+(see
+.Xr AG_Text 3
+for details).
 .Sh INPUT STATE
 .nr nS 1
 .Ft "void"
-.Fn AG_WidgetEnable "AG_Widget *widget"
+.Fn AG_WidgetEnable "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetDisable "AG_Widget *widget"
+.Fn AG_WidgetDisable "AG_Widget *obj"
 .Pp
 .Ft "int"
-.Fn AG_WidgetEnabled "AG_Widget *widget"
+.Fn AG_WidgetEnabled "AG_Widget *obj"
 .Pp
 .Ft "int"
-.Fn AG_WidgetDisabled "AG_Widget *widget"
+.Fn AG_WidgetDisabled "AG_Widget *obj"
 .Pp
 .nr nS 0
 The "enabled" flag of a widget determines whether the user is allowed to modify
@@ -298,22 +392,22 @@ options).
 .Pp
 .nr nS 1
 .Ft "int"
-.Fn AG_WidgetSetFocusable "AG_Widget *widget" "int enable"
+.Fn AG_WidgetSetFocusable "AG_Widget *obj" "int enable"
 .Pp
 .Ft "int"
-.Fn AG_WidgetFocus "AG_Widget *widget"
+.Fn AG_WidgetFocus "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetUnfocus "AG_Widget *widget"
+.Fn AG_WidgetUnfocus "AG_Widget *obj"
 .Pp
 .Ft "int"
-.Fn AG_WidgetIsFocused "AG_Widget *widget"
+.Fn AG_WidgetIsFocused "AG_Widget *obj"
 .Pp
 .Ft "int"
-.Fn AG_WidgetIsFocusedInWindow "AG_Widget *widget"
+.Fn AG_WidgetIsFocusedInWindow "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetForwardFocus "AG_Widget *widget" "AG_Widget *widgetToFocus"
+.Fn AG_WidgetForwardFocus "AG_Widget *obj" "AG_Widget *widgetToFocus"
 .Pp
 .nr nS 0
 .Fn AG_WidgetSetFocusable
@@ -343,19 +437,16 @@ focus state of any parent windows).
 .Fn AG_WidgetForwardFocus
 arranges automatic forwarding of the focus to a specified widget.
 Whenever
-.Fa AG_WidgetFocus
-will be invoked on
-.Fa widget ,
-the focus will be given to
-.Fa widgetToFocus
-instead.
+.Fa obj
+gains focus, Agar will arrange for the focus to be transferred automatically to
+.Fa widgetToFocus .
 .Sh COORDINATES
 .nr nS 1
 .Ft int
-.Fn AG_WidgetArea "AG_Widget *widget" "int x" "int y"
+.Fn AG_WidgetArea "AG_Widget *obj" "int x" "int y"
 .Pp
 .Ft int
-.Fn AG_WidgetRelativeArea "AG_Widget *widget" "int x" "int y"
+.Fn AG_WidgetRelativeArea "AG_Widget *obj" "int x" "int y"
 .Pp
 .nr nS 0
 The
@@ -379,31 +470,31 @@ only.
 .Pp
 .nr nS 1
 .Ft void
-.Fn AG_WidgetBlit "AG_Widget *widget" "AG_Surface *src" "int x" "int y"
+.Fn AG_WidgetBlit "AG_Widget *obj" "AG_Surface *src" "int x" "int y"
 .Pp
 .Ft int
-.Fn AG_WidgetMapSurface "AG_Widget *widget" "AG_Surface *su"
+.Fn AG_WidgetMapSurface "AG_Widget *obj" "AG_Surface *su"
 .Pp
 .Ft int
-.Fn AG_WidgetMapSurfaceNODUP "AG_Widget *widget" "AG_Surface *su"
+.Fn AG_WidgetMapSurfaceNODUP "AG_Widget *obj" "AG_Surface *su"
 .Pp
 .Ft void
-.Fn AG_WidgetReplaceSurface "AG_Widget *widget" "int surface_id" "AG_Surface *newSurface"
+.Fn AG_WidgetReplaceSurface "AG_Widget *obj" "int surface_id" "AG_Surface *newSurface"
 .Pp
 .Ft void
-.Fn AG_WidgetReplaceSurfaceNODUP "AG_Widget *widget" "int surface_id" "AG_Surface *newSurface"
+.Fn AG_WidgetReplaceSurfaceNODUP "AG_Widget *obj" "int surface_id" "AG_Surface *newSurface"
 .Pp
 .Ft void
-.Fn AG_WidgetUnmapSurface "AG_Widget *widget" "int surface_id"
+.Fn AG_WidgetUnmapSurface "AG_Widget *obj" "int surface_id"
 .Pp
 .Ft void
-.Fn AG_WidgetUpdateSurface "AG_Widget *widget" "int surface_id"
+.Fn AG_WidgetUpdateSurface "AG_Widget *obj" "int surface_id"
 .Pp
 .Ft void
-.Fn AG_WidgetBlitFrom "AG_Widget *dstWidget" "AG_Widget *srcWidget" "int surface_id" "AG_Rect *rs" "int x" "int y"
+.Fn AG_WidgetBlitFrom "AG_Widget *obj" "AG_Widget *srcWidget" "int surface_id" "AG_Rect *rs" "int x" "int y"
 .Pp
 .Ft void
-.Fn AG_WidgetBlitSurface "AG_Widget *widget" "int surface_id" "int x" "int y"
+.Fn AG_WidgetBlitSurface "AG_Widget *obj" "int surface_id" "int x" "int y"
 .Pp
 .nr nS 0
 The
@@ -495,7 +586,7 @@ source widget
 (using source rectangle
 .Fa rs )
 onto the destination widget
-.Fa dstWidget ,
+.Fa obj ,
 at coordinates
 .Fa x ,
 .Fa y .
@@ -508,7 +599,7 @@ variant invokes
 with the same argument for both
 .Fa srcWidget
 and
-.Fa dstWidget
+.Fa obj
 (and
 .Fa rs
 set to NULL).
@@ -574,13 +665,13 @@ arranges for this to occur automatically (see below).
 .Sh CONTROLLING REDRAW
 .nr nS 1
 .Ft "void"
-.Fn AG_Redraw "AG_Widget *widget"
+.Fn AG_Redraw "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_RedrawOnChange "AG_Widget *widget" "int refresh_ms" "const char *binding_name"
+.Fn AG_RedrawOnChange "AG_Widget *obj" "int refresh_ms" "const char *binding_name"
 .Pp
 .Ft "void"
-.Fn AG_RedrawOnTick "AG_Widget *widget" "int refresh_ms"
+.Fn AG_RedrawOnTick "AG_Widget *obj" "int refresh_ms"
 .Pp
 .nr nS 0
 The
@@ -685,13 +776,13 @@ should be considered valid only for as long as the parent VFS is locked.
 .Sh RENDERING CONTROL
 .nr nS 1
 .Ft void
-.Fn AG_PushClipRect "AG_Widget *widget" "const AG_Rect *r"
+.Fn AG_PushClipRect "AG_Widget *obj" "const AG_Rect *r"
 .Pp
 .Ft void
-.Fn AG_PopClipRect "AG_Widget *widget"
+.Fn AG_PopClipRect "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetDraw "AG_Widget *widget"
+.Fn AG_WidgetDraw "AG_Widget *obj"
 .Pp
 .Ft "void"
 .Fn AG_BeginRendering "AG_Driver *drv"
@@ -700,27 +791,27 @@ should be considered valid only for as long as the parent VFS is locked.
 .Fn AG_EndRendering "AG_Driver *drv"
 .Pp
 .Ft "void"
-.Fn AG_WidgetHide "AG_Widget *widget"
+.Fn AG_WidgetHide "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetShow "AG_Widget *widget"
+.Fn AG_WidgetShow "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetHideAll "AG_Widget *widget"
+.Fn AG_WidgetHideAll "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetShowAll "AG_Widget *widget"
+.Fn AG_WidgetShowAll "AG_Widget *obj"
 .Pp
 .Ft "int"
-.Fn AG_WidgetVisible "AG_Widget *widget"
+.Fn AG_WidgetVisible "AG_Widget *obj"
 .Pp
 .Ft "AG_Surface *"
-.Fn AG_WidgetSurface "AG_Widget *widget"
+.Fn AG_WidgetSurface "AG_Widget *obj"
 .Pp
 .nr nS 0
 The
 .Fn AG_PushClipRect
-function pushes a rectangle (in widget coordinates) onto the stack of
+function pushes a rectangle (in widget-relative coordinates) onto the stack of
 clipping rectangles, and
 .Fn AG_PopClipRect
 pops the last entry from the clipping rectangle stack.
@@ -776,64 +867,6 @@ The
 routine renders the widget to a newly-allocated
 .Xr AG_Surface 3 .
 This surface should be freed after use.
-.Sh STYLE PROPERTIES
-Presentation settings such as fonts and colors are stored as named
-.Xr AG_Variable 3
-properties (e.g., "font-size", "color", "color#hover", etc.)
-Those properties should be set using the following functions:
-.Pp
-.nr nS 1
-.Ft "void"
-.Fn AG_SetFont "AG_Widget *widget" "const AG_Font *font"
-.Pp
-.Ft "void"
-.Fn AG_SetStyle "AG_Widget *widget" "const char *which" "const char *value"
-.Pp
-.Ft "void"
-.Fn AG_SetStyleF "AG_Widget *widget" "const char *which" "const char *fmt" "..."
-.Pp
-.nr nS 0
-The
-.Fn AG_SetFont
-function sets the widget's default font attributes to match those of the
-specified font object.
-.Pp
-The
-.Fn AG_SetStyle
-function sets the specified style attribute to the given value.
-.\"
-.\" SYNC WITH AG_Widget(3)
-.\"
-Accepted attributes are as follows:
-.Pp
-.Bl -tag -compact -width "font-family "
-.It font-family
-Font face specification ("Courier", "Terminal").
-.It font-size
-Font size in points ("10pts") or ratio ("50%").
-.It font-weight
-Font weight, either "bold" or "normal".
-.It font-style
-Font style, either "italic" or "normal".
-.It color
-Main color of the widget.
-Colors may be specified as unsigned 8-bit components with "rgb(r,g,b[,a])",
-or floating-point HSV parameters with "hsv(h,s,v[,a])".
-In either mode, components may be expressed as a ratio to the parent widget's
-color components by appending a "%".
-.It text-color
-Color for rendered text.
-.It line-color
-Color for line drawings.
-.It shape-color
-Color for polygons and other filled shapes.
-.It border-color
-Color for cosmetic borders.
-.El
-.Pp
-An optional selector may be appended to the attribute names.
-Accepted selectors include "#disabled", "#hover" and "#selected".
-Selectors may be interpreted differently on a per-widget basis.
 .Sh STANDARD WIDGET ACTIONS
 User-generated events such as key presses or mouse button events can be
 tied to
@@ -856,43 +889,43 @@ also provides interfaces for working with widget actions.
 .\" MANLINK(AG_Action)
 .nr nS 1
 .Ft "AG_Action *"
-.Fn AG_ActionFn "AG_Widget *widget" "const char *action" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
+.Fn AG_ActionFn "AG_Widget *obj" "const char *action" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
 .Ft "AG_Action *"
-.Fn AG_ActionSetInt "AG_Widget *widget" "const char *action" "int *variable" "int value"
+.Fn AG_ActionSetInt "AG_Widget *obj" "const char *action" "int *variable" "int value"
 .Pp
 .Ft "AG_Action *"
-.Fn AG_ActionSetFlag "AG_Widget *widget" "const char *action" "Uint *variable" "Uint bitmask" "int value"
+.Fn AG_ActionSetFlag "AG_Widget *obj" "const char *action" "Uint *variable" "Uint bitmask" "int value"
 .Pp
 .Ft "AG_Action *"
-.Fn AG_ActionToggleInt "AG_Widget *widget" "const char *action" "int *variable"
+.Fn AG_ActionToggleInt "AG_Widget *obj" "const char *action" "int *variable"
 .Pp
 .Ft "AG_Action *"
-.Fn AG_ActionToggleFlag "AG_Widget *widget" "const char *action" "Uint *variable" "Uint bitmask"
+.Fn AG_ActionToggleFlag "AG_Widget *obj" "const char *action" "Uint *variable" "Uint bitmask"
 .Pp
 .Ft void
-.Fn AG_ActionOnButtonDown "AG_Widget *widget" "int button" "const char *action"
+.Fn AG_ActionOnButtonDown "AG_Widget *obj" "int button" "const char *action"
 .Pp
 .Ft void
-.Fn AG_ActionOnButtonUp "AG_Widget *widget" "int button" "const char *action"
+.Fn AG_ActionOnButtonUp "AG_Widget *obj" "int button" "const char *action"
 .Pp
 .Ft void
-.Fn AG_ActionOnKeyDown "AG_Widget *widget" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
+.Fn AG_ActionOnKeyDown "AG_Widget *obj" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
 .Pp
 .Ft void
-.Fn AG_ActionOnKeyUp "AG_Widget *widget" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
+.Fn AG_ActionOnKeyUp "AG_Widget *obj" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
 .Pp
 .Ft void
-.Fn AG_ActionOnKey "AG_Widget *widget" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
+.Fn AG_ActionOnKey "AG_Widget *obj" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
 .Pp
 .Ft int
-.Fn AG_ExecMouseAction "AG_Widget *widget" "AG_ActionEventType type" "int button" "int x" "int y"
+.Fn AG_ExecMouseAction "AG_Widget *obj" "AG_ActionEventType type" "int button" "int x" "int y"
 .Pp
 .Ft int
-.Fn AG_ExecKeyAction "AG_Widget *widget" "AG_ActionEventType type" "AG_KeySym sym" "AG_KeyMod mod"
+.Fn AG_ExecKeyAction "AG_Widget *obj" "AG_ActionEventType type" "AG_KeySym sym" "AG_KeyMod mod"
 .Pp
 .Ft int
-.Fn AG_ExecAction "AG_Widget *widget" "AG_Action *a"
+.Fn AG_ExecAction "AG_Widget *obj" "AG_Action *a"
 .Pp
 .nr nS 0
 .Fn AG_ActionFn

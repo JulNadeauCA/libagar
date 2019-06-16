@@ -1888,22 +1888,34 @@ Apply_Font_Size(AG_FontPts *fontSize, AG_FontPts parentFontSize, const char *spe
 }
 
 static void
-Apply_Font_Weight(Uint *fontFlags, const char *spec)
+Apply_Font_Weight(Uint *fontFlags, Uint parentFontFlags, const char *spec)
 {
 	if (AG_Strcasecmp(spec, "bold") == 0) {
 		*fontFlags |= AG_FONT_BOLD;
 	} else if (AG_Strcasecmp(spec, "normal") == 0) {
 		*fontFlags &= ~(AG_FONT_BOLD);
+	} else if (AG_Strcasecmp(spec, "!parent") == 0) {
+		if (parentFontFlags & AG_FONT_BOLD) {
+			*fontFlags &= ~(AG_FONT_BOLD);
+		} else {
+			*fontFlags |= AG_FONT_BOLD;
+		}
 	}
 }
 	
 static void
-Apply_Font_Style(Uint *fontFlags, const char *spec)
+Apply_Font_Style(Uint *fontFlags, Uint parentFontFlags, const char *spec)
 {
 	if (AG_Strcasecmp(spec, "italic") == 0) {
 		*fontFlags |= AG_FONT_ITALIC;
 	} else if (AG_Strcasecmp(spec, "normal") == 0) {
 		*fontFlags &= ~(AG_FONT_ITALIC);
+	} else if (AG_Strcasecmp(spec, "!parent") == 0) {
+		if (parentFontFlags & AG_FONT_ITALIC) {
+			*fontFlags &= ~(AG_FONT_ITALIC);
+		} else {
+			*fontFlags |= AG_FONT_ITALIC;
+		}
 	}
 }
 
@@ -1958,19 +1970,19 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		fontSize = parentFontSize;
 	}
 	if ((V = AG_AccessVariable(wid, "font-weight")) != NULL) {
-		Apply_Font_Weight(&fontFlags, V->data.s);
+		Apply_Font_Weight(&fontFlags, parentFontFlags, V->data.s);
 		AG_UnlockVariable(V);
 	} else if (AG_LookupStyleSheet(css, wid, "font-weight", &cssData)) {
-		Apply_Font_Weight(&fontFlags, cssData);
+		Apply_Font_Weight(&fontFlags, parentFontFlags, cssData);
 	} else {
 		fontFlags &= ~(AG_FONT_BOLD);
 		fontFlags |= (parentFontFlags & AG_FONT_BOLD);
 	}
 	if ((V = AG_AccessVariable(wid, "font-style")) != NULL) {
-		Apply_Font_Style(&fontFlags, V->data.s);
+		Apply_Font_Style(&fontFlags, parentFontFlags, V->data.s);
 		AG_UnlockVariable(V);
 	} else if (AG_LookupStyleSheet(css, wid, "font-style", &cssData)) {
-		Apply_Font_Style(&fontFlags, cssData);
+		Apply_Font_Style(&fontFlags, parentFontFlags, cssData);
 	} else {
 		fontFlags &= ~(AG_FONT_ITALIC);
 		fontFlags |= (parentFontFlags & AG_FONT_ITALIC);
@@ -2053,11 +2065,11 @@ AG_WidgetCompileStyle(void *obj)
 	if ((parent = OBJECT(wid)->parent) != NULL &&
 	    AG_OfClass(parent, "AG_Widget:*") &&
 	    (parentFont = parent->font) != NULL) {
-		CompileStyleRecursive(wid,
-		    OBJECT(parentFont)->name,
-		    parentFont->spec.size,
-		    parentFont->flags,
-		    &parent->pal);
+		CompileStyleRecursive(wid,	/* Inheritable attributes: */
+		    OBJECT(parentFont)->name,	/* "font-family" */
+		    parentFont->spec.size,	/* "font-size" */
+		    parentFont->flags,		/* "font-{style,weight}" */
+		    &parent->pal);		/* and the color palette */
 	} else {
 		CompileStyleRecursive(wid,
 		    OBJECT(agDefaultFont)->name,
