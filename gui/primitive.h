@@ -112,7 +112,7 @@ void ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
 #endif /* AG_HAVE_FLOAT */
 #endif /* !AG_INLINE_WIDGET */
 
-void AG_DrawTiling(void * , const AG_Rect *_Nonnull, int, int,
+void AG_DrawTiling(void *_Nonnull, const AG_Rect *_Nonnull, int, int,
                    const AG_Color *_Nonnull, const AG_Color *_Nonnull);
 int AG_GetLineIntersection(long x1, long y1, long x2, long y2, long x3,
                            long y3, long x4, long y4, long *xi, long *yi);
