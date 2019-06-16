@@ -52,16 +52,13 @@
 # define Truncf(x)          AG_Truncf(x)
 # define Fracf(x)           AG_Fracf(x)
 # define FracInvf(x)        AG_FracInvf(x)
+# define Square(x)          AG_Square(x)
+# define Distance(x1,y1,x2,y2) AG_Distance(x1, y1, x2, y2)
 
 #endif /* _AGAR_INTERNAL or _USE_AGAR_GUI_MATH */
 
 __BEGIN_DECLS
 #ifdef AG_HAVE_FLOAT
-static __inline__ float
-AG_Hypot(float x, float y)
-{
-	return AG_Sqrt(x*x+y*y);
-}
 static __inline__ int
 AG_Truncf(double d)
 {
@@ -76,6 +73,31 @@ static __inline__ double
 AG_FracInvf(double d)
 {
 	return (1 - (d - floor(d)));
+}
+static __inline__ double
+AG_Square(double d) {
+	return d*d;
+}
+static __inline__ double
+AG_Distance(double x1, double y1, double x2, double y2) {
+	return AG_Sqrt(AG_Square(x2-x1) + AG_Square(y2-y1));
+}
+static __inline__ float
+AG_Hypot(float x, float y)
+{
+	return AG_Sqrt(AG_Square(x)+AG_Square(y));
+}
+static __inline__ unsigned char
+AG_HaveQuadraticSolution(double a, double b, double c) {
+	return (((AG_Square(b) - 4 * a * c) >= 0) && a != 0);
+}
+static __inline__ double
+AG_QuadraticPositive(double a, double b, double c) {
+	return ((-1 * b) + AG_Sqrt(AG_Square(b) - 4 * a * c)) / ( 2 * a);
+}
+static __inline__ double
+AG_QuadraticNegative(double a, double b, double c) {
+	return ((-1 * b) - AG_Sqrt(AG_Square(b) - 4 * a * c)) / ( 2 * a);
 }
 #endif /* AG_HAVE_FLOAT */
 __END_DECLS

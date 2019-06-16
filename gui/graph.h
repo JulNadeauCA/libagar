@@ -20,6 +20,11 @@ enum ag_graph_vertex_style {	/* Vertex style */
 	AG_GRAPH_CIRCLE		/* Circle */
 };
 
+enum ag_graph_edge_type {
+	AG_GRAPH_EDGE_UNDIRECTED,
+	AG_GRAPH_EDGE_DIRECTED
+};
+
 typedef struct ag_graph_vertex {
 	char labelTxt[AG_GRAPH_LABEL_MAX]; /* Label text */
 	int  labelSu;                      /* Text surface handle */
@@ -61,6 +66,7 @@ typedef struct ag_graph_edge {
 	struct ag_graph *_Nonnull graph;	/* Back pointer to graph */
 	AG_TAILQ_ENTRY(ag_graph_edge) edges;
 	struct ag_popup_menu *_Nullable popupMenu;	/* Edge popup menu */
+	enum ag_graph_edge_type type;
 } AG_GraphEdge;
 
 typedef struct ag_graph {
@@ -115,6 +121,11 @@ void AG_GraphVertexPopupMenu(AG_GraphVertex *_Nonnull,
 void AG_GraphVertexFree(AG_GraphVertex *_Nonnull);
 
 AG_GraphEdge *_Nullable AG_GraphEdgeNew(AG_Graph *_Nonnull,
+					AG_GraphVertex *_Nonnull,
+					AG_GraphVertex *_Nonnull,
+					void *_Nullable);
+
+AG_GraphEdge *_Nullable AG_DirectedGraphEdgeNew(AG_Graph *_Nonnull,
 					AG_GraphVertex *_Nonnull,
 					AG_GraphVertex *_Nonnull,
 					void *_Nullable);

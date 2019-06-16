@@ -1,4 +1,5 @@
-.\" Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>,
+.\" 2019 Charles A. Daniels <charles@cdaniels.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -118,6 +119,9 @@ argument's local coordinate system.
 .Ft void
 .Fn AG_DrawRectBlended "AG_Widget *widget" "AG_Rect r" "AG_Color c" "AG_AlphaFn blendFn"
 .Pp
+.Ft void
+.Fn AG_DrawArrowLine "void *_Nonnull obj" "int x1" "int y1" "int x2" "int y2" "AG_ArrowLineType t" "int length" "double theta" "const AG_Color *C"
+.Pp
 .nr nS 0
 .Fn AG_PutPixel
 sets the pixel at
@@ -219,6 +223,17 @@ in that it accepts an explicit blending mode
 (see
 .Xr AG_AlphaFn 3
 for details).
+.Fn Ag_DrawArrowLine
+is a rapper around AG_DrawLine and AG_DrawArrowhead which can draw a line along
+with, depending on the value of
+.Fa t
+, no arrowheads (AG_ARROWLINE_NONE), a forward arrow (AG_ARROWLINE_FORWARD), a
+reverse arrow (AG_ARROWLINE_REVERSE), or both a forward and reverse arrow
+(AG_ARROWLINE_BOTH). For the purposes of determining "forward" and "reverse",
+a forward arrow would be taken to point to (
+.Fa x2,
+.Fa y2
+). This function requires floating point support.
 .Sh SIMPLE GRAPHICAL ELEMENTS
 .nr nS 1
 .Ft void
@@ -302,6 +317,9 @@ specify the colors of the tiles.
 .Ft void
 .Fn AG_DrawArrowRight "AG_Widget *widget" "int x" "int y" "int w" "AG_Color c1" "AG_Color c2"
 .Pp
+.Ft void
+.Fn AG_DrawArrowhead "void *_Nonnull obj" "int x1" "int y1" "int x2" "int y2" "int length" "double theta" "const AG_Color *_Nonnull c"
+.Pp
 .nr nS 0
 The
 .Fn AG_DrawPlus
@@ -330,6 +348,99 @@ draw an arrow at the specified coordinates.
 and
 .Fa w
 specify the size of the arrow in pixels.
+.Pp
+.Fn AG_DrawArrowhead
+draws an arrowhead aligned to a line.
+.Fa x2
+and
+.Fa y2
+Define the tip of the arrowhead, and
+.Fa x1
+and
+.Fa y1
+define the originating point of the "line" (i.e. the arrowhead faces away from
+this point).
+.Fa length
+defines the length from tip to base of the arrowhead.
+.Fa theta
+defines the angle of the lines which converge at the tip of the arrowhead. The
+arrowhead is always drawn in a solid / fully filled style. This function
+requires floating point support.
+.Sh UTILITIES
+.nr nS 1
+.Ft int
+.Fn AG_GetLineIntersection "long x1" "long y1" "long x2" "long y2" "long x3" "long y3" "long x4" "long y4" "long *xi" "long *yi"
+.Pp
+.Ft void
+.Fn AG_ClipLine "int ax" "int ay" "int aw" "int ah" "int x1" "int y1" "int *x2" "int *y2"
+.Ft void
+.Fn AG_ClipLineCircle "int xc" "int yc" "int r" "int x1" "int y1" "int x2" "int y2" "int *xi" "int *yi"
+.Pp
+.Pp
+.Fn AG_GetLineIntersection
+considers two line segments (
+.Fa x1,
+.Fa y1
+), (
+.Fa x2,
+.Fa y2
+) and (
+.Fa x3,
+.Fa y3
+) and (
+.Fa x4,
+.Fa y4
+). If the lines do not intersect, then the function returns 0. If they do
+intersect, then the function returns 1 and
+.Fa xi
+and
+.Fa yi
+will be updated to the coordinates at which the intersection occurs. Requires
+floating point support.
+.Pp
+.Fn AG_ClipLine
+considers the bounding box defined by it's top left corner:
+.Fa ax,
+.Fa ay
+and its width and height:
+.Fa aw,
+.Fa ah
+and the line segment defined by (
+.Fa x1,
+.Fa y1,
+), (
+.Fa x2,
+.Fa y2,
+). If the line intersects with the provided bounding box, then
+.Fa x2
+and
+.Fa y2
+will be updated such that they are the closest point to (
+.Fa x1,
+.Fa y1
+) at which the line segment intersects with the given bounding box.
+.Pp
+.Fn AG_ClipLine
+If the circle centered at (
+.Fa xc,
+.Fa yc
+) with radius
+.Fa r
+intersects with the line segment (
+.Fa x1,
+.Fa y1
+), (
+.Fa x2,
+.Fa y2
+), then
+.Fa xi
+and
+.Fa yi
+are updated to reflect the intersection point which is closest to
+(
+.Fa x1,
+.Fa y1
+). This function requires floating point support.
 .Sh SEE ALSO
 .Xr AG_AlphaFn 3 ,
 .Xr AG_Color 3 ,
@@ -341,3 +452,4 @@ specify the size of the arrow in pixels.
 Simple widget primitives first appeared in Agar 1.0.
 The basic rendering system was redesigned in Agar 1.4.
 64-bit pixel access routines were added in Agar 1.6.
+AG_GetLineIntersection, AG_ClipLine, and AG_DrawArrowhead were added in Agar 1.6.

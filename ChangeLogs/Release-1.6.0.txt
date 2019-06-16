@@ -36,4 +36,13 @@ particular order.
 - VG: Fix invalid access in VG_View(3).
 - Add missing include for 32-bit MSYS build. Thanks varialus!
 - Manual page improvements (clarity, wording, added more examples).
-
+- GUI: add AG_ClipLine for clipping lines to rectangular bounding boxes
+- GUI: add AG_ClipLineCircle for clipping lines to circular regions
+- GUI: add AG_DrawArrowhead for drawing arrowheads of arbitrary size and angle
+  aligned to arbitrary vectors
+- GUI: add AG_GetLineIntersection for computing the intersection of two line
+  segments
+- GUI: add new gui_math functions: AG_Square, AG_HaveQuadraticSolution,
+  AG_QuadraticPositive, AG_QuadraticNegative, AG_Distance
+- GUI: add AG_DrawArrowLine for drawing lines with arrowheads
+- GUI: AG_Graph now supports directed graphs

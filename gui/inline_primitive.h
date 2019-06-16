@@ -50,7 +50,7 @@ ag_put_pixel_rgb_8(void *obj, int x, int y, Uint8 r, Uint8 g, Uint8 b)
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	
+
 	wid->drvOps->putPixelRGB8(wid->drv,
 	    wid->rView.x1 + x,
 	    wid->rView.y1 + y,
@@ -90,7 +90,7 @@ ag_blend_pixel_32(void *obj, int x, int y, Uint32 px, AG_AlphaFn fnSrc)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Color c;
-	
+
 	AG_GetColor32(&c, px, agSurfaceFmt);
 	wid->drvOps->blendPixel(wid->drv,
 	    wid->rView.x1 + x,
@@ -112,7 +112,7 @@ ag_blend_pixel_rgba(void *obj, int x, int y, Uint8 c[4], AG_AlphaFn fnSrc)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Color cd;
-	
+
 	AG_ColorRGBA_8(&cd, c[0], c[1], c[2], c[3]);
 	wid->drvOps->blendPixel(wid->drv,
 	    wid->rView.x1 + x,
@@ -169,7 +169,7 @@ ag_put_pixel_rgb_16(void *obj, int x, int y, Uint16 r, Uint16 g, Uint16 b)
 # endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	
+
 	wid->drvOps->putPixelRGB16(wid->drv,
 	    wid->rView.x1 + x,
 	    wid->rView.y1 + y,
@@ -189,7 +189,7 @@ ag_blend_pixel_64(void *obj, int x, int y, Uint64 px, AG_AlphaFn fnSrc)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Color c;
-	
+
 	AG_GetColor32(&c, px, agSurfaceFmt);
 	wid->drvOps->blendPixel(wid->drv,
 	    wid->rView.x1 + x,
@@ -422,7 +422,7 @@ ag_draw_box_rounded(void *obj, const AG_Rect *r, int z, int rad,
 	rd.y = wid->rView.y1 + r->y;
 	rd.w = r->w;
 	rd.h = r->h;
-	
+
 	AG_ColorAdd(&c[0], cBg,  (z<0) ? &agSunkColor : &agRaisedColor);
 	AG_ColorAdd(&c[1], &c[0], (z<0) ? &agLowColor  : &agHighColor);
 	AG_ColorAdd(&c[2], &c[0], (z<0) ? &agHighColor : &agLowColor);
@@ -472,7 +472,7 @@ ag_draw_circle(void *obj, int x, int y, int r, const AG_Color *c)
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	
+
 	wid->drvOps->drawCircle(wid->drv,
 	    wid->rView.x1 + x,
 	    wid->rView.y1 + y,
@@ -492,7 +492,7 @@ ag_draw_circle_filled(void *obj, int x, int y, int r, const AG_Color *c)
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	
+
 	wid->drvOps->drawCircleFilled(wid->drv,
 	    wid->rView.x1 + x,
 	    wid->rView.y1 + y,
@@ -564,7 +564,7 @@ ag_draw_rect_blended(void *obj, const AG_Rect *r, const AG_Color *c,
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Rect rd;
-	
+
 	rd.x = wid->rView.x1 + r->x;
 	rd.y = wid->rView.y1 + r->y;
 	rd.w = r->w;
@@ -588,7 +588,7 @@ ag_draw_rect_dithered(void *obj, const AG_Rect *r, const AG_Color *c)
 {
 	AG_Rect rd;
 	AG_Widget *wid = (AG_Widget *)obj;
-	
+
 	rd.x = wid->rView.x1 + r->x;
 	rd.y = wid->rView.y1 + r->y;
 	rd.w = r->w;
@@ -615,7 +615,7 @@ ag_draw_frame(void *obj, const AG_Rect *r, int z, const AG_Color *cBase)
 	AG_Color c[2];
 	AG_Rect rd;
 	int y2, x2;
-	
+
 	rd.x = wid->rView.x1 + r->x;
 	rd.y = wid->rView.y1 + r->y;
 	rd.w = r->w;
@@ -840,3 +840,25 @@ ag_draw_line_2(void *obj, int x1, int y1, int x2, int y2,
 	AG_ColorAdd(&c, C, &agLowColor);
 	wid->drvOps->drawLine(wid->drv, x1+1,y1+1, x2+1,y2+1, &c);
 }
+
+#ifdef AG_HAVE_FLOAT
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_DrawArrowLine(void *_Nonnull obj, int x1, int y1, int x2, int y2,
+    AG_ArrowLineType t, int length, double theta, const AG_Color *_Nonnull C)
+#else
+void
+ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
+    AG_ArrowLineType t, int length, double theta, const AG_Color *C)
+#endif
+{
+	AG_DrawLine(obj, x1, y1, x2, y2, C);
+	if ((t == AG_ARROWLINE_FORWARD) || (t == AG_ARROWLINE_BOTH)) {
+		AG_DrawArrowhead(obj, x1, y1, x2, y2, length, theta, C);
+	}
+	if ((t == AG_ARROWLINE_REVERSE) || (t == AG_ARROWLINE_BOTH)) {
+		AG_DrawArrowhead(obj, x2, y2, x1, y1, length, theta, C);
+	}
+
+}
+#endif /* AG_HAVE_FLOAT */

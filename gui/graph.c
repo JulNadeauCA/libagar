@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>,
+ * 2019 Charles A. Daniels, <charles@cdaniels.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,7 +11,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -199,6 +200,7 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 	edge->userPtr = userPtr;
 	edge->graph = gf;
 	edge->popupMenu = NULL;
+	edge->type = AG_GRAPH_EDGE_UNDIRECTED;
 	TAILQ_INSERT_TAIL(&gf->edges, edge, edges);
 	gf->nedges++;
 
@@ -212,6 +214,14 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 	AG_ObjectUnlock(gf);
 	AG_Redraw(gf);
 	return (edge);
+}
+
+AG_GraphEdge *
+AG_DirectedGraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
+		void *usrPtr) {
+	AG_GraphEdge *edge = AG_GraphEdgeNew(gf, v1, v2, usrPtr);
+	edge->type = AG_GRAPH_EDGE_DIRECTED;
+	return edge;
 }
 
 void
@@ -241,7 +251,7 @@ void
 AG_GraphEdgeLabel(AG_GraphEdge *ge, const char *fmt, ...)
 {
 	va_list ap;
-	
+
 	AG_ObjectLock(ge->graph);
 	va_start(ap, fmt);
 	Vsnprintf(ge->labelTxt, sizeof(ge->labelTxt), fmt, ap);
@@ -477,7 +487,7 @@ AG_GraphFreeVertices(AG_Graph *gf)
 	AG_GraphEdge *edge, *edgeNext;
 
 	AG_ObjectLock(gf);
-	
+
 	for (vtx = TAILQ_FIRST(&gf->vertices);
 	     vtx != TAILQ_END(&gf->vertices);
 	     vtx = vtxNext) {
@@ -499,7 +509,7 @@ AG_GraphFreeVertices(AG_Graph *gf)
 	gf->yMin = 0;
 	gf->yMax = 0;
 	gf->flags &= ~(AG_GRAPH_DRAGGING);
-	
+
 	AG_ObjectUnlock(gf);
 	AG_Redraw(gf);
 }
@@ -573,12 +583,107 @@ Draw(void *obj)
 		if (edge->flags & AG_GRAPH_HIDDEN) {
 			continue;
 		}
-		AG_DrawLine(gf,
-		    edge->v1->x - xOffs,
-		    edge->v1->y - yOffs,
-		    edge->v2->x - xOffs,
-		    edge->v2->y - yOffs,
-		    &edge->edgeColor);
+
+#ifdef HAVE_FLOAT
+		int xi1, yi1, xi2, yi2;
+		int x1, y1, x2, y2;
+		int h1, w1, h2, w2;
+
+		/* cache to avoid pointer chasing */
+		x1 = edge->v1->x - xOffs;
+		y1 = edge->v1->y - yOffs;
+		x2 = edge->v2->x - xOffs;
+		y2 = edge->v2->y - yOffs;
+		h1 = edge->v1->h;
+		w1 = edge->v1->w;
+		h2 = edge->v2->h;
+		w2 = edge->v2->w;
+
+		/* will be over-written with clipped positions */
+		xi1 = x1;
+		yi1 = y1;
+		xi2 = x2;
+		yi2 = y2;
+
+		/* perform the correct line clipping for the given vertex
+		 * style */
+		if (edge->v2->style == AG_GRAPH_CIRCLE) {
+			AG_ClipLineCircle(
+				x2,
+				y2,
+				MAX(w2, h2) >> 1,
+				x1,
+				y1,
+				x2,
+				y2,
+				&xi2,
+				&yi2);
+
+		} else {
+			AG_ClipLine(
+				x2 - (w2 >> 1),
+				y2 - (h2 >> 1),
+				w2,
+				h2,
+				x1,
+				y1,
+				&xi2,
+				&yi2);
+		}
+
+		if (edge->v1->style == AG_GRAPH_CIRCLE) {
+			AG_ClipLineCircle(
+				x1,
+				y1,
+				MAX(w1, h1) >> 1,
+				x2,
+				y2,
+				x1,
+				y1,
+				&xi1,
+				&yi1);
+		} else {
+			AG_ClipLine(
+				x1 - (w1 >> 1),
+				y1 - (h1 >> 1),
+				w1,
+				h1,
+				x2,
+				y2,
+				&xi1,
+				&yi1);
+		}
+
+		/* Draw line appropriately depending on weather the edge type
+		 * is directed or undirected. If floating point support is
+		 * not available, then all edges are drawn undirected */
+		if (edge->type == AG_GRAPH_EDGE_DIRECTED) {
+			AG_DrawArrowLine(gf,
+			    xi1,
+			    yi1,
+			    xi2,
+			    yi2,
+			    AG_ARROWLINE_FORWARD,
+			    20,
+			    0.5,
+			    &edge->edgeColor);
+		} else {
+#endif /* HAVE_FLOAT */
+			AG_DrawLine(gf,
+#ifdef HAVE_FLOAT
+			    xi1,
+			    yi1,
+			    xi2,
+			    yi2,
+#else		/* failover if we don't have float support */
+			    edge->v1->x - xOffs, /* only have cache if
+			    edge->v1->y - yOffs,  * HAVE_FLOAT */
+			    edge->v2->x - xOffs,
+			    edge->v2->y - yOffs,
+#endif /* HAVE_FLOAT */
+			    &edge->edgeColor);
+		}
+
 
 		if (edge->labelSu >= 0) {
 			AG_Surface *su = WSURFACE(gf,edge->labelSu);
@@ -686,7 +791,7 @@ AG_GraphVertex *
 AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 {
 	AG_GraphVertex *vtx;
-	
+
 	vtx = Malloc(sizeof(AG_GraphVertex));
 	vtx->labelTxt[0] = '\0';
 	vtx->labelSu = -1;
@@ -746,7 +851,7 @@ AG_GraphVertexLabel(AG_GraphVertex *vtx, const char *fmt, ...)
 {
 	char s[AG_GRAPH_LABEL_MAX];
 	va_list ap;
-	
+
 	va_start(ap, fmt);
 	Vsnprintf(s, sizeof(s), fmt, ap);
 	va_end(ap);
@@ -772,7 +877,7 @@ void
 AG_GraphVertexPosition(AG_GraphVertex *vtx, int x, int y)
 {
 	AG_Graph *gf = vtx->graph;
-	
+
 	AG_ObjectLock(gf);
 
 	vtx->x = x;
@@ -782,7 +887,7 @@ AG_GraphVertexPosition(AG_GraphVertex *vtx, int x, int y)
 	if (y < gf->yMin) { gf->yMin = y; }
 	if (x > gf->xMax) { gf->xMax = x; }
 	if (y > gf->yMax) { gf->yMax = y; }
-	
+
 	AG_ObjectUnlock(gf);
 	AG_Redraw(gf);
 }
@@ -814,7 +919,7 @@ AG_GraphVertexPopupMenu(AG_GraphVertex *vtx, struct ag_popup_menu *pm)
 	AG_ObjectUnlock(vtx->graph);
 }
 
-static int 
+static int
 CompareVertices(const void *p1, const void *p2)
 {
 	const AG_GraphVertex *v1 = *(const void **)p1;
@@ -892,7 +997,7 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 	AG_GraphVertex **vSorted, *vtx;
 	Uint i, nSorted=0;
 	int tx, ty;
-	
+
 	AG_ObjectLock(gf);
 
 	if (gf->nvertices == 0 || gf->nedges == 0) {
