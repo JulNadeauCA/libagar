@@ -1950,7 +1950,7 @@ PollLibsFind(AG_Tlist *_Nonnull tl, AG_Object *_Nonnull pob, int depth)
 	if (!TAILQ_EMPTY(&pob->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 		if (AG_ObjectRoot(pob) == pob)
-			it->flags |= AG_TLIST_VISIBLE_CHILDREN;
+			it->flags |= AG_TLIST_ITEM_EXPANDED;
 	}
 	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
 	    AG_TlistVisibleChildren(tl, it)) {

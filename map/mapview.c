@@ -580,6 +580,41 @@ draw:
 		AG_SurfaceFree(su);
 }
 
+/* Render a gimp-style background tiling. */
+static void
+DrawTiling(void *obj, const AG_Rect *r, int tsz, int offs,
+    const AG_Color *c1, const AG_Color *c2)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Driver *drv = wid->drv;
+	AG_Rect rd;
+	int alt1 = 0, alt2 = 0;
+	int x = wid->rView.x1 + r->x;
+	int y = wid->rView.y1 + r->y;
+	int x2 = x + r->w;
+	int y2 = y + r->h;
+	int tsz_offs = tsz+offs;
+
+	rd.w = tsz;
+	rd.h = tsz;
+
+	/* XXX inelegant */
+	for (rd.y = y-tsz_offs; rd.y < y2; rd.y += tsz) {
+		for (rd.x = x-tsz_offs; rd.x < x2; rd.x += tsz) {
+			if (alt1++ == 1) {
+				wid->drvOps->drawRectFilled(drv, &rd, c1);
+				alt1 = 0;
+			} else {
+				wid->drvOps->drawRectFilled(drv, &rd, c2);
+			}
+		}
+		if (alt2++ == 1) {
+			alt2 = 0;
+		}
+		alt1 = alt2;
+	}
+}
+
 static void
 Draw(void *_Nonnull obj)
 {
@@ -626,7 +661,7 @@ Draw(void *_Nonnull obj)
 		r.h = HEIGHT(mv);
 		AG_ColorRGB_8(&c, 50,50,50);
 		AG_ColorRGB_8(&c2, 40,40,40);
-		AG_DrawTiling(mv, &r, mapViewBgTileSize, 0, &c, &c2);
+		DrawTiling(mv, &r, mapViewBgTileSize, 0, &c, &c2);
 	}
 
 	AG_ObjectLock(m);
