@@ -60,57 +60,95 @@ widget may be used instead.
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
-.Sh INITIALIZATION
+.Sh INTERFACE
 .nr nS 1
-.Ft AG_FileDlg *
+.Ft "AG_FileDlg *"
 .Fn AG_FileDlgNew "AG_Widget *parent" "Uint flags"
 .Pp
-.Ft AG_FileDlg *
+.Ft "AG_FileDlg *"
 .Fn AG_FileDlgNewMRU "AG_Widget *parent" "const char *mruKey" "Uint flags"
 .Pp
-.Ft int
-.Fn AG_FileDlgSetDirectory "AG_FileDlg *file_dlg" "const char *format" "..."
+.Ft "AG_FileDlg *"
+.Fn AG_FileDlgNewCompact "AG_Widget *parent" "const char *label" "Uint flags"
+.Pp
+.Ft "AG_FileDlg *"
+.Fn AG_FileDlgNewCompactMRU "AG_Widget *parent" "const char *label" "const char *mruKey" "Uint flags"
+.Pp
+.Ft "char *"
+.Fn AG_FileDlgGetDirectory "AG_FileDlg *fd"
+.Pp
+.Ft AG_Size
+.Fn AG_FileDlgCopyDirectory "AG_FileDlg *fd" "char *dst" "AG_Size size"
 .Pp
 .Ft int
-.Fn AG_FileDlgSetDirectoryS "AG_FileDlg *file_dlg" "const char *path"
+.Fn AG_FileDlgSetDirectory "AG_FileDlg *fd" "const char *format" "..."
+.Pp
+.Ft int
+.Fn AG_FileDlgSetDirectoryS "AG_FileDlg *fd" "const char *path"
 .Pp
 .Ft void
-.Fn AG_FileDlgSetDirectoryMRU "AG_FileDlg *file_dlg" "const char *mruKey" "const char *defaultDir"
+.Fn AG_FileDlgSetDirectoryMRU "AG_FileDlg *fd" "const char *mruKey" "const char *defaultDir"
+.Pp
+.Ft "char *"
+.Fn AG_FileDlgGetFilename "AG_FileDlg *fd"
+.Pp
+.Ft AG_Size
+.Fn AG_FileDlgCopyFilename "AG_FileDlg *fd" "char *dst" "AG_Size size"
 .Pp
 .Ft void
-.Fn AG_FileDlgSetFilename "AG_FileDlg *file_dlg" "const char *format" "..."
+.Fn AG_FileDlgSetFilename "AG_FileDlg *fd" "const char *format" "..."
 .Pp
 .Ft void
-.Fn AG_FileDlgSetFilenameS "AG_FileDlg *file_dlg" "const char *filename"
+.Fn AG_FileDlgSetFilenameS "AG_FileDlg *fd" "const char *filename"
 .Pp
 .Ft "AG_FileType *"
-.Fn AG_FileDlgAddType "AG_FileDlg *file_dlg" "const char *descr" "const char *exts" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
+.Fn AG_FileDlgAddType "AG_FileDlg *fd" "const char *descr" "const char *exts" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
 .Ft "void"
-.Fn AG_FileDlgRefresh "AG_FileDlg *file_dlg"
+.Fn AG_FileDlgCopyTypes "AG_FileDlg *dst" "const AG_FileDlg *src"
+.Pp
+.Ft "void"
+.Fn AG_FileDlgRefresh "AG_FileDlg *fd"
 .Pp
 .nr nS 0
-The
 .Fn AG_FileDlgNew
-function allocates, initializes, and attaches a new
-.Nm
-widget.
+allocates, initializes, and attaches a new
+.Nm .
+.Pp
 The
 .Fn AG_FileDlgNewMRU
-variant implicitely calls
+variant calls
 .Fn AG_FileDlgSetDirectoryMRU
-with the given key.
-Note that unless
+with
+.Fa mruKey .
+Unless
 .Fn AG_FileDlgSetDirectory
 is used (see below), the default directory is set according to the
 .Xr AG_Config 3
-.Sq save-path
-parameter.
+parameter
+.Sq save-path .
+.Pp
+.Fn AG_FileDlgNewCompact
+and
+.Fn AG_FileDlgNewCompactMRU
+implicitely set the
+.Dv AG_FILEDLG_COMPACT
+flag as well as the contents of the display label.
 .Pp
 Acceptable
 .Fa flags
 include:
 .Bl -tag -width "AG_FILEDLG_MASK_HIDDEN "
+.It AG_FILEDLG_COMPACT
+Proxy mode.
+Collapse to a single-line textbox and "..." button.
+The expand button shows a regular
+.Nm
+in a new window.
+If the user selects a file and clicks "OK", the file path is copied to the
+.Va textbox
+of the compact
+.Nm .
 .It AG_FILEDLG_MASK_EXT
 Mask unknown files by extension.
 .It AG_FILEDLG_MASK_HIDDEN
@@ -146,16 +184,17 @@ Shorthand for
 .Dv AG_FILEDLG_HFILL|AG_FILEDLG_VFILL .
 .El
 .Pp
-The working directory can be set programmatically with the
-.Fn AG_FileDlgSetDirectory
-function.
+The working directory can be retrieved as a newly-allocated string using
+.Fn AG_FileDlgGetDirectory ,
+or copied into a fixed-size buffer with
+.Fn AG_FileDlgCopyDirectory .
+.Fn AG_FileDlgSetDirectory .
 .Pp
-The
 .Fn AG_FileDlgSetDirectoryMRU
 sets the working directory according to an
 .Xr AG_Config 3
 parameter named
-.Fa mruKey
+.Fa mruKey .
 If the parameter does not exist, it will be set to
 .Fa defaultDir
 (it is customary to use a name such as
@@ -166,22 +205,58 @@ is used, subsequent directory changes will cause the current
 .Xr AG_Config 3
 settings to be saved automatically.
 .Pp
+The current filename can be retrieved as a newly-allocated string using
+.Fn AG_FileDlgGetFilename ,
+or copied into a fixed-size buffer with
+.Fn AG_FileDlgCopyFilename .
+.Pp
 The
 .Fn AG_FileDlgSetFilename
 function sets the filename to initially display in the textbox.
 It is typically used in file saving dialogs.
 .Pp
 .Fn AG_FileDlgAddType
-registers a new file format to recognize.
+registers a new type-specific event handler for a given file format (and
+associated set of filename extensions).
 If
 .Fa fn
-is non-NULL, it specifies the callback routine to be invoked whenever
-a file of this type is selected by the user.
+is non-NULL, it sets a type-specific callback to invoke when a file of
+the selected type is selected by the user.
 .Ft descr
 is a description of the file format and
 .Ft exts
-is a comma-separated list of file extensions to associate with the type
-(or otherwise an empty string).
+is a comma-separated list of filename extensions or special directives
+(enclosed in "<>").
+Syntax for extensions include:
+.Bl -tag -width "<=hello.txt/i> "
+.It ".txt" or "*.txt"
+Match all files ending in ".txt".
+.It "<-x>"
+Match all files that are executable by the effective owner of the process
+(using
+.Xr AG_GetFileInfo 3 ) .
+.It "<=hello.txt>"
+Only match
+.Pa hello.txt
+(case-sensitive exact match).
+.It "<=hello.txt/i>"
+Match
+.Pa hello.txt ,
+.Pa Hello.txt ,
+etc
+(case-insensitive).
+.El
+.Pp
+Type-specific handlers do not override the general "file-chosen" event handler
+when one exists (if both are set then the type-specific handler is run first,
+followed by "file-chosen").
+.Pp
+.Fn AG_FileDlgCopyTypes
+copies the set of
+.Ft AG_FileType
+(and any associated type-specific options), from one
+.Nm
+to another.
 .Pp
 The
 .Fn AG_FileDlgRefresh
@@ -219,16 +294,16 @@ These default actions can be overridden using the functions below:
 .Pp
 .nr nS 1
 .Ft "void"
-.Fn AG_FileDlgOkAction "AG_FileDlg *file_dlg" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Fn AG_FileDlgOkAction "AG_FileDlg *fd" "void (*fn)(AG_Event *)" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn AG_FileDlgCancelAction "AG_FileDlg *file_dlg" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Fn AG_FileDlgCancelAction "AG_FileDlg *fd" "void (*fn)(AG_Event *)" "const char *fmt" "..."
 .Pp
 .Ft "int"
-.Fn AG_FileDlgCheckReadAccess "AG_FileDlg *file_dlg"
+.Fn AG_FileDlgCheckReadAccess "AG_FileDlg *fd"
 .Pp
 .Ft "int"
-.Fn AG_FileDlgCheckWriteAccess "AG_FileDlg *file_dlg"
+.Fn AG_FileDlgCheckWriteAccess "AG_FileDlg *fd"
 .Pp
 .nr nS 0
 The
@@ -245,28 +320,26 @@ for details).
 .Fn AG_FileDlgCancelAction
 overrides the default behavior of the "Cancel" button.
 .Pp
-The utility functions
 .Fn AG_FileDlgCheckReadAccess
 and
 .Fn AG_FileDlgCheckWriteAccess
 evaluate whether the selected file is readable or writeable.
 .Sh FORMAT-SPECIFIC OPTIONS
-In many cases where we are using
+When we are using
 .Nm
-to load or save files, we may want to provide the user with format-specific
+to load and save files, we may want to provide the user with format-specific
 options that will affect the loading or saving process.
-This interface controls a list of parameters associated with the
+Format-specific options are associated with a file type (an
 .Ft AG_FileType
-objects (as returned by
+as returned by
 .Fn AG_FileDlgAddType ) .
-Whenever a file type is selected,
+When a file type is selected,
 .Nm
-will automatically display control widgets allowing the user to manipulate
-those parameters.
+displays basic widgets enabling the user to manipulate those options.
 .Pp
 .nr nS 1
 .Ft "void"
-.Fn AG_FileDlgSetOptionContainer "AG_FileDlg *file_dlg" "AG_Widget *container"
+.Fn AG_FileDlgSetOptionContainer "AG_FileDlg *fd" "AG_Widget *container"
 .Pp
 .Ft "AG_FileOption *"
 .Fn AG_FileOptionNewBool "AG_FileType *type" "const char *descr" "const char *key" "int default"
@@ -296,9 +369,8 @@ those parameters.
 .Fn AG_FileOptionDbl "AG_FileType *type" "const char *key"
 .Pp
 .nr nS 0
-The
 .Fn AG_FileDlgSetOptionContainer
-function arranges for the given container widget to hold the control
+arranges for the given container widget to hold the control
 widgets that will be dynamically created.
 .Pp
 .Fn AG_FileOptionNewBool
@@ -346,7 +418,7 @@ structure for the given option name, or NULL if there is no such option.
 .Fn AG_FileOptionFlt
 and
 .Fn AG_FileOptionDbl
-return the value of the given option assuming it exists.
+return the value of the given option.
 .Sh BINDINGS
 The
 .Nm
@@ -356,17 +428,13 @@ The
 .Nm
 widget generates the following events:
 .Bl -tag -width 2n
-.It Fn file-chosen "char *path" "AG_FileType *type" "int *status"
+.It Fn file-chosen "char *path" "AG_FileType *type"
 User has selected the given file.
 .Fa path
 is the full pathname to the file.
 If not NULL,
 .Fa type
 describes the matching type of the file.
-If an error occurs,
-.Fa status
-may be set to -1 (and error text indicated by
-.Xr AG_SetError 3 ) .
 .It Fn file-selected "char *path"
 User has moved selection over the given file, where
 .Fa path
