@@ -255,7 +255,7 @@ int
 isExpanded(item)
 	Agar::TlistItem item
 CODE:
-	RETVAL = item->flags & AG_TLIST_EXPANDED;
+	RETVAL = item->flags & AG_TLIST_ITEM_EXPANDED;
 OUTPUT:
 	RETVAL
 
@@ -265,9 +265,9 @@ setExpanded(item, on)
 	int on
 CODE:
 	if (on) {
-		item->flags |= AG_TLIST_EXPANDED;
+		item->flags |= AG_TLIST_ITEM_EXPANDED;
 	} else {
-		item->flags &= ~AG_TLIST_EXPANDED;
+		item->flags &= ~AG_TLIST_ITEM_EXPANDED;
 	}
 
 int
