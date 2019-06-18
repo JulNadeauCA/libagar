@@ -338,6 +338,64 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	return (0);
 }
 
+/* Return the checkbox state. */
+int
+AG_CheckboxGetState(AG_Checkbox *cb)
+{
+	return (cb->state);
+}
+
+/* Set the checkbox state. */
+void
+AG_CheckboxSetState(AG_Checkbox *cb, int newState)
+{
+	AG_Variable *V;
+	void *p;
+
+	AG_ObjectLock(cb);
+	V = AG_GetVariable(cb, "state", &p);
+	switch (V->type) {
+	case AG_VARIABLE_P_INT:
+	case AG_VARIABLE_P_UINT:
+		*(int *)p = newState;
+		break;
+	case AG_VARIABLE_P_FLAG:
+		AG_SETFLAGS(*(Uint *)p, V->info.bitmask.u, newState);
+		break;
+	case AG_VARIABLE_P_FLAG8:
+		AG_SETFLAGS(*(Uint8 *)p, V->info.bitmask.u8, newState);
+		break;
+	case AG_VARIABLE_P_FLAG16:
+		AG_SETFLAGS(*(Uint16 *)p, V->info.bitmask.u16, newState);
+		break;
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_P_FLAG32:
+		AG_SETFLAGS(*(Uint32 *)p, V->info.bitmask.u32, newState);
+		break;
+#endif
+	case AG_VARIABLE_P_UINT8:
+	case AG_VARIABLE_P_SINT8:
+		*(Uint8 *)p = newState;
+		break;
+	case AG_VARIABLE_P_UINT16:
+	case AG_VARIABLE_P_SINT16:
+		*(Uint16 *)p = newState;
+		break;
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_P_UINT32:
+	case AG_VARIABLE_P_SINT32:
+		*(Uint32 *)p = newState;
+		break;
+#endif
+	default:
+		break;
+	}
+	AG_PostEvent(NULL, cb, "checkbox-changed", "%i", newState);
+	AG_UnlockVariable(V);
+	AG_ObjectUnlock(cb);
+	AG_Redraw(cb);
+}
+
 /* Toggle the checkbox state. */
 void
 AG_CheckboxToggle(AG_Checkbox *cb)

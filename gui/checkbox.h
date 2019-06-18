@@ -45,6 +45,8 @@ AG_Checkbox *_Nonnull AG_CheckboxNewFlag(void *_Nullable, Uint, const char *_Nul
 void AG_CheckboxSetFromFlags(void *_Nullable, Uint, Uint *_Nonnull,
                              const AG_FlagDescr *_Nonnull);
 
+int  AG_CheckboxGetState(AG_Checkbox *_Nonnull) _Pure_Attribute;
+void AG_CheckboxSetState(AG_Checkbox *_Nonnull, int);
 void AG_CheckboxToggle(AG_Checkbox *_Nonnull);
 
 #if AG_MODEL != AG_SMALL
