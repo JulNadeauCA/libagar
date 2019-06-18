@@ -248,18 +248,6 @@ Return(AG_Event *_Nonnull event)
 }
 
 static void
-OnDetach(AG_Event *_Nonnull event)
-{
-	AG_Combo *com = AG_SELF();
-
-	if (com->panel != NULL) {
-/*		AG_ObjectDetach(com->list); */
-		AG_ObjectDetach(com->panel);
-		com->panel = NULL;
-	}
-}
-
-static void
 Init(void *_Nonnull obj)
 {
 	AG_Combo *com = obj;
@@ -283,7 +271,6 @@ Init(void *_Nonnull obj)
 	AG_ObjectInit(com->list, &agTlistClass);
 	AG_Expand(com->list);
 	
-	AG_SetEvent(com, "detached", OnDetach, NULL);
 	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 	AG_SetEvent(com->tbox, "textbox-return", Return, "%p", com);
