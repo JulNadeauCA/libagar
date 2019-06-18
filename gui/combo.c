@@ -80,7 +80,7 @@ Collapse(AG_Combo *_Nonnull com)
 	com->wSaved = WIDTH(com->panel);
 	com->hSaved = HEIGHT(com->panel);
 
-	AG_ObjectDetach(com->list);
+	AG_ObjectDetach(com->list);		/* Will be recycled */
 	AG_ObjectDetach(com->panel);
 	com->panel = NULL;
 
@@ -253,7 +253,7 @@ OnDetach(AG_Event *_Nonnull event)
 	AG_Combo *com = AG_SELF();
 
 	if (com->panel != NULL) {
-		AG_ObjectDetach(com->list);
+/*		AG_ObjectDetach(com->list); */
 		AG_ObjectDetach(com->panel);
 		com->panel = NULL;
 	}
@@ -323,14 +323,6 @@ AG_ComboSetButtonSurfaceNODUP(AG_Combo *com, AG_Surface *su)
 }
 
 static void
-Destroy(void *_Nonnull p)
-{
-	AG_Combo *com = p;
-
-	AG_ObjectDestroy(com->list);
-}
-
-static void
 Draw(void *_Nonnull obj)
 {
 	AG_Combo *com = obj;
@@ -382,7 +374,7 @@ AG_WidgetClass agComboClass = {
 		{ 0,0 },
 		Init,
 		NULL,		/* reset */
-		Destroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
