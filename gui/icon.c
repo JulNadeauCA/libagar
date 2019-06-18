@@ -76,7 +76,7 @@ Init(void *_Nonnull obj)
 {
 	AG_Icon *icon = obj;
 
-	WIDGET(icon)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
+	WIDGET(icon)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_TEXT;
 
 	icon->flags = 0;
 	icon->surface = -1;
@@ -152,6 +152,7 @@ Draw(void *_Nonnull obj)
 			icon->labelSurface = -1;
 		}
 		if (icon->labelSurface == -1) {
+			AG_TextBGColorRGB(0,0,0);	/* TODO make stylable */
 			icon->labelSurface = AG_WidgetMapSurface(icon,
 			    AG_TextRender(icon->labelTxt));
 		}
