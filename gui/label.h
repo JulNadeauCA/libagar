@@ -11,9 +11,11 @@
 #if AG_MODEL == AG_SMALL
 # define AG_LABEL_MAX		256	/* Max format string length */
 # define AG_LABEL_MAX_POLLPTRS	8	/* Max polled pointers */
+# define AG_SMALL_LABEL_MAX	32	/* Max length of small labels */
 #else
 # define AG_LABEL_MAX		1024	/* Max format string length */
 # define AG_LABEL_MAX_POLLPTRS	32	/* Max polled pointers */
+# define AG_SMALL_LABEL_MAX	256	/* Max length of small labels */
 #endif
 
 struct ag_label;
