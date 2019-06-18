@@ -234,13 +234,26 @@ TestGUI(void *obj, AG_Window *win)
 
 	/* Populate the Tlist displayed by the combo widgets we just created. */
 	for (i = 0; i < 50; i++) {
+		AG_Color c;
 		char text[32];
+		AG_TlistItem *it;
 
 		/* This is more efficient than AG_Printf() */
 		AG_Strlcpy(text, "Item #", sizeof(text));
 		AG_StrlcatInt(text, i, sizeof(text));
 
-		AG_TlistAddS(com->list, NULL, text);
+		it = AG_TlistAddS(com->list, NULL, text);
+		if ((i % 25) == 0) {
+			it->flags |= AG_TLIST_ITEM_UNDERLINE;
+		} else if ((i % 10) == 0) {
+			it->flags |= AG_TLIST_ITEM_BOLD;
+		} else if ((i % 5) == 0) {
+			it->flags |= AG_TLIST_ITEM_ITALIC;
+		}
+
+		AG_ColorRGB_8(&c, 240, 240, 255 - i*4);
+		AG_TlistSetColor(com->list, it, &c);
+
 		AG_TlistAddS(ucom->list, NULL, text);
 	}
 
