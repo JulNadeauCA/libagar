@@ -125,7 +125,7 @@ int agFontconfigInited = 0;		/* Initialized Fontconfig library */
 static int agTextInitedSubsystem = 0;
 static AG_TextState agTextStateStack[AG_TEXT_STATES_MAX];
 static Uint curState = 0;
-AG_TextState *agTextState;
+AG_TextState *agTextState = NULL;
 
 /* #define SYMBOLS */		/* Escape $(x) type symbols */
 
@@ -257,13 +257,29 @@ OpenBitmapFont(AG_Font *_Nonnull font)
 void
 AG_PushTextState(void)
 {
+	AG_TextState *newState, *prevState;
+	AG_Font *prevFont;
+
 	AG_MutexLock(&agTextLock);
 	if ((curState+1) >= AG_TEXT_STATES_MAX) {
 		AG_FatalError("Text state stack overflow");
 	}
-	agTextState = &agTextStateStack[++curState];
-	memcpy(agTextState, &agTextStateStack[curState-1], sizeof(AG_TextState));
-//	AG_TextStateInit();
+	prevState = &agTextStateStack[curState];
+	prevFont = prevState->font;
+	newState = &agTextStateStack[++curState];
+	newState->font = AG_FetchFont(
+	    OBJECT(prevFont)->name,
+	    &prevFont->spec.size,
+	    prevFont->flags);
+	
+	memcpy(&newState->color, &prevState->color, sizeof(AG_Color));
+	memcpy(&newState->colorBG, &prevState->colorBG, sizeof(AG_Color));
+	newState->justify = prevState->justify;
+	newState->valign = prevState->valign;
+	newState->tabWd = prevState->tabWd;
+
+	agTextState = newState;
+
 	AG_MutexUnlock(&agTextLock);
 }
 
@@ -551,6 +567,12 @@ AG_PopTextState(void)
 	if (curState == 0) {
 		AG_FatalError("Unexpected AG_PopTextState()");
 	}
+#if 0
+	if (agTextState->font != NULL &&
+	    agTextState->font != agDefaultFont)
+		AG_UnusedFont(agTextState->font);
+#endif
+	AG_TextStateInit();
 	agTextState = &agTextState[--curState];
 	AG_MutexUnlock(&agTextLock);
 }
@@ -805,6 +827,12 @@ AG_TextSizeNat(const AG_Char *s, int *w, int *h)
 		return;
 	}
 	InitMetrics(&tm);
+#ifdef AG_DEBUG
+	if (agTextState->font == NULL)
+		AG_FatalError("Illegal context for AG_TextSize()");
+	if (!AG_OfClass(agTextState->font, "AG_Font:*"))
+		AG_FatalError("Inconsistent context for AG_TextSize()");
+#endif
 	switch (agTextState->font->spec.type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
