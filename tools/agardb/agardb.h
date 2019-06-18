@@ -7,6 +7,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <functional>
 
 #ifdef __APPLE__
 # include <LLDB/LLDB.h>
@@ -17,6 +18,7 @@
 # include "lldb/API/SBCommunication.h"
 # include "lldb/API/SBBroadcaster.h"
 # include "lldb/API/SBDebugger.h"
+# include "lldb/API/SBStructuredData.h"
 # include "lldb/API/SBEvent.h"
 # include "lldb/API/SBHostOS.h"
 # include "lldb/API/SBLanguageRuntime.h"
@@ -26,11 +28,16 @@
 # include "lldb/API/SBStringList.h"
 # include "lldb/API/SBTarget.h"
 # include "lldb/API/SBThread.h"
-# include "llvm/ADT/StringRef.h"
-# include "llvm/Support/ConvertUTF.h"
+# include "lldb/Utility/Stream.h"
+
+# include "lldb/Utility/StringList.h"
+# include "lldb/Utility/ArchSpec.h"
+//# include "llvm/Support/ConvertUTF.h"
 # include "llvm/Support/PrettyStackTrace.h"
 # include "llvm/Support/Signals.h"
 #endif
+
+#include <thread>
 
 #if !defined(__APPLE__)
 #include "llvm/Support/DataTypes.h"
@@ -57,6 +64,10 @@ public:
 	lldb::SBDebugger &GetDebugger() { return m_debugger; }
 
 	void SetTerminalWidth(unsigned short col);
+	static void Take_Screenshot(AG_Event *_Nonnull);
+	static void Run_GUI_Debugger_GK(void);
+	static void Run_GUI_Debugger(AG_Event *_Nonnull);
+	static void Forward_Commands(lldb::SBStream &);
 
 	class GUI {
 public:

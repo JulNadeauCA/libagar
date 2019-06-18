@@ -14,7 +14,7 @@ SRCS=		agardb.cpp
 MAN1=		agardb.1
 
 CXXFLAGS+=	${AGAR_CFLAGS} ${LLDB_CFLAGS}
-LIBS+=		${AGAR_LIBS} ${LLDB_LIBS}
+LIBS+=		${AGAR_LIBS} ${LLDB_LIBS} -llldbUtility
 
 all: all-subdir ${PROG}
 
