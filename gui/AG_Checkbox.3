@@ -76,6 +76,12 @@ If a text label is specified, it is displayed next to the control.
 .Fn "AG_Checkbox *"
 .Fn AG_CheckboxSetFromFlags32 "AG_Widget *parent" "Uint flags" "Uint32 *pFlags" "const AG_FlagDescr *flagsDescr"
 .Pp
+.Ft "int"
+.Fn AG_CheckboxGetState "AG_Checkbox *checkbox"
+.Pp
+.Ft "void"
+.Fn AG_CheckboxSetState "AG_Checkbox *checkbox" "int enable"
+.Pp
 .Ft "void"
 .Fn AG_CheckboxToggle "AG_Checkbox *checkbox"
 .Pp
@@ -134,10 +140,12 @@ typedef struct ag_flag_descr {
 } AG_FlagDescr;
 .Ed
 .Pp
-The
+.Fn AG_CheckboxGetState
+returns the current state of the checkbox.
+.Fn AG_CheckboxSetState
+sets the of the checkbox, where 0=inactive and 0=active.
 .Fn AG_CheckboxToggle
-function inverts the current state of
-.Fa checkbox .
+inverts the state atomically.
 .Sh BINDINGS
 The
 .Nm
