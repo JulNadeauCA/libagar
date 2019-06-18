@@ -439,6 +439,12 @@ The following functions allow such manipulations.
 .Fn AG_EventArgs "AG_Event *ev" "const char *fmt" "..."
 .Pp
 .Ft void
+.Fn AG_EventCopy "AG_Event *dst" "const AG_Event *src"
+.Pp
+.Ft "AG_Event *"
+.Fn AG_EventDup "const AG_Event *src"
+.Pp
+.Ft void
 .Fn AG_EventPushPointer "AG_Event *ev" "const char *key" "void *val"
 .Pp
 .Ft void
@@ -508,6 +514,13 @@ initializes
 and also specifies a list of arguments (in the same format as
 .Fn AG_SetEvent ) .
 .Pp
+.Fn AG_EventCopy
+copies the function pointer and arguments from one
+.Nm
+to another.
+.Fn AG_EventDup
+returns a newly-allocated duplicate.
+.Pp
 The
 .Fn AG_EventPush*
 functions append an argument to the end of the argument list for the specified
@@ -522,9 +535,6 @@ assumed to be a character from an
 .Fn AG_SetEvent
 style format string, and the argument is retrieved using
 .Xr va_arg 3 .
-.Pp
-.Fn AG_EventPopArgument
-removes the last argument from the list.
 .Sh EVENT QUEUES
 Under some circumstances, it is useful to gather
 .Ft AG_Event

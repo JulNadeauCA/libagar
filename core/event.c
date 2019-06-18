@@ -135,6 +135,38 @@ AG_EventArgs(AG_Event *ev, const char *fmt, ...)
 	ev->argc0 = ev->argc;
 }
 
+/* Return a newly-allocated duplicate of the given AG_Event. */
+AG_Event *
+AG_EventDup(const AG_Event *event)
+{
+	AG_Event *ev;
+
+	ev = Malloc(sizeof(AG_Event));
+	AG_EventCopy(ev, event);
+	return (ev);
+}
+
+/*
+ * Copy the name, callback pointer, arguments and inheritable flags
+ * from a source AG_Event to a destination AG_Event.
+ */
+void
+AG_EventCopy(AG_Event *dst, const AG_Event *src)
+{
+	int i;
+
+	memcpy(dst->name, src->name, sizeof(dst->name));
+	dst->flags = src->flags & AG_EVENT_SAVED_FLAGS;
+	dst->fn = src->fn;
+	dst->argc = src->argc;
+	dst->argc0 = src->argc0;
+	for (i = 0; i < src->argc; i++) {
+		AG_CopyVariable(&dst->argv[i], &src->argv[i]);
+	}
+	dst->events.tqe_next = NULL;
+	dst->events.tqe_prev = NULL;
+}
+
 /*
  * Configure an event handler routine for a given event.
  * If a handler routine already exists, replace it.

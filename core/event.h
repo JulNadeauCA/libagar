@@ -67,6 +67,8 @@ typedef struct ag_event {
 	Uint flags;
 #define	AG_EVENT_ASYNC     0x01			/* Service in separate thread */
 #define AG_EVENT_PROPAGATE 0x02			/* Forward to child objs */
+#define AG_EVENT_SAVED_FLAGS (AG_EVENT_ASYNC | \
+                              AG_EVENT_PROPAGATE)
 	AG_VoidFn fn;				/* Callback function */
 	int argc, argc0;			/* Argument count & offset */
 	AG_Variable argv[AG_EVENT_ARGS_MAX];	/* Argument values */
@@ -306,6 +308,9 @@ void AG_DestroyEventSubsystem(void);
 
 void AG_EventInit(AG_Event *_Nonnull);
 void AG_EventArgs(AG_Event *_Nonnull, const char *_Nullable , ...);
+
+void               AG_EventCopy(AG_Event *_Nonnull, const AG_Event *_Nonnull);
+AG_Event *_Nonnull AG_EventDup(const AG_Event *_Nonnull);
 
 AG_Event *_Nonnull AG_SetEvent(void *_Nonnull, const char *_Nullable ,
                                _Nullable AG_EventFn, const char *_Nullable, ...);
