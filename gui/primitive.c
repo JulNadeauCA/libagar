@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2019 Julien Nadeau Carriere <vedge@csoft.net>, 2019 Charles A.
- * Daniels <charles@cdaniels.net>
+ * Copyright (c) 2019 Julien Nadeau Carriere <vedge@csoft.net>.
+ * Copyright (c) 2019 Charles A. Daniels <charles@cdaniels.net>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,43 +31,6 @@
 /* Import inlinables */
 #undef AG_INLINE_HEADER
 #include "inline_primitive.h"
-
-/*
- * Render a gimp-style background tiling.
- */
-void
-AG_DrawTiling(void *obj, const AG_Rect *r, int tsz, int offs,
-    const AG_Color *c1, const AG_Color *c2)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Driver *drv = wid->drv;
-	AG_Rect rd;
-	int alt1 = 0, alt2 = 0;
-	int x = wid->rView.x1 + r->x;
-	int y = wid->rView.y1 + r->y;
-	int x2 = x + r->w;
-	int y2 = y + r->h;
-	int tsz_offs = tsz+offs;
-
-	rd.w = tsz;
-	rd.h = tsz;
-
-	/* XXX inelegant */
-	for (rd.y = y-tsz_offs; rd.y < y2; rd.y += tsz) {
-		for (rd.x = x-tsz_offs; rd.x < x2; rd.x += tsz) {
-			if (alt1++ == 1) {
-				wid->drvOps->drawRectFilled(drv, &rd, c1);
-				alt1 = 0;
-			} else {
-				wid->drvOps->drawRectFilled(drv, &rd, c2);
-			}
-		}
-		if (alt2++ == 1) {
-			alt2 = 0;
-		}
-		alt1 = alt2;
-	}
-}
 
 /*
  * Return 0 in the case that the lines ((x1,y1), (x2,y2)) and ((x3,y3),(x4,y4))
@@ -103,94 +66,76 @@ AG_DrawTiling(void *obj, const AG_Rect *r, int tsz, int offs,
 #define SAME_SIGNS( a, b )	\
 		(((long) ((unsigned long) a ^ (unsigned long) b)) >= 0 )
 
-int AG_GetLineIntersection (
-		x1, y1,   /* First line segment */
-		x2, y2,
-
-		x3, y3,   /* Second line segment */
-		x4, y4,
-
-		xi,
-		yi         /* Output value:
-		            * point of intersection */
-               )
-long
-    x1, y1, x2, y2, x3, y3, x4, y4,
-    *xi, *yi;
+int
+AG_GetLineIntersection(long x1,long y1, long x2,long y2, long x3,long y3,
+    long x4,long y4, long *xi,long *yi)
 {
-    long a1, a2, b1, b2, c1, c2; /* Coefficients of line eqns. */
-    long r1, r2, r3, r4;         /* 'Sign' values */
-    long denom, offset, num;     /* Intermediate values */
+	long a1,a2, b1,b2, c1,c2;	/* Coefficients of line eqns. */
+	long r1, r2, r3, r4;		/* 'Sign' values */
+	long denom, offset, num;	/* Intermediate values */
 
-    /* Compute a1, b1, c1, where line joining points 1 and 2
-     * is "a1 x  +  b1 y  +  c1  =  0".
-     */
+	/* Compute a1, b1, c1, where line joining points 1 and 2
+	 * is "a1 x  +  b1 y  +  c1  =  0".
+	 */
+	a1 = y2 - y1;
+	b1 = x1 - x2;
+	c1 = x2*y1 - x1*y2;
 
-    a1 = y2 - y1;
-    b1 = x1 - x2;
-    c1 = x2 * y1 - x1 * y2;
+	/* Compute r3 and r4.
+	 */
+	r3 = a1*x3 + b1*y3 + c1;
+	r4 = a1*x4 + b1*y4 + c1;
 
-    /* Compute r3 and r4.
-     */
+	/* Check signs of r3 and r4.  If both point 3 and point 4 lie on
+	 * same side of line 1, the line segments do not intersect.
+	 */
+	if (r3 != 0 &&
+	    r4 != 0 &&
+	    SAME_SIGNS(r3, r4))
+		return (0);
 
+	/* Compute a2, b2, c2 */
+	a2 = y4 - y3;
+	b2 = x3 - x4;
+	c2 = x4*y3 - x3*y4;
 
-    r3 = a1 * x3 + b1 * y3 + c1;
-    r4 = a1 * x4 + b1 * y4 + c1;
+	/* Compute r1 and r2 */
+	r1 = a2*x1 + b2*y1 + c2;
+	r2 = a2*x2 + b2*y2 + c2;
 
-    /* Check signs of r3 and r4.  If both point 3 and point 4 lie on
-     * same side of line 1, the line segments do not intersect.
-     */
+	/* Check signs of r1 and r2.  If both point 1 and point 2 lie
+	 * on same side of second line segment, the line segments do
+	 * not intersect.
+	 */
+	if (r1 != 0 &&
+	    r2 != 0 &&
+	    SAME_SIGNS(r1, r2))
+		return (0);
 
-    if ( r3 != 0 &&
-         r4 != 0 &&
-         SAME_SIGNS( r3, r4 ))
-        return ( 0 );
+	/* Line segments intersect: compute intersection point.
+	 */
+	denom = a1*b2 - a2*b1;
+	if (denom == 0)
+		return (0);
 
-    /* Compute a2, b2, c2 */
+	/* The denom/2 is to get rounding instead of truncating.  It
+	 * is added or subtracted to the numerator, depending upon the
+	 * sign of the numerator.
+	 */
+	offset = denom < 0 ? - denom/2 : denom/2;
 
-    a2 = y4 - y3;
-    b2 = x3 - x4;
-    c2 = x4 * y3 - x3 * y4;
+	num = b1*c2 - b2*c1;
+	*xi = (num < 0 ? num-offset : num+offset) / denom;
 
-    /* Compute r1 and r2 */
+	num = a2*c1 - a1*c2;
+	*yi = (num < 0 ? num-offset : num+offset ) / denom;
 
-    r1 = a2 * x1 + b2 * y1 + c2;
-    r2 = a2 * x2 + b2 * y2 + c2;
-
-    /* Check signs of r1 and r2.  If both point 1 and point 2 lie
-     * on same side of second line segment, the line segments do
-     * not intersect.
-     */
-
-    if ( r1 != 0 &&
-         r2 != 0 &&
-         SAME_SIGNS( r1, r2 ))
-        return ( 0 );
-
-    /* Line segments intersect: compute intersection point.
-     */
-
-    denom = a1 * b2 - a2 * b1;
-    if ( denom == 0 )
-        return ( 0 );
-    offset = denom < 0 ? - denom / 2 : denom / 2;
-
-    /* The denom/2 is to get rounding instead of truncating.  It
-     * is added or subtracted to the numerator, depending upon the
-     * sign of the numerator.
-     */
-
-    num = b1 * c2 - b2 * c1;
-    *xi = ( num < 0 ? num - offset : num + offset ) / denom;
-
-    num = a2 * c1 - a1 * c2;
-    *yi = ( num < 0 ? num - offset : num + offset ) / denom;
-
-    return ( 1 );
+	return (1);
 }
 
 #undef SAME_SIGNS
 
+#ifdef HAVE_FLOAT
 /* If the circle with the center (xc, yc) and radius r intersects with the line
  * (x1, y1), (x2, y2), then xi and yi are updated to reflect the point at which
  * the intersection occurs. In the event of two intersections, xi and yi are
@@ -203,9 +148,10 @@ long
  * be due to floating point precision errors as m becomes very small or very
  * large.
  */
-void AG_ClipLineCircle(int xc, int yc, int r, int x1, int y1,
-	int x2, int y2, int *xi, int *yi) {
-
+void
+AG_ClipLineCircle(int xc, int yc, int r, int x1, int y1, int x2, int y2,
+    int *xi, int *yi)
+{
 	/* In the case that x1 and x2 are the same, there is a bug that causes
 	 * m to be zero, resulting in no intersect being detected. */
 	if (x1 == x2) {x1++;}
@@ -248,12 +194,12 @@ void AG_ClipLineCircle(int xc, int yc, int r, int x1, int y1,
 /*
  * Given a widget object and a line, clip the line such that it ends on the
  * border of the object. In other words, set x2, y2 to the intersect of the
- * line and the object. If the line does not intersect the object, then x2 and
- * y2 are unchanged.
- *
+ * line and the object. If the line does not intersect the object, then x2
+ * and y2 are unchanged.
  */
-void AG_ClipLine(int ax, int ay, int aw, int ah, int x1, int y1, int *x2, int *y2) {
-
+void
+AG_ClipLine(int ax, int ay, int aw, int ah, int x1, int y1, int *x2, int *y2)
+{
 	/* We simply compute the intersection with every possible face, and
 	 * pick the one which is smallest. It _might_ be faster to decide which
 	 * face we are "approaching" from, but I think the edge case handling
@@ -338,16 +284,13 @@ void AG_ClipLine(int ax, int ay, int aw, int ah, int x1, int y1, int *x2, int *y
  * the arrowhead.
  *
  */
-void AG_DrawArrowhead(void *_Nonnull obj, int x1, int y1,
-		int x2, int y2, int length, double theta,
-		const AG_Color *_Nonnull c)
+void
+AG_DrawArrowhead(void *obj, int x1, int y1, int x2, int y2, int length,
+    double theta, const AG_Color *_Nonnull c)
 {
-	AG_Widget *wid = (AG_Widget *)obj;
-
+	AG_Widget *wid = obj;
 	AG_Pt P_start, P_tip,P1, P2;
-
 	double V_dirx, V_diry, V_refx, V_refy, V_per1x, V_per1y, V_per2x, V_per2y;
-
 	double width;
 
 
@@ -365,8 +308,8 @@ void AG_DrawArrowhead(void *_Nonnull obj, int x1, int y1,
 
 	/* length of overall line, necessary to generate direction reference
 	 * unit vector */
-	double line_length = AG_Distance((double) P_tip.x, (double) P_tip.y,
-			(double) P_start.x, (double) P_start.y);
+	double line_length = AG_Distance((double) P_tip.x,   (double) P_tip.y,
+	                                 (double) P_start.x, (double) P_start.y);
 
 	/* Avoid a divide by zero error later -- we can't draw an error for
 	 * a zero-length line anyway.
@@ -375,7 +318,8 @@ void AG_DrawArrowhead(void *_Nonnull obj, int x1, int y1,
 	 *
 	 * XXX: might want to use an epsilon test?
 	 * */
-	if (line_length == 0) {return;}
+	if (line_length == 0)
+		return;
 
 	/* direction reference vector -- this intentionally points the
 	 * "wrong" way since it makes it convenient to calculate P_ref and
@@ -407,5 +351,4 @@ void AG_DrawArrowhead(void *_Nonnull obj, int x1, int y1,
 
 	AG_DrawTriangle(wid, &P_tip, &P1, &P2, c);
 }
-
-
+#endif /* HAVE_FLOAT */

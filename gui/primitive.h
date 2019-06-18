@@ -107,23 +107,24 @@ void ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
 # define AG_DrawPlus(o,r,c,fn)			ag_draw_plus((o),(r),(c),(fn))
 # define AG_DrawMinus(o,r,c,fn)			ag_draw_minus((o),(r),(c),(fn))
 # define AG_DrawLine2(o,x1,y1,x2,y2,c)		ag_draw_line_2((o),(x1),(y1),(x2),(y2),(c))
-#ifdef AG_HAVE_FLOAT
-#define AG_DrawArrowLine(o,x1,y1,x2,y2,t,l,th,c) ag_draw_arrow_line((o),(x1),(y1),(x2),(y2),(t),(l),(th),(c))
-#endif /* AG_HAVE_FLOAT */
+# ifdef AG_HAVE_FLOAT
+#  define AG_DrawArrowLine(o,x1,y1,x2,y2,t,l,th,c) ag_draw_arrow_line((o),(x1),(y1),(x2),(y2),(t),(l),(th),(c))
+# else
+#  define AG_DrawArrowLine(o,x1,y1,x2,y2,t,l,th,c)
+# endif
 #endif /* !AG_INLINE_WIDGET */
 
-void AG_DrawTiling(void *_Nonnull, const AG_Rect *_Nonnull, int, int,
-                   const AG_Color *_Nonnull, const AG_Color *_Nonnull);
-int AG_GetLineIntersection(long x1, long y1, long x2, long y2, long x3,
-                           long y3, long x4, long y4, long *xi, long *yi);
+int AG_GetLineIntersection(long,long, long,long, long,long, long,long,
+                           long *_Nonnull,long *_Nonnull);
+
 #ifdef AG_HAVE_FLOAT
-void AG_ClipLine(int ax, int ay, int aw, int ah, int x1, int y1, int *x2, int *y2);
-void AG_ClipLineCircle(int xc, int yc, int r, int x1, int y1,
-                       int x2, int y2, int *xi, int *yi);
-void AG_DrawArrowhead(void *_Nonnull obj, int x1, int y1,
-		int x2, int y2, int length, double theta,
-		const AG_Color *_Nonnull c);
-#endif /* AG_HAVE_FLOAT */
+void AG_ClipLine(int,int, int,int, int,int, int *_Nonnull,int *_Nonnull);
+void AG_ClipLineCircle(int,int, int, int,int, int,int,
+                       int *_Nonnull,int *_Nonnull);
+
+void AG_DrawArrowhead(void *_Nonnull, int, int, int,int, int, double,
+                      const AG_Color *_Nonnull);
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

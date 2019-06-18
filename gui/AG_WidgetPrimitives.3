@@ -1,5 +1,5 @@
-.\" Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>,
-.\" 2019 Charles A. Daniels <charles@cdaniels.net>
+.\" Copyright (c) 2019 Charles A. Daniels <charles@cdaniels.net>
+.\" Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -223,17 +223,32 @@ in that it accepts an explicit blending mode
 (see
 .Xr AG_AlphaFn 3
 for details).
-.Fn Ag_DrawArrowLine
-is a rapper around AG_DrawLine and AG_DrawArrowhead which can draw a line along
-with, depending on the value of
-.Fa t
-, no arrowheads (AG_ARROWLINE_NONE), a forward arrow (AG_ARROWLINE_FORWARD), a
-reverse arrow (AG_ARROWLINE_REVERSE), or both a forward and reverse arrow
-(AG_ARROWLINE_BOTH). For the purposes of determining "forward" and "reverse",
-a forward arrow would be taken to point to (
+.Pp
+.Fn AG_DrawArrowLine
+is a wrapper around
+.Fn AG_DrawLine
+and
+.Fn AG_DrawArrowhead
+which can draw a line along with, depending on the value of
+.Fa t :
+.Pp
+.Bl -tag -width "AG_ARROWLINE_FORWARD " -compact
+.It AG_ARROWLINE_NONE
+No arrowheads.
+.It AG_ARROWLINE_FORWARD
+A forward-pointing arrow.
+.It AG_ARROWLINE_REVERSE
+A reverse-pointing arrow.
+.It AG_ARROWLINE_BOTH
+Forward and reverse arrows.
+.El
+.Pp
+For the purposes of determining "forward" and "reverse", a forward arrow would
+be taken to point to (
 .Fa x2,
 .Fa y2
-). This function requires floating point support.
+).
+This function requires floating point support.
 .Sh SIMPLE GRAPHICAL ELEMENTS
 .nr nS 1
 .Ft void
@@ -247,9 +262,6 @@ a forward arrow would be taken to point to (
 .Pp
 .Ft void
 .Fn AG_DrawBoxRoundedTop "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "AG_Color c"
-.Pp
-.Ft void
-.Fn AG_DrawTiling "AG_Widget *widget" "AG_Rect r" "int tileSz" "int offset" "AG_Color c1" "AG_Color c2"
 .Pp
 .Ft void
 .Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "int z" "AG_Color c"
@@ -283,17 +295,6 @@ The
 .Fn AG_DrawBoxRoundedTop
 variant only rounds the top two corners.
 .Pp
-.Fn AG_DrawTiling
-fills the rectangle
-.Fa r
-with a two-color tiling pattern.
-.Fa tileSz
-is the size of the tiles in pixels,
-.Fa offset
-is an offset in pixels and
-.Fa c1 ,
-.Fa c2
-specify the colors of the tiles.
 .Sh SYMBOLS
 .nr nS 1
 .Ft void
@@ -366,19 +367,22 @@ defines the length from tip to base of the arrowhead.
 defines the angle of the lines which converge at the tip of the arrowhead. The
 arrowhead is always drawn in a solid / fully filled style. This function
 requires floating point support.
-.Sh UTILITIES
+.Sh UTILITY ROUTINES
 .nr nS 1
 .Ft int
 .Fn AG_GetLineIntersection "long x1" "long y1" "long x2" "long y2" "long x3" "long y3" "long x4" "long y4" "long *xi" "long *yi"
 .Pp
 .Ft void
 .Fn AG_ClipLine "int ax" "int ay" "int aw" "int ah" "int x1" "int y1" "int *x2" "int *y2"
+.Pp
 .Ft void
 .Fn AG_ClipLineCircle "int xc" "int yc" "int r" "int x1" "int y1" "int x2" "int y2" "int *xi" "int *yi"
 .Pp
+.nr nS 0
 .Pp
+The
 .Fn AG_GetLineIntersection
-considers two line segments (
+function considers two line segments (
 .Fa x1,
 .Fa y1
 ), (
@@ -391,12 +395,11 @@ considers two line segments (
 .Fa x4,
 .Fa y4
 ). If the lines do not intersect, then the function returns 0. If they do
-intersect, then the function returns 1 and
+intersect, then it returns 1 and
 .Fa xi
 and
 .Fa yi
-will be updated to the coordinates at which the intersection occurs. Requires
-floating point support.
+will be updated to the coordinates at which the intersection occurs.
 .Pp
 .Fn AG_ClipLine
 considers the bounding box defined by it's top left corner:
@@ -440,7 +443,7 @@ are updated to reflect the intersection point which is closest to
 (
 .Fa x1,
 .Fa y1
-). This function requires floating point support.
+).
 .Sh SEE ALSO
 .Xr AG_AlphaFn 3 ,
 .Xr AG_Color 3 ,
@@ -451,5 +454,5 @@ are updated to reflect the intersection point which is closest to
 .Sh HISTORY
 Simple widget primitives first appeared in Agar 1.0.
 The basic rendering system was redesigned in Agar 1.4.
-64-bit pixel access routines were added in Agar 1.6.
-AG_GetLineIntersection, AG_ClipLine, and AG_DrawArrowhead were added in Agar 1.6.
+64-bit pixel access routines, line intersection/clipping tests and the
+Arrowhead primitive were added in Agar 1.6.
