@@ -88,7 +88,9 @@ AG_MenuNewGlobal(Uint flags)
 	if (agDriverSw) {
 		wFlags |= AG_WINDOW_PLAIN|AG_WINDOW_HMAXIMIZE;
 	}
-	win = AG_WindowNewNamedS(wFlags, "_agAppMenu");
+	if ((win = AG_WindowNewNamedS(wFlags, "_agAppMenu")) == NULL) {
+		goto exists;
+	}
 	win->wmType = AG_WINDOW_WM_DOCK;
 	if (win == NULL) {
 		goto exists;
