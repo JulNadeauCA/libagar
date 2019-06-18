@@ -12,6 +12,7 @@
 #define AG_TLIST_LABEL_MAX AG_LABEL_MAX
 #endif
 
+/* Popup menu (TODO switch to AG_PopupMenu) */
 typedef struct ag_tlist_popup {
 	const char  *_Nonnull  iclass;	/* Apply to items of this class */
 	AG_Menu     *_Nonnull  menu;	/* The popup menu proper */
@@ -20,6 +21,7 @@ typedef struct ag_tlist_popup {
 	AG_TAILQ_ENTRY(ag_tlist_popup) popups;
 } AG_TlistPopup;
 
+/* A tree/list item */
 typedef struct ag_tlist_item {
 	int selected;			/* Effective selection flag */
 
@@ -31,20 +33,30 @@ typedef struct ag_tlist_item {
 	int label;			/* Cached label surface */
 	Uint depth;			/* Indent in tree display */
 	Uint flags;
-#define AG_TLIST_EXPANDED     0x01	/* Child items visible (tree) */
-#define AG_TLIST_HAS_CHILDREN 0x02	/* Child items exist (tree) */
-#define AG_TLIST_NO_SELECT    0x08	/* Item is not selectable */
-#define AG_TLIST_NO_POPUP     0x10	/* Disable popups for item */
-#define AG_TLIST_VISIBLE_CHILDREN AG_TLIST_EXPANDED
+#define AG_TLIST_ITEM_EXPANDED  0x001	/* Child items visible (tree) */
+#define AG_TLIST_HAS_CHILDREN   0x002	/* Child items exist (tree) */
+#define AG_TLIST_NO_SELECT      0x008	/* Item is not selectable */
+#define AG_TLIST_NO_POPUP       0x010	/* Disable popups for item */
+#define AG_TLIST_ITEM_BOLD      0x020	/* Render font in bold weight */
+#define AG_TLIST_ITEM_ITALIC    0x040	/* Render font in italic */
+#define AG_TLIST_ITEM_UNDERLINE 0x080	/* Render font in underline */
+#define AG_TLIST_ITEM_UPPERCASE 0x100	/* Render font in uppercase */
+#define AG_TLIST_ITEM_STYLE     (AG_TLIST_ITEM_BOLD | \
+				 AG_TLIST_ITEM_ITALIC | \
+				 AG_TLIST_ITEM_UNDERLINE | \
+				 AG_TLIST_ITEM_UPPERCASE)
 
 	AG_TAILQ_ENTRY(ag_tlist_item) items;	/* Items in list */
 	AG_TAILQ_ENTRY(ag_tlist_item) selitems;	/* Saved selection state */
 	
 	char text[AG_TLIST_LABEL_MAX];	/* Label text */
+	AG_Color *_Nullable color;	/* Alternate text-color */
+	AG_Font *_Nullable font;	/* Alternate font */
 } AG_TlistItem;
 
 typedef AG_TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item) AG_TlistItemQ;
 
+/* Tree/list widget */
 typedef struct ag_tlist {
 	struct ag_widget wid;		/* AG_Widget -> AG_Tlist */
 	Uint flags;
@@ -116,8 +128,7 @@ void AG_TlistSizeHintLargest(AG_Tlist *_Nonnull, int);
 
 void AG_TlistSetItemHeight(AG_Tlist *_Nonnull, int);
 void AG_TlistSetIconWidth(AG_Tlist *_Nonnull, int);
-void AG_TlistSetIcon(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull,
-                     const AG_Surface *_Nullable);
+
 #ifdef AG_TIMERS
 void AG_TlistSetRefresh(AG_Tlist *_Nonnull, int);
 #endif
@@ -157,6 +168,13 @@ AG_TlistItem *_Nonnull AG_TlistAddPtr(AG_Tlist *_Nonnull,
 AG_TlistItem *_Nonnull AG_TlistAddPtrHead(AG_Tlist *_Nonnull,
                                           const AG_Surface *_Nullable,
                                           const char *_Nonnull, void *_Nullable);
+
+void AG_TlistSetIcon(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull,
+                     const AG_Surface *_Nullable);
+void AG_TlistSetColor(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull,
+                      const AG_Color *_Nullable);
+void AG_TlistSetFont(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull,
+                     AG_Font *_Nullable);
 
 void AG_TlistDel(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
 
@@ -207,6 +225,8 @@ int  AG_TlistVisibleChildren(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
 void AG_TlistRefresh(AG_Tlist *_Nonnull);
 
 #ifdef AG_LEGACY
+#define AG_TLIST_EXPANDED         AG_TLIST_ITEM_EXPANDED
+#define AG_TLIST_VISIBLE_CHILDREN AG_TLIST_ITEM_EXPANDED
 #define AG_TlistPrescale(tl,text,n) AG_TlistSizeHint((tl),(text),(n))
 #endif
 __END_DECLS

@@ -34,6 +34,8 @@
 #define AG_TLIST_PADDING 2	/* Label padding (pixels) */
 #endif
 
+static void StylizeFont(AG_Tlist *_Nonnull, Uint);
+
 AG_Tlist *
 AG_TlistNew(void *parent, Uint flags)
 {
@@ -518,15 +520,32 @@ Draw(void *_Nonnull obj)
 			r.w = wIcon;
 			r.h = hItem;
 			DrawSubnodeIndicator(tl, &r,
-			    (it->flags & AG_TLIST_VISIBLE_CHILDREN));
+			    (it->flags & AG_TLIST_ITEM_EXPANDED));
 		}
 		if (it->label == -1) {
-			AG_TextColor(it->selected ?
-			             &WCOLOR_SEL(tl,AG_TEXT_COLOR) :
-				     &WCOLOR(tl,AG_TEXT_COLOR));
+			int altFont = 0;
 
+			if (it->color) {
+				AG_TextColor(it->color);
+			} else {
+				AG_TextColor(it->selected ?
+				             &WCOLOR_SEL(tl,AG_TEXT_COLOR) :
+					     &WCOLOR(tl,AG_TEXT_COLOR));
+			}
+			if (it->font) {
+				AG_PushTextState();
+				AG_TextFont(it->font);
+				altFont = 1;
+			} else if (it->flags & AG_TLIST_ITEM_STYLE) {
+				AG_PushTextState();
+				StylizeFont(tl, it->flags);
+				altFont = 1;
+			}
 			it->label = AG_WidgetMapSurface(tl,
 			    AG_TextRender(it->text));
+
+			if (altFont)
+				AG_PopTextState();
 		}
 
 		AG_WidgetBlitSurface(tl, it->label,
@@ -548,6 +567,20 @@ Draw(void *_Nonnull obj)
 		tl->flags &= ~(AG_TLIST_SCROLLTOSEL);
 	}
 	AG_PopClipRect(tl);
+}
+
+static void
+StylizeFont(AG_Tlist *_Nonnull tl, Uint itFlags)
+{
+	AG_Font *defFont = WIDGET(tl)->font;
+	Uint fontFlags = 0;
+
+	if (itFlags & AG_TLIST_ITEM_BOLD) { fontFlags |= AG_FONT_BOLD; }
+	if (itFlags & AG_TLIST_ITEM_ITALIC) { fontFlags |= AG_FONT_ITALIC; }
+	if (itFlags & AG_TLIST_ITEM_UNDERLINE) { fontFlags |= AG_FONT_UNDERLINE; }
+	if (itFlags & AG_TLIST_ITEM_UPPERCASE) { fontFlags |= AG_FONT_UPPERCASE; }
+
+	AG_TextFontLookup(OBJECT(defFont)->name, &defFont->spec.size, fontFlags);
 }
 
 /* Remove a tlist item. */
@@ -680,10 +713,10 @@ AG_TlistEnd(AG_Tlist *tl)
 			if (!(tl->flags & AG_TLIST_NOSELSTATE)) {
 				cit->selected = sit->selected;
 			}
-			if (sit->flags & AG_TLIST_VISIBLE_CHILDREN) {
-				cit->flags |= AG_TLIST_VISIBLE_CHILDREN;
+			if (sit->flags & AG_TLIST_ITEM_EXPANDED) {
+				cit->flags |= AG_TLIST_ITEM_EXPANDED;
 			} else {
-				cit->flags &= ~(AG_TLIST_VISIBLE_CHILDREN);
+				cit->flags &= ~(AG_TLIST_ITEM_EXPANDED);
 			}
 		}
 		FreeItem(tl, sit);
@@ -717,7 +750,7 @@ AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *cit)
 	if (sit == NULL) { 
 		return (0);			/* TODO default setting */
 	}
-	return (sit->flags & AG_TLIST_VISIBLE_CHILDREN);
+	return (sit->flags & AG_TLIST_ITEM_EXPANDED);
 }
 
 void
@@ -744,6 +777,8 @@ AG_TlistItemNew(AG_Tlist *_Nonnull tl, const AG_Surface *icon)
 	it->depth = 0;
 	it->flags = 0;
 	it->text[0] = '\0';
+	it->color = NULL;
+	it->font = NULL;
 	return (it);
 }
 
@@ -853,6 +888,57 @@ AG_TlistAddPtrHead(AG_Tlist *tl, const AG_Surface *icon, const char *text,
 	InsertItem(tl, it, 1);
 	AG_ObjectUnlock(tl);
 	return (it);
+}
+
+/* Set the graphical icon to display along with an item. */
+void
+AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, const AG_Surface *S)
+{
+	AG_ObjectLock(tl);
+	if (it->iconsrc != NULL) {
+		AG_SurfaceFree(it->iconsrc);
+	}
+	it->iconsrc = (S != NULL) ? AG_SurfaceDup(S) : NULL;
+	if (it->icon != -1) {
+		AG_WidgetUnmapSurface(tl, it->icon);
+		it->icon = -1;
+	}
+	AG_ObjectUnlock(tl);
+	AG_Redraw(tl);
+}
+
+/* Set an alternate, per-item text color. */
+void
+AG_TlistSetColor(AG_Tlist *tl, AG_TlistItem *it, const AG_Color *c)
+{
+	AG_ObjectLock(tl);
+	if (it->color != NULL) {
+		free(it->color);
+	}
+	if (c != NULL) {
+		it->color = Malloc(sizeof(AG_Color));
+		memcpy(it->color, c, sizeof(AG_Color));
+	} else {
+		it->color = NULL;
+	}
+	AG_ObjectUnlock(tl);
+}
+
+/* Set an alternate, per-item font. */
+void
+AG_TlistSetFont(AG_Tlist *tl, AG_TlistItem *it, AG_Font *font)
+{
+	AG_ObjectLock(tl);
+	if (it->font != NULL && it->font != agDefaultFont) {
+		AG_UnusedFont(it->font);
+	}
+	if (font != NULL) {
+		font->nRefs++;
+		it->font = font;
+	} else {
+		it->font = NULL;
+	}
+	AG_ObjectUnlock(tl);
 }
 
 /* Select an item based on its pointer value. */
@@ -1005,10 +1091,10 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		if (ti->flags & AG_TLIST_HAS_CHILDREN) {
 			if (x >= ti->depth*tl->icon_w &&
 			    x <= (ti->depth+1)*tl->icon_w) {
-				if (ti->flags & AG_TLIST_VISIBLE_CHILDREN) {
-					ti->flags &= ~AG_TLIST_VISIBLE_CHILDREN;
+				if (ti->flags & AG_TLIST_ITEM_EXPANDED) {
+					ti->flags &= ~AG_TLIST_ITEM_EXPANDED;
 				} else {
-					ti->flags |=  AG_TLIST_VISIBLE_CHILDREN;
+					ti->flags |=  AG_TLIST_ITEM_EXPANDED;
 				}
 				tl->flags |= AG_TLIST_REFRESH;
 				AG_Redraw(tl);
@@ -1188,7 +1274,7 @@ Init(void *_Nonnull obj)
 {
 	AG_Tlist *tl = obj;
 
-	WIDGET(tl)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
+	WIDGET(tl)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_TEXT;
 
 	tl->flags = 0;
 	tl->selected = NULL;
@@ -1417,22 +1503,6 @@ AG_TlistSetIconWidth(AG_Tlist *tl, int iw)
 			AG_FatalError(NULL);
 		}
 		AG_WidgetReplaceSurface(tl, it->icon, sScaled);
-	}
-	AG_ObjectUnlock(tl);
-	AG_Redraw(tl);
-}
-
-void
-AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, const AG_Surface *S)
-{
-	AG_ObjectLock(tl);
-	if (it->iconsrc != NULL) {
-		AG_SurfaceFree(it->iconsrc);
-	}
-	it->iconsrc = (S != NULL) ? AG_SurfaceDup(S) : NULL;
-	if (it->icon != -1) {
-		AG_WidgetUnmapSurface(tl, it->icon);
-		it->icon = -1;
 	}
 	AG_ObjectUnlock(tl);
 	AG_Redraw(tl);

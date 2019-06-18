@@ -70,9 +70,6 @@ optimizes for cases where contents are cleared and regenerated frequently
 .Fn AG_TlistSetIconWidth "AG_Tlist *tl" "int icon_width"
 .Pp
 .Ft void
-.Fn AG_TlistSetIcon "AG_Tlist *tl" "AG_TlistItem *item" "const AG_Surface *icon"
-.Pp
-.Ft void
 .Fn AG_TlistSizeHint "AG_Tlist *tl" "const char *text" "int nitems"
 .Pp
 .Ft void
@@ -109,28 +106,24 @@ Acceptable
 .Fa flags
 include:
 .Bl -tag -width "AG_TLIST_MULTITOGGLE "
+.It AG_TLIST_TREE
+List contents are displayed in a tree layout.
 .It AG_TLIST_MULTI
-Allow the user to select multiple items while holding
-.Dv CTRL
-or
-.Dv SHIFT .
+Allow multiple selections (with ctrl/shift).
 .It AG_TLIST_MULTITOGGLE
-Allow the user to select multiple items without holding
-.Dv CTRL
-or
-.Dv SHIFT .
+Enforce multiple selections (without ctrl/shift).
 .It AG_TLIST_POLL
 List contents are updated dynamically by the
 .Sq tlist-poll
-event handler (implied by
-.Fn AG_TlistNewPolled ) .
-Note that it is necessary to use
+event handler.
+This handler is expected to wrap its
+.Fn AG_TlistAdd
+calls between
 .Fn AG_TlistBegin
 and
-.Fn AG_TlistEnd
-when updating a dynamic list.
-.It AG_TLIST_TREE
-List contents are organized in a tree structure.
+.Fn AG_TlistEnd .
+Implied by
+.Fn AG_TlistNewPolled .
 .It AG_TLIST_NOSELSTATE
 When using
 .Dv AG_TLIST_POLL ,
@@ -144,11 +137,6 @@ Expand vertically in parent (equivalent to invoking
 .It AG_TLIST_EXPAND
 Shorthand for
 .Dv AG_TLIST_HFILL|AG_TLIST_VFILL .
-This is recommended as an alternative to
-.Fn AG_TlistSizeHint ,
-.Fn AG_TlistSizeHintPixels
-or
-.Fn AG_TlistSizeHintLargest .
 .El
 .Pp
 .Fn AG_TlistSetRefresh
@@ -162,16 +150,9 @@ A value of -1 disables automatic updates, assuming
 will be used to explicitely force updates.
 .Pp
 .Fn AG_TlistSetItemHeight
-sets the height of all items to
-.Fa item_height
-pixels .
+sets the given, uniform height of all items.
 .Fn AG_TlistSetIconWidth
-sets the width of icons in pixels.
-.Pp
-The
-.Fn AG_TlistSetIcon
-function sets the icon surface associated with
-.Fa item .
+sets the width of item icons in pixels.
 .Pp
 .Fn AG_TlistSizeHint
 requests sufficient height to display
@@ -233,6 +214,15 @@ are provided.
 .Pp
 .Ft "AG_TlistItem *"
 .Fn AG_TlistAddPtrHead "AG_Tlist *tlist" "const AG_Surface *icon" "const char *text" "const void *p1"
+.Pp
+.Ft void
+.Fn AG_TlistSetIcon "AG_Tlist *tl" "AG_TlistItem *item" "const AG_Surface *icon"
+.Pp
+.Ft void
+.Fn AG_TlistSetColor "AG_Tlist *tl" "AG_TlistItem *item" "const AG_Color *color"
+.Pp
+.Ft void
+.Fn AG_TlistSetFont "AG_Tlist *tl" "AG_TlistItem *item" "AG_Font *font"
 .Pp
 .Ft "void"
 .Fn AG_TlistDel "AG_Tlist *tlist" "AG_TlistItem *item"
@@ -301,9 +291,8 @@ are provided.
 .Fn AG_TlistScrollToEnd "AG_Tlist *tlist"
 .Pp
 .nr nS 0
-The
 .Fn AG_TlistAdd
-function inserts a new item into the list.
+inserts a newly-allocated item into the list and returns a pointer to it.
 The
 .Fa icon
 argument, if not NULL, specifies a graphical
@@ -319,8 +308,25 @@ is a variant of
 which accepts an extra user-defined pointer
 .Fa p1 ,
 which will be associated with the item.
+.Pp
+The
 .Fn AG_TlistAddPtrHead
-places the item at the head of the list, as opposed to the tail.
+variant places the item at the head of the list, as opposed to the tail.
+.Pp
+.Fn AG_TlistSetIcon
+sets the icon surface associated with
+.Fa item .
+.Pp
+.Fn AG_TlistSetColor
+sets an alternate text color for the specified item (or NULL to switch
+back to the default).
+.Pp
+.Fn AG_TlistSetFont
+sets an alternate font for the specified item (or NULL to switch back to the
+default font).
+This will increment the font object's reference count.
+See
+.Xr AG_FetchFont 3 .
 .Pp
 The
 .Fn AG_TlistDel
@@ -540,17 +546,25 @@ Item flags (see
 section below).
 .El
 .Sh ITEM FLAGS
-.Bl -tag -width "AG_TLIST_MULTITOGGLE "
+.Bl -tag -width "AG_TLIST_ITEM_UPPERCASE "
 .It AG_TLIST_ITEM_EXPANDED
-Indicates that the child items should be displayed (the
-.Dv AG_TLIST_TREE
-flag must be set).
+The node is expanded and child items are visible
+(assuming the parent uses
+.Dv AG_TLIST_TREE ) .
 .It AG_TLIST_HAS_CHILDREN
-Indicates that this item has a non-zero number of child items.
+There is at least one child item.
 .It AG_TLIST_NO_SELECT
 Disallow user selection of this item.
 .It AG_TLIST_NO_POPUP
-If popup menus are in effect, disable popups for this item.
+Disable popup menus (if any have been created).
+.It AG_TLIST_ITEM_BOLD
+Render this item in boldface.
+.It AG_TLIST_ITEM_ITALIC
+Render this item in italic.
+.It AG_TLIST_ITEM_UNDERLINE
+Render this item underlined.
+.It AG_TLIST_ITEM_UPPERCASE
+Render this item in all-caps.
 .El
 .Sh EXAMPLES
 The following code fragment displays an existing tree structure.
@@ -596,3 +610,9 @@ AG_TlistNewPolled(NULL, 0, UpdateItems, "%p", myTreeRoot);
 The
 .Nm
 widget first appeared in Agar 1.0.
+The BOLD, ITALIC, UNDERLINE and UPPERCASE attributes of
+.Ft AG_TlistItem ,
+.Fn AG_TlistSetColor
+and
+.Fn AG_TlistSetFont
+were added in Agar 1.6.
