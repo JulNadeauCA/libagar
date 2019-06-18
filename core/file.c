@@ -147,20 +147,26 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	}
 	if ((sb.st_mode & S_ISUID) == S_ISUID) i->flags |= AG_FILE_SUID;
 	if ((sb.st_mode & S_ISGID) == S_ISGID) i->flags |= AG_FILE_SGID;
-
+	
 	if (sb.st_uid == uid) {
-		i->perms |= (sb.st_mode & S_IRUSR) ? AG_FILE_READABLE : 0;
-		i->perms |= (sb.st_mode & S_IWUSR) ? AG_FILE_WRITEABLE : 0;
-		i->perms |= (sb.st_mode & S_IXUSR) ? AG_FILE_EXECUTABLE : 0;
+		if ((sb.st_mode & S_IRUSR) == S_IRUSR) { i->perms |= AG_FILE_READABLE; }
+		if ((sb.st_mode & S_IWUSR) == S_IWUSR) { i->perms |= AG_FILE_WRITEABLE; }
+		if ((sb.st_mode & S_IXUSR) == S_IXUSR) { i->perms |= AG_FILE_EXECUTABLE; }
 	} else if (sb.st_gid == gid) {
-		i->perms |= (sb.st_mode & S_IRGRP) ? AG_FILE_READABLE : 0;
-		i->perms |= (sb.st_mode & S_IWGRP) ? AG_FILE_WRITEABLE : 0;
-		i->perms |= (sb.st_mode & S_IXGRP) ? AG_FILE_EXECUTABLE : 0;
+		if ((sb.st_mode & S_IRGRP) == S_IRGRP) { i->perms |= AG_FILE_READABLE; }
+		if ((sb.st_mode & S_IWGRP) == S_IWGRP) { i->perms |= AG_FILE_WRITEABLE; }
+		if ((sb.st_mode & S_IXGRP) == S_IXGRP) { i->perms |= AG_FILE_EXECUTABLE; }
 	} else {
-		i->perms |= (sb.st_mode & S_IROTH) ? AG_FILE_READABLE : 0;
-		i->perms |= (sb.st_mode & S_IWOTH) ? AG_FILE_WRITEABLE : 0;
-		i->perms |= (sb.st_mode & S_IXOTH) ? AG_FILE_EXECUTABLE : 0;
+		if ((sb.st_mode & S_IROTH) == S_IROTH) { i->perms |= AG_FILE_READABLE; }
+		if ((sb.st_mode & S_IWOTH) == S_IWOTH) { i->perms |= AG_FILE_WRITEABLE; }
+		if ((sb.st_mode & S_IXOTH) == S_IXOTH) { i->perms |= AG_FILE_EXECUTABLE; }
 	}
+#if 0	
+	Verbose("stat[%s]: mode=%x(%s) perms=%x(%s) uid=%d:%d\n", path,
+	    sb.st_mode, (sb.st_mode & S_IXUSR) ? "exec" : "",
+	    i->perms, (i->perms & AG_FILE_EXECUTABLE) ? "exec" : "",
+	    uid, gid);
+#endif
 	return (0);
 # else
 	AG_SetErrorS("No stat()");
