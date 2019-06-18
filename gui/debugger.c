@@ -67,7 +67,7 @@ FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
 	it = AG_TlistAddPtr(tl, NULL, text, wid);
 	it->depth = depth;
 	it->cat = "widget";
-	it->flags |= AG_TLIST_EXPANDED;
+	it->flags |= AG_TLIST_ITEM_EXPANDED;
 	
 	if (!TAILQ_EMPTY(&OBJECT(wid)->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
@@ -102,7 +102,7 @@ FindWindows(AG_Tlist *_Nonnull tl, AG_Window *_Nonnull win, int depth)
 	it->p1 = win;
 	it->depth = depth;
 	it->cat = "window";
-	it->flags |= AG_TLIST_EXPANDED;
+	it->flags |= AG_TLIST_ITEM_EXPANDED;
 
 	if (!TAILQ_EMPTY(&OBJECT(win)->children) ||
 	    !TAILQ_EMPTY(&win->pvt.subwins)) {

@@ -541,7 +541,7 @@ section below).
 .El
 .Sh ITEM FLAGS
 .Bl -tag -width "AG_TLIST_MULTITOGGLE "
-.It AG_TLIST_EXPANDED
+.It AG_TLIST_ITEM_EXPANDED
 Indicates that the child items should be displayed (the
 .Dv AG_TLIST_TREE
 flag must be set).
@@ -572,7 +572,7 @@ UpdateItems(AG_Event *event)
 
 	ti = AG_TlistAddPtr(tl, NULL, item->text, item);
 	ti->flags |= AG_TLIST_HAS_CHILDREN;
-	if (ti->flags & AG_TLIST_EXPANDED) {
+	if (ti->flags & AG_TLIST_ITEM_EXPANDED) {
 		LIST_FOREACH(child, &item->children, children) {
 			AG_Event ev;
 			AG_EventArgs(&ev, "%p,%p", tl, child);

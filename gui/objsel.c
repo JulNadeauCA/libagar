@@ -91,7 +91,7 @@ FindObjects(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 	if (!TAILQ_EMPTY(&pob->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 		if (pob->parent == NULL)
-			it->flags |= AG_TLIST_VISIBLE_CHILDREN;
+			it->flags |= AG_TLIST_ITEM_EXPANDED;
 	}
 	if ((it->flags & AG_TLIST_HAS_CHILDREN)) {
 		TAILQ_FOREACH(cob, &pob->children, cobjs)
