@@ -323,7 +323,7 @@ MenuExportToFileDlg(AG_Event *_Nonnull event)
 	AG_GetString(AG_ConfigObject(), "save-path", path, sizeof(path));
 	AG_FileDlgSetDirectoryMRU(fd, "agar.console.export-dir", path);
 	
-	AG_FileDlgAddType(fd, _("Text file"), "*.txt",
+	AG_FileDlgAddType(fd, _("Text file"), "*.txt,*.log",
 	    MenuExportToFileTXT, "%p", cons);
 
 	AG_WindowShow(win);
