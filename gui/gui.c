@@ -42,7 +42,6 @@
 #include <agar/gui/dir_dlg.h>
 #include <agar/gui/editable.h>
 #include <agar/gui/file_dlg.h>
-#include <agar/gui/file_selector.h>
 #include <agar/gui/fixed.h>
 #include <agar/gui/fspinbutton.h>
 #include <agar/gui/fixed_plotter.h>
@@ -133,7 +132,6 @@ void *agStdWidgets[] = {
 	&agDirDlgClass,
 	&agFontSelectorClass,
 	&agFileDlgClass,
-	&agFileSelectorClass,
 #endif
 	&agFixedClass,
 #if defined(HAVE_FLOAT) && defined(AG_LEGACY)
