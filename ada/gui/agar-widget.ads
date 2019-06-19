@@ -872,7 +872,7 @@ package Agar.Widget is
     Driver_Ops       : Driver_Class_Access;      -- Parent driver class
 
     Stylesheet       : System.Address;           -- TODO Alternate CSS stylesheet
-    Color_State      : Widget_Color_State;       -- Current CSS color state
+    Color_State      : Widget_State;             -- Current CSS color state
     Font             : System.Address;           -- TODO Current font
     Palette          : Widget_Palette;           -- Computed color palette
 #if HAVE_OPENGL
