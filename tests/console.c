@@ -8,8 +8,8 @@
 static void
 AppendLine(AG_Event *event)
 {
-	AG_Textbox *tb = AG_SELF();
 	AG_Console *cons = AG_PTR(1);
+	AG_Textbox *tb = AG_PTR(2);
 	char *s;
 	
 	s = AG_TextboxDupString(tb);
@@ -104,10 +104,10 @@ TestGUI(void *obj, AG_Window *win)
 		tb = AG_TextboxNew(box,
 		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
 		    _("Input: "));
-		AG_SetEvent(tb, "textbox-return", AppendLine, "%p", cons);
+		AG_SetEvent(tb, "textbox-return", AppendLine, "%p,%p", cons, tb);
 		AG_WidgetFocus(tb);
 
-		btn = AG_ButtonNewFn(box, 0, "OK", AppendLine, "%p", cons);
+		btn = AG_ButtonNewFn(box, 0, "OK", AppendLine, "%p,%p", cons, tb);
 		AG_WidgetSetFocusable(btn, 0);
 	}
 
