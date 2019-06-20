@@ -56,6 +56,8 @@
 # define N_(s) (s)
 #endif
 
+#define ADB_ARCH_NAME_MAX 32
+
 class Agardb : public lldb::SBBroadcaster {
 public:
 	Agardb();
@@ -64,17 +66,19 @@ public:
 	lldb::SBDebugger &GetDebugger() { return m_debugger; }
 
 	void SetTerminalWidth(unsigned short col);
+
 	static void Take_Screenshot(AG_Event *_Nonnull);
 	static void Run_GUI_Debugger_GK(void);
 	static void Run_GUI_Debugger(AG_Event *_Nonnull);
-	static void Forward_Commands(lldb::SBStream &);
+	static void Run_LLDB(lldb::SBStream &, bool);
 
 	class GUI {
 public:
 		GUI();
 		virtual ~GUI();
-		AG_Window *winMain;			/* Main window */
-		AG_Console *cons;			/* Debugger console */
+
+		static void Preferences(AG_Event *_Nonnull);
+		static void MenuTarget(AG_Event *_Nonnull);
 	};
 
 private:

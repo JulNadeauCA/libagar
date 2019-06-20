@@ -78,9 +78,22 @@ static int          g_set_use_color = 1;	/* Use color */
 static char        *g_exec_file = NULL;		/* Executable (-f) */
 static std::vector<std::string> g_exec_args;	/* Arguments to executable */
 
+static AG_Window   *g_main_window = NULL;	/* The main window */
 static AG_Console  *g_console = NULL;		/* The GUI console */
 static AG_Menu     *g_menu = NULL;		/* The main menu */
 static AG_Textbox  *g_textbox_prompt = NULL;	/* "agardb>" prompt */
+
+static const struct {
+	const char *cfgKey;
+	const char *descr;
+} g_interp_opts[] = {
+	{ "lldb.stopOnCont",      N_("Stop on Continue") },
+	{ "lldb.stopOnError",     N_("Stop on Error") },
+	{ "lldb.stopOnCrash",     N_("Stop on Crash") },
+	{ "lldb.echoCommands",    N_("Echo Commands") },
+	{ "lldb.echoCommentCmds", N_("Echo Comment Commands") },
+	{ "lldb.printResults",    N_("Print Results") }
+};
 
 //static bool g_old_stdin_termios_is_valid = false;
 //static struct termios g_old_stdin_termios;
@@ -114,10 +127,11 @@ FatalError(void)
 
 /* Prepare commands for lldb sourcing */
 static ::FILE *
-PrepCmd(const char *cmdsData, size_t cmdsSize, int fds[2])
+Open_LLDB_Pipe(const char *cmdsData, size_t cmdsSize, int fds[2])
 {
 	enum PIPES { READ, WRITE };   /* Constants 0 and 1 for READ and WRITE */
-	::FILE *cmdsFile = NULL;
+	::FILE *cmdsPipe = NULL;
+	ssize_t nrwr;
 
 	fds[0] = -1;
 	fds[1] = -1;
@@ -127,55 +141,50 @@ PrepCmd(const char *cmdsData, size_t cmdsSize, int fds[2])
 #else
 	err = pipe(fds);
 #endif
-	if (err == 0) {
-		ssize_t nrwr;
-
-		nrwr = write(fds[WRITE], cmdsData, cmdsSize);
-		if (nrwr < 0) {
-			Verbose("write(%i, %p, %" PRIu64 ") failed (errno = %i) "
-			    "trying to open lldb commands pipe\n",
-			    fds[WRITE], static_cast<const void *>(cmdsData),
-			    static_cast<uint64_t>(cmdsSize), errno);
-		} else if (static_cast<size_t>(nrwr) == cmdsSize) {
-			/*
-			 * Close the write end of the pipe so when we give the read end to
-			 * the debugger/command interpreter it will exit when it consumes all
-			 * of the data.
-			 */
-#ifdef _WIN32
-			_close(fds[WRITE]);
-#else
-			close(fds[WRITE]);
-#endif
-			fds[WRITE] = -1;
-
-			/*
-			 * Now open the read file descriptor in a FILE * that
-			 * we can give to the debugger as an input handle.
-			 */
-			cmdsFile = fdopen(fds[READ], "r");
-			if (cmdsFile) {
-				/*
-				 * cmdsFile now owns the read descriptor.
-				 * Hand ownership of the FILE * over to the
-				 * debugger.
-				 */
-				fds[READ] = -1;
-			} else {
-				Verbose("fdopen(%i, \"r\") failed (errno = %i) when "
-				        "trying to open lldb commands pipe\n",
-				fds[READ], errno);
-			}
-		}
-	} else {
-		Verbose("can't create pipe file descriptors for lldb commands\n");
+	if (err != 0) {
+		AG_SetError("LLDB command pipe: %s", AG_Strerror(errno));
+		return (NULL);
 	}
+	nrwr = write(fds[WRITE], cmdsData, cmdsSize);
+	if (nrwr < 0) {
+		Verbose("write(%i, %p, %" PRIu64 ") failed (errno = %i) "
+		        "trying to open lldb commands pipe\n",
+		    fds[WRITE], static_cast<const void *>(cmdsData),
+		    static_cast<uint64_t>(cmdsSize), errno);
+	} else if (static_cast<size_t>(nrwr) == cmdsSize) {
+		/*
+		 * Close the write end of the pipe so when we give the read
+		 * end to the debugger/command interpreter, it will exit on EOF.
+		 */
+#ifdef _WIN32
+		_close(fds[WRITE]);
+#else
+		close(fds[WRITE]);
+#endif
+		fds[WRITE] = -1;
 
-	return cmdsFile;
+		/*
+		 * Now open the read file descriptor in a FILE * that
+		 * we can give to the debugger as an input handle.
+		 */
+		if ((cmdsPipe = fdopen(fds[READ], "r")) != NULL) {
+			/*
+			 * cmdsPipe now owns the read descriptor.
+			 * Hand ownership of the FILE * over to the
+			 * debugger.
+			 */
+			fds[READ] = -1;
+		} else {
+			Verbose("fdopen(%i, \"r\") failed (errno = %i) when "
+			        "trying to open lldb commands pipe\n",
+			    fds[READ], errno);
+		}
+	}
+	return (cmdsPipe);
 }
 
 static void
-PrepCmdCleanup(int fds[2])
+Close_LLDB_Pipe(int fds[2])
 {
 	enum PIPES { READ, WRITE };
 
@@ -198,54 +207,171 @@ PrepCmdCleanup(int fds[2])
 	}
 }
 
+/* "agar version": Print agar version number */
+class AgarVersionCommand : public lldb::SBCommandPluginInterface {
+public:
+	virtual bool DoExecute(lldb::SBDebugger debugger, char **command,
+	                       lldb::SBCommandReturnObject &result) {
+		AG_AgarVersion av;
+
+		AG_GetVersion(&av);
+		result.Printf("agardb is running agar %d.%d.%d (\"%s\")\n",
+		    av.major, av.minor, av.patch, av.release);
+#if 0
+		if (command == NULL) {
+			return (false);
+		}
+		const char *arg = *command;
+
+		while (arg != NULL) {
+			result.Printf("%s", arg);
+			arg = *(++command);
+		}
+#endif
+		return (true);
+	}
+};
+
+/* "agar debug": Print or set the Agar debug level */
+class AgarDebugCommand : public lldb::SBCommandPluginInterface {
+public:
+	virtual bool DoExecute(lldb::SBDebugger debugger, char **command,
+	                       lldb::SBCommandReturnObject &result) {
+		if (command == NULL || *command == NULL) {
+			result.Printf("agDebugLvl: %d\n", agDebugLvl);
+			return (true);
+		} else {
+			int newLvl = atoi(*command);
+			result.Printf("agDebugLvl %d -> %d\n", agDebugLvl, newLvl);
+			agDebugLvl = newLvl;
+		}
+		return (true);
+	}
+};
+
+/* "agar driver": Query the available AG_Driver classes */
+class AgarDriverCommand : public lldb::SBCommandPluginInterface {
+public:
+	virtual bool DoExecute(lldb::SBDebugger debugger, char **command,
+	                       lldb::SBCommandReturnObject &result)
+	{
+		const AG_DriverClass *drvClass = AGWIDGET(g_main_window)->drvOps;
+
+		if (command != NULL && (*command) != NULL) {
+			AG_DriverClass **pd;
+		
+			if (strcasecmp(*command, "list") == 0) {
+				for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+					AG_DriverClass *dc = *pd;
+
+					result.Printf("%p: %s ( %s(3) )\n",
+					    *pd, dc->name, AGCLASS(dc)->name);
+				}
+				return (true);
+			}
+			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+				AG_DriverClass *dc = *pd;
+
+				if (strcasecmp(dc->name, *command) == 0 ||
+				    strcasecmp(AGCLASS(dc)->name, *command) == 0)
+					break;
+			}
+			if (*pd != NULL) {
+				drvClass = *pd;
+				result.Printf(
+				    _("The %s(3) driver is available in this build.\n"),
+				    AGCLASS(drvClass)->name);
+			} else {
+				result.Printf("No such driver \"%s\"\n", *command);
+				return (false);
+			}
+		} else {
+			result.Printf(_("agardb is running %s(3)\n"), AGCLASS(drvClass)->name);
+		}
+		result.Printf("[%s]\n", AGCLASS(drvClass)->name);
+		result.Printf(_("Driver Class: %s\n"), AGCLASS(drvClass)->name);
+		result.Printf(_("Rendering method: %s\n"), _(agDriverTypeNames[drvClass->type]));
+		result.Printf(_("Windowing method: %s\n"), _(agDriverWmTypeNames[drvClass->wm]));
+		result.Printf(_("Capabilities: %s%s%s\n"),
+		    (drvClass->flags & AG_DRIVER_OPENGL) ? "GL " : "",
+		    (drvClass->flags & AG_DRIVER_SDL) ? "SDL " : "",
+		    (drvClass->flags & AG_DRIVER_TEXTURES) ? "TEXTURES " : "");
+
+		return (true);
+	}
+};
+
 /*
  * Forward a set of commands to LLDB.
  */
 void
-Agardb::Forward_Commands(SBStream &cmds)
+Agardb::Run_LLDB(SBStream &cmds, bool async)
 {
 	lldb::SBDebugger &db = g_agardb->GetDebugger();
 	const char *cmdsData = cmds.GetData();
 	const size_t cmdsSize = cmds.GetSize();
-	bool quit_requested = false;
-	bool stopped_for_crash = false;
-  	bool handle_events = true;
-	bool spawn_thread = false;
+  	bool doHandleEvents = true;
+	bool quitRequested = false;
+	bool stoppedForCrash = false;
+	int cmdsFds[2];
+	FILE *cmdsPipe;
 
-	if (cmdsData && cmdsSize > 0) {
-		int cmdsFds[2];
-		bool success = true;
-		FILE *cmdsFile;
-
-		cmdsFile = PrepCmd(cmdsData, cmdsSize, cmdsFds);
-		if (cmdsFile) {
-			db.SetInputFileHandle(cmdsFile, true);
-   			bool asyncSave = db.GetAsync();
-			int nErrors;
-
-			db.SetAsync(false);
-
-			SBCommandInterpreterRunOptions options;
-			options.SetStopOnError(true);
-/*			if (batchMode) { options.SetStopOnCrash(true); } */
-
-			db.RunCommandInterpreter(handle_events, spawn_thread,
-			                         options, nErrors,
-						 quit_requested,
-						 stopped_for_crash);
-			db.SetAsync(asyncSave);
-		} else {
-			success = false;
-		}
-
-		/* Close any pipes that we still have ownership of */
-		PrepCmdCleanup(cmdsFds);
-
-		if (!success) {
-			AG_SetError("lldb command pipe error");
-			FatalError();
-		}
+	if (!cmdsData || cmdsSize == 0) {
+		return;
 	}
+	if ((cmdsPipe = Open_LLDB_Pipe(cmdsData, cmdsSize, cmdsFds)) == NULL) {
+		AG_TextMsgFromError();
+		return;
+	}
+	db.SetInputFileHandle(cmdsPipe, true);
+	AG_Config *cfg = agConfig;
+	SBCommandInterpreterRunOptions ro;
+   	bool asyncSave = db.GetAsync();
+	int nErrors;
+
+	db.SetAsync(async);
+
+	ro.SetStopOnContinue      (AG_GetBool(cfg, "lldb.stopOnCont"));
+	ro.SetStopOnError         (AG_GetBool(cfg, "lldb.stopOnError"));
+	ro.SetStopOnCrash         (AG_GetBool(cfg, "lldb.stopOnCrash"));
+	ro.SetEchoCommands        (AG_GetBool(cfg, "lldb.echoCommands"));
+	ro.SetEchoCommentCommands (AG_GetBool(cfg, "lldb.echoCommentCmds"));
+	ro.SetPrintResults        (AG_GetBool(cfg, "lldb.printResults"));
+
+	lldb::SBCommandInterpreter interpreter = db.GetCommandInterpreter();
+	lldb::SBCommand agarCmds = interpreter.AddMultiwordCommand("agar", NULL);
+	agarCmds.AddCommand("debug", new AgarDebugCommand(),
+	                    _("set agardb debug level"));
+	agarCmds.AddCommand("driver", new AgarDriverCommand(),
+	                    _("print agar driver information"));
+	agarCmds.AddCommand("version", new AgarVersionCommand(),
+	                    _("print libagar version"));
+
+	db.RunCommandInterpreter(doHandleEvents, async, ro, nErrors,
+	                         quitRequested, stoppedForCrash);
+
+	db.SetAsync(asyncSave);
+
+	/* Close any pipes that we still have ownership of */
+	Close_LLDB_Pipe(cmdsFds);
+}
+
+static void
+PrintVersion(void)
+{
+	AG_AgarVersion av;
+	AG_ConsoleLine *cl;
+	AG_Color c;
+		
+	cl = AG_ConsoleMsg(g_console, "agardb version %s", VERSION);
+	AG_ColorRGB_8(&c, 0,170,170);
+	AG_ConsoleMsgColor(cl, &c);
+
+	AG_GetVersion(&av);
+	cl = AG_ConsoleMsg(g_console, "agar version %d.%d.%d",
+	    av.major, av.minor, av.patch);
+	AG_ColorRGB_8(&c, 0,170,0);
+	AG_ConsoleMsgColor(cl, &c);
 }
 
 /*
@@ -255,22 +381,26 @@ static void
 ExecCmd(AG_Event *event)
 {
 	AG_Textbox *tb = (AG_Textbox *)AG_SELF();
-	lldb::SBDebugger &db = g_agardb->GetDebugger();
-	char *s;
+	char *s = AG_TextboxDupString(tb);
 	SBStream cmds;
 	
-	if (!db.IsValid()) {
-		AG_TextError("db !IsValid");
-		return;
-	}
+	if (strcmp(s, "version") == 0)
+		PrintVersion();
 
-	s = AG_TextboxDupString(tb);
 	cmds.Printf("%s\n", s);
 	free(s);
 
-	Agardb::Forward_Commands(cmds);
-
+	Agardb::Run_LLDB(cmds, 0);
 	AG_TextboxClearString(tb);
+}
+
+static void
+ConsoleHelp(AG_Event *event)
+{
+	SBStream cmds;
+
+	cmds.Printf("help\n");
+	Agardb::Run_LLDB(cmds, 0);
 }
 
 static void
@@ -291,138 +421,143 @@ EscapeString(std::string arg)
 	return '"' + arg + '"';
 }
 
-/* Call lldb "target create"  */
+/*
+ * Create a new debugger target.
+ */
 static void
 CreateTarget(AG_Event *event)
 {
-	AG_FileDlg *fdExec = (AG_FileDlg *) AG_PTR(1);
-	AG_FileDlg *fdCore = (AG_FileDlg *) AG_PTR(2);
-	AG_Combo *comArch  = (AG_Combo *) AG_PTR(3);
-	AG_Checkbox *cbDeps = (AG_Checkbox *) AG_PTR(4);
-	lldb::SBDebugger &db = g_agardb->GetDebugger();
-	
-	if (!db.IsValid()) {
-		AG_TextError("db !IsValid");
-		return;
-	}
-
+	AG_Window *win = (AG_Window *) AG_PTR(1);
 	char execFile[AG_PATHNAME_MAX];
 	char coreFile[AG_PATHNAME_MAX];
-	char arch[64];
-	bool loadDeps;
+	char symFile[AG_PATHNAME_MAX];
+	char args[AG_ARG_MAX];
+	char arch[ADB_ARCH_NAME_MAX];
+	lldb::SBDebugger &db = g_agardb->GetDebugger();
 
-	AG_FileDlgCopyFilename(fdExec, execFile, sizeof(execFile));
-	AG_FileDlgCopyFilename(fdCore, coreFile, sizeof(coreFile));
-	AG_TextboxCopyString(comArch->tbox, arch, sizeof(arch));
-	if (arch[0] == '\0') {
+	AG_FileDlgCopyFilename(AGFILEDLG( AG_GetPointer(win,"fdExec") ), execFile, sizeof(execFile));
+	AG_FileDlgCopyFilename(AGFILEDLG( AG_GetPointer(win,"fdCore") ), coreFile, sizeof(coreFile));
+	AG_FileDlgCopyFilename(AGFILEDLG( AG_GetPointer(win,"fdSyms") ), symFile, sizeof(symFile));
+	AG_TextboxCopyString  (AGTEXTBOX( AG_GetPointer(win,"tbArgs") ), args, sizeof(args));
+	AG_TextboxCopyString  (AGCOMBO  ( AG_GetPointer(win,"comArch") )->tbox, arch, sizeof(arch));
+
+	if (arch[0] == '\0')
 		db.GetDefaultArchitecture(arch, sizeof(arch));
-	}
-	loadDeps = AG_CheckboxGetState(cbDeps);
 
 	SBStream cmds;
-
-	cmds.Printf("target create --arch=%s %s", arch, execFile);
-//	    EscapeString(g_exec_args[0]).c_str());
-
-	if (coreFile[0] != '\0') {
-		cmds.Printf(" --core %s", EscapeString(coreFile).c_str());
+	cmds.Printf("target create");
+	if (!AG_CheckboxGetState(AGCHECKBOX( AG_GetPointer(win,"cbDeps") ))) {
+		cmds.Printf(" --no-dependents=true");
 	}
+	cmds.Printf(" --arch=%s %s", arch, execFile);
+	if (coreFile[0] != '\0') { cmds.Printf(" --core %s", EscapeString(coreFile).c_str()); }
+	if (symFile[0] != '\0') { cmds.Printf(" --symfile %s", EscapeString(symFile).c_str()); }
 	cmds.Printf("\n");
-#if 0
-	if (nArgs > 1) {
-		cmds.Printf("settings set -- target.run-args ");
-		for (i = 1; i < nArgs; ++i) {
-			cmds.Printf(" %s",
-			    EscapeString(g_exec_args[i]).c_str();
-		}
-	}
-#endif
+	if (args[0] != '\0')
+		cmds.Printf("settings set -- target.run-args %s\n", args);
 
-//	AG_TextInfo(NULL, "Create target fdExec=%s", AGOBJECT(fdExec)->name);
-	Agardb::Forward_Commands(cmds);
-	AG_PostEvent(NULL, AG_ParentWindow(fdExec), "window-close", NULL);
+	Agardb::Run_LLDB(cmds, 0);
+	AG_PostEvent(NULL, win, "window-close", NULL);
 }
 
 static void
 CreateTargetDlg(AG_Event *event)
 {
-	AG_CPUInfo cpu;
-//	lldb::SBDebugger &db = g_agardb->GetDebugger();
 	AG_Window *win;
-	size_t i;
-	AG_FileDlg *fdExec, *fdCore;
+	AG_FileDlg *fdExec, *fdCore, *fdSyms;
 	AG_Combo *comArch;
 	AG_Checkbox *cbDeps;
+	AG_Textbox *tbArgs;
+	AG_Size i;
 	
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
 	}
-	AG_WindowSetCaption(win, _("Create Debugger Target"));
+	AG_WindowSetCaption(win, _("New Debugger Target"));
+	AG_WindowSetPadding(win, 5,5,5,5);
 
-	/* Executable and core files */
-	fdExec = AG_FileDlgNewCompactMRU(win, "adb.mru.exec", _("Executable: "),
+	AG_SpacerNewHoriz(win);
+
+	fdExec = AG_FileDlgNewCompactMRU(win, "adb.mru.exec",	/* common */
+	    _("Executable: "),
 	    AG_FILEDLG_HFILL | AG_FILEDLG_MASK_EXT);
-	{
-		const struct {
-			const char *descr;
-			const char *extns;
-		} exeFormats[] = {
-			{ N_("Executable"),		"<-x>" },
-			{ N_("Binary Executable"),	".bin,<=a.out>" },
-			{ N_("DOS/Windows Executable"),	".exe,.com" },
-			{ N_("OSX Application"),	".app,.osx" },
+
+	AG_SetPointer(win, "fdExec", fdExec);
+
+	const struct {
+		const char *descr;
+		const char *extns;
+	} exeFormats[] = {
+		{ N_("Executable"),		"<-x>" },
+		{ N_("Binary Executable"),	".bin,<=a.out>" },
+		{ N_("DOS/Windows Executable"),	".exe,.com" },
+		{ N_("OSX Application"),	".app,.osx" },
 #ifdef __WIN32__
-			{ N_("Control Panel Extension"),".cpl" },
-			{ N_("Installer Package"),	".msi" },
-			{ N_("Screensaver Executable"),	".scr" },
+		{ N_("Control Panel Extension"),".cpl" },
+		{ N_("Installer Package"),	".msi" },
+		{ N_("Screensaver Executable"),	".scr" },
 #endif
-		};
-		int i;
-
-		for (i = 0 ; i < sizeof(exeFormats) / sizeof(exeFormats[0]); i++) {
-			AG_FileDlgAddType(fdExec,
-			    exeFormats[i].descr,
-			    exeFormats[i].extns,
-			    NULL, NULL);
-		}
+	};
+	for (i = 0 ; i < sizeof(exeFormats) / sizeof(exeFormats[0]); i++) {
+		AG_FileDlgAddType(fdExec,
+		    exeFormats[i].descr,
+		    exeFormats[i].extns, NULL, NULL);
 	}
 
-	fdCore = AG_FileDlgNewCompactMRU(win, "adb.mru.exec", _("Core file: "),
+	/* Arguments to the program */
+	tbArgs = AG_TextboxNewS(win, AG_TEXTBOX_HFILL, _("Arguments: "));
+	AG_SetStyle(tbArgs, "font-style", "Courier");
+	AG_SetPointer(win, "tbArgs", tbArgs);
+
+	AG_SeparatorNewHoriz(win);
+
+	/* Core dump file */
+	fdCore = AG_FileDlgNewCompactMRU(win, "adb.mru.exec",	/* common */
+	    _("Core File: "),
 	    AG_FILEDLG_HFILL | AG_FILEDLG_MASK_EXT);
-	{
-		AG_FileDlgAddType(fdCore, _("Core file"), ".core,<=core>",
-		    NULL, NULL);
-	}
+	AG_FileDlgAddType(fdCore, _("Core file"), ".core,<=core>", NULL, NULL);
+	AG_SetPointer(win, "fdCore", fdCore);
 
+	/* Stand-alone symbols file */
+	fdSyms = AG_FileDlgNewCompactMRU(win, "adb.mru.exec",	/* common */
+	    _("Symbols File: "),
+	    AG_FILEDLG_HFILL | AG_FILEDLG_MASK_EXT);
+	AG_SetPointer(win, "fdSyms", fdSyms);
+	AG_FileDlgAddType(fdSyms, _("ELF symbols file"), ".debug", NULL, NULL);
+	AG_FileDlgAddType(fdSyms, _("MacOS symbols file"), ".dSYM", NULL, NULL);
+	AG_FileDlgAddType(fdSyms, _("Windows symbols file"), ".pdb", NULL, NULL);
+
+	AG_SeparatorNewHoriz(win);
 
 	/* Target architecture */
 	StringList arches;
 	comArch = AG_ComboNew(win, AG_COMBO_HFILL, _("Architecture: "));
 	AG_ComboSizeHint(comArch, "<unknown-mach-64>", 15);
+	AG_SetPointer(win, "comArch", comArch);
 
 	ArchSpec::ListSupportedArchNames(arches);
 	for (i = 0; i < arches.GetSize(); i++) {
 		AG_TlistAddS(comArch->list, agIconGear.s,
 		    arches.GetStringAtIndex(i));
 	}
+	AG_CPUInfo cpu;
 	AG_GetCPUInfo(&cpu);
 	if (strcmp(cpu.arch, "amd64") == 0) {
 		AG_ComboSelectText(comArch, "x86_64");
 	} else {
 		AG_ComboSelectText(comArch, cpu.arch);
 	}
+	
+	AG_SeparatorNewHoriz(win);
 
 	/* Dependencies */
-	cbDeps = AG_CheckboxNew(win, 0, _("Load dependents"));
+	cbDeps = AG_CheckboxNew(win, 0, _("Load dependencies"));
 	AG_CheckboxToggle(cbDeps);
-
-	AG_SeparatorNewHoriz(win);
+	AG_SetPointer(win, "cbDeps", cbDeps);
 
 	AG_Box *hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonNewFn(hBox, 0, _("OK"), CreateTarget, "%p,%p,%p,%p,%p",
-		    fdExec, fdCore, comArch, cbDeps);
-
+		AG_ButtonNewFn(hBox, 0, _("OK"), CreateTarget, "%p", win);
 		AG_ButtonNewFn(hBox, 0, _("Cancel"), AGWINCLOSE(win));
 	}
 
@@ -451,8 +586,53 @@ Agardb::Run_GUI_Debugger(AG_Event *event)
 }
 #endif /* DEBUG and TIMERS */
 
+/* Debugger preferences */
+void
+Agardb::GUI::Preferences(AG_Event *event)
+{
+	AG_Window *win = AG_WindowNew(0);
+	AG_Notebook *nb;
+	AG_NotebookTab *nt;
+
+	AG_WindowSetCaption(win, _("Debugger Preferences"));
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
+
+	nt = AG_NotebookAdd(nb, _("Interpreter Options"), AG_BOX_VERT);
+	{
+		for (int i = 0; i < sizeof(g_interp_opts) / sizeof(g_interp_opts[0]); i++) {
+			AG_Checkbox *cb;
+
+			cb = AG_CheckboxNewS(nt, 0, _(g_interp_opts[i].descr));
+			AG_BindVariable(cb, "state",
+			                agConfig, g_interp_opts[i].cfgKey);
+		}
+	}
+
+	AG_WindowShow(win);
+}
+
+/* Generate "Target" menu */
+void
+Agardb::GUI::MenuTarget(AG_Event *event)
+{
+	AG_MenuItem *mi = (AG_MenuItem *)AG_SENDER();
+	lldb::SBDebugger &db = g_agardb->GetDebugger();
+	Uint32 i, numTargets = db.GetNumTargets();
+
+	Debug(mi, "MenuTarget\n");
+
+	for (i = 0; i < numTargets; i++) {
+		lldb::SBTarget tgt = db.GetTargetAtIndex(i);
+
+		if (!tgt.IsValid()) {
+			continue;
+		}
+		AG_MenuAction(mi, AG_Printf("Target %d", i), NULL, NULL, NULL);
+	}
+}
+
 /*
- * Our Agar-based GUI.
+ * Create Agar GUI.
  */
 Agardb::GUI::GUI()
 {
@@ -463,7 +643,6 @@ Agardb::GUI::GUI()
 
 	g_agardb_gui = this;
 
-	AG_Verbose("Creating Agar GUI\n");
 	if (g_font_spec != NULL) {
 		AG_TextParseFontSpec(g_font_spec);
 	}
@@ -488,14 +667,14 @@ Agardb::GUI::GUI()
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
 #endif
 
-	if ((winMain = AG_WindowNew(AG_WINDOW_MAIN)) == NULL) {
+	if ((g_main_window = AG_WindowNew(AG_WINDOW_MAIN)) == NULL) {
 		AG_Verbose("GUI failed: %s\n", AG_GetError());
 		return;
 	}
-	AG_WindowSetCaption(winMain, "agardb");
-	AG_WindowSetPosition(winMain, AG_WINDOW_BC, 0);
+	AG_WindowSetCaption(g_main_window, "agardb");
+	AG_WindowSetPosition(g_main_window, AG_WINDOW_BC, 0);
 
-	g_menu = AG_MenuNew(winMain, AG_MENU_HFILL);
+	g_menu = AG_MenuNew(g_main_window, AG_MENU_HFILL);
 	m = AG_MenuNode(g_menu->root, _("File"), NULL);
 	{
 		AG_MenuActionKb(m, _("New Target..."), agIconLoad.s,
@@ -511,7 +690,7 @@ Agardb::GUI::GUI()
 		AG_MenuActionKb(m, _("GUI Debugger..."), agIconMagnifier.s,
 		    AG_KEY_F7, 0,
 		    Agardb::Run_GUI_Debugger, NULL);
-
+		
 		AG_MenuSeparator(m);
 
 		AG_MenuActionKb(m, _("Quit"), agIconClose.s,
@@ -519,7 +698,15 @@ Agardb::GUI::GUI()
 		    QuitGUI, NULL);
 	}
 
-	nb = AG_NotebookNew(winMain, AG_NOTEBOOK_EXPAND);
+	AG_MenuDynamicItem(g_menu->root, _("Target"), NULL, MenuTarget, NULL);
+
+	m = AG_MenuNode(g_menu->root, _("Edit"), NULL);
+	{
+		AG_MenuAction(m, _("Preferences..."), agIconGear.s,
+		    Agardb::GUI::Preferences, NULL);
+	}
+
+	nb = AG_NotebookNew(g_main_window, AG_NOTEBOOK_EXPAND);
 	nt = AG_NotebookAdd(nb, _("Inspector"), AG_BOX_HORIZ);
 	{
 		AG_LabelNewS(nt, 0,
@@ -549,8 +736,7 @@ Agardb::GUI::GUI()
 
 		g_console = AG_ConsoleNew(nt, AG_CONSOLE_EXPAND);
 		AG_SetStyle(g_console, "font-family", "Terminal");
-		AG_ConsoleMsgS(g_console, "Welcome to agardb");
-		AG_SetStyle(g_console, "font-family", "Terminal");
+		PrintVersion();
 
 		box = AG_BoxNewHoriz(nt, AG_BOX_HFILL);
 		AG_SetStyle(box, "font-family", "Courier");
@@ -558,8 +744,12 @@ Agardb::GUI::GUI()
 		AG_SetStyle(box, "font-size", "120%");
 		tb = g_textbox_prompt = AG_TextboxNew(box,
 		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
-		    "agardb>");
+		    "(lldb)");
 		AG_SetEvent(tb, "textbox-return", ExecCmd, NULL);
+	
+		AG_ActionFn(g_console, "Help", ConsoleHelp, NULL);
+		AG_ActionOnKey(g_console, AG_KEY_F1, AG_KEYMOD_ANY, "Help");
+		AG_ActionOnKey(g_console, AG_KEY_HELP, AG_KEYMOD_ANY, "Help");
 
 		AG_WidgetFocus(tb);
 
@@ -602,8 +792,8 @@ Agardb::GUI::GUI()
 		    SBDebugger::GetVersionString());
 	}
 
-	AG_WindowSetGeometryAligned(winMain, AG_WINDOW_BC, 1000, 600);
-	AG_WindowShow(winMain);
+	AG_WindowSetGeometryAligned(g_main_window, AG_WINDOW_BC, 1000, 600);
+	AG_WindowShow(g_main_window);
 }
 
 Agardb::GUI::~GUI()
@@ -871,7 +1061,7 @@ main(int argc, char *const argv[])
 		const int nArgs = g_exec_args.size();
 
 		if (nArgs > 0) {
-			char archName[64];
+			char archName[ADB_ARCH_NAME_MAX];
 
 			if (db.GetDefaultArchitecture(archName, sizeof(archName))) {
 				cmds.Printf("target create --arch=%s %s",
@@ -909,19 +1099,44 @@ main(int argc, char *const argv[])
 			    processPID);
 		}
 
-		/* Commit creation of target based on command-line args. */
-		Agardb::Forward_Commands(cmds);
+		/* Load settings from ~/.agardb. */
+		(void)AG_ConfigLoad();
+	
+		/*
+		 * Inherit command interpreter option defaults from
+		 * SBCommandInterpreterRunOptions().
+		 */
+		AG_Config *cfg = agConfig;
+		const SBCommandInterpreterRunOptions ro;
 
-		/* Create an Agar GUI */
+		if (!AG_Defined(cfg, "lldb.stopOnCont"))
+			AG_SetBool(cfg,"lldb.stopOnCont", ro.GetStopOnContinue());
+		if (!AG_Defined(cfg, "lldb.stopOnError"))
+			AG_SetBool(cfg,"lldb.stopOnError", ro.GetStopOnError());
+		if (!AG_Defined(cfg, "lldb.stopOnCrash"))
+			AG_SetBool(cfg,"lldb.stopOnCrash", ro.GetStopOnCrash());
+		if (!AG_Defined(cfg, "lldb.echoCommands"))
+			AG_SetBool(cfg,"lldb.echoCommands", ro.GetEchoCommands());
+		if (!AG_Defined(cfg, "lldb.echoCommentCmds"))
+			AG_SetBool(cfg,"lldb.echoCommentCmds", ro.GetEchoCommentCommands());
+		if (!AG_Defined(cfg, "lldb.printResults"))
+			AG_SetBool(cfg,"lldb.printResults", ro.GetPrintResults());
+
+		/* Commit creation of target based on command-line args. */
+		Agardb::Run_LLDB(cmds, 0);
+
+		/*
+		 * Create Agar GUI.
+		 */
 		Agardb::GUI GUI;
-		char pathLogOut[AG_PATHNAME_MAX];
-		char pathLogErr[AG_PATHNAME_MAX];
-		std::FILE *logOut, *logErr;
 
 		/*
 		 * Redirect lldb output and error to ~/.agardb/agardb.out
 		 * and ~/.agardb/agardb.err for history-keeping.
 		 */
+		char pathLogOut[AG_PATHNAME_MAX];
+		char pathLogErr[AG_PATHNAME_MAX];
+		std::FILE *logOut, *logErr;
 		AG_GetString(agConfig, "save-path", pathLogOut, sizeof(pathLogOut));
 		AG_Strlcat(pathLogOut, AG_PATHSEP, sizeof(pathLogOut));
 		memcpy(pathLogErr, pathLogOut, strlen(pathLogOut)+1);
@@ -944,8 +1159,8 @@ main(int argc, char *const argv[])
 		db.SetErrorFileHandle(logErr, true);
 
 		/*
-		 * Arrange for the AG_Console(3) to automatically follow the
-		 * output and error log files we've just created.
+		 * Arrange for AG_Console(3) to follow the output and error
+		 * log files we've just created.
 		 */
 		AG_ConsoleOpenFile(g_console, "lldberr", pathLogErr,
 		    AG_NEWLINE_NATIVE, 0);
