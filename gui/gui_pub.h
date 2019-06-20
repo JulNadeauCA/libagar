@@ -22,7 +22,6 @@
 #include <agar/gui/dir_dlg.h>
 #include <agar/gui/editable.h>
 #include <agar/gui/file_dlg.h>
-#include <agar/gui/file_selector.h>
 #include <agar/gui/fixed.h>
 #include <agar/gui/font_selector.h>
 #include <agar/gui/fixed_plotter.h>
