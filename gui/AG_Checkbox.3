@@ -67,14 +67,8 @@ If a text label is specified, it is displayed next to the control.
 .Ft "AG_Checkbox *"
 .Fn AG_CheckboxNewFlag "AG_Widget *parent" "Uint flags" "const char *label" "Uint *pFlags" "Uint bitmask"
 .Pp
-.Ft "AG_Checkbox *"
-.Fn AG_CheckboxNewFlag32 "AG_Widget *parent" "Uint flags" "const char *label" "Uint32 *pFlags" "Uint32 bitmask"
-.Pp
 .Fn "AG_Checkbox *"
 .Fn AG_CheckboxSetFromFlags "AG_Widget *parent" "Uint flags" "Uint *pFlags" "const AG_FlagDescr *flagsDescr"
-.Pp
-.Fn "AG_Checkbox *"
-.Fn AG_CheckboxSetFromFlags32 "AG_Widget *parent" "Uint flags" "Uint32 *pFlags" "const AG_FlagDescr *flagsDescr"
 .Pp
 .Ft "int"
 .Fn AG_CheckboxGetState "AG_Checkbox *checkbox"
@@ -118,13 +112,17 @@ Shorthand for
 .Pp
 The
 .Fn AG_CheckboxNewInt
-variant binds the state to a boolean integer.
-.Pp
+constructor binds "state" to a natural integer.
 .Fn AG_CheckboxNewFlag
-binds the state to a specified set of bits
-.Fa bitmask
-in
-.Fa pFlags .
+binds "state" to one or more bits in the natural integer at
+.Fa pFlags ,
+according to
+.Fa bitmask a.
+.Pp
+Note: While convenience constructors are only provided for natural integers,
+.Nm
+can also bind to fixed-size integers (see
+.Sx BINDINGS ) .
 .Pp
 The utility function
 .Fn AG_CheckboxSetFromFlags

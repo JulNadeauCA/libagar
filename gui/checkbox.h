@@ -48,14 +48,6 @@ void AG_CheckboxSetFromFlags(void *_Nullable, Uint, Uint *_Nonnull,
 int  AG_CheckboxGetState(AG_Checkbox *_Nonnull) _Pure_Attribute;
 void AG_CheckboxSetState(AG_Checkbox *_Nonnull, int);
 void AG_CheckboxToggle(AG_Checkbox *_Nonnull);
-
-#if AG_MODEL != AG_SMALL
-AG_Checkbox *_Nonnull AG_CheckboxNewFlag32(void *_Nullable, Uint,
-                                           const char *_Nullable,
-                                           Uint32 *_Nonnull, Uint32);
-void AG_CheckboxSetFromFlags32(void *_Nullable, Uint, Uint32 *_Nonnull,
-                               const AG_FlagDescr *_Nonnull);
-#endif /* !AG_SMALL */
 __END_DECLS
 
 #include <agar/gui/close.h>
