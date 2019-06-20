@@ -208,24 +208,23 @@ rendering functions.
 .nr nS 0
 The
 .Fn AG_TextRender
-function renders text to a new, transparent surface.
+function renders text to a new surface.
+The current rendering attributes determine the font, text and BG colors as
+well as line and tab spacings.
 If
 .Dv AG_UNICODE
-is supported, the text may contain UTF-8 sequences.
-The
-.Fn AG_TextRenderF
-variant accepts
-.Xr printf 3
-style arguments.
+is supported, the input text may contain UTF-8.
 .Pp
 .Fn AG_TextRenderNat
-renders text in native format (UCS-4 or ASCII).
-onto a new surface.
+renders onto a new surface text in native
+.Ft AG_Char
+encoding (which is either an ASCII
+.Ft char ,
+or a 32-bit UCS-4 character in Unicode builds).
 .Fn AG_TextRenderGlyph
-renders the specified native character.
-The function returns an
+returns a pointer to the corresponding
 .Ft AG_Glyph
-structure, which has the following public (read-only) members:
+from the cache, which has the following public (read-only) members:
 .Pp
 .Bl -tag -compact -width "float texcoord[4] "
 .It AG_Char ch

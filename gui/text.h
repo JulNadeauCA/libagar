@@ -17,31 +17,38 @@
 
 struct ag_window;
 struct ag_button;
+struct ag_font;
 
+/* Way to justify text horizontally in a space. */
 enum ag_text_justify {
 	AG_TEXT_LEFT,
 	AG_TEXT_CENTER,
 	AG_TEXT_RIGHT
 };
+
+/* Way to align text vertically in a space. */
 enum ag_text_valign {
 	AG_TEXT_TOP,
 	AG_TEXT_MIDDLE,
 	AG_TEXT_BOTTOM
 };
+
+/* Canned dialog types. */
 enum ag_text_msg_title {
 	AG_MSG_ERROR,
 	AG_MSG_WARNING,
 	AG_MSG_INFO
 };
 
-struct ag_font;
-
-/* Font specification (may be obtained from fontconfig) */
+/* Font engine classes. */
 enum ag_font_type {
 	AG_FONT_VECTOR,				/* Vectorial font */
 	AG_FONT_BITMAP,				/* Raw glyph pixmaps */
-	AG_FONT_DUMMY				/* No font engine */
+	AG_FONT_DUMMY,				/* No font engine */
+	AG_FONT_TYPE_LAST
 };
+
+/* Data source from which to load a font. */
 enum ag_font_spec_source {
 	AG_FONT_SOURCE_FILE,			/* Load from file */
 	AG_FONT_SOURCE_MEMORY			/* Read from memory */
@@ -57,6 +64,7 @@ typedef int AG_FontPts;
 #define AG_FONT_PTS_EPSILON 0.01
 #endif
 
+/* Agar font specification. */
 typedef struct ag_font_spec {
 	AG_FontPts size;			/* Font size in points */
 	int index;				/* Font index (FC_INDEX) */
@@ -143,6 +151,7 @@ typedef struct ag_text_metrics {
 	Uint            nLines;		/* Total line count */
 } AG_TextMetrics;
 
+/* Cache of pre-rendered glyphs */
 typedef struct ag_glyph_cache {
 	AG_SLIST_HEAD_(ag_glyph) glyphs;
 } AG_GlyphCache;
@@ -160,6 +169,8 @@ extern AG_TextState *_Nonnull  agTextState;
 extern _Nonnull_Mutex AG_Mutex agTextLock;
 
 extern AG_StaticFont *_Nonnull agBuiltinFonts[];
+extern const char *agFontTypeNames[];
+extern const char *agTextMsgTitles[];
 
 void               AG_PushTextState(void);
 AG_Font *_Nullable AG_TextFontLookup(const char *_Nullable,
@@ -177,6 +188,7 @@ void               AG_TextClearGlyphCache(AG_Driver *_Nonnull);
 void AG_TextSize(const char *_Nullable, int *_Nullable, int *_Nullable);
 void AG_TextSizeMulti(const char *_Nonnull, int *_Nonnull, int *_Nonnull,
                       Uint *_Nullable *_Nonnull, Uint *_Nullable);
+
 void AG_TextSizeNat(const AG_Char *_Nullable, int *_Nullable, int *_Nullable);
 void AG_TextSizeMultiNat(const AG_Char *_Nonnull, int *_Nullable,
                          int *_Nullable, Uint *_Nullable *_Nonnull, Uint *_Nonnull);

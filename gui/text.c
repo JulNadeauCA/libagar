@@ -129,7 +129,12 @@ AG_TextState *agTextState = NULL;
 
 /* #define SYMBOLS */		/* Escape $(x) type symbols */
 
-static const char *agTextMsgTitles[] = {
+const char *agFontTypeNames[] = {		/* For enum ag_font_type */
+	N_("Vector"),
+	N_("Bitmap"),
+	N_("Dummy")
+};
+const char *agTextMsgTitles[] = {		/* For enum ag_text_msg_title */
 	N_("Error"),
 	N_("Warning"),
 	N_("Information")
@@ -139,13 +144,15 @@ _Nonnull_Mutex AG_Mutex agTextLock;
 static TAILQ_HEAD(ag_fontq, ag_font) fonts;
 AG_Font *_Nullable agDefaultFont = NULL;
 
+static void TextRenderFT(const AG_Char *_Nonnull, AG_Surface *_Nonnull,
+                         const AG_TextMetrics *_Nonnull);
 #ifdef HAVE_FREETYPE
-static AG_Surface *_Nonnull TextRenderFT(const AG_Char *_Nonnull);
-static void TextRenderFT_Underline(AG_TTFFont *_Nonnull, AG_Surface *_Nonnull, int);
+static void TextRenderFT_Underline(AG_TTFFont *_Nonnull, AG_Surface *_Nonnull,
+                                   int);
 # ifdef SYMBOLS
 static int  TextRenderSymbol(Uint, AG_Surface *_Nonnull, int,int);
 # endif
-#endif /* HAVE_FREETYPE */
+#endif
 static AG_Glyph *_Nonnull TextRenderGlyph_Miss(AG_Driver *_Nonnull, AG_Char);
 
 static void AG_TextStateInit(void);
@@ -639,7 +646,17 @@ FreeMetrics(AG_TextMetrics *_Nonnull tm)
 	Free(tm->wLines);
 }
 
-#ifdef HAVE_FREETYPE
+/* For DUMMY font engine */
+static void
+TextSizeDummy(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
+    int extended)
+{
+	tm->w = 0;
+	tm->h = 0;
+	tm->wLines = NULL;
+	tm->nLines = 0;
+}
+
 /*
  * Compute the rendered size of UCS-4 text with a FreeType font. If the
  * string is multiline and nLines is non-NULL, the width of individual lines
@@ -648,6 +665,7 @@ FreeMetrics(AG_TextMetrics *_Nonnull tm)
 static void
 TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extended)
 {
+#ifdef HAVE_FREETYPE
 	AG_Font *font = agTextState->font;
 	AG_TTFFont *ftFont = font->ttf;
 	AG_TTFGlyph *G;
@@ -661,7 +679,6 @@ TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extende
 	x = 0;
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
-			/* XXX TODO separate loop */
 			if (extended) {
 				tm->wLines = Realloc(tm->wLines,
 				    (tm->nLines+2)*sizeof(Uint));
@@ -707,9 +724,10 @@ TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extende
 	}
 	tm->w = (xMax-xMin);
 	tm->h = (yMax-yMin);
-}
-
+#else /* !HAVE_FREETYPE */
+	InitMetrics(&tm);
 #endif /* HAVE_FREETYPE */
+}
 
 static __inline__ AG_Surface *_Nonnull
 GetBitmapGlyph(AG_Font *_Nonnull font, AG_Char c)
@@ -724,12 +742,12 @@ GetBitmapGlyph(AG_Font *_Nonnull font, AG_Char c)
 	return (font->bglyphs[c - font->c0 + 1]);
 }
 
-#ifdef AG_SERIALIZATION
 /* Compute the rendered size of UCS-4 text with a bitmap font. */
-static __inline__ void
+static void
 TextSizeBitmap(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
     int extended)
 {
+#ifdef AG_SERIALIZATION
 	AG_Font *font = agTextState->font;
 	const AG_Char *c;
 	AG_Surface *Sglyph;
@@ -764,38 +782,30 @@ TextSizeBitmap(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 		}
 		tm->nLines++;
 	}
+#else /* !AG_SERIALIZATION */
+	InitMetrics(&tm);
+#endif /* AG_SERIALIZATION */
 }
 
 /* Render UCS-4 text to a new surface using a bitmap font. */
-static AG_Surface *_Nonnull
-TextRenderBitmap(const AG_Char *_Nonnull ucs)
+static void
+TextRenderBitmap(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
+    const AG_TextMetrics *_Nonnull tm)
 {
-	AG_TextMetrics tm;
-	AG_Rect rd;
+#ifdef AG_SERIALIZATION
 	AG_Font *font = agTextState->font;
-	AG_Surface *Sglyph, *S;
+	AG_Surface *Sglyph;
 	const AG_Char *c;
+	AG_Rect rd;
 	int line;
 
-	InitMetrics(&tm);
-	TextSizeBitmap(ucs, &tm, 1);
-
-	S = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
-	AG_FillRect(S, NULL, &agTextState->colorBG);
-	
-	if (agTextState->colorBG.a == AG_TRANSPARENT) {
-		/* Prevent unnecessary blending. */
-		AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
-		    AG_MapPixel(&S->format, &agTextState->colorBG));
-	}
-
-	rd.x = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
+	rd.x = (tm->nLines > 1) ? AG_TextJustifyOffset(tm->w, tm->wLines[0]) : 0;
 	rd.y = 0;
 	
 	for (c=&ucs[0], line=0; *c != '\0'; c++) {
 		if (*c == '\n') {
 			rd.y += font->lineskip;
-			rd.x = AG_TextJustifyOffset(tm.w, tm.wLines[++line]);
+			rd.x = AG_TextJustifyOffset(tm->w, tm->wLines[++line]);
 			continue;
 		}
 		if (*c == '\t') {
@@ -811,85 +821,14 @@ TextRenderBitmap(const AG_Char *_Nonnull ucs)
 	AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
 	    AG_MapPixel_RGBA(&S->format, 0,0,0,0));
 	AG_SurfaceSetAlpha(S, AG_SURFACE_ALPHA, font->bglyphs[0]->alpha);
-
-	FreeMetrics(&tm);
-	return (S);
-}
 #endif /* AG_SERIALIZATION */
-
-/* Return the rendered size in pixels of a natively-encoded string. */
-void
-AG_TextSizeNat(const AG_Char *s, int *w, int *h)
-{
-	AG_TextMetrics tm;
-
-	if (s == NULL) {
-		return;
-	}
-	InitMetrics(&tm);
-#ifdef AG_DEBUG
-	if (agTextState->font == NULL)
-		AG_FatalError("Illegal context for AG_TextSize()");
-	if (!AG_OfClass(agTextState->font, "AG_Font:*"))
-		AG_FatalError("Inconsistent context for AG_TextSize()");
-#endif
-	switch (agTextState->font->spec.type) {
-#ifdef HAVE_FREETYPE
-	case AG_FONT_VECTOR:
-		TextSizeFT(s, &tm, 0);
-		break;
-#endif
-#ifdef AG_SERIALIZATION
-	case AG_FONT_BITMAP:
-		TextSizeBitmap(s, &tm, 0);
-		break;
-#endif
-	case AG_FONT_DUMMY:
-		tm.w = 8;
-		tm.h = 8;
-		break;
-	}
-	if (w != NULL) { *w = tm.w; }
-	if (h != NULL) { *h = tm.h; }
-	FreeMetrics(&tm);
 }
 
-/*
- * Return the rendered size in pixels of a UCS4-encoded string, along with
- * a line count and the width of each line in an array.
- */
-void
-AG_TextSizeMultiNat(const AG_Char *s, int *w, int *h, Uint **wLines,
-    Uint *nLines)
+static void
+TextRenderDummy(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
+    const AG_TextMetrics *_Nonnull tm)
 {
-	AG_TextMetrics tm;
-
-	InitMetrics(&tm);
-	switch (agTextState->font->spec.type) {
-#ifdef HAVE_FREETYPE
-	case AG_FONT_VECTOR:
-		TextSizeFT(s, &tm, 1);
-		break;
-#endif
-#ifdef AG_SERIALIZATION
-	case AG_FONT_BITMAP:
-		TextSizeBitmap(s, &tm, 1);
-		break;
-#endif
-	case AG_FONT_DUMMY:
-		tm.wLines = NULL;
-		tm.nLines = 0;
-		break;
-	}
-	if (w != NULL) { *w = tm.w; }
-	if (h != NULL) { *h = tm.h; }
-
-	if (tm.nLines == 1) {
-		tm.wLines = Realloc(tm.wLines, sizeof(Uint));
-		tm.wLines[0] = tm.w;
-	}
-	if (wLines != NULL) { *wLines = tm.wLines; }
-	if (nLines != NULL) { *nLines = tm.nLines; }
+	/* no-op */
 }
 
 /*
@@ -909,18 +848,47 @@ AG_TextSize(const char *text, int *w, int *h)
 	}
 #ifdef AG_UNICODE
 	if ((s = AG_ImportUnicode("UTF-8", text, NULL, NULL)) != NULL) {
-		AG_TextSizeNat(s, w, h);
+		AG_TextSizeNat(s, w,h);
 		free(s);
 	}
 #else
-	AG_TextSizeNat((const Uint8 *)text, w, h);
+	AG_TextSizeNat((const Uint8 *)s, w,h);
 #endif
 }
 
 /*
- * Return the expected size in pixels of a rendered C string,
- * along with the line count and width of each line.
- * If Unicode is supported, the string may contain UTF-8.
+ * Return the rendered size in pixels of a string of internal AG_Char (which
+ * may be internal UCS-4 or ASCII).
+ */
+void
+AG_TextSizeNat(const AG_Char *s, int *w, int *h)
+{
+	void (*pfSize[])(const AG_Char *_Nonnull, AG_TextMetrics *_Nonnull, int) = {
+		TextSizeFT,
+		TextSizeBitmap,
+		TextSizeDummy
+	};
+	const enum ag_font_type fontEngine = agTextState->font->spec.type;
+	AG_TextMetrics tm;
+
+#ifdef AG_DEBUG
+	if (fontEngine >= AG_FONT_TYPE_LAST)
+		AG_FatalError("Bad font type");
+	if (!AG_OfClass(agTextState->font, "AG_Font:*"))
+		AG_FatalError("Bad AG_Font obj");
+#endif
+	InitMetrics(&tm);
+	if (s != NULL && (char)(s[0]) != '\0') {
+		pfSize[fontEngine](s, &tm, 0);
+	}
+	if (w != NULL) { *w = tm.w; }
+	if (h != NULL) { *h = tm.h; }
+	FreeMetrics(&tm);
+}
+
+/*
+ * Return the rendered size in pixels of a C string (which may contain UTF-8).
+ * Return a line count and an array of line widths.
  */
 void
 AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
@@ -936,6 +904,43 @@ AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
 #else
 	AG_TextSizeMultiNat((const Uint8 *)text, w, h, wLines, nLines);
 #endif
+}
+
+/*
+ * Compute the rendered size of a string of internal AG_Char (which may
+ * be UCS-4 or ASCII). Return a line count and an array of line widths.
+ */
+void
+AG_TextSizeMultiNat(const AG_Char *s, int *w, int *h, Uint **wLines,
+    Uint *nLines)
+{
+	AG_TextMetrics tm;
+	void (*pfSize[])(const AG_Char *_Nonnull, AG_TextMetrics *_Nonnull, int) = {
+		TextSizeFT,
+		TextSizeBitmap,
+		TextSizeDummy
+	};
+	const enum ag_font_type fontEngine = agTextState->font->spec.type;
+
+#ifdef AG_DEBUG
+	if (fontEngine >= AG_FONT_TYPE_LAST)
+		AG_FatalError("Bad font type");
+	if (!AG_OfClass(agTextState->font, "AG_Font:*"))
+		AG_FatalError("Bad AG_Font obj");
+#endif
+	InitMetrics(&tm);
+	if (s != NULL && (char)(s[0]) != '\0') {
+		pfSize[fontEngine](s, &tm, 1);
+	}
+	if (w != NULL) { *w = tm.w; }
+	if (h != NULL) { *h = tm.h; }
+
+	if (tm.nLines == 1) {
+		tm.wLines = Realloc(tm.wLines, sizeof(Uint));
+		tm.wLines[0] = tm.w;
+	}
+	if (wLines != NULL) { *wLines = tm.wLines; }
+	if (nLines != NULL) { *nLines = tm.nLines; }
 }
 
 /*
@@ -1436,94 +1441,102 @@ AG_TextRender(const char *text)
 }
 
 /*
- * Allocate a transparent surface and render UCS-4 (internal) text on it.
+ * Render text (in internal AG_Char format which is UCS-4 or ASCII)
+ * onto a newly allocated, native-format transparent surface.
  */
 AG_Surface *
 AG_TextRenderNat(const AG_Char *text)
 {
-	switch (agTextState->font->spec.type) {
-#ifdef HAVE_FREETYPE
-	case AG_FONT_VECTOR:
-		return TextRenderFT(text);
+	void (*pfSize[])(const AG_Char *_Nonnull, AG_TextMetrics *_Nonnull, int) = {
+		TextSizeFT,
+		TextSizeBitmap,
+		TextSizeDummy
+	};
+	void (*pfRender[])(const AG_Char *_Nonnull, AG_Surface *_Nonnull,
+	                   const AG_TextMetrics *_Nonnull) = {
+		TextRenderFT,
+		TextRenderBitmap,
+		TextRenderDummy
+	};
+	const enum ag_font_type fontEngine = agTextState->font->spec.type;
+	const AG_Color *colorBG = &agTextState->colorBG;
+	AG_TextMetrics tm;
+	AG_Surface *S;
+
+#ifdef AG_DEBUG
+	if (fontEngine >= AG_FONT_TYPE_LAST)
+		AG_FatalError("Bad font type");
 #endif
-#ifdef AG_SERIALIZATION
-	case AG_FONT_BITMAP:
-		return TextRenderBitmap(text);
-#endif
-	case AG_FONT_DUMMY:
-	default:
-		return AG_SurfaceEmpty();
-	}
+
+	/* Size the text and allocate the new surface. */
+	InitMetrics(&tm);
+	pfSize[fontEngine](text, &tm, 1);
+	S = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
+
+	/*
+	 * Fill the background. If fully transparent, set a colorkey to avoid
+	 * further unnecessary blending ops with transparent pixels.
+	 */
+	AG_FillRect(S, NULL, colorBG);
+	if (colorBG->a == AG_TRANSPARENT)
+		AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
+		    AG_MapPixel(&S->format, colorBG));
+
+	/* Finally render the text. */
+	if (tm.w > 0 && tm.h > 0)
+		pfRender[fontEngine](text, S, &tm);
+
+	FreeMetrics(&tm);
+	return (S);
 }
 
-#ifdef HAVE_FREETYPE
-/*
- * Render text to a surface using FreeType.
- */
 /*
  * TODO use a separate routine for transparent vs. non-transparent
  * agTextState->colorBG.
  */
-static AG_Surface *_Nonnull
-TextRenderFT(const AG_Char *_Nonnull ucs)
+static void
+TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
+    const AG_TextMetrics *_Nonnull tm)
 {
-	AG_TextMetrics tm;
-	AG_Color cBG, c;
-	AG_Font *font = agTextState->font;
+#ifdef HAVE_FREETYPE
+	const AG_Font *font = agTextState->font;
+	AG_Color c = agTextState->color;
 	AG_TTFFont *ttf = font->ttf;
 	AG_TTFGlyph *G;
 	const AG_Char *ch;
-	AG_Surface *S;
 	Uint8 *src, *dst;
 	FT_UInt prev_index = 0;
-	int xStart, yStart, line, x, y;
-	int w, BytesPerPixel, tabWd, lineSkip;
+	const int BytesPerPixel = S->format.BytesPerPixel;
+	const int tabWd = agTextState->tabWd;
+	const int lineSkip = font->lineskip;
+	int xStart, yStart, line, x,y, w;
+	AG_Color cBG = agTextState->colorBG;
 
-	InitMetrics(&tm);
-	TextSizeFT(ucs, &tm, 1);
-	if (tm.w <= 0 || tm.h <= 0) {
-		goto empty;
-	}
-
-	S = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
-	cBG = agTextState->colorBG;
-	AG_FillRect(S, NULL, &cBG);
-
-	if (cBG.a == AG_TRANSPARENT) {
-		/* Prevent unnecessary blending. */
-		AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
-		    AG_MapPixel(&S->format, &cBG));
-	}
-
-	c = agTextState->color;
-	tabWd = agTextState->tabWd;
-	lineSkip = font->lineskip;
-	BytesPerPixel = S->format.BytesPerPixel;
- 	line = 0;
- 	xStart = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
+ 	xStart = (tm->nLines > 1) ? AG_TextJustifyOffset(tm->w, tm->wLines[0]) : 0;
  	yStart = 0;
-	for (ch = &ucs[0]; *ch != '\0'; ch++) {
+
+	for (ch=&ucs[0], line=0; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
 			yStart += lineSkip;
-			xStart = AG_TextJustifyOffset(tm.w, tm.wLines[++line]);
+			xStart = AG_TextJustifyOffset(tm->w, tm->wLines[++line]);
 			continue;
 		}
 		if (*ch == '\t') {
 			xStart += tabWd;
 			continue;
 		}
-#ifdef SYMBOLS
+# ifdef SYMBOLS
 		if (ch[0] == '$' && agTextSymbols &&
 		    ch[1] == '(' && ch[2] != '\0' && ch[3] == ')') {
 			xStart += TextRenderSymbol(ch[2], S, xStart, yStart);
 			ch += 3;
 			continue;
 		}
-#endif
+# endif
 		if (AG_TTFFindGlyph(ttf, *ch,
 		    TTF_CACHED_METRICS | TTF_CACHED_PIXMAP)) {
-			AG_SurfaceFree(S);
-			goto empty;
+			Debug(NULL, "TextRenderFT: No 0x%x\n", *ch);
+			return;
 		}
 		G = ttf->current;
 		/*
@@ -1582,19 +1595,13 @@ TextRenderFT(const AG_Char *_Nonnull ucs)
 		prev_index = G->index;
 	}
 	if (ttf->style & AG_TTF_STYLE_UNDERLINE) {
-		TextRenderFT_Underline(ttf, S, tm.nLines);
+		TextRenderFT_Underline(ttf, S, tm->nLines);
 	}
-	FreeMetrics(&tm);
-	return (S);
-empty:
-	FreeMetrics(&tm);
-	return AG_SurfaceEmpty();
+#endif /* HAVE_FREETYPE */
 }
 
+#ifdef HAVE_FREETYPE
 # ifdef SYMBOLS
-/*
- * Handle $(x) type symbols.
- */
 static int
 TextRenderSymbol(Uint ch, AG_Surface *_Nonnull s, int x, int y)
 {
