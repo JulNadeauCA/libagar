@@ -1560,19 +1560,6 @@ syntax:
 	return (AG_WIDGET_BAD_SPEC);
 }
 
-int
-AG_WidgetScrollDelta(Uint32 *t1)
-{
-	Uint32 t2 = AG_GetTicks();
-	int delta;
-
-	if (*t1 != 0 && ((delta = (t2 - *t1))) < 250) {
-		return (((250-delta)<<3)>>9);
-	}
-	*t1 = AG_GetTicks();
-	return (1);
-}
-
 /* Show a widget */
 void
 AG_WidgetShow(void *obj)

@@ -1730,14 +1730,14 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	
 	switch (button) {
 	case AG_MOUSE_WHEELUP:
-		t->mOffs -= AG_WidgetScrollDelta(&t->wheelTicks);
+		t->mOffs -= AG_GetInt(t,"line-scroll-amount");
 		if (t->mOffs < 0) {
 			t->mOffs = 0;
 		}
 		AG_Redraw(t);
 		break;
 	case AG_MOUSE_WHEELDOWN:
-		t->mOffs += AG_WidgetScrollDelta(&t->wheelTicks);
+		t->mOffs += AG_GetInt(t,"line-scroll-amount");
 		if (t->mOffs > (t->m - t->mVis)) {
 			t->mOffs = MAX(0, t->m - t->mVis);
 		}
@@ -2429,6 +2429,8 @@ Init(void *_Nonnull obj)
 		TAILQ_INIT(&tb->cells);
 	}
 	TAILQ_INIT(&t->cPrevList);
+	
+	AG_SetInt(t, "line-scroll-amount", 5);
 
 	AG_AddEvent(t, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(t, "widget-hidden", LostFocus, NULL);

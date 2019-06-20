@@ -1637,13 +1637,13 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		break;
 	case AG_MOUSE_WHEELUP:
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
-			ed->y -= AG_WidgetScrollDelta(&ed->wheelTicks);
+			ed->y -= AG_GetInt(ed, "line-scroll-amount");
 			if (ed->y < 0) { ed->y = 0; }
 		}
 		break;
 	case AG_MOUSE_WHEELDOWN:
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
-			ed->y += AG_WidgetScrollDelta(&ed->wheelTicks);
+			ed->y += AG_GetInt(ed, "line-scroll-amount");
 			ed->y = MIN(ed->y, ed->yMax - ed->yVis);
 		}
 		break;
@@ -2023,6 +2023,8 @@ Init(void *_Nonnull obj)
 	ed->sBuf.maxLen = 0;
 	ed->sBuf.reallocable = 0;
 
+	AG_SetInt(ed, "line-scroll-amount", 5);
+
 	AG_SetEvent(ed, "bound", OnBindingChange, NULL);
 	OBJECT(ed)->flags |= AG_OBJECT_BOUND_EVENTS;
 
@@ -2046,18 +2048,6 @@ Init(void *_Nonnull obj)
 	AG_BindString(ed, "string", ed->text, sizeof(ed->text));
 #endif
 	AG_RedrawOnTick(ed, 1000);
-#if 0
-	AG_BindInt(ed, "pos", &ed->pos);
-	AG_BindInt(ed, "sel", &ed->sel);
-	AG_BindInt(ed, "xCurs", &ed->xCurs);
-	AG_BindInt(ed, "yCurs", &ed->yCurs);
-	AG_BindInt(ed, "xCursPref", &ed->xCursPref);
-	AG_BindInt(ed, "x", &ed->x);
-	AG_BindInt(ed, "xMax", &ed->xMax);
-	AG_BindInt(ed, "y", &ed->y);
-	AG_BindInt(ed, "yMax", &ed->yMax);
-	AG_BindInt(ed, "yVis", &ed->yVis);
-#endif
 }
 
 static void

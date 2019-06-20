@@ -98,10 +98,11 @@ static void
 ScrollUp(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_SELF();
-	int newOffs = (int)cons->rOffs - 1;
+	const int lsa = AG_GetInt(cons, "line-scroll-amount");
+	const int newOffs = cons->rOffs - lsa;
 
 	if (newOffs >= 0) {
-		cons->rOffs--;
+		cons->rOffs -= lsa;
 		AG_Redraw(cons);
 	}
 }
@@ -110,11 +111,12 @@ static void
 ScrollDown(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_SELF();
-	int newOffs = (int)cons->rOffs + 1;
+	const int lsa = AG_GetInt(cons, "line-scroll-amount");
+	const int newOffs = cons->rOffs + lsa;
 
 	if (cons->nLines > cons->rVisible &&
 	    newOffs <= (cons->nLines - cons->rVisible)) {
-		cons->rOffs++;
+		cons->rOffs += lsa;
 		AG_Redraw(cons);
 	}
 }
@@ -536,6 +538,8 @@ Init(void *_Nonnull obj)
 	AG_ActionOnKey(cons, AG_KEY_PAGEDOWN, AG_KEYMOD_ANY, "PageDown");
 	AG_ActionOnKey(cons, AG_KEY_HOME, AG_KEYMOD_ANY, "GoToTop");
 	AG_ActionOnKey(cons, AG_KEY_END, AG_KEYMOD_ANY, "GoToBottom");
+
+	AG_SetInt(cons, "line-scroll-amount", 5);
 
 	AG_SetEvent(cons, "mouse-motion", MouseMotion, NULL);
 	AG_AddEvent(cons, "font-changed", OnFontChange, NULL);

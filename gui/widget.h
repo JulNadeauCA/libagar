@@ -311,7 +311,6 @@ void AG_WidgetRegenResourcesGL(void *_Nonnull);
 
 int         AG_WidgetSensitive(void *_Nonnull, int,int);
 AG_SizeSpec AG_WidgetParseSizeSpec(const char *_Nonnull, int *_Nonnull);
-int         AG_WidgetScrollDelta(Uint32 *_Nonnull);
 
 void *_Nullable AG_WidgetFind(void *_Nonnull, const char *_Nonnull);
 

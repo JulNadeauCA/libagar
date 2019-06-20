@@ -188,19 +188,27 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		}
 		break;
 	case AG_MOUSE_WHEELUP:
-		if ((sv->yOffs -= 10) < 0) { sv->yOffs = 0; }
+		if ((sv->yOffs -= AG_GetInt(sv,"y-scroll-amount")) < 0) {
+			sv->yOffs = 0;
+		}
 		update = 1;
 		break;
 	case AG_MOUSE_WHEELDOWN:
-		if ((sv->yOffs += 10) > sv->xMax) { sv->yOffs = sv->xMax; }
+		if ((sv->yOffs += AG_GetInt(sv,"y-scroll-amount")) > sv->xMax) {
+			sv->yOffs = sv->xMax;
+		}
 		update = 1;
 		break;
 	case AG_MOUSE_X1:
-		if ((sv->xOffs -= 10) < 0) { sv->xOffs = 0; }
+		if ((sv->xOffs -= AG_GetInt(sv,"x-scroll-amount")) < 0) {
+			sv->xOffs = 0;
+		}
 		update = 1;
 		break;
 	case AG_MOUSE_X2:
-		if ((sv->xOffs += 10) > sv->xMax) { sv->xOffs = sv->xMax; }
+		if ((sv->xOffs += AG_GetInt(sv,"x-scroll-amount")) > sv->xMax) {
+			sv->xOffs = sv->xMax;
+		}
 		update = 1;
 		break;
 	}
@@ -268,8 +276,8 @@ Init(void *_Nonnull obj)
 	AG_Scrollview *sv = obj;
 
 	sv->flags = 0;
-	sv->wPre = 256;
-	sv->hPre = 256;
+	sv->wPre = (AG_MODEL * 8);
+	sv->hPre = (AG_MODEL * 8);
 	sv->xOffs = 0;
 	sv->yOffs = 0;
 	sv->xMin = 0;
@@ -286,14 +294,9 @@ Init(void *_Nonnull obj)
 	sv->r.w = 0;
 	sv->r.h = 0;
 	sv->incr = 10;
-#if 0
-	AG_BindInt(sv, "xOffs", &sv->xOffs);
-	AG_BindInt(sv, "yOffs", &sv->yOffs);
-	AG_BindInt(sv, "xMin", &sv->xMin);
-	AG_BindInt(sv, "yMin", &sv->yMin);
-	AG_BindInt(sv, "xMax", &sv->xMax);
-	AG_BindInt(sv, "yMax", &sv->yMax);
-#endif
+
+	AG_SetInt(sv, "x-scroll-amount", 40);
+	AG_SetInt(sv, "y-scroll-amount", 40);
 }
 
 void
