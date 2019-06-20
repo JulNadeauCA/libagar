@@ -1136,7 +1136,7 @@ AG_MenuUpdateItem(AG_MenuItem *mi)
 	if (mi->poll != NULL) {
 		InvalidateLabelSurfaces(mi);
 		AG_MenuItemFreeChildren(mi);
-		AG_PostEventByPtr(mi, m, mi->poll, NULL);
+		AG_PostEventByPtr(NULL, m, mi->poll, "%p", mi);
 	}
 	AG_ObjectUnlock(m);
 }

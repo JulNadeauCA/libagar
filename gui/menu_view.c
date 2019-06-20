@@ -187,7 +187,9 @@ MouseButtonUp(AG_Event *_Nonnull event)
 				/* Nothing to do */
 			} else if (mi->clickFn != NULL) {
 				AG_MenuCollapseAll(m);
-				mi->clickFn->fn(mi->clickFn);
+				if (mi->clickFn->fn != NULL) {
+					mi->clickFn->fn(mi->clickFn);
+				}
 			} else if (mi->bind_type != AG_MENU_NO_BINDING) {
 #ifdef AG_THREADS
 				if (mi->bind_lock != NULL)
