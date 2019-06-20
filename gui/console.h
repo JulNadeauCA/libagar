@@ -66,6 +66,8 @@ typedef struct ag_console {
 	AG_TAILQ_HEAD_(ag_console_file) files; /* Files being monitored */
 } AG_Console;
 
+#define AGCONSOLE(p) ((AG_Console *)(p))
+
 __BEGIN_DECLS
 extern AG_WidgetClass agConsoleClass;
 
