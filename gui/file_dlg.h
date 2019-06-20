@@ -105,6 +105,8 @@ typedef struct ag_file_dlg {
 	struct ag_file_dlg *_Nullable fdExpand; /* Instance in expanded window */
 } AG_FileDlg;
 
+#define AGFILEDLG(p) ((AG_FileDlg *)(p))
+
 __BEGIN_DECLS
 extern AG_WidgetClass agFileDlgClass;
 

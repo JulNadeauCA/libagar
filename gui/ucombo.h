@@ -25,6 +25,8 @@ typedef struct ag_ucombo {
 	int wPreList, hPreList;		/* Size hints */
 } AG_UCombo;
 
+#define AGUCOMBO(p) ((AG_UCombo *)(p))
+
 __BEGIN_DECLS
 extern AG_WidgetClass agUComboClass;
 
