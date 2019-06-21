@@ -123,23 +123,9 @@ AG_Pixmap *
 AG_PixmapFromFile(void *parent, Uint flags, const char *file)
 {
 	AG_Pixmap *px;
-	AG_Surface *su;
-	const char *ext;
+	AG_Surface *S;
 
-	if ((ext = strrchr(file, '.')) == NULL) {
-		AG_FatalError("Invalid filename");
-	}
-	if (Strcasecmp(ext, ".bmp") == 0) {
-		su = AG_SurfaceFromBMP(file);
-	} else if (Strcasecmp(ext, ".png") == 0) {
-		su = AG_SurfaceFromPNG(file);
-	} else if (Strcasecmp(ext, ".jpg") == 0 || Strcasecmp(ext, ".jpeg") == 0) {
-		su = AG_SurfaceFromJPEG(file);
-	} else {
-		AG_SetError("Unrecognized image extension: %s", ext);
-		su = NULL;
-	}
-	if (su == NULL)
+	if ((S = AG_SurfaceFromFile(file)) == NULL)
 		AG_FatalError(NULL);
 
 	px = Malloc(sizeof(AG_Pixmap));
@@ -150,7 +136,8 @@ AG_PixmapFromFile(void *parent, Uint flags, const char *file)
 	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
 	
 	AG_ObjectAttach(parent, px);
-	AG_WidgetMapSurface(px, su);
+	AG_WidgetMapSurface(px, S);
+/*	AG_WidgetMapSurface(px, AG_SurfaceConvert(S, agSurfaceFmt)); */
 	return (px);
 }
 #endif /* AG_SERIALIZATION */
