@@ -146,6 +146,8 @@ int  AG_FileDlgCheckReadAccess(AG_FileDlg *_Nonnull);
 int  AG_FileDlgCheckWriteAccess(AG_FileDlg *_Nonnull);
 void AG_FileDlgRefresh(AG_FileDlg *_Nonnull);
 
+void AG_FileDlgAddImageTypes(AG_FileDlg *, AG_EventFn, const char *, ...);
+
 void AG_FileDlgCopyTypes(AG_FileDlg *_Nonnull _Restrict,
                          const AG_FileDlg *_Nonnull _Restrict);
 
