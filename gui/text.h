@@ -133,6 +133,9 @@ typedef struct ag_text_state {
 	enum ag_text_justify justify;	/* Justification mode */
 	enum ag_text_valign valign;	/* Vertical alignment mode */
 	int tabWd;			/* Width of \t in pixels */
+#ifdef AG_DEBUG
+	char name[8];			/* Tag for debugging */
+#endif
 } AG_TextState;
 
 /* Description of font stored in data segment. */

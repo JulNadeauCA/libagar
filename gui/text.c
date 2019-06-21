@@ -273,18 +273,21 @@ AG_PushTextState(void)
 	}
 	prevState = &agTextStateStack[curState];
 	prevFont = prevState->font;
+
 	newState = &agTextStateStack[++curState];
-	newState->font = AG_FetchFont(
-	    OBJECT(prevFont)->name,
-	    &prevFont->spec.size,
-	    prevFont->flags);
-	
+
+	newState->font = AG_FetchFont(OBJECT(prevFont)->name,
+	                              &prevFont->spec.size,
+				      prevFont->flags);
+
 	memcpy(&newState->color, &prevState->color, sizeof(AG_Color));
 	memcpy(&newState->colorBG, &prevState->colorBG, sizeof(AG_Color));
 	newState->justify = prevState->justify;
 	newState->valign = prevState->valign;
 	newState->tabWd = prevState->tabWd;
-
+#ifdef AG_DEBUG
+	snprintf(newState->name, sizeof(newState->name), "TS%d", curState);
+#endif
 	agTextState = newState;
 
 	AG_MutexUnlock(&agTextLock);
@@ -294,12 +297,17 @@ AG_PushTextState(void)
 void
 AG_TextStateInit(void)
 {
-	agTextState->font = agDefaultFont;
-	AG_ColorWhite(&agTextState->color);
-	AG_ColorNone(&agTextState->colorBG);
-	agTextState->justify = AG_TEXT_LEFT;
-	agTextState->valign = AG_TEXT_TOP;
-	agTextState->tabWd = agTextTabWidth;
+	AG_TextState *ts = agTextState;
+
+	ts->font = agDefaultFont;
+	AG_ColorWhite(&ts->color);
+	AG_ColorNone(&ts->colorBG);
+	ts->justify = AG_TEXT_LEFT;
+	ts->valign = AG_TEXT_TOP;
+	ts->tabWd = agTextTabWidth;
+#ifdef AG_DEBUG
+	AG_Strlcpy(ts->name, "TS0", sizeof(ts->name));
+#endif
 }
 
 /* Select the font face to use in rendering text. */
