@@ -168,13 +168,23 @@ static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_Notebook *nb = obj;
-	AG_Font *font = WIDGET(nb)->font;
 	AG_NotebookTab *tab;
 	AG_SizeReq rTab;
 	int ts2 = nb->tabspacing << 1;
+	Uint hMax = 0;
+	
+	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
+		AG_SizeReq rLbl;
+
+		if (tab->lbl == NULL) {
+			continue;
+		}
+		AG_WidgetSizeReq(tab->lbl, &rLbl);
+		hMax = MAX(hMax, rLbl.h);
+	}
 
 	if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0) {
-		nb->bar_h = font->height + ts2;
+		nb->bar_h = hMax + ts2;
 		nb->bar_w = ts2;
 	} else {
 		nb->bar_h = 0;
