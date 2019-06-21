@@ -241,11 +241,11 @@ ButtonDown(AG_Event *event)
 	int button = AG_INT(2);
 
 	switch (button) {
-	case AG_MOUSE_WHEELUP:
-		ti->vz -= 0.1;
-		break;
 	case AG_MOUSE_WHEELDOWN:
-		ti->vz += 0.1;
+		ti->vz -= 0.2;
+		break;
+	case AG_MOUSE_WHEELUP:
+		ti->vz += 0.2;
 		break;
 	}
 }
