@@ -60,6 +60,9 @@
 
 #include <agar/gui/file_dlg_common.h>
 
+#include <agar/config/have_jpeg.h>
+#include <agar/config/have_png.h>
+
 static int FileIsExecutable(AG_FileDlg *_Nonnull, char *_Nonnull);
 
 void
@@ -1549,6 +1552,36 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull aParent)
 }
 
 /*
+ * Register a common action for all image file formats supported by
+ * AG_SurfaceFromFile().
+ */
+void
+AG_FileDlgAddImageTypes(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
+{
+	AG_FileType *ftBMP;
+
+	ftBMP = AG_FileDlgAddType(fd, _("Windows Bitmap"), "*.bmp", NULL, NULL);
+	if (fn) {
+		ftBMP->action = AG_SetEvent(fd, NULL, fn, NULL);
+		AG_EVENT_GET_ARGS(ftBMP->action, fmt);
+	}
+#ifdef HAVE_JPEG
+	{
+		AG_FileType *ft;
+		ft = AG_FileDlgAddType(fd, _("JPEG image"), "*.jpg,*.jpeg", NULL, NULL);
+		ft->action = AG_EventDup(ftBMP->action);
+	}
+#endif
+#ifdef HAVE_PNG
+	{
+		AG_FileType *ft;
+		ft = AG_FileDlgAddType(fd, _("PNG image"), "*.png", NULL, NULL);
+		ft->action = AG_EventDup(ftBMP->action);
+	}
+#endif
+}
+
+/*
  * Inherit the set of AG_FileType (and all of their options),
  * from one AG_FileDlg to another.
  */
@@ -1605,8 +1638,8 @@ AG_FileType *
 AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
     AG_EventFn fn, const char *fmt, ...)
 {
-	AG_FileType *ft;
 	char extsLbl[64];
+	AG_FileType *ft;
 	char *dexts, *ds, *ext;
 	AG_TlistItem *it;
 
@@ -1660,9 +1693,8 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 			it = AG_TlistAddS(fd->comTypes->list, NULL, descr);
 		}
 		it->p1 = ft;
-		if (TAILQ_EMPTY(&fd->types)) {
+		if (TAILQ_EMPTY(&fd->types))
 			AG_ComboSelectPointer(fd->comTypes, ft);
-		}
 	}
 	TAILQ_INSERT_TAIL(&fd->types, ft, types);
 	

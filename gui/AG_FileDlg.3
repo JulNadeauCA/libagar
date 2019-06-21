@@ -105,6 +105,9 @@ widget may be used instead.
 .Fn AG_FileDlgAddType "AG_FileDlg *fd" "const char *descr" "const char *exts" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
 .Ft "void"
+.Fn AG_FileDlgAddImageTypes "AG_FileDlg *fd" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
+.Pp
+.Ft "void"
 .Fn AG_FileDlgCopyTypes "AG_FileDlg *dst" "const AG_FileDlg *src"
 .Pp
 .Ft "void"
@@ -250,6 +253,11 @@ etc
 Type-specific handlers do not override the general "file-chosen" event handler
 when one exists (if both are set then the type-specific handler is run first,
 followed by "file-chosen").
+.Pp
+.Fn AG_FileDlgAddImageTypes
+registers a common handler for all image types recognized by
+.Xr AG_SurfaceFromFile 3
+(such as BMP, PNG and JPEG).
 .Pp
 .Fn AG_FileDlgCopyTypes
 copies the set of
