@@ -335,7 +335,12 @@ ag_fetch_variable_of_type(void *obj, const char *name,
 }
 
 /*
- * Lookup an object variable by name and return a locked AG_Variable.
+ * Lookup a Variable by name and return a locked handle for it.
+ * The caller must use AG_UnlockVariable() when finished.
+ *
+ * Unlike AG_FetchVariable(), the AG_AccessVariable() function will
+ * try to dereference proxy variables (variables of type P_VARIABLE).
+ *
  * The object must be locked.
  */
 #ifdef AG_INLINE_HEADER
@@ -359,11 +364,15 @@ ag_access_variable(void *pObj, const char *name)
 	AG_LockVariable(V);
 	if (V->type == AG_VARIABLE_P_VARIABLE) {
 #if 0
-		AG_Debug(obj, "Aliasing \"%s\" -> %s<%s>:\"%s\"", name,
+		AG_Debug(NULL, "Aliasing \"%s\" -> %s<%s>:\"%s\"\n", name,
 		    AGOBJECT(V->data.p)->name,
 		    AGOBJECT_CLASS(V->data.p)->name,
 		    V->info.varName);
 #endif
+		/*
+		 * TODO limit the recursion level so that we can
+		 * detect possible circular references.
+		 */
 		Vtgt = AG_AccessVariable(AGOBJECT(V->data.p), V->info.varName);
 		AG_UnlockVariable(V);
 		return (Vtgt);

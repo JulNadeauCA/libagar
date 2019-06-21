@@ -11,12 +11,16 @@
 				  OS-provided timer facilities */
 #define AG_POSIX_USERS    0x08 /* Use the AG_User(3) module "posix" instead
 				  of "getenv" if both are supported */
+
+#define AG_MEMORY_MODEL_NAME (agMemoryModelNames[AG_MODEL >> 5])
+
 __BEGIN_DECLS
 struct ag_event;
 
 extern char *_Nullable agProgName;	/* User program name */
 extern int agVerbose;			/* Verbose console output */
 extern int agSoftTimers;		/* Disable hardware timers */
+extern const char *agMemoryModelNames[];
 
 int  AG_InitCore(const char *_Nullable, Uint);
 void AG_AtExitFunc(void (*_Nullable)(void));

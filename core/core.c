@@ -81,6 +81,12 @@ int agVerbose = 0;				/* Verbose console output */
 int agSoftTimers = 0;				/* Disable hardware timers */
 #endif
 
+const char *agMemoryModelNames[] = {
+	N_("Small"),				/* AG_SMALL */
+	N_("Medium"),				/* AG_MEDIUM */
+	N_("Large")				/* AG_LARGE */
+};
+
 /* Initialize the Agar-Core library */
 int
 AG_InitCore(const char *progname, Uint flags)
