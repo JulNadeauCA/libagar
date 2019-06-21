@@ -157,6 +157,11 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	case AG_MOUSE_MIDDLE:
 		sv->flags &= ~(AG_SCROLLVIEW_PANNING);
 		break;
+	case AG_MOUSE_LEFT:
+		if (sv->flags & AG_SCROLLVIEW_PAN_LEFT) {
+			sv->flags &= ~(AG_SCROLLVIEW_PANNING);
+		}
+		break;
 	case AG_MOUSE_RIGHT:
 		if (sv->flags & AG_SCROLLVIEW_PAN_RIGHT) {
 			sv->flags &= ~(AG_SCROLLVIEW_PANNING);
@@ -179,12 +184,18 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			AG_WidgetFocus(sv);
 		}
 		break;
+	case AG_MOUSE_LEFT:
+		if (sv->flags & AG_SCROLLVIEW_PAN_LEFT) {
+			sv->flags |= AG_SCROLLVIEW_PANNING;
+			if (!AG_WidgetIsFocused(sv))
+				AG_WidgetFocus(sv);
+		}
+		break;
 	case AG_MOUSE_RIGHT:
 		if (sv->flags & AG_SCROLLVIEW_PAN_RIGHT) {
 			sv->flags |= AG_SCROLLVIEW_PANNING;
-			if (!AG_WidgetIsFocused(sv)) {
+			if (!AG_WidgetIsFocused(sv))
 				AG_WidgetFocus(sv);
-			}
 		}
 		break;
 	case AG_MOUSE_WHEELUP:

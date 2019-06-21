@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -69,22 +69,23 @@ Acceptable
 .Fa flags
 include:
 .Bl -tag -width "AG_SCROLLVIEW_BY_MOUSE "
+.It AG_SCROLLVIEW_PAN_LEFT
+Pannable with left mouse button.
 .It AG_SCROLLVIEW_PAN_RIGHT
-Right mouse button triggers panning.
+Pannable with right mouse button.
 .It AG_SCROLLVIEW_NOPAN_X
-Disable panning over X.
+Disable horizontal pan.
 .It AG_SCROLLVIEW_NOPAN_Y
-Disable panning over Y.
+Disable vertical pan.
 .It AG_SCROLLVIEW_NOPAN_XY
-Alias for
+Same as
 .Dv AG_SCROLLVIEW_NOPAN_X
 and
 .Dv AG_SCROLLVIEW_NOPAN_Y .
 .It AG_SCROLLVIEW_BY_MOUSE
-Panning with cursor is permitted (may interfere with the operation
-of child widgets).
+Panning with cursor is permitted (may interfere with child widgets).
 .It AG_SCROLLVIEW_FRAME
-Draw background and frame.
+Decorative background and frame.
 .It AG_SCROLLVIEW_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
