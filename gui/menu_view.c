@@ -41,7 +41,8 @@ SelectItem(AG_MenuItem *_Nonnull mi, AG_MenuItem *_Nullable subitem)
 	if (subitem != NULL) {
 		AG_MenuView *mview = mi->view;
 
-		AG_MenuExpand(mview, subitem, WIDTH(mview), subitem->y);
+		AG_MenuExpand(mview, subitem, WIDTH(mview),
+		              subitem->y + subitem->pmenu->itemh);
 	}
 }
 
