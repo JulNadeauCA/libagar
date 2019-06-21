@@ -568,12 +568,17 @@ main(int argc, char *argv[])
 
 	TAILQ_INIT(&tests);
 
-	while ((c = AG_Getopt(argc, argv, "Cp:?hd:s:t:", &optArg, &optInd)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "CWqd:s:t:v?h", &optArg, &optInd)) != -1) {
 		switch (c) {
 		case 'C':
 			noConsoleRedir = 1;
 			break;
-		case 'p':
+		case 'W':
+			initFlags |= AG_SOFT_TIMERS;
+			break;
+		case 'q':
+			agDebugLvl = 0;
+			initFlags &= ~(AG_VERBOSE);
 			break;
 		case 'd':
 			driverSpec = optArg;
@@ -584,10 +589,25 @@ main(int argc, char *argv[])
 		case 't':
 			fontSpec = optArg;
 			break;
+		case 'v':
+			{
+				AG_AgarVersion av;
+
+				AG_GetVersion(&av);
+				if (av.release) {
+					printf("agar %d.%d.%d (\"%s\", %s)\n", av.major, av.minor,
+					    av.patch, av.release, AG_MEMORY_MODEL_NAME);
+				} else {
+					printf("agar %d.%d.%d (%s)\n", av.major, av.minor, av.patch,
+					    AG_MEMORY_MODEL_NAME);
+				}
+				return (0);
+			}
+			break;
 		case '?':
 		case 'h':
 		default:
-			printf("Usage: agartest [-C] [-d driver] [-s stylesheet] [-t font] [test1 test2 ...]\n");
+			printf("Usage: agartest [-CWqv] [-d driver] [-s stylesheet] [-t font] [test1 test2 ...]\n");
 			return (1);
 		}
 	}
@@ -673,13 +693,6 @@ main(int argc, char *argv[])
 	AG_SetStyle(C, "font-family", "Courier");
 	{
 		AG_AgarVersion av;
-#if AG_MODEL == AG_SMALL
-		const char *memory_model = "SMALL";
-#elif AG_MODEL == AG_MEDIUM
-		const char *memory_model = "MEDIUM";
-#else
-		const char *memory_model = "LARGE";
-#endif
 		AG_DriverClass **pd;
 		AG_ConsoleLine *ln;
 		const char **bopt;
@@ -700,7 +713,7 @@ main(int argc, char *argv[])
 		ln = AG_ConsoleMsgS(C, "http://libagar.org");
 		AG_ColorRGB_8(&ln->c, 0,255,120);
 
-		ln = AG_ConsoleMsg(C, _("Memory model: %s"), memory_model);
+		ln = AG_ConsoleMsg(C, _("Memory model: %s"), AG_MEMORY_MODEL_NAME);
 		AG_ColorRGB_8(&ln->c, 240,240,0);
 
 		ln = AG_ConsoleMsg(C, _("Color: %d-bit/component "
@@ -739,6 +752,8 @@ main(int argc, char *argv[])
 		AG_ConsoleMsg(C, _("Press F7 to debug active window"));
 # endif
 #endif
+		if (agDriverSw)
+			AG_ConsoleMsg(C, _("Press F8 to take a screenshot"));
 	}
 
 	AG_TlistSetChangedFn(tl, SelectedTest, NULL);

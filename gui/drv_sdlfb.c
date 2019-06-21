@@ -1594,6 +1594,8 @@ SDLFB_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 	AG_ClipRect *cr0;
 	Uint32 sFlags;
 
+	Debug(sfb, "VideoResize event (%u x %u)\n", w,h);
+
 	sFlags = S->flags & (SDL_SWSURFACE | SDL_HWSURFACE | SDL_ASYNCBLIT |
 	                     SDL_ANYFORMAT | SDL_HWPALETTE | SDL_DOUBLEBUF |
 	                     SDL_FULLSCREEN | SDL_OPENGL | SDL_OPENGLBLIT |
@@ -1604,6 +1606,8 @@ SDLFB_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 		    SDL_GetError());
 		return (-1);
 	}
+	Debug(sfb, "Resized to: %u x %u x %d-bpp (flags 0x%x)\n",
+	    S->w, S->h, S->format->BitsPerPixel, S->flags);
 	sfb->s = S;
 
 	dsw->w = S->w;

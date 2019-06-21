@@ -528,8 +528,10 @@ SDLGL_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 	AG_DriverSDLGL *sgl = obj;
 	AG_Rect rVP;
 	Uint32 sFlags;
-	SDL_Surface *su;
+	SDL_Surface *S;
 	AG_Window *win;
+
+	Debug(sgl, "VideoResize event (%u x %u)\n", w,h);
 
 	sFlags = sgl->s->flags & (SDL_SWSURFACE|SDL_HWSURFACE|SDL_ASYNCBLIT|
 				  SDL_ANYFORMAT|SDL_HWPALETTE|SDL_DOUBLEBUF|
@@ -545,16 +547,19 @@ SDLGL_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 	/* Invalidate the font cache. */
 	AG_TextClearGlyphCache(drv);
 	
-	if ((su = SDL_SetVideoMode(w, h, 0, sFlags)) == NULL) {
+	if ((S = SDL_SetVideoMode(w, h, 0, sFlags)) == NULL) {
 		AG_SetError("Cannot resize display to %ux%u: %s", w, h,
 		    SDL_GetError());
 		return (-1);
 	}
-	sgl->s = su;
+	sgl->s = S;
 
-	dsw->w = su->w;
-	dsw->h = su->h;
-	dsw->depth = (Uint)su->format->BitsPerPixel;
+	Debug(sgl, "Resized to: %u x %u x %d-bpp (flags 0x%x)\n",
+	    S->w, S->h, S->format->BitsPerPixel, S->flags);
+
+	dsw->w = S->w;
+	dsw->h = S->h;
+	dsw->depth = (Uint)S->format->BitsPerPixel;
 
 	/* Resize the output capture buffer. */
 	if (sgl->outBuf != NULL) {
@@ -587,13 +592,21 @@ SDLGL_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 static AG_Surface *
 SDLGL_VideoCapture(void *_Nonnull obj)
 {
-#if 0
-	AG_DriverSDLGL *sgl = obj;
-	return (sgl->s);
-#endif
-	/* TODO */
-	AG_SetErrorS("Capture not implemented");
-	return (NULL);
+	const AG_DriverSw *dsw = obj;
+	const Uint w = dsw->w;
+	const Uint h = dsw->h;
+	Uint8 *pixels;
+
+	if ((pixels = AG_TryMalloc((w*h) << 2)) == NULL) {
+		return (NULL);
+	}
+	glReadPixels(0,0, w,h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	AG_PackedPixelFlip(pixels, h, (w << 2));
+
+	return AG_SurfaceFromPixelsRGBA(pixels, w,h, 32,
+	    0x000000ff,
+	    0x0000ff00,
+	    0x00ff0000, 0);
 }
 
 static void

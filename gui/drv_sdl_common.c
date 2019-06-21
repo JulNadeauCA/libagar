@@ -429,15 +429,15 @@ AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
  * Inherit SDL_SRCALPHA -> AG_SURFACE_ALPHA and per-surface alpha.
  */
 AG_Surface *
-AG_SDL_ImportSurface(SDL_Surface *ss)
+AG_SDL_ImportSurface(SDL_Surface *src)
 {
 	AG_PixelFormat pf;
-	AG_Surface *ds;
+	AG_Surface *dst;
 	const SDL_Palette *sp;
 	int i;
 
-	if ((sp = ss->format->palette) != NULL) {
-		AG_PixelFormatIndexed(&pf, ss->format->BitsPerPixel);
+	if ((sp = src->format->palette) != NULL) {
+		AG_PixelFormatIndexed(&pf, src->format->BitsPerPixel);
 #ifdef AG_DEBUG
 		if (sp->ncolors != pf.palette->nColors)
 			AG_FatalError("nColors");
@@ -452,32 +452,30 @@ AG_SDL_ImportSurface(SDL_Surface *ss)
 			c->a = AG_OPAQUE;
 		}
 	} else {
-		AG_PixelFormatRGBA(&pf, ss->format->BitsPerPixel,
-		    ss->format->Rmask,
-		    ss->format->Gmask,
-		    ss->format->Bmask,
-		    ss->format->Amask);
+		AG_PixelFormatRGBA(&pf, src->format->BitsPerPixel,
+		    src->format->Rmask,
+		    src->format->Gmask,
+		    src->format->Bmask,
+		    src->format->Amask);
 	}
-	if ((ds = AG_SurfaceNew(&pf, ss->w, ss->h, 0)) == NULL) {
-		goto out;
+	dst = AG_SurfaceNew(&pf, src->w, src->h, 0);
+	if (src->flags & SDL_SRCCOLORKEY) {
+		dst->flags |= AG_SURFACE_COLORKEY;
+		dst->colorkey = src->format->colorkey;
 	}
-	if (ss->flags & SDL_SRCCOLORKEY) {
-		ds->flags |= AG_SURFACE_COLORKEY;
-		ds->colorkey = ss->format->colorkey;
-	}
-	if (ss->flags & SDL_SRCALPHA)    {
-		ds->flags |= AG_SURFACE_ALPHA;
-		ds->alpha = ss->format->alpha;
+	if (src->flags & SDL_SRCALPHA)    {
+		dst->flags |= AG_SURFACE_ALPHA;
+		dst->alpha = src->format->alpha;
 	}
 	
-	if (SDL_MUSTLOCK(ss)) { SDL_LockSurface(ss); }
+	if (SDL_MUSTLOCK(src)) { SDL_LockSurface(src); }
 
-	memcpy(ds->pixels, (Uint8 *)ss->pixels, ss->h * ss->pitch);
+	memcpy(dst->pixels, (Uint8 *)src->pixels, src->h * src->pitch);
 
-	if (SDL_MUSTLOCK(ss)) { SDL_UnlockSurface(ss); }
-out:
+	if (SDL_MUSTLOCK(src)) { SDL_UnlockSurface(src); }
+
 	AG_PixelFormatFree(&pf);
-	return (ds);
+	return (dst);
 }
 
 /* Convert a SDL surface to Agar surface. */
@@ -999,16 +997,16 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 	case AG_DRIVER_KEY_UP:
 		rv = ProcessInputEvent(drv, dev);
 		break;
+	case AG_DRIVER_EXPOSE:
+		break;
 	case AG_DRIVER_VIDEORESIZE:
 		if (AG_ResizeDisplay(dev->data.videoresize.w,
-		    dev->data.videoresize.h) == -1) {
+		                     dev->data.videoresize.h) == -1) {
 			Verbose("ResizeDisplay: %s\n", AG_GetError());
 		}
 		break;
 	case AG_DRIVER_CLOSE:
 		AG_Terminate(0);
-		break;
-	case AG_DRIVER_EXPOSE:
 		break;
 	default:
 		rv = 0;

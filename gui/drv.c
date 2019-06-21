@@ -182,23 +182,24 @@ AG_EndRendering(void *drv)
 void
 AG_ViewCapture(void)
 {
-	AG_Surface *s;
+	char dir[AG_PATHNAME_MAX];
+	char file[AG_FILENAME_MAX];
+	AG_Surface *S;
 	AG_Config *cfg;
 	char *pname;
-	char dir[AG_PATHNAME_MAX];
-	char file[AG_PATHNAME_MAX+8];
 	Uint seq;
 
 	if (agDriverSw == NULL) {
-		Verbose("AG_ViewCapture() is not implemented under "
-		        "multiple-window drivers\n");
+		AG_TextError(_("Screenshot is currently only available "
+		               "with single-window drivers\n"));
 		return;
 	}
 
 	AG_LockVFS(&agDrivers);
 
-	if ((s = AGDRIVER_SW_CLASS(agDriverSw)->videoCapture(agDriverSw)) != NULL) {
-		Verbose("Capture failed: %s\n", AG_GetError());
+	if ((S = AGDRIVER_SW_CLASS(agDriverSw)->videoCapture(agDriverSw)) == NULL) {
+		AG_TextError(_("%s: Screenshot failed (%s)"),
+		    OBJECT(agDriverSw)->name, AG_GetError());
 		goto out;
 	}
 
@@ -208,22 +209,25 @@ AG_ViewCapture(void)
 	Strlcat(dir, AG_PATHSEP, sizeof(dir));
 	Strlcat(dir, "screenshot", sizeof(dir));
 	if (!AG_FileExists(dir) && AG_MkPath(dir) == -1) {
-		Verbose("Capture failed: %s\n", AG_GetError());
+		AG_TextError(_("Screenshot failed: %s"), AG_GetError());
 		goto out;
 	}
-	pname = (agProgName != NULL) ? agProgName : "agarapp";
+	pname = (agProgName != NULL) ? agProgName : "agar";
 	for (seq = 0; ; seq++) {
 		Snprintf(file, sizeof(file), "%s%c%s%u.jpg",
-		    dir, AG_PATHSEPCHAR, pname, seq++);
+		    dir, AG_PATHSEPCHAR, pname, seq);
+
 		if (!AG_FileExists(file))
 			break;			/* XXX race condition */
 	}
-	if (AG_SurfaceExportJPEG(s, file, 100, 0) == 0) {
-		Verbose("Saved capture to: %s\n", file);
+	if (AG_SurfaceExportJPEG(S, file, 100, 0) == 0) {
+		Verbose("%s: Saved %u x %u x %ubpp screenshot to %s\n",
+		    OBJECT(agDriverSw)->name,
+		    S->w, S->h, S->format.BitsPerPixel, AG_ShortFilename(file));
 	} else {
-		Verbose("Capture failed: %s\n", AG_GetError());
+		AG_TextError("Screenshot failed: %s (jpeg)\n", AG_GetError());
 	}
-	AG_SurfaceFree(s);
+	AG_SurfaceFree(S);
 out:
 	AG_UnlockVFS(&agDrivers);
 }
