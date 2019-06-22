@@ -1,4 +1,4 @@
-.\" Copyright (c) 2010-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -47,29 +47,28 @@ it is possible to attach Agar to an existing SDL display surface.
 .Nm .
 .Sh EXAMPLES
 .Bd -literal -offset indent
-AG_InitGraphics("sdlfb(width=640:height=480:depth=32)");
-AG_InitVideoSDL(screen, 0);
+AG_InitGraphics("sdlfb(width=640:height=480)");
+AG_InitGraphics("sdlfb(width=60%:height=80%)");
+AG_InitGraphics("sdlgl(bgColor=0/120/120)");
+
+AG_InitVideoSDL(an_existing_SDL_screen, 0);
 .Ed
 .Sh OPTIONS
 .Bl -tag -compact -width "bgColor "
 .It width
-Width in pixels (or
-.Sq auto
-for available desktop size).
+Width in pixels, in % of available desktop space, or "auto".
 .It height
-Height in pixels (or
-.Sq auto ) .
+Height in pixels, in % of available desktop space, or "auto".
 .It depth
-Depth in bits per pixel (or
-.Sq auto ) .
+Depth in bits per pixel, or "auto".
 .It fpsMax
 Limit GUI refresh rate in frames/second (default = 60fps).
 .It bgColor
-Solid background color (see
-.Xr AG_ColorFromString 3 ) .
-Default is "rgb(0,0,0)".
-.It bgPopup
-Show popup menu upon middle / right-button click in the background.
+Solid background color specified as "R/G/B", from "0/0/0" (black) to
+"255/255/255" (white).
+.It !bgPopup
+Disable the right-click background popup menu
+(which includes, notably the list of active windows).
 .El
 .Sh SEE ALSO
 .Xr AG_Driver 3 ,

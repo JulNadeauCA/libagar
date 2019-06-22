@@ -52,24 +52,24 @@ driver automatically.
 .Nm .
 .Sh EXAMPLES
 .Bd -literal -offset indent
-AG_InitGraphics("sdlgl(width=640:height=480:depth=32)");
+AG_InitGraphics("sdlgl(width=640:height=480)");
+AG_InitGraphics("sdlgl(width=60%:height=80%)");
+AG_InitGraphics("sdlgl(bgColor=0/120/120)");
 AG_InitGraphics("sdlgl(out=%08d.jpg:outFirst=10)");
-AG_InitVideoSDL(screen, 0);
+AG_InitGraphics("sdlgl(depth=64:stereo)");
+
+AG_InitVideoSDL(an_existing_SDL_screen, 0);
 .Ed
 .Sh OPTIONS
 .Bl -tag -compact -width "outFirst "
 .It stereo
 Request a stereoscopic visual.
 .It width
-Width in pixels (or
-.Sq auto
-for available desktop size).
+Width in pixels, in % of available desktop space, or "auto".
 .It height
-Height in pixels (or
-.Sq auto ) .
+Height in pixels, in % of available desktop space, or "auto".
 .It depth
-Depth in bits per pixel (or
-.Sq auto ) .
+Depth in bits per pixel, or "auto".
 .It fpsMax
 Limit GUI refresh rate in frames/second (default = 60fps).
 .It out
@@ -83,11 +83,11 @@ Override first frame number (default = 0).
 .It outLast
 Terminate application after # frames have been rendered.
 .It bgColor
-Solid background color (see
-.Xr AG_ColorFromString 3 ) .
-Default is "rgb(0,0,0)".
-.It bgPopup
-Show popup menu upon middle / right-button click in the background.
+Solid background color specified as "R/G/B", from "0/0/0" (black) to
+"255/255/255" (white).
+.It !bgPopup
+Disable the right-click background popup menu
+(which includes, notably the list of active windows).
 .It jpegQual
 If exporting to JPEG, set quality factor (100% = best).
 .It jpegDCT

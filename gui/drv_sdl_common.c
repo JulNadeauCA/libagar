@@ -674,7 +674,7 @@ AG_SDL_GetDisplaySize(Uint *w, Uint *h)
 void
 AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 {
-	char buf[16];
+	char buf[16], *ep;
 	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
 	Uint wDisp, hDisp;
@@ -685,7 +685,16 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 	if (*w == 0) {
 		if (AG_Defined(drv, "width")) {
 			AG_GetString(drv, "width", buf, sizeof(buf));
-			*w = (buf[0] != 'a') ? atoi(buf) : wDisp*2/3;
+			if (buf[0] == 'a') { /* auto */
+				*w = wDisp*2/3;
+			} else {
+				Uint wNew = strtol(buf, &ep, 10);
+				if (ep != NULL && ep[0] == '%') {
+					*w = wDisp*wNew/100;
+				} else {
+					*w = wNew;
+				}
+			}
 		} else {
 			*w = wDisp*2/3;
 		}
@@ -693,7 +702,16 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 	if (*h == 0) {
 		if (AG_Defined(drv, "height")) {
 			AG_GetString(drv, "height", buf, sizeof(buf));
-			*h = (buf[0] != 'a') ? atoi(buf) : hDisp*2/3;
+			if (buf[0] == 'a') { /* auto */
+				*h = hDisp*2/3;
+			} else {
+				Uint hNew = strtol(buf, &ep, 10);
+				if (ep != NULL && ep[0] == '%') {
+					*h = hDisp*hNew/100;
+				} else {
+					*h = hNew;
+				}
+			}
 		} else {
 			*h = hDisp*2/3;
 		}
@@ -712,19 +730,30 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 		float v;
 		AG_GetString(drv, "fpsMax", buf, sizeof(buf));
 		v = (float)strtod(buf, &ep);
-		if (*ep == '\0') { dsw->rNom = (Uint)(1000.0f/v); }
+		if (*ep == '\0') {
+			dsw->rNom = (Uint)(1000.0f/v);
+			Verbose("%s: max fps %s (%u ms)\n", OBJECT(drv)->name,
+			    buf, dsw->rNom);
+		}
 #else
 		Uint v;
 		AG_GetString(drv, "fpsMax", buf, sizeof(buf));
 		v = (Uint)strtoul(buf, &ep, 10);
-		if (*ep == '\0') { dsw->rNom = 1000/v; }
+		if (*ep == '\0') {
+			dsw->rNom = 1000/v;
+			Verbose("%s: max fps %s (%u ms)\n", OBJECT(drv)->name,
+			    buf, dsw->rNom);
+		}
 #endif /* !HAVE_FLOAT */
 	}
 	if (AG_Defined(drv, "bgColor")) {
-		AG_ColorFromString(&dsw->bgColor, AG_GetStringP(drv,"bgColor"),
+		Verbose("%s: bgColor -> %s\n", OBJECT(drv)->name,
+		    AG_GetStringP(drv,"bgColor"));
+		AG_ColorFromString(&dsw->bgColor,
+		    AG_GetStringP(drv,"bgColor"),
 		    NULL);
 	}
-	if (AG_Defined(drv, "bgPopup"))
+	if (!AG_Defined(drv, "!bgPopup"))
 		dsw->flags |= AG_DRIVER_SW_BGPOPUP;
 }
 
@@ -837,15 +866,18 @@ AG_SDL_GetNextEvent(void *obj, AG_DriverEvent *dev)
 static __inline__ int
 GenericMouseOverCtrl(AG_Window *_Nonnull win, int x, int y)
 {
-	if ((y - WIDGET(win)->y) > (HEIGHT(win) - win->wBorderBot)) {
-		int xRel = x - WIDGET(win)->x;
-	    	if (xRel < win->wResizeCtrl) {
-			return (AG_WINOP_LRESIZE);
-		} else if (xRel > (WIDTH(win) - win->wResizeCtrl)) {
-			return (AG_WINOP_RRESIZE);
-		} else if ((win->flags & AG_WINDOW_NOVRESIZE) == 0) {
-			return (AG_WINOP_HRESIZE);
-		}
+	int xRel;
+
+	if ((y - WIDGET(win)->y) < (HEIGHT(win) - win->wBorderBot)) {
+		return (AG_WINOP_NONE);
+	}
+	xRel = x - WIDGET(win)->x;
+    	if (xRel < win->wResizeCtrl) {
+		return (AG_WINOP_LRESIZE);
+	} else if (xRel > (WIDTH(win) - win->wResizeCtrl)) {
+		return (AG_WINOP_RRESIZE);
+	} else if ((win->flags & AG_WINDOW_NOVRESIZE) == 0) {
+		return (AG_WINOP_HRESIZE);
 	}
 	return (AG_WINOP_NONE);
 }

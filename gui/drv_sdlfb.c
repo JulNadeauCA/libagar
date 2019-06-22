@@ -232,6 +232,8 @@ SDLFB_UpdateRegion(void *_Nonnull obj, const AG_Rect *_Nonnull rRegion)
 	AG_DriverSDLFB *sfb = obj;
 	SDL_Rect *rSDL;
 	AG_Rect2 r;
+	Uint w = dsw->w;
+	Uint h = dsw->h;
 	int n;
 
 	AG_RectToRect2(&r, rRegion);
@@ -239,10 +241,10 @@ SDLFB_UpdateRegion(void *_Nonnull obj, const AG_Rect *_Nonnull rRegion)
 	/* TODO Compute intersections? */
 	if (r.x1 < 0) { r.x1 = 0; }
 	if (r.y1 < 0) { r.y1 = 0; }
-	if (r.x2 > dsw->w) { r.x2 = dsw->w; r.w = r.x2-r.x1; }
-	if (r.y2 > dsw->h) { r.y2 = dsw->h; r.h = r.y2-r.y1; }
-	if (r.w < 0) { r.x1 = 0; r.x2 = r.w = dsw->w; }
-	if (r.h < 0) { r.y1 = 0; r.y2 = r.h = dsw->h; }
+	if (r.x2 > w) { r.x2 = w; r.w = r.x2-r.x1; }
+	if (r.y2 > h) { r.y2 = h; r.h = r.y2-r.y1; }
+	if (r.w < 0)  { r.x1 = 0; r.x2 = r.w = w; }
+	if (r.h < 0)  { r.y1 = 0; r.y2 = r.h = h; }
 
 	n = sfb->nDirty++;
 	if (n+1 > sfb->maxDirty) {
@@ -293,9 +295,7 @@ SDLFB_PopClipRect(void *_Nonnull obj)
 	if (sfb->nClipRects < 1)
 		AG_FatalError("PopClipRect() without PushClipRect()");
 #endif
-	cr = &sfb->clipRects[sfb->nClipRects-2];
-	sfb->nClipRects--;
-
+	cr = &sfb->clipRects[--sfb->nClipRects - 1];
 	rSDL.x = (Sint16)cr->r.x;
 	rSDL.y = (Sint16)cr->r.y;
 	rSDL.w = (Uint16)cr->r.w;
