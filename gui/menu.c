@@ -181,9 +181,9 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 		return (win);
 	}
 
-	win = AG_WindowNew(AG_WINDOW_NOTITLE | AG_WINDOW_NOBORDERS |
-	                   AG_WINDOW_NORESIZE | AG_WINDOW_DENYFOCUS |
-	                   AG_WINDOW_KEEPABOVE);
+	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
+	                   AG_WINDOW_NOBORDERS | AG_WINDOW_NORESIZE |
+			   AG_WINDOW_DENYFOCUS | AG_WINDOW_KEEPABOVE);
 	if (win == NULL) {
 		return (NULL);
 	}
