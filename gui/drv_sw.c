@@ -89,7 +89,7 @@ OpenGuiDebugger(AG_Event *_Nonnull event)
 {
 	AG_Window *win;
 
-	if ((win = AG_GuiDebugger(NULL)) != NULL)
+	if ((win = AG_GuiDebugger(agWindowFocused)) != NULL)
 		AG_WindowShow(win);
 }
 #endif /* AG_DEBUG and AG_TIMERS */
@@ -113,11 +113,11 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	mi = me->itemSel = AG_MenuNode(me->root, NULL, NULL);
 
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
-		if (strcmp(win->caption, "win-popup") == 0) {
+		if (strncmp(OBJECT(win)->name, "_Popup", 6) == 0) {
 			continue;
 		}
 		AG_MenuAction(mi,
-		    win->caption[0] != '\0' ? win->caption : _("Untitled"),
+		    (win->caption[0] != '\0') ? win->caption : _("Untitled"),
 		    agIconWinMaximize.s,
 		    UnminimizeWindow, "%p", win);
 		nWindows++;
