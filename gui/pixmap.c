@@ -297,6 +297,7 @@ AG_PixmapSetSurface(AG_Pixmap *px, int name)
 	px->n = name;
 	px->flags |= AG_PIXMAP_UPDATE;
 	AG_ObjectUnlock(px);
+	AG_Redraw(px);
 	return (0);
 }
 
@@ -308,6 +309,7 @@ AG_PixmapSetCoords(AG_Pixmap *px, int s, int t)
 	px->s = s;
 	px->t = t;
 	AG_ObjectUnlock(px);
+	AG_Redraw(px);
 }
 
 static void
