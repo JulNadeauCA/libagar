@@ -7,8 +7,10 @@
 #ifndef AG_VARIABLE_NAME_MAX
 # if AG_MODEL == AG_SMALL
 #  define AG_VARIABLE_NAME_MAX 16
-# else
+# elif AG_MODEL == AG_MEDIUM
 #  define AG_VARIABLE_NAME_MAX 24
+# elif AG_MODEL == AG_LARGE
+#  define AG_VARIABLE_NAME_MAX 48
 # endif
 #endif
 
@@ -87,9 +89,7 @@ typedef struct ag_variable_type_info {
 /* Variable-stored data */
 union ag_variable_data {
 	void       *_Nullable p;
-	const void *_Nullable Cp;
 	char       *_Nullable s;
-	const char *_Nullable Cs;
 	int            i;
 	Uint           u;
 	Uint8         u8;
