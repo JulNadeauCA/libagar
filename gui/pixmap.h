@@ -52,7 +52,7 @@ void AG_PixmapUpdateSurface(AG_Pixmap *_Nonnull, int);
 int  AG_PixmapSetSurface(AG_Pixmap *_Nonnull, int);
 void AG_PixmapSetCoords(AG_Pixmap *_Nonnull, int,int);
 
-AG_Surface *_Nonnull AG_PixmapGetSurface(AG_Pixmap *_Nonnull);
+AG_Surface *_Nonnull AG_PixmapGetSurface(AG_Pixmap *_Nonnull, int);
 __END_DECLS
 
 #include <agar/gui/close.h>
