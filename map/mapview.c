@@ -280,7 +280,7 @@ MAP_ViewUseScrollbars(MAP_View *mv, AG_Scrollbar *hbar, AG_Scrollbar *vbar)
  * Translate widget coordinates to node coordinates.
  * The map must be locked.
  */
-static __inline__ void
+static void
 GetNodeCoords(MAP_View *_Nonnull mv, int *_Nonnull x, int *_Nonnull y)
 {
 	*x -= mv->xoffs;
@@ -343,7 +343,7 @@ defcurs:
 	AG_DrawRectOutline(mv, &rd, &c);
 }
 
-static __inline__ void
+static void
 CenterToOrigin(MAP_View *_Nonnull mv)
 {
 	AGMCAM(mv).x = mv->map->origin.x*AGMTILESZ(mv) - AGMTILESZ(mv)/2;
@@ -445,7 +445,7 @@ RenderAnimItem(MAP_Item *_Nonnull r, RG_Anim *_Nonnull anim,
  * Return a pointer to a tile item surface. If there are transforms to
  * apply, perform a cache lookup/insert.
  */
-static __inline__ void
+static void
 RenderTileItem(MAP_Item *_Nonnull r, RG_Tile *_Nonnull tile,
     AG_Surface *_Nonnull *_Nonnull pSurface,
     Uint *_Nullable pTexture) /* TODO */
@@ -918,7 +918,7 @@ MAP_ViewSetScale(MAP_View *mv, Uint zoom, int adj_offs)
 	MAP_ViewUpdateCamera(mv);
 }
 
-static __inline__ int
+static __inline__ int _Pure_Attribute
 InsideNodeSelection(MAP_View *_Nonnull mv, int x, int y)
 {
 	return (!mapViewEditSelOnly || !mv->esel.set ||

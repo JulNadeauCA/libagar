@@ -307,7 +307,6 @@ fail:
 static void
 MenuExportToFileDlg(AG_Event *_Nonnull event)
 {
-	char path[AG_PATHNAME_MAX];
 	AG_Console *cons = AG_PTR(1);
 	AG_Window *win;
 	AG_FileDlg *fd;
@@ -317,14 +316,12 @@ MenuExportToFileDlg(AG_Event *_Nonnull event)
 	}
 	AG_WindowSetCaptionS(win, _("Export to text file..."));
 
-	fd = AG_FileDlgNew(win, AG_FILEDLG_SAVE | AG_FILEDLG_CLOSEWIN |
-	                        AG_FILEDLG_EXPAND);
+	fd = AG_FileDlgNewMRU(win, "agar.console.text-dir",
+	                      AG_FILEDLG_SAVE | AG_FILEDLG_CLOSEWIN |
+	                      AG_FILEDLG_EXPAND);
 
 	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));
 
-	AG_GetString(AG_ConfigObject(), "save-path", path, sizeof(path));
-	AG_FileDlgSetDirectoryMRU(fd, "agar.console.export-dir", path);
-	
 	AG_FileDlgAddType(fd, _("Text file"), "*.txt,*.log",
 	    MenuExportToFileTXT, "%p", cons);
 

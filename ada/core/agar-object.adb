@@ -371,28 +371,6 @@ package body Agar.Object is
     return AG_ObjectInUse(Object) = 1;
   end;
 
-  function Add_Dependency
-    (Object     : in Object_Not_Null_Access;
-     Dependency : in Object_Not_Null_Access;
-     Persistent : in Boolean := False) return Dependency_Access is
-  begin
-    return AG_ObjectAddDep
-      (Object     => Object,
-       Dependency => Dependency,
-       Persistent => Boolean'Pos(Persistent));
-  end;
-
-  function Find_Dependency
-    (Object  : in Object_Not_Null_Access;
-     Index   : in Interfaces.Unsigned_32;
-     Pointer : access Object_Not_Null_Access) return Boolean is
-  begin
-    return AG_ObjectFindDep
-      (Object  => Object,
-       Index   => Index,
-       Pointer => Pointer) = 0;
-  end;
-
   -------------------
   -- Serialization --
   -------------------

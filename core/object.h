@@ -48,9 +48,6 @@
 # endif
 #endif
 
-#ifndef AG_OBJECT_DEP_MAX
-# define AG_OBJECT_DEP_MAX (0xffffffff-2)
-#endif
 #ifndef AG_OBJECT_MAX_VARIABLES
 # define AG_OBJECT_MAX_VARIABLES 0xffff
 #endif
@@ -126,15 +123,6 @@ typedef struct ag_object_class {
 
 AG_TAILQ_HEAD(ag_objectq, ag_object);
 
-/* Entry in dependency table. */
-typedef struct ag_object_dep {
-	int persistent;				/* Serialize this entry? */
-	char *_Nullable path;			/* Unresolved object path */
-	struct ag_object *_Nullable obj;	/* Resolved object */
-	Uint32 count;				/* Reference count */
-	AG_TAILQ_ENTRY(ag_object_dep) deps;
-} AG_ObjectDep;
-
 /* Object private data */
 typedef struct ag_object_pvt {
 #ifdef AG_TIMERS
@@ -148,21 +136,13 @@ typedef struct ag_object_pvt {
 
 /* Object instance */
 typedef struct ag_object {
-	char name[AG_OBJECT_NAME_MAX];	/* Object ID (unique in parent) */
-#ifdef AG_SERIALIZATION
-	/*
-	 * XXX TODO 1.6: we can store archivePath and save_pfx as AG_Variables.
-	 */
-	char *_Nullable archivePath;	/* Application-specific archive path */
-	char *_Nullable save_pfx;	/* Prefix for default save paths */
-#endif
-	AG_ObjectClass *_Nonnull cls;	/* Class description */
+	char name[AG_OBJECT_NAME_MAX];    /* Object ID (unique in parent) */
+	AG_ObjectClass *_Nonnull cls;     /* Class description */
 	Uint flags;
 #define AG_OBJECT_FLOATING_VARS	 0x00001  /* Clear variables before load */
 #define AG_OBJECT_NON_PERSISTENT 0x00002  /* Never include in saves */
 #define AG_OBJECT_INDESTRUCTIBLE 0x00004  /* Not destructible (advisory) */
 #define AG_OBJECT_RESIDENT	 0x00008  /* Data part is resident */
-#define AG_OBJECT_PRESERVE_DEPS	 0x00010  /* Preserve cnt=0 dependencies */
 #define AG_OBJECT_STATIC	 0x00020  /* Don't free() after detach */
 #define AG_OBJECT_READONLY	 0x00040  /* Disallow edition (advisory) */
 #define AG_OBJECT_WAS_RESIDENT	 0x00080  /* Used internally by ObjectLoad() */
@@ -178,44 +158,36 @@ typedef struct ag_object {
 					     AG_Bind*() is invoked */
 #define AG_OBJECT_SAVED_FLAGS	(AG_OBJECT_FLOATING_VARS|\
  				 AG_OBJECT_INDESTRUCTIBLE|\
-				 AG_OBJECT_PRESERVE_DEPS|\
 				 AG_OBJECT_READONLY|\
 				 AG_OBJECT_REOPEN_ONLOAD|\
 				 AG_OBJECT_REMAIN_DATA|\
 				 AG_OBJECT_DEBUG|\
 				 AG_OBJECT_BOUND_EVENTS)
 
-	AG_TAILQ_HEAD_(ag_event) events;	/* Event handlers/virtual fns */
+	AG_TAILQ_HEAD_(ag_event) events;  /* Event handlers */
 #ifdef AG_TIMERS
-	AG_TAILQ_HEAD_(ag_timer) timers;	/* Running timers */
+	AG_TAILQ_HEAD_(ag_timer) timers;  /* Running timers */
 #endif
-	AG_TAILQ_HEAD_(ag_variable) vars;	/* Named variables / bindings */
-#ifdef AG_SERIALIZATION
-	/*
-	 * TODO 1.6: represent deps as AG_Variables (of P_OBJECT type) and
-	 * remove this list entirely.
-	 */
-	AG_TAILQ_HEAD_(ag_object_dep) deps;	/* Object dependencies */
-#endif
-	struct ag_objectq children;		/* Child objects */
-	AG_TAILQ_ENTRY(ag_object) cobjs;	/* Entry in parent */
-
-	void *_Nullable parent;			/* Parent object (or NULL = is VFS root) */
-	void *_Nonnull root;			/* Pointer to VFS root (possibly self) */
-
-	AG_ObjectPvt pvt;			/* Private data */
+	AG_TAILQ_HEAD_(ag_variable) vars; /* Named variables / bindings */
+	struct ag_objectq children;       /* Child objects */
+	AG_TAILQ_ENTRY(ag_object) cobjs;  /* Entry in parent */
+	void *_Nullable parent;           /* Parent in VFS (NULL = is root) */
+	void *_Nonnull root;              /* VFS root (possibly self) */
+	AG_ObjectPvt pvt;                 /* Private data */
 } AG_Object;
 
 /* Object archive header information. */
 typedef struct ag_object_header {
-	AG_ObjectClassSpec cs;			/* Class specification */
-	Uint32 dataOffs;			/* Dataset offset */
-	AG_Version ver;				/* AG_Object version */
-	Uint flags;				/* Object flags */
+	AG_ObjectClassSpec cs;            /* Class specification */
+	Uint32 dataOffs;                  /* Dataset offset */
+	AG_Version ver;                   /* AG_Object version */
+	Uint flags;                       /* Object flags */
 } AG_ObjectHeader;
 
-#define AGOBJECT(ob)        ((struct ag_object *)(ob))
-#define AGCLASS(obj)        ((struct ag_object_class *)(obj))
+#define AGOBJECT(ob) ((struct ag_object *)(ob))
+#define AGCLASS(obj) ((struct ag_object_class *)(obj))
+
+/* Return a pointer an Object's class description. */
 #define AGOBJECT_CLASS(obj) ((struct ag_object_class *)(AGOBJECT(obj)->cls))
 
 /* Iterate over the direct child objects. */
@@ -259,9 +231,13 @@ typedef struct ag_object_header {
 #endif
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_CORE)
+/*
+ * Shorthands
+ */
 # define OBJECT(ob)              AGOBJECT(ob)
 # define OBJECT_CLASS(ob)        AGOBJECT_CLASS(ob)
 # define CLASS(ob)               AGCLASS(ob)
+
 # define OBJECT_RESIDENT(ob)    (AGOBJECT(ob)->flags & AG_OBJECT_RESIDENT)
 # define OBJECT_PERSISTENT(ob) !(AGOBJECT(ob)->flags & AG_OBJECT_NON_PERSISTENT)
 # define OBJECT_DEBUG(ob)       (AGOBJECT(ob)->flags & AG_OBJECT_DEBUG)
@@ -383,8 +359,8 @@ void AG_ObjectFreeChildren(void *_Nonnull);
 void AG_ObjectFreeEvents(AG_Object *_Nonnull);
 
 #ifdef AG_SERIALIZATION
-int AG_ObjectCopyDirname(void *_Nonnull, char *_Nonnull, AG_Size);
 int AG_ObjectCopyFilename(void *_Nonnull, char *_Nonnull, AG_Size);
+int AG_ObjectCopyDirname(void *_Nonnull, char *_Nonnull, AG_Size);
 int AG_ObjectChanged(void *_Nonnull);
 int AG_ObjectChangedAll(void *_Nonnull);
 
@@ -393,8 +369,6 @@ int AG_ObjectInUse(void *_Nonnull)
 		  _Warn_Unused_Result;
 
 void AG_ObjectUnlinkDatafiles(void *_Nonnull);
-void AG_ObjectFreeDeps(AG_Object *_Nonnull);
-void AG_ObjectFreeDummyDeps(AG_Object *_Nonnull);
 
 int AG_ObjectPageIn(void *_Nonnull);
 int AG_ObjectPageOut(void *_Nonnull);
@@ -417,21 +391,8 @@ int AG_ObjectLoadData(void *_Nonnull, int *_Nonnull);
 int AG_ObjectLoadDataFromFile(void *_Nonnull, int *_Nonnull, const char *_Nullable);
 int AG_ObjectLoadGeneric(void *_Nonnull);
 int AG_ObjectLoadGenericFromFile(void *_Nonnull, const char *_Nullable);
-int AG_ObjectResolveDeps(void *_Nonnull);
 int AG_ObjectReadHeader(AG_DataSource *_Nonnull, AG_ObjectHeader *_Nonnull);
 int AG_ObjectLoadVariables(void *_Nonnull, AG_DataSource *_Nonnull);
-
-AG_ObjectDep *_Nonnull AG_ObjectAddDep(void *_Nonnull, void *_Nonnull, int);
-
-int AG_ObjectFindDep(void *_Nonnull, Uint32, void *_Nonnull *_Nullable)
-                    _Warn_Unused_Result;
-
-void AG_ObjectDelDep(void *_Nonnull, const void *_Nonnull);
-
-Uint32 AG_ObjectEncodeName(void *_Nonnull, const void *_Nullable)
-                          _Pure_Attribute_If_Unthreaded
-                          _Warn_Unused_Result;
-
 #endif /* AG_SERIALIZATION */
 
 void AG_ObjectGenName(void *_Nonnull, AG_ObjectClass *_Nonnull, char *_Nonnull,

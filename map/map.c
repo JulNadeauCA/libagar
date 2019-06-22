@@ -190,14 +190,20 @@ MAP_ItemDestroy(MAP *m, MAP_Item *r)
 	switch (r->type) {
 	case MAP_ITEM_TILE:
 		if (r->r_tile.obj != NULL) {
-			AG_ObjectDelDep(m, r->r_tile.obj);
-			AG_ObjectPageOut(r->r_tile.obj);
+#ifdef AG_DEBUG
+			if (!AG_OfClass(r->r_tile.obj, "RG_Tileset:*"))
+				AG_FatalError(NULL);
+#endif
+			MAP_PageOut(m, "TS-", r->r_tile.obj);
 		}
 		break;
 	case MAP_ITEM_ANIM:
 		if (r->r_anim.obj != NULL) {
-			AG_ObjectDelDep(m, r->r_anim.obj);
-			AG_ObjectPageOut(r->r_anim.obj);
+#ifdef AG_DEBUG
+			if (!AG_OfClass(r->r_anim.obj, "RG_Tileset:*"))
+				AG_FatalError(NULL);
+#endif
+			MAP_PageOut(m, "TS-", r->r_anim.obj);
 		}
 		break;
 	case MAP_ITEM_WARP:
@@ -531,6 +537,64 @@ MAP_PopLayer(MAP *m)
 		m->nlayers = 1;
 }
 
+/*
+ * Set up a dependency between the map and an external Object
+ * (or increment the reference count of existing dependency).
+ */
+void
+MAP_PageIn(MAP *map, const char *resPrefix, void *resObj)
+{
+	char key[AG_VARIABLE_NAME_MAX];
+	int nRefs;
+
+	Strlcpy(key, resPrefix, sizeof(key));
+	Strlcat(key, OBJECT(resObj)->name, sizeof(key));
+	AG_BindObject(map,key, resObj);
+
+	Strlcat(key, "-NREFS", sizeof(key));
+	if (AG_Defined(map,key)) {
+		if ((nRefs = AG_GetInt(map,key)) == 0) {
+			if (AG_ObjectPageIn(resObj) == -1)
+				AG_FatalError(NULL);
+		}
+		AG_SetInt(map,key, nRefs+1);
+	} else {
+		if (AG_ObjectPageIn(resObj) == -1) {
+			AG_FatalError(NULL);
+		}
+		AG_SetInt(map,key, 1);
+	}
+}
+
+/*
+ * Decrement the reference count between the map and specified tileset.
+ * Delete the reference if the reference count reaches 0.
+ */
+void
+MAP_PageOut(MAP *map, const char *resPrefix, void *resObj)
+{
+	char key[AG_VARIABLE_NAME_MAX];
+	char nrefkey[AG_VARIABLE_NAME_MAX];
+	int nRefs;
+	
+	Strlcpy(key, resPrefix, sizeof(key));
+	Strlcat(key, OBJECT(resObj)->name, sizeof(key));
+
+	Strlcpy(nrefkey, key, sizeof(nrefkey));
+	Strlcat(nrefkey, "-NREFS", sizeof(nrefkey));
+
+	if (!AG_Defined(map,nrefkey)) {
+		Debug(map, "No reference to %s\n", OBJECT(resObj)->name);
+		return;
+	}
+	if ((nRefs = AG_GetInt(map,nrefkey)) > 0) {
+		AG_SetInt(map,nrefkey, --nRefs);
+	} else {
+		AG_Unset(map,key);
+		AG_Unset(map,nrefkey);
+	}
+}
+
 /* Set or change the tile reference of a TILE item. */
 void
 MAP_ItemSetTile(MAP_Item *r, MAP *map, RG_Tileset *ts, Uint tile_id)
@@ -538,12 +602,9 @@ MAP_ItemSetTile(MAP_Item *r, MAP *map, RG_Tileset *ts, Uint tile_id)
 	RG_Tile *tile;
 
 	if (r->r_tile.obj != ts && r->r_tile.obj != NULL) {
-		AG_ObjectDelDep(map, r->r_tile.obj);
-		AG_ObjectPageOut(r->r_tile.obj);
+		MAP_PageOut(map, "TS-", r->r_tile.obj);
 	} else {
-		AG_ObjectAddDep(map, ts, 1);
-		if (AG_ObjectPageIn(ts) == -1)
-			AG_FatalError(NULL);
+		MAP_PageIn(map, "TS-", ts);
 	}
 	r->r_tile.obj = ts;
 	r->r_tile.id = tile_id;
@@ -583,14 +644,10 @@ MAP_ItemSetAnim(MAP_Item *r, MAP *map, RG_Tileset *ts, Uint anim_id)
 {
 	RG_Anim *anim;
 
-	if (r->r_anim.obj != NULL) {
-		AG_ObjectDelDep(map, r->r_anim.obj);
-		AG_ObjectPageOut(r->r_anim.obj);
-	}
-	if (ts != NULL) {
-		AG_ObjectAddDep(map, ts, 1);
-		if (AG_ObjectPageIn(ts) == -1)
-			AG_FatalError(NULL);
+	if (r->r_anim.obj != ts && r->r_anim.obj != NULL) {
+		MAP_PageOut(map, "TS-", r->r_anim.obj);
+	} else {
+		MAP_PageIn(map, "TS-", ts);
 	}
 
 	r->r_anim.obj = ts;
@@ -645,7 +702,7 @@ MAP_NodeAddWarpPoint(MAP *map, MAP_Node *node, const char *mapname,
 
 /*
  * Move a reference to a specified node and optionally assign to a
- * specified layer.
+ * specified layer. This may cause tilesets to be paged in and out.
  */
 void
 MAP_NodeMoveItem(MAP *sm, MAP_Node *sn, MAP_Item *r, MAP *dm, MAP_Node *dn,
@@ -662,12 +719,12 @@ MAP_NodeMoveItem(MAP *sm, MAP_Node *sn, MAP_Item *r, MAP *dm, MAP_Node *dn,
 
 	switch (r->type) {
 	case MAP_ITEM_TILE:
-		AG_ObjectDelDep(sm, r->r_tile.obj);
-		AG_ObjectAddDep(dm, r->r_tile.obj, 1);
+		MAP_PageOut(sm, "TS-", r->r_tile.obj);
+		MAP_PageIn(dm, "TS-", r->r_tile.obj);
 		break;
 	case MAP_ITEM_ANIM:
-		AG_ObjectDelDep(sm, r->r_anim.obj);
-		AG_ObjectAddDep(dm, r->r_anim.obj, 1);
+		MAP_PageOut(sm, "TS-", r->r_anim.obj);
+		MAP_PageIn(dm, "TS-", r->r_anim.obj);
 		break;
 	default:
 		break;
@@ -768,24 +825,23 @@ MAP_NodeCopyItem(const MAP_Item *sr, MAP *dm, MAP_Node *dn, int dlayer)
 
 /* Remove a noderef from a node and free it. */
 void
-MAP_NodeDelItem(MAP *m, MAP_Node *node, MAP_Item *r)
+MAP_NodeDelItem(MAP *map, MAP_Node *node, MAP_Item *r)
 {
-	AG_ObjectLock(m);
+	AG_ObjectLock(map);
 	TAILQ_REMOVE(&node->nrefs, r, nrefs);
-	MAP_ItemDestroy(m, r);
-	AG_ObjectUnlock(m);
+	MAP_ItemDestroy(map, r);
+	AG_ObjectUnlock(map);
 	
 	free(r);
 }
 
 /* Remove all references associated with the given layer. */
 void
-MAP_NodeRemoveAll(MAP *m, MAP_Node *node, int layer)
+MAP_NodeRemoveAll(MAP *map, MAP_Node *node, int layer)
 {
 	MAP_Item *r, *nr;
 
-	AG_ObjectLock(m);
-
+	AG_ObjectLock(map);
 	for (r = TAILQ_FIRST(&node->nrefs);
 	     r != TAILQ_END(&node->nrefs);
 	     r = nr) {
@@ -795,25 +851,24 @@ MAP_NodeRemoveAll(MAP *m, MAP_Node *node, int layer)
 			continue;
 		}
 		TAILQ_REMOVE(&node->nrefs, r, nrefs);
-		MAP_ItemDestroy(m, r);
+		MAP_ItemDestroy(map, r);
 		free(r);
 	}
-
-	AG_ObjectUnlock(m);
+	AG_ObjectUnlock(map);
 }
 
 /* Move all references from a layer to another. */
 void
-MAP_NodeSwapLayers(MAP *m, MAP_Node *node, int layer1, int layer2)
+MAP_NodeSwapLayers(MAP *map, MAP_Node *node, int layer1, int layer2)
 {
 	MAP_Item *r;
 
-	AG_ObjectLock(m);
+	AG_ObjectLock(map);
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
 		if (r->layer == layer1)
 			r->layer = layer2;
 	}
-	AG_ObjectUnlock(m);
+	AG_ObjectUnlock(map);
 }
 
 /*
@@ -908,13 +963,11 @@ Destroy(void *_Nonnull p)
 int
 MAP_ItemLoad(MAP *m, AG_DataSource *ds, MAP_Node *node, MAP_Item **r)
 {
+	char tileset[AG_OBJECT_NAME_MAX];
+	RG_Tileset *ts;
 	enum map_item_type type;
-	Uint32 nmasks = 0;
-	Uint8 flags;
-	Uint8 layer;
-	Sint8 friction;
-	Uint32 obj_ref, offs;
-	void *pobj;
+	Uint32 nmasks = 0, offs;
+	Uint8 flags, layer, friction;
 	Uint i;
 
 	/* Read the type of reference, flags and the layer#. */
@@ -926,54 +979,58 @@ MAP_ItemLoad(MAP *m, AG_DataSource *ds, MAP_Node *node, MAP_Item **r)
 	/* Read the reference data. */
 	switch (type) {
 	case MAP_ITEM_TILE:
-		{
-			obj_ref = AG_ReadUint32(ds);
-			offs = AG_ReadUint32(ds);
-
-			if (AG_ObjectFindDep(m, obj_ref, &pobj) == -1) {
-				return (-1);
-			}
-			*r = MAP_NodeAddTile(m, node, pobj, offs);
-			(*r)->flags = flags;
-			(*r)->layer = layer;
-			(*r)->friction = friction;
-			(*r)->r_gfx.xcenter = AG_ReadSint16(ds);
-			(*r)->r_gfx.ycenter = AG_ReadSint16(ds);
-			(*r)->r_gfx.xmotion = AG_ReadSint16(ds);
-			(*r)->r_gfx.ymotion = AG_ReadSint16(ds);
-			(*r)->r_gfx.xorigin = AG_ReadSint16(ds);
-			(*r)->r_gfx.yorigin = AG_ReadSint16(ds);
-			(*r)->r_gfx.rs.x = AG_ReadSint16(ds);
-			(*r)->r_gfx.rs.y = AG_ReadSint16(ds);
-			(*r)->r_gfx.rs.w = AG_ReadUint16(ds);
-			(*r)->r_gfx.rs.h = AG_ReadUint16(ds);
+		AG_CopyString(tileset, ds, sizeof(tileset));
+		offs = AG_ReadUint32(ds);
+		ts = AG_ObjectFindChild(OBJECT(m)->root, tileset);
+		if (ts == NULL) {
+			AG_SetError("No `%s' under %s\n", tileset, OBJECT(m)->root);
+			return (-1);
+		} else if (!AG_OfClass(ts, "RG_Tileset:*")) {
+			AG_SetError("%s is not a tileset\n", tileset);
+			return (-1);
 		}
+		*r = MAP_NodeAddTile(m,node, ts,offs);
+		(*r)->flags = flags;
+		(*r)->layer = layer;
+		(*r)->friction = friction;
+		(*r)->r_gfx.xcenter = AG_ReadSint16(ds);
+		(*r)->r_gfx.ycenter = AG_ReadSint16(ds);
+		(*r)->r_gfx.xmotion = AG_ReadSint16(ds);
+		(*r)->r_gfx.ymotion = AG_ReadSint16(ds);
+		(*r)->r_gfx.xorigin = AG_ReadSint16(ds);
+		(*r)->r_gfx.yorigin = AG_ReadSint16(ds);
+		(*r)->r_gfx.rs.x = AG_ReadSint16(ds);
+		(*r)->r_gfx.rs.y = AG_ReadSint16(ds);
+		(*r)->r_gfx.rs.w = AG_ReadUint16(ds);
+		(*r)->r_gfx.rs.h = AG_ReadUint16(ds);
 		break;
-	case MAP_ITEM_ANIM:
-		{
-			obj_ref = AG_ReadUint32(ds);
-			offs = AG_ReadUint32(ds);
-			
-			if (AG_ObjectFindDep(m, obj_ref, &pobj) == -1) {
-				return (-1);
-			}
-			*r = MAP_NodeAddAnim(m, node, pobj, offs);
-			(*r)->flags = flags;
-			(*r)->layer = layer;
-			(*r)->friction = friction;
-			(*r)->r_gfx.xcenter = AG_ReadSint16(ds);
-			(*r)->r_gfx.ycenter = AG_ReadSint16(ds);
-			(*r)->r_gfx.xmotion = AG_ReadSint16(ds);
-			(*r)->r_gfx.ymotion = AG_ReadSint16(ds);
-			(*r)->r_gfx.xorigin = AG_ReadSint16(ds);
-			(*r)->r_gfx.yorigin = AG_ReadSint16(ds);
-			(*r)->r_gfx.rs.x = AG_ReadSint16(ds);
-			(*r)->r_gfx.rs.y = AG_ReadSint16(ds);
-			(*r)->r_gfx.rs.w = AG_ReadUint16(ds);
-			(*r)->r_gfx.rs.h = AG_ReadUint16(ds);
+	case MAP_ITEM_ANIM:					/* TODO remove */
+		AG_CopyString(tileset, ds, sizeof(tileset));
+		offs = AG_ReadUint32(ds);
+		ts = AG_ObjectFindChild(OBJECT(m)->root, tileset);
+		if (ts == NULL) {
+			AG_SetError("No `%s' under %s\n", tileset, OBJECT(m)->root);
+			return (-1);
+		} else if (!AG_OfClass(ts, "RG_Tileset:*")) {
+			AG_SetError("%s is not a tileset\n", tileset);
+			return (-1);
 		}
+		*r = MAP_NodeAddAnim(m, node, ts, offs);
+		(*r)->flags = flags;
+		(*r)->layer = layer;
+		(*r)->friction = friction;
+		(*r)->r_gfx.xcenter = AG_ReadSint16(ds);
+		(*r)->r_gfx.ycenter = AG_ReadSint16(ds);
+		(*r)->r_gfx.xmotion = AG_ReadSint16(ds);
+		(*r)->r_gfx.ymotion = AG_ReadSint16(ds);
+		(*r)->r_gfx.xorigin = AG_ReadSint16(ds);
+		(*r)->r_gfx.yorigin = AG_ReadSint16(ds);
+		(*r)->r_gfx.rs.x = AG_ReadSint16(ds);
+		(*r)->r_gfx.rs.y = AG_ReadSint16(ds);
+		(*r)->r_gfx.rs.w = AG_ReadUint16(ds);
+		(*r)->r_gfx.rs.h = AG_ReadUint16(ds);
 		break;
-	case MAP_ITEM_WARP:
+	case MAP_ITEM_WARP:			/* TODO move to separate fn */
 		{
 			char map_id[AG_OBJECT_NAME_MAX];
 			Uint32 ox, oy;
@@ -1068,8 +1125,8 @@ MAP_AttachActor(MAP *m, MAP_Actor *a)
 		AG_ObjectUnlock(a);
 		return;
 	}
-	
-	AG_ObjectAddDep(m, a, 1);
+
+	MAP_PageIn(m, "ACTOR-", a);
 
 	a->type = AG_ACTOR_MAP;
 	a->parent = m;
@@ -1091,8 +1148,8 @@ MAP_DetachActor(MAP *m, MAP_Actor *a)
 
 	if (AG_OfClass(m, "MAP:*")) {
 		MAP_ActorUnmapTile(a);
+		MAP_PageOut(m, "ACTOR-", a);
 	}
-	AG_ObjectDelDep(m, a);
 	a->parent = NULL;
 
 	AG_ObjectUnlock(a);
@@ -1214,7 +1271,7 @@ fail:
 void
 MAP_ItemSave(MAP *m, AG_DataSource *ds, MAP_Item *r)
 {
-	off_t nmasks_offs;
+	AG_Offset nmasks_offs;
 	Uint32 nmasks = 0;
 	MAP_NodeMask *mask;
 
@@ -1227,11 +1284,11 @@ MAP_ItemSave(MAP *m, AG_DataSource *ds, MAP_Item *r)
 	/* Save the reference. */
 	switch (r->type) {
 	case MAP_ITEM_TILE:
-		AG_WriteUint32(ds, AG_ObjectEncodeName(m, r->r_tile.obj));
+		AG_WriteString(ds, OBJECT(r->r_tile.obj)->name);
 		AG_WriteUint32(ds, r->r_tile.id);
 		break;
 	case MAP_ITEM_ANIM:
-		AG_WriteUint32(ds, AG_ObjectEncodeName(m, r->r_anim.obj));
+		AG_WriteString(ds, OBJECT(r->r_anim.obj)->name);
 		AG_WriteUint32(ds, r->r_anim.id);
 		break;
 	case MAP_ITEM_WARP:
@@ -1273,7 +1330,7 @@ void
 MAP_NodeSave(MAP *m, AG_DataSource *ds, MAP_Node *node)
 {
 	MAP_Item *r;
-	off_t nrefs_offs;
+	AG_Offset nrefs_offs;
 	Uint32 nrefs = 0;
 
 	nrefs_offs = AG_Tell(ds);
@@ -1703,7 +1760,7 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, AG_Surface *sprite)
 				AG_SetAlpha(su, AG_SRCALPHA, su->format->alpha);
 
 			/* Map the sprite as a NULL reference. */
-			MAP_NodeAddTile(fragmap, node, NULL, nsprite);
+			MAP_NodeAddTile(fragmap,node, NULL,nsprite);
 		}
 	}
 

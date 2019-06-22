@@ -347,9 +347,7 @@ Init(void *_Nonnull obj)
 {
 	AG_Widget *wid = obj;
 	AG_Event *ev;
-#ifdef AG_SERIALIZATION
-	OBJECT(wid)->save_pfx = "/widgets";
-#endif
+
 	OBJECT(wid)->flags |= AG_OBJECT_NAME_ONATTACH;
 
 	wid->flags = 0;

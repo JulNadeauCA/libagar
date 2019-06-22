@@ -13,15 +13,11 @@ char someString[64];
 static void
 LoadConfig(AG_Event *event)
 {
+	char path[AG_PATHNAME_MAX];
 	AG_TestInstance *ti = AG_PTR(1);
 
-	if (AGOBJECT(agConfig)->archivePath != NULL) {
-		TestMsg(ti, "Loading from %s", AGOBJECT(agConfig)->archivePath);
-	} else {
-		char path[AG_PATHNAME_MAX];
-		if (AG_ObjectCopyFilename(agConfig, path, sizeof(path)) == 0)
-			TestMsg(ti, "Loading from %s", path);
-	}
+	if (AG_ObjectCopyFilename(agConfig, path, sizeof(path)) == 0)
+		TestMsg(ti, "Loading from %s", path);
 
 	if (AG_ConfigLoad() == 0) {
 		TestMsg(ti, "Loaded configuration successfully");
@@ -33,15 +29,11 @@ LoadConfig(AG_Event *event)
 static void
 SaveConfig(AG_Event *event)
 {
+	char path[AG_PATHNAME_MAX];
 	AG_TestInstance *ti = AG_PTR(1);
 	
-	if (AGOBJECT(agConfig)->archivePath != NULL) {
-		TestMsg(ti, "Saving to %s", AGOBJECT(agConfig)->archivePath);
-	} else {
-		char path[AG_PATHNAME_MAX];
-		if (AG_ObjectCopyFilename(agConfig, path, sizeof(path)) == 0)
-			TestMsg(ti, "Saving to %s", path);
-	}
+	if (AG_ObjectCopyFilename(agConfig, path, sizeof(path)) == 0)
+		TestMsg(ti, "Saving to %s", path);
 
 	if (AG_ConfigSave() == 0) {
 		TestMsg(ti, "Saved configuration successfully");

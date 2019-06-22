@@ -96,8 +96,6 @@ Init(void *_Nonnull obj)
 #endif
 	int i;
 	
-	OBJECT(cfg)->save_pfx = NULL;
-
 	for (i = 0; i < AG_CONFIG_PATH_LAST; i++)
 		SLIST_INIT(&cfg->paths[i]);
 #ifdef AG_DEBUG

@@ -220,10 +220,8 @@ DEV_BrowserOpenData(void *p)
 	if (ob->cls->edit == NULL)
 		return;
 
-	if (OBJECT_PERSISTENT(ob) &&
-	    !OBJECT_RESIDENT(ob)) {
+	if (OBJECT_PERSISTENT(ob) && !OBJECT_RESIDENT(ob)) {
 		if (AG_ObjectLoadGenericFromFile(ob, NULL) == -1 ||
-		    AG_ObjectResolveDeps(ob) == -1 ||
 		    AG_ObjectLoadDataFromFile(ob, &dataFound, NULL) == -1) {
 			if (!dataFound) {
 				if (AG_ObjectSave(ob) == -1) {
@@ -420,8 +418,7 @@ ObjectOp(AG_Event *_Nonnull event)
 				AG_Event ev;
 
 				AG_EventInit(&ev);
-				AG_EventArgs(&ev, "%s,%p", ob,
-				    (ob->archivePath != NULL) ? ob->archivePath : "");
+				AG_EventArgs(&ev, "%p", ob);
 				SaveObjectToFile(&ev);
 			}
 			break;

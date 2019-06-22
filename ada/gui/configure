@@ -2672,7 +2672,6 @@ static const struct {
 	{ "SIZEOF_AG_OBJECT", sizeof(AG_Object) },
 	{ "SIZEOF_AG_OBJECTCLASS", sizeof(AG_ObjectClass) },
 	{ "SIZEOF_AG_OBJECTCLASSPVT", sizeof(AG_ObjectClassPvt) },
-	{ "SIZEOF_AG_OBJECTDEP", sizeof(AG_ObjectDep) },
 	{ "SIZEOF_AG_OBJECTHEADER", sizeof(AG_ObjectHeader) },
 	{ "SIZEOF_AG_OBJECTPVT", sizeof(AG_ObjectPvt) },
 	{ "SIZEOF_AG_TBL", sizeof(AG_Tbl) },
@@ -2740,9 +2739,11 @@ static const struct {
 	{ "SIZEOF_AG_TREETBLROW", sizeof(AG_TreetblRow) },
 	{ "SIZEOF_AG_TREETBLROWQ", sizeof(AG_TreetblRowQ) },
 	{ "SIZEOF_AG_UNIT", sizeof(AG_Unit) },
+	{ "SIZEOF_AG_WIDGET", sizeof(AG_Widget) },
 	{ "SIZEOF_AG_WIDGETGL", sizeof(AG_WidgetGL) },
 	{ "SIZEOF_AG_WIDGETPALETTE", sizeof(AG_WidgetPalette) },
 	{ "SIZEOF_AG_WIDGETPVT", sizeof(AG_WidgetPvt) },
+	{ "SIZEOF_AG_WINDOW", sizeof(AG_Window) },
 	{ "SIZEOF_AG_WINDOWPVT", sizeof(AG_WindowPvt) },
 };
 int

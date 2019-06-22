@@ -52,7 +52,6 @@ MAP_EditorInit(void)
 {
 	AG_ObjectInitStatic(&mapEditor, &mapEditorClass);
 	AG_ObjectSetName(&mapEditor, "_mapEditor");
-	OBJECT(&mapEditor)->save_pfx = "/_mapEditor";
 
 	/* Initialize the default tunables. */
 	AG_SetUint32(&mapEditor, "default-map-width", 12);

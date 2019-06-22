@@ -46,7 +46,6 @@ const AG_FlagDescr devObjectFlags[] = {
 	{ AG_OBJECT_READONLY,		N_("Read-only"),		  1 },
 	{ AG_OBJECT_INDESTRUCTIBLE,	N_("Indestructible"),		  1 },
 	{ AG_OBJECT_NON_PERSISTENT,	N_("Non-persistent"),		  1 },
-	{ AG_OBJECT_PRESERVE_DEPS,	N_("Preserve null dependencies"), 1 },
 	{ AG_OBJECT_REMAIN_DATA,	N_("Keep data resident"),	  1 },
 	{ AG_OBJECT_RESIDENT,		N_("Data part is resident"),	  0 },
 	{ AG_OBJECT_STATIC,		N_("Statically allocated"),	  0 },
@@ -54,36 +53,6 @@ const AG_FlagDescr devObjectFlags[] = {
 	{ AG_OBJECT_NAME_ONATTACH,	N_("Generate name upon attach"),  0 },
 	{ 0,				"",				  0 }
 };
-
-static void
-PollDeps(AG_Event *_Nonnull event)
-{
-	char path[AG_OBJECT_PATH_MAX];
-	AG_Tlist *tl = AG_SELF();
-	AG_Object *ob = AG_PTR(1);
-	AG_ObjectDep *dep;
-
-	AG_TlistClear(tl);
-	AG_LockVFS(ob);
-	TAILQ_FOREACH(dep, &ob->deps, deps) {
-		char label[AG_TLIST_LABEL_MAX];
-	
-		if (dep->obj != NULL) {
-			AG_ObjectCopyName(dep->obj, path, sizeof(path));
-		} else {
-			Strlcpy(path, "(NULL)", sizeof(path));
-		}
-		if (dep->count == AG_OBJECT_DEP_MAX) {
-			Snprintf(label, sizeof(label), "%s (wired)", path);
-		} else {
-			Snprintf(label, sizeof(label), "%s (%u)", path,
-			    (Uint)dep->count);
-		}
-		AG_TlistAddPtr(tl, NULL, label, dep);
-	}
-	AG_UnlockVFS(ob);
-	AG_TlistRestore(tl);
-}
 
 static void
 PollVariables(AG_Event *_Nonnull event)
@@ -190,17 +159,8 @@ DEV_ObjectEdit(void *p)
 		AG_LabelNewPolledMT(ntab, AG_LABEL_HFILL, &agLinkageLock,
 		    _("Parent: %[obj]"), &ob->parent);
 #endif
-		AG_LabelNew(ntab, 0, _("Save prefix: %s"),
-		    ob->save_pfx != NULL ? ob->save_pfx : AG_PATHSEP);
 	}
 
-	ntab = AG_NotebookAdd(nb, _("Deps"), AG_BOX_VERT);
-	{
-		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
-		AG_TlistSizeHint(tl, "XXXXXXXXXXXX", 6);
-		AG_SetEvent(tl, "tlist-poll", PollDeps, "%p", ob);
-	}
-	
 	ntab = AG_NotebookAdd(nb, _("Events"), AG_BOX_VERT);
 	{
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);

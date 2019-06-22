@@ -21,12 +21,18 @@
 
 #include <agar/map/begin.h>
 
+/* Type of item contained in a MAP_Node stack. */
+/* TODO 1.6 get rid of ANIM type which AG_Surface now handles. */
 enum map_item_type {
 	MAP_ITEM_TILE,		/* Reference to a tile */
 	MAP_ITEM_ANIM,		/* Reference to an animation */
 	MAP_ITEM_WARP		/* Reference to another location */
 };
 
+/*
+ * TODO: ag_objectify map items. make it possible to create
+ * custom classes of items on the fly.
+ */
 typedef struct map_item {
 	enum map_item_type type;	/* Type of element */
 	
@@ -208,6 +214,10 @@ int  MAP_ItemLoad(MAP *_Nonnull, AG_DataSource *_Nonnull, MAP_Node *_Nonnull,
 void MAP_ItemSave(MAP *_Nonnull, AG_DataSource *_Nonnull, MAP_Item *_Nonnull);
 int  MAP_ItemExtent(MAP *_Nonnull, MAP_Item *_Nonnull, AG_Rect *_Nonnull, int);
 void MAP_ItemDraw(MAP *_Nonnull, MAP_Item *_Nonnull, int,int, int);
+
+void MAP_PageIn(MAP *_Nonnull, const char *_Nonnull, void *_Nonnull);
+void MAP_PageOut(MAP *_Nonnull, const char *_Nonnull, void *_Nonnull);
+
 void MAP_ItemSetTile(MAP_Item *_Nonnull, MAP *_Nonnull,
                      RG_Tileset *_Nonnull, Uint);
 void MAP_ItemSetAnim(MAP_Item *_Nonnull, MAP *_Nonnull,

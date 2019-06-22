@@ -125,15 +125,11 @@ SelectObject(AG_Event *event)
 	objectb = AG_GetVariable(os, "object", &object);
 
 	if (*object != NULL) {
-		if (os->flags & AG_OBJSEL_PAGE_DATA) {
+		if (os->flags & AG_OBJSEL_PAGE_DATA)
 			AG_ObjectPageOut(*object);
-		}
-		AG_ObjectDelDep(os->pobj, *object);
 	}
 
 	*object = it->p1;
-
-	AG_ObjectAddDep(os->pobj, *object, 1);
 
 	if (os->flags & AG_OBJSEL_PAGE_DATA) {
 		AG_ObjectPageIn(*object);
