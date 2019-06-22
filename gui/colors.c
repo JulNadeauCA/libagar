@@ -153,8 +153,9 @@ AG_ColorFromString(AG_Color *cOut, const char *s, const AG_Color *pColor)
 		cOut->g = AG_8toH((hexVal >> 8)  & 0xff);
 		cOut->b = AG_8toH((hexVal)       & 0xff);
 		cOut->a = AG_OPAQUE;
+
 		return;
-	    } /* case */
+	    }
 	}
 	if (*c == 'r' || *c == 'h') {
 		for (; *c != '\0' && *c != '('; c++)
@@ -168,7 +169,7 @@ AG_ColorFromString(AG_Color *cOut, const char *s, const AG_Color *pColor)
 	}
 	for (i=0, argc=0; i<4; i++) {
 		char *tok, *ep;
-		if ((tok = AG_Strsep(&pc, ",:")) == NULL) {
+		if ((tok = AG_Strsep(&pc, ",:/")) == NULL) {
 			break;
 		}
 #ifdef HAVE_FLOAT

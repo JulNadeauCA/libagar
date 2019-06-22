@@ -159,16 +159,21 @@ converts a text-based color representation to an
 .Nm .
 The following formats are allowed:
 .Bd -literal
-	"#RRGGBB"
+	"#RRGGBB"           (opaque)
+	"#RRGGBBAA"
+	"#RRRRGGGGBBBB"     (opaque, if AG_LARGE)
 	"#RRRRGGGGBBBBAAAA" (if AG_LARGE)
 	"r:g:b[:a]"
 	"r,g,b[,a]"
+	"r/g/b[/a]"
 	"rgb(r,g,b[,a])"
 	"hsv(h,s,v[,a])"    (if HAVE_FLOAT)
 .Ed
 .Pp
-Components with a terminating "%" character are interpreted as a percentage
-of the corresponding component in
+Components can be separated by ",:/" characters.
+.Pp
+Components with a terminating "%" character are interpreted as a
+percentage of the corresponding component in
 .Fa parentColor
 (if non-NULL).
 .Pp
