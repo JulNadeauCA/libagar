@@ -312,6 +312,13 @@ AG_PixmapSetCoords(AG_Pixmap *px, int s, int t)
 	AG_Redraw(px);
 }
 
+/* Return a copy of the surface at given index. */
+AG_Surface *
+AG_PixmapGetSurface(AG_Pixmap *px, int name)
+{
+	return AG_SurfaceDup(WSURFACE(px,name));
+}
+
 static void
 Init(void *_Nonnull obj)
 {

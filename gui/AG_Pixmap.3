@@ -152,6 +152,9 @@ If OpenGL support is not available, an error is returned.
 .Ft "void"
 .Fn AG_PixmapSetSurface "AG_Pixmap *pixmap" "int surface_name"
 .Pp
+.Ft "AG_Surface *"
+.Fn AG_PixmapGetSurface "AG_Pixmap *pixmap" "int surface_name"
+.Pp
 .Ft "void"
 .Fn AG_PixmapReplaceSurface "AG_Pixmap *pixmap" "int surface_name" "AG_Surface *surfaceNew"
 .Pp
@@ -182,6 +185,11 @@ in
 The argument should be the handle of one of the surfaces previously
 mapped with
 .Fn AG_PixmapAddSurface .
+.Pp
+The
+.Fn AG_PixmapGetSurface
+returns a copy of the surface at given index (if the index is invalid then
+a fatal condition is raised).
 .Pp
 The
 .Fn AG_PixmapReplaceSurface
