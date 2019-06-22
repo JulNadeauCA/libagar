@@ -45,7 +45,10 @@
 #include <agar/gui/notebook.h>
 #include <agar/gui/pane.h>
 #include <agar/gui/scrollview.h>
+#include <agar/gui/pixmap.h>
+#include <agar/gui/file_dlg.h>
 #include <agar/gui/cursors.h>
+#include <agar/gui/icons.h>
 
 #include <string.h>
 
@@ -121,7 +124,7 @@ static void
 PollWidgets(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_OBJECT(1, "AG_Widget:AG_Window:*");
 	AG_Driver *drv;
 	
 	AG_TlistClear(tl);
@@ -142,37 +145,97 @@ PollWidgets(AG_Event *_Nonnull event)
 static void
 ShowWindow(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_OBJECT(1, "AG_Widget:AG_Window:*");
+
 	AG_WindowShow(win);
 }
 
 static void
 HideWindow(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_OBJECT(1, "AG_Widget:AG_Window:*");
+
 	AG_WindowHide(win);
+}
+
+static void
+SelectedSurface(AG_Event *_Nonnull event)
+{
+	AG_Pixmap *px  = AG_OBJECT(2, "AG_Widget:AG_Pixmap:*");
+	AG_TlistItem *it = AG_PTR(3);
+	AG_Surface *S = it->p1;
+	int Smapped;
+
+	Smapped = AG_PixmapAddSurfaceScaled(px, S, S->w << 1, S->h << 1);
+	AG_PixmapSetSurface(px, Smapped);
+	AG_Redraw(px);
+}
+
+static void
+ExportSurface(AG_Event *_Nonnull event)
+{
+	AG_Pixmap *px = AG_OBJECT(1, "AG_Widget:AG_Pixmap:*");
+	const char *path = AG_STRING(2);
+	AG_Surface *S;
+
+	if (px->n == -1)
+		return;
+
+	S = AG_PixmapGetSurface(px, px->n);
+	if (AG_SurfaceExportFile(S, path) == 0) {
+		AG_TextTmsg(AG_MSG_INFO, 2000,
+		    _("Exported %u x %u x %ubpp surface to:\n%s"),
+		    S->w, S->h, S->format.BitsPerPixel, path);
+	} else {
+		AG_TextMsgFromError();
+	}
+	AG_SurfaceFree(S);
+}
+
+static void
+ExportSurfaceDlg(AG_Event *_Nonnull event)
+{
+	AG_Pixmap *px  = AG_OBJECT(1, "AG_Widget:AG_Pixmap:*");
+	AG_Window *win;
+	AG_FileDlg *fd;
+	
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
+	AG_WindowSetCaptionS(win, _("Export to image file..."));
+	fd = AG_FileDlgNewMRU(win, "agar.debugger.image-dir",
+	                      AG_FILEDLG_SAVE | AG_FILEDLG_CLOSEWIN |
+	                      AG_FILEDLG_MASK_EXT | AG_FILEDLG_EXPAND);
+	AG_FileDlgAddImageTypes(fd, ExportSurface, "%p", px);
+	AG_WindowShow(win);
 }
 
 static void
 PollSurfaces(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
-	AG_Widget *wid = AG_PTR(1);
+	AG_Widget *wid = AG_OBJECT(1, "AG_Widget:*");
+	AG_TlistItem *it;
 	Uint i;
 
 	AG_TlistBegin(tl);
 	for (i = 0; i < wid->nSurfaces; i++) {
-		AG_Surface *su = WSURFACE(wid,i);
+		AG_Surface *S = WSURFACE(wid,i);
 
 		/* Sometimes WSURFACE returns NULL. This may be a bug
 		 * elsewhere, maybe in the glxdriver, causing wid->nSurfaces
 		 * to be inconsistent with the number of non-null surfaces.
-		 * Without this check, su will get DE referenced and cause
+		 * Without this check, S will get DE referenced and cause
 		 * a segfault. */
-		if (su == NULL) { continue; }
+		if (S == NULL) {
+			AG_TlistAdd(tl, NULL, "Surface%u = NULL", i);
+			continue;
+		}
+		it = AG_TlistAdd(tl, S, "Surface%u (%ux%u, %ubpp)",
+		    i, S->w, S->h, S->format.BitsPerPixel);
 
-		AG_TlistAdd(tl, su, "Surface%u (%ux%u, %ubpp)",
-		    i, su->w, su->h, su->format.BitsPerPixel);
+		it->p1 = S;
+		it->cat = "surface";
 	}
 	AG_TlistEnd(tl);
 }
@@ -218,7 +281,7 @@ static void
 PollCursors(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
-	AG_Widget *wid = AG_PTR(1);
+	AG_Widget *wid = AG_OBJECT(1, "AG_Widget:*");
 	AG_Driver *drv = wid->drv;
 	AG_TlistItem *it;
 	AG_Cursor *cu;
@@ -235,7 +298,7 @@ PollCursors(AG_Event *_Nonnull event)
 static void
 WidgetSelected(AG_Event *_Nonnull event)
 {
-	AG_Box *box = AG_PTR(1);
+	AG_Box *box = AG_OBJECT(1, "AG_Widget:AG_Box");
 	AG_TlistItem *ti = AG_PTR(2);
 	AG_Widget *wid = ti->p1;
 	AG_Notebook *nb;
@@ -332,13 +395,26 @@ WidgetSelected(AG_Event *_Nonnull event)
 		AG_BindInt(msb, "yvalue", &wid->rView.y2);
 	}
 	nt = AG_NotebookAdd(nb, _("Surfaces"), AG_BOX_VERT);
+	AG_BoxSetHomogenous(&nt->box, 1);
 	{
+		AG_Pane *pane;
+		AG_Pixmap *px;
 		AG_Tlist *tl;
+		AG_MenuItem *mi;
 
-		tl = AG_TlistNewPolled(nt, AG_TLIST_EXPAND,
+		pane = AG_PaneNewVert(nt, AG_PANE_EXPAND);
+		px = AG_PixmapNew(pane->div[0], AG_PIXMAP_EXPAND, 320, 240);
+
+		tl = AG_TlistNewPolled(pane->div[1], AG_TLIST_EXPAND,
 		    PollSurfaces, "%p", wid);
-		AG_TlistSetItemHeight(tl, 32);
-		AG_TlistSetIconWidth(tl, 64);
+		AG_SetEvent(tl, "tlist-selected",
+		    SelectedSurface, "%p,%p", wid, px);
+
+		mi = AG_TlistSetPopup(tl, "surface");
+		AG_MenuAction(mi, _("Export to image file..."), agIconSave.s,
+		    ExportSurfaceDlg, "%p", px);
+
+		AG_PaneMoveDividerPct(pane, 50);
 	}
 
 	/* Don't show the cursors tab if the widget doesn't have a driver (i.e.
@@ -367,8 +443,8 @@ WidgetSelected(AG_Event *_Nonnull event)
 static void
 ContextualMenu(AG_Event *_Nonnull event)
 {
-	AG_MenuItem *mi = AG_SENDER();
-	AG_Tlist *tl = AG_PTR(1);
+	AG_Tlist *tl = AG_OBJECT(1, "AG_Widget:AG_Tlist");
+	AG_MenuItem *mi = AG_PTR(2);
 	AG_TlistItem *ti = AG_TlistSelectedItem(tl);
 
 	if (ti == NULL)
