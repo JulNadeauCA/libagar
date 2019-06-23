@@ -237,12 +237,6 @@ ProcessFmtString64(AG_FmtString *_Nonnull fs, const char *_Nonnull f,
     char *_Nonnull dst, AG_Size dstSize)
 {
 	switch (*f) {
-# ifdef HAVE_LONG_DOUBLE
-	case 'f':
-		return Snprintf(dst, dstSize, "%.2Lf", FSARG(fs,long double));
-	case 'g':
-		return Snprintf(dst, dstSize, "%.2Lg", FSARG(fs,long double));
-# endif
 	case 'd':
 	case 'i':
 		return Snprintf(dst, dstSize, "%lld", (long long)FSARG(fs,Sint64));
@@ -529,14 +523,6 @@ next_char:
 			case 'l':
 				CAT_SPEC(f[2]);
 				switch (f[3]) {
-# if defined(HAVE_FLOAT) && defined(HAVE_LONG_DOUBLE)
-				case 'f':
-				case 'g':
-					CAT_SPEC(f[3]);
-					rv = Snprintf(pDst, (pEnd-pDst), spec,
-					    va_arg(ap,long double));
-					break;
-# endif
 				case 'd':
 				case 'i':
 					CAT_SPEC(f[3]);

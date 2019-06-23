@@ -183,9 +183,6 @@ GetPxCoords(AG_Scrollbar *_Nonnull sb, int *_Nonnull x, int *_Nonnull len)
 #ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		GET_PX_COORDS(float);	break;
 	case AG_VARIABLE_DOUBLE:	GET_PX_COORDS(double);	break;
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:	GET_PX_COORDS(long double);	break;
-# endif
 #endif
 	case AG_VARIABLE_UINT8:		GET_PX_COORDS(Uint8);	break;
 	case AG_VARIABLE_SINT8:		GET_PX_COORDS(Sint8);	break;
@@ -255,9 +252,6 @@ SeekToPxCoords(AG_Scrollbar *_Nonnull sb, int x)
 #ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		MAP_PX_COORDS(float);		break;
 	case AG_VARIABLE_DOUBLE:	MAP_PX_COORDS(double);		break;
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:	MAP_PX_COORDS(long double);	break;
-# endif
 #endif
 	case AG_VARIABLE_UINT8:		MAP_PX_COORDS(Uint8);		break;
 	case AG_VARIABLE_SINT8:		MAP_PX_COORDS(Sint8);		break;
@@ -328,9 +322,6 @@ Increment(AG_Scrollbar *_Nonnull sb)
 #ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		INCREMENT(float);	break;
 	case AG_VARIABLE_DOUBLE:	INCREMENT(double);	break;
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:	INCREMENT(long double);	break;
-# endif
 #endif
 	case AG_VARIABLE_UINT8:		INCREMENT(Uint8);	break;
 	case AG_VARIABLE_SINT8:		INCREMENT(Sint8);	break;
@@ -375,9 +366,6 @@ Decrement(AG_Scrollbar *_Nonnull sb)
 #ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		DECREMENT(float);	break;
 	case AG_VARIABLE_DOUBLE:	DECREMENT(double);	break;
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:	DECREMENT(long double);	break;
-# endif
 #endif
 	case AG_VARIABLE_UINT8:		DECREMENT(Uint8);	break;
 	case AG_VARIABLE_SINT8:		DECREMENT(Sint8);	break;
@@ -693,9 +681,6 @@ OnShow(AG_Event *_Nonnull event)
 #ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:	 SET_DEF(AG_SetFloat, 0.0f, 1.0f, 0.1f); break;
 	case AG_VARIABLE_DOUBLE: SET_DEF(AG_SetDouble, 0.0, 1.0, 0.1); break;
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE: SET_DEF(AG_SetLongDouble, 0.0l, 1.0l, 0.1l); break;
-# endif
 #endif
 	case AG_VARIABLE_INT:    SET_DEF(AG_SetInt, 0, AG_INT_MAX-1, 1); break;
 	case AG_VARIABLE_UINT:   SET_DEF(AG_SetUint, 0U, AG_UINT_MAX-1, 1U); break;

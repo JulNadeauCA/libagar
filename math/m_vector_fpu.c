@@ -6,6 +6,8 @@
 #include <agar/core/core.h>
 #include <agar/math/m.h>
 
+#include <agar/config/have_long_double.h>
+
 static __inline__ M_Vector *_Nonnull
 M_VectorNew_FPU(Uint m)
 {
@@ -264,12 +266,7 @@ const M_VectorOps mVecOps_FPU = {
 	M_WriteVector_FPU,
 	M_VectorFromReals_FPU,
 	M_VectorFromFloats_FPU,
-	M_VectorFromDoubles_FPU,
-#ifdef HAVE_LONG_DOUBLE
-	M_VectorFromLongDoubles_FPU,
-#else
-	M_VectorFromDoubles_FPU,	/* Padding */
-#endif
+	M_VectorFromDoubles_FPU
 };
 
 M_Vector *
@@ -331,17 +328,3 @@ M_VectorFromDoubles_FPU(Uint n, const double *fv)
 	}
 	return (a);
 }
-
-#ifdef HAVE_LONG_DOUBLE
-M_Vector *
-M_VectorFromLongDoubles_FPU(Uint n, const long double *fv)
-{
-	M_Vector *a=M_VecNew(n);
-	Uint i;
-
-	for (i = 0; i < n; i++) {
-		a->v[i] = (M_Real)fv[i];
-	}
-	return (a);
-}
-#endif /* HAVE_LONG_DOUBLE */

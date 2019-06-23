@@ -53,9 +53,6 @@ typedef struct m_vector_ops {
 	M_Vector *_Nonnull  (*_Nonnull FromReals)(Uint, const M_Real *_Nonnull);
 	M_Vector *_Nonnull  (*_Nonnull FromFloats)(Uint, const float *_Nonnull);
 	M_Vector *_Nonnull  (*_Nonnull FromDoubles)(Uint, const double *_Nonnull);
-#ifdef AG_HAVE_LONG_DOUBLE
-	M_Vector *_Nonnull  (*_Nonnull FromLongDoubles)(Uint, const long double *_Nonnull);
-#endif
 } M_VectorOps;
 
 /* Operations on vectors in R^2 */
@@ -315,7 +312,6 @@ __END_DECLS
 #define M_VecFromReals		mVecOps->FromReals
 #define M_VecFromFloats		mVecOps->FromFloats
 #define M_VecFromDoubles	mVecOps->FromDoubles
-#define M_VecFromLongDoubles	mVecOps->FromLongDoubles
 
 /* Simple wrappers */
 #define M_VecGet(v,i) *M_VecGetElement(v, i)

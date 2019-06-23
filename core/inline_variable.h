@@ -10,21 +10,26 @@ void
 ag_init_variable(AG_Variable *V, AG_VariableType type, const char *name)
 #endif
 {
-#if 0 /* for better gdbabillity */
-	memset(V->name, '\0', sizeof(V->name));
-#endif
 	if (name[0] != '\0') {
 		AG_Strlcpy(V->name, name, sizeof(V->name));
 	} else {
+#ifdef AG_DEBUG
+		memset(V->name, '\0', sizeof(V->name));
+#else
 		V->name[0] = '\0';
+#endif
 	}
 	V->type = type;
 #ifdef AG_THREADS
 	V->mutex = NULL;
 #endif
-	V->info.size = 0;
-	V->info.varName = NULL;
-	V->data.s = NULL;
+#ifdef AG_DEBUG
+	memset(&V->info, 0, sizeof(V->info));
+	memset(&V->data, 0, sizeof(V->data));
+#else
+	V->info.pFlags = 0;
+	V->data.p = NULL;
+#endif
 }
 
 #ifdef AG_THREADS

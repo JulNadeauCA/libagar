@@ -6,7 +6,6 @@
 #include <agar/config/_mk_have_limits_h.h>
 #include <agar/config/_mk_have_float_h.h>
 #include <agar/config/have_long_long.h>
-#include <agar/config/have_long_double.h>
 
 /*
  * String limits
@@ -130,32 +129,14 @@
 # else
 #  define AG_DBL_MAX 1.7976931348623158e+308
 # endif
-# ifdef AG_HAVE_LONG_DOUBLE
-#  ifdef __LDBL_MIN__
-#   define AG_LDBL_MIN __LDBL_MIN__
-#  else
-#   define AG_LDBL_MIN 3.36210314311209350626e-4932l
-#  endif
-#  ifdef __LDBL_MAX__
-#   define AG_LDBL_MAX __LDBL_MAX__
-#  else
-#   define AG_LDBL_MAX 1.18973149535723176502e+4932l
-#  endif
-# endif /* AG_HAVE_LONG_DOUBLE */
 
 # ifdef _MK_HAVE_FLOAT_H
 #  include <float.h>
 #  define AG_FLT_EPSILON FLT_EPSILON
 #  define AG_DBL_EPSILON DBL_EPSILON
-#  ifdef AG_HAVE_LONG_DOUBLE
-#   define AG_LDBL_EPSILON LDBL_EPSILON
-#  endif
 # else /* !HAVE_FLOAT_H */
 #  define AG_FLT_EPSILON 1.192092896e-7f
 #  define AG_DBL_EPSILON 2.2204460492503131e-16
-#  ifdef AG_HAVE_LONG_DOUBLE
-#   define AG_LDBL_EPSILON 1.08420217248550443e-19l
-#  endif
 # endif /* !HAVE_FLOAT_H */
 
 #endif /* AG_HAVE_FLOAT */

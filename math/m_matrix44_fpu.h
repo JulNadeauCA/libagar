@@ -192,8 +192,6 @@ M_MatrixFromFloats44_FPU(M_Matrix44 *_Nonnull M, const float *_Nonnull fv)
 			M->m[m][n] = fv[(m<<2)+n];
 #elif defined(DOUBLE_PRECISION)
 			M->m[m][n] = (double)fv[(m<<2)+n];
-#elif defined(QUAD_PRECISION)
-			M->m[m][n] = (long double)fv[(m<<2)+n];
 #endif
 	}
 }
@@ -209,8 +207,6 @@ M_MatrixFromDoubles44_FPU(M_Matrix44 *_Nonnull M, const double *_Nonnull fv)
 			M->m[m][n] = (double)fv[(m<<2)+n];
 #elif defined(DOUBLE_PRECISION)
 			M->m[m][n] = fv[(m<<2)+n];
-#elif defined(QUAD_PRECISION)
-			M->m[m][n] = (long double)fv[(m<<2)+n];
 #endif
 	}
 }

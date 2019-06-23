@@ -11,7 +11,4 @@ void               M_WriteVector_FPU(AG_DataSource *_Nonnull,
 M_Vector *_Nonnull M_VectorFromReals_FPU(Uint, const M_Real *_Nonnull);
 M_Vector *_Nonnull M_VectorFromFloats_FPU(Uint, const float *_Nonnull);
 M_Vector *_Nonnull M_VectorFromDoubles_FPU(Uint, const double *_Nonnull);
-#ifdef AG_HAVE_LONG_DOUBLE
-M_Vector *_Nonnull M_VectorFromLongDoubles_FPU(Uint, const long double *_Nonnull);
-#endif
 __END_DECLS

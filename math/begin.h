@@ -166,12 +166,7 @@
 # define _M_UNDEFINED_DOUBLE_PRECISION
 # undef DOUBLE_PRECISION
 #endif
-#ifdef QUAD_PRECISION
-# define _M_UNDEFINED_QUAD_PRECISION
-# undef QUAD_PRECISION
-#endif
 #include <agar/config/single_precision.h>
-#include <agar/config/quad_precision.h>
 #include <agar/config/double_precision.h>
 
 #ifdef _AGAR_MATH_INTERNAL

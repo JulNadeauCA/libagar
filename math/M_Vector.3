@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -161,9 +161,6 @@ for details.
 .Ft "M_Vector *"
 .Fn M_VecFromDoubles "Uint n" "const double *values"
 .Pp
-.Ft "M_Vector *"
-.Fn M_VecFromLongDoubles "Uint n" "const long double *values"
-.Pp
 .nr nS 0
 .Fn M_VecGetElement
 returns a direct pointer to entry
@@ -178,24 +175,17 @@ in a vector
 .Fa v ,
 which can be a sparse vector.
 .Pp
-The
 .Fn M_VecFromReals ,
 .Fn M_VecFromFloats ,
-.Fn M_VecFromDoubles ,
 and
-.Fn M_VecFromLongDoubles
-functions generate an
+.Fn M_VecFromDoubles
+generate an
 .Nm
 from an array of
 .Ft M_Real ,
-.Ft float ,
-.Ft double
+.Ft float
 or
-.Ft "long double" ,
-respectively.
-The latter function is only available on platforms where
-.Dv HAVE_LONG_DOUBLE
-is defined.
+.Ft double .
 .Sh VECTORS IN R^N: BASIC OPERATIONS
 .nr nS 1
 .Ft int

@@ -110,29 +110,6 @@ AG_NumericalNewDblR(void *parent, Uint flags, const char *unit, const char *labe
 	return (num);
 }
 
-# ifdef HAVE_LONG_DOUBLE
-AG_Numerical *
-AG_NumericalNewLdbl(void *parent, Uint flags, const char *unit, const char *label,
-    long double *v)
-{
-	AG_Numerical *num;
-	num = AG_NumericalNewS(parent, flags, unit, label);
-	AG_BindLongDouble(num, "value", v);
-	return (num);
-}
-AG_Numerical *
-AG_NumericalNewLdblR(void *parent, Uint flags, const char *unit, const char *label,
-    long double *v, long double min, long double max)
-{
-	AG_Numerical *num;
-	num = AG_NumericalNewS(parent, flags, unit, label);
-	AG_BindLongDouble(num, "value", v);
-	AG_SetLongDouble(num, "min", min);
-	AG_SetLongDouble(num, "max", max);
-	return (num);
-}
-# endif /* HAVE_LONG_DOUBLE */
-
 AG_Numerical *
 AG_NumericalNewFlt(void *parent, Uint flags, const char *unit,
     const char *label, float *v)
@@ -240,9 +217,6 @@ OnShow(AG_Event *_Nonnull event)
 #ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:  SET_DEF(AG_SetFloat, -AG_FLT_MAX, AG_FLT_MAX, 0.1f); break;
 	case AG_VARIABLE_DOUBLE: SET_DEF(AG_SetDouble, -AG_DBL_MAX, AG_DBL_MAX, 0.1); break;
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE: SET_DEF(AG_SetLongDouble, -AG_LDBL_MAX, AG_LDBL_MAX, 0.1l); break;
-# endif
 #endif
 	case AG_VARIABLE_INT:    SET_DEF(AG_SetInt, AG_INT_MIN+1, AG_INT_MAX-1, 1); break;
 	case AG_VARIABLE_UINT:   SET_DEF(AG_SetUint, 0U, AG_UINT_MAX-1, 1U); break;
@@ -264,7 +238,6 @@ OnShow(AG_Event *_Nonnull event)
 #ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:
 	case AG_VARIABLE_DOUBLE:
-	case AG_VARIABLE_LONG_DOUBLE:
 		AG_TextboxSetFltOnly(num->input, 1);
 		break;
 #endif
@@ -323,15 +296,6 @@ UpdateFromText(AG_Event *_Nonnull event)
 	case AG_VARIABLE_DOUBLE:
 		SET_NUM(double, AG_Unit2Base(strtod(num->inTxt,NULL),num->unit));
 		break;
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:
-#  ifdef _MK_HAVE_STRTOLD
-		SET_NUM(long double, AG_Unit2BaseLDBL(strtold(num->inTxt,NULL),num->unit));
-#  else
-		SET_NUM(long double, AG_Unit2BaseLDBL((long double)strtod(num->inTxt,NULL),num->unit));
-#  endif
-		break;
-# endif /* HAVE_LONG_DOUBLE */
 #endif /* HAVE_FLOAT */
 
 	case AG_VARIABLE_INT:    SET_NUM(int, strtol(num->inTxt,NULL,10));	break;
@@ -677,15 +641,6 @@ Draw(void *_Nonnull obj)
 	else { v += *(TYPE *)inc; }					\
 	*(TYPE *)value = AG_Unit2Base((double)v, num->unit);		\
 }
-#undef ADD_LDBL
-#define ADD_LDBL(TYPE) {						\
-	TYPE v;								\
-	v = AG_Base2UnitLDBL(*(TYPE *)value, num->unit);		\
-	if ((v + *(TYPE *)inc) < *(TYPE *)min) { v = *(TYPE *)min; }	\
-	else if ((v + *(TYPE *)inc) > *(TYPE *)max) { v = *(TYPE *)max; } \
-	else { v += *(TYPE *)inc; }					\
-	*(TYPE *)value = AG_Unit2BaseLDBL((long double)v, num->unit);	\
-}
 void
 AG_NumericalIncrement(AG_Numerical *num)
 {
@@ -702,9 +657,6 @@ AG_NumericalIncrement(AG_Numerical *num)
 #ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		ADD_REAL(float);	break;
 	case AG_VARIABLE_DOUBLE:	ADD_REAL(double);	break;
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:	ADD_LDBL(long double);	break;
-# endif
 #endif
 	case AG_VARIABLE_INT:		ADD_INT(int);		break;
 	case AG_VARIABLE_UINT:		ADD_INT(Uint);		break;
@@ -735,7 +687,6 @@ AG_NumericalIncrement(AG_Numerical *num)
 }
 #undef ADD_INT
 #undef ADD_REAL
-#undef ADD_LDBL
 
 /*
  * Type-independent decrement operation.
@@ -756,14 +707,6 @@ AG_NumericalIncrement(AG_Numerical *num)
 	else { v -= *(TYPE *)inc; }					\
 	*(TYPE *)value = AG_Unit2Base((double)v, num->unit);		\
 }
-#undef SUB_LDBL
-#define SUB_LDBL(TYPE) {						\
-	TYPE v = AG_Base2UnitLDBL((long double)*(TYPE *)value, num->unit); \
-	if ((v - *(TYPE *)inc) < *(TYPE *)min) { v = *(TYPE *)min; }	\
-	else if ((v - *(TYPE *)inc) > *(TYPE *)max) { v = *(TYPE *)max; } \
-	else { v -= *(TYPE *)inc; }					\
-	*(TYPE *)value = AG_Unit2BaseLDBL((long double)v, num->unit);	\
-}
 void
 AG_NumericalDecrement(AG_Numerical *num)
 {
@@ -780,9 +723,6 @@ AG_NumericalDecrement(AG_Numerical *num)
 #ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		SUB_REAL(float);	break;
 	case AG_VARIABLE_DOUBLE:	SUB_REAL(double);	break;
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:	SUB_LDBL(long double);	break;
-# endif
 #endif
 	case AG_VARIABLE_INT:		SUB_INT(int);		break;
 	case AG_VARIABLE_UINT:		SUB_INT(Uint);		break;
@@ -812,7 +752,6 @@ AG_NumericalDecrement(AG_Numerical *num)
 }
 #undef SUB_INT
 #undef SUB_REAL
-#undef SUB_LDBL
 
 void
 AG_NumericalSetPrecision(AG_Numerical *num, const char *mode, int precision)
@@ -880,9 +819,6 @@ AG_NumericalGetFlt(AG_Numerical *num)
 	switch (AG_VARIABLE_TYPE(bValue)) {
 	case AG_VARIABLE_FLOAT:		return *(float *)value;
 	case AG_VARIABLE_DOUBLE:	return (float)(*(double *)value);
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:	return (float)(*(long double *)value);
-# endif
 	case AG_VARIABLE_INT:		return (float)(*(int *)value);
 	case AG_VARIABLE_UINT:		return (float)(*(Uint *)value);
 	case AG_VARIABLE_UINT8:		return (float)(*(Uint8 *)value);
@@ -912,9 +848,6 @@ AG_NumericalGetDbl(AG_Numerical *num)
 	switch (AG_VARIABLE_TYPE(bValue)) {
 	case AG_VARIABLE_FLOAT:		return (double)(*(float *)value);
 	case AG_VARIABLE_DOUBLE:	return *(double *)value;
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:	return (double)(*(long double *)value);
-# endif
 	case AG_VARIABLE_INT:		return (double)(*(int *)value);
 	case AG_VARIABLE_UINT:		return (double)(*(Uint *)value);
 	case AG_VARIABLE_UINT8:		return (double)(*(Uint8 *)value);
@@ -932,38 +865,6 @@ AG_NumericalGetDbl(AG_Numerical *num)
 	default:			return (0.0);
 	}
 }
-
-# ifdef HAVE_LONG_DOUBLE
-/* Convert the bound value to a long double. */
-long double
-AG_NumericalGetLdbl(AG_Numerical *num)
-{
-	AG_Variable *bValue;
-	void *value;
-
-	bValue = AG_GetVariable(num, "value", &value);
-	switch (AG_VARIABLE_TYPE(bValue)) {
-	case AG_VARIABLE_FLOAT:		return (long double)(*(float *)value);
-	case AG_VARIABLE_DOUBLE:	return (long double)(*(double *)value);
-	case AG_VARIABLE_LONG_DOUBLE:	return *(long double *)value;
-	case AG_VARIABLE_INT:		return (long double)(*(int *)value);
-	case AG_VARIABLE_UINT:		return (long double)(*(Uint *)value);
-	case AG_VARIABLE_UINT8:		return (long double)(*(Uint8 *)value);
-	case AG_VARIABLE_SINT8:		return (long double)(*(Sint8 *)value);
-	case AG_VARIABLE_UINT16:	return (long double)(*(Uint16 *)value);
-	case AG_VARIABLE_SINT16:	return (long double)(*(Sint16 *)value);
-# if AG_MODEL != AG_SMALL
-	case AG_VARIABLE_UINT32:	return (long double)(*(Uint32 *)value);
-	case AG_VARIABLE_SINT32:	return (long double)(*(Sint32 *)value);
-# endif
-#  ifdef HAVE_64BIT
-	case AG_VARIABLE_UINT64:	return (long double)(*(Uint64 *)value);
-	case AG_VARIABLE_SINT64:	return (long double)(*(Sint64 *)value);
-#  endif
-	default:			return (0.0L);
-	}
-}
-# endif /* HAVE_LONG_DOUBLE */
 #endif /* HAVE_FLOAT */
 
 /* Convert the bound value to a natural integer. */
@@ -977,9 +878,6 @@ AG_NumericalGetInt(AG_Numerical *num)
 	switch (AG_VARIABLE_TYPE(bValue)) {
 	case AG_VARIABLE_FLOAT:		return (int)(*(float *)value);
 	case AG_VARIABLE_DOUBLE:	return (int)(*(double *)value);
-#ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:	return (int)(*(long double *)value);
-#endif
 	case AG_VARIABLE_INT:		return *(int *)value;
 	case AG_VARIABLE_UINT:		return (int)(*(Uint *)value);
 	case AG_VARIABLE_UINT8:		return (int)(*(Uint8 *)value);
@@ -1009,9 +907,6 @@ AG_NumericalGetUint32(AG_Numerical *num)
 	switch (AG_VARIABLE_TYPE(bValue)) {
 	case AG_VARIABLE_FLOAT:		return (Uint32)(*(float *)value);
 	case AG_VARIABLE_DOUBLE:	return (Uint32)(*(double *)value);
-#ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:	return (Uint32)(*(long double *)value);
-#endif
 	case AG_VARIABLE_INT:		return (Uint32)(*(int *)value);
 	case AG_VARIABLE_UINT:		return (Uint32)(*(Uint *)value);
 	case AG_VARIABLE_UINT8:		return (Uint32)(*(Uint8 *)value);
@@ -1042,9 +937,6 @@ AG_NumericalGetUint64(AG_Numerical *num)
 	switch (AG_VARIABLE_TYPE(bValue)) {
 	case AG_VARIABLE_FLOAT:		return (Uint64)(*(float *)value);
 	case AG_VARIABLE_DOUBLE:	return (Uint64)(*(double *)value);
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:	return (Uint64)(*(long double *)value);
-# endif
 	case AG_VARIABLE_INT:		return (Uint64)(*(int *)value);
 	case AG_VARIABLE_UINT:		return (Uint64)(*(Uint *)value);
 	case AG_VARIABLE_UINT8:		return (Uint64)(*(Uint8 *)value);

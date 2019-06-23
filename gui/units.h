@@ -67,10 +67,6 @@ extern const AG_Unit agDensityUnits[];
 int AG_UnitIsNonlinear(const char *_Nonnull) _Const_Attribute;
 double AG_Unit2Base(double, const AG_Unit *_Nonnull) _Pure_Attribute;
 double AG_Base2Unit(double, const AG_Unit *_Nonnull) _Pure_Attribute;
-#ifdef AG_HAVE_LONG_DOUBLE
-long double AG_Unit2BaseLDBL(long double, const AG_Unit *_Nonnull) _Pure_Attribute;
-long double AG_Base2UnitLDBL(long double, const AG_Unit *_Nonnull) _Pure_Attribute;
-#endif
 
 double AG_Unit2Unit(double, const AG_Unit *_Nonnull, const AG_Unit *_Nonnull)
                    _Pure_Attribute;

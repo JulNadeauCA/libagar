@@ -70,9 +70,6 @@ package Agar.Data_Source is
 #if HAVE_FLOAT
   subtype Float       is Interfaces.C.C_float;
   subtype Double      is Interfaces.C.double;
-# if HAVE_LONG_DOUBLE
-  subtype Long_Double is Interfaces.C.long_double;
-# end if;
 #end if;
   
   --
@@ -318,23 +315,6 @@ package Agar.Data_Source is
      Value  : in Double;
      Offset : in AG_Offset)
     with Import, Convention => C, Link_Name => "ag_write_double_at";
-
-#if HAVE_LONG_DOUBLE
-  function Read_Long_Double
-    (Source : in Data_Source_Access) return Long_Double
-    with Import, Convention => C, Link_Name => "ag_read_long_double";
-
-  procedure Write_Long_Double
-    (Source : in Data_Source_Access;
-     Value  : in Long_Double)
-    with Import, Convention => C, Link_Name => "ag_write_long_double";
-
-  procedure Write_Long_Double_At
-    (Source : in Data_Source_Access;
-     Value  : in Long_Double;
-     Offset : in AG_Offset)
-    with Import, Convention => C, Link_Name => "ag_write_long_double_at";
-# end if;
 #end if;
   
   ----------------

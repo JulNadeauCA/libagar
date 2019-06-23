@@ -163,10 +163,7 @@ will autoload any required DSOs).
 .Fn AG_ObjectGenNamePfx "AG_Object *obj" "const char *prefix" "char *name" "AG_Size len"
 .Pp
 .Ft "void"
-.Fn AG_ObjectSetAttachFn "AG_Object *obj" "void (*fn)(struct ag_event *)" "const char *fmt" "..."
-.Pp
-.Ft "void"
-.Fn AG_ObjectSetDetachFn "AG_Object *obj" "void (*fn)(struct ag_event *)" "const char *fmt" "..."
+.Fn AG_ObjectSetFn "AG_Object *obj" "const char *key" "void (*fn)(AG_Event *)" "const char *fmt" "..."
 .Pp
 .Fn AGOBJECT_FOREACH_CHILD "AG_Object *child" "AG_Object *parent" "TYPE type"
 .Pp
@@ -352,19 +349,33 @@ The
 .Fn AG_ObjectGenNamePfx
 variant generates a name using the specified prefix instead of the class name.
 .Pp
-.Fn AG_ObjectSetAttachFn
+.Fn AG_ObjectSetFn
+sets the variable named
+.Fa key
+to a function pointer, where
+.Fa fn
+is an Agar-style event handler function.
+.Fn AG_ObjectSetFn
+arranges for the arguments optionally specified in
+.Fa fmt
+to be passed to that function.
+If
+.Fa fn
+is NULL, the variable named
+.Fa key
+is unset.
+.Pp
+Note: The functions named "attach-fn" and "detach-fn" are handled specially:
+they provide an alternate hook for overriding the behavior of
+.Xr AG_ObjectAttach 3
 and
-.Fn AG_ObjectSetDetachFn
-allow custom "attach" and "detach" hooks to be registered.
-This is useful where it is necessary to control the order of the child objects
-(for example, in the
-.Xr AG_Window 3
-system of Agar-GUI, the ordering of window objects is important as it
-determines the order of rendering).
-The hook function must insert/remove the child object directly from the
-parent's
-.Va children
-list.
+.Xr AG_ObjectDetach 3 .
+These hooks can be used to override the order in which child objects are
+attached.
+This is used for example by
+.Xr AG_Window 3 ,
+which for rendering reasons requires its child objects to be attached
+in a particular order.
 .Pp
 The
 .Fn AGOBJECT_FOREACH_CHILD

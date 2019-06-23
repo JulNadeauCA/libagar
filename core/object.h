@@ -4,7 +4,11 @@
 #define _AGAR_CORE_OBJECT_H_
 
 #ifndef AG_OBJECT_NAME_MAX
-# define AG_OBJECT_NAME_MAX AG_MODEL
+# if AG_MODEL == AG_SMALL
+#  define AG_OBJECT_NAME_MAX 16
+# else
+#  define AG_OBJECT_NAME_MAX 32
+# endif
 #endif
 #ifndef AG_OBJECT_TYPE_MAX
 # if AG_MODEL == AG_SMALL
@@ -55,14 +59,13 @@
 #include <agar/core/begin.h>
 
 struct ag_object;
+struct ag_tbl;
+struct ag_db;
+struct ag_dbt;
 
 #include <agar/core/variable.h>
 #include <agar/core/event.h>
 #include <agar/core/time.h>
-
-struct ag_tbl;
-struct ag_db;
-struct ag_dbt;
 
 /* Agar Object class specification */
 typedef struct ag_object_class_spec {
@@ -128,9 +131,6 @@ typedef struct ag_object_pvt {
 #ifdef AG_TIMERS
 	AG_TAILQ_ENTRY(ag_object) tobjs;	/* Entry in agTimerObjQ */
 #endif
-	/* TODO 1.6: store these as AG_Variables */
-	AG_Event *_Nullable attachFn;		/* Attach hook */
-	AG_Event *_Nullable detachFn;		/* Detach hook */
 	_Nonnull_Mutex AG_Mutex lock;		/* General object lock */
 } AG_ObjectPvt;
 
@@ -338,13 +338,8 @@ void AG_ObjectSetNameS(void *_Nonnull, const char *_Nullable);
 void AG_ObjectSetName(void *_Nonnull, const char *_Nullable, ...)
                      FORMAT_ATTRIBUTE(printf,2,3);
 
-void AG_ObjectSetAttachFn(void *_Nonnull,
-                          void (*_Nullable fn)(AG_Event *_Nonnull),
-			  const char *_Nullable, ...);
-
-void AG_ObjectSetDetachFn(void *_Nonnull,
-                          void (*_Nullable fn)(AG_Event *_Nonnull),
-			  const char *_Nullable, ...);
+void AG_SetFn(void *_Nonnull, const char *_Nonnull,
+              _Nullable AG_EventFn, const char *_Nullable, ...);
 
 #if AG_MODEL != AG_SMALL
 void AG_ObjectMoveUp(void *_Nonnull);
@@ -455,6 +450,12 @@ void *_Nonnull ag_get_named_object(AG_Event *_Nonnull, const char *_Nonnull,
                                    const char *_Nonnull)
                                   _Pure_Attribute
                                   _Warn_Unused_Result;
+
+const void *_Nonnull ag_get_named_const_object(AG_Event *_Nonnull,
+                                               const char *_Nonnull,
+                                               const char *_Nonnull)
+                                              _Pure_Attribute
+                                              _Warn_Unused_Result;
 #ifdef AG_THREADS
 void ag_object_lock(void *_Nonnull);
 void ag_object_unlock(void *_Nonnull);

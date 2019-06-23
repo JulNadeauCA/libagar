@@ -10,7 +10,7 @@
 # elif AG_MODEL == AG_MEDIUM
 #  define AG_VARIABLE_NAME_MAX 24
 # elif AG_MODEL == AG_LARGE
-#  define AG_VARIABLE_NAME_MAX 48
+#  define AG_VARIABLE_NAME_MAX 32
 # endif
 #endif
 
@@ -47,8 +47,6 @@ typedef enum ag_variable_type {
 	AG_VARIABLE_P_FLOAT,		/* Pointer to single-precision real */
 	AG_VARIABLE_DOUBLE,		/* Double-precision real number */
 	AG_VARIABLE_P_DOUBLE,		/* Pointer to double-precision real */
-	AG_VARIABLE_LONG_DOUBLE,	/* Quad-precision float */
-	AG_VARIABLE_P_LONG_DOUBLE,	/* Pointer to quad-precision real */
 
 	AG_VARIABLE_STRING,		/* C string */
 	AG_VARIABLE_P_STRING,		/* Pointer to C string */
@@ -88,30 +86,27 @@ typedef struct ag_variable_type_info {
 
 /* Variable-stored data */
 union ag_variable_data {
-	void       *_Nullable p;
-	char       *_Nullable s;
-	int            i;
-	Uint           u;
-	Uint8         u8;
-	Sint8         s8;
-	Uint16       u16;
-	Sint16       s16;
+	void *_Nullable p;
+	char *_Nullable s;
+	int             i;
+	Uint            u;
+	Uint8          u8;
+	Sint8          s8;
+	Uint16        u16;
+	Sint16        s16;
 #if AG_MODEL != AG_SMALL
-	long          li;
-	Ulong        uli;
-	Uint32       u32;
-	Sint32       s32;
+	long           li;
+	Ulong         uli;
+	Uint32        u32;
+	Sint32        s32;
 #endif
 #ifdef AG_HAVE_64BIT
-	Uint64       u64;
-	Sint64       s64;
+	Uint64        u64;
+	Sint64        s64;
 #endif
 #ifdef AG_HAVE_FLOAT
-	float        flt;
-	double       dbl;
-# ifdef AG_HAVE_LONG_DOUBLE
-	long double ldbl;
-# endif
+	float         flt;
+	double        dbl;
 #endif
 };
 
@@ -135,22 +130,24 @@ typedef Sint64 (*AG_Sint64Fn)(struct ag_event *_Nonnull);
 #ifdef AG_HAVE_FLOAT
 typedef float  (*AG_FloatFn)(struct ag_event *_Nonnull);
 typedef double (*AG_DoubleFn)(struct ag_event *_Nonnull);
-# ifdef AG_HAVE_LONG_DOUBLE
-typedef long double (*AG_LongDoubleFn)(struct ag_event *_Nonnull);
-# endif
 #endif
 typedef AG_Size (*AG_StringFn)(struct ag_event *_Nonnull, char *_Nonnull, AG_Size);
 typedef void *_Nullable (*AG_PointerFn)(struct ag_event *_Nonnull);
+typedef const void *_Nullable (*AG_ConstPointerFn)(struct ag_event *_Nonnull);
 
 /* Agar variable instance */
 typedef struct ag_variable {
-	char name[AG_VARIABLE_NAME_MAX]; /* Variable name (or "") */
-	AG_VariableType type;            /* Variable type */
+	char name[AG_VARIABLE_NAME_MAX];           /* Variable name (""=anon) */
+	AG_VariableType type;                      /* Variable type */
 #ifdef AG_THREADS
-	_Nullable_Mutex AG_Mutex *_Nullable mutex; /* Lock on data */
+	_Nullable_Mutex AG_Mutex *_Nullable mutex; /* Lock on target data */
 #endif
 	union {
-		union {                  /* Bitmask (for P_FLAG_*) */
+		Uint pFlags;           /* Pointer flags (for [P_]POINTER) */
+#define AG_VARIABLE_P_READONLY 0x01    /* Auto-free() the target on cleanup */
+#define AG_VARIABLE_P_FREE     0x02    /* Require access via AG_CONST_PTR() */
+
+		union {                /* Bitmask (for P_FLAG_*) */
 			Uint u;
 			Uint8 u8;
 			Uint16 u16;
@@ -400,8 +397,7 @@ AG_Variable *_Nonnull AG_BindFloat(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindFloatMp(void *_Nonnull, const char *_Nonnull,
                                      float *_Nonnull,
                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
-#endif
-
+# endif
 /*
  * DOUBLE: Double-precision IEEE float.
  */
@@ -411,29 +407,11 @@ void AG_InitDouble(AG_Variable *_Nonnull, double);
 AG_Variable *_Nonnull AG_SetDouble(void *_Nonnull, const char *_Nonnull, double);
 AG_Variable *_Nonnull AG_BindDouble(void *_Nonnull, const char *_Nonnull,
                                     double *_Nonnull);
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 AG_Variable *_Nonnull AG_BindDoubleMp(void *_Nonnull, const char *_Nonnull,
                                       double *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
-#endif
-
-/*
- * LONG_DOUBLE: Quad-precision IEEE float.
- */
-# ifdef AG_HAVE_LONG_DOUBLE
-long double AG_GetLongDouble(void *_Nonnull, const char *_Nonnull)
-                            _Pure_Attribute_If_Unthreaded;
-void AG_InitLongDouble(AG_Variable *_Nonnull, long double);
-AG_Variable *_Nonnull AG_SetLongDouble(void *_Nonnull, const char *_Nonnull,
-                                       long double);
-AG_Variable *_Nonnull AG_BindLongDouble(void *_Nonnull, const char  *_Nonnull,
-			                long double *_Nonnull);
-#  ifdef AG_THREADS
-AG_Variable *_Nonnull AG_BindLongDoubleMp(void *_Nonnull, const char *_Nonnull,
-                                          long double *_Nonnull,
-                                          _Nonnull_Mutex AG_Mutex *_Nonnull);
-#  endif
-# endif /* HAVE_LONG_DOUBLE */
+# endif
 #endif /* HAVE_FLOAT */
 
 /*
@@ -470,9 +448,21 @@ AG_Variable *_Nonnull AG_BindStringMp(void *_Nonnull, const char *_Nonnull,
  */
 void *_Nullable AG_GetPointer(void *_Nonnull, const char *_Nonnull)
                              _Pure_Attribute_If_Unthreaded;
+#ifdef AG_TYPE_SAFETY
+const void *_Nullable AG_GetConstPointer(void *_Nonnull, const char *_Nonnull)
+                                        _Pure_Attribute_If_Unthreaded;
+#else
+# define AG_GetConstPointer(o,n) ((const void *)AG_GetPointer((o),(n)))
+#endif
+
+void AG_InitConstPointer(AG_Variable *_Nonnull, const void *_Nullable);
 void AG_InitPointer(AG_Variable *_Nonnull, void *_Nullable);
+
 AG_Variable *_Nonnull AG_SetPointer(void *_Nonnull, const char *_Nonnull,
                                     void *_Nullable);
+AG_Variable *_Nonnull AG_SetConstPointer(void *_Nonnull, const char *_Nonnull,
+                                         const void *_Nullable);
+
 AG_Variable *_Nonnull AG_BindPointer(void *_Nonnull, const char *_Nonnull,
                                      void *_Nonnull *_Nullable);
 #ifdef AG_THREADS

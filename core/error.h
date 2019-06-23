@@ -64,10 +64,13 @@ void         AG_SetErrorCode(AG_ErrorCode);
 const char *_Nullable AG_Strerror(int);
 const char *_Nonnull  AG_GetError(void) _Pure_Attribute_If_Unthreaded;
 
-void AG_SetError(const char *_Nonnull, ...)
-                 FORMAT_ATTRIBUTE(printf,1,2);
 void AG_SetErrorS(const char *_Nonnull);
+void AG_SetError(const char *_Nonnull, ...)
+                FORMAT_ATTRIBUTE(printf,1,2);
+
 void AG_FatalError(const char *_Nullable) _Noreturn_Attribute;
+void AG_FatalErrorF(const char *_Nullable, ...)
+                   FORMAT_ATTRIBUTE(printf,1,2) _Noreturn_Attribute;
 
 #ifdef AG_VERBOSITY
 # define AG_SetErrorV(c,s)   AG_SetErrorS(s)
@@ -96,9 +99,6 @@ long            AG_LongMismatch(void)   _Noreturn_Attribute;
 # ifdef AG_HAVE_FLOAT
 float           AG_FloatMismatch(void)  _Noreturn_Attribute;
 double          AG_DoubleMismatch(void) _Noreturn_Attribute;
-#  ifdef AG_HAVE_LONG_DOUBLE
-long double     AG_LongDoubleMismatch(void) _Noreturn_Attribute;
-#  endif
 # endif
 #endif /* AG_TYPE_SAFETY */
 

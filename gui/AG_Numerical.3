@@ -215,9 +215,6 @@ member of the structure.
 .Ft "double"
 .Fn AG_NumericalGetDbl "AG_Numerical *num"
 .Pp
-.Ft "long double"
-.Fn AG_NumericalGetLdbl "AG_Numerical *num"
-.Pp
 .nr nS 0
 The
 .Fn AG_NumericalIncrement
@@ -263,13 +260,11 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "long double *value, *min, *max, *inc "
+.Bl -tag -compact -width "double *value, *min, *max, *inc "
 .It Va float *value, *min, *max, *inc
 Real number (single-precision).
 .It Va double *value, *min, *max, *inc
 Real number (double-precision).
-.It Va long double *value, *min, *max, *inc
-Real number (quad-precision).
 .It Va int *value, *min, *max, *inc
 Signed integer value.
 .It Va Uint *value, *min, *max, *inc
@@ -311,11 +306,6 @@ should be of the same unit system as
 The 64-bit types are only available if
 .Dv AG_HAVE_64BIT
 is defined.
-The
-.Ft long double
-type requires the
-.Dv AG_HAVE_LONG_DOUBLE
-be defined.
 .Sh SEE ALSO
 .Xr AG_Button 3 ,
 .Xr AG_Intro 3 ,
@@ -330,5 +320,4 @@ widget first appeared in Agar 1.2 as a replacement for
 and
 .Sq AG_FSpinbutton
 that can handle both floating-point and integer values.
-Agar 1.5 added support for 64-bit types and
-.Ft long double .
+Agar 1.5 added support for 64-bit types.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -138,12 +138,6 @@ M_ReadVector2v(AG_DataSource *ds, M_Vector2 *v)
 		v->x = (M_Real)AG_ReadDouble(ds);
 		v->y = (M_Real)AG_ReadDouble(ds);
 		break;
-#ifdef HAVE_LONG_DOUBLE
-	case 24:
-		v->x = (M_Real)AG_ReadLongDouble(ds);
-		v->y = (M_Real)AG_ReadLongDouble(ds);
-		break;
-#endif
 	default:
 		AG_SetError("Bad vector2: %u", type);
 		return (-1);
@@ -179,19 +173,6 @@ M_ReadVector3v(AG_DataSource *ds, M_Vector3 *v)
 		v->z = (M_Real)AG_ReadDouble(ds);
 #endif
 		break;
-#ifdef HAVE_LONG_DOUBLE
-	case 34:
-# ifdef HAVE_SSE
-		v->x = (float)AG_ReadLongDouble(ds);
-		v->y = (float)AG_ReadLongDouble(ds);
-		v->z = (float)AG_ReadLongDouble(ds);
-# else
-		v->x = (M_Real)AG_ReadLongDouble(ds);
-		v->y = (M_Real)AG_ReadLongDouble(ds);
-		v->z = (M_Real)AG_ReadLongDouble(ds);
-# endif
-		break;
-#endif
 	default:
 		AG_SetError("Bad vector3: %u", type);
 		return (-1);
@@ -231,21 +212,6 @@ M_ReadVector4v(AG_DataSource *ds, M_Vector4 *v)
 		v->w = (M_Real)AG_ReadDouble(ds);
 #endif
 		break;
-#ifdef HAVE_LONG_DOUBLE
-	case 44:
-# ifdef HAVE_SSE
-		v->x = (float)AG_ReadLongDouble(ds);
-		v->y = (float)AG_ReadLongDouble(ds);
-		v->z = (float)AG_ReadLongDouble(ds);
-		v->w = (float)AG_ReadLongDouble(ds);
-# else
-		v->x = (M_Real)AG_ReadLongDouble(ds);
-		v->y = (M_Real)AG_ReadLongDouble(ds);
-		v->z = (M_Real)AG_ReadLongDouble(ds);
-		v->w = (M_Real)AG_ReadLongDouble(ds);
-# endif
-		break;
-#endif
 	default:
 		AG_SetError("Bad vector4: %u", type);
 		return (-1);
@@ -297,10 +263,6 @@ M_WriteVector2(AG_DataSource *ds, const M_Vector2 *v)
 	AG_WriteUint8(ds, 22);
 	AG_WriteDouble(ds, v->x);
 	AG_WriteDouble(ds, v->y);
-#elif defined(QUAD_PRECISION)
-	AG_WriteUint8(ds, 24);
-	AG_WriteLongDouble(ds, v->x);
-	AG_WriteLongDouble(ds, v->y);
 #endif
 }
 
@@ -317,11 +279,6 @@ M_WriteVector3(AG_DataSource *ds, const M_Vector3 *v)
 	AG_WriteDouble(ds, v->x);
 	AG_WriteDouble(ds, v->y);
 	AG_WriteDouble(ds, v->z);
-#elif defined(QUAD_PRECISION)
-	AG_WriteUint8(ds, 34);
-	AG_WriteLongDouble(ds, v->x);
-	AG_WriteLongDouble(ds, v->y);
-	AG_WriteLongDouble(ds, v->z);
 #endif
 }
 
@@ -340,12 +297,6 @@ M_WriteVector4(AG_DataSource *ds, const M_Vector4 *v)
 	AG_WriteDouble(ds, v->y);
 	AG_WriteDouble(ds, v->z);
 	AG_WriteDouble(ds, v->w);
-#elif defined(QUAD_PRECISION)
-	AG_WriteUint8(ds, 44);
-	AG_WriteLongDouble(ds, v->x);
-	AG_WriteLongDouble(ds, v->y);
-	AG_WriteLongDouble(ds, v->z);
-	AG_WriteLongDouble(ds, v->w);
 #endif
 }
 

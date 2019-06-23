@@ -92,16 +92,35 @@ typedef struct ag_event_source_kqueue {
 #undef AG_INLINE_HEADER
 #include <agar/core/inline_event.h>
 
+#ifdef AG_DEBUG
+static __inline__ void
+InitDebugName(AG_Variable *_Nonnull V, const char *tag)
+{
+	Strlcpy(V->name, tag, sizeof(V->name));
+}
+#else
+# define InitDebugName(V,tag)
+#endif
+
 /* Initialize a pointer argument. */
 static __inline__ void
 InitPointerArg(AG_Variable *_Nonnull V, void *_Nullable p)
 {
+#ifdef AG_DEBUG
+	memset(V->name, '\0', sizeof(V->name));
+#else
 	V->name[0] = '\0';
+#endif
 	V->type = AG_VARIABLE_POINTER;
 #ifdef AG_THREADS
 	V->mutex = NULL;
 #endif
 	V->data.p = p;
+	V->info.pFlags = 0;
+#ifdef AG_DEBUG
+	V->vars.tqe_next = NULL;
+	V->vars.tqe_prev = NULL;
+#endif
 }
 
 static __inline__ void
@@ -117,6 +136,11 @@ InitEvent(AG_Event *_Nonnull ev, AG_Object *_Nullable ob)
 	ev->argc = 1;
 	ev->argc0 = 1;
 	InitPointerArg(&ev->argv[0], ob);
+	InitDebugName (&ev->argv[0], "self");
+#ifdef AG_DEBUG
+	ev->events.tqe_next = NULL;
+	ev->events.tqe_prev = NULL;
+#endif
 }
 
 /* Initialize an AG_Event structure. */
@@ -134,6 +158,21 @@ AG_EventArgs(AG_Event *ev, const char *fmt, ...)
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
 }
+
+#if AG_MODEL != AG_SMALL
+/* Return a newly allocated AG_Event. */
+AG_Event *
+AG_EventNew(AG_EventFn fn, void *obj, const char *fmt, ...)
+{
+	AG_Event *ev;
+
+	ev = AG_Malloc(sizeof(AG_Event));
+	InitEvent(ev, obj);
+	ev->fn = fn;
+	AG_EVENT_GET_ARGS(ev, fmt);
+	return (ev);
+}
+#endif /* !AG_SMALL */
 
 /* Return a newly-allocated duplicate of the given AG_Event. */
 AG_Event *
@@ -200,6 +239,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 		ev->argc0 = 1;
 	}
 	InitPointerArg(&ev->argv[0], ob);
+	InitDebugName (&ev->argv[0], "self");
 	ev->fn = fn;
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
@@ -318,6 +358,7 @@ EventTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 		return (0);
 	}
 	InitPointerArg(&ev->argv[ev->argc], obSender);
+	InitDebugName (&ev->argv[ev->argc], "sender");
 
 	/* Propagate event to children. */
 	if (ev->flags & AG_EVENT_PROPAGATE) {
@@ -405,6 +446,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			memcpy(evAsy, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(evAsy, fmt);
 			InitPointerArg(&evAsy->argv[evAsy->argc], sndr);
+			InitDebugName( &evAsy->argv[evAsy->argc], "sender");
 			AG_ThreadCreate(&th, EventThread, evAsy);
 		} else
 #endif
@@ -415,6 +457,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			memcpy(evTmp, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(evTmp, fmt);
 			InitPointerArg(&evTmp->argv[evTmp->argc], sndr);
+			InitDebugName( &evTmp->argv[evTmp->argc], "sender");
 
 			if (evTmp->flags & AG_EVENT_PROPAGATE) {
 				AG_LockVFS(rcvr);
@@ -433,6 +476,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			memcpy(&evTmp, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(&evTmp, fmt);
 			InitPointerArg(&evTmp.argv[evTmp.argc], sndr);
+			InitDebugName (&evTmp.argv[evTmp.argc], "sender");
 
 			if (evTmp.flags & AG_EVENT_PROPAGATE) {
 				AG_LockVFS(rcvr);
@@ -471,6 +515,7 @@ AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
 		memcpy(evAsy, ev, sizeof(AG_Event));
 		AG_EVENT_GET_ARGS(evAsy, fmt);
 		InitPointerArg(&evAsy->argv[evAsy->argc], sndr);
+		InitDebugName (&evAsy->argv[evAsy->argc], "sender");
 		AG_ThreadCreate(&th, EventThread, evAsy);
 	} else
 #endif
@@ -481,6 +526,7 @@ AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
 		memcpy(evTmp, ev, sizeof(AG_Event));
 		AG_EVENT_GET_ARGS(evTmp, fmt);
 		InitPointerArg(&evTmp->argv[evTmp->argc], sndr);
+		InitDebugName (&evTmp->argv[evTmp->argc], "sender");
 		if (evTmp->flags & AG_EVENT_PROPAGATE) {
 			AG_LockVFS(rcvr);
 			OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
@@ -498,6 +544,7 @@ AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
 		memcpy(&evTmp, ev, sizeof(AG_Event));
 		AG_EVENT_GET_ARGS(&evTmp, fmt);
 		InitPointerArg(&evTmp.argv[evTmp.argc], sndr);
+		InitDebugName (&evTmp.argv[evTmp.argc], "sender");
 		if (evTmp.flags & AG_EVENT_PROPAGATE) {
 			AG_LockVFS(rcvr);
 			OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
@@ -584,7 +631,9 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 
 			memcpy(evNew, ev, sizeof(AG_Event));
 			InitPointerArg(&evNew->argv[0], rcvr);
+			InitDebugName (&evNew->argv[0], "self");
 			InitPointerArg(&evNew->argv[evNew->argc], sndr);
+			InitDebugName (&evNew->argv[evNew->argc], "sender");
 			AG_ThreadCreate(&th, EventThread, evNew);
 		} else
 #endif
@@ -594,7 +643,9 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 
 			memcpy(evTmp, event, sizeof(AG_Event));
 			InitPointerArg(&evTmp->argv[0], rcvr);
+			InitDebugName (&evTmp->argv[0], "self");
 			InitPointerArg(&evTmp->argv[evTmp->argc], sndr);
+			InitDebugName (&evTmp->argv[evTmp->argc], "sender");
 
 			if (ev->flags & AG_EVENT_PROPAGATE) {
 # ifdef AG_DEBUG_CORE
@@ -618,7 +669,9 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 
 			memcpy(&evTmp, event, sizeof(AG_Event));
 			InitPointerArg(&evTmp.argv[0], rcvr);
+			InitDebugName (&evTmp.argv[0], "self");
 			InitPointerArg(&evTmp.argv[evTmp.argc], sndr);
+			InitDebugName (&evTmp.argv[evTmp.argc], "sender");
 
 			if (ev->flags & AG_EVENT_PROPAGATE) {
 # ifdef AG_DEBUG_CORE

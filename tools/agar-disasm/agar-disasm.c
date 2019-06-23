@@ -48,7 +48,6 @@ const struct {
 	{ AG_SOURCE_SINT64,		"Sint64" },
 	{ AG_SOURCE_FLOAT,		"Float" },
 	{ AG_SOURCE_DOUBLE,		"Double" },
-	{ AG_SOURCE_LONG_DOUBLE,	"LongDbl" },
 	{ AG_SOURCE_STRING,		"String" },
 	{ AG_SOURCE_COLOR_RGBA,		"ColorRGBA" },
 	{ AG_SOURCE_STRING_PAD,		"StringPad" },
@@ -201,12 +200,6 @@ main(int argc, char *argv[])
 			printf("%f\n", *(double *)p);
 			FORWARD(8);
 			break;
-# ifdef HAVE_LONG_DOUBLE
-		case AG_SOURCE_LONG_DOUBLE:
-			printf("%Lf\n", *(long double *)p);
-			FORWARD(16);
-			break;
-# endif
 #endif
 		case AG_SOURCE_STRING:
 			if (AG_SwapBE32(*(Uint32 *)p) != AG_SOURCE_UINT32) {

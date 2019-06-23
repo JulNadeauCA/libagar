@@ -106,25 +106,6 @@ AG_Base2Unit(double n, const AG_Unit *unit)
 	return (n / unit->divider);
 }
 
-#ifdef AG_HAVE_LONG_DOUBLE
-long double
-AG_Unit2BaseLDBL(long double n, const AG_Unit *unit)
-{
-	if (AG_UnitIsNonlinear(unit->key)) {
-		return (long double)AG_UNIT_NL(unit)->func(n, 1);
-	}
-	return (n * (long double)unit->divider);
-}
-long double
-AG_Base2UnitLDBL(long double n, const AG_Unit *unit)
-{
-	if (AG_UnitIsNonlinear(unit->key)) {
-		return (long double)AG_UNIT_NL(unit)->func(n, 0);
-	}
-	return (n / (long double)unit->divider);
-}
-#endif /* AG_HAVE_LONG_DOUBLE */
-
 /* Convert n (in fromUnit units) to its value in toUnit units. */
 double
 AG_Unit2Unit(double n, const AG_Unit *fromUnit, const AG_Unit *toUnit)

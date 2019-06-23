@@ -537,28 +537,8 @@ is defined.
 .Ft "AG_Variable *"
 .Fn AG_BindDoubleMp "AG_Object *obj" "const char *name" "double *pVal" "AG_Mutex *lock"
 .Pp
-.Ft "long double"
-.Fn AG_GetLongDouble "AG_Object *obj" "const char *name"
-.Pp
-.Ft "void"
-.Fn AG_InitLongDouble "AG_Variable *var" "long double val"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_SetLongDouble "AG_Object *obj" "const char *name" "long double val"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindLongDouble "AG_Object *obj" "const char *name" "long double *pVal"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindLongDoubleMp "AG_Object *obj" "const char *name" "long double *pVal" "AG_Mutex *lock"
-.Pp
 .nr nS 0
 These functions provide an interface to floating-point numbers.
-The
-.Ft long double
-functions are only available if
-.Dv AG_HAVE_LONG_DOUBLE
-is defined.
 .Sh C STRINGS
 .nr nS 1
 .Ft "AG_Size"

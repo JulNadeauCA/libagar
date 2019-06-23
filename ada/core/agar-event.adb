@@ -126,21 +126,6 @@ package body Agar.Event is
        Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access),
        Value => C.double(Value));
   end Push_Long_Float;
-
-# if HAVE_LONG_DOUBLE 
-  procedure Push_Long_Long_Float
-    (Event : in Event_Not_Null_Access;
-     Name  : in String;
-     Value : in Long_Long_Float)
-  is
-    Ch_Name : aliased C.char_array := C.To_C(Name);
-  begin
-    ag_event_push_long_double
-      (Event => Event,
-       Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access),
-       Value => C.long_double(Value));
-  end Push_Long_Long_Float;
-# end if;
 #end if;
  
   -------------------------------------
@@ -218,18 +203,6 @@ package body Agar.Event is
        Name  => CS.Null_Ptr,
        Value => C.double(Value));
   end Push_Long_Float;
-
-# if HAVE_LONG_DOUBLE
-  procedure Push_Long_Long_Float
-    (Event : in Event_Not_Null_Access;
-     Value : in Long_Long_Float)
-  is begin
-    ag_event_push_long_double
-      (Event => Event,
-       Name  => CS.Null_Ptr,
-       Value => C.long_double(Value));
-  end Push_Long_Long_Float;
-# end if;
 #end if;
  
   ------------------------------------
@@ -401,30 +374,6 @@ package body Agar.Event is
         (Event => Event,
 	 Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access)));
   end Get_Long_Float;
-
-# if HAVE_LONG_DOUBLE 
-  function Get_Long_Long_Float
-    (Event : in Event_Not_Null_Access;
-     Index : in Natural) return Long_Long_Float
-  is begin
-    return Long_Long_Float
-      (ag_event_get_long_double
-        (Event => Event,
-	 Index => C.unsigned(Index)));
-  end Get_Long_Long_Float;
-
-  function Get_Long_Long_Float
-    (Event : in Event_Not_Null_Access;
-     Name  : in String) return Long_Long_Float
-  is
-    Ch_Name : aliased C.char_array := C.To_C(Name);
-  begin
-    return Long_Long_Float
-      (ag_event_get_long_double_named
-        (Event => Event,
-	 Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access)));
-  end Get_Long_Long_Float;
-# end if;
 #end if;
 
 end Agar.Event;

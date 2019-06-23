@@ -70,18 +70,16 @@ const AG_VariableTypeInfo agVariableTypes[] = {
 	{ AG_VARIABLE_P_FLOAT,       1, "float *",	 AG_VARIABLE_FLOAT,       10, 4 },
 	{ AG_VARIABLE_DOUBLE,        0, "double",	 AG_VARIABLE_DOUBLE,      11, 8 },
 	{ AG_VARIABLE_P_DOUBLE,	     1, "double *",	 AG_VARIABLE_DOUBLE,      11, 8 },
-	{ AG_VARIABLE_LONG_DOUBLE,   0, "long double",	 AG_VARIABLE_LONG_DOUBLE, 12, 16 },
-	{ AG_VARIABLE_P_LONG_DOUBLE, 1, "long double *", AG_VARIABLE_LONG_DOUBLE, 12, 16 },
 	/*
 	 * C strings (STRING is auto-allocated; P_STRING is fixed-size buffer).
 	 */
-	{ AG_VARIABLE_STRING,	0, "Str",   AG_VARIABLE_STRING, 13, sizeof(char *) },
-	{ AG_VARIABLE_P_STRING,	1, "Str *", AG_VARIABLE_STRING, 13, sizeof(char *) },
+	{ AG_VARIABLE_STRING,	0, "String",   AG_VARIABLE_STRING, 13, sizeof(char *) },
+	{ AG_VARIABLE_P_STRING,	1, "String *", AG_VARIABLE_STRING, 13, sizeof(char *) },
 	/*
 	 * Generic pointers.
 	 */
-	{ AG_VARIABLE_POINTER,	0, "Ptr",   AG_VARIABLE_POINTER, -1, sizeof(void *) },
-	{ AG_VARIABLE_P_POINTER,1, "Ptr *", AG_VARIABLE_POINTER, -1, sizeof(void *) },
+	{ AG_VARIABLE_POINTER,	0, "Pointer",   AG_VARIABLE_POINTER, -1, sizeof(void *) },
+	{ AG_VARIABLE_P_POINTER,1, "Pointer *", AG_VARIABLE_POINTER, -1, sizeof(void *) },
 	/*
 	 * Reference to one or more bits in a word.
 	 */
@@ -154,9 +152,6 @@ AG_DerefVariable(AG_Variable *Vdst, const AG_Variable *Vsrc)
 #endif
 #ifdef HAVE_FLOAT
 	case AG_VARIABLE_P_FLOAT:  case AG_VARIABLE_P_DOUBLE:
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_P_LONG_DOUBLE:
-# endif
 #endif
 	case AG_VARIABLE_P_FLAG:		/* to UINT */
 	case AG_VARIABLE_P_FLAG8:		/* to UINT8 */
@@ -278,9 +273,6 @@ AG_PrintVariable(char *s, AG_Size len, AG_Variable *V)
 	case AG_VARIABLE_P_FLOAT:	Snprintf(s, len, "%.2f", *(float *)V->data.p);		break;
 	case AG_VARIABLE_DOUBLE:	Snprintf(s, len, "%.2f", V->data.dbl);			break;
 	case AG_VARIABLE_P_DOUBLE:	Snprintf(s, len, "%.2f", *(double *)V->data.p);		break;
-# ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_P_LONG_DOUBLE:	Snprintf(s, len, "%.2Lf", *(long double *)V->data.p);	break;
-# endif
 #endif
 	case AG_VARIABLE_STRING:
 		Strlcpy(s, V->data.s, len);
@@ -345,7 +337,7 @@ AG_Unset(void *pObj, const char *name)
 
 /* Body of AG_GetFoo() routines. */
 #undef  FN_VARIABLE_GET
-#define FN_VARIABLE_GET(_memb,_fn,_type) {			\
+#define FN_VARIABLE_GET(_memb,_type) {				\
 	_type rv;						\
 	AG_Variable *V;						\
 								\
@@ -410,7 +402,7 @@ AG_Unset(void *pObj, const char *name)
 Uint
 AG_GetUint(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(u, fnUint, Uint);
+	FN_VARIABLE_GET(u, Uint);
 }
 AG_Variable *
 AG_SetUint(void *obj, const char *name, Uint v)
@@ -452,7 +444,7 @@ AG_BindUintMp(void *obj, const char *name, Uint *v, AG_Mutex *mutex)
 int
 AG_GetInt(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(i, fnInt, int);
+	FN_VARIABLE_GET(i, int);
 }
 AG_Variable *
 AG_SetInt(void *obj, const char *name, int v)
@@ -495,7 +487,7 @@ AG_BindIntMp(void *obj, const char *name, int *v, AG_Mutex *mutex)
 Ulong
 AG_GetUlong(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(uli, fnUlong, Ulong);
+	FN_VARIABLE_GET(uli, Ulong);
 }
 AG_Variable *
 AG_SetUlong(void *obj, const char *name, Ulong v)
@@ -537,7 +529,7 @@ AG_BindUlongMp(void *obj, const char *name, Ulong *v, AG_Mutex *mutex)
 long
 AG_GetLong(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(li, fnLong, long);
+	FN_VARIABLE_GET(li, long);
 }
 AG_Variable *
 AG_SetLong(void *obj, const char *name, long v)
@@ -580,7 +572,7 @@ AG_BindLongMp(void *obj, const char *name, long *v, AG_Mutex *mutex)
 Uint8
 AG_GetUint8(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(u8, fnUint8, Uint8);
+	FN_VARIABLE_GET(u8, Uint8);
 }
 AG_Variable *
 AG_SetUint8(void *obj, const char *name, Uint8 v)
@@ -622,7 +614,7 @@ AG_BindUint8Mp(void *obj, const char *name, Uint8 *v, AG_Mutex *mutex)
 Sint8
 AG_GetSint8(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(s8, fnSint8, Sint8);
+	FN_VARIABLE_GET(s8, Sint8);
 }
 AG_Variable *
 AG_SetSint8(void *obj, const char *name, Sint8 v)
@@ -664,7 +656,7 @@ AG_BindSint8Mp(void *obj, const char *name, Sint8 *v, AG_Mutex *mutex)
 Uint16
 AG_GetUint16(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(u16, fnUint16, Uint16);
+	FN_VARIABLE_GET(u16, Uint16);
 }
 AG_Variable *
 AG_SetUint16(void *obj, const char *name, Uint16 v)
@@ -706,7 +698,7 @@ AG_BindUint16Mp(void *obj, const char *name, Uint16 *v, AG_Mutex *mutex)
 Sint16
 AG_GetSint16(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(s16, fnSint16, Sint16);
+	FN_VARIABLE_GET(s16, Sint16);
 }
 AG_Variable *
 AG_SetSint16(void *obj, const char *name, Sint16 v)
@@ -749,7 +741,7 @@ AG_BindSint16Mp(void *obj, const char *name, Sint16 *v, AG_Mutex *mutex)
 Uint32
 AG_GetUint32(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(u32, fnUint32, Uint32);
+	FN_VARIABLE_GET(u32, Uint32);
 }
 AG_Variable *
 AG_SetUint32(void *obj, const char *name, Uint32 v)
@@ -791,7 +783,7 @@ AG_BindUint32Mp(void *obj, const char *name, Uint32 *v, AG_Mutex *mutex)
 Sint32
 AG_GetSint32(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(s32, fnSint32, Sint32);
+	FN_VARIABLE_GET(s32, Sint32);
 }
 AG_Variable *
 AG_SetSint32(void *obj, const char *name, Sint32 v)
@@ -835,7 +827,7 @@ AG_BindSint32Mp(void *obj, const char *name, Sint32 *v, AG_Mutex *mutex)
 Uint64
 AG_GetUint64(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(u64, fnUint64, Uint64);
+	FN_VARIABLE_GET(u64, Uint64);
 }
 AG_Variable *
 AG_SetUint64(void *obj, const char *name, Uint64 v)
@@ -880,7 +872,7 @@ AG_BindUint64Mp(void *obj, const char *name, Uint64 *v, AG_Mutex *mutex)
 Sint64
 AG_GetSint64(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(s64, fnSint64, Sint64);
+	FN_VARIABLE_GET(s64, Sint64);
 }
 AG_Variable *
 AG_SetSint64(void *obj, const char *name, Sint64 v)
@@ -926,7 +918,7 @@ AG_BindSint64Mp(void *obj, const char *name, Sint64 *v, AG_Mutex *mutex)
 float
 AG_GetFloat(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(flt, fnFloat, float);
+	FN_VARIABLE_GET(flt, float);
 }
 AG_Variable *
 AG_SetFloat(void *obj, const char *name, float v)
@@ -968,7 +960,7 @@ AG_BindFloatMp(void *obj, const char *name, float *v, AG_Mutex *mutex)
 double
 AG_GetDouble(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(dbl, fnDouble, double);
+	FN_VARIABLE_GET(dbl, double);
 }
 AG_Variable *
 AG_SetDouble(void *obj, const char *name, double v)
@@ -1003,50 +995,6 @@ AG_BindDoubleMp(void *obj, const char *name, double *v, AG_Mutex *mutex)
 	return (V);
 }
 # endif /* AG_THREADS */
-
-# ifdef HAVE_LONG_DOUBLE
-/*
- * Quad-precision floating-point number.
- */
-long double
-AG_GetLongDouble(void *obj, const char *name)
-{
-	FN_VARIABLE_GET(ldbl, fnLongDouble, long double);
-}
-AG_Variable *
-AG_SetLongDouble(void *obj, const char *name, long double v)
-{
-#  ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (long double) %Lf\n", name, v);
-#  endif
-	FN_VARIABLE_SET(ldbl, long double, AG_VARIABLE_LONG_DOUBLE);
-}
-void
-AG_InitLongDouble(AG_Variable *V, long double v)
-{
-	AG_InitVariable(V, AG_VARIABLE_LONG_DOUBLE, "");
-	V->data.ldbl = v;
-}
-AG_Variable *
-AG_BindLongDouble(void *obj, const char *name, long double *v)
-{
-#  ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(long double)%p (= %Lf)\n", name, v, *v);
-#  endif
-	FN_VARIABLE_BIND(AG_VARIABLE_P_LONG_DOUBLE);
-}
-#  ifdef AG_THREADS
-AG_Variable *
-AG_BindLongDoubleMp(void *obj, const char *name, long double *v, AG_Mutex *mutex)
-{
-	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_LONG_DOUBLE);
-#  ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(long double)%p (= %Lf) mutex %p\n", name, v, *v, mutex);
-#  endif
-	return (V);
-}
-#  endif /* AG_THREADS */
-# endif /* HAVE_LONG_DOUBLE */
 #endif /* HAVE_FLOAT */
 
 /*
@@ -1055,15 +1003,85 @@ AG_BindLongDoubleMp(void *obj, const char *name, long double *v, AG_Mutex *mutex
 void *
 AG_GetPointer(void *obj, const char *name)
 {
-	FN_VARIABLE_GET(p, fnPointer, void *);
+	AG_Variable *V;
+	void *p;
+
+	AG_ObjectLock(obj);
+	if ((V = AG_AccessVariable(obj, name)) == NULL) {
+		AG_FatalErrorV("E20", "No such Pointer variable");
+	}
+#ifdef AG_TYPE_SAFETY
+	if ((V->info.pFlags & AG_VARIABLE_P_READONLY))
+		AG_FatalErrorV("E30", "Pointer is const. "
+		                      "Did you mean AG_CONST_PTR()?");
+#endif
+	p = V->data.p;
+	AG_UnlockVariable(V);
+	AG_ObjectUnlock(obj);
+	return (p);
 }
+
+#ifdef AG_TYPE_SAFETY
+const void *
+AG_GetConstPointer(void *obj, const char *name)
+{
+	AG_Variable *V;
+	void *p;
+
+	AG_ObjectLock(obj);
+	if ((V = AG_AccessVariable(obj, name)) == NULL) {
+		AG_FatalErrorV("E20", "No such Pointer variable");
+	}
+	if (!(V->info.pFlags & AG_VARIABLE_P_READONLY)) {
+		AG_FatalErrorV("E30", "Pointer is !const. "
+		                      "Did you mean AG_PTR()?");
+	}
+	p = V->data.p;
+	AG_UnlockVariable(V);
+	AG_ObjectUnlock(obj);
+	return (const void *)p;
+}
+#endif /* AG_TYPE_SAFETY */
+
 AG_Variable *
 AG_SetPointer(void *obj, const char *name, void *v)
 {
+	AG_Variable *V;
 #ifdef AG_DEBUG
 	Debug(obj, "Set \"%s\" -> (void *)%p\n", name, v);
 #endif
-	FN_VARIABLE_SET(p, void *, AG_VARIABLE_POINTER);
+	AG_ObjectLock(obj);
+	V = AG_FetchVariable(obj, name, AG_VARIABLE_POINTER);
+	if (agVariableTypes[V->type].indirLvl > 0) {
+		*(void **)V->data.p = v;
+	} else {
+		V->data.p = v;
+	}
+	V->info.pFlags = 0;
+	AG_ObjectUnlock(obj);
+	return (V);
+}
+
+AG_Variable *
+AG_SetConstPointer(void *obj, const char *name, const void *v)
+{
+	AG_Variable *V;
+#ifdef AG_DEBUG
+	Debug(obj, "Set \"%s\" -> (const void *)%p\n", name, v);
+#endif
+	AG_ObjectLock(obj);
+	V = AG_FetchVariable(obj, name, AG_VARIABLE_POINTER);
+	V->data.p = (void *)v;
+	V->info.pFlags = AG_VARIABLE_P_READONLY;
+	AG_ObjectUnlock(obj);
+	return (V);
+}
+
+void
+AG_InitConstPointer(AG_Variable *V, const void *v)
+{
+	AG_InitPointer(V, (void *)v);
+	V->info.pFlags |= AG_VARIABLE_P_READONLY;
 }
 void
 AG_InitPointer(AG_Variable *V, void *v)
@@ -1071,6 +1089,7 @@ AG_InitPointer(AG_Variable *V, void *v)
 	AG_InitVariable(V, AG_VARIABLE_POINTER, "");
 	V->data.p = v;
 }
+
 AG_Variable *
 AG_BindPointer(void *obj, const char *name, void **v)
 {

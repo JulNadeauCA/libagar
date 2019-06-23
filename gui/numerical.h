@@ -64,12 +64,6 @@ AG_Numerical *_Nonnull AG_NumericalNewFlt(void *_Nullable, Uint, const char *_Nu
 AG_Numerical *_Nonnull AG_NumericalNewFltR(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, float *_Nonnull, float,float);
 AG_Numerical *_Nonnull AG_NumericalNewDbl(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, double *_Nonnull);
 AG_Numerical *_Nonnull AG_NumericalNewDblR(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, double *_Nonnull, double,double);
-# ifdef AG_HAVE_LONG_DOUBLE
-AG_Numerical *_Nonnull AG_NumericalNewLdbl(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, long double *_Nonnull);
-AG_Numerical *_Nonnull AG_NumericalNewLdblR(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, long double *_Nonnull, long double,long double);
-
-long double AG_NumericalGetLdbl(AG_Numerical *_Nonnull);
-# endif
 float       AG_NumericalGetFlt(AG_Numerical *_Nonnull);
 double      AG_NumericalGetDbl(AG_Numerical *_Nonnull);
 #endif /* AG_HAVE_FLOAT */

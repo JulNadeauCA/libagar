@@ -11,12 +11,33 @@
 #define AG_EVENT_NAME_MAX 24
 #endif
 
-/* Argument accessor macros */
+/*
+ * Argument accessor macros
+ */
 #ifdef AG_TYPE_SAFETY
-# define AG_OBJECT(v,t)   ((v <= event->argc && event->argv[v].type==AG_VARIABLE_POINTER \
-                           && AG_OfClass(event->argv[v].data.p, (t))) ? \
-			   event->argv[v].data.p : AG_ObjectMismatch())
-# define AG_PTR(v)        ((v <= event->argc && event->argv[v].type==AG_VARIABLE_POINTER) ? event->argv[v].data.p : AG_PtrMismatch())
+
+# define AG_OBJECT(v,t) ((v <= event->argc && \
+                         (event->argv[v].type == AG_VARIABLE_POINTER && \
+                        !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
+	                 AG_OfClass(event->argv[v].data.p, (t)))) ? \
+                         event->argv[v].data.p : AG_ObjectMismatch())
+
+# define AG_CONST_OBJECT(v,t) ((v <= event->argc && \
+                               event->argv[v].type == AG_VARIABLE_POINTER && \
+                              (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
+                               AG_OfClass(event->argv[v].data.p, (t))) ? \
+                               event->argv[v].data.p : AG_ObjectMismatch())
+
+# define AG_PTR(v) ((v <= event->argc && \
+                    event->argv[v].type == AG_VARIABLE_POINTER && \
+                    !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY)) ? \
+                    event->argv[v].data.p : AG_PtrMismatch())
+
+# define AG_CONST_PTR(v) ((v <= event->argc && \
+                          event->argv[v].type == AG_VARIABLE_POINTER && \
+                          (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY)) ? \
+                          event->argv[v].data.p : AG_PtrMismatch())
+
 # define AG_STRING(v)      ((v < event->argc && event->argv[v].type==AG_VARIABLE_STRING) ? event->argv[v].data.s : AG_StringMismatch())
 # define AG_INT(v)         ((v < event->argc && event->argv[v].type==AG_VARIABLE_INT) ? event->argv[v].data.i : AG_IntMismatch())
 # define AG_UINT(v)        ((v < event->argc && event->argv[v].type==AG_VARIABLE_UINT) ? event->argv[v].data.u : (Uint)AG_IntMismatch())
@@ -24,18 +45,21 @@
 # define AG_ULONG(v)       ((v < event->argc && event->argv[v].type==AG_VARIABLE_ULONG) ? event->argv[v].data.uli : (Ulong)AG_LongMismatch())
 # define AG_FLOAT(v)       ((v < event->argc && event->argv[v].type==AG_VARIABLE_FLOAT) ? event->argv[v].data.flt : AG_FloatMismatch())
 # define AG_DOUBLE(v)      ((v < event->argc && event->argv[v].type==AG_VARIABLE_DOUBLE) ? event->argv[v].data.dbl : AG_DoubleMismatch())
-# define AG_LONG_DOUBLE(v) ((v < event->argc && event->argv[v].type==AG_VARIABLE_LONG_DOUBLE) ? event->argv[v].data.ldbl : AG_LongDoubleMismatch())
+
 #else /* !AG_TYPE_SAFETY */
-# define AG_PTR(v)         (event->argv[v].data.p)
-# define AG_OBJECT(v, t)   (event->argv[v].data.p)
-# define AG_STRING(v)      (event->argv[v].data.s)
-# define AG_INT(v)         (event->argv[v].data.i)
-# define AG_UINT(v)        (event->argv[v].data.u)
-# define AG_LONG(v)        (event->argv[v].data.li)
-# define AG_ULONG(v)       (event->argv[v].data.uli)
-# define AG_FLOAT(v)       (event->argv[v].data.flt)
-# define AG_DOUBLE(v)      (event->argv[v].data.dbl)
-# define AG_LONG_DOUBLE(v) (event->argv[v].data.ldbl)
+
+# define AG_PTR(v)            (event->argv[v].data.p)
+# define AG_CONST_PTR(v)      (event->argv[v].data.p)
+# define AG_OBJECT(v,t)       (event->argv[v].data.p)
+# define AG_CONST_OBJECT(v,t) (event->argv[v].data.p)
+# define AG_STRING(v)         (event->argv[v].data.s)
+# define AG_INT(v)            (event->argv[v].data.i)
+# define AG_UINT(v)           (event->argv[v].data.u)
+# define AG_LONG(v)           (event->argv[v].data.li)
+# define AG_ULONG(v)          (event->argv[v].data.uli)
+# define AG_FLOAT(v)          (event->argv[v].data.flt)
+# define AG_DOUBLE(v)         (event->argv[v].data.dbl)
+
 #endif /* !AG_TYPE_SAFETY */
 
 #ifdef AG_UNICODE
@@ -47,16 +71,17 @@
 #define AG_SELF()	AG_PTR(0)
 #define AG_SENDER()	AG_PTR(event->argc)
 
-#define AG_PTR_NAMED(k)		AG_GetNamedPtr(event,(k))
-#define AG_OBJECT_NAMED(k,cls)	AG_GetNamedObject(event,(k),(cls))
-#define AG_STRING_NAMED(k)	AG_GetNamedString(event,(k))
-#define AG_INT_NAMED(k)		AG_GetNamedInt(event,(k))
-#define AG_UINT_NAMED(k)	AG_GetNamedUint(event,(k))
-#define AG_LONG_NAMED(k)	AG_GetNamedLong(event,(k))
-#define AG_ULONG_NAMED(k)	AG_GetNamedUlong(event,(k))
-#define AG_FLOAT_NAMED(k)       AG_GetNamedFlt(event,(k))
-#define AG_DOUBLE_NAMED(k)      AG_GetNamedDbl(event,(k))
-#define AG_LONG_DOUBLE_NAMED(k) AG_GetNamedLongDbl(event,(k))
+#define AG_PTR_NAMED(k)			AG_GetNamedPtr(event,(k))
+#define AG_CONST_PTR_NAMED(k)		AG_GetNamedConstPtr(event,(k))
+#define AG_OBJECT_NAMED(k,cls)		AG_GetNamedObject(event,(k),(cls))
+#define AG_CONST_OBJECT_NAMED(k,cls)	AG_GetNamedConstObject(event,(k),(cls))
+#define AG_STRING_NAMED(k)		AG_GetNamedString(event,(k))
+#define AG_INT_NAMED(k)			AG_GetNamedInt(event,(k))
+#define AG_UINT_NAMED(k)		AG_GetNamedUint(event,(k))
+#define AG_LONG_NAMED(k)		AG_GetNamedLong(event,(k))
+#define AG_ULONG_NAMED(k)		AG_GetNamedUlong(event,(k))
+#define AG_FLOAT_NAMED(k)       	AG_GetNamedFlt(event,(k))
+#define AG_DOUBLE_NAMED(k)      	AG_GetNamedDbl(event,(k))
 
 struct ag_timer;
 struct ag_event_sink;
@@ -74,6 +99,9 @@ typedef struct ag_event {
 	AG_Variable argv[AG_EVENT_ARGS_MAX];	/* Argument values */
 	AG_TAILQ_ENTRY(ag_event) events;	/* Entry in Object */
 } AG_Event, AG_Function;
+
+#define AGEVENT(ev)    ((struct ag_event *)(ev))
+#define AGFUNCTION(ev) ((struct ag_event *)(ev))
 
 /* Low-level event sink */
 enum ag_event_sink_type {
@@ -183,6 +211,8 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 	AG_EVENT_POP_ARG_POSTCOND(V, vtype)	\
 	return (V->data.memb)
 
+#define AG_EVENT_POP_CONST_POINTER_FN(vtype, memb)	\
+
 /*
  * Inline implementation of the varargs argument parser, AG_EVENT_GET_ARGS().
  * Used by AG_{Set,Add,Post}Event() and AG_EventArgs().
@@ -230,22 +260,20 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 # define AG_EVENT_PUSH_ARG_CASE_FLT(ev)
 #endif
 
-#ifdef AG_HAVE_LONG_DOUBLE
-# define AG_EVENT_PUSH_ARG_CASE_LDBL(ev)				\
-	  case 'd':							\
-	    AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_LONG_DOUBLE, ldbl,	\
-	        long double);						\
-	    break;
-#else
-# define AG_EVENT_PUSH_ARG_CASE_LDBL(ev)
-#endif
-
 #define AG_EVENT_PUSH_ARG(ap,ev) {					\
 	AG_Variable *V;							\
 									\
 	switch (*c) {							\
 	case 'p':							\
 	  AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_POINTER, p, void *);	\
+	  V->info.pFlags = 0;						\
+	  break;							\
+	case 'C':							\
+	  if (c[1] == 'p') {						\
+	  	AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_POINTER, p, void *); \
+	  	V->info.pFlags = AG_VARIABLE_P_READONLY;		 \
+		c++;							\
+	  }								\
 	  break;							\
 	case 'i':							\
 	  AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_INT, i, int);		\
@@ -260,7 +288,6 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 	case 'l':							\
 	  switch (c[1]) {						\
 	  AG_EVENT_PUSH_ARG_CASE_LONG(ev)				\
-	  AG_EVENT_PUSH_ARG_CASE_LDBL(ev)				\
 	  default:							\
 	    AG_FatalError("E3");					\
 	  }								\
@@ -306,9 +333,12 @@ __BEGIN_DECLS
 int  AG_InitEventSubsystem(Uint);
 void AG_DestroyEventSubsystem(void);
 
-void AG_EventInit(AG_Event *_Nonnull);
-void AG_EventArgs(AG_Event *_Nonnull, const char *_Nullable , ...);
-
+void               AG_EventInit(AG_Event *_Nonnull);
+void               AG_EventArgs(AG_Event *_Nonnull, const char *_Nullable , ...);
+#if AG_MODEL != AG_SMALL
+AG_Event *_Nonnull AG_EventNew(AG_EventFn, void *_Nonnull,
+                               const char *_Nullable, ...);
+#endif
 void               AG_EventCopy(AG_Event *_Nonnull, const AG_Event *_Nonnull);
 AG_Event *_Nonnull AG_EventDup(const AG_Event *_Nonnull);
 
@@ -380,6 +410,7 @@ int  AG_EventSinkSPINNER(void);
  * Inlinables
  */
 void ag_event_push_pointer(AG_Event *_Nonnull, const char *_Nullable, void *_Nullable);
+void ag_event_push_const_pointer(AG_Event *_Nonnull, const char *_Nullable, const void *_Nullable);
 void ag_event_push_string(AG_Event *_Nonnull, const char *_Nullable, char *_Nonnull);
 void ag_event_push_int(AG_Event *_Nonnull, const char *_Nullable, int);
 void ag_event_push_uint(AG_Event *_Nonnull, const char *_Nullable, Uint);
@@ -388,74 +419,68 @@ void ag_event_push_ulong(AG_Event *_Nonnull, const char *_Nullable, Ulong);
 # ifdef AG_HAVE_FLOAT
 void ag_event_push_float(AG_Event *_Nonnull, const char *_Nullable, float);
 void ag_event_push_double(AG_Event *_Nonnull, const char *_Nullable, double);
-#  ifdef AG_HAVE_LONG_DOUBLE
-void ag_event_push_long_double(AG_Event *_Nonnull, const char *_Nullable, long double);
-#  endif
-# endif /* AG_HAVE_FLOAT */
+# endif
 
-void *_Nullable ag_event_pop_pointer(AG_Event *_Nonnull);
-char *_Nonnull  ag_event_pop_string(AG_Event *_Nonnull);
-int             ag_event_pop_int(AG_Event *_Nonnull);
-Uint            ag_event_pop_uint(AG_Event *_Nonnull);
-long            ag_event_pop_long(AG_Event *_Nonnull);
-Ulong           ag_event_pop_ulong(AG_Event *_Nonnull);
+void *_Nullable       ag_event_pop_pointer(AG_Event *_Nonnull);
+const void *_Nullable ag_event_pop_const_pointer(AG_Event *_Nonnull);
+char *_Nonnull        ag_event_pop_string(AG_Event *_Nonnull);
+
+int    ag_event_pop_int(AG_Event *_Nonnull);
+Uint   ag_event_pop_uint(AG_Event *_Nonnull);
+long   ag_event_pop_long(AG_Event *_Nonnull);
+Ulong  ag_event_pop_ulong(AG_Event *_Nonnull);
 # ifdef AG_HAVE_FLOAT
-float           ag_event_pop_float(AG_Event *_Nonnull);
-double          ag_event_pop_double(AG_Event *_Nonnull);
-#  ifdef AG_HAVE_LONG_DOUBLE
-long double     ag_event_pop_long_double(AG_Event *_Nonnull);
-#  endif
+float  ag_event_pop_float(AG_Event *_Nonnull);
+double ag_event_pop_double(AG_Event *_Nonnull);
 # endif
 #endif /* !AG_SMALL */
 
-AG_Variable *_Nonnull ag_get_named_event_arg(AG_Event *_Nonnull, const char *_Nonnull)
-                                            _Pure_Attribute;
-void *_Nullable ag_get_named_ptr(AG_Event *_Nonnull, const char *_Nonnull)    _Pure_Attribute;
-char *_Nonnull  ag_get_named_string(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
-int             ag_get_named_int(AG_Event *_Nonnull, const char *_Nonnull)    _Pure_Attribute;
-Uint            ag_get_named_uint(AG_Event *_Nonnull, const char *_Nonnull)   _Pure_Attribute;
+AG_Variable *_Nonnull ag_get_named_event_arg(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
+void *_Nullable       ag_get_named_ptr(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
+const void *_Nullable ag_get_named_const_ptr(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
+char *_Nonnull        ag_get_named_string(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
+
+int    ag_get_named_int(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
+Uint   ag_get_named_uint(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
 #if AG_MODEL != AG_SMALL
-long            ag_get_named_long(AG_Event *_Nonnull, const char *_Nonnull)   _Pure_Attribute;
-Ulong           ag_get_named_ulong(AG_Event *_Nonnull, const char *_Nonnull)  _Pure_Attribute;
+long   ag_get_named_long(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
+Ulong  ag_get_named_ulong(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
 #endif
 #ifdef AG_HAVE_FLOAT
-float           ag_get_named_flt(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
-double          ag_get_named_dbl(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
-# ifdef AG_HAVE_LONG_DOUBLE
-long double     ag_get_named_long_dbl(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
-# endif
+float  ag_get_named_flt(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
+double ag_get_named_dbl(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
 #endif
 #ifdef AG_INLINE_EVENT
 # define AG_INLINE_HEADER
 # include <agar/core/inline_event.h>
 #else
-# define AG_EventPushPointer(e,n,v)    ag_event_push_pointer((e),(n),(v))
-# define AG_EventPushString(e,n,v)     ag_event_push_string((e),(n),(v))
-# define AG_EventPushInt(e,n,v)        ag_event_push_int((e),(n),(v))
-# define AG_EventPushUint(e,n,v)       ag_event_push_uint((e),(n),(v))
-# define AG_EventPushLong(e,n,v)       ag_event_push_long((e),(n),(v))
-# define AG_EventPushUlong(e,n,v)      ag_event_push_ulong((e),(n),(v))
-# define AG_EventPushFloat(e,n,v)      ag_event_push_float((e),(n),(v))
-# define AG_EventPushDouble(e,n,v)     ag_event_push_double((e),(n),(v))
-# define AG_EventPushLongDouble(e,n,v) ag_event_push_long_double((e),(n),(v))
-# define AG_EventPopPointer(e)         ag_event_pop_pointer(e)
-# define AG_EventPopString(e)          ag_event_pop_string(e)
-# define AG_EventPopInt(e)             ag_event_pop_int(e)
-# define AG_EventPopUint(e)            ag_event_pop_uint(e)
-# define AG_EventPopLong(e)            ag_event_pop_long(e)
-# define AG_EventPopUlong(e)           ag_event_pop_ulong(e)
-# define AG_EventPopFloat(e)           ag_event_pop_float(e)
-# define AG_EventPopDouble(e)          ag_event_pop_double(e)
-# define AG_EventPopLongDouble(e)      ag_event_pop_long_double(e)
-# define AG_GetNamedEventArg(e,n)      ag_get_named_event_arg((e),(n))
-# define AG_GetNamedPtr(e,n)           ag_get_named_ptr((e),(n))
-# define AG_GetNamedString(e,n)        ag_get_named_string((e),(n))
-# define AG_GetNamedInt(e,n)           ag_get_named_int((e),(n))
-# define AG_GetNamedUint(e,n)          ag_get_named_uint((e),(n))
-# define AG_GetNamedLong(e,n)          ag_get_named_long((e),(n))
-# define AG_GetNamedUlong(e,n)         ag_get_named_ulong((e),(n))
-# define AG_GetNamedFlt(e,n)           ag_get_named_flt((e),(n))
-# define AG_GetNamedDbl(e,n)           ag_get_named_dbl((e),(n))
-# define AG_GetNamedLongDbl(e,n)       ag_get_named_long_dbl((e),(n))
+# define AG_EventPushPointer(e,n,v)      ag_event_push_pointer((e),(n),(v))
+# define AG_EventPushConstPointer(e,n,v) ag_event_push_const_pointer((e),(n),(v))
+# define AG_EventPushString(e,n,v)       ag_event_push_string((e),(n),(v))
+# define AG_EventPushInt(e,n,v)          ag_event_push_int((e),(n),(v))
+# define AG_EventPushUint(e,n,v)         ag_event_push_uint((e),(n),(v))
+# define AG_EventPushLong(e,n,v)         ag_event_push_long((e),(n),(v))
+# define AG_EventPushUlong(e,n,v)        ag_event_push_ulong((e),(n),(v))
+# define AG_EventPushFloat(e,n,v)        ag_event_push_float((e),(n),(v))
+# define AG_EventPushDouble(e,n,v)       ag_event_push_double((e),(n),(v))
+# define AG_EventPopPointer(e)           ag_event_pop_pointer(e)
+# define AG_EventPopConstPointer(e)      ag_event_pop_const_pointer(e)
+# define AG_EventPopString(e)            ag_event_pop_string(e)
+# define AG_EventPopInt(e)               ag_event_pop_int(e)
+# define AG_EventPopUint(e)              ag_event_pop_uint(e)
+# define AG_EventPopLong(e)              ag_event_pop_long(e)
+# define AG_EventPopUlong(e)             ag_event_pop_ulong(e)
+# define AG_EventPopFloat(e)             ag_event_pop_float(e)
+# define AG_EventPopDouble(e)            ag_event_pop_double(e)
+# define AG_GetNamedEventArg(e,n)        ag_get_named_event_arg((e),(n))
+# define AG_GetNamedPtr(e,n)             ag_get_named_ptr((e),(n))
+# define AG_GetNamedConstPtr(e,n)        ag_get_named_const_ptr((e),(n))
+# define AG_GetNamedString(e,n)          ag_get_named_string((e),(n))
+# define AG_GetNamedInt(e,n)             ag_get_named_int((e),(n))
+# define AG_GetNamedUint(e,n)            ag_get_named_uint((e),(n))
+# define AG_GetNamedLong(e,n)            ag_get_named_long((e),(n))
+# define AG_GetNamedUlong(e,n)           ag_get_named_ulong((e),(n))
+# define AG_GetNamedFlt(e,n)             ag_get_named_flt((e),(n))
+# define AG_GetNamedDbl(e,n)             ag_get_named_dbl((e),(n))
 #endif /* AG_INLINE_EVENT */
 __END_DECLS

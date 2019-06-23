@@ -35,19 +35,7 @@ __BEGIN_DECLS
 # define GL_TexCoord2(s,t)	glTexCoord2d((s),(t))
 # define GL_TexCoord3(s,t,r)	glTexCoord3d((s),(t),(r))
 # define GL_TexCoord4(s,t,r,q)	glTexCoord4d((s),(t),(r),(q))
-#elif defined(QUAD_PRECISION)
-# define GL_Vertex2(x,y)	glVertex2d((GLdouble)(x),(GLdouble)(y))
-# define GL_TexCoord1(s)	glTexCoord1d((GLdouble)(s))
-# define GL_TexCoord2(s,t)	glTexCoord2d((GLdouble)(s),(GLdouble)(t))
-# define GL_TexCoord3(s,t,r)	glTexCoord3d((GLdouble)(s),(GLdouble)(t),(GLdouble)(r))
-# define GL_TexCoord4(s,t,r,q)	glTexCoord4d((GLdouble)(s),(GLdouble)(t),(GLdouble)(r),(GLdouble)(q))
-static __inline__ void
-GL_Vertex2v(const void *v)
-{
-	const M_Real *r = (const M_Real *)v;
-	glVertex2d((GLdouble)r[0], (GLdouble)r[1]);
-}
-#endif /* QUAD_PRECISION */
+#endif
 
 /*
  * M_Vector3 and M_Vector4 argument wrappers
@@ -66,29 +54,7 @@ GL_Vertex2v(const void *v)
 # define GL_Vertex4v(v)		glVertex4dv((const GLdouble *)(void *)(v))
 # define GL_Normal3(x,y,z)	glNormal3d((x),(y),(z))
 # define GL_Normal3v(v)		glNormal3dv((const GLdouble *)(void *)(v))
-#elif defined(QUAD_PRECISION)
-# define GL_Vertex3(x,y,z)	glVertex3d((GLdouble)(x),(GLdouble)(y),(GLdouble)(z))
-# define GL_Vertex4(x,y,z,w)	glVertex4d((GLdouble)(x),(GLdouble)(y),(GLdouble)(z),(GLdouble)(w))
-# define GL_Normal3(x,y,z)	glNormal3d((GLdouble)(x),(GLdouble)(y),(GLdouble)(z))
-static __inline__ void
-GL_Vertex3v(const void *v)
-{
-	const M_Real *r = (const M_Real *)v;
-	glVertex3d((GLdouble)r[0], (GLdouble)r[1], (GLdouble)r[2]);
-}
-static __inline__ void
-GL_Vertex4v(const void *v)
-{
-	const M_Real *r = (const M_Real *)v;
-	glVertex3d((GLdouble)r[0], (GLdouble)r[1], (GLdouble)r[2],(GLdouble)r[3]);
-}
-static __inline__ void
-GL_Normal3v(const void *v)
-{
-	const M_Real *r = (const M_Real *)v;
-	glNormal3d((GLdouble)r[0], (GLdouble)r[1], (GLdouble)r[2]);
-}
-#endif /* QUAD_PRECISION */
+#endif
 
 /* 
  * Macros provided for symmetry
@@ -246,10 +212,6 @@ GL_FetchMatrixv(GLenum which, M_Matrix44 *T)
 	glGetFloatv(which, &T->m[0][0]);
 #elif defined(DOUBLE_PRECISION)
 	glGetDoublev(which, &T->m[0][0]);
-#elif defined(QUAD_PRECISION)
-	double dv[4][4];
-	glGetDoublev(which, &dv[0][0]);
-	M_MatFromDoubles44(T, &dv[0][0]);
 #endif
 }
 
@@ -261,10 +223,6 @@ GL_LoadMatrixv(const M_Matrix44 *T)
 	glLoadMatrixf(&T->m[0][0]);
 #elif defined(DOUBLE_PRECISION)
 	glLoadMatrixd(&T->m[0][0]);
-#elif defined(QUAD_PRECISION)
-	GLdouble Td[4][4];
-	M_MatToDoubles44((double *)&Td[0][0], T);
-	glLoadMatrixd(&Td[0][0]);
 #endif
 }
 
@@ -276,10 +234,6 @@ GL_MultMatrixv(const M_Matrix44 *T)
 	glMultMatrixf(&T->m[0][0]);
 #elif defined(DOUBLE_PRECISION)
 	glMultMatrixd(&T->m[0][0]);
-#elif defined(QUAD_PRECISION)
-	GLdouble Td[4][4];
-	M_MatToDoubles44((double *)&Td[0][0], T);
-	glMultMatrixd(&Td[0][0]);
 #endif
 }
 
@@ -291,8 +245,6 @@ GL_Translate(M_Vector3 v)
 	glTranslatef(v.x, v.y, v.z);
 #elif defined(DOUBLE_PRECISION)
 	glTranslated(v.x, v.y, v.z);
-#elif defined(QUAD_PRECISION)
-	glTranslated((GLdouble)v.x, (GLdouble)v.y, (GLdouble)v.z);
 #endif
 }
 static __inline__ void
@@ -302,8 +254,6 @@ GL_Translatev(const M_Vector3 *v)
 	glTranslatef(v->x, v->y, v->z);
 #elif defined(DOUBLE_PRECISION)
 	glTranslated(v->x, v->y, v->z);
-#elif defined(QUAD_PRECISION)
-	glTranslated((GLdouble)v->x, (GLdouble)v->y, (GLdouble)v->z);
 #endif
 }
 
@@ -315,8 +265,6 @@ GL_Rotate(M_Real theta, M_Vector3 a)
 	glRotatef(theta, a.x, a.y, a.z);
 #elif defined(DOUBLE_PRECISION)
 	glRotated(theta, a.x, a.y, a.z);
-#elif defined(QUAD_PRECISION)
-	glRotated(theta, (GLdouble)a.x, (GLdouble)a.y, (GLdouble)a.z);
 #endif
 }
 static __inline__ void
@@ -326,8 +274,6 @@ GL_Rotatev(M_Real theta, const M_Vector3 *a)
 	glRotatef(theta, a->x, a->y, a->z);
 #elif defined(DOUBLE_PRECISION)
 	glRotated(theta, a->x, a->y, a->z);
-#elif defined(QUAD_PRECISION)
-	glRotated(theta, (GLdouble)a->x, (GLdouble)a->y, (GLdouble)a->z);
 #endif
 }
 
@@ -339,8 +285,6 @@ GL_Scale3(M_Real x, M_Real y, M_Real z)
 	glScalef(x, y, z);
 #elif defined(DOUBLE_PRECISION)
 	glScaled(x, y, z);
-#elif defined(QUAD_PRECISION)
-	glScaled((GLdouble)x, (GLdouble)y, (GLdouble)z);
 #endif
 }
 
@@ -352,8 +296,6 @@ GL_Color3(M_Color C)
 	glColor3fv((const GLfloat *)&C);
 #elif defined(DOUBLE_PRECISION)
 	glColor3dv((const GLdouble *)&C);
-#elif defined(QUAD_PRECISION)
-	glColor3d((GLdouble)C.r, (GLdouble)C.g, (GLdouble)C.b);
 #endif
 }
 static __inline__ void
@@ -363,8 +305,6 @@ GL_Color3v(const M_Color *C)
 	glColor3fv((const GLfloat *)C);
 #elif defined(DOUBLE_PRECISION)
 	glColor3dv((const GLdouble *)C);
-#elif defined(QUAD_PRECISION)
-	glColor3d((GLdouble)C->r, (GLdouble)C->g, (GLdouble)C->b);
 #endif
 }
 static __inline__ void
@@ -374,8 +314,6 @@ GL_Color4(M_Color C)
 	glColor4fv((const GLfloat *)&C);
 #elif defined(DOUBLE_PRECISION)
 	glColor4dv((const GLdouble *)&C);
-#elif defined(QUAD_PRECISION)
-	glColor4d((GLdouble)C.r, (GLdouble)C.g, (GLdouble)C.b, (GLdouble)C.a);
 #endif
 }
 static __inline__ void
@@ -385,8 +323,6 @@ GL_Color4v(const M_Color *C)
 	glColor4fv((const GLfloat *)C);
 #elif defined(DOUBLE_PRECISION)
 	glColor4dv((const GLdouble *)C);
-#elif defined(QUAD_PRECISION)
-	glColor4d((GLdouble)C->r, (GLdouble)C->g, (GLdouble)C->b, (GLdouble)C->a);
 #endif
 }
 
@@ -415,10 +351,6 @@ GL_GetRealv(GLenum pname, M_Real *v)
 	glGetFloatv(pname, v);
 #elif defined(DOUBLE_PRECISION)
 	glGetDoublev(pname, v);
-#elif defined(QUAD_PRECISION)
-	double d;
-	glGetDoublev(pname, &d);
-	*v = (M_Real)d;
 #endif
 }
 

@@ -77,16 +77,16 @@ const char *agWindowWmTypeNames[] = {
 };
 
 const char *agWindowAlignmentNames[] = {
-	"None",
-	"Top Left",		/* TL */
-	"Top Center",		/* TC */
-	"Top Right",		/* TR */
-	"Middle Left",		/* ML */
-	"Middle Center",	/* MC */
-	"Middle Right",		/* MR */
-	"Bottom Left",		/* BL */
-	"Bottom Center",	/* BC */
-	"Bottom Right",		/* BR */
+	N_("None"),
+	N_("Top Left"),		/* TL */
+	N_("Top Center"),	/* TC */
+	N_("Top Right"),	/* TR */
+	N_("Middle Left"),	/* ML */
+	N_("Middle Center"),	/* MC */
+	N_("Middle Right"),	/* MR */
+	N_("Bottom Left"),	/* BL */
+	N_("Bottom Center"),	/* BC */
+	N_("Bottom Right"),	/* BR */
 	NULL
 };
 
@@ -115,9 +115,8 @@ AG_WindowNewSw(void *pDrv, Uint flags)
 	AG_Driver *drv = pDrv;
 	AG_Window *win;
 
-	if (!AG_OfClass(drv, "AG_Driver:AG_DriverSw:*")) {
+	if (!AG_OfClass(drv, "AG_Driver:AG_DriverSw:*"))
 		return (NULL);
-	}
 	
 	if ((win = TryMalloc(sizeof(AG_Window))) == NULL) {
 		return (NULL);
@@ -473,14 +472,14 @@ AG_WindowMakeTransient(AG_Window *forParent, AG_Window *win)
 	AG_ObjectLock(win);
 
 	if (forParent == NULL) {
-		if (AGDRIVER_MULTIPLE(drv) &&
+		if (drv && AGDRIVER_MULTIPLE(drv) &&
 		    AGDRIVER_MW_CLASS(drv)->setTransientFor != NULL) {
 			AGDRIVER_MW_CLASS(drv)->setTransientFor(win, NULL);
 		}
 		win->transientFor = NULL;
 	} else {
 		AG_ObjectLock(forParent);
-		if (AGDRIVER_MULTIPLE(drv) &&
+		if (drv && AGDRIVER_MULTIPLE(drv) &&
 		    AGDRIVER_MW_CLASS(drv)->setTransientFor != NULL) {
 			AGDRIVER_MW_CLASS(drv)->setTransientFor(win, forParent);
 		}
@@ -573,7 +572,7 @@ UpdateNeeded(AG_Widget *_Nonnull wid)
 static __inline__ int _Pure_Attribute
 Selected_WM_Op(AG_Window *_Nonnull win, enum ag_wm_operation op)
 {
-	AG_Driver *drv = AGWIDGET(win)->drv;
+	AG_Driver *drv = WIDGET(win)->drv;
 
 	return (AGDRIVER_SINGLE(drv) &&
 	        AGDRIVER_SW(drv)->winSelected == win &&
@@ -1644,7 +1643,7 @@ AG_WindowMinimize(AG_Window *win)
 	win->flags |= AG_WINDOW_MINIMIZED;
 	AG_WindowHide(win);
 
-	if (AGDRIVER_SINGLE(drv)) {
+	if (drv && AGDRIVER_SINGLE(drv)) {
 		AG_Window *wDND;
 		AG_Icon *icon = win->icon;
 
@@ -1726,7 +1725,6 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Window *win = obj;
-	AG_Driver *drv = WIDGET(win)->drv;
 	AG_Widget *chld;
 	AG_SizeReq rChld, rTbar;
 	int nWidgets;
@@ -1757,7 +1755,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	win->wReq = r->w;
 	win->hReq = r->h;
 
-	if (AGDRIVER_SINGLE(drv))
+	if (WIDGET(win)->drv && AGDRIVER_SINGLE(WIDGET(win)->drv))
 		AG_WM_LimitWindowToView(win);
 }
 
@@ -1765,7 +1763,6 @@ static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Window *win = obj;
-	AG_Driver *drv = WIDGET(win)->drv;
 	AG_Widget *chld;
 	AG_SizeReq rChld;
 	AG_SizeAlloc aChld;
@@ -1871,7 +1868,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		aChld.y += aChld.h + win->spacing;
 	}
 
-	if (AGDRIVER_SINGLE(drv))		/* Fit in frame buffer */
+	if (WIDGET(win)->drv && AGDRIVER_SINGLE(WIDGET(win)->drv))
 		AG_WM_LimitWindowToView(win);
 
 	win->r.x = 0;
@@ -1998,7 +1995,7 @@ UpdateIconCaption(AG_Window *_Nonnull win)
 void
 AG_WindowSetCaptionS(AG_Window *win, const char *s)
 {
-	AG_Driver *drv = WIDGET(win)->drv;
+	AG_Driver *drv;
 
 	AG_ObjectLock(win);
 	Strlcpy(win->caption, s, sizeof(win->caption));
@@ -2008,7 +2005,7 @@ AG_WindowSetCaptionS(AG_Window *win, const char *s)
 	if (win->icon != NULL)
 		UpdateIconCaption(win);
 
-	if (AGDRIVER_MULTIPLE(drv) &&
+	if ((drv = WIDGET(win)->drv) && AGDRIVER_MULTIPLE(drv) &&
 	    (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
 	    (AGDRIVER_MW_CLASS(drv)->setWindowCaption != NULL)) {
 		AGDRIVER_MW_CLASS(drv)->setWindowCaption(win, s);
@@ -2051,7 +2048,7 @@ AG_WindowProcessFocusChange(void)
 		AG_WM_CommitWindowFocus(agWindowToFocus);
 		break;
 	case AG_WM_MULTIPLE:
-		if ((drv = AGWIDGET(agWindowToFocus)->drv) != NULL) {
+		if ((drv = WIDGET(agWindowToFocus)->drv) != NULL) {
 			AGDRIVER_MW_CLASS(drv)->raiseWindow(agWindowToFocus);
 			AGDRIVER_MW_CLASS(drv)->setInputFocus(agWindowToFocus);
 		}
@@ -2155,8 +2152,8 @@ AG_WindowProcessDetachQueue(void)
 			AGDRIVER_SW(drv)->flags |= AG_DRIVER_SW_REDRAW;
 		}
 
-		/* Do a standard AG_ObjectDetach(). */
-		AG_ObjectSetDetachFn(win, NULL, NULL);
+		/* Unset detach-fn and do a standard AG_ObjectDetach(). */
+		AG_SetFn(win, "detach-fn", NULL, NULL);
 		AG_ObjectDetach(win);
 
 		if (AGDRIVER_MULTIPLE(drv)) {
@@ -2342,11 +2339,11 @@ AG_WindowSetOpacity(AG_Window *win, float f)
 	AG_ObjectLock(win);
 # ifdef AG_TIMERS
 	win->pvt.fadeOpacity = (f > 1.0) ? 1.0 : f;
-	if (AGDRIVER_MULTIPLE(drv) &&
+	if (drv && AGDRIVER_MULTIPLE(drv) &&
 	    AGDRIVER_MW_CLASS(drv)->setOpacity != NULL)
 		rv = AGDRIVER_MW_CLASS(drv)->setOpacity(win, win->pvt.fadeOpacity);
 # else
-	if (AGDRIVER_MULTIPLE(drv) &&
+	if (drv && AGDRIVER_MULTIPLE(drv) &&
 	    AGDRIVER_MW_CLASS(drv)->setOpacity != NULL)
 		rv = AGDRIVER_MW_CLASS(drv)->setOpacity(win, f);
 # endif
@@ -2397,7 +2394,8 @@ AG_WindowSetZoom(AG_Window *win, int zoom)
 #endif
 	AG_WindowUpdate(win);
 	win->zoom = zoom;
-	if (WIDGET(win)->drv != NULL) {
+
+	if (WIDGET(win)->drv) {
 		AG_TextClearGlyphCache(WIDGET(win)->drv);
 	}
 	TAILQ_FOREACH(winChld, &win->pvt.subwins, pvt.swins) {
@@ -2414,12 +2412,10 @@ AG_WindowSetZoom(AG_Window *win, int zoom)
 void
 AG_WindowDraw(AG_Window *_Nonnull win)
 {
-	AG_Driver *drv = AGWIDGET(win)->drv;
-
 	if (!win->visible) {
 		return;
 	}
-	AGDRIVER_CLASS(drv)->renderWindow(win);
+	AGDRIVER_CLASS(WIDGET(win)->drv)->renderWindow(win);
 	win->dirty = 0;
 }
 
@@ -2436,14 +2432,14 @@ AG_WindowUpdate(AG_Window *_Nonnull win)
 {
 	AG_SizeAlloc a;
 	
-	if (AGWIDGET(win)->x != -1 && AGWIDGET(win)->y != -1) {
-		a.x = AGWIDGET(win)->x;
-		a.y = AGWIDGET(win)->y;
-		a.w = AGWIDGET(win)->w;
-		a.h = AGWIDGET(win)->h;
+	if (WIDGET(win)->x != -1 && WIDGET(win)->y != -1) {
+		a.x = WIDGET(win)->x;
+		a.y = WIDGET(win)->y;
+		a.w = WIDGET(win)->w;
+		a.h = WIDGET(win)->h;
 		AG_WidgetSizeAlloc(win, &a);
 	}
-	AG_WidgetUpdateCoords(win, AGWIDGET(win)->x, AGWIDGET(win)->y);
+	AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 }
 
 /*
@@ -2463,7 +2459,7 @@ AG_WindowIsVisible(AG_Window *_Nonnull win)
 AG_Window *
 AG_ParentWindow(void *_Nonnull obj)
 {
-	return (AGWIDGET(obj)->window);
+	return (WIDGET(obj)->window);
 }
 
 /*
@@ -2526,7 +2522,7 @@ AG_WindowSetGeometryMax(AG_Window *_Nonnull win)
 {
 	Uint wMax, hMax;
 
-	AG_GetDisplaySize((void *)AGWIDGET(win)->drv, &wMax, &hMax);
+	AG_GetDisplaySize((void *)WIDGET(win)->drv, &wMax, &hMax);
 	AG_WindowSetGeometry(win, 0, 0, wMax, hMax);
 }
 
@@ -2536,7 +2532,7 @@ AG_Redraw(void *_Nonnull obj)
 {
 	AG_Window *win;
 
-	if ((win = AGWIDGET(obj)->window) != NULL) {
+	if ((win = WIDGET(obj)->window) != NULL) {
 		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
 		win->dirty = 1;
 	}
@@ -2711,9 +2707,9 @@ Init(void *_Nonnull obj)
 	ev = AG_SetEvent(win, "detached", NULL, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
 
-	/* Custom attach/detach hooks are needed by the window stack. */
-	AG_ObjectSetAttachFn(win, Attach, NULL);
-	AG_ObjectSetDetachFn(win, Detach, NULL);
+	/* Use custom attach/detach hooks to keep the window stack in order. */
+	AG_SetFn(win, "attach-fn", Attach, NULL);
+	AG_SetFn(win, "detach-fn", Detach, NULL);
 	
 	/* Set the inheritable style defaults. */
 	AG_SetString(win,  "font-family", OBJECT(agDefaultFont)->name);

@@ -29,7 +29,6 @@
 #include <agar/core/core.h>
 
 #include <agar/config/enable_gui.h>
-#include <agar/config/have_long_double.h>
 
 #include <agar/math/m.h>
 
@@ -52,11 +51,7 @@ PrintReal(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Real *r = AG_FMTSTRING_ARG(fs);
 
-#if defined(QUAD_PRECISION)
-	return Snprintf(dst, dstSize, "%.03llf", *r);
-#else
 	return Snprintf(dst, dstSize, "%.03f", *r);
-#endif
 }
 static AG_Size
 PrintTime(AG_FmtString *_Nonnull fs, char *dst, AG_Size dstSize)
@@ -264,10 +259,6 @@ M_ReadReal(AG_DataSource *ds)
 		return (M_Real)AG_ReadFloat(ds);
 	case 2:
 		return (M_Real)AG_ReadDouble(ds);
-#ifdef HAVE_LONG_DOUBLE
-	case 4:
-		return (M_Real)AG_ReadLongDouble(ds);
-#endif
 	default:
 		AG_FatalError("Bad real prec");
 	}
@@ -288,11 +279,6 @@ M_CopyReal(AG_DataSource *ds, M_Real *rv)
 	case 2:
 		*rv = (M_Real)AG_ReadDouble(ds);
 		break;
-#ifdef HAVE_LONG_DOUBLE
-	case 4:
-		*rv = (M_Real)AG_ReadLongDouble(ds);
-		break;
-#endif
 	default:
 		AG_FatalError("Bad real prec");
 	}
@@ -308,9 +294,6 @@ M_WriteReal(AG_DataSource *ds, M_Real v)
 #elif defined(DOUBLE_PRECISION)
 	AG_WriteUint8(ds, 2);
 	AG_WriteDouble(ds, v);
-#elif defined(QUAD_PRECISION)
-	AG_WriteUint8(ds, 4);
-	AG_WriteLongDouble(ds, v);
 #endif
 }
 

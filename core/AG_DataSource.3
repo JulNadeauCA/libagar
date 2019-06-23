@@ -420,9 +420,6 @@ representation.
 .Ft "double"
 .Fn AG_ReadDouble "AG_DataSource *ds"
 .Pp
-.Ft "long double"
-.Fn AG_ReadLongDouble "AG_DataSource *ds"
-.Pp
 .Ft "void"
 .Fn AG_WriteFloat "AG_DataSource *ds" "float f"
 .Pp
@@ -435,23 +432,15 @@ representation.
 .Ft "void"
 .Fn AG_WriteDoubleAt "AG_DataSource *ds" "double f" "AG_Offset pos"
 .Pp
-.Ft "void"
-.Fn AG_WriteLongDouble "AG_DataSource *ds" "long double f"
-.Pp
-.Ft "void"
-.Fn AG_WriteLongDoubleAt "AG_DataSource *ds" "long double f" "AG_Offset pos"
-.Pp
 .nr nS 0
-.Fn AG_ReadFloat ,
-.Fn AG_ReadDouble
+.Fn AG_ReadFloat
 and
-.Fn AG_ReadLongDouble
+.Fn AG_ReadDouble
 read a floating-point value from the data source.
 .Pp
-.Fn AG_WriteFloat ,
-.Fn AG_WriteDouble
+.Fn AG_WriteFloat
 and
-.Fn AG_WriteLongDouble
+.Fn AG_WriteDouble
 write a floating-point value to the data source.
 The
 .Fn AG_Write*At
@@ -463,12 +452,6 @@ functions return 0 on success and -1 on failure, without raising any
 exceptions.
 The other functions will raise a data source exception if an failuer (e.g.,
 an I/O error) occured.
-.Pp
-The
-.Fa "long double"
-functions are available only if
-.Dv HAVE_LONG_DOUBLE
-is defined.
 .Sh STRING OPERATIONS
 The following functions read and write C strings.
 The serialized representation includes an unsigned 32-bit count followed
@@ -575,39 +558,28 @@ bytes + 4 in size.
 On failure, the
 .Fn AG_WriteString
 routines raise a data source exception.
-.Sh EXTENDING THE API
-New types of data sources can be implemented by deriving the
+.Sh DERIVING NEW SOURCES
+New sources can be implemented by deriving the
 .Nm
 structure:
 .Bd -literal
-typedef struct ag_data_source {
-	AG_Mutex lock;                  /* Lock on all operations */
+typedef AG_DataSource {
+  AG_Mutex lock;                    /* Lock on all operations */
+  enum ag_byte_order byte_order;    /* Byte order of source */
 
-	enum ag_byte_order byte_order;  /* Byte order of source */
+  AG_Size wrLast;                   /* Last write count (bytes) */
+  AG_Size rdLast;                   /* Last read count (bytes) */
+  AG_Size wrTotal;                  /* Total write count (bytes) */
+  AG_Size rdTotal;                  /* Total read count (bytes) */
 
-	AG_Size wrLast;                 /* Last write count (bytes) */
-	AG_Size rdLast;                 /* Last read count (bytes) */
-	AG_Size wrTotal;                /* Total write count (bytes) */
-	AG_Size rdTotal;                /* Total read count (bytes) */
-
-	AG_IOStatus (*read)(struct ag_data_source *, void *buf,
-	                    AG_Size size, AG_Size *rv);
-
-	AG_IOStatus (*read_at)(struct ag_data_source *, void *buf,
-	                       AG_Size size, AG_Offset pos, AG_Size *rv);
-
-	AG_IOStatus (*write)(struct ag_data_source *, const void *buf,
-	                     AG_Size size, AG_Size *rv);
-
-	AG_IOStatus (*write_at)(struct ag_data_source *, const void *buf,
-	                        AG_Size size, AG_Offset pos, AG_Size *rv);
-
-	AG_Offset   (*tell)(struct ag_data_source *);
-
-	int         (*seek)(struct ag_data_source *, AG_Offset offs,
-	                    enum ag_seek_mode mode);
-
-	void        (*close)(struct ag_data_source *);
+  int (*read)(AG_DataSource *, void *, AG_Size, AG_Size *);
+  int (*read_at)(AG_DataSource *, void *, AG_Size, AG_Offset, AG_Size *);
+  int (*write)(AG_DataSource *, const void *, AG_Size, AG_Size *);
+  int (*write_at)(AG_DataSource *, const void *, AG_Size, AG_Offset,
+                  AG_Size *);
+  AG_Offset (*tell)(AG_DataSource *);
+  int (*seek)(AG_DataSource *, AG_Offset offs, enum ag_seek_mode mode);
+  void (*close)(AG_DataSource *);
 } AG_DataSource;
 .Ed
 .Pp

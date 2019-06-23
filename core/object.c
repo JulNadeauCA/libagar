@@ -78,8 +78,6 @@ AG_ObjectInit(void *p, void *cl)
 	ob->root = ob;
 	ob->flags = 0;
 
-	ob->pvt.attachFn = NULL;
-	ob->pvt.detachFn = NULL;
 	AG_MutexInitRecursive(&ob->pvt.lock);
 	
 	TAILQ_INIT(&ob->events);
@@ -333,34 +331,20 @@ used:
 }
 #endif /* AG_SERIALIZATION */
 
-/* Configure a custom "attach" function. */
+/* Set a variable which is a pointer to a function (with optional arguments). */
 void
-AG_ObjectSetAttachFn(void *p, void (*fn)(struct ag_event *), const char *fmt, ...)
+AG_SetFn(void *p, const char *key, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Object *obj = p;
+	AG_Event *ev;
 
 	AG_ObjectLock(obj);
 	if (fn != NULL) {
-		obj->pvt.attachFn = AG_SetEvent(obj, NULL, fn, NULL);
-		AG_EVENT_GET_ARGS(obj->pvt.attachFn, fmt);
+		ev = AG_EventNew(fn, obj, NULL);
+		AG_EVENT_GET_ARGS(ev, fmt);
+		AG_SetPointer(obj, key, ev);
 	} else {
-		obj->pvt.attachFn = NULL;
-	}
-	AG_ObjectUnlock(obj);
-}
-
-/* Configure a custom "detach" function. */
-void
-AG_ObjectSetDetachFn(void *p, void (*fn)(struct ag_event *), const char *fmt, ...)
-{
-	AG_Object *obj = p;
-
-	AG_ObjectLock(obj);
-	if (fn != NULL) {
-		obj->pvt.detachFn = AG_SetEvent(obj, NULL, fn, NULL);
-		AG_EVENT_GET_ARGS(obj->pvt.detachFn, fmt);
-	} else {
-		obj->pvt.detachFn = NULL;
+		AG_Unset(obj, key);
 	}
 	AG_ObjectUnlock(obj);
 }
@@ -390,8 +374,12 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	chld->root = parent->root;
 	
 	/* Call the attach function if one is defined. */
-	if (chld->pvt.attachFn != NULL)  {
-		chld->pvt.attachFn->fn(chld->pvt.attachFn);
+	if (AG_Defined(chld, "attach-fn")) {
+		AG_Event *ev;
+		if ((ev = AG_GetPointer(chld,"attach-fn")) != NULL &&
+		     ev->fn != NULL) {
+			ev->fn(ev);
+		}
 		goto out;
 	}
 
@@ -445,10 +433,14 @@ AG_ObjectDetach(void *pChld)
 #endif
 	AG_ObjectLock(parent);
 	AG_ObjectLock(chld);
-
+	
 	/* Call the detach function if one is defined. */
-	if (chld->pvt.detachFn != NULL) {
-		chld->pvt.detachFn->fn(chld->pvt.detachFn);
+	if (AG_Defined(chld, "detach-fn")) {
+		AG_Event *ev;
+		if ((ev = AG_GetPointer(chld,"detach-fn")) != NULL &&
+		     ev->fn != NULL) {
+			ev->fn(ev);
+		}
 		goto out;
 	}
 #ifdef AG_TIMERS
@@ -1032,9 +1024,6 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 #ifdef AG_HAVE_FLOAT
 		case AG_VARIABLE_FLOAT:  AG_SetFloat(ob,  key, AG_ReadFloat(ds));	break;
 		case AG_VARIABLE_DOUBLE: AG_SetDouble(ob, key, AG_ReadDouble(ds));	break;
-# ifdef AG_HAVE_LONG_DOUBLE
-		case AG_VARIABLE_LONG_DOUBLE: AG_SetLongDouble(ob, key, AG_ReadLongDouble(ds)); break;
-# endif
 #endif
 		case AG_VARIABLE_STRING:
 			if ((s = AG_ReadString(ds)) != NULL) {
@@ -1116,9 +1105,6 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 #ifdef AG_HAVE_FLOAT
 		case AG_VARIABLE_FLOAT:  AG_WriteFloat(ds, *(float *)p);		break;
 		case AG_VARIABLE_DOUBLE: AG_WriteDouble(ds, *(double *)p);		break;
-# ifdef AG_HAVE_LONG_DOUBLE
-		case AG_VARIABLE_LONG_DOUBLE: AG_WriteLongDouble(ds, *(long double *)p); break;
-# endif
 #endif
 		case AG_VARIABLE_STRING: AG_WriteString(ds, V->data.s);			break;
 		default: break;

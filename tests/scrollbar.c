@@ -15,9 +15,6 @@ Uint64 v64 = 64;
 #endif
 float vFlt = 1.0;
 double vDbl = 0.0;
-#ifdef AG_HAVE_LONG_DOUBLE
-long double vLDbl = 1.0;
-#endif
 
 static int
 TestGUI(void *obj, AG_Window *win)
@@ -90,13 +87,6 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SetDouble(sb, "min", -100.0);
 	AG_SetDouble(sb, "max", +100.0);
 	AG_SetDouble(sb, "inc", 1.0);
-# ifdef AG_HAVE_LONG_DOUBLE
-#  ifdef AG_ENABLE_STRING
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Long Double binding: %llf", &vLDbl);
-#  endif
-	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
-	AG_BindLongDouble(sb, "value", &vLDbl);
-# endif
 #endif /* AG_HAVE_FLOAT */
 
 	return (0);

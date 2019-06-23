@@ -39,10 +39,6 @@
 #ifdef HAVE_FLOAT
 # define AG_HAVE_FLOAT "yes"
 #endif
-#include <agar/config/have_long_double.h>
-#ifdef HAVE_LONG_DOUBLE
-# define AG_HAVE_LONG_DOUBLE "yes"
-#endif
 
 /*
  * C Integer Types

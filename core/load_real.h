@@ -18,11 +18,7 @@ void        ag_write_float_at(AG_DataSource *_Nonnull, float, AG_Offset);
 double      ag_read_double(AG_DataSource *_Nonnull);
 void        ag_write_double(AG_DataSource *_Nonnull, double);
 void        ag_write_double_at(AG_DataSource *_Nonnull, double, AG_Offset);
-# ifdef AG_HAVE_LONG_DOUBLE
-long double ag_read_long_double(AG_DataSource *_Nonnull);
-void        ag_write_long_double(AG_DataSource *_Nonnull, long double);
-void        ag_write_long_double_at(AG_DataSource *, long double, AG_Offset);
-# endif
+
 # ifdef AG_INLINE_IO
 #  define AG_INLINE_HEADER
 #  include <agar/core/inline_load_real.h>
@@ -33,9 +29,6 @@ void        ag_write_long_double_at(AG_DataSource *, long double, AG_Offset);
 #  define AG_ReadDouble(ds)              ag_read_double(ds)
 #  define AG_WriteDouble(ds,x)           ag_write_double((ds),(x))
 #  define AG_WriteDoubleAt(ds,x,pos)     ag_write_double_at((ds),(x),(pos))
-#  define AG_ReadLongDouble(ds)          ag_read_long_double(ds)
-#  define AG_WriteLongDouble(ds,x)       ag_write_long_double((ds),(x))
-#  define AG_WriteLongDoubleAt(ds,x,pos) ag_write_long_double_at((ds),(x),(pos))
 # endif
 __END_DECLS
 

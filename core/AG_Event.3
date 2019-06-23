@@ -254,11 +254,6 @@ Real number:
 .Ft double .
 Requires
 .Dv AG_HAVE_FLOAT .
-.It "%ld"
-Real number:
-.Ft "long double" .
-Requires
-.Dv AG_HAVE_LONG_DOUBLE .
 .It "%s"
 C string (NUL-terminated):
 .Ft "char *" .
@@ -305,9 +300,6 @@ they also check for potential accesses to incorrect types.
 .Ft "double"
 .Fn AG_DOUBLE "int index"
 .Pp
-.Ft "long double"
-.Fn AG_LONG_DOUBLE "int index"
-.Pp
 .Ft "void *"
 .Fn AG_PTR_NAMED "const char *key"
 .Pp
@@ -334,9 +326,6 @@ they also check for potential accesses to incorrect types.
 .Pp
 .Ft "double"
 .Fn AG_DOUBLE_NAMED "const char *key"
-.Pp
-.Ft "long double"
-.Fn AG_LONG_DOUBLE_NAMED "const char *key"
 .Pp
 .nr nS 0
 The
@@ -402,16 +391,14 @@ or
 .Sq %lu
 argument respectively.
 .Pp
-.Fn AG_FLOAT ,
-.Fn AG_DOUBLE
+.Fn AG_FLOAT
 and
-.Fn AG_LONG_DOUBLE
-return the given floating-point number, previously passed as a
-.Sq %f ,
+.Fn AG_DOUBLE
+return the given floating-point number, previously passed as a real
+.Sq %f
+or
 .Sq %d
-o
-.Sq %ld
-argument respectively.
+argument.
 .Pp
 The
 .Fn AG_*_NAMED
@@ -469,9 +456,6 @@ The following functions allow such manipulations.
 .Fn AG_EventPushDouble "AG_Event *ev" "const char *key" "double val"
 .Pp
 .Ft void
-.Fn AG_EventPushLongDouble "AG_Event *ev" "const char *key" "long double val"
-.Pp
-.Ft void
 .Fn AG_EVENT_PUSH_ARG "va_list ap" "char formatChar" "AG_Event *ev"
 .Pp
 .Ft "void *"
@@ -497,9 +481,6 @@ The following functions allow such manipulations.
 .Pp
 .Ft "double"
 .Fn AG_EventPopDouble "AG_Event *ev"
-.Pp
-.Ft "long double"
-.Fn AG_EventPopLongDouble "AG_Event *ev"
 .Pp
 .nr nS 0
 The

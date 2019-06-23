@@ -57,9 +57,6 @@ package Agar.Object is
 #if HAVE_FLOAT
   subtype Float       is Interfaces.C.C_float;
   subtype Double      is Interfaces.C.double;
-# if HAVE_LONG_DOUBLE
-  subtype Long_Double is Interfaces.C.long_double;
-# end if;
 #end if;
 
   --------------------------
@@ -1200,25 +1197,6 @@ package Agar.Object is
      Name   : in System.Address;
      Value  : access Double) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_BindDouble";
-
-# if HAVE_LONG_DOUBLE 
-  function AG_GetLongDouble
-    (Object : in System.Address;
-     Name   : in System.Address) return Variable_not_null_Access
-    with Import, Convention => C, Link_Name => "AG_GetLongDouble";
-
-  function AG_SetLongDouble
-    (Object : in System.Address;
-     Name   : in System.Address;
-     Value  : in Long_Double) return Variable_not_null_Access
-    with Import, Convention => C, Link_Name => "AG_SetLongDouble";
-
-  function AG_BindLongDouble
-    (Object : in System.Address;
-     Name   : in System.Address;
-     Value  : access Long_Double) return Variable_not_null_Access
-    with Import, Convention => C, Link_Name => "AG_BindLongDouble";
-# end if;
 #end if;
 
   function AG_GetString

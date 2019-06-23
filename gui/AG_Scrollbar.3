@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -198,13 +198,11 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "long double *{value,min,max,inc,visible} "
+.Bl -tag -compact -width "double *{value,min,max,inc,visible} "
 .It Va float *{value,min,max,inc,visible}
 Single precision number
 .It Va double *{value,min,max,inc,visible}
 Double precision number
-.It Va long double *{value,min,max,inc,visible}
-Quad precision number
 .It Va int *{value,min,max,inc,visible}
 Natural integer
 .It Va Uint *{value,min,max,inc,visible}
@@ -251,10 +249,6 @@ bindings must share the same type as
 .Va value .
 The 64-bit types are only available if
 .Dv AG_HAVE_64BIT
-is set, and
-.Ft long double
-is only available if
-.Dv AG_HAVE_LONG_DOUBLE
 is set.
 .Sh EVENTS
 The

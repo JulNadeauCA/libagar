@@ -370,6 +370,22 @@ AG_Verbose(const char *fmt, ...)
 #endif /* AG_VERBOSITY */
 }
 
+/* Raise a fatal error condition (format string). */
+void
+AG_FatalErrorF(const char *fmt, ...)
+{
+	va_list args;
+	char *s;
+
+	if (fmt == NULL) {
+		AG_FatalError(NULL);
+	}
+	va_start(args, fmt);
+	Vasprintf(&s, fmt, args);
+	va_end(args);
+	AG_FatalError(s);
+}
+
 /* Raise a fatal error condition. */
 void
 AG_FatalError(const char *msg)
@@ -421,8 +437,5 @@ int    AG_IntMismatch(void)    { AG_FatalErrorV("E29", "Illegal AG_[U]INT() acce
 long   AG_LongMismatch(void)   { AG_FatalErrorV("E29", "Illegal AG_[U]LONG() access"); }
 float  AG_FloatMismatch(void)  { AG_FatalErrorV("E29", "Illegal AG_FLOAT() access"); }
 double AG_DoubleMismatch(void) { AG_FatalErrorV("E29", "Illegal AG_DOUBLE() access"); }
-#ifdef AG_HAVE_LONG_DOUBLE
-long double AG_LongDoubleMismatch(void) { AG_FatalErrorV("E29", "Illegal AG_LONG_DOUBLE() access"); }
-#endif
 void  *AG_ObjectMismatch(void) { AG_FatalErrorV("E29", "Illegal AG_OBJECT() access"); }
 #endif /* AG_TYPE_SAFETY */
