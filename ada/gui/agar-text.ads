@@ -196,6 +196,10 @@ package Agar.Text is
   ---------------------------------------
   -- Pushable/poppable state variables --
   ---------------------------------------
+#if AG_DEBUG
+  type AG_Text_State_Tag is array (1 .. 8) of aliased C.char
+    with Convention => C;
+#end if;
   type AG_Text_State is record
     Font     : Font_not_null_Access;    -- Font face
     Color    : SU.AG_Color;             -- Foreground text color
@@ -203,6 +207,9 @@ package Agar.Text is
     Justify  : AG_Text_Justify;         -- Justification mode
     Valign   : AG_Text_Valign;          -- Vertical alignment
     Tab_Wd   : C.int;                   -- Width of tabs in pixels
+#if AG_DEBUG
+    C_Tag    : AG_Text_State_Tag;
+#end if;
     C_Pad1   : Unsigned_32;
   end record
     with Convention => C;
