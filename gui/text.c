@@ -733,7 +733,7 @@ TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extende
 	tm->w = (xMax-xMin);
 	tm->h = (yMax-yMin);
 #else /* !HAVE_FREETYPE */
-	InitMetrics(&tm);
+	InitMetrics(tm);
 #endif /* HAVE_FREETYPE */
 }
 
@@ -791,7 +791,7 @@ TextSizeBitmap(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 		tm->nLines++;
 	}
 #else /* !AG_SERIALIZATION */
-	InitMetrics(&tm);
+	InitMetrics(tm);
 #endif /* AG_SERIALIZATION */
 }
 
@@ -860,7 +860,7 @@ AG_TextSize(const char *text, int *w, int *h)
 		free(s);
 	}
 #else
-	AG_TextSizeNat((const Uint8 *)s, w,h);
+	AG_TextSizeNat((const Uint8 *)text, w,h);
 #endif
 }
 

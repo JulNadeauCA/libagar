@@ -802,7 +802,11 @@ AG_ConsoleBinary(AG_Console *cons, const void *data, AG_Size size,
 		const Uint8 val = ((const Uint8 *)data)[pos];
 		char num[4];
 
-		snprintf(num, sizeof(num), fmt ? fmt : "%02x ", val);
+		if (fmt) {
+			Snprintf(num, sizeof(num), fmt, val);
+		} else {
+			Snprintf(num, sizeof(num), "%02x ", val);
+		}
 		AG_Strlcat(buf, num, bufSize);
 		if (++lineWd == columnWd) {
 			int i;
@@ -999,6 +1003,7 @@ out:
 	return (0);
 }
 
+#ifdef AG_SERIALIZATION
 /*
  * Read, dump and follow a file.
  *
@@ -1088,6 +1093,7 @@ AG_ConsoleClose(AG_Console *cons, AG_ConsoleFile *cf)
 	Free(cf->label);
 	free(cf);
 }
+#endif /* AG_SERIALIZATION */
 
 AG_WidgetClass agConsoleClass = {
 	{

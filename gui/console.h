@@ -91,6 +91,7 @@ void AG_ConsoleClear(AG_Console *_Nonnull);
 
 char *_Nullable AG_ConsoleExportText(AG_Console *_Nonnull, enum ag_newline_type);
 
+#ifdef AG_SERIALIZATION
 AG_ConsoleFile *AG_ConsoleOpenFile(AG_Console *_Nonnull, const char *_Nullable,
                                    const char *_Nullable, enum ag_newline_type,
 				   Uint);
@@ -99,6 +100,7 @@ AG_ConsoleFile *AG_ConsoleOpenFD(AG_Console *_Nonnull, const char *_Nullable,
 AG_ConsoleFile *AG_ConsoleOpenStream(AG_Console *_Nonnull, const char *_Nullable,
                                      void *_Nullable, enum ag_newline_type, Uint);
 void            AG_ConsoleClose(AG_Console *_Nonnull, AG_ConsoleFile *_Nonnull);
+#endif
 
 #ifdef AG_LEGACY
 # define AG_ConsoleSetFont(cons,font) AG_SetFont((cons),(font))
