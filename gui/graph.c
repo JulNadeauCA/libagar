@@ -580,110 +580,112 @@ Draw(void *obj)
 
 	/* Draw the edges */
 	TAILQ_FOREACH(edge, &gf->edges, edges) {
-		if (edge->flags & AG_GRAPH_HIDDEN) {
+		if (edge->flags & AG_GRAPH_HIDDEN)
 			continue;
-		}
-
 #ifdef HAVE_FLOAT
-		int xi1, yi1, xi2, yi2;
-		int x1, y1, x2, y2;
-		int h1, w1, h2, w2;
+		{
+			int xi1, yi1, xi2, yi2;
+			int x1, y1, x2, y2;
+			int h1, w1, h2, w2;
 
-		/* cache to avoid pointer chasing */
-		x1 = edge->v1->x - xOffs;
-		y1 = edge->v1->y - yOffs;
-		x2 = edge->v2->x - xOffs;
-		y2 = edge->v2->y - yOffs;
-		h1 = edge->v1->h;
-		w1 = edge->v1->w;
-		h2 = edge->v2->h;
-		w2 = edge->v2->w;
+			/* Cache to avoid pointer chasing. */
+			x1 = edge->v1->x - xOffs;
+			y1 = edge->v1->y - yOffs;
+			x2 = edge->v2->x - xOffs;
+			y2 = edge->v2->y - yOffs;
+			h1 = edge->v1->h;
+			w1 = edge->v1->w;
+			h2 = edge->v2->h;
+			w2 = edge->v2->w;
 
-		/* will be over-written with clipped positions */
-		xi1 = x1;
-		yi1 = y1;
-		xi2 = x2;
-		yi2 = y2;
+			/* Will be over-written with clipped positions. */
+			xi1 = x1;
+			yi1 = y1;
+			xi2 = x2;
+			yi2 = y2;
 
-		/* perform the correct line clipping for the given vertex
-		 * style */
-		if (edge->v2->style == AG_GRAPH_CIRCLE) {
-			AG_ClipLineCircle(
-				x2,
-				y2,
-				MAX(w2, h2) >> 1,
-				x1,
-				y1,
-				x2,
-				y2,
-				&xi2,
-				&yi2);
+			/*
+			 * Perform the correct line clipping for the
+			 * given vertex style.
+			 */
+			if (edge->v2->style == AG_GRAPH_CIRCLE) {
+				AG_ClipLineCircle(
+					x2,
+					y2,
+					MAX(w2, h2) >> 1,
+					x1,
+					y1,
+					x2,
+					y2,
+					&xi2,
+					&yi2);
+			} else {
+				AG_ClipLine(
+					x2 - (w2 >> 1),
+					y2 - (h2 >> 1),
+					w2,
+					h2,
+					x1,
+					y1,
+					&xi2,
+					&yi2);
+			}
+			if (edge->v1->style == AG_GRAPH_CIRCLE) {
+				AG_ClipLineCircle(
+					x1,
+					y1,
+					MAX(w1, h1) >> 1,
+					x2,
+					y2,
+					x1,
+					y1,
+					&xi1,
+					&yi1);
+			} else {
+				AG_ClipLine(
+					x1 - (w1 >> 1),
+					y1 - (h1 >> 1),
+					w1,
+					h1,
+					x2,
+					y2,
+					&xi1,
+					&yi1);
+			}
 
-		} else {
-			AG_ClipLine(
-				x2 - (w2 >> 1),
-				y2 - (h2 >> 1),
-				w2,
-				h2,
-				x1,
-				y1,
-				&xi2,
-				&yi2);
-		}
-
-		if (edge->v1->style == AG_GRAPH_CIRCLE) {
-			AG_ClipLineCircle(
-				x1,
-				y1,
-				MAX(w1, h1) >> 1,
-				x2,
-				y2,
-				x1,
-				y1,
-				&xi1,
-				&yi1);
-		} else {
-			AG_ClipLine(
-				x1 - (w1 >> 1),
-				y1 - (h1 >> 1),
-				w1,
-				h1,
-				x2,
-				y2,
-				&xi1,
-				&yi1);
-		}
-
-		/* Draw line appropriately depending on weather the edge type
-		 * is directed or undirected. If floating point support is
-		 * not available, then all edges are drawn undirected */
-		if (edge->type == AG_GRAPH_EDGE_DIRECTED) {
-			AG_DrawArrowLine(gf,
-			    xi1,
-			    yi1,
-			    xi2,
-			    yi2,
-			    AG_ARROWLINE_FORWARD,
-			    20,
-			    0.5,
-			    &edge->edgeColor);
-		} else {
-#endif /* HAVE_FLOAT */
+			/*
+			 * Draw line appropriately depending on weather the
+			 * edge type is directed or undirected. If floating
+			 * point support is not available, then all edges
+			 * are drawn undirected.
+			 */
+			if (edge->type == AG_GRAPH_EDGE_DIRECTED) {
+				AG_DrawArrowLine(gf,
+				    xi1,
+				    yi1,
+				    xi2,
+				    yi2,
+				    AG_ARROWLINE_FORWARD,
+				    20,
+				    0.5,
+				    &edge->edgeColor);
+			}
 			AG_DrawLine(gf,
-#ifdef HAVE_FLOAT
 			    xi1,
 			    yi1,
 			    xi2,
 			    yi2,
-#else		/* failover if we don't have float support */
-			    edge->v1->x - xOffs, /* only have cache if
-			    edge->v1->y - yOffs,  * HAVE_FLOAT */
-			    edge->v2->x - xOffs,
-			    edge->v2->y - yOffs,
-#endif /* HAVE_FLOAT */
 			    &edge->edgeColor);
 		}
-
+#else /* !HAVE_FLOAT */
+		/* Failover if we don't have float support. */
+		AG_DrawLine(gf,
+		    edge->v1->x - xOffs,
+		    edge->v1->y - yOffs,
+		    edge->v2->x - xOffs,
+		    edge->v2->y - yOffs,
+		    &edge->edgeColor);
+#endif /* HAVE_FLOAT */
 
 		if (edge->labelSu >= 0) {
 			AG_Surface *su = WSURFACE(gf,edge->labelSu);
