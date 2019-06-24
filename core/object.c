@@ -340,7 +340,17 @@ AG_SetFn(void *p, const char *key, AG_EventFn fn, const char *fmt, ...)
 
 	AG_ObjectLock(obj);
 	if (fn != NULL) {
+#if AG_MODEL != AG_SMALL
 		ev = AG_EventNew(fn, obj, NULL);
+#else
+		ev = Malloc(sizeof(AG_Event));
+		AG_EventInit(ev);
+		ev->fn = fn;
+		ev->argv[0].data.p = obj;
+# ifdef AG_DEBUG
+		Strlcpy(ev->argv[0].name, "self", sizeof(ev->argv[0].name));
+# endif
+#endif
 		AG_EVENT_GET_ARGS(ev, fmt);
 		AG_SetPointer(obj, key, ev);
 	} else {

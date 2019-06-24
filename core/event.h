@@ -334,9 +334,11 @@ int  AG_InitEventSubsystem(Uint);
 void AG_DestroyEventSubsystem(void);
 
 void               AG_EventInit(AG_Event *_Nonnull);
+#if AG_MODEL != AG_SMALL
 void               AG_EventArgs(AG_Event *_Nonnull, const char *_Nullable , ...);
 AG_Event *_Nonnull AG_EventNew(AG_EventFn, void *_Nonnull,
                                const char *_Nullable, ...);
+#endif
 void               AG_EventCopy(AG_Event *_Nonnull, const AG_Event *_Nonnull);
 AG_Event *_Nonnull AG_EventDup(const AG_Event *_Nonnull);
 

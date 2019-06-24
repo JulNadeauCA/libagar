@@ -150,6 +150,7 @@ AG_EventInit(AG_Event *_Nonnull ev)
 	InitEvent(ev, NULL);
 }
 
+#if AG_MODEL != AG_SMALL
 /* Initialize an AG_Event structure with the specified arguments. */
 void
 AG_EventArgs(AG_Event *ev, const char *fmt, ...)
@@ -171,6 +172,7 @@ AG_EventNew(AG_EventFn fn, void *obj, const char *fmt, ...)
 	AG_EVENT_GET_ARGS(ev, fmt);
 	return (ev);
 }
+#endif /* !AG_SMALL */
 
 /* Return a newly-allocated duplicate of the given AG_Event. */
 AG_Event *
