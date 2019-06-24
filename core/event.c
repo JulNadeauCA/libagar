@@ -159,7 +159,6 @@ AG_EventArgs(AG_Event *ev, const char *fmt, ...)
 	ev->argc0 = ev->argc;
 }
 
-#if AG_MODEL != AG_SMALL
 /* Return a newly allocated AG_Event. */
 AG_Event *
 AG_EventNew(AG_EventFn fn, void *obj, const char *fmt, ...)
@@ -172,7 +171,6 @@ AG_EventNew(AG_EventFn fn, void *obj, const char *fmt, ...)
 	AG_EVENT_GET_ARGS(ev, fmt);
 	return (ev);
 }
-#endif /* !AG_SMALL */
 
 /* Return a newly-allocated duplicate of the given AG_Event. */
 AG_Event *
