@@ -427,7 +427,7 @@ CloseMenu(AG_HSVPal *_Nonnull pal)
 static void
 EditNumValues(AG_Event *event)
 {
-	AG_HSVPal *pal = AG_PTR(1);
+	AG_HSVPal *pal = AG_HSVPAL_PTR(1);
 	AG_Window *pwin;
 	AG_Window *win;
 	AG_Numerical *num;
@@ -501,7 +501,7 @@ EditNumValues(AG_Event *event)
 static void
 SetComplementaryColor(AG_Event *_Nonnull event)
 {
-	AG_HSVPal *pal = AG_PTR(1);
+	AG_HSVPal *pal = AG_HSVPAL_PTR(1);
 	float hue;
 
 	AG_ObjectLock(pal);
@@ -518,7 +518,7 @@ SetComplementaryColor(AG_Event *_Nonnull event)
 static void
 CopyColor(AG_Event *_Nonnull event)
 {
-	AG_HSVPal *pal = AG_PTR(1);
+	AG_HSVPal *pal = AG_HSVPAL_PTR(1);
 	
 	AG_ObjectLock(pal);
 	AG_MutexLock(&CopyLock);
@@ -534,7 +534,7 @@ CopyColor(AG_Event *_Nonnull event)
 static void
 PasteColor(AG_Event *_Nonnull event)
 {
-	AG_HSVPal *pal = AG_PTR(1);
+	AG_HSVPal *pal = AG_HSVPAL_PTR(1);
 
 	AG_ObjectLock(pal);
 
@@ -586,7 +586,7 @@ OpenMenu(AG_HSVPal *_Nonnull pal, int x, int y)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_HSVPal *pal = AG_SELF();
+	AG_HSVPal *pal = AG_HSVPAL_SELF();
 	int btn = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -624,7 +624,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_HSVPal *pal = AG_SELF();
+	AG_HSVPal *pal = AG_HSVPAL_SELF();
 
 	pal->state = AG_HSVPAL_SEL_NONE;
 }
@@ -632,7 +632,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_HSVPal *pal = AG_SELF();
+	AG_HSVPal *pal = AG_HSVPAL_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 
@@ -658,8 +658,8 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 Bound(AG_Event *_Nonnull event)
 {
-	AG_HSVPal *pal = AG_SELF();
-	AG_Variable *V = AG_PTR(1);
+	AG_HSVPal *pal = AG_HSVPAL_SELF();
+	const AG_Variable *V = AG_PTR(1);
 
 	if (AG_VARIABLE_TYPE(V) == AG_VARIABLE_UINT32 &&
 	    strcmp(V->name, "pixel") == 0) {
@@ -685,7 +685,7 @@ Bound(AG_Event *_Nonnull event)
 static void
 OnAttach(AG_Event *_Nonnull event)
 {
-	AG_HSVPal *pal = AG_SELF();
+	AG_HSVPal *pal = AG_HSVPAL_SELF();
 	
 	pal->pixel = AG_MapPixel32_RGBA8(agSurfaceFmt, 0,0,0,255);
 	AG_ColorRGBA_8(&pal->color, 0,0,0, 255);

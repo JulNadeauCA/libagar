@@ -245,7 +245,7 @@ AG_WindowNewNamed(Uint flags, const char *fmt, ...)
 static void
 Attach(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_SELF();
+	AG_Window *win = AG_WINDOW_SELF();
 	AG_Driver *drv = OBJECT(win)->parent;
 	
 	/* Attach the window. */
@@ -297,7 +297,7 @@ Attach(AG_Event *_Nonnull event)
 static void
 Detach(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_SELF();
+	AG_Window *win = AG_WINDOW_SELF();
 	AG_Driver *drv;
 	AG_Window *other, *subwin;
 #ifdef AG_TIMERS
@@ -377,7 +377,7 @@ Detach(AG_Event *_Nonnull event)
 static Uint32
 FadeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_SELF();
+	AG_Window *win = AG_WINDOW_SELF();
 	int dir = AG_INT(1);
 
 	if (dir == 1) {					/* Fade in */
@@ -658,7 +658,7 @@ Draw(void *_Nonnull obj)
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_SELF();
+	AG_Window *win = AG_WINDOW_SELF();
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverMw *dmw = AGDRIVER_MW(drv);
 	AG_SizeReq r;
@@ -778,7 +778,7 @@ OnShow(AG_Event *_Nonnull event)
 static void
 OnHide(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_SELF();
+	AG_Window *win = AG_WINDOW_SELF();
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverSw *dsw;
 	int i;
@@ -893,7 +893,7 @@ WidgetLostFocus(AG_Widget *_Nonnull wid)
 static void
 OnGainFocus(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_SELF();
+	AG_Window *win = AG_WINDOW_SELF();
 
 /*	Verbose("%s (\"%s\"): Gained Focus\n", OBJECT(win)->name, win->caption); */
 	WidgetGainFocus(WIDGET(win));
@@ -902,7 +902,7 @@ OnGainFocus(AG_Event *_Nonnull event)
 static void
 OnLostFocus(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_SELF();
+	AG_Window *win = AG_WINDOW_SELF();
 
 /*	Verbose("%s (\"%s\"): Lost Focus\n", OBJECT(win)->name, win->caption); */
 	WidgetLostFocus(WIDGET(win));
@@ -1550,7 +1550,7 @@ AG_WindowUnmaximize(AG_Window *win)
 static void
 IconMotion(AG_Event *_Nonnull event)
 {
-	AG_Icon *icon = AG_SELF();
+	AG_Icon *icon = AG_ICON_SELF();
 	AG_Driver *drv = WIDGET(icon)->drv;
 	int xRel = AG_INT(3);
 	int yRel = AG_INT(4);
@@ -1589,7 +1589,7 @@ IconMotion(AG_Event *_Nonnull event)
 static Uint32
 IconDoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Icon *icon = AG_SELF();
+	AG_Icon *icon = AG_ICON_SELF();
 
 	icon->flags &= ~(AG_ICON_DBLCLICKED);
 	return (0);
@@ -1599,13 +1599,13 @@ IconDoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 IconButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Icon *icon = AG_SELF();
+	AG_Icon *icon = AG_ICON_SELF();
 
 	WIDGET(icon)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
 	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
 #ifdef AG_TIMERS
 	if (icon->flags & AG_ICON_DBLCLICKED) {
-		AG_Window *win = AG_PTR(1);
+		AG_Window *win = AG_WINDOW_PTR(1);
 
 		AG_DelTimer(icon, &icon->toDblClick);
 		AG_WindowUnminimize(win);
@@ -1624,7 +1624,7 @@ IconButtonDown(AG_Event *_Nonnull event)
 static void
 IconButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Icon *icon = AG_SELF();
+	AG_Icon *icon = AG_ICON_SELF();
 	
 	WIDGET(icon)->flags &= ~(AG_WIDGET_UNFOCUSED_MOTION);
 	WIDGET(icon)->flags &= ~(AG_WIDGET_UNFOCUSED_BUTTONUP);
@@ -1691,23 +1691,21 @@ AG_WindowUnminimize(AG_Window *win)
 void
 AG_WindowDetachGenEv(AG_Event *event)
 {
-	AG_Window *win = AG_PTR(1);
-
-	AG_ObjectDetach(win);
+	AG_ObjectDetach(AG_WINDOW_PTR(1));
 }
 
 /* AGWINHIDE(): General-purpose "hide window" event handler. */
 void
 AG_WindowHideGenEv(AG_Event *event)
 {
-	AG_WindowHide(AG_PTR(1));
+	AG_WindowHide(AG_WINDOW_PTR(1));
 }
 
 /* AGWINCLOSE(): General-purpose "close window" event handler. */
 void
 AG_WindowCloseGenEv(AG_Event *event)
 {
-	AG_PostEvent(NULL, AG_PTR(1), "window-close", NULL);
+	AG_PostEvent(NULL, AG_WINDOW_PTR(1), "window-close", NULL);
 }
 
 /* Close the actively focused window. */
@@ -2740,8 +2738,8 @@ static void
 WindowCaptionChanged(AG_Event *event)
 {
 	char caption[AG_WINDOW_CAPTION_MAX];
-	AG_Textbox *tb = AG_SELF();
-	AG_Window *win = AG_PTR(1);
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
+	AG_Window *win = AG_WINDOW_PTR(1);
 
 	AG_TextboxCopyString(tb, caption, sizeof(caption));
 	AG_WindowSetCaptionS(win, caption);

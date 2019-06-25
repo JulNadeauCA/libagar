@@ -64,7 +64,7 @@ SetIdentity(GLfloat *_Nonnull M, GLenum which)
 static void
 WidgetMoved(AG_Event *_Nonnull event)
 {
-	AG_GLView *glv = AG_SELF();
+	AG_GLView *glv = AG_GLVIEW_SELF();
 
 	glv->flags |= AG_GLVIEW_RESHAPE;
 }
@@ -72,7 +72,7 @@ WidgetMoved(AG_Event *_Nonnull event)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_GLView *glv = AG_SELF();
+	AG_GLView *glv = AG_GLVIEW_SELF();
 
 	if (!AG_WidgetIsFocused(glv))
 		AG_WidgetFocus(glv);

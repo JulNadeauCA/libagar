@@ -90,7 +90,7 @@ Collapse(AG_Combo *_Nonnull com)
 static void
 ModalClose(AG_Event *_Nonnull event)
 {
-	AG_Combo *com = AG_PTR(1);
+	AG_Combo *com = AG_COMBO_PTR(1);
 
 	if (com->panel != NULL)
 		Collapse(com);
@@ -99,7 +99,7 @@ ModalClose(AG_Event *_Nonnull event)
 static void
 Expand(AG_Event *_Nonnull event)
 {
-	AG_Combo *com = AG_PTR(1);
+	AG_Combo *com = AG_COMBO_PTR(1);
 	AG_Driver *drv = WIDGET(com)->drv;
 	int expand = AG_INT(2);
 	AG_SizeReq rList;
@@ -108,8 +108,9 @@ Expand(AG_Event *_Nonnull event)
 
 	if (expand) {
 		com->panel = AG_WindowNew(
-		    AG_WINDOW_NOTITLE|AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE|
-		    AG_WINDOW_MODAL);
+		    AG_WINDOW_NOTITLE | AG_WINDOW_DENYFOCUS |
+		    AG_WINDOW_KEEPABOVE | AG_WINDOW_MODAL);
+
 		com->panel->wmType = AG_WINDOW_WM_COMBO;
 		AG_WindowSetPadding(com->panel, 0,0,0,0);
 		AG_ObjectSetName(com->panel, "_ComboPopup");
@@ -199,8 +200,8 @@ AG_ComboSelect(AG_Combo *com, AG_TlistItem *it)
 static void
 SelectedItem(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_Combo *com = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Combo *com = AG_COMBO_PTR(1);
 	AG_TlistItem *ti;
 
 	AG_ObjectLock(tl);
@@ -215,8 +216,8 @@ SelectedItem(AG_Event *_Nonnull event)
 static void
 Return(AG_Event *_Nonnull event)
 {
-	AG_Textbox *tbox = AG_SELF();
-	AG_Combo *com = AG_PTR(1);
+	AG_Textbox *tbox = AG_TEXTBOX_SELF();
+	AG_Combo *com = AG_COMBO_PTR(1);
 	char *text;
 	
 	AG_ObjectLock(com->list);
@@ -261,7 +262,7 @@ Init(void *_Nonnull obj)
 	com->wPreList = -1;
 	com->hPreList = -1;
 	
-	com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO|AG_TEXTBOX_EXCL, NULL);
+	com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO | AG_TEXTBOX_EXCL, NULL);
 	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY, _(" ... "));
 	AG_ButtonSetPadding(com->button, 0,0,0,0);
 	AG_LabelSetPadding(com->button->lbl, 0,0,0,0);

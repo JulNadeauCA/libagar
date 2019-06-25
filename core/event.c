@@ -340,8 +340,8 @@ PropagateEvent(AG_Object *_Nonnull sndr, AG_Object *_Nonnull rcvr,
 static Uint32
 EventTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Object *ob = AG_SELF();
-	AG_Object *obSender = AG_PTR(1);
+	AG_Object *ob = AG_OBJECT_SELF();
+	AG_Object *obSender = AG_OBJECT_PTR(1);
 	char *eventName = AG_STRING(2);
 	AG_Event *ev;
 

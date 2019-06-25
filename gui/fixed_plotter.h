@@ -48,6 +48,14 @@ typedef struct ag_fixed_plotter {
 	struct ag_fixed_plotter_itemq items;	/* Items to plot */
 } AG_FixedPlotter;
 
+#define AGFIXEDPLOTTER(obj)            ((AG_FixedPlotter *)(obj))
+#define AG_FIXEDPLOTTER_SELF()         AG_OBJECT(0,"AG_Widget:AG_FixedPlotter:*")
+#define AG_FIXEDPLOTTER_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_FixedPlotter:*")
+#define AG_FIXEDPLOTTER_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_FixedPlotter:*")
+#define AG_CONST_FIXEDPLOTTER_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_FixedPlotter:*")
+#define AG_CONST_FIXEDPLOTTER_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_FixedPlotter:*")
+#define AG_CONST_FIXEDPLOTTER_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_FixedPlotter:*")
+
 __BEGIN_DECLS
 extern AG_WidgetClass agFixedPlotterClass;
 

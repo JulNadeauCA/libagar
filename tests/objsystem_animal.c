@@ -31,10 +31,10 @@ AnimalNew(void *parent)
 static void
 Die(AG_Event *event)
 {
-	Animal *animal = AG_SELF();
+	Animal *animal = ANIMAL_SELF();
 	AG_Object *killer = AG_SENDER();
 
-	printf("%s: killed by %s!\n", AGOBJECT(animal)->name, killer->name);
+	Verbose("%s: killed by %s!\n", AGOBJECT(animal)->name, killer->name);
 }
 
 #ifdef AG_TIMERS

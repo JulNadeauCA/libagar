@@ -237,8 +237,8 @@ RefreshShortcuts(AG_DirDlg *_Nonnull dd, int init)
 static void
 DirSelected(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_DirDlg *dd = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_DirDlg *dd = AG_DIRDLG_PTR(1);
 	AG_TlistItem *ti;
 
 	AG_ObjectLock(dd);
@@ -258,8 +258,8 @@ DirSelected(AG_Event *_Nonnull event)
 static void
 LocSelected(AG_Event *_Nonnull event)
 {
-	AG_DirDlg *dd = AG_PTR(1);
-	AG_TlistItem *ti = AG_PTR(2);
+	AG_DirDlg *dd = AG_DIRDLG_PTR(1);
+	const AG_TlistItem *ti = AG_PTR(2);
 
 	if (ti == NULL) {
 		return;
@@ -360,7 +360,7 @@ CheckAccessAndChoose(AG_DirDlg *_Nonnull dd)
 static void
 PressedOK(AG_Event *_Nonnull event)
 {
-	AG_DirDlg *dd = AG_PTR(1);
+	AG_DirDlg *dd = AG_DIRDLG_PTR(1);
 
 	AG_ObjectLock(dd);
 	if (dd->okAction != NULL) {
@@ -390,8 +390,8 @@ static void
 TextboxChanged(AG_Event *_Nonnull event)
 {
 	char path[AG_PATHNAME_MAX];
-	AG_Textbox *tb = AG_SELF();
-	AG_DirDlg *dd = AG_PTR(1);
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
+	AG_DirDlg *dd = AG_DIRDLG_PTR(1);
 
 	AG_ObjectLock(dd);
 	AG_TextboxCopyString(tb, path, sizeof(path));
@@ -404,9 +404,9 @@ static void
 SelectGlobResult(AG_Event *_Nonnull event)
 {
 	char file[AG_PATHNAME_MAX];
-	AG_Window *win = AG_PTR(1);
-	AG_DirDlg *dd = AG_PTR(2);
-	AG_TlistItem *ti = AG_PTR(3);
+	AG_Window *win = AG_WINDOW_PTR(1);
+	AG_DirDlg *dd =  AG_DIRDLG_PTR(2);
+	const AG_TlistItem *ti = AG_PTR(3);
 	AG_Textbox *tb = dd->tbInput;
 
 	AG_ObjectLock(dd);
@@ -425,7 +425,8 @@ out:
 static void
 CloseGlobResults(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_WINDOW_PTR(1);
+
 	AG_ObjectDetach(win);
 }
 
@@ -537,8 +538,8 @@ static void
 TextboxReturn(AG_Event *_Nonnull event)
 {
 	char dir[AG_PATHNAME_MAX];
-	AG_Textbox *tb = AG_SELF();
-	AG_DirDlg *dd = AG_PTR(1);
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
+	AG_DirDlg *dd  = AG_DIRDLG_PTR(1);
 	AG_FileInfo info;
 	int endSep;
 	
@@ -575,7 +576,7 @@ out:
 static void
 PressedCancel(AG_Event *_Nonnull event)
 {
-	AG_DirDlg *dd = AG_PTR(1);
+	AG_DirDlg *dd = AG_DIRDLG_PTR(1);
 	AG_Window *pwin;
 
 	AG_ObjectLock(dd);
@@ -593,7 +594,7 @@ PressedCancel(AG_Event *_Nonnull event)
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	AG_DirDlg *dd = AG_SELF();
+	AG_DirDlg *dd = AG_DIRDLG_SELF();
 
 	if (!(dd->flags & AG_DIRDLG_RESET_ONSHOW)) {
 		return;

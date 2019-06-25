@@ -66,7 +66,13 @@ typedef struct ag_console {
 	AG_TAILQ_HEAD_(ag_console_file) files; /* Files being monitored */
 } AG_Console;
 
-#define AGCONSOLE(p) ((AG_Console *)(p))
+#define AGCONSOLE(obj)            ((AG_Console *)(obj))
+#define AG_CONSOLE_SELF()         AG_OBJECT(0,"AG_Widget:AG_Console:*")
+#define AG_CONSOLE_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Console:*")
+#define AG_CONSOLE_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Console:*")
+#define AG_CONST_CONSOLE_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Console:*")
+#define AG_CONST_CONSOLE_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Console:*")
+#define AG_CONST_CONSOLE_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Console:*")
 
 __BEGIN_DECLS
 extern AG_WidgetClass agConsoleClass;
@@ -89,8 +95,8 @@ void AG_ConsoleMsgPtr(AG_ConsoleLine *_Nonnull, void *_Nullable);
 void AG_ConsoleMsgColor(AG_ConsoleLine *_Nonnull, const AG_Color *_Nonnull);
 void AG_ConsoleClear(AG_Console *_Nonnull);
 
-char *_Nullable AG_ConsoleExportText(AG_Console *_Nonnull, enum ag_newline_type);
-
+char *_Nullable AG_ConsoleExportText(const AG_Console *_Nonnull,
+                                     enum ag_newline_type);
 #ifdef AG_SERIALIZATION
 AG_ConsoleFile *AG_ConsoleOpenFile(AG_Console *_Nonnull, const char *_Nullable,
                                    const char *_Nullable, enum ag_newline_type,

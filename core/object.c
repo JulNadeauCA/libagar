@@ -62,18 +62,22 @@ int agObjectBackups = 1;	   /* Backup object save files. */
 
 /* Initialize an AG_Object instance. */
 void
-AG_ObjectInit(void *p, void *cl)
+AG_ObjectInit(void *pObj, void *pClass)
 {
-	AG_Object *ob = p;
+	AG_Object *ob = pObj;
+	AG_ObjectClass *cl = pClass ? pClass : &agObjectClass;
 	AG_ObjectClass **hier;
 	int i, nHier;
 
+#ifdef AG_TYPE_SAFETY
+	Strlcpy(ob->tag, AG_OBJECT_TYPE_TAG, sizeof(ob->tag));
+#endif
 #ifdef AG_DEBUG
 	memset(ob->name, '\0', sizeof(ob->name));
 #else
 	ob->name[0] = '\0';
 #endif
-	ob->cls = (cl != NULL) ? (AG_ObjectClass *)cl : &agObjectClass;
+	ob->cls = cl;
 	ob->parent = NULL;
 	ob->root = ob;
 	ob->flags = 0;

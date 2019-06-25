@@ -46,8 +46,6 @@ typedef struct ag_db_class {
 	                          void *_Nullable);
 } AG_DbClass;
 
-#define AGDB_CLASS(db) ((AG_DbClass *)AGOBJECT(db)->cls)
-
 typedef struct ag_db {
 	struct ag_object _inherit;
 	Uint flags;
@@ -56,6 +54,14 @@ typedef struct ag_db {
 } AG_Db;
 
 #define AGDB(p) ((AG_Db *)(p))
+#define AGDB_CLASS(db) ((AG_DbClass *)AGOBJECT(db)->cls)
+
+#define AG_DB_SELF()         AG_OBJECT(0,"AG_Db:*")
+#define AG_DB_PTR(n)         AG_OBJECT((n),"AG_Db:*")
+#define AG_DB_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Db:*")
+#define AG_CONST_DB_SELF()   AG_CONST_OBJECT(0,"AG_Db:*")
+#define AG_CONST_DB_PTR(n)   AG_CONST_OBJECT((n),"AG_Db:*")
+#define AG_CONST_DB_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Db:*")
 
 __BEGIN_DECLS
 extern AG_DbClass agDbClass;

@@ -344,7 +344,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_Radio *rad = AG_SELF();
+	AG_Radio *rad = AG_RADIO_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	int sel;
@@ -365,7 +365,7 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Radio *rad = AG_SELF();
+	AG_Radio *rad = AG_RADIO_SELF();
 	int button = AG_INT(1);
 	int y = AG_INT(3);
 	int *sel, selNew = -1;
@@ -396,7 +396,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	AG_Radio *rad = AG_SELF();
+	AG_Radio *rad = AG_RADIO_SELF();
 	AG_Variable *value;
 	int keysym = AG_INT(1);
 	int *sel, selNew = -1;
@@ -435,7 +435,7 @@ KeyDown(AG_Event *_Nonnull event)
 static void
 OnFontChange(AG_Event *_Nonnull event)
 {
-	AG_Radio *rad = AG_SELF();
+	AG_Radio *rad = AG_RADIO_SELF();
 	AG_Font *font = WIDGET(rad)->font;
 	int i, w;
 

@@ -167,7 +167,7 @@ AG_ButtonNewFlag32(void *parent, Uint flags, const char *caption,
 static Uint32
 ExpireRepeat(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Button *bu = AG_SELF();
+	AG_Button *bu = AG_BUTTON_SELF();
 
 	AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
 	return (to->ival);
@@ -175,7 +175,7 @@ ExpireRepeat(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static Uint32
 ExpireDelay(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Button *bu = AG_SELF();
+	AG_Button *bu = AG_BUTTON_SELF();
 	int repeatIval = AG_INT(1);
 
 	AG_AddTimer(bu, &bu->repeatTo, repeatIval, ExpireRepeat, NULL);
@@ -186,7 +186,7 @@ ExpireDelay(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Button *bu = AG_SELF();
+	AG_Button *bu = AG_BUTTON_SELF();
 	int button = AG_INT(1);
 	AG_Variable *binding;
 	void *pState;
@@ -218,7 +218,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Button *bu = AG_SELF();
+	AG_Button *bu = AG_BUTTON_SELF();
 	int button = AG_INT(1);
 	AG_Variable *binding;
 	void *pState;
@@ -256,7 +256,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_Button *bu = AG_SELF();
+	AG_Button *bu = AG_BUTTON_SELF();
 	AG_Variable *binding;
 	int x = AG_INT(1);
 	int y = AG_INT(2);
@@ -278,7 +278,7 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
-	AG_Button *bu = AG_SELF();
+	AG_Button *bu = AG_BUTTON_SELF();
 	AG_Variable *binding;
 	void *pState;
 	int keysym = AG_INT(1);
@@ -310,7 +310,7 @@ KeyUp(AG_Event *_Nonnull event)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	AG_Button *bu = AG_SELF();
+	AG_Button *bu = AG_BUTTON_SELF();
 	AG_Variable *binding;
 	void *pState;
 	int keysym = AG_INT(1);
@@ -339,7 +339,7 @@ KeyDown(AG_Event *_Nonnull event)
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	AG_Button *bu = AG_SELF();
+	AG_Button *bu = AG_BUTTON_SELF();
 
 	if ((bu->flags & AG_BUTTON_EXCL) == 0)
 		AG_RedrawOnChange(bu, 100, "state");

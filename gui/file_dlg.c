@@ -155,8 +155,8 @@ static void
 ExpandedFileSelect(AG_Event *_Nonnull event)
 {
 	char path[AG_PATHNAME_MAX];
-	AG_FileDlg *fdExpand = AG_SELF();
-	AG_FileDlg *fd = AG_OBJECT(1, "AG_Widget:AG_FileDlg");
+	AG_FileDlg *fdExpand = AG_FILEDLG_SELF();
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 
 	AG_FileDlgCopyFilename(fdExpand, path, sizeof(path));
 	AG_TextboxSetString(fd->textbox, path);
@@ -171,8 +171,8 @@ ExpandedFileSelect(AG_Event *_Nonnull event)
 static void
 CollapseFromExpanded(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_SELF();
-	AG_FileDlg *fd = AG_OBJECT(1, "AG_Widget:AG_FileDlg");
+	AG_Window *win = AG_WINDOW_SELF();
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 	
 	fd->fdExpand = NULL;
 	fd->winExpand = NULL;
@@ -184,7 +184,7 @@ CollapseFromExpanded(AG_Event *_Nonnull event)
 static void
 ExpandFromCompact(AG_Event *_Nonnull event)
 {
-	AG_FileDlg *fd = AG_OBJECT(1, "AG_Widget:AG_FileDlg");
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 	AG_Window *win = fd->winExpand;
 
 	if (win) {
@@ -421,8 +421,8 @@ AG_FileDlgRefresh(AG_FileDlg *fd)
 static void
 DirSelected(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_FileDlg *fd = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 	AG_TlistItem *ti;
 
 	AG_ObjectLock(fd);
@@ -442,8 +442,8 @@ DirSelected(AG_Event *_Nonnull event)
 static void
 LocSelected(AG_Event *_Nonnull event)
 {
-	AG_FileDlg *fd = AG_PTR(1);
-	AG_TlistItem *ti = AG_PTR(2);
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
+	const AG_TlistItem *ti = AG_PTR(2);
 
 	if (ti == NULL) {
 		return;
@@ -496,9 +496,9 @@ ChooseFile(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull pwin)
 static void
 ReplaceFileConfirm(AG_Event *_Nonnull event)
 {
-	AG_FileDlg *fd = AG_PTR(1);
-	AG_Window *qwin = AG_PTR(2);
-	AG_Window *pwin = AG_PTR(3);
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
+	AG_Window *qwin = AG_WINDOW_PTR(2);
+	AG_Window *pwin = AG_WINDOW_PTR(3);
 
 	ChooseFile(fd, pwin);
 	AG_ObjectDetach(qwin);
@@ -609,8 +609,8 @@ CheckAccessAndChoose(AG_FileDlg *_Nonnull fd)
 static void
 FileSelected(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_FileDlg *fd = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 	AG_TlistItem *ti;
 	char *ext;
 
@@ -650,8 +650,8 @@ FileSelected(AG_Event *_Nonnull event)
 static void
 FileDblClicked(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_FileDlg *fd = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 	AG_TlistItem *itFile;
 
 	AG_ObjectLock(fd);
@@ -674,7 +674,7 @@ FileDblClicked(AG_Event *_Nonnull event)
 static void
 PressedOK(AG_Event *_Nonnull event)
 {
-	AG_FileDlg *fd = AG_PTR(1);
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 
 	AG_ObjectLock(fd);
 	if (fd->okAction) {
@@ -705,8 +705,8 @@ static void
 TextboxChanged(AG_Event *_Nonnull event)
 {
 	char path[AG_PATHNAME_MAX];
-	AG_Textbox *tb = AG_SELF();
-	AG_FileDlg *fd = AG_PTR(1);
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 
 	AG_ObjectLock(fd);
 	AG_TextboxCopyString(tb, path, sizeof(path));
@@ -719,9 +719,9 @@ static void
 SelectGlobResult(AG_Event *_Nonnull event)
 {
 	char file[AG_PATHNAME_MAX];
-	AG_Window *win = AG_PTR(1);
-	AG_FileDlg *fd = AG_PTR(2);
-	AG_TlistItem *ti = AG_PTR(3);
+	AG_Window *win = AG_WINDOW_PTR(1);
+	AG_FileDlg *fd = AG_FILEDLG_PTR(2);
+	const AG_TlistItem *ti = AG_PTR(3);
 	AG_Textbox *tb = fd->tbFile;
 	AG_FileInfo info;
 	int endSep;
@@ -751,7 +751,8 @@ out:
 static void
 CloseGlobResults(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_WINDOW_PTR(1);
+
 	AG_ObjectDetach(win);
 }
 
@@ -859,8 +860,8 @@ static void
 TextboxReturn(AG_Event *_Nonnull event)
 {
 	char file[AG_PATHNAME_MAX];
-	AG_Textbox *tb = AG_SELF();
-	AG_FileDlg *fd = AG_PTR(1);
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 	AG_FileInfo info;
 	int endSep;
 	
@@ -898,7 +899,7 @@ out:
 static void
 PressedCancel(AG_Event *_Nonnull event)
 {
-	AG_FileDlg *fd = AG_PTR(1);
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 	AG_Window *pwin;
 
 	AG_ObjectLock(fd);
@@ -916,8 +917,8 @@ PressedCancel(AG_Event *_Nonnull event)
 static void
 SelectedType(AG_Event *_Nonnull event)
 {
-	AG_FileDlg *fd = AG_PTR(1);
-	AG_TlistItem *it = AG_PTR(2);
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
+	const AG_TlistItem *it = AG_PTR(2);
 	AG_FileType *ft;
 	AG_FileOption *fo;
 	AG_Numerical *num;
@@ -987,7 +988,7 @@ SelectedType(AG_Event *_Nonnull event)
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	AG_FileDlg *fd = AG_SELF();
+	AG_FileDlg *fd = AG_FILEDLG_SELF();
 	AG_TlistItem *it;
 	int w, wMax = 0, nItems = 0;
 	
@@ -1188,7 +1189,7 @@ AG_FileDlgSetFilenameS(AG_FileDlg *fd, const char *s)
 static void
 MaskOptionSelected(AG_Event *_Nonnull event)
 {
-	AG_FileDlg *fd = AG_PTR(1);
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 
 	RefreshListing(fd);
 }

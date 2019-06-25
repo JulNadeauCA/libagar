@@ -1060,7 +1060,7 @@ int
 AG_SDL_EventSink(AG_EventSink *es, AG_Event *event)
 {
 	AG_DriverEvent dev;
-	AG_Driver *drv = AG_PTR(1);
+	AG_Driver *drv = AG_DRIVER_PTR(1);
 
 	if (SDL_PollEvent(NULL) != 0) {
 		while (AG_SDL_GetNextEvent(drv, &dev) == 1)

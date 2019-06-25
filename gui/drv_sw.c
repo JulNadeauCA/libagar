@@ -79,7 +79,8 @@ Destroy(void *_Nonnull obj)
 static void
 UnminimizeWindow(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_OBJECT(1,"AG_Window");
+
 	AG_WindowUnminimize(win);
 }
 

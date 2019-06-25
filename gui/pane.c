@@ -79,7 +79,7 @@ OverDivControl(AG_Pane *_Nonnull pa, int pos)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Pane *pa = AG_SELF();
+	AG_Pane *pa = AG_PANE_SELF();
 	int button = AG_INT(1);
 
 	if (button == AG_MOUSE_LEFT &&
@@ -143,7 +143,7 @@ AG_PaneMoveDividerPct(AG_Pane *pa, int pct)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_Pane *pa = AG_SELF();
+	AG_Pane *pa = AG_PANE_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	int dx = AG_INT(3);
@@ -178,7 +178,7 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Pane *pa = AG_SELF();
+	AG_Pane *pa = AG_PANE_SELF();
 
 	if (pa->dmoving) {
 		if (WIDGET(pa)->window != NULL) {

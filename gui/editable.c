@@ -570,7 +570,7 @@ out:
 static Uint32
 KeyRepeatTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_SELF();
+	AG_Editable *ed = AG_EDITABLE_SELF();
 	int keysym = AG_INT(1);
 	int keymod = AG_INT(2);
 	AG_Char ch = AG_CHAR(3);
@@ -587,7 +587,7 @@ KeyRepeatTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static Uint32
 BlinkTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_SELF();
+	AG_Editable *ed = AG_EDITABLE_SELF();
 
 	if ((ed->flags & AG_EDITABLE_CURSOR_MOVING) == 0) {
 		AG_INVFLAGS(ed->flags, AG_EDITABLE_BLINK_ON);
@@ -599,7 +599,7 @@ BlinkTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 OnFocusGain(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_SELF();
+	AG_Editable *ed = AG_EDITABLE_SELF();
 
 	AG_LockTimers(ed);
 	AG_DelTimer(ed, &ed->toRepeat);
@@ -613,7 +613,7 @@ OnFocusGain(AG_Event *_Nonnull event)
 static void
 OnFocusLoss(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_SELF();
+	AG_Editable *ed = AG_EDITABLE_SELF();
 
 	AG_LockTimers(ed);
 	AG_DelTimer(ed, &ed->toRepeat);
@@ -629,7 +629,7 @@ OnFocusLoss(AG_Event *_Nonnull event)
 static void
 OnHide(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_SELF();
+	AG_Editable *ed = AG_EDITABLE_SELF();
 
 	if (ed->pm != NULL) {
 		AG_PopupHide(ed->pm);
@@ -642,8 +642,8 @@ OnHide(AG_Event *_Nonnull event)
 static void
 OnFontChange(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_SELF();
-	AG_Font *font = WIDGET(ed)->font;
+	AG_Editable *ed = AG_EDITABLE_SELF();
+	AG_Font *font   = WIDGET(ed)->font;
 
 	ed->lineSkip = font->lineskip;
 	ed->fontMaxHeight = font->lineskip;
@@ -1161,7 +1161,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_SELF();
+	AG_Editable *ed = AG_EDITABLE_SELF();
 	int keysym = AG_INT(1);
 	int keymod = AG_INT(2);
 	AG_Char ch = AG_CHAR(3);
@@ -1201,7 +1201,7 @@ KeyDown(AG_Event *_Nonnull event)
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_SELF();
+	AG_Editable *ed = AG_EDITABLE_SELF();
 	int keysym = AG_INT(1);
 
 #ifdef AG_TIMERS
@@ -1417,7 +1417,7 @@ AG_EditableSelectAll(AG_Editable *ed, AG_EditableBuffer *buf)
 static void
 MenuCut(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_PTR(1);
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	AG_EditableBuffer *buf;
 	
 	if ((buf = GetBuffer(ed)) != NULL) {
@@ -1430,7 +1430,7 @@ MenuCut(AG_Event *_Nonnull event)
 static void
 MenuCutActive(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_PTR(1);
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	int *enable = AG_PTR(2);
 
 	*enable = (!AG_EditableReadOnly(ed) && ed->sel != 0);
@@ -1439,7 +1439,7 @@ MenuCutActive(AG_Event *_Nonnull event)
 static void
 MenuCopy(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_PTR(1);
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	AG_EditableBuffer *buf;
 	
 	if ((buf = GetBuffer(ed)) != NULL) {
@@ -1450,7 +1450,7 @@ MenuCopy(AG_Event *_Nonnull event)
 static void
 MenuCopyActive(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_PTR(1);
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	int *enable = AG_PTR(2);
 
 	*enable = (ed->sel != 0);
@@ -1459,7 +1459,7 @@ MenuCopyActive(AG_Event *_Nonnull event)
 static void
 MenuPaste(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_PTR(1);
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	AG_EditableBuffer *buf;
 	
 	if ((buf = GetBuffer(ed)) != NULL) {
@@ -1472,7 +1472,7 @@ MenuPaste(AG_Event *_Nonnull event)
 static void
 MenuPasteActive(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_PTR(1);
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	int *enable = AG_PTR(2);
 
 	*enable = (!AG_EditableReadOnly(ed) && agEditableClipbrd.len > 0);
@@ -1481,7 +1481,7 @@ MenuPasteActive(AG_Event *_Nonnull event)
 static void
 MenuDelete(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_PTR(1);
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	AG_EditableBuffer *buf;
 	
 	if ((buf = GetBuffer(ed)) != NULL) {
@@ -1494,7 +1494,7 @@ MenuDelete(AG_Event *_Nonnull event)
 static void
 MenuDeleteActive(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_PTR(1);
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	int *enable = AG_PTR(2);
 
 	*enable = (!AG_EditableReadOnly(ed) && ed->sel != 0);
@@ -1503,7 +1503,7 @@ MenuDeleteActive(AG_Event *_Nonnull event)
 static void
 MenuSelectAll(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_PTR(1);
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	AG_EditableBuffer *buf;
 	
 	if ((buf = GetBuffer(ed)) != NULL) {
@@ -1516,7 +1516,7 @@ MenuSelectAll(AG_Event *_Nonnull event)
 static void
 MenuSetLang(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_PTR(1);
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	enum ag_language lang = (enum ag_language)AG_INT(2);
 
 	AG_EditableSetLang(ed, lang);
@@ -1581,7 +1581,7 @@ PopupMenu(AG_Editable *_Nonnull ed)
 static Uint32
 DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_SELF();
+	AG_Editable *ed = AG_EDITABLE_SELF();
 
 	ed->selDblClick = -1;
 	return (0);
@@ -1591,7 +1591,7 @@ DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_SELF();
+	AG_Editable *ed = AG_EDITABLE_SELF();
 	int btn = AG_INT(1);
 	int mx = AG_INT(2);
 	int my = AG_INT(3);
@@ -1655,7 +1655,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_SELF();
+	AG_Editable *ed = AG_EDITABLE_SELF();
 	int btn = AG_INT(1);
 
 	switch (btn) {
@@ -1670,7 +1670,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_SELF();
+	AG_Editable *ed = AG_EDITABLE_SELF();
 	AG_EditableBuffer *buf;
 	int mx = AG_INT(1);
 	int my = AG_INT(2);
@@ -1960,7 +1960,7 @@ AG_EditableDbl(AG_Editable *ed)
 static void
 OnBindingChange(AG_Event *_Nonnull event)
 {
-	AG_Editable *ed = AG_SELF();
+	AG_Editable *ed = AG_EDITABLE_SELF();
 	AG_Variable *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "string") == 0) {

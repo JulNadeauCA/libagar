@@ -58,8 +58,8 @@ static void
 PollVariables(AG_Event *_Nonnull event)
 {
 	char val[64];
-	AG_Tlist *tl = AG_SELF();
-	AG_Object *ob = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Object *ob = AG_OBJECT_PTR(1);
 	AG_Variable *V;
 	
 	AG_TlistClear(tl);
@@ -78,8 +78,8 @@ PollVariables(AG_Event *_Nonnull event)
 static void
 PollEvents(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_Object *ob = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Object *ob = AG_OBJECT_PTR(1);
 	AG_Event *ev;
 	
 	AG_TlistClear(tl);
@@ -118,8 +118,8 @@ PollEvents(AG_Event *_Nonnull event)
 static void
 RenameObject(AG_Event *_Nonnull event)
 {
-	AG_Textbox *tb = AG_SELF();
-	AG_Object *ob = AG_PTR(1);
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
+	AG_Object *ob = AG_OBJECT_PTR(1);
 
 	if (AG_ObjectPageIn(ob) == 0) {
 		AG_ObjectUnlinkDatafiles(ob);

@@ -1326,7 +1326,7 @@ SetAboveBelowHints(AG_Window *_Nonnull win)
 static Uint32
 InitExposeTimeout(AG_Timer *_Nonnull timer, AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_WINDOW_PTR(1);
 
 	win->dirty = 1;
 	return (0);

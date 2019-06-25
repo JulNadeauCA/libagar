@@ -6,7 +6,7 @@ static void
 LookupUser(AG_Event *event)
 {
 	char name[AG_USER_NAME_MAX];
-	AG_Textbox *tb = AG_SELF();
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
 	AG_User *u;
 
 	AG_TextboxCopyString(tb, name, sizeof(name));

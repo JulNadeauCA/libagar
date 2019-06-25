@@ -8,7 +8,7 @@
 static void
 mousemotion(AG_Event *event)
 {
-	AG_Widget *w = AG_SELF();
+	AG_Widget *w = AG_WIDGET_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 
@@ -45,7 +45,7 @@ mousemotion(AG_Event *event)
 static void
 keydown(AG_Event *event)
 {
-	AG_Widget *w = AG_SELF();
+	AG_Widget *w = AG_WIDGET_SELF();
 	int kb = AG_INT(1);
 
 	printf("%s: key %d\n", AGOBJECT(w)->name, kb);
@@ -54,7 +54,7 @@ keydown(AG_Event *event)
 static void
 buttondown(AG_Event *event)
 {
-	AG_Widget *w = AG_SELF();
+	AG_Widget *w = AG_WIDGET_SELF();
 
 	AG_WidgetFocus(w);
 }
@@ -62,7 +62,7 @@ buttondown(AG_Event *event)
 static void
 TestUnfocusedMotion(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1), *win;
+	AG_Window *winParent = AG_WINDOW_PTR(1), *win;
 	AG_Button *btn;
 	AG_Fixed *fx1, *fx2;
 
@@ -101,7 +101,7 @@ TestUnfocusedMotion(AG_Event *event)
 static void
 TestTabCycle(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1), *win;
+	AG_Window *winParent = AG_WINDOW_PTR(1), *win;
 	AG_Box *b, *b1, *b2;
 	int i;
 

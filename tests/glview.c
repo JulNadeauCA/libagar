@@ -208,7 +208,7 @@ UpdateRotation(AG_Timer *to, AG_Event *event)
 static void
 MyOverlayFunction(AG_Event *event)
 {
-	AG_GLView *glv = AG_SELF();
+	AG_GLView *glv = AG_GLVIEW_SELF();
 	MyTestInstance *ti = AG_PTR(1);
 	AG_Surface *myText;
 

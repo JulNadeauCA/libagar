@@ -177,7 +177,7 @@ AG_NumericalNewUintR(void *parent, Uint flags, const char *unit, const char *lab
 static Uint32
 UpdateTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Numerical *num = AG_SELF();
+	AG_Numerical *num = AG_NUMERICAL_SELF();
 	
 	if (!AG_WidgetIsFocused(num)) {
 		AG_NumericalUpdate(num);
@@ -195,7 +195,7 @@ UpdateTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	AG_Numerical *num = AG_SELF();
+	AG_Numerical *num = AG_NUMERICAL_SELF();
 	AG_Variable *V;
 
 #ifdef AG_TIMERS
@@ -253,7 +253,7 @@ OnShow(AG_Event *_Nonnull event)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	AG_Numerical *num = AG_SELF();
+	AG_Numerical *num = AG_NUMERICAL_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
@@ -279,7 +279,7 @@ KeyDown(AG_Event *_Nonnull event)
 static void
 UpdateFromText(AG_Event *_Nonnull event)
 {
-	AG_Numerical *num = AG_PTR(1);
+	AG_Numerical *num = AG_NUMERICAL_PTR(1);
 	int unfocus = AG_INT(2);
 	AG_Variable *valueb, *minb, *maxb;
 	void *value, *min, *max;
@@ -344,14 +344,13 @@ UpdateFromText(AG_Event *_Nonnull event)
 static void
 IncrementValue(AG_Event *_Nonnull event)
 {
-	AG_Numerical *num = AG_PTR(1);
-	AG_NumericalIncrement(num);
+	AG_NumericalIncrement(AG_NUMERICAL_PTR(1));
 }
+
 static void
 DecrementValue(AG_Event *_Nonnull event)
 {
-	AG_Numerical *num = AG_PTR(1);
-	AG_NumericalDecrement(num);
+	AG_NumericalDecrement(AG_NUMERICAL_PTR(1));
 }
 
 #ifdef HAVE_FLOAT
@@ -366,8 +365,8 @@ UpdateUnitSelector(AG_Numerical *_Nonnull num)
 static void
 UnitSelected(AG_Event *_Nonnull event)
 {
-	AG_Numerical *num = AG_PTR(1);
-	AG_TlistItem *ti = AG_PTR(2);
+	AG_Numerical *num = AG_NUMERICAL_PTR(1);
+	const AG_TlistItem *ti = AG_PTR(2);
 
 	AG_ObjectLock(num);
 	num->unit = (const AG_Unit *)ti->p1;

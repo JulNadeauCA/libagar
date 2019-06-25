@@ -82,7 +82,7 @@ Collapse(AG_UCombo *_Nonnull com)
 static void
 ModalClose(AG_Event *_Nonnull event)
 {
-	AG_UCombo *com = AG_PTR(1);
+	AG_UCombo *com = AG_UCOMBO_PTR(1);
 
 	if (com->panel != NULL)
 		Collapse(com);
@@ -91,7 +91,7 @@ ModalClose(AG_Event *_Nonnull event)
 static void
 Expand(AG_Event *_Nonnull event)
 {
-	AG_UCombo *com = AG_PTR(1);
+	AG_UCombo *com = AG_UCOMBO_PTR(1);
 	AG_Driver *drv = WIDGET(com)->drv;
 	int expand = AG_INT(2);
 	AG_SizeReq rList;
@@ -156,8 +156,8 @@ Expand(AG_Event *_Nonnull event)
 static void
 SelectedItem(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_UCombo *com = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_UCombo *com = AG_UCOMBO_PTR(1);
 	AG_TlistItem *it;
 
 	AG_ObjectLock(com);
@@ -175,7 +175,7 @@ SelectedItem(AG_Event *_Nonnull event)
 static void
 OnDetach(AG_Event *_Nonnull event)
 {
-	AG_UCombo *com = AG_SELF();
+	AG_UCombo *com = AG_UCOMBO_SELF();
 
 	if (com->panel != NULL) {
 		AG_ObjectDetach(com->list);

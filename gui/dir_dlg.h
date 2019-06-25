@@ -45,6 +45,14 @@ typedef struct ag_dir_dlg {
 	AG_Combo *_Nonnull comLoc;		/* Locations list */
 } AG_DirDlg;
 
+#define AGDIRDLG(obj)            ((AG_DirDlg *)(obj))
+#define AG_DIRDLG_SELF()         AG_OBJECT(0,"AG_Widget:AG_DirDlg:*")
+#define AG_DIRDLG_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_DirDlg:*")
+#define AG_DIRDLG_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_DirDlg:*")
+#define AG_CONST_DIRDLG_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_DirDlg:*")
+#define AG_CONST_DIRDLG_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_DirDlg:*")
+#define AG_CONST_DIRDLG_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_DirDlg:*")
+
 __BEGIN_DECLS
 extern AG_WidgetClass agDirDlgClass;
 

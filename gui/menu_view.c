@@ -49,7 +49,7 @@ SelectItem(AG_MenuItem *_Nonnull mi, AG_MenuItem *_Nullable subitem)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_MenuView *mview = AG_SELF();
+	AG_MenuView *mview = AG_MENUVIEW_SELF();
 	AG_MenuItem *mi = mview->pitem, *miSub;
 	AG_Menu *m = mview->pmenu;
 	int mx = AG_INT(1);
@@ -162,7 +162,7 @@ SetItemBoolValue(AG_MenuItem *_Nonnull mi)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_MenuView *mview = AG_SELF();
+	AG_MenuView *mview = AG_MENUVIEW_SELF();
 	AG_MenuItem *miRoot = mview->pitem, *mi;
 	AG_Menu *m = mview->pmenu;
 	int mx = AG_INT(2);
@@ -212,7 +212,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	AG_MenuView *mview = AG_SELF();
+	AG_MenuView *mview = AG_MENUVIEW_SELF();
 
 	/* XXX wasteful */
 	if (mview->arrowRight == -1) {
@@ -224,7 +224,7 @@ OnShow(AG_Event *_Nonnull event)
 static void
 OnFontChange(AG_Event *_Nonnull event)
 {
-	AG_MenuView *mv = AG_SELF();
+	AG_MenuView *mv = AG_MENUVIEW_SELF();
 	AG_MenuItem *mi = mv->pitem, *miSub;
 	int j;
 

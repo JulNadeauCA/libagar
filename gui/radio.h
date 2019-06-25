@@ -40,7 +40,13 @@ typedef struct ag_radio {
 	int wPre, hPre;			/* Size hint */
 } AG_Radio;
 
-#define AGRADIO(p) ((AG_Radio *)(p))
+#define AGRADIO(obj)            ((AG_Radio *)(obj))
+#define AG_RADIO_SELF()         AG_OBJECT(0,"AG_Widget:AG_Radio:*")
+#define AG_RADIO_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Radio:*")
+#define AG_RADIO_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Radio:*")
+#define AG_CONST_RADIO_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Radio:*")
+#define AG_CONST_RADIO_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Radio:*")
+#define AG_CONST_RADIO_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Radio:*")
 
 __BEGIN_DECLS
 extern AG_WidgetClass agRadioClass;

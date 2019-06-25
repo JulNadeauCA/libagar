@@ -8,8 +8,8 @@
 static void
 AppendLine(AG_Event *event)
 {
-	AG_Console *cons = AG_PTR(1);
-	AG_Textbox *tb = AG_PTR(2);
+	AG_Console *cons = AG_CONSOLE_PTR(1);
+	AG_Textbox *tb = AG_TEXTBOX_PTR(2);
 	char *s;
 	
 	s = AG_TextboxDupString(tb);
@@ -22,7 +22,7 @@ static void
 Enter100Lines(AG_Event *event)
 {
 	const char *text = "The Quick Brown Fox Jumps Over The Lazy Dog";
-	AG_Console *cons = AG_PTR(1);
+	AG_Console *cons = AG_CONSOLE_PTR(1);
 	int i;
 
 	for (i = 0; i <= 100; i++)
@@ -32,8 +32,8 @@ Enter100Lines(AG_Event *event)
 static void
 DumpCoreOf(AG_Event *event)
 {
-	AG_Console *cons = AG_PTR(1);
-	AG_Object *obj = AG_PTR(2);
+	AG_Console *cons = AG_CONSOLE_PTR(1);
+	AG_Object *obj = AG_OBJECT_PTR(2);
 	AG_Size objSize = AG_UINT(3);
 
 	AG_ConsoleBinary(cons, obj, objSize, obj->name, NULL);
@@ -42,8 +42,8 @@ DumpCoreOf(AG_Event *event)
 static void
 FollowFile(AG_Event *event)
 {
-	AG_Button *btnOpen = AG_SELF();
-	AG_Console *cons = AG_PTR(1);
+	AG_Button *btnOpen = AG_BUTTON_SELF();
+	AG_Console *cons = AG_CONSOLE_PTR(1);
 	char *file = AG_STRING(2);
 	Uint flags = AG_UINT(3);
 	char *label = AG_STRING(4);
@@ -65,8 +65,8 @@ FollowFile(AG_Event *event)
 static void
 CloseFile(AG_Event *event)
 {
-	AG_Console *cons = AG_PTR(1);
-	AG_Button *btnOpen = AG_PTR(2);
+	AG_Console *cons = AG_CONSOLE_PTR(1);
+	AG_Button *btnOpen = AG_BUTTON_PTR(2);
 	char *file = AG_STRING(3);
 	AG_ConsoleFile *cf;
 
@@ -83,7 +83,7 @@ CloseFile(AG_Event *event)
 static void
 ClearLines(AG_Event *event)
 {
-	AG_Console *cons = AG_PTR(1);
+	AG_Console *cons = AG_CONSOLE_PTR(1);
 
 	AG_ConsoleClear(cons);
 }

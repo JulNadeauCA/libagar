@@ -54,7 +54,7 @@ static void
 SetPath(AG_Event *_Nonnull event)
 {
 	char path[AG_PATHNAME_MAX];
-	AG_Textbox *tbox = AG_SELF();
+	AG_Textbox *tbox = AG_TEXTBOX_SELF();
 	char *varname = AG_STRING(1);
 
 	AG_TextboxCopyString(tbox, path, sizeof(path));
@@ -76,7 +76,7 @@ WarnRestart(AG_Event *_Nonnull event)
 static void
 BindSelectedColor(AG_Event *_Nonnull event)
 {
-	AG_HSVPal *hsv = AG_PTR(1);
+	AG_HSVPal *hsv = AG_HSVPAL_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
 	AG_Color *c = it->p1;
 
@@ -87,7 +87,7 @@ BindSelectedColor(AG_Event *_Nonnull event)
 static void
 SetColor(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_PTR(1);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 
 	if (it != NULL && it->p1 == &agColors[BG_COLOR]) {
@@ -180,8 +180,8 @@ static void
 SelectPathOK(AG_Event *_Nonnull event)
 {
 	char *key = AG_STRING(1);
-	AG_Textbox *tbox = AG_PTR(2);
-	AG_Window *win = AG_PTR(3);
+	AG_Textbox *tbox = AG_TEXTBOX_PTR(2);
+	AG_Window *win = AG_WINDOW_PTR(3);
 	char *path = AG_STRING(4);
 	
 	AG_SetString(agConfig, key, path);
@@ -196,7 +196,7 @@ SelectPath(AG_Event *_Nonnull event)
 	AG_Window *win;
 	AG_DirDlg *dd;
 	char *key = AG_STRING(1);
-	AG_Textbox *tbox = AG_PTR(2);
+	AG_Textbox *tbox = AG_TEXTBOX_PTR(2);
 
 	win = AG_WindowNew(0);
 	dd = AG_DirDlgNew(win, AG_DIRDLG_EXPAND|AG_DIRDLG_CLOSEWIN);

@@ -86,7 +86,7 @@ CreateBrush(AG_Event *_Nonnull event)
 {
 	char brush_name[AG_OBJECT_NAME_MAX];
 	char m_name[AG_OBJECT_NAME_MAX];
-	AG_Textbox *name_tbox = AG_PTR(1);
+	AG_Textbox *name_tbox = AG_TEXTBOX_PTR(1);
 	MAP *m;
 
 	AG_TextboxCopyString(name_tbox, brush_name,
@@ -128,7 +128,7 @@ static void
 EditBrush(AG_Event *_Nonnull event)
 {
 	AG_TlistItem *it;
-	AG_Window *pwin = AG_PTR(1);
+	AG_Window *pwin = AG_WINDOW_PTR(1);
 
 	TAILQ_FOREACH(it, &brushes_tl->items, items) {
 		MAP *brush = it->p1;

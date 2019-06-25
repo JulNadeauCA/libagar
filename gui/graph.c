@@ -52,7 +52,7 @@ AG_GraphNew(void *parent, Uint flags)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	AG_Graph *gf = AG_SELF();
+	AG_Graph *gf = AG_GRAPH_SELF();
 	int keysym = AG_INT(1);
 	const int scrollIncr = 10;
 
@@ -109,7 +109,7 @@ MouseOverEdge(AG_GraphEdge *edge, int x, int y)
 static void
 MouseMotion(AG_Event *event)
 {
-	AG_Graph *gf = AG_SELF();
+	AG_Graph *gf = AG_GRAPH_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	int dx = AG_INT(3);
@@ -149,7 +149,7 @@ MouseMotion(AG_Event *event)
 static void
 MouseButtonUp(AG_Event *event)
 {
-	AG_Graph *gf = AG_SELF();
+	AG_Graph *gf = AG_GRAPH_SELF();
 	int button = AG_INT(1);
 
 	switch (button) {
@@ -336,7 +336,7 @@ SelectVertex(AG_Graph *gf, AG_GraphVertex *vtx)
 static void
 MouseButtonDown(AG_Event *event)
 {
-	AG_Graph *gf = AG_SELF();
+	AG_Graph *gf = AG_GRAPH_SELF();
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);

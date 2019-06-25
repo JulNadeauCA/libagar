@@ -28,6 +28,14 @@ typedef struct ag_titlebar {
 	AG_Button *_Nullable maximize_btn;	/* Maximize button */
 } AG_Titlebar;
 
+#define AGTITLEBAR(obj)            ((AG_Titlebar *)(obj))
+#define AG_TITLEBAR_SELF()         AG_OBJECT(0,"AG_Widget:AG_Box:AG_Titlebar:*")
+#define AG_TITLEBAR_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Box:AG_Titlebar:*")
+#define AG_TITLEBAR_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Titlebar:*")
+#define AG_CONST_TITLEBAR_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Box:AG_Titlebar:*")
+#define AG_CONST_TITLEBAR_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Box:AG_Titlebar:*")
+#define AG_CONST_TITLEBAR_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Titlebar:*")
+
 __BEGIN_DECLS
 extern AG_WidgetClass agTitlebarClass;
 

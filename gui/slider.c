@@ -370,7 +370,7 @@ Decrement(AG_Slider *_Nonnull sl)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Slider *sl = AG_SELF();
+	AG_Slider *sl = AG_SLIDER_SELF();
 
 	if (sl->ctlPressed) {
 		sl->ctlPressed = 0;
@@ -383,7 +383,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Slider *sl = AG_SELF();
+	AG_Slider *sl = AG_SLIDER_SELF();
 	int button = AG_INT(1);
 	int x = ((sl->type == AG_SLIDER_HORIZ) ? AG_INT(2) : AG_INT(3));
 	int pos;
@@ -422,7 +422,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_Slider *sl = AG_SELF();
+	AG_Slider *sl = AG_SLIDER_SELF();
 
 	if (!sl->ctlPressed) {
 		return;
@@ -436,7 +436,7 @@ MouseMotion(AG_Event *_Nonnull event)
 static Uint32
 MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Slider *sl = AG_SELF();
+	AG_Slider *sl = AG_SLIDER_SELF();
 	int dir = AG_INT(1);
 
 	if (dir < 0) {
@@ -451,7 +451,7 @@ MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	AG_Slider *sl = AG_SELF();
+	AG_Slider *sl = AG_SLIDER_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
@@ -476,7 +476,7 @@ KeyDown(AG_Event *_Nonnull event)
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
-	AG_Slider *sl = AG_SELF();
+	AG_Slider *sl = AG_SLIDER_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
@@ -492,7 +492,7 @@ KeyUp(AG_Event *_Nonnull event)
 static void
 OnFocusLoss(AG_Event *_Nonnull event)
 {
-	AG_Slider *sl = AG_SELF();
+	AG_Slider *sl = AG_SLIDER_SELF();
 
 	AG_DelTimer(sl, &sl->moveTo);
 }
@@ -507,7 +507,7 @@ OnFocusLoss(AG_Event *_Nonnull event)
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	AG_Slider *sl = AG_SELF();
+	AG_Slider *sl = AG_SLIDER_SELF();
 	AG_Variable *V;
 	
 	if ((V = AG_GetVariable(sl, "value", NULL)) == NULL) {

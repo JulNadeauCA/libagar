@@ -126,7 +126,7 @@ exists:
 static void
 MenuCollapseAll(AG_Event *_Nonnull event)
 {
-	AG_Menu *m = AG_PTR(1);
+	AG_Menu *m = AG_MENU_PTR(1);
 
 	AG_MenuCollapseAll(m);
 }
@@ -314,7 +314,7 @@ IntersectItem(AG_MenuItem *_Nonnull mi, int x, int y, int *_Nonnull hLbl)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Menu *m = AG_SELF();
+	AG_Menu *m = AG_MENU_SELF();
 	int x = AG_INT(2);
 	int y = AG_INT(3);
 	AG_MenuItem *mi;
@@ -349,7 +349,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_Menu *m = AG_SELF();
+	AG_Menu *m = AG_MENU_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	AG_MenuItem *mi;
@@ -467,8 +467,8 @@ CreateItem(AG_MenuItem *_Nullable miParent, const char *_Nullable text,
 static void
 OnFontChange(AG_Event *_Nonnull event)
 {
-	AG_Menu *m = AG_SELF();
-	AG_Font *font = WIDGET(m)->font;
+	AG_Menu *m = AG_MENU_SELF();
+	const AG_Font *font = WIDGET(m)->font;
 	AG_MenuItem *mi;
 	int j;
 

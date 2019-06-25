@@ -237,7 +237,13 @@ typedef struct ag_widget {
 	AG_WidgetPvt pvt;               /* Private data */
 } AG_Widget;
 
-#define AGWIDGET(wi)		((AG_Widget *)(wi))
+#define AGWIDGET(p)            ((AG_Widget *)(p))
+#define AG_WIDGET_SELF()       AG_OBJECT(0,"AG_Widget:*")
+#define AG_WIDGET_PTR(n)       AG_OBJECT((n),"AG_Widget:*")
+#define AG_WIDGET_NAMED(n)     AG_OBJECT_NAMED((n),"AG_Widget:*")
+#define AG_CONST_WIDGET_SELF() AG_CONST_OBJECT(0,"AG_Widget:*")
+#define AG_CONST_WIDGET_PTR(n) AG_CONST_OBJECT((n),"AG_Widget:*")
+
 #define AGWIDGET_OPS(wi)	((AG_WidgetClass *)AGOBJECT(wi)->cls)
 #define AGWIDGET_SUPER_OPS(wi)	((AG_WidgetClass *)AGOBJECT(wi)->cls->super)
 
@@ -246,10 +252,9 @@ typedef struct ag_widget {
 #define AGWIDGET_SURFACE_NODUP(wi, ind)	(AGWIDGET(wi)->surfaceFlags[ind] & \
 					 AG_WIDGET_SURFACE_NODUP)
 
-#define AGWIDGET_KEYBOARD(obj)				\
-    (((obj) != NULL) ? AGWIDGET(obj)->drv->kbd :	\
-     (agDriverSw != NULL) ? AGDRIVER(agDriverSw)->kbd:	\
-     NULL)
+#define AGWIDGET_KEYBOARD(obj) \
+    (((obj) != NULL) ? AGWIDGET(obj)->drv->kbd : \
+     (agDriverSw != NULL) ? AGDRIVER(agDriverSw)->kbd: NULL)
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_GUI)
 # define WIDGET(wi)			AGWIDGET(wi)

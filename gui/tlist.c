@@ -221,7 +221,7 @@ IncrementSelection(AG_Tlist *_Nonnull tl, int inc)
 static Uint32
 DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 
 	tl->dblClicked = NULL;
 	return (0);
@@ -230,7 +230,7 @@ DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 OnFocusLoss(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 
 	AG_DelTimer(tl, &tl->moveTo);
 	AG_DelTimer(tl, &tl->dblClickTo);
@@ -240,7 +240,7 @@ OnFocusLoss(AG_Event *_Nonnull event)
 static Uint32
 PollRefreshTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 
 	tl->flags |= AG_TLIST_REFRESH;
 	AG_Redraw(tl);
@@ -251,7 +251,7 @@ PollRefreshTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 OnFontChange(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -272,7 +272,7 @@ OnFontChange(AG_Event *_Nonnull event)
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 
 	if (tl->flags & AG_TLIST_POLL) {
 		tl->flags |= AG_TLIST_REFRESH;
@@ -284,7 +284,7 @@ OnShow(AG_Event *_Nonnull event)
 static Uint32
 MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	int incr = AG_INT(1);
 
 	if (incr < 0) {
@@ -1055,7 +1055,7 @@ PopupMenu(AG_Tlist *_Nonnull tl, AG_TlistPopup *_Nonnull tp, int x, int y)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -1211,7 +1211,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	int keysym = AG_INT(1);
 	void *ti;
 
@@ -1253,7 +1253,7 @@ KeyDown(AG_Event *_Nonnull event)
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {

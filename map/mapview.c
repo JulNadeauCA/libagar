@@ -156,7 +156,7 @@ MAP_ViewFindTool(MAP_View *mv, const char *name)
 static void
 SelectTool(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_PTR(1);
+	MAP_View *mv = MAP_VIEW_PTR(1);
 	MAP_Tool *tool = AG_PTR(2);
 	void *p = AG_PTR(3);
 
@@ -224,7 +224,7 @@ Destroy(void *_Nonnull p)
 static void
 OnDetach(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_SELF();
+	MAP_View *mv = MAP_VIEW_SELF();
 	MAP_Tool *tool, *ntool;
 
 	for (tool = TAILQ_FIRST(&mv->tools);
@@ -241,7 +241,7 @@ OnDetach(AG_Event *_Nonnull event)
 static void
 ExpireDblClick(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_SELF();
+	MAP_View *mv = MAP_VIEW_SELF();
 
 	mv->dblclicked = 0;
 }
@@ -249,7 +249,7 @@ ExpireDblClick(AG_Event *_Nonnull event)
 static void
 UpdateCamera(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_PTR(1);
+	MAP_View *mv = MAP_VIEW_PTR(1);
 
 	MAP_ViewUpdateCamera(mv);
 }
@@ -962,7 +962,7 @@ ToggleAttribute(MAP_View *_Nonnull mv)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_SELF();
+	MAP_View *mv = MAP_VIEW_SELF();
 	MAP *m = mv->map;
 	int x = AG_INT(1);
 	int y = AG_INT(2);
@@ -1062,7 +1062,7 @@ MAP_ViewSetMode(MAP_View *mv, enum map_view_mode mode)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_SELF();
+	MAP_View *mv = MAP_VIEW_SELF();
 	MAP *m = mv->map;
 	int button = AG_INT(1);
 	int x = AG_INT(2);
@@ -1241,7 +1241,7 @@ out:
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_SELF();
+	MAP_View *mv = MAP_VIEW_SELF();
 	MAP *m = mv->map;
 	int button = AG_INT(1);
 	int x = AG_INT(2);
@@ -1336,7 +1336,7 @@ out:
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_SELF();
+	MAP_View *mv = MAP_VIEW_SELF();
 	MAP *m = mv->map;
 	int keysym = AG_INT(1);
 	int keymod = AG_INT(2);
@@ -1384,7 +1384,7 @@ out:
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_SELF();
+	MAP_View *mv = MAP_VIEW_SELF();
 	MAP *m = mv->map;
 	int keysym = AG_INT(1);
 	int keymod = AG_INT(2);
@@ -1542,7 +1542,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 static void
 LostFocus(AG_Event *_Nonnull event)
 {
-//	MAP_View *mv = AG_SELF();
+//	MAP_View *mv = MAP_VIEW_SELF();
 
 //	if (mv->actor != NULL)
 //		AG_ObjectCancelTimeouts(mv->actor, 0);

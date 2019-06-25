@@ -31,6 +31,14 @@ typedef struct ag_progress_bar {
 	struct ag_text_cache *_Nonnull tCache; /* For SHOW_PCT */
 } AG_ProgressBar;
 
+#define AGPROGRESSBAR(obj)            ((AG_ProgressBar *)(obj))
+#define AG_PROGRESSBAR_SELF()         AG_OBJECT(0,"AG_Widget:AG_ProgressBar:*")
+#define AG_PROGRESSBAR_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_ProgressBar:*")
+#define AG_PROGRESSBAR_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_ProgressBar:*")
+#define AG_CONST_PROGRESSBAR_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_ProgressBar:*")
+#define AG_CONST_PROGRESSBAR_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_ProgressBar:*")
+#define AG_CONST_PROGRESSBAR_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_ProgressBar:*")
+
 __BEGIN_DECLS
 extern AG_WidgetClass agProgressBarClass;
 

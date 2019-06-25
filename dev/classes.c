@@ -51,7 +51,7 @@ GenClassTable(AG_Table *_Nonnull tbl, AG_ObjectClass *_Nonnull C)
 static void
 PollClasses(AG_Event *_Nonnull event)
 {
-	AG_Table *tbl = AG_SELF();
+	AG_Table *tbl = AG_TABLE_SELF();
 
 	/* XXX tree */
 	AG_TableBegin(tbl);

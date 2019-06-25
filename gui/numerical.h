@@ -36,6 +36,14 @@ typedef struct ag_numerical {
 #endif
 } AG_Numerical;
 
+#define AGNUMERICAL(obj)            ((AG_Numerical *)(obj))
+#define AG_NUMERICAL_SELF()         AG_OBJECT(0,"AG_Widget:AG_Numerical:*")
+#define AG_NUMERICAL_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Numerical:*")
+#define AG_NUMERICAL_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Numerical:*")
+#define AG_CONST_NUMERICAL_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Numerical:*")
+#define AG_CONST_NUMERICAL_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Numerical:*")
+#define AG_CONST_NUMERICAL_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Numerical:*")
+
 __BEGIN_DECLS
 extern AG_WidgetClass agNumericalClass;
 

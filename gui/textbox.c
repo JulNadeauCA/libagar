@@ -507,7 +507,7 @@ AG_TextboxSetCursorPos(AG_Textbox *tb, int pos)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Textbox *tb = AG_SELF();
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
 
 	AG_WidgetFocus(tb);
 	AG_ForwardEvent(NULL, tb->ed, event);
@@ -516,7 +516,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 Disabled(AG_Event *_Nonnull event)
 {
-	AG_Textbox *tb = AG_SELF();
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
 
 	AG_WidgetDisable(tb->ed);
 }
@@ -524,7 +524,7 @@ Disabled(AG_Event *_Nonnull event)
 static void
 Enabled(AG_Event *_Nonnull event)
 {
-	AG_Textbox *tb = AG_SELF();
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
 
 	AG_WidgetEnable(tb->ed);
 }
@@ -532,19 +532,19 @@ Enabled(AG_Event *_Nonnull event)
 static void
 EditablePreChg(AG_Event *_Nonnull event)
 {
-	AG_PostEvent(NULL, AG_PTR(1), "textbox-prechg", NULL);
+	AG_PostEvent(NULL, AG_TEXTBOX_PTR(1), "textbox-prechg", NULL);
 }
 
 static void
 EditablePostChg(AG_Event *_Nonnull event)
 {
-	AG_PostEvent(NULL, AG_PTR(1), "textbox-postchg", NULL);
+	AG_PostEvent(NULL, AG_TEXTBOX_PTR(1), "textbox-postchg", NULL);
 }
 
 static void
 EditableReturn(AG_Event *_Nonnull event)
 {
-	AG_PostEvent(NULL, AG_PTR(1), "textbox-return", NULL);
+	AG_PostEvent(NULL, AG_TEXTBOX_PTR(1), "textbox-return", NULL);
 }
 
 static void

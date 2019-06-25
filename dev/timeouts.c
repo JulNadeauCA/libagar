@@ -38,7 +38,7 @@
 static Uint32 
 RefreshTableTimeout(AG_Timer *_Nonnull refreshTo, AG_Event *_Nonnull event)
 {
-	AG_Treetbl *tt = AG_SELF();
+	AG_Treetbl *tt = AG_TREETBL_SELF();
 	extern struct ag_objectq agTimerObjQ;
 	AG_Object *ob;
 	int id;
@@ -72,7 +72,7 @@ RefreshTableTimeout(AG_Timer *_Nonnull refreshTo, AG_Event *_Nonnull event)
 static void
 CloseWindow(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_SELF();
+	AG_Window *win = AG_WINDOW_SELF();
 
 	AG_ObjectDetach(win);
 }

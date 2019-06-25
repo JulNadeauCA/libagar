@@ -21,18 +21,16 @@
 # if AG_MODEL == AG_SMALL
 #  define AG_OBJECT_HIER_MAX 48
 # elif AG_MODEL == AG_MEDIUM
-#  define AG_OBJECT_HIER_MAX 96
+#  define AG_OBJECT_HIER_MAX 64
 # elif AG_MODEL == AG_LARGE
-#  define AG_OBJECT_HIER_MAX 128
+#  define AG_OBJECT_HIER_MAX 96
 # endif
 #endif
 #ifndef AG_OBJECT_PATH_MAX
 # if AG_MODEL == AG_SMALL
 #  define AG_OBJECT_PATH_MAX 64
-# elif AG_MODEL == AG_MEDIUM
+# else
 #  define AG_OBJECT_PATH_MAX 128
-# elif AG_MODEL == AG_LARGE
-#  define AG_OBJECT_PATH_MAX 196
 # endif
 #endif
 #ifndef AG_OBJECT_LIBS_MAX
@@ -46,15 +44,19 @@
 # if AG_MODEL == AG_SMALL
 #  define AG_OBJECT_CLASSTBLSIZE 32
 # elif AG_MODEL == AG_MEDIUM
-#  define AG_OBJECT_CLASSTBLSIZE 128
+#  define AG_OBJECT_CLASSTBLSIZE 64
 # else
-#  define AG_OBJECT_CLASSTBLSIZE 256
+#  define AG_OBJECT_CLASSTBLSIZE 128
 # endif
 #endif
 
 #ifndef AG_OBJECT_MAX_VARIABLES
 # define AG_OBJECT_MAX_VARIABLES 0xffff
 #endif
+#ifndef AG_OBJECT_TYPE_TAG
+# define AG_OBJECT_TYPE_TAG "AgarObj"
+#endif
+#define AG_OBJECT_TYPE_TAG_LEN 8
 
 #include <agar/core/begin.h>
 
@@ -136,6 +138,9 @@ typedef struct ag_object_pvt {
 
 /* Object instance */
 typedef struct ag_object {
+#ifdef AG_TYPE_SAFETY
+	char tag[AG_OBJECT_TYPE_TAG_LEN]; /* For runtime type-safety check */
+#endif
 	char name[AG_OBJECT_NAME_MAX];    /* Object ID (unique in parent) */
 	AG_ObjectClass *_Nonnull cls;     /* Class description */
 	Uint flags;
@@ -186,9 +191,24 @@ typedef struct ag_object_header {
 
 #define AGOBJECT(ob) ((struct ag_object *)(ob))
 #define AGCLASS(obj) ((struct ag_object_class *)(obj))
-
-/* Return a pointer an Object's class description. */
 #define AGOBJECT_CLASS(obj) ((struct ag_object_class *)(AGOBJECT(obj)->cls))
+
+#define AG_OBJECT_SELF()         AG_OBJECT_PTR(0)
+#define AG_OBJECT_NAMED(n)       AG_PTR_NAMED(n)
+#define AG_CONST_OBJECT_SELF()   AG_CONST_OBJECT_PTR(0)
+#define AG_CONST_OBJECT_NAMED(n) AG_CONST_PTR_NAMED(n)
+
+#define AG_OBJECT_PTR(v) \
+   (v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
+    !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
+    strncmp(AGOBJECT(event->argv[v].data.p)->tag, AG_OBJECT_TYPE_TAG, AG_OBJECT_TYPE_TAG_LEN) == 0) ? \
+    event->argv[v].data.p : AG_ObjectMismatch()
+
+#define AG_CONST_OBJECT_PTR(v) \
+   (v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
+    (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
+    strncmp(AGOBJECT(event->argv[v].data.p)->tag, AG_OBJECT_TYPE_TAG, AG_OBJECT_TYPE_TAG_LEN) == 0) ? \
+    (const void *)event->argv[v].data.p : (const void *)AG_ObjectMismatch()
 
 /* Iterate over the direct child objects. */
 #define AGOBJECT_FOREACH_CHILD(var, ob, t) \
@@ -481,7 +501,6 @@ void ag_unlock_timers(void *_Nullable);
 # define AG_FetchVariable(o,n,t)	ag_fetch_variable((o),(n),(t))
 # define AG_FetchVariableOfType(o,n,t)	ag_fetch_variable_of_type((o),(n),(t))
 # define AG_AccessVariable(o,n)		ag_access_variable((o),(n))
-# define AG_GetNamedObject(e,k,s)	ag_get_named_object((e),(k),(s))
 # ifdef AG_THREADS
 #  define AG_ObjectLock(o)		ag_object_lock(o)
 #  define AG_ObjectUnlock(o)		ag_object_unlock(o)

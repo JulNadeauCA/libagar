@@ -97,7 +97,7 @@ ClampVisible(AG_Console *_Nonnull cons)
 static void
 ScrollUp(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_SELF();
+	AG_Console *cons = AG_CONSOLE_SELF();
 	const int lsa = AG_GetInt(cons, "line-scroll-amount");
 	const int newOffs = cons->rOffs - lsa;
 
@@ -110,7 +110,7 @@ ScrollUp(AG_Event *_Nonnull event)
 static void
 ScrollDown(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_SELF();
+	AG_Console *cons = AG_CONSOLE_SELF();
 	const int lsa = AG_GetInt(cons, "line-scroll-amount");
 	const int newOffs = cons->rOffs + lsa;
 
@@ -124,7 +124,7 @@ ScrollDown(AG_Event *_Nonnull event)
 static void
 PageUp(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_SELF();
+	AG_Console *cons = AG_CONSOLE_SELF();
 	int newOffs = (int)cons->rOffs - (int)cons->rVisible;
 
 	if (newOffs < 0) {
@@ -139,7 +139,7 @@ PageUp(AG_Event *_Nonnull event)
 static void
 PageDown(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_SELF();
+	AG_Console *cons = AG_CONSOLE_SELF();
 	int newOffs;
 
 	if (cons->nLines < cons->rVisible) {
@@ -158,7 +158,7 @@ PageDown(AG_Event *_Nonnull event)
 static void
 GoToTop(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_SELF();
+	AG_Console *cons = AG_CONSOLE_SELF();
 
 	cons->rOffs = 0;
 	AG_Redraw(cons);
@@ -167,7 +167,7 @@ GoToTop(AG_Event *_Nonnull event)
 static void
 GoToBottom(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_SELF();
+	AG_Console *cons = AG_CONSOLE_SELF();
 	int newOffs;
 
 	newOffs = cons->nLines - cons->rVisible;
@@ -201,7 +201,7 @@ MapLine(AG_Console *_Nonnull cons, int yMouse, int *_Nonnull nLine)
  * separate the lines by newlines of the specified variety.
  */
 char *
-AG_ConsoleExportText(AG_Console *cons, enum ag_newline_type nl)
+AG_ConsoleExportText(const AG_Console *cons, enum ag_newline_type nl)
 {
 	const AG_NewlineFormat *newline;
 	char *s, *ps;
@@ -248,7 +248,7 @@ AG_ConsoleExportText(AG_Console *cons, enum ag_newline_type nl)
 static void
 MenuCopy(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_PTR(1);
+	AG_Console *cons = AG_CONSOLE_PTR(1);
 	AG_EditableClipboard *cb = &agEditableClipbrd;
 	char *s;
 
@@ -272,7 +272,7 @@ MenuCopy(AG_Event *_Nonnull event)
 static void
 MenuCopyActive(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_PTR(1);
+	const AG_Console *cons = AG_CONST_CONSOLE_PTR(1);
 	int *status = AG_PTR(2);
 
 	*status = (cons->pos != -1) ? 1 : 0;
@@ -282,8 +282,8 @@ MenuCopyActive(AG_Event *_Nonnull event)
 static void
 MenuExportToFileTXT(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_PTR(1);
-	char *path = AG_STRING(2), *s;
+	const AG_Console *cons = AG_CONST_CONSOLE_PTR(1);
+	char *s, *path = AG_STRING(2);
 	FILE *f;
 
 	if ((s = AG_ConsoleExportText(cons, AG_NEWLINE_NATIVE)) == NULL) {
@@ -307,7 +307,7 @@ fail:
 static void
 MenuExportToFileDlg(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_PTR(1);
+	const AG_Console *cons = AG_CONST_CONSOLE_PTR(1);
 	AG_Window *win;
 	AG_FileDlg *fd;
 
@@ -323,7 +323,7 @@ MenuExportToFileDlg(AG_Event *_Nonnull event)
 	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));
 
 	AG_FileDlgAddType(fd, _("Text file"), "*.txt,*.log",
-	    MenuExportToFileTXT, "%p", cons);
+	    MenuExportToFileTXT, "%Cp", cons);
 
 	AG_WindowShow(win);
 }
@@ -332,7 +332,7 @@ MenuExportToFileDlg(AG_Event *_Nonnull event)
 static void
 MenuSelectAll(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_PTR(1);
+	AG_Console *cons = AG_CONSOLE_PTR(1);
 
 	cons->pos = 0;
 	cons->sel = cons->nLines-1;
@@ -342,7 +342,7 @@ MenuSelectAll(AG_Event *_Nonnull event)
 static void
 BeginSelect(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_SELF();
+	AG_Console *cons = AG_CONSOLE_SELF();
 	int x = AG_INT(2);
 	int y = AG_INT(3);
 
@@ -366,14 +366,14 @@ BeginSelect(AG_Event *_Nonnull event)
 static void
 CloseSelect(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_SELF();
+	AG_Console *cons = AG_CONSOLE_SELF();
 	cons->flags &= ~(AG_CONSOLE_SELECTING);
 }
 
 static void
 PopupMenu(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_SELF();
+	AG_Console *cons = AG_CONSOLE_SELF();
 	int x = AG_INT(2);
 	int y = AG_INT(3);
 	AG_PopupMenu *pm;
@@ -390,10 +390,10 @@ PopupMenu(AG_Event *_Nonnull event)
 		return;
 	}
 	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy, "%p", cons);
-	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCopyActive, "%p", cons);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCopyActive, "%Cp", cons);
 #ifdef AG_SERIALIZATION
 	AG_MenuAction(pm->root, _("Export to file..."), NULL,
-	    MenuExportToFileDlg, "%p", cons);
+	    MenuExportToFileDlg, "%Cp", cons);
 #endif
 	AG_MenuSeparator(pm->root);
 
@@ -406,7 +406,7 @@ PopupMenu(AG_Event *_Nonnull event)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_SELF();
+	AG_Console *cons = AG_CONSOLE_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	int newPos, newSel;
@@ -447,7 +447,7 @@ ComputeVisible(AG_Console *_Nonnull cons)
 static void
 OnFontChange(AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_SELF();
+	AG_Console *cons = AG_CONSOLE_SELF();
 	Uint i;
 	int j;
 
@@ -926,7 +926,7 @@ AG_ConsoleClear(AG_Console *cons)
 static int
 ConsoleReadFile(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 {
-	AG_Console *cons = AG_PTR(1);
+	AG_Console *cons = AG_CONSOLE_PTR(1);
 	AG_ConsoleFile *cf = AG_PTR(2);
 	FILE *f = cf->pFILE;
 	char *buf, *pLine, *line;

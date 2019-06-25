@@ -284,7 +284,13 @@ void AG_SetStockCursor(void *_Nonnull, AG_CursorArea *_Nonnull *_Nullable,
 
 void AG_WindowProcessQueued(void);
 
-#define AGWINDOW(win)    ((AG_Window *)(win))
+#define AGWINDOW(p)            ((AG_Window *)(p))
+#define AG_WINDOW_SELF()       AG_OBJECT(0,"AG_Widget:AG_Window:*")
+#define AG_WINDOW_PTR(n)       AG_OBJECT((n),"AG_Widget:AG_Window:*")
+#define AG_WINDOW_NAMED(n)     AG_OBJECT_NAMED((n),"AG_Widget:AG_Window:*")
+#define AG_CONST_WINDOW_SELF() AG_CONST_OBJECT(0,"AG_Widget:AG_Window:*")
+#define AG_CONST_WINDOW_PTR(n) AG_CONST_OBJECT((n),"AG_Widget:AG_Window:*")
+
 #define AGWINDETACH(win) AG_WindowDetachGenEv, "%p", (win)
 #define AGWINHIDE(win)   AG_WindowHideGenEv, "%p", (win)
 #define AGWINCLOSE(win)  AG_WindowCloseGenEv, "%p", (win)

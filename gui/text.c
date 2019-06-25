@@ -1007,7 +1007,7 @@ AG_TextMsgFromError(void)
 static Uint32
 TextTmsgExpire(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_WINDOW_PTR(1);
 
 	AG_ObjectDetach(win);
 	return (0);

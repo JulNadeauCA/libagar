@@ -4,6 +4,8 @@
 # error "Must be included by object.h"
 #endif
 
+#include <string.h>
+
 #ifndef AG_EVENT_ARGS_MAX
 #define AG_EVENT_ARGS_MAX 8
 #endif
@@ -16,18 +18,6 @@
  */
 #ifdef AG_TYPE_SAFETY
 
-# define AG_OBJECT(v,t) ((v <= event->argc && \
-                         (event->argv[v].type == AG_VARIABLE_POINTER && \
-                        !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
-	                 AG_OfClass(event->argv[v].data.p, (t)))) ? \
-                         event->argv[v].data.p : AG_ObjectMismatch())
-
-# define AG_CONST_OBJECT(v,t) ((v <= event->argc && \
-                               event->argv[v].type == AG_VARIABLE_POINTER && \
-                              (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
-                               AG_OfClass(event->argv[v].data.p, (t))) ? \
-                               event->argv[v].data.p : AG_ObjectMismatch())
-
 # define AG_PTR(v) ((v <= event->argc && \
                     event->argv[v].type == AG_VARIABLE_POINTER && \
                     !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY)) ? \
@@ -36,30 +26,42 @@
 # define AG_CONST_PTR(v) ((v <= event->argc && \
                           event->argv[v].type == AG_VARIABLE_POINTER && \
                           (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY)) ? \
-                          event->argv[v].data.p : AG_PtrMismatch())
+                          (const void *)event->argv[v].data.p : \
+			  (const void *)AG_PtrMismatch())
 
-# define AG_STRING(v)      ((v < event->argc && event->argv[v].type==AG_VARIABLE_STRING) ? event->argv[v].data.s : AG_StringMismatch())
-# define AG_INT(v)         ((v < event->argc && event->argv[v].type==AG_VARIABLE_INT) ? event->argv[v].data.i : AG_IntMismatch())
-# define AG_UINT(v)        ((v < event->argc && event->argv[v].type==AG_VARIABLE_UINT) ? event->argv[v].data.u : (Uint)AG_IntMismatch())
-# define AG_LONG(v)        ((v < event->argc && event->argv[v].type==AG_VARIABLE_LONG) ? event->argv[v].data.li : AG_LongMismatch())
-# define AG_ULONG(v)       ((v < event->argc && event->argv[v].type==AG_VARIABLE_ULONG) ? event->argv[v].data.uli : (Ulong)AG_LongMismatch())
-# define AG_FLOAT(v)       ((v < event->argc && event->argv[v].type==AG_VARIABLE_FLOAT) ? event->argv[v].data.flt : AG_FloatMismatch())
-# define AG_DOUBLE(v)      ((v < event->argc && event->argv[v].type==AG_VARIABLE_DOUBLE) ? event->argv[v].data.dbl : AG_DoubleMismatch())
+# define AG_OBJECT(v,hier) \
+    (v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
+     !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
+     strncmp(AGOBJECT(event->argv[v].data.p)->tag, AG_OBJECT_TYPE_TAG, AG_OBJECT_TYPE_TAG_LEN) == 0 && \
+     AG_OfClass(event->argv[v].data.p,(hier))) ? \
+     event->argv[v].data.p : AG_ObjectMismatch()
 
+# define AG_CONST_OBJECT(v,hier) \
+    (v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
+     (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
+     strncmp(AGOBJECT(event->argv[v].data.p)->tag, AG_OBJECT_TYPE_TAG, AG_OBJECT_TYPE_TAG_LEN) == 0 && \
+     AG_OfClass(event->argv[v].data.p,(hier))) ? \
+     (const void *)event->argv[v].data.p : (const void *)AG_ObjectMismatch()
+
+# define AG_STRING(v) ((v < event->argc && event->argv[v].type==AG_VARIABLE_STRING) ? event->argv[v].data.s : AG_StringMismatch())
+# define AG_INT(v)    ((v < event->argc && event->argv[v].type==AG_VARIABLE_INT)    ? event->argv[v].data.i : AG_IntMismatch())
+# define AG_UINT(v)   ((v < event->argc && event->argv[v].type==AG_VARIABLE_UINT)   ? event->argv[v].data.u : (Uint)AG_IntMismatch())
+# define AG_LONG(v)   ((v < event->argc && event->argv[v].type==AG_VARIABLE_LONG)   ? event->argv[v].data.li : AG_LongMismatch())
+# define AG_ULONG(v)  ((v < event->argc && event->argv[v].type==AG_VARIABLE_ULONG)  ? event->argv[v].data.uli : (Ulong)AG_LongMismatch())
+# define AG_FLOAT(v)  ((v < event->argc && event->argv[v].type==AG_VARIABLE_FLOAT)  ? event->argv[v].data.flt : AG_FloatMismatch())
+# define AG_DOUBLE(v) ((v < event->argc && event->argv[v].type==AG_VARIABLE_DOUBLE) ? event->argv[v].data.dbl : AG_DoubleMismatch())
 #else /* !AG_TYPE_SAFETY */
-
-# define AG_PTR(v)            (event->argv[v].data.p)
-# define AG_CONST_PTR(v)      (event->argv[v].data.p)
-# define AG_OBJECT(v,t)       (event->argv[v].data.p)
-# define AG_CONST_OBJECT(v,t) (event->argv[v].data.p)
-# define AG_STRING(v)         (event->argv[v].data.s)
-# define AG_INT(v)            (event->argv[v].data.i)
-# define AG_UINT(v)           (event->argv[v].data.u)
-# define AG_LONG(v)           (event->argv[v].data.li)
-# define AG_ULONG(v)          (event->argv[v].data.uli)
-# define AG_FLOAT(v)          (event->argv[v].data.flt)
-# define AG_DOUBLE(v)         (event->argv[v].data.dbl)
-
+# define AG_OBJECT(v,hier)       (event->argv[v].data.p)
+# define AG_CONST_OBJECT(v,hier) (event->argv[v].data.p)
+# define AG_PTR(v)               (event->argv[v].data.p)
+# define AG_CONST_PTR(v)         (event->argv[v].data.p)
+# define AG_STRING(v)            (event->argv[v].data.s)
+# define AG_INT(v)               (event->argv[v].data.i)
+# define AG_UINT(v)              (event->argv[v].data.u)
+# define AG_LONG(v)              (event->argv[v].data.li)
+# define AG_ULONG(v)             (event->argv[v].data.uli)
+# define AG_FLOAT(v)             (event->argv[v].data.flt)
+# define AG_DOUBLE(v)            (event->argv[v].data.dbl)
 #endif /* !AG_TYPE_SAFETY */
 
 #ifdef AG_UNICODE
@@ -68,20 +70,18 @@
 # define AG_CHAR(v) ((AG_Char)AG_UINT(v))
 #endif
 
-#define AG_SELF()	AG_PTR(0)
-#define AG_SENDER()	AG_PTR(event->argc)
+#define AG_SELF()         AG_PTR(0)
+#define AG_SENDER()       AG_PTR(event->argc)
 
-#define AG_PTR_NAMED(k)			AG_GetNamedPtr(event,(k))
-#define AG_CONST_PTR_NAMED(k)		AG_GetNamedConstPtr(event,(k))
-#define AG_OBJECT_NAMED(k,cls)		AG_GetNamedObject(event,(k),(cls))
-#define AG_CONST_OBJECT_NAMED(k,cls)	AG_GetNamedConstObject(event,(k),(cls))
-#define AG_STRING_NAMED(k)		AG_GetNamedString(event,(k))
-#define AG_INT_NAMED(k)			AG_GetNamedInt(event,(k))
-#define AG_UINT_NAMED(k)		AG_GetNamedUint(event,(k))
-#define AG_LONG_NAMED(k)		AG_GetNamedLong(event,(k))
-#define AG_ULONG_NAMED(k)		AG_GetNamedUlong(event,(k))
-#define AG_FLOAT_NAMED(k)       	AG_GetNamedFlt(event,(k))
-#define AG_DOUBLE_NAMED(k)      	AG_GetNamedDbl(event,(k))
+#define AG_PTR_NAMED(k)       AG_GetNamedPtr(event,(k))
+#define AG_CONST_PTR_NAMED(k) AG_GetNamedConstPtr(event,(k))
+#define AG_STRING_NAMED(k)    AG_GetNamedString(event,(k))
+#define AG_INT_NAMED(k)       AG_GetNamedInt(event,(k))
+#define AG_UINT_NAMED(k)      AG_GetNamedUint(event,(k))
+#define AG_LONG_NAMED(k)      AG_GetNamedLong(event,(k))
+#define AG_ULONG_NAMED(k)     AG_GetNamedUlong(event,(k))
+#define AG_FLOAT_NAMED(k)     AG_GetNamedFlt(event,(k))
+#define AG_DOUBLE_NAMED(k)    AG_GetNamedDbl(event,(k))
 
 struct ag_timer;
 struct ag_event_sink;

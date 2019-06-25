@@ -40,7 +40,13 @@ typedef struct ag_glview {
 	AG_Color bgColor;			/* Background color */
 } AG_GLView;
 
-#define AGGLVIEW(p) ((AG_GLView *)(p))
+#define AGGLVIEW(obj)            ((AG_GLView *)(obj))
+#define AG_GLVIEW_SELF()         AG_OBJECT(0,"AG_Widget:AG_GLView:*")
+#define AG_GLVIEW_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_GLView:*")
+#define AG_GLVIEW_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_GLView:*")
+#define AG_CONST_GLVIEW_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_GLView:*")
+#define AG_CONST_GLVIEW_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_GLView:*")
+#define AG_CONST_GLVIEW_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_GLView:*")
 
 __BEGIN_DECLS
 extern AG_WidgetClass agGLViewClass;

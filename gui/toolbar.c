@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -83,8 +83,8 @@ Init(void *_Nonnull obj)
 static void
 StickyUpdate(AG_Event *_Nonnull event)
 {
-	AG_Button *selBtn = AG_SELF();
-	AG_Toolbar *bar = AG_PTR(1);
+	const AG_Button *selBtn = AG_BUTTON_SELF();
+	AG_Toolbar *bar = AG_TOOLBAR_PTR(1);
 	AG_Variable *stateb;
 	AG_Button *oBtn;
 	int i;

@@ -397,7 +397,7 @@ Decrement(AG_Scrollbar *_Nonnull sb)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Scrollbar *sb = AG_SELF();
+	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 
 #ifdef AG_TIMERS
 	AG_DelTimer(sb, &sb->moveTo);
@@ -422,7 +422,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 static Uint32
 MoveButtonsTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Scrollbar *sb = AG_SELF();
+	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 	int dir = AG_INT(1);
 	int rv;
 
@@ -450,7 +450,7 @@ MoveButtonsTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static Uint32
 MoveKbdTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Scrollbar *sb = AG_SELF();
+	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 	int dir = AG_INT(1);
 	int rv;
 
@@ -466,7 +466,7 @@ MoveKbdTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Scrollbar *sb = AG_SELF();
+	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 	int button = AG_INT(1);
 	int x = SBPOS(sb, AG_INT(2), AG_INT(3)) - sb->width;
 	int totsize = SBLEN(sb);
@@ -541,7 +541,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_Scrollbar *sb = AG_SELF();
+	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 	int mx = AG_INT(1);
 	int my = AG_INT(2);
 	int x = SBPOS(sb,mx,my) - sb->width;
@@ -582,7 +582,7 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	AG_Scrollbar *sb = AG_SELF();
+	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
@@ -611,7 +611,7 @@ KeyDown(AG_Event *_Nonnull event)
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
-	AG_Scrollbar *sb = AG_SELF();
+	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 	int keysym = AG_INT(1);
 	
 	switch (keysym) {
@@ -629,7 +629,7 @@ KeyUp(AG_Event *_Nonnull event)
 static Uint32
 AutoHideTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Scrollbar *sb = AG_SELF();
+	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 	AG_Window *pwin;
 	int rv, x, len;
 
@@ -655,7 +655,7 @@ AutoHideTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 OnFocusLoss(AG_Event *_Nonnull event)
 {
-	AG_Scrollbar *sb = AG_SELF();
+	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 
 	AG_DelTimer(sb, &sb->moveTo);
 }
@@ -671,7 +671,7 @@ OnFocusLoss(AG_Event *_Nonnull event)
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	AG_Scrollbar *sb = AG_SELF();
+	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 	AG_Variable *V;
 
 	if ((V = AG_AccessVariable(sb, "value")) == NULL) {
@@ -718,7 +718,7 @@ OnShow(AG_Event *_Nonnull event)
 static void
 OnHide(AG_Event *_Nonnull event)
 {
-	AG_Scrollbar *sb = AG_SELF();
+	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 	
 	AG_DelTimer(sb, &sb->moveTo);
 }
@@ -726,7 +726,7 @@ OnHide(AG_Event *_Nonnull event)
 static void
 OnDetach(AG_Event *_Nonnull event)
 {
-	AG_Scrollbar *sb = AG_SELF();
+	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 	
 	if (sb->flags & AG_SCROLLBAR_AUTOHIDE)
 		AG_DelTimer(sb, &sb->autoHideTo);

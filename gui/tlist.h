@@ -100,6 +100,14 @@ typedef struct ag_tlist {
 	int lastKeyDown;		/* For key repeat */
 } AG_Tlist;
 
+#define AGTLIST(obj)            ((AG_Tlist *)(obj))
+#define AG_TLIST_SELF()         AG_OBJECT(0,"AG_Widget:AG_Tlist:*")
+#define AG_TLIST_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Tlist:*")
+#define AG_TLIST_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Tlist:*")
+#define AG_CONST_TLIST_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Tlist:*")
+#define AG_CONST_TLIST_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Tlist:*")
+#define AG_CONST_TLIST_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Tlist:*")
+
 #define AG_TLIST_FOREACH(it, tl) \
 	AG_TAILQ_FOREACH(it, &(tl)->items, items)
 

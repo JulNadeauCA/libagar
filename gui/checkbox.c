@@ -125,7 +125,7 @@ AG_CheckboxSetFromFlags(void *parent, Uint flags, Uint *pFlags,
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Checkbox *cb = AG_SELF();
+	AG_Checkbox *cb = AG_CHECKBOX_SELF();
 	int button = AG_INT(1);
 
 	if (!AG_WidgetEnabled(cb))
@@ -142,7 +142,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	AG_Checkbox *cb = AG_SELF();
+	AG_Checkbox *cb = AG_CHECKBOX_SELF();
 	int key = AG_INT(1);
 	
 	if (!AG_WidgetEnabled(cb))

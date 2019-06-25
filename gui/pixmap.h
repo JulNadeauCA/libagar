@@ -24,6 +24,13 @@ typedef struct ag_pixmap {
 	AG_Rect rClip;		/* Clipping rectangle (for !RESCALE) */
 } AG_Pixmap;
 
+#define AGPIXMAP(p)            ((AG_Pixmap *)(p))
+#define AG_PIXMAP_SELF()       AG_OBJECT(0,"AG_Widget:AG_Pixmap:*")
+#define AG_PIXMAP_PTR(n)       AG_OBJECT((n),"AG_Widget:AG_Pixmap:*")
+#define AG_PIXMAP_NAMED(n)     AG_OBJECT_NAMED((n),"AG_Widget:AG_Pixmap:*")
+#define AG_CONST_PIXMAP_SELF() AG_CONST_OBJECT(0,"AG_Widget:AG_Pixmap:*")
+#define AG_CONST_PIXMAP_PTR(n) AG_CONST_OBJECT((n),"AG_Widget:AG_Pixmap:*")
+
 __BEGIN_DECLS
 extern AG_WidgetClass agPixmapClass;
 
@@ -52,7 +59,7 @@ void AG_PixmapUpdateSurface(AG_Pixmap *_Nonnull, int);
 int  AG_PixmapSetSurface(AG_Pixmap *_Nonnull, int);
 void AG_PixmapSetCoords(AG_Pixmap *_Nonnull, int,int);
 
-AG_Surface *_Nonnull AG_PixmapGetSurface(AG_Pixmap *_Nonnull, int);
+AG_Surface *_Nonnull AG_PixmapGetSurface(const AG_Pixmap *_Nonnull, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

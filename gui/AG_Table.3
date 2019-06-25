@@ -741,7 +741,7 @@ function:
 void
 UpdateMyTable(AG_Event *event)
 {
-	AG_Table *tbl = AG_SELF();
+	AG_Table *tbl = AG_TABLE_SELF();
 
 	AG_TableBegin(tbl);
 	AG_TableAddRow(tbl, "%s:%d", "foo", 1234);

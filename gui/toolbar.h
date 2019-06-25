@@ -35,6 +35,14 @@ typedef struct ag_toolbar {
 #define AG_TOOLBAR_EXPAND	(AG_TOOLBAR_HFILL|AG_TOOLBAR_VFILL)
 } AG_Toolbar;
 
+#define AGTOOLBAR(obj)            ((AG_Toolbar *)(obj))
+#define AG_TOOLBAR_SELF()         AG_OBJECT(0,"AG_Widget:AG_Box:AG_Toolbar:*")
+#define AG_TOOLBAR_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Box:AG_Toolbar:*")
+#define AG_TOOLBAR_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Toolbar:*")
+#define AG_CONST_TOOLBAR_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Box:AG_Toolbar:*")
+#define AG_CONST_TOOLBAR_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Box:AG_Toolbar:*")
+#define AG_CONST_TOOLBAR_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Toolbar:*")
+
 __BEGIN_DECLS
 extern AG_WidgetClass agToolbarClass;
 

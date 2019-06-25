@@ -66,7 +66,7 @@ M_PlotterNew(void *parent, Uint flags)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	M_Plotter *ptr = AG_SELF();
+	M_Plotter *ptr = M_PLOTTER_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
@@ -101,7 +101,7 @@ MouseOverPlotItem(M_Plotter *_Nonnull ptr, M_Plot *_Nonnull pl, int x, int y)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	M_Plotter *ptr = AG_SELF();
+	M_Plotter *ptr = M_PLOTTER_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	int dy = AG_INT(4);
@@ -135,7 +135,7 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	M_Plotter *ptr = AG_SELF();
+	M_Plotter *ptr = M_PLOTTER_SELF();
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -176,7 +176,7 @@ UpdateLabel(AG_Event *_Nonnull event)
 static void
 UpdatePlotTbl(AG_Event *_Nonnull event)
 {
-	AG_Table *tbl = AG_SELF();
+	AG_Table *tbl = AG_TABLE_SELF();
 	M_Plot *pl = AG_PTR(1);
 	Uint i, j;
 
@@ -252,15 +252,13 @@ M_PlotSettings(M_Plot *pl)
 static void
 ShowPlotSettings(AG_Event *_Nonnull event)
 {
-	M_Plot *pl = AG_PTR(1);
-
-	M_PlotSettings(pl);
+	M_PlotSettings(AG_PTR(1));
 }
 
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	M_Plotter *ptr = AG_SELF();
+	M_Plotter *ptr = M_PLOTTER_SELF();
 	M_Plot *pl, *opl;
 	int button = AG_INT(1);
 	int x = AG_INT(2);
@@ -329,7 +327,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 UpdateXBar(AG_Event *_Nonnull event)
 {
-	M_Plotter *ptr = AG_PTR(1);
+	M_Plotter *ptr = M_PLOTTER_PTR(1);
 	int value = AG_GetInt(ptr->hbar, "value");
 
 	if (value >= ptr->xMax - WIDTH(ptr)) {

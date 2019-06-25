@@ -14,8 +14,8 @@
 static void
 LoadImage(AG_Event *event)
 {
-/*	AG_FileDlg *fd = AG_SELF(); */
-	AG_Window *winParent = AG_PTR(1);
+/*	AG_FileDlg *fd = AG_FILEDLG_SELF(); */
+	AG_Window *winParent = AG_WINDOW_PTR(1);
 	char *file = AG_STRING(2);
 	AG_FileType *ft = AG_PTR(3);
 	AG_Surface *S;

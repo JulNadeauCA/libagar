@@ -145,8 +145,7 @@ typedef struct map_mod_blk {
 struct map_actor;
 
 typedef struct map {
-	struct ag_object obj;
-
+	struct ag_object obj;		/* AG_Object -> MAP */
 	Uint flags;
 #define AG_MAP_SAVE_CAM0POS	0x01	/* Save the camera 0 position */
 #define AG_MAP_SAVE_CAM0ZOOM	0x02	/* Save the camera 0 zoom factor */
@@ -160,20 +159,24 @@ typedef struct map {
 	} origin;
 	MAP_Node *_Nullable *_Nonnull map;	/* Arrays of nodes */
 	int redraw;				/* Redraw (for tile-based mode) */
-
 	MAP_Layer *_Nonnull layers;		/* List of layers */
 	Uint               nlayers;
-
 	MAP_Camera *_Nonnull cameras;		/* List of cameras */
 	Uint                ncameras;
-
 	MAP_ModBlk *_Nonnull blks;		/* Saved modifications */
 	Uint                nblks;
 	Uint curblk;
 	Uint nmods;	
-
 	AG_TAILQ_HEAD_(map_actor) actors;	/* Active objects */
 } MAP;
+
+#define MAP_(obj)          ((MAP *)(obj))
+#define MAP_SELF()         AG_OBJECT(0,"MAP:*")
+#define MAP_PTR(n)         AG_OBJECT((n),"MAP:*")
+#define MAP_NAMED(n)       AG_OBJECT_NAMED((n),"MAP:*")
+#define MAP_CONST_SELF()   AG_CONST_OBJECT(0,"MAP:*")
+#define MAP_CONST_PTR(n)   AG_CONST_OBJECT((n),"MAP:*")
+#define MAP_CONST_NAMED(n) AG_CONST_OBJECT_NAMED((n),"MAP:*")
 
 __BEGIN_DECLS
 extern AG_ObjectClass mapClass;

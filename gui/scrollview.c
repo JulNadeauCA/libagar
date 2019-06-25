@@ -119,7 +119,7 @@ PanView(AG_Scrollview *_Nonnull sv)
 static void
 ScrollbarChanged(AG_Event *_Nonnull event)
 {
-	AG_Scrollview *sv = AG_PTR(1);
+	AG_Scrollview *sv = AG_SCROLLVIEW_PTR(1);
 
 	PanView(sv);
 }
@@ -127,7 +127,7 @@ ScrollbarChanged(AG_Event *_Nonnull event)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_Scrollview *sv = AG_SELF();
+	AG_Scrollview *sv = AG_SCROLLVIEW_SELF();
 	int dx = AG_INT(3);
 	int dy = AG_INT(4);
 
@@ -150,7 +150,7 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Scrollview *sv = AG_SELF();
+	AG_Scrollview *sv = AG_SCROLLVIEW_SELF();
 	int button = AG_INT(1);
 
 	switch (button) {
@@ -173,7 +173,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Scrollview *sv = AG_SELF();
+	AG_Scrollview *sv = AG_SCROLLVIEW_SELF();
 	int button = AG_INT(1);
 	int update = 0;
 

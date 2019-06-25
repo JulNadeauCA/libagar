@@ -485,7 +485,7 @@ AG_BoxSetVertAlign(AG_Box *box, enum ag_box_align align)
 static void
 UpdateWindowOf(AG_Event *_Nonnull event)
 {
-	AG_Box *box = AG_PTR(1);
+	AG_Box *box = AG_BOX_PTR(1);
 	AG_Window *win = AG_ParentWindow(box);
 
 	AG_Redraw(box);

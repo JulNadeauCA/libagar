@@ -67,7 +67,7 @@ AG_MFSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *sep,
 static Uint32
 UpdateTimeout(AG_Timer *to, AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = AG_SELF();
+	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_SELF();
 	
 	if (!AG_WidgetIsFocused(fsu)) {
 		AG_MFSpinbuttonUpdate(fsu);
@@ -79,7 +79,7 @@ UpdateTimeout(AG_Timer *to, AG_Event *event)
 static void
 OnShow(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = AG_SELF();
+	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_SELF();
 	AG_Variable *Vx, *Vy;
 
 #ifdef AG_TIMERS
@@ -227,7 +227,7 @@ AG_MFSpinbuttonUpdate(AG_MFSpinbutton *fsu)
 static void
 KeyDown(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = AG_SELF();
+	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
@@ -251,7 +251,7 @@ KeyDown(AG_Event *event)
 static void
 TextChanged(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = AG_PTR(1);
+	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_PTR(1);
 	int unfocus = AG_INT(2);
 	char inTxt[128];
 	char *tp = &inTxt[0], *s;
@@ -280,7 +280,7 @@ TextChanged(AG_Event *event)
 static void
 DecrementY(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = AG_PTR(1);
+	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_PTR(1);
 
 	AG_ObjectLock(fsu);
 	AG_MFSpinbuttonAddValue(fsu, "yvalue", -fsu->inc);
@@ -290,7 +290,7 @@ DecrementY(AG_Event *event)
 static void
 IncrementY(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = AG_PTR(1);
+	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_PTR(1);
 	
 	AG_ObjectLock(fsu);
 	AG_MFSpinbuttonAddValue(fsu, "yvalue", fsu->inc);
@@ -300,7 +300,7 @@ IncrementY(AG_Event *event)
 static void
 DecrementX(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = AG_PTR(1);
+	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_PTR(1);
 	
 	AG_ObjectLock(fsu);
 	AG_MFSpinbuttonAddValue(fsu, "xvalue", -fsu->inc);
@@ -310,7 +310,7 @@ DecrementX(AG_Event *event)
 static void
 IncrementX(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = AG_PTR(1);
+	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_PTR(1);
 	
 	AG_ObjectLock(fsu);
 	AG_MFSpinbuttonAddValue(fsu, "xvalue", fsu->inc);
@@ -328,7 +328,7 @@ UpdateUnitSelector(AG_MFSpinbutton *fsu)
 static void
 SelectedUnit(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = AG_PTR(1);
+	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_PTR(1);
 	AG_TlistItem *ti = AG_PTR(2);
 
 	AG_ObjectLock(fsu);

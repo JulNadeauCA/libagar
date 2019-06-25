@@ -90,6 +90,14 @@ typedef struct ag_menu {
 	AG_Rect r;			  /* View area */
 } AG_Menu;
 
+#define AGMENU(obj)            ((AG_Menu *)(obj))
+#define AG_MENU_SELF()         AG_OBJECT(0,"AG_Widget:AG_Menu:*")
+#define AG_MENU_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Menu:*")
+#define AG_MENU_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Menu:*")
+#define AG_CONST_MENU_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Menu:*")
+#define AG_CONST_MENU_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Menu:*")
+#define AG_CONST_MENU_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Menu:*")
+
 typedef struct ag_popup_menu {
 	AG_Widget   *_Nonnull  widget;	/* Parent widget */
 	AG_Menu     *_Nonnull  menu;	/* Menu (allocated) */
@@ -108,6 +116,14 @@ typedef struct ag_menu_view {
 	int lPad, rPad, tPad, bPad;	/* Padding in pixels */
 	int arrowRight;			/* Right arrow surface handle */
 } AG_MenuView;
+
+#define AGMENUVIEW(obj)            ((AG_MenuView *)(obj))
+#define AG_MENUVIEW_SELF()         AG_OBJECT(0,"AG_Widget:AG_MenuView:*")
+#define AG_MENUVIEW_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_MenuView:*")
+#define AG_MENUVIEW_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_MenuView:*")
+#define AG_CONST_MENUVIEW_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_MenuView:*")
+#define AG_CONST_MENUVIEW_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_MenuView:*")
+#define AG_CONST_MENUVIEW_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_MenuView:*")
 
 __BEGIN_DECLS
 extern AG_WidgetClass agMenuClass;

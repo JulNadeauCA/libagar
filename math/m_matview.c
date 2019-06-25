@@ -75,7 +75,7 @@ M_MatviewSetMatrix(M_Matview *mv, M_Matrix *M)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	M_Matview *mv = AG_SELF();
+	M_Matview *mv = M_MATVIEW_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
@@ -101,7 +101,7 @@ KeyDown(AG_Event *_Nonnull event)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Button *bu = AG_SELF();
+	AG_Button *bu = AG_BUTTON_SELF();
 
 	AG_WidgetFocus(bu);
 }

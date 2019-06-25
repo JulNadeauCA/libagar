@@ -67,7 +67,7 @@ AG_TreetblNew(void *parent, Uint flags, AG_TreetblDataFn cellDataFn,
 static Uint32
 DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Treetbl *tt = AG_SELF();
+	AG_Treetbl *tt = AG_TREETBL_SELF();
 
 	tt->dblClicked = 0;
 	/* TODO: if the cursor remains in the cell, activate a click-to-edit */
@@ -77,7 +77,7 @@ DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 FocusLost(AG_Event *_Nonnull event)
 {
-	AG_Treetbl *tt = AG_SELF();
+	AG_Treetbl *tt = AG_TREETBL_SELF();
 
 	AG_DelTimer(tt, &tt->toDblClick);
 	tt->dblClicked = 0;
@@ -106,8 +106,8 @@ FontChangedRow(AG_Treetbl *_Nonnull tt, AG_TreetblRow *_Nonnull row)
 static void
 FontChanged(AG_Event *_Nonnull event)
 {
-	AG_Treetbl *tt = AG_SELF();
-	AG_Font *font = WIDGET(tt)->font;
+	AG_Treetbl *tt = AG_TREETBL_SELF();
+	const AG_Font *font = WIDGET(tt)->font;
 	AG_TreetblRow *row;
 	Uint i;
 
@@ -129,7 +129,7 @@ FontChanged(AG_Event *_Nonnull event)
 static void
 ScrollbarChanged(AG_Event *_Nonnull event)
 {
-	AG_Treetbl *tt = AG_PTR(1);
+	AG_Treetbl *tt = AG_TREETBL_PTR(1);
 
 	tt->visible.dirty = 1;
 	AG_Redraw(tt);
@@ -263,7 +263,7 @@ FOREACH_VISIBLE_COLUMN(AG_Treetbl *_Nonnull tt, VisibleForeachFn foreachFn,
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Treetbl *tt = AG_SELF();
+	AG_Treetbl *tt = AG_TREETBL_SELF();
 	AG_TreetblCol *col = NULL;
 	int coord_x = AG_INT(2), coord_y = AG_INT(3);
 	int left;
@@ -508,7 +508,7 @@ ClickedRow(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Treetbl *tt = AG_SELF();
+	AG_Treetbl *tt = AG_TREETBL_SELF();
 	int coord_x = AG_INT(2);
 	int coord_y = AG_INT(3);
 

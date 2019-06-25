@@ -102,8 +102,8 @@ FindObjects(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 static void
 PollObjects(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_ObjectSelector *os = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_ObjectSelector *os = AG_OBJECTSELECTOR_PTR(1);
 
 	AG_TlistClear(tl);
 	AG_ObjectLock(os);
@@ -117,34 +117,33 @@ PollObjects(AG_Event *event)
 static void
 SelectObject(AG_Event *event)
 {
-	AG_ObjectSelector *os = AG_PTR(1);
-	AG_TlistItem *it = AG_PTR(2);
-	AG_Variable *objectb;
+	AG_ObjectSelector *os = AG_OBJECTSELECTOR_PTR(1);
+	const AG_TlistItem *it = AG_PTR(2);
+	AG_Variable *V;
 	void **object;
 	
-	objectb = AG_GetVariable(os, "object", &object);
+	V = AG_GetVariable(os, "object", &object);
 
 	if (*object != NULL) {
 		if (os->flags & AG_OBJSEL_PAGE_DATA)
 			AG_ObjectPageOut(*object);
 	}
-
 	*object = it->p1;
 
 	if (os->flags & AG_OBJSEL_PAGE_DATA) {
 		AG_ObjectPageIn(*object);
 	}
-	AG_UnlockVariable(objectb);
+	AG_UnlockVariable(V);
 }
 
 static void
 Bound(AG_Event *event)
 {
-	AG_ObjectSelector *os = AG_SELF();
-	AG_Variable *b = AG_PTR(1);
+	AG_ObjectSelector *os = AG_OBJECTSELECTOR_SELF();
+	const AG_Variable *V = AG_PTR(1);
 
-	if (strcmp(b->name, "object") == 0) {
-		void **object = b->data.p;
+	if (strcmp(V->name, "object") == 0) {
+		void **object = V->data.p;
 	
 		if (*object != NULL)
 			AG_ComboSelectPointer(&os->com, *object);

@@ -200,12 +200,11 @@ void
 Selected(AG_Event *event)
 {
 	AG_TlistItem *item = AG_PTR(1);
+	
 	AG_TextMsg(AG_MSG_INFO, "Selected item: %s", item->text);
 }
 
-AG_Combo *com;
-
-com = AG_ComboNew(NULL, 0, "Item: ");
+AG_Combo *com = AG_ComboNew(NULL, 0, "Item: ");
 AG_TlistAdd(com->list, NULL, "Foo");
 AG_TlistAdd(com->list, NULL, "Bar");
 AG_SetEvent(com, "combo-selected", Selected, NULL);

@@ -99,6 +99,14 @@ typedef struct map_view {
 	AG_SLIST_HEAD_(map_view_draw_cb) draw_cbs;	/* Post-draw callbacks */
 } MAP_View;
 
+#define MAPVIEW(obj)            ((MAP_View *)(obj))
+#define MAP_VIEW_SELF()         AG_OBJECT(0,"AG_Widget:MAP_View:*")
+#define MAP_VIEW_PTR(n)         AG_OBJECT((n),"AG_Widget:MAP_View:*")
+#define MAP_VIEW_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:MAP_View:*")
+#define MAP_CONST_VIEW_SELF()   AG_CONST_OBJECT(0,"AG_Widget:MAP_View:*")
+#define MAP_CONST_VIEW_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:MAP_View:*")
+#define MAP_CONST_VIEW_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:MAP_View:*")
+
 #define AGMCAM(mv)	(mv)->map->cameras[(mv)->cam]
 #define AGMZOOM(mv)	AGMCAM(mv).zoom
 #define AGMTILESZ(mv)	AGMCAM(mv).tilesz

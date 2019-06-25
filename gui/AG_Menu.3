@@ -266,17 +266,12 @@ The
 function creates a dynamic menu item.
 The specified callback routine
 .Fa fn
-will be invoked repeatedly to update the menu item.
-The
+will be invoked repeatedly to update the menu item, with the
 .Nm
-object is passed as
-.Fn AG_SELF ,
-and pointer to the
-.Ft AG_MenuItem
-structure can be retrieved using
-.Fn AG_SENDER
-(see
-.Xr AG_Event 3 ) .
+as receiver object (access with
+.Fn AG_MENU_SELF ) ,
+and the first Pointer argument a pointer to the
+.Ft AG_MenuItem .
 The callback routine is allowed to directly modify the
 .Va state
 member of the

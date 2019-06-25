@@ -40,7 +40,13 @@ typedef struct ag_slider {
 #endif
 } AG_Slider;
 
-#define AGSLIDER(p) ((AG_Slider *)p)
+#define AGSLIDER(obj)            ((AG_Slider *)(obj))
+#define AG_SLIDER_SELF()         AG_OBJECT(0,"AG_Widget:AG_Slider:*")
+#define AG_SLIDER_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Slider:*")
+#define AG_SLIDER_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Slider:*")
+#define AG_CONST_SLIDER_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Slider:*")
+#define AG_CONST_SLIDER_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Slider:*")
+#define AG_CONST_SLIDER_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Slider:*")
 
 __BEGIN_DECLS
 extern AG_WidgetClass agSliderClass;

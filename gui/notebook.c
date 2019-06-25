@@ -47,7 +47,7 @@ AG_NotebookNew(void *parent, Uint flags)
 static void
 MouseButtonDown(AG_Event *event)
 {
-	AG_Notebook *nb = AG_SELF();
+	AG_Notebook *nb = AG_NOTEBOOK_SELF();
 	int x = AG_INT(2);
 	int y = AG_INT(3);
 	int ts = nb->tabspacing;
@@ -73,7 +73,7 @@ MouseButtonDown(AG_Event *event)
 static void
 OnShow(AG_Event *event)
 {
-	AG_Notebook *nb = AG_SELF();
+	AG_Notebook *nb = AG_NOTEBOOK_SELF();
 
 	if (nb->sel_tab == NULL)
 		AG_NotebookSelect(nb, TAILQ_FIRST(&nb->tabs));
@@ -82,7 +82,7 @@ OnShow(AG_Event *event)
 static void
 OnHide(AG_Event *event)
 {
-	AG_Notebook *nb = AG_SELF();
+	AG_Notebook *nb = AG_NOTEBOOK_SELF();
 
 	if (nb->sel_tab != NULL)
 		AG_NotebookSelect(nb, NULL);

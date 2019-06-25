@@ -73,7 +73,7 @@ AG_ProgressBarNewInt(void *parent, enum ag_progress_bar_type type, Uint flags,
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	AG_ProgressBar *pb = AG_SELF();
+	AG_ProgressBar *pb = AG_PROGRESSBAR_SELF();
 
 	if ((pb->flags & AG_PROGRESS_BAR_EXCL) == 0) {
 		AG_RedrawOnChange(pb, 250, "value");
@@ -85,7 +85,7 @@ OnShow(AG_Event *_Nonnull event)
 static void
 OnFontChange(AG_Event *_Nonnull event)
 {
-	AG_ProgressBar *pb = AG_SELF();
+	AG_ProgressBar *pb = AG_PROGRESSBAR_SELF();
 
 	pb->width = WIDGET(pb)->font->height+10;
 }

@@ -57,7 +57,7 @@ AG_FontSelectorNew(void *parent, Uint flags)
 static void
 Bound(AG_Event *event)
 {
-	AG_FontSelector *fs = AG_SELF();
+	AG_FontSelector *fs = AG_FONTSELECTOR_SELF();
 	AG_Variable *b = AG_PTR(1);
 	AG_Font **pFont;
 
@@ -123,7 +123,7 @@ OnShow(AG_Event *event)
 {
 	AG_Variable *bFont;
 	AG_Font **pFont;
-	AG_FontSelector *fs = AG_SELF();
+	AG_FontSelector *fs = AG_FONTSELECTOR_SELF();
 	char fontPath[AG_PATHNAME_MAX], *pFontPath = &fontPath[0];
 	AG_StaticFont **pbf;
 	AG_TlistItem *ti;
@@ -243,8 +243,8 @@ OnShow(AG_Event *event)
 static void
 SelectedFace(AG_Event *event)
 {
-	AG_FontSelector *fs = AG_PTR(1);
-	AG_TlistItem *it = AG_PTR(2);
+	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
+	const AG_TlistItem *it = AG_PTR(2);
 
 	Strlcpy(fs->curFace, it->text, sizeof(fs->curFace));
 	UpdateFontSelection(fs);
@@ -254,8 +254,8 @@ SelectedFace(AG_Event *event)
 static void
 SelectedStyle(AG_Event *event)
 {
-	AG_FontSelector *fs = AG_PTR(1);
-	AG_TlistItem *it = AG_PTR(2);
+	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
+	const AG_TlistItem *it = AG_PTR(2);
 	Uint flags = 0;
 
 	if (!strcmp(it->text, _("Italic")))
@@ -273,8 +273,8 @@ SelectedStyle(AG_Event *event)
 static void
 SelectedSize(AG_Event *event)
 {
-	AG_FontSelector *fs = AG_PTR(1);
-	AG_TlistItem *it = AG_PTR(2);
+	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
+	const AG_TlistItem *it = AG_PTR(2);
 
 #ifdef HAVE_FLOAT
 	fs->curSize = strtod(it->text, NULL);

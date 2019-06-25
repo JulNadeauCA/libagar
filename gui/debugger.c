@@ -83,7 +83,7 @@ FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
 }
 
 static void
-FindWindows(AG_Tlist *_Nonnull tl, AG_Window *_Nonnull win, int depth)
+FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 {
 	char text[AG_TLIST_LABEL_MAX];
 	AG_Window *wSub;
@@ -102,7 +102,7 @@ FindWindows(AG_Tlist *_Nonnull tl, AG_Window *_Nonnull win, int depth)
 		    win->caption[0] != '\0' ? win->caption : _("Untitled"),
 		    OBJECT(win)->name);
 	}
-	it->p1 = win;
+	it->p1 = (AG_Window *)win;
 	it->depth = depth;
 	it->cat = "window";
 	it->flags |= AG_TLIST_ITEM_EXPANDED;
@@ -123,8 +123,8 @@ FindWindows(AG_Tlist *_Nonnull tl, AG_Window *_Nonnull win, int depth)
 static void
 PollWidgets(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_Window *win = AG_OBJECT(1, "AG_Widget:AG_Window:*");
+	AG_Tlist *tl = AG_TLIST_SELF();
+	const AG_Window *win = AG_CONST_WINDOW_PTR(1);
 	AG_Driver *drv;
 	
 	AG_TlistClear(tl);
@@ -145,7 +145,7 @@ PollWidgets(AG_Event *_Nonnull event)
 static void
 ShowWindow(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_OBJECT(1, "AG_Widget:AG_Window:*");
+	AG_Window *win = AG_WINDOW_PTR(1);
 
 	AG_WindowShow(win);
 }
@@ -153,7 +153,7 @@ ShowWindow(AG_Event *_Nonnull event)
 static void
 HideWindow(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_OBJECT(1, "AG_Widget:AG_Window:*");
+	AG_Window *win = AG_WINDOW_PTR(1);
 
 	AG_WindowHide(win);
 }
@@ -161,8 +161,8 @@ HideWindow(AG_Event *_Nonnull event)
 static void
 SelectedSurface(AG_Event *_Nonnull event)
 {
-	AG_Pixmap *px  = AG_OBJECT(2, "AG_Widget:AG_Pixmap:*");
-	AG_TlistItem *it = AG_PTR(3);
+	AG_Pixmap *px = AG_PIXMAP_PTR(1);
+	AG_TlistItem *it = AG_PTR(2);
 	AG_Surface *S = it->p1;
 	int Smapped;
 
@@ -174,7 +174,7 @@ SelectedSurface(AG_Event *_Nonnull event)
 static void
 ExportSurface(AG_Event *_Nonnull event)
 {
-	AG_Pixmap *px = AG_OBJECT(1, "AG_Widget:AG_Pixmap:*");
+	const AG_Pixmap *px = AG_CONST_PIXMAP_PTR(1);
 	const char *path = AG_STRING(2);
 	AG_Surface *S;
 
@@ -195,7 +195,7 @@ ExportSurface(AG_Event *_Nonnull event)
 static void
 ExportSurfaceDlg(AG_Event *_Nonnull event)
 {
-	AG_Pixmap *px  = AG_OBJECT(1, "AG_Widget:AG_Pixmap:*");
+	const AG_Pixmap *px = AG_CONST_PIXMAP_PTR(1);
 	AG_Window *win;
 	AG_FileDlg *fd;
 	
@@ -206,21 +206,22 @@ ExportSurfaceDlg(AG_Event *_Nonnull event)
 	fd = AG_FileDlgNewMRU(win, "agar.debugger.image-dir",
 	                      AG_FILEDLG_SAVE | AG_FILEDLG_CLOSEWIN |
 	                      AG_FILEDLG_MASK_EXT | AG_FILEDLG_EXPAND);
-	AG_FileDlgAddImageTypes(fd, ExportSurface, "%p", px);
+	AG_FileDlgAddImageTypes(fd, ExportSurface, "%Cp", px);
 	AG_WindowShow(win);
 }
 
 static void
 PollSurfaces(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_Widget *wid = AG_OBJECT(1, "AG_Widget:*");
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Widget *wid = AG_WIDGET_PTR(1);
 	AG_TlistItem *it;
 	Uint i;
 
+	AG_ObjectLock(wid);
 	AG_TlistBegin(tl);
 	for (i = 0; i < wid->nSurfaces; i++) {
-		AG_Surface *S = WSURFACE(wid,i);
+		const AG_Surface *S = WSURFACE(wid,i);
 
 		/* Sometimes WSURFACE returns NULL. This may be a bug
 		 * elsewhere, maybe in the glxdriver, causing wid->nSurfaces
@@ -234,20 +235,22 @@ PollSurfaces(AG_Event *_Nonnull event)
 		it = AG_TlistAdd(tl, S, "Surface%u (%ux%u, %ubpp)",
 		    i, S->w, S->h, S->format.BitsPerPixel);
 
-		it->p1 = S;
+		it->p1 = (AG_Surface *)S;
 		it->cat = "surface";
 	}
 	AG_TlistEnd(tl);
+	AG_ObjectUnlock(wid);
 }
 
 static void
 PollVariables(AG_Event *_Nonnull event)
 {
 	char val[AG_LABEL_MAX];
-	AG_Tlist *tl = AG_SELF();
-	AG_Object *obj = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Object *obj = AG_OBJECT_PTR(1);
 	AG_Variable *V;
 
+	AG_ObjectLock(obj);
 	AG_TlistBegin(tl);
 	TAILQ_FOREACH(V, &obj->vars, vars) {
 		if ((V->type == AG_VARIABLE_P_UINT ||
@@ -275,17 +278,20 @@ PollVariables(AG_Event *_Nonnull event)
 		}
 	}
 	AG_TlistEnd(tl);
+	AG_ObjectUnlock(obj);
 }
 
 static void
 PollCursors(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_Widget *wid = AG_OBJECT(1, "AG_Widget:*");
-	AG_Driver *drv = wid->drv;
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Widget *wid = AG_WIDGET_PTR(1);
+	AG_Driver *drv;
 	AG_TlistItem *it;
 	AG_Cursor *cu;
 
+	AG_ObjectLock(wid);
+	drv = wid->drv;
 	AG_TlistBegin(tl);
 	TAILQ_FOREACH(cu, &drv->cursors, cursors) {
 		it = AG_TlistAdd(tl, NULL, "%dx%d (%d,%d); p=%p", cu->w, cu->h, 
@@ -293,12 +299,13 @@ PollCursors(AG_Event *_Nonnull event)
 		it->p1 = cu;
 	}
 	AG_TlistEnd(tl);
+	AG_ObjectUnlock(wid);
 }
 
 static void
 WidgetSelected(AG_Event *_Nonnull event)
 {
-	AG_Box *box = AG_OBJECT(1, "AG_Widget:AG_Box");
+	AG_Box *box = AG_BOX_PTR(1);
 	AG_TlistItem *ti = AG_PTR(2);
 	AG_Widget *wid = ti->p1;
 	AG_Notebook *nb;
@@ -408,11 +415,11 @@ WidgetSelected(AG_Event *_Nonnull event)
 		tl = AG_TlistNewPolled(pane->div[1], AG_TLIST_EXPAND,
 		    PollSurfaces, "%p", wid);
 		AG_SetEvent(tl, "tlist-selected",
-		    SelectedSurface, "%p,%p", wid, px);
+		    SelectedSurface, "%p", px);
 
 		mi = AG_TlistSetPopup(tl, "surface");
 		AG_MenuAction(mi, _("Export to image file..."), agIconSave.s,
-		    ExportSurfaceDlg, "%p", px);
+		    ExportSurfaceDlg, "%Cp", px);
 
 		AG_PaneMoveDividerPct(pane, 50);
 	}
@@ -443,7 +450,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 static void
 ContextualMenu(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_OBJECT(1, "AG_Widget:AG_Tlist");
+	AG_Tlist *tl = AG_TLIST_PTR(1);
 	AG_MenuItem *mi = AG_PTR(2);
 	AG_TlistItem *ti = AG_TlistSelectedItem(tl);
 
@@ -485,7 +492,7 @@ AG_GuiDebugger(void *obj)
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 
-	tl = AG_TlistNewPolled(pane->div[0], 0, PollWidgets, "%p", obj);
+	tl = AG_TlistNewPolled(pane->div[0], 0, PollWidgets, "%Cp", obj);
 	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 10);
 	AG_SetEvent(tl, "tlist-dblclick", WidgetSelected, "%p", pane->div[1]);
 	AG_Expand(tl);

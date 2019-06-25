@@ -87,6 +87,7 @@ package Agar.Object is
   type Object_Access is access all Object with Convention => C;
   subtype Object_not_null_Access is not null Object_Access;
   
+  type Object_Tag is array (1 .. 8) of aliased c.char with Convention => C;
   type Object_Name is array (1 .. NAME_MAX) of
     aliased c.char with Convention => C;
   
@@ -143,6 +144,9 @@ package Agar.Object is
   OBJECT_BOUND_EVENTS          : constant C.unsigned := 16#2_0000#;
 
   type Object is limited record
+#if AG_TYPE_SAFETY
+    Tag             : Object_Tag;
+#end if;
     Name            : Object_Name;
     Class           : Class_not_null_Access;
     Flags           : C.unsigned;

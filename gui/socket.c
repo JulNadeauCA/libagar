@@ -318,7 +318,7 @@ SetCount(AG_Variable *_Nonnull binding, void *_Nonnull p, int v)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_Socket *sock = AG_SELF();
+	AG_Socket *sock = AG_SOCKET_SELF();
 	AG_Variable *binding;
 	int x = AG_INT(1);
 	int y = AG_INT(2);
@@ -350,7 +350,7 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 IconMotion(AG_Event *_Nonnull event)
 {
-	AG_Icon *icon = AG_PTR(1);
+	AG_Icon *icon = AG_ICON_PTR(1);
 	int xRel = AG_INT(4);
 	int yRel = AG_INT(5);
 	AG_Window *wDND = icon->wDND;
@@ -366,7 +366,7 @@ IconMotion(AG_Event *_Nonnull event)
 static void
 IconButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Icon *icon = AG_PTR(1);
+	AG_Icon *icon = AG_ICON_PTR(1);
 	AG_Window *wDND = icon->wDND;
 	int x = WIDGET(wDND)->rView.x1;
 	int y = WIDGET(wDND)->rView.y1;
@@ -395,7 +395,7 @@ IconButtonUp(AG_Event *_Nonnull event)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Socket *sock = AG_SELF();
+	AG_Socket *sock = AG_SOCKET_SELF();
 	int button = AG_INT(1);
 	AG_Variable *binding;
 	void *pState;
@@ -446,7 +446,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Socket *sock = AG_SELF();
+	AG_Socket *sock = AG_SOCKET_SELF();
 	int button = AG_INT(1);
 	AG_Variable *binding;
 	void *pState;

@@ -314,7 +314,7 @@ AG_PixmapSetCoords(AG_Pixmap *px, int s, int t)
 
 /* Return a copy of the surface at given index. */
 AG_Surface *
-AG_PixmapGetSurface(AG_Pixmap *px, int name)
+AG_PixmapGetSurface(const AG_Pixmap *px, int name)
 {
 	return AG_SurfaceDup(WSURFACE(px,name));
 }

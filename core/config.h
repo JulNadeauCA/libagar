@@ -26,6 +26,14 @@ typedef struct ag_config {
 	AG_ConfigPathQ paths[AG_CONFIG_PATH_LAST];  /* Configured load paths */
 } AG_Config;
 
+#define AGCONFIG(obj)            ((AG_Config *)(obj))
+#define AG_CONFIG_SELF()         AG_OBJECT(0,"AG_Config:*")
+#define AG_CONFIG_PTR(n)         AG_OBJECT((n),"AG_Config:*")
+#define AG_CONFIG_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Config:*")
+#define AG_CONST_CONFIG_SELF()   AG_CONST_OBJECT(0,"AG_Config:*")
+#define AG_CONST_CONFIG_PTR(n)   AG_CONST_OBJECT((n),"AG_Config:*")
+#define AG_CONST_CONFIG_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Config:*")
+
 __BEGIN_DECLS
 extern AG_Config *_Nullable agConfig;
 extern AG_ObjectClass agConfigClass;

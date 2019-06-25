@@ -90,7 +90,13 @@ typedef struct ag_editable {
 	AG_Timer toDblClick;		/* Double click timer */
 } AG_Editable;
 
-#define AGEDITABLE(p) ((AG_Editable *)(p))
+#define AGEDITABLE(obj)            ((AG_Editable *)(obj))
+#define AG_EDITABLE_SELF()         AG_OBJECT(0,"AG_Widget:AG_Editable:*")
+#define AG_EDITABLE_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Editable:*")
+#define AG_EDITABLE_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Editable:*")
+#define AG_CONST_EDITABLE_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Editable:*")
+#define AG_CONST_EDITABLE_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Editable:*")
+#define AG_CONST_EDITABLE_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Editable:*")
 
 __BEGIN_DECLS
 extern AG_WidgetClass agEditableClass;

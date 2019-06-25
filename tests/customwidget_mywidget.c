@@ -136,7 +136,7 @@ Draw(void *_Nonnull p)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	MyWidget *my = AG_SELF();
+	MyWidget *my = MYWIDGET_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 
@@ -151,7 +151,7 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	MyWidget *my = AG_SELF();
+	MyWidget *my = MYWIDGET_SELF();
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -167,7 +167,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-/*	MyWidget *my = AG_SELF(); */
+/*	MyWidget *my = MYWIDGET_SELF(); */
 /*	int button = AG_INT(1); */
 /*	int x = AG_INT(2); */
 /*	int y = AG_INT(3); */
@@ -179,7 +179,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	MyWidget *my = AG_SELF();
+	MyWidget *my = MYWIDGET_SELF();
 	int keysym = AG_INT(1);
 /*	int keymod = AG_INT(2); */
 	Uint32 unicode = AG_INT(3);
@@ -191,7 +191,7 @@ KeyDown(AG_Event *_Nonnull event)
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
-/*	MyWidget *my = AG_SELF(); */
+/*	MyWidget *my = MYWIDGET_SELF(); */
 /*	int keysym = AG_INT(1); */
 
 	/* ... */

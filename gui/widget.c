@@ -187,7 +187,7 @@ static void
 OnAttach(AG_Event *_Nonnull event)
 {
 	void *parent = AG_SENDER();
-	AG_Widget *w = AG_SELF();
+	AG_Widget *w = AG_WIDGET_SELF();
 
 	if (AG_OfClass(parent, "AG_Widget:AG_Window:*") &&
 	    AG_OfClass(w, "AG_Widget:*")) {
@@ -240,7 +240,7 @@ static void
 OnDetach(AG_Event *_Nonnull event)
 {
 	void *parent = AG_SENDER();
-	AG_Widget *w = AG_SELF();
+	AG_Widget *w = AG_WIDGET_SELF();
 	
 	if (AG_OfClass(parent, "AG_Widget:*") &&
 	    AG_OfClass(w, "AG_Widget:*")) {
@@ -273,7 +273,7 @@ RedrawOnTickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static Uint32
 RedrawOnChangeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Widget *wid = AG_SELF();
+	AG_Widget *wid = AG_WIDGET_SELF();
 	AG_RedrawTie *rt = AG_PTR(1);
 	AG_Variable *V, Vd;
 	void *p;
@@ -295,7 +295,7 @@ RedrawOnChangeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	AG_Widget *wid = AG_SELF();
+	AG_Widget *wid = AG_WIDGET_SELF();
 #ifdef AG_TIMERS
 	AG_RedrawTie *rt;
 #endif
@@ -324,7 +324,7 @@ OnShow(AG_Event *_Nonnull event)
 static void
 OnHide(AG_Event *_Nonnull event)
 {
-	AG_Widget *wid = AG_SELF();
+	AG_Widget *wid = AG_WIDGET_SELF();
 #ifdef AG_TIMERS
 	AG_RedrawTie *rt;
 #endif
@@ -478,7 +478,7 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 void
 AG_WidgetStdKeyDown(AG_Event *event)
 {
-	AG_Widget *wid = AG_SELF();
+	AG_Widget *wid = AG_WIDGET_SELF();
 	int sym = AG_INT(1);
 	int mod = AG_INT(2);
 
@@ -489,7 +489,7 @@ AG_WidgetStdKeyDown(AG_Event *event)
 void
 AG_WidgetStdKeyUp(AG_Event *event)
 {
-	AG_Widget *wid = AG_SELF();
+	AG_Widget *wid = AG_WIDGET_SELF();
 	int sym = AG_INT(1);
 	int mod = AG_INT(2);
 
@@ -500,7 +500,7 @@ AG_WidgetStdKeyUp(AG_Event *event)
 void
 AG_WidgetStdMouseButtonDown(AG_Event *event)
 {
-	AG_Widget *wid = AG_SELF();
+	AG_Widget *wid = AG_WIDGET_SELF();
 	int btn = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -515,7 +515,7 @@ AG_WidgetStdMouseButtonDown(AG_Event *event)
 void
 AG_WidgetStdMouseButtonUp(AG_Event *event)
 {
-	AG_Widget *wid = AG_SELF();
+	AG_Widget *wid = AG_WIDGET_SELF();
 	int btn = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -604,7 +604,7 @@ AG_ActionOnKeyUp(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 static Uint32
 ActionKeyRepeatTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Widget *wid = AG_SELF();
+	AG_Widget *wid = AG_WIDGET_SELF();
 	AG_ActionTie *at = AG_PTR(1);
 	AG_Action *a;
 

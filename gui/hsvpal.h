@@ -55,6 +55,14 @@ typedef struct ag_hsvpal {
 	AG_Color cTile;		/* Tiling fill color (TODO use style) */
 } AG_HSVPal;
 
+#define AGHSVPAL(obj)            ((AG_HSVPal *)(obj))
+#define AG_HSVPAL_SELF()         AG_OBJECT(0,"AG_Widget:AG_HSVPal:*")
+#define AG_HSVPAL_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_HSVPal:*")
+#define AG_HSVPAL_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_HSVPal:*")
+#define AG_CONST_HSVPAL_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_HSVPal:*")
+#define AG_CONST_HSVPAL_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_HSVPal:*")
+#define AG_CONST_HSVPAL_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_HSVPal:*")
+
 __BEGIN_DECLS
 extern AG_WidgetClass agHSVPalClass;
 

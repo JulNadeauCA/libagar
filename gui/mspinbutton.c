@@ -52,8 +52,8 @@ AG_MSpinbuttonNew(void *parent, Uint flags, const char *sep, const char *label)
 static void
 Bound(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = AG_SELF();
-	AG_Variable *binding = AG_PTR(1);
+	AG_MSpinbutton *sbu = AG_MSPINBUTTON_SELF();
+	const AG_Variable *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "xvalue") == 0 ||
 	    strcmp(binding->name, "yvalue") == 0) {
@@ -100,7 +100,7 @@ Bound(AG_Event *event)
 static void
 KeyDown(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = AG_SELF();
+	AG_MSpinbutton *sbu = AG_MSPINBUTTON_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
@@ -124,7 +124,7 @@ KeyDown(AG_Event *event)
 static void
 TextReturn(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = AG_PTR(1);
+	AG_MSpinbutton *sbu = AG_MSPINBUTTON_PTR(1);
 	char inTxt[64];
 	char *tp = &inTxt[0], *s;
 
@@ -145,7 +145,7 @@ TextReturn(AG_Event *event)
 static void
 TextChanged(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = AG_PTR(1);
+	AG_MSpinbutton *sbu = AG_MSPINBUTTON_PTR(1);
 	char inTxt[64];
 	char *tp = &inTxt[0], *s;
 	
@@ -165,7 +165,7 @@ TextChanged(AG_Event *event)
 static void
 DecrementY(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = AG_PTR(1);
+	AG_MSpinbutton *sbu = AG_MSPINBUTTON_PTR(1);
 
 	AG_ObjectLock(sbu);
 	AG_MSpinbuttonAddValue(sbu, "yvalue", -sbu->inc);
@@ -175,7 +175,7 @@ DecrementY(AG_Event *event)
 static void
 IncrementY(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = AG_PTR(1);
+	AG_MSpinbutton *sbu = AG_MSPINBUTTON_PTR(1);
 	
 	AG_ObjectLock(sbu);
 	AG_MSpinbuttonAddValue(sbu, "yvalue", sbu->inc);
@@ -185,7 +185,7 @@ IncrementY(AG_Event *event)
 static void
 DecrementX(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = AG_PTR(1);
+	AG_MSpinbutton *sbu = AG_MSPINBUTTON_PTR(1);
 	
 	AG_ObjectLock(sbu);
 	AG_MSpinbuttonAddValue(sbu, "xvalue", -sbu->inc);
@@ -195,7 +195,7 @@ DecrementX(AG_Event *event)
 static void
 IncrementX(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = AG_PTR(1);
+	AG_MSpinbutton *sbu = AG_MSPINBUTTON_PTR(1);
 	
 	AG_ObjectLock(sbu);
 	AG_MSpinbuttonAddValue(sbu, "xvalue", sbu->inc);

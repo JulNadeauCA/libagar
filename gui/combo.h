@@ -32,7 +32,13 @@ typedef struct ag_combo {
 	int wPreList, hPreList;		/* Size hints */
 } AG_Combo;
 
-#define AGCOMBO(p) ((AG_Combo *)(p))
+#define AGCOMBO(obj)            ((AG_Combo *)(obj))
+#define AG_COMBO_SELF()         AG_OBJECT(0,"AG_Widget:AG_Combo:*")
+#define AG_COMBO_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Combo:*")
+#define AG_COMBO_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Combo:*")
+#define AG_CONST_COMBO_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Combo:*")
+#define AG_CONST_COMBO_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Combo:*")
+#define AG_CONST_COMBO_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Combo:*")
 
 #define AG_COMBO_FOREACH(it, com) \
 	AG_TLIST_FOREACH(it, (com)->list)

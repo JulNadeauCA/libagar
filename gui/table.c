@@ -56,7 +56,7 @@ AG_TableNew(void *parent, Uint flags)
 static Uint32
 PollTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Table *t = AG_SELF();
+	AG_Table *t = AG_TABLE_SELF();
 
 	t->poll_ev->fn(t->poll_ev);
 	if (t->mOffs+t->mVis >= t->m) {
@@ -1719,7 +1719,7 @@ IncrementSelection(AG_Table *_Nonnull t, int inc)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Table *t = AG_SELF();
+	AG_Table *t = AG_TABLE_SELF();
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -1771,7 +1771,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Table *t = AG_SELF();
+	AG_Table *t = AG_TABLE_SELF();
 	int button = AG_INT(1);
 
 	switch (button) {
@@ -1789,7 +1789,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 static Uint32
 MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Table *t = AG_SELF();
+	AG_Table *t = AG_TABLE_SELF();
 	int incr = AG_INT(1);
 
 	if (incr < 0) {
@@ -1804,7 +1804,7 @@ MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	AG_Table *t = AG_SELF();
+	AG_Table *t = AG_TABLE_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
@@ -1838,7 +1838,7 @@ KeyDown(AG_Event *_Nonnull event)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_Table *t = AG_SELF();
+	AG_Table *t = AG_TABLE_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	int xrel = AG_INT(3);
@@ -1861,7 +1861,7 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
-	AG_Table *t = AG_SELF();
+	AG_Table *t = AG_TABLE_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
@@ -1878,7 +1878,7 @@ KeyUp(AG_Event *_Nonnull event)
 static void
 OnFontChange(AG_Event *_Nonnull event)
 {
-	AG_Table *t = AG_SELF();
+	AG_Table *t = AG_TABLE_SELF();
 	AG_Font *font = WIDGET(t)->font;
 	Uint m, n;
 	
@@ -1906,7 +1906,7 @@ OnFontChange(AG_Event *_Nonnull event)
 static void
 LostFocus(AG_Event *_Nonnull event)
 {
-	AG_Table *t = AG_SELF();
+	AG_Table *t = AG_TABLE_SELF();
 
 #ifdef AG_TIMERS
 	AG_DelTimer(t, &t->moveTo);

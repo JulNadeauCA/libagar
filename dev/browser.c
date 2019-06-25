@@ -58,17 +58,16 @@ struct objent {
 static TAILQ_HEAD_(objent) dobjs;
 static TAILQ_HEAD_(objent) gobjs;
 static int editNowFlag = 1;
-static void *_Nullable lastSelectedParent = NULL;
 
 static void
 CreateObject(AG_Event *_Nonnull event)
 {
 	char name[AG_OBJECT_NAME_MAX];
-	AG_Object *vfsRoot = AG_PTR(1);
+	AG_Object *vfsRoot = AG_OBJECT_PTR(1);
 	AG_ObjectClass *cl = AG_PTR(2);
-	AG_Textbox *name_tb = AG_PTR(3);
-	AG_Tlist *tlObjs = AG_PTR(4);
-	AG_Window *dlg_win = AG_PTR(5);
+	AG_Textbox *name_tb = AG_TEXTBOX_PTR(3);
+	AG_Tlist *tlObjs = AG_TLIST_PTR(4);
+	AG_Window *dlg_win = AG_WINDOW_PTR(5);
 	AG_TlistItem *it;
 	AG_Object *pobj;
 	void *nobj;
@@ -113,7 +112,7 @@ enum {
 static void
 CloseGenericDlg(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_SELF();
+	AG_Window *win = AG_WINDOW_SELF();
 	struct objent *oent = AG_PTR(1);
 
 	AG_ObjectDetach(win);
@@ -160,7 +159,7 @@ SaveAndCloseObject(struct objent *_Nonnull oent, AG_Window *_Nonnull win,
 static void
 SaveChangesReturn(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_WINDOW_PTR(1);
 	struct objent *oent = AG_PTR(2);
 	int save = AG_INT(3);
 
@@ -170,7 +169,7 @@ SaveChangesReturn(AG_Event *_Nonnull event)
 static void
 SaveChangesDlg(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_SELF();
+	AG_Window *win = AG_WINDOW_SELF();
 	struct objent *oent = AG_PTR(1);
 
 	if (AG_ObjectChanged(oent->obj)) {
@@ -257,7 +256,7 @@ fail:
 static void
 SaveObjectToFile(AG_Event *_Nonnull event)
 {
-	AG_Object *ob = AG_PTR(1);
+	AG_Object *ob = AG_OBJECT_PTR(1);
 	char *path = AG_STRING(2);
 	int loadedTmp = 0;
 	int dataFound;
@@ -292,7 +291,7 @@ fail:
 static void
 ImportObject(AG_Event *_Nonnull event)
 {
-	AG_Object *ob = AG_PTR(1);
+	AG_Object *ob = AG_OBJECT_PTR(1);
 	char *path = AG_STRING(2);
 	int loadedTmp = 0;
 	int dataFound;
@@ -374,8 +373,8 @@ DEV_BrowserLoadFromDlg(void *p, const char *name)
 static void
 ObjectOp(AG_Event *_Nonnull event)
 {
-	void *vfsRoot = AG_PTR(1);
-	AG_Tlist *tl = AG_PTR(2);
+	AG_Object *vfsRoot = AG_OBJECT_PTR(1);
+	AG_Tlist *tl = AG_TLIST_PTR(2);
 	AG_Window *win, *winParent = AG_ParentWindow(tl);
 	int op = AG_INT(3);
 	AG_TlistItem *it;
@@ -476,7 +475,7 @@ ObjectOp(AG_Event *_Nonnull event)
 static void
 DEV_BrowserGenericSave(AG_Event *_Nonnull event)
 {
-	AG_Object *ob = AG_PTR(1);
+	AG_Object *ob = AG_OBJECT_PTR(1);
 
 	if (AG_ObjectSave(ob) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, _("Save failed: %s: %s"), ob->name,
@@ -490,7 +489,7 @@ DEV_BrowserGenericSave(AG_Event *_Nonnull event)
 static void
 DEV_BrowserGenericLoad(AG_Event *_Nonnull event)
 {
-	AG_Object *ob = AG_PTR(1);
+	AG_Object *ob = AG_OBJECT_PTR(1);
 
 	if (AG_ObjectLoad(ob) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, _("Load failed: %s: %s"), ob->name,
@@ -504,8 +503,8 @@ DEV_BrowserGenericLoad(AG_Event *_Nonnull event)
 static void
 DEV_BrowserGenericSaveTo(AG_Event *_Nonnull event)
 {
-	void *obj = AG_PTR(1);
-	AG_Window *winParent = AG_PTR(2), *win;
+	AG_Object *obj = AG_OBJECT_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(2), *win;
 
 	win = DEV_BrowserSaveToDlg(obj, _("Agar object file"));
 	if (win != NULL)
@@ -515,8 +514,8 @@ DEV_BrowserGenericSaveTo(AG_Event *_Nonnull event)
 static void
 DEV_BrowserGenericLoadFrom(AG_Event *_Nonnull event)
 {
-	void *obj = AG_PTR(1);
-	AG_Window *winParent = AG_PTR(2), *win;
+	AG_Object *obj = AG_OBJECT_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(2), *win;
 
 	win = DEV_BrowserLoadFromDlg(obj, _("Agar object file"));
 	if (win != NULL)
@@ -578,31 +577,20 @@ PollObjectsFind(AG_Tlist *_Nonnull tl, AG_Object *_Nonnull pob, int depth)
 static void
 PollObjects(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_Object *pob = AG_PTR(1);
-	AG_Object *dob = AG_PTR(2);
-	AG_TlistItem *it;
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Object *pob = AG_OBJECT_PTR(1);
 
 	AG_LockVFS(pob);
 	AG_TlistClear(tl);
 	PollObjectsFind(tl, pob, 0);
 	AG_TlistRestore(tl);
 	AG_UnlockVFS(pob);
-
-	if (AG_TlistSelectedItem(tl) == NULL) {
-		TAILQ_FOREACH(it, &tl->items, items) {
-			if (it->p1 == dob)
-				break;
-		}
-		if (it != NULL)
-			AG_TlistSelect(tl, it);
-	}
 }
 
 static void
 LoadObject(AG_Event *_Nonnull event)
 {
-	AG_Object *o = AG_PTR(1);
+	AG_Object *o = AG_OBJECT_PTR(1);
 
 	if (AG_ObjectLoad(o) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", OBJECT(o)->name,
@@ -613,7 +601,7 @@ LoadObject(AG_Event *_Nonnull event)
 static void
 SaveObject(AG_Event *_Nonnull event)
 {
-	AG_Object *ob = AG_PTR(1);
+	AG_Object *ob = AG_OBJECT_PTR(1);
 
 	if (AG_ObjectSave(ob) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name, AG_GetError());
@@ -639,9 +627,9 @@ static void
 CreateObjectDlg(AG_Event *_Nonnull event)
 {
 	AG_Window *win;
-	AG_Object *vfsRoot = AG_PTR(1);
+	AG_Object *vfsRoot = AG_OBJECT_PTR(1);
 	AG_ObjectClass *cl = AG_PTR(2);
-	AG_Window *winParent = AG_PTR(3);
+	AG_Window *winParent = AG_WINDOW_PTR(3);
 	AG_Tlist *tlParents;
 	AG_Box *bo;
 	AG_Textbox *tb;
@@ -669,10 +657,8 @@ CreateObjectDlg(AG_Event *_Nonnull event)
 
 		tlParents = AG_TlistNewPolled(bo,
 		    AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND,
-		    PollObjects, "%p,%p", vfsRoot, lastSelectedParent);
+		    PollObjects, "%p", vfsRoot);
 		AG_TlistSizeHint(tlParents, "XXXXXXXXXXXXXXXXXXX", 5);
-		AG_BindPointer(tlParents, "selected",
-		    (void **)&lastSelectedParent);
 	}
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
@@ -734,7 +720,7 @@ DEV_Browser(void *vfsRoot)
 	                           AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tlObjs, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
 	AG_SetEvent(tlObjs, "tlist-poll",
-	    PollObjects, "%p,%p", vfsRoot, NULL);
+	    PollObjects, "%p", vfsRoot);
 	AG_SetEvent(tlObjs, "tlist-dblclick",
 	    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_EDIT_DATA);
 
@@ -890,7 +876,7 @@ ConfirmQuit(AG_Event *_Nonnull event)
 static void
 AbortQuit(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_WINDOW_PTR(1);
 
 	AG_ObjectDetach(win);
 }
@@ -904,7 +890,7 @@ AbortQuit(AG_Event *_Nonnull event)
 static void
 DEV_QuitCallback(AG_Event *_Nonnull event)
 {
-	AG_Object *vfsRoot = AG_PTR(1);
+	AG_Object *vfsRoot = AG_OBJECT_PTR(1);
 	AG_Window *win;
 	AG_Box *bo;
 	

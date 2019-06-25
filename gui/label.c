@@ -261,7 +261,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 static void
 OnFontChange(AG_Event *_Nonnull event)
 {
-	AG_Label *lbl = AG_SELF();
+	AG_Label *lbl = AG_LABEL_SELF();
 
 	if (lbl->tCache != NULL) {
 		AG_TextCacheClear(lbl->tCache);

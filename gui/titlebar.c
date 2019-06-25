@@ -32,7 +32,7 @@
 static void
 MaximizeWindow(AG_Event *_Nonnull event)
 {
-	AG_Titlebar *tbar = AG_PTR(1);
+	const AG_Titlebar *tbar = AG_CONST_TITLEBAR_PTR(1);
 	AG_Window *win = tbar->win;
 
 	AG_ObjectLock(win);
@@ -53,13 +53,13 @@ CreateMaximizeButton(AG_Titlebar *_Nonnull tbar)
 	AG_ButtonSurface(tbar->maximize_btn, agIconWinMaximize.s);
 	AG_ButtonSetPadding(tbar->maximize_btn, 0,2,1,1);
 	AG_SetEvent(tbar->maximize_btn, "button-pushed",
-	    MaximizeWindow, "%p", tbar);
+	    MaximizeWindow, "%Cp", tbar);
 }
 
 static void
 MinimizeWindow(AG_Event *_Nonnull event)
 {
-	AG_Titlebar *tbar = AG_PTR(1);
+	const AG_Titlebar *tbar = AG_CONST_TITLEBAR_PTR(1);
 
 	AG_WindowMinimize(tbar->win);
 }
@@ -73,15 +73,16 @@ CreateMinimizeButton(AG_Titlebar *_Nonnull tbar)
 	AG_ButtonSurface(tbar->minimize_btn, agIconWinMinimize.s);
 	AG_ButtonSetPadding(tbar->minimize_btn, 0,2,1,1);
 	AG_SetEvent(tbar->minimize_btn, "button-pushed",
-	    MinimizeWindow, "%p", tbar);
+	    MinimizeWindow, "%Cp", tbar);
 }
 
 static void
 CloseWindow(AG_Event *_Nonnull event)
 {
-	AG_Titlebar *tbar = AG_PTR(1);
+	const AG_Titlebar *tbar = AG_CONST_TITLEBAR_PTR(1);
+	AG_Window *win = tbar->win;
 
-	AG_PostEvent(NULL, tbar->win, "window-close", NULL);
+	AG_PostEvent(NULL, win, "window-close", NULL);
 }
 
 static void
@@ -93,7 +94,7 @@ CreateCloseButton(AG_Titlebar *_Nonnull tbar)
 	AG_ButtonSurface(tbar->close_btn, agIconWinClose.s);
 	AG_ButtonSetPadding(tbar->close_btn, 0,2,1,1);
 	AG_SetEvent(tbar->close_btn, "button-pushed",
-	    CloseWindow, "%p", tbar);
+	    CloseWindow, "%Cp", tbar);
 }
 
 AG_Titlebar *
@@ -112,7 +113,7 @@ AG_TitlebarNew(void *parent, Uint flags)
 	 * is called from the Window attach routine.
 	 */
 	AG_ObjectLock(tbar);
-	tbar->win = (AG_Window *)parent;
+	tbar->win = AGWINDOW(parent);
 	WIDGET(tbar)->window = tbar->win;
 	WIDGET(tbar)->drv = WIDGET(parent)->drv;
 	WIDGET(tbar)->drvOps = AGDRIVER_CLASS(WIDGET(tbar)->drv);
@@ -131,7 +132,7 @@ AG_TitlebarNew(void *parent, Uint flags)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Titlebar *tbar = AG_SELF();
+	AG_Titlebar *tbar = AG_TITLEBAR_SELF();
 
 	tbar->flags |= AG_TITLEBAR_PRESSED;
 
@@ -142,7 +143,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Titlebar *tbar = AG_SELF();
+	AG_Titlebar *tbar = AG_TITLEBAR_SELF();
 	
 	tbar->flags &= ~(AG_TITLEBAR_PRESSED);
 	

@@ -87,7 +87,7 @@ AG_FixedPlotterSetRange(AG_FixedPlotter *fpl, AG_FixedPlotterValue range)
 static void
 KeyDown(AG_Event *event)
 {
-	AG_FixedPlotter *fpl = AG_SELF();
+	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
 	int key = AG_INT(1);
 
 	switch (key) {
@@ -111,7 +111,7 @@ KeyDown(AG_Event *event)
 static void
 MouseMotion(AG_Event *event)
 {
-	AG_FixedPlotter *fpl = AG_SELF();
+	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
 	int xrel = AG_INT(3);
 	int yrel = AG_INT(4);
 	int state = AG_INT(5);
@@ -135,7 +135,7 @@ MouseMotion(AG_Event *event)
 static void
 MouseButtonUp(AG_Event *event)
 {
-	AG_FixedPlotter *fpl = AG_SELF();
+	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
 
 	fpl->flags |= AG_FIXED_PLOTTER_SCROLL;
 }
@@ -143,7 +143,7 @@ MouseButtonUp(AG_Event *event)
 static void
 MouseButtonDown(AG_Event *event)
 {
-	AG_FixedPlotter *fpl = AG_SELF();
+	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
 	int button = AG_INT(1);
 	
 	if (button != AG_MOUSE_LEFT)

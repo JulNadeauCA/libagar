@@ -576,7 +576,7 @@ MyTreeItem *myTreeRoot;
 void
 UpdateItems(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	MyTreeItem *item = AG_PTR(1);
 	MyTreeItem *child;
 	AG_TlistItem *ti;

@@ -63,7 +63,7 @@ MyCustomSurfaceFn(void *p, int x, int y)
 static void
 CreateStaticTable(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(1);
 	AG_Window *win;
 	AG_Table *table;
 	int i;
@@ -146,7 +146,7 @@ CreateStaticTable(AG_Event *event)
 static void
 UpdateTable(AG_Event *event)
 {
-	AG_Table *t = AG_SELF();
+	AG_Table *t = AG_TABLE_SELF();
 	static int prev = 0;
 	static int dir = +1;
 	int i;
@@ -172,8 +172,7 @@ UpdateTable(AG_Event *event)
 static void
 PausePolling(AG_Event *event)
 {
-/*	AG_Button *btn = AG_SELF(); */
-	AG_Table *tbl = AG_PTR(1);
+	AG_Table *tbl = AG_TABLE_PTR(1);
 	int state = AG_INT(2);
 
 	if (!state) {
@@ -185,7 +184,7 @@ PausePolling(AG_Event *event)
 static void
 CreatePolledTable(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(1);
 	AG_Window *win;
 	AG_Table *table;
 
@@ -241,7 +240,7 @@ ClearAllRows(AG_Event *event)
 static void
 CreateTableWithControls(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(1);
 	static int MyTable[20];
 	AG_Window *win;
 	AG_Table *table;

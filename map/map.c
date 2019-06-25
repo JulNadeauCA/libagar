@@ -1773,8 +1773,8 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, AG_Surface *sprite)
 static void
 CreateView(AG_Event *_Nonnull event)
 {
-	MAP_View *omv = AG_PTR(1);
-	AG_Window *pwin = AG_PTR(2);
+	MAP_View *omv = MAP_VIEW_PTR(1);
+	AG_Window *pwin = AG_WINDOW_PTR(2);
 	MAP *map = omv->map;
 	MAP_View *mv;
 	AG_Window *win;
@@ -1795,7 +1795,7 @@ CreateView(AG_Event *_Nonnull event)
 static void
 SelectTool(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_PTR(1);
+	MAP_View *mv = MAP_VIEW_PTR(1);
 	MAP_Tool *ntool = AG_PTR(2);
 
 	MAP_ViewSelectTool(mv, ntool, mv->map);
@@ -1805,9 +1805,9 @@ SelectTool(AG_Event *_Nonnull event)
 static void
 ResizeMap(AG_Event *_Nonnull event)
 {
-	AG_MSpinbutton *msb = AG_SELF();
-	MAP *m = AG_PTR(1);
-	MAP_View *mv = AG_PTR(2);
+	AG_MSpinbutton *msb = AG_MSPINBUTTON_SELF();
+	MAP *m = MAP_PTR(1);
+	MAP_View *mv = MAP_VIEW_PTR(2);
 
 	MAP_Resize(m, msb->xvalue, msb->yvalue);
 	AG_PostEvent(NULL, mv, "map-resized", NULL);
@@ -1817,8 +1817,8 @@ ResizeMap(AG_Event *_Nonnull event)
 static void
 PollUndoBlks(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	MAP *m = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	MAP *m = MAP_PTR(1);
 	Uint i, j;
 
 	AG_TlistClear(tl);
@@ -1855,13 +1855,13 @@ PollUndoBlks(AG_Event *_Nonnull event)
 static void
 EditMapParameters(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_PTR(1);
-	MAP *m = mv->map;
-	AG_Window *pwin = AG_PTR(2);
+	MAP_View *mv = MAP_VIEW_PTR(1);
+	AG_Window *pwin = AG_WINDOW_PTR(2);
 	AG_Window *win;
 	AG_MSpinbutton *msb;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
+	MAP *m = mv->map;
 
 	if ((win = AG_WindowNewNamed(0, "MAP_Edit-Parameters-%s",
 	    OBJECT(m)->name)) == NULL) {
@@ -2018,8 +2018,8 @@ PollLibsFind(AG_Tlist *_Nonnull tl, AG_Object *_Nonnull pob, int depth)
 static void
 PollLibs(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_Object *pob = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Object *pob = AG_OBJECT_PTR(1);
 
 	AG_TlistClear(tl);
 	AG_LockLinkage();
@@ -2033,7 +2033,7 @@ PollLibs(AG_Event *_Nonnull event)
 static void
 SelectLib(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_PTR(1);
+	MAP_View *mv = MAP_VIEW_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
 	int state = AG_INT(3);
 	MAP_Tool *t;
@@ -2080,8 +2080,8 @@ SelectLib(AG_Event *_Nonnull event)
 static void
 PollActors(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	MAP_View *mv = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	MAP_View *mv = MAP_VIEW_PTR(1);
 	MAP *m = mv->map;
 	AG_TlistItem *it;
 	MAP_Actor *a;
@@ -2101,8 +2101,8 @@ PollActors(AG_Event *_Nonnull event)
 static void
 PollLayers(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	MAP *m = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	MAP *m = MAP_PTR(1);
 	AG_TlistItem *it;
 	Uint i;
 
@@ -2132,7 +2132,7 @@ SetLayerVisibility(AG_Event *_Nonnull event)
 static void
 SelectLayer(AG_Event *_Nonnull event)
 {
-	MAP *m = AG_PTR(1);
+	MAP *m = MAP_PTR(1);
 	AG_TlistItem *ti = AG_PTR(2);
 	MAP_Layer *layer = ti->p1;
 	Uint nlayer;
@@ -2152,7 +2152,7 @@ SelectLayer(AG_Event *_Nonnull event)
 static void
 DeleteLayer(AG_Event *_Nonnull event)
 {
-	MAP *m = AG_PTR(1);
+	MAP *m = MAP_PTR(1);
 	MAP_Layer *lay = AG_PTR(2);
 	Uint i, x, y, nlayer;
 	
@@ -2198,7 +2198,7 @@ DeleteLayer(AG_Event *_Nonnull event)
 static void
 ClearLayer(AG_Event *_Nonnull event)
 {
-	MAP *m = AG_PTR(1);
+	MAP *m = MAP_PTR(1);
 	MAP_Layer *lay = AG_PTR(2);
 	Uint x, y, nlayer;
 	
@@ -2230,10 +2230,10 @@ static void
 MoveLayer(AG_Event *_Nonnull event)
 {
 	char tmp[MAP_LAYER_NAME_MAX];
-	MAP *m = AG_PTR(1);
+	MAP *m = MAP_PTR(1);
 	MAP_Layer *lay1 = AG_PTR(2), *lay2;
 	int movedown = AG_INT(3);
-	AG_Tlist *tlLayers = AG_PTR(4);
+	AG_Tlist *tlLayers = AG_TLIST_PTR(4);
 	Uint l1, l2;
 	Uint x, y;
 
@@ -2279,8 +2279,8 @@ static void
 PushLayer(AG_Event *_Nonnull event)
 {
 	char name[MAP_LAYER_NAME_MAX];
-	MAP *m = AG_PTR(1);
-	AG_Textbox *tb = AG_PTR(2);
+	MAP *m = MAP_PTR(1);
+	AG_Textbox *tb = AG_TEXTBOX_PTR(2);
 	
 	AG_TextboxCopyString(tb, name, sizeof(name));
 
@@ -2295,7 +2295,7 @@ PushLayer(AG_Event *_Nonnull event)
 static void
 EditItemProps(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_SELF();
+	MAP_View *mv = MAP_VIEW_SELF();
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -2349,7 +2349,7 @@ EditItemProps(AG_Event *_Nonnull event)
 static void
 EditPropMode(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_PTR(1);
+	MAP_View *mv = MAP_VIEW_PTR(1);
 	int flag = AG_INT(2);
 
 	if (flag != 0) {
@@ -2363,19 +2363,19 @@ EditPropMode(AG_Event *_Nonnull event)
 static void
 Undo(AG_Event *_Nonnull event)
 {
-	MAP_Undo(AG_PTR(1));
+	MAP_Undo(MAP_PTR(1));
 }
 
 static void
 Redo(AG_Event *_Nonnull event)
 {
-	MAP_Redo(AG_PTR(1));
+	MAP_Redo(MAP_PTR(1));
 }
 
 static void
 CenterViewToOrigin(AG_Event *_Nonnull event)
 {
-	MAP_View *mv = AG_PTR(1);
+	MAP_View *mv = MAP_VIEW_PTR(1);
 
 	AGMCAM(mv).x = mv->map->origin.x*AGMTILESZ(mv) - AGMTILESZ(mv)/2;
 	AGMCAM(mv).y = mv->map->origin.y*AGMTILESZ(mv) - AGMTILESZ(mv)/2;
@@ -2386,8 +2386,8 @@ CenterViewToOrigin(AG_Event *_Nonnull event)
 static void
 DetachActor(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_PTR(1);
-	MAP *m = AG_PTR(2);
+	AG_Tlist *tl = AG_TLIST_PTR(1);
+	MAP *m = MAP_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl)) != NULL &&
@@ -2403,8 +2403,8 @@ DetachActor(AG_Event *_Nonnull event)
 static void
 SelectActor(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_PTR(1);
-	MAP_View *mv = AG_PTR(2);
+	AG_Tlist *tl = AG_TLIST_PTR(1);
+	MAP_View *mv = MAP_VIEW_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl)) != NULL &&
@@ -2419,8 +2419,8 @@ SelectActor(AG_Event *_Nonnull event)
 static void
 RemoveAllRefsToTileset(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_PTR(1);
-	MAP_View *mv = AG_PTR(2);
+	AG_Tlist *tl = AG_TLIST_PTR(1);
+	MAP_View *mv = MAP_VIEW_PTR(2);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	RG_Tileset *ts = it->p1;
 	MAP *m = mv->map;
@@ -2449,8 +2449,8 @@ RemoveAllRefsToTileset(AG_Event *_Nonnull event)
 static void
 RemoveAllRefsToTile(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_PTR(1);
-	MAP_View *mv = AG_PTR(2);
+	AG_Tlist *tl = AG_TLIST_PTR(1);
+	MAP_View *mv = MAP_VIEW_PTR(2);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	RG_Tile *tile = it->p1;
 	MAP *m = mv->map;
@@ -2479,8 +2479,8 @@ static void
 CreateLayerMenu(AG_Event *_Nonnull event)
 {
 	AG_MenuItem *mi = AG_SENDER();
-	MAP *m = AG_PTR(1);
-	AG_Tlist *tlLayers = AG_PTR(2);
+	MAP *m = MAP_PTR(1);
+	AG_Tlist *tlLayers = AG_TLIST_PTR(2);
 	MAP_Layer *layer;
 
 	if ((layer = AG_TlistSelectedItemPtr(tlLayers)) == NULL) {

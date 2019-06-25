@@ -51,6 +51,14 @@ typedef struct ag_pane {
 	enum ag_pane_resize_action resizeAction;	/* Resize action */
 } AG_Pane;
 
+#define AGPANE(obj)            ((AG_Pane *)(obj))
+#define AG_PANE_SELF()         AG_OBJECT(0,"AG_Widget:AG_Pane:*")
+#define AG_PANE_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Pane:*")
+#define AG_PANE_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Pane:*")
+#define AG_CONST_PANE_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Pane:*")
+#define AG_CONST_PANE_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Pane:*")
+#define AG_CONST_PANE_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Pane:*")
+
 __BEGIN_DECLS
 extern AG_WidgetClass agPaneClass;
 
