@@ -25,7 +25,6 @@
 #include <agar/gui/fixed.h>
 #include <agar/gui/font_selector.h>
 #include <agar/gui/fixed_plotter.h>
-#include <agar/gui/fspinbutton.h>
 #include <agar/gui/glview.h>
 #include <agar/gui/graph.h>
 #include <agar/gui/hsvpal.h>
@@ -47,7 +46,6 @@
 #include <agar/gui/scrollview.h>
 #include <agar/gui/separator.h>
 #include <agar/gui/socket.h>
-#include <agar/gui/spinbutton.h>
 #include <agar/gui/slider.h>
 #include <agar/gui/statusbar.h>
 #include <agar/gui/table.h>

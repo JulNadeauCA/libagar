@@ -43,7 +43,6 @@
 #include <agar/gui/editable.h>
 #include <agar/gui/file_dlg.h>
 #include <agar/gui/fixed.h>
-#include <agar/gui/fspinbutton.h>
 #include <agar/gui/fixed_plotter.h>
 #include <agar/gui/font_selector.h>
 #include <agar/gui/glview.h>
@@ -67,7 +66,6 @@
 #include <agar/gui/separator.h>
 #include <agar/gui/slider.h>
 #include <agar/gui/socket.h>
-#include <agar/gui/spinbutton.h>
 #include <agar/gui/statusbar.h>
 #include <agar/gui/table.h>
 #include <agar/gui/treetbl.h>
@@ -134,9 +132,6 @@ void *agStdWidgets[] = {
 	&agFileDlgClass,
 #endif
 	&agFixedClass,
-#if defined(HAVE_FLOAT) && defined(AG_LEGACY)
-	&agFSpinbuttonClass,
-#endif
 	&agFixedPlotterClass,
 	&agGraphClass,
 #ifdef HAVE_OPENGL
@@ -165,7 +160,6 @@ void *agStdWidgets[] = {
 	&agSeparatorClass,
 	&agSliderClass,
 	&agSocketClass,
-	&agSpinbuttonClass,
 	&agStatusbarClass,
 	&agTitlebarClass,
 	&agTableClass,
