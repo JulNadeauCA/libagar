@@ -41,10 +41,10 @@
 static void
 SnapTo(AG_Event *_Nonnull event)
 {
-	AG_Button *bu    = AG_SELF();
-	AG_Toolbar *tbar = AG_PTR(1);
-	VG_View *vv      = AG_PTR(2);
-	int snap_mode    = AG_INT(3);
+	AG_Button *bu = AG_BUTTON_SELF();
+	AG_Toolbar *tbar = AG_TOOLBAR_PTR(1);
+	VG_View *vv = VG_VIEW_PTR(2);
+	int snap_mode = AG_INT(3);
 
 	AG_ToolbarSelectOnly(tbar, bu);
 	VG_ViewSetSnapMode(vv, snap_mode);
@@ -53,7 +53,7 @@ SnapTo(AG_Event *_Nonnull event)
 static void
 SnapToMenu(AG_Event *_Nonnull event)
 {
-	VG_View *vv   = AG_PTR(1);
+	VG_View *vv = VG_VIEW_PTR(1);
 	int snap_mode = AG_INT(2);
 
 	VG_ViewSetSnapMode(vv, snap_mode);

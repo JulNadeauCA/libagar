@@ -195,7 +195,7 @@ VG_ApplyConstraints(VG_View *vv, VG_Vector *pos)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	VG_View *vv = AG_SELF();
+	VG_View *vv = VG_VIEW_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
 	int xCurs = AG_INT(1);
 	int yCurs = AG_INT(2);
@@ -240,7 +240,7 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	VG_View *vv = AG_SELF();
+	VG_View *vv = VG_VIEW_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
 	int button = AG_INT(1);
 	int xCurs = AG_INT(2);
@@ -278,7 +278,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	VG_View *vv = AG_SELF();
+	VG_View *vv = VG_VIEW_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
 	int button = AG_INT(1);
 	int xCurs = AG_INT(2);
@@ -312,7 +312,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	VG_View *vv = AG_SELF();
+	VG_View *vv = VG_VIEW_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
 	int sym = AG_INT(1);
 	int mod = AG_INT(2);
@@ -344,7 +344,7 @@ KeyDown(AG_Event *_Nonnull event)
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
-	VG_View *vv = AG_SELF();
+	VG_View *vv = VG_VIEW_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
 	int sym = AG_INT(1);
 	int mod = AG_INT(2);
@@ -365,7 +365,7 @@ KeyUp(AG_Event *_Nonnull event)
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	VG_View *vv = AG_SELF();
+	VG_View *vv = VG_VIEW_SELF();
 
 	vv->x = WIDGET(vv)->w/2.0f;
 	vv->y = WIDGET(vv)->h/2.0f;
@@ -392,7 +392,7 @@ UpdateGridIntervals(VG_View *vv)
 static void
 ZoomInOut(AG_Event *_Nonnull event)
 {
-	VG_View *vv = AG_SELF();
+	VG_View *vv = VG_VIEW_SELF();
 	int inc = AG_INT(1);
 		
 	VG_ViewSetScalePreset(vv, (vv->scaleIdx += inc));
@@ -402,7 +402,7 @@ ZoomInOut(AG_Event *_Nonnull event)
 static void
 ZoomInMax(AG_Event *_Nonnull event)
 {
-	VG_View *vv = AG_SELF();
+	VG_View *vv = VG_VIEW_SELF();
 		
 	VG_ViewSetScalePreset(vv, nScaleFactors-1);
 	VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
@@ -411,7 +411,7 @@ ZoomInMax(AG_Event *_Nonnull event)
 static void
 ZoomOutMax(AG_Event *_Nonnull event)
 {
-	VG_View *vv = AG_SELF();
+	VG_View *vv = VG_VIEW_SELF();
 		
 	VG_ViewSetScalePreset(vv, 0);
 	VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
@@ -420,7 +420,7 @@ ZoomOutMax(AG_Event *_Nonnull event)
 static void
 SetScale(AG_Event *_Nonnull event)
 {
-	VG_View *vv = AG_SELF();
+	VG_View *vv = VG_VIEW_SELF();
 	int n = AG_INT(1);
 		
 	VG_ViewSetScalePreset(vv, n);
@@ -856,7 +856,7 @@ out:
 void
 VG_ViewSelectToolEv(AG_Event *event)
 {
-	VG_View *vv = AG_PTR(1);
+	VG_View *vv = VG_VIEW_PTR(1);
 
 	if (!AG_WidgetIsFocused(vv)) {
 		AG_WidgetFocus(vv);

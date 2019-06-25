@@ -86,6 +86,12 @@ typedef struct vg_view {
 } VG_View;
 
 #define VGVIEW(p) ((VG_View *)(p))
+#define VG_VIEW_SELF()          AG_OBJECT(0,"AG_Widget:VG_View:*")
+#define VG_VIEW_PTR(n)          AG_OBJECT((n),"AG_Widget:VG_View:*")
+#define VG_VIEW_NAMED(n)        AG_OBJECT_NAMED((n),"AG_Widget:VG_View:*")
+#define AG_CONST_DUMMY_SELF()   AG_CONST_OBJECT(0,"AG_Widget:VG_View:*")
+#define AG_CONST_DUMMY_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:VG_View:*")
+#define AG_CONST_DUMMY_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:VG_View:*")
 
 #define VG_SKIP_CONSTRAINTS(vv) (AG_GetModState(vv) & AG_KEYMOD_SHIFT)
 #define VG_SELECT_MULTI(vv)     (AG_GetModState(vv) & AG_KEYMOD_CTRL)
