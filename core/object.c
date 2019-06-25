@@ -65,7 +65,7 @@ void
 AG_ObjectInit(void *pObj, void *pClass)
 {
 	AG_Object *ob = pObj;
-	AG_ObjectClass *cl = pClass ? pClass : &agObjectClass;
+	AG_ObjectClass *cl = (pClass != NULL) ? AGCLASS(pClass) : &agObjectClass;
 	AG_ObjectClass **hier;
 	int i, nHier;
 

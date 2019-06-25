@@ -190,7 +190,7 @@ typedef struct ag_object_header {
 } AG_ObjectHeader;
 
 #define AGOBJECT(ob) ((struct ag_object *)(ob))
-#define AGCLASS(obj) ((struct ag_object_class *)(obj))
+#define AGCLASS(cls) ((struct ag_object_class *)(cls))
 #define AGOBJECT_CLASS(obj) ((struct ag_object_class *)(AGOBJECT(obj)->cls))
 
 #define AG_OBJECT_SELF()         AG_OBJECT_PTR(0)
