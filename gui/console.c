@@ -813,9 +813,10 @@ AG_ConsoleBinary(AG_Console *cons, const void *data, AG_Size size,
 			char cp[2];
 
 			Strlcat(buf, " |", bufSize);
-			for (i = 0; i <= lineWd; i++) {
-				const Uint8 pval = ((const Uint8 *)data)
-				                   [pos-lineWd+i];
+			for (i = 1; i <= lineWd; i++) {
+				Uint8 pval;
+
+				pval = ((const Uint8 *)data)[pos-lineWd+i];
 
 				cp[0] = isprint(pval) ? pval : '.';
 				cp[1] = '\0';
