@@ -44,7 +44,9 @@ TestGUI(void *obj, AG_Window *win)
 static void
 TextSize_UTF8(void *obj)
 {
+#ifdef AG_THREADS
 	MyTestInstance *ti = obj;
+#endif
 	int w, h;
 	int i;
 
@@ -63,7 +65,9 @@ TextSize_Nat(void *obj)
 	                   'J','u','m','p','s',' ','O','v','e','r',' ',
 	                   'T','h','e',' ','L','a','z','y',' ',
 	                   'D','o','g', '\0' };
+#ifdef AG_THREADS
 	MyTestInstance *ti = obj;
+#endif
 	int w, h;
 	int i;
 
@@ -77,7 +81,9 @@ TextSize_Nat(void *obj)
 static void
 TextRender_UTF8(void *obj)
 {
+#ifdef AG_THREADS
 	MyTestInstance *ti = obj;
+#endif
 	AG_Surface *S;
 
 	AG_MutexLock(&ti->lock);
@@ -94,7 +100,9 @@ TextRender_Nat(void *obj)
 	                   'J','u','m','p','s',' ','O','v','e','r',' ',
 	                   'T','h','e',' ','L','a','z','y',' ','D','o','g',
 	                   '\0' };
+#ifdef AG_THREADS
 	MyTestInstance *ti = obj;
+#endif
 	AG_Surface *S;
 
 	AG_MutexLock(&ti->lock);
@@ -106,7 +114,9 @@ TextRender_Nat(void *obj)
 static void
 TextRender_2L(void *obj)
 {
+#ifdef AG_THREADS
 	MyTestInstance *ti = obj;
+#endif
 	AG_Surface *S;
 
 	AG_MutexLock(&ti->lock);
@@ -119,7 +129,9 @@ TextRender_2L(void *obj)
 static void
 TextRender_3L(void *obj)
 {
+#ifdef AG_THREADS
 	MyTestInstance *ti = obj;
+#endif
 	AG_Surface *S;
 
 	AG_MutexLock(&ti->lock);
@@ -133,7 +145,9 @@ TextRender_3L(void *obj)
 static void
 TextRender_4L(void *obj)
 {
+#ifdef AG_THREADS
 	MyTestInstance *ti = obj;
+#endif
 	AG_Surface *S;
 
 	AG_MutexLock(&ti->lock);
@@ -176,9 +190,10 @@ Bench(void *obj)
 static int
 Init(void *obj)
 {
+#ifdef AG_THREADS
 	MyTestInstance *ti = obj;
-
 	AG_MutexInit(&ti->lock);
+#endif
 	return (0);
 }
 
