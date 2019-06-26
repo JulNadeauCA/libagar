@@ -198,17 +198,22 @@ typedef struct ag_object_header {
 #define AG_CONST_OBJECT_SELF()   AG_CONST_OBJECT_PTR(0)
 #define AG_CONST_OBJECT_NAMED(n) AG_CONST_PTR_NAMED(n)
 
-#define AG_OBJECT_PTR(v) \
+#ifdef AG_TYPE_SAFETY
+# define AG_OBJECT_PTR(v) \
    (v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
     !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
     strncmp(AGOBJECT(event->argv[v].data.p)->tag, AG_OBJECT_TYPE_TAG, AG_OBJECT_TYPE_TAG_LEN) == 0) ? \
     event->argv[v].data.p : AG_ObjectMismatch()
 
-#define AG_CONST_OBJECT_PTR(v) \
+# define AG_CONST_OBJECT_PTR(v) \
    (v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
     (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
     strncmp(AGOBJECT(event->argv[v].data.p)->tag, AG_OBJECT_TYPE_TAG, AG_OBJECT_TYPE_TAG_LEN) == 0) ? \
     (const void *)event->argv[v].data.p : (const void *)AG_ObjectMismatch()
+#else
+# define AG_OBJECT_PTR(v)       (event->argv[v].data.p)
+# define AG_CONST_OBJECT_PTR(v) ((const void *)event->argv[v].data.p)
+#endif
 
 /* Iterate over the direct child objects. */
 #define AGOBJECT_FOREACH_CHILD(var, ob, t) \
