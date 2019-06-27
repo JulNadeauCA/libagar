@@ -37,12 +37,13 @@ typedef struct m_matview {
 } M_Matview;
 
 #define MMATVIEW(obj)           ((M_Matview *)(obj))
-#define M_MATVIEW_SELF()         AG_OBJECT(0,"AG_Widget:M_Matview:*")
-#define M_MATVIEW_PTR(n)         AG_OBJECT((n),"AG_Widget:M_Matview:*")
-#define M_MATVIEW_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:M_Matview:*")
-#define M_CONST_MATVIEW_SELF()   AG_CONST_OBJECT(0,"AG_Widget:M_Matview:*")
-#define M_CONST_MATVIEW_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:M_Matview:*")
-#define M_CONST_MATVIEW_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:M_Matview:*")
+#define MCMATVIEW(obj)          ((const M_Matview *)(obj))
+#define M_MATVIEW_SELF()          MMATVIEW( AG_OBJECT(0,"AG_Widget:M_Matview:*") )
+#define M_MATVIEW_PTR(n)          MMATVIEW( AG_OBJECT((n),"AG_Widget:M_Matview:*") )
+#define M_MATVIEW_NAMED(n)        MMATVIEW( AG_OBJECT_NAMED((n),"AG_Widget:M_Matview:*") )
+#define M_CONST_MATVIEW_SELF()   MCMATVIEW( AG_CONST_OBJECT(0,"AG_Widget:M_Matview:*") )
+#define M_CONST_MATVIEW_PTR(n)   MCMATVIEW( AG_CONST_OBJECT((n),"AG_Widget:M_Matview:*") )
+#define M_CONST_MATVIEW_NAMED(n) MCMATVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:M_Matview:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass mMatviewClass;

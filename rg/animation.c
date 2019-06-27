@@ -333,9 +333,9 @@ RG_AnimGenerate(RG_Anim *ani)
 static void
 EditClose(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_SELF();
+	AG_Window *win = AG_WINDOW_SELF();
 #ifdef AG_THREADS
-	RG_Tileset *ts = AG_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 #endif
 	RG_Anim *ani = AG_PTR(2);
 	
@@ -349,7 +349,7 @@ EditClose(AG_Event *_Nonnull event)
 static void
 PollInsns(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	RG_Anim *ani = AG_PTR(1);
 #ifdef AG_THREADS
 	RG_Tileset *ts = ani->tileset;
@@ -402,7 +402,7 @@ PollInsns(AG_Event *_Nonnull event)
 static void
 PollFrames(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	RG_Anim *ani = AG_PTR(1);
 #ifdef AG_THREADS
 	RG_Tileset *ts = ani->tileset;
@@ -428,8 +428,8 @@ PollFrames(AG_Event *_Nonnull event)
 static void
 PollTiles(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	RG_Tile *t;
 
 	AG_TlistClear(tl);
@@ -455,8 +455,8 @@ static void
 SelectInsnTile(AG_Event *_Nonnull event)
 {
 	RG_AnimInsn *insn = AG_PTR(2);
-	RG_Tileview *tv = AG_PTR(3);
-	AG_TlistItem *it = AG_PTR(4);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(3);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(4);
 
 	if (it != NULL) {
 		insn->t = (RG_Tile *)it->p1;
@@ -544,8 +544,8 @@ static void
 SelectInsn(AG_Event *_Nonnull event)
 {
 	RG_Anim *ani = AG_PTR(1);
-	AG_Box *box = AG_PTR(2);
-	AG_TlistItem *ti = AG_PTR(3);
+	AG_Box *box = AG_BOX_PTR(2);
+	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(3);
 	RG_AnimInsn *insn = ti->p1;
 
 	EditInsn(ani, insn, box);
@@ -555,8 +555,8 @@ static void
 SelectFrame(AG_Event *_Nonnull event)
 {
 	RG_Anim *ani = AG_PTR(1);
-	AG_Box *box = AG_PTR(2);
-	AG_TlistItem *ti = AG_PTR(3);
+	AG_Box *box = AG_BOX_PTR(2);
+	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(3);
 	RG_AnimFrame *frame = ti->p1;
 
 	EditFrame(ani, frame, box);
@@ -567,8 +567,8 @@ InsertInsn(AG_Event *_Nonnull event)
 {
 	RG_Anim *ani = AG_PTR(1);
 	enum rg_anim_insn_type type = AG_INT(2);
-	AG_Box *box = AG_PTR(3);
-	AG_Tlist *tl = AG_PTR(4);
+	AG_Box *box = AG_BOX_PTR(3);
+	AG_Tlist *tl = AG_TLIST_PTR(4);
 	RG_AnimInsn *insn;
 	
 	insn = &ani->insns[RG_AnimInsertInsn(ani, type)];
@@ -588,7 +588,7 @@ static void
 PreviewAnim(AG_Event *_Nonnull event)
 {
 	RG_Anim *ani = AG_PTR(1);
-	AG_Window *pwin = AG_PTR(2);
+	AG_Window *pwin = AG_WINDOW_PTR(2);
 	AG_Window *win;
 	RG_Animview *av;
 	AG_Label *lbl;

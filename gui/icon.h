@@ -34,12 +34,13 @@ typedef struct ag_icon {
 } AG_Icon;
 
 #define AGICON(obj)            ((AG_Icon *)(obj))
-#define AG_ICON_SELF()         AG_OBJECT(0,"AG_Widget:AG_Icon:*")
-#define AG_ICON_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Icon:*")
-#define AG_ICON_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Icon:*")
-#define AG_CONST_ICON_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Icon:*")
-#define AG_CONST_ICON_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Icon:*")
-#define AG_CONST_ICON_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Icon:*")
+#define AGCICON(obj)           ((const AG_Icon *)(obj))
+#define AG_ICON_SELF()          AGICON( AG_OBJECT(0,"AG_Widget:AG_Icon:*") )
+#define AG_ICON_PTR(n)          AGICON( AG_OBJECT((n),"AG_Widget:AG_Icon:*") )
+#define AG_ICON_NAMED(n)        AGICON( AG_OBJECT_NAMED((n),"AG_Widget:AG_Icon:*") )
+#define AG_CONST_ICON_SELF()   AGCICON( AG_CONST_OBJECT(0,"AG_Widget:AG_Icon:*") )
+#define AG_CONST_ICON_PTR(n)   AGCICON( AG_CONST_OBJECT((n),"AG_Widget:AG_Icon:*") )
+#define AG_CONST_ICON_NAMED(n) AGCICON( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Icon:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agIconClass;

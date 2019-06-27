@@ -15,7 +15,7 @@ typedef struct {
 static void
 TestDesktopAlign(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(1);
 	AG_Window *win;
 	int i;
 	
@@ -100,7 +100,7 @@ static void
 CreateTestWindow(AG_Event *event)
 {
 	MyTestInstance *ti = AG_PTR(1);
-	AG_Window *winParent = AG_PTR(2);
+	AG_Window *winParent = AG_WINDOW_PTR(2);
 	AG_Window *win;
 
 	if ((win = AG_WindowNew(ti->testFlags)) == NULL) {

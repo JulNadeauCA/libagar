@@ -162,7 +162,7 @@ static void
 SelectedSurface(AG_Event *_Nonnull event)
 {
 	AG_Pixmap *px = AG_PIXMAP_PTR(1);
-	AG_TlistItem *it = AG_PTR(2);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 	AG_Surface *S = it->p1;
 	int Smapped;
 
@@ -306,7 +306,7 @@ static void
 WidgetSelected(AG_Event *_Nonnull event)
 {
 	AG_Box *box = AG_BOX_PTR(1);
-	AG_TlistItem *ti = AG_PTR(2);
+	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
 	AG_Widget *wid = ti->p1;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;
@@ -451,7 +451,7 @@ static void
 ContextualMenu(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_PTR(1);
-	AG_MenuItem *mi = AG_PTR(2);
+	AG_MenuItem *mi = AG_MENU_ITEM_PTR(2);
 	AG_TlistItem *ti = AG_TlistSelectedItem(tl);
 
 	if (ti == NULL)

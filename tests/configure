@@ -1526,7 +1526,7 @@ exit 1
 fi
 $ECHO_N 'checking for Agar...'
 $ECHO_N '# checking for Agar...' >>config.log
-# BEGIN agar(1.5.0 ${prefix_agar})
+# BEGIN agar(1.6.0 ${prefix_agar})
 AGAR_VERSION=
 if [ "${prefix_agar}" != "" ]; then
 if [ -e "${prefix_agar}/bin/agar-config" ]; then
@@ -1570,9 +1570,9 @@ elif [ $MK_VERSION_MAJOR -eq 1 ]; then
 if [ "$MK_VERSION_MINOR" = '' ]; then
 MK_VERSION_OK=yes
 else
-if [ $MK_VERSION_MINOR -gt 5 ]; then
+if [ $MK_VERSION_MINOR -gt 6 ]; then
 MK_VERSION_OK=yes
-elif [ $MK_VERSION_MINOR -eq 5 ]; then
+elif [ $MK_VERSION_MINOR -eq 6 ]; then
 if [ "$MK_VERSION_MICRO" = '' ]; then
 MK_VERSION_OK=yes
 else
@@ -1586,8 +1586,8 @@ fi
 if [ "${MK_VERSION_OK}" = "no" ]; then
 echo '*'
 echo '# *' >>config.log
-echo "* Minimum required version is 1.5.0 (found $AGAR_VERSION)"
-echo "# * Minimum required version is 1.5.0 (found $AGAR_VERSION)" >>config.log
+echo "* Minimum required version is 1.6.0 (found $AGAR_VERSION)"
+echo "# * Minimum required version is 1.6.0 (found $AGAR_VERSION)" >>config.log
 echo '*'
 echo '# *' >>config.log
 fi
@@ -1733,8 +1733,8 @@ fi
 if [ "${HAVE_AGAR}" != "yes" ]; then
 echo '* '
 echo '# * ' >>config.log
-echo "* $PACKAGE requires Agar (version 1.5.0 or newer)."
-echo "# * $PACKAGE requires Agar (version 1.5.0 or newer)." >>config.log
+echo "* $PACKAGE requires Agar (version 1.6.0 or newer)."
+echo "# * $PACKAGE requires Agar (version 1.6.0 or newer)." >>config.log
 echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
@@ -1745,8 +1745,8 @@ fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
 echo '* '
 echo '# * ' >>config.log
-echo '* This software requires agar version >= 1.5.0,'
-echo '# * This software requires agar version >= 1.5.0,' >>config.log
+echo '* This software requires agar version >= 1.6.0,'
+echo '# * This software requires agar version >= 1.6.0,' >>config.log
 echo '* please update that package and try again.'
 echo '# * please update that package and try again.' >>config.log
 echo '* WWW: http://libagar.org'
@@ -1758,7 +1758,7 @@ exit 1
 fi
 $ECHO_N 'checking for Agar-DEV...'
 $ECHO_N '# checking for Agar-DEV...' >>config.log
-# BEGIN agar-dev(1.5.0 ${prefix_agar})
+# BEGIN agar-dev(1.6.0 ${prefix_agar})
 AGAR_DEV_VERSION=
 if [ "${prefix_agar}" != "" ]; then
 if [ -e "${prefix_agar}/bin/agar-dev-config" ]; then
@@ -1802,9 +1802,9 @@ elif [ $MK_VERSION_MAJOR -eq 1 ]; then
 if [ "$MK_VERSION_MINOR" = '' ]; then
 MK_VERSION_OK=yes
 else
-if [ $MK_VERSION_MINOR -gt 5 ]; then
+if [ $MK_VERSION_MINOR -gt 6 ]; then
 MK_VERSION_OK=yes
-elif [ $MK_VERSION_MINOR -eq 5 ]; then
+elif [ $MK_VERSION_MINOR -eq 6 ]; then
 if [ "$MK_VERSION_MICRO" = '' ]; then
 MK_VERSION_OK=yes
 else
@@ -1818,8 +1818,8 @@ fi
 if [ "${MK_VERSION_OK}" = "no" ]; then
 echo '*'
 echo '# *' >>config.log
-echo "* Minimum required version is 1.5.0 (found $AGAR_DEV_VERSION)"
-echo "# * Minimum required version is 1.5.0 (found $AGAR_DEV_VERSION)" >>config.log
+echo "* Minimum required version is 1.6.0 (found $AGAR_DEV_VERSION)"
+echo "# * Minimum required version is 1.6.0 (found $AGAR_DEV_VERSION)" >>config.log
 echo '*'
 echo '# *' >>config.log
 fi
@@ -2012,8 +2012,8 @@ fi
 if [ "${HAVE_AGAR_DEV}" != "yes" ]; then
 echo '* '
 echo '# * ' >>config.log
-echo "* $PACKAGE requires Agar-DEV (version 1.5.0 or newer)."
-echo "# * $PACKAGE requires Agar-DEV (version 1.5.0 or newer)." >>config.log
+echo "* $PACKAGE requires Agar-DEV (version 1.6.0 or newer)."
+echo "# * $PACKAGE requires Agar-DEV (version 1.6.0 or newer)." >>config.log
 echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
@@ -2024,8 +2024,8 @@ fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
 echo '* '
 echo '# * ' >>config.log
-echo '* This software requires agar-dev version >= 1.5.0,'
-echo '# * This software requires agar-dev version >= 1.5.0,' >>config.log
+echo '* This software requires agar-dev version >= 1.6.0,'
+echo '# * This software requires agar-dev version >= 1.6.0,' >>config.log
 echo '* please update that package and try again.'
 echo '# * please update that package and try again.' >>config.log
 echo '* WWW: http://libagar.org'
@@ -2037,7 +2037,7 @@ exit 1
 fi
 $ECHO_N 'checking for Agar-Math...'
 $ECHO_N '# checking for Agar-Math...' >>config.log
-# BEGIN agar-math(1.5.0 ${prefix_agar})
+# BEGIN agar-math(1.6.0 ${prefix_agar})
 AGAR_MATH_VERSION=
 if [ "${prefix_agar}" != "" ]; then
 if [ -e "${prefix_agar}/bin/agar-math-config" ]; then
@@ -2081,9 +2081,9 @@ elif [ $MK_VERSION_MAJOR -eq 1 ]; then
 if [ "$MK_VERSION_MINOR" = '' ]; then
 MK_VERSION_OK=yes
 else
-if [ $MK_VERSION_MINOR -gt 5 ]; then
+if [ $MK_VERSION_MINOR -gt 6 ]; then
 MK_VERSION_OK=yes
-elif [ $MK_VERSION_MINOR -eq 5 ]; then
+elif [ $MK_VERSION_MINOR -eq 6 ]; then
 if [ "$MK_VERSION_MICRO" = '' ]; then
 MK_VERSION_OK=yes
 else
@@ -2097,8 +2097,8 @@ fi
 if [ "${MK_VERSION_OK}" = "no" ]; then
 echo '*'
 echo '# *' >>config.log
-echo "* Minimum required version is 1.5.0 (found $AGAR_MATH_VERSION)"
-echo "# * Minimum required version is 1.5.0 (found $AGAR_MATH_VERSION)" >>config.log
+echo "* Minimum required version is 1.6.0 (found $AGAR_MATH_VERSION)"
+echo "# * Minimum required version is 1.6.0 (found $AGAR_MATH_VERSION)" >>config.log
 echo '*'
 echo '# *' >>config.log
 fi
@@ -2293,8 +2293,8 @@ fi
 if [ "${HAVE_AGAR_MATH}" != "yes" ]; then
 echo '* '
 echo '# * ' >>config.log
-echo "* $PACKAGE requires Agar-Math (version 1.5.0 or newer)."
-echo "# * $PACKAGE requires Agar-Math (version 1.5.0 or newer)." >>config.log
+echo "* $PACKAGE requires Agar-Math (version 1.6.0 or newer)."
+echo "# * $PACKAGE requires Agar-Math (version 1.6.0 or newer)." >>config.log
 echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
@@ -2305,8 +2305,8 @@ fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
 echo '* '
 echo '# * ' >>config.log
-echo '* This software requires agar-math version >= 1.5.0,'
-echo '# * This software requires agar-math version >= 1.5.0,' >>config.log
+echo '* This software requires agar-math version >= 1.6.0,'
+echo '# * This software requires agar-math version >= 1.6.0,' >>config.log
 echo '* please update that package and try again.'
 echo '# * please update that package and try again.' >>config.log
 echo '* WWW: http://libagar.org'
@@ -2318,7 +2318,7 @@ exit 1
 fi
 $ECHO_N 'checking for Agar-VG...'
 $ECHO_N '# checking for Agar-VG...' >>config.log
-# BEGIN agar-vg(1.5.0 ${prefix_agar})
+# BEGIN agar-vg(1.6.0 ${prefix_agar})
 AGAR_VG_VERSION=
 if [ "${prefix_agar}" != "" ]; then
 if [ -e "${prefix_agar}/bin/agar-vg-config" ]; then
@@ -2362,9 +2362,9 @@ elif [ $MK_VERSION_MAJOR -eq 1 ]; then
 if [ "$MK_VERSION_MINOR" = '' ]; then
 MK_VERSION_OK=yes
 else
-if [ $MK_VERSION_MINOR -gt 5 ]; then
+if [ $MK_VERSION_MINOR -gt 6 ]; then
 MK_VERSION_OK=yes
-elif [ $MK_VERSION_MINOR -eq 5 ]; then
+elif [ $MK_VERSION_MINOR -eq 6 ]; then
 if [ "$MK_VERSION_MICRO" = '' ]; then
 MK_VERSION_OK=yes
 else
@@ -2378,8 +2378,8 @@ fi
 if [ "${MK_VERSION_OK}" = "no" ]; then
 echo '*'
 echo '# *' >>config.log
-echo "* Minimum required version is 1.5.0 (found $AGAR_VG_VERSION)"
-echo "# * Minimum required version is 1.5.0 (found $AGAR_VG_VERSION)" >>config.log
+echo "* Minimum required version is 1.6.0 (found $AGAR_VG_VERSION)"
+echo "# * Minimum required version is 1.6.0 (found $AGAR_VG_VERSION)" >>config.log
 echo '*'
 echo '# *' >>config.log
 fi
@@ -2570,7 +2570,7 @@ fi
 # END agar-vg
 $ECHO_N 'checking for Agar-AU...'
 $ECHO_N '# checking for Agar-AU...' >>config.log
-# BEGIN agar-au(1.5.0 ${prefix_agar})
+# BEGIN agar-au(1.6.0 ${prefix_agar})
 AGAR_AU_VERSION=
 if [ "${prefix_agar}" != "" ]; then
 if [ -e "${prefix_agar}/bin/agar-au-config" ]; then
@@ -2614,9 +2614,9 @@ elif [ $MK_VERSION_MAJOR -eq 1 ]; then
 if [ "$MK_VERSION_MINOR" = '' ]; then
 MK_VERSION_OK=yes
 else
-if [ $MK_VERSION_MINOR -gt 5 ]; then
+if [ $MK_VERSION_MINOR -gt 6 ]; then
 MK_VERSION_OK=yes
-elif [ $MK_VERSION_MINOR -eq 5 ]; then
+elif [ $MK_VERSION_MINOR -eq 6 ]; then
 if [ "$MK_VERSION_MICRO" = '' ]; then
 MK_VERSION_OK=yes
 else
@@ -2630,8 +2630,8 @@ fi
 if [ "${MK_VERSION_OK}" = "no" ]; then
 echo '*'
 echo '# *' >>config.log
-echo "* Minimum required version is 1.5.0 (found $AGAR_AU_VERSION)"
-echo "# * Minimum required version is 1.5.0 (found $AGAR_AU_VERSION)" >>config.log
+echo "* Minimum required version is 1.6.0 (found $AGAR_AU_VERSION)"
+echo "# * Minimum required version is 1.6.0 (found $AGAR_AU_VERSION)" >>config.log
 echo '*'
 echo '# *' >>config.log
 fi

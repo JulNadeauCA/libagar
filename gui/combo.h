@@ -33,12 +33,13 @@ typedef struct ag_combo {
 } AG_Combo;
 
 #define AGCOMBO(obj)            ((AG_Combo *)(obj))
-#define AG_COMBO_SELF()         AG_OBJECT(0,"AG_Widget:AG_Combo:*")
-#define AG_COMBO_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Combo:*")
-#define AG_COMBO_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Combo:*")
-#define AG_CONST_COMBO_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Combo:*")
-#define AG_CONST_COMBO_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Combo:*")
-#define AG_CONST_COMBO_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Combo:*")
+#define AGCCOMBO(obj)           ((const AG_Combo *)(obj))
+#define AG_COMBO_SELF()          AGCOMBO( AG_OBJECT(0,"AG_Widget:AG_Combo:*") )
+#define AG_COMBO_PTR(n)          AGCOMBO( AG_OBJECT((n),"AG_Widget:AG_Combo:*") )
+#define AG_COMBO_NAMED(n)        AGCOMBO( AG_OBJECT_NAMED((n),"AG_Widget:AG_Combo:*") )
+#define AG_CONST_COMBO_SELF()   AGCCOMBO( AG_CONST_OBJECT(0,"AG_Widget:AG_Combo:*") )
+#define AG_CONST_COMBO_PTR(n)   AGCCOMBO( AG_CONST_OBJECT((n),"AG_Widget:AG_Combo:*") )
+#define AG_CONST_COMBO_NAMED(n) AGCCOMBO( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Combo:*") )
 
 #define AG_COMBO_FOREACH(it, com) \
 	AG_TLIST_FOREACH(it, (com)->list)

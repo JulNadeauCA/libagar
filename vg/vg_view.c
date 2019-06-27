@@ -852,18 +852,6 @@ out:
 	AG_Redraw(vv);
 }
 
-/* Generic event handler for tool selection. */
-void
-VG_ViewSelectToolEv(AG_Event *event)
-{
-	VG_View *vv = VG_VIEW_PTR(1);
-
-	if (!AG_WidgetIsFocused(vv)) {
-		AG_WidgetFocus(vv);
-	}
-	VG_ViewSelectTool(vv, AG_PTR(2), AG_PTR(3));
-}
-
 /* VG_View must be locked */
 VG_Tool *
 VG_ViewFindTool(VG_View *vv, const char *name)

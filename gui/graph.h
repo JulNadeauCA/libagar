@@ -98,12 +98,13 @@ typedef struct ag_graph {
 } AG_Graph;
 
 #define AGGRAPH(obj)            ((AG_Graph *)(obj))
-#define AG_GRAPH_SELF()         AG_OBJECT(0,"AG_Widget:AG_Graph:*")
-#define AG_GRAPH_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Graph:*")
-#define AG_GRAPH_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Graph:*")
-#define AG_CONST_GRAPH_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Graph:*")
-#define AG_CONST_GRAPH_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Graph:*")
-#define AG_CONST_GRAPH_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Graph:*")
+#define AGCGRAPH(obj)           ((const AG_Graph *)(obj))
+#define AG_GRAPH_SELF()          AGGRAPH( AG_OBJECT(0,"AG_Widget:AG_Graph:*") )
+#define AG_GRAPH_PTR(n)          AGGRAPH( AG_OBJECT((n),"AG_Widget:AG_Graph:*") )
+#define AG_GRAPH_NAMED(n)        AGGRAPH( AG_OBJECT_NAMED((n),"AG_Widget:AG_Graph:*") )
+#define AG_CONST_GRAPH_SELF()   AGCGRAPH( AG_CONST_OBJECT(0,"AG_Widget:AG_Graph:*") )
+#define AG_CONST_GRAPH_PTR(n)   AGCGRAPH( AG_CONST_OBJECT((n),"AG_Widget:AG_Graph:*") )
+#define AG_CONST_GRAPH_NAMED(n) AGCGRAPH( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Graph:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agGraphClass;

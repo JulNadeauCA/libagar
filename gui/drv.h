@@ -220,16 +220,24 @@ typedef struct ag_driver_event {
 typedef AG_TAILQ_HEAD(ag_driver_eventq, ag_driver_event) AG_DriverEventQ;
 
 #define AGDRIVER(obj)            ((AG_Driver *)(obj))
-#define AG_DRIVER_SELF()         AG_OBJECT(0,"AG_Driver:*")
-#define AG_DRIVER_PTR(n)         AG_OBJECT((n),"AG_Driver:*")
-#define AG_DRIVER_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Driver:*")
-#define AG_CONST_DRIVER_SELF()   AG_CONST_OBJECT(0,"AG_Driver:*")
-#define AG_CONST_DRIVER_PTR(n)   AG_CONST_OBJECT((n),"AG_Driver:*")
-#define AG_CONST_DRIVER_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Driver:*")
+#define AGCDRIVER(obj)           ((const AG_Driver *)(obj))
+#define AG_DRIVER_SELF()          AGDRIVER( AG_OBJECT(0,"AG_Driver:*") )
+#define AG_DRIVER_PTR(n)          AGDRIVER( AG_OBJECT((n),"AG_Driver:*") )
+#define AG_DRIVER_NAMED(n)        AGDRIVER( AG_OBJECT_NAMED((n),"AG_Driver:*") )
+#define AG_CONST_DRIVER_SELF()   AGCDRIVER( AG_CONST_OBJECT(0,"AG_Driver:*") )
+#define AG_CONST_DRIVER_PTR(n)   AGCDRIVER( AG_CONST_OBJECT((n),"AG_Driver:*") )
+#define AG_CONST_DRIVER_NAMED(n) AGCDRIVER( AG_CONST_OBJECT_NAMED((n),"AG_Driver:*") )
 
 #define AGDRIVER_CLASS(obj)	((struct ag_driver_class *)(AGOBJECT(obj)->cls))
-#define AGDRIVER_SINGLE(drv)	(AGDRIVER_CLASS(drv)->wm == AG_WM_SINGLE)
-#define AGDRIVER_MULTIPLE(drv)	(AGDRIVER_CLASS(drv)->wm == AG_WM_MULTIPLE)
+
+#ifdef AG_TYPE_SAFETY
+# define AGDRIVER_SINGLE(drv)	(AG_OBJECT_VALID(drv) && (AGDRIVER_CLASS(drv)->wm == AG_WM_SINGLE))
+# define AGDRIVER_MULTIPLE(drv)	(AG_OBJECT_VALID(drv) && (AGDRIVER_CLASS(drv)->wm == AG_WM_MULTIPLE))
+#else
+# define AGDRIVER_SINGLE(drv)	(AGDRIVER_CLASS(drv)->wm == AG_WM_SINGLE)
+# define AGDRIVER_MULTIPLE(drv)	(AGDRIVER_CLASS(drv)->wm == AG_WM_MULTIPLE)
+#endif
+
 #define AGDRIVER_BOUNDED_WIDTH(win,x) (((x) < 0) ? 0 : \
                                       ((x) > AGWIDGET(win)->w) ? (AGWIDGET(win)->w - 1) : (x))
 #define AGDRIVER_BOUNDED_HEIGHT(win,y) (((y) < 0) ? 0 : \

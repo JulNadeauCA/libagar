@@ -148,7 +148,7 @@ SquaredSineStep(M_Real t)
 static void
 GeneratePlot(AG_Event *event)
 {
-	M_Plotter *plt = AG_PTR(1);
+	M_Plotter *plt = M_PLOTTER_PTR(1);
 	M_Real t;
 
 	/* Clear the current plot data. */

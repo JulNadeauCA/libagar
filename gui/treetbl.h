@@ -111,12 +111,13 @@ typedef struct ag_treetbl {
 } AG_Treetbl;
 
 #define AGTREETBL(obj)            ((AG_Treetbl *)(obj))
-#define AG_TREETBL_SELF()         AG_OBJECT(0,"AG_Widget:AG_Treetbl:*")
-#define AG_TREETBL_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Treetbl:*")
-#define AG_TREETBL_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Treetbl:*")
-#define AG_CONST_TREETBL_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Treetbl:*")
-#define AG_CONST_TREETBL_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Treetbl:*")
-#define AG_CONST_TREETBL_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Treetbl:*")
+#define AGCTREETBL(obj)           ((const AG_Treetbl *)(obj))
+#define AG_TREETBL_SELF()          AGTREETBL( AG_OBJECT(0,"AG_Widget:AG_Treetbl:*") )
+#define AG_TREETBL_PTR(n)          AGTREETBL( AG_OBJECT((n),"AG_Widget:AG_Treetbl:*") )
+#define AG_TREETBL_NAMED(n)        AGTREETBL( AG_OBJECT_NAMED((n),"AG_Widget:AG_Treetbl:*") )
+#define AG_CONST_TREETBL_SELF()   AGCTREETBL( AG_CONST_OBJECT(0,"AG_Widget:AG_Treetbl:*") )
+#define AG_CONST_TREETBL_PTR(n)   AGCTREETBL( AG_CONST_OBJECT((n),"AG_Widget:AG_Treetbl:*") )
+#define AG_CONST_TREETBL_NAMED(n) AGCTREETBL( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Treetbl:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agTreetblClass;

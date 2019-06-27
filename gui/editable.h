@@ -91,12 +91,13 @@ typedef struct ag_editable {
 } AG_Editable;
 
 #define AGEDITABLE(obj)            ((AG_Editable *)(obj))
-#define AG_EDITABLE_SELF()         AG_OBJECT(0,"AG_Widget:AG_Editable:*")
-#define AG_EDITABLE_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Editable:*")
-#define AG_EDITABLE_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Editable:*")
-#define AG_CONST_EDITABLE_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Editable:*")
-#define AG_CONST_EDITABLE_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Editable:*")
-#define AG_CONST_EDITABLE_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Editable:*")
+#define AGCEDITABLE(obj)           ((const AG_Editable *)(obj))
+#define AG_EDITABLE_SELF()          AGEDITABLE( AG_OBJECT(0,"AG_Widget:AG_Editable:*") )
+#define AG_EDITABLE_PTR(n)          AGEDITABLE( AG_OBJECT((n),"AG_Widget:AG_Editable:*") )
+#define AG_EDITABLE_NAMED(n)        AGEDITABLE( AG_OBJECT_NAMED((n),"AG_Widget:AG_Editable:*") )
+#define AG_CONST_EDITABLE_SELF()   AGCEDITABLE( AG_CONST_OBJECT(0,"AG_Widget:AG_Editable:*") )
+#define AG_CONST_EDITABLE_PTR(n)   AGCEDITABLE( AG_CONST_OBJECT((n),"AG_Widget:AG_Editable:*") )
+#define AG_CONST_EDITABLE_NAMED(n) AGCEDITABLE( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Editable:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agEditableClass;

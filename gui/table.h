@@ -193,12 +193,13 @@ typedef struct ag_table {
 } AG_Table;
 
 #define AGTABLE(p)              ((AG_Table *)(p))
-#define AG_TABLE_SELF()         AG_OBJECT(0,"AG_Widget:AG_Table:*")
-#define AG_TABLE_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Table:*")
-#define AG_TABLE_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Table:*")
-#define AG_CONST_TABLE_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Table:*")
-#define AG_CONST_TABLE_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Table:*")
-#define AG_CONST_TABLE_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Table:*")
+#define AGCTABLE(p)             ((const AG_Table *)(p))
+#define AG_TABLE_SELF()          AGTABLE( AG_OBJECT(0,"AG_Widget:AG_Table:*") )
+#define AG_TABLE_PTR(n)          AGTABLE( AG_OBJECT((n),"AG_Widget:AG_Table:*") )
+#define AG_TABLE_NAMED(n)        AGTABLE( AG_OBJECT_NAMED((n),"AG_Widget:AG_Table:*") )
+#define AG_CONST_TABLE_SELF()   AGCTABLE( AG_CONST_OBJECT(0,"AG_Widget:AG_Table:*") )
+#define AG_CONST_TABLE_PTR(n)   AGCTABLE( AG_CONST_OBJECT((n),"AG_Widget:AG_Table:*") )
+#define AG_CONST_TABLE_NAMED(n) AGCTABLE( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Table:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agTableClass;

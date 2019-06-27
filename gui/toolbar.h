@@ -36,12 +36,13 @@ typedef struct ag_toolbar {
 } AG_Toolbar;
 
 #define AGTOOLBAR(obj)            ((AG_Toolbar *)(obj))
-#define AG_TOOLBAR_SELF()         AG_OBJECT(0,"AG_Widget:AG_Box:AG_Toolbar:*")
-#define AG_TOOLBAR_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Box:AG_Toolbar:*")
-#define AG_TOOLBAR_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Toolbar:*")
-#define AG_CONST_TOOLBAR_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Box:AG_Toolbar:*")
-#define AG_CONST_TOOLBAR_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Box:AG_Toolbar:*")
-#define AG_CONST_TOOLBAR_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Toolbar:*")
+#define AGCTOOLBAR(obj)           ((const AG_Toolbar *)(obj))
+#define AG_TOOLBAR_SELF()          AGTOOLBAR( AG_OBJECT(0,"AG_Widget:AG_Box:AG_Toolbar:*") )
+#define AG_TOOLBAR_PTR(n)          AGTOOLBAR( AG_OBJECT((n),"AG_Widget:AG_Box:AG_Toolbar:*") )
+#define AG_TOOLBAR_NAMED(n)        AGTOOLBAR( AG_OBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Toolbar:*") )
+#define AG_CONST_TOOLBAR_SELF()   AGCTOOLBAR( AG_CONST_OBJECT(0,"AG_Widget:AG_Box:AG_Toolbar:*") )
+#define AG_CONST_TOOLBAR_PTR(n)   AGCTOOLBAR( AG_CONST_OBJECT((n),"AG_Widget:AG_Box:AG_Toolbar:*") )
+#define AG_CONST_TOOLBAR_NAMED(n) AGCTOOLBAR( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Toolbar:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agToolbarClass;

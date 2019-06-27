@@ -52,12 +52,13 @@ typedef struct ag_socket {
 } AG_Socket;
 
 #define AGSOCKET(obj)            ((AG_Socket *)(obj))
-#define AG_SOCKET_SELF()         AG_OBJECT(0,"AG_Widget:AG_Socket:*")
-#define AG_SOCKET_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Socket:*")
-#define AG_SOCKET_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Socket:*")
-#define AG_CONST_SOCKET_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Socket:*")
-#define AG_CONST_SOCKET_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Socket:*")
-#define AG_CONST_SOCKET_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Socket:*")
+#define AGCSOCKET(obj)           ((const AG_Socket *)(obj))
+#define AG_SOCKET_SELF()          AGSOCKET( AG_OBJECT(0,"AG_Widget:AG_Socket:*") )
+#define AG_SOCKET_PTR(n)          AGSOCKET( AG_OBJECT((n),"AG_Widget:AG_Socket:*") )
+#define AG_SOCKET_NAMED(n)        AGSOCKET( AG_OBJECT_NAMED((n),"AG_Widget:AG_Socket:*") )
+#define AG_CONST_SOCKET_SELF()   AGCSOCKET( AG_CONST_OBJECT(0,"AG_Widget:AG_Socket:*") )
+#define AG_CONST_SOCKET_PTR(n)   AGCSOCKET( AG_CONST_OBJECT((n),"AG_Widget:AG_Socket:*") )
+#define AG_CONST_SOCKET_NAMED(n) AGCSOCKET( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Socket:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agSocketClass;

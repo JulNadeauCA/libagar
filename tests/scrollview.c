@@ -8,7 +8,7 @@
 static void
 TestWithReactiveWidgets(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1), *win;
+	AG_Window *winParent = AG_WINDOW_PTR(1), *win;
 	AG_Box *hBox;
 	AG_Scrollview *sv;
 	int x, y;
@@ -36,7 +36,7 @@ TestWithReactiveWidgets(AG_Event *event)
 static void
 TestWithPassiveWidgets(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1), *win;
+	AG_Window *winParent = AG_WINDOW_PTR(1), *win;
 	AG_Box *hBox;
 	AG_Scrollview *sv;
 	int x, y;

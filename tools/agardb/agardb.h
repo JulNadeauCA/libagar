@@ -78,7 +78,8 @@ public:
 		virtual ~GUI();
 
 		static void Preferences(AG_Event *_Nonnull);
-		static void MenuTarget(AG_Event *_Nonnull);
+		static void MenuTargets(AG_Event *_Nonnull);
+		static void SelectTarget(AG_Event *_Nonnull);
 	};
 
 private:

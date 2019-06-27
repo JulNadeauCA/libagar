@@ -52,12 +52,13 @@ typedef struct ag_pane {
 } AG_Pane;
 
 #define AGPANE(obj)            ((AG_Pane *)(obj))
-#define AG_PANE_SELF()         AG_OBJECT(0,"AG_Widget:AG_Pane:*")
-#define AG_PANE_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Pane:*")
-#define AG_PANE_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Pane:*")
-#define AG_CONST_PANE_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Pane:*")
-#define AG_CONST_PANE_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Pane:*")
-#define AG_CONST_PANE_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Pane:*")
+#define AGCPANE(obj)           ((const AG_Pane *)(obj))
+#define AG_PANE_SELF()          AGPANE( AG_OBJECT(0,"AG_Widget:AG_Pane:*") )
+#define AG_PANE_PTR(n)          AGPANE( AG_OBJECT((n),"AG_Widget:AG_Pane:*") )
+#define AG_PANE_NAMED(n)        AGPANE( AG_OBJECT_NAMED((n),"AG_Widget:AG_Pane:*") )
+#define AG_CONST_PANE_SELF()   AGCPANE( AG_CONST_OBJECT(0,"AG_Widget:AG_Pane:*") )
+#define AG_CONST_PANE_PTR(n)   AGCPANE( AG_CONST_OBJECT((n),"AG_Widget:AG_Pane:*") )
+#define AG_CONST_PANE_NAMED(n) AGCPANE( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Pane:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agPaneClass;

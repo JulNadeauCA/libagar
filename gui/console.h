@@ -67,12 +67,13 @@ typedef struct ag_console {
 } AG_Console;
 
 #define AGCONSOLE(obj)            ((AG_Console *)(obj))
-#define AG_CONSOLE_SELF()         AG_OBJECT(0,"AG_Widget:AG_Console:*")
-#define AG_CONSOLE_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Console:*")
-#define AG_CONSOLE_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Console:*")
-#define AG_CONST_CONSOLE_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Console:*")
-#define AG_CONST_CONSOLE_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Console:*")
-#define AG_CONST_CONSOLE_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Console:*")
+#define AGCCONSOLE(obj)           ((const AG_Console *)(obj))
+#define AG_CONSOLE_SELF()          AGCONSOLE( AG_OBJECT(0,"AG_Widget:AG_Console:*") )
+#define AG_CONSOLE_PTR(n)          AGCONSOLE( AG_OBJECT((n),"AG_Widget:AG_Console:*") )
+#define AG_CONSOLE_NAMED(n)        AGCONSOLE( AG_OBJECT_NAMED((n),"AG_Widget:AG_Console:*") )
+#define AG_CONST_CONSOLE_SELF()   AGCCONSOLE( AG_CONST_OBJECT(0,"AG_Widget:AG_Console:*") )
+#define AG_CONST_CONSOLE_PTR(n)   AGCCONSOLE( AG_CONST_OBJECT((n),"AG_Widget:AG_Console:*") )
+#define AG_CONST_CONSOLE_NAMED(n) AGCCONSOLE( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Console:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agConsoleClass;

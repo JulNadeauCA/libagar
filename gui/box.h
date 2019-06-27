@@ -51,12 +51,13 @@ typedef struct ag_box {
 #define AG_VBOX_EXPAND    (AG_BOX_HFILL | AG_BOX_VFILL)
 
 #define AGBOX(obj)            ((AG_Box *)(obj))
-#define AG_BOX_SELF()         AG_OBJECT(0,"AG_Widget:AG_Box:*")
-#define AG_BOX_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Box:*")
-#define AG_BOX_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Box:*")
-#define AG_CONST_BOX_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Box:*")
-#define AG_CONST_BOX_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Box:*")
-#define AG_CONST_BOX_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Box:*")
+#define AGCBOX(obj)           ((const AG_Box *)(obj))
+#define AG_BOX_SELF()          AGBOX( AG_OBJECT(0,"AG_Widget:AG_Box:*") )
+#define AG_BOX_PTR(n)          AGBOX( AG_OBJECT((n),"AG_Widget:AG_Box:*") )
+#define AG_BOX_NAMED(n)        AGBOX( AG_OBJECT_NAMED((n),"AG_Widget:AG_Box:*") )
+#define AG_CONST_BOX_SELF()   AGCBOX( AG_CONST_OBJECT(0,"AG_Widget:AG_Box:*") )
+#define AG_CONST_BOX_PTR(n)   AGCBOX( AG_CONST_OBJECT((n),"AG_Widget:AG_Box:*") )
+#define AG_CONST_BOX_NAMED(n) AGCBOX( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Box:*") )
 
 __BEGIN_DECLS
 extern const char *agBoxHorizAlignNames[];

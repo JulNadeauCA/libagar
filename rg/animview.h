@@ -28,6 +28,15 @@ typedef struct rg_anim_view {
 	AG_PopupMenu *pm;
 } RG_Animview;
 
+#define RGANIMVIEW(obj)            ((RG_Animview *)(obj))
+#define RGCANIMVIEW(obj)           ((const RG_Animview *)(obj))
+#define RG_ANIMVIEW_SELF()          RGANIMVIEW( AG_OBJECT(0,"AG_Widget:RG_Animview:*") )
+#define RG_ANIMVIEW_PTR(n)          RGANIMVIEW( AG_OBJECT((n),"AG_Widget:RG_Animview:*") )
+#define RG_ANIMVIEW_NAMED(n)        RGANIMVIEW( AG_OBJECT_NAMED((n),"AG_Widget:RG_Animview:*") )
+#define RG_CONST_ANIMVIEW_SELF()   RGCANIMVIEW( AG_CONST_OBJECT(0,"AG_Widget:RG_Animview:*") )
+#define RG_CONST_ANIMVIEW_PTR(n)   RGCANIMVIEW( AG_CONST_OBJECT((n),"AG_Widget:RG_Animview:*") )
+#define RG_CONST_ANIMVIEW_NAMED(n) RGCANIMVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:RG_Animview:*") )
+
 __BEGIN_DECLS
 extern AG_WidgetClass rgAnimviewClass;
 

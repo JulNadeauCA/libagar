@@ -50,12 +50,13 @@ typedef struct ag_scrollbar {
 } AG_Scrollbar;
 
 #define AGSCROLLBAR(obj)            ((AG_Scrollbar *)(obj))
-#define AG_SCROLLBAR_SELF()         AG_OBJECT(0,"AG_Widget:AG_Scrollbar:*")
-#define AG_SCROLLBAR_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Scrollbar:*")
-#define AG_SCROLLBAR_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Scrollbar:*")
-#define AG_CONST_SCROLLBAR_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Scrollbar:*")
-#define AG_CONST_SCROLLBAR_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Scrollbar:*")
-#define AG_CONST_SCROLLBAR_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Scrollbar:*")
+#define AGCSCROLLBAR(obj)           ((const AG_Scrollbar *)(obj))
+#define AG_SCROLLBAR_SELF()          AGSCROLLBAR( AG_OBJECT(0,"AG_Widget:AG_Scrollbar:*") )
+#define AG_SCROLLBAR_PTR(n)          AGSCROLLBAR( AG_OBJECT((n),"AG_Widget:AG_Scrollbar:*") )
+#define AG_SCROLLBAR_NAMED(n)        AGSCROLLBAR( AG_OBJECT_NAMED((n),"AG_Widget:AG_Scrollbar:*") )
+#define AG_CONST_SCROLLBAR_SELF()   AGCSCROLLBAR( AG_CONST_OBJECT(0,"AG_Widget:AG_Scrollbar:*") )
+#define AG_CONST_SCROLLBAR_PTR(n)   AGCSCROLLBAR( AG_CONST_OBJECT((n),"AG_Widget:AG_Scrollbar:*") )
+#define AG_CONST_SCROLLBAR_NAMED(n) AGCSCROLLBAR( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Scrollbar:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agScrollbarClass;

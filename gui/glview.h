@@ -41,12 +41,13 @@ typedef struct ag_glview {
 } AG_GLView;
 
 #define AGGLVIEW(obj)            ((AG_GLView *)(obj))
-#define AG_GLVIEW_SELF()         AG_OBJECT(0,"AG_Widget:AG_GLView:*")
-#define AG_GLVIEW_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_GLView:*")
-#define AG_GLVIEW_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_GLView:*")
-#define AG_CONST_GLVIEW_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_GLView:*")
-#define AG_CONST_GLVIEW_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_GLView:*")
-#define AG_CONST_GLVIEW_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_GLView:*")
+#define AGCGLVIEW(obj)           ((const AG_GLView *)(obj))
+#define AG_GLVIEW_SELF()          AGGLVIEW( AG_OBJECT(0,"AG_Widget:AG_GLView:*") )
+#define AG_GLVIEW_PTR(n)          AGGLVIEW( AG_OBJECT((n),"AG_Widget:AG_GLView:*") )
+#define AG_GLVIEW_NAMED(n)        AGGLVIEW( AG_OBJECT_NAMED((n),"AG_Widget:AG_GLView:*") )
+#define AG_CONST_GLVIEW_SELF()   AGCGLVIEW( AG_CONST_OBJECT(0,"AG_Widget:AG_GLView:*") )
+#define AG_CONST_GLVIEW_PTR(n)   AGCGLVIEW( AG_CONST_OBJECT((n),"AG_Widget:AG_GLView:*") )
+#define AG_CONST_GLVIEW_NAMED(n) AGCGLVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_GLView:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agGLViewClass;

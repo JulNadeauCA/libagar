@@ -29,12 +29,13 @@ typedef struct ag_mspinbutton {
 } AG_MSpinbutton;
 
 #define AGMSPINBUTTON(obj)            ((AG_MSpinbutton *)(obj))
-#define AG_MSPINBUTTON_SELF()         AG_OBJECT(0,"AG_Widget:AG_MSpinbutton:*")
-#define AG_MSPINBUTTON_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_MSpinbutton:*")
-#define AG_MSPINBUTTON_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_MSpinbutton:*")
-#define AG_CONST_MSPINBUTTON_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_MSpinbutton:*")
-#define AG_CONST_MSPINBUTTON_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_MSpinbutton:*")
-#define AG_CONST_MSPINBUTTON_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_MSpinbutton:*")
+#define AGCMSPINBUTTON(obj)           ((const AG_MSpinbutton *)(obj))
+#define AG_MSPINBUTTON_SELF()          AGMSPINBUTTON( AG_OBJECT(0,"AG_Widget:AG_MSpinbutton:*") )
+#define AG_MSPINBUTTON_PTR(n)          AGMSPINBUTTON( AG_OBJECT((n),"AG_Widget:AG_MSpinbutton:*") )
+#define AG_MSPINBUTTON_NAMED(n)        AGMSPINBUTTON( AG_OBJECT_NAMED((n),"AG_Widget:AG_MSpinbutton:*") )
+#define AG_CONST_MSPINBUTTON_SELF()   AGCMSPINBUTTON( AG_CONST_OBJECT(0,"AG_Widget:AG_MSpinbutton:*") )
+#define AG_CONST_MSPINBUTTON_PTR(n)   AGCMSPINBUTTON( AG_CONST_OBJECT((n),"AG_Widget:AG_MSpinbutton:*") )
+#define AG_CONST_MSPINBUTTON_NAMED(n) AGCMSPINBUTTON( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_MSpinbutton:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agMSpinbuttonClass;

@@ -135,7 +135,7 @@ selection event by displaying a text dialog:
 void
 Selected(AG_Event *event)
 {
-	AG_TlistItem *item = AG_PTR(1);
+	AG_TlistItem *item = AG_TLIST_ITEM_PTR(1);
 	AG_TextMsg(AG_MSG_INFO, "Selected item: %s", item->text);
 }
 

@@ -53,15 +53,15 @@ typedef struct ag_db {
 #define AG_DB_READONLY	0x02		/* Open in read-only mode */
 } AG_Db;
 
-#define AGDB(p) ((AG_Db *)(p))
-#define AGDB_CLASS(db) ((AG_DbClass *)AGOBJECT(db)->cls)
-
-#define AG_DB_SELF()         AG_OBJECT(0,"AG_Db:*")
-#define AG_DB_PTR(n)         AG_OBJECT((n),"AG_Db:*")
-#define AG_DB_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Db:*")
-#define AG_CONST_DB_SELF()   AG_CONST_OBJECT(0,"AG_Db:*")
-#define AG_CONST_DB_PTR(n)   AG_CONST_OBJECT((n),"AG_Db:*")
-#define AG_CONST_DB_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Db:*")
+#define AGDB(p)              ((AG_Db *)(p))
+#define AGCDB(p)             ((const AG_Db *)(p))
+#define AGDB_CLASS(db)       ((AG_DbClass *)AGOBJECT(db)->cls)
+#define AG_DB_SELF()          AGDB( AG_OBJECT(0,"AG_Db:*") )
+#define AG_DB_PTR(n)          AGDB( AG_OBJECT((n),"AG_Db:*") )
+#define AG_DB_NAMED(n)        AGDB( AG_OBJECT_NAMED((n),"AG_Db:*") )
+#define AG_CONST_DB_SELF()   AGCDB( AG_CONST_OBJECT(0,"AG_Db:*") )
+#define AG_CONST_DB_PTR(n)   AGCDB( AG_CONST_OBJECT((n),"AG_Db:*") )
+#define AG_CONST_DB_NAMED(n) AGCDB( AG_CONST_OBJECT_NAMED((n),"AG_Db:*") )
 
 __BEGIN_DECLS
 extern AG_DbClass agDbClass;

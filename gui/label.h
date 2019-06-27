@@ -55,12 +55,13 @@ typedef struct ag_label {
 } AG_Label;
 
 #define AGLABEL(obj)            ((AG_Label *)(obj))
-#define AG_LABEL_SELF()         AG_OBJECT(0,"AG_Widget:AG_Label:*")
-#define AG_LABEL_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Label:*")
-#define AG_LABEL_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Label:*")
-#define AG_CONST_LABEL_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Label:*")
-#define AG_CONST_LABEL_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Label:*")
-#define AG_CONST_LABEL_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Label:*")
+#define AGCLABEL(obj)           ((const AG_Label *)(obj))
+#define AG_LABEL_SELF()          AGLABEL( AG_OBJECT(0,"AG_Widget:AG_Label:*") )
+#define AG_LABEL_PTR(n)          AGLABEL( AG_OBJECT((n),"AG_Widget:AG_Label:*") )
+#define AG_LABEL_NAMED(n)        AGLABEL( AG_OBJECT_NAMED((n),"AG_Widget:AG_Label:*") )
+#define AG_CONST_LABEL_SELF()   AGCLABEL( AG_CONST_OBJECT(0,"AG_Widget:AG_Label:*") )
+#define AG_CONST_LABEL_PTR(n)   AGCLABEL( AG_CONST_OBJECT((n),"AG_Widget:AG_Label:*") )
+#define AG_CONST_LABEL_NAMED(n) AGCLABEL( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Label:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agLabelClass;

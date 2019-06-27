@@ -12,6 +12,9 @@
 #define AG_TLIST_LABEL_MAX AG_LABEL_MAX
 #endif
 
+#define AG_TLIST_ITEM_TAG "AgTlItm"
+#define AG_TLIST_ITEM_TAG_LEN 8
+
 /* Popup menu (TODO switch to AG_PopupMenu) */
 typedef struct ag_tlist_popup {
 	const char  *_Nonnull  iclass;	/* Apply to items of this class */
@@ -23,6 +26,9 @@ typedef struct ag_tlist_popup {
 
 /* A tree/list item */
 typedef struct ag_tlist_item {
+#ifdef AG_TYPE_SAFETY
+	char tag[AG_TLIST_ITEM_TAG_LEN];       /* Tagged non-object */
+#endif
 	int selected;			/* Effective selection flag */
 
 	AG_Surface *_Nullable iconsrc;	/* Source icon */
@@ -101,12 +107,33 @@ typedef struct ag_tlist {
 } AG_Tlist;
 
 #define AGTLIST(obj)            ((AG_Tlist *)(obj))
-#define AG_TLIST_SELF()         AG_OBJECT(0,"AG_Widget:AG_Tlist:*")
-#define AG_TLIST_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Tlist:*")
-#define AG_TLIST_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Tlist:*")
-#define AG_CONST_TLIST_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Tlist:*")
-#define AG_CONST_TLIST_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Tlist:*")
-#define AG_CONST_TLIST_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Tlist:*")
+#define AGCTLIST(obj)           ((const AG_Tlist *)(obj))
+#define AG_TLIST_SELF()          AGTLIST( AG_OBJECT(0,"AG_Widget:AG_Tlist:*") )
+#define AG_TLIST_PTR(n)          AGTLIST( AG_OBJECT((n),"AG_Widget:AG_Tlist:*") )
+#define AG_TLIST_NAMED(n)        AGTLIST( AG_OBJECT_NAMED((n),"AG_Widget:AG_Tlist:*") )
+#define AG_CONST_TLIST_SELF()   AGCTLIST( AG_CONST_OBJECT(0,"AG_Widget:AG_Tlist:*") )
+#define AG_CONST_TLIST_PTR(n)   AGCTLIST( AG_CONST_OBJECT((n),"AG_Widget:AG_Tlist:*") )
+#define AG_CONST_TLIST_NAMED(n) AGCTLIST( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Tlist:*") )
+
+/* NOTE: AG_TlistItem is a tagged non-object. */
+#ifdef AG_TYPE_SAFETY
+# define AG_TLIST_ITEM_PTR(v) \
+    (v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
+     !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
+     strncmp(AGTLISTITEM(event->argv[v].data.p)->tag, AG_TLIST_ITEM_TAG, AG_TLIST_ITEM_TAG_LEN) == 0) ? \
+     event->argv[v].data.p : AG_ObjectMismatch()
+# define AG_CONST_TLIST_ITEM_PTR(v) \
+    (v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
+     (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
+     strncmp(AGTLISTITEM(event->argv[v].data.p)->tag, AG_TLIST_ITEM_TAG, AG_TLIST_ITEM_TAG_LEN) == 0) ? \
+     event->argv[v].data.p : AG_ObjectMismatch()
+#else
+# define AG_TLIST_ITEM_PTR(v)       event->argv[v].data.p
+# define AG_CONST_TLIST_ITEM_PTR(v) event->argv[v].data.p
+#endif
+#define AGTLISTITEM(p)               ((AG_TlistItem *)(p))
+#define AG_TLIST_ITEM_SELF()         AG_TLIST_ITEM_PTR(0)
+#define AG_CONST_TLIST_ITEM_SELF()   AG_CONST_TLIST_ITEM_PTR(0)
 
 #define AG_TLIST_FOREACH(it, tl) \
 	AG_TAILQ_FOREACH(it, &(tl)->items, items)
@@ -117,8 +144,6 @@ typedef struct ag_tlist {
 	    (it) != AG_TAILQ_END(&(tl)->children) && (it)->p1 != NULL;	\
 	    (it) = AG_TAILQ_NEXT((it), cobjs),				\
 	     (p) = (it)!=NULL ? (struct t *)(it)->p1 : NULL)
-
-#define AG_TLIST_ITEM(n) AG_TlistSelectedItemPtr(AG_PTR(n))
 
 __BEGIN_DECLS
 extern AG_WidgetClass agTlistClass;

@@ -2034,7 +2034,7 @@ static void
 SelectLib(AG_Event *_Nonnull event)
 {
 	MAP_View *mv = MAP_VIEW_PTR(1);
-	AG_TlistItem *it = AG_PTR(2);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 	int state = AG_INT(3);
 	MAP_Tool *t;
 
@@ -2133,7 +2133,7 @@ static void
 SelectLayer(AG_Event *_Nonnull event)
 {
 	MAP *m = MAP_PTR(1);
-	AG_TlistItem *ti = AG_PTR(2);
+	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
 	MAP_Layer *layer = ti->p1;
 	Uint nlayer;
 

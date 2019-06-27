@@ -193,27 +193,46 @@ typedef struct ag_object_header {
 #define AGCLASS(cls) ((struct ag_object_class *)(cls))
 #define AGOBJECT_CLASS(obj) ((struct ag_object_class *)(AGOBJECT(obj)->cls))
 
+/* Argument Accessors */
+#ifdef AG_TYPE_SAFETY
+
+# define AG_OBJECT_VALID(p) \
+   (strncmp(AGOBJECT(p)->tag, AG_OBJECT_TYPE_TAG, AG_OBJECT_TYPE_TAG_LEN) == 0)
+
+# define AG_OBJECT(v,hier) \
+   ((v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
+     !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
+     AG_OBJECT_VALID(event->argv[v].data.p) && \
+     AG_OfClass(event->argv[v].data.p,(hier))) ? event->argv[v].data.p : \
+                                                 AG_ObjectMismatch())
+# define AG_OBJECT_PTR(v) \
+  ((v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
+    !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
+    AG_OBJECT_VALID(event->argv[v].data.p)) ? event->argv[v].data.p : \
+                                              AG_ObjectMismatch())
+# define AG_CONST_OBJECT(v,hier) \
+   ((v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
+     (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
+     AG_OBJECT_VALID(event->argv[v].data.p) && \
+     AG_OfClass(event->argv[v].data.p,(hier))) ? (const void *)event->argv[v].data.p : \
+                                                 (const void *)AG_ObjectMismatch())
+# define AG_CONST_OBJECT_PTR(v) \
+  ((v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
+    (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
+    AG_OBJECT_VALID(event->argv[v].data.p)) ? (const void *)event->argv[v].data.p : \
+                                              (const void *)AG_ObjectMismatch())
+#else /* !AG_TYPE_SAFETY */
+# define AG_OBJECT_VALID(p)      (1)
+# define AG_OBJECT(v,hier)       (event->argv[v].data.p)
+# define AG_OBJECT_PTR(v)        (event->argv[v].data.p)
+# define AG_CONST_OBJECT(v,hier) (event->argv[v].data.p)
+# define AG_CONST_OBJECT_PTR(v) ((const void *)event->argv[v].data.p)
+#endif /* AG_TYPE_SAFETY */
+
 #define AG_OBJECT_SELF()         AG_OBJECT_PTR(0)
 #define AG_OBJECT_NAMED(n)       AG_PTR_NAMED(n)
 #define AG_CONST_OBJECT_SELF()   AG_CONST_OBJECT_PTR(0)
 #define AG_CONST_OBJECT_NAMED(n) AG_CONST_PTR_NAMED(n)
-
-#ifdef AG_TYPE_SAFETY
-# define AG_OBJECT_PTR(v) \
-   (v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
-    !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
-    strncmp(AGOBJECT(event->argv[v].data.p)->tag, AG_OBJECT_TYPE_TAG, AG_OBJECT_TYPE_TAG_LEN) == 0) ? \
-    event->argv[v].data.p : AG_ObjectMismatch()
-
-# define AG_CONST_OBJECT_PTR(v) \
-   (v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
-    (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
-    strncmp(AGOBJECT(event->argv[v].data.p)->tag, AG_OBJECT_TYPE_TAG, AG_OBJECT_TYPE_TAG_LEN) == 0) ? \
-    (const void *)event->argv[v].data.p : (const void *)AG_ObjectMismatch()
-#else
-# define AG_OBJECT_PTR(v)       (event->argv[v].data.p)
-# define AG_CONST_OBJECT_PTR(v) ((const void *)event->argv[v].data.p)
-#endif
 
 /* Iterate over the direct child objects. */
 #define AGOBJECT_FOREACH_CHILD(var, ob, t) \
@@ -244,9 +263,12 @@ typedef struct ag_object_header {
 			continue; \
 		} else
 
-/* Class membership assertion */
+/* Object validity and class membership test assertion */
 #ifdef AG_DEBUG
 # define AG_ASSERT_CLASS(obj,class) \
+	if (!AG_OBJECT_VALID(obj)) { \
+		AG_FatalErrorF("%p is not a valid AG_Object", (obj)); \
+	} \
 	if (!AG_OfClass((obj),(class))) { \
 		AG_SetError("%s is not a %s", AGOBJECT(obj)->name, class); \
 		AG_FatalError(NULL); \

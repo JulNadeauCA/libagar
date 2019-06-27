@@ -24,12 +24,14 @@ typedef struct ag_pixmap {
 	AG_Rect rClip;		/* Clipping rectangle (for !RESCALE) */
 } AG_Pixmap;
 
-#define AGPIXMAP(p)            ((AG_Pixmap *)(p))
-#define AG_PIXMAP_SELF()       AG_OBJECT(0,"AG_Widget:AG_Pixmap:*")
-#define AG_PIXMAP_PTR(n)       AG_OBJECT((n),"AG_Widget:AG_Pixmap:*")
-#define AG_PIXMAP_NAMED(n)     AG_OBJECT_NAMED((n),"AG_Widget:AG_Pixmap:*")
-#define AG_CONST_PIXMAP_SELF() AG_CONST_OBJECT(0,"AG_Widget:AG_Pixmap:*")
-#define AG_CONST_PIXMAP_PTR(n) AG_CONST_OBJECT((n),"AG_Widget:AG_Pixmap:*")
+#define AGPIXMAP(p)              ((AG_Pixmap *)(p))
+#define AGCPIXMAP(p)             ((const AG_Pixmap *)(p))
+#define AG_PIXMAP_SELF()          AGPIXMAP( AG_OBJECT(0,"AG_Widget:AG_Pixmap:*") )
+#define AG_PIXMAP_PTR(n)          AGPIXMAP( AG_OBJECT((n),"AG_Widget:AG_Pixmap:*") )
+#define AG_PIXMAP_NAMED(n)        AGPIXMAP( AG_OBJECT_NAMED((n),"AG_Widget:AG_Pixmap:*") )
+#define AG_CONST_PIXMAP_SELF()   AGCPIXMAP( AG_CONST_OBJECT(0,"AG_Widget:AG_Pixmap:*") )
+#define AG_CONST_PIXMAP_PTR(n)   AGCPIXMAP( AG_CONST_OBJECT((n),"AG_Widget:AG_Pixmap:*") )
+#define AG_CONST_PIXMAP_NAMED(n) AGCPIXMAP( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Pixmap:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agPixmapClass;

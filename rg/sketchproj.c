@@ -90,7 +90,7 @@ RG_SketchProjSave(void *p, AG_DataSource *buf)
 static void
 PollSketches(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	RG_Tile *t = AG_PTR(1);
 	RG_Tileset *ts = t->ts;
 	RG_TileElement *tel;
@@ -115,7 +115,7 @@ static void
 SelectSketch(AG_Event *_Nonnull event)
 {
 	struct rg_sketchproj *sproj = AG_PTR(1);
-	AG_TlistItem *it = AG_PTR(3);
+	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(3);
 
 	Strlcpy(sproj->sketch, it->text, sizeof(sproj->sketch));
 }

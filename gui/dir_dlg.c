@@ -259,7 +259,7 @@ static void
 LocSelected(AG_Event *_Nonnull event)
 {
 	AG_DirDlg *dd = AG_DIRDLG_PTR(1);
-	const AG_TlistItem *ti = AG_PTR(2);
+	const AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
 
 	if (ti == NULL) {
 		return;
@@ -406,7 +406,7 @@ SelectGlobResult(AG_Event *_Nonnull event)
 	char file[AG_PATHNAME_MAX];
 	AG_Window *win = AG_WINDOW_PTR(1);
 	AG_DirDlg *dd =  AG_DIRDLG_PTR(2);
-	const AG_TlistItem *ti = AG_PTR(3);
+	const AG_TlistItem *ti = AG_TLIST_ITEM_PTR(3);
 	AG_Textbox *tb = dd->tbInput;
 
 	AG_ObjectLock(dd);

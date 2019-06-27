@@ -387,79 +387,65 @@ Attached(AG_Event *_Nonnull event)
 		AG_WindowSetPadding(pwin, -1, -1, 0, pwin->bPad);
 }
 
-/* Generic constructor for menu items. Menu must be locked. */
+/* Parent Menu (if any) must be locked. */
 static AG_MenuItem *_Nonnull
 CreateItem(AG_MenuItem *_Nullable miParent, const char *_Nullable text,
     const AG_Surface *_Nullable icon)
 {
-	AG_Menu *m;
+	AG_Menu *pmenu = (miParent) ? miParent->pmenu : NULL;
 	AG_MenuItem *mi;
 	
 	mi = Malloc(sizeof(AG_MenuItem));
-	mi->parent = miParent;
+#ifdef AG_TYPE_SAFETY
+	Strlcpy(mi->tag, AG_MENU_ITEM_TAG, sizeof(mi->tag));
+#endif
+	mi->text = text ? Strdup(text) : Strdup("");
+	mi->lblMenu[1] = mi->lblMenu[0] = -1;
+	mi->lblView[1] = mi->lblView[0] = -1;
+	mi->icon = -1;
+	mi->iconSrc = (icon) ? AG_SurfaceDup(icon) : NULL;  /* TODO shared */
+	mi->value = -1;
+	mi->state = (pmenu) ? pmenu->curState : 1;
 	mi->stateFn = NULL;
-
-	if (miParent != NULL) {
-		m = mi->pmenu = miParent->pmenu;
-		mi->y = miParent->nSubItems*m->itemh - m->itemh;
-		mi->state = m->curState;
-
-		TAILQ_INSERT_TAIL(&miParent->subItems, mi, items);
-		miParent->nSubItems++;
-	} else {
-		m = mi->pmenu = NULL;
-		mi->y = 0;
-		mi->state = 1;
-	}
-	mi->view = NULL;
-	mi->sel_subitem = NULL;
 	mi->key_equiv = 0;
 	mi->key_mod = 0;
+	mi->x = 0;
+	mi->y = (miParent && pmenu) ?
+	    (miParent->nSubItems * pmenu->itemh) - pmenu->itemh : 0;
 	mi->clickFn = NULL;
 	mi->poll = NULL;
+	mi->flags = 0;
 	mi->bind_type = AG_MENU_NO_BINDING;
 	mi->bind_flags = 0;
 	mi->bind_invert = 0;
 #ifdef AG_THREADS
 	mi->bind_lock = NULL;
 #endif
-	if (text != NULL) {
-		mi->text = Strdup(text);
-	} else {
-		mi->text = Strdup("");
-	}
-	mi->lblMenu[0] = -1;
-	mi->lblMenu[1] = -1;
-	mi->lblView[0] = -1;
-	mi->lblView[1] = -1;
-	mi->value = -1;
-	mi->flags = 0;
-	mi->icon = -1;
+	mi->view = NULL;
+	mi->pmenu = pmenu;
+	mi->sel_subitem = NULL;
 	mi->tbButton = NULL;
+	mi->parent = miParent;
 	TAILQ_INIT(&mi->subItems);
 	mi->nSubItems = 0;
-
-	if (icon != NULL) {
-		if (miParent != NULL) {
-			/* Request that the parent allocate space for icons. */
+	
+	if (miParent) {
+		if (icon) {
 			miParent->flags |= AG_MENU_ITEM_ICONS;
 		}
-		/* TODO: NODUP */
-		mi->iconSrc = AG_SurfaceDup(icon);
-	} else {
-		mi->iconSrc = NULL;
-	}
-	if (m != NULL) {
-		if ((m->style == AG_MENU_GLOBAL) &&
+		TAILQ_INSERT_TAIL(&miParent->subItems, mi, items);
+		miParent->nSubItems++;
+
+		if (pmenu && (pmenu->style == AG_MENU_GLOBAL) &&
 		    agDriverSw != NULL && agAppMenuWin != NULL) {
 			Uint wMax, hMax;
 			AG_SizeReq rMenu;
 
 			AG_GetDisplaySize(agDriverSw, &wMax, &hMax);
-			AG_WidgetSizeReq(m, &rMenu);
-			AG_WindowSetGeometry(agAppMenuWin, 0, 0, wMax, rMenu.h);
+			AG_WidgetSizeReq(pmenu, &rMenu);
+			AG_WindowSetGeometry(agAppMenuWin, 0,0, wMax, rMenu.h);
+			AG_Redraw(pmenu);
 		}
-		AG_Redraw(m);
 	}
 	return (mi);
 }

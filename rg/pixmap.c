@@ -230,7 +230,7 @@ RG_PixmapScale(RG_Pixmap *px, int w, int h)
 static void
 PollBrushes(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	RG_Pixmap *px = AG_PTR(1);
 	RG_Brush *br;
 	AG_TlistItem *it;
@@ -255,7 +255,7 @@ static void
 SelectBrush(AG_Event *_Nonnull event)
 {
 	RG_Pixmap *px = AG_PTR(1);
-	AG_TlistItem *ti = AG_PTR(2);
+	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
 	RG_Brush *brush = ti->p1;
 
 	px->curbrush = (px->curbrush == brush) ? NULL : brush;
@@ -264,8 +264,8 @@ SelectBrush(AG_Event *_Nonnull event)
 static void
 PollPixmaps(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	AG_TlistItem *it;
 	RG_Pixmap *px;
 
@@ -284,11 +284,11 @@ static void
 CreateBrush(AG_Event *_Nonnull event)
 {
 	RG_Pixmap *px = AG_PTR(1);
-	AG_Tlist *tl = AG_PTR(2);
-	AG_Textbox *tb = AG_PTR(3);
-	AG_Radio *rad_types = AG_PTR(4);
-	AG_Checkbox *cb_oneshot = AG_PTR(5);
-	AG_Window *dlg_win = AG_PTR(6);
+	AG_Tlist *tl = AG_TLIST_PTR(2);
+	AG_Textbox *tb = AG_TEXTBOX_PTR(3);
+	AG_Radio *rad_types = AG_RADIO_PTR(4);
+	AG_Checkbox *cb_oneshot = AG_CHECKBOX_PTR(5);
+	AG_Window *dlg_win = AG_WINDOW_PTR(6);
 	enum rg_brush_type btype;
 	RG_Pixmap *spx;
 	RG_Brush *pbr;
@@ -314,8 +314,8 @@ CreateBrush(AG_Event *_Nonnull event)
 static void
 UpdateBrushOptions(AG_Event *_Nonnull event)
 {
-	AG_Textbox *tb_name = AG_PTR(1);
-	AG_TlistItem *it = AG_PTR(2);
+	AG_Textbox *tb_name = AG_TEXTBOX_PTR(1);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 	RG_Pixmap *spx;
 
 	if (it != NULL) {
@@ -327,9 +327,9 @@ UpdateBrushOptions(AG_Event *_Nonnull event)
 static void
 CreateBrushDlg(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 	RG_Pixmap *px = AG_PTR(2);
-	AG_Window *win, *pwin = AG_PTR(3);
+	AG_Window *win, *pwin = AG_WINDOW_PTR(3);
 	AG_Tlist *tl;
 	AG_Box *bo;
 	AG_Textbox *tb_name;

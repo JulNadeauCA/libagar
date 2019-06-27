@@ -669,8 +669,8 @@ RG_TilesetFindAnim(RG_Tileset *ts, const char *name)
 static void
 PollGraphics(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	RG_Pixmap *px;
 /*	RG_Sketch *sk; */
 	AG_TlistItem *it;
@@ -702,8 +702,8 @@ PollGraphics(AG_Event *_Nonnull event)
 static void
 PollTextures(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	RG_Texture *tex;
 	AG_TlistItem *it;
 
@@ -732,8 +732,8 @@ PollTextures(AG_Event *_Nonnull event)
 static void
 PollAnims(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	RG_Anim *ani;
 	AG_TlistItem *it;
 
@@ -754,8 +754,8 @@ PollAnims(AG_Event *_Nonnull event)
 static void
 PollTiles(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	RG_Tile *t;
 	AG_TlistItem *it;
 	RG_TileElement *tel;
@@ -936,8 +936,8 @@ RemoveAnimMappings(RG_Tileset *_Nonnull ts, RG_Anim *_Nonnull anim)
 static void
 InsertTile(AG_Event *_Nonnull event)
 {
-	AG_Window *pwin = AG_PTR(1);
-	RG_Tileset *ts = AG_PTR(2);
+	AG_Window *pwin = AG_WINDOW_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(2);
 	RG_Tile *t;
 	Uint tileFlags = 0;
 	int w, h;
@@ -1031,9 +1031,9 @@ tryname2:
 static void
 InsertTexture(AG_Event *_Nonnull event)
 {
-	AG_Window *dlgwin = AG_PTR(1);
-	AG_Window *pwin = AG_PTR(2);
-	RG_Tileset *ts = AG_PTR(3);
+	AG_Window *dlgwin = AG_WINDOW_PTR(1);
+	AG_Window *pwin = AG_WINDOW_PTR(2);
+	RG_Tileset *ts = RG_TILESET_PTR(3);
 	AG_Window *win;
 	RG_Texture *tex;
 
@@ -1096,8 +1096,8 @@ tryname2:
 static void
 InsertAnim(AG_Event *_Nonnull event)
 {
-	AG_Window *pwin = AG_PTR(1);
-	RG_Tileset *ts = AG_PTR(2);
+	AG_Window *pwin = AG_WINDOW_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(2);
 	RG_Anim *ani;
 	int flags = 0;
 
@@ -1165,8 +1165,8 @@ tryname2:
 static void
 InsertTileDlg(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
-	AG_Window *pwin = AG_PTR(2);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
+	AG_Window *pwin = AG_WINDOW_PTR(2);
 	AG_Window *win;
 	AG_Box *btnbox;
 	AG_Textbox *tb;
@@ -1212,8 +1212,8 @@ InsertTileDlg(AG_Event *_Nonnull event)
 static void
 InsertTextureDlg(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
-	AG_Window *pwin = AG_PTR(2);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
+	AG_Window *pwin = AG_WINDOW_PTR(2);
 	AG_Window *win;
 	AG_Box *btnbox;
 	AG_Textbox *tb;
@@ -1245,8 +1245,8 @@ InsertTextureDlg(AG_Event *_Nonnull event)
 static void
 InsertAnimDlg(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
-	AG_Window *pwin = AG_PTR(2);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
+	AG_Window *pwin = AG_WINDOW_PTR(2);
 	AG_Window *win;
 	AG_Box *btnbox;
 	AG_Textbox *tb;
@@ -1284,8 +1284,8 @@ InsertAnimDlg(AG_Event *_Nonnull event)
 static void
 DeleteSelTiles(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_PTR(1);
-	RG_Tileset *ts = AG_PTR(2);
+	AG_Tlist *tl = AG_TLIST_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(2);
 	AG_TlistItem *it;
 
 	AG_MutexLock(&ts->lock);
@@ -1378,8 +1378,8 @@ tryname2:
 static void
 DupSelTiles(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
-	AG_Tlist *tl = AG_PTR(2);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
+	AG_Tlist *tl = AG_TLIST_PTR(2);
 	AG_TlistItem *it;
 
 	AG_MutexLock(&ts->lock);
@@ -1397,9 +1397,9 @@ DupSelTiles(AG_Event *_Nonnull event)
 static void
 EditSelTiles(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
-	AG_Tlist *tl = AG_PTR(2);
-	AG_Window *pwin = AG_PTR(3);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
+	AG_Tlist *tl = AG_TLIST_PTR(2);
+	AG_Window *pwin = AG_WINDOW_PTR(3);
 	AG_Window *win;
 	AG_TlistItem *it;
 
@@ -1421,10 +1421,10 @@ static void
 EditSelAnims(AG_Event *_Nonnull event)
 {
 #ifdef AG_THREADS
-	RG_Tileset *ts = AG_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 #endif
-	AG_Tlist *tl = AG_PTR(2);
-	AG_Window *pwin = AG_PTR(3);
+	AG_Tlist *tl = AG_TLIST_PTR(2);
+	AG_Window *pwin = AG_WINDOW_PTR(3);
 	AG_Window *win;
 	AG_TlistItem *it;
 
@@ -1446,9 +1446,9 @@ EditSelAnims(AG_Event *_Nonnull event)
 static void
 EditSelTextures(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
-	AG_Tlist *tl = AG_PTR(2);
-	AG_Window *pwin = AG_PTR(3);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
+	AG_Tlist *tl = AG_TLIST_PTR(2);
+	AG_Window *pwin = AG_WINDOW_PTR(3);
 	AG_Window *win;
 	AG_TlistItem *it;
 
@@ -1469,8 +1469,8 @@ EditSelTextures(AG_Event *_Nonnull event)
 static void
 DeleteSelPixmaps(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
-	AG_Tlist *tlGfx = AG_PTR(2);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
+	AG_Tlist *tlGfx = AG_TLIST_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tlGfx)) != NULL) {
@@ -1488,8 +1488,8 @@ DeleteSelPixmaps(AG_Event *_Nonnull event)
 static void
 DeleteSelAnims(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
-	AG_Tlist *tlAnims = AG_PTR(2);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
+	AG_Tlist *tlAnims = AG_TLIST_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tlAnims)) != NULL) {
@@ -1512,8 +1512,8 @@ DeleteSelAnims(AG_Event *_Nonnull event)
 static void
 DeleteSelSketches(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
-	AG_Tlist *tlGfx = AG_PTR(2);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
+	AG_Tlist *tlGfx = AG_TLIST_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tlGfx)) != NULL) {
@@ -1535,8 +1535,8 @@ DeleteSelSketches(AG_Event *_Nonnull event)
 static void
 DeleteSelGraphics(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
-	AG_Tlist *tlGfx = AG_PTR(2);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
+	AG_Tlist *tlGfx = AG_TLIST_PTR(2);
 	AG_TlistItem *it;
 
 	AG_TLIST_FOREACH(it, tlGfx) {
@@ -1567,8 +1567,8 @@ DeleteSelGraphics(AG_Event *_Nonnull event)
 static void
 DeleteSelTextures(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
-	AG_Tlist *tlTextures = AG_PTR(2);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
+	AG_Tlist *tlTextures = AG_TLIST_PTR(2);
 	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tlTextures->items, items) {
@@ -1586,8 +1586,8 @@ DeleteSelTextures(AG_Event *_Nonnull event)
 static void
 DupSelPixmaps(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
-	AG_Tlist *tlGfx = AG_PTR(2);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
+	AG_Tlist *tlGfx = AG_TLIST_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tlGfx)) != NULL) {
@@ -1617,7 +1617,7 @@ tryname:
 static void
 SelectTemplate(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	int w, h;
 
 	AG_ObjectReset(ts);
@@ -1655,8 +1655,8 @@ SelectTemplate(AG_Event *_Nonnull event)
 static void
 PollTileTbl(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	AG_TlistItem *it;
 	Uint32 i;
 
@@ -1683,8 +1683,8 @@ PollTileTbl(AG_Event *_Nonnull event)
 static void
 PollAnimTbl(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	AG_TlistItem *it;
 	Uint32 i;
 

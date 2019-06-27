@@ -14,7 +14,7 @@
 static void
 MyKeyboardHandler(AG_Event *event)
 {
-	AG_Console *cons = AG_PTR(1);
+	AG_Console *cons = AG_CONSOLE_PTR(1);
 	int sym = AG_INT(2);
 	int mod = AG_INT(3);
 	AG_Char ch = AG_CHAR(4);

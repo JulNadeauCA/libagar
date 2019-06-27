@@ -59,6 +59,15 @@ typedef struct rg_tileset {
 	AG_TAILQ_HEAD_(rg_texture) textures;
 } RG_Tileset;
 
+#define RGTILESET(obj)            ((RG_Tileset *)(obj))
+#define RGCTILESET(obj)           ((const RG_Tileset *)(obj))
+#define RG_TILESET_SELF()          RGTILESET( AG_OBJECT(0,"RG_Tileset:*") )
+#define RG_TILESET_PTR(n)          RGTILESET( AG_OBJECT((n),"RG_Tileset:*") )
+#define RG_TILESET_NAMED(n)        RGTILESET( AG_OBJECT_NAMED((n),"RG_Tileset:*") )
+#define RG_CONST_TILESET_SELF()   RGCTILESET( AG_CONST_OBJECT(0,"RG_Tileset:*") )
+#define RG_CONST_TILESET_PTR(n)   RGCTILESET( AG_CONST_OBJECT((n),"RG_Tileset:*") )
+#define RG_CONST_TILESET_NAMED(n) RGCTILESET( AG_CONST_OBJECT_NAMED((n),"RG_Tileset:*") )
+
 #ifdef AG_DEBUG
 # define RGTILE(ts,id) RG_GetTile((ts),(id))
 # define RGANIM(ts,id) RG_GetAnim((ts),(id))

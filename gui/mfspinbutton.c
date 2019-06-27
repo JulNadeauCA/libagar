@@ -329,7 +329,7 @@ static void
 SelectedUnit(AG_Event *event)
 {
 	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_PTR(1);
-	AG_TlistItem *ti = AG_PTR(2);
+	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
 
 	AG_ObjectLock(fsu);
 	fsu->unit = (const AG_Unit *)ti->p1;

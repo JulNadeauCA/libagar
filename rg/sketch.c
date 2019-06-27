@@ -162,7 +162,7 @@ RG_SketchRender(RG_Tile *t, RG_TileElement *tel)
 static void
 UpdateScale(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 	RG_TileElement *tel = AG_PTR(2);
 	RG_Sketch *sk = tel->tel_sketch.sk;
 
@@ -223,7 +223,7 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 static void
 PollStyles(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	VG *vg = AG_PTR(1);
 	VG_Style *vgs;
 
@@ -671,7 +671,7 @@ RG_SketchKeyUp(RG_Tileview *tv, RG_TileElement *tel, int keysym,
 static void
 SelectTool(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 	RG_TileviewTool *tvt = AG_PTR(2);
 
 	RG_TileviewSelectTool(tv, tvt);
@@ -680,9 +680,9 @@ SelectTool(AG_Event *_Nonnull event)
 static void
 SelectToolFromToolbar(AG_Event *_Nonnull event)
 {
-	AG_Button *btn = AG_SELF();
-	AG_Toolbar *tbar = AG_PTR(1);
-	RG_Tileview *tv = AG_PTR(2);
+	AG_Button *btn = AG_BUTTON_SELF();
+	AG_Toolbar *tbar = AG_TOOLBAR_PTR(1);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(2);
 	RG_TileviewTool *tvt = AG_PTR(3);
 
 	AG_ToolbarSelectOnly(tbar, btn);

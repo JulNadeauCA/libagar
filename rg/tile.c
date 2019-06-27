@@ -662,7 +662,7 @@ RG_TileDestroy(RG_Tile *t)
 static void
 GeoCtrlButtonUp(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_SELF();
+	RG_Tileview *tv = RG_TILEVIEW_SELF();
 	RG_TileviewCtrl *ctrl = AG_PTR(1);
 	RG_Tileset *ts = tv->ts;
 	RG_Tile *t = tv->tile;
@@ -764,7 +764,7 @@ CloseElement(RG_Tileview *_Nonnull tv)
 static void
 ElementClosedEv(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 
 	if (tv->edit_mode)
 		CloseElement(tv);
@@ -773,7 +773,7 @@ ElementClosedEv(AG_Event *_Nonnull event)
 static void
 PixmapCtrlButtonUp(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_SELF();
+	RG_Tileview *tv = RG_TILEVIEW_SELF();
 	RG_TileviewCtrl *ctrl = AG_PTR(1);
 	RG_Pixmap *px = AG_PTR(2);
 	RG_Tile *t = tv->tile;
@@ -790,7 +790,7 @@ PixmapCtrlButtonUp(AG_Event *_Nonnull event)
 static void
 SketchCtrlButtonUp(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_SELF();
+	RG_Tileview *tv = RG_TILEVIEW_SELF();
 	RG_TileviewCtrl *ctrl = AG_PTR(1);
 	RG_TileElement *tel = AG_PTR(2);
 	RG_Sketch *sk = tel->tel_sketch.sk;
@@ -929,8 +929,8 @@ OpenElement(RG_Tileview *_Nonnull tv, RG_TileElement *_Nonnull tel)
 static void
 CreatePixmap(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
-	AG_Tlist *tlFeatures = AG_PTR(2);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
+	AG_Tlist *tlFeatures = AG_TLIST_PTR(2);
 	AG_TlistItem *eit;
 	RG_Pixmap *px;
 	RG_TileElement *tel;
@@ -977,8 +977,8 @@ tryname:
 static void
 CreateSketch(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
-	AG_Tlist *tlFeatures = AG_PTR(2);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
+	AG_Tlist *tlFeatures = AG_TLIST_PTR(2);
 	AG_TlistItem *eit;
 	RG_Sketch *sk, *osk;
 	RG_TileElement *tel;
@@ -1024,10 +1024,10 @@ tryname:
 static void
 AttachPixmap(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
-	AG_Window *dlgWin = AG_PTR(2);
-	AG_Tlist *tlFeatures = AG_PTR(3);
-	AG_Tlist *tl_pixmaps = AG_PTR(4);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
+	AG_Window *dlgWin = AG_WINDOW_PTR(2);
+	AG_Tlist *tlFeatures = AG_TLIST_PTR(3);
+	AG_Tlist *tl_pixmaps = AG_TLIST_PTR(4);
 	AG_TlistItem *it;
 	RG_TileElement *tel;
 	RG_Pixmap *px;
@@ -1061,8 +1061,8 @@ AttachPixmap(AG_Event *_Nonnull event)
 static void
 AttachPixmapDlg(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
-	AG_Tlist *tlFeatures = AG_PTR(2);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
+	AG_Tlist *tlFeatures = AG_TLIST_PTR(2);
 	AG_Tlist *tl;
 	RG_Pixmap *px;
 	AG_Window *win;
@@ -1101,10 +1101,10 @@ AttachPixmapDlg(AG_Event *_Nonnull event)
 static void
 AttachSketch(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
-	AG_Window *dlgWin = AG_PTR(2);
-	AG_Tlist *tlFeatures = AG_PTR(3);
-	AG_Tlist *tl_sketches = AG_PTR(4);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
+	AG_Window *dlgWin = AG_WINDOW_PTR(2);
+	AG_Tlist *tlFeatures = AG_TLIST_PTR(3);
+	AG_Tlist *tl_sketches = AG_TLIST_PTR(4);
 	AG_TlistItem *it;
 	RG_TileElement *tel;
 	RG_Sketch *sk;
@@ -1138,8 +1138,8 @@ AttachSketch(AG_Event *_Nonnull event)
 static void
 AttachSketchDlg(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
-	AG_Tlist *tlFeatures = AG_PTR(2);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
+	AG_Tlist *tlFeatures = AG_TLIST_PTR(2);
 	AG_Tlist *tl;
 	RG_Sketch *sk;
 	AG_Window *win;
@@ -1203,8 +1203,8 @@ SelectFeature(AG_Tlist *_Nonnull tlFeatures, void *_Nonnull fp)
 static void
 AddFillFeature(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
-	AG_Tlist *tlFeatures = AG_PTR(2);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
+	AG_Tlist *tlFeatures = AG_TLIST_PTR(2);
 	struct rg_fill_feature *fill;
 	RG_TileElement *tel;
 
@@ -1220,8 +1220,8 @@ AddFillFeature(AG_Event *_Nonnull event)
 static void
 AddSketchProjFeature(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
-	AG_Tlist *tlFeatures = AG_PTR(2);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
+	AG_Tlist *tlFeatures = AG_TLIST_PTR(2);
 	struct rg_sketchproj *sproj;
 	RG_TileElement *tel;
 
@@ -1237,12 +1237,12 @@ AddSketchProjFeature(AG_Event *_Nonnull event)
 static void
 PollFeatures(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 #ifdef AG_THREADS
-	RG_Tileset *ts = AG_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 #endif
 	RG_Tile *t = AG_PTR(2);
-	RG_Tileview *tv = AG_PTR(4);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(4);
 	RG_TileElement *tel;
 	AG_TlistItem *it;
 	static char attr_names[6];			/* XXX tlist hack */
@@ -1389,9 +1389,9 @@ PollFeatures(AG_Event *_Nonnull event)
 static void
 EditElement(AG_Event *_Nonnull event)
 {
-	AG_Widget *sndr = AG_SELF();
-	RG_Tileview *tv = AG_PTR(1);
-	AG_Tlist *tl = AG_PTR(2);
+	AG_Widget *sndr = AG_WIDGET_SELF();
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
+	AG_Tlist *tl = AG_TLIST_PTR(2);
 	AG_TlistItem *it;
 	
 	if (AG_OfClass(sndr, "AG_Widget:AG_Button:*") && !tv->edit_mode) {
@@ -1434,9 +1434,9 @@ EditElement(AG_Event *_Nonnull event)
 static void
 DeleteElement(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 	RG_Tile *t = tv->tile;
-	AG_Tlist *tlFeatures = AG_PTR(2);
+	AG_Tlist *tlFeatures = AG_TLIST_PTR(2);
 	int detach_only = AG_INT(3);
 	AG_TlistItem *it;
 	RG_TileElement *tel;
@@ -1476,12 +1476,12 @@ DeleteElement(AG_Event *_Nonnull event)
 static void
 UpdateTileSettings(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
-	AG_MSpinbutton *msb = AG_PTR(2);
-	AG_Window *dlg_w = AG_PTR(3);
-	AG_Checkbox *ckey_cb = AG_PTR(4);
-	AG_Checkbox *alpha_cb = AG_PTR(5);
-	AG_Numerical *alpha_num = AG_PTR(6);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
+	AG_MSpinbutton *msb = AG_MSPINBUTTON_PTR(2);
+	AG_Window *dlg_w = AG_WINDOW_PTR(3);
+	AG_Checkbox *ckey_cb = AG_CHECKBOX_PTR(4);
+	AG_Checkbox *alpha_cb = AG_CHECKBOX_PTR(5);
+	AG_Numerical *alpha_num = AG_NUMERICAL_PTR(6);
 	RG_Tileset *ts = tv->ts;
 	RG_Tile *t = tv->tile;
 	int w = AG_GetInt(msb, "xvalue");
@@ -1512,7 +1512,7 @@ UpdateTileSettings(AG_Event *_Nonnull event)
 static void
 TileSettingsDlg(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 	RG_Tile *t = tv->tile;
 	AG_Window *win;
 	AG_MSpinbutton *msb;
@@ -1573,8 +1573,8 @@ TileSettingsDlg(AG_Event *_Nonnull event)
 static void
 MoveElementUp(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
-	AG_Tlist *tl = AG_PTR(2);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
+	AG_Tlist *tl = AG_TLIST_PTR(2);
 	RG_Tile *t = tv->tile;
 	AG_TlistItem *it;
 	RG_TileElement *tel, *ptel;
@@ -1597,8 +1597,8 @@ MoveElementUp(AG_Event *_Nonnull event)
 static void
 MoveElementDown(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
-	AG_Tlist *tl = AG_PTR(2);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
+	AG_Tlist *tl = AG_TLIST_PTR(2);
 	RG_Tile *t = tv->tile;
 	AG_TlistItem *it;
 	RG_TileElement *tel, *ntel;
@@ -1620,8 +1620,8 @@ MoveElementDown(AG_Event *_Nonnull event)
 static void
 ToggleElementVisibility(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
-	AG_Tlist *tl = AG_PTR(2);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
+	AG_Tlist *tl = AG_TLIST_PTR(2);
 	RG_Tile *t = tv->tile;
 	AG_TlistItem *it;
 	RG_TileElement *tel;
@@ -1640,7 +1640,7 @@ ToggleElementVisibility(AG_Event *_Nonnull event)
 static void
 Undo(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
@@ -1654,7 +1654,7 @@ Undo(AG_Event *_Nonnull event)
 static void
 Redo(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
@@ -1669,7 +1669,7 @@ static void
 ImportImage(AG_Event *_Nonnull event)
 {
 	RG_Tile *t = AG_PTR(1);
-	RG_Tileview *tv = AG_PTR(2);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(2);
 	char *path = AG_STRING(3);
 	AG_Surface *su;
 	RG_Pixmap *px;
@@ -1689,7 +1689,7 @@ ImportImage(AG_Event *_Nonnull event)
 static void
 ImportImageDlg(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 	RG_Tile *t = tv->tile;
 	AG_FileDlg *dlg;
 	AG_Window *win;
@@ -1724,7 +1724,7 @@ ExportBMP(AG_Event *_Nonnull event)
 static void
 ExportImageDlg(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 	RG_Tile *t = tv->tile;
 	AG_FileDlg *dlg;
 	AG_Window *win;
@@ -1828,9 +1828,9 @@ InitTileFeatureMenu(RG_Tileview *_Nonnull tv, AG_Tlist *_Nonnull tl)
 static void
 CreateView(AG_Event *_Nonnull event)
 {
-	RG_Tileset *ts = AG_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	RG_Tile *t = AG_PTR(2);
-	AG_Window *pWin = AG_PTR(3);
+	AG_Window *pWin = AG_WINDOW_PTR(3);
 	AG_Window *win;
 	RG_Tileview *tv;
 

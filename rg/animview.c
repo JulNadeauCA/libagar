@@ -43,7 +43,7 @@ RG_AnimviewNew(void *parent)
 static Uint32
 PlayUpdateTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	RG_Animview *av = AG_SELF();
+	RG_Animview *av = RG_ANIMVIEW_SELF();
 
 	if (av->anim->nframes == 0)
 		return (0);
@@ -65,7 +65,7 @@ PlayUpdateTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 Play(AG_Event *_Nonnull event)
 {
-	RG_Animview *av = AG_PTR(1);
+	RG_Animview *av = RG_ANIMVIEW_PTR(1);
 
 	AG_AddTimer(av, &av->timer, 1, PlayUpdateTimeout, NULL);
 	AG_WidgetDisable(av->btns.play);
@@ -76,7 +76,7 @@ Play(AG_Event *_Nonnull event)
 static void
 Pause(AG_Event *_Nonnull event)
 {
-	RG_Animview *av = AG_PTR(1);
+	RG_Animview *av = RG_ANIMVIEW_PTR(1);
 	
 	AG_DelTimer(av, &av->timer);
 	AG_WidgetEnable(av->btns.play);
@@ -87,7 +87,7 @@ Pause(AG_Event *_Nonnull event)
 static void
 Stop(AG_Event *_Nonnull event)
 {
-	RG_Animview *av = AG_PTR(1);
+	RG_Animview *av = RG_ANIMVIEW_PTR(1);
 	
 	AG_DelTimer(av, &av->timer);
 	av->frame = 0;
@@ -100,7 +100,7 @@ Stop(AG_Event *_Nonnull event)
 static void
 SetSpeed(AG_Event *_Nonnull event)
 {
-	RG_Animview *av = AG_PTR(1);
+	RG_Animview *av = RG_ANIMVIEW_PTR(1);
 	Uint factor = AG_INT(2);
 
 	av->speed = factor;
@@ -141,7 +141,7 @@ PopupMenu(RG_Animview *_Nonnull av)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	RG_Animview *av = AG_SELF();
+	RG_Animview *av = RG_ANIMVIEW_SELF();
 	int button = AG_INT(1);
 /*	int x = AG_INT(2); */
 	int y = AG_INT(3);

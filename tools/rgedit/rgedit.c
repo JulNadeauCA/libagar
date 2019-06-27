@@ -49,8 +49,8 @@ typedef AG_Surface *(*AG_SurfaceFromFn)(const char *);
 static void
 CloseObject(AG_Event *event)
 {
-	AG_Window *win = AG_PTR(1);
-	RG_Tileset *ts = AG_PTR(2);
+	AG_Window *win = AG_WINDOW_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(2);
 	int save = AG_INT(3);
 
 	if (save) {
@@ -69,8 +69,8 @@ CloseObject(AG_Event *event)
 static void
 WindowClose(AG_Event *event)
 {
-	AG_Window *win = AG_SELF();
-	RG_Tileset *ts = AG_PTR(1);
+	AG_Window *win = AG_WINDOW_SELF();
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	AG_Event ev;
 	AG_Button *bOpts[3];
 	AG_Window *wDlg;
@@ -94,8 +94,8 @@ WindowClose(AG_Event *event)
 static void
 WindowGainedFocus(AG_Event *event)
 {
-/*	AG_Window *win = AG_SELF(); */
-	RG_Tileset *ts = AG_PTR(1);
+/*	AG_Window *win = AG_WINDOW_SELF(); */
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 
 	tsFocused = ts;
 }
@@ -103,7 +103,7 @@ WindowGainedFocus(AG_Event *event)
 static void
 WindowLostFocus(AG_Event *event)
 {
-/*	AG_Window *win = AG_SELF(); */
+/*	AG_Window *win = AG_WINDOW_SELF(); */
 
 	tsFocused = NULL;
 }
@@ -170,7 +170,7 @@ OpenTilesetDlg(AG_Event *event)
 static void
 SaveTilesetToAGT(AG_Event *event)
 {
-	RG_Tileset *ts = AG_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	char *path = AG_STRING(2);
 
 	if (AG_ObjectSaveToFile(ts, path) == -1) {
@@ -198,7 +198,7 @@ ExportTilesetToC(AG_Event *event)
 {
 	char pathData[AG_PATHNAME_MAX];
 	char iconID[64];
-	RG_Tileset *ts = AG_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	char *path = AG_STRING(2);
 	AG_FileType *ft = AG_PTR(3);
 	char *pkgName = AG_FileOptionString(ft,"pkg-name");
@@ -288,7 +288,7 @@ ExportTilesetToC(AG_Event *event)
 static void
 SaveTilesetAsDlg(AG_Event *event)
 {
-	RG_Tileset *ts = AG_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	AG_Window *win;
 	AG_FileDlg *fd;
 	AG_FileType *ft;
@@ -315,7 +315,7 @@ SaveTilesetAsDlg(AG_Event *event)
 static void
 ImportImageFrom(AG_Event *event)
 {
-	RG_Tileset *ts = AG_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	AG_SurfaceFromFn *fn = AG_PTR(2);
 	char *path = AG_STRING(3);
 	AG_Surface *bmp;
@@ -352,7 +352,7 @@ LoadTileFromXCF(AG_Surface *xcf, const char *lbl, void *p)
 static void
 ImportLayersFromXCF(AG_Event *event)
 {
-	RG_Tileset *ts = AG_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	char *path = AG_STRING(2);
 	AG_DataSource *ds;
 	int rv;
@@ -368,7 +368,7 @@ ImportLayersFromXCF(AG_Event *event)
 static void
 ImportImagesDlg(AG_Event *event)
 {
-	RG_Tileset *ts = AG_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 	AG_Window *win;
 	AG_FileDlg *fd;
 
@@ -392,7 +392,7 @@ ImportImagesDlg(AG_Event *event)
 static void
 SaveTileset(AG_Event *event)
 {
-	RG_Tileset *ts = AG_PTR(1);
+	RG_Tileset *ts = RG_TILESET_PTR(1);
 
 	if (!AG_Defined(ts,"archive-path")) {
 		SaveTilesetAsDlg(event);
@@ -411,7 +411,7 @@ SaveTileset(AG_Event *event)
 static void
 FileMenu(AG_Event *event)
 {
-	AG_MenuItem *m = AG_PTR(1);
+	AG_MenuItem *m = AG_MENU_ITEM_PTR(1);
 
 	AG_MenuActionKb(m, _("New"), agIconDoc.s,
 	    AG_KEY_N, AG_KEYMOD_CTRL,
@@ -446,7 +446,7 @@ Undo(AG_Event *event)
 static void
 EditMenu(AG_Event *event)
 {
-	AG_MenuItem *m = AG_PTR(1);
+	AG_MenuItem *m = AG_MENU_ITEM_PTR(1);
 	
 	if (tsFocused == NULL) { AG_MenuDisable(m); }
 

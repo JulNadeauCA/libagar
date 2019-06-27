@@ -366,7 +366,7 @@ static void
 UnitSelected(AG_Event *_Nonnull event)
 {
 	AG_Numerical *num = AG_NUMERICAL_PTR(1);
-	const AG_TlistItem *ti = AG_PTR(2);
+	const AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
 
 	AG_ObjectLock(num);
 	num->unit = (const AG_Unit *)ti->p1;

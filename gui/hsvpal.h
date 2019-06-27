@@ -56,12 +56,13 @@ typedef struct ag_hsvpal {
 } AG_HSVPal;
 
 #define AGHSVPAL(obj)            ((AG_HSVPal *)(obj))
-#define AG_HSVPAL_SELF()         AG_OBJECT(0,"AG_Widget:AG_HSVPal:*")
-#define AG_HSVPAL_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_HSVPal:*")
-#define AG_HSVPAL_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_HSVPal:*")
-#define AG_CONST_HSVPAL_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_HSVPal:*")
-#define AG_CONST_HSVPAL_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_HSVPal:*")
-#define AG_CONST_HSVPAL_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_HSVPal:*")
+#define AGCHSVPAL(obj)           ((const AG_HSVPal *)(obj))
+#define AG_HSVPAL_SELF()          AGHSVPAL( AG_OBJECT(0,"AG_Widget:AG_HSVPal:*") )
+#define AG_HSVPAL_PTR(n)          AGHSVPAL( AG_OBJECT((n),"AG_Widget:AG_HSVPal:*") )
+#define AG_HSVPAL_NAMED(n)        AGHSVPAL( AG_OBJECT_NAMED((n),"AG_Widget:AG_HSVPal:*") )
+#define AG_CONST_HSVPAL_SELF()   AGCHSVPAL( AG_CONST_OBJECT(0,"AG_Widget:AG_HSVPal:*") )
+#define AG_CONST_HSVPAL_PTR(n)   AGCHSVPAL( AG_CONST_OBJECT((n),"AG_Widget:AG_HSVPal:*") )
+#define AG_CONST_HSVPAL_NAMED(n) AGCHSVPAL( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_HSVPal:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agHSVPalClass;

@@ -61,7 +61,7 @@ static void
 StartBrowser(AG_Event *event)
 {
 	MyTestInstance *ti = AG_PTR(1);
-	AG_Window *winParent = AG_PTR(2), *win;
+	AG_Window *winParent = AG_WINDOW_PTR(2), *win;
 
 	if ((win = DEV_Browser(&ti->vfsRoot)) != NULL)
 		AG_WindowAttach(winParent, win);

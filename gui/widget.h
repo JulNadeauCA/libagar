@@ -237,12 +237,14 @@ typedef struct ag_widget {
 	AG_WidgetPvt pvt;               /* Private data */
 } AG_Widget;
 
-#define AGWIDGET(p)            ((AG_Widget *)(p))
-#define AG_WIDGET_SELF()       AG_OBJECT(0,"AG_Widget:*")
-#define AG_WIDGET_PTR(n)       AG_OBJECT((n),"AG_Widget:*")
-#define AG_WIDGET_NAMED(n)     AG_OBJECT_NAMED((n),"AG_Widget:*")
-#define AG_CONST_WIDGET_SELF() AG_CONST_OBJECT(0,"AG_Widget:*")
-#define AG_CONST_WIDGET_PTR(n) AG_CONST_OBJECT((n),"AG_Widget:*")
+#define AGWIDGET(p)             ((AG_Widget *)(p))
+#define AGCWIDGET(p)            ((const AG_Widget *)(p))
+#define AG_WIDGET_SELF()          AGWIDGET( AG_OBJECT(0,"AG_Widget:*") )
+#define AG_WIDGET_PTR(n)          AGWIDGET( AG_OBJECT((n),"AG_Widget:*") )
+#define AG_WIDGET_NAMED(n)        AGWIDGET( AG_OBJECT_NAMED((n),"AG_Widget:*") )
+#define AG_CONST_WIDGET_SELF()   AGCWIDGET( AG_CONST_OBJECT(0,"AG_Widget:*") )
+#define AG_CONST_WIDGET_PTR(n)   AGCWIDGET( AG_CONST_OBJECT((n),"AG_Widget:*") )
+#define AG_CONST_WIDGET_NAMED(n) AGCWIDGET( AG_CONST_OBJECT((n),"AG_Widget:*") )
 
 #define AGWIDGET_OPS(wi)	((AG_WidgetClass *)AGOBJECT(wi)->cls)
 #define AGWIDGET_SUPER_OPS(wi)	((AG_WidgetClass *)AGOBJECT(wi)->cls->super)

@@ -119,7 +119,7 @@ find_tilesets(AG_Tlist *_Nonnull tl, AG_Object *_Nonnull pob, int depth)
 static void
 PollTilesets(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 
 	AG_TlistClear(tl);
 	AG_LockLinkage();
@@ -132,8 +132,8 @@ PollTilesets(AG_Event *_Nonnull event)
 static void
 PollSourceTiles(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_Object *vfsRoot = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Object *vfsRoot = AG_OBJECT_PTR(1);
 	RG_Texture *tex = AG_PTR(2);
 	RG_Tileset *ts;
 	RG_Tile *t;
@@ -156,7 +156,7 @@ static void
 SelectTileset(AG_Event *_Nonnull event)
 {
 	RG_Texture *tex = AG_PTR(1);
-	AG_TlistItem *it = AG_PTR(2);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 	RG_Tileset *ts = it->p1;
 
 	AG_ObjectCopyName(ts, tex->tileset, sizeof(tex->tileset));
@@ -167,7 +167,7 @@ static void
 SelectSourceTile(AG_Event *_Nonnull event)
 {
 	RG_Texture *tex = AG_PTR(1);
-	AG_TlistItem *it = AG_PTR(2);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 	RG_Tile *t = it->p1;
 
 	Strlcpy(tex->tile, t->name, sizeof(tex->tile));

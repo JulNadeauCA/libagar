@@ -26,7 +26,7 @@ typedef struct {
 static void
 ComboSelected(AG_Event *event)
 {
-	AG_TlistItem *ti = AG_PTR(1);
+	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(1);
 
 	AG_TextMsg(AG_MSG_INFO, "Selected Item: %s", ti->text);
 }
@@ -41,7 +41,7 @@ Preferences(AG_Event *event)
 static void
 SetWordWrap(AG_Event *event)
 {
-	AG_Textbox *textbox = AG_PTR(1);
+	AG_Textbox *textbox = AG_TEXTBOX_PTR(1);
 	int flag = AG_INT(2);
 
 	AG_TextboxSetWordWrap(textbox, flag);

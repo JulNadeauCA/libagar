@@ -20,7 +20,7 @@ Init(void *obj)
 static Uint32
 RotateHue(AG_Timer *t, AG_Event *event)
 {
-	AG_HSVPal *pal = AG_PTR(1);
+	AG_HSVPal *pal = AG_HSVPAL_PTR(1);
 	float s_save = pal->s;
 	float v_save = pal->v;
 
@@ -36,7 +36,7 @@ static void
 SetRotateHue(AG_Event *event)
 {
 	MyTestInstance *ti = AG_PTR(1);
-	AG_HSVPal *pal = AG_PTR(2);
+	AG_HSVPal *pal = AG_HSVPAL_PTR(2);
 	int enable = AG_INT(3);
 
 	if (enable) {

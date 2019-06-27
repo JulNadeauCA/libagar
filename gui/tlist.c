@@ -768,6 +768,9 @@ AG_TlistItemNew(AG_Tlist *_Nonnull tl, const AG_Surface *icon)
 	AG_TlistItem *it;
 
 	it = Malloc(sizeof(AG_TlistItem));
+#ifdef AG_TYPE_SAFETY
+	Strlcpy(it->tag, AG_TLIST_ITEM_TAG, sizeof(it->tag));
+#endif
 	it->selected = 0;
 	it->iconsrc = (icon != NULL) ? AG_SurfaceDup(icon) : NULL;
 	it->icon = -1;

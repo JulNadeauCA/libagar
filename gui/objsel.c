@@ -118,7 +118,7 @@ static void
 SelectObject(AG_Event *event)
 {
 	AG_ObjectSelector *os = AG_OBJECTSELECTOR_PTR(1);
-	const AG_TlistItem *it = AG_PTR(2);
+	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 	AG_Variable *V;
 	void **object;
 	

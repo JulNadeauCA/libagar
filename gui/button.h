@@ -34,12 +34,13 @@ typedef struct ag_button {
 } AG_Button;
 
 #define AGBUTTON(obj)            ((AG_Button *)(obj))
-#define AG_BUTTON_SELF()         AG_OBJECT(0,"AG_Widget:AG_Button:*")
-#define AG_BUTTON_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Button:*")
-#define AG_BUTTON_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Button:*")
-#define AG_CONST_BUTTON_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Button:*")
-#define AG_CONST_BUTTON_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Button:*")
-#define AG_CONST_BUTTON_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Button:*")
+#define AGCBUTTON(obj)           ((const AG_Button *)(obj))
+#define AG_BUTTON_SELF()          AGBUTTON( AG_OBJECT(0,"AG_Widget:AG_Button:*") )
+#define AG_BUTTON_PTR(n)          AGBUTTON( AG_OBJECT((n),"AG_Widget:AG_Button:*") )
+#define AG_BUTTON_NAMED(n)        AGBUTTON( AG_OBJECT_NAMED((n),"AG_Widget:AG_Button:*") )
+#define AG_CONST_BUTTON_SELF()   AGCBUTTON( AG_CONST_OBJECT(0,"AG_Widget:AG_Button:*") )
+#define AG_CONST_BUTTON_PTR(n)   AGCBUTTON( AG_CONST_OBJECT((n),"AG_Widget:AG_Button:*") )
+#define AG_CONST_BUTTON_NAMED(n) AGCBUTTON( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Button:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agButtonClass;

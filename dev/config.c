@@ -77,7 +77,7 @@ static void
 BindSelectedColor(AG_Event *_Nonnull event)
 {
 	AG_HSVPal *hsv = AG_HSVPAL_PTR(1);
-	AG_TlistItem *it = AG_PTR(2);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 	AG_Color *c = it->p1;
 
 	AG_BindUint8(hsv, "RGBAv", (Uint8 *)c);

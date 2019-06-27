@@ -8,11 +8,12 @@ typedef struct mammal {
 } Mammal;
 
 #define MAMMAL(obj)              ((Mammal *)(obj))
-#define AG_MAMMAL_SELF()         AG_OBJECT(0,"Animal:Mammal:*")
-#define AG_MAMMAL_PTR(n)         AG_OBJECT((n),"Animal:Mammal:*")
-#define AG_MAMMAL_NAMED(n)       AG_OBJECT_NAMED((n),"Animal:Mammal:*")
-#define AG_CONST_MAMMAL_SELF()   AG_CONST_OBJECT(0,"Animal:Mammal:*")
-#define AG_CONST_MAMMAL_PTR(n)   AG_CONST_OBJECT((n),"Animal:Mammal:*")
-#define AG_CONST_MAMMAL_NAMED(n) AG_CONST_OBJECT_NAMED((n),"Animal:Mammal:*")
+#define CMAMMAL(obj)             ((const Mammal *)(obj))
+#define AG_MAMMAL_SELF()          MAMMAL( AG_OBJECT(0,"Animal:Mammal:*") )
+#define AG_MAMMAL_PTR(n)          MAMMAL( AG_OBJECT((n),"Animal:Mammal:*") )
+#define AG_MAMMAL_NAMED(n)        MAMMAL( AG_OBJECT_NAMED((n),"Animal:Mammal:*") )
+#define AG_CONST_MAMMAL_SELF()   CMAMMAL( AG_CONST_OBJECT(0,"Animal:Mammal:*") )
+#define AG_CONST_MAMMAL_PTR(n)   CMAMMAL( AG_CONST_OBJECT((n),"Animal:Mammal:*") )
+#define AG_CONST_MAMMAL_NAMED(n) CMAMMAL( AG_CONST_OBJECT_NAMED((n),"Animal:Mammal:*") )
 
 extern AG_ObjectClass MammalClass;

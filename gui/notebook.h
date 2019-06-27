@@ -47,12 +47,13 @@ typedef struct ag_notebook {
 } AG_Notebook;
 
 #define AGNOTEBOOK(obj)            ((AG_Notebook *)(obj))
-#define AG_NOTEBOOK_SELF()         AG_OBJECT(0,"AG_Widget:AG_Notebook:*")
-#define AG_NOTEBOOK_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Notebook:*")
-#define AG_NOTEBOOK_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Notebook:*")
-#define AG_CONST_NOTEBOOK_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Notebook:*")
-#define AG_CONST_NOTEBOOK_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Notebook:*")
-#define AG_CONST_NOTEBOOK_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Notebook:*")
+#define AGCNOTEBOOK(obj)           ((const AG_Notebook *)(obj))
+#define AG_NOTEBOOK_SELF()          AGNOTEBOOK( AG_OBJECT(0,"AG_Widget:AG_Notebook:*") )
+#define AG_NOTEBOOK_PTR(n)          AGNOTEBOOK( AG_OBJECT((n),"AG_Widget:AG_Notebook:*") )
+#define AG_NOTEBOOK_NAMED(n)        AGNOTEBOOK( AG_OBJECT_NAMED((n),"AG_Widget:AG_Notebook:*") )
+#define AG_CONST_NOTEBOOK_SELF()   AGCNOTEBOOK( AG_CONST_OBJECT(0,"AG_Widget:AG_Notebook:*") )
+#define AG_CONST_NOTEBOOK_PTR(n)   AGCNOTEBOOK( AG_CONST_OBJECT((n),"AG_Widget:AG_Notebook:*") )
+#define AG_CONST_NOTEBOOK_NAMED(n) AGCNOTEBOOK( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Notebook:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agNotebookClass;

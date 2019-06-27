@@ -48,12 +48,13 @@ typedef struct ag_textbox {
 } AG_Textbox;
 
 #define AGTEXTBOX(obj)            ((AG_Textbox *)(obj))
-#define AG_TEXTBOX_SELF()         AG_OBJECT(0,"AG_Widget:AG_Textbox:*")
-#define AG_TEXTBOX_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_Textbox:*")
-#define AG_TEXTBOX_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_Textbox:*")
-#define AG_CONST_TEXTBOX_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_Textbox:*")
-#define AG_CONST_TEXTBOX_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_Textbox:*")
-#define AG_CONST_TEXTBOX_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Textbox:*")
+#define AGCTEXTBOX(obj)           ((const AG_Textbox *)(obj))
+#define AG_TEXTBOX_SELF()          AGTEXTBOX( AG_OBJECT(0,"AG_Widget:AG_Textbox:*") )
+#define AG_TEXTBOX_PTR(n)          AGTEXTBOX( AG_OBJECT((n),"AG_Widget:AG_Textbox:*") )
+#define AG_TEXTBOX_NAMED(n)        AGTEXTBOX( AG_OBJECT_NAMED((n),"AG_Widget:AG_Textbox:*") )
+#define AG_CONST_TEXTBOX_SELF()   AGCTEXTBOX( AG_CONST_OBJECT(0,"AG_Widget:AG_Textbox:*") )
+#define AG_CONST_TEXTBOX_PTR(n)   AGCTEXTBOX( AG_CONST_OBJECT((n),"AG_Widget:AG_Textbox:*") )
+#define AG_CONST_TEXTBOX_NAMED(n) AGCTEXTBOX( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Textbox:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agTextboxClass;

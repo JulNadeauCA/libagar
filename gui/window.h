@@ -284,17 +284,21 @@ void AG_SetStockCursor(void *_Nonnull, AG_CursorArea *_Nonnull *_Nullable,
 
 void AG_WindowProcessQueued(void);
 
-#define AGWINDOW(p)            ((AG_Window *)(p))
-#define AG_WINDOW_SELF()       AG_OBJECT(0,"AG_Widget:AG_Window:*")
-#define AG_WINDOW_PTR(n)       AG_OBJECT((n),"AG_Widget:AG_Window:*")
-#define AG_WINDOW_NAMED(n)     AG_OBJECT_NAMED((n),"AG_Widget:AG_Window:*")
-#define AG_CONST_WINDOW_SELF() AG_CONST_OBJECT(0,"AG_Widget:AG_Window:*")
-#define AG_CONST_WINDOW_PTR(n) AG_CONST_OBJECT((n),"AG_Widget:AG_Window:*")
+#define AGWINDOW(p)              ((AG_Window *)(p))
+#define AGCWINDOW(p)             ((const AG_Window *)(p))
+#define AG_WINDOW_SELF()          AGWINDOW( AG_OBJECT(0,"AG_Widget:AG_Window:*") )
+#define AG_WINDOW_PTR(n)          AGWINDOW( AG_OBJECT((n),"AG_Widget:AG_Window:*") )
+#define AG_WINDOW_NAMED(n)        AGWINDOW( AG_OBJECT_NAMED((n),"AG_Widget:AG_Window:*") )
+#define AG_CONST_WINDOW_SELF()   AGCWINDOW( AG_CONST_OBJECT(0,"AG_Widget:AG_Window:*") )
+#define AG_CONST_WINDOW_PTR(n)   AGCWINDOW( AG_CONST_OBJECT((n),"AG_Widget:AG_Window:*") )
+#define AG_CONST_WINDOW_NAMED(n) AGCWINDOW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Window:*") )
 
+/* Canned fn,args arguments to AG_{Add,Set,Post}Event(3). */
 #define AGWINDETACH(win) AG_WindowDetachGenEv, "%p", (win)
 #define AGWINHIDE(win)   AG_WindowHideGenEv, "%p", (win)
 #define AGWINCLOSE(win)  AG_WindowCloseGenEv, "%p", (win)
 
+/* Iterators over direct descendants widgets. */
 #define AG_FOREACH_WINDOW(var, ob) \
 	AGOBJECT_FOREACH_CHILD(var, ob, ag_window)
 

@@ -380,7 +380,7 @@ PrintVersion(void)
 static void
 ExecCmd(AG_Event *event)
 {
-	AG_Textbox *tb = (AG_Textbox *)AG_SELF();
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
 	char *s = AG_TextboxDupString(tb);
 	SBStream cmds;
 	
@@ -427,7 +427,7 @@ EscapeString(std::string arg)
 static void
 CreateTarget(AG_Event *event)
 {
-	AG_Window *win = (AG_Window *) AG_PTR(1);
+	AG_Window *win = AG_WINDOW_PTR(1);
 	char execFile[AG_PATHNAME_MAX];
 	char coreFile[AG_PATHNAME_MAX];
 	char symFile[AG_PATHNAME_MAX];
@@ -458,6 +458,12 @@ CreateTarget(AG_Event *event)
 
 	Agardb::Run_LLDB(cmds, 0);
 	AG_PostEvent(NULL, win, "window-close", NULL);
+}
+
+static void
+MoveFocus(AG_Event *event)
+{
+	AG_WidgetFocus(AG_WIDGET_PTR(1));
 }
 
 static void
@@ -556,10 +562,16 @@ CreateTargetDlg(AG_Event *event)
 	AG_SetPointer(win, "cbDeps", cbDeps);
 
 	AG_Box *hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
-	{
-		AG_ButtonNewFn(hBox, 0, _("OK"), CreateTarget, "%p", win);
-		AG_ButtonNewFn(hBox, 0, _("Cancel"), AGWINCLOSE(win));
-	}
+	AG_Button *btnOK;
+
+	btnOK = AG_ButtonNewFn(hBox, 0, _("OK"), CreateTarget, "%p", win);
+	AG_ButtonNewFn(hBox, 0, _("Cancel"), AGWINCLOSE(win));
+
+	AG_WidgetFocus(fdExec->textbox);
+	AG_SetEvent(fdExec->textbox, "textbox-return", MoveFocus, "%p", tbArgs);
+	AG_SetEvent(tbArgs,          "textbox-return", MoveFocus, "%p", fdCore->textbox);
+	AG_SetEvent(fdCore->textbox, "textbox-return", MoveFocus, "%p", fdSyms->textbox);
+	AG_SetEvent(fdSyms->textbox, "textbox-return", MoveFocus, "%p", btnOK);
 
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 400, -1);
 	AG_WindowShow(win);
@@ -611,23 +623,49 @@ Agardb::GUI::Preferences(AG_Event *event)
 	AG_WindowShow(win);
 }
 
-/* Generate "Target" menu */
+/* "Targets / Select Target" */
 void
-Agardb::GUI::MenuTarget(AG_Event *event)
+Agardb::GUI::SelectTarget(AG_Event *event)
 {
-	AG_MenuItem *mi = (AG_MenuItem *)AG_SENDER();
-	lldb::SBDebugger &db = g_agardb->GetDebugger();
-	Uint32 i, numTargets = db.GetNumTargets();
+	int i = AG_INT(1);
 
-	Debug(mi, "MenuTarget\n");
+	AG_TextTmsg(AG_MSG_INFO, 1250, _("Selected target # %d"), i);
+}
+
+/* Generate the "Targets" menu */
+void
+Agardb::GUI::MenuTargets(AG_Event *event)
+{
+	AG_MenuItem *m = AG_MENU_ITEM_PTR(1);
+	lldb::SBDebugger &db = g_agardb->GetDebugger();
+	const Uint32 numTargets = db.GetNumTargets();
+	Uint32 i;
+
+	if (numTargets == 0) {
+		(AG_MenuNode(m, _("(no targets)"), NULL))->state = 0;
+		return;
+	}
 
 	for (i = 0; i < numTargets; i++) {
-		lldb::SBTarget tgt = db.GetTargetAtIndex(i);
+		lldb::SBTarget dbTarget = db.GetTargetAtIndex(i);
 
-		if (!tgt.IsValid()) {
+		if (!dbTarget.IsValid()) {
+			(AG_MenuNode(m,
+			    AG_Printf(_("%d. (invalid target)"), i), NULL))->state = 0;
 			continue;
 		}
-		AG_MenuAction(mi, AG_Printf("Target %d", i), NULL, NULL, NULL);
+		lldb::SBFileSpec exe = dbTarget.GetExecutable();
+		if (exe.IsValid() && exe.Exists()) {
+			AG_MenuAction(m,
+			    AG_Printf("%d. %s", i, exe.GetFilename()),
+			    agIconDocImport.s,
+			    Agardb::GUI::SelectTarget, "%i", i);
+		} else {
+			AG_MenuAction(m,
+			    AG_Printf("Target #%d (%s)", i, dbTarget.GetTriple()),
+			    agIconDoc.s,
+			    Agardb::GUI::SelectTarget, "%i", i);
+		}
 	}
 }
 
@@ -680,6 +718,9 @@ Agardb::GUI::GUI()
 		AG_MenuActionKb(m, _("New Target..."), agIconLoad.s,
 		    AG_KEY_N, AG_KEYMOD_CTRL,
 		    CreateTargetDlg, NULL);
+		
+		AG_MenuDynamicItem(m, _("Targets"), NULL,
+		    Agardb::GUI::MenuTargets, NULL);
 	
 		AG_MenuSeparator(m);
 #if 0	
@@ -697,8 +738,6 @@ Agardb::GUI::GUI()
 		    AG_KEY_Q, AG_KEYMOD_CTRL,
 		    QuitGUI, NULL);
 	}
-
-	AG_MenuDynamicItem(g_menu->root, _("Target"), NULL, MenuTarget, NULL);
 
 	m = AG_MenuNode(g_menu->root, _("Edit"), NULL);
 	{

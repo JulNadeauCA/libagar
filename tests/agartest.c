@@ -180,7 +180,7 @@ char consoleBuf[2048];
 static void
 SelectedTest(AG_Event *event)
 {
-	AG_TlistItem *it = AG_PTR(1);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(1);
 	AG_TestCase *tc = it->p1;
 
 	AG_LabelText(status, "%s: %s", tc->name, tc->descr);
@@ -241,7 +241,7 @@ fail:
 static void
 RequestTestClose(AG_Event *event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_WINDOW_PTR(1);
 	
 	AG_PostEvent(NULL, win, "window-close", NULL);
 }
@@ -249,8 +249,8 @@ RequestTestClose(AG_Event *event)
 static void
 RunTest(AG_Event *event)
 {
-	AG_Tlist *tl = AG_PTR(1);
-	AG_Window *winParent = AG_PTR(2);
+	AG_Tlist *tl = AG_TLIST_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(2);
 	AG_Driver *drv = AGWIDGET(winParent)->drv;
 	AG_DriverClass *drvClass = AGDRIVER_CLASS(drv);
 	AG_TestCase *tc = AG_TlistSelectedItemPtr(tl);
@@ -335,7 +335,7 @@ fail:
 static void
 RunBench(AG_Event *event)
 {
-	AG_Tlist *tl = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_PTR(1);
 	AG_TestCase *tc = AG_TlistSelectedItemPtr(tl);
 	AG_TestInstance *ti;
 

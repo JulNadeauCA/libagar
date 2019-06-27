@@ -106,12 +106,13 @@ typedef struct ag_file_dlg {
 } AG_FileDlg;
 
 #define AGFILEDLG(obj)            ((AG_FileDlg *)(obj))
-#define AG_FILEDLG_SELF()         AG_OBJECT(0,"AG_Widget:AG_FileDlg:*")
-#define AG_FILEDLG_PTR(n)         AG_OBJECT((n),"AG_Widget:AG_FileDlg:*")
-#define AG_FILEDLG_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:AG_FileDlg:*")
-#define AG_CONST_FILEDLG_SELF()   AG_CONST_OBJECT(0,"AG_Widget:AG_FileDlg:*")
-#define AG_CONST_FILEDLG_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:AG_FileDlg:*")
-#define AG_CONST_FILEDLG_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_FileDlg:*")
+#define AGCFILEDLG(obj)           ((const AG_FileDlg *)(obj))
+#define AG_FILEDLG_SELF()          AGFILEDLG( AG_OBJECT(0,"AG_Widget:AG_FileDlg:*") )
+#define AG_FILEDLG_PTR(n)          AGFILEDLG( AG_OBJECT((n),"AG_Widget:AG_FileDlg:*") )
+#define AG_FILEDLG_NAMED(n)        AGFILEDLG( AG_OBJECT_NAMED((n),"AG_Widget:AG_FileDlg:*") )
+#define AG_CONST_FILEDLG_SELF()   AGCFILEDLG( AG_CONST_OBJECT(0,"AG_Widget:AG_FileDlg:*") )
+#define AG_CONST_FILEDLG_PTR(n)   AGCFILEDLG( AG_CONST_OBJECT((n),"AG_Widget:AG_FileDlg:*") )
+#define AG_CONST_FILEDLG_NAMED(n) AGCFILEDLG( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_FileDlg:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agFileDlgClass;

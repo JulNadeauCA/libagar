@@ -8,8 +8,8 @@
 static void
 RenderToSurface(AG_Event *event)
 {
-	AG_Button *btn = AG_PTR(1);
-	AG_Window *winParent = AG_PTR(2), *win;
+	AG_Button *btn = AG_BUTTON_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(2), *win;
 	AG_Surface *S;
 	
 	/* Render the AG_Button to a surface. */

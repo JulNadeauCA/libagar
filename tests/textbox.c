@@ -18,7 +18,7 @@ char bufferExcl[60];	/* Exclusive text buffer */
 static void
 SetDisable(AG_Event *event)
 {
-	AG_Textbox *textbox = AG_PTR(1);
+	AG_Textbox *textbox = AG_TEXTBOX_PTR(1);
 	int flag = AG_INT(2);
 
 	if (flag) {
@@ -31,7 +31,7 @@ SetDisable(AG_Event *event)
 static void
 SetWordWrap(AG_Event *event)
 {
-	AG_Textbox *textbox = AG_PTR(1);
+	AG_Textbox *textbox = AG_TEXTBOX_PTR(1);
 	int flag = AG_INT(2);
 
 	AG_TextboxSetWordWrap(textbox, flag);
@@ -40,7 +40,7 @@ SetWordWrap(AG_Event *event)
 static void
 SetString(AG_Event *event)
 {
-	AG_Textbox *textbox = AG_PTR(1);
+	AG_Textbox *textbox = AG_TEXTBOX_PTR(1);
 
 	AG_TextboxPrintf(textbox, "Formatted string");
 	AG_TextboxSetString(textbox, "Set string");
@@ -49,7 +49,7 @@ SetString(AG_Event *event)
 static void
 DupString(AG_Event *event)
 {
-	AG_Textbox *textbox = AG_PTR(1);
+	AG_Textbox *textbox = AG_TEXTBOX_PTR(1);
 	char *s;
 
 	if ((s = AG_TextboxDupString(textbox)) != NULL) {
@@ -64,7 +64,7 @@ static void
 CopyString(AG_Event *event)
 {
 	char tinybuf[10];
-	AG_Textbox *textbox = AG_PTR(1);
+	AG_Textbox *textbox = AG_TEXTBOX_PTR(1);
 
 	AG_TextboxCopyString(textbox, tinybuf, sizeof(tinybuf));
 	AG_TextMsg(AG_MSG_INFO, "String truncated to fit %d-byte buffer:\n"
@@ -115,7 +115,7 @@ static void
 SingleLineExample(AG_Event *event)
 {
 	const char *text = "The Quick Brown Fox Jumps Over The Lazy Dog";
-	AG_Window *winParent = AG_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(1);
 	AG_Window *win;
 	AG_Box *hBox, *vBox;
 	AG_Textbox *textbox;
@@ -208,7 +208,7 @@ static void
 MultiLineExample(AG_Event *event)
 {
 	char path[AG_PATHNAME_MAX];
-	AG_Window *winParent = AG_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(1);
 	AG_Window *win;
 	AG_Textbox *textbox;
 	char *someText;
@@ -224,8 +224,9 @@ MultiLineExample(AG_Event *event)
 	/*
 	 * Create a multiline textbox.
 	 */
-	flags = AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB|AG_TEXTBOX_EXPAND|
-	        AG_TEXTBOX_EXCL;
+	flags = AG_TEXTBOX_MULTILINE | AG_TEXTBOX_CATCH_TAB |
+	        AG_TEXTBOX_EXPAND | AG_TEXTBOX_EXCL;
+
 	textbox = AG_TextboxNewS(win, flags, NULL);
 
 	/*

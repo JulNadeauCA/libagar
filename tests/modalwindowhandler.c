@@ -10,7 +10,7 @@ static int count = 0;
 static void
 CreateWindow(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(1);
 	AG_Window *win;
 
 	if ((win = AG_WindowNew(AG_WINDOW_MODAL)) == NULL) {

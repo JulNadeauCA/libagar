@@ -320,8 +320,8 @@ static void
 SelectFont(AG_Event *_Nonnull event)
 {
 	VG_Text *vt = AG_PTR(1);
-	AG_Window *win = AG_PTR(2);
-	AG_FontSelector *fs = AG_PTR(3);
+	AG_Window *win = AG_WINDOW_PTR(2);
+	AG_FontSelector *fs = AG_FONT_SELECTOR_PTR(3);
 
 	Strlcpy(vt->fontFace, fs->curFace, sizeof(vt->fontFace));
 	vt->fontSize = fs->curSize;
@@ -336,7 +336,7 @@ static void
 SelectFontDlg(AG_Event *_Nonnull event)
 {
 	VG_Text *vt = AG_PTR(1);
-	VG_View *vv = AG_PTR(2);
+	VG_View *vv = VG_VIEW_PTR(2);
 	AG_Window *win, *winParent;
 	AG_FontSelector *fs;
 	AG_Box *hBox;

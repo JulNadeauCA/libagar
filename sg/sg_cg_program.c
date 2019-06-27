@@ -103,9 +103,10 @@ PollObjs(AG_Event *_Nonnull event)
 static void
 ViewProgramText(AG_Event *_Nonnull event)
 {
-	CGprogram cgp = AG_TLIST_ITEM(0);
 	SG_CgProgram *prog = AG_PTR(1);
 	AG_Textbox *tbox = AG_PTR(2);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(3);
+	CGprogram cgp = (CGprogram)it->p1;
 	const char *s;
 
 	AG_ObjectLock(prog);

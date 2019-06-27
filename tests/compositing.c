@@ -14,7 +14,7 @@ float opval = 1.0, opmin = 0.0, opmax = 1.0;
 static void
 Changed(AG_Event *event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_WINDOW_PTR(1);
 
 	AG_WindowSetOpacity(win, opval);
 }

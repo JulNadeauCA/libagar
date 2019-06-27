@@ -118,12 +118,13 @@ typedef struct m_plotter {
 } M_Plotter;
 
 #define MPLOTTER(obj)           ((M_Plotter *)(obj))
-#define M_PLOTTER_SELF()         AG_OBJECT(0,"AG_Widget:M_Plotter:*")
-#define M_PLOTTER_PTR(n)         AG_OBJECT((n),"AG_Widget:M_Plotter:*")
-#define M_PLOTTER_NAMED(n)       AG_OBJECT_NAMED((n),"AG_Widget:M_Plotter:*")
-#define M_CONST_PLOTTER_SELF()   AG_CONST_OBJECT(0,"AG_Widget:M_Plotter:*")
-#define M_CONST_PLOTTER_PTR(n)   AG_CONST_OBJECT((n),"AG_Widget:M_Plotter:*")
-#define M_CONST_PLOTTER_NAMED(n) AG_CONST_OBJECT_NAMED((n),"AG_Widget:M_Plotter:*")
+#define MCPLOTTER(obj)          ((const M_Plotter *)(obj))
+#define M_PLOTTER_SELF()          MPLOTTER( AG_OBJECT(0,"AG_Widget:M_Plotter:*") )
+#define M_PLOTTER_PTR(n)          MPLOTTER( AG_OBJECT((n),"AG_Widget:M_Plotter:*") )
+#define M_PLOTTER_NAMED(n)        MPLOTTER( AG_OBJECT_NAMED((n),"AG_Widget:M_Plotter:*") )
+#define M_CONST_PLOTTER_SELF()   MCPLOTTER( AG_CONST_OBJECT(0,"AG_Widget:M_Plotter:*") )
+#define M_CONST_PLOTTER_PTR(n)   MCPLOTTER( AG_CONST_OBJECT((n),"AG_Widget:M_Plotter:*") )
+#define M_CONST_PLOTTER_NAMED(n) MCPLOTTER( AG_CONST_OBJECT_NAMED((n),"AG_Widget:M_Plotter:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass mPlotterClass;

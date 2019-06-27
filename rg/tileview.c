@@ -63,7 +63,7 @@ RG_TileviewNew(void *parent, RG_Tileset *ts, Uint flags)
 static Uint32
 ZoomTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_SELF();
+	RG_Tileview *tv = RG_TILEVIEW_SELF();
 	int dir = AG_INT(1);
 
 	if (dir == +1) {					/* Zoom in */
@@ -104,7 +104,7 @@ CursorOver(RG_TileviewHandle *_Nonnull th, int sx, int sy)
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_SELF();
+	RG_Tileview *tv = RG_TILEVIEW_SELF();
 	int keysym = AG_INT(1);
 	int keymod = AG_INT(2);
 
@@ -172,7 +172,7 @@ KeyDown(AG_Event *_Nonnull event)
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_SELF();
+	RG_Tileview *tv = RG_TILEVIEW_SELF();
 	int keysym = AG_INT(1);
 /*	int keymod = AG_INT(2); */
 	
@@ -266,7 +266,7 @@ IncrementLayer(RG_Tileview *_Nonnull tv, int sx, int sy, int inc)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_SELF();
+	RG_Tileview *tv = RG_TILEVIEW_SELF();
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -415,7 +415,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_SELF();
+	RG_Tileview *tv = RG_TILEVIEW_SELF();
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -619,7 +619,7 @@ MoveHandle(RG_Tileview *_Nonnull tv, RG_TileviewCtrl *_Nonnull ctrl, int nhandle
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_SELF();
+	RG_Tileview *tv = RG_TILEVIEW_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	int xrel = AG_INT(3);
@@ -941,7 +941,7 @@ RG_TileviewDelCtrl(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
 static Uint32
 RedrawTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_SELF();
+	RG_Tileview *tv = RG_TILEVIEW_SELF();
 
 	tv->tile->flags |= RG_TILE_DIRTY;
 	AG_Redraw(tv);
@@ -1764,7 +1764,7 @@ Destroy(void *_Nonnull p)
 static void
 CloseToolWindow(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = AG_PTR(1);
+	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 	
 	AG_ObjectDetach(tv->cur_tool->win);
 	tv->cur_tool->win = NULL;

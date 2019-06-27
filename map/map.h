@@ -170,13 +170,14 @@ typedef struct map {
 	AG_TAILQ_HEAD_(map_actor) actors;	/* Active objects */
 } MAP;
 
-#define MAP_(obj)          ((MAP *)(obj))
-#define MAP_SELF()         AG_OBJECT(0,"MAP:*")
-#define MAP_PTR(n)         AG_OBJECT((n),"MAP:*")
-#define MAP_NAMED(n)       AG_OBJECT_NAMED((n),"MAP:*")
-#define MAP_CONST_SELF()   AG_CONST_OBJECT(0,"MAP:*")
-#define MAP_CONST_PTR(n)   AG_CONST_OBJECT((n),"MAP:*")
-#define MAP_CONST_NAMED(n) AG_CONST_OBJECT_NAMED((n),"MAP:*")
+#define MAPMAP(obj)        ((MAP *)(obj))
+#define MAPCMAP(obj)       ((const MAP *)(obj))
+#define MAP_SELF()          MAPMAP( AG_OBJECT(0,"MAP:*") )
+#define MAP_PTR(n)          MAPMAP( AG_OBJECT((n),"MAP:*") )
+#define MAP_NAMED(n)        MAPMAP( AG_OBJECT_NAMED((n),"MAP:*") )
+#define MAP_CONST_SELF()   MAPCMAP( AG_CONST_OBJECT(0,"MAP:*") )
+#define MAP_CONST_PTR(n)   MAPCMAP( AG_CONST_OBJECT((n),"MAP:*") )
+#define MAP_CONST_NAMED(n) MAPCMAP( AG_CONST_OBJECT_NAMED((n),"MAP:*") )
 
 __BEGIN_DECLS
 extern AG_ObjectClass mapClass;

@@ -233,6 +233,15 @@ typedef struct rg_tileview {
 #define RG_TILEVIEW_MAPPED_X_ABS(tv, x) (AGWIDGET(tv)->rView.x1 + (tv)->xoffs + (x)*(tv)->pxsz)
 #define RG_TILEVIEW_MAPPED_Y_ABS(tv, y) (AGWIDGET(tv)->rView.y1 + (tv)->yoffs + (y)*(tv)->pxsz)
 
+#define RGTILEVIEW(obj)            ((RG_Tileview *)(obj))
+#define RGCTILEVIEW(obj)           ((const RG_Tileview *)(obj))
+#define RG_TILEVIEW_SELF()          RGTILEVIEW( AG_OBJECT(0,"AG_Widget:RG_Tileview:*") )
+#define RG_TILEVIEW_PTR(n)          RGTILEVIEW( AG_OBJECT((n),"AG_Widget:RG_Tileview:*") )
+#define RG_TILEVIEW_NAMED(n)        RGTILEVIEW( AG_OBJECT_NAMED((n),"AG_Widget:RG_Tileview:*") )
+#define RG_CONST_TILEVIEW_SELF()   RGCTILEVIEW( AG_CONST_OBJECT(0,"AG_Widget:RG_Tileview:*") )
+#define RG_CONST_TILEVIEW_PTR(n)   RGCTILEVIEW( AG_CONST_OBJECT((n),"AG_Widget:RG_Tileview:*") )
+#define RG_CONST_TILEVIEW_NAMED(n) RGCTILEVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:RG_Tileview:*") )
+
 __BEGIN_DECLS
 extern AG_WidgetClass rgTileviewClass;
 
