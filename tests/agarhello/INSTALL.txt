@@ -1,0 +1,10 @@
+
+agarhello - sample agar-gui application
+---------------------------------------
+
+To install this program, do the following:
+
+	$ ./configure
+	$ make
+	# make install
+
