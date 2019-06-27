@@ -5264,6 +5264,8 @@ CFLAGS="$CFLAGS -Wmissing-prototypes"
 CXXFLAGS="$CXXFLAGS -Wmissing-prototypes"
 CFLAGS="$CFLAGS -Wno-switch"
 CXXFLAGS="$CXXFLAGS -Wno-switch"
+CFLAGS="$CFLAGS -Wno-parentheses-equality"
+CXXFLAGS="$CXXFLAGS -Wno-parentheses-equality"
 fi
 if [ "${enable_debug}" = 'yes' ]
  then
