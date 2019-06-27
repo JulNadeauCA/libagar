@@ -321,7 +321,7 @@ SelectFont(AG_Event *_Nonnull event)
 {
 	VG_Text *vt = AG_PTR(1);
 	AG_Window *win = AG_WINDOW_PTR(2);
-	AG_FontSelector *fs = AG_FONT_SELECTOR_PTR(3);
+	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(3);
 
 	Strlcpy(vt->fontFace, fs->curFace, sizeof(vt->fontFace));
 	vt->fontSize = fs->curSize;
