@@ -51,9 +51,9 @@ MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mview = AG_MENUVIEW_SELF();
 	AG_MenuItem *mi = mview->pitem, *miSub;
-	AG_Menu *m = mview->pmenu;
-	int mx = AG_INT(1);
-	int my = AG_INT(2);
+	const int mx = AG_INT(1);
+	const int my = AG_INT(2);
+	const int itemh = mview->pmenu->itemh;
 	int y = mview->tPad;
 
 	if (my < 0)
@@ -64,7 +64,7 @@ MouseMotion(AG_Event *_Nonnull event)
 	TAILQ_FOREACH(miSub, &mi->subItems, items) {
 		AG_MenuUpdateItem(miSub);
 
-		y += m->itemh;
+		y += itemh;
 		if (my < y) {
 			if (mx > WIDTH(mview) &&
 			    miSub->nSubItems == 0) {
@@ -169,6 +169,8 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	int my = AG_INT(3);
 	int y = mview->tPad;
 
+	AG_ASSERT_CLASS(m, "AG_Widget:AG_Menu:*");
+
 	if (mx < 0 || mx >= WIDTH(mview) ||
 	    my < 0 || my >= HEIGHT(mview)) {
 		return;
@@ -271,8 +273,12 @@ Draw(void *_Nonnull obj)
 	AG_Menu *m = mv->pmenu;
 	AG_Font *font = WIDGET(mv)->font;
 	AG_Rect r;
-	int itemh = m->itemh, itemh_2 = (itemh >> 1);
-	int fonth_2 = (font->height >> 1);
+	const int itemh = m->itemh;
+	const int itemh_2 = (itemh >> 1);
+	const int fonth_2 = (font->height >> 1);
+	
+	AG_ASSERT_CLASS(m, "AG_Widget:AG_Menu:*");
+	AG_ASSERT_CLASS(font, "AG_Font:*");
 
 	r.x = 0;
 	r.y = mv->tPad;

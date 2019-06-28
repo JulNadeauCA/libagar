@@ -72,13 +72,13 @@ typedef struct ag_menu_item {
 
 #ifdef AG_TYPE_SAFETY
 # define AG_MENU_ITEM_PTR(v) \
-    ((v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
+    AGMENUITEM((v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
       !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
       strncmp(AGMENUITEM(event->argv[v].data.p)->tag, AG_MENU_ITEM_TAG, AG_MENU_ITEM_TAG_LEN) == 0) ? \
       event->argv[v].data.p : AG_ObjectMismatch())
 
 # define AG_CONST_MENU_ITEM_PTR(v) \
-    ((v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
+    AGCMENUITEM((v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
       (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
       strncmp(AGMENUITEM(event->argv[v].data.p)->tag, AG_MENU_ITEM_TAG, AG_MENU_ITEM_TAG_LEN) == 0) ? \
       event->argv[v].data.p : AG_ObjectMismatch())
