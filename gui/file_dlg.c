@@ -924,6 +924,7 @@ SelectedType(AG_Event *_Nonnull event)
 	AG_Numerical *num;
 	AG_Textbox *tbox;
 
+	AG_ObjectLock(fd);
 	if (it) {
 		ft = it->p1;
 	} else {
@@ -931,7 +932,6 @@ SelectedType(AG_Event *_Nonnull event)
 	}
 	fd->curType = ft;
 
-	AG_ObjectLock(fd);
 	if (fd->optsCtr == NULL) {
 		AG_ObjectUnlock(fd);
 		return;
@@ -990,6 +990,7 @@ OnShow(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_FILEDLG_SELF();
 	AG_TlistItem *it;
+	AG_Combo *comTypes;
 	int w, wMax = 0, nItems = 0;
 	
 	if (!(fd->flags & AG_FILEDLG_RESET_ONSHOW)) {
@@ -1003,7 +1004,7 @@ OnShow(AG_Event *_Nonnull event)
 	RefreshListing(fd);
 	RefreshShortcuts(fd, 1);
 
-	if (fd->comTypes) {
+	if ((comTypes = fd->comTypes) != NULL) {
 		AG_PostEvent(NULL, fd->comTypes, "combo-selected", "%p", NULL);
 		AG_COMBO_FOREACH(it, fd->comTypes) {
 			AG_TextSize(it->text, &w, NULL);
