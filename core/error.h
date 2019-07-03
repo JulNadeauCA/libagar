@@ -91,13 +91,14 @@ void AG_Verbose(const char *_Nonnull, ...)
                FORMAT_ATTRIBUTE(printf,1,2);
 
 #ifdef AG_TYPE_SAFETY
-void *_Nullable AG_PtrMismatch(void)    _Noreturn_Attribute;
+void *_Nullable AG_GenericMismatch(const char *_Nonnull) _Noreturn_Attribute;
+void *_Nullable AG_PtrMismatch(void) _Noreturn_Attribute;
 char *_Nonnull  AG_StringMismatch(void) _Noreturn_Attribute;
 void *_Nullable AG_ObjectMismatch(void) _Noreturn_Attribute;
-int             AG_IntMismatch(void)    _Noreturn_Attribute;
-long            AG_LongMismatch(void)   _Noreturn_Attribute;
+int             AG_IntMismatch(void) _Noreturn_Attribute;
+long            AG_LongMismatch(void) _Noreturn_Attribute;
 # ifdef AG_HAVE_FLOAT
-float           AG_FloatMismatch(void)  _Noreturn_Attribute;
+float           AG_FloatMismatch(void) _Noreturn_Attribute;
 double          AG_DoubleMismatch(void) _Noreturn_Attribute;
 # endif
 #endif /* AG_TYPE_SAFETY */

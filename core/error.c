@@ -431,11 +431,16 @@ AG_SetDebugCallback(int (*fn)(const char *))
  * Raise fatal error condition due to a runtime type checking error
  * (if compiled with either --enable-debug or --enable-type-safety).
  */
-void  *AG_PtrMismatch(void)    { AG_FatalErrorV("E29", "Illegal AG_PTR() / AG_CONST_PTR() access"); }
-char  *AG_StringMismatch(void) { AG_FatalErrorV("E29", "Illegal AG_STRING() access"); }
-int    AG_IntMismatch(void)    { AG_FatalErrorV("E29", "Illegal AG_INT() / AG_UINT() access"); }
-long   AG_LongMismatch(void)   { AG_FatalErrorV("E29", "Illegal AG_LONG() / AG_ULONG() access"); }
-float  AG_FloatMismatch(void)  { AG_FatalErrorV("E29", "Illegal AG_FLOAT() access"); }
-double AG_DoubleMismatch(void) { AG_FatalErrorV("E29", "Illegal AG_DOUBLE() access"); }
-void  *AG_ObjectMismatch(void) { AG_FatalErrorV("E29", "Illegal AG_OBJECT() / AG_CONST_OBJECT() access"); }
+# ifdef AG_VERBOSITY
+void  *AG_GenericMismatch(const char *s) { AG_FatalErrorF("Illegal %s access", s); }
+# else
+void  *AG_GenericMismatch(const char *s) { AG_FatalErrorV("E29", s); }
+# endif
+void  *AG_PtrMismatch(void) { AG_FatalErrorV("E290", "Illegal AG_PTR() / AG_CONST_PTR() access"); }
+char  *AG_StringMismatch(void) { AG_FatalErrorV("E291", "Illegal AG_STRING() access"); }
+int    AG_IntMismatch(void) { AG_FatalErrorV("E292", "Illegal AG_INT() / AG_UINT() access"); }
+long   AG_LongMismatch(void) { AG_FatalErrorV("E293", "Illegal AG_LONG() / AG_ULONG() access"); }
+float  AG_FloatMismatch(void) { AG_FatalErrorV("E294", "Illegal AG_FLOAT() access"); }
+double AG_DoubleMismatch(void) { AG_FatalErrorV("E295", "Illegal AG_DOUBLE() access"); }
+void  *AG_ObjectMismatch(void) { AG_FatalErrorV("E296", "Illegal AG_OBJECT() / AG_CONST_OBJECT() access"); }
 #endif /* AG_TYPE_SAFETY */

@@ -171,14 +171,14 @@ AG_ObjectReset(void *p)
 		if (hier[i]->reset != NULL)
 			hier[i]->reset(ob);
 	}
-	free(hier);
-
 	AG_ObjectUnlock(ob);
+
+	free(hier);
 }
 
 /*
  * Recursive function to construct absolute object names.
- * The object's VFS must be locked.
+ * The Object and its parent VFS must be locked.
  */
 static int
 GenerateObjectPath(void *_Nonnull obj, char *_Nonnull path, AG_Size path_len)
@@ -187,18 +187,15 @@ GenerateObjectPath(void *_Nonnull obj, char *_Nonnull path, AG_Size path_len)
 	AG_Size name_len, cur_len;
 	int rv = 0;
 
-	AG_ObjectLock(ob);
-
 	cur_len = strlen(path);
 	name_len = strlen(ob->name);
 	
 	if (name_len+cur_len+1 > path_len) {
 		AG_SetErrorV("E4", _("Path buffer overflow"));
-		AG_ObjectUnlock(ob);
 		return (-1);
 	}
 	
-	/* Prepend `/ and the object name. */
+	/* Prepend separator, object name. */
 	memmove(&path[name_len+1], path, cur_len+1);    /* Move the NUL as well */
 	path[0] = AG_PATHSEPCHAR;
 	memcpy(&path[1], ob->name, name_len);		/* Omit the NUL */
@@ -206,7 +203,6 @@ GenerateObjectPath(void *_Nonnull obj, char *_Nonnull path, AG_Size path_len)
 	if (ob->parent != ob->root && ob->parent != NULL) {
 		rv = GenerateObjectPath(ob->parent, path, path_len);
 	}
-	AG_ObjectUnlock(ob);
 	return (rv);
 }
 
@@ -1988,27 +1984,44 @@ out:
 /*
  * Generate an object name that is unique in the given parent object. The
  * name is only guaranteed to remain unique as long as the VFS and parent
- * object are locked. The class name is used as prefix.
+ * object are locked.
  */
 void
 AG_ObjectGenName(void *p, AG_ObjectClass *C, char *name, AG_Size len)
 {
-	AG_Object *pobj = p;
-	Uint i = 0;
-	AG_Object *ch;
+	AG_Object *pobj = p, *chld;
+	char *ccBase, *cc, *dBase;
+	Uint i;
 
+	if ((ccBase = strchr(C->name, '_')) != NULL) {	/* Skip any prefix */
+		ccBase++;
+	} else {
+		ccBase = C->name;
+	}
+	if (len < 4) {
+		return;
+	}
+	name[0] = tolower(ccBase[0]);
+	len--;
+	for (cc = &ccBase[1], dBase = &name[1];
+	    *cc != '\0' && len > 0;
+	     cc++, dBase++) {
+		*dBase = *cc;
+		len--;
+	}
+	*dBase = '\0';
+	i = 0;
 tryname:
-	Strlcpy(name, C->name, len);
-	Strlcat(name, " #", len);
-	StrlcatUint(name, i, len);
+	StrlcpyUint(dBase, i, len);
 	if (pobj != NULL) {
 		AG_LockVFS(pobj);
-		TAILQ_FOREACH(ch, &pobj->children, cobjs) {
-			if (strcmp(ch->name, name) == 0)
+		TAILQ_FOREACH(chld, &pobj->children, cobjs) {
+			if (strcmp(chld->name, name) == 0)
 				break;
 		}
 		AG_UnlockVFS(pobj);
-		if (ch != NULL) {
+
+		if (chld != NULL) {
 			i++;
 			goto tryname;
 		}

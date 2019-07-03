@@ -195,10 +195,8 @@ typedef struct ag_object_header {
 
 /* Argument Accessors */
 #ifdef AG_TYPE_SAFETY
-
 # define AG_OBJECT_VALID(p) \
    (strncmp(AGOBJECT(p)->tag, AG_OBJECT_TYPE_TAG, AG_OBJECT_TYPE_TAG_LEN) == 0)
-
 # define AG_OBJECT(v,hier) \
    ((v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
      !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
@@ -221,12 +219,23 @@ typedef struct ag_object_header {
     (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
     AG_OBJECT_VALID(event->argv[v].data.p)) ? (const void *)event->argv[v].data.p : \
                                               (const void *)AG_ObjectMismatch())
+# define AG_OBJECT_ISA(obj,class) \
+	if (!AG_OBJECT_VALID(obj)) { \
+		AG_FatalErrorF("%p is not a valid AG_Object", (obj)); \
+	} \
+	if (!AG_OfClass((obj),(class))) { \
+		AG_FatalErrorF("%s is not a %s", AGOBJECT(obj)->name, class); \
+	}
+
 #else /* !AG_TYPE_SAFETY */
-# define AG_OBJECT_VALID(p)      (1)
-# define AG_OBJECT(v,hier)       (event->argv[v].data.p)
-# define AG_OBJECT_PTR(v)        (event->argv[v].data.p)
-# define AG_CONST_OBJECT(v,hier) (event->argv[v].data.p)
-# define AG_CONST_OBJECT_PTR(v) ((const void *)event->argv[v].data.p)
+
+# define AG_OBJECT_VALID(p)       (1)
+# define AG_OBJECT(v,hier)        (event->argv[v].data.p)
+# define AG_OBJECT_PTR(v)         (event->argv[v].data.p)
+# define AG_CONST_OBJECT(v,hier)  (event->argv[v].data.p)
+# define AG_CONST_OBJECT_PTR(v)  ((const void *)event->argv[v].data.p)
+# define AG_OBJECT_ISA(obj,class)
+
 #endif /* AG_TYPE_SAFETY */
 
 #define AG_OBJECT_SELF()         AG_OBJECT_PTR(0)
@@ -234,48 +243,28 @@ typedef struct ag_object_header {
 #define AG_CONST_OBJECT_SELF()   AG_CONST_OBJECT_PTR(0)
 #define AG_CONST_OBJECT_NAMED(n) AG_CONST_PTR_NAMED(n)
 
-/* Iterate over the direct child objects. */
+/* Iterate over child objects */
 #define AGOBJECT_FOREACH_CHILD(var, ob, t) \
 	for((var) = (struct t *)AG_TAILQ_FIRST(&AGOBJECT(ob)->children); \
 	    (var) != (struct t *)AG_TAILQ_END(&AGOBJECT(ob)->children); \
 	    (var) = (struct t *)AG_TAILQ_NEXT(AGOBJECT(var), cobjs))
-
-/* Return next entry in list of direct child objects. */
-#define AGOBJECT_NEXT_CHILD(var,t) \
-	((struct t *)AG_TAILQ_NEXT(AGOBJECT(var),cobjs))
-
-/* Return last entry in list of direct child objects. */
-#define AGOBJECT_LAST_CHILD(var,t) \
-	((struct t *)AG_TAILQ_LAST(&AGOBJECT(var)->children,ag_objectq))
-	
-/* Iterate over the direct child objects (reverse order). */
 #define AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, t) \
 	for((var) = (struct t *)AG_TAILQ_LAST(&AGOBJECT(ob)->children, \
 	    ag_objectq); \
 	    (var) != (struct t *)AG_TAILQ_END(&AGOBJECT(ob)->children); \
 	    (var) = (struct t *)AG_TAILQ_PREV(AGOBJECT(var), ag_objectq, \
 	    cobjs))
+#define AGOBJECT_NEXT_CHILD(var,t) \
+	((struct t *)AG_TAILQ_NEXT(AGOBJECT(var),cobjs))
+#define AGOBJECT_LAST_CHILD(var,t) \
+	((struct t *)AG_TAILQ_LAST(&AGOBJECT(var)->children,ag_objectq))
 
-/* Iterate over the direct child objects (matching a specified class). */
-#define AGOBJECT_FOREACH_CLASS(var, ob, t, subclass) \
+/* Iterate over child objects of a given class. */
+# define AGOBJECT_FOREACH_CLASS(var, ob, t, subclass) \
 	AGOBJECT_FOREACH_CHILD(var,ob,t) \
-		if (!AG_OfClass(var,(subclass))) { \
+		if (!AG_OBJECT_VALID(var) || !AG_OfClass(var,(subclass))) { \
 			continue; \
 		} else
-
-/* Object validity and class membership test assertion */
-#ifdef AG_DEBUG
-# define AG_ASSERT_CLASS(obj,class) \
-	if (!AG_OBJECT_VALID(obj)) { \
-		AG_FatalErrorF("%p is not a valid AG_Object", (obj)); \
-	} \
-	if (!AG_OfClass((obj),(class))) { \
-		AG_SetError("%s is not a %s", AGOBJECT(obj)->name, class); \
-		AG_FatalError(NULL); \
-	}
-#else
-# define AG_ASSERT_CLASS(obj,class)
-#endif
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_CORE)
 /*
