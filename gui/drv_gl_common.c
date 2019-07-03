@@ -419,8 +419,8 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
 	GLuint texture;
 	AG_TexCoord tc;
 	
-	AG_ASSERT_CLASS(obj, "AG_Driver:*");
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Driver:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AG_GL_UploadTexture(drv, &texture, s, &tc);
 
@@ -466,8 +466,8 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, int name, const AG_Rect *r,
 	AG_Surface *s = wid->surfaces[name];
 	AG_TexCoord tc;
 	
-	AG_ASSERT_CLASS(obj, "AG_Driver:*");
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Driver:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	/* XXX move this call past pushBlendingMode? */
 	AG_GL_PrepareTexture(wid, name);
@@ -511,8 +511,8 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *s, float w, float h)
 	GLuint texture;
 	AG_TexCoord tc;
 	
-	AG_ASSERT_CLASS(obj, "AG_Driver:*");
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Driver:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AG_GL_UploadTexture(drv, &texture, s, &tc);
 
@@ -547,8 +547,8 @@ AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int name, float w, float h)
 {
 	AG_Driver *drv = obj;
 	
-	AG_ASSERT_CLASS(obj, "AG_Driver:*");
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Driver:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
 	/* XXX move this call past pushBlendingMode? */
 	AG_GL_PrepareTexture(wid, name);
@@ -584,8 +584,8 @@ AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int name, float w, float h
 {
 	AG_Driver *drv = obj;
 	
-	AG_ASSERT_CLASS(obj, "AG_Driver:*");
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Driver:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
 	/* XXX move this call past pushBlendingMode? */
 	AG_GL_PrepareTexture(wid, name);
@@ -621,8 +621,8 @@ AG_GL_BackupSurfaces(void *obj, AG_Widget *wid)
 	GLint w, h;
 	Uint i;
 	
-	AG_ASSERT_CLASS(obj, "AG_Driver:*");
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Driver:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AG_ObjectLock(wid);
 	for (i = 0; i < wid->nSurfaces; i++)  {
@@ -653,8 +653,8 @@ AG_GL_RestoreSurfaces(void *obj, AG_Widget *wid)
 {
 	Uint i;
 	
-	AG_ASSERT_CLASS(obj, "AG_Driver:*");
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Driver:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AG_ObjectLock(wid);
 	for (i = 0; i < wid->nSurfaces; i++)  {
@@ -680,8 +680,8 @@ AG_GL_RenderToSurface(void *obj, AG_Widget *wid, AG_Surface **s)
 	Uint8 *pixels;
 	int visiblePrev;
 	
-	AG_ASSERT_CLASS(obj, "AG_Driver:*");
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AG_BeginRendering(drv);
 	visiblePrev = wid->window->visible;

@@ -226,7 +226,7 @@ AG_KeyboardNew(void *drv, const char *desc)
 {
 	AG_Keyboard *kbd;
 	
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 
 	if ((kbd = TryMalloc(sizeof(AG_Keyboard))) == NULL) {
 		return (NULL);

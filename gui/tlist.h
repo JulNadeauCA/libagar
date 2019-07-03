@@ -115,18 +115,9 @@ typedef struct ag_tlist {
 #define AG_CONST_TLIST_PTR(n)   AGCTLIST( AG_CONST_OBJECT((n),"AG_Widget:AG_Tlist:*") )
 #define AG_CONST_TLIST_NAMED(n) AGCTLIST( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Tlist:*") )
 
-/* NOTE: AG_TlistItem is a tagged non-object. */
 #ifdef AG_TYPE_SAFETY
-# define AG_TLIST_ITEM_PTR(v) \
-    (v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
-     !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
-     strncmp(AGTLISTITEM(event->argv[v].data.p)->tag, AG_TLIST_ITEM_TAG, AG_TLIST_ITEM_TAG_LEN) == 0) ? \
-     event->argv[v].data.p : AG_ObjectMismatch()
-# define AG_CONST_TLIST_ITEM_PTR(v) \
-    (v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
-     (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
-     strncmp(AGTLISTITEM(event->argv[v].data.p)->tag, AG_TLIST_ITEM_TAG, AG_TLIST_ITEM_TAG_LEN) == 0) ? \
-     event->argv[v].data.p : AG_ObjectMismatch()
+# define AG_TLIST_ITEM_PTR(v)       AG_TlistGetItemPtr(event,(v),0)
+# define AG_CONST_TLIST_ITEM_PTR(v) ((const AG_MenuItem *)AG_TlistGetItemPtr(event,(v),1))
 #else
 # define AG_TLIST_ITEM_PTR(v)       event->argv[v].data.p
 # define AG_CONST_TLIST_ITEM_PTR(v) event->argv[v].data.p
@@ -256,6 +247,10 @@ int  AG_TlistComparePtrsAndClasses(const AG_TlistItem *_Nonnull,
 int  AG_TlistSort(AG_Tlist *_Nonnull);
 int  AG_TlistVisibleChildren(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
 void AG_TlistRefresh(AG_Tlist *_Nonnull);
+
+#ifdef AG_TYPE_SAFETY
+AG_TlistItem *_Nullable AG_TlistGetItemPtr(const AG_Event *_Nonnull, int, int);
+#endif
 
 #ifdef AG_LEGACY
 #define AG_TLIST_EXPANDED         AG_TLIST_ITEM_EXPANDED

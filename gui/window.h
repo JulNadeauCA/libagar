@@ -170,9 +170,9 @@ AG_Window *_Nullable AG_WindowNewNamed(Uint, const char *_Nonnull, ...)
 			              FORMAT_ATTRIBUTE(printf,2,3);
 void                 AG_WindowInit(AG_Window *_Nonnull, Uint);
 
-void AG_WindowSetCaptionS(AG_Window *_Nonnull, const char *_Nonnull);
 void AG_WindowSetCaption(AG_Window *_Nonnull, const char *_Nonnull, ...)
                         FORMAT_ATTRIBUTE(printf,2,3);
+void AG_WindowSetCaptionS(AG_Window *_Nonnull, const char *_Nonnull);
 void AG_WindowSetIcon(AG_Window *_Nonnull, const AG_Surface *_Nonnull);
 
 void AG_WindowSetSpacing(AG_Window *_Nonnull, int);

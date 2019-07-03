@@ -264,7 +264,7 @@ RedrawOnTickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	AG_Widget *wid = AG_WIDGET_SELF();
 
 	if (wid->window != NULL) {
-		AG_ASSERT_CLASS(wid->window, "AG_Widget:AG_Window:*");
+		AG_OBJECT_ISA(wid->window, "AG_Widget:AG_Window:*");
 		wid->window->dirty = 1;
 	}
 	return (to->ival);
@@ -283,7 +283,7 @@ RedrawOnChangeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	AG_DerefVariable(&Vd, V);
 	if (!rt->VlastInited || AG_CompareVariables(&Vd, &rt->Vlast) != 0) {
 		if (wid->window != NULL) {
-			AG_ASSERT_CLASS(wid->window, "AG_Widget:AG_Window:*");
+			AG_OBJECT_ISA(wid->window, "AG_Widget:AG_Window:*");
 			wid->window->dirty = 1;
 		}
 		AG_CopyVariable(&rt->Vlast, &Vd);
@@ -305,7 +305,7 @@ OnShow(AG_Event *_Nonnull event)
 	if (wid->font == NULL) {
 		AG_FatalError("wid->font=NULL");
 	}
-	AG_ASSERT_CLASS(wid->font, "AG_Font:*");
+	AG_OBJECT_ISA(wid->font, "AG_Font:*");
 #endif
 	wid->flags |= AG_WIDGET_VISIBLE;
 
@@ -412,7 +412,7 @@ AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
 	AG_Widget *wid = obj;
 	AG_RedrawTie *rt;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	TAILQ_FOREACH(rt, &wid->pvt.redrawTies, redrawTies) {
 		if (rt->type == AG_REDRAW_ON_CHANGE &&
@@ -452,7 +452,7 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 	AG_Widget *wid = obj;
 	AG_RedrawTie *rt;
 	
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	if (refresh_ms == -1) {
 		TAILQ_FOREACH(rt, &wid->pvt.redrawTies, redrawTies) {
@@ -542,7 +542,7 @@ AG_ActionOnButtonDown(void *obj, int button, const char *action)
 	at->type = AG_ACTION_ON_BUTTONDOWN;
 	at->data.button = (AG_MouseButton)button;
 	Strlcpy(at->action, action, sizeof(at->action));
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	TAILQ_INSERT_TAIL(&wid->pvt.mouseActions, at, ties);
 
 	if (AG_FindEventHandler(wid, "mouse-button-down") == NULL)
@@ -552,7 +552,7 @@ AG_ActionOnButtonDown(void *obj, int button, const char *action)
 void
 AG_ActionOnButton(void *obj, int button, const char *action)
 {
-	AG_ASSERT_CLASS(obj, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
 	AG_ActionOnButtonDown(obj, button, action);
 }
 
@@ -567,7 +567,7 @@ AG_ActionOnButtonUp(void *obj, int button, const char *action)
 	at->type = AG_ACTION_ON_BUTTONUP;
 	at->data.button = (AG_MouseButton)button;
 	Strlcpy(at->action, action, sizeof(at->action));
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	TAILQ_INSERT_TAIL(&wid->pvt.mouseActions, at, ties);
 	
 	if (AG_FindEventHandler(wid, "mouse-button-up") == NULL)
@@ -586,7 +586,7 @@ AG_ActionOnKeyDown(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
 	Strlcpy(at->action, action, sizeof(at->action));
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
 
 	if (AG_FindEventHandler(wid, "key-down") == NULL)
@@ -605,7 +605,7 @@ AG_ActionOnKeyUp(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
 	Strlcpy(at->action, action, sizeof(at->action));
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
 	
 	if (AG_FindEventHandler(wid, "key-up") == NULL)
@@ -648,7 +648,7 @@ AG_ActionOnKey(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	    sizeof(at->data.key.toRepeat.name));
 # endif
 	Strlcpy(at->action, action, sizeof(at->action));
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
 	
 	if (AG_FindEventHandler(wid, "key-up") == NULL &&
@@ -670,7 +670,7 @@ AG_ActionFn(void *obj, const char *name, AG_EventFn fn, const char *fnArgs,...)
 	AG_Widget *wid = obj;
 	AG_Action *a;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_FN;
@@ -689,7 +689,7 @@ AG_ActionSetInt(void *obj, const char *name, int *p, int val)
 	AG_Widget *wid = obj;
 	AG_Action *a;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_SET_INT;
@@ -709,7 +709,7 @@ AG_ActionToggleInt(void *obj, const char *name, int *p)
 	AG_Widget *wid = obj;
 	AG_Action *a;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_TOGGLE_INT;
@@ -728,7 +728,7 @@ AG_ActionSetFlag(void *obj, const char *name, Uint *p, Uint bitmask, int val)
 	AG_Widget *wid = obj;
 	AG_Action *a;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_SET_INT;
@@ -749,7 +749,7 @@ AG_ActionToggleFlag(void *obj, const char *name, Uint *p, Uint bitmask)
 	AG_Widget *wid = obj;
 	AG_Action *a;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_TOGGLE_FLAG;
@@ -766,7 +766,7 @@ AG_ActionToggleFlag(void *obj, const char *name, Uint *p, Uint bitmask)
 int
 AG_ExecAction(void *obj, AG_Action *a)
 {
-	AG_ASSERT_CLASS(obj, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
 
 	switch (a->type) {
 	case AG_ACTION_FN:
@@ -811,7 +811,7 @@ AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
 	AG_ActionTie *at;
 	AG_Action *a;
 	
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 #ifdef AG_DEBUG
 	if (et != AG_ACTION_ON_BUTTONDOWN &&
 	    et != AG_ACTION_ON_BUTTONUP)
@@ -847,7 +847,7 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 	AG_Action *a;
 	int rv;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 #ifdef AG_DEBUG
 	if (et != AG_ACTION_ON_KEYDOWN &&
 	    et != AG_ACTION_ON_KEYUP)
@@ -906,7 +906,7 @@ WidgetFindPath(const AG_Object *_Nonnull parent, const char *_Nonnull name)
 		AG_Window *win;
 
 		AG_FOREACH_WINDOW(win, drv) {
-			AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+			AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 			if (strcmp(AGOBJECT(win)->name, node_name) != 0) {
 				continue;
 			}
@@ -922,7 +922,7 @@ WidgetFindPath(const AG_Object *_Nonnull parent, const char *_Nonnull name)
 		}
 	} else {
 		TAILQ_FOREACH(chld, &parent->children, cobjs) {
-			AG_ASSERT_CLASS(chld, "AG_Widget:*");
+			AG_OBJECT_ISA(chld, "AG_Widget:*");
 			if (strcmp(chld->name, node_name) != 0) {
 				continue;
 			}
@@ -956,7 +956,7 @@ AG_WidgetFind(void *obj, const char *name)
 #ifdef AG_DEBUG
 	if (name[0] != '/') { AG_FatalError("Not an absolute path"); }
 #endif
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 	AG_LockVFS(drv);
 	rv = WidgetFindPath(OBJECT(drv), &name[1]);
 	AG_UnlockVFS(drv);
@@ -973,7 +973,7 @@ AG_WidgetSetFocusable(void *obj, int enable)
 	AG_Widget *wid = obj;
 	int prev;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	prev = (wid->flags & AG_WIDGET_FOCUSABLE);
 	AG_SETFLAGS(wid->flags, AG_WIDGET_FOCUSABLE, enable);
@@ -987,7 +987,7 @@ AG_WidgetEnable(void *obj)
 {
 	AG_Widget *wid = obj;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	if (wid->flags & AG_WIDGET_DISABLED) {
 		wid->flags &= ~(AG_WIDGET_DISABLED);
@@ -1003,7 +1003,7 @@ AG_WidgetDisable(void *obj)
 {
 	AG_Widget *wid = obj;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	if (!(wid->flags & AG_WIDGET_DISABLED)) {
 		wid->flags |= AG_WIDGET_DISABLED;
@@ -1019,10 +1019,10 @@ AG_WidgetForwardFocus(void *obj, void *objFwd)
 {
 	AG_Widget *wid = obj;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	if (objFwd != NULL) {
-		AG_ASSERT_CLASS(objFwd, "AG_Widget:*");
+		AG_OBJECT_ISA(objFwd, "AG_Widget:*");
 		wid->flags |= AG_WIDGET_FOCUSABLE;
 		wid->focusFwd = WIDGET(objFwd);
 	} else {
@@ -1104,21 +1104,21 @@ void
 AG_WidgetBlitGL(void *obj, AG_Surface *su, float w, float h)
 {
 	AG_Widget *wid = obj;
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	wid->drvOps->blitSurfaceGL(wid->drv, wid, su, w, h);
 }
 void
 AG_WidgetBlitSurfaceGL(void *obj, int name, float w, float h)
 {
 	AG_Widget *wid = obj;
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	wid->drvOps->blitSurfaceFromGL(wid->drv, wid, name, w, h);
 }
 void
 AG_WidgetBlitSurfaceFlippedGL(void *obj, int name, float w, float h)
 {
 	AG_Widget *wid = obj;
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	wid->drvOps->blitSurfaceFlippedGL(wid->drv, wid, name, w, h);
 }
 
@@ -1135,7 +1135,7 @@ AG_WidgetFreeResourcesGL(void *obj)
 {
 	AG_Widget *wid = obj, *cwid;
 	
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	if (wid->drvOps->backupSurfaces != NULL) {
 		wid->drvOps->backupSurfaces(wid->drv, wid);
@@ -1148,7 +1148,7 @@ AG_WidgetRegenResourcesGL(void *obj)
 {
 	AG_Widget *wid = obj, *cwid;
 	
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	if (wid->drvOps->restoreSurfaces != NULL) {
 		wid->drvOps->restoreSurfaces(wid->drv, wid);
@@ -1162,11 +1162,11 @@ AG_WidgetRegenResourcesGL(void *obj)
 static __inline__ void
 FocusWidget(AG_Widget *_Nonnull wid)
 {
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	wid->flags |= AG_WIDGET_FOCUSED;
 	if (wid->window != NULL) {
-		AG_ASSERT_CLASS(wid->window, "AG_Widget:AG_Window:*");
+		AG_OBJECT_ISA(wid->window, "AG_Widget:AG_Window:*");
 		AG_PostEvent(wid->window, wid, "widget-gainfocus", NULL);
 		wid->window->nFocused++;
 		wid->window->dirty = 1;
@@ -1180,11 +1180,11 @@ FocusWidget(AG_Widget *_Nonnull wid)
 static __inline__ void
 UnfocusWidget(AG_Widget *_Nonnull wid)
 {
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	wid->flags &= ~(AG_WIDGET_FOCUSED);
 	if (wid->window != NULL) {
-		AG_ASSERT_CLASS(wid->window, "AG_Widget:AG_Window:*");
+		AG_OBJECT_ISA(wid->window, "AG_Widget:AG_Window:*");
 		AG_PostEvent(wid->window, wid, "widget-lostfocus", NULL);
 		wid->window->nFocused--;
 		wid->window->dirty = 1;
@@ -1197,10 +1197,10 @@ AG_WidgetUnfocus(void *p)
 {
 	AG_Widget *wid = p, *cwid;
 	
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	if (wid->focusFwd != NULL) {
-		AG_ASSERT_CLASS(wid->focusFwd, "AG_Widget:*");
+		AG_OBJECT_ISA(wid->focusFwd, "AG_Widget:*");
 		AG_ObjectLock(wid->focusFwd);
 		if (wid->focusFwd->flags & AG_WIDGET_FOCUSED) {
 			UnfocusWidget(wid->focusFwd);
@@ -1223,9 +1223,9 @@ AG_WidgetFocus(void *obj)
 	AG_Widget *wid = obj, *wParent = wid;
 	AG_Window *win;
 	
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	win = wid->window;
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
@@ -1236,7 +1236,7 @@ AG_WidgetFocus(void *obj)
 	if (!(wid->flags & AG_WIDGET_FOCUSABLE)) {
 		if (wid->focusFwd != NULL &&
 		    !(wid->focusFwd->flags & AG_WIDGET_FOCUSED)) {
-			AG_ASSERT_CLASS(wid->focusFwd, "AG_Widget:*");
+			AG_OBJECT_ISA(wid->focusFwd, "AG_Widget:*");
 			AG_ObjectLock(wid->focusFwd);
 			FocusWidget(wid->focusFwd);
 			AG_ObjectUnlock(wid->focusFwd);
@@ -1286,7 +1286,7 @@ DrawPrologueGL_Reshape(AG_Widget *_Nonnull wid)
 	glMatrixMode(GL_PROJECTION); glPushMatrix();
 	glMatrixMode(GL_MODELVIEW);  glPushMatrix();
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_PostEvent(NULL, wid, "widget-reshape", NULL);
 	wid->flags &= ~(AG_WIDGET_GL_RESHAPE);
 
@@ -1305,7 +1305,7 @@ DrawPrologueGL(AG_Widget *_Nonnull wid)
 {
 	Uint hView;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_PostEvent(NULL, wid, "widget-underlay", NULL);
 
 	glPushAttrib(GL_TRANSFORM_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
@@ -1348,7 +1348,7 @@ DrawEpilogueGL(AG_Widget *_Nonnull wid)
 
 	glPopAttrib(); /* GL_TRANSFORM_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT */
 	
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_PostEvent(NULL, wid, "widget-overlay", NULL);
 }
 #endif /* HAVE_OPENGL */
@@ -1362,7 +1362,7 @@ AG_WidgetDraw(void *p)
 {
 	AG_Widget *wid = p;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 
 	if (!(wid->flags & AG_WIDGET_VISIBLE) ||
@@ -1418,7 +1418,7 @@ AG_WidgetSizeReq(void *obj, AG_SizeReq *r)
 	r->w = 0;
 	r->h = 0;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	if (wid->flags & AG_WIDGET_USE_TEXT) {
 		AG_PushTextState();
@@ -1438,7 +1438,7 @@ AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 {
 	AG_Widget *wid = obj;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 
 	if (wid->flags & AG_WIDGET_USE_TEXT) {
@@ -1483,7 +1483,7 @@ AG_WidgetSensitive(void *obj, int x, int y)
 	AG_Widget *widParent = wid;
 	AG_Rect2 rx;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	memcpy(&rx, &wid->rSens, sizeof(AG_Rect2));
 
@@ -1507,7 +1507,7 @@ AG_WidgetFindFocused(void *p)
 	AG_Widget *wid = p;
 	AG_Widget *cwid, *fwid;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
 
@@ -1543,7 +1543,7 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 	AG_Widget *wid = obj, *chld;
 	AG_Rect2 rPrev;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
 	wid->flags &= ~(AG_WIDGET_UPDATE_WINDOW);
@@ -1624,7 +1624,7 @@ AG_WidgetShow(void *obj)
 {
 	AG_Widget *wid = obj;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	wid->flags &= ~(AG_WIDGET_HIDE);
 	AG_PostEvent(NULL, wid, "widget-shown", NULL);
@@ -1640,7 +1640,7 @@ AG_WidgetHide(void *obj)
 {
 	AG_Widget *wid = obj;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	wid->flags |= AG_WIDGET_HIDE;
 	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
@@ -1657,7 +1657,7 @@ AG_WidgetShowAll(void *p)
 	AG_Widget *wid = p;
 	AG_Widget *chld;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
 
@@ -1677,7 +1677,7 @@ AG_WidgetHideAll(void *p)
 	AG_Widget *wid = p;
 	AG_Widget *chld;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
 	
@@ -1776,7 +1776,7 @@ AG_WidgetFindRect(const char *type, int x, int y, int w, int h)
 void
 AG_WidgetInheritDraw(void *obj)
 {
-	AG_ASSERT_CLASS(obj, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
 	WIDGET_SUPER_OPS(obj)->draw(obj);
 }
 
@@ -1784,7 +1784,7 @@ AG_WidgetInheritDraw(void *obj)
 void
 AG_WidgetInheritSizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_ASSERT_CLASS(obj, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
 	WIDGET_SUPER_OPS(obj)->size_request(obj, r);
 }
 
@@ -1792,7 +1792,7 @@ AG_WidgetInheritSizeRequest(void *obj, AG_SizeReq *r)
 int
 AG_WidgetInheritSizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_ASSERT_CLASS(obj, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
 	return WIDGET_SUPER_OPS(obj)->size_allocate(obj, a);
 }
 
@@ -1804,7 +1804,7 @@ AG_WidgetSurface(void *obj)
 	AG_Surface *su;
 	int rv;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_LockVFS(wid);
 	if (wid->drvOps->renderToSurface == NULL) {
 		AG_SetError("renderToSurface not supported by driver");
@@ -1832,7 +1832,7 @@ AG_WidgetMapSurface(void *obj, AG_Surface *su)
 	AG_Widget *wid = obj;
 	int i, s = -1;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	for (i = 0; i < wid->nSurfaces; i++) {
 		if (wid->surfaces[i] == NULL) {
@@ -1867,7 +1867,7 @@ AG_WidgetUpdateSurface(void *obj, int name)
 #ifdef HAVE_OPENGL
 	AG_Widget *wid = obj;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 # ifdef AG_DEBUG
 	if (name < 0 || name >= wid->nSurfaces)
 		AG_FatalError("Bad surface");
@@ -1879,14 +1879,14 @@ AG_WidgetUpdateSurface(void *obj, int name)
 void
 AG_WidgetUnmapSurface(void *obj, int name)
 {
-	AG_ASSERT_CLASS(obj, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
 	AG_WidgetReplaceSurface(obj, name, NULL);
 }
 
 void
 AG_WidgetBlitSurface(void *obj, int name, int x, int y)
 {
-	AG_ASSERT_CLASS(obj, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
 	AG_WidgetBlitFrom(obj, name, NULL, x,y);
 }
 
@@ -1900,7 +1900,7 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
 	AG_Widget *wid = obj;
 	AG_Surface *suPrev;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 #ifdef AG_DEBUG
 	if (s < 0 || s >= wid->nSurfaces)
@@ -1921,7 +1921,7 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
 	 * to 0 so the texture will be regenerated at the next blit.
 	 */
 	if (wid->textures[s] != 0 && wid->drv) {
-		AG_ASSERT_CLASS(wid->drv, "AG_Driver:*");
+		AG_OBJECT_ISA(wid->drv, "AG_Driver:*");
 		if (wid->drvOps->deleteTexture != NULL) {
 			wid->drvOps->deleteTexture(wid->drv, wid->textures[s]);
 			wid->textures[s] = 0;
@@ -1999,7 +1999,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	Uint fontFlags = parentFontFlags;
 	int i, j;
 	
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	/* Select the effective style sheet for this widget. */
 	for (po = OBJECT(wid);
@@ -2091,11 +2091,11 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		}
 		if (fontNew == NULL) {
 			fontNew = AG_FetchFont(NULL, &fontSize, fontFlags);
-			AG_ASSERT_CLASS(fontNew, "AG_Font:*");
+			AG_OBJECT_ISA(fontNew, "AG_Font:*");
 		}
 		if (fontNew != NULL && wid->font != fontNew) {
 			if (wid->font != NULL) {
-				AG_ASSERT_CLASS(wid->font, "AG_Font:*");
+				AG_OBJECT_ISA(wid->font, "AG_Font:*");
 				AG_UnusedFont(wid->font);
 			}
 			wid->font = fontNew;
@@ -2122,7 +2122,7 @@ AG_WidgetCompileStyle(void *obj)
 	AG_Widget *parent;
 	AG_Font *parentFont;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_LockVFS(wid);
 	AG_MutexLock(&agTextLock);
 
@@ -2156,9 +2156,9 @@ AG_WidgetFreeStyle(void *obj)
 	AG_Widget *wid = obj;
 	AG_Widget *chld;
 	
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	if (wid->font != NULL) {
-		AG_ASSERT_CLASS(wid->font, "AG_Font:*");
+		AG_OBJECT_ISA(wid->font, "AG_Font:*");
 		AG_UnusedFont(wid->font);
 		wid->font = NULL;
 	}
@@ -2175,8 +2175,8 @@ AG_WidgetCopyStyle(void *objDst, void *objSrc)
 	AG_Variable *V;
 	const char **s;
 
-	AG_ASSERT_CLASS(widSrc, "AG_Widget:*");
-	AG_ASSERT_CLASS(widDst, "AG_Widget:*");
+	AG_OBJECT_ISA(widSrc, "AG_Widget:*");
+	AG_OBJECT_ISA(widDst, "AG_Widget:*");
 	AG_ObjectLock(widSrc);
 	AG_ObjectLock(widDst);
 	for (s = &agWidgetStyleNames[0]; *s != NULL; s++) {
@@ -2202,8 +2202,8 @@ AG_SetFont(void *obj, const AG_Font *font)
 {
 	AG_Widget *wid = obj;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
-	AG_ASSERT_CLASS(font, "Font:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(font, "Font:*");
 
 	AG_SetString(wid, "font-family", OBJECT(font)->name);
 	AG_SetStringF(wid, "font-size", "%.2fpts", font->spec.size);
@@ -2236,7 +2236,7 @@ AG_SetStyle(void *obj, const char *which, const char *value)
 {
 	AG_Widget *wid = obj;
 	
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	if (value != NULL) {
 		AG_SetString(wid, which, value);

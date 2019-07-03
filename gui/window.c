@@ -249,7 +249,7 @@ Attach(AG_Event *_Nonnull event)
 	AG_Window *win = AG_WINDOW_SELF();
 	AG_Driver *drv = OBJECT(win)->parent;
 
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 
 	/* Attach the window. */
 	if (win->flags & AG_WINDOW_KEEPBELOW) {
@@ -329,13 +329,13 @@ Detach(AG_Event *_Nonnull event)
 #endif
 	/* Implicitely detach window dependencies. */
 	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		AG_ASSERT_CLASS(drv, "AG_Driver:*");
+		AG_OBJECT_ISA(drv, "AG_Driver:*");
 
 		AG_FOREACH_WINDOW(other, drv) {
 			if (other == win) {
 				continue;
 			}
-			AG_ASSERT_CLASS(other, "AG_Widget:AG_Window:*");
+			AG_OBJECT_ISA(other, "AG_Widget:AG_Window:*");
 			AG_ObjectLock(other);
 			TAILQ_FOREACH(subwin, &other->pvt.subwins, pvt.swins) {
 				if (subwin == win)
@@ -423,8 +423,8 @@ AG_WindowAttach(AG_Window *winParent, AG_Window *winChld)
 	if (winParent == NULL)
 		return;
 
-	AG_ASSERT_CLASS(winParent, "AG_Widget:AG_Window:*");
-	AG_ASSERT_CLASS(winChld, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(winParent, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(winChld, "AG_Widget:AG_Window:*");
 
 	AG_LockVFS(&agDrivers);
 	AG_ObjectLock(winParent);
@@ -452,8 +452,8 @@ AG_WindowDetach(AG_Window *winParent, AG_Window *winChld)
 	if (winParent == NULL)
 		return;
 
-	AG_ASSERT_CLASS(winParent, "AG_Widget:AG_Window:*");
-	AG_ASSERT_CLASS(winChld, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(winParent, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(winChld, "AG_Widget:AG_Window:*");
 
 	AG_LockVFS(&agDrivers);
 	AG_ObjectLock(winParent);
@@ -510,8 +510,8 @@ AG_WindowPin(AG_Window *winParent, AG_Window *win)
 #ifdef AG_DEBUG
 	if (win == winParent) { AG_FatalError("AG_WindowPin"); }
 #endif
-	AG_ASSERT_CLASS(winParent, "AG_Widget:AG_Window:*");
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(winParent, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
 	win->pinnedTo = winParent;
 	AG_ObjectUnlock(win);
@@ -521,7 +521,7 @@ AG_WindowPin(AG_Window *winParent, AG_Window *win)
 void
 AG_WindowUnpin(AG_Window *win)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
 	win->pinnedTo = NULL;
 	AG_ObjectUnlock(win);
@@ -684,7 +684,7 @@ OnShow(AG_Event *_Nonnull event)
 	Uint mwFlags = 0;
 	AG_Variable V;
 	
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 
 	win->visible = 1;
 	WIDGET(win)->flags |= AG_WIDGET_VISIBLE;
@@ -803,7 +803,7 @@ OnHide(AG_Event *_Nonnull event)
 	AG_DriverSw *dsw;
 	int i;
 
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 
 	win->visible = 0;
 	WIDGET(win)->flags &= ~(AG_WIDGET_VISIBLE);
@@ -890,7 +890,7 @@ WidgetGainFocus(AG_Widget *_Nonnull wid)
 	AG_Widget *chld;
 
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
-		AG_ASSERT_CLASS(chld, "AG_Widget:*");
+		AG_OBJECT_ISA(chld, "AG_Widget:*");
 		AG_ObjectLock(chld);
 		WidgetGainFocus(chld);
 		AG_ObjectUnlock(chld);
@@ -905,7 +905,7 @@ WidgetLostFocus(AG_Widget *_Nonnull wid)
 	AG_Widget *chld;
 
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
-		AG_ASSERT_CLASS(chld, "AG_Widget:*");
+		AG_OBJECT_ISA(chld, "AG_Widget:*");
 		AG_ObjectLock(chld);
 		WidgetLostFocus(chld);
 		AG_ObjectUnlock(chld);
@@ -936,7 +936,7 @@ OnLostFocus(AG_Event *_Nonnull event)
 void
 AG_WindowShow(AG_Window *win)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_LockVFS(&agDrivers);
 	AG_ObjectLock(win);
 	if (!win->visible) {
@@ -959,7 +959,7 @@ AG_WindowShow(AG_Window *win)
 void
 AG_WindowHide(AG_Window *win)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_LockVFS(&agDrivers);
 	AG_ObjectLock(win);
 
@@ -1062,7 +1062,7 @@ ListFocusableWidgets(AG_List *_Nonnull L, AG_Widget *_Nonnull wid)
 	AG_Widget *chld;
 	AG_Variable V;
 	
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AG_ObjectLock(wid);
 	if (wid->flags & AG_WIDGET_FOCUSABLE) {
@@ -1085,7 +1085,7 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 	AG_List *Lfoc, *Luniq;
 	int i, j;
 	
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 
 	/* Generate a list of focusable widgets; eliminate duplicates. */
 	Lfoc = AG_ListNew();
@@ -1165,7 +1165,7 @@ AG_WindowIsFocused(AG_Window *_Nullable win)
 void
 AG_WindowFocus(AG_Window *win)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 
 	AG_LockVFS(&agDrivers);
 
@@ -1210,9 +1210,9 @@ AG_WindowFocusNamed(const char *name)
 
 	AG_LockVFS(&agDrivers);
 	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		AG_ASSERT_CLASS(drv, "AG_Driver:*");
+		AG_OBJECT_ISA(drv, "AG_Driver:*");
 		AG_FOREACH_WINDOW(owin, drv) {
-			AG_ASSERT_CLASS(owin, "AG_Widget:AG_Window:*");
+			AG_OBJECT_ISA(owin, "AG_Widget:AG_Window:*");
 			if (strcmp(OBJECT(owin)->name, name) == 0) {
 				AG_WindowShow(owin);
 				AG_WindowFocus(owin);
@@ -1237,12 +1237,12 @@ AG_WindowFocusAtPos(AG_DriverSw *dsw, int x, int y)
 {
 	AG_Window *win;
 	
-	AG_ASSERT_CLASS(dsw, "AG_Driver:AG_DriverSw:*");
+	AG_OBJECT_ISA(dsw, "AG_Driver:AG_DriverSw:*");
 
 	AG_LockVFS(&agDrivers);
 	agWindowToFocus = NULL;
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
-		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 
 		AG_ObjectLock(win);
 		if (!win->visible ||
@@ -1307,7 +1307,7 @@ AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 {
 	AG_Rect r;
 	
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	r.x = x;
 	r.y = y;
 	r.w = w;
@@ -1321,7 +1321,7 @@ AG_WindowSetGeometryBounded(AG_Window *win, int x, int y, int w, int h)
 {
 	AG_Rect r;
 
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	r.x = x;
 	r.y = y;
 	r.w = w;
@@ -1343,10 +1343,10 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 	int wMin, hMin;
 	Uint wDisp = 0, hDisp = 0;
 	
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
-
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 	AG_ObjectLock(win);
+
 	rPrev.x = WIDGET(win)->x;
 	rPrev.y = WIDGET(win)->y;
 	rPrev.w = WIDGET(win)->w;
@@ -1435,7 +1435,7 @@ fail:
 void
 AG_WindowSetMinSizePct(AG_Window *win, int pct)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
 	win->flags |= AG_WINDOW_MINSIZEPCT;
 	win->minPct = pct;
@@ -1447,18 +1447,22 @@ AG_WindowSetMinSizePct(AG_Window *win, int pct)
 void
 AG_WindowSetMinSize(AG_Window *win, int w, int h)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
+
 	win->flags &= ~(AG_WINDOW_MINSIZEPCT);
 	win->wMin = w;
 	win->hMin = h;
 	win->dirty = 1;
+
 	AG_ObjectUnlock(win);
 }
 
 /*
  * Update the x,y of the a to produce the required alignment for the
  * window's current display.
+ *
+ * The window must be locked.
  */
 void
 AG_WindowComputeAlignment(AG_Window *win, AG_SizeAlloc *a)
@@ -1468,8 +1472,8 @@ AG_WindowComputeAlignment(AG_Window *win, AG_SizeAlloc *a)
 	int w = a->w;
 	int h = a->h;
 	
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 
 	if (AG_GetDisplaySize(WIDGET(win)->drv, &wMax, &hMax) == -1)
 		return;
@@ -1527,8 +1531,9 @@ AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment alignment,
 	AG_SizeAlloc a;
 	int rv;
 	
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
+
 	win->alignment = alignment;
 	a.x = 0;
 	a.y = 0;
@@ -1536,6 +1541,7 @@ AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment alignment,
 	a.h = (h != -1) ? h : WIDGET(win)->h;
 	AG_WindowComputeAlignment(win, &a);
 	rv = AG_WindowSetGeometry(win, a.x, a.y, a.w, a.h);
+
 	AG_ObjectUnlock(win);
 	return (rv);
 }
@@ -1548,9 +1554,10 @@ AG_WindowSetGeometryAlignedPct(AG_Window *win, enum ag_window_alignment align,
 	Uint wMax=0, hMax=0;
 	AG_Driver *drv;
 	
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	drv = WIDGET(win)->drv;
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
+
 	AG_GetDisplaySize(drv, &wMax, &hMax);
 
 	return AG_WindowSetGeometryAligned(win, align,
@@ -1562,7 +1569,8 @@ AG_WindowSetGeometryAlignedPct(AG_Window *win, enum ag_window_alignment align,
 void
 AG_WindowSaveGeometry(AG_Window *win)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+
 	win->rSaved.x = WIDGET(win)->x;
 	win->rSaved.y = WIDGET(win)->y;
 	win->rSaved.w = WIDTH(win);
@@ -1573,7 +1581,8 @@ AG_WindowSaveGeometry(AG_Window *win)
 int
 AG_WindowRestoreGeometry(AG_Window *win)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+
 	return AG_WindowSetGeometryRect(win, &win->rSaved, 0);
 }
 
@@ -1583,23 +1592,31 @@ AG_WindowMaximize(AG_Window *win)
 {
 	Uint wMax, hMax;
 
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+	AG_ObjectLock(win);
+
 	AG_WindowSaveGeometry(win);
 	AG_GetDisplaySize(WIDGET(win)->drv, &wMax, &hMax);
+
 	if (AG_WindowSetGeometry(win, 0, 0, wMax, hMax) == 0)
 		win->flags |= AG_WINDOW_MAXIMIZED;
+	
+	AG_ObjectUnlock(win);
 }
 
 /* Restore a window's geometry prior to maximization. */
 void
 AG_WindowUnmaximize(AG_Window *win)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+	AG_ObjectLock(win);
 
 	if (AG_WindowRestoreGeometry(win) == 0) {
 		win->flags &= ~(AG_WINDOW_MAXIMIZED);
 		win->dirty = 1;
 	}
+	
+	AG_ObjectUnlock(win);
 }
 
 static void
@@ -1611,8 +1628,8 @@ IconMotion(AG_Event *_Nonnull event)
 	int yRel = AG_INT(4);
 	AG_Window *wDND = icon->wDND;
 
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
-	AG_ASSERT_CLASS(wDND, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(wDND, "AG_Widget:AG_Window:*");
 
 	if (icon->flags & AG_ICON_DND) {
 		AG_Rect r;
@@ -1695,10 +1712,11 @@ AG_WindowMinimize(AG_Window *win)
 {
 	AG_Driver *drv;
 	
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+	AG_ObjectLock(win);
 
 	if (win->flags & AG_WINDOW_MINIMIZED) {
-		return;
+		goto out;
 	}
 	win->flags |= AG_WINDOW_MINIMIZED;
 	AG_WindowHide(win);
@@ -1732,13 +1750,16 @@ AG_WindowMinimize(AG_Window *win)
 		icon->hSaved = HEIGHT(wDND);
 	}
 	/* TODO MW: send a WM_CHANGE_STATE */
+out:
+	AG_ObjectUnlock(win);
 }
 
 /* Unminimize a window */
 void
 AG_WindowUnminimize(AG_Window *win)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+	AG_ObjectLock(win);
 
 	if (!win->visible) {
 		AG_WindowShow(win);
@@ -1747,6 +1768,8 @@ AG_WindowUnminimize(AG_Window *win)
 		AG_WindowFocus(win);
 	}
 	/* TODO MW: send a WM_CHANGE_STATE */
+
+	AG_ObjectUnlock(win);
 }
 
 /* AGWINDETACH(): General-purpose "detach window" event handler. */
@@ -1776,7 +1799,7 @@ AG_CloseFocusedWindow(void)
 {
 	AG_LockVFS(&agDrivers);
 	if (agWindowFocused) {
-		AG_ASSERT_CLASS(agWindowFocused, "AG_Widget:AG_Window:*");
+		AG_OBJECT_ISA(agWindowFocused, "AG_Widget:AG_Window:*");
 		AG_PostEvent(NULL, agWindowFocused, "window-close", NULL);
 	}
 	AG_UnlockVFS(&agDrivers);
@@ -1788,6 +1811,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_Window *win = obj;
 	AG_Widget *chld;
 	AG_SizeReq rChld, rTbar;
+	AG_Titlebar *tbar = win->tbar;
+	const int spacing = win->spacing;
 	int nWidgets;
 	int wTot;
 	
@@ -1795,24 +1820,24 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	r->w = wTot;
 	r->h = win->bPad+win->tPad + win->wBorderBot;
 
-	if (win->tbar) {
-		AG_WidgetSizeReq(win->tbar, &rTbar);
+	if (tbar) {
+		AG_WidgetSizeReq(tbar, &rTbar);
 		r->w = MAX(r->w, rTbar.w);
 		r->h += rTbar.h;
 	}
 	nWidgets = 0;
 	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
-		AG_ASSERT_CLASS(chld, "AG_Widget:*");
-		if (chld == WIDGET(win->tbar)) {
+		if (chld == WIDGET(tbar)) {
 			continue;
 		}
+		AG_OBJECT_ISA(chld, "AG_Widget:*");
 		AG_WidgetSizeReq(chld, &rChld);
 		r->w = MAX(r->w, rChld.w + wTot);
-		r->h += rChld.h + win->spacing;
+		r->h += rChld.h + spacing;
 		nWidgets++;
 	}
-	if (nWidgets > 0 && r->h >= win->spacing)
-		r->h -= win->spacing;
+	if (nWidgets > 0 && r->h >= spacing)
+		r->h -= spacing;
 
 	win->wReq = r->w;
 	win->hReq = r->h;
@@ -1873,7 +1898,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	nWidgets = 0;
 	totFixed = 0;
 	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
-		AG_ASSERT_CLASS(chld, "AG_Widget:*");
+		AG_OBJECT_ISA(chld, "AG_Widget:*");
 		AG_WidgetSizeReq(chld, &rChld);
 		if ((chld->flags & AG_WIDGET_VFILL) == 0) {
 			totFixed += rChld.h;
@@ -1900,7 +1925,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		aChld.y = win->tPad;
 	}
 	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {		/* Widgets */
-		AG_ASSERT_CLASS(chld, "AG_Widget:*");
+		AG_OBJECT_ISA(chld, "AG_Widget:*");
 		AG_WidgetSizeReq(chld, &rChld);
 		if (chld == WIDGET(win->tbar)) {
 			continue;
@@ -1922,10 +1947,9 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 				aChld.y += win->spacing;
 			}
 			continue;
-		} else {
-			aChld.w = (chld->flags & AG_WIDGET_HFILL) ?
-			          wAvail : MIN(wAvail,rChld.w);
 		}
+		aChld.w = (chld->flags & AG_WIDGET_HFILL) ?
+		          wAvail : MIN(wAvail,rChld.w);
 		aChld.h = (chld->flags & AG_WIDGET_VFILL) ?
 		          hAvail-totFixed : rChld.h;
 		AG_WidgetSizeAlloc(chld, &aChld);
@@ -1948,11 +1972,9 @@ void
 AG_WindowSetSideBorders(AG_Window *win, int pixels)
 {
 	if (win) {
-		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
-		AG_ObjectLock(win);
+		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		win->wBorderSide = pixels;
 		win->dirty = 1;
-		AG_ObjectUnlock(win);
 	} else {
 		agWindowSideBorderDefault = pixels;
 	}
@@ -1963,11 +1985,9 @@ void
 AG_WindowSetBottomBorder(AG_Window *win, int pixels)
 {
 	if (win) {
-		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
-		AG_ObjectLock(win);
+		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		win->wBorderBot = pixels;
 		win->dirty = 1;
-		AG_ObjectUnlock(win);
 	} else {
 		agWindowBotBorderDefault = pixels;
 	}
@@ -1977,23 +1997,23 @@ AG_WindowSetBottomBorder(AG_Window *win, int pixels)
 void
 AG_WindowSetSpacing(AG_Window *win, int spacing)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
-	AG_ObjectLock(win);
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	win->spacing = spacing;
 	win->dirty = 1;
-	AG_ObjectUnlock(win);
 }
 
 /* Change the padding around child widgets. */
 void
 AG_WindowSetPadding(AG_Window *win, int lPad, int rPad, int tPad, int bPad)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
+
 	if (lPad != -1) { win->lPad = lPad; }
 	if (rPad != -1) { win->rPad = rPad; }
 	if (tPad != -1) { win->tPad = tPad; }
 	if (bPad != -1) { win->bPad = bPad; }
+
 	win->dirty = 1;
 	AG_ObjectUnlock(win);
 }
@@ -2003,10 +2023,12 @@ void
 AG_WindowSetPosition(AG_Window *win, enum ag_window_alignment alignment,
     int tiling)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
+
 	win->alignment = alignment;
 	AG_SETFLAGS(win->flags, AG_WINDOW_TILING, tiling);
+
 	AG_ObjectUnlock(win);
 }
 
@@ -2014,7 +2036,7 @@ AG_WindowSetPosition(AG_Window *win, enum ag_window_alignment alignment,
 void
 AG_WindowSetCloseAction(AG_Window *win, enum ag_window_close_action mode)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
 
 	switch (mode) {
@@ -2038,9 +2060,9 @@ UpdateTitlebar(AG_Window *_Nonnull win)
 {
 	AG_Titlebar *tbar;
 	
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	tbar = win->tbar;
-	AG_ASSERT_CLASS(tbar, "AG_Widget:AG_Box:AG_Titlebar:*");
+	AG_OBJECT_ISA(tbar, "AG_Widget:AG_Box:AG_Titlebar:*");
 	AG_ObjectLock(tbar);
 	AG_LabelTextS(tbar->label, win->caption);
 	AG_ObjectUnlock(tbar);
@@ -2053,9 +2075,9 @@ UpdateIconCaption(AG_Window *_Nonnull win)
 	AG_Icon *icon = win->icon;
 	char s[20], *c;
 	
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	icon = win->icon;
-	AG_ASSERT_CLASS(icon, "AG_Widget:AG_Icon:*");
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
 
 	if (Strlcpy(s, win->caption, sizeof(s)) >= sizeof(s)) {	/* Truncate */
 		for (c = &s[0]; *c != '\0'; c++) {
@@ -2066,30 +2088,6 @@ UpdateIconCaption(AG_Window *_Nonnull win)
 	} else {
 		AG_IconSetTextS(icon, s);
 	}
-}
-
-/* Set the text to show inside a window's titlebar (C string). */
-void
-AG_WindowSetCaptionS(AG_Window *win, const char *s)
-{
-	AG_Driver *drv;
-
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
-	AG_ObjectLock(win);
-	Strlcpy(win->caption, s, sizeof(win->caption));
-
-	if (win->tbar)
-		UpdateTitlebar(win);
-	if (win->icon)
-		UpdateIconCaption(win);
-
-	if ((drv = WIDGET(win)->drv) && AGDRIVER_MULTIPLE(drv) &&
-	    (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
-	    (AGDRIVER_MW_CLASS(drv)->setWindowCaption != NULL)) {
-		AGDRIVER_MW_CLASS(drv)->setWindowCaption(win, s);
-	}
-	win->dirty = 1;
-	AG_ObjectUnlock(win);
 }
 
 /* Set the text to show inside a window's titlebar (format string). */
@@ -2108,11 +2106,36 @@ AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 	free(s);
 }
 
+/* Set the text to show inside a window's titlebar (C string). */
+void
+AG_WindowSetCaptionS(AG_Window *win, const char *s)
+{
+	AG_Driver *drv;
+
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+	AG_ObjectLock(win);
+
+	Strlcpy(win->caption, s, sizeof(win->caption));
+
+	if (win->tbar)
+		UpdateTitlebar(win);
+	if (win->icon)
+		UpdateIconCaption(win);
+
+	if ((drv = WIDGET(win)->drv) && AGDRIVER_MULTIPLE(drv) &&
+	    (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
+	    (AGDRIVER_MW_CLASS(drv)->setWindowCaption != NULL)) {
+		AGDRIVER_MW_CLASS(drv)->setWindowCaption(win, s);
+	}
+	win->dirty = 1;
+	AG_ObjectUnlock(win);
+}
+
 /* Set the icon of a window from the contents of a surface. */
 void
 AG_WindowSetIcon(AG_Window *win, const AG_Surface *S)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_IconSetSurface(win->icon, S);
 }
 
@@ -2129,10 +2152,10 @@ AG_WindowProcessFocusChange(void)
 	case AG_WM_MULTIPLE:
 #ifdef AG_TYPE_SAFETY
 		if (agWindowToFocus)
-			AG_ASSERT_CLASS(agWindowToFocus, "AG_Widget:AG_Window:*");
+			AG_OBJECT_ISA(agWindowToFocus, "AG_Widget:AG_Window:*");
 #endif
 		if ((drv = WIDGET(agWindowToFocus)->drv) != NULL) {
-			AG_ASSERT_CLASS(drv, "AG_Driver:*");
+			AG_OBJECT_ISA(drv, "AG_Driver:*");
 			AGDRIVER_MW_CLASS(drv)->raiseWindow(agWindowToFocus);
 			AGDRIVER_MW_CLASS(drv)->setInputFocus(agWindowToFocus);
 		}
@@ -2151,7 +2174,7 @@ AG_WindowProcessShowQueue(void)
 	AG_Window *win;
 
 	TAILQ_FOREACH(win, &agWindowShowQ, pvt.visibility) {
-		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		AG_PostEvent(NULL, win, "widget-shown", NULL);
 	}
 	TAILQ_INIT(&agWindowShowQ);
@@ -2167,7 +2190,7 @@ AG_WindowProcessHideQueue(void)
 	AG_Window *win;
 
 	TAILQ_FOREACH(win, &agWindowHideQ, pvt.visibility) {
-		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		AG_PostEvent(NULL, win, "widget-hidden", NULL);
 	}
 	TAILQ_INIT(&agWindowHideQ);
@@ -2188,7 +2211,7 @@ AG_WindowProcessDetachQueue(void)
 	Debug(NULL, "AG_WindowProcessDetachQueue() Begin\n");
 #endif
 	TAILQ_FOREACH(win, &agWindowDetachQ, pvt.detach) {
-		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		if (!win->visible) {
 			continue;
 		}
@@ -2219,9 +2242,9 @@ AG_WindowProcessDetachQueue(void)
 	     win = winNext) {
 		winNext = TAILQ_NEXT(win, pvt.detach);
 
-		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		drv = WIDGET(win)->drv;
-		AG_ASSERT_CLASS(drv, "AG_Driver:*");
+		AG_OBJECT_ISA(drv, "AG_Driver:*");
 #ifdef AG_DEBUG_GUI
 		Debug(NULL, "Detach: %s (\"%s\")\n", OBJECT(win)->name, win->caption);
 #endif
@@ -2262,9 +2285,9 @@ AG_WindowProcessDetachQueue(void)
 	/* Terminate if the last AG_WINDOW_MAIN window was closed. */
 	if (closedMain > 0) {
 		AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-			AG_ASSERT_CLASS(drv, "AG_Driver:*");
+			AG_OBJECT_ISA(drv, "AG_Driver:*");
 			AG_FOREACH_WINDOW(win, drv) {
-				AG_ASSERT_CLASS(drv, "AG_Widget:AG_Window:*");
+				AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 				if (win->flags & AG_WINDOW_MAIN)
 					break;
 			}
@@ -2298,7 +2321,7 @@ AG_MapCursor(void *obj, const AG_Rect *r, AG_Cursor *c)
 	AG_Window *win;
 	AG_CursorArea *ca;
 	
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
 	if ((ca = TryMalloc(sizeof(AG_CursorArea))) == NULL) {
 		return (NULL);
@@ -2309,7 +2332,7 @@ AG_MapCursor(void *obj, const AG_Rect *r, AG_Cursor *c)
 	ca->wid = wid;
 	
 	if ((win = wid->window) != NULL) {
-		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		TAILQ_INSERT_TAIL(&win->pvt.cursorAreas, ca, cursorAreas);
 	} else {
 		TAILQ_INSERT_TAIL(&wid->pvt.cursorAreas, ca, cursorAreas);
@@ -2328,10 +2351,10 @@ AG_MapStockCursor(void *obj, const AG_Rect *_Nonnull r, int name)
 	AG_CursorArea *ca;
 	int i = 0;
 	
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	win = wid->window;
 	drv = wid->drv;
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 	TAILQ_FOREACH(ac, &drv->cursors, cursors) {
 		if (i++ == name)
 			break;
@@ -2347,7 +2370,7 @@ AG_MapStockCursor(void *obj, const AG_Rect *_Nonnull r, int name)
 	ca->wid = WIDGET(obj);
 
 	if (win != NULL) {
-		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		ca->c = ac;
 		TAILQ_INSERT_TAIL(&win->pvt.cursorAreas, ca, cursorAreas);
 	} else {
@@ -2374,9 +2397,9 @@ AG_UnmapCursor(void *obj, AG_CursorArea *ca)
 	} else {
 		AG_Driver *drv;
 		
-		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		drv = WIDGET(win)->drv;
-		AG_ASSERT_CLASS(drv, "AG_Driver:*");
+		AG_OBJECT_ISA(drv, "AG_Driver:*");
 
 		if (ca->c == drv->activeCursor) {
 			if (ca->stock == -1) {
@@ -2402,9 +2425,9 @@ AG_UnmapAllCursors(AG_Window *win, void *wid)
 	AG_Driver *drv;
 	AG_CursorArea *ca, *caNext;
 	
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	drv = WIDGET(win)->drv;
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 
 	if (wid == NULL) {
 		for (ca = TAILQ_FIRST(&win->pvt.cursorAreas);
@@ -2443,11 +2466,11 @@ AG_WindowSetOpacity(AG_Window *win, float f)
 	AG_Driver *drv;
 	int rv = -1;
 
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
-	drv = OBJECT(win)->parent;
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
-
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
+	drv = OBJECT(win)->parent;
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
+
 # ifdef AG_TIMERS
 	win->pvt.fadeOpacity = (f > 1.0) ? 1.0 : f;
 	if (drv && AGDRIVER_MULTIPLE(drv) &&
@@ -2471,7 +2494,7 @@ AG_WindowSetOpacity(AG_Window *win, float f)
 void
 AG_WindowSetFadeIn(AG_Window *win, float fadeTime, float fadeIncr)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
 	win->pvt.fadeInTime = fadeTime;
 	win->pvt.fadeInIncr = fadeIncr;
@@ -2480,7 +2503,7 @@ AG_WindowSetFadeIn(AG_Window *win, float fadeTime, float fadeIncr)
 void
 AG_WindowSetFadeOut(AG_Window *win, float fadeTime, float fadeIncr)
 {
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
 	win->pvt.fadeOutTime = fadeTime;
 	win->pvt.fadeOutIncr = fadeIncr;
@@ -2495,7 +2518,7 @@ AG_WindowSetZoom(AG_Window *win, int zoom)
 {
 	AG_Window *winChld;
 
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
 	if (zoom < 0 || zoom >= AG_ZOOM_RANGE || zoom == win->zoom) {
 		AG_ObjectUnlock(win);
@@ -2528,9 +2551,9 @@ AG_WindowDraw(AG_Window *_Nonnull win)
 {
 	AG_Driver *drv;
 
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	drv = WIDGET(win)->drv;
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 
 	if (!win->visible) {
 		return;
@@ -2552,7 +2575,7 @@ AG_WindowUpdate(AG_Window *_Nonnull win)
 {
 	AG_SizeAlloc a;
 	
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	
 	if (WIDGET(win)->x != -1 && WIDGET(win)->y != -1) {
 		a.x = WIDGET(win)->x;
@@ -2581,7 +2604,7 @@ AG_WindowIsVisible(AG_Window *_Nonnull win)
 AG_Window *
 AG_ParentWindow(void *_Nonnull obj)
 {
-	AG_ASSERT_CLASS(obj, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
 	return (WIDGET(obj)->window);
 }
 
@@ -2594,7 +2617,7 @@ AG_WidgetIsFocused(void *_Nonnull obj)
 {
 	AG_Widget *wid = obj;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	return ((wid->flags & AG_WIDGET_FOCUSED) &&
                 (wid->window == NULL || AG_WindowIsFocused(wid->window)));
@@ -2606,7 +2629,7 @@ AG_WidgetSetPosition(void *_Nonnull obj, int x, int y)
 {
 	AG_Widget *wid = obj;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	wid->x = x;
 	wid->y = y;
@@ -2620,7 +2643,7 @@ AG_WidgetSetSize(void *_Nonnull obj, int w, int h)
 {
 	AG_Widget *wid = obj;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	wid->w = w;
 	wid->h = h;
@@ -2634,7 +2657,7 @@ AG_WidgetSetGeometry(void *obj, const AG_Rect *r)
 {
 	AG_Widget *wid = obj;
 
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	wid->x = r->x;
 	wid->y = r->y;
@@ -2650,7 +2673,7 @@ AG_WindowSetGeometryMax(AG_Window *_Nonnull win)
 {
 	Uint wMax, hMax;
 
-	AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_GetDisplaySize((void *)WIDGET(win)->drv, &wMax, &hMax);
 	AG_WindowSetGeometry(win, 0, 0, wMax, hMax);
 }
@@ -2661,10 +2684,10 @@ AG_Redraw(void *_Nonnull obj)
 {
 	AG_Window *win;
 
-	AG_ASSERT_CLASS(obj, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
 
 	if ((win = WIDGET(obj)->window) != NULL) {
-		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		win->dirty = 1;
 	}
 }
@@ -2677,7 +2700,7 @@ void
 AG_SetCursor(void *obj, AG_CursorArea **ca, const AG_Rect *_Nonnull r,
     struct ag_cursor *c)
 {
-	AG_ASSERT_CLASS(obj, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
 
 	if (*ca == NULL) {
 		*ca = AG_MapCursor(obj, r, c);
@@ -2693,7 +2716,7 @@ AG_SetCursor(void *obj, AG_CursorArea **ca, const AG_Rect *_Nonnull r,
 void
 AG_SetStockCursor(void *obj, AG_CursorArea **ca, const AG_Rect *r, int cName)
 {
-	AG_ASSERT_CLASS(obj, "AG_Widget:*");
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
 
 	if (*ca == NULL) {
 		*ca = AG_MapStockCursor(obj, r, cName);
@@ -2854,20 +2877,6 @@ Init(void *_Nonnull obj)
 
 	WIDGET(win)->font = agDefaultFont;
 	WIDGET(win)->pal = agDefaultPalette;
-#if 0
-	AG_BindUint(win, "flags", &win->flags);
-	AG_BindString(win, "caption", win->caption, sizeof(win->caption));
-	AG_BindInt(win, "visible", &win->visible);
-	AG_BindInt(win, "spacing", &win->spacing);
-	AG_BindInt(win, "wReq", &win->wReq);
-	AG_BindInt(win, "hReq", &win->hReq);
-	AG_BindInt(win, "wMin", &win->wMin);
-	AG_BindInt(win, "hMin", &win->hMin);
-	AG_BindInt(win, "r.x", &win->r.x);
-	AG_BindInt(win, "r.y", &win->r.y);
-	AG_BindInt(win, "r.w", &win->r.w);
-	AG_BindInt(win, "r.h", &win->r.h);
-#endif
 }
 
 #ifdef AG_DEBUG

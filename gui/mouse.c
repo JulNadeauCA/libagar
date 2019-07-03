@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@ AG_MouseNew(void *drv, const char *desc)
 {
 	AG_Mouse *ms;
 	
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 	
 	if ((ms = TryMalloc(sizeof(AG_Mouse))) == NULL) {
 		return (NULL);
