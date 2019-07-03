@@ -71,17 +71,8 @@ typedef struct ag_menu_item {
 #define AG_CONST_MENU_ITEM_SELF() AGCMENUITEM( AG_CONST_MENU_ITEM(0) )
 
 #ifdef AG_TYPE_SAFETY
-# define AG_MENU_ITEM_PTR(v) \
-    AGMENUITEM((v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
-      !(event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
-      strncmp(AGMENUITEM(event->argv[v].data.p)->tag, AG_MENU_ITEM_TAG, AG_MENU_ITEM_TAG_LEN) == 0) ? \
-      event->argv[v].data.p : AG_ObjectMismatch())
-
-# define AG_CONST_MENU_ITEM_PTR(v) \
-    AGCMENUITEM((v <= event->argc && event->argv[v].type == AG_VARIABLE_POINTER && \
-      (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
-      strncmp(AGMENUITEM(event->argv[v].data.p)->tag, AG_MENU_ITEM_TAG, AG_MENU_ITEM_TAG_LEN) == 0) ? \
-      event->argv[v].data.p : AG_ObjectMismatch())
+# define AG_MENU_ITEM_PTR(v)       AG_MenuGetItemPtr(event,(v),0)
+# define AG_CONST_MENU_ITEM_PTR(v) AG_MenuGetItemPtr(event,(v),1)
 #else
 # define AG_MENU_ITEM_PTR(v)       event->argv[v].data.p
 # define AG_CONST_MENU_ITEM_PTR(v) event->argv[v].data.p
@@ -100,11 +91,9 @@ typedef struct ag_menu {
 #define AG_MENU_VFILL	 	0x02
 #define AG_MENU_EXPAND	 	(AG_MENU_HFILL|AG_MENU_VFILL)
 	enum ag_menu_style style;	/* Menu style */
-	AG_MenuItem *_Nullable root;	/* Root menu item */
+	AG_MenuItem *_Nonnull root;	/* Root menu item */
 	int selecting;			/* Selection in progress */
 	AG_MenuItem *_Nullable itemSel;	/* Selected top-level item */
-	int spHoriz;			/* Horiz spacing between items */
-	int spVert;			/* Vertical spacing between items */
 	int lPad, rPad, tPad, bPad;	/* Global padding in pixels */
 	int lPadLbl, rPadLbl;		/* Item label padding in pixels */
 	int tPadLbl, bPadLbl;
@@ -200,6 +189,8 @@ void AG_MenuSetLabelS(AG_MenuItem *_Nonnull, const char *_Nonnull);
 void AG_MenuSetPollFn(AG_MenuItem *_Nonnull, _Nonnull AG_EventFn,
                       const char *_Nullable, ...);
 void AG_MenuUpdateItem(AG_MenuItem *_Nonnull);
+void AG_MenuInvalidateLabels(AG_MenuItem *_Nonnull);
+void AG_MenuFreeSubitems(AG_MenuItem *_Nonnull);
 
 void	AG_MenuState(AG_MenuItem *_Nonnull, int);
 #define AG_MenuDisable(m) AG_MenuState((m),0)
@@ -319,6 +310,11 @@ void    AG_MenuSetIntBoolMp(AG_MenuItem *_Nonnull, int *_Nonnull, int,
 
 void AG_MenuSetIntFlagsMp(AG_MenuItem *_Nonnull, int *_Nonnull, int, int,
                           _Nonnull_Mutex AG_Mutex *_Nonnull);
+
+#ifdef AG_TYPE_SAFETY
+AG_MenuItem *_Nullable AG_MenuGetItemPtr(const AG_Event *_Nonnull, int, int);
+#endif
+
 #ifdef AG_LEGACY
 # define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),NULL)
 #endif /* AG_LEGACY */

@@ -28,6 +28,18 @@
 #include <agar/gui/primitive.h>
 #include <agar/gui/icons.h>
 
+static int  GetItemBoolValue(AG_MenuItem *_Nonnull);
+static void SetItemBoolValue(AG_MenuItem *_Nonnull);
+
+/* Refresh a dynamic item. */
+static void
+UpdateItem(AG_Menu *_Nonnull m, AG_MenuItem *_Nonnull mi)
+{
+	AG_MenuInvalidateLabels(mi);
+	AG_MenuFreeSubitems(mi);
+	AG_PostEventByPtr(NULL, m, mi->poll, "%p", mi);
+}
+
 /* Selection has moved over the specified item. */
 static void
 SelectItem(AG_MenuItem *_Nonnull mi, AG_MenuItem *_Nullable subitem)
@@ -38,12 +50,9 @@ SelectItem(AG_MenuItem *_Nonnull mi, AG_MenuItem *_Nullable subitem)
 	}
 	mi->sel_subitem = subitem;
 
-	if (subitem != NULL) {
-		AG_MenuView *mview = mi->view;
-
-		AG_MenuExpand(mview, subitem, WIDTH(mview),
+	if (subitem != NULL)
+		AG_MenuExpand(mi->view, subitem, WIDTH(mi->view),
 		              subitem->y + subitem->pmenu->itemh);
-	}
 }
 
 static void
@@ -51,72 +60,127 @@ MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mview = AG_MENUVIEW_SELF();
 	AG_MenuItem *mi = mview->pitem, *miSub;
+	AG_Menu *m = mview->pmenu;
 	const int mx = AG_INT(1);
 	const int my = AG_INT(2);
-	const int itemh = mview->pmenu->itemh;
-	int y = mview->tPad;
-
+	const int w = WIDTH(mview);
+	int y = mview->tPad, itemh;
+	
 	if (my < 0)
 		return;
-	if (mx < 0 || mx > WIDTH(mview))
-		goto selnone;
+
+	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
+	AG_ObjectLock(m);
+	itemh = m->itemh;
+	
+	if (mx < 0 || mx > w)
+		goto no_select;
 
 	TAILQ_FOREACH(miSub, &mi->subItems, items) {
-		AG_MenuUpdateItem(miSub);
+		if (miSub->poll)
+			UpdateItem(m, miSub);
 
-		y += itemh;
-		if (my < y) {
-			if (mx > WIDTH(mview) &&
-			    miSub->nSubItems == 0) {
-				goto selnone;
-			}
-			if (miSub->flags & AG_MENU_ITEM_SEPARATOR) {
-				goto selnone;
-			}
-			if (mi->sel_subitem != miSub &&
-			    (miSub->flags & AG_MENU_ITEM_NOSELECT) == 0) {
-				SelectItem(mi, miSub);
-			}
-			AG_Redraw(mview);
-			return;
+		if ((y += itemh) <= my) {
+			continue;
 		}
+		if ((mx > w && miSub->nSubItems == 0) ||
+		    miSub->flags & AG_MENU_ITEM_SEPARATOR) {
+			goto no_select;
+		}
+		if (mi->sel_subitem != miSub &&
+		    (miSub->flags & AG_MENU_ITEM_NOSELECT) == 0) {
+			SelectItem(mi, miSub);
+		}
+		AG_Redraw(mview);
+		goto out;
 	}
-selnone:
+no_select:
 	if (mi->sel_subitem != NULL &&
 	    mi->sel_subitem->nSubItems == 0) {
 		AG_Redraw(mview);
 		SelectItem(mi, NULL);
 	}
+out:
+	AG_ObjectUnlock(m);
 }
 
-static int
-GetItemBoolValue(AG_MenuItem *_Nonnull mi)
+static void
+MouseButtonUp(AG_Event *_Nonnull event)
 {
-	int val = 0;
+	AG_MenuView *mview = AG_MENUVIEW_SELF();
+	AG_MenuItem *miRoot = mview->pitem, *mi;
+	AG_Menu *m = mview->pmenu;
+	const int mx = AG_INT(2);
+	const int my = AG_INT(3);
+	const int w = WIDTH(mview);
+	const int h = HEIGHT(mview);
+	int y = mview->tPad, itemh;
 
-	switch (mi->bind_type) {
-	case AG_MENU_INT_BOOL:
-		val = *(int *)mi->bind_p;
-		break;
-	case AG_MENU_INT8_BOOL:
-		val = *(Uint8 *)mi->bind_p;
-		break;
-	case AG_MENU_INT_FLAGS:
-		val = *(int *)mi->bind_p & mi->bind_flags;
-		break;
-	case AG_MENU_INT8_FLAGS:
-		val = *(Uint8 *)mi->bind_p & mi->bind_flags;
-		break;
-	case AG_MENU_INT16_FLAGS:
-		val = *(Uint16 *)mi->bind_p & mi->bind_flags;
-		break;
-	case AG_MENU_INT32_FLAGS:
-		val = *(Uint32 *)mi->bind_p & mi->bind_flags;
-		break;
-	default:
-		break;
+	if (mx < 0 || mx >= w || my < 0 || my >= h)
+		return;
+
+	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
+	AG_ObjectLock(m);
+	itemh = m->itemh;
+
+	/* TODO: Scrolling */
+
+	Debug(mview, "click @%d,%d (in %dx%d, itemh = %d)\n", mx,my, w,h, itemh);
+
+	TAILQ_FOREACH(mi, &miRoot->subItems, items) {
+		int mi_state;
+
+		if (mi->poll) {
+			Debug(mview, "Updating [%s] (lbl=[%d,%d])\n", mi->text,
+			    mi->lblView[0],
+			    mi->lblView[1]);
+			UpdateItem(m, mi);
+		}
+		if ((y += itemh) < my) {
+			continue;
+		}
+		Debug(mview, "Item: [%s]\n", mi->text);
+		Debug(mview, "[%s]: Processing (state=%d)\n", mi->text, mi->state);
+
+		mi_state = mi->state;
+		if (mi->stateFn != NULL) {
+#ifdef AG_DEBUG
+			if (mi->stateFn->flags & AG_EVENT_ASYNC)
+				AG_FatalError("stateFn cannot be ASYNC");
+#endif
+			AG_PostEventByPtr(NULL, m, mi->stateFn, "%p", &mi_state);
+		}
+		if (!mi_state) {
+			/* Nothing to do */
+			Debug(mview, "[%s]: Inactive item\n", mi->text);
+		} else if (mi->clickFn != NULL) {
+			AG_MenuCollapseAll(m);
+			if (mi->clickFn->fn != NULL) {
+				Debug(mview, "[%s]: Calling %p\n", mi->text,
+				    mi->clickFn);
+				mi->clickFn->fn(mi->clickFn);
+			} else {
+				Debug(mview, "[%s]: No clickFn\n", mi->text);
+			}
+		} else if (mi->bind_type != AG_MENU_NO_BINDING) {
+#ifdef AG_THREADS
+			if (mi->bind_lock) { AG_MutexLock(mi->bind_lock); }
+#endif
+			Debug(mview, "[%s]: Setting bool\n", mi->text);
+			SetItemBoolValue(mi);
+#ifdef AG_THREADS
+			if (mi->bind_lock) { AG_MutexUnlock(mi->bind_lock); }
+#endif
+			AG_MenuCollapseAll(m);
+		}
+		AG_Redraw(mview);
+		
+		if (y > my) {
+			Debug(mview, "[%s]: Break\n", mi->text);
+			break;
+		}
 	}
-	return (mi->bind_invert ? !val : val);
+	AG_ObjectUnlock(m);
 }
 
 static void
@@ -160,58 +224,6 @@ SetItemBoolValue(AG_MenuItem *_Nonnull mi)
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
-{
-	AG_MenuView *mview = AG_MENUVIEW_SELF();
-	AG_MenuItem *miRoot = mview->pitem, *mi;
-	AG_Menu *m = mview->pmenu;
-	int mx = AG_INT(2);
-	int my = AG_INT(3);
-	int y = mview->tPad;
-
-	AG_ASSERT_CLASS(m, "AG_Widget:AG_Menu:*");
-
-	if (mx < 0 || mx >= WIDTH(mview) ||
-	    my < 0 || my >= HEIGHT(mview)) {
-		return;
-	}
-	TAILQ_FOREACH(mi, &miRoot->subItems, items) {
-		AG_MenuUpdateItem(mi);
-
-		y += m->itemh;
-		if (my < y && mx >= 0 && mx <= WIDTH(mview)) {
-			int fState = mi->state;
-
-			if (mi->stateFn != NULL) {
-				AG_PostEventByPtr(NULL, m, mi->stateFn, "%p",
-				    &fState);
-			}
-			if (!fState) {
-				/* Nothing to do */
-			} else if (mi->clickFn != NULL) {
-				AG_MenuCollapseAll(m);
-				if (mi->clickFn->fn != NULL) {
-					mi->clickFn->fn(mi->clickFn);
-				}
-			} else if (mi->bind_type != AG_MENU_NO_BINDING) {
-#ifdef AG_THREADS
-				if (mi->bind_lock != NULL)
-					AG_MutexLock(mi->bind_lock);
-#endif
-				SetItemBoolValue(mi);
-#ifdef AG_THREADS
-				if (mi->bind_lock != NULL)
-					AG_MutexUnlock(mi->bind_lock);
-#endif
-				AG_MenuCollapseAll(m);
-			}
-			AG_Redraw(mview);
-			return;
-		}
-	}
-}
-
-static void
 OnShow(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mview = AG_MENUVIEW_SELF();
@@ -228,7 +240,11 @@ OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mv = AG_MENUVIEW_SELF();
 	AG_MenuItem *mi = mv->pitem, *miSub;
+	AG_Menu *m = mv->pmenu;
 	int j;
+	
+	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
+	AG_ObjectLock(m);
 
 	TAILQ_FOREACH(miSub, &mi->subItems, items) {
 		for (j = 0; j < 2; j++) {
@@ -238,6 +254,8 @@ OnFontChange(AG_Event *_Nonnull event)
 			}
 		}
 	}
+
+	AG_ObjectUnlock(m);
 }
 
 static void
@@ -277,44 +295,41 @@ Draw(void *_Nonnull obj)
 	const int itemh_2 = (itemh >> 1);
 	const int fonth_2 = (font->height >> 1);
 	
-	AG_ASSERT_CLASS(m, "AG_Widget:AG_Menu:*");
-	AG_ASSERT_CLASS(font, "AG_Font:*");
-
 	r.x = 0;
 	r.y = mv->tPad;
 	r.w = WIDTH(mv);
 	r.h = itemh;
+	
+	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
+	AG_ObjectLock(m);
 
 	TAILQ_FOREACH(mi, &miRoot->subItems, items) {
 		AG_Color c;
 		int x = mv->lPad;
-		int boolState;
-		int fState = mi->state;
+		int mi_state = mi->state;
 
 		if (mi->stateFn != NULL)
-			AG_PostEventByPtr(NULL, m, mi->stateFn, "%p", &fState);
+			AG_PostEventByPtr(NULL, m, mi->stateFn, "%p", &mi_state);
 
-		/* Update dynamic item if needed. */
-		AG_MenuUpdateItem(mi);
+		if (mi->poll)
+			UpdateItem(m, mi);
 
-		/* Indicate active item selection */
-		if (mi == miRoot->sel_subitem && fState)
+		if (mi == miRoot->sel_subitem && mi_state)       /* Is selected */
 			AG_DrawRect(mv, &r, &WCOLOR_SEL(mv,0));
 
-		/* Render the menu item's icon */
 		if (mi->icon == -1 && mi->iconSrc != NULL) {
 			mi->icon = AG_WidgetMapSurface(mv,
 			    AG_SurfaceDup(mi->iconSrc));
 		}
 		if (mi->icon != -1) {
+			int bv;
+
 			AG_WidgetBlitSurface(mv, mi->icon,
 			    x   + ((r.h >> 1) - (mi->iconSrc->w >> 1)),
 			    r.y + ((r.h >> 1) - (mi->iconSrc->h >> 1)) + 1);
 
-			/* Indicate boolean state */
-			boolState = (mi->value != -1) ? mi->value :
-			                                GetItemBoolValue(mi);
-			if (boolState) {
+			bv = (mi->value != -1) ? mi->value : GetItemBoolValue(mi);
+			if (bv) {
 				AG_Rect rFrame;
 
 				rFrame.x = x;
@@ -337,17 +352,16 @@ Draw(void *_Nonnull obj)
 			int x1 = mv->lPad;
 			int x2 = WIDTH(mv) - mv->rPad - 1;
 			AG_Color c[2];
-	
+			
 			AG_ColorAdd(&c[0], &WCOLOR(mv,0), &agLowColor);
 			AG_ColorAdd(&c[1], &WCOLOR(mv,0), &agHighColor);
-
 			AG_DrawLineH(mv, x1, x2, (r.y + itemh_2 - 1), &c[0]);
 			AG_DrawLineH(mv, x1, x2, (r.y + itemh_2),     &c[1]);
 		} else {
-			int lbl = fState ? mi->lblView[1] : mi->lblView[0];
+			int lbl;
 
 			/* Render the menu item's text string */
-			if (fState) {
+			if (mi_state) {
 				if (mi->lblView[1] == -1) {
 					AG_TextColor(&WCOLOR(mv,TEXT_COLOR));
 					mi->lblView[1] = (mi->text==NULL) ? -1 :
@@ -379,6 +393,38 @@ Draw(void *_Nonnull obj)
 
 		r.y += itemh;
 	}
+	
+	AG_ObjectUnlock(m);
+}
+
+static int
+GetItemBoolValue(AG_MenuItem *_Nonnull mi)
+{
+	int val = 0;
+
+	switch (mi->bind_type) {
+	case AG_MENU_INT_BOOL:
+		val = *(int *)mi->bind_p;
+		break;
+	case AG_MENU_INT8_BOOL:
+		val = *(Uint8 *)mi->bind_p;
+		break;
+	case AG_MENU_INT_FLAGS:
+		val = *(int *)mi->bind_p & mi->bind_flags;
+		break;
+	case AG_MENU_INT8_FLAGS:
+		val = *(Uint8 *)mi->bind_p & mi->bind_flags;
+		break;
+	case AG_MENU_INT16_FLAGS:
+		val = *(Uint16 *)mi->bind_p & mi->bind_flags;
+		break;
+	case AG_MENU_INT32_FLAGS:
+		val = *(Uint32 *)mi->bind_p & mi->bind_flags;
+		break;
+	default:
+		break;
+	}
+	return (mi->bind_invert ? !val : val);
 }
 
 static void
@@ -387,21 +433,26 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_MenuView *mview = obj;
 	AG_MenuItem *mi = mview->pitem, *item;
 	AG_Menu *m = mview->pmenu;
+	const int itemh = m->itemh;
 
 	r->w = 0;
 	r->h = mview->tPad + mview->bPad;
 	
+	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
+	AG_ObjectLock(m);
+	
 	TAILQ_FOREACH(item, &mi->subItems, items) {
 		int wReq = mview->lPad + mview->rPad;
 		int wLbl;
-	
-		AG_MenuUpdateItem(item);
+
+		if (item->poll)
+			UpdateItem(m, item);
 		
 		if (item->icon != -1) {
 			wReq += item->iconSrc->w;
 		}
 		if (mi->flags & AG_MENU_ITEM_ICONS)
-			wReq += m->itemh + mview->spIconLbl;
+			wReq += itemh + mview->spIconLbl;
 	
 		AG_TextSize(item->text, &wLbl, NULL);
 		wReq += wLbl;
@@ -412,8 +463,10 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		if (wReq > r->w) {
 			r->w = wReq;
 		}
-		r->h += m->itemh;
+		r->h += itemh;
 	}
+	
+	AG_ObjectUnlock(m);
 }
 
 static int
