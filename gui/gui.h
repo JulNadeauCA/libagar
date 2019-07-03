@@ -6,8 +6,13 @@
 #include <agar/config/have_sdl.h>
 #include <agar/gui/begin.h>
 
-#define AG_ZOOM_RANGE	14		/* Number of default zoom settings */
-#define AG_ZOOM_DEFAULT	5		/* Initial zoom setting (1.0) */
+#ifdef AG_HAVE_FLOAT
+# define AG_ZOOM_RANGE 20
+#else
+# define AG_ZOOM_RANGE 10
+#endif
+
+#define AG_ZOOM_DEFAULT	8		/* Initial zoom setting (1.0) */
 
 /* Flags for AG_InitVideoSDL() */
 #define AG_VIDEO_HWSURFACE     0x0001
@@ -37,6 +42,8 @@ extern int agTextCache, agTextTabWidth, agTextBlinkRate, agTextSymbols;
 extern int agScreenshotQuality;
 #ifdef AG_HAVE_FLOAT
 extern double agZoomValues[AG_ZOOM_RANGE];
+#else
+extern int    agZoomValues[AG_ZOOM_RANGE];
 #endif
 
 int   AG_InitGraphics(const char *_Nullable);
