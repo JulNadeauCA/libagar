@@ -1832,6 +1832,14 @@ KeyDown(AG_Event *_Nonnull event)
 		AG_AddTimer(t, &t->moveTo, agKbdDelay, MoveTimeout, "%i", +agPageIncrement);
 #endif
 		break;
+	case AG_KEY_HOME:
+		t->mOffs = 0;
+		AG_Redraw(t);
+		break;
+	case AG_KEY_END:
+		t->mOffs = MAX(0, t->m - t->mVis);
+		AG_Redraw(t);
+		break;
 	}
 }
 

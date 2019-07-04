@@ -1243,6 +1243,12 @@ KeyDown(AG_Event *_Nonnull event)
 		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", +agPageIncrement);
 #endif
 		break;
+	case AG_KEY_HOME:
+		AG_TlistScrollToStart(tl);
+		break;
+	case AG_KEY_END:
+		AG_TlistScrollToEnd(tl);
+		break;
 	case AG_KEY_RETURN:
 		if ((ti = AG_TlistSelectedItemPtr(tl)) != NULL) {
 			AG_PostEvent(NULL, tl, "tlist-return", "%p", ti);
