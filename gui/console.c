@@ -79,6 +79,7 @@ AdjustXoffs(AG_Console *_Nonnull cons)
 		} else {
 			AG_TextSize(ln->text, &w, NULL);
 		}
+		w += cons->padding << 1;
 		if (w+wBar > cons->wMax)
 			cons->wMax = w+wBar;
 	}
@@ -95,30 +96,42 @@ ClampVisible(AG_Console *_Nonnull cons)
 }
 
 static void
-ScrollUp(AG_Event *_Nonnull event)
+ScrollVert(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
+	const int dir = AG_INT(1);
 	const int lsa = AG_GetInt(cons, "line-scroll-amount");
-	const int newOffs = cons->rOffs - lsa;
-
-	if (newOffs >= 0) {
-		cons->rOffs -= lsa;
-		AG_Redraw(cons);
+	const int newOffs = (dir < 0) ? cons->rOffs - lsa :
+	                                cons->rOffs + lsa;
+	
+	if (dir > 0) {						/* Down */
+		if (cons->nLines > cons->rVisible &&
+		    newOffs <= (cons->nLines - cons->rVisible)) {
+			cons->rOffs += lsa;
+			AG_Redraw(cons);
+		}
+	} else {						/* Up */
+		if (newOffs >= 0) {
+			cons->rOffs -= lsa;
+			AG_Redraw(cons);
+		}
 	}
 }
 
 static void
-ScrollDown(AG_Event *_Nonnull event)
+ScrollHoriz(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
-	const int lsa = AG_GetInt(cons, "line-scroll-amount");
-	const int newOffs = cons->rOffs + lsa;
+	const int dir = AG_INT(1);
+	const int ssa = AG_GetInt(cons, "side-scroll-amount");
+	const int newOffs = (dir < 0) ? (cons->xOffs - ssa) :
+	                                (cons->xOffs + ssa);
 
-	if (cons->nLines > cons->rVisible &&
-	    newOffs <= (cons->nLines - cons->rVisible)) {
-		cons->rOffs += lsa;
-		AG_Redraw(cons);
+	if (newOffs < 0 || newOffs > cons->wMax - WIDTH(cons)) {
+		return;
 	}
+	cons->xOffs = newOffs;
+	AG_Redraw(cons);
 }
 
 static void
@@ -160,6 +173,7 @@ GoToTop(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
 
+	cons->xOffs = 0;
 	cons->rOffs = 0;
 	AG_Redraw(cons);
 }
@@ -492,6 +506,9 @@ Init(void *_Nonnull obj)
 	cons->r.h = 0;
 	cons->scrollTo = NULL;
 	TAILQ_INIT(&cons->files);
+	
+	AG_SetInt(cons, "line-scroll-amount", 5);
+	AG_SetInt(cons, "side-scroll-amount", 30);
 
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT,
 	    AG_SCROLLBAR_NOAUTOHIDE | AG_SCROLLBAR_EXCL);
@@ -508,6 +525,7 @@ Init(void *_Nonnull obj)
 	{
 		AG_WidgetSetFocusable(cons->hBar, 0);
 		AG_SetInt(cons->hBar, "min", 0);
+		AG_SetInt(cons->hBar, "inc", 30);
 		AG_BindInt(cons->hBar, "max", &cons->wMax);
 		AG_BindInt(cons->hBar, "visible", &WIDGET(cons)->w);
 		AG_BindInt(cons->hBar, "value", &cons->xOffs);
@@ -515,28 +533,32 @@ Init(void *_Nonnull obj)
 
 	AG_ActionFn(cons, "BeginSelect", BeginSelect, NULL);
 	AG_ActionFn(cons, "CloseSelect", CloseSelect, NULL);
-	AG_ActionFn(cons, "PopupMenu", PopupMenu, NULL);
-	AG_ActionFn(cons, "ScrollUp", ScrollUp, NULL);
-	AG_ActionFn(cons, "ScrollDown", ScrollDown, NULL);
-	AG_ActionFn(cons, "PageUp", PageUp, NULL);
-	AG_ActionFn(cons, "PageDown", PageDown, NULL);
-	AG_ActionFn(cons, "GoToTop", GoToTop, NULL);
-	AG_ActionFn(cons, "GoToBottom", GoToBottom, NULL);
+	AG_ActionFn(cons, "PopupMenu",   PopupMenu, NULL);
+	AG_ActionFn(cons, "ScrollUp",    ScrollVert, "%i", -1);
+	AG_ActionFn(cons, "ScrollDown",  ScrollVert, "%i", +1);
+	AG_ActionFn(cons, "ScrollLeft",  ScrollHoriz, "%i", -1);
+	AG_ActionFn(cons, "ScrollRight", ScrollHoriz, "%i", +1);
+	AG_ActionFn(cons, "PageUp",      PageUp, NULL);
+	AG_ActionFn(cons, "PageDown",    PageDown, NULL);
+	AG_ActionFn(cons, "GoToTop",     GoToTop, NULL);
+	AG_ActionFn(cons, "GoToBottom",  GoToBottom, NULL);
 
-	AG_ActionOnButtonDown(cons, AG_MOUSE_LEFT, "BeginSelect");
-	AG_ActionOnButtonUp(cons, AG_MOUSE_LEFT, "CloseSelect");
-	AG_ActionOnButtonDown(cons, AG_MOUSE_RIGHT, "PopupMenu");
-	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELUP, "ScrollUp");
+	AG_ActionOnButtonDown(cons, AG_MOUSE_LEFT,      "BeginSelect");
+	AG_ActionOnButtonUp  (cons, AG_MOUSE_LEFT,      "CloseSelect");
+	AG_ActionOnButtonDown(cons, AG_MOUSE_RIGHT,     "PopupMenu");
+	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELUP,   "ScrollUp");
 	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELDOWN, "ScrollDown");
+	AG_ActionOnButtonDown(cons, AG_MOUSE_X1,        "ScrollLeft");
+	AG_ActionOnButtonDown(cons, AG_MOUSE_X2,        "ScrollRight");
 
-	AG_ActionOnKey(cons, AG_KEY_UP, AG_KEYMOD_ANY, "ScrollUp");
-	AG_ActionOnKey(cons, AG_KEY_DOWN, AG_KEYMOD_ANY, "ScrollDown");
-	AG_ActionOnKey(cons, AG_KEY_PAGEUP, AG_KEYMOD_ANY, "PageUp");
+	AG_ActionOnKey(cons, AG_KEY_UP,       AG_KEYMOD_ANY, "ScrollUp");
+	AG_ActionOnKey(cons, AG_KEY_DOWN,     AG_KEYMOD_ANY, "ScrollDown");
+	AG_ActionOnKey(cons, AG_KEY_LEFT,     AG_KEYMOD_ANY, "ScrollLeft");
+	AG_ActionOnKey(cons, AG_KEY_RIGHT,    AG_KEYMOD_ANY, "ScrollRight");
+	AG_ActionOnKey(cons, AG_KEY_PAGEUP,   AG_KEYMOD_ANY, "PageUp");
 	AG_ActionOnKey(cons, AG_KEY_PAGEDOWN, AG_KEYMOD_ANY, "PageDown");
-	AG_ActionOnKey(cons, AG_KEY_HOME, AG_KEYMOD_ANY, "GoToTop");
-	AG_ActionOnKey(cons, AG_KEY_END, AG_KEYMOD_ANY, "GoToBottom");
-
-	AG_SetInt(cons, "line-scroll-amount", 5);
+	AG_ActionOnKey(cons, AG_KEY_HOME,     AG_KEYMOD_ANY, "GoToTop");
+	AG_ActionOnKey(cons, AG_KEY_END,      AG_KEYMOD_ANY, "GoToBottom");
 
 	AG_SetEvent(cons, "mouse-motion", MouseMotion, NULL);
 	AG_AddEvent(cons, "font-changed", OnFontChange, NULL);
@@ -627,7 +649,10 @@ Draw(void *_Nonnull p)
 			if ((lnIdx == pos) ||
 			    ((sel > 0 && lnIdx > pos && lnIdx < pos+sel+1) ||
 			     (sel < 0 && lnIdx < pos && lnIdx > pos+sel-1))) {
-				AG_DrawRectFilled(cons, &r,
+				AG_Rect rSel = r;
+				rSel.x = 0;
+				rSel.w = WIDGET(cons)->w;
+				AG_DrawRectFilled(cons, &rSel,
 				    &WCOLOR_SEL(cons,AG_BG_COLOR));
 				cTxt = &WCOLOR_SEL(cons,AG_TEXT_COLOR);
 				suIdx = 1;
