@@ -29,6 +29,7 @@
  */
 
 #include <agar/config/have_xkb.h>
+#include <agar/config/have_xf86misc.h>
 #include <agar/config/have_xinerama.h>
 
 #include <agar/core/core.h>
@@ -39,6 +40,9 @@
 #include <X11/cursorfont.h>
 #ifdef HAVE_XKB
 #include <X11/XKBlib.h>
+#endif
+#ifdef HAVE_XF86MISC
+#include <X11/extensions/xf86misc.h>
 #endif
 #ifdef HAVE_XINERAMA
 #include <X11/extensions/Xinerama.h>
@@ -2105,6 +2109,38 @@ GLX_InitGlobals(void)
 		AG_SetError("GLX extension is not available");
 		goto fail;
 	}
+
+#if defined(HAVE_XKB)
+	{
+		int xkbmajor = XkbMajorVersion;
+		int xkbminor = XkbMinorVersion;
+		int xkbopcode, xkbevent, xkberror;
+
+		if (XkbQueryExtension(agDisplay, &xkbopcode, &xkbevent,
+		                      &xkberror, &xkbmajor, &xkbminor)) {
+			XkbDescPtr xkb;
+
+			if ((xkb = XkbAllocKeyboard()) == NULL) {
+				goto fail;
+			}
+			XkbGetControls(agDisplay, XkbRepeatKeysMask, xkb);
+			agKbdDelay = xkb->ctrls->repeat_delay;
+			agKbdRepeat = xkb->ctrls->repeat_interval;
+			XkbFreeKeyboard(xkb, 0, True);
+		}
+	}
+#elif defined(HAVE_XF86MISC)
+	{
+		XF86MiscKbdSettings kbdinfo;
+		int dummy;
+
+		if (XF86MiscQueryExtension(agDisplay, &dummy, &dummy) &&
+		    XF86MiscGetKbdSettings(agDisplay, &kbdinfo)) {
+			agKbdDelay = kbdinfo.delay;
+			agKbdRepeat = kbdinfo.rate;
+		}
+	}
+#endif /* HAVE_XF86MISC */
 
 	AG_MutexInitRecursive(&agDisplayLock);
 	agScreen = DefaultScreen(agDisplay);

@@ -6694,8 +6694,7 @@ cat << EOT >conftest$$.c
 #include <X11/Xlib.h>
 int main(int argc, char *argv[])
 {
-	Display *disp;
-	disp = XOpenDisplay(NULL);
+	Display *disp = XOpenDisplay(NULL);
 	XCloseDisplay(disp);
 	return (0);
 }
@@ -6759,11 +6758,9 @@ cat << EOT >conftest$$.c
 #include <X11/XKBlib.h>
 int main(int argc, char *argv[])
 {
-	Display *disp;
+	Display *disp = XOpenDisplay(NULL);
 	KeyCode kc = 0;
-	KeySym ks;
-	disp = XOpenDisplay(NULL);
-	ks = XkbKeycodeToKeysym(disp, kc, 0, 0);
+	KeySym ks = XkbKeycodeToKeysym(disp, kc, 0, 0);
 	XCloseDisplay(disp);
 	return (ks != NoSymbol);
 }
@@ -6798,9 +6795,77 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_XKB}" = "yes" ]; then
+HAVE_XF86MISC="no"
+echo '#undef HAVE_XF86MISC' >$bb_incdir/have_xf86misc.h
+echo 'hdefs["HAVE_XF86MISC"] = nil' >>configure.lua
+else
+$ECHO_N 'checking for the XF86MISC extension...'
+$ECHO_N '# checking for the XF86MISC extension...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <X11/Xlib.h>
+#include <X11/extensions/xf86misc.h>
+int main(int argc, char *argv[])
+{
+	Display *disp = XOpenDisplay(NULL);
+	int dummy, rv;
+	rv = XF86MiscQueryExtension(disp, &dummy, &dummy);
+	XCloseDisplay(disp);
+	return (rv != 0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_XF86MISC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} -lX11 -lXxf86misc 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} -lX11 -lXxf86misc 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_XF86MISC=yes
+bb_o=$bb_incdir/have_xf86misc.h
+echo '#ifndef HAVE_XF86MISC' >$bb_o
+echo "#define HAVE_XF86MISC \"$HAVE_XF86MISC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_XF86MISC\"] = \"$HAVE_XF86MISC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_XF86MISC=no
+echo '#undef HAVE_XF86MISC' >$bb_incdir/have_xf86misc.h
+echo 'hdefs["HAVE_XF86MISC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_XF86MISC}" = "yes" ]; then
+X11_LIBS="${X11_LIBS} -lXxf86misc"
+bb_o=$bb_incdir/have_xf86misc.h
+echo '#ifndef HAVE_XF86MISC' >$bb_o
+echo "#define HAVE_XF86MISC \"$HAVE_XF86MISC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_XF86MISC\"] = \"$HAVE_XF86MISC\"" >>configure.lua
+bb_o=$bb_incdir/x11_libs.h
+echo '#ifndef X11_LIBS' >$bb_o
+echo "#define X11_LIBS \"$X11_LIBS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
+else
+echo '#undef HAVE_XF86MISC' >$bb_incdir/have_xf86misc.h
+echo 'hdefs["HAVE_XF86MISC"] = nil' >>configure.lua
+fi
+fi
 else
 HAVE_X11="no"
 HAVE_XKB="no"
+HAVE_XF86MISC="no"
 X11_CFLAGS=""
 X11_LIBS=""
 X11_PC=""
@@ -6808,6 +6873,8 @@ echo '#undef HAVE_X11' >$bb_incdir/have_x11.h
 echo 'hdefs["HAVE_X11"] = nil' >>configure.lua
 echo '#undef HAVE_XKB' >$bb_incdir/have_xkb.h
 echo 'hdefs["HAVE_XKB"] = nil' >>configure.lua
+echo '#undef HAVE_XF86MISC' >$bb_incdir/have_xf86misc.h
+echo 'hdefs["HAVE_XF86MISC"] = nil' >>configure.lua
 echo '#undef X11_CFLAGS' >$bb_incdir/x11_cflags.h
 echo 'hdefs["X11_CFLAGS"] = nil' >>configure.lua
 echo '#undef X11_LIBS' >$bb_incdir/x11_libs.h
@@ -6828,6 +6895,7 @@ echo 'not enabling the X window system'
 echo '# not enabling the X window system' >>config.log
 HAVE_X11="no"
 HAVE_XKB="no"
+HAVE_XF86MISC="no"
 X11_CFLAGS=""
 X11_LIBS=""
 X11_PC=""
@@ -6835,6 +6903,8 @@ echo '#undef HAVE_X11' >$bb_incdir/have_x11.h
 echo 'hdefs["HAVE_X11"] = nil' >>configure.lua
 echo '#undef HAVE_XKB' >$bb_incdir/have_xkb.h
 echo 'hdefs["HAVE_XKB"] = nil' >>configure.lua
+echo '#undef HAVE_XF86MISC' >$bb_incdir/have_xf86misc.h
+echo 'hdefs["HAVE_XF86MISC"] = nil' >>configure.lua
 echo '#undef X11_CFLAGS' >$bb_incdir/x11_cflags.h
 echo 'hdefs["X11_CFLAGS"] = nil' >>configure.lua
 echo '#undef X11_LIBS' >$bb_incdir/x11_libs.h
@@ -7073,6 +7143,7 @@ echo 'not enabling the X window system'
 echo '# not enabling the X window system' >>config.log
 HAVE_X11="no"
 HAVE_XKB="no"
+HAVE_XF86MISC="no"
 X11_CFLAGS=""
 X11_LIBS=""
 X11_PC=""
@@ -7080,6 +7151,8 @@ echo '#undef HAVE_X11' >$bb_incdir/have_x11.h
 echo 'hdefs["HAVE_X11"] = nil' >>configure.lua
 echo '#undef HAVE_XKB' >$bb_incdir/have_xkb.h
 echo 'hdefs["HAVE_XKB"] = nil' >>configure.lua
+echo '#undef HAVE_XF86MISC' >$bb_incdir/have_xf86misc.h
+echo 'hdefs["HAVE_XF86MISC"] = nil' >>configure.lua
 echo '#undef X11_CFLAGS' >$bb_incdir/x11_cflags.h
 echo 'hdefs["X11_CFLAGS"] = nil' >>configure.lua
 echo '#undef X11_LIBS' >$bb_incdir/x11_libs.h
@@ -8472,6 +8545,7 @@ echo 'not enabling the X window system'
 echo '# not enabling the X window system' >>config.log
 HAVE_X11="no"
 HAVE_XKB="no"
+HAVE_XF86MISC="no"
 X11_CFLAGS=""
 X11_LIBS=""
 X11_PC=""
@@ -8479,6 +8553,8 @@ echo '#undef HAVE_X11' >$bb_incdir/have_x11.h
 echo 'hdefs["HAVE_X11"] = nil' >>configure.lua
 echo '#undef HAVE_XKB' >$bb_incdir/have_xkb.h
 echo 'hdefs["HAVE_XKB"] = nil' >>configure.lua
+echo '#undef HAVE_XF86MISC' >$bb_incdir/have_xf86misc.h
+echo 'hdefs["HAVE_XF86MISC"] = nil' >>configure.lua
 echo '#undef X11_CFLAGS' >$bb_incdir/x11_cflags.h
 echo 'hdefs["X11_CFLAGS"] = nil' >>configure.lua
 echo '#undef X11_LIBS' >$bb_incdir/x11_libs.h
@@ -14340,6 +14416,8 @@ echo "HAVE_WGL=$HAVE_WGL" >>Makefile.config
 echo "mdefs[\"HAVE_WGL\"] = \"$HAVE_WGL\"" >>configure.lua
 echo "HAVE_X11=$HAVE_X11" >>Makefile.config
 echo "mdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
+echo "HAVE_XF86MISC=$HAVE_XF86MISC" >>Makefile.config
+echo "mdefs[\"HAVE_XF86MISC\"] = \"$HAVE_XF86MISC\"" >>configure.lua
 echo "HAVE_XINERAMA=$HAVE_XINERAMA" >>Makefile.config
 echo "mdefs[\"HAVE_XINERAMA\"] = \"$HAVE_XINERAMA\"" >>configure.lua
 echo "HAVE_XKB=$HAVE_XKB" >>Makefile.config
