@@ -932,6 +932,60 @@ OnLostFocus(AG_Event *_Nonnull event)
 	WidgetLostFocus(WIDGET(win));
 }
 
+/* Lower a window to the bottom of the stack. */
+void
+AG_WindowLower(AG_Window *win)
+{
+	AG_Driver *drv = WIDGET(win)->drv;
+	
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
+	
+	AG_LockVFS(&agDrivers);
+	AG_ObjectLock(drv);
+	AG_ObjectLock(win);
+	Debug(drv, "Lowering %s to bottom\n", OBJECT(win)->name);
+	switch (AGDRIVER_CLASS(drv)->wm) {
+	case AG_WM_MULTIPLE:
+		AGDRIVER_MW_CLASS(drv)->lowerWindow(win);
+		break;
+	case AG_WM_SINGLE:
+		TAILQ_REMOVE(&OBJECT(drv)->children, OBJECT(win), cobjs);
+		TAILQ_INSERT_HEAD(&OBJECT(drv)->children, OBJECT(win), cobjs);
+		break;
+	}
+	AG_ObjectUnlock(drv);
+	AG_ObjectUnlock(win);
+	AG_UnlockVFS(&agDrivers);
+}
+
+/* Raise a window to the top of the stack. */
+void
+AG_WindowRaise(AG_Window *win)
+{
+	AG_Driver *drv = WIDGET(win)->drv;
+	
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
+	
+	AG_LockVFS(&agDrivers);
+	AG_ObjectLock(drv);
+	AG_ObjectLock(win);
+	Debug(drv, "Raising %s to top\n", OBJECT(win)->name);
+	switch (AGDRIVER_CLASS(drv)->wm) {
+	case AG_WM_MULTIPLE:
+		AGDRIVER_MW_CLASS(drv)->raiseWindow(win);
+		break;
+	case AG_WM_SINGLE:
+		TAILQ_REMOVE(&OBJECT(drv)->children, OBJECT(win), cobjs);
+		TAILQ_INSERT_TAIL(&OBJECT(drv)->children, OBJECT(win), cobjs);
+		break;
+	}
+	AG_ObjectUnlock(drv);
+	AG_ObjectUnlock(win);
+	AG_UnlockVFS(&agDrivers);
+}
+
 /* Make a window visible to the user. */
 void
 AG_WindowShow(AG_Window *win)

@@ -177,17 +177,21 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	}
 
 	AG_MenuUpdateItem(mi);
-
+	
 	if (mi->nSubItems == 0)
 		return (NULL);
 
 	if (mi->view != NULL) {
 		win = WIDGET(mi->view)->window;
 		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+		Debug(m, "Expand: [%s] -> %s\n", mi->text, OBJECT(win)->name);
 		AG_WindowSetGeometry(win, x,y, -1,-1);
+		AG_WindowRaise(win);
 		AG_WindowShow(win);
 		return (win);
 	}
+		
+	Debug(m, "Expand: [%s] -> (new)\n", mi->text);
 
 	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
 	                   AG_WINDOW_NOBORDERS | AG_WINDOW_NORESIZE |
@@ -330,7 +334,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	int hLbl;
 
 	TAILQ_FOREACH(mi, &m->root->subItems, items) {
-		if (!IntersectItem(mi, x, y, &hLbl)) {
+		if (!IntersectItem(mi, x,y, &hLbl)) {
 			continue;
 		}
 	    	if (m->itemSel == mi) {

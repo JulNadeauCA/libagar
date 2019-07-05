@@ -223,6 +223,8 @@ void AG_WindowMakeTransient(AG_Window *_Nullable, AG_Window *_Nonnull);
 void AG_WindowPin(AG_Window *_Nonnull, AG_Window *_Nonnull);
 void AG_WindowUnpin(AG_Window *_Nonnull);
 void AG_WindowMovePinned(AG_Window *_Nonnull, int, int);
+void AG_WindowLower(AG_Window *_Nonnull);
+void AG_WindowRaise(AG_Window *_Nonnull);
 void AG_WindowShow(AG_Window *_Nonnull);
 void AG_WindowHide(AG_Window *_Nonnull);
 void AG_WindowDrawQueued(void);

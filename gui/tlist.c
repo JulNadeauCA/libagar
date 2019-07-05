@@ -1063,16 +1063,14 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	int x = AG_INT(2);
 	int y = AG_INT(3);
 	AG_TlistItem *ti;
-	int tind;
-
-	tind = tl->rOffs + y/tl->item_h + 1;
-
-	/* XXX use array */
-	if ((ti = AG_TlistFindByIndex(tl, tind)) == NULL)
-		return;
+	const int tind = tl->rOffs + y/tl->item_h + 1;
 	
 	if (!AG_WidgetIsFocused(tl))
 		AG_WidgetFocus(tl);
+	
+	/* XXX use array */
+	if ((ti = AG_TlistFindByIndex(tl, tind)) == NULL)
+		return;
 	
 	switch (button) {
 	case AG_MOUSE_WHEELUP:

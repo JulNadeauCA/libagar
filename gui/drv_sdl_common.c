@@ -944,10 +944,6 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 				AG_ObjectUnlock(win);
 				continue;
 			}
-			if (win != agWindowFocused &&
-			    !(win->flags & AG_WINDOW_DENYFOCUS)) {
-				agWindowToFocus = win;
-			}
 			if (win->wBorderBot > 0 &&
 			    !(win->flags & AG_WINDOW_NORESIZE)) {
 				dsw->winop = GenericMouseOverCtrl(win,

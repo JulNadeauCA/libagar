@@ -614,7 +614,7 @@ SaveObject(AG_Event *_Nonnull event)
 static void
 ExitProgram(AG_Event *_Nonnull event)
 {
-	AG_QuitGUI();
+	AG_Quit();
 }
 
 static void
@@ -715,6 +715,7 @@ DEV_Browser(void *vfsRoot)
 		return (NULL);
 	}
 	AG_WindowSetCaptionS(win, OBJECT(vfsRoot)->name);
+	AG_WindowSetPosition(win, AG_WINDOW_ML, 0);
 	
 	tlObjs = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
 	                           AG_TLIST_EXPAND);
