@@ -143,7 +143,7 @@ TestGUI(void *obj, AG_Window *win)
 		    CloseFile, "%p,%p,%s", cons, btn, utxlog);
 	}
 #endif
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 30, 30);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_BR, 640, 480);
 	return (0);
 }
 

@@ -91,7 +91,7 @@ TestGUI(void *obj, AG_Window *win)
 			if (AG_ConfigFind(AG_CONFIG_PATH_DATA, file,
 			    path, sizeof(path)) == 0) {
 				if ((S = AG_SurfaceFromBMP(path)) != NULL) {
-					S->flags |= AG_SURFACE_TRACE;
+/*					S->flags |= AG_SURFACE_TRACE; */
 					AG_PixmapFromSurface(div1, 0, S);
 				} else {
 					S = AG_TextRender(AG_GetError());

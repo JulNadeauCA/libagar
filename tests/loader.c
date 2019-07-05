@@ -73,15 +73,15 @@ LoadImage(AG_Event *event)
 		AG_PixmapFromSurfaceScaled(sv, 0, S, S->w, S->h);
 
 		AG_WindowSetGeometry(win, -1, -1,
-		    AG_MIN(640, S->w),
-		    AG_MIN(480, S->h));
+		    AG_MIN(640, S->w + 32),
+		    AG_MIN(480, S->h + 32));
 	} else {						/* Compact */
 
 		AG_PixmapFromSurfaceScaled(win, 0, S, S->w, S->h);
 
 		AG_WindowSetGeometry(win, -1, -1,
-		    AG_MAX(200, S->w),
-		    AG_MAX(100, S->h));
+		    AG_MAX(200, S->w + 32),
+		    AG_MAX(100, S->h + 32));
 	}
 	
 	AG_SurfaceFree(S);
