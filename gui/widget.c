@@ -129,6 +129,9 @@ SetParentWindow(AG_Widget *_Nonnull wid, AG_Window *_Nullable win)
 		wid->drv = (AG_Driver *)OBJECT(win)->parent;
 		wid->drvOps = AGDRIVER_CLASS(wid->drv);
 
+		if (wid->flags & AG_WIDGET_USE_TEXT)
+			win->flags |= AG_WINDOW_USE_TEXT;
+
 		/*
 		 * Commit any previously deferred AG_MapStockCursor()
 		 * operation.
