@@ -33,6 +33,7 @@
 #include <agar/gui/packedpixel.h>
 #include <agar/gui/cursors.h>
 #include <agar/gui/sdl.h>
+#include <agar/gui/text.h>
 
 #define AG_SDL_CLIPPED_PIXEL(s, ax, ay)			\
 	((ax) <  (s)->clip_rect.x ||			\
@@ -905,11 +906,20 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 			AG_ObjectUnlock(win);
 			continue;
 		}
+		if (win->flags & AG_WINDOW_USE_TEXT) {
+			AG_PushTextState();
+			AG_TextFont(WIDGET(win)->font);
+			AG_TextColor(&WIDGET(win)->pal.c[WIDGET(win)->state]
+			                                [AG_TEXT_COLOR]);
+		}
 		switch (dev->type) {
 		case AG_DRIVER_MOUSE_MOTION:
 			if (dsw->winop != AG_WINOP_NONE) {
 				if (dsw->winSelected != win) {
 					AG_ObjectUnlock(win);
+					if (win->flags & AG_WINDOW_USE_TEXT) {
+						AG_PopTextState();
+					}
 					continue;
 				}
 				AG_WM_MouseMotion(dsw, win,
@@ -934,6 +944,9 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 			    dev->data.button.which);
 			if (agWindowToFocus != NULL ||
 			    !TAILQ_EMPTY(&agWindowDetachQ)) {
+				if (win->flags & AG_WINDOW_USE_TEXT) {
+					AG_PopTextState();
+				}
 				AG_ObjectUnlock(win);
 				return (1);
 			}
@@ -941,6 +954,9 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 		case AG_DRIVER_MOUSE_BUTTON_DOWN:
 			if (!AG_WidgetArea(win, dev->data.button.x,
 			    dev->data.button.y)) {
+				if (win->flags & AG_WINDOW_USE_TEXT) {
+					AG_PopTextState();
+				}
 				AG_ObjectUnlock(win);
 				continue;
 			}
@@ -951,6 +967,9 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 				if (dsw->winop != AG_WINOP_NONE) {
 					win->dirty = 1;
 					dsw->winSelected = win;
+					if (win->flags & AG_WINDOW_USE_TEXT) {
+						AG_PopTextState();
+					}
 					AG_ObjectUnlock(win);
 					return (1);
 				}
@@ -958,6 +977,9 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 			AG_ProcessMouseButtonDown(win,
 			    dev->data.button.x, dev->data.button.y,
 			    dev->data.button.which);
+			if (win->flags & AG_WINDOW_USE_TEXT) {
+				AG_PopTextState();
+			}
 			AG_ObjectUnlock(win);
 			return (1);
 		case AG_DRIVER_KEY_UP:
@@ -979,6 +1001,9 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 			break;
 		default:
 			break;
+		}
+		if (win->flags & AG_WINDOW_USE_TEXT) {
+			AG_PopTextState();
 		}
 		AG_ObjectUnlock(win);
 	}
