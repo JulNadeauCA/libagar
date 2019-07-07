@@ -84,12 +84,15 @@ AG_DirDlgNew(void *parent, Uint flags)
 AG_DirDlg *
 AG_DirDlgNewMRU(void *parent, const char *mruKey, Uint flags)
 {
-	char savePath[AG_PATHNAME_MAX];
+	char path[AG_PATHNAME_MAX];
 	AG_DirDlg *dd;
 
 	dd = AG_DirDlgNew(parent, flags);
-	AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
-	AG_DirDlgSetDirectoryMRU(dd, mruKey, savePath);
+
+	if (AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, path, sizeof(path))
+	    < sizeof(path)) {
+		AG_DirDlgSetDirectoryMRU(dd, mruKey, path);
+	}
 	return (dd);
 }
 
@@ -217,13 +220,13 @@ RefreshShortcuts(AG_DirDlg *_Nonnull dd, int init)
 			AG_TlistAddS(tl, agIconDirectory.s, path);
 		}
 		if (dd->flags & AG_DIRDLG_SAVE) {
-			AG_GetString(agConfig, "save-path", path, sizeof(path));
-			AG_TlistAddS(tl, agIconDirectory.s, path);
+			if (AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, path, sizeof(path)) < sizeof(path))
+				AG_TlistAddS(tl, agIconDirectory.s, path);
 		} else {
 			AG_ConfigPathQ *pathGroup =
 			    &agConfig->paths[AG_CONFIG_PATH_DATA];
 
-			SLIST_FOREACH(loadPath, pathGroup, paths)
+			TAILQ_FOREACH(loadPath, pathGroup, paths)
 				AG_TlistAddS(tl, agIconDirectory.s, loadPath->s);
 		}
 		AG_ComboSelectText(dd->comLoc, dd->cwd);

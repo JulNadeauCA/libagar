@@ -38,6 +38,12 @@
 
 #include <agar/config/datadir.h>
 
+const char *agConfigPathGroupNames[] = {
+	N_("Application Data"),
+	N_("Fonts"),
+	N_("Temporary Files")
+};
+
 /* Initialize the AG_Config object. */
 int
 AG_ConfigInit(AG_Config *cfg, Uint flags)
@@ -58,13 +64,13 @@ AG_CreateDataDir(void)
 {
 	char path[AG_PATHNAME_MAX];
 
-	AG_GetString(agConfig, "save-path", path, sizeof(path));
-	if (AG_FileExists(path) == 0 && AG_MkDir(path) != 0) {
-		return (-1);
+	if (AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, path, sizeof(path)) < sizeof(path)) {
+		if (AG_FileExists(path) == 0 && AG_MkDir(path) != 0)
+			return (-1);
 	}
-	AG_GetString(agConfig, "tmp-path", path, sizeof(path));
-	if (AG_FileExists(path) == 0 && AG_MkDir(path) != 0) {
-		return (-1);
+	if (AG_ConfigGetPath(AG_CONFIG_PATH_TEMP, 0, path, sizeof(path)) < sizeof(path)) {
+		if (AG_FileExists(path) == 0 && AG_MkDir(path) != 0)
+			return (-1);
 	}
 	return (0);
 }
@@ -97,7 +103,7 @@ Init(void *_Nonnull obj)
 	int i;
 	
 	for (i = 0; i < AG_CONFIG_PATH_LAST; i++)
-		SLIST_INIT(&cfg->paths[i]);
+		TAILQ_INIT(&cfg->paths[i]);
 #ifdef AG_DEBUG
 	debugLvlSave = agDebugLvl;
 	agDebugLvl = 0;
@@ -107,10 +113,15 @@ Init(void *_Nonnull obj)
 
 	if (agProgName != NULL &&
 	    (sysUser = AG_GetRealUser()) != NULL) {
+		/* Set the default temp directory. */
 		AG_SetString(cfg, "home", sysUser->home);
-		AG_SetString(cfg, "tmp-path", sysUser->tmp);
+		AG_ConfigSetPathS(AG_CONFIG_PATH_TEMP, 0, sysUser->tmp);
 
-		/* Add ~/.progname/ to load path. */
+		/*
+		 * Add $HOME/.progname to data path. Since it is the first
+		 * entry, it is also the default location where object files
+		 * will be saved (formerly known as "save-path" before 1.6.0).
+		 */
 		Strlcpy(path, sysUser->home, sizeof(path));
 		Strlcat(path, AG_PATHSEP, sizeof(path));
 #ifndef _WIN32
@@ -119,13 +130,7 @@ Init(void *_Nonnull obj)
 		Strlcat(path, agProgName, sizeof(path));
 		AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, path);
 
-		/* Also use ~/.progname as the default save path. */
-		AG_SetString(cfg, "save-path", path);
-	
-		/*
-		 * Add static DATADIR to load path if one is defined
-		 * (./configure --datadir setting).
-		 */
+		/* Add ./configure --datadir setting to data path. */
 		if (strcmp(DATADIR, "NONE") != 0) {
 			AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, DATADIR);
 		}
@@ -138,8 +143,7 @@ Init(void *_Nonnull obj)
 		} else {
 			AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, ".");
 		}
-		AG_SetString(cfg, "save-path", ".");
-		AG_SetString(cfg, "tmp-path", "tmp");
+		AG_ConfigSetPathS(AG_CONFIG_PATH_TEMP, 0, "tmp");
 	}
 #ifdef AG_DEBUG
 	agDebugLvl = debugLvlSave;
@@ -205,21 +209,105 @@ AG_ConfigClearPaths(AG_Config *cfg)
 	for (i = 0; i < AG_CONFIG_PATH_LAST; i++) {
 		AG_ConfigPathQ *pathq = &cfg->paths[i];
 
-		for (cp = SLIST_FIRST(pathq);
-		     cp != SLIST_END(pathq);
+		for (cp = TAILQ_FIRST(pathq);
+		     cp != TAILQ_END(pathq);
 		     cp = cpNext) {
-			cpNext = SLIST_NEXT(cp, paths);
+			cpNext = TAILQ_NEXT(cp, paths);
 			Free(cp->s);
 			free(cp);
 		}
-		SLIST_INIT(pathq);
+		TAILQ_INIT(pathq);
 	}
 }
 
+/* Return a pointer to the global agConfig object. */
+AG_Config *
+AG_ConfigObject(void)
+{
+	return (agConfig);
+}
+
 /*
- * Search the load paths for the named file. If one is found and is accessible,
- * copy its absolute path name to the fixed-size buffer path and return 0.
- * If the file cannot be found, return -1.
+ * Copy the path at index idx to a fixed-size buffer.
+ * If no match (or no such group), return 0 and NUL-terminate the buffer.
+ * Otherwise, return the length of the string that would have been created
+ * were bufSize unlimited.
+ */
+AG_Size
+AG_ConfigGetPath(AG_ConfigPathGroup group, int idx, char *buf, AG_Size bufSize)
+{
+	const AG_ConfigPathQ *pathGroup = &agConfig->paths[group];
+	const AG_ConfigPath *path;
+	int i;
+
+	if (group >= AG_CONFIG_PATH_LAST || idx < 0) {
+		goto no_match;
+	}
+	i = 0;
+	TAILQ_FOREACH(path, pathGroup, paths) {
+		if (i++ == idx) {
+			return Strlcpy(buf, path->s, bufSize);
+		} else if (i > idx) {
+			break;
+		}
+	}
+no_match:
+	if (bufSize > 0) { buf[0] = '\0'; }
+	return (0);
+}
+
+/*
+ * Set the path at index idx.
+ * If the entry at idx does not exist, create it.
+ * If creating a new entry, idx must be (last)-1.
+ */
+int
+AG_ConfigSetPath(AG_ConfigPathGroup group, int idx, const char *fmt, ...)
+{
+	va_list ap;
+	char *s;
+	
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+
+	return AG_ConfigSetPathS(group, idx, s);
+}
+int
+AG_ConfigSetPathS(AG_ConfigPathGroup group, int idx, const char *buf)
+{
+	const AG_ConfigPathQ *pathGroup = &agConfig->paths[group];
+	AG_ConfigPath *path;
+	int i;
+
+	if (group >= AG_CONFIG_PATH_LAST || idx < 0) {
+		AG_SetErrorS("Bad path group/index");
+		return (-1);
+	}
+	i = 0;
+	TAILQ_FOREACH(path, pathGroup, paths) {
+		if (i++ == idx) {
+			Verbose("ConfigSetPath: Found i=%d (%s)\n", i, path->s);
+			Free(path->s);
+			path->s = Strdup(buf);
+			return (0);
+		} else if (i > idx) {
+			AG_SetError("Bad index");
+			return (-1);
+		}
+	}
+	Verbose("ConfigSetPath(%s): Adding entry %d\n", agConfigPathGroupNames[group], idx);
+	AG_ConfigAddPathS(group, buf);
+	return (0);
+}
+
+/*
+ * Search the specified path group for the given filename, test for its
+ * existence and if the file exists, copy its fullpath to a fixed-size
+ * buffer and return 0. If the file does not exist, return -1.
+ *
+ * Designated paths groups (such as FONTS) may have their entries
+ * reordered based on the most recent successful access.
  */
 int
 AG_ConfigFind(AG_ConfigPathGroup group, const char *filename, char *path,
@@ -231,19 +319,23 @@ AG_ConfigFind(AG_ConfigPathGroup group, const char *filename, char *path,
 	AG_ConfigPath *loadPath;
 	int rv;
 
-	SLIST_FOREACH(loadPath, pathGroup, paths) {
+	TAILQ_FOREACH(loadPath, pathGroup, paths) {
 		Strlcpy(file, loadPath->s, sizeof(file));
 		Strlcat(file, AG_PATHSEP, sizeof(file));
 		Strlcat(file, filename, sizeof(file));
 		if ((rv = AG_FileExists(file)) == 1) {
-			Strlcpy(path, file, path_len);
-			if (loadPath != SLIST_FIRST(pathGroup)) {
+			if (Strlcpy(path, file, path_len) > path_len) {
+				AG_SetErrorS(_("Path overflow"));
+				return (-1);
+			}
+			if (group == AG_CONFIG_PATH_FONTS &&
+			    loadPath != TAILQ_FIRST(pathGroup)) {
 				/*
-				 * Sort paths by the most recently
-				 * successfully accessed first.
+				 * Sort the font paths based on most recent
+				 * successful access.
 				 */
-				SLIST_REMOVE(pathGroup, loadPath, ag_config_path, paths);
-				SLIST_INSERT_HEAD(pathGroup, loadPath, paths);
+				TAILQ_REMOVE(pathGroup, loadPath, paths);
+				TAILQ_INSERT_HEAD(pathGroup, loadPath, paths);
 			}
 			return (0);
 		} else if (rv == -1) {
@@ -253,13 +345,6 @@ AG_ConfigFind(AG_ConfigPathGroup group, const char *filename, char *path,
 	}
 	AG_SetError(_("Cannot find %s in load-path."), filename);
 	return (-1);
-}
-
-/* Return a pointer to the global agConfig object. */
-AG_Config *
-AG_ConfigObject(void)
-{
-	return (agConfig);
 }
 
 /* Add a directory for to the AG_ConfigFind() search path. */
@@ -273,7 +358,7 @@ AG_ConfigAddPathS(AG_ConfigPathGroup group, const char *_Nonnull s)
 #ifdef AG_DEBUG
 	if (group >= AG_CONFIG_PATH_LAST) { AG_FatalError("Bad group"); }
 #endif
-	SLIST_INSERT_HEAD(&agConfig->paths[group], loadPath, paths);
+	TAILQ_INSERT_TAIL(&agConfig->paths[group], loadPath, paths);
 }
 
 void
@@ -289,7 +374,7 @@ AG_ConfigAddPath(AG_ConfigPathGroup group, const char *_Nonnull fmt, ...)
 #ifdef AG_DEBUG
 	if (group >= AG_CONFIG_PATH_LAST) { AG_FatalError("Bad group"); }
 #endif
-	SLIST_INSERT_HEAD(&agConfig->paths[group], loadPath, paths);
+	TAILQ_INSERT_TAIL(&agConfig->paths[group], loadPath, paths);
 }
 
 /* Remove a directory from the AG_ConfigFind() search path. */
@@ -303,7 +388,7 @@ AG_ConfigDelPathS(AG_ConfigPathGroup group, const char *_Nonnull s)
 	if (group >= AG_CONFIG_PATH_LAST) { AG_FatalError("Bad group"); }
 #endif
 	pathGroup = &agConfig->paths[group];
-	SLIST_FOREACH(loadPath, pathGroup, paths) {
+	TAILQ_FOREACH(loadPath, pathGroup, paths) {
 #ifdef _WIN32
 		if (Strcasecmp(loadPath->s, s) == 0)
 			break;
@@ -313,7 +398,7 @@ AG_ConfigDelPathS(AG_ConfigPathGroup group, const char *_Nonnull s)
 #endif
 	}
 	if (loadPath != NULL)
-		SLIST_REMOVE(pathGroup, loadPath, ag_config_path, paths);
+		TAILQ_REMOVE(pathGroup, loadPath, paths);
 }
 
 void

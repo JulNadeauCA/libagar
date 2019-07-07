@@ -59,6 +59,7 @@ Init(void *_Nonnull obj)
 	dsw->windowIconWidth = 32;
 	dsw->windowIconHeight = 32;
 	dsw->Lmodal = AG_ListNew();
+	dsw->bgPopup = NULL;
 
 	AG_SetString(dsw, "bgColor", "rgb(0,0,0)");
 }
@@ -79,7 +80,7 @@ Destroy(void *_Nonnull obj)
 static void
 UnminimizeWindow(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_OBJECT(1,"AG_Window");
+	AG_Window *win = AG_WINDOW_PTR(1);
 
 	AG_WindowUnminimize(win);
 }
@@ -110,11 +111,15 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	AG_Window *win;
 	int nWindows = 0;
 
-	me = AG_MenuNew(NULL, 0);
+	if (dsw->bgPopup != NULL) {
+		AG_MenuCollapseAll(dsw->bgPopup);
+	}
+	me = dsw->bgPopup = AG_MenuNew(NULL, 0);
 	mi = me->itemSel = AG_MenuNode(me->root, NULL, NULL);
 
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
-		if (strncmp(OBJECT(win)->name, "_Popup", 6) == 0) {
+		if (strncmp(OBJECT(win)->name, "_Popup", 6) == 0 ||
+		    strncmp(OBJECT(win)->name, "_Icon", 5) == 0) {
 			continue;
 		}
 		AG_MenuAction(mi,
@@ -132,12 +137,18 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 #else
 	AG_MenuDisable(AG_MenuNode(mi, _("GUI debugger"), agIconMagnifier.s));
 #endif
+	AG_MenuSeparator(mi);
 	AG_MenuAction(mi, _("Exit application"), agIconWinClose.s,
 	    ExitApplication, NULL);
 				
-	AG_MenuExpand(NULL, mi,
+	win = AG_MenuExpand(NULL, mi,
 	    AGDRIVER(dsw)->mouse->x + 4,
 	    AGDRIVER(dsw)->mouse->y + 4);
+	if (win == NULL) {
+		Verbose("%s; ignoring\n", AG_GetError());
+		AG_ObjectDestroy(dsw->bgPopup);		/* Undo */
+		dsw->bgPopup = NULL;
+	}
 }
 
 /*

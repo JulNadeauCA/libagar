@@ -394,13 +394,14 @@ RefreshShortcuts(AG_FileDlg *_Nonnull fd, int init)
 			AG_TlistAddS(tl, agIconDirectory.s, path);
 		}
 		if (fd->flags & AG_FILEDLG_SAVE) {
-			AG_GetString(agConfig, "save-path", path, sizeof(path));
-			AG_TlistAddS(tl, agIconDirectory.s, path);
+			if (AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0,
+			    path, sizeof(path)) < sizeof(path))
+				AG_TlistAddS(tl, agIconDirectory.s, path);
 		} else {
 			AG_ConfigPathQ *pathGroup =
 			    &agConfig->paths[AG_CONFIG_PATH_DATA];
 
-			SLIST_FOREACH(loadPath, pathGroup, paths)
+			TAILQ_FOREACH(loadPath, pathGroup, paths)
 				AG_TlistAddS(tl, agIconDirectory.s, loadPath->s);
 		}
 		AG_ComboSelectText(fd->comLoc, fd->cwd);
@@ -1202,8 +1203,11 @@ AG_FileDlgNewMRU(void *parent, const char *mruKey, Uint flags)
 	AG_FileDlg *fd;
 
 	fd = AG_FileDlgNew(parent, flags);
-	AG_GetString(agConfig, "save-path", path, sizeof(path));
-	AG_FileDlgSetDirectoryMRU(fd, mruKey, path);
+
+	if (AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, path, sizeof(path))
+	    < sizeof(path)) {
+		AG_FileDlgSetDirectoryMRU(fd, mruKey, path);
+	}
 	return (fd);
 }
 
@@ -1226,8 +1230,11 @@ AG_FileDlgNewCompactMRU(void *parent, const char *mruKey, const char *label,
 
 	fd = AG_FileDlgNew(parent, (flags | AG_FILEDLG_COMPACT));
 	AG_LabelTextS(fd->textbox->lbl, label);
-	AG_GetString(agConfig, "save-path", path, sizeof(path));
-	AG_FileDlgSetDirectoryMRU(fd, mruKey, path);
+
+	if (AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, path, sizeof(path))
+	    < sizeof(path)) {
+		AG_FileDlgSetDirectoryMRU(fd, mruKey, path);
+	}
 	return (fd);
 }
 

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@hypertriton.com>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -76,6 +76,12 @@ a parameter value to be specified as a pointer to an external piece of data.
 .Fn AG_ConfigAddPathS "AG_ConfigPathGroup group" "const char *pathname"
 .Pp
 .Ft "void"
+.Fn AG_ConfigSetPath "AG_ConfigPathGroup group" "int index" "const char *format" "..."
+.Pp
+.Ft "void"
+.Fn AG_ConfigSetPathS "AG_ConfigPathGroup group" "int index" "const char *pathname"
+.Pp
+.Ft "void"
 .Fn AG_ConfigDelPath "AG_ConfigPathGroup group" "const char *format" "..."
 .Pp
 .Ft "void"
@@ -141,23 +147,19 @@ If the file cannot be found, it returns -1.
 adds the specified directory to the list of
 .Fn AG_ConfigFind
 search paths.
+.Pp
+.Fn AG_ConfigSetPath
+sets the path at index
+.Fa idx .
+If there is no such entry but
+.Fa idx
+is (last)-1, then the entry is created.
+Otherwise
+.Fn AG_ConfigFind
+will fail and return -1.
+.Pp
 .Fn AG_ConfigDelPath
 removes the given directory from the list of registered search paths.
-.Sh CONFIGURATION PARAMETERS
-The following parameters are registered by Agar-Core:
-.Bl -tag -width "BOOL initial-run "
-.It Va BOOL initial-run
-Application is being ran for the first time (read-only).
-.It Va STRING save-path
-Target directory for writing the
-.Xr AG_Object 3
-virtual filesystem.
-.It Va STRING tmp-path
-Directory for temporary files.
-Default is platform-dependent (on POSIX platforms, the
-.Ev TMPDIR
-environment variable is honored).
-.El
 .Sh EXAMPLES
 The following code sets an integer option and a string.
 The configuration is then immediately saved to disk:
@@ -183,6 +185,22 @@ int myExtSetting = 0;
 
 AG_BindInt(agConfig, "my-ext-setting", &myExtSetting);
 AG_ConfigLoad();
+.Ed
+.Pp
+The following code dumps the currently configured paths:
+.Bd -literal -offset indent
+char path[AG_PATHNAME_MAX];
+int i,j;
+
+for (i=0; i<AG_CONFIG_PATH_LAST; i++) {
+	for (j=0; ; j++) {
+		if (AG_ConfigGetPath(i,j, path, sizeof(path)) == 0) {
+			break;
+		}
+		AG_LabelNew(win, 0, "%s[%d] = %s",
+		    agConfigPathGroupNames[i], j, path);
+	}
+}
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,

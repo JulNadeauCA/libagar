@@ -205,7 +205,10 @@ AG_ViewCapture(void)
 
 	/* Save to a new file. */
 	cfg = AG_ConfigObject();
-	AG_GetString(cfg, "save-path", dir, sizeof(dir));
+	if (AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, dir, sizeof(dir)) >= sizeof(dir)) {
+		AG_TextError(_("Path overflow"));
+		goto out;
+	}
 	Strlcat(dir, AG_PATHSEP, sizeof(dir));
 	Strlcat(dir, "screenshot", sizeof(dir));
 	if (!AG_FileExists(dir) && AG_MkPath(dir) == -1) {

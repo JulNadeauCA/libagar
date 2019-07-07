@@ -50,6 +50,7 @@
 
 static AG_Window *_Nullable DEV_ConfigWindow(AG_Config *_Nullable);
 
+#if 0
 static void
 SetPath(AG_Event *_Nonnull event)
 {
@@ -61,6 +62,7 @@ SetPath(AG_Event *_Nonnull event)
 	AG_SetString(agConfig, varname, path);
 	AG_WidgetUnfocus(tbox);
 }
+#endif
 
 #if 0
 static void
@@ -137,7 +139,9 @@ LoadColorSchemeDlg(AG_Event *_Nonnull event)
 	AG_Window *win;
 	AG_FileDlg *fd;
 
-	win = AG_WindowNew(0);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
 	AG_WindowSetCaptionS(win, _("Load color scheme..."));
 	fd = AG_FileDlgNewMRU(win, "dev.mru.color-schemes",
 	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
@@ -153,7 +157,9 @@ SaveColorSchemeDlg(AG_Event *_Nonnull event)
 	AG_Window *win;
 	AG_FileDlg *fd;
 
-	win = AG_WindowNew(0);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
 	AG_WindowSetCaptionS(win, _("Load color scheme..."));
 	fd = AG_FileDlgNewMRU(win, "dev.mru.color-schemes",
 	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
@@ -176,6 +182,7 @@ SaveConfig(AG_Event *_Nonnull event)
 	}
 }
 
+#if 0
 static void
 SelectPathOK(AG_Event *_Nonnull event)
 {
@@ -198,8 +205,10 @@ SelectPath(AG_Event *_Nonnull event)
 	char *key = AG_STRING(1);
 	AG_Textbox *tbox = AG_TEXTBOX_PTR(2);
 
-	win = AG_WindowNew(0);
-	dd = AG_DirDlgNew(win, AG_DIRDLG_EXPAND|AG_DIRDLG_CLOSEWIN);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
+	dd = AG_DirDlgNew(win, AG_DIRDLG_EXPAND | AG_DIRDLG_CLOSEWIN);
 	AG_GetString(agConfig, key, path, sizeof(path));
 	if (AG_DirDlgSetDirectoryS(dd, path) == -1) {
 		AG_MkPath(path);
@@ -210,14 +219,13 @@ SelectPath(AG_Event *_Nonnull event)
 	AG_DirDlgOkAction(dd, SelectPathOK, "%s,%p,%p", key, tbox, win);
 	AG_WindowShow(win);
 }
+#endif
 
 static AG_Window *_Nullable
 DEV_ConfigWindow(AG_Config *_Nullable cfg)
 {
-	char path[AG_PATHNAME_MAX];
 	AG_Window *win;
 	AG_Box *hb;
-	AG_Textbox *tbox;
 /*	AG_Checkbox *cb; */
 	AG_Notebook *nb;
 	AG_NotebookTab *tab;
@@ -228,7 +236,7 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 	AG_WindowSetCaptionS(win, _("Agar settings"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL | AG_NOTEBOOK_VFILL);
 	tab = AG_NotebookAdd(nb, _("Video"), AG_BOX_VERT);
 	{
 		AG_NumericalNewIntR(tab, 0, "%", _("Screenshot quality: "),
@@ -259,35 +267,6 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 
 	tab = AG_NotebookAdd(nb, _("Directories"), AG_BOX_VERT);
 	{
-		hb = AG_BoxNewHoriz(tab, AG_BOX_HFILL);
-		tbox = AG_TextboxNewS(hb, AG_TEXTBOX_HFILL, _("Temporary file directory: "));
-		AG_GetString(agConfig, "tmp-path", path, sizeof(path));
-		AG_TextboxSetString(tbox, path);
-		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "tmp-path");
-		AG_TextboxSizeHint(tbox, "XXXXXXXXXXXXXXXXXXXX");
-		AG_ButtonNewFn(hb, 0, "...", SelectPath, "%s,%p", "tmp-path", tbox);
-
-		hb = AG_BoxNewHoriz(tab, AG_BOX_HFILL);
-		tbox = AG_TextboxNewS(hb, AG_TEXTBOX_HFILL, _("Dataset save directory: "));
-		AG_GetString(agConfig, "save-path", path, sizeof(path));
-		AG_TextboxSetString(tbox, path);
-		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "save-path");
-		AG_ButtonNewFn(hb, 0, "...", SelectPath, "%s,%p", "save-path", tbox);
-#if 0
-		/* XXX TODO DirDlgs */
-
-		hb = AG_BoxNewHoriz(tab, AG_BOX_HFILL);
-		tbox = AG_TextboxNewS(hb, AG_TEXTBOX_HFILL, _("Dataset search path: "));
-		AG_GetString(agConfig, "load-path", path, sizeof(path));
-		AG_TextboxSetString(tbox, path);
-		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "load-path");
-	
-		hb = AG_BoxNewHoriz(tab, AG_BOX_HFILL);
-		tbox = AG_TextboxNewS(hb, AG_TEXTBOX_HFILL, _("Font search path: "));
-		AG_GetString(agConfig, "font-path", path, sizeof(path));
-		AG_TextboxSetString(tbox, path);
-		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "font-path");
-#endif
 	}
 #if 0
 	tab = AG_NotebookAdd(nb, _("Colors"), AG_BOX_VERT);
@@ -320,7 +299,7 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		AG_LabelSetPaddingLeft(lbl, 10);
 		AG_LabelSetPaddingRight(lbl, 10);
 		
-		hb = AG_BoxNewHoriz(tab, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
+		hb = AG_BoxNewHoriz(tab, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 		{
 			AG_ButtonNewFn(hb, 0, _("Load scheme"),
 			    LoadColorSchemeDlg, NULL);
@@ -338,7 +317,7 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 	}
 #endif
 
-	hb = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
+	hb = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 	{
 		AG_ButtonNewFn(hb, 0, _("Close"), AGWINDETACH(win));
 		AG_ButtonNewFn(hb, 0, _("Save"), SaveConfig, NULL);

@@ -241,8 +241,8 @@ SK_GUI_SaveAsDlg(AG_Event *event)
 	fd = AG_FileDlgNew(win, AG_FILEDLG_SAVE | AG_FILEDLG_CLOSEWIN |
 	                        AG_FILEDLG_EXPAND);
 	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));
-	
-	AG_GetString(agConfig, "save-path", defDir, sizeof(defDir));
+
+	AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, defDir, sizeof(defDir));
 	AG_FileDlgSetDirectoryMRU(fd, "agar-sk.mru.files", defDir);
 
 	if (AG_OfClass(obj, "SK:*")) {

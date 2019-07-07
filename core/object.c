@@ -748,7 +748,7 @@ AG_ObjectCopyFilename(void *p, char *path, AG_Size pathSize)
 
 	AG_ObjectCopyName(ob, name, sizeof(name));
 
-	SLIST_FOREACH(loadPath, pathGroup, paths) {
+	TAILQ_FOREACH(loadPath, pathGroup, paths) {
 	     	Strlcpy(path, loadPath->s, pathSize);
 		Strlcat(path, name, pathSize);
 		Strlcat(path, AG_PATHSEP, pathSize);
@@ -789,7 +789,7 @@ AG_ObjectCopyDirname(void *p, char *path, AG_Size pathSize)
 	AG_ObjectLock(ob);
 	AG_ObjectCopyName(ob, name, sizeof(name));
 
-	SLIST_FOREACH(loadPath, pathGroup, paths) {
+	TAILQ_FOREACH(loadPath, pathGroup, paths) {
 	     	Strlcpy(tp, loadPath->s, sizeof(tp));
 		Strlcat(tp, name, sizeof(tp));
 
@@ -1629,8 +1629,11 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 		 * Create the save directory if needed (but never do this
 		 * if an archive-path is set).
 		 */
-		AG_GetString(agConfig, "save-path", dirPath, sizeof(dirPath));
-		Strlcat(dirPath, name, sizeof(dirPath));
+		if (AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, dirPath, sizeof(dirPath)) >= sizeof(dirPath) ||
+		    Strlcat(dirPath, name, sizeof(dirPath)) >= sizeof(dirPath)) {
+			AG_SetErrorV("E4", _("Path overflow"));
+			goto fail_unlock;
+		}
 		if (AG_FileExists(dirPath) == 0 &&
 		    AG_MkPath(dirPath) == -1)
 			goto fail_unlock;
@@ -1936,7 +1939,7 @@ AG_ObjectChanged(void *p)
 		rv = 1;
 		goto out;
 	}
-	AG_GetString(agConfig, "tmp-path", pathCur, sizeof(pathCur));
+	AG_ConfigGetPath(AG_CONFIG_PATH_TEMP, 0, pathCur, sizeof(pathCur));
 	Strlcat(pathCur, AG_PATHSEP, sizeof(pathCur));
 	Strlcat(pathCur, "_chg.", sizeof(pathCur));
 	Strlcat(pathCur, ob->name, sizeof(pathCur));

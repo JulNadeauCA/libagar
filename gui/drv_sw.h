@@ -74,6 +74,8 @@ typedef struct ag_driver_sw {
 	int rCur;			/* Effective refresh rate (ms) */
 	AG_Color bgColor;		/* "bgColor" setting */
 	Uint rLast;			/* Refresh rate timestamp */
+
+	struct ag_menu *_Nullable bgPopup;	/* Background popup menu */
 } AG_DriverSw;
 
 #define AGDRIVER_SW(obj) ((AG_DriverSw *)(obj))

@@ -8,6 +8,7 @@ TestGUI(void *obj, AG_Window *win)
 	char path[AG_PATHNAME_MAX];
 	AG_ConfigPath *cp;
 	AG_Label *lbl;
+	int i;
 
 	AG_SeparatorNewHoriz(win);
 	{
@@ -17,27 +18,13 @@ TestGUI(void *obj, AG_Window *win)
 		AG_SetStyle(lbl, "font-family", "Courier");
 	}
 	AG_SeparatorNewHoriz(win);
-	{
-		AG_LabelNewS(win, 0, "Data Search Paths:");
-		AG_SLIST_FOREACH(cp, &agConfig->paths[AG_CONFIG_PATH_DATA], paths) {
+	for (i = 0; i < AG_CONFIG_PATH_LAST; i++) {
+		AG_LabelNew(win, 0, "%s: ", _(agConfigPathGroupNames[i]));
+		AG_TAILQ_FOREACH(cp, &agConfig->paths[i], paths) {
 			lbl = AG_LabelNewS(win, 0, cp->s);
 			AG_SetStyle(lbl, "font-family", "Courier");
+			AG_SetStyle(lbl, "font-size", "90%");
 		}
-	}
-	AG_SeparatorNewHoriz(win);
-	{
-		AG_LabelNewS(win, 0, "Font Search Paths:");
-		AG_SLIST_FOREACH(cp, &agConfig->paths[AG_CONFIG_PATH_FONTS], paths) {
-			lbl = AG_LabelNewS(win, 0, cp->s);
-			AG_SetStyle(lbl, "font-family", "Courier");
-		}
-	}
-	AG_SeparatorNewHoriz(win);
-	{
-		AG_LabelNewS(win, 0, "Temporary directory:");
-		AG_GetString(agConfig, "tmp-path", path, sizeof(path));
-		lbl = AG_LabelNewS(win, 0, path);
-		AG_SetStyle(lbl, "font-family", "Courier");
 	}
 	return (0);
 }

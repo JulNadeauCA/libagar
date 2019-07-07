@@ -636,32 +636,31 @@ Agardb::GUI::SelectTarget(AG_Event *event)
 void
 Agardb::GUI::MenuTargets(AG_Event *event)
 {
-	AG_MenuItem *m = AG_MENU_ITEM_PTR(1);
+	AG_MenuItem *mi = AG_MENU_ITEM_PTR(1);
 	lldb::SBDebugger &db = g_agardb->GetDebugger();
 	const Uint32 numTargets = db.GetNumTargets();
 	Uint32 i;
 
 	if (numTargets == 0) {
-		(AG_MenuNode(m, _("(no targets)"), NULL))->state = 0;
+		(AG_MenuNode(mi,_("(no targets)"),NULL))->state = 0;
 		return;
 	}
-
 	for (i = 0; i < numTargets; i++) {
 		lldb::SBTarget dbTarget = db.GetTargetAtIndex(i);
 
 		if (!dbTarget.IsValid()) {
-			(AG_MenuNode(m,
-			    AG_Printf(_("%d. (invalid target)"), i), NULL))->state = 0;
+			AG_MenuNode(mi,_("(invalid target)"),NULL);
 			continue;
 		}
 		lldb::SBFileSpec exe = dbTarget.GetExecutable();
 		if (exe.IsValid() && exe.Exists()) {
-			AG_MenuAction(m,
-			    AG_Printf("%d. %s", i, exe.GetFilename()),
+			AG_MenuAction(mi,
+			    AG_Printf("%d. %s (%s)", i, exe.GetFilename(),
+			        dbTarget.GetTriple()),
 			    agIconDocImport.s,
 			    Agardb::GUI::SelectTarget, "%i", i);
 		} else {
-			AG_MenuAction(m,
+			AG_MenuAction(mi,
 			    AG_Printf("Target #%d (%s)", i, dbTarget.GetTriple()),
 			    agIconDoc.s,
 			    Agardb::GUI::SelectTarget, "%i", i);
