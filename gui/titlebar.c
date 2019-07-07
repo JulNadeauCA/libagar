@@ -170,9 +170,11 @@ Init(void *_Nonnull obj)
 	tbar->minimize_btn = NULL;
 	tbar->close_btn = NULL;
 	
-	tbar->label = AG_LabelNewS(tbar, AG_LABEL_HFILL|AG_LABEL_NOMINSIZE,
+	tbar->label = AG_LabelNewS(tbar,
+	    AG_LABEL_HFILL | AG_LABEL_NOMINSIZE,
 	    _("Untitled"));
-	AG_LabelSizeHint(tbar->label, 1, "X");
+	tbar->label->wPre = 16;
+	tbar->label->hPre = 1;
 	AG_LabelSetPadding(tbar->label, 5,5,2,2);
 
 	AG_SetEvent(tbar, "mouse-button-down", MouseButtonDown, NULL);

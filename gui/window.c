@@ -90,6 +90,10 @@ const char *agWindowAlignmentNames[] = {
 	NULL
 };
 
+static int CreateMinimizedIcon(AG_Window *_Nonnull);
+static void AttachTitlebarAndIcons(AG_Driver *_Nonnull, AG_Window *_Nonnull);
+static void HideMinimizedIcon(AG_Window *_Nonnull);
+
 void
 AG_InitWindowSystem(void)
 {
@@ -268,32 +272,40 @@ Attach(AG_Event *_Nonnull event)
 	
 	if (AGDRIVER_SINGLE(drv)) {
 		/*
-		 * Initialize the built-in AG_Titlebar and dekstop AG_Icon now
-		 * that we have an attached driver (we could not do this
-		 * earlier because surface operations are involved).
+		 * Initialize built-in titlebar and desktop icon now that
+		 * we have an attached driver (we could not do this earlier
+		 * because surface operations require a driver).
 		 */
-		if (win->tbar == NULL && !(win->flags & AG_WINDOW_NOTITLE)) {
-			Uint titlebarFlags = 0;
-
-			if (win->flags & AG_WINDOW_NOCLOSE) { titlebarFlags |= AG_TITLEBAR_NO_CLOSE; }
-			if (win->flags & AG_WINDOW_NOMINIMIZE) { titlebarFlags |= AG_TITLEBAR_NO_MINIMIZE; }
-			if (win->flags & AG_WINDOW_NOMAXIMIZE) { titlebarFlags |= AG_TITLEBAR_NO_MAXIMIZE; }
-
-			win->tbar = AG_TitlebarNew(win, titlebarFlags);
-		}
-		if (win->icon == NULL) {
-			win->icon = AG_IconNew(NULL, 0);
-		}
-		WIDGET(win->icon)->drv = drv;
-		WIDGET(win->icon)->drvOps = AGDRIVER_CLASS(drv);
-		AG_IconSetSurface(win->icon, agIconWindow.s);
-		AG_IconSetBackgroundFill(win->icon, 1, &AGDRIVER_SW(drv)->bgColor);
-		AG_SetStyle(win->icon, "font-size", "80%");
-		AG_WidgetCompileStyle(win->icon);
+		AttachTitlebarAndIcons(drv, win);
 	}
-
 	if (win->flags & AG_WINDOW_FOCUSONATTACH)
 		AG_WindowFocus(win);
+}
+
+static void
+AttachTitlebarAndIcons(AG_Driver *_Nonnull drv, AG_Window *_Nonnull win)
+{
+	AG_Icon *icon;
+
+	if (win->tbar == NULL && !(win->flags & AG_WINDOW_NOTITLE)) {
+		Uint titlebarFlags = 0;
+
+		if (win->flags & AG_WINDOW_NOCLOSE) { titlebarFlags |= AG_TITLEBAR_NO_CLOSE; }
+		if (win->flags & AG_WINDOW_NOMINIMIZE) { titlebarFlags |= AG_TITLEBAR_NO_MINIMIZE; }
+		if (win->flags & AG_WINDOW_NOMAXIMIZE) { titlebarFlags |= AG_TITLEBAR_NO_MAXIMIZE; }
+
+		win->tbar = AG_TitlebarNew(win, titlebarFlags);
+	}
+	if ((icon = win->icon) == NULL) {
+		icon = win->icon = AG_IconNew(NULL, 0);
+		AG_ObjectSetNameS(icon, "icon");
+	}
+	WIDGET(icon)->drv = drv;
+	WIDGET(icon)->drvOps = AGDRIVER_CLASS(drv);
+	AG_IconSetSurface(icon, agIconWindow.s);
+	AG_IconSetBackgroundFill(icon, 1, &AGDRIVER_SW(drv)->bgColor);
+	AG_SetStyle(icon, "font-size", "80%");
+	AG_WidgetCompileStyle(icon);
 }
 
 /* Special implementation of AG_ObjectDetach() for AG_Window. */
@@ -1680,13 +1692,14 @@ IconMotion(AG_Event *_Nonnull event)
 	AG_Driver *drv = WIDGET(icon)->drv;
 	int xRel = AG_INT(3);
 	int yRel = AG_INT(4);
-	AG_Window *wDND = icon->wDND;
 
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
-	AG_OBJECT_ISA(wDND, "AG_Widget:AG_Window:*");
 
 	if (icon->flags & AG_ICON_DND) {
 		AG_Rect r;
+		AG_Window *wDND = icon->wDND;
+
+		AG_OBJECT_ISA(wDND, "AG_Widget:AG_Window:*");
 
 		if (drv && AGDRIVER_SINGLE(drv)) {
 			r.x = 0;
@@ -1730,7 +1743,7 @@ IconButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Icon *icon = AG_ICON_SELF();
 
-	WIDGET(icon)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
+	WIDGET(icon)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
 	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
 #ifdef AG_TIMERS
 	if (icon->flags & AG_ICON_DBLCLICKED) {
@@ -1738,9 +1751,6 @@ IconButtonDown(AG_Event *_Nonnull event)
 
 		AG_DelTimer(icon, &icon->toDblClick);
 		AG_WindowUnminimize(win);
-		AG_ObjectDetach(win->icon);
-		AG_ObjectDetach(icon->wDND);
-		icon->wDND = NULL;
 		icon->flags &= (AG_ICON_DND|AG_ICON_DBLCLICKED);
 	} else {
 		icon->flags |= (AG_ICON_DND|AG_ICON_DBLCLICKED);
@@ -1765,37 +1775,57 @@ void
 AG_WindowMinimize(AG_Window *win)
 {
 	AG_Driver *drv;
-	
+
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
 
 	if (win->flags & AG_WINDOW_MINIMIZED) {
+		Debug(win, "Already minimized\n");
 		goto out;
 	}
+	Debug(win, "Minimizing\n");
 	win->flags |= AG_WINDOW_MINIMIZED;
 	AG_WindowHide(win);
 
 	if ((drv = WIDGET(win)->drv) && AGDRIVER_SINGLE(drv)) {
-		AG_Window *wDND;
-		AG_Icon *icon = win->icon;
-	
-		wDND = AG_WindowNew(AG_WINDOW_PLAIN|AG_WINDOW_KEEPBELOW|
-		                    AG_WINDOW_DENYFOCUS|AG_WINDOW_NOBACKGROUND);
+		if (CreateMinimizedIcon(win) == -1)
+			goto out;
+	}
+	/* TODO MW: send a WM_CHANGE_STATE */
+out:
+	AG_ObjectUnlock(win);
+}
+static int
+CreateMinimizedIcon(AG_Window *_Nonnull win)
+{
+	AG_Window *wDND;
+	AG_Icon *icon = win->icon;
+
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
+	if ((wDND = icon->wDND) == NULL) {
+		wDND = icon->wDND = AG_WindowNew(
+		    AG_WINDOW_PLAIN | AG_WINDOW_KEEPBELOW |
+		    AG_WINDOW_DENYFOCUS | AG_WINDOW_NOBACKGROUND);
+		if (wDND == NULL) {
+			return (-1);
+		}
 		AG_ObjectAttach(wDND, icon);
-		icon->wDND = wDND;
-		icon->flags &= ~(AG_ICON_DND|AG_ICON_DBLCLICKED);
+		AG_ObjectSetName(wDND, "_Icon");
+	} else {
+		AG_WindowShow(wDND);
+	}
+	icon->flags &= ~(AG_ICON_DND | AG_ICON_DBLCLICKED);
 
-		AG_SetEvent(icon, "mouse-motion", IconMotion, NULL);
-		AG_SetEvent(icon, "mouse-button-up", IconButtonUp, NULL);
-		AG_SetEvent(icon, "mouse-button-down", IconButtonDown, "%p", win);
+	AG_SetEvent(icon, "mouse-motion", IconMotion, NULL);
+	AG_SetEvent(icon, "mouse-button-up", IconButtonUp, NULL);
+	AG_SetEvent(icon, "mouse-button-down", IconButtonDown, "%p", win);
 
-#if 0
-		if (icon->xSaved != -1) {
-			AG_WindowShow(wDND);
-			AG_WindowSetGeometry(wDND, icon->xSaved, icon->ySaved,
-			                     icon->wSaved, icon->hSaved);
-		} else {
-#endif
+	if (icon->xSaved != -1) {
+		AG_WindowShow(wDND);
+		AG_WindowSetGeometry(wDND,
+		    icon->xSaved, icon->ySaved,
+		    icon->wSaved, icon->hSaved);
+	} else {
 		AG_WindowSetPosition(wDND, AG_WINDOW_LOWER_LEFT, 1);
 		AG_WindowShow(wDND);
 		icon->xSaved = WIDGET(wDND)->x;
@@ -1803,9 +1833,7 @@ AG_WindowMinimize(AG_Window *win)
 		icon->wSaved = WIDTH(wDND);
 		icon->hSaved = HEIGHT(wDND);
 	}
-	/* TODO MW: send a WM_CHANGE_STATE */
-out:
-	AG_ObjectUnlock(win);
+	return (0);
 }
 
 /* Unminimize a window */
@@ -1816,14 +1844,31 @@ AG_WindowUnminimize(AG_Window *win)
 	AG_ObjectLock(win);
 
 	if (!win->visible) {
+		AG_Driver *drv;
+
+		if ((drv = WIDGET(win)->drv) && AGDRIVER_SINGLE(drv)) {
+			HideMinimizedIcon(win);
+		}
 		AG_WindowShow(win);
 		win->flags &= ~(AG_WINDOW_MINIMIZED);
 	} else {
 		AG_WindowFocus(win);
 	}
 	/* TODO MW: send a WM_CHANGE_STATE */
-
 	AG_ObjectUnlock(win);
+}
+
+static void
+HideMinimizedIcon(AG_Window *_Nonnull win)
+{
+	AG_Icon *icon;
+
+	if ((icon = win->icon) == NULL) {
+		return;
+	}
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
+	AG_OBJECT_ISA(icon->wDND, "AG_Widget:AG_Window:*");
+	AG_WindowHide(icon->wDND);
 }
 
 /* AGWINDETACH(): General-purpose "detach window" event handler. */

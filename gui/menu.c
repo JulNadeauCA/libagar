@@ -204,6 +204,7 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 		      AG_WINDOW_WM_POPUP_MENU;
 	AG_ObjectSetName(win, "_Popup-%s",
 	    (parent != NULL) ? OBJECT(parent)->name : "generic");
+	AG_WindowSetCaptionS(win, "(menu)");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 
 	AG_SetEvent(win, "window-modal-close", MenuCollapseAll, "%p", m);

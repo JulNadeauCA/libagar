@@ -286,6 +286,8 @@ void AG_SetStockCursor(void *_Nonnull, AG_CursorArea *_Nonnull *_Nullable,
 
 void AG_WindowProcessQueued(void);
 
+AG_Window *AG_SettingsWindow(void);
+
 #define AGWINDOW(p)              ((AG_Window *)(p))
 #define AGCWINDOW(p)             ((const AG_Window *)(p))
 #define AG_WINDOW_SELF()          AGWINDOW( AG_OBJECT(0,"AG_Widget:AG_Window:*") )
