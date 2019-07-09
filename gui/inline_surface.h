@@ -356,7 +356,7 @@ ag_surface_get32(const AG_Surface *S, int x, int y)
 {
 #ifdef AG_DEBUG
 	if (x < 0 || y < 0 || x >= S->w || y >= S->h)
-		AG_FatalError("Illegal SurfaceGet32");
+		AG_FatalErrorF("Illegal AG_SurfaceGet32() access (%d,%d in %ux%u)", x,y, S->w, S->h);
 #endif
 	if (S->format.BitsPerPixel < 8) {
 		return (Uint32)AG_SurfaceGet8(S, x,y);
@@ -419,11 +419,8 @@ ag_surface_get64(const AG_Surface *S, int x, int y)
 # endif
 {
 # ifdef AG_DEBUG
-	if (x < 0 || y < 0 || x >= S->w || y >= S->h) {
-		AG_SetError("Illegal SurfaceGet64(%d,%d > %ux%u)", x,y,
-		    S->w, S->h);
-		AG_FatalError(NULL);
-	}
+	if (x < 0 || y < 0 || x >= S->w || y >= S->h)
+		AG_FatalErrorF("Illegal AG_SurfaceGet64() access (%d,%d in %ux%u)", x,y, S->w, S->h);
 # endif
 	if (S->format.BitsPerPixel < 8) {
 		return (Uint64)AG_SurfaceGet8(S, x,y);

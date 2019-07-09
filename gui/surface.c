@@ -911,26 +911,24 @@ AG_SurfaceBlit(const AG_Surface *S, const AG_Rect *srcRect, AG_Surface *D,
 		sr.w = S->w;
 		sr.h = S->h;
 	}
-	dr.x = xDst;
-	dr.y = yDst;
-	dr.w = sr.w;
-	dr.h = sr.h;
+	dr.x = (Sint16)xDst;
+	dr.y = (Sint16)yDst;
+	dr.w = (Uint16)sr.w;
+	dr.h = (Uint16)sr.h;
 	if (!AG_RectIntersect(&dr, &dr, &D->clipRect)) {
 		return;
 	}
 	if (dr.w < sr.w) {					/* Partial */
-		int diff = (sr.w - dr.w);
-		if (xDst+sr.w < D->clipRect.x + D->clipRect.w) {
-			sr.x += diff;
+		if (xDst < D->clipRect.x) {
+			sr.x += (D->clipRect.x - xDst);
 		}
-		sr.w -= diff;
+		sr.w -= (sr.w - dr.w);
 	}
 	if (dr.h < sr.h) {
-		int diff = (sr.h - dr.h);
-		if (yDst+sr.h < D->clipRect.y + D->clipRect.h) {
-			sr.y += diff;
+		if (yDst < D->clipRect.y) {
+			sr.y += (D->clipRect.y - yDst);
 		}
-		sr.h -= diff;
+		sr.h -= (sr.h - dr.h);
 	}
 
 	if (S->alpha < AG_OPAQUE) {

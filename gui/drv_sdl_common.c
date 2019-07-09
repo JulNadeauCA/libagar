@@ -41,6 +41,11 @@
 	 (ay) <  (s)->clip_rect.y ||			\
 	 (ay) >= (s)->clip_rect.y + (s)->clip_rect.h)
 
+static void AG_SDL_SoftBlit_Colorkey(const AG_Surface *_Nonnull, AG_Rect,
+                                     SDL_Surface *_Nonnull, AG_Rect);
+static void AG_SDL_SoftBlit_NoColorkey(const AG_Surface *_Nonnull, AG_Rect,
+                                       SDL_Surface *_Nonnull, AG_Rect);
+
 /*
  * Initialize Agar with an existing SDL display. If the display surface has
  * flags SDL_OPENGL / SDL_OPENGLBLIT set, the "sdlgl" driver is selected;
@@ -220,6 +225,12 @@ AG_SDL_PutPixel(SDL_Surface *_Nonnull s, Uint8 *_Nonnull p, Uint32 px)
 		break;
 	}
 }
+static __inline__ void
+AG_SDL_PutPixel2(SDL_Surface *_Nonnull S, int x, int y, Uint32 px)
+{
+	AG_SDL_PutPixel(S, S->pixels + y*S->pitch + x*S->format->BytesPerPixel,
+	    px);
+}
 
 /*
  * Blend an AG_Color c against the pixel at p in an SDL_Surface.
@@ -265,113 +276,6 @@ AG_SDL_SurfaceBlend(SDL_Surface *_Nonnull s, Uint8 *_Nonnull p, AG_Color c,
 	        B+(((b - B)*a) >> 8), a));
 }
 
-/* Return the intersection of two SDL_Rect's (or a zero-size rect) */
-static __inline__ SDL_Rect
-AG_SDL_RectIntersect(const SDL_Rect *_Nonnull a, const SDL_Rect *_Nonnull b)
-{
-	SDL_Rect x;
-	int aMin, aMax, bMin, bMax;
-
-	aMin = a->x;
-	aMax = aMin + a->w;
-	bMin = b->x;
-	bMax = bMin + b->w;
-	if (bMin > aMin) { aMin = bMin; }
-	x.x = aMin;
-	if (bMax < aMax) { aMax = bMax; }
-	x.w = aMax - aMin > 0 ? aMax-aMin : 0;
-
-	aMin = a->y;
-	aMax = aMin + a->h;
-	bMin = b->y;
-	bMax = bMin + b->h;
-	if (bMin > aMin) { aMin = bMin; }
-	x.y = aMin;
-	if (bMax < aMax) { aMax = bMax; }
-	x.h = aMax - aMin > 0 ? aMax-aMin : 0;
-
-	return (x);
-}
-
-static void
-AG_SDL_SoftBlit_Colorkey(const AG_Surface *_Nonnull ss, AG_Rect sr,
-    SDL_Surface *_Nonnull ds, SDL_Rect dr)
-{
-	const Uint8 *pSrc = ss->pixels + sr.y*ss->pitch +
-	                                 sr.x*ss->format.BytesPerPixel;
-	Uint8 *pDst = (Uint8 *)ds->pixels + dr.y*ds->pitch +
-	                                    dr.x*ss->format.BytesPerPixel;
-	int dsBytesPerPixel = ds->format->BytesPerPixel;
-	int size = dr.w*dsBytesPerPixel;
-	int ssPadding = ss->pitch - size;
-	int dsPadding = ds->pitch - size;
-	int x, y;
-
-	for (y = 0; y < dr.h; y++) {
-		for (x = 0; x < dr.w; x++) {
-			AG_Pixel px = AG_SurfaceGet_At(ss,pSrc);
-			AG_Color c;
-
-			if (ss->colorkey == px) {
-				pSrc += ss->format.BytesPerPixel;
-				pDst += dsBytesPerPixel;
-				continue;
-			}
-			AG_GetColor(&c, px, &ss->format);
-			if (c.a < AG_OPAQUE) {
-				AG_SDL_SurfaceBlend(ds, pDst, c, AG_ALPHA_SRC);
-			} else {
-				AG_SDL_PutPixel(ds, pDst,
-				    SDL_MapRGB(ds->format,
-				        AG_Hto8(c.r),
-				        AG_Hto8(c.g),
-				        AG_Hto8(c.b)));
-			}
-			pSrc += ss->format.BytesPerPixel;
-			pDst += dsBytesPerPixel;
-		}
-		pSrc += ssPadding;
-		pDst += dsPadding;
-	}
-}
-
-static void
-AG_SDL_SoftBlit_NoColorkey(const AG_Surface *_Nonnull ss, AG_Rect sr,
-    SDL_Surface *_Nonnull ds, SDL_Rect dr)
-{
-	const Uint8 *pSrc = ss->pixels + sr.y*ss->pitch +
-	                                 sr.x*ss->format.BytesPerPixel;
-	Uint8 *pDst = (Uint8 *)ds->pixels + dr.y*ds->pitch +
-	                                    dr.x*ss->format.BytesPerPixel;
-	int dsBytesPerPixel = ds->format->BytesPerPixel;
-	int size = dr.w*dsBytesPerPixel;
-	int ssPadding = ss->pitch - size;
-	int dsPadding = ds->pitch - size;
-	int x, y;
-
-	for (y = 0; y < dr.h; y++) {
-		for (x = 0; x < dr.w; x++) {
-			AG_Pixel px = AG_SurfaceGet_At(ss,pSrc);
-			AG_Color c;
-		
-			AG_GetColor(&c, px, &ss->format);
-			if (c.a < AG_OPAQUE) {
-				AG_SDL_SurfaceBlend(ds, pDst, c, AG_ALPHA_SRC);
-			} else {
-				AG_SDL_PutPixel(ds, pDst,
-				    SDL_MapRGB(ds->format,
-				        AG_Hto8(c.r),
-				        AG_Hto8(c.g),
-				        AG_Hto8(c.b)));
-			}
-			pSrc += ss->format.BytesPerPixel;
-			pDst += dsBytesPerPixel;
-		}
-		pSrc += ssPadding;
-		pDst += dsPadding;
-	}
-}
-
 /*
  * Blit an AG_Surface directly to an SDL_Surface.
  * If the formats of the two surfaces may differ, convert implicitely.
@@ -379,47 +283,133 @@ AG_SDL_SoftBlit_NoColorkey(const AG_Surface *_Nonnull ss, AG_Rect sr,
  */
 /* XXX TODO optimized cases, per-surface alpha */
 void
-AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
-    SDL_Surface *ds, int xDst, int yDst)
+AG_SDL_BlitSurface(const AG_Surface *S, const AG_Rect *srcRect,
+    SDL_Surface *D, int xDst, int yDst)
 {
-	AG_Rect sr;
-	SDL_Rect dr;
+	AG_Rect sr, dr, cr;
 
 #ifdef AG_DEBUG
-	if (ss->flags & AG_SURFACE_TRACE)
+	if (S->flags & AG_SURFACE_TRACE)
 		Debug(NULL, "Surface <%p>: Blit to SDL_Surface <%p> @ %d,%d\n",
-		    ss, ds, xDst, yDst);
+		    S, D, xDst, yDst);
 #endif
 	if (srcRect != NULL) {
 		sr = *srcRect;
 		if (sr.x < 0) { sr.x = 0; }
 		if (sr.y < 0) { sr.y = 0; }
-		if (sr.x+sr.w >= ss->w) { sr.w = ss->w - sr.x; }
-		if (sr.y+sr.h >= ss->h) { sr.h = ss->h - sr.y; }
+		if (sr.x+sr.w >= S->w) { sr.w = S->w - sr.x; }
+		if (sr.y+sr.h >= S->h) { sr.h = S->h - sr.y; }
+		if (sr.w < 0) { sr.w = 0; }
+		if (sr.h < 0) { sr.h = 0; }
 	} else {
 		sr.x = 0;
 		sr.y = 0;
-		sr.w = ss->w;
-		sr.h = ss->h;
+		sr.w = S->w;
+		sr.h = S->h;
 	}
-	dr.x = (Sint16)xDst;
-	dr.y = (Sint16)yDst;
-	dr.w = (Uint16)sr.w;
-	dr.h = (Uint16)sr.h;
-	dr = AG_SDL_RectIntersect(&dr, &ds->clip_rect);
-	if (dr.w == 0 || dr.h == 0)
+	dr.x = xDst;
+	dr.y = yDst;
+	dr.w = sr.w;
+	dr.h = sr.h;
+	cr.x = D->clip_rect.x;
+	cr.y = D->clip_rect.y;
+	cr.w = D->clip_rect.w;
+	cr.h = D->clip_rect.h;
+	if (!AG_RectIntersect(&dr, &dr, &cr))
 		return;
 
-	if (SDL_MUSTLOCK(ds)) {
-		SDL_LockSurface(ds);
+	if (sr.w > dr.w) {					/* Partial */
+		if (xDst < cr.x) {
+			sr.x += (cr.x - xDst);
+		}
+		sr.w -= (sr.w - dr.w);
 	}
-	if (ss->flags & AG_SURFACE_COLORKEY) {
-		AG_SDL_SoftBlit_Colorkey(ss,sr, ds,dr);
+	if (sr.h > dr.h) {
+		if (yDst < cr.y) {
+			sr.y += (cr.y - yDst);
+		}
+		sr.h -= (sr.h - dr.h);
+	}
+	if (sr.w <= 0 || sr.h <= 0)
+		return;
+
+	if (SDL_MUSTLOCK(D)) { SDL_LockSurface(D); }
+
+	if (S->flags & AG_SURFACE_COLORKEY) {
+		AG_SDL_SoftBlit_Colorkey(S,sr, D,dr);
 	} else {
-		AG_SDL_SoftBlit_NoColorkey(ss,sr, ds,dr);
+		AG_SDL_SoftBlit_NoColorkey(S,sr, D,dr);
 	}
-	if (SDL_MUSTLOCK(ds))
-		SDL_UnlockSurface(ds);
+
+	if (SDL_MUSTLOCK(D)) { SDL_UnlockSurface(D); }
+}
+static void
+AG_SDL_SoftBlit_Colorkey(const AG_Surface *_Nonnull S, AG_Rect sr,
+    SDL_Surface *_Nonnull ds, AG_Rect dr)
+{
+	const int dsBytesPerPixel = ds->format->BytesPerPixel;
+	Uint8 *pDst = (Uint8 *)ds->pixels + dr.y*ds->pitch + dr.x*dsBytesPerPixel;
+	const int dsPadding = ds->pitch - dr.w*dsBytesPerPixel;
+	int x, y;
+
+	for (y = 0; y < sr.h; y++) {
+		for (x = 0; x < sr.w; x++) {
+			AG_Pixel px;
+			AG_Color c;
+
+			px = AG_SurfaceGet(S, sr.x+x, sr.y+y);
+			if (S->colorkey == px) {
+				pDst += dsBytesPerPixel;
+				continue;
+			}
+			AG_GetColor(&c, px, &S->format);
+			if (c.a < AG_OPAQUE) {
+				AG_SDL_SurfaceBlend(ds, pDst, c, AG_ALPHA_SRC);
+			} else {
+				AG_SDL_PutPixel2(ds,
+				    dr.x + x,
+				    dr.y + y,
+				    SDL_MapRGB(ds->format,
+				        AG_Hto8(c.r),
+				        AG_Hto8(c.g),
+				        AG_Hto8(c.b)));
+			}
+			pDst += dsBytesPerPixel;
+		}
+		pDst += dsPadding;
+	}
+}
+static void
+AG_SDL_SoftBlit_NoColorkey(const AG_Surface *_Nonnull S, AG_Rect sr,
+    SDL_Surface *_Nonnull ds, AG_Rect dr)
+{
+	const int dsBytesPerPixel = ds->format->BytesPerPixel;
+	Uint8 *pDst = (Uint8 *)ds->pixels + dr.y*ds->pitch + dr.x*dsBytesPerPixel;
+	const int dsPadding = ds->pitch - dr.w*dsBytesPerPixel;
+	int x, y;
+
+	for (y = 0; y < dr.h; y++) {
+		for (x = 0; x < dr.w; x++) {
+			AG_Pixel px;
+			AG_Color c;
+	
+			px = AG_SurfaceGet(S, sr.x+x, sr.y+y);
+			AG_GetColor(&c, px, &S->format);
+			if (c.a < AG_OPAQUE) {
+				AG_SDL_SurfaceBlend(ds, pDst, c, AG_ALPHA_SRC);
+			} else {
+				AG_SDL_PutPixel2(ds,
+				    dr.x + x,
+				    dr.y + y,
+				    SDL_MapRGB(ds->format,
+				        AG_Hto8(c.r),
+				        AG_Hto8(c.g),
+				        AG_Hto8(c.b)));
+			}
+			pDst += dsBytesPerPixel;
+		}
+		pDst += dsPadding;
+	}
 }
 
 /*
