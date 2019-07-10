@@ -113,9 +113,9 @@ DUMMY_Open(void *_Nonnull obj, const char *_Nullable spec)
 		return (-1);
 
 	nDrivers++;
-
+#ifdef AG_ENABLE_STRING
 	Debug(drv, "Open (%s)\n", (spec) ? spec : "");
-
+#endif
 	if ((drv->mouse = AG_MouseNew(dum, "Dummy mouse")) == NULL ||
 	    (drv->kbd = AG_KeyboardNew(dum, "Dummy keyboard")) == NULL)
 		goto fail;
@@ -297,6 +297,7 @@ DUMMY_FillRect(void *_Nonnull obj, const AG_Rect *_Nonnull r, const AG_Color *_N
 	    c->r, c->g, c->b, c->a);
 }
 
+#ifdef HAVE_FLOAT
 static void
 DUMMY_UploadTexture(void *_Nonnull obj, Uint *_Nonnull rv,
     AG_Surface *_Nonnull S, AG_TexCoord *_Nullable tc)
@@ -336,6 +337,7 @@ DUMMY_DeleteTexture(void *_Nonnull obj, Uint texture)
 {
 	Debug(obj, "DeleteTexture(#%d)\n", texture);
 }
+#endif /* HAVE_FLOAT */
 
 /*
  * Clipping and blending control (rendering context)
@@ -929,12 +931,14 @@ DUMMY_SetTransientFor(AG_Window *_Nonnull win, AG_Window *_Nullable forParent)
 	    (forParent) ? OBJECT(forParent)->name : "null");
 }
 
+#ifdef HAVE_FLOAT
 static int
 DUMMY_SetOpacity(AG_Window *_Nonnull win, float f)
 {
 	Debug(win, "SetOpacity (%f)\n", f);
 	return (0);
 }
+#endif /* HAVE_FLOAT */
 
 static void
 DUMMY_TweakAlignment(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a,
@@ -1058,9 +1062,15 @@ AG_DriverMwClass agDriverDUMMY = {
 		DUMMY_EndRendering,
 		DUMMY_FillRect,
 		NULL,			/* updateRegion */
+#ifdef HAVE_FLOAT
 		DUMMY_UploadTexture,
 		DUMMY_UpdateTexture,
 		DUMMY_DeleteTexture,
+#else
+		NULL,			/* uploadTexture */
+		NULL,			/* updateTexture */
+		NULL,			/* deleteTexture */
+#endif
 		NULL,			/* setRefreshRate */
 		DUMMY_PushClipRect,
 		DUMMY_PopClipRect,
@@ -1078,6 +1088,10 @@ AG_DriverMwClass agDriverDUMMY = {
 		DUMMY_BlitSurfaceGL,
 		DUMMY_BlitSurfaceFromGL,
 		DUMMY_BlitSurfaceFlippedGL,
+#else
+		NULL,			/* blitSurfaceGL */
+		NULL,			/* blitSurfaceFromGL */
+		NULL,			/* blitSurfaceFlippedGL */
 #endif
 		DUMMY_BackupSurfaces,
 		DUMMY_RestoreSurfaces,
@@ -1124,6 +1138,10 @@ AG_DriverMwClass agDriverDUMMY = {
 	DUMMY_SetBorderWidth,
 	DUMMY_SetWindowCaption,
 	DUMMY_SetTransientFor,
+#ifdef HAVE_FLOAT
 	DUMMY_SetOpacity,
+#else
+	NULL,				/* setOpacity */
+#endif
 	DUMMY_TweakAlignment
 };

@@ -569,7 +569,7 @@ static void
 SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
 	AG_TextSize("XXXXXXXXXXXXXXXXXXXXXXXXX", &r->w, &r->h);
-	r->h *= 2;
+	r->h <<= 1;
 }
 
 static int
@@ -649,9 +649,12 @@ Draw(void *_Nonnull p)
 			if ((lnIdx == pos) ||
 			    ((sel > 0 && lnIdx > pos && lnIdx < pos+sel+1) ||
 			     (sel < 0 && lnIdx < pos && lnIdx > pos+sel-1))) {
-				AG_Rect rSel = r;
+				AG_Rect rSel;
+
 				rSel.x = 0;
+				rSel.y = r.y;
 				rSel.w = WIDGET(cons)->w;
+				rSel.h = r.h;
 				AG_DrawRectFilled(cons, &rSel,
 				    &WCOLOR_SEL(cons,AG_BG_COLOR));
 				cTxt = &WCOLOR_SEL(cons,AG_TEXT_COLOR);
