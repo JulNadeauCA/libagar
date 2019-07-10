@@ -177,6 +177,16 @@ AG_BoxSetLabelS(AG_Box *box, const char *s)
 }
 
 static void
+MouseButtonDown(AG_Event *_Nonnull event)
+{
+	AG_Box *box = AG_BOX_SELF();
+	AG_Window *wParent = AG_ParentWindow(box);
+
+	if (!AG_WindowIsFocused(wParent))
+		AG_WindowFocus(wParent);
+}
+
+static void
 Init(void *_Nonnull obj)
 {
 	AG_Box *box = obj;
@@ -189,6 +199,8 @@ Init(void *_Nonnull obj)
 	box->lbl = NULL;
 	box->hAlign = AG_BOX_LEFT;
 	box->vAlign = AG_BOX_TOP;
+
+	AG_SetEvent(box, "mouse-button-down", MouseButtonDown, NULL);
 }
 
 static void
@@ -248,21 +260,23 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_SizeReq rChld;
 	int wMax = 0, hMax = 0;
 	int nWidgets, totArea;
+	const int padding2 = box->padding << 1;
+	
+	r->w = padding2;
+	r->h = padding2;
 
 	nWidgets = CountChildWidgets(box, &totArea);
-	r->w = box->padding*2;
-	r->h = box->padding*2;
 	OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
 		AG_WidgetSizeReq(chld, &rChld);
 		if (rChld.w > wMax) { wMax = rChld.w; }
 		if (rChld.h > hMax) { hMax = rChld.h; }
 		switch (box->type) {
 		case AG_BOX_HORIZ:
-			r->h = MAX(r->h, hMax + box->padding*2);
+			r->h = MAX(r->h, hMax + padding2);
 			r->w += rChld.w + box->spacing;
 			break;
 		case AG_BOX_VERT:
-			r->w = MAX(r->w, wMax + box->padding*2);
+			r->w = MAX(r->w, wMax + padding2);
 			r->h += rChld.h + box->spacing;
 			break;
 		}
@@ -288,18 +302,17 @@ SizeAllocateHomogenous(AG_Box *_Nonnull box, const AG_SizeAlloc *_Nonnull a,
 	int wSize, totUsed = 0, avail;
 	AG_Widget *chld, *chldLast = NULL;
 	AG_SizeAlloc aChld;
+	const int padding2 = box->padding << 1;
 
 	avail = ((box->type == AG_BOX_HORIZ) ? a->w : a->h);
-	avail -= box->padding*2;
+	avail -= padding2;
 	wSize = (avail - nWidgets - 1) / nWidgets;
 
 	aChld.x = box->padding;
 	aChld.y = box->padding;
 	OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
-		aChld.w = (box->type==AG_BOX_HORIZ) ?
-		          wSize : (a->w - box->padding*2);
-		aChld.h = (box->type==AG_BOX_VERT) ?
-		          wSize : (a->h - box->padding*2);
+		aChld.w = (box->type==AG_BOX_HORIZ) ? wSize : (a->w - padding2);
+		aChld.h = (box->type==AG_BOX_VERT)  ? wSize : (a->h - padding2);
 
 		AG_WidgetSizeAlloc(chld, &aChld);
 		if (chld->flags & AG_WIDGET_UNDERSIZE)
@@ -340,6 +353,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_Widget *chld;
 	AG_SizeReq rChld;
 	AG_SizeAlloc aChld;
+	const int padding = box->padding, padding2 = padding << 1;
 	int nWidgets, totFixed;
 	int wAvail, hAvail;
 	int x, y;
@@ -353,20 +367,20 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		}
 		return (0);
 	}
-	wAvail = a->w - box->padding*2;
-	hAvail = a->h - box->padding*2;
-	x = box->padding;
-	y = box->padding;
+	wAvail = a->w - padding2;
+	hAvail = a->h - padding2;
+	x = padding;
+	y = padding;
 	if (totFixed < wAvail) {
 		switch (box->hAlign) {
-		case AG_BOX_CENTER:	x = wAvail/2 - totFixed/2;	break;
-		case AG_BOX_RIGHT:	x = wAvail - totFixed;		break;
-		default:						break;
+		case AG_BOX_CENTER: x = (wAvail>>1) - (totFixed>>1);  break;
+		case AG_BOX_RIGHT:  x =  wAvail     -  totFixed;      break;
+		default:                                              break;
 		}
 		switch (box->vAlign) {
-		case AG_BOX_CENTER:	y = hAvail/2 - totFixed/2;	break;
-		case AG_BOX_BOTTOM:	y = hAvail - totFixed;		break;
-		default:						break;
+		case AG_BOX_CENTER: y = (hAvail>>1) - (totFixed>>1);  break;
+		case AG_BOX_BOTTOM: y =  hAvail     -  totFixed;      break;
+		default:                                              break;
 		}
 	}
 	OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
@@ -382,9 +396,9 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 				aChld.w = a->w - aChld.x;
 			}
 			switch (box->vAlign) {
-			case AG_BOX_TOP:	aChld.y = y;			break;
-			case AG_BOX_CENTER:	aChld.y = hAvail/2 - aChld.h/2;	break;
-			case AG_BOX_BOTTOM:	aChld.y = hAvail - aChld.h;	break;
+			case AG_BOX_TOP:    aChld.y = y;                          break;
+			case AG_BOX_CENTER: aChld.y = (hAvail>>1) - (aChld.h>>1); break;
+			case AG_BOX_BOTTOM: aChld.y =  hAvail     -  aChld.h;     break;
 			}
 			AG_WidgetSizeAlloc(chld, &aChld);
 			x += aChld.w + box->spacing;
@@ -399,9 +413,9 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 				aChld.h = a->h - aChld.y;
 			}
 			switch (box->hAlign) {
-			case AG_BOX_TOP:	aChld.x = x;			break;
-			case AG_BOX_CENTER:	aChld.x = wAvail/2 - aChld.w/2;	break;
-			case AG_BOX_BOTTOM:	aChld.x = wAvail - aChld.w;	break;
+			case AG_BOX_TOP:    aChld.x = x;                          break;
+			case AG_BOX_CENTER: aChld.x = (wAvail>>1) - (aChld.w>>1); break;
+			case AG_BOX_BOTTOM: aChld.x =  wAvail     -  aChld.w;     break;
 			}
 			AG_WidgetSizeAlloc(chld, &aChld);
 			y += aChld.h + box->spacing;
