@@ -138,7 +138,7 @@
 #endif
 
 /* Nullability */
-#if !defined(NULL) && !defined(__MACH__)
+#if !defined(NULL) && !defined(__MACH__) && !defined(__CC65__)
 # ifdef __cplusplus
 #  define NULL 0
 #  define _AGAR_CORE_DEFINED_NULL
