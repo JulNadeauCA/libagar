@@ -53,6 +53,7 @@ extern AG_DriverClass agDriverWGL;
 #if defined(HAVE_COCOA)
 extern AG_DriverClass agDriverCocoa;
 #endif
+extern AG_DriverClass agDriverDUMMY;
 
 AG_Object       agDrivers;			/* Drivers VFS */
 AG_DriverClass *agDriverOps = NULL;		/* Current driver class */
@@ -73,16 +74,17 @@ AG_DriverClass *agDriverList[] = {
 #if defined(HAVE_SDL)
 	&agDriverSDLFB,
 #endif
+	&agDriverDUMMY,
 	NULL
 };
 
 const char *agDriverTypeNames[] = {
-	"Framebuffer",
-	"Vector"
+	N_("Framebuffer"),
+	N_("Vector")
 };
 const char *agDriverWmTypeNames[] = {
-	"Single-window",
-	"Multi-window"
+	N_("Single-window"),
+	N_("Multi-window")
 };
 
 /* Return a string with the available drivers. */

@@ -1,0 +1,63 @@
+.\" Copyright (c) 2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd May 2, 2010
+.Dt AG_DRIVERDUMMY 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4.1
+.Sh NAME
+.Nm AG_DriverDUMMY
+.Nd agar no-op driver
+.Sh DESCRIPTION
+The Agar
+.Va dummy
+driver is intended for testing and debugging applications.
+It advertises itself as a multi-window driver with texture management
+capabilities.
+In debug mode, the driver reports all low-level driver operations
+using
+.Xr AG_Debug 3 .
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Driver 3 ->
+.Xr AG_DriverMw 3 ->
+.Nm .
+.Sh EXAMPLES
+.Bd -literal -offset indent
+AG_InitGraphics("dummy");
+.Ed
+.Sh OPTIONS
+.Bl -tag -compact -width "stereo "
+.It stereo
+Request a stereoscopic visual.
+.El
+.Sh SEE ALSO
+.Xr AG_Driver 3 ,
+.Xr AG_GL 3 ,
+.Xr AG_InitGraphics 3 ,
+.Xr AG_Intro 3
+.Sh HISTORY
+The
+.Va dummy
+driver first appeared in Agar 1.6.0.
