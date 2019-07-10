@@ -453,7 +453,7 @@ DUMMY_PutPixelRGB8(void *_Nonnull obj, int x, int y, Uint8 r, Uint8 g, Uint8 b)
 	Debug(obj, "PutPixelRGB8(%d,%d, [%d,%d,%d])\n", x,y, r,g,b);
 }
 
-#ifdef HAVE_64BIT
+#if AG_MODEL == AG_LARGE
 static void
 DUMMY_PutPixel64(void *_Nonnull obj, int x, int y, Uint64 px)
 {
