@@ -44,7 +44,8 @@ Insert(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	AG_Char ins[3];
-	int i, nIns;
+	AG_Size len;
+	int i, nIns, pos;
 
 	if (keysym == 0)
 		return (0);
@@ -104,14 +105,16 @@ Insert(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 		return (0);
 	}
 
-	if (ed->pos == buf->len) {				/* Append */
+	pos = ed->pos;
+	len = buf->len;
+	if (pos == len) {					/* Append */
 		for (i = 0; i < nIns; i++)
-			buf->s[buf->len + i] = ins[i];
+			buf->s[len+i] = ins[i];
 	} else {						/* Insert */
-		memmove(&buf->s[ed->pos + nIns], &buf->s[ed->pos],
-		       (buf->len - ed->pos)*sizeof(AG_Char));
+		memmove(&buf->s[pos+nIns], &buf->s[pos],
+		        (len-pos)*sizeof(AG_Char));
 		for (i = 0; i < nIns; i++)
-			buf->s[ed->pos + i] = ins[i];
+			buf->s[pos+i] = ins[i];
 	}
 	buf->len += nIns;
 	buf->s[buf->len] = '\0';
@@ -138,11 +141,11 @@ Delete(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	AG_Char *c;
+	AG_Size len;
 #ifdef AG_UNICODE
 	int wDel;
 #endif
-
-	if (buf->len == 0)
+	if ((len = buf->len) == 0)
 		return (0);
 
 	if (ed->sel != 0) {
@@ -152,25 +155,30 @@ Delete(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	if (keysym == AG_KEY_BACKSPACE && ed->pos == 0) {
 		return (0);
 	}
-	if (ed->pos == buf->len) { 
+	if (ed->pos == len) { 
 		ed->pos--;
-		buf->s[--buf->len] = '\0';
+		buf->s[--len] = '\0';
+		buf->len--;
 
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
 			ed->xScrollTo = &ed->xCurs;
 			ed->yScrollTo = &ed->yCurs;
 		} else {
 #ifdef AG_UNICODE
-			AG_TextSizeNat(&buf->s[buf->len-1], &wDel, NULL);
-			if (ed->x > 0) { ed->x -= wDel; }
+			if (len > 0) {
+				AG_TextSizeNat(&buf->s[len-1], &wDel, NULL);
+				if (ed->x > 0) { ed->x -= wDel; }
+			}
 #else
 			/* TODO */
 #endif
 		}
 		return (1);
 	}
-	if (keysym == AG_KEY_BACKSPACE)
-		ed->pos--;
+	if (keysym == AG_KEY_BACKSPACE) {
+		if (ed->pos > 0)
+			ed->pos--;
+	}
 
 	if (ed->flags & AG_EDITABLE_MULTILINE) {
 		ed->xScrollTo = &ed->xCurs;
@@ -189,7 +197,7 @@ Delete(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	}
 
 	for (c = &buf->s[ed->pos];
-	     c < &buf->s[buf->len + 1];
+	     c < &buf->s[len+1];
 	     c++) {
 		*c = c[1];
 		if (*c == '\0')
