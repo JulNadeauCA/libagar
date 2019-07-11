@@ -759,59 +759,65 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 static int
 GLX_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 {
+	AG_Window *win;
 	AG_Driver *drv;
 	AG_SizeAlloc a;
 	int rv = 1;
 
-	if (dev->win == NULL ||
-	    dev->win->flags & AG_WINDOW_DETACHING)
+	if ((win = dev->win) == NULL ||
+	    win->flags & AG_WINDOW_DETACHING)
 		return (0);
 
 	AG_LockVFS(&agDrivers);
-	drv = WIDGET(dev->win)->drv;
+	drv = WIDGET(win)->drv;
 
+	if (win->flags & AG_WINDOW_USE_TEXT) {
+		AG_PushTextState();
+		AG_TextFont(WIDGET(win)->font);
+		AG_TextColor(&WIDGET(win)->pal.c[WIDGET(win)->state]
+		                                [AG_TEXT_COLOR]);
+	}
 	switch (dev->type) {
 	case AG_DRIVER_MOUSE_MOTION:
-		AG_ProcessMouseMotion(dev->win,
+		AG_ProcessMouseMotion(win,
 		    dev->data.motion.x, dev->data.motion.y,
-		    drv->mouse->xRel, drv->mouse->yRel,
-		    drv->mouse->btnState);
-		AG_MouseCursorUpdate(dev->win,
+		    drv->mouse->xRel, drv->mouse->yRel, drv->mouse->btnState);
+		AG_MouseCursorUpdate(win,
 		     dev->data.motion.x, dev->data.motion.y);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_DOWN:
-		AG_ProcessMouseButtonDown(dev->win,
+		AG_ProcessMouseButtonDown(win,
 		    dev->data.button.x, dev->data.button.y,
 		    dev->data.button.which);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_UP:
-		AG_ProcessMouseButtonUp(dev->win,
+		AG_ProcessMouseButtonUp(win,
 		    dev->data.button.x, dev->data.button.y,
 		    dev->data.button.which);
 		break;
 	case AG_DRIVER_KEY_UP:
-		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_RELEASED,
+		AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED,
 		    dev->data.key.ks, dev->data.key.ucs);
 		break;
 	case AG_DRIVER_KEY_DOWN:
-		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_PRESSED,
+		AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
 		    dev->data.key.ks, dev->data.key.ucs);
 		break;
 	case AG_DRIVER_MOUSE_ENTER:
-		AG_PostEvent(NULL, dev->win, "window-enter", NULL);
+		AG_PostEvent(NULL, win, "window-enter", NULL);
 		break;
 	case AG_DRIVER_MOUSE_LEAVE:
-		AG_PostEvent(NULL, dev->win, "window-leave", NULL);
+		AG_PostEvent(NULL, win, "window-leave", NULL);
 		break;
 	case AG_DRIVER_FOCUS_IN:
-		if (agWindowFocused != dev->win) {
-			agWindowFocused = dev->win;
-			AG_PostEvent(NULL, dev->win, "window-gainfocus", NULL);
+		if (agWindowFocused != win) {
+			agWindowFocused = win;
+			AG_PostEvent(NULL, win, "window-gainfocus", NULL);
 		}
 		break;
 	case AG_DRIVER_FOCUS_OUT:
-		if (agWindowFocused == dev->win) {
-			AG_PostEvent(NULL, dev->win, "window-lostfocus", NULL);
+		if (agWindowFocused == win) {
+			AG_PostEvent(NULL, win, "window-lostfocus", NULL);
 			agWindowFocused = NULL;
 		}
 		break;
@@ -820,24 +826,27 @@ GLX_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		a.y = dev->data.videoresize.y;
 		a.w = dev->data.videoresize.w;
 		a.h = dev->data.videoresize.h;
-		if (a.x != WIDGET(dev->win)->x || a.y != WIDGET(dev->win)->y) {
-			GLX_PostMoveCallback(dev->win, &a);
+		if (a.x != WIDGET(win)->x || a.y != WIDGET(win)->y) {
+			GLX_PostMoveCallback(win, &a);
 		}
-		if (a.w != WIDTH(dev->win) || a.h != HEIGHT(dev->win)) {
-			GLX_PostResizeCallback(dev->win, &a);
+		if (a.w != WIDTH(win) || a.h != HEIGHT(win)) {
+			GLX_PostResizeCallback(win, &a);
 		}
 		break;
 	case AG_DRIVER_CLOSE:
-		AG_PostEvent(NULL, dev->win, "window-close", NULL);
+		AG_PostEvent(NULL, win, "window-close", NULL);
 		break;
 	case AG_DRIVER_EXPOSE:
-		dev->win->dirty = 1;
+		win->dirty = 1;
 		break;
 	default:
 		rv = 0;
 		break;
 	}
 
+	if (win->flags & AG_WINDOW_USE_TEXT) {
+		AG_PopTextState();
+	}
 	AG_UnlockVFS(&agDrivers);
 	return (rv);
 }
