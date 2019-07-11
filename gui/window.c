@@ -3067,17 +3067,19 @@ Edit(void *_Nonnull obj)
 	AG_NumericalNewInt(rBox, 0, NULL, _("View Y: "), &WIDGET(tgt)->y);
 	AG_NumericalNewInt(rBox, 0, NULL, _("View W: "), &tgt->r.w);
 	AG_NumericalNewInt(rBox, 0, NULL, _("View H: "), &tgt->r.h);
+#if 0
 	AG_NumericalNewInt(rBox, 0, NULL, _("Saved X: "), &tgt->rSaved.x);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Saved Y: "), &tgt->rSaved.y);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Saved W: "), &tgt->rSaved.w);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Saved H: "), &tgt->rSaved.h);
+#endif
 	AG_NumericalNewInt(rBox, 0, NULL, _("Spacing: "), &tgt->spacing);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Padding Left: "), &tgt->lPad);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Padding Right: "), &tgt->rPad);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Padding Top: "), &tgt->tPad);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Padding Bottom: "), &tgt->bPad);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Requested W: "), &tgt->wReq);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Requested H: "), &tgt->hReq);
+	AG_WidgetDisable(AG_NumericalNewInt(rBox, 0, NULL, _("Requested W: "), &tgt->wReq));
+	AG_WidgetDisable(AG_NumericalNewInt(rBox, 0, NULL, _("Requested H: "), &tgt->hReq));
 	AG_NumericalNewInt(rBox, 0, NULL, _("Minimum W: "), &tgt->wMin);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Minimum H: "), &tgt->hMin);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Bottom Border W: "), &tgt->wBorderBot);
@@ -3087,7 +3089,7 @@ Edit(void *_Nonnull obj)
 	if (tgt->flags & AG_WINDOW_MINSIZEPCT) {
 		AG_NumericalNewInt(rBox, 0, "%", _("Minimum size: "), &tgt->minPct);
 	}
-	
+#if 0	
 	AG_SpacerNewHoriz(rBox);
 
 	AG_LabelNewS(rBox, 0, _("Initial window position:"));
@@ -3095,7 +3097,7 @@ Edit(void *_Nonnull obj)
 
 	AG_LabelNewS(rBox, 0, _("EWMH Window Type:"));
 	AG_RadioNewUint(rBox, 0, agWindowWmTypeNames, &tgt->wmType);
-
+#endif
 	AG_SetStyle(box, "font-size", "80%");
 	return (box);
 }
