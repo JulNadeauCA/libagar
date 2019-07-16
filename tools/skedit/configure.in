@@ -1,33 +1,34 @@
 # Public domain
+# ex:syn=bsdbuild
 
-CONFIG_GUESS("../../mk/config.guess")
+config_guess("../../mk/config.guess")
 
-REGISTER_SECTION("skedit options:")
-REGISTER("--with-agar[=PREFIX]",	"Location of Agar library [check]")
-REGISTER("--with-agar-math[=PREFIX]",	"Location of Agar-MATH library [check]")
-REGISTER("--with-agar-sk[=PREFIX]",	"Location of Agar-SK library [check]")
+register_section("skedit options:")
+register("--with-agar[=PREFIX]",	"Location of Agar library [check]")
+register("--with-agar-math[=PREFIX]",	"Location of Agar-MATH library [check]")
+register("--with-agar-sk[=PREFIX]",	"Location of Agar-SK library [check]")
 
-PACKAGE("skedit")
-VERSION("1.0")
-DEFAULT_DIR(DATADIR, "${PREFIX}/share/agar")
-DEFAULT_DIR(LOCALEDIR, "${DATADIR}/locale")
+package("skedit")
+version("1.0")
+default_dir(DATADIR, "${PREFIX}/share/agar")
+default_dir(LOCALEDIR, "${DATADIR}/locale")
 
-REQUIRE(cc)
-REQUIRE(agar, 1.6.0, ${prefix_agar})
-REQUIRE(agar-math, 1.6.0, ${prefix_agar_math})
-REQUIRE(agar-sk, 1.6.0, ${prefix_agar_sk})
+require(cc)
+require(agar, 1.6.0, ${prefix_agar})
+require(agar-math, 1.6.0, ${prefix_agar_math})
+require(agar-sk, 1.6.0, ${prefix_agar_sk})
 
 if [ "${enable_nls}" = "yes" ]; then
-	REQUIRE(gettext)
+	require(gettext)
 fi
 
-C_DEFINE(_USE_SG_MATH)
-C_DEFINE(_USE_AGAR_QUEUE)
-C_DEFINE(_USE_AGAR_STD)
-C_DEFINE(_USE_AGAR_TYPES)
-C_DEFINE(_USE_AGAR_ATTRIBUTES)
-C_DEFINE(_USE_AGAR_NULLABILITY)
-C_NO_SECURE_WARNINGS()
+c_define(_USE_SG_MATH)
+c_define(_USE_AGAR_QUEUE)
+c_define(_USE_AGAR_STD)
+c_define(_USE_AGAR_TYPES)
+c_define(_USE_AGAR_ATTRIBUTES)
+c_define(_USE_AGAR_NULLABILITY)
+c_no_secure_warnings()
 
-C_INCDIR($BLD)
-C_INCDIR_CONFIG($BLD/config)
+c_incdir($BLD)
+c_incdir_config($BLD/config)

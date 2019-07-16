@@ -37,10 +37,6 @@ includes:
 		perl mk/gen-includes.pl include/agar; \
 	fi
 
-configure:
-	cat configure.in | mkconfigure > configure
-	chmod 755 configure
-
 cleandir-config:
 	rm -fR include config 
 	rm -f Makefile.config config.log configure.lua .projfiles.out .projfiles2.out
@@ -153,7 +149,7 @@ function-list:
 	find . -name \*.3 -exec grep ^\.Fn {} \; |awk '{print $$2}' |uniq
 
 .PHONY: clean cleandir install deinstall depend regress includes
-.PHONY: configure cleandir-config release
+.PHONY: cleandir-config release
 .PHONY: install-includes deinstall-includes install-config deinstall-config
 .PHONY: pre-package post-package function-list
 

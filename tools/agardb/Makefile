@@ -18,11 +18,5 @@ LIBS+=		${AGAR_LIBS} ${LLDB_LIBS} -llldbUtility
 
 all: all-subdir ${PROG}
 
-configure: configure.in
-	cat configure.in | mkconfigure > configure
-	chmod 755 configure
-
-.PHONY: configure
-
 include ${TOP}/mk/build.prog.mk
 include ${TOP}/mk/build.man.mk

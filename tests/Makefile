@@ -65,12 +65,4 @@ DATAFILES= BigImage.jpg agar.png agar-index.png agar.bmp agar-1.bmp agar-2.bmp \
 
 CLEANFILES+=	agar-index-save.png agar-save.png axe-save.png pepe-save.jpg
 
-all: all-subdir ${PROG}
-
-configure: configure.in
-	cat configure.in | mkconfigure > configure
-	chmod 755 configure
-
-.PHONY: configure
-
 include ${TOP}/mk/build.prog.mk

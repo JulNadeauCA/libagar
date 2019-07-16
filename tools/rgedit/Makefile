@@ -16,13 +16,5 @@ MAN1=		rgedit.1
 CFLAGS+=	${AGAR_RG_CFLAGS} ${AGAR_CFLAGS}
 LIBS+=		${AGAR_RG_LIBS} ${AGAR_LIBS}
 
-all: all-subdir ${PROG}
-
-configure: configure.in
-	cat configure.in | mkconfigure > configure
-	chmod 755 configure
-
-.PHONY: configure
-
 include ${TOP}/mk/build.prog.mk
 include ${TOP}/mk/build.man.mk

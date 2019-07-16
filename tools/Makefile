@@ -15,6 +15,7 @@ clean: prereq clean-subdir
 cleandir: prereq cleandir-subdir cleandir-cache
 deinstall: deinstall-subdir
 depend: depend-subdir
+configure: configure-subdir
 
 install:
 	for D in ${SUBDIR}; do \
@@ -25,11 +26,6 @@ install:
 cleandir-cache:
 	rm -fR .cache
 
-configure:
-	for D in ${SUBDIR}; do \
-		echo "==> $$D"; \
-		(cd $$D && ${MAKE} configure); \
-	done
 
 prereq:
 	for D in ${SUBDIR}; do \
