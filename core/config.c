@@ -287,16 +287,14 @@ AG_ConfigSetPathS(AG_ConfigPathGroup group, int idx, const char *buf)
 	i = 0;
 	TAILQ_FOREACH(path, pathGroup, paths) {
 		if (i++ == idx) {
-			Verbose("ConfigSetPath: Found i=%d (%s)\n", i, path->s);
 			Free(path->s);
 			path->s = Strdup(buf);
 			return (0);
 		} else if (i > idx) {
-			AG_SetError("Bad index");
+			AG_SetErrorS("Bad index");
 			return (-1);
 		}
 	}
-	Verbose("ConfigSetPath(%s): Adding entry %d\n", agConfigPathGroupNames[group], idx);
 	AG_ConfigAddPathS(group, buf);
 	return (0);
 }
