@@ -353,7 +353,7 @@ TestGUI(void *obj, AG_Window *win)
 	 */
 	{
 		AG_Notebook *nb;
-		AG_NotebookTab *ntab;
+		AG_NotebookTab *nt;
 		AG_Table *table;
 		AG_Menu *menu;
 		AG_MenuItem *m, *mSub;
@@ -394,7 +394,7 @@ TestGUI(void *obj, AG_Window *win)
 
 		nb = AG_NotebookNew(div2, AG_NOTEBOOK_EXPAND);
 
-		ntab = AG_NotebookAdd(nb, "Some table", AG_BOX_VERT);
+		nt = AG_NotebookAdd(nb, "Some table", AG_BOX_VERT);
 		{
 			float f;
 
@@ -404,8 +404,8 @@ TestGUI(void *obj, AG_Window *win)
 			 * the table is static or needs to be repopulated
 			 * periodically.
 			 */
-			table = AG_TableNew(ntab,
-			    AG_TABLE_EXPAND|AG_TABLE_MULTI);
+			table = AG_TableNew(nt,
+			    AG_TABLE_EXPAND | AG_TABLE_MULTI);
 			AG_TableAddCol(table, "x", "33%", NULL);
 			AG_TableAddCol(table, "sin(x)", "33%", NULL);
 			AG_TableAddCol(table, "cos(x)", "33%", NULL);
@@ -418,9 +418,24 @@ TestGUI(void *obj, AG_Window *win)
 				AG_TableAddRow(table, "%.02f:%.02f:%.02f",
 				    f, sin(f), cos(f));
 			}
+			{
+				const char *selModes[] = {
+				    "Select by row",
+				    "Select by cell",
+				    "Select by column",
+				    NULL
+				};
+				AG_RadioNewUint(nt, 0, selModes, &table->selMode);
+			}
+			AG_CheckboxNewFlag(nt, 0,
+			    "Multiple selections allowed",
+			    &table->flags, AG_TABLE_MULTI);
+			AG_CheckboxNewFlag(nt, 0,
+			    "Toggle multiple selections",
+			    &table->flags, AG_TABLE_MULTITOGGLE);
 		}
 		
-		ntab = AG_NotebookAdd(nb, "Some text", AG_BOX_VERT);
+		nt = AG_NotebookAdd(nb, "Some text", AG_BOX_VERT);
 		{
 			char path[AG_PATHNAME_MAX];
 			AG_Size size, bufSize;
@@ -432,7 +447,7 @@ TestGUI(void *obj, AG_Window *win)
 			 * causes the widget to receive TAB key events
 			 * (normally used to focus other widgets).
 			 */
-			tbox = AG_TextboxNewS(ntab,
+			tbox = AG_TextboxNewS(nt,
 			    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB|
 			    AG_TEXTBOX_EXPAND|AG_TEXTBOX_EXCL, NULL);
 			AG_WidgetSetFocusable(tbox, 1);
@@ -474,11 +489,11 @@ TestGUI(void *obj, AG_Window *win)
 #endif
 	
 			/* Add a word wrapping control */
-			AG_CheckboxNewFn(ntab, 0, "Word wrapping",
+			AG_CheckboxNewFn(nt, 0, "Word wrapping",
 			    SetWordWrap, "%p", tbox);
 		}
 		
-		ntab = AG_NotebookAdd(nb, "Empty tab", AG_BOX_VERT);
+		nt = AG_NotebookAdd(nb, "Empty tab", AG_BOX_VERT);
 	}
 	return (0);
 }

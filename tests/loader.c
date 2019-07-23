@@ -32,7 +32,7 @@ LoadImage(AG_Event *event)
 		AG_TextMsgFromError();
 		return;
 	}
-	AG_WindowSetCaption(win, "Image <%s>", AG_ShortFilename(file));
+	AG_WindowSetCaptionS(win, AG_ShortFilename(file));
 
 	/*
 	 * Process type-specific options.
@@ -76,12 +76,10 @@ LoadImage(AG_Event *event)
 		    AG_MIN(640, S->w + 32),
 		    AG_MIN(480, S->h + 32));
 	} else {						/* Compact */
-
 		AG_PixmapFromSurfaceScaled(win, 0, S, S->w, S->h);
-
 		AG_WindowSetGeometry(win, -1, -1,
-		    AG_MAX(200, S->w + 32),
-		    AG_MAX(100, S->h + 32));
+		    S->w + 20,
+		    S->h + agTextFontHeight + 30);
 	}
 	
 	AG_SurfaceFree(S);
