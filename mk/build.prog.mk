@@ -112,6 +112,7 @@ deinstall: deinstall-prog deinstall-subdir
 clean: clean-prog clean-subdir
 cleandir: clean-prog clean-subdir cleandir-prog cleandir-subdir
 regress: regress-subdir
+configure: configure-prog
 
 .SUFFIXES: .adb .ads .asm .c .cc .cpp .l .m .o .y
 
@@ -573,9 +574,27 @@ prog-tags:
 check-prog:
 	@echo check-prog
 
-.PHONY: install deinstall clean cleandir regress depend
+configure-prog:
+	@if [ "${PROG}" != "" ]; then \
+		if [ -e "configure.in" ]; then \
+			echo "cat configure.in | mkconfigure > configure"; \
+			cat configure.in | mkconfigure > configure; \
+			if [ ! -e configure ]; then \
+				echo "mkconfigure failed."; \
+				echo "Note: mkconfigure is part of BSDBuild"; \
+				echo "(http://bsdbuild.hypertriton.com/)"; \
+				exit 1; \
+			fi; \
+			if [ ! -x configure ]; then \
+				echo "chmod 755 configure"; \
+				chmod 755 configure; \
+			fi; \
+		fi; \
+	fi
+
+.PHONY: install deinstall clean cleandir regress depend configure
 .PHONY: install-prog deinstall-prog clean-prog cleandir-prog check-prog
-.PHONY: _prog_objs prog-tags none
+.PHONY: configure-prog _prog_objs prog-tags none
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.proj.mk

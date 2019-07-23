@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@hypertriton.com>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -164,6 +164,40 @@ deinstall-subdir-ifexists:
 		done; \
 	fi)
 
+configure-subdir:
+	@(if [ "${SUBDIR}" = "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
+		    echo "==> ${REL}$$F"; \
+		    (cd $$F && ${MAKE} REL=${REL}$$F/ configure); \
+		    if [ $$? != 0 ]; then \
+		    	exit 1; \
+		    fi; \
+		done; \
+	fi)
+
+configure-subdir-ifexists:
+	@(if [ "${SUBDIR}" = "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
+		    if [ -e "$$F" ]; then \
+		        echo "==> ${REL}$$F"; \
+		        (cd $$F && ${MAKE} REL=${REL}$$F/ configure); \
+		        if [ $$? != 0 ]; then \
+		    	    exit 1; \
+		        fi; \
+		    fi; \
+		done; \
+	fi)
+
 depend-subdir:
 	@(if [ "${SUBDIR}" = "" ]; then \
 	    SUBDIR="NONE"; \
@@ -300,8 +334,8 @@ proj-clean-subdir:
 	fi)
 
 .PHONY:	all-subdir clean-subdir cleandir-subdir install-subdir
-.PHONY: deinstall-subdir depend-subdir regress-subdir
+.PHONY: deinstall-subdir configure-subdir depend-subdir regress-subdir
 .PHONY:	all-subdir-ifexists clean-subdir-ifexists cleandir-subdir-ifexists
 .PHONY: install-subdir-ifexists deinstall-subdir-ifexists
-.PHONY: depend-subdir-ifexists regress-subdir-ifexists
+.PHONY: configure-subdir-ifexists depend-subdir-ifexists regress-subdir-ifexists
 .PHONY: proj-package-subdir proj-clean-subdir

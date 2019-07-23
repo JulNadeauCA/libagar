@@ -109,6 +109,7 @@ deinstall: deinstall-lib deinstall-subdir
 clean: clean-lib clean-subdir
 cleandir: clean-lib clean-subdir cleandir-lib cleandir-subdir
 regress: regress-subdir
+configure: configure-lib
 
 .SUFFIXES: .ads .adb .asm .c .cc .cpp .l .lo .m .o .y
 
@@ -904,8 +905,26 @@ lib-tags:
 
 ${LTCONFIG} ${LTCONFIG_DEPS}:
 
-.PHONY: install deinstall includes clean cleandir regress depend
-.PHONY: install-lib deinstall-lib clean-lib cleandir-lib
+configure-lib:
+	@if [ "${LIB}" != "" ]; then \
+		if [ -e "configure.in" ]; then \
+			echo "cat configure.in | mkconfigure > configure"; \
+			cat configure.in | mkconfigure > configure; \
+			if [ ! -e configure ]; then \
+				echo "mkconfigure failed."; \
+				echo "Note: mkconfigure is part of BSDBuild"; \
+				echo "(http://bsdbuild.hypertriton.com/)"; \
+				exit 1; \
+			fi; \
+			if [ ! -x configure ]; then \
+				echo "chmod 755 configure"; \
+				chmod 755 configure; \
+			fi; \
+		fi; \
+	fi
+
+.PHONY: install deinstall includes clean cleandir regress depend configure
+.PHONY: install-lib deinstall-lib clean-lib cleandir-lib configure-lib
 .PHONY: _lib_objs _lib_ltobjs lib-tags check-libtool none
 
 include ${TOP}/mk/build.common.mk

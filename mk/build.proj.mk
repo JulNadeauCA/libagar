@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@hypertriton.com>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#
-# For Makefiles using <build.prog.mk> and <build.lib.mk>, generate project
-# files for various IDEs using Premake (http://premake.sourceforge.net/).
-#
-
 PREMAKE?=	premake
 ZIP?=		zip
 ZIPFLAGS?=	-r
@@ -46,6 +41,8 @@ PROJFILES?=	windows:vs2005:: \
 
 CLEANFILES+=	${PREMAKEOUT}
 
+configure: configure-proj
+
 proj-package:
 	@if [ "${PROJECT}" = "" ]; then \
 	    echo "cat Makefile | ${MKPROJFILES} > ${PREMAKEOUT}"; \
@@ -55,6 +52,10 @@ proj-package:
 	        ${MKPROJFILES} > ${PREMAKEOUT}; \
 	fi
 
+#
+# For Makefiles using <build.prog.mk> and <build.lib.mk>, generate project
+# files for various IDEs using Premake (http://premake.sourceforge.net/).
+#
 proj:
 	@if [ ! -d "${PROJDIR}" ]; then \
 		echo "mkdir -p ${PROJDIR}"; \
@@ -150,4 +151,22 @@ proj:
 	done
 	@echo "* Done"
 
-.PHONY: proj
+configure-proj:
+	@if [ "${PROG}" = "" -a "${LIB}" = "" ]; then \
+		if [ -e "configure.in" ]; then \
+			echo "cat configure.in | mkconfigure > configure"; \
+			cat configure.in | mkconfigure > configure; \
+			if [ ! -e configure ]; then \
+				echo "mkconfigure failed."; \
+				echo "Note: mkconfigure is part of BSDBuild"; \
+				echo "(http://bsdbuild.hypertriton.com/)"; \
+				exit 1; \
+			fi; \
+			if [ ! -x configure ]; then \
+				echo "chmod 755 configure"; \
+				chmod 755 configure; \
+			fi; \
+		fi; \
+	fi
+
+.PHONY: proj configure-proj
