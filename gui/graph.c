@@ -545,10 +545,10 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 
 	if (a->w < 1 || a->h < 1)
 		return (-1);
-
+#if 0
 	gf->xOffs = -(a->w >> 1);
 	gf->yOffs = -(a->h >> 1);
-
+#endif
 	gf->r.x = 0;
 	gf->r.y = 0;
 	gf->r.w = a->w;
