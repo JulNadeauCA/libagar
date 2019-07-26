@@ -44,7 +44,7 @@ extensive detail.
 .Sh INTERFACE
 .nr nS 1
 .Ft "AG_Window *"
-.Fn AG_GuiDebugger "void"
+.Fn AG_GuiDebugger "AG_Window *_Nonnull"
 .Pp
 .nr nS 0
 The
@@ -52,7 +52,8 @@ The
 function creates the GUI debugger window.
 The caller should invoke
 .Xr AG_WindowShow 3
-to display it.
+to display it. The debugger window should be closed before the window which
+it is debugging.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,

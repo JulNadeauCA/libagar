@@ -58,7 +58,7 @@ void  AG_ZoomOut(void);
 void  AG_ZoomReset(void);
 
 #if defined(AG_DEBUG) && defined(AG_TIMERS)
-void *_Nullable AG_GuiDebugger(void *_Nullable);
+struct ag_window *_Nullable AG_GuiDebugger(struct ag_window *_Nonnull);
 #endif
 
 #ifdef HAVE_SDL

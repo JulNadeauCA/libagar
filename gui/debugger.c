@@ -472,8 +472,8 @@ ContextualMenu(AG_Event *_Nonnull event)
 }
 
 /* Create the GUI debugger window. Return NULL if window exists. */
-void *
-AG_GuiDebugger(void *obj)
+AG_Window *_Nullable
+AG_GuiDebugger(AG_Window *_Nonnull obj)
 {
 	AG_Window *win;
 	AG_Pane *pane;
