@@ -542,18 +542,27 @@ static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Graph *gf = obj;
+	AG_GraphVertex* vtx;
 
 	if (a->w < 1 || a->h < 1)
 		return (-1);
-#if 0
-	gf->xOffs = -(a->w >> 1);
-	gf->yOffs = -(a->h >> 1);
-#endif
+
 	gf->r.x = 0;
 	gf->r.y = 0;
 	gf->r.w = a->w;
 	gf->r.h = a->h;
 
+	/* if at least one vertex is in view, we don't need to reset *Offs. */
+	TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
+		if (AG_RectInside(&gf->r, vtx->x - gf->xOffs,
+		                          vtx->y - gf->yOffs))
+			break;
+	}
+	if (vtx == NULL) {
+		/* reset view position */
+		gf->xOffs = -(a->w >> 1);
+		gf->yOffs = -(a->h >> 1);
+	}
 	return (0);
 }
 
