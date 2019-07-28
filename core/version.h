@@ -9,9 +9,10 @@
 #define AGAR_PATCHLEVEL		0
 
 typedef struct ag_agar_version {
-	int major;
-	int minor;
-	int patch;
+	int major;			/* Major version number */
+	int minor;			/* Minor version number */
+	int patch;			/* Patchlevel */
+	int rev;			/* SVN revision number (or 0) */
 	const char *_Nullable release;
 } AG_AgarVersion;
 

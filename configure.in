@@ -1142,3 +1142,9 @@ pkgconfig_mod(agar-vg, "Agar vector graphics library", "agar", "", \
 	"-I\${includedir}/agar ${MATH_CFLAGS}", \
 	"-L\${libdir} -lag_vg", \
 	"-lag_vg ${MATH_LIBS}")
+
+#
+# Get the SVN revision number (or 0)
+#
+(cd ${SRCDIR} && \
+ ${SH} mk/gen-revision.sh "${SRCDIR}" AGAR_REVISION > $bb_incdir/revision.h)

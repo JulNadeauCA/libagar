@@ -29,6 +29,7 @@
 
 #include <agar/config/version.h>
 #include <agar/config/release.h>
+#include <agar/config/revision.h>
 #include <agar/config/enable_nls.h>
 #include <agar/config/localedir.h>
 #include <agar/config/ag_threads.h>
@@ -299,5 +300,6 @@ AG_GetVersion(AG_AgarVersion *ver)
 	ver->major = AGAR_MAJOR_VERSION;
 	ver->minor = AGAR_MINOR_VERSION;
 	ver->patch = AGAR_PATCHLEVEL;
+	ver->rev = AGAR_REVISION;
 	ver->release = RELEASE;
 }

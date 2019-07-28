@@ -11,6 +11,7 @@
 
 #include <agar/config/ag_unicode.h>
 #include <agar/config/have_opengl.h>
+#include <agar/config/revision.h>
 #include "config/have_agar_au.h"
 #include "config/datadir.h"
 
@@ -595,10 +596,20 @@ main(int argc, char *argv[])
 
 				AG_GetVersion(&av);
 				if (av.release) {
-					printf("agar %d.%d.%d (\"%s\", %s)\n", av.major, av.minor,
-					    av.patch, av.release, AG_MEMORY_MODEL_NAME);
+					if (av.rev > 0) {
+						printf("agar %d.%d.%d (r%d, \"%s\", %s)\n",
+						    av.major, av.minor, av.patch,
+						    av.rev, av.release,
+						    AG_MEMORY_MODEL_NAME);
+					} else {
+						printf("agar %d.%d.%d (\"%s\", %s)\n",
+						    av.major, av.minor, av.patch,
+						    av.release, AG_MEMORY_MODEL_NAME);
+					}
 				} else {
-					printf("agar %d.%d.%d (%s)\n", av.major, av.minor, av.patch,
+					printf("agar %d.%d.%d (r%d, %s)\n",
+					    av.major, av.minor, av.patch,
+					    av.rev,
 					    AG_MEMORY_MODEL_NAME);
 				}
 				return (0);
@@ -706,9 +717,29 @@ main(int argc, char *argv[])
 		AG_ConsoleMsgS(C, "          |___/                 ");
 		AG_ConsoleMsgS(C, "");
 
-		ln = AG_ConsoleMsg(C, _("Agar %d.%d.%d for %s (\"%s\")"),
-		    av.major, av.minor, av.patch, agCPU.arch, av.release);
+		if (av.release) {
+			if (av.rev > 0) {
+				ln = AG_ConsoleMsg(C, _("Agar %d.%d.%d for %s (r%d, \"%s\")"),
+				    av.major, av.minor, av.patch, agCPU.arch,
+				    av.rev, av.release);
+			} else {
+				ln = AG_ConsoleMsg(C, _("Agar %d.%d.%d for %s (\"%s\")"),
+				    av.major, av.minor, av.patch, agCPU.arch,
+				    av.release);
+			}
+		} else {
+			ln = AG_ConsoleMsg(C, _("Agar %d.%d.%d for %s (r%d)"),
+			    av.major, av.minor, av.patch, agCPU.arch, av.rev);
+		}
 		AG_ColorRGB_8(&ln->c, 0,255,120);
+
+		if (av.rev > 0 && av.rev != AGAR_REVISION) {
+			ln = AG_ConsoleMsg(C,
+			    _("WARNING: Agartest compiled against SVN r%d, but "
+			      "installed libagar is r%d.\n"),
+			      AGAR_REVISION, av.rev);
+			AG_ColorRGB_8(&ln->c, 255,100,100);
+		}
 
 		ln = AG_ConsoleMsgS(C, "http://libagar.org");
 		AG_ColorRGB_8(&ln->c, 0,255,120);

@@ -1267,8 +1267,8 @@ echo '# C: HAVE_CC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1293,7 +1293,7 @@ if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
-TEST_CFLAGS="-Wall -Werror"
+TEST_CFLAGS="-Wall"
 fi
 $ECHO_N 'cc: checking for float and double...'
 $ECHO_N '# cc: checking for float and double...' >>config.log
@@ -1894,8 +1894,8 @@ echo '# ObjC: HAVE_OBJC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.m" >>config.log
 cat conftest$$.m>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -x objective-c -o $testdir/conftest$$ conftest$$.m  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -x objective-c -o $testdir/conftest$$ conftest$$.m  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -x objective-c -o $testdir/conftest$$ conftest$$.m  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -x objective-c -o $testdir/conftest$$ conftest$$.m  2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1920,7 +1920,7 @@ if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.m $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_OBJC_WARNINGS}" = "yes" ]; then
-TEST_OBJCFLAGS="-Wall -Werror"
+TEST_OBJCFLAGS="-Wall"
 fi
 bb_o=$bb_incdir/have_objc.h
 echo '#ifndef HAVE_OBJC' >$bb_o
@@ -14208,6 +14208,7 @@ Libs.private: $pkgconfig_module_libs_pvt
 Cflags: $pkgconfig_module_cflags
 EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-vg.pc"
+(cd ${SRCDIR} && ${SH} mk/gen-revision.sh "${SRCDIR}" AGAR_REVISION > $bb_incdir/revision.h)
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
 echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
 echo "AVAIL_CONFIGSCRIPTS=$AVAIL_CONFIGSCRIPTS" >>Makefile.config
