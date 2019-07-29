@@ -86,12 +86,6 @@ widgets should be used.
 .Ft void
 .Fn AG_ScrollbarSetControlLength "AG_Scrollbar *scrollbar" "int length"
 .Pp
-.Ft void
-.Fn AG_ScrollbarSetWidth "int width"
-.Pp
-.Ft int
-.Fn AG_ScrollbarWidth "void"
-.Pp
 .Ft int
 .Fn AG_ScrollbarVisible "AG_Scrollbar *scrollbar"
 .Pp
@@ -173,11 +167,6 @@ Note that this parameter is ignored if the
 .Va visible
 binding is set to a non-zero value (in which case, the optimal size of the
 control is determined automatically).
-.Pp
-.Fn AG_ScrollbarSetWidth
-configures the width (i.e., thickness) of the scrollbar.
-.Fn AG_ScrollbarWidth
-returns the effective width of a scrollbar in pixels.
 .Pp
 The
 .Fn AG_ScrollbarVisible

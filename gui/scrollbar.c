@@ -33,6 +33,11 @@
 #define SBPOS(sb,x,y) (((sb)->type == AG_SCROLLBAR_HORIZ) ? (x) : (y))
 #define SBLEN(sb)     (((sb)->type == AG_SCROLLBAR_HORIZ) ? WIDTH(sb) : HEIGHT(sb))
 
+static void DrawHoriz(AG_Scrollbar *_Nonnull, int, int);
+static void DrawVert(AG_Scrollbar *_Nonnull, int, int);
+static void DrawHorizUndersize(AG_Scrollbar *_Nonnull);
+static void DrawVertUndersize(AG_Scrollbar *_Nonnull);
+
 AG_Scrollbar *
 AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 {
@@ -83,27 +88,6 @@ AG_ScrollbarSetControlLength(AG_Scrollbar *sb, int bsize)
 	sb->length -= sb->width*2;
 	sb->length -= sb->wBar;
 	AG_ObjectUnlock(sb);
-}
-
-/* Set scrollbar width in pixels. */
-void
-AG_ScrollbarSetWidth(AG_Scrollbar *sb, int width)
-{
-	AG_ObjectLock(sb);
-	sb->width = width;
-	AG_ObjectUnlock(sb);
-}
-
-/* Return the current width of a scrollbar in pixels. */
-int
-AG_ScrollbarWidth(AG_Scrollbar *sb)
-{
-	int w;
-
-	AG_ObjectLock(sb);
-	w = sb->width;
-	AG_ObjectUnlock(sb);
-	return (w);
 }
 
 /* Set an alternate handler for UP/LEFT button click. */
@@ -160,8 +144,12 @@ AG_ScrollbarSetDecFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 	divPx = (int)(max - vis - min);					\
 	if (divPx < 1) { goto fail; }					\
 	*x = (int)(((*(TYPE *)pVal - min) * extentPx) / divPx);		\
-	*len = (vis > 0) ? (vis * sb->length / (max - min)) :			\
+	*len = (vis > 0) ? (vis * sb->length / (max - min)) :		\
 	                    (sb->wBar == -1) ? sb->length : sb->wBar;	\
+	if (*len < 16) {						\
+		*x -= (16 - *len);					\
+		*len = 16;						\
+	}								\
 }
 static __inline__ int
 GetPxCoords(AG_Scrollbar *_Nonnull sb, int *_Nonnull x, int *_Nonnull len)
@@ -746,6 +734,7 @@ Init(void *_Nonnull obj)
 	sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
 	sb->mouseOverBtn = AG_SCROLLBAR_BUTTON_NONE;
 	sb->flags = AG_SCROLLBAR_AUTOHIDE;
+	sb->value = 0;
 	sb->buttonIncFn = NULL;
 	sb->buttonDecFn = NULL;
 	sb->xOffs = 0;
@@ -756,7 +745,6 @@ Init(void *_Nonnull obj)
 	sb->wBarMin = 16;
 	sb->width = agTextFontHeight;
 	sb->hArrow = sb->width >> 1;
-	sb->value = 0;
 	
 	AG_AddEvent(sb, "widget-shown", OnShow, NULL);
 	AG_SetEvent(sb, "mouse-button-down", MouseButtonDown, NULL);
@@ -848,32 +836,41 @@ DrawText(AG_Scrollbar *_Nonnull sb)
 }
 
 static void
-DrawVertUndersize(AG_Scrollbar *_Nonnull sb)
+Draw(void *_Nonnull obj)
 {
-	AG_Rect r;
-	int w_2, s;
+	AG_Scrollbar *sb = obj;
+	static void (*pf[])(AG_Scrollbar *_Nonnull, int, int) = {
+		DrawHoriz,
+		DrawVert
+	};
+	int x, len;
 
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(sb);
-	r.h = HEIGHT(sb);
-	AG_DrawBox(sb, &r, 1, &WCOLOR(sb,0));
-	
-	w_2 = (r.w >> 1);
-	s = MIN(r.h>>2, r.w);
+	if (GetPxCoords(sb, &x, &len) == -1) {
+		x = 0;
+		len = sb->length;
+	}
+	if ((sb->flags & AG_SCROLLBAR_AUTOHIDE) && (len == sb->length))
+		return;
+#ifdef AG_DEBUG
+	if (sb->type != AG_SCROLLBAR_HORIZ &&
+	    sb->type != AG_SCROLLBAR_VERT)
+		AG_FatalError("sb->type");
+#endif
+	pf[sb->type](sb, x, len);
 
-	AG_DrawArrowUp(sb,   w_2, s,          s, &WCOLOR(sb,SHAPE_COLOR));
-	AG_DrawArrowDown(sb, w_2, (r.h>>1)+s, s, &WCOLOR(sb,SHAPE_COLOR));
+	if (sb->flags & AG_SCROLLBAR_TEXT)
+		DrawText(sb);
 }
+
 static void
 DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 {
 	AG_Rect r;
-	int w = WIDTH(sb);
-	int h = HEIGHT(sb);
-	int mid = (w >> 1);
-	int wBar = sb->width, wBar2 = (wBar<<1), wBar_2 = (wBar>>1);
-	int hArrow = MIN(w, sb->hArrow);
+	const int w = WIDTH(sb);
+	const int h = HEIGHT(sb);
+	const int mid = (w >> 1);
+	const int wBar = sb->width, wBar2 = (wBar<<1), wBar_2 = (wBar>>1);
+	const int hArrow = MIN(w, sb->hArrow);
 
 	if (h < wBar2) {
 		DrawVertUndersize(sb);
@@ -926,33 +923,16 @@ DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 		    &WCOLOR_HOV(sb,0) : &WCOLOR(sb,0));
 	}
 }
-static void
-DrawHorizUndersize(AG_Scrollbar *_Nonnull sb)
-{
-	AG_Rect r;
-	int h_2, s;
 
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(sb);
-	r.h = HEIGHT(sb);
-	AG_DrawBox(sb, &r, 1, &WCOLOR(sb,0));
-
-	h_2 = (r.h >> 1);
-	s = MIN(r.w>>2, r.h);
-
-	AG_DrawArrowLeft(sb,  s,          h_2, s, &WCOLOR(sb,SHAPE_COLOR));
-	AG_DrawArrowRight(sb, (r.w>>1)+s, h_2, s, &WCOLOR(sb,SHAPE_COLOR));
-}
 static void
 DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 {
 	AG_Rect r;
-	int w = WIDTH(sb);
-	int h = HEIGHT(sb);
-	int h_2 = h >> 1;
-	int wBar = sb->width, wBar2 = (wBar << 1), wBar_2 = (wBar >> 1);
-	int hArrow = MIN(h, sb->hArrow);
+	const int w = WIDTH(sb);
+	const int h = HEIGHT(sb);
+	const int h_2 = h >> 1;
+	const int wBar = sb->width, wBar2 = (wBar << 1), wBar_2 = (wBar >> 1);
+	const int hArrow = MIN(h, sb->hArrow);
 	
 	if (w < wBar2) {
 		DrawHorizUndersize(sb);
@@ -1000,32 +980,41 @@ DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 }
 
 static void
-Draw(void *_Nonnull obj)
+DrawVertUndersize(AG_Scrollbar *_Nonnull sb)
 {
-	AG_Scrollbar *sb = obj;
-	int x, len;
+	AG_Rect r;
+	int w_2, s;
 
-	if (GetPxCoords(sb, &x, &len) == -1) {		/* No range */
-		x = 0;
-		len = sb->length;
-	}
-	if (sb->flags & AG_SCROLLBAR_AUTOHIDE && len == sb->length)
-		return;
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(sb);
+	r.h = HEIGHT(sb);
+	AG_DrawBox(sb, &r, 1, &WCOLOR(sb,0));
+	
+	w_2 = (r.w >> 1);
+	s = MIN(r.h>>2, r.w);
 
-	/*
-	 * TODO set the Draw() operation vector to DrawVert() or DrawHoriz()
-	 * at initialization time and merge this code into both.
-	 */
-	switch (sb->type) {
-	case AG_SCROLLBAR_VERT:
-		DrawVert(sb, x, len);
-		break;
-	case AG_SCROLLBAR_HORIZ:
-		DrawHoriz(sb, x, len);
-		break;
-	}
-	if (sb->flags & AG_SCROLLBAR_TEXT)
-		DrawText(sb);
+	AG_DrawArrowUp(sb,   w_2, s,          s, &WCOLOR(sb,SHAPE_COLOR));
+	AG_DrawArrowDown(sb, w_2, (r.h>>1)+s, s, &WCOLOR(sb,SHAPE_COLOR));
+}
+
+static void
+DrawHorizUndersize(AG_Scrollbar *_Nonnull sb)
+{
+	AG_Rect r;
+	int h_2, s;
+
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(sb);
+	r.h = HEIGHT(sb);
+	AG_DrawBox(sb, &r, 1, &WCOLOR(sb,0));
+
+	h_2 = (r.h >> 1);
+	s = MIN(r.w>>2, r.h);
+
+	AG_DrawArrowLeft(sb,  s,          h_2, s, &WCOLOR(sb,SHAPE_COLOR));
+	AG_DrawArrowRight(sb, (r.w>>1)+s, h_2, s, &WCOLOR(sb,SHAPE_COLOR));
 }
 
 /* Return 1 if it is useful to display the scrollbar given the current range. */

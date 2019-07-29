@@ -39,6 +39,7 @@ typedef struct ag_scrollbar {
 	int wBar;			/* Preferred control length */
 	int wBarMin;			/* Minimum control length */
 	int hArrow;			/* Arrow height */
+	int value;			/* Default `value' binding */
 	AG_Event *_Nullable buttonIncFn; /* Alt. handler for increment btns */
 	AG_Event *_Nullable buttonDecFn; /* Alt. handler for decrement btns */
 	AG_Timer moveTo;		/* Timer for scrolling control */
@@ -46,7 +47,6 @@ typedef struct ag_scrollbar {
 	int xOffs, xSeek;		/* Cursor offset for scrolling */
 	Uint lenPre;			/* Preferred length size hint */
 	int minOffs, maxOffs, visOffs;	/* Constants to add to binding values */
-	int value;			/* Default `value' binding */
 } AG_Scrollbar;
 
 #define AGSCROLLBAR(obj)            ((AG_Scrollbar *)(obj))
@@ -68,7 +68,6 @@ AG_Scrollbar *_Nonnull AG_ScrollbarNewVert(void *_Nullable, Uint);
 
 void AG_ScrollbarSizeHint(AG_Scrollbar *_Nonnull, int);
 void AG_ScrollbarSetControlLength(AG_Scrollbar *_Nonnull, int);
-void AG_ScrollbarSetWidth(AG_Scrollbar *_Nonnull, int);
 
 void AG_ScrollbarSetIncFn(AG_Scrollbar *_Nonnull,
                          _Nullable AG_EventFn, const char *_Nullable, ...);
