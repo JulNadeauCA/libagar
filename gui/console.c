@@ -90,7 +90,7 @@ AdjustXoffs(AG_Console *_Nonnull cons)
 static __inline__ void
 ClampVisible(AG_Console *_Nonnull cons)
 {
-	int v = (int)cons->nLines - (int)cons->rVisible;
+	const int v = (int)cons->nLines - (int)cons->rVisible;
 
 	cons->rOffs = MAX(0,v);
 }
@@ -101,20 +101,18 @@ ScrollVert(AG_Event *_Nonnull event)
 	AG_Console *cons = AG_CONSOLE_SELF();
 	const int dir = AG_INT(1);
 	const int lsa = AG_GetInt(cons, "line-scroll-amount");
-	const int newOffs = (dir < 0) ? cons->rOffs - lsa :
-	                                cons->rOffs + lsa;
-	
+
 	if (dir > 0) {						/* Down */
-		if (cons->nLines > cons->rVisible &&
-		    newOffs <= (cons->nLines - cons->rVisible)) {
-			cons->rOffs += lsa;
-			AG_Redraw(cons);
-		}
+		const int newOffs = cons->rOffs + lsa;
+		const int maxOffs = (cons->nLines - cons->rVisible);
+
+		cons->rOffs = MIN(newOffs,maxOffs);
+		AG_Redraw(cons);
 	} else {						/* Up */
-		if (newOffs >= 0) {
-			cons->rOffs -= lsa;
-			AG_Redraw(cons);
-		}
+		const int newOffs = cons->rOffs - lsa;
+
+		cons->rOffs = MAX(0,newOffs);
+		AG_Redraw(cons);
 	}
 }
 
@@ -138,13 +136,13 @@ static void
 PageUp(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
-	int newOffs = (int)cons->rOffs - (int)cons->rVisible;
+	int newOffs = cons->rOffs - cons->rVisible;
 
 	if (newOffs < 0) {
 		newOffs = 0;
 	}
 	if (cons->rOffs != newOffs) {
-		cons->rOffs = (Uint)newOffs;
+		cons->rOffs = newOffs;
 		AG_Redraw(cons);
 	}
 }
@@ -153,15 +151,14 @@ static void
 PageDown(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
+	const int maxOffs = (cons->nLines - cons->rVisible);
 	int newOffs;
 
-	if (cons->nLines < cons->rVisible) {
+	if (maxOffs < 0) {
 		return;
 	}
-	newOffs = (int)cons->rOffs + (int)cons->rVisible;
-	if (newOffs > (cons->nLines - cons->rVisible))  {
-		newOffs = MAX(0, cons->nLines - cons->rVisible);
-	}
+	newOffs = cons->rOffs + cons->rVisible;
+	newOffs = MIN(newOffs,maxOffs);
 	if (cons->rOffs != newOffs) {
 		cons->rOffs = (Uint)newOffs;
 		AG_Redraw(cons);
