@@ -26,10 +26,13 @@ typedef struct ag_console_file {
 	Uint flags;
 #define AG_CONSOLE_FILE_BINARY     0x01  /* Display binary in hex dump format */
 #define AG_CONSOLE_FILE_LEAVE_OPEN 0x02  /* Don't close FILE* or fd on detach */
+	int fd;				 /* File descriptor */
 	char *_Nullable label;		 /* Label (e.g., filename or id) */
 	void *pFILE;			 /* FILE * pointer */
-	int fd;				 /* File descriptor */
 	AG_Offset offs;			 /* Current file offset */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
 	AG_Color *_Nullable color;	 /* Alternate color */
 	const AG_NewlineFormat *newline; /* Newline encoding */
 	AG_TAILQ_ENTRY(ag_console_file) files;
@@ -47,18 +50,18 @@ typedef struct ag_console {
 #define AG_CONSOLE_SELECTING	0x10	/* Selection in progress */
 	int padding;			/* Padding in pixels */
 	int lineskip;			/* Space between lines */
+	int xOffs;			/* Horizontal display offset (px) */
 
 	AG_ConsoleLine *_Nullable *_Nonnull lines; /* Lines in buffer */
 	Uint                               nLines; /* Line count */
 
-	int xOffs;			/* Horizontal display offset (px) */
 	int wMax;			/* Width of widest line seen (px) */
 
 	Uint rOffs;			/* Row display offset */
+	Uint rVisible;			/* Visible line count */
 	AG_Scrollbar *_Nonnull vBar;	/* Vertical scrollbar */
 	AG_Scrollbar *_Nonnull hBar;	/* Horizontal scrollbar */
 	AG_Rect r;			/* View area */
-	Uint rVisible;			/* Visible line count */
 	Uint *_Nullable scrollTo;	/* Scrolling request */
 	int pos, sel;			/* Position and selection */
 

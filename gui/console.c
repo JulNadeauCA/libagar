@@ -425,9 +425,37 @@ MouseMotion(AG_Event *_Nonnull event)
 	int y = AG_INT(2);
 	int newPos, newSel;
 
-	if (!(cons->flags & AG_CONSOLE_SELECTING) ||
-	    x < cons->r.x || x > cons->r.x+cons->r.w) {
+	if ((cons->flags & AG_CONSOLE_SELECTING) == 0) {
 		return;
+	}
+	if (x < cons->r.x) {
+		const int ssa = AG_GetInt(cons, "side-scroll-amount");
+		if (cons->xOffs > 0) {
+			if ((cons->xOffs -= ssa) < 0) {
+				cons->xOffs = 0;
+			}
+			AG_Redraw(cons);
+		}
+		return;
+	} else if (x > cons->r.x+cons->r.w) {
+		const int ssa = AG_GetInt(cons, "side-scroll-amount");
+		const int wMax = cons->wMax - WIDTH(cons);
+		if (cons->xOffs < wMax) {
+			cons->xOffs += ssa;
+			if (cons->xOffs > wMax) {
+				cons->xOffs = wMax;
+			}
+			AG_Redraw(cons);
+		}
+		return;
+	}
+	if (y < 0 && cons->rOffs > 0) {
+		cons->rOffs--;
+		AG_Redraw(cons);
+	} else if (y > HEIGHT(cons) &&
+	          cons->rOffs < (cons->nLines - cons->rVisible)) {
+		cons->rOffs++;
+		AG_Redraw(cons);
 	}
 	if (cons->nLines > 0) {
 		MapLine(cons, y, &newPos);
@@ -490,10 +518,10 @@ Init(void *_Nonnull obj)
 	                       AG_WIDGET_USE_TEXT;
 	cons->flags = 0;
 	cons->padding = 4;
+	cons->xOffs = 0;
 	cons->lines = NULL;
 	cons->lineskip = 0;
 	cons->nLines = 0;
-	cons->xOffs = 0;
 	cons->wMax = 0;
 	cons->rOffs = 0;
 	cons->rVisible = 0;
