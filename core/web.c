@@ -992,20 +992,20 @@ WEB_QueryInit(WEB_Query *q, const char *lang)
 	q->flags = 0;
 	q->compressLvl = WEB_DATA_COMPRESS_LVL;
 	q->nAcceptLangs = 0;
+	TAILQ_INIT(&q->args);
+	TAILQ_INIT(&q->cookies);
+	q->nArgs = 0;
 	q->nCookies = 0;
 	q->contentType[0] = '\0';
 	q->contentLength = 0;
 	q->sess = NULL;
 	q->sock = -1;
-	q->nArgs = 0;
 	q->date[0] = '\0';
 	q->userIP[0] = '\0';
 	q->userHost[0] = '\0';
 	q->userAgent[0] = '\0';
 	q->code[0] = '\0';
 	Strlcpy(q->lang, lang, sizeof(q->lang));
-	TAILQ_INIT(&q->args);
-	TAILQ_INIT(&q->cookies);
 
 	WEB_ClearHeaders(q, "HTTP/1.0 200 OK\r\n");
 	
@@ -1164,7 +1164,7 @@ WEB_FlushQuery_DEFLATE(WEB_Query *_Nonnull q)
 	int flush=0, rv;
 	z_stream strm;
 
-/*	WEB_LogDebug("FlushQuery_DEFLATE(method=%s, head=%lu, data=%lu, lvl=%d)",
+/*	WEB_LogDebug("FlushQuery_DEFLATE(method=%s, head=%u, data=%lu, lvl=%d)",
 	    webMethods[q->method].name, q->headLen, q->dataLen, q->compressLvl); */
 	
 	WEB_SetHeaderS(q, "Content-Encoding", "deflate");
@@ -1257,8 +1257,8 @@ WEB_FlushQuery_RANGE(WEB_Query *_Nonnull q)
 {
 	Uint rangeLen;
 	
-	WEB_LogDebug("FlushQuery_RANGE(head=%lu, range=%d-%d/%lu)",
-	    (Ulong)q->headLen, q->rangeFrom, q->rangeTo, (Ulong)q->dataLen);
+	WEB_LogDebug("FlushQuery_RANGE(head=%u, range=%d-%d/%lu)",
+	    q->headLen, q->rangeFrom, q->rangeTo, (Ulong)q->dataLen);
 
 	if (q->rangeFrom > q->rangeTo ||
 	    q->rangeTo > q->dataLen ||
@@ -1312,7 +1312,7 @@ WEB_FlushQuery(WEB_Query *q)
 		WEB_FlushQuery_DEFLATE(q);
 #endif
 	} else {
-/*		WEB_LogDebug("FlushQuery_PLAIN(head=%lu, data=%lu)",
+/*		WEB_LogDebug("FlushQuery_PLAIN(head=%u, data=%lu)",
 		    q->headLen, q->dataLen); */
 
 		if (q->dataLen > 0) {
@@ -2543,8 +2543,8 @@ MessageToHTML(char *_Nonnull h, AG_Size hLen, const char *_Nonnull msg)
 	for (c = &msg[0], d = &h[0];
 	    *c != '\0' && d < &h[hLen-5];
 	     c++) {
-		if      (*c == '<') { strncpy(d, "&lt;", 4); d+=4; }
-		else if (*c == '>') { strncpy(d, "&gt;", 4); d+=4; }
+		if      (*c == '<') { memcpy(d, "&lt;", 4); d+=4; }
+		else if (*c == '>') { memcpy(d, "&gt;", 4); d+=4; }
 		else {
 			*d = *c;
 			d++;
