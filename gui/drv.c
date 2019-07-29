@@ -185,9 +185,8 @@ void
 AG_ViewCapture(void)
 {
 	char dir[AG_PATHNAME_MAX];
-	char file[AG_FILENAME_MAX];
+	char file[AG_FILENAME_MAX+7];
 	AG_Surface *S;
-	AG_Config *cfg;
 	char *pname;
 	Uint seq;
 
@@ -206,7 +205,6 @@ AG_ViewCapture(void)
 	}
 
 	/* Save to a new file. */
-	cfg = AG_ConfigObject();
 	if (AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, dir, sizeof(dir)) >= sizeof(dir)) {
 		AG_TextError(_("Path overflow"));
 		goto out;
@@ -296,14 +294,14 @@ Init(void *_Nonnull obj)
 	drv->videoFmt = NULL;
 	drv->kbd = NULL;
 	drv->mouse = NULL;
-	drv->activeCursor = NULL;
-	TAILQ_INIT(&drv->cursors);
-	drv->nCursors = 0;
 	drv->glyphCache = Malloc(AG_GLYPH_NBUCKETS*sizeof(AG_GlyphCache));
 	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
 		SLIST_INIT(&drv->glyphCache[i].glyphs);
 	}
 	drv->gl = NULL;
+	drv->activeCursor = NULL;
+	TAILQ_INIT(&drv->cursors);
+	drv->nCursors = 0;
 }
 
 static void
