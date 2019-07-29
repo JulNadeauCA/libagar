@@ -299,7 +299,6 @@ if [ "${enable_warnings}" = 'yes' ]; then
 	c_option(-Werror)
 	c_option(-Wmissing-prototypes)
 	c_option(-Wno-switch)
-	c_option(-Wno-parentheses-equality)
 fi
 if [ "${enable_debug}" = 'yes' ]; then
 	hdefine(AG_DEBUG, "yes")
