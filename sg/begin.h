@@ -6,6 +6,7 @@
 #define _AGAR_SG_BEGIN_H_
 
 #include <agar/core/types.h>
+#include <agar/core/attributes.h>
 
 /* Define internationalization macros if NLS is enabled. */
 #if !defined(_)
@@ -151,29 +152,11 @@
 #  define _AGAR_SG_DEFINED_NULL
 # endif
 #endif
-
-/* Expand FOO_ATTRIBUTE() to supported compiler attributes. */
-#include <agar/config/have_bounded_attribute.h>
-#include <agar/config/have_format_attribute.h>
-#include <agar/config/have_packed_attribute.h>
-#include <agar/config/have_aligned_attribute.h>
-#ifdef HAVE_BOUNDED_ATTRIBUTE
-# define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
+#if defined(__GNUC__) || defined(__CC65__)
+# define _Nonnull
+# define _Nullable
+# define _Null_unspecified
+# define _AGAR_SG_DEFINED_NULLABILITY
 #else
-# define BOUNDED_ATTRIBUTE(t, a, b)
-#endif
-#ifdef HAVE_FORMAT_ATTRIBUTE
-# define FORMAT_ATTRIBUTE(t, a, b) __attribute__((__format__ (t,a,b)))
-#else
-# define FORMAT_ATTRIBUTE(t, a, b)
-#endif
-#ifdef HAVE_PACKED_ATTRIBUTE
-# define PACKED_ATTRIBUTE __attribute__((__packed__))
-#else
-# define PACKED_ATTRIBUTE
-#endif
-#ifdef HAVE_ALIGNED_ATTRIBUTE
-# define ALIGNED_ATTRIBUTE(a) __attribute__((__aligned__ (a)))
-#else
-# define ALIGNED_ATTRIBUTE(a)
+# include <agar/sg/nullability.h>
 #endif

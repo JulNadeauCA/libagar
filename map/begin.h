@@ -6,6 +6,7 @@
 #define _AGAR_MAP_BEGIN_H_
 
 #include <agar/core/types.h>
+#include <agar/core/attributes.h>
 
 /* Define internationalization macros if NLS is enabled. */
 #if !defined(_)
@@ -150,4 +151,12 @@
 #  define NULL ((void *)0)
 #  define _AGAR_MAP_DEFINED_NULL
 # endif
+#endif
+#if defined(__GNUC__) || defined(__CC65__)
+# define _Nonnull
+# define _Nullable
+# define _Null_unspecified
+# define _AGAR_RG_DEFINED_NULLABILITY
+#else
+# include <agar/map/nullability.h>
 #endif
