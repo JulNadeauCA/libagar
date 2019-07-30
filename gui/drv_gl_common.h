@@ -8,8 +8,9 @@
 struct ag_glyph;
 
 /* Saved blending state */
-typedef struct ag_gl_blending_state {
+typedef struct ag_gl_blend_state {
 	GLboolean enabled;		/* GL_BLEND enable bit */
+	char _pad[3];
 	GLint srcFactor;		/* GL_BLEND_SRC mode */
 	GLint dstFactor;		/* GL_BLEND_DST mode */
 	GLfloat texEnvMode;		/* GL_TEXTURE_ENV mode */
@@ -17,17 +18,18 @@ typedef struct ag_gl_blending_state {
 
 /* Common OpenGL context data */
 typedef struct ag_gl_context {
-	AG_ClipRect *_Nullable clipRects; /* Clipping rectangle coords */
+	AG_ClipRect *_Nullable clipRects;	/* Clipping rectangle coords */
 	Uint                  nClipRects;
+	int                    clipStates[4];	/* Last GL_CLIP_PLANE[0-4] states */
 
-	int clipStates[4];		  /* Clipping states */
-	AG_GL_BlendState bs[1];		  /* Alpha blending states */
+	Uint                       nBlendStates;
+	AG_GL_BlendState *_Nullable blendStates;  /* Alpha blending states */
 
 	Uint *_Nullable textureGC;	  /* Textures queued for deletion */
 	Uint           nTextureGC;
 
-	Uint *_Nullable listGC;           /* Display lists queued for deletion */
 	Uint           nListGC;
+	Uint *_Nullable listGC;           /* Display lists queued for deletion */
 
 	Uint32 dither[32];		  /* 32x32 stipple pattern */
 } AG_GL_Context;
@@ -39,7 +41,8 @@ void AG_GL_DestroyContext(void *_Nonnull);
 
 void AG_GL_StdPushClipRect(void *_Nonnull, const AG_Rect *_Nonnull);
 void AG_GL_StdPopClipRect(void *_Nonnull);
-void AG_GL_StdPushBlendingMode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn);
+void AG_GL_StdPushBlendingMode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn,
+                               AG_TextureEnvMode);
 void AG_GL_StdPopBlendingMode(void *_Nonnull);
 
 void AG_GL_StdUploadTexture(void *_Nonnull, Uint *_Nonnull, AG_Surface *_Nonnull,
@@ -83,6 +86,10 @@ void AG_GL_DrawLineBlended(void *_Nonnull, int,int, int,int,
 void AG_GL_DrawTriangle(void *_Nonnull, const AG_Pt *_Nonnull,
                         const AG_Pt *_Nonnull, const AG_Pt *_Nonnull,
                         const AG_Color *_Nonnull);
+void AG_GL_DrawPolygon(void *_Nonnull, const AG_Pt *_Nonnull, Uint,
+                       const AG_Color *_Nonnull);
+void AG_GL_DrawPolygonSti32(void *_Nonnull, const AG_Pt *_Nonnull, Uint,
+                            const AG_Color *_Nonnull, const Uint8 *_Nonnull);
 void AG_GL_DrawArrow(void *_Nonnull, Uint8, int,int, int,
                      const AG_Color *_Nonnull);
 void AG_GL_DrawRectDithered(void *_Nonnull, const AG_Rect *_Nonnull,

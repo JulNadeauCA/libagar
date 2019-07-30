@@ -49,13 +49,14 @@ typedef struct ag_sdlgl_driver {
 	SDL_Surface *_Nullable s;	/* Display surface */
 	AG_GL_Context gl;		/* Common OpenGL context data */
 
-	enum ag_sdlgl_out outMode;	/* Output capture mode */
+	Uint8 *_Nullable  outBuf;	/* Output capture buffer */
 	char *_Nullable   outPath;	/* Output capture path */
+	enum ag_sdlgl_out outMode;	/* Output capture mode */
 	Uint              outFrame;	/* Capture frame# counter */
 	Uint              outLast;	/* Terminate after this many frames */
-	Uint8 *_Nullable  outBuf;	/* Output capture buffer */
 	Uint              outJpegQual;	/* Quality (%) for jpeg output */
 	Uint              outJpegFlags;	/* DCT options */
+	Uint32 _pad;
 } AG_DriverSDLGL;
 
 static int nDrivers = 0;				/* Opened driver instances */
@@ -113,11 +114,11 @@ SDLGL_Open(void *_Nonnull obj, const char *_Nullable spec)
 	    (drv->kbd = AG_KeyboardNew(sgl, "SDL keyboard")) == NULL) {
 		goto fail;
 	}
-	sgl->outMode = AG_SDLGL_OUT_NONE;
+	sgl->outBuf = NULL;
 	sgl->outPath = NULL;
+	sgl->outMode = AG_SDLGL_OUT_NONE;
 	sgl->outFrame = 0;
 	sgl->outLast = 0;
-	sgl->outBuf = NULL;
 	sgl->outJpegQual = 100;
 	sgl->outJpegFlags = 0;
 	
@@ -719,6 +720,8 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_GL_DrawLineV,
 		AG_GL_DrawLineBlended,
 		AG_GL_DrawTriangle,
+		AG_GL_DrawPolygon,
+		AG_GL_DrawPolygonSti32,
 		AG_GL_DrawArrow,
 		AG_GL_DrawBoxRounded,
 		AG_GL_DrawBoxRoundedTop,

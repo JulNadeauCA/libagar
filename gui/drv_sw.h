@@ -6,8 +6,11 @@
 
 typedef struct ag_driver_sw_class {
 	struct ag_driver_class _inherit;
+#ifdef AG_HAVE_64BIT
+	Uint64 flags;
+#else
 	Uint flags;
-
+#endif
 	/* Create or attach to a graphics context */
 	int  (*_Nonnull openVideo)(void *_Nonnull, Uint,Uint, int, Uint);
 	int  (*_Nonnull openVideoContext)(void *_Nonnull, void *_Nonnull, Uint);
@@ -74,7 +77,9 @@ typedef struct ag_driver_sw {
 	int rCur;			/* Effective refresh rate (ms) */
 	AG_Color bgColor;		/* "bgColor" setting */
 	Uint rLast;			/* Refresh rate timestamp */
-
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
 	struct ag_menu *_Nullable bgPopup;	/* Background popup menu */
 } AG_DriverSw;
 

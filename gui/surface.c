@@ -1903,14 +1903,12 @@ AG_AnimStateInit(AG_AnimState *ast, AG_Surface *s)
 	AG_MutexInitRecursive(&ast->lock);
 	ast->s = s;
 	ast->flags = 0;
-	ast->play = 0;
 	ast->f = 0;
 }
 
 void
 AG_AnimStateDestroy(AG_AnimState *ast)
 {
-	ast->play = 0;
 	AG_MutexDestroy(&ast->lock);
 }
 
@@ -1950,7 +1948,7 @@ AG_AnimThreadProc(void *_Nonnull arg)
 	AG_AnimState *ast = arg;
 	Uint32 delay;
 
-	while (ast->play) {
+	while (ast->flags & AG_ANIM_PLAYING) {
 		AG_MutexLock(&ast->lock);
 		AG_MutexLock(&ast->an->lock);
 
@@ -1967,7 +1965,7 @@ AG_AnimThreadProc(void *_Nonnull arg)
 					ast->f = 0;
 					ast->flags &= ~(AG_ANIM_REVERSE);
 				} else {
-					ast->play = 0;
+					ast->flags &= ~(AG_ANIM_PLAYING);
 					AG_MutexUnlock(&ast->an->lock);
 					AG_MutexUnlock(&ast->lock);
 					goto out;
@@ -1981,7 +1979,7 @@ AG_AnimThreadProc(void *_Nonnull arg)
 					ast->f--;
 					ast->flags |= AG_ANIM_REVERSE;
 				} else {
-					ast->play = 0;
+					ast->flags &= ~(AG_ANIM_PLAYING);
 					AG_MutexUnlock(&ast->an->lock);
 					AG_MutexUnlock(&ast->lock);
 					goto out;
@@ -2007,12 +2005,12 @@ AG_AnimPlay(AG_AnimState *ast)
 	int rv = 0;
 
 	AG_MutexLock(&ast->lock);
-	ast->play = 1;
+	ast->flags |= AG_ANIM_PLAYING;
 #ifdef AG_THREADS
 	if (AG_ThreadTryCreate(&ast->th, AG_AnimThreadProc, ast) != 0) {
 		AG_SetErrorS("Failed to create playback thread");
 		rv = -1;
-		ast->play = 0;
+		ast->flags &= ~(AG_ANIM_PLAYING);
 	}
 #else
 	AG_SetErrorS("AG_AnimPlay() requires threads");
@@ -2026,7 +2024,7 @@ void
 AG_AnimStop(AG_AnimState *ast)
 {
 	AG_MutexLock(&ast->lock);
-	ast->play = 0;
+	ast->flags &= ~(AG_ANIM_PLAYING);
 	AG_MutexUnlock(&ast->lock);
 }
 

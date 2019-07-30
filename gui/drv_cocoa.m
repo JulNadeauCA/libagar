@@ -1730,6 +1730,8 @@ AG_DriverMwClass agDriverCocoa = {
 		AG_GL_DrawLineV,
 		AG_GL_DrawLineBlended,
 		AG_GL_DrawTriangle,
+		AG_GL_DrawPolygon,
+		AG_GL_DrawPolygonSti32,
 		AG_GL_DrawArrow,
 		AG_GL_DrawBoxRounded,
 		AG_GL_DrawBoxRoundedTop,

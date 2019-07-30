@@ -36,7 +36,11 @@ typedef struct ag_driver_class {
 	const char *_Nonnull name;		/* Short name */
 	enum ag_driver_type type;		/* Driver type */
 	enum ag_driver_wm_type wm;		/* Window manager type */
+#ifdef AG_HAVE_64BIT
+	Uint64 flags;				/* Capabilities */
+#else
 	Uint flags;
+#endif
 #define AG_DRIVER_OPENGL	0x01		/* Supports OpenGL calls */
 #define AG_DRIVER_SDL		0x02		/* Supports SDL calls */
 #define AG_DRIVER_TEXTURES	0x04		/* Support texture ops */
@@ -75,7 +79,8 @@ typedef struct ag_driver_class {
 
 	void (*_Nonnull  pushClipRect)(void *_Nonnull, const AG_Rect *_Nonnull);
 	void (*_Nonnull  popClipRect)(void *_Nonnull);
-	void (*_Nonnull  pushBlendingMode)(void *_Nonnull, AG_AlphaFn, AG_AlphaFn);
+	void (*_Nonnull  pushBlendingMode)(void *_Nonnull, AG_AlphaFn, AG_AlphaFn,
+	                                   AG_TextureEnvMode);
 	void (*_Nonnull  popBlendingMode)(void *_Nonnull);
 
 	/* Hardware Cursor Operations */
@@ -128,6 +133,12 @@ typedef struct ag_driver_class {
 	void (*_Nonnull drawTriangle)(void *_Nonnull, const AG_Pt *_Nonnull,
 	                              const AG_Pt *_Nonnull, const AG_Pt *_Nonnull,
 	                              const AG_Color *_Nonnull);
+	void (*_Nonnull drawPolygon)(void *_Nonnull, const AG_Pt *_Nonnull, Uint,
+	                             const AG_Color *_Nonnull);
+	void (*_Nonnull drawPolygonSti32)(void *_Nonnull, const AG_Pt *_Nonnull,
+	                                  Uint, const AG_Color *_Nonnull,
+	                                  const Uint8 *_Nonnull);
+
 	void (*_Nonnull drawArrow)(void *_Nonnull, Uint8, int,int, int,
 	                           const AG_Color *_Nonnull);
 	void (*_Nonnull drawBoxRounded)(void *_Nonnull, const AG_Rect *_Nonnull,
@@ -170,13 +181,15 @@ typedef struct ag_driver {
 
 	struct ag_keyboard *_Nullable kbd;	/* Primary keyboard device */
 	struct ag_mouse    *_Nullable mouse;	/* Primary mouse device */
+	
+	struct ag_glyph_cache *_Nonnull glyphCache; /* For text rendering */
+	void *_Nullable gl;                         /* AG_GL_Context (GL modes) */
 
 	struct ag_cursor *_Nullable activeCursor; /* Current cursor */
 	AG_TAILQ_HEAD_(ag_cursor) cursors;	  /* Available cursors */
 	Uint                     nCursors;
 
-	struct ag_glyph_cache *_Nonnull glyphCache; /* For text rendering */
-	void *_Nullable gl;                         /* AG_GL_Context (GL modes) */
+	Uint32 _pad;
 } AG_Driver;
 
 /* Generic driver event (for custom event loops). */
@@ -197,6 +210,7 @@ enum ag_driver_event_type {
 };
 typedef struct ag_driver_event {
 	enum ag_driver_event_type type;	 /* Type of event */
+	Uint32 _pad;
 	struct ag_window *_Nullable win; /* Associated window (AG_WM_MULTIPLE) */
 	AG_TAILQ_ENTRY(ag_driver_event) events;
 	union {

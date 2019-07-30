@@ -40,8 +40,8 @@ Init(void *_Nonnull obj)
 {
 	AG_DriverMw *dmw = obj;
 
-	dmw->flags = 0;
 	dmw->win = NULL;
+	dmw->flags = 0;
 
 	if (agModalWindowsRefs++ == 0 &&
 	    (agModalWindows = AG_ListNew()) == NULL)

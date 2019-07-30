@@ -46,7 +46,7 @@ typedef enum ag_grayscale_mode {
 typedef struct ag_palette {
 	AG_Color *_Nonnull colors;	/* Color array */
 	Uint              nColors;	/* Total allocated colors */
-	Uint availFirst, availLast;	/* Range of unused colors */
+	Uint32 _pad;
 } AG_Palette;
 
 /* Pixel storage information */
@@ -149,6 +149,13 @@ typedef struct ag_surface {
 	Uint padding;			/* Scanline end padding */
 	AG_Pixel colorkey;		/* Color key pixel */
 	AG_Component alpha;		/* Per-surface alpha */
+#if AG_MODEL == AG_LARGE
+	Uint8 _pad[6];
+#elif AG_MODEL == AG_MEDIUM
+	Uint8 _pad[3];
+#else
+	Uint8 _pad[7];
+#endif
 } AG_Surface;
 
 /* Animation playback context */
@@ -159,11 +166,22 @@ typedef struct ag_anim_state {
 #define AG_ANIM_LOOP	 0x01		/* Loop playback */
 #define AG_ANIM_PINGPONG 0x02		/* Loop in ping-pong fashion */
 #define AG_ANIM_REVERSE	 0x04		/* Playback in reverse */
-	int play;			/* Animation is playing */
+#define AG_ANIM_PLAYING  0x08		/* Animation is playing */
 	int f;				/* Current frame# */
+#ifdef AG_THREADS
 	_Nullable_Thread AG_Thread th;	/* Animation thread */
+#endif
 } AG_AnimState;
 
+/* Texture environment mode. See glTextEnv(3G). */
+typedef enum ag_texture_env_mode {
+	AG_TEXTURE_ENV_MODULATE,
+	AG_TEXTURE_ENV_DECAL,
+	AG_TEXTURE_ENV_BLEND,
+	AG_TEXTURE_ENV_REPLACE		/* Needs OpenGL >= 1.1 */
+} AG_TextureEnvMode;
+
+/* Pixel arithmetic for alpha blending. See glBlendFunc(3G). */
 typedef enum ag_alpha_func {
 	AG_ALPHA_OVERLAY,		/* a <- MIN(src.a + dst.a, 1) */
 	AG_ALPHA_ZERO,			/* a <- 0 */

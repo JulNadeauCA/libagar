@@ -284,11 +284,11 @@ ag_draw_line_v(void *obj, int x, int y1, int y2, const AG_Color *c)
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_DrawLineBlended(void *_Nonnull obj, int x1, int y1, int x2, int y2,
-    const AG_Color *c, AG_AlphaFn fnSrc)
+    const AG_Color *c, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 #else
 void
 ag_draw_line_blended(void *obj, int x1, int y1, int x2, int y2,
-    const AG_Color *c, AG_AlphaFn fnSrc)
+    const AG_Color *c, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
@@ -298,7 +298,7 @@ ag_draw_line_blended(void *obj, int x1, int y1, int x2, int y2,
 	    wid->rView.y1 + y1,
 	    wid->rView.x1 + x2,
 	    wid->rView.y1 + y2,
-	    c, fnSrc, AG_ALPHA_ZERO);
+	    c, fnSrc, fnDst);
 }
 
 /*
@@ -417,17 +417,19 @@ ag_draw_box_rounded(void *obj, const AG_Rect *r, int z, int rad,
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Color c[3];
 	AG_Rect rd;
-
-	rd.x = wid->rView.x1 + r->x;
-	rd.y = wid->rView.y1 + r->y;
-	rd.w = r->w;
-	rd.h = r->h;
+	
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
 
 	AG_ColorAdd(&c[0], cBg,  (z<0) ? &agSunkColor : &agRaisedColor);
 	AG_ColorAdd(&c[1], &c[0], (z<0) ? &agLowColor  : &agHighColor);
 	AG_ColorAdd(&c[2], &c[0], (z<0) ? &agHighColor : &agLowColor);
 
-	wid->drvOps->drawBoxRounded(wid->drv, &rd, z, rad, &c[0],&c[1],&c[2]);
+	rd.x = wid->rView.x1 + r->x;
+	rd.y = wid->rView.y1 + r->y;
+	rd.w = r->w;
+	rd.h = r->h;
+	wid->drvOps->drawBoxRounded(wid->drv, &rd, z, rad,
+	                            &c[0], &c[1], &c[2]);
 }
 
 /*
@@ -446,6 +448,8 @@ ag_draw_box_rounded_top(void *obj, const AG_Rect *r, int z, int rad,
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Color c[3];
 	AG_Rect rd;
+	
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
 
 	rd.x = wid->rView.x1 + r->x;
 	rd.y = wid->rView.y1 + r->y;
@@ -497,6 +501,41 @@ ag_draw_circle_filled(void *obj, int x, int y, int r, const AG_Color *c)
 	    wid->rView.x1 + x,
 	    wid->rView.y1 + y,
 	    r, c);
+}
+
+/*
+ * Draw a filled polygon.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_DrawPolygon(void *_Nonnull obj, const AG_Pt *_Nonnull pts, Uint nPts,
+    const AG_Color *_Nonnull c)
+#else
+void
+ag_draw_polygon(void *obj, const AG_Pt *pts, Uint nPts, const AG_Color *c)
+#endif
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+
+	wid->drvOps->drawPolygon(obj, pts, nPts, c);
+}
+
+/*
+ * Draw a filled polygon with 32x32 stipple pattern.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_DrawPolygonSti32(void *_Nonnull obj, const AG_Pt *_Nonnull pts, Uint nPts,
+    const AG_Color *_Nonnull c, const Uint8 *_Nonnull stipple)
+#else
+void
+ag_draw_polygon_sti32(void *obj, const AG_Pt *pts, Uint nPts, const AG_Color *c,
+    const Uint8 *stipple)
+#endif
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+
+	wid->drvOps->drawPolygonSti32(wid->drv, pts, nPts, c, stipple);
 }
 
 /*
@@ -555,11 +594,11 @@ ag_draw_rect_filled(void *obj, const AG_Rect *r, const AG_Color *c)
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_DrawRectBlended(void *_Nonnull obj, const AG_Rect *_Nonnull r,
-    const AG_Color *_Nonnull c, AG_AlphaFn fnSrc)
+    const AG_Color *_Nonnull c, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 #else
 void
 ag_draw_rect_blended(void *obj, const AG_Rect *r, const AG_Color *c,
-    AG_AlphaFn fnSrc)
+    AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
@@ -570,8 +609,7 @@ ag_draw_rect_blended(void *obj, const AG_Rect *r, const AG_Color *c,
 	rd.w = r->w;
 	rd.h = r->h;
 
-	wid->drvOps->drawRectBlended(wid->drv, &rd, c, fnSrc,
-	    AG_ALPHA_ONE_MINUS_SRC);
+	wid->drvOps->drawRectBlended(wid->drv, &rd, c, fnSrc, fnDst);
 }
 
 /*
@@ -615,6 +653,8 @@ ag_draw_frame(void *obj, const AG_Rect *r, int z, const AG_Color *cBase)
 	AG_Color c[2];
 	AG_Rect rd;
 	int y2, x2;
+	
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	rd.x = wid->rView.x1 + r->x;
 	rd.y = wid->rView.y1 + r->y;
@@ -659,6 +699,8 @@ ag_draw_box(void *obj, const AG_Rect *r, int z, const AG_Color *C)
 	AG_Driver *drv = wid->drv;
 	AG_Color c;
 	AG_Rect rd;
+	
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	rd.x = wid->rView.x1 + r->x;
 	rd.y = wid->rView.y1 + r->y;
@@ -692,6 +734,8 @@ ag_draw_box_disabled(void *obj, const AG_Rect *r, int z,
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Color c;
 	AG_Rect rd;
+	
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	rd.x = wid->rView.x1 + r->x;
 	rd.y = wid->rView.y1 + r->y;
@@ -748,8 +792,8 @@ ag_draw_rect_outline(void *obj, const AG_Rect *r, const AG_Color *_Nonnull c)
 	AG_DriverClass *drvOps = wid->drvOps;
 	int x = wid->rView.x1 + r->x;
 	int y = wid->rView.y1 + r->y;
-	int x2 = x + r->w - 1;
-	int y2 = y + r->h - 1;
+	int x2 = x + r->w;
+	int y2 = y + r->h;
 
 	if (c->a < AG_OPAQUE) {
 		drvOps->drawLineBlended(drv, x,  y, x2, y,  c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
@@ -758,8 +802,13 @@ ag_draw_rect_outline(void *obj, const AG_Rect *r, const AG_Color *_Nonnull c)
 		drvOps->drawLineBlended(drv, x2, y, x,  y2, c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
 	} else {
 		drvOps->drawLineH(drv, x,  x2, y,  c);
-		drvOps->drawLineH(drv, x,  x2, y2, c);
-		drvOps->drawLineV(drv, x,  y,  y2, c);
+		if (drvOps->flags & AG_DRIVER_OPENGL) {		/* XXX */
+			drvOps->drawLineH(drv, x-1,x2, y2, c);
+			drvOps->drawLineV(drv, x,  y,  y2, c);
+		} else {
+			drvOps->drawLineH(drv, x,  x2+1, y2,   c);
+			drvOps->drawLineV(drv, x,  y,    y2+1, c);
+		}
 		drvOps->drawLineV(drv, x2, y,  y2, c);
 	}
 }
@@ -842,23 +891,25 @@ ag_draw_line_2(void *obj, int x1, int y1, int x2, int y2,
 }
 
 #ifdef AG_HAVE_FLOAT
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_DrawArrowLine(void *_Nonnull obj, int x1, int y1, int x2, int y2,
     AG_ArrowLineType t, int length, double theta, const AG_Color *_Nonnull C)
-#else
+# else
 void
 ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
     AG_ArrowLineType t, int length, double theta, const AG_Color *C)
-#endif
+# endif
 {
-	AG_DrawLine(obj, x1, y1, x2, y2, C);
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
+
+	AG_DrawLine(obj, x1,y1, x2,y2, C);
+
 	if ((t == AG_ARROWLINE_FORWARD) || (t == AG_ARROWLINE_BOTH)) {
-		AG_DrawArrowhead(obj, x1, y1, x2, y2, length, theta, C);
+		AG_DrawArrowhead(obj, x1,y1, x2,y2, length, theta, C);
 	}
 	if ((t == AG_ARROWLINE_REVERSE) || (t == AG_ARROWLINE_BOTH)) {
-		AG_DrawArrowhead(obj, x2, y2, x1, y1, length, theta, C);
+		AG_DrawArrowhead(obj, x2,y2, x1,y1, length, theta, C);
 	}
-
 }
 #endif /* AG_HAVE_FLOAT */

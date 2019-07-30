@@ -27,6 +27,7 @@
 #include <agar/core/core.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/gui_math.h>
+#include <agar/gui/opengl.h>
 
 /* Import inlinables */
 #undef AG_INLINE_HEADER
@@ -158,7 +159,7 @@ AG_ClipLineCircle(int xc, int yc, int r, int x1, int y1, int x2, int y2,
 
 	/* the derivation here is fairly straightforward -- just calculate
 	 * the y = mx+b form of the line segment, and then plug the y found
-	 * thus into (x - x꜀)² + (y - y꜀)² = r²
+	 * thus into (x - x2)^2 + (y - y2)^2 = r^2
 	 *
 	 * You should get an order-2 polynomial, the solution for which is
 	 * trivially found with the quadratic formula.
@@ -233,6 +234,7 @@ AG_ClipLine(int ax, int ay, int aw, int ah, int x1, int y1, int *x2, int *y2)
 		long xi;
 		long yi;
 		int intersect;
+		Uint32 _pad;
 	} faces[4] = {
 		{x1_d, y1_d, x2_d, y2_d, ax   , ay   , ax   , ay+ah, 0, 0, 0},
 		{x1_d, y1_d, x2_d, y2_d, ax   , ay+ah, ax+aw, ay+ah, 0, 0, 0},
@@ -286,11 +288,12 @@ AG_ClipLine(int ax, int ay, int aw, int ah, int x1, int y1, int *x2, int *y2)
  */
 void
 AG_DrawArrowhead(void *obj, int x1, int y1, int x2, int y2, int length,
-    double theta, const AG_Color *_Nonnull c)
+    double theta, const AG_Color *c)
 {
 	AG_Widget *wid = obj;
 	AG_Pt P_start, P_tip,P1, P2;
-	double V_dirx, V_diry, V_refx, V_refy, V_per1x, V_per1y, V_per2x, V_per2y;
+	double V_dirx, V_diry, V_per1x, V_per1y, V_per2x, V_per2y;
+	/* double V_refx, V_refy */
 	double width;
 
 
@@ -329,8 +332,8 @@ AG_DrawArrowhead(void *obj, int x1, int y1, int x2, int y2, int length,
 
 	/* reference vector, this is a point a bit back from the tip that we
 	 * use to compute some trig later to find the corner points */
-	V_refx = (double) length * V_dirx + (double) P_tip.x;
-	V_refy = (double) length * V_diry + (double) P_tip.y;
+	/* V_refx = (double) length * V_dirx + (double) P_tip.x; */
+	/* V_refy = (double) length * V_diry + (double) P_tip.y; */
 
 	/* perpendicular to the direction unit vector */
 	V_per1x =      V_diry;
@@ -352,3 +355,390 @@ AG_DrawArrowhead(void *obj, int x1, int y1, int x2, int y2, int length,
 	AG_DrawTriangle(wid, &P_tip, &P1, &P2, c);
 }
 #endif /* HAVE_FLOAT */
+
+/*
+ * Render a vector graphic made from a display list of elements on a fixed
+ * size grid of MxN vertices. The drawing is scaled to fit r (which is given
+ * in display coordinates).
+ *
+ * Choose the smallest possible grid for a given drawing to optimize coordinate
+ * conversion. Select an odd or even grid to achieve pixel-perfect alignment.
+ * Use elemFirst-elemLast to index and reuse a subset of an existing drawing.
+ *
+ * Elements are straight lines, outline polygons, outline circular arcs,
+ * filled polygons and filled circular arcs. Per-element attributes include
+ * line thickness, color and endpoint style. Attributes are non-modal.
+ *
+ *  2 x 2    3 x 3        4 x 4             5 x 5                6 x 6
+ * .-----. .-------. .-------------. .-----------------. .-------------------. 
+ * | 0 1 | | 0 1 2 | |  0  1  2  3 | |  0  1  2  3  4  | |  0  1  2  3  4  5 |
+ * | 2 3 | | 3 4 5 | |  4  5  6  7 | |  5  6  7  8  9  | |  6  7  8  9 10 11 |
+ * `-----' | 6 7 8 | |  8  9 10 11 | | 10 11 12 13 14  | | 12 13 14 15 16 17 |
+ *         `-------' | 12 13 14 15 | | 15 16 17 18 19  | | 18 19 20 21 22 23 |
+ *                   `-------------' | 20 21 22 23 24  | | 24 25 26 27 28 29 |
+ *            8 x 8                  `-----------------' | 30 31 32 33 34 35 |
+ * .-------------------------.                           `-------------------'
+ * |  0  1  2  3  4  5  6  7 |      M x N       [ cases ]
+ * |  8  9 10 11 12 13 14 15 |  .-----------.   2x2: precalc (fastest)
+ * | 16 17 18 19 20 21 22 23 |  | 0 ....N-1 |   3x3: precalc + shift
+ * | 24 25 26 27 28 29 30 31 |  | ......... |   4x4: precalc + 2 shifts
+ * | 32 33 34 35 36 37 38 39 |  | ......... |   8x8: stream + shifts
+ * | 40 41 42 43 44 45 46 47 |  | ... M*N-1 |   MxN: stream + multiply, divide
+ * | 48 49 50 51 52 53 54 55 |  `-----------'   
+ * | 56 57 58 59 60 61 62 63 |
+ * `-------------------------'
+ */
+static void DrawVector2x2(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull, int,int, const AG_VectorElement *_Nonnull, int,int);
+static void DrawVector3x3(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull, int,int, const AG_VectorElement *_Nonnull, int,int);
+static void DrawVector4x4(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull, int,int, const AG_VectorElement *_Nonnull, int,int);
+static void DrawVector8x8(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull, int,int, const AG_VectorElement *_Nonnull, int,int);
+static void DrawVectorMxN(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull, int,int, const AG_VectorElement *_Nonnull, int,int);
+void
+AG_DrawVector(void *obj, int m, int n, const AG_Rect *r, const AG_Color *pal,
+    const AG_VectorElement *elemBase, int elemFirst, int elemLast)
+{
+	static void (*pf[])(void *_Nonnull, const AG_Rect *, const AG_Color *,
+	                    int,int, const AG_VectorElement *, int,int) = {
+		DrawVector2x2,
+		DrawVector3x3,
+		DrawVector4x4,
+		DrawVectorMxN,	/* 5x5 */
+		DrawVectorMxN,	/* 6x6 */
+		DrawVectorMxN,	/* 7x7 */
+		DrawVector8x8,
+		DrawVectorMxN	/* 9x9 (or MxN) */
+	};
+#ifdef AG_DEBUG
+	if (m < 2 || n < 2) { AG_FatalError("m or n < 2"); }
+#endif
+	if (m != n || n > 9) {
+		n = 9;
+	}
+	pf[n-2](obj, r, pal, m,n, elemBase,elemFirst,elemLast);
+}
+
+static __inline__ void
+DrawVectorFixed(void *_Nonnull obj, const AG_Pt *_Nonnull vtx, Uint nVtx,
+    const AG_Color *_Nonnull pal,
+    const AG_VectorElement *_Nonnull elemBase, Uint elemFirst, Uint elemLast)
+{
+	AG_Widget *wid = obj;
+	int a,b, i;
+
+#ifdef AG_DEBUG
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+
+	if (elemFirst < 0 || elemFirst > elemLast)
+		AG_FatalError("elemFirst/elemLast");
+#endif
+	for (i = elemFirst; i < elemLast; i++) {
+		const AG_VectorElement *elem = &elemBase[i];
+
+		switch (elem->type) {
+		case AG_VE_LINE:
+			if ((a = elem->a) >= 0 && a < nVtx &&
+			    (b = elem->b) >= 0 && b < nVtx) {
+				AG_DrawLine(wid,
+				    vtx[a].x, vtx[a].y,
+				    vtx[b].x, vtx[b].y,
+				    &pal[elem->color]);
+			}
+			break;
+		case AG_VE_POLYGON:
+			if ((a = elem->a) >= 0 &&
+			    (b = elem->b) >= 0 &&
+			    (b > a)) {
+				const int nPts = b - a;
+				AG_Pt *pts = Malloc(nPts * sizeof(AG_Pt));
+				const int *poly = elem->p;
+				int j;
+
+				for (j = 0; j < nPts; j++) {
+					const int vi = poly[a+j];
+					pts[j].x = wid->rView.x1 + vtx[vi].x;
+					pts[j].y = wid->rView.y1 + vtx[vi].y;
+				}
+				AG_DrawPolygon(wid, pts, nPts, &pal[elem->color]);
+				free(pts);
+			}
+			break;
+		case AG_VE_CIRCLE:
+			if ((a = elem->a) >= 0 && a < nVtx) {
+				if (elem->flags & AG_VE_FILLED) {
+					AG_DrawCircleFilled(wid,
+					    vtx[a].x, vtx[a].y,
+					    elem->b,
+					    &pal[elem->color]);
+				} else {
+					AG_DrawCircle(wid,
+					    vtx[a].x, vtx[a].y,
+					    elem->b,
+					    &pal[elem->color]);
+				}
+			}
+			break;
+		case AG_VE_ARC1:
+		case AG_VE_ARC2:
+		case AG_VE_ARC3:
+		case AG_VE_ARC4:
+			break;
+		case AG_VE_POINT:
+		default:
+			if ((a = elem->a) >= 0 && a < nVtx) {
+				AG_DrawLineH(wid,
+				    vtx[a].x-4, vtx[a].x-4,
+				    vtx[a].y,
+				    &pal[elem->color]);
+				AG_DrawLineV(wid,
+				    vtx[a].x,
+				    vtx[a].y-4, vtx[a].y+4,
+				    &pal[elem->color]);
+			}
+			break;
+		}
+	}
+}
+
+static void
+DrawVector2x2(void *_Nonnull obj, const AG_Rect *_Nonnull r,
+    const AG_Color *_Nonnull pal, int m, int n,
+    const AG_VectorElement *_Nonnull elemBase, int elemFirst, int elemLast)
+{
+	const int x = r->x + 1;
+	const int y = r->y + 1;
+	const int w = r->w - 3;
+	const int h = r->h - 3;
+	AG_Pt vtx[4];
+
+	vtx[0].x = x;	vtx[0].y = y;
+	vtx[1].x = x+w;	vtx[1].y = y;
+	vtx[2].x = x;	vtx[2].y = y+h;
+	vtx[3].x = x+w;	vtx[3].y = y+h;
+
+	if (w > 0 && h > 0)
+		DrawVectorFixed(obj, vtx,4, pal, elemBase,elemFirst,elemLast);
+}
+
+static void
+DrawVector3x3(void *_Nonnull obj, const AG_Rect *_Nonnull r,
+    const AG_Color *_Nonnull pal, int m, int n,
+    const AG_VectorElement *_Nonnull elemBase, int elemFirst, int elemLast)
+{
+	const int x = r->x + 1;
+	const int y = r->y + 1;
+	const int w = r->w - 3, w_2 = w>>1;
+	const int h = r->h - 3, h_2 = h>>1;
+	AG_Pt vtx[9];
+
+	vtx[0].x = x;		vtx[0].y = y;
+	vtx[1].x = x+w_2;	vtx[1].y = y;
+	vtx[2].x = x+w;		vtx[2].y = y;
+	vtx[3].x = x;		vtx[3].y = y+h_2;
+	vtx[4].x = x+w_2;	vtx[4].y = y+h_2;
+	vtx[5].x = x+w;		vtx[5].y = y+h_2;
+	vtx[6].x = x;		vtx[6].y = y+h;
+	vtx[7].x = x+w_2;	vtx[7].y = y+h;
+	vtx[8].x = x+w;		vtx[8].y = y+h;
+
+	if (w > 0 && h > 0)
+		DrawVectorFixed(obj, vtx,9, pal, elemBase,elemFirst,elemLast);
+}
+
+static void
+DrawVector4x4(void *_Nonnull obj, const AG_Rect *_Nonnull r,
+    const AG_Color *_Nonnull pal, int m, int n,
+    const AG_VectorElement *_Nonnull elemBase, int elemFirst, int elemLast)
+{
+	const int x = r->x + 1;
+	const int y = r->y + 1;
+	const int w = r->w - 3, w_4 = w>>2, w_4x2 = w_4<<1;
+	const int h = r->h - 3, h_4 = h>>2, h_4x2 = h_4<<1;
+	AG_Pt vtx[16];
+
+	vtx[0].x = x;		vtx[0].y = y;
+	vtx[1].x = x+w_4;	vtx[1].y = y;
+	vtx[2].x = x+w_4x2;	vtx[2].y = y;
+	vtx[3].x = x+w;		vtx[3].y = y;
+	vtx[4].x = x;		vtx[4].y = y+h_4;
+	vtx[5].x = x+w_4;	vtx[5].y = y+h_4;
+	vtx[6].x = x+w_4x2;	vtx[6].y = y+h_4;
+	vtx[7].x = x+w;		vtx[7].y = y+h_4;
+	vtx[8].x = x;		vtx[8].y = y+h_4x2;
+	vtx[9].x = x+w_4;	vtx[9].y = y+h_4x2;
+	vtx[10].x = x+w_4x2;	vtx[10].y = y+h_4x2;
+	vtx[11].x = x+w;	vtx[11].y = y+h_4x2;
+	vtx[12].x = x;		vtx[12].y = y+h;
+	vtx[13].x = x+w_4;	vtx[13].y = y+h;
+	vtx[14].x = x+w_4x2;	vtx[14].y = y+h;
+	vtx[15].x = x+w;	vtx[15].y = y+h;
+
+	if (w > 0 && h > 0)
+		DrawVectorFixed(obj, vtx,16, pal, elemBase,elemFirst,elemLast);
+}
+
+static void
+DrawVector8x8(void *_Nonnull obj, const AG_Rect *_Nonnull r,
+    const AG_Color *_Nonnull pal, int m, int n,
+    const AG_VectorElement *_Nonnull elemBase, int elemFirst, int elemLast)
+{
+	const int w = r->w;
+	const int h = r->h;
+	int a,b, i;
+
+#ifdef AG_DEBUG
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
+
+	if (elemFirst < 0 || elemFirst > elemLast)
+		AG_FatalError("elemFirst/elemLast");
+#endif
+	for (i = elemFirst; i < elemLast; i++) {
+		const AG_VectorElement *elem = &elemBase[i];
+
+		switch (elem->type) {
+		case AG_VE_LINE:
+			a = elem->a >> 3;
+			b = elem->b >> 3;
+			AG_DrawLine(obj,
+			    r->x + a*w, r->y + a*h,
+			    r->x + b*w, r->y + b*h,
+			    &pal[elem->color]);
+			break;
+		case AG_VE_POLYGON:
+			if ((a = elem->a) >= 0 && (b = elem->b) >= 0 &&
+			    (b > a)) {
+				const int nPts = b - a;
+				AG_Pt *pts = Malloc(nPts * sizeof(AG_Pt));
+				const int *poly = elem->p;
+				int j;
+
+				for (j=0; j < nPts; j++) {
+					pts[j].x = r->x + (poly[a+j] >> 3)*w;
+					pts[j].y = r->y + (poly[a+j] >> 3)*h;
+				}
+				AG_DrawPolygon(obj, pts, nPts, &pal[elem->color]);
+				free(pts);
+			}
+			break;
+		case AG_VE_CIRCLE:
+			a = elem->a >> 3;
+			if (elem->flags & AG_VE_FILLED) {
+				AG_DrawCircleFilled(obj,
+				    r->x + a*w,
+				    r->y + a*h,
+				    elem->b, &pal[elem->color]);
+			} else {
+				AG_DrawCircle(obj,
+				    r->x + a*w,
+				    r->y + a*h,
+				    elem->b, &pal[elem->color]);
+			}
+			break;
+		case AG_VE_ARC1:
+		case AG_VE_ARC2:
+		case AG_VE_ARC3:
+		case AG_VE_ARC4:
+			break;
+		case AG_VE_POINT:
+		default:
+			a = elem->a >> 3;
+			AG_DrawLineH(obj,
+			    r->x + a*w - 4,
+			    r->x + a*w - 4,
+			    r->y + a*h,
+			    &pal[elem->color]);
+			AG_DrawLineV(obj,
+			    r->x + a*w,
+			    r->y + a*h - 4,
+			    r->y + a*h + 4,
+			    &pal[elem->color]);
+			break;
+		}
+	}
+}
+
+static void
+DrawVectorMxN(void *_Nonnull obj, const AG_Rect *_Nonnull r,
+    const AG_Color *_Nonnull pal, int m, int n,
+    const AG_VectorElement *_Nonnull elemBase, int elemFirst, int elemLast)
+{
+#ifdef HAVE_FLOAT
+	const int w = r->w;
+	const int h = r->h;
+	int a,b, i;
+
+# ifdef AG_DEBUG
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
+
+	if (elemFirst < 0 || elemFirst > elemLast)
+		AG_FatalError("elemFirst/elemLast");
+# endif
+	for (i = elemFirst; i < elemLast; i++) {
+		const AG_VectorElement *elem = &elemBase[i];
+
+		switch (elem->type) {
+		case AG_VE_LINE:
+			a = elem->a;
+			b = elem->b;
+			AG_DrawLine(obj,
+			    r->x + (int)((double)a/(double)m*(double)w),
+			    r->y + (int)((double)a/(double)n*(double)h),
+			    r->x + (int)((double)b/(double)m*(double)w),
+			    r->y + (int)((double)b/(double)n*(double)h),
+			    &pal[elem->color]);
+			break;
+		case AG_VE_POLYGON:
+			if ((a = elem->a) >= 0 &&
+			    (b = elem->b) >= 0 &&
+			    (b > a)) {
+				const int nPts = b - a;
+				AG_Pt *pts = Malloc(nPts * sizeof(AG_Pt));
+				const int *poly = elem->p;
+				int j;
+
+				for (j=0; j < nPts; j++) {
+					pts[j].x = r->x + poly[a+j]/m*w;
+					pts[j].y = r->y + poly[a+j]/n*h;
+				}
+				AG_DrawPolygon(obj, pts, nPts, &pal[elem->color]);
+				free(pts);
+			}
+			break;
+		case AG_VE_CIRCLE:
+			a = elem->a;
+			if (elem->flags & AG_VE_FILLED) {
+				AG_DrawCircleFilled(obj,
+				    r->x + a/m*w,
+				    r->y + a/n*h,
+				    elem->b, &pal[elem->color]);
+			} else {
+				AG_DrawCircle(obj,
+				    r->x + a/m*w,
+				    r->y + a/n*h,
+				    elem->b, &pal[elem->color]);
+			}
+			break;
+		case AG_VE_ARC1:
+		case AG_VE_ARC2:
+		case AG_VE_ARC3:
+		case AG_VE_ARC4:
+			break;
+		case AG_VE_POINT:
+		default:
+			a = elem->a;
+			AG_DrawLineH(obj,
+			    r->x + a/m*w - 4,
+			    r->x + a/m*w - 4,
+			    r->y + a/n*h,
+			    &pal[elem->color]);
+			AG_DrawLineV(obj,
+			    r->x + a/m*w,
+			    r->y + a/n*h - 4,
+			    r->y + a/n*h + 4,
+			    &pal[elem->color]);
+			break;
+		}
+	}
+#else
+/* TODO */
+#endif /* HAVE_FLOAT */
+}

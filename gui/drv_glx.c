@@ -81,6 +81,7 @@ typedef struct ag_driver_glx {
 	AG_GL_Context gl;		/* Common OpenGL context data */
 	AG_Mutex      lock;		/* Protect Xlib calls */
 	int           wmHintsSet;	/* WM hints have been set */
+	Uint32 _pad;
 	AG_Timer      toInitExpose;	/* Initial Expose */
 } AG_DriverGLX;
 
@@ -382,7 +383,7 @@ LookupWindowByID(Window xw)
 	}
 fail:
 	AG_UnlockVFS(&agDrivers);
-	AG_SetError("X event from unknown window");
+	AG_SetErrorS(_("X event from unknown window"));
 	return (NULL);
 }
 
@@ -620,7 +621,7 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 			ch = 0;
 		}
 		if (!LookupKeyCode(xev.xkey.keycode, &ks)) {
-			AG_SetError("Keyboard event: Unknown keycode: %d",
+			AG_SetError(_("Keyboard event: Unknown keycode: %d"),
 			    (int)xev.xkey.keycode);
 			AG_MutexUnlock(&agDisplayLock);
 			return (-1);
@@ -750,7 +751,7 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	case ReparentNotify:
 		return (0);
 	default:
-		AG_SetError("Unknown X event %d\n", xev.type);
+		AG_SetError(_("Unknown X event %d"), xev.type);
 		return (-1);
 	}
 	return (1);
@@ -1390,7 +1391,7 @@ GLX_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 #endif
 		if ((xvi = glXChooseVisual(agDisplay, agScreen, glxAttrs))
 		    == NULL) {
-			AG_SetError("Cannot find an acceptable GLX visual");
+			AG_SetErrorS(_("Cannot find an acceptable GLX visual"));
 			goto fail_unlock;
 		}
 	}
@@ -1425,7 +1426,7 @@ GLX_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	    valuemask,
 	    &xwAttrs);
 	if (glx->w == 0) {
-		AG_SetError("XCreateWindow failed");
+		AG_SetErrorS("XCreateWindow failed");
 		goto fail_unlock;
 	}
 
@@ -1754,7 +1755,7 @@ GLX_GetInputFocus(AG_Window *_Nonnull *_Nonnull rv)
 			break;
 	}
 	if (glx == NULL) {
-		AG_SetError("Input focus is external to this application");
+		AG_SetErrorS(_("Input focus is external to this application"));
 		return (-1);
 	}
 	*rv = AGDRIVER_MW(glx)->win;
@@ -1982,7 +1983,7 @@ GLX_SetWindowCaption(AG_Window *_Nonnull win, const char *_Nonnull s)
 	    &xtp);
 #endif
 	if (rv != Success) {
-		AG_SetError("Cannot convert string to X property");
+		AG_SetErrorS(_("Cannot convert string to X property"));
 		goto fail;
 	}
 	XSetTextProperty(agDisplay, glx->w, &xtp, XA_WM_NAME);
@@ -2034,7 +2035,7 @@ GLX_SetOpacity(AG_Window *_Nonnull win, float f)
 		    (Uchar *)&opacity, 1);
 		return (0);
 	} else {
-		AG_SetError("Opacity not implemented");
+		AG_SetErrorS("No opacity");
 		return (-1);
 	}
 }
@@ -2110,12 +2111,12 @@ GLX_InitGlobals(void)
 	XInitThreads();
 #endif
 	if ((agDisplay = XOpenDisplay(NULL)) == NULL) {
-		AG_SetError("Cannot open X display");
+		AG_SetErrorS(_("Cannot open X display"));
 		return (-1);
 	}
 	xfd = XConnectionNumber(agDisplay);
 	if (!glXQueryExtension(agDisplay, &err, &ev)) {
-		AG_SetError("GLX extension is not available");
+		AG_SetErrorS(_("GLX extension is not available"));
 		goto fail;
 	}
 
@@ -2255,6 +2256,8 @@ AG_DriverMwClass agDriverGLX = {
 		AG_GL_DrawLineV,
 		AG_GL_DrawLineBlended,
 		AG_GL_DrawTriangle,
+		AG_GL_DrawPolygon,
+		AG_GL_DrawPolygonSti32,
 		AG_GL_DrawArrow,
 		AG_GL_DrawBoxRounded,
 		AG_GL_DrawBoxRoundedTop,

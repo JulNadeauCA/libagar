@@ -46,6 +46,9 @@ typedef struct ag_sdlfb_driver {
 
 	AG_ClipRect *clipRects;		/* Clipping rectangle stack */
 	Uint        nClipRects;
+	
+	Uint           nPolyInts;
+	int  *_Nullable polyInts;	/* Sorted intersections for drawPolygon */
 } AG_DriverSDLFB;
 
 static int nDrivers = 0;			/* Opened driver instances */
@@ -57,6 +60,7 @@ static AG_EventSink *_Nullable sfbEventEpilogue = NULL;
 static void SDLFB_DrawRectFilled(void *_Nonnull, const AG_Rect *_Nonnull,
                                  const AG_Color *_Nonnull);
 static void SDLFB_UpdateRegion(void *_Nonnull, const AG_Rect *_Nonnull);
+static int CompareInts(const void *_Nonnull, const void *_Nonnull);
 
 static void
 Init(void *_Nonnull obj)
@@ -69,6 +73,8 @@ Init(void *_Nonnull obj)
 	sfb->maxDirty = 4;
 	sfb->clipRects = NULL;
 	sfb->nClipRects = 0;
+	sfb->nPolyInts = 0;
+	sfb->polyInts = NULL;
 }
 
 static void
@@ -78,6 +84,7 @@ Destroy(void *_Nonnull obj)
 
 	Free(sfb->dirty);
 	Free(sfb->clipRects);
+	Free(sfb->polyInts);
 }
 
 /*
@@ -305,7 +312,8 @@ SDLFB_PopClipRect(void *_Nonnull obj)
 }
 
 static void
-SDLFB_PushBlendingMode(void *_Nonnull drv, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
+SDLFB_PushBlendingMode(void *_Nonnull drv, AG_AlphaFn fnSrc, AG_AlphaFn fnDst,
+    AG_TextureEnvMode texEnvMode)
 {
 	/* No-op (handle blending on a per-blit basis) */
 }
@@ -508,7 +516,7 @@ SDLFB_BlendPixel(void *_Nonnull obj, int x, int y, const AG_Color *c,
 		return;
 	}
 #endif /* SDL<1.3 */
-
+	
 	/* Blend the components and write the computed pixel value. */
 	SDL_GetRGBA(pxDst, S->format, &dR,&dG,&dB,&dA);
 	switch (fnSrc) {
@@ -982,6 +990,99 @@ SDLFB_DrawTriangle(void *_Nonnull obj, const AG_Pt *v1, const AG_Pt *v2,
 		SDLFB_DrawTriangle_FlatBot(obj, v1,v2,&v4, c);
 		SDLFB_DrawTriangle_FlatTop(obj, v2,&v4,v3, c);
 	}
+}
+
+static void
+SDLFB_DrawPolygon(void *obj, const AG_Pt *pts, Uint nPts, const AG_Color *c)
+{
+	AG_Widget *wid = WIDGET(obj);
+	AG_DriverSDLFB *sfb = (AG_DriverSDLFB *)wid->drv;
+	int y, x1, y1, x2, y2;
+	int miny, maxy;
+	int i, i1, i2;
+	Uint nPolyInts;
+
+	/* Allocate/resize the array of intersections. */
+	if (sfb->polyInts == NULL) {
+		sfb->nPolyInts = nPts;
+		sfb->polyInts = Malloc(nPts*sizeof(int));
+	} else {
+		if (nPts > sfb->nPolyInts) {
+			sfb->nPolyInts = nPts;
+			sfb->polyInts = Realloc(sfb->polyInts, nPts*sizeof(int));
+		}
+	}
+
+	/* Find Y maxima */
+	miny = pts[0].y;
+	maxy = miny;
+	for (i=1; i < nPts; i++) {
+		int vy;
+	
+		vy = pts[i].y;
+		if (vy < miny) {
+			miny = vy;
+		} else if (vy > maxy) {
+			maxy = vy;
+		}
+	}
+
+	/* Find the intersections. */
+	for (y = miny; y <= maxy; y++) {
+		nPolyInts = 0;
+		for (i=0; i < nPts; i++) {
+			if (i == 0) {
+				i1 = nPts - 1;
+				i2 = 0;
+			} else {
+				i1 = i - 1;
+				i2 = i;
+			}
+			y1 = pts[i1].y;
+			y2 = pts[i2].y;
+			if (y1 < y2) {
+				x1 = pts[i1].x;
+				x2 = pts[i2].x;
+			} else if (y1 > y2) {
+				x2 = pts[i1].x;
+				y2 = pts[i1].y;
+				x1 = pts[i2].x;
+				y1 = pts[i2].y;
+			} else {
+				continue;
+			}
+			if (((y >= y1) && (y < y2)) ||
+			    ((y == maxy) && (y > y1) && (y <= y2))) {
+				sfb->polyInts[nPolyInts++] =
+				    (((y - y1) << 16) / (y2 - y1)) *
+				     (x2 - x1) + (x1 << 16);
+			} 
+		}
+		qsort(sfb->polyInts, nPolyInts, sizeof(int), CompareInts);
+
+		for (i=0; i < nPolyInts; i+=2) {
+			int xa, xb;
+
+			xa = sfb->polyInts[i] + 1;
+			xa = (xa >> 16) + ((xa & 0x8000) >> 15);
+			xb = sfb->polyInts[i+1] - 1;
+			xb = (xb >> 16) + ((xb & 0x8000) >> 15);
+			SDLFB_DrawLineH(sfb, xa,xb, y, c);
+		}
+	}
+}
+
+static void
+SDLFB_DrawPolygonSti32(void *_Nonnull obj, const AG_Pt *_Nonnull pts, Uint nPts,
+    const AG_Color *_Nonnull c, const Uint8 *_Nonnull stipple)
+{
+	Debug(obj, "drawPolygonSti32() not implemented\n");
+}
+
+static int
+CompareInts(const void *_Nonnull p1, const void *_Nonnull p2)
+{
+	return (*(const int *)p1 - *(const int *)p2);
 }
 
 static void
@@ -1743,6 +1844,8 @@ AG_DriverSwClass agDriverSDLFB = {
 		SDLFB_DrawLineV,
 		SDLFB_DrawLineBlended,
 		SDLFB_DrawTriangle,
+		SDLFB_DrawPolygon,
+		SDLFB_DrawPolygonSti32,
 		SDLFB_DrawArrow,
 		SDLFB_DrawBoxRounded,
 		SDLFB_DrawBoxRoundedTop,

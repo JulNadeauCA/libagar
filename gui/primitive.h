@@ -13,6 +13,31 @@ typedef enum ag_arrowline_type {
 	AG_ARROWLINE_BOTH
 } AG_ArrowLineType;
 
+typedef enum ag_vector_element_type {
+	AG_VE_POINT,		/* Marker (crosshairs) on vertex A */
+	AG_VE_LINE,		/* Line from vertex A to vertex B */
+	AG_VE_POLYGON,		/* Polygon from vertex array C (indices A..B) */
+	AG_VE_CIRCLE,		/* Circle of radius B centered at vertex A */
+	AG_VE_ARC1,		/* Arc (0-90 deg) of radius B centered at A */
+	AG_VE_ARC2,		/* Arc (90-180 deg) "" */
+	AG_VE_ARC3,		/* Arc (180-270 deg) "" */
+	AG_VE_ARC4,		/* Arc (270-360 deg) "" */
+	AG_VE_LAST
+} AG_VectorElementType;
+
+typedef struct ag_vector_element {
+	AG_VectorElementType type;		/* Element type (or terminator) */
+	int a,b;				/* Immediate values A and B */
+	int thick;				/* Line thickness */
+	int color;				/* Color index into palette */
+	Uint flags;
+#define AG_VE_BEVELED	0x0001			/* Beveled endpoints (LINE) */
+#define AG_VE_ROUNDED	0x0002			/* Rounded endpoints (LINE) */
+#define AG_VE_FILLED	0x0004			/* Filled (CIRCLE) */
+#define AG_VE_TAG_MASK	0xff00			/* Mask to decode tag */
+	const void *_Nullable p;		/* Array or object parameter */
+} AG_VectorElement;
+
 __BEGIN_DECLS
 #ifdef AG_INLINE_WIDGET
 # define AG_INLINE_HEADER
@@ -35,9 +60,13 @@ void ag_draw_line(void *_Nonnull, int,int, int,int, const AG_Color *_Nonnull);
 void ag_draw_line_h(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
 void ag_draw_line_v(void *_Nonnull, int, int,int, const AG_Color *_Nonnull);
 void ag_draw_line_blended(void *_Nonnull, int,int, int,int,
-                          const AG_Color *_Nonnull, AG_AlphaFn);
+                          const AG_Color *_Nonnull, AG_AlphaFn, AG_AlphaFn);
 void ag_draw_triangle(void *_Nonnull, const AG_Pt *, const AG_Pt *, const AG_Pt *,
                       const AG_Color *_Nonnull);
+void ag_draw_polygon(void *_Nonnull, const AG_Pt *_Nonnull, Uint, const AG_Color *);
+void ag_draw_polygon_sti32(void *_Nonnull, const AG_Pt *_Nonnull, Uint,
+                           const AG_Color *_Nonnull, const Uint8 *_Nonnull);
+
 void ag_draw_arrow_up(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
 void ag_draw_arrow_right(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
 void ag_draw_arrow_down(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
@@ -52,7 +81,8 @@ void ag_draw_rect(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonn
 void ag_draw_rect_filled(void *_Nonnull, const AG_Rect *_Nonnull,
                          const AG_Color *_Nonnull);
 void ag_draw_rect_blended(void *_Nonnull, const AG_Rect *_Nonnull,
-                          const AG_Color *_Nonnull, AG_AlphaFn);
+                          const AG_Color *_Nonnull,
+			  AG_AlphaFn, AG_AlphaFn);
 void ag_draw_rect_dithered(void *_Nonnull, const AG_Rect *_Nonnull,
                            const AG_Color *_Nonnull);
 void ag_draw_frame(void *_Nonnull, const AG_Rect *_Nonnull, int,
@@ -85,8 +115,10 @@ void ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
 # define AG_DrawLine(o,x1,y1,x2,y2,c)		ag_draw_line((o),(x1),(y1),(x2),(y2),(c))
 # define AG_DrawLineH(o,x1,x2,y,c)		ag_draw_line_h((o),(x1),(x2),(y),(c))
 # define AG_DrawLineV(o,x,y1,y2,c)		ag_draw_line_v((o),(x),(y1),(y2),(c))
-# define AG_DrawLineBlended(o,x1,y1,x2,y2,c,fn)	ag_draw_line_blended((o),(x1),(y1),(x2),(y2),(c),(fn))
+# define AG_DrawLineBlended(o,x,y,x2,y2,c,fs,fd) ag_draw_line_blended((o),(x),(y),(x2),(y2),(c),(fs),(fd))
 # define AG_DrawTriangle(o,v1,v2,v3,c)		ag_draw_triangle((o),(v1),(v2),(v3),(c))
+# define AG_DrawPolygon(o,pts,n,c)		ag_draw_polygon((o),(pts),(n),(c))
+# define AG_DrawPolygonSti32(o,pts,n,c,sti)	ag_draw_polygon_sti32((o),(pts),(n),(c),(sti))
 # define AG_DrawArrowUp(o,x,y,h,c)		ag_draw_arrow_up((o),(x),(y),(h),(c))
 # define AG_DrawArrowRight(o,x,y,h,c)		ag_draw_arrow_right((o),(x),(y),(h),(c))
 # define AG_DrawArrowDown(o,x,y,h,c)		ag_draw_arrow_down((o),(x),(y),(h),(c))
@@ -97,7 +129,7 @@ void ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
 # define AG_DrawCircleFilled(o,x,y,rad,c)	ag_draw_circle_filled((o),(x),(y),(rad),(c))
 # define AG_DrawRect(o,r,c)			ag_draw_rect((o),(r),(c))
 # define AG_DrawRectFilled(o,r,c)		ag_draw_rect_filled((o),(r),(c))
-# define AG_DrawRectBlended(o,r,c,fn)		ag_draw_rect_blended((o),(r),(c),(fn))
+# define AG_DrawRectBlended(o,r,c,sf,df)	ag_draw_rect_blended((o),(r),(c),(sf),(df))
 # define AG_DrawRectDithered(o,r,c)		ag_draw_rect_dithered((o),(r),(c))
 # define AG_DrawFrame(o,r,z,c)			ag_draw_frame((o),(r),(z),(c))
 # define AG_DrawBox(o,r,z,c)			ag_draw_box((o),(r),(z),(c))
@@ -124,7 +156,11 @@ void AG_ClipLineCircle(int,int, int, int,int, int,int,
 
 void AG_DrawArrowhead(void *_Nonnull, int, int, int,int, int, double,
                       const AG_Color *_Nonnull);
-#endif
+#endif /* AG_HAVE_FLOAT */
+
+void AG_DrawVector(void *_Nonnull, int,int, const AG_Rect *_Nonnull,
+                   const AG_Color *_Nonnull, const AG_VectorElement *_Nonnull,
+                   int,int);
 __END_DECLS
 
 #include <agar/gui/close.h>

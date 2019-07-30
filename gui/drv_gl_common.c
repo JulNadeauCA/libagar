@@ -34,6 +34,7 @@
 #include <agar/gui/text.h>
 #include <agar/gui/packedpixel.h>
 #include <agar/gui/opengl.h>
+#include <agar/gui/primitive.h>
 
 #if AG_MODEL == AG_LARGE
 # define GL_Color3uH(r,g,b)   glColor3us((r),(g),(b))
@@ -55,12 +56,13 @@ AG_GL_InitContext(void *obj, AG_GL_Context *gl)
 {
 	AG_Driver *drv = obj;
 	AG_ClipRect *cr;
+	AG_GL_BlendState *bs;
 	int y;
 	
 	gl->textureGC = NULL;
 	gl->nTextureGC = 0;
-	gl->listGC = NULL;
 	gl->nListGC = 0;
+	gl->listGC = NULL;
 
 	for (y = 0; y < 32; y++)
 		gl->dither[y] = ((y % 2)==0) ? 0x55555555 : 0xaaaaaaaa;
@@ -79,11 +81,20 @@ AG_GL_InitContext(void *obj, AG_GL_Context *gl)
 	glDisable(GL_LIGHTING);
 
 	/* Initialize our clipping rectangles. */
-	memset(gl->clipStates, 0, sizeof(gl->clipStates));
 	if ((gl->clipRects = TryMalloc(sizeof(AG_ClipRect))) == NULL) {
 		return (-1);
 	}
 	gl->nClipRects = 1;
+	memset(gl->clipStates, 0, sizeof(gl->clipStates));
+
+	/* Initialize the first alpha blending state */
+	gl->nBlendStates = 1;
+	gl->blendStates = Malloc(sizeof(AG_GL_BlendState));
+	bs = &gl->blendStates[0];
+	bs->enabled = 0;
+	bs->srcFactor = GL_ONE;
+	bs->dstFactor = GL_ZERO;
+	bs->texEnvMode = GL_REPLACE;
 
 	/* Initialize the first clipping rectangle. */
 	cr = &gl->clipRects[0];
@@ -232,7 +243,7 @@ AG_GL_StdPopClipRect(void *obj)
 	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
 }
 
-static __inline__ GLenum
+static __inline__ GLenum _Const_Attribute
 AG_GL_GetBlendingFunc(AG_AlphaFn fn)
 {
 	switch (fn) {
@@ -247,41 +258,65 @@ AG_GL_GetBlendingFunc(AG_AlphaFn fn)
 	}
 }
 
+static __inline__ GLenum _Const_Attribute
+AG_GL_GetTextureEnvMode(AG_TextureEnvMode texEnvMode)
+{
+	switch (texEnvMode) {
+	default:
+	case AG_TEXTURE_ENV_MODULATE:	return (GL_MODULATE);
+	case AG_TEXTURE_ENV_DECAL:	return (GL_DECAL);
+	case AG_TEXTURE_ENV_BLEND:	return (GL_BLEND);
+	case AG_TEXTURE_ENV_REPLACE:	return (GL_REPLACE);
+	}
+}
+
 /* Push/pop alpha blending mode. Set GL_BLEND and GL_BLEND_{SRC,DST}. */
 void
-AG_GL_StdPushBlendingMode(void *obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
+AG_GL_StdPushBlendingMode(void *obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst,
+    AG_TextureEnvMode texEnvMode)
 {
 	AG_Driver *drv = obj;
 	AG_GL_Context *gl = drv->gl;
+	AG_GL_BlendState *bs;
 	
-	/* XXX TODO: stack */
-	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &gl->bs[0].texEnvMode);
-	glGetBooleanv(GL_BLEND, &gl->bs[0].enabled);
-	glGetIntegerv(GL_BLEND_SRC, &gl->bs[0].srcFactor);
-	glGetIntegerv(GL_BLEND_DST, &gl->bs[0].dstFactor);
+	gl->blendStates = Realloc(gl->blendStates, (gl->nBlendStates + 1) *
+	                                           sizeof(AG_GL_BlendState));
+	bs = &gl->blendStates[gl->nBlendStates++];
+	
+	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &bs->texEnvMode);
+	glGetBooleanv(GL_BLEND, &bs->enabled);
+	glGetIntegerv(GL_BLEND_SRC, &bs->srcFactor);
+	glGetIntegerv(GL_BLEND_DST, &bs->dstFactor);
 
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,
+	          AG_GL_GetTextureEnvMode(texEnvMode));
+
 	glEnable(GL_BLEND);
-	if (fnSrc == AG_ALPHA_OVERLAY || fnDst == AG_ALPHA_OVERLAY) {
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	} else {
-		glBlendFunc(AG_GL_GetBlendingFunc(fnSrc),
-		            AG_GL_GetBlendingFunc(fnDst));
-	}
+
+	glBlendFunc(AG_GL_GetBlendingFunc(fnSrc),
+	            AG_GL_GetBlendingFunc(fnDst));
 }
 void
 AG_GL_StdPopBlendingMode(void *obj)
 {
 	AG_Driver *drv = obj;
 	AG_GL_Context *gl = drv->gl;
-	
-	/* XXX TODO: stack */
-	if (gl->bs[0].enabled) {
+	AG_GL_BlendState *bs;
+
+#ifdef AG_DEBUG
+	if (gl->nBlendStates < 1)
+		AG_FatalError("PopBlendingMode() without PushBlendingMode()");
+#endif
+	bs = &gl->blendStates[gl->nBlendStates-2];
+	gl->nBlendStates--;
+
+	if (bs->enabled) {
 		glEnable(GL_BLEND);
 	} else {
 		glDisable(GL_BLEND);
 	}
-	glBlendFunc(gl->bs[0].srcFactor, gl->bs[0].dstFactor);
+	glBlendFunc(bs->srcFactor, bs->dstFactor);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, bs->texEnvMode);
 }
 
 /* Delete a texture by name */
@@ -426,7 +461,8 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
-	    AG_ALPHA_ONE_MINUS_SRC);
+	    AG_ALPHA_ONE_MINUS_SRC,
+	    AG_TEXTURE_ENV_REPLACE);
 
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBegin(GL_POLYGON);
@@ -474,7 +510,8 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, int name, const AG_Rect *r,
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
-	    AG_ALPHA_ONE_MINUS_SRC);
+	    AG_ALPHA_ONE_MINUS_SRC,
+	    AG_TEXTURE_ENV_REPLACE);
 
 	glBindTexture(GL_TEXTURE_2D, wid->textures[name]);
 	glBegin(GL_POLYGON);
@@ -518,7 +555,8 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *s, float w, float h)
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
-	    AG_ALPHA_ONE_MINUS_SRC);
+	    AG_ALPHA_ONE_MINUS_SRC,
+	    AG_TEXTURE_ENV_REPLACE);
 	
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBegin(GL_POLYGON);
@@ -555,7 +593,8 @@ AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int name, float w, float h)
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
-	    AG_ALPHA_ONE_MINUS_SRC);
+	    AG_ALPHA_ONE_MINUS_SRC,
+	    AG_TEXTURE_ENV_REPLACE);
 	
 	glBindTexture(GL_TEXTURE_2D, wid->textures[name]);
 	glBegin(GL_POLYGON);
@@ -592,7 +631,8 @@ AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int name, float w, float h
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
-	    AG_ALPHA_ONE_MINUS_SRC);
+	    AG_ALPHA_ONE_MINUS_SRC,
+	    AG_TEXTURE_ENV_REPLACE);
 	
 	glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[name]);
 	glBegin(GL_POLYGON);
@@ -796,15 +836,12 @@ AG_GL_BlendPixel(void *obj, int x, int y, const AG_Color *c, AG_AlphaFn fnSrc,
 {
 	AG_Driver *drv = obj;
 
-	/* XXX use own blending routine here to avoid blending moe push/pop? */
-
-	AGDRIVER_CLASS(drv)->pushBlendingMode(drv, fnSrc, fnDst);
-
+	AGDRIVER_CLASS(drv)->pushBlendingMode(drv, fnSrc, fnDst,
+	                                      AG_TEXTURE_ENV_REPLACE);
 	glBegin(GL_POINTS);
 	GL_Color4uH(c->r, c->g, c->b, c->a);
 	glVertex2i(x,y);
 	glEnd();
-
 	AGDRIVER_CLASS(drv)->popBlendingMode(drv);
 }
 
@@ -848,19 +885,17 @@ AG_GL_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2,
 {
 	int a = c->a;
 
-	if (a < AG_OPAQUE)
-		AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst);
-
+	AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst,
+	                                      AG_TEXTURE_ENV_REPLACE);
 	glBegin(GL_LINES);
 	GL_Color4uH(c->r, c->g, c->b, a);
 	glVertex2s(x1, y1);
 	glVertex2s(x2, y2);
 	glEnd();
-	
-	if (a < AG_OPAQUE)
-		AGDRIVER_CLASS(obj)->popBlendingMode(obj);
+	AGDRIVER_CLASS(obj)->popBlendingMode(obj);
 }
 
+/* Draw a solid triangle from 3 points. */
 void
 AG_GL_DrawTriangle(void *obj, const AG_Pt *v1, const AG_Pt *v2, const AG_Pt *v3,
     const AG_Color *c)
@@ -871,6 +906,42 @@ AG_GL_DrawTriangle(void *obj, const AG_Pt *v1, const AG_Pt *v2, const AG_Pt *v3,
 	glVertex2i(v2->x, v2->y);
 	glVertex2i(v3->x, v3->y);
 	glEnd();
+}
+
+/* Draw a solid polygon from n points. */
+void
+AG_GL_DrawPolygon(void *obj, const AG_Pt *pts, Uint nPts, const AG_Color *c)
+{
+	Uint i;
+
+	glBegin(GL_POLYGON);
+	GL_Color3uH(c->r, c->g, c->b);
+	for (i = 0; i < nPts; i++) {
+		glVertex2i(pts[i].x,
+		           pts[i].y);
+	}
+	glEnd();
+}
+
+/* Draw a stippled polygon from n points with a 32x32-bit stipple pattern. */
+void
+AG_GL_DrawPolygonSti32(void *obj, const AG_Pt *pts, Uint nPts,
+    const AG_Color *c, const Uint8 *stipple)
+{
+	Uint8 stipplePrev[32*4];
+	Uint i;
+
+	glGetPolygonStipple(stipplePrev);
+	glPolygonStipple(stipple);
+
+	glBegin(GL_POLYGON);
+	GL_Color3uH(c->r, c->g, c->b);
+	for (i = 0; i < nPts; i++) {
+		glVertex2i(pts[i].x, pts[i].y);
+	}
+	glEnd();
+
+	glPolygonStipple(stipplePrev);
 }
 
 static void
@@ -989,9 +1060,9 @@ AG_GL_DrawBoxRounded(void *obj, const AG_Rect *r, int z, int radius,
     const AG_Color *c1, const AG_Color *c2, const AG_Color *c3)
 {
 	float rad = (float)radius, rad2 = 2.0f*rad;
-	float t, i, nFull = 10.0f, nQuart = nFull/4.0f;
+	float t, i, nFull = rad*4.0f, nQuart = nFull/4.0f;
 	float w, h;
-	
+
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 
@@ -1004,59 +1075,75 @@ AG_GL_DrawBoxRounded(void *obj, const AG_Rect *r, int z, int radius,
 	glBegin(GL_POLYGON);
 	GL_Color3uH(c1->r, c1->g, c1->b);
 	{
-		for (i = 0.0f; i < nQuart; i++) {
+		for (i = 0.0f; i <= nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(-rad*Cos(t), -rad*Sin(t));
+			glVertex2f(-rad*Cos(t),
+			           -rad*Sin(t));
 		}
-		for (i = nQuart-1; i > 0.0f; i--) {
+
+		t = 2.0f*AG_PI*nQuart;
+		glVertex2f((w - rad2 + rad*Cos(t/nFull)),
+		           -rad*Sin(t/nFull));
+
+		for (i = nQuart-1.0f; i >= 0.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(w - rad2 + rad*Cos(t/nFull),
-			           -rad*Sin(t/nFull));
+			glVertex2f(w - rad2 + rad*Cos(t),
+			                     -rad*Sin(t));
 		}
-		for (i = 0.0f; i < nQuart; i++) {
+
+		for (i = 0.0f; i <= nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(w - rad2 + rad*Cos(t),
 			           h - rad2 + rad*Sin(t));
 		}
-		for (i = nQuart; i > 0.0f; i--) {
+
+		t = 2.0f*AG_PI*nQuart;
+		glVertex2f(0, h - rad);
+
+		for (i = nQuart-1.0f; i >= 1.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(-rad*Cos(t),
 			           h - rad2 + rad*Sin(t));
 		}
 	}
 	glEnd();
-	
-	glBegin(GL_LINE_STRIP);
+
+	glBegin(GL_LINE_LOOP);
 	{
 		GL_Color3uH(c2->r, c2->g, c2->b);
-		for (i = 0.0f; i < nQuart; i++) {
+		for (i = 0.0f; i <= nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(-rad*Cos(t),
 			           -rad*Sin(t));
 		}
+
 		t = 2.0f*AG_PI*nQuart;
 		glVertex2f((w - rad2 + rad*Cos(t/nFull)),
 		           -rad*Sin(t/nFull));
 
 		GL_Color3uH(c3->r, c3->g, c3->b);
-		for (i = nQuart-1; i > 0.0f; i--) {
+		for (i = nQuart-1.0f; i >= 0.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(w - rad2 + rad*Cos(t), -rad*Sin(t));
+			glVertex2f(w - rad2 + rad*Cos(t),
+			           -rad*Sin(t));
 		}
-		for (i = 0.0f; i < nQuart; i++) {
+		for (i = 0.0f; i <= nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(w - rad2 + rad*Cos(t),
 			           h - rad2 + rad*Sin(t));
 		}
-		for (i = nQuart; i > 0.0f; i--) {
+		
+		t = 2.0f*AG_PI*nQuart;
+		glVertex2f(0, h - rad - 1);
+
+		for (i = nQuart-1.0f; i >= 1.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(-rad*Cos(t),
 			           h - rad2 + rad*Sin(t));
 		}
-		GL_Color3uH(c2->r, c2->g, c2->b);
-		glVertex2f(-rad, 0.0f);
 	}
 	glEnd();
+
 	glPopMatrix();
 }
 
@@ -1219,9 +1306,8 @@ AG_GL_DrawRectBlended(void *obj, const AG_Rect *r, const AG_Color *c,
 	int x2 = x1 + r->w;
 	int y2 = y1 + r->h;
 
-	if (c->a < AG_OPAQUE)
-		AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst);
-
+	AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst,
+	                                      AG_TEXTURE_ENV_REPLACE);
 	glBegin(GL_POLYGON);
 	glColor4us(c->r, c->g, c->b, c->a);
 	glVertex2i(x1, y1);
@@ -1229,9 +1315,7 @@ AG_GL_DrawRectBlended(void *obj, const AG_Rect *r, const AG_Color *c,
 	glVertex2i(x2, y2);
 	glVertex2i(x1, y2);
 	glEnd();
-	
-	if (c->a < AG_OPAQUE)
-		AGDRIVER_CLASS(obj)->popBlendingMode(obj);
+	AGDRIVER_CLASS(obj)->popBlendingMode(obj);
 }
 
 /* Prepare for rendering an AG_Text(3) glyph. */

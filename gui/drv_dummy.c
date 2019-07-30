@@ -47,6 +47,7 @@ static int nDrivers = 0;		/* Number of drivers open */
 typedef struct ag_driver_dummy {
 	struct ag_driver_mw _inherit;	/* AG_DriverMW -> AG_DriverDUMMY */
 	Uint flags;			/* Some flags */
+	Uint32 _pad;
 	AG_Mutex lock;			/* Some locking device */
 } AG_DriverDUMMY;
 
@@ -54,6 +55,7 @@ typedef struct ag_driver_dummy {
 typedef struct ag_cursor_dummy {
 	struct ag_cursor _inherit;	/* (not an object) */
 	int handle;			/* Some internal handle */
+	Uint32 _pad;
 } AG_CursorDUMMY;
 
 AG_DriverMwClass agDriverDUMMY;
@@ -355,9 +357,11 @@ DUMMY_PopClipRect(void *_Nonnull obj)
 }
 
 static void
-DUMMY_PushBlendingMode(void *_Nonnull obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
+DUMMY_PushBlendingMode(void *_Nonnull obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst,
+    AG_TextureEnvMode texEnvMode)
 {
-	Debug(obj, "PushBlendingMode(%d,%d)\n", fnSrc, fnDst);
+	Debug(obj, "PushBlendingMode(%d,%d, %d)\n", fnSrc, fnDst,
+	    texEnvMode);
 }
 
 static void
@@ -518,6 +522,31 @@ DUMMY_DrawTriangle(void *_Nonnull obj, const AG_Pt *_Nonnull v1,
 	Debug(obj, "DrawTriangle([%d,%d], [%d,%d], [%d,%d], [%x:%x:%x:%x])\n",
 	    v1->x, v1->y, v2->x, v2->y, v3->x, v3->y,
 	    c->r, c->g, c->b, c->a);
+}
+
+static void
+DUMMY_DrawPolygon(void *_Nonnull obj, const AG_Pt *_Nonnull pts, Uint nPts,
+    const AG_Color *_Nonnull c)
+{
+#ifdef AG_DEBUG
+	Uint i;
+	Debug(obj, "DrawPolygon(%u, [%x:%x:%x:%x],", nPts, c->r, c->g, c->b, c->a);
+	for (i = 0; i < nPts; i++) { Debug(NULL, " (%d,%d)", pts[i].x, pts[i].y); }
+	Debug(NULL, ")\n");
+#endif
+}
+
+static void
+DUMMY_DrawPolygonSti32(void *_Nonnull obj, const AG_Pt *_Nonnull pts, Uint nPts,
+    const AG_Color *_Nonnull c, const Uint8 *_Nonnull stipplePattern)
+{
+#ifdef AG_DEBUG
+	Uint i;
+	Debug(obj, "DrawPolygon(%u, [%x:%x:%x:%x], %p, ", nPts, c->r, c->g, c->b, c->a,
+	    stipplePattern);
+	for (i = 0; i < nPts; i++) { Debug(NULL, " (%d,%d)", pts[i].x, pts[i].y); }
+	Debug(NULL, ")\n");
+#endif
 }
 
 static void
@@ -1109,6 +1138,8 @@ AG_DriverMwClass agDriverDUMMY = {
 		DUMMY_DrawLineV,
 		DUMMY_DrawLineBlended,
 		DUMMY_DrawTriangle,
+		DUMMY_DrawPolygon,
+		DUMMY_DrawPolygonSti32,
 		DUMMY_DrawArrow,
 		DUMMY_DrawBoxRounded,
 		DUMMY_DrawBoxRoundedTop,
