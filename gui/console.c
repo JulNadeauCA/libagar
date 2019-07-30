@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>,
+ * 2019 Charles A Daniels <charles@cdaniels.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,7 +11,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -42,6 +43,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
+
+static AG_ConsoleLine *AppendMultiLine(AG_Console *_Nonnull, const char *_Nonnull);
 
 AG_Console *
 AG_ConsoleNew(void *parent, Uint flags)
@@ -389,7 +392,7 @@ PopupMenu(AG_Event *_Nonnull event)
 	int y = AG_INT(3);
 	AG_PopupMenu *pm;
 	AG_MenuItem *mi;
-		
+
 	if (cons->flags & AG_CONSOLE_NOPOPUP)
 		return;
 
@@ -531,7 +534,7 @@ Init(void *_Nonnull obj)
 	cons->r.h = 0;
 	cons->scrollTo = NULL;
 	TAILQ_INIT(&cons->files);
-	
+
 	AG_SetInt(cons, "line-scroll-amount", 5);
 	AG_SetInt(cons, "side-scroll-amount", 30);
 
@@ -603,7 +606,7 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 	AG_Console *cons = p;
 	AG_SizeReq rBar;
 	AG_SizeAlloc aBar;
-	
+
 	if (a->w < 8 || a->h < 8)
 		return (-1);
 
@@ -613,19 +616,19 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 	aBar.w = rBar.w;
 	aBar.h = a->h;
 	AG_WidgetSizeAlloc(cons->vBar, &aBar);
-	
+
 	cons->r.x = 0;
 	cons->r.y = 0;
 	cons->r.w = (a->w - aBar.w);
 	cons->r.h = a->h;
-	
+
 	AG_WidgetSizeReq(cons->hBar, &rBar);
 	aBar.x = 0;
 	aBar.y = a->h - rBar.h;
 	aBar.w = a->w - rBar.h;
 	aBar.h = rBar.h;
 	AG_WidgetSizeAlloc(cons->hBar, &aBar);
-	
+
 	ComputeVisible(cons);
 	ClampVisible(cons);
 	AdjustXoffs(cons);
@@ -687,13 +690,28 @@ Draw(void *_Nonnull p)
 			}
 		}
 		if (ln->surface[suIdx] == -1) {
-			AG_TextColor((ln->c.a != 0) ? &ln->c : cTxt);
+
+			if (ln->parent != NULL) {
+				/* take the parent's color */
+				AG_TextColor((ln->parent->c.a != 0) ? &ln->parent->c : cTxt);
+			} else {
+				AG_TextColor((ln->c.a != 0) ? &ln->c : cTxt);
+			}
 			if ((su = AG_TextRender(ln->text)) == NULL) {
 				continue;
 			}
 			ln->surface[suIdx] = AG_WidgetMapSurface(cons, su);
 		}
-		AG_WidgetBlitSurface(cons, ln->surface[suIdx], r.x, r.y);
+
+		AG_WidgetBlitSurface(cons, ln->surface[suIdx],
+				/* make extra space for group indicator */
+			(ln->parent != NULL) ? r.x + 9 : r.x, r.y);
+
+		/* group indicator */
+		if (ln->parent != NULL) {
+			AG_DrawLine(cons, r.x + 5, r.y, r.x + 5, r.y + cons->lineskip, &WCOLOR_SEL(cons, AG_TEXT_COLOR));
+		}
+
 		r.y += cons->lineskip;
 	}
 	AG_PopClipRect(cons);
@@ -706,7 +724,7 @@ static void
 FreeLines(AG_Console *_Nonnull cons)
 {
 	Uint i;
-	
+
 	for (i = 0; i < cons->nLines; i++) {
 		AG_ConsoleLine *ln = cons->lines[i];
 		free(ln->text);
@@ -742,34 +760,84 @@ AG_ConsoleLine *
 AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 {
 	AG_ConsoleLine *ln;
-	
-	ln = Malloc(sizeof(AG_ConsoleLine));
 
 	AG_ObjectLock(cons);
+
+	if (s && (strchr(s, agNewlineFormats[AG_NEWLINE_NATIVE].s[0]))) {
+		ln = AppendMultiLine(cons, s);
+	} else {
+		ln = Malloc(sizeof(AG_ConsoleLine));
+
+		/* top level / standalone line by default */
+		ln->parent = NULL;
+
+		if (s && strlen(s) == 0) {
+			/* zero length strings */
+			ln->text = Strdup(s);
+			ln->len = 0;
+		} else if (s != NULL) {
+			ln->text = Strdup(s);
+			ln->len = strlen(s);
+		} else {
+			ln->text = NULL;
+			ln->len = 0;
+		}
+	}
 
 	cons->lines = Realloc(cons->lines, (cons->nLines+1) *
 	                                   sizeof(AG_ConsoleLine *));
 	cons->lines[cons->nLines++] = ln;
 
-	if (s != NULL) {
-		ln->text = Strdup(s);
-		ln->len = strlen(s);
-	} else {
-		ln->text = NULL;
-		ln->len = 0;
-	}
 	ln->cons = cons;
 	ln->p = NULL;
 	ln->surface[0] = -1;
 	ln->surface[1] = -1;
 	AG_ColorNone(&ln->c);			/* Inherit default */
 
-	if ((cons->flags & AG_CONSOLE_NOAUTOSCROLL) == 0) {
+	if ((cons->flags & AG_CONSOLE_NOAUTOSCROLL) == 0)
 		cons->scrollTo = &cons->nLines;
-	}
+
 	AG_Redraw(cons);
 	AG_ObjectUnlock(cons);
 	return (ln);
+}
+
+/* Append a line to the console; backend to AG_ConsoleMsg(). */
+static AG_ConsoleLine *
+AppendMultiLine(AG_Console *cons, const char *s)
+{
+	const AG_NewlineFormat *newline = &agNewlineFormats[AG_NEWLINE_NATIVE];
+	AG_ConsoleLine *ln;
+	char *tok = NULL, *dup, *pDup;
+	int first = 1;
+
+	ln = Malloc(sizeof(AG_ConsoleLine));
+
+	/* top level / standalone line by default */
+	ln->parent = NULL;
+
+	dup = pDup = Strdup(s);
+
+	while ((tok = Strsep(&dup, newline->s)) != NULL) {
+		if (newline->len == 2 && tok[0] != '\0') { 	/* XXX */
+			tok[strlen(tok)-1] = '\0';
+		}	
+		if (first == 1) {
+			first = 0;
+
+			/* populate this line with the first slice */
+			ln->text = Strdup(tok);
+			ln->len = strlen(tok);
+		} else {
+			/* create a child line */
+			(AG_ConsoleAppendLine(cons, tok))->parent = ln;
+		}
+	}
+	free(pDup);
+	/* we only return the parent, but that's ok since the children take
+	 * it's style */
+	return (ln);
+
 }
 
 /* Append a message to the console (format string). */
@@ -806,7 +874,7 @@ AG_ConsoleMsgS(AG_Console *cons, const char *s)
 {
 	AG_ConsoleLine *ln;
 	AG_Size len;
-	
+
 	AG_ObjectLock(cons);
 	if ((ln = AG_ConsoleAppendLine(cons, s)) == NULL) {
 		goto fail;
@@ -901,7 +969,7 @@ static void
 InvalidateCachedLabel(AG_Console *cons, AG_ConsoleLine *ln)
 {
 	int i;
-	
+
 	for (i = 0; i < 2; i++) {
 		if (ln->surface[i] != -1) {
 			AG_WidgetUnmapSurface(cons, ln->surface[i]);
@@ -985,11 +1053,11 @@ ConsoleReadFile(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 	FILE *f = cf->pFILE;
 	char *buf, *pLine, *line;
 #if AG_MODEL == AG_LARGE
-	const size_t bufferMax = AG_BUFFER_MAX*8;
+	const AG_Size bufferMax = AG_BUFFER_MAX*8;
 #else
-	const size_t bufferMax = AG_BUFFER_MAX*4;
+	const AG_Size bufferMax = AG_BUFFER_MAX*4;
 #endif
-	size_t bufSize = bufferMax, rv, nRead=0;
+	AG_Size bufSize = bufferMax, rv, nRead=0;
 
 	if ((buf = TryMalloc(bufSize+1)) == NULL) {
 		return (0);
@@ -1045,7 +1113,7 @@ ConsoleReadFile(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 					if (line[0] == '\0') {
 						continue;
 					}
-					line[strlen(line)-1] = '\0'; 
+					line[strlen(line)-1] = '\0';
 					AG_ConsoleMsgS(cons, line);
 				}
 				break;

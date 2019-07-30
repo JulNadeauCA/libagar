@@ -118,12 +118,19 @@ function sets the padding around log entries in pixels.
 The
 .Fn AG_ConsoleMsg
 function appends a new message to the console log.
-Unless an error occurs, the function returns a
+Unless an error occurs, the function returns a pointer to the created
+.Ft AG_ConsoleLine .
+If the message contains newlines, create a group of lines (which will
+be displayed in an indented style) and return a pointer to the first
+line
+(which will be the
+.Va parent
+of the subsequent lines).
+The returned
 .Ft AG_ConsoleLine
-handle.
-This handle remains valid until the widget is destroyed, or
+remains valid until deleted (or
 .Fn AG_ConsoleClear
-is used.
+is used).
 .Pp
 As a special case, if a
 .Fa cons
@@ -285,3 +292,4 @@ User pointer
 The
 .Nm
 widget first appeared in Agar 1.3.
+Multi-line support appeared in Agar 1.6.

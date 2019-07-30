@@ -14,12 +14,14 @@ struct ag_popup_menu;
 
 /* TODO: timestamps, markup */
 typedef struct ag_console_line {
-	char *_Nonnull text;		  /* Line text */
-	AG_Size len;			  /* Size in bytes excluding NUL */
-	int surface[2];			  /* Cached surfaces (0=not selected; 1=selected) */
-	AG_Color c;			  /* Alternate text color */
-	void *_Nullable p;		  /* User pointer */
-	struct ag_console *_Nonnull cons; /* Back pointer to console */
+	char *_Nonnull text;    /* Line text */
+	AG_Size len;            /* Size in bytes excluding NUL */
+	int surface[2];         /* Cached surfaces (0=not selected; 1=selected) */
+	AG_Color c;             /* Alternate text color */
+
+	void *_Nullable p;                        /* User pointer */
+	struct ag_console *_Nonnull cons;         /* Back pointer to console */
+	struct ag_console_line *_Nullable parent; /* Parent line for multi-line groups */
 } AG_ConsoleLine;
 
 typedef struct ag_console_file {
