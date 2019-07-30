@@ -301,7 +301,7 @@ static void
 FreeLayers(MAP *_Nonnull m)
 {
 	m->layers = Realloc(m->layers, 1*sizeof(MAP_Layer));
-	m->nlayers = 1;
+	m->nLayers = 1;
 	MAP_InitLayer(&m->layers[0], _("Layer 0"));
 }
 
@@ -309,7 +309,7 @@ static void
 FreeCameras(MAP *_Nonnull m)
 {
 	m->cameras = Realloc(m->cameras , 1*sizeof(MAP_Camera));
-	m->ncameras = 1;
+	m->nCameras = 1;
 	MAP_InitCamera(&m->cameras[0], _("Camera 0"));
 }
 
@@ -426,9 +426,9 @@ int
 MAP_AddCamera(MAP *m, const char *name)
 {
 	m->cameras = Realloc(m->cameras,
-	    (m->ncameras+1)*sizeof(MAP_Camera));
-	MAP_InitCamera(&m->cameras[m->ncameras], name);
-	return (m->ncameras++);
+	    (m->nCameras+1)*sizeof(MAP_Camera));
+	MAP_InitCamera(&m->cameras[m->nCameras], name);
+	return (m->nCameras++);
 }
 
 /* Initialize undo block. */
@@ -436,7 +436,7 @@ static void
 InitModBlk(MAP_ModBlk *_Nonnull blk)
 {
 	blk->mods = Malloc(sizeof(MAP_Mod));
-	blk->nmods = 0;
+	blk->nMods = 0;
 	blk->cancel = 0;
 }
 
@@ -446,7 +446,7 @@ FreeModBlk(MAP *_Nonnull m, MAP_ModBlk *_Nonnull blk)
 {
 	Uint i;
 
-	for (i = 0; i < blk->nmods; i++) {
+	for (i = 0; i < blk->nMods; i++) {
 		MAP_Mod *mm = &blk->mods[i];
 	
 		switch (mm->type) {
@@ -464,10 +464,10 @@ void
 MAP_InitModBlks(MAP *m)
 {
 	m->blks = Malloc(sizeof(MAP_ModBlk));
-	m->nblks = 1;
+	m->nBlks = 1;
 	InitModBlk(&m->blks[0]);
-	m->curblk = 0;
-	m->nmods = 0;
+	m->curBlk = 0;
+	m->nMods = 0;
 	MAP_ModBegin(m);
 }
 
@@ -480,18 +480,18 @@ Init(void *_Nonnull obj)
 	MAP *m = obj;
 
 	m->flags = 0;
-	m->redraw = 0;
 	m->mapw = 0;
 	m->maph = 0;
+	m->cur_layer = 0;
 	m->origin.x = 0;
 	m->origin.y = 0;
 	m->origin.layer = 0;
+	m->redraw = 0;
 	m->map = NULL;
-	m->cur_layer = 0;
 	m->layers = Malloc(sizeof(MAP_Layer));
-	m->nlayers = 1;
+	m->nLayers = 1;
 	m->cameras = Malloc(sizeof(MAP_Camera));
-	m->ncameras = 1;
+	m->nCameras = 1;
 	TAILQ_INIT(&m->actors);
 	
 	MAP_InitLayer(&m->layers[0], _("Layer 0"));
@@ -514,18 +514,18 @@ MAP_PushLayer(MAP *m, const char *name)
 	char layname[MAP_LAYER_NAME_MAX];
 
 	if (name[0] == '\0') {
-		Snprintf(layname, sizeof(layname), _("Layer %u"), m->nlayers);
+		Snprintf(layname, sizeof(layname), _("Layer %u"), m->nLayers);
 	} else {
 		Strlcpy(layname, name, sizeof(layname));
 	}
 
-	if (m->nlayers+1 > MAP_LAYERS_MAX) {
-		AG_SetError(_("Too many layers."));
+	if (m->nLayers+1 > MAP_LAYERS_MAX) {
+		AG_SetErrorS(_("Too many layers."));
 		return (-1);
 	}
-	m->layers = Realloc(m->layers, (m->nlayers+1)*sizeof(MAP_Layer));
-	MAP_InitLayer(&m->layers[m->nlayers], layname);
-	m->nlayers++;
+	m->layers = Realloc(m->layers, (m->nLayers+1)*sizeof(MAP_Layer));
+	MAP_InitLayer(&m->layers[m->nLayers], layname);
+	m->nLayers++;
 	return (0);
 }
 
@@ -533,8 +533,8 @@ MAP_PushLayer(MAP *m, const char *name)
 void
 MAP_PopLayer(MAP *m)
 {
-	if (--m->nlayers < 1)
-		m->nlayers = 1;
+	if (--m->nLayers < 1)
+		m->nLayers = 1;
 }
 
 /*
@@ -686,7 +686,7 @@ MAP_NodeAddAnim(MAP *map, MAP_Node *node, RG_Tileset *ts, Uint32 animid)
  */
 MAP_Item *
 MAP_NodeAddWarpPoint(MAP *map, MAP_Node *node, const char *mapname,
-    int x, int y, Uint8 dir)
+    int x, int y, Uint dir)
 {
 	MAP_Item *r;
 
@@ -807,7 +807,7 @@ MAP_NodeCopyItem(const MAP_Item *sr, MAP *dm, MAP_Node *dn, int dlayer)
 	/* Inherit the transformations. */
 	TAILQ_FOREACH(xf, &sr->transforms, transforms) {
 		xfDup = Malloc(sizeof(RG_Transform));
-		RG_TransformInit(xfDup , xf->type, xf->nargs, xf->args);
+		RG_TransformInit(xfDup , xf->type, xf->nArgs, xf->args);
 		TAILQ_INSERT_TAIL(&dr->transforms, xfDup, transforms);
 	}
 	
@@ -940,7 +940,7 @@ Reset(void *_Nonnull p)
 	if (m->cameras != NULL)
 		FreeCameras(m);
 	
-	for (i = 0; i < m->nblks; i++) {
+	for (i = 0; i < m->nBlks; i++) {
 		FreeModBlk(m, &m->blks[i]);
 	}
 	free(m->blks);
@@ -982,11 +982,8 @@ MAP_ItemLoad(MAP *m, AG_DataSource *ds, MAP_Node *node, MAP_Item **r)
 		AG_CopyString(tileset, ds, sizeof(tileset));
 		offs = AG_ReadUint32(ds);
 		ts = AG_ObjectFindChild(OBJECT(m)->root, tileset);
-		if (ts == NULL) {
-			AG_SetError("No `%s' under %s\n", tileset, OBJECT(m)->root);
-			return (-1);
-		} else if (!AG_OfClass(ts, "RG_Tileset:*")) {
-			AG_SetError("%s is not a tileset\n", tileset);
+		if (ts == NULL || !AG_OfClass(ts, "RG_Tileset:*")) {
+			AG_SetError(_("No such tileset: \"%s\""), tileset);
 			return (-1);
 		}
 		*r = MAP_NodeAddTile(m,node, ts,offs);
@@ -1008,11 +1005,8 @@ MAP_ItemLoad(MAP *m, AG_DataSource *ds, MAP_Node *node, MAP_Item **r)
 		AG_CopyString(tileset, ds, sizeof(tileset));
 		offs = AG_ReadUint32(ds);
 		ts = AG_ObjectFindChild(OBJECT(m)->root, tileset);
-		if (ts == NULL) {
-			AG_SetError("No `%s' under %s\n", tileset, OBJECT(m)->root);
-			return (-1);
-		} else if (!AG_OfClass(ts, "RG_Tileset:*")) {
-			AG_SetError("%s is not a tileset\n", tileset);
+		if (ts == NULL || !AG_OfClass(ts, "RG_Tileset:*")) {
+			AG_SetError(_("No such tileset: \"%s\""), tileset);
 			return (-1);
 		}
 		*r = MAP_NodeAddAnim(m, node, ts, offs);
@@ -1038,13 +1032,13 @@ MAP_ItemLoad(MAP *m, AG_DataSource *ds, MAP_Node *node, MAP_Item **r)
 
 			if (AG_CopyString(map_id, ds, sizeof(map_id)) >=
 			    sizeof(map_id)) {
-				AG_SetError(_("Warp map name is too big."));
+				AG_SetErrorS(_("Warp map name is too big."));
 				return (-1);
 			}
 			ox = AG_ReadUint32(ds);
 			oy = AG_ReadUint32(ds);
 			if (ox > MAP_WIDTH_MAX || oy > MAP_HEIGHT_MAX) {
-				AG_SetError(_("Invalid warp coordinates."));
+				AG_SetErrorS(_("Invalid warp coordinates."));
 				return (-1);
 			}
 			dir = AG_ReadUint8(ds);
@@ -1097,7 +1091,7 @@ MAP_NodeLoad(MAP *m, AG_DataSource *ds, MAP_Node *node)
 	Uint i;
 	
 	if ((nrefs = AG_ReadUint32(ds)) > MAP_NODE_ITEMS_MAX) {
-		AG_SetError(_("Too many noderefs."));
+		AG_SetErrorS(_("Too many noderefs."));
 		return (-1);
 	}
 	for (i = 0; i < nrefs; i++) {
@@ -1170,7 +1164,7 @@ Load(void *_Nonnull ob, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull v
 	origin_y = AG_ReadUint32(ds);
 	if (w > MAP_WIDTH_MAX || h > MAP_HEIGHT_MAX ||
 	    origin_x > MAP_WIDTH_MAX || origin_y > MAP_HEIGHT_MAX) {
-		AG_SetError(_("Invalid map geometry."));
+		AG_SetErrorS(_("Invalid map geometry."));
 		goto fail;
 	}
 	m->mapw = (Uint)w;
@@ -1179,16 +1173,16 @@ Load(void *_Nonnull ob, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull v
 	m->origin.y = (int)origin_y;
 	
 	/* Read the layer information. */
-	if ((m->nlayers = (Uint)AG_ReadUint32(ds)) > MAP_LAYERS_MAX) {
-		AG_SetError(_("Too many layers."));
+	if ((m->nLayers = (Uint)AG_ReadUint32(ds)) > MAP_LAYERS_MAX) {
+		AG_SetErrorS(_("Too many layers."));
 		goto fail;
 	}
-	if (m->nlayers < 1) {
-		AG_SetError(_("Missing zeroth layer."));
+	if (m->nLayers < 1) {
+		AG_SetErrorS(_("Missing zeroth layer."));
 		goto fail;
 	}
-	m->layers = Realloc(m->layers, m->nlayers*sizeof(MAP_Layer));
-	for (i = 0; i < m->nlayers; i++) {
+	m->layers = Realloc(m->layers, m->nLayers*sizeof(MAP_Layer));
+	for (i = 0; i < m->nLayers; i++) {
 		MAP_Layer *lay = &m->layers[i];
 
 		AG_CopyString(lay->name, ds, sizeof(lay->name));
@@ -1201,16 +1195,16 @@ Load(void *_Nonnull ob, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull v
 	m->origin.layer = (int)AG_ReadUint8(ds);
 	
 	/* Read the camera information. */
-	if ((m->ncameras = (Uint)AG_ReadUint32(ds)) > MAP_CAMERAS_MAX) {
-		AG_SetError(_("Too many cameras."));
+	if ((m->nCameras = (Uint)AG_ReadUint32(ds)) > MAP_CAMERAS_MAX) {
+		AG_SetErrorS(_("Too many cameras."));
 		goto fail;
 	}
-	if (m->ncameras < 1) {
-		AG_SetError(_("Missing zeroth camera."));
+	if (m->nCameras < 1) {
+		AG_SetErrorS(_("Missing zeroth camera."));
 		goto fail;
 	}
-	m->cameras = Realloc(m->cameras, m->ncameras*sizeof(MAP_Camera));
-	for (i = 0; i < m->ncameras; i++) {
+	m->cameras = Realloc(m->cameras, m->nCameras*sizeof(MAP_Camera));
+	for (i = 0; i < m->nCameras; i++) {
 		MAP_Camera *cam = &m->cameras[i];
 
 		AG_CopyString(cam->name, ds, sizeof(cam->name));
@@ -1358,8 +1352,8 @@ Save(void *_Nonnull p, AG_DataSource *_Nonnull ds)
 	AG_WriteUint32(ds, (Uint32)m->origin.y);
 
 	/* Write the layer information. */
-	AG_WriteUint32(ds, (Uint32)m->nlayers);
-	for (i = 0; i < m->nlayers; i++) {
+	AG_WriteUint32(ds, (Uint32)m->nLayers);
+	for (i = 0; i < m->nLayers; i++) {
 		MAP_Layer *lay = &m->layers[i];
 
 		AG_WriteString(ds, lay->name);
@@ -1372,8 +1366,8 @@ Save(void *_Nonnull p, AG_DataSource *_Nonnull ds)
 	AG_WriteUint8(ds, m->origin.layer);
 	
 	/* Write the camera information. */
-	AG_WriteUint32(ds, (Uint32)m->ncameras);
-	for (i = 0; i < m->ncameras; i++) {
+	AG_WriteUint32(ds, (Uint32)m->nCameras);
+	for (i = 0; i < m->nCameras; i++) {
 		MAP_Camera *cam = &m->cameras[i];
 
 		AG_WriteString(ds, cam->name);
@@ -1591,17 +1585,17 @@ void
 MAP_ModBegin(MAP *m)
 {
 	/* Destroy blocks at upper levels. */
-	while (m->nblks > m->curblk+1)
-		FreeModBlk(m, &m->blks[--m->nblks]);
+	while (m->nBlks > m->curBlk+1)
+		FreeModBlk(m, &m->blks[--m->nBlks]);
 
-	m->blks = Realloc(m->blks, (++m->nblks)*sizeof(MAP_Mod));
-	InitModBlk(&m->blks[m->curblk++]);
+	m->blks = Realloc(m->blks, (++m->nBlks)*sizeof(MAP_Mod));
+	InitModBlk(&m->blks[m->curBlk++]);
 }
 
 void
 MAP_ModCancel(MAP *m)
 {
-	MAP_ModBlk *blk = &m->blks[m->curblk];
+	MAP_ModBlk *blk = &m->blks[m->curBlk];
 
 	blk->cancel = 1;
 }
@@ -1609,25 +1603,25 @@ MAP_ModCancel(MAP *m)
 void
 MAP_ModEnd(MAP *m)
 {
-	MAP_ModBlk *blk = &m->blks[m->curblk];
+	MAP_ModBlk *blk = &m->blks[m->curBlk];
 	
-	if (blk->nmods == 0 || blk->cancel == 1) {
+	if (blk->nMods == 0 || blk->cancel == 1) {
 		FreeModBlk(m, blk);
-		m->nblks--;
-		m->curblk--;
+		m->nBlks--;
+		m->curBlk--;
 	}
 }
 
 void
 MAP_Undo(MAP *m)
 {
-	MAP_ModBlk *blk = &m->blks[m->curblk];
+	MAP_ModBlk *blk = &m->blks[m->curBlk];
 	Uint i;
 
-	if (m->curblk-1 <= 0)
+	if (m->curBlk-1 <= 0)
 		return;
 
-	for (i = 0; i < blk->nmods; i++) {
+	for (i = 0; i < blk->nMods; i++) {
 		MAP_Mod *mm = &blk->mods[i];
 
 		switch (mm->type) {
@@ -1649,8 +1643,8 @@ MAP_Undo(MAP *m)
 		}
 	}
 	FreeModBlk(m, blk);
-	m->nblks--;
-	m->curblk--;
+	m->nBlks--;
+	m->curBlk--;
 }
 
 void
@@ -1663,12 +1657,12 @@ void
 MAP_ModNodeChg(MAP *m, int x, int y)
 {
 	MAP_Node *node = &m->map[y][x];
-	MAP_ModBlk *blk = &m->blks[m->nblks-1];
+	MAP_ModBlk *blk = &m->blks[m->nBlks-1];
 	MAP_Mod *mm;
 	MAP_Item *sr;
 	Uint i;
 
-	for (i = 0; i < blk->nmods; i++) {
+	for (i = 0; i < blk->nMods; i++) {
 		mm = &blk->mods[i];
 		if (mm->type == AG_MAPMOD_NODECHG &&
 		    mm->mm_nodechg.x == x &&
@@ -1676,8 +1670,8 @@ MAP_ModNodeChg(MAP *m, int x, int y)
 			return;
 	}
 
-	blk->mods = Realloc(blk->mods, (blk->nmods+1)*sizeof(MAP_Mod));
-	mm = &blk->mods[blk->nmods++];
+	blk->mods = Realloc(blk->mods, (blk->nMods+1)*sizeof(MAP_Mod));
+	mm = &blk->mods[blk->nMods++];
 	mm->type = AG_MAPMOD_NODECHG;
 	mm->mm_nodechg.x = x;
 	mm->mm_nodechg.y = y;
@@ -1822,14 +1816,14 @@ PollUndoBlks(AG_Event *_Nonnull event)
 	Uint i, j;
 
 	AG_TlistClear(tl);
-	for (i = 0; i < m->nblks; i++) {
+	for (i = 0; i < m->nBlks; i++) {
 		MAP_ModBlk *blk = &m->blks[i];
 		AG_TlistItem *it;
 
 		it = AG_TlistAdd(tl, NULL, "%sBlock %d (%d mods)",
-		    i==m->curblk ? "*" : "", i, blk->nmods);
+		    i==m->curBlk ? "*" : "", i, blk->nMods);
 		it->depth = 0;
-		for (j = 0; j < blk->nmods; j++) {
+		for (j = 0; j < blk->nMods; j++) {
 			MAP_Mod *mod = &blk->mods[j];
 			
 			switch (mod->type) {
@@ -2107,7 +2101,7 @@ PollLayers(AG_Event *_Nonnull event)
 	Uint i;
 
 	AG_TlistClear(tl);
-	for (i = 0; i < m->nlayers; i++) {
+	for (i = 0; i < m->nLayers; i++) {
 		MAP_Layer *lay = &m->layers[i];
 
 		it = AG_TlistAdd(tl, mapIconLayerEditor.s, "%s%s%s",
@@ -2137,7 +2131,7 @@ SelectLayer(AG_Event *_Nonnull event)
 	MAP_Layer *layer = ti->p1;
 	Uint nlayer;
 
-	for (nlayer = 0; nlayer < m->nlayers; nlayer++) {
+	for (nlayer = 0; nlayer < m->nLayers; nlayer++) {
 		if (&m->layers[nlayer] == layer) {
 			m->cur_layer = nlayer;
 			break;
@@ -2156,21 +2150,21 @@ DeleteLayer(AG_Event *_Nonnull event)
 	MAP_Layer *lay = AG_PTR(2);
 	Uint i, x, y, nlayer;
 	
-	for (nlayer = 0; nlayer < m->nlayers; nlayer++) {
+	for (nlayer = 0; nlayer < m->nLayers; nlayer++) {
 		if (&m->layers[nlayer] == lay)
 			break;
 	}
-	if (nlayer == m->nlayers) {
+	if (nlayer == m->nLayers) {
 		return;
 	}
-	if (--m->nlayers < 1) {
-		m->nlayers = 1;
+	if (--m->nLayers < 1) {
+		m->nLayers = 1;
 		return;
 	}
-	if (m->cur_layer <= (int)m->nlayers) {
-		m->cur_layer = (int)m->nlayers-1;
+	if (m->cur_layer <= (int)m->nLayers) {
+		m->cur_layer = (int)m->nLayers-1;
 	}
-	for (i = nlayer; i <= m->nlayers; i++) {
+	for (i = nlayer; i <= m->nLayers; i++) {
 		memcpy(&m->layers[i], &m->layers[i+1], sizeof(MAP_Layer));
 	}
 	for (y = 0; y < m->maph; y++) {
@@ -2202,7 +2196,7 @@ ClearLayer(AG_Event *_Nonnull event)
 	MAP_Layer *lay = AG_PTR(2);
 	Uint x, y, nlayer;
 	
-	for (nlayer = 0; nlayer < m->nlayers; nlayer++) {
+	for (nlayer = 0; nlayer < m->nLayers; nlayer++) {
 		if (&m->layers[nlayer] == lay)
 			break;
 	}
@@ -2237,16 +2231,16 @@ MoveLayer(AG_Event *_Nonnull event)
 	Uint l1, l2;
 	Uint x, y;
 
-	for (l1 = 0; l1 < m->nlayers; l1++) {
+	for (l1 = 0; l1 < m->nLayers; l1++) {
 		if (&m->layers[l1] == lay1)
 			break;
 	}
-	if (l1 == m->nlayers) {
+	if (l1 == m->nLayers) {
 		return;
 	}
 	if (movedown) {
 		l2 = l1+1;
-		if (l2 >= m->nlayers) return;
+		if (l2 >= m->nLayers) return;
 	} else {
 		if (((int)l1 - 1) < 0) return;
 		l2 = l1-1;

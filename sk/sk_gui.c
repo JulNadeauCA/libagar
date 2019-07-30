@@ -117,6 +117,9 @@ SK_GUI_OpenObject(void *p)
 		AG_SetError("%s: edit() illegal object", obj->cls->name);
 		return (NULL);
 	}
+
+	win->flags |= AG_WINDOW_MAIN;
+
 	AG_WindowSetCaptionS(win, AG_Defined(obj,"archive-path") ?
 	    AG_ShortFilename(AG_GetStringP(obj,"archive-path")) :
 	    obj->name);

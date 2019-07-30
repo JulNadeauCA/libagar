@@ -88,6 +88,7 @@ Init(void *_Nonnull obj)
 	cam->aspect = 1.0;
 	cam->pNear = 0.40;
 	cam->pFar = 100.0;
+	cam->rotSpeed = 0.1;
 	cam->fov = Radians(60.0);
 	cam->polyFace.mode = SG_CAMERA_SMOOTH_SHADED;
 	cam->polyFace.cull = 0;
@@ -96,7 +97,6 @@ Init(void *_Nonnull obj)
 	cam->rotCtrl = SG_CAMERA_ROT_CIRCULAR;
 	cam->focus[0] = NULL;
 	cam->focus[1] = NULL;
-	cam->rotSpeed = 0.1;
 }
 
 static int
@@ -725,8 +725,8 @@ SG_CameraRotMouse(SG_Camera *cam, SG_View *sv, int x, int y)
 
 	switch (cam->rotCtrl) {
 	case SG_CAMERA_ROT_CIRCULAR:
-		iRot = sv->mouse.rsens.y*(M_Real)y;
-		jRot = sv->mouse.rsens.x*(M_Real)x;
+		iRot = sv->rSens.y*(M_Real)y;
+		jRot = sv->rSens.x*(M_Real)x;
 		if (cam->focus[0] == NULL || cam->focus[0] == SGNODE(cam)) {
 			SG_Rotatev(cam, iRot, M_VecI3());
 			SG_Rotatev(cam, jRot, M_VecJ3());
@@ -752,9 +752,9 @@ SG_CameraMoveMouse(SG_Camera *cam, SG_View *sv, int xrel, int yrel, int zrel)
 {
 	M_Vector3 m;
 
-	m.x = sv->mouse.tsens.x*(-(M_Real)xrel);
-	m.y = sv->mouse.tsens.y*((M_Real)yrel);
-	m.z = sv->mouse.tsens.z*(-(M_Real)zrel);
+	m.x = sv->tSens.x*(-(M_Real)xrel);
+	m.y = sv->tSens.y*((M_Real)yrel);
+	m.z = sv->tSens.z*(-(M_Real)zrel);
 
 	AG_ObjectLock(sv->sg);
 	AG_ObjectLock(cam);

@@ -34,6 +34,7 @@ typedef struct ag_mpane {
 #define AG_MPANE_EXPAND (AG_MPANE_HFILL|AG_MPANE_VFILL)
 	struct ag_box *_Nonnull panes[4];
 	Uint                   nPanes;
+	Uint32 _pad;
 } AG_MPane;
 
 __BEGIN_DECLS

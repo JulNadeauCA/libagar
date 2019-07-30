@@ -86,15 +86,15 @@ static _Nullable_Mutex AG_Mutex   agFmtExtensionsLock;
 
 /* Map character encodings to possible newlines and their values. */
 const AG_NewlineFormat agNewlineFormats[] = {
-  { "US-ASCII", "LF",    1, "\n" },   /* Unix, Amiga, BeOS, Multics */
-  { "US-ASCII", "CR+LF", 2, "\r\n" }, /* DOS/Windows, early non-Unix */
-  { "US-ASCII", "CR",    1, "\r" },   /* Commodore 8-bit machines (C64/128) */
+  { "US-ASCII", "LF",    "\n",1 },   /* Unix, Amiga, BeOS, Multics */
+  { "US-ASCII", "CR+LF", "\r\n",2 }, /* DOS/Windows, early non-Unix */
+  { "US-ASCII", "CR",    "\r",1 },   /* Commodore 8-bit machines (C64/128) */
 #if 0
-  { "US-ASCII", "LF+CR", 2, "\n\r" }, /* Acorn BBC and RISC OS */
-  { "ATASCII",  "ATACR", 1, "\x9b" }, /* Atari 8-bit machines */
-  { "EBCDIC",   "NL",    1, "\x15" }, /* IBM mainframes */
+  { "US-ASCII", "LF+CR", "\n\r",2 }, /* Acorn BBC and RISC OS */
+  { "ATASCII",  "ATACR", "\x9b",1 }, /* Atari 8-bit machines */
+  { "EBCDIC",   "NL",    "\x15",1 }, /* IBM mainframes */
 #endif
-  { NULL,       NULL,    0, NULL }
+  { NULL,       NULL,    NULL,0 }
 };
 
 #include <agar/core/string_strcasecmp.h>

@@ -5,6 +5,7 @@ typedef struct sk_circle {
 	SK_Point *_Nullable p;		/* Center point */
 	M_Real  r;			/* Radius */
 	M_Real  width;			/* Display thickness */
+	Uint8 _pad[8];
 	M_Color color;			/* Display color */
 } SK_Circle;
 

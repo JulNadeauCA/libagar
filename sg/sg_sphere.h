@@ -1,8 +1,9 @@
 /*	Public domain	*/
 
 typedef struct sg_sphere {
-	struct sg_geom _inherit;
+	struct sg_geom _inherit;	/* SG_Geom -> SG_Sphere */
 	M_Real d;			/* Sphere diameter */
+	Uint8 _pad[8];
 } SG_Sphere;
 
 #define SGSPHERE(n) ((SG_Sphere *)(n))

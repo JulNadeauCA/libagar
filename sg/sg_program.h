@@ -4,7 +4,8 @@
 #define _AGAR_SG_SG_PROGRAM_H_
 
 typedef struct sg_program_class {
-	struct ag_object_class _inherit;
+	struct ag_object_class _inherit; /* AG_ObjectClass -> SG_ProgramClass */
+
 	int  (*_Nullable install)(void *_Nonnull, struct sg_view *_Nonnull);
 	void (*_Nullable deinstall)(void *_Nonnull, struct sg_view *_Nonnull);
 	void (*_Nullable bind)(void *_Nonnull, struct sg_view *_Nonnull);
@@ -12,8 +13,9 @@ typedef struct sg_program_class {
 } SG_ProgramClass;
 
 typedef struct sg_program {
-	struct ag_object obj;
+	struct ag_object obj;		/* AG_Object -> SG_Program */
 	Uint flags;
+	int tag;			/* User tag */
 } SG_Program;
 
 #define SG_PROGRAM(sp)	   ((SG_Program *)(sp))

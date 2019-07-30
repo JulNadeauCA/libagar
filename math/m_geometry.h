@@ -12,6 +12,7 @@ typedef struct m_line3 {
 	M_Vector3 p;
 	M_Vector3 d;
 	M_Real t;
+	Uint8 _pad[8];
 } M_Line3;
 
 #define M_LINE2_INITIALIZER(px,py,nx,ny,t) { {px,py}, {nx,ny}, t }
@@ -27,6 +28,7 @@ typedef struct m_circle2 {
 typedef struct m_circle3 {
 	M_Vector3 p;
 	M_Real r;
+	Uint8 _pad[8];
 } M_Circle3;
 
 #define M_CIRCLE2_INITIALIZER(px,py,r) { { px,py }, r }
@@ -38,6 +40,7 @@ typedef struct m_circle3 {
 typedef struct m_sphere {
 	M_Vector3 p;		/* Origin point */
 	M_Real r;		/* Radius */
+	Uint8 _pad[8];
 } M_Sphere;
 
 #define M_SPHERE_INITIALIZER(px,py,pz,r) { { px,py,pz }, r }
@@ -48,6 +51,7 @@ typedef struct m_sphere {
 typedef struct m_plane {
 	M_Vector3 n;		/* Normal vector */
 	M_Real d;		/* Distance to origin */
+	Uint8 _pad[8];
 } M_Plane;
 
 #define M_PLANE_INITIALIZER(a,b,c,d) { {a,b,c},d }
@@ -84,7 +88,8 @@ typedef struct m_rectangle3 {
  */
 typedef struct m_polygon {
 	M_Vector2 *_Nullable v;			/* Vertices */
-	Uint                 n;			/* Number of vertices */
+	Uint n;					/* Vertex count */
+	Uint32 _pad;
 } M_Polygon;
 
 #define M_POLYGON_INITIALIZER { NULL, 0 }
@@ -100,20 +105,22 @@ typedef struct m_halfedge {
 } M_Halfedge;
 typedef struct m_facet {
 	Uint *_Nullable e;	/* Incident edge indices */
-	Uint            n;	/* Number of edges (>=3) */
+	Uint n;			/* Number of edges (>=3) */
+	Uint tag;		/* User tag */
 } M_Facet;
 typedef struct m_polyhedron {
+	Uint nv;			/* Vertex count */
+	Uint ne;			/* Edge count */
+	Uint nf;			/* Face count */
+	Uint tag;			/* User tag */
 	M_Vector3  *_Nullable v;	/* Vertices */
-	Uint                 nv;
 	M_Halfedge *_Nullable e;	/* Edges */
-	Uint                 ne;
 	M_Facet    *_Nullable f;	/* Facets */
-	Uint                 nf;
 } M_Polyhedron;
 
 #define M_HALFEDGE_INITIALIZER   { 0, 0, 0 }
-#define M_FACET_INITIALIZER      { NULL, 0 }
-#define M_POLYHEDRON_INITIALIZER { NULL, 0, NULL, 0, NULL, 0 }
+#define M_FACET_INITIALIZER      { NULL, 0, 0 }
+#define M_POLYHEDRON_INITIALIZER { 0,0,0,0, NULL,NULL,NULL }
 
 /*
  * Generic geometrical structure in R^2 and R^3.
@@ -135,6 +142,7 @@ typedef enum m_geom_type {
 
 typedef struct m_geom2 {
 	M_GeomType type;
+	Uint32 _pad;
 	union {
 		M_Vector2    point;
 		M_Line2	     line;
@@ -147,6 +155,7 @@ typedef struct m_geom2 {
 
 typedef struct m_geom3 {
 	M_GeomType type;
+	Uint8 _pad[12];
 	union {
 		M_Vector3    point;
 		M_Line3	     line;
@@ -163,11 +172,13 @@ typedef struct m_geom3 {
 /* Sets of generic geometric entities. */
 typedef struct m_geom_set2 {
 	M_Geom2 *_Nullable g;
-	Uint               n;
+	Uint n;
+	Uint32 _pad;
 } M_GeomSet2;
 typedef struct m_geom_set3 {
 	M_Geom3 *_Nullable g;
-	Uint               n;
+	Uint n;
+	Uint32 _pad;
 } M_GeomSet3;
 #define M_GEOM_SET_EMPTY { NULL, 0 }
 

@@ -6,6 +6,10 @@
 
 #include <agar/sk/sk_tool.h>
 
+#ifndef SK_VIEW_STATUS_MAX
+#define SK_VIEW_STATUS_MAX 124
+#endif
+
 struct sk;
 struct sk_point;
 struct ag_pane;
@@ -17,6 +21,9 @@ typedef struct sk_view {
 #define SK_VIEW_HFILL	0x01
 #define SK_VIEW_VFILL	0x02
 #define SK_VIEW_EXPAND	(SK_VIEW_HFILL | SK_VIEW_VFILL)
+#define SK_VIEW_PANNING 0x04
+	
+	char status[SK_VIEW_STATUS_MAX];	/* Status text buffer */
 
 	struct sk *_Nullable sk;		/* Sketch object */
 	M_Matrix44 mView;			/* Viewing matrix */
@@ -30,11 +37,8 @@ typedef struct sk_view {
 	AG_Event *_Nullable btnup_ev;		/* Mouse button release event */
 	AG_Event *_Nullable motion_ev;		/* Mouse motion event */
 
-	char status[128];			/* Status text buffer */
-	struct {
-		M_Vector3 last;			/* Last coordinates */
-		int panning;			/* Panning mode */
-	} mouse;
+	M_Vector3 mouseLast;			/* Last coordinates */
+
 	SK_Tool *_Nullable curtool;		/* Selected tool */
 	SK_Tool *_Nullable deftool;		/* Default tool if any */
 	AG_PopupMenu *_Nullable popup;		/* Popup menu for context */

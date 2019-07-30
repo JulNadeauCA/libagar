@@ -284,8 +284,9 @@ The generic features of all edition tools are defined by the structure:
 typedef struct rg_tileview_tool_ops {
 	const char *name;     /* Name of tool */
 	const char *desc;     /* Tool description */
-	size_t len;           /* Size of structure */
-	int flags;
+	AG_Size len;          /* Size of structure */
+	Uint flags;
+
 	int icon;             /* Specific icon (or -1) */
 	int cursor;           /* Specific cursor (or -1) */
 

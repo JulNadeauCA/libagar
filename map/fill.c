@@ -195,6 +195,7 @@ const MAP_ToolOps mapFillOps = {
 	&mapIconFill,
 	sizeof(struct rg_fill_tool),
 	0,
+	1,
 	Init,
 	NULL,			/* destroy */
 	EditPane,

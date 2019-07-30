@@ -21,6 +21,7 @@ enum ag_treetbl_sort_mode {
 
 typedef struct ag_treetbl_col {
 	int cid;				/* Column identifier */
+	Uint32 _pad;
 	struct ag_treetbl *_Nonnull tbl;	/* Back pointer to Treetbl */
 
 	Uint idx;				/* Index into row->cell[] */
@@ -44,13 +45,14 @@ typedef AG_TAILQ_HEAD(ag_treetbl_rowq, ag_treetbl_row) AG_TreetblRowQ;
 typedef struct ag_treetbl_cell {
 	char *_Nullable text;		/* Display text */
 	int             textSu;		/* Cached surface (or -1) */
+	Uint32 _pad;
 } AG_TreetblCell;
 
 typedef struct ag_treetbl_row {
-	int rid;			 /* Row identifier */
 	struct ag_treetbl *_Nonnull tbl; /* Back pointer to Treetbl */
 	AG_TreetblCell *_Nonnull cell;	 /* Array of cells */
 
+	int rid;			 /* Row identifier */
 	Uint flags;
 #define AG_TREETBL_ROW_EXPANDED	0x01	/* Tree expanded */
 #define AG_TREETBL_ROW_DYNAMIC	0x02	/* Update dynamically */
@@ -83,14 +85,13 @@ typedef struct ag_treetbl {
 	AG_Timer toDblClick;
 
 	Uint n;					/* Column count */
-	AG_TreetblCol *_Nullable column;	/* Column array */
-
 	enum ag_treetbl_sort_mode sortMode;	/* Sorting mode */
+	AG_TreetblCol *_Nullable column;	/* Column array */
 	
 	AG_TreetblRowQ children;	/* Tree of rows */
 	AG_TreetblRowQ backstore;	/* For polling */
 	int nExpandedRows;		/* Number of rows visible */
-	
+	Uint32 _pad;	
 	AG_Scrollbar *_Nonnull  vBar;	/* Vertical scrollbar */
 	AG_Scrollbar *_Nullable hBar;	/* Horizontal scrollbar */
 	
@@ -106,6 +107,7 @@ typedef struct ag_treetbl {
 		struct ag_treetbl_rowdocket_item {	/* Visible row cache */
 			AG_TreetblRow *_Nullable row;
 			Uint depth;
+			Uint32 _pad;
 		} *_Nullable items;
 	} visible;
 } AG_Treetbl;

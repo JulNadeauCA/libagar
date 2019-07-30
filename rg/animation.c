@@ -61,13 +61,13 @@ RG_AnimInit(RG_Anim *ani, RG_Tileset *ts, const char *name, Uint flags)
 	ani->w = 0;
 	ani->h = 0;
 	ani->tileset = ts;
-	ani->nrefs = 0;
+	ani->nRefs = 0;
 
+	ani->nInsns = 0;
 	ani->insns = Malloc(sizeof(RG_AnimInsn));
-	ani->ninsns = 0;
 	ani->frames = Malloc(sizeof(RG_AnimFrame));
-	ani->nframes = 0;
-	ani->gframe = 0;
+	ani->nFrames = 0;
+	ani->gFrame = 0;
 }
 
 void
@@ -85,13 +85,13 @@ RG_AnimInsertInsn(RG_Anim *ani, enum rg_anim_insn_type type)
 	RG_AnimInsn *insn;
 
 	ani->insns = Realloc(ani->insns,
-	    (ani->ninsns+1)*sizeof(RG_AnimInsn));
-	insn = &ani->insns[ani->ninsns];
+	    (ani->nInsns+1)*sizeof(RG_AnimInsn));
+	insn = &ani->insns[ani->nInsns];
 	insn->type = type;
+	insn->delay = 100;
 	insn->t = NULL;
 	insn->px = NULL;
 /*	insn->sk = NULL; */
-	insn->delay = 100;
 
 	switch (type) {
 	case RG_ANIM_TILE:
@@ -109,26 +109,26 @@ RG_AnimInsertInsn(RG_Anim *ani, enum rg_anim_insn_type type)
 	default:
 		break;
 	}
-	return (ani->ninsns++);
+	return (ani->nInsns++);
 }
 
 static void
 DestroyInsn(RG_AnimInsn *_Nonnull insn)
 {
-	if (insn->t != NULL)	insn->t->nrefs--;
-	if (insn->px != NULL)	insn->px->nrefs--;
-/*	if (insn->sk != NULL)	insn->sk->nrefs--; */
+	if (insn->t != NULL)	insn->t->nRefs--;
+	if (insn->px != NULL)	insn->px->nRefs--;
+/*	if (insn->sk != NULL)	insn->sk->nRefs--; */
 }
 
 void
 RG_AnimRemoveInsn(RG_Anim *ani, Uint i)
 {
 	DestroyInsn(&ani->insns[i]);
-	if (i < ani->ninsns-1) {
+	if (i < ani->nInsns-1) {
 		memmove(&ani->insns[i], &ani->insns[i+1],
-		    (ani->ninsns - i - 1)*sizeof(RG_AnimInsn));
+		    (ani->nInsns - i - 1)*sizeof(RG_AnimInsn));
 	}
-	ani->ninsns--;
+	ani->nInsns--;
 }
 
 Uint
@@ -138,15 +138,15 @@ RG_AnimInsertFrame(RG_Anim *ani, AG_Surface *sNew)
 	Uint32 sFlags = 0;
 	RG_AnimFrame *fr;
 
-	if ((ani->nframes+1) >= RG_ANIMATION_FRAMES_MAX)
+	if ((ani->nFrames+1) >= RG_ANIMATION_FRAMES_MAX)
 		AG_FatalError("Too many frames");
 
 	if (ani->flags & RG_ANIM_SRCCOLORKEY)	sFlags |= AG_SURFACE_COLORKEY;
 	if (ani->flags & RG_ANIM_SRCALPHA)	sFlags |= AG_SURFACE_ALPHA;
 
 	ani->frames = Realloc(ani->frames,
-	    (ani->nframes+1)*sizeof(RG_AnimFrame));
-	fr = &ani->frames[ani->nframes];
+	    (ani->nFrames+1)*sizeof(RG_AnimFrame));
+	fr = &ani->frames[ani->nFrames];
 	if (sNew == NULL) {
 		sNew = RG_SurfaceStd(ts, ani->w, ani->h, sFlags);
 		if (sNew == NULL)
@@ -154,7 +154,7 @@ RG_AnimInsertFrame(RG_Anim *ani, AG_Surface *sNew)
 	}
 	fr->su = sNew;
 	fr->delay = 0;
-	fr->name = ani->nframes++;
+	fr->name = ani->nFrames++;
 	return (fr->name);
 }
 
@@ -168,11 +168,11 @@ void
 RG_AnimRemoveFrame(RG_Anim *ani, Uint i)
 {
 	FreeFrame(&ani->frames[i]);
-	if (i < ani->nframes-1) {
+	if (i < ani->nFrames-1) {
 		memmove(&ani->frames[i], &ani->frames[i+1],
-		    (ani->nframes - i - 1)*sizeof(RG_AnimFrame));
+		    (ani->nFrames - i - 1)*sizeof(RG_AnimFrame));
 	}
-	ani->nframes--;
+	ani->nFrames--;
 }
 
 static void
@@ -180,10 +180,10 @@ FreeFrames(RG_Anim *_Nonnull ani)
 {
 	Uint i;
 	
-	for (i = 0; i < ani->nframes; i++) {
+	for (i = 0; i < ani->nFrames; i++) {
 		FreeFrame(&ani->frames[i]);
 	}
-	ani->nframes = 0;
+	ani->nFrames = 0;
 }
 
 void
@@ -191,7 +191,7 @@ RG_AnimDestroy(RG_Anim *ani)
 {
 	Uint i;
 
-	for (i = 0; i < ani->ninsns; i++) {
+	for (i = 0; i < ani->nInsns; i++) {
 		DestroyInsn(&ani->insns[i]);
 	}
 	Free(ani->insns);
@@ -203,13 +203,13 @@ int
 RG_AnimLoad(RG_Anim *ani, AG_DataSource *buf)
 {
 	RG_Tileset *ts = ani->tileset;
-	Uint32 i, ninsns;
+	Uint32 i, nInsns;
 	
 	ani->w = AG_ReadUint16(buf);
 	ani->h = AG_ReadUint16(buf);
 
-	ninsns = AG_ReadUint32(buf);
-	for (i = 0; i < ninsns; i++) {
+	nInsns = AG_ReadUint32(buf);
+	for (i = 0; i < nInsns; i++) {
 		char name[RG_TILESET_NAME_MAX];
 		enum rg_anim_insn_type type;
 		RG_AnimInsn *insn;
@@ -240,10 +240,10 @@ RG_AnimLoad(RG_Anim *ani, AG_DataSource *buf)
 		}
 	}
 
-	ani->nframes = (Uint)AG_ReadUint32(buf);
+	ani->nFrames = (Uint)AG_ReadUint32(buf);
 	ani->frames = Realloc(ani->frames,
-	    ani->nframes*sizeof(RG_AnimFrame));
-	for (i = 0; i < ani->nframes; i++) {
+	    ani->nFrames*sizeof(RG_AnimFrame));
+	for (i = 0; i < ani->nFrames; i++) {
 		RG_AnimFrame *fr = &ani->frames[i];
 		AG_Surface *sNew;
 
@@ -265,8 +265,8 @@ RG_AnimSave(RG_Anim *ani, AG_DataSource *buf)
 	AG_WriteUint16(buf, ani->w);
 	AG_WriteUint16(buf, ani->h);
 	
-	AG_WriteUint32(buf, ani->ninsns);
-	for (i = 0; i < ani->ninsns; i++) {
+	AG_WriteUint32(buf, ani->nInsns);
+	for (i = 0; i < ani->nInsns; i++) {
 		RG_AnimInsn *insn = &ani->insns[i];
 		
 		AG_WriteUint16(buf, (Uint16)insn->type);
@@ -290,8 +290,8 @@ RG_AnimSave(RG_Anim *ani, AG_DataSource *buf)
 		}
 	}
 
-	AG_WriteUint32(buf, ani->nframes);
-	for (i = 0; i < ani->nframes; i++) {
+	AG_WriteUint32(buf, ani->nFrames);
+	for (i = 0; i < ani->nFrames; i++) {
 		RG_AnimFrame *fr = &ani->frames[i];
 
 		AG_WriteSurface(buf, fr->su);
@@ -306,7 +306,7 @@ RG_AnimGenerate(RG_Anim *ani)
 
 	FreeFrames(ani);
 
-	for (i = 0; i < ani->ninsns; i++) {
+	for (i = 0; i < ani->nInsns; i++) {
 		RG_AnimInsn *insn = &ani->insns[i];
 		RG_AnimFrame *fr;
 
@@ -340,7 +340,7 @@ EditClose(AG_Event *_Nonnull event)
 	RG_Anim *ani = AG_PTR(2);
 	
 	AG_MutexLock(&ts->lock);
-	ani->nrefs--;
+	ani->nRefs--;
 	AG_MutexUnlock(&ts->lock);
 
 	AG_ObjectDetach(win);
@@ -360,7 +360,7 @@ PollInsns(AG_Event *_Nonnull event)
 	AG_TlistClear(tl);
 	AG_MutexLock(&ts->lock);
 
-	for (i = 0; i < ani->ninsns; i++) {
+	for (i = 0; i < ani->nInsns; i++) {
 		RG_AnimInsn *insn = &ani->insns[i];
 
 		switch (insn->type) {
@@ -411,7 +411,7 @@ PollFrames(AG_Event *_Nonnull event)
 
 	AG_TlistClear(tl);
 	AG_MutexLock(&ts->lock);
-	for (i = 0; i < ani->nframes; i++) {
+	for (i = 0; i < ani->nFrames; i++) {
 		RG_AnimFrame *fr = &ani->frames[i];
 		AG_TlistItem *it;
 		
@@ -529,7 +529,7 @@ EditFrame(RG_Anim *_Nonnull ani, RG_AnimFrame *_Nonnull fr, AG_Box *_Nonnull box
 
 	AG_ObjectFreeChildren(box);
 
-	ani->gframe = fr->name;
+	ani->gFrame = fr->name;
 
 	AG_PixmapFromSurface(box, 0, fr->su);
 
@@ -605,7 +605,7 @@ PreviewAnim(AG_Event *_Nonnull event)
 	av = RG_AnimviewNew(win);
 	RG_AnimviewSetAnimation(av, ani);
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
-	lbl = AG_LabelNewPolled(win, 0, " %u/%u", &av->frame, &ani->nframes);
+	lbl = AG_LabelNewPolled(win, 0, " %u/%u", &av->frame, &ani->nFrames);
 	AG_LabelSizeHint(lbl, 1, " 00000/00000");
 
 	AG_WindowShow(win);
@@ -675,6 +675,6 @@ RG_AnimEdit(RG_Anim *ani)
 	
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 70, 50);
 	RG_AnimGenerate(ani);
-	ani->nrefs++;
+	ani->nRefs++;
 	return (win);
 }

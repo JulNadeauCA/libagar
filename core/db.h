@@ -14,6 +14,9 @@ struct ag_db;
 typedef struct ag_dbt {
 	void *_Nonnull data;
 	AG_Size        size;
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
 } AG_Dbt;
 
 typedef int (*AG_DbIterateFn)(const AG_Dbt *_Nonnull,
@@ -51,6 +54,7 @@ typedef struct ag_db {
 	Uint flags;
 #define AG_DB_OPEN	0x01		/* Database is open */
 #define AG_DB_READONLY	0x02		/* Open in read-only mode */
+	Uint32 _pad;
 } AG_Db;
 
 #define AGDB(p)              ((AG_Db *)(p))

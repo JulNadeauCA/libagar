@@ -5,7 +5,7 @@
 typedef struct sg_pigment {
 	Uint id;
 	char name[64];		/* Pigment name */
-	char ciName[32];	/* C.I. name */
+	char ciName[28];	/* C.I. name */
 	M_Real Tr;		/* Transparency (Very Opaque -> Transparent) */
 	M_Real St;		/* Staining (Nonstaining -> Heavily Staining) */
 	M_Real VR;		/* Masstone value vs. white paper (0-100) */
@@ -28,7 +28,7 @@ typedef struct sg_mixture {
 } SG_Mixture;
 
 typedef struct sg_palette {
-	struct ag_object _inherit;
+	struct ag_object _inherit;	/* AG_Object -> SG_Palette */
 	Uint flags;
 #define SG_PALETTE_SAVED 0
 	int lastKeyDown;

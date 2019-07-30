@@ -1,7 +1,8 @@
 /*	Public domain	*/
 
 typedef struct m_vectorz {
-	Uint          n;
+	Uint n;
+	Uint32 _pad;
 	int *_Nonnull v;
 } M_VectorZ;
 

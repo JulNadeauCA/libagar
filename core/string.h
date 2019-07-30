@@ -57,6 +57,9 @@ typedef AG_Size (*AG_FmtStringExtFn)(struct ag_fmt_string *_Nonnull,
 typedef struct ag_fmt_string_ext {
 	char *_Nonnull fmt;		/* Format specifier string */
 	AG_Size        fmtLen;		/* Specifier length */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
 	_Nonnull AG_FmtStringExtFn fn;	/* Callback function */
 } AG_FmtStringExt;
 
@@ -69,8 +72,9 @@ typedef struct ag_fmt_string_ext {
 typedef struct ag_newline_format {
 	const char *encoding;		/* Character encoding */
 	const char *abbr;		/* Abbreviation */
-	int len;			/* Length of sequence (1..2) */
 	const char *s;			/* The sequence */
+	int len;			/* Length of sequence (1..2) */
+	Uint32 _pad;
 } AG_NewlineFormat;
 
 enum ag_newline_type {

@@ -259,8 +259,10 @@ Draw(void *_Nonnull obj)
 		r.y = 0;
 		r.w = WIDTH(cb);
 		r.h = HEIGHT(cb)-1;
+
 		AG_ColorRGBA_8(&c, 255,255,255, 25);
-		AG_DrawRectBlended(cb, &r, &c, AG_ALPHA_SRC);
+		AG_DrawRectBlended(cb, &r, &c, AG_ALPHA_SRC,
+		                               AG_ALPHA_ONE_MINUS_SRC);
 	}
 
 	r.x = 0;

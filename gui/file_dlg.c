@@ -92,7 +92,7 @@ FilterByExtension(AG_FileDlg *_Nonnull fd, char *_Nonnull file)
 	ext = strrchr(file, '.');
 
 	TAILQ_FOREACH(ft, &fd->types, types) {
-		for (i = 0; i < ft->nexts; i++) {
+		for (i = 0; i < ft->nExts; i++) {
 			const char *ftExt = ft->exts[i];
 
 			if (ftExt[0] == '.' && ext &&
@@ -128,7 +128,7 @@ FilterByExtension(AG_FileDlg *_Nonnull fd, char *_Nonnull file)
 
 			/* TODO: Regular expression */
 		}
-		if (i < ft->nexts)
+		if (i < ft->nExts)
 			break;
 	}
 	return (ft == NULL);
@@ -472,13 +472,13 @@ ChooseFile(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull pwin)
 		ft = it->p1;
 	} else if ((ext = strrchr(fd->cfile, '.')) != NULL) {
 		TAILQ_FOREACH(ft, &fd->types, types) {
-			for (i = 0; i < ft->nexts; i++) {
+			for (i = 0; i < ft->nExts; i++) {
 				char *s;
 				if ((s = strrchr(ft->exts[i], '.')) != NULL &&
 				    Strcasecmp(s, ext) == 0)
 					break;
 			}
-			if (i < ft->nexts)
+			if (i < ft->nExts)
 				break;
 		}
 	}
@@ -629,7 +629,7 @@ FileSelected(AG_Event *_Nonnull event)
 			char *ftext;
 			Uint i;
 
-			for (i = 0; i < ft->nexts; i++) {
+			for (i = 0; i < ft->nExts; i++) {
 				if ((ftext = strrchr(ft->exts[i], '.'))
 				    == NULL) {
 					continue;
@@ -637,7 +637,7 @@ FileSelected(AG_Event *_Nonnull event)
 				if (Strcasecmp(ftext, ext) == 0)
 					break;
 			}
-			if (i < ft->nexts) {
+			if (i < ft->nExts) {
 				AG_ComboSelect(fd->comTypes, ti);
 				AG_PostEvent(NULL, fd->comTypes,
 				    "combo-selected", "%p", ti);
@@ -1423,7 +1423,7 @@ Destroy(void *_Nonnull obj)
 			free(fo);
 		}
 		free(ft->descr);
-		for (i = 0; i < ft->nexts; i++) {
+		for (i = 0; i < ft->nExts; i++) {
 			free(ft->exts[i]);
 		}
 		free(ft->exts);
@@ -1656,7 +1656,7 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 	ft->fd = fd;
 	ft->descr = Strdup(descr);
 	ft->exts = Malloc(sizeof(char *));
-	ft->nexts = 0;
+	ft->nExts = 0;
 	TAILQ_INIT(&ft->opts);
 	
 	ft->allExts = Strdup(exts);
@@ -1666,8 +1666,8 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 		if (ext[0] == '*' && ext[1] == '.') {
 			ext++;
 		}
-		ft->exts = Realloc(ft->exts, (ft->nexts+1)*sizeof(char *));
-		ft->exts[ft->nexts++] = Strdup(ext);
+		ft->exts = Realloc(ft->exts, (ft->nExts+1)*sizeof(char *));
+		ft->exts[ft->nExts++] = Strdup(ext);
 		if (strcmp("<-x>", ext) == 0) {
 			Strlcat(extsLbl, "* ", sizeof(extsLbl));
 		} else if (ext[0] == '<' && ext[1] == '=') {

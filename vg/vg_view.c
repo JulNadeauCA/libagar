@@ -435,7 +435,17 @@ Init(void *_Nonnull obj)
 	WIDGET(vv)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
 
 	vv->flags = 0;
+	vv->scaleIdx = 0;
 	vv->vg = NULL;
+	vv->x = 0.0f;
+	vv->y = 0.0f;
+	vv->scale = scaleFactors[0];
+	vv->scaleMin = 1.0f;
+	vv->scaleMax = 1e6f;
+	vv->wPixel = 1.0f;
+	vv->snap_mode = VG_GRID;
+	vv->nGrids = 0;
+
 	vv->draw_ev = NULL;
 	vv->scale_ev = NULL;
 	vv->keydown_ev = NULL;
@@ -443,17 +453,11 @@ Init(void *_Nonnull obj)
 	vv->keyup_ev = NULL;
 	vv->btnup_ev = NULL;
 	vv->motion_ev = NULL;
-	vv->x = 0.0f;
-	vv->y = 0.0f;
-	vv->scaleIdx = 0;
-	vv->scale = scaleFactors[0];
-	vv->scaleMin = 1.0f;
-	vv->scaleMax = 1e6f;
-	vv->wPixel = 1.0f;
-	vv->snap_mode = VG_GRID;
+
 	vv->mouse.x = 0.0f;
 	vv->mouse.y = 0.0f;
 	vv->mouse.panning = 0;
+
 	vv->curtool = NULL;
 	vv->deftool = NULL;
 	vv->status[0] = '\0';
@@ -466,7 +470,6 @@ Init(void *_Nonnull obj)
 	vv->r.h = 0;
 	TAILQ_INIT(&vv->tools);
 
-	vv->nGrids = 0;
 	VG_ViewSetGrid(vv, 0, VG_GRID_POINTS, 8, VG_GetColorRGB(100,100,100));
 	VG_ViewSetScale(vv, 0);
 	

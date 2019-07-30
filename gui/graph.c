@@ -190,7 +190,6 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 		}
 	}
 	edge = Malloc(sizeof(AG_GraphEdge));
-	edge->labelTxt[0] = '\0';
 	edge->labelSu = -1;
 	AG_ColorBlack(&edge->edgeColor);
 	AG_ColorBlack(&edge->labelColor);
@@ -200,16 +199,17 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 	edge->userPtr = userPtr;
 	edge->graph = gf;
 	edge->popupMenu = NULL;
+	edge->labelTxt[0] = '\0';
 	edge->type = AG_GRAPH_EDGE_UNDIRECTED;
 	TAILQ_INSERT_TAIL(&gf->edges, edge, edges);
-	gf->nedges++;
+	gf->nEdges++;
 
 	edge->v1->edges = Realloc(edge->v1->edges,
-	    (edge->v1->nedges + 1)*sizeof(AG_GraphEdge *));
+	    (edge->v1->nEdges + 1)*sizeof(AG_GraphEdge *));
 	edge->v2->edges = Realloc(edge->v2->edges,
-	    (edge->v2->nedges + 1)*sizeof(AG_GraphEdge *));
-	edge->v1->edges[edge->v1->nedges++] = edge;
-	edge->v2->edges[edge->v2->nedges++] = edge;
+	    (edge->v2->nEdges + 1)*sizeof(AG_GraphEdge *));
+	edge->v1->edges[edge->v1->nEdges++] = edge;
+	edge->v2->edges[edge->v2->nEdges++] = edge;
 
 	AG_ObjectUnlock(gf);
 	AG_Redraw(gf);
@@ -463,8 +463,8 @@ Init(void *obj)
 	gf->yMax = 0;
 	TAILQ_INIT(&gf->vertices);
 	TAILQ_INIT(&gf->edges);
-	gf->nvertices = 0;
-	gf->nedges = 0;
+	gf->nVertices = 0;
+	gf->nEdges = 0;
 	gf->pxMin = 0;
 	gf->pxMax = 0;
 	gf->pyMin = 0;
@@ -502,8 +502,8 @@ AG_GraphFreeVertices(AG_Graph *gf)
 	}
 	TAILQ_INIT(&gf->vertices);
 	TAILQ_INIT(&gf->edges);
-	gf->nvertices = 0;
-	gf->nedges = 0;
+	gf->nVertices = 0;
+	gf->nEdges = 0;
 	gf->xMin = 0;
 	gf->xMax = 0;
 	gf->yMin = 0;
@@ -817,12 +817,12 @@ AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 	vtx->graph = gf;
 	vtx->userPtr = userPtr;
 	vtx->edges = NULL;
-	vtx->nedges = 0;
+	vtx->nEdges = 0;
 	vtx->popupMenu = NULL;
 
 	AG_ObjectLock(gf);
 	TAILQ_INSERT_TAIL(&gf->vertices, vtx, vertices);
-	gf->nvertices++;
+	gf->nVertices++;
 	AG_ObjectUnlock(gf);
 
 	AG_Redraw(gf);
@@ -936,7 +936,7 @@ CompareVertices(const void *p1, const void *p2)
 	const AG_GraphVertex *v1 = *(const void **)p1;
 	const AG_GraphVertex *v2 = *(const void **)p2;
 
-	return (v2->nedges - v1->nedges);
+	return (v2->nEdges - v1->nEdges);
 }
 
 static AG_GraphVertex *
@@ -970,7 +970,7 @@ PlaceVertex(AG_Graph *gf, AG_GraphVertex *vtx, AG_GraphVertex **vSorted,
 	if (y < gf->pyMin) { gf->pyMin = y; }
 	if (y > gf->pyMax) { gf->pyMax = y; }
 
-	for (i = 0; i < vtx->nedges; i++) {
+	for (i = 0; i < vtx->nEdges; i++) {
 		AG_GraphEdge *edge = vtx->edges[i];
 		AG_GraphVertex *oVtx;
 		float r = 128.0;
@@ -1011,13 +1011,13 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 
 	AG_ObjectLock(gf);
 
-	if (gf->nvertices == 0 || gf->nedges == 0) {
+	if (gf->nVertices == 0 || gf->nEdges == 0) {
 		AG_ObjectUnlock(gf);
 		return;
 	}
 
 	/* Sort the vertices based on their number of connected edges. */
-	vSorted = Malloc(gf->nvertices*sizeof(AG_GraphVertex *));
+	vSorted = Malloc(gf->nVertices*sizeof(AG_GraphVertex *));
 	TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
 		vtx->flags &= ~(AG_GRAPH_AUTOPLACED);
 		vSorted[nSorted++] = vtx;

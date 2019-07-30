@@ -58,6 +58,9 @@ typedef struct map_view {
 		int x, y;		/* Origin of rectangle */
 		int xoffs, yoffs;	/* Displacement from origin */
 	} msel;
+#if AG_MODEL == AG_LARGE
+	Uint32 _pad1;
+#endif
 	struct {			/* Effective map selection */
 		int set;		/* Selection is set */
 		int moving;		/* Nodes are being displaced */
@@ -68,7 +71,7 @@ typedef struct map_view {
 	struct {			/* Noderef selection */
 		int moving;		/* Noderefs are being displaced */
 	} rsel;
-
+	Uint32 _pad2;
 	MAP       *_Nullable map;	/* Active map */
 	MAP_Actor *_Nullable actor;	/* Selected actor */
 

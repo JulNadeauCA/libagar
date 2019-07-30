@@ -24,7 +24,9 @@
  */
 
 #include <agar/core/core.h>
-
+#include <agar/gui/gui.h>
+#include <agar/gui/widget.h>
+#include <agar/rg/tileset.h>
 #include <agar/rg/animview.h>
 #include <agar/rg/icons.h>
 
@@ -45,12 +47,12 @@ PlayUpdateTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	RG_Animview *av = RG_ANIMVIEW_SELF();
 
-	if (av->anim->nframes == 0)
+	if (av->anim->nFrames == 0)
 		return (0);
 
 	AG_Redraw(av);
 
-	if (++av->frame < av->anim->nframes) {
+	if (++av->frame < av->anim->nFrames) {
 		RG_AnimFrame *fr = &av->anim->frames[av->frame];
 
 		return (fr->delay > 0 ? fr->delay*100/av->speed : 1);
@@ -251,7 +253,7 @@ Draw(void *_Nonnull p)
 	RG_Animview *av = p;
 	RG_AnimFrame *fr;
 
-	if (av->anim == NULL || av->anim->nframes < 1) {
+	if (av->anim == NULL || av->anim->nFrames < 1) {
 		return;
 	}
 	fr = &av->anim->frames[av->frame];

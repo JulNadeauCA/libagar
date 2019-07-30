@@ -1,9 +1,11 @@
 /*	Public domain	*/
 
 typedef struct sg_voxel {
-	struct sg_node _inherit;
+	struct sg_node _inherit;		/* SG_Node -> SG_Voxel */
 	int w, h, d;
+	Uint32 _pad1;
 	M_Real *_Nullable *_Nonnull *_Nonnull map;	/* Array of cells */
+	Uint8 _pad2[8];
 } SG_Voxel;
 
 __BEGIN_DECLS

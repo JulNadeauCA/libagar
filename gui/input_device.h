@@ -6,9 +6,10 @@
 
 typedef struct ag_input_device {
 	struct ag_object _inherit;
-	Uint flags;
 	void *_Nullable drv;	/* Associated graphics driver */
 	char *_Nullable desc;	/* User description */
+	Uint flags;
+	Uint32 _pad;
 } AG_InputDevice;
 
 #define AGINPUTDEV(obj) ((AG_InputDevice *)(obj))

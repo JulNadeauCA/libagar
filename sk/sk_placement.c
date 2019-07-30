@@ -461,35 +461,35 @@ LineFromLineLine(void *_Nonnull self, SK_Constraint *_Nonnull ct1,
 }
 
 const SK_ConstraintPairFn skConstraintPairFns[] = {
-	{ SK_DISTANCE,	 "Point:*", "Point:*",	PtFromPtAtDistance },
-	{ SK_DISTANCE,	 "Point:*", "Line:*",	PtFromLineAtDistance },
-	{ SK_DISTANCE,	 "Line:*",  "Line:*",	LineFromLineAtDistance },
-	{ SK_ANGLE,	 "Line:*",  "Line:*",	LineFromLineAtAngle },
+	{ SK_DISTANCE, 0, "Point:*", "Point:*",	PtFromPtAtDistance },
+	{ SK_DISTANCE, 0, "Point:*", "Line:*",	PtFromLineAtDistance },
+	{ SK_DISTANCE, 0, "Line:*",  "Line:*",	LineFromLineAtDistance },
+	{ SK_ANGLE,    0, "Line:*",  "Line:*",	LineFromLineAtAngle },
 };
 const SK_ConstraintRingFn skConstraintRingFns[] = {
 	{
-		"Point:*",
-		SK_CONSTRAINT_ANY, "Point:*",	SK_CONSTRAINT_ANY, "Point:*",
+		SK_CONSTRAINT_ANY, SK_CONSTRAINT_ANY,
+		"Point:*", "Point:*", "Point:*",
 		PtFromPtPt
 	}, {
-		"Point:*",
-		SK_CONSTRAINT_ANY, "Point:*",	SK_CONSTRAINT_ANY, "Line:*",
+		SK_CONSTRAINT_ANY, SK_CONSTRAINT_ANY,
+		"Point:*", "Point:*", "Line:*",
 		PtFromPtLine
 	}, {
-		"Point:*",
-		SK_CONSTRAINT_ANY, "Line:*",	SK_CONSTRAINT_ANY, "Line:*",
+		SK_CONSTRAINT_ANY, SK_CONSTRAINT_ANY,
+		"Point:*", "Line:*", "Line:*",
 		PtFromLineLine
 	}, {
-		"Line:*",
-		SK_CONSTRAINT_ANY, "Point:*",	SK_CONSTRAINT_ANY, "Point:*",
+		SK_CONSTRAINT_ANY, SK_CONSTRAINT_ANY,
+		"Line:*", "Point:*", "Point:*",
 		LineFromPtPt
 	}, {
-		"Line:*",
-		SK_CONSTRAINT_ANY, "Point:*",	SK_CONSTRAINT_ANY, "Line:*",
+		SK_CONSTRAINT_ANY, SK_CONSTRAINT_ANY,
+		"Line:*", "Point:*", "Line:*",
 		LineFromPtLine
 	}, {
-		"Line:*",
-		SK_CONSTRAINT_ANY, "Line:*",	SK_CONSTRAINT_ANY, "Line:*",
+		SK_CONSTRAINT_ANY, SK_CONSTRAINT_ANY,
+		"Line:*", "Line:*", "Line:*",
 		LineFromLineLine
 	}
 };

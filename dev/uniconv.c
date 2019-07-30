@@ -38,7 +38,11 @@
 #include <agar/dev/dev.h>
 
 static const struct unicode_range {
+#ifdef AG_HAVE_64BIT
+	Uint64 start;
+#else
 	Uint32 start;
+#endif
 	char *_Nonnull name;
 } unicodeRanges[] = {
 	{ 0x0000, "Basic Latin" },

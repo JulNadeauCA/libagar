@@ -3,8 +3,6 @@
 #ifndef _AGAR_RG_ANIMATION_H_
 #define _AGAR_RG_ANIMATION_H_
 
-#include <agar/config/have_opengl.h>
-
 #include <agar/rg/begin.h>
 
 #define RG_ANIMATION_NAME_MAX	32
@@ -22,12 +20,12 @@ enum rg_anim_insn_type {
 /* Source animation instruction */
 typedef struct rg_anim_insn {
 	enum rg_anim_insn_type type;
+	Uint delay;			/* Delay in milliseconds */
 	struct rg_tile *_Nullable t;	/* Tile reference (for ANIM_*TILE) */
 	struct rg_pixmap *_Nullable px;	/* Pixmap reference (for ANIM_*PX) */
 #if 0
 	struct rg_sketch *_Nullable sk;	/* Sketch of path (for ANIM_MOVPX) */
 #endif
-	Uint delay;			/* Delay in milliseconds */
 	union {
 		struct {
 			Uint alpha;		/* Per-surface source alpha */
@@ -45,6 +43,7 @@ typedef struct rg_anim_insn {
 #define in_disPx args.disPx
 #define in_rotPx args.rotPx
 #endif
+	Uint32 _pad;
 	AG_TAILQ_ENTRY(rg_anim_insn) insns;
 } RG_AnimInsn;
 
@@ -54,6 +53,7 @@ typedef struct rg_anim_frame {
 	Uint delay;
 	AG_Surface *_Nonnull su;		/* Frame surface */
 	Uint texture;				/* For OpenGL */
+	Uint32 _pad;
 } RG_AnimFrame;
 
 /* Animation structure */
@@ -66,14 +66,14 @@ typedef struct rg_anim {
 #define RG_ANIM_DUPED_FLAGS	(RG_ANIM_SRCALPHA|RG_ANIM_SRCCOLORKEY)
 	Uint w, h;				/* Sprite geometry */
 	struct rg_tileset *_Nonnull tileset;	/* Parent tileset */
-	Uint nrefs;				/* Reference count */
+	Uint nRefs;				/* Reference count */
 
+	Uint	              nInsns;
 	RG_AnimInsn  *_Nonnull insns;		/* Animation instructions */
-	Uint	              ninsns;
 
 	RG_AnimFrame *_Nonnull frames;		/* Generated frames */
-	Uint	              nframes;
-	Uint	              gframe;		/* Current frame (global) */
+	Uint	              nFrames;
+	Uint	              gFrame;		/* Current frame (global) */
 
 	AG_SLIST_HEAD_(rg_anim_variant) vars;	/* Transformed variants */
 	AG_TAILQ_ENTRY(rg_anim) animations;
@@ -84,6 +84,7 @@ typedef struct rg_anim_variant {
 	RG_TransformChain transforms;		/* Applied transforms */
 	RG_Anim *_Nonnull anim;			/* Transformed anim */
 	Uint32 last_drawn;			/* Time last draw occured */
+	Uint32 _pad;
 	AG_SLIST_ENTRY(rg_anim_variant) vars;
 } RG_AnimVariant;
 
@@ -113,7 +114,7 @@ void RG_AnimRemoveFrame(RG_Anim *_Nonnull, Uint);
 static __inline__ RG_AnimFrame *_Nonnull
 RG_AnimGetFrame(RG_Anim *_Nonnull anim, Uint frame)
 {
-	if (frame >= anim->nframes) {
+	if (frame >= anim->nFrames) {
 		AG_Verbose("%s: no such frame %u\n", anim->name, frame);
 		AG_FatalError("RG_AnimGetFrame");
 	}

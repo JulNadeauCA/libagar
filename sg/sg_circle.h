@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
 typedef struct sg_circle {
-	struct sg_geom _inherit;
+	struct sg_geom _inherit;	/* SG_Geom -> SG_Circle */
 } SG_Circle;
 
 #define SGCIRCLE(n) ((SG_Circle *)(n))

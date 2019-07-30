@@ -6,6 +6,7 @@ typedef struct sk_pixmap {
 	M_Real w, h;			/* Dimensions */
 	M_Real alpha;			/* Overall alpha */
 	int s;				/* Mapped surface */
+	Uint32 _pad;
 	AG_Surface *_Nullable sSrc;	/* Source surface */
 } SK_Pixmap;
 

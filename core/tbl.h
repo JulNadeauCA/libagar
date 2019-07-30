@@ -11,14 +11,15 @@ typedef struct ag_tbl_bucket {
 	char *_Nullable *_Nonnull keys;
 	AG_Variable *_Nullable    ents;
 	Uint                     nEnts;
+	Uint32 _pad;
 } AG_TblBucket;
 
 typedef struct ag_tbl {
 	Uint flags;
 #define AG_TBL_DUPLICATES	0x01	/* Allow duplicate entries */
 
+	Uint                  nBuckets;		/* Bucket count */
 	AG_TblBucket *_Nonnull buckets;		/* Hash buckets */
-	Uint         nBuckets;			/* Bucket count */
 } AG_Tbl;
 
 __BEGIN_DECLS

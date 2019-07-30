@@ -37,6 +37,8 @@ const RG_FeatureOps rgSketchProjOps = {
 	sizeof(struct rg_sketchproj),
 	N_("Sketch projection."),
 	FEATURE_AUTOREDRAW,
+	AG_KEYMOD_SHIFT, AG_KEY_P,
+	1,
 	RG_SketchProjInit,
 	RG_SketchProjLoad,
 	RG_SketchProjSave,
@@ -48,7 +50,7 @@ const RG_FeatureOps rgSketchProjOps = {
 };
 
 void
-RG_SketchProjInit(void *p, RG_Tileset *ts, int flags)
+RG_SketchProjInit(void *p, RG_Tileset *ts, Uint flags)
 {
 	struct rg_sketchproj *sproj = p;
 

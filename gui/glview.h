@@ -22,7 +22,7 @@ typedef struct ag_glview {
 #define AG_GLVIEW_EXPAND	(AG_GLVIEW_HFILL|AG_GLVIEW_VFILL)
 
 	int wPre, hPre;			/* Initial geometry */
-
+	Uint32 _pad1;
 	AG_Event *_Nullable draw_ev;		/* Draw callback */
 	AG_Event *_Nullable overlay_ev;		/* Graphics overlay callback */
 	AG_Event *_Nullable underlay_ev;	/* Graphics underlay callback */
@@ -38,6 +38,10 @@ typedef struct ag_glview {
 	float mTexture[16];			/* Texture matrix to load */
 
 	AG_Color bgColor;			/* Background color */
+
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad2;
+#endif
 } AG_GLView;
 
 #define AGGLVIEW(obj)            ((AG_GLView *)(obj))

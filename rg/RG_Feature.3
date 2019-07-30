@@ -52,7 +52,7 @@ structure:
 .Bd -literal
 typedef struct rg_feature_ops {
 	const char *type;       /* Feature name */
-	size_t len;             /* Size of structure */
+	AG_Size len;            /* Size of structure */
 	const char *desc;       /* Feature description */
 	int flags;
 #define FEATURE_AUTOREDRAW 0x01 /* Automatic redraw on edit */

@@ -61,8 +61,10 @@ typedef struct sg_script_edit_ctx {
 	M_Vector3   vCamMove;		/* Camera motion vector */
 	M_Vector3   vCamMoveSum;	/* Camera motion vector sum */
 	int          camMoving;
+	Uint32 _pad1;
 	AG_Slider *slTime;		/* Time slider */
 	AG_Surface *suUnder;		/* Underlay (for animation) */
+	Uint8 _pad2[8];
 } SG_ScriptEditCtx;
 
 /* Rendering context for a SG_Script. */
@@ -160,7 +162,7 @@ LoadInsn(SG_Script *_Nonnull scr, SG_ScriptInsn *_Nonnull si,
 		{
 			char clsName[AG_OBJECT_HIER_MAX];
 			AG_ObjectClass *cls;
-			size_t dataSize;
+			AG_Size dataSize;
 
 			si->si_create.name = AG_ReadStringLen(ds, AG_OBJECT_NAME_MAX);
 			if (si->si_create.name == NULL) {
@@ -170,7 +172,7 @@ LoadInsn(SG_Script *_Nonnull scr, SG_ScriptInsn *_Nonnull si,
 			if ((cls = AG_LookupClass(clsName)) == NULL) {
 				return (-1);
 			}
-			dataSize = (size_t)AG_ReadUint32(ds);
+			dataSize = (AG_Size)AG_ReadUint32(ds);
 			if ((si->si_create.data = TryMalloc(dataSize)) == NULL) {
 				return (-1);
 			}
@@ -379,7 +381,7 @@ SG_ScriptDelInsn(SG_Script *scr, Uint t, SG_ScriptInsn *si)
 
 /* Print the given instruction to a fixed-size buffer. */
 void
-SG_ScriptPrintInsn(const SG_ScriptInsn *si, char *buf, size_t len)
+SG_ScriptPrintInsn(const SG_ScriptInsn *si, char *buf, AG_Size len)
 {
 	if (si->type >= SG_INSN_LAST) {
 		if (len > 0) { buf[0] = '\0'; }
@@ -1014,7 +1016,9 @@ PickNearestNode(SG_ScriptEditCtx *_Nonnull e, int xWid, int yWid,
 static int
 BeginAction(SG_ScriptEditCtx *_Nonnull e, int xWid, int yWid)
 {
-	int *kbd = AG_GetKeyState(e->sv);
+	SG_View *sv = e->sv;
+	const int *kbdState = AG_GetKeyState(sv);
+	const Uint keyModState = AG_GetModState(sv);
 	SG_Script *scr = e->scr;
 	SG_Node *node;
 	M_Vector3 Xnear = M_VecZero3();
@@ -1034,7 +1038,8 @@ BeginAction(SG_ScriptEditCtx *_Nonnull e, int xWid, int yWid)
 
 	/* Look for a matching action key shortcut (default to Move). */
 	TAILQ_FOREACH(actReg, &node->actions, actions) {
-		if (kbd[actReg->key])
+		if (kbdState[actReg->key] &&
+		    (actReg->keyMod == 0 || (keyModState & actReg->keyMod)))
 			break;
 	}
 	if (actReg == NULL) {
@@ -1047,8 +1052,8 @@ BeginAction(SG_ScriptEditCtx *_Nonnull e, int xWid, int yWid)
 	}
 
 	/* Compute the mouse control ray. */
-	SG_ViewUnProject(e->sv, xWid, yWid, &pNear, &pFar);
-	SG_GetNodeTransform(e->sv->cam, &T);
+	SG_ViewUnProject(sv, xWid, yWid, &pNear, &pFar);
+	SG_GetNodeTransform(sv->cam, &T);
 	M_MatMultVector44v(&pNear, &T);
 	M_MatMultVector44v(&pFar, &T);
 
@@ -1409,7 +1414,7 @@ OnUnderlay(AG_Event *_Nonnull event)
 	r.w = WIDTH(sv);
 	r.h = HEIGHT(sv);
 	AG_ColorRGBA_8(&c, 0,0,0, 128);
-	AG_DrawRectBlended(sv, &r, &c, AG_ALPHA_SRC);
+	AG_DrawRectBlended(sv, &r, &c, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 }
 
 /* Reset generated scene and seek to first frame. */

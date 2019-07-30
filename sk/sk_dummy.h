@@ -3,6 +3,7 @@
 typedef struct sk_dummy {
 	struct sk_node node;
 	M_Real foo;
+	Uint8 _pad[8];
 } SK_Dummy;
 
 #define SK_DUMMY(n) ((SK_Dummy *)(n))

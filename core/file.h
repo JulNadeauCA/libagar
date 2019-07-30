@@ -30,6 +30,7 @@ typedef struct ag_file_info {
 #define AG_FILE_HIDDEN		0x020
 #define AG_FILE_TEMPORARY	0x100
 #define AG_FILE_SYSTEM		0x200
+	Uint32 _pad;
 } AG_FileInfo;
 
 typedef struct ag_file_ext_mapping {
@@ -37,6 +38,7 @@ typedef struct ag_file_ext_mapping {
 	const char *_Nonnull descr;		/* Type description */
 	void *_Nullable cls;			/* Related Agar class */
 	int editDirect;				/* Directly editable */
+	Uint32 _pad;
 } AG_FileExtMapping;
 
 __BEGIN_DECLS

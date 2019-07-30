@@ -75,12 +75,14 @@ enum sg_action_type {
 typedef struct sg_rotation {
 	M_Vector3 axis;			/* Axis of rotation */
 	M_Real theta;			/* Angle in radians */
+	Uint8 _pad[8];
 } SG_Rotation;
 typedef struct sg_action {
 	enum sg_action_type type;
 	Uint flags;
 #define SG_ACTION_SAVED 0
 	AG_KeySym key;			/* Keyboard binding */
+	AG_KeyMod keyMod;		/* Key modifier */
 	union {
 		M_Vector3 move;
 		SG_Rotation rotate;
@@ -102,7 +104,8 @@ typedef struct sg_action {
 
 /* SG Node class-specific operations */
 typedef struct sg_node_class {
-	struct ag_object_class _inherit;
+	struct ag_object_class _inherit;   /* AG_ObjectClass -> SG_NodeClass */
+
 	void  (*_Nullable menuInstance)(void *_Nonnull, struct ag_menu_item *_Nonnull,
 	                                struct sg_view *_Nonnull);
 	void  (*_Nullable menuClass)(struct sg *_Nonnull,
@@ -119,20 +122,22 @@ typedef struct sg_node_class {
 
 /* SG Node object instance */
 typedef struct sg_node {
-	struct ag_object _inherit;
+	struct ag_object _inherit;	/* AG_Object -> SG_Node */
 	Uint flags;
 #define SG_NODE_SELECTED	0x01	/* Selection flag */
 #define SG_NODE_HIDE		0x02	/* Disable rendering */
-	struct sg *_Nullable sg;	/* Back pointer to sg */
+	Uint32 _pad1;
 	M_Matrix44 T;			/* Transformation from parent */
+	struct sg *_Nullable sg;	/* Back pointer to sg */
 	AG_TAILQ_ENTRY(sg_node) rnodes;	/* Used for quick inverse traversal */
 	AG_TAILQ_ENTRY(sg_node) nodes;	/* For flat list */
 	AG_TAILQ_HEAD_(sg_action) actions; /* Enabled node actions */
+	Uint8 _pad2[8];
 } SG_Node;
 
 /* Scene graph object */
 typedef struct sg {
-	struct ag_object _inherit;
+	struct ag_object _inherit;	/* AG_Object -> SG */
 	Uint flags;
 #define SG_OVERLAY_WIREFRAME	0x01	/* Overlay scene wireframe */
 #define SG_OVERLAY_VERTICES	0x02	/* Draw points at vertices */
@@ -142,7 +147,9 @@ typedef struct sg {
 					   (otherwise LoadObject will fail) */
 #define SG_NO_DEFAULT_NODES	0x20	/* Don't create default camera/lights */
 
+	Uint32 _pad;
 	SG_Node *_Nullable root;	/* Root of graph */
+
 	struct {
 		struct sg_camera *_Nullable cam;	/* Default camera */
 		struct sg_light  *_Nullable lt[2];	/* Default lights */
@@ -219,8 +226,7 @@ void           SG_GetNodeTransformInverse(void *_Nonnull, M_Matrix44 *_Nonnull);
 
 void SG_ActionInit(SG_Action *_Nonnull, enum sg_action_type);
 void SG_ActionCopy(SG_Action *_Nonnull, const SG_Action *_Nonnull);
-void SG_ActionPrint(const SG_Action *_Nonnull, char *_Nonnull, size_t)
-                   BOUNDED_ATTRIBUTE(__string__, 2,3);
+void SG_ActionPrint(const SG_Action *_Nonnull, char *_Nonnull, AG_Size);
 int  SG_ActionLoad(SG_Action *_Nonnull, AG_DataSource *_Nonnull);
 int  SG_ActionSave(SG_Action *_Nonnull, AG_DataSource *_Nonnull);
 

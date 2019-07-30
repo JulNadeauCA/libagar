@@ -46,9 +46,8 @@ typedef struct ag_pane {
 	int rx;				/* Requested divider position */
 	int rxPct;			/* Requested position in % */
 	int wDiv;			/* Divider width */
-	AG_CursorArea *_Nullable ca;	/* Divider cursor-change area */
-
 	enum ag_pane_resize_action resizeAction;	/* Resize action */
+	AG_CursorArea *_Nullable ca;	/* Divider cursor-change area */
 } AG_Pane;
 
 #define AGPANE(obj)            ((AG_Pane *)(obj))

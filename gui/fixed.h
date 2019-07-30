@@ -19,6 +19,7 @@ typedef struct ag_fixed {
 #define AG_FIXED_FRAME		0x40	/* Draw a frame */
 #define AG_FIXED_EXPAND		(AG_FIXED_HFILL|AG_FIXED_VFILL)
 	int wPre, hPre;			/* User geometry */
+	Uint32 _pad;
 } AG_Fixed;
 
 __BEGIN_DECLS

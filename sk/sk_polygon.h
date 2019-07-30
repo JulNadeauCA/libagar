@@ -2,9 +2,10 @@
 
 typedef struct sk_polygon {
 	struct sk_node node;
-	SK_Line *_Nonnull *_Nullable s;	/* Sides */
-	Uint      n;
-	M_Color   color;		/* Fill color */
+	SK_Line *_Nonnull *_Nullable s;		/* Line boundaries */
+	Uint flags;
+	Uint n;
+	M_Color color;				/* Fill color */
 } SK_Polygon;
 
 #define SKPOLYGON(n) ((SK_Polygon *)(n))

@@ -7,10 +7,8 @@
 #ifndef AG_VARIABLE_NAME_MAX
 # if AG_MODEL == AG_SMALL
 #  define AG_VARIABLE_NAME_MAX 16
-# elif AG_MODEL == AG_MEDIUM
-#  define AG_VARIABLE_NAME_MAX 24
-# elif AG_MODEL == AG_LARGE
-#  define AG_VARIABLE_NAME_MAX 32
+# else
+#  define AG_VARIABLE_NAME_MAX 28
 # endif
 #endif
 
@@ -79,9 +77,12 @@ typedef struct ag_variable_type_info {
 	int indirLvl;              /* Level of indirection (0 = none) */
 	const char *_Nonnull name; /* Name string */
 	AG_VariableType typeTgt;   /* Pointer target type (if indirLvl > 0) */
-	Sint8 code;                /* Numerical code (-1 = not serializable) */
+	int code;                  /* Numerical code (-1 = not serializable) */
 	AG_Size size;              /* Size in bytes */
 #endif /* !AG_SMALL */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
 } AG_VariableTypeInfo;
 
 /* Variable-stored data */

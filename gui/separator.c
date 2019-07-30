@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -104,18 +104,20 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Separator *sep = obj;
+	const int padding2 = (sep->padding << 1) + 2;
 
-	r->w = sep->padding*2 + 2;
-	r->h = sep->padding*2 + 2;
+	r->w = padding2;
+	r->h = padding2;
 }
 
 static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Separator *sep = obj;
+	const int padding2 = (sep->padding << 1) + 2;
 
-	if (a->w < sep->padding*2 + 2 ||
-	    a->h < sep->padding*2 + 2) {
+	if (a->w < padding2 ||
+	    a->h < padding2) {
 		return (-1);
 	}
 	return (0);
@@ -148,9 +150,7 @@ Draw(void *_Nonnull obj)
 void
 AG_SeparatorSetPadding(AG_Separator *sep, Uint pixels)
 {
-	AG_ObjectLock(sep);
 	sep->padding = pixels;
-	AG_ObjectUnlock(sep);
 	AG_Redraw(sep);
 }
 

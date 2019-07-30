@@ -40,9 +40,9 @@ typedef struct ag_graph_vertex {
 
 	int x, y;					 /* Coordinates */
 	Uint w, h;					 /* Bounding box geometry */
-	void *_Nullable userPtr;			 /* User pointer */
+	Uint                                     nEdges;
 	struct ag_graph_edge *_Nullable *_Nonnull edges; /* Back pointers to edges */
-	Uint                                     nedges;
+	void *_Nullable userPtr;			 /* User pointer */
 	struct ag_graph *_Nonnull graph;		 /* Parent graph */
 	AG_TAILQ_ENTRY(ag_graph_vertex) vertices;
 	AG_TAILQ_ENTRY(ag_graph_vertex) sorted;		 /* For autoplacer */
@@ -50,6 +50,7 @@ typedef struct ag_graph_vertex {
 } AG_GraphVertex;
 
 typedef struct ag_graph_edge {
+	enum ag_graph_edge_type type;		/* Edge type */
 	char labelTxt[AG_GRAPH_LABEL_MAX];	/* Label text */
 	int  labelSu;				/* Text surface handle */
 	AG_Color edgeColor;			/* Edge color */
@@ -59,39 +60,35 @@ typedef struct ag_graph_edge {
 /*#define AG_GRAPH_SELECTED	0x02 */
 /*#define AG_GRAPH_HIDDEN	0x04 */
 /*#define AG_GRAPH_AUTOPLACED	0x08 */
-
-	AG_GraphVertex *_Nonnull v1, *_Nonnull v2; /* Connected vertices */
-
-	void *_Nullable userPtr;		/* User pointer */
-	struct ag_graph *_Nonnull graph;	/* Back pointer to graph */
+	Uint32 _pad;
+	AG_GraphVertex *_Nonnull v1, *_Nonnull v2;   /* Connected vertices */
+	void *_Nullable userPtr;                     /* User pointer */
+	struct ag_graph *_Nonnull graph;             /* Back pointer to graph */
 	AG_TAILQ_ENTRY(ag_graph_edge) edges;
-	struct ag_popup_menu *_Nullable popupMenu;	/* Edge popup menu */
-	enum ag_graph_edge_type type;
+	struct ag_popup_menu *_Nullable popupMenu;   /* Edge popup menu */
 } AG_GraphEdge;
 
 typedef struct ag_graph {
 	struct ag_widget wid;		/* AG_Widget -> AG_Graph */
-
 	Uint flags;
-#define AG_GRAPH_HFILL		0x01
-#define AG_GRAPH_VFILL		0x02
-#define AG_GRAPH_EXPAND		(AG_GRAPH_HFILL|AG_GRAPH_VFILL)
-#define AG_GRAPH_SCROLL		0x04
-#define AG_GRAPH_DRAGGING	0x08	/* Vertex is being moved (readonly) */
-#define AG_GRAPH_PANNING	0x10	/* View is being panned (readonly) */
-#define AG_GRAPH_NO_MOVE	0x20	/* User cannot move vertices */
-#define AG_GRAPH_NO_SELECT	0x40	/* User cannot select vertices */
-#define AG_GRAPH_NO_MENUS	0x80	/* Disable popup menus */
-#define AG_GRAPH_READONLY	(AG_GRAPH_NO_MOVE|AG_GRAPH_NO_SELECT| \
-                         	 AG_GRAPH_NO_MENUS)
-
-	int wPre, hPre;			/* Requested geometry */
-	int xOffs, yOffs;		/* Display offset */
-	int xMin, xMax, yMin, yMax;	/* Display boundaries */
-
+#define AG_GRAPH_HFILL     0x01
+#define AG_GRAPH_VFILL     0x02
+#define AG_GRAPH_EXPAND    (AG_GRAPH_HFILL | AG_GRAPH_VFILL)
+#define AG_GRAPH_SCROLL	   0x04
+#define AG_GRAPH_DRAGGING  0x08    /* Vertex is being moved (readonly) */
+#define AG_GRAPH_PANNING   0x10    /* View is being panned (readonly) */
+#define AG_GRAPH_NO_MOVE   0x20    /* User cannot move vertices */
+#define AG_GRAPH_NO_SELECT 0x40    /* User cannot select vertices */
+#define AG_GRAPH_NO_MENUS  0x80    /* Disable popup menus */
+#define AG_GRAPH_READONLY  (AG_GRAPH_NO_MOVE | AG_GRAPH_NO_SELECT | \
+                            AG_GRAPH_NO_MENUS)
+	int wPre, hPre;                           /* Requested geometry */
+	int xOffs, yOffs;                         /* Display offset */
+	int xMin, xMax, yMin, yMax;               /* Display boundaries */
+	Uint32 _pad;
 	AG_TAILQ_HEAD_(ag_graph_vertex) vertices; /* Graph vertices */
 	AG_TAILQ_HEAD_(ag_graph_edge) edges;      /* Graph edges */
-	Uint nvertices, nedges;	
+	Uint nVertices, nEdges;	
 
 	int pxMin, pxMax, pyMin, pyMax;	 /* Last cluster bounds (for autoplacer) */
 	AG_Rect r;			 /* Display area */

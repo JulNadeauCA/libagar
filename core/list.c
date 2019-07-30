@@ -10,8 +10,8 @@ AG_ListNew(void)
 	AG_List *L;
 
 	L = AG_Malloc(sizeof(AG_List));
-	L->n = 0;
 	L->v = NULL;
+	L->n = 0;
 	return (L);
 }
 

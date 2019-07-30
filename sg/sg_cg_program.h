@@ -10,7 +10,7 @@
 #include <Cg/cgGL.h>
 
 typedef struct sg_cg_program {
-	struct sg_program _inherit;
+	struct sg_program _inherit;	/* SG_Program -> SG_CgProgram */
 	enum {
 		SG_VERTEX_PROGRAM,
 		SG_FRAGMENT_PROGRAM

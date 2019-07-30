@@ -256,11 +256,6 @@ Init(void *_Nonnull obj)
 	WIDGET(com)->flags |= AG_WIDGET_TABLE_EMBEDDABLE;
 
 	com->flags = 0;
-	com->panel = NULL;
-	com->wSaved = 0;
-	com->hSaved = 0;
-	com->wPreList = -1;
-	com->hPreList = -1;
 	
 	com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO | AG_TEXTBOX_EXCL, NULL);
 	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY, _(" ... "));
@@ -271,6 +266,13 @@ Init(void *_Nonnull obj)
 	com->list = Malloc(sizeof(AG_Tlist));
 	AG_ObjectInit(com->list, &agTlistClass);
 	AG_Expand(com->list);
+	
+	com->panel = NULL;
+
+	com->wSaved = 0;
+	com->hSaved = 0;
+	com->wPreList = -1;
+	com->hPreList = -1;
 	
 	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);

@@ -357,12 +357,12 @@ Init(void *_Nonnull obj)
 			     AG_WIDGET_USE_TEXT|
 			     AG_WIDGET_USE_MOUSEOVER;
 
-	bu->flags = 0;
-	bu->lbl = NULL;
-	bu->surface = -1;
 	bu->state = 0;
+	bu->surface = -1;
+	bu->lbl = NULL;
 	bu->justify = AG_TEXT_CENTER;
 	bu->valign = AG_TEXT_MIDDLE;
+	bu->flags = 0;
 	bu->lPad = 4;
 	bu->rPad = 4;
 	bu->tPad = 3;

@@ -46,8 +46,8 @@ enum ag_data_source_type {
 /* Generic data source object */
 typedef struct ag_data_source {
 	_Nonnull_Mutex AG_Mutex lock;		/* Lock on all operations */
-	int debug;
 	struct ag_event *_Nullable errorFn;	/* Exception handler */
+	int debug;
 	AG_ByteOrder byte_order;		/* Effective byte order */
 	AG_Size wrLast;				/* Last write count (bytes) */
 	AG_Size rdLast;				/* Last read count (bytes) */

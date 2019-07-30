@@ -48,6 +48,7 @@ Init(void *_Nonnull obj)
 	SG_Widget *w = obj;
 
 	w->style = SG_WIDGET_DISC;
+	w->flags = 0;
 	w->size = 0.10;
 }
 

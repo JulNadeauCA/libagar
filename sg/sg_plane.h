@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
 typedef struct sg_plane {
-	struct sg_geom _inherit;
+	struct sg_geom _inherit;	/* SG_Geom -> SG_Plane */
 } SG_Plane;
 
 __BEGIN_DECLS

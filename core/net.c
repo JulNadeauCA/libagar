@@ -58,6 +58,7 @@ AG_NetSocketNew(enum ag_net_addr_family af, enum ag_net_socket_type type,
 	}
 	ns->family = af;
 	ns->type = type;
+	AG_MutexInitRecursive(&ns->lock);
 	ns->proto = proto;
 	ns->flags = 0;
 	ns->poll = 0;
@@ -72,7 +73,6 @@ AG_NetSocketNew(enum ag_net_addr_family af, enum ag_net_socket_type type,
 		free(ns);
 		return (NULL);
 	}
-	AG_MutexInitRecursive(&ns->lock);
 	return (ns);
 }
 

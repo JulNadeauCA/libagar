@@ -46,6 +46,7 @@ SG_ActionInit(SG_Action *act, enum sg_action_type type)
 {
 	act->type = type;
 	act->flags = 0;
+	act->keyMod = 0;
 	TAILQ_INIT(&act->widgets);
 
 	switch (type) {
@@ -147,7 +148,7 @@ SG_DisableAction(void *obj, enum sg_action_type type)
 }
 
 void
-SG_ActionPrint(const SG_Action *a, char *buf, size_t len)
+SG_ActionPrint(const SG_Action *a, char *buf, AG_Size len)
 {
 	if (a->type >= SG_ACTION_LAST) {
 		if (len > 0) { buf[0] = '\0'; }

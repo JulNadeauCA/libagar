@@ -40,10 +40,10 @@ typedef struct ag_notebook {
 	int spacing, padding;		/* Spacing for tab boxes */
 	int tabspacing;			/* Spacing between tabs */
 
+	Uint nTabs;
 	struct ag_notebook_tab *_Nullable sel_tab;	/* Active tab */
 	AG_TAILQ_HEAD_(ag_notebook_tab) tabs;		/* All tabs */
 	AG_Rect r;					/* Display area */
-	Uint nTabs;
 } AG_Notebook;
 
 #define AGNOTEBOOK(obj)            ((AG_Notebook *)(obj))

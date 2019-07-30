@@ -275,7 +275,6 @@ void
 AG_ScrollviewSetIncrement(AG_Scrollview *sv, int incr)
 {
 	AG_ObjectLock(sv);
-	sv->incr = incr;
 	if (sv->hbar != NULL) { AG_SetInt(sv->hbar, "inc", incr); }
 	if (sv->vbar != NULL) { AG_SetInt(sv->vbar, "inc", incr); }
 	AG_ObjectUnlock(sv);
@@ -304,7 +303,6 @@ Init(void *_Nonnull obj)
 	sv->r.y = 0;
 	sv->r.w = 0;
 	sv->r.h = 0;
-	sv->incr = 10;
 
 	AG_SetInt(sv, "x-scroll-amount", 40);
 	AG_SetInt(sv, "y-scroll-amount", 40);

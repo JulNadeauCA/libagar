@@ -193,7 +193,7 @@ AG_TTFOpenFont(AG_Font *font)
 		ttf->underline_height = 1;
 	}
 	ttf->glyph_overhang = face->size->metrics.y_ppem / 10;
-	ttf->glyph_italics = 0.207f;				/* 12 deg */
+	ttf->glyph_italics = 0.207;				/* 12 deg */
 	ttf->glyph_italics *= ttf->height;
 
 	/* Apply the standard style modifiers */

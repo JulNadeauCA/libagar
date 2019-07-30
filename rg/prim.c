@@ -24,8 +24,7 @@
  */
 
 #include <agar/core/core.h>
-
-#include <agar/gui/gui.h>
+#include <agar/gui/widget.h>
 
 #include <agar/rg/tileset.h>
 #include <agar/rg/rg_math.h>

@@ -26,6 +26,7 @@ typedef struct rg_texture {
 	int blend_func;				/* Blending function to use
 						   (ag_blend_func) */
 	Uint8 alpha;				/* Overall alpha value */
+	Uint8 _pad[7];
 	AG_TAILQ_ENTRY(rg_texture) textures;
 } RG_Texture;
 

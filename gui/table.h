@@ -70,6 +70,8 @@ enum ag_table_cell_type {
 
 typedef struct ag_table_cell {
 	enum ag_table_cell_type type;
+	Uint flags;
+#define AG_TABLE_CELL_NOCOMPARE	0x01  /* Don't compare against backing store */
 	union {
 		char s[AG_TABLE_TXT_MAX];
 		int i;
@@ -79,9 +81,10 @@ typedef struct ag_table_cell {
 #ifdef AG_HAVE_64BIT
 		Uint64 u64;
 #else
-		Uint32 u64[2];	/* Padding */
+		Uint32 u64[2];
 #endif
 	} data;
+
 	char fmt[AG_TABLE_FMT_MAX];		/* Format string */
 
 	AG_Surface *_Nonnull (*_Nullable fnSu)(void *_Nullable, int,int);
@@ -93,12 +96,10 @@ typedef struct ag_table_cell {
 	int surface;				/* Named of mapped surface */
 	struct ag_table *_Nonnull tbl;		/* Back pointer to Table */
 	Uint id;				/* Optional user-specified ID */
-	Uint flags;
-#define AG_TABLE_CELL_NOCOMPARE	0x01		/* Ignore when comparing cells
-						   against backing store. */
+	Uint nPrev;				/* For SEL_ROWS mode */
+
 	AG_TAILQ_ENTRY(ag_table_cell) cells;	/* In AG_TableBucket */
 	AG_TAILQ_ENTRY(ag_table_cell) cells_list; /* In AG_Table */
-	Uint nPrev;				/* For SEL_ROWS mode */
 } AG_TableCell;
 
 typedef struct ag_table_bucket {
@@ -153,12 +154,16 @@ typedef struct ag_table {
 
 	AG_TableBucket *_Nonnull cPrev;		 /* Saved (recyclable) cells */
 	Uint                     nPrevBuckets;
+	int nResizing;			/* Column being resized (or -1) */
+
 	AG_TAILQ_HEAD_(ag_table_cell) cPrevList;	
 
 	int n;				/* Number of columns */
 	int m;				/* Number of rows */
 	int mVis;			/* Maximum number of visible rows */
-	int nResizing;			/* Column being resized (or -1) */
+
+	Uint32 wheelTicks;		/* For wheel acceleration */
+
 	AG_Scrollbar *_Nonnull vbar;	/* Vertical scrollbar */
 	AG_Scrollbar *_Nonnull hbar;	/* Horizontal scrollbar */
 
@@ -166,16 +171,18 @@ typedef struct ag_table {
 	AG_Event *_Nullable dblClickRowEv;	/* Row double click callback */
 	AG_Event *_Nullable dblClickColEv;	/* Column double click callback */
 	AG_Event *_Nullable dblClickCellEv;	/* Cell double click callback */
-	Uint32 wheelTicks;		/* For wheel acceleration */
 	AG_Rect r;			/* View area */
 	int wTot;			/* Total width for all columns */
 	AG_Color selColor;		/* Selection color */
-
-	AG_SLIST_HEAD_(ag_table_popup) popups; /* Registered popup menus */
-
+	
 	Uint colAction;
 #define AG_TABLE_COL_SELECT	0x01	/* Select column */
 #define AG_TABLE_COL_SORT	0x02	/* Set sorting mode */
+
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
+	AG_SLIST_HEAD_(ag_table_popup) popups; /* Registered popup menus */
 
 	AG_Event *_Nullable clickRowEv;		/* Row double click callback */
 	AG_Event *_Nullable clickColEv;		/* Column double click callback */

@@ -20,6 +20,10 @@ struct ag_widget;
 struct ag_cursor;
 struct ag_font;
 
+#ifndef AG_ACTION_NAME_MAX
+#define AG_ACTION_NAME_MAX 60
+#endif
+
 /* Widget size requisition and allocation. */
 typedef struct ag_size_req {
 	int w, h;			/* Requested geometry in pixels */
@@ -56,9 +60,14 @@ enum ag_widget_packing {
 
 /* Flag description (i.e., for AG_Checkbox(3)) */
 typedef struct ag_flag_descr {
+#ifdef AG_HAVE_64BIT
+	Uint64 bitmask;			/* Bitmask */
+#else
 	Uint bitmask;			/* Bitmask */
+#endif
 	const char *_Nonnull descr;	/* Description (UTF-8) */
 	int writeable;			/* User-editable */
+	Uint32 _pad;
 } AG_FlagDescr;
 
 /* 
@@ -73,7 +82,8 @@ typedef enum ag_action_type {
 } AG_ActionType;
 
 typedef struct ag_action {
-	AG_ActionType type;
+	AG_ActionType type;			/* Type of action */
+	Uint32 _pad;
 	struct ag_widget *_Nonnull widget;	/* Back pointer to widget */
 	AG_Event *_Nullable fn;			/* Callback function */
 	void *_Nullable p;			/* Target (for SET_*) */
@@ -93,6 +103,7 @@ typedef enum ag_action_event_type {
 
 typedef struct ag_action_tie {
 	AG_ActionEventType type;		/* Trigger event type */
+	char action[AG_ACTION_NAME_MAX];	/* Action name */
 	union {
 		AG_MouseButton button;		/* Button index */
 		struct {
@@ -101,7 +112,6 @@ typedef struct ag_action_tie {
 			AG_Timer toRepeat;	/* Key repeat timer */
 		} key;
 	} data;
-	char action[64];			/* Action name */
 	AG_TAILQ_ENTRY(ag_action_tie) ties;
 } AG_ActionTie;
 
@@ -115,8 +125,8 @@ typedef struct ag_redraw_tie {
 	char name[AG_VARIABLE_NAME_MAX];	/* Polled variable */
 	AG_Variable Vlast;			/* Last accessed data */
 	int         VlastInited;
-	AG_Timer to;				/* Polling timer */
 	Uint ival;				/* Polling interval */
+	AG_Timer to;				/* Polling timer */
 	AG_TAILQ_ENTRY(ag_redraw_tie) redrawTies; /* In widget */
 } AG_RedrawTie;
 
@@ -126,6 +136,7 @@ typedef struct ag_cursor_area {
 	struct ag_cursor *_Nullable c;			/* Associated cursor */
 	struct ag_widget *_Nonnull wid;			/* Associated widget */
 	int stock;					/* Stock cursor? */
+	Uint32 _pad;
 	AG_TAILQ_ENTRY(ag_cursor_area) cursorAreas;
 } AG_CursorArea;
 
@@ -143,11 +154,11 @@ enum ag_widget_state {
 	AG_SELECTED_STATE		/* "Selected" state (#selected) */
 };
 enum ag_widget_color {
-	AG_BG_COLOR = 0,		/* Background ("color") */
-	AG_TEXT_COLOR,			/* Rendered text ("text-color") */
-	AG_LINE_COLOR,			/* Line drawing ("line-color") */
-	AG_SHAPE_COLOR,			/* Filled shapes ("shape-color") */
-	AG_BORDER_COLOR			/* Decorative borders ("border-color") */
+	AG_BG_COLOR     = 0,		/* Background ("color") */
+	AG_TEXT_COLOR   = 1,		/* Rendered text ("text-color") */
+	AG_LINE_COLOR   = 2,		/* Line drawing ("line-color") */
+	AG_SHAPE_COLOR  = 3,		/* Filled shapes ("shape-color") */
+	AG_BORDER_COLOR	= 4		/* Decorative borders ("border-color") */
 };
 typedef struct {
 	AG_Color c[AG_WIDGET_NSTATES]
@@ -213,11 +224,11 @@ typedef struct ag_widget {
 	AG_Rect2 rView;			/* Effective view coordinates */
 	AG_Rect2 rSens;			/* Effective sensitivity rectangle */
 
+	Uint nSurfaces;
 	AG_Surface *_Nullable *_Nullable surfaces;     /* Mapped surfaces */
 	Uint8 *_Nullable                 surfaceFlags; /* Mapped surface flags: */
 #define AG_WIDGET_SURFACE_NODUP	0x01                   /* Don't auto-free */
 #define AG_WIDGET_SURFACE_REGEN	0x02                   /* Regenerate textures */
-	Uint nSurfaces;
 
 	Uint        *_Nullable textures;       /* Cached hardware textures */
 	AG_TexCoord *_Nullable texcoords;      /* Cached texture coordinates */
@@ -228,9 +239,13 @@ typedef struct ag_widget {
 	struct ag_driver_class *_Nullable drvOps; /* Parent driver class (null = no parent window) */
 
 	AG_StyleSheet *_Nullable css;      /* Style sheet (null = use default) */
-	enum ag_widget_state state;       /* Current state for styling */
+	enum ag_widget_state state;        /* Current state for styling */
+	Uint32 _pad1;
 	struct ag_font *_Nullable font;    /* Computed font reference */
 	AG_WidgetPalette pal;              /* Computed color palette */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad2;
+#endif
 #ifdef HAVE_OPENGL
 	AG_WidgetGL *_Nullable gl;      /* Saved GL context (for USE_OPENGL) */
 #endif
@@ -395,7 +410,8 @@ void ag_expand_vert(void *_Nonnull);
 void ag_widget_update(void *_Nonnull);
 void ag_push_clip_rect(void *_Nonnull, const AG_Rect *_Nonnull);
 void ag_pop_clip_rect(void *_Nonnull);
-void ag_push_blending_mode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn);
+void ag_push_blending_mode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn,
+                           AG_TextureEnvMode);
 void ag_pop_blending_mode(void *_Nonnull);
 int  ag_widget_map_surface_nodup(void *_Nonnull, AG_Surface *_Nonnull);
 void ag_widget_replace_surface_nodup(void *_Nonnull, int, AG_Surface *_Nullable);
@@ -419,7 +435,7 @@ void ag_set_mod_state(void *_Nonnull, Uint);
 # define AG_WidgetUpdate(o)                  ag_widget_update(o)
 # define AG_PushClipRect(o,r)                ag_push_clip_rect((o),(r))
 # define AG_PopClipRect(o)                   ag_pop_clip_rect(o)
-# define AG_PushBlendingMode(o,fs,fd)        ag_push_blending_mode((o),(fs),(fd))
+# define AG_PushBlendingMode(o,fs,fd,te)     ag_push_blending_mode((o),(fs),(fd),(te))
 # define AG_PopBlendingMode(o)               ag_pop_blending_mode(o)
 # define AG_WidgetMapSurfaceNODUP(o,S)       ag_widget_map_surface_nodup((o),(S))
 # define AG_WidgetReplaceSurfaceNODUP(o,n,S) ag_widget_replace_surface_nodup((o),(n),(S))

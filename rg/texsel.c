@@ -28,8 +28,8 @@
  */
 
 #include <agar/core/core.h>
-
 #include <agar/gui/gui.h>
+#include <agar/gui/tlist.h>
 
 #include <agar/rg/tileset.h>
 #include <agar/rg/texsel.h>

@@ -13,10 +13,11 @@
 typedef struct au_wave {
 	_Nonnull_Mutex AG_Mutex lock;	/* Lock on audio data */
 	Uint flags;
-	float *_Nullable frames;	/* Uncompressed audio data */
 	Uint            nFrames;	/* Number of frames */
-	int ch;				/* Number of channels */
+	float *_Nullable frames;	/* Uncompressed audio data */
 	double peak;			/* Signal peak */
+	int ch;				/* Number of channels */
+	Uint32 _pad;
 #ifdef HAVE_SNDFILE
 	SF_INFO info;			/* Format information */
 	SNDFILE *_Nullable file;	/* Associated file */

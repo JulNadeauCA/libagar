@@ -37,6 +37,7 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_MULTILINGUAL	 0x100000 /* Enable multilingual edition */
 
 	int boxPadX, boxPadY;		/* Padding around textbox */
+	Uint32 _pad;
 	AG_Scrollbar *_Nullable hBar;	/* Horizontal bar (for MULTILINE) */
 	AG_Scrollbar *_Nullable vBar;	/* Vertical bar (for MULTILINE) */
 	AG_Rect r;			/* View area */

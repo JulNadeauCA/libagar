@@ -142,7 +142,7 @@ ListLibraryItems(AG_Tlist *_Nonnull tl, const char *_Nonnull pat, int depth,
 SG_Node *
 SG_GUI_CreateNode(SG *sg, AG_ObjectClass *cl)
 {
-	char name[AG_OBJECT_NAME_MAX];
+	char name[AG_OBJECT_NAME_MAX+30];
 	SG_Node *node;
 	int num = 0;
 

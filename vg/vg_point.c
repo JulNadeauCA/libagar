@@ -49,7 +49,7 @@ VG_PointNew(void *pNode, VG_Vector pos)
 }
 
 void
-VG_PointSize(VG_Point *vp, float r)
+VG_PointSize(VG_Point *vp, double r)
 {
 	VG_Lock(VGNODE(vp)->vg);
 	vp->size = r;
@@ -61,17 +61,17 @@ Init(void *_Nonnull obj)
 {
 	VG_Point *pt = obj;
 
-	pt->size = 0.0f;
+	pt->size = 0.0;
 }
 
 static void
 Draw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
 	VG_Point *pt = obj;
-	float size, i;
+	double size, i;
 
 	if (vv->flags & VG_VIEW_CONSTRUCTION) {
-		size = 3.0f;
+		size = 3.0;
 	} else {
 		size = pt->size;
 	}
@@ -125,7 +125,7 @@ Edit(void *_Nonnull obj, VG_View *_Nonnull vv)
 	VG_Point *vp = obj;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
-	AG_NumericalNewFlt(box, 0, NULL, _("Render size: "), &vp->size);
+	AG_NumericalNewDbl(box, 0, NULL, _("Render size: "), &vp->size);
 	return (box);
 }
 

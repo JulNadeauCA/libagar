@@ -17,6 +17,7 @@ typedef struct ag_checkbox {
 #define AG_CHECKBOX_SET		0x04
 	int state;			/* Default "state" binding */
 	int spacing;			/* Spacing in pixels */
+	Uint32 _pad;
 	AG_Label *_Nullable lbl;	/* Text label */
 } AG_Checkbox;
 

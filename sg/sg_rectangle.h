@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
 typedef struct sg_rectangle {
-	struct sg_geom _inherit;
+	struct sg_geom _inherit;		/* SG_Geom -> SG_Rectangle */
 	M_Rectangle3 R;
 } SG_Rectangle;
 

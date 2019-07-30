@@ -586,7 +586,8 @@ Draw(void *_Nonnull obj)
 				colLine = pl->color;
 				colLine.a >>= 1;
 				AG_DrawLineBlended(ptr, xLbl,1, xLbl,h-2,
-				    &colLine, AG_ALPHA_SRC);
+				    &colLine,
+				    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 				break;
 			case M_LABEL_Y:
 				xLbl = plbl->x - xOffs;

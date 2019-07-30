@@ -39,6 +39,7 @@ typedef struct vg_polygon_tool {
 	VG_Tool _inherit;
 	VG_Polygon *vpCur;
 	int vtxCur;
+	Uint32 _pad;
 } VG_PolygonTool;
 
 static void

@@ -70,6 +70,7 @@ SK_PolygonInit(void *p, Uint name)
 	SK_NodeInit(poly, &skPolygonOps, name, 0);
 	poly->color = M_ColorRGB(0.0, 0.0, 1.0);
 	poly->s = Malloc(sizeof(SK_Line **));
+	poly->flags = 0;
 	poly->n = 0;
 }
 

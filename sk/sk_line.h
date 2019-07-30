@@ -5,6 +5,7 @@ typedef struct sk_line {
 	SK_Point *_Nullable p1;		/* Endpoint #1 */
 	SK_Point *_Nullable p2;		/* Endpoint #2 */
 	M_Real width;			/* Display width */
+	Uint8 _pad[8];
 	M_Color color;			/* Display color */
 } SK_Line;
 

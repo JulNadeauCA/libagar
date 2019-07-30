@@ -123,6 +123,7 @@ typedef struct ply_info {
 		PLY_BIN_BE,
 		PLY_BIN_LE
 	} format;
+	Uint32 _pad;
 	TAILQ_HEAD_(ply_element) elements;
 } PLY_Info;
 
@@ -357,23 +358,23 @@ SetVertexProps(SG_Vertex *_Nonnull v, PLY_Prop *_Nonnull prop, M_Real fv,
     Uint flags)
 {
 	struct ply_vertex_prop {
-		enum ply_std_prop std;
-		void *p;
-		int inVec;
-		int conv8;
+		enum ply_std_prop std;		/* PLY property */
+		int inVec;			/* Is a vector? */
+		void *p;			/* Address */
+		int conv8;			/* Convert to 8-bit */
 		Uint flags;
 	} vProps[] = {
-		{ PLY_X,     &v->v.x,	1, 0, 0 },
-		{ PLY_Y,     &v->v.y,	1, 0, 0 },
-		{ PLY_Z,     &v->v.z,	1, 0, 0 },
-		{ PLY_NX,    &v->n.x,	1, 0, SG_PLY_LOAD_VTX_NORMALS },
-		{ PLY_NY,    &v->n.y,	1, 0, SG_PLY_LOAD_VTX_NORMALS },
-		{ PLY_NZ,    &v->n.z,	1, 0, SG_PLY_LOAD_VTX_NORMALS },
-		{ PLY_U,     &v->st.x,	0, 0, SG_PLY_LOAD_TEXCOORDS },
-		{ PLY_V,     &v->st.y,	0, 0, SG_PLY_LOAD_TEXCOORDS },
-		{ PLY_RED,   &v->c.r,	1, 1, SG_PLY_LOAD_VTX_COLORS },
-		{ PLY_GREEN, &v->c.g,	1, 1, SG_PLY_LOAD_VTX_COLORS },
-		{ PLY_BLUE,  &v->c.b,	1, 1, SG_PLY_LOAD_VTX_COLORS },
+		{ PLY_X,     1,  &v->v.x,   0, 0 },
+		{ PLY_Y,     1,  &v->v.y,   0, 0 },
+		{ PLY_Z,     1,  &v->v.z,   0, 0 },
+		{ PLY_NX,    1,  &v->n.x,   0, SG_PLY_LOAD_VTX_NORMALS },
+		{ PLY_NY,    1,  &v->n.y,   0, SG_PLY_LOAD_VTX_NORMALS },
+		{ PLY_NZ,    1,  &v->n.z,   0, SG_PLY_LOAD_VTX_NORMALS },
+		{ PLY_U,     0,  &v->st.x,  0, SG_PLY_LOAD_TEXCOORDS },
+		{ PLY_V,     0,  &v->st.y,  0, SG_PLY_LOAD_TEXCOORDS },
+		{ PLY_RED,   1,  &v->c.r,   1, SG_PLY_LOAD_VTX_COLORS },
+		{ PLY_GREEN, 1,  &v->c.g,   1, SG_PLY_LOAD_VTX_COLORS },
+		{ PLY_BLUE,  1,  &v->c.b,   1, SG_PLY_LOAD_VTX_COLORS },
 	};
 	const int nprops = sizeof(vProps)/sizeof(vProps[0]);
 	int i;

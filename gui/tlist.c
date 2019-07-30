@@ -34,6 +34,8 @@
 #define AG_TLIST_PADDING 2	/* Label padding (pixels) */
 #endif
 
+static void DrawExpandCollapseSign(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull,
+                                   int, int);
 static void StylizeFont(AG_Tlist *_Nonnull, Uint);
 
 AG_Tlist *
@@ -420,56 +422,39 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 }
 
 static void
-DrawSubnodeIndicator(void *_Nonnull wid, const AG_Rect *_Nonnull r,
-    int isExpanded)
-{
-	AG_Rect rd;
-	AG_Color c;
-
-	rd.x = r->x - 1;
-	rd.y = r->y;
-	rd.w = r->w + 2;
-	rd.h = r->h;
-	AG_ColorRGBA_8(&c, 0,0,0, 64);
-	AG_DrawRectBlended(wid, &rd, &c, AG_ALPHA_SRC);
-
-	AG_ColorRGBA_8(&c, 255,255,255, 100);
-	rd.x += 3;
-	rd.y += 2;
-	rd.w -= 6;
-	rd.h -= 4;
-	if (isExpanded) {
-		AG_DrawMinus(wid, &rd, &c, AG_ALPHA_SRC);
-	} else {
-		AG_DrawPlus(wid, &rd, &c, AG_ALPHA_SRC);
-	}
-}
-
-static void
 Draw(void *_Nonnull obj)
 {
 	AG_Tlist *tl = obj;
 	AG_TlistItem *it;
 	AG_Rect r;
-	AG_Color cSel;
-	int x, y=0, i=0, selSeen=0, selPos=1, h=HEIGHT(tl);
-	int hItem, wIcon, wSpace, yLast, wRow, rOffs;
+	AG_Color cSel, cLine;
+	const int wSpace = tl->wSpace;
+	const int hItem = tl->item_h;
+	const int wIcon = tl->icon_w;
+	const int wRow = tl->wRow;
+	const int rOffs = tl->rOffs;
+	const int zoomLvl = WIDGET(tl)->window->zoom;
+	int x, y=0, i=0, selSeen=0, selPos=1, h=HEIGHT(tl), yLast;
 
 #ifdef AG_TIMERS
 	UpdatePolled(tl);
 #endif
 	AG_DrawBox(tl, &tl->r, -1, &WCOLOR(tl,AG_BG_COLOR));
 	cSel = WCOLOR_SEL(tl,AG_BG_COLOR);
+	cLine = WCOLOR(tl,AG_LINE_COLOR);
 	AG_WidgetDraw(tl->sbar);
 	AG_PushClipRect(tl, &tl->r);
 
-	wSpace = tl->wSpace;
-	hItem = tl->item_h;
-	wIcon = tl->icon_w;
-	wRow = tl->wRow;
-	rOffs = tl->rOffs;
-	yLast = h;
+	if (zoomLvl < AG_ZOOM_1_1) {
+		int z;
+	
+		/* Tint the line color to create an illusion of distance. */
+		/* TODO combine these additions */
+		for (z = zoomLvl; z < AG_ZOOM_1_1; z++)
+			AG_ColorAdd(&cLine, &cLine, &agTint);
+	}
 
+	yLast = h;
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (i++ < rOffs) {
 			if (it->selected) {
@@ -510,17 +495,14 @@ Draw(void *_Nonnull obj)
 				r.y = y;
 				r.w = wIcon;
 				r.h = hItem;
-				AG_DrawRectBlended(tl, &r, &cSel, AG_ALPHA_SRC);
+				AG_DrawRectBlended(tl, &r, &cSel,
+				    AG_ALPHA_SRC,
+				    AG_ALPHA_ONE_MINUS_SRC);
 				cSel.a <<= 1;
 			}
 		}
 		if (it->flags & AG_TLIST_HAS_CHILDREN) {
-			r.x = x;
-			r.y = y;
-			r.w = wIcon;
-			r.h = hItem;
-			DrawSubnodeIndicator(tl, &r,
-			    (it->flags & AG_TLIST_ITEM_EXPANDED));
+			DrawExpandCollapseSign(tl,it, x,y);
 		}
 		if (it->label == -1) {
 			int altFont = 0;
@@ -555,7 +537,7 @@ Draw(void *_Nonnull obj)
 		y += hItem;
 		
 		if (y < h)
-			AG_DrawLineH(tl, 0, wRow-2, y, &WCOLOR(tl,AG_LINE_COLOR));
+			AG_DrawLineH(tl, 0, wRow-2, y, &cLine);
 	}
 	if (!selSeen && (tl->flags & AG_TLIST_SCROLLTOSEL)) {
 		if (selPos == -1) {
@@ -567,6 +549,30 @@ Draw(void *_Nonnull obj)
 		tl->flags &= ~(AG_TLIST_SCROLLTOSEL);
 	}
 	AG_PopClipRect(tl);
+}
+
+static void
+DrawExpandCollapseSign(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it,
+    int x, int y)
+{
+	AG_Rect r;
+	const AG_Color *cLine = &WCOLOR(tl,LINE_COLOR);
+	static AG_VectorElement expdSign[] = {
+		{ AG_VE_LINE,    3,5,  1,0, 0, NULL },            /* - */
+		{ AG_VE_LINE,    1,7,  1,0, 0, NULL },            /* | */
+	};
+
+	r.x = x+1;
+	r.y = y+1;
+	r.h = r.w = tl->item_h;
+
+	AG_DrawRectFilled(tl, &r, &WCOLOR(tl, AG_BG_COLOR));
+
+	if (it->flags & AG_TLIST_ITEM_EXPANDED) {
+		AG_DrawVector(tl, 3,3, &r, cLine, expdSign, 0,1);    /* - */
+	} else {
+		AG_DrawVector(tl, 3,3, &r, cLine, expdSign, 0,2);    /* + */
+	}
 }
 
 static void
@@ -772,8 +778,8 @@ AG_TlistItemNew(AG_Tlist *_Nonnull tl, const AG_Surface *icon)
 	Strlcpy(it->tag, AG_TLIST_ITEM_TAG, sizeof(it->tag));
 #endif
 	it->selected = 0;
-	it->iconsrc = (icon != NULL) ? AG_SurfaceDup(icon) : NULL;
 	it->icon = -1;
+	it->iconsrc = (icon != NULL) ? AG_SurfaceDup(icon) : NULL;
 	it->p1 = NULL;
 	it->cat = "";
 	it->label = -1;
@@ -1284,28 +1290,33 @@ Init(void *_Nonnull obj)
 	WIDGET(tl)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_TEXT;
 
 	tl->flags = 0;
-	tl->selected = NULL;
-	tl->wSpace = 4;
 	tl->item_h = agTextFontHeight + AG_TLIST_PADDING;
-	tl->icon_w = tl->item_h + 1;
-	tl->dblClicked = NULL;
-	tl->nitems = 0;
-	tl->nvisitems = 0;
-	tl->compare_fn = AG_TlistComparePtrs;
+	if (!(tl->item_h & 1)) {
+		tl->item_h++;
+	}
+	tl->selected = NULL;
 	tl->wHint = 0;
 	tl->hHint = tl->item_h + 2;
-	tl->popupEv = NULL;
-	tl->changedEv = NULL;
-	tl->dblClickEv = NULL;
-	tl->wheelTicks = 0;
 	tl->r.x = 0;
 	tl->r.y = 0;
 	tl->r.w = 0;
 	tl->r.h = 0;
+	tl->wSpace = 4;
+	tl->icon_w = tl->item_h + 1;
+	tl->wRow = 0;
 	tl->rOffs = 0;
+	tl->dblClicked = NULL;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
+	tl->nitems = 0;
+	tl->nvisitems = 0;
 	TAILQ_INIT(&tl->popups);
+	tl->compare_fn = AG_TlistComparePtrs;
+	tl->popupEv = NULL;
+	tl->changedEv = NULL;
+	tl->dblClickEv = NULL;
+	tl->wheelTicks = 0;
+	tl->lastKeyDown = AG_KEY_NONE;
 #ifdef AG_TIMERS
 	AG_InitTimer(&tl->moveTo, "move", 0);
 	AG_InitTimer(&tl->refreshTo, "refresh", 0);

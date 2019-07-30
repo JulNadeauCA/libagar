@@ -18,16 +18,17 @@ typedef AG_TAILQ_HEAD(rg_transformq, rg_transform) RG_TransformChain;
 
 typedef struct rg_transform {
 	enum rg_transform_type type;
+	Uint             nArgs;
+	Uint32 *_Nullable args;
 	AG_Surface *_Nonnull (*_Nullable func)(AG_Surface *_Nonnull, int,
 	                                       Uint32 *_Nonnull);
-	Uint32 *_Nullable args;
-	int              nargs;
 	AG_TAILQ_ENTRY(rg_transform) transforms;
 } RG_Transform;
 
 struct rg_transform_ops {
 	char *_Nonnull name;
 	enum rg_transform_type type;
+	Uint flags;
 	AG_Surface *_Nonnull (*_Nonnull func)(AG_Surface *_Nonnull, int,
 	                                      Uint32 *_Nonnull);
 };
@@ -35,7 +36,7 @@ struct rg_transform_ops {
 __BEGIN_DECLS
 RG_Transform *_Nullable RG_TransformNew(enum rg_transform_type, int,
                                         Uint32 *_Nullable);
-int  RG_TransformInit(RG_Transform *_Nonnull, enum rg_transform_type, int,
+int  RG_TransformInit(RG_Transform *_Nonnull, enum rg_transform_type, Uint,
                       Uint32 *_Nullable);
 int  RG_TransformLoad(AG_DataSource *_Nonnull, RG_Transform *_Nonnull);
 void RG_TransformSave(AG_DataSource *_Nonnull, const RG_Transform *_Nonnull);
@@ -45,7 +46,7 @@ void RG_TransformChainInit(RG_TransformChain *_Nonnull);
 int  RG_TransformChainLoad(AG_DataSource *_Nonnull, RG_TransformChain *_Nonnull);
 void RG_TransformChainSave(AG_DataSource *_Nonnull, const RG_TransformChain *_Nonnull);
 void RG_TransformChainDestroy(RG_TransformChain *_Nonnull);
-void RG_TransformChainPrint(const RG_TransformChain *_Nonnull, char *_Nonnull, size_t);
+void RG_TransformChainPrint(const RG_TransformChain *_Nonnull, char *_Nonnull, AG_Size);
 void RG_TransformChainDup(const RG_TransformChain *_Nonnull,
                           RG_TransformChain *_Nonnull);
 int  RG_TransformCompare(const RG_Transform *_Nonnull,

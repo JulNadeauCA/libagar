@@ -109,6 +109,7 @@ RG_TileviewSketchToolOps sketch_circle_ops = {
 		sizeof(struct circle_tool),
 		TILEVIEW_SKETCH_TOOL,
 		NULL, -1,
+		AG_KEY_C,
 		init,
 		NULL,		/* destroy */
 		NULL,		/* edit */

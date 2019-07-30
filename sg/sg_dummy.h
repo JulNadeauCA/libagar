@@ -3,6 +3,7 @@
 typedef struct sg_dummy {
 	struct sg_node node;
 	M_Real foo;
+	Uint8 _pad[8];
 } SG_Dummy;
 
 __BEGIN_DECLS

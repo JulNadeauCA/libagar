@@ -26,6 +26,11 @@ typedef struct ag_ttf_glyph {
 	int yoffset;
 	int advance;
 	AG_Char cached;
+#ifdef AG_UNICODE
+	Uint8 _pad[4];
+#else
+	Uint8 _pad[7];
+#endif
 } AG_TTFGlyph;
 
 typedef struct ag_ttf_font {
@@ -36,7 +41,7 @@ typedef struct ag_ttf_font {
 	int lineskip;
 	int style;
 	int glyph_overhang;
-	float glyph_italics;
+	double glyph_italics;
 	int underline_offset;
 	int underline_height;
 
@@ -45,6 +50,7 @@ typedef struct ag_ttf_font {
 	AG_TTFGlyph scratch;
 	
 	int font_size_family;		/* For non-scalable formats */
+	Uint32 _pad;
 } AG_TTFFont;
 
 #define AG_TTF_STYLE_NORMAL	0x00

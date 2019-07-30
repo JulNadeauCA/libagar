@@ -95,8 +95,8 @@ typedef AG_TAILQ_HEAD(ag_net_addr_list, ag_net_addr) AG_NetAddrList;
 typedef struct ag_net_socket {
 	enum ag_net_addr_family family;		/* Address family */
 	enum ag_net_socket_type type;		/* Socket type */
-	int proto;				/* Socket protocol number */
 	_Nonnull_Mutex AG_Mutex lock;
+	int proto;				/* Socket protocol number */
 	Uint flags;
 #define AG_NET_SOCKET_BOUND	0x01		/* Bound to a local address */
 #define AG_NET_SOCKET_CONNECTED	0x02		/* Connection established */
@@ -104,7 +104,7 @@ typedef struct ag_net_socket {
 #define AG_NET_POLL_READ	0x01		/* Poll read condition */
 #define AG_NET_POLL_WRITE	0x02		/* Poll write condition */
 #define AG_NET_POLL_EXCEPTIONS	0x04		/* Poll exceptions */
-
+	Uint32 _pad;
 	AG_NetAddr *_Nullable addrLocal;	/* Bound local address */
 	AG_NetAddr *_Nullable addrRemote;	/* Connected remote address */
 	int fd;					/* File descriptor (if any) */

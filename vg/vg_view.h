@@ -14,6 +14,10 @@
 #define VG_GRIDS_MAX 4
 #endif
 
+#ifndef VG_VIEW_STATUS_MAX
+#define VG_VIEW_STATUS_MAX 124
+#endif
+
 #include <agar/vg/begin.h>
 
 typedef enum vg_grid_type {
@@ -35,7 +39,6 @@ typedef struct vg_grid {
 
 typedef struct vg_view {
 	struct ag_widget wid;			/* AG_Widget(3) -> VG_View */
-
 	Uint flags;
 #define VG_VIEW_HFILL		0x01
 #define VG_VIEW_VFILL		0x02
@@ -44,20 +47,16 @@ typedef struct vg_view {
 #define VG_VIEW_DISABLE_BG	0x10		/* Enable VG background */
 #define VG_VIEW_CONSTRUCTION	0x20		/* Construction geometry */
 #define VG_VIEW_EXPAND	(VG_VIEW_HFILL|VG_VIEW_VFILL)
-
-	VG *_Nullable vg;			/* Vector graphics object */
-
-	float x, y;				/* Display offset */
 	int scaleIdx;				/* Scaling factor index */
+	VG *_Nullable vg;			/* Vector graphics object */
+	float x, y;				/* Display offset */
 	float scale;				/* Display scaling factor */
 	float scaleMin;				/* Minimum scaling factor */
 	float scaleMax;				/* Maximum scaling factor */
 	float wPixel;				/* Relative pixel size */
-
 	enum vg_snap_mode  snap_mode;		/* Snapping constraint */
 	VG_Grid grid[VG_GRIDS_MAX];		/* Grid settings */
-	Uint nGrids;
-
+	Uint   nGrids;
 	AG_Event *_Nullable draw_ev;		/* Draw callback */
 	AG_Event *_Nullable scale_ev;		/* Scaling/movement event */
 	AG_Event *_Nullable keydown_ev;		/* Key press event */
@@ -71,11 +70,12 @@ typedef struct vg_view {
 		int panning;			/* Panning mode */
 	} mouse;
 
+	char status[VG_VIEW_STATUS_MAX];	/* Status text buffer */
+
 	VG_Tool *_Nullable curtool;		/* Selected tool */
 	VG_Tool *_Nullable deftool;		/* Default tool if any */
 	AG_TAILQ_HEAD_(vg_tool) tools;		/* Edition tools */
 
-	char status[128];			/* Status text buffer */
 	AG_TextCache *_Nonnull tCache;		/* Text cache for VG_Text */
 
 	AG_Widget *_Nullable *_Nonnull editAreas; /* User-created containers */

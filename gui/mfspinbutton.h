@@ -20,6 +20,7 @@ typedef struct ag_mfspinbutton {
 #define AG_MFSPINBUTTON_NOHFILL	0x01
 #define AG_MFSPINBUTTON_VFILL	0x02
 #define AG_MFSPINBUTTON_EXCL	0x04	/* Exclusive binding access */
+	int writeable;			/* 0 = read-only */
 	double xvalue, yvalue;		/* Default value bindings */
 	double min, max;		/* Default range bindings */
 	float minFlt, maxFlt;
@@ -27,7 +28,6 @@ typedef struct ag_mfspinbutton {
 	char format[32];		/* Printing format */
 	const char *_Nonnull sep;	/* x/y field separator */
 	const AG_Unit *_Nonnull unit;	/* Conversion unit */
-	int writeable;			/* 0 = read-only */
 	char inTxt[128];		/* Input text buffer */
 	AG_Textbox *_Nonnull input;	/* Input field */
 	AG_UCombo  *_Nullable units;	/* Unit selector */

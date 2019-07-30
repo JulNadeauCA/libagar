@@ -402,7 +402,7 @@ RenderAnimItem(MAP_Item *_Nonnull r, RG_Anim *_Nonnull anim,
 		var->anim->w = anim->w;
 		var->anim->h = anim->h;
 
-		for (i = 0; i < anim->nframes; i++) {
+		for (i = 0; i < anim->nFrames; i++) {
 			RG_AnimFrame *vframe;
 			AG_Surface *Sx, *Sframe;
 			Uint32 frame_no;
@@ -426,7 +426,7 @@ RenderAnimItem(MAP_Item *_Nonnull r, RG_Anim *_Nonnull anim,
 
 			/* Apply the transform chain. */
 			TAILQ_FOREACH(xf, &r->transforms, transforms) {
-				Sx = xf->func(vframe->su, xf->nargs, xf->args);
+				Sx = xf->func(vframe->su, xf->nArgs, xf->args);
 				if (Sx != vframe->su) {
 					AG_SurfaceFree(vframe->su);
 					vframe->su = Sx;
@@ -493,7 +493,7 @@ RenderTileItem(MAP_Item *_Nonnull r, RG_Tile *_Nonnull tile,
 		AG_SurfaceCopy(var->su, Stile);
 
 		TAILQ_FOREACH(xf, &r->transforms, transforms) {
-			Sx = xf->func(var->su, xf->nargs, xf->args);
+			Sx = xf->func(var->su, xf->nArgs, xf->args);
 			if (Sx != var->su) {
 				AG_SurfaceFree(var->su);
 				var->su = Sx;
@@ -708,7 +708,8 @@ draw_layer:
 					r.w = AGMTILESZ(mv);
 					r.h = AGMTILESZ(mv);
 					AG_DrawRectBlended(mv, &r, &c,
-					    AG_ALPHA_OVERLAY);
+					    AG_ALPHA_SRC,
+					    AG_ALPHA_ONE_MINUS_SRC);
 				}
 
 				if ((nref->flags & MAP_ITEM_SELECTED) &&
@@ -755,7 +756,7 @@ draw_layer:
 		}
 	}
 next_layer:
-	if (++layer < (int)m->nlayers)
+	if (++layer < (int)m->nLayers)
 		goto draw_layer;			/* Draw next layer */
 
 	/* Draw the node grid. */
@@ -1003,7 +1004,7 @@ MouseMotion(AG_Event *_Nonnull event)
 			    mv->curtool->ops->effect != NULL &&
 			    (rv = mv->curtool->ops->effect(mv->curtool,
 			     &m->map[mv->cy][mv->cx])) != -1) {
-				m->nmods += rv;
+				m->nMods += rv;
 				goto out;
 			}
 		}
@@ -1115,7 +1116,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			    InsideNodeSelection(mv, mv->cx, mv->cy)) {
 				if ((rv = mv->curtool->ops->effect(mv->curtool,
 				     &m->map[mv->cy][mv->cx])) != -1) {
-					mv->map->nmods = rv;
+					mv->map->nMods = rv;
 					goto out;
 				}
 			}

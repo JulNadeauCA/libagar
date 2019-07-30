@@ -120,12 +120,12 @@ tryname:
 	t->flags = flags;
 	RG_TileScale(ts, t, w, h);
 
-	if ((ts->ntiletbl+1) >= RG_TILE_ID_MAX) {
+	if ((ts->nTileTbl+1) >= RG_TILE_ID_MAX) {
 		AG_FatalError("Out of tile mappings");
 	}
-	ts->tiletbl = Realloc(ts->tiletbl, (ts->ntiletbl+1)*sizeof(RG_Tile *));
-	ts->tiletbl[ts->ntiletbl] = t;
-	t->main_id = ts->ntiletbl++;
+	ts->tileTbl = Realloc(ts->tileTbl, (ts->nTileTbl+1)*sizeof(RG_Tile *));
+	ts->tileTbl[ts->nTileTbl] = t;
+	t->main_id = ts->nTileTbl++;
 	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 	return (t);
 }
@@ -139,7 +139,7 @@ RG_TileInit(RG_Tile *t, RG_Tileset *ts, const char *name)
 	t->flags = 0;
 	t->su = NULL;
 	t->ts = ts;
-	t->nrefs = 0;
+	t->nRefs = 0;
 	t->blend_fn = BlendOverlayAlpha;
 	t->attrs = NULL;
 	t->layers = NULL;
@@ -331,7 +331,7 @@ RG_TileDelFeature(RG_Tile *t, void *ftp, int destroy)
 		TAILQ_REMOVE(&t->elements, tel, elements);
 		Free(tel);
 
-		if (--ft->nrefs == 0 && destroy) {
+		if (--ft->nRefs == 0 && destroy) {
 			AG_TextTmsg(AG_MSG_INFO, 2000,
 			    _("Destroying unreferenced feature: %s"),
 			    ft->name);
@@ -360,7 +360,7 @@ RG_TileAddPixmap(RG_Tile *t, const char *name, RG_Pixmap *px, int x, int y)
 	tel->tel_pixmap.y = y;
 	tel->tel_pixmap.alpha = 255;
 	TAILQ_INSERT_TAIL(&t->elements, tel, elements);
-	px->nrefs++;
+	px->nRefs++;
 
 	t->flags |= RG_TILE_DIRTY;
 	return (tel);
@@ -386,7 +386,7 @@ RG_TileAddSketch(RG_Tile *t, const char *name, RG_Sketch *sk, int x, int y)
 	tel->tel_sketch.alpha = 255;
 	tel->tel_sketch.scale = 1.0;
 	TAILQ_INSERT_TAIL(&t->elements, tel, elements);
-	sk->nrefs++;
+	sk->nRefs++;
 	t->flags |= RG_TILE_DIRTY;
 	return (tel);
 }
@@ -404,7 +404,7 @@ RG_TileDelPixmap(RG_Tile *t, RG_Pixmap *px, int destroy)
 	if (tel != NULL) {
 		TAILQ_REMOVE(&t->elements, tel, elements);
 		Free(tel);
-		if (--px->nrefs == 0 && destroy) {
+		if (--px->nRefs == 0 && destroy) {
 			AG_TextTmsg(AG_MSG_INFO, 2000,
 			    _("Destroying unreferenced pixmap: %s"),
 			    px->name);
@@ -428,7 +428,7 @@ RG_TileDelSketch(RG_Tile *t, RG_Sketch *sk, int destroy)
 	if (tel != NULL) {
 		TAILQ_REMOVE(&t->elements, tel, elements);
 		Free(tel);
-		if (--sk->nrefs == 0 && destroy) {
+		if (--sk->nRefs == 0 && destroy) {
 			AG_TextTmsg(AG_MSG_INFO, 2000,
 			    _("Destroying unreferenced sketch: %s"),
 			    sk->name);

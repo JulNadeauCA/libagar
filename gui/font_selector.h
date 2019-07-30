@@ -22,6 +22,11 @@ typedef struct ag_font_selector {
 #define AG_FONTSELECTOR_VFILL	0x200
 #define AG_FONTSELECTOR_EXPAND	(AG_FONTSELECTOR_HFILL|AG_FONTSELECTOR_VFILL)
 
+	char curFace[AG_OBJECT_NAME_MAX];	/* Current font face */
+	Uint curStyle;				/* Current style flags */
+	int  sPreview;				/* Preview surface */
+	AG_FontPts curSize;			/* Current size */
+
 	AG_Pane *_Nonnull  hPane;		/* Base container */
 	AG_Pane *_Nonnull  hPane2;		/* Right horizontal container */
 	AG_Box  *_Nonnull  sizeBox;		/* Font size selection area */
@@ -29,13 +34,7 @@ typedef struct ag_font_selector {
 	AG_Tlist *_Nonnull tlStyles;		/* List of font styles */
 	AG_Tlist *_Nonnull tlSizes;		/* List of available sizes */
 
-	char curFace[AG_OBJECT_NAME_MAX];	/* Current font face */
-	Uint curStyle;				/* Current style flags */
-	AG_FontPts curSize;			/* Current size */
-
 	AG_Rect rPreview;			/* Preview area */
-	int     sPreview;			/* Preview surface */
-
 	AG_Font *_Nullable font;		/* Default `font' binding */
 } AG_FontSelector;
 

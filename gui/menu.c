@@ -415,22 +415,21 @@ CreateItem(AG_MenuItem *_Nullable miParent, const char *_Nullable text,
 	mi->text = (text) ? Strdup(text) : Strdup("");
 	mi->lblMenu[1] = mi->lblMenu[0] = -1;
 	mi->lblView[1] = mi->lblView[0] = -1;
-	mi->icon = -1;
 	mi->iconSrc = (icon) ? AG_SurfaceDup(icon) : NULL;  /* TODO shared */
+	mi->icon = -1;
 	mi->value = -1;
-	mi->state = (pmenu) ? pmenu->curState : 1;
 	mi->stateFn = NULL;
+	mi->state = (pmenu) ? pmenu->curState : 1;
 	mi->key_equiv = 0;
 	mi->key_mod = 0;
 	mi->x = 0;
 	mi->y = (miParent && pmenu) ?
 	    (miParent->nSubItems * pmenu->itemh) - pmenu->itemh : 0;
+	mi->flags = 0;
 	mi->clickFn = NULL;
 	mi->poll = NULL;
-	mi->flags = 0;
 	mi->bind_type = AG_MENU_NO_BINDING;
 	mi->bind_flags = 0;
-	mi->bind_invert = 0;
 #ifdef AG_THREADS
 	mi->bind_lock = NULL;
 #endif
@@ -495,7 +494,6 @@ Init(void *_Nonnull obj)
 	m->root = CreateItem(NULL, NULL, NULL);
 	m->root->pmenu = m;
 	m->selecting = 0;
-	m->itemSel = NULL;
 
 	m->lPad=5;     m->rPad=5;
 	m->tPad=2;     m->bPad=2;
@@ -504,6 +502,8 @@ Init(void *_Nonnull obj)
 
 	m->itemh = agTextFontHeight + m->tPadLbl + m->bPadLbl;
 	m->curState = 1;
+
+	m->itemSel = NULL;
 	m->curToolbar = NULL;
 	m->r.x = 0;
 	m->r.y = 0;
@@ -849,7 +849,7 @@ AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT_BOOL;
 	mi->bind_p = (void *)pBool;
-	mi->bind_invert = inv;
+	if (inv) { mi->flags |= AG_MENU_ITEM_INVERTED; }
 #ifdef AG_THREADS
 	mi->bind_lock = lock;
 #endif
@@ -882,7 +882,7 @@ AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT8_BOOL;
 	mi->bind_p = (void *)pBool;
-	mi->bind_invert = inv;
+	if (inv) { mi->flags |= AG_MENU_ITEM_INVERTED; }
 #ifdef AG_THREADS
 	mi->bind_lock = lock;
 #endif
@@ -914,9 +914,9 @@ AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 
 	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT_FLAGS;
-	mi->bind_p = (void *)pFlags;
 	mi->bind_flags = flags;
-	mi->bind_invert = inv;
+	mi->bind_p = (void *)pFlags;
+	if (inv) { mi->flags |= AG_MENU_ITEM_INVERTED; }
 #ifdef AG_THREADS
 	mi->bind_lock = lock;
 #endif
@@ -950,9 +950,9 @@ AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 
 	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT8_FLAGS;
-	mi->bind_p = (void *)pFlags;
 	mi->bind_flags = flags;
-	mi->bind_invert = inv;
+	mi->bind_p = (void *)pFlags;
+	if (inv) { mi->flags |= AG_MENU_ITEM_INVERTED; }
 #ifdef AG_THREADS
 	mi->bind_lock = lock;
 #endif
@@ -984,9 +984,9 @@ AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 
 	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT16_FLAGS;
-	mi->bind_p = (void *)pFlags;
 	mi->bind_flags = flags;
-	mi->bind_invert = inv;
+	mi->bind_p = (void *)pFlags;
+	if (inv) { mi->flags |= AG_MENU_ITEM_INVERTED; }
 #ifdef AG_THREADS
 	mi->bind_lock = lock;
 #endif
@@ -1020,9 +1020,9 @@ AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 
 	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT32_FLAGS;
-	mi->bind_p = (void *)pFlags;
 	mi->bind_flags = flags;
-	mi->bind_invert = inv;
+	mi->bind_p = (void *)pFlags;
+	if (inv) { mi->flags |= AG_MENU_ITEM_INVERTED; }
 # ifdef AG_THREADS
 	mi->bind_lock = lock;
 # endif
@@ -1054,7 +1054,7 @@ AG_MenuSetIntBoolMp(AG_MenuItem *mi, int *pBool, int inv, AG_Mutex *lock)
 
 	mi->bind_type = AG_MENU_INT_BOOL;
 	mi->bind_p = (void *)pBool;
-	mi->bind_invert = inv;
+	if (inv) { mi->flags |= AG_MENU_ITEM_INVERTED; }
 #ifdef AG_THREADS
 	mi->bind_lock = lock;
 #endif
@@ -1083,9 +1083,9 @@ AG_MenuSetIntFlagsMp(AG_MenuItem *mi, int *pFlags, int flags, int inv,
 	AG_ObjectLock(m);
 
 	mi->bind_type = AG_MENU_INT_FLAGS;
-	mi->bind_p = (void *)pFlags;
 	mi->bind_flags = flags;
-	mi->bind_invert = inv;
+	mi->bind_p = (void *)pFlags;
+	if (inv) { mi->flags |= AG_MENU_ITEM_INVERTED; }
 #ifdef AG_THREADS
 	mi->bind_lock = lock;
 #endif

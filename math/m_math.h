@@ -110,6 +110,7 @@ typedef struct m_color { M_Real r, g, b, a; } M_Color;
 /* Vector in R^n. */
 typedef struct m_vector {
 	Uint m;			/* Size */
+	Uint32 _pad;
 	M_Real *_Nullable v;	/* Elements */
 } M_Vector;
 

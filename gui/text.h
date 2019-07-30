@@ -70,6 +70,7 @@ typedef struct ag_font_spec {
 	int index;				/* Font index (FC_INDEX) */
 	enum ag_font_type type;			/* Font engine type */
 	enum ag_font_spec_source sourceType;	/* Source type */
+	Uint32 _pad;
 #ifdef AG_HAVE_FLOAT
 	struct {				/* Transform matrix */
 		double xx, xy;
@@ -81,6 +82,9 @@ typedef struct ag_font_spec {
 		struct {
 			const Uint8 *_Nonnull data;  /* Source memory region */
 			AG_Size size;                /* Size in bytes */
+#if AG_MODEL == AG_MEDIUM
+			Uint32 _pad;
+#endif
 		} mem;
 	} source;
 } AG_FontSpec;
@@ -89,11 +93,15 @@ typedef struct ag_font_spec {
 typedef struct ag_glyph {
 	struct ag_font *_Nonnull font;	/* Font face */
 	AG_Color color;			/* Base color */
-	AG_Char ch;			/* Native character */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad1;
+#endif
 	AG_Surface *_Nonnull su;	/* Rendered surface */
+	AG_Char ch;			/* Native character */
 	int advance;			/* Pixel advance */
 	Uint texture;			/* Cached texture (driver-specific) */
 	AG_TexCoord texcoords;		/* Texture coordinates */
+	Uint32 _pad2;
 	AG_SLIST_ENTRY(ag_glyph) glyphs;
 } AG_Glyph;
 
@@ -110,8 +118,8 @@ typedef struct ag_font {
 	int ascent;			/* Ascent (relative to baseline) */
 	int descent;			/* Descent (relative to baseline) */
 	int lineskip;			/* Multiline y-increment */
+	char bspec[28];			/* Bitmap font specification */
 	void *_Nonnull ttf;		/* AG_TTFFont object */
-	char bspec[32];			/* Bitmap font specification */
 
 	AG_Surface *_Nullable *_Nullable bglyphs; /* Bitmap glyph surfaces */
 	Uint nglyphs;                             /* Bitmap glyph count */
@@ -136,6 +144,7 @@ typedef struct ag_text_state {
 #ifdef AG_DEBUG
 	char name[8];			/* Tag for debugging */
 #endif
+	Uint32 _pad;
 } AG_TextState;
 
 /* Description of font stored in data segment. */
@@ -152,6 +161,7 @@ typedef struct ag_text_metrics {
 	int w, h;			/* Dimensions in pixels */
 	Uint *_Nullable wLines;		/* Width of each line */
 	Uint            nLines;		/* Total line count */
+	Uint32 _pad;
 } AG_TextMetrics;
 
 /* Cache of pre-rendered glyphs */

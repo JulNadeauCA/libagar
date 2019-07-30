@@ -34,7 +34,7 @@
 #define SK_TYPE_NAME_MAX 64
 #define SK_NODE_NAME_MAX (SK_TYPE_NAME_MAX+12)
 #define SK_NAME_MAX	 (0xffffffff-1)
-#define SK_STATUS_MAX	 2048
+#define SK_STATUS_MAX	 508
 #define SK_GROUP_NAME_MAX 64
 
 struct sk;
@@ -57,8 +57,12 @@ typedef enum sk_status {
 /* Operations for sketch node classes. */
 typedef struct sk_node_ops {
 	const char *_Nonnull name;
-	size_t size;
+	AG_Size size;
+#if AG_MODEL == AG_LARGE
+	Uint64 flags;
+#else
 	Uint flags;
+#endif
 	void (*_Nonnull  init)(void *_Nonnull, Uint);
 	void (*_Nullable destroy)(void *_Nonnull);
 	int  (*_Nullable load)(struct sk *_Nonnull, void *_Nonnull, AG_DataSource *_Nonnull);
@@ -91,19 +95,20 @@ typedef struct sk_node {
 #define SK_NODE_KNOWN		0x20	/* Position found by solver */
 #define SK_NODE_CHECKED		0x40	/* For constrainedness check */
 
+	Uint nRefs;			 /* Reference count */
 	struct sk *_Nullable sk;	 /* Back pointer to sk */
 	struct sk_node *_Nullable pNode; /* Back pointer to parent node */
 	M_Matrix44 T;			 /* Transformation from parent */
 	struct sk_nodeq cnodes;		 /* Siblings */
-	Uint nRefs;			 /* Reference count (optimization) */
 
 	struct sk_node *_Nonnull *_Nonnull refNodes; /* Referenced nodes */
 	Uint                              nRefNodes;
 
+	Uint                                    nCons;
 	struct sk_constraint *_Nonnull *_Nonnull cons;	/* Constraint edges */
-	Uint                                    nCons;  /* (optimization) */
 
 	Uint nEdges;			/* For solver */
+	Uint32 _pad;
 
 	AG_TAILQ_ENTRY(sk_node) sknodes; /* Entry in transformation tree */
 	AG_TAILQ_ENTRY(sk_node) nodes;	 /* Entry in flat node list */
@@ -148,6 +153,7 @@ typedef struct sk_constraint {
 /* Rigid cluster of constrained nodes */
 typedef struct sk_cluster {
 	Uint name;
+	Uint32 _pad;
 	AG_TAILQ_HEAD_(sk_constraint) edges;
 	AG_TAILQ_ENTRY(sk_cluster) clusters;
 } SK_Cluster;
@@ -159,6 +165,7 @@ typedef struct sk_insn {
 		SK_COMPOSE_RING		/* Find n3 from n1 and n2, assuming
 					   (n1,n2,n3) is a constrained ring */
 	} type;
+	Uint32 _pad;
 	SK_Node *_Nullable n[3];	/* Nodes (n0 = unknown) */
 	SK_Constraint *_Nonnull ct01;	/* Constraint #1 */
 	SK_Constraint *_Nonnull ct02;	/* Constraint #2 */
@@ -186,14 +193,14 @@ typedef struct sk {
 	Uint flags;
 #define SK_SKIP_UNKNOWN_NODES	0x01		/* Ignore unimplemented nodes
 						   in load (otherwise fail) */
+	Uint nSolutions;			/* Total number of solutions
+						   (if well-constrained) */
 	_Nonnull_Mutex AG_Mutex lock;
 	const struct ag_unit *_Nonnull uLen;	/* Length unit */
 	SK_Node *_Nullable root;		/* Root node */
 	struct sk_nodeq nodes;			/* Flat node list */
 	SK_Status status;			/* Constrainedness status */
 	char statusText[SK_STATUS_MAX];		/* Status text */
-	Uint nSolutions;			/* Total number of solutions
-						   (if well-constrained) */
 
 	/* For internal use by constraint solver */
 	SK_Cluster ctGraph;			/* Original constraint graph */

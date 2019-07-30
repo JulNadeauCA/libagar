@@ -8,9 +8,9 @@ typedef struct sg_blk {
 } SG_Blk;
 
 typedef struct sg_map {
-	struct sg_node _inherit;
+	struct sg_node _inherit;	/* SG_Node -> SG_Map */
 	Uint flags;
-	SG_Blk *root;
+	SG_Blk *root;			/* Root block */
 } SG_Map;
 
 #define SGMAP(n) ((SG_Map *)(n))

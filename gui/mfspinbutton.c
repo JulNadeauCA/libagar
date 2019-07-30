@@ -386,8 +386,9 @@ Init(void *obj)
 	WIDGET(fsu)->flags |= AG_WIDGET_FOCUSABLE|
 	                      AG_WIDGET_TABLE_EMBEDDABLE;
 
-	fsu->inc = 1.0;
+	fsu->flags = 0;
 	fsu->writeable = 1;
+	fsu->inc = 1.0;
 	fsu->sep = ",";
 	fsu->inTxt[0] = '\0';
 	Strlcpy(fsu->format, "%.02f", sizeof(fsu->format));

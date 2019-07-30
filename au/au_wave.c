@@ -38,13 +38,14 @@
 AU_Wave *
 AU_WaveNew(void)
 {
-	AU_Wave *w = Malloc(sizeof(AU_Wave));
+	AU_Wave *w;
 
+	w = Malloc(sizeof(AU_Wave));
 	w->flags = 0;
-	w->frames = NULL;
 	w->nFrames = 0;
-	w->ch = 0;
+	w->frames = NULL;
 	w->peak = 0.0;
+	w->ch = 0;
 #ifdef HAVE_SNDFILE
 	w->vizFrames = NULL;
 	w->nVizFrames = 0;

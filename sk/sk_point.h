@@ -3,6 +3,7 @@
 typedef struct sk_point {
 	struct sk_node node;
 	Uint flags;
+	Uint32 _pad;
 	M_Real size;			/* Display size in pixels */
 	M_Color color;			/* Display color */
 } SK_Point;

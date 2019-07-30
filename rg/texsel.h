@@ -9,10 +9,11 @@
 #include <agar/rg/begin.h>
 
 typedef struct rg_texture_selector {
-	struct ag_tlist tl;
+	struct ag_tlist tl;                /* AG_Tlist -> RG_TextureSelector */
 	RG_Tileset *tset;		   /* Attached tileset */
 	char texname[RG_TEXTURE_NAME_MAX]; /* Default texture name binding */
 	Uint flags;
+	Uint32 _pad;
 } RG_TextureSelector;
 
 __BEGIN_DECLS

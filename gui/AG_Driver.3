@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -160,6 +160,7 @@ typedef struct ag_driver_class {
     enum ag_driver_type type;  /* Driver type */
     enum ag_driver_wm_type wm; /* Window manager type */
     Uint flags;                /* Driver class options */
+    int rev;                   /* Driver revision number */ 
 
     /* Initialization */
     int  (*open)(void *d, const char *spec);

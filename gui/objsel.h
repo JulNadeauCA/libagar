@@ -14,6 +14,7 @@ typedef struct ag_object_selector {
 #define AG_OBJSEL_PAGE_DATA	0x01
 #define AG_OBJSEL_PAGE_GFX	0x02
 	char type_mask[AG_OBJECT_HIER_MAX];
+	Uint32 _pad;
 	void *_Nullable pobj;			/* Pointer to the object */
 	void *_Nullable root;			/* Root of object's VFS */
 	void *_Nullable object;			/* Default "object" binding */

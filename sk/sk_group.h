@@ -4,6 +4,7 @@ typedef struct sk_group {
 	struct sk_node _inherit;
 	SK_Node *_Nullable *_Nullable nodes;	/* Nodes in group */
 	Uint                         nNodes;
+	Uint32 _pad;
 	M_Color color;				/* Selection color */
 } SK_Group;
 

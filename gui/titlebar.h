@@ -19,6 +19,7 @@ typedef struct ag_titlebar {
 #define AG_TITLEBAR_PRESSED	0x08	/* Titlebar is pressed down */
 #define AG_TITLEBAR_SAVED_FLAGS	(AG_TITLEBAR_NO_CLOSE|AG_TITLEBAR_NO_MINIMIZE|\
 				 AG_TITLEBAR_NO_MAXIMIZE)
+	Uint32 _pad;
 
 	struct ag_window *_Nullable win;	/* Back pointer to window */
 

@@ -23,20 +23,22 @@ typedef struct ag_menu_item {
 	char *_Nonnull text;		/* Label text */
 	int lblMenu[2];			/* Cached surfaces (for AG_Menu) */
 	int lblView[2];			/* Cached surfaces (for AG_MenuView) */
-	int icon;			/* Icon surface mapping */
 	AG_Surface *_Nullable iconSrc;	/* Icon surface source */
+	int                   icon;	/* Icon surface mapping */
 	int value;			/* Default bool value binding */
-	int state;			/* State flag */
 	AG_Function *_Nullable stateFn;	/* State function (overrides flag) */
+	int                    state;	/* State flag */
 	AG_KeySym key_equiv;		/* Key shortcut */
 	AG_KeyMod key_mod;
 	int x, y;			/* Position in parent view */
+	Uint flags;
+#define AG_MENU_ITEM_ICONS     0x01 /* At least one item has an icon */
+#define AG_MENU_ITEM_NOSELECT  0x02 /* Non-selectable regardless of state */
+#define AG_MENU_ITEM_SEPARATOR 0x04 /* Item is a cosmetic separator */
+#define AG_MENU_ITEM_INVERTED  0x08 /* Invert the binding state */
+
 	AG_Event *_Nullable clickFn;	/* Raised on click */
 	AG_Event *_Nullable poll;	/* Raised before the item is drawn */
-	Uint flags;
-#define AG_MENU_ITEM_ICONS     0x01	/* At least one item has an icon */
-#define AG_MENU_ITEM_NOSELECT  0x02	/* Non-selectable regardless of state */
-#define AG_MENU_ITEM_SEPARATOR 0x04	/* Item is a cosmetic separator */
 
 	enum ag_menu_binding {		/* Boolean binding */
 		AG_MENU_NO_BINDING,
@@ -47,9 +49,8 @@ typedef struct ag_menu_item {
 		AG_MENU_INT16_FLAGS,
 		AG_MENU_INT32_FLAGS
 	} bind_type;
-	void *_Nullable bind_p;	        /* Pointer to data */
 	Uint32          bind_flags;     /* Bitmask (for FLAGS) */
-	int             bind_invert;    /* Inverted value */
+	void *_Nullable bind_p;	        /* Pointer to data */
 #ifdef AG_THREADS
 	_Nullable_Mutex AG_Mutex *_Nullable bind_lock; /* Lock on data */
 #endif
@@ -61,7 +62,7 @@ typedef struct ag_menu_item {
 
 	AG_TAILQ_HEAD_(ag_menu_item) subItems;      /* Child items */
 	Uint                        nSubItems;
-	
+	Uint32 _pad;
 	AG_TAILQ_ENTRY(ag_menu_item) items;         /* In parent */
 } AG_MenuItem;
 
@@ -93,12 +94,13 @@ typedef struct ag_menu {
 	enum ag_menu_style style;	/* Menu style */
 	AG_MenuItem *_Nonnull root;	/* Root menu item */
 	int selecting;			/* Selection in progress */
-	AG_MenuItem *_Nullable itemSel;	/* Selected top-level item */
 	int lPad, rPad, tPad, bPad;	/* Global padding in pixels */
 	int lPadLbl, rPadLbl;		/* Item label padding in pixels */
 	int tPadLbl, bPadLbl;
 	int itemh;			/* Item height (optimization) */
 	int curState;			/* For MenuState() */
+	Uint32 _pad;
+	AG_MenuItem *_Nullable itemSel;	/* Selected top-level item */
 	AG_Toolbar *_Nullable curToolbar; /* For MenuToolbar() */
 	AG_Rect r;			  /* View area */
 } AG_Menu;
@@ -129,6 +131,7 @@ typedef struct ag_menu_view {
 	int spLblArrow;			/* Label and submenu arrow spacing */
 	int lPad, rPad, tPad, bPad;	/* Padding in pixels */
 	int arrowRight;			/* Right arrow surface handle */
+	Uint32 _pad;
 } AG_MenuView;
 
 #define AGMENUVIEW(obj)            ((AG_MenuView *)(obj))

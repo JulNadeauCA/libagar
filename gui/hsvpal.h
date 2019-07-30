@@ -27,6 +27,9 @@ typedef struct ag_hsvpal {
 	Uint32 pixel;			/* Calculated pixel */
 	AG_Color color;			/* Calculated color */
 	AG_Rect rPrev;			/* Filled color preview area */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad1;
+#endif
 	AG_Surface *_Nullable surface;	/* Cached surface */
 	int surfaceId;
 	int selcircle_r;		/* Radius of selection circles */
@@ -53,6 +56,10 @@ typedef struct ag_hsvpal {
 	AG_Window   *_Nullable menu_win;
 
 	AG_Color cTile;		/* Tiling fill color (TODO use style) */
+
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad2;
+#endif
 } AG_HSVPal;
 
 #define AGHSVPAL(obj)            ((AG_HSVPal *)(obj))

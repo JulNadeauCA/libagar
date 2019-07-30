@@ -2619,7 +2619,7 @@ AG_WindowSetZoom(AG_Window *win, int zoom)
 
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
-	if (zoom < 0 || zoom >= AG_ZOOM_RANGE || zoom == win->zoom) {
+	if (zoom < 0 || zoom >= AG_ZOOM_MAX || zoom == win->zoom) {
 		AG_ObjectUnlock(win);
 		return;
 	}
@@ -2905,9 +2905,9 @@ Init(void *_Nonnull obj)
 #endif
 	win->visible = 0;
 	win->dirty = 0;
+	win->alignment = AG_WINDOW_ALIGNMENT_NONE;
 	win->tbar = NULL;
 	win->icon = NULL;
-	win->alignment = AG_WINDOW_ALIGNMENT_NONE;
 	win->spacing = 3;
 	win->tPad = 2;
 	win->bPad = 2;

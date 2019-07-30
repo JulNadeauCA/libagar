@@ -16,6 +16,9 @@ typedef struct ag_tree_item {
 	void *_Nullable p;			/* User pointer */
 	void *_Nullable privData;		/* Private data */
 	AG_Size privDataSize;			/* Private data size */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
 	struct ag_tree_itemq chldItems;		/* Child items */
 	AG_TAILQ_ENTRY(ag_tree_item) tree;	/* Entry in tree */
 	AG_TAILQ_ENTRY(ag_tree_item) list;	/* Entre in list */

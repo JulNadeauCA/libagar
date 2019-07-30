@@ -69,13 +69,13 @@ AG_ThreadKey agEventSourceKey;
 # define EVBUFSIZE 2
 
 typedef struct ag_event_source_kqueue {
-	struct ag_event_source _inherit;
-
-	int fd;					/* kqueue() fd */
-	struct kevent *_Nullable changes;	/* Queued changes */
+	struct ag_event_source _inherit;  /* EventSource -> EventSourceKQUEUE */
+	struct kevent *_Nullable changes; /* Queued changes */
 	Uint                    nChanges;
 	Uint                  maxChanges;
-	struct kevent events[EVBUFSIZE];	/* Input event buffer */
+	struct kevent events[EVBUFSIZE];  /* Input event buffer */
+	int fd;                           /* kqueue() fd */
+	Uint32 _pad;
 } AG_EventSourceKQUEUE;
 
 #endif /* HAVE_KQUEUE */
@@ -725,16 +725,16 @@ CreateEventSource(void)
 		return (NULL);
 	}
 	src->flags = 0;
+	src->breakReq = 0;
 #ifdef AG_TIMERS
 	src->addTimerFn = NULL;
 	src->delTimerFn = NULL;
 #endif
-	src->breakReq = 0;
-	src->returnCode = 0;
 	TAILQ_INIT(&src->prologues);
 	TAILQ_INIT(&src->epilogues);
 	TAILQ_INIT(&src->spinners);
 	TAILQ_INIT(&src->sinks);
+	src->returnCode = 0;
 	memset(src->caps, 0, sizeof(src->caps));
 
 #if defined(HAVE_KQUEUE)
@@ -1660,6 +1660,8 @@ restart:
 				if (FD_ISSET(es->ident, &wrFds)) {
 					es->fn(es, &es->fnArgs);
 				}
+				break;
+			default:
 				break;
 			}
 		}

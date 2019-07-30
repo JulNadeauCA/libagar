@@ -76,6 +76,9 @@ typedef struct m_plot {
 	char label_txt[32];			/* Label text */
 	int label;				/* Label surface handle */
 	AG_Color color;				/* Plot color */
+#if AG_MODEL == AG_LARGE
+	Uint32 _pad;
+#endif
 	M_Real xScale, yScale;			/* Scaling factors */
 	int xOffs, yOffs;			/* Offset in display */
 	int xLabel, yLabel;			/* Item position */
@@ -100,6 +103,7 @@ typedef struct m_plotter {
 #define M_PLOTTER_VFILL		0x8000
 #define M_PLOTTER_EXPAND	(M_PLOTTER_HFILL|M_PLOTTER_VFILL)
 	int xMax;			/* Maximum X for single value plots */
+	int   curColor;				/* Current default color */
 	M_Real yMin, yMax;		/* Extrema for single value plots */
 	M_Vector *_Nonnull vMin;	/* Extrema for vector plots */
 	M_Vector *_Nonnull vMax;	/* Extrema for vector plots */
@@ -109,8 +113,6 @@ typedef struct m_plotter {
 
 	AG_Font *_Nonnull font;			/* Default font */
 	AG_Color colors[M_PLOTTER_NDEFCOLORS];	/* Default plot color */
-	int   curColor;				/* Current default color */
-
 	AG_Scrollbar *_Nonnull hbar;	/* Horizontal scrollbar */
 	AG_Scrollbar *_Nonnull vbar;	/* Vertical scrollbar */
 	AG_Rect r;			/* View area */

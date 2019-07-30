@@ -24,6 +24,7 @@
  */
 
 #include <agar/core/core.h>
+
 #include <agar/gui/gui.h>
 #include <agar/gui/hsvpal.h>
 #include <agar/gui/notebook.h>
@@ -41,6 +42,8 @@ const RG_FeatureOps rgFillOps = {
 	sizeof(struct rg_fill_feature),
 	N_("Fill tile with solid color/pattern."),
 	FEATURE_AUTOREDRAW,
+	AG_KEYMOD_SHIFT, AG_KEY_B,
+	1,
 	RG_FillInit,
 	RG_FillLoad,
 	RG_FillSave,
@@ -52,7 +55,7 @@ const RG_FeatureOps rgFillOps = {
 };
 
 void
-RG_FillInit(void *p, RG_Tileset *ts, int flags)
+RG_FillInit(void *p, RG_Tileset *ts, Uint flags)
 {
 	struct rg_fill_feature *f = p;
 

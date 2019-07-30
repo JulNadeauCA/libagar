@@ -291,7 +291,14 @@ Init(void *obj)
 	AG_FontSelector *fs = obj;
 	
 	fs->flags = AG_FONTSELECTOR_UPDATE;
-
+	fs->curFace[0] = '\0';
+	fs->curStyle = 0;
+	fs->sPreview = -1;
+#ifdef HAVE_FLOAT
+	fs->curSize = 0.0;
+#else
+	fs->curSize = 0;
+#endif
 	fs->hPane = AG_PaneNewHoriz(fs, AG_PANE_EXPAND);
 	fs->tlFaces = AG_TlistNew(fs->hPane->div[0], AG_TLIST_EXPAND);
 	fs->hPane2 = AG_PaneNewHoriz(fs->hPane->div[1], AG_PANE_EXPAND);
@@ -300,29 +307,23 @@ Init(void *obj)
 	fs->tlSizes = AG_TlistNew(fs->sizeBox, AG_TLIST_EXPAND);
 
 	fs->font = NULL;
-	fs->curFace[0] = '\0';
-	fs->curStyle = 0;
-#ifdef HAVE_FLOAT
-	fs->curSize = 0.0;
-#else
-	fs->curSize = 0;
-#endif
+
 	fs->rPreview.x = 0;
 	fs->rPreview.y = 0;
 	fs->rPreview.w = 0;
 	fs->rPreview.h = 64;
-	fs->sPreview = -1;
 
 	AG_TlistSizeHint(fs->tlFaces, "XXXXXXXXXXXXXXX", 8);
 	AG_TlistSizeHint(fs->tlStyles, "XXXXXXXXX", 8);
 	AG_TlistSizeHint(fs->tlSizes, "100", 8);
 	
+	/* Handle "font" binding programmatically */
 	AG_BindPointer(fs, "font", (void *)&fs->font);
+	AG_SetEvent(fs, "bound", Bound, NULL);
+	OBJECT(fs)->flags |= AG_OBJECT_BOUND_EVENTS;
 	
 	AG_AddEvent(fs, "widget-shown", OnShow, NULL);
 
-	AG_SetEvent(fs, "bound", Bound, NULL);
-	OBJECT(fs)->flags |= AG_OBJECT_BOUND_EVENTS;
 	AG_SetEvent(fs->tlFaces, "tlist-selected", SelectedFace, "%p", fs);
 	AG_SetEvent(fs->tlStyles, "tlist-selected", SelectedStyle, "%p", fs);
 	AG_SetEvent(fs->tlSizes, "tlist-selected", SelectedSize, "%p", fs);

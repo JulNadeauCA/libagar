@@ -46,7 +46,12 @@
 #define WEB_MAX_ARGS		256	/* URL-encoded argument count */
 #define WEB_MAX_COOKIES		32	/* Number of cookies */
 
-#define WEB_ARG_KEY_MAX		64	   /* Argument key */
+#define WEB_ARG_KEY_MAX		60	   /* Argument key */
+#if AG_MODEL == AG_MEDIUM
+#define WEB_ARG_TYPE_MAX	28
+#else
+#define WEB_ARG_TYPE_MAX	32
+#endif
 #define WEB_ARG_LENGTH_MAX	100000000  /* Argument data (100MB) */
 
 #define WEB_LANGS_MAX		64	/* Accept-Language entries */
@@ -76,7 +81,7 @@
 #define WEB_COOKIE_VALUE_MAX	3807	/* Cookie value */
 #define WEB_COOKIE_EXPIRE_MAX	64	/* Cookie expiration field */
 #define WEB_COOKIE_DOMAIN_MAX	48	/* Cookie domain field */
-#define WEB_COOKIE_PATH_MAX	128	/* Cookie path argument */
+#define WEB_COOKIE_PATH_MAX	101	/* Cookie path argument */
 #define WEB_COOKIE_SET_MAX	128	/* Max generated Set-Cookie length */
 
 #define WEB_VAR_NAME_MAX	32	/* Web variable name */
@@ -118,7 +123,8 @@ typedef struct web_variable {
 	char *_Nullable value;			/* Value */
 	AG_Size len;				/* Content length (characters) */
 	AG_Size bufSize;			/* Buffer size */
-	int    global;				/* 1 = Persist across queries */
+	int global;				/* 1 = Persist across queries */
+	Uint32 _pad;
 	AG_TAILQ_ENTRY(web_variable) vars;
 } WEB_Variable;
 
@@ -134,7 +140,7 @@ typedef struct web_argument {
 	char key[WEB_ARG_KEY_MAX];		/* Key */
 	char *_Nullable value;			/* Value data (allocated) */
 	AG_Size len;				/* Value length in bytes */
-	char contentType[32];			/* Content-Type or "" */
+	char contentType[WEB_ARG_TYPE_MAX];	/* Content-Type or "" */
 	AG_TAILQ_ENTRY(web_argument) args;
 } WEB_Argument;
 
@@ -174,9 +180,10 @@ typedef struct web_query {
 	char  acceptLangs[WEB_LANGS_MAX]	/* Accept-Language list */
 	                 [WEB_LANG_CODE_MAX];
 	Uint  nAcceptLangs;
+
 	AG_TAILQ_HEAD_(web_argument) args;	/* Call arguments */
-	Uint                        nArgs;
 	AG_TAILQ_HEAD_(web_cookie) cookies;	/* HTTP cookies */
+	Uint                        nArgs;
 	Uint                      nCookies;
 
 	char contentType[128];			/* Client Content-Type (+attrs) */
@@ -191,17 +198,19 @@ typedef struct web_query {
 
 	char    head[WEB_HTTP_HEADER_MAX];	/* HTTP response headers */
 	Uint    headLine[WEB_HTTP_MAXHEADERS];	/* Line start offsets */
-	Uint    headLineCount;
-	AG_Size headLen;
-
+	Uint    headLineCount;			/* Total lines in header */
+	Uint    headLen;			/* Length of header in bytes */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
 	Uchar *_Nullable data;			/* Raw response entity-body */
 	AG_Size dataSize, dataLen;
 
-	char lang[4];				/* Negotiated language */
+	char lang[8];				/* Negotiated language code */
 	void *_Nullable sess;			/* Session object */
 	void *_Nullable mod;			/* WEB_Module executing op */
 	int sock;				/* Client socket (or -1) */
-	char date[32];				/* HTTP time */
+	char date[36];				/* HTTP time */
 } WEB_Query;
 
 /* Control command sent to running Frontend process. */
@@ -299,9 +308,16 @@ typedef struct web_module {
 typedef struct web_session_ops {
 	const char *_Nonnull name;	/* Session class name */
 	AG_Size size;			/* Structure size */
-
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
+#ifdef AG_HAVE_64BIT
+	Uint64 flags;
+#else
 	Uint flags;
+#endif
 #define WEB_SESSION_PREFORK_AUTH 0x01	/* Call auth() before fork() */
+
 	time_t sessTimeout;		/* Session inactivity timeout (s) */
 	time_t workerTimeout;		/* Worker inactivity timeout (s) */
 
@@ -347,6 +363,7 @@ typedef struct web_session_var {
 /* Open socket between a Frontend and a running Worker. */
 typedef struct web_session_socket {
 	char  sessID[WEB_SESSID_MAX];		/* Open session ID */
+	Uint8 _pad;
 	int   fd;				/* Socket */
 	pid_t workerPID;			/* Worker process PID */
 	int   workerIsMyChld;			/* Worker is my child */
@@ -359,11 +376,13 @@ AG_TAILQ_HEAD(web_session_socketq, web_session_socket);
 typedef struct web_session {
 	const WEB_SessionOps *_Nonnull ops;	/* Operations */
 	char id[WEB_SESSID_MAX];		/* Session identifier */
-	AG_TAILQ_HEAD_(web_session_var) vars;	/* Session variables */
+	Uint8 _pad1;
 	Uint                           nVars;
+	AG_TAILQ_HEAD_(web_session_var) vars;	/* Session variables */
 	AG_TAILQ_ENTRY(web_session) sessions;
 	int pp[2];				/* Status pipe */
 	Uint nEvents;				/* Event counter */
+	Uint32 _pad2;
 } WEB_Session;
 
 typedef int  (*WEB_LanguageFn)(const char *_Nonnull, void *_Nullable);

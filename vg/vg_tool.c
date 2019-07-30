@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@ void
 VG_ToolInit(VG_Tool *t)
 {
 	t->selected = 0;
+	t->tag = 0;
 	t->editWin = NULL;
 	t->editArea = NULL;
 	TAILQ_INIT(&t->cmds);

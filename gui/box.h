@@ -35,6 +35,7 @@ typedef struct ag_box {
 	int padding;			/* Padding around widgets */
 	int spacing;			/* Spacing between widgets */
 	int depth;			/* Depth of frame (for AG_BOX_FRAME) */
+	Uint32 _pad;
 	struct ag_label *_Nonnull lbl;	/* Optional text label */
 	enum ag_box_align hAlign;	/* Horizontal alignment */
 	enum ag_box_align vAlign;	/* Vertical alignment */

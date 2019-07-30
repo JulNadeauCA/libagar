@@ -4,7 +4,7 @@
 #define _AGAR_RG_SKETCH_H_
 #include <agar/rg/begin.h>
 
-#define RG_SKETCH_NAME_MAX	32
+#define RG_SKETCH_NAME_MAX 32
 
 struct ag_toolbar;
 struct ag_window;
@@ -28,7 +28,7 @@ typedef struct rg_sketch {
 	int flags;
 	struct rg_tileset *ts;
 	VG *vg;
-	Uint nrefs;
+	Uint nRefs;
 	float h, s, v, a;
 	struct rg_sketch_undoblk *ublks;
 	Uint nublks, curblk;

@@ -13,7 +13,7 @@ struct rg_sketchproj {
 };
 
 __BEGIN_DECLS
-void       RG_SketchProjInit(void *, RG_Tileset *, int);
+void       RG_SketchProjInit(void *, RG_Tileset *, Uint);
 int        RG_SketchProjLoad(void *, AG_DataSource *);
 void       RG_SketchProjSave(void *, AG_DataSource *);
 void       RG_SketchProjApply(void *, RG_Tile *, int, int);

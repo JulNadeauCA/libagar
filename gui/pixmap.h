@@ -22,6 +22,7 @@ typedef struct ag_pixmap {
 	int pre_w, pre_h;	/* Geometry to use if there is no surface */
 	int sScaled;		/* Scaled surface (for RESCALE) */
 	AG_Rect rClip;		/* Clipping rectangle (for !RESCALE) */
+	Uint32 _pad;
 } AG_Pixmap;
 
 #define AGPIXMAP(p)              ((AG_Pixmap *)(p))

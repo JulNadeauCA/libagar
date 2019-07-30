@@ -9,8 +9,12 @@ typedef struct sk_tool_ops {
 	const char *_Nonnull name;		/* Short name */
 	const char *_Nonnull desc;		/* Tool description */
 	struct ag_static_icon *_Nullable icon;	/* Optional icon */
-	size_t len;
+	AG_Size len;
+#if AG_MODEL == AG_LARGE
+	Uint64 flags;
+#else
 	Uint flags;
+#endif
 #define SK_MOUSEMOTION_NOSNAP	0x01	/* Ignore snapping in mousemotion */
 #define SK_BUTTONUP_NOSNAP	0x02	/* Ignore snapping in buttonup */
 #define SK_BUTTONDOWN_NOSNAP	0x04	/* Ignore snapping in buttondown */
@@ -43,6 +47,7 @@ typedef struct sk_tool_keybinding {
 	AG_KeyMod mod;
 	AG_KeySym key;
 	int edit;
+	Uint32 _pad;
 	int (*_Nonnull func)(SK_Tool *_Nonnull, AG_KeySym k, int s,
 	                     void *_Nullable);
 	void *_Nullable arg;

@@ -19,16 +19,16 @@ enum sg_script_interp_mode {
 typedef struct sg_script_insn {
 	enum sg_script_insn_type type;		/* Instruction type */
 	Uint flags;
-#define SG_SCRIPT_INSN_SUPPRESS	0x01
-#define SG_SCRIPT_INSN_SELECTED	0x02
+#define SG_SCRIPT_INSN_SUPPRESS	0x01		/* Suppress instruction */
+#define SG_SCRIPT_INSN_SELECTED	0x02		/* Selected in editor */
 #define SG_SCRIPT_INSN_SAVED	(SG_SCRIPT_INSN_SUPPRESS)
-
+	char *_Nullable tgtName;		/* Target node path */
 	union {
 		struct {
 			char *_Nullable name;		/* Name (under parent) */
 			AG_ObjectClass *_Nullable cls;	/* Node class */
 			void *_Nullable data;		/* Saved dataset */
-			size_t size;			/* Dataset size */
+			AG_Size size;			/* Dataset size */
 		} create; 
 		SG_Action action;
 #ifdef _AGAR_SG_INTERNAL
@@ -36,7 +36,6 @@ typedef struct sg_script_insn {
 #define si_action args.action
 #endif
 	} args;
-	char *_Nullable tgtName;		/* Target node path */
 	AG_TAILQ_ENTRY(sg_script_insn) insns;
 } SG_ScriptInsn;
 
@@ -45,7 +44,7 @@ typedef struct sg_script_frame {
 } SG_ScriptFrame;
 
 typedef struct sg_script {
-	struct ag_object _inherit;
+	struct ag_object _inherit;		/* AG_Object -> SG_Script */
 	Uint flags;
 #define SG_SCRIPT_SAVED 0
 	int fps;				/* Frames/second */
@@ -55,6 +54,7 @@ typedef struct sg_script {
 	int tFirst;				/* First frame index */
 	int tLast;				/* Last frame index */
 	int tPrev;				/* Previous frame */
+	Uint32 _pad;
 } SG_Script;
 
 struct sg_view;
@@ -73,6 +73,5 @@ int SG_ScriptAddInsn(SG_Script *_Nonnull, Uint, SG_ScriptInsn *_Nonnull);
 int SG_ScriptAddInsnBefore(SG_Script *_Nonnull, Uint, SG_ScriptInsn *_Nonnull,
                            SG_ScriptInsn *_Nonnull);
 int  SG_ScriptDelInsn(SG_Script *_Nonnull, Uint, SG_ScriptInsn *_Nonnull);
-void SG_ScriptPrintInsn(const SG_ScriptInsn *_Nonnull, char *_Nonnull, size_t)
-                       BOUNDED_ATTRIBUTE(__string__, 2,3);
+void SG_ScriptPrintInsn(const SG_ScriptInsn *_Nonnull, char *_Nonnull, AG_Size);
 __END_DECLS

@@ -7,6 +7,9 @@
 typedef struct ag_version {
 	Uint32 major;		/* TODO 2.0: 16-bit */
 	Uint32 minor;
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
 } AG_Version;
 
 /* TODO 2.0: shorten this */

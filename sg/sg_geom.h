@@ -1,13 +1,14 @@
 /*	Public domain	*/
 
 typedef struct sg_geom {
-	struct sg_node _inherit;
+	struct sg_node _inherit;	/* SG_Node -> SG_Geom */
 	Uint flags;
-#define SG_GEOM_SAVED	0
-	M_Real wd;		/* Line Width */
-	M_Color c;		/* Line Color */
-	int stFactor;		/* Stipple Factor */
-	Uint16 stPat;		/* Stipple Pattern */
+#define SG_GEOM_SAVED 0
+	int stFactor;			/* Stipple Factor */
+	M_Real wd;			/* Line Width */
+	M_Color c;			/* Line Color */
+	Uint16 stPat;			/* Stipple Pattern */
+	Uint8 _pad[14];
 } SG_Geom;
 
 #define SGGEOM(n) ((SG_Geom *)(n))

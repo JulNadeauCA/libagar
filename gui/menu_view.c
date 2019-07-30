@@ -116,8 +116,10 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	const int h = HEIGHT(mview);
 	int y = mview->tPad, itemh;
 
-	if (mx < 0 || mx >= w || my < 0 || my >= h)
+	if (mx < 0 || mx >= w || my < 0 || my >= h) {
+		Debug(mview, "MouseButtonUp: Out of bounds\n");
 		return;
+	}
 
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
@@ -340,7 +342,9 @@ Draw(void *_Nonnull obj)
 				AG_ColorRGB_8(&c, 223,207,128);	/* XXX */
 				AG_DrawFrame(mv, &rFrame, 1, &c);
 				c.a = AG_OPAQUE/4;
-				AG_DrawRectBlended(mv, &rFrame, &c, AG_ALPHA_SRC);
+				AG_DrawRectBlended(mv, &rFrame, &c,
+				    AG_ALPHA_SRC,
+				    AG_ALPHA_ONE_MINUS_SRC);
 			}
 		}
 
@@ -424,7 +428,7 @@ GetItemBoolValue(AG_MenuItem *_Nonnull mi)
 	default:
 		break;
 	}
-	return (mi->bind_invert ? !val : val);
+	return (mi->flags & AG_MENU_ITEM_INVERTED) ? !val : val;
 }
 
 static void

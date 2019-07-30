@@ -85,6 +85,7 @@ const MAP_ToolOps mapRefselOps = {
 	&mapIconSelectItem,
 	sizeof(MAP_Tool),
 	0,
+	1,
 	Init,
 	NULL,			/* destroy */
 	NULL,			/* pane */

@@ -41,6 +41,7 @@ typedef struct vg_select_tool {
 	Uint flags;
 #define MOVING_ENTITIES	0x01	/* Translation is in progress */
 	VG_Vector vLast;	/* For grid snapping */
+	Uint32 _pad;
 	VG_Node *vnMouseOver;	/* Element under cursor */
 } VG_SelectTool;
 

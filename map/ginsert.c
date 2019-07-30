@@ -142,6 +142,7 @@ const MAP_ToolOps mapGInsertOps = {
 	&mapIconStamp,
 	sizeof(struct ginsert_tool),
 	TOOL_HIDDEN,
+	1,
 	Init,
 	NULL,				/* destroy */
 	EditPane,

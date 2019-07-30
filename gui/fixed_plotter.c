@@ -232,9 +232,9 @@ AG_FixedPlotterCurve(AG_FixedPlotter *fpl, const char *name,
  	gi = Malloc(sizeof(AG_FixedPlotterItem));
 	Strlcpy(gi->name, name, sizeof(gi->name));
 	AG_ColorRGB_8(&gi->color, r,g,b);
+	gi->nvals = 0;
 	gi->vals = Malloc(NITEMS_INIT*sizeof(AG_FixedPlotterValue));
 	gi->maxvals = NITEMS_INIT;
-	gi->nvals = 0;
 	gi->fpl = fpl;
 	gi->limit = limit>0 ? limit : (0xffffffff-1);
 

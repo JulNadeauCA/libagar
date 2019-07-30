@@ -29,10 +29,10 @@ enum map_actor_type {
 
 typedef struct map_actor {
 	struct ag_object obj;
-	int flags;
+	enum map_actor_type type;		/* Type of actor */
+	Uint flags;
 #define AG_ACTOR_SAVED_FLAGS	0x00
 	MAP *_Nullable parent;			/* Current map */
-	enum map_actor_type type;
 	union {
 		struct {
 			int x, y, l0, l1;	/* Destination position */

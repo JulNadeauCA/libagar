@@ -3,7 +3,7 @@
 #include <agar/core/begin.h>
 
 #ifndef AG_USER_NAME_MAX
-#define AG_USER_NAME_MAX 73
+#define AG_USER_NAME_MAX 68
 #endif
 
 /* User account (POSIX-style, or otherwise) */

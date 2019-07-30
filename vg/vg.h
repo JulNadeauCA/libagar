@@ -7,11 +7,21 @@
 
 #include <agar/vg/begin.h>
 
+#ifndef VG_NAME_MAX
 #define VG_NAME_MAX		128
+#endif
+#ifndef VG_LAYER_NAME_MAX
 #define VG_LAYER_NAME_MAX	128
+#endif
+#ifndef VG_STYLE_NAME_MAX
 #define VG_STYLE_NAME_MAX	16
+#endif
+#ifndef VG_TYPE_NAME_MAX
 #define VG_TYPE_NAME_MAX	32
+#endif
+#ifndef VG_SYM_NAME_MAX
 #define VG_SYM_NAME_MAX		16
+#endif
 #define VG_HANDLE_MAX	 	(0xffffffff-1)
 
 enum vg_alignment {
@@ -47,11 +57,13 @@ struct ag_static_icon;
 #include <agar/vg/vg_snap.h>
 
 typedef struct vg_node_ops {
-	const char            *_Nonnull  name;  /* Display text */
+	const char *_Nonnull name;              /* Display text */
 	struct ag_static_icon *_Nullable icon;  /* Display icon */
-
-	AG_Size size;             /* Size of instance structure */
-
+#ifdef AG_HAVE_64BIT
+	Uint64 size;                            /* Instance size */
+#else
+	Uint size; 
+#endif
 	void  (*_Nullable init)(void *_Nonnull);
 	void  (*_Nullable destroy)(void *_Nonnull);
 
@@ -79,6 +91,7 @@ typedef struct vg_layer {
 	int      visible;			/* Flag of visibility */
 	VG_Color color;				/* Per-layer default color */
 	Uint8    alpha;				/* Per-layer alpha value */
+	Uint8   _pad[3];
 } VG_Layer;
 
 typedef struct vg_matrix {
@@ -120,27 +133,22 @@ typedef struct vg_node {
 #define VGNODE(p) ((VG_Node *)(p))
 
 typedef struct vg {
-	Uint flags;
-#define VG_NO_ANTIALIAS	0x01		/* Disable anti-aliasing */
-
 	_Nonnull_Mutex AG_Mutex lock;
-
-	VG_IndexedColor *_Nullable colors;	/* Global color table */
+	Uint flags;
+#define VG_NO_ANTIALIAS	0x01			/* Disable anti-aliasing */
 	Uint                      nColors;	/* Color count */
+	VG_IndexedColor *_Nullable colors;	/* Global color table */
+	VG_Color               fillColor;	/* Background color */
+	VG_Color          selectionColor;	/* Selected item/block color */
+	VG_Color          mouseoverColor;	/* Mouse overlap item color */
 
-	VG_Color fillColor;		/* Background color */
-	VG_Color selectionColor;	/* Selected item/block color */
-	VG_Color mouseoverColor;	/* Mouse overlap item color */
-
-	VG_Layer *_Nullable layers;	/* Layer information */
-	Uint	           nLayers;	/* Layer count */
-	
-	VG_Matrix *_Nonnull T;		/* Stack of view matrices */
+	VG_Layer *_Nullable layers;		/* Layer information */
+	Uint	           nLayers;		/* Layer count */
 	Uint               nT;
-
-	VG_Node *_Nullable root;	/* Tree of entities */
-	AG_TAILQ_HEAD_(vg_node) nodes;	/* List of entities */
-	AG_TAILQ_ENTRY(vg) user;	/* Entry in user list */
+	VG_Matrix *_Nonnull T;			/* Stack of view matrices */
+	VG_Node *_Nullable root;		/* Tree of entities */
+	AG_TAILQ_HEAD_(vg_node) nodes;		/* List of entities */
+	AG_TAILQ_ENTRY(vg) user;		/* Entry in user list */
 } VG;
 
 extern VG_NodeOps *_Nullable *_Nonnull vgNodeClasses;

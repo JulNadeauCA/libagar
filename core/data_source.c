@@ -510,8 +510,8 @@ void
 AG_DataSourceInit(AG_DataSource *_Nonnull ds)
 {
 	AG_MutexInitRecursive(&ds->lock);
-	ds->debug = 0;
 	ds->errorFn = NULL;
+	ds->debug = 0;
 	ds->byte_order = AG_BYTEORDER_BE;
 	ds->rdLast = 0;
 	ds->wrLast = 0;

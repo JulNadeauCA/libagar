@@ -12,8 +12,8 @@ typedef struct ag_button {
 	struct ag_widget wid;		/* AG_Widget -> AG_Button */
 
 	int state;			/* Default state binding */
-	AG_Label *_Nullable lbl;	/* Text label */
 	int surface;			/* Icon surface handle */
+	AG_Label *_Nullable lbl;	/* Text label */
 	enum ag_text_justify justify;	/* Label justification */
 	enum ag_text_valign valign;	/* Vertical alignment */
 	Uint flags;
@@ -29,6 +29,7 @@ typedef struct ag_button {
 
 	int lPad, rPad, tPad, bPad;	/* Padding in pixels */
 #ifdef AG_TIMERS
+	Uint32 _pad;
 	AG_Timer delayTo, repeatTo;	/* For AG_BUTTON_REPEAT */
 #endif
 } AG_Button;

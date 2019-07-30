@@ -132,6 +132,7 @@ RG_TileviewSketchToolOps sketch_line_ops = {
 		sizeof(struct line_tool),
 		TILEVIEW_SKETCH_TOOL,
 		NULL, -1,
+		AG_KEY_L,
 		init,
 		NULL,		/* destroy */
 		edit,

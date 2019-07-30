@@ -1,6 +1,8 @@
 /*	Public domain	*/
 
-#define SK_DIMENSION_TEXT_MAX	256
+#ifndef SK_DIMENSION_TEXT_MAX
+#define SK_DIMENSION_TEXT_MAX 56
+#endif
 
 enum sk_dimension_type {
 	SK_DIMENSION_NONE,
@@ -21,10 +23,10 @@ typedef struct sk_dimension {
 	M_Color cLblBorder;			/* Color of label border */
 	M_Color cLineDim;			/* Color of dimension line */
 	int xPad, yPad;				/* Label padding (pixels) */
+	char text[SK_DIMENSION_TEXT_MAX];	/* Generated label text */
 	M_Vector3 vLbl;				/* Label position (in annotation's
 						   frame of reference) */
 	M_Real wLbl, hLbl;			/* Label dimensions */
-	char text[SK_DIMENSION_TEXT_MAX];	/* Generated label text */
 } SK_Dimension;
 
 typedef struct sk_dimension_view {

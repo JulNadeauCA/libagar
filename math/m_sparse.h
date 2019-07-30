@@ -865,6 +865,7 @@ typedef struct AllocationRecord *AllocationListPtr;
 struct FillinListNodeStruct
 {   ElementPtr  pFillinList;
     int         NumberOfFillinsInList;
+    Uint32 _pad;
     struct      FillinListNodeStruct  *Next;
 };
 
@@ -1069,6 +1070,7 @@ struct  MatrixFrame
     int                          Elements;
     int                          Error;
     int                          ExtSize;
+    Uint32 _pad1;
     int                         *ExtToIntColMap;
     int                         *ExtToIntRowMap;
     BOOLEAN                      Factored;
@@ -1078,6 +1080,7 @@ struct  MatrixFrame
     unsigned long                ID;
     RealVector                   Intermediate;
     BOOLEAN                      InternalVectorsAllocated;
+    Uint32 _pad2;
     int                         *IntToExtColMap;
     int                         *IntToExtRowMap;
     int                         *MarkowitzRow;
@@ -1090,6 +1093,7 @@ struct  MatrixFrame
     int                          PivotsOriginalCol;
     int                          PivotsOriginalRow;
     char                         PivotSelectionMethod;
+    Uint8 _pad3[3];
     BOOLEAN                      PreviousMatrixWasComplex;
     RealNumber                   RelThreshold;
     BOOLEAN                      Reordered;
@@ -1102,10 +1106,13 @@ struct  MatrixFrame
 
     AllocationListPtr            TopOfAllocationList;
     int                          RecordsRemaining;
+    Uint32 _pad4;
     ElementPtr                   NextAvailElement;
     int                          ElementsRemaining;
+    Uint32 _pad5;
     ElementPtr                   NextAvailFillin;
     int                          FillinsRemaining;
+    Uint32 _pad6;
     struct FillinListNodeStruct *FirstFillinListNode;
     struct FillinListNodeStruct *LastFillinListNode;
 };

@@ -1,10 +1,12 @@
 /*	Public domain	*/
 
 typedef struct sg_light {
-	struct sg_node _inherit;
+	struct sg_node _inherit;	/* SG_Node -> SG_Light */
+	Uint flags;
 	int pri;			/* Priority for light allocation */
 	int light;			/* Allocated OpenGL light name
 					   (or GL_INVALID_ENUM) */
+	int tag;			/* User tag */
 	M_Color ambient;		/* Ambient component */
 	M_Color diffuse;		/* Diffuse component */
 	M_Color specular;		/* Specular component */
@@ -17,6 +19,7 @@ typedef struct sg_light {
 #ifdef HAVE_GLU
 	GLUquadricObj *_Nonnull qo;	/* For rendering in editor */
 #endif
+	Uint8 _pad[8];
 } SG_Light;
 
 __BEGIN_DECLS

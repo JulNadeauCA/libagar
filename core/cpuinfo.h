@@ -7,6 +7,8 @@
 typedef struct ag_cpuinfo {
 	const char *_Nonnull arch;	/* Architecture name */
 	char vendorID[13];		/* CPU Vendor ID string */
+	char     _pad1[3];
+
 	Uint32 ext;			/* Architecture extensions
 					   (relevant to user-mode) */
 #define AG_EXT_CPUID		0x00000001 /* CPUID Instruction */
@@ -36,6 +38,8 @@ typedef struct ag_cpuinfo {
 #define AG_EXT_SSSE3		0x01000000 /* SSSE3 Extensions */
 #define AG_EXT_SSE41		0x02000000 /* SSE4.1 extensions */
 #define AG_EXT_SSE42		0x04000000 /* SSE4.1 extensions */
+
+	Uint32 _pad2;
 } AG_CPUInfo;
 
 __BEGIN_DECLS

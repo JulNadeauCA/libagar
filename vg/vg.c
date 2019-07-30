@@ -119,19 +119,19 @@ VG_Init(VG *vg, Uint flags)
 {
 	VG_Point *ptRoot;
 
+	AG_MutexInitRecursive(&vg->lock);
 	vg->flags = flags;
-	vg->colors = NULL;
 	vg->nColors = 0;
+	vg->colors = NULL;
 	vg->fillColor = VG_GetColorRGB(0,0,0);
 	vg->selectionColor = VG_GetColorRGBA(0,200,0,150);
 	vg->mouseoverColor = VG_GetColorRGBA(250,250,0,100);
 	vg->layers = NULL;
 	vg->nLayers = 0;
 	TAILQ_INIT(&vg->nodes);
-	AG_MutexInitRecursive(&vg->lock);
 	
-	vg->T = Malloc(sizeof(VG_Matrix));
 	vg->nT = 1;
+	vg->T = Malloc(sizeof(VG_Matrix));
 	vg->T[0] = VG_MatrixIdentity();
 	
 	VG_PushLayer(vg, _("Layer 0"));

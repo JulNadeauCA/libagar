@@ -554,9 +554,9 @@ Init(void *_Nonnull obj)
 		AG_SetInt(tt->hBar, "max", 0);
 		AG_SetInt(tt->hBar, "value", 0);
 	}
-	tt->column = NULL;
 	tt->n = 0;
 	tt->sortMode = AG_TREETBL_SORT_NOT;
+	tt->column = NULL;
 
 	TAILQ_INIT(&tt->children);
 	TAILQ_INIT(&tt->backstore);
@@ -1354,7 +1354,7 @@ DrawSubnodeIndicator(void *_Nonnull wid, const AG_Rect *_Nonnull r,
 	rd.w = r->w + 2;
 	rd.h = r->h;
 	AG_ColorRGBA_8(&c, 0,0,0, 64);
-	AG_DrawRectBlended(wid, &rd, &c, AG_ALPHA_SRC);
+	AG_DrawRectBlended(wid, &rd, &c, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
 	rd.x += 3;
 	rd.y += 2;

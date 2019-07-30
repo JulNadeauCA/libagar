@@ -37,6 +37,7 @@ Init(void *_Nonnull obj)
 	SG_Program *prog = obj;
 
 	prog->flags = 0;
+	prog->tag = 0;
 }
 
 static int
@@ -45,6 +46,7 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull buf, const AG_Version *_Nonnull
 	SG_Program *prog = obj;
 
 	prog->flags = (Uint)AG_ReadUint32(buf);
+	prog->tag = (int)AG_ReadSint32(buf);
 	return (0);
 }
 
@@ -54,6 +56,7 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull buf)
 	SG_Program *prog = obj;
 
 	AG_WriteUint32(buf, (Uint32)prog->flags);
+	AG_WriteSint32(buf, (Sint32)prog->tag);
 	return (0);
 }
 

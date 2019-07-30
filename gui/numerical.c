@@ -491,7 +491,6 @@ Init(void *_Nonnull obj)
 	                      AG_WIDGET_TABLE_EMBEDDABLE;
 
 	num->flags = 0;
-	num->writeable = 1;
 	num->wUnitSel = 0;
 	num->hUnitSel = 0;
 	num->inTxt[0] = '\0';
@@ -790,15 +789,16 @@ AG_NumericalSelectUnit(AG_Numerical *num, const char *uname)
 #endif /* HAVE_FLOAT */
 
 void
-AG_NumericalSetWriteable(AG_Numerical *num, int writeable)
+AG_NumericalSetWriteable(AG_Numerical *num, int enable)
 {
 	AG_ObjectLock(num);
-	num->writeable = writeable;
-	if (writeable) {
+	if (enable) {
+		num->flags &= ~(AG_NUMERICAL_READONLY);
 		AG_WidgetEnable(num->incbu);
 		AG_WidgetEnable(num->decbu);
 		AG_WidgetEnable(num->input);
 	} else {
+		num->flags |= AG_NUMERICAL_READONLY;
 		AG_WidgetDisable(num->incbu);
 		AG_WidgetDisable(num->decbu);
 		AG_WidgetDisable(num->input);

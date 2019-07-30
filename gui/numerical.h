@@ -10,7 +10,11 @@
 #include <agar/gui/units.h>
 
 #include <agar/gui/begin.h>
-	
+
+#ifndef AG_NUMERICAL_INPUT_MAX
+#define AG_NUMERICAL_INPUT_MAX 56
+#endif
+
 typedef struct ag_numerical {
 	struct ag_widget wid;		/* AG_Widget -> AG_Numerical */
 	Uint flags;
@@ -18,19 +22,20 @@ typedef struct ag_numerical {
 #define AG_NUMERICAL_VFILL	0x02
 #define AG_NUMERICAL_INT	0x04	/* Default binding should be int */
 #define AG_NUMERICAL_EXCL	0x08	/* Exclusive access to bindings */
+#define AG_NUMERICAL_READONLY	0x10	/* Read-only mode */
 
-	char format[32];		/* Print format (for reals) */
+	char format[28];		/* Print format (for reals) */
 #ifdef AG_HAVE_FLOAT
 	const AG_Unit *_Nonnull unit;	/* Conversion unit in use */
 	AG_UCombo *_Nullable units;	/* Unit selector */
 #endif
-	int writeable;			/* 0 = read-only */
-	char inTxt[64];			/* Input text buffer */
-	AG_Textbox *_Nonnull input;	/* Input textbox */
-	AG_Button *_Nonnull incbu;	/* Increment button */
-	AG_Button *_Nonnull decbu;	/* Decrement button */
-	int wUnitSel, hUnitSel;		/* Size hints for entry box */
-	int wPreUnit;			/* Size hint for unit selector */
+	char inTxt[AG_NUMERICAL_INPUT_MAX];	/* Input text buffer */
+	AG_Textbox *_Nonnull input;		/* Input textbox */
+	AG_Button *_Nonnull incbu;		/* Increment button */
+	AG_Button *_Nonnull decbu;		/* Decrement button */
+	int wUnitSel, hUnitSel;			/* Size hints for entry box */
+	int wPreUnit;				/* Size hint for unit selector */
+	Uint32 _pad;
 #ifdef AG_TIMERS
 	AG_Timer updateTo;		/* Timer for non-EXCL mode */
 #endif

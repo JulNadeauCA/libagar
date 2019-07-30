@@ -10,8 +10,11 @@ struct au_dev_out;
 
 typedef struct au_dev_out_class {
 	const char *_Nonnull name;		/* Display text */
-	AG_Size size;				/* Instance structure size */
-
+#ifdef AG_HAVE_64BIT
+	Uint64 size;				/* Instance structure size */
+#else
+	Uint size;				/* Instance structure size */
+#endif
 	void (*_Nullable Init)(void *_Nonnull);
 	void (*_Nullable Destroy)(void *_Nonnull);
 	int  (*_Nullable Open)(void *_Nonnull, const char *_Nonnull, int, int);
@@ -72,11 +75,11 @@ typedef struct au_dev_out {
 	AG_Size bufSize;		/* Buffer content size (frames) */
 	AG_Size bufMax;			/* Total buffer size (frames) */
 	int nOverruns;			/* Overruns recorded */
+	Uint                 nChan;
+	AU_Channel *_Nullable chan;	/* Virtual channels */
 #ifdef AG_THREADS
 	_Nonnull AG_Cond wrRdy, rdRdy;	/* Buffer status */
 #endif
-	AU_Channel *_Nullable chan;	/* Virtual channels */
-	Uint                 nChan;
 } AU_DevOut;
 
 #define AUDEVOUT(obj) ((AU_DevOut *)(obj))

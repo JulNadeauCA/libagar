@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
 typedef struct sg_triangle {
-	struct sg_geom _inherit;
+	struct sg_geom _inherit;		/* SG_Geom -> SG_Triangle */
 } SG_Triangle;
 
 #define SGTRIANGLE(n) ((SG_Triangle *)(n))

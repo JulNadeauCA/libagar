@@ -7,7 +7,7 @@
 # if AG_MODEL == AG_SMALL
 #  define AG_OBJECT_NAME_MAX 16
 # else
-#  define AG_OBJECT_NAME_MAX 32
+#  define AG_OBJECT_NAME_MAX 28
 # endif
 #endif
 #ifndef AG_OBJECT_TYPE_MAX
@@ -142,7 +142,6 @@ typedef struct ag_object {
 	char tag[AG_OBJECT_TYPE_TAG_LEN]; /* For runtime type-safety check */
 #endif
 	char name[AG_OBJECT_NAME_MAX];    /* Object ID (unique in parent) */
-	AG_ObjectClass *_Nonnull cls;     /* Class description */
 	Uint flags;
 #define AG_OBJECT_FLOATING_VARS	 0x00001  /* Clear variables before load */
 #define AG_OBJECT_NON_PERSISTENT 0x00002  /* Never include in saves */
@@ -168,6 +167,8 @@ typedef struct ag_object {
 				 AG_OBJECT_REMAIN_DATA|\
 				 AG_OBJECT_DEBUG|\
 				 AG_OBJECT_BOUND_EVENTS)
+
+	AG_ObjectClass *_Nonnull cls;     /* Class description */
 
 	AG_TAILQ_HEAD_(ag_event) events;  /* Event handlers */
 #ifdef AG_TIMERS
@@ -219,13 +220,14 @@ typedef struct ag_object_header {
     (event->argv[v].info.pFlags & AG_VARIABLE_P_READONLY) && \
     AG_OBJECT_VALID(event->argv[v].data.p)) ? (const void *)event->argv[v].data.p : \
                                               (const void *)AG_ObjectMismatch())
-# define AG_OBJECT_ISA(obj,class) \
+# define AG_OBJECT_ISA(obj,class) { \
 	if (!AG_OBJECT_VALID(obj)) { \
 		AG_FatalErrorF("%p is not a valid AG_Object", (obj)); \
 	} \
 	if (!AG_OfClass((obj),(class))) { \
 		AG_FatalErrorF("%s is not a %s", AGOBJECT(obj)->name, class); \
-	}
+	} \
+ }
 
 #else /* !AG_TYPE_SAFETY */
 

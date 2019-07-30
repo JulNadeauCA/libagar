@@ -51,6 +51,9 @@ typedef struct ag_label {
 	AG_FmtString *_Nullable fmt;		/* Polled label data */
 	char *_Nullable pollBuf;		/* Buffer for polled labels */
 	AG_Size         pollBufSize;
+# if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+# endif
 #endif
 } AG_Label;
 

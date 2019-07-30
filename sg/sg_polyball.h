@@ -1,9 +1,10 @@
 /*	Public domain	*/
 
 typedef struct sg_polyball {
-	struct sg_object _inherit;
+	struct sg_object _inherit;	/* SG_Object -> SG_Polyball */
 	Uint flags;
 	int subdiv;			/* Subdivision level */
+	Uint8 _pad[8];
 } SG_Polyball;
 
 __BEGIN_DECLS

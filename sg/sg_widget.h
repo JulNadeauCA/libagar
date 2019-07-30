@@ -6,8 +6,9 @@ enum sg_widget_style {
 };
 
 typedef struct sg_widget {
-	struct sg_geom _inherit;
+	struct sg_geom _inherit;		/* SG_Geom -> SG_Widget */
 	enum sg_widget_style style;
+	Uint flags;
 	M_Real size;
 	AG_TAILQ_ENTRY(sg_widget) widgets;
 } SG_Widget;

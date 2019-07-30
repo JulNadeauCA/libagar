@@ -24,8 +24,8 @@
  */
 
 #include <agar/core/core.h>
-
 #include <agar/gui/gui.h>
+#include <agar/gui/widget.h>
 
 #include <agar/rg/tileset.h>
 
@@ -95,12 +95,12 @@ TransformRotate(struct map_item *r, int angle)
 #endif
 
 RG_Transform *
-RG_TransformNew(enum rg_transform_type type, int nargs, Uint32 *args)
+RG_TransformNew(enum rg_transform_type type, int nArgs, Uint32 *args)
 {
 	RG_Transform *xf;
 
 	xf = Malloc(sizeof(RG_Transform));
-	if (RG_TransformInit(xf, type, nargs, args) == -1) {
+	if (RG_TransformInit(xf, type, nArgs, args) == -1) {
 		Free(xf);
 		return (NULL);
 	}
@@ -108,28 +108,28 @@ RG_TransformNew(enum rg_transform_type type, int nargs, Uint32 *args)
 }
 
 int
-RG_TransformInit(RG_Transform *xf, enum rg_transform_type type, int nargs,
+RG_TransformInit(RG_Transform *xf, enum rg_transform_type type, Uint nArgs,
     Uint32 *args)
 {
 	int i;
 
-	if (nargs > RG_TRANSFORM_MAX_ARGS) {
+	if (nArgs > RG_TRANSFORM_MAX_ARGS) {
 		AG_SetError("Too many transform args");
 		return (-1);
 	}
 
 	memset(xf, 0, sizeof(RG_Transform));
 	xf->type = type;
-	xf->func = NULL;
-	xf->nargs = nargs;
-	if (nargs > 0) {
-		xf->args = Malloc(nargs*sizeof(Uint32));
-		memcpy(xf->args, args, nargs * sizeof(Uint32));
+	if ((xf->nArgs = nArgs) > 0) {
+		xf->args = Malloc(nArgs*sizeof(Uint32));
+		memcpy(xf->args, args, nArgs * sizeof(Uint32));
 	} else {
 		xf->args = NULL;
 	}
 
-	for (i = 0; i < rgTransformsCount; i++) {
+	for (i=0, xf->func = NULL;
+	     i < rgTransformsCount;
+	     i++) {
 		if (rgTransforms[i].type == type) {
 			xf->func = rgTransforms[i].func;
 			break;
@@ -199,7 +199,7 @@ RG_TransformChainDestroy(RG_TransformChain *xchain)
 
 void
 RG_TransformChainPrint(const RG_TransformChain *xchain, char *buf,
-    size_t buf_size)
+    AG_Size buf_size)
 {
 	extern const struct rg_transform_ops rgTransforms[];
 	extern const int rgTransformsCount;
@@ -214,7 +214,7 @@ RG_TransformChainPrint(const RG_TransformChain *xchain, char *buf,
 		if (i < rgTransformsCount) {
 			Strlcat(buf, "+", buf_size);
 			Strlcat(buf, rgTransforms[i].name, buf_size);
-			for (j = 0; j < tr->nargs; j++) {
+			for (j = 0; j < tr->nArgs; j++) {
 				char num[32];
 
 				Snprintf(num, sizeof(num), "(%lu)",
@@ -234,7 +234,7 @@ RG_TransformChainDup(const RG_TransformChain *xc, RG_TransformChain *xc_dup)
 
 	TAILQ_FOREACH(xf, xc, transforms) {
 		xf_dup = Malloc(sizeof(RG_Transform));
-		RG_TransformInit(xf_dup, xf->type, xf->nargs, xf->args);
+		RG_TransformInit(xf_dup, xf->type, xf->nArgs, xf->args);
 		TAILQ_INSERT_TAIL(xc_dup, xf_dup, transforms);
 	}
 }
@@ -243,9 +243,9 @@ int
 RG_TransformCompare(const RG_Transform *xf1, const RG_Transform *xf2)
 {
 	return (xf1->type == xf2->type &&
-	        xf1->nargs == xf2->nargs &&
-		(xf1->nargs == 0 ||
-		 memcmp(xf1->args, xf2->args, xf1->nargs*sizeof(Uint32)) == 0));
+	        xf1->nArgs == xf2->nArgs &&
+		(xf1->nArgs == 0 ||
+		 memcmp(xf1->args, xf2->args, xf1->nArgs*sizeof(Uint32)) == 0));
 }
 
 void
@@ -261,15 +261,15 @@ RG_TransformLoad(AG_DataSource *buf, RG_Transform *xf)
 
 	xf->type = AG_ReadUint8(buf);
 	xf->func = NULL;
-	xf->nargs = (int)AG_ReadUint8(buf);
-	if (xf->nargs > RG_TRANSFORM_MAX_ARGS) {
-		AG_SetError("Too many transform args: %u", (Uint)xf->nargs);
+	xf->nArgs = (int)AG_ReadUint8(buf);
+	if (xf->nArgs > RG_TRANSFORM_MAX_ARGS) {
+		AG_SetError("Too many transform args: %u", (Uint)xf->nArgs);
 		return (-1);
 	}
 
 	Free(xf->args);
-	xf->args = Malloc(xf->nargs * sizeof(Uint32));
-	for (i = 0; i < xf->nargs; i++)
+	xf->args = Malloc(xf->nArgs * sizeof(Uint32));
+	for (i = 0; i < xf->nArgs; i++)
 		xf->args[i] = AG_ReadUint32(buf);
 
 	/* Look for a matching algorithm. */
@@ -292,9 +292,9 @@ RG_TransformSave(AG_DataSource *buf, const RG_Transform *xf)
 	int i;
 
 	AG_WriteUint8(buf, xf->type);
-	AG_WriteUint8(buf, xf->nargs);
+	AG_WriteUint8(buf, xf->nArgs);
 
-	for (i = 0; i < xf->nargs; i++)
+	for (i = 0; i < xf->nArgs; i++)
 		AG_WriteUint32(buf, xf->args[i]);
 }
 
@@ -330,7 +330,7 @@ TransformFlip(AG_Surface *_Nonnull S, int argc, Uint32 *_Nonnull argv)
 	Uint8 *pRow, *row;
 	Uint8 *p = S->pixels;
 	int pitch = S->pitch;
-	size_t totsize = S->h*pitch;
+	AG_Size totsize = S->h*pitch;
 	int y;
 
 	row = Malloc(totsize);
@@ -403,7 +403,7 @@ TransformRotate(AG_Surface *_Nonnull S, int argc, Uint32 *_Nonnull argv)
 static AG_Surface *_Nonnull
 TransformInvertRGB(AG_Surface *_Nonnull S, int argc, Uint32 *_Nonnull argv)
 {
-	size_t size = S->w*S->h;
+	AG_Size size = S->w*S->h;
 	Uint8 *p = S->pixels;
 	AG_Color c;
 	int i;
@@ -420,9 +420,9 @@ TransformInvertRGB(AG_Surface *_Nonnull S, int argc, Uint32 *_Nonnull argv)
 }
 
 const struct rg_transform_ops rgTransforms[] = {
-	{ "mirror",	RG_TRANSFORM_MIRROR,		TransformMirror },
-	{ "flip",	RG_TRANSFORM_FLIP,		TransformFlip },
-	{ "rotate",	RG_TRANSFORM_ROTATE,		TransformRotate },
-	{ "rgb-invert",	RG_TRANSFORM_RGB_INVERT,	TransformInvertRGB }
+	{ "mirror",	RG_TRANSFORM_MIRROR,     0, TransformMirror },
+	{ "flip",	RG_TRANSFORM_FLIP,       0, TransformFlip },
+	{ "rotate",	RG_TRANSFORM_ROTATE,     0, TransformRotate },
+	{ "rgb-invert",	RG_TRANSFORM_RGB_INVERT, 0, TransformInvertRGB }
 };
 const int rgTransformsCount = sizeof(rgTransforms) / sizeof(rgTransforms[0]);

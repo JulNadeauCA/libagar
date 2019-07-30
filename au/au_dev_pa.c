@@ -40,6 +40,7 @@ typedef struct au_dev_out_pa {
 	struct au_dev_out _inherit;
 	PaStream *stream;
 	int wrPos;
+	Uint32 _pad;
 	AG_Thread th;
 } AU_DevOutPA;
 

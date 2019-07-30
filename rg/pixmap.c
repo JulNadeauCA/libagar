@@ -77,12 +77,12 @@ void
 RG_PixmapInit(RG_Pixmap *px, RG_Tileset *ts, int flags)
 {
 	px->name[0] = '\0';
-	px->ts = ts;
 	px->flags = flags;
 	px->xorig = 0;
 	px->yorig = 0;
+	px->nRefs = 0;
+	px->ts = ts;
 	px->su = NULL;
-	px->nrefs = 0;
 	px->ublks = Malloc(sizeof(RG_PixmapUndoBlk));
 	px->nublks = 1;
 	px->curblk = 0;
@@ -111,7 +111,7 @@ RG_PixmapAddBrush(RG_Pixmap *px, enum rg_brush_type type,
 	br->name[0] = '\0';
 	br->flags = 0;
 	br->px = bpx;
-	br->px->nrefs++;
+	br->px->nRefs++;
 	TAILQ_INSERT_TAIL(&px->brushes, br, brushes);
 	return (br);
 }
@@ -120,7 +120,7 @@ void
 RG_PixmapDelBrush(RG_Pixmap *px, RG_Brush *br)
 {
 	TAILQ_REMOVE(&px->brushes, br, brushes);
-	br->px->nrefs--;
+	br->px->nRefs--;
 	Free(br);
 }
 
@@ -272,7 +272,7 @@ PollPixmaps(AG_Event *_Nonnull event)
 	AG_TlistClear(tl);
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
 		it = AG_TlistAdd(tl, NULL, "%s (%u refs)", px->name,
-		    px->nrefs);
+		    px->nRefs);
 		it->cat = "pixmap";
 		it->p1 = px;
 		AG_TlistSetIcon(tl, it, px->su);
@@ -393,7 +393,7 @@ static void
 FlipPixmap(AG_Event *_Nonnull event)
 {
 	RG_Pixmap *px = AG_PTR(2);
-	size_t totsize = px->su->h*px->su->pitch;
+	AG_Size totsize = px->su->h*px->su->pitch;
 	Uint8 *row, *buf;
 	Uint8 *fb = px->su->pixels;
 	int y;

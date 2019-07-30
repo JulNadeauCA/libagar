@@ -18,10 +18,14 @@ typedef struct map_tool_ops {
 	const char    *_Nonnull name;	/* Display name */
 	const char    *_Nonnull desc;	/* Long description */
 	AG_StaticIcon *_Nonnull icon;	/* Display icon */
-
-	size_t len;
-	int flags;
+#ifdef AG_HAVE_64BIT
+	Uint64 len;
+#else
+	Uint len;
+#endif
+	Uint flags;
 #define TOOL_HIDDEN	0x01		/* Don't include in toolbars/menus */
+	int rev;
 
 	void (*_Nullable init)(void *_Nonnull);
 	void (*_Nullable destroy)(void *_Nonnull);
@@ -44,7 +48,7 @@ typedef struct map_tool {
 
 	char *_Nullable status[AG_MAPTOOL_STATUS_MAX];  /* Status */
 	int            nstatus;
-
+	Uint32 _pad;
 	struct ag_window *_Nullable win;	/* Edition window (if any) */
 	struct ag_widget *_Nullable pane;	/* Edition pane (if any) */
 	struct ag_button *_Nullable trigger;	/* Trigger button (XXX) */
@@ -58,6 +62,7 @@ typedef struct map_tool_keybinding {
 	AG_KeyMod mod;
 	AG_KeySym key;
 	int edit;
+	Uint32 _pad;
 	int (*_Nonnull func)(MAP_Tool *_Nonnull, AG_KeySym k, int s,
 	                     void *_Nullable);
 	void *_Nullable arg;

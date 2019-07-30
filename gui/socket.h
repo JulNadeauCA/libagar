@@ -39,6 +39,7 @@ typedef struct ag_socket {
 	} bgData;
 	enum ag_text_justify lblJustify; /* Label justification */
 	int lPad, rPad, tPad, bPad;	 /* Padding around contained Icon */
+	Uint32 _pad;
 	struct ag_icon *_Nullable icon;	 /* Icon in socket if any */
 
 	/* Icon inserted callback */

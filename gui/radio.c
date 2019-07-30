@@ -268,7 +268,7 @@ Draw(void *_Nonnull obj)
 			r.w = WIDTH(rad) - (xPadding << 1);
 			r.h = itemHeight;
 			AG_DrawRectBlended(rad, &r, &WCOLOR_HOV(rad,0),
-			    AG_ALPHA_SRC);
+			    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 		}
 
 		xc = xPadding + radius;

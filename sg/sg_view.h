@@ -6,6 +6,10 @@
 
 struct sg_camera;
 
+#ifndef SG_VIEW_STATUS_MAX
+#define SG_VIEW_STATUS_MAX 120
+#endif
+
 /* Managed per-view texture. */
 typedef struct sg_view_texture {
 	void *_Nonnull node;			/* Pointer to parent node */
@@ -28,11 +32,12 @@ typedef struct sg_view_list {
 typedef struct sg_view_cam_action {
 	M_Real incr;			/* Increment */
 	Uint32 vMin, vAccel, vMax;	/* Repeat delays */
+	Uint8 _pad[12];
 	M_Vector3 v;			/* Axis or direction */
 } SG_ViewCamAction;
 
 typedef struct sg_view {
-	struct ag_widget _inherit;
+	struct ag_widget _inherit;	/* AG_Widget -> SG_View */
 
 	Uint flags;
 #define SG_VIEW_HFILL		0x001
@@ -48,24 +53,26 @@ typedef struct sg_view {
 #define SG_VIEW_MOVING		0x100 /* Moving object */
 #define SG_VIEW_ROTATING	0x200 /* Rotating object */
 
+	Uint transFlags;
+#define SG_VIEW_TRANSFADE	0x01	/* Fade-out/fade-in */
+
 	SG *_Nullable sg;		/* Scene graph */
 	SG *_Nullable sgTrans;		/* For SG_ViewTransition() */
 
-	Uint     transFlags;
-#define SG_VIEW_TRANSFADE	0x01	/* Fade-out/fade-in */
 	AG_Timer toTransFade;		/* Timer for fade */
 	float    transProgress;		/* Transition state */
 	AG_Color transFadeColor;	/* Color for fade */
 	Uint     transDuration;		/* Duration for transition (ms) */
-
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad1;
+#endif
 	struct sg_camera *_Nullable cam;	/* Current camera */
 	struct sg_camera *_Nullable camTrans;	/* Transitioning to camera */
 
-	struct {
-		int lx, ly;		/* Last mouse position (for rotation) */
-		M_Vector3 rsens;	/* Rotation sensitivity vector */
-		M_Vector3 tsens;	/* Translation sensitivity vector */
-	} mouse;
+	char editStatus[SG_VIEW_STATUS_MAX];	/* Status text */
+
+	M_Vector3 rSens;		/* Rotational sensitivity (mouse) */
+	M_Vector3 tSens;		/* Translational sensitivity (mouse) */
 
 	AG_Widget *_Nonnull editArea;	/* Edit container widget */
 	SG_Node   *_Nonnull editNode;	/* Node being edited */
@@ -73,9 +80,9 @@ typedef struct sg_view {
 	SG_ViewCamAction rot[3];	/* Keyboard controlled yaw/pitch/roll */
 	SG_ViewCamAction move[3];	/* Keyboard controlled translate */
 	AG_Timer toRot, toMove;
-	int lastKeyDown;
+	AG_KeySym lastKeyDown;		/* Last pressed key */
+	Uint32 _pad2;
 
-	char editStatus[128];		/* Edit status text */
 	AG_PopupMenu *_Nonnull pmView;	/* Popup menu per view */
 	AG_PopupMenu *_Nonnull pmNode;	/* Popup menu per node */
 	AG_Timer toRefresh;		/* View refresh timer */

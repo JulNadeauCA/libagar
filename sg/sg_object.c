@@ -125,13 +125,13 @@ Init(void *_Nonnull obj)
 	SG_Object *so = obj;
 
 	so->flags = 0;
-	so->vtx = Malloc(sizeof(SG_Vertex));
 	so->nVtx = 1;
+	so->vtx = Malloc(sizeof(SG_Vertex));
 	so->edgeTbl = Malloc(sizeof(SG_EdgeEnt));
 	so->nEdgeTbl = 1;
 	SLIST_INIT(&so->edgeTbl[0].edges);
-	so->facetTbl = Malloc(sizeof(SG_FacetEnt));
 	so->nFacetTbl = 1;
+	so->facetTbl = Malloc(sizeof(SG_FacetEnt));
 	SLIST_INIT(&so->facetTbl[0].facets);
 
 	SG_VertexInit(&so->vtx[0]);				/* Reserved */
@@ -406,16 +406,16 @@ SG_Edge2(void *obj, int vT, int vH)
 		}
 	}
 	e = Malloc(sizeof(SG_Edge));
+	e->flags = 0;
 	e->v = vH;
 	e->f = NULL;
-	e->flags = 0;
 	SLIST_INSERT_HEAD(&ee->edges, e, edges);
 
 	e->oe = Malloc(sizeof(SG_Edge));
-	e->oe->oe = e;
+	e->oe->flags = 0;
 	e->oe->v = vT;
 	e->oe->f = NULL;
-	e->oe->flags = 0;
+	e->oe->oe = e;
 	SLIST_INSERT_HEAD(&ee->edges, e->oe, edges);
 	
 	AG_ObjectUnlock(so);
@@ -427,7 +427,7 @@ SG_Edge2(void *obj, int vT, int vH)
  * must be locked.
  */
 void
-SG_EdgeGetName(SG_Edge *e, char *dst, size_t dst_len)
+SG_EdgeGetName(SG_Edge *e, char *dst, AG_Size dst_len)
 {
 	snprintf(dst, dst_len, "%u->%u", e->v, e->oe->v);
 }
@@ -542,7 +542,7 @@ SG_FacetFromQuad4(void *obj, int v1, int v2, int v3, int v4)
  * Parent object must be locked.
  */
 void
-SG_FacetGetName(SG_Facet *f, char *dst, size_t dst_len)
+SG_FacetGetName(SG_Facet *f, char *dst, AG_Size dst_len)
 {
 	switch (f->n) {
 	case 3:

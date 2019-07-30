@@ -114,7 +114,12 @@ int
 SK_DimensionSave(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Dimension *dim = p;
-	
+
+	if (dim->n1 == NULL || dim->n2 == NULL) {
+		AG_SetErrorS("Missing n1/n2");
+		return (-1);
+	}
+
 	SK_AnnotSave(sk, dim, buf);
 	AG_WriteUint32(buf, (Uint32)dim->type);
 	AG_WriteUint32(buf, (Uint32)dim->flags);
@@ -256,7 +261,7 @@ GetDimensionVal(SK_Dimension *_Nonnull dim)
 }
 
 static void
-GetLabelText(SK_Dimension *_Nonnull dim, char *_Nonnull text, size_t text_len)
+GetLabelText(SK_Dimension *_Nonnull dim, char *_Nonnull text, AG_Size text_len)
 {
 	SK *sk = SKNODE(dim)->sk;
 

@@ -62,11 +62,13 @@ struct xcf_prop {
 		enum xcf_compression compression;	/* Tile compression */
 		struct {
 			Uint32 size;		/* Number of RGB triplets */
+			Uint32 _pad;
 			char *data;		/* RGB triplet array */
 		} colormap;
 		struct {
 			Sint32 position;	/* Guide coordinates */
 			Sint8 orientation;	/* Guide orientation */
+			Uint8 _pad[3];
 		} guide;
 		struct {
 			char *name;
@@ -96,11 +98,14 @@ struct xcf_prop {
 struct xcf_header {
 	Uint32 w, h;				/* Geometry in pixels */
 	enum xcf_base_type base_type;		/* Type of image */
+	Uint32 _pad1;
 	Uint32 *layer_offstable;
 	Uint32 *channel_offstable;
 	Uint8 compression;
+	char _pad2[7];
 	struct {
 		Uint32 size;
+		Uint32 _pad;
 		Uint8 *data;
 	} colormap;
 };
@@ -114,11 +119,13 @@ struct xcf_layer {
 	Uint32 mode;			/* Application mode */
 	Uint32 hierarchy_offset;	/* Offset of xcf_hierarchy */
 	Uint32 mask_offset;		/* Offset of mask xcf_layer */
+	Uint32 _pad;
 };
 
 struct xcf_hierarchy {
 	Uint32 w, h;
 	Uint32 bpp;
+	Uint32 _pad;
 	Uint32 *level_offsets;
 	int    nlevel_offsets;
 	int  maxlevel_offsets;

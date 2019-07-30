@@ -33,6 +33,8 @@ typedef struct ag_file_type_option {
 	char *_Nonnull key;			/* Option identifier string */
 	char *_Nullable unit;			/* Unit for AG_Numerical(3) */
 	enum ag_file_type_option_type type;
+	Uint32 _pad;
+	AG_TAILQ_ENTRY(ag_file_type_option) opts;
 	union {
 		struct { int val, min, max; } i;
 #ifdef AG_HAVE_FLOAT
@@ -41,7 +43,6 @@ typedef struct ag_file_type_option {
 #endif
 		char s[AG_SMALL_LABEL_MAX];
 	} data;
-	AG_TAILQ_ENTRY(ag_file_type_option) opts;
 } AG_FileOption;
 
 typedef struct ag_file_type {
@@ -49,7 +50,8 @@ typedef struct ag_file_type {
 	char *_Nonnull descr;              /* Display text */
 	char *_Nonnull allExts;            /* Filename extensions/patterns */
 	char *_Nonnull *_Nonnull exts;     /* Extensions/patterns as an array */
-	Uint                    nexts;
+	Uint                    nExts;
+	Uint32 _pad;
 	AG_Event *_Nullable action;                /* Load/save callback */
 	AG_TAILQ_HEAD_(ag_file_type_option) opts;  /* Type-specific options */
 	AG_TAILQ_ENTRY(ag_file_type) types;
@@ -81,6 +83,7 @@ typedef struct ag_file_dlg {
 
 	char cwd[AG_PATHNAME_MAX];		/* Current working directory */
 	char cfile[AG_PATHNAME_MAX];		/* Current file path */
+	Uint32 _pad;
 	AG_Pane *_Nonnull hPane;		/* Horizontal split container */
 	AG_Tlist *_Nonnull tlDirs;		/* List of directories */
 	AG_Tlist *_Nonnull tlFiles;		/* List of files */

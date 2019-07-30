@@ -30,7 +30,6 @@ typedef struct ag_scrollview {
 	AG_Scrollbar *_Nullable hbar;	/* Horizontal scrollbar */
 	AG_Scrollbar *_Nullable vbar;	/* Vertical scrollbar */
 	int wBar, hBar;			/* Effective scrollbar sizes */
-	int incr;			/* Scrolling increment */
 } AG_Scrollview;
 
 #define AGSCROLLVIEW(obj)            ((AG_Scrollview *)(obj))

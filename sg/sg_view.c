@@ -266,7 +266,9 @@ OnOverlay(AG_Event *_Nonnull event)
 		c.a = AG_COLOR_LAST - (AG_Component)
 		      (Fabs(sv->transProgress) * (AG_COLOR_LASTD-1.0));
 
-		AG_DrawRectBlended(sv, &r, &c, AG_ALPHA_SRC);
+		AG_DrawRectBlended(sv, &r, &c,
+		    AG_ALPHA_SRC,
+		    AG_ALPHA_ONE_MINUS_SRC);
 	}
 	if (sv->flags & SG_VIEW_CAMERA_STATUS) {
 		OnOverlayCameraStatus(sv);
@@ -783,9 +785,9 @@ Init(void *_Nonnull obj)
 	WIDGET(sv)->flags |= (AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_OPENGL);
 
 	sv->flags = 0;
+	sv->transFlags = 0;
 	sv->sg = NULL;
 	sv->sgTrans = NULL;
-	sv->transFlags = 0;
 	sv->transProgress = 1.0;
 	sv->cam = NULL;
 	sv->camTrans = NULL;
@@ -799,8 +801,8 @@ Init(void *_Nonnull obj)
 	AG_InitTimer(&sv->toTransFade, "transFade", 0);
 	AG_InitTimer(&sv->toRefresh, "refresh", 0);
 
-	sv->mouse.rsens = M_VECTOR3(0.01, 0.01, 0.01);
-	sv->mouse.tsens = M_VECTOR3(0.01, 0.01, 0.1);
+	sv->rSens = M_VECTOR3(0.01, 0.01, 0.01);
+	sv->tSens = M_VECTOR3(0.01, 0.01, 0.1);
 
 	sv->rot[0].v = M_VecJ3();
 	sv->rot[1].v = M_VecI3();

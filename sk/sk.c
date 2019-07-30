@@ -211,6 +211,7 @@ Init(void *_Nonnull obj)
 	OBJECT(sk)->flags |= AG_OBJECT_REOPEN_ONLOAD;
 
 	sk->flags = 0;
+	sk->nSolutions = 0;
 	AG_MutexInitRecursive(&sk->lock);
 	SK_InitCluster(&sk->ctGraph, 0);
 	TAILQ_INIT(&sk->nodes);
@@ -222,7 +223,6 @@ Init(void *_Nonnull obj)
 	}
 	sk->uLen = un;
 	sk->status = SK_WELL_CONSTRAINED;
-	sk->nSolutions = 0;
 	Strlcpy(sk->statusText, _("New sketch"), sizeof(sk->statusText));
 
 	SK_InitRoot(sk);

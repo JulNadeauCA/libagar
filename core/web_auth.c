@@ -47,8 +47,8 @@ WEB_SessionInit(WEB_Session *S, const WEB_SessionOps *Sops)
 {
 	S->ops = Sops;
 	S->id[0] = '\0';
-	TAILQ_INIT(&S->vars);
 	S->nVars = 0;
+	TAILQ_INIT(&S->vars);
 	S->pp[0] = -1;
 	S->pp[1] = -1;
 	S->nEvents = 0;

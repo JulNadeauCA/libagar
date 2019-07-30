@@ -26,7 +26,6 @@
 #include <agar/core/core.h>
 
 #include <agar/gui/gui.h>
-
 #include <agar/gui/combo.h>
 #include <agar/gui/notebook.h>
 #include <agar/gui/numerical.h>

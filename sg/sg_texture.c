@@ -51,16 +51,16 @@ Init(void *_Nonnull obj)
 	tex->flags = 0;
 	tex->w = 0;
 	tex->h = 0;
+	tex->shininess = 0.0;
 	tex->emissive = M_ColorGray(0.5);
 	tex->ambient = M_ColorGray(0.2);
 	tex->diffuse = M_ColorGray(0.8);
 	tex->specular = M_ColorBlack();
-	tex->shininess = 0.0;
 	TAILQ_INIT(&tex->progs);
 	tex->nProgs = 0;
 	tex->surface = NULL;
-	TAILQ_INIT(&tex->surfaces);
 	tex->nSurfaces = 0;
+	TAILQ_INIT(&tex->surfaces);
 	TAILQ_INIT(&tex->vtex);
 }
 
@@ -106,11 +106,11 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull 
 	tex->flags |= (AG_ReadUint32(ds) & SG_TEXTURE_SAVED);
 	tex->w = (Uint)AG_ReadUint32(ds);
 	tex->h = (Uint)AG_ReadUint32(ds);
+	tex->shininess = M_ReadReal(ds);
 	tex->emissive = M_ReadColor(ds);
 	tex->ambient = M_ReadColor(ds);
 	tex->diffuse = M_ReadColor(ds);
 	tex->specular = M_ReadColor(ds);
-	tex->shininess = M_ReadReal(ds);
 
 	/* Load program references. */
 	if ((count = (int)AG_ReadUint8(ds)) > SG_TEXTURE_PROGS_MAX) {
@@ -165,11 +165,11 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 	AG_WriteUint32(ds, tex->flags & SG_TEXTURE_SAVED);
 	AG_WriteUint32(ds, (Uint32)tex->w);
 	AG_WriteUint32(ds, (Uint32)tex->h);
+	M_WriteReal(ds, tex->shininess);
 	M_WriteColor(ds, &tex->emissive);
 	M_WriteColor(ds, &tex->ambient);
 	M_WriteColor(ds, &tex->diffuse);
 	M_WriteColor(ds, &tex->specular);
-	M_WriteReal(ds, tex->shininess);
 
 	AG_WriteUint8(ds, (Uint32)tex->nProgs);
 	TAILQ_FOREACH(tp, &tex->progs, programs) {
@@ -658,7 +658,8 @@ SG_TextureBind(SG_Texture *tex, SG_View *view)
 			TAILQ_INSERT_TAIL(&tex->vtex, vt, textures);
 		}
 		AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
-		    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+		    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC,
+		    AG_TEXTURE_ENV_REPLACE);
 		glBindTexture(GL_TEXTURE_2D, vt->name);
 	}
 

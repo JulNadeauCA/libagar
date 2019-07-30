@@ -49,8 +49,10 @@ Init(void *_Nonnull obj)
 	SG_Light *lt = obj;
 	static int nlight = GL_LIGHT0;			/* XXX */
 
+	lt->flags = 0;
 	lt->pri = 0;
 	lt->light = nlight++;				/* XXX test */
+	lt->tag = 0;
 	lt->ambient = M_ColorBlack();
 	lt->diffuse = M_ColorWhite();
 	lt->specular = M_ColorWhite();
@@ -81,8 +83,10 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull 
 {
 	SG_Light *lt = obj;
 
+	lt->flags = (Uint)AG_ReadUint8(ds);
 	lt->pri = (int)AG_ReadSint32(ds);
 	lt->light = (int)AG_ReadSint32(ds);
+	lt->tag = (int)AG_ReadSint32(ds);
 	lt->ambient = M_ReadColor(ds);
 	lt->diffuse = M_ReadColor(ds);
 	lt->specular = M_ReadColor(ds);
@@ -102,6 +106,7 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 
 	AG_WriteSint32(ds, (Sint32)lt->pri);
 	AG_WriteSint32(ds, (Sint32)lt->light);
+	AG_WriteSint32(ds, (Sint32)lt->tag);
 	M_WriteColor(ds, &lt->ambient);
 	M_WriteColor(ds, &lt->diffuse);
 	M_WriteColor(ds, &lt->specular);
@@ -135,19 +140,20 @@ Draw(void *_Nonnull obj, SG_View *_Nonnull view)
 void
 SG_LightSetup(SG_Light *lt)
 {
+	const int which = lt->light;
 	M_Vector3 v;
 	GLfloat posf[4];
 	GLfloat dirf[4];
 
 	AG_ObjectLock(lt);
 
-	GL_Enable(lt->light);
+	GL_Enable(which);
 	v = SG_NodePos(lt);
 	posf[0] = (GLfloat)v.x;
 	posf[1] = (GLfloat)v.y;
 	posf[2] = (GLfloat)v.z;
 	posf[3] = 1.0f;
-	glLightfv(lt->light, GL_POSITION, posf);
+	glLightfv(which, GL_POSITION, posf);
 
 #ifdef DOUBLE_PRECISION
 	{
@@ -156,11 +162,11 @@ SG_LightSetup(SG_Light *lt)
 		float specular[4];
 
 		M_ColorTo4fv(&lt->ambient, ambient);
-		glLightfv(lt->light, GL_AMBIENT, ambient);
+		glLightfv(which, GL_AMBIENT, ambient);
 		M_ColorTo4fv(&lt->diffuse, diffuse);
-		glLightfv(lt->light, GL_DIFFUSE, diffuse);
+		glLightfv(which, GL_DIFFUSE, diffuse);
 		M_ColorTo4fv(&lt->specular, specular);
-		glLightfv(lt->light, GL_SPECULAR, specular);
+		glLightfv(which, GL_SPECULAR, specular);
 
 		if (lt->spot_cutoff != 180.0) {
 			v = SG_NodeDir(lt);
@@ -168,22 +174,22 @@ SG_LightSetup(SG_Light *lt)
 			dirf[1] = (GLfloat)v.y;
 			dirf[2] = (GLfloat)v.z;
 			dirf[3] = 1.0f;
-			glLightfv(lt->light, GL_SPOT_DIRECTION, dirf);
+			glLightfv(which, GL_SPOT_DIRECTION, dirf);
 		}
 	}
-#else
-	glLightfv(lt->light, GL_AMBIENT, (GLfloat *)&lt->ambient);
-	glLightfv(lt->light, GL_DIFFUSE, (GLfloat *)&lt->diffuse);
-	glLightfv(lt->light, GL_SPECULAR, (GLfloat *)&lt->specular);
+#else /* !DOUBLE_PRECISION */
+	glLightfv(which, GL_AMBIENT,  (GLfloat *)&lt->ambient);
+	glLightfv(which, GL_DIFFUSE,  (GLfloat *)&lt->diffuse);
+	glLightfv(which, GL_SPECULAR, (GLfloat *)&lt->specular);
 	if (lt->spot_cutoff != 180.0) {
-		glLightfv(lt->light, GL_SPOT_DIRECTION, dirf);
+		glLightfv(which, GL_SPOT_DIRECTION, dirf);
 	}
 #endif
-	glLightf(lt->light, GL_SPOT_EXPONENT, (GLfloat)lt->spot_exponent);
-	glLightf(lt->light, GL_SPOT_CUTOFF, (GLfloat)lt->spot_cutoff);
-	glLightf(lt->light, GL_CONSTANT_ATTENUATION, (GLfloat)lt->Kc);
-	glLightf(lt->light, GL_LINEAR_ATTENUATION, (GLfloat)lt->Kl);
-	glLightf(lt->light, GL_QUADRATIC_ATTENUATION, (GLfloat)lt->Kq);
+	glLightf(which, GL_SPOT_EXPONENT,         (GLfloat)lt->spot_exponent);
+	glLightf(which, GL_SPOT_CUTOFF,           (GLfloat)lt->spot_cutoff);
+	glLightf(which, GL_CONSTANT_ATTENUATION,  (GLfloat)lt->Kc);
+	glLightf(which, GL_LINEAR_ATTENUATION,    (GLfloat)lt->Kl);
+	glLightf(which, GL_QUADRATIC_ATTENUATION, (GLfloat)lt->Kq);
 	
 	AG_ObjectUnlock(lt);
 }

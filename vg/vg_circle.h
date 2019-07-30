@@ -3,7 +3,7 @@
 typedef struct vg_circle {
 	struct vg_node _inherit;	/* VG_Node(3) -> VG_Circle */
 	VG_Point *_Nullable p;		/* Centerpoint */
-	float r;			/* Radius */
+	double r;			/* Radius */
 } VG_Circle;
 
 #define VGCIRCLE(p) ((VG_Circle *)(p))

@@ -16,6 +16,7 @@ typedef struct ag_ucombo {
 #define AG_UCOMBO_VFILL	  	0x02
 #define AG_UCOMBO_SCROLLTOSEL	0x40	/* Scroll to initial selection */
 #define AG_UCOMBO_EXPAND  (AG_UCOMBO_HFILL|AG_UCOMBO_VFILL)
+	Uint32 _pad;
 
 	AG_Button *_Nonnull  button;	/* Selection button */
 	AG_Tlist  *_Nonnull  list;	/* Item list */

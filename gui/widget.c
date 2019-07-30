@@ -387,8 +387,8 @@ Init(void *_Nonnull obj)
 	TAILQ_INIT(&wid->pvt.mouseActions);
 	TAILQ_INIT(&wid->pvt.keyActions);
 	
-	wid->css = NULL;
 	wid->state = AG_DEFAULT_STATE;
+	wid->css = NULL;
 	wid->font = agDefaultFont;
 	wid->pal = agDefaultPalette;
 #ifdef HAVE_OPENGL
@@ -543,8 +543,8 @@ AG_ActionOnButtonDown(void *obj, int button, const char *action)
 	
 	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_BUTTONDOWN;
-	at->data.button = (AG_MouseButton)button;
 	Strlcpy(at->action, action, sizeof(at->action));
+	at->data.button = (AG_MouseButton)button;
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	TAILQ_INSERT_TAIL(&wid->pvt.mouseActions, at, ties);
 
@@ -568,8 +568,8 @@ AG_ActionOnButtonUp(void *obj, int button, const char *action)
 	
 	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_BUTTONUP;
-	at->data.button = (AG_MouseButton)button;
 	Strlcpy(at->action, action, sizeof(at->action));
+	at->data.button = (AG_MouseButton)button;
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	TAILQ_INSERT_TAIL(&wid->pvt.mouseActions, at, ties);
 	
@@ -586,9 +586,9 @@ AG_ActionOnKeyDown(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	
 	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_KEYDOWN;
+	Strlcpy(at->action, action, sizeof(at->action));
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
-	Strlcpy(at->action, action, sizeof(at->action));
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
 
@@ -605,9 +605,9 @@ AG_ActionOnKeyUp(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	
 	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_KEYUP;
+	Strlcpy(at->action, action, sizeof(at->action));
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
-	Strlcpy(at->action, action, sizeof(at->action));
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
 	
@@ -643,6 +643,7 @@ AG_ActionOnKey(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	
 	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_KEYREPEAT;
+	Strlcpy(at->action, action, sizeof(at->action));
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
 	AG_InitTimer(&at->data.key.toRepeat, "actionKeyRepeat-", 0);
@@ -650,7 +651,6 @@ AG_ActionOnKey(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	Strlcat(at->data.key.toRepeat.name, action,
 	    sizeof(at->data.key.toRepeat.name));
 # endif
-	Strlcpy(at->action, action, sizeof(at->action));
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
 	

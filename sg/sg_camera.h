@@ -11,7 +11,7 @@ typedef struct sg_camera_polymode {
 } SG_CameraPolyMode;
 
 typedef struct sg_camera {
-	struct sg_node _inherit;
+	struct sg_node _inherit;		/* SG_Node -> SG_Camera */
 
 	Uint flags;
 #define SG_CAMERA_ROT_I 0x01	/* Artificial rotation around i (debug) */
@@ -29,6 +29,7 @@ typedef struct sg_camera {
 	M_Real fov;				/* Field of view (radians) */
 	M_Real aspect;				/* Aspect ratio */
 	M_Real pNear, pFar;			/* Clipping planes */
+	M_Real rotSpeed;			/* For artificial rotate */
 	M_Matrix44 userProj[2];			/* User projection matrices
 						   (column-major) */
 	enum sg_camera_rotctrl {
@@ -36,8 +37,9 @@ typedef struct sg_camera {
 		SG_CAMERA_ROT_CIRCULAR,		/* Circular path (1 node) */
 		SG_CAMERA_ROT_ELLIPTIC		/* Elliptic path (2 nodes) */
 	} rotCtrl;
+	Uint8 _pad1[4];
 	SG_Node *_Nullable focus[2];		/* Center nodes */
-	M_Real rotSpeed;			/* For artificial rotate */
+	Uint8 _pad2[8];
 } SG_Camera;
 
 __BEGIN_DECLS

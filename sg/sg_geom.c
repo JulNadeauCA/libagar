@@ -79,9 +79,9 @@ Init(void *_Nonnull obj)
 	SG_Geom *geo = obj;
 
 	geo->flags = 0;
+	geo->stFactor = 1;
 	geo->wd = 1.0;
 	geo->c = M_ColorBlack();
-	geo->stFactor = 1;
 	geo->stPat = 0xffff;
 }
 

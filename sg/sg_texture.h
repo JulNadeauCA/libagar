@@ -2,14 +2,19 @@
 
 struct sg_view;
 
+#ifndef SG_TEXTURE_PROGS_MAX
 #define SG_TEXTURE_PROGS_MAX	64
+#endif
+#ifndef SG_TEXTURE_SURFACES_MAX
 #define SG_TEXTURE_SURFACES_MAX	1024
+#endif
 
 typedef struct sg_texture_surface {
 	Uint flags;
 #define SG_TEXTURE_SURFACE_NODUP	0x01	/* Surface is not a copy */
 #define SG_TEXTURE_SURFACE_SUPPRESS	0x02	/* Disabled */
 #define SG_TEXTURE_SURFACE_SAVED	(SG_TEXTURE_SURFACE_SUPPRESS)
+	Uint32 _pad;
 	AG_Surface *_Nonnull su;		/* Source surface */
 	AG_Rect rSrc;				/* Source rectangle */
 	AG_Rect rDst;				/* Destination rectangle */
@@ -26,26 +31,26 @@ typedef struct sg_texture_program {
 } SG_TextureProgram;
 
 typedef struct sg_texture {
-	struct ag_object _inherit;
+	struct ag_object _inherit;	/* AG_Object -> SG_Texture */
 
 	Uint flags;
-#define SG_TEXTURE_NOLIGHT	0x01	/* Disable lighting for this material */
-#define SG_TEXTURE_SAVED	(SG_TEXTURE_NOLIGHT)
+#define SG_TEXTURE_NOLIGHT 0x01	/* Disable lighting for this material */
+#define SG_TEXTURE_SAVED   (SG_TEXTURE_NOLIGHT)
 
 	Uint w, h;			/* Pixel dimensions */
-
-	/* For fixed lighting model */
+	Uint32 _pad;
+	M_Real shininess;		/* Specular exponent */
+					/* (for fixed lighting model) */
 	M_Color emissive;		/* Light emitted by surface (Ke) */
 	M_Color ambient;		/* Ambient reflectance (Ka) */
 	M_Color diffuse;		/* Diffuse reflectance (Kd) */
 	M_Color specular;		/* Specular reflectance (Ks) */
-	M_Real shininess;		/* Specular exponent */
 	
 	AG_TAILQ_HEAD_(sg_texture_program) progs;	/* Fragment shaders */
 	Uint                              nProgs;
 
-	AG_Surface *_Nullable surface;			/* Rendered surface */
 	Uint                 nSurfaces;
+	AG_Surface *_Nullable surface;			/* Rendered surface */
 
 	AG_TAILQ_HEAD_(sg_texture_surface) surfaces;	/* Input surface(s) */
 	AG_TAILQ_HEAD_(sg_view_texture) vtex;	/* Active hardware textures */

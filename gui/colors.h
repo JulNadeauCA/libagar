@@ -125,6 +125,7 @@ typedef struct ag_color_hsv {
 
 __BEGIN_DECLS
 extern AG_ColorOffset agSunkColor, agRaisedColor, agLowColor, agHighColor;
+extern AG_ColorOffset agTint, agShade;
 
 void AG_ColorFromString(AG_Color *_Nonnull, const char *_Nonnull,
                         const AG_Color *_Nullable);

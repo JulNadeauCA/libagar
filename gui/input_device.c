@@ -14,9 +14,9 @@ Init(void *obj)
 {
 	AG_InputDevice *id = obj;
 
-	id->flags = 0;
 	id->drv = NULL;
 	id->desc = NULL;
+	id->flags = 0;
 }
 
 static void

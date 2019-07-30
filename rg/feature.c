@@ -24,11 +24,9 @@
  */
 
 #include <agar/core/core.h>
-
 #include <agar/gui/gui.h>
 #include <agar/gui/widget.h>
 #include <agar/gui/window.h>
-
 #include <agar/rg/tileset.h>
 #include <agar/rg/tileview.h>
 
@@ -54,7 +52,7 @@ tryname:
 	ft->ts = ts;
 	ft->flags = flags;
 	ft->ops = ops;
-	ft->nrefs = 0;
+	ft->nRefs = 0;
 /*	TAILQ_INIT(&ft->sketches); */
 	TAILQ_INIT(&ft->pixmaps);
 }
@@ -96,6 +94,7 @@ RG_FeatureAddPixmap(RG_Feature *ft, RG_Pixmap *px)
 	RG_FeaturePixmap *fpx;
 
 	fpx = Malloc(sizeof(RG_FeaturePixmap));
+	fpx->flags = 0;
 	fpx->px = px;
 	fpx->x = 0;
 	fpx->y = 0;

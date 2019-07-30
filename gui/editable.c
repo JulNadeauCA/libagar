@@ -533,8 +533,10 @@ ProcessKey(AG_Editable *_Nonnull ed, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 		const char *flag;
 	
 		if ((kc->key != AG_KEY_LAST) &&
-		    (kc->key != ks || (kc->modFlags[0] != '\0' &&
-		     !AG_CompareKeyMods(kmod, kc->modFlags)))) {
+		    (kc->key != ks)) {
+			continue;
+		}
+		if (kc->modKeys != 0 && ((kmod & kc->modKeys) == 0)) {
 			continue;
 		}
 		for (flag = &kc->flags[0]; *flag != '\0'; flag++) {
@@ -961,7 +963,8 @@ Draw(void *_Nonnull obj)
 	rClip.x2 += (ed->fontMaxHeight << 1);
 	rClip.y2 += ed->lineSkip;
 
-	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC,
+	                    AG_TEXTURE_ENV_REPLACE);
 	AG_PushClipRect(ed, &ed->r);
 
 	x = 0;

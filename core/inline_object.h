@@ -34,10 +34,10 @@ int
 ag_class_is_named(const void *pClass, const char *pat)
 #endif
 {
-	AG_ObjectClass *cls = (AG_ObjectClass *)pClass;
+	const AG_ObjectClass *cls = (const AG_ObjectClass *)pClass;
 	const char *c;
-	int nwild = 0;
 	AG_Size patSize;
+	int nwild = 0;
 
 	for (c = &pat[0]; *c != '\0'; c++) {
 		if (*c == '*')

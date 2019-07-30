@@ -14,13 +14,15 @@ struct vg_view;
 
 /* VG tool class description */
 typedef struct vg_tool_ops {
-	const char    *_Nonnull  name;	/* Display text */
-	const char    *_Nonnull  desc;	/* Display description */
+	const char *_Nonnull  name;	/* Display text */
+	const char *_Nonnull  desc;	/* Display description */
 	AG_StaticIcon *_Nullable icon;	/* Optional GUI icon */
-
 	AG_Size len;			/* Size of instance structure */
-
+#if AG_MODEL == AG_LARGE
+	Uint64 flags;
+#else
 	Uint flags;
+#endif
 #define VG_MOUSEMOTION_NOSNAP	0x01	/* Ignore snapping in mousemotion */
 #define VG_BUTTONUP_NOSNAP	0x02	/* Ignore snapping in buttonup */
 #define VG_BUTTONDOWN_NOSNAP	0x04	/* Ignore snapping in buttondown */
@@ -48,16 +50,13 @@ typedef struct vg_tool_ops {
 /* VG tool instance */
 typedef struct vg_tool {
 	const VG_ToolOps *_Nonnull ops;		/* Class description */
-
 	int selected;				/* Tool is in use? */
-
-	struct vg_view *_Nonnull  vgv;		/* Associated view */
-	void           *_Nullable p;		/* User-supplied pointer */
-	AG_Window      *_Nullable editWin;	/* Edition window (if any) */
-	AG_Widget      *_Nullable editArea;	/* Edition area (if any) */
-
+	int tag;				/* User tag */
+	struct vg_view *_Nonnull vgv;		/* Associated view */
+	void *_Nullable p;			/* User-supplied pointer */
+	AG_Window *_Nullable editWin;		/* Edition window (if any) */
+	AG_Widget *_Nullable editArea;		/* Edition area (if any) */
 	VG_Vector vCursor;			/* Last cursor position */
-
 	AG_SLIST_HEAD_(vg_tool_keybinding) kbindings;
 	AG_TAILQ_HEAD_(vg_tool_command) cmds;
 	AG_TAILQ_ENTRY(vg_tool) tools;

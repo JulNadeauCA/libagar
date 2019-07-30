@@ -8,19 +8,25 @@
 
 #include <agar/gui/begin.h>
 
+#ifndef AG_FIXED_PLOTTER_LABEL_MAX
+#define AG_FIXED_PLOTTER_LABEL_MAX 124
+#endif
+
 typedef Sint16 AG_FixedPlotterValue;
 
 struct ag_fixed_plotter;
 
 typedef struct ag_fixed_plotter_item {
-	char name[AG_LABEL_MAX];			/* Description */
+	char name[AG_FIXED_PLOTTER_LABEL_MAX];		/* Description */
 	AG_Color color;					/* Line color */
 
-	AG_FixedPlotterValue *_Nonnull vals;		/* Values array */
 	Uint32                        nvals;		/* Values total */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
+	AG_FixedPlotterValue *_Nonnull vals;		/* Values array */
 	Uint32                      maxvals;		/* Values allocated */
 	Uint32                        limit;		/* Hard limit */
-
 	struct ag_fixed_plotter *_Nonnull fpl;		/* Back pointer */
 	AG_TAILQ_ENTRY(ag_fixed_plotter_item) items;
 } AG_FixedPlotterItem;

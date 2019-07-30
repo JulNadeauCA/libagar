@@ -2,14 +2,13 @@
 
 typedef struct vg_polygon {
 	struct vg_node _inherit;
-
-	int outline;		/* Render outline? */
-
-	VG_Point *_Nullable *_Nonnull pts;	/* Vertices */
+	int outline;				/* Render outline? */
 	Uint                         nPts;
+	VG_Point *_Nullable *_Nonnull pts;	/* Vertices */
 
 	int  *_Nullable ints;	/* Sorted intersections (for FB rendering) */
 	Uint           nInts;
+	Uint32 _pad;
 } VG_Polygon;
 
 #define VGPOLYGON(p) ((VG_Polygon *)(p))

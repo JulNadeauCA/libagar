@@ -16,6 +16,7 @@ typedef struct ag_separator {
 	enum ag_separator_type type;
 	Uint padding;				/* Padding in pixels */
 	int visible;				/* Visible flag */
+	Uint32 _pad;
 } AG_Separator;
 
 __BEGIN_DECLS

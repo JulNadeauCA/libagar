@@ -19,6 +19,7 @@ struct rg_fill_feature {
 	RG_Feature ft;
 	enum rg_fill_type type;
 	Uint8 alpha;
+	Uint8 _pad1[7];
 	union {
 		struct {
 			AG_Color c;
@@ -38,10 +39,13 @@ struct rg_fill_feature {
 #define f_gradient args.gradient
 #define f_pattern  args.pattern
 #endif
+#if AG_MODEL == AG_LARGE
+	Uint32 _pad2;
+#endif
 };
 
 __BEGIN_DECLS
-void RG_FillInit(void *_Nonnull, RG_Tileset *_Nonnull, int);
+void RG_FillInit(void *_Nonnull, RG_Tileset *_Nonnull, Uint);
 int  RG_FillLoad(void *_Nonnull, AG_DataSource *_Nonnull);
 void RG_FillSave(void *_Nonnull, AG_DataSource *_Nonnull);
 void RG_FillApply(void *_Nonnull, RG_Tile *_Nonnull, int,int);

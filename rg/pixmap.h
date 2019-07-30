@@ -4,7 +4,7 @@
 #define _AGAR_RG_PIXMAP_H_
 #include <agar/rg/begin.h>
 
-#define RG_PIXMAP_NAME_MAX	32
+#define RG_PIXMAP_NAME_MAX 74
 
 struct ag_window;
 struct ag_toolbar;
@@ -24,6 +24,7 @@ typedef struct rg_pixmap_mod {
 typedef struct rg_pixmap_undoblk {
 	struct rg_pixmap_mod *_Nonnull mods;	/* Undoable modifications */
 	Uint		              nmods;
+	Uint32 _pad;
 } RG_PixmapUndoBlk;
 
 enum rg_pixmap_blend_mode {
@@ -53,9 +54,9 @@ typedef struct rg_pixmap {
 	char name[RG_PIXMAP_NAME_MAX];
 	int flags;
 	int xorig, yorig;		/* Pixmap origin point */
+	Uint nRefs;			/* Number of tile references */
 	struct rg_tileset *_Nonnull ts; /* Back pointer to tileset */
 	AG_Surface *_Nullable su;	/* Pixmap surface */
-	Uint nrefs;			/* Number of tile references */
 
 	struct rg_pixmap_undoblk *_Nonnull ublks;	/* Undo buffer */
 	Uint nublks, curblk;
@@ -63,6 +64,7 @@ typedef struct rg_pixmap {
 	float h, s, v, a;			/* Current pixel value */
 	RG_Brush *_Nullable curbrush;		/* Active brush */
 	enum rg_pixmap_blend_mode blend_mode;	/* Current blending method */
+	Uint32 _pad;
 	AG_TAILQ_HEAD_(rg_brush) brushes;	/* Brush references */
 	AG_TAILQ_ENTRY(rg_pixmap) pixmaps;
 } RG_Pixmap;

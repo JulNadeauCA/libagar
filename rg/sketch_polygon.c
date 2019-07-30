@@ -240,6 +240,7 @@ RG_TileviewSketchToolOps sketch_polygon_ops = {
 		sizeof(struct polygon_tool),
 		TILEVIEW_SKETCH_TOOL,
 		NULL, -1,
+		AG_KEY_P,
 		init,
 		NULL,		/* destroy */
 		edit,

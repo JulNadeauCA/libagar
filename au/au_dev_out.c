@@ -97,16 +97,16 @@ AU_OpenOut(const char *path, int rate, int ch)
 	}
 	dev->buf = buf;
 
-	for (i = 0; i < dev->bufMax*ch; i++)
+	for (i = 0; i < dev->bufMax*ch; i++) {
 		buf[i] = 0.0f;
+	}
+	dev->nChan = 0;
+	dev->chan = NULL;
 #ifdef AG_THREADS
 	AG_MutexInit(&dev->lock);
 	AG_CondInit(&dev->wrRdy);
 	AG_CondInit(&dev->rdRdy);
 #endif
-	dev->chan = NULL;
-	dev->nChan = 0;
-
 	if (dev->cls->Init != NULL) {
 		dev->cls->Init(dev);
 	}

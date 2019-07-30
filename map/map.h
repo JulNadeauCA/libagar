@@ -47,28 +47,32 @@ typedef struct map_item {
 
 	Sint8 friction;			/* Coefficient of friction */
 	Uint8 layer;			/* Associated layer */
+	Uint8 _pad1[6];
 	void *_Nullable p;		/* User pointer (non-persistent) */
-
 	struct {
 		Sint16 xcenter, ycenter;	/* Centering offsets */
 		Sint16 xmotion, ymotion;	/* Motion offsets */
 		Sint16 xorigin, yorigin;	/* Origin point */
 		AG_Rect rs;			/* Source rectangle */
 	} r_gfx;
+	Uint32 _pad2;
 	union {
 		struct {
 			RG_Tileset *_Nonnull obj;	/* Tileset object */
 			Uint id;			/* Tile ID */
+			Uint32 _pad;
 		} tile;
 		struct {
 			RG_Tileset *_Nonnull obj;	/* Tileset object */
 			Uint id;			/* Animation ID */
+			Uint32 _pad;
 			Uint *_Nonnull curframe;	/* Current frame# */
 		} anim;
 		struct {
 			char *_Nullable map;		/* Target map name */
 			int x, y;			/* At coordinates */
-			Uint8 dir;			/* Towards direction */
+			Uint dir;			/* Towards direction */
+			Uint32 _pad;
 		} warp;
 	} nref;
 	RG_TransformChain transforms;		/* Graphical transformations */
@@ -89,7 +93,7 @@ typedef struct map_layer {
 	char name[MAP_LAYER_NAME_MAX];
 	int visible;				/* Show/hide flag */
 	Sint16 xinc, yinc;			/* Rendering direction */
-	Uint8 alpha;				/* Transparency value */
+	Uint alpha;				/* 8-bit transparency value */
 } MAP_Layer;
 
 enum map_camera_alignment {
@@ -122,6 +126,7 @@ enum map_mod_type {
 
 typedef struct map_mod {
 	enum map_mod_type type;
+	Uint32 _pad;
 	union {
 		struct {
 			MAP_Node node;
@@ -138,8 +143,8 @@ typedef struct map_mod {
 
 typedef struct map_mod_blk {
 	MAP_Mod *_Nonnull mods;
-	Uint             nmods;
-	Uchar cancel;
+	Uint             nMods;
+	int               cancel;
 } MAP_ModBlk;
 
 struct map_actor;
@@ -157,16 +162,17 @@ typedef struct map {
 		int x, y;		/* Origin coordinates */
 		int layer;		/* Default tile layer */
 	} origin;
-	MAP_Node *_Nullable *_Nonnull map;	/* Arrays of nodes */
 	int redraw;				/* Redraw (for tile-based mode) */
+	MAP_Node *_Nullable *_Nonnull map;	/* Arrays of nodes */
 	MAP_Layer *_Nonnull layers;		/* List of layers */
-	Uint               nlayers;
+	Uint               nLayers;
+	Uint                nCameras;
 	MAP_Camera *_Nonnull cameras;		/* List of cameras */
-	Uint                ncameras;
 	MAP_ModBlk *_Nonnull blks;		/* Saved modifications */
-	Uint                nblks;
-	Uint curblk;
-	Uint nmods;	
+	Uint                nBlks;
+	Uint              curBlk;
+	Uint                nMods;	
+	Uint32 _pad;
 	AG_TAILQ_HEAD_(map_actor) actors;	/* Active objects */
 } MAP;
 
@@ -256,7 +262,7 @@ MAP_Item *_Nonnull MAP_NodeAddTile(MAP *_Nonnull, MAP_Node *_Nonnull,
 MAP_Item *_Nonnull MAP_NodeAddAnim(MAP *_Nonnull, MAP_Node *_Nonnull,
                                    RG_Tileset *_Nonnull, Uint32);
 MAP_Item *_Nonnull MAP_NodeAddWarpPoint(MAP *_Nonnull, MAP_Node *_Nonnull,
-                                        const char *_Nonnull, int,int, Uint8);
+                                        const char *_Nonnull, int,int, Uint);
 
 void MAP_AttachActor(MAP *_Nonnull, struct map_actor *_Nonnull);
 void MAP_DetachActor(MAP *_Nonnull, struct map_actor *_Nonnull);

@@ -106,7 +106,7 @@ typedef struct sk_tool_ops {
 	const char *name;
 	const char *desc;
 	struct ag_static_icon *icon;
-	size_t len;
+	AG_Size len;
 	Uint flags;
 #define SK_MOUSEMOTION_NOSNAP 0x01 /* Ignore snapping in mousemotion */
 #define SK_BUTTONUP_NOSNAP    0x02 /* Ignore snapping in buttonup */

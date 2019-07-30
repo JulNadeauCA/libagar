@@ -128,7 +128,7 @@ GenerateTileMap(struct map_insert_tool *_Nonnull ins, RG_Tile *_Nonnull tile)
 			if (nlayer < 0) {
 				nlayer = 0;
 			} else {
-				if (nlayer >= (int)ins->mTmp.nlayers)
+				if (nlayer >= (int)ins->mTmp.nLayers)
 					MAP_PushLayer(&ins->mTmp, "");
 			}
 			r->layer = nlayer;
@@ -242,10 +242,10 @@ Effect(void *_Nonnull p, MAP_Node *_Nonnull node)
 			TAILQ_FOREACH(r1, &sn->nrefs, nrefs) {
 				r2 = MAP_NodeCopyItem(r1, mDst, dn, -1);
 				r2->layer += mDst->cur_layer;
-				while (r2->layer >= mDst->nlayers) {
+				while (r2->layer >= mDst->nLayers) {
 					if (MAP_PushLayer(mDst, "") == 0)
 						MAP_ModLayerAdd(mDst,
-						    mDst->nlayers - 1);
+						    mDst->nLayers - 1);
 				}
 				if (ins->snap_mode == RG_SNAP_NONE) {
 					r2->r_gfx.xcenter +=
@@ -363,6 +363,7 @@ const MAP_ToolOps mapInsertOps = {
 	&mapIconStamp,
 	sizeof(struct map_insert_tool),
 	TOOL_HIDDEN,
+	1,
 	Init,
 	Destroy,
 	EditPane,

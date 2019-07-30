@@ -23,10 +23,12 @@ typedef struct map_nodemask {
 		struct {
 			AG_Object *_Nullable obj;
 			Uint32 offs;
+			Uint32 _pad;
 		} bitmap;
 		struct {
 			Uint32 *_Nullable vertices;
 			Uint32           nvertices;
+			Uint32 _pad;
 		} poly;
 	} params;
 #define nm_bitmap params.bitmap

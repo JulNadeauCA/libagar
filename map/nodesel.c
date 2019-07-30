@@ -122,7 +122,7 @@ MAP_NodeselBeginMove(MAP_View *mv)
 			MAP_NodeCopy(mSrc, nSrc, mSrc->cur_layer, mTmp, nTmp,
 			    0);
 			MAP_NodeSwapLayers(mSrc, nSrc, mSrc->cur_layer,
-			    mSrc->nlayers-1);
+			    mSrc->nLayers-1);
 		}
 	}
 	
@@ -151,7 +151,7 @@ MAP_NodeselUpdateMove(MAP_View *mv, int xRel, int yRel)
 		     x < mv->esel.w;
 		     x++) {
 			MAP_NodeRemoveAll(mDst, &mDst->map[dy][dx],
-			    mDst->nlayers-1);
+			    mDst->nLayers-1);
 		}
 	}
 
@@ -166,7 +166,7 @@ MAP_NodeselUpdateMove(MAP_View *mv, int xRel, int yRel)
 	
 			MAP_ModNodeChg(mDst, dx, dy);
 			MAP_NodeCopy(mTmp, nTmp, 0, mDst, nDst,
-			    mDst->nlayers-1);
+			    mDst->nLayers-1);
 		}
 	}
 	
@@ -191,7 +191,7 @@ MAP_NodeselEndMove(MAP_View *mv)
 			MAP_Item *nref;
 
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				if (nref->layer == mDst->nlayers-1)
+				if (nref->layer == mDst->nLayers-1)
 					nref->layer = mDst->cur_layer;
 			}
 		}
@@ -335,6 +335,7 @@ const MAP_ToolOps mapNodeselOps = {
 	&mapIconSelectNode,
 	sizeof(MAP_Tool),
 	0,
+	1,
 	Init,
 	NULL,			/* destroy */
 	NULL,			/* pane */

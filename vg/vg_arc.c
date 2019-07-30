@@ -62,7 +62,7 @@ VG_ArcCenter(VG_Arc *va, VG_Point *pCenter)
 }
 
 void
-VG_ArcRadius(VG_Arc *va, float r)
+VG_ArcRadius(VG_Arc *va, double r)
 {
 	VG_Lock(VGNODE(va)->vg);
 	va->r = r;
@@ -75,7 +75,7 @@ Init(void *p)
 	VG_Arc *va = p;
 
 	va->p = NULL;
-	va->r = 0.5f;
+	va->r = 0.5;
 	va->a1 = 0.0f;
 	va->a2 = 360.0f;
 }
@@ -88,7 +88,7 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 	if ((va->p = VG_ReadRef(ds, va, "Point")) == NULL) {
 		return (-1);
 	}
-	va->r = AG_ReadFloat(ds);
+	va->r = AG_ReadDouble(ds);
 	va->a1 = AG_ReadFloat(ds);
 	va->a2 = AG_ReadFloat(ds);
 	return (0);
@@ -100,7 +100,7 @@ Save(void *p, AG_DataSource *ds)
 	VG_Arc *va = p;
 
 	VG_WriteRef(ds, va->p);
-	AG_WriteFloat(ds, va->r);
+	AG_WriteDouble(ds, va->r);
 	AG_WriteFloat(ds, va->a1);
 	AG_WriteFloat(ds, va->a2);
 }
@@ -191,7 +191,7 @@ Edit(void *p, VG_View *vv)
 	VG_Arc *va = p;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
-	AG_NumericalNewFlt(box, 0, NULL, _("Radius: "), &va->r);
+	AG_NumericalNewDbl(box, 0, NULL, _("Radius: "), &va->r);
 	AG_NumericalNewFlt(box, 0, NULL, _("Start angle: "), &va->a1);
 	AG_NumericalNewFlt(box, 0, NULL, _("End angle: "), &va->a2);
 

@@ -1,9 +1,10 @@
 /*	Public domain	*/
 
 typedef struct sg_line {
-	struct sg_geom _inherit;
-	M_Vector3 d;		/* Direction vector */
-	M_Real t;		/* Line length */
+	struct sg_geom _inherit;	/* SG_Geom -> SG_Line */
+	M_Vector3 d;			/* Direction vector */
+	M_Real t;			/* Line length */
+	Uint8 _pad[8];
 } SG_Line;
 
 #define SGLINE(n) ((SG_Line *)(n))

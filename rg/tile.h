@@ -42,6 +42,7 @@ typedef struct rg_tile_element {
 			struct rg_pixmap *_Nonnull px;
 			int x, y;
 			int alpha;
+			Uint32 _pad;
 		} pixmap;
 		struct {
 			struct rg_sketch *_Nonnull sk;
@@ -64,6 +65,7 @@ typedef struct rg_tile {
 	char name[RG_TILE_NAME_MAX];	/* User description */
 	char clname[RG_TILE_CLASS_MAX];	/* Category (application-specific) */
 	Uint32 main_id;			/* Default ID mapping */
+	Uint32 _pad1;
 	struct rg_tileset *_Nonnull ts;	/* Back pointer to tileset */
 	AG_Surface *_Nullable su;	/* Generated surface */
 
@@ -75,11 +77,11 @@ typedef struct rg_tile {
 	Uint *_Nullable attrs;		/* Node attribute grid (edition) */
 	int  *_Nullable layers;		/* Node layer offset grid (edition) */
 	Uint nw, nh;			/* Node grid dimensions */
-	Uint8 flags;
+	Uint flags;
 #define RG_TILE_SRCCOLORKEY	0x01	/* Colorkey source */
 #define RG_TILE_SRCALPHA	0x02	/* Alpha source */
 #define RG_TILE_DIRTY		0x04	/* Mark for redraw */
-	Uint nrefs;			/* Reference count */
+	Uint nRefs;			/* Reference count */
 	AG_Color c;			/* Current RGB color (edition) */
 	Uint32 pc;			/* Current pixel value (edition) */
 	struct {
@@ -90,6 +92,9 @@ typedef struct rg_tile {
 			RG_TILE_ROUNDED_ENDPOINT
 		} endpoint;
 	} line;
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad2;
+#endif
 	struct rg_tile_elementq elements;	/* Elements to combine */
 
 	/* Pixel blending function */

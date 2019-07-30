@@ -33,6 +33,7 @@ typedef struct ag_toolbar {
 #define AG_TOOLBAR_HFILL	0x08
 #define AG_TOOLBAR_VFILL	0x10
 #define AG_TOOLBAR_EXPAND	(AG_TOOLBAR_HFILL|AG_TOOLBAR_VFILL)
+	Uint32 _pad;
 } AG_Toolbar;
 
 #define AGTOOLBAR(obj)            ((AG_Toolbar *)(obj))

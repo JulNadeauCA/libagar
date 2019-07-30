@@ -43,12 +43,12 @@ typedef struct rg_tileset {
 	AG_Surface *_Nonnull icon;	/* Thumbnail */
 	int flags;
 
-	RG_Tile *_Nullable *_Nullable tiletbl;	/* Tile ID mappings */
-	Uint                         ntiletbl;
+	Uint                         nTileTbl;
+	RG_Tile *_Nullable *_Nullable tileTbl;	/* Tile ID mappings */
 
-	RG_Anim *_Nullable *_Nullable animtbl;	/* Animation ID mappings */
-	Uint                         nanimtbl;
-
+	RG_Anim *_Nullable *_Nullable animTbl;	/* Animation ID mappings */
+	Uint                         nAnimTbl;
+	Uint32 _pad;
 	AG_TAILQ_HEAD_(rg_tile) tiles;
 #if 0
 	AG_TAILQ_HEAD_(rg_sketch) sketches;
@@ -72,8 +72,8 @@ typedef struct rg_tileset {
 # define RGTILE(ts,id) RG_GetTile((ts),(id))
 # define RGANIM(ts,id) RG_GetAnim((ts),(id))
 #else
-# define RGTILE(ts,id) (ts)->tiletbl[(id)]
-# define RGANIM(ts,id) (ts)->animtbl[(id)]
+# define RGTILE(ts,id) (ts)->tileTbl[(id)]
+# define RGANIM(ts,id) (ts)->animTbl[(id)]
 #endif
 
 __BEGIN_DECLS
@@ -106,13 +106,13 @@ static __inline__ int
 RG_LookupTile(RG_Tileset *_Nonnull ts, Uint32 id,
     RG_Tile *_Nullable *_Nullable t)
 {
-	if (id >= ts->ntiletbl || ts->tiletbl[id] == NULL) {
+	if (id >= ts->nTileTbl || ts->tileTbl[id] == NULL) {
 		AG_SetError("%s: no such tile: %u", AGOBJECT(ts)->name,
 		    (Uint)id);
 		return (-1);
 	}
 	if (t != NULL) {
-		*t = ts->tiletbl[id];
+		*t = ts->tileTbl[id];
 	}
 	return (0);
 }
@@ -120,13 +120,13 @@ static __inline__ int
 RG_LookupAnim(RG_Tileset *_Nonnull ts, Uint32 id,
     RG_Anim *_Nullable *_Nullable anim)
 {
-	if (id >= ts->nanimtbl || ts->animtbl[id] == NULL) {
+	if (id >= ts->nAnimTbl || ts->animTbl[id] == NULL) {
 		AG_SetError("%s: no such anim: %u", AGOBJECT(ts)->name,
 		    (Uint)id);
 		return (-1);
 	}
 	if (anim != NULL) {
-		*anim = ts->animtbl[id];
+		*anim = ts->animTbl[id];
 	}
 	return (0);
 }

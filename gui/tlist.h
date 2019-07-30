@@ -9,7 +9,13 @@
 #include <agar/gui/begin.h>
 
 #ifndef AG_TLIST_LABEL_MAX
-#define AG_TLIST_LABEL_MAX AG_LABEL_MAX
+# if AG_MODEL == AG_SMALL
+#  define AG_TLIST_LABEL_MAX 60
+# elif AG_MODEL == AG_MEDIUM
+#  define AG_TLIST_LABEL_MAX 252
+# elif AG_MODEL == AG_LARGE
+#  define AG_TLIST_LABEL_MAX 508
+# endif
 #endif
 
 #define AG_TLIST_ITEM_TAG "AgTlItm"
@@ -31,8 +37,8 @@ typedef struct ag_tlist_item {
 #endif
 	int selected;			/* Effective selection flag */
 
-	AG_Surface *_Nullable iconsrc;	/* Source icon */
 	int                   icon;	/* Cached icon surface */
+	AG_Surface *_Nullable iconsrc;	/* Source icon */
 	void       *_Nullable p1;	/* User pointer */
 	const char *_Nullable cat;	/* Category for filter */
 
@@ -51,11 +57,12 @@ typedef struct ag_tlist_item {
 				 AG_TLIST_ITEM_ITALIC | \
 				 AG_TLIST_ITEM_UNDERLINE | \
 				 AG_TLIST_ITEM_UPPERCASE)
+	
+	char text[AG_TLIST_LABEL_MAX];	/* Label text */
 
 	AG_TAILQ_ENTRY(ag_tlist_item) items;	/* Items in list */
 	AG_TAILQ_ENTRY(ag_tlist_item) selitems;	/* Saved selection state */
 	
-	char text[AG_TLIST_LABEL_MAX];	/* Label text */
 	AG_Color *_Nullable color;	/* Alternate text-color */
 	AG_Font *_Nullable font;	/* Alternate font */
 } AG_TlistItem;
@@ -77,11 +84,11 @@ typedef struct ag_tlist {
 #define AG_TLIST_REFRESH	0x400	/* Repopulate display (for polling) */
 #define AG_TLIST_EXPAND		(AG_TLIST_HFILL|AG_TLIST_VFILL)
 
+	int item_h;			/* Item height */
 	void *_Nullable selected;	/* Default `selected' binding */
 	int wHint, hHint;		/* Size hint */
 	AG_Rect r;			/* Clipping rectangle */
 	int wSpace;			/* Icon/text spacing */
-	int item_h;			/* Item height */
 	int icon_w;			/* Item icon width */
 	int wRow;			/* Row width */
 	int rOffs;			/* Row display offset */
@@ -99,11 +106,11 @@ typedef struct ag_tlist {
 	AG_Event *_Nullable popupEv;	/* Popup menu hook */
 	AG_Event *_Nullable changedEv;	/* Selection change hook */
 	AG_Event *_Nullable dblClickEv;	/* Double click hook */
-	AG_Timer moveTo;		/* Timer for keyboard motion */
 	Uint32 wheelTicks;		/* For wheel acceleration */
+	int lastKeyDown;		/* For key repeat */
+	AG_Timer moveTo;		/* Timer for keyboard motion */
 	AG_Timer refreshTo;		/* Timer for polled mode updates */
 	AG_Timer dblClickTo;		/* Timer for detecting double clicks */
-	int lastKeyDown;		/* For key repeat */
 } AG_Tlist;
 
 #define AGTLIST(obj)            ((AG_Tlist *)(obj))

@@ -30,6 +30,23 @@ Enter100Lines(AG_Event *event)
 }
 
 static void
+EnterMultiLine(AG_Event *event)
+{
+	AG_Console *cons = AG_CONSOLE_PTR(1);
+	AG_Color red;
+	AG_ColorRGB_8(&red, 255, 16, 16);
+
+	AG_ConsoleMsgS(cons, "This message is all on one line");
+	AG_ConsoleMsgS(cons, "This message is on two lines\nsecond line");
+	AG_ConsoleMsgS(cons, "This message is on five lines\n2\n3\n4\n5");
+
+	AG_ConsoleMsgColor(
+		AG_ConsoleMsgS(cons,
+			"Multi-line messages\ntake the color\nof their parent"),
+		&red);
+}
+
+static void
 DumpCoreOf(AG_Event *event)
 {
 	AG_Console *cons = AG_CONSOLE_PTR(1);
@@ -117,6 +134,8 @@ TestGUI(void *obj, AG_Window *win)
 		    ClearLines, "%p", cons);
 		AG_ButtonNewFn(box, 0, "100 Lines",
 		    Enter100Lines, "%p", cons);
+		AG_ButtonNewFn(box, 0, "Multi-Line",
+		    EnterMultiLine, "%p", cons);
 		AG_ButtonNewFn(box, 0, "Dump Own Core",
 		    DumpCoreOf, "%p,%p,%u", cons, cons, sizeof(AG_Console));
 		AG_ButtonNewFn(box, 0, "Dump Window's Core",

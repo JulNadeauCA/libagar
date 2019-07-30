@@ -51,9 +51,9 @@ Init(void *_Nonnull obj)
 	MAP_Actor *a = obj;
 
 	OBJECT(a)->flags |= AG_OBJECT_REMAIN_DATA;
+	a->type = AG_ACTOR_MAP;
 	a->flags = 0;
 	a->parent = NULL;
-	a->type = AG_ACTOR_MAP;
 	a->g_map.x = 0;
 	a->g_map.y = 0;
 	a->g_map.l0 = 0;
@@ -318,7 +318,7 @@ MAP_ActorMapTile(void *obj, int X0, int Y0, int L0, RG_Tileset *ts,
 			if (l < 0) {
 				l = 0;
 			} else {
-				while ((int)m->nlayers <= l)
+				while ((int)m->nLayers <= l)
 					MAP_PushLayer(m, "");
 			}
 			r->layer = l;

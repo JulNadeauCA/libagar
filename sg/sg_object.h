@@ -14,16 +14,17 @@ typedef struct sg_vertex {
 #define SG_VERTEX_SELECTED	0x01
 #define SG_VERTEX_HIGHLIGHTED	0x02
 #define SG_VERTEX_STRIDE (sizeof(Uint)+sizeof(Uint))
+	Uint8 _pad[12];
 } SG_Vertex;
 
 typedef struct sg_edge {
+	Uint flags;
+#define SG_EDGE_SAVED		0x01	/* For save operation */
+#define SG_EDGE_SELECTED	0x02
+#define SG_EDGE_HIGHLIGHTED	0x04
 	int v;				/* Incident vertex */
 	struct sg_facet *_Nullable f;	/* Incident facet */
 	struct sg_edge *_Nonnull oe;	/* Opposite halfedge */
-	Uint8 flags;
-#define SG_EDGE_SAVED		0x01		/* For save operation */
-#define SG_EDGE_SELECTED	0x02
-#define SG_EDGE_HIGHLIGHTED	0x04
 	AG_SLIST_ENTRY(sg_edge) edges;
 } SG_Edge;
 typedef struct sg_edge_ent {
@@ -32,8 +33,8 @@ typedef struct sg_edge_ent {
 
 typedef struct sg_facet {
 	SG_Edge *_Nullable e[4];	/* Polygon edges */
-	Uint16 n;			/* Number of edges (3 or 4) */
-	Uint16 flags;
+	Uint n;				/* Number of edges (3 or 4) */
+	Uint flags;
 #define SG_FACET_SELECTED	0x01
 #define SG_FACET_HIGHLIGHTED	0x02
 	struct sg_facet *_Nonnull of;		/* Opposite facet */
@@ -46,29 +47,31 @@ typedef struct sg_facet_ent {
 } SG_FacetEnt;
 
 typedef struct sg_bsp_node {
-	M_Plane P;
-	SG_Facet *_Nullable facets;
+	M_Plane P;				/* Plane */
+	SG_Facet *_Nullable facets;		/* Facets */
 	Uint               nFacets;
-	AG_TAILQ_HEAD_(sg_bsp_node) front;
-	AG_TAILQ_HEAD_(sg_bsp_node) back;
-	AG_TAILQ_ENTRY(sg_bsp_node) bsp;
+	int                 tag;		/* User tag */
+	AG_TAILQ_HEAD_(sg_bsp_node) front;	/* Front subnodes */
+	AG_TAILQ_HEAD_(sg_bsp_node) back;	/* Back subnodes */
+	AG_TAILQ_ENTRY(sg_bsp_node) bsp;	/* In parent node */
 } SG_BSPNode;
 
 typedef struct sg_object {
-	struct sg_node _inherit;
+	struct sg_node _inherit;	/* SG_Object -> SG_Node */
 
 	Uint flags;
 #define SG_OBJECT_STATIC	0x01	/* Geometry is unchanging */
 #define SG_OBJECT_NODUPVERTEX	0x02	/* Check for duplicate vertices in
 					   SG_VertexNew*() */
-	SG_Vertex *_Nonnull vtx;	/* Vertex array */
 	Uint               nVtx;
+	SG_Vertex *_Nonnull vtx;	/* Vertex array */
 	SG_EdgeEnt *_Nonnull edgeTbl;	/* Edge table */
 	Uint	            nEdgeTbl;
-	SG_FacetEnt *_Nonnull facetTbl;	/* Facet table */
 	Uint                 nFacetTbl;
+	SG_FacetEnt *_Nonnull facetTbl;	/* Facet table */
 	SG_Texture *_Nullable tex;	/* Associated texture */
 	SG_BSPNode *_Nullable bsp;	/* Root BSP node */
+	Uint8 _pad[8];
 } SG_Object;
 
 typedef enum sg_extrude_mode {
@@ -146,8 +149,7 @@ int  SG_EdgeRehash(void *_Nonnull, Uint);
 int  SG_FacetRehash(void *_Nonnull, Uint);
 
 SG_Edge	*_Nonnull SG_Edge2(void *_Nonnull, int,int);
-void              SG_EdgeGetName(SG_Edge *_Nonnull, char *_Nonnull, size_t)
-                                BOUNDED_ATTRIBUTE(__string__, 2, 3);
+void              SG_EdgeGetName(SG_Edge *_Nonnull, char *_Nonnull, AG_Size);
 
 SG_Facet *_Nonnull SG_FacetFromTri3(void *_Nonnull, int,int,int);
 SG_Facet *_Nonnull SG_FacetFromQuad4(void *_Nonnull, int,int,int,int);
@@ -155,9 +157,7 @@ SG_Facet *_Nonnull SG_FacetFromQuad4(void *_Nonnull, int,int,int,int);
 int  SG_FacetExtrude(void *_Nonnull, SG_Facet *_Nonnull, M_Vector3, SG_ExtrudeMode);
 void SG_FacetDelete(SG_Facet *_Nonnull);
 
-void      SG_FacetGetName(SG_Facet *_Nonnull, char *_Nonnull, size_t)
-                          BOUNDED_ATTRIBUTE(__string__, 2, 3);
-
+void      SG_FacetGetName(SG_Facet *_Nonnull, char *_Nonnull, AG_Size);
 M_Real    SG_FacetArea(SG_Object *_Nonnull, SG_Facet *_Nonnull);
 M_Real    SG_FacetAreaSigned(SG_Object *_Nonnull, SG_Facet *_Nonnull);
 M_Vector3 SG_FacetCentroid(SG_Object *_Nonnull, SG_Facet *_Nonnull);

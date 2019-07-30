@@ -11,6 +11,7 @@
 typedef struct ag_dir {
 	char *_Nullable *_Nonnull ents;
 	Uint                     nents;
+	Uint32 _pad;
 } AG_Dir;
 
 __BEGIN_DECLS

@@ -95,9 +95,8 @@ Init(void *obj)
 
 	WIDGET(nb)->flags |= AG_WIDGET_USE_TEXT;
 
-	nb->flags = 0;
 	nb->tab_align = AG_NOTEBOOK_TABS_TOP;
-	nb->sel_tab = NULL;
+	nb->flags = 0;
 	nb->bar_w = -1;
 	nb->bar_h = -1;
 	nb->cont_w = -1;
@@ -105,12 +104,13 @@ Init(void *obj)
 	nb->spacing = -1;
 	nb->padding = -1;
 	nb->tabspacing = 8;	/* TODO adjust */
+	nb->nTabs = 0;
+	nb->sel_tab = NULL;
+	TAILQ_INIT(&nb->tabs);
 	nb->r.x = 0;
 	nb->r.y = 0;
 	nb->r.w = 0;
 	nb->r.h = 0;
-	nb->nTabs = 0;
-	TAILQ_INIT(&nb->tabs);
 
 	AG_AddEvent(nb, "widget-shown", OnShow, NULL);
 	AG_AddEvent(nb, "widget-hidden", OnHide, NULL);

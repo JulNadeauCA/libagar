@@ -50,8 +50,8 @@ AG_TblInit(AG_Tbl *tbl, Uint nBuckets, Uint flags)
 {
 	Uint i;
 
-	tbl->nBuckets = nBuckets;
 	tbl->flags = flags;
+	tbl->nBuckets = nBuckets;
 	tbl->buckets = Malloc(nBuckets*sizeof(AG_TblBucket));
 
 	for (i = 0; i < nBuckets; i++) {

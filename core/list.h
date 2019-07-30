@@ -8,8 +8,9 @@
 #include <agar/core/begin.h>
 
 typedef struct ag_list {
-	int n;				/* Element count */
 	AG_Variable *_Nullable v;	/* Items */
+	int n;				/* Element count */
+	Uint32 _pad;
 } AG_List;
 
 __BEGIN_DECLS

@@ -1935,6 +1935,7 @@ AG_Font_Init(void *_Nonnull obj)
 	font->ascent = 0;
 	font->descent = 0;
 	font->lineskip = 0;
+	font->bspec[0] = '\0';
 	font->ttf = NULL;
 
 	font->c0 = 0;

@@ -17,6 +17,7 @@ typedef struct ag_editable_buffer {
 	AG_Size len;			/* String length (chars) */
 	AG_Size maxLen;			/* Available buffer size (bytes) */
 	int reallocable;		/* Buffer can be realloc'd */
+	Uint32 _pad;
 } AG_EditableBuffer;
 
 /* Internal clipboard for copy/paste and kill/yank */
@@ -25,6 +26,9 @@ typedef struct ag_editable_clipboard {
 	char encoding[32];		/* Character set encoding */
 	AG_Char *_Nullable s;		/* Clipboard contents */
 	AG_Size len;			/* Length in characters */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
 } AG_EditableClipboard;
 
 typedef struct ag_editable {
@@ -53,6 +57,7 @@ typedef struct ag_editable {
 #define AG_EDITABLE_READONLY	  0x200000 /* Disable user input */
 #define AG_EDITABLE_MULTILINGUAL  0x400000 /* Multilingual edition */
 
+	Uint32 _pad1;
 	const char *_Nonnull encoding;	/* Character set (default "US-ASCII"
 	                                   or "UTF-8" if Unicode supported) */
 #ifdef AG_UNICODE
@@ -75,6 +80,7 @@ typedef struct ag_editable {
 	int yMax;			/* Lowest y (lines) */
 	int yVis;			/* Maximum visible area (lines) */
 	Uint32 wheelTicks;		/* For wheel acceleration */
+	Uint32 _pad2;
 	AG_EditableBuffer sBuf;		/* Working buffer (for STATIC) */
 	AG_Rect r;			/* View area */
 	AG_CursorArea *_Nullable ca;	/* Text cursor-change area */

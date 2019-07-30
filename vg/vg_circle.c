@@ -65,7 +65,7 @@ Init(void *_Nonnull obj)
 	VG_Circle *vc = obj;
 
 	vc->p = NULL;
-	vc->r = 0.025f;
+	vc->r = 0.025;
 }
 
 static int
@@ -76,7 +76,7 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull 
 	if ((vc->p = VG_ReadRef(ds, vc, "Point")) == NULL) {
 		return (-1);
 	}
-	vc->r = AG_ReadFloat(ds);
+	vc->r = AG_ReadDouble(ds);
 	return (0);
 }
 
@@ -86,7 +86,7 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 	VG_Circle *vc = obj;
 
 	VG_WriteRef(ds, vc->p);
-	AG_WriteFloat(ds, vc->r);
+	AG_WriteDouble(ds, vc->r);
 }
 
 static void
@@ -156,7 +156,7 @@ Edit(void *_Nonnull obj, VG_View *_Nonnull vv)
 	VG_Circle *vc = obj;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
-	AG_NumericalNewFlt(box, 0, NULL, _("Radius: "), &vc->r);
+	AG_NumericalNewDbl(box, 0, NULL, _("Radius: "), &vc->r);
 	return (box);
 }
 

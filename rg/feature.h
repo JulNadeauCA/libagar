@@ -4,6 +4,8 @@
 #define _AGAR_RG_FEATURE_H_
 #include <agar/rg/begin.h>
 
+#include <agar/gui/keyboard.h>
+
 #define RG_FEATURE_NAME_MAX 32
 #define RG_FEATURE_TYPE_MAX 32
 
@@ -14,12 +16,19 @@ struct ag_window;
 
 typedef struct rg_feature_ops {
 	const char *_Nonnull type;	/* Feature name */
-	size_t len;             	/* Size of structure */
+#ifdef AG_HAVE_64BIT
+	Uint64 len;             	/* Size of structure */
+#else
+	Uint len;	             	/* Size of structure */
+#endif
 	const char *_Nonnull desc;	/* Feature description */
-	int flags;
+	Uint flags;
 #define FEATURE_AUTOREDRAW 0x01		/* Redraw tile periodically on edit */
+	AG_KeyMod keymod;		/* Keyboard modifier */
+	AG_KeySym keysym;		/* Keyboard shortcut (or NONE) */
+	Uint rev;			/* Revision number */
 
-	void (*_Nullable init)(void *_Nonnull, struct rg_tileset *_Nonnull, int);
+	void (*_Nullable init)(void *_Nonnull, struct rg_tileset *_Nonnull, Uint);
 	int  (*_Nullable load)(void *_Nonnull, AG_DataSource *_Nonnull);
 	void (*_Nullable save)(void *_Nonnull, AG_DataSource *_Nonnull);
 	void (*_Nullable destroy)(void *_Nonnull);
@@ -42,6 +51,7 @@ typedef struct rg_feature_sketch {
 
 typedef struct rg_feature_pixmap {
 	struct rg_pixmap *_Nonnull px;
+	Uint flags;
 	int x, y;
 	int visible;
 	AG_TAILQ_ENTRY(rg_feature_pixmap) pixmaps;
@@ -52,7 +62,7 @@ typedef struct rg_feature {
 	const RG_FeatureOps *_Nonnull ops;
 	struct rg_tileset *_Nonnull ts;
 	int flags;
-	Uint nrefs;
+	Uint nRefs;
 /*	AG_TAILQ_HEAD_(rg_feature_sketch) sketches; */
 	AG_TAILQ_HEAD_(rg_feature_pixmap) pixmaps;
 	AG_TAILQ_ENTRY(rg_feature) features;

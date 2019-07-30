@@ -3,6 +3,7 @@
 typedef struct sk_annot {
 	struct sk_node node;
 	Uint flags;
+	Uint8 _pad[12];
 } SK_Annot;
 
 #define SK_ANNOT(n) ((SK_Annot *)(n))

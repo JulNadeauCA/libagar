@@ -161,9 +161,12 @@ typedef struct ag_text {
 	_Nonnull_Mutex AG_Mutex lock;
 	AG_TextEnt ent[AG_LANG_LAST];	/* Language entries */
 	AG_Language lang;		/* Selected language */
-	AG_Size maxLen;			/* Maximum string length (bytes) */
 	Uint flags;
 #define AG_TEXT_SAVED_FLAGS	0
+	AG_Size maxLen;			/* Maximum string length (bytes) */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
 } AG_Text, AG_TextElement;
 
 #define AGTEXT(p) ((AG_Text *)(p))

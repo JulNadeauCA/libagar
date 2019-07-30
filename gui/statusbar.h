@@ -20,8 +20,8 @@ typedef struct ag_statusbar {
 #define AG_STATUSBAR_VFILL  0x02
 #define AG_STATUSBAR_EXPAND (AG_STATUSBAR_HFILL|AG_STATUSBAR_VFILL)
 
+	Uint              nLabels;
 	AG_Label *_Nonnull labels[AG_STATUSBAR_MAX_LABELS];
-	int               nLabels;
 } AG_Statusbar;
 
 __BEGIN_DECLS

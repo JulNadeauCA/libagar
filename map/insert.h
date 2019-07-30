@@ -10,6 +10,7 @@ struct map_insert_tool {
 	enum rg_snap_mode snap_mode;
 	int replace_mode;
 	int angle;
+	Uint32 _pad;
 	struct map mTmp;
 	struct map_view *_Nullable mvTmp;
 };

@@ -10,7 +10,7 @@
 #define AG_EVENT_ARGS_MAX 8
 #endif
 #ifndef AG_EVENT_NAME_MAX
-#define AG_EVENT_NAME_MAX 24
+#define AG_EVENT_NAME_MAX 20
 #endif
 
 /*
@@ -126,10 +126,8 @@ typedef struct ag_event_sink {
 
 /* Low-level event source */
 typedef struct ag_event_source {
-	int  caps[AG_SINK_LAST];		/* Capabilities */
 	Uint flags;
 	int  breakReq;				/* Break from event loop */
-	int  returnCode;			/* AG_EventLoop() return code */
 	int  (*_Nonnull sinkFn)(void);
 #ifdef AG_TIMERS
 	int  (*_Nullable addTimerFn)(struct ag_timer *_Nonnull, Uint32, int);
@@ -139,6 +137,10 @@ typedef struct ag_event_source {
 	AG_TAILQ_HEAD_(ag_event_sink) epilogues;   /* Event sink epilogues */
 	AG_TAILQ_HEAD_(ag_event_sink) spinners;	   /* Spinning sinks */
 	AG_TAILQ_HEAD_(ag_event_sink) sinks;	   /* Normal event sinks */
+
+	int  returnCode;			/* AG_EventLoop() return code */
+	Uint8 caps[AG_SINK_LAST];		/* Capabilities */
+	Uint16 _pad;
 } AG_EventSource;
 
 typedef void (*AG_EventFn)(AG_Event *_Nonnull);

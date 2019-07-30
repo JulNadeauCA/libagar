@@ -107,8 +107,8 @@ Init(void *_Nonnull obj)
 	vt->p1 = NULL;
 	vt->p2 = NULL;
 	vt->align = VG_ALIGN_MC;
-	vt->fontSize = (AG_FontPts)(vgGUI ? agDefaultFont->spec.size : 12);
 	vt->fontFlags = vgGUI ? agDefaultFont->flags : 0;
+	vt->fontSize = (AG_FontPts)(vgGUI ? agDefaultFont->spec.size : 12);
 	vt->fontFace[0] = '\0';
 	vt->args = NULL;
 	vt->argSizes = NULL;

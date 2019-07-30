@@ -9,6 +9,7 @@
 typedef struct ag_cached_text {
 	char *_Nonnull text;			/* Text string */
 	int surface;				/* Surface mapping */
+	Uint32 _pad;
 	AG_TextState state;			/* Text rendering state */
 	AG_TAILQ_ENTRY(ag_cached_text) ents;
 } AG_CachedText;
@@ -16,6 +17,7 @@ typedef struct ag_cached_text {
 typedef struct ag_text_cache_bucket {
 	AG_TAILQ_HEAD(ag_cached_textq,ag_cached_text) ents;
 	Uint nEnts;
+	Uint32 _pad;
 } AG_TextCacheBucket;
 
 struct ag_widget;
@@ -26,6 +28,7 @@ typedef struct ag_text_cache {
 	Uint                        nBuckets;
 	Uint curEnts;				/* Current entries */
 	Uint nBucketEnts;			/* Target bucket utilization */
+	Uint32 _pad;
 } AG_TextCache;
 
 __BEGIN_DECLS

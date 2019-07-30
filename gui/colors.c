@@ -43,16 +43,22 @@ AG_ColorOffset agSunkColor   = { -2500, -2500, -5100 };
 AG_ColorOffset agRaisedColor = {  7700,  7700,  5100 };
 AG_ColorOffset agLowColor    = { -7700, -7700, -5100 };
 AG_ColorOffset agHighColor   = { 10000, 10000, 10000 };
+AG_ColorOffset agTint        = {  2000,  2000,  2000 };
+AG_ColorOffset agShade       = { -2000, -2000, -2000 };
 #elif AG_MODEL == AG_MEDIUM
 AG_ColorOffset agSunkColor   = { -10, -10, -20 };
 AG_ColorOffset agRaisedColor = {  10,  10,  20 };
 AG_ColorOffset agLowColor    = { -20, -20, -10 };
 AG_ColorOffset agHighColor   = {  40,  40,  40 };
+AG_ColorOffset agTint        = {   8,   8,   8 };
+AG_ColorOffset agShade       = {  -8,  -8,  -8 };
 #elif AG_MODEL == AG_SMALL
 AG_ColorOffset agSunkColor   = { -1, -1, -2 };
 AG_ColorOffset agRaisedColor = {  1,  1,  2 };
 AG_ColorOffset agLowColor    = { -2, -2, -1 };
 AG_ColorOffset agHighColor   = {  4,  4,  4 };
+AG_ColorOffset agTint        = {  1,  1,  1 };
+AG_ColorOffset agShade       = { -1, -1, -1 };
 #endif
 
 /* Import inlinables */

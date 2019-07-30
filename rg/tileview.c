@@ -35,7 +35,6 @@
 #include <agar/gui/text.h>
 #include <agar/gui/text_cache.h>
 #include <agar/gui/primitive.h>
-
 #include <agar/gui/opengl.h>
 
 #include <agar/rg/tileview.h>
@@ -313,7 +312,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	if (button == AG_MOUSE_LEFT &&
 	   !(tv->flags & RG_TILEVIEW_HIDE_CONTROLS)) {
 		TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
-			for (i = 0; i < ctrl->nhandles; i++) {
+			for (i = 0; i < ctrl->nHandles; i++) {
 				RG_TileviewHandle *th = &ctrl->handles[i];
 		
 				if (CursorOver(th, sx, sy)) {
@@ -331,7 +330,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 					break;
 				}
 			}
-			if (i < ctrl->nhandles)
+			if (i < ctrl->nHandles)
 				return;
 		}
 	}
@@ -433,7 +432,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 		break;
 	case AG_MOUSE_LEFT:
 		TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
-			for (i = 0; i < ctrl->nhandles; i++) {
+			for (i = 0; i < ctrl->nHandles; i++) {
 				RG_TileviewHandle *th = &ctrl->handles[i];
 
 				if (th->enable) {
@@ -445,7 +444,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 					break;
 				}
 			}
-			if (i < ctrl->nhandles)
+			if (i < ctrl->nHandles)
 				break;
 		}
 		if (ctrl == NULL) {
@@ -513,7 +512,7 @@ ClampOffsets(RG_Tileview *_Nonnull tv)
 }
 
 static void
-MoveHandle(RG_Tileview *_Nonnull tv, RG_TileviewCtrl *_Nonnull ctrl, int nhandle,
+MoveHandle(RG_Tileview *_Nonnull tv, RG_TileviewCtrl *_Nonnull ctrl, int which,
     int x2, int y2)
 {
 	int dx = x2 - tv->xorig;
@@ -526,7 +525,7 @@ MoveHandle(RG_Tileview *_Nonnull tv, RG_TileviewCtrl *_Nonnull ctrl, int nhandle
 
 	switch (ctrl->type) {
 	case RG_TILEVIEW_RECTANGLE:
-		switch (nhandle) {
+		switch (which) {
 		case 0:
 			RG_TileviewSetInt(ctrl, 0,
 			    RG_TileviewInt(ctrl,0)+dx);
@@ -561,7 +560,7 @@ MoveHandle(RG_Tileview *_Nonnull tv, RG_TileviewCtrl *_Nonnull ctrl, int nhandle
 		}
 		/* FALLTHROUGH */
 	case RG_TILEVIEW_RDIMENSIONS:
-		switch (nhandle) {
+		switch (which) {
 		case 2:						/* Bottom */
 			{
 				int ch = RG_TileviewInt(ctrl, 3);
@@ -643,7 +642,7 @@ MouseMotion(AG_Event *_Nonnull event)
 	sy /= tv->pxsz;
 
 	TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
-		for (i = 0; i < ctrl->nhandles; i++) {
+		for (i = 0; i < ctrl->nHandles; i++) {
 			RG_TileviewHandle *th = &ctrl->handles[i];
 
 			if (th->enable) {
@@ -653,7 +652,7 @@ MouseMotion(AG_Event *_Nonnull event)
 				th->over = CursorOver(th, sx, sy);
 			}
 		}
-		if (i < ctrl->nhandles)
+		if (i < ctrl->nHandles)
 			break;
 	}
 	if (ctrl == NULL) {
@@ -729,11 +728,11 @@ void
 RG_TileviewSetTile(RG_Tileview *tv, RG_Tile *t)
 {
 	if (tv->tile != NULL) {
-		tv->tile->nrefs--;
+		tv->tile->nRefs--;
 	}
 	tv->tile = t;
 	if (t != NULL) {
-		t->nrefs++;
+		t->nRefs++;
 		RG_TileviewSetZoom(tv, 100, 0);
 	}
 	t->flags |= RG_TILE_DIRTY;
@@ -751,8 +750,8 @@ Init(void *_Nonnull obj)
 	tv->flags = RG_TILEVIEW_NO_EXTENT|RG_TILEVIEW_NO_TILING;
 	tv->ts = NULL;
 	tv->tile = NULL;
-	tv->scaled = NULL;
 	tv->su = -1;
+	tv->scaled = NULL;
 	tv->zoom = 100;
 	tv->pxsz = 1;
 	tv->pxlen = 0;
@@ -874,31 +873,31 @@ RG_TileviewAddCtrl(RG_Tileview *tv, enum rg_tileview_ctrl_type type,
 out:
 	switch (ctrl->type) {
 	case RG_TILEVIEW_POINT:
-		ctrl->nhandles = 1;
+		ctrl->nHandles = 1;
 		if (ctrl->nvals < 1) goto missingvals;
 		break;
 #if 0
 	case RG_TILEVIEW_VERTEX:
-		ctrl->nhandles = 1;
+		ctrl->nHandles = 1;
 		if (ctrl->nvals < 1) goto missingvals;
 		break;
 #endif
 	case RG_TILEVIEW_RECTANGLE:
 	case RG_TILEVIEW_RDIMENSIONS:
-		ctrl->nhandles = 6;
+		ctrl->nHandles = 6;
 		if (ctrl->nvals < 4) goto missingvals;
 		break;
 	case RG_TILEVIEW_CIRCLE:
-		ctrl->nhandles = 2;
+		ctrl->nHandles = 2;
 		if (ctrl->nvals < 2) goto missingvals;
 		break;
 	default:
-		ctrl->nhandles = 0;
+		ctrl->nHandles = 0;
 		break;
 	}
-	ctrl->handles = (ctrl->nhandles > 0) ?
-	    Malloc(sizeof(RG_TileviewHandle)*ctrl->nhandles) : NULL;
-	for (i = 0; i < ctrl->nhandles; i++) {
+	ctrl->handles = (ctrl->nHandles > 0) ?
+	    Malloc(sizeof(RG_TileviewHandle)*ctrl->nHandles) : NULL;
+	for (i = 0; i < ctrl->nHandles; i++) {
 		RG_TileviewHandle *th = &ctrl->handles[i];
 
 		th->x = -1;
@@ -1440,7 +1439,7 @@ DrawControl(RG_Tileview *_Nonnull tv, RG_TileviewCtrl *_Nonnull ctrl)
 		break;
 	}
 
-	for (i = 0; i < ctrl->nhandles; i++)
+	for (i = 0; i < ctrl->nHandles; i++)
 		DrawHandle(tv, ctrl, &ctrl->handles[i]);
 }
 
@@ -1646,7 +1645,8 @@ Draw(void *_Nonnull obj)
 					r.w = w;
 					r.h = h;
 					AG_DrawRectBlended(tv, &r, &c,
-					    AG_ALPHA_OVERLAY);
+					    AG_ALPHA_SRC,
+					    AG_ALPHA_ONE_MINUS_SRC);
 
 					n++;
 				}
@@ -1685,7 +1685,8 @@ Draw(void *_Nonnull obj)
 					r.h = tsu->h;
 					AG_ColorRGBA_8(&c, 255,255,255,128);
 					AG_DrawRectBlended(tv, &r, &c,
-					    AG_ALPHA_OVERLAY);
+					    AG_ALPHA_SRC,
+					    AG_ALPHA_ONE_MINUS_SRC);
 					AG_WidgetBlit(tv, tsu, r.x, r.y);
 					AG_SurfaceFree(tsu);
 				}
@@ -1744,7 +1745,7 @@ Destroy(void *_Nonnull p)
 	RG_TileviewTool *tool, *ntool;
 	
 	if (tv->tile != NULL) {
-		tv->tile->nrefs--;
+		tv->tile->nRefs--;
 	}
 	for (ctrl = TAILQ_FIRST(&tv->ctrls);
 	     ctrl != TAILQ_END(&tv->ctrls);

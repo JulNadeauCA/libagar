@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
 typedef struct sg_polybox {
-	struct sg_object _inherit;
+	struct sg_object _inherit;	/* SG_Object -> SG_Polybox */
 } SG_Polybox;
 
 __BEGIN_DECLS

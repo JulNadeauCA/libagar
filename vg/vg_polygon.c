@@ -226,6 +226,8 @@ DrawFB(VG_Polygon *_Nonnull vp, VG_View *_Nonnull vv)
 				     (x2 - x1) + (x1 << 16);
 			} 
 		}
+
+		/* TODO use a less general integer sort */
 		qsort(vp->ints, nInts, sizeof(int), CompareInts);
 
 		for (i = 0; i < nInts; i += 2) {

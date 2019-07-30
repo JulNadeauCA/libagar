@@ -131,7 +131,7 @@ ViewMotion(AG_Event *_Nonnull event)
 
 	AG_MutexLock(&sk->lock);
 
-	if (skv->mouse.panning) {
+	if (skv->flags & SK_VIEW_PANNING) {
 		SK_Translate2(sk->root, vRel.x, vRel.y);
 		AG_Redraw(skv);
 		goto out;
@@ -145,8 +145,8 @@ ViewMotion(AG_Event *_Nonnull event)
 		AG_Redraw(skv);
 	}
 out:
-	skv->mouse.last.x = vPos.x;
-	skv->mouse.last.y = vPos.y;
+	skv->mouseLast.x = vPos.x;
+	skv->mouseLast.y = vPos.y;
 	AG_MutexUnlock(&sk->lock);
 }
 
@@ -173,14 +173,14 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	vPos = M_VecFromProj3(M_MatMultVector44(Tinv, M_VecToProj3(vPos,1)));
 
 	AG_MutexLock(&sk->lock);
-	skv->mouse.last = vPos;
+	skv->mouseLast = vPos;
 	
 	switch (button) {
 	case AG_MOUSE_RIGHT:
 		SK_ViewPopupMenu(skv, x, y);
 		break;
 	case AG_MOUSE_MIDDLE:
-		skv->mouse.panning = 1;
+		skv->flags |= SK_VIEW_PANNING;
 		break;
 	case AG_MOUSE_WHEELDOWN:
 		SK_ViewZoom(skv, SK_VIEW_SCALE_X(skv) -
@@ -273,7 +273,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	}
 	switch (button) {
 	case AG_MOUSE_MIDDLE:
-		skv->mouse.panning = 0;
+		skv->flags &= ~(SK_VIEW_PANNING);
 		goto out;
 	default:
 		break;
@@ -315,9 +315,8 @@ Init(void *_Nonnull obj)
 	skv->btnup_ev = NULL;
 	skv->motion_ev = NULL;
 	skv->status[0] = '\0';
-	skv->mouse.last.x = 0;
-	skv->mouse.last.y = 0;
-	skv->mouse.panning = 0;
+	skv->mouseLast.x = 0;
+	skv->mouseLast.y = 0;
 	skv->curtool = NULL;
 	skv->deftool = NULL;
 	skv->wPixel = 1.0;

@@ -769,7 +769,7 @@ Draw(void *_Nonnull obj)
 			DrawCell(t, c, &rCell);
 			if (c->selected) {
 				AG_DrawRectBlended(t, &rCell, &t->selColor,
-				    AG_ALPHA_SRC);
+				    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 			}
 			rCell.y += t->hRow;
 			AG_DrawLineH(t, 0, t->r.w - 1, rCell.y,
@@ -781,7 +781,8 @@ Draw(void *_Nonnull obj)
 			AG_Color c;
 
 			AG_ColorRGBA_8(&c, 0,0,250, 32);
-			AG_DrawRectBlended(t, &rCol, &c, AG_ALPHA_SRC);
+			AG_DrawRectBlended(t, &rCol, &c,
+			    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 		}
 
 		AG_PopClipRect(t);
@@ -1326,9 +1327,11 @@ ColumnLeftClickSort(AG_Table *_Nonnull t, AG_TableCol *_Nonnull tc)
 		}
 	}
 	if (tc->flags & AG_TABLE_SORT_ASCENDING) {
+		Debug(t, "Sorting column \"%s\" descending\n", tc->name);
 		tc->flags &= ~(AG_TABLE_SORT_ASCENDING);
 		tc->flags |= AG_TABLE_SORT_DESCENDING;
 	} else {
+		Debug(t, "Sorting column \"%s\" ascending\n", tc->name);
 		tc->flags &= ~(AG_TABLE_SORT_DESCENDING);
 		tc->flags |= AG_TABLE_SORT_ASCENDING;
 	}
@@ -1364,10 +1367,14 @@ ColumnLeftClick(AG_Table *_Nonnull t, int px)
 		if (x > x1 && x < x2) {
 			if ((x2 - x) <= COLUMN_RESIZE_RANGE) {
 				if (t->nResizing == -1) {
+					Debug(t, "Resizing col#%d (\"%s\")\n",
+					    n, tc->name);
 					t->nResizing = n;
 				}
 			} else {
 				if (t->colAction & AG_TABLE_COL_SELECT) {
+					Debug(t, "Selecting col#%d (\"%s\")\n",
+					    n, tc->name);
 					if (multi) {
 						tc->selected = !tc->selected;
 					} else {
@@ -1439,27 +1446,31 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 				break;
 			}
 			if (m < mc) {
+				Debug(t, "Selecting rows #%d-#%d\n", m, mc);
 				for (i = m; i <= mc; i++)
 					AG_TableSelectRow(t, i);
 			} else if (m > mc) {
+				Debug(t, "Selecting rows #%d-#%d\n", mc, m);
 				for (i = mc; i <= m; i++)
 					AG_TableSelectRow(t, i);
 			} else {
+				Debug(t, "Selecting row #%d\n", mc);
 				AG_TableSelectRow(t, mc);
 			}
 		} else if (SelectingMultiple(t)) {
 			for (n = 0; n < t->n; n++) {
 				c = &t->cells[mc][n];
+				Debug(t, "Cell[%d][%d]: Selection %d -> %d\n", mc, n,
+				    c->selected, !c->selected);
 				c->selected = !c->selected;
 			}
 		} else {
+			Debug(t, "Selecting row #%d\n", mc);
 			AG_TableDeselectAllRows(t);
 			AG_TableSelectRow(t, mc);
-			if (t->clickRowEv != NULL) {
+			if (t->clickRowEv != NULL)
 				AG_PostEvent(NULL, t,
-				    t->clickRowEv->name,
-				    "%i", mc);
-			}
+				    t->clickRowEv->name, "%i", mc);
 #ifdef AG_TIMERS
 			if (t->dblClickedRow != -1 &&
 			    t->dblClickedRow == mc) {
@@ -1492,20 +1503,28 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 				break;
 			}
 			if (m < mc && n < nc) {
+				Debug(t, "Selecting cells [%d,%d][%d-%d]\n",
+				    n, nc, m, mc);
 				for (i = n; i <= nc; i++)
 					for (j = m; j <= mc; j++)
 						AG_TableSelectCell(t, j,i);
 			} else if (m > mc && n > nc) {
+				Debug(t, "Selecting cells [%d,%d][%d,%d]\n",
+				    nc, n, mc, m);
 				for (i = nc; i <= n; i++)
 					for (j = mc; j <= m; j++)
 						AG_TableSelectCell(t, j,i);
 			} else {
+				Debug(t, "Selecting cell %d,%d\n", mc, nc);
 				AG_TableSelectCell(t, mc, nc);
 			}
 		} else if (SelectingMultiple(t)) {
 			c = &t->cells[mc][nc];
+			Debug(t, "Cell[%d][%d]: Selection %d -> %d\n", mc, nc,
+			    c->selected, !c->selected);
 			c->selected = !c->selected;
 		} else {
+			Debug(t, "Selecting cell %d,%d\n", mc, nc);
 			for (m = 0; m < t->m; m++) {
 				for (n = 0; n < t->n; n++) {
 					c = &t->cells[m][n];
@@ -1513,11 +1532,9 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 					              ((int)n == nc);
 				}
 			}
-			if (t->clickCellEv != NULL) {
-				AG_PostEvent(NULL, t,
-				    t->clickCellEv->name,
+			if (t->clickCellEv != NULL)
+				AG_PostEvent(NULL, t, t->clickCellEv->name,
 				    "%i", mc);
-			}
 #ifdef AG_TIMERS
 			if (t->dblClickedCell != -1 &&
 			    t->dblClickedCell == mc) {
@@ -1749,9 +1766,11 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			break;
 		}
 		if (t->m == 0 || t->n == 0) {
+			Debug(t, "Click: empty table\n");
 			return;
 		}
 		m = RowAtY(t, y);
+		Debug(t, "Cell click row #%d at y=%d\n", m, y);
 		CellLeftClick(t, m, x);
 		break;
 	case AG_MOUSE_RIGHT:

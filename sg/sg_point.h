@@ -1,8 +1,9 @@
 /*	Public domain	*/
 
 typedef struct sg_point {
-	struct sg_geom _inherit;
+	struct sg_geom _inherit;	/* SG_Geom -> SG_Point */
 	float size;
+	Uint8 _pad[12];
 } SG_Point;
 
 #define SGPOINT(n) ((SG_Point *)(n))

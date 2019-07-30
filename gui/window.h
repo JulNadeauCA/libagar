@@ -69,6 +69,7 @@ typedef struct ag_window_pvt {
 	float fadeInTime, fadeOutTime;		/* Fade time (s) */
 	float fadeInIncr, fadeOutIncr;		/* Fade increment */
 	float fadeOpacity;			/* Fade opacity */
+	Uint32 _pad;
 #endif
 	AG_CursorAreaQ cursorAreas;		/* Cursor-change areas */
 	AG_CursorArea *_Nullable caResize[5];	/* Window-resize areas */
@@ -116,11 +117,11 @@ typedef struct ag_window {
 	char caption[AG_WINDOW_CAPTION_MAX];	/* Window caption */
 	int visible;				/* Window is visible */
 	int dirty;				/* Window needs redraw */
+	enum ag_window_alignment alignment;	/* Initial position */
 
 	struct ag_titlebar *_Nullable tbar;	/* Titlebar (or NULL) */
 	struct ag_icon *_Nullable     icon;	/* Window icon (internal WM) */
 
-	enum ag_window_alignment alignment;	/* Initial position */
 	int spacing;				/* Default spacing (px) */
 	int tPad, bPad, lPad, rPad;		/* Window padding (px) */
 	int wReq, hReq;				/* Requested geometry (px) */

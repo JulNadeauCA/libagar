@@ -91,7 +91,7 @@ MouseButtonUp(void *_Nonnull p, int x, int y, int btn)
 	MAP_View *mv = t->mv;
 	MAP *m = mv->map;
 
-	if (m->nmods == 0) {
+	if (m->nMods == 0) {
 		MAP_ModCancel(m);
 	}
 	MAP_ModEnd(m);
@@ -131,7 +131,9 @@ Cursor(void *_Nonnull p, AG_Rect *_Nonnull rd)
 	AG_Color c;
 
 	AG_ColorRGBA_8(&c, 255,0,0,64);
-	AG_DrawRectBlended(TOOL(p)->mv, rd, &c, AG_ALPHA_OVERLAY);
+	AG_DrawRectBlended(TOOL(p)->mv, rd, &c,
+	    AG_ALPHA_SRC,
+	    AG_ALPHA_ONE_MINUS_SRC);
 	return (1);
 }
 
@@ -140,6 +142,7 @@ const MAP_ToolOps mapEraserOps = {
 	&mapIconEraser,
 	sizeof(MAP_Tool),
 	0,
+	1,
 	Init,
 	NULL,			/* destroy */
 	EditPane,

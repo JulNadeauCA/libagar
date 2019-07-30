@@ -8,8 +8,8 @@ struct ag_editable;
 struct ag_editable_buffer;
 
 struct ag_keycode {
-	AG_KeySym key;
-	const char *_Nonnull modFlags;
+	AG_KeySym key;			/* Match keysym */
+	Uint      modKeys;		/* Match set of modifier keys */
 	int (*_Nonnull func)(struct ag_editable *_Nonnull,
 	                     struct ag_editable_buffer *_Nonnull,
 	                     AG_KeySym, Uint, AG_Char);

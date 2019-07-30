@@ -27,6 +27,7 @@ typedef struct m_matview {
 	int hSpacing, vSpacing;		/* Spacing between entries */
 	int xOffs, yOffs;		/* Display offset */
 	int scale;			/* Scale (for graphic rendering) */
+	Uint32 _pad;
 
 	AG_Scrollbar *_Nonnull hBar;	/* Horizontal scrollbar */
 	AG_Scrollbar *_Nonnull vBar;	/* Vertical scrollbar */

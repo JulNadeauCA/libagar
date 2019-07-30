@@ -104,8 +104,8 @@ AG_TextInit(AG_Text *txt, AG_Size maxLen)
 {
 	Uint i;
 	
-	txt->flags = 0;
 	txt->lang = 0;
+	txt->flags = 0;
 	txt->maxLen = (maxLen != 0) ? maxLen : AG_INT_MAX-1;
 	AG_MutexInitRecursive(&txt->lock);
 

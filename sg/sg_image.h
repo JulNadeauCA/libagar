@@ -7,7 +7,7 @@ enum sg_image_shape {
 };
 
 typedef struct sg_image {
-	struct sg_node _inherit;
+	struct sg_node _inherit;		/* SG_Node -> SG_Image */
 	enum sg_image_shape shape;		/* Contour shape */
 	Uint flags;
 #define SG_IMAGE_BILLBOARD	0x01		/* Render facing the camera */
@@ -25,6 +25,9 @@ typedef struct sg_image {
 						   or animations */
 
 	AG_Color color;				/* Background color */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
 	AG_Surface *_Nullable su;		/* Source surface
 						   (Anim: Effective surface) */
 	AG_TexCoord *_Nullable tc;		/* Effective texcoords */
@@ -36,11 +39,14 @@ typedef struct sg_image {
 	SG_GLVertex3 *_Nullable *_Nonnull tessBufs; /* Tesselator buffers */
 	Uint                             nTessBufs;
 	float tolContour, tolHoles;		/* For simplification */
+	Uint32 _pad1;
 	M_Polygon contour;			/* Computed polygon contour */
 	M_Polygon *_Nullable holes;		/* Computed holes */
 	Uint                nHoles;
+	Uint32 _pad2;
 	AG_TAILQ_HEAD_(sg_view_texture) vtex;	/* Per-view textures */
 	AG_TAILQ_HEAD_(sg_view_list) vlist;	/* Per-view display lists */
+	Uint8 _pad3[8];
 } SG_Image;
 
 #define SGIMAGE(n) ((SG_Image *)(n))

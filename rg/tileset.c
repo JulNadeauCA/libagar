@@ -141,10 +141,10 @@ Init(void *_Nonnull obj)
 	ts->fmt = &Sicon->format;
 	ts->flags = 0;
 	ts->tmpl[0] = '\0';
-	ts->tiletbl = NULL;
-	ts->ntiletbl = 0;
-	ts->animtbl = NULL;
-	ts->nanimtbl = 0;
+	ts->nTileTbl = 0;
+	ts->tileTbl = NULL;
+	ts->animTbl = NULL;
+	ts->nAnimTbl = 0;
 }
 
 static void
@@ -212,13 +212,13 @@ Reset(void *_Nonnull obj)
 	TAILQ_INIT(&ts->animations);
 	TAILQ_INIT(&ts->textures);
 
-	Free(ts->tiletbl);
-	ts->tiletbl = NULL;
-	Free(ts->animtbl);
-	ts->animtbl = NULL;
+	Free(ts->tileTbl);
+	ts->tileTbl = NULL;
+	Free(ts->animTbl);
+	ts->animTbl = NULL;
 
-	ts->ntiletbl = 0;
-	ts->nanimtbl = 0;
+	ts->nTileTbl = 0;
+	ts->nAnimTbl = 0;
 
 	AG_MutexUnlock(&ts->lock);
 }
@@ -230,8 +230,8 @@ Destroy(void *_Nonnull obj)
 
 	AG_MutexDestroy(&ts->lock);
 	AG_SurfaceFree(ts->icon);
-	Free(ts->tiletbl);
-	Free(ts->animtbl);
+	Free(ts->tileTbl);
+	Free(ts->animTbl);
 }
 
 static int
@@ -284,14 +284,13 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull buf, const AG_Version *_Nonnull
 		const RG_FeatureOps **ftops;
 		char name[RG_FEATURE_NAME_MAX];
 		char type[RG_FEATURE_TYPE_MAX];
-		size_t len;
+		Uint32 len, flags;
 		RG_Feature *ft;
-		int flags;
 		
 		AG_CopyString(name, buf, sizeof(name));
 		AG_CopyString(type, buf, sizeof(type));
-		flags = (int)AG_ReadUint32(buf);
-		len = (size_t)AG_ReadUint32(buf);
+		flags = AG_ReadUint32(buf);
+		len = AG_ReadUint32(buf);
 
 		for (ftops = &feature_tbl[0]; *ftops != NULL; ftops++) {
 			if (strcmp((*ftops)->type, type) == 0)
@@ -307,7 +306,7 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull buf, const AG_Version *_Nonnull
 
 		ft = Malloc((*ftops)->len);
 		ft->ops = *ftops;
-		ft->ops->init(ft, ts, flags);
+		ft->ops->init(ft, ts, (Uint)flags);
 		if (RG_FeatureLoad(ft, buf) == -1) {
 			RG_FeatureDestroy(ft);
 			Free(ft);
@@ -376,36 +375,36 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull buf, const AG_Version *_Nonnull
 	}
 
 	/* Load and resolve the static tile and animation mappings. */
-	ts->ntiletbl = AG_ReadUint32(buf);
-	Debug(ts, "Tiletbl has %u entries\n", (Uint)ts->ntiletbl);
-	ts->tiletbl = Realloc(ts->tiletbl, ts->ntiletbl*sizeof(RG_Tile *));
-	for (i = 0; i < ts->ntiletbl; i++) {
+	ts->nTileTbl = AG_ReadUint32(buf);
+	Debug(ts, "Tiletbl has %u entries\n", (Uint)ts->nTileTbl);
+	ts->tileTbl = Realloc(ts->tileTbl, ts->nTileTbl*sizeof(RG_Tile *));
+	for (i = 0; i < ts->nTileTbl; i++) {
 		char name[RG_TILE_NAME_MAX];
 
 		AG_CopyString(name, buf, sizeof(name));
 		Debug(ts, "Tile mapping %u: <%s>\n", i, name);
 		if (name[0] == '\0') {
-			ts->tiletbl[i] = NULL;
+			ts->tileTbl[i] = NULL;
 		} else {
-			if ((ts->tiletbl[i] = RG_TilesetFindTile(ts, name)) == NULL) {
+			if ((ts->tileTbl[i] = RG_TilesetFindTile(ts, name)) == NULL) {
 				AG_SetError("%s: Bad tile mapping: %s (%u)",
 				    OBJECT(ts)->name, name, (Uint)i);
 				goto fail;
 			}
 		}
 	}
-	ts->nanimtbl = AG_ReadUint32(buf);
-	Debug(ts, "Animtbl has %u entries\n", (Uint)ts->nanimtbl);
-	ts->animtbl = Realloc(ts->animtbl, ts->nanimtbl*sizeof(RG_Anim *));
-	for (i = 0; i < ts->nanimtbl; i++) {
+	ts->nAnimTbl = AG_ReadUint32(buf);
+	Debug(ts, "Animtbl has %u entries\n", (Uint)ts->nAnimTbl);
+	ts->animTbl = Realloc(ts->animTbl, ts->nAnimTbl*sizeof(RG_Anim *));
+	for (i = 0; i < ts->nAnimTbl; i++) {
 		char name[RG_ANIMATION_NAME_MAX];
 
 		AG_CopyString(name, buf, sizeof(name));
 		Debug(ts, "Anim mapping %u: <%s>\n", i, name);
 		if (name[0] == '\0') {
-			ts->animtbl[i] = NULL;
+			ts->animTbl[i] = NULL;
 		} else {
-			if ((ts->animtbl[i] = RG_TilesetFindAnim(ts, name)) == NULL) {
+			if ((ts->animTbl[i] = RG_TilesetFindAnim(ts, name)) == NULL) {
 				AG_SetError("%s: Bad anim mapping: %s (%u)",
 				    OBJECT(ts)->name, name, (Uint)i);
 				goto fail;
@@ -425,7 +424,7 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull buf, const AG_Version *_Nonnull
 			TAILQ_FOREACH(ppx, &ts->pixmaps, pixmaps) {
 				if (strcmp(pbr->px_name, ppx->name) == 0) {
 					pbr->px = ppx;
-					pbr->px->nrefs++;
+					pbr->px->nRefs++;
 					break;
 				}
 			}
@@ -539,16 +538,16 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull buf)
 	Debug(ts, "Saved %u textures\n", (Uint)count);
 
 	/* Save the static tile and animation mappings. */
-	AG_WriteUint32(buf, ts->ntiletbl);
-	for (i = 0; i < ts->ntiletbl; i++) {
-		AG_WriteString(buf, ts->tiletbl[i]->name);
+	AG_WriteUint32(buf, ts->nTileTbl);
+	for (i = 0; i < ts->nTileTbl; i++) {
+		AG_WriteString(buf, ts->tileTbl[i]->name);
 	}
-	AG_WriteUint32(buf, ts->nanimtbl);
-	for (i = 0; i < ts->nanimtbl; i++) {
-		AG_WriteString(buf, ts->animtbl[i]->name);
+	AG_WriteUint32(buf, ts->nAnimTbl);
+	for (i = 0; i < ts->nAnimTbl; i++) {
+		AG_WriteString(buf, ts->animTbl[i]->name);
 	}
-	Debug(ts, "Saved %u tiletbl and %u animtbl entries\n",
-	    ts->ntiletbl, ts->nanimtbl);
+	Debug(ts, "Saved %u tileTbl and %u animTbl entries\n",
+	    ts->nTileTbl, ts->nAnimTbl);
 
 	AG_MutexUnlock(&ts->lock);
 	return (0);
@@ -680,7 +679,7 @@ PollGraphics(AG_Event *_Nonnull event)
 
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
 		it = AG_TlistAdd(tl, NULL, "%s (%ux%u) [#%u]",
-		    px->name, px->su->w, px->su->h, px->nrefs);
+		    px->name, px->su->w, px->su->h, px->nRefs);
 		it->p1 = px;
 		it->cat = "pixmap";
 		AG_TlistSetIcon(tl, it, px->su);
@@ -689,7 +688,7 @@ PollGraphics(AG_Event *_Nonnull event)
 	TAILQ_FOREACH(sk, &ts->sketches, sketches) {
 		it = AG_TlistAdd(tl, NULL,
 		    "%s (%ux%u %.0f%%) [#%u]", sk->name, sk->vg->su->w,
-		    sk->vg->su->h, sk->vg->scale*100.0, sk->nrefs);
+		    sk->vg->su->h, sk->vg->scale*100.0, sk->nRefs);
 		it->cat = "sketch";
 		it->p1 = sk;
 		AG_TlistSetIcon(tl, it, sk->vg->su);
@@ -742,7 +741,7 @@ PollAnims(AG_Event *_Nonnull event)
 
 	TAILQ_FOREACH(ani, &ts->animations, animations) {
 		it = AG_TlistAdd(tl, NULL, "%s (%ux%u) [#%u]", ani->name,
-		    ani->w, ani->h, ani->nrefs);
+		    ani->w, ani->h, ani->nRefs);
 		it->p1 = ani;
 		it->cat = "anim";
 	}
@@ -864,23 +863,23 @@ InsertTileMapping(RG_Tileset *_Nonnull ts, RG_Tile *_Nonnull t,
 	Uint32 i;
 
 	/* Try to recycle NULL ids if we reach the threshold. */
-	if (ts->ntiletbl >= RG_TILE_ID_MINREUSE) {
-		for (i = 0; i < ts->ntiletbl; i++) {
-			if (ts->tiletbl[i] != NULL) {
+	if (ts->nTileTbl >= RG_TILE_ID_MINREUSE) {
+		for (i = 0; i < ts->nTileTbl; i++) {
+			if (ts->tileTbl[i] != NULL) {
 				continue;
 			}
-			ts->tiletbl[i] = t;
+			ts->tileTbl[i] = t;
 			if (id != NULL) { *id = i; }
 			return (0);
 		}
 	}
-	if ((ts->ntiletbl+1) >= RG_TILE_ID_MAX) {
+	if ((ts->nTileTbl+1) >= RG_TILE_ID_MAX) {
 		AG_SetError("Out of tile ID space");
 		return (-1);
 	}
-	ts->tiletbl = Realloc(ts->tiletbl, (ts->ntiletbl+1)*sizeof(RG_Tile *));
-	ts->tiletbl[ts->ntiletbl] = t;
-	if (id != NULL) { *id = ts->ntiletbl++; }
+	ts->tileTbl = Realloc(ts->tileTbl, (ts->nTileTbl+1)*sizeof(RG_Tile *));
+	ts->tileTbl[ts->nTileTbl] = t;
+	if (id != NULL) { *id = ts->nTileTbl++; }
 	return (0);
 }
 
@@ -891,23 +890,23 @@ InsertAnimMapping(RG_Tileset *_Nonnull ts, RG_Anim *_Nonnull anim,
 	Uint32 i;
 
 	/* Try to recycle NULL ids if we reach the threshold. */
-	if (ts->nanimtbl >= RG_ANIM_ID_MINREUSE) {
-		for (i = 0; i < ts->nanimtbl; i++) {
-			if (ts->animtbl[i] != NULL) {
+	if (ts->nAnimTbl >= RG_ANIM_ID_MINREUSE) {
+		for (i = 0; i < ts->nAnimTbl; i++) {
+			if (ts->animTbl[i] != NULL) {
 				continue;
 			}
-			ts->animtbl[i] = anim;
+			ts->animTbl[i] = anim;
 			if (id != NULL) { *id = i; }
 			return (0);
 		}
 	}
-	if ((ts->nanimtbl+1) >= RG_ANIM_ID_MAX) {
+	if ((ts->nAnimTbl+1) >= RG_ANIM_ID_MAX) {
 		AG_SetError("Out of anim ID space");
 		return (-1);
 	}
-	ts->animtbl = Realloc(ts->animtbl, (ts->nanimtbl+1)*sizeof(RG_Anim *));
-	ts->animtbl[ts->nanimtbl] = anim;
-	if (id != NULL) { *id = ts->nanimtbl++; }
+	ts->animTbl = Realloc(ts->animTbl, (ts->nAnimTbl+1)*sizeof(RG_Anim *));
+	ts->animTbl[ts->nAnimTbl] = anim;
+	if (id != NULL) { *id = ts->nAnimTbl++; }
 	return (0);
 }
 
@@ -916,9 +915,9 @@ RemoveTileMappings(RG_Tileset *_Nonnull ts, RG_Tile *_Nonnull t)
 {
 	Uint32 i;
 
-	for (i = 0; i < ts->ntiletbl; i++) {
-		if (ts->tiletbl[i] == t)
-			ts->tiletbl[i] = NULL;
+	for (i = 0; i < ts->nTileTbl; i++) {
+		if (ts->tileTbl[i] == t)
+			ts->tileTbl[i] = NULL;
 	}
 }
 
@@ -927,9 +926,9 @@ RemoveAnimMappings(RG_Tileset *_Nonnull ts, RG_Anim *_Nonnull anim)
 {
 	Uint32 i;
 
-	for (i = 0; i < ts->nanimtbl; i++) {
-		if (ts->animtbl[i] == anim)
-			ts->animtbl[i] = NULL;
+	for (i = 0; i < ts->nAnimTbl; i++) {
+		if (ts->animTbl[i] == anim)
+			ts->animTbl[i] = NULL;
 	}
 }
 
@@ -1295,7 +1294,7 @@ DeleteSelTiles(AG_Event *_Nonnull event)
 		if (!it->selected) {
 			continue;
 		}
-		if (t->nrefs > 0) {
+		if (t->nRefs > 0) {
 			AG_TextMsg(AG_MSG_ERROR, _("The tile `%s' is in use."),
 			    t->name);
 			continue;
@@ -1319,7 +1318,7 @@ TileDup(RG_Tileset *_Nonnull ts, RG_Tile *_Nonnull t1)
 
 	t2 = Malloc(sizeof(RG_Tile));
 tryname1:
-	Snprintf(name, sizeof(name), _("Copy #%d of %s"), ncopy++, t1->name);
+	Snprintf(name, sizeof(name), _("Copy #%d"), ncopy++);
 	if (RG_TilesetFindTile(ts, name) != NULL) {
 		goto tryname1;
 	}
@@ -1351,7 +1350,7 @@ tryname1:
 			RG_PixmapInit(px2, ts, 0);
 tryname2:
 			Snprintf(px2->name, sizeof(px2->name),
-			    _("Copy #%d of %s"), ncopy++, px1->name);
+			    _("Copy #%d"), ncopy++);
 			if (RG_TilesetFindPixmap(ts, px2->name) != NULL) {
 				goto tryname2;
 			}
@@ -1476,7 +1475,7 @@ DeleteSelPixmaps(AG_Event *_Nonnull event)
 	if ((it = AG_TlistSelectedItem(tlGfx)) != NULL) {
 		RG_Pixmap *px = it->p1;
 	
-		if (px->nrefs > 0) {
+		if (px->nRefs > 0) {
 			return;
 		}
 		TAILQ_REMOVE(&ts->pixmaps, px, pixmaps);
@@ -1495,7 +1494,7 @@ DeleteSelAnims(AG_Event *_Nonnull event)
 	if ((it = AG_TlistSelectedItem(tlAnims)) != NULL) {
 		RG_Anim *ani = it->p1;
 	
-		if (ani->nrefs > 0) {
+		if (ani->nRefs > 0) {
 			AG_TextMsg(AG_MSG_ERROR,
 			    _("The animation \"%s\" is currently in use."),
 			    ani->name);
@@ -1519,7 +1518,7 @@ DeleteSelSketches(AG_Event *_Nonnull event)
 	if ((it = AG_TlistSelectedItem(tlGfx)) != NULL) {
 		RG_Sketch *sk = it->p1;
 	
-		if (sk->nrefs > 0) {
+		if (sk->nRefs > 0) {
 			AG_TextMsg(AG_MSG_ERROR,
 			    _("The sketch \"%s\" is currently in use."),
 			    sk->name);
@@ -1543,7 +1542,7 @@ DeleteSelGraphics(AG_Event *_Nonnull event)
 		if (strcmp(it->cat, "pixmap") == 0) {
 			RG_Pixmap *px = it->p1;
 	
-			if (px->nrefs > 0) {
+			if (px->nRefs > 0) {
 				continue;
 			}
 			TAILQ_REMOVE(&ts->pixmaps, px, pixmaps);
@@ -1553,7 +1552,7 @@ DeleteSelGraphics(AG_Event *_Nonnull event)
 		} else if (strcmp(it->cat, "sketch") == 0) {
 			RG_Sketch *sk = it->p1;
 	
-			if (sk->nrefs > 0) {
+			if (sk->nRefs > 0) {
 				continue;
 			}
 			TAILQ_REMOVE(&ts->sketches, sk, sketches);
@@ -1598,8 +1597,8 @@ DupSelPixmaps(AG_Event *_Nonnull event)
 		px2 = Malloc(sizeof(RG_Pixmap));
 		RG_PixmapInit(px2, ts, 0);
 tryname:
-		Snprintf(px2->name, sizeof(px2->name), _("Copy #%d of %s"),
-		    ncopy++, px1->name);
+		Snprintf(px2->name, sizeof(px2->name), _("Copy #%d"),
+		    ncopy++);
 		if (RG_TilesetFindPixmap(ts, px2->name) != NULL)
 			goto tryname;
 
@@ -1662,12 +1661,12 @@ PollTileTbl(AG_Event *_Nonnull event)
 
 	AG_TlistClear(tl);
 	AG_MutexLock(&ts->lock);
-	for (i = 0; i < ts->ntiletbl; i++) {
-		if (ts->tiletbl[i] == NULL) {
+	for (i = 0; i < ts->nTileTbl; i++) {
+		if (ts->tileTbl[i] == NULL) {
 			it = AG_TlistAdd(tl, NULL, "%u. NULL", (Uint)i);
 			it->cat = "";
 		} else {
-			RG_Tile *t = ts->tiletbl[i];
+			RG_Tile *t = ts->tileTbl[i];
 			
 			it = AG_TlistAdd(tl, NULL, "%u. %s (%ux%u)", (Uint)i,
 			    t->name, t->su->w, t->su->h);
@@ -1690,12 +1689,12 @@ PollAnimTbl(AG_Event *_Nonnull event)
 
 	AG_TlistClear(tl);
 	AG_MutexLock(&ts->lock);
-	for (i = 0; i < ts->nanimtbl; i++) {
-		if (ts->animtbl[i] == NULL) {
+	for (i = 0; i < ts->nAnimTbl; i++) {
+		if (ts->animTbl[i] == NULL) {
 			it = AG_TlistAdd(tl, NULL, "%u. NULL", (Uint)i);
 			it->cat = "";
 		} else {
-			RG_Anim *anim = ts->animtbl[i];
+			RG_Anim *anim = ts->animTbl[i];
 			
 			it = AG_TlistAdd(tl, NULL, "%u. %s (%ux%u)", (Uint)i,
 			    anim->name, anim->w, anim->h);

@@ -13,8 +13,12 @@
 
 #include <agar/rg/begin.h>
 
-#define RG_TILEVIEW_MIN_W	32
-#define RG_TILEVIEW_MIN_H	32
+#ifndef RG_TILEVIEW_MIN_W
+#define RG_TILEVIEW_MIN_W 32
+#endif
+#ifndef RG_TILEVIEW_MIN_H
+#define RG_TILEVIEW_MIN_H 32
+#endif
 
 enum rg_tileview_ctrl_type {
 	RG_TILEVIEW_POINT,		/* Point (x,y) */
@@ -59,8 +63,8 @@ typedef struct rg_tileview_ctrl {
 	union rg_tileview_val  *_Nonnull vals;		/* Values/pointers */
 	Uint                             nvals;
 
+	Uint                                nHandles;
 	struct rg_tileview_handle *_Nullable handles;	/* User handles */
-	Uint                                nhandles;
 #if 0
 	VG *vg;			/* For RG_TILEVIEW_VERTEX */
 	VG_Element *vge;
@@ -77,10 +81,15 @@ typedef struct rg_tileview_ctrl {
 typedef struct rg_tileview_tool_ops {
 	const char *_Nonnull name;	/* Name of tool */
 	const char *_Nonnull desc;	/* Tool description */
-	size_t len;			/* Size of structure */
-	int flags;
+	AG_Size len;			/* Size of structure */
+#if AG_MODEL == AG_LARGE
+	Uint64 flags;
+#else
+	Uint flags;
+#endif
 	AG_StaticIcon *_Nullable icon;	/* Display icon */
 	int cursor;			/* Autoset cursor (or -1) */
+	AG_KeySym hotkey;		/* Keyboard shortcut (or NONE) */
 
 	void                (*_Nullable init)(void *_Nonnull);
 	void                (*_Nullable destroy)(void *_Nonnull);
@@ -114,11 +123,12 @@ typedef struct rg_tileview_sketch_tool_ops {
 typedef struct rg_tileview_tool {
 	const RG_TileviewToolOps *_Nonnull ops;
 	struct rg_tileview *_Nonnull tv;
-	int flags;
+	Uint flags;
 #define TILEVIEW_TILE_TOOL	0x01	/* Call in default edition mode */
 #define TILEVIEW_FEATURE_TOOL	0x02	/* Call in feature edition mode */
 #define TILEVIEW_SKETCH_TOOL	0x04	/* Call in vector edition mode */
 #define TILEVIEW_PIXMAP_TOOL	0x08	/* Call in pixmap edition mode */
+	Uint32 _pad;
 	AG_Window *_Nullable win;	/* Expanded window */
 	AG_TAILQ_ENTRY(rg_tileview_tool) tools;
 } RG_TileviewTool;
@@ -147,8 +157,8 @@ typedef struct rg_tileview {
 	int xms, yms;			/* Cursor coords in surface (pixels) */
 	int xsub, ysub;			/* Cursor subpixel coords (v.pixels) */
 	int xorig, yorig;		/* Origin used when moving controls */
-	AG_Surface *_Nullable scaled;	/* Scaled surface (source) */
 	int su;				/* Rendered surface handle (or -1) */
+	AG_Surface *_Nullable scaled;	/* Scaled surface (source) */
 	int scrolling;
 	int flags;
 #define RG_TILEVIEW_NO_SCROLLING 0x01	/* Disable right click scrolling */
@@ -164,7 +174,8 @@ typedef struct rg_tileview {
 
 	int edit_attr;			/* Attribute being edited */
 	int edit_mode;			/* Element is being edited */
-	enum rg_tileview_state state;
+	enum rg_tileview_state state;	/* Current editor mode */
+	Uint32 _pad;
 
 	AG_Box       *_Nullable tel_box;	/* Element-specific toolbar container */
 	AG_Toolbar   *_Nullable tel_tbar;	/* Element-specific toolbar */
@@ -199,6 +210,7 @@ typedef struct rg_tileview {
 				RG_TVPIXMAP_HORIZONTAL,
 				RG_TVPIXMAP_DIAGONAL
 			} state;
+			Uint32 _pad;
 			AG_PopupMenu *_Nullable menu;	/* Popup menu */
 			int xorig, yorig;		/* Ref pt for restrictions */
 		} pixmap;

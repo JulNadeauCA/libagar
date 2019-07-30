@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
 typedef struct sg_polygon {
-	struct sg_geom _inherit;
+	struct sg_geom _inherit;		/* SG_Geom -> SG_Polygon */
 	M_Polygon P;
 } SG_Polygon;
 

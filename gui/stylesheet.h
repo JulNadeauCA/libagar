@@ -5,7 +5,7 @@
 #include <agar/gui/begin.h>
 
 #ifndef AG_STYLE_VALUE_MAX
-#define AG_STYLE_VALUE_MAX (AG_MODEL*2)
+#define AG_STYLE_VALUE_MAX (AG_MODEL*2 + 4)
 #endif
 
 typedef struct ag_style_entry {
@@ -26,10 +26,14 @@ typedef struct ag_style_sheet {
 
 /* Built-in Agar stylesheet */
 typedef struct ag_static_css {
-	const char *_Nonnull           name;	/* Identifier */
-	Uint32                         size;	/* Length (bytes) */
+	const char *_Nonnull name;		/* Identifier */
+#ifdef AG_HAVE_64BIT
+	Uint64 size;				/* Length (bytes) */
+#else
+	Uint size;				/* Length (bytes) */
+#endif
 	const char *_Nonnull *_Nonnull data;	/* Minified CSS */
-	AG_StyleSheet *_Nullable       css;	/* Initialized stylesheet */
+	AG_StyleSheet *_Nullable  css;		/* Initialized stylesheet */
 } AG_StaticCSS;
 
 __BEGIN_DECLS

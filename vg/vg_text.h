@@ -1,11 +1,23 @@
 /*	Public domain	*/
 
+#ifndef VG_TEXT_MAX
 #define VG_TEXT_MAX       256
+#endif
+#ifndef VG_TEXT_MAX_PTRS
 #define VG_TEXT_MAX_PTRS  32
+#endif
+#ifndef VG_FONT_FACE_MAX
 #define VG_FONT_FACE_MAX  32
+#endif
+#ifndef VG_FONT_STYLE_MAX
 #define VG_FONT_STYLE_MAX 16
+#endif
+#ifndef VG_FONT_SIZE_MIN
 #define VG_FONT_SIZE_MIN  4
+#endif
+#ifndef VG_FONT_SIZE_MAX
 #define VG_FONT_SIZE_MAX  48
+#endif
 
 typedef struct vg_text {
 	struct vg_node _inherit;
@@ -14,8 +26,8 @@ typedef struct vg_text {
 	enum vg_alignment align;	/* Text alignment around line */
 
 	char       fontFace[VG_FONT_FACE_MAX];   /* Font face */
-	AG_FontPts fontSize;			 /* Font size */
 	Uint       fontFlags;			 /* Font flags */
+	AG_FontPts fontSize;			 /* Font size */
 
 #define VG_TEXT_BOLD      0x01		 /* Bold style */
 #define VG_TEXT_ITALIC    0x02		 /* Italic style */
