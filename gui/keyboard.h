@@ -10,6 +10,20 @@ typedef enum ag_keyboard_action {
 	AG_KEY_RELEASED = 0
 } AG_KeyboardAction;
 
+typedef enum ag_key_category {
+	AG_KCAT_NONE,			/* No category */
+	AG_KCAT_CONTROL,		/* Control character */
+	AG_KCAT_SPACING,		/* Whitespace */
+	AG_KCAT_RETURN,			/* Return / Line feed */
+	AG_KCAT_PRINT,			/* Printable character (not alphanumerici) */
+	AG_KCAT_ALPHA,			/* Alphabetic character */
+	AG_KCAT_NUMBER,			/* Numerical character */
+	AG_KCAT_DIR,			/* Directional keys */
+	AG_KCAT_FUNCTION,		/* Function keys */
+	AG_KCAT_LOCK,			/* Num/caps/scroll lock */
+	AG_KCAT_MODIFIER,		/* Shift/ctrl/alt/meta/super/compose */
+} AG_KeyCategory;
+
 typedef enum ag_key_sym {
 	AG_KEY_NONE		= 0x0000,	/* Start of ASCII range */
 	AG_KEY_ASCII_START	= 0x0000,
@@ -267,11 +281,11 @@ typedef unsigned int AG_KeyMod;
 #define AG_KEYMOD_NUMLOCK	0x1000
 #define AG_KEYMOD_CAPSLOCK	0x2000
 #define AG_KEYMOD_MODE		0x4000
-#define AG_KEYMOD_ANY		0xffff		/* As argument for matching */
-#define AG_KEYMOD_CTRL		(AG_KEYMOD_LCTRL|AG_KEYMOD_RCTRL)
-#define AG_KEYMOD_SHIFT		(AG_KEYMOD_LSHIFT|AG_KEYMOD_RSHIFT)
-#define AG_KEYMOD_ALT		(AG_KEYMOD_LALT|AG_KEYMOD_RALT)
-#define AG_KEYMOD_META		(AG_KEYMOD_LMETA|AG_KEYMOD_RMETA)
+#define AG_KEYMOD_CTRL		(AG_KEYMOD_LCTRL  | AG_KEYMOD_RCTRL)
+#define AG_KEYMOD_SHIFT		(AG_KEYMOD_LSHIFT | AG_KEYMOD_RSHIFT)
+#define AG_KEYMOD_ALT		(AG_KEYMOD_LALT   | AG_KEYMOD_RALT)
+#define AG_KEYMOD_META		(AG_KEYMOD_LMETA  | AG_KEYMOD_RMETA)
+#define AG_KEYMOD_ANY		0xffff		/* For matching */
 
 struct ag_window;
 
@@ -283,7 +297,6 @@ typedef struct ag_key {
 
 typedef struct ag_keyboard {
 	struct ag_input_device _inherit;
-	Uint flags;
 	int *_Nonnull keyState;		/* Key state */
 	Uint keyCount;
 	Uint modState;			/* Modifiers state */
