@@ -56,7 +56,7 @@ package Agar.Mouse is
   -- Mouse Device --
   ------------------
   type Mouse_Device is limited record
-    Super        : aliased INDEV.Input_Device; -- Input_Device -> Mouse
+    Super        : aliased INDEV.Input_Device; -- [Input_Device -> Mouse]
     Button_Count : C.unsigned;                 -- Button count (or 0)
     Button_State : Mouse_Button;               -- Last button state
     X,Y          : C.int;                      -- Last cursor position

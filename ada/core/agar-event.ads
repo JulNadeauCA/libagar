@@ -31,15 +31,6 @@ package Agar.Event is
   type Event_Access             is access all Event with Convention => C;
   subtype Event_not_null_Access is not null Event_Access;
 
-  type Event_Queue is limited record
-    Count  : C.unsigned;
-    Events : Event_Access;
-  end record
-    with Convention => C;
-
-  type Event_Queue_Access is access all Event_Queue with Convention => C;
-  subtype Event_Queue_not_null_Access is not null Event_Queue_Access;
-
   --
   -- Initialize an existing Event.
   --

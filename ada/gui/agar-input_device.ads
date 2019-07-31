@@ -6,7 +6,6 @@
 with Interfaces.C;
 with Interfaces.C.Strings;
 with Agar.Object;
-with Agar.Event;
 with System;
 
 --
@@ -19,11 +18,11 @@ package Agar.Input_Device is
   use type C.unsigned;
 
   type Input_Device is limited record
-    Super   : aliased Agar.Object.Object; -- Input_Device
-    Flags   : C.unsigned;
+    Super   : aliased Agar.Object.Object; -- [Object -> Input_Device]
     Driver  : System.Address;             -- Agar.Driver.Driver_Access
     Descr   : CS.chars_ptr;               -- Long description
-    Event_Q : Agar.Event.Event_Queue;     -- Queued events
+    Flags   : C.unsigned;
+    C_Pad   : Interfaces.Unsigned_32;
   end record
     with Convention => C;
 

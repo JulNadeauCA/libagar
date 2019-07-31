@@ -75,6 +75,9 @@ package Agar.Object is
   type Version_t is record
     Major : Interfaces.Unsigned_32;
     Minor : Interfaces.Unsigned_32;
+#if AG_MODEL = AG_MEDIUM
+    _Pad  : Interfaces.Unsigned_32;
+#end if;
   end record
     with Convention => C;
   type Version_Access is access all Version_t
@@ -148,10 +151,12 @@ package Agar.Object is
     Tag             : Object_Tag;
 #end if;
     Name            : Object_Name;
-    Class           : Class_not_null_Access;
     Flags           : C.unsigned;
+    Class           : Class_not_null_Access;
     Events          : Event_List;
+#if AG_TIMERS
     Timers          : Timer_List;
+#end if;
     Variables       : Variable_List;
     Children        : Children_List;
     Entry_in_Parent : Entry_in_Parent_t;

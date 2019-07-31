@@ -6,6 +6,7 @@
 with Interfaces.C;
 with Interfaces.C.Strings;
 with Agar.Input_Device;
+with Agar.Types; use Agar.Types;
 
 package Agar.Keyboard is
   package C renames Interfaces.C;
@@ -417,7 +418,7 @@ package Agar.Keyboard is
   type Virtual_Key_t is record
     Symbol   : Key_Sym;                   -- Virtual key
     Modifier : C.int;                     -- Virtual key modifier mask
-    Unicode  : Interfaces.Unsigned_32;    -- Corresponding Unicode or 0
+    Unicode  : AG_Char;                   -- Corresponding Unicode (or 0)
   end record
     with Convention => C;
 
@@ -426,11 +427,10 @@ package Agar.Keyboard is
   ---------------------
   type Keyboard_Keys_Access is access all C.int with Convention => C;
   type Keyboard_Device is limited record
-    Super      : aliased INDEV.Input_Device;       -- Input_Device -> Keyboard
-    Flags      : C.unsigned;
-    Keys       : Keyboard_Keys_Access;
-    Key_Count  : C.unsigned;
-    Mod_State  : C.unsigned;
+    Super      : aliased INDEV.Input_Device;     -- [Input_Device -> Keyboard]
+    Keys       : Keyboard_Keys_Access;           -- Key state
+    Key_Count  : C.unsigned;                     -- Number of keys
+    Mod_State  : C.unsigned;                     -- State of modifier keys
   end record
     with Convention => C;
 

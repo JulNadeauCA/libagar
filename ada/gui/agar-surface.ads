@@ -106,6 +106,17 @@ package Agar.Surface is
   type Color_Offset_Access is access all AG_Color_Offset with Convention => C;
   subtype Color_Offset_not_null_Access is not null Color_Offset_Access;
 
+  --------------------------------
+  -- Point in pixel coordinates --
+  --------------------------------
+  type AG_Pt is record
+    X,Y : C.int;
+  end record
+    with Convention => C;
+
+  type AG_Pt_Access is access all AG_Pt with Convention => C;
+  subtype AG_Pt_not_null_Access is not null AG_Pt_Access;
+
   -------------------------
   -- Rectangle of Pixels --
   -------------------------
@@ -165,8 +176,9 @@ package Agar.Surface is
   -- Palette for Indexed Surfaces --
   ----------------------------------
   type AG_Palette is limited record
-    Colors : Color_Access;
-    Count  : C.unsigned;
+    Colors : Color_Access;             -- Color array
+    Count  : C.unsigned;               -- Total allocated colors
+    C_Pad  : Interfaces.Unsigned_32;
   end record
     with Convention => C;
 
@@ -203,10 +215,74 @@ package Agar.Surface is
  
   type Pixel_Access is access all Unsigned_8 with Convention => C;
   subtype Pixel_not_null_Access is not null Pixel_Access;
+  
+  -------------------------------------
+  -- Animation frame disposal method --
+  -------------------------------------
+  type Anim_Dispose_Method is
+    (UNSPECIFIED,  -- No method indicated
+     DO_NOT,       -- Keep previous frame's pixels
+     BACKGROUND,   -- Blend A=0 pixels against BG (as opposed to previous frame)
+     PREVIOUS);    -- Restore to previous frame contents
+  for Anim_Dispose_Method'Size use C.int'Size;
+
+  ---------------------
+  -- Animation Frame --
+  ---------------------
+  type Anim_Frame_Type is
+    (NONE,         -- No-op
+     PIXELS,       -- Keep previous frame's pixels
+     COLORS,       -- Replace n contiguous palette entries
+     BLEND,        -- Blend entire graphic uniformly against color
+     MOVE,         -- Displace a sub-rectangle of pixels
+     DATA);        -- User data block (for audio, subtitles, annotations, etc)
+  for Anim_Frame_Type'Size use C.int'Size;
+  
+  type Anim_Frame
+    (Which_Type : Anim_Frame_Type := NONE)
+  is limited record
+    Frame_Type  : Anim_Frame_Type;
+    Flags       : C.unsigned;
+    Dispose     : Anim_Dispose_Method;
+    Delay_ms    : C.unsigned;
+    
+    case Which_Type is
+    when PIXELS =>
+      Pixels  : Pixel_Access;             -- New pixels to combine
+      X,Y,W,H : Interfaces.Unsigned_16;   -- Destination rectangle (normalized)
+    when COLORS =>
+      Col_Palette : Color_not_null_Access;    -- Array of contiguous color entries
+      Col_Count   : C.unsigned;               -- Number of colors in Palette
+      Col_Index   : C.unsigned;               -- Destination index
+    when BLEND =>
+      Blend_C1 : AG_Color;                    -- Colors for uniform blend
+      Blend_C2 : AG_Color;
+    when MOVE =>
+      Xm,Ym,Wm,Hm : Interfaces.Unsigned_16;   -- Target rectangle (normalized)
+      Xdis,Ydis   : C.int;                    -- Displacement in pixels
+    when DATA =>
+      Data_Header : CS.chars_ptr;             -- Header (type/size) or NULL
+      Data_Addr   : System.Address;           -- Allocated data block
+    when others =>
+      null;
+    end case;
+  end record
+    with Convention => C;
+  pragma Unchecked_Union (Anim_Frame);
+
+  -- Animation Frame Flags --
+  ANIM_FRAME_USER_INPUT : constant C.unsigned := 16#01#; -- Dispose needs user input?
  
   ----------------------
   -- Surface Instance --
   ----------------------
+#if AG_MODEL = AG_LARGE
+  type Surface_Pad1 is array (1 .. 6) of aliased Interfaces.Unsigned_8;
+#elsif AG_MODEL = AG_MEDIUM
+  type Surface_Pad1 is array (1 .. 3) of aliased Interfaces.Unsigned_8;
+#elsif AG_MODEL = AG_SMALL
+  type Surface_Pad1 is array (1 .. 7) of aliased Interfaces.Unsigned_8;
+#end if;
   type Surface is limited record
     Format         : aliased Pixel_Format; -- Pixel format description
     Flags          : C.unsigned;           -- Surface Flags (below)
@@ -219,11 +295,7 @@ package Agar.Surface is
     Padding        : C.unsigned;           -- Scanline end padding
     Colorkey       : AG_Pixel;             -- Color key pixel
     Alpha          : AG_Component;         -- Per-surface alpha
-#if AG_MODEL = AG_LARGE
-    Struct_Pad1    : Unsigned_32;
-#else
-    Struct_Pad1    : Unsigned_16;
-#end if;
+    C_Pad1         : Surface_Pad1;
   end record
     with Convention => C;
   

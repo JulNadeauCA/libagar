@@ -134,6 +134,7 @@ package Agar.Widget is
   -----------------------------
   -- GL & Texture Management --
   -----------------------------
+#if HAVE_OPENGL
   type Widget_GL_Projection_Matrix is array (1 .. 16) of aliased C.C_float with Convention => C;
   type Widget_GL_Modelview_Matrix is array (1 .. 16) of aliased C.C_float with Convention => C;
   type Widget_GL_Context is limited record
@@ -142,7 +143,7 @@ package Agar.Widget is
   end record
     with Convention => C;
   type Widget_GL_Context_Access is access all Widget_GL_Context with Convention => C;
-
+#end if;
   subtype Surface_Handle is C.int;
   subtype Texture_Handle is C.unsigned;
   type Texture_Handle_Access is access all Texture_Handle with Convention => C;
@@ -161,18 +162,19 @@ package Agar.Widget is
   -- Low Level Driver Instance --
   -------------------------------
   type Driver is limited record
-    Super         : aliased OBJ.Object;          -- [Driver]
+    Super         : aliased OBJ.Object;          -- [Object -> Driver]
     Instance_ID   : C.unsigned;                  -- Driver instance ID
     Flags         : C.unsigned;                  -- Flags (below)
     Ref_Surface   : SU.Surface_Access;           -- Standard surface format
     Video_Format  : SU.Pixel_Format;             -- Video format (FB modes only)
     Keyboard_Dev  : KBD.Keyboard_Device_Access;  -- Keyboard device
     Mouse_Dev     : MSE.Mouse_Device_Access;     -- Mouse device
+    Glyph_Cache   : System.Address;              -- Cached AG_Glyph store
+    GL_Context    : System.Address;              -- TODO: AG_GL_Context
     Active_Cursor : Cursor_Access;               -- Effective cursor
     Cursors       : Cursor_List;                 -- All registered cursors
     Cursor_Count  : C.unsigned;                  -- Total cursor count
-    Glyph_Cache   : System.Address;              -- Cached AG_Glyph store
-    GL_Context    : System.Address;              -- TODO: AG_GL_Context
+    C_Pad1        : Interfaces.Unsigned_32;
   end record
     with Convention => C;
   
@@ -417,6 +419,17 @@ package Agar.Widget is
      Source_Fn : SU.Alpha_Func;
      Dest_Fn   : SU.Alpha_Func) with Convention => C;
 
+  type Draw_Triangle_Func_Access is access procedure
+    (Driver    : Driver_not_null_Access;
+     V1,V2,V3  : SU.AG_Pt_not_null_Access;
+     Color     : SU.Color_not_null_Access) with Convention => C;
+
+  type Draw_Polygon_Func_Access is access procedure
+    (Driver : Driver_not_null_Access;
+     Points : SU.AG_Pt_not_null_Access;
+     Count  : C.unsigned;
+     Color  : SU.Color_not_null_Access) with Convention => C;
+
   type Draw_Arrow_Func_Access is access procedure
     (Driver  : Driver_not_null_Access;
      Angle   : C.C_float;
@@ -491,7 +504,11 @@ package Agar.Widget is
     Name        : CS.chars_ptr;
     Driver_Type : Driver_Type_t;
     WM_Type     : Driver_WM_Type_t;
-    Flags       : C.unsigned;                         -- DRIVER_* flags (below)
+#if HAVE_64BIT
+    Flags       : Interfaces.Unsigned_64;             -- DRIVER_* flags (below)
+#else
+    Flags       : C.unsigned;
+#end if;
     -- Initialization --
     Open_Func        : Open_Func_Access;
     Close_Func       : Close_Func_Access;
@@ -548,6 +565,9 @@ package Agar.Widget is
     Draw_Horizonal_Line  : Draw_Horizontal_Line_Func_Access;
     Draw_Vertical_Line   : Draw_Vertical_Line_Func_Access;
     Draw_Blended_Line    : Draw_Blended_Line_Func_Access;
+    Draw_Triangle        : Draw_Triangle_Func_Access;
+    Draw_Polygon         : Draw_Polygon_Func_Access;
+    Draw_Polygon_Sti_32  : Draw_Polygon_Func_Access;
     Draw_Arrow           : Draw_Arrow_Func_Access;
     Draw_Box_Rounded     : Draw_Box_Rounded_Func_Access;
     Draw_Box_Rounded_Top : Draw_Box_Rounded_Top_Func_Access;
@@ -689,8 +709,9 @@ package Agar.Widget is
   ----------------------------------
   type Driver_MW is limited record
     Super  : aliased Driver;                    -- [Driver -> DriverMW]
-    Flags  : C.unsigned;                        -- DRIVER_MW_* flags (below)
     Window : Window_Access;                     -- Back reference to window
+    Flags  : C.unsigned;                        -- DRIVER_MW_* flags (below)
+    C_Pad1 : Interfaces.Unsigned_32;
   end record
     with Convention => C;
   
@@ -738,7 +759,11 @@ package Agar.Widget is
   --------------------------------
   type Driver_SW_Class is limited record
     Super              : aliased Driver_Class;    -- [Driver -> DriverSW]
+#if HAVE_64BIT
+    Flags              : Interfaces.Unsigned_64;  -- DRIVER_SW_* flags (below)
+#else
     Flags              : C.unsigned;              -- DRIVER_SW_* flags (below)
+#end if;
     Open_Video         : Open_Video_Func_Access;
     Open_Video_Context : Open_Video_Context_Func_Access;
     Set_Video_Context  : Set_Video_Context_Func_Access;
@@ -778,6 +803,7 @@ package Agar.Widget is
     Selected_Window      : Window_Access;         -- Window being manipulated
     Last_Key_Down_Window : Window_Access;         -- Window with last kbd event
     Modal_Window_Stack   : System.Address;        -- Modal window list TODO
+
     Window_Operation     : Window_Operation_t;    -- Window op in progress
     X_Out_Limit          : C.int;                 -- Left/right boundaries
     Bottom_Out_Limit     : C.int;                 -- Bottom boundary
@@ -786,6 +812,10 @@ package Agar.Widget is
     Current_FPS          : C.int;                 -- Last calculated FPS
     BG_Color             : SU.AG_Color;           -- Background color
     Refresh_Last         : C.unsigned;            -- Refresh rate timestamp
+#if AG_MODEL = AG_MEDIUM
+    C_Pad1               : Interfaces.Unsigned_32;
+#end if;
+    BG_Popup_Menu        : System.Address;        -- Background popup (TODO)
   end record
     with Convention => C;
 
@@ -820,9 +850,11 @@ package Agar.Widget is
   type Driver_Event
     (Which : Driver_Event_Type := Driver_Event_Type'First) is
   record
-    Event_Type     : Driver_Event_Type;
+    Event_Type     : Driver_Event_Type;               -- Type of event
+    C_Pad1         : Interfaces.Unsigned_32;
     Window         : Window_Access;                   -- For multi-window mode
     Entry_in_Queue : Driver_Event_Entry;              -- Entry in event queue
+
     case Which is
       when MOUSE_MOTION =>
         X,Y           : C.int;                        -- Mouse coordinates
@@ -850,18 +882,16 @@ package Agar.Widget is
 
   type Widget_Surface_Flags_Access is access all Unsigned_8 with Convention => C;
   type Widget is limited record
-    Super            : aliased OBJ.Object;       -- [Widget]
+    Super            : aliased OBJ.Object;       -- [Object -> Widget]
     Flags            : C.unsigned;               -- WIDGET_* Flags (below)
-
     X,Y              : C.int;                    -- Coordinates in parent widget
     W,H              : C.int;                    -- Allocated size in pixels
-
     View_Rect        : SU.AG_Rect2;              -- Display coordinates
     Sensitivity_Rect : SU.AG_Rect2;              -- Sensitivity rectangle
 
+    Surface_Count    : C.unsigned;                  -- Mapped surface count
     Surfaces         : access SU.Surface_Access;    -- Mapped surfaces
     Surface_Flags    : Widget_Surface_Flags_Access; -- Mapped surface flags
-    Surface_Count    : C.unsigned;                  -- Mapped surface count
 
     Textures         : Texture_Handle_Access;    -- Mapped texture handles
     Texcoords        : Texture_Coord_Access;     -- Mapped texture coords
@@ -873,8 +903,12 @@ package Agar.Widget is
 
     Stylesheet       : System.Address;           -- TODO Alternate CSS stylesheet
     Color_State      : Widget_State;             -- Current CSS color state
+    C_Pad1           : Interfaces.Unsigned_32;
     Font             : System.Address;           -- TODO Current font
     Palette          : Widget_Palette;           -- Computed color palette
+#if AG_MODEL = AG_MEDIUM
+    C_Pad2           : Interfaces.Unsigned_32;
+#end if;
 #if HAVE_OPENGL
     GL_Context       : Widget_GL_Context_Access; -- Context for USE_OPENGL
 #end if;
@@ -916,11 +950,14 @@ package Agar.Widget is
   -- Boolean Flag Description --
   ------------------------------
   type Flag_Descr is limited record
-    Bitmask   : C.unsigned;             -- Bit mask
-    Text      : CS.chars_ptr;           -- User-readable string
-    Writeable : C.int;                  -- Flag is writeable
-    W,H       : C.int;                  -- Size (px)
-    X,Y       : C.int;                  -- Position in parent
+#if HAVE_64BIT
+    Bitmask   : Interfaces.Unsigned_64; -- Bitmask
+#else
+    Bitmask   : C.unsigned;             -- Bitmask
+#end if;
+    Text      : CS.chars_ptr;           -- Description (UTF-8)
+    Writeable : C.int;                  -- User-editable
+    C_Pad1    : Interfaces.Unsigned_32;
   end record
     with Convention => C;
   type Flag_Descr_Access is access all Flag_Descr with Convention => C;
@@ -946,12 +983,13 @@ package Agar.Widget is
   for Action_Event_Type'Size use C.int'Size;
 
   type Action is limited record
-    Act_Type     : Action_Type;      -- Type of action
-    Widget       : Widget_Access;    -- Back pointer to widget
-    Func         : EV.Event_Access;  -- Callback routine
-    Set_Target   : System.Address;   -- Target for SET_{INT,FLAG}
-    Set_Value    : C.int;            -- Value for SET_INT
-    Flag_Bitmask : C.unsigned;       -- Bitmask for {SET,TOGGLE}_FLAG
+    Act_Type     : Action_Type;             -- Type of action
+    C_Pad1       : Interfaces.Unsigned_32;
+    Widget       : Widget_Access;           -- Back pointer to widget
+    Func         : EV.Event_Access;         -- Callback routine
+    Set_Target   : System.Address;          -- Target for SET_{INT,FLAG}
+    Set_Value    : C.int;                   -- Value for SET_INT
+    Flag_Bitmask : C.unsigned;              -- Bitmask for {SET,TOGGLE}_FLAG
   end record
     with Convention => C;
   type Action_Access is access all Action with Convention => C;
@@ -1029,10 +1067,11 @@ package Agar.Widget is
     Caption   : Window_Caption;           -- Window title
     Visible   : C.int;                    -- Visibility flag
     Dirty     : C.int;                    -- Redraw flag
+    Alignment        : Window_Alignment;  -- Initial position
+
     Title_Bar : System.Address;           -- TODO AG_Titlebar
     Icon      : System.Address;           -- TODO AG_Icon
 
-    Alignment        : Window_Alignment;  -- Initial position
     Spacing          : C.int;             -- Container spacing
     Padding_Top      : C.int;             -- Container padding (top)
     Padding_Bottom   : C.int;             -- Container padding (bottom)

@@ -118,6 +118,7 @@ package Agar.Text is
     Index       : C.int;                       -- Font index (FC_INDEX)
     Font_Type   : AG_Font_Type;                -- Font engine
     Font_Source : AG_Font_Spec_Source;         -- Source type
+    C_Pad1      : Interfaces.Unsigned_32;
 #if HAVE_FLOAT
     Matrix_XX   : C.double;       -- 1 --      -- Transformation matrix
     Matrix_XY   : C.double;       -- 0 --
@@ -126,10 +127,13 @@ package Agar.Text is
 #end if;
     case Spec_Source is
     when FONT_FILE =>
-      File_Source   : AG_Font_Source_Filename; -- Font file name
+      File_Source   : AG_Font_Source_Filename;   -- Source font file
     when FONT_IN_MEMORY =>
-      Memory_Source : access Unsigned_8;       -- Source memory region
-      Memory_Size   : AG_Size;                 -- Size in bytes
+      Memory_Source : access Unsigned_8;         -- Source memory region
+      Memory_Size   : AG_Size;                   -- Size in bytes
+#if AG_MODEL = AG_MEDIUM
+      C_Pad2        : Interfaces.Unsigned_32;
+#end if;
     end case;
   end record
     with Convention => C;
@@ -148,7 +152,7 @@ package Agar.Text is
     Prev : access Font_Access;
   end record
     with Convention => C;
-  type AG_Font_Bitmap_Spec is array (1 .. 32) of aliased C.char
+  type AG_Font_Bitmap_Spec is array (1 .. 28) of aliased C.char
     with Convention => C;
 
   type AG_Font is limited record
@@ -160,8 +164,8 @@ package Agar.Text is
     Descent       : C.int;                       -- Descent relative to baseline
     Line_Skip     : C.int;                       -- Multiline Y-increment
 
-    TTF                : System.Address;              -- TODO TTF interface
     Bitmap_Spec        : aliased AG_Font_Bitmap_Spec; -- Bitmap font spec
+    TTF                : System.Address;              -- TODO TTF interface
     Bitmap_Glyphs      : System.Address;              -- TODO Bitmap glyph array
     Bitmap_Glyph_Count : C.unsigned;                  -- Bitmap glyph count
     Char_0, Char_1     : AG_Char;                     -- Bitmap font spec
@@ -184,11 +188,15 @@ package Agar.Text is
   type AG_Glyph is limited record
     Font           : Font_not_null_Access;       -- Back pointer to font
     Color          : SU.AG_Color;                -- Base color
-    Char           : AG_Char;                    -- Native character
+#if AG_MODEL = AG_MEDIUM
+    C_Pad1         : Interfaces.Unsigned_32;
+#end if;
     Surface        : SU.Surface_not_null_Access; -- Rendered surface
+    Char           : AG_Char;                    -- Native character
     Advance        : C.int;                      -- Advance in pixels
     Texture        : C.unsigned;                 -- Mapped texture (by driver)
     Texcoords      : SU.AG_Texcoord;             -- Texture coordinates
+    C_Pad2         : Interfaces.Unsigned_32;
     Entry_in_Cache : AG_Glyph_Entry;             -- Entry in cache
   end record
     with Convention => C;
@@ -225,7 +233,7 @@ package Agar.Text is
   -- Measure of rendered text --
   ------------------------------
   type AG_Text_Metrics is record
-    W, H        : C.int;                -- Dimensions in pixels
+    W,H         : C.int;                -- Dimensions in pixels
     Line_Widths : access C.unsigned;    -- Width of each line
     Line_Count  : C.unsigned;           -- Total line count
     C_Pad1      : Unsigned_32;
