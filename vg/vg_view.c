@@ -801,6 +801,16 @@ Draw(void *_Nonnull obj)
 	AG_PopClipRect(vv);
 }
 
+void
+VG_ViewSelectToolEv(AG_Event *event)
+{
+	VG_View *vv = VG_VIEW_PTR(1);
+	VG_Tool *tool = AG_PTR(2);
+	void *p = AG_PTR(3);
+
+	VG_ViewSelectTool(vv, tool, p);
+}
+
 /* Select a new tool to use. */
 void
 VG_ViewSelectTool(VG_View *vv, void *pTool, void *p)

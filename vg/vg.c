@@ -39,6 +39,15 @@
 #include <string.h>
 
 const AG_Version vgVer = { 6, 1 };
+#if 0
+const AG_FileExtMapping vgFileExtMap[] = {
+	{ ".avg", N_("Agar-VG Vector Graphics"),  &vgClass },
+#if 0
+	{ ".svg", N_("Scalable Vector Graphics"), &vgClassSVG },
+#endif
+
+};
+#endif
 
 int          vgInitedSubsystem = 0;
 VG_NodeOps **vgNodeClasses;
