@@ -76,7 +76,7 @@ package Agar.Object is
     Major : Interfaces.Unsigned_32;
     Minor : Interfaces.Unsigned_32;
 #if AG_MODEL = AG_MEDIUM
-    _Pad  : Interfaces.Unsigned_32;
+    C_Pad : Interfaces.Unsigned_32;
 #end if;
   end record
     with Convention => C;
