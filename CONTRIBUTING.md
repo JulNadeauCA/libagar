@@ -25,22 +25,21 @@ applications and we do not require any kind of compensation, but if you find
 Agar useful, we hope that you will consider signing up for
 [commercial support](http://libagar.org/lists.html).
 
-#### **Try Csoft.net Hosting for Free**
+#### **Try Csoft.net Hosting**
 
 The [Csoft.net Hosting](https://csoft.net) Company, which first advertised on
 Slashdot back in 1998, has been providing the the funding and resources
-necessary in developing Agar since the very beginning of the project.
-Now located in New York City, Csoft.net provides physically secure,
-non-virtualized Unix hosting with unrestricted SSH access and gigabit
-transfer rates for as low as $5 a month.
+necessary in developing Edacious since the beginning. Now located in New York,
+Csoft.net provides physically secure, non-virtualized gigabit Unix hosting
+with SSH access for as low as $5.
 
-#### **Buy Items from ElectronTubeStore.com**
+#### **Buy from ElectronTubeStore**
 
-Our newest sponsor, [ElectronTubeStore](https://electrontubestore.com)
-provides raw materials, useful parts and components. ElectronTubeStore
-ships worldwide, quickly and economically. If you are looking for a reputable
-supplier for a specific chip, transistor, vacuum tube, connector, hard to find
-material, or any metal alloy in any shape, check out ElectronTubeStore.com.
+Our sponsor [ElectronTubeStore](https://electrontubestore.com) provides raw
+materials, useful parts and components. ElectronTubeStore ships worldwide,
+quickly and economically. If you are looking for a reputable supplier for a
+specific chip, transistor, vacuum tube, connector, hard to find material, or
+any metal alloy in any shape, check out ElectronTubeStore.com.
 
 #### **Donating hardware**
 
