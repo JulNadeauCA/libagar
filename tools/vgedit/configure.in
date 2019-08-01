@@ -1,0 +1,29 @@
+# Public domain
+# ex:syn=bsdbuild
+
+config_guess("../../mk/config.guess")
+
+register_section("vgedit options:")
+register("--with-agar[=PREFIX]",	"Location of Agar library [check]")
+register("--with-agar-math[=PREFIX]",	"Location of Agar-MATH library [check]")
+register("--with-agar-vg[=PREFIX]",	"Location of Agar-VG library [check]")
+
+package("vgedit")
+version("1.0")
+default_dir(DATADIR, "${PREFIX}/share/agar")
+
+require(cc)
+require(agar, 1.6.0, ${prefix_agar})
+require(agar-vg, 1.6.0, ${prefix_agar_vg})
+
+if [ "${enable_nls}" = "yes" ]; then
+	require(gettext)
+fi
+
+c_define(_USE_AGAR_QUEUE)
+c_define(_USE_AGAR_STD)
+c_define(_USE_AGAR_TYPES)
+c_no_secure_warnings()
+
+c_incdir($BLD)
+c_incdir_config($BLD/config)

@@ -5,7 +5,8 @@ SUBDIR=	agardb \
 	agar-disasm \
 	rgedit \
 	sgedit \
-	skedit
+	skedit \
+	vgedit
 
 # For regenerating gui/*_data.h.
 #SUBDIR+=bundlefont bundlecss
