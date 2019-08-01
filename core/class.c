@@ -406,8 +406,12 @@ AG_LookupClass(const char *inSpec)
 		return ((AG_ObjectClass *)V->data.p);
 	}
 	AG_MutexUnlock(&agClassLock);
-
+#ifdef AG_VERBOSITY
+	AG_SetError(_("No such class \"%s\". "
+	              "Did you forget AG_RegisterClass()?"), inSpec);
+#else
 	AG_SetErrorV("E25", _("No such class"));
+#endif
 	return (NULL);
 }
 
