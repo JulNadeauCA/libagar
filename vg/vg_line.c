@@ -56,17 +56,21 @@ VG_LineNew(void *pNode, VG_Point *p1, VG_Point *p2)
 void
 VG_LineThickness(VG_Line *vl, Uint8 t)
 {
-	VG_Lock(VGNODE(vl)->vg);
+	VG *vg = VGNODE(vl)->vg;
+
+	AG_ObjectLock(vg);
 	vl->thickness = t;
-	VG_Unlock(VGNODE(vl)->vg);
+	AG_ObjectUnlock(vg);
 }
 
 void
 VG_LineStipple(VG_Line *vl, Uint16 s)
 {
-	VG_Lock(VGNODE(vl)->vg);
+	VG *vg = VGNODE(vl)->vg;
+
+	AG_ObjectLock(vg);
 	vl->stipple = s;
-	VG_Unlock(VGNODE(vl)->vg);
+	AG_ObjectUnlock(vg);
 }
 
 static void
@@ -85,9 +89,10 @@ Init(void *_Nonnull obj)
 void
 VG_LineEndpointStyle(VG_Line *vl, enum vg_line_endpoint style, ...)
 {
+	VG *vg = VGNODE(vl)->vg;
 	va_list ap;
 
-	VG_Lock(VGNODE(vl)->vg);
+	AG_ObjectLock(vg);
 	
 	vl->endPt = style;
 
@@ -97,7 +102,7 @@ VG_LineEndpointStyle(VG_Line *vl, enum vg_line_endpoint style, ...)
 		va_end(ap);
 	}
 
-	VG_Unlock(VGNODE(vl)->vg);
+	AG_ObjectUnlock(vg);
 }
 
 static int

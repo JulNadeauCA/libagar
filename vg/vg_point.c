@@ -51,9 +51,11 @@ VG_PointNew(void *pNode, VG_Vector pos)
 void
 VG_PointSize(VG_Point *vp, double r)
 {
-	VG_Lock(VGNODE(vp)->vg);
+	VG *vg = VGNODE(vp)->vg;
+
+	AG_ObjectLock(vg);
 	vp->size = r;
-	VG_Unlock(VGNODE(vp)->vg);
+	AG_ObjectUnlock(vg);
 }
 
 static void

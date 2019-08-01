@@ -41,45 +41,53 @@
 VG_Polygon *
 VG_PolygonNew(void *pNode)
 {
-	VG_Polygon *vP = Malloc(sizeof(VG_Polygon));
+	VG_Polygon *ply = Malloc(sizeof(VG_Polygon));
 
-	VG_NodeInit(vP, &vgPolygonOps);
-	VG_NodeAttach(pNode, vP);
-	return (vP);
+	VG_NodeInit(ply, &vgPolygonOps);
+	VG_NodeAttach(pNode, ply);
+	return (ply);
 }
 
 void
-VG_PolygonSetOutline(VG_Polygon *vP, int flag)
+VG_PolygonSetOutline(VG_Polygon *ply, int flag)
 {
-	VG_Lock(VGNODE(vP)->vg);
-	vP->outline = flag;
-	VG_Unlock(VGNODE(vP)->vg);
+	VG *vg = VGNODE(ply)->vg;
+
+	AG_ObjectLock(vg);
+	ply->outline = flag;
+	AG_ObjectUnlock(vg);
 }
 
 Uint
-VG_PolygonVertex(VG_Polygon *vP, VG_Point *pt)
+VG_PolygonVertex(VG_Polygon *ply, VG_Point *pt)
 {
-	VG_Lock(VGNODE(vP)->vg);
-	vP->pts = Realloc(vP->pts, (vP->nPts + 1)*sizeof(VG_Point *));
-	vP->pts[vP->nPts] = pt;
-	VG_AddRef(vP, pt);
-	VG_Unlock(VGNODE(vP)->vg);
-	return (vP->nPts++);
+	VG *vg = VGNODE(ply)->vg;
+
+	AG_ObjectLock(vg);
+
+	ply->pts = Realloc(ply->pts, (ply->nPts + 1)*sizeof(VG_Point *));
+	ply->pts[ply->nPts] = pt;
+	VG_AddRef(ply, pt);
+
+	AG_ObjectUnlock(vg);
+	return (ply->nPts++);
 }
 
 void
-VG_PolygonDelVertex(VG_Polygon *vP, Uint vtx)
+VG_PolygonDelVertex(VG_Polygon *ply, Uint vtx)
 {
-	VG_Lock(VGNODE(vP)->vg);
-	if (vtx < vP->nPts) {
-		VG_DelRef(vP, vP->pts[vtx]);
-		if (vtx < vP->nPts-1) {
-			memmove(&vP->pts[vtx], &vP->pts[vtx+1],
-			    (vP->nPts - vtx - 1)*sizeof(VG_Point *));
+	VG *vg = VGNODE(ply)->vg;
+
+	AG_ObjectLock(vg);
+	if (vtx < ply->nPts) {
+		VG_DelRef(ply, ply->pts[vtx]);
+		if (vtx < ply->nPts-1) {
+			memmove(&ply->pts[vtx], &ply->pts[vtx+1],
+			    (ply->nPts - vtx - 1)*sizeof(VG_Point *));
 		}
-		vP->nPts--;
+		ply->nPts--;
 	}
-	VG_Unlock(VGNODE(vP)->vg);
+	AG_ObjectUnlock(vg);
 }
 
 static void

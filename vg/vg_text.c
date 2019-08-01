@@ -61,41 +61,47 @@ VG_TextNew(void *pNode, VG_Point *p1, VG_Point *p2)
 void
 VG_TextAlignment(VG_Text *vt, enum vg_alignment align)
 {
-	VG_Lock(VGNODE(vt)->vg);
+	VG *vg = VGNODE(vt)->vg;
+
+	AG_ObjectLock(vg);
 	vt->align = align;
-	VG_Unlock(VGNODE(vt)->vg);
+	AG_ObjectUnlock(vg);
 }
 
 void
 VG_TextFontFace(VG_Text *vt, const char *face)
 {
-	VG_Lock(VGNODE(vt)->vg);
+	VG *vg = VGNODE(vt)->vg;
+
+	AG_ObjectLock(vg);
 	AG_Strlcpy(vt->fontFace, face, sizeof(vt->fontFace));
-	VG_Unlock(VGNODE(vt)->vg);
+	AG_ObjectUnlock(vg);
 }
 
 void
 VG_TextFontSize(VG_Text *vt, int size)
 {
-	VG_Lock(VGNODE(vt)->vg);
+	VG *vg = VGNODE(vt)->vg;
+
+	AG_ObjectLock(vg);
 	vt->fontSize = (AG_FontPts)size;
-	VG_Unlock(VGNODE(vt)->vg);
+	AG_ObjectUnlock(vg);
 }
 
 void
 VG_TextFontFlags(VG_Text *vt, Uint flags)
 {
-	VG_Lock(VGNODE(vt)->vg);
 	vt->fontFlags = flags;
-	VG_Unlock(VGNODE(vt)->vg);
 }
 
 void
 VG_TextSubstObject(VG_Text *vt, void *obj)
 {
-	VG_Lock(VGNODE(vt)->vg);
+	VG *vg = VGNODE(vt)->vg;
+
+	AG_ObjectLock(vg);
 	vt->vsObj = obj;
-	VG_Unlock(VGNODE(vt)->vg);
+	AG_ObjectUnlock(vg);
 }
 
 static void
@@ -151,22 +157,28 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 void
 VG_TextString(VG_Text *vt, const char *s)
 {
-	VG_Lock(VGNODE(vt)->vg);
+	VG *vg = VGNODE(vt)->vg;
+
+	AG_ObjectLock(vg);
+
 	if (s != NULL) {
 		Strlcpy(vt->text, s, sizeof(vt->text));
 	} else {
 		vt->text[0] = '\0';
 	}
-	VG_Unlock(VGNODE(vt)->vg);
+
+	AG_ObjectUnlock(vg);
 }
 
 /* Specify static text (format string). */
 void
 VG_TextPrintf(VG_Text *vt, const char *fmt, ...)
 {
+	VG *vg = VGNODE(vt)->vg;
 	va_list ap;
 
-	VG_Lock(VGNODE(vt)->vg);
+	AG_ObjectLock(vg);
+
 	if (fmt != NULL) {
 		va_start(ap, fmt);
 		Vsnprintf(vt->text, sizeof(vt->text), fmt, ap);
@@ -174,7 +186,8 @@ VG_TextPrintf(VG_Text *vt, const char *fmt, ...)
 	} else {
 		vt->text[0] = '\0';
 	}
-	VG_Unlock(VGNODE(vt)->vg);
+
+	AG_ObjectUnlock(vg);
 }
 
 static void

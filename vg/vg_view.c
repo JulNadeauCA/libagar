@@ -772,21 +772,18 @@ Draw(void *_Nonnull obj)
 			DrawGrid(vv, &vv->grid[i]);
 	}
 
-	VG_Lock(vg);
+	AG_ObjectLock(vg);
 
-	if (curtool != NULL && curtool->ops->predraw != NULL) {
+	if (curtool && curtool->ops->predraw)
 		curtool->ops->predraw(curtool, vv);
-	}
-	if (vv->draw_ev != NULL) {
+	if (vv->draw_ev)
 		vv->draw_ev->fn(vv->draw_ev);
-	}
-	if (curtool != NULL && curtool->ops->postdraw != NULL) {
+	if (curtool && curtool->ops->postdraw)
 		curtool->ops->postdraw(curtool, vv);
-	}
 
 	DrawNode(vg, vg->root, vv);
 
-	VG_Unlock(vg);
+	AG_ObjectUnlock(vg);
 
 	if (vv->status[0] != '\0') {
 		AG_PushTextState();

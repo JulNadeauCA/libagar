@@ -52,11 +52,13 @@ VG_CircleNew(void *pNode, VG_Point *pCenter, float r)
 void
 VG_CircleCenter(VG_Circle *vc, VG_Point *pCenter)
 {
-	VG_Lock(VGNODE(vc)->vg);
+	VG *vg = VGNODE(vc)->vg;
+
+	AG_ObjectLock(vg);
 	VG_DelRef(vc, vc->p);
 	VG_AddRef(vc, pCenter);
 	vc->p = pCenter;
-	VG_Unlock(VGNODE(vc)->vg);
+	AG_ObjectUnlock(vg);
 }
 
 static void

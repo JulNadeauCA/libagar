@@ -133,7 +133,7 @@ typedef struct vg_node {
 #define VGNODE(p) ((VG_Node *)(p))
 
 typedef struct vg {
-	_Nonnull_Mutex AG_Mutex lock;
+	struct ag_object _inherit;		/* AG_Object -> VG */
 	Uint flags;
 #define VG_NO_ANTIALIAS	0x01			/* Disable anti-aliasing */
 	Uint                      nColors;	/* Color count */
@@ -142,10 +142,12 @@ typedef struct vg {
 	VG_Color          selectionColor;	/* Selected item/block color */
 	VG_Color          mouseoverColor;	/* Mouse overlap item color */
 
-	VG_Layer *_Nullable layers;		/* Layer information */
+	VG_Layer *_Nullable layers;		/* Stack of layers */
 	Uint	           nLayers;		/* Layer count */
-	Uint               nT;
-	VG_Matrix *_Nonnull T;			/* Stack of view matrices */
+
+	Uint               nT;			/* Matrix count */
+	VG_Matrix *_Nonnull T;			/* Stack of matrices */
+
 	VG_Node *_Nullable root;		/* Tree of entities */
 	AG_TAILQ_HEAD_(vg_node) nodes;		/* List of entities */
 	AG_TAILQ_ENTRY(vg) user;		/* Entry in user list */
@@ -157,6 +159,8 @@ extern Uint                            vgNodeClassCount;
 extern int vgGUI;
 
 #include <agar/vg/vg_math.h>
+
+#define VG_NodeIsClass(p,pat) (strcmp(VGNODE(p)->ops->name, (pat)) == 0)
 
 #define VG_FOREACH_NODE(node, vg, ntype)				\
 	for((node) = (struct ntype *)AG_TAILQ_FIRST(&(vg)->nodes);	\
@@ -178,19 +182,19 @@ extern int vgGUI;
 		} else
 
 __BEGIN_DECLS
+extern AG_ObjectClass vgClass;
+
+extern const AG_FileExtMapping vgFileExtMap[];
+extern const Uint              vgFileExtCount;
+
 void VG_InitSubsystem(void);
 void VG_DestroySubsystem(void);
 
 VG *_Nonnull VG_New(Uint) _Warn_Unused_Result;
 
-void VG_Init(VG *_Nonnull, Uint);
-void VG_Destroy(VG *_Nonnull);
 void VG_Clear(VG *_Nonnull);
 void VG_ClearNodes(VG *_Nonnull);
 void VG_ClearColors(VG *_Nonnull);
-
-void VG_Save(VG *_Nonnull, AG_DataSource *_Nonnull);
-int  VG_Load(VG *_Nonnull, AG_DataSource *_Nonnull);
 
 VG_NodeOps *_Nullable VG_LookupClass(const char *_Nonnull)
                                     _Warn_Unused_Result;
@@ -244,282 +248,32 @@ void *_Nullable VG_PointProximityMax(struct vg_view *_Nonnull, const char *_Null
                                      void *_Nullable, float);
 
 VG_Matrix VG_MatrixInvert(VG_Matrix);
+VG_Color  VG_GetColorRGB(Uint8, Uint8, Uint8);
+VG_Color  VG_GetColorRGBA(Uint8, Uint8, Uint8, Uint8);
+AG_Color  VG_MapColorRGB(VG_Color);
+AG_Color  VG_MapColorRGBA(VG_Color);
+void      VG_BlendColors(VG_Color *_Nonnull, VG_Color);
 
-/* Acquire the VG lock. */
-static __inline__ void
-VG_Lock(VG *_Nonnull vg)
-{
-	AG_MutexLock(&vg->lock);
-}
+void *_Nullable VG_FindNodeSym(VG *_Nonnull, const char *_Nonnull);
+void *_Nullable VG_FindNode(VG *_Nonnull, Uint32, const char *_Nonnull);
 
-/* Release the VG lock. */
-static __inline__ void
-VG_Unlock(VG *_Nonnull vg)
-{
-	AG_MutexUnlock(&vg->lock);
-}
+void VG_PushMatrix(VG *_Nonnull);
+void VG_PopMatrix(VG *_Nonnull);
+void VG_LoadIdentity(void *_Nonnull);
+void VG_SetPositionInParent(void *_Nonnull, VG_Vector);
+void VG_Translate(void *_Nonnull, VG_Vector);
+void VG_Scale(void *_Nonnull, float);
+void VG_Rotate(void *_Nonnull, float);
+void VG_FlipVert(void *_Nonnull);
+void VG_FlipHoriz(void *_Nonnull);
 
-/* Evaluate whether a node belongs to a class. */
-static __inline__ int _Pure_Attribute
-VG_NodeIsClass(void *_Nonnull p, const char *_Nonnull name)
-{
-	return (strcmp(VGNODE(p)->ops->name, name) == 0);
-}
+void VG_Select(void *_Nonnull);
+void VG_Unselect(void *_Nonnull);
+void VG_SelectAll(VG *_Nonnull);
+void VG_UnselectAll(VG *_Nonnull);
 
-/* Return the VG_Color representing a RGB triplet. */
-static __inline__ VG_Color
-VG_GetColorRGB(Uint8 r, Uint8 g, Uint8 b)
-{
-	VG_Color vc;
-	vc.r = r;
-	vc.g = g;
-	vc.b = b;
-	vc.a = 255;
-	vc.idx = -1;
-	return (vc);
-}
-
-/* Return the VG_Color from RGBA components. */
-static __inline__ VG_Color
-VG_GetColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-	VG_Color vc;
-	vc.r = r;
-	vc.g = g;
-	vc.b = b;
-	vc.a = a;
-	vc.idx = -1;
-	return (vc);
-}
-
-/* Convert a VG_Color to opaque AG_Color */
-static __inline__ AG_Color
-VG_MapColorRGB(VG_Color vc)
-{
-	AG_Color c;
-
-	AG_ColorRGB(&c, vc.r, vc.g, vc.b);
-	return (c);
-}
-
-/* Convert a VG_Color to AG_Color */
-static __inline__ AG_Color
-VG_MapColorRGBA(VG_Color vc)
-{
-	AG_Color c;
-
-	AG_ColorRGBA(&c, vc.r, vc.g, vc.b, vc.a);
-	return (c);
-}
-
-/* Alpha-blend colors cDst and cSrc and return in cDst. */
-static __inline__ void
-VG_BlendColors(VG_Color *_Nonnull cDst, VG_Color cSrc)
-{
-	cDst->r = (((cSrc.r - cDst->r)*cSrc.a) >> 8) + cDst->r;
-	cDst->g = (((cSrc.g - cDst->g)*cSrc.a) >> 8) + cDst->g;
-	cDst->b = (((cSrc.b - cDst->b)*cSrc.a) >> 8) + cDst->b;
-	cDst->a = (cDst->a+cSrc.a >= 255) ? 255 : (cDst->a+cSrc.a);
-}
-
-/* Search a node by symbol. */
-static __inline__ void *_Nullable
-VG_FindNodeSym(VG *_Nonnull vg, const char *_Nonnull sym)
-{
-	VG_Node *vn;
-
-	AG_TAILQ_FOREACH(vn, &vg->nodes, list) {
-		if (strcmp(vn->sym, sym) == 0)
-			return (vn);
-	}
-	return (NULL);
-}
-
-/* Search a node by handle and class. Used for loading datafiles. */
-static __inline__ void *_Nullable
-VG_FindNode(VG *_Nonnull vg, Uint32 handle, const char *_Nonnull type)
-{
-	VG_Node *vn;
-
-	AG_TAILQ_FOREACH(vn, &vg->nodes, list) {
-		if (vn->handle == handle &&
-		    strcmp(vn->ops->name, type) == 0)
-			return (vn);
-	}
-	return (NULL);
-}
-
-/* Push the transformation matrix stack. */
-static __inline__ void
-VG_PushMatrix(VG *_Nonnull vg)
-{
-	vg->T = (VG_Matrix *)AG_Realloc(vg->T, (vg->nT+1)*sizeof(VG_Matrix));
-	memcpy(&vg->T[vg->nT], &vg->T[vg->nT-1], sizeof(VG_Matrix));
-	vg->nT++;
-}
-
-/* Pop the transformation matrix stack. */
-static __inline__ void
-VG_PopMatrix(VG *_Nonnull vg)
-{
-#ifdef AG_DEBUG
-	if (vg->nT == 1) { AG_FatalError("VG_PopMatrix"); }
-#endif
-	vg->nT--;
-}
-
-/* Load identity matrix for the given node. */
-static __inline__ void
-VG_LoadIdentity(void *_Nonnull pNode)
-{
-	VG_Node *vn = (VG_Node *)pNode;
-	
-	vn->T.m[0][0] = 1.0f;	vn->T.m[0][1] = 0.0f;	vn->T.m[0][2] = 0.0f;
-	vn->T.m[1][0] = 0.0f;	vn->T.m[1][1] = 1.0f;	vn->T.m[1][2] = 0.0f;
-	vn->T.m[2][0] = 0.0f;	vn->T.m[2][1] = 0.0f;	vn->T.m[2][2] = 1.0f;
-}
-
-/* Set the position of the given node relative to its parent. */
-static __inline__ void
-VG_SetPositionInParent(void *_Nonnull pNode, VG_Vector v)
-{
-	VG_Node *vn = (VG_Node *)pNode;
-	
-	vn->T.m[0][2] = v.x;
-	vn->T.m[1][2] = v.y;
-}
-
-/* Translate the given node. */
-static __inline__ void
-VG_Translate(void *_Nonnull pNode, VG_Vector v)
-{
-	VG_Node *vn = (VG_Node *)pNode;
-	VG_Matrix T;
-	
-	T.m[0][0] = 1.0f;	T.m[0][1] = 0.0f;	T.m[0][2] = v.x;
-	T.m[1][0] = 0.0f;	T.m[1][1] = 1.0f;	T.m[1][2] = v.y;
-	T.m[2][0] = 0.0f;	T.m[2][1] = 0.0f;	T.m[2][2] = 1.0f;
-
-	VG_MultMatrix(&vn->T, &T);
-}
-
-/* Apply uniform scaling to the current viewing matrix. */
-static __inline__ void
-VG_Scale(void *_Nonnull pNode, float s)
-{
-	VG_Node *vn = (VG_Node *)pNode;
-	VG_Matrix T;
-	
-	T.m[0][0] = s;		T.m[0][1] = 0.0f;	T.m[0][2] = 0.0f;
-	T.m[1][0] = 0.0f;	T.m[1][1] = s;		T.m[1][2] = 0.0f;
-	T.m[2][0] = 0.0f;	T.m[2][1] = 0.0f;	T.m[2][2] = s;
-
-	VG_MultMatrix(&vn->T, &T);
-}
-
-/* Apply a rotation to the current viewing matrix. */
-static __inline__ void
-VG_Rotate(void *_Nonnull pNode, float theta)
-{
-	VG_Node *vn = (VG_Node *)pNode;
-	VG_Matrix T;
-	float rCos = VG_Cos(theta);
-	float rSin = VG_Sin(theta);
-
-	T.m[0][0] = +rCos;	T.m[0][1] = -rSin;	T.m[0][2] = 0.0f;
-	T.m[1][0] = +rSin;	T.m[1][1] = +rCos;	T.m[1][2] = 0.0f;
-	T.m[2][0] = 0.0f;	T.m[2][1] = 0.0f;	T.m[2][2] = 1.0f;
-
-	VG_MultMatrix(&vn->T, &T);
-}
-
-/* Reflection about vertical line going through the origin. */
-static __inline__ void
-VG_FlipVert(void *_Nonnull pNode)
-{
-	VG_Node *vn = (VG_Node *)pNode;
-	VG_Matrix T;
-
-	T.m[0][0] = 1.0f;	T.m[0][1] = 0.0f;	T.m[0][2] = 0.0f;
-	T.m[1][0] = 0.0f;	T.m[1][1] = -1.0f;	T.m[1][2] = 0.0f;
-	T.m[2][0] = 0.0f;	T.m[2][1] = 0.0f;	T.m[2][2] = 1.0f;
-
-	VG_MultMatrix(&vn->T, &T);
-}
-
-/* Reflection about horizontal line going through the origin. */
-static __inline__ void
-VG_FlipHoriz(void *_Nonnull pNode)
-{
-	VG_Node *vn = (VG_Node *)pNode;
-	VG_Matrix T;
-
-	T.m[0][0] = -1.0f;	T.m[0][1] = 0.0f;	T.m[0][2] = 0.0f;
-	T.m[1][0] = 0.0f;	T.m[1][1] = 1.0f;	T.m[1][2] = 0.0f;
-	T.m[2][0] = 0.0f;	T.m[2][1] = 0.0f;	T.m[2][2] = 1.0f;
-
-	VG_MultMatrix(&vn->T, &T);
-}
-
-/* Mark node as selected. */
-static __inline__ void
-VG_Select(void *_Nonnull pNode)
-{
-	VGNODE(pNode)->flags |= VG_NODE_SELECTED;
-}
-
-/* Remove the selection flag from node. */
-static __inline__ void
-VG_Unselect(void *_Nonnull pNode)
-{
-	VGNODE(pNode)->flags |= VG_NODE_SELECTED;
-}
-
-/* Mark all nodes selected. */
-static __inline__ void
-VG_SelectAll(VG *_Nonnull vg)
-{
-	VG_Node *vn;
-	AG_TAILQ_FOREACH(vn, &vg->nodes, list)
-		vn->flags |= VG_NODE_SELECTED;
-}
-
-/* Remove the selection flag from all nodes. */
-static __inline__ void
-VG_UnselectAll(VG *_Nonnull vg)
-{
-	VG_Node *vn;
-	AG_TAILQ_FOREACH(vn, &vg->nodes, list)
-		vn->flags &= ~(VG_NODE_SELECTED);
-}
-
-/* Return the effective position of the given node relative to the VG origin. */
-static __inline__ VG_Vector
-VG_Pos(void *_Nonnull node)
-{
-	VG_Matrix T;
-	VG_Vector v = { 0.0f, 0.0f };
-
-	VG_NodeTransform(node, &T);
-	VG_MultMatrixByVector(&v, &v, &T);
-	return (v);
-}
-
-/* Set the position of the given node relative to the VG origin. */
-static __inline__ void
-VG_SetPosition(void *_Nonnull pNode, VG_Vector v)
-{
-	VG_Node *vn = (VG_Node *)pNode;
-	VG_Vector vParent;
-
-	vn->T.m[0][2] = v.x;
-	vn->T.m[1][2] = v.y;
-	if (vn->parent != NULL) {
-		vParent = VG_Pos(vn->parent);
-		vn->T.m[0][2] -= vParent.x;
-		vn->T.m[1][2] -= vParent.y;
-	}
-}
+VG_Vector VG_Pos(void *_Nonnull);
+void      VG_SetPosition(void *_Nonnull, VG_Vector);
 __END_DECLS
 
 #include <agar/vg/vg_point.h>

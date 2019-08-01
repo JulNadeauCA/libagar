@@ -54,19 +54,23 @@ VG_ArcNew(void *pNode, VG_Point *pCenter, float r, float a1, float a2)
 void
 VG_ArcCenter(VG_Arc *va, VG_Point *pCenter)
 {
-	VG_Lock(VGNODE(va)->vg);
+	VG *vg = VGNODE(va)->vg;
+
+	AG_ObjectLock(vg);
 	VG_DelRef(va, va->p);
 	VG_AddRef(va, pCenter);
 	va->p = pCenter;
-	VG_Unlock(VGNODE(va)->vg);
+	AG_ObjectUnlock(vg);
 }
 
 void
 VG_ArcRadius(VG_Arc *va, double r)
 {
-	VG_Lock(VGNODE(va)->vg);
+	VG *vg = VGNODE(va)->vg;
+
+	AG_ObjectLock(vg);
 	va->r = r;
-	VG_Unlock(VGNODE(va)->vg);
+	AG_ObjectUnlock(vg);
 }
 
 static void

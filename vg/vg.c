@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,19 +35,17 @@
 #include <agar/vg/vg_view.h>
 #include <agar/vg/icons.h>
 #include <agar/vg/icons_data.h>
+#include <agar/vg/vg_tools.h>
 
 #include <string.h>
 
 const AG_Version vgVer = { 6, 1 };
-#if 0
 const AG_FileExtMapping vgFileExtMap[] = {
 	{ ".avg", N_("Agar-VG Vector Graphics"),  &vgClass },
-#if 0
-	{ ".svg", N_("Scalable Vector Graphics"), &vgClassSVG },
-#endif
-
+/*	{ ".svg", N_("Scalable Vector Graphics"), &vgClassSVG }, */
+/*	{ ".dxf", N_("AutoCAD DXF"),              &vgClassDXF }, */
 };
-#endif
+const Uint vgFileExtCount = sizeof(vgFileExtMap) / sizeof(vgFileExtMap[0]);
 
 int          vgInitedSubsystem = 0;
 VG_NodeOps **vgNodeClasses;
@@ -70,6 +68,17 @@ VG_NodeOps *vgBuiltinClasses[] = {
 	&vgTextOps,
 	NULL
 };
+VG_ToolOps *vgBuiltinTools[] = {
+	&vgSelectTool,
+	&vgPointTool,
+	&vgLineTool,
+	&vgPolygonTool,
+	&vgCircleTool,
+	&vgArcTool,
+	&vgTextTool,
+	&vgProximityTool,
+	NULL
+};
 
 void
 VG_InitSubsystem(void)
@@ -84,6 +93,9 @@ VG_InitSubsystem(void)
 #ifdef AG_NAMESPACES
 	AG_RegisterNamespace("VG", "VG_", "http://libagar.org/");
 #endif
+	AG_RegisterClass(&vgClass);
+/*	AG_RegisterClass(&vgClassSVG); */
+
 	if (agGUI) {
 		AG_RegisterClass(&vgViewClass);
 		vgGUI = 1;
@@ -101,12 +113,14 @@ VG_DestroySubsystem(void)
 	if (!vgInitedSubsystem)
 		return;
 	
-	if (vgGUI) {
-		AG_UnregisterClass(&vgViewClass);
-	}
 	Free(vgNodeClasses);
 	vgNodeClasses = NULL;
 	vgNodeClassCount = 0;
+
+	if (vgGUI) {
+		AG_UnregisterClass(&vgViewClass);
+	}
+	AG_UnregisterClass(&vgClass);
 #ifdef AG_NAMESPACES
 	AG_UnregisterNamespace("VG");
 #endif	
@@ -119,17 +133,18 @@ VG_New(Uint flags)
 	VG *vg;
 
 	vg = Malloc(sizeof(VG));
-	VG_Init(vg, flags);
+	AG_ObjectInit(vg, &vgClass);
+	vg->flags |= flags;
 	return (vg);
 }
 
-void
-VG_Init(VG *vg, Uint flags)
+static void
+Init(void *_Nonnull obj)
 {
+	VG *vg = obj;
 	VG_Point *ptRoot;
 
-	AG_MutexInitRecursive(&vg->lock);
-	vg->flags = flags;
+	vg->flags = 0;
 	vg->nColors = 0;
 	vg->colors = NULL;
 	vg->fillColor = VG_GetColorRGB(0,0,0);
@@ -150,6 +165,15 @@ VG_Init(VG *vg, Uint flags)
 	vg->root->vg = vg;
 	vg->root->handle = 1;
 	VG_SetColorRGB(vg->root, 0, 150, 0);
+}
+
+static void
+Destroy(void *_Nonnull obj)
+{
+	VG *vg = obj;
+
+	VG_Clear(vg);
+	Free(vg->layers);
 }
 
 /* Delete and free a node (including its children). */
@@ -219,14 +243,6 @@ VG_ClearColors(VG *vg)
 }
 
 void
-VG_Destroy(VG *vg)
-{
-	VG_Clear(vg);
-	Free(vg->layers);
-	AG_MutexDestroy(&vg->lock);
-}
-
-void
 VG_RegisterClass(VG_NodeOps *vnOps)
 {
 	vgNodeClasses = Realloc(vgNodeClasses,
@@ -280,9 +296,11 @@ VG_Delete(void *pVn)
 	if (vg == NULL)
 		AG_FatalError("Unattached node");
 #endif
-	VG_Lock(vg);
+	AG_ObjectLock(vg);
+
 	if (vn->nDeps > 0) {
-		AG_SetError("%s%u is in use", vn->ops->name, (Uint)vn->handle);
+		AG_SetError(_("Node %s%u is in use"), vn->ops->name,
+		    (Uint)vn->handle);
 		goto fail;
 	}
 	if (vn->ops->deleteNode != NULL) {
@@ -290,10 +308,11 @@ VG_Delete(void *pVn)
 	}
 	VG_NodeDetach(vn);
 	VG_NodeDestroy(vn);
-	VG_Unlock(vg);
+
+	AG_ObjectUnlock(vg);
 	return (0);
 fail:
-	VG_Unlock(vg);
+	AG_ObjectUnlock(vg);
 	return (-1);
 }
 
@@ -334,12 +353,13 @@ void
 VG_AddRef(void *p, void *pRef)
 {
 	VG_Node *vn = p;
+	VG *vg = vn->vg;
 
-	if (vn->vg != NULL) { VG_Lock(vn->vg); }
+	if (vg) { AG_ObjectLock(vg); }
 	vn->refs = Realloc(vn->refs, (vn->nRefs+1)*sizeof(VG_Node *));
 	vn->refs[vn->nRefs++] = VGNODE(pRef);
 	VGNODE(pRef)->nDeps++;
-	if (vn->vg != NULL) { VG_Unlock(vn->vg); }
+	if (vg) { AG_ObjectUnlock(vg); }
 }
 
 /* Remove a node reference to another node. */
@@ -347,10 +367,13 @@ Uint
 VG_DelRef(void *pVn, void *pRef)
 {
 	VG_Node *vn = pVn;
+	VG *vg = vn->vg;
 	Uint newDeps;
 	int i;
 
-	if (vn->vg != NULL) { VG_Lock(vn->vg); }
+	if (vg) {
+		AG_ObjectLock(vg);
+	}
 	for (i = 0; i < vn->nRefs; i++) {
 		if (vn->refs[i] == VGNODE(pRef))
 			break;
@@ -364,7 +387,10 @@ VG_DelRef(void *pVn, void *pRef)
 	}
 	vn->nRefs--;
 	newDeps = (--VGNODE(pRef)->nDeps);
-	if (vn->vg != NULL) { VG_Unlock(vn->vg); }
+
+	if (vg) {
+		AG_ObjectUnlock(vg);
+	}
 	return (newDeps);
 }
 
@@ -427,7 +453,7 @@ VG_NodeAttach(void *pParent, void *pNode)
 	}
 	vg = vnParent->vg;
 
-	VG_Lock(vg);
+	AG_ObjectLock(vg);
 	
 	if (vn->handle == 0) {
 		vn->handle = VG_GenNodeName(vg, vn->ops->name);
@@ -436,7 +462,8 @@ VG_NodeAttach(void *pParent, void *pNode)
 	TAILQ_INSERT_TAIL(&vnParent->cNodes, vn, tree);
 	TAILQ_INSERT_TAIL(&vg->nodes, vn, list);
 	vn->vg = vg;
-	VG_Unlock(vg);
+
+	AG_ObjectUnlock(vg);
 }
 
 /*
@@ -455,7 +482,8 @@ VG_NodeDetach(void *p)
 	if (vg == NULL)
 		AG_FatalError("Unattached node");
 #endif
-	VG_Lock(vg);
+	AG_ObjectLock(vg);
+
 	for (vnChld = TAILQ_FIRST(&vn->cNodes);
 	     vnChld != TAILQ_END(&vn->cNodes);
 	     vnChld = vnNext) {
@@ -470,7 +498,8 @@ VG_NodeDetach(void *p)
 	}
 	TAILQ_REMOVE(&vg->nodes, vn, list);
 	vn->vg = NULL;
-	VG_Unlock(vg);
+
+	AG_ObjectUnlock(vg);
 }
 
 /* Set the symbolic name of a node. */
@@ -480,11 +509,13 @@ VG_SetSym(void *pNode, const char *fmt, ...)
 	VG_Node *vn = pNode;
 	va_list args;
 
-	if (vn->vg != NULL) { VG_Lock(vn->vg); }
+	if (vn->vg) { AG_ObjectLock(vn->vg); }
+
 	va_start(args, fmt);
 	Vsnprintf(vn->sym, sizeof(vn->sym), fmt, args);
 	va_end(args);
-	if (vn->vg != NULL) { VG_Unlock(vn->vg); }
+
+	if (vn->vg) { AG_ObjectUnlock(vn->vg); }
 }
 
 void
@@ -528,16 +559,17 @@ VG_PushLayer(VG *vg, const char *name)
 {
 	VG_Layer *vgl;
 
-	VG_Lock(vg);
-	vg->layers = Realloc(vg->layers, (vg->nLayers+1) *
-	                                 sizeof(VG_Layer));
+	AG_ObjectLock(vg);
+
+	vg->layers = Realloc(vg->layers, (vg->nLayers+1)*sizeof(VG_Layer));
 	vgl = &vg->layers[vg->nLayers];
 	vg->nLayers++;
 	Strlcpy(vgl->name, name, sizeof(vgl->name));
 	vgl->visible = 1;
 	vgl->alpha = 255;
 	vgl->color = VG_GetColorRGB(255,255,255);
-	VG_Unlock(vg);
+
+	AG_ObjectUnlock(vg);
 	return (vgl);
 }
 
@@ -545,11 +577,11 @@ VG_PushLayer(VG *vg, const char *name)
 void
 VG_PopLayer(VG *vg)
 {
-	VG_Lock(vg);
+	AG_ObjectLock(vg);
 	if (--vg->nLayers < 1) {
 		vg->nLayers = 1;
 	}
-	VG_Unlock(vg);
+	AG_ObjectUnlock(vg);
 }
 
 static void
@@ -575,7 +607,7 @@ LoadMatrix(VG_Matrix *_Nonnull A, AG_DataSource *_Nonnull ds)
 static void
 SaveNodeGeneric(VG *_Nonnull vg, VG_Node *_Nonnull vn, AG_DataSource *_Nonnull ds)
 {
-	off_t nNodesOffs;
+	AG_Offset nNodesOffs;
 	Uint32 nNodes = 0;
 	VG_Node *vnChld;
 
@@ -615,18 +647,17 @@ SaveNodeData(VG *_Nonnull vg, VG_Node *_Nonnull vn, AG_DataSource *_Nonnull ds)
 	return (0);
 }
 
-void
-VG_Save(VG *vg, AG_DataSource *ds)
+static int
+Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 {
-	off_t nNodesOffs;
+	VG *vg = obj;
+	AG_Offset nNodesOffs;
 	Uint32 nNodes = 0;
 	VG_Node *vn;
 	Uint i;
 
 	AG_WriteVersion(ds, "Agar-VG", &vgVer);
 	AG_WriteString(ds, "VG");				/* name */
-
-	VG_Lock(vg);
 
 	AG_WriteUint32(ds, (Uint32)vg->flags);
 	VG_WriteColor(ds, &vg->fillColor);
@@ -663,7 +694,7 @@ VG_Save(VG *vg, AG_DataSource *ds)
 	}
 	AG_WriteUint32At(ds, nNodes, nNodesOffs);
 	SaveNodeData(vg, vg->root, ds);
-	VG_Unlock(vg);
+	return (0);
 }
 
 static int
@@ -716,9 +747,10 @@ LoadNodeData(VG *_Nonnull vg, VG_Node *_Nonnull vn, AG_DataSource *_Nonnull ds,
 	return (0);
 }
 
-int
-VG_Load(VG *vg, AG_DataSource *ds)
+static int
+Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull ver)
 {
+	VG *vg = obj;
 	char name[VG_NAME_MAX];
 	AG_Version dsVer;
 	Uint32 i, nColors, nNodes;
@@ -728,7 +760,6 @@ VG_Load(VG *vg, AG_DataSource *ds)
 	}
 	AG_CopyString(name, ds, sizeof(name));		/* Ignore */
 	
-	VG_Lock(vg);
 	vg->flags = AG_ReadUint32(ds);
 	vg->fillColor = VG_ReadColor(ds);
 	(void)VG_ReadColor(ds);				/* gridColor */
@@ -763,16 +794,9 @@ VG_Load(VG *vg, AG_DataSource *ds)
 	nNodes = AG_ReadUint32(ds);
 	for (i = 0; i < nNodes; i++) {
 		if (LoadNodeGeneric(vg, vg->root, ds) == -1)
-			goto fail;
+			return (-1);
 	}
-	if (LoadNodeData(vg, vg->root, ds, &dsVer) == -1) {
-		goto fail;
-	}
-	VG_Unlock(vg);
-	return (0);
-fail:
-	VG_Unlock(vg);
-	return (-1);
+	return LoadNodeData(vg, vg->root, ds, &dsVer);
 }
 
 void
@@ -976,3 +1000,345 @@ VG_MatrixInvert(VG_Matrix A)
 	return (B);
 }
 
+/* Return the VG_Color representing a RGB triplet. */
+VG_Color
+VG_GetColorRGB(Uint8 r, Uint8 g, Uint8 b)
+{
+	VG_Color vc;
+	vc.r = r;
+	vc.g = g;
+	vc.b = b;
+	vc.a = 255;
+	vc.idx = -1;
+	return (vc);
+}
+
+/* Return the VG_Color from RGBA components. */
+VG_Color
+VG_GetColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	VG_Color vc;
+	vc.r = r;
+	vc.g = g;
+	vc.b = b;
+	vc.a = a;
+	vc.idx = -1;
+	return (vc);
+}
+
+/* Convert a VG_Color to opaque AG_Color */
+AG_Color
+VG_MapColorRGB(VG_Color vc)
+{
+	AG_Color c;
+
+	AG_ColorRGB(&c, vc.r, vc.g, vc.b);
+	return (c);
+}
+
+/* Convert a VG_Color to AG_Color */
+AG_Color
+VG_MapColorRGBA(VG_Color vc)
+{
+	AG_Color c;
+
+	AG_ColorRGBA(&c, vc.r, vc.g, vc.b, vc.a);
+	return (c);
+}
+
+/* Alpha-blend colors cDst and cSrc and return in cDst. */
+void
+VG_BlendColors(VG_Color *_Nonnull cDst, VG_Color cSrc)
+{
+	cDst->r = (((cSrc.r - cDst->r)*cSrc.a) >> 8) + cDst->r;
+	cDst->g = (((cSrc.g - cDst->g)*cSrc.a) >> 8) + cDst->g;
+	cDst->b = (((cSrc.b - cDst->b)*cSrc.a) >> 8) + cDst->b;
+	cDst->a = (cDst->a+cSrc.a >= 255) ? 255 : (cDst->a+cSrc.a);
+}
+
+/* Search a node by symbol. */
+void *
+VG_FindNodeSym(VG *vg, const char *sym)
+{
+	VG_Node *vn;
+
+	AG_TAILQ_FOREACH(vn, &vg->nodes, list) {
+		if (strcmp(vn->sym, sym) == 0)
+			return (vn);
+	}
+	return (NULL);
+}
+
+/* Search a node by handle and class. Used for loading datafiles. */
+void *
+VG_FindNode(VG *vg, Uint32 handle, const char *type)
+{
+	VG_Node *vn;
+
+	AG_TAILQ_FOREACH(vn, &vg->nodes, list) {
+		if (vn->handle == handle &&
+		    strcmp(vn->ops->name, type) == 0)
+			return (vn);
+	}
+	return (NULL);
+}
+
+/* Push the transformation matrix stack. */
+void
+VG_PushMatrix(VG *vg)
+{
+	vg->T = (VG_Matrix *)AG_Realloc(vg->T, (vg->nT+1)*sizeof(VG_Matrix));
+	memcpy(&vg->T[vg->nT], &vg->T[vg->nT-1], sizeof(VG_Matrix));
+	vg->nT++;
+}
+
+/* Pop the transformation matrix stack. */
+void
+VG_PopMatrix(VG *vg)
+{
+#ifdef AG_DEBUG
+	if (vg->nT == 1)
+		AG_FatalError("VG_PopMatrix() without AG_PushMatrix()");
+#endif
+	vg->nT--;
+}
+
+/* Load identity matrix for the given node. */
+void
+VG_LoadIdentity(void *pNode)
+{
+	VG_Node *vn = (VG_Node *)pNode;
+	
+	vn->T.m[0][0] = 1.0f;	vn->T.m[0][1] = 0.0f;	vn->T.m[0][2] = 0.0f;
+	vn->T.m[1][0] = 0.0f;	vn->T.m[1][1] = 1.0f;	vn->T.m[1][2] = 0.0f;
+	vn->T.m[2][0] = 0.0f;	vn->T.m[2][1] = 0.0f;	vn->T.m[2][2] = 1.0f;
+}
+
+/* Set the position of the given node relative to its parent. */
+void
+VG_SetPositionInParent(void *pNode, VG_Vector v)
+{
+	VG_Node *vn = (VG_Node *)pNode;
+	
+	vn->T.m[0][2] = v.x;
+	vn->T.m[1][2] = v.y;
+}
+
+/* Translate the given node. */
+void
+VG_Translate(void *pNode, VG_Vector v)
+{
+	VG_Node *vn = (VG_Node *)pNode;
+	VG_Matrix T;
+	
+	T.m[0][0] = 1.0f;	T.m[0][1] = 0.0f;	T.m[0][2] = v.x;
+	T.m[1][0] = 0.0f;	T.m[1][1] = 1.0f;	T.m[1][2] = v.y;
+	T.m[2][0] = 0.0f;	T.m[2][1] = 0.0f;	T.m[2][2] = 1.0f;
+
+	VG_MultMatrix(&vn->T, &T);
+}
+
+/* Apply uniform scaling to the current viewing matrix. */
+void
+VG_Scale(void *pNode, float s)
+{
+	VG_Node *vn = (VG_Node *)pNode;
+	VG_Matrix T;
+	
+	T.m[0][0] = s;		T.m[0][1] = 0.0f;	T.m[0][2] = 0.0f;
+	T.m[1][0] = 0.0f;	T.m[1][1] = s;		T.m[1][2] = 0.0f;
+	T.m[2][0] = 0.0f;	T.m[2][1] = 0.0f;	T.m[2][2] = s;
+
+	VG_MultMatrix(&vn->T, &T);
+}
+
+/* Apply a rotation to the current viewing matrix. */
+void
+VG_Rotate(void *pNode, float theta)
+{
+	VG_Node *vn = (VG_Node *)pNode;
+	VG_Matrix T;
+	float rCos = VG_Cos(theta);
+	float rSin = VG_Sin(theta);
+
+	T.m[0][0] = +rCos;	T.m[0][1] = -rSin;	T.m[0][2] = 0.0f;
+	T.m[1][0] = +rSin;	T.m[1][1] = +rCos;	T.m[1][2] = 0.0f;
+	T.m[2][0] = 0.0f;	T.m[2][1] = 0.0f;	T.m[2][2] = 1.0f;
+
+	VG_MultMatrix(&vn->T, &T);
+}
+
+/* Reflection about vertical line going through the origin. */
+void
+VG_FlipVert(void *pNode)
+{
+	VG_Node *vn = (VG_Node *)pNode;
+	VG_Matrix T;
+
+	T.m[0][0] = 1.0f;	T.m[0][1] = 0.0f;	T.m[0][2] = 0.0f;
+	T.m[1][0] = 0.0f;	T.m[1][1] = -1.0f;	T.m[1][2] = 0.0f;
+	T.m[2][0] = 0.0f;	T.m[2][1] = 0.0f;	T.m[2][2] = 1.0f;
+
+	VG_MultMatrix(&vn->T, &T);
+}
+
+/* Reflection about horizontal line going through the origin. */
+void
+VG_FlipHoriz(void *pNode)
+{
+	VG_Node *vn = (VG_Node *)pNode;
+	VG_Matrix T;
+
+	T.m[0][0] = -1.0f;	T.m[0][1] = 0.0f;	T.m[0][2] = 0.0f;
+	T.m[1][0] = 0.0f;	T.m[1][1] = 1.0f;	T.m[1][2] = 0.0f;
+	T.m[2][0] = 0.0f;	T.m[2][1] = 0.0f;	T.m[2][2] = 1.0f;
+
+	VG_MultMatrix(&vn->T, &T);
+}
+
+/* Mark node as selected. */
+void
+VG_Select(void *pNode)
+{
+	VGNODE(pNode)->flags |= VG_NODE_SELECTED;
+}
+
+/* Remove the selection flag from node. */
+void
+VG_Unselect(void *pNode)
+{
+	VGNODE(pNode)->flags |= VG_NODE_SELECTED;
+}
+
+/* Mark all nodes selected. */
+void
+VG_SelectAll(VG *vg)
+{
+	VG_Node *vn;
+
+	AG_TAILQ_FOREACH(vn, &vg->nodes, list)
+		vn->flags |= VG_NODE_SELECTED;
+}
+
+/* Remove the selection flag from all nodes. */
+void
+VG_UnselectAll(VG *vg)
+{
+	VG_Node *vn;
+
+	AG_TAILQ_FOREACH(vn, &vg->nodes, list)
+		vn->flags &= ~(VG_NODE_SELECTED);
+}
+
+/* Return the effective position of the given node relative to the VG origin. */
+VG_Vector
+VG_Pos(void *node)
+{
+	VG_Matrix T;
+	VG_Vector v = { 0.0f, 0.0f };
+
+	VG_NodeTransform(node, &T);
+	VG_MultMatrixByVector(&v, &v, &T);
+	return (v);
+}
+
+/* Set the position of the given node relative to the VG origin. */
+void
+VG_SetPosition(void *pNode, VG_Vector v)
+{
+	VG_Node *vn = (VG_Node *)pNode;
+	VG_Vector vParent;
+
+	vn->T.m[0][2] = v.x;
+	vn->T.m[1][2] = v.y;
+	if (vn->parent != NULL) {
+		vParent = VG_Pos(vn->parent);
+		vn->T.m[0][2] -= vParent.x;
+		vn->T.m[1][2] -= vParent.y;
+	}
+}
+
+static void *_Nonnull
+Edit(void *_Nonnull p)
+{
+	VG *vg = p;
+	AG_Window *win;
+	AG_Menu *menu;
+	AG_MenuItem *mi;
+	AG_Toolbar *tbTop, *tbRight;
+	AG_Box *box;
+	VG_View *vv;
+
+	if ((win = AG_WindowNew(0)) == NULL) {
+		AG_FatalError(NULL);
+	}
+	AG_WindowSetCaptionS(win, OBJECT(vg)->name);
+
+	tbTop = AG_ToolbarNew(NULL, AG_TOOLBAR_HORIZ, 1, AG_TOOLBAR_HFILL);
+	tbRight = AG_ToolbarNew(NULL, AG_TOOLBAR_VERT, 1, AG_TOOLBAR_VFILL);
+
+	vv = VG_ViewNew(NULL, vg, VG_VIEW_EXPAND | VG_VIEW_GRID);
+	VG_ViewSetSnapMode(vv, VG_GRID);
+	VG_ViewSetScale(vv, 2);
+
+	menu = AG_MenuNew(win, AG_MENU_HFILL);
+	mi = AG_MenuNode(menu->root, _("File"), NULL);
+	{
+		/* ... */
+	}
+	mi = AG_MenuNode(menu->root, _("Edit"), NULL);
+	{
+		/* AG_MenuToolbar(mi, tbTop); */
+		/* ... */
+	}
+	mi = AG_MenuNode(menu->root, _("Tools"), NULL);
+	{
+		AG_MenuItem *mAction;
+		VG_ToolOps **pOps, *ops;
+		VG_Tool *tool;
+
+		AG_MenuToolbar(mi, tbRight);
+		for (pOps = &vgBuiltinTools[0]; *pOps != NULL; pOps++) {
+			ops = *pOps;
+			tool = VG_ViewRegTool(vv, ops, NULL);
+			mAction = AG_MenuAction(mi, ops->name,
+			    ops->icon ? ops->icon->s : NULL,
+			    VG_ViewSelectToolEv, "%p,%p,%p", vv, tool, NULL);
+			AG_MenuSetIntBoolMp(mAction, &tool->selected, 0,
+			    &OBJECT(vv)->pvt.lock);
+
+			if (ops == &vgSelectTool) {
+				VG_ViewSetDefaultTool(vv, tool);
+				VG_ViewSelectTool(vv, tool, NULL);
+			}
+		}
+		AG_MenuToolbar(mi, NULL);
+
+	}
+
+	AG_ObjectAttach(win, tbTop);
+
+	box = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
+	{
+		AG_ObjectAttach(box, vv);
+		AG_ObjectAttach(box, tbRight);
+	}
+
+/*	VG_ViewButtondownFn(vv, MouseButtonDown, NULL); */
+
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 50);
+	AG_WindowShow(win);
+	return (win);
+}
+
+AG_ObjectClass vgClass = {
+	"VG",
+	sizeof(VG),
+	{ 0, 0 },
+	Init,
+	NULL,		/* reset */
+	Destroy,
+	Load,
+	Save,
+	Edit
+};
