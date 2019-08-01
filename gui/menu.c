@@ -193,7 +193,7 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 		
 	Debug(m, "Expand: [%s] -> (new)\n", mi->text);
 
-	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
+	win = AG_WindowNew(AG_WINDOW_NOTITLE |
 	                   AG_WINDOW_NOBORDERS | AG_WINDOW_NORESIZE |
 			   AG_WINDOW_DENYFOCUS | AG_WINDOW_KEEPABOVE);
 	if (win == NULL) {
