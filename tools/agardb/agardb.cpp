@@ -64,7 +64,9 @@
 #include "agardb.h"
 
 using namespace lldb;
+#ifdef HAVE_LLDB_UTILITY
 using namespace lldb_private;
+#endif
 
 static Agardb      *g_agardb = NULL;
 static Agardb::GUI *g_agardb_gui = NULL;
@@ -207,7 +209,9 @@ Close_LLDB_Pipe(int fds[2])
 	}
 }
 
-/* "agar version": Print agar version number */
+/*
+ * "agar version": Print the libagar version number.
+ */
 class AgarVersionCommand : public lldb::SBCommandPluginInterface {
 public:
 	virtual bool DoExecute(lldb::SBDebugger debugger, char **command,
@@ -232,7 +236,9 @@ public:
 	}
 };
 
-/* "agar debug": Print or set the Agar debug level */
+/*
+ * "agar debug": Print or set the Agar debug level.
+ */
 class AgarDebugCommand : public lldb::SBCommandPluginInterface {
 public:
 	virtual bool DoExecute(lldb::SBDebugger debugger, char **command,
@@ -249,7 +255,9 @@ public:
 	}
 };
 
-/* "agar driver": Query the available AG_Driver classes */
+/*
+ * "agar driver": Query the available AG_Driver classes.
+ */
 class AgarDriverCommand : public lldb::SBCommandPluginInterface {
 public:
 	virtual bool DoExecute(lldb::SBDebugger debugger, char **command,
@@ -439,8 +447,11 @@ CreateTarget(AG_Event *event)
 	AG_FileDlgCopyFilename(AGFILEDLG( AG_GetPointer(win,"fdCore") ), coreFile, sizeof(coreFile));
 	AG_FileDlgCopyFilename(AGFILEDLG( AG_GetPointer(win,"fdSyms") ), symFile, sizeof(symFile));
 	AG_TextboxCopyString  (AGTEXTBOX( AG_GetPointer(win,"tbArgs") ), args, sizeof(args));
+#ifdef HAVE_LLDB_UTILITY
 	AG_TextboxCopyString  (AGCOMBO  ( AG_GetPointer(win,"comArch") )->tbox, arch, sizeof(arch));
-
+#else
+	arch[0] = '\0';
+#endif
 	if (arch[0] == '\0')
 		db.GetDefaultArchitecture(arch, sizeof(arch));
 
@@ -471,7 +482,6 @@ CreateTargetDlg(AG_Event *event)
 {
 	AG_Window *win;
 	AG_FileDlg *fdExec, *fdCore, *fdSyms;
-	AG_Combo *comArch;
 	AG_Checkbox *cbDeps;
 	AG_Textbox *tbArgs;
 	AG_Size i;
@@ -484,10 +494,8 @@ CreateTargetDlg(AG_Event *event)
 
 	AG_SpacerNewHoriz(win);
 
-	fdExec = AG_FileDlgNewCompactMRU(win, "adb.mru.exec",	/* common */
-	    _("Executable: "),
-	    AG_FILEDLG_HFILL | AG_FILEDLG_MASK_EXT);
-
+	fdExec = AG_FileDlgNewCompactMRU(win, "adb.mru.exec", _("Executable: "),
+	                                 AG_FILEDLG_HFILL | AG_FILEDLG_MASK_EXT);
 	AG_SetPointer(win, "fdExec", fdExec);
 
 	const struct {
@@ -518,16 +526,14 @@ CreateTargetDlg(AG_Event *event)
 	AG_SeparatorNewHoriz(win);
 
 	/* Core dump file */
-	fdCore = AG_FileDlgNewCompactMRU(win, "adb.mru.exec",	/* common */
-	    _("Core File: "),
-	    AG_FILEDLG_HFILL | AG_FILEDLG_MASK_EXT);
+	fdCore = AG_FileDlgNewCompactMRU(win, "adb.mru.exec", _("Core File: "),
+	                                 AG_FILEDLG_HFILL | AG_FILEDLG_MASK_EXT);
 	AG_FileDlgAddType(fdCore, _("Core file"), ".core,<=core>", NULL, NULL);
 	AG_SetPointer(win, "fdCore", fdCore);
 
 	/* Stand-alone symbols file */
-	fdSyms = AG_FileDlgNewCompactMRU(win, "adb.mru.exec",	/* common */
-	    _("Symbols File: "),
-	    AG_FILEDLG_HFILL | AG_FILEDLG_MASK_EXT);
+	fdSyms = AG_FileDlgNewCompactMRU(win, "adb.mru.exec", _("Symbols File: "),
+	                                 AG_FILEDLG_HFILL | AG_FILEDLG_MASK_EXT);
 	AG_SetPointer(win, "fdSyms", fdSyms);
 	AG_FileDlgAddType(fdSyms, _("ELF symbols file"), ".debug", NULL, NULL);
 	AG_FileDlgAddType(fdSyms, _("MacOS symbols file"), ".dSYM", NULL, NULL);
@@ -536,7 +542,11 @@ CreateTargetDlg(AG_Event *event)
 	AG_SeparatorNewHoriz(win);
 
 	/* Target architecture */
+#ifdef HAVE_LLDB_UTILITY
+	AG_CPUInfo cpu;
+	AG_Combo *comArch;
 	StringList arches;
+
 	comArch = AG_ComboNew(win, AG_COMBO_HFILL, _("Architecture: "));
 	AG_ComboSizeHint(comArch, "<unknown-mach-64>", 15);
 	AG_SetPointer(win, "comArch", comArch);
@@ -546,14 +556,14 @@ CreateTargetDlg(AG_Event *event)
 		AG_TlistAddS(comArch->list, agIconGear.s,
 		    arches.GetStringAtIndex(i));
 	}
-	AG_CPUInfo cpu;
 	AG_GetCPUInfo(&cpu);
 	if (strcmp(cpu.arch, "amd64") == 0) {
 		AG_ComboSelectText(comArch, "x86_64");
 	} else {
 		AG_ComboSelectText(comArch, cpu.arch);
 	}
-	
+#endif /* HAVE_LLDB_UTILITY */
+
 	AG_SeparatorNewHoriz(win);
 
 	/* Dependencies */
@@ -783,7 +793,7 @@ Agardb::GUI::GUI()
 		tb = g_textbox_prompt = AG_TextboxNew(box,
 		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
 		    "(lldb)");
-		AG_SetEvent(tb, "textbox-return", ExecCmd, NULL);
+		(AG_SetEvent(tb, "textbox-return", ExecCmd, NULL))->flags |= AG_EVENT_ASYNC;
 	
 		AG_ActionFn(g_console, "Help", ConsoleHelp, NULL);
 		AG_ActionOnKey(g_console, AG_KEY_F1, AG_KEYMOD_ANY, "Help");
@@ -937,7 +947,7 @@ main(int argc, char *const argv[])
 		return (1);
 	}
 #ifdef AG_DEBUG
-	agDebugLvl = 0;
+	agDebugLvl = 1;
 #endif
 	g_process_name.erase();
 	while ((c = AG_Getopt(argc, argv, "a:c:f:n:p:d:t:xDXvh?", &optArg, &optInd)) != -1) {
@@ -977,7 +987,7 @@ main(int argc, char *const argv[])
 			break;
 		case 'D':
 #ifdef AG_DEBUG
-			agDebugLvl = 1;
+			agDebugLvl = 0;
 #endif
 			break;
 		case 'X':
@@ -1009,8 +1019,10 @@ main(int argc, char *const argv[])
 	/*
 	 * LLDB Initialization
 	 */
+#ifdef HAVE_LLDB_UTILITY
 	llvm::StringRef ToolName = argv[0];
 	llvm::sys::PrintStackTraceOnErrorSignal(ToolName);
+#endif
 	llvm::PrettyStackTraceProgram X(argc, argv);
 	SBDebugger::Initialize();
   	SBHostOS::ThreadCreated("<lldb.driver.main-thread>");

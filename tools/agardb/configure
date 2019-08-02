@@ -450,6 +450,7 @@ echo ''
 echo 'agardb options:'
 echo '    --with-agar[=PREFIX]        Location of Agar library [check]'
 echo '    --with-llvm[=PREFIX]        Location of LLVM [check]'
+echo '    --enable-lldb-utility       Use LLDB Utility library [check]'
 echo '    --enable-debug              Debug build [no]'
 echo '    --enable-warnings           Suggested compiler warnings [no]'
 echo ''
@@ -2844,8 +2845,6 @@ fi
 if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether LLDB works...'
 $ECHO_N '# checking whether LLDB works...' >>config.log
-echo "# LLDB_CFLAGS = ${LLDB_CFLAGS}" >>config.log
-echo "# LLDB_LIBS = ${LLDB_LIBS}" >>config.log
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.cpp
 #include <stdlib.h>
@@ -2853,14 +2852,20 @@ cat << EOT >conftest$$.cpp
 #ifdef __APPLE__
 # include <LLDB/LLDB.h>
 #else
-# include "lldb/API/SBBlock.h"
-# include "lldb/API/SBCompileUnit.h"
+# include "lldb/API/SBBreakpoint.h"
+# include "lldb/API/SBCommandInterpreter.h"
+# include "lldb/API/SBCommandReturnObject.h"
+# include "lldb/API/SBCommunication.h"
+# include "lldb/API/SBBroadcaster.h"
 # include "lldb/API/SBDebugger.h"
-# include "lldb/API/SBFunction.h"
-# include "lldb/API/SBModule.h"
+# include "lldb/API/SBStructuredData.h"
+# include "lldb/API/SBEvent.h"
+# include "lldb/API/SBHostOS.h"
+# include "lldb/API/SBLanguageRuntime.h"
+# include "lldb/API/SBListener.h"
 # include "lldb/API/SBProcess.h"
 # include "lldb/API/SBStream.h"
-# include "lldb/API/SBSymbol.h"
+# include "lldb/API/SBStringList.h"
 # include "lldb/API/SBTarget.h"
 # include "lldb/API/SBThread.h"
 #endif
@@ -2871,12 +2876,8 @@ using namespace lldb;
 
 class LLDBSentry {
 public:
-	LLDBSentry() {
-		SBDebugger::Initialize();
-	}
-	~LLDBSentry() {
-		SBDebugger::Terminate();
-	}
+	LLDBSentry() { SBDebugger::Initialize(); }
+	~LLDBSentry() { SBDebugger::Terminate(); }
 };
 
 int
@@ -2930,17 +2931,149 @@ echo '#ifndef LLDB_LIBS' >$bb_o
 echo "#define LLDB_LIBS \"$LLDB_LIBS\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"LLDB_LIBS\"] = \"$LLDB_LIBS\"" >>configure.lua
+$ECHO_N 'checking for LLDB Utility library...'
+$ECHO_N '# checking for LLDB Utility library...' >>config.log
+case "${host}" in
+*-*-darwin*)
+echo 'no'
+echo '# no' >>config.log
+HAVE_LLDB_UTILITY="no"
+LLDB_UTILITY_CFLAGS=""
+LLDB_UTILITY_LIBS=""
+;;
+*)
+LLDB_UTILITY_CFLAGS=""
+LLDB_UTILITY_LIBS="-llldbUtility"
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.cpp
+#include <stdlib.h>
+
+#include "lldb/API/SBBlock.h"
+#include "lldb/API/SBCompileUnit.h"
+#include "lldb/API/SBDebugger.h"
+#include "lldb/API/SBFunction.h"
+#include "lldb/API/SBModule.h"
+#include "lldb/API/SBProcess.h"
+#include "lldb/API/SBStream.h"
+#include "lldb/API/SBSymbol.h"
+#include "lldb/API/SBTarget.h"
+#include "lldb/API/SBThread.h"
+
+#include "lldb/Utility/Stream.h"
+#include "lldb/Utility/StringList.h"
+#include "lldb/Utility/ArchSpec.h"
+
+#include "llvm/Support/PrettyStackTrace.h"
+#include "llvm/Support/Signals.h"
+
+#include <string>
+
+using namespace lldb;
+using namespace lldb_private;
+
+class LLDBSentry {
+public:
+	LLDBSentry() {
+		SBDebugger::Initialize();
+	}
+	~LLDBSentry() {
+		SBDebugger::Terminate();
+	}
+};
+
+int
+main(int argc, char const *argv[])
+{
+	LLDBSentry sentry;
+	SBDebugger debugger(SBDebugger::Create());
+	llvm::StringRef name = argv[0];
+	llvm::sys::PrintStackTraceOnErrorSignal(name);
+	StringList arches;
+	unsigned i;
+
+	ArchSpec::ListSupportedArchNames(arches);
+	for (i = 0; i < arches.GetSize(); ++i) {
+		const char *s = arches.GetStringAtIndex(i);
+		if (s == NULL) return (1);
+	}
+	return !debugger.IsValid();
+}
+EOT
+echo >>config.log
+echo '# C++: HAVE_LLDB_UTILITY' >>config.log
+echo "cat << EOT >conftest$$.cpp" >>config.log
+cat conftest$$.cpp>>config.log
+echo EOT >>config.log
+echo "$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} ${LLDB_UTILITY_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} ${LLDB_UTILITY_LIBS} 2>>config.log">>config.log
+$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} ${LLDB_UTILITY_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} ${LLDB_UTILITY_LIBS} 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LLDB_UTILITY=yes
+bb_o=$bb_incdir/have_lldb_utility.h
+echo '#ifndef HAVE_LLDB_UTILITY' >$bb_o
+echo "#define HAVE_LLDB_UTILITY \"$HAVE_LLDB_UTILITY\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LLDB_UTILITY\"] = \"$HAVE_LLDB_UTILITY\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LLDB_UTILITY=no
+echo '#undef HAVE_LLDB_UTILITY' >$bb_incdir/have_lldb_utility.h
+echo 'hdefs["HAVE_LLDB_UTILITY"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.cpp $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LLDB_UTILITY}" = "yes" ]; then
+bb_o=$bb_incdir/lldb_utility_cflags.h
+echo '#ifndef LLDB_UTILITY_CFLAGS' >$bb_o
+echo "#define LLDB_UTILITY_CFLAGS \"$LLDB_UTILITY_CFLAGS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"LLDB_UTILITY_CFLAGS\"] = \"$LLDB_UTILITY_CFLAGS\"" >>configure.lua
+bb_o=$bb_incdir/lldb_utility_libs.h
+echo '#ifndef LLDB_UTILITY_LIBS' >$bb_o
+echo "#define LLDB_UTILITY_LIBS \"$LLDB_UTILITY_LIBS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"LLDB_UTILITY_LIBS\"] = \"$LLDB_UTILITY_LIBS\"" >>configure.lua
+else
+echo '#undef LLDB_UTILITY_CFLAGS' >$bb_incdir/lldb_utility_cflags.h
+echo 'hdefs["LLDB_UTILITY_CFLAGS"] = nil' >>configure.lua
+echo '#undef LLDB_UTILITY_LIBS' >$bb_incdir/lldb_utility_libs.h
+echo 'hdefs["LLDB_UTILITY_LIBS"] = nil' >>configure.lua
+fi
+;;
+esac
+else
+HAVE_LLDB_UTILITY="no"
+echo '#undef LLDB_UTILITY_CFLAGS' >$bb_incdir/lldb_utility_cflags.h
+echo 'hdefs["LLDB_UTILITY_CFLAGS"] = nil' >>configure.lua
+echo '#undef LLDB_UTILITY_LIBS' >$bb_incdir/lldb_utility_libs.h
+echo 'hdefs["LLDB_UTILITY_LIBS"] = nil' >>configure.lua
 fi
 else
 HAVE_LLDB="no"
+HAVE_LLDB_UTILITY="no"
 LLDB_CFLAGS=""
 LLDB_LIBS=""
+LLDB_UTILITY_CFLAGS=""
+LLDB_UTILITY_LIBS=""
 echo '#undef HAVE_LLDB' >$bb_incdir/have_lldb.h
 echo 'hdefs["HAVE_LLDB"] = nil' >>configure.lua
+echo '#undef HAVE_LLDB_UTILITY' >$bb_incdir/have_lldb_utility.h
+echo 'hdefs["HAVE_LLDB_UTILITY"] = nil' >>configure.lua
 echo '#undef LLDB_CFLAGS' >$bb_incdir/lldb_cflags.h
 echo 'hdefs["LLDB_CFLAGS"] = nil' >>configure.lua
 echo '#undef LLDB_LIBS' >$bb_incdir/lldb_libs.h
 echo 'hdefs["LLDB_LIBS"] = nil' >>configure.lua
+echo '#undef LLDB_UTILITY_CFLAGS' >$bb_incdir/lldb_utility_cflags.h
+echo 'hdefs["LLDB_UTILITY_CFLAGS"] = nil' >>configure.lua
+echo '#undef LLDB_UTILITY_LIBS' >$bb_incdir/lldb_utility_libs.h
+echo 'hdefs["LLDB_UTILITY_LIBS"] = nil' >>configure.lua
 fi
 # END lldb
 if [ "${HAVE_LLDB}" != "yes" ]; then
@@ -2968,6 +3101,14 @@ echo '* '
 echo '# * ' >>config.log
 echo "Required dependency lldb version mismatch"
 exit 1
+fi
+if [ "${enable_lldb_utility}" = "no" ]
+ then
+HAVE_LLDB_UTILITY="no"
+LLDB_UTILITY_CFLAGS=""
+LLDB_UTILITY_LIBS=""
+echo '#undef HAVE_LLDB_UTILITY' >$bb_incdir/have_lldb_utility.h
+echo 'hdefs["HAVE_LLDB_UTILITY"] = nil' >>configure.lua
 fi
 if [ "${enable_nls}" = "yes" ]
  then
@@ -3331,6 +3472,8 @@ echo "HAVE_LD_STATIC_LIBGCC=$HAVE_LD_STATIC_LIBGCC" >>Makefile.config
 echo "mdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
 echo "HAVE_LLDB=$HAVE_LLDB" >>Makefile.config
 echo "mdefs[\"HAVE_LLDB\"] = \"$HAVE_LLDB\"" >>configure.lua
+echo "HAVE_LLDB_UTILITY=$HAVE_LLDB_UTILITY" >>Makefile.config
+echo "mdefs[\"HAVE_LLDB_UTILITY\"] = \"$HAVE_LLDB_UTILITY\"" >>configure.lua
 echo "LIBDIR=$LIBDIR" >>Makefile.config
 echo "mdefs[\"LIBDIR\"] = \"$LIBDIR\"" >>configure.lua
 echo "LIBEXECDIR=$LIBEXECDIR" >>Makefile.config
@@ -3341,6 +3484,10 @@ echo "LLDB_CFLAGS=$LLDB_CFLAGS" >>Makefile.config
 echo "mdefs[\"LLDB_CFLAGS\"] = \"$LLDB_CFLAGS\"" >>configure.lua
 echo "LLDB_LIBS=$LLDB_LIBS" >>Makefile.config
 echo "mdefs[\"LLDB_LIBS\"] = \"$LLDB_LIBS\"" >>configure.lua
+echo "LLDB_UTILITY_CFLAGS=$LLDB_UTILITY_CFLAGS" >>Makefile.config
+echo "mdefs[\"LLDB_UTILITY_CFLAGS\"] = \"$LLDB_UTILITY_CFLAGS\"" >>configure.lua
+echo "LLDB_UTILITY_LIBS=$LLDB_UTILITY_LIBS" >>Makefile.config
+echo "mdefs[\"LLDB_UTILITY_LIBS\"] = \"$LLDB_UTILITY_LIBS\"" >>configure.lua
 echo "LOCALEDIR=$LOCALEDIR" >>Makefile.config
 echo "mdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
 echo "MANDIR=$MANDIR" >>Makefile.config

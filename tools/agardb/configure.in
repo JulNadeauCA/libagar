@@ -12,6 +12,7 @@ config_guess("../../mk/config.guess")
 register_section("agardb options:")
 register("--with-agar[=PREFIX]",	"Location of Agar library [check]")
 register("--with-llvm[=PREFIX]",	"Location of LLVM [check]")
+register("--enable-lldb-utility",	"Use LLDB Utility library [check]")
 register("--enable-debug",		"Debug build [no]")
 register("--enable-warnings",		"Suggested compiler warnings [no]")
 
@@ -25,6 +26,12 @@ require(agar, 1.6.0, ${prefix_agar})
 require(agar-dev, 1.6.0, ${prefix_agar})
 require(cxx)
 require(lldb, 8.0.0, ${prefix_llvm})
+if [ "${enable_lldb_utility}" = "no" ]; then
+	mdefine(HAVE_LLDB_UTILITY, no);
+	mdefine(LLDB_UTILITY_CFLAGS, "");
+	mdefine(LLDB_UTILITY_LIBS, "");
+	hundef(HAVE_LLDB_UTILITY);
+fi
 
 if [ "${enable_nls}" = "yes" ]; then
 	require(gettext)

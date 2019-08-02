@@ -3,6 +3,9 @@
 #ifndef _AGARDB_H_
 #define _AGARDB_H_
 
+#include <config/have_lldb.h>
+#include <config/have_lldb_utility.h>
+
 #include <bitset>
 #include <set>
 #include <string>
@@ -28,10 +31,13 @@
 # include "lldb/API/SBStringList.h"
 # include "lldb/API/SBTarget.h"
 # include "lldb/API/SBThread.h"
-# include "lldb/Utility/Stream.h"
 
+#ifdef HAVE_LLDB_UTILITY
+# include "lldb/Utility/Stream.h"
 # include "lldb/Utility/StringList.h"
 # include "lldb/Utility/ArchSpec.h"
+#endif
+
 //# include "llvm/Support/ConvertUTF.h"
 # include "llvm/Support/PrettyStackTrace.h"
 # include "llvm/Support/Signals.h"

@@ -13,8 +13,8 @@ SRCS=		agardb.cpp
 #DATAFILES_SRC=	agardb.bmp
 MAN1=		agardb.1
 
-CXXFLAGS+=	${AGAR_CFLAGS} ${LLDB_CFLAGS}
-LIBS+=		${AGAR_LIBS} ${LLDB_LIBS} -llldbUtility
+CXXFLAGS+=	${AGAR_CFLAGS} ${LLDB_CFLAGS} ${LLDB_UTILITY_CFLAGS}
+LIBS+=		${AGAR_LIBS} ${LLDB_LIBS} ${LLDB_UTILITY_LIBS}
 
 all: all-subdir ${PROG}
 
