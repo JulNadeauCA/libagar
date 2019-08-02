@@ -1170,6 +1170,7 @@ void
 AG_MenuUpdateItem(AG_MenuItem *mi)
 {
 	AG_Menu *m = mi->pmenu;
+	AG_Window *win;
 
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
@@ -1178,6 +1179,11 @@ AG_MenuUpdateItem(AG_MenuItem *mi)
 		AG_MenuInvalidateLabels(mi);
 		AG_MenuFreeSubitems(mi);
 		AG_PostEventByPtr(NULL, m, mi->poll, "%p", mi);
+
+		if (mi->view && (win = WIDGET(mi->view)->window)) {
+			AG_ObjectDetach(win);
+			mi->view = NULL;
+		}
 	}
 
 	AG_ObjectUnlock(m);
