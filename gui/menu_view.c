@@ -105,6 +105,29 @@ out:
 }
 
 static void
+MouseButtonDown(AG_Event *_Nonnull event)
+{
+	AG_MenuView *mview = AG_MENUVIEW_SELF();
+	AG_MenuItem *miRoot = mview->pitem;
+	AG_Menu *m = mview->pmenu;
+	const int mx = AG_INT(2);
+	const int my = AG_INT(3);
+	const int w = WIDTH(mview);
+	const int h = HEIGHT(mview);
+
+	if ((mx < 0 || mx >= w || my < 0 || my >= h) &&
+	    !AG_WidgetArea(m, mx,my)) {
+		if (AG_WidgetFindPoint("AG_Widget:AG_MenuView:*",
+		    WIDGET(mview)->rView.x1 + mx,
+		    WIDGET(mview)->rView.y1 + my) == NULL) {
+			AG_MenuCollapse(miRoot);
+			m->itemSel = NULL;
+			m->selecting = 0;
+		}
+	}
+}
+
+static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mview = AG_MENUVIEW_SELF();
@@ -115,12 +138,12 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	const int w = WIDTH(mview);
 	const int h = HEIGHT(mview);
 	int y = mview->tPad, itemh;
-
+#if 1
 	if (mx < 0 || mx >= w || my < 0 || my >= h) {
 		Debug(mview, "MouseButtonUp: Out of bounds\n");
 		return;
 	}
-
+#endif
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 	itemh = m->itemh;
@@ -265,8 +288,9 @@ Init(void *_Nonnull obj)
 {
 	AG_MenuView *mview = obj;
 
-	WIDGET(mview)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
-	                        AG_WIDGET_UNFOCUSED_BUTTONUP|
+	WIDGET(mview)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
+	                        AG_WIDGET_UNFOCUSED_BUTTONDOWN |
+	                        AG_WIDGET_UNFOCUSED_BUTTONUP |
 				AG_WIDGET_USE_TEXT;
 
 	mview->pmenu = NULL;
@@ -280,6 +304,7 @@ Init(void *_Nonnull obj)
 	mview->arrowRight = -1;
 
 	AG_SetEvent(mview, "mouse-motion", MouseMotion, NULL);
+	AG_SetEvent(mview, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(mview, "mouse-button-up", MouseButtonUp, NULL);
 	AG_AddEvent(mview, "widget-shown", OnShow, NULL);
 	AG_AddEvent(mview, "font-changed", OnFontChange, NULL);
