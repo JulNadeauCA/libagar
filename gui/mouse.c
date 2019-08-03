@@ -237,22 +237,28 @@ PostMouseButtonDown(
 		if (PostMouseButtonDown(win, chld, x, y, button))
 			goto match;
 	}
-	if ((wid->flags & AG_WIDGET_VISIBLE) &&
-	   !(wid->flags & AG_WIDGET_DISABLED) && 
-	    AG_WidgetSensitive(wid, x, y)) {
-		TAILQ_FOREACH(ev, &OBJECT(wid)->events, events) {
-			if (strcmp(ev->name, "mouse-button-down") == 0)
-				break;
-		}
-		if (ev != NULL) {
-			AG_PostEvent(NULL, wid, "mouse-button-down",
-			    "%i(button),%i(x),%i(y)",
-			    (int)button,
-			    x - wid->rView.x1,
-			    y - wid->rView.y1);
-			goto match;
+	if ((wid->flags & AG_WIDGET_VISIBLE) == 0 ||
+	    (wid->flags & AG_WIDGET_DISABLED)) {
+		goto no_match;
+	}
+	if ((wid->flags & AG_WIDGET_UNFOCUSED_BUTTONDOWN) == 0) {
+		if (!AG_WidgetSensitive(wid, x,y)) {
+			goto no_match;
 		}
 	}
+	TAILQ_FOREACH(ev, &OBJECT(wid)->events, events) {
+		if (strcmp(ev->name, "mouse-button-down") == 0)
+			break;
+	}
+	if (ev != NULL) {
+		AG_PostEvent(NULL, wid, "mouse-button-down",
+		    "%i(button),%i(x),%i(y)",
+		    (int)button,
+		    x - wid->rView.x1,
+		    y - wid->rView.y1);
+		goto match;
+	}
+no_match:
 	AG_ObjectUnlock(wid);
 	return (0);
 match:

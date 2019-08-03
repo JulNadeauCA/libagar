@@ -944,6 +944,9 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 		case AG_DRIVER_MOUSE_BUTTON_DOWN:
 			if (!AG_WidgetArea(win, dev->data.button.x,
 			    dev->data.button.y)) {
+				AG_ProcessMouseButtonDown(win,
+				    dev->data.button.x, dev->data.button.y,
+				    dev->data.button.which);
 				if (win->flags & AG_WINDOW_USE_TEXT) {
 					AG_PopTextState();
 				}
