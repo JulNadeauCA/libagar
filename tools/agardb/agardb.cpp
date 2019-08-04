@@ -324,6 +324,8 @@ Agardb::Run_LLDB(SBStream &cmds, bool async)
 	int cmdsFds[2];
 	FILE *cmdsPipe;
 
+	SBHostOS::ThreadCreated("<lldb.driver.command-thread>");
+
 	if (!cmdsData || cmdsSize == 0) {
 		return;
 	}
@@ -933,6 +935,7 @@ ResetStdinTermios(void)
 int
 main(int argc, char *const argv[])
 {
+	char savePath[AG_PATHNAME_MAX];
 	char *optArg = NULL;
 	int optInd, i, c;
 	lldb::pid_t processPID = LLDB_INVALID_PROCESS_ID;
@@ -1181,26 +1184,26 @@ main(int argc, char *const argv[])
 		Agardb::GUI GUI;
 
 		/*
-		 * Redirect lldb output and error to ~/.agardb/agardb.out
-		 * and ~/.agardb/agardb.err for history-keeping.
+		 * Redirect lldb output and error to ~/.agardb/agardb.out.<pid>
+		 * and ~/.agardb/agardb.err.<pid> for history-keeping.
 		 */
-		char pathLogOut[AG_PATHNAME_MAX];
-		char pathLogErr[AG_PATHNAME_MAX];
+		char pathOut[AG_PATHNAME_MAX];
+		char pathErr[AG_PATHNAME_MAX];
 		std::FILE *logOut, *logErr;
-		AG_GetString(agConfig, "save-path", pathLogOut, sizeof(pathLogOut));
-		AG_Strlcat(pathLogOut, AG_PATHSEP, sizeof(pathLogOut));
-		memcpy(pathLogErr, pathLogOut, strlen(pathLogOut)+1);
-		AG_Strlcat(pathLogOut, "agardb.out", sizeof(pathLogOut));
-		AG_Strlcat(pathLogErr, "agardb.err", sizeof(pathLogErr));
 
-		if ((logOut = std::fopen(pathLogOut, "w")) == NULL) {
-			Verbose("%s: %s", pathLogOut, strerror(errno));
+		AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
+		Strlcat(savePath, AG_PATHSEP, sizeof(savePath));
+		Snprintf(pathOut, sizeof(pathOut), "%sagardb.out.%d", savePath, getpid());
+		Snprintf(pathErr, sizeof(pathErr), "%sagardb.err.%d", savePath, getpid());
+
+		if ((logOut = std::fopen(pathOut, "w")) == NULL) {
+			Verbose("%s: %s", pathOut, strerror(errno));
 			return (1);
 		}
 		::setbuf(logOut, NULL);
 
-		if ((logErr = std::fopen(pathLogErr, "w")) == NULL) {
-			Verbose("%s: %s", pathLogErr, strerror(errno));
+		if ((logErr = std::fopen(pathErr, "w")) == NULL) {
+			Verbose("%s: %s", pathErr, strerror(errno));
 			return (1);
 		}
 		::setbuf(logErr, NULL);
@@ -1212,13 +1215,26 @@ main(int argc, char *const argv[])
 		 * Arrange for AG_Console(3) to follow the output and error
 		 * log files we've just created.
 		 */
-		AG_ConsoleOpenFile(g_console, "lldberr", pathLogErr,
-		    AG_NEWLINE_NATIVE, 0);
-		AG_ConsoleOpenFile(g_console, "lldb", pathLogOut,
-		    AG_NEWLINE_NATIVE, 0);
+		AG_ConsoleOpenFile(g_console, "lldberr", pathErr, AG_NEWLINE_NATIVE, 0);
+		AG_ConsoleOpenFile(g_console, "lldb", pathOut, AG_NEWLINE_NATIVE, 0);
 
 		AG_EventLoop();
 	}
+
+	/*
+	 * Save the contents of the output and error buffers to a .log file.
+	 */
+	char pathPID[AG_PATHNAME_MAX];
+	char pathLog[AG_PATHNAME_MAX];
+
+	AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
+	Strlcat(savePath, AG_PATHSEP, sizeof(savePath));
+	Snprintf(pathPID, sizeof(pathPID), "%sagardb.out.%d", savePath, getpid());
+	Snprintf(pathLog, sizeof(pathLog), "%sagardb.out.log", savePath);
+	rename(pathPID, pathLog);
+	Snprintf(pathPID, sizeof(pathPID), "%sagardb.err.%d", savePath, getpid());
+	Snprintf(pathLog, sizeof(pathLog), "%sagardb.err.log", savePath);
+	rename(pathPID, pathLog);
 
 	SBDebugger::Terminate();
 	AG_Destroy();
