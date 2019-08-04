@@ -976,9 +976,8 @@ AG_TextMsgS(enum ag_text_msg_title title, const char *s)
 	AG_VBox *vb;
 	AG_Button *btnOK;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NORESIZE |
-	                   AG_WINDOW_NOCLOSE | AG_WINDOW_NOMINIMIZE |
-			   AG_WINDOW_NOMAXIMIZE);
+	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
+	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
 	if (win == NULL)
 		return;
 
@@ -1036,9 +1035,9 @@ AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
 	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
-	if (win == NULL) {
+	if (win == NULL)
 		return;
-	}
+
 	win->wmType = AG_WINDOW_WM_NOTIFICATION;
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
@@ -1095,6 +1094,8 @@ AG_TextInfoS(const char *key, const char *s)
 #endif
 	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
 	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
+	if (win == NULL)
+		return;
 
 	win->wmType = AG_WINDOW_WM_DIALOG;
 
@@ -1162,9 +1163,10 @@ AG_TextWarningS(const char *key, const char *s)
 			goto out;
 	}
 #endif
-	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NORESIZE |
-	                   AG_WINDOW_NOCLOSE | AG_WINDOW_NOMINIMIZE |
-			   AG_WINDOW_NOMAXIMIZE);
+	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
+	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
+	if (win == NULL)
+		return;
 
 	win->wmType = AG_WINDOW_WM_DIALOG;
 
@@ -1216,9 +1218,11 @@ AG_TextErrorS(const char *s)
 	AG_VBox *vb;
 	AG_Button *btnOK;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NORESIZE |
-	                   AG_WINDOW_NOCLOSE | AG_WINDOW_NOMINIMIZE |
-			   AG_WINDOW_NOMAXIMIZE);
+	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
+	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
+	if (win == NULL)
+		return;
+
 	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_ERROR]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
@@ -1230,119 +1234,6 @@ AG_TextErrorS(const char *s)
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	AG_WidgetFocus(btnOK);
-	AG_WindowShow(win);
-}
-
-/* Prompt the user with a choice of options. */
-AG_Window *
-AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
-{
-	char *text;
-	AG_Window *win;
-	AG_Box *bo;
-	va_list ap;
-	Uint i;
-
-	va_start(ap, fmt);
-	Vasprintf(&text, fmt, ap);
-	va_end(ap);
-
-	if ((win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
-	                        AG_WINDOW_NORESIZE)) == NULL) {
-		AG_FatalError(NULL);
-	}
-	win->wmType = AG_WINDOW_WM_DIALOG;
-	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_WindowSetSpacing(win, 8);
-
-	AG_LabelNewS(win, 0, text);
-	free(text);
-
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
-	for (i = 0; i < nbOpts; i++) {
-		bOpts[i] = AG_ButtonNewS(bo, 0, "XXXXXXXXXXX");
-	}
-	AG_WindowShow(win);
-	return (win);
-}
-
-#ifdef HAVE_FLOAT
-/* Prompt the user for a floating-point value. */
-void
-AG_TextEditFloat(double *fp, double min, double max, const char *unit,
-    const char *format, ...)
-{
-	char msg[AG_LABEL_MAX];
-	AG_Window *win;
-	AG_VBox *vb;
-	va_list args;
-	AG_Numerical *num;
-
-	va_start(args, format);
-	Vsnprintf(msg, sizeof(msg), format, args);
-	va_end(args);
-
-	win = AG_WindowNew(AG_WINDOW_MODAL);
-	win->wmType = AG_WINDOW_WM_DIALOG;
-	AG_WindowSetCaptionS(win, _("Enter real number"));
-	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
-
-	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	AG_LabelNewS(vb, 0, msg);
-	
-	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	{
-		num = AG_NumericalNewDblR(vb, 0, unit, _("Number: "),
-		    fp, min, max);
-		AG_SetEvent(num, "numerical-return", AGWINDETACH(win));
-	}
-	
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_HFILL | AG_VBOX_VFILL);
-	AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
-
-	/* TODO test type */
-
-	AG_WidgetFocus(num);
-	AG_WindowShow(win);
-}
-#endif /* HAVE_FLOAT */
-
-/* Create a dialog to edit a string value. */
-void
-AG_TextEditString(char *sp, AG_Size len, const char *msgfmt, ...)
-{
-	char *msg;
-	AG_Window *win;
-	AG_VBox *vb;
-	va_list args;
-	AG_Textbox *tb;
-
-	va_start(args, msgfmt);
-	Vasprintf(&msg, msgfmt, args);
-	va_end(args);
-
-	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE);
-	win->wmType = AG_WINDOW_WM_DIALOG;
-	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
-
-	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	AG_LabelNewS(vb, 0, msg);
-	free(msg);
-	
-	vb = AG_VBoxNew(win, AG_VBOX_EXPAND);
-	tb = AG_TextboxNewS(vb, AG_TEXTBOX_EXCL | AG_TEXTBOX_MULTILINE, NULL);
-	AG_Expand(tb);
-#ifdef AG_UNICODE
-	AG_TextboxBindUTF8(tb, sp, len);
-#else
-	AG_TextboxBindASCII(tb, sp, len);
-#endif
-	AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
-
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_HFILL);
-	AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
-
-	AG_WidgetFocus(tb);
 	AG_WindowShow(win);
 }
 
@@ -1971,6 +1862,38 @@ AG_Font_Destroy(void *_Nonnull obj)
 	}
 }
 
+/* Prompt the user with a choice of options. */
+AG_Window *
+AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
+{
+	char *text;
+	AG_Window *win;
+	AG_Box *bo;
+	va_list ap;
+	Uint i;
+
+	va_start(ap, fmt);
+	Vasprintf(&text, fmt, ap);
+	va_end(ap);
+
+	if ((win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
+	                        AG_WINDOW_NORESIZE)) == NULL) {
+		AG_FatalError(NULL);
+	}
+	win->wmType = AG_WINDOW_WM_DIALOG;
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
+	AG_WindowSetSpacing(win, 8);
+
+	AG_LabelNewS(win, 0, text);
+	free(text);
+
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
+	for (i = 0; i < nbOpts; i++) {
+		bOpts[i] = AG_ButtonNewS(bo, 0, "XXXXXXXXXXX");
+	}
+	AG_WindowShow(win);
+	return (win);
+}
 
 /* Initialize the font engine and configure the default font. */
 int

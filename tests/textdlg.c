@@ -9,17 +9,6 @@ char someString[256];
 double v = 10.0;
 
 static void
-TestPrompts(AG_Event *event)
-{
-	/* Edit an existing floating-point variable. */
-	AG_TextEditFloat(&v, 0.0, 100.0, "cm", "Edit a float value: ");
-	
-	/* Edit a fixed-size string buffer. */
-	AG_Strlcpy(someString, "Test string", sizeof(someString));
-	AG_TextEditString(someString, sizeof(someString), "Edit a string: ");
-}
-
-static void
 TestCanned(AG_Event *event)
 {
 	AG_TextWarning("my-warning-key", "This is a warning");
@@ -36,7 +25,6 @@ TestCanned(AG_Event *event)
 static int
 TestGUI(void *obj, AG_Window *win)
 {
-	AG_ButtonNewFn(win, 0, "Test prompts", TestPrompts, "%p", win);
 	AG_ButtonNewFn(win, 0, "Test canned dialogs", TestCanned, "%p", win);
 	return (0);
 }

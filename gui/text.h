@@ -227,19 +227,6 @@ void AG_TextErrorS(const char *_Nonnull);
 void AG_TextError(const char *_Nonnull, ...)
                  FORMAT_ATTRIBUTE(printf,1,2);
 
-#ifdef AG_HAVE_FLOAT
-void AG_TextEditFloat(double *_Nonnull, double, double, const char *_Nonnull,
-                      const char *_Nonnull, ...)
-                     FORMAT_ATTRIBUTE(printf,5,6);
-#endif
-
-void AG_TextEditString(char *_Nonnull, AG_Size, const char *_Nonnull, ...)
-                      FORMAT_ATTRIBUTE(printf,3,4);
-
-struct ag_window *_Nonnull AG_TextPromptOptions(struct ag_button *_Nonnull *_Nonnull ,
-                                                Uint, const char *_Nonnull, ...);
-
-
 void AG_TextAlign(int *_Nonnull, int *_Nonnull, int,int, int,int,
                   int,int,int, int, enum ag_text_justify, enum ag_text_valign);
 int  AG_TextJustifyOffset(int, int) _Pure_Attribute;
@@ -269,6 +256,10 @@ void AG_TextTabWidth(int);
 void AG_SetDefaultFont(AG_Font *_Nonnull);
 void AG_TextParseFontSpec(const char *_Nonnull);
 #endif
+
+struct ag_window *_Nonnull AG_TextPromptOptions(struct ag_button *_Nonnull *_Nonnull ,
+                                                Uint, const char *_Nonnull, ...);
+
 int  AG_InitTextSubsystem(void);
 void AG_DestroyTextSubsystem(void);
 
