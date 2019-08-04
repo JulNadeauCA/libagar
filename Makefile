@@ -116,20 +116,17 @@ pre-package:
 		cp -f ${TOP}/mk/install-sdk/install-sdk.exe .; \
 		echo '<meta http-equiv="refresh" content="1;url=http://libagar.org/docs/compile-msvc.html" />' > VisualC.html; \
 		echo "install-sdk.exe" >> ${PROJFILELIST}; \
-		echo "VisualC.html" >> ${PROJFILELIST}; \
+		echo "VisualC.html"    >> ${PROJFILELIST}; \
+		echo "README.md"       >> ${PROJFILELIST}; \
 		V=`perl mk/get-version.pl`; \
-		cat README                       |sed "s/$$/`echo -e \\\r`/" >README.txt; \
-		cat INSTALL.txt                  |sed "s/$$/`echo -e \\\r`/" >INSTALL-Windows.txt; \
 		cat ChangeLogs/Release-$$V.txt   |sed "s/$$/`echo -e \\\r`/" >RELEASE-$$V.txt; \
 		cat LICENSE                      |sed "s/$$/`echo -e \\\r`/" >LICENSE.txt; \
 		cat gui/fonts/Vera-Copyright.txt |sed "s/$$/`echo -e \\\r`/" >LICENSE-Vera.txt; \
 		cp -f mk/agar-logo.png Logo.png; \
-		echo "README.txt"          >> ${PROJFILELIST}; \
-		echo "INSTALL-Windows.txt" >> ${PROJFILELIST}; \
-		echo "RELEASE-$$V.txt"     >> ${PROJFILELIST}; \
-		echo "LICENSE.txt"         >> ${PROJFILELIST}; \
-		echo "LICENSE-Vera.txt"    >> ${PROJFILELIST}; \
-		echo "Logo.png" >> ${PROJFILELIST}; \
+		echo "RELEASE-$$V.txt"  >> ${PROJFILELIST}; \
+		echo "LICENSE.txt"      >> ${PROJFILELIST}; \
+		echo "LICENSE-Vera.txt" >> ${PROJFILELIST}; \
+		echo "Logo.png"         >> ${PROJFILELIST}; \
 	else \
 		V=`perl mk/get-version.pl`; \
 		cp ChangeLogs/Release-$$V.txt RELEASE-$$V; \
@@ -139,7 +136,7 @@ pre-package:
 
 post-package:
 	@if [ "${PKG_OS}" = "windows" ]; then \
-		rm -f install-sdk.exe README.txt INSTALL-Windows.txt VisualC.html; \
+		rm -f install-sdk.exe VisualC.html; \
 		rm -f RELEASE-*.txt LICENSE.txt LICENSE-*.txt Logo.png; \
 	else \
 		rm -f Release-* ChangeLog-* LICENSE-* Logo.png; \
