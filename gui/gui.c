@@ -257,7 +257,8 @@ AG_InitGUIGlobals(void)
 	for (i = 0; i < agGUIOptionCount; i++) {
 		AG_BindInt(cfg, agGUIOptions[i].key, agGUIOptions[i].p);
 	}
-	AG_LoadStyleSheet(NULL, "_agStyleDefault");
+	if (AG_LoadStyleSheet(NULL, "_agStyleDefault") == NULL)
+		AG_Verbose("Error loading stylesheet: %s\n", AG_GetError());
 #endif
 	return (0);
 }
