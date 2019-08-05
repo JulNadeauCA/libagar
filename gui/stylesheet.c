@@ -81,7 +81,7 @@ AG_LoadStyleSheet(void *obj, const char *path)
 	AG_Size fileSize;
 	char *buf, *s, *line;
 	AG_StyleBlock *cssBlk = NULL;
-	int i;
+	int i, inComment=0;
 
 	if (tgt != NULL) {
 		if (tgt->css != NULL) {
@@ -125,16 +125,39 @@ AG_LoadStyleSheet(void *obj, const char *path)
 	buf[fileSize] = '\0';
 	s = buf;
 	while ((line = Strsep(&s, "\n")) != NULL) {
-		char *c = &line[0], *cKey, *cVal, *t;
-		size_t len;
+		char *c = &line[0], *cKey, *cVal, *t, *cComment;
 		AG_StyleEntry *cssEnt;
+		int len;
 	
-		while (isspace((int)*c)) { c++; }
-		if (*c == '\0' || *c == '#') { continue;  }
+		while (isspace((int)*c)) {
+			c++;
+		}
+		if (*c == '\0' || *c == '#') {
+			continue; 
+		}
+		if ((cComment = strstr(c, "/*")) != NULL) {
+			char *cCommentEnd;
+
+			if ((cCommentEnd = strstr(&cComment[2], "*/"))) {
+				memmove(cComment, &cCommentEnd[2],
+				    &cCommentEnd[2]-cComment);
+			} else {
+				inComment++;
+				continue;
+			}
+		} else if ((cComment = strstr(c, "*/")) != NULL) {
+			if (--inComment < 0) {
+				AG_SetError(_("Unmatched comment terminator `*/'."));
+				goto fail_parse;
+			}
+			c = &cComment[2];
+		} else if (inComment) {
+			continue;
+		}
 
 		if ((t = strchr(c, '{')) != NULL) {
 			if (cssBlk != NULL) {
-				AG_SetError("Syntax error (nested block)");
+				AG_SetErrorS(_("A {} block cannot be nested."));
 				goto fail_parse;
 			}
 			while (isspace((int)t[-1])) {
@@ -149,7 +172,7 @@ AG_LoadStyleSheet(void *obj, const char *path)
 			continue;
 		} else if (strchr(c, '}') != NULL) {
 			if (cssBlk == NULL) {
-				AG_SetError("Syntax error (unmatched `}')");
+				AG_SetError(_("Unmatched block terminator `}'"));
 				goto fail_parse;
 			}
 			TAILQ_INSERT_TAIL(&css->blks, cssBlk, blks);
@@ -163,7 +186,7 @@ AG_LoadStyleSheet(void *obj, const char *path)
 		}
 		while (isspace((int)*cKey)) { cKey++; }
 		while (isspace((int)*cVal)) { cVal++; }
-		len = strlen(cKey)-1;
+		len = (int)strlen(cKey)-1;
 		for (;;) {
 			if (!isspace((int)cKey[len])) { break; }
 			cKey[len] = '\0';
@@ -183,6 +206,14 @@ AG_LoadStyleSheet(void *obj, const char *path)
 		}
 		Strlcpy(cssEnt->key, cKey, sizeof(cssEnt->key));
 		Strlcpy(cssEnt->value, cVal, sizeof(cssEnt->value));
+		if (cssBlk == NULL) {
+			AG_SetError(_("Entry is not inside {}: \"%s\""),
+			    cssEnt->key);
+			free(cssEnt);
+			goto fail_parse;
+		}
+		Debug(NULL, "CSS(%s): %s -> %s\n", cssBlk->match,
+		    cssEnt->key, cssEnt->value);
 		TAILQ_INSERT_TAIL(&cssBlk->ents, cssEnt, ents);
 	}
 
@@ -194,6 +225,7 @@ fail:
 	if (css != &agDefaultCSS) { free(css); }
 	return (NULL);
 fail_parse:
+	AG_SetError(_("Syntax error: %s"), AG_GetError());
 	free(buf);
 	AG_DestroyStyleSheet(css);
 	if (css != &agDefaultCSS) { free(css); }
