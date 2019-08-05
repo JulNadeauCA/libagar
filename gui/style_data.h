@@ -34,6 +34,7 @@ const char *agStyleDefault_Data =
 	"AG_Editable {\n"
 	"color: rgb(0,0,0,0);			/* Disable BG */\n"
 	"color#selected: rgb(0,0,100);\n"
+	"text-color#disabled: rgb(200,200,200);\n"
 	"}\n"
 	"AG_Titlebar {\n"
 	"color: rgb(40,50,60);\n"
@@ -100,7 +101,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2630,
+	2669,
 	&agStyleDefault_Data,
 	NULL
 };

@@ -34,6 +34,7 @@ AG_Label {
 AG_Editable {
 	color: rgb(0,0,0,0);			/* Disable BG */
 	color#selected: rgb(0,0,100);
+	text-color#disabled: rgb(200,200,200);
 }
 AG_Titlebar {
 	color: rgb(40,50,60);
