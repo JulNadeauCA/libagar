@@ -446,12 +446,9 @@ Draw(void *_Nonnull obj)
 	AG_PushClipRect(tl, &tl->r);
 
 	if (zoomLvl < AG_ZOOM_1_1) {
-		int z;
-	
-		/* Tint the line color to create an illusion of distance. */
-		/* TODO combine these additions */
-		for (z = zoomLvl; z < AG_ZOOM_1_1; z++)
-			AG_ColorAdd(&cLine, &cLine, &agTint);
+		/* Tint the lines to create an illusion of distance. */
+		AG_ColorAddScaled(&cLine, &cLine, &agTint,
+		                  AG_ZOOM_1_1 - zoomLvl);
 	}
 
 	yLast = h;

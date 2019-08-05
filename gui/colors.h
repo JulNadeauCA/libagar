@@ -165,6 +165,8 @@ void ag_color_hex_64(AG_Color *_Nonnull, Uint64);
 #endif
 void ag_color_add(AG_Color *_Nonnull, const AG_Color *_Nonnull,
                   const AG_ColorOffset *_Nonnull);
+void ag_color_add_scaled(AG_Color *_Nonnull, const AG_Color *_Nonnull,
+                         const AG_ColorOffset *_Nonnull, int);
 int  ag_color_compare(const AG_Color *_Nonnull, const AG_Color *_Nonnull)
                      _Pure_Attribute;
 #ifdef AG_HAVE_FLOAT
@@ -172,20 +174,21 @@ void ag_color_2_hsv(const AG_Color *_Nonnull, float *_Nonnull, float *_Nonnull, 
 void ag_hsv_2_color(float, float, float, AG_Color *_Nonnull);
 #endif
 
-#define AG_Grayscale8(v,a)         ag_grayscale_8((v),(a))
-#define AG_Grayscale16(v,a)        ag_grayscale_16((v),(a))
-#define AG_Grayscale32(v,a)        ag_grayscale_32((v),(a))
-#define AG_ColorRGB_8(c,r,g,b)     ag_color_rgb_8((c),(r),(g),(b))
-#define AG_ColorRGBA_8(c,r,g,b,a)  ag_color_rgba_8((c),(r),(g),(b),(a))
-#define AG_ColorRGB_16(c,r,g,b)    ag_color_rgb_16((c),(r),(g),(b))
-#define AG_ColorRGBA_16(c,r,g,b,a) ag_color_rgba_16((c),(r),(g),(b),(a))
-#define AG_ColorHex16(c,h)         ag_color_hex_16((c),(h))
-#define AG_ColorHex32(c,h)         ag_color_hex_32((c),(h))
-#define AG_ColorHex64(c,h)         ag_color_hex_64((c),(h))
-#define AG_ColorAdd(dst,c,offs)    ag_color_add((dst),(c),(offs))
-#define AG_ColorCompare(A,B)       ag_color_compare((A),(B))
-#define AG_Color2HSV(c,h,s,v)      ag_color_2_hsv((c),(h),(s),(v))
-#define AG_HSV2Color(h,s,v,c)      ag_hsv_2_color((h),(s),(v),(c))
+#define AG_Grayscale8(v,a)              ag_grayscale_8((v),(a))
+#define AG_Grayscale16(v,a)             ag_grayscale_16((v),(a))
+#define AG_Grayscale32(v,a)             ag_grayscale_32((v),(a))
+#define AG_ColorRGB_8(c,r,g,b)          ag_color_rgb_8((c),(r),(g),(b))
+#define AG_ColorRGBA_8(c,r,g,b,a)       ag_color_rgba_8((c),(r),(g),(b),(a))
+#define AG_ColorRGB_16(c,r,g,b)         ag_color_rgb_16((c),(r),(g),(b))
+#define AG_ColorRGBA_16(c,r,g,b,a)      ag_color_rgba_16((c),(r),(g),(b),(a))
+#define AG_ColorHex16(c,h)              ag_color_hex_16((c),(h))
+#define AG_ColorHex32(c,h)              ag_color_hex_32((c),(h))
+#define AG_ColorHex64(c,h)              ag_color_hex_64((c),(h))
+#define AG_ColorAdd(d,c,offs)           ag_color_add((d),(c),(offs))
+#define AG_ColorAddScaled(d,c,offs,fac) ag_color_add_scaled((d),(c),(offs),(fac))
+#define AG_ColorCompare(A,B)            ag_color_compare((A),(B))
+#define AG_Color2HSV(c,h,s,v)           ag_color_2_hsv((c),(h),(s),(v))
+#define AG_HSV2Color(h,s,v,c)           ag_hsv_2_color((h),(s),(v),(c))
 #endif /* !AG_INLINE_SURFACE */
 __END_DECLS
 

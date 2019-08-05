@@ -254,6 +254,23 @@ ag_color_add(AG_Color *dst, const AG_Color *c, const AG_ColorOffset *offs)
 	dst->a = AG_MIN(AG_COLOR_LAST, c->a + offs->a);
 }
 
+/* Component-wise clamped scaled addition */
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_ColorAddScaled(AG_Color *_Nonnull dst, const AG_Color *_Nonnull c,
+    const AG_ColorOffset *_Nonnull offs, int factor)
+#else
+void
+ag_color_add_scaled(AG_Color *dst, const AG_Color *c,
+    const AG_ColorOffset *offs, int factor)
+#endif
+{
+	dst->r = AG_MIN(AG_COLOR_LAST, c->r + offs->r*factor);
+	dst->g = AG_MIN(AG_COLOR_LAST, c->g + offs->g*factor);
+	dst->b = AG_MIN(AG_COLOR_LAST, c->b + offs->b*factor);
+	dst->a = AG_MIN(AG_COLOR_LAST, c->a + offs->a*factor);
+}
+
 /* Compare two colors. */
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Const_Attribute

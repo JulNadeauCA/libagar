@@ -114,6 +114,9 @@ is fully opaque.
 .Ft void
 .Fn AG_ColorAdd "AG_Color *sum" "const AG_Color *c" "const AG_ColorOffset *offs"
 .Pp
+.Ft void
+.Fn AG_ColorAddScaled "AG_Color *sum" "const AG_Color *c" "const AG_ColorOffset *offs" "int factor"
+.Pp
 .Ft int
 .Fn AG_ColorCompare "const AG_Color *a" "const AG_Color *b"
 .Pp
@@ -190,6 +193,12 @@ adds the components of a color
 to the signed components of
 .Fa offs
 and returns the clamped result.
+The
+.Fn AG_ColorAddScaled
+variant multiplies each component by a constant
+.Fa factor
+before clamping.
+.Pp
 The
 .Ft AG_ColorOffset
 structure is declared as:
