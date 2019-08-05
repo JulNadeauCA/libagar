@@ -694,8 +694,9 @@ fail:
 static void
 DUMMY_FreeCursor(void *_Nonnull obj, AG_Cursor *_Nonnull ac)
 {
+#ifdef AG_DEBUG
 	AG_Driver *drv = obj;
-
+#endif
 	Debug(drv, "FreeCursor (%p)\n", ac);
 	free(ac);
 }
@@ -823,15 +824,18 @@ DUMMY_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r,
 static void
 DUMMY_CloseWindow(AG_Window *_Nonnull win)
 {
+#ifdef AG_DEBUG
 	AG_Driver *drv = WIDGET(win)->drv;
-
+#endif
 	Debug(drv, "CloseWindow (%s)\n", OBJECT(win)->name);
 }
 
 static int
 DUMMY_MapWindow(AG_Window *_Nonnull win)
 {
+#ifdef AG_DEBUG
 	AG_DriverDUMMY *dum = (AG_DriverDUMMY *)WIDGET(win)->drv;
+#endif
 	AG_SizeAlloc a;
 	int x,y;
 
@@ -854,7 +858,9 @@ DUMMY_MapWindow(AG_Window *_Nonnull win)
 static int
 DUMMY_UnmapWindow(AG_Window *_Nonnull win)
 {
+#ifdef AG_DEBUG
 	AG_DriverDUMMY *dum = (AG_DriverDUMMY *)WIDGET(win)->drv;
+#endif
 	Debug(win, "UnmapWindow (%s)\n", OBJECT(dum)->name);
 	return (0);
 }
