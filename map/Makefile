@@ -26,11 +26,11 @@ CFLAGS+=${RG_CFLAGS} \
 	${CORE_CFLAGS} \
 	${MAP_CFLAGS} -D_AGAR_MAP_INTERNAL
 
-LIBS=	-L../rg   -lag_rg   ${RG_LIBS} \
-	-L../math -lag_math ${AGMATH_LIBS} \
-	-L../gui  -lag_gui  ${GUI_LIBS} \
-	-L../core -lag_core ${CORE_LIBS} \
-	${MAP_LIBS}
+#LIBS=	-L../rg   -lag_rg   ${RG_LIBS} \
+#	-L../math -lag_math ${AGMATH_LIBS} \
+#	-L../gui  -lag_gui  ${GUI_LIBS} \
+#	-L../core -lag_core ${CORE_LIBS} \
+#	${MAP_LIBS}
 
 include ${TOP}/mk/build.lib.mk
 include ${TOP}/mk/build.man.mk

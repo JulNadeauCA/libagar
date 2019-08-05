@@ -25,9 +25,9 @@ CFLAGS+=${GUI_CFLAGS} \
 	${CORE_CFLAGS} \
 	${VG_CFLAGS} -D_AGAR_VG_INTERNAL
 
-LIBS=	${ENABLE_GUI_LIBS} \
-	-L../core -lag_core ${CORE_LIBS} \
-	${VG_LIBS}
+#LIBS=	${ENABLE_GUI_LIBS} \
+#	-L../core -lag_core ${CORE_LIBS} \
+#	${VG_LIBS}
 
 include ${TOP}/mk/build.lib.mk
 include ${TOP}/mk/build.man.mk

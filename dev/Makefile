@@ -19,7 +19,7 @@ CFLAGS+=${GUI_CFLAGS} \
 	${CORE_CFLAGS} \
 	${DEV_CFLAGS} -D_AGAR_DEV_INTERNAL
 
-LIBS=	-L../gui -lag_gui ${GUI_LIBS} \
-	-L../core -lag_core
+#LIBS=	-L../gui -lag_gui ${GUI_LIBS} \
+#	-L../core -lag_core
 
 include ${TOP}/mk/build.lib.mk

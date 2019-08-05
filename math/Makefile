@@ -33,8 +33,8 @@ CFLAGS+=${GUI_CFLAGS} \
 	${CORE_CFLAGS} \
 	${AGMATH_CFLAGS} -D_AGAR_MATH_INTERNAL
 
-LIBS=	${ENABLE_GUI_LIBS} \
-	-L../core -lag_core
+#LIBS=	${ENABLE_GUI_LIBS} \
+#	-L../core -lag_core
 
 # For gcc warnings in m_matrix44_sse.c. XXX
 CFLAGS+=${WNO_UNINITIALIZED}

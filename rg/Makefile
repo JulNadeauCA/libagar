@@ -28,10 +28,10 @@ CFLAGS+=${AGMATH_CFLAGS} \
 	${CORE_CFLAGS} \
 	${RG_CFLAGS} -D_AGAR_RG_INTERNAL
 
-LIBS=	-L../math -lag_math ${AGMATH_LIBS} \
-	-L../gui  -lag_gui  ${GUI_LIBS} \
-	-L../core -lag_core ${CORE_LIBS} \
-	${RG_LIBS}
+#LIBS=	-L../math -lag_math ${AGMATH_LIBS} \
+#	-L../gui  -lag_gui  ${GUI_LIBS} \
+#	-L../core -lag_core ${CORE_LIBS} \
+#	${RG_LIBS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
