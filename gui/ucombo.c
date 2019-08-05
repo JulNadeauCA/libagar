@@ -178,7 +178,6 @@ OnDetach(AG_Event *_Nonnull event)
 	AG_UCombo *com = AG_UCOMBO_SELF();
 
 	if (com->panel != NULL) {
-		AG_ObjectDetach(com->list);
 		AG_ObjectDetach(com->panel);
 		com->panel = NULL;
 	}
