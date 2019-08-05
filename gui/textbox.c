@@ -78,6 +78,8 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 	if (flags & AG_TEXTBOX_VFILL)		AG_ExpandVert(tb);
 	if (flags & AG_TEXTBOX_READONLY)	tb->ed->flags |= AG_EDITABLE_READONLY;
 	if (flags & AG_TEXTBOX_PASSWORD)	tb->ed->flags |= AG_EDITABLE_PASSWORD;
+	if (flags & AG_TEXTBOX_UPPERCASE)	tb->ed->flags |= AG_EDITABLE_UPPERCASE;
+	if (flags & AG_TEXTBOX_LOWERCASE)	tb->ed->flags |= AG_EDITABLE_LOWERCASE;
 	if (flags & AG_TEXTBOX_ABANDON_FOCUS)	tb->ed->flags |= AG_EDITABLE_ABANDON_FOCUS;
 	if (flags & AG_TEXTBOX_INT_ONLY)	tb->ed->flags |= AG_EDITABLE_INT_ONLY;
 	if (flags & AG_TEXTBOX_FLT_ONLY)	tb->ed->flags |= AG_EDITABLE_FLT_ONLY;

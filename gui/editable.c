@@ -1034,7 +1034,10 @@ Draw(void *_Nonnull obj)
 			continue;
 		}
 
-		c = (ed->flags & AG_EDITABLE_PASSWORD) ? '*' : c;
+		if      (ed->flags & AG_EDITABLE_PASSWORD)  { c = '*'; }
+		else if (ed->flags & AG_EDITABLE_UPPERCASE) { c = toupper(c); }
+		else if (ed->flags & AG_EDITABLE_LOWERCASE) { c = tolower(c); }
+
 		gl = AG_TextRenderGlyph(drv, c);
 		dx = WIDGET(ed)->rView.x1 + x - ed->x;
 		dy = WIDGET(ed)->rView.y1 + y;

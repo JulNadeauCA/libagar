@@ -38,6 +38,32 @@ SetWordWrap(AG_Event *event)
 }
 
 static void
+SetUppercase(AG_Event *event)
+{
+	AG_Textbox *textbox = AG_TEXTBOX_PTR(1);
+	int flag = AG_INT(2);
+
+	if (flag) {
+		textbox->ed->flags |= AG_EDITABLE_UPPERCASE;
+	} else {
+		textbox->ed->flags &= ~(AG_EDITABLE_UPPERCASE);
+	}
+}
+
+static void
+SetLowercase(AG_Event *event)
+{
+	AG_Textbox *textbox = AG_TEXTBOX_PTR(1);
+	int flag = AG_INT(2);
+
+	if (flag) {
+		textbox->ed->flags |= AG_EDITABLE_LOWERCASE;
+	} else {
+		textbox->ed->flags &= ~(AG_EDITABLE_LOWERCASE);
+	}
+}
+
+static void
 SetString(AG_Event *event)
 {
 	AG_Textbox *textbox = AG_TEXTBOX_PTR(1);
@@ -95,6 +121,8 @@ DebugStuff(AG_Box *win, AG_Textbox *textbox)
 	AG_CheckboxNewFlag(win, 0, "Blink",               &ed->flags, AG_EDITABLE_BLINK_ON);
 	AG_CheckboxNewFlag(win, 0, "Read-only",	          &ed->flags, AG_EDITABLE_READONLY);
 	AG_CheckboxNewFlag(win, 0, "Password input",      &ed->flags, AG_EDITABLE_PASSWORD);
+	AG_CheckboxNewFlag(win, 0, "Display uppercase",   &ed->flags, AG_EDITABLE_UPPERCASE);
+	AG_CheckboxNewFlag(win, 0, "Display lowercase",   &ed->flags, AG_EDITABLE_LOWERCASE);
 	AG_CheckboxNewFlag(win, 0, "Force integer input", &ed->flags, AG_EDITABLE_INT_ONLY);
 	AG_CheckboxNewFlag(win, 0, "Force float input",   &ed->flags, AG_EDITABLE_FLT_ONLY);
 	AG_CheckboxNewFlag(win, 0, "Keep cursor visible", &ed->flags, AG_EDITABLE_KEEPVISCURSOR);
@@ -262,6 +290,8 @@ MultiLineExample(AG_Event *event)
 	    &textbox->ed->flags, AG_EDITABLE_READONLY);
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
 	AG_CheckboxNewFn(win, 0, "Word wrapping", SetWordWrap, "%p", textbox);
+	AG_CheckboxNewFn(win, 0, "Uppercase", SetUppercase, "%p", textbox);
+	AG_CheckboxNewFn(win, 0, "Lowercase", SetLowercase, "%p", textbox);
 	AG_SeparatorNewHoriz(win);
 	{
 #ifdef AG_ENABLE_STRING

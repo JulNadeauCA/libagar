@@ -17,11 +17,13 @@ typedef struct ag_textbox {
 
 	Uint flags;
 #define AG_TEXTBOX_MULTILINE     0x000001 /* Enable multiline edition */
+#define AG_TEXTBOX_UPPERCASE     0x000002 /* Render in uppercase */
 #define AG_TEXTBOX_PASSWORD      0x000004 /* Hide buffer contents */
 #define AG_TEXTBOX_ABANDON_FOCUS 0x000008 /* Lose focus on return */
 #define AG_TEXTBOX_COMBO         0x000010 /* Used by AG_Combo */
 #define AG_TEXTBOX_HFILL         0x000020
 #define AG_TEXTBOX_VFILL         0x000040
+#define AG_TEXTBOX_LOWERCASE     0x000080 /* Render in lowercase */
 #define AG_TEXTBOX_EXPAND        (AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL)
 #define AG_TEXTBOX_READONLY      0x000100 /* Disable user input */
 #define AG_TEXTBOX_INT_ONLY      0x000200 /* Accepts only valid strtol() input */
