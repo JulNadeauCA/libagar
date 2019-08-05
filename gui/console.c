@@ -99,34 +99,49 @@ ClampVisible(AG_Console *_Nonnull cons)
 }
 
 static void
-ScrollVert(AG_Event *_Nonnull event)
+ScrollUp(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
-	const int dir = AG_INT(1);
-	const int lsa = AG_GetInt(cons, "line-scroll-amount");
+	const int newOffs = cons->rOffs - AG_GetInt(cons,"line-scroll-amount");
 
-	if (dir > 0) {						/* Down */
-		const int newOffs = cons->rOffs + lsa;
-		const int maxOffs = (cons->nLines - cons->rVisible);
-
-		cons->rOffs = MIN(newOffs,maxOffs);
-		AG_Redraw(cons);
-	} else {						/* Up */
-		const int newOffs = cons->rOffs - lsa;
-
-		cons->rOffs = MAX(0,newOffs);
-		AG_Redraw(cons);
-	}
+	cons->rOffs = MAX(0,newOffs);
+	AG_Redraw(cons);
 }
 
 static void
-ScrollHoriz(AG_Event *_Nonnull event)
+ScrollDown(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
-	const int dir = AG_INT(1);
+	const int newOffs = cons->rOffs + AG_GetInt(cons,"line-scroll-amount");
+	const int maxOffs = (cons->nLines - cons->rVisible);
+
+	if (maxOffs < 0) {
+		return;
+	}
+	cons->rOffs = MIN(newOffs,maxOffs);
+	AG_Redraw(cons);
+}
+
+static void
+ScrollLeft(AG_Event *_Nonnull event)
+{
+	AG_Console *cons = AG_CONSOLE_SELF();
 	const int ssa = AG_GetInt(cons, "side-scroll-amount");
-	const int newOffs = (dir < 0) ? (cons->xOffs - ssa) :
-	                                (cons->xOffs + ssa);
+	const int newOffs = (cons->xOffs - ssa);
+
+	if (newOffs < 0 || newOffs > cons->wMax - WIDTH(cons)) {
+		return;
+	}
+	cons->xOffs = newOffs;
+	AG_Redraw(cons);
+}
+
+static void
+ScrollRight(AG_Event *_Nonnull event)
+{
+	AG_Console *cons = AG_CONSOLE_SELF();
+	const int ssa = AG_GetInt(cons, "side-scroll-amount");
+	const int newOffs = (cons->xOffs + ssa);
 
 	if (newOffs < 0 || newOffs > cons->wMax - WIDTH(cons)) {
 		return;
@@ -562,10 +577,10 @@ Init(void *_Nonnull obj)
 	AG_ActionFn(cons, "BeginSelect", BeginSelect, NULL);
 	AG_ActionFn(cons, "CloseSelect", CloseSelect, NULL);
 	AG_ActionFn(cons, "PopupMenu",   PopupMenu, NULL);
-	AG_ActionFn(cons, "ScrollUp",    ScrollVert, "%i", -1);
-	AG_ActionFn(cons, "ScrollDown",  ScrollVert, "%i", +1);
-	AG_ActionFn(cons, "ScrollLeft",  ScrollHoriz, "%i", -1);
-	AG_ActionFn(cons, "ScrollRight", ScrollHoriz, "%i", +1);
+	AG_ActionFn(cons, "ScrollUp",    ScrollUp, NULL);
+	AG_ActionFn(cons, "ScrollDown",  ScrollDown, NULL);
+	AG_ActionFn(cons, "ScrollLeft",  ScrollLeft, NULL);
+	AG_ActionFn(cons, "ScrollRight", ScrollRight, NULL);
 	AG_ActionFn(cons, "PageUp",      PageUp, NULL);
 	AG_ActionFn(cons, "PageDown",    PageDown, NULL);
 	AG_ActionFn(cons, "GoToTop",     GoToTop, NULL);
