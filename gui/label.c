@@ -202,7 +202,7 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Label *lbl = obj;
-	AG_Font *font = WIDGET(lbl)->font;
+	AG_Font *font = WFONT(lbl);
 	
 	if (lbl->flags & AG_LABEL_NOMINSIZE) {
 		r->w = lbl->lPad + lbl->rPad;
@@ -217,7 +217,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		break;
 	case AG_LABEL_POLLED:
 		r->w = lbl->wPre + lbl->lPad + lbl->rPad;
-		r->h = lbl->hPre*font->lineskip + lbl->tPad + lbl->bPad;
+		r->h = lbl->hPre * font->lineskip + lbl->tPad + lbl->bPad;
 		break;
 	}
 }
@@ -308,24 +308,20 @@ Init(void *_Nonnull obj)
 
 /* Size the widget to accomodate the given text (with the current font). */
 void
-AG_LabelSizeHint(AG_Label *lbl, Uint nlines, const char *text)
+AG_LabelSizeHint(AG_Label *lbl, Uint nLines, const char *text)
 {
-	AG_ObjectLock(lbl);
 	AG_TextSize(text, &lbl->wPre, NULL);
-	lbl->hPre = (nlines > 0) ? nlines : 1;
-	AG_ObjectUnlock(lbl);
+	lbl->hPre = (nLines > 0) ? nLines : 1;
 }
 
 /* Set the padding around the label in pixels. */
 void
 AG_LabelSetPadding(AG_Label *lbl, int lPad, int rPad, int tPad, int bPad)
 {
-	AG_ObjectLock(lbl);
 	if (lPad != -1) { lbl->lPad = lPad; }
 	if (rPad != -1) { lbl->rPad = rPad; }
 	if (tPad != -1) { lbl->tPad = tPad; }
 	if (bPad != -1) { lbl->bPad = bPad; }
-	AG_ObjectUnlock(lbl);
 	AG_Redraw(lbl);
 }
 
@@ -333,9 +329,7 @@ AG_LabelSetPadding(AG_Label *lbl, int lPad, int rPad, int tPad, int bPad)
 void
 AG_LabelJustify(AG_Label *lbl, enum ag_text_justify justify)
 {
-	AG_ObjectLock(lbl);
 	lbl->justify = justify;
-	AG_ObjectUnlock(lbl);
 	AG_Redraw(lbl);
 }
 
@@ -343,9 +337,7 @@ AG_LabelJustify(AG_Label *lbl, enum ag_text_justify justify)
 void
 AG_LabelValign(AG_Label *lbl, enum ag_text_valign valign)
 {
-	AG_ObjectLock(lbl);
 	lbl->valign = valign;
-	AG_ObjectUnlock(lbl);
 	AG_Redraw(lbl);
 }
 
@@ -356,11 +348,15 @@ AG_LabelText(AG_Label *lbl, const char *fmt, ...)
 	va_list ap;
 
 	AG_ObjectLock(lbl);
+
 	Free(lbl->text);
+
 	va_start(ap, fmt);
 	Vasprintf(&lbl->text, fmt, ap);
 	va_end(ap);
+
 	lbl->flags |= AG_LABEL_REGEN;
+
 	AG_ObjectUnlock(lbl);
 	AG_Redraw(lbl);
 }
@@ -370,21 +366,25 @@ void
 AG_LabelTextS(AG_Label *lbl, const char *s)
 {
 	AG_ObjectLock(lbl);
+
 	Free(lbl->text);
+
 	lbl->text = Strdup(s);
 	lbl->flags |= AG_LABEL_REGEN;
+
 	AG_ObjectUnlock(lbl);
 	AG_Redraw(lbl);
 }
 
 static __inline__ void
-GetPosition(AG_Label *_Nonnull lbl, AG_Surface *_Nonnull su,
+GetLabelPosition(const AG_Label *_Nonnull lbl, const AG_Surface *_Nonnull S,
     int *_Nonnull x, int *_Nonnull y)
 {
-	*x = lbl->lPad +
-	     AG_TextJustifyOffset(WIDTH(lbl) - (lbl->lPad+lbl->rPad), su->w);
-	*y = lbl->tPad +
-	     AG_TextValignOffset(HEIGHT(lbl) - (lbl->tPad+lbl->bPad), su->h);
+	const int lPad = lbl->lPad;
+	const int tPad = lbl->tPad;
+
+	*x = lPad + AG_TextJustifyOffset(WIDTH(lbl) - (lPad + lbl->rPad), S->w);
+	*y = tPad + AG_TextValignOffset(HEIGHT(lbl) - (tPad + lbl->bPad), S->h);
 }
 
 #ifdef AG_ENABLE_STRING
@@ -414,8 +414,8 @@ DrawPolled(AG_Label *_Nonnull lbl)
 	}
 
 	if ((su = AG_TextCacheGet(lbl->tCache,lbl->pollBuf)) != -1) {
-		GetPosition(lbl, WSURFACE(lbl,su), &x, &y);
-		AG_WidgetBlitSurface(lbl, su, x, y);
+		GetLabelPosition(lbl, WSURFACE(lbl,su), &x,&y);
+		AG_WidgetBlitSurface(lbl, su, x,y);
 	}
 }
 #endif /* AG_ENABLE_STRING */
@@ -425,7 +425,7 @@ Draw(void *_Nonnull obj)
 {
 	AG_Label *lbl = obj;
 	const AG_Color *bgColor = &WCOLOR(lbl, AG_BG_COLOR);
-	AG_Surface *suNew;
+	AG_Surface *S;
 	AG_Rect r;
 	int x, y, cw = 0;			/* make compiler happy */
 
@@ -465,21 +465,21 @@ Draw(void *_Nonnull obj)
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
 		if (lbl->surface == -1 && lbl->text != NULL) {
-			if ((suNew = AG_TextRender(lbl->text)) != NULL) {
-				lbl->surface = AG_WidgetMapSurface(lbl, suNew);
+			if ((S = AG_TextRender(lbl->text)) != NULL) {
+				lbl->surface = AG_WidgetMapSurface(lbl, S);
 			}
 		} else if (lbl->flags & AG_LABEL_REGEN) {
 			if (lbl->text != NULL) {
-				if ((suNew = AG_TextRender(lbl->text)) != NULL)
-					AG_WidgetReplaceSurface(lbl, 0, suNew);
+				if ((S = AG_TextRender(lbl->text)) != NULL)
+					AG_WidgetReplaceSurface(lbl, 0, S);
 			} else {
 				lbl->surface = -1;
 			}
 		}
 		lbl->flags &= ~(AG_LABEL_REGEN);
 		if (lbl->surface != -1) {
-			GetPosition(lbl, WSURFACE(lbl,lbl->surface), &x, &y);
-			AG_WidgetBlitSurface(lbl, lbl->surface, x, y);
+			GetLabelPosition(lbl, WSURFACE(lbl,lbl->surface), &x,&y);
+			AG_WidgetBlitSurface(lbl, lbl->surface, x,y);
 		}
 		break;
 	case AG_LABEL_POLLED:
@@ -492,7 +492,7 @@ Draw(void *_Nonnull obj)
 	AG_PopClipRect(lbl);
 	
 	if ((lbl->flags & AG_LABEL_PARTIAL) && lbl->surfaceCont != -1) {
-		GetPosition(lbl, WSURFACE(lbl,lbl->surfaceCont), &x, &y);
+		GetLabelPosition(lbl, WSURFACE(lbl,lbl->surfaceCont), &x,&y);
 		AG_WidgetBlitSurface(lbl, lbl->surfaceCont, WIDTH(lbl)-cw, y);
 	}
 }
