@@ -197,8 +197,6 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 	AG_EVENT_POP_ARG_POSTCOND(V, vtype)	\
 	return (V->data.memb)
 
-#define AG_EVENT_POP_CONST_POINTER_FN(vtype, memb)	\
-
 /*
  * Inline implementation of the varargs argument parser, AG_EVENT_GET_ARGS().
  * Used by AG_{Set,Add,Post}Event() and AG_EventArgs().
