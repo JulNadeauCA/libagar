@@ -432,7 +432,7 @@ AG_SetDebugCallback(int (*fn)(const char *))
  * (if compiled with either --enable-debug or --enable-type-safety).
  */
 # ifdef AG_VERBOSITY
-void  *AG_GenericMismatch(const char *s) { AG_FatalErrorF("Illegal %s access", s); }
+void  *AG_GenericMismatch(const char *s) { AG_FatalErrorF("Illegal access: %s", s); }
 # else
 void  *AG_GenericMismatch(const char *s) { AG_FatalErrorV("E29", s); }
 # endif
