@@ -184,7 +184,6 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Checkbox *cb = obj;
-	AG_Font *font = WIDGET(cb)->font;
 	AG_Variable *V;
 	void *p;
 	AG_Rect r;
@@ -267,7 +266,7 @@ Draw(void *_Nonnull obj)
 
 	r.x = 0;
 	r.y = 0;
-	r.w = font->height;
+	r.w = WFONT(cb)->height;
 	r.h = r.w;
 
 	if (AG_WidgetEnabled(cb)) {
@@ -291,11 +290,11 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Checkbox *cb = obj;
-	AG_Font *font = WIDGET(cb)->font;
+	const int hFont = WFONT(cb)->height;
 	AG_SizeReq rLbl;
 
-	r->h = font->height;
-	r->w = font->height;
+	r->h = hFont;
+	r->w = hFont;
 	
 	if (cb->lbl != NULL) {
 		AG_WidgetSizeReq(cb->lbl, &rLbl);
@@ -308,14 +307,14 @@ static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Checkbox *cb = obj;
-	AG_Font *font = WIDGET(cb)->font;
+	const int hFont = WFONT(cb)->height;
 	AG_SizeAlloc aLbl;
 
-	if (a->w < font->height) {
+	if (a->w < hFont) {
 		return (-1);
 	}
 	if (cb->lbl != NULL) {
-		aLbl.x = font->height + cb->spacing;
+		aLbl.x = hFont + cb->spacing;
 		aLbl.y = 0;
 		aLbl.w = a->w - aLbl.x;
 		aLbl.h = a->h;

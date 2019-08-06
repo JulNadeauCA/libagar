@@ -227,7 +227,7 @@ AG_EditableGrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, AG_Char *ins,
     AG_Size nIns)
 {
 	AG_Size newLen;		/* UCS-4 buffer size in bytes */
-	AG_Size convLen;		/* Converted string length in bytes */
+	AG_Size convLen;	/* Converted string length in bytes */
 	AG_Char *sNew;
 
 	newLen = (buf->len + nIns + 1)*sizeof(AG_Char);
@@ -573,9 +573,9 @@ static Uint32
 KeyRepeatTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
-	int keysym = AG_INT(1);
-	int keymod = AG_INT(2);
-	AG_Char ch = AG_CHAR(3);
+	const int keysym = AG_INT(1);
+	const int keymod = AG_INT(2);
+	const AG_Char ch = AG_CHAR(3);
 	
 	if (ProcessKey(ed, keysym, keymod, ch) == 0) {
 		return (0);
@@ -645,11 +645,12 @@ static void
 OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
-	AG_Font *font   = WIDGET(ed)->font;
+	const int height = WFONT(ed)->height;
+	const int lineskip = WFONT(ed)->lineskip;
 
-	ed->lineSkip = font->lineskip;
-	ed->fontMaxHeight = font->lineskip;
-	ed->yVis = WIDGET(ed)->h / ed->lineSkip;
+	ed->fontMaxHeight = height;
+	ed->lineSkip = lineskip;
+	ed->yVis = HEIGHT(ed) / lineskip;
 }
 
 /*
@@ -720,7 +721,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
     int *pos)
 {
 	AG_Driver *drv = WIDGET(ed)->drv;
-	AG_Font *font = WIDGET(ed)->font;
+	AG_Font *font = WFONT(ed);
 	AG_Char ch;
 	int i, x, y, line = 0;
 	int nLines = 1;
@@ -941,6 +942,10 @@ Draw(void *_Nonnull obj)
 	const AG_Color *bgColor = &WCOLOR(ed, AG_BG_COLOR);
 	const AG_Color *txColor = &WCOLOR(ed, AG_TEXT_COLOR);
 	AG_Rect2 rClip;
+	const int pos = ed->pos;
+	const int sel = ed->sel;
+	const int flags = ed->flags;
+	const int lineSkip = ed->lineSkip;
 	int i, dx, dy, x, y;
 	int inSel = 0;
 
@@ -957,86 +962,89 @@ Draw(void *_Nonnull obj)
 	}
 	AG_EditableValidateSelection(ed, buf);
 	
+	/* Tweak the clipping rectangle to allow a bit of overflow. */
 	rClip = WIDGET(ed)->rView;
 	rClip.x1 -= (ed->fontMaxHeight << 1);
-	rClip.y1 -= ed->lineSkip;
+	rClip.y1 -= lineSkip;
 	rClip.x2 += (ed->fontMaxHeight << 1);
-	rClip.y2 += ed->lineSkip;
+	rClip.y2 += lineSkip;
 
 	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC,
 	                    AG_TEXTURE_ENV_REPLACE);
 	AG_PushClipRect(ed, &ed->r);
 
 	x = 0;
-	y = -ed->y * ed->lineSkip;
+	y = -ed->y * lineSkip;
 	ed->xMax = 10;
 	ed->yMax = 1;
 	for (i = 0; i <= buf->len; i++) {
 		AG_Glyph *gl;
 		AG_Char c = buf->s[i];
 
-		if (i == ed->pos) {			/* At cursor */
-			if (ed->sel == 0 &&
-			    (ed->flags & AG_EDITABLE_BLINK_ON) &&
+		if (i == pos) {				/* At cursor */
+			/* TODO subroutine this */
+			if (sel == 0 &&
+			    (flags & AG_EDITABLE_BLINK_ON) &&
 			    (ed->y >= 0 && ed->y <= ed->yMax-1) &&
 			    AG_WidgetIsFocused(ed)) {
 				AG_DrawLineV(ed,
 				    x - ed->x, (y + 1),
-				    (y + ed->lineSkip - 1), txColor);
+				    (y + lineSkip - 1), txColor);
 			}
 			ed->xCurs = x;
-			if (ed->flags & AG_EDITABLE_MARKPREF) {
+			if (flags & AG_EDITABLE_MARKPREF) {
 				ed->flags &= ~(AG_EDITABLE_MARKPREF);
 				ed->xCursPref = x;
 			}
-			ed->yCurs = y/ed->lineSkip + ed->y;
+			ed->yCurs = y/lineSkip + ed->y;
 		}
-		if ((ed->sel > 0 && i >= ed->pos && i < ed->pos + ed->sel) ||
-		    (ed->sel < 0 && i <  ed->pos && i > ed->pos + ed->sel - 1)) {
+		if ((sel > 0 && i >= pos && i < pos+sel) ||
+		    (sel < 0 && i <  pos && i > pos+sel-1)) {
 			if (!inSel) {
 				inSel = 1;
 				ed->xSelStart = x;
-				ed->ySelStart = y/ed->lineSkip + ed->y;
+				ed->ySelStart = y/lineSkip + ed->y;
 			}
 		} else {
 			if (inSel) {
 				inSel = 0;
 				ed->xSelEnd = x;
-				ed->ySelEnd = y/ed->lineSkip + ed->y;
+				ed->ySelEnd = y/lineSkip + ed->y;
 			}
 		}
 		if (i == buf->len)
 			break;
 
 		if (WrapAtChar(ed, x, &buf->s[i])) {
-			y += ed->lineSkip;
+			y += lineSkip;
 			ed->xMax = MAX(ed->xMax, x);
 			ed->yMax++;
 			x = 0;
 		}
 		if (c == '\n') {
-			y += ed->lineSkip;
+			y += lineSkip;
 			ed->xMax = MAX(ed->xMax, x+10);
 			ed->yMax++;
 			x = 0;
 			continue;
 		} else if (c == '\t') {
+			/* TODO subroutine this */
 			if (inSel) {
 				AG_Rect r;
 
 				r.x = x - ed->x;
 				r.y = y;
 				r.w = agTextTabWidth + 1;
-				r.h = ed->lineSkip + 1;
+				r.h = lineSkip + 1;
 				AG_DrawRectFilled(ed, &r, &WCOLOR_SEL(ed,0));
 			}
 			x += agTextTabWidth;
 			continue;
 		}
 
-		if      (ed->flags & AG_EDITABLE_PASSWORD)  { c = '*'; }
-		else if (ed->flags & AG_EDITABLE_UPPERCASE) { c = toupper(c); }
-		else if (ed->flags & AG_EDITABLE_LOWERCASE) { c = tolower(c); }
+		if      (flags & AG_EDITABLE_PASSWORD)  { c = '*'; }
+		else if (flags & AG_EDITABLE_UPPERCASE) { c = toupper(c); }
+		else if (flags & AG_EDITABLE_LOWERCASE) { c = tolower(c); }
 
 		gl = AG_TextRenderGlyph(drv, c);
 		dx = WIDGET(ed)->rView.x1 + x - ed->x;
@@ -1062,9 +1070,10 @@ Draw(void *_Nonnull obj)
 		ed->xMax = x;
 	
 	/* Process any scrolling requests. */
-	if (ed->flags & AG_EDITABLE_KEEPVISCURSOR) {
+	if (flags & AG_EDITABLE_KEEPVISCURSOR) {
 		MoveCursorToView(ed, buf);
 	}
+	/* TODO subroutine these */
 	if (ed->xScrollTo != NULL) {
 		if ((*ed->xScrollTo - ed->x) < 0) {
 			ed->x += (*ed->xScrollTo - ed->x);
@@ -1125,9 +1134,7 @@ AG_EditableSizeHintPixels(AG_Editable *ed, Uint w, Uint h)
 void
 AG_EditableSizeHintLines(AG_Editable *ed, Uint nLines)
 {
-	AG_ObjectLock(ed);
 	ed->hPre = nLines;
-	AG_ObjectUnlock(ed);
 }
 
 static void
@@ -1168,9 +1175,9 @@ static void
 KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
-	int keysym = AG_INT(1);
-	int keymod = AG_INT(2);
-	AG_Char ch = AG_CHAR(3);
+	const int keysym = AG_INT(1);
+	const int keymod = AG_INT(2);
+	const AG_Char ch = AG_CHAR(3);
 
 	switch (keysym) {
 	case AG_KEY_LSHIFT:
@@ -1208,7 +1215,7 @@ static void
 KeyUp(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
-	int keysym = AG_INT(1);
+	const int keysym = AG_INT(1);
 
 #ifdef AG_TIMERS
 	AG_DelTimer(ed, &ed->toRepeat);
@@ -1523,7 +1530,7 @@ static void
 MenuSetLang(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_PTR(1);
-	enum ag_language lang = (enum ag_language)AG_INT(2);
+	const enum ag_language lang = (enum ag_language)AG_INT(2);
 
 	AG_EditableSetLang(ed, lang);
 }
@@ -1598,9 +1605,9 @@ static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
-	int btn = AG_INT(1);
+	const int btn = AG_INT(1);
 	int mx = AG_INT(2);
-	int my = AG_INT(3);
+	const int my = AG_INT(3);
 	AG_EditableBuffer *buf;
 
 	if (!AG_WidgetIsFocused(ed))
@@ -1662,7 +1669,7 @@ static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
-	int btn = AG_INT(1);
+	const int btn = AG_INT(1);
 
 	switch (btn) {
 	case AG_MOUSE_LEFT:
@@ -1678,8 +1685,8 @@ MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
 	AG_EditableBuffer *buf;
-	int mx = AG_INT(1);
-	int my = AG_INT(2);
+	const int mx = AG_INT(1);
+	const int my = AG_INT(2);
 	int newPos;
 
 	if (!AG_WidgetIsFocused(ed) ||
@@ -1967,7 +1974,7 @@ static void
 OnBindingChange(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
-	AG_Variable *binding = AG_PTR(1);
+	const AG_Variable *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "string") == 0) {
 		AG_Unset(ed, "text");

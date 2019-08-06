@@ -266,7 +266,7 @@ OnFontChange(AG_Event *_Nonnull event)
 			it->label = -1;
 		}
 	}
-	AG_TlistSetItemHeight(tl, WIDGET(tl)->font->height + AG_TLIST_PADDING);
+	AG_TlistSetItemHeight(tl, WFONT(tl)->height + AG_TLIST_PADDING);
 	AG_TlistSetIconWidth(tl, tl->item_h + 1);
 }
 
@@ -575,7 +575,7 @@ DrawExpandCollapseSign(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it,
 static void
 StylizeFont(AG_Tlist *_Nonnull tl, Uint itFlags)
 {
-	AG_Font *defFont = WIDGET(tl)->font;
+	const AG_Font *defFont = WFONT(tl);
 	Uint fontFlags = 0;
 
 	if (itFlags & AG_TLIST_ITEM_BOLD) { fontFlags |= AG_FONT_BOLD; }
@@ -1631,7 +1631,7 @@ AG_TlistGetItemPtr(const AG_Event *event, int idx, int isConst)
 	const AG_Variable *V = &event->argv[idx];
 
 	if (idx > event->argc || V->type != AG_VARIABLE_POINTER) {
-		AG_GenericMismatch("AG_TLIST_ITEM_PTR(idx)");
+		AG_GenericMismatch("by AG_TLIST_ITEM_PTR(idx)");
 	}
 	if (isConst) {
 		if ((V->info.pFlags & AG_VARIABLE_P_READONLY) == 0)
@@ -1646,7 +1646,7 @@ AG_TlistGetItemPtr(const AG_Event *event, int idx, int isConst)
 		return (NULL);
 	}
 	if (strncmp(AGTLISTITEM(V->data.p)->tag, AG_TLIST_ITEM_TAG, AG_TLIST_ITEM_TAG_LEN) != 0) {
-		AG_GenericMismatch("AG_TLIST_ITEM_PTR(tag)");
+		AG_GenericMismatch("by AG_TLIST_ITEM_PTR(tag)");
 	}
 	return (V->data.p);
 }

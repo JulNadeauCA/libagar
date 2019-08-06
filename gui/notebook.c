@@ -121,9 +121,9 @@ static void
 Draw(void *obj)
 {
 	AG_Notebook *nb = obj;
-	AG_Font *font = WIDGET(nb)->font;
 	AG_NotebookTab *tab;
 	AG_Rect r;
+	const int fontHeight_2 = WFONT(nb)->height;
 	int ts = nb->tabspacing, ts_2 = (ts << 1);
 	int x = ts, y = ts;
 
@@ -153,7 +153,7 @@ Draw(void *obj)
 				break;
 		}
 		AG_DrawBoxRoundedTop(nb, &r,
-		    isSelected ? -1 : 1, font->height >> 1,
+		    isSelected ? -1 : 1, fontHeight_2,
 		    isSelected ? &WCOLOR_HOV(nb,0) :
 	 	                 &WCOLOR(nb,0));
 
@@ -170,7 +170,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	AG_Notebook *nb = obj;
 	AG_NotebookTab *tab;
 	AG_SizeReq rTab;
-	int ts2 = nb->tabspacing << 1;
+	const int ts2 = nb->tabspacing << 1;
 	Uint hMax = 0;
 	
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {

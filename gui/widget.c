@@ -1833,30 +1833,30 @@ int
 AG_WidgetMapSurface(void *obj, AG_Surface *su)
 {
 	AG_Widget *wid = obj;
-	int i, s = -1;
+	int i, n, s = -1;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
-	for (i = 0; i < wid->nSurfaces; i++) {
+
+	n = wid->nSurfaces;
+	for (i = 0; i < n; i++) {
 		if (wid->surfaces[i] == NULL) {
 			s = i;
 			break;
 		}
 	}
-	if (i == wid->nSurfaces) {
-		wid->surfaces = Realloc(wid->surfaces,
-		    (wid->nSurfaces+1)*sizeof(AG_Surface *));
-		wid->surfaceFlags = Realloc(wid->surfaceFlags,
-		    (wid->nSurfaces+1)*sizeof(Uint8));
-		wid->textures = Realloc(wid->textures,
-		    (wid->nSurfaces+1)*sizeof(Uint));
-		wid->texcoords = Realloc(wid->texcoords,
-		    (wid->nSurfaces+1)*sizeof(AG_TexCoord));
+	if (i == n) {
+		++n;
+		wid->surfaces= Realloc(wid->surfaces, n*sizeof(AG_Surface *));
+		wid->surfaceFlags = Realloc(wid->surfaceFlags, n*sizeof(Uint));
+		wid->textures = Realloc(wid->textures, n*sizeof(Uint));
+		wid->texcoords = Realloc(wid->texcoords, n*sizeof(AG_TexCoord));
 		s = wid->nSurfaces++;
 	}
 	wid->surfaces[s] = su;
 	wid->surfaceFlags[s] = 0;
 	wid->textures[s] = 0;
+
 	if (su != NULL) {
 		su->flags |= AG_SURFACE_MAPPED;
 	}

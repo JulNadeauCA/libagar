@@ -436,7 +436,7 @@ static void
 OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_Radio *rad = AG_RADIO_SELF();
-	AG_Font *font = WIDGET(rad)->font;
+	AG_Font *font = WFONT(rad);
 	int i, w;
 
 	rad->itemHeight = font->height + (rad->ySpacing << 1);
@@ -460,9 +460,9 @@ Init(void *_Nonnull obj)
 {
 	AG_Radio *rad = obj;
 
-	WIDGET(rad)->flags |= AG_WIDGET_FOCUSABLE|
-	                      AG_WIDGET_UNFOCUSED_MOTION|
-			      AG_WIDGET_TABLE_EMBEDDABLE|
+	WIDGET(rad)->flags |= AG_WIDGET_FOCUSABLE |
+	                      AG_WIDGET_UNFOCUSED_MOTION |
+			      AG_WIDGET_TABLE_EMBEDDABLE |
 			      AG_WIDGET_USE_TEXT;
 
 	rad->flags = 0;

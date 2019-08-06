@@ -508,7 +508,7 @@ OnFontChange(AG_Event *_Nonnull event)
 	Uint i;
 	int j;
 
-	cons->lineskip = WIDGET(cons)->font->lineskip + 1;
+	cons->lineskip = WFONT(cons)->lineskip + 1;
 	cons->rOffs = 0;
 	ComputeVisible(cons);
 

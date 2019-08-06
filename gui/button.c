@@ -398,7 +398,7 @@ SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 			AG_WidgetSizeReq(bu->lbl, &rLbl);
 			r->w += rLbl.w;
 		}
-		r->h += WIDGET(bu)->font->height;
+		r->h += WFONT(bu)->height;
 	}
 }
 

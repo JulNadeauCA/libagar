@@ -1906,11 +1906,11 @@ static void
 OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_TABLE_SELF();
-	AG_Font *font = WIDGET(t)->font;
+	const int fontHeight = WFONT(t)->height;
 	Uint m, n;
 	
-	t->hRow = font->height + 2;
-	t->hCol = font->height + 4;
+	t->hRow = fontHeight+2;
+	t->hCol = fontHeight+4;
 	
 	for (n = 0; n < t->n; n++) {
 		AG_TableCol *tc = &t->cols[n];

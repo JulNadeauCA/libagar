@@ -224,9 +224,9 @@ typedef struct ag_widget {
 	AG_Rect2 rView;			/* Effective view coordinates */
 	AG_Rect2 rSens;			/* Effective sensitivity rectangle */
 
-	Uint nSurfaces;
+	Uint                            nSurfaces;
 	AG_Surface *_Nullable *_Nullable surfaces;     /* Mapped surfaces */
-	Uint8 *_Nullable                 surfaceFlags; /* Mapped surface flags: */
+	Uint *_Nullable                  surfaceFlags; /* Mapped surface flags: */
 #define AG_WIDGET_SURFACE_NODUP	0x01                   /* Don't auto-free */
 #define AG_WIDGET_SURFACE_REGEN	0x02                   /* Regenerate textures */
 
@@ -269,6 +269,15 @@ typedef struct ag_widget {
 #define AGWIDGET_SURFACE_NODUP(wi, ind)	(AGWIDGET(wi)->surfaceFlags[ind] & \
 					 AG_WIDGET_SURFACE_NODUP)
 
+#ifdef AG_DEBUG
+# define AGWIDGET_FONT(wi) ((AGWIDGET(wi)->flags & AG_WIDGET_USE_TEXT) ? \
+                             AGWIDGET(wi)->font : (AG_Font *) \
+			     AG_GenericMismatch("by AGWIDGET_FONT(). " \
+			                        "Did you forget USE_TEXT?"))
+#else
+# define AGWIDGET_FONT(wi) AGWIDGET(wi)->font
+#endif
+
 #define AGWIDGET_KEYBOARD(obj) \
     (((obj) != NULL) ? AGWIDGET(obj)->drv->kbd : \
      (agDriverSw != NULL) ? AGDRIVER(agDriverSw)->kbd: NULL)
@@ -280,6 +289,7 @@ typedef struct ag_widget {
 # define WSURFACE(wi,ind)		AGWIDGET_SURFACE((wi),(ind))
 # define WTEXTURE(wi,ind)		AGWIDGET_TEXTURE((wi),(ind))
 # define WSURFACE_NODUP(wi,ind)		AGWIDGET_SURFACE_NODUP((wi),(ind))
+# define WFONT(wi)                      AGWIDGET_FONT(wi)
 # define WIDTH(p)			AGWIDGET(p)->w
 # define HEIGHT(p)			AGWIDGET(p)->h
 # define WCOLOR(wid,which)		AG_WCOLOR((wid),(which))
@@ -287,6 +297,7 @@ typedef struct ag_widget {
 # define WCOLOR_DIS(wid,which)		AG_WCOLOR_DIS((wid),(which))
 # define WCOLOR_HOV(wid,which)		AG_WCOLOR_HOV((wid),(which))
 # define WCOLOR_SEL(wid,which)		AG_WCOLOR_SEL((wid),(which))
+# define BG_COLOR			AG_BG_COLOR
 # define TEXT_COLOR			AG_TEXT_COLOR
 # define LINE_COLOR			AG_LINE_COLOR
 # define SHAPE_COLOR			AG_SHAPE_COLOR

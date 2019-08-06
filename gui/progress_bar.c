@@ -86,8 +86,9 @@ static void
 OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_ProgressBar *pb = AG_PROGRESSBAR_SELF();
+	const AG_Font *font = WFONT(pb);
 
-	pb->width = WIDGET(pb)->font->height+10;
+	pb->width = font->height + 10;
 }
 
 static void
@@ -95,9 +96,9 @@ Init(void *_Nonnull obj)
 {
 	AG_ProgressBar *pb = obj;
 
-	WIDGET(pb)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
-	                     AG_WIDGET_UNFOCUSED_MOTION|
-			     AG_WIDGET_TABLE_EMBEDDABLE|
+	WIDGET(pb)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP |
+	                     AG_WIDGET_UNFOCUSED_MOTION |
+			     AG_WIDGET_TABLE_EMBEDDABLE |
 			     AG_WIDGET_USE_TEXT;
 
 	pb->type = AG_PROGRESS_BAR_HORIZ;
