@@ -126,7 +126,7 @@ static void
 ScrollLeft(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
-	const int ssa = AG_GetInt(cons, "side-scroll-amount");
+	const int ssa = AG_GetInt(cons->hBar, "inc");
 	const int newOffs = (cons->xOffs - ssa);
 
 	if (newOffs < 0 || newOffs > cons->wMax - WIDTH(cons)) {
@@ -140,7 +140,7 @@ static void
 ScrollRight(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
-	const int ssa = AG_GetInt(cons, "side-scroll-amount");
+	const int ssa = AG_GetInt(cons->hBar, "inc");
 	const int newOffs = (cons->xOffs + ssa);
 
 	if (newOffs < 0 || newOffs > cons->wMax - WIDTH(cons)) {
@@ -444,7 +444,8 @@ MouseMotion(AG_Event *_Nonnull event)
 		return;
 	}
 	if (x < cons->r.x) {
-		const int ssa = AG_GetInt(cons, "side-scroll-amount");
+		const int ssa = AG_GetInt(cons->hBar,"inc");
+
 		if (cons->xOffs > 0) {
 			if ((cons->xOffs -= ssa) < 0) {
 				cons->xOffs = 0;
@@ -453,8 +454,9 @@ MouseMotion(AG_Event *_Nonnull event)
 		}
 		return;
 	} else if (x > cons->r.x+cons->r.w) {
-		const int ssa = AG_GetInt(cons, "side-scroll-amount");
+		const int ssa = AG_GetInt(cons->hBar,"inc");
 		const int wMax = cons->wMax - WIDTH(cons);
+
 		if (cons->xOffs < wMax) {
 			cons->xOffs += ssa;
 			if (cons->xOffs > wMax) {
@@ -528,6 +530,7 @@ static void
 Init(void *_Nonnull obj)
 {
 	AG_Console *cons = obj;
+	AG_Scrollbar *sb;
 
 	WIDGET(cons)->flags |= AG_WIDGET_FOCUSABLE |
 	                       AG_WIDGET_USE_TEXT;
@@ -551,28 +554,24 @@ Init(void *_Nonnull obj)
 	TAILQ_INIT(&cons->files);
 
 	AG_SetInt(cons, "line-scroll-amount", 5);
-	AG_SetInt(cons, "side-scroll-amount", 30);
 
-	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT,
-	    AG_SCROLLBAR_NOAUTOHIDE | AG_SCROLLBAR_EXCL);
-	{
-		AG_WidgetSetFocusable(cons->vBar, 0);
-		AG_SetUint(cons->vBar, "min", 0);
-		AG_BindUint(cons->vBar, "max", &cons->nLines);
-		AG_BindUint(cons->vBar, "visible", &cons->rVisible);
-		AG_BindUint(cons->vBar, "value", &cons->rOffs);
-	}
+	sb = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
+	WIDGET(sb)->flags &= ~(AG_WIDGET_FOCUSABLE);
+	AG_SetUint(sb,  "min",     0);
+	AG_BindUint(sb, "max",     &cons->nLines);
+	AG_BindUint(sb, "value",   &cons->rOffs);
+	AG_BindUint(sb, "visible", &cons->rVisible);
+	cons->vBar = sb;
 
-	cons->hBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_HORIZ,
-	    AG_SCROLLBAR_NOAUTOHIDE | AG_SCROLLBAR_EXCL);
-	{
-		AG_WidgetSetFocusable(cons->hBar, 0);
-		AG_SetInt(cons->hBar, "min", 0);
-		AG_SetInt(cons->hBar, "inc", 30);
-		AG_BindInt(cons->hBar, "max", &cons->wMax);
-		AG_BindInt(cons->hBar, "visible", &WIDGET(cons)->w);
-		AG_BindInt(cons->hBar, "value", &cons->xOffs);
-	}
+	sb = AG_ScrollbarNew(cons, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL |
+	                                               AG_SCROLLBAR_SMOOTH);
+	WIDGET(sb)->flags &= ~(AG_WIDGET_FOCUSABLE);
+	AG_SetInt(sb,  "min",     0);
+	AG_SetInt(sb,  "inc",     30);
+	AG_BindInt(sb, "visible", &WIDGET(cons)->w);
+	AG_BindInt(sb, "value",   &cons->xOffs);
+	AG_BindInt(sb, "max",     &cons->wMax);
+	cons->hBar = sb;
 
 	AG_ActionFn(cons, "BeginSelect", BeginSelect, NULL);
 	AG_ActionFn(cons, "CloseSelect", CloseSelect, NULL);
@@ -765,9 +764,7 @@ Destroy(void *_Nonnull p)
 void
 AG_ConsoleSetPadding(AG_Console *cons, int padding)
 {
-	AG_ObjectLock(cons);
 	cons->padding = padding;
-	AG_ObjectUnlock(cons);
 }
 
 /* Append a line to the console; backend to AG_ConsoleMsg(). */

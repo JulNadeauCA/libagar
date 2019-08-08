@@ -182,8 +182,8 @@ int agKbdRepeat = 30;			/* Key repeat interval */
 int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
 int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
 int agMouseSpinIval = 50;		/* Spinbutton repeat interval */
-int agMouseScrollDelay = 200;		/* Scrollbar increment delay */
 int agMouseScrollIval = 1;		/* Scrollbar increment interval */
+int agScrollButtonIval = 100;		/* Scrollbar button interval */
 #ifdef AG_UNICODE
 int agTextComposition = 1;		/* Built-in input composition */
 int agTextBidi = 0;			/* Bidirectionnal text display */
@@ -199,7 +199,7 @@ int agScreenshotQuality = 100;		/* JPEG quality in % */
 double agZoomValues[AG_ZOOM_MAX] = {
 	12.5, 18.2, 25.00, 33.33, 50.00, 66.67, 80.00, 90.00,
 	100.00, 110.00, 120.00, 133.00, 150.00, 170.00,
-	200.00, 240.00, 300.00, 400.00, 550.00, 800.00
+	200.00, 240.00, 280.00, 400.00, 550.00, 650.00
 };
 #else
 int agZoomValues[AG_ZOOM_MAX] = {

@@ -58,13 +58,6 @@ The
 binding would be tied to the number of lines that can be displayed on-screen
 (see
 .Sx BINDINGS ) .
-.Pp
-NOTE: This widget is meant only as a panning control.
-For general edition of numerical values, the simpler
-.Xr AG_Slider 3
-or
-.Xr AG_Numerical 3
-widgets should be used.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -79,12 +72,6 @@ widgets should be used.
 .Pp
 .Ft "AG_Scrollbar *"
 .Fn AG_ScrollbarNewVert "AG_Widget *parent" "Uint flags"
-.Pp
-.Ft void
-.Fn AG_ScrollbarSizeHint "AG_Scrollbar *scrollbar" "int length"
-.Pp
-.Ft void
-.Fn AG_ScrollbarSetControlLength "AG_Scrollbar *scrollbar" "int length"
 .Pp
 .Ft int
 .Fn AG_ScrollbarVisible "AG_Scrollbar *scrollbar"
@@ -111,15 +98,11 @@ to create a vertical scrollbar.
 Acceptable
 .Fa flags
 include:
-.Bl -tag -width "AG_SCROLLBAR_NOAUTOHIDE "
-.It AG_SCROLLBAR_NOAUTOHIDE
-Always display the scrollbar.
-By default, the scrollbar is automatically hidden if the values of
-.Va min ,
-.Va max
-and
-.Va visible
-do not allow any room for scrolling.
+.Bl -tag -width "AG_SCROLLBAR_EXPAND "
+.It AG_SCROLLBAR_SMOOTH
+Use an animated scrolling motion when clicking outside of the control bar
+area (in between the increment/decrement buttons and the control bar).
+The default behavior is to jump to the target position.
 .It AG_SCROLLBAR_EXCL
 Advise that no external changes to the
 .Va value ,
@@ -135,15 +118,9 @@ binding values are handled safely regardless.
 .It AG_SCROLLBAR_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
-This flag is only sensible with horizontal scrollbars, and renders the use of
-.Fn AG_ScrollbarSizeHint
-unnecessary.
 .It AG_SCROLLBAR_VFILL
 Expand vertically in parent (equivalent to invoking
 .Xr AG_ExpandVert 3 ) .
-This flag is only sensible with vertical scrollbars, and renders the use of
-.Fn AG_ScrollbarSizeHint
-unnecessary.
 .It AG_SCROLLBAR_EXPAND
 Shorthand for
 .Dv AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL .
@@ -151,22 +128,6 @@ Shorthand for
 Display the minimum, current and maximum values in text.
 This option is primarily useful for debugging.
 .El
-.Pp
-The
-.Fn AG_ScrollbarSizeHint
-function specifies a default, preferred scrollbar length in pixels.
-This is rarely used; in practice, scrollbars almost always use
-.Dv AG_SCROLLBAR_HFILL
-or
-.Dv AG_SCROLLBAR_VFILL .
-.Pp
-The
-.Fn AG_ScrollbarSetControlLength
-function sets the size of the scrolling control in pixels.
-Note that this parameter is ignored if the
-.Va visible
-binding is set to a non-zero value (in which case, the optimal size of the
-control is determined automatically).
 .Pp
 The
 .Fn AG_ScrollbarVisible
@@ -265,6 +226,7 @@ Size of "arrow" icons in pixels.
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_Numerical 3 ,
 .Xr AG_Scrollview 3 ,
 .Xr AG_Slider 3 ,
 .Xr AG_Widget 3 ,
@@ -274,8 +236,8 @@ The
 .Nm
 widget first appeared in Agar 1.0.
 The
-.Dv AUTOSIZE
-option was introduced in Agar 1.4.0.
-The
 .Va inc
 binding was introduced in Agar 1.5.0.
+The
+.Dv AG_SCROLLBAR_SMOOTH
+option appeared in Agar 1.6.0.

@@ -37,7 +37,7 @@ __BEGIN_DECLS
 extern int agGUI, agRenderingContext, agStereo, agXsync;
 extern int agKbdDelay, agKbdRepeat;
 extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval,
-           agMouseScrollDelay, agMouseScrollIval, agPageIncrement;
+           agMouseScrollIval, agScrollButtonIval, agPageIncrement;
 #ifdef AG_UNICODE
 extern int agTextComposition, agTextBidi;
 #endif

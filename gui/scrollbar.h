@@ -23,30 +23,25 @@ typedef struct ag_scrollbar {
 	Uint flags;
 #define AG_SCROLLBAR_HFILL	0x01
 #define AG_SCROLLBAR_VFILL	0x02
-#define AG_SCROLLBAR_TEXT	0x08	/* Print numbers (for debugging) */
-#define AG_SCROLLBAR_AUTOHIDE	0x20	/* Show based on range (default) */
+#define AG_SCROLLBAR_SMOOTH	0x04	/* Animate scrolling to the target
+                                           (default: jump to it) */
+#define AG_SCROLLBAR_TEXT	0x08	/* Display values and offsets in text */
 #define AG_SCROLLBAR_EXCL	0x40	/* Has exclusive access to bindings */
-#define AG_SCROLLBAR_NOAUTOHIDE 0x80	/* Disable autohide */
-#define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL)
+#define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_HFILL | AG_SCROLLBAR_VFILL)
 
 	enum ag_scrollbar_type type;	/* Horizontal or vertical */
 
 	enum ag_scrollbar_button curBtn;	/* Active button */
 	enum ag_scrollbar_button mouseOverBtn;	/* Mouseover button */
 
-	int width;			/* Scrollbar width */
 	int length;			/* Length of scrolling control area */
-	int wBar;			/* Preferred control length */
-	int wBarMin;			/* Minimum control length */
+	int wBarLast;			/* Auto-calculated control length */
 	int hArrow;			/* Arrow height */
 	int value;			/* Default `value' binding */
 	AG_Event *_Nullable buttonIncFn; /* Alt. handler for increment btns */
 	AG_Event *_Nullable buttonDecFn; /* Alt. handler for decrement btns */
 	AG_Timer moveTo;		/* Timer for scrolling control */
-	AG_Timer autoHideTo;		/* Timer for autohide check */
 	int xOffs, xSeek;		/* Cursor offset for scrolling */
-	Uint lenPre;			/* Preferred length size hint */
-	int minOffs, maxOffs, visOffs;	/* Constants to add to binding values */
 } AG_Scrollbar;
 
 #define AGSCROLLBAR(obj)            ((AG_Scrollbar *)(obj))
@@ -61,13 +56,10 @@ typedef struct ag_scrollbar {
 __BEGIN_DECLS
 extern AG_WidgetClass agScrollbarClass;
 
-AG_Scrollbar *_Nonnull AG_ScrollbarNew(void *_Nullable, enum ag_scrollbar_type,
-                                       Uint);
 AG_Scrollbar *_Nonnull AG_ScrollbarNewHoriz(void *_Nullable, Uint);
 AG_Scrollbar *_Nonnull AG_ScrollbarNewVert(void *_Nullable, Uint);
-
-void AG_ScrollbarSizeHint(AG_Scrollbar *_Nonnull, int);
-void AG_ScrollbarSetControlLength(AG_Scrollbar *_Nonnull, int);
+AG_Scrollbar *_Nonnull AG_ScrollbarNew(void *_Nullable, enum ag_scrollbar_type,
+                                       Uint);
 
 void AG_ScrollbarSetIncFn(AG_Scrollbar *_Nonnull,
                          _Nullable AG_EventFn, const char *_Nullable, ...);
