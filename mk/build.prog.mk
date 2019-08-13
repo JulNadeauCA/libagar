@@ -328,8 +328,8 @@ ${PROG}: ${SRCS_GENERATED} _prog_objs ${OBJS}
 	        ${ADALINK} ${LDFLAGS} ${ADALFLAGS} $$_ada_cflags $$_prog_ldflags ${PROG} ${LIBS}; \
 		;; \
 	    CL65) \
-	        echo "cl65 ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}"; \
-	        cl65 ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}; \
+	        echo "cl65 ${LDFLAGS} $$_prog_ldflags -Ln ${PROG}.lbl -m ${PROG}.map -o ${PROG} $$_objs ${LIBS}"; \
+	        cl65 ${LDFLAGS} $$_prog_ldflags -Ln ${PROG}.lbl -m ${PROG}.map -o ${PROG} $$_objs ${LIBS}; \
 	        ;; \
 	    *) \
 	        echo "${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}"; \

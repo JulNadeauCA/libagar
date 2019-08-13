@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Generate MYPROJECT_SVN_REVISION if sources are from svn and svn exists.
-# Otherwise, fail gracefully and return a revision number of "0".
+# Generate CPP define for a SVN revision number if sources are from SVN
+# (and svn is available). Otherwise, define the revision number to be 0.
 #
 
 TOP=$1
@@ -39,7 +39,7 @@ if [ -e "${TOP}/.svn" ]; then
 		echo "#define $DEFN 0"
 	fi
 else
-	echo '/* sources not from svn */'
+	echo '/* not using SVN sources */'
 	echo "#define $DEFN 0"
 fi
 echo '#endif'

@@ -54,6 +54,7 @@ my @MKFILES = (
 	'^gen-declspecs\.pl$',
 	'^gen-includes\.pl$',
 	'^gen-includelinks\.pl$',
+	'^gen-revision\.sh$',
 	'^install-manpages\.sh$',
 );
 my %V = ();
