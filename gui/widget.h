@@ -409,12 +409,13 @@ void AG_SetStyleF(void *_Nonnull, const char *_Nonnull, const char *_Nullable, .
 # include <agar/gui/inline_widget.h>
 #else /* !AG_INLINE_WIDGET */
 
-int  ag_widget_enabled(void *_Nonnull) _Pure_Attribute;
-int  ag_widget_disabled(void *_Nonnull) _Pure_Attribute;
-int  ag_widget_visible(void *_Nonnull) _Pure_Attribute;
-int  ag_widget_is_focused_in_window(void *_Nonnull) _Pure_Attribute;
-int  ag_widget_area(void *_Nonnull, int,int) _Pure_Attribute;
-int  ag_widget_relative_area(void *_Nonnull, int,int) _Pure_Attribute;
+int  ag_widget_enabled(const void *_Nonnull) _Pure_Attribute;
+int  ag_widget_disabled(const void *_Nonnull) _Pure_Attribute;
+int  ag_widget_visible(const void *_Nonnull) _Pure_Attribute;
+int  ag_widget_is_focused(const void *_Nonnull) _Pure_Attribute;
+int  ag_widget_is_focused_in_window(const void *_Nonnull) _Pure_Attribute;
+int  ag_widget_area(const void *_Nonnull, int,int) _Pure_Attribute;
+int  ag_widget_relative_area(const void *_Nonnull, int,int) _Pure_Attribute;
 void ag_expand(void *_Nonnull);
 void ag_expand_horiz(void *_Nonnull);
 void ag_expand_vert(void *_Nonnull);
@@ -437,6 +438,7 @@ void ag_set_mod_state(void *_Nonnull, Uint);
 # define AG_WidgetEnabled(o)                 ag_widget_enabled(o)
 # define AG_WidgetDisabled(o)                ag_widget_disabled(o)
 # define AG_WidgetVisible(o)                 ag_widget_visible(o)
+# define AG_WidgetIsFocused(o)               ag_widget_is_focused(o)
 # define AG_WidgetIsFocusedInWindow(o)       ag_widget_is_focused_in_window(o)
 # define AG_WidgetArea(o,x,y)                ag_widget_area((o),(x),(y))
 # define AG_WidgetRelativeArea(o,x,y)        ag_widget_relative_area((o),(x),(y))

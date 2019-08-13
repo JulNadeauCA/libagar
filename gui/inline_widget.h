@@ -29,20 +29,20 @@
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Pure_Attribute
-AG_WidgetEnabled(void *_Nonnull p)
+AG_WidgetEnabled(const void *_Nonnull p)
 #else
 int
-ag_widget_enabled(void *p)
+ag_widget_enabled(const void *p)
 #endif
 {
 	return !(AGWIDGET(p)->flags & AG_WIDGET_DISABLED);
 }
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Pure_Attribute
-AG_WidgetDisabled(void *_Nonnull p)
+AG_WidgetDisabled(const void *_Nonnull p)
 #else
 int
-ag_widget_disabled(void *p)
+ag_widget_disabled(const void *p)
 #endif
 {
 	return (AGWIDGET(p)->flags & AG_WIDGET_DISABLED);
@@ -54,29 +54,48 @@ ag_widget_disabled(void *p)
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Pure_Attribute
-AG_WidgetVisible(void *_Nonnull p)
+AG_WidgetVisible(const void *_Nonnull p)
 #else
 int
-ag_widget_visible(void *p)
+ag_widget_visible(const void *p)
 #endif
 {
 	return (AGWIDGET(p)->flags & AG_WIDGET_VISIBLE);
 }
 
 /*
- * Return the "focus" flag of a widget which is the focus state of the
- * widget relative to its parent (and not necessarily the active focus).
- * The Widget must be locked.
+ * Test whether a widget (and its parent window) both hold focus.
+ * The Widget and agDrivers VFS must be locked.
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Pure_Attribute
-AG_WidgetIsFocusedInWindow(void *_Nonnull p)
+AG_WidgetIsFocused(const void *_Nonnull obj)
 #else
 int
-ag_widget_is_focused_in_window(void *p)
+ag_widget_is_focused(const void *obj)
 #endif
 {
-	return (AGWIDGET(p)->flags & AG_WIDGET_FOCUSED);
+	AG_Widget *wid = AGWIDGET(obj);
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+
+	return ((wid->flags & AG_WIDGET_FOCUSED) &&
+                (wid->window == NULL || agWindowFocused == wid->window));
+}
+
+/*
+ * Test whether a widget is focused in relation to its parent window
+ * (which itself may not necessarily be focused). The Widget must be locked.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ int _Pure_Attribute
+AG_WidgetIsFocusedInWindow(const void *_Nonnull obj)
+#else
+int
+ag_widget_is_focused_in_window(const void *obj)
+#endif
+{
+	return (AGWIDGET(obj)->flags & AG_WIDGET_FOCUSED);
 }
 
 /*
@@ -85,13 +104,13 @@ ag_widget_is_focused_in_window(void *p)
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Pure_Attribute
-AG_WidgetArea(void *_Nonnull p, int x, int y)
+AG_WidgetArea(const void *_Nonnull obj, int x, int y)
 #else
 int
-ag_widget_area(void *p, int x, int y)
+ag_widget_area(const void *obj, int x, int y)
 #endif
 {
-	AG_Widget *wid = AGWIDGET(p);
+	const AG_Widget *wid = AGWIDGET(obj);
 
 	return (x > wid->rView.x1 && y > wid->rView.y1 &&
 	        x < wid->rView.x2 && y < wid->rView.y2);
@@ -103,18 +122,16 @@ ag_widget_area(void *p, int x, int y)
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Pure_Attribute
-AG_WidgetRelativeArea(void *_Nonnull p, int x, int y)
+AG_WidgetRelativeArea(const void *_Nonnull obj, int x, int y)
 #else
 int
-ag_widget_relative_area(void *p, int x, int y)
+ag_widget_relative_area(const void *obj, int x, int y)
 #endif
 {
-	AG_Widget *wid = AGWIDGET(p);
-
 	return (x >= 0 &&
 	        y >= 0 &&
-	        x < wid->w &&
-		y < wid->h);
+	        x < WIDTH(obj) &&
+		y < HEIGHT(obj));
 }
 
 /*

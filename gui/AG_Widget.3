@@ -401,10 +401,10 @@ options).
 .Fn AG_WidgetUnfocus "AG_Widget *obj"
 .Pp
 .Ft "int"
-.Fn AG_WidgetIsFocused "AG_Widget *obj"
+.Fn AG_WidgetIsFocused "const AG_Widget *obj"
 .Pp
 .Ft "int"
-.Fn AG_WidgetIsFocusedInWindow "AG_Widget *obj"
+.Fn AG_WidgetIsFocusedInWindow "const AG_Widget *obj"
 .Pp
 .Ft "void"
 .Fn AG_WidgetForwardFocus "AG_Widget *obj" "AG_Widget *widgetToFocus"
@@ -423,16 +423,13 @@ the parent
 Returns 1 on success and 0 if the widget is not accepting focus.
 .Pp
 .Fn AG_WidgetUnfocus
-removes the focus state from the given widget (including its child widgets,
-if any).
+removes the focus state from the given widget and its children, recursively.
 .Pp
 .Fn AG_WidgetIsFocused
-returns 1 if the widget is currently holding focus (i.e., the widget
-has the focus flag set, and its parent window, if any, is focused as
-well).
+returns 1 if the widget is both focused in relation to its parent window, and
+the parent window itself is focused.
 .Fn AG_WidgetIsFocusedInWindow
-returns 1 if the widget has the focus flag set (without evaluating the
-focus state of any parent windows).
+returns 1 if the widget is focused regardless of the focus state of its parent.
 .Pp
 .Fn AG_WidgetForwardFocus
 arranges automatic forwarding of the focus to a specified widget.
