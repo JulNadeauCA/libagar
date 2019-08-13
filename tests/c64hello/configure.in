@@ -1,4 +1,5 @@
 # Public domain
+# ex:syn=bsdbuild
 #
 # A sample Agar program on the C64.
 #
@@ -23,6 +24,9 @@ require(cc)
 require(agar-core, 1.6, ${prefix_agar_core})
 
 mdefine(CFLAGS, "-Ors --codesize 500 -T -g -t c64")
+c_define(_USE_AGAR_STD)
+c_define(_USE_AGAR_QUEUE)
+c_define(_USE_AGAR_TYPES)
 
-C_INCDIR($BLD)
-C_INCDIR_CONFIG($BLD/config)
+c_incdir($BLD)
+c_incdir_config($BLD/config)

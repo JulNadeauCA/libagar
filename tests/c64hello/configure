@@ -1088,8 +1088,8 @@ echo '# C: HAVE_CC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1114,7 +1114,7 @@ if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
-TEST_CFLAGS="-Wall -Werror"
+TEST_CFLAGS="-Wall"
 fi
 $ECHO_N 'cc: checking for float and double...'
 $ECHO_N '# cc: checking for float and double...' >>config.log
@@ -1670,7 +1670,8 @@ main(int argc, char *argv[])
 
 	AG_InitCore("conf-test", 0);
 	AG_RegisterClass(&FooClass);
-	AG_ObjectInitStatic(&obj, &FooClass);
+	AG_ObjectInit(&obj, &FooClass);
+	obj.flags |= AG_OBJECT_STATIC;
 	AG_ObjectDestroy(&obj);
 	AG_Quit();
 	return (0);
@@ -1764,6 +1765,12 @@ echo "Required dependency agar-core version mismatch"
 exit 1
 fi
 CFLAGS="-Ors --codesize 500 -T -g -t c64"
+CFLAGS="$CFLAGS -D_USE_AGAR_STD"
+CXXFLAGS="$CXXFLAGS -D_USE_AGAR_STD"
+CFLAGS="$CFLAGS -D_USE_AGAR_QUEUE"
+CXXFLAGS="$CXXFLAGS -D_USE_AGAR_QUEUE"
+CFLAGS="$CFLAGS -D_USE_AGAR_TYPES"
+CXXFLAGS="$CXXFLAGS -D_USE_AGAR_TYPES"
 CFLAGS="$CFLAGS -I$BLD"
 CXXFLAGS="$CXXFLAGS -I$BLD"
 echo "AGAR_CORE_CFLAGS=$AGAR_CORE_CFLAGS" >>Makefile.config
