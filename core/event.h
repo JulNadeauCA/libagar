@@ -5,6 +5,7 @@
 #endif
 
 #include <string.h>
+#include <stdarg.h>
 
 #ifndef AG_EVENT_ARGS_MAX
 # if AG_MODEL == AG_SMALL
