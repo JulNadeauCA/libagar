@@ -244,10 +244,12 @@ AG_PrintVariable(char *s, AG_Size len, AG_Variable *V)
 	case AG_VARIABLE_P_UINT:	StrlcpyUint(s, *(Uint *)V->data.p, len);		break;
 	case AG_VARIABLE_INT:		StrlcpyInt(s, V->data.i, len);				break;
 	case AG_VARIABLE_P_INT:		StrlcpyInt(s, *(int *)V->data.p, len);			break;
+# if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_ULONG:		Snprintf(s, len, "%lu", V->data.uli);			break;
 	case AG_VARIABLE_P_ULONG:	Snprintf(s, len, "%lu", *(Ulong *)V->data.p);		break;
 	case AG_VARIABLE_LONG:		Snprintf(s, len, "%ld", V->data.li);			break;
 	case AG_VARIABLE_P_LONG:	Snprintf(s, len, "%ld", *(long *)V->data.p);		break;
+# endif
 	case AG_VARIABLE_UINT8:		StrlcpyUint(s, (Uint)V->data.u8, len);			break;
 	case AG_VARIABLE_P_UINT8:	StrlcpyUint(s, (Uint)*(Uint8 *)V->data.p, len);		break;
 	case AG_VARIABLE_SINT8:		StrlcpyInt(s, (int)V->data.s8, len);			break;

@@ -8,6 +8,7 @@
 #include <agar/config/ag_enable_string.h>
 #include <agar/config/ag_legacy.h>
 #include <agar/config/ag_namespaces.h>
+#include <agar/config/ag_named_args.h>
 #include <agar/config/ag_serialization.h>
 #include <agar/config/ag_threads.h>
 #include <agar/config/ag_timers.h>

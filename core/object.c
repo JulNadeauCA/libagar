@@ -101,26 +101,6 @@ AG_ObjectInit(void *pObj, void *pClass)
 	free(hier);
 }
 
-/* Initialize an AG_Object instance (name argument variant). */
-void
-AG_ObjectInitNamed(void *obj, void *cl, const char *name)
-{
-	AG_ObjectInit(obj, cl);
-	if (name != NULL) {
-		AG_ObjectSetNameS(obj, name);
-	} else {
-		OBJECT(obj)->flags |= AG_OBJECT_NAME_ONATTACH;
-	}
-}
-
-/* Initialize an AG_Object instance (static variant). */
-void
-AG_ObjectInitStatic(void *obj, void *C)
-{
-	AG_ObjectInit(obj, C);
-	OBJECT(obj)->flags |= AG_OBJECT_STATIC;
-}
-
 /*
  * Allocate, initialize and attach a new object instance of the specified
  * class.
@@ -176,6 +156,7 @@ AG_ObjectReset(void *p)
 	free(hier);
 }
 
+#if AG_MODEL != AG_SMALL
 /*
  * Recursive function to construct absolute object names.
  * The Object and its parent VFS must be locked.
@@ -274,6 +255,7 @@ fail:
 	AG_UnlockVFS(ob);
 	return (NULL);
 }
+#endif /* !AG_SMALL */
 
 #ifdef AG_SERIALIZATION
 /*
@@ -340,18 +322,14 @@ AG_SetFn(void *p, const char *key, AG_EventFn fn, const char *fmt, ...)
 
 	AG_ObjectLock(obj);
 	if (fn != NULL) {
-#if AG_MODEL != AG_SMALL
 		ev = AG_EventNew(fn, obj, NULL);
-#else
-		ev = Malloc(sizeof(AG_Event));
-		AG_EventInit(ev);
-		ev->fn = fn;
-		ev->argv[0].data.p = obj;
-# ifdef AG_DEBUG
-		Strlcpy(ev->argv[0].name, "self", sizeof(ev->argv[0].name));
-# endif
-#endif
-		AG_EVENT_GET_ARGS(ev, fmt);
+		if (fmt) {
+			va_list ap;
+
+			va_start(ap, fmt);
+			AG_EventGetArgs(ev, fmt, ap);
+			va_end(ap);
+		}
 		AG_SetPointer(obj, key, ev);
 	} else {
 		AG_Unset(obj, key);
@@ -2057,3 +2035,25 @@ tryname:
 	}
 }
 #endif /* !AG_SMALL */
+
+#ifdef AG_LEGACY
+/* Initialize an AG_Object instance (name argument variant). */
+void
+AG_ObjectInitNamed(void *obj, void *cl, const char *name)
+{
+	AG_ObjectInit(obj, cl);
+	if (name != NULL) {
+		AG_ObjectSetNameS(obj, name);
+	} else {
+		OBJECT(obj)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
+}
+
+/* Initialize an AG_Object instance (static variant). */
+void
+AG_ObjectInitStatic(void *obj, void *C)
+{
+	AG_ObjectInit(obj, C);
+	OBJECT(obj)->flags |= AG_OBJECT_STATIC;
+}
+#endif /* !AG_LEGACY */

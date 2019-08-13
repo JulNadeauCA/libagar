@@ -41,7 +41,8 @@ void
 AG_InitTimers(void)
 {
 	AG_MutexInitRecursive(&agTimerLock);
-	AG_ObjectInitStatic(&agTimerMgr, NULL);
+	AG_ObjectInit(&agTimerMgr, NULL);
+	agTimerMgr.flags |= AG_OBJECT_STATIC;
 }
 
 void
@@ -71,7 +72,13 @@ AG_AddTimerAuto(void *p, Uint32 ival, AG_TimerFn fn, const char *fmt, ...)
 		goto fail;
 	}
 	ev = &to->fnEvent;
-	AG_EVENT_GET_ARGS(ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
 	ev->argc0 = ev->argc;
 	AG_UnlockTimers(ob);
 	return (to);
@@ -147,7 +154,13 @@ reinsert:
 	ev = &to->fnEvent;
 	AG_EventInit(ev);
 	ev->argv[0].data.p = ob;
-	AG_EVENT_GET_ARGS(ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
 	ev->argc0 = ev->argc;
 
 	if (src->addTimerFn != NULL &&

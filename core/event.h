@@ -7,10 +7,14 @@
 #include <string.h>
 
 #ifndef AG_EVENT_ARGS_MAX
-#define AG_EVENT_ARGS_MAX 8
+# if AG_MODEL == AG_SMALL
+#  define AG_EVENT_ARGS_MAX 4
+# else
+#  define AG_EVENT_ARGS_MAX 8
+# endif
 #endif
 #ifndef AG_EVENT_NAME_MAX
-#define AG_EVENT_NAME_MAX 20
+# define AG_EVENT_NAME_MAX 20
 #endif
 
 /*
@@ -244,6 +248,29 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 # define AG_EVENT_PUSH_ARG_CASE_FLT(ev)
 #endif
 
+#ifdef AG_NAMED_ARGS
+# define AG_EVENT_GET_NAMED_ARG(ev)					\
+	if (*c == '(' && c[1] != '\0') {				\
+		char *cEnd;						\
+		AG_Strlcpy(V->name, &c[1], sizeof(V->name));		\
+		for (cEnd = V->name; *cEnd != '\0'; cEnd++) {		\
+			if (*cEnd == ')') {				\
+				*cEnd = '\0';				\
+				c += 2;					\
+				break;					\
+			}						\
+			c++;						\
+		}							\
+	} else {							\
+		V->name[0] = '\0';					\
+	}
+#else
+# define AG_EVENT_GET_NAMED_ARG(ev) 					\
+	{								\
+		V->name[0] = '\0';					\
+	}
+#endif
+
 #define AG_EVENT_PUSH_ARG(ap,ev) {					\
 	AG_Variable *V;							\
 									\
@@ -286,20 +313,7 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 	  AG_FatalError("E3");						\
 	}								\
 	c++;								\
-	if (*c == '(' && c[1] != '\0') {				\
-		char *cEnd;						\
-		AG_Strlcpy(V->name, &c[1], sizeof(V->name));		\
-		for (cEnd = V->name; *cEnd != '\0'; cEnd++) {		\
-			if (*cEnd == ')') {				\
-				*cEnd = '\0';				\
-				c += 2;					\
-				break;					\
-			}						\
-			c++;						\
-		}							\
-	} else {							\
-		V->name[0] = '\0';					\
-	}								\
+	AG_EVENT_GET_NAMED_ARG();					\
 }
 #define AG_EVENT_GET_ARGS(ev, fmtp)					\
 	if (fmtp != NULL) {						\
@@ -318,11 +332,11 @@ int  AG_InitEventSubsystem(Uint);
 void AG_DestroyEventSubsystem(void);
 
 void               AG_EventInit(AG_Event *_Nonnull);
-#if AG_MODEL != AG_SMALL
+void               AG_EventGetArgs(AG_Event *_Nonnull, const char *_Nullable,
+                                   va_list);
 void               AG_EventArgs(AG_Event *_Nonnull, const char *_Nullable , ...);
-AG_Event *_Nonnull AG_EventNew(AG_EventFn, void *_Nonnull,
-                               const char *_Nullable, ...);
-#endif
+AG_Event *_Nonnull AG_EventNew(AG_EventFn, void *_Nonnull, const char *_Nullable,
+                               ...);
 void               AG_EventCopy(AG_Event *_Nonnull, const AG_Event *_Nonnull);
 AG_Event *_Nonnull AG_EventDup(const AG_Event *_Nonnull);
 

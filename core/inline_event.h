@@ -236,16 +236,17 @@ ag_event_pop_double(AG_Event *_Nonnull ev)
 
 #endif /* !AG_SMALL */
 
+#ifdef AG_NAMED_ARGS
 /*
  * Extract Event argument by name (case-insensitive).
  */
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ AG_Variable *_Nonnull _Pure_Attribute
 AG_GetNamedEventArg(AG_Event *_Nonnull ev, const char *_Nonnull name)
-#else
+# else
 AG_Variable *
 ag_get_named_event_arg(AG_Event *ev, const char *name)
-#endif
+# endif
 {
 	int i;
 
@@ -253,26 +254,26 @@ ag_get_named_event_arg(AG_Event *ev, const char *name)
 		if (strcmp(ev->argv[i].name, name) == 0)
 			return (&ev->argv[i]);
 	}
-#ifdef AG_VERBOSITY
+# ifdef AG_VERBOSITY
 	AG_FatalErrorF("No such argument: \"%s\"", name);
-#else
+# else
 	AG_FatalError("E26");
-#endif
+# endif
 	return (&ev->argv[0]);
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ void *_Nullable _Pure_Attribute
 AG_GetNamedPtr(AG_Event *_Nonnull event, const char *_Nonnull name)
-#else
+# else
 void *
 ag_get_named_ptr(AG_Event *event, const char *name)
-#endif
+# endif
 {
 	AG_Variable *V;
 
 	V = AG_GetNamedEventArg(event, name);
-#ifdef AG_TYPE_SAFETY
+# ifdef AG_TYPE_SAFETY
 	if (V->type != AG_VARIABLE_POINTER) {
 		AG_FatalErrorF("Argument %s is a %s (not a Pointer)",
 		    name, agVariableTypes[V->type].name);
@@ -281,22 +282,22 @@ ag_get_named_ptr(AG_Event *event, const char *name)
 		AG_FatalErrorV("E35", "Pointer is const. "
 		                      "Did you mean AG_CONST_PTR_NAMED()?");
 	}
-#endif
+# endif
 	return (V->data.p);
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ const void *_Nullable _Pure_Attribute
 AG_GetNamedConstPtr(AG_Event *_Nonnull event, const char *_Nonnull name)
-#else
+# else
 const void *
 ag_get_named_const_ptr(AG_Event *event, const char *name)
-#endif
+# endif
 {
 	AG_Variable *V;
 
 	V = AG_GetNamedEventArg(event, name);
-#ifdef AG_TYPE_SAFETY
+# ifdef AG_TYPE_SAFETY
 	if (V->type != AG_VARIABLE_POINTER) {
 		AG_FatalErrorF("Argument %s is a %s (not a Pointer)",
 		    name, agVariableTypes[V->type].name);
@@ -305,17 +306,17 @@ ag_get_named_const_ptr(AG_Event *event, const char *name)
 		AG_FatalErrorV("E35", "Pointer is not const. "
 		                      "Did you mean AG_PTR_NAMED()?");
 	}
-#endif
+# endif
 	return (const void *)V->data.p;
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ char *_Nonnull _Pure_Attribute
 AG_GetNamedString(AG_Event *_Nonnull event, const char *_Nonnull name)
-#else
+# else
 char *
 ag_get_named_string(AG_Event *event, const char *name)
-#endif
+# endif
 {
 	AG_Variable *V;
 
@@ -328,13 +329,13 @@ ag_get_named_string(AG_Event *event, const char *name)
 	return (V->data.s);
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ int _Pure_Attribute
 AG_GetNamedInt(AG_Event *_Nonnull event, const char *_Nonnull name)
-#else
+# else
 int
 ag_get_named_int(AG_Event *_Nonnull event, const char *_Nonnull name)
-#endif
+# endif
 {
 	AG_Variable *V;
 
@@ -347,102 +348,104 @@ ag_get_named_int(AG_Event *_Nonnull event, const char *_Nonnull name)
 	return (V->data.i);
 }
 
-#ifdef AG_INLINE_HEADER
+# ifdef AG_INLINE_HEADER
 static __inline__ Uint _Pure_Attribute
 AG_GetNamedUint(AG_Event *_Nonnull event, const char *_Nonnull name)
-#else
+# else
 Uint
 ag_get_named_uint(AG_Event *event, const char *name)
-#endif
+# endif
 {
 	AG_Variable *V;
 
 	V = AG_GetNamedEventArg(event, name);
-#ifdef AG_TYPE_SAFETY
+# ifdef AG_TYPE_SAFETY
 	if (V->type != AG_VARIABLE_UINT)
 		AG_FatalErrorF("Argument %s is a %s (not an Uint)",
 		    name, agVariableTypes[V->type].name);
-#endif
+# endif
 	return (V->data.u);
 }
 
-#if AG_MODEL != AG_SMALL
+# if AG_MODEL != AG_SMALL
 
-#ifdef AG_INLINE_HEADER
+#  ifdef AG_INLINE_HEADER
 static __inline__ long _Pure_Attribute
 AG_GetNamedLong(AG_Event *_Nonnull event, const char *_Nonnull name)
-#else
+#  else
 long
 ag_get_named_long(AG_Event *event, const char *name)
-#endif
+#  endif
 {
 	AG_Variable *V;
 
 	V = AG_GetNamedEventArg(event, name);
-#ifdef AG_TYPE_SAFETY
+#  ifdef AG_TYPE_SAFETY
 	if (V->type != AG_VARIABLE_LONG)
 		AG_FatalErrorF("Argument %s is a %s (not a Long)",
 		    name, agVariableTypes[V->type].name);
-#endif
+#  endif
 	return (V->data.li);
 }
 
-#ifdef AG_INLINE_HEADER
+#  ifdef AG_INLINE_HEADER
 static __inline__ Ulong _Pure_Attribute
 AG_GetNamedUlong(AG_Event *_Nonnull event, const char *_Nonnull name)
-#else
+#  else
 Ulong
 ag_get_named_ulong(AG_Event *event, const char *name)
-#endif
+#  endif
 {
 	AG_Variable *V;
 
 	V = AG_GetNamedEventArg(event, name);
-#ifdef AG_TYPE_SAFETY
+#  ifdef AG_TYPE_SAFETY
 	if (V->type != AG_VARIABLE_ULONG)
 		AG_FatalErrorF("Argument %s is a %s (not an Ulong)",
 		    name, agVariableTypes[V->type].name);
-#endif
+#  endif
 	return (V->data.uli);
 }
-#endif /* !AG_SMALL */
+#  endif /* !AG_SMALL */
 
-#ifdef AG_HAVE_FLOAT
-# ifdef AG_INLINE_HEADER
+# ifdef AG_HAVE_FLOAT
+#  ifdef AG_INLINE_HEADER
 static __inline__ float _Pure_Attribute
 AG_GetNamedFlt(AG_Event *_Nonnull event, const char *_Nonnull name)
-# else
+#  else
 float
 ag_get_named_flt(AG_Event *event, const char *name)
-# endif
+#  endif
 {
 	AG_Variable *V;
 
 	V = AG_GetNamedEventArg(event, name);
-# ifdef AG_TYPE_SAFETY
+#  ifdef AG_TYPE_SAFETY
 	if (V->type != AG_VARIABLE_FLOAT)
 		AG_FatalErrorF("Argument %s is a %s (not a Float)",
 		    name, agVariableTypes[V->type].name);
-# endif
+#  endif
 	return (V->data.flt);
 }
 
-# ifdef AG_INLINE_HEADER
+#  ifdef AG_INLINE_HEADER
 static __inline__ double _Pure_Attribute
 AG_GetNamedDbl(AG_Event *_Nonnull event, const char *_Nonnull name)
-# else
+#  else
 double
 ag_get_named_dbl(AG_Event *event, const char *name)
-# endif
+#  endif
 {
 	AG_Variable *V;
 
 	V = AG_GetNamedEventArg(event, name);
-# ifdef AG_TYPE_SAFETY
+#  ifdef AG_TYPE_SAFETY
 	if (V->type != AG_VARIABLE_DOUBLE)
 		AG_FatalErrorF("Argument %s is a %s (not a Double)",
 		    name, agVariableTypes[V->type].name);
-# endif
+#  endif
 	return (V->data.dbl);
 }
-#endif /* AG_HAVE_FLOAT */
+# endif /* AG_HAVE_FLOAT */
+
+#endif /* AG_NAMED_ARGS */

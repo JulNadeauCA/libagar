@@ -40,6 +40,7 @@ register("--enable-debug-core",		"Expensive AG_Object debugging [no]")
 register("--enable-dso",		"Dynamically loaded modules [check]")
 register("--enable-exec",		"The AG_Execute(3) interface [check]")
 register("--enable-namespaces",		"Namespaces for object classes [check]")
+register("--enable-named-args",		"Named AG_Event arguments [check]")
 register("--enable-network",		"The AG_Net(3) network interface [check]")
 register("--enable-serialization",	"File I/O and serialization [check]")
 register("--enable-string",		"AG_Printf(3) formatting engine [check]")
@@ -156,6 +157,7 @@ c64 | c128 | geos | nes)
 	enable_dso="no"
 	enable_exec="no"
 	enable_namespaces="no"
+	enable_named_args="no"
 	enable_network="no"
 	enable_serialization="no"
 	enable_string="no"
@@ -314,6 +316,7 @@ hdefine_if("${enable_dso}" != 'no',           AG_ENABLE_DSO)
 hdefine_if("${enable_exec}" != 'no',          AG_ENABLE_EXEC)
 hdefine_if("${enable_legacy}" = 'yes',        AG_LEGACY)
 hdefine_if("${enable_namespaces}" != 'no',    AG_NAMESPACES)
+hdefine_if("${enable_named_args}" != 'no',    AG_NAMED_ARGS)
 hdefine_if("${enable_serialization}" != 'no', AG_SERIALIZATION)
 hdefine_if("${enable_string}" != 'no',        AG_ENABLE_STRING)
 hdefine_if("${enable_timers}" != 'no',        AG_TIMERS)

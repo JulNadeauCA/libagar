@@ -32,17 +32,23 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined(_WIN32) && !defined(_XBOX)
-#undef SLIST_ENTRY
-#include <windows.h>
+#ifdef __CC65__
+# include <conio.h>
 #endif
 
-char         *_Nullable agErrorMsg = NULL;	/* Error message */
-AG_ErrorCode  agErrorCode = AG_EUNDEFINED; 	/* Error code */
-#ifdef AG_THREADS
-AG_ThreadKey agErrorMsgKey;
-AG_ThreadKey agErrorCodeKey;
+#if defined(_WIN32) && !defined(_XBOX)
+# undef SLIST_ENTRY
+# include <windows.h>
 #endif
+
+char *_Nullable agErrorMsg  = NULL;		/* Last error message (UTF-8) */
+AG_ErrorCode    agErrorCode = AG_EUNDEFINED; 	/* Last error code */
+#ifdef AG_THREADS
+AG_ThreadKey    agErrorMsgKey;    /* Last error message (UTF-8; thread-local) */
+AG_ThreadKey    agErrorCodeKey;   /* Last error code (thread-local) */
+#endif
+
+int agDebugLvl = 1;				/* Default debug level */
 
 /* Redirect Verbose() output to "foo-out.txt" file */
 /* #define VERBOSE_TO_FILE */
@@ -53,11 +59,13 @@ AG_ThreadKey agErrorCodeKey;
 /* Use AttachConsole() on Windows */
 /* #define USE_WIN32_CONSOLE */
 
-int agDebugLvl = 1;			/* Default debug level */
-
 static void (*_Nullable agErrorCallback)(const char *_Nonnull) = NULL;
 static int  (*_Nullable agVerboseCallback)(const char *_Nonnull) = NULL;
 static int  (*_Nullable agDebugCallback)(const char *_Nonnull) = NULL;
+
+#ifdef __CC65__
+int ag65consoleX = 0, ag65consoleY = 0;
+#endif
 
 /* Import inlinables */
 #undef AG_INLINE_HEADER
@@ -214,14 +222,37 @@ AG_GetErrorCode(void)
 #endif
 }
 
-/* Issue a debug message. */
+/*
+ * Print a debug message on the error console. Optionally, prefix the
+ * message with a label containing the name/address of an object.
+ */
 void
-AG_Debug(void *p, const char *fmt, ...)
+AG_Debug(void *pObj, const char *fmt, ...)
 {
-#ifdef AG_DEBUG
-	AG_Object *obj = p;
+#if defined(AG_DEBUG) || defined(__CC65__)
+	AG_Object *obj = pObj;
 	va_list args;
+# ifdef __CC65__
+	Uint8 colorSave, wScr,hScr;
 	
+	va_start(args, fmt);
+	colorSave = textcolor(COLOR_CYAN);
+	gotoxy(ag65consoleX, ag65consoleY);
+	if (obj != NULL) {
+		fputs(obj->name, stdout);
+		fputc(':', stdout);
+	}
+	vcprintf(fmt, args);
+	textcolor(colorSave);
+	va_end(args);
+
+	screensize(&wScr, &hScr);
+	if (++ag65consoleY > hScr) {
+		clrscr();
+		ag65consoleY = 0;
+	}
+# else /* !__CC65__ */
+
 	if (agDebugCallback != NULL) {
 		char *buf;
 
@@ -234,11 +265,11 @@ AG_Debug(void *p, const char *fmt, ...)
 				Strlcpy(buf, obj->name, bufLen);
 				Strlcat(buf, ": ", bufLen);
 			} else {
-#if AG_MODEL == AG_LARGE
+#  if AG_MODEL == AG_LARGE
 				bufLen = strlen(obj->name)+23;
-#else
+#  else
 				bufLen = strlen(obj->name)+16;
-#endif
+#  endif
 				buf = Malloc(bufLen);
 				Snprintf(buf, bufLen, "<%p>: ", obj);
 			}
@@ -256,7 +287,7 @@ AG_Debug(void *p, const char *fmt, ...)
 	}
 	if (agDebugLvl >= 1) {
 		va_start(args, fmt);
-# if defined(DEBUG_TO_FILE)
+#  if defined(DEBUG_TO_FILE)
 		/* Redirect output to foo-debug.txt */
 		{
 			char path[AG_FILENAME_MAX];
@@ -280,7 +311,7 @@ AG_Debug(void *p, const char *fmt, ...)
 				fclose(f);
 			}
 		}
-# elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
+#  elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
 		{
 			HANDLE cons;
 			char *buf;
@@ -296,7 +327,7 @@ AG_Debug(void *p, const char *fmt, ...)
 				free(buf);
 			}
 		}
-# else /* _WIN32 */
+#  else /* _WIN32 */
 		if (obj != NULL) {
 			if (obj->name[0] != '\0') {
 				printf("%s: ", obj->name);
@@ -305,9 +336,10 @@ AG_Debug(void *p, const char *fmt, ...)
 			}
 		}
 		vprintf(fmt, args);
-#endif
+#  endif
 		va_end(args);
 	}
+# endif /* !__CC65__ */
 #endif /* AG_DEBUG */
 }
 
@@ -315,7 +347,25 @@ AG_Debug(void *p, const char *fmt, ...)
 void
 AG_Verbose(const char *fmt, ...)
 {
-#ifdef AG_VERBOSITY
+#if defined(AG_VERBOSITY) || defined(__CC65__)
+# ifdef __CC65__
+	va_list args;
+	Uint8 colorSave, wScr,hScr;
+	
+	va_start(args, fmt);
+	colorSave = textcolor(COLOR_WHITE);
+	gotoxy(ag65consoleX, ag65consoleY);
+	vcprintf(fmt, args);
+	textcolor(colorSave);
+	va_end(args);
+
+	screensize(&wScr, &hScr);
+	if (++ag65consoleY > hScr) {
+		clrscr();
+		ag65consoleY = 0;
+	}
+# else /* !__CC65__ */
+
 	va_list args;
 
 	if (!agVerbose)
@@ -334,7 +384,7 @@ AG_Verbose(const char *fmt, ...)
 	}
 
 	va_start(args, fmt);
-# if defined(VERBOSE_TO_FILE)
+#  if defined(VERBOSE_TO_FILE)
 	/* Redirect output to foo-out.txt */
 	{
 		char path[AG_FILENAME_MAX];
@@ -351,7 +401,7 @@ AG_Verbose(const char *fmt, ...)
 			fclose(f);
 		}
 	}
-# elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
+#  elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
 	{
 		HANDLE cons;
 		char *buf;
@@ -363,10 +413,11 @@ AG_Verbose(const char *fmt, ...)
 			free(buf);
 		}
 	}
-# else
+#  else
 	vprintf(fmt, args);
-# endif
+#  endif
 	va_end(args);
+# endif /* !__CC65__ */
 #endif /* AG_VERBOSITY */
 }
 
@@ -390,14 +441,14 @@ AG_FatalErrorF(const char *fmt, ...)
 void
 AG_FatalError(const char *msg)
 {
-	/* Use callback if defined. The callback must gracefully exit. */
+#ifdef __CC65__
+	textcolor(COLOR_LIGHTRED);
+#endif
 	if (agErrorCallback != NULL) {
 		agErrorCallback(msg ? msg : AG_GetError());
 		abort(); /* not reached */
 	} else {
-#ifdef AG_VERBOSITY
 		fputs("AG_FatalError: ", stderr);
-#endif
 		if (msg != NULL) {
 			fputs(msg, stderr);
 		} else {

@@ -476,6 +476,7 @@ echo '    --enable-debug-core         Expensive AG_Object debugging [no]'
 echo '    --enable-dso                Dynamically loaded modules [check]'
 echo '    --enable-exec               The AG_Execute(3) interface [check]'
 echo '    --enable-namespaces         Namespaces for object classes [check]'
+echo '    --enable-named-args         Named AG_Event arguments [check]'
 echo '    --enable-network            The AG_Net(3) network interface [check]'
 echo '    --enable-serialization      File I/O and serialization [check]'
 echo '    --enable-string             AG_Printf(3) formatting engine [check]'
@@ -1723,6 +1724,7 @@ echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
 	enable_dso="no"
 	enable_exec="no"
 	enable_namespaces="no"
+	enable_named_args="no"
 	enable_network="no"
 	enable_serialization="no"
 	enable_string="no"
@@ -5360,6 +5362,17 @@ echo "hdefs[\"AG_NAMESPACES\"] = \"$AG_NAMESPACES\"" >>configure.lua
 else
 echo '#undef AG_NAMESPACES' >$bb_incdir/ag_namespaces.h
 echo 'hdefs["AG_NAMESPACES"] = nil' >>configure.lua
+fi
+if [ "${enable_named_args}" != 'no' ]; then
+AG_NAMED_ARGS="yes"
+bb_o=$bb_incdir/ag_named_args.h
+echo '#ifndef AG_NAMED_ARGS' >$bb_o
+echo "#define AG_NAMED_ARGS \"$AG_NAMED_ARGS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_NAMED_ARGS\"] = \"$AG_NAMED_ARGS\"" >>configure.lua
+else
+echo '#undef AG_NAMED_ARGS' >$bb_incdir/ag_named_args.h
+echo 'hdefs["AG_NAMED_ARGS"] = nil' >>configure.lua
 fi
 if [ "${enable_serialization}" != 'no' ]; then
 AG_SERIALIZATION="yes"

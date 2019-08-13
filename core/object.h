@@ -42,7 +42,7 @@
 #endif
 #ifndef AG_OBJECT_CLASSTBLSIZE
 # if AG_MODEL == AG_SMALL
-#  define AG_OBJECT_CLASSTBLSIZE 32
+#  define AG_OBJECT_CLASSTBLSIZE 8
 # elif AG_MODEL == AG_MEDIUM
 #  define AG_OBJECT_CLASSTBLSIZE 64
 # else
@@ -349,15 +349,13 @@ void *_Nullable AG_ObjectNew(void *_Nullable, const char *_Nullable,
 void AG_ObjectAttach(void *_Nullable _Restrict, void *_Nonnull _Restrict);
 
 void AG_ObjectInit(void *_Nonnull _Restrict, void *_Nullable _Restrict);
-void AG_ObjectInitStatic(void *_Nonnull _Restrict, void *_Nullable _Restrict);
-void AG_ObjectInitNamed(void *_Nonnull _Restrict, void *_Nonnull _Restrict,
-                        const char *_Nullable);
-
 void AG_ObjectDetach(void *_Nonnull);
 void AG_ObjectReset(void *_Nonnull);
 
+#if AG_MODEL != AG_SMALL
 char *_Nullable AG_ObjectGetName(void *_Nonnull) _Warn_Unused_Result;
 int             AG_ObjectCopyName(void *_Nonnull, char *_Nonnull, AG_Size);
+#endif
 
 void *_Nullable AG_ObjectFindS(void *_Nonnull, const char *_Nonnull)
                               _Pure_Attribute_If_Unthreaded
@@ -484,16 +482,6 @@ AG_Variable *_Nullable ag_access_variable(void *_Nonnull, const char *_Nonnull)
                                          _Pure_Attribute_If_Unthreaded
                                          _Warn_Unused_Result;
 
-void *_Nonnull ag_get_named_object(AG_Event *_Nonnull, const char *_Nonnull,
-                                   const char *_Nonnull)
-                                  _Pure_Attribute
-                                  _Warn_Unused_Result;
-
-const void *_Nonnull ag_get_named_const_object(AG_Event *_Nonnull,
-                                               const char *_Nonnull,
-                                               const char *_Nonnull)
-                                              _Pure_Attribute
-                                              _Warn_Unused_Result;
 #ifdef AG_THREADS
 void ag_object_lock(void *_Nonnull);
 void ag_object_unlock(void *_Nonnull);
@@ -540,6 +528,14 @@ void ag_unlock_timers(void *_Nullable);
 #  define AG_UnlockTimers(o)
 # endif
 #endif /* !AG_INLINE_OBJECT */
+
+#ifdef AG_LEGACY
+void AG_ObjectInitStatic(void *_Nonnull _Restrict, void *_Nullable _Restrict)
+                        DEPRECATED_ATTRIBUTE;
+void AG_ObjectInitNamed(void *_Nonnull _Restrict, void *_Nonnull _Restrict,
+                        const char *_Nullable)
+                       DEPRECATED_ATTRIBUTE;
+#endif /* AG_LEGACY */
 __END_DECLS
 #ifdef AG_LEGACY
 #include <agar/core/legacy_object.h>

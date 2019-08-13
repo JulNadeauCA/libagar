@@ -19,6 +19,10 @@ ag_malloc(AG_Size len)
 	void *p;
 
 	if ((p = malloc(len)) == NULL) {
+#ifdef __CC65__
+		AG_Verbose("Heap avail=%d (max %d)\n", _heapmemavail(),
+		                                       _heapmaxavail());
+#endif
 		AG_FatalError("malloc");
 	}
 	return (p);

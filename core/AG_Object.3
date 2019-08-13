@@ -88,12 +88,6 @@ will autoload any required DSOs).
 .Fn AG_ObjectInit "AG_Object *obj" "AG_ObjectClass *classInfo"
 .Pp
 .Ft "void"
-.Fn AG_ObjectInitStatic "AG_Object *obj" "AG_ObjectClass *classInfo"
-.Pp
-.Ft "void"
-.Fn AG_ObjectInitNamed "AG_Object *obj" "AG_ObjectClass *classInfo" "const char *name"
-.Pp
-.Ft "void"
 .Fn AG_ObjectAttach "AG_Object *new_parent" "AG_Object *obj"
 .Pp
 .Ft "void"
@@ -212,25 +206,6 @@ The
 argument specifies a default set of flags (see
 .Sx FLAGS
 section).
-.Pp
-The
-.Fn AG_ObjectInitStatic
-variant of
-.Fn AG_ObjectInit
-implicitely sets the
-.Dv AG_OBJECT_STATIC
-flag, indicating that the object's structure statically allocated (or allocated
-through a facility other than
-.Xr malloc 3 ) .
-The
-.Fn AG_ObjectInitNamed
-variant either sets the object name with
-.Fn AG_ObjectSetNameS
-if the
-.Fa name
-argument is non-NULL, or it implicitely sets the
-.Dv AG_OBJECT_NAME_ONATTACH
-flag if the name is NULL.
 .Pp
 The function
 .Fn AG_ObjectAttach

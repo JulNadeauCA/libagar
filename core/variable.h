@@ -23,7 +23,6 @@ typedef enum ag_variable_type {
 	AG_VARIABLE_P_ULONG,		/* Pointer to unsigned long */
 	AG_VARIABLE_LONG,		/* Natural long integer */
 	AG_VARIABLE_P_LONG,		/* Pointer to long */
-
 	AG_VARIABLE_UINT8,		/* Unsigned 8-bit */
 	AG_VARIABLE_P_UINT8,		/* Pointer to Uint8 */
 	AG_VARIABLE_SINT8,		/* Signed 8-bit */
@@ -139,7 +138,11 @@ typedef const void *_Nullable (*AG_ConstPointerFn)(struct ag_event *_Nonnull);
 /* Agar variable instance */
 typedef struct ag_variable {
 	char name[AG_VARIABLE_NAME_MAX];           /* Variable name (""=anon) */
-	AG_VariableType type;                      /* Variable type */
+#if AG_MODEL != AG_SMALL
+	AG_VariableType type;			   /* Variable type */
+#else
+	Uint8 type;
+#endif
 #ifdef AG_THREADS
 	_Nullable_Mutex AG_Mutex *_Nullable mutex; /* Lock on target data */
 #endif
@@ -230,6 +233,7 @@ AG_Variable *_Nonnull AG_BindIntMp(void *_Nonnull, const char *_Nonnull,
 #define AG_BindBool(o,k,p)     AG_BindInt((o),(k),(p))
 #define AG_BindBoolMp(o,k,p,m) AG_BindIntMp((o),(k),(p),(m))
 
+#if AG_MODEL != AG_SMALL
 /*
  * ULONG: Natural long unsigned integer.
  */
@@ -239,11 +243,11 @@ void AG_InitUlong(AG_Variable *_Nonnull, Ulong);
 AG_Variable *_Nonnull AG_SetUlong(void *_Nonnull, const char *_Nonnull, Ulong);
 AG_Variable *_Nonnull AG_BindUlong(void *_Nonnull, const char *_Nonnull,
 			           Ulong *_Nonnull);
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 AG_Variable *_Nonnull AG_BindUlongMp(void *_Nonnull, const char *_Nonnull,
                                      Ulong *_Nonnull,
 				     _Nonnull_Mutex AG_Mutex *_Nonnull);
-#endif
+# endif
 
 /*
  * LONG: Natural long integer.
@@ -254,11 +258,12 @@ void AG_InitLong(AG_Variable *_Nonnull, long);
 AG_Variable *_Nonnull AG_SetLong(void *_Nonnull, const char *_Nonnull, long);
 AG_Variable *_Nonnull AG_BindLong(void *_Nonnull, const char *_Nonnull,
 			          long *_Nonnull);
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 AG_Variable *_Nonnull AG_BindLongMp(void *_Nonnull, const char *_Nonnull,
                                     long *_Nonnull,
                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
-#endif
+# endif
+#endif /* !AG_SMALL */
 
 /*
  * UINT8: Unsigned 8-bit integer

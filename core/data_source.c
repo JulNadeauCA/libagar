@@ -43,7 +43,8 @@ static AG_Object errorMgr;
 void
 AG_DataSourceInitSubsystem(void)
 {
-	AG_ObjectInitStatic(&errorMgr, NULL);
+	AG_ObjectInit(&errorMgr, NULL);
+	errorMgr.flags |= AG_OBJECT_STATIC;
 }
 
 void
@@ -59,7 +60,13 @@ AG_DataSourceSetErrorFn(AG_DataSource *ds, AG_EventFn fn,
 {
 	AG_ObjectLock(&errorMgr);
 	ds->errorFn = AG_SetEvent(&errorMgr, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(ds->errorFn, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ds->errorFn, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(&errorMgr);
 }
 

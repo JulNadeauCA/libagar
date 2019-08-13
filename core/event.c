@@ -150,14 +150,30 @@ AG_EventInit(AG_Event *_Nonnull ev)
 	InitEvent(ev, NULL);
 }
 
-#if AG_MODEL != AG_SMALL
 /* Initialize an AG_Event structure with the specified arguments. */
 void
 AG_EventArgs(AG_Event *ev, const char *fmt, ...)
 {
+	va_list ap;
+
 	InitEvent(ev, NULL);
-	AG_EVENT_GET_ARGS(ev, fmt);
+	if (fmt) {
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
 	ev->argc0 = ev->argc;
+}
+
+void
+AG_EventGetArgs(AG_Event *ev, const char *fmt, va_list ap)
+{
+	if (fmt) {
+		const char *c = (const char *)fmt;
+
+		while (*c != '\0')
+			AG_EVENT_PUSH_ARG(ap, ev);
+	}
 }
 
 /* Return a newly allocated AG_Event. */
@@ -165,14 +181,18 @@ AG_Event *
 AG_EventNew(AG_EventFn fn, void *obj, const char *fmt, ...)
 {
 	AG_Event *ev;
+	va_list ap;
 
 	ev = AG_Malloc(sizeof(AG_Event));
 	InitEvent(ev, obj);
 	ev->fn = fn;
-	AG_EVENT_GET_ARGS(ev, fmt);
+	if (fmt) {
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
 	return (ev);
 }
-#endif /* !AG_SMALL */
 
 /* Return a newly-allocated duplicate of the given AG_Event. */
 AG_Event *
@@ -241,7 +261,14 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	InitPointerArg(&ev->argv[0], ob);
 	InitDebugName (&ev->argv[0], "self");
 	ev->fn = fn;
-	AG_EVENT_GET_ARGS(ev, fmt);
+
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
 	ev->argc0 = ev->argc;
 
 	AG_ObjectUnlock(ob);
@@ -277,7 +304,14 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	}
 
 	ev->fn = fn;
-	AG_EVENT_GET_ARGS(ev, fmt);
+
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
 	ev->argc0 = ev->argc;
 
 	TAILQ_INSERT_TAIL(&ob->events, ev, events);
@@ -430,6 +464,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 	AG_Object *rcvr = rp;
 	AG_Event *ev;
 	AG_Object *chld;
+	va_list ap;
 
 #ifdef AG_DEBUG_CORE
 	if (agDebugLvl >= 2) { Debug(rcvr, "Event <%s> posted from %s\n", evname, sndr ? sndr->name : "NULL"); }
@@ -444,9 +479,14 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			AG_Thread th;
 			
 			memcpy(evAsy, ev, sizeof(AG_Event));
-			AG_EVENT_GET_ARGS(evAsy, fmt);
+			if (fmt) {
+				va_start(ap, fmt);
+				AG_EventGetArgs(evAsy, fmt, ap);
+				va_end(ap);
+			}
 			InitPointerArg(&evAsy->argv[evAsy->argc], sndr);
 			InitDebugName( &evAsy->argv[evAsy->argc], "sender");
+
 			AG_ThreadCreate(&th, EventThread, evAsy);
 		} else
 #endif
@@ -455,7 +495,11 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			AG_Event *evTmp = Malloc(sizeof(AG_Event));
 
 			memcpy(evTmp, ev, sizeof(AG_Event));
-			AG_EVENT_GET_ARGS(evTmp, fmt);
+			if (fmt) {
+				va_start(ap, fmt);
+				AG_EventGetArgs(evTmp, fmt, ap);
+				va_end(ap);
+			}
 			InitPointerArg(&evTmp->argv[evTmp->argc], sndr);
 			InitDebugName( &evTmp->argv[evTmp->argc], "sender");
 
@@ -466,7 +510,9 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 				}
 				AG_UnlockVFS(rcvr);
 			}
-			if (evTmp->fn != NULL) { evTmp->fn(evTmp); }
+			if (evTmp->fn != NULL) {
+				evTmp->fn(evTmp);
+			}
 			free(evTmp);
 		}
 #else /* MEDIUM or LARGE */
@@ -474,7 +520,11 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			AG_Event evTmp;			/* Fits the stack */
 
 			memcpy(&evTmp, ev, sizeof(AG_Event));
-			AG_EVENT_GET_ARGS(&evTmp, fmt);
+			if (fmt) {
+				va_start(ap, fmt);
+				AG_EventGetArgs(&evTmp, fmt, ap);
+				va_end(ap);
+			}
 			InitPointerArg(&evTmp.argv[evTmp.argc], sndr);
 			InitDebugName (&evTmp.argv[evTmp.argc], "sender");
 
@@ -485,13 +535,15 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 				}
 				AG_UnlockVFS(rcvr);
 			}
-			if (evTmp.fn != NULL) { evTmp.fn(&evTmp); }
+			if (evTmp.fn != NULL)
+				evTmp.fn(&evTmp);
 		}
 #endif /* MEDIUM or LARGE */
 	}
 	AG_ObjectUnlock(rcvr);
 }
 
+#if AG_MODEL != AG_SMALL
 /*
  * Variant of AG_PostEvent() which accepts an AG_Event pointer
  * (as opposed to a string identifier).
@@ -502,29 +554,39 @@ AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
 	AG_Object *sndr = sp;
 	AG_Object *rcvr = rp;
 	AG_Object *chld;
+	va_list ap;
 
-#ifdef AG_DEBUG_CORE
+# ifdef AG_DEBUG_CORE
 	if (agDebugLvl >= 2) { Debug(rcvr, "Event %p posted from %s\n", ev, sndr ? sndr->name : "NULL"); }
-#endif
+# endif
 	AG_ObjectLock(rcvr);
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 	if (ev->flags & AG_EVENT_ASYNC) {
 		AG_Event *evAsy = Malloc(sizeof(AG_Event));
 		AG_Thread th;
 
 		memcpy(evAsy, ev, sizeof(AG_Event));
-		AG_EVENT_GET_ARGS(evAsy, fmt);
+		if (fmt) {
+			va_start(ap, fmt);
+			AG_EventGetArgs(evAsy, fmt, ap);
+			va_end(ap);
+		}
 		InitPointerArg(&evAsy->argv[evAsy->argc], sndr);
 		InitDebugName (&evAsy->argv[evAsy->argc], "sender");
+
 		AG_ThreadCreate(&th, EventThread, evAsy);
 	} else
-#endif
-#if AG_MODEL == AG_SMALL
+# endif
+# if AG_MODEL == AG_SMALL
 	{
 		AG_Event *evTmp = Malloc(sizeof(AG_Event));
 
 		memcpy(evTmp, ev, sizeof(AG_Event));
-		AG_EVENT_GET_ARGS(evTmp, fmt);
+		if (fmt) {
+			va_start(ap, fmt);
+			AG_EventGetArgs(evTmp, fmt, ap);
+			va_end(ap);
+		}
 		InitPointerArg(&evTmp->argv[evTmp->argc], sndr);
 		InitDebugName (&evTmp->argv[evTmp->argc], "sender");
 		if (evTmp->flags & AG_EVENT_PROPAGATE) {
@@ -534,15 +596,21 @@ AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
 			}
 			AG_UnlockVFS(rcvr);
 		}
-		if (evTmp->fn != NULL) { evTmp->fn(evTmp); }
+		if (evTmp->fn != NULL) {
+			evTmp->fn(evTmp);
+		}
 		free(evTmp);
 	}
-#else /* MEDIUM or LARGE */
+# else /* MEDIUM or LARGE */
 	{
 		AG_Event evTmp;				/* Fits the stack */
 
 		memcpy(&evTmp, ev, sizeof(AG_Event));
-		AG_EVENT_GET_ARGS(&evTmp, fmt);
+		if (fmt) {
+			va_start(ap, fmt);
+			AG_EventGetArgs(&evTmp, fmt, ap);
+			va_end(ap);
+		}
 		InitPointerArg(&evTmp.argv[evTmp.argc], sndr);
 		InitDebugName (&evTmp.argv[evTmp.argc], "sender");
 		if (evTmp.flags & AG_EVENT_PROPAGATE) {
@@ -554,10 +622,11 @@ AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
 		}
 		if (evTmp.fn != NULL) { evTmp.fn(&evTmp); }
 	}
-#endif /* MEDIUM or LARGE */
+# endif /* MEDIUM or LARGE */
 
 	AG_ObjectUnlock(rcvr);
 }
+#endif /* !SMALL */
 
 #ifdef AG_TIMERS
 /*
@@ -576,6 +645,7 @@ AG_SchedEvent(void *pSndr, void *pRcvr, Uint32 ticks, const char *evname,
 	AG_Object *rcvr = pRcvr;
 	AG_Event *ev;
 	AG_Timer *to;
+	va_list ap;
 
 	if ((to = TryMalloc(sizeof(AG_Timer))) == NULL) {
 		return (-1);
@@ -592,7 +662,11 @@ AG_SchedEvent(void *pSndr, void *pRcvr, Uint32 ticks, const char *evname,
 	ev = &to->fnEvent;
 	AG_EventInit(ev);
 	ev->argv[0].data.p = rcvr;
-	AG_EVENT_GET_ARGS(ev, fmt);
+	if (fmt) {
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
 	ev->argc0 = ev->argc;
 
 	AG_UnlockTiming();
@@ -942,6 +1016,7 @@ AG_AddEventPrologue(AG_EventSinkFn fn, const char *fnArgs, ...)
 {
 	AG_EventSource *src = AG_GetEventSource();
 	AG_EventSink *es;
+	va_list ap;
 
 	if ((es = TryMalloc(sizeof(AG_EventSink))) == NULL) {
 		return (NULL);
@@ -949,7 +1024,11 @@ AG_AddEventPrologue(AG_EventSinkFn fn, const char *fnArgs, ...)
 	es->type = AG_SINK_PROLOGUE;
 	es->fn = fn;
 	InitEvent(&es->fnArgs, NULL);
-	AG_EVENT_GET_ARGS(&es->fnArgs, fnArgs);
+	if (fnArgs) {
+		va_start(ap, fnArgs);
+		AG_EventGetArgs(&es->fnArgs, fnArgs, ap);
+		va_end(ap);
+	}
 	es->fnArgs.argc0 = es->fnArgs.argc;
 	TAILQ_INSERT_TAIL(&src->prologues, es, sinks);
 	return (es);
@@ -977,6 +1056,7 @@ AG_AddEventEpilogue(AG_EventSinkFn fn, const char *fnArgs, ...)
 {
 	AG_EventSource *src = AG_GetEventSource();
 	AG_EventSink *es;
+	va_list ap;
 
 	if ((es = TryMalloc(sizeof(AG_EventSink))) == NULL) {
 		return (NULL);
@@ -984,7 +1064,11 @@ AG_AddEventEpilogue(AG_EventSinkFn fn, const char *fnArgs, ...)
 	es->type = AG_SINK_EPILOGUE;
 	es->fn = fn;
 	InitEvent(&es->fnArgs, NULL);
-	AG_EVENT_GET_ARGS(&es->fnArgs, fnArgs);
+	if (fnArgs) {
+		va_start(ap, fnArgs);
+		AG_EventGetArgs(&es->fnArgs, fnArgs, ap);
+		va_end(ap);
+	}
 	es->fnArgs.argc0 = es->fnArgs.argc;
 	TAILQ_INSERT_TAIL(&src->epilogues, es, sinks);
 	return (es);
@@ -1012,6 +1096,7 @@ AG_AddEventSpinner(AG_EventSinkFn fn, const char *fnArgs, ...)
 {
 	AG_EventSource *src = AG_GetEventSource();
 	AG_EventSink *es;
+	va_list ap;
 
 	if ((es = TryMalloc(sizeof(AG_EventSink))) == NULL) {
 		return (NULL);
@@ -1019,7 +1104,11 @@ AG_AddEventSpinner(AG_EventSinkFn fn, const char *fnArgs, ...)
 	es->type = AG_SINK_SPINNER;
 	es->fn = fn;
 	InitEvent(&es->fnArgs, NULL);
-	AG_EVENT_GET_ARGS(&es->fnArgs, fnArgs);
+	if (fnArgs) {
+		va_start(ap, fnArgs);
+		AG_EventGetArgs(&es->fnArgs, fnArgs, ap);
+		va_end(ap);
+	}
 	es->fnArgs.argc0 = es->fnArgs.argc;
 	TAILQ_INSERT_TAIL(&src->spinners, es, sinks);
 	return (es);
@@ -1051,6 +1140,8 @@ AG_AddEventSink(enum ag_event_sink_type type, int ident, Uint flags,
 	AG_EventSourceKQUEUE *kq = (AG_EventSourceKQUEUE *)src;
 	struct kevent *kev;
 #endif
+	va_list ap;
+
 	if (type >= AG_SINK_LAST || !src->caps[type]) {
 		AG_SetErrorV("E1", "No such event type");
 		return (NULL);
@@ -1091,7 +1182,11 @@ AG_AddEventSink(enum ag_event_sink_type type, int ident, Uint flags,
 
 	es->fn = fn;
 	InitEvent(&es->fnArgs, NULL);
-	AG_EVENT_GET_ARGS(&es->fnArgs, fnArgs);
+	if (fnArgs) {
+		va_start(ap, fnArgs);
+		AG_EventGetArgs(&es->fnArgs, fnArgs, ap);
+		va_end(ap);
+	}
 	es->fnArgs.argc0 = es->fnArgs.argc;
 	TAILQ_INSERT_TAIL(&src->sinks, es, sinks);
 	return (es);
