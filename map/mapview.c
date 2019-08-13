@@ -870,12 +870,10 @@ MAP_ViewUpdateCamera(MAP_View *mv)
 	if (mv->hbar != NULL) {
 		AG_SetInt(mv->hbar, "min", 0);
 		AG_SetInt(mv->hbar, "max", m->mapw * AGMTILESZ(mv));
-		AG_ScrollbarSetControlLength(mv->hbar, 20); /* XXX */
 	}
 	if (mv->vbar != NULL) {
 		AG_SetInt(mv->vbar, "min", 0);
 		AG_SetInt(mv->vbar, "max", m->maph * AGMTILESZ(mv));
-		AG_ScrollbarSetControlLength(mv->vbar, 20);
 	}
 	
 	AG_ObjectUnlock(m);
@@ -1514,22 +1512,24 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	MAP_View *mv = obj;
 	MAP *m = mv->map;
 	AG_SizeAlloc aBar;
+	const AG_Font *font = WIDGET(mv)->font;
+	const int sbLen = font->lineskip;
 
 	mv->r.w = a->w;
 	mv->r.h = a->h;
 
-	if (mv->hbar != NULL) {
+	if (mv->hbar) {
 		aBar.x = 0;
-		aBar.y = a->h - mv->hbar->width;
+		aBar.y = a->h - sbLen;
 		aBar.w = a->w;
-		aBar.h = mv->hbar->width;
+		aBar.h = sbLen;
 		AG_WidgetSizeAlloc(mv->hbar, &aBar);
 		mv->r.h -= HEIGHT(mv->hbar);
 	}
-	if (mv->vbar != NULL) {
+	if (mv->vbar) {
 		aBar.x = 0;
 		aBar.y = 0;
-		aBar.w = mv->vbar->width;
+		aBar.w = sbLen;
 		aBar.h = a->h;
 		AG_WidgetSizeAlloc(mv->vbar, &aBar);
 		mv->r.w -= WIDTH(mv->vbar);

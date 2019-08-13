@@ -193,21 +193,23 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	M_Matview *mv = obj;
 	AG_SizeAlloc aBar;
+	const AG_Font *font = WIDGET(mv)->font;
+	const int sbThick = font->lineskip;
 
 	mv->r.w = a->w;
 	mv->r.h = a->h;
 
 	aBar.x = 0;
-	aBar.y = a->h - mv->hBar->width;
+	aBar.y = a->h - sbThick;
 	aBar.w = a->w;
-	aBar.h = mv->hBar->width+1;
+	aBar.h = sbThick+1;
 	AG_WidgetSizeAlloc(mv->hBar, &aBar);
 	mv->r.h -= HEIGHT(mv->hBar);
 
-	aBar.x = a->w - mv->vBar->width;
-	aBar.y = mv->vBar->width;
-	aBar.w = mv->vBar->width;
-	aBar.h = a->h - mv->hBar->width+1;
+	aBar.x = a->w - sbThick;
+	aBar.y = sbThick;
+	aBar.w = sbThick;
+	aBar.h = a->h - sbThick+1;
 	AG_WidgetSizeAlloc(mv->vBar, &aBar);
 	mv->r.w -= WIDTH(mv->vBar);
 

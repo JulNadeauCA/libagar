@@ -128,7 +128,12 @@ SG_New(void *parent, const char *name, Uint flags)
 	SG *sg;
 
 	sg = Malloc(sizeof(SG));
-	AG_ObjectInitNamed(sg, &sgClass, name);
+	AG_ObjectInit(sg, &sgClass);
+	if (name) {
+		AG_ObjectSetNameS(sg, name);
+	} else {
+		OBJECT(sg)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 
 	sg->root = (SG_Node *)SG_PointNew(sg, "_root", NULL);
 	SG_PointSize(SGPOINT(sg->root), 0);

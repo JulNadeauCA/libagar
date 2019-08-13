@@ -571,7 +571,8 @@ SG_InitGUI(void)
 		AG_RegisterClass(&sgPaletteViewClass);
 		sgIcon_Init();
 	}
-	AG_ObjectInitStatic(&sgVfsRoot, NULL);
+	AG_ObjectInit(&sgVfsRoot, NULL);
+	sgVfsRoot.flags |= AG_OBJECT_STATIC;
 	AG_ObjectSetName(&sgVfsRoot, "Agar-SG VFS");
 	TAILQ_INIT(&sgEditorWindows);
 }

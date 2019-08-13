@@ -50,7 +50,8 @@ int mapDefaultBrushHeight = 9;
 void
 MAP_EditorInit(void)
 {
-	AG_ObjectInitStatic(&mapEditor, &mapEditorClass);
+	AG_ObjectInit(&mapEditor, &mapEditorClass);
+	OBJECT(&mapEditor)->flags |= AG_OBJECT_STATIC;
 	AG_ObjectSetName(&mapEditor, "_mapEditor");
 
 	/* Initialize the default tunables. */

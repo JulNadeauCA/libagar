@@ -38,7 +38,12 @@ SG_TextureNew(void *parent, const char *name)
 	SG_Texture *tex;
 
 	tex = Malloc(sizeof(SG_Texture));
-	AG_ObjectInitNamed(tex, &sgTextureClass, name);
+	AG_ObjectInit(tex, &sgTextureClass);
+	if (name) {
+		AG_ObjectSetNameS(tex, name);
+	} else {
+		OBJECT(tex)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, tex);
 	return (tex);
 }

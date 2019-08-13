@@ -37,7 +37,12 @@ SG_VoxelNew(void *parent, const char *name)
 	SG_Voxel *vol;
 
 	vol = Malloc(sizeof(SG_Voxel));
-	AG_ObjectInitNamed(vol, &sgVoxelClass, name);
+	AG_ObjectInit(vol, &sgVoxelClass);
+	if (name) {
+		AG_ObjectSetNameS(vol, name);
+	} else {
+		OBJECT(vol)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, vol);
 	return (vol);
 }

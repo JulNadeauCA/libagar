@@ -36,7 +36,12 @@ SG_SphereNew(void *parent, const char *name, const M_Sphere *si)
 	SG_Sphere *sph;
 
 	sph = Malloc(sizeof(SG_Sphere));
-	AG_ObjectInitNamed(sph, &sgSphereClass, name);
+	AG_ObjectInit(sph, &sgSphereClass);
+	if (name) {
+		AG_ObjectSetNameS(sph, name);
+	} else {
+		OBJECT(sph)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, sph);
 	if (si != NULL) {
 		SG_Translatev(sph, si->p);

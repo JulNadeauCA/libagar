@@ -36,7 +36,12 @@ SG_LineNew(void *parent, const char *name, const M_Line3 *ml)
 	SG_Line *ln;
 
 	ln = Malloc(sizeof(SG_Line));
-	AG_ObjectInitNamed(ln, &sgLineClass, name);
+	AG_ObjectInit(ln, &sgLineClass);
+	if (name) {
+		AG_ObjectSetNameS(ln, name);
+	} else {
+		OBJECT(ln)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, ln);
 	if (ml != NULL) {
 		SG_Translatev(ln, ml->p);

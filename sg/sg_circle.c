@@ -36,7 +36,12 @@ SG_CircleNew(void *parent, const char *name, const M_Circle3 *mc)
 	SG_Circle *c;
 
 	c = Malloc(sizeof(SG_Circle));
-	AG_ObjectInitNamed(c, &sgCircleClass, name);
+	AG_ObjectInit(c, &sgCircleClass);
+	if (name) {
+		AG_ObjectSetNameS(c, name);
+	} else {
+		OBJECT(c)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, c);
 	if (mc != NULL) {
 		SG_Translatev(c, mc->p);

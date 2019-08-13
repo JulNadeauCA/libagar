@@ -36,7 +36,12 @@ SG_RectangleNew(void *parent, const char *name, const M_Rectangle3 *rInit)
 	SG_Rectangle *sr;
 
 	sr = Malloc(sizeof(SG_Rectangle));
-	AG_ObjectInitNamed(sr, &sgRectangleClass, name);
+	AG_ObjectInit(sr, &sgRectangleClass);
+	if (name) {
+		AG_ObjectSetNameS(sr, name);
+	} else {
+		OBJECT(sr)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, sr);
 	if (rInit != NULL) {
 		sr->R = *rInit;

@@ -49,7 +49,12 @@ SG_ImageNew(void *parent, const char *name)
 	SG_Image *si;
 
 	si = Malloc(sizeof(SG_Image));
-	AG_ObjectInitNamed(si, &sgImageClass, name);
+	AG_ObjectInit(si, &sgImageClass);
+	if (name) {
+		AG_ObjectSetNameS(si, name);
+	} else {
+		OBJECT(si)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, si);
 	return (si);
 }

@@ -40,7 +40,12 @@ SG_DummyNew(void *parent, const char *name)
 	SG_Dummy *dum;
 
 	dum = Malloc(sizeof(SG_Dummy));
-	AG_ObjectInitNamed(dum, &sgDummyClass, name);
+	AG_ObjectInit(dum, &sgDummyClass);
+	if (name) {
+		AG_ObjectSetNameS(dum, name);
+	} else {
+		OBJECT(dum)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, dum);
 	return (dum);
 }

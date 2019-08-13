@@ -52,7 +52,12 @@ SG_PolyballNew(void *parent, const char *name, const M_Sphere *ms)
 	SG_Polyball *ball;
 
 	ball = Malloc(sizeof(SG_Polyball));
-	AG_ObjectInitNamed(ball, &sgPolyballClass, name);
+	AG_ObjectInit(ball, &sgPolyballClass);
+	if (name) {
+		AG_ObjectSetNameS(ball, name);
+	} else {
+		OBJECT(ball)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, ball);
 	if (ms != NULL) {
 		SG_Translatev(ball, ms->p);

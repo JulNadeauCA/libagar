@@ -37,7 +37,12 @@ SG_PolyboxNew(void *parent, const char *name)
 	SG_Polybox *box;
 
 	box = Malloc(sizeof(SG_Polybox));
-	AG_ObjectInitNamed(box, &sgPolyboxClass, name);
+	AG_ObjectInit(box, &sgPolyboxClass);
+	if (name) {
+		AG_ObjectSetNameS(box, name);
+	} else {
+		OBJECT(box)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, box);
 	return (box);
 }

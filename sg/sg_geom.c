@@ -66,7 +66,12 @@ SG_GeomNew(void *parent, const char *name, M_Geom3 g)
 	case M_NONE:
 	default:
 		geo = Malloc(sizeof(SG_Geom));
-		AG_ObjectInitNamed(geo, &sgGeomClass, name);
+		AG_ObjectInit(geo, &sgGeomClass);
+		if (name) {
+			AG_ObjectSetNameS(geo, name);
+		} else {
+			OBJECT(geo)->flags |= AG_OBJECT_NAME_ONATTACH;
+		}
 		AG_ObjectAttach(parent, geo);
 		break;
 	}

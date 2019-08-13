@@ -375,7 +375,8 @@ SK_InitGUI(void)
 	if (agGUI) {
 		AG_RegisterClass(&skViewClass);
 	}
-	AG_ObjectInitStatic(&skVfsRoot, NULL);
+	AG_ObjectInit(&skVfsRoot, NULL);
+	skVfsRoot.flags |= AG_OBJECT_STATIC;
 	AG_ObjectSetName(&skVfsRoot, "Agar-SK VFS");
 	AG_MutexInitRecursive(&skObjLock);
 }

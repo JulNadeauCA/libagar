@@ -41,7 +41,12 @@ SG_PaletteNew(void *parent, const char *name)
 	SG_Palette *pal;
 
 	pal = Malloc(sizeof(SG_Palette));
-	AG_ObjectInitNamed(pal, &sgPaletteClass, name);
+	AG_ObjectInit(pal, &sgPaletteClass);
+	if (name) {
+		AG_ObjectSetNameS(pal, name);
+	} else {
+		OBJECT(pal)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, pal);
 	return (pal);
 }

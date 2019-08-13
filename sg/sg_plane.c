@@ -38,7 +38,12 @@ SG_PlaneNew(void *parent, const char *name)
 	SG_Plane *po;
 
 	po = Malloc(sizeof(SG_Plane));
-	AG_ObjectInitNamed(po, &sgPlaneClass, name);
+	AG_ObjectInit(po, &sgPlaneClass);
+	if (name) {
+		AG_ObjectSetNameS(po, name);
+	} else {
+		OBJECT(po)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, po);
 	return (po);
 }

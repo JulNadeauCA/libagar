@@ -50,7 +50,8 @@ Init(void *_Nonnull p)
 	ins->replace_mode = 0;
 	ins->angle = 0;
 
-	AG_ObjectInitStatic(&ins->mTmp, &mapClass);
+	AG_ObjectInit(&ins->mTmp, &mapClass);
+	OBJECT(&ins->mTmp)->flags |= AG_OBJECT_STATIC;
 	ins->mvTmp = NULL;
 
 	MAP_ToolPushStatus(ins,

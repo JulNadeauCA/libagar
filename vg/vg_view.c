@@ -47,6 +47,12 @@ static const float scaleFactors[] = {
 };
 const int nScaleFactors = sizeof(scaleFactors)/sizeof(scaleFactors[0]);
 
+static void DrawGrid(VG_View *_Nonnull, const VG_Grid *_Nonnull);
+static void DrawNode(VG *_Nonnull, VG_Node *_Nonnull, VG_View *_Nonnull);
+#ifdef AG_DEBUG
+static void DrawNodeExtent(VG_Node *_Nonnull, VG_View *_Nonnull);
+#endif
+
 VG_View *
 VG_ViewNew(void *parent, VG *vg, Uint flags)
 {
@@ -197,13 +203,13 @@ MouseMotion(AG_Event *_Nonnull event)
 {
 	VG_View *vv = VG_VIEW_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
-	int xCurs = AG_INT(1);
-	int yCurs = AG_INT(2);
-	float xRel = (float)AG_INT(3);
-	float yRel = (float)AG_INT(4);
-	int state = AG_INT(5);
-	float x, y;
 	VG_Vector vCt;
+	const int xCurs = AG_INT(1);
+	const int yCurs = AG_INT(2);
+	const float xRel = (float)AG_INT(3);
+	const float yRel = (float)AG_INT(4);
+	const int state = AG_INT(5);
+	float x, y;
 
 	if (vv->mouse.panning) {
 		vv->x += (float)xRel;
@@ -242,9 +248,9 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	VG_View *vv = VG_VIEW_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
-	int button = AG_INT(1);
-	int xCurs = AG_INT(2);
-	int yCurs = AG_INT(3);
+	const int button = AG_INT(1);
+	const int xCurs = AG_INT(2);
+	const int yCurs = AG_INT(3);
 	float x, y;
 	VG_Vector vCt;
 	
@@ -280,9 +286,9 @@ MouseButtonUp(AG_Event *_Nonnull event)
 {
 	VG_View *vv = VG_VIEW_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
-	int button = AG_INT(1);
-	int xCurs = AG_INT(2);
-	int yCurs = AG_INT(3);
+	const int button = AG_INT(1);
+	const int xCurs = AG_INT(2);
+	const int yCurs = AG_INT(3);
 	float x, y;
 	VG_Vector vCt;
 	
@@ -314,9 +320,9 @@ KeyDown(AG_Event *_Nonnull event)
 {
 	VG_View *vv = VG_VIEW_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
-	int sym = AG_INT(1);
-	int mod = AG_INT(2);
-	AG_Char ch = AG_CHAR(3);
+	const int sym = AG_INT(1);
+	const int mod = AG_INT(2);
+	const AG_Char ch = AG_CHAR(3);
 	VG_ToolCommand *cmd;
 	
 	if (vv->vg == NULL)
@@ -346,9 +352,9 @@ KeyUp(AG_Event *_Nonnull event)
 {
 	VG_View *vv = VG_VIEW_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
-	int sym = AG_INT(1);
-	int mod = AG_INT(2);
-	AG_Char ch = AG_CHAR(3);
+	const int sym = AG_INT(1);
+	const int mod = AG_INT(2);
+	const AG_Char ch = AG_CHAR(3);
 	
 	if (vv->vg == NULL)
 		return;
@@ -367,8 +373,8 @@ OnShow(AG_Event *_Nonnull event)
 {
 	VG_View *vv = VG_VIEW_SELF();
 
-	vv->x = WIDGET(vv)->w/2.0f;
-	vv->y = WIDGET(vv)->h/2.0f;
+	vv->x = WIDTH(vv)/2.0f;
+	vv->y = HEIGHT(vv)/2.0f;
 }
 
 static void
@@ -432,7 +438,7 @@ Init(void *_Nonnull obj)
 {
 	VG_View *vv = obj;
 
-	WIDGET(vv)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
+	WIDGET(vv)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_TEXT;
 
 	vv->flags = 0;
 	vv->scaleIdx = 0;
@@ -499,14 +505,6 @@ Init(void *_Nonnull obj)
 	AG_ActionOnKeyDown(vv,    AG_KEY_2, AG_KEYMOD_ANY,	"Scale 1:2");
 	AG_ActionOnKeyDown(vv,    AG_KEY_3, AG_KEYMOD_ANY,	"Scale 1:3");
 	AG_ActionOnKeyDown(vv,    AG_KEY_9, AG_KEYMOD_ANY,	"Scale 1:9");
-
-#ifdef AG_DEBUG
-	AG_BindFloat(vv, "x", &vv->x);
-	AG_BindFloat(vv, "y", &vv->y);
-	AG_BindFloat(vv, "scale", &vv->scale);
-	AG_BindFloat(vv, "wPixel", &vv->wPixel);
-	AG_BindInt(vv, "pointSelRadius", &vv->pointSelRadius);
-#endif /* AG_DEBUG */
 }
 
 static void
@@ -534,9 +532,7 @@ VG_ViewSetVG(VG_View *vv, VG *vg)
 void
 VG_ViewSetSnapMode(VG_View *vv, enum vg_snap_mode mode)
 {
-	AG_ObjectLock(vv);
 	vv->snap_mode = mode;
-	AG_ObjectUnlock(vv);
 }
 
 /* Set the parameters of the specified grid. */
@@ -570,7 +566,13 @@ VG_ViewDrawFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
 	vv->draw_ev = AG_SetEvent(vv, "Draw", fn, NULL);
-	AG_EVENT_GET_ARGS(vv->draw_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(vv->draw_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(vv);
 }
 
@@ -580,7 +582,13 @@ VG_ViewScaleFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
 	vv->scale_ev = AG_SetEvent(vv, "Scale", fn, NULL);
-	AG_EVENT_GET_ARGS(vv->scale_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(vv->scale_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(vv);
 }
 
@@ -590,7 +598,13 @@ VG_ViewKeydownFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
 	vv->keydown_ev = AG_SetEvent(vv, "key-down", fn, NULL);
-	AG_EVENT_GET_ARGS(vv->keydown_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(vv->keydown_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(vv);
 }
 
@@ -600,7 +614,13 @@ VG_ViewKeyupFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
 	vv->keyup_ev = AG_SetEvent(vv, "key-up", fn, NULL);
-	AG_EVENT_GET_ARGS(vv->keyup_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(vv->keyup_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(vv);
 }
 
@@ -610,7 +630,13 @@ VG_ViewButtondownFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
 	vv->btndown_ev = AG_SetEvent(vv, "ButtonDown", fn, NULL);
-	AG_EVENT_GET_ARGS(vv->btndown_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(vv->btndown_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(vv);
 }
 
@@ -620,7 +646,13 @@ VG_ViewButtonupFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
 	vv->btnup_ev = AG_SetEvent(vv, "mouse-button-up", fn, NULL);
-	AG_EVENT_GET_ARGS(vv->btnup_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(vv->btnup_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(vv);
 }
 
@@ -630,7 +662,13 @@ VG_ViewMotionFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
 	vv->motion_ev = AG_SetEvent(vv, "mouse-motion", fn, NULL);
-	AG_EVENT_GET_ARGS(vv->motion_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(vv->motion_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(vv);
 }
 
@@ -654,13 +692,91 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	return (0);
 }
 
-static __inline__ void
+static void
+Draw(void *_Nonnull obj)
+{
+	VG_View *vv = obj;
+	VG *vg = vv->vg;
+	VG_Tool *curtool = vv->curtool;
+	AG_Color c;
+	int su, i;
+
+	if (vg == NULL)
+		return;
+
+	if (!(vv->flags & VG_VIEW_DISABLE_BG)) {
+		c = VG_MapColorRGBA(vg->fillColor);
+		AG_DrawRect(vv, &vv->r, &c);
+	}
+	
+	AG_PushClipRect(vv, &vv->r);
+
+	if (vv->flags & VG_VIEW_GRID) {
+		for (i = 0; i < vv->nGrids; i++)
+			DrawGrid(vv, &vv->grid[i]);
+	}
+
+	AG_ObjectLock(vg);
+
+	if (curtool && curtool->ops->predraw)
+		curtool->ops->predraw(curtool, vv);
+	if (vv->draw_ev)
+		vv->draw_ev->fn(vv->draw_ev);
+	if (curtool && curtool->ops->postdraw)
+		curtool->ops->postdraw(curtool, vv);
+
+	DrawNode(vg, vg->root, vv);
+
+	AG_ObjectUnlock(vg);
+
+	if (vv->status[0] != '\0') {
+		AG_PushTextState();
+		AG_TextColor(&WCOLOR(vv,TEXT_COLOR));
+		if ((su = AG_TextCacheGet(vv->tCache, vv->status)) != -1) {
+			AG_WidgetBlitSurface(vv, su,
+			    0,
+			    HEIGHT(vv) - WSURFACE(vv,su)->h);
+		}
+		AG_PopTextState();
+	}
+	AG_PopClipRect(vv);
+}
+
+static void
+DrawNode(VG *_Nonnull vg, VG_Node *_Nonnull vn, VG_View *_Nonnull vv)
+{
+	VG_Node *vnChld;
+	VG_Color colorSave;
+
+	VG_PushMatrix(vg);
+	VG_MultMatrix(&vg->T[vg->nT-1], &vn->T);
+
+	VG_FOREACH_CHLD(vnChld, vn, vg_node)
+		DrawNode(vg, vnChld, vv);
+#ifdef AG_DEBUG
+	if (vv->flags & VG_VIEW_EXTENTS)
+		DrawNodeExtent(vn, vv);
+#endif
+	colorSave = vn->color;
+	if (vn->flags & VG_NODE_SELECTED) {
+		VG_BlendColors(&vn->color, vg->selectionColor);
+	}
+	if (vn->flags & VG_NODE_MOUSEOVER) {
+		VG_BlendColors(&vn->color, vg->mouseoverColor);
+	}
+	vn->ops->draw(vn, vv);
+	vn->color = colorSave;
+
+	VG_PopMatrix(vg);
+}
+
+static void
 DrawGrid(VG_View *_Nonnull vv, const VG_Grid *_Nonnull grid)
 {
 	int x, x0, y, ival;
 	int x2, y2;
 
-	if (grid->flags & (VG_GRID_HIDE|VG_GRID_UNDERSIZE))
+	if (grid->flags & (VG_GRID_HIDE | VG_GRID_UNDERSIZE))
 		return;
 
 	ival = grid->ivalView;
@@ -719,84 +835,6 @@ DrawNodeExtent(VG_Node *_Nonnull vn, VG_View *_Nonnull vv)
 	AG_DrawRectOutline(vv, &r, &c);
 }
 #endif /* AG_DEBUG */
-
-static void
-DrawNode(VG *_Nonnull vg, VG_Node *_Nonnull vn, VG_View *_Nonnull vv)
-{
-	VG_Node *vnChld;
-	VG_Color colorSave;
-
-	VG_PushMatrix(vg);
-	VG_MultMatrix(&vg->T[vg->nT-1], &vn->T);
-
-	VG_FOREACH_CHLD(vnChld, vn, vg_node)
-		DrawNode(vg, vnChld, vv);
-#ifdef AG_DEBUG
-	if (vv->flags & VG_VIEW_EXTENTS)
-		DrawNodeExtent(vn, vv);
-#endif
-	colorSave = vn->color;
-	if (vn->flags & VG_NODE_SELECTED) {
-		VG_BlendColors(&vn->color, vg->selectionColor);
-	}
-	if (vn->flags & VG_NODE_MOUSEOVER) {
-		VG_BlendColors(&vn->color, vg->mouseoverColor);
-	}
-	vn->ops->draw(vn, vv);
-	vn->color = colorSave;
-
-	VG_PopMatrix(vg);
-}
-
-static void
-Draw(void *_Nonnull obj)
-{
-	VG_View *vv = obj;
-	VG *vg = vv->vg;
-	VG_Tool *curtool = vv->curtool;
-	AG_Color c;
-	int su, i;
-
-	if (vg == NULL)
-		return;
-
-	if (!(vv->flags & VG_VIEW_DISABLE_BG)) {
-		c = VG_MapColorRGBA(vg->fillColor);
-		AG_DrawRect(vv, &vv->r, &c);
-	}
-	
-	AG_PushClipRect(vv, &vv->r);
-
-	if (vv->flags & VG_VIEW_GRID) {
-		for (i = 0; i < vv->nGrids; i++)
-			DrawGrid(vv, &vv->grid[i]);
-	}
-
-	AG_ObjectLock(vg);
-
-	if (curtool && curtool->ops->predraw)
-		curtool->ops->predraw(curtool, vv);
-	if (vv->draw_ev)
-		vv->draw_ev->fn(vv->draw_ev);
-	if (curtool && curtool->ops->postdraw)
-		curtool->ops->postdraw(curtool, vv);
-
-	DrawNode(vg, vg->root, vv);
-
-	AG_ObjectUnlock(vg);
-
-	if (vv->status[0] != '\0') {
-		AG_PushTextState();
-		AG_TextColor(&WCOLOR(vv,TEXT_COLOR));
-		if ((su = AG_TextCacheGet(vv->tCache, vv->status)) != -1) {
-			AG_WidgetBlitSurface(vv, su,
-			    0,
-			    HEIGHT(vv) - WSURFACE(vv,su)->h);
-		}
-		AG_PopTextState();
-	}
-	AG_PopClipRect(vv);
-}
 
 void
 VG_ViewSelectToolEv(AG_Event *event)
@@ -945,7 +983,7 @@ VG_ViewSetScale(VG_View *vv, float c)
 	vv->wPixel = 1.0/vv->scale;
 	vv->x *= (vv->scale/scalePrev);
 	vv->y *= (vv->scale/scalePrev);
-	vv->pointSelRadius = vv->grid[0].ival/2;
+	vv->pointSelRadius = vv->grid[0].ival >> 1;
 	UpdateGridIntervals(vv);
 
 	AG_ObjectUnlock(vv);

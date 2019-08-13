@@ -329,7 +329,8 @@ MAP_Resize(MAP *m, Uint w, Uint h)
 	AG_ObjectLock(m);
 
 	/* Save the nodes to a temporary map, to preserve dependencies. */
-	AG_ObjectInitStatic(&tm, &mapClass);
+	AG_ObjectInit(&tm, &mapClass);
+	tm.flags |= AG_OBJECT_STATIC;
 
 	if (MAP_AllocNodes(&tm, m->mapw, m->maph) == -1) {
 		goto fail;

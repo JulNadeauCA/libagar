@@ -36,7 +36,12 @@ SG_PointNew(void *parent, const char *name, const M_Vector3 *v)
 	SG_Point *pt;
 
 	pt = Malloc(sizeof(SG_Point));
-	AG_ObjectInitNamed(pt, &sgPointClass, name);
+	AG_ObjectInit(pt, &sgPointClass);
+	if (name) {
+		AG_ObjectSetNameS(pt, name);
+	} else {
+		OBJECT(pt)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, pt);
 	if (v != NULL) {
 		SG_Translatev(pt, *v);

@@ -36,7 +36,12 @@ SG_WidgetNew(void *parent, enum sg_widget_style style, const char *name)
 	SG_Widget *w;
 
 	w = Malloc(sizeof(SG_Widget));
-	AG_ObjectInitNamed(w, &sgWidgetClass, name);
+	AG_ObjectInit(w, &sgWidgetClass);
+	if (name) {
+		AG_ObjectSetNameS(w, name);
+	} else {
+		OBJECT(w)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, w);
 	w->style = style;
 	return (w);

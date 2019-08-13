@@ -105,11 +105,6 @@ DEV_ConfigShow(void)
 {
 	AG_Window *win;
 
-	/* Avoid clobbering modal windows */
-	if (agDriverSw != NULL &&
-	    agDriverSw->Lmodal->n > 0)
-		return;
-
 	if ((win = DEV_ConfigWindow(agConfig)) != NULL)
 		AG_WindowShow(win);
 }

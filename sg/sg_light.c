@@ -38,7 +38,12 @@ SG_LightNew(void *parent, const char *name)
 	SG_Light *lt;
 
 	lt = Malloc(sizeof(SG_Light));
-	AG_ObjectInitNamed(lt, &sgLightClass, name);
+	AG_ObjectInit(lt, &sgLightClass);
+	if (name) {
+		AG_ObjectSetNameS(lt, name);
+	} else {
+		OBJECT(lt)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, lt);
 	return (lt);
 }

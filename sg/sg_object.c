@@ -40,7 +40,12 @@ SG_ObjectNew(void *parent, const char *name)
 	SG_Object *so;
 
 	so = Malloc(sizeof(SG_Object));
-	AG_ObjectInitNamed(so, &sgObjectClass, name);
+	AG_ObjectInit(so, &sgObjectClass);
+	if (name) {
+		AG_ObjectSetNameS(so, name);
+	} else {
+		OBJECT(so)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, so);
 	return (so);
 }

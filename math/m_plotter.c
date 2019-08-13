@@ -459,6 +459,8 @@ static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	M_Plotter *ptr = obj;
+	const AG_Font *font = WIDGET(ptr)->font;
+	const int sbThick = font->lineskip;
 	AG_SizeAlloc aBar;
 
 	if (a->w < 2 || a->h < 2)
@@ -468,16 +470,16 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	ptr->r.h = a->h;
 
 	aBar.x = 0;
-	aBar.y = a->h - ptr->hbar->width;
+	aBar.y = a->h - sbThick;
 	aBar.w = a->w;
-	aBar.h = ptr->hbar->width;
+	aBar.h = sbThick;;
 	AG_WidgetSizeAlloc(ptr->hbar, &aBar);
 	ptr->r.h -= HEIGHT(ptr->hbar);
 
-	aBar.x = a->w - ptr->vbar->width;
+	aBar.x = a->w - sbThick;
 	aBar.y = 0;
-	aBar.w = ptr->vbar->width;
-	aBar.h = a->h - ptr->hbar->width;
+	aBar.w = sbThick;
+	aBar.h = a->h - sbThick;
 	AG_WidgetSizeAlloc(ptr->vbar, &aBar);
 	ptr->r.w -= WIDTH(ptr->vbar);
 	

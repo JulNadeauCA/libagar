@@ -38,7 +38,12 @@ SG_PolygonNew(void *parent, const char *name, const M_Polygon *mp)
 	SG_Polygon *poly;
 
 	poly = Malloc(sizeof(SG_Polygon));
-	AG_ObjectInitNamed(poly, &sgPolygonClass, name);
+	AG_ObjectInit(poly, &sgPolygonClass);
+	if (name) {
+		AG_ObjectSetNameS(poly, name);
+	} else {
+		OBJECT(poly)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, poly);
 	if (mp != NULL) {
 		M_PolygonCopy(&poly->P, mp);

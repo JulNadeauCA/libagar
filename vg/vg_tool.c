@@ -157,7 +157,13 @@ VG_ToolCommandExec(void *obj, const char *name, const char *fmt, ...)
 	}
 	Debug(tool->vgv, "%s: CMD: <%s>\n", tool->ops->name, name);
 	AG_EventInit(&evPost);
-	AG_EVENT_GET_ARGS(&evPost, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(&evPost, fmt, ap);
+		va_end(ap);
+	}
 	cmd->fn->fn(&evPost);
 
 	AG_ObjectUnlock(tool->vgv);

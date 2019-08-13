@@ -36,7 +36,12 @@ SG_TriangleNew(void *parent, const char *name, const M_Triangle3 *mt)
 	SG_Triangle *tri;
 
 	tri = Malloc(sizeof(SG_Triangle));
-	AG_ObjectInitNamed(tri, &sgTriangleClass, name);
+	AG_ObjectInit(tri, &sgTriangleClass);
+	if (name) {
+		AG_ObjectSetNameS(tri, name);
+	} else {
+		OBJECT(tri)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, tri);
 #if 0
 	if (mt != NULL) {

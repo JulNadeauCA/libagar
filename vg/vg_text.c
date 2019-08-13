@@ -116,6 +116,7 @@ Init(void *_Nonnull obj)
 	vt->fontFlags = vgGUI ? agDefaultFont->flags : 0;
 	vt->fontSize = (AG_FontPts)(vgGUI ? agDefaultFont->spec.size : 12);
 	vt->fontFace[0] = '\0';
+	vt->argsCount = 0;
 	vt->args = NULL;
 	vt->argSizes = NULL;
 	vt->vsObj = NULL;
@@ -252,10 +253,10 @@ RenderTextPolled(VG_Text *_Nonnull vt, VG_View *_Nonnull vv)
 			c+=2;
 			continue;
 		}
-		if ((argIdx+1) >= vt->args->n) {
+		if ((argIdx+1) >= vt->argsCount) {
 			AG_FatalError("Argument inconsistency");
 		}
-		AG_PrintVariable(val, sizeof(val), &vt->args->v[argIdx]);
+		AG_PrintVariable(val, sizeof(val), &vt->args[argIdx]);
 		Strlcat(s, val, sizeof(s));
 		c += vt->argSizes[argIdx++];
 	}

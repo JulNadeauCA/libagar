@@ -92,7 +92,12 @@ SG_ScriptNew(void *parent, const char *name)
 	SG_Script *scr;
 
 	scr = Malloc(sizeof(SG_Script));
-	AG_ObjectInitNamed(scr, &sgScriptClass, name);
+	AG_ObjectInit(scr, &sgScriptClass);
+	if (name) {
+		AG_ObjectSetNameS(scr, name);
+	} else {
+		OBJECT(scr)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, scr);
 	return (scr);
 }
@@ -440,7 +445,8 @@ ExecCreateInsn(SG_ScriptEditCtx *_Nonnull e, SG_ScriptRenderCtx *_Nullable re,
 	if ((node = TryMalloc(si->si_create.cls->size)) == NULL) {
 		goto fail;
 	}
-	AG_ObjectInitNamed(node, si->si_create.cls, NULL);
+	AG_ObjectInit(node, si->si_create.cls);
+	OBJECT(node)->flags |= AG_OBJECT_NAME_ONATTACH;
 	if (AG_ObjectUnserialize(node, ds) == -1) {
 		AG_ObjectDestroy(node);
 		goto fail;
@@ -891,7 +897,8 @@ InsertCreateInsnDlg(AG_Event *_Nonnull event)
 		AG_TextMsgFromError();
 		return;
 	}
-	AG_ObjectInitNamed(node, cls, NULL);
+	AG_ObjectInit(node, cls);
+	OBJECT(node)->flags |= AG_OBJECT_NAME_ONATTACH;
 	AG_ObjectAttach(parent, node);
 	
 	if (parent != sg->root) {

@@ -37,7 +37,12 @@ SG_CameraNew(void *parent, const char *name)
 	SG_Camera *cam;
 
 	cam = Malloc(sizeof(SG_Camera));
-	AG_ObjectInitNamed(cam, &sgCameraClass, name);
+	AG_ObjectInit(cam, &sgCameraClass);
+	if (name) {
+		AG_ObjectSetNameS(cam, name);
+	} else {
+		OBJECT(cam)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 	AG_ObjectAttach(parent, cam);
 	return (cam);
 }

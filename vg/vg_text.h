@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
 #ifndef VG_TEXT_MAX
-#define VG_TEXT_MAX       256
+#define VG_TEXT_MAX       252
 #endif
 #ifndef VG_TEXT_MAX_PTRS
 #define VG_TEXT_MAX_PTRS  32
@@ -35,8 +35,9 @@ typedef struct vg_text {
 #define VG_TEXT_SCALED    0x08		 /* Try to scale the text */
 
 	char text[VG_TEXT_MAX];		/* Text or format string */
-	AG_List *_Nullable args;	/* Text arguments */
-	int     *_Nullable argSizes;	/* Sizes of format strings in text */
+	Uint            argsCount;	/* Number of arguments */
+	void *_Nullable args;		/* Argument data */
+	int  *_Nullable argSizes;	/* Sizes of format strings in text */
 
 	void *_Nullable vsObj;		/* Object for $(foo) expansion */
 } VG_Text;
