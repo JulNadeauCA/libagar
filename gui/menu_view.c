@@ -316,7 +316,7 @@ Draw(void *_Nonnull obj)
 	AG_MenuView *mv = obj;
 	AG_MenuItem *miRoot = mv->pitem, *mi;
 	AG_Menu *m = mv->pmenu;
-	AG_Font *font = WIDGET(mv)->font;
+	const AG_Font *font = WFONT(mv);
 	AG_Rect r;
 	const int itemh = m->itemh;
 	const int itemh_2 = (itemh >> 1);
@@ -332,8 +332,9 @@ Draw(void *_Nonnull obj)
 
 	TAILQ_FOREACH(mi, &miRoot->subItems, items) {
 		AG_Color c;
+		const AG_Surface *Sicon = mi->iconSrc;
+		const int mi_state = mi->state;
 		int x = mv->lPad;
-		int mi_state = mi->state;
 
 		if (mi->stateFn != NULL)
 			AG_PostEventByPtr(NULL, m, mi->stateFn, "%p", &mi_state);
@@ -341,19 +342,18 @@ Draw(void *_Nonnull obj)
 		if (mi->poll)
 			UpdateItem(m, mi);
 
-		if (mi == miRoot->sel_subitem && mi_state)       /* Is selected */
+		if (mi == miRoot->sel_subitem && mi_state)    /* Is selected */
 			AG_DrawRect(mv, &r, &WCOLOR_SEL(mv,0));
 
-		if (mi->icon == -1 && mi->iconSrc != NULL) {
-			mi->icon = AG_WidgetMapSurface(mv,
-			    AG_SurfaceDup(mi->iconSrc));
+		if (mi->icon == -1 && Sicon) {
+			mi->icon = AG_WidgetMapSurface(mv, AG_SurfaceDup(Sicon));
 		}
 		if (mi->icon != -1) {
 			int bv;
 
 			AG_WidgetBlitSurface(mv, mi->icon,
-			    x   + ((r.h >> 1) - (mi->iconSrc->w >> 1)),
-			    r.y + ((r.h >> 1) - (mi->iconSrc->h >> 1)) + 1);
+			    x   + ((r.h >> 1) - (Sicon->w >> 1)),
+			    r.y + ((r.h >> 1) - (Sicon->h >> 1)) + 1);
 
 			bv = (mi->value != -1) ? mi->value : GetItemBoolValue(mi);
 			if (bv) {
@@ -378,9 +378,9 @@ Draw(void *_Nonnull obj)
 			x += itemh + mv->spIconLbl;
 
 		if (mi->flags & AG_MENU_ITEM_SEPARATOR) {
+			AG_Color c[2];
 			int x1 = mv->lPad;
 			int x2 = WIDTH(mv) - mv->rPad - 1;
-			AG_Color c[2];
 			
 			AG_ColorAdd(&c[0], &WCOLOR(mv,0), &agLowColor);
 			AG_ColorAdd(&c[1], &WCOLOR(mv,0), &agHighColor);
@@ -413,6 +413,7 @@ Draw(void *_Nonnull obj)
 		}
 
 		/* Render the submenu arrow. */
+		/* TODO use a vector icon */
 		if (mi->nSubItems > 0) {
 			x += mv->spLblArrow;
 			AG_WidgetBlitSurface(mv, mv->arrowRight,

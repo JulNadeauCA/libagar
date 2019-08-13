@@ -47,6 +47,9 @@
 #include <string.h>
 #include <stdarg.h>
 
+/* Trace AG_Redraw() requests. */
+/* #define DEBUG_REDRAW */
+
 int agWindowSideBorderDefault = 0;
 int agWindowBotBorderDefault = 8;
 
@@ -89,6 +92,8 @@ const char *agWindowAlignmentNames[] = {
 	N_("Bottom Right"),	/* BR */
 	NULL
 };
+
+static int agWindowIconCounter = 0;
 
 static int CreateMinimizedIcon(AG_Window *_Nonnull);
 static void AttachTitlebarAndIcons(AG_Driver *_Nonnull, AG_Window *_Nonnull);
@@ -186,8 +191,10 @@ AG_WindowNew(Uint flags)
 void
 AG_WindowInit(AG_Window *win, Uint flags)
 {
+	static Uint winNo = 0;
+
 	AG_ObjectInit(win, &agWindowClass);
-	AG_ObjectSetNameS(win, "generic");
+	AG_ObjectSetName(win, "win%u", winNo++);
 
 	/* We use a specific naming system. */
 	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
@@ -195,8 +202,6 @@ AG_WindowInit(AG_Window *win, Uint flags)
 	WIDGET(win)->window = win;
 	win->flags |= flags;
 
-	if (win->flags & AG_WINDOW_MODAL)
-		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
 	if (win->flags & AG_WINDOW_NORESIZE)
 		win->flags |= AG_WINDOW_NOMAXIMIZE;
 
@@ -694,7 +699,6 @@ OnShow(AG_Event *_Nonnull event)
 	AG_SizeAlloc a;
 	int xPref, yPref;
 	Uint mwFlags = 0;
-	AG_Variable V;
 	
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
 
@@ -745,17 +749,9 @@ OnShow(AG_Event *_Nonnull event)
 	
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
-		if (win->flags & AG_WINDOW_MODAL) {	/* Per-driver stack */
-			AG_InitPointer(&V, win);
-			AG_ListAppend(AGDRIVER_SW(drv)->Lmodal, &V);
-		}
 		AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 		break;
 	case AG_WM_MULTIPLE:
-		if (win->flags & AG_WINDOW_MODAL) {	/* Global stack */
-			AG_InitPointer(&V, win);
-			AG_ListAppend(agModalWindows, &V);
-		}
 		/* We expect the driver will call AG_WidgetUpdateCoords(). */
 		if (!(AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN)) {
 			AG_Rect rw;
@@ -813,7 +809,6 @@ OnHide(AG_Event *_Nonnull event)
 	AG_Window *win = AG_WINDOW_SELF();
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverSw *dsw;
-	int i;
 
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
 
@@ -847,15 +842,6 @@ OnHide(AG_Event *_Nonnull event)
 			if (wOther)
 				agWindowToFocus = wOther;
 		}
-
-		if (win->flags & AG_WINDOW_MODAL) {
-			for (i = 0; i < dsw->Lmodal->n; i++) {
-				if (dsw->Lmodal->v[i].data.p == win)
-					break;
-			}
-			if (i < dsw->Lmodal->n)
-				AG_ListRemove(dsw->Lmodal, i);
-		}
 		if (AGDRIVER_CLASS(drv)->type == AG_FRAMEBUFFER) {
 			AG_Rect r;
 
@@ -876,14 +862,6 @@ OnHide(AG_Event *_Nonnull event)
 		if (win == agWindowFocused) {
 			AG_PostEvent(NULL, win, "window-lostfocus", NULL);
 			agWindowFocused = NULL;
-		}
-		if (win->flags & AG_WINDOW_MODAL) {
-			for (i = 0; i < agModalWindows->n; i++) {
-				if (agModalWindows->v[i].data.p == win)
-					break;
-			}
-			if (i < agModalWindows->n)
-				AG_ListRemove(agModalWindows, i);
 		}
 		if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
 			if (AGDRIVER_MW_CLASS(drv)->unmapWindow(win) == -1)
@@ -1120,7 +1098,7 @@ out:
 	AG_UnlockVFS(&agDrivers);
 }
 
-
+#if 0
 /* Build an ordered list of the focusable widgets in a window. */
 static void
 ListFocusableWidgets(AG_List *_Nonnull L, AG_Widget *_Nonnull wid)
@@ -1140,6 +1118,7 @@ ListFocusableWidgets(AG_List *_Nonnull L, AG_Widget *_Nonnull wid)
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		ListFocusableWidgets(L, chld);
 }
+#endif
 
 /*
  * Move the widget focus inside a window.
@@ -1148,6 +1127,7 @@ ListFocusableWidgets(AG_List *_Nonnull L, AG_Widget *_Nonnull wid)
 void
 AG_WindowCycleFocus(AG_Window *win, int reverse)
 {
+#if 0
 	AG_List *Lfoc, *Luniq;
 	int i, j;
 	
@@ -1202,6 +1182,7 @@ out:
 	AG_ListDestroy(Lfoc);
 	AG_ListDestroy(Luniq);
 	win->dirty = 1;
+#endif
 }
 
 /*
@@ -1240,13 +1221,26 @@ AG_WindowFocus(AG_Window *win)
 		goto out;
 	}
 
-	/*
-	 * Avoid clobbering modal windows (single-window drivers are
-	 * expected to perform this test internally).
-	 */
+	/* Abort if there are any visible modal windows. */
 	if (agDriverOps->wm == AG_WM_MULTIPLE) {
-		if (agModalWindows->n > 0)
-			goto out;
+		AG_Driver *drv;
+		AG_Window *other;
+
+		AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+			AG_OBJECT_ISA(drv, "AG_Driver:*");
+			AG_FOREACH_WINDOW(other, drv) {
+				if (other == win) {
+					continue;
+				}
+				AG_OBJECT_ISA(other, "AG_Widget:AG_Window:*");
+				AG_ObjectLock(other);
+				if (other->flags & AG_WINDOW_MODAL) {
+					AG_ObjectUnlock(other);
+					goto out;
+				}
+				AG_ObjectUnlock(other);
+			}
+		}
 	}
 
 	AG_ObjectLock(win);
@@ -1810,7 +1804,7 @@ CreateMinimizedIcon(AG_Window *_Nonnull win)
 			return (-1);
 		}
 		AG_ObjectAttach(wDND, icon);
-		AG_ObjectSetName(wDND, "_Icon");
+		AG_ObjectSetName(wDND, "icon%u", agWindowIconCounter++);
 	} else {
 		AG_WindowShow(wDND);
 	}
@@ -2628,8 +2622,8 @@ AG_WindowSetZoom(AG_Window *win, int zoom)
 #else
 	/* TODO */
 #endif
-	AG_WindowUpdate(win);
 	win->zoom = zoom;
+	AG_WindowUpdate(win);
 
 	if (WIDGET(win)->drv) {
 		AG_TextClearGlyphCache(WIDGET(win)->drv);
@@ -2707,21 +2701,6 @@ AG_ParentWindow(void *_Nonnull obj)
 	return (WIDGET(obj)->window);
 }
 
-/*
- * Return the effective focus state of a widget.
- * The Widget and agDrivers VFS must be locked.
- */
-int
-AG_WidgetIsFocused(void *_Nonnull obj)
-{
-	AG_Widget *wid = obj;
-
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
-
-	return ((wid->flags & AG_WIDGET_FOCUSED) &&
-                (wid->window == NULL || AG_WindowIsFocused(wid->window)));
-}
-
 /* Set an explicit widget position in pixels. */
 void
 AG_WidgetSetPosition(void *_Nonnull obj, int x, int y)
@@ -2784,7 +2763,11 @@ AG_Redraw(void *_Nonnull obj)
 	AG_Window *win;
 
 	AG_OBJECT_ISA(obj, "AG_Widget:*");
-
+#ifdef DEBUG_REDRAW
+	Debug(obj, "Redraw %s @ t=%u\n",
+	    WIDGET(obj)->window ? OBJECT(WIDGET(obj)->window)->name : "(null)",
+	    AG_GetTicks());
+#endif
 	if ((win = WIDGET(obj)->window) != NULL) {
 		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		win->dirty = 1;

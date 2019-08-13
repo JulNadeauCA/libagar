@@ -32,8 +32,6 @@
 #include <agar/gui/window.h>
 
 AG_DriverMw *agDriverMw = NULL;		/* Root driver instance */
-AG_List     *agModalWindows = NULL;	/* Modal window stack */
-int          agModalWindowsRefs = 0;
 
 static void
 Init(void *_Nonnull obj)
@@ -42,19 +40,6 @@ Init(void *_Nonnull obj)
 
 	dmw->win = NULL;
 	dmw->flags = 0;
-
-	if (agModalWindowsRefs++ == 0 &&
-	    (agModalWindows = AG_ListNew()) == NULL)
-		AG_FatalError(NULL);
-}
-
-static void
-Destroy(void *_Nonnull obj)
-{
-	if (--agModalWindowsRefs == 0) {
-		AG_ListDestroy(agModalWindows);
-		agModalWindows = NULL;
-	}
 }
 
 AG_ObjectClass agDriverMwClass = {
@@ -63,7 +48,7 @@ AG_ObjectClass agDriverMwClass = {
 	{ 1,4 },
 	Init,
 	NULL,		/* reset */
-	Destroy,
+	NULL,		/* destroy */
 	NULL,		/* load */
 	NULL,		/* save */
 	NULL		/* edit */

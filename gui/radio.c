@@ -30,6 +30,26 @@
 #include <agar/gui/text.h>
 
 AG_Radio *
+AG_RadioNewInt(void *parent, Uint flags, const char **itemText, int *v)
+{
+	AG_Radio *rad;
+
+	rad = AG_RadioNew(parent, flags, itemText);
+	AG_BindInt(rad, "value", v);
+	return (rad);
+}
+
+AG_Radio *
+AG_RadioNewUint(void *parent, Uint flags, const char **itemText, Uint *v)
+{
+	AG_Radio *rad;
+
+	rad = AG_RadioNew(parent, flags, itemText);
+	AG_BindUint(rad, "value", v);
+	return (rad);
+}
+
+AG_Radio *
 AG_RadioNew(void *parent, Uint flags, const char **itemText)
 {
 	AG_Radio *rad;
@@ -45,37 +65,6 @@ AG_RadioNew(void *parent, Uint flags, const char **itemText)
 		AG_RadioItemsFromArray(rad, itemText);
 	}
 	AG_ObjectAttach(parent, rad);
-	return (rad);
-}
-
-AG_Radio *
-AG_RadioNewInt(void *parent, Uint flags, const char **itemText, int *v)
-{
-	AG_Radio *rad;
-	rad = AG_RadioNew(parent, flags, itemText);
-	AG_BindInt(rad, "value", v);
-	return (rad);
-}
-
-AG_Radio *
-AG_RadioNewUint(void *parent, Uint flags, const char **itemText, Uint *v)
-{
-	AG_Radio *rad;
-	rad = AG_RadioNew(parent, flags, itemText);
-	AG_BindUint(rad, "value", v);
-	return (rad);
-}
-
-AG_Radio *
-AG_RadioNewFn(void *parent, Uint flags, const char **itemText, AG_EventFn fn,
-    const char *fmt, ...)
-{
-	AG_Radio *rad;
-	AG_Event *ev;
-
-	rad = AG_RadioNew(parent, flags, itemText);
-	ev = AG_SetEvent(rad, "radio-changed", fn, NULL);
-	AG_EVENT_GET_ARGS(ev, fmt);
 	return (rad);
 }
 
@@ -226,10 +215,8 @@ AG_RadioClearItems(AG_Radio *rad)
 void
 AG_RadioSizeHint(AG_Radio *rad, int nLines, const char *text)
 {
-	AG_ObjectLock(rad);
 	AG_TextSize(text, &rad->wPre, NULL);
 	rad->hPre = nLines;
-	AG_ObjectUnlock(rad);
 }
 
 static void
@@ -345,14 +332,14 @@ static void
 MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Radio *rad = AG_RADIO_SELF();
-	int x = AG_INT(1);
+	const int x = AG_INT(1);
 	int y = AG_INT(2);
 	int sel;
 
 	y -= rad->yPadding;
 
-	if (x < 0 || x > WIDGET(rad)->w ||
-	    y < 0 || y > WIDGET(rad)->h) {
+	if (x < 0 || x > WIDTH(rad) ||
+	    y < 0 || y > HEIGHT(rad)) {
 		rad->oversel = -1;
 		return;
 	}
@@ -366,8 +353,8 @@ static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Radio *rad = AG_RADIO_SELF();
-	int button = AG_INT(1);
-	int y = AG_INT(3);
+	const int button = AG_INT(1);
+	const int y = AG_INT(3);
 	int *sel, selNew = -1;
 	AG_Variable *value;
 
@@ -398,9 +385,9 @@ KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Radio *rad = AG_RADIO_SELF();
 	AG_Variable *value;
-	int keysym = AG_INT(1);
-	int *sel, selNew = -1;
-	int i;
+	int *sel;
+	const int keysym = AG_INT(1);
+	int selNew = -1, i;
 
 	value = AG_GetVariable(rad, "value", &sel);
 	switch (keysym) {
@@ -436,11 +423,11 @@ static void
 OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_Radio *rad = AG_RADIO_SELF();
-	AG_Font *font = WFONT(rad);
+	const int fontHeight = WFONT(rad)->height;
 	int i, w;
 
-	rad->itemHeight = font->height + (rad->ySpacing << 1);
-	rad->radius = MAX(0, (font->height >> 1)-1);
+	rad->itemHeight = fontHeight + (rad->ySpacing << 1);
+	rad->radius = MAX(0, (fontHeight >> 1)-1);
 	rad->max_w = 0;
 
 	for (i = 0; i < rad->nItems; i++) {
@@ -451,7 +438,8 @@ OnFontChange(AG_Event *_Nonnull event)
 			ri->surface = -1;
 		}
 		AG_TextSize(ri->text, &w, NULL);
-		if (w > rad->max_w) { rad->max_w = w; }
+		if (w > rad->max_w)
+			rad->max_w = w;
 	}
 }
 
@@ -492,6 +480,27 @@ Init(void *_Nonnull obj)
 	AG_BindInt(rad, "value", &rad->value);
 	AG_RedrawOnChange(rad, 100, "value");
 }
+
+#ifdef AG_LEGACY
+AG_Radio *
+AG_RadioNewFn(void *parent, Uint flags, const char **itemText, AG_EventFn fn,
+    const char *fmt, ...)
+{
+	AG_Radio *rad;
+	AG_Event *ev;
+
+	rad = AG_RadioNew(parent, flags, itemText);
+	ev = AG_SetEvent(rad, "radio-changed", fn, NULL);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
+	return (rad);
+}
+#endif /* AG_LEGACY */
 
 AG_WidgetClass agRadioClass = {
 	{

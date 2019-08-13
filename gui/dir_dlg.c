@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -753,26 +753,30 @@ Init(void *_Nonnull obj)
 }
 
 /*
- * Register an event handler for the "OK" button. Overrides type-specific
- * handlers.
+ * Register an event handler for the "OK" / "Cancel" buttons.
+ * Overrides type-specific handlers.
  */
 void
 AG_DirDlgOkAction(AG_DirDlg *dd, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(dd);
-	if (dd->okAction != NULL) {
+	if (dd->okAction) {
 		AG_UnsetEvent(dd, dd->okAction->name);
 	}
 	dd->okAction = AG_SetEvent(dd, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(dd->okAction, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(dd->okAction, fmt, ap);
+		va_end(ap);
+	}
 #ifdef AG_THREADS
 	if (dd->flags & AG_DIRDLG_ASYNC)
 		dd->okAction->flags |= AG_EVENT_ASYNC;
 #endif
 	AG_ObjectUnlock(dd);
 }
-
-/* Register an event handler for the "Cancel" button. */
 void
 AG_DirDlgCancelAction(AG_DirDlg *dd, AG_EventFn fn, const char *fmt, ...)
 {
@@ -781,7 +785,13 @@ AG_DirDlgCancelAction(AG_DirDlg *dd, AG_EventFn fn, const char *fmt, ...)
 		AG_UnsetEvent(dd, dd->cancelAction->name);
 	}
 	dd->cancelAction = AG_SetEvent(dd, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(dd->cancelAction, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(dd->cancelAction, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(dd);
 }
 
@@ -826,7 +836,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_DirDlg *dd = obj;
 	AG_SizeReq r, rLoc, rInput;
 	AG_SizeAlloc aChld;
-	int hBtn = 0, wBtn = a->w/2;
+	int hBtn = 0, wBtn = a->w >> 1;
 
 	if (!(dd->flags & AG_DIRDLG_NOBUTTONS)) {
 		AG_WidgetSizeReq(dd->btnOk, &r);
@@ -863,7 +873,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		aChld.h = hBtn;
 		AG_WidgetSizeAlloc(dd->btnOk, &aChld);
 		aChld.x = wBtn;
-		if (wBtn*2 < a->w) { aChld.w++; }
+		if ((wBtn << 1) < a->w) { aChld.w++; }
 		aChld.h = hBtn;
 		AG_WidgetSizeAlloc(dd->btnCancel, &aChld);
 	}

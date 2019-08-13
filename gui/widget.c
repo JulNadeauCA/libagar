@@ -490,8 +490,8 @@ void
 AG_WidgetStdKeyDown(AG_Event *event)
 {
 	AG_Widget *wid = AG_WIDGET_SELF();
-	int sym = AG_INT(1);
-	int mod = AG_INT(2);
+	const int sym = AG_INT(1);
+	const int mod = AG_INT(2);
 
 	AG_ExecKeyAction(wid, AG_ACTION_ON_KEYDOWN, sym, mod);
 }
@@ -501,8 +501,8 @@ void
 AG_WidgetStdKeyUp(AG_Event *event)
 {
 	AG_Widget *wid = AG_WIDGET_SELF();
-	int sym = AG_INT(1);
-	int mod = AG_INT(2);
+	const int sym = AG_INT(1);
+	const int mod = AG_INT(2);
 
 	AG_ExecKeyAction(wid, AG_ACTION_ON_KEYUP, sym, mod);
 }
@@ -512,9 +512,9 @@ void
 AG_WidgetStdMouseButtonDown(AG_Event *event)
 {
 	AG_Widget *wid = AG_WIDGET_SELF();
-	int btn = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	const int btn = AG_INT(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 
 	if (!AG_WidgetIsFocused(wid)) {
 		AG_WidgetFocus(wid);
@@ -527,9 +527,9 @@ void
 AG_WidgetStdMouseButtonUp(AG_Event *event)
 {
 	AG_Widget *wid = AG_WIDGET_SELF();
-	int btn = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	const int btn = AG_INT(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 
 	AG_ExecMouseAction(wid, AG_ACTION_ON_BUTTONUP, btn, x, y);
 }
@@ -679,7 +679,13 @@ AG_ActionFn(void *obj, const char *name, AG_EventFn fn, const char *fnArgs,...)
 	a->type = AG_ACTION_FN;
 	a->widget = wid;
 	a->fn = AG_SetEvent(wid, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(a->fn, fnArgs);
+	if (fnArgs) {
+		va_list ap;
+		
+		va_start(ap, fnArgs);
+		AG_EventGetArgs(a->fn, fnArgs, ap);
+		va_end(ap);
+	}
 	AG_TblInsertPointer(&wid->pvt.actions, name, a);
 	AG_ObjectUnlock(wid);
 	return (a);

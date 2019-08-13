@@ -1369,8 +1369,8 @@ Init(void *_Nonnull obj)
 }
 
 /*
- * Register an event handler for the "OK" button. Overrides type-specific
- * handlers.
+ * Register an event handler for the "OK" / "Cancel" buttons.
+ * This overrides type-specific handlers.
  */
 void
 AG_FileDlgOkAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
@@ -1380,15 +1380,19 @@ AG_FileDlgOkAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 		AG_UnsetEvent(fd, fd->okAction->name);
 	}
 	fd->okAction = AG_SetEvent(fd, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(fd->okAction, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(fd->okAction, fmt, ap);
+		va_end(ap);
+	}
 #ifdef AG_THREADS
 	if (fd->flags & AG_FILEDLG_ASYNC)
 		fd->okAction->flags |= AG_EVENT_ASYNC;
 #endif
 	AG_ObjectUnlock(fd);
 }
-
-/* Register an event handler for the "Cancel" button. */
 void
 AG_FileDlgCancelAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 {
@@ -1397,7 +1401,13 @@ AG_FileDlgCancelAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 		AG_UnsetEvent(fd, fd->cancelAction->name);
 	}
 	fd->cancelAction = AG_SetEvent(fd, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(fd->cancelAction, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(fd->cancelAction, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(fd);
 }
 
@@ -1572,11 +1582,18 @@ AG_FileDlgAddImageTypes(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 	ftBMP = AG_FileDlgAddType(fd, _("Windows Bitmap"), "*.bmp", NULL, NULL);
 	if (fn) {
 		ftBMP->action = AG_SetEvent(fd, NULL, fn, NULL);
-		AG_EVENT_GET_ARGS(ftBMP->action, fmt);
+		if (fmt) {
+			va_list ap;
+
+			va_start(ap, fmt);
+			AG_EventGetArgs(ftBMP->action, fmt, ap);
+			va_end(ap);
+		}
 	}
 #ifdef HAVE_JPEG
 	{
 		AG_FileType *ft;
+
 		ft = AG_FileDlgAddType(fd, _("JPEG image"), "*.jpg,*.jpeg", NULL, NULL);
 		ft->action = AG_EventDup(ftBMP->action);
 	}
@@ -1584,6 +1601,7 @@ AG_FileDlgAddImageTypes(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 #ifdef HAVE_PNG
 	{
 		AG_FileType *ft;
+
 		ft = AG_FileDlgAddType(fd, _("PNG image"), "*.png", NULL, NULL);
 		ft->action = AG_EventDup(ftBMP->action);
 	}
@@ -1686,7 +1704,13 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 
 	if (fn) {
 		ft->action = AG_SetEvent(fd, NULL, fn, NULL);
-		AG_EVENT_GET_ARGS(ft->action, fmt);
+		if (fmt) {
+			va_list ap;
+
+			va_start(ap, fmt);
+			AG_EventGetArgs(ft->action, fmt, ap);
+			va_end(ap);
+		}
 #ifdef AG_THREADS
 		if (fd->flags & AG_FILEDLG_ASYNC)
 			ft->action->flags |= AG_EVENT_ASYNC;

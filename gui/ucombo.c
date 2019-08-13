@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,13 @@ AG_UComboNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt,
 	AG_ObjectLock(com);
 	com->list->flags |= AG_TLIST_POLL;
 	ev = AG_SetEvent(com->list, "tlist-poll", fn, NULL);
-	AG_EVENT_GET_ARGS(ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(com);
 	return (com);
 }
@@ -80,11 +86,15 @@ Collapse(AG_UCombo *_Nonnull com)
 }
 
 static void
-ModalClose(AG_Event *_Nonnull event)
+ModalCollapse(AG_Event *_Nonnull event)
 {
+	const AG_Window *win = AG_WINDOW_SELF();
 	AG_UCombo *com = AG_UCOMBO_PTR(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 
-	if (com->panel != NULL)
+	if (com->panel &&
+	    (x < 0 || y < 0 || x > WIDTH(win) || y > HEIGHT(win)))
 		Collapse(com);
 }
 
@@ -93,24 +103,28 @@ Expand(AG_Event *_Nonnull event)
 {
 	AG_UCombo *com = AG_UCOMBO_PTR(1);
 	AG_Driver *drv = WIDGET(com)->drv;
-	int expand = AG_INT(2);
+	AG_Window *panel;
+	const int expand = AG_INT(2);
 	AG_SizeReq rList;
 	int x, y, w, h;
 	Uint wView, hView;
 
 	AG_ObjectLock(com);
 	if (expand) {
-		com->panel = AG_WindowNew(
-		    AG_WINDOW_NOTITLE|AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE|
-		    AG_WINDOW_MODAL);
-		com->panel->wmType = AG_WINDOW_WM_COMBO;
-		AG_ObjectSetName(com->panel, "_UComboPopup");
-		AG_WindowSetPadding(com->panel, 0,0,0,0);
-		AG_ObjectAttach(com->panel, com->list);
-		if (WIDGET(com)->window != NULL) {
-			AG_WindowAttach(WIDGET(com)->window, com->panel);
-			AG_WindowMakeTransient(WIDGET(com)->window, com->panel);
-			AG_WindowPin(WIDGET(com)->window, com->panel);
+		panel = com->panel = AG_WindowNew(AG_WINDOW_MODAL |
+		                                  AG_WINDOW_NOTITLE |
+		                                  AG_WINDOW_DENYFOCUS |
+		                                  AG_WINDOW_KEEPABOVE);
+		panel->wmType = AG_WINDOW_WM_COMBO;
+
+		AG_ObjectSetName(panel, "_UComboPopup");
+		AG_WindowSetPadding(panel, 0,0,0,0);
+		AG_ObjectAttach(panel, com->list);
+
+		if (WIDGET(com)->window) {
+			AG_WindowAttach(WIDGET(com)->window, panel);
+			AG_WindowMakeTransient(WIDGET(com)->window, panel);
+			AG_WindowPin(WIDGET(com)->window, panel);
 		}
 	
 		if (com->wSaved > 0) {
@@ -122,8 +136,8 @@ Expand(AG_Event *_Nonnull event)
 				    com->wPreList, com->hPreList);
 			}
 			AG_WidgetSizeReq(com->list, &rList);
-			w = rList.w + com->panel->wBorderSide*2;
-			h = rList.h + com->panel->wBorderBot;
+			w = rList.w + (panel->wBorderSide << 1);
+			h = rList.h + panel->wBorderBot;
 		}
 		x = WIDGET(com)->rView.x2 - w;
 		y = WIDGET(com)->rView.y1;
@@ -143,10 +157,13 @@ Expand(AG_Event *_Nonnull event)
 			Collapse(com);
 			return;
 		}
-		AG_SetEvent(com->panel, "window-modal-close",
-		    ModalClose, "%p", com);
-		AG_WindowSetGeometry(com->panel, x,y, w,h);
-		AG_WindowShow(com->panel);
+
+		/* Collapse if user clicks outside of the window boundaries. */
+		WIDGET(panel)->flags |= AG_WIDGET_UNFOCUSED_BUTTONDOWN;
+		AG_AddEvent(panel, "mouse-button-down", ModalCollapse, "%p", com);
+
+		AG_WindowSetGeometry(panel, x,y, w,h);
+		AG_WindowShow(panel);
 	} else {
 		Collapse(com);
 	}
@@ -188,7 +205,7 @@ Init(void *_Nonnull obj)
 {
 	AG_UCombo *com = obj;
 
-	WIDGET(com)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
+	WIDGET(com)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP |
 	                      AG_WIDGET_TABLE_EMBEDDABLE;
 
 	com->flags = 0;
@@ -225,10 +242,8 @@ AG_UComboSizeHint(AG_UCombo *com, const char *text, int h)
 void
 AG_UComboSizeHintPixels(AG_UCombo *com, int w, int h)
 {
-	AG_ObjectLock(com);
 	com->wPreList = w;
 	com->hPreList = h;
-	AG_ObjectUnlock(com);
 }
 
 static void

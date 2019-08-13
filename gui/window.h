@@ -270,7 +270,6 @@ int  AG_WindowIsVisible(AG_Window *_Nonnull) _Pure_Attribute;
 
 AG_Window *_Nullable AG_ParentWindow(void *_Nonnull);
 
-int  AG_WidgetIsFocused(void *_Nonnull) _Pure_Attribute;
 void AG_WidgetSetPosition(void *_Nonnull, int,int);
 void AG_WidgetSetSize(void *_Nonnull, int, int);
 void AG_WidgetSetGeometry(void *_Nonnull, const AG_Rect *_Nonnull);

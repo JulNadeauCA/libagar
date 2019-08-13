@@ -95,9 +95,15 @@ void
 AG_ScrollbarSetIncFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(sb);
-	if (fn != NULL) {
+	if (fn) {
 		sb->buttonIncFn = AG_SetEvent(sb, NULL, fn, NULL);
-		AG_EVENT_GET_ARGS(sb->buttonIncFn, fmt);
+		if (fmt) {
+			va_list ap;
+
+			va_start(ap, fmt);
+			AG_EventGetArgs(sb->buttonIncFn, fmt, ap);
+			va_end(ap);
+		}
 	} else {
 		sb->buttonIncFn = NULL;
 	}
@@ -109,9 +115,15 @@ void
 AG_ScrollbarSetDecFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(sb);
-	if (fn != NULL) {
+	if (fn) {
 		sb->buttonDecFn = AG_SetEvent(sb, NULL, fn, NULL);
-		AG_EVENT_GET_ARGS(sb->buttonDecFn, fmt);
+		if (fmt) {
+			va_list ap;
+
+			va_start(ap, fmt);
+			AG_EventGetArgs(sb->buttonDecFn, fmt, ap);
+			va_end(ap);
+		}
 	} else {
 		sb->buttonDecFn = NULL;
 	}
@@ -460,12 +472,12 @@ MouseButtonUp(AG_Event *_Nonnull event)
 #endif
 	switch (sb->curBtn) {
 	case AG_SCROLLBAR_BUTTON_DEC:
-		if (sb->buttonDecFn != NULL) {
+		if (sb->buttonDecFn) {
 			AG_PostEventByPtr(NULL, sb, sb->buttonDecFn, "%i", 0);
 		}
 		break;
 	case AG_SCROLLBAR_BUTTON_INC:
-		if (sb->buttonIncFn != NULL)
+		if (sb->buttonIncFn)
 			AG_PostEventByPtr(NULL, sb, sb->buttonIncFn, "%i", 0);
 		break;
 	default:
@@ -532,7 +544,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	}
 	if (x < 0) {						/* Decrement */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_DEC;
-		if (sb->buttonDecFn != NULL) {
+		if (sb->buttonDecFn) {
 			AG_PostEventByPtr(NULL, sb, sb->buttonDecFn, "%i", 1);
 		} else {
 			if (Increment(sb,-1) != 1) {
@@ -545,7 +557,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		}
 	} else if (x > len - (sbThick << 1)) {			/* Increment */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_INC;
-		if (sb->buttonIncFn != NULL) {
+		if (sb->buttonIncFn) {
 			AG_PostEventByPtr(NULL, sb, sb->buttonIncFn, "%i", 1);
 		} else {
 			if (Increment(sb,+1) != 1) {
@@ -1068,13 +1080,15 @@ Edit(void *_Nonnull obj)
 	AG_Mutex *sbLock = &OBJECT(sb)->pvt.lock;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
+#if AG_MODEL != AG_SMALL
 	AG_CheckboxSetFromFlags(box, 0, &sb->flags, flagDescr);
-
+#endif
 	AG_LabelNewS(box, 0, _("Direction:"));
-	AG_RadioNewUint(box, 0, sbTypeNames, &sb->type);
+	AG_RadioNewUint(box, 0, sbTypeNames, (Uint *)&sb->type);
 
 	AG_SeparatorNewHoriz(box);
 
+#ifdef AG_ENABLE_STRING
 	AG_LabelNewPolledMT(box, AG_LABEL_HFILL, sbLock,
 	    "Button: #%d (mouse over #%d)",
 	    &sb->curBtn, &sb->mouseOverBtn);
@@ -1084,7 +1098,7 @@ Edit(void *_Nonnull obj)
 	AG_LabelNewPolledMT(box, AG_LABEL_HFILL, sbLock,
 	    "wBarLast: %d, hArrow: %d",
 	    &sb->wBarLast, &sb->hArrow);
-
+#endif
 	return (box);
 }
 

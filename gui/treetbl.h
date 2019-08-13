@@ -91,7 +91,7 @@ typedef struct ag_treetbl {
 	AG_TreetblRowQ children;	/* Tree of rows */
 	AG_TreetblRowQ backstore;	/* For polling */
 	int nExpandedRows;		/* Number of rows visible */
-	Uint32 _pad;	
+	int lineScrollAmount;		/* Wheel scroll increment */
 	AG_Scrollbar *_Nonnull  vBar;	/* Vertical scrollbar */
 	AG_Scrollbar *_Nullable hBar;	/* Horizontal scrollbar */
 	

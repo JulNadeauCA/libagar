@@ -34,6 +34,8 @@
 
 #include <stdarg.h>
 
+static void Reshape(AG_GLView *);
+
 AG_GLView *
 AG_GLViewNew(void *parent, Uint flags)
 {
@@ -94,13 +96,10 @@ Init(void *_Nonnull obj)
 	AG_GLView *glv = obj;
 
 	WIDGET(glv)->flags |= AG_WIDGET_FOCUSABLE;
-
+	
+	glv->flags = AG_GLVIEW_INIT_MATRICES;
 	glv->wPre = 100;
 	glv->hPre = 100;
-
-	AG_ColorBlack(&glv->bgColor);
-
-	glv->flags = AG_GLVIEW_INIT_MATRICES;
 	glv->draw_ev = NULL;
 	glv->underlay_ev = NULL;
 	glv->overlay_ev = NULL;
@@ -110,21 +109,23 @@ Init(void *_Nonnull obj)
 	glv->keyup_ev = NULL;
 	glv->btnup_ev = NULL;
 	glv->motion_ev = NULL;
+	
+	AG_ColorBlack(&glv->bgColor);
 
 	AG_SetEvent(glv, "widget-moved", WidgetMoved, NULL);
 	AG_SetEvent(glv, "mouse-button-down", MouseButtonDown, NULL);
 	AG_AddEvent(glv, "attached", OnAttach, NULL);
 }
 
+/* Set an initial size requisition in pixels. */
 void
 AG_GLViewSizeHint(AG_GLView *glv, int w, int h)
 {
-	AG_ObjectLock(glv);
 	glv->wPre = w;
 	glv->hPre = h;
-	AG_ObjectUnlock(glv);
 }
 
+/* Register a rendering routine. */
 void
 AG_GLViewDrawFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
@@ -132,10 +133,17 @@ AG_GLViewDrawFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 
 	AG_ObjectLock(glv);
 	glv->draw_ev = AG_SetEvent(glv, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(glv->draw_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->draw_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a rendering callback routine (before draw). */
 void
 AG_GLViewUnderlayFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
@@ -143,10 +151,17 @@ AG_GLViewUnderlayFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 
 	AG_ObjectLock(glv);
 	glv->underlay_ev = AG_SetEvent(glv, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(glv->underlay_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->underlay_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a rendering callback routine (post-draw). */
 void
 AG_GLViewOverlayFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
@@ -154,10 +169,17 @@ AG_GLViewOverlayFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 
 	AG_ObjectLock(glv);
 	glv->overlay_ev = AG_SetEvent(glv, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(glv->overlay_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->overlay_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a callback routine to run whenever the widget is resized. */
 void
 AG_GLViewScaleFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
@@ -165,10 +187,17 @@ AG_GLViewScaleFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 
 	AG_ObjectLock(glv);
 	glv->scale_ev = AG_SetEvent(glv, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(glv->scale_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->scale_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a "key-down" (key pressed) callback routine. */
 void
 AG_GLViewKeydownFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
@@ -176,10 +205,17 @@ AG_GLViewKeydownFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 
 	AG_ObjectLock(glv);
 	glv->keydown_ev = AG_SetEvent(glv, "key-down", fn, NULL);
-	AG_EVENT_GET_ARGS(glv->keydown_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->keydown_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a "key-up" (key released) callback routine. */
 void
 AG_GLViewKeyupFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
@@ -187,10 +223,17 @@ AG_GLViewKeyupFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 
 	AG_ObjectLock(glv);
 	glv->keyup_ev = AG_SetEvent(glv, "key-up", fn, NULL);
-	AG_EVENT_GET_ARGS(glv->keyup_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->keyup_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a "mouse-button-down" callback routine. */
 void
 AG_GLViewButtondownFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
@@ -198,10 +241,17 @@ AG_GLViewButtondownFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 
 	AG_ObjectLock(glv);
 	glv->btndown_ev = AG_SetEvent(glv, "mouse-button-down", fn, NULL);
-	AG_EVENT_GET_ARGS(glv->btndown_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->keydown_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a "mouse-button-up" callback routine. */
 void
 AG_GLViewButtonupFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
@@ -209,10 +259,17 @@ AG_GLViewButtonupFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 
 	AG_ObjectLock(glv);
 	glv->btnup_ev = AG_SetEvent(glv, "mouse-button-up", fn, NULL);
-	AG_EVENT_GET_ARGS(glv->btnup_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->btnup_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a "mouse-motion" callback routine. */
 void
 AG_GLViewMotionFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
@@ -220,44 +277,18 @@ AG_GLViewMotionFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 
 	AG_ObjectLock(glv);
 	glv->motion_ev = AG_SetEvent(glv, "mouse-motion", fn, NULL);
-	AG_EVENT_GET_ARGS(glv->motion_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->motion_ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(glv);
 }
 
-/*
- * Compute the projection matrix for the context and save it for later.
- * Called automatically when the widget is scaled or moved.
- */
-void
-AG_GLViewReshape(AG_GLView *glv)
-{
-	glMatrixMode(GL_TEXTURE);	glPushMatrix();	glLoadIdentity();
-	glMatrixMode(GL_MODELVIEW);	glPushMatrix();	glLoadIdentity();
-	glMatrixMode(GL_PROJECTION);	glPushMatrix(); glLoadIdentity();
-
-	if (glv->scale_ev != NULL) {
-		glv->scale_ev->fn(glv->scale_ev);
-	}
-	glGetFloatv(GL_PROJECTION_MATRIX, glv->mProjection);
-	glGetFloatv(GL_MODELVIEW_MATRIX, glv->mModelview);
-	glGetFloatv(GL_TEXTURE_MATRIX, glv->mTexture);
-	
-	glMatrixMode(GL_PROJECTION);	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
-	glMatrixMode(GL_TEXTURE);	glPopMatrix();
-}
-
-void
-AG_GLViewSizeRequest(void *obj, AG_SizeReq *r)
-{
-	AG_GLView *glv = obj;
-
-	r->w = glv->wPre;
-	r->h = glv->hPre;
-}
-
-int
-AG_GLViewSizeAllocate(void *obj, const AG_SizeAlloc *a)
+static int
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_GLView *glv = obj;
 
@@ -276,8 +307,8 @@ AG_GLViewSetBgColor(AG_GLView *glv, const AG_Color *c)
 	AG_ObjectUnlock(glv);
 }
 
-void
-AG_GLViewDraw(void *obj)
+static void
+Draw(void *_Nonnull obj)
 {
 	AG_GLView *glv = obj;
 	AG_Driver *drv = WIDGET(glv)->drv;
@@ -305,7 +336,7 @@ AG_GLViewDraw(void *obj)
 	}
 	if (glv->flags & AG_GLVIEW_RESHAPE) {
 		glv->flags &= ~(AG_GLVIEW_RESHAPE);
-		AG_GLViewReshape(glv);
+		Reshape(glv);
 	}
 
 	if (AGDRIVER_SINGLE(drv)) {
@@ -354,6 +385,38 @@ AG_GLViewDraw(void *obj)
 	}
 }
 
+/*
+ * Compute the projection matrix for the context and save it for later.
+ * Called automatically when the widget is scaled or moved.
+ */
+static void
+Reshape(AG_GLView *glv)
+{
+	glMatrixMode(GL_TEXTURE);	glPushMatrix();	glLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);	glPushMatrix();	glLoadIdentity();
+	glMatrixMode(GL_PROJECTION);	glPushMatrix(); glLoadIdentity();
+
+	if (glv->scale_ev != NULL) {
+		glv->scale_ev->fn(glv->scale_ev);
+	}
+	glGetFloatv(GL_PROJECTION_MATRIX, glv->mProjection);
+	glGetFloatv(GL_MODELVIEW_MATRIX, glv->mModelview);
+	glGetFloatv(GL_TEXTURE_MATRIX, glv->mTexture);
+	
+	glMatrixMode(GL_PROJECTION);	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
+	glMatrixMode(GL_TEXTURE);	glPopMatrix();
+}
+
+static void
+SizeRequest(void *obj, AG_SizeReq *r)
+{
+	AG_GLView *glv = obj;
+
+	r->w = glv->wPre;
+	r->h = glv->hPre;
+}
+
 AG_WidgetClass agGLViewClass = {
 	{
 		"Agar(Widget:GLView)",
@@ -366,9 +429,9 @@ AG_WidgetClass agGLViewClass = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	AG_GLViewDraw,
-	AG_GLViewSizeRequest,
-	AG_GLViewSizeAllocate
+	Draw,
+	SizeRequest,
+	SizeAllocate
 };
 
 #endif /* HAVE_OPENGL */

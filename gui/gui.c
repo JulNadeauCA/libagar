@@ -247,10 +247,13 @@ AG_InitGUIGlobals(void)
 	agGUI = 1;
 	agRenderingContext = 0;
 
-	AG_ObjectInitStatic(&agDrivers, &agObjectClass);
+	AG_ObjectInit(&agDrivers, &agObjectClass);
 	AG_ObjectSetName(&agDrivers, "agDrivers");
-	AG_ObjectInitStatic(&agInputDevices, &agObjectClass);
+	agDrivers.flags |= AG_OBJECT_STATIC;
+
+	AG_ObjectInit(&agInputDevices, &agObjectClass);
 	AG_ObjectSetName(&agInputDevices, "agInputDevices");
+	agInputDevices.flags |= AG_OBJECT_STATIC;
 
 #ifdef AG_SERIALIZATION
 	cfg = AG_ConfigObject();

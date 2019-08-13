@@ -56,8 +56,6 @@ AG_TreetblNew(void *parent, Uint flags, AG_TreetblDataFn cellDataFn,
 	if (flags & AG_TREETBL_HFILL)	{ AG_ExpandHoriz(tt); }
 	if (flags & AG_TREETBL_VFILL)	{ AG_ExpandVert(tt); }
 
-	tt->hBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
-
 	AG_ObjectAttach(parent, tt);
 	return (tt);
 }
@@ -107,7 +105,7 @@ static void
 FontChanged(AG_Event *_Nonnull event)
 {
 	AG_Treetbl *tt = AG_TREETBL_SELF();
-	const AG_Font *font = WIDGET(tt)->font;
+	const AG_Font *font = WFONT(tt);
 	AG_TreetblRow *row;
 	Uint i;
 
@@ -171,7 +169,7 @@ CountVisibleChld(AG_TreetblRowQ *_Nonnull in, int i)
 static void
 SwapColumns(AG_Treetbl *_Nonnull tt, Uint a, Uint b)
 {
-	AG_TreetblCol col_tmp;
+	AG_TreetblCol colTmp;
 
 	/* a little sanity checking never hurt */
 	if (a >= tt->n || b >= tt->n)
@@ -179,9 +177,9 @@ SwapColumns(AG_Treetbl *_Nonnull tt, Uint a, Uint b)
 	if (a == b)
 		return;
 
-	col_tmp = tt->column[a];
+	colTmp = tt->column[a];
 	tt->column[a] = tt->column[b];
-	tt->column[b] = col_tmp;
+	tt->column[b] = colTmp;
 	tt->visible.dirty = 1;
 	AG_Redraw(tt);
 }
@@ -191,8 +189,8 @@ static void
 MoveColumn(AG_Treetbl *_Nonnull tt, Uint cid, int left)
 {
 	AG_TreetblCol *col = &tt->column[cid];
-	AG_TreetblCol *colLeft = &tt->column[cid-1];
-	AG_TreetblCol *colRight = &tt->column[cid+1];
+	const AG_TreetblCol *colLeft = &tt->column[cid-1];
+	const AG_TreetblCol *colRight = &tt->column[cid+1];
 	int x;
 
 	col->flags |= AG_TREETBL_COL_MOVING;
@@ -233,11 +231,10 @@ static void
 FOREACH_VISIBLE_COLUMN(AG_Treetbl *_Nonnull tt, VisibleForeachFn foreachFn,
     void *_Nullable arg1, void *_Nullable arg2)
 {
-	int x, first_col, wCol;
+	const int view_edge = (tt->hBar ? AG_GetInt(tt->hBar,"value") : 0);
+	int x = 0, first_col = -1, wCol;
 	Uint i;
-	int view_edge = (tt->hBar ? AG_GetInt(tt->hBar, "value") : 0);
 
-	x = 0;
 	first_col = -1;
 	for (i = 0; i < tt->n; i++) {
 		AG_TreetblCol *col = &tt->column[i];
@@ -265,7 +262,8 @@ MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Treetbl *tt = AG_TREETBL_SELF();
 	AG_TreetblCol *col = NULL;
-	int coord_x = AG_INT(2), coord_y = AG_INT(3);
+	const int coord_x = AG_INT(2);
+	const int coord_y = AG_INT(3);
 	int left;
 	Uint i;
 
@@ -509,11 +507,19 @@ static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Treetbl *tt = AG_TREETBL_SELF();
+	const int button  = AG_INT(1);
 	int coord_x = AG_INT(2);
 	int coord_y = AG_INT(3);
 
-	if (!AG_WidgetIsFocused(tt))
+	if (!AG_WidgetIsFocused(tt)) {
 		AG_WidgetFocus(tt);
+	}
+	switch (button) {
+	case AG_MOUSE_WHEELUP:
+	case AG_MOUSE_WHEELDOWN:
+		/* TODO */
+		return;
+	}
 
 	if (tt->hCol > 0 && coord_y < tt->hCol) {
 		/* a mouse down on the column header */
@@ -529,7 +535,7 @@ Init(void *_Nonnull obj)
 {
 	AG_Treetbl *tt = obj;
 	
-	WIDGET(tt)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
+	WIDGET(tt)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_TEXT;
 
 	tt->cellDataFn = NULL;
 	tt->sortFn = NULL;
@@ -542,69 +548,54 @@ Init(void *_Nonnull obj)
 	tt->hCol = agTextFontHeight;
 	tt->hRow = agTextFontHeight+2;
 	tt->dblClicked = 0;
-	tt->vBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
-	tt->hBar = NULL;
 
+	tt->vBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
 	AG_SetInt(tt->vBar, "min", 0);
 	AG_SetInt(tt->vBar, "max", 0);
 	AG_SetInt(tt->vBar, "value", 0);
+	AG_SetEvent(tt->vBar, "scrollbar-changed", ScrollbarChanged, "%p", tt);
 
-	if (tt->hBar != NULL) {
-		AG_SetInt(tt->hBar, "min", 0);
-		AG_SetInt(tt->hBar, "max", 0);
-		AG_SetInt(tt->hBar, "value", 0);
-	}
+	tt->hBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
+	AG_SetInt(tt->hBar, "min", 0);
+	AG_SetInt(tt->hBar, "max", 0);
+	AG_SetInt(tt->hBar, "value", 0);
+
 	tt->n = 0;
 	tt->sortMode = AG_TREETBL_SORT_NOT;
 	tt->column = NULL;
-
 	TAILQ_INIT(&tt->children);
 	TAILQ_INIT(&tt->backstore);
 	tt->nExpandedRows = 0;
-
+	tt->lineScrollAmount = 5;
 	tt->visible.redraw_rate = 0;
 	tt->visible.redraw_last = AG_GetTicks();
 	tt->visible.count = 0;
 	tt->visible.items = NULL;
-
 	tt->wHint = 10;
-	tt->hHint = tt->hCol + (tt->hRow * 4);
-
+	tt->hHint = tt->hCol + (tt->hRow << 2);
+	
 	AG_SetEvent(tt, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(tt, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(tt->vBar, "scrollbar-changed", ScrollbarChanged, "%p", tt);
 #ifdef AG_TIMERS
 	AG_InitTimer(&tt->toDblClick, "dblClick", 0);
 	AG_SetEvent(tt, "widget-lostfocus", FocusLost, NULL);
 	AG_AddEvent(tt, "widget-hidden", FocusLost, NULL);
 #endif
 	AG_AddEvent(tt, "font-changed", FontChanged, NULL);
-#if 0
-	AG_BindInt(tt, "hCol", &tt->hCol);
-	AG_BindInt(tt, "hRow", &tt->hRow);
-	AG_BindUint(tt, "n", &tt->n);
-	AG_BindUint(tt, "sortMode", &tt->sortMode);
-	AG_BindInt(tt, "nExpandedRows", &tt->nExpandedRows);
-	AG_BindUint(tt, "visible.count", &tt->visible.count);
-#endif
 }
 
 void
 AG_TreetblSizeHint(AG_Treetbl *tt, int w, int nrows)
 {
-	AG_ObjectLock(tt);
 	tt->wHint = w;
 	tt->hHint = tt->hCol + tt->hRow*nrows;
-	AG_ObjectUnlock(tt);
 }
 
 void
 AG_TreetblSetColHeight(AG_Treetbl *tt, int h)
 {
-	AG_ObjectLock(tt);
 	tt->hCol = h;
 	AG_WidgetUpdate(tt);
-	AG_ObjectUnlock(tt);
 	AG_Redraw(tt);
 }
 
@@ -698,9 +689,7 @@ AG_TreetblSetSortCol(AG_Treetbl *tt, AG_TreetblCol *col)
 void
 AG_TreetblSetSortMode(AG_Treetbl *tt, enum ag_treetbl_sort_mode mode)
 {
-	AG_ObjectLock(tt);
 	tt->sortMode = mode;
-	AG_ObjectUnlock(tt);
 	AG_Redraw(tt);
 }
 
@@ -784,9 +773,7 @@ AG_TreetblDeselectColID(AG_Treetbl *tt, int colID)
 void
 AG_TreetblSetRefreshRate(AG_Treetbl *tt, Uint ms)
 {
-	AG_ObjectLock(tt);
 	tt->visible.redraw_rate = ms;
-	AG_ObjectUnlock(tt);
 }
 
 /*
@@ -950,7 +937,9 @@ AG_TreetblSelectRowID(AG_Treetbl *tt, int rowID)
 {
 	AG_TreetblRow *row;
 
-	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	if ((row = AG_TreetblLookupRow(tt, rowID)) == NULL) {
+		return (-1);
+	}
 	AG_TreetblSelectRow(tt, row);
 	return (0);
 }
@@ -961,7 +950,9 @@ AG_TreetblDeselectRowID(AG_Treetbl *tt, int rowID)
 {
 	AG_TreetblRow *row;
 
-	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	if ((row = AG_TreetblLookupRow(tt, rowID)) == NULL) {
+		return (-1);
+	}
 	AG_TreetblDeselectRow(tt, row);
 	return (0);
 }
@@ -972,7 +963,9 @@ AG_TreetblExpandRowID(AG_Treetbl *tt, int rowID)
 {
 	AG_TreetblRow *row;
 
-	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	if ((row = AG_TreetblLookupRow(tt, rowID)) == NULL) {
+		return (-1);
+	}
 	AG_TreetblExpandRow(tt, row);
 	return (0);
 }
@@ -983,7 +976,9 @@ AG_TreetblCollapseRowID(AG_Treetbl *tt, int rowID)
 {
 	AG_TreetblRow *row;
 
-	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	if ((row = AG_TreetblLookupRow(tt, rowID)) == NULL) {
+		return (-1);
+	}
 	AG_TreetblCollapseRow(tt, row);
 	return (0);
 }
@@ -1234,6 +1229,7 @@ static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Treetbl *tt = obj;
+	AG_Scrollbar *hBar, *vBar;
 	Uint rows_per_view, i;
 	AG_SizeAlloc aBar;
 	AG_SizeReq rBar;
@@ -1247,41 +1243,38 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	tt->r.h = HEIGHT(tt) - tt->hCol;
 
 	/* Size vertical scroll bar. */
-	AG_WidgetSizeReq(tt->vBar, &rBar);
+	vBar = tt->vBar;
+	AG_WidgetSizeReq(vBar, &rBar);
 	aBar.x = a->w - rBar.w;
 	aBar.y = 0;
 	aBar.w = rBar.w;
 	aBar.h = a->h - aBar.w;
-	AG_WidgetSizeAlloc(tt->vBar, &aBar);
-	tt->r.w -= WIDTH(tt->vBar);
+	AG_WidgetSizeAlloc(vBar, &aBar);
+	tt->r.w -= WIDTH(vBar);
 
 	/* Size horizontal scroll bar, if enabled. */
-	if (tt->hBar != NULL) {
+	if ((hBar = tt->hBar) != NULL) {
 		int col_w = 0;
 
-		AG_WidgetSizeReq(tt->hBar, &rBar);
+		AG_WidgetSizeReq(hBar, &rBar);
 		aBar.x = 0;
 		aBar.y = a->h - rBar.h;
-		aBar.w = a->w - WIDTH(tt->vBar);
+		aBar.w = a->w - WIDTH(vBar);
 		aBar.h = rBar.h;
-		AG_WidgetSizeAlloc(tt->hBar, &aBar);
-		tt->r.h -= HEIGHT(tt->hBar);
+		AG_WidgetSizeAlloc(hBar, &aBar);
+		tt->r.h -= HEIGHT(hBar);
 
 		for (i = 0; i < tt->n; i++) {
 			col_w += tt->column[i].w;
 		}
-		if (col_w > WIDTH(tt->hBar)) {
-			int scroll = col_w - WIDTH(tt->hBar);
+		if (col_w > WIDTH(hBar)) {
+			int scroll = col_w - WIDTH(hBar);
 
-			AG_SetInt(tt->hBar, "max", scroll);
-			if (AG_GetInt(tt->hBar, "value") > scroll) {
-				AG_SetInt(tt->hBar, "value", scroll);
-			}
-			AG_ScrollbarSetControlLength(tt->hBar,
-			    WIDTH(tt->hBar)*tt->hBar->length/col_w);
+			AG_SetInt(hBar, "max", scroll);
+			if (AG_GetInt(hBar, "value") > scroll)
+				AG_SetInt(hBar, "value", scroll);
 		} else {
-			AG_SetInt(tt->hBar, "value", 0);
-			AG_ScrollbarSetControlLength(tt->hBar, -1);
+			AG_SetInt(hBar, "value", 0);
 		}
 	}
 
@@ -1302,11 +1295,11 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		if (fill_cols == 0)
 			fill_cols = 1;
 
-		fill_width = (a->w - WIDTH(tt->vBar) - nonfill_width) /
-		             fill_cols;
+		fill_width = (a->w - WIDTH(vBar) - nonfill_width) / fill_cols;
 
 		for (i = 0; i < tt->n; i++) {
 			AG_TreetblCol *col = &tt->column[i];
+
 			if (col->flags & AG_TREETBL_COL_FILL)
 				col->w = fill_width;
 		}
@@ -1322,8 +1315,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 			rows_per_view++;
 	}
 
-	if (tt->visible.count < rows_per_view) {
-		/* visible area increased */
+	if (tt->visible.count < rows_per_view) {         /* visible increased */
 		tt->visible.items = Realloc(tt->visible.items,
 		    sizeof(struct ag_treetbl_rowdocket_item) * rows_per_view);
 
@@ -1332,8 +1324,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 
 		tt->visible.count = rows_per_view;
 		tt->visible.dirty = 1;
-	} else if (tt->visible.count > rows_per_view) {
-		/* visible area decreased */
+	} else if (tt->visible.count > rows_per_view) {  /* visible decreased */
 		tt->visible.items = Realloc(tt->visible.items,
 		    sizeof(struct ag_treetbl_rowdocket_item) * rows_per_view);
 		tt->visible.count = rows_per_view;
@@ -1424,7 +1415,8 @@ DrawColumn(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 		rd.y = 0;
 		rd.w = col->w;
 		rd.h = tt->hCol;
-		if ((col->flags & (AG_TREETBL_COL_SELECTED|AG_TREETBL_COL_SORTING))) {
+		if ((col->flags & (AG_TREETBL_COL_SELECTED |
+		                   AG_TREETBL_COL_SORTING))) {
 			AG_DrawBox(tt, &rd, -1, &WCOLOR_SEL(tt,0));
 		} else {
 			AG_DrawBox(tt, &rd, 1, &WCOLOR(tt,0));
@@ -1538,8 +1530,8 @@ ViewChangedRecurse(AG_Treetbl *_Nonnull tt, AG_TreetblRowQ *_Nonnull in,
 static void
 ViewChanged(AG_Treetbl *_Nonnull tt)
 {
+	AG_Scrollbar *vBar;
 	int rows_per_view, max, filled, value;
-	int scrolling_area = HEIGHT(tt->vBar) - tt->vBar->width*2;
 	Uint i;
 
 #ifdef AG_TIMERS
@@ -1558,20 +1550,13 @@ ViewChanged(AG_Treetbl *_Nonnull tt)
 	if (max && (tt->r.h % tt->hRow) < 16) {
 		max++;
 	}
-	AG_SetInt(tt->vBar, "max", max);
-	if (AG_GetInt(tt->vBar, "value") > max)
-		AG_SetInt(tt->vBar, "value", max);
-
-	/* Calculate Scrollbar Size */
-	if (rows_per_view && tt->nExpandedRows > rows_per_view) {
-		AG_ScrollbarSetControlLength(tt->vBar,
-		    rows_per_view*scrolling_area/tt->nExpandedRows);
-	} else {
-		AG_ScrollbarSetControlLength(tt->vBar, -1);
-	}
+	vBar = tt->vBar;
+	AG_SetInt(vBar, "max", max);
+	if (AG_GetInt(vBar, "value") > max)
+		AG_SetInt(vBar, "value", max);
 
 	/* locate visible rows */
-	value = AG_GetInt(tt->vBar, "value");
+	value = AG_GetInt(vBar, "value");
 	filled = ViewChangedRecurse(tt, &tt->children, 0, 0, &value);
 
 	/* blank empty rows */

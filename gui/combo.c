@@ -88,11 +88,15 @@ Collapse(AG_Combo *_Nonnull com)
 }
 
 static void
-ModalClose(AG_Event *_Nonnull event)
+ModalCollapse(AG_Event *_Nonnull event)
 {
+	const AG_Window *win = AG_WINDOW_SELF();
 	AG_Combo *com = AG_COMBO_PTR(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 
-	if (com->panel != NULL)
+	if (com->panel &&
+	    (x < 0 || y < 0 || x > WIDTH(win) || y > HEIGHT(win)))
 		Collapse(com);
 }
 
@@ -101,26 +105,28 @@ Expand(AG_Event *_Nonnull event)
 {
 	AG_Combo *com = AG_COMBO_PTR(1);
 	AG_Driver *drv = WIDGET(com)->drv;
+	AG_Window *panel, *win;
 	int expand = AG_INT(2);
 	AG_SizeReq rList;
 	int x, y, w, h;
 	Uint wView, hView;
 
 	if (expand) {
-		com->panel = AG_WindowNew(
-		    AG_WINDOW_NOTITLE | AG_WINDOW_DENYFOCUS |
-		    AG_WINDOW_KEEPABOVE | AG_WINDOW_MODAL);
+		panel = com->panel = AG_WindowNew(AG_WINDOW_MODAL |
+		                                  AG_WINDOW_NOTITLE |
+		                                  AG_WINDOW_DENYFOCUS |
+		                                  AG_WINDOW_KEEPABOVE);
+		panel->wmType = AG_WINDOW_WM_COMBO;
 
-		com->panel->wmType = AG_WINDOW_WM_COMBO;
-		AG_WindowSetPadding(com->panel, 0,0,0,0);
-		AG_ObjectSetName(com->panel, "_ComboPopup");
-		AG_ObjectAttach(com->panel, com->list);
-		if (WIDGET(com)->window != NULL) {
-			AG_WindowAttach(WIDGET(com)->window, com->panel);
-			AG_WindowMakeTransient(WIDGET(com)->window, com->panel);
-			AG_WindowPin(WIDGET(com)->window, com->panel);
+		AG_WindowSetPadding(panel, 0,0,0,0);
+		AG_ObjectSetName(panel, "_ComboPopup");
+		AG_ObjectAttach(panel, com->list);
+
+		if ((win = WIDGET(com)->window) != NULL) {
+			AG_WindowAttach(win, panel);
+			AG_WindowMakeTransient(win, panel);
+			AG_WindowPin(win, panel);
 		}
-
 		if (com->wSaved > 0) {
 			w = com->wSaved;
 			h = com->hSaved;
@@ -130,8 +136,8 @@ Expand(AG_Event *_Nonnull event)
 				    com->wPreList, com->hPreList);
 			}
 			AG_WidgetSizeReq(com->list, &rList);
-			w = rList.w + com->panel->wBorderSide*2;
-			h = rList.h + com->panel->wBorderBot;
+			w = rList.w + (panel->wBorderSide << 1);
+			h = rList.h + panel->wBorderBot;
  		}
 		x = WIDGET(com)->rView.x2 - w;
 		y = WIDGET(com)->rView.y1;
@@ -140,10 +146,9 @@ Expand(AG_Event *_Nonnull event)
 		if (x+w > wView) { w = wView - x; }
 		if (y+h > hView) { h = hView - y; }
 
-		if (AGDRIVER_CLASS(drv)->wm == AG_WM_MULTIPLE &&
-		    WIDGET(com)->window != NULL) {
-			x += WIDGET(WIDGET(com)->window)->x;
-			y += WIDGET(WIDGET(com)->window)->y;
+		if (win && AGDRIVER_CLASS(drv)->wm == AG_WM_MULTIPLE) {
+			x += WIDGET(win)->x;
+			y += WIDGET(win)->y;
 		}
 		if (x < 0) { x = 0; }
 		if (y < 0) { y = 0; }
@@ -151,10 +156,13 @@ Expand(AG_Event *_Nonnull event)
 			Collapse(com);
 			return;
 		}
-		AG_SetEvent(com->panel, "window-modal-close",
-		    ModalClose, "%p", com);
-		AG_WindowSetGeometry(com->panel, x,y, w,h);
-		AG_WindowShow(com->panel);
+
+		/* Collapse if user clicks outside of the window boundaries. */
+		WIDGET(panel)->flags |= AG_WIDGET_UNFOCUSED_BUTTONDOWN;
+		AG_AddEvent(panel, "mouse-button-down", ModalCollapse, "%p", com);
+
+		AG_WindowSetGeometry(panel, x,y, w,h);
+		AG_WindowShow(panel);
 	} else {
 		Collapse(com);
 	}

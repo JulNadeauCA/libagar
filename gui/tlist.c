@@ -65,7 +65,13 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectLock(tl);
 	tl->flags |= AG_TLIST_POLL;
 	ev = AG_SetEvent(tl, "tlist-poll", fn, NULL);
-	AG_EVENT_GET_ARGS(ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(tl);
 	AG_RedrawOnTick(tl, 1000);
 	return (tl);
@@ -138,9 +144,9 @@ SelectItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 	*sel_ptr = it->p1;
 	if (!it->selected) {
 		it->selected = 1;
-		if (tl->changedEv != NULL) {
-			AG_PostEventByPtr(NULL, tl, tl->changedEv, "%p,%i",
-			    it, 1);
+		if (tl->changedEv) {
+			AG_PostEventByPtr(NULL, tl,
+			    tl->changedEv, "%p,%i", it, 1);
 		}
 		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 1);
 	}
@@ -159,9 +165,9 @@ DeselectItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 	*sel_ptr = NULL;
 	if (it->selected) {
 		it->selected = 0;
-		if (tl->changedEv != NULL) {
-			AG_PostEventByPtr(NULL, tl, tl->changedEv, "%p,%i",
-			    it, 0);
+		if (tl->changedEv) {
+			AG_PostEventByPtr(NULL, tl, tl->changedEv,
+			    "%p,%i", it, 0);
 		}
 		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 0);
 	}
@@ -181,7 +187,7 @@ DecrementSelection(AG_Tlist *_Nonnull tl, int inc)
 				continue;
 			}
 			itPrev = TAILQ_PREV(it, ag_tlist_itemq, items);
-			if (itPrev != NULL) {
+			if (itPrev) {
 				DeselectItem(tl, it);
 				SelectItem(tl, itPrev);
 			}
@@ -206,7 +212,7 @@ IncrementSelection(AG_Tlist *_Nonnull tl, int inc)
 				continue;
 			}
 			itNext = TAILQ_NEXT(it, items);
-			if (itNext != NULL) {
+			if (itNext) {
 				DeselectItem(tl, it);
 				SelectItem(tl, itNext);
 			}
@@ -343,7 +349,7 @@ AG_TlistSizeHintLargest(AG_Tlist *tl, int nitems)
 static void
 FreeItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 {
-	if (it->iconsrc != NULL)
+	if (it->iconsrc)
 		AG_SurfaceFree(it->iconsrc);
 	if (it->icon != -1)
 		AG_WidgetUnmapSurface(tl, it->icon);
@@ -474,7 +480,7 @@ Draw(void *_Nonnull obj)
 			AG_DrawRect(tl, &rSel, &cSel);
 			selSeen = 1;
 		}
-		if (it->iconsrc != NULL) {
+		if (it->iconsrc) {
 			if (it->icon == -1) {
 				AG_Surface *S;
 
@@ -776,7 +782,7 @@ AG_TlistItemNew(AG_Tlist *_Nonnull tl, const AG_Surface *icon)
 #endif
 	it->selected = 0;
 	it->icon = -1;
-	it->iconsrc = (icon != NULL) ? AG_SurfaceDup(icon) : NULL;
+	it->iconsrc = (icon) ? AG_SurfaceDup(icon) : NULL;
 	it->p1 = NULL;
 	it->cat = "";
 	it->label = -1;
@@ -901,10 +907,10 @@ void
 AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, const AG_Surface *S)
 {
 	AG_ObjectLock(tl);
-	if (it->iconsrc != NULL) {
+	if (it->iconsrc) {
 		AG_SurfaceFree(it->iconsrc);
 	}
-	it->iconsrc = (S != NULL) ? AG_SurfaceDup(S) : NULL;
+	it->iconsrc = S ? AG_SurfaceDup(S) : NULL;
 	if (it->icon != -1) {
 		AG_WidgetUnmapSurface(tl, it->icon);
 		it->icon = -1;
@@ -918,10 +924,10 @@ void
 AG_TlistSetColor(AG_Tlist *tl, AG_TlistItem *it, const AG_Color *c)
 {
 	AG_ObjectLock(tl);
-	if (it->color != NULL) {
+	if (it->color) {
 		free(it->color);
 	}
-	if (c != NULL) {
+	if (c) {
 		it->color = Malloc(sizeof(AG_Color));
 		memcpy(it->color, c, sizeof(AG_Color));
 	} else {
@@ -935,10 +941,10 @@ void
 AG_TlistSetFont(AG_Tlist *tl, AG_TlistItem *it, AG_Font *font)
 {
 	AG_ObjectLock(tl);
-	if (it->font != NULL && it->font != agDefaultFont) {
+	if (it->font && it->font != agDefaultFont) {
 		AG_UnusedFont(it->font);
 	}
-	if (font != NULL) {
+	if (font) {
 		font->nRefs++;
 		it->font = font;
 	} else {
@@ -1050,7 +1056,7 @@ PopupMenu(AG_Tlist *_Nonnull tl, AG_TlistPopup *_Nonnull tp, int x, int y)
 	if (AG_ParentWindow(tl) == NULL)
 		AG_FatalError("AG_Tlist: Unattached");
 #endif
-	if (tp->panel != NULL) {
+	if (tp->panel) {
 		AG_MenuCollapse(tp->item);
 		tp->panel = NULL;
 	}
@@ -1169,9 +1175,9 @@ MouseButtonDown(AG_Event *_Nonnull event)
 #ifdef AG_TIMERS
 		/* Handle double clicks. */
 		/* XXX compare the args as well as p1 */
-		if (tl->dblClicked != NULL && tl->dblClicked == ti->p1) {
+		if (tl->dblClicked && tl->dblClicked == ti->p1) {
 			AG_DelTimer(tl, &tl->dblClickTo);
-			if (tl->dblClickEv != NULL) {
+			if (tl->dblClickEv) {
 				AG_PostEventByPtr(NULL, tl, tl->dblClickEv,
 				    "%p", ti);
 			}
@@ -1188,14 +1194,16 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		if (ti->flags & AG_TLIST_NO_POPUP) {
 			return;
 		}
-		if (tl->popupEv != NULL) {
+		if (tl->popupEv) {
 			AG_PostEventByPtr(NULL, tl, tl->popupEv, NULL);
-		} else if (ti->cat != NULL) {
+		} else if (ti->cat) {
 			AG_TlistPopup *tp;
 	
 			if (!(tl->flags &
-			    (AG_TLIST_MULTITOGGLE|AG_TLIST_MULTI)) ||
-			    !(AG_GetModState(tl) & (AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT))) {
+			    (AG_TLIST_MULTITOGGLE | AG_TLIST_MULTI)) ||
+			    !(AG_GetModState(tl) & (AG_KEYMOD_CTRL |
+			                            AG_KEYMOD_SHIFT)))
+			{
 				AG_TlistDeselectAll(tl);
 				SelectItem(tl, ti);
 			}
@@ -1203,7 +1211,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 				if (strcmp(tp->iclass, ti->cat) == 0)
 					break;
 			}
-			if (tp != NULL) {
+			if (tp) {
 				PopupMenu(tl, tp, x,y);
 				return;
 			}
@@ -1338,10 +1346,6 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(tl, "key-up", KeyUp, NULL);
 #endif
 	AG_BindPointer(tl, "selected", &tl->selected);
-#if 0
-	AG_BindInt(tl, "nitems", &tl->nitems);
-	AG_BindInt(tl, "nvisitems", &tl->nvisitems);
-#endif
 }
 
 /*
@@ -1525,30 +1529,51 @@ AG_TlistSetIconWidth(AG_Tlist *tl, int iw)
 	AG_Redraw(tl);
 }
 
+/* Set a callback to run when the user double clicks on an item. */
 void
 AG_TlistSetDblClickFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(tl);
 	tl->dblClickEv = AG_SetEvent(tl, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(tl->dblClickEv, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(tl->dblClickEv, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(tl);
 }
 
+/* Set a callback to run when the user right-clicks on an item. */
 void
 AG_TlistSetPopupFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(tl);
 	tl->popupEv = AG_SetEvent(tl, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(tl->popupEv, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(tl->popupEv, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(tl);
 }
 
+/* Set a callback to run when the selection changes. */
 void
 AG_TlistSetChangedFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(tl);
 	tl->changedEv = AG_SetEvent(tl, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(tl->changedEv, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(tl->changedEv, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(tl);
 }
 

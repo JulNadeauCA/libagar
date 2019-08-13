@@ -51,6 +51,9 @@
 #include <agar/gui/icons.h>
 
 #include <string.h>
+#include <ctype.h>
+
+static int agDbgrCounter = 0;
 
 static void
 FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
@@ -85,23 +88,21 @@ FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
 static void
 FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 {
-	char text[AG_TLIST_LABEL_MAX];
+	const char *name = OBJECT(win)->name;
 	AG_Window *wSub;
 	AG_Widget *wChild;
 	AG_TlistItem *it;
 
-	if (strncmp(OBJECT(win)->name, "_Popup-", sizeof("_Popup-")) == 0 ||
-	    strncmp(OBJECT(win)->name, "_Icon", sizeof("_Icon")) == 0)
+	if ((strncmp(name, "menu", 4) == 0 ||
+	     strncmp(name, "icon", 4) == 0) && isdigit(name[4]))
 		return;
 
-	Strlcpy(text, win->caption, sizeof(text));
-	if (strcmp(OBJECT(win)->name, "generic") == 0) {
-		it = AG_TlistAddS(tl, NULL,
-		    win->caption[0] != '\0' ? win->caption : _("Untitled"));
+	if (strncmp(name, "win", 3) == 0 && isdigit(name[4])) {
+		it = AG_TlistAddS(tl, NULL, win->caption[0] !='\0' ?
+		                            win->caption : _("Untitled"));
 	} else {
-		it = AG_TlistAdd(tl, NULL, "%s (<%s>)",
-		    win->caption[0] != '\0' ? win->caption : _("Untitled"),
-		    OBJECT(win)->name);
+		it = AG_TlistAdd(tl, NULL, "<%s> (\"%s\")", name,
+		    win->caption[0] != '\0' ? win->caption : _("Untitled"));
 	}
 	it->p1 = (AG_Window *)win;
 	it->depth = depth;
@@ -480,7 +481,7 @@ AG_GuiDebugger(AG_Window *_Nonnull obj)
 	AG_Tlist *tl;
 	AG_MenuItem *mi;
 
-	if ((win = AG_WindowNewNamedS(0, "AG_GuiDebugger")) == NULL) {
+	if ((win = AG_WindowNewNamed(0, "dbgr%u", agDbgrCounter++)) == NULL) {
 		return (NULL);
 	}
 	if (win != NULL) {

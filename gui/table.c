@@ -71,13 +71,22 @@ AG_TableNewPolled(void *parent, Uint flags, void (*fn)(AG_Event *),
     const char *fmt, ...)
 {
 	AG_Table *t;
+	va_list ap;
 
 	t = AG_TableNew(parent, flags);
+
 	AG_ObjectLock(t);
+
 	t->flags |= AG_TABLE_POLL;
 	t->poll_ev = AG_SetEvent(t, "table-poll", fn, NULL);
-	AG_EVENT_GET_ARGS(t->poll_ev, fmt);
+	if (fmt) {
+		va_start(ap, fmt);
+		AG_EventGetArgs(t->poll_ev, fmt, ap);
+		va_end(ap);
+	}
+
 	AG_AddTimer(t, &t->pollTo, 250, PollTimeout, NULL);
+
 	AG_ObjectUnlock(t);
 	return (t);
 }
@@ -155,35 +164,27 @@ AG_TableSetPollInterval(AG_Table *t, Uint ival)
 void
 AG_TableSizeHint(AG_Table *t, int w, int nrows)
 {
-	AG_ObjectLock(t);
-	if (w != -1) { t->wHint = w; }
+	if (w != -1)     { t->wHint = w; }
 	if (nrows != -1) { t->hHint = nrows*agTextFontHeight; }
-	AG_ObjectUnlock(t);
 }
 
 void
 AG_TableSetSelectionMode(AG_Table *t, enum ag_table_selmode mode)
 {
-	AG_ObjectLock(t);
 	t->selMode = mode;
-	AG_ObjectUnlock(t);
 }
 
 void
 AG_TableSetSelectionColor(AG_Table *t, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
-	AG_ObjectLock(t);
 	AG_ColorRGBA_8(&t->selColor, r,g,b,a);
-	AG_ObjectUnlock(t);
 	AG_Redraw(t);
 }
 
 void
 AG_TableSetColumnAction(AG_Table *t, Uint flags)
 {
-	AG_ObjectLock(t);
 	t->colAction = flags;
-	AG_ObjectUnlock(t);
 }
 
 /* Change the set of recognized field separators (defaults to ":") */
@@ -199,10 +200,8 @@ AG_TableSetSeparator(AG_Table *t, const char *sep)
 void
 AG_TableSetColHeight(AG_Table *t, int h)
 {
-	AG_ObjectLock(t);
 	t->hCol = h;
 	AG_WidgetUpdate(t);
-	AG_ObjectUnlock(t);
 	AG_Redraw(t);
 }
 
@@ -210,10 +209,8 @@ AG_TableSetColHeight(AG_Table *t, int h)
 void
 AG_TableSetRowHeight(AG_Table *t, int h)
 {
-	AG_ObjectLock(t);
 	t->hRow = h;
 	AG_WidgetUpdate(t);
-	AG_ObjectUnlock(t);
 	AG_Redraw(t);
 }
 
@@ -227,6 +224,7 @@ AG_TableSetColMin(AG_Table *t, int w)
 	t->wColMin = w;
 	for (n = 0; n < t->n; n++) {
 		AG_TableCol *tc = &t->cols[n];
+
 		if (tc->w < t->wColMin)
 			tc->w = t->wColMin;
 	}
@@ -240,9 +238,7 @@ AG_TableSetColMin(AG_Table *t, int w)
 void
 AG_TableSetDefaultColWidth(AG_Table *t, int w)
 {
-	AG_ObjectLock(t);
 	t->wColDefault = w;
-	AG_ObjectUnlock(t);
 }
 
 /* Compute the effective widths of the columns. */
@@ -405,9 +401,8 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	t->r.h = a->h - t->hCol;
 	t->r.y = t->hCol;
 
-	if (t->r.h <= 0) {
+	if (t->r.h <= 0)
 		return (-1);
-	}
 	
 	if (t->vbar && AG_WidgetVisible(t->vbar)) {
 		AG_WidgetSizeReq(t->vbar, &rBar);
@@ -835,7 +830,13 @@ AG_TableSetRowDblClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
 {
 	AG_ObjectLock(t);
 	t->dblClickRowEv = AG_SetEvent(t, NULL, ev, NULL);
-	AG_EVENT_GET_ARGS(t->dblClickRowEv, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(t->dblClickRowEv, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(t);
 }
 
@@ -845,7 +846,13 @@ AG_TableSetColDblClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
 {
 	AG_ObjectLock(t);
 	t->dblClickColEv = AG_SetEvent(t, NULL, ev, NULL);
-	AG_EVENT_GET_ARGS(t->dblClickColEv, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(t->dblClickColEv, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(t);
 }
 
@@ -855,7 +862,13 @@ AG_TableSetCellDblClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
 {
 	AG_ObjectLock(t);
 	t->dblClickCellEv = AG_SetEvent(t, NULL, ev, NULL);
-	AG_EVENT_GET_ARGS(t->dblClickCellEv, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(t->dblClickCellEv, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(t);
 }
 
@@ -865,7 +878,13 @@ AG_TableSetRowClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
 {
 	AG_ObjectLock(t);
 	t->clickRowEv = AG_SetEvent(t, NULL, ev, NULL);
-	AG_EVENT_GET_ARGS(t->clickRowEv, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(t->clickRowEv, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(t);
 }
 
@@ -875,7 +894,13 @@ AG_TableSetColClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
 {
 	AG_ObjectLock(t);
 	t->clickColEv = AG_SetEvent(t, NULL, ev, NULL);
-	AG_EVENT_GET_ARGS(t->clickColEv, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(t->clickColEv, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(t);
 }
 
@@ -885,7 +910,13 @@ AG_TableSetCellClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
 {
 	AG_ObjectLock(t);
 	t->clickCellEv = AG_SetEvent(t, NULL, ev, NULL);
-	AG_EVENT_GET_ARGS(t->clickCellEv, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(t->clickCellEv, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(t);
 }
 
@@ -906,7 +937,7 @@ AG_TableRedrawCells(AG_Table *t)
 void
 AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 {
-	if (c->widget != NULL) {
+	if (c->widget) {
 		AG_ObjectDetach(c->widget);
 		AG_ObjectDestroy(c->widget);
 	}
@@ -1196,7 +1227,7 @@ AG_TableEnd(AG_Table *t)
 	}
 	TAILQ_INIT(&t->cPrevList);
 
-	/* It is safe to use memset() in place of TAILQ_INIT() in a loop. */
+	/* It is safe to use memset() in place of TAILQ_INIT(). */
 	memset(t->cPrev, 0, t->nPrevBuckets*sizeof(AG_TableBucket));
 out:
 	AG_ObjectUnlock(t);		/* Lock across TableBegin/End */
@@ -1207,8 +1238,8 @@ AG_TableSortCellsAsc(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const AG_TableCell *row1 = *(const AG_TableCell **)p1;
 	const AG_TableCell *row2 = *(const AG_TableCell **)p2;
-	AG_Table *t = row1[0].tbl;
-	AG_TableCol *tc = &t->cols[t->nSorting];
+	const AG_Table *t = row1[0].tbl;
+	const AG_TableCol *tc = &t->cols[t->nSorting];
 
 	if (tc->sortFn) {
 		return tc->sortFn(&row1[t->nSorting], &row2[t->nSorting]);
@@ -1221,8 +1252,8 @@ AG_TableSortCellsDsc(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const AG_TableCell *row1 = *(const AG_TableCell **)p1;
 	const AG_TableCell *row2 = *(const AG_TableCell **)p2;
-	AG_Table *t = row1[0].tbl;
-	AG_TableCol *tc = &t->cols[t->nSorting];
+	const AG_Table *t = row1[0].tbl;
+	const AG_TableCol *tc = &t->cols[t->nSorting];
 
 	if (tc->sortFn) {
 		return tc->sortFn(&row2[t->nSorting], &row1[t->nSorting]);
@@ -1238,7 +1269,7 @@ AG_TableSort(AG_Table *t)
 	int (*sortFn)(const void *, const void *) = NULL;
 
 	for (i = 0; i < t->n; i++) {
-		AG_TableCol *tc = &t->cols[i];
+		const AG_TableCol *tc = &t->cols[i];
 
 		if (tc->flags & AG_TABLE_SORT_ASCENDING) {
 			sortFn = AG_TableSortCellsAsc;
@@ -1289,18 +1320,18 @@ ShowPopup(AG_Table *_Nonnull t, AG_TablePopup *_Nonnull tp, int x, int y)
 static void
 ColumnRightClick(AG_Table *_Nonnull t, int px, int py)
 {
-	int n;
-	int cx;
-	int x = px - (COLUMN_RESIZE_RANGE/2);
+	const int x = px - (COLUMN_RESIZE_RANGE/2);
+	int n, cx;
 
 	for (n = 0, cx = -t->xOffs;
 	     n < t->n;
 	     n++) {
-		AG_TableCol *tc = &t->cols[n];
-		int x2 = cx+tc->w;
-		AG_TablePopup *tp;
+		const int w = t->cols[n].w;
+		const int x2 = cx+w;
 
 		if (x > cx && x < x2) {
+			AG_TablePopup *tp;
+
 			SLIST_FOREACH(tp, &t->popups, popups) {
 				if (tp->m == -1 && tp->n == n) {
 					ShowPopup(t, tp, px,py);
@@ -1308,7 +1339,7 @@ ColumnRightClick(AG_Table *_Nonnull t, int px, int py)
 				}
 			}
 		}
-		cx += tc->w;
+		cx += w;
 	}
 }
 
@@ -1354,15 +1385,15 @@ DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 static void
 ColumnLeftClick(AG_Table *_Nonnull t, int px)
 {
-	int x = px - (COLUMN_RESIZE_RANGE/2), x1;
+	const int x = px - (COLUMN_RESIZE_RANGE/2);
 	int multi = SelectingMultiple(t);
-	int n;
+	int x1, n;
 
 	for (n = 0, x1 = -t->xOffs;
 	     n < t->n;
 	     n++) {
 		AG_TableCol *tc = &t->cols[n];
-		int x2 = x1+tc->w;
+		const int x2 = x1 + tc->w;
 
 		if (x > x1 && x < x2) {
 			if ((x2 - x) <= COLUMN_RESIZE_RANGE) {
@@ -1737,9 +1768,9 @@ static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_TABLE_SELF();
-	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	const int button = AG_INT(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 	int m;
 	
 	if (!AG_WidgetIsFocused(t))
@@ -1747,14 +1778,14 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	
 	switch (button) {
 	case AG_MOUSE_WHEELUP:
-		t->mOffs -= AG_GetInt(t,"line-scroll-amount");
+		t->mOffs -= t->lineScrollAmount;
 		if (t->mOffs < 0) {
 			t->mOffs = 0;
 		}
 		AG_Redraw(t);
 		break;
 	case AG_MOUSE_WHEELDOWN:
-		t->mOffs += AG_GetInt(t,"line-scroll-amount");
+		t->mOffs += t->lineScrollAmount;
 		if (t->mOffs > (t->m - t->mVis)) {
 			t->mOffs = MAX(0, t->m - t->mVis);
 		}
@@ -1791,7 +1822,7 @@ static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_TABLE_SELF();
-	int button = AG_INT(1);
+	const int button = AG_INT(1);
 
 	switch (button) {
 	case AG_MOUSE_LEFT:
@@ -1809,7 +1840,7 @@ static Uint32
 MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_TABLE_SELF();
-	int incr = AG_INT(1);
+	const int incr = AG_INT(1);
 
 	if (incr < 0) {
 		DecrementSelection(t, -incr);
@@ -1824,7 +1855,7 @@ static void
 KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_TABLE_SELF();
-	int keysym = AG_INT(1);
+	const int keysym = AG_INT(1);
 
 	switch (keysym) {
 	case AG_KEY_UP:
@@ -1866,9 +1897,9 @@ static void
 MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_TABLE_SELF();
-	int x = AG_INT(1);
-	int y = AG_INT(2);
-	int xrel = AG_INT(3);
+	const int x = AG_INT(1);
+	const int y = AG_INT(2);
+	const int xrel = AG_INT(3);
 
 	if (x < 0 || y < 0 || x >= WIDTH(t) || y >= HEIGHT(t))
 		return;
@@ -1889,7 +1920,7 @@ static void
 KeyUp(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_TABLE_SELF();
-	int keysym = AG_INT(1);
+	const int keysym = AG_INT(1);
 
 	switch (keysym) {
 	case AG_KEY_UP:
@@ -2383,9 +2414,9 @@ Init(void *_Nonnull obj)
 	AG_Table *t = obj;
 	Uint i;
 
-	WIDGET(t)->flags |= AG_WIDGET_FOCUSABLE|
-	                    AG_WIDGET_UNFOCUSED_MOTION|
-	                    AG_WIDGET_UNFOCUSED_BUTTONUP|
+	WIDGET(t)->flags |= AG_WIDGET_FOCUSABLE |
+	                    AG_WIDGET_UNFOCUSED_MOTION |
+	                    AG_WIDGET_UNFOCUSED_BUTTONUP |
 			    AG_WIDGET_USE_TEXT;
 
 	t->sep = ":";
@@ -2420,7 +2451,7 @@ Init(void *_Nonnull obj)
 	t->dblClickRowEv = NULL;
 	t->dblClickColEv = NULL;
 	t->dblClickCellEv = NULL;
-	t->wheelTicks = 0;
+	t->lineScrollAmount = 5;
 	SLIST_INIT(&t->popups);
 #ifdef AG_TIMERS
 	t->dblClickedRow = -1;
@@ -2432,8 +2463,7 @@ Init(void *_Nonnull obj)
 #endif
 
 	/* Horizontal scrollbar */
-	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL|
-	                                                 AG_SCROLLBAR_NOAUTOHIDE);
+	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
 	AG_SetInt(t->hbar, "min", 0);
 	AG_BindInt(t->hbar, "max", &t->wTot);
 	AG_BindInt(t->hbar, "value", &t->xOffs);
@@ -2441,8 +2471,7 @@ Init(void *_Nonnull obj)
 	AG_WidgetSetFocusable(t->hbar, 0);
 
 	/* Vertical scrollbar */
-	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL|
-	                                                AG_SCROLLBAR_NOAUTOHIDE);
+	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
 	AG_SetInt(t->vbar, "min", 0);
 	AG_BindInt(t->vbar, "max", &t->m);
 	AG_BindInt(t->vbar, "value", &t->mOffs);
@@ -2457,8 +2486,6 @@ Init(void *_Nonnull obj)
 	}
 	TAILQ_INIT(&t->cPrevList);
 	
-	AG_SetInt(t, "line-scroll-amount", 5);
-
 	AG_AddEvent(t, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(t, "widget-hidden", LostFocus, NULL);
 	AG_AddEvent(t, "detached", LostFocus, NULL);

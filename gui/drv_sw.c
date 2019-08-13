@@ -35,6 +35,9 @@
 #include <agar/gui/menu.h>
 #include <agar/gui/icons.h>
 
+#include <string.h>
+#include <ctype.h>
+
 AG_DriverSw *agDriverSw = NULL;		/* Root driver instance */
 
 static void (*_Nullable agVideoResizeCallback)(Uint w, Uint h) = NULL;
@@ -58,19 +61,9 @@ Init(void *_Nonnull obj)
 	dsw->windowBotOutLimit = 32;
 	dsw->windowIconWidth = 32;
 	dsw->windowIconHeight = 32;
-	dsw->Lmodal = AG_ListNew();
 	dsw->bgPopup = NULL;
 
 	AG_SetString(dsw, "bgColor", "rgb(0,0,0)");
-}
-
-static void
-Destroy(void *_Nonnull obj)
-{
-	AG_DriverSw *dsw = obj;
-	
-	if (dsw->Lmodal != NULL)
-		AG_ListDestroy(dsw->Lmodal);
 }
 
 /*
@@ -118,8 +111,10 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	mi = me->itemSel = AG_MenuNode(me->root, NULL, NULL);
 
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
-		if (strncmp(OBJECT(win)->name, "_Popup", 6) == 0 ||
-		    strncmp(OBJECT(win)->name, "_Icon", 5) == 0) {
+		const char *name = OBJECT(win)->name;
+
+		if ((strncmp(name, "menu", 4) == 0 ||
+		     strncmp(name, "icon", 4) == 0) && isdigit(name[4])) {
 			continue;
 		}
 		AG_MenuAction(mi,
@@ -708,7 +703,7 @@ AG_ObjectClass agDriverSwClass = {
 	{ 1,4 },
 	Init,
 	NULL,		/* reset */
-	Destroy,
+	NULL,		/* destroy */
 	NULL,		/* load */
 	NULL,		/* save */
 	NULL		/* edit */

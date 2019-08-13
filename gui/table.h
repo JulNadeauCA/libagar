@@ -161,8 +161,7 @@ typedef struct ag_table {
 	int n;				/* Number of columns */
 	int m;				/* Number of rows */
 	int mVis;			/* Maximum number of visible rows */
-
-	Uint32 wheelTicks;		/* For wheel acceleration */
+	int lineScrollAmount;		/* Wheel scroll increment */
 
 	AG_Scrollbar *_Nonnull vbar;	/* Vertical scrollbar */
 	AG_Scrollbar *_Nonnull hbar;	/* Horizontal scrollbar */

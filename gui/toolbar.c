@@ -135,12 +135,16 @@ AG_ToolbarButtonIcon(AG_Toolbar *bar, const AG_Surface *icon, int def,
 	bar->nButtons++;
 	
 	ev = AG_SetEvent(bu, "button-pushed", handler, NULL);
-	AG_EVENT_GET_ARGS(ev, fmt);
-	
-	if (bar->flags & (AG_TOOLBAR_STICKY|AG_TOOLBAR_MULTI_STICKY)) {
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
+	if (bar->flags & (AG_TOOLBAR_STICKY | AG_TOOLBAR_MULTI_STICKY)) {
 		AG_AddEvent(bu, "button-pushed", StickyUpdate, "%p", bar);
 	}
-	
 	AG_ObjectUnlock(bar);
 	AG_Redraw(bar);
 	return (bu);
@@ -162,12 +166,16 @@ AG_ToolbarButton(AG_Toolbar *bar, const char *text, int def,
 	bar->nButtons++;
 	
 	ev = AG_SetEvent(bu, "button-pushed", handler, NULL);
-	AG_EVENT_GET_ARGS(ev, fmt);
+	if (fmt) {
+		va_list ap;
 
-	if (bar->flags & (AG_TOOLBAR_STICKY|AG_TOOLBAR_MULTI_STICKY)) {
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
+	if (bar->flags & (AG_TOOLBAR_STICKY | AG_TOOLBAR_MULTI_STICKY)) {
 		AG_AddEvent(bu, "button-pushed", StickyUpdate, "%p", bar);
 	}
-	
 	AG_ObjectUnlock(bar);
 	AG_Redraw(bar);
 	return (bu);

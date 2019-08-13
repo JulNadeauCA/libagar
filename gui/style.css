@@ -16,7 +16,7 @@
  */
 
 AG_Widget {
-	color: rgb(125,125,125);		/* Background primary */
+	color: rgb(120,120,120);		/* Background primary */
 	color#focused: rgb(200,0,0);
 	color#disabled: rgb(160,160,160);
 	color#hover: rgb(130,130,130);
@@ -28,6 +28,9 @@ AG_Widget {
 	border-color: rgb(100,100,100);		/* Decorative border primary */
 }
 
+AG_Box {
+	color: rgb(120,120,120);
+}
 AG_Label {
 	color: rgb(0,0,0,0);			/* Disable BG */
 }
@@ -58,7 +61,6 @@ AG_Notebook {
 	color#selected: rgb(117,117,117);
 }
 AG_Tlist {
-	color: rgb(125,125,125);
 	color#selected: rgb(50,50,120);
 	text-color#selected: rgb(255,255,200);
 }
@@ -83,7 +85,6 @@ AG_FixedPlotter {
  * TODO: We wish to be able to write rules such as this:
  *
  * AG_Console > AG_Scrollbar {
- *	color: rgb(125,125,125);
  * 	color#hover: rgb(145,145,145);
  * 	color#focused: rgb(225,225,225);
  * }
@@ -92,7 +93,6 @@ AG_FixedPlotter {
  * Scrollbar not inherit the reverse colors of its parent:
  */
 AG_Scrollbar {
-	color: rgb(125,125,125);
 	color#focused: rgb(200,0,0);
 	color#disabled: rgb(160,160,160);
 	color#hover: rgb(130,130,130);

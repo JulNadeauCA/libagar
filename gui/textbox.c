@@ -329,7 +329,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Textbox *tb = obj;
 	AG_SizeReq rEd, rLbl;
-	AG_Font *font = WIDGET(tb)->font;
+	const AG_Font *font = WFONT(tb);
 
 	AG_WidgetSizeReq(tb->ed, &rEd);
 

@@ -66,8 +66,6 @@ typedef struct ag_driver_sw {
 	struct ag_window *_Nullable winSelected;    /* Window being manipulated */
 	struct ag_window *_Nullable winLastKeydown; /* For keyboard processing */
 
-	AG_List *_Nonnull Lmodal;	/* Modal window stack */
-
 	enum ag_wm_operation winop;	/* WM operation in progress */
 	int windowXOutLimit;		/* Limit past left/right boundary */
 	int windowBotOutLimit;		/* Limit past bottom boundary */

@@ -58,13 +58,8 @@ extern AG_WidgetClass agGLViewClass;
 
 AG_GLView *_Nonnull AG_GLViewNew(void *_Nullable, Uint);
 
-void AG_GLViewDraw(void *_Nonnull);
-void AG_GLViewSizeRequest(void *_Nonnull, AG_SizeReq *_Nonnull);
-int  AG_GLViewSizeAllocate(void *_Nonnull, const AG_SizeAlloc *_Nonnull);
-
 void AG_GLViewSetBgColor(AG_GLView *_Nonnull, const AG_Color *_Nonnull);
 void AG_GLViewSizeHint(AG_GLView *_Nonnull, int,int);
-void AG_GLViewReshape(AG_GLView *_Nonnull);
 void AG_GLViewDrawFn(void *_Nonnull, _Nonnull AG_EventFn, const char *_Nullable, ...);
 void AG_GLViewUnderlayFn(void *_Nonnull, _Nonnull AG_EventFn, const char *_Nullable, ...);
 void AG_GLViewOverlayFn(void *_Nonnull, _Nonnull AG_EventFn, const char *_Nullable, ...);

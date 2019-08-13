@@ -696,8 +696,8 @@ DUMMY_FreeCursor(void *_Nonnull obj, AG_Cursor *_Nonnull ac)
 {
 #ifdef AG_DEBUG
 	AG_Driver *drv = obj;
-#endif
 	Debug(drv, "FreeCursor (%p)\n", ac);
+#endif
 	free(ac);
 }
 
@@ -826,21 +826,20 @@ DUMMY_CloseWindow(AG_Window *_Nonnull win)
 {
 #ifdef AG_DEBUG
 	AG_Driver *drv = WIDGET(win)->drv;
-#endif
 	Debug(drv, "CloseWindow (%s)\n", OBJECT(win)->name);
+#endif
 }
 
 static int
 DUMMY_MapWindow(AG_Window *_Nonnull win)
 {
-#ifdef AG_DEBUG
-	AG_DriverDUMMY *dum = (AG_DriverDUMMY *)WIDGET(win)->drv;
-#endif
 	AG_SizeAlloc a;
 	int x,y;
+#ifdef AG_DEBUG
+	AG_DriverDUMMY *dum = (AG_DriverDUMMY *)WIDGET(win)->drv;
 
 	Debug(win, "MapWindow (%s)\n", OBJECT(dum)->name);
-
+#endif
 	/* Update per-widget coordinate information. */
 	x = WIDGET(win)->x;
 	y = WIDGET(win)->y;
@@ -860,8 +859,8 @@ DUMMY_UnmapWindow(AG_Window *_Nonnull win)
 {
 #ifdef AG_DEBUG
 	AG_DriverDUMMY *dum = (AG_DriverDUMMY *)WIDGET(win)->drv;
-#endif
 	Debug(win, "UnmapWindow (%s)\n", OBJECT(dum)->name);
+#endif
 	return (0);
 }
 

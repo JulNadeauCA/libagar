@@ -52,20 +52,14 @@ typedef struct ag_radio {
 __BEGIN_DECLS
 extern AG_WidgetClass agRadioClass;
 
-AG_Radio *_Nonnull AG_RadioNew(void *_Nullable, Uint,
-                               const char *_Nullable *_Nullable);
-
-AG_Radio *_Nonnull AG_RadioNewFn(void *_Nullable, Uint,
-                                 const char *_Nullable *_Nullable,
-                                 _Nonnull AG_EventFn, const char *_Nullable, ...);
-
 AG_Radio *_Nonnull AG_RadioNewInt(void *_Nullable, Uint,
                                   const char *_Nullable *_Nullable,
                                   int *_Nonnull);
-
 AG_Radio *_Nonnull AG_RadioNewUint(void *_Nullable, Uint,
                                    const char *_Nullable *_Nullable,
                                    Uint *_Nonnull);
+AG_Radio *_Nonnull AG_RadioNew(void *_Nullable, Uint,
+                               const char *_Nullable *_Nullable);
 
 void AG_RadioItemsFromArray(AG_Radio *_Nonnull, const char *_Nonnull *_Nullable);
 
@@ -78,6 +72,13 @@ int AG_RadioAddItemHK(AG_Radio *_Nonnull, AG_KeySym, const char *_Nonnull, ...)
 
 void AG_RadioClearItems(AG_Radio *_Nonnull);
 void AG_RadioSizeHint(AG_Radio *_Nonnull, int, const char *);
+
+#ifdef AG_LEGACY
+AG_Radio *_Nonnull AG_RadioNewFn(void *_Nullable, Uint,
+                                 const char *_Nullable *_Nullable,
+                                 _Nonnull AG_EventFn, const char *_Nullable, ...)
+                                DEPRECATED_ATTRIBUTE;
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

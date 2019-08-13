@@ -17,7 +17,7 @@ const char *agStyleDefault_Data =
 	" * AG_Widget(3) (under the STYLING section).\n"
 	" */\n"
 	"AG_Widget {\n"
-	"color: rgb(125,125,125);		/* Background primary */\n"
+	"color: rgb(120,120,120);		/* Background primary */\n"
 	"color#focused: rgb(200,0,0);\n"
 	"color#disabled: rgb(160,160,160);\n"
 	"color#hover: rgb(130,130,130);\n"
@@ -27,6 +27,9 @@ const char *agStyleDefault_Data =
 	"line-color#hover: rgb(70,70,70);\n"
 	"shape-color: rgb(100,100,100);		/* Filled shape primary */\n"
 	"border-color: rgb(100,100,100);		/* Decorative border primary */\n"
+	"}\n"
+	"AG_Box {\n"
+	"color: rgb(120,120,120);\n"
 	"}\n"
 	"AG_Label {\n"
 	"color: rgb(0,0,0,0);			/* Disable BG */\n"
@@ -58,7 +61,6 @@ const char *agStyleDefault_Data =
 	"color#selected: rgb(117,117,117);\n"
 	"}\n"
 	"AG_Tlist {\n"
-	"color: rgb(125,125,125);\n"
 	"color#selected: rgb(50,50,120);\n"
 	"text-color#selected: rgb(255,255,200);\n"
 	"}\n"
@@ -82,7 +84,6 @@ const char *agStyleDefault_Data =
 	" * TODO: We wish to be able to write rules such as this:\n"
 	" *\n"
 	" * AG_Console > AG_Scrollbar {\n"
-	" *	color: rgb(125,125,125);\n"
 	" * 	color#hover: rgb(145,145,145);\n"
 	" * 	color#focused: rgb(225,225,225);\n"
 	" * }\n"
@@ -91,7 +92,6 @@ const char *agStyleDefault_Data =
 	" * Scrollbar not inherit the reverse colors of its parent:\n"
 	" */\n"
 	"AG_Scrollbar {\n"
-	"color: rgb(125,125,125);\n"
 	"color#focused: rgb(200,0,0);\n"
 	"color#disabled: rgb(160,160,160);\n"
 	"color#hover: rgb(130,130,130);\n"
@@ -101,7 +101,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2669,
+	2627,
 	&agStyleDefault_Data,
 	NULL
 };
