@@ -245,7 +245,7 @@ AG_GLViewButtondownFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 		va_list ap;
 
 		va_start(ap, fmt);
-		AG_EventGetArgs(glv->keydown_ev, fmt, ap);
+		AG_EventGetArgs(glv->btndown_ev, fmt, ap);
 		va_end(ap);
 	}
 	AG_ObjectUnlock(glv);
