@@ -31,9 +31,31 @@
 
 #include <stdarg.h>
 
+static void SetState(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull, int);
 static int  GetState(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull);
-static void SetState(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull,
-                     int);
+static int  GetStateGeneral(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull);
+static void SetStateGeneral(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull, int);
+
+AG_Button *
+AG_ButtonNewInt(void *parent, Uint flags, const char *caption, int *v)
+{
+	AG_Button *bu;
+
+	bu = AG_ButtonNewS(parent, flags, caption);
+	AG_BindInt(bu, "state", v);
+	return (bu);
+}
+
+AG_Button *
+AG_ButtonNewFlag(void *parent, Uint flags, const char *caption,
+    Uint *p, Uint bitmask)
+{
+	AG_Button *bu;
+
+	bu = AG_ButtonNewS(parent, flags, caption);
+	AG_BindFlag(bu, "state", p, bitmask);
+	return (bu);
+}
 
 AG_Button *
 AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
@@ -51,6 +73,26 @@ AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
 	}
 	bu = AG_ButtonNewS(parent, flags, s);
 	free(s);
+	return (bu);
+}
+
+AG_Button *
+AG_ButtonNewFn(void *parent, Uint flags, const char *caption, AG_EventFn fn,
+    const char *fmt, ...)
+{
+	AG_Button *bu;
+	AG_Event *ev;
+	va_list ap;
+
+	if (!(flags & AG_BUTTON_NOEXCL)) { flags |= AG_BUTTON_EXCL;  }
+
+	bu = AG_ButtonNewS(parent, flags, caption);
+	ev = AG_SetEvent(bu, "button-pushed", fn, NULL);
+
+	va_start(ap, fmt);
+	AG_EventGetArgs(ev, fmt, ap);
+	va_end(ap);
+
 	return (bu);
 }
 
@@ -76,91 +118,47 @@ AG_ButtonNewS(void *parent, Uint flags, const char *label)
 	return (bu);
 }
 
-AG_Button *
-AG_ButtonNewFn(void *parent, Uint flags, const char *caption, AG_EventFn fn,
-    const char *fmt, ...)
+void
+AG_ButtonSetPadding(AG_Button *bu, int lPad, int rPad, int tPad, int bPad)
 {
-	AG_Button *bu;
-	AG_Event *ev;
+	if (lPad != -1) { bu->lPad = lPad; }
+	if (rPad != -1) { bu->rPad = rPad; }
+	if (tPad != -1) { bu->tPad = tPad; }
+	if (bPad != -1) { bu->bPad = bPad; }
 
-	if (!(flags & AG_BUTTON_NOEXCL)) { flags |= AG_BUTTON_EXCL;  }
-	bu = AG_ButtonNewS(parent, flags, caption);
-	ev = AG_SetEvent(bu, "button-pushed", fn, NULL);
-	AG_EVENT_GET_ARGS(ev, fmt);
-	return (bu);
+	AG_Redraw(bu);
 }
 
-AG_Button *
-AG_ButtonNewInt(void *parent, Uint flags, const char *caption, int *v)
+void
+AG_ButtonSetFocusable(AG_Button *bu, int focusable)
 {
-	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
-	AG_BindInt(bu, "state", v);
-	return (bu);
+	AG_ObjectLock(bu);
+	if (focusable) {
+		WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE;
+		WIDGET(bu)->flags &= ~(AG_WIDGET_UNFOCUSED_BUTTONUP);
+	} else {
+		WIDGET(bu)->flags &= ~(AG_WIDGET_FOCUSABLE);
+		WIDGET(bu)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
+	}
+	AG_ObjectUnlock(bu);
 }
 
-AG_Button *
-AG_ButtonNewUint8(void *parent, Uint flags, const char *caption, Uint8 *v)
+void
+AG_ButtonSetSticky(AG_Button *bu, int flag)
 {
-	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
-	AG_BindUint8(bu, "state", v);
-	return (bu);
+	AG_ObjectLock(bu);
+	AG_SETFLAGS(bu->flags, AG_BUTTON_STICKY, flag);
+	AG_ObjectUnlock(bu);
 }
 
-AG_Button *
-AG_ButtonNewUint16(void *parent, Uint flags, const char *caption, Uint16 *v)
+void
+AG_ButtonInvertState(AG_Button *bu, int flag)
 {
-	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
-	AG_BindUint16(bu, "state", v);
-	return (bu);
+	AG_ObjectLock(bu);
+	AG_SETFLAGS(bu->flags, AG_BUTTON_INVSTATE, flag);
+	AG_ObjectUnlock(bu);
 }
 
-#if AG_MODEL != AG_SMALL
-AG_Button *
-AG_ButtonNewUint32(void *parent, Uint flags, const char *caption, Uint32 *v)
-{
-	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
-	AG_BindUint32(bu, "state", v);
-	return (bu);
-}
-#endif
-
-AG_Button *
-AG_ButtonNewFlag(void *parent, Uint flags, const char *caption,
-    Uint *p, Uint bitmask)
-{
-	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
-	AG_BindFlag(bu, "state", p, bitmask);
-	return (bu);
-}
-
-AG_Button *
-AG_ButtonNewFlag8(void *parent, Uint flags, const char *caption,
-   Uint8 *p, Uint8 bitmask)
-{
-	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
-	AG_BindFlag8(bu, "state", p, bitmask);
-	return (bu);
-}
-
-AG_Button *
-AG_ButtonNewFlag16(void *parent, Uint flags, const char *caption,
-    Uint16 *p, Uint16 bitmask)
-{
-	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
-	AG_BindFlag16(bu, "state", p, bitmask);
-	return (bu);
-}
-
-#if AG_MODEL != AG_SMALL
-AG_Button *
-AG_ButtonNewFlag32(void *parent, Uint flags, const char *caption,
-    Uint32 *p, Uint32 bitmask)
-{
-	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
-	AG_BindFlag32(bu, "state", p, bitmask);
-	return (bu);
-}
-#endif
 
 #ifdef AG_TIMERS
 /* Delay/repeat timer callbacks for AG_BUTTON_REPEAT */
@@ -176,7 +174,7 @@ static Uint32
 ExpireDelay(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
-	int repeatIval = AG_INT(1);
+	const int repeatIval = AG_INT(1);
 
 	AG_AddTimer(bu, &bu->repeatTo, repeatIval, ExpireRepeat, NULL);
 	return (0);
@@ -187,11 +185,11 @@ static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
-	int button = AG_INT(1);
-	AG_Variable *binding;
+	AG_Variable *bState;
 	void *pState;
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	const int button = AG_INT(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 
 #ifdef AG_TIMERS
 	if (bu->flags & AG_BUTTON_REPEAT) {
@@ -201,26 +199,25 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	}
 #endif
 	if (AG_WidgetDisabled(bu) ||
-	    x < 0 || y < 0 ||
-	    x > WIDGET(bu)->w || y > WIDGET(bu)->h) {
+	   !AG_WidgetRelativeArea(bu, x,y))
 		return;
-	}
 	
-	binding = AG_GetVariable(bu, "state", &pState);
-	if (GetState(bu, binding, pState) && button == AG_MOUSE_LEFT &&
+	bState = AG_GetVariable(bu, "state", &pState);
+	if (GetState(bu, bState, pState) &&
+	    button == AG_MOUSE_LEFT &&
 	    !(bu->flags & AG_BUTTON_STICKY)) {
-	    	SetState(bu, binding, pState, 0);
+	    	SetState(bu, bState, pState, 0);
 		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
 	}
-	AG_UnlockVariable(binding);
+	AG_UnlockVariable(bState);
 }
 
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
-	int button = AG_INT(1);
-	AG_Variable *binding;
+	const int button = AG_INT(1);
+	AG_Variable *bState;
 	void *pState;
 	int newState;
 	
@@ -233,15 +230,15 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	if (button != AG_MOUSE_LEFT)
 		return;
 	
-	binding = AG_GetVariable(bu, "state", &pState);
+	bState = AG_GetVariable(bu, "state", &pState);
 	if (!(bu->flags & AG_BUTTON_STICKY)) {
-		SetState(bu, binding, pState, 1);
+		SetState(bu, bState, pState, 1);
 	} else {
-		newState = !GetState(bu, binding, pState);
-		SetState(bu, binding, pState, newState);
+		newState = !GetState(bu, bState, pState);
+		SetState(bu, bState, pState, newState);
 		AG_PostEvent(NULL, bu, "button-pushed", "%i", newState);
 	}
-	AG_UnlockVariable(binding);
+	AG_UnlockVariable(bState);
 
 #ifdef AG_TIMERS
 	if (bu->flags & AG_BUTTON_REPEAT) {
@@ -257,35 +254,34 @@ static void
 MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
-	AG_Variable *binding;
-	int x = AG_INT(1);
-	int y = AG_INT(2);
+	AG_Variable *bState;
 	void *pState;
+	const int x = AG_INT(1);
+	const int y = AG_INT(2);
 
 	if (AG_WidgetDisabled(bu))
 		return;
 
-	binding = AG_GetVariable(bu, "state", &pState);
-	if (!AG_WidgetRelativeArea(bu, x, y)) {
+	bState = AG_GetVariable(bu, "state", &pState);
+	if (!AG_WidgetRelativeArea(bu, x,y)) {
 		if ((bu->flags & AG_BUTTON_STICKY) == 0 &&
-		    GetState(bu, binding, pState) == 1) {
-			SetState(bu, binding, pState, 0);
+		    GetState(bu, bState, pState) == 1) {
+			SetState(bu, bState, pState, 0);
 		}
 	}
-	AG_UnlockVariable(binding);
+	AG_UnlockVariable(bState);
 }
 
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
-	AG_Variable *binding;
+	AG_Variable *bState;
 	void *pState;
-	int keysym = AG_INT(1);
+	const int keysym = AG_INT(1);
 	
-	if (AG_WidgetDisabled(bu)) {
+	if (AG_WidgetDisabled(bu))
 		return;
-	}
 #ifdef AG_TIMERS
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimer(bu, &bu->delayTo);
@@ -297,9 +293,9 @@ KeyUp(AG_Event *_Nonnull event)
 	    keysym != AG_KEY_SPACE) {
 		return;
 	}
-	binding = AG_GetVariable(bu, "state", &pState);
-	SetState(bu, binding, pState, 0);
-	AG_UnlockVariable(binding);
+	bState = AG_GetVariable(bu, "state", &pState);
+	SetState(bu, bState, pState, 0);
+	AG_UnlockVariable(bState);
 
 	if (bu->flags & AG_BUTTON_KEYDOWN) {
 		bu->flags &= ~(AG_BUTTON_KEYDOWN);
@@ -311,19 +307,20 @@ static void
 KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
-	AG_Variable *binding;
+	AG_Variable *bState;
 	void *pState;
-	int keysym = AG_INT(1);
+	const int keysym = AG_INT(1);
 	
-	if (AG_WidgetDisabled(bu))
+	if (AG_WidgetDisabled(bu)) {
 		return;
+	}
 	if (keysym != AG_KEY_RETURN &&		/* TODO AG_Action */
 	    keysym != AG_KEY_KP_ENTER &&
 	    keysym != AG_KEY_SPACE) {
 		return;
 	}
-	binding = AG_GetVariable(bu, "state", &pState);
-	SetState(bu, binding, pState, 1);
+	bState = AG_GetVariable(bu, "state", &pState);
+	SetState(bu, bState, pState, 1);
 	AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
 	bu->flags |= AG_BUTTON_KEYDOWN;
 #ifdef AG_TIMERS
@@ -333,7 +330,7 @@ KeyDown(AG_Event *_Nonnull event)
 		    ExpireDelay, "%i", agKbdRepeat);
 	}
 #endif
-	AG_UnlockVariable(binding);
+	AG_UnlockVariable(bState);
 }
 
 static void
@@ -350,13 +347,12 @@ Init(void *_Nonnull obj)
 {
 	AG_Button *bu = obj;
 
-	WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE|
-	                     AG_WIDGET_UNFOCUSED_MOTION|
-			     AG_WIDGET_UNFOCUSED_BUTTONUP|
-			     AG_WIDGET_TABLE_EMBEDDABLE|
-			     AG_WIDGET_USE_TEXT|
+	WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE |
+	                     AG_WIDGET_UNFOCUSED_MOTION |
+			     AG_WIDGET_UNFOCUSED_BUTTONUP |
+			     AG_WIDGET_TABLE_EMBEDDABLE |
+			     AG_WIDGET_USE_TEXT |
 			     AG_WIDGET_USE_MOUSEOVER;
-
 	bu->state = 0;
 	bu->surface = -1;
 	bu->lbl = NULL;
@@ -421,81 +417,22 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 	return (0);
 }
 
-static int
-GetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull binding,
-    void *_Nonnull p)
-{
-	int v;
-
-	switch (AG_VARIABLE_TYPE(binding)) {
-	case AG_VARIABLE_INT:
-		v = *(int *)p;
-		break;
-	case AG_VARIABLE_UINT8:
-		v = (int)(*(Uint8 *)p);
-		break;
-	case AG_VARIABLE_UINT16:
-		v = (int)(*(Uint16 *)p);
-		break;
-	case AG_VARIABLE_P_FLAG:
-		v = (int)(*(Uint *)p & binding->info.bitmask.u);
-		break;
-	case AG_VARIABLE_P_FLAG8:
-		v = (int)(*(Uint8 *)p & binding->info.bitmask.u8);
-		break;
-	case AG_VARIABLE_P_FLAG16:
-		v = (int)(*(Uint16 *)p & binding->info.bitmask.u16);
-		break;
-#if AG_MODEL != AG_SMALL
-	case AG_VARIABLE_UINT32:
-		v = (int)(*(Uint32 *)p);
-		break;
-	case AG_VARIABLE_P_FLAG32:
-		v = (int)(*(Uint32 *)p & binding->info.bitmask.u32);
-		break;
-#endif
-	default:
-		v = 0;
-		break;
-	}
-	if (bu->flags & AG_BUTTON_INVSTATE) {
-		v = !v;
-	}
-	return (v);
-}
-
 static void
-SetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull binding,
-    void *_Nonnull p, int v)
+SetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState, void *_Nonnull p,
+    int v)
 {
-	switch (AG_VARIABLE_TYPE(binding)) {
+	switch (AG_VARIABLE_TYPE(bState)) {
 	case AG_VARIABLE_INT:
 		*(int *)p = v;
 		break;
-	case AG_VARIABLE_UINT8:
-		*(Uint8 *)p = v;
-		break;
-	case AG_VARIABLE_UINT16:
-		*(Uint16 *)p = v;
+	case AG_VARIABLE_UINT:
+		*(Uint *)p = v;
 		break;
 	case AG_VARIABLE_P_FLAG:
-		AG_SETFLAGS(*(Uint *)p, binding->info.bitmask.u, v);
+		AG_SETFLAGS(*(Uint *)p, bState->info.bitmask.u, v);
 		break;
-	case AG_VARIABLE_P_FLAG8:
-		AG_SETFLAGS(*(Uint8 *)p, binding->info.bitmask.u8, v);
-		break;
-	case AG_VARIABLE_P_FLAG16:
-		AG_SETFLAGS(*(Uint16 *)p, binding->info.bitmask.u16, v);
-		break;
-#if AG_MODEL != AG_SMALL
-	case AG_VARIABLE_UINT32:
-		*(Uint32 *)p = v;
-		break;
-	case AG_VARIABLE_P_FLAG32:
-		AG_SETFLAGS(*(Uint32 *)p, binding->info.bitmask.u32, v);
-		break;
-#endif
 	default:
+		SetStateGeneral(bu, bState, p, v);
 		break;
 	}
 	AG_Redraw(bu);
@@ -505,14 +442,14 @@ static void
 Draw(void *_Nonnull p)
 {
 	AG_Button *bu = p;
-	AG_Variable *binding;
+	AG_Variable *bState;
 	void *pState;
 	AG_Rect rd;
-	int pressed;
+	int pressed, surface;
 	
-	binding = AG_GetVariable(bu, "state", &pState);
-	pressed = GetState(bu, binding, pState);
-	AG_UnlockVariable(binding);
+	bState = AG_GetVariable(bu, "state", &pState);
+	pressed = GetState(bu, bState, pState);
+	AG_UnlockVariable(bState);
 
 	rd.x = 0;
 	rd.y = 0;
@@ -530,69 +467,108 @@ Draw(void *_Nonnull p)
 
 	if (bu->lbl != NULL) {
 		AG_WidgetDraw(bu->lbl);
-	} else if (bu->surface != -1) {
-		int w = WSURFACE(bu,bu->surface)->w;
-		int h = WSURFACE(bu,bu->surface)->h;
-		int x = 0, y = 0;
+	} else if ((surface = bu->surface) != -1) {
+		const int w = WSURFACE(bu,surface)->w;
+		const int h = WSURFACE(bu,surface)->h;
+		int x=0, y=0;
 
 		switch (bu->justify) {
-		case AG_TEXT_LEFT:	x = bu->lPad;			break;
-		case AG_TEXT_CENTER:	x = (WIDTH(bu) >> 1)-(w >> 1);	break;
-		case AG_TEXT_RIGHT:	x = WIDTH(bu) - w - bu->rPad;	break;
+		case AG_TEXT_LEFT:    x = bu->lPad;                    break;
+		case AG_TEXT_CENTER:  x = (WIDTH(bu) >> 1)-(w >> 1);   break;
+		case AG_TEXT_RIGHT:   x = WIDTH(bu) - w - bu->rPad;    break;
 		}
 		switch (bu->valign) {
-		case AG_TEXT_TOP:	y = bu->tPad;			break;
-		case AG_TEXT_MIDDLE:	y = (HEIGHT(bu) >> 1)-(h >> 1);	break;
-		case AG_TEXT_BOTTOM:	y = HEIGHT(bu) - h - bu->bPad;	break;
+		case AG_TEXT_TOP:     y = bu->tPad;                    break;
+		case AG_TEXT_MIDDLE:  y = (HEIGHT(bu) >> 1)-(h >> 1);  break;
+		case AG_TEXT_BOTTOM:  y = HEIGHT(bu) - h - bu->bPad;   break;
 		}
 		if (pressed) {
 			x++;
 			y++;
 		}
-		AG_WidgetBlitSurface(bu, bu->surface, x,y);
+		AG_WidgetBlitSurface(bu, surface, x,y);
 	}
 }
 
-void
-AG_ButtonSetPadding(AG_Button *bu, int lPad, int rPad, int tPad, int bPad)
+static int
+GetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState, void *_Nonnull p)
 {
-	AG_ObjectLock(bu);
-	if (lPad != -1) { bu->lPad = lPad; }
-	if (rPad != -1) { bu->rPad = rPad; }
-	if (tPad != -1) { bu->tPad = tPad; }
-	if (bPad != -1) { bu->bPad = bPad; }
-	AG_ObjectUnlock(bu);
-	AG_Redraw(bu);
-}
+	int v;
 
-void
-AG_ButtonSetFocusable(AG_Button *bu, int focusable)
-{
-	AG_ObjectLock(bu);
-	if (focusable) {
-		WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE;
-		WIDGET(bu)->flags &= ~(AG_WIDGET_UNFOCUSED_BUTTONUP);
-	} else {
-		WIDGET(bu)->flags &= ~(AG_WIDGET_FOCUSABLE);
-		WIDGET(bu)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
+	switch (AG_VARIABLE_TYPE(bState)) {
+	case AG_VARIABLE_INT:
+		v = *(int *)p;
+		break;
+	case AG_VARIABLE_UINT:
+		v = *(Uint *)p;
+		break;
+	case AG_VARIABLE_P_FLAG:
+		v = (int)(*(Uint *)p & bState->info.bitmask.u);
+		break;
+	default:
+		v = GetStateGeneral(bu, bState, p);
+		break;
 	}
-	AG_ObjectUnlock(bu);
+	if (bu->flags & AG_BUTTON_INVSTATE) {
+		v = !v;
+	}
+	return (v);
+}
+static int
+GetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState,
+    void *_Nonnull p)
+{
+	switch (AG_VARIABLE_TYPE(bState)) {
+	case AG_VARIABLE_UINT8:
+		return (int)(*(Uint8 *)p);
+	case AG_VARIABLE_UINT16:
+		return (int)(*(Uint16 *)p);
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_UINT32:
+		return (int)(*(Uint32 *)p);
+#endif
+	case AG_VARIABLE_P_FLAG8:
+		return (int)(*(Uint8 *)p & bState->info.bitmask.u8);
+	case AG_VARIABLE_P_FLAG16:
+		return (int)(*(Uint16 *)p & bState->info.bitmask.u16);
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_P_FLAG32:
+		return (int)(*(Uint32 *)p & bState->info.bitmask.u32);
+#endif
+	default:
+		break;
+	}
+	return (0);
 }
 
-void
-AG_ButtonSetSticky(AG_Button *bu, int flag)
+static void
+SetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState,
+    void *_Nonnull p, int v)
 {
-	AG_ObjectLock(bu);
-	AG_SETFLAGS(bu->flags, AG_BUTTON_STICKY, flag);
-	AG_ObjectUnlock(bu);
-}
-
-void
-AG_ButtonInvertState(AG_Button *bu, int flag)
-{
-	AG_ObjectLock(bu);
-	AG_SETFLAGS(bu->flags, AG_BUTTON_INVSTATE, flag);
-	AG_ObjectUnlock(bu);
+	switch (AG_VARIABLE_TYPE(bState)) {
+	case AG_VARIABLE_UINT8:
+		*(Uint8 *)p = v;
+		break;
+	case AG_VARIABLE_UINT16:
+		*(Uint16 *)p = v;
+		break;
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_UINT32:
+		*(Uint32 *)p = v;
+		break;
+#endif
+	case AG_VARIABLE_P_FLAG8:
+		AG_SETFLAGS(*(Uint8 *)p, bState->info.bitmask.u8, v);
+		break;
+	case AG_VARIABLE_P_FLAG16:
+		AG_SETFLAGS(*(Uint16 *)p, bState->info.bitmask.u16, v);
+		break;
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_P_FLAG32:
+		AG_SETFLAGS(*(Uint32 *)p, bState->info.bitmask.u32, v);
+		break;
+#endif
+	}
 }
 
 void
@@ -611,7 +587,7 @@ AG_ButtonValign(AG_Button *bu, enum ag_text_valign va)
 {
 	AG_ObjectLock(bu);
 	bu->valign = va;
-	if (bu->lbl != NULL) {
+	if (bu->lbl) {
 		AG_LabelValign(bu->lbl, va);
 	}
 	AG_ObjectUnlock(bu);
@@ -671,6 +647,22 @@ AG_ButtonSetRepeatMode(AG_Button *bu, int repeat)
 	AG_ObjectUnlock(bu);
 }
 
+/* Set the label text (format string). */
+void
+AG_ButtonText(AG_Button *bu, const char *fmt, ...)
+{
+	char *s;
+	va_list ap;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+
+	AG_ButtonTextS(bu, s);
+
+	free(s);
+}
+
 /* Set the label text (C string). */
 void
 AG_ButtonTextS(AG_Button *bu, const char *label)
@@ -688,20 +680,6 @@ AG_ButtonTextS(AG_Button *bu, const char *label)
 	}
 	AG_ObjectUnlock(bu);
 	AG_Redraw(bu);
-}
-
-/* Set the label text (format string). */
-void
-AG_ButtonText(AG_Button *bu, const char *fmt, ...)
-{
-	char *s;
-	va_list ap;
-
-	va_start(ap, fmt);
-	Vasprintf(&s, fmt, ap);
-	va_end(ap);
-	AG_ButtonTextS(bu, s);
-	free(s);
 }
 
 AG_WidgetClass agButtonClass = {

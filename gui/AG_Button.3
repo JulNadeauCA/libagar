@@ -58,19 +58,11 @@ an integer or one or more bits in an integer).
 .Ft "AG_Button *"
 .Fn AG_ButtonNewFn "AG_Widget *parent" "Uint flags" "const char *label" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
-.\" MANLINK(AG_ButtonNewInt)
-.\" MANLINK(AG_ButtonNewUint8)
-.\" MANLINK(AG_ButtonNewUint16)
-.\" MANLINK(AG_ButtonNewUint32)
 .Ft "AG_Button *"
-.Fn AG_ButtonNew{Int,Uint8,Uint16,Uint32} "AG_Widget *parent" "Uint flags" "const char *label" "<Type> *p"
+.Fn AG_ButtonNewInt "AG_Widget *parent" "Uint flags" "const char *label" "int *p"
 .Pp
-.\" MANLINK(AG_ButtonNewFlag)
-.\" MANLINK(AG_ButtonNewFlag8)
-.\" MANLINK(AG_ButtonNewFlag16)
-.\" MANLINK(AG_ButtonNewFlag32)
 .Ft "AG_Button *"
-.Fn AG_ButtonNew{Flag,Flag8,Flag16,Flag32} "AG_Widget *parent" "Uint flags" "const char *label" "Uint *p" "<Type> bitmask"
+.Fn AG_ButtonNewFlag "AG_Widget *parent" "Uint flags" "const char *label" "Uint *p" "Uint bitmask"
 .Pp
 .Ft void
 .Fn AG_ButtonInvertState "AG_Button *button" "int flag"
@@ -136,28 +128,29 @@ implies
 is passed).
 .Pp
 The
-.Fn AG_ButtonNew{Int,Uint8,Uint16,Uint32}
-functions tie the boolean state of the button (the
+.Fn AG_ButtonNewInt
+shorthand constructor also ties the
 .Sq state
-binding) to a specified integer, where 1 is true and 0 is false.
-.Pp
+of the button to the natural integer at
+.Fa p .
 The
-.Fn AG_ButtonNew{Flag,Flag8,Flag16,Flag32} ,
-functions tie the boolean state of the button to the bits described by
-.Fa bitmask ,
-within the specified integer.
+.Fn AG_ButtonNewFlag
+shorthand ties
+.Sq state
+to the value of the bit(s) indicated by
+.Fa bitmask
+contained within the natural integer at
+.Fa p .
 .Pp
-To invert the boolean interpretation of the tied value, the button can be
-initialized with
-.Dv AG_BUTTON_INVSTATE ,
-or a parameter of 1 can be passed to
-.Fn AG_ButtonInvertState .
+To invert the boolean interpretation of a binding, call
+.Fn AG_ButtonInvertState
+or set
+.Dv AG_BUTTON_INVSTATE .
 .Pp
-The
 .Fn AG_ButtonSetPadding
-function sets the padding around the label in pixels.
-If a parameter is -1, its current value is preserved.
-Note that when using a text label, this setting is independent from that of
+sets the padding around the label in pixels.
+If any one parameter is -1, its current value is preserved.
+When using a text label, this setting is independent from that of
 the label (use
 .Xr AG_LabelSetPadding 3
 on the
@@ -166,18 +159,16 @@ member of the
 .Nm
 to configure the text label padding as well).
 .Pp
-The
 .Fn AG_ButtonSetFocusable
-function with an argument of 0 prevents the button from gaining focus.
-The default is to allow buttons to gain focus.
+sets whether the button is allowed to receive focus (default = 1);
+see
+.Xr AG_WidgetFocus 3 .
 .Pp
-The
 .Fn AG_ButtonSetSticky
-function enables or disable sticky mode.
-Under sticky mode, the button will not spring back to its previous state
-following a click event.
-This mode is mostly useful when the button's state is bound to a boolean
-variable.
+sets the behavior of the button when pressed (0 = momentary, 1 = sticky).
+Buttons are sticky by default.
+In momentary mode, the button springs back to its former state when released.
+The default mode is sticky.
 .Pp
 .Fn AG_ButtonJustify
 sets the justification for the button text label (or icon):
@@ -274,6 +265,8 @@ is considered boolean FALSE.
 .It Va BOOL *state
 Value (1/0) of natural integer
 .It Va INT *state
+Value (1/0) of natural integer
+.It Va UINT *state
 Value (1/0) of natural integer
 .It Va UINT8 *state
 Value (1/0) of 8-bit integer

@@ -46,37 +46,17 @@ typedef struct ag_button {
 __BEGIN_DECLS
 extern AG_WidgetClass agButtonClass;
 
-AG_Button *_Nonnull AG_ButtonNewS(void *_Nullable, Uint, const char *_Nullable);
-AG_Button *_Nonnull AG_ButtonNew(void *_Nullable, Uint, const char *_Nullable, ...)
-                                FORMAT_ATTRIBUTE(printf,3,4);
-
-AG_Button *_Nonnull AG_ButtonNewFn(void *_Nullable, Uint, const char *_Nullable,
-                                  _Nonnull AG_EventFn, const char *_Nullable, ...);
-
 AG_Button *_Nonnull AG_ButtonNewInt(void *_Nullable, Uint,
                                     const char *_Nullable, int  *_Nonnull);
-AG_Button *_Nonnull AG_ButtonNewUint8(void *_Nullable, Uint,
-                                      const char *_Nullable, Uint8 *_Nonnull);
-AG_Button *_Nonnull AG_ButtonNewUint16(void *_Nullable, Uint,
-                                       const char *_Nullable, Uint16 *_Nonnull);
-#if AG_MODEL != AG_SMALL
-AG_Button *_Nonnull AG_ButtonNewUint32(void *_Nullable, Uint,
-                                       const char *_Nullable, Uint32 *_Nonnull);
-#endif
 AG_Button *_Nonnull AG_ButtonNewFlag(void *_Nullable, Uint,
                                      const char *_Nullable, Uint *_Nonnull,
 				     Uint);
-AG_Button *_Nonnull AG_ButtonNewFlag8(void *_Nullable, Uint,
-                                      const char *_Nullable, Uint8 *_Nonnull,
-				      Uint8);
-AG_Button *_Nonnull AG_ButtonNewFlag16(void *_Nullable, Uint,
-                                       const char *_Nullable, Uint16 *_Nonnull,
-				       Uint16);
-#if AG_MODEL != AG_SMALL
-AG_Button *_Nonnull AG_ButtonNewFlag32(void *_Nullable, Uint,
-                                       const char *_Nullable, Uint32 *_Nonnull,
-				       Uint32);
-#endif
+AG_Button *_Nonnull AG_ButtonNew(void *_Nullable, Uint, const char *_Nullable, ...)
+                                FORMAT_ATTRIBUTE(printf,3,4);
+AG_Button *_Nonnull AG_ButtonNewFn(void *_Nullable, Uint, const char *_Nullable,
+                                  _Nonnull AG_EventFn, const char *_Nullable, ...);
+AG_Button *_Nonnull AG_ButtonNewS(void *_Nullable, Uint, const char *_Nullable);
+
 void    AG_ButtonSetPadding(AG_Button *_Nonnull, int,int,int,int);
 #define	AG_ButtonSetPaddingLeft(b,v)   AG_ButtonSetPadding((b),(v),-1,-1,-1)
 #define	AG_ButtonSetPaddingRight(b,v)  AG_ButtonSetPadding((b),-1,(v),-1,-1)
@@ -86,14 +66,15 @@ void    AG_ButtonSetPadding(AG_Button *_Nonnull, int,int,int,int);
 void AG_ButtonSetFocusable(AG_Button *_Nonnull, int);
 void AG_ButtonSetSticky(AG_Button *_Nonnull, int);
 void AG_ButtonInvertState(AG_Button *_Nonnull, int);
+
 void AG_ButtonJustify(AG_Button *_Nonnull, enum ag_text_justify);
 void AG_ButtonValign(AG_Button *_Nonnull, enum ag_text_valign);
 void AG_ButtonSurface(AG_Button *_Nonnull, const AG_Surface *_Nullable);
 void AG_ButtonSurfaceNODUP(AG_Button *_Nonnull, AG_Surface *_Nullable);
 void AG_ButtonSetRepeatMode(AG_Button *_Nonnull, int);
-void AG_ButtonTextS(AG_Button *_Nonnull, const char *_Nullable);
 void AG_ButtonText(AG_Button *_Nonnull, const char *_Nonnull, ...)
                   FORMAT_ATTRIBUTE(printf,2,3);
+void AG_ButtonTextS(AG_Button *_Nonnull, const char *_Nullable);
 
 #ifdef AG_LEGACY
 # define AG_ButtonAct AG_ButtonNewFn
