@@ -218,7 +218,8 @@ Init(void *obj)
 {
 	MyTestInstance *ti = obj;
 
-	AG_ObjectInitStatic(&ti->workerMgr, NULL);
+	AG_ObjectInit(&ti->workerMgr, NULL);
+	ti->workerMgr.flags |= AG_OBJECT_STATIC;
 	ti->nWorkers = 0;
 	ti->winParent = NULL;
 	ti->sleeping.win = NULL;

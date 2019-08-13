@@ -37,7 +37,8 @@ Init(void *obj)
 	 * Initialize our virtual filesystem root. Since vfsRoot was not
 	 * malloc'ed, we must use the AG_ObjectInitStatic() variant.
 	 */
-	AG_ObjectInitStatic(&ti->vfsRoot, NULL);
+	AG_ObjectInit(&ti->vfsRoot, NULL);
+	ti->vfsRoot.flags |= AG_OBJECT_STATIC;
 	AG_ObjectSetName(&ti->vfsRoot, "My VFS");
 	return (0);
 }
