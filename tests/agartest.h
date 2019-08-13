@@ -15,9 +15,9 @@
 
 /* Test case definition */
 typedef struct ag_test_case {
-	const char *_Nonnull name;			/* Test name */
-	const char *_Nonnull descr;			/* Short description */
-	const char *_Nullable minVer;			/* Minimum Agar version */
+	const char *_Nonnull name;		/* Test name */
+	const char *_Nonnull descr;		/* Short description */
+	const char *_Nullable minVer;		/* Minimum Agar version */
 	Uint flags;
 #define AG_TEST_THREADS	0x01			/* Require multithreading */
 #define AG_TEST_OPENGL	0x02			/* Require OpenGL support */

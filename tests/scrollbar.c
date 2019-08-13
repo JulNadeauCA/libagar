@@ -20,11 +20,11 @@ static int
 TestGUI(void *obj, AG_Window *win)
 {
 	AG_Scrollbar *sb;
-	Uint flags = AG_SCROLLBAR_HFILL|AG_SCROLLBAR_NOAUTOHIDE;
+	Uint flags = AG_SCROLLBAR_HFILL | AG_SCROLLBAR_EXCL;
 #ifdef AG_ENABLE_STRING
 	AG_Label *lbl;
 
-	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL, "Int binding: %d", &vInt);
+	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL, "%d (int)", &vInt);
 	AG_LabelSizeHint(lbl, 0, "XXXXXXXXXXXXXXXXXXXX");
 #endif
 	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
@@ -34,7 +34,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SetInt(sb, "inc", 1000);
 
 #ifdef AG_ENABLE_STRING
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Uint binding: %d (vis=1000)", &vUint);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "%d (Uint; vis=1000)", &vUint);
 #endif
 	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
 	AG_BindUint(sb, "value", &vUint);
@@ -44,14 +44,14 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SetUint(sb, "visible", 1000);
 
 #ifdef AG_ENABLE_STRING
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "8-bit binding: %[s8] (vis=50)", &v8);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "%[s8] (8-bit; vis=50)", &v8);
 #endif
 	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
 	AG_BindSint8(sb, "value", &v8);
 	AG_SetSint8(sb, "visible", 50);
 
 #ifdef AG_ENABLE_STRING
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "32-bit binding: %[u32] (vis=10)", &v32);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "%[u32] (32-bit; vis=10)", &v32);
 #endif
 	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
 	AG_BindUint32(sb, "value", &v32);
@@ -61,7 +61,7 @@ TestGUI(void *obj, AG_Window *win)
 
 #ifdef AG_HAVE_64BIT
 # ifdef AG_ENABLE_STRING
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "64-bit binding: %[u64] (vis=10)", &v64);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "%[u64] (64-bit; vis=10)", &v64);
 # endif
 	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
 	AG_BindUint64(sb, "value", &v64);
@@ -70,9 +70,11 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SetUint64(sb, "visible", 10ULL);
 #endif
 
+	AG_SeparatorNewHoriz(win);
+
 #ifdef AG_HAVE_FLOAT
 # ifdef AG_ENABLE_STRING
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Float binding: %f", &vFlt);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "%f (float)", &vFlt);
 # endif
 	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
 	AG_BindFloat(sb, "value", &vFlt);
@@ -80,7 +82,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SetFloat(sb, "max", 1.0f);
 	AG_SetFloat(sb, "inc", 0.01f);
 # ifdef AG_ENABLE_STRING	
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Double binding: %lf", &vDbl);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "%lf (double)", &vDbl);
 # endif
 	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
 	AG_BindDouble(sb, "value", &vDbl);

@@ -172,6 +172,7 @@ const char *agarBuildOpts[] = {
 };
 
 TAILQ_HEAD_(ag_test_instance) tests;		/* Running tests */
+AG_Window *winMain;				/* Main window */
 AG_Statusbar *statusBar;
 AG_Label *status;
 AG_Console *C = NULL;
@@ -251,8 +252,7 @@ static void
 RunTest(AG_Event *event)
 {
 	AG_Tlist *tl = AG_TLIST_PTR(1);
-	AG_Window *winParent = AG_WINDOW_PTR(2);
-	AG_Driver *drv = AGWIDGET(winParent)->drv;
+	AG_Driver *drv = AGWIDGET(winMain)->drv;
 	AG_DriverClass *drvClass = AGDRIVER_CLASS(drv);
 	AG_TestCase *tc = AG_TlistSelectedItemPtr(tl);
 	AG_TestInstance *ti;
@@ -316,7 +316,7 @@ RunTest(AG_Event *event)
 			ti->closeBtn = AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close this test"),
 			    RequestTestClose, "%p", win);
 			AG_WindowSetPosition(win, AG_WINDOW_MC, 0);
-			AG_WindowAttach(winParent, win);
+			AG_WindowAttach(winMain, win);
 			AG_WindowShow(win);
 		} else {
 			AG_ConsoleMsg(C, _("%s: Failed to start (%s)"),
@@ -554,6 +554,93 @@ ConsoleWindowDetached(AG_Event *event)
 	C = NULL;
 }
 
+/* Show information about a test module */
+static void
+TestInfo(AG_Event *event)
+{
+	const AG_TestCase *tc = AG_CONST_PTR(1);
+
+	AG_TextMsg(AG_MSG_INFO,
+	    _("Test: %s\n"
+	      "Needs: agar %s\n"
+	      "%s"),
+	    tc->name,
+	    tc->minVer ? tc->minVer : "1.0",
+	    _(tc->descr));
+}
+
+/* Display the source code for a test module. */
+static void
+TestViewSource(AG_Event *event)
+{
+	char path[AG_PATHNAME_MAX];
+	char file[AG_FILENAME_MAX];
+	const AG_TestCase *tc = AG_CONST_PTR(1);
+	AG_Textbox *tb;
+	AG_Window *win;
+	char *s;
+	FILE *f;
+	AG_Size size;
+
+	Strlcpy(file, tc->name, sizeof(file));
+	Strlcat(file, ".c", sizeof(file));
+
+	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, file, path, sizeof(path)) != 0) {
+		AG_TextMsgFromError();
+		return;
+	}
+	if ((f = fopen(path, "r")) == NULL) {
+		AG_TextError(_("Could not open %s"), file);
+		return;
+	}
+
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
+	tb = AG_TextboxNew(win, AG_TEXTBOX_MULTILINE | AG_TEXTBOX_EXPAND |
+	                        AG_TEXTBOX_READONLY, NULL);
+	AG_SetStyle(tb, "font-family", "Courier,Terminal,Clean");
+	fseek(f, 0, SEEK_END);
+	size = (AG_Size)ftell(f);
+	fseek(f, 0, SEEK_SET);
+	s = Malloc(size);
+	fread(s, size, 1, f);
+	fclose(f);
+	s[size] = '\0';
+
+	AG_TextboxBindASCII(tb, s, size);
+	AG_WindowSetGeometry(win, -1, -1, 800,480);
+	AG_WindowShow(win);
+}
+
+static void
+TestPopupMenu(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+	const AG_TestCase *tc = AG_TlistSelectedItemPtr(tl);
+	AG_PopupMenu *pm = AG_PopupNew(tl);
+	
+	AG_MenuAction(pm->root, _("Test Information"), agIconMagnifier.s,
+	    TestInfo, "%Cp", tc);
+	AG_MenuAction(pm->root, _("View Source"), agIconDoc.s,
+	    TestViewSource, "%Cp", tc);
+	
+	AG_MenuSeparator(pm->root);
+
+	if (tc->test || tc->testGUI) {
+		AG_MenuAction(pm->root,
+		    tc->testGUI ? _("Run test") : _("Run test (on console)"),
+		    agIconGear.s,
+		    RunTest, "%p", tl);
+	}
+	if (tc->bench) {
+		AG_MenuAction(pm->root, _("Run benchmark"), agIconGear.s,
+		    RunBench, "%p", tl);
+	}
+
+	AG_PopupShow(pm);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -667,7 +754,7 @@ main(int argc, char *argv[])
 
 /*	(void)AG_ConfigLoad(); */
 
-	if ((win = AG_WindowNew(AG_WINDOW_MAIN)) == NULL) {
+	if ((win = winMain = AG_WindowNew(AG_WINDOW_MAIN)) == NULL) {
 		return (1);
 	}
 	AG_WindowSetCaptionS(win, "agartest");
@@ -788,8 +875,10 @@ main(int argc, char *argv[])
 	}
 
 	AG_TlistSetChangedFn(tl, SelectedTest, NULL);
-	AG_TlistSetDblClickFn(tl, RunTest, "%p,%p", tl, win);
-	AG_SetEvent(btnTest, "button-pushed", RunTest, "%p,%p", tl, win);
+	AG_TlistSetDblClickFn(tl, RunTest, "%p", tl);
+	AG_TlistSetPopupFn(tl, TestPopupMenu, NULL);
+
+	AG_SetEvent(btnTest, "button-pushed", RunTest, "%p", tl);
 	AG_SetEvent(btnBench, "button-pushed", RunBench, "%p", tl);
 
 	statusBar = AG_StatusbarNew(win, AG_STATUSBAR_HFILL);

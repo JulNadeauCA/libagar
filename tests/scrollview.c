@@ -16,6 +16,7 @@ TestWithReactiveWidgets(AG_Event *event)
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
 	}
+
 	AG_LabelNewS(win, 0, "AG_Scrollview(3) with reactive widgets");
 	AG_ButtonNew(win, AG_BUTTON_EXCL, "Foo");
 	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);

@@ -78,61 +78,47 @@ TestGUI(void *obj, AG_Window *win)
 	div2 = pane->div[1];
 	{
 		char path[AG_PATHNAME_MAX];
-		AG_Pixmap *px;
 		AG_Surface *S;
-		int i;
 
-		for (i = 1; i <= 4; i++) {
-			char file[12];
-
-			AG_Snprintf(file, sizeof(file), "agar-%d.bmp", i);
-			AG_LabelNew(div1, 0, "%s:", file);
-
-			if (AG_ConfigFind(AG_CONFIG_PATH_DATA, file,
-			    path, sizeof(path)) == 0) {
-				if ((S = AG_SurfaceFromBMP(path)) != NULL) {
-/*					S->flags |= AG_SURFACE_TRACE; */
-					AG_PixmapFromSurface(div1, 0, S);
-				} else {
-					S = AG_TextRender(AG_GetError());
-					AG_PixmapFromSurface(div1, 0, S);
-					AG_SurfaceFree(S);
-				}
+		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-1.bmp",
+		    path, sizeof(path)) == 0) {
+			if ((S = AG_SurfaceFromBMP(path)) != NULL) {
+/*				S->flags |= AG_SURFACE_TRACE; */
+				AG_PixmapFromSurface(div1, 0, S);
 			} else {
 				S = AG_TextRender(AG_GetError());
 				AG_PixmapFromSurface(div1, 0, S);
 				AG_SurfaceFree(S);
 			}
+		} else {
+			S = AG_TextRender(AG_GetError());
+			AG_PixmapFromSurface(div1, 0, S);
+			AG_SurfaceFree(S);
 		}
 
 		/* Display agar.png. PNG support requires libpng. */
 #include <agar/config/have_png.h>
 #ifdef HAVE_PNG
-		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar.png",
+		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "sq-agar.bmp",
 		    path, sizeof(path)) == 0) {
-			AG_Surface *S;
+			AG_Surface *S = AG_SurfaceFromFile(path);
 			int i, x,y;
 
-			hBox = AG_BoxNewHoriz(div1, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
-			px = AG_PixmapFromFile(hBox, 0, path);
-			AG_SetString(px, "tooltip", "agar.png");
-			S = AGWIDGET_SURFACE(px,0);
-			for (i = 1; i <= 4; i++) {
+			hBox = AG_BoxNewHoriz(div1, AG_BOX_HOMOGENOUS |
+			                            AG_BOX_HFILL);
+			for (i = 0; i < 5; i++) {
 				for (y = 0; y < S->h; y++) {
 					for (x = 0; x < S->w; x++) {
 						AG_Pixel px = AG_SurfaceGet(S, x,y);
 						AG_Color c ;
 						
 						AG_GetColor(&c, px, &S->format);
-						c.a = i*(AG_OPAQUE >> 2);
+						c.a /= (1+i);
 						AG_SurfacePut(S, x,y,
 						    AG_MapPixel(&S->format, &c));
 					}
 				}
-				px = AG_PixmapFromSurface(hBox, 0, S);
-				AG_SetStringF(px, "tooltip", "agar.png "
-				                             "(with %d%% alpha)",
-				                              i*25);
+				AG_PixmapFromSurface(hBox, 0, S);
 			}
 		} else {
 			S = AG_TextRender(AG_GetError());
@@ -148,22 +134,30 @@ TestGUI(void *obj, AG_Window *win)
 		 * (polled labels use special format strings; see AG_Label(3)
 		 * for details).
 		 */
-		AG_LabelNewS(div1, 0, "This is a static label");
+		{
+			AG_AgarVersion av;
+			AG_Label *lbl;
+
+			AG_GetVersion(&av);
+			lbl = AG_LabelNew(div1, 0, "Agar v%d.%d.%d (\"%s\")",
+			    av.major, av.minor, av.patch,
+			    av.release ? av.release : "dev");
+			AG_SetStyle(lbl, "font-size", "80%");
+		}
 
 #ifdef AG_ENABLE_STRING
 		{
 			AG_Label *lbl;
 
-			lbl = AG_LabelNewPolled(div1, AG_LABEL_FRAME|AG_LABEL_EXPAND,
-			    "This is a polled label.\n"
-			    "Window is at %i,%i (%ux%u)",
+			lbl = AG_LabelNewPolled(div1, AG_LABEL_EXPAND,
+			    "Window is at %i,%i (%ux%u)\n",
 			    &AGWIDGET(win)->x,
 			    &AGWIDGET(win)->y,
 			    &AGWIDGET(win)->w,
 			    &AGWIDGET(win)->h);
 			AG_LabelSizeHint(lbl, 1,
 			    "This is a polled label\n"
-			    "Window is at 0000,0000 (0000x0000)");
+			    "Window is at 000,000 (000x000)");
 			AG_LabelJustify(lbl, AG_TEXT_CENTER);
 		}
 #else
@@ -172,10 +166,26 @@ TestGUI(void *obj, AG_Window *win)
 	}
 
 	/*
-	 * Box is a general-purpose widget container. We use AG_BoxNewHoriz()
-	 * for horizontal widget packing.
+	 * Tlist is a scrollable list view of items.
 	 */
-	hBox = AG_BoxNewHoriz(div1, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
+	{
+		AG_Tlist *tl;
+
+		tl = AG_TlistNew(div1, AG_TLIST_HFILL);
+		AG_TlistAdd(tl, agIconDoc.s, "Doc");
+		AG_TlistAdd(tl, agIconMagnifier.s, "Magnifier");
+		AG_TlistAdd(tl, agIconUp.s, "Up");
+		AG_TlistAdd(tl, agIconDown.s, "Down");
+		AG_TlistAdd(tl, agIconTrash.s, "Trash");
+		AG_TlistSizeHintLargest(tl, 4);
+		AG_TlistSetIconWidth(tl, 16);
+	}
+
+	/*
+	 * Box is a general-purpose widget container. AG_BoxNewHoriz() creates
+	 * a container which packs its widgets horizontally.
+	 */
+	hBox = AG_BoxNewHoriz(div1, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 	{
 		/*
 		 * The Button widget is a simple push-button. It is typically
@@ -251,7 +261,7 @@ TestGUI(void *obj, AG_Window *win)
 			it->flags |= AG_TLIST_ITEM_ITALIC;
 		}
 
-		AG_ColorRGB_8(&c, 240, 240, 255 - i*4);
+		AG_ColorRGB_8(&c, 240, 240, 255 - (i << 2));
 		AG_TlistSetColor(com->list, it, &c);
 
 		AG_TlistAddS(ucom->list, NULL, text);
@@ -267,13 +277,13 @@ TestGUI(void *obj, AG_Window *win)
 		static int myInt = 50;
 
 		num = AG_NumericalNewS(div1,
-		    AG_NUMERICAL_EXCL|AG_NUMERICAL_HFILL,
+		    AG_NUMERICAL_EXCL | AG_NUMERICAL_HFILL,
 		    "cm", "Real: ");
 		AG_BindFloat(num, "value", &myFloat);
 		AG_SetFloat(num, "inc", 1.0f);
 
 		num = AG_NumericalNewS(div1,
-		    AG_NUMERICAL_EXCL|AG_NUMERICAL_HFILL,
+		    AG_NUMERICAL_EXCL | AG_NUMERICAL_HFILL,
 		    NULL, "Int: ");
 		AG_BindInt(num, "value", &myInt);
 		AG_SetInt(num, "min", -100);
@@ -289,8 +299,7 @@ TestGUI(void *obj, AG_Window *win)
 		AG_Strlcpy(ti->textBuffer, "Foo bar baz bezo", sizeof(ti->textBuffer));
 
 		/* Create a textbox bound to a fixed-size buffer */
-		tbox = AG_TextboxNew(div1,
-		    AG_TEXTBOX_EXCL|AG_TEXTBOX_HFILL,
+		tbox = AG_TextboxNew(div1, AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
 		    "Fixed text buffer: ");
 #ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tbox, ti->textBuffer, sizeof(ti->textBuffer));
@@ -301,7 +310,7 @@ TestGUI(void *obj, AG_Window *win)
 #ifdef AG_UNICODE
 		/* Create a textbox bound to a built-in AG_Text element */
 		tbox = AG_TextboxNew(div1,
-		    AG_TEXTBOX_EXCL|AG_TEXTBOX_MULTILINGUAL|AG_TEXTBOX_HFILL,
+		    AG_TEXTBOX_EXCL | AG_TEXTBOX_MULTILINGUAL | AG_TEXTBOX_HFILL,
 		    "AG_Text element: ");
 		AG_TextboxSetString(tbox, "Hello hello hello");
 		AG_TextSetEntS(tbox->text, AG_LANG_EN, "Hello");
@@ -326,7 +335,7 @@ TestGUI(void *obj, AG_Window *win)
 		AG_ProgressBar *pb;
 
 		sb = AG_ScrollbarNew(div1, AG_SCROLLBAR_HORIZ,
-		    AG_SCROLLBAR_NOAUTOHIDE|AG_SCROLLBAR_EXCL|AG_SCROLLBAR_HFILL);
+		    AG_SCROLLBAR_EXCL | AG_SCROLLBAR_HFILL);
 		AG_BindInt(sb, "value", &myVal);
 		AG_BindInt(sb, "min", &myMin);
 		AG_BindInt(sb, "max", &myMax);
@@ -334,14 +343,14 @@ TestGUI(void *obj, AG_Window *win)
 		AG_SetInt(sb, "inc", 10);
 
 		sl = AG_SliderNew(div1, AG_SLIDER_HORIZ,
-		    AG_SLIDER_EXCL|AG_SLIDER_HFILL);
+		    AG_SLIDER_EXCL | AG_SLIDER_HFILL);
 		AG_BindInt(sl, "value", &myVal);
 		AG_BindInt(sl, "min", &myMin);
 		AG_BindInt(sl, "max", &myMax);
 		AG_SetInt(sl, "inc", 10);
 
 		pb = AG_ProgressBarNew(div1, AG_PROGRESS_BAR_HORIZ,
-		    AG_PROGRESS_BAR_EXCL|AG_PROGRESS_BAR_SHOW_PCT);
+		    AG_PROGRESS_BAR_EXCL | AG_PROGRESS_BAR_SHOW_PCT);
 		AG_BindInt(pb, "value", &myVal);
 		AG_BindInt(pb, "min", &myMin);
 		AG_BindInt(pb, "max", &myMax);
@@ -448,8 +457,8 @@ TestGUI(void *obj, AG_Window *win)
 			 * (normally used to focus other widgets).
 			 */
 			tbox = AG_TextboxNewS(nt,
-			    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB|
-			    AG_TEXTBOX_EXPAND|AG_TEXTBOX_EXCL, NULL);
+			    AG_TEXTBOX_MULTILINE | AG_TEXTBOX_CATCH_TAB |
+			    AG_TEXTBOX_EXPAND | AG_TEXTBOX_EXCL, NULL);
 			AG_WidgetSetFocusable(tbox, 1);
 
 			/*
