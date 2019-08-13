@@ -32,45 +32,9 @@
 #include <stdarg.h>
 #include <string.h>
 
-AG_Checkbox *
-AG_CheckboxNew(void *parent, Uint flags, const char *fmt, ...)
-{
-	char *s;
-	va_list ap;
-	AG_Checkbox *cb;
+static void DrawMouseOver(AG_Checkbox *_Nonnull);
 
-	if (fmt != NULL) {
-		va_start(ap, fmt);
-		Vasprintf(&s, fmt, ap);
-		va_end(ap);
-		cb = AG_CheckboxNewS(parent, flags, s);
-		free(s);
-	} else {
-		cb = AG_CheckboxNewS(parent, flags, NULL);
-	}
-	return (cb);
-}
-
-AG_Checkbox *
-AG_CheckboxNewS(void *parent, Uint flags, const char *label)
-{
-	AG_Checkbox *cb;
-
-	cb = Malloc(sizeof(AG_Checkbox));
-	AG_ObjectInit(cb, &agCheckboxClass);
-	cb->flags |= flags;
-
-	if (label != NULL) {
-		cb->lbl = AG_LabelNewS(cb, 0, label);
-		AG_LabelValign(cb->lbl, AG_TEXT_MIDDLE);
-	}
-	if (flags & AG_CHECKBOX_SET) {
-		cb->state = 1;
-	}
-	AG_ObjectAttach(parent, cb);
-	return (cb);
-}
-
+#if AG_MODEL != AG_SMALL
 AG_Checkbox *
 AG_CheckboxNewFn(void *parent, Uint flags, const char *label, AG_EventFn fn,
     const char *fmt, ...)
@@ -80,7 +44,13 @@ AG_CheckboxNewFn(void *parent, Uint flags, const char *label, AG_EventFn fn,
 
 	cb = AG_CheckboxNewS(parent, flags, label);
 	ev = AG_SetEvent(cb, "checkbox-changed", fn, NULL);
-	AG_EVENT_GET_ARGS(ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
 	return (cb);
 }
 
@@ -88,19 +58,9 @@ AG_Checkbox *
 AG_CheckboxNewInt(void *parent, Uint flags, const char *label, int *pVal)
 {
 	AG_Checkbox *cb;
+
 	cb = AG_CheckboxNewS(parent, flags, label);
 	AG_BindInt(cb, "state", pVal);
-	return (cb);
-}
-
-AG_Checkbox *
-AG_CheckboxNewFlag(void *parent, Uint flags, const char *label, Uint *pFlags,
-    Uint bitmask)
-{
-	AG_Checkbox *cb;
-
-	cb = AG_CheckboxNewS(parent, flags, label);
-	AG_BindFlag(cb, "state", pFlags, bitmask);
 	return (cb);
 }
 
@@ -122,11 +82,64 @@ AG_CheckboxSetFromFlags(void *parent, Uint flags, Uint *pFlags,
 	}
 }
 
+AG_Checkbox *
+AG_CheckboxNewFlag(void *parent, Uint flags, const char *label, Uint *pFlags,
+    Uint bitmask)
+{
+	AG_Checkbox *cb;
+
+	cb = AG_CheckboxNewS(parent, flags, label);
+	AG_BindFlag(cb, "state", pFlags, bitmask);
+	return (cb);
+}
+
+AG_Checkbox *
+AG_CheckboxNew(void *parent, Uint flags, const char *fmt, ...)
+{
+	char *s;
+	va_list ap;
+	AG_Checkbox *cb;
+
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		Vasprintf(&s, fmt, ap);
+		va_end(ap);
+		cb = AG_CheckboxNewS(parent, flags, s);
+		free(s);
+	} else {
+		cb = AG_CheckboxNewS(parent, flags, NULL);
+	}
+	return (cb);
+}
+#endif /* !AG_SMALL */
+
+AG_Checkbox *
+AG_CheckboxNewS(void *parent, Uint flags, const char *label)
+{
+	AG_Checkbox *cb;
+
+	cb = Malloc(sizeof(AG_Checkbox));
+	AG_ObjectInit(cb, &agCheckboxClass);
+	cb->flags |= flags;
+
+	if (label != NULL) {
+		cb->lbl = AG_LabelNewS(cb, 0, label);
+		AG_LabelValign(cb->lbl, AG_TEXT_MIDDLE);
+	}
+	if (flags & AG_CHECKBOX_SET)
+		cb->state = 1;
+	if (flags & AG_CHECKBOX_INVERT)
+		cb->invert = 1;
+
+	AG_ObjectAttach(parent, cb);
+	return (cb);
+}
+
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Checkbox *cb = AG_CHECKBOX_SELF();
-	int button = AG_INT(1);
+	const int button = AG_INT(1);
 
 	if (!AG_WidgetEnabled(cb))
 		return;
@@ -143,7 +156,7 @@ static void
 KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Checkbox *cb = AG_CHECKBOX_SELF();
-	int key = AG_INT(1);
+	const int key = AG_INT(1);
 	
 	if (!AG_WidgetEnabled(cb))
 		return;
@@ -162,19 +175,19 @@ Init(void *_Nonnull obj)
 {
 	AG_Checkbox *cb = obj;
 
-	WIDGET(cb)->flags |= AG_WIDGET_FOCUSABLE|
-	                     AG_WIDGET_UNFOCUSED_MOTION|
-	                     AG_WIDGET_TABLE_EMBEDDABLE|
-			     AG_WIDGET_USE_TEXT|
+	WIDGET(cb)->flags |= AG_WIDGET_FOCUSABLE |
+	                     AG_WIDGET_TABLE_EMBEDDABLE |
+			     AG_WIDGET_USE_TEXT |
 			     AG_WIDGET_USE_MOUSEOVER;
 
+	cb->flags = 0;
 	cb->state = 0;
+	cb->spacing = 4;
+	cb->invert = 0;
+	cb->lbl = NULL;
+	
 	AG_BindInt(cb, "state", &cb->state);
 	AG_RedrawOnChange(cb, 100, "state");
-
-	cb->flags = 0;
-	cb->lbl = NULL;
-	cb->spacing = 4;
 	
 	AG_SetEvent(cb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(cb, "key-down", KeyDown, NULL);
@@ -193,76 +206,35 @@ Draw(void *_Nonnull obj)
 	r.y = 0;
 	r.w = WIDTH(cb);
 	r.h = HEIGHT(cb);
-	AG_PushClipRect(cb, &r);
+	AG_PushClipRect(cb, &r); /* XXX */
 
 	V = AG_GetVariable(cb, "state", &p);
 	switch (V->type) {
-	case AG_VARIABLE_INT:
+	case AG_VARIABLE_INT:				/* Natural integer */
 	case AG_VARIABLE_UINT:
 		state = V->data.i;
+		AG_UnlockVariable(V);
 		break;
 	case AG_VARIABLE_P_INT:
 	case AG_VARIABLE_P_UINT:
 		state = *(int *)p;
+		AG_UnlockVariable(V);
 		break;
 	case AG_VARIABLE_P_FLAG:
 		state = *(Uint *)p & V->info.bitmask.u;
+		AG_UnlockVariable(V);
 		break;
-	case AG_VARIABLE_P_FLAG8:
-		state = *(Uint8 *)p & V->info.bitmask.u8;
-		break;
-	case AG_VARIABLE_P_FLAG16:
-		state = *(Uint16 *)p & V->info.bitmask.u16;
-		break;
-#if AG_MODEL != AG_SMALL
-	case AG_VARIABLE_P_FLAG32:
-		state = *(Uint32 *)p & V->info.bitmask.u32;
-		break;
-#endif
-	case AG_VARIABLE_UINT8:
-	case AG_VARIABLE_SINT8:
-		state = V->data.u8;
-		break;
-	case AG_VARIABLE_P_UINT8:
-	case AG_VARIABLE_P_SINT8:
-		state = *(Uint8 *)p;
-		break;
-	case AG_VARIABLE_UINT16:
-	case AG_VARIABLE_SINT16:
-		state = V->data.u16;
-		break;
-	case AG_VARIABLE_P_UINT16:
-	case AG_VARIABLE_P_SINT16:
-		state = *(Uint16 *)p;
-		break;
-#if AG_MODEL != AG_SMALL
-	case AG_VARIABLE_UINT32:
-	case AG_VARIABLE_SINT32:
-		state = V->data.u32;
-		break;
-	case AG_VARIABLE_P_UINT32:
-	case AG_VARIABLE_P_SINT32:
-		state = *(Uint32 *)p;
-		break;
-#endif
-	default:
-		Debug(cb, "Unknown state type %d\n", V->type);
-		state = 0;
+	default:					/* General case */
+		AG_UnlockVariable(V);
+		state = AG_CheckboxGetState(cb);
 		break;
 	}
 
-	if (WIDGET(cb)->flags & AG_WIDGET_MOUSEOVER) {
-		AG_Color c;
+	if (cb->invert)
+		state = !state;
 
-		r.x = 0;
-		r.y = 0;
-		r.w = WIDTH(cb);
-		r.h = HEIGHT(cb)-1;
-
-		AG_ColorRGBA_8(&c, 255,255,255, 25);
-		AG_DrawRectBlended(cb, &r, &c, AG_ALPHA_SRC,
-		                               AG_ALPHA_ONE_MINUS_SRC);
-	}
+	if (WIDGET(cb)->flags & AG_WIDGET_MOUSEOVER)
+		DrawMouseOver(cb);
 
 	r.x = 0;
 	r.y = 0;
@@ -270,20 +242,98 @@ Draw(void *_Nonnull obj)
 	r.h = r.w;
 
 	if (AG_WidgetEnabled(cb)) {
-		AG_DrawBox(cb, &r, state ? -1 : 1,
-		    &WCOLOR(cb,0));
+		AG_DrawBox(cb, &r, state ? -1 : 1, &WCOLOR(cb,0));
 	} else {
-		AG_DrawBoxDisabled(cb, &r, state ? -1 : 1,
-		    &WCOLOR(cb,0),
-		    &WCOLOR_DIS(cb,0));
+		AG_DrawBoxDisabled(cb, &r, state ? -1 : 1, &WCOLOR(cb,0),
+		                                           &WCOLOR_DIS(cb,0));
 	}
-
 	if (cb->lbl != NULL) {
 		AG_WidgetDraw(cb->lbl);
 	}
-	AG_UnlockVariable(V);
-
 	AG_PopClipRect(cb);
+}
+
+/* Return the checkbox state. */
+int
+AG_CheckboxGetState(AG_Checkbox *cb)
+{
+	AG_Variable *bState;
+	void *p;
+	int rv;
+
+	AG_ObjectLock(cb);
+	bState = AG_GetVariable(cb, "state", &p);
+	switch (bState->type) {
+	case AG_VARIABLE_P_FLAG8:
+		rv = *(Uint8 *)p & bState->info.bitmask.u8;
+		break;
+	case AG_VARIABLE_P_FLAG16:
+		rv = *(Uint16 *)p & bState->info.bitmask.u16;
+		break;
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_P_FLAG32:
+		rv = *(Uint32 *)p & bState->info.bitmask.u32;
+		break;
+#endif
+	case AG_VARIABLE_UINT8:
+	case AG_VARIABLE_SINT8:
+		rv = bState->data.u8;
+		break;
+	case AG_VARIABLE_P_UINT8:
+	case AG_VARIABLE_P_SINT8:
+		rv = *(Uint8 *)p;
+		break;
+	case AG_VARIABLE_UINT16:
+	case AG_VARIABLE_SINT16:
+		rv = bState->data.u16;
+		break;
+	case AG_VARIABLE_P_UINT16:
+	case AG_VARIABLE_P_SINT16:
+		rv = *(Uint16 *)p;
+		break;
+#if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_UINT32:
+	case AG_VARIABLE_SINT32:
+		rv = bState->data.u32;
+		break;
+	case AG_VARIABLE_P_UINT32:
+	case AG_VARIABLE_P_SINT32:
+		rv = *(Uint32 *)p;
+		break;
+#endif
+	case AG_VARIABLE_INT:
+	case AG_VARIABLE_UINT:
+		rv = bState->data.i;
+		break;
+	case AG_VARIABLE_P_INT:
+	case AG_VARIABLE_P_UINT:
+		rv = *(int *)p;
+		break;
+	case AG_VARIABLE_P_FLAG:
+		rv = *(Uint *)p & bState->info.bitmask.u;
+		break;
+	default:
+		rv = 0;
+	}
+	AG_UnlockVariable(bState);
+	AG_ObjectUnlock(cb);
+	return (rv);
+}
+
+static void
+DrawMouseOver(AG_Checkbox *_Nonnull cb)
+{
+	AG_Rect r;
+	AG_Color c;
+
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(cb);
+	r.h = HEIGHT(cb)-1;
+
+	AG_ColorRGBA_8(&c, 255,255,255, 25);
+	AG_DrawRectBlended(cb, &r, &c, AG_ALPHA_SRC,
+	                               AG_ALPHA_ONE_MINUS_SRC);
 }
 
 static void
@@ -323,13 +373,6 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	return (0);
 }
 
-/* Return the checkbox state. */
-int
-AG_CheckboxGetState(AG_Checkbox *cb)
-{
-	return (cb->state);
-}
-
 /* Set the checkbox state. */
 void
 AG_CheckboxSetState(AG_Checkbox *cb, int newState)
@@ -338,6 +381,9 @@ AG_CheckboxSetState(AG_Checkbox *cb, int newState)
 	void *p;
 
 	AG_ObjectLock(cb);
+	if (cb->invert) {
+		newState = !newState;
+	}
 	V = AG_GetVariable(cb, "state", &p);
 	switch (V->type) {
 	case AG_VARIABLE_INT:

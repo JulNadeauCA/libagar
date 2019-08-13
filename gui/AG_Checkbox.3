@@ -97,8 +97,10 @@ Acceptable values for the
 .Fa flags
 argument include:
 .Bl -tag -width "AG_CHECKBOX_EXPAND "
+.It AG_CHECKBOX_INVERT
+Invert the logical interpretation of "state".
 .It AG_CHECKBOX_SET
-Set the state to 1 on initialization.
+Set default "state" to 1 (default = 0).
 .It AG_CHECKBOX_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -185,6 +187,10 @@ For the
 .Ft AG_Checkbox
 object:
 .Bl -tag -width "AG_Label *lbl "
+.It Ft int invert
+Invert the logical interpretation of the
+.Sq state
+binding.
 .It Ft AG_Label *lbl
 Pointer to the
 .Xr AG_Label 3
