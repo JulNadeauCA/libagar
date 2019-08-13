@@ -16,9 +16,3 @@ LIBS+=	${AGAR_ADA_CORE_LIBS} ${AGAR_CORE_LIBS}
 
 include ${TOP}/mk/build.prog.mk
 include ${TOP}/mk/build.man.mk
-
-configure: configure.in
-	cat configure.in | mkconfigure > configure
-	chmod 755 configure
-
-.PHONY: configure

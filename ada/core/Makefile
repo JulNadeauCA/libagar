@@ -37,9 +37,3 @@ CLEANFILES+=	Cow.obj
 CLEANDIRFILES+=	${ADAPREPFILE}
 
 include ${TOP}/mk/build.lib.mk
-
-configure: configure.in
-	cat configure.in | mkconfigure > configure
-	chmod 755 configure
-
-.PHONY: configure
