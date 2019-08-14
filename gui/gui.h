@@ -49,24 +49,25 @@ extern double agZoomValues[AG_ZOOM_MAX];
 extern int    agZoomValues[AG_ZOOM_MAX];
 #endif
 
+#ifdef AG_EVENT_LOOP
+void  AG_QuitGUI(void);
+#endif
 int   AG_InitGraphics(const char *_Nullable);
 void  AG_DestroyGraphics(void);
+void  AG_ZoomIn(void);
+void  AG_ZoomOut(void);
+void  AG_ZoomReset(void);
 int   AG_InitGUI(Uint);
 void  AG_DestroyGUI(void);
 int   AG_InitGUIGlobals(void);
 void  AG_DestroyGUIGlobals(void);
-void  AG_QuitGUI(void);
-void  AG_ZoomIn(void);
-void  AG_ZoomOut(void);
-void  AG_ZoomReset(void);
-
-#if defined(AG_DEBUG) && defined(AG_TIMERS)
-struct ag_window *_Nullable AG_GuiDebugger(struct ag_window *_Nonnull);
-#endif
 
 #ifdef HAVE_SDL
 int   AG_InitVideoSDL(void *_Nonnull, Uint);
 int   AG_SetVideoSurfaceSDL(void *_Nonnull);
+#endif
+#if defined(AG_DEBUG) && defined(AG_TIMERS)
+struct ag_window *_Nullable AG_GuiDebugger(struct ag_window *_Nonnull);
 #endif
 
 #ifdef AG_LEGACY

@@ -475,6 +475,7 @@ echo 'Options specific to CORE library:'
 echo '    --enable-debug-core         Expensive AG_Object debugging [no]'
 echo '    --enable-dso                Dynamically loaded modules [check]'
 echo '    --enable-exec               The AG_Execute(3) interface [check]'
+echo '    --enable-event-loop         The standard AG_EventLoop(3) [check]'
 echo '    --enable-namespaces         Namespaces for object classes [check]'
 echo '    --enable-named-args         Named AG_Event arguments [check]'
 echo '    --enable-network            The AG_Net(3) network interface [check]'
@@ -1723,6 +1724,7 @@ echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
 	with_float="no"
 	enable_dso="no"
 	enable_exec="no"
+	enable_event_loop="no"
 	enable_namespaces="no"
 	enable_named_args="no"
 	enable_network="no"
@@ -5351,6 +5353,17 @@ echo "hdefs[\"AG_LEGACY\"] = \"$AG_LEGACY\"" >>configure.lua
 else
 echo '#undef AG_LEGACY' >$bb_incdir/ag_legacy.h
 echo 'hdefs["AG_LEGACY"] = nil' >>configure.lua
+fi
+if [ "${enable_event_loop}" != 'no' ]; then
+AG_EVENT_LOOP="yes"
+bb_o=$bb_incdir/ag_event_loop.h
+echo '#ifndef AG_EVENT_LOOP' >$bb_o
+echo "#define AG_EVENT_LOOP \"$AG_EVENT_LOOP\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_EVENT_LOOP\"] = \"$AG_EVENT_LOOP\"" >>configure.lua
+else
+echo '#undef AG_EVENT_LOOP' >$bb_incdir/ag_event_loop.h
+echo 'hdefs["AG_EVENT_LOOP"] = nil' >>configure.lua
 fi
 if [ "${enable_namespaces}" != 'no' ]; then
 AG_NAMESPACES="yes"

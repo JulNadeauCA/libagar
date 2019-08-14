@@ -7,6 +7,7 @@
 #include <agar/config/ag_enable_exec.h>
 #include <agar/config/ag_enable_string.h>
 #include <agar/config/ag_legacy.h>
+#include <agar/config/ag_event_loop.h>
 #include <agar/config/ag_namespaces.h>
 #include <agar/config/ag_named_args.h>
 #include <agar/config/ag_serialization.h>

@@ -14,8 +14,13 @@
 #  define AG_EVENT_ARGS_MAX 8
 # endif
 #endif
+
 #ifndef AG_EVENT_NAME_MAX
-# define AG_EVENT_NAME_MAX 20
+# if AG_MODEL == AG_SMALL
+#  define AG_EVENT_NAME_MAX 14
+# else
+#  define AG_EVENT_NAME_MAX 20
+# endif
 #endif
 
 /*
@@ -78,11 +83,13 @@ struct ag_event_sink;
 /* Event handler / virtual function */
 typedef struct ag_event {
 	char name[AG_EVENT_NAME_MAX];		/* String identifier */
+#if AG_MODEL != AG_SMALL
 	Uint flags;
 #define	AG_EVENT_ASYNC     0x01			/* Service in separate thread */
 #define AG_EVENT_PROPAGATE 0x02			/* Forward to child objs */
 #define AG_EVENT_SAVED_FLAGS (AG_EVENT_ASYNC | \
                               AG_EVENT_PROPAGATE)
+#endif
 	AG_VoidFn fn;				/* Callback function */
 	int argc, argc0;			/* Argument count & offset */
 	AG_Variable argv[AG_EVENT_ARGS_MAX];	/* Argument values */
@@ -329,9 +336,6 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 	}
 
 __BEGIN_DECLS
-int  AG_InitEventSubsystem(Uint);
-void AG_DestroyEventSubsystem(void);
-
 void               AG_EventInit(AG_Event *_Nonnull);
 void               AG_EventGetArgs(AG_Event *_Nonnull, const char *_Nullable,
                                    va_list);
@@ -362,47 +366,41 @@ int  AG_SchedEvent(void *_Nullable, void *_Nonnull, Uint32,
 #endif
 void AG_ForwardEvent(void *_Nullable, void *_Nonnull, AG_Event *_Nonnull);
 
+#ifdef AG_EVENT_LOOP
+
+int  AG_InitEventSubsystem(Uint);
+void AG_DestroyEventSubsystem(void);
+
 AG_EventSource *_Nonnull AG_GetEventSource(void);
 
-#if AG_MODEL != AG_SMALL
-AG_EventSink *_Nullable AG_AddEventPrologue(_Nonnull AG_EventSinkFn,
-                                             const char *_Nullable, ...);
+AG_EventSink *_Nullable AG_AddEventPrologue(_Nonnull AG_EventSinkFn, const char *_Nullable, ...);
+AG_EventSink *_Nullable AG_AddEventEpilogue(_Nonnull AG_EventSinkFn, const char *_Nullable, ...);
+AG_EventSink *_Nullable AG_AddEventSpinner(_Nonnull AG_EventSinkFn, const char *_Nullable, ...);
 void                    AG_DelEventPrologue(AG_EventSink *_Nonnull);
-#endif /* !AG_SMALL */
-
-AG_EventSink *_Nullable AG_AddEventEpilogue(_Nonnull AG_EventSinkFn,
-                                             const char *_Nullable, ...);
 void                    AG_DelEventEpilogue(AG_EventSink *_Nonnull);
-
-AG_EventSink *_Nullable AG_AddEventSpinner(_Nonnull AG_EventSinkFn,
-                                            const char *_Nullable, ...);
 void                    AG_DelEventSpinner(AG_EventSink *_Nonnull);
-
 AG_EventSink *_Nullable AG_AddEventSink(enum ag_event_sink_type, int, Uint,
                                          _Nonnull AG_EventSinkFn,
 					 const char *_Nullable, ...);
 void                    AG_DelEventSink(AG_EventSink *_Nonnull);
-#if AG_MODEL != AG_SMALL
-void                    AG_DelEventSinksByIdent(enum ag_event_sink_type, int,
-                                                Uint);
-#endif
+void                    AG_DelEventSinksByIdent(enum ag_event_sink_type, int, Uint);
 
 int  AG_EventLoop(void);
-
 void AG_Terminate(int);
 void AG_TerminateEv(AG_Event *_Nonnull);
-
-#ifdef AG_TIMERS
+# ifdef AG_TIMERS
 int  AG_AddTimerKQUEUE(struct ag_timer *_Nonnull, Uint32, int);
 void AG_DelTimerKQUEUE(struct ag_timer *_Nonnull);
 int  AG_AddTimerTIMERFD(struct ag_timer *_Nonnull, Uint32, int);
 void AG_DelTimerTIMERFD(struct ag_timer *_Nonnull);
-#endif
+# endif
 int  AG_EventSinkKQUEUE(void);
 int  AG_EventSinkTIMERFD(void);
 int  AG_EventSinkTIMEDSELECT(void);
 int  AG_EventSinkSELECT(void);
 int  AG_EventSinkSPINNER(void);
+
+#endif /* AG_EVENT_LOOP */
 
 #if AG_MODEL != AG_SMALL
 /*

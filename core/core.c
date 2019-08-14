@@ -121,10 +121,13 @@ AG_InitCore(const char *progname, Uint flags)
 #endif
 	/* Initialize AG_Error(3), AG_String(3) and AG_Event(3) interfaces. */
 	if (AG_InitErrorSubsystem() == -1 ||
-	    AG_InitStringSubsystem() == -1 ||
-	    AG_InitEventSubsystem(flags) == -1) {
+	    AG_InitStringSubsystem() == -1) {
 		return (-1);
 	}
+#ifdef AG_EVENT_LOOP
+	if (AG_InitEventSubsystem(flags) == -1)
+		return (-1);
+#endif
 	/* Fetch CPU information. */
 	AG_GetCPUInfo(&agCPU);
 
@@ -286,7 +289,9 @@ AG_Destroy(void)
 	AG_MutexDestroy(&agDSOLock);
 # endif
 #endif
+#ifdef AG_EVENT_LOOP
 	AG_DestroyEventSubsystem();
+#endif
 	AG_DestroyStringSubsystem();
 	AG_DestroyErrorSubsystem();
 

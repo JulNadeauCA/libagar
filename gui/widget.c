@@ -398,9 +398,13 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(wid, "attached", OnAttach, NULL);
 	AG_SetEvent(wid, "detached", OnDetach, NULL);
 	ev = AG_SetEvent(wid, "widget-shown", OnShow, NULL);
+#if AG_MODEL != AG_SMALL
 	ev->flags |= AG_EVENT_PROPAGATE;
+#endif
 	ev = AG_SetEvent(wid, "widget-hidden", OnHide, NULL);
+#if AG_MODEL != AG_SMALL
 	ev->flags |= AG_EVENT_PROPAGATE;
+#endif
 #ifdef AG_TIMERS
 	TAILQ_INIT(&wid->pvt.redrawTies);
 #endif

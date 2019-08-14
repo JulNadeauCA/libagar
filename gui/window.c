@@ -2391,7 +2391,9 @@ AG_WindowProcessDetachQueue(void)
 #ifdef AG_DEBUG_GUI
 			Debug(NULL, "AG_WindowProcessDetachQueue() Exit Normally\n");
 #endif
+#ifdef AG_EVENT_LOOP
 			AG_Terminate(0);
+#endif
 		}
 #ifdef AG_DEBUG_GUI
 		Debug(NULL, "AG_WindowProcessDetachQueue() End (MAIN window remains)\n");
@@ -2941,11 +2943,17 @@ Init(void *_Nonnull obj)
 	 * `detached' events to all attached child widgets.
 	 */
 	ev = AG_SetEvent(win, "widget-shown", OnShow, NULL);
+#if AG_MODEL != AG_SMALL
 	ev->flags |= AG_EVENT_PROPAGATE;
+#endif
 	ev = AG_SetEvent(win, "widget-hidden", OnHide, NULL);
+#if AG_MODEL != AG_SMALL
 	ev->flags |= AG_EVENT_PROPAGATE;
+#endif
 	ev = AG_SetEvent(win, "detached", NULL, NULL);
+#if AG_MODEL != AG_SMALL
 	ev->flags |= AG_EVENT_PROPAGATE;
+#endif
 
 	/* Use custom attach/detach hooks to keep the window stack in order. */
 	AG_SetFn(win, "attach-fn", Attach, NULL);

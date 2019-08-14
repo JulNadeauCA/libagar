@@ -394,12 +394,16 @@ AG_DestroyGUI(void)
 	AG_DestroyGUIGlobals();
 }
 
-/* Break out of the event loop. */
+#ifdef AG_EVENT_LOOP
+/*
+ * Break out of the event loop.
+ */
 void
 AG_QuitGUI(void)
 {
 	AG_Terminate(0);
 }
+#endif
 
 /*
  * Initialize the Agar-GUI library. If spec is non-NULL, select the driver

@@ -66,18 +66,27 @@ AG_ThreadKey agEventSourceKey;
 
 #ifdef HAVE_KQUEUE
 
-# define EVBUFSIZE 2
+/* Size of kqueue input event buffer (in kevents). */
+# ifndef AG_KQ_EVBUFSIZE
+# define AG_KQ_EVBUFSIZE 2
+# endif
+
+/* Initial size of kqueue changes[] array. */
+#ifndef AG_KQ_INIT_MAXCHANGES
+#define AG_KQ_INIT_MAXCHANGES 64
+#endif
 
 typedef struct ag_event_source_kqueue {
 	struct ag_event_source _inherit;  /* EventSource -> EventSourceKQUEUE */
 	struct kevent *_Nullable changes; /* Queued changes */
 	Uint                    nChanges;
 	Uint                  maxChanges;
-	struct kevent events[EVBUFSIZE];  /* Input event buffer */
-	int fd;                           /* kqueue() fd */
+	struct kevent events[AG_KQ_EVBUFSIZE];  /* Input event buffer */
+	int fd;                                 /* kqueue() fd */
 	Uint32 _pad;
 } AG_EventSourceKQUEUE;
 
+static int GrowKqChangelist(AG_EventSourceKQUEUE *_Nonnull, Uint);
 #endif /* HAVE_KQUEUE */
 
 /* #define DEBUG_TIMERS */
@@ -131,7 +140,9 @@ InitEvent(AG_Event *_Nonnull ev, AG_Object *_Nullable ob)
 #else
 	ev->name[0] = '\0';
 #endif
+#if AG_MODEL != AG_SMALL
 	ev->flags = 0;
+#endif
 	ev->fn = NULL;
 	ev->argc = 1;
 	ev->argc0 = 1;
@@ -215,7 +226,9 @@ AG_EventCopy(AG_Event *dst, const AG_Event *src)
 	int i;
 
 	memcpy(dst->name, src->name, sizeof(dst->name));
+#if AG_MODEL != AG_SMALL
 	dst->flags = src->flags & AG_EVENT_SAVED_FLAGS;
+#endif
 	dst->fn = src->fn;
 	dst->argc = src->argc;
 	dst->argc0 = src->argc0;
@@ -295,9 +308,10 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 			if (strcmp(evOther->name, name) == 0)
 				break;
 		}
-		if (evOther != NULL) {
+#if AG_MODEL != AG_SMALL
+		if (evOther != NULL)
 			ev->flags = evOther->flags;
-		}
+#endif
 		Strlcpy(ev->name, name, sizeof(ev->name));
 	} else {
 		ev->name[0] = '\0';
@@ -394,20 +408,21 @@ EventTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	InitPointerArg(&ev->argv[ev->argc], obSender);
 	InitDebugName (&ev->argv[ev->argc], "sender");
 
+# if AG_MODEL != AG_SMALL
 	/* Propagate event to children. */
 	if (ev->flags & AG_EVENT_PROPAGATE) {
 		AG_Object *child;
-# ifdef AG_DEBUG_CORE
+#  ifdef AG_DEBUG_CORE
 		if (agDebugLvl >= 2)
 			Debug(ob, "Propagate <%s> (timeout)\n", ev->name);
-# endif
+#  endif
 		AG_LockVFS(ob);
 		OBJECT_FOREACH_CHILD(child, ob, ag_object) {
 			PropagateEvent(ob, child, ev);
 		}
 		AG_UnlockVFS(ob);
 	}
-
+#endif
 	/* Invoke the event handler routine. */
 	if (ev->fn != NULL) {
 		ev->fn(ev);
@@ -425,6 +440,7 @@ EventThread(void *_Nonnull p)
 	AG_Object *rcvr = eev->argv[0].data.p;
 	AG_Object *chld;
 
+# if AG_MODEL != AG_SMALL
 	if (eev->flags & AG_EVENT_PROPAGATE) {
 		AG_LockVFS(rcvr);
 		OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
@@ -432,17 +448,18 @@ EventThread(void *_Nonnull p)
 		}
 		AG_UnlockVFS(rcvr);
 	}
-#ifdef AG_DEBUG_CORE
+# endif
+# ifdef AG_DEBUG_CORE
 	if (agDebugLvl >= 2)
 		Debug(rcvr, "BEGIN event thread for <%s>\n", eev->name);
-#endif
+# endif
 	if (eev->fn != NULL) {
 		eev->fn(eev);
 	}
-#ifdef AG_DEBUG_CORE
+# ifdef AG_DEBUG_CORE
 	if (agDebugLvl >= 2)
 		Debug(rcvr, "CLOSE event thread for <%s>\n", eev->name);
-#endif
+# endif
 	free(eev);
 	return (NULL);
 }
@@ -502,14 +519,6 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			}
 			InitPointerArg(&evTmp->argv[evTmp->argc], sndr);
 			InitDebugName( &evTmp->argv[evTmp->argc], "sender");
-
-			if (evTmp->flags & AG_EVENT_PROPAGATE) {
-				AG_LockVFS(rcvr);
-				OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
-					PropagateEvent(rcvr, chld, evTmp);
-				}
-				AG_UnlockVFS(rcvr);
-			}
 			if (evTmp->fn != NULL) {
 				evTmp->fn(evTmp);
 			}
@@ -589,13 +598,6 @@ AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
 		}
 		InitPointerArg(&evTmp->argv[evTmp->argc], sndr);
 		InitDebugName (&evTmp->argv[evTmp->argc], "sender");
-		if (evTmp->flags & AG_EVENT_PROPAGATE) {
-			AG_LockVFS(rcvr);
-			OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
-				PropagateEvent(rcvr, chld, evTmp);
-			}
-			AG_UnlockVFS(rcvr);
-		}
 		if (evTmp->fn != NULL) {
 			evTmp->fn(evTmp);
 		}
@@ -720,18 +722,6 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 			InitDebugName (&evTmp->argv[0], "self");
 			InitPointerArg(&evTmp->argv[evTmp->argc], sndr);
 			InitDebugName (&evTmp->argv[evTmp->argc], "sender");
-
-			if (ev->flags & AG_EVENT_PROPAGATE) {
-# ifdef AG_DEBUG_CORE
-				if (agDebugLvl >= 2) { Debug(rcvr, "Propagate <%s> (forward)\n", event->name); }
-# endif
-				AG_LockVFS(rcvr);
-				OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
-					PropagateEvent(rcvr, chld, ev);
-				}
-				AG_UnlockVFS(rcvr);
-			}
-			/* XXX AG_EVENT_ASYNC.. */
 			if (ev->fn != NULL) {
 				ev->fn(evTmp);
 			}
@@ -749,7 +739,9 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 
 			if (ev->flags & AG_EVENT_PROPAGATE) {
 # ifdef AG_DEBUG_CORE
-				if (agDebugLvl >= 2) { Debug(rcvr, "Propagate <%s> (forward)\n", event->name); }
+				if (agDebugLvl >= 2)
+					Debug(rcvr, "Propagate <%s> (forward)\n",
+					    event->name);
 # endif
 				AG_LockVFS(rcvr);
 				OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
@@ -766,44 +758,28 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 	AG_ObjectUnlock(rcvr);
 }
 
-#ifdef HAVE_KQUEUE
-static __inline__ int
-GrowKqChangelist(AG_EventSourceKQUEUE *_Nonnull kq, Uint n)
-{
-	struct kevent *changesNew;
-
-	if (n <= kq->maxChanges) {
-		return (0);
-	}
-	if ((changesNew = TryRealloc(kq->changes, n*sizeof(struct kevent)))
-	    == NULL) {
-		return (-1);
-	}
-	kq->changes = changesNew;
-	kq->maxChanges = n;
-	return (0);
-}
-#endif /* HAVE_KQUEUE */
-
-/* Create a new event source. */
+#ifdef AG_EVENT_LOOP
+/*
+ * Create a new event source.
+ */
 static AG_EventSource *_Nullable
 CreateEventSource(void)
 {
-#ifdef HAVE_KQUEUE
+# ifdef HAVE_KQUEUE
 	AG_EventSourceKQUEUE *kq = TryMalloc(sizeof(AG_EventSourceKQUEUE));
 	AG_EventSource *src = (AG_EventSource *)kq;
-#else
+# else
 	AG_EventSource *src = TryMalloc(sizeof(AG_EventSource));
-#endif
+# endif
 	if (src == NULL) {
 		return (NULL);
 	}
 	src->flags = 0;
 	src->breakReq = 0;
-#ifdef AG_TIMERS
+# ifdef AG_TIMERS
 	src->addTimerFn = NULL;
 	src->delTimerFn = NULL;
-#endif
+# endif
 	TAILQ_INIT(&src->prologues);
 	TAILQ_INIT(&src->epilogues);
 	TAILQ_INIT(&src->spinners);
@@ -811,7 +787,7 @@ CreateEventSource(void)
 	src->returnCode = 0;
 	memset(src->caps, 0, sizeof(src->caps));
 
-#if defined(HAVE_KQUEUE)
+# if defined(HAVE_KQUEUE)
 	if ((kq->fd = kqueue()) == -1) {
 		AG_SetError("kqueue: %s", AG_Strerror(errno));
 		return (NULL);
@@ -819,50 +795,53 @@ CreateEventSource(void)
 	kq->changes = NULL;
 	kq->nChanges = 0;
 	kq->maxChanges = 0;
-	memset(kq->events, 0, EVBUFSIZE*sizeof(struct kevent));
+	memset(kq->events, 0, AG_KQ_EVBUFSIZE*sizeof(struct kevent));
 	src->sinkFn = AG_EventSinkKQUEUE;
-#ifdef AG_TIMERS
+#  ifdef AG_TIMERS
 	src->addTimerFn = AG_AddTimerKQUEUE;
 	src->delTimerFn = AG_DelTimerKQUEUE;
-#endif
+#  endif
 	src->caps[AG_SINK_TIMER] = 1;		/* Provides timers internally */
 	src->caps[AG_SINK_READ] = 1;
 	src->caps[AG_SINK_WRITE] = 1;
 	src->caps[AG_SINK_FSEVENT] = 1;
 	src->caps[AG_SINK_PROCEVENT] = 1;
-	GrowKqChangelist(kq, 64);		/* Preallocate */
-#elif defined(HAVE_TIMERFD)
+	if (GrowKqChangelist(kq, AG_KQ_INIT_MAXCHANGES) == -1) {
+		AG_FatalError("GrowKqChangelist");
+	}
+# elif defined(HAVE_TIMERFD)
 	src->sinkFn = AG_EventSinkTIMERFD;
-# ifdef AG_TIMERS
+#  ifdef AG_TIMERS
 	src->addTimerFn = AG_AddTimerTIMERFD;
 	src->delTimerFn = AG_DelTimerTIMERFD;
-# endif
+#  endif
 	src->caps[AG_SINK_TIMER] = 1;		/* Provides timers internally */
 	src->caps[AG_SINK_READ] = 1;
 	src->caps[AG_SINK_WRITE] = 1;
-#elif defined(HAVE_SELECT) && !defined(AG_THREADS)
+# elif defined(HAVE_SELECT) && !defined(AG_THREADS)
 	src->sinkFn = AG_EventSinkTIMEDSELECT;
 	src->caps[AG_SINK_READ] = 1;
 	src->caps[AG_SINK_WRITE] = 1;
-#elif defined(HAVE_SELECT) && defined(AG_THREADS)
+# elif defined(HAVE_SELECT) && defined(AG_THREADS)
 	src->sinkFn = AG_EventSinkSELECT;
 	src->caps[AG_SINK_READ] = 1;
 	src->caps[AG_SINK_WRITE] = 1;
-#else
+# else
 	src->sinkFn = AG_EventSinkSPINNER;
-#endif
-#ifdef AG_TIMERS
+# endif
+# ifdef AG_TIMERS
 	if (agSoftTimers) {			/* Force soft timers */
 		src->addTimerFn = NULL;
 		src->delTimerFn = NULL;
 		src->caps[AG_SINK_TIMER] = 0;
 	}
-#else
+# else
 	src->caps[AG_SINK_TIMER] = 0;
-#endif
+# endif
 	return (src);
 }
 
+/* Free all resources allocated by an event source. */
 static void
 DestroyEventSource(void *_Nullable pEventSource)
 {
@@ -872,7 +851,7 @@ DestroyEventSource(void *_Nullable pEventSource)
 	if (agEventSource == NULL)
 		return;
 
-#ifdef HAVE_KQUEUE
+# ifdef HAVE_KQUEUE
 	{
 		AG_EventSourceKQUEUE *kq = pEventSource;
 
@@ -881,7 +860,7 @@ DestroyEventSource(void *_Nullable pEventSource)
 		}
 		Free(kq->changes);
 	}
-#endif
+# endif
 	for (es = TAILQ_FIRST(&src->prologues);
 	     es != TAILQ_END(&src->prologues);
 	     es = esNext) {
@@ -909,29 +888,6 @@ DestroyEventSource(void *_Nullable pEventSource)
 	free(src);
 }
 
-/* Return the calling thread's effective event source. */
-AG_EventSource *
-AG_GetEventSource(void)
-{
-	AG_EventSource *src;
-
-#ifdef AG_THREADS
-	if ((src = AG_ThreadKeyGet(agEventSourceKey)) != NULL && src != NULL)
-		return (src);
-#else
-	if (agEventSource != NULL)
-		return (agEventSource);
-#endif
-	if ((src = CreateEventSource()) == NULL)
-		AG_FatalError(NULL);
-#ifdef AG_THREADS
-	AG_ThreadKeySet(agEventSourceKey, src);
-#else
-	agEventSource = src;
-#endif
-	return (src);
-}
-
 int
 AG_InitEventSubsystem(Uint flags)
 {
@@ -956,7 +912,30 @@ AG_DestroyEventSubsystem(void)
 	}
 }
 
-#ifdef HAVE_KQUEUE
+/* Return the calling thread's effective event source. */
+AG_EventSource *
+AG_GetEventSource(void)
+{
+	AG_EventSource *src;
+
+# ifdef AG_THREADS
+	if ((src = AG_ThreadKeyGet(agEventSourceKey)) != NULL && src != NULL)
+		return (src);
+# else
+	if (agEventSource != NULL)
+		return (agEventSource);
+# endif
+	if ((src = CreateEventSource()) == NULL)
+		AG_FatalError(NULL);
+# ifdef AG_THREADS
+	AG_ThreadKeySet(agEventSourceKey, src);
+# else
+	agEventSource = src;
+# endif
+	return (src);
+}
+
+# ifdef HAVE_KQUEUE
 /*
  * Routines for translating between AG_EventSink and kqueue types.
  */
@@ -1004,9 +983,8 @@ GetSinkFlags(Uint fflags)
 	if (fflags & NOTE_EXEC) { fflags |= AG_PROCEVENT_EXEC; }
 	return (flags);
 }
-#endif /* HAVE_KQUEUE */
+# endif /* HAVE_KQUEUE */
 
-#if AG_MODEL != AG_SMALL
 /*
  * Add/remove an event processing prologue. The function will be invoked
  * only once at the beginning of AG_EventLoop().
@@ -1045,7 +1023,6 @@ AG_DelEventPrologue(AG_EventSink *es)
 	TAILQ_REMOVE(&src->prologues, es, sinks);
 	free(es);
 }
-#endif /* !AG_SMALL */
 
 /*
  * Add/remove an event sink epilogue. The function will be invoked
@@ -1078,10 +1055,10 @@ AG_DelEventEpilogue(AG_EventSink *es)
 {
 	AG_EventSource *src = AG_GetEventSource();
 
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	if (es->type != AG_SINK_EPILOGUE)
 		AG_FatalError("AG_DelEventEpilogue");
-#endif
+# endif
 	TAILQ_REMOVE(&src->epilogues, es, sinks);
 	free(es);
 }
@@ -1118,10 +1095,10 @@ AG_DelEventSpinner(AG_EventSink *es)
 {
 	AG_EventSource *src = AG_GetEventSource();
 
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	if (es->type != AG_SINK_SPINNER)
 		AG_FatalError("AG_DelEventSpinner");
-#endif
+# endif
 	TAILQ_REMOVE(&src->spinners, es, sinks);
 	free(es);
 }
@@ -1136,10 +1113,10 @@ AG_AddEventSink(enum ag_event_sink_type type, int ident, Uint flags,
 {
 	AG_EventSource *src = AG_GetEventSource();
 	AG_EventSink *es;
-#ifdef HAVE_KQUEUE
+# ifdef HAVE_KQUEUE
 	AG_EventSourceKQUEUE *kq = (AG_EventSourceKQUEUE *)src;
 	struct kevent *kev;
-#endif
+# endif
 	va_list ap;
 
 	if (type >= AG_SINK_LAST || !src->caps[type]) {
@@ -1153,8 +1130,9 @@ AG_AddEventSink(enum ag_event_sink_type type, int ident, Uint flags,
 	es->ident = ident;
 	es->flags = flags;
 
-#ifdef HAVE_KQUEUE
-	if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
+# ifdef HAVE_KQUEUE
+	if (kq->nChanges+1 > kq->maxChanges &&
+	    GrowKqChangelist(kq, kq->nChanges+1) == -1) {
 		free(es);
 		return (NULL);
 	}
@@ -1178,7 +1156,7 @@ AG_AddEventSink(enum ag_event_sink_type type, int ident, Uint flags,
 		kq->nChanges--;
 		break;
 	}
-#endif /* HAVE_KQUEUE */
+# endif /* HAVE_KQUEUE */
 
 	es->fn = fn;
 	InitEvent(&es->fnArgs, NULL);
@@ -1191,15 +1169,31 @@ AG_AddEventSink(enum ag_event_sink_type type, int ident, Uint flags,
 	TAILQ_INSERT_TAIL(&src->sinks, es, sinks);
 	return (es);
 }
+
+static int
+GrowKqChangelist(AG_EventSourceKQUEUE *_Nonnull kq, Uint n)
+{
+	struct kevent *changesNew;
+
+	if ((changesNew = TryRealloc(kq->changes, n*sizeof(struct kevent)))
+	    == NULL) {
+		return (-1);
+	}
+	kq->changes = changesNew;
+	kq->maxChanges = n;
+	return (0);
+}
+
 void
 AG_DelEventSink(AG_EventSink *es)
 {
 	AG_EventSource *src = AG_GetEventSource();
-#ifdef HAVE_KQUEUE
+# ifdef HAVE_KQUEUE
 	AG_EventSourceKQUEUE *kq = (AG_EventSourceKQUEUE *)src;
 	struct kevent *kev;
 
-	if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
+	if (kq->nChanges+1 > kq->maxChanges &&
+	    GrowKqChangelist(kq, kq->nChanges+1) == -1) {
 		AG_FatalError(NULL);
 	}
 	kev = &kq->changes[kq->nChanges++];
@@ -1223,13 +1217,12 @@ AG_DelEventSink(AG_EventSink *es)
 		kq->nChanges--;
 		break;
 	}
-#endif /* HAVE_KQUEUE */
+# endif /* HAVE_KQUEUE */
 
 	TAILQ_REMOVE(&src->sinks, es, sinks);
 	free(es);
 }
 
-#if AG_MODEL != AG_SMALL
 void
 AG_DelEventSinksByIdent(enum ag_event_sink_type type, int ident, Uint flags)
 {
@@ -1244,9 +1237,8 @@ AG_DelEventSinksByIdent(enum ag_event_sink_type type, int ident, Uint flags)
 			AG_DelEventSink(es);
 	}
 }
-#endif /* !AG_SMALL */
 
-#ifdef HAVE_KQUEUE
+# ifdef HAVE_KQUEUE
 /*
  * Standard event sink using kqueue(2), commonly found on modern BSD
  * derived operating systems. 
@@ -1266,7 +1258,7 @@ restart:
 	} else {
 		pTimeo = NULL;
 	}
-# ifdef DEBUG_TIMERS
+#  ifdef DEBUG_TIMERS
 	for (i = 0; i < kq->nChanges; i++) {
 		struct kevent *chg = &kq->changes[i];
 		Verbose("changes[%d]: f=%d i=%u f=0x%x ff=0x%x u=%p\n",
@@ -1274,9 +1266,9 @@ restart:
 		    (Uint)chg->ident, chg->flags, chg->fflags,
 		    chg->udata);
 	}
-# endif
-	rv = kevent(kq->fd, kq->changes, kq->nChanges, kq->events, EVBUFSIZE,
-	    pTimeo);
+#  endif
+	rv = kevent(kq->fd, kq->changes, kq->nChanges, kq->events,
+	            AG_KQ_EVBUFSIZE, pTimeo);
 	if (rv < 0) {
 		if (errno == EINTR) {
 			goto restart;
@@ -1286,7 +1278,7 @@ restart:
 	}
 	kq->nChanges = 0;
 
-# ifdef AG_TIMERS
+#  ifdef AG_TIMERS
 	/* 1. Process timer expirations. */
 	AG_LockTiming();
 	for (i = 0; i < rv; i++) {
@@ -1308,22 +1300,23 @@ restart:
 		rvt = to->fn(to, &to->fnEvent);
 		if (rvt > 0) {				/* Restart timer */
 			struct kevent *kev;
-# ifdef DEBUG_TIMERS
+#  ifdef DEBUG_TIMERS
 			Verbose("TIMER[%d] resetting t=+%u\n", to->id,
 			    (Uint)rvt);
-# endif
-			if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
+#  endif
+			if (kq->nChanges+1 > kq->maxChanges &&
+			    GrowKqChangelist(kq, kq->nChanges+1) == -1) {
 				AG_UnlockTiming();
 				return (-1);
 			}
 			kev = &kq->changes[kq->nChanges++];
 			AG_EV_SET(kev, to->id, EVFILT_TIMER,
-			    EV_ADD|EV_ENABLE|EV_ONESHOT, 0, (int)rvt, to);
+			    EV_ADD | EV_ENABLE | EV_ONESHOT, 0, (int)rvt, to);
 			to->ival = rvt;
 		} else {				/* Expire */
-# ifdef DEBUG_TIMERS
+#  ifdef DEBUG_TIMERS
 			Verbose("TIMER[%d] expired\n", to->id);
-# endif
+#  endif
 			if ((ob = to->obj) == NULL) {
 				continue;
 			}
@@ -1342,7 +1335,7 @@ restart:
 		}
 	}
 	AG_UnlockTiming();
-# endif /* AG_TIMERS */
+#  endif /* AG_TIMERS */
 
 	/* 2. Process I/O and other events. */
 	for (i = 0; i < rv; i++) {
@@ -1369,7 +1362,7 @@ restart:
 	return (0);
 }
 
-# ifdef AG_TIMERS
+#  ifdef AG_TIMERS
 /*
  * Add/remove a kqueue(2) based timer.
  */
@@ -1385,10 +1378,10 @@ GenerateTimerID(AG_Timer *_Nonnull to)
 	int id;
 
 gen_id:
-#  ifdef AG_DEBUG
+#   ifdef AG_DEBUG
 	if (agTimerCount+1 >= (AG_INT_MAX-1))
 		AG_FatalError("agTimerCount");
-#  endif
+#   endif
 	id = (int)++agTimerCount;			/* XXX */
 	TAILQ_FOREACH(obOther, &agTimerObjQ, pvt.tobjs) {
 		TAILQ_FOREACH(toOther, &obOther->timers, pvt.timers) {
@@ -1413,15 +1406,16 @@ AG_AddTimerKQUEUE(AG_Timer *to, Uint32 ival, int newTimer)
 	}
 	if (newTimer || to->ival != ival) {
 		struct kevent *kev;
-#  ifdef DEBUG_TIMERS
+#   ifdef DEBUG_TIMERS
 		Verbose("kevent: creating timer ID=%d ival=%d\n", to->id, (int)ival);
-#  endif
-		if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
+#   endif
+		if (kq->nChanges+1 > kq->maxChanges &&
+		    GrowKqChangelist(kq, kq->nChanges+1) == -1) {
 			return (-1);
 		}
 		kev = &kq->changes[kq->nChanges++];
 		AG_EV_SET(kev, to->id, EVFILT_TIMER,
-		    EV_ADD|EV_ENABLE|EV_ONESHOT, 0, (int)ival, to);
+		    EV_ADD | EV_ENABLE | EV_ONESHOT, 0, (int)ival, to);
 		to->ival = ival;
 	}
 	return (0);
@@ -1434,18 +1428,18 @@ AG_DelTimerKQUEUE(AG_Timer *to)
 	AG_EventSourceKQUEUE *kq = (AG_EventSourceKQUEUE *)agEventSource;
 	struct kevent *kev;
 
-	if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
+	if (kq->nChanges+1 > kq->maxChanges &&
+	    GrowKqChangelist(kq, kq->nChanges+1) == -1) {
 		AG_FatalError(NULL);
 	}
 	kev = &kq->changes[kq->nChanges++];
-	AG_EV_SET(kev, to->id, EVFILT_TIMER, EV_DELETE,
-	    0, 0, NULL);
+	AG_EV_SET(kev, to->id, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
 	agTimerCount--;
 }
-# endif /* AG_TIMERS */
-#endif /* HAVE_KQUEUE */
+#  endif /* AG_TIMERS */
+# endif /* HAVE_KQUEUE */
 
-#ifdef HAVE_TIMERFD
+# ifdef HAVE_TIMERFD
 /*
  * Standard event sink using select(2) and fd-based timers,
  * usually available on Linux.
@@ -1476,14 +1470,14 @@ restart:
 			break;
 		}
 	}
-# ifdef AG_TIMERS
+#  ifdef AG_TIMERS
 	TAILQ_FOREACH(ob, &agTimerObjQ, pvt.tobjs) {
 		TAILQ_FOREACH(to, &ob->timers, pvt.timers) {
 			FD_SET(to->id, &rdFds);
 			if (to->id > nFds) { nFds = to->id; }
 		}
 	}
-# endif
+#  endif
 	if (!TAILQ_EMPTY(&agEventSource->spinners)) {
 		timeo.tv_sec = 0;
 		timeo.tv_usec = 0;
@@ -1500,7 +1494,7 @@ restart:
 		return (-1);
 	}
 
-# ifdef AG_TIMERS
+#  ifdef AG_TIMERS
 	/* 1. Process timer expirations. */
 	AG_LockTiming();
 	for (ob = TAILQ_FIRST(&agTimerObjQ);
@@ -1537,7 +1531,7 @@ restart:
 		AG_ObjectUnlock(ob);
 	}
 	AG_UnlockTiming();
-# endif /* AG_TIMERS */
+#  endif /* AG_TIMERS */
 	
 	/* 2. Process I/O events. */
 	TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
@@ -1558,7 +1552,7 @@ restart:
 	return (0);
 }
 
-# ifdef AG_TIMERS
+#  ifdef AG_TIMERS
 /*
  * Add/remove a fd-based timer.
  */
@@ -1589,16 +1583,16 @@ AG_AddTimerTIMERFD(AG_Timer *to, Uint32 ival, int newTimer)
 void
 AG_DelTimerTIMERFD(AG_Timer *to)
 {
-# ifdef AG_DEBUG
+#  ifdef AG_DEBUG
 	if (to->id == -1)
 		AG_FatalError("timerfd inconsistency");
-# endif
+#  endif
 	close(to->id);
 }
-# endif /* AG_TIMERS */
-#endif /* HAVE_TIMERFD */
+#  endif /* AG_TIMERS */
+# endif /* HAVE_TIMERFD */
 
-#if defined(HAVE_SELECT) && !defined(AG_THREADS)
+# if defined(HAVE_SELECT) && !defined(AG_THREADS)
 /*
  * Standard event sink using select(2) with timers implemented using the
  * select() timeout. Only available in single-threaded builds, since timers
@@ -1611,12 +1605,12 @@ AG_EventSinkTIMEDSELECT(void)
 	fd_set rdFds, wrFds;
 	int i, nFds, rv;
 	AG_EventSink *es;
-# ifdef AG_TIMERS
+#  ifdef AG_TIMERS
 	AG_Object *ob, *obNext;
 	AG_Timer *to, *toNext;
 	struct timeval timeo, *pTimeo;
 	Uint32 t, tSoonest;
-# endif
+#  endif
 
 restart:
 	nFds = 0;
@@ -1634,7 +1628,7 @@ restart:
 			break;
 		}
 	}
-# ifdef AG_TIMERS
+#  ifdef AG_TIMERS
 	if (!TAILQ_EMPTY(&agEventSource->spinners)) {
 		timeo.tv_sec = 0;
 		timeo.tv_usec = 0;
@@ -1652,10 +1646,10 @@ restart:
 		timeo.tv_usec = (tSoonest % 1000)*1000;
 		AG_UnlockTiming();
 	}
-# else /* !AG_TIMERS */
+#  else /* !AG_TIMERS */
 	timeo.tv_sec = 0;
 	timeo.tv_usec = 0;
-# endif /* AG_TIMERS */
+#  endif /* AG_TIMERS */
 	rv = select(nFds+1, &rdFds, &wrFds, NULL, &timeo);
 	if (rv == -1) {
 		if (errno == EINTR) {
@@ -1664,11 +1658,11 @@ restart:
 		AG_SetError("select: %s", AG_Strerror(errno));
 		return (-1);
 	}
-# ifdef AG_TIMERS
+#  ifdef AG_TIMERS
 	AG_LockTiming();
 	/* 1. Process timer expirations. */
 	AG_ProcessTimeouts(t);
-# endif
+#  endif
 	if (rv > 0) {
 		/* 2. Process I/O events */
 		TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
@@ -1686,14 +1680,14 @@ restart:
 			}
 		}
 	}
-# ifdef AG_TIMERS
+#  ifdef AG_TIMERS
 	AG_UnlockTiming();
-# endif
+#  endif
 	return (0);
 }
-#endif /* HAVE_SELECT and !AG_THREADS */
+# endif /* HAVE_SELECT and !AG_THREADS */
 
-#if defined(HAVE_SELECT) && defined(AG_THREADS)
+# if defined(HAVE_SELECT) && defined(AG_THREADS)
 /*
  * Standard event sink using non-blocking select(2) with timers implemented
  * with a delay loop. This is inefficient, but on some platforms, it is the
@@ -1737,11 +1731,11 @@ restart:
 		AG_SetError("select: %s", AG_Strerror(errno));
 		return (-1);
 	}
-# ifdef AG_TIMERS
+#  ifdef AG_TIMERS
 	AG_LockTiming();
 	/* 1. Process timer expirations. */
 	AG_ProcessTimeouts(AG_GetTicks());
-# endif
+#  endif
 	if (rv > 0) {
 		/* 2. Process I/O events. */
 		TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
@@ -1761,15 +1755,15 @@ restart:
 			}
 		}
 	}
-# ifdef AG_TIMERS
+#  ifdef AG_TIMERS
 	AG_UnlockTiming();
-# endif
+#  endif
 	if (TAILQ_EMPTY(&agEventSource->spinners)) {
 		AG_Delay(1);
 	}
 	return (0);
 }
-#endif /* HAVE_SELECT and AG_THREADS */
+# endif /* HAVE_SELECT and AG_THREADS */
 
 /*
  * Fallback "spinning" event sink using a delay loop. This is inefficient,
@@ -1778,9 +1772,9 @@ restart:
 int
 AG_EventSinkSPINNER(void)
 {
-#ifdef AG_TIMERS
+# ifdef AG_TIMERS
 	AG_ProcessTimeouts(AG_GetTicks());
-#endif
+# endif
 	AG_Delay(1);
 	return (0);
 }
@@ -1840,3 +1834,4 @@ AG_TerminateEv(AG_Event *ev)
 	}
 	src->breakReq = 1;
 }
+#endif /* AG_EVENT_LOOP */

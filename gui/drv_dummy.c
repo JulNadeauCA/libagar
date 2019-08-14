@@ -37,9 +37,11 @@
 #include <agar/gui/cursors.h>
 #include <agar/gui/opengl.h>
 
+#ifdef AG_EVENT_LOOP
 AG_EventSink *_Nullable dummyEventSink = NULL;
 AG_EventSink *_Nullable dummyEventSpinner = NULL;
 AG_EventSink *_Nullable dummyEventEpilogue = NULL;
+#endif
 
 static int nDrivers = 0;		/* Number of drivers open */
 
@@ -99,10 +101,11 @@ DUMMY_DestroyGlobals(void)
 {
 	if (nDrivers > 0)
 		return;
-
+#ifdef AG_EVENT_LOOP
 	AG_DelEventSink(dummyEventSink);         dummyEventSink = NULL;
 	AG_DelEventSpinner(dummyEventSpinner);   dummyEventSpinner = NULL;
 	AG_DelEventEpilogue(dummyEventEpilogue); dummyEventEpilogue = NULL;
+#endif
 }
 
 static int
@@ -984,13 +987,14 @@ DUMMY_TweakAlignment(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a,
 	    wMax, hMax);
 }
 
+#ifdef AG_EVENT_LOOP
 /*
  * Standard AG_EventLoop() event sink.
  */
 static int
 DUMMY_EventSink(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 {
-#if 0
+# if 0
 	AG_DriverEvent dev;
 	/*
 	 * Check for events. If there are pending events, process them.
@@ -999,10 +1003,10 @@ DUMMY_EventSink(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 		if (DUMMY_GetNextEvent(NULL, &dev) == 1)
 			DUMMY_ProcessEvent(NULL, &dev);
 	}
-#else
+# else
 	/* Just spin */
 	AG_Delay(1);
-#endif
+# endif
 	return (1);
 }
 
@@ -1020,6 +1024,7 @@ DUMMY_EventEpilogue(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 
 	return (0);
 }
+#endif /* AG_EVENT_LOOP */
 
 static int
 DUMMY_InitGlobals(void)
@@ -1035,8 +1040,8 @@ DUMMY_InitGlobals(void)
 	 * Initialize any other global resource shared between driver
 	 * instances (tables, maps, locking devices...)
 	 */
-
-#if 0
+#ifdef AG_EVENT_LOOP
+# if 0
 	/* Set up polling on a file descriptor. */
 	{
 		int fd = open(...);
@@ -1045,22 +1050,23 @@ DUMMY_InitGlobals(void)
 		    DUMMY_EventSink, NULL)) == NULL)
 			goto fail;
 	}
-#else
+# else
 	/* Just spin */
 	if ((dummyEventSpinner = AG_AddEventSpinner(DUMMY_EventSink, NULL))
 	    == NULL)
 		goto fail;
-#endif
-
+# endif
 	/* Set up an event-processing finalization routine */
 	if ((dummyEventEpilogue = AG_AddEventEpilogue(DUMMY_EventEpilogue, NULL)) == NULL)
 		goto fail;
-
+#endif
 	return (0);
 fail:
+#ifdef AG_EVENT_LOOP
 	if (dummyEventSink)     { AG_DelEventSink(dummyEventSink);         dummyEventSink = NULL; }
 	if (dummyEventSpinner)  { AG_DelEventSpinner(dummyEventSpinner);   dummyEventSpinner = NULL; }
 	if (dummyEventEpilogue) { AG_DelEventEpilogue(dummyEventEpilogue); dummyEventEpilogue = NULL; }
+#endif
 	return (-1);
 }
 

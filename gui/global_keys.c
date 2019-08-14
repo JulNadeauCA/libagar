@@ -92,9 +92,10 @@ AG_BindStdGlobalKeys(void)
 	AG_BindGlobalKey(AG_KEY_PLUS,   mod|AG_KEYMOD_SHIFT,	AG_ZoomIn);
 	AG_BindGlobalKey(AG_KEY_MINUS,	mod,			AG_ZoomOut);
 	AG_BindGlobalKey(AG_KEY_0,      mod,			AG_ZoomReset);
-
+#ifdef AG_EVENT_LOOP
 	/* Terminate the application immediately. */
 	AG_BindGlobalKey(AG_KEY_Q,      mod,			AG_QuitGUI);
+#endif
 
 	/*
 	 * Close the active window and gracefully terminate the application
