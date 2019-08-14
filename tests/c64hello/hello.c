@@ -33,6 +33,8 @@
 /*
  * Register an example Agar object class.
  */
+
+/* Handler for `hello' event. */
 static void
 MyClass_SayHello(AG_Event *event)
 {
@@ -41,26 +43,40 @@ MyClass_SayHello(AG_Event *event)
 
 	AG_Debug(obj, "Hello, %s!\n", thing);
 }
+
+/* Handler for `find-primes' event (really a method). */
+static void
+MyClass_FindPrimes(AG_Event *event)
+{
+	const Uint8 nPrimes = AG_INT(1);
+	Uint8 n, i, nFound=0, cc=2;
+
+	for (n=0; nFound < nPrimes; n++) {
+		int flag = 0;
+
+		for (i = 2; i <= (n >> 1); ++i) {
+			if ((n % i) == 0) {
+				flag = 1;
+				break;
+			}
+		}
+		if (n != 1) {
+			if (!flag) {
+				textcolor(cc);
+				if (++cc > 8) { cc = 2; }
+				cprintf("%d ", n);
+				nFound++;
+			}
+		}
+	}
+}
 static void
 MyClass_Init(void *pObj)
 {
 	AG_Object *obj = pObj;
-	int mag;
 
-	AG_SetInt(obj, "magic", 30000);
-	if ((mag = AG_GetInt(obj,"magic")) == 30000) {
-		AG_Verbose("Variables OK! (magic=%d)", mag);
-	} else {
-		AG_Verbose("Variables don't work (%d!=30000)", mag);
-	}
-	AG_SetEvent(obj, "greet", MyClass_SayHello, NULL);
-}
-static void
-MyClass_Destroy(void *pObj)
-{
-	AG_Object *obj = pObj;
-
-	AG_Verbose("Instance of MyClass finalizing");
+//	AG_SetEvent(obj, "hello", MyClass_SayHello, NULL);
+	AG_SetEvent(obj, "find-primes", MyClass_FindPrimes, NULL);
 }
 static AG_ObjectClass myClass = {
 	"My_Class",
@@ -68,7 +84,7 @@ static AG_ObjectClass myClass = {
 	{ 1,0 },
 	MyClass_Init,
 	NULL,			/* reset */
-	MyClass_Destroy,
+	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
 	NULL			/* edit */
@@ -87,7 +103,6 @@ main(void)
 	clrscr();
 
 	_heapadd((void *)0x0803, 0x17fd);
-/*	_heapadd((void *)0x0400, 0x0400); */
 
 	if (AG_InitCore(NULL, AG_VERBOSE) == -1) {
 		return EXIT_FAILURE;
@@ -103,9 +118,26 @@ main(void)
 	}
 	AG_Verbose("%s lives at %p", myObj->name, myObj);
 
-	/* Test event delivery. */
-	AG_PostEvent(NULL, myObj, "greet", "%s", "world");
-
+	while (1) {
+		int c;
+		AG_Verbose("Find [P]rimes or [Q]uit?");
+		switch ((c = cgetc())) {
+#if 0
+		case 'h':
+			AG_PostEvent(NULL, myObj, "hello", "%s", "world");
+			break;
+#endif
+		case 'p':
+			AG_PostEvent(NULL, myObj, "find-primes", "%i", 100);
+			break;
+		case 'q':
+			goto out;
+		default:
+			AG_Verbose("I don't know what %c means", c);
+			break;
+		}
+	}
+out:
  	/* Clear the screen again */
 //	clrscr ();
 
