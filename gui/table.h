@@ -22,7 +22,19 @@ struct ag_table;
 enum ag_table_selmode {
 	AG_TABLE_SEL_ROWS,	/* Select entire rows */
 	AG_TABLE_SEL_CELLS,	/* Select individual cells */
-	AG_TABLE_SEL_COLS	/* Select entire columns */
+	AG_TABLE_SEL_COLS,	/* Select entire columns */
+	AG_TABLE_SEL_LAST
+};
+
+enum ag_table_fn {
+	AG_TABLE_FN_POLL,		/* Poll event (AG_TableNewPolled()) */
+	AG_TABLE_FN_ROW_CLICK,		/* Clicked a row */
+	AG_TABLE_FN_ROW_DBLCLICK,	/* Double-clicked a row */
+	AG_TABLE_FN_COL_CLICK,		/* Clicked a column */
+	AG_TABLE_FN_COL_DBLCLICK,	/* Double-clicked a column */
+	AG_TABLE_FN_CELL_CLICK,		/* Clicked a cell */
+	AG_TABLE_FN_CELL_DBLCLICK,	/* Double-clicked a cell */
+	AG_TABLE_FN_LAST
 };
 
 typedef struct ag_table_popup {
@@ -53,10 +65,12 @@ enum ag_table_cell_type {
 	AG_CELL_PSINT16,
 	AG_CELL_PUINT32,
 	AG_CELL_PSINT32,
+#ifdef AG_HAVE_FLOAT
 	AG_CELL_PFLOAT,
 	AG_CELL_PDOUBLE,
+#endif
 #ifdef AG_HAVE_64BIT
-	AG_CELL_INT64,
+	AG_CELL_SINT64,
 	AG_CELL_UINT64,
 	AG_CELL_PINT64,
 	AG_CELL_PUINT64,
@@ -154,6 +168,7 @@ typedef struct ag_table {
 
 	AG_TableBucket *_Nonnull cPrev;		 /* Saved (recyclable) cells */
 	Uint                     nPrevBuckets;
+
 	int nResizing;			/* Column being resized (or -1) */
 
 	AG_TAILQ_HEAD_(ag_table_cell) cPrevList;	
@@ -166,14 +181,11 @@ typedef struct ag_table {
 	AG_Scrollbar *_Nonnull vbar;	/* Vertical scrollbar */
 	AG_Scrollbar *_Nonnull hbar;	/* Horizontal scrollbar */
 
-	AG_Event *_Nullable poll_ev;		/* Poll event */
-	AG_Event *_Nullable dblClickRowEv;	/* Row double click callback */
-	AG_Event *_Nullable dblClickColEv;	/* Column double click callback */
-	AG_Event *_Nullable dblClickCellEv;	/* Cell double click callback */
+	AG_Event *_Nullable fn[AG_TABLE_FN_LAST];  /* Registered callbacks */
+
 	AG_Rect r;			/* View area */
 	int wTot;			/* Total width for all columns */
-	AG_Color selColor;		/* Selection color */
-	
+
 	Uint colAction;
 #define AG_TABLE_COL_SELECT	0x01	/* Select column */
 #define AG_TABLE_COL_SORT	0x02	/* Set sorting mode */
@@ -183,9 +195,6 @@ typedef struct ag_table {
 #endif
 	AG_SLIST_HEAD_(ag_table_popup) popups; /* Registered popup menus */
 
-	AG_Event *_Nullable clickRowEv;		/* Row double click callback */
-	AG_Event *_Nullable clickColEv;		/* Column double click callback */
-	AG_Event *_Nullable clickCellEv;	/* Cell double click callback */
 	Uint nSorting;				/* Index of sorting column
 						   (computed from flags) */
 #ifdef AG_TIMERS
@@ -221,30 +230,19 @@ void               AG_TableSetPollInterval(AG_Table *_Nonnull, Uint);
 
 void AG_TableSizeHint(AG_Table *_Nonnull, int, int);
 void AG_TableSetSeparator(AG_Table *_Nonnull, const char *_Nonnull);
-void AG_TableSetRowClickFn(AG_Table *_Nonnull,
-                           _Nonnull AG_EventFn, const char *_Nullable, ...);
-void AG_TableSetColClickFn(AG_Table *_Nonnull,
-                           _Nonnull AG_EventFn, const char *_Nullable, ...);
-void AG_TableSetCellClickFn(AG_Table *_Nonnull,
-                            _Nonnull AG_EventFn, const char *_Nullable, ...);
-void AG_TableSetRowDblClickFn(AG_Table *_Nonnull,
-                              _Nonnull AG_EventFn, const char *_Nullable, ...);
-void AG_TableSetColDblClickFn(AG_Table *_Nonnull,
-                              _Nonnull AG_EventFn, const char *_Nullable, ...);
-void AG_TableSetCellDblClickFn(AG_Table *_Nonnull,
-                               _Nonnull AG_EventFn, const char *_Nullable, ...);
+void AG_TableSetFn(AG_Table *_Nonnull, enum ag_table_fn, _Nonnull AG_EventFn,
+                   const char *_Nullable, ...);
 void AG_TableSetColHeight(AG_Table *_Nonnull, int);
 void AG_TableSetRowHeight(AG_Table *_Nonnull, int);
 void AG_TableSetColMin(AG_Table *_Nonnull, int);
 void AG_TableSetDefaultColWidth(AG_Table *_Nonnull, int);
 void AG_TableSetSelectionMode(AG_Table *_Nonnull, enum ag_table_selmode);
-void AG_TableSetSelectionColor(AG_Table *_Nonnull, Uint8,Uint8,Uint8,Uint8);
 void AG_TableSetColumnAction(AG_Table *_Nonnull, Uint);
 
+void AG_TableSort(AG_Table *_Nonnull);
 void AG_TableClear(AG_Table *_Nonnull);
 void AG_TableBegin(AG_Table *_Nonnull);
 void AG_TableEnd(AG_Table *_Nonnull);
-void AG_TableSort(AG_Table *_Nonnull);
 
 void AG_TableInitCell(AG_Table *_Nonnull, AG_TableCell *_Nonnull);
 void AG_TablePrintCell(const AG_TableCell *_Nonnull, char *_Nonnull, AG_Size);
@@ -264,7 +262,6 @@ int  AG_TableAddCol(AG_Table *_Nonnull, const char *_Nullable,
 void AG_TableSelectAllCols(AG_Table *_Nonnull);
 void AG_TableDeselectAllCols(AG_Table *_Nonnull);
 
-void AG_TableRedrawCells(AG_Table *_Nonnull);
 int  AG_TableCompareCells(const AG_TableCell *_Nonnull,
                           const AG_TableCell *_Nonnull);
 
@@ -282,6 +279,13 @@ AG_MenuItem *_Nonnull AG_TableSetPopup(AG_Table *_Nonnull, int,int);
 
 #ifdef AG_LEGACY
 #define AG_TablePrescale(c,r) AG_TableSizeHint((c),(r))
+#define AG_TableSetSelectionColor(t,r,g,b,a) {				\
+	WCOLOR((t),SEL_COLOR).r = r;					\
+	WCOLOR((t),SEL_COLOR).g = g;					\
+	WCOLOR((t),SEL_COLOR).b = b;					\
+	WCOLOR((t),SEL_COLOR).a = a;					\
+	AG_Verbose("AG_TableSetSelectionColor() is deprecated\n");	\
+}
 #endif
 __END_DECLS
 
