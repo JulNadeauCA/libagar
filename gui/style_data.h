@@ -61,8 +61,14 @@ const char *agStyleDefault_Data =
 	"color#selected: rgb(117,117,117);\n"
 	"}\n"
 	"AG_Tlist {\n"
-	"color#selected: rgb(50,50,120);\n"
+	"color#selected: rgb(50,50,120);		/* Selected line(s) */\n"
 	"text-color#selected: rgb(255,255,200);\n"
+	"line-color#selected: rgb(255,255,200);\n"
+	"}\n"
+	"AG_Table {\n"
+	"color#selected: rgb(50,50,120);		/* Selected rows/cells */\n"
+	"text-color#selected: rgb(255,255,200);\n"
+	"line-color#selected: rgb(100,100,30);\n"
 	"}\n"
 	"AG_Console {\n"
 	"font-family: Courier;\n"
@@ -101,7 +107,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2627,
+	2839,
 	&agStyleDefault_Data,
 	NULL
 };

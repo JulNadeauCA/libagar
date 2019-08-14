@@ -61,8 +61,14 @@ AG_Notebook {
 	color#selected: rgb(117,117,117);
 }
 AG_Tlist {
-	color#selected: rgb(50,50,120);
+	color#selected: rgb(50,50,120);		/* Selected line(s) */
 	text-color#selected: rgb(255,255,200);
+	line-color#selected: rgb(255,255,200);
+}
+AG_Table {
+	color#selected: rgb(50,50,120);		/* Selected rows/cells */
+	text-color#selected: rgb(255,255,200);
+	line-color#selected: rgb(100,100,30);
 }
 AG_Console {
 	font-family: Courier;
