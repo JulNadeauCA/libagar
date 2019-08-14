@@ -6,24 +6,50 @@
 
 #include "agartest.h"
 
-int someInt = 1234;
-int someBool = 0;
-char someString[64];
+static int someInt = 1234;
+static int someBool = 0;
+static char someString[64];
 
 static void
 LoadConfig(AG_Event *event)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_TestInstance *ti = AG_PTR(1);
+	AG_Object *cfg = AGOBJECT(agConfig);
+	AG_Variable *V;
 
-	if (AG_ObjectCopyFilename(agConfig, path, sizeof(path)) == 0)
+	if (AG_ObjectCopyFilename(cfg, path, sizeof(path)) == 0)
 		TestMsg(ti, "Loading from %s", path);
 
 	if (AG_ConfigLoad() == 0) {
-		TestMsg(ti, "Loaded configuration successfully");
+		const char *s = "Configuration loaded successfully";
+		TestMsg(ti, s);
+		AG_TextTmsg(AG_MSG_INFO, 1250, "%s", s);
 	} else {
+		AG_TextMsgFromError();
 		TestMsg(ti, "AG_ConfigLoad: %s", AG_GetError());
 	}
+
+	if (AG_Defined(cfg,"some-string")) {
+		AG_GetString(cfg, "some-string", someString, sizeof(someString));
+	}
+	TAILQ_FOREACH(V, &cfg->vars, vars) {
+		char val[AG_LABEL_MAX];
+
+#ifdef AG_ENABLE_STRING
+		AG_PrintVariable(val, sizeof(val), V);
+#else
+		val[0] = '\0';
+#endif
+		TestMsg(ti, "%s: (%s) %s -> %s", cfg->name,
+		    agVariableTypes[V->type].name, V->name, val);
+	}
+}
+
+static void
+ShowAgarPrefs(AG_Event *event)
+{
+	DEV_ConfigShow();
 }
 
 static void
@@ -42,6 +68,15 @@ SaveConfig(AG_Event *event)
 	}
 }
 
+static void
+UpdateString(AG_Event *event)
+{
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
+
+	AG_SetString(agConfig, "some-string", someString);
+	AG_WidgetUnfocus(tb);
+}
+
 static int
 TestGUI(void *obj, AG_Window *win)
 {
@@ -51,12 +86,12 @@ TestGUI(void *obj, AG_Window *win)
 	AG_Textbox *tb;
 	AG_Label *lbl;
 
-	someString[0] = '\0';
+	Strlcpy(someString, "hello", sizeof(someString));
 
 	/* Tie some globals to the config settings */
 	AG_BindInt(agConfig, "some-int", &someInt);
 	AG_BindInt(agConfig, "some-bool", &someBool);
-	AG_BindString(agConfig, "some-string", someString, sizeof(someString));
+	AG_SetString(agConfig, "some-string", someString);
 	AG_SetInt(agConfig, "some-int", 2345);
 
 	/* Create some widgets */
@@ -68,7 +103,9 @@ TestGUI(void *obj, AG_Window *win)
 #else
 	AG_TextboxBindASCII(tb, someString, sizeof(someString));
 #endif
-	box = AG_BoxNewVert(win, AG_BOX_EXPAND|AG_BOX_FRAME);
+	AG_SetEvent(tb, "textbox-return", UpdateString, NULL);
+
+	box = AG_BoxNewVert(win, AG_BOX_EXPAND);
 	AG_BoxSetLabelS(box, "AG_ConfigFind() search paths:");
 	AG_SetStyle(box, "font-size", "90%");
 	AG_SetStyle(box, "font-weight", "bold");
@@ -85,8 +122,9 @@ TestGUI(void *obj, AG_Window *win)
 
 	box = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
 	{
-		AG_ButtonNewFn(box, 0, "Load configuration", LoadConfig, "%p", ti);
-		AG_ButtonNewFn(box, 0, "Save configuration", SaveConfig, "%p", ti);
+		AG_ButtonNewFn(box, 0, "Load Config", LoadConfig, "%p", ti);
+		AG_ButtonNewFn(box, 0, "Agar Preferences", ShowAgarPrefs, NULL);
+		AG_ButtonNewFn(box, 0, "Save Config", SaveConfig, "%p", ti);
 	}
 	return (0);
 }

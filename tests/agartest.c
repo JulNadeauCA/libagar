@@ -752,7 +752,7 @@ main(int argc, char *argv[])
 #endif
 	AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, ".");
 
-/*	(void)AG_ConfigLoad(); */
+	(void)AG_ConfigLoad();
 
 	if ((win = winMain = AG_WindowNew(AG_WINDOW_MAIN)) == NULL) {
 		return (1);
@@ -888,12 +888,23 @@ main(int argc, char *argv[])
 
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 980, 540);
 	AG_WindowShow(win);
-	
+
+	if (optInd == argc &&
+	    AG_GetBool(agConfig,"initial-run") == 1) {
+		AG_Event ev;
+
+		AG_TlistSelectPtr(tl, (void *)&widgetsTest);
+		AG_EventArgs(&ev, "%p,%p", tl, win);
+		RunTest(&ev);
+		AG_SetBool(agConfig,"initial-run",0);
+		if (AG_ConfigSave() == -1)
+			AG_Verbose("AG_ConfigSave: %s; ignoring", AG_GetError());
+	}
 	for (i = optInd; i < argc; i++) {
 		AG_Event ev;
 
 		for (pTest = &testCases[0]; *pTest != NULL; pTest++) {
-			if (strcmp((*pTest)->name, argv[i]) == 0)
+			if (strcasecmp((*pTest)->name, argv[i]) == 0)
 				break;
 		}
 		if (*pTest == NULL) {
@@ -905,6 +916,8 @@ main(int argc, char *argv[])
 		RunTest(&ev);
 		RunBench(&ev);
 	}
+	if (AG_ConfigSave() == -1)
+		AG_Verbose("ConfigSave: %s\n", AG_GetError());
 
 	AG_EventLoop();
 	AG_DestroyGraphics();
