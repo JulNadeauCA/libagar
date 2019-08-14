@@ -2203,7 +2203,8 @@ main(int argc, char *argv[])
 
 	AG_InitCore("conf-test", 0);
 	AG_RegisterClass(&FooClass);
-	AG_ObjectInitStatic(&obj, &FooClass);
+	AG_ObjectInit(&obj, &FooClass);
+	obj.flags |= AG_OBJECT_STATIC;
 	AG_ObjectDestroy(&obj);
 	AG_Quit();
 	return (0);
@@ -2599,7 +2600,6 @@ static const struct {
 	{ "SIZEOF_AG_FMTSTRING", sizeof(AG_FmtString) },
 	{ "SIZEOF_AG_FMTSTRINGEXT", sizeof(AG_FmtStringExt) },
 	{ "SIZEOF_AG_FUNCTION", sizeof(AG_Function) },
-	{ "SIZEOF_AG_LIST", sizeof(AG_List) },
 	{ "SIZEOF_AG_MUTEX", sizeof(AG_Mutex) },
 	{ "SIZEOF_AG_MUTEXATTR", sizeof(AG_MutexAttr) },
 	{ "SIZEOF_AG_NAMESPACE", sizeof(AG_Namespace) },
@@ -2615,8 +2615,6 @@ static const struct {
 	{ "SIZEOF_AG_OBJECTPVT", sizeof(AG_ObjectPvt) },
 	{ "SIZEOF_AG_TBL", sizeof(AG_Tbl) },
 	{ "SIZEOF_AG_TBLBUCKET", sizeof(AG_TblBucket) },
-	{ "SIZEOF_AG_TREE", sizeof(AG_Tree) },
-	{ "SIZEOF_AG_TREEITEM", sizeof(AG_TreeItem) },
 	{ "SIZEOF_AG_TEXT", sizeof(AG_Text) },
 	{ "SIZEOF_AG_TEXTELEMENT", sizeof(AG_TextElement) },
 	{ "SIZEOF_AG_TEXTENT", sizeof(AG_TextEnt) },

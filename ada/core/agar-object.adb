@@ -57,15 +57,22 @@ package body Agar.Object is
   end;
 
   procedure Init_Object
-    (Object : in Object_Not_Null_Access;
-     Class  : in Class_Not_Null_Access;
-     Static : in Boolean := False) is
+    (Object         : in Object_Not_Null_Access;
+     Class          : in Class_Not_Null_Access;
+     Static         : in Boolean := False;
+     Name_On_Attach : in Boolean := False)
+  is
+    C_Flags : C.unsigned := 0;
   begin
+    AG_ObjectInit (Object, Class);
+    C_Flags := Object.Flags;
     if Static then
-    	AG_ObjectInitStatic (Object, Class);
-    else
-    	AG_ObjectInit (Object, Class);
+      C_Flags := C_Flags or OBJECT_STATIC;
     end if;
+    if Name_On_Attach then
+      C_Flags := C_Flags or OBJECT_NAME_ON_ATTACH;
+    end if;
+    Object.Flags := C_Flags;
   end;
   
   procedure Attach

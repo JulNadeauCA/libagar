@@ -254,13 +254,16 @@ package Agar.Object is
     (Class : in Class_not_null_Access) return Object_Access;
    
   --
-  -- Initialize an Agar Object. Used internally by New_Object. Static should be
-  -- set unless Object points to auto-allocated and Agar-freeable memory.
+  -- Initialize an Agar Object. Used internally by New_Object.
+  --
+  -- Static         : Object is not (agar-)freeable autoallocated memory.
+  -- Name_On_Attach : Auto-generate a unique name in Attach().
   --
   procedure Init_Object
-    (Object : in Object_not_null_Access;
-     Class  : in Class_not_null_Access;
-     Static : in Boolean := False);
+    (Object         : in Object_not_null_Access;
+     Class          : in Class_not_null_Access;
+     Static         : in Boolean := False;
+     Name_On_Attach : in Boolean := False);
 
   --
   -- Make Object a child of Parent.
@@ -739,11 +742,6 @@ package Agar.Object is
     (Object : in Object_not_null_Access;
      Class  : in Class_not_null_Access)
     with Import, Convention => C, Link_Name => "AG_ObjectInit";
-  
-  procedure AG_ObjectInitStatic
-    (Object : in Object_not_null_Access;
-     Class  : in Class_not_null_Access)
-    with Import, Convention => C, Link_Name => "AG_ObjectInitStatic";
   
   procedure AG_ObjectAttach
     (Parent : in Object_Access;
