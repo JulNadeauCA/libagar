@@ -1170,6 +1170,7 @@ AG_AddEventSink(enum ag_event_sink_type type, int ident, Uint flags,
 	return (es);
 }
 
+# ifdef HAVE_KQUEUE
 static int
 GrowKqChangelist(AG_EventSourceKQUEUE *_Nonnull kq, Uint n)
 {
@@ -1183,6 +1184,7 @@ GrowKqChangelist(AG_EventSourceKQUEUE *_Nonnull kq, Uint n)
 	kq->maxChanges = n;
 	return (0);
 }
+# endif /* HAVE_KQUEUE */
 
 void
 AG_DelEventSink(AG_EventSink *es)
