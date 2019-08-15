@@ -250,26 +250,22 @@ AG_MenuItem *_Nonnull AG_MenuInt8BoolMp(AG_MenuItem *_Nonnull,
                                         const AG_Surface *_Nullable,
                                         Uint8 *_Nonnull, int,
 					_Nonnull_Mutex AG_Mutex *_Nullable);
-
 AG_MenuItem *_Nonnull AG_MenuIntFlagsMp(AG_MenuItem *_Nonnull,
 					const char *_Nullable,
 					const AG_Surface *_Nullable,
 					int *_Nonnull, int, int,
 					_Nonnull_Mutex AG_Mutex *_Nullable);
-
 AG_MenuItem *_Nonnull AG_MenuInt8FlagsMp(AG_MenuItem *_Nonnull,
 					 const char *_Nullable,
 					 const AG_Surface *_Nullable,
 					 Uint8 *_Nonnull, Uint8, int,
 					 _Nonnull_Mutex AG_Mutex *_Nullable);
-
+#if AG_MODEL != AG_SMALL
 AG_MenuItem *_Nonnull AG_MenuInt16FlagsMp(AG_MenuItem *_Nonnull,
 					 const char *_Nullable,
 					 const AG_Surface *_Nullable,
 					 Uint16 *_Nonnull, Uint16, int,
 					 _Nonnull_Mutex AG_Mutex *_Nullable);
-
-#if AG_MODEL != AG_SMALL
 AG_MenuItem *_Nonnull AG_MenuInt32FlagsMp(AG_MenuItem *_Nonnull,
 					  const char *_Nullable,
 					  const AG_Surface *_Nullable,
@@ -311,8 +307,8 @@ void    AG_MenuSetIntBoolMp(AG_MenuItem *_Nonnull, int *_Nonnull, int,
 #define AG_MenuSetIntBool(mi,p,fl,inv,mtx) \
         AG_MenuSetIntBoolMp((mi),(p),(fl),(inv),(mtx))
 
-void AG_MenuSetIntFlagsMp(AG_MenuItem *_Nonnull, int *_Nonnull, int, int,
-                          _Nonnull_Mutex AG_Mutex *_Nonnull);
+void    AG_MenuSetIntFlagsMp(AG_MenuItem *_Nonnull, int *_Nonnull, int, int,
+                             _Nonnull_Mutex AG_Mutex *_Nonnull);
 
 #ifdef AG_TYPE_SAFETY
 AG_MenuItem *_Nullable AG_MenuGetItemPtr(const AG_Event *_Nonnull, int, int);

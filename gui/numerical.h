@@ -97,12 +97,20 @@ void AG_NumericalSetPrecision(AG_Numerical *_Nonnull, const char *_Nonnull, int)
 
 int	AG_NumericalGetInt(AG_Numerical *_Nonnull);
 #define AG_NumericalGetUint(n)     ((Uint)AG_NumericalGetInt(n))
-#define AG_NumericalGetUint8(n)   ((Uint8)AG_NumericalGetUint32(n))
-#define AG_NumericalGetUint16(n) ((Uint16)AG_NumericalGetUint32(n))
-#define AG_NumericalGetSint8(n)   ((Sint8)AG_NumericalGetUint32(n))
-#define AG_NumericalGetSint16(n) ((Sint16)AG_NumericalGetUint32(n))
-Uint32	AG_NumericalGetUint32(AG_Numerical *_Nonnull);
-#define AG_NumericalGetSint32(n) ((Sint32)AG_NumericalGetUint32(n))
+#if AG_MODEL != AG_SMALL
+Uint32	 AG_NumericalGetUint32(AG_Numerical *_Nonnull);
+# define AG_NumericalGetUint8(n)   ((Uint8)AG_NumericalGetUint32(n))
+# define AG_NumericalGetUint16(n) ((Uint16)AG_NumericalGetUint32(n))
+# define AG_NumericalGetSint8(n)   ((Sint8)AG_NumericalGetUint32(n))
+# define AG_NumericalGetSint16(n) ((Sint16)AG_NumericalGetUint32(n))
+# define AG_NumericalGetSint32(n) ((Sint32)AG_NumericalGetUint32(n))
+#else
+# define AG_NumericalGetUint8(n)   ((Uint8)AG_NumericalGetUint(n))
+# define AG_NumericalGetUint16(n) ((Uint16)AG_NumericalGetUint(n))
+# define AG_NumericalGetSint8(n)   ((Sint8)AG_NumericalGetInt(n))
+# define AG_NumericalGetSint16(n) ((Sint16)AG_NumericalGetInt(n))
+#endif /* !AG_SMALL */
+
 #ifdef AG_HAVE_64BIT
 Uint64	AG_NumericalGetUint64(AG_Numerical *_Nonnull);
 #define AG_NumericalGetSint64(n) ((Sint64)AG_NumericalGetUint64(n))

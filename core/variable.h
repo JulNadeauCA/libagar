@@ -176,11 +176,9 @@ extern const AG_VariableTypeInfo agVariableTypes[];
 AG_Variable *_Nullable AG_GetVariable(void *_Nonnull, const char *_Nonnull, ...)
                                      _Pure_Attribute_If_Unthreaded
                                      _Warn_Unused_Result;
-
 #ifdef AG_ENABLE_STRING
 void AG_PrintVariable(char *_Nonnull, AG_Size, AG_Variable *_Nonnull);
 #endif
-
 int  AG_CopyVariable(AG_Variable *_Nonnull _Restrict,
                      const AG_Variable *_Nonnull _Restrict);
 int  AG_DerefVariable(AG_Variable *_Nonnull _Restrict,
@@ -198,9 +196,9 @@ void AG_VariableSubst(void *_Nonnull, const char *_Nonnull, char *_Nonnull,
 /*
  * UINT: Natural unsigned integer
  */
-Uint AG_GetUint(void *_Nonnull, const char *_Nonnull)
-               _Pure_Attribute_If_Unthreaded;
-void AG_InitUint(AG_Variable *_Nonnull, Uint);
+Uint                  AG_GetUint(void *_Nonnull, const char *_Nonnull)
+                                _Pure_Attribute_If_Unthreaded;
+void                  AG_InitUint(AG_Variable *_Nonnull, Uint);
 AG_Variable *_Nonnull AG_SetUint(void *_Nonnull, const char *_Nonnull, Uint);
 AG_Variable *_Nonnull AG_BindUint(void *_Nonnull, const char *_Nonnull,
                                   Uint *_Nonnull);
@@ -209,13 +207,12 @@ AG_Variable *_Nonnull AG_BindUintMp(void *_Nonnull, const char *_Nonnull,
 				    Uint *_Nonnull,
 				    _Nonnull_Mutex AG_Mutex *_Nonnull);
 #endif
-
 /*
  * INT: Natural integer
  */
-int AG_GetInt(void *_Nonnull, const char *_Nonnull)
-             _Pure_Attribute_If_Unthreaded;
-void AG_InitInt(AG_Variable *_Nonnull, int);
+int                   AG_GetInt(void *_Nonnull, const char *_Nonnull)
+                               _Pure_Attribute_If_Unthreaded;
+void                  AG_InitInt(AG_Variable *_Nonnull, int);
 AG_Variable *_Nonnull AG_SetInt(void *_Nonnull, const char *_Nonnull, int);
 AG_Variable *_Nonnull AG_BindInt(void *_Nonnull, const char *_Nonnull,
 			         int *_Nonnull);
@@ -237,9 +234,9 @@ AG_Variable *_Nonnull AG_BindIntMp(void *_Nonnull, const char *_Nonnull,
 /*
  * ULONG: Natural long unsigned integer.
  */
-Ulong AG_GetUlong(void *_Nonnull, const char *_Nonnull)
-                 _Pure_Attribute_If_Unthreaded;
-void AG_InitUlong(AG_Variable *_Nonnull, Ulong);
+Ulong                 AG_GetUlong(void *_Nonnull, const char *_Nonnull)
+                                 _Pure_Attribute_If_Unthreaded;
+void                  AG_InitUlong(AG_Variable *_Nonnull, Ulong);
 AG_Variable *_Nonnull AG_SetUlong(void *_Nonnull, const char *_Nonnull, Ulong);
 AG_Variable *_Nonnull AG_BindUlong(void *_Nonnull, const char *_Nonnull,
 			           Ulong *_Nonnull);
@@ -248,13 +245,12 @@ AG_Variable *_Nonnull AG_BindUlongMp(void *_Nonnull, const char *_Nonnull,
                                      Ulong *_Nonnull,
 				     _Nonnull_Mutex AG_Mutex *_Nonnull);
 # endif
-
 /*
  * LONG: Natural long integer.
  */
-long AG_GetLong(void *_Nonnull, const char *_Nonnull)
-               _Pure_Attribute_If_Unthreaded;
-void AG_InitLong(AG_Variable *_Nonnull, long);
+long                  AG_GetLong(void *_Nonnull, const char *_Nonnull)
+                                _Pure_Attribute_If_Unthreaded;
+void                  AG_InitLong(AG_Variable *_Nonnull, long);
 AG_Variable *_Nonnull AG_SetLong(void *_Nonnull, const char *_Nonnull, long);
 AG_Variable *_Nonnull AG_BindLong(void *_Nonnull, const char *_Nonnull,
 			          long *_Nonnull);
@@ -263,14 +259,15 @@ AG_Variable *_Nonnull AG_BindLongMp(void *_Nonnull, const char *_Nonnull,
                                     long *_Nonnull,
                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
 # endif
+
 #endif /* !AG_SMALL */
 
 /*
  * UINT8: Unsigned 8-bit integer
  */
-Uint8 AG_GetUint8(void *_Nonnull, const char *_Nonnull)
-                 _Pure_Attribute_If_Unthreaded;
-void AG_InitUint8(AG_Variable *_Nonnull, Uint8);
+Uint8                 AG_GetUint8(void *_Nonnull, const char *_Nonnull)
+                                 _Pure_Attribute_If_Unthreaded;
+void                  AG_InitUint8(AG_Variable *_Nonnull, Uint8);
 AG_Variable *_Nonnull AG_SetUint8(void *_Nonnull, const char *_Nonnull, Uint8);
 AG_Variable *_Nonnull AG_BindUint8(void *_Nonnull, const char *_Nonnull,
                                    Uint8 *_Nonnull);
@@ -279,13 +276,12 @@ AG_Variable *_Nonnull AG_BindUint8Mp(void *_Nonnull, const char *_Nonnull,
                                      Uint8 *_Nonnull,
                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
 #endif
-
 /*
  * UINT8: Signed 8-bit integer
  */
-Sint8 AG_GetSint8(void *_Nonnull, const char *_Nonnull)
-                 _Pure_Attribute_If_Unthreaded;
-void AG_InitSint8(AG_Variable *_Nonnull, Sint8);
+Sint8                 AG_GetSint8(void *_Nonnull, const char *_Nonnull)
+                                 _Pure_Attribute_If_Unthreaded;
+void                  AG_InitSint8(AG_Variable *_Nonnull, Sint8);
 AG_Variable *_Nonnull AG_SetSint8(void *_Nonnull, const char *_Nonnull, Sint8);
 AG_Variable *_Nonnull AG_BindSint8(void *_Nonnull, const char *_Nonnull,
 			           Sint8 *_Nonnull);
@@ -295,75 +291,74 @@ AG_Variable *_Nonnull AG_BindSint8Mp(void *_Nonnull, const char *_Nonnull,
                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
 #endif
 
+#if AG_MODEL != AG_SMALL
 /*
  * UINT16: Unsigned 16-bit integer
  */
-Uint16 AG_GetUint16(void *_Nonnull, const char *_Nonnull)
-                   _Pure_Attribute_If_Unthreaded;
-void AG_InitUint16(AG_Variable *_Nonnull, Uint16);
+Uint16                AG_GetUint16(void *_Nonnull, const char *_Nonnull)
+                                  _Pure_Attribute_If_Unthreaded;
+void                  AG_InitUint16(AG_Variable *_Nonnull, Uint16);
 AG_Variable *_Nonnull AG_SetUint16(void *_Nonnull, const char *_Nonnull, Uint16);
 AG_Variable *_Nonnull AG_BindUint16(void *_Nonnull, const char *_Nonnull,
 			            Uint16 *_Nonnull);
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 AG_Variable *_Nonnull AG_BindUint16Mp(void *_Nonnull, const char *_Nonnull,
                                       Uint16 *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
-#endif
-
+# endif
 /*
  * SINT16: Signed 16-bit integer
  */
-Sint16 AG_GetSint16(void *_Nonnull, const char *_Nonnull)
-                   _Pure_Attribute_If_Unthreaded;
-void AG_InitSint16(AG_Variable *_Nonnull, Sint16);
+Sint16                AG_GetSint16(void *_Nonnull, const char *_Nonnull)
+                                  _Pure_Attribute_If_Unthreaded;
+void                  AG_InitSint16(AG_Variable *_Nonnull, Sint16);
 AG_Variable *_Nonnull AG_SetSint16(void *_Nonnull, const char *_Nonnull, Sint16);
 AG_Variable *_Nonnull AG_BindSint16(void *_Nonnull, const char *_Nonnull,
 			            Sint16 *_Nonnull);
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 AG_Variable *_Nonnull AG_BindSint16Mp(void *_Nonnull, const char *_Nonnull,
                                       Sint16 *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
-#endif
+# endif
 
-#if AG_MODEL != AG_SMALL
 /*
  * UINT32: Unsigned 32-bit integer
  */
-Uint32 AG_GetUint32(void *_Nonnull, const char *_Nonnull)
-                   _Pure_Attribute_If_Unthreaded;
-void AG_InitUint32(AG_Variable *_Nonnull, Uint32);
+Uint32                AG_GetUint32(void *_Nonnull, const char *_Nonnull)
+                                  _Pure_Attribute_If_Unthreaded;
+void                  AG_InitUint32(AG_Variable *_Nonnull, Uint32);
 AG_Variable *_Nonnull AG_SetUint32(void *_Nonnull, const char *_Nonnull, Uint32);
 AG_Variable *_Nonnull AG_BindUint32(void *_Nonnull, const char *_Nonnull,
 			            Uint32 *_Nonnull);
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 AG_Variable *_Nonnull AG_BindUint32Mp(void *_Nonnull, const char *_Nonnull,
                                       Uint32 *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
-#endif
-
+# endif
 /*
  * SINT32: Signed 32-bit integer
  */
-Sint32 AG_GetSint32(void *_Nonnull, const char *_Nonnull)
-                   _Pure_Attribute_If_Unthreaded;
-void AG_InitSint32(AG_Variable *_Nonnull, Sint32);
+Sint32                AG_GetSint32(void *_Nonnull, const char *_Nonnull)
+                                  _Pure_Attribute_If_Unthreaded;
+void                  AG_InitSint32(AG_Variable *_Nonnull, Sint32);
 AG_Variable *_Nonnull AG_SetSint32(void *_Nonnull, const char *_Nonnull, Sint32);
 AG_Variable *_Nonnull AG_BindSint32(void *_Nonnull, const char *_Nonnull,
 			            Sint32 *_Nonnull);
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 AG_Variable *_Nonnull AG_BindSint32Mp(void *_Nonnull, const char *_Nonnull,
                                       Sint32 *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
-#endif /* AG_THREADS */
+# endif /* AG_THREADS */
+
 #endif /* !AG_SMALL */
 
 #ifdef AG_HAVE_64BIT
 /*
  * UINT64: Unsigned 64-bit integer
  */
-Uint64 AG_GetUint64(void *_Nonnull, const char *_Nonnull)
-                   _Pure_Attribute_If_Unthreaded;
-void AG_InitUint64(AG_Variable *_Nonnull, Uint64);
+Uint64                AG_GetUint64(void *_Nonnull, const char *_Nonnull)
+                                  _Pure_Attribute_If_Unthreaded;
+void                  AG_InitUint64(AG_Variable *_Nonnull, Uint64);
 AG_Variable *_Nonnull AG_SetUint64(void *_Nonnull, const char *_Nonnull, Uint64);
 AG_Variable *_Nonnull AG_BindUint64(void *_Nonnull, const char *_Nonnull,
 			            Uint64 *_Nonnull);
@@ -372,13 +367,12 @@ AG_Variable *_Nonnull AG_BindUint64Mp(void *_Nonnull, const char *_Nonnull,
                                       Uint64 *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
 # endif
-
 /*
  * SINT64: Signed 64-bit integer
  */
-Sint64 AG_GetSint64(void *_Nonnull, const char *_Nonnull)
-                   _Pure_Attribute_If_Unthreaded;
-void AG_InitSint64(AG_Variable *_Nonnull, Sint64);
+Sint64                AG_GetSint64(void *_Nonnull, const char *_Nonnull)
+                                  _Pure_Attribute_If_Unthreaded;
+void                  AG_InitSint64(AG_Variable *_Nonnull, Sint64);
 AG_Variable *_Nonnull AG_SetSint64(void *_Nonnull, const char *_Nonnull, Sint64);
 AG_Variable *_Nonnull AG_BindSint64(void *_Nonnull, const char *_Nonnull,
 			            Sint64 *_Nonnull);
@@ -393,9 +387,9 @@ AG_Variable *_Nonnull AG_BindSint64Mp(void *_Nonnull, const char *_Nonnull,
 /*
  * FLOAT: Single-precision IEEE float.
  */
-float AG_GetFloat(void *_Nonnull, const char *_Nonnull)
-                 _Pure_Attribute_If_Unthreaded;
-void AG_InitFloat(AG_Variable *_Nonnull, float);
+float                 AG_GetFloat(void *_Nonnull, const char *_Nonnull)
+                                 _Pure_Attribute_If_Unthreaded;
+void                  AG_InitFloat(AG_Variable *_Nonnull, float);
 AG_Variable *_Nonnull AG_SetFloat(void *_Nonnull, const char *_Nonnull, float);
 AG_Variable *_Nonnull AG_BindFloat(void *_Nonnull, const char *_Nonnull,
 			           float *_Nonnull);
@@ -407,9 +401,9 @@ AG_Variable *_Nonnull AG_BindFloatMp(void *_Nonnull, const char *_Nonnull,
 /*
  * DOUBLE: Double-precision IEEE float.
  */
-double AG_GetDouble(void *_Nonnull, const char *_Nonnull)
-                   _Pure_Attribute_If_Unthreaded;
-void AG_InitDouble(AG_Variable *_Nonnull, double);
+double                AG_GetDouble(void *_Nonnull, const char *_Nonnull)
+                                  _Pure_Attribute_If_Unthreaded;
+void                  AG_InitDouble(AG_Variable *_Nonnull, double);
 AG_Variable *_Nonnull AG_SetDouble(void *_Nonnull, const char *_Nonnull, double);
 AG_Variable *_Nonnull AG_BindDouble(void *_Nonnull, const char *_Nonnull,
                                     double *_Nonnull);
@@ -424,12 +418,10 @@ AG_Variable *_Nonnull AG_BindDoubleMp(void *_Nonnull, const char *_Nonnull,
  * STRING: C string (which is either contained in a fixed-size buffer,
  * or dynamically allocated internally).
  */
-AG_Size AG_GetString(void *_Nonnull, const char *_Nonnull, char *_Nonnull,
-                     AG_Size);
-
-char *_Nullable AG_GetStringDup(void *_Nonnull, const char *_Nonnull);
-char *_Nullable AG_GetStringP(void *_Nonnull, const char *_Nonnull);
-
+AG_Size               AG_GetString(void *_Nonnull, const char *_Nonnull,
+                                   char *_Nonnull, AG_Size);
+char *_Nullable       AG_GetStringDup(void *_Nonnull, const char *_Nonnull);
+char *_Nullable       AG_GetStringP(void *_Nonnull, const char *_Nonnull);
 AG_Variable *_Nonnull AG_SetString(void *_Nonnull, const char *_Nonnull,
                                    const char *_Nonnull);
 AG_Variable *_Nonnull AG_SetStringF(void *_Nonnull, const char *_Nonnull,
@@ -437,10 +429,8 @@ AG_Variable *_Nonnull AG_SetStringF(void *_Nonnull, const char *_Nonnull,
 		                   FORMAT_ATTRIBUTE(printf,3,4);
 AG_Variable *_Nonnull AG_SetStringNODUP(void *_Nonnull, const char *_Nonnull,
                                         char *_Nonnull);
-
-void AG_InitString(AG_Variable *_Nonnull, const char *_Nonnull);
-void AG_InitStringNODUP(AG_Variable *_Nonnull, char *_Nonnull);
-
+void                  AG_InitString(AG_Variable *_Nonnull, const char *_Nonnull);
+void                  AG_InitStringNODUP(AG_Variable *_Nonnull, char *_Nonnull);
 AG_Variable *_Nonnull AG_BindString(void *_Nonnull, const char *_Nonnull,
                                     char *_Nonnull, AG_Size);
 #ifdef AG_THREADS
@@ -452,18 +442,16 @@ AG_Variable *_Nonnull AG_BindStringMp(void *_Nonnull, const char *_Nonnull,
 /*
  * POINTER: A generic pointer or memory address.
  */
-void *_Nullable AG_GetPointer(void *_Nonnull, const char *_Nonnull)
-                             _Pure_Attribute_If_Unthreaded;
+void *_Nullable       AG_GetPointer(void *_Nonnull, const char *_Nonnull)
+                                   _Pure_Attribute_If_Unthreaded;
 #ifdef AG_TYPE_SAFETY
 const void *_Nullable AG_GetConstPointer(void *_Nonnull, const char *_Nonnull)
                                         _Pure_Attribute_If_Unthreaded;
 #else
-# define AG_GetConstPointer(o,n) ((const void *)AG_GetPointer((o),(n)))
+# define              AG_GetConstPointer(o,n) ((const void *)AG_GetPointer((o),(n)))
 #endif
-
-void AG_InitConstPointer(AG_Variable *_Nonnull, const void *_Nullable);
-void AG_InitPointer(AG_Variable *_Nonnull, void *_Nullable);
-
+void                  AG_InitConstPointer(AG_Variable *_Nonnull, const void *_Nullable);
+void                  AG_InitPointer(AG_Variable *_Nonnull, void *_Nullable);
 AG_Variable *_Nonnull AG_SetPointer(void *_Nonnull, const char *_Nonnull,
                                     void *_Nullable);
 AG_Variable *_Nonnull AG_SetConstPointer(void *_Nonnull, const char *_Nonnull,
@@ -490,9 +478,9 @@ AG_Variable *_Nonnull AG_BindFlagMp(void *_Nonnull, const char *_Nonnull,
 
 AG_Variable *_Nonnull AG_BindFlag8(void *_Nonnull, const char *_Nonnull,
 				   Uint8 *_Nonnull, Uint8);
+#if AG_MODEL != AG_SMALL
 AG_Variable *_Nonnull AG_BindFlag16(void *_Nonnull, const char *_Nonnull,
 				    Uint16 *_Nonnull, Uint16);
-#if AG_MODEL != AG_SMALL
 AG_Variable *_Nonnull AG_BindFlag32(void *_Nonnull, const char *_Nonnull,
 				    Uint32 *_Nonnull, Uint32);
 #endif
@@ -506,7 +494,7 @@ AG_Variable *_Nonnull AG_BindFlag16Mp(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindFlag32Mp(void *_Nonnull, const char *_Nonnull,
 				      Uint32 *_Nonnull, Uint32,
 				      _Nonnull_Mutex AG_Mutex *_Nonnull);
-#endif /* AG_THREADS */
+#endif
 
 AG_Variable *_Nonnull AG_BindObject(void *_Nonnull, const char *_Nonnull,
 				    void *_Nonnull);

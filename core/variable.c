@@ -142,9 +142,9 @@ AG_DerefVariable(AG_Variable *Vdst, const AG_Variable *Vsrc)
 	switch (Vsrc->type) {
 	case AG_VARIABLE_P_UINT:   case AG_VARIABLE_P_INT:
 	case AG_VARIABLE_P_UINT8:  case AG_VARIABLE_P_SINT8:
-	case AG_VARIABLE_P_UINT16: case AG_VARIABLE_P_SINT16:
 #if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_ULONG:  case AG_VARIABLE_P_LONG:
+	case AG_VARIABLE_P_UINT16: case AG_VARIABLE_P_SINT16:
 	case AG_VARIABLE_P_UINT32: case AG_VARIABLE_P_SINT32:
 #endif
 #ifdef HAVE_64BIT
@@ -155,12 +155,13 @@ AG_DerefVariable(AG_Variable *Vdst, const AG_Variable *Vsrc)
 #endif
 	case AG_VARIABLE_P_FLAG:		/* to UINT */
 	case AG_VARIABLE_P_FLAG8:		/* to UINT8 */
-	case AG_VARIABLE_P_FLAG16:		/* to UINT16 */
 #if AG_MODEL != AG_SMALL
+	case AG_VARIABLE_P_FLAG16:		/* to UINT16 */
 	case AG_VARIABLE_P_FLAG32:		/* to UINT32 */
 #endif
 	case AG_VARIABLE_P_POINTER:
-		memcpy(&Vdst->data, Vsrc->data.p, agVariableTypes[Vsrc->type].size);
+		memcpy(&Vdst->data, Vsrc->data.p,
+		       agVariableTypes[Vsrc->type].size);
 		break;
 	case AG_VARIABLE_STRING:
 	case AG_VARIABLE_P_STRING:
@@ -244,37 +245,35 @@ AG_PrintVariable(char *s, AG_Size len, AG_Variable *V)
 	case AG_VARIABLE_P_UINT:	StrlcpyUint(s, *(Uint *)V->data.p, len);		break;
 	case AG_VARIABLE_INT:		StrlcpyInt(s, V->data.i, len);				break;
 	case AG_VARIABLE_P_INT:		StrlcpyInt(s, *(int *)V->data.p, len);			break;
+	case AG_VARIABLE_UINT8:		StrlcpyUint(s, (Uint)V->data.u8, len);			break;
+	case AG_VARIABLE_P_UINT8:	StrlcpyUint(s, (Uint)*(Uint8 *)V->data.p, len);		break;
+	case AG_VARIABLE_SINT8:		StrlcpyInt(s, (int)V->data.s8, len);			break;
+	case AG_VARIABLE_P_SINT8:	StrlcpyInt(s, (int)*(Sint8 *)V->data.p, len);		break;
 # if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_ULONG:		Snprintf(s, len, "%lu", V->data.uli);			break;
 	case AG_VARIABLE_P_ULONG:	Snprintf(s, len, "%lu", *(Ulong *)V->data.p);		break;
 	case AG_VARIABLE_LONG:		Snprintf(s, len, "%ld", V->data.li);			break;
 	case AG_VARIABLE_P_LONG:	Snprintf(s, len, "%ld", *(long *)V->data.p);		break;
-# endif
-	case AG_VARIABLE_UINT8:		StrlcpyUint(s, (Uint)V->data.u8, len);			break;
-	case AG_VARIABLE_P_UINT8:	StrlcpyUint(s, (Uint)*(Uint8 *)V->data.p, len);		break;
-	case AG_VARIABLE_SINT8:		StrlcpyInt(s, (int)V->data.s8, len);			break;
-	case AG_VARIABLE_P_SINT8:	StrlcpyInt(s, (int)*(Sint8 *)V->data.p, len);		break;
 	case AG_VARIABLE_UINT16:	StrlcpyUint(s, (Uint)V->data.u16, len);			break;
 	case AG_VARIABLE_P_UINT16:	StrlcpyUint(s, (Uint)*(Uint16 *)V->data.p, len);	break;
 	case AG_VARIABLE_SINT16:	StrlcpyInt(s, (int)V->data.s16, len);			break;
 	case AG_VARIABLE_P_SINT16:	StrlcpyInt(s, (int)*(Sint16 *)V->data.p, len);		break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32:	Snprintf(s, len, "%lu", (Ulong)V->data.u32);		break;
 	case AG_VARIABLE_P_UINT32:	Snprintf(s, len, "%lu", (Ulong)*(Uint32 *)V->data.p);	break;
 	case AG_VARIABLE_SINT32:	Snprintf(s, len, "%ld", (long)V->data.s32);		break;
 	case AG_VARIABLE_P_SINT32:	Snprintf(s, len, "%ld", (long)*(Sint32 *)V->data.p);	break;
-#endif
-#ifdef HAVE_64BIT
-	case AG_VARIABLE_SINT64:	Snprintf(s, len, "%lld", (long long)V->data.s64);		break;
-	case AG_VARIABLE_P_SINT64:	Snprintf(s, len, "%lld", (long long)*(Sint64 *)V->data.p);	break;
-	case AG_VARIABLE_UINT64:	Snprintf(s, len, "%llu", (unsigned long long)V->data.u64);		break;
-	case AG_VARIABLE_P_UINT64:	Snprintf(s, len, "%llu", (unsigned long long)*(Sint64 *)V->data.p);	break;
 #endif
 #ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		Snprintf(s, len, "%.2f", V->data.flt);			break;
 	case AG_VARIABLE_P_FLOAT:	Snprintf(s, len, "%.2f", *(float *)V->data.p);		break;
 	case AG_VARIABLE_DOUBLE:	Snprintf(s, len, "%.2f", V->data.dbl);			break;
 	case AG_VARIABLE_P_DOUBLE:	Snprintf(s, len, "%.2f", *(double *)V->data.p);		break;
+#endif
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_SINT64:	Snprintf(s, len, "%lld", (long long)V->data.s64);		break;
+	case AG_VARIABLE_P_SINT64:	Snprintf(s, len, "%lld", (long long)*(Sint64 *)V->data.p);	break;
+	case AG_VARIABLE_UINT64:	Snprintf(s, len, "%llu", (unsigned long long)V->data.u64);		break;
+	case AG_VARIABLE_P_UINT64:	Snprintf(s, len, "%llu", (unsigned long long)*(Sint64 *)V->data.p);	break;
 #endif
 	case AG_VARIABLE_STRING:
 		Strlcpy(s, V->data.s, len);
@@ -294,10 +293,10 @@ AG_PrintVariable(char *s, AG_Size len, AG_Variable *V)
 	case AG_VARIABLE_P_FLAG8:
 		Snprintf(s, len, "%s", (*(Uint8 *)V->data.p & V->info.bitmask.u8) ? "YES" : "NO");
 		break;
+# if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_FLAG16:
 		Snprintf(s, len, "%s", (*(Uint16 *)V->data.p & V->info.bitmask.u16) ? "YES" : "NO");
 		break;
-# if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_FLAG32:
 		Snprintf(s, len, "%s", (*(Uint32 *)V->data.p & V->info.bitmask.u32) ? "YES" : "NO");
 		break;
@@ -652,6 +651,7 @@ AG_BindSint8Mp(void *obj, const char *name, Sint8 *v, AG_Mutex *mutex)
 }
 #endif
 
+#if AG_MODEL != AG_SMALL
 /*
  * Unsigned 16-bit integer
  */
@@ -663,9 +663,9 @@ AG_GetUint16(void *obj, const char *name)
 AG_Variable *
 AG_SetUint16(void *obj, const char *name, Uint16 v)
 {
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	Debug(obj, "Set \"%s\" -> (Uint16) 0x%04x\n", name, v);
-#endif
+# endif
 	FN_VARIABLE_SET(u16, Uint16, AG_VARIABLE_UINT16);
 }
 void
@@ -677,22 +677,22 @@ AG_InitUint16(AG_Variable *V, Uint16 v)
 AG_Variable *
 AG_BindUint16(void *obj, const char *name, Uint16 *v)
 {
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	Debug(obj, "Bind \"%s\" -> *(Uint16 *)%p (= 0x%04x)\n", name, v, *v);
-#endif
+# endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_UINT16);
 }
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 AG_Variable *
 AG_BindUint16Mp(void *obj, const char *name, Uint16 *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_UINT16);
-# ifdef AG_DEBUG
+#  ifdef AG_DEBUG
 	Debug(obj, "Bind \"%s\" -> *(Uint16 *)%p (= 0x%04x) mutex %p\n", name, v, *v, mutex);
-# endif
+#  endif
 	return (V);
 }
-#endif
+# endif
 
 /*
  * Signed 16-bit integer
@@ -705,9 +705,9 @@ AG_GetSint16(void *obj, const char *name)
 AG_Variable *
 AG_SetSint16(void *obj, const char *name, Sint16 v)
 {
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	Debug(obj, "Set \"%s\" -> (Sint16) 0x%04x\n", name, v);
-#endif
+# endif
 	FN_VARIABLE_SET(s16, Sint16, AG_VARIABLE_SINT16);
 }
 void
@@ -719,24 +719,23 @@ AG_InitSint16(AG_Variable *V, Sint16 v)
 AG_Variable *
 AG_BindSint16(void *obj, const char *name, Sint16 *v)
 {
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	Debug(obj, "Bind \"%s\" -> *(Sint16 *)%p (= 0x%04x)\n", name, v, *v);
-#endif
+# endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_SINT16);
 }
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 AG_Variable *
 AG_BindSint16Mp(void *obj, const char *name, Sint16 *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_SINT16);
-# ifdef AG_DEBUG
+#  ifdef AG_DEBUG
 	Debug(obj, "Bind \"%s\" -> *(Sint16 *)%p (= 0x%04x) mutex %p\n", name, v, *v, mutex);
-# endif
+#  endif
 	return (V);
 }
-#endif
+# endif
 
-#if AG_MODEL != AG_SMALL
 /*
  * Unsigned 32-bit integer
  */
@@ -748,9 +747,9 @@ AG_GetUint32(void *obj, const char *name)
 AG_Variable *
 AG_SetUint32(void *obj, const char *name, Uint32 v)
 {
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	Debug(obj, "Set \"%s\" -> (Uint32) 0x%08x\n", name, v);
-#endif
+# endif
 	FN_VARIABLE_SET(u32, Uint32, AG_VARIABLE_UINT32);
 }
 void
@@ -762,9 +761,9 @@ AG_InitUint32(AG_Variable *V, Uint32 v)
 AG_Variable *
 AG_BindUint32(void *obj, const char *name, Uint32 *v)
 {
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	Debug(obj, "Bind \"%s\" -> *(Uint32 *)%p (= 0x%08x)\n", name, v, *v);
-#endif
+# endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_UINT32);
 }
 # ifdef AG_THREADS
@@ -790,9 +789,9 @@ AG_GetSint32(void *obj, const char *name)
 AG_Variable *
 AG_SetSint32(void *obj, const char *name, Sint32 v)
 {
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	Debug(obj, "Set \"%s\" -> (Sint32) 0x%08x\n", name, v);
-#endif
+# endif
 	FN_VARIABLE_SET(s32, Sint32, AG_VARIABLE_SINT32);
 }
 void
@@ -804,9 +803,9 @@ AG_InitSint32(AG_Variable *V, Sint32 v)
 AG_Variable *
 AG_BindSint32(void *obj, const char *name, Sint32 *v)
 {
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	Debug(obj, "Bind \"%s\" -> *(Sint32 *)%p (= 0x%08x)\n", name, v, *v);
-#endif
+# endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_SINT32);
 }
 # ifdef AG_THREADS
@@ -820,6 +819,7 @@ AG_BindSint32Mp(void *obj, const char *name, Sint32 *v, AG_Mutex *mutex)
 	return (V);
 }
 # endif /* AG_THREADS */
+
 #endif /* !AG_SMALL */
 
 #ifdef HAVE_64BIT
@@ -1443,15 +1443,17 @@ AG_BindFlag8Mp(void *obj, const char *name, Uint8 *v, Uint8 bitmask,
 }
 #endif /* AG_THREADS */
 
+#if AG_MODEL != AG_SMALL
+
 AG_Variable *
 AG_BindFlag16(void *obj, const char *name, Uint16 *v, Uint16 bitmask)
 {
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	Debug(obj, "Bind \"%s\" -> *(Uint16 *)%p (= 0x%04x) mask 0x%04x\n", name, v, *v, bitmask);
-#endif
+# endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG16);
 	V->data.p = v;
 	V->info.bitmask.u16 = bitmask;
@@ -1460,7 +1462,7 @@ AG_BindFlag16(void *obj, const char *name, Uint16 *v, Uint16 bitmask)
 	return (V);
 }
 
-#ifdef AG_THREADS
+# ifdef AG_THREADS
 AG_Variable *
 AG_BindFlag16Mp(void *obj, const char *name, Uint16 *v, Uint16 bitmask,
     AG_Mutex *mutex)
@@ -1468,9 +1470,9 @@ AG_BindFlag16Mp(void *obj, const char *name, Uint16 *v, Uint16 bitmask,
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
-# ifdef AG_DEBUG
+#  ifdef AG_DEBUG
 	Debug(obj, "Bind \"%s\" -> *(Uint16 *)%p (= 0x%04x) mask 0x%04x mutex %p\n", name, v, *v, bitmask, mutex);
-# endif
+#  endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG16);
 	V->mutex = mutex;
 	V->data.p = v;
@@ -1479,9 +1481,8 @@ AG_BindFlag16Mp(void *obj, const char *name, Uint16 *v, Uint16 bitmask,
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-#endif /* AG_THREADS */
+# endif /* AG_THREADS */
 
-#if AG_MODEL != AG_SMALL
 AG_Variable *
 AG_BindFlag32(void *obj, const char *name, Uint32 *v, Uint32 bitmask)
 {
@@ -1519,6 +1520,7 @@ AG_BindFlag32Mp(void *obj, const char *name, Uint32 *v, Uint32 bitmask,
 	return (V);
 }
 # endif /* AG_THREADS */
+
 #endif /* !AG_SMALL */
 
 /* Create a Variable to Object reference. */
