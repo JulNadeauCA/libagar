@@ -308,11 +308,15 @@ MenuCopyActive(AG_Event *_Nonnull event)
 }
 
 #ifdef AG_SERIALIZATION
+/*
+ * Save the console buffer to a text file.
+ */
 static void
 MenuExportToFileTXT(AG_Event *_Nonnull event)
 {
 	const AG_Console *cons = AG_CONST_CONSOLE_PTR(1);
-	char *s, *path = AG_STRING(2);
+	const char *path = AG_STRING(2);
+	char *s;
 	FILE *f;
 
 	if ((s = AG_ConsoleExportText(cons, AG_NEWLINE_NATIVE)) == NULL) {
@@ -327,11 +331,36 @@ MenuExportToFileTXT(AG_Event *_Nonnull event)
 	fclose(f);
 	free(s);
 #ifdef AG_TIMERS
-	AG_TextTmsg(AG_MSG_INFO, 2000, _("Saved successfully to %s"), path);
+	AG_TextTmsg(AG_MSG_INFO, 1250, _("Saved to %s OK"), AG_ShortFilename(path));
 #endif
 	return;
 fail:
 	AG_TextMsgFromError();
+}
+
+/*
+ * Save a screenshot of the console to an image file.
+ */
+static void
+MenuExportToFileImage(AG_Event *_Nonnull event)
+{
+	AG_Console *cons = AG_CONSOLE_PTR(1);
+	const char *path = AG_STRING(2);
+	AG_Surface *S;
+
+	if ((S = AG_WidgetSurface(cons)) == NULL) {
+		AG_TextMsgFromError();
+		return;
+	}
+	if (AG_SurfaceExportFile(S, path) == -1) {
+		AG_TextMsgFromError();
+		goto out;
+	}
+#ifdef AG_TIMERS
+	AG_TextTmsg(AG_MSG_INFO, 1250, _("Saved to %s OK"), AG_ShortFilename(path));
+#endif
+out:
+	AG_SurfaceFree(S);
 }
 static void
 MenuExportToFileDlg(AG_Event *_Nonnull event)
@@ -343,7 +372,7 @@ MenuExportToFileDlg(AG_Event *_Nonnull event)
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
 	}
-	AG_WindowSetCaptionS(win, _("Export to text file..."));
+	AG_WindowSetCaption(win, _("Export %s to..."), OBJECT(cons)->name);
 
 	fd = AG_FileDlgNewMRU(win, "agar.console.text-dir",
 	                      AG_FILEDLG_SAVE | AG_FILEDLG_CLOSEWIN |
@@ -351,6 +380,8 @@ MenuExportToFileDlg(AG_Event *_Nonnull event)
 
 	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));
 
+	AG_FileDlgAddType(fd, _("Screenshot image"), "*.png,*.bmp,*.jpg",
+	    MenuExportToFileImage, "%p", cons);
 	AG_FileDlgAddType(fd, _("Text file"), "*.txt,*.log",
 	    MenuExportToFileTXT, "%Cp", cons);
 
