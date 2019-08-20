@@ -86,28 +86,11 @@ const char *agStyleDefault_Data =
 	"color: rgb(50,50,50);\n"
 	"line-color: rgb(70,70,70);\n"
 	"}\n"
-	"/*\n"
-	" * TODO: We wish to be able to write rules such as this:\n"
-	" *\n"
-	" * AG_Console > AG_Scrollbar {\n"
-	" * 	color#hover: rgb(145,145,145);\n"
-	" * 	color#focused: rgb(225,225,225);\n"
-	" * }\n"
-	" *\n"
-	" * But this is not supported yet so as a temporary workaround, we make\n"
-	" * Scrollbar not inherit the reverse colors of its parent:\n"
-	" */\n"
-	"AG_Scrollbar {\n"
-	"color#focused: rgb(200,0,0);\n"
-	"color#disabled: rgb(160,160,160);\n"
-	"color#hover: rgb(130,130,130);\n"
-	"color#selected: rgb(50,50,120);\n"
-	"}\n"
 	"";
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2839,
+	2388,
 	&agStyleDefault_Data,
 	NULL
 };

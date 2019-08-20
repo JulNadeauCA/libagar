@@ -86,21 +86,3 @@ AG_FixedPlotter {
 	color: rgb(50,50,50);
 	line-color: rgb(70,70,70);
 }
-
-/*
- * TODO: We wish to be able to write rules such as this:
- *
- * AG_Console > AG_Scrollbar {
- * 	color#hover: rgb(145,145,145);
- * 	color#focused: rgb(225,225,225);
- * }
- *
- * But this is not supported yet so as a temporary workaround, we make
- * Scrollbar not inherit the reverse colors of its parent:
- */
-AG_Scrollbar {
-	color#focused: rgb(200,0,0);
-	color#disabled: rgb(160,160,160);
-	color#hover: rgb(130,130,130);
-	color#selected: rgb(50,50,120);
-}
