@@ -7,12 +7,14 @@
 #include <agar/gui/drv.h>
 #include <agar/gui/begin.h>
 
-#if AG_MODEL == AG_SMALL
-# define AG_GLYPH_NBUCKETS  256
-# define AG_TEXT_STATES_MAX 32
-#else
-# define AG_GLYPH_NBUCKETS  512
-# define AG_TEXT_STATES_MAX 64
+#ifndef AG_TEXT_STATES_MAX
+#define AG_TEXT_STATES_MAX (AG_MODEL >> 1)
+#endif
+#ifndef AG_TEXT_FONTSPEC_MAX
+#define AG_TEXT_FONTSPEC_MAX AG_MODEL
+#endif
+#ifndef AG_GLYPH_NBUCKETS
+#define AG_GLYPH_NBUCKETS (AG_MODEL * 8)
 #endif
 
 struct ag_window;
@@ -131,8 +133,8 @@ typedef struct ag_font {
 } AG_Font;
 
 /*
- * State variables for text rendering.
- * SYNC: AG_TextStateCompare()
+ * An element of the rendering attribute stack.
+ * SYNC with CompareTextStates() in gui/text_cache.c.
  */
 typedef struct ag_text_state {
 	AG_Font *_Nonnull font;		/* Font face */
@@ -169,28 +171,36 @@ typedef struct ag_glyph_cache {
 	AG_SLIST_HEAD_(ag_glyph) glyphs;
 } AG_GlyphCache;
 
+#ifdef AG_DEBUG
+# define AG_TEXT_STATE_CUR() \
+  (((agTextStateCur >= 0 && \
+    agTextStateCur < AG_TEXT_STATES_MAX)) ? &agTextStateStack[agTextStateCur] : \
+   (AG_TextState *)AG_GenericMismatch("AG_TEXT_STATE"))
+#else
+# define AG_TEXT_STATE_CUR() (&agTextStateStack[agTextStateCur])
+#endif
+
 __BEGIN_DECLS
 extern AG_ObjectClass agFontClass;
-extern AG_Font *_Nullable agDefaultFont;
-extern int agTextFontHeight;
-extern int agTextFontAscent;
-extern int agTextFontDescent;
-extern int agTextFontLineSkip;
-extern int agFreetypeInited;
-
-extern AG_TextState *_Nonnull  agTextState;
-extern _Nonnull_Mutex AG_Mutex agTextLock;
 
 extern AG_StaticFont *_Nonnull agBuiltinFonts[];
-extern const char *agFontTypeNames[];
-extern const char *agTextMsgTitles[];
+extern int                     agTextFontHeight;
+extern int                     agTextFontAscent;
+extern int                     agTextFontDescent;
+extern int                     agTextFontLineSkip;
+extern int                     agFreetypeInited;
+extern AG_TextState            agTextStateStack[AG_TEXT_STATES_MAX];
+extern Uint                    agTextStateCur;
+extern const char             *agFontTypeNames[];
+extern const char             *agTextMsgTitles[];
+extern _Nonnull_Mutex AG_Mutex agTextLock;
+extern AG_Font *_Nullable      agDefaultFont;
 
 void               AG_PushTextState(void);
 AG_Font *_Nullable AG_TextFontLookup(const char *_Nullable,
                                      const AG_FontPts *_Nullable, Uint);
 AG_Font *_Nullable AG_TextFontPts(const AG_FontPts *_Nullable);
 AG_Font *_Nullable AG_TextFontPct(int);
-
 AG_Font	*_Nullable AG_FetchFont(const char *_Nullable,
                                 const AG_FontPts *_Nullable, Uint)
                                _Warn_Unused_Result;
@@ -253,7 +263,7 @@ void AG_TextValign(enum ag_text_valign);
 void AG_TextTabWidth(int);
 
 #ifdef AG_SERIALIZATION
-void AG_SetDefaultFont(AG_Font *_Nonnull);
+AG_Font *AG_SetDefaultFont(AG_Font *_Nonnull);
 void AG_TextParseFontSpec(const char *_Nonnull);
 #endif
 

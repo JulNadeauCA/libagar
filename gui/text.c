@@ -75,15 +75,18 @@
 # include <fontconfig/fontconfig.h>
 #endif
 
+#include <agar/gui/text.h>
 #include <agar/gui/window.h>
-#include <agar/gui/box.h>
-#include <agar/gui/label.h>
-#include <agar/gui/textbox.h>
-#include <agar/gui/button.h>
-#include <agar/gui/ucombo.h>
-#include <agar/gui/numerical.h>
+#ifdef AG_WIDGETS
+# include <agar/gui/box.h>
+# include <agar/gui/label.h>
+# include <agar/gui/textbox.h>
+# include <agar/gui/button.h>
+# include <agar/gui/ucombo.h>
+# include <agar/gui/numerical.h>
+# include <agar/gui/checkbox.h>
+#endif
 #include <agar/gui/keymap.h>
-#include <agar/gui/checkbox.h>
 #include <agar/gui/load_xcf.h>
 #include <agar/gui/iconmgr.h>
 #include <agar/gui/icons.h>
@@ -123,9 +126,9 @@ int agFreetypeInited = 0;		/* Initialized Freetype library */
 int agFontconfigInited = 0;		/* Initialized Fontconfig library */
 
 static int agTextInitedSubsystem = 0;
-static AG_TextState agTextStateStack[AG_TEXT_STATES_MAX];
-static Uint curState = 0;
-AG_TextState *agTextState = NULL;
+
+AG_TextState agTextStateStack[AG_TEXT_STATES_MAX];
+Uint         agTextStateCur = 0;
 
 /* #define SYMBOLS */		/* Escape $(x) type symbols */
 
@@ -144,18 +147,26 @@ _Nonnull_Mutex AG_Mutex agTextLock;
 static TAILQ_HEAD(ag_fontq, ag_font) fonts;
 AG_Font *_Nullable agDefaultFont = NULL;
 
-static void TextRenderFT(const AG_Char *_Nonnull, AG_Surface *_Nonnull,
-                         const AG_TextMetrics *_Nonnull);
 #ifdef HAVE_FREETYPE
-static void TextRenderFT_Underline(AG_TTFFont *_Nonnull, AG_Surface *_Nonnull,
-                                   int);
+static void TextRenderFT(const AG_Char *_Nonnull, AG_Surface *_Nonnull, const AG_TextMetrics *_Nonnull);
+static void TextRenderFT_Underline(AG_TTFFont *_Nonnull, AG_Surface *_Nonnull, int);
 # ifdef SYMBOLS
 static int  TextRenderSymbol(Uint, AG_Surface *_Nonnull, int,int);
 # endif
 #endif
 static AG_Glyph *_Nonnull TextRenderGlyph_Miss(AG_Driver *_Nonnull, AG_Char);
+#ifdef AG_SERIALIZATION
+static AG_Surface *_Nonnull GetBitmapGlyph(const AG_Font *_Nonnull, AG_Char);
+#endif
 
-static void AG_TextStateInit(void);
+#if !defined(HAVE_FREETYPE)
+# define TextSizeFT       TextSizeDummy
+# define TextRenderFT     TextRenderDummy
+#endif
+#if !defined(AG_SERIALIZATION)
+# define TextSizeBitmap   TextSizeDummy
+# define TextRenderBitmap TextRenderDummy
+#endif
 
 /* Load an individual glyph from a bitmap font file. */
 static void
@@ -201,8 +212,7 @@ GetFontTypeFromSignature(const char *_Nonnull path,
 static int
 OpenBitmapFont(AG_Font *_Nonnull font)
 {
-	char *s;
-	char *msig, *c0, *c1;
+	char *s, *msig, *c0, *c1;
 	AG_DataSource *ds;
 
 	switch (font->spec.sourceType) {
@@ -243,7 +253,7 @@ OpenBitmapFont(AG_Font *_Nonnull font)
 	    msig == NULL || strcmp(msig, "MAP") != 0 ||
 	    c0 == NULL || c1 == NULL ||
 	    c0[0] == '\0' || c1[0] == '\0') {
-		AG_SetError("XCF is missing the \"MAP:x-y\" string");
+		AG_SetErrorS("XCF is missing the \"MAP:x-y\" string");
 		return (-1);
 	}
 	font->c0 = (AG_Char)strtol(c0, NULL, 10);
@@ -260,123 +270,98 @@ OpenBitmapFont(AG_Font *_Nonnull font)
 }
 #endif /* AG_SERIALIZATION */
 
-/* Save the current text rendering state. */
+/*
+ * Save the current font-engine rendering state.
+ *
+ * Must be called from Widget draw(), size_alloc(), size_request() or
+ * event-handling context. Widget must have the USE_TEXT flag set.
+ */
 void
 AG_PushTextState(void)
 {
-	AG_TextState *newState, *prevState;
-	AG_Font *prevFont;
+	const AG_TextState *tsPrev = AG_TEXT_STATE_CUR();
+	AG_TextState *ts;
 
-	AG_MutexLock(&agTextLock);
-	if ((curState+1) >= AG_TEXT_STATES_MAX) {
-		AG_FatalError("Text state stack overflow");
+	if ((agTextStateCur+1) >= AG_TEXT_STATES_MAX) {
+#ifdef AG_VERBOSITY
+		AG_FatalErrorF("PushTextState Overflow (%d+1 >= %d)",
+		    agTextStateCur, AG_TEXT_STATES_MAX);
+#else
+		AG_FatalError("PushTextState Overflow");
+#endif
 	}
-	prevState = &agTextStateStack[curState];
-	prevFont = prevState->font;
-
-	newState = &agTextStateStack[++curState];
-
-	newState->font = AG_FetchFont(OBJECT(prevFont)->name,
-	                              &prevFont->spec.size,
-				      prevFont->flags);
-
-	memcpy(&newState->color, &prevState->color, sizeof(AG_Color));
-	memcpy(&newState->colorBG, &prevState->colorBG, sizeof(AG_Color));
-	newState->justify = prevState->justify;
-	newState->valign = prevState->valign;
-	newState->tabWd = prevState->tabWd;
+	ts = &agTextStateStack[++agTextStateCur];
+	memcpy(ts, tsPrev, sizeof(AG_TextState));
+	ts->font = AG_FetchFont(OBJECT(tsPrev->font)->name,
+	                              &tsPrev->font->spec.size,
+		                       tsPrev->font->flags);
 #ifdef AG_DEBUG
-	snprintf(newState->name, sizeof(newState->name), "TS%d", curState);
-#endif
-	agTextState = newState;
-
-	AG_MutexUnlock(&agTextLock);
-}
-
-/* Initialize the text state to default settings. */
-void
-AG_TextStateInit(void)
-{
-	AG_TextState *ts = agTextState;
-
-	ts->font = agDefaultFont;
-	AG_ColorWhite(&ts->color);
-	AG_ColorNone(&ts->colorBG);
-	ts->justify = AG_TEXT_LEFT;
-	ts->valign = AG_TEXT_TOP;
-	ts->tabWd = agTextTabWidth;
-#ifdef AG_DEBUG
-	AG_Strlcpy(ts->name, "TS0", sizeof(ts->name));
+	snprintf(ts->name, sizeof(ts->name), "TS%d", agTextStateCur);
 #endif
 }
 
-/* Select the font face to use in rendering text. */
+/*
+ * Select the font face to use in rendering text.
+ *
+ * Must be called from Widget draw(), size_alloc(), size_request() or
+ * event-handling context. Widget must have the USE_TEXT flag set.
+ */
 AG_Font *
 AG_TextFontLookup(const char *face, const AG_FontPts *size, Uint flags)
 {
 	AG_Font *newFont;
+	AG_TextState *ts;
 
-	AG_MutexLock(&agTextLock);
 	if ((newFont = AG_FetchFont(face, size, flags)) == NULL) {
-		goto fail;
+		return (NULL);
 	}
-	agTextState->font = newFont;
-	AG_MutexUnlock(&agTextLock);
+	ts = AG_TEXT_STATE_CUR();
+	ts->font = newFont;
 	return (newFont);
-fail:
-	AG_MutexUnlock(&agTextLock);
-	return (NULL);
 }
 
-/* Set font size in points. */
+/*
+ * Set font size in points.
+ *
+ * Must be called from Widget draw(), size_alloc(), size_request() or
+ * event-handling context. Widget must have the USE_TEXT flag set.
+ */
 AG_Font *
 AG_TextFontPts(const AG_FontPts *size)
 {
-	AG_Font *font, *fontNew;
+	AG_TextState *ts = AG_TEXT_STATE_CUR();
+	const AG_Font *fontCur = ts->font;
+	AG_Font *font;
 
-	AG_MutexLock(&agTextLock);
-	font = agTextState->font;
-	fontNew = AG_FetchFont(OBJECT(font)->name, size, font->flags);
-	if (fontNew == NULL) {
-		goto fail;
+	if (!(font = AG_FetchFont(OBJECT(fontCur)->name, size, fontCur->flags))) {
+		return (NULL);
 	}
-	agTextState->font = fontNew;
-	AG_MutexUnlock(&agTextLock);
-	return (agTextState->font);
-fail:
-	AG_MutexUnlock(&agTextLock);
-	return (NULL);
+	ts->font = font;
+	return (font);
 }
 
-/* Set font size as % of the current font size. */
+/*
+ * Set font size as % of the current font size.
+ *
+ * Must be called from Widget draw(), size_alloc(), size_request() or
+ * event-handling context. Widget must have the USE_TEXT flag set.
+ */
 AG_Font *
 AG_TextFontPct(int pct)
 {
-	AG_Font *font, *fontNew;
-	AG_FontPts size;
-
-	AG_MutexLock(&agTextLock);
-	font = agTextState->font;
+	AG_TextState *ts = AG_TEXT_STATE_CUR();
+	const AG_Font *fontCur = ts->font;
 #ifdef HAVE_FLOAT
-	size = font->spec.size*pct/100.0;
+	const AG_FontPts size = fontCur->spec.size * pct / 100.0;
 #else
-	size = font->spec.size*pct/100;
+	const AG_FontPts size = fontCur->spec.size * pct / 100;  /* TODO */
 #endif
-	fontNew = AG_FetchFont(OBJECT(font)->name, &size, font->flags);
-	if (fontNew == NULL) {
-		goto fail;
-	}
-	agTextState->font = fontNew;
-	AG_MutexUnlock(&agTextLock);
-	return (agTextState->font);
-fail:
-	AG_MutexUnlock(&agTextLock);
-	return (NULL);
+	return AG_FetchFont(OBJECT(fontCur)->name, &size, fontCur->flags);
 }
 
 /*
  * Load the given font (or return a pointer to an existing one), with the
- * given specifications. Size may be fractional except in integer-only build.
+ * given specifications.
  */
 AG_Font *
 AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
@@ -472,7 +457,6 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 				Snprintf(nameIn, nameLen, "%s-%.0f",
 				    name, *fontSize);
 			}
-			Debug(font, "fontconfig query \"%s\"\n", nameIn);
 			if ((pattern = FcNameParse((FcChar8 *)nameIn)) == NULL ||
 			    !FcConfigSubstitute(NULL, pattern, FcMatchPattern)) {
 				AG_SetError(_("Fontconfig failed to parse: %s"), name);
@@ -574,25 +558,37 @@ fail:
 	return (NULL);
 }
 
-/* Restore the previous rendering state. */
+/*
+ * Restore the previous font-engine rendering state.
+ *
+ * Must be called from Widget draw(), size_alloc(), size_request() or
+ * event-handling context. Widget must have the USE_TEXT flag set.
+ */
 void
 AG_PopTextState(void)
 {
-	AG_MutexLock(&agTextLock);
-	if (curState == 0) {
-		AG_FatalError("Unexpected AG_PopTextState()");
-	}
-#if 0
-	if (agTextState->font != NULL &&
-	    agTextState->font != agDefaultFont)
-		AG_UnusedFont(agTextState->font);
+	AG_TextState *ts = AG_TEXT_STATE_CUR();
+
+	if (agTextStateCur == 0)
+		AG_FatalError("PopTextState without Push");
+#ifdef AG_DEBUG
+	if (ts->name[0] != 'T' ||
+	    ts->name[1] != 'S' || atoi(&ts->name[2]) != agTextStateCur)
+		AG_FatalErrorF("PopTextState: Bad state #%d", agTextStateCur);
 #endif
-	AG_TextStateInit();
-	agTextState = &agTextState[--curState];
-	AG_MutexUnlock(&agTextLock);
+#if 0
+	/* TODO */
+	if (AG_TEXT_STATE_CUR()->font != NULL &&
+	    AG_TEXT_STATE_CUR()->font != agDefaultFont)
+		AG_UnusedFont(AG_TEXT_STATE_CUR()->font);
+#endif
+	--agTextStateCur;
 }
 
-/* Decrement reference count on a font, delete if it reaches zero. */
+/*
+ * Decrement reference count on a font, delete if it reaches zero.
+ * TODO make this work asynchronously.
+ */
 void
 AG_UnusedFont(AG_Font *font)
 {
@@ -665,6 +661,7 @@ TextSizeDummy(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 	tm->nLines = 0;
 }
 
+#ifdef HAVE_FREETYPE
 /*
  * Compute the rendered size of UCS-4 text with a FreeType font. If the
  * string is multiline and nLines is non-NULL, the width of individual lines
@@ -673,11 +670,12 @@ TextSizeDummy(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 static void
 TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extended)
 {
-#ifdef HAVE_FREETYPE
-	AG_Font *font = agTextState->font;
+	AG_TextState *ts = AG_TEXT_STATE_CUR();
+	AG_Font *font = ts->font;
 	AG_TTFFont *ftFont = font->ttf;
 	AG_TTFGlyph *G;
 	const AG_Char *ch;
+	const int lineskip = font->lineskip;
 	int xMin=0, xMax=0, yMin=0, yMax;
 	int xMinLine=0, xMaxLine=0;
 	int x, z;
@@ -694,12 +692,12 @@ TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extende
 				xMinLine = 0;
 				xMaxLine = 0;
 			}
-			yMax += font->lineskip;
+			yMax += lineskip;
 			x = 0;
 			continue;
 		}
 		if (*ch == '\t') {
-			x += agTextState->tabWd;
+			x += ts->tabWd;
 			continue;
 		}
 		if (AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS) != 0) {
@@ -732,34 +730,23 @@ TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extende
 	}
 	tm->w = (xMax-xMin);
 	tm->h = (yMax-yMin);
-#else /* !HAVE_FREETYPE */
-	InitMetrics(tm);
-#endif /* HAVE_FREETYPE */
 }
+#endif /* !HAVE_FREETYPE */
 
-static __inline__ AG_Surface *_Nonnull
-GetBitmapGlyph(AG_Font *_Nonnull font, AG_Char c)
-{
-	if ((font->flags & AG_FONT_UPPERCASE) &&
-	    (isalpha((int)c) && islower((int)c))) {
-		c = (AG_Char)toupper((int)c);
-	}
-	if (c < font->c0 || c > font->c1) {
-		return (agTextState->font->bglyphs[0]);
-	}
-	return (font->bglyphs[c - font->c0 + 1]);
-}
-
-/* Compute the rendered size of UCS-4 text with a bitmap font. */
+#ifdef AG_SERIALIZATION
+/*
+ * Compute the rendered size of UCS-4 text with a bitmap font.
+ */
 static void
 TextSizeBitmap(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
     int extended)
 {
-#ifdef AG_SERIALIZATION
-	AG_Font *font = agTextState->font;
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	const AG_Char *c;
 	AG_Surface *Sglyph;
-	int wLine = 0, lineSkip = font->lineskip;
+	const int tabWd = ts->tabWd;
+	const int lineskip = ts->font->lineskip;
+	int wLine=0;
 
 	for (c = &ucs[0]; *c != '\0'; c++) {
 		if (*c == '\n') {
@@ -769,15 +756,15 @@ TextSizeBitmap(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 				tm->wLines[tm->nLines++] = wLine;
 				wLine = 0;
 			}
-			tm->h += lineSkip;
+			tm->h += lineskip;
 			continue;
 		}
 		if (*c == '\t') {
-			wLine += agTextState->tabWd;
-			tm->w += agTextState->tabWd;
+			wLine += tabWd;
+			tm->w += tabWd;
 			continue;
 		}
-		Sglyph = GetBitmapGlyph(font, *c);
+		Sglyph = GetBitmapGlyph(ts->font, *c);
 		wLine += Sglyph->w;
 		tm->w += Sglyph->w;
 		tm->h = MAX(tm->h, Sglyph->h);
@@ -790,9 +777,6 @@ TextSizeBitmap(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 		}
 		tm->nLines++;
 	}
-#else /* !AG_SERIALIZATION */
-	InitMetrics(tm);
-#endif /* AG_SERIALIZATION */
 }
 
 /* Render UCS-4 text to a new surface using a bitmap font. */
@@ -800,8 +784,9 @@ static void
 TextRenderBitmap(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
     const AG_TextMetrics *_Nonnull tm)
 {
-#ifdef AG_SERIALIZATION
-	AG_Font *font = agTextState->font;
+	AG_TextState *ts = AG_TEXT_STATE_CUR();
+	const AG_Font *font = ts->font;
+	const int lineskip = font->lineskip;
 	AG_Surface *Sglyph;
 	const AG_Char *c;
 	AG_Rect rd;
@@ -812,12 +797,12 @@ TextRenderBitmap(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	
 	for (c=&ucs[0], line=0; *c != '\0'; c++) {
 		if (*c == '\n') {
-			rd.y += font->lineskip;
+			rd.y += lineskip;
 			rd.x = AG_TextJustifyOffset(tm->w, tm->wLines[++line]);
 			continue;
 		}
 		if (*c == '\t') {
-			rd.x += agTextState->tabWd;
+			rd.x += ts->tabWd;
 			continue;
 		}
 		Sglyph = GetBitmapGlyph(font, *c);
@@ -829,8 +814,21 @@ TextRenderBitmap(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
 	    AG_MapPixel_RGBA(&S->format, 0,0,0,0));
 	AG_SurfaceSetAlpha(S, AG_SURFACE_ALPHA, font->bglyphs[0]->alpha);
-#endif /* AG_SERIALIZATION */
 }
+
+static AG_Surface *_Nonnull
+GetBitmapGlyph(const AG_Font *_Nonnull font, AG_Char c)
+{
+	if ((font->flags & AG_FONT_UPPERCASE) &&
+	    (isalpha((int)c) && islower((int)c))) {
+		c = (AG_Char)toupper((int)c);
+	}
+	if (c < font->c0 || c > font->c1) {
+		return (AG_TEXT_STATE_CUR()->font->bglyphs[0]);
+	}
+	return (font->bglyphs[c - font->c0 + 1]);
+}
+#endif /* !AG_SERIALIZATION */
 
 static void
 TextRenderDummy(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
@@ -871,23 +869,25 @@ AG_TextSize(const char *text, int *w, int *h)
 void
 AG_TextSizeNat(const AG_Char *s, int *w, int *h)
 {
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	void (*pfSize[])(const AG_Char *_Nonnull, AG_TextMetrics *_Nonnull, int) = {
 		TextSizeFT,
 		TextSizeBitmap,
 		TextSizeDummy
 	};
-	const enum ag_font_type fontEngine = agTextState->font->spec.type;
 	AG_TextMetrics tm;
 
-#ifdef AG_DEBUG
-	if (fontEngine >= AG_FONT_TYPE_LAST)
-		AG_FatalError("Bad font type");
-	if (!AG_OfClass(agTextState->font, "AG_Font:*"))
-		AG_FatalError("Bad AG_Font obj");
-#endif
 	InitMetrics(&tm);
+
 	if (s != NULL && (char)(s[0]) != '\0') {
-		pfSize[fontEngine](s, &tm, 0);
+		const enum ag_font_type engine = ts->font->spec.type;
+#ifdef AG_DEBUG
+		if (engine >= AG_FONT_TYPE_LAST) {
+			AG_FatalError("Bad font type");
+		}
+		AG_OBJECT_ISA(ts->font, "AG_Font:*");
+#endif
+		pfSize[engine](s, &tm, 0);
 	}
 	if (w != NULL) { *w = tm.w; }
 	if (h != NULL) { *h = tm.h; }
@@ -922,23 +922,24 @@ void
 AG_TextSizeMultiNat(const AG_Char *s, int *w, int *h, Uint **wLines,
     Uint *nLines)
 {
-	AG_TextMetrics tm;
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	void (*pfSize[])(const AG_Char *_Nonnull, AG_TextMetrics *_Nonnull, int) = {
 		TextSizeFT,
 		TextSizeBitmap,
 		TextSizeDummy
 	};
-	const enum ag_font_type fontEngine = agTextState->font->spec.type;
+	AG_TextMetrics tm;
+	const enum ag_font_type engine = ts->font->spec.type;
 
 #ifdef AG_DEBUG
-	if (fontEngine >= AG_FONT_TYPE_LAST)
+	if (engine >= AG_FONT_TYPE_LAST) {
 		AG_FatalError("Bad font type");
-	if (!AG_OfClass(agTextState->font, "AG_Font:*"))
-		AG_FatalError("Bad AG_Font obj");
+	}
+	AG_OBJECT_ISA(ts->font, "AG_Font:*");
 #endif
 	InitMetrics(&tm);
 	if (s != NULL && (char)(s[0]) != '\0') {
-		pfSize[fontEngine](s, &tm, 1);
+		pfSize[engine](s, &tm, 1);
 	}
 	if (w != NULL) { *w = tm.w; }
 	if (h != NULL) { *h = tm.h; }
@@ -953,7 +954,9 @@ AG_TextSizeMultiNat(const AG_Char *s, int *w, int *h, Uint **wLines,
 
 /*
  * Canned notification and dialog windows.
+ * TODO move this elsewhere
  */
+#ifdef AG_WIDGETS
 
 /* Display an informational message window. */
 void
@@ -974,7 +977,6 @@ AG_TextMsgS(enum ag_text_msg_title title, const char *s)
 {
 	AG_Window *win;
 	AG_VBox *vb;
-	AG_Button *btnOK;
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
 	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
@@ -986,12 +988,11 @@ AG_TextMsgS(enum ag_text_msg_title title, const char *s)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
+	AG_SetStyle(vb, "font-size", "120%");
 	AG_LabelNewS(vb, 0, s);
 
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_HFILL | AG_VBOX_VFILL);
-	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
-
-	AG_WidgetFocus(btnOK);
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_EXPAND);
+	AG_WidgetFocus( AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)) );
 	AG_WindowShow(win);
 }
 
@@ -1002,7 +1003,7 @@ AG_TextMsgFromError(void)
 	AG_TextMsgS(AG_MSG_ERROR, AG_GetError());
 }
 
-#ifdef AG_TIMERS
+# ifdef AG_TIMERS
 static Uint32
 TextTmsgExpire(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -1043,6 +1044,7 @@ AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
+	AG_SetStyle(vb, "font-size", "120%");
 	AG_LabelNewS(vb, 0, s);
 	AG_WindowShow(win);
 
@@ -1050,7 +1052,7 @@ AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
 	if (to != NULL)
 		Strlcpy(to->name, "textTmsg", sizeof(to->name));
 }
-#endif /* AG_TIMERS */
+# endif /* AG_TIMERS */
 
 /*
  * Display an informational message with a "Don't tell me again" option.
@@ -1081,7 +1083,6 @@ AG_TextInfoS(const char *key, const char *s)
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Checkbox *cb;
-	AG_Button *btnOK;
 	
 #ifdef AG_SERIALIZATION
 	if (key != NULL) {
@@ -1103,10 +1104,11 @@ AG_TextInfoS(const char *key, const char *s)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
+	AG_SetStyle(vb, "font-size", "120%");
 	AG_LabelNewS(vb, 0, s);
 
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_HFILL | AG_VBOX_VFILL);
-	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_EXPAND);
+	AG_WidgetFocus( AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)) );
 #ifdef AG_SERIALIZATION
 	if (key != NULL) {
 		cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL,
@@ -1115,7 +1117,6 @@ AG_TextInfoS(const char *key, const char *s)
 		AG_BindInt(cb, "state", &Vdisable->data.i);
 	}
 #endif
-	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
 #ifdef AG_SERIALIZATION
 out:
@@ -1152,7 +1153,6 @@ AG_TextWarningS(const char *key, const char *s)
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Checkbox *cb;
-	AG_Button *btnOK;
 
 #ifdef AG_SERIALIZATION
 	if (key != NULL) {
@@ -1174,10 +1174,11 @@ AG_TextWarningS(const char *key, const char *s)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
+	AG_SetStyle(vb, "font-size", "120%");
 	AG_LabelNewS(vb, 0, s);
 
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_HFILL | AG_VBOX_VFILL);
-	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_EXPAND);
+	AG_WidgetFocus( AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)) );
 
 #ifdef AG_SERIALIZATION
 	if (key != NULL) {
@@ -1187,7 +1188,6 @@ AG_TextWarningS(const char *key, const char *s)
 		AG_BindInt(cb, "state", &Vdisable->data.i);
 	}
 #endif
-	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
 
 #ifdef AG_SERIALIZATION
@@ -1216,7 +1216,6 @@ AG_TextErrorS(const char *s)
 {
 	AG_Window *win;
 	AG_VBox *vb;
-	AG_Button *btnOK;
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
 	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
@@ -1228,14 +1227,14 @@ AG_TextErrorS(const char *s)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
+	AG_SetStyle(vb, "font-size", "120%");
 	AG_LabelNewS(vb, 0, s);
 
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
-	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
-
-	AG_WidgetFocus(btnOK);
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_EXPAND);
+	AG_WidgetFocus( AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)) );
 	AG_WindowShow(win);
 }
+#endif /* AG_WIDGETS */
 
 /* Align a text surface inside a given space. */
 void
@@ -1274,7 +1273,7 @@ AG_TextAlign(int *x, int *y, int wArea, int hArea, int wText, int hText,
 int
 AG_TextJustifyOffset(int w, int wLine)
 {
-	switch (agTextState->justify) {
+	switch (AG_TEXT_STATE_CUR()->justify) {
 	case AG_TEXT_LEFT:	return (0);
 	case AG_TEXT_CENTER:	return ((w >> 1) - (wLine >> 1));
 	case AG_TEXT_RIGHT:	return (w - wLine);
@@ -1289,7 +1288,7 @@ AG_TextJustifyOffset(int w, int wLine)
 int
 AG_TextValignOffset(int h, int hLine)
 {
-	switch (agTextState->valign) {
+	switch (AG_TEXT_STATE_CUR()->valign) {
 	case AG_TEXT_TOP:	return (0);
 	case AG_TEXT_MIDDLE:	return ((h >> 1) - (hLine >> 1));
 	case AG_TEXT_BOTTOM:	return (h - hLine);
@@ -1357,19 +1356,19 @@ AG_TextRenderNat(const AG_Char *text)
 		TextRenderBitmap,
 		TextRenderDummy
 	};
-	const enum ag_font_type fontEngine = agTextState->font->spec.type;
-	const AG_Color *colorBG = &agTextState->colorBG;
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
+	const AG_Color *colorBG = &ts->colorBG;
+	const enum ag_font_type engine = ts->font->spec.type;
 	AG_TextMetrics tm;
 	AG_Surface *S;
 
+	InitMetrics(&tm);
 #ifdef AG_DEBUG
-	if (fontEngine >= AG_FONT_TYPE_LAST)
+	if (engine >= AG_FONT_TYPE_LAST)
 		AG_FatalError("Bad font type");
 #endif
+	pfSize[engine](text, &tm, 1);
 
-	/* Size the text and allocate the new surface. */
-	InitMetrics(&tm);
-	pfSize[fontEngine](text, &tm, 1);
 	S = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
 
 	/*
@@ -1383,33 +1382,34 @@ AG_TextRenderNat(const AG_Char *text)
 
 	/* Finally render the text. */
 	if (tm.w > 0 && tm.h > 0)
-		pfRender[fontEngine](text, S, &tm);
+		pfRender[engine](text, S, &tm);
 
 	FreeMetrics(&tm);
 	return (S);
 }
 
+#ifdef HAVE_FREETYPE
 /*
- * TODO use a separate routine for transparent vs. non-transparent
- * agTextState->colorBG.
+ * Render text using FreeType, using its grayscale output to modulate the alpha.
+ * TODO subroutine the (AG_TEXT_STATE_CUR()->colorBG.a == 0) case.
  */
 static void
 TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
     const AG_TextMetrics *_Nonnull tm)
 {
-#ifdef HAVE_FREETYPE
-	const AG_Font *font = agTextState->font;
-	AG_Color c = agTextState->color;
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
+	const AG_Font *font = ts->font;
 	AG_TTFFont *ttf = font->ttf;
 	AG_TTFGlyph *G;
 	const AG_Char *ch;
 	Uint8 *src, *dst;
+	AG_Color c = ts->color;
 	FT_UInt prev_index = 0;
+	const int bgAlpha = ts->colorBG.a;
 	const int BytesPerPixel = S->format.BytesPerPixel;
-	const int tabWd = agTextState->tabWd;
+	const int tabWd = ts->tabWd;
 	const int lineSkip = font->lineskip;
 	int xStart, yStart, line, x,y, w;
-	AG_Color cBG = agTextState->colorBG;
 
  	xStart = (tm->nLines > 1) ? AG_TextJustifyOffset(tm->w, tm->wLines[0]) : 0;
  	yStart = 0;
@@ -1471,7 +1471,7 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 			                G->pixmap.pitch*y);
 
 			/* XXX TODO separate routine to avoid branch */
-			if (cBG.a == AG_TRANSPARENT) {
+			if (bgAlpha == AG_TRANSPARENT) {
 				for (x = 0; x < w; x++) {
 					c.a = AG_8toH(*src++);
 					AG_SurfacePut_At(S, dst,
@@ -1493,13 +1493,10 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 		}
 		prev_index = G->index;
 	}
-	if (ttf->style & AG_TTF_STYLE_UNDERLINE) {
+	if (ttf->style & AG_TTF_STYLE_UNDERLINE)
 		TextRenderFT_Underline(ttf, S, tm->nLines);
-	}
-#endif /* HAVE_FREETYPE */
 }
 
-#ifdef HAVE_FREETYPE
 # ifdef SYMBOLS
 static int
 TextRenderSymbol(Uint ch, AG_Surface *_Nonnull s, int x, int y)
@@ -1542,17 +1539,14 @@ static void
 TextRenderFT_Underline(AG_TTFFont *_Nonnull ftFont, AG_Surface *_Nonnull S,
     int nLines)
 {
-	AG_Color c;
-	AG_Pixel px;
+	AG_Color c = AG_TEXT_STATE_CUR()->color;
+	AG_Pixel px = AG_MapPixel(&S->format, &c);
 	Uint8 *pDst;
-	const int pad = 2;
+	const int pad = 2;	/* TODO */
 	int w = S->w - pad;
 	int lh = ftFont->underline_height;
 	int incr = ftFont->ascent - ftFont->underline_offset - lh;
 	int line, y0, lineskip = ftFont->lineskip;
-
-	c = agTextState->color;
-	px = AG_MapPixel(&S->format, &c);
 
 	for (line=0, y0=incr; line < nLines; line++) {
 		int x, y;
@@ -1581,12 +1575,13 @@ AG_Glyph *
 AG_TextRenderGlyph(AG_Driver *drv, AG_Char ch)
 {
 	AG_Glyph *gl;
-	Uint h = (Uint)(ch % AG_GLYPH_NBUCKETS);
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
+	const Uint h = (Uint)(ch % AG_GLYPH_NBUCKETS);
 
 	AG_SLIST_FOREACH(gl, &drv->glyphCache[h].glyphs, glyphs) {
 		if (ch == gl->ch &&
-		    agTextState->font == gl->font &&
-		    AG_ColorCompare(&agTextState->color, &gl->color) == 0)
+		    ts->font == gl->font &&
+		    AG_ColorCompare(&ts->color, &gl->color) == 0)
 			break;
 	}
 	if (gl == NULL) {
@@ -1600,27 +1595,28 @@ AG_TextRenderGlyph(AG_Driver *drv, AG_Char ch)
 static AG_Glyph *_Nonnull
 TextRenderGlyph_Miss(AG_Driver *_Nonnull drv, AG_Char ch)
 {
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Glyph *G;
 	AG_Char s[2];
 
 	G = Malloc(sizeof(AG_Glyph));
-	G->font = agTextState->font;
-	G->color = agTextState->color;
+	G->font = ts->font;
+	G->color = ts->color;
 	G->ch = ch;
 
 	s[0] = ch;
 	s[1] = '\0';
 	G->su = AG_TextRenderNat(s);
 
-	switch (agTextState->font->spec.type) {
+	switch (ts->font->spec.type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
 		{
 			AG_TTFGlyph *Gttf;
 
-			if (AG_TTFFindGlyph(agTextState->font->ttf, ch,
+			if (AG_TTFFindGlyph(ts->font->ttf, ch,
 			    TTF_CACHED_METRICS | TTF_CACHED_BITMAP) == 0) {
-				Gttf = ((AG_TTFFont *)agTextState->font->ttf)->current;
+				Gttf = ((AG_TTFFont *)ts->font->ttf)->current;
 				G->advance = Gttf->advance;
 			} else {
 				G->advance = G->su->w;
@@ -1644,120 +1640,111 @@ TextRenderGlyph_Miss(AG_Driver *_Nonnull drv, AG_Char ch)
 void
 AG_TextColor(const AG_Color *c)
 {
-	AG_MutexLock(&agTextLock);
-	memcpy(&agTextState->color, c, sizeof(AG_Color));
-	AG_MutexUnlock(&agTextLock);
+	memcpy(&AG_TEXT_STATE_CUR()->color, c, sizeof(AG_Color));
 }
 void
 AG_TextColorRGB(Uint8 r, Uint8 g, Uint8 b)
 {
-	AG_MutexLock(&agTextLock);
-	AG_ColorRGB_8(&agTextState->color, r,g,b);
-	AG_MutexUnlock(&agTextLock);
+	AG_ColorRGB_8(&AG_TEXT_STATE_CUR()->color, r,g,b);
 }
 void
 AG_TextColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
-	AG_MutexLock(&agTextLock);
-	AG_ColorRGBA_8(&agTextState->color, r,g,b,a);
-	AG_MutexUnlock(&agTextLock);
+	AG_ColorRGBA_8(&AG_TEXT_STATE_CUR()->color, r,g,b,a);
 }
 
 /* Set text color from 0xRRGGBBAA format. */
 void
 AG_TextColorHex(Uint32 c)
 {
-	AG_MutexLock(&agTextLock);
-	AG_ColorHex32(&agTextState->color, c);
-	AG_MutexUnlock(&agTextLock);
+	AG_ColorHex32(&AG_TEXT_STATE_CUR()->color, c);
 }
 
 /* Set active text background color. */
 void
 AG_TextBGColor(const AG_Color *c)
 {
-	AG_MutexLock(&agTextLock);
-	memcpy(&agTextState->colorBG, c, sizeof(AG_Color));
-	AG_MutexUnlock(&agTextLock);
+	memcpy(&AG_TEXT_STATE_CUR()->colorBG, c, sizeof(AG_Color));
 }
 void
 AG_TextBGColorRGB(Uint8 r, Uint8 g, Uint8 b)
 {
-	AG_MutexLock(&agTextLock);
-	AG_ColorRGB_8(&agTextState->colorBG, r,g,b);
-	AG_MutexUnlock(&agTextLock);
+	AG_ColorRGB_8(&AG_TEXT_STATE_CUR()->colorBG, r,g,b);
 }
 void
 AG_TextBGColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
-	AG_MutexLock(&agTextLock);
-	AG_ColorRGBA_8(&agTextState->colorBG, r,g,b,a);
-	AG_MutexUnlock(&agTextLock);
+	AG_ColorRGBA_8(&AG_TEXT_STATE_CUR()->colorBG, r,g,b,a);
 }
 
 /* Set text BG color from 0xRRGGBBAA format. */
 void
 AG_TextBGColorHex(Uint32 c)
 {
-	AG_MutexLock(&agTextLock);
-	AG_ColorHex(&agTextState->colorBG, c);
-	AG_MutexUnlock(&agTextLock);
+	AG_ColorHex(&AG_TEXT_STATE_CUR()->colorBG, c);
 }
 
 /* Select a specific font face to use in rendering text. */
 void
 AG_TextFont(AG_Font *font)
 {
-	AG_MutexLock(&agTextLock);
-	agTextState->font = font;
-	AG_MutexUnlock(&agTextLock);
+	AG_TEXT_STATE_CUR()->font = font;
 }
 
 /* Select the justification mode to use in rendering text. */
 void
 AG_TextJustify(enum ag_text_justify mode)
 {
-	AG_MutexLock(&agTextLock);
-	agTextState->justify = mode;
-	AG_MutexUnlock(&agTextLock);
+	AG_TEXT_STATE_CUR()->justify = mode;
 }
 
 /* Select the vertical alignment mode to use in rendering text. */
 void
 AG_TextValign(enum ag_text_valign mode)
 {
-	AG_MutexLock(&agTextLock);
-	agTextState->valign = mode;
-	AG_MutexUnlock(&agTextLock);
+	AG_TEXT_STATE_CUR()->valign = mode;
 }
 
 /* Select the tab width in pixels for rendering text. */
 void
 AG_TextTabWidth(int px)
 {
-	AG_MutexLock(&agTextLock);
-	agTextState->tabWd = px;
-	AG_MutexUnlock(&agTextLock);
+	AG_TEXT_STATE_CUR()->tabWd = px;
 }
 
 #ifdef AG_SERIALIZATION
-void
+/*
+ * Set the default font to the specified font.
+ *
+ * Return a pointer to the previous default font (the caller may or may
+ * not wish to call AG_UnusedFont() on it).
+ */
+AG_Font *
 AG_SetDefaultFont(AG_Font *font)
 {
+	AG_Font *prevDefaultFont;
 	AG_Config *cfg;
 
 	AG_MutexLock(&agTextLock);
+
+	prevDefaultFont = agDefaultFont;
 	agDefaultFont = font;
+
 	agTextFontHeight = font->height;
 	agTextFontAscent = font->ascent;
 	agTextFontDescent = font->descent;
 	agTextFontLineSkip = font->lineskip;
-	agTextState->font = font;
+
+	AG_TEXT_STATE_CUR()->font = font;
+
 	cfg = AG_ConfigObject();
 	AG_SetString(cfg, "font.face", OBJECT(font)->name);
 	AG_SetInt(cfg, "font.size", (int)font->spec.size);
 	AG_SetInt(cfg, "font.flags", font->flags);
+
 	AG_MutexUnlock(&agTextLock);
+
+	return (prevDefaultFont);
 }
 
 /*
@@ -1768,23 +1755,20 @@ AG_SetDefaultFont(AG_Font *font)
 void
 AG_TextParseFontSpec(const char *fontspec)
 {
+	char buf[AG_TEXT_FONTSPEC_MAX];
 	AG_Config *cfg = AG_ConfigObject();
-	char buf[128];
 	char *fs, *s, *c;
 
 	Strlcpy(buf, fontspec, sizeof(buf));
 	fs = &buf[0];
 
-	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
-	    s[0] != '\0') {
+	if ((s = AG_Strsep(&fs, ":,/")) != NULL && s[0] != '\0') {
 		AG_SetString(cfg, "font.face", s);
 	}
-	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
-	    s[0] != '\0') {
+	if ((s = AG_Strsep(&fs, ":,/")) != NULL && s[0] != '\0') {
 		AG_SetInt(cfg, "font.size", atoi(s));
 	}
-	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
-	    s[0] != '\0') {
+	if ((s = AG_Strsep(&fs, ":,/")) != NULL && s[0] != '\0') {
 		Uint flags = 0;
 
 		for (c = &s[0]; *c != '\0'; c++) {
@@ -1799,6 +1783,7 @@ AG_TextParseFontSpec(const char *fontspec)
 }
 #endif /* AG_SERIALIZATION */
 
+/* AG_Font init() method */
 static void
 AG_Font_Init(void *_Nonnull obj)
 {
@@ -1834,6 +1819,7 @@ AG_Font_Init(void *_Nonnull obj)
 	font->nRefs = 0;
 }
 
+/* AG_Font destroy() method */
 static void
 AG_Font_Destroy(void *_Nonnull obj)
 {
@@ -1862,7 +1848,11 @@ AG_Font_Destroy(void *_Nonnull obj)
 	}
 }
 
-/* Prompt the user with a choice of options. */
+#ifdef AG_WIDGETS
+/*
+ * Prompt the user with a choice of options.
+ * TODO move this elsewhere
+ */
 AG_Window *
 AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 {
@@ -1894,6 +1884,7 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	AG_WindowShow(win);
 	return (win);
 }
+#endif /* AG_WIDGETS */
 
 /* Initialize the font engine and configure the default font. */
 int
@@ -1903,6 +1894,8 @@ AG_InitTextSubsystem(void)
 	AG_Config *cfg = AG_ConfigObject();
 	AG_User *sysUser;
 #endif
+	AG_TextState *ts;
+
 	if (agTextInitedSubsystem++ > 0)
 		return (0);
 
@@ -2002,9 +1995,17 @@ AG_InitTextSubsystem(void)
 	agTextFontLineSkip = agDefaultFont->lineskip;
 
 	/* Initialize the rendering state. */
-	curState = 0;
-	agTextState = &agTextStateStack[0];
-	AG_TextStateInit();
+	agTextStateCur = 0;
+	ts = &agTextStateStack[0];
+	ts->font = agDefaultFont;
+	AG_ColorWhite(&ts->color);
+	AG_ColorNone(&ts->colorBG);
+	ts->justify = AG_TEXT_LEFT;
+	ts->valign = AG_TEXT_TOP;
+	ts->tabWd = agTextTabWidth;
+#ifdef AG_DEBUG
+	AG_Strlcpy(ts->name, "TS0", sizeof(ts->name));
+#endif
 	return (0);
 fail:
 #ifdef HAVE_FREETYPE

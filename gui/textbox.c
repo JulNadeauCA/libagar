@@ -36,6 +36,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/ttf.h>
 #include <agar/gui/textbox.h>
 #include <agar/gui/text.h>
@@ -512,7 +514,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	AG_Textbox *tb = AG_TEXTBOX_SELF();
 
 	AG_WidgetFocus(tb);
-	AG_ForwardEvent(NULL, tb->ed, event);
+	AG_ForwardEvent(tb->ed, event);
 }
 
 static void
@@ -534,19 +536,19 @@ Enabled(AG_Event *_Nonnull event)
 static void
 EditablePreChg(AG_Event *_Nonnull event)
 {
-	AG_PostEvent(NULL, AG_TEXTBOX_PTR(1), "textbox-prechg", NULL);
+	AG_PostEvent(AG_TEXTBOX_PTR(1), "textbox-prechg", NULL);
 }
 
 static void
 EditablePostChg(AG_Event *_Nonnull event)
 {
-	AG_PostEvent(NULL, AG_TEXTBOX_PTR(1), "textbox-postchg", NULL);
+	AG_PostEvent(AG_TEXTBOX_PTR(1), "textbox-postchg", NULL);
 }
 
 static void
 EditableReturn(AG_Event *_Nonnull event)
 {
-	AG_PostEvent(NULL, AG_TEXTBOX_PTR(1), "textbox-return", NULL);
+	AG_PostEvent(AG_TEXTBOX_PTR(1), "textbox-return", NULL);
 }
 
 static void
@@ -554,8 +556,8 @@ Init(void *_Nonnull obj)
 {
 	AG_Textbox *tb = obj;
 	
-	WIDGET(tb)->flags |= AG_WIDGET_TABLE_EMBEDDABLE|
-	                     AG_WIDGET_USE_TEXT|
+	WIDGET(tb)->flags |= AG_WIDGET_TABLE_EMBEDDABLE |
+	                     AG_WIDGET_USE_TEXT |
 			     AG_WIDGET_USE_MOUSEOVER;
 
 	tb->ed = AG_EditableNew(tb, 0);
@@ -602,3 +604,5 @@ AG_WidgetClass agTextboxClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */
