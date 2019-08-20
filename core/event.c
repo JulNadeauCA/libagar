@@ -72,9 +72,9 @@ AG_ThreadKey agEventSourceKey;
 # endif
 
 /* Initial size of kqueue changes[] array. */
-#ifndef AG_KQ_INIT_MAXCHANGES
-#define AG_KQ_INIT_MAXCHANGES 64
-#endif
+# ifndef AG_KQ_INIT_MAXCHANGES
+# define AG_KQ_INIT_MAXCHANGES AG_MODEL
+# endif
 
 typedef struct ag_event_source_kqueue {
 	struct ag_event_source _inherit;  /* EventSource -> EventSourceKQUEUE */
@@ -140,9 +140,6 @@ InitEvent(AG_Event *_Nonnull ev, AG_Object *_Nullable ob)
 #else
 	ev->name[0] = '\0';
 #endif
-#if AG_MODEL != AG_SMALL
-	ev->flags = 0;
-#endif
 	ev->fn = NULL;
 	ev->argc = 1;
 	ev->argc0 = 1;
@@ -176,17 +173,6 @@ AG_EventArgs(AG_Event *ev, const char *fmt, ...)
 	ev->argc0 = ev->argc;
 }
 
-void
-AG_EventGetArgs(AG_Event *ev, const char *fmt, va_list ap)
-{
-	if (fmt) {
-		const char *c = (const char *)fmt;
-
-		while (*c != '\0')
-			AG_EVENT_PUSH_ARG(ap, ev);
-	}
-}
-
 /* Return a newly allocated AG_Event. */
 AG_Event *
 AG_EventNew(AG_EventFn fn, void *obj, const char *fmt, ...)
@@ -205,6 +191,7 @@ AG_EventNew(AG_EventFn fn, void *obj, const char *fmt, ...)
 	return (ev);
 }
 
+#if AG_MODEL != AG_SMALL
 /* Return a newly-allocated duplicate of the given AG_Event. */
 AG_Event *
 AG_EventDup(const AG_Event *event)
@@ -215,6 +202,7 @@ AG_EventDup(const AG_Event *event)
 	AG_EventCopy(ev, event);
 	return (ev);
 }
+#endif /* !AG_SMALL */
 
 /*
  * Copy the name, callback pointer, arguments and inheritable flags
@@ -226,9 +214,6 @@ AG_EventCopy(AG_Event *dst, const AG_Event *src)
 	int i;
 
 	memcpy(dst->name, src->name, sizeof(dst->name));
-#if AG_MODEL != AG_SMALL
-	dst->flags = src->flags & AG_EVENT_SAVED_FLAGS;
-#endif
 	dst->fn = src->fn;
 	dst->argc = src->argc;
 	dst->argc0 = src->argc0;
@@ -262,7 +247,8 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 		ev = Malloc(sizeof(AG_Event));
 		InitEvent(ev, ob);
 		if (name != NULL) {
-			Strlcpy(ev->name, name, sizeof(ev->name));
+			if (Strlcpy(ev->name, name, sizeof(ev->name)) >= sizeof(ev->name))
+				AG_FatalError("Event name too big");
 		} else {
 			ev->name[0] = '\0';
 		}
@@ -308,11 +294,8 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 			if (strcmp(evOther->name, name) == 0)
 				break;
 		}
-#if AG_MODEL != AG_SMALL
-		if (evOther != NULL)
-			ev->flags = evOther->flags;
-#endif
-		Strlcpy(ev->name, name, sizeof(ev->name));
+		if (Strlcpy(ev->name, name, sizeof(ev->name)) >= sizeof(ev->name))
+			AG_FatalError("Event name too big");
 	} else {
 		ev->name[0] = '\0';
 	}
@@ -370,59 +353,29 @@ AG_FindEventHandler(void *p, const char *name)
 	return (ev);
 }
 
-/* Forward an event to an object's descendents. */
-static void
-PropagateEvent(AG_Object *_Nonnull sndr, AG_Object *_Nonnull rcvr,
-    AG_Event *_Nonnull ev)
-{
-	AG_Object *chld;
-
-	OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
-		PropagateEvent(rcvr, chld, ev);
-	}
-	AG_ForwardEvent(sndr, rcvr, ev);
-}
-
 #ifdef AG_TIMERS
-/* Timeout callback for scheduled events. */
+/*
+ * Timeout callback for scheduled events.
+ */
 static Uint32
 EventTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Object *ob = AG_OBJECT_SELF();
-	AG_Object *obSender = AG_OBJECT_PTR(1);
-	char *eventName = AG_STRING(2);
+	AG_Object *obj = AG_OBJECT_SELF();
+	const char *eventName = AG_STRING(1);
 	AG_Event *ev;
 
 # ifdef AG_DEBUG_CORE
 	if (agDebugLvl >= 2)
-		Debug(ob, "Event <%s> timeout (%u ticks)\n", eventName,
-		(Uint)to->ival);
+		Debug(obj, "Event <%s> timeout (%u ticks)\n", eventName,
+		    (Uint)to->ival);
 # endif
-	TAILQ_FOREACH(ev, &ob->events, events) {
+	TAILQ_FOREACH(ev, &obj->events, events) {
 		if (strcmp(eventName, ev->name) == 0)
 			break;
 	}
 	if (ev == NULL) {
 		return (0);
 	}
-	InitPointerArg(&ev->argv[ev->argc], obSender);
-	InitDebugName (&ev->argv[ev->argc], "sender");
-
-# if AG_MODEL != AG_SMALL
-	/* Propagate event to children. */
-	if (ev->flags & AG_EVENT_PROPAGATE) {
-		AG_Object *child;
-#  ifdef AG_DEBUG_CORE
-		if (agDebugLvl >= 2)
-			Debug(ob, "Propagate <%s> (timeout)\n", ev->name);
-#  endif
-		AG_LockVFS(ob);
-		OBJECT_FOREACH_CHILD(child, ob, ag_object) {
-			PropagateEvent(ob, child, ev);
-		}
-		AG_UnlockVFS(ob);
-	}
-#endif
 	/* Invoke the event handler routine. */
 	if (ev->fn != NULL) {
 		ev->fn(ev);
@@ -431,161 +384,20 @@ EventTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 }
 #endif /* AG_TIMERS */
 
-#ifdef AG_THREADS
-/* Invoke an event handler routine asynchronously. */
-static void *_Nullable
-EventThread(void *_Nonnull p)
-{
-	AG_Event *eev = p;
-	AG_Object *rcvr = eev->argv[0].data.p;
-	AG_Object *chld;
-
-# if AG_MODEL != AG_SMALL
-	if (eev->flags & AG_EVENT_PROPAGATE) {
-		AG_LockVFS(rcvr);
-		OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
-			PropagateEvent(rcvr, chld, eev);
-		}
-		AG_UnlockVFS(rcvr);
-	}
-# endif
-# ifdef AG_DEBUG_CORE
-	if (agDebugLvl >= 2)
-		Debug(rcvr, "BEGIN event thread for <%s>\n", eev->name);
-# endif
-	if (eev->fn != NULL) {
-		eev->fn(eev);
-	}
-# ifdef AG_DEBUG_CORE
-	if (agDebugLvl >= 2)
-		Debug(rcvr, "CLOSE event thread for <%s>\n", eev->name);
-# endif
-	free(eev);
-	return (NULL);
-}
-#endif /* AG_THREADS */
-
 /*
- * Raise the specified event. Configured event handler routines may be
- * called immediately, but they may also get called from a separate
- * thread, or queued for later execution.
- *
- * The argument vector passed to the event handler function contains
- * the AG_SetEvent() arguments, and any arguments specified here are
- * appended to that list.
+ * Variant of AG_PostEvent() which accepts a resolved AG_Event pointer
+ * (as opposed to an event name string).
  */
 void
-AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
+AG_PostEventByPtr(void *pObj, AG_Event *ev, const char *fmt, ...)
 {
-	AG_Object *sndr = sp;
-	AG_Object *rcvr = rp;
-	AG_Event *ev;
-	AG_Object *chld;
-	va_list ap;
-
-#ifdef AG_DEBUG_CORE
-	if (agDebugLvl >= 2) { Debug(rcvr, "Event <%s> posted from %s\n", evname, sndr ? sndr->name : "NULL"); }
-#endif
-	AG_ObjectLock(rcvr);
-	TAILQ_FOREACH(ev, &rcvr->events, events) {
-		if (strcmp(evname, ev->name) != 0)
-			continue;
-#ifdef AG_THREADS
-		if (ev->flags & AG_EVENT_ASYNC) {
-			AG_Event *evAsy = Malloc(sizeof(AG_Event));
-			AG_Thread th;
-			
-			memcpy(evAsy, ev, sizeof(AG_Event));
-			if (fmt) {
-				va_start(ap, fmt);
-				AG_EventGetArgs(evAsy, fmt, ap);
-				va_end(ap);
-			}
-			InitPointerArg(&evAsy->argv[evAsy->argc], sndr);
-			InitDebugName( &evAsy->argv[evAsy->argc], "sender");
-
-			AG_ThreadCreate(&th, EventThread, evAsy);
-		} else
-#endif
-#if AG_MODEL == AG_SMALL
-		{
-			AG_Event *evTmp = Malloc(sizeof(AG_Event));
-
-			memcpy(evTmp, ev, sizeof(AG_Event));
-			if (fmt) {
-				va_start(ap, fmt);
-				AG_EventGetArgs(evTmp, fmt, ap);
-				va_end(ap);
-			}
-			InitPointerArg(&evTmp->argv[evTmp->argc], sndr);
-			InitDebugName( &evTmp->argv[evTmp->argc], "sender");
-			if (evTmp->fn != NULL) {
-				evTmp->fn(evTmp);
-			}
-			free(evTmp);
-		}
-#else /* MEDIUM or LARGE */
-		{
-			AG_Event evTmp;			/* Fits the stack */
-
-			memcpy(&evTmp, ev, sizeof(AG_Event));
-			if (fmt) {
-				va_start(ap, fmt);
-				AG_EventGetArgs(&evTmp, fmt, ap);
-				va_end(ap);
-			}
-			InitPointerArg(&evTmp.argv[evTmp.argc], sndr);
-			InitDebugName (&evTmp.argv[evTmp.argc], "sender");
-
-			if (evTmp.flags & AG_EVENT_PROPAGATE) {
-				AG_LockVFS(rcvr);
-				OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
-					PropagateEvent(rcvr, chld, &evTmp);
-				}
-				AG_UnlockVFS(rcvr);
-			}
-			if (evTmp.fn != NULL)
-				evTmp.fn(&evTmp);
-		}
-#endif /* MEDIUM or LARGE */
-	}
-	AG_ObjectUnlock(rcvr);
-}
-
-#if AG_MODEL != AG_SMALL
-/*
- * Variant of AG_PostEvent() which accepts an AG_Event pointer
- * (as opposed to a string identifier).
- */
-void
-AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
-{
-	AG_Object *sndr = sp;
-	AG_Object *rcvr = rp;
-	AG_Object *chld;
+	AG_Object *obj = pObj;
 	va_list ap;
 
 # ifdef AG_DEBUG_CORE
-	if (agDebugLvl >= 2) { Debug(rcvr, "Event %p posted from %s\n", ev, sndr ? sndr->name : "NULL"); }
+	if (agDebugLvl>=2) Debug(obj, "Event %p posted\n", ev);
 # endif
-	AG_ObjectLock(rcvr);
-# ifdef AG_THREADS
-	if (ev->flags & AG_EVENT_ASYNC) {
-		AG_Event *evAsy = Malloc(sizeof(AG_Event));
-		AG_Thread th;
-
-		memcpy(evAsy, ev, sizeof(AG_Event));
-		if (fmt) {
-			va_start(ap, fmt);
-			AG_EventGetArgs(evAsy, fmt, ap);
-			va_end(ap);
-		}
-		InitPointerArg(&evAsy->argv[evAsy->argc], sndr);
-		InitDebugName (&evAsy->argv[evAsy->argc], "sender");
-
-		AG_ThreadCreate(&th, EventThread, evAsy);
-	} else
-# endif
+	AG_ObjectLock(obj);
 # if AG_MODEL == AG_SMALL
 	{
 		AG_Event *evTmp = Malloc(sizeof(AG_Event));
@@ -596,8 +408,6 @@ AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
 			AG_EventGetArgs(evTmp, fmt, ap);
 			va_end(ap);
 		}
-		InitPointerArg(&evTmp->argv[evTmp->argc], sndr);
-		InitDebugName (&evTmp->argv[evTmp->argc], "sender");
 		if (evTmp->fn != NULL) {
 			evTmp->fn(evTmp);
 		}
@@ -613,22 +423,129 @@ AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
 			AG_EventGetArgs(&evTmp, fmt, ap);
 			va_end(ap);
 		}
-		InitPointerArg(&evTmp.argv[evTmp.argc], sndr);
-		InitDebugName (&evTmp.argv[evTmp.argc], "sender");
-		if (evTmp.flags & AG_EVENT_PROPAGATE) {
-			AG_LockVFS(rcvr);
-			OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
-				PropagateEvent(rcvr, chld, &evTmp);
-			}
-			AG_UnlockVFS(rcvr);
-		}
-		if (evTmp.fn != NULL) { evTmp.fn(&evTmp); }
+		if (evTmp.fn != NULL)
+			evTmp.fn(&evTmp);
 	}
 # endif /* MEDIUM or LARGE */
 
-	AG_ObjectUnlock(rcvr);
+	AG_ObjectUnlock(obj);
 }
-#endif /* !SMALL */
+
+/*
+ * Post an event (by name) to an object. If fmt is given, append the
+ * given arguments (specified in the same format as AG_SetEvent(3)),
+ * to the end of the argument vector.
+ */
+void
+AG_PostEvent(void *pObj, const char *evname, const char *fmt, ...)
+{
+	AG_Object *obj = pObj;
+	AG_Event *ev;
+	va_list ap;
+
+#ifdef AG_DEBUG
+	if (obj == NULL) { AG_FatalError("NULL object"); }
+#endif
+#ifdef AG_DEBUG_CORE
+	if (agDebugLvl>=2) Debug(obj, "PostEvent <%s>\n", evname);
+#endif
+	AG_ObjectLock(obj);
+	TAILQ_FOREACH(ev, &obj->events, events) {
+		if (strcmp(evname, ev->name) != 0)
+			continue;
+#if AG_MODEL == AG_SMALL
+		{
+			AG_Event *evTmp = Malloc(sizeof(AG_Event));
+
+			memcpy(evTmp, ev, sizeof(AG_Event));
+			if (fmt) {
+				va_start(ap, fmt);
+				AG_EventGetArgs(evTmp, fmt, ap);
+				va_end(ap);
+			}
+			if (evTmp->fn != NULL) {
+				evTmp->fn(evTmp);
+			}
+			free(evTmp);
+		}
+#else /* MEDIUM or LARGE */
+		{
+			AG_Event evTmp;			/* Fits the stack */
+
+			memcpy(&evTmp, ev, sizeof(AG_Event));
+			if (fmt) {
+				va_start(ap, fmt);
+				AG_EventGetArgs(&evTmp, fmt, ap);
+				va_end(ap);
+			}
+			if (evTmp.fn != NULL)
+				evTmp.fn(&evTmp);
+		}
+#endif /* MEDIUM or LARGE */
+	}
+	AG_ObjectUnlock(obj);
+}
+
+/*
+ * Parse a format string of AG_Event-style arguments into the argument
+ * vector of ev. The parser macros are defined in <core/event.h>.
+ */
+void
+AG_EventGetArgs(AG_Event *ev, const char *fmt, va_list ap)
+{
+	if (fmt) {
+		const char *c = (const char *)fmt;
+
+		while (*c != '\0')
+			AG_EVENT_PUSH_ARG(ap, ev);
+	}
+}
+
+/*
+ * Forward an event to an object. The original arguments are copied
+ * as is, except for Pointer 0 (SELF) which becomes pObj.
+ */
+void
+AG_ForwardEvent(void *pObj, const AG_Event *event)
+{
+	AG_Object *obj = pObj;
+	AG_Event *ev;
+
+#ifdef AG_DEBUG_CORE
+	if (agDebugLvl >= 2)
+		Debug(obj, "Event <%s> forwarded\n", event->name);
+#endif
+	AG_ObjectLock(obj);
+	TAILQ_FOREACH(ev, &obj->events, events) {
+		if (strcmp(event->name, ev->name) != 0)
+			continue;
+#if AG_MODEL == AG_SMALL
+		{
+			AG_Event *evTmp = Malloc(sizeof(AG_Event));
+
+			memcpy(evTmp, event, sizeof(AG_Event));
+			InitPointerArg(&evTmp->argv[0], obj);
+			InitDebugName (&evTmp->argv[0], "self");
+			if (ev->fn != NULL) {
+				ev->fn(evTmp);
+			}
+			free(evTmp);
+		}
+#else /* MEDIUM or LARGE */
+		{
+			AG_Event evTmp;			/* Fits the stack */
+
+			memcpy(&evTmp, event, sizeof(AG_Event));
+			InitPointerArg(&evTmp.argv[0], obj);
+			InitDebugName (&evTmp.argv[0], "self");
+
+			if (ev->fn != NULL)
+				ev->fn(&evTmp);
+		}
+#endif /* MEDIUM or LARGE */
+	}
+	AG_ObjectUnlock(obj);
+}
 
 #ifdef AG_TIMERS
 /*
@@ -640,11 +557,9 @@ AG_PostEventByPtr(void *sp, void *rp, AG_Event *ev, const char *fmt, ...)
  * appended to that list.
  */
 int
-AG_SchedEvent(void *pSndr, void *pRcvr, Uint32 ticks, const char *evname,
-    const char *fmt, ...)
+AG_SchedEvent(void *pObj, Uint32 ticks, const char *evname, const char *fmt, ...)
 {
-	AG_Object *sndr = pSndr;
-	AG_Object *rcvr = pRcvr;
+	AG_Object *obj = pObj;
 	AG_Event *ev;
 	AG_Timer *to;
 	va_list ap;
@@ -655,15 +570,15 @@ AG_SchedEvent(void *pSndr, void *pRcvr, Uint32 ticks, const char *evname,
 	AG_InitTimer(to, evname, AG_TIMER_AUTO_FREE);
 
 	AG_LockTiming();
-	AG_ObjectLock(rcvr);
+	AG_ObjectLock(obj);
 	
-	if (AG_AddTimer(rcvr, to, ticks, EventTimeout,"%p,%s",sndr,evname) == -1) {
+	if (AG_AddTimer(obj, to, ticks, EventTimeout, "%s", evname) == -1) {
 		free(to);
 		goto fail;
 	}
 	ev = &to->fnEvent;
 	AG_EventInit(ev);
-	ev->argv[0].data.p = rcvr;
+	ev->argv[0].data.p = obj;
 	if (fmt) {
 		va_start(ap, fmt);
 		AG_EventGetArgs(ev, fmt, ap);
@@ -672,91 +587,14 @@ AG_SchedEvent(void *pSndr, void *pRcvr, Uint32 ticks, const char *evname,
 	ev->argc0 = ev->argc;
 
 	AG_UnlockTiming();
-	AG_ObjectUnlock(rcvr);
+	AG_ObjectUnlock(obj);
 	return (0);
 fail:
 	AG_UnlockTiming();
-	AG_ObjectUnlock(rcvr);
+	AG_ObjectUnlock(obj);
 	return (-1);
 }
 #endif /* AG_TIMERS */
-
-/*
- * Forward an event, without modifying the original event structure, except
- * for the sender and receiver pointers.
- */
-void
-AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
-{
-	AG_Object *sndr = pSndr;
-	AG_Object *rcvr = pRcvr;
-	AG_Object *chld;
-	AG_Event *ev;
-
-#ifdef AG_DEBUG_CORE
-	if (agDebugLvl >= 2) { Debug(rcvr, "Event <%s> forwarded from %s\n", event->name, sndr ? sndr->name : "NULL"); }
-#endif
-	AG_ObjectLock(rcvr);
-	TAILQ_FOREACH(ev, &rcvr->events, events) {
-		if (strcmp(event->name, ev->name) != 0)
-			continue;
-#ifdef AG_THREADS
-		if (ev->flags & AG_EVENT_ASYNC) {
-			AG_Event *evNew = Malloc(sizeof(AG_Event));
-			AG_Thread th;
-
-			memcpy(evNew, ev, sizeof(AG_Event));
-			InitPointerArg(&evNew->argv[0], rcvr);
-			InitDebugName (&evNew->argv[0], "self");
-			InitPointerArg(&evNew->argv[evNew->argc], sndr);
-			InitDebugName (&evNew->argv[evNew->argc], "sender");
-			AG_ThreadCreate(&th, EventThread, evNew);
-		} else
-#endif
-#if AG_MODEL == AG_SMALL
-		{
-			AG_Event *evTmp = Malloc(sizeof(AG_Event));
-
-			memcpy(evTmp, event, sizeof(AG_Event));
-			InitPointerArg(&evTmp->argv[0], rcvr);
-			InitDebugName (&evTmp->argv[0], "self");
-			InitPointerArg(&evTmp->argv[evTmp->argc], sndr);
-			InitDebugName (&evTmp->argv[evTmp->argc], "sender");
-			if (ev->fn != NULL) {
-				ev->fn(evTmp);
-			}
-			free(evTmp);
-		}
-#else /* MEDIUM or LARGE */
-		{
-			AG_Event evTmp;			/* Fits the stack */
-
-			memcpy(&evTmp, event, sizeof(AG_Event));
-			InitPointerArg(&evTmp.argv[0], rcvr);
-			InitDebugName (&evTmp.argv[0], "self");
-			InitPointerArg(&evTmp.argv[evTmp.argc], sndr);
-			InitDebugName (&evTmp.argv[evTmp.argc], "sender");
-
-			if (ev->flags & AG_EVENT_PROPAGATE) {
-# ifdef AG_DEBUG_CORE
-				if (agDebugLvl >= 2)
-					Debug(rcvr, "Propagate <%s> (forward)\n",
-					    event->name);
-# endif
-				AG_LockVFS(rcvr);
-				OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
-					PropagateEvent(rcvr, chld, ev);
-				}
-				AG_UnlockVFS(rcvr);
-			}
-			/* XXX AG_EVENT_ASYNC.. */
-			if (ev->fn != NULL)
-				ev->fn(&evTmp);
-		}
-#endif /* MEDIUM or LARGE */
-	}
-	AG_ObjectUnlock(rcvr);
-}
 
 #ifdef AG_EVENT_LOOP
 /*
@@ -1285,7 +1123,7 @@ restart:
 	AG_LockTiming();
 	for (i = 0; i < rv; i++) {
 		struct kevent *kev = &kq->events[i];
-		enum ag_event_sink_type esType = GetSinkType(kev->filter);
+		const enum ag_event_sink_type esType = GetSinkType(kev->filter);
 		Uint32 rvt;
 		AG_Timer *to;
 		AG_Object *ob;
@@ -1342,7 +1180,7 @@ restart:
 	/* 2. Process I/O and other events. */
 	for (i = 0; i < rv; i++) {
 		struct kevent *kev = &kq->events[i];
-		enum ag_event_sink_type esType = GetSinkType(kev->filter);
+		const enum ag_event_sink_type esType = GetSinkType(kev->filter);
 		AG_EventSink *es;
 
 		switch (esType) {

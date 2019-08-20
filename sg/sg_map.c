@@ -46,13 +46,15 @@ InitBlk(SG_Blk *_Nonnull b)
 	b->c = NULL;
 }
 
+#if 0
 static void
 EditListPoll(AG_Event *_Nonnull event)
 {
-//	SG_Map *m = AG_SELF();
-//	AG_Tlist *tl = AG_PTR(1);
-//	int depth = AG_INT(2);
+	SG_Map *m = SG_MAP_SELF();
+	AG_Tlist *tl = AG_TLIST_PTR(1);
+	const int depth = AG_INT(2);
 }
+#endif
 
 static void
 Init(void *_Nonnull obj)
@@ -62,8 +64,9 @@ Init(void *_Nonnull obj)
 	m->flags = 0;
 	m->root = Malloc(sizeof(SG_Blk));
 	InitBlk(m->root);
-
+#if 0
 	AG_SetEvent(m, "edit-list-poll", EditListPoll, NULL);
+#endif
 }
 
 static void

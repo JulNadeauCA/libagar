@@ -42,6 +42,15 @@ typedef struct sg_camera {
 	Uint8 _pad2[8];
 } SG_Camera;
 
+#define SGCAMERA(obj)            ((SG_Camera *)(obj))
+#define SGCCAMERA(obj)           ((const SG_Camera *)(obj))
+#define SG_CAMERA_SELF()          SGCAMERA( AG_OBJECT(0,"SG_Node:SG_Camera:*") )
+#define SG_CAMERA_PTR(n)          SGCAMERA( AG_OBJECT((n),"SG_Node:SG_Camera:*") )
+#define SG_CAMERA_NAMED(n)        SGCAMERA( AG_OBJECT_NAMED((n),"SG_Node:SG_Camera:*") )
+#define SG_CONST_CAMERA_SELF()   SGCCAMERA( AG_CONST_OBJECT(0,"SG_Node:SG_Camera:*") )
+#define SG_CONST_CAMERA_PTR(n)   SGCCAMERA( AG_CONST_OBJECT((n),"SG_Node:SG_Camera:*") )
+#define SG_CONST_CAMERA_NAMED(n) SGCCAMERA( AG_CONST_OBJECT_NAMED((n),"SG_Node:SG_Camera:*") )
+
 __BEGIN_DECLS
 extern SG_NodeClass sgCameraClass;
 

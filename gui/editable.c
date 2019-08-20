@@ -29,6 +29,7 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
 
 #include <agar/gui/editable.h>
 #include <agar/gui/text.h>
@@ -173,7 +174,7 @@ CommitBuffer(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf)
 #endif /* !AG_UNICODE */
 
 	ed->flags |= AG_EDITABLE_MARKPREF;
-	AG_PostEvent(NULL, ed, "editable-postchg", NULL);
+	AG_PostEvent(ed, "editable-postchg", NULL);
 	return;
 #ifdef AG_UNICODE
 fail:
@@ -555,7 +556,7 @@ ProcessKey(AG_Editable *_Nonnull ed, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 				break;
 			}
 		}
-		AG_PostEvent(NULL, ed, "editable-prechg", NULL);
+		AG_PostEvent(ed, "editable-prechg", NULL);
 		rv = kc->func(ed, buf, ks, kmod, ch);
 		break;
 	}
@@ -1225,7 +1226,7 @@ KeyUp(AG_Event *_Nonnull event)
 		if (ed->flags & AG_EDITABLE_ABANDON_FOCUS) {
 			AG_WidgetUnfocus(ed);
 		}
-		AG_PostEvent(NULL, ed, "editable-return", NULL);
+		AG_PostEvent(ed, "editable-return", NULL);
 	}
 	AG_Redraw(ed);
 }
@@ -2174,3 +2175,5 @@ AG_WidgetClass agEditableClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

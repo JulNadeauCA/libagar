@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/fixed.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -225,3 +227,5 @@ AG_WidgetClass agFixedClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

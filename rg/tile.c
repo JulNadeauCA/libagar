@@ -957,7 +957,7 @@ tryname:
 	OpenElement(tv, tel);
 
 	/* Select the newly inserted feature. */
-	AG_PostEvent(NULL, tlFeatures, "tlist-poll", NULL);
+	AG_PostEvent(tlFeatures, "tlist-poll", NULL);
 	AG_TlistDeselectAll(tlFeatures);
 	TAILQ_FOREACH(eit, &tlFeatures->items, items) {
 		RG_TileElement *tel;
@@ -1004,7 +1004,7 @@ tryname:
 	OpenElement(tv, tel);
 
 	/* Select the newly inserted feature. */
-	AG_PostEvent(NULL, tlFeatures, "tlist-poll", NULL);
+	AG_PostEvent(tlFeatures, "tlist-poll", NULL);
 	AG_TlistDeselectAll(tlFeatures);
 	TAILQ_FOREACH(eit, &tlFeatures->items, items) {
 		RG_TileElement *tel;
@@ -1041,7 +1041,7 @@ AttachPixmap(AG_Event *_Nonnull event)
 	OpenElement(tv, tel);
 
 	/* Select the newly inserted feature. */
-	AG_PostEvent(NULL, tlFeatures, "tlist-poll", NULL);
+	AG_PostEvent(tlFeatures, "tlist-poll", NULL);
 	AG_TlistDeselectAll(tlFeatures);
 	TAILQ_FOREACH(it, &tlFeatures->items, items) {
 		RG_TileElement *tel;
@@ -1118,7 +1118,7 @@ AttachSketch(AG_Event *_Nonnull event)
 	OpenElement(tv, tel);
 
 	/* Select the newly inserted feature. */
-	AG_PostEvent(NULL, tlFeatures, "tlist-poll", NULL);
+	AG_PostEvent(tlFeatures, "tlist-poll", NULL);
 	AG_TlistDeselectAll(tlFeatures);
 	TAILQ_FOREACH(it, &tlFeatures->items, items) {
 		RG_TileElement *tel;
@@ -1184,7 +1184,7 @@ SelectFeature(AG_Tlist *_Nonnull tlFeatures, void *_Nonnull fp)
 	AG_TlistItem *eit;
 
 	/* Select the newly inserted feature. */
-	AG_PostEvent(NULL, tlFeatures, "tlist-poll", NULL);
+	AG_PostEvent(tlFeatures, "tlist-poll", NULL);
 	AG_TlistDeselectAll(tlFeatures);
 	TAILQ_FOREACH(eit, &tlFeatures->items, items) {
 		RG_TileElement *tel;
@@ -1437,7 +1437,7 @@ DeleteElement(AG_Event *_Nonnull event)
 	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 	RG_Tile *t = tv->tile;
 	AG_Tlist *tlFeatures = AG_TLIST_PTR(2);
-	int detach_only = AG_INT(3);
+	const int detach_only = AG_INT(3);
 	AG_TlistItem *it;
 	RG_TileElement *tel;
 
@@ -1476,32 +1476,32 @@ DeleteElement(AG_Event *_Nonnull event)
 static void
 UpdateTileSettings(AG_Event *_Nonnull event)
 {
-	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
-	AG_MSpinbutton *msb = AG_MSPINBUTTON_PTR(2);
-	AG_Window *dlg_w = AG_WINDOW_PTR(3);
-	AG_Checkbox *ckey_cb = AG_CHECKBOX_PTR(4);
-	AG_Checkbox *alpha_cb = AG_CHECKBOX_PTR(5);
-	AG_Numerical *alpha_num = AG_NUMERICAL_PTR(6);
+	RG_Tileview *tv         = RG_TILEVIEW_PTR(1);
+	AG_Window *win          = AG_WINDOW_PTR(2);
+	AG_MSpinbutton *msbSize = AGMSPINBUTTON (AG_GetPointer(win,"msbSize"));
+	AG_Checkbox *cbColorkey = AGCHECKBOX    (AG_GetPointer(win,"cbColorkey"));
+	AG_Checkbox *cbAlpha    = AGCHECKBOX    (AG_GetPointer(win,"cbAlpha"));
+	AG_Numerical *numAlpha  = AGNUMERICAL   (AG_GetPointer(win,"numAlpha"));
 	RG_Tileset *ts = tv->ts;
 	RG_Tile *t = tv->tile;
-	int w = AG_GetInt(msb, "xvalue");
-	int h = AG_GetInt(msb, "yvalue");
+	const int w = AG_GetInt(msbSize, "xvalue");
+	const int h = AG_GetInt(msbSize, "yvalue");
 
-	if (AG_GetBool(ckey_cb,"state")) {
+	if (AG_GetBool(cbColorkey,"state")) {
 		t->flags |= RG_TILE_SRCCOLORKEY;
 	} else {
 		t->flags &= ~(RG_TILE_SRCCOLORKEY);
 	}
-	if (AG_GetBool(alpha_cb,"state")) {
+	if (AG_GetBool(cbAlpha,"state")) {
 		t->flags |= RG_TILE_SRCALPHA;
 	} else {
 		t->flags &= ~(RG_TILE_SRCALPHA);
 	}
 
-	RG_TileScale(ts, t, w, h);
-	t->su->alpha = AG_GetInt(alpha_num, "value");
+	RG_TileScale(ts, t, w,h);
+	t->su->alpha = AG_GetInt(numAlpha, "value");
 	RG_TileviewSetZoom(tv, 100, 0);
-	AG_ObjectDetach(dlg_w);
+	AG_ObjectDetach(win);
 
 	if (tv->state == RG_TILEVIEW_TILE_EDIT) {
 		RG_TileviewSetInt(tv->tv_tile.geo_ctrl, 2, w);
@@ -1515,15 +1515,13 @@ TileSettingsDlg(AG_Event *_Nonnull event)
 	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 	RG_Tile *t = tv->tile;
 	AG_Window *win;
-	AG_MSpinbutton *msb;
+	AG_MSpinbutton *msbSize;
 	AG_Box *box;
-	AG_Checkbox *ckey_cb, *alpha_cb;
-	AG_Numerical *alpha_num;
+	AG_Checkbox *cbColorkey, *cbAlpha;
+	AG_Numerical *numAlpha;
 	AG_Textbox *tb;
 
-	if ((win = AG_WindowNewNamed(
-	    AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOMINIMIZE,
-	    "rg-tileinfo-%s", t->name)) == NULL) {
+	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL, "rg-tileinfo-%s", t->name)) == NULL) {
 		return;
 	}
 	AG_WindowSetCaption(win, _("Tile information: %s"), t->name);
@@ -1535,21 +1533,25 @@ TileSettingsDlg(AG_Event *_Nonnull event)
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Class: "));
 	AG_TextboxBindUTF8(tb, t->clname, sizeof(t->clname));
 
-	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size: "));
-	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
-	AG_SetInt(msb, "xvalue", t->su->w);
-	AG_SetInt(msb, "yvalue", t->su->h);
+	msbSize = AG_MSpinbuttonNew(win, 0, "x", _("Size: "));
+	AG_MSpinbuttonSetRange(msbSize, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
+	AG_SetInt(msbSize, "xvalue", t->su->w);
+	AG_SetInt(msbSize, "yvalue", t->su->h);
+	AG_SetPointer(win, "msbSize", msbSize);
 	
-	alpha_num = AG_NumericalNewS(win, 0, NULL, _("Overall alpha: "));
-	AG_SetInt(alpha_num, "value", t->su->alpha);
+	numAlpha = AG_NumericalNewS(win, 0, NULL, _("Overall alpha: "));
+	AG_SetInt(numAlpha, "value", t->su->alpha);
+	AG_SetPointer(win, "numAlpha", numAlpha);
 	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 	
-	ckey_cb = AG_CheckboxNew(win, 0, _("Colorkey"));
-	AG_SetInt(ckey_cb, "state", t->flags & RG_TILE_SRCCOLORKEY);
+	cbColorkey = AG_CheckboxNew(win, 0, _("Colorkey"));
+	AG_SetInt(cbColorkey, "state", t->flags & RG_TILE_SRCCOLORKEY);
+	AG_SetPointer(win, "cbColorkey", cbColorkey);
 
-	alpha_cb = AG_CheckboxNew(win, 0, _("Source alpha"));
-	AG_SetInt(alpha_cb, "state", t->flags & RG_TILE_SRCALPHA);
+	cbAlpha = AG_CheckboxNew(win, 0, _("Source alpha"));
+	AG_SetInt(cbAlpha, "state", t->flags & RG_TILE_SRCALPHA);
+	AG_SetPointer(win, "cbAlpha", cbAlpha);
 	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
@@ -1558,11 +1560,9 @@ TileSettingsDlg(AG_Event *_Nonnull event)
 
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
-	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonNewFn(box, 0, _("OK"),
-		    UpdateTileSettings, "%p,%p,%p,%p,%p,%p",
-		    tv, msb, win, ckey_cb, alpha_cb, alpha_num);
+		AG_ButtonNewFn(box, 0, _("OK"), UpdateTileSettings, "%p,%p", tv,win);
 		AG_ButtonNewFn(box, 0, _("Cancel"), AGWINDETACH(win));
 	}
 

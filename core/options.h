@@ -17,3 +17,5 @@
 #include <agar/config/ag_unicode.h>
 #include <agar/config/ag_user.h>
 #include <agar/config/ag_verbosity.h>
+#include <agar/config/ag_widgets.h>
+#include <agar/config/ag_wm_hints.h>

@@ -55,15 +55,15 @@ FindSGNodes(AG_Tlist *_Nonnull tl, SG_Node *_Nonnull node, int depth)
 		OBJECT_FOREACH_CLASS(chld, node, sg_node, "SG_Node:*") {
 			FindSGNodes(tl, chld, depth+1);
 		}
-		AG_PostEvent(NULL, node, "edit-list-poll", "%p,%i", tl, depth);
+		AG_PostEvent(node, "edit-list-poll", "%p,%i", tl, depth);
 	}
 }
 
 void
 SG_GUI_PollNodes(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
-	SG *sg = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	SG *sg = SG_PTR(1);
 
 	AG_TlistClear(tl);
 	AG_ObjectLock(sg);
@@ -75,8 +75,8 @@ SG_GUI_PollNodes(AG_Event *event)
 static void
 SelectNode(AG_Event *_Nonnull event)
 {
-	AG_TlistItem *it = AG_PTR(1);
-	int state = AG_INT(2);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(1);
+	const int state = AG_INT(2);
 
 	if (strcmp(it->cat, "node") == 0) {
 		SG_Node *node = it->p1;
@@ -194,8 +194,8 @@ SG_GUI_DeleteNode(SG_Node *node, SG_View *sv)
 static void
 DeleteNode(AG_Event *_Nonnull event)
 {
-	SG_Node *node = AG_PTR(1);
-	SG_View *sv = AG_PTR(2);
+	SG_Node *node = SG_NODE_PTR(1);
+	SG_View *sv = SG_VIEW_PTR(2);
 
 	SG_GUI_DeleteNode(node, sv);
 }
@@ -225,11 +225,11 @@ NodePopupFindCommon(SG_Node *_Nonnull node,
 void
 SG_GUI_NodePopupMenu(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
+	SG *sg = SG_PTR(1);
+	SG_View *sv = SG_VIEW_PTR(2);
 	AG_TlistItem *tlItem = AG_TlistSelectedItem(tl);
 	SG_Node *node;
-	SG *sg = AG_PTR(1);
-	SG_View *sv = AG_PTR(2);
 	AG_PopupMenu *pm;
 	int commonFlag = 1, nSel = 0, x, y;
 	const SG_NodeClass *commonCls = NULL;
@@ -276,10 +276,10 @@ SG_GUI_NodePopupMenu(AG_Event *event)
 static void
 EditNode(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_Pane *editPane = AG_PTR(1);
-	AG_Widget *editArea = AG_PTR(2);
-	SG_View *sv = AG_PTR(3);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Pane *editPane = AG_PANE_PTR(1);
+	AG_Widget *editArea = AG_WIDGET_PTR(2);
+	SG_View *sv = SG_VIEW_PTR(3);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	SG_Node *node = it->p1;
 
@@ -300,11 +300,11 @@ EditNode(AG_Event *_Nonnull event)
 static void
 CreateNode(AG_Event *_Nonnull event)
 {
-	SG *sg = AG_PTR(1);
-	AG_Pane *editPane = AG_PTR(2);
-	AG_Widget *editArea = AG_PTR(3);
-	SG_View *sv = AG_PTR(4);
-	AG_TlistItem *ti = AG_PTR(5);
+	SG *sg = SG_PTR(1);
+	AG_Pane *editPane = AG_PANE_PTR(2);
+	AG_Widget *editArea = AG_WIDGET_PTR(3);
+	SG_View *sv = SG_VIEW_PTR(4);
+	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(5);
 	AG_ObjectClass *cl = ti->p1;
 	SG_Node *node;
 
@@ -334,7 +334,7 @@ SG_Edit(void *p)
 	AG_Pane *hp;
 
 	if (sg->def.cam == NULL) {
-		AG_SetError("No camera");
+		AG_SetErrorS("No camera");
 		return (NULL);
 	}
 
@@ -346,7 +346,7 @@ SG_Edit(void *p)
 	AG_WindowSetSpacing(win, 0);
 
 	/* Main SG_View(3), later attached to Pane */
-	sv = SG_ViewNew(NULL, sg, SG_VIEW_EXPAND|SG_VIEW_EDIT);
+	sv = SG_ViewNew(NULL, sg, SG_VIEW_EXPAND | SG_VIEW_EDIT);
 	sv->cam = sg->def.cam;
 
 	/* Scene menu */
@@ -368,15 +368,15 @@ SG_Edit(void *p)
 		AG_Tlist *tl;
 		AG_Pane *vp;
 
-		vp = AG_PaneNew(hp->div[0], AG_PANE_VERT,
-		    AG_PANE_EXPAND|AG_PANE_DIV1FILL);
+		vp = AG_PaneNew(hp->div[0], AG_PANE_VERT, AG_PANE_EXPAND |
+		                                          AG_PANE_DIV1FILL);
 		nb = AG_NotebookNew(vp->div[0], AG_NOTEBOOK_EXPAND);
 		ntab = AG_NotebookAdd(nb, _("Create Object"), AG_BOX_VERT);
 		{
-			tl = AG_TlistNew(ntab, AG_TLIST_TREE|AG_TLIST_EXPAND);
+			tl = AG_TlistNew(ntab, AG_TLIST_TREE | AG_TLIST_EXPAND);
 			AG_TlistSizeHint(tl, "<Isocahedron>", 2);
 			AG_SetEvent(tl, "tlist-dblclick",
-			    CreateNode, "%p,%p,%p,%p", sg, vp, vp->div[1], sv);
+			    CreateNode, "%p%p%p%p", sg, vp, vp->div[1], sv);
 			ListLibraryItems(tl, "SG_Node:*", 0, &agObjectClass);
 		}
 		ntab = AG_NotebookAdd(nb, _("Nodes"), AG_BOX_VERT);

@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/separator.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -170,3 +172,5 @@ AG_WidgetClass agSeparatorClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

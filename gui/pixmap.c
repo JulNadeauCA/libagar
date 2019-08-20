@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/pixmap.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/window.h>
@@ -434,3 +436,5 @@ AG_WidgetClass agPixmapClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

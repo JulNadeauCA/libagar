@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/titlebar.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -82,7 +84,7 @@ CloseWindow(AG_Event *_Nonnull event)
 	const AG_Titlebar *tbar = AG_CONST_TITLEBAR_PTR(1);
 	AG_Window *win = tbar->win;
 
-	AG_PostEvent(NULL, win, "window-close", NULL);
+	AG_PostEvent(win, "window-close", NULL);
 }
 
 static void
@@ -157,7 +159,7 @@ Init(void *_Nonnull obj)
 	AG_Titlebar *tbar = obj;
 	AG_Box *box = obj;
 
-	WIDGET(tbar)->flags |= AG_WIDGET_HFILL|
+	WIDGET(tbar)->flags |= AG_WIDGET_HFILL |
 	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
 
 	AG_BoxSetType(box, AG_BOX_HORIZ);
@@ -215,3 +217,5 @@ AG_WidgetClass agTitlebarClass = {
 	AG_WidgetInheritSizeRequest,
 	AG_WidgetInheritSizeAllocate
 };
+
+#endif /* AG_WIDGETS */

@@ -205,6 +205,7 @@ typedef struct ag_widget {
 #define AG_WIDGET_USE_OPENGL		0x000100 /* Set up separate GL context */
 #define AG_WIDGET_HIDE			0x000200 /* Don't draw this widget */
 #define AG_WIDGET_DISABLED		0x000400 /* Don't respond to input */
+                                                 /* (TODO make this an int) */
 #define AG_WIDGET_MOUSEOVER		0x000800 /* Mouseover state (computed) */
 #define AG_WIDGET_CATCH_TAB		0x001000 /* Receive focus-cycling key events */
 #define AG_WIDGET_GL_RESHAPE		0x002000 /* Pending GL view reshape */
@@ -217,7 +218,7 @@ typedef struct ag_widget {
 #define AG_WIDGET_QUEUE_SURFACE_BACKUP	0x200000 /* Must backup surfaces ASAP */
 #define AG_WIDGET_USE_TEXT		0x400000 /* Use Agar's font engine */
 #define AG_WIDGET_USE_MOUSEOVER		0x800000 /* Generate mouseover events (and maintain MOUSEOVER flag) */
-#define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
+#define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL | AG_WIDGET_VFILL)
 
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */

@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/socket.h>
 #include <agar/gui/icon.h>
 #include <agar/gui/window.h>
@@ -261,3 +263,5 @@ AG_WidgetClass agIconClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

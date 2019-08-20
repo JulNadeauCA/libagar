@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/mpane.h>
 #include <agar/gui/window.h>
 #include <agar/gui/cursors.h>
@@ -188,3 +190,5 @@ AG_WidgetClass agMPaneClass = {
 	NULL,			/* size_request */
 	NULL			/* size_allocate */
 };
+
+#endif /* AG_WIDGETS */

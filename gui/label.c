@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/gui.h>
 #include <agar/gui/window.h>
 #include <agar/gui/label.h>
@@ -530,3 +532,5 @@ AG_WidgetClass agLabelClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

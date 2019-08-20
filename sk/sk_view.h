@@ -51,10 +51,18 @@ typedef struct sk_view {
 	AG_PopupMenu *_Nullable pmView;
 } SK_View;
 
-#define SKVIEW(p) ((SK_View *)(p))
-#define SK_VIEW_X(skv,px) ((M_Real)(px - WIDGET(skv)->w/2)) / \
+#define SKVIEW(obj)            ((SK_View *)(obj))
+#define SKCVIEW(obj)           ((const SK_View *)(obj))
+#define SK_VIEW_SELF()          SKVIEW( AG_OBJECT(0,"AG_Widget:SK_View:*") )
+#define SK_VIEW_PTR(n)          SKVIEW( AG_OBJECT((n),"AG_Widget:SK_View:*") )
+#define SK_VIEW_NAMED(n)        SKVIEW( AG_OBJECT_NAMED((n),"AG_Widget:SK_View:*") )
+#define SK_CONST_VIEW_SELF()   SKCVIEW( AG_CONST_OBJECT(0,"AG_Widget:SK_View:*") )
+#define SK_CONST_VIEW_PTR(n)   SKCVIEW( AG_CONST_OBJECT((n),"AG_Widget:SK_View:*") )
+#define SK_CONST_VIEW_NAMED(n) SKCVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:SK_View:*") )
+
+#define SK_VIEW_X(skv,px) ((M_Real)(px - (AGWIDGET(skv)->w >> 1))) / \
                           ((M_Real)WIDGET(skv)->w/2.0)
-#define SK_VIEW_Y(skv,py) ((M_Real)(py - WIDGET(skv)->h/2)) / \
+#define SK_VIEW_Y(skv,py) ((M_Real)(py - (AGWIDGET(skv)->h >> 1))) / \
                           ((M_Real)WIDGET(skv)->h/2.0)
 #define SK_VIEW_X_SNAP(skv,px) (px)
 #define SK_VIEW_Y_SNAP(skv,py) (py)

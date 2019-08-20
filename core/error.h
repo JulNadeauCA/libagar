@@ -44,8 +44,10 @@ typedef enum ag_error_code {
 # ifdef AG_DEBUG
 #  define Debug AG_Debug
 # else
-#  ifdef __GNUC__
+#  if defined(__GNUC__)
 #   define Debug(obj, arg...) ((void)0)
+#  elif defined(__CC65__)
+#   define Debug
 #  else
 #   define Debug AG_Debug
 #  endif

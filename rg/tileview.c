@@ -63,7 +63,7 @@ static Uint32
 ZoomTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	RG_Tileview *tv = RG_TILEVIEW_SELF();
-	int dir = AG_INT(1);
+	const int dir = AG_INT(1);
 
 	if (dir == +1) {					/* Zoom in */
 		if (tv->zoom > 1600) {
@@ -104,8 +104,8 @@ static void
 KeyDown(AG_Event *_Nonnull event)
 {
 	RG_Tileview *tv = RG_TILEVIEW_SELF();
-	int keysym = AG_INT(1);
-	int keymod = AG_INT(2);
+	const int keysym = AG_INT(1);
+	const int keymod = AG_INT(2);
 
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
@@ -172,8 +172,8 @@ static void
 KeyUp(AG_Event *_Nonnull event)
 {
 	RG_Tileview *tv = RG_TILEVIEW_SELF();
-	int keysym = AG_INT(1);
-/*	int keymod = AG_INT(2); */
+	const int keysym = AG_INT(1);
+/*	const int keymod = AG_INT(2); */
 	
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
@@ -266,9 +266,9 @@ static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	RG_Tileview *tv = RG_TILEVIEW_SELF();
-	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	const int button = AG_INT(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 	RG_TileviewCtrl *ctrl;
 	RG_TileElement *tel = tv->tv_pixmap.tel;
 	int sx = (x - tv->xoffs)/tv->pxsz;
@@ -322,7 +322,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 					ctrl->xoffs = 0;
 					ctrl->yoffs = 0;
 					if (ctrl->buttondown != NULL) {
-						AG_PostEventByPtr(NULL, tv,
+						AG_PostEventByPtr(tv,
 						    ctrl->buttondown,
 						    "%i,%i", sx, sy);
 					}
@@ -415,9 +415,9 @@ static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
 	RG_Tileview *tv = RG_TILEVIEW_SELF();
-	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	const int button = AG_INT(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 	RG_TileviewCtrl *ctrl;
 	int i;
 
@@ -438,7 +438,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 				if (th->enable) {
 					th->enable = 0;
 					if (ctrl->buttonup != NULL) {
-						AG_PostEventByPtr(NULL, tv,
+						AG_PostEventByPtr(tv,
 						    ctrl->buttonup, NULL);
 					}
 					break;
@@ -610,7 +610,7 @@ MoveHandle(RG_Tileview *_Nonnull tv, RG_TileviewCtrl *_Nonnull ctrl, int which,
 	ctrl->yoffs += yoffs;
 
 	if (ctrl->motion != NULL)
-		AG_PostEventByPtr(NULL, tv, ctrl->motion, "%i,%i", xoffs, yoffs);
+		AG_PostEventByPtr(tv, ctrl->motion, "%i,%i", xoffs, yoffs);
 	
 	AG_Redraw(tv);
 }
@@ -619,11 +619,11 @@ static void
 MouseMotion(AG_Event *_Nonnull event)
 {
 	RG_Tileview *tv = RG_TILEVIEW_SELF();
-	int x = AG_INT(1);
-	int y = AG_INT(2);
-	int xrel = AG_INT(3);
-	int yrel = AG_INT(4);
-	int state = AG_INT(5);
+	const int x = AG_INT(1);
+	const int y = AG_INT(2);
+	const int xrel = AG_INT(3);
+	const int yrel = AG_INT(4);
+	const int state = AG_INT(5);
 	RG_TileviewCtrl *ctrl;
 	int sx, sy, i;
 
@@ -744,10 +744,10 @@ Init(void *_Nonnull obj)
 {
 	RG_Tileview *tv = obj;
 	
-	WIDGET(tv)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL|
-	                     AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
+	WIDGET(tv)->flags |= AG_WIDGET_HFILL | AG_WIDGET_VFILL |
+	                     AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_TEXT;
 
-	tv->flags = RG_TILEVIEW_NO_EXTENT|RG_TILEVIEW_NO_TILING;
+	tv->flags = RG_TILEVIEW_NO_EXTENT | RG_TILEVIEW_NO_TILING;
 	tv->ts = NULL;
 	tv->tile = NULL;
 	tv->su = -1;

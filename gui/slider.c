@@ -23,7 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * XXX TODO reimplement this whole thing as a tiny subclass of Scrollbar
+ * (with a different styling, fixed control bar and no "visible" binding).
+ */
+
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/slider.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -259,7 +266,7 @@ SeekToPosition(AG_Slider *_Nonnull sl, int x)
 	default:							break;
 	} 
 
-	AG_PostEvent(NULL, sl, "slider-changed", NULL);
+	AG_PostEvent(sl, "slider-changed", NULL);
 	AG_UnlockVariable(bMax);
 	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
@@ -316,7 +323,7 @@ Increment(AG_Slider *_Nonnull sl)
 	default:						break;
 	} 
 
-	AG_PostEvent(NULL, sl, "slider-changed", NULL);
+	AG_PostEvent(sl, "slider-changed", NULL);
 	AG_UnlockVariable(bVal);
 	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bMax);
@@ -357,7 +364,7 @@ Decrement(AG_Slider *_Nonnull sl)
 	default:						break;
 	} 
 
-	AG_PostEvent(NULL, sl, "slider-changed", NULL);
+	AG_PostEvent(sl, "slider-changed", NULL);
 	AG_UnlockVariable(bVal);
 	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bMax);
@@ -375,7 +382,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	if (sl->ctlPressed) {
 		sl->ctlPressed = 0;
 		sl->xOffs = 0;
-		AG_PostEvent(NULL, sl, "slider-drag-end", NULL);
+		AG_PostEvent(sl, "slider-drag-end", NULL);
 		AG_Redraw(sl);
 	}
 }
@@ -405,16 +412,16 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		 */
 		sl->ctlPressed = 1;
 		sl->xOffs = x - pos;
-		AG_PostEvent(NULL, sl, "slider-drag-begin", NULL);
+		AG_PostEvent(sl, "slider-drag-begin", NULL);
 	} else {
 		/*
 		 * Click outside of control. We seek to the absolute position
 		 * described by the cursor.
 		 */
 		sl->ctlPressed = 1;
-		sl->xOffs = sl->wControl/2;
+		sl->xOffs = (sl->wControl >> 1);
 		SeekToPosition(sl, x - sl->xOffs);
-		AG_PostEvent(NULL, sl, "slider-drag-begin", NULL);
+		AG_PostEvent(sl, "slider-drag-begin", NULL);
 	}
 	AG_Redraw(sl);
 }
@@ -552,9 +559,9 @@ Init(void *_Nonnull obj)
 {
 	AG_Slider *sl = obj;
 
-	WIDGET(sl)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
-	                     AG_WIDGET_UNFOCUSED_MOTION|
-			     AG_WIDGET_FOCUSABLE|
+	WIDGET(sl)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP |
+	                     AG_WIDGET_UNFOCUSED_MOTION |
+			     AG_WIDGET_FOCUSABLE |
 			     AG_WIDGET_TABLE_EMBEDDABLE;
 
 	sl->type = AG_SLIDER_HORIZ;
@@ -586,8 +593,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Slider *sl = obj;
 	
-	r->w = sl->wControlPref*2 + 10;
-	r->h = sl->wControlPref;
+	r->w = (sl->wControlPref << 1) + 10;
+	r->h =  sl->wControlPref;
 }
 
 static int
@@ -659,3 +666,5 @@ AG_WidgetClass agSliderClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

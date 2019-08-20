@@ -88,6 +88,15 @@ typedef struct sg_view {
 	AG_Timer toRefresh;		/* View refresh timer */
 } SG_View;
 
+#define SGVIEW(obj)            ((SG_View *)(obj))
+#define SGCVIEW(obj)           ((const SG_View *)(obj))
+#define SG_VIEW_SELF()          SGVIEW( AG_OBJECT(0,"AG_Widget:SG_View:*") )
+#define SG_VIEW_PTR(n)          SGVIEW( AG_OBJECT((n),"AG_Widget:SG_View:*") )
+#define SG_VIEW_NAMED(n)        SGVIEW( AG_OBJECT_NAMED((n),"AG_Widget:SG_View:*") )
+#define SG_CONST_VIEW_SELF()   SGCVIEW( AG_CONST_OBJECT(0,"AG_Widget:SG_View:*") )
+#define SG_CONST_VIEW_PTR(n)   SGCVIEW( AG_CONST_OBJECT((n),"AG_Widget:SG_View:*") )
+#define SG_CONST_VIEW_NAMED(n) SGCVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:SG_View:*") )
+
 __BEGIN_DECLS
 extern AG_WidgetClass sgViewClass;
 extern M_Real sgEyeSeparation;

@@ -209,6 +209,10 @@ typedef struct sk {
 	AG_TAILQ_HEAD_(sk_group) group;		/* Item groups */
 } SK;
 
+#define SK_SELF()   (SK *)( AG_OBJECT(0,"SK:*") )
+#define SK_PTR(n)   (SK *)( AG_OBJECT((n),"SK:*") )
+#define SK_NAMED(n) (SK *)( AG_OBJECT_NAMED((n),"SK:*") )
+
 #define SKNODE(node) ((SK_Node *)(node))
 #define SKNODE_SELECTED(node) (((SK_Node *)(node))->flags & SK_NODE_SELECTED)
 #define SK_MOVED(node) (((SK_Node *)(node))->flags & SK_NODE_MOVED)

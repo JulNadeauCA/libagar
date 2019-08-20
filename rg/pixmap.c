@@ -283,44 +283,45 @@ PollPixmaps(AG_Event *_Nonnull event)
 static void
 CreateBrush(AG_Event *_Nonnull event)
 {
-	RG_Pixmap *px = AG_PTR(1);
-	AG_Tlist *tl = AG_TLIST_PTR(2);
-	AG_Textbox *tb = AG_TEXTBOX_PTR(3);
-	AG_Radio *rad_types = AG_RADIO_PTR(4);
-	AG_Checkbox *cb_oneshot = AG_CHECKBOX_PTR(5);
-	AG_Window *dlg_win = AG_WINDOW_PTR(6);
-	enum rg_brush_type btype;
-	RG_Pixmap *spx;
+	RG_Pixmap *px          = AG_PTR(1);
+	AG_Window *win         = AG_WINDOW_PTR(2);
+	AG_Tlist *tlSrc        = AGTLIST   ( AG_GetPointer(win, "tlSrc") );
+	AG_Textbox *tbName     = AGTEXTBOX ( AG_GetPointer(win, "tbName") );
+	AG_Radio *radMode      = AGRADIO   ( AG_GetPointer(win, "radMode") );
+	AG_Checkbox *cbOneShot = AGCHECKBOX( AG_GetPointer(win, "cbOneShot") );
 	RG_Brush *pbr;
-	AG_TlistItem *it;
+	AG_TlistItem *itSrc;
+	RG_Pixmap *pxSrc;
+	enum rg_brush_type bMode;
 
-	if ((it = AG_TlistSelectedItem(tl)) == NULL) {
+	if ((itSrc = AG_TlistSelectedItem(tlSrc)) == NULL) {
 		return;
 	}
-	spx = it->p1;
+	pxSrc = (RG_Pixmap *)itSrc->p1;
 
-	btype = (enum rg_brush_type)AG_GetInt(rad_types, "value");
-	pbr = RG_PixmapAddBrush(px, btype, spx);
-	AG_TextboxCopyString(tb, pbr->name, sizeof(pbr->name));
+	bMode = (enum rg_brush_type)AG_GetInt(radMode, "value");
+	pbr = RG_PixmapAddBrush(px, bMode, pxSrc);
+
+	AG_TextboxCopyString(tbName, pbr->name, sizeof(pbr->name));
 	if (pbr->name[0] == '\0') {
-		Strlcpy(pbr->name, spx->name, sizeof(pbr->name));
+		Strlcpy(pbr->name, pxSrc->name, sizeof(pbr->name));
 	}
-	if (AG_GetInt(cb_oneshot, "state")) {
+	if (AG_GetInt(cbOneShot, "state")) {
 		pbr->flags |= RG_PIXMAP_BRUSH_ONESHOT;
 	}
-	AG_ObjectDetach(dlg_win);
+	AG_ObjectDetach(win);
 }
 
 static void
 UpdateBrushOptions(AG_Event *_Nonnull event)
 {
-	AG_Textbox *tb_name = AG_TEXTBOX_PTR(1);
+	AG_Textbox *tbName = AG_TEXTBOX_PTR(1);
 	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 	RG_Pixmap *spx;
 
 	if (it != NULL) {
 		spx = it->p1;
-		AG_TextboxSetString(tb_name, spx->name);
+		AG_TextboxSetString(tbName , spx->name);
 	}
 }
 
@@ -330,27 +331,30 @@ CreateBrushDlg(AG_Event *_Nonnull event)
 	RG_Tileview *tv = RG_TILEVIEW_PTR(1);
 	RG_Pixmap *px = AG_PTR(2);
 	AG_Window *win, *pwin = AG_WINDOW_PTR(3);
-	AG_Tlist *tl;
+	AG_Tlist *tlSrc;
 	AG_Box *bo;
-	AG_Textbox *tb_name;
-	AG_Radio *rad_types;
-	AG_Checkbox *cb_oneshot;
+	AG_Textbox *tbName;
+	AG_Radio *rad;
+	AG_Checkbox *cbOneShot;
 	static const char *types[] = {
 		N_("Monochromatic"),
 		N_("Source RGB"),
 		NULL
 	};
 
-	if ((win = AG_WindowNew(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE))
+	if ((win = AG_WindowNew(AG_WINDOW_NOCLOSE | AG_WINDOW_NOMINIMIZE))
 	    == NULL) {
 		return;
 	}
 	AG_WindowSetCaption(win, _("New %s brush"), px->name);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	tb_name = AG_TextboxNew(NULL, AG_TEXTBOX_HFILL, _("Name: "));
-	cb_oneshot = AG_CheckboxNew(NULL, 0, _("One-shot"));
-	AG_WidgetFocus(tb_name);
+	tbName = AG_TextboxNew(NULL, AG_TEXTBOX_HFILL, _("Name: "));
+	AG_SetPointer(win, "tbName", tbName);
+	AG_WidgetFocus(tbName);
+
+	cbOneShot = AG_CheckboxNew(NULL, 0, _("One-shot"));
+	AG_SetPointer(win, "cbOneShot", cbOneShot);
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_EXPAND);
 	AG_BoxSetPadding(bo, 0);
@@ -358,30 +362,29 @@ CreateBrushDlg(AG_Event *_Nonnull event)
 	{
 		AG_LabelNewS(bo, 0, _("Source pixmap:"));
 
-		tl = AG_TlistNew(bo, AG_TLIST_POLL|AG_TLIST_EXPAND);
-		AG_TlistSetItemHeight(tl, RG_TILESZ);
-		AG_TlistSizeHint(tl, "XXXXXXXXXXXXXXXXXXX", 5);
-		AG_SetEvent(tl, "tlist-poll", PollPixmaps, "%p", tv->ts);
-		AG_SetEvent(tl, "tlist-selected", UpdateBrushOptions,
-		    "%p", tb_name);
+		tlSrc = AG_TlistNew(bo, AG_TLIST_POLL | AG_TLIST_EXPAND);
+		AG_TlistSetItemHeight(tlSrc, RG_TILESZ);
+		AG_TlistSizeHint(tlSrc, "XXXXXXXXXXXXXXXXXXX", 5);
+		AG_SetEvent(tlSrc, "tlist-poll", PollPixmaps, "%p", tv->ts);
+		AG_SetEvent(tlSrc, "tlist-selected", UpdateBrushOptions, "%p", tbName);
+		AG_SetPointer(win, "tlSrc", tlSrc);
 	}
 	
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
 		AG_LabelNewS(bo, 0, _("Pixel mode:"));
-		rad_types = AG_RadioNew(bo, AG_RADIO_EXPAND, types);
-		AG_SetInt(rad_types, "value", 0);
-		AG_ObjectAttach(bo, tb_name);
-		AG_ObjectAttach(bo, cb_oneshot);
+		rad = AG_RadioNew(bo, AG_RADIO_EXPAND, types);
+		AG_SetInt(rad, "value", 0);
+		AG_SetPointer(win, "radMode", rad);
+		AG_ObjectAttach(bo, tbName);
+		AG_ObjectAttach(bo, cbOneShot);
 	}
 
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 	
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 	{
-		AG_ButtonNewFn(bo, 0, _("OK"), CreateBrush,
-		    "%p,%p,%p,%p,%p,%p", px, tl, tb_name, rad_types,
-		    cb_oneshot, win);
+		AG_ButtonNewFn(bo, 0, _("OK"), CreateBrush, "%p,%p", px, win);
 		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
@@ -392,8 +395,8 @@ CreateBrushDlg(AG_Event *_Nonnull event)
 static void
 FlipPixmap(AG_Event *_Nonnull event)
 {
-	RG_Pixmap *px = AG_PTR(2);
-	AG_Size totsize = px->su->h*px->su->pitch;
+	RG_Pixmap *px = AG_PTR(1);
+	AG_Size totsize = px->su->h * px->su->pitch;
 	Uint8 *row, *buf;
 	Uint8 *fb = px->su->pixels;
 	int y;
@@ -412,7 +415,7 @@ FlipPixmap(AG_Event *_Nonnull event)
 static void
 MirrorPixmap(AG_Event *_Nonnull event)
 {
-	RG_Pixmap *px = AG_PTR(2);
+	RG_Pixmap *px = AG_PTR(1);
 	Uint8 *row, *rowp;
 	AG_Surface *S = px->su;
 	Uint8 *fb = S->pixels;
@@ -503,10 +506,8 @@ RG_PixmapToolbar(RG_Tileview *tv, RG_TileElement *tel)
 	tbar = AG_ToolbarNew(tv->tel_box, AG_TOOLBAR_VERT, 1, 0);
 	AG_ToolbarButtonIcon(tbar, rgIconStamp.s, 0,
 	    CreateBrushDlg, "%p,%p,%p", tv, px, AG_ParentWindow(tv));
-	AG_ToolbarButtonIcon(tbar, rgIconFlip.s, 0,
-	    FlipPixmap, "%p,%p", tv, px);
-	AG_ToolbarButtonIcon(tbar, rgIconMirror.s, 0,
-	    MirrorPixmap, "%p,%p", tv, px);
+	AG_ToolbarButtonIcon(tbar, rgIconFlip.s, 0, FlipPixmap, "%p", px);
+	AG_ToolbarButtonIcon(tbar, rgIconMirror.s, 0, MirrorPixmap, "%p,%p", px);
 
 	return (tbar);
 }

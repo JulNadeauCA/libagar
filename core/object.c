@@ -68,7 +68,7 @@ AG_ObjectInit(void *pObj, void *pClass)
 	AG_ObjectClass *cl = (pClass != NULL) ? AGCLASS(pClass) : &agObjectClass;
 	AG_ObjectClass **hier;
 	int i, nHier;
-
+	
 #ifdef AG_TYPE_SAFETY
 	Strlcpy(ob->tag, AG_OBJECT_TYPE_TAG, sizeof(ob->tag));
 #endif
@@ -90,7 +90,7 @@ AG_ObjectInit(void *pObj, void *pClass)
 #endif
 	TAILQ_INIT(&ob->vars);
 	TAILQ_INIT(&ob->children);
-	
+
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) != 0) {
 		AG_FatalError(NULL);
 	}
@@ -120,7 +120,7 @@ AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *C)
 			return (NULL);
 		}
 	}
-	
+
 	if ((obj = TryMalloc(C->size)) == NULL) {
 		return (NULL);
 	}
@@ -379,10 +379,10 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	
 	/* Attach the object. */
 	TAILQ_INSERT_TAIL(&parent->children, chld, cobjs);
-
+      
 	/* Notify both the parent and child objects. */
-	AG_PostEvent(parent, chld, "attached", NULL);
-	AG_PostEvent(chld, parent, "child-attached", NULL);
+	AG_PostEvent(chld, "attached", "%p", parent);
+	AG_PostEvent(parent, "child-attached", "%p", chld);
 
 #ifdef AG_DEBUG_CORE
 	if (chld->name[0] != '\0') {
@@ -446,8 +446,8 @@ AG_ObjectDetach(void *pChld)
 	TAILQ_REMOVE(&parent->children, chld, cobjs);
 	chld->parent = NULL;
 	chld->root = chld;
-	AG_PostEvent(parent, chld, "detached", NULL);
-	AG_PostEvent(chld, parent, "child-detached", NULL);
+	AG_PostEvent(chld, "detached", "%p", parent);
+	AG_PostEvent(parent, "child-detached", "%p", chld);
 
 #ifdef AG_DEBUG_CORE
 	if (chld->name[0] != '\0') {
@@ -477,7 +477,10 @@ FindObjectByName(const AG_Object *_Nonnull parent, const char *_Nonnull name)
 	char *s;
 	AG_Object *child;
 
-	Strlcpy(chldName, name, sizeof(chldName));
+	if (Strlcpy(chldName, name, sizeof(chldName)) >= sizeof(chldName)) {
+		AG_SetErrorS(_("Path overflow"));
+		return (NULL);
+	}
 
 	if ((s = strchr(chldName, AG_PATHSEPCHAR)) != NULL) {
 		*s = '\0';
@@ -831,8 +834,10 @@ AG_ObjectPageOut(void *p)
 		goto out;
 	}
 	if (!AG_ObjectInUse(ob)) {
-		if (AG_FindEventHandler(ob->root, "object-page-out") != NULL) {
-			AG_PostEvent(ob, ob->root, "object-page-out", NULL);
+		AG_Event *ev;
+
+		if ((ev = AG_FindEventHandler(ob->root, "object-page-out"))) {
+			AG_PostEventByPtr(ob->root, ev, "%p", ob);
 		} else {
 			if (AG_ObjectSave(ob) == -1)
 				goto fail;
@@ -1335,7 +1340,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	free(hier);
 
 	AG_CloseFile(ds);
-	AG_PostEvent(ob, ob->root, "object-post-load-data", "%s", path);
+	AG_PostEvent(ob->root, "object-post-load", "%p,%s", ob, path);
 out:
 	AG_ObjectUnlock(ob);
 	AG_UnlockVFS(ob);
@@ -1730,7 +1735,12 @@ AG_ObjectSetNameS(void *p, const char *name)
 	if (name == NULL) {
 		ob->name[0] = '\0';
 	} else {
+#ifdef AG_DEBUG
+		if (Strlcpy(ob->name, name, sizeof(ob->name)) >= sizeof(ob->name))
+			Verbose("Truncated object name: \"%s\"", ob->name);
+#else
 		Strlcpy(ob->name, name, sizeof(ob->name));
+#endif
 		for (c = &ob->name[0]; *c != '\0'; c++) {
 			if (*c == '/' || *c == '\\')		/* Pathname separator */
 				*c = '_';

@@ -22,10 +22,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <agar/config/ag_serialization.h>
-#ifdef AG_SERIALIZATION
-
 #include <agar/core/core.h>
+#if defined(AG_WIDGETS) && defined(AG_SERIALIZATION)
+
 #include <agar/gui/objsel.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -202,4 +201,4 @@ AG_WidgetClass agObjectSelectorClass = {
 	AG_WidgetInheritSizeAllocate
 };
 
-#endif /* AG_SERIALIZATION */
+#endif /* AG_WIDGETS and AG_SERIALIZATION */

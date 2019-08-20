@@ -114,37 +114,38 @@ void *agStdClasses[] = {
 	&agInputDeviceClass,
 	&agMouseClass,
 	&agKeyboardClass,
+	&agFontClass,
 	NULL
 };
 void *agStdWidgets[] = {
 	&agWidgetClass,
 	&agWindowClass,
-	&agFontClass,
+#ifdef AG_WIDGETS
 	&agBoxClass,
 	&agButtonClass,
 	&agCheckboxClass,
 	&agComboClass,
 	&agConsoleClass,
 	&agEditableClass,
-#ifdef AG_SERIALIZATION
+# ifdef AG_SERIALIZATION
 	&agDirDlgClass,
 	&agFontSelectorClass,
 	&agFileDlgClass,
-#endif
+# endif
 	&agFixedClass,
 	&agFixedPlotterClass,
 	&agGraphClass,
-#ifdef HAVE_OPENGL
+# ifdef HAVE_OPENGL
 	&agGLViewClass,
-#endif
+# endif
 	&agHSVPalClass,
 	&agIconClass,
 	&agLabelClass,
 	&agMenuClass,
 	&agMenuViewClass,
-#ifdef HAVE_FLOAT
+# ifdef HAVE_FLOAT
 	&agMFSpinbuttonClass,
-#endif
+# endif
 	&agMPaneClass,
 	&agMSpinbuttonClass,
 	&agNotebookClass,
@@ -168,6 +169,7 @@ void *agStdWidgets[] = {
 	&agTlistClass,
 	&agToolbarClass,
 	&agUComboClass,
+#endif /* AG_WIDGETS */
 	NULL
 };
 
@@ -203,7 +205,9 @@ double agZoomValues[AG_ZOOM_MAX] = {
 };
 #else
 int agZoomValues[AG_ZOOM_MAX] = {
-	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+	 1,  2,  3,  4,  5,  6,  7,  8,
+	 9, 10, 11, 12, 13, 14,
+	15, 16, 17, 18, 19, 20
 };
 #endif /* HAVE_FLOAT */
 
@@ -351,14 +355,8 @@ AG_DestroyGUI(void)
 	AG_LockVFS(&agDrivers);
 
 	/* Destroy all windows */
-#ifdef AG_DEBUG_GUI
-	Debug(NULL, "AG_DestroyGUI()\n");
-#endif
 	OBJECT_FOREACH_CHILD(drv, &agDrivers, ag_object) {
 		OBJECT_FOREACH_CHILD(win, drv, ag_window) {
-#ifdef AG_DEBUG_GUI
-			Debug(drv, "Freeing Window %s (\"%s\")\n", OBJECT(win)->name, win->caption);
-#endif
 			AG_ObjectDetach(win);
 		}
 	}
@@ -370,9 +368,6 @@ AG_DestroyGUI(void)
 	     drv != TAILQ_END(&agDrivers.children);
 	     drv = drvNext) {
 		drvNext = TAILQ_NEXT(drv, cobjs);
-#ifdef AG_DEBUG_GUI
-		Debug(drv, "Freeing Driver %s\n", OBJECT(drv)->name);
-#endif
 		TAILQ_INIT(&drv->children);
 		AG_DriverClose((AG_Driver *)drv);
 	}
@@ -425,7 +420,7 @@ AG_InitGraphics(const char *spec)
 		return (-1);
 
 	if (agDriverMw != NULL || agDriverSw != NULL) {
-		AG_SetError(_("Root driver already initialized"));
+		AG_SetErrorS("agDriver is already set");
 		goto fail;
 	}
 	if (spec != NULL && spec[0] != '\0') {
@@ -445,7 +440,7 @@ AG_InitGraphics(const char *spec)
 				}
 			}
 			if (dc == NULL) {
-				AG_SetError(_("No OpenGL drivers are available"));
+				AG_SetErrorS(_("No OpenGL drivers are available"));
 				goto fail;
 			}
 		} else if (strncmp(s, "<SDL>", 5) == 0) {
@@ -461,7 +456,7 @@ AG_InitGraphics(const char *spec)
 				}
 			}
 			if (dc == NULL) {
-				AG_SetError(_("No SDL drivers are available"));
+				AG_SetErrorS(_("No SDL drivers are available"));
 				goto fail;
 			}
 		} else {
@@ -646,14 +641,14 @@ AG_InitVideo(int w, int h, int depth, Uint flags)
 		return (-1);
 	}
 	if (agDriverMw != NULL || agDriverSw != NULL) {
-		AG_SetError("Root driver already initialized");
+		AG_SetErrorS("agDriver is already set");
 		goto fail;
 	}
 	if (depth < 1 || w < 16 || h < 16) {
 		AG_SetError("Resolution too small");
 		goto fail;
 	}
-	if (flags & (AG_VIDEO_OPENGL|AG_VIDEO_OPENGL_OR_SDL)) {
+	if (flags & (AG_VIDEO_OPENGL | AG_VIDEO_OPENGL_OR_SDL)) {
 		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 			if ((*pd)->wm == AG_WM_SINGLE &&
 			   ((*pd)->flags & AG_DRIVER_OPENGL) &&

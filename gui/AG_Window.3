@@ -138,9 +138,6 @@ event is raised.
 .Fn AG_WindowSetGeometryAlignedPct "AG_Window *win" "enum ag_window_alignment alignment" "int wPct" "int hPct"
 .Pp
 .Ft "void"
-.Fn AG_WindowSetGeometryBounded "AG_Window *win" "int x" "int y" "int w" "int h"
-.Pp
-.Ft "void"
 .Fn AG_WindowSetGeometryMax "AG_Window *win"
 .Pp
 .Ft "void"
@@ -372,11 +369,6 @@ are given in percentage of current view area instead of pixels.
 Calling these functions with an argument of
 .Dv AG_WINDOW_ALIGNMENT_NONE
 is a no-op.
-.Pp
-The
-.Fn AG_WindowSetGeometryBounded
-variant limits the window to the view area (by default, windows can lie
-outside of the visible area).
 .Pp
 The
 .Fn AG_WindowSetGeometryMax

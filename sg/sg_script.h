@@ -57,6 +57,15 @@ typedef struct sg_script {
 	Uint32 _pad;
 } SG_Script;
 
+#define SGSCRIPT(obj)            ((SG_Script *)(obj))
+#define SGCSCRIPT(obj)           ((const SG_Script *)(obj))
+#define SG_SCRIPT_SELF()          SGSCRIPT( AG_OBJECT(0,"SG_Script:*") )
+#define SG_SCRIPT_PTR(n)          SGSCRIPT( AG_OBJECT((n),"SG_Script:*") )
+#define SG_SCRIPT_NAMED(n)        SGSCRIPT( AG_OBJECT_NAMED((n),"SG_Script:*") )
+#define SG_CONST_SCRIPT_SELF()   SGCSCRIPT( AG_CONST_OBJECT(0,"SG_Script:*") )
+#define SG_CONST_SCRIPT_PTR(n)   SGCSCRIPT( AG_CONST_OBJECT((n),"SG_Script:*") )
+#define SG_CONST_SCRIPT_NAMED(n) SGCSCRIPT( AG_CONST_OBJECT_NAMED((n),"SG_Script:*") )
+
 struct sg_view;
 
 __BEGIN_DECLS

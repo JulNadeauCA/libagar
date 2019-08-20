@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/treetbl.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -397,7 +399,7 @@ ClickedRow(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 	/* Clicking on blank space clears the selection. */
 	if (row == NULL) {
 		DeselectAll(&tt->children);
-		//AG_PostEvent(NULL, tt, "treetbl-selectclear", "");
+		/* AG_PostEvent(tt, "treetbl-selectclear", ""); */
 		return (0);
 	}
 
@@ -429,7 +431,7 @@ ClickedRow(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 	      kmod & AG_KEYMOD_CTRL)) {
 		if (row->flags & AG_TREETBL_ROW_SELECTED) {
 			row->flags &= ~(AG_TREETBL_ROW_SELECTED);
-			AG_PostEvent(NULL, tt, "treetbl-deselect", "%p", row);
+			AG_PostEvent(tt, "treetbl-deselect", "%p", row);
 			AG_Redraw(tt);
 		} else {
 			if (!(tt->flags & AG_TREETBL_MULTI) && 
@@ -437,7 +439,7 @@ ClickedRow(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 				DeselectAll(&tt->children);
 			}
 			row->flags |= AG_TREETBL_ROW_SELECTED;
-			AG_PostEvent(NULL, tt, "treetbl-select", "%p", row);
+			AG_PostEvent(tt, "treetbl-select", "%p", row);
 			AG_Redraw(tt);
 		}
 	} else if (kmod & AG_KEYMOD_SHIFT) {
@@ -471,7 +473,7 @@ ClickedRow(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 		DeselectAll(&tt->children);
 		if (!(row->flags & AG_TREETBL_ROW_SELECTED)) {
 			row->flags |= AG_TREETBL_ROW_SELECTED;
-			AG_PostEvent(NULL, tt, "treetbl-select", "%p", row);
+			AG_PostEvent(tt, "treetbl-select", "%p", row);
 			AG_Redraw(tt);
 		}
 	}
@@ -492,7 +494,7 @@ ClickedRow(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 			AG_Redraw(tt);
 		}
 		tt->dblClicked = 0;
-		AG_PostEvent(NULL, tt, "treetbl-dblclick", "%p", row);
+		AG_PostEvent(tt, "treetbl-dblclick", "%p", row);
 	} else {
 		tt->dblClicked++;
 		AG_AddTimer(tt, &tt->toDblClick, agMouseDblclickDelay,
@@ -1654,3 +1656,5 @@ AG_WidgetClass agTreetblClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

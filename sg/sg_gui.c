@@ -55,9 +55,9 @@ const char *sgEditableClasses[] = {
 static void
 CloseObject(AG_Event *_Nonnull event)
 {
-	AG_Window *wMain = AG_PTR(1);
-	AG_Object *obj = AG_PTR(2);
-	int save = AG_INT(3);
+	AG_Window *wMain = AG_WINDOW_PTR(1);
+	AG_Object *obj = AG_OBJECT_PTR(2);
+	const int save = AG_INT(3);
 	AG_Event ev;
 
 	if (save) {
@@ -81,8 +81,8 @@ CloseObject(AG_Event *_Nonnull event)
 static void
 WindowClose(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_SELF();
-	AG_Object *obj = AG_PTR(1);
+	AG_Window *win = AG_WINDOW_SELF();
+	AG_Object *obj = AG_OBJECT_PTR(1);
 	AG_Event ev;
 	AG_Button *bOpts[3];
 	AG_Window *wDlg, *wOther;
@@ -149,7 +149,7 @@ SG_GUI_OpenObject(void *p)
 
 	AG_SetEvent(win, "window-close", WindowClose, "%p", obj);
 	AG_SetPointer(win, "object", obj);
-	AG_PostEvent(NULL, obj, "edit-open", NULL);
+	AG_PostEvent(obj, "edit-open", NULL);
 
 	TAILQ_INSERT_TAIL(&sgEditorWindows, win, user);
 	AG_WindowShow(win);
@@ -207,7 +207,7 @@ static void
 LoadObject(AG_Event *_Nonnull event)
 {
 	AG_ObjectClass *cls = AG_PTR(1);
-	char *path = AG_STRING(2);
+	const char *path = AG_STRING(2);
 
 	if (SG_GUI_LoadObject(cls, path) == NULL)
 		AG_TextMsgFromError();
@@ -217,7 +217,7 @@ LoadObject(AG_Event *_Nonnull event)
 void
 SG_GUI_OpenDlg(AG_Event *event)
 {
-	AG_Window *wMain = AG_PTR(1);
+	AG_Window *wMain = AG_WINDOW_PTR(1);
 	AG_Window *win;
 	AG_FileDlg *fd;
 	int j;
@@ -248,10 +248,10 @@ SG_GUI_OpenDlg(AG_Event *event)
 static void
 SaveObject(AG_Event *_Nonnull event)
 {
-	AG_Window *wMain = AG_PTR(1);
-	AG_Object *obj = AG_PTR(2);
-	int saveAndClose = AG_INT(3);
-	char *path = AG_STRING(4);
+	AG_Window *wMain = AG_WINDOW_PTR(1);
+	AG_Object *obj = AG_OBJECT_PTR(2);
+	const int saveAndClose = AG_INT(3);
+	const char *path = AG_STRING(4);
 	const char *pathShort;
 	AG_Event ev;
 
@@ -276,8 +276,8 @@ SaveObject(AG_Event *_Nonnull event)
 void
 SG_GUI_SaveAsDlg(AG_Event *event)
 {
-	AG_Window *wMain = AG_PTR(1);
-	AG_Object *obj = AG_PTR(2);
+	AG_Window *wMain = AG_WINDOW_PTR(1);
+	AG_Object *obj = AG_OBJECT_PTR(2);
 	int saveAndClose = AG_INT(3);
 	char defDir[AG_PATHNAME_MAX];
 	AG_Window *win;
@@ -322,9 +322,9 @@ SG_GUI_SaveAsDlg(AG_Event *event)
 void
 SG_GUI_Save(AG_Event *event)
 {
-	AG_Window *wMain = AG_PTR(1);
-	AG_Object *obj = AG_PTR(2);
-	int saveAndClose = AG_INT(3);
+	AG_Window *wMain = AG_WINDOW_PTR(1);
+	AG_Object *obj = AG_OBJECT_PTR(2);
+	const int saveAndClose = AG_INT(3);
 	char *archivePath;
 	AG_Event ev;
 	
@@ -370,7 +370,7 @@ SG_GUI_EditPreferences(AG_Event *event)
 static void
 SelectedFont(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_WINDOW_PTR(1);
 
 	AG_SetString(agConfig, "font.face",  OBJECT(agDefaultFont)->name);
 	AG_SetInt(agConfig, "font.size", agDefaultFont->spec.size);
@@ -387,7 +387,7 @@ SelectedFont(AG_Event *_Nonnull event)
 void
 SG_GUI_SelectFontDlg(AG_Event *event)
 {
-	AG_Window *wMain = AG_PTR(1);
+	AG_Window *wMain = AG_WINDOW_PTR(1);
 	AG_Window *win;
 	AG_FontSelector *fs;
 	AG_Box *hBox;
@@ -462,9 +462,9 @@ void
 SG_GUI_CreateNewView(AG_Event *event)
 {
 	char name[AG_OBJECT_NAME_MAX];
-	AG_Window *wMain = AG_PTR(1);
-	SG_View *svOrig = AG_PTR(2), *sv;
-	int shareCam = AG_INT(3);
+	AG_Window *wMain = AG_WINDOW_PTR(1);
+	SG_View *svOrig = SG_VIEW_PTR(2), *sv;
+	const int shareCam = AG_INT(3);
 	SG *sg = svOrig->sg;
 	AG_Window *win;
 	int num = 0;
@@ -491,11 +491,11 @@ tryname:
 static void
 CloseEditor(AG_Event *_Nonnull event)
 {
-	AG_Menu *m = AG_SELF();
+	AG_Menu *m = AG_MENU_SELF();
 	AG_Window *win = AG_ParentWindow(m);
 
-	if (win != NULL)
-		AG_PostEvent(NULL, win, "window-close", NULL);
+	if (win)
+		AG_PostEvent(win, "window-close", NULL);
 }
 
 /* Build a generic "File" menu. */

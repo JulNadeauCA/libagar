@@ -8,7 +8,7 @@ PROG_GUID=	"f6ece979-70a4-11e9-a96a-ac9e17b8d45b"
 PROG=		"c64hello"
 SRCS=		hello.c
 
-CFLAGS+=	${AGAR_CORE_CFLAGS}
-LIBS=		${AGAR_CORE_LIBS}
+CFLAGS+=	${AGAR_CFLAGS}
+LIBS=		${AGAR_LIBS}
 
 include ${TOP}/mk/build.prog.mk

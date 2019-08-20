@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/radio.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -374,7 +376,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	}
 	if (selNew != -1 && selNew != *sel) {
 		*sel = selNew;
-		AG_PostEvent(NULL, rad, "radio-changed", "%i", *sel);
+		AG_PostEvent(rad, "radio-changed", "%i", *sel);
 		AG_Redraw(rad);
 	}
 	AG_UnlockVariable(value);
@@ -413,7 +415,7 @@ KeyDown(AG_Event *_Nonnull event)
 	}
 	if (selNew != -1 && selNew != *sel) {
 		*sel = selNew;
-		AG_PostEvent(NULL, rad, "radio-changed", "%i", *sel);
+		AG_PostEvent(rad, "radio-changed", "%i", *sel);
 		AG_Redraw(rad);
 	}
 	AG_UnlockVariable(value);
@@ -518,3 +520,5 @@ AG_WidgetClass agRadioClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

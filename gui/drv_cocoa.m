@@ -861,20 +861,20 @@ COCOA_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		    dev->data.key.ks, dev->data.key.ucs);
 		break;
 	case AG_DRIVER_MOUSE_ENTER:
-		AG_PostEvent(NULL, win, "window-enter", NULL);
+		AG_PostEvent(win, "window-enter", NULL);
 		break;
 	case AG_DRIVER_MOUSE_LEAVE:
-		AG_PostEvent(NULL, win, "window-leave", NULL);
+		AG_PostEvent(win, "window-leave", NULL);
 		break;
 	case AG_DRIVER_FOCUS_IN:
 		agWindowFocused = win;
-		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+		AG_PostEvent(win, "window-gainfocus", NULL);
 		break;
 	case AG_DRIVER_FOCUS_OUT:
-		AG_PostEvent(NULL, win, "window-lostfocus", NULL);
+		AG_PostEvent(win, "window-lostfocus", NULL);
 		break;
 	case AG_DRIVER_CLOSE:
-		AG_PostEvent(NULL, win, "window-close", NULL);
+		AG_PostEvent(win, "window-close", NULL);
 		break;
 	case AG_DRIVER_EXPOSE:
 		win->dirty = 1;

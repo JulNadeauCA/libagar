@@ -229,20 +229,20 @@ DUMMY_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		    dev->data.key.ks, dev->data.key.ucs);
 		break;
 	case AG_DRIVER_MOUSE_ENTER:
-		AG_PostEvent(NULL, dev->win, "window-enter", NULL);
+		AG_PostEvent(dev->win, "window-enter", NULL);
 		break;
 	case AG_DRIVER_MOUSE_LEAVE:
-		AG_PostEvent(NULL, dev->win, "window-leave", NULL);
+		AG_PostEvent(dev->win, "window-leave", NULL);
 		break;
 	case AG_DRIVER_FOCUS_IN:
 		if (agWindowFocused != dev->win) {
 			agWindowFocused = dev->win;
-			AG_PostEvent(NULL, dev->win, "window-gainfocus", NULL);
+			AG_PostEvent(dev->win, "window-gainfocus", NULL);
 		}
 		break;
 	case AG_DRIVER_FOCUS_OUT:
 		if (agWindowFocused == dev->win) {
-			AG_PostEvent(NULL, dev->win, "window-lostfocus", NULL);
+			AG_PostEvent(dev->win, "window-lostfocus", NULL);
 			agWindowFocused = NULL;
 		}
 		break;
@@ -259,7 +259,7 @@ DUMMY_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		}
 		break;
 	case AG_DRIVER_CLOSE:
-		AG_PostEvent(NULL, dev->win, "window-close", NULL);
+		AG_PostEvent(dev->win, "window-close", NULL);
 		break;
 	case AG_DRIVER_EXPOSE:
 		dev->win->dirty = 1;
@@ -981,10 +981,12 @@ static void
 DUMMY_TweakAlignment(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a,
     Uint wMax, Uint hMax)
 {
+#ifdef AG_DEBUG
 	Debug(win, "TweakAlignment (%s, [%d,%d %dx%d], max=%ux%u)\n",
 	    agWindowAlignmentNames[win->alignment],
 	    a->x, a->y, a->w, a->h,
 	    wMax, hMax);
+#endif
 }
 
 #ifdef AG_EVENT_LOOP

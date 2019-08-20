@@ -33,10 +33,10 @@
 #include <string.h>
 
 static void
-Attached(AG_Event *_Nonnull event)
+OnAttach(AG_Event *_Nonnull event)
 {
-	void *parent = AG_SENDER();
-	SG_Node *node = AG_SELF();
+	SG_Node *node = SG_NODE_SELF();
+	AG_Object *parent = AG_OBJECT_PTR(1);
 	SG *sg = NULL;
 	
 	if (AG_OfClass(parent, "SG:*")) {
@@ -53,10 +53,10 @@ Attached(AG_Event *_Nonnull event)
 }
 
 static void
-Detached(AG_Event *_Nonnull event)
+OnDetach(AG_Event *_Nonnull event)
 {
-	void *parent = AG_SENDER();
-	SG_Node *node = AG_SELF();
+	SG_Node *node = SG_NODE_SELF();
+	void *parent = AG_OBJECT_PTR(1);
 	SG *sg = NULL;
 	
 	if (AG_OfClass(parent, "SG:*")) {
@@ -81,8 +81,8 @@ Init(void *_Nonnull obj)
 	M_MatIdentity44v(&node->T);
 	TAILQ_INIT(&node->actions);
 
-	AG_SetEvent(node, "attached", Attached, NULL);
-	AG_SetEvent(node, "detached", Detached, NULL);
+	AG_SetEvent(node, "attached", OnAttach, NULL);
+	AG_SetEvent(node, "detached", OnDetach, NULL);
 }
 
 static void

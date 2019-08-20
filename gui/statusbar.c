@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/statusbar.h>
 #include <agar/gui/window.h>
 
@@ -100,3 +102,5 @@ AG_WidgetClass agStatusbarClass = {
 	AG_WidgetInheritSizeRequest,
 	AG_WidgetInheritSizeAllocate
 };
+
+#endif /* AG_WIDGETS */

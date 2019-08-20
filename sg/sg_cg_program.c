@@ -81,7 +81,7 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull buf)
 static void
 PollObjs(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	SG_CgProgram *prog = AG_PTR(1);
 	AG_TlistItem *it;
 	int i;
@@ -104,7 +104,7 @@ static void
 ViewProgramText(AG_Event *_Nonnull event)
 {
 	SG_CgProgram *prog = AG_PTR(1);
-	AG_Textbox *tbox = AG_PTR(2);
+	AG_Textbox *tbox = AG_TEXTBOX_PTR(2);
 	AG_TlistItem *it = AG_TLIST_ITEM_PTR(3);
 	CGprogram cgp = (CGprogram)it->p1;
 	const char *s;

@@ -98,13 +98,13 @@ provides a thread-safe message passing system for multithreaded applications.
 .Fn AG_UnsetEvent "AG_Object *obj" "const char *name"
 .Pp
 .Ft "int"
-.Fn AG_PostEvent "AG_Object *sndr" "AG_Object *rcvr" "const char *name" "const char *fmt" "..."
+.Fn AG_PostEvent "AG_Object *obj" "const char *name" "const char *fmt" "..."
 .Pp
 .Ft "int"
-.Fn AG_PostEventByPtr "AG_Object *sndr" "AG_Object *rcvr" "AG_Event *event" "const char *fmt" "..."
+.Fn AG_PostEventByPtr "AG_Object *obj" "AG_Event *event" "const char *fmt" "..."
 .Pp
 .Ft "int"
-.Fn AG_SchedEvent "AG_Object *sndr" "AG_Object *rcvr" "Uint32 ticks" "const char *name" "const char *fmt" "..."
+.Fn AG_SchedEvent "AG_Object *obj" "Uint32 ticks" "const char *name" "const char *fmt" "..."
 .Pp
 .nr nS 0
 The
@@ -193,20 +193,21 @@ routines accept a special
 .Fa fnArgs
 format string specifying a list of arguments to be passed to the event handler
 function.
-For instance, the
-.Sq %s,%p,%Cp,%i
-string indicates that the following arguments are: a string, a pointer, a
-const pointer and an
-.Ft int .
-The arguments would retrieved by the event handler function like so:
+For example, "%s,%p,%i" (or "%s%p%i") says that the following arguments are
+a string, a pointer and an integer.
+An event handler routine will typically use accessor macros to extract argument
+values out of the
+.Fa event
+structure:
 .Bd -literal -offset indent
 void
 MyEventHandler(AG_Event *event)
 {
-	char *s       = AG_STRING(1);
-	const void *p = AG_CONST_PTR(2);
-	void *p       = AG_PTR(3);
-	int i         = AG_INT(4);
+	char *s = AG_STRING(1);
+	void *p = AG_PTR(2);
+	int i   = AG_INT(3);
+	
+	/* ... */
 }
 .Ed
 .Pp
@@ -233,23 +234,24 @@ Here is an example using Agar-GUI widget classes:
 static void
 PushedOK(AG_Event *event)
 {
-	AG_Button *button           = AG_BUTTON_SELF();
-	const AG_Checkbox *checkbox = AG_CONST_CHECKBOX_PTR(1);
-	AG_Radio *radio             = AG_RADIO_PTR(2);
-	AG_Button *button           = AG_BUTTON_PTR(3);
+	AG_Button *button = AG_BUTTON_SELF();
+	AG_Radio *radio   = AG_RADIO_PTR(1);
+	AG_Button *button = AG_BUTTON_PTR(2);
+	const AG_Checkbox *cb = AG_CONST_CHECKBOX_PTR(3);
 
-/*	AG_WidgetDisable(checkbox); <- illegal (checkbox is const) */
-	AG_WidgetDisable(radio);
-	AG_WidgetDisable(button);
+/* 	cb->invert = 1;              <- Incorrect (cb is const) */
+/*	AG_WidgetDisable(cb);        <- Incorrect (cb is const) */
+	AG_WidgetDisable(radio);  /* <- OK */
+	AG_WidgetDisable(button); /* <- OK */
 }
 
-AG_Window *win        = AG_WindowNew(0);
-AG_Checkbox *checkbox = AG_CheckboxNew(win, 0, "Some option");
-AG_Checkbox *radio    = AG_RadioNew(win, 0, NULL);
-AG_Button *button     = AG_ButtonNew(win, 0, "OK");
+AG_Window *win = AG_WindowNew(0);
+AG_Checkbox *radio = AG_RadioNew(window, 0, NULL);
+AG_Button *button = AG_ButtonNew(window, 0, "OK");
+AG_Checkbox *checkbox = AG_CheckboxNew(window, 0, "Some option");
 
 AG_SetEvent(button, "button-pushed",
-    PushedOK, "%Cp,%p", checkbox, radio);
+    PushedOK, "%p,%Cp", radio, checkbox);
 .Ed
 .Pp
 Arguments can be named and retrieved with
@@ -276,10 +278,10 @@ The following argument specifiers are accepted:
 .Pp
 .Bl -tag -compact -width "%li "
 .It "%p"
-A pointer to writeable data:
+A pointer to data:
 .Ft "void *" .
 .It "%Cp"
-A pointer to read-only data:
+A pointer to const data:
 .Ft "const void *" .
 .It "%i"
 Signed integer:
@@ -324,9 +326,6 @@ they also check for potential accesses to incorrect types.
 .Pp
 .Ft "const AG_Object *"
 .Fn AG_CONST_SELF "void"
-.Pp
-.Ft "AG_Object *"
-.Fn AG_SENDER "void"
 .Pp
 .Ft "void *"
 .Fn AG_PTR "int index"
@@ -398,18 +397,15 @@ they also check for potential accesses to incorrect types.
 .nr nS 0
 The
 .Fn AG_SELF
-macro (equivalent to AG_PTR(0)) returns a pointer to the
+and
+.Fn AG_CONST_SELF
+macros expand to a pointer to the
 .Xr AG_Object 3
 receiving the event (the
-.Fa rcvr
-argument to
+.Fa obj
+argument passed to
 .Fn AG_PostEvent ) .
-.Fn AG_SENDER
-returns a pointer to the object sending the event (the
-.Fa sndr
-argument to
-.Fn AG_PostEvent ) ,
-if there is one.
+They are equivalent to AG_PTR(0) and AG_CONST_PTR(0), respectively.
 .Pp
 The following macros return a specific item in the list of arguments.
 When retrieving arguments by index, note that the arguments to
@@ -421,17 +417,17 @@ follow the arguments to
 are pushed first onto the argument stack, followed by the arguments to
 .Fn AG_PostEvent ,
 if any).
-These macros ensure type safety if Agar is compiled with either
+These macros ensure type safety if Agar is compiled with
 --enable-debug or --enable-type-safety.
 .Pp
 .Fn AG_PTR
-returns a pointer previously passed as a
+returns a pointer (previously passed as a
 .Sq %p
-argument.
+argument).
 .Fn AG_CONST_PTR
-returns a pointer previously passed as a
+returns a pointer (previously passed as a 
 .Sq %Cp
-argument.
+argument).
 .Pp
 .Fn AG_OBJECT
 returns a pointer to an
@@ -439,18 +435,12 @@ returns a pointer to an
 (previously passed as a
 .Sq %p
 argument).
-It differs from
-.Fn AG_PTR
-only in builds with run-time type safety checking.
-When type safety is enabled,
-.Fn AG_OBJECT
-tests the validity of the object and checks the membership of the object in
-the specified class, raising a fatal condition if it doesn't match.
+In debug mode, assert that the argument points to a valid
+.Xr AG_Object 3
+by performing a validity test, and a class membership test.
 The
 .Fn AG_CONST_OBJECT
-variant expects a pointer passed as
-.Sq %Cp
-argument.
+variant asserts that the object pointer was passed as "%Cp".
 .Pp
 .Fn AG_STRING
 returns a pointer to a string passed as a
@@ -622,34 +612,11 @@ structure:
 .Bl -tag -compact -width "AG_Variable *argv "
 .It Ft char * name
 String identifier for the event.
-.It Ft Uint flags
-See
-.Sx EVENT FLAGS
-section below.
 .It Ft int argc
 Argument count.
 .It Ft AG_Variable *argv
 Argument data (see
 .Xr AG_Variable 3 ) .
-.El
-.Sh EVENT FLAGS
-Acceptable
-.Va flags
-for the
-.Nm
-structure include:
-.Bl -tag -width "AG_EVENT_PROPAGATE "
-.It AG_EVENT_ASYNC
-Arrange for the event handler to execute inside a separate thread that will
-be automatically created (and managed by the receiver object).
-This flag is only available if Agar was compiled with the
-.Dv AG_THREADS
-option.
-.It AG_EVENT_PROPAGATE
-Automatically forward events of this type to all attached child objects.
-If
-.Dv AG_EVENT_ASYNC
-is also set, the event handlers of the child objects are executed concurrently.
 .El
 .Sh EXAMPLES
 The following code fragment demonstrates a typical

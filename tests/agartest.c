@@ -245,7 +245,7 @@ RequestTestClose(AG_Event *event)
 {
 	AG_Window *win = AG_WINDOW_PTR(1);
 	
-	AG_PostEvent(NULL, win, "window-close", NULL);
+	AG_PostEvent(win, "window-close", NULL);
 }
 
 static void
@@ -562,7 +562,7 @@ TestInfo(AG_Event *event)
 
 	AG_TextMsg(AG_MSG_INFO,
 	    _("Test: %s\n"
-	      "Needs: agar %s\n"
+	      "Needs at least: agar %s\n"
 	      "%s"),
 	    tc->name,
 	    tc->minVer ? tc->minVer : "1.0",
@@ -618,8 +618,13 @@ TestPopupMenu(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	const AG_TestCase *tc = AG_TlistSelectedItemPtr(tl);
-	AG_PopupMenu *pm = AG_PopupNew(tl);
-	
+	AG_PopupMenu *pm;
+
+	if (tc == NULL) {
+		return;
+	}
+	pm = AG_PopupNew(tl);
+
 	AG_MenuAction(pm->root, _("Test Information"), agIconMagnifier.s,
 	    TestInfo, "%Cp", tc);
 	AG_MenuAction(pm->root, _("View Source"), agIconDoc.s,

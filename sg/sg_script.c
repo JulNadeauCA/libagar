@@ -661,8 +661,8 @@ static void
 PollInsns(AG_Event *_Nonnull event)
 {
 	char text[1024];
-	AG_Tlist *tl = AG_SELF();
-	SG_Script *scr = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	SG_Script *scr = SG_SCRIPT_PTR(1);
 	SG_ScriptFrame *sf = &scr->frames[scr->t];
 	SG_ScriptInsn *si;
 
@@ -686,10 +686,10 @@ static void
 SelectInsn(AG_Event *_Nonnull event)
 {
 #ifdef AG_THREADS
-	SG_Script *scr = AG_PTR(1);
+	SG_Script *scr = SG_SCRIPT_PTR(1);
 #endif
-	AG_TlistItem *it = AG_PTR(2);
-	int state = AG_INT(3);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	const int state = AG_INT(3);
 
 	if (strcmp(it->cat, "insn") == 0) {
 		SG_ScriptInsn *si = it->p1;
@@ -731,8 +731,8 @@ InsertCreateInsn(AG_Event *_Nonnull event)
 {
 	char path[AG_OBJECT_PATH_MAX];
 	SG_ScriptEditCtx *e = AG_PTR(1);
-	SG_Node *parent = AG_PTR(2);
-	SG_Node *node = AG_PTR(3);
+	SG_Node *parent = SG_NODE_PTR(2);
+	SG_Node *node = SG_NODE_PTR(3);
 	SG_Script *scr = e->scr;
 	SG_ScriptInsn *si = NULL, *siRef;
 	AG_DataSource *ds;
@@ -800,7 +800,7 @@ static void
 CancelCreateInsn(AG_Event *_Nonnull event)
 {
 	SG_ScriptEditCtx *e = AG_PTR(1);
-	SG_Node *node = AG_PTR(2);
+	SG_Node *node = SG_NODE_PTR(2);
 	SG_Script *scr = e->scr;
 	SG_ScriptInsn *siRef, *siRefNext;
 	SG_ScriptFrame *sf;
@@ -929,7 +929,7 @@ InsertCreateInsnDlg(AG_Event *_Nonnull event)
 static void
 EditInsn(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	SG_ScriptEditCtx *e = AG_PTR(1);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 
@@ -944,8 +944,8 @@ EditInsn(AG_Event *_Nonnull event)
 static void
 AllocFrames(AG_Event *_Nonnull event)
 {
-	SG_Script *scr = AG_PTR(1);
-	AG_Numerical *numAlloc = AG_PTR(2);
+	SG_Script *scr = SG_SCRIPT_PTR(1);
+	AG_Numerical *numAlloc = AG_NUMERICAL_PTR(2);
 
 	if (SG_ScriptAlloc(scr, scr->n+AG_GetInt(numAlloc,"value")) == -1)
 		AG_TextMsgFromError();
@@ -1181,7 +1181,7 @@ EndAction(SG_ScriptEditCtx *_Nonnull e)
 static Uint32
 CamMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	SG_View *sv = AG_SELF();
+	SG_View *sv = SG_VIEW_SELF();
 	SG_ScriptEditCtx *e = AG_PTR(1);
 	
 	SG_Translatev(sv->cam, e->vCamMove);
@@ -1294,7 +1294,7 @@ static void
 KeyDown(AG_Event *_Nonnull event)
 {
 	SG_ScriptEditCtx *e = AG_PTR(1);
-	int key = AG_INT(2);
+	const int key = AG_INT(2);
 	AG_Event ev;
 
 	switch (key) {
@@ -1320,9 +1320,9 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	SG_ScriptEditCtx *e = AG_PTR(1);
 	SG_View *sv = e->sv;
-	int button = AG_INT(2);
-	int x = AG_INT(3);
-	int y = AG_INT(4);
+	const int button = AG_INT(2);
+	const int x = AG_INT(3);
+	const int y = AG_INT(4);
 	
 	if (sv->cam == NULL)
 		return;
@@ -1364,7 +1364,7 @@ static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
 	SG_ScriptEditCtx *e = AG_PTR(1);
-	int button = AG_INT(2);
+	const int button = AG_INT(2);
 
 	switch (button) {
 	case AG_MOUSE_LEFT:
@@ -1386,10 +1386,10 @@ static void
 MouseMotion(AG_Event *_Nonnull event)
 {
 	SG_ScriptEditCtx *e = AG_PTR(1);
-	int xWid = AG_INT(2);
-	int yWid = AG_INT(3);
-	int xRel = AG_INT(4);
-	int yRel = AG_INT(5);
+	const int xWid = AG_INT(2);
+	const int yWid = AG_INT(3);
+	const int xRel = AG_INT(4);
+	const int yRel = AG_INT(5);
 	SG_View *sv = e->sv;
 
 	if (e->siNew != NULL && e->siNew->type == SG_INSN_ACTION) {
@@ -1451,8 +1451,8 @@ Render(AG_Event *_Nonnull event)
 	char path[AG_PATHNAME_MAX];
 	SG_ScriptEditCtx *e = AG_PTR(1);
 	SG_ScriptRenderCtx *re = AG_PTR(2);
-	AG_Window *winDlg = AG_PTR(3);
-	AG_DirDlg *dirDlg = AG_PTR(4);
+	AG_Window *winDlg = AG_WINDOW_PTR(3);
+	AG_DirDlg *dirDlg = AG_DIRDLG_PTR(4);
 	char *outDir = Strdup(dirDlg->cwd);
 	SG_Script *scr = e->scr;
 	AG_Driver *drv = WIDGET(e->sv)->drv;
@@ -1760,17 +1760,19 @@ Edit(void *_Nonnull obj)
 		AG_Toolbar *tbInsns;
 
 		e->paLeft = AG_PaneNew(e->paHoriz->div[0], AG_PANE_VERT,
-		    AG_PANE_EXPAND|AG_PANE_DIV1FILL);
+		    AG_PANE_EXPAND | AG_PANE_DIV1FILL);
 	
-		lbl = AG_LabelNewPolledMT(e->paLeft->div[0], 0, lock,
+		lbl = AG_LabelNewPolled(e->paLeft->div[0], 0,
 		    _("Instructions at f%u: "), &scr->t);
 		AG_LabelSizeHint(lbl, 1,
 		    _("Instructions at f0000: "));
 
-		tl = AG_TlistNew(e->paLeft->div[0], AG_TLIST_POLL|AG_TLIST_TREE|
-		                       AG_TLIST_EXPAND|AG_TLIST_MULTI);
+		tl = AG_TlistNew(e->paLeft->div[0],
+		    AG_TLIST_POLL | AG_TLIST_TREE | AG_TLIST_EXPAND |
+		    AG_TLIST_MULTI);
 		WIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		AG_TlistSizeHint(tl, "<Isocahedron>", 2);
+
 		AG_SetEvent(tl, "tlist-poll", PollInsns, "%p", scr);
 		AG_SetEvent(tl, "tlist-changed", SelectInsn, "%p", scr);
 		AG_SetEvent(tl, "tlist-dblclick", EditInsn, "%p", e);
@@ -1795,8 +1797,8 @@ Edit(void *_Nonnull obj)
 
 	AG_ObjectAttach(e->paHoriz->div[1], sv);
 
-	lbl = AG_LabelNewPolledMT(win, 0, lock, _("Position: %u/%u"),
-	    &scr->t, &scr->tLast);
+	lbl = AG_LabelNewPolled(win, 0, _("Position: %u/%u"), &scr->t,
+	                                                      &scr->tLast);
 	AG_LabelSizeHint(lbl, 1, _("Position: 0000/0000"));
 
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
@@ -1819,8 +1821,9 @@ Edit(void *_Nonnull obj)
 		    AllocFrames, "%p,%p", scr, numAlloc);
 	}
 
-	statBox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_FRAME);
-	e->stat = AG_LabelNew(statBox, AG_LABEL_STATIC|AG_LABEL_HFILL, _("Idle"));
+	statBox = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_FRAME);
+	e->stat = AG_LabelNew(statBox, AG_LABEL_STATIC | AG_LABEL_HFILL,
+	    _("Idle"));
 
 	AG_PaneMoveDividerPct(e->paHoriz, 20);
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 60);

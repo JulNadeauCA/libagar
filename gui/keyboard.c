@@ -347,12 +347,10 @@ PostUnfocusedKeyUp(AG_Widget *_Nonnull wid, AG_KeySym ks, Uint kmod,
 	AG_ObjectLock(wid);
 	if (wid->flags & AG_WIDGET_UNFOCUSED_KEYUP) {
 #ifdef AG_UNICODE
-		AG_PostEvent(NULL, wid,  "key-up",
-		    "%i(key),%i(mod),%lu(ch)",
+		AG_PostEvent(wid,  "key-up", "%i(key),%i(mod),%lu(ch)",
 		    (int)ks, (int)kmod, (Ulong)ch);
 #else
-		AG_PostEvent(NULL, wid,  "key-up",
-		    "%i(key),%i(mod),%u(ch)",
+		AG_PostEvent(wid,  "key-up", "%i(key),%i(mod),%u(ch)",
 		    (int)ks, (int)kmod, (Uint)ch);
 #endif
 	}
@@ -372,12 +370,10 @@ PostUnfocusedKeyDown(AG_Widget *_Nonnull wid, AG_KeySym ks, Uint kmod,
 	AG_ObjectLock(wid);
 	if (wid->flags & AG_WIDGET_UNFOCUSED_KEYDOWN) {
 #ifdef AG_UNICODE
-		AG_PostEvent(NULL, wid,  "key-down",
-		    "%i(key),%i(mod),%lu(ch)",
+		AG_PostEvent(wid,  "key-down", "%i(key),%i(mod),%lu(ch)",
 		    (int)ks, (int)kmod, (Ulong)ch);
 #else
-		AG_PostEvent(NULL, wid,  "key-down",
-		    "%i(key),%i(mod),%u(ch)",
+		AG_PostEvent(wid,  "key-down", "%i(key),%i(mod),%u(ch)",
 		    (int)ks, (int)kmod, (Uint)ch);
 #endif
 	}
@@ -454,14 +450,12 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 				tabCycle = 0;
 			}
 #ifdef AG_UNICODE
-			AG_PostEvent(NULL, wFoc,
-			    (action == AG_KEY_RELEASED) ?
+			AG_PostEvent(wFoc, (action == AG_KEY_RELEASED) ?
 			    "key-up" : "key-down",
 			    "%i(key),%i(mod),%lu(ch)",
 			    (int)ks, (int)kbd->modState, (Ulong)ch);
 #else
-			AG_PostEvent(NULL, wFoc,
-			    (action == AG_KEY_RELEASED) ?
+			AG_PostEvent(wFoc, (action == AG_KEY_RELEASED) ?
 			    "key-up" : "key-down",
 			    "%i(key),%i(mod),%u(ch)",
 			    (int)ks, (int)kbd->modState, (Uint)ch);

@@ -252,7 +252,7 @@ TestGUI(void *obj, AG_Window *win)
 		AG_ButtonNewFn(box, AG_BUTTON_HFILL, "Generate",
 		    GeneratePlot, "%p", plt);
 	}
-	AG_SetEvent(win, "window-shown", GeneratePlot, "%p", plt);
+	AG_AddEvent(win, "window-shown", GeneratePlot, "%p", plt);
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 50, 30);
 	return (0);
 }

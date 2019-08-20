@@ -556,51 +556,23 @@ package body Agar.Object is
   end;
   
   procedure Post_Event
-    (Source : in Object_Access;
-     Target : in Object_Not_Null_Access;
+    (Object : in Object_Not_Null_Access;
      Event  : in String)
   is
     Ch_Event  : aliased C.char_array := C.To_C(Event);
   begin
     AG_PostEvent
-      (Source => Source,
-       Target => Target,
+      (Object => Object,
        Event  => CS.To_Chars_Ptr(Ch_Event'Unchecked_Access),
        Format => CS.Null_Ptr);
   end;
   
   procedure Post_Event
-    (Source : in Object_Access;
-     Target : in Object_Not_Null_Access;
+    (Object : in Object_Not_Null_Access;
      Event  : in Event_Not_Null_Access) is
   begin
     AG_PostEventByPtr
-      (Source => Source,
-       Target => Target,
-       Event  => Event,
-       Format => CS.Null_Ptr);
-  end;
-  
-  procedure Post_Event
-    (Target : in Object_Not_Null_Access;
-     Event  : in String)
-  is
-    Ch_Event  : aliased C.char_array := C.To_C(Event);
-  begin
-    AG_PostEvent
-      (Source => Null,
-       Target => Target,
-       Event  => CS.To_Chars_Ptr(Ch_Event'Unchecked_Access),
-       Format => CS.Null_Ptr);
-  end;
-
-  procedure Post_Event
-    (Target : in Object_Not_Null_Access;
-     Event  : in Event_Not_Null_Access) is
-  begin
-    AG_PostEventByPtr
-      (Source => Null,
-       Target => Target,
+      (Object => Object,
        Event  => Event,
        Format => CS.Null_Ptr);
   end;

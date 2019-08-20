@@ -24,7 +24,6 @@ typedef struct ag_dir_dlg {
 					   if "Cancel" is pressed */
 #define AG_DIRDLG_LOAD		0x004	/* Directory must exist and be readable */
 #define AG_DIRDLG_SAVE		0x008	/* Directory must be writeable */
-#define AG_DIRDLG_ASYNC		0x010	/* Separate thread for load/save fn */
 #define AG_DIRDLG_RESET_ONSHOW	0x020	/* Reset listing on show */
 #define AG_DIRDLG_HFILL		0x100
 #define AG_DIRDLG_VFILL		0x200

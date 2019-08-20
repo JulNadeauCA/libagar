@@ -1805,7 +1805,7 @@ ResizeMap(AG_Event *_Nonnull event)
 	MAP_View *mv = MAP_VIEW_PTR(2);
 
 	MAP_Resize(m, msb->xvalue, msb->yvalue);
-	AG_PostEvent(NULL, mv, "map-resized", NULL);
+	AG_PostEvent(mv, "map-resized", NULL);
 }
 
 /* Display the list of undo blocks. */
@@ -2473,9 +2473,9 @@ RemoveAllRefsToTile(AG_Event *_Nonnull event)
 static void
 CreateLayerMenu(AG_Event *_Nonnull event)
 {
-	AG_MenuItem *mi = AG_SENDER();
-	MAP *m = MAP_PTR(1);
+	MAP *m             = MAP_PTR(1);
 	AG_Tlist *tlLayers = AG_TLIST_PTR(2);
+	AG_MenuItem *mi    = AG_MENU_ITEM_PTR(3);
 	MAP_Layer *layer;
 
 	if ((layer = AG_TlistSelectedItemPtr(tlLayers)) == NULL) {

@@ -70,10 +70,10 @@ ChangeScene(SG_View *_Nonnull sv, SG *_Nullable sg, SG_Camera *_Nullable cam)
 		SG_ViewSetCamera(sv, cam);
 		return;
 	}
-	if (sv->sg != NULL) {
+	if (sv->sg) {
 		AG_ObjectLock(sv->sg);
 		SG_FOREACH_NODE(node, sv->sg) {
-			AG_PostEvent(sv, node, "view-detach", NULL);
+			AG_PostEvent(node, "view-detach", "%p", sv);
 		}
 		AG_ObjectUnlock(sv->sg);
 	}
@@ -81,10 +81,10 @@ ChangeScene(SG_View *_Nonnull sv, SG *_Nullable sg, SG_Camera *_Nullable cam)
 	sv->sg = sg;
 	SG_ViewSetCamera(sv, cam);
 
-	if (sg != NULL) {
+	if (sg) {
 		AG_ObjectLock(sg);
 		SG_FOREACH_NODE(node, sg) {
-			AG_PostEvent(sv, node, "view-attach", NULL);
+			AG_PostEvent(node, "view-attach", "%p", sv);
 		}
 		AG_ObjectUnlock(sg);
 	}
@@ -93,7 +93,7 @@ ChangeScene(SG_View *_Nonnull sv, SG *_Nullable sg, SG_Camera *_Nullable cam)
 static Uint32
 TransitionFade(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	SG_View *sv = AG_SELF();
+	SG_View *sv = SG_VIEW_SELF();
 
 	AG_ObjectLock(sv);
 
@@ -250,7 +250,7 @@ OnOverlayCameraStatus(SG_View *_Nonnull sv)
 static void
 OnOverlay(AG_Event *_Nonnull event)
 {
-	SG_View *sv = AG_SELF();
+	SG_View *sv = SG_VIEW_SELF();
 	AG_Surface *su;
 	
 	if (sv->transProgress < 1.0) {		/* Fade in progress */
@@ -392,7 +392,7 @@ Draw(void *_Nonnull obj)
 static void
 OnReshape(AG_Event *_Nonnull event)
 {
-	SG_View *sv = AG_SELF();
+	SG_View *sv = SG_VIEW_SELF();
 
 	if (sv->cam == NULL)
 		return;
@@ -408,12 +408,12 @@ OnReshape(AG_Event *_Nonnull event)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	SG_View *sv = AG_SELF();
-/*	int x = AG_INT(1); */
-/*	int y = AG_INT(2); */
-	int xrel = AG_INT(3);
-	int yrel = AG_INT(4);
-	int bs = AG_INT(5);
+	SG_View *sv = SG_VIEW_SELF();
+/*	const int x = AG_INT(1); */
+/*	const int y = AG_INT(2); */
+	const int xrel = AG_INT(3);
+	const int yrel = AG_INT(4);
+	const int bs = AG_INT(5);
 
 	if (bs & AG_MOUSE_LEFT) {
 		if (AG_GetModState(sv) & AG_KEYMOD_CTRL) {
@@ -427,8 +427,8 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 ViewSwitchCamera(AG_Event *_Nonnull event)
 {
-	SG_View *sv = AG_PTR(1);
-	SG_Camera *cam = AG_PTR(2);
+	SG_View *sv = SG_VIEW_PTR(1);
+	SG_Camera *cam = SG_CAMERA_PTR(2);
 
 	AG_ObjectLock(sv);
 	sv->cam = cam;
@@ -548,9 +548,9 @@ SelectByMouse(SG_View *_Nonnull sv, int x, int y)
 static Uint32
 CamRotateTimeout(AG_Timer *_Nonnull to, AG_Event *event)
 {
-	SG_View *sv = AG_SELF();
-	SG_ViewCamAction *act = AG_PTR(1);
-	M_Real dir = (M_Real)AG_FLOAT(2);
+	SG_View *sv = SG_VIEW_SELF();
+	const SG_ViewCamAction *act = AG_PTR(1);
+	const M_Real dir = (M_Real)AG_FLOAT(2);
 	SG *sg = sv->sg;
 	Uint32 rv = 0;
 
@@ -573,9 +573,9 @@ out:
 static Uint32
 CamMoveTimeout(AG_Timer *_Nonnull to, AG_Event *event)
 {
-	SG_View *sv = AG_SELF();
-	SG_ViewCamAction *act = AG_PTR(1);
-	M_Real dir = (M_Real)AG_FLOAT(2);
+	SG_View *sv = SG_VIEW_SELF();
+	const SG_ViewCamAction *act = AG_PTR(1);
+	const M_Real dir = (M_Real)AG_FLOAT(2);
 	SG *sg = sv->sg;
 	Uint32 rv = 0;
 	
@@ -597,9 +597,9 @@ out:
 static void
 KeyDown(AG_Event *_Nonnull event)
 {
-	SG_View *sv = AG_SELF();
-	int keysym = AG_INT(1);
-	int kmod = AG_INT(2);
+	SG_View *sv = SG_VIEW_SELF();
+	const int keysym = AG_INT(1);
+	const int kmod = AG_INT(2);
 	
 	switch (keysym) {
 	case AG_KEY_LEFT:
@@ -661,8 +661,8 @@ KeyDown(AG_Event *_Nonnull event)
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
-	SG_View *sv = AG_SELF();
-	int keysym = AG_INT(1);
+	SG_View *sv = SG_VIEW_SELF();
+	const int keysym = AG_INT(1);
 
 	switch (keysym) {
 	case AG_KEY_LEFT:
@@ -684,10 +684,10 @@ KeyUp(AG_Event *_Nonnull event)
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	SG_View *sv = AG_SELF();
-	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	SG_View *sv = SG_VIEW_SELF();
+	const int button = AG_INT(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 
 	if (!AG_WidgetIsFocused(sv)) {
 		AG_WidgetFocus(sv);
@@ -713,8 +713,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-/*	SG_View *sv = AG_SELF(); */
-	int button = AG_INT(1);
+/*	SG_View *sv = SG_VIEW_SELF(); */
+	const int button = AG_INT(1);
 
 	switch (button) {
 	case AG_MOUSE_LEFT:
@@ -738,7 +738,7 @@ SG_ViewSetCamera(SG_View *sv, SG_Camera *cam)
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	SG_View *sv = AG_SELF();
+	SG_View *sv = SG_VIEW_SELF();
 	SG *sg = sv->sg;
 	SG_Node *node;
 
@@ -751,7 +751,7 @@ OnShow(AG_Event *_Nonnull event)
 #endif
 	AG_ObjectLock(sg);
 	SG_FOREACH_NODE(node, sg) {
-		AG_PostEvent(sv, node, "view-shown", NULL);
+		AG_PostEvent(node, "view-shown", "%p", sv);
 	}
 	AG_ObjectUnlock(sg);
 }
@@ -759,7 +759,7 @@ OnShow(AG_Event *_Nonnull event)
 static void
 OnHide(AG_Event *_Nonnull event)
 {
-	SG_View *sv = AG_SELF();
+	SG_View *sv = SG_VIEW_SELF();
 	SG *sg = sv->sg;
 	SG_Node *node;
 
@@ -771,7 +771,7 @@ OnHide(AG_Event *_Nonnull event)
 #endif
 	AG_ObjectLock(sg);
 	SG_FOREACH_NODE(node, sg) {
-		AG_PostEvent(sv, node, "view-hidden", NULL);
+		AG_PostEvent(node, "view-hidden", "%p", sv);
 	}
 	AG_ObjectUnlock(sg);
 }

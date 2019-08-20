@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/mspinbutton.h>
 #include <agar/gui/window.h>
 
@@ -136,7 +138,7 @@ TextReturn(AG_Event *event)
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "yvalue", atoi(s));
 	}
-	AG_PostEvent(NULL, sbu, "mspinbutton-return", NULL);
+	AG_PostEvent(sbu, "mspinbutton-return", NULL);
 	AG_WidgetUnfocus(sbu->input);
 	AG_ObjectUnlock(sbu);
 	AG_Redraw(sbu);
@@ -157,49 +159,19 @@ TextChanged(AG_Event *event)
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "yvalue", atoi(s));
 	}
-	AG_PostEvent(NULL, sbu, "mspinbutton-changed", NULL);
+	AG_PostEvent(sbu, "mspinbutton-changed", NULL);
 	AG_ObjectUnlock(sbu);
 	AG_Redraw(sbu);
 }
 
 static void
-DecrementY(AG_Event *event)
+Increment(AG_Event *event)
 {
 	AG_MSpinbutton *sbu = AG_MSPINBUTTON_PTR(1);
+	const char *which = AG_STRING(2);
+	const int sign = AG_INT(3);
 
-	AG_ObjectLock(sbu);
-	AG_MSpinbuttonAddValue(sbu, "yvalue", -sbu->inc);
-	AG_ObjectUnlock(sbu);
-}
-
-static void
-IncrementY(AG_Event *event)
-{
-	AG_MSpinbutton *sbu = AG_MSPINBUTTON_PTR(1);
-	
-	AG_ObjectLock(sbu);
-	AG_MSpinbuttonAddValue(sbu, "yvalue", sbu->inc);
-	AG_ObjectUnlock(sbu);
-}
-
-static void
-DecrementX(AG_Event *event)
-{
-	AG_MSpinbutton *sbu = AG_MSPINBUTTON_PTR(1);
-	
-	AG_ObjectLock(sbu);
-	AG_MSpinbuttonAddValue(sbu, "xvalue", -sbu->inc);
-	AG_ObjectUnlock(sbu);
-}
-
-static void
-IncrementX(AG_Event *event)
-{
-	AG_MSpinbutton *sbu = AG_MSPINBUTTON_PTR(1);
-	
-	AG_ObjectLock(sbu);
-	AG_MSpinbuttonAddValue(sbu, "xvalue", sbu->inc);
-	AG_ObjectUnlock(sbu);
+	AG_MSpinbuttonAddValue(sbu, which, sign*sbu->inc);
 }
 
 static void
@@ -233,10 +205,11 @@ Init(void *obj)
 	sbu->xincbu = b[1] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
 	sbu->ydecbu = b[2] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
 	sbu->yincbu = b[3] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
-	AG_SetEvent(sbu->xdecbu, "button-pushed", DecrementX, "%p", sbu);
-	AG_SetEvent(sbu->xincbu, "button-pushed", IncrementX, "%p", sbu);
-	AG_SetEvent(sbu->ydecbu, "button-pushed", DecrementY, "%p", sbu);
-	AG_SetEvent(sbu->yincbu, "button-pushed", IncrementY, "%p", sbu);
+	AG_SetEvent(sbu->xdecbu, "button-pushed", Increment, "%p%s%i", sbu, "xvalue", -1);
+	AG_SetEvent(sbu->xincbu, "button-pushed", Increment, "%p%s%i", sbu, "xvalue", +1);
+	AG_SetEvent(sbu->ydecbu, "button-pushed", Increment, "%p%s%i", sbu, "yvalue", -1);
+	AG_SetEvent(sbu->yincbu, "button-pushed", Increment, "%p%s%i", sbu, "yvalue", +1);
+
 	for (i = 0; i < 4; i++) {
 		AG_ButtonSetPadding(b[i], 0,0,0,0);
 		AG_LabelSetPadding(b[i]->lbl, 0,0,0,0);
@@ -419,7 +392,7 @@ AG_MSpinbuttonAddValue(AG_MSpinbutton *sbu, const char *which, int inc)
 		break;
 	}
 
-	AG_PostEvent(NULL, sbu, "mspinbutton-changed", "%s", which);
+	AG_PostEvent(sbu, "mspinbutton-changed", "%s", which);
 
 	AG_UnlockVariable(maxb);
 	AG_UnlockVariable(minb);
@@ -552,7 +525,7 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 	}
 	va_end(ap);
 
-	AG_PostEvent(NULL, sbu, "mspinbutton-changed", "%s", which);
+	AG_PostEvent(sbu, "mspinbutton-changed", "%s", which);
 
 	AG_UnlockVariable(valueb);
 	AG_UnlockVariable(minb);
@@ -606,9 +579,7 @@ AG_MSpinbuttonSetRange(AG_MSpinbutton *sbu, int nmin, int nmax)
 void
 AG_MSpinbuttonSetIncrement(AG_MSpinbutton *sbu, int inc)
 {
-	AG_ObjectLock(sbu);
 	sbu->inc = inc;
-	AG_ObjectUnlock(sbu);
 }
 
 void
@@ -649,3 +620,5 @@ AG_WidgetClass agMSpinbuttonClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

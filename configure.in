@@ -71,6 +71,8 @@ register("--with-sse[=inline]",		"SSE-optimized routines [check]")
 register("--with-sse[234]",		"SSE2 SSE3 SSE4 routines [check]")
 
 register_section("Options specific to GUI library:")
+register("--enable-widgets",		"The standard widget library [yes]")
+register("--enable-wm-hints",		"Interface with window managers [yes]")
 register("--enable-debug-gui",		"Expensive GUI debugging [no]")
 register("--with-freetype[=PREFIX]",	"Enable FreeType support [check]")
 register("--with-fontconfig[=PREFIX]",	"Enable Fontconfig support [check]")
@@ -169,6 +171,8 @@ c64 | c128 | geos | nes)
 	enable_unicode="no"
 	enable_user="no"
 	enable_verbosity="no"
+	enable_widgets="no"
+	enable_wm_hints="no"
 	enable_au="no"
 	enable_dev="no"
 	enable_map="no"
@@ -326,6 +330,8 @@ hdefine_if("${enable_timers}" != 'no',        AG_TIMERS)
 hdefine_if("${enable_unicode}" != 'no',       AG_UNICODE)
 hdefine_if("${enable_user}" != 'no',          AG_USER)
 hdefine_if("${enable_verbosity}" != 'no',     AG_VERBOSITY)
+hdefine_if("${enable_widgets}" != 'no',       AG_WIDGETS)
+hdefine_if("${enable_wm_hints}" != 'no',      AG_WM_HINTS)
 
 #
 # Options specific to the Agar-GUI library.

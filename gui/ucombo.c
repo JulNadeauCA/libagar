@@ -24,8 +24,12 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/ucombo.h>
 #include <agar/gui/primitive.h>
+
+static int agUcomboCounter = 0;
 
 AG_UCombo *
 AG_UComboNew(void *parent, Uint flags)
@@ -117,7 +121,7 @@ Expand(AG_Event *_Nonnull event)
 		                                  AG_WINDOW_KEEPABOVE);
 		panel->wmType = AG_WINDOW_WM_COMBO;
 
-		AG_ObjectSetName(panel, "_UComboPopup");
+		AG_ObjectSetName(panel, "ucombo%u", agUcomboCounter++);
 		AG_WindowSetPadding(panel, 0,0,0,0);
 		AG_ObjectAttach(panel, com->list);
 
@@ -182,7 +186,7 @@ SelectedItem(AG_Event *_Nonnull event)
 	if ((it = AG_TlistSelectedItem(tl)) != NULL) {
 		it->selected++;
 		AG_ButtonTextS(com->button, it->text);
-		AG_PostEvent(NULL, com, "ucombo-selected", "%p", it);
+		AG_PostEvent(com, "ucombo-selected", "%p", it);
 	}
 	Collapse(com);
 	AG_ObjectUnlock(tl);
@@ -233,10 +237,8 @@ Init(void *_Nonnull obj)
 void
 AG_UComboSizeHint(AG_UCombo *com, const char *text, int h)
 {
-	AG_ObjectLock(com);
 	AG_TextSize(text, &com->wPreList, NULL);
 	com->hPreList = h;
-	AG_ObjectUnlock(com);
 }
 
 void
@@ -303,3 +305,5 @@ AG_WidgetClass agUComboClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

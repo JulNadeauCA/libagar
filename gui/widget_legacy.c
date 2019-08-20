@@ -63,7 +63,7 @@ AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_Variable *Vsrc)
 	}
 
 	if (OBJECT(wDst)->flags & AG_OBJECT_BOUND_EVENTS) {
-		AG_PostEvent(NULL, wDst, "bound", "%p", Vdst);
+		AG_PostEvent(wDst, "bound", "%p", Vdst);
 	}
 	AG_UnlockVariable(Vdst);
 	return (0);
@@ -200,7 +200,7 @@ AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
 	va_end(ap);
 
 	if (obj->flags & AG_OBJECT_BOUND_EVENTS) {
-		AG_PostEvent(NULL, obj, "bound", "%p", V);
+		AG_PostEvent(obj, "bound", "%p", V);
 	}
 	AG_ObjectUnlock(obj);
 	return (V);

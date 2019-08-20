@@ -23,13 +23,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
+#include <agar/gui/numerical.h>
+#include <agar/gui/primitive.h>
+
 #ifdef __NetBSD__
 #define _NETBSD_SOURCE
 #endif
-
-#include <agar/core/core.h>
-#include <agar/gui/numerical.h>
-#include <agar/gui/primitive.h>
 
 #include <string.h>
 
@@ -254,7 +256,7 @@ static void
 KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Numerical *num = AG_NUMERICAL_SELF();
-	int keysym = AG_INT(1);
+	const int keysym = AG_INT(1);
 
 	switch (keysym) {
 	case AG_KEY_UP:
@@ -280,7 +282,7 @@ static void
 UpdateFromText(AG_Event *_Nonnull event)
 {
 	AG_Numerical *num = AG_NUMERICAL_PTR(1);
-	int unfocus = AG_INT(2);
+	const int unfocus = AG_INT(2);
 	AG_Variable *valueb, *minb, *maxb;
 	void *value, *min, *max;
 
@@ -328,7 +330,7 @@ UpdateFromText(AG_Event *_Nonnull event)
 		break;
 	}
 
-	AG_PostEvent(NULL, num, "numerical-changed", NULL);
+	AG_PostEvent(num, "numerical-changed", NULL);
 
 	AG_UnlockVariable(valueb);
 	AG_UnlockVariable(minb);
@@ -337,7 +339,7 @@ UpdateFromText(AG_Event *_Nonnull event)
 	if (unfocus) {
 		AG_WidgetUnfocus(num->input);
 	}
-	AG_PostEvent(NULL, num, "numerical-return", NULL);
+	AG_PostEvent(num, "numerical-return", NULL);
 }
 #undef SET_NUM
 
@@ -673,7 +675,7 @@ AG_NumericalIncrement(AG_Numerical *num)
 	default:						break;
 	}
 
-	AG_PostEvent(NULL, num, "numerical-changed", NULL);
+	AG_PostEvent(num, "numerical-changed", NULL);
 
 	AG_UnlockVariable(valueb);
 	AG_UnlockVariable(minb);
@@ -738,7 +740,7 @@ AG_NumericalDecrement(AG_Numerical *num)
 #endif
 	default:						break;
 	}
-	AG_PostEvent(NULL, num, "numerical-changed", NULL);
+	AG_PostEvent(num, "numerical-changed", NULL);
 
 	AG_UnlockVariable(valueb);
 	AG_UnlockVariable(minb);
@@ -972,3 +974,4 @@ AG_WidgetClass agNumericalClass = {
 	SizeAllocate
 };
 
+#endif /* AG_WIDGETS */

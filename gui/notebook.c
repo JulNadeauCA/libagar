@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/notebook.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -283,7 +285,7 @@ AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 
 	tab = Malloc(sizeof(AG_NotebookTab));
 	AG_ObjectInit(tab, &agNotebookTabClass);
-	AG_ObjectSetName(tab, "_Tab%u", nb->nTabs);
+	AG_ObjectSetName(tab, "tab%u", nb->nTabs);
 	AG_BoxSetType(&tab->box, btype);
 	AG_Expand(tab);
 
@@ -409,3 +411,5 @@ AG_WidgetClass agNotebookTabClass = {
 	AG_WidgetInheritSizeRequest,
 	AG_WidgetInheritSizeAllocate
 };
+
+#endif /* AG_WIDGETS */

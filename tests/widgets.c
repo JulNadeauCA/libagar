@@ -55,6 +55,26 @@ TestMenuFn(AG_Event *event)
 	AG_TextMsgS(AG_MSG_INFO, text);
 }
 
+static void
+TableKeyDown(AG_Event *event)
+{
+	AG_Table *t = AG_TABLE_SELF();
+	const int keysym = AG_INT(1);
+	int m;
+
+	switch (keysym) {
+	case AG_KEY_DELETE:
+		for (m = 0; m < t->m; m++) {
+			if (AG_TableRowSelected(t,m))
+				break;
+		}
+		if (m < t->m) {
+			AG_Debug(t, "Deleting row # %d\n", m);
+		}
+		break;
+	}
+}
+
 static int
 TestGUI(void *obj, AG_Window *win)
 {
@@ -437,11 +457,19 @@ TestGUI(void *obj, AG_Window *win)
 				AG_RadioNewUint(nt, 0, selModes, &table->selMode);
 			}
 			AG_CheckboxNewFlag(nt, 0,
-			    "Multiple selections allowed",
+			    "Allow multiple selections",
 			    &table->flags, AG_TABLE_MULTI);
 			AG_CheckboxNewFlag(nt, 0,
-			    "Toggle multiple selections",
+			    "Enforce multiple selections",
 			    &table->flags, AG_TABLE_MULTITOGGLE);
+			AG_CheckboxNewFlag(nt, 0,
+			    "Highlight columns",
+			    &table->flags, AG_TABLE_HIGHLIGHT_COLS);
+
+			/*
+			 * Append an event handler for the DELETE function.
+			 */
+			AG_AddEvent(table, "key-down", TableKeyDown, NULL);
 		}
 		
 		nt = AG_NotebookAdd(nb, "Some text", AG_BOX_VERT);

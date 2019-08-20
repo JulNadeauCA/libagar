@@ -80,7 +80,14 @@ typedef enum sg_extrude_mode {
 	SG_EXTRUDE_VERTICES	/* Create n edges and no faces */
 } SG_ExtrudeMode;
 
-#define SGOBJECT(so) ((SG_Object *)(so))
+#define SGOBJECT(obj)          ((SG_Object *)(obj))
+#define SGCOBJECT(obj)         ((const SG_Object *)(obj))
+#define SG_OBJECT_SELF()          SGOBJECT( AG_OBJECT(0,"SG_Node:SG_View:*") )
+#define SG_OBJECT_PTR(n)          SGOBJECT( AG_OBJECT((n),"SG_Node:SG_View:*") )
+#define SG_OBJECT_NAMED(n)        SGOBJECT( AG_OBJECT_NAMED((n),"SG_Node:SG_View:*") )
+#define SG_CONST_OBJECT_SELF()   SGCOBJECT( AG_CONST_OBJECT(0,"SG_Node:SG_View:*") )
+#define SG_CONST_OBJECT_PTR(n)   SGCOBJECT( AG_CONST_OBJECT((n),"SG_Node:SG_View:*") )
+#define SG_CONST_OBJECT_NAMED(n) SGCOBJECT( AG_CONST_OBJECT_NAMED((n),"SG_Node:SG_View:*") )
 
 #ifdef _AGAR_SG_INTERNAL
 #define OBJ_V(so,vnum) (SGOBJECT(so)->vtx[vnum].v)

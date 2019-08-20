@@ -89,7 +89,7 @@ CreateObject(AG_Event *_Nonnull event)
 	AG_ObjectAttach(pobj, nobj);
 	AG_ObjectUnlinkDatafiles(nobj);
 
-	AG_PostEvent(NULL, nobj, "edit-create", NULL);
+	AG_PostEvent(nobj, "edit-create", NULL);
 	
 	if (editNowFlag && cl->edit != NULL)
 		DEV_BrowserOpenData(nobj);
@@ -149,7 +149,7 @@ SaveAndCloseObject(struct objent *_Nonnull oent, AG_Window *_Nonnull win,
     int save)
 {
 	AG_WindowHide(win);
-	AG_PostEvent(NULL, oent->obj, "edit-close", NULL);
+	AG_PostEvent(oent->obj, "edit-close", NULL);
 	AG_ObjectDetach(win);
 	TAILQ_REMOVE(&dobjs, oent, objs);
 	AG_ObjectPageOut(oent->obj);
@@ -234,12 +234,12 @@ DEV_BrowserOpenData(void *p)
 				return;
 			}
 		}
-		AG_PostEvent(NULL, ob, "edit-post-load", NULL);
+		AG_PostEvent(ob, "edit-post-load", NULL);
 	}
 	if ((win = ob->cls->edit(ob)) == NULL) {
 		goto fail;
 	}
-	AG_PostEvent(NULL, ob, "edit-open", NULL);
+	AG_PostEvent(ob, "edit-open", NULL);
 	
 	oent = Malloc(sizeof(struct objent));
 	oent->obj = ob;
@@ -270,7 +270,7 @@ SaveObjectToFile(AG_Event *_Nonnull event)
 			if (dataFound)
 				goto fail;
 		}
-		AG_PostEvent(NULL, ob, "edit-post-load", NULL);
+		AG_PostEvent(ob, "edit-post-load", NULL);
 		loadedTmp = 1;
 	}
 	if (AG_ObjectSaveToFile(ob, path) == -1) {
@@ -306,7 +306,7 @@ ImportObject(AG_Event *_Nonnull event)
 				goto fail;
 		}
 		loadedTmp = 1;
-		AG_PostEvent(NULL, ob, "edit-post-load", NULL);
+		AG_PostEvent(ob, "edit-post-load", NULL);
 	}
 	if (AG_ObjectLoadFromFile(ob, path) == -1) {
 		AG_SetError("%s: %s", ob->name, AG_GetError());
@@ -409,7 +409,7 @@ ObjectOp(AG_Event *_Nonnull event)
 				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
 				    AG_GetError());
 			} else {
-				AG_PostEvent(NULL, ob, "edit-post-load", NULL);
+				AG_PostEvent(ob, "edit-post-load", NULL);
 			}
 			break;
 		case OBJEDIT_SAVE:
@@ -832,26 +832,29 @@ DEV_Browser(void *vfsRoot)
  * associated with the object after the load.
  */
 static void
-DEV_PostLoadDataCallback(AG_Event *_Nonnull event)
+DEV_PostLoadCallback(AG_Event *_Nonnull event)
 {
-	AG_Object *obj = AG_SENDER();	
+	AG_Object *obj = AG_PTR(1);
+	const char *path = AG_STRING(2);
 	struct objent *oent;
 
 	if ((obj->flags & AG_OBJECT_REOPEN_ONLOAD) == 0)
 		return;
 
-	TAILQ_FOREACH(oent, &dobjs, objs) {
-		if (oent->obj == obj) {
-			AG_WindowHide(oent->win);
-			AG_PostEvent(NULL, oent->obj, "edit-close", NULL);
-			AG_ObjectDetach(oent->win);
+	AG_Verbose("%s: Loaded from %s\n", obj->name, path);
 
-			AG_PostEvent(NULL, oent->obj, "edit-open", NULL);
-			oent->win = obj->cls->edit(obj);
-			AG_WindowShow(oent->win);
-			AG_SetEvent(oent->win, "window-close",
-			    SaveChangesDlg, "%p", oent);
+	TAILQ_FOREACH(oent, &dobjs, objs) {
+		if (oent->obj != obj) {
+			continue;
 		}
+		AG_WindowHide(oent->win);
+		AG_PostEvent(oent->obj, "edit-close", NULL);
+		AG_ObjectDetach(oent->win);
+
+		AG_PostEvent(oent->obj, "edit-open", NULL);
+		oent->win = obj->cls->edit(obj);
+		AG_WindowShow(oent->win);
+		AG_SetEvent(oent->win, "window-close", SaveChangesDlg, "%p", oent);
 	}
 }
 
@@ -862,7 +865,7 @@ DEV_PostLoadDataCallback(AG_Event *_Nonnull event)
 static void
 DEV_PageOutCallback(AG_Event *_Nonnull event)
 {
-	AG_Object *obj = AG_SENDER();
+	AG_Object *obj = AG_OBJECT_PTR(1);
 	
 	if (AG_ObjectSave(obj) == -1)
 		AG_TextMsgFromError();
@@ -924,8 +927,7 @@ DEV_BrowserInit(void *vfsRoot)
 	TAILQ_INIT(&dobjs);
 	TAILQ_INIT(&gobjs);
 
-	AG_AddEvent(vfsRoot, "object-post-load-data", DEV_PostLoadDataCallback,
-	    NULL);
+	AG_AddEvent(vfsRoot, "object-post-load", DEV_PostLoadCallback, NULL);
 	AG_AddEvent(vfsRoot, "object-page-out", DEV_PageOutCallback, NULL);
 	AG_AddEvent(vfsRoot, "quit", DEV_QuitCallback, "%p", vfsRoot);
 }
@@ -959,7 +961,7 @@ DEV_BrowserCloseData(void *p)
 		if (oent->obj != obj) {
 			continue;
 		}
-		AG_PostEvent(NULL, oent->win, "window-close", NULL);
+		AG_PostEvent(oent->win, "window-close", NULL);
 	}
 }
 

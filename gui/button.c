@@ -24,6 +24,7 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
 
 #include <agar/gui/button.h>
 #include <agar/gui/primitive.h>
@@ -167,7 +168,7 @@ ExpireRepeat(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
 
-	AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
+	AG_PostEvent(bu, "button-pushed", "%i", 1);
 	return (to->ival);
 }
 static Uint32
@@ -207,7 +208,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	    button == AG_MOUSE_LEFT &&
 	    !(bu->flags & AG_BUTTON_STICKY)) {
 	    	SetState(bu, bState, pState, 0);
-		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
+		AG_PostEvent(bu, "button-pushed", "%i", 0);
 	}
 	AG_UnlockVariable(bState);
 }
@@ -236,14 +237,14 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	} else {
 		newState = !GetState(bu, bState, pState);
 		SetState(bu, bState, pState, newState);
-		AG_PostEvent(NULL, bu, "button-pushed", "%i", newState);
+		AG_PostEvent(bu, "button-pushed", "%i", newState);
 	}
 	AG_UnlockVariable(bState);
 
 #ifdef AG_TIMERS
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimer(bu, &bu->repeatTo);
-		AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
+		AG_PostEvent(bu, "button-pushed", "%i", 1);
 		AG_AddTimer(bu, &bu->delayTo, agMouseSpinDelay,
 		    ExpireDelay, "%i", agMouseSpinIval);
 	}
@@ -299,7 +300,7 @@ KeyUp(AG_Event *_Nonnull event)
 
 	if (bu->flags & AG_BUTTON_KEYDOWN) {
 		bu->flags &= ~(AG_BUTTON_KEYDOWN);
-		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
+		AG_PostEvent(bu, "button-pushed", "%i", 0);
 	}
 }
 
@@ -321,7 +322,7 @@ KeyDown(AG_Event *_Nonnull event)
 	}
 	bState = AG_GetVariable(bu, "state", &pState);
 	SetState(bu, bState, pState, 1);
-	AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
+	AG_PostEvent(bu, "button-pushed", "%i", 1);
 	bu->flags |= AG_BUTTON_KEYDOWN;
 #ifdef AG_TIMERS
 	if (bu->flags & AG_BUTTON_REPEAT) {
@@ -698,3 +699,5 @@ AG_WidgetClass agButtonClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

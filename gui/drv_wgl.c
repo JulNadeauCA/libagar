@@ -202,10 +202,10 @@ WGL_Open(void *_Nonnull obj, const char *_Nullable spec)
 	nDrivers++;
 	return (0);
 fail:
-	if (wglEventSpinner != NULL) { AG_DelEventSpinner(wglEventSpinner); wglEventSpinner = NULL; }
-	if (wglEventEpilogue != NULL) { AG_DelEventEpilogue(wglEventEpilogue); wglEventEpilogue = NULL; }
-	if (drv->kbd != NULL) { AG_ObjectDelete(drv->kbd); drv->kbd = NULL; }
-	if (drv->mouse != NULL) { AG_ObjectDelete(drv->mouse); drv->mouse = NULL; }
+	if (wglEventSpinner)  { AG_DelEventSpinner(wglEventSpinner);   wglEventSpinner = NULL; }
+	if (wglEventEpilogue) { AG_DelEventEpilogue(wglEventEpilogue); wglEventEpilogue = NULL; }
+	if (drv->kbd)   { AG_ObjectDelete(drv->kbd);   drv->kbd = NULL; }
+	if (drv->mouse) { AG_ObjectDelete(drv->mouse); drv->mouse = NULL; }
 	return (-1);
 }
 
@@ -456,7 +456,7 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	if (!(win->flags & AG_WINDOW_DENYFOCUS)) {
 		SetFocus(wgl->hwnd);
 		agWindowFocused = win;
-		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+		AG_PostEvent(win, "window-gainfocus", NULL);
 	}
 	
 	return (0);
@@ -726,7 +726,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (dev->type == AG_DRIVER_VIDEORESIZE)
 					break;
 			}
-			if (dev != NULL) {
+			if (dev) {
 				dev->data.videoresize.w = LOWORD(lParam);
 				dev->data.videoresize.h = HIWORD(lParam);
 				dev = NULL;
@@ -781,7 +781,9 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		goto fallback;
 	}
 out:
-	if (dev != NULL) { TAILQ_INSERT_TAIL(&wglEventQ, dev, events); }
+	if (dev) {
+		TAILQ_INSERT_TAIL(&wglEventQ, dev, events);
+	}
 	AG_UnlockVFS(&agDrivers);
 	return (rv);
 fallback:
@@ -867,20 +869,20 @@ WGL_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		    dev->data.key.ks, dev->data.key.ucs);
 		break;
 	case AG_DRIVER_MOUSE_ENTER:
-		AG_PostEvent(NULL, win, "window-enter", NULL);
+		AG_PostEvent(win, "window-enter", NULL);
 		break;
 	case AG_DRIVER_MOUSE_LEAVE:
-		AG_PostEvent(NULL, win, "window-leave", NULL);
+		AG_PostEvent(win, "window-leave", NULL);
 		break;
 	case AG_DRIVER_FOCUS_IN:
 		if (win != agWindowFocused) {
 			agWindowFocused = win;
-			AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+			AG_PostEvent(win, "window-gainfocus", NULL);
 		}
 		break;
 	case AG_DRIVER_FOCUS_OUT:
 		if (win == agWindowFocused) {
-			AG_PostEvent(NULL, win, "window-lostfocus", NULL);
+			AG_PostEvent(win, "window-lostfocus", NULL);
 			agWindowFocused = NULL;
 		}
 		break;
@@ -896,7 +898,7 @@ WGL_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		}
 		break;
 	case AG_DRIVER_CLOSE:
-		AG_PostEvent(NULL, win, "window-close", NULL);
+		AG_PostEvent(win, "window-close", NULL);
 		break;
 	case AG_DRIVER_EXPOSE:
 		win->dirty = 1;

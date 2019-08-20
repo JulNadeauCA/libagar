@@ -24,6 +24,7 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
 #include <agar/config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
@@ -83,7 +84,9 @@ MouseButtonDown(AG_Event *_Nonnull event)
 static void
 OnAttach(AG_Event *_Nonnull event)
 {
-	AG_Widget *parent = AG_SENDER();
+	AG_Widget *parent = AG_PTR(1);
+
+	AG_OBJECT_ISA(parent, "AG_Widget:*");
 
 	if (parent->drv != NULL &&
 	    !(AGDRIVER_CLASS(parent->drv)->flags & AG_DRIVER_OPENGL))
@@ -435,3 +438,4 @@ AG_WidgetClass agGLViewClass = {
 };
 
 #endif /* HAVE_OPENGL */
+#endif /* AG_WIDGETS */

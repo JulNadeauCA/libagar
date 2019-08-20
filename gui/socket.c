@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/socket.h>
 #include <agar/gui/icon.h>
 #include <agar/gui/window.h>
@@ -239,7 +241,7 @@ Draw(void *_Nonnull obj)
 		AGWIDGET_OPS(sock->icon)->draw(sock->icon);
 	}
 	if (sock->overlayFn) {
-		AG_PostEventByPtr(NULL, sock, sock->overlayFn, NULL);
+		AG_PostEventByPtr(sock, sock->overlayFn, NULL);
 	} else {
 		switch (sock->bgType) {
 		case AG_SOCKET_PIXMAP:
@@ -341,13 +343,12 @@ MouseMotion(AG_Event *_Nonnull event)
 		}
 		if (sock->flags & AG_SOCKET_MOUSEOVER) {
 			sock->flags &= ~(AG_SOCKET_MOUSEOVER);
-			AG_PostEvent(NULL, sock, "socket-mouseoverlap",
-			    "%i", 0);
+			AG_PostEvent(sock, "socket-mouseoverlap", "%i", 0);
 			AG_Redraw(sock);
 		}
 	} else {
 		sock->flags |= AG_SOCKET_MOUSEOVER;
-		AG_PostEvent(NULL, sock, "socket-mouseoverlap", "%i", 1);
+		AG_PostEvent(sock, "socket-mouseoverlap", "%i", 1);
 		AG_Redraw(sock);
 	}
 	AG_UnlockVariable(binding);
@@ -420,7 +421,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	} else {
 		newState = !GetState(binding, pState);
 		SetState(sock, binding, pState, newState);
-		AG_PostEvent(NULL, sock, "socket-click", "%i", newState);
+		AG_PostEvent(sock, "socket-click", "%i", newState);
 	}
 	AG_UnlockVariable(binding);
 
@@ -468,7 +469,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	if (GetState(binding, pState) && button == AG_MOUSE_LEFT &&
 	    !(sock->flags & AG_SOCKET_STICKY_STATE)) {
 	    	SetState(sock, binding, pState, 0);
-		AG_PostEvent(NULL, sock, "socket-click", "%i", 0);
+		AG_PostEvent(sock, "socket-click", "%i", 0);
 	}
 	AG_UnlockVariable(binding);
 }
@@ -476,12 +477,10 @@ MouseButtonUp(AG_Event *_Nonnull event)
 void
 AG_SocketSetPadding(AG_Socket *sock, int lPad, int rPad, int tPad, int bPad)
 {
-	AG_ObjectLock(sock);
 	if (lPad != -1) { sock->lPad = lPad; }
 	if (rPad != -1) { sock->rPad = rPad; }
 	if (tPad != -1) { sock->tPad = tPad; }
 	if (bPad != -1) { sock->bPad = bPad; }
-	AG_ObjectUnlock(sock);
 	AG_Redraw(sock);
 }
 
@@ -625,3 +624,5 @@ AG_WidgetClass agSocketClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

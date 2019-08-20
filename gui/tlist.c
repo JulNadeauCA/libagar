@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/tlist.h>
 #include <agar/gui/primitive.h>
 
@@ -84,7 +86,7 @@ UpdatePolled(AG_Tlist *_Nonnull tl)
 	if ((tl->flags & AG_TLIST_POLL) &&
 	    (tl->flags & AG_TLIST_REFRESH)) {
 		tl->flags &= ~(AG_TLIST_REFRESH);
-		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
+		AG_PostEvent(tl, "tlist-poll", NULL);
 	}
 }
 #endif /* AG_TIMERS */
@@ -145,12 +147,11 @@ SelectItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 	if (!it->selected) {
 		it->selected = 1;
 		if (tl->changedEv) {
-			AG_PostEventByPtr(NULL, tl,
-			    tl->changedEv, "%p,%i", it, 1);
+			AG_PostEventByPtr(tl, tl->changedEv, "%p,%i", it, 1);
 		}
-		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 1);
+		AG_PostEvent(tl, "tlist-changed", "%p,%i", it, 1);
 	}
-	AG_PostEvent(NULL, tl, "tlist-selected", "%p", it);
+	AG_PostEvent(tl, "tlist-selected", "%p", it);
 	AG_UnlockVariable(selectedb);
 	AG_Redraw(tl);
 }
@@ -166,10 +167,9 @@ DeselectItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 	if (it->selected) {
 		it->selected = 0;
 		if (tl->changedEv) {
-			AG_PostEventByPtr(NULL, tl, tl->changedEv,
-			    "%p,%i", it, 0);
+			AG_PostEventByPtr(tl, tl->changedEv, "%p,%i", it, 0);
 		}
-		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 0);
+		AG_PostEvent(tl, "tlist-changed", "%p,%i", it, 0);
 	}
 	AG_UnlockVariable(selectedb);
 	AG_Redraw(tl);
@@ -293,7 +293,7 @@ static Uint32
 MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
-	int incr = AG_INT(1);
+	const int incr = AG_INT(1);
 
 	if (incr < 0) {
 		DecrementSelection(tl, -incr);
@@ -307,19 +307,15 @@ MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 void
 AG_TlistSizeHint(AG_Tlist *tl, const char *text, int nitems)
 {
-	AG_ObjectLock(tl);
 	AG_TextSize(text, &tl->wHint, NULL);
 	tl->hHint = (tl->item_h+2)*nitems;
-	AG_ObjectUnlock(tl);
 }
 
 void
 AG_TlistSizeHintPixels(AG_Tlist *tl, int w, int nitems)
 {
-	AG_ObjectLock(tl);
 	tl->wHint = w;
 	tl->hHint = (tl->item_h+2)*nitems;
-	AG_ObjectUnlock(tl);
 }
 
 /*
@@ -1068,9 +1064,9 @@ static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
-	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	const int button = AG_INT(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 	AG_TlistItem *ti;
 	const int tind = tl->rOffs + y/tl->item_h + 1;
 	
@@ -1178,10 +1174,9 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		if (tl->dblClicked && tl->dblClicked == ti->p1) {
 			AG_DelTimer(tl, &tl->dblClickTo);
 			if (tl->dblClickEv) {
-				AG_PostEventByPtr(NULL, tl, tl->dblClickEv,
-				    "%p", ti);
+				AG_PostEventByPtr(tl, tl->dblClickEv, "%p", ti);
 			}
-			AG_PostEvent(NULL, tl, "tlist-dblclick", "%p", ti);
+			AG_PostEvent(tl, "tlist-dblclick", "%p", ti);
 			tl->dblClicked = NULL;
 		} else {
 			tl->dblClicked = ti->p1;
@@ -1195,7 +1190,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			return;
 		}
 		if (tl->popupEv) {
-			AG_PostEventByPtr(NULL, tl, tl->popupEv, NULL);
+			AG_PostEventByPtr(tl, tl->popupEv, NULL);
 		} else if (ti->cat) {
 			AG_TlistPopup *tp;
 	
@@ -1224,7 +1219,7 @@ static void
 KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
-	int keysym = AG_INT(1);
+	const int keysym = AG_INT(1);
 	void *ti;
 
 	switch (keysym) {
@@ -1260,7 +1255,7 @@ KeyDown(AG_Event *_Nonnull event)
 		break;
 	case AG_KEY_RETURN:
 		if ((ti = AG_TlistSelectedItemPtr(tl)) != NULL) {
-			AG_PostEvent(NULL, tl, "tlist-return", "%p", ti);
+			AG_PostEvent(tl, "tlist-return", "%p", ti);
 		}
 		break;
 	}
@@ -1272,7 +1267,7 @@ static void
 KeyUp(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
-	int keysym = AG_INT(1);
+	const int keysym = AG_INT(1);
 
 	switch (keysym) {
 	case AG_KEY_UP:
@@ -1693,3 +1688,5 @@ AG_WidgetClass agTlistClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/toolbar.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -295,3 +297,5 @@ AG_WidgetClass agToolbarClass = {
 	SizeRequest,
 	AG_WidgetInheritSizeAllocate
 };
+
+#endif /* AG_WIDGETS */

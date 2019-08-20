@@ -33,7 +33,7 @@
 #include <agar/gui/icons.h>
 #include <agar/gui/cursors.h>
 #include <agar/gui/label.h>
-#ifdef AG_DEBUG
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
 #include <agar/gui/checkbox.h>
 #include <agar/gui/scrollview.h>
 #include <agar/gui/textbox.h>
@@ -60,6 +60,7 @@ AG_WindowQ agWindowHideQ;			/* Windows to hide */
 AG_Window *agWindowToFocus = NULL;		/* Window to focus */
 AG_Window *agWindowFocused = NULL;		/* Window holding focus */
 
+#ifdef AG_WM_HINTS
 /* Map enum ag_window_wm_type to EWMH window type */
 const char *agWindowWmTypeNames[] = {
 	"_NET_WM_WINDOW_TYPE_NORMAL",
@@ -78,6 +79,7 @@ const char *agWindowWmTypeNames[] = {
 	"_NET_WM_WINDOW_TYPE_DND",
 	NULL
 };
+#endif /* AG_WM_HINTS */
 
 const char *agWindowAlignmentNames[] = {
 	N_("None"),
@@ -95,9 +97,11 @@ const char *agWindowAlignmentNames[] = {
 
 static int agWindowIconCounter = 0;
 
+#ifdef AG_WIDGETS
 static int CreateMinimizedIcon(AG_Window *_Nonnull);
 static void AttachTitlebarAndIcons(AG_Driver *_Nonnull, AG_Window *_Nonnull);
 static void HideMinimizedIcon(AG_Window *_Nonnull);
+#endif
 
 void
 AG_InitWindowSystem(void)
@@ -115,6 +119,34 @@ AG_DestroyWindowSystem(void)
 }
 
 /*
+ * Initialize a new window.
+ * Called internally by AG_WindowNew*().
+ */
+static __inline__ void
+InitWindow(AG_Window *win, Uint flags)
+{
+	static Uint winNo = 0;
+
+	AG_ObjectInit(win, &agWindowClass);
+	AG_ObjectSetName(win, "win%u", winNo++);
+
+	/* We use a specific naming system. */
+	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
+
+	WIDGET(win)->window = win;
+	win->flags |= flags;
+
+	if (win->flags & AG_WINDOW_NORESIZE)
+		win->flags |= AG_WINDOW_NOMAXIMIZE;
+	/*
+	 * Set the default "close" action to AGWINDETACH(), a canned
+	 * event handler which calls AG_ObjectDetach(win).
+	 */
+	AG_SetEvent(win, "window-close", AGWINDETACH(win));
+}
+
+#if AG_MODEL != AG_SMALL
+/*
  * Create a generic window under a specific single-window driver. Return
  * a pointer to the newly-allocated window, or NULL on failure.
  */
@@ -131,7 +163,7 @@ AG_WindowNewSw(void *pDrv, Uint flags)
 	if ((win = TryMalloc(sizeof(AG_Window))) == NULL) {
 		return (NULL);
 	}
-	AG_WindowInit(win, flags);
+	InitWindow(win, flags);
 	AG_ObjectAttach(drv, win);
 	
 	if (!(win->flags & AG_WINDOW_NOTITLE)) {
@@ -143,6 +175,7 @@ AG_WindowNewSw(void *pDrv, Uint flags)
 	}
 	return (win);
 }
+#endif /* !AG_SMALL */
 
 /*
  * Create a new Agar window. On success return a pointer to the newly
@@ -157,7 +190,7 @@ AG_WindowNew(Uint flags)
 	if ((win = TryMalloc(sizeof(AG_Window))) == NULL) {
 		return (NULL);
 	}
-	AG_WindowInit(win, flags);
+	InitWindow(win, flags);
 
 	switch (agDriverOps->wm) {
 	case AG_WM_SINGLE:
@@ -184,31 +217,7 @@ AG_WindowNew(Uint flags)
 	return (win);
 }
 
-/*
- * Initialize a new window.
- * Called internally by AG_WindowNew*().
- */
-void
-AG_WindowInit(AG_Window *win, Uint flags)
-{
-	static Uint winNo = 0;
-
-	AG_ObjectInit(win, &agWindowClass);
-	AG_ObjectSetName(win, "win%u", winNo++);
-
-	/* We use a specific naming system. */
-	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
-
-	WIDGET(win)->window = win;
-	win->flags |= flags;
-
-	if (win->flags & AG_WINDOW_NORESIZE)
-		win->flags |= AG_WINDOW_NOMAXIMIZE;
-
-	/* Default window "close" action should be detach/free. */
-	AG_SetEvent(win, "window-close", AGWINDETACH(win));
-}
-
+#if AG_MODEL != AG_SMALL
 /*
  * Create a new, uniquely named Agar window (string name).
  * On success return a pointer to the new window.
@@ -250,6 +259,7 @@ AG_WindowNewNamed(Uint flags, const char *fmt, ...)
 	va_end(ap);
 	return AG_WindowNewNamedS(flags, s);
 }
+#endif /* !AG_SMALL */
 
 /* Special implementation of AG_ObjectAttach() for AG_Window. */
 static void
@@ -273,8 +283,9 @@ Attach(AG_Event *_Nonnull event)
 	 * Notify the objects. This will cause the the "drv" and "drvOps"
 	 * pointers of all widgets to be updated.
 	 */
-	AG_PostEvent(drv, win, "attached", NULL);
-	
+	AG_PostEvent(win, "attached", "%p", drv);
+
+#ifdef AG_WIDGETS
 	if (AGDRIVER_SINGLE(drv)) {
 		/*
 		 * Initialize built-in titlebar and desktop icon now that
@@ -283,10 +294,12 @@ Attach(AG_Event *_Nonnull event)
 		 */
 		AttachTitlebarAndIcons(drv, win);
 	}
+#endif
 	if (win->flags & AG_WINDOW_FOCUSONATTACH)
 		AG_WindowFocus(win);
 }
 
+#ifdef AG_WIDGETS
 static void
 AttachTitlebarAndIcons(AG_Driver *_Nonnull drv, AG_Window *_Nonnull win)
 {
@@ -312,6 +325,7 @@ AttachTitlebarAndIcons(AG_Driver *_Nonnull drv, AG_Window *_Nonnull win)
 	AG_SetStyle(icon, "font-size", "80%");
 	AG_WidgetCompileStyle(icon);
 }
+#endif /* AG_WIDGETS */
 
 /* Special implementation of AG_ObjectDetach() for AG_Window. */
 static void
@@ -690,11 +704,13 @@ Draw(void *_Nonnull obj)
 		AG_PopClipRect(win);
 }
 
+/* Handler for "widget-shown", generated when the window becomes visible. */
 static void
 OnShow(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_WINDOW_SELF();
 	AG_Driver *drv = WIDGET(win)->drv;
+	AG_Object *chld;
 	AG_SizeReq r;
 	AG_SizeAlloc a;
 	int xPref, yPref;
@@ -730,11 +746,14 @@ OnShow(AG_Event *_Nonnull event)
 			if (AGDRIVER_MULTIPLE(drv))
 				AG_WindowComputeAlignment(win, &a);
 		} else {
+#ifdef AG_WM_HINTS
 			if (AGDRIVER_MULTIPLE(drv) &&
 			   (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_ANYPOS_AVAIL)) {
 				/* Let the WM choose a default position */
 				mwFlags |= AG_DRIVER_MW_ANYPOS;
-			} else {
+			} else
+#endif
+			{
 				win->alignment = AG_WINDOW_MC;
 				AG_WindowComputeAlignment(win, &a);
 			}
@@ -781,7 +800,11 @@ OnShow(AG_Event *_Nonnull event)
 	}
 	
 	/* Notify widgets that the window is now visible. */
-	AG_PostEvent(NULL, win, "window-shown", NULL);
+	OBJECT_FOREACH_CHILD(chld, win, ag_object) {
+/*		Debug(win, "Propagating \"widget-shown\"() to %s\n", chld->name); */
+		AG_ForwardEvent(chld, event);
+	}
+	AG_PostEvent(win, "window-shown", NULL);
 
 	/* Implicit focus change. */
 	if (!(win->flags & AG_WINDOW_DENYFOCUS))
@@ -803,12 +826,14 @@ OnShow(AG_Event *_Nonnull event)
 #endif /* AG_TIMERS and HAVE_FLOAT */
 }
 
+/* Handler for "widget-hidden", generated when the window is to be unmapped. */
 static void
 OnHide(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_WINDOW_SELF();
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverSw *dsw;
+	AG_Object *chld;
 
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
 
@@ -831,7 +856,7 @@ OnHide(AG_Event *_Nonnull event)
 		if (win == agWindowFocused) {
 			AG_Window *wOther;
 
-			AG_PostEvent(NULL, win, "window-lostfocus", NULL);
+			AG_PostEvent(win, "window-lostfocus", NULL);
 			agWindowFocused = NULL;
 		
 			AG_FOREACH_WINDOW_REVERSE(wOther, dsw) {
@@ -860,7 +885,7 @@ OnHide(AG_Event *_Nonnull event)
 		break;
 	case AG_WM_MULTIPLE:
 		if (win == agWindowFocused) {
-			AG_PostEvent(NULL, win, "window-lostfocus", NULL);
+			AG_PostEvent(win, "window-lostfocus", NULL);
 			agWindowFocused = NULL;
 		}
 		if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
@@ -871,7 +896,28 @@ OnHide(AG_Event *_Nonnull event)
 	}
 	
 	/* Notify widgets that the window is now hidden. */
-	AG_PostEvent(NULL, win, "window-hidden", NULL);
+	OBJECT_FOREACH_CHILD(chld, win, ag_object) {
+/*		Debug(win, "Propagating \"widget-hidden\"() to %s\n", chld->name); */
+		AG_ForwardEvent(chld, event);
+	}
+	AG_PostEvent(win, "window-hidden", NULL);
+}
+
+/* Handler for "detached", generated by AG_ObjectDetach(). */
+static void
+OnDetach(AG_Event *_Nonnull event)
+{
+	AG_Window *win = AG_WINDOW_SELF();
+	AG_Object *sender = AG_OBJECT_PTR(1);
+	AG_Object *chld;
+
+	/* Propagate to child objects */
+	OBJECT_FOREACH_CHILD(chld, win, ag_object) {
+/*		AG_Debug(win, "Broadcasting \"detached\"() to %s\n", chld->name); */
+
+		event->argv[1].data.p = win;	/* Make SENDER */
+		AG_ForwardEvent(chld, event);
+	}
 }
 
 static void
@@ -886,7 +932,7 @@ WidgetGainFocus(AG_Widget *_Nonnull wid)
 		AG_ObjectUnlock(chld);
 	}
 	if (wid->flags & AG_WIDGET_FOCUSED)
-		AG_PostEvent(NULL, wid, "widget-gainfocus", NULL);
+		AG_PostEvent(wid, "widget-gainfocus", NULL);
 }
 
 static void
@@ -901,7 +947,7 @@ WidgetLostFocus(AG_Widget *_Nonnull wid)
 		AG_ObjectUnlock(chld);
 	}
 	if (wid->flags & AG_WIDGET_FOCUSED)
-		AG_PostEvent(NULL, wid, "widget-lostfocus", NULL);
+		AG_PostEvent(wid, "widget-lostfocus", NULL);
 }
 
 static void
@@ -992,7 +1038,7 @@ AG_WindowShow(AG_Window *win)
 		} else
 #endif
 		{
-			AG_PostEvent(NULL, win, "widget-shown", NULL);
+			AG_PostEvent(win, "widget-shown", NULL);
 		}
 	}
 	AG_ObjectUnlock(win);
@@ -1028,7 +1074,7 @@ AG_WindowHide(AG_Window *win)
 		} else
 #endif
 		{
-			AG_PostEvent(NULL, win, "widget-hidden", NULL);
+			AG_PostEvent(win, "widget-hidden", NULL);
 			win->visible = 0;
 			WIDGET(win)->flags &= ~(AG_WIDGET_VISIBLE);
 		}
@@ -1260,7 +1306,10 @@ out:
 	AG_UnlockVFS(&agDrivers);
 }
 
-/* Give focus to a window by name, and show it is if is hidden. */
+#if AG_MODEL != AG_SMALL
+/*
+ * Give focus to a window by name, and show it is if is hidden.
+ */
 int
 AG_WindowFocusNamed(const char *name)
 {
@@ -1360,6 +1409,7 @@ UpdateWindowBG(AG_Window *_Nonnull win, const AG_Rect *_Nonnull rPrev)
 			AGDRIVER_CLASS(drv)->updateRegion(drv, &r);
 	}
 }
+#endif /* !AG_SMALL */
 
 /* Set window position and size (no bounds) */
 int
@@ -1373,20 +1423,6 @@ AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 	r.w = w;
 	r.h = h;
 	return AG_WindowSetGeometryRect(win, &r, 0);
-}
-
-/* Set window position and size (bounded to total display size) */
-int
-AG_WindowSetGeometryBounded(AG_Window *win, int x, int y, int w, int h)
-{
-	AG_Rect r;
-
-	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
-	r.x = x;
-	r.y = y;
-	r.w = w;
-	r.h = h;
-	return AG_WindowSetGeometryRect(win, &r, 1);
 }
 
 /* Set the coordinates and geometry of a window. */
@@ -1463,9 +1499,10 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
-		if (dc->type == AG_FRAMEBUFFER && win->visible && !new) {
+#if AG_MODEL != AG_SMALL
+		if (dc->type == AG_FRAMEBUFFER && win->visible && !new)
 			UpdateWindowBG(win, &rPrev);
-		}
+#endif
 		break;
 	case AG_WM_MULTIPLE:
 		if ((AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
@@ -1679,6 +1716,10 @@ AG_WindowUnmaximize(AG_Window *win)
 	AG_ObjectUnlock(win);
 }
 
+#ifdef AG_WIDGETS
+/*
+ * Mouse-motion callback for a minimized window icon in SW mode.
+ */
 static void
 IconMotion(AG_Event *_Nonnull event)
 {
@@ -1719,6 +1760,7 @@ IconMotion(AG_Event *_Nonnull event)
 		icon->hSaved = HEIGHT(wDND);
 	}
 }
+#endif /* AG_WIDGETS */
 
 #ifdef AG_TIMERS
 /* Timer for double click on minimized icon. */
@@ -1780,15 +1822,18 @@ AG_WindowMinimize(AG_Window *win)
 	Debug(win, "Minimizing\n");
 	win->flags |= AG_WINDOW_MINIMIZED;
 	AG_WindowHide(win);
-
+#ifdef AG_WIDGETS
 	if ((drv = WIDGET(win)->drv) && AGDRIVER_SINGLE(drv)) {
 		if (CreateMinimizedIcon(win) == -1)
 			goto out;
 	}
+#endif
 	/* TODO MW: send a WM_CHANGE_STATE */
 out:
 	AG_ObjectUnlock(win);
 }
+
+#ifdef AG_WIDGETS
 static int
 CreateMinimizedIcon(AG_Window *_Nonnull win)
 {
@@ -1829,6 +1874,7 @@ CreateMinimizedIcon(AG_Window *_Nonnull win)
 	}
 	return (0);
 }
+#endif /* AG_WIDGETS */
 
 /* Unminimize a window */
 void
@@ -1839,10 +1885,10 @@ AG_WindowUnminimize(AG_Window *win)
 
 	if (!win->visible) {
 		AG_Driver *drv;
-
-		if ((drv = WIDGET(win)->drv) && AGDRIVER_SINGLE(drv)) {
+#ifdef AG_WIDGETS
+		if ((drv = WIDGET(win)->drv) && AGDRIVER_SINGLE(drv))
 			HideMinimizedIcon(win);
-		}
+#endif
 		AG_WindowShow(win);
 		win->flags &= ~(AG_WINDOW_MINIMIZED);
 	} else {
@@ -1852,6 +1898,7 @@ AG_WindowUnminimize(AG_Window *win)
 	AG_ObjectUnlock(win);
 }
 
+#ifdef AG_WIDGETS
 static void
 HideMinimizedIcon(AG_Window *_Nonnull win)
 {
@@ -1864,6 +1911,7 @@ HideMinimizedIcon(AG_Window *_Nonnull win)
 	AG_OBJECT_ISA(icon->wDND, "AG_Widget:AG_Window:*");
 	AG_WindowHide(icon->wDND);
 }
+#endif /* AG_WIDGETS */
 
 /* AGWINDETACH(): General-purpose "detach window" event handler. */
 void
@@ -1883,7 +1931,7 @@ AG_WindowHideGenEv(AG_Event *event)
 void
 AG_WindowCloseGenEv(AG_Event *event)
 {
-	AG_PostEvent(NULL, AG_WINDOW_PTR(1), "window-close", NULL);
+	AG_PostEvent(AG_WINDOW_PTR(1), "window-close", NULL);
 }
 
 /* Close the actively focused window. */
@@ -1893,7 +1941,7 @@ AG_CloseFocusedWindow(void)
 	AG_LockVFS(&agDrivers);
 	if (agWindowFocused) {
 		AG_OBJECT_ISA(agWindowFocused, "AG_Widget:AG_Window:*");
-		AG_PostEvent(NULL, agWindowFocused, "window-close", NULL);
+		AG_PostEvent(agWindowFocused, "window-close", NULL);
 	}
 	AG_UnlockVFS(&agDrivers);
 }
@@ -2268,7 +2316,7 @@ AG_WindowProcessShowQueue(void)
 
 	TAILQ_FOREACH(win, &agWindowShowQ, pvt.visibility) {
 		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
-		AG_PostEvent(NULL, win, "widget-shown", NULL);
+		AG_PostEvent(win, "widget-shown", NULL);
 	}
 	TAILQ_INIT(&agWindowShowQ);
 }
@@ -2284,7 +2332,7 @@ AG_WindowProcessHideQueue(void)
 
 	TAILQ_FOREACH(win, &agWindowHideQ, pvt.visibility) {
 		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
-		AG_PostEvent(NULL, win, "widget-hidden", NULL);
+		AG_PostEvent(win, "widget-hidden", NULL);
 	}
 	TAILQ_INIT(&agWindowHideQ);
 }
@@ -2315,7 +2363,7 @@ AG_WindowProcessDetachQueue(void)
 		 * Note: `widget-hidden' event handlers may cause new windows
 		 * to be added to agWindowDetachQ.
 		 */
-		AG_PostEvent(NULL, win, "widget-hidden", NULL);
+		AG_PostEvent(win, "widget-hidden", NULL);
 		nHidden++;
 	}
 	if (nHidden > 0) {
@@ -2342,7 +2390,7 @@ AG_WindowProcessDetachQueue(void)
 		Debug(NULL, "Detach: %s (\"%s\")\n", OBJECT(win)->name, win->caption);
 #endif
 		/* Notify all widgets of the window detach. */
-		AG_PostEvent(drv, win, "detached", NULL);
+		AG_PostEvent(win, "detached", "%p", drv);
 
 		/* Release the cursor areas and associated cursors. */
 		AG_UnmapAllCursors(win, NULL);
@@ -2370,7 +2418,7 @@ AG_WindowProcessDetachQueue(void)
 		if (win->flags & AG_WINDOW_MAIN) {
 			closedMain++;
 		}
-		AG_PostEvent(NULL, win, "window-detached", NULL);
+		AG_PostEvent(win, "window-detached", NULL);
 		AG_ObjectDestroy(win);
 	}
 	TAILQ_INIT(&agWindowDetachQ);
@@ -2879,7 +2927,6 @@ static void
 Init(void *_Nonnull obj)
 {
 	AG_Window *win = obj;
-	AG_Event *ev;
 	int i;
 
 	win->flags = AG_WINDOW_NOCURSORCHG;
@@ -2942,18 +2989,9 @@ Init(void *_Nonnull obj)
 	 * We wish to forward incoming `widget-shown', `widget-hidden' and
 	 * `detached' events to all attached child widgets.
 	 */
-	ev = AG_SetEvent(win, "widget-shown", OnShow, NULL);
-#if AG_MODEL != AG_SMALL
-	ev->flags |= AG_EVENT_PROPAGATE;
-#endif
-	ev = AG_SetEvent(win, "widget-hidden", OnHide, NULL);
-#if AG_MODEL != AG_SMALL
-	ev->flags |= AG_EVENT_PROPAGATE;
-#endif
-	ev = AG_SetEvent(win, "detached", NULL, NULL);
-#if AG_MODEL != AG_SMALL
-	ev->flags |= AG_EVENT_PROPAGATE;
-#endif
+	AG_SetEvent(win, "widget-shown", OnShow, NULL);
+	AG_SetEvent(win, "widget-hidden", OnHide, NULL);
+	AG_SetEvent(win, "detached", OnDetach, NULL);
 
 	/* Use custom attach/detach hooks to keep the window stack in order. */
 	AG_SetFn(win, "attach-fn", Attach, NULL);
@@ -2969,7 +3007,7 @@ Init(void *_Nonnull obj)
 	WIDGET(win)->pal = agDefaultPalette;
 }
 
-#ifdef AG_DEBUG
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
 static void
 WindowCaptionChanged(AG_Event *event)
 {
@@ -3017,7 +3055,6 @@ Edit(void *_Nonnull obj)
 	};
 	AG_Window *tgt = obj;
 	AG_Box *box, *hBox, *lBox, *rBox;
-	AG_Checkbox *cb;
 	AG_Textbox *tb;
 
 	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
@@ -3031,19 +3068,15 @@ Edit(void *_Nonnull obj)
 	hBox = AG_BoxNewHoriz(box, AG_BOX_EXPAND);
 	lBox = AG_BoxNewVert(hBox, 0);
 
-	cb = AG_CheckboxNewInt(lBox, 0, _("Is visible"), &tgt->visible);
-	AG_WidgetDisable(cb);
-	cb = AG_CheckboxNewInt(lBox, 0, _("Is dirty"), &tgt->dirty);
-	AG_WidgetDisable(cb);
+	AG_WidgetDisable(AG_CheckboxNewInt(lBox, 0, _("Is visible"), &tgt->visible));
+	AG_WidgetDisable(AG_CheckboxNewInt(lBox, 0, _("Is dirty"), &tgt->dirty));
 
 	AG_CheckboxSetFromFlags(lBox, 0, &tgt->flags, flagDescr);
 
 	rBox = AG_BoxNewVert(hBox, AG_BOX_EXPAND);
 
-	AG_LabelNewPolledMT(rBox, AG_LABEL_HFILL, &OBJECT(tgt)->pvt.lock,
-	    _("nFocused: %i"), &tgt->nFocused);
-	AG_LabelNewPolledMT(rBox, AG_LABEL_HFILL, &OBJECT(tgt)->pvt.lock,
-	    _("Zoom Level: %i"), &tgt->zoom);
+	AG_LabelNewPolled(rBox, AG_LABEL_HFILL, "nFocused: %i", &tgt->nFocused);
+	AG_LabelNewPolled(rBox, AG_LABEL_HFILL, _("Zoom Level: %i"), &tgt->zoom);
 	AG_LabelNewPolledMT(rBox, AG_LABEL_HFILL, &OBJECT(tgt)->pvt.lock,
 	    _("Parent: %[objName] @ (AG_Window *)%p"),
 	    &tgt->parent, &tgt->parent);
@@ -3077,22 +3110,22 @@ Edit(void *_Nonnull obj)
 	AG_NumericalNewInt(rBox, 0, NULL, _("Side Border W: "), &tgt->wBorderSide);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Resize Ctrl W: "), &tgt->wResizeCtrl);
 
-	if (tgt->flags & AG_WINDOW_MINSIZEPCT) {
+	if (tgt->flags & AG_WINDOW_MINSIZEPCT)
 		AG_NumericalNewInt(rBox, 0, "%", _("Minimum size: "), &tgt->minPct);
-	}
 #if 0	
 	AG_SpacerNewHoriz(rBox);
 
 	AG_LabelNewS(rBox, 0, _("Initial window position:"));
 	AG_RadioNewUint(rBox, 0, agWindowAlignmentNames, &tgt->alignment);
-
+# ifdef AG_WM_HINTS
 	AG_LabelNewS(rBox, 0, _("EWMH Window Type:"));
 	AG_RadioNewUint(rBox, 0, agWindowWmTypeNames, &tgt->wmType);
+# endif
 #endif
 	AG_SetStyle(box, "font-size", "80%");
 	return (box);
 }
-#endif /* AG_DEBUG */
+#endif /* AG_WIDGETS and AG_DEBUG */
 
 AG_WidgetClass agWindowClass = {
 	{
@@ -3104,7 +3137,7 @@ AG_WidgetClass agWindowClass = {
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
-#ifdef AG_DEBUG
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
 		Edit
 #else
 		NULL		/* edit */

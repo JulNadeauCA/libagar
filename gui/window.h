@@ -165,11 +165,13 @@ void AG_InitWindowSystem(void);
 void AG_DestroyWindowSystem(void);
 
 AG_Window *_Nullable AG_WindowNew(Uint);
+
+#if AG_MODEL != AG_SMALL
 AG_Window *_Nullable AG_WindowNewSw(void *_Nonnull, Uint);
 AG_Window *_Nullable AG_WindowNewNamedS(Uint, const char *_Nonnull);
 AG_Window *_Nullable AG_WindowNewNamed(Uint, const char *_Nonnull, ...)
 			              FORMAT_ATTRIBUTE(printf,2,3);
-void                 AG_WindowInit(AG_Window *_Nonnull, Uint);
+#endif
 
 void AG_WindowSetCaption(AG_Window *_Nonnull, const char *_Nonnull, ...)
                         FORMAT_ATTRIBUTE(printf,2,3);
@@ -193,12 +195,10 @@ void AG_WindowSetMinSize(AG_Window *_Nonnull, int, int);
 void AG_WindowSetMinSizePct(AG_Window *_Nonnull, int);
 
 int  AG_WindowSetGeometry(AG_Window *_Nonnull, int,int, int,int);
-int  AG_WindowSetGeometryBounded(AG_Window *_Nonnull, int,int, int,int);
 int  AG_WindowSetGeometryRect(AG_Window *_Nonnull, const AG_Rect *_Nonnull, int);
 int  AG_WindowSetGeometryAligned(AG_Window *_Nonnull, enum ag_window_alignment, int, int);
 int  AG_WindowSetGeometryAlignedPct(AG_Window *_Nonnull, enum ag_window_alignment,
                                     int,int);
-
 void AG_WindowComputeAlignment(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
 
 #ifdef AG_HAVE_FLOAT
@@ -208,7 +208,6 @@ void AG_WindowSetFadeIn(AG_Window *_Nonnull, float, float);
 void AG_WindowSetFadeOut(AG_Window *_Nonnull, float, float);
 # endif
 #endif
-
 void AG_WindowSetZoom(AG_Window *_Nonnull, int);
 
 void AG_WindowSaveGeometry(AG_Window *_Nonnull);
@@ -240,8 +239,10 @@ int AG_WindowIsFocused(AG_Window *_Nonnull)
                       _Warn_Unused_Result;
 
 void AG_WindowFocus(AG_Window *_Nonnull);
-int  AG_WindowFocusAtPos(AG_DriverSw *_Nonnull, int,int);
+#if AG_MODEL != AG_SMALL
 int  AG_WindowFocusNamed(const char *_Nonnull);
+int  AG_WindowFocusAtPos(AG_DriverSw *_Nonnull, int,int);
+#endif
 void AG_WindowCycleFocus(AG_Window *_Nonnull, int);
 
 void AG_WindowDetachGenEv(AG_Event *_Nonnull);

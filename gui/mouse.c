@@ -187,22 +187,20 @@ PostMouseMotion(
 			if (AG_WidgetArea(wid, x,y)) {
 				if ((wid->flags & AG_WIDGET_MOUSEOVER) == 0) {
 					wid->flags |= AG_WIDGET_MOUSEOVER;
-					AG_PostEvent(NULL, wid, "mouse-over",
-					    NULL);
+					AG_PostEvent(wid, "mouse-over", NULL);
 					AG_Redraw(wid);
 				}
 			} else {
 				if (wid->flags & AG_WIDGET_MOUSEOVER) {
 					wid->flags &= ~(AG_WIDGET_MOUSEOVER);
-					AG_PostEvent(NULL, wid, "mouse-over",
-					    NULL);
+					AG_PostEvent(wid, "mouse-over", NULL);
 					AG_Redraw(wid);
 				}
 			}
 		}
 		if ((wid->flags & AG_WIDGET_FOCUSED) ||
 		    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
-			AG_PostEvent(NULL, wid, "mouse-motion",
+			AG_PostEvent(wid, "mouse-motion",
 			    "%i(x),%i(y),%i(xRel),%i(yRel),%i(buttons)",
 			    x - wid->rView.x1,
 			    y - wid->rView.y1,
@@ -251,7 +249,7 @@ PostMouseButtonUp(
 	if ((wid->flags & AG_WIDGET_VISIBLE)) {
 		if ((wid->flags & AG_WIDGET_FOCUSED) ||
 		    (wid->flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
-			AG_PostEvent(NULL, wid, "mouse-button-up",
+			AG_PostEvent(wid, "mouse-button-up",
 			    "%i(button),%i(x),%i(y)",
 			    (int)button,
 			    x - wid->rView.x1,
@@ -312,7 +310,7 @@ PostMouseButtonDown(
 			break;
 	}
 	if (ev != NULL) {
-		AG_PostEvent(NULL, wid, "mouse-button-down",
+		AG_PostEvent(wid, "mouse-button-down",
 		    "%i(button),%i(x),%i(y)",
 		    (int)button,
 		    x - wid->rView.x1,

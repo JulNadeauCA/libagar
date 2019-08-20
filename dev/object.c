@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,16 +42,19 @@
 #include <agar/dev/dev.h>
 
 const AG_FlagDescr devObjectFlags[] = {
-	{ AG_OBJECT_DEBUG,		N_("Debugging"),		  1 },
-	{ AG_OBJECT_READONLY,		N_("Read-only"),		  1 },
-	{ AG_OBJECT_INDESTRUCTIBLE,	N_("Indestructible"),		  1 },
-	{ AG_OBJECT_NON_PERSISTENT,	N_("Non-persistent"),		  1 },
-	{ AG_OBJECT_REMAIN_DATA,	N_("Keep data resident"),	  1 },
-	{ AG_OBJECT_RESIDENT,		N_("Data part is resident"),	  0 },
-	{ AG_OBJECT_STATIC,		N_("Statically allocated"),	  0 },
-	{ AG_OBJECT_REOPEN_ONLOAD,	N_("Recreate UI on load"),	  0 },
-	{ AG_OBJECT_NAME_ONATTACH,	N_("Generate name upon attach"),  0 },
-	{ 0,				"",				  0 }
+	{ AG_OBJECT_FLOATING_VARS,  N_("Clear Variables pre-load"),   1 },
+	{ AG_OBJECT_NON_PERSISTENT, N_("Not serializable"),           1 },
+	{ AG_OBJECT_INDESTRUCTIBLE, N_("Indestructible"),             1 },
+	{ AG_OBJECT_RESIDENT,       N_("Data part is resident"),      0 },
+	{ AG_OBJECT_STATIC,         N_("Static (not on the heap)"),   1 },
+	{ AG_OBJECT_READONLY,       N_("Read-only to editors"),       1 },
+	{ AG_OBJECT_REOPEN_ONLOAD,  N_("Recreate GUI post-load"),     1 },
+	{ AG_OBJECT_REMAIN_DATA,    N_("Keep data part resident"),    1 },
+	{ AG_OBJECT_DEBUG,          N_("Debug mode"),                 1 },
+	{ AG_OBJECT_DEBUG_DATA,     N_("Produce DEBUG object files"), 1 },
+	{ AG_OBJECT_NAME_ONATTACH,  N_("Was named on attach"),        0 },
+	{ AG_OBJECT_CHLD_AUTOSAVE,  N_("Autosave child objects"),     1 },
+	{ 0,                        "",                               0 }
 };
 
 static void
@@ -87,8 +90,7 @@ PollEvents(AG_Event *_Nonnull event)
 		char args[AG_TLIST_LABEL_MAX], arg[64];
 		int i;
 
-		args[0] = '(';
-		args[1] = '\0';
+		args[0] = '\0';
 		for (i = 1; i < ev->argc; i++) {
 			AG_Variable *V = &ev->argv[i];
 
@@ -104,12 +106,7 @@ PollEvents(AG_Event *_Nonnull event)
 			if (i < ev->argc-1)
 				Strlcat(args, ", ", sizeof(args));
 		}
-		Strlcat(args, ")", sizeof(args));
-
-		AG_TlistAdd(tl, NULL, "%s%s%s %s", ev->name,
-		    (ev->flags & AG_EVENT_ASYNC) ? " <async>" : "",
-		    (ev->flags & AG_EVENT_PROPAGATE) ? " <propagate>" : "",
-		    args);
+		AG_TlistAdd(tl, NULL, "\"%s\"(%s)", ev->name, args);
 
 	}
 	AG_TlistRestore(tl);
@@ -126,7 +123,7 @@ RenameObject(AG_Event *_Nonnull event)
 		AG_TextboxCopyString(tb, ob->name, sizeof(ob->name));
 		AG_ObjectPageOut(ob);
 	}
-	AG_PostEvent(NULL, ob, "renamed", NULL);
+	AG_PostEvent(ob, "renamed", NULL);
 }
 
 void *

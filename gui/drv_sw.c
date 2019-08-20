@@ -104,7 +104,7 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	AG_Window *win;
 	int nWindows = 0;
 
-	if (dsw->bgPopup != NULL) {
+	if (dsw->bgPopup) {
 		AG_MenuCollapseAll(dsw->bgPopup);
 	}
 	me = dsw->bgPopup = AG_MenuNew(NULL, 0);
@@ -399,20 +399,20 @@ AG_WM_CommitWindowFocus(AG_Window *win)
 	if (win->flags & AG_WINDOW_DENYFOCUS)
 		AG_FatalError("Window is not focusable");
 #endif
-	if (agWindowFocused != NULL) {
-		if (win != NULL &&
+	if (agWindowFocused) {
+		if (win &&
 		    win == agWindowFocused) {		/* Nothing to do */
 			return;
 		}
-		AG_PostEvent(NULL, agWindowFocused, "window-lostfocus", NULL);
+		AG_PostEvent(agWindowFocused, "window-lostfocus", NULL);
 	}
-	if (win != NULL) {
+	if (win) {
 		AG_ObjectLock(win);
 		if (!(win->flags & AG_WINDOW_KEEPBELOW)) {
 			AG_ObjectMoveToTail(win);
 		}
 		agWindowFocused = win;
-		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+		AG_PostEvent(win, "window-gainfocus", NULL);
 		win->dirty = 1;
 		AG_ObjectUnlock(win);
 	} else {
@@ -668,7 +668,7 @@ AG_SetRefreshRate(int fps)
 int
 AG_PendingEvents(AG_Driver *drv)
 {
-	if (drv != NULL) {
+	if (drv) {
 		return AGDRIVER_CLASS(drv)->pendingEvents(drv);
 	} else {
 		return agDriverOps->pendingEvents(agDriverSw);
@@ -679,7 +679,7 @@ AG_PendingEvents(AG_Driver *drv)
 int
 AG_GetNextEvent(AG_Driver *drv, AG_DriverEvent *dev)
 {
-	if (drv != NULL) {
+	if (drv) {
 		return AGDRIVER_CLASS(drv)->getNextEvent(drv, dev);
 	} else {
 		return agDriverOps->getNextEvent(agDriverSw, dev);
@@ -690,7 +690,7 @@ AG_GetNextEvent(AG_Driver *drv, AG_DriverEvent *dev)
 int
 AG_ProcessEvent(AG_Driver *drv, AG_DriverEvent *dev)
 {
-	if (drv != NULL) {
+	if (drv) {
 		return AGDRIVER_CLASS(drv)->processEvent(drv, dev);
 	} else {
 		return agDriverOps->processEvent(agDriverSw, dev);

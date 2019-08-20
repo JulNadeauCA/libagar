@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/progress_bar.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -274,3 +276,5 @@ AG_WidgetClass agProgressBarClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

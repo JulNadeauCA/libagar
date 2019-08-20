@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/menu.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/label.h>
@@ -398,15 +400,15 @@ MouseButtonDown(AG_Event *_Nonnull event)
 }
 
 static void
-Attached(AG_Event *_Nonnull event)
+OnAttach(AG_Event *_Nonnull event)
 {
-	AG_Widget *pwid = AG_SENDER();
-	AG_Window *pwin;
+	AG_Widget *pwid = AG_PTR(1);
+	AG_Window *win;
 	
 	AG_OBJECT_ISA(pwid, "AG_Widget:*");
 
-	if ((pwin = AG_ParentWindow(pwid)) != NULL)
-		AG_WindowSetPadding(pwin, -1, -1, 0, pwin->bPad);
+	if ((win = AG_ParentWindow(pwid)) != NULL)
+		AG_WindowSetPadding(win, -1, -1, 0, win->bPad);
 }
 
 /* Parent Menu (if any) must be locked. */
@@ -521,7 +523,7 @@ Init(void *_Nonnull obj)
 
 	AG_SetEvent(m, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(m, "mouse-motion", MouseMotion, NULL);
-	AG_AddEvent(m, "attached", Attached, NULL);
+	AG_AddEvent(m, "attached", OnAttach, NULL);
 	AG_AddEvent(m, "font-changed", OnFontChange, NULL);
 }
 
@@ -1237,7 +1239,7 @@ AG_MenuUpdateItem(AG_MenuItem *mi)
 	if (mi->poll) {
 		AG_MenuInvalidateLabels(mi);
 		AG_MenuFreeSubitems(mi);
-		AG_PostEventByPtr(NULL, m, mi->poll, "%p", mi);
+		AG_PostEventByPtr(m, mi->poll, "%p", mi);
 
 		if (mi->view && (win = WIDGET(mi->view)->window)) {
 			AG_ObjectDetach(win);
@@ -1313,8 +1315,7 @@ Draw(void *_Nonnull obj)
 		int activeState = mi->state;
 
 		if (mi->stateFn) {
-			AG_PostEventByPtr(NULL, m, mi->stateFn, "%p",
-			    &activeState);
+			AG_PostEventByPtr(m, mi->stateFn, "%p", &activeState);
 		}
 		if (activeState) {
 			if (mi->lblMenu[1] == -1) {
@@ -1567,3 +1568,5 @@ AG_WidgetClass agMenuClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

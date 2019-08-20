@@ -108,14 +108,14 @@ Draw(void *_Nonnull obj)
 static void
 ViewMotion(AG_Event *_Nonnull event)
 {
-	SK_View *skv = AG_PTR(1);
+	SK_View *skv = SK_VIEW_SELF();
 	SK_Tool *tool = skv->curtool;
 	SK *sk = skv->sk;
-	int x = AG_INT(2);
-	int y = AG_INT(3);
-	int xRel = AG_INT(4);
-	int yRel = AG_INT(5);
-	int state = AG_INT(6);
+	const int x = AG_INT(1);
+	const int y = AG_INT(2);
+	const int xRel = AG_INT(3);
+	const int yRel = AG_INT(4);
+	const int state = AG_INT(5);
 	M_Vector3 vPos, vRel;
 	M_Matrix44 Tinv;
 
@@ -153,12 +153,12 @@ out:
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	SK_View *skv = AG_PTR(1);
+	SK_View *skv = SK_VIEW_SELF();
 	SK_Tool *tool = SK_CURTOOL(skv);
 	SK *sk = skv->sk;
-	int button = AG_INT(2);
-	int x = AG_INT(3);
-	int y = AG_INT(4);
+	const int button = AG_INT(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 	M_Vector3 vPos;
 	M_Matrix44 Tinv;
 
@@ -218,7 +218,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		}
 	}
 	if (skv->btndown_ev != NULL) {
-		AG_PostEventByPtr(NULL, skv, skv->btndown_ev, "%i,%f,%f",
+		AG_PostEventByPtr(skv, skv->btndown_ev, "%i,%f,%f",
 		    button, vPos.x, vPos.y);
 		AG_Redraw(skv);
 	}
@@ -229,14 +229,14 @@ out:
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	SK_View *skv = AG_PTR(1);
+	SK_View *skv = SK_VIEW_SELF();
 	SK_Tool *tool = SK_CURTOOL(skv);
 	SK *sk = skv->sk;
-	int button = AG_INT(2);
-	int x = AG_INT(3);
-	int y = AG_INT(4);
-	M_Vector3 vPos;
 	M_Matrix44 Tinv;
+	M_Vector3 vPos;
+	const int button = AG_INT(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 
 	vPos.x = SK_VIEW_X(skv, x);
 	vPos.y = SK_VIEW_Y(skv, HEIGHT(skv) - y);
@@ -279,7 +279,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 		break;
 	}
 	if (skv->btnup_ev != NULL) {
-		AG_PostEventByPtr(NULL, skv, skv->btnup_ev, "%i,%f,%f",
+		AG_PostEventByPtr(skv, skv->btnup_ev, "%i,%f,%f",
 		    button, vPos.x, vPos.y);
 		AG_Redraw(skv);
 	}
@@ -302,9 +302,9 @@ Init(void *_Nonnull obj)
 
 	WIDGET(skv)->flags |= (AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_OPENGL);
 
-	AG_SetEvent(skv, "mouse-button-down", MouseButtonDown, "%p", skv);
-	AG_SetEvent(skv, "mouse-button-up", MouseButtonUp, "%p", skv);
-	AG_SetEvent(skv, "mouse-motion", ViewMotion, "%p", skv);
+	AG_SetEvent(skv, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(skv, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(skv, "mouse-motion", ViewMotion, NULL);
 
 	skv->flags = 0;
 	skv->sk = NULL;
@@ -455,23 +455,23 @@ SK_ViewSetDefaultTool(SK_View *skv, SK_Tool *tool)
 static void
 SetLengthUnit(AG_Event *_Nonnull event)
 {
-	SK *sk = AG_PTR(1);
-	char *uname = AG_STRING(2);
+	SK *sk = SK_PTR(1);
+	const char *uname = AG_STRING(2);
 	const AG_Unit *unit;
 
-	Debug(sk, "Setting unit = %s\n", uname);
 	if ((unit = AG_FindUnit(uname)) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "Unknown unit: %s", uname);
+		AG_TextError(_("No such unit \"%s\""), uname);
 		return;
 	}
 	SK_SetLengthUnit(sk, unit);
+	AG_TextTmsg(AG_MSG_INFO, 1250, _("Set unit to %s"), uname);
 }
 
 static void
 AddConstraint(AG_Event *_Nonnull event)
 {
-	SK *sk = AG_PTR(1);
-	enum sk_constraint_type type = (enum sk_constraint_type)AG_INT(2);
+	SK *sk = SK_PTR(1);
+	const enum sk_constraint_type type = (enum sk_constraint_type)AG_INT(2);
 	SK_Node *node, *nodes[2];
 	int count = 0;
 
@@ -508,7 +508,7 @@ AddConstraint(AG_Event *_Nonnull event)
 static void
 ComputeIntersections(AG_Event *_Nonnull event)
 {
-	SK *sk = AG_PTR(1);
+	SK *sk = SK_PTR(1);
 	SK_Node *n1, *n2;
 	SK_Group *g;
 	SK_NodePair *tested;

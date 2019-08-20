@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/menu.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/icons.h>
@@ -32,12 +34,12 @@ static int  GetItemBoolValue(AG_MenuItem *_Nonnull);
 static void SetItemBoolValue(AG_MenuItem *_Nonnull);
 
 /* Refresh a dynamic item. */
-static void
+static __inline__ void
 UpdateItem(AG_Menu *_Nonnull m, AG_MenuItem *_Nonnull mi)
 {
 	AG_MenuInvalidateLabels(mi);
 	AG_MenuFreeSubitems(mi);
-	AG_PostEventByPtr(NULL, m, mi->poll, "%p", mi);
+	AG_PostEventByPtr(m, mi->poll, "%p", mi);
 }
 
 /* Selection has moved over the specified item. */
@@ -78,7 +80,7 @@ MouseMotion(AG_Event *_Nonnull event)
 
 	TAILQ_FOREACH(miSub, &mi->subItems, items) {
 		if (miSub->poll)
-			UpdateItem(m, miSub);
+			UpdateItem(m, miSub); /* TODO regulate these updates */
 
 		if ((y += itemh) <= my) {
 			continue;
@@ -169,11 +171,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 
 		mi_state = mi->state;
 		if (mi->stateFn != NULL) {
-#ifdef AG_DEBUG
-			if (mi->stateFn->flags & AG_EVENT_ASYNC)
-				AG_FatalError("stateFn cannot be ASYNC");
-#endif
-			AG_PostEventByPtr(NULL, m, mi->stateFn, "%p", &mi_state);
+			AG_PostEventByPtr(m, mi->stateFn, "%p", &mi_state);
 		}
 		if (!mi_state) {
 			/* Nothing to do */
@@ -337,7 +335,7 @@ Draw(void *_Nonnull obj)
 		int x = mv->lPad;
 
 		if (mi->stateFn != NULL)
-			AG_PostEventByPtr(NULL, m, mi->stateFn, "%p", &mi_state);
+			AG_PostEventByPtr(m, mi->stateFn, "%p", &mi_state);
 
 		if (mi->poll)
 			UpdateItem(m, mi);
@@ -524,3 +522,5 @@ AG_WidgetClass agMenuViewClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

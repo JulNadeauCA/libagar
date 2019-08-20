@@ -276,9 +276,10 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		if (tool->ops->mousebuttondown(tool, vCt, button) == 1)
 			return;
 	}
-	if (vv->btndown_ev != NULL)
-		AG_PostEventByPtr(NULL, vv, vv->btndown_ev, "%i,%f,%f",
-		    button, x, y);
+	if (vv->btndown_ev != NULL) {
+		AG_PostEventByPtr(vv, vv->btndown_ev, "%i,%f,%f", button, x,y);
+		AG_Redraw(vv);
+	}
 }
 
 static void
@@ -309,8 +310,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 			return;
 	}
 	if (vv->btnup_ev != NULL) {
-		AG_PostEventByPtr(NULL, vv, vv->btnup_ev, "%i,%f,%f",
-		    button, x, y);
+		AG_PostEventByPtr(vv, vv->btnup_ev, "%i,%f,%f", button, x, y);
 		AG_Redraw(vv);
 	}
 }
@@ -341,7 +341,7 @@ KeyDown(AG_Event *_Nonnull event)
 	TAILQ_FOREACH(cmd, &tool->cmds, cmds) {
 		if (cmd->kSym == sym &&
 		    (cmd->kMod == AG_KEYMOD_NONE || mod & cmd->kMod)) {
-			AG_PostEventByPtr(NULL, tool->vgv, cmd->fn, "%p", tool);
+			AG_PostEventByPtr(tool->vgv, cmd->fn, "%p", tool);
 			AG_Redraw(vv);
 		}
 	}

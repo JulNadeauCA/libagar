@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/box.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -568,3 +570,5 @@ AG_WidgetClass agBoxClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

@@ -116,6 +116,9 @@ AG_WidgetPalette agDefaultPalette = {{
 #undef AG_INLINE_HEADER
 #include "inline_widget.h"
 
+static void FocusWidget(AG_Widget *_Nonnull);
+static void UnfocusWidget(AG_Widget *_Nonnull);
+
 /* Set the parent window/driver pointers on a widget and its children. */
 static void
 SetParentWindow(AG_Widget *_Nonnull wid, AG_Window *_Nullable win)
@@ -125,8 +128,8 @@ SetParentWindow(AG_Widget *_Nonnull wid, AG_Window *_Nullable win)
 	
 	wid->window = win;
 
-	if (win != NULL) {
-		wid->drv = (AG_Driver *)OBJECT(win)->parent;
+	if (win) {
+		wid->drv = AGDRIVER( OBJECT(win)->parent );
 		wid->drvOps = AGDRIVER_CLASS(wid->drv);
 
 		if (wid->flags & AG_WIDGET_USE_TEXT)
@@ -149,7 +152,7 @@ SetParentWindow(AG_Widget *_Nonnull wid, AG_Window *_Nullable win)
 					if (i++ == ca->stock)
 						break;
 				}
-				if (ac != NULL) {
+				if (ac) {
 					ca->c = ac;
 					TAILQ_INSERT_TAIL(&win->pvt.cursorAreas,
 					    ca, cursorAreas);
@@ -175,8 +178,8 @@ SetParentDriver(AG_Widget *_Nonnull wid, AG_Driver *_Nullable drv)
 {
 	AG_Widget *chld;
 
-	if (drv != NULL) {
-		wid->drv = (AG_Driver *)drv;
+	if (drv) {
+		wid->drv = AGDRIVER(drv);
 		wid->drvOps = AGDRIVER_CLASS(drv);
 	} else {
 		wid->drv = NULL;
@@ -189,73 +192,94 @@ SetParentDriver(AG_Widget *_Nonnull wid, AG_Driver *_Nullable drv)
 static void
 OnAttach(AG_Event *_Nonnull event)
 {
-	void *parent = AG_SENDER();
-	AG_Widget *w = AG_WIDGET_SELF();
+	AG_Widget *widget = AG_WIDGET_SELF();
+	const void *parent = AG_PTR(1);
 
 	if (AG_OfClass(parent, "AG_Widget:AG_Window:*") &&
-	    AG_OfClass(w, "AG_Widget:*")) {
-		AG_Widget *widParent = (AG_Widget *)parent;
+	    AG_OfClass(widget, "AG_Widget:*")) {
+		AG_Widget *wParent = WIDGET(parent);
 		Uint i;
+		/*
+		 * This is a widget attaching to a window.
+		 */
 #ifdef AG_DEBUG_GUI
-		Debug(w, "Attach to %s window (\"%s\")\n",
+		Debug(widget, "Attach to %s window (\"%s\")\n",
 		    OBJECT(parent)->name, AGWINDOW(parent)->caption);
 #endif
-		SetParentWindow(w, AGWINDOW(widParent));
-		if (AGWINDOW(widParent)->visible) {
-			w->flags |= AG_WIDGET_UPDATE_WINDOW;
-			AG_PostEvent(NULL, w, "widget-shown", NULL);
+		SetParentWindow(widget, AGWINDOW(wParent));
+		if (AGWINDOW(wParent)->visible) {
+			widget->flags |= AG_WIDGET_UPDATE_WINDOW;
+			AG_PostEvent(widget, "widget-shown", NULL);
 		}
-
 		/*
 		 * Widget may have previously been detached from another
 		 * driver; textures may need regenerating.
 		 */
-		for (i = 0; i < w->nSurfaces; i++) {
-			w->textures[i] = 0;
+		for (i = 0; i < widget->nSurfaces; i++) {
+			widget->textures[i] = 0;
 		}
 	} else if (AG_OfClass(parent, "AG_Widget:*") &&
-	           AG_OfClass(w, "AG_Widget:*")) {
-		AG_Widget *widParent = (AG_Widget *)parent;
-#ifdef AG_DEBUG_GUI
-		Debug(w, "Attach to %s in %s\n",
-		    OBJECT_CLASS(parent)->name,
-		    widParent->window ? OBJECT(widParent->window)->name : "<>");
+	           AG_OfClass(widget, "AG_Widget:*")) {
+		AG_Widget *wParent = WIDGET(parent);
+		AG_Window *window = wParent->window;
+		/*
+		 * This is a widget attaching to another widget (not a window).
+		 */
+#ifdef AG_DEBUG
+		if (window) { AG_OBJECT_ISA(window, "AG_Widget:AG_Window:*"); }
 #endif
-		SetParentWindow(w, widParent->window);
-		if (widParent->window != NULL &&
-		    widParent->window->visible) {
-			AG_PostEvent(NULL, w, "widget-shown", NULL);
+#ifdef AG_DEBUG_GUI
+		Debug(widget, "Attach to %s in %s\n", OBJECT_CLASS(parent)->name,
+		    window ? OBJECT(window)->name : "<>");
+#endif
+		SetParentWindow(widget, window);
+		if (window && window->visible) {
+			AG_PostEvent(widget, "widget-shown", NULL);
 		}
 	} else if (AG_OfClass(parent, "AG_Driver:*") &&
-	           AG_OfClass(w, "AG_Widget:AG_Window:*")) {
-		AG_Driver *drvParent = (AG_Driver *)parent;
+	           AG_OfClass(widget, "AG_Widget:AG_Window:*")) {
+		AG_Driver *drvParent = AGDRIVER(parent);
+		/*
+		 * This is a Window attaching to a low-level Driver.
+		 */
 #ifdef AG_DEBUG_GUI
 		Debug(w, "Attach to %s (%s)\n", OBJECT_CLASS(parent)->name,
 		   OBJECT(parent)->name);
 #endif
-		SetParentDriver(w, drvParent);
+		SetParentDriver(widget, drvParent);
 	} else {
-		AG_FatalError("Can only attach to AG_{Widget,Driver}");
+#ifdef AG_VERBOSITY
+		AG_FatalErrorF("Cannot attach %s to %s", OBJECT(widget)->name,
+		    OBJECT(parent)->name);
+#else
+		AG_FatalError("Cannot attach to parent");
+#endif
 	}
 }
 
 static void
 OnDetach(AG_Event *_Nonnull event)
 {
-	void *parent = AG_SENDER();
-	AG_Widget *w = AG_WIDGET_SELF();
+	AG_Widget *widget = AG_WIDGET_SELF();
+	const void *parent = AG_PTR(1);
 	
 	if (AG_OfClass(parent, "AG_Widget:*") &&
-	    AG_OfClass(w, "AG_Widget:*")) {
-		if (w->window != NULL) {
-			AG_UnmapAllCursors(w->window, w);
+	    AG_OfClass(widget, "AG_Widget:*")) {
+		if (widget->window) {
+			AG_UnmapAllCursors(widget->window, widget);
 		}
-		SetParentWindow(w, NULL);
+		SetParentWindow(widget, NULL);
 	} else if (AG_OfClass(parent, "AG_Driver:*") &&
-	           AG_OfClass(w, "AG_Widget:AG_Window:*")) {
-		SetParentDriver(w, NULL);
+	           AG_OfClass(widget, "AG_Widget:AG_Window:*")) {
+		SetParentDriver(widget, NULL);
 	} else {
-		AG_FatalError("Inconsistent widget detach");
+#ifdef AG_VERBOSITY
+		AG_FatalErrorF("Unexpected parent on detach. "
+		               "Why is %s attached to %s?",
+			       OBJECT(widget)->name, OBJECT(parent)->name);
+#else
+		AG_FatalError("Unexpected parent on detach");
+#endif
 	}
 }
 
@@ -266,7 +290,7 @@ RedrawOnTickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Widget *wid = AG_WIDGET_SELF();
 
-	if (wid->window != NULL) {
+	if (wid->window) {
 		AG_OBJECT_ISA(wid->window, "AG_Widget:AG_Window:*");
 		wid->window->dirty = 1;
 	}
@@ -285,7 +309,7 @@ RedrawOnChangeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	V = AG_GetVariable(wid, rt->name, &p);
 	AG_DerefVariable(&Vd, V);
 	if (!rt->VlastInited || AG_CompareVariables(&Vd, &rt->Vlast) != 0) {
-		if (wid->window != NULL) {
+		if (wid->window) {
 			AG_OBJECT_ISA(wid->window, "AG_Widget:AG_Window:*");
 			wid->window->dirty = 1;
 		}
@@ -297,19 +321,22 @@ RedrawOnChangeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 }
 #endif /* AG_TIMERS */
 
+/* "widget-shown" handler */
 static void
 OnShow(AG_Event *_Nonnull event)
 {
 	AG_Widget *wid = AG_WIDGET_SELF();
+	AG_Widget *chld;
 #ifdef AG_TIMERS
 	AG_RedrawTie *rt;
 #endif
 #ifdef AG_DEBUG
-	if (wid->font == NULL) {
-		AG_FatalError("wid->font=NULL");
-	}
+	if (!wid->font) { AG_FatalError("!font"); }
 	AG_OBJECT_ISA(wid->font, "AG_Font:*");
 #endif
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		AG_ForwardEvent(chld, event);
+	}
 	wid->flags |= AG_WIDGET_VISIBLE;
 
 #ifdef AG_TIMERS
@@ -328,13 +355,18 @@ OnShow(AG_Event *_Nonnull event)
 #endif /* AG_TIMERS */
 }
 
+/* "widget-hidden" handler */
 static void
 OnHide(AG_Event *_Nonnull event)
 {
 	AG_Widget *wid = AG_WIDGET_SELF();
+	AG_Widget *chld;
 #ifdef AG_TIMERS
 	AG_RedrawTie *rt;
 #endif
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		AG_ForwardEvent(chld, event);
+	}
 	wid->flags &= ~(AG_WIDGET_VISIBLE);
 
 #ifdef AG_TIMERS
@@ -353,7 +385,6 @@ static void
 Init(void *_Nonnull obj)
 {
 	AG_Widget *wid = obj;
-	AG_Event *ev;
 
 	OBJECT(wid)->flags |= AG_OBJECT_NAME_ONATTACH;
 
@@ -397,14 +428,8 @@ Init(void *_Nonnull obj)
 
 	AG_SetEvent(wid, "attached", OnAttach, NULL);
 	AG_SetEvent(wid, "detached", OnDetach, NULL);
-	ev = AG_SetEvent(wid, "widget-shown", OnShow, NULL);
-#if AG_MODEL != AG_SMALL
-	ev->flags |= AG_EVENT_PROPAGATE;
-#endif
-	ev = AG_SetEvent(wid, "widget-hidden", OnHide, NULL);
-#if AG_MODEL != AG_SMALL
-	ev->flags |= AG_EVENT_PROPAGATE;
-#endif
+	AG_SetEvent(wid, "widget-shown", OnShow, NULL);
+	AG_SetEvent(wid, "widget-hidden", OnHide, NULL);
 #ifdef AG_TIMERS
 	TAILQ_INIT(&wid->pvt.redrawTies);
 #endif
@@ -427,7 +452,7 @@ AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
 		    rt->ival == refresh_ms)
 			break;
 	}
-	if (rt != NULL) {
+	if (rt) {
 		AG_ResetTimer(wid, &rt->to, refresh_ms);
 		return;
 	}
@@ -466,7 +491,7 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 			if (rt->type == AG_REDRAW_ON_TICK)
 				break;
 		}
-		if (rt != NULL) {
+		if (rt) {
 			TAILQ_REMOVE(&wid->pvt.redrawTies, rt, redrawTies);
 			AG_DelTimer(wid, &rt->to);
 			free(rt);
@@ -523,7 +548,7 @@ AG_WidgetStdMouseButtonDown(AG_Event *event)
 	if (!AG_WidgetIsFocused(wid)) {
 		AG_WidgetFocus(wid);
 	}
-	AG_ExecMouseAction(wid, AG_ACTION_ON_BUTTONDOWN, btn, x, y);
+	AG_ExecMouseAction(wid, AG_ACTION_ON_BUTTONDOWN, btn, x,y);
 }
 
 /* Default event handler for "mouse-button-up" (for widgets using Actions). */
@@ -535,7 +560,7 @@ AG_WidgetStdMouseButtonUp(AG_Event *event)
 	const int x = AG_INT(2);
 	const int y = AG_INT(3);
 
-	AG_ExecMouseAction(wid, AG_ACTION_ON_BUTTONUP, btn, x, y);
+	AG_ExecMouseAction(wid, AG_ACTION_ON_BUTTONUP, btn, x,y);
 }
 
 /* Tie an action to a mouse-button-down event. */
@@ -545,21 +570,24 @@ AG_ActionOnButtonDown(void *obj, int button, const char *action)
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
 	
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	
 	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_BUTTONDOWN;
 	Strlcpy(at->action, action, sizeof(at->action));
 	at->data.button = (AG_MouseButton)button;
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	TAILQ_INSERT_TAIL(&wid->pvt.mouseActions, at, ties);
 
-	if (AG_FindEventHandler(wid, "mouse-button-down") == NULL)
+	AG_ObjectLock(wid);
+	TAILQ_INSERT_TAIL(&wid->pvt.mouseActions, at, ties);
+	if (AG_FindEventHandler(wid, "mouse-button-down") == NULL) {
 		AG_SetEvent(wid, "mouse-button-down", AG_WidgetStdMouseButtonDown, NULL);
+	}
+	AG_ObjectUnlock(wid);
 }
 
 void
 AG_ActionOnButton(void *obj, int button, const char *action)
 {
-	AG_OBJECT_ISA(obj, "AG_Widget:*");
 	AG_ActionOnButtonDown(obj, button, action);
 }
 
@@ -569,16 +597,20 @@ AG_ActionOnButtonUp(void *obj, int button, const char *action)
 {
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
 	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_BUTTONUP;
 	Strlcpy(at->action, action, sizeof(at->action));
 	at->data.button = (AG_MouseButton)button;
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
+
+	AG_ObjectLock(wid);
 	TAILQ_INSERT_TAIL(&wid->pvt.mouseActions, at, ties);
-	
-	if (AG_FindEventHandler(wid, "mouse-button-up") == NULL)
+	if (AG_FindEventHandler(wid, "mouse-button-up") == NULL) {
 		AG_SetEvent(wid, "mouse-button-up", AG_WidgetStdMouseButtonUp, NULL);
+	}
+	AG_ObjectUnlock(wid);
 }
 
 /* Tie an action to a key-down event. */
@@ -588,16 +620,20 @@ AG_ActionOnKeyDown(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
 	
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	
 	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_KEYDOWN;
 	Strlcpy(at->action, action, sizeof(at->action));
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
 
-	if (AG_FindEventHandler(wid, "key-down") == NULL)
+	AG_ObjectLock(wid);
+	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
+	if (AG_FindEventHandler(wid, "key-down") == NULL) {
 		AG_SetEvent(wid, "key-down", AG_WidgetStdKeyDown, NULL);
+	}
+	AG_ObjectUnlock(wid);
 }
 
 /* Tie an action to a key-up event. */
@@ -607,16 +643,20 @@ AG_ActionOnKeyUp(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
 	
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	
 	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_KEYUP;
 	Strlcpy(at->action, action, sizeof(at->action));
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
+
+	AG_ObjectLock(wid);
 	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
-	
-	if (AG_FindEventHandler(wid, "key-up") == NULL)
+	if (AG_FindEventHandler(wid, "key-up") == NULL) {
 		AG_SetEvent(wid, "key-up", AG_WidgetStdKeyUp, NULL);
+	}
+	AG_ObjectUnlock(wid);
 }
 
 #ifdef AG_TIMERS
@@ -632,7 +672,7 @@ ActionKeyRepeatTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	    a == NULL) {
 		return (0);
 	}
-	(void)AG_ExecAction(wid, a);
+	AG_ExecAction(wid, a);
 	return (agKbdRepeat);
 }
 #endif /* AG_TIMERS */
@@ -645,26 +685,28 @@ AG_ActionOnKey(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
 	
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	
 	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_KEYREPEAT;
 	Strlcpy(at->action, action, sizeof(at->action));
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
-	AG_InitTimer(&at->data.key.toRepeat, "actionKeyRepeat-", 0);
+	AG_InitTimer(&at->data.key.toRepeat, "actKey-", 0);
 # ifdef AG_DEBUG
-	Strlcat(at->data.key.toRepeat.name, action,
-	    sizeof(at->data.key.toRepeat.name));
+	Strlcat(at->data.key.toRepeat.name, action, sizeof(at->data.key.toRepeat.name));
 # endif
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	AG_ObjectLock(wid);
 	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
-	
 	if (AG_FindEventHandler(wid, "key-up") == NULL &&
 	    AG_FindEventHandler(wid, "key-down") == NULL) {
 		AG_SetEvent(wid, "key-up", AG_WidgetStdKeyUp, NULL);
 		AG_SetEvent(wid, "key-down", AG_WidgetStdKeyDown, NULL);
 	}
+	AG_ObjectUnlock(wid);
 #else /* AG_TIMERS */
 
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ActionOnKeyDown(obj, sym, mod, action);
 
 #endif /* AG_TIMERS */
@@ -676,12 +718,14 @@ AG_ActionFn(void *obj, const char *name, AG_EventFn fn, const char *fnArgs,...)
 {
 	AG_Widget *wid = obj;
 	AG_Action *a;
-
+	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	AG_ObjectLock(wid);
+
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_FN;
 	a->widget = wid;
+
+	AG_ObjectLock(wid);
 	a->fn = AG_SetEvent(wid, NULL, fn, NULL);
 	if (fnArgs) {
 		va_list ap;
@@ -703,13 +747,15 @@ AG_ActionSetInt(void *obj, const char *name, int *p, int val)
 	AG_Action *a;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	AG_ObjectLock(wid);
+
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_SET_INT;
 	a->widget = wid;
 	a->fn = NULL;
 	a->p = (void *)p;
 	a->val = val;
+
+	AG_ObjectLock(wid);
 	AG_TblInsertPointer(&wid->pvt.actions, name, a);
 	AG_ObjectUnlock(wid);
 	return (a);
@@ -723,12 +769,14 @@ AG_ActionToggleInt(void *obj, const char *name, int *p)
 	AG_Action *a;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	AG_ObjectLock(wid);
+
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_TOGGLE_INT;
 	a->widget = wid;
 	a->fn = NULL;
 	a->p = (void *)p;
+
+	AG_ObjectLock(wid);
 	AG_TblInsertPointer(&wid->pvt.actions, name, a);
 	AG_ObjectUnlock(wid);
 	return (a);
@@ -742,7 +790,7 @@ AG_ActionSetFlag(void *obj, const char *name, Uint *p, Uint bitmask, int val)
 	AG_Action *a;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	AG_ObjectLock(wid);
+
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_SET_INT;
 	a->widget = wid;
@@ -750,6 +798,8 @@ AG_ActionSetFlag(void *obj, const char *name, Uint *p, Uint bitmask, int val)
 	a->p = (void *)p;
 	a->bitmask = bitmask;
 	a->val = val;
+
+	AG_ObjectLock(wid);
 	AG_TblInsertPointer(&wid->pvt.actions, name, a);
 	AG_ObjectUnlock(wid);
 	return (a);
@@ -763,13 +813,15 @@ AG_ActionToggleFlag(void *obj, const char *name, Uint *p, Uint bitmask)
 	AG_Action *a;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	AG_ObjectLock(wid);
+
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_TOGGLE_FLAG;
 	a->widget = wid;
 	a->fn = NULL;
 	a->p = (void *)p;
 	a->bitmask = bitmask;
+
+	AG_ObjectLock(wid);
 	AG_TblInsertPointer(&wid->pvt.actions, name, a);
 	AG_ObjectUnlock(wid);
 	return (a);
@@ -783,7 +835,7 @@ AG_ExecAction(void *obj, AG_Action *a)
 
 	switch (a->type) {
 	case AG_ACTION_FN:
-		if (a->fn != NULL) {
+		if (a->fn) {
 			a->fn->fn(a->fn);
 			return (1);
 		}
@@ -828,7 +880,7 @@ AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
 #ifdef AG_DEBUG
 	if (et != AG_ACTION_ON_BUTTONDOWN &&
 	    et != AG_ACTION_ON_BUTTONUP)
-		AG_FatalError("Invalid type arg to AG_ExecMouseAction()");
+		AG_FatalError("Invalid type argument");
 #endif
 	TAILQ_FOREACH(at, &wid->pvt.mouseActions, ties) {
 		if (at->type == et &&
@@ -843,9 +895,8 @@ AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
 	    a == NULL) {
 		return (0);
 	}
-	if (a->fn != NULL) {
-		AG_PostEventByPtr(NULL, wid, a->fn, "%i,%i,%i", button,
-		    xCurs, yCurs);
+	if (a->fn) {
+		AG_PostEventByPtr(wid, a->fn, "%i,%i,%i", button, xCurs,yCurs);
 		return (1);
 	}
 	return (0);
@@ -864,7 +915,7 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 #ifdef AG_DEBUG
 	if (et != AG_ACTION_ON_KEYDOWN &&
 	    et != AG_ACTION_ON_KEYUP)
-		AG_FatalError("AG_ExecKeyAction() type");
+		AG_FatalError("Invalid type argument");
 #endif
 	TAILQ_FOREACH(at, &wid->pvt.keyActions, ties) {
 #ifdef AG_TIMERS
@@ -925,7 +976,7 @@ WidgetFindPath(const AG_Object *_Nonnull parent, const char *_Nonnull name)
 			}
 			if ((s = strchr(name, '/')) != NULL) {
 				rv = WidgetFindPath(AGOBJECT(win), &s[1]);
-				if (rv != NULL) {
+				if (rv) {
 					return (rv);
 				} else {
 					return (NULL);
@@ -941,7 +992,7 @@ WidgetFindPath(const AG_Object *_Nonnull parent, const char *_Nonnull name)
 			}
 			if ((s = strchr(name, '/')) != NULL) {
 				rv = WidgetFindPath(chld, &s[1]);
-				if (rv != NULL) {
+				if (rv) {
 					return (rv);
 				} else {
 					return (NULL);
@@ -1002,9 +1053,10 @@ AG_WidgetEnable(void *obj)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+	/* TODO make the "disabled" flag a (locklessly settable) int. */
 	if (wid->flags & AG_WIDGET_DISABLED) {
 		wid->flags &= ~(AG_WIDGET_DISABLED);
-		AG_PostEvent(NULL, wid, "widget-enabled", NULL);
+		AG_PostEvent(wid, "widget-enabled", NULL);
 		AG_Redraw(wid);
 	}
 	AG_ObjectUnlock(wid);
@@ -1018,9 +1070,10 @@ AG_WidgetDisable(void *obj)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+	/* TODO make the "disabled" flag a (locklessly settable) int. */
 	if (!(wid->flags & AG_WIDGET_DISABLED)) {
 		wid->flags |= AG_WIDGET_DISABLED;
-		AG_PostEvent(NULL, wid, "widget-disabled", NULL);
+		AG_PostEvent(wid, "widget-disabled", NULL);
 		AG_Redraw(wid);
 	}
 	AG_ObjectUnlock(wid);
@@ -1034,7 +1087,7 @@ AG_WidgetForwardFocus(void *obj, void *objFwd)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
-	if (objFwd != NULL) {
+	if (objFwd) {
 		AG_OBJECT_ISA(objFwd, "AG_Widget:*");
 		wid->flags |= AG_WIDGET_FOCUSABLE;
 		wid->focusFwd = WIDGET(objFwd);
@@ -1095,11 +1148,11 @@ Destroy(void *_Nonnull obj)
 	 * any associated resources.
 	 */
 	for (i = 0; i < wid->nSurfaces; i++) {
-		AG_Surface *su;
+		AG_Surface *S;
 
-		if ((su = wid->surfaces[i]) != NULL && !WSURFACE_NODUP(wid,i)) {
-			su->flags &= ~(AG_SURFACE_MAPPED);
-			AG_SurfaceFree(su);
+		if ((S = wid->surfaces[i]) && !WSURFACE_NODUP(wid,i)) {
+			S->flags &= ~(AG_SURFACE_MAPPED);
+			AG_SurfaceFree(S);
 		}
 	}
 	Free(wid->surfaces);
@@ -1114,25 +1167,28 @@ Destroy(void *_Nonnull obj)
  * Rely on GL transformations instead of coordinates.
  */
 void
-AG_WidgetBlitGL(void *obj, AG_Surface *su, float w, float h)
+AG_WidgetBlitGL(void *obj, AG_Surface *S, float w, float h)
 {
 	AG_Widget *wid = obj;
+
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	wid->drvOps->blitSurfaceGL(wid->drv, wid, su, w, h);
+	wid->drvOps->blitSurfaceGL(wid->drv, wid, S, w,h);
 }
 void
 AG_WidgetBlitSurfaceGL(void *obj, int name, float w, float h)
 {
 	AG_Widget *wid = obj;
+
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	wid->drvOps->blitSurfaceFromGL(wid->drv, wid, name, w, h);
+	wid->drvOps->blitSurfaceFromGL(wid->drv, wid, name, w,h);
 }
 void
 AG_WidgetBlitSurfaceFlippedGL(void *obj, int name, float w, float h)
 {
 	AG_Widget *wid = obj;
+
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	wid->drvOps->blitSurfaceFlippedGL(wid->drv, wid, name, w, h);
+	wid->drvOps->blitSurfaceFlippedGL(wid->drv, wid, name, w,h);
 }
 
 /*
@@ -1171,54 +1227,21 @@ AG_WidgetRegenResourcesGL(void *obj)
 }
 #endif /* HAVE_OPENGL */
 
-/* Acquire widget focus */
-static __inline__ void
-FocusWidget(AG_Widget *_Nonnull wid)
-{
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
-
-	wid->flags |= AG_WIDGET_FOCUSED;
-	if (wid->window != NULL) {
-		AG_OBJECT_ISA(wid->window, "AG_Widget:AG_Window:*");
-		AG_PostEvent(wid->window, wid, "widget-gainfocus", NULL);
-		wid->window->nFocused++;
-		wid->window->dirty = 1;
-	} else {
-		Verbose("%s: Gained focus, but no parent window\n",
-		    OBJECT(wid)->name);
-	}
-}
-
-/* Give up widget focus */
-static __inline__ void
-UnfocusWidget(AG_Widget *_Nonnull wid)
-{
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
-
-	wid->flags &= ~(AG_WIDGET_FOCUSED);
-	if (wid->window != NULL) {
-		AG_OBJECT_ISA(wid->window, "AG_Widget:AG_Window:*");
-		AG_PostEvent(wid->window, wid, "widget-lostfocus", NULL);
-		wid->window->nFocused--;
-		wid->window->dirty = 1;
-	}
-}
-
 /* Remove focus from a widget and its children. */
 void
 AG_WidgetUnfocus(void *p)
 {
-	AG_Widget *wid = p, *cwid;
+	AG_Widget *wid = p, *cwid, *focusFwd;
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
-	if (wid->focusFwd != NULL) {
-		AG_OBJECT_ISA(wid->focusFwd, "AG_Widget:*");
-		AG_ObjectLock(wid->focusFwd);
-		if (wid->focusFwd->flags & AG_WIDGET_FOCUSED) {
-			UnfocusWidget(wid->focusFwd);
+	if ((focusFwd = wid->focusFwd) != NULL) {
+		AG_OBJECT_ISA(focusFwd, "AG_Widget:*");
+		AG_ObjectLock(focusFwd);
+		if (focusFwd->flags & AG_WIDGET_FOCUSED) {
+			UnfocusWidget(focusFwd);
 		}
-		AG_ObjectUnlock(wid->focusFwd);
+		AG_ObjectUnlock(focusFwd);
 	}
 	if (wid->flags & AG_WIDGET_FOCUSED) {
 		UnfocusWidget(wid);
@@ -1229,11 +1252,27 @@ AG_WidgetUnfocus(void *p)
 	AG_ObjectUnlock(wid);
 }
 
+static void
+UnfocusWidget(AG_Widget *_Nonnull wid)
+{
+	AG_Window *win;
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+
+	wid->flags &= ~(AG_WIDGET_FOCUSED);
+	if ((win = wid->window)) {
+		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+		AG_PostEvent(wid, "widget-lostfocus", NULL);
+		win->nFocused--;
+		win->dirty = 1;
+	}
+}
+
 /* Move the focus over a widget (and its parents). */
 int
 AG_WidgetFocus(void *obj)
 {
-	AG_Widget *wid = obj, *wParent = wid;
+	AG_Widget *wid = obj, *wParent = wid, *focusFwd;
 	AG_Window *win;
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
@@ -1247,19 +1286,19 @@ AG_WidgetFocus(void *obj)
 		goto out;
 
 	if (!(wid->flags & AG_WIDGET_FOCUSABLE)) {
-		if (wid->focusFwd != NULL &&
-		    !(wid->focusFwd->flags & AG_WIDGET_FOCUSED)) {
-			AG_OBJECT_ISA(wid->focusFwd, "AG_Widget:*");
-			AG_ObjectLock(wid->focusFwd);
-			FocusWidget(wid->focusFwd);
-			AG_ObjectUnlock(wid->focusFwd);
+		if ((focusFwd = wid->focusFwd) &&
+		   !(focusFwd->flags & AG_WIDGET_FOCUSED)) {
+			AG_OBJECT_ISA(focusFwd, "AG_Widget:*");
+			AG_ObjectLock(focusFwd);
+			FocusWidget(focusFwd);
+			AG_ObjectUnlock(focusFwd);
 			goto out;
 		}
 		goto fail;
 	}
 
 	/* Remove any existing focus. XXX inefficient */
-	if (win != NULL && win->nFocused > 0)
+	if (win && win->nFocused > 0)
 		AG_WidgetUnfocus(win);
 
 	/*
@@ -1273,9 +1312,9 @@ AG_WidgetFocus(void *obj)
 		}
 		AG_ObjectLock(wParent);
 		if ((wParent->flags & AG_WIDGET_FOCUSED) == 0) {
-			if (wParent->focusFwd != NULL &&
-			    !(wParent->focusFwd->flags & AG_WIDGET_FOCUSED)) {
-				FocusWidget(wParent->focusFwd);
+			if ((focusFwd = wParent->focusFwd) &&
+			    !(focusFwd->flags & AG_WIDGET_FOCUSED)) {
+				FocusWidget(focusFwd);
 			}
 			FocusWidget(wParent);
 		}
@@ -1291,6 +1330,26 @@ fail:
 	return (0);
 }
 
+/* Acquire widget focus */
+static void
+FocusWidget(AG_Widget *_Nonnull wid)
+{
+	AG_Window *win;
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+
+	wid->flags |= AG_WIDGET_FOCUSED;
+	if ((win = wid->window) != NULL) {
+		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+		AG_PostEvent(wid, "widget-gainfocus", NULL);
+		win->nFocused++;
+		win->dirty = 1;
+	} else {
+		Verbose("%s: Gained focus, but no parent window\n",
+		    OBJECT(wid)->name);
+	}
+}
+
 #ifdef HAVE_OPENGL
 
 static void
@@ -1300,7 +1359,7 @@ DrawPrologueGL_Reshape(AG_Widget *_Nonnull wid)
 	glMatrixMode(GL_MODELVIEW);  glPushMatrix();
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	AG_PostEvent(NULL, wid, "widget-reshape", NULL);
+	AG_PostEvent(wid, "widget-reshape", NULL);
 	wid->flags &= ~(AG_WIDGET_GL_RESHAPE);
 
 	if (wid->gl == NULL) {
@@ -1319,7 +1378,7 @@ DrawPrologueGL(AG_Widget *_Nonnull wid)
 	Uint hView;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	AG_PostEvent(NULL, wid, "widget-underlay", NULL);
+	AG_PostEvent(wid, "widget-underlay", NULL);
 
 	glPushAttrib(GL_TRANSFORM_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
 
@@ -1336,7 +1395,7 @@ DrawPrologueGL(AG_Widget *_Nonnull wid)
 	glLoadIdentity();
 
 #ifdef AG_DEBUG
-	if (wid->gl == NULL) { AG_FatalError("wid->gl == NULL"); }
+	if (wid->gl == NULL) { AG_FatalError("!wid->gl"); }
 #endif
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -1362,7 +1421,7 @@ DrawEpilogueGL(AG_Widget *_Nonnull wid)
 	glPopAttrib(); /* GL_TRANSFORM_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT */
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	AG_PostEvent(NULL, wid, "widget-overlay", NULL);
+	AG_PostEvent(wid, "widget-overlay", NULL);
 }
 #endif /* HAVE_OPENGL */
 
@@ -1374,37 +1433,39 @@ void
 AG_WidgetDraw(void *p)
 {
 	AG_Widget *wid = p;
+	int flags;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+	flags = wid->flags;
 
 	if (!(wid->flags & AG_WIDGET_VISIBLE) ||
 	     (wid->flags & AG_WIDGET_UNDERSIZE) ||
 	     WIDGET_OPS(wid)->draw == NULL)
 		goto out;
 
-	if (wid->flags & AG_WIDGET_DISABLED) {       wid->state = AG_DISABLED_STATE; }
-	else if (wid->flags & AG_WIDGET_MOUSEOVER) { wid->state = AG_HOVER_STATE; }
-	else if (wid->flags & AG_WIDGET_FOCUSED) {   wid->state = AG_FOCUSED_STATE; }
-	else {                                       wid->state = AG_DEFAULT_STATE; }
+	if (flags & AG_WIDGET_DISABLED) {       wid->state = AG_DISABLED_STATE; }
+	else if (flags & AG_WIDGET_MOUSEOVER) { wid->state = AG_HOVER_STATE; }
+	else if (flags & AG_WIDGET_FOCUSED) {   wid->state = AG_FOCUSED_STATE; }
+	else {                                  wid->state = AG_DEFAULT_STATE; }
 
-	if (wid->flags & AG_WIDGET_USE_TEXT) {
+	if (flags & AG_WIDGET_USE_TEXT) {
 		AG_PushTextState();
 		AG_TextFont(wid->font);
 		AG_TextColor(&wid->pal.c[wid->state][AG_TEXT_COLOR]);
 	}
 #ifdef HAVE_OPENGL
-	if (wid->flags & AG_WIDGET_USE_OPENGL)
+	if (flags & AG_WIDGET_USE_OPENGL)
 		DrawPrologueGL(wid);
 #endif
 
 	WIDGET_OPS(wid)->draw(wid);
 	
 #ifdef HAVE_OPENGL
-	if (wid->flags & AG_WIDGET_USE_OPENGL)
+	if (flags & AG_WIDGET_USE_OPENGL)
 		DrawEpilogueGL(wid);
 #endif
-	if (wid->flags & AG_WIDGET_USE_TEXT)
+	if (flags & AG_WIDGET_USE_TEXT)
 		AG_PopTextState();
 out:
 	AG_ObjectUnlock(wid);
@@ -1427,20 +1488,22 @@ void
 AG_WidgetSizeReq(void *obj, AG_SizeReq *r)
 {
 	AG_Widget *wid = obj;
+	int useText;
 
 	r->w = 0;
 	r->h = 0;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
-	if (wid->flags & AG_WIDGET_USE_TEXT) {
+	useText = (wid->flags & AG_WIDGET_USE_TEXT);
+	if (useText) {
 		AG_PushTextState();
 		AG_TextFont(wid->font);
 	}
 	if (WIDGET_OPS(wid)->size_request != NULL) {
 		WIDGET_OPS(wid)->size_request(wid, r);
 	}
-	if (wid->flags & AG_WIDGET_USE_TEXT) {
+	if (useText) {
 		AG_PopTextState();
 	}
 	AG_ObjectUnlock(wid);
@@ -1450,11 +1513,12 @@ void
 AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 {
 	AG_Widget *wid = obj;
+	int useText;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
-
-	if (wid->flags & AG_WIDGET_USE_TEXT) {
+	useText = (wid->flags & AG_WIDGET_USE_TEXT);
+	if (useText) {
 		AG_PushTextState();
 		AG_TextFont(wid->font);
 	}
@@ -1476,7 +1540,7 @@ AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 			wid->flags &= ~(AG_WIDGET_UNDERSIZE);
 		}
 	}
-	if (wid->flags & AG_WIDGET_USE_TEXT) {
+	if (useText) {
 		AG_PopTextState();
 	}
 #ifdef HAVE_OPENGL
@@ -1561,7 +1625,7 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 	AG_ObjectLock(wid);
 	wid->flags &= ~(AG_WIDGET_UPDATE_WINDOW);
 
-	if (wid->drv != NULL && AGDRIVER_MULTIPLE(wid->drv) &&
+	if (wid->drv && AGDRIVER_MULTIPLE(wid->drv) &&
 	    AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
 		/* Multiple-window drivers use window coordinate systems */
 		x = 0;
@@ -1584,7 +1648,7 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 	wid->rSens.y2 = y + wid->h;
 
 	if (AG_RectCompare2(&wid->rView, &rPrev) != 0) {
-		AG_PostEvent(NULL, wid, "widget-moved", NULL);
+		AG_PostEvent(wid, "widget-moved", NULL);
 #ifdef HAVE_OPENGL
 		wid->flags |= AG_WIDGET_GL_RESHAPE;
 #endif
@@ -1640,8 +1704,8 @@ AG_WidgetShow(void *obj)
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	wid->flags &= ~(AG_WIDGET_HIDE);
-	AG_PostEvent(NULL, wid, "widget-shown", NULL);
-	if (wid->window != NULL) {
+	AG_PostEvent(wid, "widget-shown", NULL);
+	if (wid->window) {
 		AG_WindowUpdate(wid->window);
 	}
 	AG_ObjectUnlock(wid);
@@ -1656,8 +1720,8 @@ AG_WidgetHide(void *obj)
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 	wid->flags |= AG_WIDGET_HIDE;
-	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
-	if (wid->window != NULL) {
+	AG_PostEvent(wid, "widget-hidden", NULL);
+	if (wid->window) {
 		AG_WindowUpdate(wid->window);
 	}
 	AG_ObjectUnlock(wid);
@@ -1677,7 +1741,7 @@ AG_WidgetShowAll(void *p)
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		AG_WidgetShowAll(chld);
 
-	AG_PostEvent(NULL, wid, "widget-shown", NULL);
+	AG_PostEvent(wid, "widget-shown", NULL);
 
 	AG_ObjectUnlock(wid);
 	AG_UnlockVFS(wid);
@@ -1697,7 +1761,7 @@ AG_WidgetHideAll(void *p)
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		AG_WidgetHideAll(chld);
 
-	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
+	AG_PostEvent(wid, "widget-hidden", NULL);
 	
 	AG_ObjectUnlock(wid);
 	AG_UnlockVFS(wid);
@@ -1732,7 +1796,7 @@ AG_WidgetFindPoint(const char *_Nonnull type, int x, int y)
 	AG_LockVFS(&agDrivers);
 	OBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 		AG_FOREACH_WINDOW_REVERSE(win, drv) {
-			if ((p = FindAtPoint(WIDGET(win), type, x, y)) != NULL) {
+			if ((p = FindAtPoint(WIDGET(win), type, x,y)) != NULL) {
 				AG_UnlockVFS(&agDrivers);
 				return (p);
 			}
@@ -1814,7 +1878,7 @@ AG_Surface *
 AG_WidgetSurface(void *obj)
 {
 	AG_Widget *wid = obj;
-	AG_Surface *su;
+	AG_Surface *S;
 	int rv;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
@@ -1823,24 +1887,24 @@ AG_WidgetSurface(void *obj)
 		AG_SetError("renderToSurface not supported by driver");
 		rv = -1;
 	} else {
-		rv = wid->drvOps->renderToSurface(wid->drv, wid, &su);
+		rv = wid->drvOps->renderToSurface(wid->drv, wid, &S);
 	}
 	AG_UnlockVFS(wid);
-	return (rv == 0) ? su : NULL;
+	return (rv == 0) ? S : NULL;
 }
 
 /*
- * Attach an AG_Surface(3) to a widget, such that:
+ * Attach a surface to a Widget and return an integer surface handle.
  *
- *   1) It is freed automatically when the widget is destroyed.
- *   2) A hardware texture is generated automatically for it
- *      (where supported by the graphics backend).
+ * The returned handle is unique to the Widget, and is also an index into its
+ * surfaces[] and surfaceFlags[]. If textures are supported, it is also an
+ * index into textures[] and texcoords[].
  *
- * Returned handle is unique to the widget (and is index into surfaces[],
- * surfaceFlags[], textures[] and texcoords[]).
+ * The surface will be freed automatically when the widget is destroyed
+ * (unless the NODUP bit is set in surfaceFlags).
  */
 int
-AG_WidgetMapSurface(void *obj, AG_Surface *su)
+AG_WidgetMapSurface(void *obj, AG_Surface *S)
 {
 	AG_Widget *wid = obj;
 	int i, n, s = -1;
@@ -1863,17 +1927,21 @@ AG_WidgetMapSurface(void *obj, AG_Surface *su)
 		wid->texcoords = Realloc(wid->texcoords, n*sizeof(AG_TexCoord));
 		s = wid->nSurfaces++;
 	}
-	wid->surfaces[s] = su;
+	wid->surfaces[s] = S;
 	wid->surfaceFlags[s] = 0;
 	wid->textures[s] = 0;
 
-	if (su != NULL) {
-		su->flags |= AG_SURFACE_MAPPED;
+	if (S) {
+		S->flags |= AG_SURFACE_MAPPED;
 	}
 	AG_ObjectUnlock(wid);
 	return (s);
 }
 
+/*
+ * Request update of any hardware copy of a given mapped surface.
+ * If hardware textures are not used, this is a no-op.
+ */
 void
 AG_WidgetUpdateSurface(void *obj, int name)
 {
@@ -1883,12 +1951,16 @@ AG_WidgetUpdateSurface(void *obj, int name)
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 # ifdef AG_DEBUG
 	if (name < 0 || name >= wid->nSurfaces)
-		AG_FatalError("Bad surface");
+		AG_FatalError("No such surface");
 # endif
 	wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_REGEN;
 #endif
 }
 
+/*
+ * Delete and free all resources associated with a mapped surface.
+ * If a hardware texture was created, it is deleted asynchronously.
+ */
 void
 AG_WidgetUnmapSurface(void *obj, int name)
 {
@@ -1896,6 +1968,13 @@ AG_WidgetUnmapSurface(void *obj, int name)
 	AG_WidgetReplaceSurface(obj, name, NULL);
 }
 
+/*
+ * Perform an image transfer from a mapped surface (by name) to specified
+ * target coordinates x,y (relative to the widget). If a texture unit is
+ * available, this is done entirely in hardware.
+ *
+ * This must be called from rendering context (the Widget draw() operation).
+ */
 void
 AG_WidgetBlitSurface(void *obj, int name, int x, int y)
 {
@@ -1904,29 +1983,29 @@ AG_WidgetBlitSurface(void *obj, int name, int x, int y)
 }
 
 /*
- * Replace the contents of a mapped surface. Passing su => NULL is equivalent
+ * Replace the contents of a mapped surface. Passing S => NULL is equivalent
  * to calling AG_WidgetUnmapSurface().
  */
 void
-AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
+AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *S)
 {
 	AG_Widget *wid = obj;
-	AG_Surface *suPrev;
+	AG_Surface *Sprev;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 #ifdef AG_DEBUG
 	if (s < 0 || s >= wid->nSurfaces)
-		AG_FatalError("Invalid surface handle");
+		AG_FatalError("No such surface");
 #endif
-	if ((suPrev = wid->surfaces[s]) != NULL && !WSURFACE_NODUP(wid,s)) {
-		suPrev->flags &= ~(AG_SURFACE_MAPPED);
-		AG_SurfaceFree(suPrev);
+	if ((Sprev = wid->surfaces[s]) && !WSURFACE_NODUP(wid,s)) {
+		Sprev->flags &= ~(AG_SURFACE_MAPPED);
+		AG_SurfaceFree(Sprev);
 	}
-	if (su != NULL) {
-		su->flags |= AG_SURFACE_MAPPED;
+	if (S) {
+		S->flags |= AG_SURFACE_MAPPED;
 	}
-	wid->surfaces[s] = su;
+	wid->surfaces[s] = S;
 	wid->surfaceFlags[s] &= ~(AG_WIDGET_SURFACE_NODUP);
 
 	/*
@@ -2016,9 +2095,9 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 
 	/* Select the effective style sheet for this widget. */
 	for (po = OBJECT(wid);
-	     po->parent != NULL && AG_OfClass(po->parent, "AG_Widget:*");
+	     po->parent && AG_OfClass(po->parent, "AG_Widget:*");
 	     po = po->parent) {
-		if (WIDGET(po)->css != NULL) {
+		if (WIDGET(po)->css) {
 			css = WIDGET(po)->css;
 			break;
 		}
@@ -2114,7 +2193,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 			wid->font = fontNew;
 			AG_PushTextState();
 			AG_TextFont(wid->font);
-			AG_PostEvent(NULL, wid, "font-changed", NULL);
+			AG_PostEvent(wid, "font-changed", NULL);
 			AG_PopTextState();
 			AG_Redraw(wid);
 		}
@@ -2170,7 +2249,7 @@ AG_WidgetFreeStyle(void *obj)
 	AG_Widget *chld;
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	if (wid->font != NULL) {
+	if (wid->font) {
 		AG_OBJECT_ISA(wid->font, "AG_Font:*");
 		AG_UnusedFont(wid->font);
 		wid->font = NULL;
@@ -2243,7 +2322,7 @@ AG_SetStyleF(void *obj, const char *which, const char *fmt, ...)
 	free(val);
 }
 
-/* Set the value of a CSS parameter to the given string. */
+/* Set the value of a CSS parameter to the given string (or NULL = unset it). */
 void
 AG_SetStyle(void *obj, const char *which, const char *value)
 {
@@ -2251,7 +2330,7 @@ AG_SetStyle(void *obj, const char *which, const char *value)
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
-	if (value != NULL) {
+	if (value) {
 		AG_SetString(wid, which, value);
 	} else {
 		AG_Unset(wid, which);				/* inherit */

@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -297,7 +299,7 @@ SeekToPxCoords(AG_Scrollbar *_Nonnull sb, int x)
 		break;
 	}
 
-	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
+	AG_PostEvent(sb, "scrollbar-changed", NULL);
 
 	AG_UnlockVariable(bVis);
 	AG_UnlockVariable(bMax);
@@ -429,7 +431,7 @@ Increment(AG_Scrollbar *_Nonnull sb, int direction)
 	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
 
-	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
+	AG_PostEvent(sb, "scrollbar-changed", NULL);
 	AG_Redraw(sb);
 	return (rv);
 }
@@ -473,12 +475,12 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	switch (sb->curBtn) {
 	case AG_SCROLLBAR_BUTTON_DEC:
 		if (sb->buttonDecFn) {
-			AG_PostEventByPtr(NULL, sb, sb->buttonDecFn, "%i", 0);
+			AG_PostEventByPtr(sb, sb->buttonDecFn, "%i", 0);
 		}
 		break;
 	case AG_SCROLLBAR_BUTTON_INC:
 		if (sb->buttonIncFn)
-			AG_PostEventByPtr(NULL, sb, sb->buttonIncFn, "%i", 0);
+			AG_PostEventByPtr(sb, sb->buttonIncFn, "%i", 0);
 		break;
 	default:
 		break;
@@ -486,7 +488,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 
 	sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
 	sb->xOffs = 0;
-	AG_PostEvent(NULL, sb, "scrollbar-drag-end", NULL);
+	AG_PostEvent(sb, "scrollbar-drag-end", NULL);
 	AG_Redraw(sb);
 }
 
@@ -545,7 +547,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	if (x < 0) {						/* Decrement */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_DEC;
 		if (sb->buttonDecFn) {
-			AG_PostEventByPtr(NULL, sb, sb->buttonDecFn, "%i", 1);
+			AG_PostEventByPtr(sb, sb->buttonDecFn, "%i", 1);
 		} else {
 			if (Increment(sb,-1) != 1) {
 				sb->xSeek = -1;
@@ -558,7 +560,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	} else if (x > len - (sbThick << 1)) {			/* Increment */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_INC;
 		if (sb->buttonIncFn) {
-			AG_PostEventByPtr(NULL, sb, sb->buttonIncFn, "%i", 1);
+			AG_PostEventByPtr(sb, sb->buttonIncFn, "%i", 1);
 		} else {
 			if (Increment(sb,+1) != 1) {
 				sb->xSeek = -1;
@@ -609,7 +611,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			}
 		}
 	}
-	AG_PostEvent(NULL, sb, "scrollbar-drag-begin", NULL);
+	AG_PostEvent(sb, "scrollbar-drag-begin", NULL);
 	AG_Redraw(sb);
 }
 
@@ -1118,3 +1120,5 @@ AG_WidgetClass agScrollbarClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

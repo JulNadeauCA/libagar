@@ -68,11 +68,10 @@ MAP_ViewNew(void *parent, MAP *m, Uint flags, struct ag_toolbar *toolbar,
 	mv->map = m;
 	mv->toolbar = toolbar;
 	mv->statusbar = statbar;
-
-	AG_ObjectLock(m);
+/*	AG_ObjectLock(m); */
 	mv->mx = m->origin.x;
 	mv->my = m->origin.y;
-	AG_ObjectUnlock(m);
+/*	AG_ObjectUnlock(m); */
 
 	if (statbar != NULL) {
 		mv->statusbar = statbar;
@@ -965,15 +964,15 @@ MouseMotion(AG_Event *_Nonnull event)
 	MAP *m = mv->map;
 	int x = AG_INT(1);
 	int y = AG_INT(2);
-	int xrel = AG_INT(3);
-	int yrel = AG_INT(4);
-	int state = AG_INT(5);
+	const int xrel = AG_INT(3);
+	const int yrel = AG_INT(4);
+	const int state = AG_INT(5);
 	int xmap, ymap;
 	int rv;
 
 	AG_ObjectLock(m);
 
-	GetNodeCoords(mv, &x, &y);
+	GetNodeCoords(mv, &x,&y);
 	mv->cxrel = x - mv->mouse.x;
 	mv->cyrel = y - mv->mouse.y;
 	xmap = mv->cx * AGMTILESZ(mv) + mv->cxoffs;
@@ -1053,9 +1052,7 @@ out:
 void
 MAP_ViewSetMode(MAP_View *mv, enum map_view_mode mode)
 {
-	AG_ObjectLock(mv);
 	mv->mode = mode;
-	AG_ObjectUnlock(mv);
 }
 
 static void
@@ -1063,16 +1060,16 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	MAP_View *mv = MAP_VIEW_SELF();
 	MAP *m = mv->map;
-	int button = AG_INT(1);
+	MAP_Tool *tool;
+	const int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
-	MAP_Tool *tool;
 	int rv;
 	
 	AG_WidgetFocus(mv);
 	
 	AG_ObjectLock(m);
-	GetNodeCoords(mv, &x, &y);
+	GetNodeCoords(mv, &x,&y);
 	mv->mouse.x = x;
 	mv->mouse.y = y;
 	mv->mouse.xmap = mv->cx*AGMTILESZ(mv) + mv->cxoffs;
@@ -1199,13 +1196,12 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			}
 		}
 		if (mv->dblclicked) {
-			AG_PostEvent(NULL, mv, "mapview-dblclick",
-			    "%i, %i, %i, %i, %i", button, x, y,
-			    mv->cxoffs, mv->cyoffs);
+			AG_PostEvent(mv, "mapview-dblclick", "%i,%i%i,%i%i",
+			    button, x,y, mv->cxoffs, mv->cyoffs);
 			mv->dblclicked = 0;
 		} else {
 			mv->dblclicked++;
-			AG_SchedEvent(NULL, mv, agMouseDblclickDelay,
+			AG_SchedEvent(mv, agMouseDblclickDelay,
 			    "dblclick-expire", NULL);
 		}
 		break;
@@ -1242,13 +1238,13 @@ MouseButtonUp(AG_Event *_Nonnull event)
 {
 	MAP_View *mv = MAP_VIEW_SELF();
 	MAP *m = mv->map;
-	int button = AG_INT(1);
+	MAP_Tool *tool;
+	const int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
-	MAP_Tool *tool;
 	
 	AG_ObjectLock(m);
-	GetNodeCoords(mv, &x, &y);
+	GetNodeCoords(mv, &x,&y);
 
 	mv->flags &= ~(MAP_VIEW_SET_ATTRS);
 	
@@ -1337,9 +1333,9 @@ KeyUp(AG_Event *_Nonnull event)
 {
 	MAP_View *mv = MAP_VIEW_SELF();
 	MAP *m = mv->map;
-	int keysym = AG_INT(1);
-	int keymod = AG_INT(2);
 	MAP_Tool *tool;
+	const int keysym = AG_INT(1);
+	const int keymod = AG_INT(2);
 	
 	AG_ObjectLock(m);
 
@@ -1385,9 +1381,9 @@ KeyDown(AG_Event *_Nonnull event)
 {
 	MAP_View *mv = MAP_VIEW_SELF();
 	MAP *m = mv->map;
-	int keysym = AG_INT(1);
-	int keymod = AG_INT(2);
 	MAP_Tool *tool;
+	const int keysym = AG_INT(1);
+	const int keymod = AG_INT(2);
 	
 	AG_ObjectLock(m);
 
@@ -1510,7 +1506,6 @@ static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	MAP_View *mv = obj;
-	MAP *m = mv->map;
 	AG_SizeAlloc aBar;
 	const AG_Font *font = WIDGET(mv)->font;
 	const int sbLen = font->lineskip;
@@ -1534,9 +1529,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		AG_WidgetSizeAlloc(mv->vbar, &aBar);
 		mv->r.w -= WIDTH(mv->vbar);
 	}
-	AG_ObjectLock(m);
 	MAP_ViewSetScale(mv, AGMZOOM(mv), 0);
-	AG_ObjectUnlock(m);
 	return (0);
 }
 
@@ -1554,14 +1547,12 @@ void
 MAP_ViewSetSelection(MAP_View *mv, int x, int y, int w, int h)
 {
 	AG_ObjectLock(mv);
-
 	mv->msel.set = 0;
 	mv->esel.set = 1;
 	mv->esel.x = x;
 	mv->esel.y = y;
 	mv->esel.w = w;
 	mv->esel.h = h;
-	
 	AG_ObjectUnlock(mv);
 }
 
@@ -1585,10 +1576,8 @@ MAP_ViewGetSelection(MAP_View *mv, int *x, int *y, int *w, int *h)
 void	
 MAP_ViewSizeHint(MAP_View *mv, int w, int h)
 {
-	AG_ObjectLock(mv);
 	mv->prew = w;
 	mv->preh = h;
-	AG_ObjectUnlock(mv);
 }
 
 void
@@ -1619,7 +1608,7 @@ Init(void *_Nonnull obj)
 {
 	MAP_View *mv = obj;
 
-	WIDGET(mv)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_EXPAND;
+	WIDGET(mv)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_EXPAND;
 
 	mv->flags = MAP_VIEW_CENTER;
 	mv->mode = MAP_VIEW_EDITION;

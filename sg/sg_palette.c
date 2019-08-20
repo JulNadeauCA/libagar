@@ -208,7 +208,7 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 static void
 PollPigments(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	SG_Palette *pal = AG_PTR(1);
 	AG_TlistItem *it;
 	SG_Pigment *pig;
@@ -242,7 +242,7 @@ AddPigment(AG_Event *_Nonnull event)
 static void
 PollMixtures(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
+	AG_Tlist *tl = AG_TLIST_SELF();
 	SG_Palette *pal = AG_PTR(1);
 	AG_TlistItem *it;
 	SG_Mixture *mix;

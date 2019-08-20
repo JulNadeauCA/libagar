@@ -470,7 +470,7 @@ CreateTarget(AG_Event *event)
 		cmds.Printf("settings set -- target.run-args %s\n", args);
 
 	Agardb::Run_LLDB(cmds, 0);
-	AG_PostEvent(NULL, win, "window-close", NULL);
+	AG_PostEvent(win, "window-close", NULL);
 }
 
 static void

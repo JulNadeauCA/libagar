@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/checkbox.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -437,7 +439,7 @@ AG_CheckboxSetState(AG_Checkbox *cb, int newState)
 	default:
 		break;
 	}
-	AG_PostEvent(NULL, cb, "checkbox-changed", "%i", newState);
+	AG_PostEvent(cb, "checkbox-changed", "%i", newState);
 	AG_UnlockVariable(V);
 	AG_ObjectUnlock(cb);
 	AG_Redraw(cb);
@@ -458,7 +460,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 		{
 			int old_state = V->data.i;
 			V->data.i = !old_state;
-			AG_PostEvent(NULL, cb, "checkbox-changed", "%i", V->data.i);
+			AG_PostEvent(cb, "checkbox-changed", "%i", V->data.i);
 		}
 		break;
 	case AG_VARIABLE_P_INT:
@@ -466,28 +468,28 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 		{
 			int *state = (int *)p;
 			*state = !(*state);
-			AG_PostEvent(NULL, cb, "checkbox-changed", "%i", *state);
+			AG_PostEvent(cb, "checkbox-changed", "%i", *state);
 		}
 		break;
 	case AG_VARIABLE_P_FLAG:
 		{
 			Uint *state = (Uint *)p;
 			AG_INVFLAGS(*state, V->info.bitmask.u);
-			AG_PostEvent(NULL, cb, "checkbox-changed", "%i", (Uint)*state);
+			AG_PostEvent(cb, "checkbox-changed", "%i", (Uint)*state);
 		}
 		break;
 	case AG_VARIABLE_P_FLAG8:
 		{
 			Uint8 *state = (Uint8 *)p;
 			AG_INVFLAGS(*state, V->info.bitmask.u8);
-			AG_PostEvent(NULL, cb, "checkbox-changed", "%i", (Uint8)*state);
+			AG_PostEvent(cb, "checkbox-changed", "%i", (Uint8)*state);
 		}
 		break;
 	case AG_VARIABLE_P_FLAG16:
 		{
 			Uint16 *state = (Uint16 *)p;
 			AG_INVFLAGS(*state, V->info.bitmask.u16);
-			AG_PostEvent(NULL, cb, "checkbox-changed", "%i", (Uint16)*state);
+			AG_PostEvent(cb, "checkbox-changed", "%i", (Uint16)*state);
 		}
 		break;
 #if AG_MODEL != AG_SMALL
@@ -495,7 +497,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 		{
 			Uint32 *state = (Uint32 *)p;
 			AG_INVFLAGS(*state, V->info.bitmask.u32);
-			AG_PostEvent(NULL, cb, "checkbox-changed", "%i", (Uint32)*state);
+			AG_PostEvent(cb, "checkbox-changed", "%i", (Uint32)*state);
 		}
 		break;
 #endif
@@ -504,7 +506,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 		{
 			Uint8 old_state = V->data.u8;
 			V->data.u8 = !old_state;
-			AG_PostEvent(NULL, cb, "checkbox-changed", "%i", V->data.u8);
+			AG_PostEvent(cb, "checkbox-changed", "%i", V->data.u8);
 		}
 		break;
 	case AG_VARIABLE_P_UINT8:
@@ -512,7 +514,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 		{
 			Uint8 *state = (Uint8 *)p;
 			*state = !(*state);
-			AG_PostEvent(NULL, cb, "checkbox-changed", "%i", (int)*state);
+			AG_PostEvent(cb, "checkbox-changed", "%i", (int)*state);
 		}
 		break;
 	case AG_VARIABLE_UINT16:
@@ -520,7 +522,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 		{
 			Uint16 old_state = V->data.u16;
 			V->data.u16 = !old_state;
-			AG_PostEvent(NULL, cb, "checkbox-changed", "%i", V->data.u16);
+			AG_PostEvent(cb, "checkbox-changed", "%i", V->data.u16);
 		}
 		break;
 	case AG_VARIABLE_P_UINT16:
@@ -528,7 +530,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 		{
 			Uint16 *state = (Uint16 *)p;
 			*state = !(*state);
-			AG_PostEvent(NULL, cb, "checkbox-changed", "%i", (int)*state);
+			AG_PostEvent(cb, "checkbox-changed", "%i", (int)*state);
 		}
 		break;
 #if AG_MODEL != AG_SMALL
@@ -537,7 +539,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 		{
 			Uint32 old_state = V->data.u32;
 			V->data.u32 = !old_state;
-			AG_PostEvent(NULL, cb, "checkbox-changed", "%i", (int)V->data.u32);
+			AG_PostEvent(cb, "checkbox-changed", "%i", (int)V->data.u32);
 		}
 		break;
 	case AG_VARIABLE_P_UINT32:
@@ -545,7 +547,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 		{
 			Uint32 *state = (Uint32 *)p;
 			*state = !(*state);
-			AG_PostEvent(NULL, cb, "checkbox-changed", "%i", (int)*state);
+			AG_PostEvent(cb, "checkbox-changed", "%i", (int)*state);
 		}
 		break;
 #endif /* !AG_SMALL */
@@ -573,3 +575,5 @@ AG_WidgetClass agCheckboxClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

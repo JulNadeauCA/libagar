@@ -114,22 +114,24 @@ AG_DriverMwClass agDriverGLX;
 #define AGDRIVER_IS_GLX(drv) (AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverGLX)
 #endif
 
-/* X Atoms */
-static Atom wmProtocols, wmTakeFocus, wmDeleteWindow,
-    wmMotifWmHints, wmKwmWinDecoration, wmWinHints,
-    wmNetWmState, wmNetWmStateModal, wmNetWmStateSkipTaskbar,
-    wmNetWmStateAbove, wmNetWmStateBelow, wmNetWmWindowType,
-    wmNetWmWindowOpacity;
+#ifdef AG_WM_HINTS
+static Atom wmDeleteWindow, wmNetWmWindowOpacity, wmProtocols, wmTakeFocus,
+            wmMotifWmHints, wmKwmWinDecoration, wmWinHints, wmNetWmState,
+            wmNetWmStateModal, wmNetWmStateSkipTaskbar, wmNetWmStateAbove,
+            wmNetWmStateBelow, wmNetWmWindowType, wmNetWmWindowOpacity;
+#endif
 
 static int  GLX_InitGlobals(void);
 static void GLX_PostResizeCallback(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
 static void GLX_PostMoveCallback(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
 static void GLX_SetTransientFor(AG_Window *, AG_Window *_Nullable);
 
+#ifdef AG_WM_HINTS
 static void SetHints(AG_Window *_Nonnull);
 static void SetMotifWmHints(AG_Window *_Nonnull);
 static void SetKwmWmHints(AG_Window *_Nonnull);
 static void SetGnomeWmHints(AG_Window *_Nonnull);
+#endif
 
 static void
 Init(void *_Nonnull obj)
@@ -735,16 +737,18 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		dev->win = win;
 		break;
 	case ClientMessage:
+#ifdef AG_WM_HINTS
 		if ((xev.xclient.format == 32) &&
 		    (xev.xclient.data.l[0] == wmDeleteWindow) &&
 		    (win = LookupWindowByID(xev.xclient.window))) {
-#ifdef DEBUG_XEVENTS
+# ifdef DEBUG_XEVENTS
 			Debug(win, "ClientMessage(WM_DELETE_WINDOW)\n");
-#endif
+# endif
 			dev->type = AG_DRIVER_CLOSE;
 			dev->win = win;
 			break;
 		}
+#endif /* AG_WM_HINTS */
 		return (0);
 	case MapNotify:
 	case UnmapNotify:
@@ -806,20 +810,20 @@ GLX_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		    dev->data.key.ks, dev->data.key.ucs);
 		break;
 	case AG_DRIVER_MOUSE_ENTER:
-		AG_PostEvent(NULL, win, "window-enter", NULL);
+		AG_PostEvent(win, "window-enter", NULL);
 		break;
 	case AG_DRIVER_MOUSE_LEAVE:
-		AG_PostEvent(NULL, win, "window-leave", NULL);
+		AG_PostEvent(win, "window-leave", NULL);
 		break;
 	case AG_DRIVER_FOCUS_IN:
 		if (agWindowFocused != win) {
 			agWindowFocused = win;
-			AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+			AG_PostEvent(win, "window-gainfocus", NULL);
 		}
 		break;
 	case AG_DRIVER_FOCUS_OUT:
 		if (agWindowFocused == win) {
-			AG_PostEvent(NULL, win, "window-lostfocus", NULL);
+			AG_PostEvent(win, "window-lostfocus", NULL);
 			agWindowFocused = NULL;
 		}
 		break;
@@ -836,7 +840,7 @@ GLX_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		}
 		break;
 	case AG_DRIVER_CLOSE:
-		AG_PostEvent(NULL, win, "window-close", NULL);
+		AG_PostEvent(win, "window-close", NULL);
 		break;
 	case AG_DRIVER_EXPOSE:
 		win->dirty = 1;
@@ -1342,10 +1346,10 @@ GLX_MapWindow(AG_Window *_Nonnull win)
 
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
-	
-	if (!glx->wmHintsSet) {
+#ifdef AG_WM_HINTS
+	if (!glx->wmHintsSet)
 		SetHints(win);		/* Set window manager hints */
-	}
+#endif
 	XMapWindow(agDisplay, glx->w);
 	XIfEvent(agDisplay, &xev, WaitMapNotify, (char *)glx->w);
 
@@ -1387,6 +1391,7 @@ GLX_MapWindow(AG_Window *_Nonnull win)
 	return (0);
 }
 
+#ifdef AG_WM_HINTS
 static void
 SetHints(AG_Window *_Nonnull win)
 {
@@ -1594,6 +1599,7 @@ SetGnomeWmHints(AG_Window *_Nonnull win)
 		    sizeof(GNOMEHints)/sizeof(long));
 	}
 }
+#endif /* AG_WM_HINTS */
 
 static void
 GLX_CloseWindow(AG_Window *_Nonnull win)
@@ -1982,6 +1988,7 @@ GLX_SetTransientFor(AG_Window *_Nonnull win, AG_Window *_Nullable forParent)
 static int
 GLX_SetOpacity(AG_Window *_Nonnull win, float f)
 {
+#ifdef AG_WM_HINTS
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	Ulong opacity = (f > 0.99) ? (Ulong) 0xffffffff : (Ulong)(f*0xffffffff);
 
@@ -1995,6 +2002,10 @@ GLX_SetOpacity(AG_Window *_Nonnull win, float f)
 		AG_SetErrorS("No opacity");
 		return (-1);
 	}
+#else
+	AG_SetErrorS("No opacity (no WM hints)");
+	return (-1;
+#endif
 }
 
 static void
@@ -2114,7 +2125,7 @@ GLX_InitGlobals(void)
 	InitKeymaps();
 	memset(xkbBuf, '\0', sizeof(xkbBuf));
 	memset(&xkbCompStatus, 0, sizeof(xkbCompStatus));
-
+#ifdef AG_WM_HINTS
 	wmProtocols = XInternAtom(agDisplay, "WM_PROTOCOLS", True);
 	wmTakeFocus = XInternAtom(agDisplay, "WM_TAKE_FOCUS", True);
 	wmDeleteWindow = XInternAtom(agDisplay, "WM_DELETE_WINDOW", True);
@@ -2128,7 +2139,7 @@ GLX_InitGlobals(void)
 	wmNetWmStateBelow = XInternAtom(agDisplay, "_NET_WM_STATE_BELOW", True);
 	wmNetWmWindowType = XInternAtom(agDisplay, "_NET_WM_WINDOW_TYPE", True);
 	wmNetWmWindowOpacity = XInternAtom(agDisplay, "_NET_WM_WINDOW_OPACITY", True);
-
+#endif
 	/* Set up event filters for standard AG_EventLoop(). */
 	if ((glxEventSink = AG_AddEventSink(AG_SINK_READ, xfd, 0, GLX_EventSink, "%p", agDisplay)) == NULL ||
 	    (glxEventEpilogue = AG_AddEventEpilogue(GLX_EventEpilogue, "%p", agDisplay)) == NULL) {

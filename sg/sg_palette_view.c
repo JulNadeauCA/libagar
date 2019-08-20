@@ -67,9 +67,9 @@ OnOverlay(AG_Event *_Nonnull event)
 static void
 ViewKeyDown(AG_Event *_Nonnull event)
 {
-//	SG_PaletteView *pv = AG_PTR(1);
-	int keysym = AG_INT(2);
-//	int kmod = AG_INT(3);
+	SG_PaletteView *pv = AG_PTR(1);
+	const int keysym = AG_INT(2);
+	const int kmod = AG_INT(3);
 	
 	switch (keysym) {
 	case AG_KEY_LEFT:
@@ -81,23 +81,23 @@ ViewKeyDown(AG_Event *_Nonnull event)
 	case AG_KEY_DOWN:
 		break;
 	}
-//	pv->lastKeyDown = keysym;
+	pv->lastKeyDown = keysym;
 }
 
 static void
 ViewKeyUp(AG_Event *_Nonnull event)
 {
-//	SG_PaletteView *pv = AG_PTR(1);
-	int keysym = AG_INT(2);
+	SG_PaletteView *pv = AG_PTR(1);
+	const int keysym = AG_INT(2);
 
 	switch (keysym) {
 	case AG_KEY_LEFT:
 	case AG_KEY_RIGHT:
 	case AG_KEY_UP:
 	case AG_KEY_DOWN:
-//		if (keysym == pv->lastKeyDown) {
-//			AG_DelTimeout(pv, &pv->toRot);
-//		}
+		if (keysym == pv->lastKeyDown) {
+			AG_DelTimeout(pv, &pv->toRot);
+		}
 		break;
 	}
 }
@@ -106,18 +106,18 @@ static void
 ViewButtonDown(AG_Event *_Nonnull event)
 {
 	SG_PaletteView *pv = AG_PTR(1);
-	int button = AG_INT(2);
-//	int x = AG_INT(3);
-//	int y = AG_INT(4);
+	const int button = AG_INT(2);
+	const int x = AG_INT(3);
+	const int y = AG_INT(4);
 
 	if (!AG_WidgetIsFocused(pv)) {
 		AG_WidgetFocus(pv);
 	}
 	switch (button) {
 	case AG_MOUSE_LEFT:
-//		if ((AG_GetModState(pv) & AG_KEYMOD_CTRL) == 0) {
-//			SelectByMouse(pv, x,y);
-//		}
+		if ((AG_GetModState(pv) & AG_KEYMOD_CTRL) == 0) {
+			SelectByMouse(pv, x,y);
+		}
 		break;
 	}
 }
@@ -125,8 +125,8 @@ ViewButtonDown(AG_Event *_Nonnull event)
 static void
 ViewButtonUp(AG_Event *_Nonnull event)
 {
-/*	SG_PaletteView *pv = AG_PTR(1); */
-	int button = AG_INT(2);
+	SG_PaletteView *pv = AG_PTR(1);
+	const int button = AG_INT(2);
 
 	switch (button) {
 	case AG_MOUSE_LEFT:
@@ -135,12 +135,12 @@ ViewButtonUp(AG_Event *_Nonnull event)
 		break;
 	}
 }
-#endif
+#endif /* 0 */
 
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	SG_View *sv = AG_SELF();
+	SG_View *sv = SG_VIEW_SELF();
 	SG_PaletteView *pv = AG_SELF();
 
 	SG_ViewTransition(sv, pv->sg, NULL, 0);

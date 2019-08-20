@@ -507,6 +507,8 @@ echo '    --with-sse[=inline]         SSE-optimized routines [check]'
 echo '    --with-sse[234]             SSE2 SSE3 SSE4 routines [check]'
 echo ''
 echo 'Options specific to GUI library:'
+echo '    --enable-widgets            The standard widget library [yes]'
+echo '    --enable-wm-hints           Interface with window managers [yes]'
 echo '    --enable-debug-gui          Expensive GUI debugging [no]'
 echo '    --with-freetype[=PREFIX]    Enable FreeType support [check]'
 echo '    --with-fontconfig[=PREFIX]  Enable Fontconfig support [check]'
@@ -1736,6 +1738,8 @@ echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
 	enable_unicode="no"
 	enable_user="no"
 	enable_verbosity="no"
+	enable_widgets="no"
+	enable_wm_hints="no"
 	enable_au="no"
 	enable_dev="no"
 	enable_map="no"
@@ -5452,6 +5456,28 @@ echo "hdefs[\"AG_VERBOSITY\"] = \"$AG_VERBOSITY\"" >>configure.lua
 else
 echo '#undef AG_VERBOSITY' >$bb_incdir/ag_verbosity.h
 echo 'hdefs["AG_VERBOSITY"] = nil' >>configure.lua
+fi
+if [ "${enable_widgets}" != 'no' ]; then
+AG_WIDGETS="yes"
+bb_o=$bb_incdir/ag_widgets.h
+echo '#ifndef AG_WIDGETS' >$bb_o
+echo "#define AG_WIDGETS \"$AG_WIDGETS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_WIDGETS\"] = \"$AG_WIDGETS\"" >>configure.lua
+else
+echo '#undef AG_WIDGETS' >$bb_incdir/ag_widgets.h
+echo 'hdefs["AG_WIDGETS"] = nil' >>configure.lua
+fi
+if [ "${enable_wm_hints}" != 'no' ]; then
+AG_WM_HINTS="yes"
+bb_o=$bb_incdir/ag_wm_hints.h
+echo '#ifndef AG_WM_HINTS' >$bb_o
+echo "#define AG_WM_HINTS \"$AG_WM_HINTS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_WM_HINTS\"] = \"$AG_WM_HINTS\"" >>configure.lua
+else
+echo '#undef AG_WM_HINTS' >$bb_incdir/ag_wm_hints.h
+echo 'hdefs["AG_WM_HINTS"] = nil' >>configure.lua
 fi
 if [ "${enable_gui}" != 'no' ]
  then

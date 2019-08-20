@@ -56,6 +56,15 @@ typedef struct sg_texture {
 	AG_TAILQ_HEAD_(sg_view_texture) vtex;	/* Active hardware textures */
 } SG_Texture;
 
+#define SGTEXTURE(obj)            ((SG_Texture *)(obj))
+#define SGCTEXTURE(obj)           ((const SG_Texture *)(obj))
+#define SG_TEXTURE_SELF()          SGTEXTURE( AG_OBJECT(0,"SG_Texture:*") )
+#define SG_TEXTURE_PTR(n)          SGTEXTURE( AG_OBJECT((n),"SG_Texture:*") )
+#define SG_TEXTURE_NAMED(n)        SGTEXTURE( AG_OBJECT_NAMED((n),"SG_Texture:*") )
+#define AG_CONST_TEXTURE_SELF()   SGCTEXTURE( AG_CONST_OBJECT(0,"SG_Texture:*") )
+#define AG_CONST_TEXTURE_PTR(n)   SGCTEXTURE( AG_CONST_OBJECT((n),"SG_Texture:*") )
+#define AG_CONST_TEXTURE_NAMED(n) SGCTEXTURE( AG_CONST_OBJECT_NAMED((n),"SG_Texture:*") )
+
 __BEGIN_DECLS
 extern AG_ObjectClass sgTextureClass;
 

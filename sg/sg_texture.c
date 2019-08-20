@@ -195,7 +195,7 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 static void
 SelectColor(AG_Event *_Nonnull event)
 {
-	AG_HSVPal *pal = AG_PTR(1);
+	AG_HSVPal *pal = AG_HSVPAL_PTR(1);
 	void *color = AG_PTR(2);
 	AG_Mutex *lock = AG_PTR(3);
 
@@ -205,8 +205,8 @@ SelectColor(AG_Event *_Nonnull event)
 static void
 PollSurfaces(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	SG_Texture *tex = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	SG_Texture *tex = SG_TEXTURE_PTR(1);
 	AG_TlistItem *it;
 	SG_TextureSurface *tsu;
 	int n = 0;
@@ -352,8 +352,8 @@ SG_TextureDelProgram(SG_Texture *tex, SG_TextureProgram *tp)
 static void
 ImportSurface(AG_Event *_Nonnull event)
 {
-	SG_Texture *tex = AG_PTR(1);
-	char *path = AG_STRING(2);
+	SG_Texture *tex = SG_TEXTURE_PTR(1);
+	const char *path = AG_STRING(2);
 	AG_Surface *s;
 	SG_TextureSurface *tsu;
 
@@ -374,8 +374,8 @@ ImportSurface(AG_Event *_Nonnull event)
 static void
 PreviewTexture(AG_Event *_Nonnull event)
 {
-	AG_Pixmap *px = AG_PTR(1);
-	char *path = AG_STRING(2);
+	AG_Pixmap *px = AG_PIXMAP_PTR(1);
+	const char *path = AG_STRING(2);
 	AG_Surface *suFile, *suScaled = NULL;
 
 	if ((suFile = AG_SurfaceFromFile(path)) == NULL) {
@@ -393,8 +393,8 @@ PreviewTexture(AG_Event *_Nonnull event)
 static void
 ImportSurfaceDlg(AG_Event *_Nonnull event)
 {
+	SG_Texture *tex = SG_TEXTURE_PTR(2);
 	AG_Window *win;
-	SG_Texture *tex = AG_PTR(2);
 	AG_FileDlg *fd;
 	AG_Box *hBox;
 	AG_Pixmap *px;
@@ -425,8 +425,8 @@ ImportSurfaceDlg(AG_Event *_Nonnull event)
 static void
 AttachProgram(AG_Event *_Nonnull event)
 {
-	AG_ObjectSelector *os = AG_PTR(1);
-	SG_Texture *tex = AG_PTR(2);
+	AG_ObjectSelector *os = AG_OBJECTSELECTOR_PTR(1);
+	SG_Texture *tex = SG_TEXTURE_PTR(2);
 	SG_Program *prog = AG_GetPointer(os,"object");
 	SG_TextureProgram *tp;
 
@@ -444,8 +444,8 @@ AttachProgram(AG_Event *_Nonnull event)
 static void
 PollPrograms(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = AG_SELF();
-	SG_Texture *tex = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	SG_Texture *tex = SG_TEXTURE_PTR(1);
 	SG_TextureProgram  *tp;
 	
 	AG_TlistBegin(tl);

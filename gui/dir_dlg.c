@@ -26,13 +26,10 @@
 /*
  * Agar directory browser widget.
  */
-#include <agar/config/ag_serialization.h>
-#ifdef AG_SERIALIZATION
-
-#ifdef __NetBSD__
-#define _NETBSD_SOURCE
-#endif
 #include <agar/core/core.h>
+#include <agar/config/ag_serialization.h>
+#if defined(AG_WIDGETS) && defined(AG_SERIALIZATION)
+
 #include <agar/core/config.h>
 #include <agar/gui/dir_dlg.h>
 #include <agar/gui/box.h>
@@ -40,6 +37,10 @@
 #include <agar/gui/checkbox.h>
 #include <agar/gui/separator.h>
 #include <agar/gui/icons.h>
+
+#ifdef __NetBSD__
+#define _NETBSD_SOURCE
+#endif
 
 #include <stdarg.h>
 #include <string.h>
@@ -250,7 +251,7 @@ DirSelected(AG_Event *_Nonnull event)
 		if (AG_DirDlgSetDirectoryS(dd, ti->text) == -1) {
 			/* AG_TextMsgFromError() */
 		} else {
-			AG_PostEvent(NULL, dd, "dir-selected", "%s", dd->cwd);
+			AG_PostEvent(dd, "dir-selected", "%s", dd->cwd);
 			RefreshListing(dd);
 		}
 	}
@@ -270,7 +271,7 @@ LocSelected(AG_Event *_Nonnull event)
 	if (AG_DirDlgSetDirectoryS(dd, ti->text) == -1) {
 		/* AG_TextMsgFromError() */
 	} else {
-		AG_PostEvent(NULL, dd, "dir-selected", "%s", dd->cwd);
+		AG_PostEvent(dd, "dir-selected", "%s", dd->cwd);
 		RefreshListing(dd);
 	}
 }
@@ -319,9 +320,9 @@ static void
 ChooseDir(AG_DirDlg *_Nonnull dd, AG_Window *_Nonnull pwin)
 {
 	AG_ObjectLock(dd);
-	AG_PostEvent(NULL, dd, "dir-chosen", "%s", dd->cwd);
+	AG_PostEvent(dd, "dir-chosen", "%s", dd->cwd);
 	if (dd->flags & AG_DIRDLG_CLOSEWIN) {
-/*		AG_PostEvent(NULL, pwin, "window-close", NULL); */
+/*		AG_PostEvent(pwin, "window-close", NULL); */
 		AG_ObjectDetach(pwin);
 	}
 	AG_ObjectUnlock(dd);
@@ -366,8 +367,8 @@ PressedOK(AG_Event *_Nonnull event)
 	AG_DirDlg *dd = AG_DIRDLG_PTR(1);
 
 	AG_ObjectLock(dd);
-	if (dd->okAction != NULL) {
-		AG_PostEventByPtr(NULL, dd, dd->okAction, "%s", dd->cwd);
+	if (dd->okAction) {
+		AG_PostEventByPtr(dd, dd->okAction, "%s", dd->cwd);
 	} else {
 		CheckAccessAndChoose(dd);
 	}
@@ -584,10 +585,10 @@ PressedCancel(AG_Event *_Nonnull event)
 
 	AG_ObjectLock(dd);
 	if (dd->cancelAction != NULL) {
-		AG_PostEventByPtr(NULL, dd, dd->cancelAction, NULL);
+		AG_PostEventByPtr(dd, dd->cancelAction, NULL);
 	} else if (dd->flags & AG_DIRDLG_CLOSEWIN) {
 		if ((pwin = AG_ParentWindow(dd)) != NULL) {
-/*			AG_PostEvent(NULL, pwin, "window-close", NULL); */
+/*			AG_PostEvent(pwin, "window-close", NULL); */
 			AG_ObjectDetach(pwin);
 		}
 	}
@@ -771,10 +772,6 @@ AG_DirDlgOkAction(AG_DirDlg *dd, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(dd->okAction, fmt, ap);
 		va_end(ap);
 	}
-#ifdef AG_THREADS
-	if (dd->flags & AG_DIRDLG_ASYNC)
-		dd->okAction->flags |= AG_EVENT_ASYNC;
-#endif
 	AG_ObjectUnlock(dd);
 }
 void
@@ -896,4 +893,4 @@ AG_WidgetClass agDirDlgClass = {
 	SizeRequest,
 	SizeAllocate
 };
-#endif /* AG_SERIALIZATION */
+#endif /* AG_WIDGETS and AG_SERIALIZATION */

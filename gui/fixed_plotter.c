@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/fixed_plotter.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -327,3 +329,5 @@ AG_WidgetClass agFixedPlotterClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGET */

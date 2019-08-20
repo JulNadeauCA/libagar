@@ -59,7 +59,7 @@ CreateNewObject(AG_Event *_Nonnull event)
 	AG_WindowSetCaptionS(win, _("Untitled"));
 /*	AG_SetEvent(win, "window-close", WindowClose, "%p", obj); */
 	AG_SetPointer(win, "object", obj);
-	AG_PostEvent(NULL, obj, "edit-open", NULL);
+	AG_PostEvent(obj, "edit-open", NULL);
 	AG_WindowShow(win);
 	return;
 fail:
@@ -247,7 +247,7 @@ main(int argc, char *argv[])
 	
 /*		AG_SetEvent(win, "window-close", WindowClose, "%p", obj); */
 		AG_SetPointer(win, "object", obj);
-		AG_PostEvent(NULL, obj, "edit-open", NULL);
+		AG_PostEvent(obj, "edit-open", NULL);
 		AG_WindowShow(win);
 	}
 

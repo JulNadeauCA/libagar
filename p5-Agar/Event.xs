@@ -110,16 +110,6 @@ CODE:
 OUTPUT:
 	RETVAL
 
-Agar::Object
-sender(event)
-	Agar::Event event
-CODE:
-	if ((RETVAL = AG_SENDER()) == NULL) {
-		XSRETURN_UNDEF;
-	}
-OUTPUT:
-	RETVAL
-
 IV
 ptr(event, index)
 	Agar::Event event
@@ -178,23 +168,6 @@ CODE:
 		XSRETURN_UNDEF;
 	}
 	RETVAL = AG_OBJECT_NAMED(name, hier);
-OUTPUT:
-	RETVAL
-
-Agar::Object
-objectOfClass(event, index, hier)
-	Agar::Event event
-	int index
-	const char * hier
-PREINIT:
-	static const enum ag_variable_type argtype = AG_VARIABLE_POINTER;
-CODE:
-	index += apNumOurArgs;
-	if (index <= apNumOurArgs || index >= event->argc ||
-	    event->argv[index].type != argtype) {
-		XSRETURN_UNDEF;
-	}
-	RETVAL = AG_OBJECT_FULL(index, hier);
 OUTPUT:
 	RETVAL
 

@@ -23,10 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_float.h>
-#if defined(HAVE_FLOAT)
-
 #include <agar/core/core.h>
+#if defined(AG_WIDGETS) && defined(AG_HAVE_FLOAT)
+
 #include <agar/gui/gui.h>
 #include <agar/gui/hsvpal.h>
 #include <agar/gui/primitive.h>
@@ -342,7 +341,7 @@ AG_HSVPal_UpdateHue(AG_HSVPal *_Nonnull pal, int x, int y)
 	AG_SetFloat(pal, "hue", h/(2.0f*AG_PI)*360.0f);
 
 	UpdatePixelFromHSVA(pal);
-	AG_PostEvent(NULL, pal, "h-changed", NULL);
+	AG_PostEvent(pal, "h-changed", NULL);
 	pal->flags |= AG_HSVPAL_DIRTY;
 	AG_Redraw(pal);
 }
@@ -372,7 +371,7 @@ AG_HSVPal_UpdateSV(AG_HSVPal *_Nonnull pal, int ax, int ay)
 	AG_SetFloat(pal, "value", v);
 
 	UpdatePixelFromHSVA(pal);
-	AG_PostEvent(NULL, pal, "sv-changed", NULL);
+	AG_PostEvent(pal, "sv-changed", NULL);
 	pal->flags |= AG_HSVPAL_DIRTY;
 	AG_Redraw(pal);
 }
@@ -409,7 +408,7 @@ UpdateAlpha(AG_HSVPal *_Nonnull pal, int x)
 	AG_UnlockVariable(bAlpha);
 
 	UpdatePixelFromHSVA(pal);
-	AG_PostEvent(NULL, pal, "a-changed", NULL);
+	AG_PostEvent(pal, "a-changed", NULL);
 	AG_Redraw(pal);
 }
 
@@ -509,8 +508,8 @@ SetComplementaryColor(AG_Event *_Nonnull event)
 	AG_SetFloat(pal, "hue", ((int)hue+180) % 359);
 	UpdatePixelFromHSVA(pal);
 	pal->flags |= AG_HSVPAL_DIRTY;
-	AG_PostEvent(NULL, pal, "h-changed", NULL);
-	AG_PostEvent(NULL, pal, "sv-changed", NULL);
+	AG_PostEvent(pal, "h-changed", NULL);
+	AG_PostEvent(pal, "sv-changed", NULL);
 	AG_ObjectUnlock(pal);
 	AG_Redraw(pal);
 }
@@ -547,8 +546,8 @@ PasteColor(AG_Event *_Nonnull event)
 	
 	UpdatePixelFromHSVA(pal);
 	pal->flags |= AG_HSVPAL_DIRTY;
-	AG_PostEvent(NULL, pal, "h-changed", NULL);
-	AG_PostEvent(NULL, pal, "sv-changed", NULL);
+	AG_PostEvent(pal, "h-changed", NULL);
+	AG_PostEvent(pal, "sv-changed", NULL);
 
 	AG_ObjectUnlock(pal);
 	AG_Redraw(pal);
@@ -1004,4 +1003,4 @@ AG_WidgetClass agHSVPalClass = {
 	SizeAllocate
 };
 
-#endif /* HAVE_FLOAT */
+#endif /* AG_WIDGETS and AG_HAVE_FLOAT */

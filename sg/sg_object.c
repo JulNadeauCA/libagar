@@ -33,7 +33,6 @@
 
 #include <string.h>
 
-/* Create a new Object instance. */
 SG_Object *
 SG_ObjectNew(void *parent, const char *name)
 {
@@ -53,9 +52,9 @@ SG_ObjectNew(void *parent, const char *name)
 static void
 EditListPoll(AG_Event *_Nonnull event)
 {
-	SG_Object *so = AG_SELF();
-	AG_Tlist *tl = AG_PTR(1);
-	int depth = AG_INT(2);
+	SG_Object *so = SG_OBJECT_SELF();
+	AG_Tlist *tl = AG_TLIST_PTR(1);
+	const int depth = AG_INT(2);
 	AG_TlistItem *itVertices, *itFacets, *itEdges, *it;
 	int i;
 	
@@ -434,7 +433,7 @@ SG_Edge2(void *obj, int vT, int vH)
 void
 SG_EdgeGetName(SG_Edge *e, char *dst, AG_Size dst_len)
 {
-	snprintf(dst, dst_len, "%u->%u", e->v, e->oe->v);
+	Snprintf(dst, dst_len, "%u->%u", e->v, e->oe->v);
 }
 
 /*
@@ -551,13 +550,13 @@ SG_FacetGetName(SG_Facet *f, char *dst, AG_Size dst_len)
 {
 	switch (f->n) {
 	case 3:
-		snprintf(dst, dst_len, "%u,%u,%u",
+		Snprintf(dst, dst_len, "%u,%u,%u",
 		    f->e[0]->v,
 		    f->e[1]->v,
 		    f->e[2]->v);
 		break;
 	case 4:
-		snprintf(dst, dst_len, "%u,%u,%u,%u",
+		Snprintf(dst, dst_len, "%u,%u,%u,%u",
 		    f->e[0]->v,
 		    f->e[1]->v,
 		    f->e[2]->v,
@@ -1059,13 +1058,13 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull 
 			goto fail;
 		}
 		f->obj = so;
-		f->n = (Uint16)AG_ReadUint8(ds);
+		f->n = (Uint)AG_ReadUint8(ds);
 		if (f->n < 3 || f->n > 4) {
 			AG_SetError("Facet %u invalid edge count", i);
 			Free(f);
 			goto fail;
 		}
-		f->flags = (Uint16)AG_ReadUint8(ds);
+		f->flags = (Uint)AG_ReadUint8(ds);
 		for (j = 0; j < f->n; j++) {
 			v[j] = (Uint)AG_ReadUint32(ds);
 		}
@@ -1105,7 +1104,6 @@ Save(void *_Nonnull p, AG_DataSource *_Nonnull ds)
 
 	/* Save the vertices. */
 	AG_WriteUint32(ds, so->nVtx);
-	printf("%s: saving %u vertices\n", AGOBJECT(so)->name, so->nVtx);
 	for (i = 1; i < so->nVtx; i++) {
 		vtx = &so->vtx[i];
 		M_WriteVector2(ds, &vtx->st);
@@ -1114,7 +1112,6 @@ Save(void *_Nonnull p, AG_DataSource *_Nonnull ds)
 		M_WriteVector3(ds, &vtx->v);
 		AG_WriteUint8(ds, (Uint8)vtx->flags);
 	}
-	printf("%s: saving %u edges\n", AGOBJECT(so)->name, (Uint)so->nEdgeTbl);
 
 	/* Save the edge table. Halfedges are saved in pair. */
 	AG_WriteUint32(ds, (Uint32)so->nEdgeTbl);
@@ -1164,7 +1161,6 @@ Save(void *_Nonnull p, AG_DataSource *_Nonnull ds)
 			count++;
 		}
 	}
-	printf("%s: saved %u facets\n", AGOBJECT(so)->name, count);
 	AG_WriteUint32At(ds, (Uint32)count, offs);
 	return (0);
 }
@@ -1381,7 +1377,7 @@ Intersect(void *_Nonnull obj, M_Geom3 g, M_GeomSet3 *_Nullable S)
 static void
 CheckConnectivity(AG_Event *_Nonnull event)
 {
-	SG_Object *so = AG_PTR(1);
+	SG_Object *so = SG_OBJECT_PTR(1);
 	AG_Window *win;
 	AG_Console *cons;
 
@@ -1400,31 +1396,28 @@ CheckConnectivity(AG_Event *_Nonnull event)
 static void
 RecomputeNormals(AG_Event *_Nonnull event)
 {
-	SG_Object *so = AG_PTR(1);
+	SG_Object *so = SG_OBJECT_PTR(1);
 
-	if (SG_ObjectNormalize(so) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", AGOBJECT(so)->name,
-		    AG_GetError());
-	}
+	if (SG_ObjectNormalize(so) == -1)
+		AG_TextError("%s: %s", AGOBJECT(so)->name, AG_GetError());
 }
 
 static void
 ConvQuadsToTriangles(AG_Event *_Nonnull event)
 {
-	SG_Object *so = AG_PTR(1);
+	SG_Object *so = SG_OBJECT_PTR(1);
 	Uint count;
 
 	count = SG_ObjectConvQuadsToTriangles(so);
-	AG_TextMsg(AG_MSG_INFO, "%s: converted %u quads", AGOBJECT(so)->name,
-	    count);
+	AG_TextInfo("%s: converted %u quads", AGOBJECT(so)->name, count);
 }
 
 static void
 EdgeTableUpdate(AG_Event *_Nonnull event)
 {
-	SG_Object *so = AG_PTR(1);
-	AG_Table *tbl = AG_PTR(2);
-	AG_Label *lbl = AG_PTR(3);
+	SG_Object *so = SG_OBJECT_PTR(1);
+	AG_Table *tbl = AG_TABLE_PTR(2);
+	AG_Label *lbl = AG_LABEL_PTR(3);
 	Uint i;
 	Uint totEdges = 0, nWorst = 0, nUsed = 0, nCollisions = 0;
 	
@@ -1460,7 +1453,7 @@ EdgeTableUpdate(AG_Event *_Nonnull event)
 static void
 EdgeTableDlg(AG_Event *_Nonnull event)
 {
-	SG_Object *so = AG_PTR(1);
+	SG_Object *so = SG_OBJECT_PTR(1);
 	AG_Window *win;
 	AG_Table *tbl;
 	AG_Label *lbl;
@@ -1492,9 +1485,9 @@ EdgeTableDlg(AG_Event *_Nonnull event)
 static void
 FacetTableUpdate(AG_Event *_Nonnull event)
 {
-	SG_Object *so = AG_PTR(1);
-	AG_Table *tbl = AG_PTR(2);
-	AG_Label *lbl = AG_PTR(3);
+	SG_Object *so = SG_OBJECT_PTR(1);
+	AG_Table *tbl = AG_TABLE_PTR(2);
+	AG_Label *lbl = AG_LABEL_PTR(3);
 	Uint totTris = 0, totQuads = 0;
 	Uint nBig = 0, nUsed = 0, nCollisions = 0;
 	Uint i;
@@ -1549,7 +1542,7 @@ FacetTableUpdate(AG_Event *_Nonnull event)
 static void
 FacetTableDlg(AG_Event *_Nonnull event)
 {
-	SG_Object *so = AG_PTR(1);
+	SG_Object *so = SG_OBJECT_PTR(1);
 	AG_Window *win;
 	AG_Table *tbl;
 	AG_Label *lbl;
@@ -1606,9 +1599,9 @@ SG_ObjectMenuInstance(void *pNode, AG_MenuItem *m, SG_View *sgv)
 static void
 ImportMeshFromPLY(AG_Event *_Nonnull event)
 {
-	SG_Object *so = AG_PTR(1);
-	SG_View *sgv = AG_PTR(2);
-	char *path = AG_STRING(3);
+	SG_Object *so = SG_OBJECT_PTR(1);
+	SG_View *sgv = SG_VIEW_PTR(2);
+	const char *path = AG_STRING(3);
 	AG_FileType *ft = AG_PTR(4);
 	int *status = AG_PTR(5);
 	Uint flags = 0;
@@ -1628,8 +1621,8 @@ ImportMeshFromPLY(AG_Event *_Nonnull event)
 static void
 ImportMeshDlg(AG_Event *_Nonnull event)
 {
-	SG_Object *so = AG_PTR(1);
-	SG_View *sgv = AG_PTR(2);
+	SG_Object *so = SG_OBJECT_PTR(1);
+	SG_View *sgv = SG_VIEW_PTR(2);
 	AG_Window *win;
 	AG_FileDlg *dlg;
 	AG_FileType *ft;
@@ -1639,8 +1632,8 @@ ImportMeshDlg(AG_Event *_Nonnull event)
 	}
 	AG_WindowSetCaption(win, _("Import Data into %s..."), OBJECT(so)->name);
 	dlg = AG_FileDlgNewMRU(win, "sg.mru.objects",
-	    AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND|
-	    AG_FILEDLG_MASK_EXT|AG_FILEDLG_MASK_HIDDEN);
+	    AG_FILEDLG_LOAD | AG_FILEDLG_CLOSEWIN | AG_FILEDLG_EXPAND |
+	    AG_FILEDLG_MASK_EXT | AG_FILEDLG_MASK_HIDDEN);
 
 	AG_FileDlgSetOptionContainer(dlg, AG_BoxNewVert(win,AG_BOX_HFILL));
 
@@ -1657,9 +1650,9 @@ ImportMeshDlg(AG_Event *_Nonnull event)
 static void *_Nullable
 Edit(void *_Nonnull obj, SG_View *_Nullable sgv)
 {
-	SG_Object *so = obj;
+	SG_Object *so = SGOBJECT(obj);
 	AG_Mutex *lock = &OBJECT(so)->pvt.lock;
-	SG *sg = SGNODE(so)->sg;
+	const SG *sg = SGNODE(so)->sg;
 	AG_ObjectSelector *os;
 	AG_Box *box;
 

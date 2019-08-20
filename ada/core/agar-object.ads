@@ -654,29 +654,15 @@ package Agar.Object is
      Propagate : in Boolean := False);
 
   --
-  -- Post an Event to a Target object.
-  -- Message-passing style with specified Source object.
+  -- Post an Event to a target Object.
   --
   procedure Post_Event
-    (Source : in Object_Access;
-     Target : in Object_not_null_Access;
+    (Object : in Object_not_null_Access;
      Event  : in String);
   procedure Post_Event
-    (Source : in Object_Access;
-     Target : in Object_not_null_Access;
+    (Object : in Object_not_null_Access;
      Event  : in EV.Event_not_null_Access);
   
-  --
-  -- Post an Event to a Target object.
-  -- Anonymous style without specified Source.
-  --
-  procedure Post_Event
-    (Target : in Object_not_null_Access;
-     Event  : in String);
-  procedure Post_Event
-    (Target : in Object_not_null_Access;
-     Event  : in EV.Event_not_null_Access);
- 
   --
   -- Log object name and message to the console for debugging purposes.
   --
@@ -974,21 +960,18 @@ package Agar.Object is
     with Import, Convention => C, Link_Name => "AG_AddEvent";
   
   function AG_PostEvent
-    (Source : in Object_Access;
-     Target : in Object_not_null_Access;
+    (Object : in Object_not_null_Access;
      Event  : in CS.chars_ptr;
      Format : in CS.chars_ptr) return EV.Event_not_null_Access
     with Import, Convention => C, Link_Name => "AG_PostEvent";
   procedure AG_PostEvent
-    (Source : in Object_Access;
-     Target : in Object_not_null_Access;
+    (Object : in Object_not_null_Access;
      Event  : in CS.chars_ptr;
      Format : in CS.chars_ptr)
     with Import, Convention => C, Link_Name => "AG_PostEvent";
   
   procedure AG_PostEventByPtr
-    (Source : in Object_Access;
-     Target : in Object_not_null_Access;
+    (Object : in Object_not_null_Access;
      Event  : in EV.Event_Access;
      Format : in CS.chars_ptr)
     with Import, Convention => C, Link_Name => "AG_PostEventByPtr";

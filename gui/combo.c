@@ -24,8 +24,12 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/combo.h>
 #include <agar/gui/primitive.h>
+
+static int agComboCounter = 0;
 
 AG_Combo *
 AG_ComboNew(void *parent, Uint flags, const char *fmt, ...)
@@ -106,8 +110,8 @@ Expand(AG_Event *_Nonnull event)
 	AG_Combo *com = AG_COMBO_PTR(1);
 	AG_Driver *drv = WIDGET(com)->drv;
 	AG_Window *panel, *win;
-	int expand = AG_INT(2);
 	AG_SizeReq rList;
+	const int expand = AG_INT(2);
 	int x, y, w, h;
 	Uint wView, hView;
 
@@ -119,7 +123,7 @@ Expand(AG_Event *_Nonnull event)
 		panel->wmType = AG_WINDOW_WM_COMBO;
 
 		AG_WindowSetPadding(panel, 0,0,0,0);
-		AG_ObjectSetName(panel, "_ComboPopup");
+		AG_ObjectSetName(panel, "combo%u", agComboCounter++);
 		AG_ObjectAttach(panel, com->list);
 
 		if ((win = WIDGET(com)->window) != NULL) {
@@ -215,7 +219,7 @@ SelectedItem(AG_Event *_Nonnull event)
 	AG_ObjectLock(tl);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
 		AG_TextboxSetString(com->tbox, ti->text);
-		AG_PostEvent(NULL, com, "combo-selected", "%p", ti);
+		AG_PostEvent(com, "combo-selected", "%p", ti);
 	}
 	AG_ObjectUnlock(tl);
 	Collapse(com);
@@ -241,16 +245,15 @@ Return(AG_Event *_Nonnull event)
 		if (text[0] != '\0' &&
 		    (it = AG_TlistSelectText(com->list, text)) != NULL) {
 			AG_TextboxSetString(com->tbox, it->text);
-			AG_PostEvent(NULL, com, "combo-selected", "%p", it);
+			AG_PostEvent(com, "combo-selected", "%p", it);
 		} else {
 			AG_TlistDeselectAll(com->list);
 			AG_TextboxSetString(com->tbox, "");
-			AG_PostEvent(NULL, com, "combo-text-unknown", "%s",
-			    text);
+			AG_PostEvent(com, "combo-text-unknown", "%s", text);
 		}
 	} else {
 		AG_TlistDeselectAll(com->list);
-		AG_PostEvent(NULL, com, "combo-text-entry", "%s", text);
+		AG_PostEvent(com, "combo-text-entry", "%s", text);
 	}
 
 	AG_ObjectUnlock(com->list);
@@ -381,3 +384,5 @@ AG_WidgetClass agComboClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

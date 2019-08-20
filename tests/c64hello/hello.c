@@ -29,6 +29,7 @@
 #include <dbg.h>
 
 #include <agar/core.h>
+#include <agar/gui.h>
 
 /*
  * Register an example Agar object class.
@@ -94,7 +95,7 @@ int
 main(void)
 {
 	unsigned char XSize, YSize;
-	AG_Object *myObj;
+	AG_Object *myObj = NULL;
 	
 	textcolor(COLOR_WHITE);
 	bordercolor(COLOR_BLACK);
@@ -107,28 +108,44 @@ main(void)
 	if (AG_InitCore(NULL, AG_VERBOSE) == -1) {
 		return EXIT_FAILURE;
 	}
-	AG_Verbose("Agar OK (%d bytes free)", _heapmemavail());
 
 	/* Register a new Agar object class. */
 	AG_RegisterClass(&myClass);
 
-	/* Create an instance of our new class. */
-	if ((myObj = AG_ObjectNew(NULL, "myobj1", &myClass)) == NULL) {
-		AG_FatalError("ObjectNew");
-	}
-	AG_Verbose("%s lives at %p", myObj->name, myObj);
-
 	while (1) {
 		int c;
-		AG_Verbose("Find [P]rimes or [Q]uit?");
+
+		AG_Verbose("Agar (%d bytes free)", _heapmemavail());
+		AG_Verbose("AG_Object=%d, AG_Event=%d", sizeof(AG_Object),
+		                                        sizeof(AG_Event));
+		AG_Verbose("[O]bj | [P]rimes | [G]UI | [Q]uit ?");
+
 		switch ((c = cgetc())) {
-#if 0
-		case 'h':
-			AG_PostEvent(NULL, myObj, "hello", "%s", "world");
+		case 'o':
+			/* Create an instance of our new class. */
+			AG_Verbose("Instantiating (%u bytes)\n", myClass.size);
+			if ((myObj = AG_ObjectNew(NULL, "myobj1", &myClass))
+			    == NULL) {
+				AG_Verbose("Failed: %s", AG_GetError());
+			} else {
+				AG_Verbose("OK! %s is at %p", myObj->name, myObj);
+			}
 			break;
-#endif
 		case 'p':
-			AG_PostEvent(NULL, myObj, "find-primes", "%i", 100);
+			if (myObj) {
+				AG_PostEvent(myObj, "find-primes", "%i", 100);
+			} else {
+				AG_Verbose("Spawn an [O]bject first!\n");
+			}
+			break;
+		case 'g':
+#if 0
+			if (AG_InitGUI(0) == 0) {
+				AG_Verbose("GUI OK");
+			} else {
+				AG_Verbose("AG_InitGUI: %s", AG_GetError());
+			}
+#endif
 			break;
 		case 'q':
 			goto out;

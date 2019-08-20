@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/window.h>
 #include <agar/gui/scrollview.h>
 #include <agar/gui/primitive.h>
@@ -485,3 +487,5 @@ AG_WidgetClass agScrollviewClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

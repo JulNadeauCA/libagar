@@ -23,10 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_float.h>
-#if defined(HAVE_FLOAT)
-
 #include <agar/core/core.h>
+#if defined(AG_WIDGETS) && defined(AG_HAVE_FLOAT)
+
 #include <agar/gui/mfspinbutton.h>
 #include <agar/gui/window.h>
 
@@ -268,7 +267,7 @@ TextChanged(AG_Event *event)
 		    strtod(s, NULL)*fsu->unit->divider);
 	}
 
-	AG_PostEvent(NULL, fsu, "mfspinbutton-return", NULL);
+	AG_PostEvent(fsu, "mfspinbutton-return", NULL);
 
 	if (unfocus)
 		AG_WidgetUnfocus(fsu->input);
@@ -545,7 +544,7 @@ AG_MFSpinbuttonAddValue(AG_MFSpinbutton *fsu, const char *which, double inc)
 	default:
 		break;
 	}
-	AG_PostEvent(NULL, fsu, "mfspinbutton-changed", "%s", which);
+	AG_PostEvent(fsu, "mfspinbutton-changed", "%s", which);
 
 	AG_UnlockVariable(valueb);
 	AG_UnlockVariable(minb);
@@ -583,7 +582,7 @@ AG_MFSpinbuttonSetValue(AG_MFSpinbutton *fsu, const char *which,
 	default:
 		break;
 	}
-	AG_PostEvent(NULL, fsu, "mfspinbutton-changed", "%s", which);
+	AG_PostEvent(fsu, "mfspinbutton-changed", "%s", which);
 
 	AG_UnlockVariable(valueb);
 	AG_UnlockVariable(minb);
@@ -725,4 +724,4 @@ AG_WidgetClass agMFSpinbuttonClass = {
 	SizeAllocate
 };
 
-#endif /* HAVE_FLOAT */
+#endif /* AG_WIDGETS and AG_HAVE_FLOAT */

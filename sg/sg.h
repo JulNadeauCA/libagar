@@ -157,6 +157,14 @@ typedef struct sg {
 	AG_TAILQ_HEAD_(sg_node) nodes;	/* Flat list of nodes */
 } SG;
 
+#define SG_SELF()    (SG *)( AG_OBJECT(0,"SG:*") )
+#define SG_PTR(n)    (SG *)( AG_OBJECT((n),"SG:*") )
+#define SG_NAMED(n)  (SG *)( AG_OBJECT_NAMED((n),"SG:*") )
+
+#define SG_NODE_SELF()    SGNODE( AG_OBJECT(0,"SG_Node:*") )
+#define SG_NODE_PTR(n)    SGNODE( AG_OBJECT((n),"SG_Node:*") )
+#define SG_NODE_NAMED(n)  SGNODE( AG_OBJECT_NAMED((n),"SG_Node:*") )
+
 #define SGNODE(node) ((struct sg_node *)(node))
 #define SGNODE_OPS(node) ((struct sg_node_class *)(AGOBJECT(node)->cls))
 #define SGNODE_SELECTED(node) (((SG_Node *)(node))->flags & SG_NODE_SELECTED)
