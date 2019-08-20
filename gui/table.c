@@ -24,6 +24,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/table.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/cursors.h>
@@ -32,17 +34,19 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define COLUMN_RESIZE_RANGE	10	/* Range in pixels for resize ctrls */
-#define LAST_VISIBLE(t) ((t)->m - (t)->mVis + 1)
+static int     SortCellsAscending(const void *_Nonnull, const void *_Nonnull);
+static int     SortCellsDescending(const void *_Nonnull, const void *_Nonnull);
+static AG_Size PrintCellGeneral(const AG_TableCell *_Nonnull, char *_Nonnull, AG_Size);
+static void    DrawCell(AG_Table *_Nonnull, AG_TableCell *_Nonnull, const AG_Rect *);
+static void    UpdateEmbeddedWidgets(AG_Table *_Nonnull);
+static int     CompareCellsGeneral(const AG_TableCell *, const AG_TableCell *);
+static int     CompareCellsFnTxt(const AG_TableCell *_Nonnull, const AG_TableCell *_Nonnull);
+static void    RestoreRowSelections(AG_Table *_Nonnull);
+static void    RestoreCellSelections(AG_Table *_Nonnull);
+static void    RestoreColSelections(AG_Table *_Nonnull);
 
-static int  SortCellsAscending(const void *_Nonnull, const void *_Nonnull);
-static int  SortCellsDescending(const void *_Nonnull, const void *_Nonnull);
-static void PrintCellGeneral(const AG_TableCell *_Nonnull, char *_Nonnull, AG_Size);
-static int  CompareCellsGeneral(const AG_TableCell *, const AG_TableCell *);
-static int  CompareCellsFnTxt(const AG_TableCell *_Nonnull, const AG_TableCell *_Nonnull);
-static void RestoreRowSelections(AG_Table *_Nonnull);
-static void RestoreCellSelections(AG_Table *_Nonnull);
-static void RestoreColSelections(AG_Table *_Nonnull);
+#undef  COLUMN_RESIZE_RANGE
+#define COLUMN_RESIZE_RANGE 10  /* TODO css */
 
 AG_Table *
 AG_TableNew(void *parent, Uint flags)
@@ -249,6 +253,51 @@ AG_TableSetDefaultColWidth(AG_Table *t, int w)
 	t->wColDefault = w;
 }
 
+/* Register a new popup menu. */
+AG_MenuItem *
+AG_TableSetPopup(AG_Table *t, int m, int n)
+{
+	AG_TablePopup *tp;
+	AG_MenuItem *rv;
+
+	AG_ObjectLock(t);
+	SLIST_FOREACH(tp, &t->popups, popups) {
+		if (tp->m == m && tp->n == n) {
+			AG_ObjectUnlock(t);
+			return (tp->item);
+		}
+	}
+	tp = Malloc(sizeof(AG_TablePopup));
+	tp->m = m;
+	tp->n = n;
+	tp->panel = NULL;
+	tp->menu = AG_MenuNew(NULL, 0);
+	tp->item = tp->menu->root;			/* XXX redundant */
+	SLIST_INSERT_HEAD(&t->popups, tp, popups);
+	rv = tp->item;
+	AG_ObjectUnlock(t);
+
+	return (rv);
+}
+
+/* Set a callback function. */
+void
+AG_TableSetFn(AG_Table *t, enum ag_table_fn which, AG_EventFn fn,
+    const char *fmt, ...)
+{
+	if (which >= AG_TABLE_FN_LAST) {
+		return;
+	}
+	t->fn[which] = AG_SetEvent(t, NULL, fn, NULL);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(t->fn[which], fmt, ap);
+		va_end(ap);
+	}
+}
+
 /* Compute the effective widths of the columns. */
 static void
 SizeColumns(AG_Table *_Nonnull t)
@@ -300,70 +349,6 @@ SizeColumns(AG_Table *_Nonnull t)
 	}
 }
 
-/* Set the effective position of all embedded widgets in the table. */
-static void
-UpdateEmbeddedWidgets(AG_Table *_Nonnull t)
-{
-	AG_SizeAlloc wa;
-	AG_Widget *wt;
-	AG_Rect rd;
-	AG_TableCol *col;
-	AG_TableCell *c;
-	int m, n;
-	int update = 0;
-
-	rd.h = t->hRow;
-
-	for (n = 0, rd.x = -t->xOffs;
-	     n < t->n;
-	     n++) {
-		col = &t->cols[n];
-		rd.w = col->w;
-		rd.y = t->hCol - t->mOffs*t->hRow;
-		for (m = 0;
-		     m < t->m;
-		     m++) {
-			c = &t->cells[m][n];
-			if (c->type != AG_CELL_WIDGET) {
-				continue;
-			}
-			wt = c->data.p;
-
-			if (wt->x != rd.x || wt->y != rd.y ||
-			    wt->w != rd.w || wt->h != rd.h) {
-				wa.x = rd.x;
-				wa.y = rd.y;
-				wa.w = rd.w;
-				wa.h = rd.h;
-				AG_WidgetSizeAlloc(wt, &wa);
-				update++;
-			}
-
-			/*
-			 * Adjust sensitivity rectangle if widget is
-			 * partially visible.
-			 */
-			wt->rSens.w = (rd.x+rd.w > t->r.w) ?
-			    (t->r.w - rd.x - 4) : rd.w;
-			wt->rSens.x2 = wt->rSens.x1 + wt->rSens.w;
-	
-			wt->rSens.h = (rd.y+rd.h > t->r.h+t->hCol) ?
-			    (t->r.h + t->hCol - rd.y - 4) : rd.h;
-			wt->rSens.y2 = wt->rSens.y1 + wt->rSens.h;
-
-			rd.y += t->hRow;
-		}
-		rd.x += col->w;
-	}
-
-	/* Apply any changes to widget size allocations. */
-	if (update) {
-		AG_WidgetUpdateCoords(t,
-		    WIDGET(t)->rView.x1,
-		    WIDGET(t)->rView.y1);
-	}
-}
-
 static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
@@ -403,7 +388,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_Table *t = obj;
 	AG_SizeReq rBar;
 	AG_SizeAlloc aBar;
-	int vBarSz = 0, hBarSz = 0;
+	int vBarSz=0, hBarSz=0;
 	
 	t->r.w = a->w;
 	t->r.h = a->h - t->hCol;
@@ -454,168 +439,86 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	return (0);
 }
 
-static void
-DrawCell(AG_Table *_Nonnull t, AG_TableCell *_Nonnull c, const AG_Rect *rd)
-{
-	char txt[AG_TABLE_TXT_MAX];
-
-	if (c->surface != -1) {
-		if (t->flags & AG_TABLE_REDRAW_CELLS) {
-			AG_WidgetUnmapSurface(t, c->surface);
-			c->surface = -1;
-		} else {
-			goto blit;
-		}
-	}
-
-	switch (c->type) {
-	case AG_CELL_STRING:					/* Avoid copy */
-		c->surface = AG_WidgetMapSurface(t, AG_TextRender(c->data.s));
-		goto blit;
-	case AG_CELL_PSTRING:					/* Avoid copy */
-		c->surface = AG_WidgetMapSurface(t, AG_TextRender((char *)
-		                                                  c->data.p));
-		goto blit;
-	case AG_CELL_FN_SU:
-		c->surface = AG_WidgetMapSurface(t,
-		    c->fnSu(c->data.p, rd->x, rd->y));
-		goto blit;
-	case AG_CELL_FN_SU_NODUP:
-		c->surface = AG_WidgetMapSurfaceNODUP(t,
-		    c->fnSu(c->data.p, rd->x, rd->y));
-		goto blit;
-	case AG_CELL_WIDGET:
-		if (WIDGET_OPS(c->data.p)->draw != NULL) {
-			AG_WidgetDraw(c->data.p);
-		}
-		c->surface = -1;
-		return;
-	case AG_CELL_NULL:
-		if (c->fmt[0] != '\0') {
-			c->surface = AG_WidgetMapSurface(t, AG_TextRender(c->fmt));
-			goto blit;
-		} else {
-			return;
-		}
-		break;
-	default:
-		AG_TablePrintCell(c, txt, sizeof(txt));
-		break;
-	}
-	c->surface = AG_WidgetMapSurface(t, AG_TextRender(txt));
-blit:
-	AG_WidgetBlitSurface(t, c->surface,
-	    rd->x,
-	    rd->y + (t->hRow >> 1) - (WSURFACE(t,c->surface)->h >> 1));
-}
-
-void
+AG_Size
 AG_TablePrintCell(const AG_TableCell *c, char *buf, AG_Size bufsz)
 {
 	switch (c->type) {
 	case AG_CELL_STRING:
-		Strlcpy(buf, c->data.s, bufsz);
-		break;
+		return Strlcpy(buf, c->data.s, bufsz);
 	case AG_CELL_PSTRING:
-		Strlcpy(buf, (char *)c->data.p, bufsz);
-		break;
+		return Strlcpy(buf, (char *)c->data.p, bufsz);
 	case AG_CELL_INT:
 		if (strcmp(c->fmt, "%d") == 0) {
-			StrlcpyInt(buf, c->data.i, bufsz);
+			return StrlcpyInt(buf, c->data.i, bufsz);
 		} else {
-			Snprintf(buf, bufsz, c->fmt, c->data.i);
+			return Snprintf(buf, bufsz, c->fmt, c->data.i);
 		}
-		break;
 	case AG_CELL_PINT:
-		Snprintf(buf, bufsz, c->fmt, *(int *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(int *)c->data.p);
 	case AG_CELL_UINT:
 		if (strcmp(c->fmt, "%u") == 0) {
-			StrlcpyUint(buf, (Uint)c->data.i, bufsz);
+			return StrlcpyUint(buf, (Uint)c->data.i, bufsz);
 		} else {
-			Snprintf(buf, bufsz, c->fmt, (Uint)c->data.i);
+			return Snprintf(buf, bufsz, c->fmt, (Uint)c->data.i);
 		}
-		break;
 	case AG_CELL_PUINT:
-		Snprintf(buf, bufsz, c->fmt, *(Uint *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(Uint *)c->data.p);
 #ifdef HAVE_FLOAT
 	case AG_CELL_FLOAT:
-		Snprintf(buf, bufsz, c->fmt, (float)c->data.f);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, (float)c->data.f);
 	case AG_CELL_PFLOAT:
-		Snprintf(buf, bufsz, c->fmt, *(float *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(float *)c->data.p);
 	case AG_CELL_DOUBLE:
-		Snprintf(buf, bufsz, c->fmt, c->data.f);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, c->data.f);
 	case AG_CELL_PDOUBLE:
-		Snprintf(buf, bufsz, c->fmt, *(double *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(double *)c->data.p);
 #endif
 	default:
-		PrintCellGeneral(c, buf, bufsz);
-		break;
+		return PrintCellGeneral(c, buf, bufsz);
 	}
 }
 
-static void
-PrintCellGeneral(const AG_TableCell *_Nonnull c, char *_Nonnull buf,
-    AG_Size bufsz)
+static AG_Size
+PrintCellGeneral(const AG_TableCell *_Nonnull c, char *_Nonnull buf, AG_Size bufsz)
 {
 	switch (c->type) {
 	case AG_CELL_FN_TXT:
-		c->fnTxt(c->data.p, buf, bufsz);
-		break;
+		return c->fnTxt(c->data.p, buf, bufsz);
 	case AG_CELL_POINTER:
-		Snprintf(buf, bufsz, c->fmt, c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, c->data.p);
 	case AG_CELL_LONG:
 	case AG_CELL_ULONG:
-		Snprintf(buf, bufsz, c->fmt, c->data.l);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, c->data.l);
 	case AG_CELL_PLONG:
-		Snprintf(buf, bufsz, c->fmt, *(long *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(long *)c->data.p);
 	case AG_CELL_PULONG:
-		Snprintf(buf, bufsz, c->fmt, *(Ulong *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(Ulong *)c->data.p);
 	case AG_CELL_PUINT8:
-		Snprintf(buf, bufsz, c->fmt, *(Uint8 *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(Uint8 *)c->data.p);
 	case AG_CELL_PSINT8:
-		Snprintf(buf, bufsz, c->fmt, *(Sint8 *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(Sint8 *)c->data.p);
 	case AG_CELL_PUINT16:
-		Snprintf(buf, bufsz, c->fmt, *(Uint16 *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(Uint16 *)c->data.p);
 	case AG_CELL_PSINT16:
-		Snprintf(buf, bufsz, c->fmt, *(Sint16 *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(Sint16 *)c->data.p);
 	case AG_CELL_PUINT32:
-		Snprintf(buf, bufsz, c->fmt, *(Uint32 *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(Uint32 *)c->data.p);
 	case AG_CELL_PSINT32:
-		Snprintf(buf, bufsz, c->fmt, *(Sint32 *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(Sint32 *)c->data.p);
 #ifdef HAVE_64BIT
 	case AG_CELL_SINT64:
 	case AG_CELL_UINT64:
-		Snprintf(buf, bufsz, c->fmt, c->data.u64);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, c->data.u64);
 	case AG_CELL_PUINT64:
-		Snprintf(buf, bufsz, c->fmt, *(Uint64 *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(Uint64 *)c->data.p);
 	case AG_CELL_PINT64:
-		Snprintf(buf, bufsz, c->fmt, *(Sint64 *)c->data.p);
-		break;
+		return Snprintf(buf, bufsz, c->fmt, *(Sint64 *)c->data.p);
 #endif
 	default:
-		if (bufsz > 0) {
+		if (bufsz > 0)
 			buf[0] = '\0';
-		}
-		break;
 	}
+	return (0);
 }
 
 static void
@@ -796,48 +699,131 @@ Draw(void *_Nonnull obj)
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);
 }
 
-/* Register a new popup menu. */
-AG_MenuItem *
-AG_TableSetPopup(AG_Table *t, int m, int n)
+static void
+DrawCell(AG_Table *_Nonnull t, AG_TableCell *_Nonnull c, const AG_Rect *rd)
 {
-	AG_TablePopup *tp;
-	AG_MenuItem *rv;
+	char buf[AG_TABLE_BUF_MAX], *pTxt = buf;
+	AG_Size cSize;
+	const int cellPaddingLeft = 2;		/* TODO css */
 
-	AG_ObjectLock(t);
-	SLIST_FOREACH(tp, &t->popups, popups) {
-		if (tp->m == m && tp->n == n) {
-			AG_ObjectUnlock(t);
-			return (tp->item);
+	if (c->surface != -1) {
+		if (t->flags & AG_TABLE_REDRAW_CELLS) {
+			AG_WidgetUnmapSurface(t, c->surface);
+			c->surface = -1;
+		} else {
+			goto blit;
 		}
 	}
-	tp = Malloc(sizeof(AG_TablePopup));
-	tp->m = m;
-	tp->n = n;
-	tp->panel = NULL;
-	tp->menu = AG_MenuNew(NULL, 0);
-	tp->item = tp->menu->root;			/* XXX redundant */
-	SLIST_INSERT_HEAD(&t->popups, tp, popups);
-	rv = tp->item;
-	AG_ObjectUnlock(t);
 
-	return (rv);
+	switch (c->type) {
+	case AG_CELL_STRING:					/* Avoid copy */
+		c->surface = AG_WidgetMapSurface(t, AG_TextRender(c->data.s));
+		goto blit;
+	case AG_CELL_PSTRING:					/* Avoid copy */
+		c->surface = AG_WidgetMapSurface(t, AG_TextRender((char *)
+		                                                  c->data.p));
+		goto blit;
+	case AG_CELL_FN_SU:
+		c->surface = AG_WidgetMapSurface(t,
+		    c->fnSu(c->data.p, rd->x, rd->y));
+		goto blit;
+	case AG_CELL_FN_SU_NODUP:
+		c->surface = AG_WidgetMapSurfaceNODUP(t,
+		    c->fnSu(c->data.p, rd->x, rd->y));
+		goto blit;
+	case AG_CELL_WIDGET:
+		if (WIDGET_OPS(c->data.p)->draw != NULL) {
+			AG_WidgetDraw(c->data.p);
+		}
+		c->surface = -1;
+		return;
+	case AG_CELL_NULL:
+		if (c->fmt[0] != '\0') {
+			c->surface = AG_WidgetMapSurface(t, AG_TextRender(c->fmt));
+			goto blit;
+		} else {
+			return;
+		}
+		break;
+	default:
+		if ((cSize = AG_TablePrintCell(c, buf, sizeof(buf)))
+		    >= sizeof(buf)) {
+			if ((pTxt = TryMalloc(cSize)) == NULL) {
+				return;
+			}
+			AG_TablePrintCell(c, pTxt, cSize);
+		}
+		break;
+	}
+
+	c->surface = AG_WidgetMapSurface(t, AG_TextRender(pTxt));
+
+	if (cSize >= sizeof(buf))
+		free(pTxt);
+blit:
+	AG_WidgetBlitSurface(t, c->surface,
+	    rd->x + cellPaddingLeft,
+	    rd->y + (t->hRow >> 1) - (WSURFACE(t,c->surface)->h >> 1));
 }
 
-/* Set a callback function. */
-void
-AG_TableSetFn(AG_Table *t, enum ag_table_fn which, AG_EventFn fn,
-    const char *fmt, ...)
+/* Set the effective position of all embedded widgets in the table. */
+static void
+UpdateEmbeddedWidgets(AG_Table *_Nonnull t)
 {
-	if (which >= AG_TABLE_FN_LAST) {
-		return;
-	}
-	t->fn[which] = AG_SetEvent(t, NULL, fn, NULL);
-	if (fmt) {
-		va_list ap;
+	AG_SizeAlloc wa;
+	AG_Widget *wt;
+	AG_Rect rd;
+	AG_TableCol *col;
+	AG_TableCell *c;
+	const int hRow = t->hRow;
+	int m, n;
+	int update = 0;
 
-		va_start(ap, fmt);
-		AG_EventGetArgs(t->fn[which], fmt, ap);
-		va_end(ap);
+	rd.h = hRow;
+
+	for (n=0, rd.x=-t->xOffs; n < t->n; n++) {
+		col = &t->cols[n];
+		rd.w = col->w;
+		rd.y = t->hCol - t->mOffs*hRow;
+		for (m = 0; m < t->m; m++) {
+			c = &t->cells[m][n];
+			if (c->type != AG_CELL_WIDGET) {
+				continue;
+			}
+			wt = c->data.p;
+
+			if (wt->x != rd.x || wt->y != rd.y ||
+			    wt->w != rd.w || wt->h != rd.h) {
+				wa.x = rd.x;
+				wa.y = rd.y;
+				wa.w = rd.w;
+				wa.h = rd.h;
+				AG_WidgetSizeAlloc(wt, &wa);
+				update++;
+			}
+
+			/*
+			 * Adjust sensitivity rectangle if widget is
+			 * partially visible.
+			 */
+			wt->rSens.w = (rd.x+rd.w > t->r.w) ?
+			    (t->r.w - rd.x - 4) : rd.w;
+			wt->rSens.x2 = wt->rSens.x1 + wt->rSens.w;
+	
+			wt->rSens.h = (rd.y+rd.h > t->r.h+t->hCol) ?
+			    (t->r.h + t->hCol - rd.y - 4) : rd.h;
+			wt->rSens.y2 = wt->rSens.y1 + wt->rSens.h;
+
+			rd.y += hRow;
+		}
+		rd.x += col->w;
+	}
+
+	/* Apply any changes to widget size allocations. */
+	if (update) {
+		AG_WidgetUpdateCoords(t,
+		    WIDGET(t)->rView.x1,
+		    WIDGET(t)->rView.y1);
 	}
 }
 
@@ -885,7 +871,7 @@ AG_TableSort(AG_Table *t)
 }
 
 static int
-SortCellsAscending(const void *_Nonnull p1, const void *_Nonnull p2)
+SortCellsDescending(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const AG_TableCell *row1 = *(const AG_TableCell **)p1;
 	const AG_TableCell *row2 = *(const AG_TableCell **)p2;
@@ -899,7 +885,7 @@ SortCellsAscending(const void *_Nonnull p1, const void *_Nonnull p2)
 }
 
 static int
-SortCellsDescending(const void *_Nonnull p1, const void *_Nonnull p2)
+SortCellsAscending(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const AG_TableCell *row1 = *(const AG_TableCell **)p1;
 	const AG_TableCell *row2 = *(const AG_TableCell **)p2;
@@ -1068,9 +1054,11 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 	case AG_CELL_UINT:
 		return ((Uint)c1->data.i - (Uint)c2->data.i);
 #ifdef HAVE_FLOAT
+	/* TODO */
 	case AG_CELL_FLOAT:
+		return (int)((c1->data.f - c2->data.f)*1000000.0f);
 	case AG_CELL_DOUBLE:
-		return (c1->data.f != c2->data.f);
+		return (int)((c1->data.f - c2->data.f)*1000000.0);
 #endif
 	case AG_CELL_WIDGET:
 		/* TODO hooks */
@@ -1131,9 +1119,10 @@ CompareCellsGeneral(const AG_TableCell *c1, const AG_TableCell *c2)
 static int
 CompareCellsFnTxt(const AG_TableCell *_Nonnull c1, const AG_TableCell *_Nonnull c2)
 {
-	char b1[AG_TABLE_TXT_MAX];
-	char b2[AG_TABLE_TXT_MAX];
+	char b1[AG_TABLE_BUF_MAX];
+	char b2[AG_TABLE_BUF_MAX];
 
+	/* XXX TODO handle oversize cells */
 	c1->fnTxt(c1->data.p, b1, sizeof(b1));
 	c2->fnTxt(c2->data.p, b2, sizeof(b2));
 	return (strcoll(b1, b2));
@@ -1332,14 +1321,13 @@ ColumnLeftClick(AG_Table *_Nonnull t, int px)
 					ColumnLeftClickSort(t, tc);
 				}
 				if ((ev = t->fn[AG_TABLE_FN_COL_CLICK]))
-					AG_PostEventByPtr(NULL, t, ev, "%i", n);
+					AG_PostEventByPtr(t, ev, "%i", n);
 #ifdef AG_TIMERS
 				if (t->dblClickedCol != -1 &&
 				    t->dblClickedCol == n) {
 					AG_DelTimer(t, &t->dblClickTo);
 					if ((ev = t->fn[AG_TABLE_FN_COL_DBLCLICK])) {
-						AG_PostEventByPtr(NULL, t, ev,
-						    "%i", n);
+						AG_PostEventByPtr(t, ev, "%i", n);
 					}
 					t->dblClickedCol = -1;
 				} else {
@@ -1413,13 +1401,13 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 			AG_TableDeselectAllRows(t);
 			AG_TableSelectRow(t, mc);
 			if ((ev = t->fn[AG_TABLE_FN_ROW_CLICK]) != NULL)
-				AG_PostEventByPtr(NULL, t, ev, "%i", mc);
+				AG_PostEventByPtr(t, ev, "%i", mc);
 #ifdef AG_TIMERS
 			if (t->dblClickedRow != -1 &&
 			    t->dblClickedRow == mc) {
 				AG_DelTimer(t, &t->dblClickTo);
 				if ((ev = t->fn[AG_TABLE_FN_ROW_DBLCLICK])) {
-					AG_PostEventByPtr(NULL, t, ev, "%i", mc);
+					AG_PostEventByPtr(t, ev, "%i", mc);
 				}
 				t->dblClickedRow = -1;
 			} else {
@@ -1475,13 +1463,13 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 				}
 			}
 			if ((ev = t->fn[AG_TABLE_FN_CELL_CLICK]))
-				AG_PostEventByPtr(NULL, t, ev, "%i", mc);
+				AG_PostEventByPtr(t, ev, "%i", mc);
 #ifdef AG_TIMERS
 			if (t->dblClickedCell != -1 &&
 			    t->dblClickedCell == mc) {
 				AG_DelTimer(t, &t->dblClickTo);
 				if ((ev = t->fn[AG_TABLE_FN_CELL_DBLCLICK])) {
-					AG_PostEventByPtr(NULL, t, ev, "%i", mc);
+					AG_PostEventByPtr(t, ev, "%i", mc);
 				}
 				t->dblClickedCell = -1;
 			} else {
@@ -1522,13 +1510,13 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 				tc->selected = ((int)n == nc);
 			}
 			if ((ev = t->fn[AG_TABLE_FN_COL_CLICK]))
-				AG_PostEventByPtr(NULL, t, ev, "%i", nc);
+				AG_PostEventByPtr(t, ev, "%i", nc);
 #ifdef AG_TIMERS
 			if (t->dblClickedCol != -1 &&
 			    t->dblClickedCol == nc) {
 				AG_DelTimer(t, &t->dblClickTo);
 				if ((ev = t->fn[AG_TABLE_FN_COL_DBLCLICK])) {
-					AG_PostEventByPtr(NULL, t, ev, "%i", nc);
+					AG_PostEventByPtr(t, ev, "%i", nc);
 				}
 				t->dblClickedCol = -1;
 			} else {
@@ -1812,8 +1800,8 @@ OnFontChange(AG_Event *_Nonnull event)
 	const int fontHeight = WFONT(t)->height;
 	Uint m, n;
 	
-	t->hRow = fontHeight+2;
-	t->hCol = fontHeight+4;
+	t->hRow = fontHeight + 4;		/* TODO css cell-padding */
+	t->hCol = fontHeight + 4;		/* TODO css head-padding */
 	
 	for (n = 0; n < t->n; n++) {
 		AG_TableCol *tc = &t->cols[n];
@@ -1875,7 +1863,7 @@ AG_TableSelectRow(AG_Table *t, int m)
 	if (m < t->m) {
 		for (n = 0; n < t->n; n++)
 			t->cells[m][n].selected = 1;
-		AG_PostEvent(NULL, t, "row-selected", "%i", m);
+		AG_PostEvent(t, "row-selected", "%i", m);
 	}
 	AG_ObjectUnlock(t);
 	AG_Redraw(t);
@@ -2249,11 +2237,24 @@ fail:
 	return (-1);
 }
 
+void
+AG_TableDelRow(AG_Table *t, int m)
+{
+	int n;
+
+	for (n = 0; n < t->n; n++) {
+		AG_TableCell *c = &t->cells[m][n];
+
+		AG_Debug(t, "cell: %d, sel=%d\n", n, c->selected);
+	}
+}
+
 int
 AG_TableSaveASCII(AG_Table *t, void *pf, char sep)
 {
+	char buf[AG_TABLE_BUF_MAX];
 	FILE *f = (FILE *)pf;
-	char txt[AG_TABLE_TXT_MAX];
+	AG_Size cSize;
 	int m, n;
 
 	AG_ObjectLock(t);
@@ -2270,8 +2271,16 @@ AG_TableSaveASCII(AG_Table *t, void *pf, char sep)
 			if (t->cols[n].name[0] == '\0') {
 				continue;
 			}
-			AG_TablePrintCell(&t->cells[m][n], txt, sizeof(txt));
-			fputs(txt, f);
+			if ((cSize = AG_TablePrintCell(&t->cells[m][n], buf,
+			    sizeof(buf))) >= sizeof(buf)) {
+				char *text = TryMalloc(cSize);
+
+				AG_TablePrintCell(&t->cells[m][n], text, cSize);
+				fputs(text, f);
+				free(text);
+			} else {
+				fputs(buf, f);
+			}
 			fputc(sep, f);
 		}
 		fputc('\n', f);
@@ -2293,7 +2302,7 @@ Init(void *_Nonnull obj)
 
 	t->sep = ":";
 	t->flags = 0;
-	t->hRow = agTextFontHeight+2;
+	t->hRow = agTextFontHeight+4;
 	t->hCol = agTextFontHeight+4;
 	t->wColMin = 16;
 	t->wColDefault = 80;
@@ -2418,3 +2427,5 @@ AG_WidgetClass agTableClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */
