@@ -37,10 +37,12 @@ const AG_VariableTypeInfo agVariableTypes[] = {
 	{ AG_VARIABLE_P_UINT,  1, "Uint *",  AG_VARIABLE_UINT,  0, sizeof(Uint) },
 	{ AG_VARIABLE_INT,     0, "int",     AG_VARIABLE_INT,   1, sizeof(int) },
 	{ AG_VARIABLE_P_INT,   1, "int *",   AG_VARIABLE_INT,   1, sizeof(int) },
+#if AG_MODEL != AG_SMALL
 	{ AG_VARIABLE_ULONG,   0, "Ulong",   AG_VARIABLE_ULONG, 14, sizeof(Ulong) },
 	{ AG_VARIABLE_P_ULONG, 1, "Ulong *", AG_VARIABLE_ULONG, 14, sizeof(Ulong) },
 	{ AG_VARIABLE_LONG,    0, "long",    AG_VARIABLE_LONG,  15, sizeof(long) },
 	{ AG_VARIABLE_P_LONG,  1, "long *",  AG_VARIABLE_LONG,  15, sizeof(long) },
+#endif
 	/*
 	 * Fixed-width integers
 	 */
@@ -48,6 +50,7 @@ const AG_VariableTypeInfo agVariableTypes[] = {
 	{ AG_VARIABLE_P_UINT8,	1, "Uint8 *",   AG_VARIABLE_UINT8,  2,	1 },
 	{ AG_VARIABLE_SINT8,	0, "Sint8",     AG_VARIABLE_SINT8,  3,	1 },
 	{ AG_VARIABLE_P_SINT8,	1, "Sint8 *",   AG_VARIABLE_SINT8,  3,	1 },
+#if AG_MODEL != AG_SMALL
 	{ AG_VARIABLE_UINT16,	0, "Uint16",    AG_VARIABLE_UINT16, 4,	2 },
 	{ AG_VARIABLE_P_UINT16,	1, "Uint16 *",  AG_VARIABLE_UINT16, 4,	2 },
 	{ AG_VARIABLE_SINT16,	0, "Sint16",    AG_VARIABLE_SINT16, 5,	2 },
@@ -70,6 +73,7 @@ const AG_VariableTypeInfo agVariableTypes[] = {
 	{ AG_VARIABLE_P_FLOAT,       1, "float *",	 AG_VARIABLE_FLOAT,       10, 4 },
 	{ AG_VARIABLE_DOUBLE,        0, "double",	 AG_VARIABLE_DOUBLE,      11, 8 },
 	{ AG_VARIABLE_P_DOUBLE,	     1, "double *",	 AG_VARIABLE_DOUBLE,      11, 8 },
+#endif /* !AG_SMALL */
 	/*
 	 * C strings (STRING is auto-allocated; P_STRING is fixed-size buffer).
 	 */
@@ -85,8 +89,10 @@ const AG_VariableTypeInfo agVariableTypes[] = {
 	 */
 	{ AG_VARIABLE_P_FLAG,	1, "Flag *",   AG_VARIABLE_UINT,   1, sizeof(Uint) },
 	{ AG_VARIABLE_P_FLAG8,	1, "Flag8 *",  AG_VARIABLE_UINT8,  2, sizeof(Uint8) },
+#if AG_MODEL != AG_SMALL
 	{ AG_VARIABLE_P_FLAG16,	1, "Flag16 *", AG_VARIABLE_UINT16, 4, sizeof(Uint16) },
 	{ AG_VARIABLE_P_FLAG32,	1, "Flag32 *", AG_VARIABLE_UINT32, 6, sizeof(Uint32) },
+#endif
 	/*
 	 * Serializable Object or Object:Variable reference.
 	 */
@@ -333,7 +339,7 @@ AG_Unset(void *pObj, const char *name)
 #undef  FN_POST_BOUND_EVENT
 #define FN_POST_BOUND_EVENT(obj, V) \
 	if (OBJECT(obj)->flags & AG_OBJECT_BOUND_EVENTS) \
-		AG_PostEvent(NULL, (obj), "bound", "%p", (V))
+		AG_PostEvent((obj), "bound", "%p", (V))
 
 
 /* Body of AG_GetFoo() routines. */
@@ -413,12 +419,14 @@ AG_SetUint(void *obj, const char *name, Uint v)
 #endif
 	FN_VARIABLE_SET(u, Uint, AG_VARIABLE_UINT);
 }
+#if AG_MODEL != AG_SMALL
 void
 AG_InitUint(AG_Variable *V, Uint v)
 {
 	AG_InitVariable(V, AG_VARIABLE_UINT, "");
 	V->data.u = v;
 }
+#endif
 AG_Variable *
 AG_BindUint(void *obj, const char *name, Uint *v)
 {
@@ -455,12 +463,14 @@ AG_SetInt(void *obj, const char *name, int v)
 #endif
 	FN_VARIABLE_SET(i, int, AG_VARIABLE_INT);
 }
+#if AG_MODEL != AG_SMALL
 void
 AG_InitInt(AG_Variable *V, int v)
 {
 	AG_InitVariable(V, AG_VARIABLE_INT, "");
 	V->data.i = v;
 }
+#endif
 AG_Variable *
 AG_BindInt(void *obj, const char *name, int *v)
 {
@@ -583,12 +593,14 @@ AG_SetUint8(void *obj, const char *name, Uint8 v)
 #endif
 	FN_VARIABLE_SET(u8, Uint8, AG_VARIABLE_UINT8);
 }
+#if AG_MODEL != AG_SMALL
 void
 AG_InitUint8(AG_Variable *V, Uint8 v)
 {
 	AG_InitVariable(V, AG_VARIABLE_UINT8, "");
 	V->data.u8 = v;
 }
+#endif
 AG_Variable *
 AG_BindUint8(void *obj, const char *name, Uint8 *v)
 {
@@ -625,12 +637,14 @@ AG_SetSint8(void *obj, const char *name, Sint8 v)
 #endif
 	FN_VARIABLE_SET(s8, Sint8, AG_VARIABLE_SINT8);
 }
+#if AG_MODEL != AG_SMALL
 void
 AG_InitSint8(AG_Variable *V, Sint8 v)
 {
 	AG_InitVariable(V, AG_VARIABLE_SINT8, "");
 	V->data.s8 = v;
 }
+#endif
 AG_Variable *
 AG_BindSint8(void *obj, const char *name, Sint8 *v)
 {
@@ -1023,7 +1037,8 @@ AG_GetPointer(void *obj, const char *name)
 	return (p);
 }
 
-#ifdef AG_TYPE_SAFETY
+#if AG_MODEL != AG_SMALL
+# ifdef AG_TYPE_SAFETY
 const void *
 AG_GetConstPointer(void *obj, const char *name)
 {
@@ -1043,7 +1058,8 @@ AG_GetConstPointer(void *obj, const char *name)
 	AG_ObjectUnlock(obj);
 	return (const void *)p;
 }
-#endif /* AG_TYPE_SAFETY */
+# endif /* AG_TYPE_SAFETY */
+#endif /* !AG_SMALL */
 
 AG_Variable *
 AG_SetPointer(void *obj, const char *name, void *v)
@@ -1064,13 +1080,14 @@ AG_SetPointer(void *obj, const char *name, void *v)
 	return (V);
 }
 
+#if AG_MODEL != AG_SMALL
 AG_Variable *
 AG_SetConstPointer(void *obj, const char *name, const void *v)
 {
 	AG_Variable *V;
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	Debug(obj, "Set \"%s\" -> (const void *)%p\n", name, v);
-#endif
+# endif
 	AG_ObjectLock(obj);
 	V = AG_FetchVariable(obj, name, AG_VARIABLE_POINTER);
 	V->data.p = (void *)v;
@@ -1085,6 +1102,8 @@ AG_InitConstPointer(AG_Variable *V, const void *v)
 	AG_InitPointer(V, (void *)v);
 	V->info.pFlags |= AG_VARIABLE_P_READONLY;
 }
+#endif /* !AG_SMALL */
+
 void
 AG_InitPointer(AG_Variable *V, void *v)
 {
@@ -1139,20 +1158,18 @@ AG_GetString(void *pObj, const char *name, char *dst, AG_Size dstSize)
 	
 	AG_ObjectLock(obj);
 
-	if ((V = AG_AccessVariable(obj, name)) == NULL) {
+	if ((V = AG_AccessVariable(obj, name)) == NULL)
 		AG_FatalErrorV("E20", "No such variable");
-	}
 #ifdef AG_DEBUG
-	if (V->data.s == NULL) { AG_FatalError("V->data.s=NULL"); }
+	if (!V->data.s) { AG_FatalError("!V->data.s"); }
 #endif
-	Strlcpy(dst, V->data.s, dstSize);
-	rv = strlen(V->data.s);
-
+	rv = Strlcpy(dst, V->data.s, dstSize);
 	AG_UnlockVariable(V);
 	AG_ObjectUnlock(obj);
 	return (rv);
 }
 
+#if AG_MODEL != AG_SMALL
 /* Return a newly-allocated copy of the contents of a string variable. */
 char *
 AG_GetStringDup(void *pObj, const char *name)
@@ -1189,12 +1206,14 @@ AG_GetStringP(void *pObj, const char *name)
 	AG_UnlockVariable(V);
 	return (s);
 }
+#endif /* !AG_SMALL */
 
 /*
  * Create (or replace the contents of) a string variable.
  *
  * - If var exists as an unbounded string, then replace it with a copy of s.
- * - If var references a bounded string buffer, then safe copy s into it.
+ * - If var references a bounded fixed-size buffer, then copy s into it safely
+ *   (possibly truncating to fit the buffer).
  * - If var is a different type, then mutate into a STRING with a copy of s.
  */
 AG_Variable *
@@ -1230,11 +1249,12 @@ AG_SetString(void *pObj, const char *name, const char *s)
 		case AG_VARIABLE_P_STRING:
 			AG_LockVariable(V);
 #ifdef AG_DEBUG
-			if (strlen(s) >= V->info.size)
-				Debug(obj, "P_STRING: >= %lu bytes",
-				    (Ulong)V->info.size);
-#endif
+			if (Strlcpy(V->data.s, s, V->info.size) >= V->info.size)
+				Debug(obj, "%s: Truncated to fit %lu bytes\n",
+				    name, (Ulong)V->info.size);
+#else
 			Strlcpy(V->data.s, s, V->info.size);
+#endif
 			AG_UnlockVariable(V);
 			break;
 		default:
@@ -1254,6 +1274,7 @@ AG_SetString(void *pObj, const char *name, const char *s)
 	return (V);
 }
 
+#if AG_MODEL != AG_SMALL
 /* Initialize an AG_Variable to be a string containing the given value. */
 void
 AG_InitString(AG_Variable *V, const char *v)
@@ -1261,6 +1282,21 @@ AG_InitString(AG_Variable *V, const char *v)
 	AG_InitVariable(V, AG_VARIABLE_STRING, "");
 	V->data.s = Strdup(v);
 	V->info.size = 0;
+}
+#endif
+
+/* Printf-style variant of AG_SetString() */
+AG_Variable *
+AG_SetStringF(void *obj, const char *name, const char *fmt, ...)
+{
+	va_list ap;
+	char *s;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+
+	return AG_SetStringNODUP(obj, name, s);
 }
 
 /*
@@ -1288,10 +1324,12 @@ AG_SetStringNODUP(void *obj, const char *name, char *s)
 	case AG_VARIABLE_P_STRING:
 		AG_LockVariable(V);
 #ifdef AG_DEBUG
-		if (strlen(s) >= V->info.size)
-			Debug(obj, "P_STRING: >= %lu bytes", (Ulong)V->info.size);
-#endif
+		if (Strlcpy(V->data.s, s, V->info.size) >= V->info.size)
+			Debug(obj, "%s: Truncated to fit %lu bytes\n",
+			    name, (Ulong)V->info.size);
+#else
 		Strlcpy(V->data.s, s, V->info.size);
+#endif
 		AG_UnlockVariable(V);
 		break;
 	default:
@@ -1308,20 +1346,6 @@ AG_SetStringNODUP(void *obj, const char *name, char *s)
 	}
 	AG_ObjectUnlock(obj);
 	return (V);
-}
-
-/* Printf-style variant of AG_SetString() */
-AG_Variable *
-AG_SetStringF(void *obj, const char *name, const char *fmt, ...)
-{
-	va_list ap;
-	char *s;
-
-	va_start(ap, fmt);
-	Vasprintf(&s, fmt, ap);
-	va_end(ap);
-
-	return AG_SetStringNODUP(obj, name, s);
 }
 
 AG_Variable *

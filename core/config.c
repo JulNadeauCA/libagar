@@ -322,7 +322,7 @@ AG_ConfigFind(AG_ConfigPathGroup group, const char *filename, char *path,
 		Strlcat(file, AG_PATHSEP, sizeof(file));
 		Strlcat(file, filename, sizeof(file));
 		if ((rv = AG_FileExists(file)) == 1) {
-			if (Strlcpy(path, file, path_len) > path_len) {
+			if (Strlcpy(path, file, path_len) >= path_len) {
 				AG_SetErrorS(_("Path overflow"));
 				return (-1);
 			}

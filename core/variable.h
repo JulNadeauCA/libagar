@@ -6,7 +6,7 @@
 
 #ifndef AG_VARIABLE_NAME_MAX
 # if AG_MODEL == AG_SMALL
-#  define AG_VARIABLE_NAME_MAX 16
+#  define AG_VARIABLE_NAME_MAX 8
 # else
 #  define AG_VARIABLE_NAME_MAX 28
 # endif
@@ -19,14 +19,17 @@ typedef enum ag_variable_type {
 	AG_VARIABLE_P_UINT,		/* Pointer to Uint */
 	AG_VARIABLE_INT,		/* Natural int */
 	AG_VARIABLE_P_INT,		/* Pointer to int */
+#if AG_MODEL != AG_SMALL
 	AG_VARIABLE_ULONG,		/* Natural unsigned long integer */
 	AG_VARIABLE_P_ULONG,		/* Pointer to unsigned long */
 	AG_VARIABLE_LONG,		/* Natural long integer */
 	AG_VARIABLE_P_LONG,		/* Pointer to long */
+#endif
 	AG_VARIABLE_UINT8,		/* Unsigned 8-bit */
 	AG_VARIABLE_P_UINT8,		/* Pointer to Uint8 */
 	AG_VARIABLE_SINT8,		/* Signed 8-bit */
 	AG_VARIABLE_P_SINT8,		/* Pointer to Sint8 */
+#if AG_MODEL != AG_SMALL
 	AG_VARIABLE_UINT16,		/* Unsigned 16-bit */
 	AG_VARIABLE_P_UINT16,		/* Pointer to Uint16 */
 	AG_VARIABLE_SINT16,		/* Signed 16-bit */
@@ -39,40 +42,43 @@ typedef enum ag_variable_type {
 	AG_VARIABLE_P_UINT64,		/* Pointer to Uint64 */
 	AG_VARIABLE_SINT64,		/* Signed 64-bit */
 	AG_VARIABLE_P_SINT64,		/* Pointer to Sint64 */
-
 	AG_VARIABLE_FLOAT,		/* Single-precision real number */
 	AG_VARIABLE_P_FLOAT,		/* Pointer to single-precision real */
 	AG_VARIABLE_DOUBLE,		/* Double-precision real number */
 	AG_VARIABLE_P_DOUBLE,		/* Pointer to double-precision real */
-
+#endif /* !AG_SMALL */
 	AG_VARIABLE_STRING,		/* C string */
 	AG_VARIABLE_P_STRING,		/* Pointer to C string */
 	AG_VARIABLE_POINTER,		/* Generic C pointer */
 	AG_VARIABLE_P_POINTER,		/* Reference to a generic pointer */
 	AG_VARIABLE_P_FLAG,		/* Bit(s) in an int (per given mask) */
 	AG_VARIABLE_P_FLAG8,		/* Bit(s) in an int8 (per given mask) */
+#if AG_MODEL != AG_SMALL
 	AG_VARIABLE_P_FLAG16,		/* Bit(s) in an int16 (per given mask) */
 	AG_VARIABLE_P_FLAG32,		/* Bit(s) in an int32 (per given mask) */
+#endif
 	AG_VARIABLE_P_OBJECT,		/* Serializable reference to an Object
 					   (and hard dependency) */
 	AG_VARIABLE_P_VARIABLE,		/* Serializable reference to specific
 					   Object Variable (by name) */
 	AG_VARIABLE_TYPE_LAST
 } AG_VariableType;
+#if AG_MODEL == AG_SMALL
+#define AG_VariableType Uint8
+#endif
 
 #define AG_VARIABLE_BOOL AG_VARIABLE_INT
 
 /* Information about an AG_Variable type */
 typedef struct ag_variable_type_info {
+	AG_VariableType type;      /* Variable type */
 #if AG_MODEL == AG_SMALL
-	Uint8 type;                /* Variable type */
 	Uint8 indirLvl;            /* Level of indirection (0 = none) */
 	const char *_Nonnull name; /* Name string */
-	Uint8 typeTgt;             /* Pointer target type (if indirLvl > 0) */
+	AG_VariableType typeTgt;   /* Pointer target type (if indirLvl > 0) */
 	Sint8 code;                /* Numerical code (-1 = not serializable) */
 	Uint8 size;                /* Size in bytes */
 #else
-	AG_VariableType type;      /* Variable type */
 	int indirLvl;              /* Level of indirection (0 = none) */
 	const char *_Nonnull name; /* Name string */
 	AG_VariableType typeTgt;   /* Pointer target type (if indirLvl > 0) */
@@ -92,9 +98,9 @@ union ag_variable_data {
 	Uint            u;
 	Uint8          u8;
 	Sint8          s8;
+#if AG_MODEL != AG_SMALL
 	Uint16        u16;
 	Sint16        s16;
-#if AG_MODEL != AG_SMALL
 	long           li;
 	Ulong         uli;
 	Uint32        u32;
@@ -137,25 +143,21 @@ typedef const void *_Nullable (*AG_ConstPointerFn)(struct ag_event *_Nonnull);
 
 /* Agar variable instance */
 typedef struct ag_variable {
-	char name[AG_VARIABLE_NAME_MAX];           /* Variable name (""=anon) */
-#if AG_MODEL != AG_SMALL
+	char name[AG_VARIABLE_NAME_MAX];           /* Name string (or "") */
 	AG_VariableType type;			   /* Variable type */
-#else
-	Uint8 type;
-#endif
 #ifdef AG_THREADS
 	_Nullable_Mutex AG_Mutex *_Nullable mutex; /* Lock on target data */
 #endif
 	union {
 		Uint pFlags;           /* Pointer flags (for [P_]POINTER) */
-#define AG_VARIABLE_P_READONLY 0x01    /* Auto-free() the target on cleanup */
-#define AG_VARIABLE_P_FREE     0x02    /* Require access via AG_CONST_PTR() */
-
+#define AG_VARIABLE_P_READONLY 0x01    /* Hard const (need AG_CONST_PTR()) */
+#define AG_VARIABLE_P_FREE     0x02    /* Auto free() target on cleanup */
+#define AG_VARIABLE_P_SENDER   0x04    /* Is a pointer to a sender Object */
 		union {                /* Bitmask (for P_FLAG_*) */
 			Uint u;
 			Uint8 u8;
-			Uint16 u16;
 #if AG_MODEL != AG_SMALL
+			Uint16 u16;
 			Uint32 u32;
 #endif
 		} bitmask;
@@ -198,7 +200,9 @@ void AG_VariableSubst(void *_Nonnull, const char *_Nonnull, char *_Nonnull,
  */
 Uint                  AG_GetUint(void *_Nonnull, const char *_Nonnull)
                                 _Pure_Attribute_If_Unthreaded;
+#if AG_MODEL != AG_SMALL
 void                  AG_InitUint(AG_Variable *_Nonnull, Uint);
+#endif
 AG_Variable *_Nonnull AG_SetUint(void *_Nonnull, const char *_Nonnull, Uint);
 AG_Variable *_Nonnull AG_BindUint(void *_Nonnull, const char *_Nonnull,
                                   Uint *_Nonnull);
@@ -212,7 +216,9 @@ AG_Variable *_Nonnull AG_BindUintMp(void *_Nonnull, const char *_Nonnull,
  */
 int                   AG_GetInt(void *_Nonnull, const char *_Nonnull)
                                _Pure_Attribute_If_Unthreaded;
+#if AG_MODEL != AG_SMALL
 void                  AG_InitInt(AG_Variable *_Nonnull, int);
+#endif
 AG_Variable *_Nonnull AG_SetInt(void *_Nonnull, const char *_Nonnull, int);
 AG_Variable *_Nonnull AG_BindInt(void *_Nonnull, const char *_Nonnull,
 			         int *_Nonnull);
@@ -267,7 +273,9 @@ AG_Variable *_Nonnull AG_BindLongMp(void *_Nonnull, const char *_Nonnull,
  */
 Uint8                 AG_GetUint8(void *_Nonnull, const char *_Nonnull)
                                  _Pure_Attribute_If_Unthreaded;
+#if AG_MODEL != AG_SMALL
 void                  AG_InitUint8(AG_Variable *_Nonnull, Uint8);
+#endif
 AG_Variable *_Nonnull AG_SetUint8(void *_Nonnull, const char *_Nonnull, Uint8);
 AG_Variable *_Nonnull AG_BindUint8(void *_Nonnull, const char *_Nonnull,
                                    Uint8 *_Nonnull);
@@ -281,7 +289,9 @@ AG_Variable *_Nonnull AG_BindUint8Mp(void *_Nonnull, const char *_Nonnull,
  */
 Sint8                 AG_GetSint8(void *_Nonnull, const char *_Nonnull)
                                  _Pure_Attribute_If_Unthreaded;
+#if AG_MODEL != AG_SMALL
 void                  AG_InitSint8(AG_Variable *_Nonnull, Sint8);
+#endif
 AG_Variable *_Nonnull AG_SetSint8(void *_Nonnull, const char *_Nonnull, Sint8);
 AG_Variable *_Nonnull AG_BindSint8(void *_Nonnull, const char *_Nonnull,
 			           Sint8 *_Nonnull);
@@ -420,16 +430,20 @@ AG_Variable *_Nonnull AG_BindDoubleMp(void *_Nonnull, const char *_Nonnull,
  */
 AG_Size               AG_GetString(void *_Nonnull, const char *_Nonnull,
                                    char *_Nonnull, AG_Size);
+#if AG_MODEL != AG_SMALL
 char *_Nullable       AG_GetStringDup(void *_Nonnull, const char *_Nonnull);
 char *_Nullable       AG_GetStringP(void *_Nonnull, const char *_Nonnull);
+#endif
 AG_Variable *_Nonnull AG_SetString(void *_Nonnull, const char *_Nonnull,
                                    const char *_Nonnull);
+#if AG_MODEL != AG_SMALL
+void                  AG_InitString(AG_Variable *_Nonnull, const char *_Nonnull);
+#endif
 AG_Variable *_Nonnull AG_SetStringF(void *_Nonnull, const char *_Nonnull,
                                     const char *_Nonnull, ...)
 		                   FORMAT_ATTRIBUTE(printf,3,4);
 AG_Variable *_Nonnull AG_SetStringNODUP(void *_Nonnull, const char *_Nonnull,
                                         char *_Nonnull);
-void                  AG_InitString(AG_Variable *_Nonnull, const char *_Nonnull);
 void                  AG_InitStringNODUP(AG_Variable *_Nonnull, char *_Nonnull);
 AG_Variable *_Nonnull AG_BindString(void *_Nonnull, const char *_Nonnull,
                                     char *_Nonnull, AG_Size);
@@ -444,25 +458,26 @@ AG_Variable *_Nonnull AG_BindStringMp(void *_Nonnull, const char *_Nonnull,
  */
 void *_Nullable       AG_GetPointer(void *_Nonnull, const char *_Nonnull)
                                    _Pure_Attribute_If_Unthreaded;
-#ifdef AG_TYPE_SAFETY
-const void *_Nullable AG_GetConstPointer(void *_Nonnull, const char *_Nonnull)
-                                        _Pure_Attribute_If_Unthreaded;
-#else
-# define              AG_GetConstPointer(o,n) ((const void *)AG_GetPointer((o),(n)))
-#endif
-void                  AG_InitConstPointer(AG_Variable *_Nonnull, const void *_Nullable);
 void                  AG_InitPointer(AG_Variable *_Nonnull, void *_Nullable);
 AG_Variable *_Nonnull AG_SetPointer(void *_Nonnull, const char *_Nonnull,
                                     void *_Nullable);
-AG_Variable *_Nonnull AG_SetConstPointer(void *_Nonnull, const char *_Nonnull,
-                                         const void *_Nullable);
-
 AG_Variable *_Nonnull AG_BindPointer(void *_Nonnull, const char *_Nonnull,
                                      void *_Nonnull *_Nullable);
 #ifdef AG_THREADS
 AG_Variable *_Nonnull AG_BindPointerMp(void *_Nonnull, const char *_Nonnull,
                                        void *_Nonnull *_Nullable,
 				       _Nonnull_Mutex AG_Mutex *_Nonnull);
+#endif
+#if AG_MODEL != AG_SMALL
+# ifdef AG_TYPE_SAFETY
+const void *_Nullable AG_GetConstPointer(void *_Nonnull, const char *_Nonnull)
+                                        _Pure_Attribute_If_Unthreaded;
+# else
+# define              AG_GetConstPointer(o,n) ((const void *)AG_GetPointer((o),(n)))
+# endif
+void                  AG_InitConstPointer(AG_Variable *_Nonnull, const void *_Nullable);
+AG_Variable *_Nonnull AG_SetConstPointer(void *_Nonnull, const char *_Nonnull,
+                                         const void *_Nullable);
 #endif
 
 /*

@@ -108,7 +108,11 @@ AG_Execute(const char *file, char **argv)
 			Strlcat(argstr, " ", sizeof(argstr));
 			i++;
 		}
-		Strlcpy(launchData.szCmdLine, argstr, sizeof(argstr));
+		if (Strlcpy(launchData.szCmdLine, argstr, sizeof(argstr)) >=
+		    sizeof(argstr)) {
+			AG_SetErrorS(_("Command argument is too long"));
+			return (-1);
+		}
 	}
 
 	/* Resolve the full xbe path */

@@ -184,7 +184,12 @@ AG_InitTimer(AG_Timer *to, const char *name, Uint flags)
 	if (name == NULL) {
 		to->name[0] = '\0';
 	} else {
+#ifdef AG_DEBUG
+		if (Strlcpy(to->name, name, sizeof(to->name)) >= sizeof(to->name))
+			Verbose("Truncated timer name: \"%s\"\n", to->name);
+#else
 		Strlcpy(to->name, name, sizeof(to->name));
+#endif
 	}
 	to->id = -1;
 	to->obj = NULL;

@@ -11,7 +11,12 @@ ag_init_variable(AG_Variable *V, AG_VariableType type, const char *name)
 #endif
 {
 	if (name[0] != '\0') {
+#ifdef AG_DEBUG
+		if (AG_Strlcpy(V->name, name, sizeof(V->name)) >= sizeof(V->name))
+			AG_FatalError("Variable name too long");
+#else
 		AG_Strlcpy(V->name, name, sizeof(V->name));
+#endif
 	} else {
 #ifdef AG_DEBUG
 		memset(V->name, '\0', sizeof(V->name));

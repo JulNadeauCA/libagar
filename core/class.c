@@ -52,14 +52,23 @@ static void
 InitClass(AG_ObjectClass *_Nonnull C, const char *_Nonnull hier)
 {
 	const char *c;
+	AG_Size rv;
 
-	Strlcpy(C->hier, hier, sizeof(C->hier));
+	if (Strlcpy(C->hier, hier, sizeof(C->hier)) >= sizeof(C->hier))
+		goto too_big;
+
 	if ((c = strrchr(hier, ':')) != NULL && c[1] != '\0') {
-		Strlcpy(C->name, &c[1], sizeof(C->name));
+		rv = Strlcpy(C->name, &c[1], sizeof(C->name));
 	} else {
-		Strlcpy(C->name, hier, sizeof(C->name));
+		rv = Strlcpy(C->name, hier, sizeof(C->name));
+	}
+	if (rv >= sizeof(C->name)) {
+		goto too_big;
 	}
 	TAILQ_INIT(&C->pvt.sub);
+	return;
+too_big:
+	AG_FatalError("Class name overflow");
 }
 
 /*
@@ -139,8 +148,9 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 	char nsName[AG_OBJECT_HIER_MAX], *pNsName = nsName;
 	const char *s, *p, *pOpen = NULL;
 	char *c;
-	int iTok, i=0, len=0;
 	AG_Namespace *ns;
+	AG_Size rv;
+	int iTok, i=0, len=0;
 
 	cs->hier[0] = '\0';
 	cs->name[0] = '\0';
@@ -168,7 +178,9 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 			}
 # ifdef AG_ENABLE_DSO
 			if (s[0] == '@' && s[1] != '\0')
-				Strlcpy(cs->libs, &s[1], sizeof(cs->libs));
+				if (Strlcpy(cs->libs, &s[1], sizeof(cs->libs))
+				    >= sizeof(cs->libs))
+					AG_FatalError("DSO name overflow");
 # endif
 		}
 		if (*s == ')') {
@@ -190,12 +202,9 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 			buf[iTok] = '\0';
 			for (pBuf = buf;
 			     (pTok = Strsep(&pBuf, ":")) != NULL; ) {
-				i += Strlcpy(&cs->hier[i], ns->pfx,
-				    sizeof(cs->hier)-i);
-				i += Strlcpy(&cs->hier[i], pTok,
-				    sizeof(cs->hier)-i);
-				i += Strlcpy(&cs->hier[i], ":",
-				    sizeof(cs->hier)-i);
+				i += Strlcpy(&cs->hier[i], ns->pfx, sizeof(cs->hier)-i);
+				i += Strlcpy(&cs->hier[i], pTok, sizeof(cs->hier)-i);
+				i += Strlcpy(&cs->hier[i], ":", sizeof(cs->hier)-i);
 			}
 			pOpen = NULL;
 			continue;
@@ -207,7 +216,12 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 		cs->hier[i-1] = '\0';		/* Strip last ':' */
 	}
 	if (i == 0) {				/* Flat format */
+#ifdef AG_DEBUG
+		if (Strlcpy(cs->hier, spec, sizeof(cs->hier)) >= sizeof(cs->hier))
+			AG_FatalError("Class hierarchy overflow");
+#else
 		Strlcpy(cs->hier, spec, sizeof(cs->hier));
+#endif
 	} else {
 		cs->hier[i] = '\0';
 	}
@@ -216,10 +230,13 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 
 	/* Fill in the "name" field. */
 	if ((c = strrchr(cs->hier, ':')) != NULL && c[1] != '\0') {
-		Strlcpy(cs->name, &c[1], sizeof(cs->name));
+		rv = Strlcpy(cs->name, &c[1], sizeof(cs->name));
 	} else {
-		Strlcpy(cs->name, cs->hier, sizeof(cs->name));
+		rv = Strlcpy(cs->name, cs->hier, sizeof(cs->name));
 	}
+	if (rv >= sizeof(cs->name))
+		AG_FatalError("Class name overflow");
+
 	if ((c = strrchr(cs->name, '@')) != NULL)
 		*c = '\0';
 	
@@ -227,7 +244,9 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 	Strlcpy(cs->spec, cs->hier, sizeof(cs->spec));
 # ifdef AG_ENABLE_DSO
 	if (cs->libs[0] != '\0')
-		Strlcat(cs->spec, cs->libs, sizeof(cs->spec));
+		if (Strlcat(cs->spec, cs->libs, sizeof(cs->spec)) >=
+		    sizeof(cs->spec))
+			AG_FatalError("DSO name overflow");
 # endif
 	return (0);
 }
@@ -281,9 +300,9 @@ AG_RegisterClass(void *p)
 #ifdef AG_ENABLE_DSO
 	Strlcpy(C->pvt.libs, cs.libs, sizeof(C->pvt.libs));
 #endif
-#ifdef AG_DEBUG_CORE
-	Debug(NULL, "Registered class: %s: %s %s\n", cs.name, cs.hier, cs.libs);
-#endif
+/* #ifdef AG_DEBUG_CORE */
+	Debug(NULL, "[ Register %s (%s) ]\n", cs.name, cs.hier);
+/* #endif */
 	AG_MutexLock(&agClassLock);
 
 	/* Insert into the class tree. */
@@ -315,9 +334,9 @@ AG_UnregisterClass(void *p)
 	AG_MutexLock(&agClassLock);
 	h = AG_TblHash(agClassTbl, C->hier);
 	if (AG_TblExistsHash(agClassTbl, h, C->hier)) {
-#ifdef AG_DEBUG_CORE
-		Debug(NULL, "Unregistering class: %s\n", C->name);
-#endif
+/* #ifdef AG_DEBUG_CORE */
+		Debug(NULL, "[ Unregister %s ]\n", C->name);
+/* #endif */
 		/* Remove from the class tree. */
 		TAILQ_REMOVE(&Csuper->pvt.sub, C, pvt.subclasses);
 		C->super = NULL;
@@ -346,7 +365,9 @@ AG_CreateClass(const char *hier, AG_Size objectSize, AG_Size classSize,
 		return (NULL);
 	}
 	memset(C, 0, classSize);
-	Strlcpy(C->hier, hier, sizeof(C->hier));
+	if (Strlcpy(C->hier, hier, sizeof(C->hier)) >= sizeof(C->hier)) {
+		AG_FatalError("Class hierarchy overflow");
+	}
 	C->size = objectSize;
 	C->ver.major = major;
 	C->ver.minor = minor;
