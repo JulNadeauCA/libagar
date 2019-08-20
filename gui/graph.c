@@ -25,6 +25,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/graph.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/menu.h>
@@ -53,7 +55,7 @@ static void
 KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Graph *gf = AG_GRAPH_SELF();
-	int keysym = AG_INT(1);
+	const int keysym = AG_INT(1);
 	const int scrollIncr = 10;
 
 	switch (keysym) {
@@ -94,26 +96,27 @@ GetEdgeLabelCoords(AG_GraphEdge *edge, int *x, int *y)
 static __inline__ int
 MouseOverEdge(AG_GraphEdge *edge, int x, int y)
 {
-	int lx, ly;
+	const AG_Graph *gf = edge->graph;
 	AG_Surface *lbl;
+	int lx, ly;
 
 	if (edge->labelSu == -1) {
 		return (0);
 	}
 	GetEdgeLabelCoords(edge, &lx, &ly);
-	lbl = WSURFACE(edge->graph,edge->labelSu);
-	return (abs(x - lx + edge->graph->xOffs) <= (lbl->w >> 1) &&
-	        abs(y - ly + edge->graph->yOffs) <= (lbl->h >> 1));
+	lbl = WSURFACE(gf,edge->labelSu);
+	return (abs(x - lx + gf->xOffs) <= (lbl->w >> 1) &&
+	        abs(y - ly + gf->yOffs) <= (lbl->h >> 1));
 }
 
 static void
 MouseMotion(AG_Event *event)
 {
 	AG_Graph *gf = AG_GRAPH_SELF();
-	int x = AG_INT(1);
-	int y = AG_INT(2);
-	int dx = AG_INT(3);
-	int dy = AG_INT(4);
+	const int x = AG_INT(1);
+	const int y = AG_INT(2);
+	const int dx = AG_INT(3);
+	const int dy = AG_INT(4);
 	AG_GraphVertex *vtx;
 	AG_GraphEdge *edge;
 
@@ -150,7 +153,7 @@ static void
 MouseButtonUp(AG_Event *event)
 {
 	AG_Graph *gf = AG_GRAPH_SELF();
-	int button = AG_INT(1);
+	const int button = AG_INT(1);
 
 	switch (button) {
 	case AG_MOUSE_LEFT:
@@ -162,7 +165,7 @@ MouseButtonUp(AG_Event *event)
 	}
 }
 
-/* Widget must be locked */
+/* Search for an Edge by user pointer. The Graph must be locked. */
 AG_GraphEdge *
 AG_GraphEdgeFind(AG_Graph *gf, void *userPtr)
 {
@@ -175,21 +178,16 @@ AG_GraphEdgeFind(AG_Graph *gf, void *userPtr)
 	return (NULL);
 }
 
+/* Create a new edge between two vertices. */
 AG_GraphEdge *
 AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
     void *userPtr)
 {
-	AG_GraphEdge *edge;
+	AG_GraphEdge *edge, *edgeOrig;
 
-	AG_ObjectLock(gf);
-	TAILQ_FOREACH(edge, &gf->edges, edges) {
-		if (edge->v1 == v1 && edge->v2 == v2) {
-			AG_SetError(_("Existing edge"));
-			AG_ObjectUnlock(gf);
-			return (NULL);
-		}
-	}
 	edge = Malloc(sizeof(AG_GraphEdge));
+	edge->type = AG_GRAPH_EDGE_UNDIRECTED;
+	edge->labelTxt[0] = '\0';
 	edge->labelSu = -1;
 	AG_ColorBlack(&edge->edgeColor);
 	AG_ColorBlack(&edge->labelColor);
@@ -199,27 +197,39 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 	edge->userPtr = userPtr;
 	edge->graph = gf;
 	edge->popupMenu = NULL;
-	edge->labelTxt[0] = '\0';
-	edge->type = AG_GRAPH_EDGE_UNDIRECTED;
+
+	AG_ObjectLock(gf);
+
+	TAILQ_FOREACH(edgeOrig, &gf->edges, edges) {
+		if (edgeOrig->v1 == v1 &&
+		    edgeOrig->v2 == v2)
+			goto edge_exists;
+	}
 	TAILQ_INSERT_TAIL(&gf->edges, edge, edges);
 	gf->nEdges++;
 
-	edge->v1->edges = Realloc(edge->v1->edges,
-	    (edge->v1->nEdges + 1)*sizeof(AG_GraphEdge *));
-	edge->v2->edges = Realloc(edge->v2->edges,
-	    (edge->v2->nEdges + 1)*sizeof(AG_GraphEdge *));
+	edge->v1->edges = Realloc(edge->v1->edges, (edge->v1->nEdges + 1)*sizeof(AG_GraphEdge *));
+	edge->v2->edges = Realloc(edge->v2->edges, (edge->v2->nEdges + 1)*sizeof(AG_GraphEdge *));
 	edge->v1->edges[edge->v1->nEdges++] = edge;
 	edge->v2->edges[edge->v2->nEdges++] = edge;
 
 	AG_ObjectUnlock(gf);
 	AG_Redraw(gf);
 	return (edge);
+edge_exists:
+	AG_SetError(_("An edge already exists between %s and %s."),
+	    v1->labelTxt, v2->labelTxt);
+	AG_ObjectUnlock(gf);
+	free(edge);
+	return (NULL);
 }
 
 AG_GraphEdge *
 AG_DirectedGraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
-		void *usrPtr) {
-	AG_GraphEdge *edge = AG_GraphEdgeNew(gf, v1, v2, usrPtr);
+    void *usrPtr)
+{
+	AG_GraphEdge *edge = AG_GraphEdgeNew(gf, v1,v2, usrPtr);
+
 	edge->type = AG_GRAPH_EDGE_DIRECTED;
 	return edge;
 }
@@ -230,7 +240,7 @@ AG_GraphEdgeFree(AG_GraphEdge *edge)
 	if (edge->labelSu != -1) {
 		AG_WidgetUnmapSurface(edge->graph, edge->labelSu);
 	}
-	Free(edge);
+	free(edge);
 }
 
 void
@@ -268,35 +278,33 @@ AG_GraphEdgeLabel(AG_GraphEdge *ge, const char *fmt, ...)
 void
 AG_GraphEdgeColorLabel(AG_GraphEdge *edge, Uint8 r, Uint8 g, Uint8 b)
 {
-	AG_ObjectLock(edge->graph);
 	AG_ColorRGB_8(&edge->labelColor, r,g,b);
-	AG_ObjectUnlock(edge->graph);
 	AG_Redraw(edge->graph);
 }
 
 void
 AG_GraphEdgeColor(AG_GraphEdge *edge, Uint8 r, Uint8 g, Uint8 b)
 {
-	AG_ObjectLock(edge->graph);
 	AG_ColorRGB_8(&edge->edgeColor, r,g,b);
-	AG_ObjectUnlock(edge->graph);
 	AG_Redraw(edge->graph);
 }
 
 void
 AG_GraphEdgePopupMenu(AG_GraphEdge *edge, struct ag_popup_menu *pm)
 {
-	AG_ObjectLock(edge->graph);
+	AG_Graph *gf = edge->graph;
+
+	AG_ObjectLock(gf);
 	edge->popupMenu = pm;
-	AG_ObjectUnlock(edge->graph);
-	AG_Redraw(edge->graph);
+	AG_ObjectUnlock(gf);
+	AG_Redraw(gf);
 }
 
 static void
 SetVertexStyle(AG_Event *event)
 {
 	AG_GraphVertex *vtx = AG_PTR(1);
-	int style = AG_INT(2);
+	const int style = AG_INT(2);
 
 	AG_GraphVertexStyle(vtx, (enum ag_graph_vertex_style)style);
 }
@@ -305,7 +313,7 @@ static void
 UnselectEdge(AG_Graph *gf, AG_GraphEdge *edge)
 {
 	edge->flags &= ~(AG_GRAPH_SELECTED);
-	AG_PostEvent(NULL, gf, "graph-edge-unselected", "%p", edge);
+	AG_PostEvent(gf, "graph-edge-unselected", "%p", edge);
 	AG_Redraw(gf);
 }
 
@@ -313,7 +321,7 @@ static void
 SelectEdge(AG_Graph *gf, AG_GraphEdge *edge)
 {
 	edge->flags |= AG_GRAPH_SELECTED;
-	AG_PostEvent(NULL, gf, "graph-edge-selected", "%p", edge);
+	AG_PostEvent(gf, "graph-edge-selected", "%p", edge);
 	AG_Redraw(gf);
 }
 
@@ -321,7 +329,7 @@ static void
 UnselectVertex(AG_Graph *gf, AG_GraphVertex *vtx)
 {
 	vtx->flags &= ~(AG_GRAPH_SELECTED);
-	AG_PostEvent(NULL, gf, "graph-vertex-unselected", "%p", vtx);
+	AG_PostEvent(gf, "graph-vertex-unselected", "%p", vtx);
 	AG_Redraw(gf);
 }
 
@@ -329,7 +337,7 @@ static void
 SelectVertex(AG_Graph *gf, AG_GraphVertex *vtx)
 {
 	vtx->flags |= AG_GRAPH_SELECTED;
-	AG_PostEvent(NULL, gf, "graph-vertex-selected", "%p", vtx);
+	AG_PostEvent(gf, "graph-vertex-selected", "%p", vtx);
 	AG_Redraw(gf);
 }
 
@@ -337,10 +345,10 @@ static void
 MouseButtonDown(AG_Event *event)
 {
 	AG_Graph *gf = AG_GRAPH_SELF();
-	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
-	AG_KeyMod kmod = AG_GetModState(gf);
+	const int button = AG_INT(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
+	const AG_KeyMod kmod = AG_GetModState(gf);
 	AG_GraphVertex *vtx, *vtx2;
 	AG_GraphEdge *edge, *edge2;
 	AG_PopupMenu *pm;
@@ -356,9 +364,9 @@ MouseButtonDown(AG_Event *event)
 		if (gf->flags & AG_GRAPH_NO_SELECT) {
 			break;
 		}
-		if (kmod & (AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT)) {
+		if (kmod & (AG_KEYMOD_CTRL | AG_KEYMOD_SHIFT)) {
 			TAILQ_FOREACH(edge, &gf->edges, edges) {
-				if (!MouseOverEdge(edge, x, y)) {
+				if (!MouseOverEdge(edge, x,y)) {
 					continue;
 				}
 				if (edge->flags & AG_GRAPH_SELECTED) {
@@ -368,7 +376,7 @@ MouseButtonDown(AG_Event *event)
 				}
 			}
 			TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
-				if (!MouseOverVertex(vtx, x, y)) {
+				if (!MouseOverVertex(vtx, x,y)) {
 					continue;
 				}
 				if (vtx->flags & AG_GRAPH_SELECTED) {
@@ -379,7 +387,7 @@ MouseButtonDown(AG_Event *event)
 			}
 		} else {
 			TAILQ_FOREACH(edge, &gf->edges, edges) {
-				if (MouseOverEdge(edge, x, y))
+				if (MouseOverEdge(edge, x,y))
 					break;
 			}
 			if (edge != NULL) {
@@ -389,7 +397,7 @@ MouseButtonDown(AG_Event *event)
 				SelectEdge(gf, edge);
 			}
 			TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
-				if (MouseOverVertex(vtx, x, y))
+				if (MouseOverVertex(vtx, x,y))
 					break;
 			}
 			if (vtx != NULL) {
@@ -408,7 +416,7 @@ MouseButtonDown(AG_Event *event)
 			break;
 		}
 		TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
-			if (!MouseOverVertex(vtx, x, y)) {
+			if (!MouseOverVertex(vtx, x,y)) {
 				continue;
 			}
 			if (vtx->popupMenu != NULL) {
@@ -429,7 +437,7 @@ MouseButtonDown(AG_Event *event)
 			break;
 		}
 		TAILQ_FOREACH(edge, &gf->edges, edges) {
-			if (!MouseOverEdge(edge, x, y)) {
+			if (!MouseOverEdge(edge, x,y)) {
 				continue;
 			}
 			if (edge->popupMenu != NULL) {
@@ -520,13 +528,12 @@ Destroy(void *p)
 	AG_GraphFreeVertices((AG_Graph *)p);
 }
 
+/* Set an initial size requisition in pixels. */
 void
 AG_GraphSizeHint(AG_Graph *gf, Uint w, Uint h)
 {
-	AG_ObjectLock(gf);
 	gf->wPre = w;
 	gf->hPre = h;
-	AG_ObjectUnlock(gf);
 }
 
 static void
@@ -542,7 +549,7 @@ static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Graph *gf = obj;
-	AG_GraphVertex* vtx;
+	AG_GraphVertex *vtx;
 
 	if (a->w < 1 || a->h < 1)
 		return (-1);
@@ -785,7 +792,7 @@ Draw(void *obj)
 	AG_PopClipRect(gf);
 }
 
-/* Graph must be locked. */
+/* The Graph must be locked. */
 AG_GraphVertex *
 AG_GraphVertexFind(AG_Graph *gf, void *userPtr)
 {
@@ -798,6 +805,7 @@ AG_GraphVertexFind(AG_Graph *gf, void *userPtr)
 	return (NULL);
 }
 
+/* Create a new vertex. */
 AG_GraphVertex *
 AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 {
@@ -829,6 +837,7 @@ AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 	return (vtx);
 }
 
+/* The Graph must be locked. */
 void
 AG_GraphVertexFree(AG_GraphVertex *vtx)
 {
@@ -842,18 +851,14 @@ AG_GraphVertexFree(AG_GraphVertex *vtx)
 void
 AG_GraphVertexColorLabel(AG_GraphVertex *vtx, Uint8 r, Uint8 g, Uint8 b)
 {
-	AG_ObjectLock(vtx->graph);
 	AG_ColorRGB_8(&vtx->labelColor, r,g,b);
-	AG_ObjectUnlock(vtx->graph);
 	AG_Redraw(vtx->graph);
 }
 
 void
 AG_GraphVertexColorBG(AG_GraphVertex *vtx, Uint8 r, Uint8 g, Uint8 b)
 {
-	AG_ObjectLock(vtx->graph);
 	AG_ColorRGB_8(&vtx->bgColor, r,g,b);
-	AG_ObjectUnlock(vtx->graph);
 	AG_Redraw(vtx->graph);
 }
 
@@ -906,19 +911,15 @@ AG_GraphVertexPosition(AG_GraphVertex *vtx, int x, int y)
 void
 AG_GraphVertexSize(AG_GraphVertex *vtx, Uint w, Uint h)
 {
-	AG_ObjectLock(vtx->graph);
 	vtx->w = w;
 	vtx->h = h;
-	AG_ObjectUnlock(vtx->graph);
 	AG_Redraw(vtx->graph);
 }
 
 void
 AG_GraphVertexStyle(AG_GraphVertex *vtx, enum ag_graph_vertex_style style)
 {
-	AG_ObjectLock(vtx->graph);
 	vtx->style = style;
-	AG_ObjectUnlock(vtx->graph);
 	AG_Redraw(vtx->graph);
 }
 
@@ -1077,3 +1078,5 @@ AG_WidgetClass agGraphClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */
