@@ -40,16 +40,31 @@
 The
 .Nm
 interface enables Agar applications to size and render text.
-Currently, two font engines are supported:
+Currently, the following engines:
 .Dv AG_FONT_VECTOR
-(using FreeType) and
+(if FreeType is available),
 .Dv AG_FONT_BITMAP
-(simple built-in bitmap font renderer).
-.Sh RENDER SETTINGS
-A number of settings which affect the rendering functions (see
-.Sx RENDERING
-section) can be modified at any time, and are organized in a stack of
-rendering attributes.
+(simple built-in bitmap font renderer) and
+.Dv AG_FONT_DUMMY
+(a no-op renderer).
+.Sh RENDERING ATTRIBUTES
+Agar maintains a stack of rendering attributes which influence the operation
+of text rendering and sizing routines.
+Attributes are set using functions such as
+.Fn AG_TextFont
+or
+.Fn AG_TextColor .
+.Pp
+Note: The functions below are *not* free-threaded and are only safe to invoke
+from the
+.Fn draw ,
+.Fn size_request ,
+.Fn size_allocate ,
+or any event handler of an
+.Xr AG_Widget 3
+with the
+.Dv AG_WIDGET_USE_TEXT
+flag set.
 .Pp
 .nr nS 1
 .Ft void
@@ -57,6 +72,9 @@ rendering attributes.
 .Pp
 .Ft void
 .Fn AG_PopTextState "void"
+.Pp
+.Ft "AG_TextState *"
+.Fn AG_TEXT_STATE_CUR "void"
 .Pp
 .Ft void
 .Fn AG_TextFont "AG_Font *font"
@@ -101,14 +119,19 @@ rendering attributes.
 .Fn AG_TextBGColorRGBA "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
 .nr nS 0
-The
 .Fn AG_PushTextState
-and
+increments the attribute stack pointer and creates a copy of the previous
+state in the current state.
 .Fn AG_PopTextState
-functions respectively push and pop the text rendering attribute stack.
-The attribute stack can hold
+decrements the stack pointer, discarding the current state.
+This stack can hold up to
 .Dv AG_TEXT_STATES_MAX
-items (at least 32).
+elements.
+.Pp
+The
+.Fn AG_TEXT_STATE_CUR
+macro expands to an expression returning the pointer to the current
+.Ft AG_TextState .
 .Pp
 The
 .Fn AG_TextFont
@@ -144,7 +167,7 @@ size.
 An argument of 100% leaves the size unchanged.
 .Pp
 .Fn AG_TextJustify
-selects the justification mode to use in multi-line rendering:
+selects the justify mode to use in multi-line rendering:
 .Bd -literal
 enum ag_text_justify {
 	AG_TEXT_LEFT,
@@ -354,7 +377,7 @@ which displays the message for a specific amount of time, given in milliseconds.
 .Ft void
 .Fn AG_UnusedFont "AG_Font *font"
 .Pp
-.Ft void
+.Ft "AG_Font *"
 .Fn AG_SetDefaultFont "AG_Font *font"
 .Pp
 .Ft void
@@ -414,6 +437,10 @@ If the font is no longer referenced, it is destroyed.
 .Pp
 .Fn AG_SetDefaultFont
 sets the specified font object as the default font.
+A pointer to the previous default font is returned.
+The caller may wish to call
+.Fn AG_UnusedFont
+on it.
 .Pp
 .Fn AG_SetRTL
 enables or disables right-to-left text mode.
@@ -448,8 +475,8 @@ The
 .Nm
 interface first appeared in Agar 1.0.
 Rendering attributes were introduced in Agar 1.3.
-RTL attribute was added in Agar 1.4.
 Fontconfig support was added in Agar 1.5.
 Agar 1.6 introduced the
 .Ft AG_FontPts
-abstraction to allow for integer-only builds.
+abstraction and
+.Fn AG_TEXT_STATE_CUR .
