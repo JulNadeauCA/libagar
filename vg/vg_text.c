@@ -231,6 +231,7 @@ RenderText(VG_Text *_Nonnull vt, char *_Nonnull sIn, VG_View *_Nonnull vv)
 	AG_PopTextState();
 }
 
+#if 0
 static void
 RenderTextPolled(VG_Text *_Nonnull vt, VG_View *_Nonnull vv)
 {
@@ -262,15 +263,19 @@ RenderTextPolled(VG_Text *_Nonnull vt, VG_View *_Nonnull vv)
 	}
 	RenderText(vt, s, vv);
 }
+#endif
 
 static void
 Draw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
 	VG_Text *vt = obj;
 
+#if 0
 	if (vt->args != NULL) {
 		RenderTextPolled(vt, vv);
-	} else {
+	} else
+#endif
+	{
 		RenderText(vt, vt->text, vv);
 	}
 }

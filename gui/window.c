@@ -908,7 +908,6 @@ static void
 OnDetach(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_WINDOW_SELF();
-	AG_Object *sender = AG_OBJECT_PTR(1);
 	AG_Object *chld;
 
 	/* Propagate to child objects */
