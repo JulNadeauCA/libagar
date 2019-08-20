@@ -50,6 +50,7 @@ typedef struct ag_console {
 #define AG_CONSOLE_NOPOPUP	0x08	/* Disable popup menus */
 #define AG_CONSOLE_EXPAND	(AG_CONSOLE_HFILL|AG_CONSOLE_VFILL)
 #define AG_CONSOLE_SELECTING	0x10	/* Selection in progress */
+#define AG_CONSOLE_BEGIN_SELECT 0x20	/* Flag for beginSelectTo */
 	int padding;			/* Padding in pixels */
 	int lineskip;			/* Space between lines */
 	int xOffs;			/* Horizontal display offset (px) */
@@ -67,8 +68,9 @@ typedef struct ag_console {
 	Uint *_Nullable scrollTo;	/* Scrolling request */
 	int pos, sel;			/* Position and selection */
 
-	struct ag_popup_menu *_Nullable pm;    /* Active popup menu */
-	AG_TAILQ_HEAD_(ag_console_file) files; /* Files being monitored */
+	struct ag_popup_menu *_Nullable pm;	/* Active popup menu */
+	AG_Timer beginSelectTo;			/* Timer for double-click */
+	AG_TAILQ_HEAD_(ag_console_file) files;	/* Files being monitored */
 } AG_Console;
 
 #define AGCONSOLE(obj)            ((AG_Console *)(obj))

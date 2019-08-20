@@ -29,6 +29,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/core/config.h>
 #include <agar/gui/console.h>
 #include <agar/gui/primitive.h>
@@ -399,12 +401,25 @@ MenuSelectAll(AG_Event *_Nonnull event)
 	AG_Redraw(cons);
 }
 
+#ifdef AG_TIMERS
+/* Timer callback for double click. */
+static Uint32
+BeginSelectTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
+{
+	AG_Console *cons = AGCONSOLE(to->obj);
+
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+	cons->flags &= ~(AG_CONSOLE_BEGIN_SELECT);
+	return (0);
+}
+#endif /* AG_TIMERS */
+
 static void
 BeginSelect(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 
 	if (x < cons->r.x || x > cons->r.x+cons->r.w) {
 		return;
@@ -421,12 +436,23 @@ BeginSelect(AG_Event *_Nonnull event)
 		AG_Redraw(cons);
 		cons->flags |= AG_CONSOLE_SELECTING;
 	}
+#ifdef AG_TIMERS
+	if (cons->flags & AG_CONSOLE_BEGIN_SELECT) {
+		cons->pos = 0;
+		cons->sel = cons->nLines-1;
+	} else {
+		cons->flags |= AG_CONSOLE_BEGIN_SELECT;
+		AG_AddTimer(cons, &cons->beginSelectTo, agMouseDblclickDelay,
+		    BeginSelectTimeout, NULL);
+	}
+#endif
 }
 
 static void
 CloseSelect(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
+
 	cons->flags &= ~(AG_CONSOLE_SELECTING);
 }
 
@@ -434,8 +460,8 @@ static void
 PopupMenu(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 	AG_PopupMenu *pm;
 	AG_MenuItem *mi;
 
@@ -443,7 +469,7 @@ PopupMenu(AG_Event *_Nonnull event)
 		return;
 
 	if (cons->pm != NULL) {
-		AG_PopupShowAt(cons->pm, x, y);
+		AG_PopupShowAt(cons->pm, x,y);
 		return;
 	}
 	if ((pm = cons->pm = AG_PopupNew(cons)) == NULL) {
@@ -460,15 +486,15 @@ PopupMenu(AG_Event *_Nonnull event)
 	AG_MenuAction(pm->root, _("Select All"), NULL,
 	    MenuSelectAll, "%p", cons);
 
-	AG_PopupShowAt(pm, x, y);
+	AG_PopupShowAt(pm, x,y);
 }
 
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
-	int x = AG_INT(1);
-	int y = AG_INT(2);
+	const int x = AG_INT(1);
+	const int y = AG_INT(2);
 	int newPos, newSel;
 
 	if ((cons->flags & AG_CONSOLE_SELECTING) == 0) {
@@ -583,7 +609,9 @@ Init(void *_Nonnull obj)
 	cons->r.h = 0;
 	cons->scrollTo = NULL;
 	TAILQ_INIT(&cons->files);
-
+#ifdef AG_TIMERS
+	AG_InitTimer(&cons->beginSelectTo, "beginSel", 0);
+#endif
 	AG_SetInt(cons, "line-scroll-amount", 5);
 
 	sb = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
@@ -1276,3 +1304,5 @@ AG_WidgetClass agConsoleClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */
