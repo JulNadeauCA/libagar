@@ -159,6 +159,7 @@ AG_OpenDir(const char *path)
 	dir = Malloc(sizeof(AG_Dir));
 	dir->ents = NULL;
 	dir->nents = 0;
+	dir->fd = -1;
 
 #ifdef _WIN32
 	{
@@ -167,13 +168,13 @@ AG_OpenDir(const char *path)
 		WIN32_FIND_DATA fdata;
 		DWORD rv;
 
-#ifdef _XBOX
+# ifdef _XBOX
 		if(!AG_XBOX_PathIsValid(path)) {
 			AG_SetError(_("Invalid file handle (%d)"),
 			    (int)GetLastError());
 			goto fail;
 		}
-#endif
+# endif
 
 		Strlcpy(dpath, path, sizeof(dpath));
 		if(dpath[strlen(dpath) - 1] != '\\') {
@@ -183,14 +184,14 @@ AG_OpenDir(const char *path)
 		}
 
 		if ((h = FindFirstFileA(dpath, &fdata))==INVALID_HANDLE_VALUE) {
-#ifndef _XBOX
+# ifndef _XBOX
 			AG_SetError(_("Invalid file handle (%d)"),
 			    (int)GetLastError());
 			goto fail;
-#endif
+# endif
 		}
 
-#ifdef _XBOX
+# ifdef _XBOX
 		/* On Xbox we need to manually include "." and ".." */
 		dir->ents = Realloc(dir->ents,
 		    (dir->nents+2)*sizeof(char *));
@@ -201,7 +202,7 @@ AG_OpenDir(const char *path)
 		if(h == INVALID_HANDLE_VALUE) {
 			return dir;
 		}
-#endif
+# endif
 		do {
 			dir->ents = Realloc(dir->ents,
 			    (dir->nents+1)*sizeof(char *));
@@ -216,22 +217,21 @@ AG_OpenDir(const char *path)
 	}
 #else /* !_WIN32 */
 	{
-		DIR *dp;
 		struct dirent *dent;
 		
-		if ((dp = opendir(path)) == NULL) {
+		if ((dir->dirp = opendir(path)) == NULL) {
 			AG_SetError(_("%s: Failed to open directory (%s)"),
 			    path, strerror(errno));
 			goto fail;
 		}
-		while ((dent = readdir(dp)) != NULL) {
+		while ((dent = readdir(dir->dirp)) != NULL) {
 			dir->ents = Realloc(dir->ents,
 			    (dir->nents+1)*sizeof(char *));
 			dir->ents[dir->nents++] = Strdup(dent->d_name);
 		}
-		closedir(dp);
+		dir->fd = dirfd(dir->dirp);
 	}
-#endif /* _WIN32 */
+#endif /* !_WIN32 */
 
 	return (dir);
 fail:
@@ -244,11 +244,14 @@ AG_CloseDir(AG_Dir *dir)
 {
 	int i;
 
+	if (dir->dirp)
+		closedir(dir->dirp);
+
 	for (i = 0; i < dir->nents; i++) {
-		Free(dir->ents[i]);
+		free(dir->ents[i]);
 	}
 	Free(dir->ents);
-	Free(dir);
+	free(dir);
 }
 
 int

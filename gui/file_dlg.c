@@ -26,10 +26,9 @@
 /*
  * Agar file browser widget.
  */
-#include <agar/config/ag_serialization.h>
-#ifdef AG_SERIALIZATION
-
 #include <agar/core/core.h>
+#if defined(AG_WIDGETS) && defined(AG_SERIALIZATION)
+
 #include <agar/core/config.h>
 
 #include <agar/gui/file_dlg.h>
@@ -63,7 +62,8 @@
 #include <agar/config/have_jpeg.h>
 #include <agar/config/have_png.h>
 
-static int FileIsExecutable(AG_FileDlg *_Nonnull, char *_Nonnull);
+static int  FileIsExecutable(AG_FileDlg *_Nonnull, char *_Nonnull);
+static void RefreshListing(AG_FileDlg *_Nonnull);
 
 void
 AG_FileDlgSetOptionContainer(AG_FileDlg *fd, void *ctr)
@@ -208,6 +208,21 @@ ExpandFromCompact(AG_Event *_Nonnull event)
 	AG_WindowShow(win);
 }
 
+static int
+OnDirectoryEvent(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
+{
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
+	AG_Dir *dir = AG_PTR(2);
+
+	if (fd->fdDir != -1) {
+		AG_Debug(fd, "Directory event (dir = %d)\n", fd->fdDir);
+		fd->fdDir = -1;
+		AG_CloseDir(dir);
+	}
+	RefreshListing(fd);
+	return (0);
+}
+
 /* Update the file / directory listing */
 static void
 RefreshListing(AG_FileDlg *_Nonnull fd)
@@ -224,6 +239,14 @@ RefreshListing(AG_FileDlg *_Nonnull fd)
 	if ((dir = AG_OpenDir(fd->cwd)) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", fd->cwd, AG_GetError());
 		return;
+	}
+	if (dir->fd != -1) {
+		fd->fdDir = dir->fd;
+		AG_Debug(fd, "Following %s (fd = %d)\n", fd->cwd, dir->fd);
+		AG_AddEventSink(AG_SINK_FSEVENT, dir->fd,
+		    (AG_FSEVENT_WRITE | AG_FSEVENT_DELETE | AG_FSEVENT_LINK |
+		     AG_FSEVENT_RENAME | AG_FSEVENT_REVOKE),
+		    OnDirectoryEvent, "%p,%p", fd, dir);
 	}
 	
 	dirs = Malloc(sizeof(char *));
@@ -320,7 +343,6 @@ RefreshListing(AG_FileDlg *_Nonnull fd)
 	
 	AG_ObjectUnlock(fd->tlFiles);
 	AG_ObjectUnlock(fd->tlDirs);
-	AG_CloseDir(dir);
 }
 
 /* Update the shortcuts. */
@@ -339,12 +361,11 @@ RefreshShortcuts(AG_FileDlg *_Nonnull fd, int init)
 	{
 		char path[4];
 		int drive;
-#ifdef _XBOX
+# ifdef _XBOX
 		DWORD d = AG_XBOX_GetLogicalDrives();
-#else
+# else
 		DWORD d = GetLogicalDrives();
-#endif
-
+# endif
 		/* Add the Windows drives */
 		for (drive = 0; drive < 26; drive++) {
 			AG_TlistItem *ti;
@@ -432,7 +453,7 @@ DirSelected(AG_Event *_Nonnull event)
 		if (AG_FileDlgSetDirectoryS(fd, ti->text) == -1) {
 			/* AG_TextMsgFromError() */
 		} else {
-			AG_PostEvent(NULL, fd, "dir-selected", "%s", fd->cwd);
+			AG_PostEvent(fd, "dir-selected", "%s", fd->cwd);
 			RefreshListing(fd);
 		}
 	}
@@ -452,7 +473,7 @@ LocSelected(AG_Event *_Nonnull event)
 	if (AG_FileDlgSetDirectoryS(fd, ti->text) == -1) {
 		/* AG_TextMsgFromError() */
 	} else {
-		AG_PostEvent(NULL, fd, "dir-selected", "%s", fd->cwd);
+		AG_PostEvent(fd, "dir-selected", "%s", fd->cwd);
 		RefreshListing(fd);
 	}
 }
@@ -483,12 +504,12 @@ ChooseFile(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull pwin)
 		}
 	}
 	if (ft && ft->action) {
-		AG_PostEventByPtr(NULL, fd, ft->action, "%s,%p", fd->cfile, ft);
+		AG_PostEventByPtr(fd, ft->action, "%s,%p", fd->cfile, ft);
 	}
-	AG_PostEvent(NULL, fd, "file-chosen", "%s,%p", fd->cfile, ft);
+	AG_PostEvent(fd, "file-chosen", "%s,%p", fd->cfile, ft);
 
 	if (fd->flags & AG_FILEDLG_CLOSEWIN) {
-/*		AG_PostEvent(NULL, pwin, "window-close", NULL); */
+/*		AG_PostEvent(pwin, "window-close", NULL); */
 		AG_ObjectDetach(pwin);
 	}
 	AG_ObjectUnlock(fd);
@@ -618,7 +639,7 @@ FileSelected(AG_Event *_Nonnull event)
 	AG_ObjectLock(tl);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
 		AG_FileDlgSetFilenameS(fd, ti->text);
-		AG_PostEvent(NULL, fd, "file-selected", "%s", fd->cfile);
+		AG_PostEvent(fd, "file-selected", "%s", fd->cfile);
 	}
 	AG_ObjectUnlock(tl);
 
@@ -639,8 +660,8 @@ FileSelected(AG_Event *_Nonnull event)
 			}
 			if (i < ft->nExts) {
 				AG_ComboSelect(fd->comTypes, ti);
-				AG_PostEvent(NULL, fd->comTypes,
-				    "combo-selected", "%p", ti);
+				AG_PostEvent(fd->comTypes, "combo-selected",
+				    "%p", ti);
 				break;
 			}
 		}
@@ -661,8 +682,7 @@ FileDblClicked(AG_Event *_Nonnull event)
 		AG_FileDlgSetFilenameS(fd, itFile->text);
 
 		if (fd->okAction) {
-			AG_PostEventByPtr(NULL, fd, fd->okAction, "%s,%p",
-			    fd->cfile,
+			AG_PostEventByPtr(fd, fd->okAction, "%s,%p", fd->cfile,
 			    fd->comTypes ? AG_TlistSelectedItemPtr(fd->comTypes->list) : NULL);
 		} else {
 			CheckAccessAndChoose(fd);
@@ -679,7 +699,7 @@ PressedOK(AG_Event *_Nonnull event)
 
 	AG_ObjectLock(fd);
 	if (fd->okAction) {
-		AG_PostEventByPtr(NULL, fd, fd->okAction, "%s", fd->cfile);
+		AG_PostEventByPtr(fd, fd->okAction, "%s", fd->cfile);
 	} else {
 		CheckAccessAndChoose(fd);
 	}
@@ -905,10 +925,10 @@ PressedCancel(AG_Event *_Nonnull event)
 
 	AG_ObjectLock(fd);
 	if (fd->cancelAction) {
-		AG_PostEventByPtr(NULL, fd, fd->cancelAction, NULL);
+		AG_PostEventByPtr(fd, fd->cancelAction, NULL);
 	} else if (fd->flags & AG_FILEDLG_CLOSEWIN) {
 		if ((pwin = AG_ParentWindow(fd)) != NULL) {
-			AG_PostEvent(NULL, pwin, "window-close", NULL);
+			AG_PostEvent(pwin, "window-close", NULL);
 /*			AG_ObjectDetach(pwin); */
 		}
 	}
@@ -993,7 +1013,7 @@ OnShow(AG_Event *_Nonnull event)
 	AG_TlistItem *it;
 	AG_Combo *comTypes;
 	int w, wMax = 0, nItems = 0;
-	
+
 	if (!(fd->flags & AG_FILEDLG_RESET_ONSHOW)) {
 		return;
 	}
@@ -1006,7 +1026,7 @@ OnShow(AG_Event *_Nonnull event)
 	RefreshShortcuts(fd, 1);
 
 	if ((comTypes = fd->comTypes) != NULL) {
-		AG_PostEvent(NULL, fd->comTypes, "combo-selected", "%p", NULL);
+		AG_PostEvent(fd->comTypes, "combo-selected", "%p", NULL);
 		AG_COMBO_FOREACH(it, fd->comTypes) {
 			AG_TextSize(it->text, &w, NULL);
 			if (w > wMax) { wMax = w; }
@@ -1343,6 +1363,7 @@ Init(void *_Nonnull obj)
 	fd->flags = AG_FILEDLG_RESET_ONSHOW;
 	(void)AG_GetCWD(fd->cwd, sizeof(fd->cwd));
 	fd->cfile[0] = '\0';
+	fd->fdDir = -1;
 	fd->hPane = NULL;
 	fd->tlDirs = NULL;
 	fd->tlFiles = NULL;
@@ -1387,7 +1408,7 @@ AG_FileDlgOkAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(fd->okAction, fmt, ap);
 		va_end(ap);
 	}
-#ifdef AG_THREADS
+#if 0
 	if (fd->flags & AG_FILEDLG_ASYNC)
 		fd->okAction->flags |= AG_EVENT_ASYNC;
 #endif
@@ -1711,7 +1732,7 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 			AG_EventGetArgs(ft->action, fmt, ap);
 			va_end(ap);
 		}
-#ifdef AG_THREADS
+#if 0
 		if (fd->flags & AG_FILEDLG_ASYNC)
 			ft->action->flags |= AG_EVENT_ASYNC;
 #endif
@@ -1932,4 +1953,4 @@ AG_WidgetClass agFileDlgClass = {
 	SizeAllocate
 };
 
-#endif /* AG_SERIALIZATION */
+#endif /* AG_WIDGETS and AG_SERIALIZATION */

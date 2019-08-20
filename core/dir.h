@@ -9,9 +9,10 @@
 #include <agar/core/begin.h>
 
 typedef struct ag_dir {
-	char *_Nullable *_Nonnull ents;
+	void *_Nullable           dirp;	    /* Internal handle */
+	char *_Nullable *_Nonnull ents;     /* Entries in UTF-8 */
 	Uint                     nents;
-	Uint32 _pad;
+	int                       fd;	    /* Open file descriptor (or -1) */
 } AG_Dir;
 
 __BEGIN_DECLS
