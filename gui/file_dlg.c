@@ -216,6 +216,10 @@ OnDirectoryEvent(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 
 	if (fd->fdDir != -1) {
 		AG_Debug(fd, "Directory event (dir = %d)\n", fd->fdDir);
+		if (fd->esFollow) {
+			AG_DelEventSink(fd->esFollow);
+			fd->esFollow = NULL;
+		}
 		fd->fdDir = -1;
 		AG_CloseDir(dir);
 	}
@@ -242,11 +246,14 @@ RefreshListing(AG_FileDlg *_Nonnull fd)
 	}
 	if (dir->fd != -1) {
 		fd->fdDir = dir->fd;
-		AG_Debug(fd, "Following %s (fd = %d)\n", fd->cwd, dir->fd);
-		AG_AddEventSink(AG_SINK_FSEVENT, dir->fd,
+		if (fd->esFollow) {
+			AG_DelEventSink(fd->esFollow);
+		}
+		fd->esFollow = AG_AddEventSink(AG_SINK_FSEVENT, dir->fd,
 		    (AG_FSEVENT_WRITE | AG_FSEVENT_DELETE | AG_FSEVENT_LINK |
 		     AG_FSEVENT_RENAME | AG_FSEVENT_REVOKE),
 		    OnDirectoryEvent, "%p,%p", fd, dir);
+		AG_Debug(fd, "Following %s (es=%p)\n", fd->cwd, fd->esFollow);
 	}
 	
 	dirs = Malloc(sizeof(char *));
@@ -1036,6 +1043,18 @@ OnShow(AG_Event *_Nonnull event)
 	}
 }
 
+static void
+OnHide(AG_Event *_Nonnull event)
+{
+	AG_FileDlg *fd = AG_FILEDLG_SELF();
+
+	if (fd->esFollow) {
+		AG_Debug(fd, "Unfollowing %s (es=%p)\n", fd->cwd, fd->esFollow);
+		AG_DelEventSink(fd->esFollow);
+		fd->esFollow = NULL;
+	}
+}
+
 /* Get an auto-allocated copy of the current filename. */
 char *
 AG_FileDlgGetFilename(AG_FileDlg *fd)
@@ -1364,6 +1383,7 @@ Init(void *_Nonnull obj)
 	(void)AG_GetCWD(fd->cwd, sizeof(fd->cwd));
 	fd->cfile[0] = '\0';
 	fd->fdDir = -1;
+	fd->esFollow = NULL;
 	fd->hPane = NULL;
 	fd->tlDirs = NULL;
 	fd->tlFiles = NULL;
@@ -1387,6 +1407,7 @@ Init(void *_Nonnull obj)
 	fd->fdExpand = NULL;
 
 	AG_AddEvent(fd, "widget-shown", OnShow, NULL);
+	AG_AddEvent(fd, "widget-hidden", OnHide, NULL);
 }
 
 /*

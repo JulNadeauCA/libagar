@@ -84,6 +84,7 @@ typedef struct ag_file_dlg {
 	char cwd[AG_PATHNAME_MAX];		/* Current working directory */
 	char cfile[AG_PATHNAME_MAX];		/* Current file path */
 	int fdDir;				/* Open directory FD */
+	AG_EventSink *_Nullable esFollow;	/* Open directory event sink */
 	AG_Pane *_Nonnull hPane;		/* Horizontal split container */
 	AG_Tlist *_Nonnull tlDirs;		/* List of directories */
 	AG_Tlist *_Nonnull tlFiles;		/* List of files */
