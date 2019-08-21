@@ -1187,13 +1187,17 @@ restart:
 		case AG_SINK_READ:
 		case AG_SINK_WRITE:
 			es = (AG_EventSink *)kev->udata;
-			es->fn(es, &es->fnArgs);
+			if (es) {
+				es->fn(es, &es->fnArgs);
+			}
 			break;
 		case AG_SINK_FSEVENT:
 		case AG_SINK_PROCEVENT:
 			es = (AG_EventSink *)kev->udata;
-			es->flagsMatched = GetSinkFlags(kev->fflags);
-			es->fn(es, &es->fnArgs);
+			if (es) {
+				es->flagsMatched = GetSinkFlags(kev->fflags);
+				es->fn(es, &es->fnArgs);
+			}
 			break;
 		default:
 			break;
@@ -1289,7 +1293,7 @@ AG_EventSinkTIMERFD(void)
 {
 	fd_set rdFds, wrFds;
 	int nFds, rv;
-	AG_EventSink *es;
+	AG_EventSink *es, *esNext;
 	AG_Object *ob, *obNext;
 	AG_Timer *to, *toNext;
 	struct timeval timeo, *pTimeo;
@@ -1374,7 +1378,10 @@ restart:
 #  endif /* AG_TIMERS */
 	
 	/* 2. Process I/O events. */
-	TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
+	for (es = TAILQ_FIRST(&agEventSource->sinks);
+	     es != TAILQ_END(&agEventSource->sinks);
+	     es = esNext) {
+		esNext = TAILQ_NEXT(es, sinks);
 		switch (es->type) {
 		case AG_SINK_READ:
 			if (FD_ISSET(es->ident, &rdFds)) {
@@ -1388,7 +1395,6 @@ restart:
 			break;
 		}
 	}
-
 	return (0);
 }
 

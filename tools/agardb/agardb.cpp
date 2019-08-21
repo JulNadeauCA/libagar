@@ -387,13 +387,26 @@ PrintVersion(void)
 /*
  * Debugger command entry
  */
+static void *ExecCmdThread(void *);
+
 static void
 ExecCmd(AG_Event *event)
 {
 	AG_Textbox *tb = AG_TEXTBOX_SELF();
-	char *s = AG_TextboxDupString(tb);
+	AG_Thread th;
+
+	AG_ThreadCreate(&th, ExecCmdThread, tb);
+}
+static void *
+ExecCmdThread(void *arg)
+{
+	AG_Textbox *tb = AGTEXTBOX(arg);
+	char *s;
 	SBStream cmds;
 	
+	AG_OBJECT_ISA(tb, "AG_Widget:AG_Textbox:*");
+
+	s = AG_TextboxDupString(tb);
 	if (strcmp(s, "version") == 0)
 		PrintVersion();
 
@@ -402,6 +415,7 @@ ExecCmd(AG_Event *event)
 
 	Agardb::Run_LLDB(cmds, 0);
 	AG_TextboxClearString(tb);
+	return (NULL);
 }
 
 static void
@@ -795,7 +809,7 @@ Agardb::GUI::GUI()
 		tb = g_textbox_prompt = AG_TextboxNew(box,
 		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
 		    "(lldb)");
-		(AG_SetEvent(tb, "textbox-return", ExecCmd, NULL))->flags |= AG_EVENT_ASYNC;
+		AG_SetEvent(tb, "textbox-return", ExecCmd, NULL);
 	
 		AG_ActionFn(g_console, "Help", ConsoleHelp, NULL);
 		AG_ActionOnKey(g_console, AG_KEY_F1, AG_KEYMOD_ANY, "Help");

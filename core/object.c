@@ -350,6 +350,10 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	if (parent == chld)
 		AG_FatalErrorV("E31", "parent == chld");
 #endif
+#ifdef AG_TYPE_SAFETY
+	if (!AG_OBJECT_VALID(parent)) { AG_FatalErrorV("E38a", "Parent object is invalid"); }
+	if (!AG_OBJECT_VALID(chld))   { AG_FatalErrorV("E38b", "Child object is invalid"); }
+#endif
 	AG_LockVFS(parent);
 	AG_ObjectLock(parent);
 	AG_ObjectLock(chld);
@@ -415,7 +419,10 @@ AG_ObjectDetach(void *pChld)
 #ifdef AG_TIMERS
 	AG_Timer *to, *toNext;
 #endif
-
+#ifdef AG_TYPE_SAFETY
+	if (!AG_OBJECT_VALID(chld))   { AG_FatalErrorV("E36a", "Child object is invalid"); }
+	if (!AG_OBJECT_VALID(parent)) { AG_FatalErrorV("E36b", "Parent object is invalid"); }
+#endif
 #ifdef AG_THREADS
 	AG_LockVFS(root);
 #endif
@@ -670,15 +677,15 @@ AG_ObjectDestroy(void *p)
 	AG_ObjectClass **hier;
 	int i, nHier;
 
+#ifdef AG_TYPE_SAFETY
+	if (!AG_OBJECT_VALID(ob))
+		AG_FatalErrorV("E36", "Object is invalid");
+#endif
 #ifdef AG_DEBUG
 	if (ob->parent != NULL) {
-		AG_Debug(ob, "I'm still attached to %s\n",
-		    OBJECT(ob->parent)->name);
+		AG_Debug(ob, "I'm still attached to %s\n", OBJECT(ob->parent)->name);
 		AG_FatalErrorV("E33", "Object is still attached");
 	}
-# ifdef AG_DEBUG_CORE
-	Debug(ob, "Destroying\n");
-# endif
 #endif
 	AG_ObjectFreeChildren(ob);
 	AG_ObjectReset(ob);
@@ -694,7 +701,13 @@ AG_ObjectDestroy(void *p)
 	AG_ObjectFreeVariables(ob);
 	AG_ObjectFreeEvents(ob);
 	AG_MutexDestroy(&ob->pvt.lock);
-
+#ifdef AG_TYPE_SAFETY
+	memcpy(ob->tag, "FreeMem", 7);
+# ifdef AG_DEBUG
+	memcpy(ob->name, "invalid", 7);
+	ob->cls = NULL;
+# endif
+#endif
 	if ((ob->flags & AG_OBJECT_STATIC) == 0)
 		free(ob);
 }

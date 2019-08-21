@@ -108,8 +108,7 @@ begin
  
   -- Objects can send events to each other.
   Post_Event
-    (Source => My_Child_1,
-     Target => My_Child_2,
+    (Object => My_Child_2,
      Event  => "Ping");
 
   -- Propagate makes events broadcast to the object's descendants.
@@ -120,7 +119,7 @@ begin
      Async     => False,
      Propagate => True);
   Post_Event
-    (Target => My_Parent,
+    (Object => My_Parent,
      Event  => "Ping");
 
   T_IO.Put_Line("My_Parent path = " & Get_Name(My_Parent));
