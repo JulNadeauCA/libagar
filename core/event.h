@@ -11,7 +11,7 @@
 # if AG_MODEL == AG_SMALL
 #  define AG_EVENT_ARGS_MAX 4
 # else
-#  define AG_EVENT_ARGS_MAX 6
+#  define AG_EVENT_ARGS_MAX 7
 # endif
 #endif
 
