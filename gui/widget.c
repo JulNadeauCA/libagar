@@ -243,7 +243,7 @@ OnAttach(AG_Event *_Nonnull event)
 		 * This is a Window attaching to a low-level Driver.
 		 */
 #ifdef AG_DEBUG_GUI
-		Debug(w, "Attach to %s (%s)\n", OBJECT_CLASS(parent)->name,
+		Debug(widget, "Attach to %s (%s)\n", OBJECT_CLASS(parent)->name,
 		   OBJECT(parent)->name);
 #endif
 		SetParentDriver(widget, drvParent);
