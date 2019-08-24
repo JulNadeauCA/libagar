@@ -164,7 +164,7 @@ static __inline__ AG_ObjectClass *_Nullable _Pure_Attribute
 AG_ObjectSuperclass(const void *_Nonnull p)
 #else
 AG_ObjectClass *_Nullable _Pure_Attribute
-ag_object_superclass(void *p)
+ag_object_superclass(const void *p)
 #endif
 {
 	return AGOBJECT(p)->cls->super;
