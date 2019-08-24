@@ -320,6 +320,7 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	};
 	RECT wndRect;
 	AG_SizeAlloc a;
+	int x,y;
 
 	if (agStereo)
 		pixelFormatDescriptor.dwFlags |= PFD_STEREO;
@@ -347,7 +348,10 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 
 	/* Translate Agar window flags to window style. */
 	WGL_GetWndStyle(win, &wndStyle, &wndStyleEx);
-	
+
+	x = r->x;
+	y = r->y;
+
 	/*
 	 * XXX TODO it would be best to pass CW_USEDEFAULT here, but
 	 * I could not find a way to retrieve the final allocated
@@ -358,16 +362,16 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 		Uint wDisp, hDisp;
 
 		if (WGL_GetDisplaySize(&wDisp, &hDisp) == 0) {
-			r->x = wDisp/2 - r->w/2;
-			r->y = hDisp/2 - r->h/2;
+			x = wDisp/2 - r->w/2;
+			y = hDisp/2 - r->h/2;
 		}
 	}
 	
 	/* Adjust window with account for window borders, if any */
-	wndRect.left   = r->x;
-	wndRect.top    = r->y;
-	wndRect.right  = r->x + r->w;
-	wndRect.bottom = r->y + r->h;
+	wndRect.left   = x;
+	wndRect.top    = y;
+	wndRect.right  = x + r->w;
+	wndRect.bottom = y + r->h;
 	AdjustWindowRectEx(&wndRect, wndStyle, 0, wndStyleEx);
 
 	/* Create OpenGL Window */
@@ -445,8 +449,8 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	AG_InitStockCursors(drv);
 
 	/* Update agar's idea of the actual window coordinates. */
-	a.x = r->x;
-	a.y = r->y;
+	a.x = x;
+	a.y = y;
 	a.w = r->w;
 	a.h = r->h;
 	AG_WidgetSizeAlloc(win, &a);
