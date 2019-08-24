@@ -198,16 +198,25 @@ c64 | c128 | geos | nes)
 	fi
 	if [ "${CROSS_COMPILING}" = "yes" ]; then
 		if [ "${byte_order}" = "" ]; then
-			echo "*"
-			echo "* Cannot guess the byte order of ${host}."
-			echo "* Please use --byte-order=LE or --byte-order=BE"
-			echo "*"
-			exit 1
+			case "${host}" in
+			*-*-mingw32-*)
+				echo "*"
+				echo "* Assuming ${host} to be little-endian."
+				echo "*"
+				byte_order="LE"
+				;;
+			*)
+				echo "*"
+				echo "* Cannot guess the byte order of ${host}."
+				echo "* Please use --byte-order=LE or --byte-order=BE"
+				echo "*"
+				exit 1
+				;;
+			esac
 		fi
 		echo "checking for byte order...${byte_order} (given)"
-	else
-		check(byte_order)
 	fi
+	check(byte_order)
 	;;
 esac
 

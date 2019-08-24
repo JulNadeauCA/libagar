@@ -1960,14 +1960,24 @@ echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
  then
 		if [ "${byte_order}" = "" ]
  then
-			echo "*"
-			echo "* Cannot guess the byte order of ${host}."
-			echo "* Please use --byte-order=LE or --byte-order=BE"
-			echo "*"
-			exit 1
+			case "${host}" in
+			*-*-mingw32-*)
+				echo "*"
+				echo "* Assuming ${host} to be little-endian."
+				echo "*"
+				byte_order="LE"
+				;;
+			*)
+				echo "*"
+				echo "* Cannot guess the byte order of ${host}."
+				echo "* Please use --byte-order=LE or --byte-order=BE"
+				echo "*"
+				exit 1
+				;;
+			esac
 		fi
 		echo "checking for byte order...${byte_order} (given)"
-	else
+	fi
 $ECHO_N 'checking for byte order...'
 $ECHO_N '# checking for byte order...' >>config.log
 # BEGIN byte_order
@@ -2062,7 +2072,6 @@ echo '#undef _MK_LITTLE_ENDIAN' >$bb_incdir/_mk_little_endian.h
 echo 'hdefs["_MK_LITTLE_ENDIAN"] = nil' >>configure.lua
 fi
 # END byte_order
-	fi
 	;;
 esac
 if [ "${enable_shared}" != "no" ]
@@ -14648,6 +14657,9 @@ if [ "${srcdir}" != '' ]; then
 	echo 'ok'
 fi
 echo '*'
-echo '* Configuration successful. Use the "make" command to compile,'
-echo '* and complete the installation using "make install".'
+echo '* Configuration successful!'
+echo '*'
+echo '* Use "make depend all" to compile. When finished,'
+$ECHO_N '* run "make install" to install under '
+echo "${PREFIX}."
 echo '*'
