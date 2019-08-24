@@ -320,6 +320,7 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	};
 	RECT wndRect;
 	AG_SizeAlloc a;
+	AG_Rect rVP;
 	int x,y;
 
 	if (agStereo)
@@ -430,7 +431,11 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	if (AG_GL_InitContext(wgl, &wgl->gl) == -1) {
 		return (-1);
 	}
-	AG_GL_SetViewport(&wgl->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	rVP.x = 0;
+	rVP.y = 0;
+	rVP.w = WIDTH(win);
+	rVP.h = HEIGHT(win);
+	AG_GL_SetViewport(&wgl->gl, &rVP);
 	
 	/* Show the window */
 	ShowWindow(wgl->hwnd, SW_SHOW);
@@ -440,9 +445,37 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	}
 	
 	/* Set the pixel format */
-	drv->videoFmt = AG_PixelFormatRGB(16, 0x000000ff, 0x0000ff00, 0x00ff0000);
-	if (drv->videoFmt == NULL)
+	if ((drv->videoFmt = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
 		goto fail;
+	}
+#if AG_MODEL == AG_LARGE
+	if (depthReq == 48) {				/* Deep color */
+# if AG_BYTEORDER == AG_BIG_ENDIAN
+		AG_PixelFormatRGB(drv->videoFmt, depthReq,
+			0xffff000000000000,
+			0x0000ffff00000000,
+			0x00000000ffff0000);
+# else
+		AG_PixelFormatRGB(drv->videoFmt, depthReq,
+			0x000000000000ffff,
+			0x00000000ffff0000,
+			0x0000ffff00000000);
+# endif
+	} else
+#endif /* AG_LARGE */
+	{						/* True Color */
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+		AG_PixelFormatRGB(drv->videoFmt, depthReq,
+			0xff000000,
+			0x00ff0000,
+			0x0000ff00);
+#else
+		AG_PixelFormatRGB(drv->videoFmt, depthReq,
+			0x000000ff,
+			0x0000ff00,
+			0x00ff0000);
+#endif
+	}
 
 	/* Create the built-in cursors */
 	WGL_InitDefaultCursor(wgl);
@@ -1303,6 +1336,7 @@ WGL_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverWGL *wgl = (AG_DriverWGL *)drv;
+	AG_Rect rVP;
 	int x = (a->x == -1) ? WIDGET(win)->x : a->x;
 	int y = (a->y == -1) ? WIDGET(win)->y : a->y;
 	
@@ -1314,7 +1348,11 @@ WGL_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 
 	/* Viewport dimensions have changed */
 	wglMakeCurrent(wgl->hdc, wgl->hglrc);
-	AG_GL_SetViewport(&wgl->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	rVP.x = 0;
+	rVP.y = 0;
+	rVP.w = WIDTH(win);
+	rVP.h = HEIGHT(win);
+	AG_GL_SetViewport(&wgl->gl, &rVP);
 	
 	/* Save the new effective window position. */
 	WIDGET(win)->x = a->x = x;
