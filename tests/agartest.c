@@ -657,12 +657,15 @@ main(int argc, char *argv[])
 	AG_Box *hBox;
 	int c, i, optInd;
 	Uint initFlags = AG_VERBOSE;
-	int noConsoleRedir = 0;
+	int noConsoleRedir=0, doBenchmark=0;
 
 	TAILQ_INIT(&tests);
 
-	while ((c = AG_Getopt(argc, argv, "CWqd:s:t:v?h", &optArg, &optInd)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "bCWqd:s:t:v?h", &optArg, &optInd)) != -1) {
 		switch (c) {
+		case 'b':
+			doBenchmark = 1;
+			break;
 		case 'C':
 			noConsoleRedir = 1;
 			break;
@@ -710,7 +713,7 @@ main(int argc, char *argv[])
 		case '?':
 		case 'h':
 		default:
-			printf("Usage: agartest [-CWqv] [-d driver] [-s stylesheet] [-t font] [test1 test2 ...]\n");
+			printf("Usage: agartest [-bCWqv] [-d driver] [-s stylesheet] [-t font] [test1 test2 ...]\n");
 			return (1);
 		}
 	}
@@ -918,8 +921,11 @@ main(int argc, char *argv[])
 		}
 		AG_TlistSelectPtr(tl, (void *)(*pTest));
 		AG_EventArgs(&ev, "%p,%p", tl, win);
-		RunTest(&ev);
-		RunBench(&ev);
+		if (doBenchmark) {
+			RunBench(&ev);
+		} else {
+			RunTest(&ev);
+		}
 	}
 	if (AG_ConfigSave() == -1)
 		AG_Verbose("ConfigSave: %s\n", AG_GetError());

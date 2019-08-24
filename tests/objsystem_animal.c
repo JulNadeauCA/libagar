@@ -171,15 +171,19 @@ Edit(void *obj)
 }
 
 /*
- * This structure describes our class. Any of the function members may be
- * NULL.
+ * The AG_ObjectClass structure describes an Agar object class.
+ *
+ * Although we are using the base AG_ObjectClass in this case, deriving
+ * this structure provides a good way for adding new methods and other
+ * class-specific data members that can be shared between all instances
+ * of a class.
  */
 AG_ObjectClass AnimalClass = {
-	"Animal",		/* Name of class */
-	sizeof(Animal),		/* Size of structure */
-	{ 0,0 },		/* Dataset version */
+	"Animal",		/* Inheritance hierarchy (implies AG_Object) */
+	sizeof(Animal),		/* Size of instance structures */
+	{ 0,0 },		/* Version (Major, Minor) */
 	Init,
-	NULL,			/* reinit */
+	NULL,			/* reset */
 	NULL,			/* destroy */
 	Load,
 	Save,

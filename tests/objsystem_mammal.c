@@ -24,11 +24,7 @@ Init(void *obj)
 }
 
 /*
- * Load routine. This operation restores the state of the object from
- * a data source.
- *
- * The object system will automatically invoke the load routines of
- * the parent beforehand.
+ * Load routine. This restores the state of the object from serialized data.
  */
 static int
 Load(void *obj, AG_DataSource *ds, const AG_Version *ver)
@@ -42,11 +38,7 @@ Load(void *obj, AG_DataSource *ds, const AG_Version *ver)
 }
 
 /*
- * Save routine. This operation saves the state of the object to a
- * data source.
- *
- * The object system will automatically invoke the save routines of
- * the parent beforehand.
+ * Save routine. This saves the state of the object to a DataSource.
  */
 static int
 Save(void *obj, AG_DataSource *ds)
@@ -59,7 +51,12 @@ Save(void *obj, AG_DataSource *ds)
 	return (0);
 }
 
-/* Edition routine. */
+/*
+ * Edition routine. We use Agar-GUI so we return an AG_Window.
+ *
+ * We could have also returned another container widget (such as a
+ * parent-less AG_Box).
+ */
 static void *
 Edit(void *obj)
 {
@@ -67,9 +64,28 @@ Edit(void *obj)
 	AG_Window *win, *winSuper;
 	AG_HSVPal *pal;
 	AG_ObjectClass *super;
+	char *s;
 
-	win = AG_WindowNew(0);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		AG_FatalError(NULL);
+	}
 	AG_WindowSetCaption(win, "Mammal: %s", AGOBJECT(mammal)->name);
+
+	/* Get the name of this object instance. */
+	if ((s = AG_ObjectGetName(mammal)) != NULL) {
+		AG_LabelNew(win, 0, "Name: %s", s);
+		AG_Free(s);
+	}
+
+	/*
+	 * Get the name of the class which mammal is an instance of.
+	 *
+	 * Also accessible via AGOBJECT_CLASS(mammal)->hier (full hierarchy)
+	 * or AGOBJECT_CLASS(mammal)->name (name of the last subclass).
+	 */
+	s = AG_ObjectGetClassName(mammal, 1);
+	AG_LabelNew(win, 0, "Instance of %s", s);
+	AG_Free(s);
 
 	/* Invoke the "edit" operation of the superclass. */
 	super = AG_ObjectSuperclass(mammal);
@@ -89,13 +105,20 @@ Edit(void *obj)
 	return (win);
 }
 
-/* Class description */
+/*
+ * The AG_ObjectClass structure describes an Agar object class.
+ *
+ * Although we are using the base AG_ObjectClass in this case, deriving
+ * this structure provides a good way for adding new methods and other
+ * class-specific data members that can be shared between all instances
+ * of a class.
+ */
 AG_ObjectClass MammalClass = {
-	"Animal:Mammal",	/* Our class. We inherit from "Animal". */
-	sizeof(Mammal),		/* Size of structure */
-	{ 0,0 },		/* Dataset version */
+	"Animal:Mammal",	/* Inheritance hierarchy (implies AG_Object) */
+	sizeof(Mammal),		/* Size of instance structures */
+	{ 0,0 },		/* Version (Major, Minor) */
 	Init,
-	NULL,			/* reinit */
+	NULL,			/* reset */
 	NULL,			/* destroy */
 	Load,
 	Save,
