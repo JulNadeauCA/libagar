@@ -353,6 +353,7 @@ void AG_ObjectDetach(void *_Nonnull);
 void AG_ObjectReset(void *_Nonnull);
 
 #if AG_MODEL != AG_SMALL
+char *_Nonnull  AG_ObjectGetClassName(const void *, int);
 char *_Nullable AG_ObjectGetName(void *_Nonnull) _Warn_Unused_Result;
 int             AG_ObjectCopyName(void *_Nonnull, char *_Nonnull, AG_Size);
 #endif
@@ -459,7 +460,7 @@ void *_Nullable ag_object_find_child(void *_Nonnull, const char *_Nonnull)
                                     _Pure_Attribute_If_Unthreaded
 				    _Warn_Unused_Result;
 
-AG_ObjectClass *_Nullable ag_object_superclass(void *_Nonnull)
+AG_ObjectClass *_Nullable ag_object_superclass(const void *_Nonnull)
                                               _Pure_Attribute
 					      _Warn_Unused_Result;
 

@@ -217,8 +217,32 @@ AG_ObjectCopyName(void *obj, char *path, AG_Size path_len)
 }
 
 /*
- * Return a newly allocated string containing the absolute pathname of
- * an object.
+ * Return the name of the class which obj belongs to.
+ * 
+ * If full=0, return only the last subclass (eg. "AG_Button").
+ * If full=1, return the full inheritance hierarchy (eg. "AG_Widget:AG_Button").
+ * The caller should free(3) the returned string after use.
+ */
+char *
+AG_ObjectGetClassName(const void *obj, int full)
+{
+	const AG_Object *ob = obj;
+
+	return Strdup(full ? AGOBJECT_CLASS(ob)->hier :
+	                     AGOBJECT_CLASS(ob)->name);
+}
+
+/*
+ * Return the fullpath of an object (relative to the root of its parent VFS).
+ *
+ * The returned path is true for as long as the VFS remains locked (the
+ * caller may wish to use AG_LockVFS() to guarantee atomicity of operations
+ * which are dependent on the returned path being true).
+ *
+ * The caller should free(3) the returned string after use.
+ *
+ * This routine uses recursion. It will fail and return NULL if insufficient
+ * memory is available to construct the complete path.
  */
 char *
 AG_ObjectGetName(void *obj)
@@ -449,12 +473,13 @@ AG_ObjectDetach(void *pChld)
 	}
 	AG_UnlockTiming();
 #endif
+	AG_PostEvent(chld, "detached", "%p", parent);
+	AG_PostEvent(parent, "child-detached", "%p", chld);
+	
 	/* Detach the object. */
 	TAILQ_REMOVE(&parent->children, chld, cobjs);
 	chld->parent = NULL;
 	chld->root = chld;
-	AG_PostEvent(chld, "detached", "%p", parent);
-	AG_PostEvent(parent, "child-detached", "%p", chld);
 
 #ifdef AG_DEBUG_CORE
 	if (chld->name[0] != '\0') {

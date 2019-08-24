@@ -267,11 +267,17 @@ performs a name lookup on the immediate children of the specified object.
 The function returns the matching object if it was found, otherwise NULL.
 .Pp
 .Fn AG_ObjectGetName
-returns a newly-allocated string containing the full pathname of an object.
-The function returns NULL if insufficient memory is available.
+returns a heap-allocated string containing the full pathname of an object
+(relative to its parent VFS).
+If insufficient memory is available to construct the path, it fails and
+returns NULL.
+.Pp
 The
 .Fn AG_ObjectCopyName
-function copies the object's pathname to a fixed-size buffer.
+function copies the object's full pathname (relative to its parent VFS) to
+a fixed-size buffer.
+It returns 0 on success or -1 if the buffer size is insufficient to hold
+the full path.
 .Pp
 .Fn AG_ObjectLock
 and
@@ -400,8 +406,11 @@ AGOBJECT_FOREACH_CHILD(chld, parent, my_class) {
 .Ft "int"
 .Fn AG_OfClass "AG_Object *obj" "const char *pattern"
 .Pp
+.Ft "char *"
+.Fn AG_ObjectGetClassName "const AG_Object *obj" "int full"
+.Pp
 .Ft "AG_ObjectClass *"
-.Fn AG_ObjectSuperclass "AG_Object *obj"
+.Fn AG_ObjectSuperclass "const AG_Object *obj"
 .Pp
 .Ft "int"
 .Fn AG_ObjectGetInheritHier "AG_Object *obj" "AG_ObjectClass **pHier" "int *nHier"
@@ -658,26 +667,49 @@ function adds the specified directory to the module search path.
 .Fn AG_UnregisterModuleDirectory
 removes the specified directory from the search path.
 .Pp
-The
+Given an inheritance hierarchy string (with wildcards),
 .Fn AG_OfClass
-function evaluates whether the given object is an instance of the
-specified class.
-The
-.Fa pattern
-string may contain wildcards such as
-.Dq MyClass:*
-or
-.Dq MyClass:*:MySubclass:* .
-.Fn AG_OfClass
-returns 1 if the object's class matches the given pattern.
+evaluates whether
+.Fa obj
+is an instance of the
+specified class and returns a boolean (0 = False, 1 = True) indicating
+whether the object is an instance of a matching class.
+For example:
+.Bd -literal
+AG_Button *btn = AG_ButtonNew( ... );
+
+if (AG_OfClass(btn, "AG_Widget:AG_Button")) {
+	/*
+	 * btn is an instance of AG_Button, and *not* a subclass of it.
+	 */
+}
+if (AG_OfClass(btn, "AG_Widget:AG_Button:*")) {
+	/*
+	 * btn is an instance of AG_Button, or a subclass of AG_Button.
+	 */
+}
+.Ed
 .Pp
-The
+Fast paths are provided for patterns such as "Super:Sub:*" and "Super:Sub",
+but patterns such as "Super:*:Sub:*" are also supported.
+.Pp
+.Fn AG_ObjectGetClassName
+returns a heap-allocated string containing the name of the class of an
+object
+.Fa obj .
+If
+.Fa full
+is 1, return the complete inheritance hierarchy (e.g., "AG_Widget:AG_Button").
+Otherwise, return only the subclass (e.g., "AG_Button").
+.Pp
 .Fn AG_ObjectSuperclass
-function returns a pointer to the
+returns a pointer to the
 .Fa AG_ObjectClass
-structure for the superclass of an object.
-Exceptionally, if the object is an instance of the base class (AG_Object),
-a pointer to the
+structure describing the superclass of
+.Fa obj .
+If
+.Fa obj
+is an instance of the base class (AG_Object), then a pointer to the
 .Nm
 class is returned.
 .Pp
@@ -1004,19 +1036,15 @@ The
 .Nm
 mechanism generates the following events:
 .Bl -tag -width 2n
-.It Fn attached "void"
-The object has been attached to another.
-This event originates from the parent object.
-The linkage lock is held during the execution of the event handler.
-.It Fn detached "void"
+.It Fn attached "AG_Object *parent"
+The object has been attached to a new parent.
+.It Fn detached "AG_Object *parent"
 The object has been detached from its parent.
-The linkage lock is held during the execution of the event handler.
-This event originates from the parent.
-.It Fn child-attached "void"
+.It Fn child-attached "AG_Object *chld"
 Same as
 .Fn attached ,
 except that the event is sent from the child to the parent.
-.It Fn child-detached "void"
+.It Fn child-detached "AG_Object *chld"
 Same as
 .Fn detached ,
 except that the event is sent from the child to the parent.
