@@ -146,8 +146,8 @@ void ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
 # endif
 #endif /* !AG_INLINE_WIDGET */
 
-int AG_GetLineIntersection(long,long, long,long, long,long, long,long,
-                           long *_Nonnull,long *_Nonnull);
+int AG_GetLineIntersection(int,int, int,int, int,int, int,int,
+                           int *_Nonnull, int *_Nonnull);
 
 #ifdef AG_HAVE_FLOAT
 void AG_ClipLine(int,int, int,int, int,int, int *_Nonnull,int *_Nonnull);

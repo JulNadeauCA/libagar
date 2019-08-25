@@ -65,15 +65,15 @@
  **************************************************************/
 
 #define SAME_SIGNS( a, b )	\
-		(((long) ((unsigned long) a ^ (unsigned long) b)) >= 0 )
+		(((int) ((unsigned int) a ^ (unsigned int) b)) >= 0 )
 
 int
-AG_GetLineIntersection(long x1,long y1, long x2,long y2, long x3,long y3,
-    long x4,long y4, long *xi,long *yi)
+AG_GetLineIntersection(int x1,int y1, int x2,int y2, int x3,int y3,
+    int x4,int y4, int *xi,int *yi)
 {
-	long a1,a2, b1,b2, c1,c2;	/* Coefficients of line eqns. */
-	long r1, r2, r3, r4;		/* 'Sign' values */
-	long denom, offset, num;	/* Intermediate values */
+	int a1,a2, b1,b2, c1,c2;	/* Coefficients of line eqns. */
+	int r1, r2, r3, r4;		/* 'Sign' values */
+	int denom, offset, num;	/* Intermediate values */
 
 	/* Compute a1, b1, c1, where line joining points 1 and 2
 	 * is "a1 x  +  b1 y  +  c1  =  0".
