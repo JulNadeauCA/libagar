@@ -252,7 +252,7 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 #endif
 
 #ifdef AG_NAMED_ARGS
-# define AG_EVENT_GET_NAMED_ARG(ev)					\
+# define AG_EVENT_GET_NAMED_ARG()					\
 	if (*c == '(' && c[1] != '\0') {				\
 		char *cEnd;						\
 		AG_Strlcpy(V->name, &c[1], sizeof(V->name));		\
@@ -268,7 +268,7 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 		V->name[0] = '\0';					\
 	}
 #else
-# define AG_EVENT_GET_NAMED_ARG(ev) 					\
+# define AG_EVENT_GET_NAMED_ARG() 					\
 	{								\
 		V->name[0] = '\0';					\
 	}
@@ -290,25 +290,25 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 									\
 	switch (*c) {							\
 	case 'p':							\
-	  AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_POINTER, p, void *);	\
+	  AG_EVENT_INS_ARG(ev, ap, AG_VARIABLE_POINTER, p, void *);	\
 	  V->info.pFlags = 0;						\
 	  break;							\
 	case 'C':							\
 	  if (c[1] == 'p') {						\
-	  	AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_POINTER, p, void *); \
+	  	AG_EVENT_INS_ARG(ev, ap, AG_VARIABLE_POINTER, p, void *); \
 	  	V->info.pFlags = AG_VARIABLE_P_READONLY;		 \
 		c++;							\
 	  }								\
 	  break;							\
 	case 'i':							\
-	  AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_INT, i, int);		\
+	  AG_EVENT_INS_ARG(ev, ap, AG_VARIABLE_INT, i, int);		\
 	  break;							\
 	case 'u':							\
-	  AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_UINT, u, Uint);	\
+	  AG_EVENT_INS_ARG(ev, ap, AG_VARIABLE_UINT, u, Uint);	\
 	  break;							\
 	AG_EVENT_PUSH_ARG_CASE_FLT(ev)					\
 	case 's':							\
-	  AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_STRING, s, char *);	\
+	  AG_EVENT_INS_ARG(ev, ap, AG_VARIABLE_STRING, s, char *);	\
 	  break;							\
 	case 'l':							\
 	  switch (c[1]) {						\
