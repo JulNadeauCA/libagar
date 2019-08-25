@@ -195,7 +195,7 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 }
 
 int
-AG_TextboxGetCursorPos(AG_Textbox *tb)
+AG_TextboxGetCursorPos(const AG_Textbox *tb)
 {
 	return AG_EditableGetCursorPos(tb->ed);
 }

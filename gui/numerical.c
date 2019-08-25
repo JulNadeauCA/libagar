@@ -344,15 +344,18 @@ UpdateFromText(AG_Event *_Nonnull event)
 #undef SET_NUM
 
 static void
-IncrementValue(AG_Event *_Nonnull event)
+ButtonIncrement(AG_Event *_Nonnull event)
 {
-	AG_NumericalIncrement(AG_NUMERICAL_PTR(1));
-}
-
-static void
-DecrementValue(AG_Event *_Nonnull event)
-{
-	AG_NumericalDecrement(AG_NUMERICAL_PTR(1));
+	void (*pf[])(AG_Numerical *_Nonnull) = {
+		AG_NumericalIncrement,
+		AG_NumericalDecrement
+	};
+	AG_Numerical *num = AG_NUMERICAL_PTR(1);
+	const int dir = AG_INT(2);
+#ifdef AG_DEBUG
+	if (dir < 0 || dir > 1) { AG_FatalError("dir"); }
+#endif
+	pf[dir](num);
 }
 
 #ifdef HAVE_FLOAT
@@ -485,13 +488,31 @@ AG_NumericalUpdate(AG_Numerical *num)
 }
 
 static void
+InputKeyDown(AG_Event *_Nonnull event)
+{
+	AG_Numerical *num = AG_NUMERICAL_PTR(1);
+	const int keysym = AG_INT(2);
+/*	const int keymod = AG_INT(3); */
+	
+	/* TODO */
+
+	switch (keysym) {
+	case AG_KEY_UP:
+		AG_NumericalIncrement(num);
+		break;
+	case AG_KEY_DOWN:
+		AG_NumericalDecrement(num);
+		break;
+	}
+}
+
+static void
 Init(void *_Nonnull obj)
 {
 	AG_Numerical *num = obj;
 
-	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE|
+	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE |
 	                      AG_WIDGET_TABLE_EMBEDDABLE;
-
 	num->flags = 0;
 	num->wUnitSel = 0;
 	num->hUnitSel = 0;
@@ -521,19 +542,19 @@ Init(void *_Nonnull obj)
 
 	AG_AddEvent(num, "widget-shown", OnShow, NULL);
 	AG_SetEvent(num, "key-down", KeyDown, NULL);
-	AG_SetEvent(num->incbu, "button-pushed", IncrementValue, "%p", num);
-	AG_SetEvent(num->decbu, "button-pushed", DecrementValue, "%p", num);
-	AG_SetEvent(num->input, "textbox-return", UpdateFromText, "%p,%i", num, 1);
+	AG_SetEvent(num->incbu, "button-pushed", ButtonIncrement, "%p,%i", num, 0);
+	AG_SetEvent(num->decbu, "button-pushed", ButtonIncrement, "%p,%i", num, 1);
+	AG_SetEvent(num->input, "textbox-return",  UpdateFromText, "%p,%i", num, 1);
 	AG_SetEvent(num->input, "textbox-changed", UpdateFromText, "%p,%i", num, 0);
+	AG_AddEvent(num->input->ed, "key-down", InputKeyDown, "%p", num);
+
 	AG_WidgetForwardFocus(num, num->input);
 }
 
 void
 AG_NumericalSizeHint(AG_Numerical *num, const char *text)
 {
-	AG_ObjectLock(num);
 	AG_TextboxSizeHint(num->input, text);
-	AG_ObjectUnlock(num);
 }
 
 static void
@@ -556,17 +577,18 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Numerical *num = obj;
 	AG_SizeAlloc aChld;
-	int szBtn = a->h/2;
+	const int spacing = 4;
+	const int wBtn = a->h >> 1;
 	int wUnitSel = num->wUnitSel + 4;
 	int hUnitSel = num->hUnitSel;
 
-	if (a->h < 4 || a->w < szBtn+4)
+	if (a->h < 4 || a->w < wBtn+spacing)
 		return (-1);
 
 #ifdef HAVE_FLOAT
 	if (num->units != NULL) {
-		if (wUnitSel > a->w - szBtn-4) {
-			wUnitSel = a->w - szBtn-4;
+		if (wUnitSel > a->w - wBtn-spacing) {
+			wUnitSel = a->w - wBtn-spacing;
 		}
 		if (hUnitSel > a->h) {
 			hUnitSel = a->h;
@@ -581,7 +603,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	/* Size input textbox */
 	aChld.x = 0;
 	aChld.y = 0;
-	aChld.w = a->w - wUnitSel - szBtn - 4;
+	aChld.w = a->w - wUnitSel - wBtn - spacing;
 	aChld.h = a->h;
 	AG_WidgetSizeAlloc(num->input, &aChld);
 	aChld.x += aChld.w + 2;
@@ -597,11 +619,11 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 #endif
 
 	/* Size increment buttons */
-	aChld.w = szBtn;
-	aChld.h = szBtn;
+	aChld.w = wBtn;
+	aChld.h = wBtn;
 	AG_WidgetSizeAlloc(num->incbu, &aChld);
 	aChld.y += aChld.h;
-	if (aChld.h*2 < a->h) {
+	if ((aChld.h << 1) < a->h) {
 		aChld.h++;
 	}
 	AG_WidgetSizeAlloc(num->decbu, &aChld);

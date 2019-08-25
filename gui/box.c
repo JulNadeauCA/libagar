@@ -439,27 +439,21 @@ AG_BoxSetHomogenous(AG_Box *box, int enable)
 void
 AG_BoxSetPadding(AG_Box *box, int padding)
 {
-	AG_ObjectLock(box);
 	box->padding = padding;
-	AG_ObjectUnlock(box);
 	AG_Redraw(box);
 }
 
 void
 AG_BoxSetSpacing(AG_Box *box, int spacing)
 {
-	AG_ObjectLock(box);
 	box->spacing = spacing;
-	AG_ObjectUnlock(box);
 	AG_Redraw(box);
 }
 
 void
 AG_BoxSetDepth(AG_Box *box, int depth)
 {
-	AG_ObjectLock(box);
 	box->depth = depth;
-	AG_ObjectUnlock(box);
 	AG_Redraw(box);
 }
 
@@ -482,18 +476,14 @@ AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 void
 AG_BoxSetHorizAlign(AG_Box *box, enum ag_box_align align)
 {
-	AG_ObjectLock(box);
 	box->hAlign = align;
-	AG_ObjectUnlock(box);
 	AG_Redraw(box);
 }
 
 void
 AG_BoxSetVertAlign(AG_Box *box, enum ag_box_align align)
 {
-	AG_ObjectLock(box);
 	box->vAlign = align;
-	AG_ObjectUnlock(box);
 	AG_Redraw(box);
 }
 

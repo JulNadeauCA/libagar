@@ -59,10 +59,8 @@ Init(void *_Nonnull obj)
 void
 AG_FixedSizeHint(AG_Fixed *fx, int w, int h)
 {
-	AG_ObjectLock(fx);
 	fx->wPre = w;
 	fx->hPre = h;
-	AG_ObjectUnlock(fx);
 }
 
 static void

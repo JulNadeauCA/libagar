@@ -170,8 +170,8 @@ int  AG_EditableMapPosition(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                             int,int, int *_Nonnull);
 void AG_EditableMoveCursor(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                            int,int);
-int  AG_EditableGetCursorPos(AG_Editable *_Nonnull)
-                            _Pure_Attribute_If_Unthreaded;
+int  AG_EditableGetCursorPos(const AG_Editable *_Nonnull)
+                            _Pure_Attribute;
 int  AG_EditableSetCursorPos(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                              int);
 int  AG_EditableReadOnly(AG_Editable *_Nonnull)

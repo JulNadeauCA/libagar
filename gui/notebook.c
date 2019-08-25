@@ -254,27 +254,21 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 void
 AG_NotebookSetTabAlignment(AG_Notebook *nb, enum ag_notebook_tab_alignment ta)
 {
-	AG_ObjectLock(nb);
 	nb->tab_align = ta;
-	AG_ObjectUnlock(nb);
 	AG_Redraw(nb);
 }
 
 void
 AG_NotebookSetSpacing(AG_Notebook *nb, int spacing)
 {
-	AG_ObjectLock(nb);
 	nb->spacing = spacing;
-	AG_ObjectUnlock(nb);
 	AG_Redraw(nb);
 }
 
 void
 AG_NotebookSetPadding(AG_Notebook *nb, int padding)
 {
-	AG_ObjectLock(nb);
 	nb->padding = padding;
-	AG_ObjectUnlock(nb);
 	AG_Redraw(nb);
 }
 

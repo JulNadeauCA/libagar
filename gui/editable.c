@@ -2114,14 +2114,9 @@ AG_EditableDestroyClipboards(void)
 
 /* Return current cursor position in text. */
 int
-AG_EditableGetCursorPos(AG_Editable *ed)
+AG_EditableGetCursorPos(const AG_Editable *ed)
 {
-	int rv;
-
-	AG_ObjectLock(ed);
-	rv = ed->pos;
-	AG_ObjectUnlock(ed);
-	return (rv);
+	return (ed->pos);
 }
 
 /* Return 1 if the Editable is effectively read-only. */

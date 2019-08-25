@@ -1079,7 +1079,6 @@ Edit(void *_Nonnull obj)
 		NULL
 	};
 	AG_Scrollbar *sb = obj;
-	AG_Mutex *sbLock = &OBJECT(sb)->pvt.lock;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
 #if AG_MODEL != AG_SMALL
@@ -1091,14 +1090,11 @@ Edit(void *_Nonnull obj)
 	AG_SeparatorNewHoriz(box);
 
 #ifdef AG_ENABLE_STRING
-	AG_LabelNewPolledMT(box, AG_LABEL_HFILL, sbLock,
-	    "Button: #%d (mouse over #%d)",
+	AG_LabelNewPolled(box, AG_LABEL_HFILL, "Button: #%d (mouse over #%d)",
 	    &sb->curBtn, &sb->mouseOverBtn);
-	AG_LabelNewPolledMT(box, AG_LABEL_HFILL, sbLock,
-	    "xOffs: %d, xSeek: %d",
+	AG_LabelNewPolled(box, AG_LABEL_HFILL, "xOffs: %d, xSeek: %d",
 	    &sb->xOffs, &sb->xSeek);
-	AG_LabelNewPolledMT(box, AG_LABEL_HFILL, sbLock,
-	    "wBarLast: %d, hArrow: %d",
+	AG_LabelNewPolled(box, AG_LABEL_HFILL, "wBarLast: %d, hArrow: %d",
 	    &sb->wBarLast, &sb->hArrow);
 #endif
 	return (box);

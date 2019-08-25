@@ -12,7 +12,7 @@
 #define AG_FIXED_PLOTTER_LABEL_MAX 124
 #endif
 
-typedef Sint16 AG_FixedPlotterValue;
+typedef int AG_FixedPlotterValue;
 
 struct ag_fixed_plotter;
 

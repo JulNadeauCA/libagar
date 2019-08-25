@@ -83,7 +83,7 @@ void AG_TextboxSetExcl(AG_Textbox *, int);
 int  AG_TextboxMapPosition(AG_Textbox *_Nonnull, int,int, int *_Nonnull);
 void AG_TextboxMoveCursor(AG_Textbox *_Nonnull, int,int);
 void AG_TextboxSetCursorPos(AG_Textbox *_Nonnull, int);
-int  AG_TextboxGetCursorPos(AG_Textbox *_Nonnull);
+int  AG_TextboxGetCursorPos(const AG_Textbox *_Nonnull);
 
 void AG_TextboxBindASCII(AG_Textbox *_Nonnull, char *_Nonnull, AG_Size);
 #ifdef AG_UNICODE

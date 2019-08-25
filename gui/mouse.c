@@ -156,14 +156,12 @@ AG_ProcessMouseMotion(AG_Window *win, int x, int y, int xRel, int yRel,
 	 * `mouse-motion' events. This is used notably by AG_Pane(3).
 	 */
 	if ((wid = win->widExclMotion) != NULL) {
-		AG_ObjectLock(wid);
-		PostMouseMotion(win, wid, x, y, xRel, yRel, state);
-		AG_ObjectUnlock(wid);
+		PostMouseMotion(win, wid, x,y, xRel,yRel, state);
 		return;
 	}
 
 	OBJECT_FOREACH_CHILD(wid, win, ag_widget)
-		PostMouseMotion(win, wid, x, y, xRel, yRel, state);
+		PostMouseMotion(win, wid, x,y, xRel,yRel, state);
 }
 
 /*

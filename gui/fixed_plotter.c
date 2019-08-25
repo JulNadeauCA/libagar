@@ -80,9 +80,7 @@ Init(void *obj)
 void
 AG_FixedPlotterSetRange(AG_FixedPlotter *fpl, AG_FixedPlotterValue range)
 {
-	AG_ObjectLock(fpl);
 	fpl->yrange = range;
-	AG_ObjectUnlock(fpl);
 	AG_Redraw(fpl);
 }
 
@@ -90,7 +88,7 @@ static void
 KeyDown(AG_Event *event)
 {
 	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
-	int key = AG_INT(1);
+	const int key = AG_INT(1);
 
 	switch (key) {
 	case AG_KEY_0:
@@ -114,9 +112,9 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
-	int xrel = AG_INT(3);
-	int yrel = AG_INT(4);
-	int state = AG_INT(5);
+	const int xrel = AG_INT(3);
+	const int yrel = AG_INT(4);
+	const int state = AG_INT(5);
 
 	if ((state & AG_MOUSE_LMASK) == 0)
 		return;
@@ -146,7 +144,7 @@ static void
 MouseButtonDown(AG_Event *event)
 {
 	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
-	int button = AG_INT(1);
+	const int button = AG_INT(1);
 	
 	if (button != AG_MOUSE_LEFT)
 		return;

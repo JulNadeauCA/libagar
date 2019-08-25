@@ -313,10 +313,8 @@ Init(void *_Nonnull obj)
 void
 AG_ScrollviewSizeHint(AG_Scrollview *sv, Uint w, Uint h)
 {
-	AG_ObjectLock(sv);
 	sv->wPre = w;
 	sv->hPre = h;
-	AG_ObjectUnlock(sv);
 }
 
 static void

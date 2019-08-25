@@ -277,43 +277,13 @@ TextChanged(AG_Event *event)
 }
 
 static void
-DecrementY(AG_Event *event)
+Increment(AG_Event *event)
 {
 	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_PTR(1);
+	const char *which = AG_STRING(2);
+	const int dir = AG_INT(3);
 
-	AG_ObjectLock(fsu);
-	AG_MFSpinbuttonAddValue(fsu, "yvalue", -fsu->inc);
-	AG_ObjectUnlock(fsu);
-}
-
-static void
-IncrementY(AG_Event *event)
-{
-	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_PTR(1);
-	
-	AG_ObjectLock(fsu);
-	AG_MFSpinbuttonAddValue(fsu, "yvalue", fsu->inc);
-	AG_ObjectUnlock(fsu);
-}
-
-static void
-DecrementX(AG_Event *event)
-{
-	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_PTR(1);
-	
-	AG_ObjectLock(fsu);
-	AG_MFSpinbuttonAddValue(fsu, "xvalue", -fsu->inc);
-	AG_ObjectUnlock(fsu);
-}
-
-static void
-IncrementX(AG_Event *event)
-{
-	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_PTR(1);
-	
-	AG_ObjectLock(fsu);
-	AG_MFSpinbuttonAddValue(fsu, "xvalue", fsu->inc);
-	AG_ObjectUnlock(fsu);
+	AG_MFSpinbuttonAddValue(fsu, which, dir*fsu->inc);
 }
 
 /* Widget must be locked. */
@@ -403,10 +373,10 @@ Init(void *obj)
 	fsu->xdecbu = b[1] = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("-"));
 	fsu->yincbu = b[2] = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("+"));
 	fsu->ydecbu = b[3] = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("-"));
-	AG_SetEvent(fsu->xincbu, "button-pushed", IncrementX, "%p", fsu);
-	AG_SetEvent(fsu->xdecbu, "button-pushed", DecrementX, "%p", fsu);
-	AG_SetEvent(fsu->yincbu, "button-pushed", IncrementY, "%p", fsu);
-	AG_SetEvent(fsu->ydecbu, "button-pushed", DecrementY, "%p", fsu);
+	AG_SetEvent(fsu->xincbu, "button-pushed", Increment, "%p,%s", fsu, "xvalue", +1);
+	AG_SetEvent(fsu->xdecbu, "button-pushed", Increment, "%p,%s", fsu, "xvalue", -1);
+	AG_SetEvent(fsu->yincbu, "button-pushed", Increment, "%p,%s", fsu, "yvalue", +1);
+	AG_SetEvent(fsu->ydecbu, "button-pushed", Increment, "%p,%s", fsu, "yvalue", -1);
 	for (i = 0; i < 4; i++) {
 		AG_ButtonSetPadding(b[i], 0,0,0,0);
 		AG_LabelSetPadding(b[i]->lbl, 0,0,0,0);

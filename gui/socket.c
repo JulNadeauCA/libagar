@@ -375,8 +375,8 @@ IconButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Icon *icon = AG_ICON_PTR(1);
 	AG_Window *wDND = icon->wDND;
-	int x = WIDGET(wDND)->rView.x1;
-	int y = WIDGET(wDND)->rView.y1;
+	const int x = WIDGET(wDND)->rView.x1;
+	const int y = WIDGET(wDND)->rView.y1;
 	AG_Socket *sock;
 	int detach = 1;
 
@@ -427,11 +427,11 @@ MouseButtonDown(AG_Event *_Nonnull event)
 
 	if ((icon = sock->icon) != NULL) {
 		AG_Pixmap *px;
+		AG_Window *wDND;
 		
-		icon->wDND = AG_WindowNew(AG_WINDOW_PLAIN |
-		                          AG_WINDOW_NOBACKGROUND);
-		px = AG_PixmapFromSurface(icon->wDND, 0,
-		    WSURFACE(icon,icon->surface));
+		wDND = icon->wDND = AG_WindowNew(AG_WINDOW_PLAIN |
+		                                 AG_WINDOW_NOBACKGROUND);
+		px = AG_PixmapFromSurface(wDND, 0, WSURFACE(icon,icon->surface));
 
 		AG_ObjectLock(px);
 		WIDGET(px)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
@@ -440,12 +440,12 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		AG_SetEvent(px, "mouse-button-up", IconButtonUp,"%p",icon);
 		AG_ObjectUnlock(px);
 
-		AG_WindowSetGeometry(icon->wDND,
+		AG_WindowSetGeometry(wDND,
 		    WIDGET(icon)->rView.x1,
 		    WIDGET(icon)->rView.y1,
 		    WIDTH(icon),
 		    HEIGHT(icon));
-		AG_WindowShow(icon->wDND);
+		AG_WindowShow(wDND);
 	}
 }
 
