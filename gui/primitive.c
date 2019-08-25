@@ -150,12 +150,13 @@ AG_GetLineIntersection(long x1,long y1, long x2,long y2, long x3,long y3,
  * large.
  */
 void
-AG_ClipLineCircle(int xc, int yc, int r, int x1, int y1, int x2, int y2,
+AG_ClipLineCircle(int xc, int yc, int r, int x1i, int y1i, int x2, int y2,
     int *xi, int *yi)
 {
 	/* In the case that x1 and x2 are the same, there is a bug that causes
 	 * m to be zero, resulting in no intersect being detected. */
-	if (x1 == x2) {x1++;}
+	const double x1 = (x1i == x2) ? (double)(x1i+1) : (double)x1i;
+	const double y1 = (double)y1i;
 
 	/* the derivation here is fairly straightforward -- just calculate
 	 * the y = mx+b form of the line segment, and then plug the y found
@@ -164,26 +165,26 @@ AG_ClipLineCircle(int xc, int yc, int r, int x1, int y1, int x2, int y2,
 	 * You should get an order-2 polynomial, the solution for which is
 	 * trivially found with the quadratic formula.
 	 */
-	double m = ((double) y2 - (double) y1) / ((double) x2 - (double) x1);
-	double k = -m * (double) x1 + (double) y1  - (double) yc;
-	double a = 1 + AG_Square(m);
-	double b = -2 * (double) xc + 2 * m * k;
-	double c = -1 * (AG_Square((double) r) - AG_Square((double) xc) - AG_Square(k));
+	const double m = ((double) y2 - y1) / ((double) x2 - x1);
+	const double k = -m * x1 + y1  - (double) yc;
+	const double a = 1 + AG_Square(m);
+	const double b = -2 * (double) xc + 2 * m * k;
+	const double c = -1 * (AG_Square((double) r) - AG_Square((double) xc) - AG_Square(k));
+	double xs1, ys1, xs2, ys2;
 
 	/* no intersection */
 	if (! AG_HaveQuadraticSolution(a, b, c)) {return;}
 
 	/* calculate both possible intersections */
-	double xs1, ys1, xs2, ys2;
 	xs1 = AG_QuadraticPositive(a, b, c);
 	xs2 = AG_QuadraticNegative(a, b, c);
-	ys1 = m * (xs1 - (double) x1) + (double) y1;
-	ys2 = m * (xs2 - (double) x1) + (double) y1;
+	ys1 = m * (xs1 - x1) + y1;
+	ys2 = m * (xs2 - x1) + y1;
 
 	/* Pick the one closer to (x1, y1) and return it. If they are equal,
 	 * then this docent matter and the answer will still be correct. */
-	if (AG_Distance((double) x1, (double) y1, xs1, ys1) <
-		AG_Distance((double) x1, (double) y1, xs2, ys2)) {
+	if (AG_Distance(x1,y1, xs1,ys1) <
+		AG_Distance(x1,y1, xs2,ys2)) {
 		*xi = (int) xs1;
 		*yi = (int) ys1;
 	} else {
@@ -214,52 +215,37 @@ AG_ClipLine(int ax, int ay, int aw, int ah, int x1, int y1, int *x2, int *y2)
 	 *                  |      |
 	 *   a.x, a.y + a.h +------+ a.x + a.w, a.y + a.h
 	*/
-
-	long x1_d, y1_d, x2_d, y2_d;
-
-	x1_d = (long) x1;
-	y1_d = (long) y1;
-	x2_d = (long) *x2;
-	y2_d = (long) *y2;
-
+	const int x2_d = *x2;
+	const int y2_d = *y2;
 	struct {
-		long x1;
-		long y1;
-		long x2;
-		long y2;
-		long x3;
-		long y3;
-		long x4;
-		long y4;
-		long xi;
-		long yi;
+		int x1, y1;
+		int x2, y2;
+		int x3, y3;
+		int x4, y4;
+		int xi, yi;
 		int intersect;
 		Uint32 _pad;
 	} faces[4] = {
-		{x1_d, y1_d, x2_d, y2_d, ax   , ay   , ax   , ay+ah, 0, 0, 0},
-		{x1_d, y1_d, x2_d, y2_d, ax   , ay+ah, ax+aw, ay+ah, 0, 0, 0},
-		{x1_d, y1_d, x2_d, y2_d, ax+aw, ay+ah, ax+aw, ay   , 0, 0, 0},
-		{x1_d, y1_d, x2_d, y2_d, ax+aw, ay   , ax   , ay   , 0, 0, 0},
+		{x1, y1, x2_d, y2_d, ax   , ay   , ax   , ay+ah, 0, 0, 0},
+		{x1, y1, x2_d, y2_d, ax   , ay+ah, ax+aw, ay+ah, 0, 0, 0},
+		{x1, y1, x2_d, y2_d, ax+aw, ay+ah, ax+aw, ay   , 0, 0, 0},
+		{x1, y1, x2_d, y2_d, ax+aw, ay   , ax   , ay   , 0, 0, 0},
 	};
-
-	unsigned short best = 0;
 	double shortest_dist = -1;
 	double dist;
-	for (unsigned short i = 0 ; i < 4 ; i++) {
+	Uint i, best=0;
+
+	for (i = 0 ; i < 4 ; i++) {
 		faces[i].intersect = AG_GetLineIntersection(
-			  faces[i].x1,
-			  faces[i].y1,
-			  faces[i].x2,
-			  faces[i].y2,
-			  faces[i].x3,
-			  faces[i].y3,
-			  faces[i].x4,
-			  faces[i].y4,
-			&(faces[i].xi),
-			&(faces[i].yi));
+		    faces[i].x1,    faces[i].y1,
+		    faces[i].x2,    faces[i].y2,
+		    faces[i].x3,    faces[i].y3,
+		    faces[i].x4,    faces[i].y4,
+		  &(faces[i].xi), &(faces[i].yi) );
 
 		/* don't care about candidates that don't intersect with us */
-		if (faces[i].intersect != 1) {continue;}
+		if (faces[i].intersect != 1)
+			continue;
 
 		dist = sqrt(pow(faces[i].xi-x1, 2) + pow(faces[i].yi-y1, 2));
 		if ((shortest_dist == -1) || (dist < shortest_dist)) {
@@ -269,7 +255,8 @@ AG_ClipLine(int ax, int ay, int aw, int ah, int x1, int y1, int *x2, int *y2)
 	}
 
 	/* no intersection, so leave x2, y2 as they are */
-	if (shortest_dist < 0) { return; }
+	if (shortest_dist < 0)
+		return;
 
 	*x2 = (int) faces[best].xi;
 	*y2 = (int) faces[best].yi;
@@ -295,6 +282,7 @@ AG_DrawArrowhead(void *obj, int x1, int y1, int x2, int y2, int length,
 	double V_dirx, V_diry, V_per1x, V_per1y, V_per2x, V_per2y;
 	/* double V_refx, V_refy */
 	double width;
+	double line_length;
 
 
 	/*         AG_Sqrt( */
@@ -311,8 +299,8 @@ AG_DrawArrowhead(void *obj, int x1, int y1, int x2, int y2, int length,
 
 	/* length of overall line, necessary to generate direction reference
 	 * unit vector */
-	double line_length = AG_Distance((double) P_tip.x,   (double) P_tip.y,
-	                                 (double) P_start.x, (double) P_start.y);
+	line_length = AG_Distance((double) P_tip.x,   (double) P_tip.y,
+	                          (double) P_start.x, (double) P_start.y);
 
 	/* Avoid a divide by zero error later -- we can't draw an error for
 	 * a zero-length line anyway.

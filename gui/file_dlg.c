@@ -1679,6 +1679,7 @@ AG_FileDlgCopyTypes(AG_FileDlg *fdDst, const AG_FileDlg *fdSrc)
 				    so->data.i.min,
 				    so->data.i.max);
 				break;
+#ifdef HAVE_FLOAT
 			case AG_FILEDLG_FLOAT:
 				AG_FileOptionNewFlt(dt, so->descr, so->key,
 				    so->data.flt.val,
@@ -1693,6 +1694,7 @@ AG_FileDlgCopyTypes(AG_FileDlg *fdDst, const AG_FileDlg *fdSrc)
 				    so->data.dbl.max,
 				    so->unit);
 				break;
+#endif
 			case AG_FILEDLG_STRING:
 				AG_FileOptionNewString(dt, so->descr, so->key,
 				    so->data.s);

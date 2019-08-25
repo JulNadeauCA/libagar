@@ -143,19 +143,19 @@ SG_VoxelReset(SG_Voxel *vol, M_Real v)
 static void
 Draw(void *_Nonnull obj, SG_View *_Nonnull sgv)
 {
-	M_Vector3 p[8] = {
-		M_VECTOR3(0.0, 0.0, 0.0),
-		M_VECTOR3(1.0, 0.0, 0.0),
-		M_VECTOR3(1.0, 0.0, 1.0),
-		M_VECTOR3(0.0, 0.0, 1.0),
-		M_VECTOR3(0.0, 1.0, 0.0),
-		M_VECTOR3(1.0, 1.0, 0.0),
-		M_VECTOR3(1.0, 1.0, 1.0),
-		M_VECTOR3(0.0, 1.0, 1.0)
-	};
 	SG_Voxel *vol = obj;
 	M_Color white = M_ColorWhite();
+	M_Vector3 p[8];
 	int x, y, z;
+		
+	p[0] = M_VECTOR3(0.0, 0.0, 0.0);
+	p[1] = M_VECTOR3(1.0, 0.0, 0.0);
+	p[2] = M_VECTOR3(1.0, 0.0, 1.0);
+	p[3] = M_VECTOR3(0.0, 0.0, 1.0);
+	p[4] = M_VECTOR3(0.0, 1.0, 0.0);
+	p[5] = M_VECTOR3(1.0, 1.0, 0.0);
+	p[6] = M_VECTOR3(1.0, 1.0, 1.0);
+	p[7] = M_VECTOR3(0.0, 1.0, 1.0);
 	
 	GL_PushMatrix();
 	GL_PushAttrib(GL_LIGHTING_BIT);

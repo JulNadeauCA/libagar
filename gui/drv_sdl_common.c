@@ -228,7 +228,8 @@ AG_SDL_PutPixel(SDL_Surface *_Nonnull s, Uint8 *_Nonnull p, Uint32 px)
 static __inline__ void
 AG_SDL_PutPixel2(SDL_Surface *_Nonnull S, int x, int y, Uint32 px)
 {
-	AG_SDL_PutPixel(S, S->pixels + y*S->pitch + x*S->format->BytesPerPixel,
+	AG_SDL_PutPixel(S,
+	    (Uint8 *)S->pixels + y*S->pitch + x*S->format->BytesPerPixel,
 	    px);
 }
 

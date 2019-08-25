@@ -31,6 +31,9 @@
 # include <agar/config/have___int64.h>
 # define AG_HAVE_64BIT "yes"
 #endif
+#ifndef _AGAR_INTERNAL
+# undef HAVE_64BIT
+#endif
 
 /*
  * Floating Point Types
@@ -38,6 +41,9 @@
 #include <agar/config/have_float.h>
 #ifdef HAVE_FLOAT
 # define AG_HAVE_FLOAT "yes"
+#endif
+#ifndef _AGAR_INTERNAL
+# undef HAVE_FLOAT
 #endif
 
 /*
@@ -120,8 +126,6 @@
 #   define Uint64 unsigned __int64
 #   define _AGAR_CORE_DEFINED_UINT64
 #  endif
-#  define HAVE_64BIT "yes"
-#  define AG_HAVE_64BIT "yes"
 
 # else /* !_WIN32 */
 

@@ -1184,7 +1184,6 @@ WGL_InitDefaultCursor(AG_DriverWGL *wgl)
 		TAILQ_INSERT_HEAD(&drv->cursors, AGCURSOR(acWGL), cursors);
 		drv->nCursors++;
 	}
-	return (0);
 }
 
 static AG_Cursor *

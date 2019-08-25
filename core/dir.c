@@ -244,8 +244,10 @@ AG_CloseDir(AG_Dir *dir)
 {
 	int i;
 
+#ifndef _WIN32
 	if (dir->dirp)
 		closedir(dir->dirp);
+#endif
 
 	for (i = 0; i < dir->nents; i++) {
 		free(dir->ents[i]);

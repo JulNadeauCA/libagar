@@ -135,6 +135,7 @@ ag_swap32(Uint32 x)
  * Swap 64-bit
  */
 #ifdef AG_HAVE_64BIT
+
 # if (defined(__GNUC__) || defined(__clang__)) && defined(__i386__)
 # ifdef AG_INLINE_HEADER
 static __inline__ Uint64
@@ -168,9 +169,14 @@ ag_swap64(Uint64 x)
 		"0" (x));
 	return (x);
 }
-# else /* !MD */
-static __inline__ Uint64
+# else /* !((__GNUC__ || __clang__) && __x86_64__) */
+#  ifdef AG_INLINE_HEADER
+static __inline__ Uint64 _Const_Attribute
 AG_Swap64(Uint64 x)
+#  else
+Uint64
+ag_swap64(Uint64 x)
+#  endif
 {
 	Uint32 high, low;
 
@@ -182,5 +188,6 @@ AG_Swap64(Uint64 x)
 	x |= AG_Swap32(high);
 	return (x);
 }
-# endif /* MD */
+# endif /* !((__GNUC__ || __clang__) && __x86_64__) */
+
 #endif /* AG_HAVE_64BIT */
