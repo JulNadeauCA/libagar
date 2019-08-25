@@ -1059,7 +1059,7 @@ void
 AG_GL_DrawBoxRounded(void *obj, const AG_Rect *r, int z, int radius,
     const AG_Color *c1, const AG_Color *c2, const AG_Color *c3)
 {
-	float rad = (float)radius, rad2 = 2.0f*rad;
+	float rad = (float)radius, dia = 2.0f*rad;
 	float t, i, nFull = rad*4.0f, nQuart = nFull/4.0f;
 	float w, h;
 
@@ -1082,19 +1082,19 @@ AG_GL_DrawBoxRounded(void *obj, const AG_Rect *r, int z, int radius,
 		}
 
 		t = 2.0f*AG_PI*nQuart;
-		glVertex2f((w - rad2 + rad*Cos(t/nFull)),
+		glVertex2f((w - dia + rad*Cos(t/nFull)),
 		           -rad*Sin(t/nFull));
 
 		for (i = nQuart-1.0f; i >= 0.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(w - rad2 + rad*Cos(t),
-			                     -rad*Sin(t));
+			glVertex2f(w - dia + rad*Cos(t),
+			                    -rad*Sin(t));
 		}
 
 		for (i = 0.0f; i <= nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(w - rad2 + rad*Cos(t),
-			           h - rad2 + rad*Sin(t));
+			glVertex2f(w - dia + rad*Cos(t),
+			           h - dia + rad*Sin(t));
 		}
 
 		t = 2.0f*AG_PI*nQuart;
@@ -1103,7 +1103,7 @@ AG_GL_DrawBoxRounded(void *obj, const AG_Rect *r, int z, int radius,
 		for (i = nQuart-1.0f; i >= 1.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(-rad*Cos(t),
-			           h - rad2 + rad*Sin(t));
+			           h - dia + rad*Sin(t));
 		}
 	}
 	glEnd();
@@ -1118,19 +1118,19 @@ AG_GL_DrawBoxRounded(void *obj, const AG_Rect *r, int z, int radius,
 		}
 
 		t = 2.0f*AG_PI*nQuart;
-		glVertex2f((w - rad2 + rad*Cos(t/nFull)),
+		glVertex2f((w - dia + rad*Cos(t/nFull)),
 		           -rad*Sin(t/nFull));
 
 		GL_Color3uH(c3->r, c3->g, c3->b);
 		for (i = nQuart-1.0f; i >= 0.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(w - rad2 + rad*Cos(t),
+			glVertex2f(w - dia + rad*Cos(t),
 			           -rad*Sin(t));
 		}
 		for (i = 0.0f; i <= nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
-			glVertex2f(w - rad2 + rad*Cos(t),
-			           h - rad2 + rad*Sin(t));
+			glVertex2f(w - dia + rad*Cos(t),
+			           h - dia + rad*Sin(t));
 		}
 		
 		t = 2.0f*AG_PI*nQuart;
@@ -1139,7 +1139,7 @@ AG_GL_DrawBoxRounded(void *obj, const AG_Rect *r, int z, int radius,
 		for (i = nQuart-1.0f; i >= 1.0f; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(-rad*Cos(t),
-			           h - rad2 + rad*Sin(t));
+			           h - dia + rad*Sin(t));
 		}
 	}
 	glEnd();
