@@ -1,9 +1,8 @@
 /*	Public domain	*/
 /*
- * This program demonstrates the use of fixed-size widgets. This is
- * typically used for specialized applications like game menus (most
- * GUI applications should rely on the automatic widget packing provided
- * by widgets such as AG_Window, AG_Box, AG_Pane, etc.).
+ * This demonstrates the use of the AG_Fixed container, which sizes and
+ * positions widgets explicitely given X,Y coordinates and dimensions in
+ * display pixels.
  */
 
 #include <stdlib.h>
@@ -14,9 +13,10 @@ TestGUI(void *obj, AG_Window *win)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_Fixed *fx;
-	AG_Label *lb1, *lb2;
+	AG_Label *lb1;
 	AG_Button *btn;
 	AG_Pixmap *px;
+	AG_Box *box;
 
 	/*
 	 * Create a container which allows manual setting of the coordinates
@@ -41,10 +41,28 @@ TestGUI(void *obj, AG_Window *win)
 	 * Create two labels. We don't initially attach the labels to a
 	 * parent, so we must use AG_FixedPut().
 	 */
-	lb1 = AG_LabelNew(NULL, 0, "Fixed Widget Positioning");
-	lb2 = AG_LabelNew(NULL, 0, "Demo");
+	lb1 = AG_LabelNew(NULL, 0, "I am at 20,32 in %s", AGOBJECT(fx)->name);
 	AG_FixedPut(fx, lb1, 20, 32);
-	AG_FixedPut(fx, lb2, 20, 32+agTextFontHeight);
+
+	/*
+	 * We can always embed a normal AG_Box and items inside will
+	 * be packed normally.
+	 */
+	box = AG_BoxNewVert(NULL, AG_BOX_BORDER);
+	AG_SetStyle(box, "font-family", "Serif");
+	AG_SetStyle(box, "font-size", "90%");
+	AG_SetStyle(box, "line-color", "rgb(150,150,0)");
+	AG_SetStyle(box, "line-color#focused", "rgb(200,200,0)");
+	{
+		AG_Box *hBox;
+		int i;
+
+		AG_LabelNewS(box, 0, "I am in a normal box");
+		hBox = AG_BoxNewHoriz(box, AG_BOX_HFILL | AG_BOX_BORDER);
+		for (i = 0; i < 5; i++)
+			AG_ButtonNew(hBox, 0, "%c", '1'+i);
+	}
+	AG_FixedPut(fx, box, 450, 35);
 
 	/*
 	 * Create a series of 32x32 buttons at the right. We initially attach

@@ -169,7 +169,7 @@ TestGUI(void *obj, AG_Window *win)
 		{
 			AG_Label *lbl;
 
-			lbl = AG_LabelNewPolled(div1, AG_LABEL_EXPAND,
+			lbl = AG_LabelNewPolled(div1, AG_LABEL_HFILL,
 			    "Window is at %i,%i (%ux%u)\n",
 			    &AGWIDGET(win)->x,
 			    &AGWIDGET(win)->y,
@@ -191,7 +191,7 @@ TestGUI(void *obj, AG_Window *win)
 	{
 		AG_Tlist *tl;
 
-		tl = AG_TlistNew(div1, AG_TLIST_HFILL);
+		tl = AG_TlistNew(div1, AG_TLIST_EXPAND);
 		AG_TlistAdd(tl, agIconDoc.s, "Doc");
 		AG_TlistAdd(tl, agIconMagnifier.s, "Magnifier");
 		AG_TlistAdd(tl, agIconUp.s, "Up");
