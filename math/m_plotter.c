@@ -341,8 +341,9 @@ static void
 Init(void *_Nonnull obj)
 {
 	M_Plotter *ptr = obj;
+	AG_Scrollbar *sb;
 
-	WIDGET(ptr)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
+	WIDGET(ptr)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_TEXT;
 
 	ptr->type = M_PLOT_2D;
 	ptr->flags = 0;
@@ -369,7 +370,7 @@ Init(void *_Nonnull obj)
 
 	ptr->curColor = 0;
 
-	AG_ColorRGB_8(&ptr->colors[0],  255, 255, 255);
+	AG_ColorRGB_8(&ptr->colors[0],  230, 230, 230);
 	AG_ColorRGB_8(&ptr->colors[1],  0,   250, 0); 
 	AG_ColorRGB_8(&ptr->colors[2],  250, 250, 0);
 	AG_ColorRGB_8(&ptr->colors[3],  0,   118, 163);
@@ -386,17 +387,18 @@ Init(void *_Nonnull obj)
 	AG_ColorRGB_8(&ptr->colors[14], 127, 255, 212);
 	AG_ColorRGB_8(&ptr->colors[15], 218, 99,  4);
 	
-	ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
-	ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
-	AG_BindInt(ptr->hbar, "value", &ptr->xOffs);
-	AG_BindInt(ptr->hbar, "visible", &ptr->r.w);
-	AG_BindInt(ptr->hbar, "max", &ptr->xMax);
-	AG_SetEvent(ptr->hbar, "scrollbar-changed", UpdateXBar, "%p", ptr);
+	sb = ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
+	AG_BindInt(sb, "value",   &ptr->xOffs);
+	AG_BindInt(sb, "visible", &WIDGET(ptr)->w);
+	AG_SetInt(sb,  "min",     0);
+	AG_BindInt(sb, "max",     &ptr->xMax);
+	AG_SetEvent(sb, "scrollbar-changed", UpdateXBar, "%p", ptr);
 
-	AG_BindInt(ptr->vbar, "value", &ptr->yOffs);
-/*	AG_BindInt(ptr->vbar, "max", &ptr->yMax); */
-	AG_SetInt(ptr->hbar, "min", 0);
-	AG_SetInt(ptr->vbar, "min", 0);
+	sb = ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
+	AG_BindInt(sb, "value",   &ptr->yOffs);
+	AG_BindInt(sb, "visible", &WIDGET(ptr)->h);
+	AG_SetInt(sb,  "min",     0);
+	AG_SetInt(sb,  "max",     200);
 
 	AG_SetEvent(ptr, "key-down", KeyDown, NULL);
 	AG_SetEvent(ptr, "mouse-button-down", MouseButtonDown, NULL);
@@ -513,13 +515,13 @@ Draw(void *_Nonnull obj)
 
 	AG_PushClipRect(ptr, &r);
 	
-	AG_DrawLineH(ptr, 1, w-2, y0,            &ptr->colors[0]);
-	AG_DrawLineV(ptr, ptr->xMax-1, 30, h-30, &ptr->colors[0]);
+	AG_DrawLineH(ptr, 1, w-2, y0 - ptr->yOffs, &ptr->colors[0]);
+	AG_DrawLineV(ptr, ptr->xMax-1, r.y, r.h,   &ptr->colors[0]);
 
 	/* First pass */
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
 		AG_Color color = pl->color;
-		int yOffs = ptr->yOffs + pl->yOffs;
+		int yOffs = pl->yOffs - ptr->yOffs;
 		int x = pl->xOffs - ptr->xOffs, y;
 		int py = y0 + yOffs;
 
@@ -587,9 +589,7 @@ Draw(void *_Nonnull obj)
 				yLbl = h - su->h - 4 - plbl->y;
 				colLine = pl->color;
 				colLine.a >>= 1;
-				AG_DrawLineBlended(ptr, xLbl,1, xLbl,h-2,
-				    &colLine,
-				    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+				AG_DrawLineV(ptr, xLbl, 1, h-2, &colLine);
 				break;
 			case M_LABEL_Y:
 				xLbl = plbl->x - xOffs;
