@@ -78,6 +78,11 @@ typedef struct ag_treetbl {
 #define AG_TREETBL_EXPAND	(AG_TREETBL_HFILL|AG_TREETBL_VFILL)
 
 	AG_Rect r;			/* View area */
+	int xOffs;			/* Horizontal display offset */
+	int xMax;
+	int yOffs;
+	int yMax;
+
 	int hCol;			/* Header height */
 	int hRow;			/* Per-row height */
 	int dblClicked;			/* Used by double click */

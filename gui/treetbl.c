@@ -120,7 +120,7 @@ FontChanged(AG_Event *_Nonnull event)
 		}
 	}
 	tt->hCol = font->height;
-	tt->hRow = font->height+2;
+	tt->hRow = font->height + 2;
 
 	TAILQ_FOREACH(row, &tt->children, siblings)
 		FontChangedRow(tt, row);
@@ -233,7 +233,6 @@ static void
 FOREACH_VISIBLE_COLUMN(AG_Treetbl *_Nonnull tt, VisibleForeachFn foreachFn,
     void *_Nullable arg1, void *_Nullable arg2)
 {
-	const int view_edge = (tt->hBar ? AG_GetInt(tt->hBar,"value") : 0);
 	int x = 0, first_col = -1, wCol;
 	Uint i;
 
@@ -241,12 +240,12 @@ FOREACH_VISIBLE_COLUMN(AG_Treetbl *_Nonnull tt, VisibleForeachFn foreachFn,
 	for (i = 0; i < tt->n; i++) {
 		AG_TreetblCol *col = &tt->column[i];
 
-		if (first_col == -1 && x + col->w < view_edge) {
+		if (first_col == -1 && x + col->w < tt->xOffs) {
 			x += col->w;		/* x = offset in table */
 			continue;
 		} else if (first_col == -1) {
 			first_col = i;
-			x = x - view_edge;	/* x = offset on screen */
+			x -= tt->xOffs;		/* x = offset on screen */
 		}
 		if (x >= tt->r.w)
 			break;
@@ -371,10 +370,9 @@ ClickedRow(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 	const int x = *(int *)arg1;
 	const int y = *(int *)arg2;
 	AG_TreetblRow *row = NULL;
-	int depth = 0;
-	int ts = tt->hRow/2 + 1;
+	const int ts = (tt->hRow >> 1) + 1;
 	Uint i, j, row_idx;
-	int px;
+	int depth=0, px;
 
 	if (x < x1 || x >= x2)
 		return (1);
@@ -546,21 +544,25 @@ Init(void *_Nonnull obj)
 	tt->r.y = 0;
 	tt->r.w = 0;
 	tt->r.h = 0;
+	tt->xOffs = 0;
+	tt->xMax = 0;
+	tt->yOffs = 0;
+	tt->yMax = 0;
 
 	tt->hCol = agTextFontHeight;
-	tt->hRow = agTextFontHeight+2;
+	tt->hRow = agTextFontHeight + 2;
 	tt->dblClicked = 0;
 
 	tt->vBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
-	AG_SetInt(tt->vBar, "min", 0);
-	AG_SetInt(tt->vBar, "max", 0);
-	AG_SetInt(tt->vBar, "value", 0);
+	AG_SetInt(tt->vBar,  "min",   0);
+	AG_BindInt(tt->vBar, "max",   &tt->yMax);
+	AG_BindInt(tt->vBar, "value", &tt->yOffs);
 	AG_SetEvent(tt->vBar, "scrollbar-changed", ScrollbarChanged, "%p", tt);
 
 	tt->hBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
-	AG_SetInt(tt->hBar, "min", 0);
-	AG_SetInt(tt->hBar, "max", 0);
-	AG_SetInt(tt->hBar, "value", 0);
+	AG_SetInt(tt->hBar,  "min",   0);
+	AG_BindInt(tt->hBar, "max",   &tt->xMax);
+	AG_BindInt(tt->hBar, "value", &tt->xOffs);
 
 	tt->n = 0;
 	tt->sortMode = AG_TREETBL_SORT_NOT;
@@ -1270,13 +1272,11 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 			col_w += tt->column[i].w;
 		}
 		if (col_w > WIDTH(hBar)) {
-			int scroll = col_w - WIDTH(hBar);
-
-			AG_SetInt(hBar, "max", scroll);
-			if (AG_GetInt(hBar, "value") > scroll)
-				AG_SetInt(hBar, "value", scroll);
+			tt->xMax = col_w - WIDTH(hBar);
+			if (tt->xOffs > tt->xMax)
+				tt->xOffs = tt->xMax;
 		} else {
-			AG_SetInt(hBar, "value", 0);
+			tt->xOffs = 0;
 		}
 	}
 
@@ -1336,28 +1336,23 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 }
 
 static void
-DrawSubnodeIndicator(void *_Nonnull wid, const AG_Rect *_Nonnull r,
+DrawSubnodeIndicator(AG_Treetbl *_Nonnull tt, const AG_Rect *_Nonnull r,
     int isExpanded)
 {
-	AG_Rect rd;
+	static AG_VectorElement expdSign[] = {
+		{ AG_VE_LINE,    3,5,  1,0, 0, NULL },            /* - */
+		{ AG_VE_LINE,    1,7,  1,0, 0, NULL },            /* | */
+	};
+	const AG_Color *cLine = &WCOLOR(tt,AG_LINE_COLOR);
 	AG_Color c;
 
-	rd.x = r->x - 1;
-	rd.y = r->y;
-	rd.w = r->w + 2;
-	rd.h = r->h;
 	AG_ColorRGBA_8(&c, 0,0,0, 64);
-	AG_DrawRectBlended(wid, &rd, &c, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	AG_DrawRectBlended(tt, r, &c, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
-	rd.x += 3;
-	rd.y += 2;
-	rd.w -= 6;
-	rd.h -= 4;
-	AG_ColorRGBA_8(&c, 255,255,255, 100);
 	if (isExpanded) {
-		AG_DrawMinus(wid, &rd, &c, AG_ALPHA_SRC);
+		AG_DrawVector(tt, 3,3, r, cLine, expdSign, 0,1);    /* - */
 	} else {
-		AG_DrawPlus(wid, &rd, &c, AG_ALPHA_SRC);
+		AG_DrawVector(tt, 3,3, r, cLine, expdSign, 0,2);    /* + */
 	}
 }
 static void
@@ -1408,6 +1403,7 @@ DrawColumn(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 	const int *update = (int *)arg1;
 	AG_TreetblCol *col = &tt->column[idx];
 	AG_Rect rd;
+	const int spacing = 4;
 	Uint j;
 	int y;
 
@@ -1446,16 +1442,18 @@ DrawColumn(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 	AG_PushClipRect(tt, &tt->r);
 	y = tt->hCol;
 	for (j = 0; j < tt->visible.count; j++) {
-		int x = x1+4;
+		int x = x1+spacing;
 		AG_TreetblCell *cell;
 
 		if (VISROW(tt,j) == NULL) {
 			break;
 		}
 		if (col->flags & AG_TREETBL_COL_EXPANDER) {
-			int tw = (tt->hRow >> 1) + 1;
+			int tw = (tt->hRow >> 1);
 
-			x += VISDEPTH(tt,j)*(tw+4);
+			if ((tw & 1) == 0) { tw++; }
+	
+			x += VISDEPTH(tt,j) * (tw + spacing);
 			if (!TAILQ_EMPTY(&VISROW(tt,j)->children)) {
 				rd.x = x;
 				rd.y = y + (tw >> 1);
@@ -1464,7 +1462,7 @@ DrawColumn(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 				DrawSubnodeIndicator(tt, &rd,
 				    (VISROW(tt,j)->flags & AG_TREETBL_ROW_EXPANDED));
 			}
-			x += tw+4;
+			x += tw + spacing;
 		}
 		cell = &VISROW(tt,j)->cell[col->idx];
 
@@ -1532,7 +1530,6 @@ ViewChangedRecurse(AG_Treetbl *_Nonnull tt, AG_TreetblRowQ *_Nonnull in,
 static void
 ViewChanged(AG_Treetbl *_Nonnull tt)
 {
-	AG_Scrollbar *vBar;
 	int rows_per_view, max, filled, value;
 	Uint i;
 
@@ -1552,13 +1549,12 @@ ViewChanged(AG_Treetbl *_Nonnull tt)
 	if (max && (tt->r.h % tt->hRow) < 16) {
 		max++;
 	}
-	vBar = tt->vBar;
-	AG_SetInt(vBar, "max", max);
-	if (AG_GetInt(vBar, "value") > max)
-		AG_SetInt(vBar, "value", max);
+	tt->yMax = max;
+	if (tt->yOffs > max)
+		tt->yOffs = max;
 
 	/* locate visible rows */
-	value = AG_GetInt(vBar, "value");
+	value = tt->yOffs;
 	filled = ViewChangedRecurse(tt, &tt->children, 0, 0, &value);
 
 	/* blank empty rows */
