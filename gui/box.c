@@ -209,16 +209,21 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Box *box = obj;
+	const int flags = box->flags;
 	AG_Widget *chld;
 
-	if (box->flags & AG_BOX_FRAME) {
+	if (flags & (AG_BOX_FRAME | AG_BOX_BORDER)) {
 		AG_Rect r;
 
 		r.x = 0;
 		r.y = 0;
 		r.w = WIDTH(box);
 		r.h = HEIGHT(box);
-		AG_DrawBox(box, &r, box->depth, &WCOLOR(box,AG_BG_COLOR));
+		if (flags & AG_BOX_FRAME) {
+			AG_DrawBox(box, &r, box->depth, &WCOLOR(box,AG_BG_COLOR));
+		} else {
+			AG_DrawRectOutline(box, &r, &WCOLOR(box,AG_LINE_COLOR));
+		}
 	}
 	OBJECT_FOREACH_CHILD(chld, box, ag_widget)
 		AG_WidgetDraw(chld);
@@ -533,7 +538,10 @@ Edit(void *_Nonnull obj)
 	cb = AG_CheckboxNewFlag(box, 0, _("Homogenous"), &tgt->flags, AG_BOX_HOMOGENOUS);
 	AG_SetEvent(cb, "checkbox-changed", UpdateWindowOf,"%p",tgt);
 
-	cb = AG_CheckboxNewFlag(box, 0, _("Visual frame"), &tgt->flags, AG_BOX_FRAME);
+	cb = AG_CheckboxNewFlag(box, 0, _("Frame"), &tgt->flags, AG_BOX_FRAME);
+	AG_SetEvent(cb, "checkbox-changed", UpdateWindowOf,"%p",tgt);
+	
+	cb = AG_CheckboxNewFlag(box, 0, _("Border"), &tgt->flags, AG_BOX_BORDER);
 	AG_SetEvent(cb, "checkbox-changed", UpdateWindowOf,"%p",tgt);
 
 	return (box);

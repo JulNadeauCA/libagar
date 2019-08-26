@@ -30,7 +30,8 @@ typedef struct ag_box {
 #define AG_BOX_HOMOGENOUS	0x01	/* Divide space evenly */
 #define AG_BOX_HFILL		0x02	/* Expand to fill available width */
 #define AG_BOX_VFILL		0x04	/* Expand to fill available height */
-#define AG_BOX_FRAME		0x08	/* Display a frame by default */
+#define AG_BOX_FRAME		0x08	/* 3d-style frame and background */
+#define AG_BOX_BORDER		0x10	/* Border only */
 #define AG_BOX_EXPAND		(AG_BOX_HFILL|AG_BOX_VFILL)
 	int padding;			/* Padding around widgets */
 	int spacing;			/* Spacing between widgets */
