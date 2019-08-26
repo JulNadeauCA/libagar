@@ -534,8 +534,10 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 	const int button = AG_INT(1);
+	const int mx = AG_INT(2);
+	const int my = AG_INT(3);
 	const int sbThick = SBTHICK(sb);
-	const int x = SBPOS(sb, AG_INT(2), AG_INT(3)) - sbThick;
+	const int x = SBPOS(sb,mx,my) - sbThick;
 	int posCur, len = SBLEN(sb);
 
 	if (button != AG_MOUSE_LEFT) {
@@ -592,6 +594,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 				} else {
 					SeekToPxCoords(sb, x - (len >> 1));
 					sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
+					sb->xOffs = (len >> 1);
 				}
 			} else {
 				if (sb->flags & AG_SCROLLBAR_SMOOTH) {
@@ -607,6 +610,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 				} else {
 					SeekToPxCoords(sb, x - (len >> 1));
 					sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
+					sb->xOffs = (len >> 1);
 				}
 			}
 		}
