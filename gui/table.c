@@ -342,7 +342,7 @@ SizeColumns(AG_Table *_Nonnull t)
 	for (n = 0, x = 0; n < t->n; n++) {
 		tc = &t->cols[n];
 		
-		r.x = x - COLUMN_RESIZE_RANGE/2;
+		r.x = x - COLUMN_RESIZE_RANGE/2 - t->xOffs;
 		r.w = COLUMN_RESIZE_RANGE;
 		AG_SetStockCursor(t, &tc->ca, &r, AG_HRESIZE_CURSOR);
 		x += tc->w;
@@ -2290,9 +2290,18 @@ AG_TableSaveASCII(AG_Table *t, void *pf, char sep)
 }
 
 static void
+ScrollbarChanged(AG_Event *_Nonnull event)
+{
+	AG_Table *t = AG_TABLE_PTR(1);
+
+	SizeColumns(t);
+}
+
+static void
 Init(void *_Nonnull obj)
 {
 	AG_Table *t = obj;
+	AG_Scrollbar *sb;
 	Uint i;
 
 	WIDGET(t)->flags |= AG_WIDGET_FOCUSABLE |
@@ -2339,20 +2348,21 @@ Init(void *_Nonnull obj)
 #endif
 
 	/* Horizontal scrollbar */
-	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
-	AG_SetInt(t->hbar, "min", 0);
-	AG_BindInt(t->hbar, "max", &t->wTot);
-	AG_BindInt(t->hbar, "value", &t->xOffs);
-	AG_BindInt(t->hbar, "visible", &t->r.w);
-	AG_WidgetSetFocusable(t->hbar, 0);
+	sb = t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
+	AG_SetInt(sb,  "min",     0);
+	AG_BindInt(sb, "max",     &t->wTot);
+	AG_BindInt(sb, "value",   &t->xOffs);
+	AG_BindInt(sb, "visible", &t->r.w);
+	AG_WidgetSetFocusable(sb, 0);
+	AG_AddEvent(sb, "scrollbar-changed", ScrollbarChanged, "%p", t);
 
 	/* Vertical scrollbar */
-	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
-	AG_SetInt(t->vbar, "min", 0);
-	AG_BindInt(t->vbar, "max", &t->m);
-	AG_BindInt(t->vbar, "value", &t->mOffs);
-	AG_BindInt(t->vbar, "visible", &t->mVis);
-	AG_WidgetSetFocusable(t->vbar, 0);
+	sb = t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
+	AG_SetInt(sb,  "min",     0);
+	AG_BindInt(sb, "max",     &t->m);
+	AG_BindInt(sb, "value",   &t->mOffs);
+	AG_BindInt(sb, "visible", &t->mVis);
+	AG_WidgetSetFocusable(sb, 0);
 
 	t->nPrevBuckets = 256;
 	t->cPrev = Malloc(t->nPrevBuckets*sizeof(AG_TableBucket));
