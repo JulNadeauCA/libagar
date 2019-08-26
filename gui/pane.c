@@ -233,27 +233,21 @@ Init(void *_Nonnull obj)
 void
 AG_PaneSetDividerWidth(AG_Pane *pa, int wDiv)
 {
-	AG_ObjectLock(pa);
 	pa->wDiv = wDiv;
-	AG_ObjectUnlock(pa);
 	AG_Redraw(pa);
 }
 
 void
 AG_PaneSetDivisionPacking(AG_Pane *pa, int which, enum ag_box_type packing)
 {
-	AG_ObjectLock(pa);
 	AG_BoxSetType(pa->div[which], packing);
-	AG_ObjectUnlock(pa);
 }
 
 void
 AG_PaneSetDivisionMin(AG_Pane *pa, int which, int wMin, int hMin)
 {
-	AG_ObjectLock(pa);
 	pa->wMin[which] = wMin;
 	pa->hMin[which] = hMin;
-	AG_ObjectUnlock(pa);
 }
 
 void
@@ -291,9 +285,7 @@ AG_PaneAttachBoxes(AG_Pane *pa, AG_Box *box1, AG_Box *box2)
 void
 AG_PaneResizeAction(AG_Pane *pa, enum ag_pane_resize_action ra)
 {
-	AG_ObjectLock(pa);
 	pa->resizeAction = ra;
-	AG_ObjectUnlock(pa);
 }
 
 static void
