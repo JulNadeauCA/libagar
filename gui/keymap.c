@@ -598,7 +598,9 @@ const struct ag_keycode agKeymap[] = {
 	{ AG_KEY_Y,	AG_KEYMOD_META,	Yank,      "we" },
 #else /* __APPLE__ */
 	{ AG_KEY_LEFT,	AG_KEYMOD_CTRL,	WordBack,  "" },
+	{ AG_KEY_LEFT,	AG_KEYMOD_ALT,	WordBack,  "" },
 	{ AG_KEY_RIGHT,	AG_KEYMOD_CTRL,	WordForw,  "" },
+	{ AG_KEY_RIGHT,	AG_KEYMOD_ALT,	WordForw,  "" },
 	{ AG_KEY_A,	AG_KEYMOD_CTRL,	SelectAll, "" },
 	{ AG_KEY_C,	AG_KEYMOD_CTRL,	Copy,      "" },
 	{ AG_KEY_X,	AG_KEYMOD_CTRL,	Cut,       "w" },
