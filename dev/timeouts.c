@@ -33,16 +33,24 @@
 
 #include <agar/gui/window.h>
 #include <agar/gui/treetbl.h>
+#include <agar/gui/button.h>
 #include <agar/dev/dev.h>
 
 static Uint32 
 RefreshTableTimeout(AG_Timer *_Nonnull refreshTo, AG_Event *_Nonnull event)
 {
 	AG_Treetbl *tt = AG_TREETBL_SELF();
+	AG_Label *lbl = AG_LABEL_PTR(1);
+	const int *pauseFlag = (const int *)AG_PTR(2);
 	extern struct ag_objectq agTimerObjQ;
 	AG_Object *ob;
 	int id;
-	
+
+	if (*pauseFlag) {
+		goto out;
+	}
+	AG_LabelText(lbl, _("Ticks: %u"), (Uint)AG_GetTicks());
+
 	AG_TreetblClearRows(tt);
 
 	id = 0;
@@ -66,6 +74,7 @@ RefreshTableTimeout(AG_Timer *_Nonnull refreshTo, AG_Event *_Nonnull event)
 		}
 		AG_ObjectUnlock(ob);
 	}
+out:
 	return (refreshTo->ival);
 }
 
@@ -80,14 +89,19 @@ CloseWindow(AG_Event *_Nonnull event)
 AG_Window *
 DEV_TimerInspector(void)
 {
+	static int pauseFlag = 0;
 	AG_Window *win;
 	AG_Treetbl *tt;
+	AG_Label *lbl;
 	AG_Timer *to;
 
 	if ((win = AG_WindowNewNamedS(0, "DEV_TimerInspector")) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaptionS(win, _("Timer Inspector"));
+
+	lbl = AG_LabelNew(win, AG_LABEL_HFILL, _("Ticks: ..."));
+	AG_ButtonNewInt(win, AG_BUTTON_STICKY, _("Pause"), &pauseFlag);
 
 	tt = AG_TreetblNew(win, AG_TREETBL_EXPAND, NULL, NULL);
 	AG_TreetblSizeHint(tt, 200, 6);
@@ -96,7 +110,7 @@ DEV_TimerInspector(void)
 	AG_TreetblAddCol(tt, 2, "<XXXXXXXX>", _("Ticks"));
 	AG_TreetblAddCol(tt, 3, "<XXXXXXXX>", "tSched");
 
-	to = AG_AddTimerAuto(tt, 10, RefreshTableTimeout, NULL);
+	to = AG_AddTimerAuto(tt, 100, RefreshTableTimeout, "%p,%p", lbl, &pauseFlag);
 	if (to != NULL)
 		Strlcpy(to->name, "timerInspector", sizeof(to->name));
 	
