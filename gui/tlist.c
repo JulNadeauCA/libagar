@@ -560,10 +560,17 @@ DrawExpandCollapseSign(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it,
 		{ AG_VE_LINE,    3,5,  1,0, 0, NULL },            /* - */
 		{ AG_VE_LINE,    1,7,  1,0, 0, NULL },            /* | */
 	};
+	int h = tl->item_h >> 1;
+	int h_2 = (h >> 1);
 
-	r.x = x+1;
-	r.y = y+1;
-	r.h = r.w = tl->item_h;
+	r.x = x + h_2;
+	r.y = y + h_2;
+	r.w = h;
+	r.h = h;
+	if ((h & 1) == 0) {
+		r.w++;
+		r.h++;
+	}
 
 	AG_DrawRectFilled(tl, &r, &WCOLOR(tl, AG_BG_COLOR));
 
