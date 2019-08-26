@@ -512,11 +512,11 @@ DrawVector3x3(void *_Nonnull obj, const AG_Rect *_Nonnull r,
     const AG_Color *_Nonnull pal, int m, int n,
     const AG_VectorElement *_Nonnull elemBase, int elemFirst, int elemLast)
 {
-	const int x = r->x + 1;
-	const int y = r->y + 1;
-	const int w = r->w - 3, w_2 = w>>1;
-	const int h = r->h - 3, h_2 = h>>1;
 	AG_Pt vtx[9];
+	const int x = r->x;
+	const int y = r->y;
+	int w = r->w, w_2 = (w >> 1) + ((w & 1) ? 1 : 0);
+	int h = r->h, h_2 = (h >> 1);
 
 	vtx[0].x = x;		vtx[0].y = y;
 	vtx[1].x = x+w_2;	vtx[1].y = y;
