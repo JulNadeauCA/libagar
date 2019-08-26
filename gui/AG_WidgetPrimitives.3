@@ -298,12 +298,6 @@ variant only rounds the top two corners.
 .Sh SYMBOLS
 .nr nS 1
 .Ft void
-.Fn AG_DrawPlus "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_AlphaFn blendFn"
-.Pp
-.Ft void
-.Fn AG_DrawMinus "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_AlphaFn blendFn"
-.Pp
-.Ft void
 .Fn AG_DrawTriangle "AG_Widget *widget" "AG_Pt v1" "AG_Pt v2" "AG_Pt v3" "AG_Color c"
 .Pp
 .Ft void
@@ -331,14 +325,6 @@ variant only rounds the top two corners.
 .Fn AG_DrawArrowhead "void *_Nonnull obj" "int x1" "int y1" "int x2" "int y2" "int length" "double theta" "const AG_Color *_Nonnull c"
 .Pp
 .nr nS 0
-The
-.Fn AG_DrawPlus
-and
-.Fn AG_DrawMinus
-routines render plus ("+") or minus ("-") signs spanning rectangle
-.Fa r
-using the specified color and blending function.
-.Pp
 .Fn AG_DrawTriangle
 renders a triangle of color
 .Fa c

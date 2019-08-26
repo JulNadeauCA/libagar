@@ -315,8 +315,8 @@ ag_draw_triangle(void *obj, const AG_Pt *v1, const AG_Pt *v2, const AG_Pt *v3,
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	int x1 = wid->rView.x1;
-	int y1 = wid->rView.y1;
+	const int x1 = wid->rView.x1;
+	const int y1 = wid->rView.y1;
 	AG_Pt V1,V2,V3;
 
 	V1.x = x1 + v1->x;
@@ -624,8 +624,8 @@ void
 ag_draw_rect_dithered(void *obj, const AG_Rect *r, const AG_Color *c)
 #endif
 {
-	AG_Rect rd;
 	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Rect rd;
 
 	rd.x = wid->rView.x1 + r->x;
 	rd.y = wid->rView.y1 + r->y;
@@ -764,10 +764,10 @@ ag_draw_frame_blended(void *obj, const AG_Rect *r, const AG_Color *_Nonnull c,
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Driver *drv = wid->drv;
 	AG_DriverClass *drvOps = wid->drvOps;
-	int x = wid->rView.x1 + r->x;
-	int y = wid->rView.y1 + r->y;
-	int x2 = x + r->w - 1;
-	int y2 = y + r->h - 1;
+	const int x = wid->rView.x1 + r->x;
+	const int y = wid->rView.y1 + r->y;
+	const int x2 = x + r->w - 1;
+	const int y2 = y + r->h - 1;
 
 	drvOps->drawLineBlended(drv, x,  y,  x2,  y,  c, fnSrc, AG_ALPHA_ZERO);
 	drvOps->drawLineBlended(drv, x,  y,  x,   y2, c, fnSrc, AG_ALPHA_ZERO);
@@ -790,10 +790,10 @@ ag_draw_rect_outline(void *obj, const AG_Rect *r, const AG_Color *_Nonnull c)
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Driver *drv = wid->drv;
 	AG_DriverClass *drvOps = wid->drvOps;
-	int x = wid->rView.x1 + r->x;
-	int y = wid->rView.y1 + r->y;
-	int x2 = x + r->w;
-	int y2 = y + r->h;
+	const int x = wid->rView.x1 + r->x;
+	const int y = wid->rView.y1 + r->y;
+	const int x2 = x + r->w;
+	const int y2 = y + r->h;
 
 	if (c->a < AG_OPAQUE) {
 		drvOps->drawLineBlended(drv, x,  y, x2, y,  c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
@@ -811,55 +811,6 @@ ag_draw_rect_outline(void *obj, const AG_Rect *r, const AG_Color *_Nonnull c)
 		}
 		drvOps->drawLineV(drv, x2, y,  y2, c);
 	}
-}
-
-/*
- * Render a plus `+' sign.
- */
-#ifdef AG_INLINE_HEADER
-static __inline__ void
-AG_DrawPlus(void *_Nonnull obj, const AG_Rect *_Nonnull r,
-    const AG_Color *_Nonnull c, AG_AlphaFn fnSrc)
-#else
-void
-ag_draw_plus(void *obj, const AG_Rect *r, const AG_Color *c, AG_AlphaFn fnSrc)
-#endif
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Driver *drv = wid->drv;
-	int x = wid->rView.x1 + r->x;
-	int y = wid->rView.y1 + r->y;
-	int w = r->w;
-	int h = r->h;
-	int x1 = x + (w >> 1);
-	int y1 = y + (h >> 1);
-
-	wid->drvOps->drawLineBlended(drv, x1, y,  x1,  y+h, c, fnSrc, AG_ALPHA_ZERO);
-	wid->drvOps->drawLineBlended(drv, x,  y1, x+w, y1,  c, fnSrc, AG_ALPHA_ZERO);
-}
-
-/*
- * Render a minus `-' sign.
- */
-#ifdef AG_INLINE_HEADER
-static __inline__ void
-AG_DrawMinus(void *_Nonnull obj, const AG_Rect *_Nonnull r,
-    const AG_Color *_Nonnull c, AG_AlphaFn fnSrc)
-#else
-void
-ag_draw_minus(void *obj, const AG_Rect *_Nonnull r, const AG_Color *c,
-    AG_AlphaFn fnSrc)
-#endif
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	int x = wid->rView.x1 + r->x;
-	int y = wid->rView.y1 + r->y;
-	int w = r->w;
-	int x1 = x + (w >> 1);
-	int y1 = y + (r->h >> 1);
-
-	wid->drvOps->drawLineBlended(wid->drv, x1,y1, x+w, y, c, fnSrc,
-	    AG_ALPHA_ZERO);
 }
 
 /*

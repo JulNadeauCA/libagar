@@ -136,8 +136,6 @@ void ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
 # define AG_DrawBoxDisabled(o,r,z,c1,c2)	ag_draw_box_disabled((o),(r),(z),(c1),(c2))
 # define AG_DrawFrameBlended(o,r,c,fn)		ag_draw_frame_blended((o),(r),(c),(fn))
 # define AG_DrawRectOutline(o,r,c)		ag_draw_rect_outline((o),(r),(c))
-# define AG_DrawPlus(o,r,c,fn)			ag_draw_plus((o),(r),(c),(fn))
-# define AG_DrawMinus(o,r,c,fn)			ag_draw_minus((o),(r),(c),(fn))
 # define AG_DrawLine2(o,x1,y1,x2,y2,c)		ag_draw_line_2((o),(x1),(y1),(x2),(y2),(c))
 # ifdef AG_HAVE_FLOAT
 #  define AG_DrawArrowLine(o,x1,y1,x2,y2,t,l,th,c) ag_draw_arrow_line((o),(x1),(y1),(x2),(y2),(t),(l),(th),(c))
