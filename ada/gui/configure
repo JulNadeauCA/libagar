@@ -2191,7 +2191,9 @@ main(int argc, char *argv[])
 {
 	AG_InitCore("conf-test", 0);
 	AG_InitGraphics(AG_NULL);
+#ifdef AG_EVENT_LOOP
 	AG_EventLoop();
+#endif
 	AG_Quit();
 	return (0);
 }
@@ -2613,6 +2615,7 @@ static const struct {
 	{ "AG_ARG_MAX", AG_ARG_MAX },
 	{ "AG_BUFFER_MIN", AG_BUFFER_MIN },
 	{ "AG_BUFFER_MAX", AG_BUFFER_MAX },
+	{ "AG_VARIABLE_TYPE_LAST", AG_VARIABLE_TYPE_LAST },
 	{ "AG_COMPONENT_BITS", AG_COMPONENT_BITS },
 	{ "AG_COLOR_FIRST", AG_COLOR_FIRST },
 	{ "AG_COLOR_LAST", AG_COLOR_LAST },
@@ -2623,7 +2626,6 @@ static const struct {
 	{ "AG_OPAQUE", AG_OPAQUE },
 	{ "AG_STATUSBAR_MAX_LABELS", AG_STATUSBAR_MAX_LABELS },
 	{ "AG_STYLE_VALUE_MAX", AG_STYLE_VALUE_MAX },
-	{ "AG_TABLE_TXT_MAX", AG_TABLE_TXT_MAX },
 	{ "AG_TABLE_FMT_MAX", AG_TABLE_FMT_MAX },
 	{ "AG_TABLE_COL_NAME_MAX", AG_TABLE_COL_NAME_MAX },
 	{ "AG_TABLE_HASHBUF_MAX", AG_TABLE_HASHBUF_MAX },
@@ -3398,6 +3400,9 @@ if [ "${srcdir}" != '' ]; then
 	echo 'ok'
 fi
 echo '*'
-echo '* Configuration successful. Use the "make" command to compile,'
-echo '* and complete the installation using "make install".'
+echo '* Configuration successful!'
+echo '*'
+echo '* Use "make depend all" to compile. When finished,'
+$ECHO_N '* run "make install" to install under '
+echo "${PREFIX}."
 echo '*'
