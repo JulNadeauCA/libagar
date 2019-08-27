@@ -162,12 +162,7 @@ object_named(event, name, hier)
 PREINIT:
 	static const enum ag_variable_type argtype = AG_VARIABLE_POINTER;
 CODE:
-	index += apNumOurArgs;
-	if (index <= apNumOurArgs || index >= event->argc ||
-	    event->argv[index].type != argtype) {
-		XSRETURN_UNDEF;
-	}
-	RETVAL = AG_OBJECT_NAMED(name, hier);
+	RETVAL = AG_OBJECT_NAMED(name);
 OUTPUT:
 	RETVAL
 
