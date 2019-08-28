@@ -529,9 +529,7 @@ echo '    --with-sndfile[=PREFIX]     Enable sndfile support [check]'
 echo '    --with-portaudio[=PREFIX]   Enable portaudio driver [check]'
 echo ''
 echo 'Options specific to SG library:'
-echo '    --with-cg[=PREFIX]          Cg shader support [default: check]'
 echo '    --with-glu[=PREFIX]         OpenGL Utility Library (GLU) [check]'
-echo '    --with-ode[=PREFIX]         ODE physics interface [default: check]'
 echo ''
 echo 'Some influential environment variables:'
 echo '    CC           C compiler command'
@@ -12520,359 +12518,6 @@ echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
 echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
 echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
 	fi
-	
-	if [ "${with_ode}" != "no" ]
- then
-$ECHO_N 'checking for Open Dynamics Engine...'
-$ECHO_N '# checking for Open Dynamics Engine...' >>config.log
-# BEGIN ode(0 ${prefix_ode})
-ODE_VERSION=
-if [ "${prefix_ode}" != "" ]; then
-if [ -e "${prefix_ode}/bin/ode-config" ]; then
-ODE_VERSION=`${prefix_ode}/bin/ode-config --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_ode}/bin/ode-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -e "${path}/ode-config" ]; then
-ODE_VERSION=`${path}/ode-config --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/ode-config"
-break
-elif [ -e "${path}/ode-config.exe" ]; then
-ODE_VERSION=`${path}/ode-config.exe --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/ode-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-ODE_CFLAGS=
-if [ "${prefix_ode}" != "" ]; then
-if [ -e "${prefix_ode}/bin/ode-config" ]; then
-ODE_CFLAGS=`${prefix_ode}/bin/ode-config --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_ode}/bin/ode-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -e "${path}/ode-config" ]; then
-ODE_CFLAGS=`${path}/ode-config --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/ode-config"
-break
-elif [ -e "${path}/ode-config.exe" ]; then
-ODE_CFLAGS=`${path}/ode-config.exe --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/ode-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-ODE_LIBS=
-if [ "${prefix_ode}" != "" ]; then
-if [ -e "${prefix_ode}/bin/ode-config" ]; then
-ODE_LIBS=`${prefix_ode}/bin/ode-config --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_ode}/bin/ode-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -e "${path}/ode-config" ]; then
-ODE_LIBS=`${path}/ode-config --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/ode-config"
-break
-elif [ -e "${path}/ode-config.exe" ]; then
-ODE_LIBS=`${path}/ode-config.exe --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/ode-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-ODE_LIBS="${ODE_LIBS} -lstdc++ -lm"
-if [ "${ODE_VERSION}" != "" ]; then
-if [ "${prefix_ode}" != "" ]; then
-echo "yes ($ODE_VERSION in ${prefix_ode})"
-echo "# yes ($ODE_VERSION in ${prefix_ode})" >>config.log
-else
-echo "yes ($ODE_VERSION)"
-echo "# yes ($ODE_VERSION)" >>config.log
-fi
-if [ "${MK_VERSION_OK}" = "no" ]; then
-echo '*'
-echo '# *' >>config.log
-echo "* Minimum required version is 0 (found $ODE_VERSION)"
-echo "# * Minimum required version is 0 (found $ODE_VERSION)" >>config.log
-echo '*'
-echo '# *' >>config.log
-fi
-else
-if [ "${prefix_ode}" != "" ]; then
-echo "no (not in ${prefix_ode})"
-echo "# no (not in ${prefix_ode})" >>config.log
-else
-echo 'no'
-echo '# no' >>config.log
-fi
-MK_VERSION_OK="no"
-fi
-if [ "${MK_VERSION_OK}" = "yes" ]; then
-$ECHO_N 'checking whether ODE works...'
-$ECHO_N '# checking whether ODE works...' >>config.log
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-#include <ode/ode.h>
-
-int main(int argc, char *argv[]) {
-	dWorldID world;
-	dJointGroupID jgroup;
-	world = dWorldCreate();
-	jgroup = dJointGroupCreate(10000);
-	dWorldSetGravity(world, 0, 0, -0.5);
-	dJointGroupDestroy(jgroup);
-	dWorldDestroy(world);
-	return (0);
-}
-EOT
-echo >>config.log
-echo '# C: HAVE_ODE' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${ODE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${ODE_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${ODE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${ODE_LIBS} 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_ODE=yes
-bb_o=$bb_incdir/have_ode.h
-echo '#ifndef HAVE_ODE' >$bb_o
-echo "#define HAVE_ODE \"$HAVE_ODE\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_ODE\"] = \"$HAVE_ODE\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_ODE=no
-echo '#undef HAVE_ODE' >$bb_incdir/have_ode.h
-echo 'hdefs["HAVE_ODE"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_ODE}" = "yes" ]; then
-bb_o=$bb_incdir/ode_cflags.h
-echo '#ifndef ODE_CFLAGS' >$bb_o
-echo "#define ODE_CFLAGS \"$ODE_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"ODE_CFLAGS\"] = \"$ODE_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/ode_libs.h
-echo '#ifndef ODE_LIBS' >$bb_o
-echo "#define ODE_LIBS \"$ODE_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"ODE_LIBS\"] = \"$ODE_LIBS\"" >>configure.lua
-else
-echo '#undef ODE_CFLAGS' >$bb_incdir/ode_cflags.h
-echo 'hdefs["ODE_CFLAGS"] = nil' >>configure.lua
-ODE_CFLAGS=""
-echo '#undef ODE_LIBS' >$bb_incdir/ode_libs.h
-echo 'hdefs["ODE_LIBS"] = nil' >>configure.lua
-ODE_LIBS=""
-fi
-else
-echo '#undef HAVE_ODE' >$bb_incdir/have_ode.h
-echo 'hdefs["HAVE_ODE"] = nil' >>configure.lua
-fi
-# END ode
-		if [ "${HAVE_ODE}" != "yes" ]
- then
-			if [ "${with_ode}" = "yes" ]
- then
-				echo "*"
-				echo "* --with-ode was requested, but ODE was not"
-				echo "* found on this system."
-				echo "*"
-				exit 1
-			else
-echo 'not enabling Open Dynamics Engine'
-echo '# not enabling Open Dynamics Engine' >>config.log
-HAVE_ODE="no"
-ODE_CFLAGS=""
-ODE_LIBS=""
-echo '#undef HAVE_ODE' >$bb_incdir/have_ode.h
-echo 'hdefs["HAVE_ODE"] = nil' >>configure.lua
-echo '#undef ODE_CFLAGS' >$bb_incdir/ode_cflags.h
-echo 'hdefs["ODE_CFLAGS"] = nil' >>configure.lua
-echo '#undef ODE_LIBS' >$bb_incdir/ode_libs.h
-echo 'hdefs["ODE_LIBS"] = nil' >>configure.lua
-			fi
-		fi
-	else
-echo 'not enabling Open Dynamics Engine'
-echo '# not enabling Open Dynamics Engine' >>config.log
-HAVE_ODE="no"
-ODE_CFLAGS=""
-ODE_LIBS=""
-echo '#undef HAVE_ODE' >$bb_incdir/have_ode.h
-echo 'hdefs["HAVE_ODE"] = nil' >>configure.lua
-echo '#undef ODE_CFLAGS' >$bb_incdir/ode_cflags.h
-echo 'hdefs["ODE_CFLAGS"] = nil' >>configure.lua
-echo '#undef ODE_LIBS' >$bb_incdir/ode_libs.h
-echo 'hdefs["ODE_LIBS"] = nil' >>configure.lua
-	fi
-	
-	if [ "${with_cg}" != "no" ]
- then
-$ECHO_N 'checking for Cg...'
-$ECHO_N '# checking for Cg...' >>config.log
-# BEGIN cg(0 ${prefix_cg})
-CG_CFLAGS=""
-CG_LIBS=""
-if [ "${prefix_cg}" != "" ]; then
-CG_CFLAGS="-I${prefix_cg}/include"
-CG_LIBS="-L${prefix_cg}/lib -lCgGL -lCg -lstdc++"
-else
-if [ -e "/usr/include/Cg" ]; then
-CG_CFLAGS="${CG_CFLAGS} -I/usr/include"
-fi
-if [ -e "/usr/local/include/Cg" ]; then
-CG_CFLAGS="${CG_CFLAGS} -I/usr/local/include"
-fi
-if [ -e "/usr/Cg/include/Cg" ]; then
-CG_CFLAGS="${CG_CFLAGS} -I/usr/Cg/include"
-fi
-if [ -e "/usr/local/Cg/include/Cg" ]; then
-CG_CFLAGS="${CG_CFLAGS} -I/usr/local/Cg/include"
-fi
-if [ -e "/usr/X11R6/include/Cg" ]; then
-CG_CFLAGS="${CG_CFLAGS} -I/usr/X11R6/include"
-fi
-if [ -e "/usr/X11R6/Cg/include/Cg" ]; then
-CG_CFLAGS="${CG_CFLAGS} -I/usr/X11R6/Cg/include"
-fi
-case "${host}" in
-*-*-darwin*)
-CG_LIBS="-F/System/Library/Frameworks -framework Cg"
-;;
-x86_64-*-linux*)
-CG_LIBS="-L/usr/X11R6/lib64 -L/usr/lib64 -lCgGL -lCg -lstdc++"
-;;
-*-*-linux*)
-CG_LIBS="-L/usr/X11R6/lib -lCgGL -lCg -lstdc++"
-;;
-*)
-CG_LIBS="-lCgGL -lCg -lstdc++"
-;;
-esac
-fi
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-#include <Cg/cg.h>
-#include <Cg/cgGL.h>
-
-CGcontext context;
-CGeffect effect;
-CGtechnique technique;
-
-int main(int argc, char *argv[]) {
-	context = cgCreateContext();
-	return (0);
-}
-EOT
-echo >>config.log
-echo '# C: HAVE_CG' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${CG_CFLAGS} ${OPENGL_CFLAGS} ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${CG_LIBS} ${OPENGL_LIBS} ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CG_CFLAGS} ${OPENGL_CFLAGS} ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${CG_LIBS} ${OPENGL_LIBS} ${PTHREADS_LIBS} 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_CG=yes
-bb_o=$bb_incdir/have_cg.h
-echo '#ifndef HAVE_CG' >$bb_o
-echo "#define HAVE_CG \"$HAVE_CG\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CG\"] = \"$HAVE_CG\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_CG=no
-echo '#undef HAVE_CG' >$bb_incdir/have_cg.h
-echo 'hdefs["HAVE_CG"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_CG}" = "yes" ]; then
-bb_o=$bb_incdir/cg_cflags.h
-echo '#ifndef CG_CFLAGS' >$bb_o
-echo "#define CG_CFLAGS \"$CG_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"CG_CFLAGS\"] = \"$CG_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/cg_libs.h
-echo '#ifndef CG_LIBS' >$bb_o
-echo "#define CG_LIBS \"$CG_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"CG_LIBS\"] = \"$CG_LIBS\"" >>configure.lua
-else
-echo '#undef CG_CFLAGS' >$bb_incdir/cg_cflags.h
-echo 'hdefs["CG_CFLAGS"] = nil' >>configure.lua
-CG_CFLAGS=""
-echo '#undef CG_LIBS' >$bb_incdir/cg_libs.h
-echo 'hdefs["CG_LIBS"] = nil' >>configure.lua
-CG_LIBS=""
-fi
-# END cg
-		if [ "${HAVE_CG}" != "yes" ]
- then
-			if [ "${with_cg}" = "yes" ]
- then
-				echo "*"
-				echo "* --with-cg was requested, but Cg was not"
-				echo "* found on this system."
-				echo "*"
-				exit 1
-			else
-echo 'not enabling Cg'
-echo '# not enabling Cg' >>config.log
-HAVE_CG="no"
-CG_CFLAGS=""
-CG_LIBS=""
-echo '#undef HAVE_CG' >$bb_incdir/have_cg.h
-echo 'hdefs["HAVE_CG"] = nil' >>configure.lua
-			fi
-		fi
-	else
-echo 'not enabling Cg'
-echo '# not enabling Cg' >>config.log
-HAVE_CG="no"
-CG_CFLAGS=""
-CG_LIBS=""
-echo '#undef HAVE_CG' >$bb_incdir/have_cg.h
-echo 'hdefs["HAVE_CG"] = nil' >>configure.lua
-	fi
 else
 echo '#undef ENABLE_SG' >$bb_incdir/enable_sg.h
 echo 'hdefs["ENABLE_SG"] = nil' >>configure.lua
@@ -12888,24 +12533,6 @@ echo '#undef GLU_CFLAGS' >$bb_incdir/glu_cflags.h
 echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
 echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
 echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
-echo 'not enabling Open Dynamics Engine'
-echo '# not enabling Open Dynamics Engine' >>config.log
-HAVE_ODE="no"
-ODE_CFLAGS=""
-ODE_LIBS=""
-echo '#undef HAVE_ODE' >$bb_incdir/have_ode.h
-echo 'hdefs["HAVE_ODE"] = nil' >>configure.lua
-echo '#undef ODE_CFLAGS' >$bb_incdir/ode_cflags.h
-echo 'hdefs["ODE_CFLAGS"] = nil' >>configure.lua
-echo '#undef ODE_LIBS' >$bb_incdir/ode_libs.h
-echo 'hdefs["ODE_LIBS"] = nil' >>configure.lua
-echo 'not enabling Cg'
-echo '# not enabling Cg' >>config.log
-HAVE_CG="no"
-CG_CFLAGS=""
-CG_LIBS=""
-echo '#undef HAVE_CG' >$bb_incdir/have_cg.h
-echo 'hdefs["HAVE_CG"] = nil' >>configure.lua
 fi
 if [ "${enable_sk}" != 'no' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' ]
  then
@@ -14282,10 +13909,6 @@ echo "CC_COMPILE=$CC_COMPILE" >>Makefile.config
 echo "mdefs[\"CC_COMPILE\"] = \"$CC_COMPILE\"" >>configure.lua
 echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
-echo "CG_CFLAGS=$CG_CFLAGS" >>Makefile.config
-echo "mdefs[\"CG_CFLAGS\"] = \"$CG_CFLAGS\"" >>configure.lua
-echo "CG_LIBS=$CG_LIBS" >>Makefile.config
-echo "mdefs[\"CG_LIBS\"] = \"$CG_LIBS\"" >>configure.lua
 echo "CLOCK_CFLAGS=$CLOCK_CFLAGS" >>Makefile.config
 echo "mdefs[\"CLOCK_CFLAGS\"] = \"$CLOCK_CFLAGS\"" >>configure.lua
 echo "CLOCK_LIBS=$CLOCK_LIBS" >>Makefile.config
@@ -14354,8 +13977,6 @@ echo "HAVE_CC_MWINDOWS=$HAVE_CC_MWINDOWS" >>Makefile.config
 echo "mdefs[\"HAVE_CC_MWINDOWS\"] = \"$HAVE_CC_MWINDOWS\"" >>configure.lua
 echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
-echo "HAVE_CG=$HAVE_CG" >>Makefile.config
-echo "mdefs[\"HAVE_CG\"] = \"$HAVE_CG\"" >>configure.lua
 echo "HAVE_CLOCK_GETTIME=$HAVE_CLOCK_GETTIME" >>Makefile.config
 echo "mdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
 echo "HAVE_CLOCK_WIN32=$HAVE_CLOCK_WIN32" >>Makefile.config
@@ -14422,8 +14043,6 @@ echo "HAVE_OBJC=$HAVE_OBJC" >>Makefile.config
 echo "mdefs[\"HAVE_OBJC\"] = \"$HAVE_OBJC\"" >>configure.lua
 echo "HAVE_OBJC_WARNINGS=$HAVE_OBJC_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_OBJC_WARNINGS\"] = \"$HAVE_OBJC_WARNINGS\"" >>configure.lua
-echo "HAVE_ODE=$HAVE_ODE" >>Makefile.config
-echo "mdefs[\"HAVE_ODE\"] = \"$HAVE_ODE\"" >>configure.lua
 echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
 echo "mdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
 echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >>Makefile.config
@@ -14524,10 +14143,6 @@ echo "MYSQL_CFLAGS=$MYSQL_CFLAGS" >>Makefile.config
 echo "mdefs[\"MYSQL_CFLAGS\"] = \"$MYSQL_CFLAGS\"" >>configure.lua
 echo "MYSQL_LIBS=$MYSQL_LIBS" >>Makefile.config
 echo "mdefs[\"MYSQL_LIBS\"] = \"$MYSQL_LIBS\"" >>configure.lua
-echo "ODE_CFLAGS=$ODE_CFLAGS" >>Makefile.config
-echo "mdefs[\"ODE_CFLAGS\"] = \"$ODE_CFLAGS\"" >>configure.lua
-echo "ODE_LIBS=$ODE_LIBS" >>Makefile.config
-echo "mdefs[\"ODE_LIBS\"] = \"$ODE_LIBS\"" >>configure.lua
 echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
 echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
 echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config

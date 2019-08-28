@@ -185,7 +185,7 @@ typedef struct sg {
 /* Built-in classes and subsystems */
 #include <agar/sg/sg_dummy.h>
 #include <agar/sg/sg_program.h>
-#include <agar/sg/sg_cg_program.h>
+/* #include <agar/sg/sg_cg_program.h> <- Legacy */
 #include <agar/sg/sg_light.h>
 #include <agar/sg/sg_camera.h>
 #include <agar/sg/sg_texture.h>

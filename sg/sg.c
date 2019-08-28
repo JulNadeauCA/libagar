@@ -27,8 +27,6 @@
  * Scene Graph (SG) class.
  */
 
-#include <agar/config/have_cg.h>
-
 #include <agar/core/core.h>
 #include <agar/sg/sg.h>
 #include <agar/sg/sg_gui.h>
@@ -41,9 +39,7 @@ void *sgStdClasses[] = {
 	&sgClass,
 	&sgNodeClass,
 	&sgProgramClass,
-#ifdef HAVE_CG
-	&sgCgProgramClass,
-#endif
+/*	&sgCgProgramClass, <- Legacy */
 	&sgTextureClass,
 	&sgPaletteClass,
 	&sgScriptClass,

@@ -93,9 +93,7 @@ register("--with-sndfile[=PREFIX]",	"Enable sndfile support [check]")
 register("--with-portaudio[=PREFIX]",	"Enable portaudio driver [check]")
 
 register_section("Options specific to SG library:")
-register("--with-cg[=PREFIX]",		"Cg shader support [default: check]")
 register("--with-glu[=PREFIX]",		"OpenGL Utility Library (GLU) [check]")
-register("--with-ode[=PREFIX]",		"ODE physics interface [default: check]")
 
 default_dir(DATADIR, "${PREFIX}/share/agar")
 default_dir(LOCALEDIR, "${DATADIR}/locale")
@@ -866,49 +864,11 @@ if [ "${enable_sg}" != 'no' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'n
 	else
 		disable(glu)
 	fi
-	
-	# Enable physics support if ODE library is found.
-	if [ "${with_ode}" != "no" ]; then
-		check(ode, 0, ${prefix_ode})
-		if [ "${HAVE_ODE}" != "yes" ]; then
-			if [ "${with_ode}" = "yes" ]; then
-				echo "*"
-				echo "* --with-ode was requested, but ODE was not"
-				echo "* found on this system."
-				echo "*"
-				exit 1
-			else
-				disable(ode)
-			fi
-		fi
-	else
-		disable(ode)
-	fi
-	
-	# Enable CG support if Cg toolkit is found.
-	if [ "${with_cg}" != "no" ]; then
-		check(cg, 0, ${prefix_cg})
-		if [ "${HAVE_CG}" != "yes" ]; then
-			if [ "${with_cg}" = "yes" ]; then
-				echo "*"
-				echo "* --with-cg was requested, but Cg was not"
-				echo "* found on this system."
-				echo "*"
-				exit 1
-			else
-				disable(cg)
-			fi
-		fi
-	else
-		disable(cg)
-	fi
 else
 	hundef(ENABLE_SG)
 	mdefine(SUBDIR_sg, "")
 
 	disable(glu)
-	disable(ode)
-	disable(cg)
 fi
 
 #
