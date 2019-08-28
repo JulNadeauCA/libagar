@@ -12365,52 +12365,42 @@ else
 if [ -e "/usr/include/GL/glu.h" ]; then
 GLU_CFLAGS="-I/usr/include"
 GLU_LIBS="-L/usr/lib -lGLU"
-break
 fi
 if [ -e "/usr/local/include/GL/glu.h" ]; then
 GLU_CFLAGS="-I/usr/local/include"
 GLU_LIBS="-L/usr/local/lib -lGLU"
-break
 fi
 if [ -e "/usr/include/X11/GL/glu.h" ]; then
 GLU_CFLAGS="-I/usr/include/X11"
 GLU_LIBS="-L/usr/lib/X11 -lGLU"
-break
 fi
 if [ -e "/usr/include/X11R6/GL/glu.h" ]; then
 GLU_CFLAGS="-I/usr/include/X11R6"
 GLU_LIBS="-L/usr/lib/X11R6 -lGLU"
-break
 fi
 if [ -e "/usr/local/X11/include/GL/glu.h" ]; then
 GLU_CFLAGS="-I/usr/local/X11/include"
 GLU_LIBS="-L/usr/local/X11/lib -lGLU"
-break
 fi
 if [ -e "/usr/local/X11R6/include/GL/glu.h" ]; then
 GLU_CFLAGS="-I/usr/local/X11R6/include"
 GLU_LIBS="-L/usr/local/X11R6/lib -lGLU"
-break
 fi
 if [ -e "/usr/local/include/X11/GL/glu.h" ]; then
 GLU_CFLAGS="-I/usr/local/include/X11"
 GLU_LIBS="-L/usr/local/lib/X11 -lGLU"
-break
 fi
 if [ -e "/usr/local/include/X11R6/GL/glu.h" ]; then
 GLU_CFLAGS="-I/usr/local/include/X11R6"
 GLU_LIBS="-L/usr/local/lib/X11R6 -lGLU"
-break
 fi
 if [ -e "/usr/X11/include/GL/glu.h" ]; then
 GLU_CFLAGS="-I/usr/X11/include"
 GLU_LIBS="-L/usr/X11/lib -lGLU"
-break
 fi
 if [ -e "/usr/X11R6/include/GL/glu.h" ]; then
 GLU_CFLAGS="-I/usr/X11R6/include"
 GLU_LIBS="-L/usr/X11R6/lib -lGLU"
-break
 fi
 fi
 ;;
