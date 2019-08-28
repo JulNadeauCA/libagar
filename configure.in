@@ -842,7 +842,9 @@ fi
 #
 # SG: Enable the SG library (needs MATH, GUI).
 #
-if [ "${enable_sg}" != 'no' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' -a "${enable_threads}" != 'no' ]; then
+if [ "${enable_sg}" != 'no' -a "${enable_gui}" != 'no' \
+  -a "${enable_math}" != 'no' -a "${enable_threads}" != 'no' \
+  -a "${HAVE_OPENGL}" = 'yes' ]; then
 	hdefine(ENABLE_SG, "yes")
 	mdefine(SUBDIR_sg, "sg")
 
@@ -874,7 +876,8 @@ fi
 #
 # SK: Enable the SK library (needs MATH, GUI).
 #
-if [ "${enable_sk}" != 'no' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' ]; then
+if [ "${enable_sk}" != 'no' -a "${enable_gui}" != 'no' \
+  -a "${enable_math}" != 'no' -a "${HAVE_OPENGL}" = 'yes' ]; then
 	hdefine(ENABLE_SK, "yes")
 	mdefine(SUBDIR_sk, "sk")
 else

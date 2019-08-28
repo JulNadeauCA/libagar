@@ -12325,7 +12325,7 @@ echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
 echo '#undef PORTAUDIO_LIBS' >$bb_incdir/portaudio_libs.h
 echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
 fi
-if [ "${enable_sg}" != 'no' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' -a "${enable_threads}" != 'no' ]
+if [ "${enable_sg}" != 'no' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' -a "${enable_threads}" != 'no' -a "${HAVE_OPENGL}" = 'yes' ]
  then
 ENABLE_SG="yes"
 bb_o=$bb_incdir/enable_sg.h
@@ -12524,7 +12524,7 @@ echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
 echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
 echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
 fi
-if [ "${enable_sk}" != 'no' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' ]
+if [ "${enable_sk}" != 'no' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' -a "${HAVE_OPENGL}" = 'yes' ]
  then
 ENABLE_SK="yes"
 bb_o=$bb_incdir/enable_sk.h
