@@ -898,7 +898,15 @@ Draw(void *_Nonnull obj)
 	int x, y, rad;
 
 	if (pal->surface == NULL) {
+#ifdef HAVE_OPENGL
 		pal->surface = AG_SurfaceStdGL(w, HEIGHT(pal));
+#else
+		pal->surface = AG_SurfaceRGB(w, HEIGHT(pal),
+		                             agSurfaceFmt->BitsPerPixel, 0,
+		                             agSurfaceFmt->Rmask,
+		                             agSurfaceFmt->Gmask,
+		                             agSurfaceFmt->Bmask);
+#endif
 		pal->surfaceId = AG_WidgetMapSurface(pal, pal->surface);
 	}
 	if (pal->flags & AG_HSVPAL_DIRTY) {

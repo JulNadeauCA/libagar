@@ -1518,7 +1518,9 @@ Draw(void *_Nonnull obj)
 {
 	char status[64];
 	RG_Tileview *tv = obj;
+#ifdef HAVE_OPENGL
 	AG_Driver *drv = WIDGET(tv)->drv;
+#endif
 	RG_Tile *t = tv->tile;
 	AG_Rect rs, rd;
 	int x, y, n;

@@ -345,6 +345,7 @@ SDLFB_BlitSurfaceFrom(void *_Nonnull drv, AG_Widget *_Nonnull wid,
 	AG_SDL_BlitSurface(wid->surfaces[s], rSrc, sfb->s, x,y);
 }
 
+#ifdef HAVE_OPENGL
 static void
 SDLFB_BlitSurfaceGL(void *_Nonnull drv, AG_Widget *_Nonnull wid,
     AG_Surface *_Nonnull s, float w, float h)
@@ -365,6 +366,7 @@ SDLFB_BlitSurfaceFlippedGL(void *_Nonnull drv, AG_Widget *_Nonnull wid,
 {
 	/* Not applicable */
 }
+#endif /* HAVE_OPENGL */
 
 static int
 SDLFB_RenderToSurface(void *_Nonnull drv, AG_Widget *_Nonnull wid,

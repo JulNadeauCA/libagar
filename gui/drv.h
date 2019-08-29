@@ -98,6 +98,7 @@ typedef struct ag_driver_class {
 	                             AG_Surface *_Nonnull, int,int);
 	void (*_Nonnull blitSurfaceFrom)(void *_Nonnull, struct ag_widget *_Nonnull,
 	                                 int, const AG_Rect *_Nullable, int,int);
+#ifdef HAVE_OPENGL
 	void (*_Nonnull blitSurfaceGL)(void *_Nonnull, struct ag_widget *_Nonnull,
 	                               AG_Surface *_Nonnull, float,float);
 	void (*_Nonnull blitSurfaceFromGL)(void *_Nonnull, struct ag_widget *_Nonnull,
@@ -105,6 +106,7 @@ typedef struct ag_driver_class {
 	void (*_Nonnull blitSurfaceFlippedGL)(void *_Nonnull,
 	                                      struct ag_widget *_Nonnull,
 	                                      int, float,float);
+#endif
 	void (*_Nullable backupSurfaces)(void *_Nonnull, struct ag_widget *_Nonnull);
 	void (*_Nullable restoreSurfaces)(void *_Nonnull, struct ag_widget *_Nonnull);
 	int  (*_Nullable renderToSurface)(void *_Nonnull, struct ag_widget *_Nonnull,

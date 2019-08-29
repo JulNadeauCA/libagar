@@ -1130,10 +1130,6 @@ AG_DriverMwClass agDriverDUMMY = {
 		DUMMY_BlitSurfaceGL,
 		DUMMY_BlitSurfaceFromGL,
 		DUMMY_BlitSurfaceFlippedGL,
-#else
-		NULL,			/* blitSurfaceGL */
-		NULL,			/* blitSurfaceFromGL */
-		NULL,			/* blitSurfaceFlippedGL */
 #endif
 		DUMMY_BackupSurfaces,
 		DUMMY_RestoreSurfaces,
