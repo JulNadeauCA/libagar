@@ -1,3 +1,5 @@
+#!/usr/bin/env perl
+
 use Agar;
 use Agar::Window;
 use Agar::Label;
