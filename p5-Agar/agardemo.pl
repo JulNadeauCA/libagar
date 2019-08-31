@@ -17,7 +17,7 @@ GetOptions("driver=s" => \$driver);
 Agar::InitCore('Agar Perl demo', { verbose=>1 }) || die Agar::GetError();
 Agar::InitGraphics($driver) || die Agar::GetError();
 
-my $win = Agar::Window->new();
+my $win = Agar::Window->newNamed("main");
 $win->caption("perl $0");
 $win->setGeometry(80, 60, 640, 480);
 $win->setEvent('window-close', sub { Agar::Quit() });

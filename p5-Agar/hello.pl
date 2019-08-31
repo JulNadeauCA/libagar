@@ -3,9 +3,10 @@ use Agar::Window;
 use Agar::Label;
 #use Agar::Separator;
 
-Agar::InitCore() || die AG_GetError();
-Agar::InitGraphics() || die AG_GetError();
-my $win = Agar::Window->new();
+Agar::InitCore() || die Agar::GetError();
+Agar::InitGraphics() || die Agar::GetError();
+my $win = Agar::Window->new({ main => 1 });
+$win->caption("perl $0");
 $win->setStyle('color', 'rgb(0,100,0)');
 $win->setStyle('font-family', 'Helvetica');
 $win->setStyle('font-weight', 'bold');

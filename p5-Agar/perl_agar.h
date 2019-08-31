@@ -1,165 +1,113 @@
 /*	Public domain	*/
 
+#define Uint8 uint8_t
+#define Sint8 int8_t
+#define Uint16 uint16_t
+#define Sint16 int16_t
+#define Uint32 uint32_t
+#define Sint32 int32_t
+#define Uint unsigned
+#define Ulong unsigned long
+
+#include <stdio.h>
+#include <perlio.h>
+
+#ifndef PERL_REVISION
+# ifndef __PATCHLEVEL_H_INCLUDED__
+#  include "patchlevel.h"
+# endif
+# ifndef PERL_REVISION
+#  define PERL_REVISION   (5)
+#  define PERL_VERSION    PATCHLEVEL
+#  define PERL_SUBVERSION SUBVERSION
+# endif
+#endif
+#if (PERL_VERSION == 5) && (PERL_SUBVERSION == 3)
+# ifndef PL_na
+# define PL_na na
+# endif
+# ifndef SvPV_nolen
+# define SvPV_nolen(sv) SvPV(sv, PL_na)
+# endif
+#endif
+#ifndef PERL_UNUSED_ARG
+#define PERL_UNUSED_ARG(x) ((void)sizeof(x))
+#endif
+#ifndef NVTYPE
+typedef double NV;
+#endif
+#ifndef aTHX_
+#define aTHX_
+#endif
+#ifndef pTHX_
+#define pTHX_
+#endif
+#ifndef mPUSHp
+#define mPUSHp(p,l)	PUSHs(sv_2mortal(newSVpvn((p), (l))))
+#endif
+#ifndef mPUSHi
+#define mPUSHi(i)	PUSHs(sv_2mortal(newSViv((i))))
+#endif
+#ifndef mPUSHn
+#define mPUSHn(n)	PUSHs(sv_2mortal(newSVnv((n))))
+#endif
+
+/* How many event args belong to perl? */
+#define AP_ARGS_MAX 1
+
+/* Mapping of a Agar option flag to a string. */
 typedef struct ap_flag_names {
 	const char *name;
 	Uint bitmask;
 } AP_FlagNames;
 
-/* Translate a hashref of options to a set of bit flags. */
-static __inline__ void
-AP_MapHashToFlags(void *pHV, const AP_FlagNames *map, Uint *pFlags)
-{
-	SV **val;
-	int i;
+extern void AP_MapHashToFlags(void *, const AP_FlagNames *, Uint *);
+extern int  AP_SetNamedFlag(const char *, const AP_FlagNames *, Uint *);
+extern int  AP_UnsetNamedFlag(const char *, const AP_FlagNames *, Uint *);
+extern int  AP_GetNamedFlag(const char *, const AP_FlagNames *, Uint, Uint *);
 
-	for (i = 0; map[i].name != NULL; i++) {
-		val = hv_fetch((HV *)pHV, map[i].name, strlen(map[i].name), 0);
-		if (val)
-			*pFlags |= map[i].bitmask;
-	}
-}
+/* Agar-Core */
+#include "perl_event.h"
+#include "perl_object.h"
+#include "perl_config.h"
 
-/* Functions to allow Widget subclasses to access flags in their superclass. */
-static __inline__ int
-AP_SetNamedFlag(const char *str, const AP_FlagNames *map, Uint *flags)
-{
-	int i;
-	for (i = 0; map[i].name != NULL; i++) {
-		if (strEQ(str, map[i].name)) {
-			*flags |= map[i].bitmask;
-			return 0;
-		}
-	}
-	return -1;
-}
-static __inline__ int
-AP_UnsetNamedFlag(const char *str, const AP_FlagNames *map, Uint *flags)
-{
-	int i;
-	for (i = 0; map[i].name != NULL; i++) {
-		if (strEQ(str, map[i].name)) {
-			*flags &= ~(map[i].bitmask);
-			return 0;
-		}
-	}
-	return -1;
-}
-static __inline__ int
-AP_GetNamedFlag(const char *str, const AP_FlagNames *map, Uint flags, Uint *flag)
-{
-	int i;
-	for (i = 0; map[i].name != NULL; i++) {
-		printf("compare: %s,%s\n", str, map[i].name);
-		if (strEQ(str, map[i].name)) {
-			*flag = flags & map[i].bitmask;
-			return 0;
-		}
-	}
-	return -1;
-}
-static __inline__ int
-AP_SetNamedFlagSigned(const char *str, const AP_FlagNames *map, int *flags)
-{
-	int i;
-	for (i = 0; map[i].name != NULL; i++) {
-		if (strEQ(str, map[i].name)) {
-			*flags |= map[i].bitmask;
-			return 0;
-		}
-	}
-	return -1;
-}
-static __inline__ int
-AP_UnsetNamedFlagSigned(const char *str, const AP_FlagNames *map, int *flags)
-{
-	int i;
-	for (i = 0; map[i].name != NULL; i++) {
-		if (strEQ(str, map[i].name)) {
-			*flags &= ~(map[i].bitmask);
-			return 0;
-		}
-	}
-	return -1;
-}
+/* Agar-GUI base */
+#include "perl_surface.h"
+#include "perl_font.h"
+#include "perl_widget.h"
+#include "perl_window.h"
 
-/* defined in Event.xs */
-extern void AP_StoreEventPV(AG_Event *event, SV *pv);
-extern void AP_EventHandler(AG_Event *event);
-extern void AP_EventHandlerDecRef(AG_Event *event);
-extern SV * AP_RetrieveEventPV(AG_Event *event);
-extern void AP_DecRefEventPV(AG_Event *event);
+/* Agar-GUI widgets */
+#include "perl_box.h"
+#include "perl_button.h"
+#include "perl_checkbox.h"
+#include "perl_combo.h"
+#include "perl_console.h"
+#include "perl_editable.h"
+#include "perl_filedlg.h"
+#include "perl_fixed.h"
+#include "perl_fixedplotter.h"
+#include "perl_graph.h"
+#include "perl_hsvpal.h"
+#include "perl_icon.h"
+#include "perl_label.h"
+#include "perl_menu.h"
+#include "perl_mpane.h"
+#include "perl_notebook.h"
+#include "perl_numerical.h"
+#include "perl_pane.h"
+#include "perl_pixmap.h"
+#include "perl_progressbar.h"
+#include "perl_radio.h"
+#include "perl_scrollbar.h"
+#include "perl_scrollview.h"
+#include "perl_separator.h"
+#include "perl_slider.h"
+#include "perl_socket.h"
+#include "perl_statusbar.h"
+#include "perl_table.h"
+#include "perl_textbox.h"
+#include "perl_tlist.h"
+#include "perl_toolbar.h"
+#include "perl_ucombo.h"
 
-/* Flags used by all widget types. */
-static const AP_FlagNames AP_WidgetFlagNames[] = {
-	{ "focusable",		AG_WIDGET_FOCUSABLE },
-	{ "focused",		AG_WIDGET_FOCUSED },
-	{ "unfocusedMotion",	AG_WIDGET_UNFOCUSED_MOTION },
-	{ "unfocusedButtonUp",	AG_WIDGET_UNFOCUSED_BUTTONUP },
-	{ "unfocusedButtonDown",AG_WIDGET_UNFOCUSED_BUTTONDOWN },
-	{ "visible",		AG_WIDGET_VISIBLE },
-	{ "hFill",		AG_WIDGET_HFILL },
-	{ "vFill",		AG_WIDGET_VFILL },
-	{ "useOpenGL",		AG_WIDGET_USE_OPENGL },
-	{ "hide",		AG_WIDGET_HIDE },
-	{ "disabled",		AG_WIDGET_DISABLED },
-	{ "mouseOver",		AG_WIDGET_MOUSEOVER },
-	{ "catchTab",		AG_WIDGET_CATCH_TAB },
-	{ "glReshape",		AG_WIDGET_GL_RESHAPE },
-	{ "undersize",		AG_WIDGET_UNDERSIZE },
-	{ "noSpacing",		AG_WIDGET_NOSPACING },
-	{ "unfocusedKeyDown",	AG_WIDGET_UNFOCUSED_KEYDOWN },
-	{ "unfocusedKeyUp",	AG_WIDGET_UNFOCUSED_KEYUP },
-	{ "tableEmbeddable",	AG_WIDGET_TABLE_EMBEDDABLE },
-	{ "updateWindow",	AG_WIDGET_UPDATE_WINDOW },
-	{ "queueSurfaceBackup",	AG_WIDGET_QUEUE_SURFACE_BACKUP },
-	{ "useText",		AG_WIDGET_USE_TEXT },
-	{ "useMouseOver",	AG_WIDGET_USE_MOUSEOVER },
-	{ "expand",		AG_WIDGET_EXPAND },
-	{ NULL,			0 },
-};
-
-typedef AG_Object * Agar__Object;
-typedef AG_Widget * Agar__Widget;
-typedef AG_Event * Agar__Event;
-typedef AG_PixelFormat * Agar__PixelFormat;
-typedef AG_Surface * Agar__Surface;
-typedef AG_Window * Agar__Window;
-typedef AG_Config * Agar__Config;
-typedef AG_Font * Agar__Font;
-typedef AG_Box * Agar__Box;
-typedef AG_Button * Agar__Button;
-typedef AG_Checkbox * Agar__Checkbox;
-typedef AG_Combo * Agar__Combo;
-typedef AG_Console * Agar__Console;
-typedef AG_Editable * Agar__Editable;
-typedef AG_FileDlg * Agar__FileDlg;
-typedef AG_Fixed * Agar__Fixed;
-typedef AG_GLView * Agar__GLView;
-typedef AG_Graph * Agar__Graph;
-typedef AG_FixedPlotter * Agar__FixedPlotter;
-typedef AG_HSVPal * Agar__HSVPal;
-typedef AG_Icon * Agar__Icon;
-typedef AG_Label * Agar__Label;
-typedef AG_MPane * Agar__MPane;
-typedef AG_Menu * Agar__Menu;
-typedef AG_MenuItem * Agar__MenuItem;
-typedef AG_Notebook * Agar__Notebook;
-typedef AG_NotebookTab * Agar__NotebookTab;
-typedef AG_Numerical * Agar__Numerical;
-typedef AG_Pane * Agar__Pane;
-typedef AG_Pixmap * Agar__Pixmap;
-typedef AG_PopupMenu * Agar__PopupMenu;
-typedef AG_ProgressBar * Agar__ProgressBar;
-typedef AG_Radio * Agar__Radio;
-typedef AG_Scrollbar * Agar__Scrollbar;
-typedef AG_Scrollview * Agar__Scrollview;
-typedef AG_Separator * Agar__Separator;
-typedef AG_Slider * Agar__Slider;
-typedef AG_Socket * Agar__Socket;
-typedef AG_Statusbar * Agar__Statusbar;
-typedef AG_Table * Agar__Table;
-typedef AG_Textbox * Agar__Textbox;
-typedef AG_Tlist * Agar__Tlist;
-typedef AG_TlistItem * Agar__TlistItem;
-typedef AG_Toolbar * Agar__Toolbar;
-typedef AG_UCombo * Agar__UCombo;

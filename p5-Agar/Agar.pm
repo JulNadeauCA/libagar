@@ -3,8 +3,10 @@ package Agar;
 use 5.6.1;
 require DynaLoader;
 
-our $VERSION = '1.51';
-#our $XS_VERSION = '1.50';
+$VERSION = '1.60';
+our $XS_VERSION = $VERSION;
+$VERSION = eval $VERSION;
+
 our @ISA = qw(DynaLoader);
 
 @Agar::Widget::ISA = qw(Agar::Object);
@@ -35,9 +37,10 @@ our @ISA = qw(DynaLoader);
 @Agar::Toolbar::ISA = qw(Agar::Widget);
 @Agar::UCombo::ISA = qw(Agar::Widget);
 
-bootstrap Agar $VERSION;
+bootstrap Agar;
 
-#sub dl_load_flags { 0x01 }
+# Load the base extension with RTLD_GLOBAL.
+sub dl_load_flags { 0x01 }
 
 sub Agar::Object::downcast {
 	my $class = $_[0]->getClassName();
@@ -231,27 +234,21 @@ Allow error / warning messages on the standard output (default = no).
 
 =head1 AUTHOR
 
-Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
+Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
-Mat Sutcliffe E<lt>oktal@gmx.co.ukE<gt>
-
-=head1 COPYRIGHT
-
-Copyright (c) 2009-2016 Hypertriton, Inc. All rights reserved.
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+Julien Nadeau Carriere E<lt>F<vedge@csoft.net>E<gt>
 
 =head1 SEE ALSO
 
 L<Agar::Box(3)>, L<Agar::Button(3)>, L<Agar::Checkbox(3)>, L<Agar::Combo(3)>,
 L<Agar::Config(3)>, L<Agar::Console(3)>, L<Agar::Editable(3)>, L<Agar::Event(3)>,
 L<Agar::FileDlg(3)>, L<Agar::Fixed(3)>, L<Agar::Font(3)>, L<Agar::Label(3)>,
-L<Agar::Menu(3)>, L<Agar::Notebook(3)>, L<Agar::Numerical(3)>, L<Agar::Object(3)>,
-L<Agar::Pane(3)>, L<Agar::PixelFormat(3)>, L<Agar::Pixmap(3)>,
+L<Agar::MPane(3)>, L<Agar::Menu(3)>, L<Agar::Notebook(3)>, L<Agar::Numerical(3)>,
+L<Agar::Object(3)>, L<Agar::Pane(3)>, L<Agar::PixelFormat(3)>, L<Agar::Pixmap(3)>,
 L<Agar::PopupMenu(3)>, L<Agar::ProgressBar(3)>, L<Agar::Radio(3)>,
 L<Agar::Scrollbar(3)>, L<Agar::Scrollview(3)>, L<Agar::Separator(3)>,
-L<Agar::Slider(3)>, L<Agar::Surface(3)>, L<Agar::Table(3)>, L<Agar::Textbox(3)>,
-L<Agar::Tlist(3)>, L<Agar::TreeTbl(3)>, L<Agar::Toolbar(3)>, L<Agar::UCombo(3)>,
+L<Agar::Slider(3)>, L<Agar::Surface(3)>, L<Agar::Text(3)>, L<Agar::Table(3)>,
+L<Agar::Textbox(3)>, L<Agar::Tlist(3)>, L<Agar::Toolbar(3)>, L<Agar::UCombo(3)>,
 L<Agar::Widget(3)>, L<Agar::Window(3)>, L<http://libagar.org/>
 
 =cut

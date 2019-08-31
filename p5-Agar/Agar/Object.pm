@@ -3,7 +3,7 @@ package Agar::Object;
 use strict;
 use Agar;
 
-;1
+1;
 
 __END__
 
@@ -83,10 +83,6 @@ Attaches the object to another, effectively changing its parent object.
 
 Detach the object from its parent, making it an orphan.
 
-=item B<$cfg = $object-E<gt>getProps()>
-
-Returns the Agar::Config for this object.
-
 =item B<$object-E<gt>setName()>
 
 Sets the object's name.
@@ -103,15 +99,9 @@ Agar::Object::findChild, for example.
 
 =head1 AUTHOR
 
-Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
-
 Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
-=head1 COPYRIGHT
-
-Copyright (c) 2009-2016 Hypertriton, Inc. All rights reserved.
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+Julien Nadeau Carriere E<lt>F<vedge@csoft.net>E<gt>
 
 =head1 SEE ALSO
 

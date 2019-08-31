@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2008-2016 Julien Nadeau (vedge@hypertriton.com)
  * Copyright (c) 2009 Mat Sutcliffe (oktal@gmx.co.uk)
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere (vedge@csoft.net)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,9 @@
 /*
  * Perl interface to the Agar GUI toolkit.
  */
+#ifdef PERL_CAPI
+#define WIN32IO_IS_STDIO
+#endif
 
 #include "EXTERN.h"
 #include "perl.h"
@@ -36,80 +39,48 @@
 #include <agar/gui.h>
 #include "perl_agar.h"
 
-extern XS(boot_Agar__Object);
-extern XS(boot_Agar__Widget);
-extern XS(boot_Agar__Event);
-extern XS(boot_Agar__PixelFormat);
-extern XS(boot_Agar__Surface);
-extern XS(boot_Agar__Window);
-extern XS(boot_Agar__Config);
-extern XS(boot_Agar__Font);
-extern XS(boot_Agar__Text);
-extern XS(boot_Agar__Box);
-extern XS(boot_Agar__Button);
-extern XS(boot_Agar__Checkbox);
-extern XS(boot_Agar__Combo);
-extern XS(boot_Agar__Console);
-extern XS(boot_Agar__Editable);
-extern XS(boot_Agar__FileDlg);
-extern XS(boot_Agar__Fixed);
-extern XS(boot_Agar__Label);
-extern XS(boot_Agar__Menu);
-extern XS(boot_Agar__MPane);
-extern XS(boot_Agar__Notebook);
-extern XS(boot_Agar__Numerical);
-extern XS(boot_Agar__Pane);
-extern XS(boot_Agar__Pixmap);
-extern XS(boot_Agar__ProgressBar);
-extern XS(boot_Agar__Radio);
-extern XS(boot_Agar__Scrollbar);
-extern XS(boot_Agar__Scrollview);
-extern XS(boot_Agar__Separator);
-extern XS(boot_Agar__Slider);
-extern XS(boot_Agar__Textbox);
-extern XS(boot_Agar__Tlist);
-extern XS(boot_Agar__Toolbar);
-extern XS(boot_Agar__UCombo);
+MODULE = Agar	PACKAGE = Agar		PREFIX = AG_
+PROTOTYPES : DISABLE
 
-MODULE = Agar		PACKAGE = Agar		PREFIX = AG_
-PROTOTYPES: DISABLE
-VERSIONCHECK: DISABLE
+INCLUDE: Agar/Box.xs
+INCLUDE: Agar/Button.xs
+INCLUDE: Agar/Checkbox.xs
+INCLUDE: Agar/Combo.xs
+INCLUDE: Agar/Console.xs
+INCLUDE: Agar/Editable.xs
+INCLUDE: Agar/FileDlg.xs
+INCLUDE: Agar/Fixed.xs
+INCLUDE: Agar/Label.xs
+INCLUDE: Agar/MPane.xs
+INCLUDE: Agar/Menu.xs
+INCLUDE: Agar/Notebook.xs
+INCLUDE: Agar/Numerical.xs
+INCLUDE: Agar/Pane.xs
+INCLUDE: Agar/Pixmap.xs
+INCLUDE: Agar/ProgressBar.xs
+INCLUDE: Agar/Radio.xs
+INCLUDE: Agar/Scrollbar.xs
+INCLUDE: Agar/Scrollview.xs
+INCLUDE: Agar/Separator.xs
+INCLUDE: Agar/Slider.xs
+INCLUDE: Agar/Textbox.xs
+INCLUDE: Agar/Tlist.xs
+INCLUDE: Agar/Toolbar.xs
+INCLUDE: Agar/UCombo.xs
 
-BOOT:
-boot_Agar__Object(aTHX_ cv);
-boot_Agar__Widget(aTHX_ cv);
-boot_Agar__Event(aTHX_ cv);
-boot_Agar__PixelFormat(aTHX_ cv);
-boot_Agar__Surface(aTHX_ cv);
-boot_Agar__Window(aTHX_ cv);
-boot_Agar__Config(aTHX_ cv);
-boot_Agar__Font(aTHX_ cv);
-boot_Agar__Text(aTHX_ cv);
-boot_Agar__Box(aTHX_ cv);
-boot_Agar__Button(aTHX_ cv);
-boot_Agar__Checkbox(aTHX_ cv);
-boot_Agar__Combo(aTHX_ cv);
-boot_Agar__Console(aTHX_ cv);
-boot_Agar__Editable(aTHX_ cv);
-boot_Agar__FileDlg(aTHX_ cv);
-boot_Agar__Fixed(aTHX_ cv);
-boot_Agar__Label(aTHX_ cv);
-boot_Agar__Menu(aTHX_ cv);
-boot_Agar__MPane(aTHX_ cv);
-boot_Agar__Notebook(aTHX_ cv);
-boot_Agar__Numerical(aTHX_ cv);
-boot_Agar__Pane(aTHX_ cv);
-boot_Agar__Pixmap(aTHX_ cv);
-boot_Agar__ProgressBar(aTHX_ cv);
-boot_Agar__Radio(aTHX_ cv);
-boot_Agar__Scrollbar(aTHX_ cv);
-boot_Agar__Scrollview(aTHX_ cv);
-boot_Agar__Separator(aTHX_ cv);
-boot_Agar__Slider(aTHX_ cv);
-boot_Agar__Textbox(aTHX_ cv);
-boot_Agar__Tlist(aTHX_ cv);
-boot_Agar__Toolbar(aTHX_ cv);
-boot_Agar__UCombo(aTHX_ cv);
+INCLUDE: Agar/PixelFormat.xs
+INCLUDE: Agar/Surface.xs
+INCLUDE: Agar/Text.xs
+INCLUDE: Agar/Font.xs
+
+INCLUDE: Agar/Window.xs
+INCLUDE: Agar/Widget.xs
+INCLUDE: Agar/Config.xs
+INCLUDE: Agar/Object.xs
+INCLUDE: Agar/Event.xs
+
+MODULE = Agar	PACKAGE = Agar		PREFIX = AG_
+PROTOTYPES : DISABLE
 
 SV *
 Version()

@@ -3,7 +3,7 @@ package Agar::Window;
 use strict;
 use Agar;
 
-;1
+1;
 
 __END__
 
@@ -185,13 +185,9 @@ Returns the child widget that currently has focus, or undef if there is none.
 
 =head1 AUTHOR
 
-Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
+Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
-=head1 COPYRIGHT
-
-Copyright (c) 2008-2016 Hypertriton, Inc. All rights reserved.
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+Julien Nadeau Carriere E<lt>F<vedge@csoft.net>E<gt>
 
 =head1 SEE ALSO
 
