@@ -254,7 +254,7 @@ ag_color_add(AG_Color *dst, const AG_Color *c, const AG_ColorOffset *offs)
 	dst->a = AG_MIN(AG_COLOR_LAST, c->a + offs->a);
 }
 
-/* Component-wise clamped scaled addition */
+/* Component-wise scaled addition, clamped to AG_COLOR_LAST. */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_ColorAddScaled(AG_Color *_Nonnull dst, const AG_Color *_Nonnull c,
@@ -269,6 +269,23 @@ ag_color_add_scaled(AG_Color *dst, const AG_Color *c,
 	dst->g = AG_MIN(AG_COLOR_LAST, c->g + offs->g*factor);
 	dst->b = AG_MIN(AG_COLOR_LAST, c->b + offs->b*factor);
 	dst->a = AG_MIN(AG_COLOR_LAST, c->a + offs->a*factor);
+}
+
+/* Interpolate linearly between two colors. */
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_ColorInterpolate(AG_Color *_Nonnull dst, const AG_Color *_Nonnull c1,
+    const AG_Color *_Nonnull c2, int num, int denom)
+#else
+void
+ag_color_interpolate(AG_Color *dst, const AG_Color *c1, const AG_Color *c2,
+    int num, int denom)
+#endif
+{
+	dst->r = c1->r + (c2->r - c1->r)*num/denom;
+	dst->g = c1->g + (c2->g - c1->g)*num/denom;
+	dst->b = c1->b + (c2->b - c1->b)*num/denom;
+	dst->a = c1->a + (c2->a - c1->a)*num/denom;
 }
 
 /* Compare two colors. */

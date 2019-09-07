@@ -117,6 +117,9 @@ is fully opaque.
 .Ft void
 .Fn AG_ColorAddScaled "AG_Color *sum" "const AG_Color *c" "const AG_ColorOffset *offs" "int factor"
 .Pp
+.Ft void
+.Fn AG_ColorInterpolate "AG_Color *cx" "const AG_Color *c1" "const AG_Color *c2"
+.Pp
 .Ft int
 .Fn AG_ColorCompare "const AG_Color *a" "const AG_Color *b"
 .Pp
@@ -198,6 +201,18 @@ The
 variant multiplies each component by a constant
 .Fa factor
 before clamping.
+.Pp
+.Fn AG_ColorInterpolate
+traces an imaginary line in RGB color space between
+.Fa c1
+and
+.Fa c2
+and returns into
+.Fa cx
+the color closest to the point described by the fraction
+.Fa num
+over
+.Fa denom .
 .Pp
 The
 .Ft AG_ColorOffset
