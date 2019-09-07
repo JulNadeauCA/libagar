@@ -799,11 +799,11 @@ Agardb::GUI::GUI()
 		AG_Textbox *tb;
 
 		g_console = AG_ConsoleNew(nt, AG_CONSOLE_EXPAND);
-		AG_SetStyle(g_console, "font-family", "Terminal");
+		AG_SetStyle(g_console, "font-family", "Bedstead,Courier");
 		PrintVersion();
 
 		box = AG_BoxNewHoriz(nt, AG_BOX_HFILL);
-		AG_SetStyle(box, "font-family", "Courier");
+		AG_SetStyle(box, "font-family", "Bedstead,Courier");
 		AG_SetStyle(box, "font-weight", "bold");
 		AG_SetStyle(box, "font-size", "120%");
 		tb = g_textbox_prompt = AG_TextboxNew(box,
@@ -1089,12 +1089,15 @@ main(int argc, char *const argv[])
 			SBFileSpec file(g_exec_file);
 			if (file.Exists()) {
 				Verbose("Exec file %s exists\n", g_exec_file);
-				g_exec_args.push_back(g_exec_file);
+				g_exec_args.insert(g_exec_args.begin(),
+				                   g_exec_file);
 			} else if (file.ResolveExecutableLocation()) {
 				char path[AG_PATHNAME_MAX];
 				file.GetPath(path, sizeof(path));
-				Verbose("Exec file %s (=> %s) exists\n", g_exec_file, path);
-				g_exec_args.push_back(path);
+				Verbose("Executable %s exists (path: %s)\n",
+				    g_exec_file, path);
+				g_exec_args.insert(g_exec_args.begin(),
+				                   path);
 			} else {
 				Verbose("Exec: No such file: %s\n", g_exec_file);
 				FatalError();

@@ -1705,7 +1705,9 @@ main(int argc, char *argv[])
 {
 	AG_InitCore("conf-test", 0);
 	AG_InitGraphics(AG_NULL);
+#ifdef AG_EVENT_LOOP
 	AG_EventLoop();
+#endif
 	AG_Quit();
 	return (0);
 }
@@ -3533,6 +3535,9 @@ if [ "${srcdir}" != '' ]; then
 	echo 'ok'
 fi
 echo '*'
-echo '* Configuration successful. Use the "make" command to compile,'
-echo '* and complete the installation using "make install".'
+echo '* Configuration successful!'
+echo '*'
+echo '* Use "make depend all" to compile. When finished,'
+$ECHO_N '* run "make install" to install under '
+echo "${PREFIX}."
 echo '*'
