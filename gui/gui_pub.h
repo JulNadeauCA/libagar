@@ -3,10 +3,10 @@
 #ifndef _AGAR_GUI_PUBLIC_H_
 #define _AGAR_GUI_PUBLIC_H_
 #define _AGAR_GUI_PUBLIC
-#include <agar/core/core_begin.h>
+
+#include <agar/core/core.h>
 
 #include <agar/gui/gui.h>
-
 #include <agar/gui/widget.h>
 #include <agar/gui/window.h>
 #include <agar/gui/text.h>
@@ -63,5 +63,4 @@
 #include <agar/gui/sdl.h>
 #endif
 
-#include <agar/core/core_close.h>
 #endif /* _AGAR_GUI_PUBLIC_H_ */
