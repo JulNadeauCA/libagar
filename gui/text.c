@@ -103,6 +103,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 
+/* #define SYMBOLS */	    /* Translate "$(x)" symbols to built-in surfaces */
+
 #ifdef AG_SERIALIZATION
 /* Default fonts */
 const char *agDefaultFaceFT = "_agFontVera";
@@ -127,10 +129,51 @@ int agFontconfigInited = 0;		/* Initialized Fontconfig library */
 
 static int agTextInitedSubsystem = 0;
 
+_Nonnull_Mutex AG_Mutex agTextLock;
+
 AG_TextState agTextStateStack[AG_TEXT_STATES_MAX];
 Uint         agTextStateCur = 0;
 
-/* #define SYMBOLS */		/* Escape $(x) type symbols */
+/* ANSI color scheme (may be overridden by AG_TextState) */
+AG_Color agTextColorANSI[] = {
+#if AG_MODEL == AG_LARGE
+	{ 0x0000, 0x0000, 0x0000, 0xffff },		/* Black */
+	{ 0xdede, 0x3838, 0x2b2b, 0xffff },		/* Red */
+	{ 0x0000, 0xcdcd, 0x0000, 0xffff },		/* Green */
+	{ 0xcdcd, 0xcdcd, 0x0000, 0xffff },		/* Yellow */
+	{ 0x0000, 0x0000, 0xeeee, 0xffff },		/* Blue */
+	{ 0xcdcd, 0x0000, 0xcdcd, 0xffff },		/* Magenta */
+	{ 0x0000, 0xcdcd, 0xcdcd, 0xffff },		/* Cyan */
+	{ 0xe5e5, 0xe5e5, 0xe5e5, 0xffff },		/* White */
+	{ 0x7f7f, 0x7f7f, 0x7f7f, 0xffff },		/* Br.Black */
+	{ 0xffff, 0x0000, 0x0000, 0xffff },		/* Br.Red */
+	{ 0x0000, 0xffff, 0x0000, 0xffff },		/* Br.Green */
+	{ 0xffff, 0xffff, 0x0000, 0xffff },		/* Br.Yellow */
+	{ 0x5c5c, 0x5c5c, 0xffff, 0xffff },		/* Br.Blue */
+	{ 0xffff, 0x0000, 0xffff, 0xffff },		/* Br.Magenta */
+	{ 0x0000, 0xffff, 0xffff, 0xffff },		/* Br.Cyan */
+	{ 0xffff, 0xffff, 0xffff, 0xffff },		/* Br.White */
+#else
+	{ 0,   0,     0,   255 },			/* Black */
+	{ 205, 0,     0,   255 },			/* Red */
+	{ 0,   205,   0,   255 },			/* Green */
+	{ 205, 205,   0,   255 },			/* Yellow */
+	{ 0,   0,   238,   255 },			/* Blue */
+	{ 205, 0,   205,   255 },			/* Magenta */
+	{ 0,   205, 205,   255 },			/* Cyan */
+	{ 229, 229, 229,   255 },			/* White */
+	{ 127, 127, 127,   255 },			/* Br.Black */
+	{ 255, 0,     0,   255 },			/* Br.Red */
+	{ 0,   255,   0,   255 },			/* Br.Green */
+	{ 255, 255,   0,   255 },			/* Br.Yellow */
+	{ 92,  92,  255,   255 },			/* Br.Blue */
+	{ 255, 0,   255,   255 },			/* Br.Magenta */
+	{ 0,   255, 255,   255 },			/* Br.Cyan */
+	{ 255, 255, 255,   255 },			/* Br.White */
+#endif
+};	
+
+AG_Font *_Nullable agDefaultFont = NULL;
 
 const char *agFontTypeNames[] = {		/* For enum ag_font_type */
 	N_("Vector"),
@@ -143,12 +186,11 @@ const char *agTextMsgTitles[] = {		/* For enum ag_text_msg_title */
 	N_("Information")
 };
 
-_Nonnull_Mutex AG_Mutex agTextLock;
 static TAILQ_HEAD(ag_fontq, ag_font) fonts;
-AG_Font *_Nullable agDefaultFont = NULL;
 
 #ifdef HAVE_FREETYPE
 static void TextRenderFT(const AG_Char *_Nonnull, AG_Surface *_Nonnull, const AG_TextMetrics *_Nonnull);
+static int  TextParseANSI(const AG_TextState *_Nonnull, AG_TextANSI *_Nonnull, const AG_Char *_Nonnull);
 static void TextRenderFT_Underline(AG_TTFFont *_Nonnull, AG_Surface *_Nonnull, int);
 # ifdef SYMBOLS
 static int  TextRenderSymbol(Uint, AG_Surface *_Nonnull, int,int);
@@ -167,6 +209,18 @@ static AG_Surface *_Nonnull GetBitmapGlyph(const AG_Font *_Nonnull, AG_Char);
 # define TextSizeBitmap   TextSizeDummy
 # define TextRenderBitmap TextRenderDummy
 #endif
+
+#ifdef DEBUG_FOCUS
+# define Debug_Focus AG_Debug
+#else
+# if defined(__GNUC__)
+#  define Debug_Focus(obj, arg...) ((void)0)
+# elif defined(__CC65__)
+#  define Debug_Focus
+# else
+#  define Debug_Focus AG_Debug
+# endif
+#endif /* DEBUG_FOCUS */
 
 /* Load an individual glyph from a bitmap font file. */
 static void
@@ -292,12 +346,39 @@ AG_PushTextState(void)
 	}
 	ts = &agTextStateStack[++agTextStateCur];
 	memcpy(ts, tsPrev, sizeof(AG_TextState));
+	if (tsPrev->colorANSI != NULL) {
+		const AG_Size size = AG_ANSI_COLOR_LAST*sizeof(AG_Color);
+		ts->colorANSI = Malloc(size);
+		memcpy(ts->colorANSI, tsPrev->colorANSI, size);
+	}
 	ts->font = AG_FetchFont(OBJECT(tsPrev->font)->name,
 	                              &tsPrev->font->spec.size,
 		                       tsPrev->font->flags);
 #ifdef AG_DEBUG
 	snprintf(ts->name, sizeof(ts->name), "TS%d", agTextStateCur);
 #endif
+}
+
+/*
+ * Override an entry in the 16-color (4-bit) ANSI color palette.
+ * Duplicate the default palette into the current state if necessary.
+ */
+void
+AG_TextColorANSI(enum ag_ansi_color colorANSI, const AG_Color *c)
+{
+	AG_TextState *ts = AG_TEXT_STATE_CUR();
+	AG_Color *tgt;
+
+	if (colorANSI >= AG_ANSI_COLOR_LAST) {
+		AG_FatalError("colorANSI");
+	}
+	if (ts->colorANSI == NULL) {
+		const AG_Size size = AG_ANSI_COLOR_LAST * sizeof(AG_Color);
+		ts->colorANSI = Malloc(size);
+		memcpy(ts->colorANSI, agTextColorANSI, size);
+	}
+	tgt = &ts->colorANSI[colorANSI];
+	memcpy(tgt, c, sizeof(AG_Color));
 }
 
 /*
@@ -1007,8 +1088,12 @@ AG_TextMsgFromError(void)
 static Uint32
 TextTmsgExpire(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_WINDOW_PTR(1);
+	AG_Window *win = AGWINDOW(event->argv[1].data.p);
 
+	if (!AG_OBJECT_VALID(win) || !AG_OfClass(win, "AG_Widget:AG_Window:*")) {
+		AG_Verbose("Ignoring a TextTmsg() expiration\n");
+		return (0);
+	}
 	AG_ObjectDetach(win);
 	return (0);
 }
@@ -1403,9 +1488,10 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	AG_TTFGlyph *G;
 	const AG_Char *ch;
 	Uint8 *src, *dst;
-	AG_Color c = ts->color;
+	AG_Color cFG = ts->color;
+	AG_Color cBG = ts->colorBG;
+	AG_TextANSI ansi;
 	FT_UInt prev_index = 0;
-	const int bgAlpha = ts->colorBG.a;
 	const int BytesPerPixel = S->format.BytesPerPixel;
 	const int tabWd = ts->tabWd;
 	const int lineSkip = font->lineskip;
@@ -1415,13 +1501,47 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
  	yStart = 0;
 
 	for (ch=&ucs[0], line=0; *ch != '\0'; ch++) {
-		if (*ch == '\n') {
+		switch (*ch) {
+		case '\n':
 			yStart += lineSkip;
 			xStart = AG_TextJustifyOffset(tm->w, tm->wLines[++line]);
 			continue;
-		}
-		if (*ch == '\t') {
+		case '\r':
+			xStart = 0;
+			continue;
+		case '\t':
 			xStart += tabWd;
+			continue;
+		default:
+			break;
+			
+		}
+		if (ch[0] == 0x1b &&
+		    ch[1] >= 0x40 && ch[1] <= 0x5f && ch[2] != '\0') {
+			if (TextParseANSI(ts, &ansi, &ch[1]) == 0) {
+				if (ansi.ctrl == AG_ANSI_CSI_SGR) {
+					switch (ansi.sgr) {
+					case AG_SGR_RESET:
+					case AG_SGR_NO_FG_NO_BG:
+						cFG = ts->color;
+						cBG = ts->colorBG;
+						break;
+					case AG_SGR_FG:
+						cFG = ansi.color;
+						break;
+					case AG_SGR_BG:
+						cBG = ansi.color;
+						break;
+					case AG_SGR_BOLD:
+						break;
+					case AG_SGR_UNDERLINE:
+						break;
+					}
+				}
+				ch += ansi.len;
+			} else {
+				AG_Verbose("%s; ignoring\n", AG_GetError());
+			}
 			continue;
 		}
 # ifdef SYMBOLS
@@ -1470,18 +1590,17 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 			src = (Uint8 *)(G->pixmap.buffer +
 			                G->pixmap.pitch*y);
 
-			/* XXX TODO separate routine to avoid branch */
-			if (bgAlpha == AG_TRANSPARENT) {
+			if (cBG.a == AG_TRANSPARENT) {
 				for (x = 0; x < w; x++) {
-					c.a = AG_8toH(*src++);
+					cFG.a = AG_8toH(*src++);
 					AG_SurfacePut_At(S, dst,
-					    AG_MapPixel(&S->format, &c));
+					    AG_MapPixel(&S->format, &cFG));
 					dst += BytesPerPixel;
 				}
 			} else {
 				for (x = 0; x < w; x++) {
-					c.a = AG_8toH(*src++);
-					AG_SurfaceBlend_At(S, dst, &c,
+					cFG.a = AG_8toH(*src++);
+					AG_SurfaceBlend_At(S, dst, &cFG,
 					    AG_ALPHA_DST);
 					dst += BytesPerPixel;
 				}
@@ -1495,6 +1614,223 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	}
 	if (ttf->style & AG_TTF_STYLE_UNDERLINE)
 		TextRenderFT_Underline(ttf, S, tm->nLines);
+}
+
+/*
+ * Interpret a possible ANSI escape sequence within a native string and write
+ * a normalized description into *ansi. Return 0 on success, -1 on failure.
+ */
+static int
+TextParseANSI(const AG_TextState *ts, AG_TextANSI *_Nonnull ansi,
+    const AG_Char *_Nonnull s)
+{
+	const AG_Char *c = &s[0];
+	int len;
+
+	switch (*c) {
+	case '[':						/* CSI */
+		break;
+	case 'N':						/* SS2 */
+	case 'O':						/* SS3 */
+	case 'P':						/* DCS */
+		ansi->ctrl = AG_ANSI_SS2 + (*c - (AG_Char)'N');
+		ansi->len = 1;
+		return (0);
+	case '\\':						/* ST */
+	case ']':						/* OSC */
+	case '^':						/* PM */
+	case '_':						/* APC */
+		ansi->ctrl = AG_ANSI_ST + (*c - (AG_Char)'\\');
+		ansi->len = 1;
+		return (0);
+	case 'X':						/* SOS */
+		ansi->ctrl = AG_ANSI_SOS;
+		ansi->len = 1;
+		return (0);
+	case 'c':						/* RIS */
+		ansi->ctrl = AG_ANSI_RIS;
+		ansi->len = 1;
+		return (0);
+	default:
+		goto fail;
+	}
+
+	for (c = &s[1]; (len = (int)(c-s)) < AG_TEXT_ANSI_SEQ_MAX; c++) {
+		char buf[AG_TEXT_ANSI_PARAM_MAX], *pBuf;
+		const AG_Char *pSrc;
+		char *tok;
+		int sgr, i;
+
+		switch (*c) {
+		case 'm':					/* SGR */
+			ansi->ctrl = AG_ANSI_CSI_SGR;
+			if (len >= sizeof(buf)) {
+				goto fail;
+			} else if (len == 0) {
+				break;
+			}
+			for (i=0, pSrc=&s[1], pBuf=buf;
+			     i < len;
+			     i++) {
+				*pBuf = (char)(*pSrc);    /* AG_Char -> ASCII */
+				pBuf++;
+				pSrc++;
+			}
+			pBuf[-1] = '\0';
+/*			AG_Verbose("SGR (%d bytes): \"%s\"\n", len, buf); */
+			pBuf = buf;
+			if ((tok = Strsep(&pBuf, ":;")) == NULL) {
+				break;
+			}
+			if ((sgr = atoi(tok)) >= AG_SGR_LAST || sgr < 0) {
+				goto fail;
+			}
+			ansi->sgr = (enum ag_text_sgr_parameter) sgr;
+/*			AG_Verbose("SGR parameter %d\n", ansi->sgr); */
+			if (sgr == 0) {
+				break;
+			}
+			/*
+			 * 3/4-bit color.
+			 */
+			if (sgr >= 30 && sgr <= 37) {          /* Normal FG */
+				ansi->sgr = AG_SGR_FG;
+				memcpy(&ansi->color, (ts->colorANSI) ?
+				                     &ts->colorANSI[sgr-30] :
+				                   &agTextColorANSI[sgr-30],
+				       sizeof(AG_Color));
+				break;
+			} else if (sgr >= 40 && sgr <= 47) {    /* Normal BG */
+				ansi->sgr = AG_SGR_BG;
+				memcpy(&ansi->color, (ts->colorANSI) ?
+				                     &ts->colorANSI[sgr-40] :
+				                   &agTextColorANSI[sgr-40],
+				       sizeof(AG_Color));
+				break;
+			} else if (sgr >= 90 && sgr <= 97) {    /* Bright FG */
+				ansi->sgr = AG_SGR_FG;
+				memcpy(&ansi->color, (ts->colorANSI) ?
+				                     &ts->colorANSI[8+sgr-90] :
+				                   &agTextColorANSI[8+sgr-90],
+				       sizeof(AG_Color));
+				break;
+			} else if (sgr >= 100 && sgr <= 107) {  /* Bright BG */
+				ansi->sgr = AG_SGR_BG;
+				memcpy(&ansi->color, (ts->colorANSI) ?
+				                     &ts->colorANSI[8+sgr-90] :
+				                   &agTextColorANSI[8+sgr-90],
+				       sizeof(AG_Color));
+				break;
+			}
+			switch (ansi->sgr) {
+			case AG_SGR_FG:
+			case AG_SGR_BG:
+				if (!(tok = Strsep(&pBuf, ":;")) ||
+				    tok[0] == '\0' || tok[1] != '\0') {
+					goto fail_param;
+				}
+				switch (tok[0]) {
+				case '2':                      /* 24-bit RGB */
+					ansi->color.r = (tok = Strsep(&pBuf, ":;")) ? AG_8toH(atoi(tok)) : 0;
+					ansi->color.g = (tok = Strsep(&pBuf, ":;")) ? AG_8toH(atoi(tok)) : 0;
+					ansi->color.b = (tok = Strsep(&pBuf, ":;")) ? AG_8toH(atoi(tok)) : 0;
+					ansi->color.a = AG_OPAQUE;
+					AG_Verbose("24-bit color: %d,%d,%d\n",
+					    ansi->color.r,
+					    ansi->color.g,
+					    ansi->color.b);
+					break;
+				case '5':                   /* 8-bit indexed */
+					if (!(tok = Strsep(&pBuf, ":;")) || tok[0] == '\0') {
+						goto fail_param;
+					}
+					if ((i = atoi(tok)) >= 0 && i <= 15) {
+						memcpy(&ansi->color,
+						    (ts->colorANSI) ?
+						    &ts->colorANSI[i] :
+						    &agTextColorANSI[i],
+						    sizeof(AG_Color));
+					}
+					break;
+				}
+				break;
+			case AG_SGR_NO_FG:
+				if ((tok = Strsep(&pBuf, ":;")) &&
+				    tok[0] == '4' && tok[1] == '9' &&
+				    tok[2] == '\0') {
+					ansi->sgr = AG_SGR_NO_FG_NO_BG;
+				}
+				break;
+			case AG_SGR_NO_BG:
+				if ((tok = Strsep(&pBuf, ":;")) &&
+				    tok[0] == '3' && tok[1] == '9' &&
+				    tok[2] == '\0') {
+					ansi->sgr = AG_SGR_NO_FG_NO_BG;
+				}
+				break;
+			default:
+				break;
+			}
+			break;
+		case 'A':					/* CUU */
+		case 'B':					/* CUD */
+		case 'C':					/* CUF */
+		case 'D':					/* CUB */
+		case 'E':					/* CNL */
+		case 'F':					/* CPL */
+		case 'G':					/* CHA */
+			ansi->ctrl = AG_ANSI_CSI_CUU + (*c - (AG_Char)'A');
+			break;
+		case 'H':					/* CUP */
+		case 'f':
+			ansi->ctrl = AG_ANSI_CSI_CUP;
+			break;
+		case 'J':					/* ED */
+		case 'K':					/* EL */
+			ansi->ctrl = AG_ANSI_CSI_ED + (*c - (AG_Char)'J');
+			break;
+		case 'S':					/* SU */
+		case 'T':					/* SD */
+			ansi->ctrl = AG_ANSI_CSI_SU + (*c - (AG_Char)'S');
+			break;
+		case 'h':					/* Private */
+		case 'i':
+		case 'l':
+			ansi->ctrl = AG_ANSI_PRIVATE;
+			break;
+		case 'n':
+			ansi->ctrl = AG_ANSI_CSI_DSR;
+			break;
+		case 's':
+			ansi->ctrl = AG_ANSI_CSI_SCP;
+			break;
+		case 'u':
+			ansi->ctrl = AG_ANSI_CSI_RCP;
+			break;
+		case '\0':
+			goto fail_param;
+		default:
+			if ((*c >= 0x70 && *c < 0x7e) || /* Private final byte */
+			    strchr("<=>?", *c)) {        /* Private parameter */
+				ansi->ctrl = AG_ANSI_PRIVATE;
+				break;
+			}
+			if ((*c >= 0x30 && *c <= 0x3f) || /* Parameter byte */
+			    (*c >= 0x20 && *c <= 0x2f)) { /* Intermediate byte */
+				continue;
+			}
+			goto fail_param;
+		}
+		break;
+	}
+	ansi->len = len+1;
+	return (0);
+fail:
+	AG_SetError("Bad ANSI code (before `%c')", *c);
+	return (-1);
+fail_param:
+	AG_SetError("Bad ANSI parameter (before `%c')", *c);
+	return (-1);
 }
 
 # ifdef SYMBOLS
@@ -2000,6 +2336,7 @@ AG_InitTextSubsystem(void)
 	ts->font = agDefaultFont;
 	AG_ColorWhite(&ts->color);
 	AG_ColorNone(&ts->colorBG);
+	ts->colorANSI = NULL;
 	ts->justify = AG_TEXT_LEFT;
 	ts->valign = AG_TEXT_TOP;
 	ts->tabWd = agTextTabWidth;
@@ -2045,7 +2382,6 @@ AG_DestroyTextSubsystem(void)
 #endif
 	AG_MutexDestroy(&agTextLock);
 }
-
 
 AG_ObjectClass agFontClass = {
 	"AG_Font",

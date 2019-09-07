@@ -118,6 +118,9 @@ flag set.
 .Ft void
 .Fn AG_TextBGColorRGBA "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
+.Ft void
+.Fn AG_TextColorANSI "enum ag_ansi_color which" "const AG_Color *c"
+.Pp
 .nr nS 0
 .Fn AG_PushTextState
 increments the attribute stack pointer and creates a copy of the previous
@@ -202,6 +205,21 @@ Similarly,
 .Fn AG_TextBG*
 functions assign a background color for the surfaces returned by the
 rendering functions.
+.Pp
+.Fn AG_TextColorANSI
+modifies an entry in the 4-bit ANSI color palette.
+Subsequent calls to
+.Fn AG_TextRender
+will display text containing
+.Dv AG_SGR_FG*
+or
+.Dv AG_SGR_BG*
+sequences in the specified color (until
+.Fn AG_PopTextState
+is called).
+When the ANSI color palette is first modified, it is copied to the active
+.Ft AG_TextState
+in a copy-on-write fashion.
 .Sh RENDERING
 .nr nS 1
 .Ft "AG_Surface *"
