@@ -260,13 +260,24 @@ AG_InitGUIGlobals(void)
 	agInputDevices.flags |= AG_OBJECT_STATIC;
 
 #ifdef AG_SERIALIZATION
-	cfg = AG_ConfigObject();
-	for (i = 0; i < agGUIOptionCount; i++) {
-		AG_BindInt(cfg, agGUIOptions[i].key, agGUIOptions[i].p);
+	{
+# ifdef AG_DEBUG
+		const int dbgLvlSave = agDebugLvl;
+
+		agDebugLvl = 0;
+# endif
+		cfg = AG_ConfigObject();
+		for (i = 0; i < agGUIOptionCount; i++) {
+			AG_BindInt(cfg, agGUIOptions[i].key, agGUIOptions[i].p);
+		}
+# ifdef AG_DEBUG
+		agDebugLvl = dbgLvlSave;
+# endif
+		if (AG_LoadStyleSheet(NULL, "_agStyleDefault") == NULL)
+			AG_Verbose("Error loading stylesheet: %s\n", AG_GetError());
 	}
-	if (AG_LoadStyleSheet(NULL, "_agStyleDefault") == NULL)
-		AG_Verbose("Error loading stylesheet: %s\n", AG_GetError());
-#endif
+#endif /* AG_SERIALIZATION */
+
 	return (0);
 }
 
@@ -277,21 +288,26 @@ AG_InitGUIGlobals(void)
 void
 AG_DestroyGUIGlobals(void)
 {
-#ifdef AG_SERIALIZATION
-	AG_Config *cfg;
-#endif
 	AG_DriverClass **pd;
 	void **pcl;
 	Uint i;
-	
+
 	if (--initedGlobals > 0)
 		return;
 
 	AG_DestroyStyleSheet(&agDefaultCSS);
 #ifdef AG_SERIALIZATION
-	cfg = AG_ConfigObject();
-	for (i = 0; i < agGUIOptionCount; i++)
-		AG_Unset(cfg, agGUIOptions[i].key);
+	{
+		AG_Config *cfg = AG_ConfigObject();
+# ifdef AG_DEBUG
+		int debugLvlSave;
+# endif
+		Debug_Mute(debugLvlSave);
+		for (i = 0; i < agGUIOptionCount; i++) {
+			AG_Unset(cfg, agGUIOptions[i].key);
+		}
+		Debug_Unmute(debugLvlSave);
+	}
 #endif
 	AG_ObjectDestroy(&agInputDevices);
 #ifndef __APPLE__ /* XXX mutex issue */
