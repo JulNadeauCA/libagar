@@ -621,6 +621,8 @@ Init(void *_Nonnull obj)
 	AG_BindUint(sb, "value",   &cons->rOffs);
 	AG_BindUint(sb, "visible", &cons->rVisible);
 	cons->vBar = sb;
+	AG_SetStyle(sb, "color",       "rgb(100,100,100)");
+	AG_SetStyle(sb, "color#hover", "rgb(100,100,100)");
 
 	sb = AG_ScrollbarNew(cons, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL |
 	                                               AG_SCROLLBAR_SMOOTH);
@@ -631,6 +633,8 @@ Init(void *_Nonnull obj)
 	AG_BindInt(sb, "value",   &cons->xOffs);
 	AG_BindInt(sb, "max",     &cons->wMax);
 	cons->hBar = sb;
+	AG_SetStyle(sb, "color",       "rgb(100,100,100)");
+	AG_SetStyle(sb, "color#hover", "rgb(100,100,100)");
 
 	AG_ActionFn(cons, "BeginSelect", BeginSelect, NULL);
 	AG_ActionFn(cons, "CloseSelect", CloseSelect, NULL);
