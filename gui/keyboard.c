@@ -476,7 +476,7 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 
 	/* Cycle focus */
 	if (tabCycle && ks == AG_KEY_TAB && action == AG_KEY_RELEASED) {
-		AG_WindowCycleFocus(win, (kbd->modState & AG_KEYMOD_SHIFT));
+		AG_WindowCycleFocus(win, (kbd->modState & AG_KEYMOD_SHIFT)?1:0);
 		rv = 1;
 	}
 	return (rv);
