@@ -58,7 +58,8 @@ const char *agStyleDefault_Data =
 	"text-color#disabled: rgb(170,170,170);\n"
 	"}\n"
 	"AG_Notebook {\n"
-	"color#selected: rgb(117,117,117);\n"
+	"color#selected: rgb(120,120,120);\n"
+	"shape-color#selected: rgb(50,50,150);	/* Selected tab stripe */\n"
 	"}\n"
 	"AG_Tlist {\n"
 	"color#selected: rgb(50,50,120);		/* Selected line(s) */\n"
@@ -72,9 +73,9 @@ const char *agStyleDefault_Data =
 	"}\n"
 	"AG_Console {\n"
 	"font-family: Courier;\n"
-	"color: rgb(0,0,30);\n"
+	"color: rgb(0,0,0);\n"
 	"color#hover: rgb(0,0,30);\n"
-	"color#focused: rgb(10,10,28);\n"
+	"color#focused: rgb(5,5,5);\n"
 	"color#selected: rgb(0,15,80);\n"
 	"text-color: rgb(240,240,240);\n"
 	"}\n"
@@ -90,7 +91,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2388,
+	2448,
 	&agStyleDefault_Data,
 	NULL
 };

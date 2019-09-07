@@ -58,7 +58,8 @@ AG_MenuView {
 	text-color#disabled: rgb(170,170,170);
 }
 AG_Notebook {
-	color#selected: rgb(117,117,117);
+	color#selected: rgb(120,120,120);
+	shape-color#selected: rgb(50,50,150);	/* Selected tab stripe */
 }
 AG_Tlist {
 	color#selected: rgb(50,50,120);		/* Selected line(s) */
@@ -72,9 +73,9 @@ AG_Table {
 }
 AG_Console {
 	font-family: Courier;
-	color: rgb(0,0,30);
+	color: rgb(0,0,0);
 	color#hover: rgb(0,0,30);
-	color#focused: rgb(10,10,28);
+	color#focused: rgb(5,5,5);
 	color#selected: rgb(0,15,80);
 	text-color: rgb(240,240,240);
 }

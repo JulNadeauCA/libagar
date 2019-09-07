@@ -38,7 +38,7 @@ typedef struct ag_notebook {
 	int bar_w, bar_h;		/* Dimensions of tab button bar */
 	int cont_w, cont_h;		/* Dimensions of largest container */
 	int spacing, padding;		/* Spacing for tab boxes */
-	int tabspacing;			/* Spacing between tabs */
+	int mouseOver;			/* Index of mouseover tab */
 
 	Uint nTabs;
 	struct ag_notebook_tab *_Nullable sel_tab;	/* Active tab */

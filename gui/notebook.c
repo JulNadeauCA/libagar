@@ -47,24 +47,55 @@ AG_NotebookNew(void *parent, Uint flags)
 }
 
 static void
+MouseMotion(AG_Event *event)
+{
+	AG_Notebook *nb = AG_NOTEBOOK_SELF();
+	AG_NotebookTab *nt;
+	const int x = AG_INT(1);
+	const int y = AG_INT(2);
+	int tx=0, i=0;
+	
+	nb->mouseOver = -1;
+
+	if (y >= 0 && y <= nb->bar_h) {
+		TAILQ_FOREACH(nt, &nb->tabs, tabs) {
+			int wTab = (nt->lbl ? WIDTH(nt->lbl) : 0);
+	
+			if (x > tx && x < tx+wTab) {
+				break;
+			}
+			tx += wTab;
+			i++;
+		}
+		if (nt == NULL)
+			i = -1;
+	} else {
+		i = -1;
+	}
+	if (nb->mouseOver != i) {
+		nb->mouseOver = i;
+		AG_Redraw(nb);
+	}
+
+}
+
+static void
 MouseButtonDown(AG_Event *event)
 {
 	AG_Notebook *nb = AG_NOTEBOOK_SELF();
-	int x = AG_INT(2);
-	int y = AG_INT(3);
-	int ts = nb->tabspacing;
-	int ts2 = (ts << 1);
+	AG_NotebookTab *nt;
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 
 	if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0 &&
 	    y <= nb->bar_h) {
-		AG_NotebookTab *tab;
-		int tx = ts;
+		int tx = 0;
 
-		TAILQ_FOREACH(tab, &nb->tabs, tabs) {
-			int wTab = (tab->lbl ? WIDTH(tab->lbl) : 0) + ts2;
+		TAILQ_FOREACH(nt, &nb->tabs, tabs) {
+			int wTab = (nt->lbl ? WIDTH(nt->lbl) : 0);
 
 			if (x >= tx && x < tx+wTab) {
-				AG_NotebookSelect(nb, tab);
+				AG_NotebookSelect(nb, nt);
 				break;
 			}
 			tx += wTab;
@@ -86,7 +117,7 @@ OnHide(AG_Event *event)
 {
 	AG_Notebook *nb = AG_NOTEBOOK_SELF();
 
-	if (nb->sel_tab != NULL)
+	if (nb->sel_tab)
 		AG_NotebookSelect(nb, NULL);
 }
 
@@ -95,7 +126,8 @@ Init(void *obj)
 {
 	AG_Notebook *nb = obj;
 
-	WIDGET(nb)->flags |= AG_WIDGET_USE_TEXT;
+	WIDGET(nb)->flags |= AG_WIDGET_USE_TEXT |
+	                     AG_WIDGET_UNFOCUSED_MOTION;
 
 	nb->tab_align = AG_NOTEBOOK_TABS_TOP;
 	nb->flags = 0;
@@ -105,7 +137,7 @@ Init(void *obj)
 	nb->cont_h = -1;
 	nb->spacing = -1;
 	nb->padding = -1;
-	nb->tabspacing = 8;	/* TODO adjust */
+	nb->mouseOver = -1;
 	nb->nTabs = 0;
 	nb->sel_tab = NULL;
 	TAILQ_INIT(&nb->tabs);
@@ -116,6 +148,7 @@ Init(void *obj)
 
 	AG_AddEvent(nb, "widget-shown", OnShow, NULL);
 	AG_AddEvent(nb, "widget-hidden", OnHide, NULL);
+	AG_SetEvent(nb, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(nb, "mouse-button-down", MouseButtonDown, NULL);
 }
 
@@ -124,46 +157,97 @@ Draw(void *obj)
 {
 	AG_Notebook *nb = obj;
 	AG_NotebookTab *tab;
+	AG_Color c,cDark, cHigh,cLow;
 	AG_Rect r;
-	const int fontHeight_2 = WFONT(nb)->height;
-	int ts = nb->tabspacing, ts_2 = (ts << 1);
-	int x = ts, y = ts;
+	int boxDia = WFONT(nb)->height;
+	int x=0, y=0, xSelFirst=0, xSelLast=0, tabIdx=0;
 
-	AG_DrawRectFilled(nb, &nb->r, &WCOLOR_HOV(nb,0));
+	c = WCOLOR_SEL(nb,0);
+	AG_ColorAddScaled(&cDark, &c, &agShade, 2);	/* Contrast */
+
+	AG_DrawRectFilled(nb, &nb->r, &c);
+	AG_ColorAdd(&cHigh, &c, &agHighColor);
+	AG_ColorAdd(&cLow,  &c, &agLowColor);
+	AG_DrawLineV(nb, 0, nb->bar_h, HEIGHT(nb),
+	    (nb->sel_tab == TAILQ_FIRST(&nb->tabs)) ? &cLow : &cHigh);
 	
-	if (nb->sel_tab != NULL) {
-		AG_PushClipRect(nb, &nb->r);
+	if (nb->sel_tab) {
+/*		AG_PushClipRect(nb, &nb->r); */
 		AG_WidgetDraw(nb->sel_tab);
-		AG_PopClipRect(nb);
+/*		AG_PopClipRect(nb); */
 	}
-
 	if (nb->flags & AG_NOTEBOOK_HIDE_TABS) {
 		return;
 	}
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
-		int isSelected = (nb->sel_tab == tab);
-		int wLbl = tab->lbl ? WIDTH(tab->lbl) : 0;
+		const int isSelected = (nb->sel_tab == tab);
+		AG_Label *lbl = tab->lbl;
 
 		r.x = x;
-		r.y = y;
-		r.w = wLbl + ts_2;
-		r.h = nb->bar_h - ts;
+		r.y = isSelected ? y : y+2;
+		r.w = (lbl ? WIDTH(lbl) : 0);
+		r.h = isSelected ? nb->bar_h : nb->bar_h-2;
 	
 		if (r.x+r.w > WIDTH(nb)) {
 			r.w = WIDTH(nb) - r.x;
-			if (r.w <= (ts << 2))
-				break;
+			if (r.w <= boxDia) {
+				boxDia -= (boxDia - r.w);
+				if (boxDia < 3)
+					break;
+			}
 		}
-		AG_DrawBoxRoundedTop(nb, &r,
-		    isSelected ? -1 : 1, fontHeight_2,
-		    isSelected ? &WCOLOR_HOV(nb,0) :
-	 	                 &WCOLOR(nb,0));
+		if (isSelected || tabIdx == nb->mouseOver) {
+			AG_DrawBoxRoundedTop(nb, &r,
+			    -1, boxDia >> 1,
+			    &c);
+		} else {
+			AG_DrawBoxRoundedTop(nb, &r,
+			    +1, boxDia >> 1,
+			    &cDark);
+		}
 
-		if (tab->lbl != NULL) {
-			AG_WidgetDraw(tab->lbl);
+		if (lbl) {
+			if (isSelected) {
+				const int boxRad = (boxDia >> 1);
+				AG_Color cHalf;
+
+				AG_ColorInterpolate(&cHalf,
+						    &WCOLOR_SEL(nb,SHAPE_COLOR),
+						    &WCOLOR_SEL(nb,0),
+						    1,2);
+				lbl->tPad--;
+
+				AG_PutPixel(nb, x+boxRad-1, 2, &cHalf);
+				AG_PutPixel(nb, x+r.w-boxRad, 2, &cHalf);
+				AG_DrawLineH(nb, x+boxRad, x+r.w-boxRad,
+				             1, &WCOLOR_SEL(nb,SHAPE_COLOR));
+				AG_DrawLineH(nb, x+boxRad, x+r.w-boxRad,
+				             2, &cHalf);
+			}
+
+			AG_WidgetDraw(lbl);
+
+			if (isSelected)
+				lbl->tPad++;
 		}
-		x += r.w;
+		x += r.w+1;
+
+		if (isSelected) {
+			xSelFirst = x - (r.w+1);
+			xSelLast = x;
+		}
+	
+		tabIdx++;
 	}
+
+	if (xSelFirst > 0) {
+		AG_DrawLineH(nb, 0, xSelFirst, nb->bar_h, &cHigh);
+	}
+	if (xSelLast < WIDTH(nb)) {
+		AG_DrawLineH(nb, xSelLast-1, WIDTH(nb)-1, nb->bar_h, &cHigh);
+	}
+	AG_DrawLineH(nb, 0, WIDTH(nb)-1, HEIGHT(nb)-1,         &cLow);
+	AG_DrawLineV(nb, WIDTH(nb), nb->bar_h+1, HEIGHT(nb)-1, &cLow);
 }
 
 static void
@@ -172,7 +256,6 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	AG_Notebook *nb = obj;
 	AG_NotebookTab *tab;
 	AG_SizeReq rTab;
-	const int ts2 = nb->tabspacing << 1;
 	Uint hMax = 0;
 	
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
@@ -182,12 +265,12 @@ SizeRequest(void *obj, AG_SizeReq *r)
 			continue;
 		}
 		AG_WidgetSizeReq(tab->lbl, &rLbl);
-		hMax = MAX(hMax, rLbl.h);
+		hMax = MAX(hMax, rLbl.h + 4);
 	}
 
 	if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0) {
-		nb->bar_h = hMax + ts2;
-		nb->bar_w = ts2;
+		nb->bar_h = hMax;
+		nb->bar_w = 0;
 	} else {
 		nb->bar_h = 0;
 		nb->bar_w = 0;
@@ -200,8 +283,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		nb->cont_w = MAX(nb->cont_w,rTab.w);
 		nb->cont_h = MAX(nb->cont_h,rTab.h);
 		if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0) {
-			nb->bar_w += ts2;
-			if (tab->lbl != NULL)
+			if (tab->lbl)
 				nb->bar_w += WIDTH(tab->lbl);
 		}
 	}
@@ -216,26 +298,23 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_NotebookTab *tab;
 	AG_SizeAlloc aTab, aLbl;
 	AG_SizeReq rLbl;
-	int ts = nb->tabspacing;
-	int x = nb->padding + ts;
-	int y = x;
+	int x=0, y=0;
 
-	if (a->h < nb->bar_h) {
+	if (a->h < nb->bar_h || a->w < WFONT(nb)->height) {
 		return (-1);
 	}
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
 		if (tab->lbl == NULL) {
-			x += (ts << 2);
 			continue;
 		}
 		AG_WidgetSizeReq(tab->lbl, &rLbl);
-		aLbl.x = x + ts;
-		aLbl.y = y + ts;
-		aLbl.w = MIN(rLbl.w, WIDTH(nb) - ts - x);
+		aLbl.x = x;
+		aLbl.y = y;
+		aLbl.w = MIN(rLbl.w, WIDTH(nb) - x);
 		aLbl.h = rLbl.h;
 		AG_WidgetSizeAlloc(tab->lbl, &aLbl);
 
-		x += aLbl.w + (ts << 1);
+		x += aLbl.w;
 	}
 	if ((tab = nb->sel_tab) != NULL) {
 		aTab.x = 0;
@@ -290,8 +369,10 @@ AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 	if (nb->spacing >= 0)
 		AG_BoxSetSpacing(&tab->box, nb->spacing);
 
-	if (label != NULL && label[0] != '\0') {
+	if (label && label[0] != '\0') {
 		tab->lbl = AG_LabelNewS(nb, 0, label);
+		AG_LabelSetPadding(tab->lbl, 8,8,5,0);
+		AG_SetStyle(tab->lbl, "font-size", "110%");
 	} else {
 		tab->lbl = NULL;
 	}
@@ -313,7 +394,7 @@ AG_NotebookDel(AG_Notebook *nb, AG_NotebookTab *tab)
 	if (nb->sel_tab == tab) {
 		AG_NotebookSelect(nb, NULL);
 	}
-	if (tab->lbl != NULL) {
+	if (tab->lbl) {
 		AG_ObjectDetach(tab->lbl);
 		AG_ObjectDestroy(tab->lbl);
 	}
@@ -338,7 +419,7 @@ AG_NotebookSelect(AG_Notebook *nb, AG_NotebookTab *tab)
 
 	if (nb->sel_tab == tab) {
 		goto out;
-	} else if (nb->sel_tab != NULL) {
+	} else if (nb->sel_tab) {
 		AG_WidgetHideAll(nb->sel_tab);
 	}
 	if (tab == NULL) {
@@ -391,11 +472,11 @@ AG_WidgetClass agNotebookClass = {
 
 AG_WidgetClass agNotebookTabClass = {
 	{
-		"AG_Widget:AG_Box:AG_NotebookTab",
+		"Agar(Widget:Box:NotebookTab)",
 		sizeof(AG_NotebookTab),
 		{ 0,0 },
+		NULL,		/* init */
 		NULL,		/* reset */
-		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
