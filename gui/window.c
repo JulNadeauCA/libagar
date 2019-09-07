@@ -1143,27 +1143,30 @@ out:
 	AG_UnlockVFS(&agDrivers);
 }
 
-#if 0
-/* Build an ordered list of the focusable widgets in a window. */
+/*
+ * Build an ordered list (with duplicates allowed) of all potentially
+ * focusable widgets in a window. Honor focusFwd and "tabindex" attributes.
+ */
 static void
-ListFocusableWidgets(AG_List *_Nonnull L, AG_Widget *_Nonnull wid)
+FindFocusableWidgets(AG_WidgetVec *W, AG_Widget *_Nonnull wid)
 {
 	AG_Widget *chld;
-	AG_Variable V;
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AG_ObjectLock(wid);
 	if (wid->flags & AG_WIDGET_FOCUSABLE) {
-		AG_InitPointer(&V, wid->focusFwd ? wid->focusFwd : wid);
-		AG_ListAppend(L, &V);
+		AG_VEC_PUSH(W, wid->focusFwd ? wid->focusFwd : wid);
+	}
+#if 0
+	if (AG_Defined(wid, "tabindex"))
+		/* TODO move to proper index. */
+#endif
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		FindFocusableWidgets(W, chld);
 	}
 	AG_ObjectUnlock(wid);
-
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
-		ListFocusableWidgets(L, chld);
 }
-#endif
 
 /*
  * Move the widget focus inside a window.
@@ -1172,62 +1175,60 @@ ListFocusableWidgets(AG_List *_Nonnull L, AG_Widget *_Nonnull wid)
 void
 AG_WindowCycleFocus(AG_Window *win, int reverse)
 {
-#if 0
-	AG_List *Lfoc, *Luniq;
+	AG_WidgetVec W;		/* Ordered list of potential candidates */
+	AG_WidgetVec WU;	/* W with duplicates removed */
 	int i, j;
-	
+
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 
-	/* Generate a list of focusable widgets; eliminate duplicates. */
-	Lfoc = AG_ListNew();
-	Luniq = AG_ListNew();
-	ListFocusableWidgets(Lfoc, WIDGET(win));
-	for (i = 0; i < Lfoc->n; i++) {
-		for (j = 0; j < Luniq->n; j++) {
-			if (Lfoc->v[i].data.p == Luniq->v[j].data.p)
+	AG_VEC_INIT(&W);
+	AG_VEC_INIT(&WU);
+	FindFocusableWidgets(&W, WIDGET(win));
+	for (i = 0; i < W.length; i++) {
+		for (j = 0; j < WU.length; j++) {
+			if (W.data[i] == WU.data[j])
 				break;
 		}
-		if (j == Luniq->n)
-			AG_ListAppend(Luniq, &Lfoc->v[i]);
+		if (j == WU.length)
+			AG_VEC_PUSH(&WU, W.data[i]);
 	}
-	if (Luniq->n == 0)
+	if (WU.length == 0)
 		goto out;
 
 	/* Move focus after/before the currently focused widget. */
 	if (reverse) {
-		for (i = 0; i < Luniq->n; i++) {
-			if (WIDGET(Luniq->v[i].data.p)->flags & AG_WIDGET_FOCUSED)
+		for (i = 0; i < WU.length; i++) {
+			if (WIDGET(WU.data[i])->flags & AG_WIDGET_FOCUSED)
 				break;
 		}
 		if (i == -1) {
-			AG_WidgetFocus(Luniq->v[0].data.p);
+			AG_WidgetFocus(WU.data[0]);
 		} else {
 			if (i-1 < 0) {
-				AG_WidgetFocus(Luniq->v[Luniq->n - 1].data.p);
+				AG_WidgetFocus(WU.data[WU.length-1]);
 			} else {
-				AG_WidgetFocus(Luniq->v[i - 1].data.p);
+				AG_WidgetFocus(WU.data[i-1]);
 			}
 		}
 	} else {
-		for (i = Luniq->n-1; i >= 0; i--) {
-			if (WIDGET(Luniq->v[i].data.p)->flags & AG_WIDGET_FOCUSED)
+		for (i = WU.length-1; i >= 0; i--) {
+			if (WIDGET(WU.data[i])->flags & AG_WIDGET_FOCUSED)
 				break;
 		}
-		if (i == Luniq->n) {
-			AG_WidgetFocus(Luniq->v[0].data.p);
+		if (i == WU.length) {
+			AG_WidgetFocus(WU.data[0]);
 		} else {
-			if (i+1 < Luniq->n) {
-				AG_WidgetFocus(Luniq->v[i + 1].data.p);
+			if (i+1 < WU.length) {
+				AG_WidgetFocus(WU.data[i+1]);
 			} else {
-				AG_WidgetFocus(Luniq->v[0].data.p);
+				AG_WidgetFocus(WU.data[0]);
 			}
 		}
 	}
 out:
-	AG_ListDestroy(Lfoc);
-	AG_ListDestroy(Luniq);
+	AG_VEC_DESTROY(&WU);
+	AG_VEC_DESTROY(&W);
 	win->dirty = 1;
-#endif
 }
 
 /*
@@ -1994,9 +1995,10 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_SizeReq rChld;
 	AG_SizeAlloc aChld;
 	AG_Rect r;
+	const int spacing = win->spacing;
+	const int wBorderSide = win->wBorderSide;
+	const int wBorderBot = win->wBorderBot;
 	int wAvail, hAvail, totFixed, nWidgets;
-	int wBorderSide = win->wBorderSide;
-	int wBorderBot = win->wBorderBot;
 
 	if (wBorderSide > 0) {
 		r.x = 0;
@@ -2044,12 +2046,12 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 			totFixed += rChld.h;
 		}
 		if (chld != WIDGET(win->tbar)) {
-			totFixed += win->spacing;
+			totFixed += spacing;
 		}
 		nWidgets++;
 	}
-	if (nWidgets > 0 && totFixed >= win->spacing)
-		totFixed -= win->spacing;
+	if (nWidgets > 0 && totFixed >= spacing)
+		totFixed -= spacing;
 
 	if (win->tbar) {					/* Titlebar */
 		AG_WidgetSizeReq(win->tbar, &rChld);
@@ -2084,7 +2086,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 			chldNext = OBJECT_NEXT_CHILD(chld, ag_widget);
 			if (chldNext == NULL ||
 			    !(chldNext->flags & AG_WIDGET_NOSPACING)) {
-				aChld.y += win->spacing;
+				aChld.y += spacing;
 			}
 			continue;
 		}
@@ -2093,7 +2095,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		aChld.h = (chld->flags & AG_WIDGET_VFILL) ?
 		          hAvail-totFixed : rChld.h;
 		AG_WidgetSizeAlloc(chld, &aChld);
-		aChld.y += aChld.h + win->spacing;
+		aChld.y += aChld.h + spacing;
 	}
 
 	if (WIDGET(win)->drv && AGDRIVER_SINGLE(WIDGET(win)->drv))
@@ -2346,7 +2348,9 @@ AG_WindowProcessDetachQueue(void)
 	AG_Window *win, *winNext;
 	AG_Driver *drv;
 	int closedMain = 0, nHidden = 0;
-
+#ifdef AG_DEBUG
+	int debugLvlSave;
+#endif
 #ifdef AG_DEBUG_GUI
 	Debug(NULL, "AG_WindowProcessDetachQueue() Begin\n");
 #endif
@@ -2405,7 +2409,9 @@ AG_WindowProcessDetachQueue(void)
 		}
 
 		/* Unset detach-fn and do a standard AG_ObjectDetach(). */
+		Debug_Mute(debugLvlSave);
 		AG_SetFn(win, "detach-fn", NULL, NULL);
+		Debug_Unmute(debugLvlSave);
 		AG_ObjectDetach(win);
 
 		if (AGDRIVER_MULTIPLE(drv)) {
@@ -2637,19 +2643,15 @@ void
 AG_WindowSetFadeIn(AG_Window *win, float fadeTime, float fadeIncr)
 {
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
-	AG_ObjectLock(win);
 	win->pvt.fadeInTime = fadeTime;
 	win->pvt.fadeInIncr = fadeIncr;
-	AG_ObjectUnlock(win);
 }
 void
 AG_WindowSetFadeOut(AG_Window *win, float fadeTime, float fadeIncr)
 {
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
-	AG_ObjectLock(win);
 	win->pvt.fadeOutTime = fadeTime;
 	win->pvt.fadeOutIncr = fadeIncr;
-	AG_ObjectUnlock(win);
 }
 # endif /* AG_TIMERS */
 #endif /* HAVE_FLOAT */
@@ -2927,6 +2929,9 @@ Init(void *_Nonnull obj)
 {
 	AG_Window *win = obj;
 	int i;
+#ifdef AG_DEBUG
+	int debugLvlSave;
+#endif
 
 	win->flags = AG_WINDOW_NOCURSORCHG;
 #ifdef AG_DEBUG
@@ -2992,6 +2997,8 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(win, "widget-hidden", OnHide, NULL);
 	AG_SetEvent(win, "detached", OnDetach, NULL);
 
+	Debug_Mute(debugLvlSave);
+
 	/* Use custom attach/detach hooks to keep the window stack in order. */
 	AG_SetFn(win, "attach-fn", Attach, NULL);
 	AG_SetFn(win, "detach-fn", Detach, NULL);
@@ -3001,6 +3008,8 @@ Init(void *_Nonnull obj)
 	AG_SetStringF(win, "font-size",   "%.02fpts", agDefaultFont->spec.size);
 	AG_SetString(win,  "font-weight", "normal");
 	AG_SetString(win,  "font-style",  "normal");
+	
+	Debug_Unmute(debugLvlSave);
 
 	WIDGET(win)->font = agDefaultFont;
 	WIDGET(win)->pal = agDefaultPalette;

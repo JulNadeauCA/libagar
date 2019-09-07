@@ -148,6 +148,7 @@ typedef struct ag_window {
 } AG_Window;
 
 typedef AG_TAILQ_HEAD(ag_windowq, ag_window) AG_WindowQ;
+typedef AG_VEC_HEAD(AG_Window *) AG_WindowVec;
 
 __BEGIN_DECLS
 extern const char *_Nonnull agWindowWmTypeNames[];

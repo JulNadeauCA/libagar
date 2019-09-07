@@ -253,6 +253,8 @@ typedef struct ag_widget {
 	AG_WidgetPvt pvt;               /* Private data */
 } AG_Widget;
 
+typedef AG_VEC_HEAD(AG_Widget *) AG_WidgetVec;
+
 #define AGWIDGET(p)             ((AG_Widget *)(p))
 #define AGCWIDGET(p)            ((const AG_Widget *)(p))
 #define AG_WIDGET_SELF()          AGWIDGET( AG_OBJECT(0,"AG_Widget:*") )

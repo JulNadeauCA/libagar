@@ -43,6 +43,9 @@
 
 #include <agar/config/ag_debug_gui.h>
 
+/* Overly verbose focus-related debugging */
+/* #define DEBUG_FOCUS */
+
 /* Built-in style attributes */
 const char *agWidgetStyleNames[] = {
 	"font-family",
@@ -79,36 +82,24 @@ const char *agWidgetColorNames[] = {
 
 /* Initial color palette */
 AG_WidgetPalette agDefaultPalette = {{
-#if AG_MODEL == AG_SMALL
-# if defined(__C64__) || defined(__C128__)
-      /* Color    Text     Line     Shape    Border */
-/*def*/	{{0x777f},{0xffff},{0x333f},{0xbbbf},{0x640f}},
-/*dis*/	{{0xbbbf},{0xffff},{0x333f},{0xbbbf},{0xd85f}},
-/*foc*/	{{0xee7f},{0xffff},{0x333f},{0xbbbf},{0xd85f}},
-/*hov*/	{{0xee7f},{0xffff},{0x333f},{0xbbbf},{0x0c5f}},
-/*sel*/	{{0x00af},{0xffff},{0xaf6f},{0xee7f},{0xff7f}},
-# else
-      /* Color    Text     Line     Shape    Border */
-/*def*/	{{0x777f},{0xeeef},{0x333f},{0xcccf},{0x666f}},
-/*dis*/	{{0x999f},{0xeeef},{0x444f},{0x999f},{0x777f}},
-/*foc*/	{{0x777f},{0xeeef},{0x333f},{0xcccf},{0x666f}},
-/*hov*/	{{0x889f},{0xeeef},{0x333f},{0xdddf},{0x556f}},
-/*sel*/	{{0x337f},{0xffff},{0x334f},{0x333f},{0x667f}},
-# endif
-#elif AG_MODEL == AG_MEDIUM
-      /* Color             Text              Line           Shape             Border */
-/*def*/	{{125,125,125,255},{240,240,240,255},{50,50,50,255},{200,200,200,255},{100,100,100,255}},
-/*dis*/	{{160,160,160,255},{240,240,240,255},{70,70,70,255},{150,150,150,255},{100,100,100,255}},
-/*foc*/	{{125,125,125,255},{240,240,240,255},{50,50,50,255},{200,200,200,255},{100,100,100,255}},
-/*hov*/	{{130,130,130,255},{240,240,240,255},{50,50,50,255},{220,220,220,255},{100,100,100,255}},
-/*sel*/	{{ 50, 50,120,255},{255,255,255,255},{50,50,60,255},{ 50, 50, 50,255},{100,100,100,255}},
+       /*
+        *    Color (BG)         Text (FG)         Line (FG)       Shape (FG)       Border (FG->BG)
+	*/
+#if (AG_MODEL == AG_SMALL) || (AG_MODEL == AG_MEDIUM)
+/*def*/	{{125,125,125,255}, {240,240,240,255}, {50,50,50,255}, {200,200,200,255}, {100,100,100,255}},
+/*dis*/	{{160,160,160,255}, {240,240,240,255}, {70,70,70,255}, {150,150,150,255}, {100,100,100,255}},
+/*foc*/	{{125,125,125,255}, {240,240,240,255}, {50,50,50,255}, {200,200,200,255}, {100,100,100,255}},
+/*hov*/	{{130,130,130,255}, {240,240,240,255}, {50,50,50,255}, {220,220,220,255}, {100,100,100,255}},
+/*sel*/	{{ 50, 50,120,255}, {255,255,255,255}, {50,50,60,255}, { 50, 50, 50,255}, {100,100,100,255}},
 #elif AG_MODEL == AG_LARGE
-      /* Color                         Text                          Line                          Shape                         Border */
-/*def*/	{{0x7d7d,0x7d7d,0x7d7d,0xffff},{0xf0f0,0xf0f0,0xf0f0,0xffff},{0x3232,0x3232,0x3232,0xffff},{0xc8c8,0xc8c8,0xc8c8,0xffff},{0x6464,0x6464,0x6464,0xffff}},
-/*dis*/	{{0xa0a0,0xa0a0,0xa0a0,0xffff},{0xf0f0,0xf0f0,0xf0f0,0xffff},{0x4646,0x4646,0x4646,0xffff},{0x9696,0x9696,0x9696,0xffff},{0x6464,0x6464,0x6464,0xffff}},
-/*foc*/	{{0x7d7d,0x7d7d,0x7d7d,0xffff},{0xf0f0,0xf0f0,0xf0f0,0xffff},{0x3232,0x3232,0x3232,0xffff},{0xc8c8,0xc8c8,0xc8c8,0xffff},{0x6464,0x6464,0x6464,0xffff}},
-/*hov*/	{{0x8282,0x8282,0x8282,0xffff},{0xf0f0,0xf0f0,0xf0f0,0xffff},{0x3232,0x3232,0x3232,0xffff},{0xdcdc,0xdcdc,0xdcdc,0xffff},{0x6464,0x6464,0x6464,0xffff}},
-/*sel*/	{{0x3232,0x3232,0x7878,0xffff},{0xffff,0xffff,0xffff,0xffff},{0x3232,0x3232,0x3c3c,0xffff},{0x3232,0x3232,0x3232,0xffff},{0x6464,0x6464,0x6464,0xffff}},
+        /*
+	 *         Color (BG)                     Text (FG)                      Line (FG)                      Shape (FG)                   Border (FG->BG)
+	 */
+/*def*/	{{0x7d7d,0x7d7d,0x7d7d,0xffff}, {0xf0f0,0xf0f0,0xf0f0,0xffff}, {0x3232,0x3232,0x3232,0xffff}, {0xc8c8,0xc8c8,0xc8c8,0xffff}, {0x6464,0x6464,0x6464,0xffff}},
+/*dis*/	{{0xa0a0,0xa0a0,0xa0a0,0xffff}, {0xf0f0,0xf0f0,0xf0f0,0xffff}, {0x4646,0x4646,0x4646,0xffff}, {0x9696,0x9696,0x9696,0xffff}, {0x6464,0x6464,0x6464,0xffff}},
+/*foc*/	{{0x7d7d,0x7d7d,0x7d7d,0xffff}, {0xf0f0,0xf0f0,0xf0f0,0xffff}, {0x3232,0x3232,0x3232,0xffff}, {0xc8c8,0xc8c8,0xc8c8,0xffff}, {0x6464,0x6464,0x6464,0xffff}},
+/*hov*/	{{0x8282,0x8282,0x8282,0xffff}, {0xf0f0,0xf0f0,0xf0f0,0xffff}, {0x3232,0x3232,0x3232,0xffff}, {0xdcdc,0xdcdc,0xdcdc,0xffff}, {0x6464,0x6464,0x6464,0xffff}},
+/*sel*/	{{0x3232,0x3232,0x7878,0xffff}, {0xffff,0xffff,0xffff,0xffff}, {0x3232,0x3232,0x3c3c,0xffff}, {0x3232,0x3232,0x3232,0xffff}, {0x6464,0x6464,0x6464,0xffff}},
 #endif
 }};
 
@@ -118,6 +109,18 @@ AG_WidgetPalette agDefaultPalette = {{
 
 static void FocusWidget(AG_Widget *_Nonnull);
 static void UnfocusWidget(AG_Widget *_Nonnull);
+
+#ifdef DEBUG_FOCUS
+# define Debug_Focus AG_Debug
+#else
+# if defined(__GNUC__)
+#  define Debug_Focus(obj, arg...) ((void)0)
+# elif defined(__CC65__)
+#  define Debug_Focus
+# else
+#  define Debug_Focus AG_Debug
+# endif
+#endif /* DEBUG_FOCUS */
 
 /* Set the parent window/driver pointers on a widget and its children. */
 static void
@@ -1041,6 +1044,7 @@ AG_WidgetSetFocusable(void *obj, int enable)
 	AG_ObjectLock(wid);
 	prev = (wid->flags & AG_WIDGET_FOCUSABLE);
 	AG_SETFLAGS(wid->flags, AG_WIDGET_FOCUSABLE, enable);
+	Debug_Focus(wid, "SetFocusable: %d => %d\n", prev, enable);
 	AG_ObjectUnlock(wid);
 	return (prev);
 }
@@ -1091,9 +1095,11 @@ AG_WidgetForwardFocus(void *obj, void *objFwd)
 		AG_OBJECT_ISA(objFwd, "AG_Widget:*");
 		wid->flags |= AG_WIDGET_FOCUSABLE;
 		wid->focusFwd = WIDGET(objFwd);
+		Debug_Focus(wid, "ForwardFocus(%s)\n", OBJECT(objFwd)->name);
 	} else {
 		wid->flags &= ~(AG_WIDGET_FOCUSABLE);
 		wid->focusFwd = NULL;
+		Debug_Focus(wid, "ForwardFocus(NULL)\n");
 	}
 	AG_ObjectUnlock(wid);
 }
@@ -1281,21 +1287,25 @@ AG_WidgetFocus(void *obj)
 
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
-
-	if (AG_WidgetIsFocused(wid))
+	
+	if (AG_WidgetIsFocused(wid)) {
+		Debug_Focus(wid, "Already focused\n");
 		goto out;
-
+	}
 	if (!(wid->flags & AG_WIDGET_FOCUSABLE)) {
 		if ((focusFwd = wid->focusFwd) &&
 		   !(focusFwd->flags & AG_WIDGET_FOCUSED)) {
 			AG_OBJECT_ISA(focusFwd, "AG_Widget:*");
 			AG_ObjectLock(focusFwd);
+			Debug_Focus(wid, "Forward focus to %s\n", OBJECT(focusFwd)->name);
 			FocusWidget(focusFwd);
 			AG_ObjectUnlock(focusFwd);
 			goto out;
 		}
+		Debug_Focus(wid, "Reject focus\n");
 		goto fail;
 	}
+	Debug_Focus(wid, "Focusing\n");
 
 	/* Remove any existing focus. XXX inefficient */
 	if (win && win->nFocused > 0)
@@ -1307,6 +1317,7 @@ AG_WidgetFocus(void *obj)
 	 */
 	do {
 		if (AG_OfClass(wParent, "AG_Widget:AG_Window:*")) {
+			Debug_Focus(wid, "Imply window %s focus\n", OBJECT(wParent)->name);
 			AG_WindowFocus(AGWINDOW(wParent));
 			break;
 		}
@@ -1314,8 +1325,11 @@ AG_WidgetFocus(void *obj)
 		if ((wParent->flags & AG_WIDGET_FOCUSED) == 0) {
 			if ((focusFwd = wParent->focusFwd) &&
 			    !(focusFwd->flags & AG_WIDGET_FOCUSED)) {
+				Debug_Focus(wid, "Imply %s focus: fwd to %s\n",
+				    OBJECT(wParent)->name, OBJECT(focusFwd)->name);
 				FocusWidget(focusFwd);
 			}
+			Debug_Focus(wid, "Imply %s focus\n", OBJECT(wParent)->name);
 			FocusWidget(wParent);
 		}
 		AG_ObjectUnlock(wParent);
@@ -1345,8 +1359,7 @@ FocusWidget(AG_Widget *_Nonnull wid)
 		win->nFocused++;
 		win->dirty = 1;
 	} else {
-		Verbose("%s: Gained focus, but no parent window\n",
-		    OBJECT(wid)->name);
+		Debug_Focus(wid, "Gained focus, but no parent window\n");
 	}
 }
 
