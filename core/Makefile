@@ -24,7 +24,7 @@ SRCS=	byteswap.c class.c config.c core.c cpuinfo.c data_source.c \
 	load_integral.c load_real.c load_string.c load_version.c \
 	object.c string.c tbl.c text.c time.c time_dummy.c timeout.c \
 	threads.c vasprintf.c vsnprintf.c user.c user_dummy.c \
-	user_getenv.c variable.c \
+	user_getenv.c variable.c vec.c \
 	${SRCS_CORE}
 
 CFLAGS+=${CORE_CFLAGS} -D_AGAR_CORE_INTERNAL
