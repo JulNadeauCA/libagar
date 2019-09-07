@@ -436,7 +436,7 @@ Draw(void *_Nonnull obj)
 		r.y = 0;
 		r.w = WIDTH(lbl);
 		r.h = HEIGHT(lbl);
-		AG_DrawFrame(lbl, &r, -1, &WCOLOR(lbl,0));
+		AG_DrawFrame(lbl, &r, -1, &WCOLOR(lbl,LINE_COLOR));
 	}
 	if ((lbl->flags & AG_LABEL_PARTIAL) && lbl->surfaceCont != -1) {
 		cw = WSURFACE(lbl,lbl->surfaceCont)->w;
