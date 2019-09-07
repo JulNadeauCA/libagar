@@ -43,6 +43,8 @@ typedef enum ag_error_code {
 
 # ifdef AG_DEBUG
 #  define Debug AG_Debug
+#  define Debug_Mute(x)   x=agDebugLvl; agDebugLvl=0
+#  define Debug_Unmute(x) agDebugLvl=x
 # else
 #  if defined(__GNUC__)
 #   define Debug(obj, arg...) ((void)0)
@@ -51,7 +53,10 @@ typedef enum ag_error_code {
 #  else
 #   define Debug AG_Debug
 #  endif
+#  define Debug_Mute(x)
+#  define Debug_Unmute(x)
 # endif /* AG_DEBUG */
+
 #endif /* _AGAR_INTERNAL or _USE_AGAR_STD */
 
 __BEGIN_DECLS

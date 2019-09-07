@@ -88,7 +88,15 @@ AG_ConfigSave(void)
 int
 AG_ConfigLoad(void)
 {
-	return AG_ObjectLoad(agConfig);
+#ifdef AG_DEBUG
+	int debugLvl;
+#endif
+	int rv;
+
+	Debug_Mute(debugLvl);
+	rv = AG_ObjectLoad(agConfig);
+	Debug_Unmute(debugLvl);
+	return (rv);
 }
 
 static void

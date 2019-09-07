@@ -472,6 +472,7 @@ echo '    --with-attributes           Compiler attributes and annotations [yes]'
 echo '    --with-inline               Inline functions [yes]'
 echo ''
 echo 'Options specific to CORE library:'
+echo '    --enable-ansi-color         Produce colorized output [yes]'
 echo '    --enable-debug-core         Expensive AG_Object debugging [no]'
 echo '    --enable-dso                Dynamically loaded modules [check]'
 echo '    --enable-exec               The AG_Execute(3) interface [check]'
@@ -1722,6 +1723,7 @@ echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
 	with_attributes="no"
 	enable_shared="no"
 	with_float="no"
+	enable_ansi_color="no"
 	enable_dso="no"
 	enable_exec="no"
 	enable_event_loop="no"
@@ -5309,6 +5311,17 @@ else
 echo '#undef AG_TYPE_SAFETY' >$bb_incdir/ag_type_safety.h
 echo 'hdefs["AG_TYPE_SAFETY"] = nil' >>configure.lua
 fi
+fi
+if [ "${enable_ansi_color}" != 'no' ]; then
+AG_ANSI_COLOR="yes"
+bb_o=$bb_incdir/ag_ansi_color.h
+echo '#ifndef AG_ANSI_COLOR' >$bb_o
+echo "#define AG_ANSI_COLOR \"$AG_ANSI_COLOR\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_ANSI_COLOR\"] = \"$AG_ANSI_COLOR\"" >>configure.lua
+else
+echo '#undef AG_ANSI_COLOR' >$bb_incdir/ag_ansi_color.h
+echo 'hdefs["AG_ANSI_COLOR"] = nil' >>configure.lua
 fi
 if [ "${enable_debug_core}" = 'yes' ]; then
 AG_DEBUG_CORE="yes"

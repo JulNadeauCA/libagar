@@ -33,19 +33,24 @@
 #include <string.h>
 #include <ctype.h>
 
+/* Debug class registration and module linking */
+/* #define AG_DEBUG_CLASSES */
+
 extern AG_ObjectClass agObjectClass;
 
-AG_Tbl          *agClassTbl = NULL;		/* Classes in hash table */
 #ifdef AG_THREADS
-AG_Mutex	 agClassLock;			/* Lock on class table */
+AG_Mutex         agClassLock;		/* Lock on class table */
 #endif
+AG_ObjectClass **agClasses;		/* Array of registered classes */
+Uint             agClassCount = 0;
+AG_Tbl          *agClassTbl = NULL;	/* Classes in hash table */
 #ifdef AG_NAMESPACES
-AG_Namespace    *agNamespaceTbl = NULL;		/* Registered namespaces */
-int              agNamespaceCount = 0;
+AG_Namespace *agNamespaceTbl = NULL;	/* Registered namespaces */
+int           agNamespaceCount = 0;
 #endif
 #ifdef AG_ENABLE_DSO
-char           **agModuleDirs = NULL;		/* Module search directories */
-int              agModuleDirCount = 0;
+char **agModuleDirs = NULL;		/* Module search directories */
+int    agModuleDirCount = 0;
 #endif
 
 static void
@@ -292,7 +297,6 @@ AG_RegisterClass(void *p)
 	AG_Variable V;
 	char *s;
 	
-	/* Parse the class specification. */
 	if (AG_ParseClassSpec(&cs, C->hier) == -1) {
 		AG_FatalError(NULL);
 	}
@@ -300,9 +304,9 @@ AG_RegisterClass(void *p)
 #ifdef AG_ENABLE_DSO
 	Strlcpy(C->pvt.libs, cs.libs, sizeof(C->pvt.libs));
 #endif
-/* #ifdef AG_DEBUG_CORE */
+#ifdef AG_DEBUG_CLASSES
 	Debug(NULL, "[ Register %s (%s) ]\n", cs.name, cs.hier);
-/* #endif */
+#endif
 	AG_MutexLock(&agClassLock);
 
 	/* Insert into the class tree. */
@@ -334,9 +338,9 @@ AG_UnregisterClass(void *p)
 	AG_MutexLock(&agClassLock);
 	h = AG_TblHash(agClassTbl, C->hier);
 	if (AG_TblExistsHash(agClassTbl, h, C->hier)) {
-/* #ifdef AG_DEBUG_CORE */
+#ifdef AG_DEBUG_CLASSES
 		Debug(NULL, "[ Unregister %s ]\n", C->name);
-/* #endif */
+#endif
 		/* Remove from the class tree. */
 		TAILQ_REMOVE(&Csuper->pvt.sub, C, pvt.subclasses);
 		C->super = NULL;
@@ -512,7 +516,7 @@ AG_LoadClass(const char *classSpec)
 	for (i = 0, s = cs.libs;
 	    (lib = Strsep(&s, ", ")) != NULL;
 	    i++) {
-# ifdef AG_DEBUG_CORE
+# ifdef AG_DEBUG_CLASSES
 		Debug(NULL, "<%s>: Linking %s...", classSpec, lib);
 # endif
 		if ((dso = AG_LoadDSO(lib, 0)) == NULL) {
@@ -530,7 +534,7 @@ AG_LoadClass(const char *classSpec)
 				goto fail;
 			}
 		}
-# ifdef AG_DEBUG_CORE
+# ifdef AG_DEBUG_CLASSES
 		Debug(NULL, "OK\n");
 # endif
 	}
@@ -543,7 +547,7 @@ AG_LoadClass(const char *classSpec)
 	AG_MutexUnlock(&agClassLock);
 	return (pClass);
 fail:
-# ifdef AG_DEBUG_CORE
+# ifdef AG_DEBUG_CLASSES
 	Debug(NULL, "%s\n", AG_GetError());
 # endif
 	AG_MutexUnlock(&agClassLock);
@@ -666,9 +670,8 @@ AG_ClassIsNamedGeneral(const AG_ObjectClass *C, const char *cn)
 }
 
 /*
- * Return an array of class structures describing the inheritance
- * hierarchy of an object.
- * XXX
+ * Return an array of AG_ObjectClass pointers for every member of the
+ * inheritance hierarchy of obj.
  */
 int
 AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)

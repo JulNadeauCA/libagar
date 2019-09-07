@@ -391,7 +391,7 @@ AG_Variable *_Nonnull AG_BindSint64Mp(void *_Nonnull, const char *_Nonnull,
                                       Sint64 *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
 # endif
-#endif /* HAVE_64BIT */
+#endif /* AG_HAVE_64BIT */
 
 #ifdef AG_HAVE_FLOAT
 /*

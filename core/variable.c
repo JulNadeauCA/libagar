@@ -228,7 +228,11 @@ AG_GetVariable(void *pObj, const char *name, ...)
 
 	AG_ObjectLock(obj);
 	if ((V = AG_AccessVariable(obj, name)) == NULL) {
+#ifdef AG_VERBOSITY
+		AG_FatalErrorF("%s: No \"%s\"", obj->name, name);
+#else
 		AG_FatalErrorV("E20", "No such variable");
+#endif
 	}
 	if (p != NULL) {
 		*p = (agVariableTypes[V->type].indirLvl > 0) ?
@@ -323,7 +327,7 @@ AG_Unset(void *pObj, const char *name)
 	AG_Variable *V;
 
 #ifdef AG_DEBUG
-	Debug(obj, "Unset \"%s\"\n", name);
+	Debug(obj, "Unset \"" AGSI_YEL "%s" AGSI_RST "\"\n", name);
 #endif
 	TAILQ_FOREACH(V, &obj->vars, vars) {
 		if (strcmp(V->name, name) == 0) {
@@ -341,6 +345,15 @@ AG_Unset(void *pObj, const char *name)
 	if (OBJECT(obj)->flags & AG_OBJECT_BOUND_EVENTS) \
 		AG_PostEvent((obj), "bound", "%p", (V))
 
+#ifdef AG_VERBOSITY
+# define FN_VARIABLE_GET_ACCESS_VARIABLE				\
+	if ((V = AG_AccessVariable(obj,name)) == NULL) 			\
+		AG_FatalErrorF("%s: No \"%s\"", OBJECT(obj)->name, name)
+#else
+# define FN_VARIABLE_GET_ACCESS_VARIABLE				\
+	if ((V = AG_AccessVariable(obj,name)) == NULL) 			\
+		AG_FatalErrorV("E20", "No such variable")
+#endif
 
 /* Body of AG_GetFoo() routines. */
 #undef  FN_VARIABLE_GET
@@ -349,9 +362,7 @@ AG_Unset(void *pObj, const char *name)
 	AG_Variable *V;						\
 								\
 	AG_ObjectLock(obj);					\
-	if ((V = AG_AccessVariable(obj,name)) == NULL) {	\
-		AG_FatalErrorV("E20", "No such variable");	\
-	}							\
+	FN_VARIABLE_GET_ACCESS_VARIABLE;			\
 	if (agVariableTypes[V->type].indirLvl > 0) {		\
 		rv = *(_type *)V->data.p;			\
 	} else {						\
@@ -415,7 +426,9 @@ AG_Variable *
 AG_SetUint(void *obj, const char *name, Uint v)
 {
 #ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (Uint) %u\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "Uint" AGSI_RST ") "
+		   AGSI_BOLD "%u" AGSI_RST "\n", name, v);
 #endif
 	FN_VARIABLE_SET(u, Uint, AG_VARIABLE_UINT);
 }
@@ -431,7 +444,10 @@ AG_Variable *
 AG_BindUint(void *obj, const char *name, Uint *v)
 {
 #ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint *)%p (= 0x%x)\n", name, v, *v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "0x%x" AGSI_RST ")\n",
+		   name, v, *v);
 #endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_UINT);
 }
@@ -441,7 +457,11 @@ AG_BindUintMp(void *obj, const char *name, Uint *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_UINT);
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint *)%p (= %u) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "%u" AGSI_RST ") mutex "
+		   AGSI_BR_MAG "%p" AGSI_RST "\n",
+		   name, v, *v, mutex);
 # endif
 	return (V);
 }
@@ -459,7 +479,10 @@ AG_Variable *
 AG_SetInt(void *obj, const char *name, int v)
 {
 #ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (int) %d\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "int" AGSI_RST ") "
+		   AGSI_BOLD "%d" AGSI_RST "\n",
+		   name, v);
 #endif
 	FN_VARIABLE_SET(i, int, AG_VARIABLE_INT);
 }
@@ -475,7 +498,10 @@ AG_Variable *
 AG_BindInt(void *obj, const char *name, int *v)
 {
 #ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(int *)%p (= %d)\n", name, v, *v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	    AGSI_CYAN "int" AGSI_RST " *)%p (= "
+	    AGSI_BOLD "%d" AGSI_RST ")\n",
+	    name, v, *v);
 #endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_INT);
 }
@@ -485,7 +511,11 @@ AG_BindIntMp(void *obj, const char *name, int *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_INT);
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(int *)%p (= %d) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "int" AGSI_RST " *)%p (= "
+	           AGSI_BOLD "%d" AGSI_RST ") mutex "
+		   AGSI_BR_MAG "%p" AGSI_RST "\n",
+	           name, v, *v, mutex);
 # endif
 	return (V);
 }
@@ -504,7 +534,9 @@ AG_Variable *
 AG_SetUlong(void *obj, const char *name, Ulong v)
 {
 #ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (Ulong) %lu\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "Ulong" AGSI_RST ") "
+		   AGSI_BOLD "%lu" AGSI_RST "\n", name, v);
 #endif
 	FN_VARIABLE_SET(uli, Ulong, AG_VARIABLE_ULONG);
 }
@@ -518,7 +550,9 @@ AG_Variable *
 AG_BindUlong(void *obj, const char *name, Ulong *v)
 {
 #ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Ulong *)%p (= %lu)\n", name, v, *v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Ulong" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "%lu" AGSI_RST ")\n", name, v, *v);
 #endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_ULONG);
 }
@@ -528,7 +562,11 @@ AG_BindUlongMp(void *obj, const char *name, Ulong *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_ULONG);
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Ulong *)%p (= %lu) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Ulong" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "%lu" AGSI_RST ") mutex "
+		   AGSI_BR_MAG "%p" AGSI_RST "\n",
+		   name, v, *v, mutex);
 # endif
 	return (V);
 }
@@ -546,7 +584,9 @@ AG_Variable *
 AG_SetLong(void *obj, const char *name, long v)
 {
 #ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (long) %ld\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "long" AGSI_RST ") "
+	           AGSI_BOLD "%ld" AGSI_RST "\n", name, v);
 #endif
 	FN_VARIABLE_SET(li, long, AG_VARIABLE_LONG);
 }
@@ -560,7 +600,9 @@ AG_Variable *
 AG_BindLong(void *obj, const char *name, long *v)
 {
 #ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(long *)%p (= %ld)\n", name, v, *v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "long" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "%ld" AGSI_RST ")\n", name, v, *v);
 #endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_LONG);
 }
@@ -570,7 +612,11 @@ AG_BindLongMp(void *obj, const char *name, long *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_LONG);
 #  ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(long *)%p (= %ld) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "long" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "%ld" AGSI_RST ") mutex "
+		   AGSI_BR_MAG "%p" AGSI_RST "\n",
+		   name, v, *v, mutex);
 #  endif
 	return (V);
 }
@@ -589,7 +635,10 @@ AG_Variable *
 AG_SetUint8(void *obj, const char *name, Uint8 v)
 {
 #ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (Uint8) 0x%02x\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "Uint8" AGSI_RST ") "
+		   AGSI_BOLD "0x%02x" AGSI_RST "\n",
+		   name, v);
 #endif
 	FN_VARIABLE_SET(u8, Uint8, AG_VARIABLE_UINT8);
 }
@@ -605,7 +654,10 @@ AG_Variable *
 AG_BindUint8(void *obj, const char *name, Uint8 *v)
 {
 #ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint8 *)%p (= 0x%02x)\n", name, v, *v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint8" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "0x%02x" AGSI_RST ")\n",
+		   name, v, *v);
 #endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_UINT8);
 }
@@ -615,7 +667,11 @@ AG_BindUint8Mp(void *obj, const char *name, Uint8 *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_UINT8);
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint8 *)%p (= 0x%02x) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint8" AGSI_RST " *)%p (= "
+	           AGSI_BOLD "0x%02x" AGSI_RST ") mutex "
+	           AGSI_BR_MAG "%p" AGSI_RST "\n",
+		   name, v, *v, mutex);
 # endif
 	return (V);
 }
@@ -633,7 +689,10 @@ AG_Variable *
 AG_SetSint8(void *obj, const char *name, Sint8 v)
 {
 #ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (Sint8) 0x%02x\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "Sint8" AGSI_RST ") "
+		   AGSI_BOLD "0x%02x" AGSI_RST "\n",
+		   name, v);
 #endif
 	FN_VARIABLE_SET(s8, Sint8, AG_VARIABLE_SINT8);
 }
@@ -649,7 +708,10 @@ AG_Variable *
 AG_BindSint8(void *obj, const char *name, Sint8 *v)
 {
 #ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Sint8 *)%p (= 0x%02x)\n", name, v, *v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Sint8" AGSI_RST " *)%p (= "
+	           AGSI_BOLD "0x%02x" AGSI_RST ")\n",
+	           name, v, *v);
 #endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_SINT8);
 }
@@ -659,7 +721,11 @@ AG_BindSint8Mp(void *obj, const char *name, Sint8 *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_SINT8);
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Sint8 *)%p (= 0x%02x) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Sint8" AGSI_RST " *)%p (= "
+	           AGSI_BOLD "0x%02x" AGSI_RST ") mutex "
+		   AGSI_BR_MAG "%p" AGSI_RST "\n",
+	           name, v, *v, mutex);
 # endif
 	return (V);
 }
@@ -678,7 +744,10 @@ AG_Variable *
 AG_SetUint16(void *obj, const char *name, Uint16 v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (Uint16) 0x%04x\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "Uint16" AGSI_RST ") "
+	           AGSI_BOLD "0x%04x" AGSI_RST "\n",
+		   name, v);
 # endif
 	FN_VARIABLE_SET(u16, Uint16, AG_VARIABLE_UINT16);
 }
@@ -692,7 +761,10 @@ AG_Variable *
 AG_BindUint16(void *obj, const char *name, Uint16 *v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint16 *)%p (= 0x%04x)\n", name, v, *v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint16" AGSI_RST " *)%p (= "
+	           AGSI_BOLD "0x%04x" AGSI_RST ")\n",
+		   name, v, *v);
 # endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_UINT16);
 }
@@ -702,7 +774,11 @@ AG_BindUint16Mp(void *obj, const char *name, Uint16 *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_UINT16);
 #  ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint16 *)%p (= 0x%04x) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint16" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "0x%04x" AGSI_RST ") mutex "
+		   AGSI_BR_MAG "%p" AGSI_RST "\n",
+		   name, v, *v, mutex);
 #  endif
 	return (V);
 }
@@ -720,7 +796,10 @@ AG_Variable *
 AG_SetSint16(void *obj, const char *name, Sint16 v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (Sint16) 0x%04x\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "Sint16" AGSI_RST ") "
+		   AGSI_BOLD "0x%04x" AGSI_RST "\n",
+		   name, v);
 # endif
 	FN_VARIABLE_SET(s16, Sint16, AG_VARIABLE_SINT16);
 }
@@ -734,7 +813,10 @@ AG_Variable *
 AG_BindSint16(void *obj, const char *name, Sint16 *v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Sint16 *)%p (= 0x%04x)\n", name, v, *v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Sint16" AGSI_RST " *)%p (= "
+	           AGSI_BOLD "0x%04x" AGSI_RST ")\n",
+	           name, v, *v);
 # endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_SINT16);
 }
@@ -744,7 +826,11 @@ AG_BindSint16Mp(void *obj, const char *name, Sint16 *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_SINT16);
 #  ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Sint16 *)%p (= 0x%04x) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Sint16" AGSI_RST " *)%p (= "
+	           AGSI_BOLD "0x%04x" AGSI_RST ") mutex "
+	           AGSI_BR_MAG "%p" AGSI_RST "\n",
+		   name, v, *v, mutex);
 #  endif
 	return (V);
 }
@@ -762,7 +848,10 @@ AG_Variable *
 AG_SetUint32(void *obj, const char *name, Uint32 v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (Uint32) 0x%08x\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "Uint32" AGSI_RST ") "
+		   AGSI_BOLD "0x%08x" AGSI_RST "\n",
+	           name, v);
 # endif
 	FN_VARIABLE_SET(u32, Uint32, AG_VARIABLE_UINT32);
 }
@@ -776,7 +865,10 @@ AG_Variable *
 AG_BindUint32(void *obj, const char *name, Uint32 *v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint32 *)%p (= 0x%08x)\n", name, v, *v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint32" AGSI_RST " *)%p (= "
+	           AGSI_BOLD "0x%08x" AGSI_RST ")\n",
+		   name, v, *v);
 # endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_UINT32);
 }
@@ -786,7 +878,11 @@ AG_BindUint32Mp(void *obj, const char *name, Uint32 *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_UINT32);
 #  ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint32 *)%p (= 0x%08x) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint32" AGSI_RST " *)%p (= "
+	           AGSI_BOLD "0x%08x" AGSI_RST ") mutex "
+	           AGSI_BR_MAG "%p" AGSI_RST "\n",
+		   name, v, *v, mutex);
 #  endif
 	return (V);
 }
@@ -804,7 +900,10 @@ AG_Variable *
 AG_SetSint32(void *obj, const char *name, Sint32 v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (Sint32) 0x%08x\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "Sint32" AGSI_RST ") "
+	           AGSI_BOLD "0x%08x" AGSI_RST "\n",
+		   name, v);
 # endif
 	FN_VARIABLE_SET(s32, Sint32, AG_VARIABLE_SINT32);
 }
@@ -818,7 +917,10 @@ AG_Variable *
 AG_BindSint32(void *obj, const char *name, Sint32 *v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Sint32 *)%p (= 0x%08x)\n", name, v, *v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Sint32" AGSI_RST " *)%p (= "
+	           AGSI_BOLD "0x%08x" AGSI_RST ")\n",
+	           name, v, *v);
 # endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_SINT32);
 }
@@ -828,7 +930,11 @@ AG_BindSint32Mp(void *obj, const char *name, Sint32 *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_SINT32);
 #  ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Sint32 *)%p (= 0x%08x) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Sint32" AGSI_RST " *)%p (= "
+	           AGSI_BOLD "0x%08x" AGSI_RST ") mutex "
+		   AGSI_BR_MAG "%p" AGSI_RST "\n",
+		   name, v, *v, mutex);
 #  endif
 	return (V);
 }
@@ -849,8 +955,10 @@ AG_Variable *
 AG_SetUint64(void *obj, const char *name, Uint64 v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (Uint64) 0x%llx\n", name,
-	    (unsigned long long)v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "Uint64" AGSI_RST ") "
+	           AGSI_BOLD "0x%llx" AGSI_RST "\n",
+	           name, (unsigned long long)v);
 # endif
 	FN_VARIABLE_SET(u64, Uint64, AG_VARIABLE_UINT64);
 }
@@ -864,8 +972,10 @@ AG_Variable *
 AG_BindUint64(void *obj, const char *name, Uint64 *v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint64)%p (= 0x%llx)\n", name, v,
-	    (unsigned long long)*v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint64" AGSI_RST ")%p (= "
+	           AGSI_BOLD "0x%llx" AGSI_RST ")\n",
+	           name, v, (unsigned long long)*v);
 # endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_UINT64);
 }
@@ -875,8 +985,11 @@ AG_BindUint64Mp(void *obj, const char *name, Uint64 *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_UINT64);
 #  ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint64)%p (= 0x%llx) mutex %p\n", name,
-	    v, (unsigned long long)*v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint64" AGSI_RST ")%p (= "
+	           AGSI_BOLD "0x%llx" AGSI_RST ") mutex "
+	           AGSI_BR_MAG "%p" AGSI_RST "\n",
+	           name, v, (unsigned long long)*v, mutex);
 #  endif
 	return (V);
 }
@@ -894,7 +1007,10 @@ AG_Variable *
 AG_SetSint64(void *obj, const char *name, Sint64 v)
 {
 # if AG_MODEL == AG_LARGE
-	Debug(obj, "Set \"%s\" -> (Sint64) 0x%llx\n", name, (long long)v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "Sint64" AGSI_RST ") "
+	           AGSI_BOLD "0x%llx" AGSI_RST "\n",
+	           name, (long long)v);
 # endif
 	FN_VARIABLE_SET(s64, Sint64, AG_VARIABLE_SINT64);
 }
@@ -908,8 +1024,10 @@ AG_Variable *
 AG_BindSint64(void *obj, const char *name, Sint64 *v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Sint64)%p (= 0x%llx)\n", name, v,
-	    (long long)*v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Sint64" AGSI_RST ")%p (= "
+	           AGSI_BOLD "0x%llx" AGSI_RST ")\n",
+	           name, v, (long long)*v);
 # endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_SINT64);
 }
@@ -919,8 +1037,11 @@ AG_BindSint64Mp(void *obj, const char *name, Sint64 *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_SINT64);
 #  ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Sint64)%p (= 0x%llx) mutex %p\n", name, v,
-	    (long long)*v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Sint64" AGSI_RST ")%p (= "
+	           AGSI_BOLD "0x%llx" AGSI_RST ") mutex "
+	           AGSI_BR_MAG "%p" AGSI_RST "\n",
+	           name, v, (long long)*v, mutex);
 #  endif
 	return (V);
 }
@@ -940,7 +1061,10 @@ AG_Variable *
 AG_SetFloat(void *obj, const char *name, float v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (float) %f\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "float" AGSI_RST ") "
+		   AGSI_BOLD "%f" AGSI_RST "\n",
+	           name, v);
 # endif
 	FN_VARIABLE_SET(flt, float, AG_VARIABLE_FLOAT);
 }
@@ -954,7 +1078,10 @@ AG_Variable *
 AG_BindFloat(void *obj, const char *name, float *v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(float)%p (= %f)\n", name, v, *v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "float" AGSI_RST ")%p (= "
+	           AGSI_BOLD "%f" AGSI_RST ")\n",
+		   name, v, *v);
 # endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_FLOAT);
 }
@@ -964,7 +1091,11 @@ AG_BindFloatMp(void *obj, const char *name, float *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_FLOAT);
 #  ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(float)%p (= %f) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "float" AGSI_RST ")%p (= "
+	           AGSI_BOLD "%f" AGSI_RST ") mutex "
+	           AGSI_BR_MAG "%p" AGSI_RST "\n",
+	           name, v, *v, mutex);
 #  endif
 	return (V);
 }
@@ -982,7 +1113,10 @@ AG_Variable *
 AG_SetDouble(void *obj, const char *name, double v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (double) %f\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "double" AGSI_RST ") "
+	           AGSI_BOLD "%f" AGSI_RST "\n",
+		   name, v);
 # endif
 	FN_VARIABLE_SET(dbl, double, AG_VARIABLE_DOUBLE);
 }
@@ -996,7 +1130,10 @@ AG_Variable *
 AG_BindDouble(void *obj, const char *name, double *v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(double)%p (= %f)\n", name, v, *v);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "double" AGSI_RST ")%p (= "
+	           AGSI_BOLD "%f" AGSI_RST ")\n",
+		   name, v, *v);
 # endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_DOUBLE);
 }
@@ -1006,7 +1143,11 @@ AG_BindDoubleMp(void *obj, const char *name, double *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_DOUBLE);
 #  ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(double)%p (= %f) mutex %p\n", name, v, *v, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "double" AGSI_RST ")%p (= "
+	           AGSI_BOLD "%f" AGSI_RST ") mutex "
+	           AGSI_BR_MAG "%p" AGSI_RST "\n",
+	           name, v, *v, mutex);
 #  endif
 	return (V);
 }
@@ -1066,7 +1207,8 @@ AG_SetPointer(void *obj, const char *name, void *v)
 {
 	AG_Variable *V;
 #ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (void *)%p\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "void" AGSI_RST " *)%p\n", name, v);
 #endif
 	AG_ObjectLock(obj);
 	V = AG_FetchVariable(obj, name, AG_VARIABLE_POINTER);
@@ -1086,7 +1228,9 @@ AG_SetConstPointer(void *obj, const char *name, const void *v)
 {
 	AG_Variable *V;
 # ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> (const void *)%p\n", name, v);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "const void" AGSI_RST " *)%p\n",
+		   name, v);
 # endif
 	AG_ObjectLock(obj);
 	V = AG_FetchVariable(obj, name, AG_VARIABLE_POINTER);
@@ -1116,9 +1260,15 @@ AG_BindPointer(void *obj, const char *name, void **v)
 {
 #ifdef AG_DEBUG
 	if (v != NULL) {
-		Debug(obj, "Bind \"%s\" -> *(void *)%p (= %p)\n", name, v, *v);
+		Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+		           AGSI_CYAN "void" AGSI_RST " *)%p (= "
+			   AGSI_BOLD "%p" AGSI_RST ")\n",
+			   name, v, *v);
 	} else {
-		Debug(obj, "Bind \"%s\" -> *(void *)%p (= NULL)\n", name, v);
+		Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+		           AGSI_CYAN "void" AGSI_RST " *)%p (= "
+			   AGSI_RED "NULL" AGSI_RST ")\n",
+			   name, v);
 	}
 #endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_POINTER);
@@ -1130,9 +1280,18 @@ AG_BindPointerMp(void *obj, const char *name, void **v, AG_Mutex *mutex)
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_POINTER);
 # ifdef AG_DEBUG
 	if (v != NULL) {
-		Debug(obj, "Bind \"%s\" -> *(void *)%p (= %p) mutex %p\n", name, v, *v, mutex);
+		Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+		           AGSI_CYAN "void" AGSI_RST " *)%p (= "
+			   AGSI_BOLD "%p" AGSI_RST ") mutex "
+			   AGSI_BR_MAG "%p" AGSI_RST "\n",
+			   name, v, *v, mutex);
+
 	} else {
-		Debug(obj, "Bind \"%s\" -> *(void *)%p (= NULL) mutex %p\n", name, v, mutex);
+		Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+		           AGSI_CYAN "void" AGSI_RST " *)%p (= "
+			   AGSI_BOLD "NULL" AGSI_RST ") mutex "
+			   AGSI_BR_MAG "%p" AGSI_RST "\n",
+			   name, v, mutex);
 	}
 # endif
 	return (V);
@@ -1158,8 +1317,13 @@ AG_GetString(void *pObj, const char *name, char *dst, AG_Size dstSize)
 	
 	AG_ObjectLock(obj);
 
-	if ((V = AG_AccessVariable(obj, name)) == NULL)
+	if ((V = AG_AccessVariable(obj, name)) == NULL) {
+#ifdef AG_VERBOSITY
+		AG_FatalErrorF("%s: No \"%s\"", obj->name, name);
+#else
 		AG_FatalErrorV("E20", "No such variable");
+#endif
+	}
 #ifdef AG_DEBUG
 	if (!V->data.s) { AG_FatalError("!V->data.s"); }
 #endif
@@ -1180,7 +1344,11 @@ AG_GetStringDup(void *pObj, const char *name)
 
 	AG_ObjectLock(obj);
 	if ((V = AG_AccessVariable(obj, name)) == NULL) {
+#ifdef AG_VERBOSITY
+		AG_FatalErrorF("%s: No \"%s\"", obj->name, name);
+#else
 		AG_FatalErrorV("E20", "No such variable");
+#endif
 	}
 	s = TryStrdup(V->data.s);
 	AG_UnlockVariable(V);
@@ -1200,7 +1368,11 @@ AG_GetStringP(void *pObj, const char *name)
 	char *s;
 
 	if ((V = AG_AccessVariable(obj, name)) == NULL) {
+#ifdef AG_VERBOSITY
+		AG_FatalErrorF("%s: No \"%s\"", obj->name, name);
+#else
 		AG_FatalErrorV("E20", "No such variable");
+#endif
 	}
 	s = V->data.s;
 	AG_UnlockVariable(V);
@@ -1224,7 +1396,9 @@ AG_SetString(void *pObj, const char *name, const char *s)
 
 	AG_ObjectLock(obj);
 #ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> \"%s\"\n", name, s);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> \""
+	           AGSI_BOLD "%s" AGSI_RST "\"\n",
+		   name, s);
 #endif
 	TAILQ_FOREACH(V, &obj->vars, vars) {
 		if (strcmp(V->name, name) == 0)
@@ -1259,9 +1433,12 @@ AG_SetString(void *pObj, const char *name, const char *s)
 			break;
 		default:
 #ifdef AG_DEBUG
-			Debug(obj, "Mutating \"%s\": From (%s) to (%s)\n", name,
-			    agVariableTypes[V->type].name,
-			    agVariableTypes[AG_VARIABLE_STRING].name);
+			Debug(obj, "Mutate \"" AGSI_YEL "%s" AGSI_RST "\" "
+			           "from (" AGSI_BR_GRN "%s" AGSI_RST ") to ("
+				            AGSI_BR_GRN "%s" AGSI_RST ")\n",
+					    name,
+					    agVariableTypes[V->type].name,
+			                    agVariableTypes[AG_VARIABLE_STRING].name);
 #endif
 			AG_FreeVariable(V);
 			AG_InitVariable(V, AG_VARIABLE_STRING, name);
@@ -1310,7 +1487,10 @@ AG_SetStringNODUP(void *obj, const char *name, char *s)
 
 	AG_ObjectLock(obj);
 #ifdef AG_DEBUG
-	Debug(obj, "Set \"%s\" -> *(char *)%p<NODUP> (= \"%s\")\n", name, s, s);
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "char" AGSI_RST " *)"
+		   AGSI_BR_RED "%p" AGSI_RST "<NODUP> (= \""
+		   AGSI_BOLD "%s" AGSI_RST "\")\n", name, s, s);
 #endif
 	V = AG_FetchVariable(obj, name, AG_VARIABLE_STRING);
 	switch (V->type) {
@@ -1334,7 +1514,10 @@ AG_SetStringNODUP(void *obj, const char *name, char *s)
 		break;
 	default:
 #ifdef AG_DEBUG
-		Debug(obj, "Mutating \"%s\": From (%s) to (%s)\n", name,
+		Debug(obj, "Mutate \"" AGSI_YEL "%s" AGSI_RST "\" from ("
+		           AGSI_BR_GRN "%s" AGSI_RST ") to ("
+			   AGSI_BR_GRN "%s" AGSI_RST ")\n",
+		    name,
 		    agVariableTypes[V->type].name,
 		    agVariableTypes[AG_VARIABLE_STRING].name);
 #endif
@@ -1356,9 +1539,16 @@ AG_BindString(void *obj, const char *name, char *buf, AG_Size bufSize)
 	AG_ObjectLock(obj);
 #ifdef AG_DEBUG
 	if (strlen(buf) > 500) {
-		Debug(obj, "Bind \"%s\" -> (char *)%p[+%lu]\n", name, buf, (Ulong)bufSize);
+		Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST
+		           "\" -> (" AGSI_CYAN "char" AGSI_RST " *)%p"
+			   "[+" AGSI_BR_RED "%lu" AGSI_RST "]\n",
+			   name, buf, (Ulong)bufSize);
 	} else {
-		Debug(obj, "Bind \"%s\" -> (char *)%p[+%lu] (= \"%s\")\n", name, buf, (Ulong)bufSize, buf);
+		Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST
+		           "\" -> (" AGSI_CYAN "char" AGSI_RST " *)%p"
+			   "[+" AGSI_BR_RED "%lu" AGSI_RST "] (= \""
+			   AGSI_BOLD "%s" AGSI_RST "\")\n",
+		    name, buf, (Ulong)bufSize, buf);
 	}
 #endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_STRING);
@@ -1377,7 +1567,11 @@ AG_BindStringMp(void *obj, const char *name, char *v, AG_Size size,
 
 	AG_ObjectLock(obj);
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> (char *)%p[+%lu] (= \"%s\") mutex %p\n",
+	Debug(obj, "Bind \"" AGSI_BOLD "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "char" AGSI_RST " *)%p"
+		   "[+" AGSI_BR_RED "%lu" AGSI_RST "] (= \""
+		   AGSI_BOLD "%s" AGSI_RST "\") mutex "
+		   AGSI_BR_MAG "%p" AGSI_RST "\n",
 	    name, v, (Ulong)size, v, mutex);
 # endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_STRING);
@@ -1400,7 +1594,11 @@ AG_BindFlag(void *obj, const char *name, Uint *v, Uint bitmask)
 
 	AG_ObjectLock(obj);
 #ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(int *)%p (= 0x%x) mask 0x%x\n", name, v, *v, bitmask);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "int" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "0x%x" AGSI_RST ") mask "
+		   AGSI_BR_RED "0x%x" AGSI_RST "\n",
+		   name, v, *v, bitmask);
 #endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG);
 	V->data.p = v;
@@ -1418,7 +1616,12 @@ AG_BindFlagMp(void *obj, const char *name, Uint *v, Uint bitmask,
 
 	AG_ObjectLock(obj);
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(int *)%p (= 0x%x) mask 0x%x mutex %p\n", name, v, *v, bitmask, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "int" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "0x%x" AGSI_RST ") mask "
+		   AGSI_BR_RED "0x%x" AGSI_RST " mutex "
+		   AGSI_BR_MAG "%p" AGSI_RST "\n",
+		   name, v, *v, bitmask, mutex);
 # endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG);
 	V->mutex = mutex;
@@ -1437,7 +1640,11 @@ AG_BindFlag8(void *obj, const char *name, Uint8 *v, Uint8 bitmask)
 
 	AG_ObjectLock(obj);
 #ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint8 *)%p (= 0x%02x) mask 0x%02x\n", name, v, *v, bitmask);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint8" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "0x%02x" AGSI_RST ") mask "
+		   AGSI_BR_RED "0x%02x" AGSI_RST "\n",
+		   name, v, *v, bitmask);
 #endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG8);
 	V->data.p = v;
@@ -1455,7 +1662,12 @@ AG_BindFlag8Mp(void *obj, const char *name, Uint8 *v, Uint8 bitmask,
 
 	AG_ObjectLock(obj);
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint8 *)%p (= 0x%02x) mask 0x%02x mutex %p\n", name, v, *v, bitmask, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint8" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "0x%02x" AGSI_RST ") mask "
+		   AGSI_BR_RED "0x%02x" AGSI_RST " mutex "
+		   AGSI_BR_MAG "%p" AGSI_RST "\n",
+		   name, v, *v, bitmask, mutex);
 # endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG8);
 	V->mutex = mutex;
@@ -1476,7 +1688,11 @@ AG_BindFlag16(void *obj, const char *name, Uint16 *v, Uint16 bitmask)
 
 	AG_ObjectLock(obj);
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint16 *)%p (= 0x%04x) mask 0x%04x\n", name, v, *v, bitmask);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint16" AGSI_RST " *)%p (= "
+	           AGSI_BOLD "0x%04x" AGSI_RST ") mask "
+		   AGSI_BR_RED "0x%04x" AGSI_RST "\n",
+		   name, v, *v, bitmask);
 # endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG16);
 	V->data.p = v;
@@ -1495,7 +1711,12 @@ AG_BindFlag16Mp(void *obj, const char *name, Uint16 *v, Uint16 bitmask,
 
 	AG_ObjectLock(obj);
 #  ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint16 *)%p (= 0x%04x) mask 0x%04x mutex %p\n", name, v, *v, bitmask, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint16" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "0x%04x" AGSI_RST ") mask "
+		   AGSI_BR_RED "0x%04x" AGSI_RST " mutex "
+		   AGSI_BR_MAG "%p" AGSI_RST "\n",
+	           name, v, *v, bitmask, mutex);
 #  endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG16);
 	V->mutex = mutex;
@@ -1514,7 +1735,11 @@ AG_BindFlag32(void *obj, const char *name, Uint32 *v, Uint32 bitmask)
 
 	AG_ObjectLock(obj);
 # ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint32 *)%p (= 0x%08x) mask 0x%08x\n", name, v, *v, bitmask);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint32" AGSI_RST " *)%p (= "
+		   AGSI_BOLD "0x%08x" AGSI_RST ") mask "
+		   AGSI_BR_RED "0x%08x" AGSI_RST "\n",
+		   name, v, *v, bitmask);
 # endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG32);
 	V->data.p = v;
@@ -1533,7 +1758,12 @@ AG_BindFlag32Mp(void *obj, const char *name, Uint32 *v, Uint32 bitmask,
 
 	AG_ObjectLock(obj);
 #  ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(Uint32 *)%p (0x%08x) mask 0x%08x mutex %p\n", name, v, *v, bitmask, mutex);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_CYAN "Uint32" AGSI_RST " *)%p ("
+		   AGSI_BOLD "0x%08x" AGSI_RST ") mask "
+		   AGSI_BR_RED "0x%08x" AGSI_RST " mutex "
+		   AGSI_BR_MAG "%p" AGSI_RST "\n",
+		   name, v, *v, bitmask, mutex);
 #  endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG32);
 	V->mutex = mutex;
@@ -1555,8 +1785,11 @@ AG_BindObject(void *obj, const char *name, void *tgtObj)
 
 	AG_ObjectLock(obj);
 #ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> *(%s *)%p (= <%s>)\n", name,
-	    OBJECT_CLASS(tgtObj)->name, tgtObj, OBJECT(tgtObj)->name);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
+	           AGSI_BR_CYAN "%s" AGSI_RST " *)%p (= <"
+	           AGSI_BR_YEL "%s" AGSI_RST ">)\n",
+	           name, OBJECT_CLASS(tgtObj)->name,
+	           tgtObj, OBJECT(tgtObj)->name);
 #endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_OBJECT);
 	V->data.p = tgtObj;
@@ -1575,9 +1808,12 @@ AG_BindVariable(void *obj, const char *name, void *tgtObj, const char *tgtKey)
 
 	AG_ObjectLock(obj);
 #ifdef AG_DEBUG
-	Debug(obj, "Bind \"%s\" -> [*(%s *)%p (= %s)]:%s\n", name,
-	    OBJECT_CLASS(tgtObj)->name, tgtObj, OBJECT(tgtObj)->name,
-	    tgtKey);
+	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> [*("
+	           AGSI_BR_CYAN "%s" AGSI_RST " *)%p (= "
+		   AGSI_BR_YEL "%s" AGSI_RST ")]:"
+		   AGSI_YEL "%s" AGSI_RST "\n",
+		   name, OBJECT_CLASS(tgtObj)->name,
+		   tgtObj, OBJECT(tgtObj)->name, tgtKey);
 #endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_VARIABLE);
 	V->data.p = tgtObj;

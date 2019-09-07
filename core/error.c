@@ -260,18 +260,16 @@ AG_Debug(void *pObj, const char *fmt, ...)
 			size_t bufLen;
 
 			if (obj->name[0] != '\0') {
-				bufLen = strlen(obj->name)+3;
+				bufLen = 5+strlen(obj->name)+6+1;
 				buf = Malloc(bufLen);
-				Strlcpy(buf, obj->name, bufLen);
-				Strlcat(buf, ": ", bufLen);
+				Strlcpy(buf, "\x1b[37m",  bufLen);
+				Strlcat(buf, obj->name,   bufLen);
+				Strlcat(buf, "\x1b[0m: ", bufLen);
 			} else {
-#  if AG_MODEL == AG_LARGE
-				bufLen = strlen(obj->name)+23;
-#  else
-				bufLen = strlen(obj->name)+16;
-#  endif
+				bufLen = 6+2+(AG_MODEL >> 2)+7+1;
 				buf = Malloc(bufLen);
-				Snprintf(buf, bufLen, "<%p>: ", obj);
+				Snprintf(buf, bufLen,
+				    "<" "\x1b[37m" "%p" "\x1b[0m" ">: ", obj);
 			}
 			agDebugCallback(buf);
 			free(buf);
@@ -327,12 +325,14 @@ AG_Debug(void *pObj, const char *fmt, ...)
 				free(buf);
 			}
 		}
-#  else /* _WIN32 */
+#  else /* !_WIN32 */
 		if (obj != NULL) {
 			if (obj->name[0] != '\0') {
-				printf("%s: ", obj->name);
+				printf("\x1b[37m" "%s" "\x1b[0m" ": ",
+				    obj->name);
 			} else {
-				printf("<%p>: ", obj);
+				printf("<\x1b[37m%p\x1b[0m>: ",
+				    obj);
 			}
 		}
 		vprintf(fmt, args);

@@ -36,6 +36,7 @@ register("--with-attributes",		"Compiler attributes and annotations [yes]")
 register("--with-inline",		"Inline functions [yes]")
 
 register_section("Options specific to CORE library:")
+register("--enable-ansi-color",		"Produce colorized output [yes]")
 register("--enable-debug-core",		"Expensive AG_Object debugging [no]")
 register("--enable-dso",		"Dynamically loaded modules [check]")
 register("--enable-exec",		"The AG_Execute(3) interface [check]")
@@ -155,6 +156,7 @@ c64 | c128 | geos | nes)
 	with_attributes="no"
 	enable_shared="no"
 	with_float="no"
+	enable_ansi_color="no"
 	enable_dso="no"
 	enable_exec="no"
 	enable_event_loop="no"
@@ -323,6 +325,7 @@ else
 	hundef(AG_DEBUG)
 	hdefine_if("${enable_type_safety}" = 'yes', AG_TYPE_SAFETY)
 fi
+hdefine_if("${enable_ansi_color}" != 'no',    AG_ANSI_COLOR)
 hdefine_if("${enable_debug_core}" = 'yes',    AG_DEBUG_CORE)
 hdefine_if("${enable_debug_gui}" = 'yes',     AG_DEBUG_GUI)
 hdefine_if("${enable_dso}" != 'no',           AG_ENABLE_DSO)
