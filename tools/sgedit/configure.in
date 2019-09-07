@@ -25,6 +25,7 @@ c_define(_USE_SG_MATH)
 c_define(_USE_AGAR_QUEUE)
 c_define(_USE_AGAR_STD)
 c_define(_USE_AGAR_TYPES)
+c_define(_USE_AGAR_NULLABILITY)
 c_no_secure_warnings()
 
 c_incdir($BLD)

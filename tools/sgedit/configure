@@ -1090,8 +1090,8 @@ echo '# C: HAVE_CC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1116,7 +1116,7 @@ if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
-TEST_CFLAGS="-Wall -Werror"
+TEST_CFLAGS="-Wall"
 fi
 $ECHO_N 'cc: checking for float and double...'
 $ECHO_N '# cc: checking for float and double...' >>config.log
@@ -1668,7 +1668,9 @@ main(int argc, char *argv[])
 {
 	AG_InitCore("conf-test", 0);
 	AG_InitGraphics(AG_NULL);
+#ifdef AG_EVENT_LOOP
 	AG_EventLoop();
+#endif
 	AG_Quit();
 	return (0);
 }
@@ -2239,8 +2241,8 @@ echo '# C: HAVE_AGAR_SG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_SG_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_SG_LIBS} ${AGAR_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_SG_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_SG_LIBS} ${AGAR_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_SG_CFLAGS} ${AGAR_MATH_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_SG_LIBS} ${AGAR_MATH_LIBS} ${AGAR_LIBS} 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_SG_CFLAGS} ${AGAR_MATH_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_SG_LIBS} ${AGAR_MATH_LIBS} ${AGAR_LIBS} 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2582,6 +2584,8 @@ CFLAGS="$CFLAGS -D_USE_AGAR_STD"
 CXXFLAGS="$CXXFLAGS -D_USE_AGAR_STD"
 CFLAGS="$CFLAGS -D_USE_AGAR_TYPES"
 CXXFLAGS="$CXXFLAGS -D_USE_AGAR_TYPES"
+CFLAGS="$CFLAGS -D_USE_AGAR_NULLABILITY"
+CXXFLAGS="$CXXFLAGS -D_USE_AGAR_NULLABILITY"
 CFLAGS="$CFLAGS -I$BLD"
 CXXFLAGS="$CXXFLAGS -I$BLD"
 echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
@@ -2691,6 +2695,9 @@ if [ "${srcdir}" != '' ]; then
 	echo 'ok'
 fi
 echo '*'
-echo '* Configuration successful. Use the "make" command to compile,'
-echo '* and complete the installation using "make install".'
+echo '* Configuration successful!'
+echo '*'
+echo '* Use "make depend all" to compile. When finished,'
+$ECHO_N '* run "make install" to install under '
+echo "${PREFIX}."
 echo '*'
