@@ -30,6 +30,8 @@
 
 #include <ctype.h>
 
+/* #define DEBUG_CSS */
+
 AG_StyleSheet agDefaultCSS;
 
 AG_StaticCSS *agBuiltinStyles[] = {
@@ -212,8 +214,10 @@ AG_LoadStyleSheet(void *obj, const char *path)
 			free(cssEnt);
 			goto fail_parse;
 		}
+#ifdef DEBUG_CSS
 		Debug(NULL, "CSS(%s): %s -> %s\n", cssBlk->match,
 		    cssEnt->key, cssEnt->value);
+#endif
 		TAILQ_INSERT_TAIL(&cssBlk->ents, cssEnt, ents);
 	}
 
