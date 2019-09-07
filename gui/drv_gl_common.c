@@ -1153,8 +1153,10 @@ AG_GL_DrawBoxRoundedTop(void *obj, const AG_Rect *r, int z, int radius,
     const AG_Color *c1, const AG_Color *c2, const AG_Color *c3)
 {
 	float rad = (float)radius, dia = rad*2.0f;
-	float t, i, nFull = 10.0f, nQuart = nFull/4.0f;
-	float w,h;
+	float t, w,h;
+	const int nFull = radius << 2;
+	const int nQuart = nFull >> 2;
+	int i;
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -1168,12 +1170,12 @@ AG_GL_DrawBoxRoundedTop(void *obj, const AG_Rect *r, int z, int radius,
 	{
 		GL_Color3uH(c1->r, c1->g, c1->b);
 		glVertex2f(-rad, h - rad);
-		for (i = 0.0f; i < nQuart; i++) {
+		for (i = 0; i < nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(-rad*Cos(t), -rad*Sin(t));
 		}
 		glVertex2f(0.0f, -rad);
-		for (i = nQuart; i > 0.0f; i--) {
+		for (i = nQuart; i > 0; i--) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(w - dia + rad*Cos(t), -rad*Sin(t));
 		}
@@ -1183,18 +1185,22 @@ AG_GL_DrawBoxRoundedTop(void *obj, const AG_Rect *r, int z, int radius,
 	
 	glBegin(GL_LINE_STRIP);
 	{
+		AG_Color cx;
+
 		GL_Color3uH(c2->r, c2->g, c2->b);
-		glVertex2i(-rad, h-rad);
-		for (i = 0.0f; i < nQuart; i++) {
+		glVertex2f(-rad, h-rad);
+		for (i = 0; i < nQuart; i++) {
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(-(float)rad*Cos(t), -(float)rad*Sin(t));
 		}
+
 		glVertex2f(0.0f, -rad);
 		t = (2.0f*AG_PI*nQuart)/nFull;
 		glVertex2f(w - dia + rad*Cos(t), -rad*Sin(t));
-
-		GL_Color3uH(c3->r, c3->g, c3->b);
-		for (i = nQuart-1; i > 0.0f; i--) {
+		
+		for (i = nQuart-1; i > 0; i--) {
+			AG_ColorInterpolate(&cx, c3, c2, i,nQuart);
+			GL_Color3uH(cx.r, cx.g, cx.b);
 			t = (2.0f*AG_PI*i)/nFull;
 			glVertex2f(w - dia + rad*Cos(t), -rad*Sin(t));
 		}
