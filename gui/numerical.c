@@ -453,6 +453,9 @@ AG_NumericalUpdate(AG_Numerical *num)
 	AG_Variable *valueb;
 	void *value;
 
+	if (!AG_Defined(num,"value")) {
+		return;
+	}
 	valueb = AG_GetVariable(num, "value", &value);
 	switch (AG_VARIABLE_TYPE(valueb)) {
 #ifdef HAVE_FLOAT
