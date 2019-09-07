@@ -941,14 +941,12 @@ Draw(void *_Nonnull obj)
 	AG_DriverClass *drvOps = WIDGET(ed)->drvOps;
 	AG_EditableBuffer *buf;
 	const AG_Color *bgColor = &WCOLOR(ed, AG_BG_COLOR);
-	const AG_Color *txColor = &WCOLOR(ed, AG_TEXT_COLOR);
 	AG_Rect2 rClip;
 	const int pos = ed->pos;
 	const int sel = ed->sel;
 	const int flags = ed->flags;
 	const int lineSkip = ed->lineSkip;
-	int i, dx, dy, x, y;
-	int inSel = 0;
+	int i, dx,dy, x,y, yCurs, inSel=0;
 
 	if (bgColor->a != AG_TRANSPARENT) {
 		AG_Rect r;
@@ -983,21 +981,13 @@ Draw(void *_Nonnull obj)
 		AG_Char c = buf->s[i];
 
 		if (i == pos) {				/* At cursor */
-			/* TODO subroutine this */
-			if (sel == 0 &&
-			    (flags & AG_EDITABLE_BLINK_ON) &&
-			    (ed->y >= 0 && ed->y <= ed->yMax-1) &&
-			    AG_WidgetIsFocused(ed)) {
-				AG_DrawLineV(ed,
-				    x - ed->x, (y + 1),
-				    (y + lineSkip - 1), txColor);
-			}
 			ed->xCurs = x;
 			if (flags & AG_EDITABLE_MARKPREF) {
 				ed->flags &= ~(AG_EDITABLE_MARKPREF);
 				ed->xCursPref = x;
 			}
 			ed->yCurs = y/lineSkip + ed->y;
+			yCurs = y;
 		}
 		if ((sel > 0 && i >= pos && i < pos+sel) ||
 		    (sel < 0 && i <  pos && i > pos+sel-1)) {
@@ -1055,6 +1045,8 @@ Draw(void *_Nonnull obj)
 			x += gl->advance;
 			continue;
 		}
+
+		/* Indicate active selection */
 		if (inSel) {
 			AG_Rect r;
 
@@ -1064,11 +1056,23 @@ Draw(void *_Nonnull obj)
 			r.h = gl->su->h;
 			AG_DrawRectFilled(ed, &r, &WCOLOR_SEL(ed,0));
 		}
+
+		/* Render the glyph */
 		drvOps->drawGlyph(drv, gl, dx,dy);
+
 		x += gl->advance;
 	}
 	if (ed->yMax == 1)
 		ed->xMax = x;
+	
+	/* Render the cursor */
+	if (AG_WidgetIsFocused(ed) && (flags & AG_EDITABLE_BLINK_ON) &&
+	    (ed->y >= 0 && ed->y <= ed->yMax-1)) {
+		AG_DrawLineV(ed,
+		    ed->xCurs - ed->x, (yCurs + 1),
+		    (yCurs + lineSkip - 1),
+		    &WCOLOR(ed,AG_TEXT_COLOR));
+	}
 	
 	/* Process any scrolling requests. */
 	if (flags & AG_EDITABLE_KEEPVISCURSOR) {

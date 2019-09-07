@@ -83,7 +83,7 @@ typedef struct ag_editable {
 	int yVis;			/* Maximum visible area (lines) */
 	Uint32 wheelTicks;		/* For wheel acceleration */
 	Uint32 _pad2;
-	AG_EditableBuffer sBuf;		/* Working buffer (for STATIC) */
+	AG_EditableBuffer sBuf;		/* Working buffer (for EXCL) */
 	AG_Rect r;			/* View area */
 	AG_CursorArea *_Nullable ca;	/* Text cursor-change area */
 	int fontMaxHeight;		/* Maximum character height */
