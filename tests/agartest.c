@@ -12,6 +12,9 @@
 #include <agar/config/ag_unicode.h>
 #include <agar/config/have_opengl.h>
 #include <agar/config/revision.h>
+
+#include <agar/core/agsi.h>
+
 #include "config/have_agar_au.h"
 #include "config/datadir.h"
 
@@ -175,7 +178,7 @@ TAILQ_HEAD_(ag_test_instance) tests;		/* Running tests */
 AG_Window *winMain;				/* Main window */
 AG_Statusbar *statusBar;
 AG_Label *status;
-AG_Console *C = NULL;
+AG_Console *console = NULL;
 AG_Button *btnTest, *btnBench;
 char consoleBuf[2048];
 
@@ -205,9 +208,9 @@ RunBenchmarks(void *arg)
 	AG_TestInstance *ti = arg;
 
 	if (ti->tc->bench(ti) == 0) {
-		AG_ConsoleMsg(C, _("%s: Success"), ti->tc->name);
+		AG_ConsoleMsg(console, _("%s: Success"), ti->tc->name);
 	} else {
-		AG_ConsoleMsg(C, _("%s: Failed (%s)"), ti->tc->name, AG_GetError());
+		AG_ConsoleMsg(console, _("%s: Failed (%s)"), ti->tc->name, AG_GetError());
 	}
 	free(ti);
 	return (NULL);
@@ -226,12 +229,13 @@ CreateTestInstance(AG_TestCase *tc)
 	ti->tc = tc;
 	ti->flags = 0;
 	ti->score = 1.0;
-	ti->console = C;
+	ti->console = console;
 	ti->win = NULL;
 
 	if (tc->init != NULL &&
 	    tc->init(ti) == -1) {
-		AG_ConsoleMsg(C, _("%s: Failed: %s"), tc->name, AG_GetError());
+		AG_ConsoleMsg(console, _("%s: Failed: %s"), tc->name,
+		    AG_GetError());
 		goto fail;
 	}
 	return (ti);
@@ -282,17 +286,17 @@ RunTest(AG_Event *event)
 		return;
 
 	if (tc->test != NULL) {
-		AG_ConsoleMsg(C, _("Running test: %s..."), tc->name);
+		AG_ConsoleMsg(console, _("Running test: %s..."), tc->name);
 		ti->score = 100.0;
 		if (tc->test(ti) == 0) {
 			if (ti->score != 100.0) {
-				AG_ConsoleMsg(C, _("%s: Success (%f%%)"),
+				AG_ConsoleMsg(console, _("%s: Success (%f%%)"),
 				    tc->name, ti->score);
 			} else {
-				AG_ConsoleMsg(C, _("%s: Success"), tc->name);
+				AG_ConsoleMsg(console, _("%s: Success"), tc->name);
 			}
 		} else {
-			AG_ConsoleMsg(C, _("%s: Failed (%s)"), tc->name,
+			AG_ConsoleMsg(console, _("%s: Failed (%s)"), tc->name,
 			    AG_GetError());
 			AG_LabelTextS(status, AG_GetError());
 			goto fail;
@@ -310,7 +314,7 @@ RunTest(AG_Event *event)
 	
 		if (tc->testGUI(ti, win) == 0) {
 			ti->win = win;
-			AG_ConsoleMsg(C, _("%s: Interactive test started"),
+			AG_ConsoleMsg(console, _("%s: Interactive test started"),
 			    tc->name);
 			AG_SeparatorNewHoriz(win);
 			ti->closeBtn = AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close this test"),
@@ -319,7 +323,7 @@ RunTest(AG_Event *event)
 			AG_WindowAttach(winMain, win);
 			AG_WindowShow(win);
 		} else {
-			AG_ConsoleMsg(C, _("%s: Failed to start (%s)"),
+			AG_ConsoleMsg(console, _("%s: Failed to start (%s)"),
 			    tc->name, AG_GetError());
 			AG_ObjectDetach(win);
 			goto fail;
@@ -353,9 +357,9 @@ RunBench(AG_Event *event)
 		AG_ThreadCreate(&th, RunBenchmarks, ti);
 #else
 		if (tc->bench(ti) == 0) {
-			AG_ConsoleMsg(C, _("%s: Success"), tc->name);
+			AG_ConsoleMsg(console, _("%s: Success"), tc->name);
 		} else {
-			AG_ConsoleMsg(C, _("%s: Failed (%s)"), tc->name,
+			AG_ConsoleMsg(console, _("%s: Failed (%s)"), tc->name,
 			    AG_GetError());
 			AG_LabelTextS(status, AG_GetError());
 		}
@@ -382,7 +386,7 @@ TestWindowClose(AG_Event *event)
 {
 	AG_TestInstance *ti = AG_PTR(1);
 	
-	AG_ConsoleMsg(C, _("Test %s: terminated"), ti->name);
+	AG_ConsoleMsg(console, _("Test %s: terminated"), ti->name);
 	AG_SetEvent(ti->win, "window-detached", TestWindowDetached, "%p", ti);
 	AG_ObjectDetach(ti->win);
 }
@@ -528,7 +532,7 @@ DoDebugger(void)
 static int
 ConsoleWrite(const char *msg)
 {
-	if (C == NULL) {
+	if (console == NULL) {
 		return (0);
 	}
 	AG_Strlcat(consoleBuf, msg, sizeof(consoleBuf));
@@ -539,7 +543,7 @@ ConsoleWrite(const char *msg)
 			if (line[0] == '\0') {
 				continue;
 			}
-			AG_ConsoleMsgS(C, line);
+			AG_ConsoleMsgS(console, line);
 		}
 		consoleBuf[0] = '\0';
 	}
@@ -551,7 +555,7 @@ ConsoleWindowDetached(AG_Event *event)
 {
 	AG_SetVerboseCallback(NULL);
 	AG_SetDebugCallback(NULL);
-	C = NULL;
+	console = NULL;
 }
 
 /* Show information about a test module */
@@ -795,8 +799,10 @@ main(int argc, char *argv[])
 		AG_WidgetDisable(btnTest);
 		AG_WidgetDisable(btnBench);
 	}
-	C = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
-	AG_SetStyle(C, "font-family", "Courier");
+	console = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
+	AG_SetStyle(console, "font-family", "Bedstead,Courier,Terminal,Clean");
+	AG_SetStyle(console, "text-color", "rgb(200,200,200)");
+	AG_SetStyle(console, "font-size", "80%");
 	{
 		AG_AgarVersion av;
 		AG_DriverClass **pd;
@@ -805,58 +811,61 @@ main(int argc, char *argv[])
 
 		AG_GetVersion(&av);
 
-		AG_ConsoleMsgS(C, "    _       _       _     ___  ");
-		AG_ConsoleMsgS(C, "  / _ \\   / _ \\   / _ \\  |  _ \\ ");
-		AG_ConsoleMsgS(C, " | |_| | | (_| | | |_| | | |_) |");
-		AG_ConsoleMsgS(C, " |_| |_|  \\__, | |_| |_| |_| |_|");
-		AG_ConsoleMsgS(C, "          |___/                 ");
-		AG_ConsoleMsgS(C, "");
+		AG_ConsoleMsgS(console, "    _       _       _     ___  ");
+		AG_ConsoleMsgS(console, "  / _ \\   / _ \\   / _ \\  |  _ \\ ");
+		AG_ConsoleMsgS(console, " | |_| | | (_| | | |_| | | |_) |");
+		AG_ConsoleMsgS(console, " |_| |_|  \\__, | |_| |_| |_| |_|");
+		AG_ConsoleMsgS(console, "          |___/                 ");
+		AG_ConsoleMsgS(console, "");
 
 		if (av.release) {
 			if (av.rev > 0) {
-				ln = AG_ConsoleMsg(C, _("Agar %d.%d.%d for %s (r%d, \"%s\")"),
+				ln = AG_ConsoleMsg(console,
+				    _("Agar %d.%d.%d for %s (r%d, \"%s\")"),
 				    av.major, av.minor, av.patch, agCPU.arch,
 				    av.rev, av.release);
 			} else {
-				ln = AG_ConsoleMsg(C, _("Agar %d.%d.%d for %s (\"%s\")"),
+				ln = AG_ConsoleMsg(console,
+				    _("Agar %d.%d.%d for %s (\"%s\")"),
 				    av.major, av.minor, av.patch, agCPU.arch,
 				    av.release);
 			}
 		} else {
-			ln = AG_ConsoleMsg(C, _("Agar %d.%d.%d for %s (r%d)"),
+			ln = AG_ConsoleMsg(console,
+			    _("Agar %d.%d.%d for %s (r%d)"),
 			    av.major, av.minor, av.patch, agCPU.arch, av.rev);
 		}
 		AG_ColorRGB_8(&ln->c, 0,255,120);
 
 		if (av.rev > 0 && av.rev != AGAR_REVISION) {
-			ln = AG_ConsoleMsg(C,
+			ln = AG_ConsoleMsg(console,
 			    _("WARNING: Agartest compiled against SVN r%d, but "
 			      "installed libagar is r%d.\n"),
 			      AGAR_REVISION, av.rev);
 			AG_ColorRGB_8(&ln->c, 255,100,100);
 		}
 
-		ln = AG_ConsoleMsgS(C, "http://libagar.org");
+		ln = AG_ConsoleMsgS(console, "http://libagar.org");
 		AG_ColorRGB_8(&ln->c, 0,255,120);
 
-		ln = AG_ConsoleMsg(C, _("Memory model: %s"), AG_MEMORY_MODEL_NAME);
+		ln = AG_ConsoleMsg(console, _("Memory model: %s"), AG_MEMORY_MODEL_NAME);
 		AG_ColorRGB_8(&ln->c, 240,240,0);
 
-		ln = AG_ConsoleMsg(C, _("Color: %d-bit/component "
+		ln = AG_ConsoleMsg(console, _("Color: %d-bit/component "
 		                        "(%u-bit pixels)"),
 		    AG_COMPONENT_BITS, (Uint)(sizeof(AG_Pixel) << 3));
 		AG_ColorRGB_8(&ln->c, 240,240,0);
 
-		ln = AG_ConsoleMsg(C, _("Build options: "));
+		ln = AG_ConsoleMsg(console, _("Build options: "));
 		AG_ColorRGB_8(&ln->c, 240,240,0);
 		for (bopt = &agarBuildOpts[0]; *bopt != NULL; bopt++)
 			AG_ConsoleMsgCatS(ln, *bopt);
 
-		AG_ConsoleMsg(C, _("Available drivers:"));
+		AG_ConsoleMsg(console, _("Available drivers:"));
 		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 			AG_DriverClass *dc = *pd;
 
-			ln = AG_ConsoleMsg(C,
+			ln = AG_ConsoleMsg(console,
 			    _(" -d %5s  # %s/%s, see %s(3)"),
 			    dc->name,
 			    agDriverTypeNames[dc->type],
@@ -868,18 +877,25 @@ main(int argc, char *argv[])
 			}
 		}
 #ifdef __APPLE__
-		AG_ConsoleMsg(C, _("Press Command-[-] and Command-[=] to zoom"));
+		AG_ConsoleMsg(console,
+		    _("Press Command-[-] and Command-[=] to zoom"));
 # if defined(AG_DEBUG) && defined(AG_TIMERS)
-		AG_ConsoleMsg(C, _("Press Command-D to debug active window"));
+		AG_ConsoleMsg(console,
+		    _("Press Command-D to debug active window"));
 # endif
 #else
-		AG_ConsoleMsg(C, _("Press Ctrl-[-] and Ctrl-[=] to zoom"));
+		AG_ConsoleMsg(console,
+		    _("Press" AGSI_BOLD "Ctrl-[-]" AGSI_RST
+		      " and " AGSI_BOLD "Ctrl-[=]" AGSI_RST " to zoom"));
 # if defined(AG_DEBUG) && defined(AG_TIMERS)
-		AG_ConsoleMsg(C, _("Press F7 to debug active window"));
+		AG_ConsoleMsg(console,
+		    _("Press " AGSI_BOLD "F7" AGSI_RST
+		      " to debug active window"));
 # endif
 #endif
 		if (agDriverSw)
-			AG_ConsoleMsg(C, _("Press F8 to take a screenshot"));
+			AG_ConsoleMsg(console, _("Press " AGSI_BOLD "F8" AGSI_RST
+			                         " to take a screenshot"));
 	}
 
 	AG_TlistSetChangedFn(tl, SelectedTest, NULL);
@@ -916,7 +932,7 @@ main(int argc, char *argv[])
 				break;
 		}
 		if (*pTest == NULL) {
-			AG_ConsoleMsg(C, _("No such test: %s"), argv[i]);
+			AG_ConsoleMsg(console, _("No such test: %s"), argv[i]);
 			continue;
 		}
 		AG_TlistSelectPtr(tl, (void *)(*pTest));

@@ -4,11 +4,11 @@
 
 The most notorious ill-fortune must in the end yield to the untiring courage of 
 philosophy-as the most stubborn city to the ceaseless vigilance of an enemy. 
-Shalmanezer, as we have it in holy writings, lay three years before Samaria; 
-yet it fell. Sardanapalus-see Diodorus-maintained himself seven in Nineveh; but 
-to no purpose. Troy expired at the close of the second lustrum; and Azoth, as 
-Aristaeus declares upon his honour as a gentleman, opened at last her gates to 
-Psammetichus, after having barred them for the fifth part of a century....
+[31mShalmanezer[0m, as we have it in holy writings, lay three years before Samaria; 
+yet it fell. [32mSardanapalus[0m-see [33mDiodorus[0m-maintained himself seven in Nineveh; but 
+to no purpose. [34mTroy[0m expired at the close of the second lustrum; and [35mAzoth[0m, as 
+[36mAristaeus[0m declares upon his honour as a gentleman, opened at last her gates to 
+[1mPsammetichus[0m, after having barred them for the fifth part of a century....
 
 "Thou wretch!-thou vixen!-thou shrew!" said I to my wife on the morning after 
 our wedding; "thou witch!-thou hag!-thou whippersnapper-thou sink of 
@@ -27,8 +27,8 @@ consternation-my despair!
 
 There is a good genius, however, which has never entirely deserted me. In my 
 most ungovernable moods I still retain a sense of propriety, et le chemin des 
-passions me conduit-as Lord Edouard in the "Julie" says it did him-a la 
-philosophie veritable.
+passions me conduit-as Lord Edouard in the "Julie" says it did him-à la 
+philosophie véritable.
 
 Although I could not at first precisely ascertain to what degree the occurence 
 had affected me, I determined at all events to conceal the matter from my wife, 
