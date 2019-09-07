@@ -2,9 +2,8 @@
 
 #ifndef _AGAR_CORE_PUBLIC_H_
 #define _AGAR_CORE_PUBLIC_H_
-#include <agar/core/core_begin.h>
 
-#include <agar/core/core_init.h>
+#include <agar/core/core.h>
 
 #include <agar/core/string.h>
 #ifdef _USE_AGAR_STD
@@ -39,5 +38,4 @@
 #include <agar/core/user.h>
 #include <agar/core/net.h>
 
-#include <agar/core/core_close.h>
-#endif
+#endif /* !_AGAR_CORE_PUBLIC_H_ */
