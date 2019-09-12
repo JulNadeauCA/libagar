@@ -67,7 +67,7 @@ struct ag_dbt;
 
 #include <agar/core/variable.h>
 #include <agar/core/event.h>
-#include <agar/core/time.h>
+#include <agar/core/agtime.h>
 
 /* Agar Object class specification */
 typedef struct ag_object_class_spec {
