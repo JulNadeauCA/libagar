@@ -4,6 +4,9 @@ include ${TOP}/Makefile.config
 DATADIR=	${TTFDIR}
 DATAFILES_SRC=	minimal.xcf \
 		serif.xcf \
+		bedstead.otf \
+		bedstead-10-df.png \
+		bedstead-20-df.png \
 		Vera-Copyright.txt \
 		Vera-README.txt \
 		Vera-ReleaseNotes.txt \
