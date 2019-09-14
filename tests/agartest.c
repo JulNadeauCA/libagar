@@ -71,6 +71,7 @@ extern const AG_TestCase userTest;
 #endif
 extern const AG_TestCase widgetsTest;
 extern const AG_TestCase windowsTest;
+extern const AG_TestCase bezierTest;
 
 const AG_TestCase *testCases[] = {
 #ifdef AG_UNICODE
@@ -128,6 +129,7 @@ const AG_TestCase *testCases[] = {
 #endif
 	&widgetsTest,
 	&windowsTest,
+	&bezierTest,
 	NULL
 };
 

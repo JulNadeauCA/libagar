@@ -46,3 +46,4 @@ particular order.
   AG_QuadraticPositive, AG_QuadraticNegative, AG_Distance
 - GUI: add AG_DrawArrowLine for drawing lines with arrowheads
 - GUI: AG_Graph now supports directed graphs
+- MATH: Implemented M_Bezier module for computing Bézier curves.

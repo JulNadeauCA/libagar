@@ -24,6 +24,8 @@ SRCS=	agartest.c ${SRCS_EXTRA} \
 	console.c \
 	customwidget.c \
 	customwidget_mywidget.c \
+	bezier.c \
+	bezier_widget.c \
 	fixedres.c \
 	focusing.c \
 	fonts.c \

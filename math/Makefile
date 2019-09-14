@@ -27,7 +27,8 @@ SRCS=	m_math.c m_complex.c m_quaternion.c \
 	m_coordinates.c m_heapsort.c m_mergesort.c m_qsort.c m_radixsort.c \
 	m_point_set.c m_color.c m_sphere.c m_polyhedron.c \
 	m_matrix_sparse.c m_sparse_allocate.c m_sparse_build.c m_sparse_eda.c \
-	m_sparse_factor.c m_sparse_output.c m_sparse_solve.c m_sparse_utils.c
+	m_sparse_factor.c m_sparse_output.c m_sparse_solve.c m_sparse_utils.c \
+	m_bezier.c m_bezier_primitives.c
 
 CFLAGS+=${GUI_CFLAGS} \
 	${CORE_CFLAGS} \

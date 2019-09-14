@@ -223,6 +223,7 @@ typedef struct m_point_set3i {
 #include <agar/math/m_polygon.h>
 #include <agar/math/m_polyhedron.h>
 #include <agar/math/m_point_set.h>
+#include <agar/math/m_bezier.h>
 
 __BEGIN_DECLS
 

@@ -50,5 +50,6 @@ __END_DECLS
 
 #include <agar/math/m_plotter.h>
 #include <agar/math/m_matview.h>
+#include <agar/math/m_bezier_primitives.h>
 
 #endif /* _AGAR_MATH_M_GUI_H_ */
