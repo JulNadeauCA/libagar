@@ -648,11 +648,12 @@ fail:
 void
 AG_PopTextState(void)
 {
+#ifdef AG_DEBUG
 	AG_TextState *ts = AG_TEXT_STATE_CUR();
 
 	if (agTextStateCur == 0)
 		AG_FatalError("PopTextState without Push");
-#ifdef AG_DEBUG
+
 	if (ts->name[0] != 'T' ||
 	    ts->name[1] != 'S' || atoi(&ts->name[2]) != agTextStateCur)
 		AG_FatalErrorF("PopTextState: Bad state #%d", agTextStateCur);
