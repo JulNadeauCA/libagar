@@ -585,13 +585,18 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 		{
 			if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, name,
 			    spec->source.file, sizeof(spec->source.file)) == -1) {
-				char ttfFile[AG_FILENAME_MAX];
+				char path[AG_FILENAME_MAX];
 
-				Strlcpy(ttfFile, name, sizeof(ttfFile));
-				Strlcat(ttfFile, ".ttf", sizeof(ttfFile));
-				if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, ttfFile,
-				    spec->source.file, sizeof(spec->source.file)) == -1)
-					goto fail;
+				Strlcpy(path, name, sizeof(path));
+				Strlcat(path, ".ttf", sizeof(path));
+				if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
+				    spec->source.file, sizeof(spec->source.file)) == -1) {
+					Strlcpy(path, name, sizeof(path));
+					Strlcat(path, ".otf", sizeof(path));
+					if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
+					    spec->source.file, sizeof(spec->source.file)) == -1)
+						goto fail;
+				}
 			}
 			if (GetFontTypeFromSignature(spec->source.file,
 			   &spec->type) == -1)
