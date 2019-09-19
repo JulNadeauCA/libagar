@@ -1,7 +1,10 @@
 /*	Public domain	*/
 
+/*
+ * Return a Grayscale from 8-bit Value + 8-bit Alpha.
+ */
 #ifdef AG_INLINE_HEADER
-static __inline__ AG_Grayscale _Const_Attribute
+static __inline__ AG_Grayscale 
 AG_Grayscale_8(Uint8 v, Uint8 a)
 #else
 AG_Grayscale
@@ -22,8 +25,11 @@ ag_grayscale_8(Uint8 v, Uint8 a)
 	return (G);
 }
 
+/*
+ * Return a Grayscale from 16-bit Value + 16-bit Alpha.
+ */
 #ifdef AG_INLINE_HEADER
-static __inline__ AG_Grayscale _Const_Attribute
+static __inline__ AG_Grayscale
 AG_Grayscale_16(Uint16 v, Uint16 a)
 #else
 AG_Grayscale
@@ -44,8 +50,11 @@ ag_grayscale_16(Uint16 v, Uint16 a)
 	return (G);
 }
 
+/*
+ * Return a Grayscale from 32-bit Value + 32-bit Alpha.
+ */
 #ifdef AG_INLINE_HEADER
-static __inline__ AG_Grayscale _Const_Attribute
+static __inline__ AG_Grayscale
 AG_Grayscale_32(Uint32 v, Uint32 a)
 #else
 AG_Grayscale
@@ -66,7 +75,9 @@ ag_grayscale_32(Uint32 v, Uint32 a)
 	return (G);
 }
 
-/* Return AG_Color from 8- or 16-bit RGB (or RGB + alpha) components. */
+/*
+ * Set Color from 8-bit values R,G,B (full opaque).
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_ColorRGB_8(AG_Color *_Nonnull c, Uint8 r, Uint8 g, Uint8 b)
@@ -91,6 +102,9 @@ ag_color_rgb_8(AG_Color *c, Uint8 r, Uint8 g, Uint8 b)
 	c->a = AG_OPAQUE;
 }
 
+/*
+ * Set Color from 8-bit values R,G,B,A.
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_ColorRGBA_8(AG_Color *_Nonnull c, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
@@ -117,6 +131,9 @@ ag_color_rgba_8(AG_Color *c, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 #endif
 }
 
+/*
+ * Set Color from 16-bit values R,G,B (full opaque).
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_ColorRGB_16(AG_Color *_Nonnull c, Uint16 r, Uint16 g, Uint16 b)
@@ -141,6 +158,9 @@ ag_color_rgb_16(AG_Color *c, Uint16 r, Uint16 g, Uint16 b)
 	c->a = AG_OPAQUE;
 }
 
+/*
+ * Set Color from 16-bit values R,G,B,A.
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_ColorRGBA_16(AG_Color *_Nonnull c, Uint16 r, Uint16 g, Uint16 b, Uint16 a)
@@ -167,7 +187,9 @@ ag_color_rgba_16(AG_Color *c, Uint16 r, Uint16 g, Uint16 b, Uint16 a)
 #endif
 }
 
-/* Return AG_Color from 4-bit components packed as 0xRGBA. */
+/*
+ * Set Color from 4-bit components packed as 0x[RGBA].
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_ColorHex16(AG_Color *_Nonnull c, Uint16 h)
@@ -177,14 +199,14 @@ ag_color_hex_16(AG_Color *c, Uint16 h)
 #endif
 {
 #if AG_MODEL == AG_LARGE
-	c->r = AG_4to16((h & 0xf000) >> 3);
-	c->g = AG_4to16((h & 0x0f00) >> 2);
-	c->b = AG_4to16((h & 0x00f0) >> 1);
+	c->r = AG_4to16((h & 0xf000) >> 12);
+	c->g = AG_4to16((h & 0x0f00) >> 8);
+	c->b = AG_4to16((h & 0x00f0) >> 4);
 	c->a = AG_4to16((h & 0x000f));
 #elif AG_MODEL == AG_MEDIUM
-	c->r = AG_4to8((h & 0xf000) >> 3);
-	c->g = AG_4to8((h & 0x0f00) >> 2);
-	c->b = AG_4to8((h & 0x00f0) >> 1);
+	c->r = AG_4to8((h & 0xf000) >> 12);
+	c->g = AG_4to8((h & 0x0f00) >> 8);
+	c->b = AG_4to8((h & 0x00f0) >> 4);
 	c->a = AG_4to8((h & 0x000f));
 #elif AG_MODEL == AG_SMALL
 	c->r = (h & 0xf000) >> 3;
@@ -194,7 +216,9 @@ ag_color_hex_16(AG_Color *c, Uint16 h)
 #endif
 }
 
-/* Return AG_Color from 8-bit components packed as 0xRRGGBBAA. */
+/*
+ * Set Color from 8-bit components packed as 0x[RRGGBBAA].
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_ColorHex32(AG_Color *_Nonnull c, Uint32 h)
@@ -222,7 +246,9 @@ ag_color_hex_32(AG_Color *c, Uint32 h)
 }
 
 #if AG_MODEL == AG_LARGE
-/* Return AG_Color from 16-bit components packed as 0xRRRRGGGGBBBBAAAA. */
+/*
+ * Return AG_Color from 16-bit components packed as 0x[RRRRGGGGBBBBAAAA].
+ */
 # ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_ColorHex64(AG_Color *_Nonnull c, Uint64 h)
@@ -238,7 +264,9 @@ ag_color_hex_64(AG_Color *c, Uint64 h)
 }
 #endif /* AG_LARGE */
 
-/* Component-wise clamped addition */
+/*
+ * Compute the clamped sum of a color c and an offset offs.
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_ColorAdd(AG_Color *_Nonnull dst, const AG_Color *_Nonnull c,
@@ -254,7 +282,10 @@ ag_color_add(AG_Color *dst, const AG_Color *c, const AG_ColorOffset *offs)
 	dst->a = AG_MIN(AG_COLOR_LAST, c->a + offs->a);
 }
 
-/* Component-wise scaled addition, clamped to AG_COLOR_LAST. */
+/*
+ * Compute the sum of a color c and an offset offs added (factor) times
+ * and clamped to AG_COLOR_LAST.
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_ColorAddScaled(AG_Color *_Nonnull dst, const AG_Color *_Nonnull c,
@@ -271,7 +302,9 @@ ag_color_add_scaled(AG_Color *dst, const AG_Color *c,
 	dst->a = AG_MIN(AG_COLOR_LAST, c->a + offs->a*factor);
 }
 
-/* Interpolate linearly between two colors. */
+/*
+ * Compute the point in RGB space between c1 and c2 closest to (num/denom).
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_ColorInterpolate(AG_Color *_Nonnull dst, const AG_Color *_Nonnull c1,
@@ -288,9 +321,9 @@ ag_color_interpolate(AG_Color *dst, const AG_Color *c1, const AG_Color *c2,
 	dst->a = c1->a + (c2->a - c1->a)*num/denom;
 }
 
-/* Compare two colors. */
+/* Compute the difference between two colors. */
 #ifdef AG_INLINE_HEADER
-static __inline__ int _Const_Attribute
+static __inline__ int _Pure_Attribute
 AG_ColorCompare(const AG_Color *_Nonnull A, const AG_Color *_Nonnull B)
 #else
 int
@@ -306,7 +339,6 @@ ag_color_compare(const AG_Color *A, const AG_Color *B)
 #ifdef AG_HAVE_FLOAT
 /*
  * Convert between RGB and HSV color representations.
- * TODO make this a _Const_Attribute function returning an AG_ColorHSV.
  */
 # ifdef AG_INLINE_HEADER
 static __inline__ void
