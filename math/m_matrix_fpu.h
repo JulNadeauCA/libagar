@@ -363,6 +363,8 @@ M_MatrixEntMulv_FPU(const void *_Nonnull pA, const void *_Nonnull pB,
 static __inline__ void
 M_MNAPreorder_FPU(void *_Nonnull A)
 {
+	/* silence unused parameter warning */
+	(void)(A);
 }
 
 static __inline__ void

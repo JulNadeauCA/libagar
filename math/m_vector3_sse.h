@@ -420,7 +420,7 @@ M_VectorSum3_SSE(const M_Vector3 *_Nonnull va, Uint count)
 {
 	__m128 r1;
 	M_Vector3 out;
-	int i;
+	Uint i;
 
 	r1 = _mm_setzero_ps();
 	for (i = 0; i < count; i++) {
