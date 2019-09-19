@@ -1156,10 +1156,8 @@ Destroy(void *_Nonnull obj)
 	for (i = 0; i < wid->nSurfaces; i++) {
 		AG_Surface *S;
 
-		if ((S = wid->surfaces[i]) && !WSURFACE_NODUP(wid,i)) {
-			S->flags &= ~(AG_SURFACE_MAPPED);
+		if ((S = wid->surfaces[i]) && !WSURFACE_NODUP(wid,i))
 			AG_SurfaceFree(S);
-		}
 	}
 	Free(wid->surfaces);
 	Free(wid->surfaceFlags);
@@ -2011,10 +2009,8 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *S)
 	if (s < 0 || s >= wid->nSurfaces)
 		AG_FatalError("No such surface");
 #endif
-	if ((Sprev = wid->surfaces[s]) && !WSURFACE_NODUP(wid,s)) {
-		Sprev->flags &= ~(AG_SURFACE_MAPPED);
+	if ((Sprev = wid->surfaces[s]) && !WSURFACE_NODUP(wid,s))
 		AG_SurfaceFree(Sprev);
-	}
 	if (S) {
 		S->flags |= AG_SURFACE_MAPPED;
 	}
