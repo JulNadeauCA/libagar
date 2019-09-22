@@ -319,6 +319,8 @@ WidgetSelected(AG_Event *_Nonnull event)
 	AG_ObjectFreeChildren(box);
 
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
+	/* XXX workaround style issue */
+	AG_SetStyle(nb, "color#selected", "rgb(125,125,125)");
 	nt = AG_NotebookAdd(nb, "AG_Widget", AG_BOX_VERT);
 	{
 		static const AG_FlagDescr flagDescr[] = {
@@ -336,15 +338,12 @@ WidgetSelected(AG_Event *_Nonnull event)
 		    { AG_WIDGET_USE_TEXT,		"USE_TEXT",		0 },
 		    { AG_WIDGET_CATCH_TAB,		"CATCH_TAB",		1 },
 		    { AG_WIDGET_USE_OPENGL,		"USE_OPENGL",		0 },
-		    { AG_WIDGET_GL_RESHAPE,		"GL_RESHAPE",		0 },
 		    { AG_WIDGET_NOSPACING,		"NOSPACING",		1 },
 		    { AG_WIDGET_UNFOCUSED_MOTION,	"UNFOCUSED_MOTION",	1 },
 		    { AG_WIDGET_UNFOCUSED_BUTTONUP,	"UNFOCUSED_BUTTONUP",	1 },
 		    { AG_WIDGET_UNFOCUSED_BUTTONDOWN,	"UNFOCUSED_BUTTONDOWN",	1 },
 		    { AG_WIDGET_UNFOCUSED_KEYDOWN,	"UNFOCUSED_KEYDOWN",	1 },
 		    { AG_WIDGET_UNFOCUSED_KEYUP,	"UNFOCUSED_KEYUP",	1 },
-		    { AG_WIDGET_TABLE_EMBEDDABLE,	"TABLE_EMBEDDABLE",	1 },
-		    { AG_WIDGET_QUEUE_SURFACE_BACKUP,	"QUEUE_SURFACE_BACKUP",	1 },
 		    { 0,				NULL,0 }
 		};
 
@@ -356,16 +355,19 @@ WidgetSelected(AG_Event *_Nonnull event)
 		AG_TextboxBindASCII(tb, OBJECT(wid)->name,
 		    sizeof(OBJECT(wid)->name));
 #endif
-		AG_LabelNew(nt, 0, _("Class: %s"), OBJECT(wid)->cls->name);
+		AG_LabelNew(nt, 0, _("Class: " AGSI_BOLD "%s" AGSI_RST "(3)"), OBJECT(wid)->cls->name);
 #ifdef AG_ENABLE_STRING
 		AG_LabelNewPolledMT(nt, AG_LABEL_HFILL, &OBJECT(wid)->pvt.lock,
-		    _("Parent window: %[objName] @ (AG_Window *)%p"),
+		    _("Parent window: " AGSI_YEL "%[objName]" AGSI_RST
+		      " @ (" AGSI_CYAN "AG_Window" AGSI_RST " *)%p"),
 		    &wid->window, &wid->window);
 		AG_LabelNewPolledMT(nt, AG_LABEL_HFILL, &OBJECT(wid)->pvt.lock,
-		    _("Parent driver: %[objName] @ (AG_Driver *)%p"),
+		    _("Parent driver: " AGSI_YEL "%[objName]" AGSI_RST
+		      " @ (" AGSI_CYAN "AG_Driver" AGSI_RST " *)%p"),
 		    &wid->drv, &wid->drv);
 		AG_LabelNewPolledMT(nt, AG_LABEL_HFILL, &OBJECT(wid)->pvt.lock,
-		    _("Driver class: %[objClassName](3) @ (AG_DriverClass *)%p"),
+		    _("Driver class: " AGSI_BOLD "%[objClassName]" AGSI_RST "(3)"
+		      " @ (" AGSI_CYAN "AG_DriverClass" AGSI_RST " *)%p"),
 		    &wid->drvOps, &wid->drvOps);
 #endif
 		AG_SeparatorNewHoriz(nt);
@@ -374,6 +376,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 		                          AG_SCROLLVIEW_EXPAND);
 		AG_CheckboxSetFromFlags(sv, 0, &wid->flags, flagDescr);
 		AG_SetStyle(sv, "font-family", "Courier");
+		AG_SetStyle(sv, "font-size", "80%");
 	}
 
 	if (OBJECT_CLASS(wid)->edit != NULL) {
@@ -501,7 +504,7 @@ AG_GuiDebugger(AG_Window *_Nonnull obj)
 	AG_WidgetFocus(tl);
 	mi = AG_TlistSetPopup(tl, "window");
 	AG_MenuSetPollFn(mi, ContextualMenu, "%p", tl);
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_BR, 1000, 500);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_BR, 1000, 550);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	return (win);
 }
