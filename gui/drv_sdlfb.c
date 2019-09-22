@@ -713,7 +713,7 @@ SDLFB_DrawLineH(void *_Nonnull obj, int x1, int x2, int y, const AG_Color *C)
 	case 4:
 		pDst = (Uint8 *)S->pixels + y*S->pitch + (x1 << 2);
 		pEnd = pDst + (dx << 2);
-		while (pDst < pEnd) {
+		while (pDst <= pEnd) {
 			*(Uint32 *)pDst = c;
 			pDst += 4;
 		}
@@ -721,7 +721,7 @@ SDLFB_DrawLineH(void *_Nonnull obj, int x1, int x2, int y, const AG_Color *C)
 	case 3:
 		pDst = (Uint8 *)S->pixels + y*S->pitch + x1*3;
 		pEnd = pDst + dx*3;
-		while (pDst < pEnd) {
+		while (pDst <= pEnd) {
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 			pDst[0] = (c >>16) & 0xff;
 			pDst[1] = (c >>8) & 0xff;
@@ -737,7 +737,7 @@ SDLFB_DrawLineH(void *_Nonnull obj, int x1, int x2, int y, const AG_Color *C)
 	case 2:
 		pDst = (Uint8 *)S->pixels + y*S->pitch + (x1 << 1);
 		pEnd = pDst + (dx << 1);
-		while (pDst < pEnd) {
+		while (pDst <= pEnd) {
 			*(Uint16 *)pDst = c;
 			pDst += 2;
 		}
@@ -1231,6 +1231,7 @@ SDLFB_DrawBoxRoundedTop(void *_Nonnull obj, const AG_Rect *r, int z, int rad,
 	u = 0;
 	x = 0;
 	y = rad;
+
 	while (x <= y) {
 		SDLFB_PutPixel32(obj, x2-x, y2-y, c[1]);
 		SDLFB_PutPixel32(obj, x2-y, y2-x, c[1]);
