@@ -420,7 +420,7 @@ ag_draw_box_rounded(void *obj, const AG_Rect *r, int z, int rad,
 	
 	AG_OBJECT_ISA(obj, "AG_Widget:*");
 
-	AG_ColorAdd(&c[0], cBg,  (z<0) ? &agSunkColor : &agRaisedColor);
+	AG_ColorAdd(&c[0], cBg,   (z<0) ? &agSunkColor : &agRaisedColor);
 	AG_ColorAdd(&c[1], &c[0], (z<0) ? &agLowColor  : &agHighColor);
 	AG_ColorAdd(&c[2], &c[0], (z<0) ? &agHighColor : &agLowColor);
 
@@ -446,7 +446,7 @@ ag_draw_box_rounded_top(void *obj, const AG_Rect *r, int z, int rad,
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color c[3];
+	AG_Color c1,c2;
 	AG_Rect rd;
 	
 	AG_OBJECT_ISA(obj, "AG_Widget:*");
@@ -456,11 +456,10 @@ ag_draw_box_rounded_top(void *obj, const AG_Rect *r, int z, int rad,
 	rd.w = r->w;
 	rd.h = r->h;
 
-	c[0] = *cBg;
-	AG_ColorAdd(&c[1], &c[0], (z<0) ? &agLowColor  : &agHighColor);
-	AG_ColorAdd(&c[2], &c[0], (z<0) ? &agHighColor : &agLowColor);
+	AG_ColorAdd(&c1, cBg, (z<0) ? &agLowColor  : &agHighColor);
+	AG_ColorAdd(&c2, cBg, (z<0) ? &agHighColor : &agLowColor);
 
-	wid->drvOps->drawBoxRoundedTop(wid->drv, &rd, z, rad, &c[0],&c[1],&c[2]);
+	wid->drvOps->drawBoxRoundedTop(wid->drv, &rd, z, rad, cBg, &c1,&c2);
 }
 
 /*

@@ -35,29 +35,10 @@
 #include <string.h>
 
 static int agMenuCounter = 0;
-AG_Menu   *agAppMenu = NULL;
-AG_Window *agAppMenuWin = NULL;
-AG_Mutex   agAppMenuLock;
+AG_Menu   *agAppMenu = NULL;		/* Global application menu (SW mode) */
+AG_Window *agAppMenuWin = NULL;		/* Application menu window */
 
 static void GetItemSize(AG_MenuItem *_Nonnull, int *_Nonnull, int *_Nonnull);
-
-/* Initialize global application menu data; called from AG_InitGUI(). */
-void
-AG_InitAppMenu(void)
-{
-	AG_MutexInitRecursive(&agAppMenuLock);
-	agAppMenu = NULL;
-	agAppMenuWin = NULL;
-}
-
-/* Cleanup global application menu data; called from AG_DestroyGUI(). */
-void
-AG_DestroyAppMenu(void)
-{
-	agAppMenu = NULL;
-	agAppMenuWin = NULL;
-	AG_MutexDestroy(&agAppMenuLock);
-}
 
 /* Create a new Menu widget. */
 AG_Menu *
@@ -86,7 +67,6 @@ AG_MenuNewGlobal(Uint flags)
 	Uint wMax, hMax;
 	Uint wFlags = AG_WINDOW_KEEPBELOW | AG_WINDOW_DENYFOCUS;
 
-	AG_MutexLock(&agAppMenuLock);
 	if (agAppMenu)
 		goto exists;
 
@@ -119,12 +99,9 @@ AG_MenuNewGlobal(Uint flags)
 		AG_WindowSetGeometryAligned(win, AG_WINDOW_TL, wMax/3, -1);
 	}
 	AG_WindowShow(win);
-
-	AG_MutexUnlock(&agAppMenuLock);
 	return (m);
 exists:
 	AG_SetErrorS("appMenu exists");
-	AG_MutexUnlock(&agAppMenuLock);
 	return (NULL);
 }
 
@@ -1033,7 +1010,6 @@ AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	return (mi);
 }
 
-#if AG_MODEL != AG_SMALL
 AG_MenuItem *
 AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
     Uint16 *pFlags, Uint16 flags, int inv, AG_Mutex *lock)
@@ -1103,7 +1079,6 @@ AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 	AG_ObjectUnlock(m);
 	return (mi);
 }
-#endif /* !AG_SMALL */
 
 void
 AG_MenuSetIntBoolMp(AG_MenuItem *mi, int *pBool, int inv, AG_Mutex *lock)

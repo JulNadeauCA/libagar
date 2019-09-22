@@ -162,17 +162,11 @@ extern AG_WindowQ agWindowHideQ;		/* AG_WindowHide() queue */
 extern AG_Window *_Nullable agWindowToFocus;	/* Window to focus next */
 extern AG_Window *_Nullable agWindowFocused;	/* Window holding focus */
 
-void AG_InitWindowSystem(void);
-void AG_DestroyWindowSystem(void);
-
 AG_Window *_Nullable AG_WindowNew(Uint);
-
-#if AG_MODEL != AG_SMALL
 AG_Window *_Nullable AG_WindowNewSw(void *_Nonnull, Uint);
 AG_Window *_Nullable AG_WindowNewNamedS(Uint, const char *_Nonnull);
 AG_Window *_Nullable AG_WindowNewNamed(Uint, const char *_Nonnull, ...)
 			              FORMAT_ATTRIBUTE(printf,2,3);
-#endif
 
 void AG_WindowSetCaption(AG_Window *_Nonnull, const char *_Nonnull, ...)
                         FORMAT_ATTRIBUTE(printf,2,3);
@@ -240,10 +234,8 @@ int AG_WindowIsFocused(AG_Window *_Nonnull)
                       _Warn_Unused_Result;
 
 void AG_WindowFocus(AG_Window *_Nonnull);
-#if AG_MODEL != AG_SMALL
 int  AG_WindowFocusNamed(const char *_Nonnull);
 int  AG_WindowFocusAtPos(AG_DriverSw *_Nonnull, int,int);
-#endif
 void AG_WindowCycleFocus(AG_Window *_Nonnull, int);
 
 void AG_WindowDetachGenEv(AG_Event *_Nonnull);

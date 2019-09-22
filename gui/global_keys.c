@@ -172,16 +172,10 @@ AG_ExecGlobalKeys(AG_KeySym sym, AG_KeyMod mod)
 			if (gk->fn != NULL) {
 				gk->fn();
 			} else if (gk->fn_ev != NULL) {
-#if AG_MODEL == AG_SMALL
-				AG_Event *dummy = Malloc(sizeof(AG_Event));
-				AG_EventInit(dummy);
-				gk->fn_ev(dummy);
-				free(dummy);
-#else
 				AG_Event dummy;
+
 				AG_EventInit(&dummy);
 				gk->fn_ev(&dummy);
-#endif
 			}
 			rv = 1;
 		}

@@ -103,21 +103,6 @@ static void AttachTitlebarAndIcons(AG_Driver *_Nonnull, AG_Window *_Nonnull);
 static void HideMinimizedIcon(AG_Window *_Nonnull);
 #endif
 
-void
-AG_InitWindowSystem(void)
-{
-	TAILQ_INIT(&agWindowDetachQ);
-	TAILQ_INIT(&agWindowShowQ);
-	TAILQ_INIT(&agWindowHideQ);
-	agWindowToFocus = NULL;
-	agWindowFocused = NULL;
-}
-
-void
-AG_DestroyWindowSystem(void)
-{
-}
-
 /*
  * Initialize a new window.
  * Called internally by AG_WindowNew*().
@@ -145,7 +130,6 @@ InitWindow(AG_Window *win, Uint flags)
 	AG_SetEvent(win, "window-close", AGWINDETACH(win));
 }
 
-#if AG_MODEL != AG_SMALL
 /*
  * Create a generic window under a specific single-window driver. Return
  * a pointer to the newly-allocated window, or NULL on failure.
@@ -175,7 +159,6 @@ AG_WindowNewSw(void *pDrv, Uint flags)
 	}
 	return (win);
 }
-#endif /* !AG_SMALL */
 
 /*
  * Create a new Agar window. On success return a pointer to the newly
@@ -217,7 +200,6 @@ AG_WindowNew(Uint flags)
 	return (win);
 }
 
-#if AG_MODEL != AG_SMALL
 /*
  * Create a new, uniquely named Agar window (string name).
  * On success return a pointer to the new window.
@@ -259,7 +241,6 @@ AG_WindowNewNamed(Uint flags, const char *fmt, ...)
 	va_end(ap);
 	return AG_WindowNewNamedS(flags, s);
 }
-#endif /* !AG_SMALL */
 
 /* Special implementation of AG_ObjectAttach() for AG_Window. */
 static void
@@ -1306,7 +1287,6 @@ out:
 	AG_UnlockVFS(&agDrivers);
 }
 
-#if AG_MODEL != AG_SMALL
 /*
  * Give focus to a window by name, and show it is if is hidden.
  */
@@ -1409,7 +1389,6 @@ UpdateWindowBG(AG_Window *_Nonnull win, const AG_Rect *_Nonnull rPrev)
 			AGDRIVER_CLASS(drv)->updateRegion(drv, &r);
 	}
 }
-#endif /* !AG_SMALL */
 
 /* Set window position and size (no bounds) */
 int
@@ -1499,10 +1478,9 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
-#if AG_MODEL != AG_SMALL
-		if (dc->type == AG_FRAMEBUFFER && win->visible && !new)
+		if (dc->type == AG_FRAMEBUFFER && win->visible && !new) {
 			UpdateWindowBG(win, &rPrev);
-#endif
+		}
 		break;
 	case AG_WM_MULTIPLE:
 		if ((AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&

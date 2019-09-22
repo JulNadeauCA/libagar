@@ -52,10 +52,8 @@ structure is declared as:
 typedef struct ag_color {
 #if AG_MODEL == AG_LARGE
 	Uint16 r,g,b,a;			/* LG (16-bit color) */
-#elif AG_MODEL == AG_MEDIUM
+#else
 	Uint8  r,g,b,a;			/* MD (8-bit color) */
-#elif AG_MODEL == AG_SMALL
-	Uint8  rg,ba;			/* SM (4-bit color) */
 #endif
 } AG_Color;
 .Ed
@@ -235,9 +233,9 @@ returns non-zero if the two colors differ.
 .Xr AG_MapColorRGBA 3 ,
 .Xr AG_MapPixelRGB 3 ,
 .Xr AG_MapPixelRGBA 3 ,
+.Xr AG_Surface 3 ,
 .Xr AG_Widget 3
 .Sh HISTORY
 Agar originally used packed pixels in a reference format to describe colors.
-.Nm
-was introduced in Agar 1.4.
-Agar 1.6 added support for 4-bit/component and 16-bit/component color.
+Agar 1.6 introduced color offsets and interpolation, as well as support for
+16-bit / component "Deep Color".

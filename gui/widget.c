@@ -85,7 +85,7 @@ AG_WidgetPalette agDefaultPalette = {{
        /*
         *    Color (BG)         Text (FG)         Line (FG)       Shape (FG)       Border (FG->BG)
 	*/
-#if (AG_MODEL == AG_SMALL) || (AG_MODEL == AG_MEDIUM)
+#if AG_MODEL == AG_MEDIUM
 /*def*/	{{125,125,125,255}, {240,240,240,255}, {50,50,50,255}, {200,200,200,255}, {100,100,100,255}},
 /*dis*/	{{160,160,160,255}, {240,240,240,255}, {70,70,70,255}, {150,150,150,255}, {100,100,100,255}},
 /*foc*/	{{125,125,125,255}, {240,240,240,255}, {50,50,50,255}, {200,200,200,255}, {100,100,100,255}},
@@ -1156,8 +1156,10 @@ Destroy(void *_Nonnull obj)
 	for (i = 0; i < wid->nSurfaces; i++) {
 		AG_Surface *S;
 
-		if ((S = wid->surfaces[i]) && !WSURFACE_NODUP(wid,i))
+		if ((S = wid->surfaces[i]) && !WSURFACE_NODUP(wid,i)) {
+			S->flags &= ~(AG_SURFACE_MAPPED);
 			AG_SurfaceFree(S);
+		}
 	}
 	Free(wid->surfaces);
 	Free(wid->surfaceFlags);
@@ -2009,8 +2011,10 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *S)
 	if (s < 0 || s >= wid->nSurfaces)
 		AG_FatalError("No such surface");
 #endif
-	if ((Sprev = wid->surfaces[s]) && !WSURFACE_NODUP(wid,s))
+	if ((Sprev = wid->surfaces[s]) && !WSURFACE_NODUP(wid,s)) {
+		Sprev->flags &= ~(AG_SURFACE_MAPPED);
 		AG_SurfaceFree(Sprev);
+	}
 	if (S) {
 		S->flags |= AG_SURFACE_MAPPED;
 	}

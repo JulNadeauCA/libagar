@@ -34,27 +34,22 @@ typedef struct ag_checkbox {
 __BEGIN_DECLS
 extern AG_WidgetClass agCheckboxClass;
 
-#if AG_MODEL != AG_SMALL
-AG_Checkbox *_Nonnull AG_CheckboxNewFn(void *_Nullable, Uint,
-                                       const char *_Nullable,
-				       _Nonnull AG_EventFn,
-				       const char *_Nullable, ...);
-
-AG_Checkbox *_Nonnull AG_CheckboxNewInt(void *_Nullable, Uint,
-                                        const char *_Nullable,
+AG_Checkbox *_Nonnull AG_CheckboxNewFn(void *_Nullable, Uint, const char *_Nullable,
+				       _Nonnull AG_EventFn, const char *_Nullable,
+				       ...);
+AG_Checkbox *_Nonnull AG_CheckboxNewInt(void *_Nullable, Uint, const char *_Nullable,
                                         int *_Nonnull);
-#define AG_CheckboxNewUint(o,f,l,p) AG_CheckboxNewInt((o),(f),(l),(int *)(p))
+#define               AG_CheckboxNewUint(o,f,l,p) \
+                      AG_CheckboxNewInt((o),(f),(l),(int *)(p))
 
-void AG_CheckboxSetFromFlags(void *_Nullable, Uint, Uint *_Nonnull,
-                             const AG_FlagDescr *_Nonnull);
+void                  AG_CheckboxSetFromFlags(void *_Nullable, Uint, Uint *_Nonnull,
+                                              const AG_FlagDescr *_Nonnull);
 
 AG_Checkbox *_Nonnull AG_CheckboxNewFlag(void *_Nullable, Uint, const char *_Nullable,
                                          Uint *_Nonnull, Uint);
-AG_Checkbox *_Nonnull AG_CheckboxNew(void *_Nullable, Uint,
-                                     const char *_Nullable, ...)
-                                    FORMAT_ATTRIBUTE(printf,3,4);
-#endif /* !AG_SMALL */
 
+AG_Checkbox *_Nonnull AG_CheckboxNew(void *_Nullable, Uint, const char *_Nullable, ...)
+                                    FORMAT_ATTRIBUTE(printf,3,4);
 AG_Checkbox *_Nonnull AG_CheckboxNewS(void *_Nullable, Uint, const char *_Nullable);
 
 int  AG_CheckboxGetState(AG_Checkbox *_Nonnull) _Pure_Attribute;

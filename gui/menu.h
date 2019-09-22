@@ -147,12 +147,9 @@ __BEGIN_DECLS
 extern AG_WidgetClass agMenuClass;
 extern AG_WidgetClass agMenuViewClass;
 
-extern AG_Menu   *_Nullable    agAppMenu;
-extern AG_Window *_Nullable    agAppMenuWin;
-extern _Nonnull_Mutex AG_Mutex agAppMenuLock;
+extern AG_Menu   *_Nullable agAppMenu;
+extern AG_Window *_Nullable agAppMenuWin;
 
-void               AG_InitAppMenu(void);
-void               AG_DestroyAppMenu(void);
 AG_Menu	*_Nonnull  AG_MenuNew(void *_Nullable, Uint);
 AG_Menu	*_Nullable AG_MenuNewGlobal(Uint);
 void	           AG_MenuDraw(void *_Nonnull);
@@ -260,7 +257,6 @@ AG_MenuItem *_Nonnull AG_MenuInt8FlagsMp(AG_MenuItem *_Nonnull,
 					 const AG_Surface *_Nullable,
 					 Uint8 *_Nonnull, Uint8, int,
 					 _Nonnull_Mutex AG_Mutex *_Nullable);
-#if AG_MODEL != AG_SMALL
 AG_MenuItem *_Nonnull AG_MenuInt16FlagsMp(AG_MenuItem *_Nonnull,
 					 const char *_Nullable,
 					 const AG_Surface *_Nullable,
@@ -271,7 +267,6 @@ AG_MenuItem *_Nonnull AG_MenuInt32FlagsMp(AG_MenuItem *_Nonnull,
 					  const AG_Surface *_Nullable,
 					  Uint32 *_Nonnull, Uint32, int,
 					  _Nonnull_Mutex AG_Mutex *_Nullable);
-#endif
 
 #define	AG_MenuIntBool(mi,t,i,p,inv) \
 	AG_MenuIntBoolMp((mi),(t),(i),(p),(inv),NULL)

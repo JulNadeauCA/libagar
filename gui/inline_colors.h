@@ -15,12 +15,9 @@ ag_grayscale_8(Uint8 v, Uint8 a)
 #if AG_MODEL == AG_LARGE
 	G.v = AG_8to32(v);
 	G.a = AG_8to32(a);
-#elif AG_MODEL == AG_MEDIUM
+#else
 	G.v = AG_8to16(v);
 	G.a = AG_8to16(a);
-#elif AG_MODEL == AG_SMALL
-	G.v = v;
-	G.a = a;
 #endif
 	return (G);
 }
@@ -40,12 +37,9 @@ ag_grayscale_16(Uint16 v, Uint16 a)
 #if AG_MODEL == AG_LARGE
 	G.v = AG_16to32(v);
 	G.a = AG_16to32(a);
-#elif AG_MODEL == AG_MEDIUM
+#else
 	G.v = v;
 	G.a = a;
-#elif AG_MODEL == AG_SMALL
-	G.v = AG_16to8(v);
-	G.a = AG_16to8(a);
 #endif
 	return (G);
 }
@@ -65,12 +59,9 @@ ag_grayscale_32(Uint32 v, Uint32 a)
 #if AG_MODEL == AG_LARGE
 	G.v = v;
 	G.a = a;
-#elif AG_MODEL == AG_MEDIUM
+#else
 	G.v = AG_32to16(v);
 	G.a = AG_32to16(a);
-#elif AG_MODEL == AG_SMALL
-	G.v = AG_32to8(v);
-	G.a = AG_32to8(a);
 #endif
 	return (G);
 }
@@ -90,14 +81,10 @@ ag_color_rgb_8(AG_Color *c, Uint8 r, Uint8 g, Uint8 b)
 	c->r = AG_8to16(r);
 	c->g = AG_8to16(g);
 	c->b = AG_8to16(b);
-#elif AG_MODEL == AG_MEDIUM
+#else
 	c->r = r;
 	c->g = g;
 	c->b = b;
-#elif AG_MODEL == AG_SMALL
-	c->r = AG_8to4(r);
-	c->g = AG_8to4(g);
-	c->b = AG_8to4(b);
 #endif
 	c->a = AG_OPAQUE;
 }
@@ -118,16 +105,11 @@ ag_color_rgba_8(AG_Color *c, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	c->g = AG_8to16(g);
 	c->b = AG_8to16(b);
 	c->a = AG_8to16(a);
-#elif AG_MODEL == AG_MEDIUM
+#else
 	c->r = r;
 	c->g = g;
 	c->b = b;
 	c->a = a;
-#elif AG_MODEL == AG_SMALL
-	c->r = AG_8to4(r);
-	c->g = AG_8to4(g);
-	c->b = AG_8to4(b);
-	c->a = AG_8to4(a);
 #endif
 }
 
@@ -146,14 +128,10 @@ ag_color_rgb_16(AG_Color *c, Uint16 r, Uint16 g, Uint16 b)
 	c->r = r;
 	c->g = g;
 	c->b = b;
-#elif AG_MODEL == AG_MEDIUM
+#else
 	c->r = AG_16to8(r);
 	c->g = AG_16to8(g);
 	c->b = AG_16to8(b);
-#elif AG_MODEL == AG_SMALL
-	c->r = AG_16to4(r);
-	c->g = AG_16to4(g);
-	c->b = AG_16to4(b);
 #endif
 	c->a = AG_OPAQUE;
 }
@@ -174,16 +152,11 @@ ag_color_rgba_16(AG_Color *c, Uint16 r, Uint16 g, Uint16 b, Uint16 a)
 	c->g = g;
 	c->b = b;
 	c->a = a;
-#elif AG_MODEL == AG_MEDIUM
+#else
 	c->r = AG_16to8(r);
 	c->g = AG_16to8(g);
 	c->b = AG_16to8(b);
 	c->a = AG_16to8(a);
-#elif AG_MODEL == AG_SMALL
-	c->r = AG_16to4(r);
-	c->g = AG_16to4(g);
-	c->b = AG_16to4(b);
-	c->a = AG_16to4(a);
 #endif
 }
 
@@ -203,16 +176,11 @@ ag_color_hex_16(AG_Color *c, Uint16 h)
 	c->g = AG_4to16((h & 0x0f00) >> 8);
 	c->b = AG_4to16((h & 0x00f0) >> 4);
 	c->a = AG_4to16((h & 0x000f));
-#elif AG_MODEL == AG_MEDIUM
+#else
 	c->r = AG_4to8((h & 0xf000) >> 12);
 	c->g = AG_4to8((h & 0x0f00) >> 8);
 	c->b = AG_4to8((h & 0x00f0) >> 4);
 	c->a = AG_4to8((h & 0x000f));
-#elif AG_MODEL == AG_SMALL
-	c->r = (h & 0xf000) >> 3;
-	c->g = (h & 0x0f00) >> 2;
-	c->b = (h & 0x00f0) >> 1;
-	c->a = (h & 0x000f);
 #endif
 }
 
@@ -232,16 +200,11 @@ ag_color_hex_32(AG_Color *c, Uint32 h)
 	c->g = AG_8to16((h & 0x00ff0000) >> 16);
 	c->b = AG_8to16((h & 0x0000ff00) >> 8);
 	c->a = AG_8to16((h & 0x000000ff));
-#elif AG_MODEL == AG_MEDIUM
+#else
 	c->r = (h & 0xff000000) >> 24;
 	c->g = (h & 0x00ff0000) >> 16;
 	c->b = (h & 0x0000ff00) >> 8;
 	c->a = (h & 0x000000ff);
-#elif AG_MODEL == AG_SMALL
-	c->r = AG_8to4((h & 0xff000000) >> 24);
-	c->g = AG_8to4((h & 0x00ff0000) >> 16);
-	c->b = AG_8to4((h & 0x0000ff00) >> 8);
-	c->a = AG_8to4((h & 0x000000ff));
 #endif
 }
 

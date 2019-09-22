@@ -165,10 +165,8 @@ GetState(AG_Variable *_Nonnull binding, void *_Nonnull p)
 		return (int)(*(Uint8 *)p & binding->info.bitmask.u8);
 	case AG_VARIABLE_P_FLAG16:
 		return (int)(*(Uint16 *)p & binding->info.bitmask.u16);
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_FLAG32:
 		return (int)(*(Uint32 *)p & binding->info.bitmask.u32);
-#endif
 	default:
 		return (0);
 	}
@@ -295,11 +293,9 @@ SetState(AG_Socket *_Nonnull sock, AG_Variable *_Nonnull binding,
 	case AG_VARIABLE_P_FLAG16:
 		AG_SETFLAGS(*(Uint16 *)p, binding->info.bitmask.u16, v);
 		break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_FLAG32:
 		AG_SETFLAGS(*(Uint32 *)p, binding->info.bitmask.u32, v);
 		break;
-#endif
 	default:
 		break;
 	}

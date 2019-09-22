@@ -95,9 +95,8 @@
 #ifdef HAVE_FLOAT
 #include <agar/gui/gui_math.h>
 #endif
-#if AG_MODEL != AG_SMALL
+
 #include <agar/gui/fonts_data.h>
-#endif
 
 #include <string.h>
 #include <stdarg.h>
@@ -113,10 +112,8 @@ const char *agDefaultFaceBitmap = "_agFontMinimal";
 
 /* Statically compiled fonts */
 AG_StaticFont *agBuiltinFonts[] = {
-#if AG_MODEL != AG_SMALL
 	&agFontVera,
 	&agFontMinimal,
-#endif
 	NULL
 };
 

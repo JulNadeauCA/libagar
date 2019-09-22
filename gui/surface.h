@@ -421,7 +421,7 @@ void AG_GetColor64_Gray16(Uint64, AG_GrayscaleMode,
 # define AG_GetColor_RGB16(px,pf,r,g,b)       AG_GetColor32_RGB16((px),(pf),(r),(g),(b))
 # define AG_GetColor_RGBA16(px,pf,r,g,b,a)    AG_GetColor32_RGBA16((px),(pf),(r),(g),(b),(a))
 
-#endif /* !AG_LARGE */
+#endif /* AG_LARGE */
 
 void AG_AnimStateInit(AG_AnimState *_Nonnull, AG_Surface *_Nonnull);
 void AG_AnimStateDestroy(AG_AnimState *_Nonnull);
@@ -472,7 +472,7 @@ Uint64 ag_surface_get64(const AG_Surface *_Nonnull, int,int) _Pure_Attribute;
 void ag_surface_put64_at(AG_Surface *_Nonnull, Uint8 *_Nonnull, Uint64);
 void ag_surface_put64(AG_Surface *_Nonnull, int,int, Uint64);
 
-# endif /* SMALL or MEDIUM */
+# endif /* AG_LARGE */
 
 Uint32 ag_surface_get32_at(const AG_Surface *_Nonnull, const Uint8 *_Nonnull)
                           _Pure_Attribute;

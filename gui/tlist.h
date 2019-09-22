@@ -9,9 +9,7 @@
 #include <agar/gui/begin.h>
 
 #ifndef AG_TLIST_LABEL_MAX
-# if AG_MODEL == AG_SMALL
-#  define AG_TLIST_LABEL_MAX 60
-# elif AG_MODEL == AG_MEDIUM
+# if AG_MODEL == AG_MEDIUM
 #  define AG_TLIST_LABEL_MAX 252
 # elif AG_MODEL == AG_LARGE
 #  define AG_TLIST_LABEL_MAX 508

@@ -323,12 +323,10 @@ GetPxCoordsGeneral(AG_Scrollbar *_Nonnull sb, int *_Nonnull x, int *_Nonnull len
 #endif
 	case AG_VARIABLE_UINT8:   GET_PX_COORDS(Uint8);   break;
 	case AG_VARIABLE_SINT8:   GET_PX_COORDS(Sint8);   break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT16:  GET_PX_COORDS(Uint16);  break;
 	case AG_VARIABLE_SINT16:  GET_PX_COORDS(Sint16);  break;
 	case AG_VARIABLE_UINT32:  GET_PX_COORDS(Uint32);  break;
 	case AG_VARIABLE_SINT32:  GET_PX_COORDS(Sint32);  break;
-#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:  GET_PX_COORDS(Uint64);  break;
 	case AG_VARIABLE_SINT64:  GET_PX_COORDS(Sint64);  break;
@@ -356,12 +354,10 @@ SeekToPxCoordsGeneral(AG_Scrollbar *_Nonnull sb, int x,
 #endif
 	case AG_VARIABLE_UINT8:   MAP_PX_COORDS(Uint8);   break;
 	case AG_VARIABLE_SINT8:   MAP_PX_COORDS(Sint8);   break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT16:  MAP_PX_COORDS(Uint16);  break;
 	case AG_VARIABLE_SINT16:  MAP_PX_COORDS(Sint16);  break;
 	case AG_VARIABLE_UINT32:  MAP_PX_COORDS(Uint32);  break;
 	case AG_VARIABLE_SINT32:  MAP_PX_COORDS(Sint32);  break;
-#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:  MAP_PX_COORDS(Uint64);  break;
 	case AG_VARIABLE_SINT64:  MAP_PX_COORDS(Sint64);  break;
@@ -449,12 +445,10 @@ IncrementGeneral(AG_Scrollbar *_Nonnull sb, void *_Nonnull pVal,
 #endif
 	case AG_VARIABLE_UINT8:   INCREMENT(Uint8);	break;
 	case AG_VARIABLE_SINT8:   INCREMENT(Sint8);	break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT16:  INCREMENT(Uint16);	break;
 	case AG_VARIABLE_SINT16:  INCREMENT(Sint16);	break;
 	case AG_VARIABLE_UINT32:  INCREMENT(Uint32);	break;
 	case AG_VARIABLE_SINT32:  INCREMENT(Sint32);	break;
-#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:  INCREMENT(Uint64);	break;
 	case AG_VARIABLE_SINT64:  INCREMENT(Sint64);	break;
@@ -720,12 +714,10 @@ OnShowGeneral(AG_Scrollbar *_Nonnull sb, const AG_Event *_Nonnull event,
 #endif
 	case AG_VARIABLE_UINT8:  SET_DEF(AG_SetUint8,  0U, 0xffU, 1U); break;
 	case AG_VARIABLE_SINT8:  SET_DEF(AG_SetSint8,  0,  0x7f,  1); break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT16: SET_DEF(AG_SetUint16, 0U,  0xffffU, 1U); break;
 	case AG_VARIABLE_SINT16: SET_DEF(AG_SetSint16, 0,   0x7fff,  1); break;
 	case AG_VARIABLE_UINT32: SET_DEF(AG_SetUint32, 0UL, 0xffffffffUL, 1UL); break;
 	case AG_VARIABLE_SINT32: SET_DEF(AG_SetSint32, 0L,  0x7fffffffL,  1L); break;
-#endif
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64: SET_DEF(AG_SetUint64, 0ULL, 0xffffffffffffffffULL, 1ULL); break;
 	case AG_VARIABLE_SINT64: SET_DEF(AG_SetSint64, 0LL,  0x7fffffffffffffffLL,  1LL); break;
@@ -1085,9 +1077,8 @@ Edit(void *_Nonnull obj)
 	AG_Scrollbar *sb = obj;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
-#if AG_MODEL != AG_SMALL
 	AG_CheckboxSetFromFlags(box, 0, &sb->flags, flagDescr);
-#endif
+
 	AG_LabelNewS(box, 0, _("Direction:"));
 	AG_RadioNewUint(box, 0, sbTypeNames, (Uint *)&sb->type);
 

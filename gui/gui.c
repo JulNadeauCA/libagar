@@ -81,9 +81,8 @@
 #include <agar/gui/icons.h>
 #include <agar/gui/text.h>
 
-#if AG_MODEL != AG_SMALL
+/* Import icon bitmap data */
 #include <agar/gui/icons_data.h>
-#endif
 
 static struct {
 	const char *_Nonnull key;
@@ -343,17 +342,24 @@ AG_InitGUI(Uint flags)
 {
 	void **ops;
 
-	for (ops = &agStdWidgets[0]; *ops != NULL; ops++) {
+	/* Register standard GUI widget classes. */
+	for (ops = &agStdWidgets[0]; *ops != NULL; ops++)
 		AG_RegisterClass(*ops);
-	}
-#if AG_MODEL != AG_SMALL
+	
+	/* Initialize the statically-compiled icon data. */
 	agIcon_Init();
-#endif
-	if (AG_InitTextSubsystem() == -1) {
+
+	/* Start the font engine. */
+	if (AG_InitTextSubsystem() == -1)
 		return (-1);
-	}
-	AG_InitWindowSystem();
-	AG_InitAppMenu();
+
+	/* Initialize global Window lists and pointers. */
+	TAILQ_INIT(&agWindowDetachQ);
+	TAILQ_INIT(&agWindowShowQ);
+	TAILQ_INIT(&agWindowHideQ);
+	agWindowToFocus = NULL;
+	agWindowFocused = NULL;
+
 	return (0);
 }
 
@@ -393,12 +399,10 @@ AG_DestroyGUI(void)
 	agDriverOps = NULL;
 	AG_UnlockVFS(&agDrivers);
 
-	AG_DestroyAppMenu();
-	AG_DestroyWindowSystem();
 	AG_DestroyTextSubsystem();
-#if AG_MODEL != AG_SMALL
+
 	agIcon_Destroy();
-#endif
+
 	for (ops = &agStdWidgets[0]; *ops != NULL; ops++)
 		AG_UnregisterClass(*ops);
 	
@@ -495,19 +499,7 @@ AG_InitGraphics(const char *spec)
 					break;
 			}
 			if (tok == NULL) {
-#if AG_MODEL == AG_SMALL
-				AG_SetErrorS(_("No such Agar driver"));
-#else
-				char av[256];
-				
-				for (pd = &agDriverList[0], av[0] = '\0';
-				    *pd != NULL; pd++) {
-					Strlcat(av, " ", sizeof(av));
-					Strlcat(av, (*pd)->name, sizeof(av));
-				}
-				AG_SetError(_("No such Agar driver: \"%s\"\n"
-				              "(available: <%s >)"), specBuf, av);
-#endif
+				AG_SetError(_("No such Agar driver: \"%s\""), specBuf);
 				goto fail;
 			}
 		}
@@ -522,7 +514,7 @@ AG_InitGraphics(const char *spec)
 			}
 		}
 		if (dc == NULL) {
-			AG_SetError(_("No graphics drivers are available"));
+			AG_SetError(_("No Agar drivers are available"));
 			goto fail;
 		}
 	}

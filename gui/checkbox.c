@@ -36,7 +36,6 @@
 
 static void DrawMouseOver(AG_Checkbox *_Nonnull);
 
-#if AG_MODEL != AG_SMALL
 AG_Checkbox *
 AG_CheckboxNewFn(void *parent, Uint flags, const char *label, AG_EventFn fn,
     const char *fmt, ...)
@@ -113,7 +112,6 @@ AG_CheckboxNew(void *parent, Uint flags, const char *fmt, ...)
 	}
 	return (cb);
 }
-#endif /* !AG_SMALL */
 
 AG_Checkbox *
 AG_CheckboxNewS(void *parent, Uint flags, const char *label)
@@ -272,11 +270,9 @@ AG_CheckboxGetState(AG_Checkbox *cb)
 	case AG_VARIABLE_P_FLAG16:
 		rv = *(Uint16 *)p & bState->info.bitmask.u16;
 		break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_FLAG32:
 		rv = *(Uint32 *)p & bState->info.bitmask.u32;
 		break;
-#endif
 	case AG_VARIABLE_UINT8:
 	case AG_VARIABLE_SINT8:
 		rv = bState->data.u8;
@@ -293,7 +289,6 @@ AG_CheckboxGetState(AG_Checkbox *cb)
 	case AG_VARIABLE_P_SINT16:
 		rv = *(Uint16 *)p;
 		break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32:
 	case AG_VARIABLE_SINT32:
 		rv = bState->data.u32;
@@ -302,7 +297,6 @@ AG_CheckboxGetState(AG_Checkbox *cb)
 	case AG_VARIABLE_P_SINT32:
 		rv = *(Uint32 *)p;
 		break;
-#endif
 	case AG_VARIABLE_INT:
 	case AG_VARIABLE_UINT:
 		rv = bState->data.i;
@@ -405,11 +399,9 @@ AG_CheckboxSetState(AG_Checkbox *cb, int newState)
 	case AG_VARIABLE_P_FLAG16:
 		AG_SETFLAGS(*(Uint16 *)p, V->info.bitmask.u16, newState);
 		break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_FLAG32:
 		AG_SETFLAGS(*(Uint32 *)p, V->info.bitmask.u32, newState);
 		break;
-#endif
 	case AG_VARIABLE_UINT8:
 	case AG_VARIABLE_SINT8:
 		V->data.u8 = (Uint8)newState;
@@ -426,7 +418,6 @@ AG_CheckboxSetState(AG_Checkbox *cb, int newState)
 	case AG_VARIABLE_P_SINT16:
 		*(Uint16 *)p = newState;
 		break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32:
 	case AG_VARIABLE_SINT32:
 		V->data.u32 = (Uint32)newState;
@@ -435,7 +426,6 @@ AG_CheckboxSetState(AG_Checkbox *cb, int newState)
 	case AG_VARIABLE_P_SINT32:
 		*(Uint32 *)p = newState;
 		break;
-#endif
 	default:
 		break;
 	}
@@ -492,7 +482,6 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			AG_PostEvent(cb, "checkbox-changed", "%i", (Uint16)*state);
 		}
 		break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_FLAG32:
 		{
 			Uint32 *state = (Uint32 *)p;
@@ -500,7 +489,6 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			AG_PostEvent(cb, "checkbox-changed", "%i", (Uint32)*state);
 		}
 		break;
-#endif
 	case AG_VARIABLE_UINT8:
 	case AG_VARIABLE_SINT8:
 		{
@@ -533,7 +521,6 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			AG_PostEvent(cb, "checkbox-changed", "%i", (int)*state);
 		}
 		break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32:
 	case AG_VARIABLE_SINT32:
 		{
@@ -550,7 +537,6 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			AG_PostEvent(cb, "checkbox-changed", "%i", (int)*state);
 		}
 		break;
-#endif /* !AG_SMALL */
 	default:
 		break;
 	}

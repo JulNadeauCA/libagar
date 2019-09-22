@@ -524,18 +524,14 @@ GetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState,
 		return (int)(*(Uint8 *)p);
 	case AG_VARIABLE_UINT16:
 		return (int)(*(Uint16 *)p);
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32:
 		return (int)(*(Uint32 *)p);
-#endif
 	case AG_VARIABLE_P_FLAG8:
 		return (int)(*(Uint8 *)p & bState->info.bitmask.u8);
 	case AG_VARIABLE_P_FLAG16:
 		return (int)(*(Uint16 *)p & bState->info.bitmask.u16);
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_FLAG32:
 		return (int)(*(Uint32 *)p & bState->info.bitmask.u32);
-#endif
 	default:
 		break;
 	}
@@ -553,22 +549,18 @@ SetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState,
 	case AG_VARIABLE_UINT16:
 		*(Uint16 *)p = v;
 		break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_UINT32:
 		*(Uint32 *)p = v;
 		break;
-#endif
 	case AG_VARIABLE_P_FLAG8:
 		AG_SETFLAGS(*(Uint8 *)p, bState->info.bitmask.u8, v);
 		break;
 	case AG_VARIABLE_P_FLAG16:
 		AG_SETFLAGS(*(Uint16 *)p, bState->info.bitmask.u16, v);
 		break;
-#if AG_MODEL != AG_SMALL
 	case AG_VARIABLE_P_FLAG32:
 		AG_SETFLAGS(*(Uint32 *)p, bState->info.bitmask.u32, v);
 		break;
-#endif
 	}
 }
 

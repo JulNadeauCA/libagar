@@ -29,18 +29,11 @@ typedef Sint8  AG_ComponentOffset;
 typedef Uint16 AG_GrayComponent;
 typedef Uint32 AG_Pixel;
 #elif AG_MODEL == AG_SMALL		/* SM (12-bit color + 4-bit alpha) */
-# define AG_COMPONENT_BITS 4
-# define AG_COLOR_LAST  15
-# define AG_COLOR_LASTF 15.0f
-# define AG_COLOR_LASTD 15.0
-typedef struct ag_color { Uint8 r,g,b,a; } AG_Color;
-typedef struct ag_color_offset { Sint8 r,g,b,a; } AG_ColorOffset;
-typedef struct ag_grayscale { Uint8 v,a; } AG_Grayscale;
-typedef Uint8  AG_Component;
-typedef Sint8  AG_ComponentOffset;
-typedef Uint8  AG_GrayComponent;
-typedef Uint16 AG_Pixel;
-#endif /* SMALL */
+/*
+ * The SMALL memory model requires micro-Agar (in ../micro/).
+ */
+# error "SMALL mode requires micro-Agar"
+#endif
 
 #define AG_COLOR_FIRST 0
 #define AG_TRANSPARENT AG_COLOR_FIRST	/* Fully transparent */
@@ -99,7 +92,7 @@ typedef struct ag_color_hsv {
 # define AG_MapRGB_HSVf(r,g,b,h,s,v) AG_MapRGB16_HSVf((r),(g),(b),(h),(s),(v))
 # define AG_MapHSVf_RGB(h,s,v,r,g,b) AG_MapHSVf_RGB16((h),(s),(v),(r),(g),(b))
 
-#else /* MEDIUM or SMALL */
+#else /* !AG_LARGE */
 
 # define AG_4toH(c)      AG_4to8(c)
 # define AG_8toH(c)      (c)
@@ -116,7 +109,7 @@ typedef struct ag_color_hsv {
 # define AG_MapRGB_HSVf(r,g,b,h,s,v) AG_MapRGB8_HSVf((r),(g),(b),(h),(s),(v))
 # define AG_MapHSVf_RGB(h,s,v,r,g,b) AG_MapHSVf_RGB8((h),(s),(v),(r),(g),(b))
 
-#endif /* MEDIUM or SMALL */
+#endif /* !AG_LARGE */
 
 #define AG_ColorRGB(c,r,g,b)     AG_ColorRGB_8((c),(r),(g),(b))
 #define AG_ColorRGBA(c,r,g,b,a)  AG_ColorRGBA_8((c),(r),(g),(b),(a))
