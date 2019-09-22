@@ -168,7 +168,7 @@ Draw(void *obj)
 	AG_DrawRectFilled(nb, &nb->r, &c);
 	AG_ColorAdd(&cHigh, &c, &agHighColor);
 	AG_ColorAdd(&cLow,  &c, &agLowColor);
-	AG_DrawLineV(nb, 0, nb->bar_h, HEIGHT(nb),
+	AG_DrawLineV(nb, 0, nb->bar_h, HEIGHT(nb)-1,
 	    (nb->sel_tab == TAILQ_FIRST(&nb->tabs)) ? &cLow : &cHigh);
 	
 	if (nb->sel_tab) {
@@ -197,13 +197,9 @@ Draw(void *obj)
 			}
 		}
 		if (isSelected || tabIdx == nb->mouseOver) {
-			AG_DrawBoxRoundedTop(nb, &r,
-			    -1, boxDia >> 1,
-			    &c);
+			AG_DrawBoxRoundedTop(nb, &r, -1, boxDia >> 1, &c);
 		} else {
-			AG_DrawBoxRoundedTop(nb, &r,
-			    +1, boxDia >> 1,
-			    &cDark);
+			AG_DrawBoxRoundedTop(nb, &r, +1, boxDia >> 1, &c);
 		}
 
 		if (lbl) {
@@ -246,8 +242,8 @@ Draw(void *obj)
 	if (xSelLast < WIDTH(nb)) {
 		AG_DrawLineH(nb, xSelLast-1, WIDTH(nb)-1, nb->bar_h, &cHigh);
 	}
-	AG_DrawLineH(nb, 0, WIDTH(nb)-1, HEIGHT(nb)-1,         &cLow);
-	AG_DrawLineV(nb, WIDTH(nb), nb->bar_h+1, HEIGHT(nb)-1, &cLow);
+	AG_DrawLineH(nb, 0, WIDTH(nb)-1, HEIGHT(nb)-1,       &cLow);
+	AG_DrawLineV(nb, WIDTH(nb), nb->bar_h+1, HEIGHT(nb), &cLow);
 }
 
 static void
