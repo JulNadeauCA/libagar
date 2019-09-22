@@ -1065,11 +1065,15 @@ Draw(void *_Nonnull obj)
 	if (ed->yMax == 1)
 		ed->xMax = x;
 	
-	/* Render the cursor */
+	/*
+	 * Draw the cursor.
+	 * TODO different styles.
+	 * TODO an option to hide the cursor behind any overlapping selection.
+	 */
 	if (AG_WidgetIsFocused(ed) && (flags & AG_EDITABLE_BLINK_ON) &&
 	    (ed->y >= 0 && ed->y <= ed->yMax-1)) {
 		AG_DrawLineV(ed,
-		    ed->xCurs - ed->x, (yCurs + 1),
+		    ed->xCurs - ed->x + 1, (yCurs + 1),
 		    (yCurs + lineSkip - 1),
 		    &WCOLOR(ed,AG_TEXT_COLOR));
 	}
