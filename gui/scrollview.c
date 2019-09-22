@@ -84,23 +84,23 @@ PlaceWidgets(AG_Scrollview *_Nonnull sv, int *_Nullable wTot,
 		aChld.h = rChld.h;
 		AG_WidgetSizeAlloc(chld, &aChld);
 		switch (sv->pack) {
-		case AG_PACK_HORIZ:
+		case AG_SCROLLVIEW_HORIZ:
 			aChld.x += aChld.w;
 			break;
-		case AG_PACK_VERT:
+		case AG_SCROLLVIEW_VERT:
 			aChld.y += aChld.h;
 			break;
 		}
 		ClipWidgets(sv, chld);
 	}
 	switch (sv->pack) {
-	case AG_PACK_HORIZ:
+	case AG_SCROLLVIEW_HORIZ:
 		if (wTot != NULL)
 			*wTot = aChld.x + sv->xOffs;
 		if (hTot != NULL)
 			*hTot = aChld.y+aChld.h + sv->yOffs;
 		break;
-	case AG_PACK_VERT:
+	case AG_SCROLLVIEW_VERT:
 		if (wTot != NULL)
 			*wTot = aChld.x+aChld.w + sv->xOffs;
 		if (hTot != NULL)
@@ -300,7 +300,7 @@ Init(void *_Nonnull obj)
 	sv->vbar = NULL;
 	sv->wBar = 0;
 	sv->hBar = 0;
-	sv->pack = AG_PACK_VERT;
+	sv->pack = AG_SCROLLVIEW_VERT;
 	sv->r.x = 0;
 	sv->r.y = 0;
 	sv->r.w = 0;
@@ -345,11 +345,11 @@ SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 		if (rChld.w > wMax) { wMax = rChld.w; }
 		if (rChld.h > hMax) { hMax = rChld.h; }
 		switch (sv->pack) {
-		case AG_PACK_HORIZ:
+		case AG_SCROLLVIEW_HORIZ:
 			r->h = MAX(r->h, hMax);
 			r->w += rChld.w;
 			break;
-		case AG_PACK_VERT:
+		case AG_SCROLLVIEW_VERT:
 			r->w = MAX(r->w, wMax);
 			r->h += rChld.h;
 			break;

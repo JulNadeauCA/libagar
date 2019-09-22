@@ -52,12 +52,6 @@ typedef enum ag_widget_sizespec {
 	AG_WIDGET_FILL			/* Fill remaining space */
 } AG_SizeSpec;
 
-/* Packing mode (i.e., for container widgets). */
-enum ag_widget_packing {
-	AG_PACK_HORIZ,
-	AG_PACK_VERT
-};
-
 /* Flag description (i.e., for AG_Checkbox(3)) */
 typedef struct ag_flag_descr {
 #ifdef AG_HAVE_64BIT

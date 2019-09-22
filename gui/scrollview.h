@@ -7,6 +7,11 @@
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/begin.h>
 
+enum ag_scrollview_packing {
+	AG_SCROLLVIEW_HORIZ,
+	AG_SCROLLVIEW_VERT
+};
+
 typedef struct ag_scrollview {
 	struct ag_widget wid;		/* AG_Widget -> AG_Scrollview */
 	Uint flags;
@@ -22,7 +27,7 @@ typedef struct ag_scrollview {
 #define AG_SCROLLVIEW_EXPAND       (AG_SCROLLVIEW_HFILL|AG_SCROLLVIEW_VFILL)
 #define AG_SCROLLVIEW_NOPAN_XY     (AG_SCROLLVIEW_NOPAN_X|AG_SCROLLVIEW_NOPAN_Y)
 
-	enum ag_widget_packing pack;	/* Packing mode */
+	enum ag_scrollview_packing pack; /* Packing mode */
 	int wPre, hPre;			/* Requested geometry */
 	int xOffs, yOffs;		/* Display offset */
 	int xMin, xMax, yMin, yMax;	/* Display boundaries */
