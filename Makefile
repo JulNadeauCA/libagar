@@ -7,9 +7,10 @@ PROJCONFIGDIR=	include/agar/config
 
 include ${TOP}/Makefile.proj
 
-INCDIR=		au core dev gui map math rg sg sk vg
+INCDIR=		au core dev gui micro map math rg sg sk vg
 SUBDIR=		core \
 		${SUBDIR_gui} \
+		${SUBDIR_micro} \
 		${SUBDIR_dev} \
 		${SUBDIR_au} \
 		${SUBDIR_math} \

@@ -29,7 +29,7 @@
 #include <dbg.h>
 
 #include <agar/core.h>
-#include <agar/gui.h>
+#include <agar/micro.h>
 
 /*
  * Register an example Agar object class.

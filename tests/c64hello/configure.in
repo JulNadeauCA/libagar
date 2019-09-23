@@ -7,7 +7,6 @@
 CONFIG_GUESS("../../mk/config.guess")
 
 REGISTER_SECTION("Options for this test program:")
-REGISTER("--with-agar-core[=PREFIX]",	"Location of Agar-Core library [check]")
 REGISTER("--with-agar[=PREFIX]",	"Location of Agar GUI library [check]")
 
 if [ "${host}" != "c64" ]; then
@@ -22,10 +21,11 @@ package("c64hello")
 version("1.6.0")
 
 require(cc)
-require(agar, 1.6, ${prefix_agar})
-require(agar-core, 1.6, ${prefix_agar_core})
+require(agar-core, 1.6, ${prefix_agar})
+require(agar-micro, 1.6, ${prefix_agar})
 
 mdefine(CFLAGS, "-Ors --codesize 500 -T -g -t c64")
+
 c_define(_USE_AGAR_STD)
 c_define(_USE_AGAR_QUEUE)
 c_define(_USE_AGAR_TYPES)

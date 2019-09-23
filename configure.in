@@ -16,10 +16,11 @@ register("--enable-au",		"AU: Audio and sound toolkit [yes]")
 register("--enable-dev",	"DEV: Debugger and developer tools [yes]")
 register("--enable-gui",	"GUI: The Agar GUI library [yes]")
 register("--enable-map",	"MAP: Feature-based 2D levels [yes]")
-register("--enable-math",	"MATH: Linear algebra operations [yes]")
+register("--enable-math",	"MATH: Math library and advanced rendering [yes]")
+register("--enable-micro",	"MA: The Micro-Agar GUI library [auto]")
 register("--enable-rg",		"RG: Feature-based graphics packages [yes]")
-register("--enable-sg",		"SG: Scene Graph and 3D engine toolkit [yes]")
-register("--enable-sk",		"SK: 2D sketcher and constraint solver [yes]")
+register("--enable-sg",		"SG: Scene Graph and 3D engine toolkit [auto]")
+register("--enable-sk",		"SK: 2D sketcher and constraint solver [auto]")
 register("--enable-vg",		"VG: Simple 2D vector graphics [yes]")
 
 register_section("Global Agar options:")
@@ -119,7 +120,7 @@ if [ "${with_memory_model}" = '' ]; then
 	amd64-* | hppa64-* | ia64-* | mips64-* | ppc64*-* | sh64-* | sparc64-* | x86_64-*)
 	    with_memory_model="L"
 	    ;;
-	c64 | c128 | geos | nes)
+	bbc | c64 | c128 | geos | nes)
 	    with_memory_model="S"
 	    ;;
 	*)
@@ -150,11 +151,12 @@ echo ""
 require(cc)
 
 case "${host}" in
-c64 | c128 | geos | nes)
+bbc | c64 | c128 | geos | nes)
 	disable(objc)
-	recommend_freetype="no"
-	with_attributes="no"
+	enable_micro="yes"
+	enable_gui="no"
 	enable_shared="no"
+	with_attributes="no"
 	with_float="no"
 	enable_ansi_color="no"
 	enable_dso="no"
@@ -171,23 +173,13 @@ c64 | c128 | geos | nes)
 	enable_unicode="no"
 	enable_user="no"
 	enable_verbosity="no"
-	enable_widgets="no"
-	enable_wm_hints="no"
-	enable_au="no"
-	enable_dev="no"
-	enable_map="no"
 	enable_math="no"
-	enable_rg="no"
-	enable_sg="no"
-	enable_sk="no"
-	enable_vg="no"
 	echo "checking for byte order...little-endian (${host})"
 	mdefine(_MK_BYTE_ORDER, "LE")
 	hdefine(_MK_LITTLE_ENDIAN, "yes")
 	hundef(_MK_BIG_ENDIAN)
 	;;
 *)
-	recommend_freetype="yes"
 	check(objc)
 	if [ "${HAVE_FLOAT}" = "yes" -a "${with_float}" = "no" ]; then
 		echo "disabling floating-point support"
@@ -482,7 +474,7 @@ if [ "${enable_gui}" != 'no' ]; then
 	
 	# Enable Freetype support if the Freetype library is found. Otherwise
 	# fall back to the bitmap font engine.
-	if [ "${with_freetype}" != 'no' -a "${recommend_freetype}" = "yes" ]; then
+	if [ "${with_freetype}" != 'no' ]; then
 		check(freetype, 7.0.1, ${prefix_freetype})
 		if [ "${HAVE_FREETYPE}" != 'yes' ]; then
 			echo "*"
@@ -561,6 +553,16 @@ else
 	disable(png)
 fi
 
+if [ "${enable_micro}" = 'yes' ]; then
+	hdefine(ENABLE_MICRO, "yes")
+	mdefine(ENABLE_MICRO_LIBS, "-L../micro -lag_micro_gui")
+	mdefine(SUBDIR_micro, "micro")
+else
+	hundef(ENABLE_MICRO)
+	mdefine(ENABLE_MICRO_LIBS, "")
+	mdefine(SUBDIR_micro, "")
+fi
+
 # Enable network interface unless requested otherwise.
 if [ "${enable_network}" != 'no' ]; then
 	check(getaddrinfo)
@@ -581,8 +583,8 @@ fi
 # Enable web application server if requested
 if [ "${enable_web}" = 'yes' ]; then
 	check(zlib, 0, ${prefix_z})
-	Check_header(sys/uio.h)
-	Check_header(sys/param.h)
+	check_header(sys/uio.h)
+	check_header(sys/param.h)
 	mdefine(HAVE_WEB, "yes")
 	hdefine(AG_WEB, "yes")
 else
@@ -1011,6 +1013,13 @@ pkgconfig_mod(agar, "Agar cross-platform GUI toolkit", \
 	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
 	 ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
 #
+# Micro-Agar config.
+# Implies: CORE.
+#
+config_script(agar-micro-config,\
+	"-I${INCLDIR}",\
+	"-L${LIBDIR} -lag_micro_gui -lag_core")
+#
 # Agar-CORE config.
 #
 config_script(agar-core-config,\
@@ -1053,7 +1062,7 @@ pkgconfig_mod(agar-dev, "Agar extra developer tools", \
 # Agar-MAP config.
 # Implies: RG, MATH, GUI, CORE.
 #
-if [ "${enable_map}" != "no" ]; then
+if [ "${enable_map}" != "no" -a "${enable_gui}" != "no" -a "${enable_rg}" != "no" ]; then
 	MDEFINE(SUBDIR_map, "map")
 fi
 config_script(agar-map-config,"-I${INCLDIR}","-L${LIBDIR} -lag_map")
@@ -1086,7 +1095,7 @@ pkgconfig_mod(agar-math, "Agar math library", "${AGAR_MATH_REQUIRES}",\
 # Agar-RG config.
 # Implies: MATH, GUI, CORE.
 #
-if [ "${enable_rg}" != "no" ]; then
+if [ "${enable_rg}" != "no" -a "${enable_gui}" != "no" ]; then
 	MDEFINE(SUBDIR_rg, "rg")
 fi
 config_script(agar-rg-config,"-I${INCLDIR}","-L${LIBDIR} -lag_rg")

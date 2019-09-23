@@ -448,7 +448,6 @@ echo '    --with-manlinks            Add manual entries for every function [no]'
 echo '    --with-manpages            Generate Unix manual pages [yes]'
 echo ''
 echo 'Options for this test program:'
-echo '    --with-agar-core[=PREFIX]   Location of Agar-Core library [check]'
 echo '    --with-agar[=PREFIX]        Location of Agar GUI library [check]'
 echo ''
 echo 'Some influential environment variables:'
@@ -1527,240 +1526,15 @@ echo '# * ' >>config.log
 echo "Required dependency cc not found"
 exit 1
 fi
-$ECHO_N 'checking for Agar...'
-$ECHO_N '# checking for Agar...' >>config.log
-# BEGIN agar(1.6 ${prefix_agar})
-AGAR_VERSION=
-if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
-AGAR_VERSION=`${prefix_agar}/bin/agar-config --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
-AGAR_VERSION=`${path}/agar-config --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-config"
-break
-elif [ -e "${path}/agar-config.exe" ]; then
-AGAR_VERSION=`${path}/agar-config.exe --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-if [ "${AGAR_VERSION}" != "" ]; then
-if [ "${prefix_agar}" != "" ]; then
-echo "yes ($AGAR_VERSION in ${prefix_agar})"
-echo "# yes ($AGAR_VERSION in ${prefix_agar})" >>config.log
-else
-echo "yes ($AGAR_VERSION)"
-echo "# yes ($AGAR_VERSION)" >>config.log
-fi
-MK_VERSION_MAJOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
-MK_VERSION_MINOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
-MK_VERSION_OK=no
-if [ $MK_VERSION_MAJOR -gt 1 ]; then
-MK_VERSION_OK=yes
-elif [ $MK_VERSION_MAJOR -eq 1 ]; then
-if [ "$MK_VERSION_MINOR" = '' ]; then
-MK_VERSION_OK=yes
-else
-if [ $MK_VERSION_MINOR -ge 6 ]; then
-MK_VERSION_OK=yes
-fi
-fi
-fi
-if [ "${MK_VERSION_OK}" = "no" ]; then
-echo '*'
-echo '# *' >>config.log
-echo "* Minimum required version is 1.6 (found $AGAR_VERSION)"
-echo "# * Minimum required version is 1.6 (found $AGAR_VERSION)" >>config.log
-echo '*'
-echo '# *' >>config.log
-fi
-else
-if [ "${prefix_agar}" != "" ]; then
-echo "no (not in ${prefix_agar})"
-echo "# no (not in ${prefix_agar})" >>config.log
-else
-echo 'no'
-echo '# no' >>config.log
-fi
-MK_VERSION_OK="no"
-fi
-if [ "${MK_VERSION_OK}" = "yes" ]; then
-$ECHO_N 'checking whether Agar works...'
-$ECHO_N '# checking whether Agar works...' >>config.log
-AGAR_CFLAGS=
-if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
-AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
-AGAR_CFLAGS=`${path}/agar-config --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-config"
-break
-elif [ -e "${path}/agar-config.exe" ]; then
-AGAR_CFLAGS=`${path}/agar-config.exe --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-AGAR_LIBS=
-if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
-AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
-AGAR_LIBS=`${path}/agar-config --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-config"
-break
-elif [ -e "${path}/agar-config.exe" ]; then
-AGAR_LIBS=`${path}/agar-config.exe --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-#include <agar/core.h>
-#include <agar/gui.h>
-
-int
-main(int argc, char *argv[])
-{
-	AG_InitCore("conf-test", 0);
-	AG_InitGraphics(AG_NULL);
-#ifdef AG_EVENT_LOOP
-	AG_EventLoop();
-#endif
-	AG_Quit();
-	return (0);
-}
-EOT
-echo >>config.log
-echo '# C: HAVE_AGAR' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_AGAR=yes
-bb_o=$bb_incdir/have_agar.h
-echo '#ifndef HAVE_AGAR' >$bb_o
-echo "#define HAVE_AGAR \"$HAVE_AGAR\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_AGAR\"] = \"$HAVE_AGAR\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_AGAR=no
-echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
-echo 'hdefs["HAVE_AGAR"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_AGAR}" = "yes" ]; then
-bb_o=$bb_incdir/agar_cflags.h
-echo '#ifndef AGAR_CFLAGS' >$bb_o
-echo "#define AGAR_CFLAGS \"$AGAR_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"AGAR_CFLAGS\"] = \"$AGAR_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/agar_libs.h
-echo '#ifndef AGAR_LIBS' >$bb_o
-echo "#define AGAR_LIBS \"$AGAR_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"AGAR_LIBS\"] = \"$AGAR_LIBS\"" >>configure.lua
-else
-echo '#undef AGAR_CFLAGS' >$bb_incdir/agar_cflags.h
-echo 'hdefs["AGAR_CFLAGS"] = nil' >>configure.lua
-AGAR_CFLAGS=""
-echo '#undef AGAR_LIBS' >$bb_incdir/agar_libs.h
-echo 'hdefs["AGAR_LIBS"] = nil' >>configure.lua
-AGAR_LIBS=""
-fi
-else
-HAVE_AGAR="no"
-AGAR_CFLAGS=""
-AGAR_LIBS=""
-echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
-echo 'hdefs["HAVE_AGAR"] = nil' >>configure.lua
-echo '#undef AGAR_CFLAGS' >$bb_incdir/agar_cflags.h
-echo 'hdefs["AGAR_CFLAGS"] = nil' >>configure.lua
-echo '#undef AGAR_LIBS' >$bb_incdir/agar_libs.h
-echo 'hdefs["AGAR_LIBS"] = nil' >>configure.lua
-fi
-# END agar
-if [ "${HAVE_AGAR}" != "yes" ]; then
-echo '* '
-echo '# * ' >>config.log
-echo "* $PACKAGE requires Agar (version 1.6 or newer)."
-echo "# * $PACKAGE requires Agar (version 1.6 or newer)." >>config.log
-echo '* WWW: http://libagar.org'
-echo '# * WWW: http://libagar.org' >>config.log
-echo '* '
-echo '# * ' >>config.log
-echo "Required dependency agar not found"
-exit 1
-fi
-if [ "${MK_VERSION_OK}" != "yes" ]; then
-echo '* '
-echo '# * ' >>config.log
-echo '* This software requires agar version >= 1.6,'
-echo '# * This software requires agar version >= 1.6,' >>config.log
-echo '* please update that package and try again.'
-echo '# * please update that package and try again.' >>config.log
-echo '* WWW: http://libagar.org'
-echo '# * WWW: http://libagar.org' >>config.log
-echo '* '
-echo '# * ' >>config.log
-echo "Required dependency agar version mismatch"
-exit 1
-fi
 $ECHO_N 'checking for Agar-Core...'
 $ECHO_N '# checking for Agar-Core...' >>config.log
-# BEGIN agar-core(1.6 ${prefix_agar_core})
+# BEGIN agar-core(1.6 ${prefix_agar})
 AGAR_CORE_VERSION=
-if [ "${prefix_agar_core}" != "" ]; then
-if [ -e "${prefix_agar_core}/bin/agar-core-config" ]; then
-AGAR_CORE_VERSION=`${prefix_agar_core}/bin/agar-core-config --version`
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-core-config" ]; then
+AGAR_CORE_VERSION=`${prefix_agar}/bin/agar-core-config --version`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar_core}/bin/agar-core-config"
+MK_EXEC_PATH="${prefix_agar}/bin/agar-core-config"
 fi
 else
 bb_save_IFS=$IFS
@@ -1781,9 +1555,9 @@ done
 IFS=$bb_save_IFS
 fi
 if [ "${AGAR_CORE_VERSION}" != "" ]; then
-if [ "${prefix_agar_core}" != "" ]; then
-echo "yes ($AGAR_CORE_VERSION in ${prefix_agar_core})"
-echo "# yes ($AGAR_CORE_VERSION in ${prefix_agar_core})" >>config.log
+if [ "${prefix_agar}" != "" ]; then
+echo "yes ($AGAR_CORE_VERSION in ${prefix_agar})"
+echo "# yes ($AGAR_CORE_VERSION in ${prefix_agar})" >>config.log
 else
 echo "yes ($AGAR_CORE_VERSION)"
 echo "# yes ($AGAR_CORE_VERSION)" >>config.log
@@ -1811,9 +1585,9 @@ echo '*'
 echo '# *' >>config.log
 fi
 else
-if [ "${prefix_agar_core}" != "" ]; then
-echo "no (not in ${prefix_agar_core})"
-echo "# no (not in ${prefix_agar_core})" >>config.log
+if [ "${prefix_agar}" != "" ]; then
+echo "no (not in ${prefix_agar})"
+echo "# no (not in ${prefix_agar})" >>config.log
 else
 echo 'no'
 echo '# no' >>config.log
@@ -1824,11 +1598,11 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether Agar-Core works...'
 $ECHO_N '# checking whether Agar-Core works...' >>config.log
 AGAR_CORE_CFLAGS=
-if [ "${prefix_agar_core}" != "" ]; then
-if [ -e "${prefix_agar_core}/bin/agar-core-config" ]; then
-AGAR_CORE_CFLAGS=`${prefix_agar_core}/bin/agar-core-config --cflags`
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-core-config" ]; then
+AGAR_CORE_CFLAGS=`${prefix_agar}/bin/agar-core-config --cflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar_core}/bin/agar-core-config"
+MK_EXEC_PATH="${prefix_agar}/bin/agar-core-config"
 fi
 else
 bb_save_IFS=$IFS
@@ -1849,11 +1623,11 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_CORE_LIBS=
-if [ "${prefix_agar_core}" != "" ]; then
-if [ -e "${prefix_agar_core}/bin/agar-core-config" ]; then
-AGAR_CORE_LIBS=`${prefix_agar_core}/bin/agar-core-config --libs`
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-core-config" ]; then
+AGAR_CORE_LIBS=`${prefix_agar}/bin/agar-core-config --libs`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar_core}/bin/agar-core-config"
+MK_EXEC_PATH="${prefix_agar}/bin/agar-core-config"
 fi
 else
 bb_save_IFS=$IFS
@@ -1990,6 +1764,231 @@ echo '# * ' >>config.log
 echo "Required dependency agar-core version mismatch"
 exit 1
 fi
+$ECHO_N 'checking for Micro-Agar...'
+$ECHO_N '# checking for Micro-Agar...' >>config.log
+# BEGIN agar-micro(1.6 ${prefix_agar})
+AGAR_MICRO_VERSION=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-micro-config" ]; then
+AGAR_MICRO_VERSION=`${prefix_agar}/bin/agar-micro-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-micro-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/agar-micro-config" ]; then
+AGAR_MICRO_VERSION=`${path}/agar-micro-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-micro-config"
+break
+elif [ -e "${path}/agar-micro-config.exe" ]; then
+AGAR_MICRO_VERSION=`${path}/agar-micro-config.exe --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-micro-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+if [ "${AGAR_MICRO_VERSION}" != "" ]; then
+if [ "${prefix_agar}" != "" ]; then
+echo "yes ($AGAR_MICRO_VERSION in ${prefix_agar})"
+echo "# yes ($AGAR_MICRO_VERSION in ${prefix_agar})" >>config.log
+else
+echo "yes ($AGAR_MICRO_VERSION)"
+echo "# yes ($AGAR_MICRO_VERSION)" >>config.log
+fi
+MK_VERSION_MAJOR=`echo "$AGAR_MICRO_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$AGAR_MICRO_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_OK=no
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+MK_VERSION_OK=yes
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+if [ "$MK_VERSION_MINOR" = '' ]; then
+MK_VERSION_OK=yes
+else
+if [ $MK_VERSION_MINOR -ge 6 ]; then
+MK_VERSION_OK=yes
+fi
+fi
+fi
+if [ "${MK_VERSION_OK}" = "no" ]; then
+echo '*'
+echo '# *' >>config.log
+echo "* Minimum required version is 1.6 (found $AGAR_MICRO_VERSION)"
+echo "# * Minimum required version is 1.6 (found $AGAR_MICRO_VERSION)" >>config.log
+echo '*'
+echo '# *' >>config.log
+fi
+else
+if [ "${prefix_agar}" != "" ]; then
+echo "no (not in ${prefix_agar})"
+echo "# no (not in ${prefix_agar})" >>config.log
+else
+echo 'no'
+echo '# no' >>config.log
+fi
+MK_VERSION_OK="no"
+fi
+if [ "${MK_VERSION_OK}" = "yes" ]; then
+$ECHO_N 'checking whether micro-Agar works...'
+$ECHO_N '# checking whether micro-Agar works...' >>config.log
+AGAR_MICRO_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-micro-config" ]; then
+AGAR_MICRO_CFLAGS=`${prefix_agar}/bin/agar-micro-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-micro-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/agar-micro-config" ]; then
+AGAR_MICRO_CFLAGS=`${path}/agar-micro-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-micro-config"
+break
+elif [ -e "${path}/agar-micro-config.exe" ]; then
+AGAR_MICRO_CFLAGS=`${path}/agar-micro-config.exe --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-micro-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+AGAR_MICRO_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-micro-config" ]; then
+AGAR_MICRO_LIBS=`${prefix_agar}/bin/agar-micro-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-micro-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/agar-micro-config" ]; then
+AGAR_MICRO_LIBS=`${path}/agar-micro-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-micro-config"
+break
+elif [ -e "${path}/agar-micro-config.exe" ]; then
+AGAR_MICRO_LIBS=`${path}/agar-micro-config.exe --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-micro-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <agar/core.h>
+#include <agar/micro.h>
+
+int
+main(int argc, char *argv[])
+{
+	AG_InitCore(NULL, 0);
+	MA_InitGraphics(AG_NULL);
+#ifdef AG_EVENT_LOOP
+	AG_EventLoop();
+#endif
+	AG_Quit();
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_AGAR_MICRO' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_MICRO_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_MICRO_LIBS} 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_MICRO_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_MICRO_LIBS} 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_AGAR_MICRO=yes
+bb_o=$bb_incdir/have_agar_micro.h
+echo '#ifndef HAVE_AGAR_MICRO' >$bb_o
+echo "#define HAVE_AGAR_MICRO \"$HAVE_AGAR_MICRO\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_AGAR_MICRO\"] = \"$HAVE_AGAR_MICRO\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_AGAR_MICRO=no
+echo '#undef HAVE_AGAR_MICRO' >$bb_incdir/have_agar_micro.h
+echo 'hdefs["HAVE_AGAR_MICRO"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_AGAR_MICRO}" = "yes" ]; then
+bb_o=$bb_incdir/agar_micro_cflags.h
+echo '#ifndef AGAR_MICRO_CFLAGS' >$bb_o
+echo "#define AGAR_MICRO_CFLAGS \"$AGAR_MICRO_CFLAGS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AGAR_MICRO_CFLAGS\"] = \"$AGAR_MICRO_CFLAGS\"" >>configure.lua
+bb_o=$bb_incdir/agar_micro_libs.h
+echo '#ifndef AGAR_MICRO_LIBS' >$bb_o
+echo "#define AGAR_MICRO_LIBS \"$AGAR_MICRO_LIBS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AGAR_MICRO_LIBS\"] = \"$AGAR_MICRO_LIBS\"" >>configure.lua
+else
+echo '#undef AGAR_MICRO_CFLAGS' >$bb_incdir/agar_micro_cflags.h
+echo 'hdefs["AGAR_MICRO_CFLAGS"] = nil' >>configure.lua
+AGAR_MICRO_CFLAGS=""
+echo '#undef AGAR_MICRO_LIBS' >$bb_incdir/agar_micro_libs.h
+echo 'hdefs["AGAR_MICRO_LIBS"] = nil' >>configure.lua
+AGAR_MICRO_LIBS=""
+fi
+else
+HAVE_AGAR_MICRO="no"
+AGAR_MICRO_CFLAGS=""
+AGAR_MICRO_LIBS=""
+echo '#undef HAVE_AGAR_MICRO' >$bb_incdir/have_agar_micro.h
+echo 'hdefs["HAVE_AGAR_MICRO"] = nil' >>configure.lua
+echo '#undef AGAR_MICRO_CFLAGS' >$bb_incdir/agar_micro_cflags.h
+echo 'hdefs["AGAR_MICRO_CFLAGS"] = nil' >>configure.lua
+echo '#undef AGAR_MICRO_LIBS' >$bb_incdir/agar_micro_libs.h
+echo 'hdefs["AGAR_MICRO_LIBS"] = nil' >>configure.lua
+fi
+# END agar-micro
+if [ "${HAVE_AGAR_MICRO}" != "yes" ]; then
+echo '* '
+echo '# * ' >>config.log
+echo "* $PACKAGE requires Micro-Agar (version 1.6 or newer)."
+echo "# * $PACKAGE requires Micro-Agar (version 1.6 or newer)." >>config.log
+echo '* WWW: http://libagar.org'
+echo '# * WWW: http://libagar.org' >>config.log
+echo '* '
+echo '# * ' >>config.log
+echo "Required dependency agar-micro not found"
+exit 1
+fi
+if [ "${MK_VERSION_OK}" != "yes" ]; then
+echo '* '
+echo '# * ' >>config.log
+echo '* This software requires agar-micro version >= 1.6,'
+echo '# * This software requires agar-micro version >= 1.6,' >>config.log
+echo '* please update that package and try again.'
+echo '# * please update that package and try again.' >>config.log
+echo '* WWW: http://libagar.org'
+echo '# * WWW: http://libagar.org' >>config.log
+echo '* '
+echo '# * ' >>config.log
+echo "Required dependency agar-micro version mismatch"
+exit 1
+fi
 CFLAGS="-Ors --codesize 500 -T -g -t c64"
 CFLAGS="$CFLAGS -D_USE_AGAR_STD"
 CXXFLAGS="$CXXFLAGS -D_USE_AGAR_STD"
@@ -1999,14 +1998,14 @@ CFLAGS="$CFLAGS -D_USE_AGAR_TYPES"
 CXXFLAGS="$CXXFLAGS -D_USE_AGAR_TYPES"
 CFLAGS="$CFLAGS -I$BLD"
 CXXFLAGS="$CXXFLAGS -I$BLD"
-echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
-echo "mdefs[\"AGAR_CFLAGS\"] = \"$AGAR_CFLAGS\"" >>configure.lua
 echo "AGAR_CORE_CFLAGS=$AGAR_CORE_CFLAGS" >>Makefile.config
 echo "mdefs[\"AGAR_CORE_CFLAGS\"] = \"$AGAR_CORE_CFLAGS\"" >>configure.lua
 echo "AGAR_CORE_LIBS=$AGAR_CORE_LIBS" >>Makefile.config
 echo "mdefs[\"AGAR_CORE_LIBS\"] = \"$AGAR_CORE_LIBS\"" >>configure.lua
-echo "AGAR_LIBS=$AGAR_LIBS" >>Makefile.config
-echo "mdefs[\"AGAR_LIBS\"] = \"$AGAR_LIBS\"" >>configure.lua
+echo "AGAR_MICRO_CFLAGS=$AGAR_MICRO_CFLAGS" >>Makefile.config
+echo "mdefs[\"AGAR_MICRO_CFLAGS\"] = \"$AGAR_MICRO_CFLAGS\"" >>configure.lua
+echo "AGAR_MICRO_LIBS=$AGAR_MICRO_LIBS" >>Makefile.config
+echo "mdefs[\"AGAR_MICRO_LIBS\"] = \"$AGAR_MICRO_LIBS\"" >>configure.lua
 echo "BINDIR=$BINDIR" >>Makefile.config
 echo "mdefs[\"BINDIR\"] = \"$BINDIR\"" >>configure.lua
 echo "CC=$CC" >>Makefile.config
@@ -2023,10 +2022,10 @@ echo "ENABLE_NLS=$ENABLE_NLS" >>Makefile.config
 echo "mdefs[\"ENABLE_NLS\"] = \"$ENABLE_NLS\"" >>configure.lua
 echo "EXECSUFFIX=$EXECSUFFIX" >>Makefile.config
 echo "mdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
-echo "HAVE_AGAR=$HAVE_AGAR" >>Makefile.config
-echo "mdefs[\"HAVE_AGAR\"] = \"$HAVE_AGAR\"" >>configure.lua
 echo "HAVE_AGAR_CORE=$HAVE_AGAR_CORE" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR_CORE\"] = \"$HAVE_AGAR_CORE\"" >>configure.lua
+echo "HAVE_AGAR_MICRO=$HAVE_AGAR_MICRO" >>Makefile.config
+echo "mdefs[\"HAVE_AGAR_MICRO\"] = \"$HAVE_AGAR_MICRO\"" >>configure.lua
 echo "HAVE_CC=$HAVE_CC" >>Makefile.config
 echo "mdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
 echo "HAVE_CC65=$HAVE_CC65" >>Makefile.config
@@ -2096,6 +2095,9 @@ if [ "${srcdir}" != '' ]; then
 	echo 'ok'
 fi
 echo '*'
-echo '* Configuration successful. Use the "make" command to compile,'
-echo '* and complete the installation using "make install".'
+echo '* Configuration successful!'
+echo '*'
+echo '* Use "make depend all" to compile. When finished,'
+$ECHO_N '* run "make install" to install under '
+echo "${PREFIX}."
 echo '*'
