@@ -2,23 +2,52 @@ TOP=	../..
 include ${TOP}/Makefile.config
 
 DATADIR=	${TTFDIR}
-DATAFILES_SRC=	minimal.xcf \
-		serif.xcf \
-		bedstead.otf \
-		bedstead-10-df.png \
-		bedstead-20-df.png \
+DATAFILES_SRC=	Bedstead-COPYING.txt \
+		ModernDOS-LICENSE.txt \
 		Vera-Copyright.txt \
 		Vera-README.txt \
 		Vera-ReleaseNotes.txt \
-		Vera.ttf \
-		VeraBI.ttf \
-		VeraBd.ttf \
-		VeraIt.ttf \
-		VeraMoBI.ttf \
-		VeraMoBd.ttf \
-		VeraMoIt.ttf \
-		VeraMono.ttf \
-		VeraSe.ttf \
-		VeraSeBd.ttf
+		bedstead-10-df.png \
+		bedstead-20-df.png \
+		bedstead.otf \
+		cm-Changes.txt \
+		cm-LICENSE.txt \
+		cm-README.txt \
+		cm-bright-bold.ttf \
+		cm-bright-semibold.ttf \
+		cm-bright.ttf \
+		cm-sans-bold.ttf \
+		cm-sans-demicondensed.ttf \
+		cm-sans.ttf \
+		cm-serif-bold-italic.ttf \
+		cm-serif-bold.ttf \
+		cm-serif-italic.ttf \
+		cm-serif-upright-italic.ttf \
+		cm-serif.ttf \
+		cm-typewriter-bold-italic.ttf \
+		cm-typewriter-bold.ttf \
+		cm-typewriter-italic.ttf \
+		cm-typewriter.ttf \
+		cp437-16.bmp \
+		fraktur-FontLog.txt \
+		fraktur-LICENSE.txt \
+		fraktur.ttf \
+		minimal.xcf \
+		modern-dos-8x8.ttf \
+		modern-dos-8x14.ttf \
+		modern-dos-8x16.ttf \
+		modern-dos-9x14.ttf \
+		modern-dos-9x16.ttf \
+		serif.xcf \
+		vera.ttf \
+		vera-bold-italic.ttf \
+		vera-bold.ttf \
+		vera-italic.ttf \
+		vera-mono-bold-italic.ttf \
+		vera-mono-bold.ttf \
+		vera-mono-italic.ttf \
+		vera-mono.ttf \
+		vera-serif-bold.ttf \
+		vera-serif.ttf
 
 include ${TOP}/mk/build.prog.mk
