@@ -1,0 +1,201 @@
+UnifrakturMaguntia FontLog
+==========================
+
+UnifrakturMaguntia has been created by j. 'mach' wust, Gerrit Ansmann and Georg Duffner. You can reach us at: http://unifraktur.sf.net/unifraktur-forum/ or at: j_mach_wust at shared-files dot de
+
+UnifrakturMaguntia is a modification of Peter Wiegel's font Berthold Mainzer Fraktur that can be found at the following site (retrieved 2010-03-14) and that is in turn based on a 1901 typeface by Carl Albert Fahrenwaldt:
+
+http://www.peter-wiegel.de/KochFraktur.html
+
+Up to version 2010-11-24, UnifrakturMaguntia was basically identical to Wiegel's font with two exceptions: (1) The glyphs were allocated to their correct codepoints according to the Unicode standard, and (2) smart font rendering was added in order to generate the font's ligatures. By version 2012-10-17, Gerrit Ansmann had redrawn most of Wiegel's original letters from scratch. By version 2014-07-06, he has redrawn all of them up to the very last special character.
+
+
+Purpose
+=======
+
+UnifrakturMaguntia has been created in order to provide a Fraktur typeface that may be embedded on websites. It is in accordance with the Unicode standard. It has suitable font licenses (GPL with font exception and OFL).
+
+
+License
+=======
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1. Note that this license is suited for embedding on webpages.
+
+
+Files
+=====
+
+* UnifrakturMaguntia.ttf
+An OpenType font version of UnifrakturMaguntia. This is the main font file you will want to install. It includes OpenType features.
+
+* OFL.txt
+The Open Font License.
+
+* OFL-FAQ.txt
+The Open Font License FAQ.
+
+* FontLog.txt
+This FontLog file as required by the OFL.
+
+* Dokumentation_de_antiqua.pdf
+* Dokumentation_de_fraktur.pdf
+* Dokumentation_en_antiqua.pdf
+* Dokumentation_en_fraktur.pdf
+Extensive documentation by Gerrit Ansmann.
+
+* switched-on_features/UnifrakturMaguntia16.ttf
+* switched-on_features/UnifrakturMaguntia17.ttf
+* switched-on_features/UnifrakturMaguntia18.ttf
+* switched-on_features/UnifrakturMaguntia19.ttf
+* switched-on features/UnifrakturMaguntia20.ttf
+* switched-on_features/UnifrakturMaguntia21.ttf
+Variants with certain selections of OpenType features from UnifrakturMaguntia.ttf switched-on by default.
+
+* switched-on_features/README.pdf
+* switched-on_features/README.tex
+A short explanation of these variants.
+
+* sources
+a folder containing the source code for the fonts and documentation, consisting of the following files:
+
+* sources/UnifrakturMaguntia.sfdir
+The FontForge source directory of UnifrakturMaguntia.
+
+* sources/make.py
+Python script for building UnifrakturMaguntia along with the preconfigured variants that emulate historic typesetting or provide modern variants. In addition to FontForge, the script also requires ttfautohint.
+
+* sources/make_modern_variant.py
+* sources/manipulation.py
+* sources/make_old_variants.py
+Auxiliary files for make.py
+
+* sources/documentation
+The source files for the documentation. The Python script make.py will build everything. It requires XeTeX, Inkscape, all UnifrakturMaguntia fonts (including the variants with switched-on features) variant fonts), and the free font Yanone Kaffeesatz (in the TTF variants, it can be obtained at: http://www.yanone.de/typedesign/kaffeesatz/).
+
+* sources/switched-on_features/README.tex
+The source file for the readme for the fonts with switched-on features.
+
+
+UnifrakturMaguntia change list
+===============================
+
+* 2017-03-19
+  Releasing everything in one file again to avoid confusion.
+  – Fixed a problem with TTFautohint that caused glyphs to be slightly distorted.
+  – Several minor bugfixes.
+
+* 2016-02-21
+  Double release, either in a basic version that includes UnifrakturMaguntia.ttf, or in an extended version that includes additional font variants and extensive documentation by Gerrit Ansmann. Minor changes:
+    - Updates to the FontLog so it reflects the additional font variants and documentation.
+    - Minor improvement to the build scripts.
+
+* 2016-02-18
+  Changes by G. Ansmann:
+    - Added preconfigured variants emulating historic typesetting or providing modern variants.
+    - The roman numerals were completely redone.
+    - The lowercase 1 was replaced by a more frakturesque number.
+    - New Glyphs: ẏ, ĳ́, Ĳ́
+    - Improved horizontal metrics of capital letters.
+    - Tons of tiny fixes.
+
+* 2014-07-06
+  Changes by G. Ansmann:
+    - Several special characters have been redesigned or added: super- and subscript numbers and from 0 to 4 and fractions containing those; percent sign; ©, ® and ™; ª and º; $ and ¥.
+    - Modern variants of S, V and Y and derived characters have been designed (cv08–cv10, ss01).
+    - New feature for replacing s with s (cv00, cv41)
+    - New feature for replacing s with a swashless variant, except at the end of the word (cv20, ss20)
+    - For old Czech and Slovak texts, G and g with Caron with háček have been added.
+
+* 2013-08-21
+  Changes by G. Ansmann:
+    - The characters +, −, ÷, ×, ±, = and # have been redesigned in two variants, one for lowercase and one for uppercase numbers.
+    - The characters -, ~, _, ¶ and μ have been redesigned.
+    - The aalt feature has been added.
+    - An ſö-ligature has been added.
+    - Manual kerning has been performed for most characters.
+    - The ſ-heuristic for German has been improved (cv11).
+    - Modern variants of k, x (2×), y, A (2×), G, K, N and derived glyphs have been designed (cv01–cv07, ss01) (more are to follow).
+    - For old Latvian texts, łł- and ẜẜ-ligatures have been added (cv28).
+    - For old Norse texts, A and a with a stroke have been added.
+    - Variants of uppercase umlauts with a small e above the letter have been added (cv15).
+
+* 2012-10-19
+  Bugfixes:
+    - Fixing h with acute (G. Ansmann).
+    - Fixing OpenType Layout features (j. 'mach' wust).
+
+* 2012-10-17
+  General overhaul by G. Ansmann is finished:
+    - The remaining capital letters (A, B, H–Z) have been redigitalized or redesigned, respectively. With this, all letters are based on an own digitalization or design.
+    - There are now historical variants of ä, ö and ü with a little e instead of the dieresis. These can be assessed using U+0364 or Stylistic Set 03. Stylistic Set 04 replaces Ä, Ö and Ü with Ae, Oe and Ue.
+    - Several special characters were created or improved for modern variants of the Latin alphabet, thus supporting: Albanian, Azerbaijani, Czech, Dansk, Dieth System for Swiss dialects, Dutch, Esperanto, Estonian, Finnish, French, Hungarian, Irish, Islandic, Italian, Latvian, Lithuanian, Maltese, Norsk, Polish, Portuguese, Romanian, Serbo-Croatian, Slovak, Slovenian, Sorbian, Spanish, Swedish, Turkish, Welsh.
+    - Several special characters used by old Czech, Slovak, Latvian and especially Sorbian orthographies were added (mainly thanks to hints by F. Kaulfürst, S. Wölke and K. Stumpf).
+    - Glyphs with diacritics can now be accessed via combining diacritical marks.
+    - Character Variants 03 gives access to six variants of š. Stylistic Sets 5 and 6 contain variants of s-based special characters. Stylistic Set 07 provide variants of ď and ť with a caron instead of the comma.
+    - Lowercase numbers now have kerning. Tabular upper- and lowercase numbers have been added.
+    - Some ligatures have been added: ſb, ffj, fı, ffı
+    - Some special characters have been redesigned: €, £, *
+    - Some historical special characters (mostly units) were moved to a new font »UnifrakturSupplement«, since they are not fitted to the Maguntia font (and will not be before long).
+    - Some minor improvements.
+
+* 2012-07-26
+    - Glyphs: ð, ø, E, f-ligatures, remaining ligatures (Gerrit Ansmann).
+    - Fixed ß width (Gerrit Ansmann).
+    - Fixed fontlog typos (j. 'mach' wust).
+
+* 2012-07-21
+    - Redrawn or improved glyphs by Gerrit Ansmann: Punctuation, lower case letters, C, D, F, G.
+    - New casing numerals by Gerrit Ansmann.
+    - ccmp instead of rlig by j. 'mach' wust (thanks to http://code.google.com/p/chromium/issues/detail?id=22240#c36 ).
+    - ttfautohint
+
+* 2012-02-11
+    Major improvements of all Latin letters -- A–Z, a–z, long s (ſ), round r (ꝛ) -- and their ligatures by Gerrit Ansmann:
+      - Simplification, smoothing and alignment of all glyphs;
+      - new hinting, including "BlueValues" (global hinting settings);
+      - improvement of glyph width;
+      - significant changes to the bar height on f, k, t, long s (ſ);
+      - significant changes or new design of many glyphs, including: s, I, J, Æ, Œ, Ø, Þ, Ð, ø, æ, œ, /, <, >, all ligatures, all accents (except i-dot and diaeresis) and accented letters;
+      - the following glyphs have been removed: ƒ, all ligatures with ſſ, ll (replaced by a kerning pair), ſch, ſs;
+      - new glyphs: ſj, ij, IJ, several accented glyphs.
+
+    Overhaul of the OpenType features by Georg Duffner:
+      - cv01 will turn round s into long s (ſ) except at the ends of words -- manual override: ZWNJ;
+      - cv02 will turn regular r into round r (ꝛ) after round letters and r;
+      - cv03 will turn capital Ä Ö Ü into Ae Oe Ue;
+      - ss01 will use historic stylistic variants of u U v V;
+      - ss02 will use historic stylistic variants of i I j J;
+      - hlig will turn etc. into ꝛc.;
+      - dlig will turn double nn and mm into n and m with bar above (formerly hlig).
+
+    AAT and Graphite support has been dropped for the normal release which is intended for web use since no browser supports them. In the future, a special release with AAT and Graphite support is planned (mainly for LibreOffice).
+
+* 2010-11-24
+    License change: UnifrakturMaguntia is now OFL only (with kind consent by Peter Wiegel); the name is now "UnifrakturMaguntia" in order to prevent problems with a space in the font name. 
+
+* 2010-08-17
+    Ligatures may now be forced with ZWJ as recommended by Unicode.
+
+* 2010-07-21
+    Added longs-t to required ligatures. Duplicated rlig ligatures in liga for pango compatibility.
+
+* 2010-06-19
+    Moved ch, ck and tz required ligatures, so correct letterspacing is possible.
+
+* 2010-06-01
+    Replaced README.txt by FontLog.txt, added new WOFF, SVG and EOT generated with Font Squirrel's @font-face generator.
+
+* 2010-05-25
+    Added new glyps from Berthold Mainzer Fraktur UNZ1A.ttf; changed name from UnifrakturMaguntia to Unifraktur Maguntia.
+
+* 2010-03-24
+    New version, based on a new version of Peter Wiegel's font that includes the additional ligatures longs_longs_i, longs_h, longs_j, longs_k, longs_s, s_k.
+
+* 2010-03-19
+    Who whould have thought of that: AAT converts the sequence longs-longs-i into the ligature ffl. Ha ha, very funny... except it isn't.
+
+* 2010-03-18
+    Added combining macron, so m_macron and n_macron no longer require AAT or Graphite. Fix for what appears to be a XeTeX bug with zero width characters.
+
+* 2010-03-17
+    UnifrakturMaguntia has been created by j. 'mach' wust, as a modification of Peter Wiegel's font Bertholdr Mainzer Fraktur.
