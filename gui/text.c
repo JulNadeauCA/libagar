@@ -239,21 +239,21 @@ static int
 GetFontTypeFromSignature(const char *_Nonnull path,
     enum ag_font_type *_Nonnull pType)
 {
-	char buf[13];
+	char buf[14];
 	FILE *f;
 
 	if ((f = fopen(path, "rb")) == NULL) {
 		AG_SetError(_("Unable to open %s"), path);
 		return (-1);
 	}
-	if (fread(buf, 13, 1, f) == 13) {
-		if (strncmp(buf, "gimp xcf file", 13) == 0) {
-			*pType = AG_FONT_BITMAP;
-		} else {
-			*pType = AG_FONT_VECTOR;
-		}
-	} else {
-		*pType = AG_FONT_VECTOR;
+
+	*pType = AG_FONT_VECTOR;			/* Default */
+
+	memset(buf, 0, sizeof(buf));
+	fread(buf, 14, 1, f);
+	if ((buf[0] == 'B' && buf[1] == 'M') ||		/* Windows BMP image */
+	    strncmp(buf, "gimp xcf file", 13) == 0) {	/* Legacy Gimp XCF */
+		*pType = AG_FONT_BITMAP;
 	}
 	fclose(f);
 	return (0);
@@ -371,6 +371,7 @@ AG_TextColorANSI(enum ag_ansi_color colorANSI, const AG_Color *c)
 	}
 	if (ts->colorANSI == NULL) {
 		const AG_Size size = AG_ANSI_COLOR_LAST * sizeof(AG_Color);
+
 		ts->colorANSI = Malloc(size);
 		memcpy(ts->colorANSI, agTextColorANSI, size);
 	}
@@ -461,8 +462,17 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 #endif
 		fontSize = &myFontSize;
 	}
-	if (face != NULL) {
-		Strlcpy(name, face, sizeof(name));
+	if (face != NULL && face[0] != '_') {
+		const char *pFace;
+		char *pDst;
+
+		for (pFace=face, pDst=name;
+		    *pFace != '\0' && pDst < &name[sizeof(name)-1];
+		     pFace++) {
+			*pDst = tolower(*pFace);
+			pDst++;
+		}
+		*pDst = '\0';
 	} else {
 #ifdef AG_SERIALIZATION
 		AG_GetString(cfg, "font.face", name, sizeof(name));
@@ -477,12 +487,12 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 #ifdef HAVE_FLOAT
 		if (Fabs(font->spec.size - *fontSize) < AG_FONT_PTS_EPSILON &&
 		    font->flags == flags &&
-		    strcmp(OBJECT(font)->name, name) == 0)
+		    Strcasecmp(OBJECT(font)->name, name) == 0)
 			break;
 #else
 		if (font->spec.size == *fontSize &&
 		    font->flags == flags &&
-		    strcmp(OBJECT(font)->name, name) == 0)
+		    Strcasecmp(OBJECT(font)->name, name) == 0)
 			break;
 #endif
 	}
@@ -499,7 +509,7 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 	spec->size = *fontSize;
 	font->flags = flags;
 
-	if (name[0] == '_') {
+	if (name[0] == '_') {               /* Builtin fonts start with "_" */
 		AG_StaticFont **pbf;
 
 		for (pbf = &agBuiltinFonts[0]; *pbf != NULL; pbf++) {
@@ -517,8 +527,33 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 		spec->source.mem.data = builtin->data;
 		spec->source.mem.size = builtin->size;
 	} else {
+		int isInFontPath=0;
+		/*
+		 * Scan CONFIG_PATH_FONTS first for TTF or OTF files of
+		 * the matching exact name.
+		 */
+		if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, name,
+		    spec->source.file, sizeof(spec->source.file)) == -1) {
+			char path[AG_FILENAME_MAX];
+
+			Strlcpy(path, name, sizeof(path));
+			Strlcat(path, ".ttf", sizeof(path));
+			if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
+			    spec->source.file, sizeof(spec->source.file)) == -1) {
+				Strlcpy(path, name, sizeof(path));
+				Strlcat(path, ".otf", sizeof(path));
+				if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
+				    spec->source.file, sizeof(spec->source.file)) == -1)
+					goto try_fontconfig;
+			}
+		}
+		if (GetFontTypeFromSignature(spec->source.file, &spec->type)==0) {
+			spec->sourceType = AG_FONT_SOURCE_FILE;
+			isInFontPath = 1;
+		}
+try_fontconfig:
 #if defined(HAVE_FONTCONFIG) && defined(HAVE_FLOAT)
-		if (agFontconfigInited) {
+		if (agFontconfigInited && !isInFontPath) {
 			FcPattern *pattern, *fpat;
 			FcResult fres = FcResultMatch;
 			FcChar8 *filename;
@@ -576,33 +611,8 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 			spec->type = AG_FONT_VECTOR;
 			FcPatternDestroy(fpat);
 			FcPatternDestroy(pattern);
-		} else
-#endif /* HAVE_FONTCONFIG and HAVE_FLOAT */
-#ifdef AG_SERIALIZATION
-		{
-			if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, name,
-			    spec->source.file, sizeof(spec->source.file)) == -1) {
-				char path[AG_FILENAME_MAX];
-
-				Strlcpy(path, name, sizeof(path));
-				Strlcat(path, ".ttf", sizeof(path));
-				if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
-				    spec->source.file, sizeof(spec->source.file)) == -1) {
-					Strlcpy(path, name, sizeof(path));
-					Strlcat(path, ".otf", sizeof(path));
-					if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
-					    spec->source.file, sizeof(spec->source.file)) == -1)
-						goto fail;
-				}
-			}
-			if (GetFontTypeFromSignature(spec->source.file,
-			   &spec->type) == -1)
-				goto fail;
 		}
-		spec->sourceType = AG_FONT_SOURCE_FILE;
-#else
-		/* TODO */
-#endif
+#endif /* HAVE_FONTCONFIG and HAVE_FLOAT */
 	}
 
 	switch (spec->type) {
