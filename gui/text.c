@@ -92,9 +92,7 @@
 #include <agar/gui/icons.h>
 #include <agar/gui/fonts.h>
 #include <agar/gui/packedpixel.h>
-#ifdef HAVE_FLOAT
 #include <agar/gui/gui_math.h>
-#endif
 
 #include <agar/gui/fonts_data.h>
 
@@ -104,11 +102,9 @@
 
 /* #define SYMBOLS */	    /* Translate "$(x)" symbols to built-in surfaces */
 
-#ifdef AG_SERIALIZATION
 /* Default fonts */
 const char *agDefaultFaceFT = "_agFontVera";
 const char *agDefaultFaceBitmap = "_agFontMinimal";
-#endif
 
 /* Statically compiled fonts */
 AG_StaticFont *agBuiltinFonts[] = {
@@ -194,17 +190,11 @@ static int  TextRenderSymbol(Uint, AG_Surface *_Nonnull, int,int);
 # endif
 #endif
 static AG_Glyph *_Nonnull TextRenderGlyph_Miss(AG_Driver *_Nonnull, AG_Char);
-#ifdef AG_SERIALIZATION
 static AG_Surface *_Nonnull GetBitmapGlyph(const AG_Font *_Nonnull, AG_Char);
-#endif
 
 #if !defined(HAVE_FREETYPE)
 # define TextSizeFT       TextSizeDummy
 # define TextRenderFT     TextRenderDummy
-#endif
-#if !defined(AG_SERIALIZATION)
-# define TextSizeBitmap   TextSizeDummy
-# define TextRenderBitmap TextRenderDummy
 #endif
 
 #ifdef DEBUG_FOCUS
@@ -234,7 +224,6 @@ LoadBitmapGlyph(AG_Surface *_Nonnull su, const char *_Nonnull lbl,
 	font->bglyphs[font->nglyphs++] = su;
 }
 
-#ifdef AG_SERIALIZATION
 static int
 GetFontTypeFromSignature(const char *_Nonnull path,
     enum ag_font_type *_Nonnull pType)
@@ -319,7 +308,6 @@ OpenBitmapFont(AG_Font *_Nonnull font)
 	font->lineskip = font->height;
 	return (0);
 }
-#endif /* AG_SERIALIZATION */
 
 /*
  * Save the current font-engine rendering state.
@@ -430,11 +418,8 @@ AG_TextFontPct(int pct)
 {
 	AG_TextState *ts = AG_TEXT_STATE_CUR();
 	const AG_Font *fontCur = ts->font;
-#ifdef HAVE_FLOAT
 	const AG_FontPts size = fontCur->spec.size * pct / 100.0;
-#else
-	const AG_FontPts size = fontCur->spec.size * pct / 100;  /* TODO */
-#endif
+
 	return AG_FetchFont(OBJECT(fontCur)->name, &size, fontCur->flags);
 }
 
@@ -446,20 +431,15 @@ AG_Font *
 AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 {
 	char name[AG_OBJECT_NAME_MAX];
-#ifdef AG_SERIALIZATION
 	AG_Config *cfg = AG_ConfigObject();
-#endif
 	AG_StaticFont *builtin = NULL;
 	AG_Font *font;
 	AG_FontSpec *spec;
 	AG_FontPts myFontSize;
+	int isInFontPath;
 
 	if (fontSize == NULL) {
-#ifdef AG_SERIALIZATION
 		myFontSize = (AG_FontPts)AG_GetInt(cfg, "font.size");
-#else
-		myFontSize = 12;
-#endif
 		fontSize = &myFontSize;
 	}
 	if (face != NULL && face[0] != '_') {
@@ -474,27 +454,16 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 		}
 		*pDst = '\0';
 	} else {
-#ifdef AG_SERIALIZATION
 		AG_GetString(cfg, "font.face", name, sizeof(name));
-#else
-		name[0] = '\0';
-#endif
 	}
 
 	AG_MutexLock(&agTextLock);
 
 	TAILQ_FOREACH(font, &fonts, fonts) {
-#ifdef HAVE_FLOAT
 		if (Fabs(font->spec.size - *fontSize) < AG_FONT_PTS_EPSILON &&
 		    font->flags == flags &&
 		    Strcasecmp(OBJECT(font)->name, name) == 0)
 			break;
-#else
-		if (font->spec.size == *fontSize &&
-		    font->flags == flags &&
-		    Strcasecmp(OBJECT(font)->name, name) == 0)
-			break;
-#endif
 	}
 	if (font != NULL)
 		goto out;
@@ -526,95 +495,91 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 		spec->sourceType = AG_FONT_SOURCE_MEMORY;
 		spec->source.mem.data = builtin->data;
 		spec->source.mem.size = builtin->size;
-	} else {
-		int isInFontPath=0;
-		/*
-		 * Scan CONFIG_PATH_FONTS first for TTF or OTF files of
-		 * the matching exact name.
-		 */
-		if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, name,
-		    spec->source.file, sizeof(spec->source.file)) == -1) {
-			char path[AG_FILENAME_MAX];
-
-			Strlcpy(path, name, sizeof(path));
-			Strlcat(path, ".ttf", sizeof(path));
-			if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
-			    spec->source.file, sizeof(spec->source.file)) == -1) {
-				Strlcpy(path, name, sizeof(path));
-				Strlcat(path, ".otf", sizeof(path));
-				if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
-				    spec->source.file, sizeof(spec->source.file)) == -1)
-					goto try_fontconfig;
-			}
-		}
-		if (GetFontTypeFromSignature(spec->source.file, &spec->type)==0) {
-			spec->sourceType = AG_FONT_SOURCE_FILE;
-			isInFontPath = 1;
-		}
-try_fontconfig:
-#if defined(HAVE_FONTCONFIG) && defined(HAVE_FLOAT)
-		if (agFontconfigInited && !isInFontPath) {
-			FcPattern *pattern, *fpat;
-			FcResult fres = FcResultMatch;
-			FcChar8 *filename;
-			FcMatrix *mat;
-			char *nameIn;
-			size_t nameLen;
-
-			nameLen = strlen(name)+8;
-			nameIn = Malloc(nameLen);
-			if ((*fontSize - floor(*fontSize)) > 0.0) {
-				Snprintf(nameIn, nameLen, "%s-%.2f",
-				    name, *fontSize);
-			} else {
-				Snprintf(nameIn, nameLen, "%s-%.0f",
-				    name, *fontSize);
-			}
-			if ((pattern = FcNameParse((FcChar8 *)nameIn)) == NULL ||
-			    !FcConfigSubstitute(NULL, pattern, FcMatchPattern)) {
-				AG_SetError(_("Fontconfig failed to parse: %s"), name);
-				free(nameIn);
-				goto fail;
-			}
-			free(nameIn);
-
-			FcDefaultSubstitute(pattern);
-			if ((fpat = FcFontMatch(NULL, pattern, &fres)) == NULL ||
-			    fres != FcResultMatch) {
-				AG_SetError(_("Fontconfig failed to match: %s"), name);
-				goto fail;
-			}
-			if (FcPatternGetString(fpat, FC_FILE, 0,
-			    &filename) != FcResultMatch) {
-				AG_SetErrorS("Fontconfig FC_FILE missing");
-				goto fail;
-			}
-			Strlcpy(spec->source.file, (const char *)filename,
-			    sizeof(spec->source.file));
-	
-			if (FcPatternGetInteger(fpat, FC_INDEX, 0, &spec->index) 
-			    != FcResultMatch) {
-				AG_SetErrorS("Fontconfig FC_INDEX missing");
-				goto fail;
-			}
-			if (FcPatternGetDouble(fpat, FC_SIZE, 0, &spec->size)
-			    != FcResultMatch) {
-				AG_SetErrorS("Fontconfig FC_SIZE missing");
-				goto fail;
-			}
-			if (FcPatternGetMatrix(fpat, FC_MATRIX, 0, &mat) == FcResultMatch) {
-				spec->matrix.xx = mat->xx;
-				spec->matrix.yy = mat->yy;
-				spec->matrix.xy = mat->xy;
-				spec->matrix.yx = mat->yx;
-			}
-			spec->type = AG_FONT_VECTOR;
-			FcPatternDestroy(fpat);
-			FcPatternDestroy(pattern);
-		}
-#endif /* HAVE_FONTCONFIG and HAVE_FLOAT */
+		goto init_font;
 	}
 
+	/*
+	 * Scan CONFIG_PATH_FONTS first for TTF or OTF files of
+	 * the matching exact name.
+	 */
+	isInFontPath = 1;
+	if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, name, spec->source.file,
+	    sizeof(spec->source.file)) == -1) {
+		char path[AG_FILENAME_MAX];
+
+		Strlcpy(path, name, sizeof(path));
+		Strlcat(path, ".ttf", sizeof(path));
+		if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
+		    spec->source.file, sizeof(spec->source.file)) == -1) {
+			Strlcpy(path, name, sizeof(path));
+			Strlcat(path, ".otf", sizeof(path));
+			if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
+			    spec->source.file, sizeof(spec->source.file)) == -1)
+				isInFontPath = 0;
+		}
+	}
+	if (!isInFontPath &&
+	    GetFontTypeFromSignature(spec->source.file, &spec->type) == 0) {
+		spec->sourceType = AG_FONT_SOURCE_FILE;
+		isInFontPath = 1;
+	}
+#ifdef HAVE_FONTCONFIG
+	if (agFontconfigInited && !isInFontPath) {
+		FcPattern *pattern, *fpat;
+		FcResult fres = FcResultMatch;
+		FcChar8 *filename;
+		FcMatrix *mat;
+		char *nameIn;
+		size_t nameLen;
+
+		nameLen = strlen(name)+8;
+		nameIn = Malloc(nameLen);
+		if ((*fontSize - floor(*fontSize)) > 0.0) {
+			Snprintf(nameIn, nameLen, "%s-%.2f", name, *fontSize);
+		} else {
+			Snprintf(nameIn, nameLen, "%s-%.0f", name, *fontSize);
+		}
+		if ((pattern = FcNameParse((FcChar8 *)nameIn)) == NULL ||
+		    !FcConfigSubstitute(NULL, pattern, FcMatchPattern)) {
+			AG_SetError(_("Fontconfig failed to parse: %s"), name);
+			free(nameIn);
+			goto fail;
+		}
+		free(nameIn);
+
+		FcDefaultSubstitute(pattern);
+		if ((fpat = FcFontMatch(NULL, pattern, &fres)) == NULL ||
+		    fres != FcResultMatch) {
+			AG_SetError(_("Fontconfig failed to match: %s"), name);
+			goto fail;
+		}
+		if (FcPatternGetString(fpat, FC_FILE, 0, &filename) != FcResultMatch) {
+			AG_SetErrorS("Fontconfig FC_FILE missing");
+			goto fail;
+		}
+		Strlcpy(spec->source.file, (const char *)filename, sizeof(spec->source.file));
+	
+		if (FcPatternGetInteger(fpat, FC_INDEX, 0, &spec->index)  != FcResultMatch) {
+			AG_SetErrorS("Fontconfig FC_INDEX missing");
+			goto fail;
+		}
+		if (FcPatternGetDouble(fpat, FC_SIZE, 0, &spec->size) != FcResultMatch) {
+			AG_SetErrorS("Fontconfig FC_SIZE missing");
+			goto fail;
+		}
+		if (FcPatternGetMatrix(fpat, FC_MATRIX, 0, &mat) == FcResultMatch) {
+			spec->matrix.xx = mat->xx;
+			spec->matrix.yy = mat->yy;
+			spec->matrix.xy = mat->xy;
+			spec->matrix.yx = mat->yx;
+		}
+		spec->type = AG_FONT_VECTOR;
+		FcPatternDestroy(fpat);
+		FcPatternDestroy(pattern);
+	}
+#endif /* HAVE_FONTCONFIG */
+
+init_font:
 	switch (spec->type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
@@ -627,13 +592,11 @@ try_fontconfig:
 		}
 		break;
 #endif
-#ifdef AG_SERIALIZATION
 	case AG_FONT_BITMAP:
 		if (OpenBitmapFont(font) == -1) {
 			goto fail;
 		}
 		break;
-#endif
 	case AG_FONT_DUMMY:
 		break;
 	default:
@@ -827,7 +790,6 @@ TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extende
 }
 #endif /* !HAVE_FREETYPE */
 
-#ifdef AG_SERIALIZATION
 /*
  * Compute the rendered size of UCS-4 text with a bitmap font.
  */
@@ -922,7 +884,6 @@ GetBitmapGlyph(const AG_Font *_Nonnull font, AG_Char c)
 	}
 	return (font->bglyphs[c - font->c0 + 1]);
 }
-#endif /* !AG_SERIALIZATION */
 
 static void
 TextRenderDummy(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
@@ -1173,16 +1134,13 @@ AG_TextInfo(const char *key, const char *fmt, ...)
 void
 AG_TextInfoS(const char *key, const char *s)
 {
-#ifdef AG_SERIALIZATION
 	AG_Config *cfg = AG_ConfigObject();
 	char disableSw[64];
 	AG_Variable *Vdisable;
-#endif
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Checkbox *cb;
 	
-#ifdef AG_SERIALIZATION
 	if (key != NULL) {
 		Strlcpy(disableSw, "info.", sizeof(disableSw));
 		Strlcat(disableSw, key, sizeof(disableSw));
@@ -1190,7 +1148,6 @@ AG_TextInfoS(const char *key, const char *s)
 		if (AG_Defined(cfg,disableSw) && AG_GetInt(cfg,disableSw) == 1)
 			goto out;
 	}
-#endif
 	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
 	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
 	if (win == NULL)
@@ -1207,20 +1164,16 @@ AG_TextInfoS(const char *key, const char *s)
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_EXPAND);
 	AG_WidgetFocus( AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)) );
-#ifdef AG_SERIALIZATION
 	if (key != NULL) {
 		cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL,
 		    _("Don't tell me again"));
 		Vdisable = AG_SetInt(cfg, disableSw, 0);
 		AG_BindInt(cb, "state", &Vdisable->data.i);
 	}
-#endif
 	AG_WindowShow(win);
-#ifdef AG_SERIALIZATION
 out:
 	if (key != NULL)
 		AG_ObjectUnlock(cfg);
-#endif
 }
 
 /*
@@ -1243,16 +1196,13 @@ AG_TextWarning(const char *key, const char *fmt, ...)
 void
 AG_TextWarningS(const char *key, const char *s)
 {
-#ifdef AG_SERIALIZATION
 	AG_Config *cfg = AG_ConfigObject();
 	char disableSw[64];
 	AG_Variable *Vdisable;
-#endif
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Checkbox *cb;
 
-#ifdef AG_SERIALIZATION
 	if (key != NULL) {
 		Strlcpy(disableSw, "warn.", sizeof(disableSw));
 		Strlcat(disableSw, key, sizeof(disableSw));
@@ -1260,7 +1210,6 @@ AG_TextWarningS(const char *key, const char *s)
 		if (AG_Defined(cfg,disableSw) && AG_GetInt(cfg,disableSw) == 1)
 			goto out;
 	}
-#endif
 	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
 	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
 	if (win == NULL)
@@ -1278,21 +1227,17 @@ AG_TextWarningS(const char *key, const char *s)
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_EXPAND);
 	AG_WidgetFocus( AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)) );
 
-#ifdef AG_SERIALIZATION
 	if (key != NULL) {
 		cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL,
 		    _("Don't tell me again"));
 		Vdisable = AG_SetInt(cfg, disableSw, 0);
 		AG_BindInt(cb, "state", &Vdisable->data.i);
 	}
-#endif
 	AG_WindowShow(win);
 
-#ifdef AG_SERIALIZATION
 out:
 	if (key != NULL)
 		AG_ObjectUnlock(cfg);
-#endif
 }
 
 /* Display an error message. */
@@ -1973,11 +1918,9 @@ TextRenderGlyph_Miss(AG_Driver *_Nonnull drv, AG_Char ch)
 		}
 		break;
 #endif
-#ifdef AG_SERIALIZATION
 	case AG_FONT_BITMAP:
 		G->advance = G->su->w;
 		break;
-#endif
 	case AG_FONT_DUMMY:
 		break;
 	}
@@ -2061,7 +2004,6 @@ AG_TextTabWidth(int px)
 	AG_TEXT_STATE_CUR()->tabWd = px;
 }
 
-#ifdef AG_SERIALIZATION
 /*
  * Set the default font to the specified font.
  *
@@ -2130,7 +2072,6 @@ AG_TextParseFontSpec(const char *fontspec)
 		AG_SetUint(cfg, "font.flags", flags);
 	}
 }
-#endif /* AG_SERIALIZATION */
 
 /* AG_Font init() method */
 static void
@@ -2139,20 +2080,14 @@ AG_Font_Init(void *_Nonnull obj)
 	AG_Font *font = obj;
 	AG_FontSpec *spec = &font->spec;
 
-#ifdef HAVE_FLOAT
 	spec->size = 0.0;
-#else
-	spec->size = 0;
-#endif
 	spec->index = 0;
 	spec->type = AG_FONT_VECTOR;
 	spec->sourceType = AG_FONT_SOURCE_FILE;
-#ifdef HAVE_FLOAT
 	spec->matrix.xx = 1.0;
 	spec->matrix.xy = 0.0;
 	spec->matrix.yx = 0.0;
 	spec->matrix.yy = 1.0;
-#endif
 	spec->source.file[0] = '\0';
 
 	font->flags = 0;
@@ -2180,7 +2115,6 @@ AG_Font_Destroy(void *_Nonnull obj)
 		AG_TTFCloseFont(font);
 		break;
 #endif
-#ifdef AG_SERIALIZATION
 	case AG_FONT_BITMAP:
 		{
 			int i;
@@ -2191,7 +2125,6 @@ AG_Font_Destroy(void *_Nonnull obj)
 			Free(font->bglyphs);
 		}
 		break;
-#endif
 	case AG_FONT_DUMMY:
 		break;
 	}
@@ -2239,10 +2172,8 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 int
 AG_InitTextSubsystem(void)
 {
-#ifdef AG_SERIALIZATION
 	AG_Config *cfg = AG_ConfigObject();
 	AG_User *sysUser;
-#endif
 	AG_TextState *ts;
 
 	if (agTextInitedSubsystem++ > 0)
@@ -2251,7 +2182,6 @@ AG_InitTextSubsystem(void)
 	AG_MutexInitRecursive(&agTextLock);
 	TAILQ_INIT(&fonts);
 
-#ifdef AG_SERIALIZATION
 	/* Set the default font search path. */
 	AG_ObjectLock(cfg);
 	sysUser = AG_GetRealUser();
@@ -2259,7 +2189,7 @@ AG_InitTextSubsystem(void)
 	if (strcmp(TTFDIR, "NONE") != 0)
 		AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, TTFDIR);
 
-# if defined(__APPLE__)
+#if defined(__APPLE__)
 	if (sysUser != NULL &&
 	    sysUser->home != NULL) {
 		AG_ConfigAddPath(AG_CONFIG_PATH_FONTS, "%s/Library/Fonts",
@@ -2267,7 +2197,7 @@ AG_InitTextSubsystem(void)
 	}
 	AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, "/Library/Fonts");
 	AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, "/System/Library/Fonts");
-# elif defined(_WIN32)
+#elif defined(_WIN32)
 	{
 		char windir[AG_PATHNAME_MAX];
 
@@ -2279,16 +2209,14 @@ AG_InitTextSubsystem(void)
 			AG_ConfigAddPath(AG_CONFIG_PATH_FONTS, "%s\\Fonts",
 			    windir);
 	}
-# else /* !WIN32 & !APPLE */
+#else /* !WIN32 & !APPLE */
 	if (sysUser != NULL && sysUser->home != NULL) {
 		AG_ConfigAddPath(AG_CONFIG_PATH_FONTS, "%s%s.fonts",
 		    sysUser->home, AG_PATHSEP);
 	}
-# endif
+#endif
 	if (sysUser != NULL)
 		AG_UserFree(sysUser);
-
-#endif /* AG_SERIALIZATION */
 
 #ifdef HAVE_FREETYPE
 	if (AG_TTFInit() == 0) {		/* Initialize FreeType */
@@ -2305,13 +2233,12 @@ AG_InitTextSubsystem(void)
 		AG_Verbose("Failed to initialize fontconfig; ignoring\n");
 	}
 #endif
-#ifdef AG_SERIALIZATION
 	{
-# ifdef AG_DEBUG
+#ifdef AG_DEBUG
 		int debugLvlSave = agDebugLvl;
 
 		agDebugLvl = 0;
-# endif
+#endif
 
 		/* Load the default font. */
 		if (agFreetypeInited) {
@@ -2327,12 +2254,11 @@ AG_InitTextSubsystem(void)
 		}
 		if (!AG_Defined(cfg,"font.flags"))
 			AG_SetUint(cfg, "font.flags", 0);
-# ifdef AG_DEBUG
+#ifdef AG_DEBUG
 		agDebugLvl = debugLvlSave;
-# endif
+#endif
 	}
 	AG_ObjectUnlock(cfg);
-#endif /* AG_SERIALIZATION */
 
 	/* Load the default font. */
 	if ((agDefaultFont = AG_FetchFont(NULL, NULL, 0)) == NULL) {
