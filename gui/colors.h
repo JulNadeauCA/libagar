@@ -47,6 +47,11 @@ typedef struct ag_color_hsv {
 #endif
 } AG_ColorHSV;
 
+typedef struct ag_color_name {
+	const char *name;
+	AG_Color c;
+} AG_ColorName;
+
 #ifdef AG_HAVE_FLOAT
 # define AG_4to8(c)    (Uint8)((float)(c)/15.0f * 255.0f)
 # define AG_4to16(c)  (Uint16)((float)(c)/15.0f * 65535.0f)
@@ -119,6 +124,7 @@ typedef struct ag_color_hsv {
 __BEGIN_DECLS
 extern AG_ColorOffset agSunkColor, agRaisedColor, agLowColor, agHighColor;
 extern AG_ColorOffset agTint, agShade;
+extern AG_ColorName agColorNames[];
 
 void AG_ColorFromString(AG_Color *_Nonnull, const char *_Nonnull,
                         const AG_Color *_Nullable);

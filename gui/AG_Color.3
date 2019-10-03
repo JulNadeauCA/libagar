@@ -163,23 +163,23 @@ converts a text-based color representation to an
 .Nm .
 The following formats are allowed:
 .Bd -literal
-	"#RRGGBB"           (opaque)
-	"#RRGGBBAA"
-	"#RRRRGGGGBBBB"     (opaque, if AG_LARGE)
-	"#RRRRGGGGBBBBAAAA" (if AG_LARGE)
-	"r:g:b[:a]"
+	"#RGB[A]"
+	"#RRGGBB[AA]"
+	"#RRRRGGGGBBBB[AAAA]"
 	"r,g,b[,a]"
-	"r/g/b[/a]"
 	"rgb(r,g,b[,a])"
-	"hsv(h,s,v[,a])"    (if HAVE_FLOAT)
+	"hsv(h,s,v[,a])"
+	"AliceBlue"
 .Ed
 .Pp
-Components can be separated by ",:/" characters.
+Components can be separated by `/', ':' or ',' characters.
 .Pp
-Components with a terminating "%" character are interpreted as a
-percentage of the corresponding component in
-.Fa parentColor
-(if non-NULL).
+A component terminating with a `%' character is interpreted as a ratio in %
+of the corresponding component of
+.Fa pColor
+(or White if
+.Fa pColor
+is NULL).
 .Pp
 .Fn AG_ColorNone
 initializes the color to fully transparent black (0,0,0,0).
