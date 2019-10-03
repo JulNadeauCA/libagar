@@ -3,19 +3,22 @@ include ${TOP}/Makefile.config
 
 DATADIR=	${TTFDIR}
 DATAFILES_SRC=	Bedstead-COPYING.txt \
-		ModernDOS-LICENSE.txt \
+		Bedstead-NEWS.txt \
+		Charter-LICENSE.txt \
+		OFL-FAQ.txt \
 		Vera-Copyright.txt \
 		Vera-README.txt \
 		Vera-ReleaseNotes.txt \
 		bedstead-10-df.png \
 		bedstead-20-df.png \
 		bedstead.otf \
+		charter-bold-italic.otf \
+		charter-bold.otf \
+		charter-italic.otf \
+		charter.otf \
 		cm-Changes.txt \
 		cm-LICENSE.txt \
 		cm-README.txt \
-		cm-bright-bold.ttf \
-		cm-bright-semibold.ttf \
-		cm-bright.ttf \
 		cm-sans-bold.ttf \
 		cm-sans-demicondensed.ttf \
 		cm-sans.ttf \
@@ -28,16 +31,15 @@ DATAFILES_SRC=	Bedstead-COPYING.txt \
 		cm-typewriter-bold.ttf \
 		cm-typewriter-italic.ttf \
 		cm-typewriter.ttf \
+		courier-prime-bold.ttf \
+		courier-prime-bold-italic.ttf \
+		courier-prime-italic.ttf \
+		courier-prime.ttf \
 		cp437-16.bmp \
 		fraktur-FontLog.txt \
 		fraktur-LICENSE.txt \
 		fraktur.ttf \
 		minimal.xcf \
-		modern-dos-8x8.ttf \
-		modern-dos-8x14.ttf \
-		modern-dos-8x16.ttf \
-		modern-dos-9x14.ttf \
-		modern-dos-9x16.ttf \
 		serif.xcf \
 		vera.ttf \
 		vera-bold-italic.ttf \
