@@ -46,6 +46,8 @@ typedef unsigned int AG_KeyMod;
 #define AG_KEYMOD_NONE		0x0000
 #define AG_KEYMOD_LSHIFT	0x0001
 #define AG_KEYMOD_RSHIFT	0x0002
+#define AG_KEYMOD_CTRL_SHIFT	0x0004		/* Ctrl+Shift */
+#define AG_KEYMOD_CTRL_ALT	0x0008		/* Ctrl+Alt */
 #define AG_KEYMOD_LCTRL		0x0040
 #define AG_KEYMOD_RCTRL		0x0080
 #define AG_KEYMOD_LALT		0x0100
@@ -55,11 +57,11 @@ typedef unsigned int AG_KeyMod;
 #define AG_KEYMOD_NUMLOCK	0x1000
 #define AG_KEYMOD_CAPSLOCK	0x2000
 #define AG_KEYMOD_MODE		0x4000
+#define AG_KEYMOD_CTRL		(AG_KEYMOD_LCTRL  | AG_KEYMOD_RCTRL)
+#define AG_KEYMOD_SHIFT		(AG_KEYMOD_LSHIFT | AG_KEYMOD_RSHIFT)
+#define AG_KEYMOD_ALT		(AG_KEYMOD_LALT   | AG_KEYMOD_RALT)
+#define AG_KEYMOD_META		(AG_KEYMOD_LMETA  | AG_KEYMOD_RMETA)
 #define AG_KEYMOD_ANY		0xffff
-#define AG_KEYMOD_CTRL		(AG_KEYMOD_LCTRL|AG_KEYMOD_RCTRL)
-#define AG_KEYMOD_SHIFT		(AG_KEYMOD_LSHIFT|AG_KEYMOD_RSHIFT)
-#define AG_KEYMOD_ALT		(AG_KEYMOD_LALT|AG_KEYMOD_RALT)
-#define AG_KEYMOD_META		(AG_KEYMOD_LMETA|AG_KEYMOD_RMETA)
 .Ed
 .Pp
 The method of accessing key modifier states (and the related translation from

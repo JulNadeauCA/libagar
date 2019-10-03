@@ -270,22 +270,27 @@ typedef enum ag_key_sym {
 typedef unsigned int AG_KeyMod;
 
 #define AG_KEYMOD_NONE		0x0000
-#define AG_KEYMOD_LSHIFT	0x0001
-#define AG_KEYMOD_RSHIFT	0x0002
-#define AG_KEYMOD_LCTRL		0x0040
-#define AG_KEYMOD_RCTRL		0x0080
-#define AG_KEYMOD_LALT		0x0100
-#define AG_KEYMOD_RALT		0x0200
-#define AG_KEYMOD_LMETA		0x0400
-#define AG_KEYMOD_RMETA		0x0800
-#define AG_KEYMOD_NUMLOCK	0x1000
-#define AG_KEYMOD_CAPSLOCK	0x2000
-#define AG_KEYMOD_MODE		0x4000
+#define AG_KEYMOD_LSHIFT	0x0001		/* Left Shift */
+#define AG_KEYMOD_RSHIFT	0x0002		/* Right Shift */
+#define AG_KEYMOD_CTRL_SHIFT	0x0004		/* Ctrl+Shift combined */
+#define AG_KEYMOD_CTRL_ALT	0x0008		/* Ctrl+Alt combined */
+			/*      0x0010 Reserved */
+			/*      0x0020 Reserved */
+#define AG_KEYMOD_LCTRL		0x0040		/* Left Ctrl */
+#define AG_KEYMOD_RCTRL		0x0080		/* Right Ctrl */
+#define AG_KEYMOD_LALT		0x0100		/* Left Alt */
+#define AG_KEYMOD_RALT		0x0200		/* Right Alt */
+#define AG_KEYMOD_LMETA		0x0400		/* Left Meta */
+#define AG_KEYMOD_RMETA		0x0800		/* Right Meta */
+#define AG_KEYMOD_NUMLOCK	0x1000		/* Num lock */
+#define AG_KEYMOD_CAPSLOCK	0x2000		/* Caps lock */
+#define AG_KEYMOD_MODE		0x4000		/* Mode key */
+			/*      0x8000 Reserved */
 #define AG_KEYMOD_CTRL		(AG_KEYMOD_LCTRL  | AG_KEYMOD_RCTRL)
 #define AG_KEYMOD_SHIFT		(AG_KEYMOD_LSHIFT | AG_KEYMOD_RSHIFT)
 #define AG_KEYMOD_ALT		(AG_KEYMOD_LALT   | AG_KEYMOD_RALT)
 #define AG_KEYMOD_META		(AG_KEYMOD_LMETA  | AG_KEYMOD_RMETA)
-#define AG_KEYMOD_ANY		0xffff		/* For matching */
+#define AG_KEYMOD_ANY		0xffff		/* Any modifier */
 
 struct ag_window;
 

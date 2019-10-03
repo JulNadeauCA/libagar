@@ -2088,7 +2088,7 @@ Apply_Font_Style(Uint *fontFlags, Uint parentFontFlags, const char *spec)
  * palette and load any required fonts in the process.
  *
  * Per-instance (AG_SetStyle()-set) attributes have precedence over those
- * of the AG_Stylesheet(3). By default, attributes are inherited from parent.
+ * of the AG_StyleSheet(3). By default, attributes are inherited from parent.
  */
 static void
 CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,

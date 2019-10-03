@@ -158,6 +158,23 @@ AG_ClearGlobalKeys(void)
 	AG_MutexUnlock(&agGlobalKeysLock);
 }
 
+static __inline__ int
+TestKeyMod(AG_KeyMod mod, AG_KeyMod mask)
+{
+	if (mod == 0) {
+		return (1);
+	}
+	if ((mod & AG_KEYMOD_CTRL_SHIFT) &&
+	    (mask & AG_KEYMOD_CTRL) && (mask & AG_KEYMOD_SHIFT)) {
+		return (1);
+	}
+	if ((mod & AG_KEYMOD_CTRL_ALT) &&
+	    (mask & AG_KEYMOD_CTRL) && (mask & AG_KEYMOD_ALT)) {
+		return (1);
+	}
+	return (mod & mask);
+}
+
 /* Execute any action tied to a hotkey. */
 int
 AG_ExecGlobalKeys(AG_KeySym sym, AG_KeyMod mod)
@@ -167,8 +184,8 @@ AG_ExecGlobalKeys(AG_KeySym sym, AG_KeyMod mod)
 
 	AG_MutexLock(&agGlobalKeysLock);
 	SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
-		if ((gk->keysym == AG_KEY_ANY || gk->keysym == sym) &&
-		    (gk->keymod == AG_KEYMOD_ANY || gk->keymod & mod)) {
+		if ((gk->keysym == AG_KEY_ANY    || gk->keysym == sym) &&
+		    (gk->keymod == AG_KEYMOD_ANY || TestKeyMod(gk->keymod, mod))) {
 			if (gk->fn != NULL) {
 				gk->fn();
 			} else if (gk->fn_ev != NULL) {
