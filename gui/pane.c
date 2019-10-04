@@ -230,10 +230,21 @@ Init(void *_Nonnull obj)
 #endif
 }
 
+/*
+ * Set the width of the divider in pixels.
+ * If 0, the divider will not be visible or selectable.
+ * If -1, reset to the default which is zoom-dependent.
+ */
 void
 AG_PaneSetDividerWidth(AG_Pane *pa, int wDiv)
 {
-	pa->wDiv = wDiv;
+	if (wDiv == -1) {
+		pa->flags &= ~(AG_PANE_OVERRIDE_WDIV);
+		pa->wDiv = 0;
+	} else {
+		pa->flags |= AG_PANE_OVERRIDE_WDIV;
+		pa->wDiv = wDiv;
+	}
 	AG_Redraw(pa);
 }
 
@@ -393,16 +404,27 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
+	static const int zoomSizes[] = {
+	     5,  5,  5,  5,  5,  5,  6,  7,  /* 12.5% - 90% */
+	     8,  9, 10, 11, 12, 13,          /* 100% - 170% */
+	    14, 15, 16, 17, 18, 19           /* 200% - 650% */
+	};
 	AG_Pane *pa = obj;
 	AG_SizeReq r1, r2;
 	AG_SizeAlloc a1, a2;
 	AG_Rect r;
-
+	const int zoomLvl = WIDGET(pa)->window->zoom;
+#ifdef AG_DEBUG
+	if (zoomLvl < 0 || zoomLvl >= sizeof(zoomSizes)/sizeof(int))
+		AG_FatalError("zoomLvl");
+#endif
 	a1.x = 0;
 	a1.y = 0;
 
 	AG_WidgetSizeReq(pa->div[0], &r1);
 	AG_WidgetSizeReq(pa->div[1], &r2);
+
+	pa->wDiv = zoomSizes[zoomLvl];
 
 	switch (pa->type) {
 	case AG_PANE_HORIZ:

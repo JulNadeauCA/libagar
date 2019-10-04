@@ -29,6 +29,7 @@ typedef struct ag_pane {
 #define AG_PANE_DIV1FILL	0x004	/* Expand div1 (default is div2) */
 #define AG_PANE_FRAME		0x008	/* Display frames for each division */
 #define AG_PANE_UNMOVABLE	0x100	/* Pane is not user-movable */
+#define AG_PANE_OVERRIDE_WDIV	0x200	/* Override bar width (ignore zoom) */
 #define AG_PANE_EXPAND (AG_PANE_HFILL|AG_PANE_VFILL)
 
 #ifdef AG_LEGACY

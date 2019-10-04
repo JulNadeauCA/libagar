@@ -128,7 +128,8 @@ is a variant that accepts two box arguments.
 .Pp
 .Fn AG_PaneSetDividerWidth
 sets the width of the divider widget in pixels.
-If an argument of 0 is given, no divider is drawn.
+If the argument is 0 then the divider will be invisible and not selectable.
+If the argument is -1, reset to default (which is based on the zoom level).
 .Pp
 By default, the user is allowed to move the separator such that one of the
 two partitions can be shrunk to zero.
