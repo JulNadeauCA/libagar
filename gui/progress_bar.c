@@ -91,6 +91,7 @@ OnFontChange(AG_Event *_Nonnull event)
 	const AG_Font *font = WFONT(pb);
 
 	pb->width = font->height + 10;
+	AG_TextCacheClear(pb->tCache);
 }
 
 static void
