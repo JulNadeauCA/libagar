@@ -130,39 +130,39 @@ Uint         agTextStateCur = 0;
 /* ANSI color scheme (may be overridden by AG_TextState) */
 AG_Color agTextColorANSI[] = {
 #if AG_MODEL == AG_LARGE
-	{ 0x0000, 0x0000, 0x0000, 0xffff },		/* Black */
-	{ 0xdede, 0x3838, 0x2b2b, 0xffff },		/* Red */
-	{ 0x0000, 0xcdcd, 0x0000, 0xffff },		/* Green */
-	{ 0xcdcd, 0xcdcd, 0x0000, 0xffff },		/* Yellow */
-	{ 0x0000, 0x0000, 0xeeee, 0xffff },		/* Blue */
-	{ 0xcdcd, 0x0000, 0xcdcd, 0xffff },		/* Magenta */
-	{ 0x0000, 0xcdcd, 0xcdcd, 0xffff },		/* Cyan */
-	{ 0xe5e5, 0xe5e5, 0xe5e5, 0xffff },		/* White */
-	{ 0x7f7f, 0x7f7f, 0x7f7f, 0xffff },		/* Br.Black */
-	{ 0xffff, 0x0000, 0x0000, 0xffff },		/* Br.Red */
-	{ 0x0000, 0xffff, 0x0000, 0xffff },		/* Br.Green */
-	{ 0xffff, 0xffff, 0x0000, 0xffff },		/* Br.Yellow */
-	{ 0x5c5c, 0x5c5c, 0xffff, 0xffff },		/* Br.Blue */
-	{ 0xffff, 0x0000, 0xffff, 0xffff },		/* Br.Magenta */
-	{ 0x0000, 0xffff, 0xffff, 0xffff },		/* Br.Cyan */
-	{ 0xffff, 0xffff, 0xffff, 0xffff },		/* Br.White */
+	{ 0x0000, 0x0000, 0x0000, 0xffff },	/* Black */
+	{ 0xdede, 0x3838, 0x2b2b, 0xffff },	/* Red */
+	{ 0x0000, 0xcdcd, 0x0000, 0xffff },	/* Green */
+	{ 0xcdcd, 0xcdcd, 0x0000, 0xffff },	/* Yellow */
+	{ 0x0000, 0x0000, 0xeeee, 0xffff },	/* Blue */
+	{ 0xcdcd, 0x0000, 0xcdcd, 0xffff },	/* Magenta */
+	{ 0x0000, 0xcdcd, 0xcdcd, 0xffff },	/* Cyan */
+	{ 0xe5e5, 0xe5e5, 0xe5e5, 0xffff },	/* White */
+	{ 0x7f7f, 0x7f7f, 0x7f7f, 0xffff },	/* Br.Black */
+	{ 0xffff, 0x0000, 0x0000, 0xffff },	/* Br.Red */
+	{ 0x0000, 0xffff, 0x0000, 0xffff },	/* Br.Green */
+	{ 0xffff, 0xffff, 0x0000, 0xffff },	/* Br.Yellow */
+	{ 0x5c5c, 0x5c5c, 0xffff, 0xffff },	/* Br.Blue */
+	{ 0xffff, 0x0000, 0xffff, 0xffff },	/* Br.Magenta */
+	{ 0x0000, 0xffff, 0xffff, 0xffff },	/* Br.Cyan */
+	{ 0xffff, 0xffff, 0xffff, 0xffff },	/* Br.White */
 #else
-	{ 0,   0,     0,   255 },			/* Black */
-	{ 205, 0,     0,   255 },			/* Red */
-	{ 0,   205,   0,   255 },			/* Green */
-	{ 205, 205,   0,   255 },			/* Yellow */
-	{ 0,   0,   238,   255 },			/* Blue */
-	{ 205, 0,   205,   255 },			/* Magenta */
-	{ 0,   205, 205,   255 },			/* Cyan */
-	{ 229, 229, 229,   255 },			/* White */
-	{ 127, 127, 127,   255 },			/* Br.Black */
-	{ 255, 0,     0,   255 },			/* Br.Red */
-	{ 0,   255,   0,   255 },			/* Br.Green */
-	{ 255, 255,   0,   255 },			/* Br.Yellow */
-	{ 92,  92,  255,   255 },			/* Br.Blue */
-	{ 255, 0,   255,   255 },			/* Br.Magenta */
-	{ 0,   255, 255,   255 },			/* Br.Cyan */
-	{ 255, 255, 255,   255 },			/* Br.White */
+	{ 0,   0,     0, 255 },			/* Black */
+	{ 205, 0,     0, 255 },			/* Red */
+	{ 0,   205,   0, 255 },			/* Green */
+	{ 205, 205,   0, 255 },			/* Yellow */
+	{ 0,   0,   238, 255 },			/* Blue */
+	{ 205, 0,   205, 255 },			/* Magenta */
+	{ 0,   205, 205, 255 },			/* Cyan */
+	{ 229, 229, 229, 255 },			/* White */
+	{ 127, 127, 127, 255 },			/* Br.Black */
+	{ 255, 0,     0, 255 },			/* Br.Red */
+	{ 0,   255,   0, 255 },			/* Br.Green */
+	{ 255, 255,   0, 255 },			/* Br.Yellow */
+	{ 92,  92,  255, 255 },			/* Br.Blue */
+	{ 255, 0,   255, 255 },			/* Br.Magenta */
+	{ 0,   255, 255, 255 },			/* Br.Cyan */
+	{ 255, 255, 255, 255 },			/* Br.White */
 #endif
 };	
 
@@ -173,6 +173,20 @@ const char *agFontTypeNames[] = {		/* For enum ag_font_type */
 	N_("Bitmap"),
 	N_("Dummy")
 };
+const char *agFontFileExts[] = {
+	".otf",
+	".ttf",
+	".ttc",
+	".woff2",
+	".woff",
+	".dfont",
+	".fnt",
+	".xcf",
+	".bmp",
+	".png",
+	NULL
+};
+
 const char *agTextMsgTitles[] = {		/* For enum ag_text_msg_title */
 	N_("Error"),
 	N_("Warning"),
@@ -185,9 +199,6 @@ static TAILQ_HEAD(ag_fontq, ag_font) fonts;
 static void TextRenderFT(const AG_Char *_Nonnull, AG_Surface *_Nonnull, const AG_TextMetrics *_Nonnull);
 static int  TextParseANSI(const AG_TextState *_Nonnull, AG_TextANSI *_Nonnull, const AG_Char *_Nonnull);
 static void TextRenderFT_Underline(AG_TTFFont *_Nonnull, AG_Surface *_Nonnull, int);
-# ifdef SYMBOLS
-static int  TextRenderSymbol(Uint, AG_Surface *_Nonnull, int,int);
-# endif
 #endif
 static AG_Glyph *_Nonnull TextRenderGlyph_Miss(AG_Driver *_Nonnull, AG_Char);
 static AG_Surface *_Nonnull GetBitmapGlyph(const AG_Font *_Nonnull, AG_Char);
@@ -222,30 +233,6 @@ LoadBitmapGlyph(AG_Surface *_Nonnull su, const char *_Nonnull lbl,
 	font->bglyphs = Realloc(font->bglyphs,
 	                        (font->nglyphs+1)*sizeof(AG_Surface *));
 	font->bglyphs[font->nglyphs++] = su;
-}
-
-static int
-GetFontTypeFromSignature(const char *_Nonnull path,
-    enum ag_font_type *_Nonnull pType)
-{
-	char buf[14];
-	FILE *f;
-
-	if ((f = fopen(path, "rb")) == NULL) {
-		AG_SetError(_("Unable to open %s"), path);
-		return (-1);
-	}
-
-	*pType = AG_FONT_VECTOR;			/* Default */
-
-	memset(buf, 0, sizeof(buf));
-	fread(buf, 14, 1, f);
-	if ((buf[0] == 'B' && buf[1] == 'M') ||		/* Windows BMP image */
-	    strncmp(buf, "gimp xcf file", 13) == 0) {	/* Legacy Gimp XCF */
-		*pType = AG_FONT_BITMAP;
-	}
-	fclose(f);
-	return (0);
 }
 
 /* Load a bitmap font. */
@@ -498,31 +485,39 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 		goto init_font;
 	}
 
-	/*
-	 * Scan CONFIG_PATH_FONTS first for TTF or OTF files of
-	 * the matching exact name.
-	 */
-	isInFontPath = 1;
-	if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, name, spec->source.file,
-	    sizeof(spec->source.file)) == -1) {
-		char path[AG_FILENAME_MAX];
+	spec->type = AG_FONT_VECTOR;
+	spec->sourceType = AG_FONT_SOURCE_FILE;
+	isInFontPath = 0;
 
-		Strlcpy(path, name, sizeof(path));
-		Strlcat(path, ".ttf", sizeof(path));
-		if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
-		    spec->source.file, sizeof(spec->source.file)) == -1) {
+	if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, name,	/* Exact file match */
+	    spec->source.file, sizeof(spec->source.file)) == 0) {
+		const char *pExt = strrchr(spec->source.file, '.');
+
+		/*
+		 * Non-FreeType bitmap fonts must be referred to by their full
+		 * filename and extension.
+		 */
+		if (pExt && (Strcasecmp(pExt,".bmp") == 0 ||
+		             Strcasecmp(pExt,".png") == 0 ||
+		             Strcasecmp(pExt,".xcf") == 0)) {
+			spec->type = AG_FONT_BITMAP;
+		}
+		isInFontPath = 1;
+	} else {					/* <name>.{ttf,otf,...} */
+		char path[AG_FILENAME_MAX];
+		const char **ffe;
+
+		for (ffe = &agFontFileExts[0]; *ffe != NULL; ffe++) {
 			Strlcpy(path, name, sizeof(path));
-			Strlcat(path, ".otf", sizeof(path));
+			Strlcat(path, *ffe, sizeof(path));
 			if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
-			    spec->source.file, sizeof(spec->source.file)) == -1)
-				isInFontPath = 0;
+			    spec->source.file, sizeof(spec->source.file)) == 0) {
+				isInFontPath = 1;
+				break;
+			}
 		}
 	}
-	if (!isInFontPath &&
-	    GetFontTypeFromSignature(spec->source.file, &spec->type) == 0) {
-		spec->sourceType = AG_FONT_SOURCE_FILE;
-		isInFontPath = 1;
-	}
+
 #ifdef HAVE_FONTCONFIG
 	if (agFontconfigInited && !isInFontPath) {
 		FcPattern *pattern, *fpat;
@@ -677,20 +672,6 @@ AG_TextClearGlyphCache(AG_Driver *drv)
 		SLIST_INIT(&drv->glyphCache[i].glyphs);
 	}
 }
-
-#ifdef SYMBOLS
-static __inline__ AG_Surface *_Nullable _Pure_Attribute
-GetSymbolSurface(AG_Char ch)
-{
-	switch (ch) {
-	case 'L': return agIconLeftButton.s;
-	case 'M': return agIconMidButton.s;
-	case 'R': return agIconRightButton.s;
-	case 'C': return agIconCtrlKey.s;
-	default: return (NULL);
-	}
-}
-#endif /* SYMBOLS */
 
 static __inline__ void
 InitMetrics(AG_TextMetrics *_Nonnull tm)
@@ -1502,14 +1483,6 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 			}
 			continue;
 		}
-# ifdef SYMBOLS
-		if (ch[0] == '$' && agTextSymbols &&
-		    ch[1] == '(' && ch[2] != '\0' && ch[3] == ')') {
-			xStart += TextRenderSymbol(ch[2], S, xStart, yStart);
-			ch += 3;
-			continue;
-		}
-# endif
 		if (AG_TTFFindGlyph(ttf, *ch,
 		    TTF_CACHED_METRICS | TTF_CACHED_PIXMAP)) {
 			Debug(NULL, "TextRenderFT: No 0x%x\n", *ch);
@@ -1791,40 +1764,6 @@ fail_param:
 	return (-1);
 }
 
-# ifdef SYMBOLS
-static int
-TextRenderSymbol(Uint ch, AG_Surface *_Nonnull s, int x, int y)
-{
-	AG_Surface *sym;
-	AG_Pixel colorkey;
-	Uint BytesPerPixel;
-	int row, wSym;
-
-	If ((sym = GetSymbolSurface(ch)) == NULL) {
-		return (0);
-	}
-	wSym = sym->w;
-	colorkey = sym->colorkey;
-	BytesPerPixel = sym->format.BytesPerPixel;
-	for (row = 0; row < sym->h; row++) {
-		Uint8 *dst = s->pixels + (y + row)*(s->pitch >> 2) + (x+2);
-		Uint8 *src = sym->pixels + row*sym->pitch;
-		int col;
-
-		for (col = 0; col < wSym; col++) {
-			if (AG_SurfaceGet(sym,src) != colorkey) {
-				dst[0] = 0xff;
-				dst[1] = 0xff;
-				dst[2] = 0xff;
-			}
-			src += BytesPerPixel;
-			dst += 3;
-		}
-	}
-	return (wSym + 4);
-}
-# endif /* SYMBOLS */
-
 /*
  * Render underline style.
  * Surface must be at least ftFont->underline_height pixels high.
@@ -2040,8 +1979,11 @@ AG_SetDefaultFont(AG_Font *font)
 
 /*
  * Parse a command-line font specification and set the default font.
- * The format is <face>,<size>,<flags>. Acceptable flags include 'b'
- * (bold), 'i' (italic) and 'U' (uppercase).
+ * The format is <face>,<size>,<flags>. Acceptable flags include:
+ * 
+ *	b: Bold
+ *	i: Italic / Oblique
+ *	U: Force uppercase
  */
 void
 AG_TextParseFontSpec(const char *fontspec)

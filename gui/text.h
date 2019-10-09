@@ -354,6 +354,7 @@ extern AG_TextState            agTextStateStack[AG_TEXT_STATES_MAX];
 extern Uint                    agTextStateCur;
 extern AG_Font *_Nullable      agDefaultFont;
 
+extern const char *agFontFileExts[];
 extern const char *agFontTypeNames[];
 extern const char *agTextMsgTitles[];
 
@@ -424,10 +425,8 @@ void AG_TextJustify(enum ag_text_justify);
 void AG_TextValign(enum ag_text_valign);
 void AG_TextTabWidth(int);
 
-#ifdef AG_SERIALIZATION
 AG_Font *AG_SetDefaultFont(AG_Font *_Nonnull);
 void AG_TextParseFontSpec(const char *_Nonnull);
-#endif
 
 struct ag_window *_Nonnull AG_TextPromptOptions(struct ag_button *_Nonnull *_Nonnull ,
                                                 Uint, const char *_Nonnull, ...);
