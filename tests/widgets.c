@@ -192,11 +192,28 @@ TestGUI(void *obj, AG_Window *win)
 		AG_Tlist *tl;
 
 		tl = AG_TlistNew(div1, AG_TLIST_EXPAND);
-		AG_TlistAdd(tl, agIconDoc.s, "Doc");
-		AG_TlistAdd(tl, agIconMagnifier.s, "Magnifier");
+		AG_TlistAdd(tl, agIconLeftButton.s, "LeftButton");
+		AG_TlistAdd(tl, agIconMidButton.s, "MidButton");
+		AG_TlistAdd(tl, agIconRightButton.s, "RightButton");
+		AG_TlistAdd(tl, agIconCtrlKey.s, "CtrlKey");
+		AG_TlistAdd(tl, agIconLoad.s, "Load");
+		AG_TlistAdd(tl, agIconSave.s, "Save");
 		AG_TlistAdd(tl, agIconUp.s, "Up");
 		AG_TlistAdd(tl, agIconDown.s, "Down");
 		AG_TlistAdd(tl, agIconTrash.s, "Trash");
+		AG_TlistAdd(tl, agIconClose.s, "Close");
+		AG_TlistAdd(tl, agIconDoc.s, "Doc");
+		AG_TlistAdd(tl, agIconSymLink.s, "SymLink");
+		AG_TlistAdd(tl, agIconDirectory.s, "Directory");
+		AG_TlistAdd(tl, agIconSmallArrowRight.s, "SmallArrowRight");
+		AG_TlistAdd(tl, agIconWinClose.s, "WinClose");
+		AG_TlistAdd(tl, agIconWinMinimize.s, "WinMinimize");
+		AG_TlistAdd(tl, agIconWinMaximize.s, "WinMaximize");
+		AG_TlistAdd(tl, agIconMagnifier.s, "Magnifier");
+		AG_TlistAdd(tl, agIconGear.s, "Gear");
+		AG_TlistAdd(tl, agIconDocImport.s, "DocImport");
+		AG_TlistAdd(tl, agIconWindow.s, "Window");
+
 		AG_TlistSizeHintLargest(tl, 4);
 		AG_TlistSetIconWidth(tl, 16);
 	}
@@ -370,7 +387,8 @@ TestGUI(void *obj, AG_Window *win)
 		AG_SetInt(sl, "inc", 10);
 
 		pb = AG_ProgressBarNew(div1, AG_PROGRESS_BAR_HORIZ,
-		    AG_PROGRESS_BAR_EXCL | AG_PROGRESS_BAR_SHOW_PCT);
+		    AG_PROGRESS_BAR_EXCL | AG_PROGRESS_BAR_SHOW_PCT |
+		    AG_PROGRESS_BAR_HFILL);
 		AG_BindInt(pb, "value", &myVal);
 		AG_BindInt(pb, "min", &myMin);
 		AG_BindInt(pb, "max", &myMax);
