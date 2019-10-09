@@ -4,11 +4,15 @@ include ${TOP}/Makefile.config
 DATADIR=	${TTFDIR}
 DATAFILES_SRC=	Bedstead-COPYING.txt \
 		Bedstead-NEWS.txt \
+		Bedstead-VERSION.txt \
 		Charter-LICENSE.txt \
+		DejaVu-LICENSE.txt \
 		OFL-FAQ.txt \
 		Vera-Copyright.txt \
 		Vera-README.txt \
 		Vera-ReleaseNotes.txt \
+		League-Gothic-LICENSE.md \
+		League-Gothic-README.md \
 		bedstead-10-df.png \
 		bedstead-20-df.png \
 		bedstead.otf \
@@ -36,9 +40,21 @@ DATAFILES_SRC=	Bedstead-COPYING.txt \
 		courier-prime-italic.ttf \
 		courier-prime.ttf \
 		cp437-16.bmp \
+		dejavu-sans-bold-italic.ttf \
+		dejavu-sans-bold.ttf \
+		dejavu-sans-mono-bold-italic.ttf \
+		dejavu-sans-mono-bold.ttf \
+		dejavu-sans-mono-italic.ttf \
+		dejavu-sans-mono.ttf \
+		dejavu-sans-italic.ttf \
+		dejavu-sans.ttf \
 		fraktur-FontLog.txt \
 		fraktur-LICENSE.txt \
 		fraktur.ttf \
+		league-gothic.otf \
+		league-gothic-italic.otf \
+		league-gothic-condensed.otf \
+		league-gothic-condensed-italic.otf \
 		minimal.xcf \
 		serif.xcf \
 		vera.ttf \
