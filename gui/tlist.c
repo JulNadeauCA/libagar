@@ -445,7 +445,12 @@ Draw(void *_Nonnull obj)
 	cSel = WCOLOR_SEL(tl,AG_BG_COLOR);
 	cLine = WCOLOR(tl,AG_LINE_COLOR);
 	AG_WidgetDraw(tl->sbar);
-	AG_PushClipRect(tl, &tl->r);
+
+	r.x = 2;
+	r.y = 2;
+	r.w = tl->r.w - 4;
+	r.h = tl->r.h - 4;
+	AG_PushClipRect(tl, &r);
 
 	if (zoomLvl < AG_ZOOM_1_1) {
 		/* Tint the lines to create an illusion of distance. */
@@ -467,13 +472,11 @@ Draw(void *_Nonnull obj)
 		x = wIcon * it->depth;
 
 		if (it->selected) {
-		    	AG_Rect rSel;
-
-			rSel.x = x + wIcon;
-			rSel.y = y + 1;
-			rSel.w = wRow - x - wIcon - 1;
-			rSel.h = hItem;
-			AG_DrawRect(tl, &rSel, &cSel);
+			r.x = x + wIcon;
+			r.y = y + 1;
+			r.w = wRow - x - wIcon - 1;
+			r.h = hItem;
+			AG_DrawRect(tl, &r, &cSel);
 			selSeen = 1;
 		}
 		if (it->iconsrc) {
