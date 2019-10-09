@@ -512,7 +512,8 @@ main(int argc, char *argv[])
 
 	RG_InitSubsystem();
 
-	AG_ObjectInitStatic(&rgedit, NULL);
+	AG_ObjectInit(&rgedit, NULL);
+	rgedit.flags |= AG_OBJECT_STATIC;
 
 	if (agDriverSw != NULL) {			/* Go MDI-style */
 		appMenu = AG_MenuNewGlobal(0);
