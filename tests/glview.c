@@ -228,7 +228,7 @@ MyOverlayFunction(AG_Event *event)
 	if (myText != NULL) {
 		AG_WidgetBlit(glv, myText,
 		    0,
-		    AGWIDGET(glv)->h - agTextFontHeight*2 - 5);
+		    AGWIDGET(glv)->h - (AGWIDGET_FONT(glv)->height << 1));
 		AG_SurfaceFree(myText);
 	}
 }
@@ -297,6 +297,9 @@ TestGUI(void *obj, AG_Window *win)
 			/* Create the AG_GLView widget. */
 			glv = AG_GLViewNew(ntab, AG_GLVIEW_EXPAND);
 			AG_GLViewSizeHint(glv, 320,320);
+
+			/* Our overlay function uses the font engine. */
+			AGWIDGET(glv)->flags |= AG_WIDGET_USE_TEXT;
 
 			/* Set a periodic redraw at 60fps. */
 			AG_RedrawOnTick(glv, 1000/60);
