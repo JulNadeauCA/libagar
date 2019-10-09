@@ -406,8 +406,8 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	static const int zoomSizes[] = {
 	     5,  5,  5,  5,  5,  5,  6,  7,  /* 12.5% - 90% */
-	     8,  9, 10, 11, 12, 13,          /* 100% - 170% */
-	    14, 15, 16, 17, 18, 19           /* 200% - 650% */
+	     8,  9, 10, 11, 12, 12,          /* 100% - 170% */
+	    13, 13, 14, 14, 15, 16           /* 200% - 650% */
 	};
 	AG_Pane *pa = obj;
 	AG_SizeReq r1, r2;
