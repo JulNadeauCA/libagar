@@ -186,8 +186,14 @@ DecrementSelection(AG_Tlist *_Nonnull tl, int inc)
 			if (!it->selected) {
 				continue;
 			}
+prev_item:
 			itPrev = TAILQ_PREV(it, ag_tlist_itemq, items);
 			if (itPrev) {
+				if (itPrev->flags & AG_TLIST_NO_SELECT) {
+					DeselectItem(tl, it);
+					it = itPrev;
+					goto prev_item;
+				}
 				DeselectItem(tl, it);
 				SelectItem(tl, itPrev);
 			}
@@ -208,11 +214,16 @@ IncrementSelection(AG_Tlist *_Nonnull tl, int inc)
 
 	for (i = 0; i < inc; i++) {
 		TAILQ_FOREACH(it, &tl->items, items) {
-			if (!it->selected) {
+			if (!it->selected)
 				continue;
-			}
+next_item:
 			itNext = TAILQ_NEXT(it, items);
 			if (itNext) {
+				if (itNext->flags & AG_TLIST_NO_SELECT) {
+					DeselectItem(tl, it);
+					it = itNext;
+					goto next_item;
+				}
 				DeselectItem(tl, it);
 				SelectItem(tl, itNext);
 			}
