@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -67,6 +67,9 @@ widget draws a horizontal or vertical line or spacer.
 .Ft void
 .Fn AG_SeparatorSetPadding "AG_Separator *sep" "Uint pixels"
 .Pp
+.Ft void
+.Fn AG_SeparatorSetLength "AG_Separator *sep" "Uint pixels"
+.Pp
 .nr nS 0
 The
 .Fn AG_SeparatorNew
@@ -98,11 +101,16 @@ on horizontal separators or
 .Xr AG_ExpandVert 3
 on vertical separators, they are expanded by default.
 .Pp
-The
 .Fn AG_SeparatorSetPadding
-function sets the padding around the separator line in pixels.
+sets the padding around the separator line in pixels.
 The total width of the separation will be
 .Va pixels*2 .
+.Pp
+By default,
+.Nm
+expands to fit available space in parent container.
+.Fn AG_SeparatorSetLength
+requests a minimum length in pixels.
 .Sh EVENTS
 The
 .Nm

@@ -100,6 +100,7 @@ Init(void *_Nonnull obj)
 	sep->type = AG_SEPARATOR_HORIZ;
 	sep->padding = 4;
 	sep->visible = 1;
+	sep->minLen = 0;
 }
 
 static void
@@ -108,8 +109,21 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_Separator *sep = obj;
 	const int padding2 = (sep->padding << 1) + 2;
 
-	r->w = padding2;
-	r->h = padding2;
+	if (sep->minLen > 0) {
+		switch (sep->type) {
+		case AG_SEPARATOR_HORIZ:
+			r->w = sep->minLen;
+			r->h = padding2;
+			break;
+		case AG_SEPARATOR_VERT:
+			r->w = padding2;
+			r->h = sep->minLen;
+			break;
+		}
+	} else {
+		r->w = padding2;
+		r->h = padding2;
+	}
 }
 
 static int
@@ -153,6 +167,13 @@ void
 AG_SeparatorSetPadding(AG_Separator *sep, Uint pixels)
 {
 	sep->padding = pixels;
+	AG_Redraw(sep);
+}
+
+void
+AG_SeparatorSetLength(AG_Separator *sep, Uint minLen)
+{
+	sep->minLen = minLen;
 	AG_Redraw(sep);
 }
 

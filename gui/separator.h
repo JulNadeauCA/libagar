@@ -15,8 +15,8 @@ typedef struct ag_separator {
 	struct ag_widget wid;			/* AG_Widget -> AG_Separator */
 	enum ag_separator_type type;
 	Uint padding;				/* Padding in pixels */
+	Uint minLen;				/* Minimum length in pixels */
 	int visible;				/* Visible flag */
-	Uint32 _pad;
 } AG_Separator;
 
 __BEGIN_DECLS
@@ -30,6 +30,7 @@ AG_Separator *_Nonnull AG_SpacerNewHoriz(void *_Nullable);
 AG_Separator *_Nonnull AG_SpacerNewVert(void *_Nullable);
 
 void AG_SeparatorSetPadding(AG_Separator *_Nonnull, Uint);
+void AG_SeparatorSetLength(AG_Separator *_Nonnull, Uint);
 __END_DECLS
 
 #include <agar/gui/close.h>
