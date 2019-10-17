@@ -738,6 +738,15 @@ TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extende
 			x += ts->tabWd;
 			continue;
 		}
+		if (ch[0] == 0x1b &&
+		    ch[1] >= 0x40 && ch[1] <= 0x5f && ch[2] != '\0') {
+			AG_TextANSI ansi;
+			
+			if (TextParseANSI(ts, &ansi, &ch[1]) == 0) {
+				ch += ansi.len;
+				continue;
+			}
+		}
 		if (AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS) != 0) {
 			continue;
 		}
@@ -1429,7 +1438,6 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	Uint8 *src, *dst;
 	AG_Color cFG = ts->color;
 	AG_Color cBG = ts->colorBG;
-	AG_TextANSI ansi;
 	FT_UInt prev_index = 0;
 	const int BytesPerPixel = S->format.BytesPerPixel;
 	const int tabWd = ts->tabWd;
@@ -1457,6 +1465,8 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 		}
 		if (ch[0] == 0x1b &&
 		    ch[1] >= 0x40 && ch[1] <= 0x5f && ch[2] != '\0') {
+			AG_TextANSI ansi;
+
 			if (TextParseANSI(ts, &ansi, &ch[1]) == 0) {
 				if (ansi.ctrl == AG_ANSI_CSI_SGR) {
 					switch (ansi.sgr) {
@@ -1499,8 +1509,9 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 
 		if (FT_HAS_KERNING(ttf->face) && prev_index && G->index) {
 			FT_Vector delta; 
+
 			FT_Get_Kerning(ttf->face, prev_index, G->index,
-			    ft_kerning_default, &delta); 
+			               ft_kerning_default, &delta); 
 			xStart += delta.x >> 6;
 		}
 		
