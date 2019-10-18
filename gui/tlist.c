@@ -295,7 +295,7 @@ OnShow(AG_Event *_Nonnull event)
 
 	if (tl->flags & AG_TLIST_POLL) {
 		tl->flags |= AG_TLIST_REFRESH;
-		AG_AddTimer(tl, &tl->refreshTo, 125, PollRefreshTimeout, NULL);
+		AG_AddTimer(tl, &tl->refreshTo, tl->pollDelay, PollRefreshTimeout, NULL);
 	}
 }
 
@@ -1343,6 +1343,8 @@ Init(void *_Nonnull obj)
 	AG_InitTimer(&tl->refreshTo, "refresh", 0);
 	AG_InitTimer(&tl->dblClickTo, "dblClick", 0);
 #endif
+	tl->pollDelay = 250;
+
 	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
 	AG_SetInt(tl->sbar, "min", 0);
 	AG_BindInt(tl->sbar, "max", &tl->nitems);

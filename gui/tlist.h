@@ -109,6 +109,7 @@ typedef struct ag_tlist {
 	AG_Timer moveTo;		/* Timer for keyboard motion */
 	AG_Timer refreshTo;		/* Timer for polled mode updates */
 	AG_Timer dblClickTo;		/* Timer for detecting double clicks */
+	Uint     pollDelay;		/* Refresh rate for POLL mode */
 } AG_Tlist;
 
 #define AGTLIST(obj)            ((AG_Tlist *)(obj))
