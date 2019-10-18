@@ -1243,7 +1243,7 @@ AG_WindowFocus(AG_Window *win)
 
 	AG_LockVFS(&agDrivers);
 
-	if (win == NULL) {
+	if (win == NULL || agWindowFocused == win) {
 		agWindowToFocus = NULL;
 		goto out;
 	}
