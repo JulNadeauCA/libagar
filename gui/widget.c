@@ -1453,7 +1453,7 @@ AG_WidgetDraw(void *p)
 	flags = wid->flags;
 
 	if (!(wid->flags & AG_WIDGET_VISIBLE) ||
-	     (wid->flags & AG_WIDGET_UNDERSIZE) ||
+	     (wid->flags & (AG_WIDGET_HIDE | AG_WIDGET_UNDERSIZE)) ||
 	     WIDGET_OPS(wid)->draw == NULL)
 		goto out;
 
