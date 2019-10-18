@@ -86,6 +86,8 @@ MouseButtonDown(AG_Event *event)
 	AG_NotebookTab *nt;
 	const int x = AG_INT(2);
 	const int y = AG_INT(3);
+	
+	AG_WindowFocus(AG_ParentWindow(nb));
 
 	if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0 &&
 	    y <= nb->bar_h) {
