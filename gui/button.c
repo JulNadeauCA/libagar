@@ -445,6 +445,7 @@ Draw(void *_Nonnull p)
 	AG_Button *bu = p;
 	AG_Variable *bState;
 	void *pState;
+	AG_Label *lbl;
 	AG_Rect rd;
 	int pressed, surface;
 	
@@ -466,8 +467,18 @@ Draw(void *_Nonnull p)
 		    &WCOLOR_DIS(bu,0));
 	}
 
-	if (bu->lbl != NULL) {
-		AG_WidgetDraw(bu->lbl);
+	if ((lbl = bu->lbl) != NULL) {
+		if (pressed) {
+			WIDGET(lbl)->rView.x1++;
+			WIDGET(lbl)->rView.y1++;
+		}
+
+		AG_WidgetDraw(lbl);
+
+		if (pressed) {
+			WIDGET(lbl)->rView.x1--;
+			WIDGET(lbl)->rView.y1--;
+		}
 	} else if ((surface = bu->surface) != -1) {
 		const int w = WSURFACE(bu,surface)->w;
 		const int h = WSURFACE(bu,surface)->h;
