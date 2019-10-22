@@ -758,8 +758,10 @@ main(int argc, char *argv[])
 	 * Map F8 and Ctrl-Shift-C to Style Editor.
 	 */
 	AG_BindStdGlobalKeys();
+#if defined(AG_DEBUG) && defined(AG_TIMERS)
 	AG_BindGlobalKey(AG_KEY_F7, AG_KEYMOD_NONE, DoDebugger);
 	AG_BindGlobalKey(AG_KEY_D,  AGSI_CMD_MOD,   DoDebugger);
+#endif
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_NONE, DoStyleEditor);
 	AG_BindGlobalKey(AG_KEY_C,  AGSI_CMD_MOD,   DoStyleEditor);
 
