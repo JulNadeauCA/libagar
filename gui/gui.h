@@ -8,11 +8,7 @@
 
 #define AG_ZOOM_MIN 0
 #define AG_ZOOM_MAX 20
-#ifdef AG_HAVE_FLOAT
-# define AG_ZOOM_1_1 8		/* 12.5% to 100% (in 8 increments) */
-#else
-# define AG_ZOOM_1_1 0		/* Starts at 100% */
-#endif
+#define AG_ZOOM_1_1 8		/* 12.5% to 100% (in 8 increments) */
 #ifndef AG_ZOOM_DEFAULT
 #define AG_ZOOM_DEFAULT AG_ZOOM_1_1
 #endif
@@ -66,8 +62,12 @@ void  AG_DestroyGUIGlobals(void);
 int   AG_InitVideoSDL(void *_Nonnull, Uint);
 int   AG_SetVideoSurfaceSDL(void *_Nonnull);
 #endif
-#if defined(AG_DEBUG) && defined(AG_TIMERS)
+
+#ifdef AG_WIDGETS
+struct ag_window *_Nullable AG_StyleEditor(struct ag_window *_Nonnull);
+# if defined(AG_DEBUG) && defined(AG_TIMERS)
 struct ag_window *_Nullable AG_GuiDebugger(struct ag_window *_Nonnull);
+# endif
 #endif
 
 #ifdef AG_LEGACY

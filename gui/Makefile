@@ -45,7 +45,7 @@ SRCS=	${SRCS_GUI} drv.c drv_sw.c drv_mw.c drv_dummy.c primitive.c \
 	load_color.c load_xcf.c scrollview.c font_selector.c \
 	time_sdl.c debugger.c surface.c widget_legacy.c global_keys.c \
 	input_device.c mouse.c keyboard.c packedpixel.c load_bmp.c load_jpg.c \
-	load_png.c dir_dlg.c stylesheet.c
+	load_png.c dir_dlg.c stylesheet.c style_editor.c
 
 CFLAGS+=${CORE_CFLAGS} \
 	${GUI_CFLAGS} -D_AGAR_GUI_INTERNAL
@@ -57,10 +57,10 @@ include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
 include ${TOP}/mk/build.man.mk
 
-fonts_data.h: ${SRCDIR}/gui/fonts/Vera.ttf ${SRCDIR}/gui/fonts/minimal.xcf ${SRCDIR}/gui/fonts/serif.xcf
-	bundlefont -o $@ -v -n agFontVera ${SRCDIR}/gui/fonts/Vera.ttf
+fonts_data.h: ${SRCDIR}/gui/fonts/vera.ttf ${SRCDIR}/gui/fonts/minimal.xcf
+	bundlefont -o $@ -v -n agFontVera ${SRCDIR}/gui/fonts/vera.ttf
 	bundlefont -o $@ -a -b -n agFontMinimal ${SRCDIR}/gui/fonts/minimal.xcf
-	bundlefont -o $@ -a -b -n agFontMinimalSerif ${SRCDIR}/gui/fonts/serif.xcf
+#	bundlefont -o $@ -a -b -n agFontMinimalSerif ${SRCDIR}/gui/fonts/serif.xcf
 
 style_data.h: ${SRCDIR}/gui/style.css
 	bundlecss -o $@ -n agStyleDefault ${SRCDIR}/gui/style.css

@@ -142,9 +142,7 @@ void *agStdWidgets[] = {
 	&agLabelClass,
 	&agMenuClass,
 	&agMenuViewClass,
-# ifdef HAVE_FLOAT
 	&agMFSpinbuttonClass,
-# endif
 	&agMPaneClass,
 	&agMSpinbuttonClass,
 	&agNotebookClass,
@@ -196,19 +194,11 @@ int agTextSymbols = 1;			/* Process special symbols in text */
 int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
 int agScreenshotQuality = 100;		/* JPEG quality in % */
 
-#ifdef HAVE_FLOAT
 double agZoomValues[AG_ZOOM_MAX] = {
 	12.5, 18.2, 25.00, 33.33, 50.00, 66.67, 80.00, 90.00,
 	100.00, 110.00, 120.00, 133.00, 150.00, 170.00,
 	200.00, 240.00, 280.00, 400.00, 550.00, 650.00
 };
-#else
-int agZoomValues[AG_ZOOM_MAX] = {
-	 1,  2,  3,  4,  5,  6,  7,  8,
-	 9, 10, 11, 12, 13, 14,
-	15, 16, 17, 18, 19, 20
-};
-#endif /* HAVE_FLOAT */
 
 /*
  * Initialize the Agar-GUI globals and built-in classes. This function
