@@ -215,9 +215,11 @@ MyOverlayFunction(AG_Event *event)
 	/* Render a text string using the font engine. */
 	AG_PushTextState();
 	AG_TextColorRGB(255, 255, 125);
-	myText = AG_TextRenderF("Zoom using mouse wheel\n"
-	                        "Spin = %.0f degrees, z = %.02f",
+	AG_TextFontLookup("league-gothic",
+			  agZoomValues[AG_ParentWindow(glv)->zoom]*20.0f/100.0f, 0);
+	myText = AG_TextRenderF("Rotation: %.0f degrees.\nZ = %.02f",
 				ti->spin, ti->vz);
+
 	AG_PopTextState();
 
 	/*
@@ -228,7 +230,7 @@ MyOverlayFunction(AG_Event *event)
 	if (myText != NULL) {
 		AG_WidgetBlit(glv, myText,
 		    0,
-		    AGWIDGET(glv)->h - (AGWIDGET_FONT(glv)->height << 1));
+		    AGWIDGET(glv)->h - AGWIDGET_FONT(glv)->height*2.66f);
 		AG_SurfaceFree(myText);
 	}
 }

@@ -530,6 +530,15 @@ DoDebugger(void)
 }
 #endif /* AG_DEBUG and AG_TIMERS */
 
+static void
+DoStyleEditor(void)
+{
+	AG_Window *win;
+
+	if ((win = AG_StyleEditor(agWindowFocused)) != NULL)
+		AG_WindowShow(win);
+}
+
 /* Redirect AG_Debug() and AG_Verbose() to the AG_Console. */
 static int
 ConsoleWrite(const char *msg)
@@ -743,21 +752,16 @@ main(int argc, char *argv[])
 		AG_SetDebugCallback(ConsoleWrite);
 	}
 
-	/* Set up the standard shortcuts + debugger and screenshot functions */
+	/*
+	 * Set application-global keyboard shortcuts.
+	 * Map F7 and Ctrl-Shift-D to Debugger.
+	 * Map F8 and Ctrl-Shift-C to Style Editor.
+	 */
 	AG_BindStdGlobalKeys();
-#ifdef __APPLE__
-# if defined(AG_DEBUG) && defined(AG_TIMERS)
-	AG_BindGlobalKey(AG_KEY_D, AG_KEYMOD_META, DoDebugger);
-# endif
-	AG_BindGlobalKey(AG_KEY_C, AG_KEYMOD_META, AG_ViewCapture);
-#else
-# if defined(AG_DEBUG) && defined(AG_TIMERS)
-	AG_BindGlobalKey(AG_KEY_F7,  AG_KEYMOD_ANY,                  DoDebugger);
-	AG_BindGlobalKey(AG_KEY_F12, AG_KEYMOD_ANY,                  DoDebugger);
-/*	AG_BindGlobalKey(AG_KEY_K,   AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT, DoDebugger); */
-# endif
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-#endif
+	AG_BindGlobalKey(AG_KEY_F7, AG_KEYMOD_NONE, DoDebugger);
+	AG_BindGlobalKey(AG_KEY_D,  AGSI_CMD_MOD,   DoDebugger);
+	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_NONE, DoStyleEditor);
+	AG_BindGlobalKey(AG_KEY_C,  AGSI_CMD_MOD,   DoStyleEditor);
 
 	/* Check for data files in the agartest install directory. */
 #if !defined(_WIN32)
@@ -802,9 +806,8 @@ main(int argc, char *argv[])
 		AG_WidgetDisable(btnBench);
 	}
 	console = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
-	AG_SetStyle(console, "font-family", "Bedstead,Courier,Terminal,Clean");
-	AG_SetStyle(console, "text-color", "rgb(200,200,200)");
-	AG_SetStyle(console, "font-size", "80%");
+	AG_SetStyle(console, "font-family", "courier-prime");
+	AG_SetStyle(console, "text-color", "#ddd");
 	{
 		AG_AgarVersion av;
 		AG_DriverClass **pd;
@@ -837,7 +840,7 @@ main(int argc, char *argv[])
 			    _("Agar %d.%d.%d for %s (r%d)"),
 			    av.major, av.minor, av.patch, agCPU.arch, av.rev);
 		}
-		AG_ColorRGB_8(&ln->c, 0,255,120);
+		AG_ColorFromString(&ln->c, "Cyan", NULL);
 
 		if (av.rev > 0 && av.rev != AGAR_REVISION) {
 			ln = AG_ConsoleMsg(console,
@@ -848,13 +851,13 @@ main(int argc, char *argv[])
 		}
 
 		ln = AG_ConsoleMsgS(console, "http://libagar.org");
-		AG_ColorRGB_8(&ln->c, 0,255,120);
+		AG_ColorFromString(&ln->c, "DarkCyan", NULL);
 
 		ln = AG_ConsoleMsg(console, _("Memory model: %s"), AG_MEMORY_MODEL_NAME);
 		AG_ColorRGB_8(&ln->c, 240,240,0);
 
 		ln = AG_ConsoleMsg(console, _("Color: %d-bit/component "
-		                        "(%u-bit pixels)"),
+		                              "(%u-bit pixels)"),
 		    AG_COMPONENT_BITS, (Uint)(sizeof(AG_Pixel) << 3));
 		AG_ColorRGB_8(&ln->c, 240,240,0);
 
@@ -878,26 +881,17 @@ main(int argc, char *argv[])
 				AG_ConsoleMsgCatS(ln, _(" [current]"));
 			}
 		}
-#ifdef __APPLE__
+		AG_ConsoleMsg(console, "");
 		AG_ConsoleMsg(console,
-		    _("Press Command-[-] and Command-[=] to zoom"));
+		    _("Press " AGSI_BOLD AGSI_CMD "[-]" AGSI_RST
+		       " and " AGSI_BOLD AGSI_CMD "[=]" AGSI_RST " to zoom"));
 # if defined(AG_DEBUG) && defined(AG_TIMERS)
 		AG_ConsoleMsg(console,
-		    _("Press Command-D to debug active window"));
-# endif
-#else
-		AG_ConsoleMsg(console,
-		    _("Press" AGSI_BOLD "Ctrl-[-]" AGSI_RST
-		      " and " AGSI_BOLD "Ctrl-[=]" AGSI_RST " to zoom"));
-# if defined(AG_DEBUG) && defined(AG_TIMERS)
-		AG_ConsoleMsg(console,
-		    _("Press " AGSI_BOLD "F7" AGSI_RST
-		      " to debug active window"));
-# endif
+		    _("Press " AGSI_BOLD "F7 or Ctrl-Shift-D" AGSI_RST " to start Debugger"));
 #endif
-		if (agDriverSw)
-			AG_ConsoleMsg(console, _("Press " AGSI_BOLD "F8" AGSI_RST
-			                         " to take a screenshot"));
+		AG_ConsoleMsg(console,
+		    _("Press " AGSI_BOLD "F8 or Ctrl-Shift-C" AGSI_RST " to start Style Editor"));
+		AG_ConsoleMsg(console, "");
 	}
 
 	AG_TlistSetChangedFn(tl, SelectedTest, NULL);

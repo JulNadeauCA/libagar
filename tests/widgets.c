@@ -451,11 +451,14 @@ TestGUI(void *obj, AG_Window *win)
 			 * the table is static or needs to be repopulated
 			 * periodically.
 			 */
-			table = AG_TableNew(nt,
-			    AG_TABLE_EXPAND | AG_TABLE_MULTI);
+			table = AG_TableNew(nt, AG_TABLE_EXPAND | AG_TABLE_MULTI);
+
 			AG_TableAddCol(table, "x", "33%", NULL);
 			AG_TableAddCol(table, "sin(x)", "33%", NULL);
 			AG_TableAddCol(table, "cos(x)", "33%", NULL);
+
+			AG_SetStyle(table, "font-size", "120%");
+
 			for (f = 0.0f; f < 60.0f; f += 0.3f) {
 				/*
 				 * Insert a Table row for sin(f) and cos(f).
@@ -472,7 +475,10 @@ TestGUI(void *obj, AG_Window *win)
 				    "Select by column",
 				    NULL
 				};
-				AG_RadioNewUint(nt, 0, selModes, &table->selMode);
+				AG_Radio *rad;
+
+				rad = AG_RadioNewUint(nt, 0, selModes, &table->selMode);
+				AG_SetStyle(rad, "font-size", "80%");
 			}
 			AG_CheckboxNewFlag(nt, 0,
 			    "Allow multiple selections",
