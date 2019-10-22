@@ -391,7 +391,7 @@ Detach(AG_Event *_Nonnull event)
 	AG_UnlockVFS(&agDrivers);
 }
 
-#if defined(AG_TIMERS) && defined(HAVE_FLOAT)
+#ifdef AG_TIMERS
 static Uint32
 FadeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -422,7 +422,7 @@ FadeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 		}
 	}
 }
-#endif /* AG_TIMERS and HAVE_FLOAT */
+#endif /* AG_TIMERS */
 
 /*
  * Make a window a logical child of the specified window. If the logical
@@ -766,7 +766,7 @@ OnShow(AG_Event *_Nonnull event)
 			}
 			AGDRIVER_MW(drv)->flags |= AG_DRIVER_MW_OPEN;
 		}
-#if defined(AG_TIMERS) && defined(HAVE_FLOAT)
+#ifdef AG_TIMERS
 		if (win->flags & AG_WINDOW_FADEIN)
 			AG_WindowSetOpacity(win, 0.0);
 #endif
@@ -797,14 +797,14 @@ OnShow(AG_Event *_Nonnull event)
 	/* We can now allow cursor changes. */
 	win->flags &= ~(AG_WINDOW_NOCURSORCHG);
 
-#if defined(AG_TIMERS) && defined(HAVE_FLOAT)
+#ifdef AG_TIMERS
 	if (win->flags & AG_WINDOW_FADEIN) {
 		AG_AddTimer(win, &win->pvt.fadeTo,
 		    (Uint32)((win->pvt.fadeInTime*1000.0) /
 		             (1.0/win->pvt.fadeInIncr)),
 		    FadeTimeout, "%i", 1);
 	}
-#endif /* AG_TIMERS and HAVE_FLOAT */
+#endif
 }
 
 /* Handler for "widget-hidden", generated when the window is to be unmapped. */
@@ -1036,7 +1036,7 @@ AG_WindowHide(AG_Window *win)
 	if (!win->visible) {
 		goto out;
 	}
-#if defined(AG_TIMERS) && defined(HAVE_FLOAT)
+#ifdef AG_TIMERS
 	if ((win->flags & AG_WINDOW_FADEOUT) &&
 	   !(win->flags & AG_WINDOW_DETACHING)) {
 		AG_AddTimer(win, &win->pvt.fadeTo,
@@ -1044,7 +1044,7 @@ AG_WindowHide(AG_Window *win)
 		             (1.0 / win->pvt.fadeOutIncr)),
 		    FadeTimeout, "%i", -1);
 	} else
-#endif /* AG_TIMERS and HAVE_FLOAT */
+#endif
 	{
 #ifdef AG_THREADS
 		if (!AG_ThreadEqual(AG_ThreadSelf(), agEventThread)) {
@@ -2582,7 +2582,6 @@ scan:
 	}
 }
 
-#ifdef HAVE_FLOAT
 /*
  * Set the per-window opacity (for compositing window managers).
  */
@@ -2597,23 +2596,23 @@ AG_WindowSetOpacity(AG_Window *win, float f)
 	drv = OBJECT(win)->parent;
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
 
-# ifdef AG_TIMERS
+#ifdef AG_TIMERS
 	win->pvt.fadeOpacity = (f > 1.0) ? 1.0 : f;
 	if (drv && AGDRIVER_MULTIPLE(drv) &&
 	    AGDRIVER_MW_CLASS(drv)->setOpacity != NULL)
 		rv = AGDRIVER_MW_CLASS(drv)->setOpacity(win, win->pvt.fadeOpacity);
-# else
+#else
 	if (drv && AGDRIVER_MULTIPLE(drv) &&
 	    AGDRIVER_MW_CLASS(drv)->setOpacity != NULL)
 		rv = AGDRIVER_MW_CLASS(drv)->setOpacity(win, f);
-# endif
+#endif
 	
 	/* TODO: support compositing under single-window drivers. */
 	AG_ObjectUnlock(win);
 	return (rv);
 }
 
-# ifdef AG_TIMERS
+#ifdef AG_TIMERS
 /*
  * Set window fade-in/out parameters (for compositing window managers).
  */
@@ -2631,8 +2630,7 @@ AG_WindowSetFadeOut(AG_Window *win, float fadeTime, float fadeIncr)
 	win->pvt.fadeOutTime = fadeTime;
 	win->pvt.fadeOutIncr = fadeIncr;
 }
-# endif /* AG_TIMERS */
-#endif /* HAVE_FLOAT */
+#endif /* AG_TIMERS */
 
 /* Set the window zoom level. The scales are defined in agZoomValues[]. */
 void
@@ -2642,16 +2640,16 @@ AG_WindowSetZoom(AG_Window *win, int zoom)
 
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
+
 	if (zoom < 0 || zoom >= AG_ZOOM_MAX || zoom == win->zoom) {
 		AG_ObjectUnlock(win);
 		return;
 	}
-#if defined(HAVE_FLOAT)
+
 	AG_SetStyleF(win, "font-size", "%.02f%%", agZoomValues[zoom]);
-#else
-	/* TODO */
-#endif
+
 	win->zoom = zoom;
+
 	AG_WindowUpdate(win);
 
 	if (WIDGET(win)->drv) {
@@ -2952,7 +2950,7 @@ Init(void *_Nonnull obj)
 	win->pinnedTo = NULL;
 
 	TAILQ_INIT(&win->pvt.subwins);
-#if defined(AG_TIMERS) && defined(HAVE_FLOAT)
+#ifdef AG_TIMERS
 	win->pvt.fadeInTime = 0.06f;
 	win->pvt.fadeInIncr = 0.2f;
 	win->pvt.fadeOutTime = 0.06f;

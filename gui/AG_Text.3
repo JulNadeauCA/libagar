@@ -80,13 +80,13 @@ flag set.
 .Fn AG_TextFont "AG_Font *font"
 .Pp
 .Ft "AG_Font *"
-.Fn AG_TextFontLookup "const char *face" "const AG_FontPts *size" "Uint flags"
+.Fn AG_TextFontLookup "const char *face" "float points" "Uint flags"
 .Pp
 .Ft "AG_Font *"
 .Fn AG_TextFontPct "int size_pct"
 .Pp
 .Ft "AG_Font *"
-.Fn AG_TextFontPts "const AG_FontPts *size"
+.Fn AG_TextFontPts "float size"
 .Pp
 .Ft void
 .Fn AG_TextJustify "enum ag_text_justify mode"
@@ -143,26 +143,21 @@ function selects
 as the active font.
 .Pp
 .Fn AG_TextFontLookup
-searches the font cache for the given font face, size and flags combination,
-possibly loading new fonts from disk (scanning all
-.Sq font-path
-directories).
-On success, the font is selected as the active font and returned.
-If no match is found, the function returns NULL.
+checks the font cache for a given combination of face, point size and flags,
+possibly loading new fonts from disk.
+On success, the font is set as the active font for the current text state
+and a pointer to it is returned.
+If no font was found,
+.Fn AG_TextFontLookup
+returns NULL.
 .Pp
 .Fn AG_TextFontPts
 sets the size of the active font in points.
-The
-.Ft AG_FontPts
-type is either
-.Fa double
-or
-.Fa int
-depending on
-.Dv AG_HAVE_FLOAT .
-If the argument is NULL, then the
+If the argument nears 0.0 (is smaller than
+.Dv AG_FONT_PTS_EPSILON )
+then the
 .Xr AG_Config 3
-defaults are used.
+default "font.size" is used.
 .Pp
 .Fn AG_TextFontPct
 sets the size of the active font, specified as percentage of current font
@@ -390,7 +385,7 @@ which displays the message for a specific amount of time, given in milliseconds.
 .Sh FONT SELECTION
 .nr nS 1
 .Ft "AG_Font *"
-.Fn AG_FetchFont "const char *face" "const AG_FontPts *size" "Uint flags"
+.Fn AG_FetchFont "const char *face" "float size" "Uint flags"
 .Pp
 .Ft void
 .Fn AG_UnusedFont "AG_Font *font"
@@ -410,16 +405,7 @@ loads (or retrieves from cache) the font corresponding to the specified
 .Fa face
 and
 .Fa size
-(in points).
-The
-.Ft AG_FontPts
-type is either
-.Ft double
-or
-.Ft int
-depending on
-.Dv AG_HAVE_FLOAT .
-Fractional point sizes are supported except in integer-only builds.
+in points.
 .Pp
 Recognized
 .Fa flags
@@ -494,7 +480,6 @@ The
 interface first appeared in Agar 1.0.
 Rendering attributes were introduced in Agar 1.3.
 Fontconfig support was added in Agar 1.5.
-Agar 1.6 introduced the
-.Ft AG_FontPts
-abstraction and
-.Fn AG_TEXT_STATE_CUR .
+The
+.Fn AG_TEXT_STATE_CUR
+macro was added in Agar 1.6.

@@ -2036,19 +2036,13 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *S)
 }
 
 static void
-Apply_Font_Size(AG_FontPts *fontSize, AG_FontPts parentFontSize, const char *spec)
+Apply_Font_Size(float *fontSize, float parentFontSize, const char *spec)
 {
 	char *ep;
-#ifdef HAVE_FLOAT
 	double v;
 
 	v = strtod(spec, &ep);
-	*fontSize = (*ep == '%') ? parentFontSize * (v / 100.0) :  v;
-#else
-	*fontSize = (int)strtol(spec, &ep, 10);
-	if (*ep == '%')
-		*fontSize = parentFontSize * (*fontSize) / 100;
-#endif
+	*fontSize = (float)((*ep == '%') ? parentFontSize*(v/100.0) : v);
 }
 
 static void
@@ -2092,17 +2086,16 @@ Apply_Font_Style(Uint *fontFlags, Uint parentFontFlags, const char *spec)
  */
 static void
 CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
-    AG_FontPts parentFontSize, Uint parentFontFlags,
-    const AG_WidgetPalette *parentPalette)
+    float parentFontSize, Uint parentFontFlags, const AG_WidgetPalette *parentPalette)
 {
 	AG_StyleSheet *css = &agDefaultCSS;
 	char *fontFace, *cssData;
 	AG_Widget *chld;
 	AG_Variable *V;
 	AG_Object *po;
-	AG_FontPts fontSize;
+	float fontSize;
 	Uint fontFlags = parentFontFlags;
-	int i, j;
+	int i, j, paletteChanged=0;
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
@@ -2159,30 +2152,34 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	 */
 	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
 		for (j = 0; j < AG_WIDGET_NCOLORS; j++) {
-			const AG_Color *parentColor = &parentPalette->c[i][j];
+			const AG_Color *cParent = &parentPalette->c[i][j];
 			char name[AG_VARIABLE_NAME_MAX];
+			AG_Color cNew;
 
 			Strlcpy(name, agWidgetColorNames[j], sizeof(name));
 			Strlcat(name, agWidgetStateNames[i], sizeof(name));
 
 			if ((V = AG_AccessVariable(wid, name)) != NULL) {
-				AG_ColorFromString(&wid->pal.c[i][j],
-				    V->data.s, parentColor);
+				AG_ColorFromString(&cNew, V->data.s, cParent);
 				AG_UnlockVariable(V);
 			} else if (AG_LookupStyleSheet(css, wid, name, &cssData)) {
-				AG_ColorFromString(&wid->pal.c[i][j],
-				    cssData, parentColor);
+				AG_ColorFromString(&cNew, cssData, cParent);
 			} else {
 				Strlcpy(name, agWidgetColorNames[j], sizeof(name));
 				if (AG_LookupStyleSheet(css, wid, name, &cssData)) {
-					AG_ColorFromString(&wid->pal.c[i][j],
-					    cssData, parentColor);
+					AG_ColorFromString(&cNew, cssData, cParent);
 				} else {
-					wid->pal.c[i][j] = *parentColor;
+					cNew = *cParent;
 				}
+			}
+			if (AG_ColorCompare(&cNew, &wid->pal.c[i][j]) != 0) {
+				wid->pal.c[i][j] = cNew;
+				paletteChanged = 1;
 			}
 		}
 	}
+	if (paletteChanged)
+		AG_PostEvent(wid, "palette-changed", NULL);
 
 	/* Load any font required */
 	if (wid->flags & AG_WIDGET_USE_TEXT) {
@@ -2190,12 +2187,12 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		AG_Font *fontNew = NULL;
 
 		while ((tok = AG_Strsep(&pFace, ",")) != NULL) {
-			fontNew = AG_FetchFont(fontFace, &fontSize, fontFlags);
+			fontNew = AG_FetchFont(fontFace, fontSize, fontFlags);
 			if (fontNew != NULL)
 				break;
 		}
 		if (fontNew == NULL) {
-			fontNew = AG_FetchFont(NULL, &fontSize, fontFlags);
+			fontNew = AG_FetchFont(NULL, fontSize, fontFlags);
 			AG_OBJECT_ISA(fontNew, "AG_Font:*");
 		}
 		if (fontNew != NULL && wid->font != fontNew) {
@@ -2213,9 +2210,8 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	}
 
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
-		CompileStyleRecursive(chld,
-		    fontFace, fontSize, fontFlags,
-		    &wid->pal);
+		CompileStyleRecursive(chld, fontFace, fontSize, fontFlags,
+		                      &wid->pal);
 	}
 	
 	free(fontFace);

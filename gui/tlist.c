@@ -606,7 +606,7 @@ StylizeFont(AG_Tlist *_Nonnull tl, Uint itFlags)
 	if (itFlags & AG_TLIST_ITEM_UNDERLINE) { fontFlags |= AG_FONT_UNDERLINE; }
 	if (itFlags & AG_TLIST_ITEM_UPPERCASE) { fontFlags |= AG_FONT_UPPERCASE; }
 
-	AG_TextFontLookup(OBJECT(defFont)->name, &defFont->spec.size, fontFlags);
+	AG_TextFontLookup(OBJECT(defFont)->name, defFont->spec.size, fontFlags);
 }
 
 /* Remove a tlist item. */
@@ -1355,6 +1355,7 @@ Init(void *_Nonnull obj)
 	AG_SetInt(tl, "line-scroll-amount", 5);
 
 	AG_AddEvent(tl, "font-changed", OnFontChange, NULL);
+	AG_AddEvent(tl, "palette-changed", OnFontChange, NULL);
 	AG_SetEvent(tl, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tl, "key-down", KeyDown, NULL);
 #ifdef AG_TIMERS

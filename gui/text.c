@@ -324,8 +324,8 @@ AG_PushTextState(void)
 		memcpy(ts->colorANSI, tsPrev->colorANSI, size);
 	}
 	ts->font = AG_FetchFont(OBJECT(tsPrev->font)->name,
-	                              &tsPrev->font->spec.size,
-		                       tsPrev->font->flags);
+	                        tsPrev->font->spec.size,
+		                tsPrev->font->flags);
 #ifdef AG_DEBUG
 	snprintf(ts->name, sizeof(ts->name), "TS%d", agTextStateCur);
 #endif
@@ -361,7 +361,7 @@ AG_TextColorANSI(enum ag_ansi_color colorANSI, const AG_Color *c)
  * event-handling context. Widget must have the USE_TEXT flag set.
  */
 AG_Font *
-AG_TextFontLookup(const char *face, const AG_FontPts *size, Uint flags)
+AG_TextFontLookup(const char *face, float size, Uint flags)
 {
 	AG_Font *newFont;
 	AG_TextState *ts;
@@ -381,7 +381,7 @@ AG_TextFontLookup(const char *face, const AG_FontPts *size, Uint flags)
  * event-handling context. Widget must have the USE_TEXT flag set.
  */
 AG_Font *
-AG_TextFontPts(const AG_FontPts *size)
+AG_TextFontPts(float size)
 {
 	AG_TextState *ts = AG_TEXT_STATE_CUR();
 	const AG_Font *fontCur = ts->font;
@@ -404,10 +404,11 @@ AG_Font *
 AG_TextFontPct(int pct)
 {
 	AG_TextState *ts = AG_TEXT_STATE_CUR();
-	const AG_Font *fontCur = ts->font;
-	const AG_FontPts size = fontCur->spec.size * pct / 100.0;
+	const AG_Font *font = ts->font;
 
-	return AG_FetchFont(OBJECT(fontCur)->name, &size, fontCur->flags);
+	return AG_FetchFont(OBJECT(font)->name,
+	                    font->spec.size * pct / 100.0f,
+	                    font->flags);
 }
 
 /*
@@ -415,19 +416,17 @@ AG_TextFontPct(int pct)
  * given specifications.
  */
 AG_Font *
-AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
+AG_FetchFont(const char *face, float fontSize, Uint flags)
 {
 	char name[AG_OBJECT_NAME_MAX];
 	AG_Config *cfg = AG_ConfigObject();
 	AG_StaticFont *builtin = NULL;
 	AG_Font *font;
 	AG_FontSpec *spec;
-	AG_FontPts myFontSize;
 	int isInFontPath;
 
-	if (fontSize == NULL) {
-		myFontSize = (AG_FontPts)AG_GetInt(cfg, "font.size");
-		fontSize = &myFontSize;
+	if (fontSize < AG_FONT_PTS_EPSILON) {
+		fontSize = (float)AG_GetInt(cfg, "font.size");
 	}
 	if (face != NULL && face[0] != '_') {
 		const char *pFace;
@@ -447,7 +446,7 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 	AG_MutexLock(&agTextLock);
 
 	TAILQ_FOREACH(font, &fonts, fonts) {
-		if (Fabs(font->spec.size - *fontSize) < AG_FONT_PTS_EPSILON &&
+		if (Fabs(font->spec.size - fontSize) < AG_FONT_PTS_EPSILON &&
 		    font->flags == flags &&
 		    Strcasecmp(OBJECT(font)->name, name) == 0)
 			break;
@@ -462,7 +461,7 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 	AG_ObjectInit(font, &agFontClass);
 	AG_ObjectSetNameS(font, name);
 	spec = &font->spec;
-	spec->size = *fontSize;
+	spec->size = fontSize;
 	font->flags = flags;
 
 	if (name[0] == '_') {               /* Builtin fonts start with "_" */
@@ -526,13 +525,14 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 		FcMatrix *mat;
 		char *nameIn;
 		size_t nameLen;
+		double sizeDbl;
 
 		nameLen = strlen(name)+8;
 		nameIn = Malloc(nameLen);
-		if ((*fontSize - floor(*fontSize)) > 0.0) {
-			Snprintf(nameIn, nameLen, "%s-%.2f", name, *fontSize);
+		if ((fontSize - floorf(fontSize)) > 0.0) {
+			Snprintf(nameIn, nameLen, "%s-%.2f", name, fontSize);
 		} else {
-			Snprintf(nameIn, nameLen, "%s-%.0f", name, *fontSize);
+			Snprintf(nameIn, nameLen, "%s-%.0f", name, fontSize);
 		}
 		if ((pattern = FcNameParse((FcChar8 *)nameIn)) == NULL ||
 		    !FcConfigSubstitute(NULL, pattern, FcMatchPattern)) {
@@ -558,10 +558,11 @@ AG_FetchFont(const char *face, const AG_FontPts *fontSize, Uint flags)
 			AG_SetErrorS("Fontconfig FC_INDEX missing");
 			goto fail;
 		}
-		if (FcPatternGetDouble(fpat, FC_SIZE, 0, &spec->size) != FcResultMatch) {
+		if (FcPatternGetDouble(fpat, FC_SIZE, 0, &sizeDbl) != FcResultMatch) {
 			AG_SetErrorS("Fontconfig FC_SIZE missing");
 			goto fail;
 		}
+		spec->size = (float)sizeDbl;
 		if (FcPatternGetMatrix(fpat, FC_MATRIX, 0, &mat) == FcResultMatch) {
 			spec->matrix.xx = mat->xx;
 			spec->matrix.yy = mat->yy;
@@ -2214,7 +2215,7 @@ AG_InitTextSubsystem(void)
 	AG_ObjectUnlock(cfg);
 
 	/* Load the default font. */
-	if ((agDefaultFont = AG_FetchFont(NULL, NULL, 0)) == NULL) {
+	if ((agDefaultFont = AG_FetchFont(NULL, 0.0f, 0)) == NULL) {
 		goto fail;
 	}
 	agTextFontHeight = agDefaultFont->height;

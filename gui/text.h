@@ -71,12 +71,6 @@ enum ag_font_spec_source {
 	AG_FONT_SOURCE_MEMORY			/* Read from memory */
 };
 
-#ifdef AG_HAVE_FLOAT
-typedef double AG_FontPts;
-#else
-typedef int AG_FontPts;
-#endif
-
 #ifndef AG_FONT_PTS_EPSILON
 #define AG_FONT_PTS_EPSILON 0.01
 #endif
@@ -227,17 +221,15 @@ typedef struct ag_text_ansi {
 
 /* Agar font specification. */
 typedef struct ag_font_spec {
-	AG_FontPts size;			/* Font size in points */
+	float size;				/* Font size in points */
 	int index;				/* Font index (FC_INDEX) */
 	enum ag_font_type type;			/* Font engine type */
 	enum ag_font_spec_source sourceType;	/* Source type */
 	Uint32 _pad;
-#ifdef AG_HAVE_FLOAT
-	struct {				/* Transform matrix */
+	struct {				/* Transformation matrix */
 		double xx, xy;
 		double yx, yy;
 	} matrix;
-#endif
 	union {
 		char file[AG_PATHNAME_MAX];          /* Source font file */
 		struct {
@@ -360,12 +352,10 @@ extern const char *agTextMsgTitles[];
 
 void               AG_PushTextState(void);
 void               AG_TextColorANSI(enum ag_ansi_color, const AG_Color *_Nonnull);
-AG_Font *_Nullable AG_TextFontLookup(const char *_Nullable,
-                                     const AG_FontPts *_Nullable, Uint);
-AG_Font *_Nullable AG_TextFontPts(const AG_FontPts *_Nullable);
+AG_Font *_Nullable AG_TextFontLookup(const char *_Nullable, float, Uint);
+AG_Font *_Nullable AG_TextFontPts(float);
 AG_Font *_Nullable AG_TextFontPct(int);
-AG_Font	*_Nullable AG_FetchFont(const char *_Nullable,
-                                const AG_FontPts *_Nullable, Uint)
+AG_Font	*_Nullable AG_FetchFont(const char *_Nullable, float, Uint)
                                _Warn_Unused_Result;
 void               AG_UnusedFont(AG_Font *_Nonnull);
 void               AG_PopTextState(void);
