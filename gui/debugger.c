@@ -30,7 +30,7 @@
 
 #include <agar/core/core.h>
 
-#if defined(AG_DEBUG) && defined(AG_TIMERS)
+#if defined(AG_WIDGETS) && defined(AG_DEBUG) && defined(AG_TIMERS)
 
 #include <agar/gui/gui.h>
 #include <agar/gui/box.h>
@@ -129,7 +129,8 @@ PollWidgets(AG_Event *_Nonnull event)
 	const AG_Window *win = AG_CONST_WINDOW_PTR(1);
 	AG_Driver *drv;
 	
-	AG_TlistClear(tl);
+	AG_TlistBegin(tl);
+
 	if (win != NULL) {
 		FindWindows(tl, win, 0);
 	} else {
@@ -141,7 +142,8 @@ PollWidgets(AG_Event *_Nonnull event)
 			AG_UnlockVFS(drv);
 		}
 	}
-	AG_TlistRestore(tl);
+
+	AG_TlistEnd(tl);
 }
 
 static void
@@ -477,33 +479,36 @@ ContextualMenu(AG_Event *_Nonnull event)
 
 /* Create the GUI debugger window. Return NULL if window exists. */
 AG_Window *_Nullable
-AG_GuiDebugger(AG_Window *_Nonnull obj)
+AG_GuiDebugger(AG_Window *_Nonnull tgt)
 {
 	AG_Window *win;
 	AG_Pane *pane;
 	AG_Tlist *tl;
 	AG_MenuItem *mi;
 
+	if (tgt == NULL) {
+		AG_TextError(_("No window is focused.\n"
+		               "Focus on a window to target it in Debugger."));
+		return (NULL);
+	}
 	if ((win = AG_WindowNewNamed(0, "dbgr%u", agDbgrCounter++)) == NULL) {
 		return (NULL);
 	}
-	if (win != NULL) {
-		AG_WindowSetCaption(win,
-		    _("Agar GUI Debugger: <%s> (\"%s\")"),
-		    OBJECT(obj)->name, AGWINDOW(obj)->caption);
-	} else {
-		AG_WindowSetCaptionS(win, _("Agar GUI Debugger"));
-	}
+	AG_WindowSetCaption(win,
+	    _("Agar GUI Debugger: <%s> (\"%s\")"),
+	    OBJECT(tgt)->name, AGWINDOW(tgt)->caption);
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 
-	tl = AG_TlistNewPolled(pane->div[0], 0, PollWidgets, "%Cp", obj);
+	tl = AG_TlistNewPolled(pane->div[0], 0, PollWidgets, "%Cp", tgt);
 	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 10);
 	AG_SetEvent(tl, "tlist-dblclick", WidgetSelected, "%p", pane->div[1]);
 	AG_Expand(tl);
 	AG_WidgetFocus(tl);
+
 	mi = AG_TlistSetPopup(tl, "window");
 	AG_MenuSetPollFn(mi, ContextualMenu, "%p", tl);
+
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_BR, 1000, 550);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	return (win);
