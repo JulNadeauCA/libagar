@@ -328,11 +328,9 @@ AG_Debug(void *pObj, const char *fmt, ...)
 #  else /* !_WIN32 */
 		if (obj != NULL) {
 			if (obj->name[0] != '\0') {
-				printf("\x1b[37m" "%s" "\x1b[0m" ": ",
-				    obj->name);
+				printf(AGSI_FAINT "%s" AGSI_RST ": ", obj->name);
 			} else {
-				printf("<\x1b[37m%p\x1b[0m>: ",
-				    obj);
+				printf("<" AGSI_FAINT "%p" AGSI_RST ">: ", obj);
 			}
 		}
 		vprintf(fmt, args);
