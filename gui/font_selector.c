@@ -84,9 +84,9 @@ UpdateFontSelection(AG_FontSelector *fs)
 	AG_Variable *bFont;
 	AG_Font *font, **pFont;
 
-	font = AG_FetchFont(fs->curFace, &fs->curSize, fs->curStyle);
+	font = AG_FetchFont(fs->curFace, fs->curSize, fs->curStyle);
 	if (font == NULL) {
-		AG_TextError(_("Error opening font: %s"), AG_GetError());
+		Verbose(_("Error opening font: %s\n"), AG_GetError());
 		return;
 	}
 	bFont = AG_GetVariable(fs, "font", &pFont);
@@ -124,19 +124,21 @@ OnShow(AG_Event *event)
 	AG_Variable *bFont;
 	AG_Font **pFont;
 	AG_FontSelector *fs = AG_FONTSELECTOR_SELF();
-	char fontPath[AG_PATHNAME_MAX], *pFontPath = &fontPath[0];
 	AG_StaticFont **pbf;
 	AG_TlistItem *ti;
-	char *s;
 	int i;
 	const int stdSizes[] = { 4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
-	                         22,24,26,28,32,48,64 };
+	                         22,24,26,28,32,48,64 }; /* XXX use fontconfig? */
 	const int nStdSizes = sizeof(stdSizes) / sizeof(stdSizes[0]);
 	
 	bFont = AG_GetVariable(fs, "font", &pFont);
 	AG_PushTextState();
 
 	fs->flags &= ~(AG_FONTSELECTOR_UPDATE);
+
+	ti = AG_TlistAdd(fs->tlFaces, NULL, _("Built-in fonts:"));
+	ti->flags |= AG_TLIST_NO_SELECT;
+	AG_TlistSetFont(fs->tlFaces, ti, AG_TextFontPct(80));
 
 	for (pbf = &agBuiltinFonts[0]; *pbf != NULL; pbf++) {
 		ti = AG_TlistAdd(fs->tlFaces, NULL, "_%s", (*pbf)->name);
@@ -147,11 +149,18 @@ OnShow(AG_Event *event)
 			ti->selected++;
 	}
 
+	/*
+	 * System fonts via fontconfig.
+	 */
 #ifdef HAVE_FONTCONFIG
 	if (agFontconfigInited) {
 		FcObjectSet *os;
 		FcFontSet *fset;
 		FcPattern *pat;
+		
+		ti = AG_TlistAdd(fs->tlFaces, NULL, _("System fonts:"));
+		ti->flags |= AG_TLIST_NO_SELECT;
+		AG_TlistSetFont(fs->tlFaces, ti, AG_TextFontPct(80));
 
 		pat = FcPatternCreate();
 		os = FcObjectSetBuild(FC_FAMILY, (char *)0);
@@ -173,36 +182,48 @@ OnShow(AG_Event *event)
 			}
 			FcFontSetDestroy(fset);
 		}
-		AG_TlistSort(fs->tlFaces);
+/*		AG_TlistSort(fs->tlFaces); */
 		FcObjectSetDestroy(os);
 		FcPatternDestroy(pat);
-	} else
+	}
 #endif /* HAVE_FONTCONFIG */
 
+	/*
+	 * Fonts present under CONFIG_PATH_FONTS.
+	 */
 	{
-		AG_GetString(AG_ConfigObject(), "font-path", fontPath, sizeof(fontPath));
+		AG_ConfigPath *fpath;
 
-		while ((s = AG_Strsep(&pFontPath, AG_PATHSEPMULTI)) != NULL) {
+		ti = AG_TlistAdd(fs->tlFaces, NULL, _("Agar Fonts:"));
+		ti->flags |= AG_TLIST_NO_SELECT;
+		AG_TlistSetFont(fs->tlFaces, ti, AG_TextFontPct(80));
+
+		TAILQ_FOREACH(fpath, &agConfig->paths[AG_CONFIG_PATH_FONTS], paths) {
 			AG_Dir *dir;
 			int i;
 
-			if ((dir = AG_OpenDir(s)) == NULL) {
-				AG_Verbose(_("Ignoring: %s\n"), AG_GetError());
+			if ((dir = AG_OpenDir(fpath->s)) == NULL) {
 				continue;
 			}
 			for (i = 0; i < dir->nents; i++) {
 				char path[AG_FILENAME_MAX];
 				AG_FileInfo info;
 				char *file = dir->ents[i], *pExt;
+				const char **ffe;
 
 				if (file[0] == '.' ||
 				    (pExt = strrchr(file, '.')) == NULL) {
 					continue;
 				}
-				if (Strcasecmp(pExt, ".ttf") != 0) /* XXX */
+				for (ffe = &agFontFileExts[0]; *ffe != NULL;
+				     ffe++) {
+					if (Strcasecmp(pExt, *ffe) == 0)
+						break;
+				}
+				if (*ffe == NULL)
 					continue;
 
-				Strlcpy(path, s, sizeof(path));
+				Strlcpy(path, fpath->s, sizeof(path));
 				Strlcat(path, AG_PATHSEP, sizeof(path));
 				Strlcat(path, file, sizeof(path));
 
@@ -228,12 +249,17 @@ OnShow(AG_Event *event)
 	}
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Regular"));
 	if (*pFont != NULL && (*pFont)->flags == 0) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Italic"));
+
+	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software styles:"));
+	ti->flags |= AG_TLIST_NO_SELECT;
+	AG_TlistSetFont(fs->tlFaces, ti, AG_TextFontPct(80));
+
+	ti = AG_TlistAdd(fs->tlStyles, NULL, _("SW Italic"));
 	if (*pFont != NULL && (*pFont)->flags == AG_FONT_ITALIC) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Bold"));
+	ti = AG_TlistAdd(fs->tlStyles, NULL, _("SW Bold"));
 	if (*pFont != NULL && (*pFont)->flags == AG_FONT_BOLD) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Bold Italic"));
-	if (*pFont != NULL && (*pFont)->flags == (AG_FONT_BOLD|AG_FONT_ITALIC)) { ti->selected++; }
+	ti = AG_TlistAdd(fs->tlStyles, NULL, _("SW Bold Italic"));
+	if (*pFont != NULL && (*pFont)->flags == (AG_FONT_BOLD | AG_FONT_ITALIC)) { ti->selected++; }
 
 	UpdatePreview(fs);
 
@@ -258,12 +284,12 @@ SelectedStyle(AG_Event *event)
 	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 	Uint flags = 0;
 
-	if (!strcmp(it->text, _("Italic")))
+	if (!strcmp(it->text, _("SW Italic")))
 		flags |= AG_FONT_ITALIC;
-	if (!strcmp(it->text, _("Bold")))
+	if (!strcmp(it->text, _("SW Bold")))
 		flags |= AG_FONT_BOLD;
-	if (!strcmp(it->text, _("Bold Italic")))
-		flags |= (AG_FONT_BOLD|AG_FONT_ITALIC);
+	if (!strcmp(it->text, _("SW Bold Italic")))
+		flags |= (AG_FONT_BOLD | AG_FONT_ITALIC);
 
 	fs->curStyle = flags;
 	UpdateFontSelection(fs);
@@ -276,11 +302,7 @@ SelectedSize(AG_Event *event)
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
 	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 
-#ifdef HAVE_FLOAT
-	fs->curSize = strtod(it->text, NULL);
-#else
-	fs->curSize = (int)strtol(it->text, NULL, 10);
-#endif
+	fs->curSize = (float)strtod(it->text, NULL);
 	UpdateFontSelection(fs);
 	UpdatePreview(fs);
 }
@@ -294,11 +316,7 @@ Init(void *obj)
 	fs->curFace[0] = '\0';
 	fs->curStyle = 0;
 	fs->sPreview = -1;
-#ifdef HAVE_FLOAT
-	fs->curSize = 0.0;
-#else
-	fs->curSize = 0;
-#endif
+	fs->curSize = 0.0f;
 	fs->hPane = AG_PaneNewHoriz(fs, AG_PANE_EXPAND);
 	fs->tlFaces = AG_TlistNew(fs->hPane->div[0], AG_TLIST_EXPAND);
 	fs->hPane2 = AG_PaneNewHoriz(fs->hPane->div[1], AG_PANE_EXPAND);

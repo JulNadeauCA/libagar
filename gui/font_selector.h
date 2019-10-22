@@ -25,7 +25,7 @@ typedef struct ag_font_selector {
 	char curFace[AG_OBJECT_NAME_MAX];	/* Current font face */
 	Uint curStyle;				/* Current style flags */
 	int  sPreview;				/* Preview surface */
-	AG_FontPts curSize;			/* Current size */
+	float curSize;				/* Current size */
 
 	AG_Pane *_Nonnull  hPane;		/* Base container */
 	AG_Pane *_Nonnull  hPane2;		/* Right horizontal container */
