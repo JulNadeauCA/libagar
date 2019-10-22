@@ -51,11 +51,7 @@ VG_PolygonNew(void *pNode)
 void
 VG_PolygonSetOutline(VG_Polygon *ply, int flag)
 {
-	VG *vg = VGNODE(ply)->vg;
-
-	AG_ObjectLock(vg);
 	ply->outline = flag;
-	AG_ObjectUnlock(vg);
 }
 
 Uint

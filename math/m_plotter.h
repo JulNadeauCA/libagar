@@ -135,7 +135,7 @@ M_Plotter *_Nonnull M_PlotterNew(void *_Nullable, Uint);
 
 void M_PlotterSizeHint(M_Plotter *_Nonnull, Uint,Uint);
 void M_PlotterUpdate(M_Plotter *_Nonnull);
-void M_PlotterSetDefaultFont(M_Plotter *_Nonnull, const char *_Nullable, int);
+void M_PlotterSetDefaultFont(M_Plotter *_Nonnull, const char *_Nullable, float);
 void M_PlotterSetDefaultColor(M_Plotter *_Nonnull, int, Uint8,Uint8,Uint8);
 void M_PlotterSetDefaultScale(M_Plotter *_Nonnull, M_Real,M_Real);
 

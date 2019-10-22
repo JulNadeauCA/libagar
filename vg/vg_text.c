@@ -61,11 +61,7 @@ VG_TextNew(void *pNode, VG_Point *p1, VG_Point *p2)
 void
 VG_TextAlignment(VG_Text *vt, enum vg_alignment align)
 {
-	VG *vg = VGNODE(vt)->vg;
-
-	AG_ObjectLock(vg);
 	vt->align = align;
-	AG_ObjectUnlock(vg);
 }
 
 void
@@ -79,13 +75,9 @@ VG_TextFontFace(VG_Text *vt, const char *face)
 }
 
 void
-VG_TextFontSize(VG_Text *vt, int size)
+VG_TextFontSize(VG_Text *vt, float sizePts)
 {
-	VG *vg = VGNODE(vt)->vg;
-
-	AG_ObjectLock(vg);
-	vt->fontSize = (AG_FontPts)size;
-	AG_ObjectUnlock(vg);
+	vt->fontSize = sizePts;
 }
 
 void
@@ -114,7 +106,7 @@ Init(void *_Nonnull obj)
 	vt->p2 = NULL;
 	vt->align = VG_ALIGN_MC;
 	vt->fontFlags = vgGUI ? agDefaultFont->flags : 0;
-	vt->fontSize = (AG_FontPts)(vgGUI ? agDefaultFont->spec.size : 12);
+	vt->fontSize = vgGUI ? agDefaultFont->spec.size : 12.0f;
 	vt->fontFace[0] = '\0';
 	vt->argsCount = 0;
 	vt->args = NULL;
@@ -134,7 +126,7 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
 
 	vt->align = (enum vg_alignment)AG_ReadUint8(ds);
 	AG_CopyString(vt->fontFace, ds, sizeof(vt->fontFace));
-	vt->fontSize = (AG_FontPts)AG_ReadUint8(ds);
+	vt->fontSize = AG_ReadFloat(ds);
 	vt->fontFlags = (Uint)AG_ReadUint16(ds);
 	AG_CopyString(vt->text, ds, sizeof(vt->text));
 	return (0);
@@ -149,7 +141,7 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 	VG_WriteRef(ds, vt->p2);
 	AG_WriteUint8(ds, (Uint8)vt->align);
 	AG_WriteString(ds, vt->fontFace);
-	AG_WriteUint8(ds, (Uint8)vt->fontSize);
+	AG_WriteFloat(ds, vt->fontSize);
 	AG_WriteUint16(ds, (Uint16)vt->fontFlags);
 	AG_WriteString(ds, vt->text);
 }
@@ -210,9 +202,9 @@ RenderText(VG_Text *_Nonnull vt, char *_Nonnull sIn, VG_View *_Nonnull vv)
 	AG_PushTextState();
 
 	if (vt->fontFace[0] != '\0' &&
-	   ((vgGUI && vt->fontSize  != agDefaultFont->spec.size) ||
+	   ((vgGUI && VG_Fabs(vt->fontSize - agDefaultFont->spec.size) < AG_FONT_PTS_EPSILON) ||
 	    (vgGUI && vt->fontFlags != agDefaultFont->flags))) {
-		AG_TextFontLookup(vt->fontFace, &vt->fontSize, vt->fontFlags);
+		AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags);
 	}
 	c = VG_MapColorRGB(VGNODE(vt)->color);
 	AG_TextColor(&c);

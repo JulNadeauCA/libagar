@@ -25,9 +25,9 @@ typedef struct vg_text {
 	VG_Point *_Nullable p2;		/* Second line endpoint */
 	enum vg_alignment align;	/* Text alignment around line */
 
-	char       fontFace[VG_FONT_FACE_MAX];   /* Font face */
-	Uint       fontFlags;			 /* Font flags */
-	AG_FontPts fontSize;			 /* Font size */
+	char  fontFace[VG_FONT_FACE_MAX]; /* Font face */
+	Uint  fontFlags;                  /* Font flags */
+	float fontSize;                   /* Font size */
 
 #define VG_TEXT_BOLD      0x01		 /* Bold style */
 #define VG_TEXT_ITALIC    0x02		 /* Italic style */
@@ -52,7 +52,7 @@ VG_Text *_Nonnull VG_TextNew(void *_Nullable, VG_Point *_Nonnull,
 
 void VG_TextAlignment(VG_Text *_Nonnull, enum vg_alignment);
 void VG_TextFontFace(VG_Text *_Nonnull, const char *_Nonnull);
-void VG_TextFontSize(VG_Text *_Nonnull, int);
+void VG_TextFontSize(VG_Text *_Nonnull, float);
 void VG_TextFontFlags(VG_Text *_Nonnull, Uint);
 void VG_TextSubstObject(VG_Text *_Nonnull, void *_Nullable);
 
