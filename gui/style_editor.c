@@ -244,8 +244,15 @@ WidgetSelected(AG_Event *_Nonnull event)
 	AG_Widget *tgt = ti->p1;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;
+	int lastTabID;
 
 	AG_OBJECT_ISA(tgt, "AG_Widget:*");
+
+	if ((nb = AG_ObjectFindChild(box, "notebook0")) != NULL) {
+		lastTabID = nb->selTabID;
+	} else {
+		lastTabID = -1;
+	}
 
 	AG_ObjectFreeChildren(box);
 
@@ -326,6 +333,9 @@ WidgetSelected(AG_Event *_Nonnull event)
 		}
 	}
 
+	/* Restore tab selection */
+	AG_NotebookSelect(nb, AG_NotebookGetByID(nb, lastTabID));
+
 	AG_WidgetShowAll(box);
 	AG_WidgetUpdate(box);
 }
@@ -358,6 +368,15 @@ SetPickStatus(AG_Event *_Nonnull event)
 {
 }
 
+static void
+SetListRefresh(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tlVFS = AG_TLIST_PTR(1);
+	const int enable = AG_INT(2);
+
+	AG_TlistSetRefresh(tlVFS, enable ? 250 : -1);
+}
+
 /* Open the specified window in the GUI Style Editor */
 AG_Window *_Nullable
 AG_StyleEditor(AG_Window *_Nonnull tgt)
@@ -366,6 +385,7 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	AG_Pane *pane;
 	AG_MenuItem *mi;
 	AG_Box *hBox;
+	AG_Tlist *tlVFS;
 
 	if (tgt == NULL) {
 		AG_TextError(_("No window is focused.\n"
@@ -376,35 +396,41 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("Style Editor: <%s> (\"%s\")"),
-	    OBJECT(tgt)->name, AGWINDOW(tgt)->caption);
+	    AGOBJECT(tgt)->name,
+	    AGWINDOW(tgt)->caption);
+	
+	tlVFS = AG_TlistNewPolled(NULL, 0, PollWidgets, "%Cp", tgt);
+	AG_TlistSizeHint(tlVFS, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 10);
+	AG_Expand(tlVFS);
 
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
+	AG_SetStyle(hBox, "font-family", "dejavu-sans");
+	AG_SetStyle(hBox, "font-size", "150%");
 	{
 		AG_Button *btn;
 
 		btn = AG_ButtonNewFn(hBox, AG_BUTTON_STICKY,
 		    "\xe2\x87\xb1",				/* U+21F1 */
 		    SetPickStatus, "%p", win);
-
-		AG_SetStyle(btn, "font-family", "dejavu-sans");
-		AG_SetStyle(btn, "font-size", "150%");
 		AG_ButtonSetPadding(btn, 5,5,0,0);
+
+		btn = AG_ButtonNewFn(hBox, AG_BUTTON_STICKY | AG_BUTTON_SET,
+		    "\xe2\xa5\x81",				/* U+2941 */
+		    SetListRefresh, "%p", tlVFS);
+		AG_ButtonSetPadding(btn, 5,10,0,0);
 	}
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 	{
-		AG_Tlist *tl;
-
-		tl = AG_TlistNewPolled(pane->div[0], 0, PollWidgets, "%Cp", tgt);
-		AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 10);
-		AG_SetEvent(tl, "tlist-dblclick", WidgetSelected, "%p", pane->div[1]);
-		AG_Expand(tl);
-		AG_WidgetFocus(tl);
+		AG_SetEvent(tlVFS, "tlist-dblclick",
+		    WidgetSelected, "%p", pane->div[1]);
+		AG_ObjectAttach(pane->div[0], tlVFS);
+		AG_WidgetFocus(tlVFS);
 
 		(AG_SpacerNewHoriz(pane->div[1]))->minLen = 400;
 
-		mi = AG_TlistSetPopup(tl, "window");
-		AG_MenuSetPollFn(mi, MenuForWindow, "%p", tl);
+		mi = AG_TlistSetPopup(tlVFS, "window");
+		AG_MenuSetPollFn(mi, MenuForWindow, "%p", tlVFS);
 	}
 
 	AG_WindowSetPosition(win, AG_WINDOW_BC, 1);

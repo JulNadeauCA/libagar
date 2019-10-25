@@ -23,7 +23,8 @@ enum ag_notebook_tab_alignment {
 
 typedef struct ag_notebook_tab {
 	struct ag_box box;			/* AG_Box -> AG_NotebookTab */
-	AG_Label *_Nullable lbl;		/* Optional text label */
+	AG_Label *_Nullable lbl;		/* Text label */
+	int                 id;			/* Numerical ID */
 	AG_TAILQ_ENTRY(ag_notebook_tab) tabs;
 } AG_NotebookTab;
 
@@ -41,9 +42,10 @@ typedef struct ag_notebook {
 	int mouseOver;			/* Index of mouseover tab */
 
 	Uint nTabs;
-	struct ag_notebook_tab *_Nullable sel_tab;	/* Active tab */
-	AG_TAILQ_HEAD_(ag_notebook_tab) tabs;		/* All tabs */
-	AG_Rect r;					/* Display area */
+	AG_NotebookTab *_Nullable selTab;	/* Selected tab */
+	AG_TAILQ_HEAD_(ag_notebook_tab) tabs;	/* All tabs */
+	AG_Rect r;				/* Display area */
+	int selTabID;				/* Selected tab ID */
 } AG_Notebook;
 
 #define AGNOTEBOOK(obj)            ((AG_Notebook *)(obj))
@@ -68,10 +70,12 @@ void AG_NotebookSetTabVisibility(AG_Notebook *_Nonnull, int);
 
 AG_NotebookTab *_Nonnull AG_NotebookAdd(AG_Notebook *_Nonnull,
                                         const char *_Nonnull, enum ag_box_type);
-void                     AG_NotebookSelect(AG_Notebook *_Nonnull,
-                                           AG_NotebookTab *_Nullable);
-void                     AG_NotebookDel(AG_Notebook *_Nonnull,
-                                        AG_NotebookTab *_Nonnull);
+AG_NotebookTab *_Nonnull AG_NotebookGetByName(AG_Notebook *_Nonnull, const char *_Nonnull)
+                                             _Pure_Attribute;
+AG_NotebookTab *_Nonnull AG_NotebookGetByID(AG_Notebook *_Nonnull, int)
+                                           _Pure_Attribute;
+void                     AG_NotebookSelect(AG_Notebook *_Nonnull, AG_NotebookTab *_Nullable);
+void                     AG_NotebookDel(AG_Notebook *_Nonnull, AG_NotebookTab *_Nonnull);
 #ifdef AG_LEGACY
 # define AG_NotebookSetTabFont		AG_SetFont
 # define AG_NotebookAddTab		AG_NotebookAdd

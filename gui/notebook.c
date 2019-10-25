@@ -110,7 +110,7 @@ OnShow(AG_Event *event)
 {
 	AG_Notebook *nb = AG_NOTEBOOK_SELF();
 
-	if (nb->sel_tab == NULL)
+	if (nb->selTab == NULL)
 		AG_NotebookSelect(nb, TAILQ_FIRST(&nb->tabs));
 }
 
@@ -119,7 +119,7 @@ OnHide(AG_Event *event)
 {
 	AG_Notebook *nb = AG_NOTEBOOK_SELF();
 
-	if (nb->sel_tab)
+	if (nb->selTab)
 		AG_NotebookSelect(nb, NULL);
 }
 
@@ -141,12 +141,13 @@ Init(void *obj)
 	nb->padding = -1;
 	nb->mouseOver = -1;
 	nb->nTabs = 0;
-	nb->sel_tab = NULL;
+	nb->selTab = NULL;
 	TAILQ_INIT(&nb->tabs);
 	nb->r.x = 0;
 	nb->r.y = 0;
 	nb->r.w = 0;
 	nb->r.h = 0;
+	nb->selTabID = -1;
 
 	AG_AddEvent(nb, "widget-shown", OnShow, NULL);
 	AG_AddEvent(nb, "widget-hidden", OnHide, NULL);
@@ -171,18 +172,18 @@ Draw(void *obj)
 	AG_ColorAdd(&cHigh, &c, &agHighColor);
 	AG_ColorAdd(&cLow,  &c, &agLowColor);
 	AG_DrawLineV(nb, 0, nb->bar_h, HEIGHT(nb)-1,
-	    (nb->sel_tab == TAILQ_FIRST(&nb->tabs)) ? &cLow : &cHigh);
+	    (nb->selTab == TAILQ_FIRST(&nb->tabs)) ? &cLow : &cHigh);
 	
-	if (nb->sel_tab) {
+	if (nb->selTab) {
 /*		AG_PushClipRect(nb, &nb->r); */
-		AG_WidgetDraw(nb->sel_tab);
+		AG_WidgetDraw(nb->selTab);
 /*		AG_PopClipRect(nb); */
 	}
 	if (nb->flags & AG_NOTEBOOK_HIDE_TABS) {
 		return;
 	}
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
-		const int isSelected = (nb->sel_tab == tab);
+		const int isSelected = (nb->selTab == tab);
 		AG_Label *lbl = tab->lbl;
 
 		r.x = x;
@@ -314,7 +315,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 
 		x += aLbl.w;
 	}
-	if ((tab = nb->sel_tab) != NULL) {
+	if ((tab = nb->selTab) != NULL) {
 		aTab.x = 0;
 		aTab.y = nb->bar_h;
 		aTab.w = a->w;
@@ -377,11 +378,38 @@ AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 
 	AG_ObjectAttach(nb, tab);
 	TAILQ_INSERT_TAIL(&nb->tabs, tab, tabs);
-	nb->nTabs++;
+	tab->id = nb->nTabs++;
 
 	AG_ObjectUnlock(nb);
 	AG_Redraw(nb);
 	return (tab);
+}
+
+/* Return a notebook tab by numerical ID. */
+AG_NotebookTab *
+AG_NotebookGetByID(AG_Notebook *nb, int id)
+{
+	AG_NotebookTab *nt;
+
+	TAILQ_FOREACH(nt, &nb->tabs, tabs) {
+		if (nt->id == id)
+			return (nt);
+	}
+	return (NULL);
+}
+
+/* Return a notebook tab by comparing text labels. */
+AG_NotebookTab *
+AG_NotebookGetByName(AG_Notebook *nb, const char *label)
+{
+	AG_NotebookTab *nt;
+
+	TAILQ_FOREACH(nt, &nb->tabs, tabs) {
+		if (nt->lbl && nt->lbl->text &&
+		    strcmp(nt->lbl->text, label) == 0)
+			return (nt);
+	}
+	return (NULL);
 }
 
 void
@@ -389,7 +417,7 @@ AG_NotebookDel(AG_Notebook *nb, AG_NotebookTab *tab)
 {
 	AG_ObjectLock(nb);
 
-	if (nb->sel_tab == tab) {
+	if (nb->selTab == tab) {
 		AG_NotebookSelect(nb, NULL);
 	}
 	if (tab->lbl) {
@@ -415,16 +443,18 @@ AG_NotebookSelect(AG_Notebook *nb, AG_NotebookTab *tab)
 	AG_LockVFS(nb);
 	AG_ObjectLock(nb);
 
-	if (nb->sel_tab == tab) {
+	if (nb->selTab == tab) {
 		goto out;
-	} else if (nb->sel_tab) {
-		AG_WidgetHideAll(nb->sel_tab);
+	} else if (nb->selTab) {
+		AG_WidgetHideAll(nb->selTab);
 	}
 	if (tab == NULL) {
-		nb->sel_tab = NULL;
+		nb->selTab = NULL;
+		nb->selTabID = -1;
 		goto out;
 	}
-	nb->sel_tab = tab;
+	nb->selTab = tab;
+	nb->selTabID = tab->id;
 
 	AG_WidgetSizeReq(tab, &rTab);
 	aTab.x = 0;

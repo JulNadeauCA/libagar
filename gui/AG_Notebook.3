@@ -117,6 +117,12 @@ toggles the visibility of the tab header.
 .Ft "void"
 .Fn AG_NotebookDel "AG_Notebook *nb" "AG_NotebookTab *tab"
 .Pp
+.Ft "AG_NotebookTab *"
+.Fn AG_NotebookGetByID "AG_Notebook *nb" "int tabID"
+.Pp
+.Ft "AG_NotebookTab *"
+.Fn AG_NotebookGetByName "AG_Notebook *nb" "const char *text"
+.Pp
 .Ft "void"
 .Fn AG_NotebookSelect "AG_Notebook *nb" "AG_NotebookTab *tab"
 .Pp
@@ -146,6 +152,13 @@ container widget (a subclass of
 removes the given tabbed container, detaching and freeing all associated
 child widgets.
 .Pp
+.Fn AG_NotebookGetByID
+returns the tab with given numerical ID (or NULL).
+.Pp
+.Fn AG_NotebookGetByName
+looks up a tab based on the contents of its text label and returns a pointer
+to the tab (or NULL).
+.Pp
 The
 .Fn AG_NotebookSelect
 function selects the active tabbed container.
@@ -153,6 +166,36 @@ function selects the active tabbed container.
 The
 .Nm
 widget does not generate any event.
+.Sh STRUCTURE DATA
+For the
+.Ft AG_Notebook
+object:
+.Pp
+.Bl -tag -width "AG_NotebookTab *selTab " -compact
+.It Ft TAILQ tabs
+The list of tabs as
+.Ft AG_NotebookTab
+objects.
+.It Ft Uint nTabs
+Total number of tabs.
+.It Ft AG_NotebookTab *selTab
+Pointer to the currently selected tab.
+.It Ft int selTabID
+Numerical ID of currently selected tab.
+.El
+.Pp
+For the
+.Ft AG_NotebookTab
+object:
+.Pp
+.Bl -tag -width "AG_Label *lbl " -compact
+.It Ft AG_Label *lbl
+Pointer to the
+.Xr AG_Label 3
+of the tab (or NULL).
+.It Ft int id
+The numerical ID associated with the tab.
+.El
 .Sh EXAMPLES
 The following code fragment creates a notebook with two tabs:
 .Bd -literal -offset indent
