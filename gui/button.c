@@ -339,6 +339,14 @@ OnShow(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
 
+	if (bu->flags & AG_BUTTON_SET) {
+		AG_Variable *bState;
+		void *pState;
+
+		bState = AG_GetVariable(bu, "state", &pState);
+		SetState(bu, bState, pState, 1);
+		AG_UnlockVariable(bState);
+	}
 	if ((bu->flags & AG_BUTTON_EXCL) == 0)
 		AG_RedrawOnChange(bu, 100, "state");
 }
