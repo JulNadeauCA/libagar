@@ -372,6 +372,7 @@ AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 		tab->lbl = AG_LabelNewS(nb, 0, label);
 		AG_LabelSetPadding(tab->lbl, 8,8,5,0);
 		AG_SetStyle(tab->lbl, "font-family", "cm-sans-demicondensed");
+		AG_SetStyle(tab->lbl, "font-size", "120%");
 	} else {
 		tab->lbl = NULL;
 	}
@@ -432,6 +433,15 @@ AG_NotebookDel(AG_Notebook *nb, AG_NotebookTab *tab)
 
 	AG_ObjectUnlock(nb);
 	AG_Redraw(nb);
+}
+
+void
+AG_NotebookSelectByID(AG_Notebook *nb, int id)
+{
+	AG_NotebookTab *nt;
+
+	if ((nt = AG_NotebookGetByID(nb,id)) != NULL)
+		AG_NotebookSelect(nb, nt);
 }
 
 void

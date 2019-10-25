@@ -74,6 +74,7 @@ AG_NotebookTab *_Nonnull AG_NotebookGetByName(AG_Notebook *_Nonnull, const char 
                                              _Pure_Attribute;
 AG_NotebookTab *_Nonnull AG_NotebookGetByID(AG_Notebook *_Nonnull, int)
                                            _Pure_Attribute;
+void                     AG_NotebookSelectByID(AG_Notebook *_Nonnull, int);
 void                     AG_NotebookSelect(AG_Notebook *_Nonnull, AG_NotebookTab *_Nullable);
 void                     AG_NotebookDel(AG_Notebook *_Nonnull, AG_NotebookTab *_Nonnull);
 #ifdef AG_LEGACY
