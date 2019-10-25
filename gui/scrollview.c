@@ -425,11 +425,10 @@ Draw(void *_Nonnull p)
 {
 	AG_Scrollview *sv = p;
 	AG_Widget *chld;
+	AG_Rect r;
 	int x2,y2;
 
 	if (sv->flags & AG_SCROLLVIEW_FRAME) {
-		AG_Rect r;
-
 		r.x = 0;
 		r.y = 0;
 		r.w = WIDTH(sv);
@@ -443,7 +442,13 @@ Draw(void *_Nonnull p)
 	x2 = WIDGET(sv)->rView.x2 - sv->wBar;
 	y2 = WIDGET(sv)->rView.y2 - sv->hBar;
 
-	AG_PushClipRect(sv, &sv->r);
+	r = sv->r;
+	r.x++;
+	r.y++;
+	r.w -= 2;
+	r.h -= 2;
+	AG_PushClipRect(sv, &r);
+
 	OBJECT_FOREACH_CHILD(chld, sv, ag_widget) {
 		if (!(chld->flags & AG_WIDGET_VISIBLE) ||
 		    chld == WIDGET(sv->hbar) ||
@@ -466,6 +471,7 @@ Draw(void *_Nonnull p)
 		}
 		chld->rSens.y2 = chld->rSens.y1 + chld->rSens.h;
 	}
+
 	AG_PopClipRect(sv);
 }
 
