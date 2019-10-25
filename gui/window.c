@@ -399,7 +399,7 @@ FadeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	int dir = AG_INT(1);
 
 	if (dir == 1) {					/* Fade in */
-		if (win->pvt.fadeOpacity < 1.0) {
+		if (win->pvt.fadeOpacity < 1.0f) {
 			win->pvt.fadeOpacity += win->pvt.fadeInIncr;
 			AG_WindowSetOpacity(win, win->pvt.fadeOpacity);
 			return (to->ival);
@@ -407,12 +407,12 @@ FadeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 			return (0);
 		}
 	} else {					/* Fade out */
-		if (win->pvt.fadeOpacity > 0.0) {
+		if (win->pvt.fadeOpacity > 0.0f) {
 			win->pvt.fadeOpacity -= win->pvt.fadeOutIncr;
 			AG_WindowSetOpacity(win, win->pvt.fadeOpacity);
 			return (to->ival);
 		} else {
-			AG_WindowSetOpacity(win, 1.0);
+			AG_WindowSetOpacity(win, 1.0f);
 
 			/* Defer operation until AG_WindowProcessQueued(). */
 			AG_LockVFS(&agDrivers);
@@ -768,7 +768,7 @@ OnShow(AG_Event *_Nonnull event)
 		}
 #ifdef AG_TIMERS
 		if (win->flags & AG_WINDOW_FADEIN)
-			AG_WindowSetOpacity(win, 0.0);
+			AG_WindowSetOpacity(win, 0.0f);
 #endif
 		if (AGDRIVER_MW_CLASS(drv)->mapWindow(win) == -1) {
 			AG_FatalError(NULL);
@@ -2597,7 +2597,7 @@ AG_WindowSetOpacity(AG_Window *win, float f)
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
 
 #ifdef AG_TIMERS
-	win->pvt.fadeOpacity = (f > 1.0) ? 1.0 : f;
+	win->pvt.fadeOpacity = (f > 1.0f) ? 1.0f : f;
 	if (drv && AGDRIVER_MULTIPLE(drv) &&
 	    AGDRIVER_MW_CLASS(drv)->setOpacity != NULL)
 		rv = AGDRIVER_MW_CLASS(drv)->setOpacity(win, win->pvt.fadeOpacity);
