@@ -227,10 +227,13 @@ AddAttribute(AG_Event *_Nonnull event)
 	
 	AG_OBJECT_ISA(tgt, "AG_Widget:*");
 
+	if (key == NULL || val == NULL)
+		return;
+
 	while (isspace(*key)) { key++; }
 	while (isspace(*val)) { val++; }
 
-	AG_SetStyle(tgt, key, val);
+	AG_SetStyle(tgt, key, val[0] != '\0' ? val : NULL);
 	AG_WindowUpdate(AG_ParentWindow(tgt));
 
 	free(s);
@@ -244,18 +247,18 @@ WidgetSelected(AG_Event *_Nonnull event)
 	AG_Widget *tgt = ti->p1;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;
-	int lastTabID;
+	int savedTabID;
 
 	AG_OBJECT_ISA(tgt, "AG_Widget:*");
 
 	if ((nb = AG_ObjectFindChild(box, "notebook0")) != NULL) {
-		lastTabID = nb->selTabID;
+		savedTabID = nb->selTabID;
 	} else {
-		lastTabID = -1;
+		savedTabID = -1;
 	}
 
 	AG_ObjectFreeChildren(box);
-
+	
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
 	AG_SetStyle(nb, "color#selected", "rgb(125,125,125)");	/* XXX */
 	
@@ -313,7 +316,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 			Sx = S;
 #endif
 			lbl = AG_LabelNew(nt, 0, _("Size: %d x %d px"), S->w, S->h);
-			AG_SetStyle(lbl, "font-size", "80%");
+			AG_SetStyle(lbl, "font-size", "70%");
 
 			sv = AG_ScrollviewNew(nt, AG_SCROLLVIEW_EXPAND |
 	                                          AG_SCROLLVIEW_BY_MOUSE |
@@ -332,10 +335,8 @@ WidgetSelected(AG_Event *_Nonnull event)
 			AG_LabelNewS(nt, 0, AG_GetError());
 		}
 	}
-
-	/* Restore tab selection */
-	AG_NotebookSelect(nb, AG_NotebookGetByID(nb, lastTabID));
-
+	
+	AG_NotebookSelectByID(nb, savedTabID);		/* Restore active tab */
 	AG_WidgetShowAll(box);
 	AG_WidgetUpdate(box);
 }
