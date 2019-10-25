@@ -286,27 +286,6 @@ PollVariables(AG_Event *_Nonnull event)
 }
 
 static void
-PollCursors(AG_Event *_Nonnull event)
-{
-	AG_Tlist *tl = AG_TLIST_SELF();
-	AG_Widget *wid = AG_WIDGET_PTR(1);
-	AG_Driver *drv;
-	AG_TlistItem *it;
-	AG_Cursor *cu;
-
-	AG_ObjectLock(wid);
-	drv = wid->drv;
-	AG_TlistBegin(tl);
-	TAILQ_FOREACH(cu, &drv->cursors, cursors) {
-		it = AG_TlistAdd(tl, NULL, "%dx%d (%d,%d); p=%p", cu->w, cu->h, 
-		    cu->xHot, cu->yHot, cu->p);
-		it->p1 = cu;
-	}
-	AG_TlistEnd(tl);
-	AG_ObjectUnlock(wid);
-}
-
-static void
 WidgetSelected(AG_Event *_Nonnull event)
 {
 	AG_Box *box = AG_BOX_PTR(1);
@@ -317,13 +296,20 @@ WidgetSelected(AG_Event *_Nonnull event)
 	AG_Textbox *tb;
 	AG_MSpinbutton *msb;
 	AG_Scrollview *sv;
-
+	int savedTabID;
+	
+	if ((nb = AG_ObjectFindChild(box, "notebook0")) != NULL) {
+		savedTabID = nb->selTabID;
+	} else {
+		savedTabID = -1;
+	}
 	AG_ObjectFreeChildren(box);
 
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
-	/* XXX workaround style issue */
-	AG_SetStyle(nb, "color#selected", "rgb(125,125,125)");
+	AG_SetStyle(nb, "color#selected", "rgb(125,125,125)");	/* XXX */
+
 	nt = AG_NotebookAdd(nb, "AG_Widget", AG_BOX_VERT);
+	nt->id = 1;
 	{
 		static const AG_FlagDescr flagDescr[] = {
 		    { AG_WIDGET_FOCUSABLE,		"FOCUSABLE",		1 },
@@ -383,14 +369,17 @@ WidgetSelected(AG_Event *_Nonnull event)
 
 	if (OBJECT_CLASS(wid)->edit != NULL) {
 		nt = AG_NotebookAdd(nb, OBJECT(wid)->cls->name, AG_BOX_VERT);
+		nt->id = 2;
 		AG_ObjectAttach(nt, OBJECT_CLASS(wid)->edit(wid));
 	}
 	nt = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
+	nt->id = 3;
 	{
 		AG_TlistNewPolled(nt, AG_TLIST_EXPAND,
 		    PollVariables, "%p", wid);
 	}
 	nt = AG_NotebookAdd(nb, _("Geometry"), AG_BOX_VERT);
+	nt->id = 4;
 	{
 		msb = AG_MSpinbuttonNew(nt, 0, ",", "Container coords: ");
 		AG_BindInt(msb, "xvalue", &wid->x);
@@ -409,6 +398,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 		AG_BindInt(msb, "yvalue", &wid->rView.y2);
 	}
 	nt = AG_NotebookAdd(nb, _("Surfaces"), AG_BOX_VERT);
+	nt->id = 5;
 	AG_BoxSetHomogenous(&nt->box, 1);
 	{
 		AG_Pane *pane;
@@ -431,25 +421,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 		AG_PaneMoveDividerPct(pane, 50);
 	}
 
-	/* Don't show the cursors tab if the widget doesn't have a driver (i.e.
-	 * if it is the driver), as this will cause a segfault when we try to
-	 * generate the cursor list. */
-	if (wid->drv != NULL) {
-		nt = AG_NotebookAdd(nb, _("Cursors"), AG_BOX_VERT);
-		{
-#ifdef AG_ENABLE_STRING
-			AG_Driver *drv = wid->drv;
-
-			AG_LabelNewPolled(nt, AG_LABEL_HFILL, _("Cursor driver: %s"),
-			    OBJECT(drv)->name);
-			AG_LabelNewPolled(nt, AG_LABEL_HFILL, _("Total cursors: %u"),
-			    &drv->nCursors);
-#endif
-			AG_TlistNewPolled(nt, AG_TLIST_EXPAND,
-			    PollCursors, "%p", wid);
-		}
-	}
-
+	AG_NotebookSelectByID(nb, savedTabID);		/* Restore active tab */
 	AG_WidgetShowAll(box);
 	AG_WidgetUpdate(box);
 }
