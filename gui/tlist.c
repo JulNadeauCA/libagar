@@ -39,6 +39,9 @@
 static void DrawExpandCollapseSign(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull,
                                    int, int);
 static void StylizeFont(AG_Tlist *_Nonnull, Uint);
+#ifdef AG_TIMERS
+static Uint32 PollRefreshTimeout(AG_Timer *_Nonnull, AG_Event *_Nonnull);
+#endif
 
 AG_Tlist *
 AG_TlistNew(void *parent, Uint flags)
@@ -77,6 +80,17 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectUnlock(tl);
 	AG_RedrawOnTick(tl, 1000);
 	return (tl);
+}
+
+/* Set the refresh rate for Polled mode in milliseconds (-1 = disable) */
+void
+AG_TlistSetRefresh(AG_Tlist *tl, int ms)
+{
+	if (ms == -1) {
+		AG_DelTimer(tl, &tl->refreshTo);
+	} else {
+		AG_AddTimer(tl, &tl->refreshTo, ms, PollRefreshTimeout, NULL);
+	}
 }
 
 /* In AG_TLIST_POLL mode, invoke `tlist-poll' if refresh timer has expired. */
@@ -705,21 +719,6 @@ AG_TlistSetCompareFn(AG_Tlist *tl,
 	AG_ObjectUnlock(tl);
 }
 
-#ifdef AG_TIMERS
-/* Set the update rate for polled displays in ms (-1 = update explicitely). */
-void
-AG_TlistSetRefresh(AG_Tlist *tl, int ms)
-{
-	AG_ObjectLock(tl);
-	if (ms == -1) {
-		AG_DelTimer(tl, &tl->refreshTo);
-	} else {
-		AG_AddTimer(tl, &tl->refreshTo, ms, PollRefreshTimeout, NULL);
-	}
-	AG_ObjectUnlock(tl);
-}
-#endif /* AG_TIMERS */
-
 /* Restore previous item selection state. */
 void
 AG_TlistEnd(AG_Tlist *tl)
@@ -784,6 +783,7 @@ AG_TlistRefresh(AG_Tlist *_Nonnull tl)
 {
 	AG_ObjectLock(tl);
 	tl->flags |= AG_TLIST_REFRESH;
+	AG_Redraw(tl);
 	AG_ObjectUnlock(tl);
 }
 
