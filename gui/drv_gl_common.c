@@ -1309,13 +1309,13 @@ AG_GL_DrawRectBlended(void *obj, const AG_Rect *r, const AG_Color *c,
 {
 	int x1 = r->x;
 	int y1 = r->y;
-	int x2 = x1 + r->w;
-	int y2 = y1 + r->h;
+	int x2 = x1 + r->w - 1;
+	int y2 = y1 + r->h - 1;
 
 	AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst,
 	                                      AG_TEXTURE_ENV_REPLACE);
 	glBegin(GL_POLYGON);
-	glColor4us(c->r, c->g, c->b, c->a);
+	GL_Color4uH(c->r, c->g, c->b, c->a);
 	glVertex2i(x1, y1);
 	glVertex2i(x2, y1);
 	glVertex2i(x2, y2);
