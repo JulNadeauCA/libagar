@@ -66,7 +66,6 @@ AG_DestroyStyleSheet(AG_StyleSheet *css)
 	TAILQ_INIT(&css->blks);
 }
 
-#ifdef AG_SERIALIZATION
 /*
  * Load a style sheet and apply to the specified widget/window object. If
  * the object argument is NULL, make the style sheet the global default.
@@ -235,7 +234,6 @@ fail_parse:
 	if (css != &agDefaultCSS) { free(css); }
 	return (NULL);
 }
-#endif /* AG_SERIALIZATION */
 
 /* Lookup a style sheet entry. */
 int

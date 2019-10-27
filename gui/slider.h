@@ -35,9 +35,7 @@ typedef struct ag_slider {
 	int wControl;			/* Control size (effective) */
 	int xOffs;			/* Cursor offset for scrolling */
 	int extent;			/* Available area for scrolling */
-#ifdef AG_TIMERS
 	AG_Timer moveTo;		/* Timer for keyboard motion */
-#endif
 } AG_Slider;
 
 #define AGSLIDER(obj)            ((AG_Slider *)(obj))
@@ -61,7 +59,6 @@ AG_Slider *_Nonnull AG_SliderNewUint(void *_Nullable, enum ag_slider_type, Uint,
                                      Uint *_Nullable, Uint *_Nullable, Uint *_Nullable);
 AG_Slider *_Nonnull AG_SliderNewUintR(void *_Nullable, enum ag_slider_type, Uint,
                                       Uint *_Nullable, Uint, Uint);
-#ifdef AG_HAVE_FLOAT
 AG_Slider *_Nonnull AG_SliderNewFlt(void *_Nullable, enum ag_slider_type, Uint,
                                     float *_Nullable, float *_Nullable,
 				    float *_Nullable);
@@ -72,7 +69,6 @@ AG_Slider *_Nonnull AG_SliderNewDbl(void *_Nullable, enum ag_slider_type, Uint,
 				    double *_Nullable);
 AG_Slider *_Nonnull AG_SliderNewDblR(void *_Nullable, enum ag_slider_type, Uint,
                                      double *_Nullable, double, double);
-#endif /* HAVE_FLOAT */
 
 void AG_SliderSetControlSize(AG_Slider *_Nonnull, int);
 __END_DECLS

@@ -53,7 +53,6 @@ ag_pixel_format_is_supported(AG_SurfaceMode mode, int BitsPerPixel)
 			return (1);
 		}
 		break;
-#ifdef AG_HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		switch (BitsPerPixel) {
 		case 32:
@@ -61,7 +60,6 @@ ag_pixel_format_is_supported(AG_SurfaceMode mode, int BitsPerPixel)
 			return (1);
 		}
 		break;
-#endif
 	}
 	return (0);
 }
@@ -101,10 +99,8 @@ ag_pixel_format_compare(const AG_PixelFormat *a, const AG_PixelFormat *b)
 #endif
 		return memcmp(a->palette->colors, b->palette->colors,
 		              a->palette->nColors * sizeof(AG_Color));
-#ifdef AG_HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return !(a->graymode == b->graymode);
-#endif
 	}
 }
 
@@ -167,10 +163,8 @@ ag_map_pixel64_rgb16(const AG_PixelFormat *pf, Uint16 r, Uint16 g, Uint16 b)
 		      ((AG_OPAQUE >> pf->Aloss) << pf->Ashift & pf->Amask);
 	case AG_SURFACE_INDEXED:
 		return AG_MapPixelIndexed(pf, r,g,b, AG_OPAQUE);
-# ifdef AG_HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf, r,g,b, AG_OPAQUE);
-# endif
 	}
 }
 
@@ -196,10 +190,8 @@ ag_map_pixel64_rgba16(const AG_PixelFormat *pf,
 		      ((a >> pf->Aloss) << pf->Ashift & pf->Amask);
 	case AG_SURFACE_INDEXED:
 		return AG_MapPixelIndexed(pf, r,g,b,a);
-# ifdef AG_HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf, r,g,b,a);
-# endif
 	}
 }
 
@@ -245,13 +237,11 @@ ag_get_color64_rgb16(Uint64 px, const AG_PixelFormat *pf,
 		*g = c->g;
 		*b = c->b;
 		break;
-# ifdef AG_HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE: {
 		Uint16 dummy;
 		AG_GetColor64_Gray16(px, pf->graymode, r,g,b, &dummy);
 		break;
 	}
-# endif
 	/* pf->mode */
 	}
 }
@@ -287,11 +277,9 @@ ag_get_color64_rgba16(Uint64 px, const AG_PixelFormat *pf,
 		*b = c->b;
 		*a = c->a;
 		break;
-# ifdef AG_HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		AG_GetColor64_Gray16(px, pf->graymode, r,g,b,a);
 		break;
-# endif
 	}
 }
 

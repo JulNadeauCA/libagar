@@ -309,7 +309,6 @@ MenuCopyActive(AG_Event *_Nonnull event)
 	*status = (cons->pos != -1) ? 1 : 0;
 }
 
-#ifdef AG_SERIALIZATION
 /*
  * Save the console buffer to a text file.
  */
@@ -332,9 +331,7 @@ MenuExportToFileTXT(AG_Event *_Nonnull event)
 	fwrite(s, strlen(s), 1, f);
 	fclose(f);
 	free(s);
-#ifdef AG_TIMERS
 	AG_TextTmsg(AG_MSG_INFO, 1250, _("Saved to %s OK"), AG_ShortFilename(path));
-#endif
 	return;
 fail:
 	AG_TextMsgFromError();
@@ -358,9 +355,7 @@ MenuExportToFileImage(AG_Event *_Nonnull event)
 		AG_TextMsgFromError();
 		goto out;
 	}
-#ifdef AG_TIMERS
 	AG_TextTmsg(AG_MSG_INFO, 1250, _("Saved to %s OK"), AG_ShortFilename(path));
-#endif
 out:
 	AG_SurfaceFree(S);
 }
@@ -389,7 +384,6 @@ MenuExportToFileDlg(AG_Event *_Nonnull event)
 
 	AG_WindowShow(win);
 }
-#endif /* AG_SERIALIZATION */
 
 static void
 MenuSelectAll(AG_Event *_Nonnull event)
@@ -401,7 +395,6 @@ MenuSelectAll(AG_Event *_Nonnull event)
 	AG_Redraw(cons);
 }
 
-#ifdef AG_TIMERS
 /* Timer callback for double click. */
 static Uint32
 BeginSelectTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -412,7 +405,6 @@ BeginSelectTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	cons->flags &= ~(AG_CONSOLE_BEGIN_SELECT);
 	return (0);
 }
-#endif /* AG_TIMERS */
 
 static void
 BeginSelect(AG_Event *_Nonnull event)
@@ -421,22 +413,22 @@ BeginSelect(AG_Event *_Nonnull event)
 	const int x = AG_INT(2);
 	const int y = AG_INT(3);
 
-	if (x < cons->r.x || x > cons->r.x+cons->r.w) {
+	if (x < cons->r.x || x > cons->r.x+cons->r.w)
 		return;
-	}
-	if (!AG_WidgetIsFocused(cons)) {
+
+	if (!AG_WidgetIsFocused(cons))
 		AG_WidgetFocus(cons);
-	}
-	if (cons->pm != NULL) {
+
+	if (cons->pm != NULL)
 		AG_PopupHide(cons->pm);
-	}
+
 	if (cons->nLines > 0) {
 		MapLine(cons, y, &cons->pos);
 		cons->sel = 0;
 		AG_Redraw(cons);
 		cons->flags |= AG_CONSOLE_SELECTING;
 	}
-#ifdef AG_TIMERS
+
 	if (cons->flags & AG_CONSOLE_BEGIN_SELECT) {
 		cons->pos = 0;
 		cons->sel = cons->nLines-1;
@@ -445,7 +437,6 @@ BeginSelect(AG_Event *_Nonnull event)
 		AG_AddTimer(cons, &cons->beginSelectTo, agMouseDblclickDelay,
 		    BeginSelectTimeout, NULL);
 	}
-#endif
 }
 
 static void
@@ -477,10 +468,8 @@ PopupMenu(AG_Event *_Nonnull event)
 	}
 	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy, "%p", cons);
 	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCopyActive, "%Cp", cons);
-#ifdef AG_SERIALIZATION
 	AG_MenuAction(pm->root, _("Export to file..."), NULL,
 	    MenuExportToFileDlg, "%Cp", cons);
-#endif
 	AG_MenuSeparator(pm->root);
 
 	AG_MenuAction(pm->root, _("Select All"), NULL,
@@ -550,12 +539,8 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 ComputeVisible(AG_Console *_Nonnull cons)
 {
-#ifdef HAVE_FLOAT
 	cons->rVisible = (int)AG_Floor((float)(cons->r.h - (cons->padding << 1)) /
 	                               (float)cons->lineskip);
-#else
-	cons->rVisible = (cons->r.h - (cons->padding << 1)) / cons->lineskip;
-#endif
 	if (cons->rVisible > 0)
 		cons->rVisible--;
 }
@@ -609,9 +594,9 @@ Init(void *_Nonnull obj)
 	cons->r.h = 0;
 	cons->scrollTo = NULL;
 	TAILQ_INIT(&cons->files);
-#ifdef AG_TIMERS
+
 	AG_InitTimer(&cons->beginSelectTo, "beginSel", 0);
-#endif
+
 	AG_SetInt(cons, "line-scroll-amount", 5);
 
 	sb = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
@@ -1200,7 +1185,6 @@ out:
 	return (0);
 }
 
-#ifdef AG_SERIALIZATION
 /*
  * Read, dump and follow a file.
  *
@@ -1290,7 +1274,6 @@ AG_ConsoleClose(AG_Console *cons, AG_ConsoleFile *cf)
 	Free(cf->label);
 	free(cf);
 }
-#endif /* AG_SERIALIZATION */
 
 AG_WidgetClass agConsoleClass = {
 	{

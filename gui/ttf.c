@@ -42,10 +42,6 @@
 #include <agar/gui/ttf.h>
 #include <agar/gui/gui_math.h>
 
-# ifndef AG_HAVE_FLOAT
-# error "FreeType should require float support"
-# endif
-
 #include <stdio.h>
 #include <string.h>
 

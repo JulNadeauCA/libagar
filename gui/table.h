@@ -65,10 +65,8 @@ enum ag_table_cell_type {
 	AG_CELL_PSINT16,
 	AG_CELL_PUINT32,
 	AG_CELL_PSINT32,
-#ifdef AG_HAVE_FLOAT
 	AG_CELL_PFLOAT,
 	AG_CELL_PDOUBLE,
-#endif
 #ifdef AG_HAVE_64BIT
 	AG_CELL_SINT64,
 	AG_CELL_UINT64,
@@ -196,14 +194,12 @@ typedef struct ag_table {
 	AG_SLIST_HEAD_(ag_table_popup) popups; /* Registered popup menus */
 
 	Uint nSorting;			/* Index of sorting column */
-#ifdef AG_TIMERS
 	int dblClickedRow;		/* For SEL_ROWS */
 	int dblClickedCol;		/* For SEL_COLS */
 	int dblClickedCell;		/* For SEL_CELLS */
 	AG_Timer moveTo;		/* For keyboard motion */
 	AG_Timer pollTo;		/* For polled table update */
 	AG_Timer dblClickTo;		/* For double click */
-#endif
 } AG_Table;
 
 #define AGTABLE(p)              ((AG_Table *)(p))
@@ -220,12 +216,11 @@ extern AG_WidgetClass agTableClass;
 
 AG_Table *_Nonnull AG_TableNew(void *_Nullable, Uint);
 
-#ifdef AG_TIMERS
 AG_Table *_Nonnull AG_TableNewPolled(void *_Nullable, Uint,
                                      void (*_Nonnull fn)(AG_Event *_Nonnull),
 				     const char *_Nullable, ...);
-void               AG_TableSetPollInterval(AG_Table *_Nonnull, Uint);
-#endif
+
+void AG_TableSetPollInterval(AG_Table *_Nonnull, Uint);
 
 void AG_TableSizeHint(AG_Table *_Nonnull, int, int);
 void AG_TableSetSeparator(AG_Table *_Nonnull, const char *_Nonnull);

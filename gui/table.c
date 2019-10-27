@@ -64,7 +64,6 @@ AG_TableNew(void *parent, Uint flags)
 	return (t);
 }
 
-#ifdef AG_TIMERS
 /* Timer callback for polling updates. */
 static Uint32
 PollTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -106,7 +105,6 @@ AG_TableNewPolled(void *parent, Uint flags, void (*fn)(AG_Event *),
 	AG_ObjectUnlock(t);
 	return (t);
 }
-#endif /* AG_TIMERS */
 
 /*
  * Return the cell at unchecked location m,n.
@@ -163,7 +161,6 @@ AG_TableDeselectCol(AG_Table *t, int n)
 	t->cols[n].selected = 0;
 }
 
-#ifdef AG_TIMERS
 void
 AG_TableSetPollInterval(AG_Table *t, Uint ival)
 {
@@ -175,7 +172,6 @@ AG_TableSetPollInterval(AG_Table *t, Uint ival)
 	}
 	AG_ObjectUnlock(t);
 }
-#endif /* AG_TIMERS */
 
 /* Set an initial size requisition in width (pixels) x n (columns). */
 void
@@ -1270,7 +1266,6 @@ ColumnLeftClickSort(AG_Table *_Nonnull t, AG_TableCol *_Nonnull tc)
 	t->flags |= AG_TABLE_NEEDSORT;
 }
 
-#ifdef AG_TIMERS
 /* Timer callback for double click. */
 static Uint32
 DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -1280,7 +1275,6 @@ DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	*which = -1;
 	return (0);
 }
-#endif /* AG_TIMERS */
 
 /* Left click on a column header; resize or execute column action. */
 static void
@@ -1319,7 +1313,7 @@ ColumnLeftClick(AG_Table *_Nonnull t, int px)
 				}
 				if ((ev = t->fn[AG_TABLE_FN_COL_CLICK]))
 					AG_PostEventByPtr(t, ev, "%i", n);
-#ifdef AG_TIMERS
+
 				if (t->dblClickedCol != -1 &&
 				    t->dblClickedCol == n) {
 					AG_DelTimer(t, &t->dblClickTo);
@@ -1333,7 +1327,6 @@ ColumnLeftClick(AG_Table *_Nonnull t, int px)
 					    agMouseDblclickDelay,
 					    DoubleClickTimeout, "%p", &t->dblClickedCol);
 				}
-#endif /* AG_TIMERS */
 				goto cont;
 			}
 			AG_Redraw(t);
@@ -1399,7 +1392,7 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 			AG_TableSelectRow(t, mc);
 			if ((ev = t->fn[AG_TABLE_FN_ROW_CLICK]) != NULL)
 				AG_PostEventByPtr(t, ev, "%i", mc);
-#ifdef AG_TIMERS
+
 			if (t->dblClickedRow != -1 &&
 			    t->dblClickedRow == mc) {
 				AG_DelTimer(t, &t->dblClickTo);
@@ -1413,7 +1406,6 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 				    agMouseDblclickDelay,
 				    DoubleClickTimeout, "%p", &t->dblClickedRow);
 			}
-#endif /* AG_TIMERS */
 		}
 		break;
 	case AG_TABLE_SEL_CELLS:
@@ -1461,7 +1453,7 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 			}
 			if ((ev = t->fn[AG_TABLE_FN_CELL_CLICK]))
 				AG_PostEventByPtr(t, ev, "%i", mc);
-#ifdef AG_TIMERS
+
 			if (t->dblClickedCell != -1 &&
 			    t->dblClickedCell == mc) {
 				AG_DelTimer(t, &t->dblClickTo);
@@ -1475,7 +1467,6 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 				    agMouseDblclickDelay,
 				    DoubleClickTimeout, "%p", &t->dblClickedCell);
 			}
-#endif /* AG_TIMERS */
 		}
 		break;
 	case AG_TABLE_SEL_COLS:
@@ -1508,7 +1499,7 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 			}
 			if ((ev = t->fn[AG_TABLE_FN_COL_CLICK]))
 				AG_PostEventByPtr(t, ev, "%i", nc);
-#ifdef AG_TIMERS
+
 			if (t->dblClickedCol != -1 &&
 			    t->dblClickedCol == nc) {
 				AG_DelTimer(t, &t->dblClickTo);
@@ -1522,7 +1513,6 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 				    agMouseDblclickDelay,
 				    DoubleClickTimeout, "%p", &t->dblClickedCol);
 			}
-#endif /* AG_TIMERS */
 		}
 		break;
 	}
@@ -1691,7 +1681,6 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	}
 }
 
-#ifdef AG_TIMERS
 /* Timer callback for keyboard selection moving. */
 static Uint32
 MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -1706,7 +1695,6 @@ MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	}
 	return (agKbdRepeat);
 }
-#endif
 
 static void
 KeyDown(AG_Event *_Nonnull event)
@@ -1717,27 +1705,19 @@ KeyDown(AG_Event *_Nonnull event)
 	switch (keysym) {
 	case AG_KEY_UP:
 		DecrementSelection(t, 1);
-#ifdef AG_TIMERS
 		AG_AddTimer(t, &t->moveTo, agKbdDelay, MoveTimeout, "%i", -1);
-#endif
 		break;
 	case AG_KEY_DOWN:
 		IncrementSelection(t, 1);
-#ifdef AG_TIMERS
 		AG_AddTimer(t, &t->moveTo, agKbdDelay, MoveTimeout, "%i", +1);
-#endif
 		break;
 	case AG_KEY_PAGEUP:
 		DecrementSelection(t, agPageIncrement);
-#ifdef AG_TIMERS
 		AG_AddTimer(t, &t->moveTo, agKbdDelay, MoveTimeout, "%i", -agPageIncrement);
-#endif
 		break;
 	case AG_KEY_PAGEDOWN:
 		IncrementSelection(t, agPageIncrement);
-#ifdef AG_TIMERS
 		AG_AddTimer(t, &t->moveTo, agKbdDelay, MoveTimeout, "%i", +agPageIncrement);
-#endif
 		break;
 	case AG_KEY_HOME:
 		t->mOffs = 0;
@@ -1772,7 +1752,6 @@ MouseMotion(AG_Event *_Nonnull event)
 	}
 }
 
-#ifdef AG_TIMERS
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
@@ -1788,7 +1767,6 @@ KeyUp(AG_Event *_Nonnull event)
 		break;
 	}
 }
-#endif /* AG_TIMERS */
 
 static void
 OnFontChange(AG_Event *_Nonnull event)
@@ -1823,10 +1801,9 @@ LostFocus(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_TABLE_SELF();
 
-#ifdef AG_TIMERS
 	AG_DelTimer(t, &t->moveTo);
 	AG_DelTimer(t, &t->dblClickTo);
-#endif
+
 	if (t->nResizing >= 0)
 		t->nResizing = -1;
 }
@@ -2333,14 +2310,13 @@ Init(void *_Nonnull obj)
 	}
 	t->lineScrollAmount = 5;
 	SLIST_INIT(&t->popups);
-#ifdef AG_TIMERS
 	t->dblClickedRow = -1;
 	t->dblClickedCol = -1;
 	t->dblClickedCell = -1;
+
 	AG_InitTimer(&t->moveTo, "move", 0);
 	AG_InitTimer(&t->pollTo, "poll", 0);
 	AG_InitTimer(&t->dblClickTo, "dblClick", 0);
-#endif
 
 	/* Horizontal scrollbar */
 	sb = t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
@@ -2375,9 +2351,7 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(t, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(t, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(t, "key-down", KeyDown, NULL);
-#ifdef AG_TIMERS
 	AG_SetEvent(t, "key-up", KeyUp, NULL);
-#endif
 }
 
 static void

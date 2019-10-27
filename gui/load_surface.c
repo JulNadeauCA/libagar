@@ -26,9 +26,6 @@
 /*
  * Serialization functions for uncompressed graphic surfaces.
  */
-#include <agar/config/ag_serialization.h>
-#ifdef AG_SERIALIZATION
-
 #include <agar/core/core.h>
 #include <agar/core/load_version.h>
 #include <agar/gui/gui.h>
@@ -247,5 +244,3 @@ fail:
 	AG_SurfaceFree(s);
 	return (NULL);
 }
-
-#endif /* AG_SERIALIZATION */

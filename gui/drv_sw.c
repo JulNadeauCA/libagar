@@ -78,7 +78,7 @@ UnminimizeWindow(AG_Event *_Nonnull event)
 	AG_WindowUnminimize(win);
 }
 
-#if defined(AG_DEBUG) && defined(AG_TIMERS)
+#if defined(AG_DEBUG)
 static void
 OpenGuiDebugger(AG_Event *_Nonnull event)
 {
@@ -87,7 +87,7 @@ OpenGuiDebugger(AG_Event *_Nonnull event)
 	if ((win = AG_GuiDebugger(agWindowFocused)) != NULL)
 		AG_WindowShow(win);
 }
-#endif /* AG_DEBUG and AG_TIMERS */
+#endif /* AG_DEBUG */
 
 static void
 ExitApplication(AG_Event *_Nonnull event)
@@ -126,7 +126,7 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	if (nWindows > 0) {
 		AG_MenuSeparator(mi);
 	}
-#if defined(AG_DEBUG) && defined(AG_TIMERS)
+#ifdef AG_DEBUG
 	AG_MenuAction(mi, _("GUI debugger"), agIconMagnifier.s,
 	    OpenGuiDebugger, NULL);
 #else

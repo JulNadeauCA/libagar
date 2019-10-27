@@ -126,11 +126,9 @@ void *agStdWidgets[] = {
 	&agComboClass,
 	&agConsoleClass,
 	&agEditableClass,
-# ifdef AG_SERIALIZATION
 	&agDirDlgClass,
 	&agFontSelectorClass,
 	&agFileDlgClass,
-# endif
 	&agFixedClass,
 	&agFixedPlotterClass,
 	&agGraphClass,
@@ -207,9 +205,7 @@ double agZoomValues[AG_ZOOM_MAX] = {
 int
 AG_InitGUIGlobals(void)
 {
-#ifdef AG_SERIALIZATION
 	AG_Config *cfg;
-#endif
 	void **cl;
 	AG_DriverClass **pd;
 	Uint i;
@@ -248,25 +244,22 @@ AG_InitGUIGlobals(void)
 	AG_ObjectSetName(&agInputDevices, "agInputDevices");
 	agInputDevices.flags |= AG_OBJECT_STATIC;
 
-#ifdef AG_SERIALIZATION
 	{
-# ifdef AG_DEBUG
+#ifdef AG_DEBUG
 		const int dbgLvlSave = agDebugLvl;
 
 		agDebugLvl = 0;
-# endif
+#endif
 		cfg = AG_ConfigObject();
 		for (i = 0; i < agGUIOptionCount; i++) {
 			AG_BindInt(cfg, agGUIOptions[i].key, agGUIOptions[i].p);
 		}
-# ifdef AG_DEBUG
+#ifdef AG_DEBUG
 		agDebugLvl = dbgLvlSave;
-# endif
+#endif
 		if (AG_LoadStyleSheet(NULL, "_agStyleDefault") == NULL)
 			AG_Verbose("Error loading stylesheet: %s\n", AG_GetError());
 	}
-#endif /* AG_SERIALIZATION */
-
 	return (0);
 }
 
@@ -285,19 +278,17 @@ AG_DestroyGUIGlobals(void)
 		return;
 
 	AG_DestroyStyleSheet(&agDefaultCSS);
-#ifdef AG_SERIALIZATION
 	{
 		AG_Config *cfg = AG_ConfigObject();
-# ifdef AG_DEBUG
+#ifdef AG_DEBUG
 		int debugLvlSave;
-# endif
+#endif
 		Debug_Mute(debugLvlSave);
 		for (i = 0; i < agGUIOptionCount; i++) {
 			AG_Unset(cfg, agGUIOptions[i].key);
 		}
 		Debug_Unmute(debugLvlSave);
 	}
-#endif
 	AG_ObjectDestroy(&agInputDevices);
 #ifndef __APPLE__ /* XXX mutex issue */
 	AG_ObjectDestroy(&agDrivers);

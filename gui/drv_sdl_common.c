@@ -716,10 +716,11 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 			*depth = 32;
 		}
 	}
+
 	if (AG_Defined(drv, "fpsMax")) {
 		char *ep;
-#ifdef HAVE_FLOAT
 		float v;
+
 		AG_GetString(drv, "fpsMax", buf, sizeof(buf));
 		v = (float)strtod(buf, &ep);
 		if (*ep == '\0') {
@@ -727,16 +728,6 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 			Verbose("%s: max fps %s (%u ms)\n", OBJECT(drv)->name,
 			    buf, dsw->rNom);
 		}
-#else
-		Uint v;
-		AG_GetString(drv, "fpsMax", buf, sizeof(buf));
-		v = (Uint)strtoul(buf, &ep, 10);
-		if (*ep == '\0') {
-			dsw->rNom = 1000/v;
-			Verbose("%s: max fps %s (%u ms)\n", OBJECT(drv)->name,
-			    buf, dsw->rNom);
-		}
-#endif /* !HAVE_FLOAT */
 	}
 	if (AG_Defined(drv, "bgColor")) {
 		Verbose("%s: bgColor -> %s\n", OBJECT(drv)->name,

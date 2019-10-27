@@ -27,17 +27,11 @@ typedef struct ag_rect2 {
 
 typedef struct ag_clip_rect {
 	AG_Rect r;		/* Clipping rectangle coordinates */
-#ifdef AG_HAVE_FLOAT
 	double eqns[4][4];	/* Cached plane equations (GL mode) */
-#endif
 } AG_ClipRect;
 
 typedef struct ag_texcoord {
-#ifdef AG_HAVE_FLOAT
 	float x,y, w,h;		/* Texture coordinates (GL mode) */
-#else
-	int x,y, w,h;		/* Texture coordinates (integer-only) */
-#endif
 } AG_TexCoord;
 
 __BEGIN_DECLS
@@ -53,12 +47,10 @@ void AG_RectSize2(AG_Rect2 *_Nonnull, int,int);
 void AG_RectTranslate(AG_Rect *_Nonnull, int,int);
 void AG_RectTranslate2(AG_Rect2 *_Nonnull, int,int);
 
-#ifdef AG_SERIALIZATION
 void AG_ReadRect(AG_Rect *_Nonnull, AG_DataSource *_Nonnull);
 void AG_ReadRect2(AG_Rect2 *_Nonnull, AG_DataSource *_Nonnull);
 void AG_WriteRect(AG_DataSource *_Nonnull, const AG_Rect *_Nonnull);
 void AG_WriteRect2(AG_DataSource *_Nonnull, const AG_Rect2 *_Nonnull);
-#endif
 
 int AG_RectIntersect(AG_Rect *_Nonnull,
                      const AG_Rect *_Nonnull,

@@ -306,30 +306,28 @@ ag_color_compare(const AG_Color *A, const AG_Color *B)
 	         A->a == B->a);
 }
 
-#ifdef AG_HAVE_FLOAT
 /*
  * Convert between RGB and HSV color representations.
  */
-# ifdef AG_INLINE_HEADER
+#ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_Color2HSV(const AG_Color *_Nonnull c, float *_Nonnull h, float *_Nonnull s,
     float *_Nonnull v)
-# else
+#else
 void
 ag_color_2_hsv(const AG_Color *c, float *h, float *s, float *v)
-# endif
+#endif
 {
 	AG_MapRGB_HSVf(c->r, c->g, c->b, h,s,v);
 }
 
-# ifdef AG_INLINE_HEADER
+#ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_HSV2Color(float h, float s, float v, AG_Color *_Nonnull c)
-# else
+#else
 void
 ag_hsv_2_color(float h, float s, float v, AG_Color *c)
-# endif
+#endif
 {
 	AG_MapHSVf_RGB(h,s,v, &c->r, &c->g, &c->b);
 }
-#endif /* AG_HAVE_FLOAT */

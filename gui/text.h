@@ -374,11 +374,10 @@ void AG_TextMsg(enum ag_text_msg_title, const char *_Nonnull, ...)
                FORMAT_ATTRIBUTE(printf,2,3);
 void AG_TextMsgFromError(void);
 
-#ifdef AG_TIMERS
 void AG_TextTmsgS(enum ag_text_msg_title, Uint32, const char *_Nonnull);
 void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *_Nonnull, ...)
                 FORMAT_ATTRIBUTE(printf,3,4);
-#endif
+
 void AG_TextInfoS(const char *_Nullable, const char *_Nonnull);
 void AG_TextInfo(const char *_Nullable, const char *_Nonnull, ...)
                 FORMAT_ATTRIBUTE(printf,2,3);

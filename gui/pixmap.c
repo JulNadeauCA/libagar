@@ -119,7 +119,6 @@ AG_PixmapFromSurfaceScaled(void *parent, Uint flags, const AG_Surface *su,
 	return (px);
 }
 
-#ifdef AG_SERIALIZATION
 /* Create a new pixmap from the given image file. */
 AG_Pixmap *
 AG_PixmapFromFile(void *parent, Uint flags, const char *file)
@@ -142,7 +141,6 @@ AG_PixmapFromFile(void *parent, Uint flags, const char *file)
 /*	AG_WidgetMapSurface(px, AG_SurfaceConvert(S, agSurfaceFmt)); */
 	return (px);
 }
-#endif /* AG_SERIALIZATION */
 
 #ifdef HAVE_OPENGL
 
@@ -242,7 +240,6 @@ AG_PixmapAddSurfaceScaled(AG_Pixmap *px, const AG_Surface *suOrig,
 	return (name);
 }
 
-#ifdef AG_SERIALIZATION
 /*
  * Map a surface created from an image file (format autodetected).
  * Returned surface ID is valid as long as pixmap is locked.
@@ -269,7 +266,6 @@ AG_PixmapAddSurfaceFromFile(AG_Pixmap *px, const char *path)
 	AG_SurfaceFree(suFile);
 	return (name);
 }
-#endif /* AG_SERIALIZATION */
 
 /* Replace the contents of a mapped surface. */
 void

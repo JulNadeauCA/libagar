@@ -1049,7 +1049,6 @@ AG_TextMsgFromError(void)
 	AG_TextMsgS(AG_MSG_ERROR, AG_GetError());
 }
 
-# ifdef AG_TIMERS
 static Uint32
 TextTmsgExpire(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -1102,7 +1101,6 @@ AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
 	if (to != NULL)
 		Strlcpy(to->name, "textTmsg", sizeof(to->name));
 }
-# endif /* AG_TIMERS */
 
 /*
  * Display an informational message with a "Don't tell me again" option.

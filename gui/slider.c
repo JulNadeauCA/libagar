@@ -98,8 +98,6 @@ AG_SliderNewUintR(void *parent, enum ag_slider_type type, Uint flags,
 	return (sl);
 }
 
-#ifdef HAVE_FLOAT
-
 AG_Slider *
 AG_SliderNewFlt(void *parent, enum ag_slider_type type, Uint flags,
     float *val, float *min, float *max)
@@ -144,8 +142,6 @@ AG_SliderNewDblR(void *parent, enum ag_slider_type type, Uint flags,
 	return (sl);
 }
 
-#endif /* HAVE_FLOAT */
-
 /* Set the size of the control in pixels. */
 void
 AG_SliderSetControlSize(AG_Slider *sl, int size)
@@ -188,10 +184,8 @@ GetPosition(AG_Slider *_Nonnull sl, int *_Nonnull x)
 	bMax = AG_GetVariable(sl, "max", &pMax);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		GET_POSITION(float);		break;
 	case AG_VARIABLE_DOUBLE:	GET_POSITION(double);		break;
-#endif
 	case AG_VARIABLE_INT:		GET_POSITION(int);		break;
 	case AG_VARIABLE_UINT:		GET_POSITION(Uint);		break;
 	case AG_VARIABLE_UINT8:		GET_POSITION(Uint8);		break;
@@ -243,10 +237,8 @@ SeekToPosition(AG_Slider *_Nonnull sl, int x)
 	bMax = AG_GetVariable(sl, "max", &pMax);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		SEEK_TO_POSITION(float);	break;
 	case AG_VARIABLE_DOUBLE:	SEEK_TO_POSITION(double);	break;
-#endif
 	case AG_VARIABLE_INT:		SEEK_TO_POSITION(int);		break;
 	case AG_VARIABLE_UINT:		SEEK_TO_POSITION(Uint);		break;
 	case AG_VARIABLE_UINT8:		SEEK_TO_POSITION(Uint8);	break;
@@ -298,10 +290,8 @@ Increment(AG_Slider *_Nonnull sl)
 	bInc = AG_GetVariable(sl, "inc", &pInc);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		INCREMENT(float);	break;
 	case AG_VARIABLE_DOUBLE:	INCREMENT(double);	break;
-#endif
 	case AG_VARIABLE_INT:		INCREMENT(int);		break;
 	case AG_VARIABLE_UINT:		INCREMENT(Uint);	break;
 	case AG_VARIABLE_UINT8:		INCREMENT(Uint8);	break;
@@ -337,10 +327,8 @@ Decrement(AG_Slider *_Nonnull sl)
 	bInc = AG_GetVariable(sl, "inc", &pInc);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		DECREMENT(float);	break;
 	case AG_VARIABLE_DOUBLE:	DECREMENT(double);	break;
-#endif
 	case AG_VARIABLE_INT:		DECREMENT(int);		break;
 	case AG_VARIABLE_UINT:		DECREMENT(Uint);	break;
 	case AG_VARIABLE_UINT8:		DECREMENT(Uint8);	break;
@@ -430,7 +418,6 @@ MouseMotion(AG_Event *_Nonnull event)
 	                    AG_INT(1):AG_INT(2)) - sl->xOffs);
 }
 
-#ifdef AG_TIMERS
 /* Timer callback for keyboard motion. */
 static Uint32
 MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -445,7 +432,6 @@ MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	}
 	return (agKbdRepeat);
 }
-#endif /* AG_TIMERS */
 
 static void
 KeyDown(AG_Event *_Nonnull event)
@@ -457,21 +443,16 @@ KeyDown(AG_Event *_Nonnull event)
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
 		Decrement(sl);
-#ifdef AG_TIMERS
 		AG_AddTimer(sl, &sl->moveTo, agKbdDelay, MoveTimeout, "%i", -1);
-#endif
 		break;
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
 		Increment(sl);
-#ifdef AG_TIMERS
 		AG_AddTimer(sl, &sl->moveTo, agKbdDelay, MoveTimeout, "%i", +1);
-#endif
 		break;
 	}
 }
 
-#ifdef AG_TIMERS
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
@@ -495,7 +476,6 @@ OnFocusLoss(AG_Event *_Nonnull event)
 
 	AG_DelTimer(sl, &sl->moveTo);
 }
-#endif /* AG_TIMERS */
 
 #undef SET_DEF
 #define SET_DEF(fn,dmin,dmax,dinc) { 					\
@@ -514,10 +494,8 @@ OnShow(AG_Event *_Nonnull event)
 		AG_LockVariable(V);
 	}
 	switch (AG_VARIABLE_TYPE(V)) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:  SET_DEF(AG_SetFloat, 0.0f, 1.0f, 0.1f); break;
 	case AG_VARIABLE_DOUBLE: SET_DEF(AG_SetDouble, 0.0, 1.0, 0.1); break;
-#endif
 	case AG_VARIABLE_INT:    SET_DEF(AG_SetInt, AG_INT_MIN+1, AG_INT_MAX-1, 1); break;
 	case AG_VARIABLE_UINT:   SET_DEF(AG_SetUint, 0U, AG_UINT_MAX-1, 1U); break;
 	case AG_VARIABLE_UINT8:  SET_DEF(AG_SetUint8, 0U, 0xffU, 1U); break;
@@ -534,13 +512,11 @@ OnShow(AG_Event *_Nonnull event)
 	}
 	AG_UnlockVariable(V);
 
-#ifdef AG_TIMERS
 	if ((sl->flags & AG_SLIDER_EXCL) == 0) {
 		AG_RedrawOnChange(sl, 100, "value");
 		AG_RedrawOnChange(sl, 1000, "min");
 		AG_RedrawOnChange(sl, 1000, "max");
 	}
-#endif
 }
 #undef SET_DEF
 
@@ -566,16 +542,11 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(sl, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(sl, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(sl, "key-down", KeyDown, NULL);
-#ifdef AG_TIMERS
 	AG_SetEvent(sl, "key-up", KeyUp, NULL);
 	AG_AddEvent(sl, "widget-hidden", OnFocusLoss, NULL);
 	AG_SetEvent(sl, "widget-lostfocus", OnFocusLoss, NULL);
+
 	AG_InitTimer(&sl->moveTo, "move", 0);
-#endif
-#if 0
-	AG_BindInt(sl, "xOffs", &sl->xOffs);
-	AG_BindInt(sl, "extent", &sl->extent);
-#endif
 }
 
 static void

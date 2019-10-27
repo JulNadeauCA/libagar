@@ -26,9 +26,6 @@
 /*
  * Loader for Gimp 1.x XCF image format.
  */
-#include <agar/config/ag_serialization.h>
-#ifdef AG_SERIALIZATION
-
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
 #include <agar/gui/surface.h>
@@ -87,11 +84,9 @@ struct xcf_prop {
 			Sint32 x, y;		/* Layer offset in image */
 		} offset;
 		Uint8 color[3];			/* RGB triplet for color */
-#ifdef HAVE_FLOAT
 		struct {
 			float x, y;		/* Resolution */
 		} resolution;
-#endif
 	} data;
 };
 
@@ -218,12 +213,8 @@ ReadProp(AG_DataSource *buf, struct xcf_prop *prop)
 		}
 		break;
 	case PROP_RESOLUTION:				 /* Image resolution */
-#ifdef HAVE_FLOAT
 		prop->data.resolution.x = AG_ReadFloat(buf);
 		prop->data.resolution.y = AG_ReadFloat(buf);
-#else
-		AG_Seek(buf, 8, AG_SEEK_CUR);
-#endif
 		break;
 	case PROP_TATTOO:					/* Tattoo */
 		prop->data.tattoo_state = AG_ReadUint32(buf);
@@ -711,4 +702,3 @@ AG_XCFLoad(AG_DataSource *buf, AG_Offset xcf_offs,
 	Free(head);
 	return (0);
 }
-#endif /* AG_SERIALIZATION */

@@ -598,7 +598,6 @@ Draw(void *obj)
 	TAILQ_FOREACH(edge, &gf->edges, edges) {
 		if (edge->flags & AG_GRAPH_HIDDEN)
 			continue;
-#ifdef HAVE_FLOAT
 		{
 			int xi1, yi1, xi2, yi2;
 			int x1, y1, x2, y2;
@@ -693,15 +692,6 @@ Draw(void *obj)
 			    yi2,
 			    &edge->edgeColor);
 		}
-#else /* !HAVE_FLOAT */
-		/* Failover if we don't have float support. */
-		AG_DrawLine(gf,
-		    edge->v1->x - xOffs,
-		    edge->v1->y - yOffs,
-		    edge->v2->x - xOffs,
-		    edge->v2->y - yOffs,
-		    &edge->edgeColor);
-#endif /* HAVE_FLOAT */
 
 		if (edge->labelSu >= 0) {
 			AG_Surface *su = WSURFACE(gf,edge->labelSu);
@@ -952,8 +942,6 @@ VertexAtCoords(AG_Graph *gf, int x, int y)
 	return (NULL);
 }
 
-#ifdef HAVE_FLOAT
-
 /* TODO: an integer-only version of this */
 static void
 PlaceVertex(AG_Graph *gf, AG_GraphVertex *vtx, AG_GraphVertex **vSorted,
@@ -1059,8 +1047,6 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 	AG_Redraw(gf);
 	Free(vSorted);
 }
-
-#endif /* HAVE_FLOAT */
 
 AG_WidgetClass agGraphClass = {
 	{

@@ -482,8 +482,6 @@ AG_SurfaceFromPixelsRGBA(const void *pixels, Uint w, Uint h, Uint BitsPerPixel,
 	return (S);
 }
 
-#ifdef AG_SERIALIZATION
-
 /* Load a surface from an image file. */
 AG_Surface *
 AG_SurfaceFromFile(const char *path)
@@ -530,8 +528,6 @@ AG_SurfaceExportFile(const AG_Surface *S, const char *path)
 	}
 	return (0);
 }
-
-#endif /* AG_SERIALIZATION */
 
 #ifdef HAVE_OPENGL
 static __inline__ int _Const_Attribute
@@ -1088,6 +1084,7 @@ AG_Surface *
 AG_SurfaceScale(const AG_Surface *S, Uint w, Uint h, Uint flags)
 {
 	AG_Surface *D;
+	float xf,yf;
 	int x,y;
 
 #ifdef AG_DEBUG
@@ -1109,36 +1106,16 @@ AG_SurfaceScale(const AG_Surface *S, Uint w, Uint h, Uint flags)
 		return (D);
 	}
 
-#ifdef HAVE_FLOAT
-	{
-		float xf = (float)(S->w - 1) / (float)(D->w - 1);
-		float yf = (float)(S->h - 1) / (float)(D->h - 1);
+	xf = (float)(S->w - 1) / (float)(D->w - 1);
+	yf = (float)(S->h - 1) / (float)(D->h - 1);
 
-		for (y = 0; y < D->h; y++) {
-			for (x = 0; x < D->w; x++) {
-				AG_SurfacePut(D, x,y,
-				    AG_SurfaceGet(S, 
-				        (int)((float)x * xf),
-					(int)((float)y * yf)));
-			}
+	for (y = 0; y < D->h; y++) {
+		for (x = 0; x < D->w; x++) {
+			AG_SurfacePut(D, x,y, AG_SurfaceGet(S, 
+			    (int)((float)x * xf),
+			    (int)((float)y * yf)));
 		}
 	}
-#else
-	{
-		int xf = (S->w - 1) / (D->w - 1);
-		int yf = (S->h - 1) / (D->h - 1);
-
-		for (y = 0; y < D->h; y++) {
-			for (x = 0; x < D->w; x++) {
-				AG_SurfacePut(D, x,y,
-				    AG_SurfaceGet(S, 
-				        (x * xf),
-					(y * yf)));
-			}
-		}
-	}
-#endif /* HAVE_FLOAT */
-
 	return (D);
 }
 
@@ -1294,14 +1271,12 @@ AG_MapPixel32_RGB8(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b)
 		    AG_8toH(g),
 		    AG_8toH(b),
 		    AG_OPAQUE);
-#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf,
 		    AG_8toH(r),
 		    AG_8toH(g),
 		    AG_8toH(b),
 		    AG_OPAQUE);
-#endif
 	}
 }
 
@@ -1322,14 +1297,12 @@ AG_MapPixel32_RGBA8(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b, Uint8 a
 		    AG_8toH(g),
 		    AG_8toH(b),
 		    AG_8toH(a));
-#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf,
 		    AG_8toH(r),
 		    AG_8toH(g),
 		    AG_8toH(b),
 		    AG_8toH(a));
-#endif
 	}
 }
 
@@ -1350,14 +1323,12 @@ AG_MapPixel32_RGB16(const AG_PixelFormat *pf, Uint16 r, Uint16 g, Uint16 b)
 		    AG_16toH(g),
 		    AG_16toH(b),
 		    AG_OPAQUE);
-#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf,
 		    AG_16toH(r),
 		    AG_16toH(g),
 		    AG_16toH(b),
 		    AG_OPAQUE);
-#endif
 	}
 }
 
@@ -1375,10 +1346,8 @@ AG_MapPixel32_RGBA16(const AG_PixelFormat *pf, Uint16 r, Uint16 g, Uint16 b,
 		      ((AG_16to8(a) >> pf->Aloss) << pf->Ashift & (Uint32)pf->Amask);
 	case AG_SURFACE_INDEXED:
 		return AG_MapPixelIndexed(pf, r,g,b,a);
-#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf, r,g,b,a);
-#endif
 	}
 }
 
@@ -1401,14 +1370,12 @@ AG_MapPixel64_RGB8(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b)
 		    AG_16toH(g),
 		    AG_16toH(b),
 		    AG_OPAQUE);
-# ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf,
 		    AG_16toH(r),
 		    AG_16toH(g),
 		    AG_16toH(b),
 		    AG_OPAQUE);
-# endif
 	}
 }
 
@@ -1430,14 +1397,12 @@ AG_MapPixel64_RGBA8(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b,
 		    AG_8toH(g),
 		    AG_8toH(b),
 		    AG_8toH(a));
-# ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		return AG_MapPixelGrayscale(pf,
 		    AG_8toH(r),
 		    AG_8toH(g),
 		    AG_8toH(b),
 		    AG_8toH(a));
-# endif
 	}
 }
 
@@ -1468,13 +1433,11 @@ AG_GetColor32_RGB8(Uint32 px, const AG_PixelFormat *pf,
 		*b = AG_Hto8(c->b);
 		break;
 	}
-#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE: {
 		Uint8 dummy;
 		AG_GetColor32_Gray8(px, pf->graymode, r,g,b,&dummy);
 		break;
 	}
-#endif
 	/* pf->mode */
 	}
 }
@@ -1501,11 +1464,9 @@ AG_GetColor32_RGBA8(Uint32 px, const AG_PixelFormat *pf,
 		*b = AG_Hto8(c->b);
 		*a = AG_Hto8(c->a);
 		break;
-#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		AG_GetColor32_Gray8(px, pf->graymode, r,g,b,a);
 		break;
-#endif
 	}
 }
 
@@ -1533,13 +1494,11 @@ AG_GetColor32_RGB16(Uint32 px, const AG_PixelFormat *pf,
 		*g = c->g;
 		*b = c->b;
 		break;
-#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE: {
 		Uint16 dummy;
 		AG_GetColor32_Gray16(px, pf->graymode, r,g,b,&dummy);
 		break;
 	}
-#endif
 	/* pf->mode */
 	}
 }
@@ -1571,11 +1530,9 @@ AG_GetColor32_RGBA16(Uint32 px, const AG_PixelFormat *pf,
 		*b = c->b;
 		*a = c->a;
 		break;
-#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		AG_GetColor32_Gray16(px, pf->graymode, r,g,b,a);
 		break;
-#endif
 	}
 }
 
@@ -1608,11 +1565,9 @@ AG_GetColor32(AG_Color *c, Uint32 px, const AG_PixelFormat *pf)
 		memcpy(c, &pf->palette->colors[(Uint)px % pf->palette->nColors],
 		    sizeof(AG_Color));
 		break;
-#ifdef HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		AG_GetColor32_Gray(c, px, pf->graymode);
 		break;
-#endif
 	}
 }
 
@@ -1639,11 +1594,9 @@ AG_GetColor64(AG_Color *c, Uint64 px, const AG_PixelFormat *pf)
 		memcpy(c, &pf->palette->colors[px % pf->palette->nColors],
 		    sizeof(AG_Color));
 		break;
-# ifdef AG_HAVE_FLOAT
 	case AG_SURFACE_GRAYSCALE:
 		AG_GetColor64_Gray(c, px, pf->graymode);
 		break;
-# endif
 	}
 }
 #endif /* AG_LARGE */
@@ -1675,7 +1628,6 @@ AG_MapPixelIndexed(const AG_PixelFormat *pf,
 	return (Uint8)iMin;
 }
 
-#ifdef HAVE_FLOAT
 /* Convert RGBA components to packed grayscale+alpha by luminosity. */
 AG_Pixel
 AG_MapPixelGrayscale(const AG_PixelFormat *pf,
@@ -1789,7 +1741,7 @@ AG_GetColor32_Gray16(Uint32 px, AG_GrayscaleMode grayMode,
 	*a = (px & 0xffff);
 }
 
-# if AG_MODEL == AG_LARGE
+#if AG_MODEL == AG_LARGE
 /*
  * Convert a 64-bit grayscale+alpha pixel to 16-bit RGBA by luminosity
  * (with compressed alpha).
@@ -1850,8 +1802,7 @@ AG_GetColor64_Gray(AG_Color *c, Uint64 G, AG_GrayscaleMode mode)
 	}
 	c->a = AG_32to16(G & 0xffffffff);
 }
-# endif /* AG_LARGE */
-#endif /* HAVE_FLOAT */
+#endif /* AG_LARGE */
 
 /*
  * Blend 8-bit RGBA components with the pixel at x,y and overwrite it with

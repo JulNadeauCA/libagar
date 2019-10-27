@@ -27,8 +27,7 @@
  * Agar directory browser widget.
  */
 #include <agar/core/core.h>
-#include <agar/config/ag_serialization.h>
-#if defined(AG_WIDGETS) && defined(AG_SERIALIZATION)
+#if defined(AG_WIDGETS)
 
 #include <agar/core/config.h>
 #include <agar/gui/dir_dlg.h>
@@ -893,4 +892,4 @@ AG_WidgetClass agDirDlgClass = {
 	SizeRequest,
 	SizeAllocate
 };
-#endif /* AG_WIDGETS and AG_SERIALIZATION */
+#endif /* AG_WIDGETS */

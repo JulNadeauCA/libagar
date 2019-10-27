@@ -62,7 +62,6 @@ AG_TreetblNew(void *parent, Uint flags, AG_TreetblDataFn cellDataFn,
 	return (tt);
 }
 
-#ifdef AG_TIMERS
 /* Timer for detecting double clicks. */
 static Uint32
 DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -82,7 +81,6 @@ FocusLost(AG_Event *_Nonnull event)
 	AG_DelTimer(tt, &tt->toDblClick);
 	tt->dblClicked = 0;
 }
-#endif /* AG_TIMERS */
 
 static void
 FontChangedRow(AG_Treetbl *_Nonnull tt, AG_TreetblRow *_Nonnull row)
@@ -475,7 +473,7 @@ ClickedRow(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 			AG_Redraw(tt);
 		}
 	}
-#ifdef AG_TIMERS
+
 	/* Handle double-clicks. */
 	if (tt->dblClicked) {
 		AG_DelTimer(tt, &tt->toDblClick);
@@ -498,8 +496,6 @@ ClickedRow(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 		AG_AddTimer(tt, &tt->toDblClick, agMouseDblclickDelay,
 		    DoubleClickTimeout, NULL);
 	}
-#endif /* AG_TIMERS */
-
 	return (0);
 }
 
@@ -578,13 +574,12 @@ Init(void *_Nonnull obj)
 	tt->wHint = 10;
 	tt->hHint = tt->hCol + (tt->hRow << 2);
 	
+	AG_InitTimer(&tt->toDblClick, "dblClick", 0);
+
 	AG_SetEvent(tt, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(tt, "mouse-button-down", MouseButtonDown, NULL);
-#ifdef AG_TIMERS
-	AG_InitTimer(&tt->toDblClick, "dblClick", 0);
 	AG_SetEvent(tt, "widget-lostfocus", FocusLost, NULL);
 	AG_AddEvent(tt, "widget-hidden", FocusLost, NULL);
-#endif
 	AG_AddEvent(tt, "font-changed", FontChanged, NULL);
 }
 
@@ -1533,11 +1528,10 @@ ViewChanged(AG_Treetbl *_Nonnull tt)
 	int rows_per_view, max, filled, value;
 	Uint i;
 
-#ifdef AG_TIMERS
 	/* cancel double clicks if what's under it changes it */
 	AG_DelTimer(tt, &tt->toDblClick);
 	tt->dblClicked = 0;
-#endif
+
 	rows_per_view = tt->r.h/tt->hRow;
 	if (tt->r.h % tt->hRow)
 		rows_per_view++;

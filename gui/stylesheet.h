@@ -44,10 +44,7 @@ extern AG_StaticCSS agStyleDefault;
 void                     AG_InitStyleSheet(AG_StyleSheet *_Nonnull);
 void                     AG_DestroyStyleSheet(AG_StyleSheet *_Nonnull);
 
-#ifdef AG_SERIALIZATION
 AG_StyleSheet *_Nullable AG_LoadStyleSheet(void *_Nullable, const char *_Nonnull);
-#endif
-
 int                      AG_LookupStyleSheet(AG_StyleSheet *_Nonnull,
                                              void *_Nonnull,
 					     const char *_Nonnull,

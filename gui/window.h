@@ -64,13 +64,11 @@ typedef struct ag_window_pvt {
 	AG_TAILQ_ENTRY(ag_window) visibility;	/* In agWindow{Show,Hide}Q */
 	AG_TAILQ_HEAD_(ag_window) subwins;	/* For AG_WindowAttach() */
 	AG_TAILQ_ENTRY(ag_window) swins;	/* Entry in logical parent window */
-#if defined(AG_TIMERS)
 	AG_Timer fadeTo;			/* Fade timer */
 	float fadeInTime, fadeOutTime;		/* Fade time (s) */
 	float fadeInIncr, fadeOutIncr;		/* Fade increment */
 	float fadeOpacity;			/* Fade opacity */
 	Uint32 _pad;
-#endif
 	AG_CursorAreaQ cursorAreas;		/* Cursor-change areas */
 	AG_CursorArea *_Nullable caResize[5];	/* Window-resize areas */
 } AG_WindowPvt;
@@ -197,11 +195,8 @@ int  AG_WindowSetGeometryAlignedPct(AG_Window *_Nonnull, enum ag_window_alignmen
 void AG_WindowComputeAlignment(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
 
 int  AG_WindowSetOpacity(AG_Window *_Nonnull, float);
-# ifdef AG_TIMERS
 void AG_WindowSetFadeIn(AG_Window *_Nonnull, float, float);
 void AG_WindowSetFadeOut(AG_Window *_Nonnull, float, float);
-# endif
-
 void AG_WindowSetZoom(AG_Window *_Nonnull, int);
 
 void AG_WindowSaveGeometry(AG_Window *_Nonnull);

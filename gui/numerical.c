@@ -77,7 +77,6 @@ AG_NumericalNewS(void *parent, Uint flags, const char *unit, const char *label)
 	if (label != NULL) {
 		AG_TextboxSetLabelS(num->input, label);
 	}
-#ifdef HAVE_FLOAT
 	if (unit != NULL) {
 		num->units = AG_UComboNew(num, 0);
 		AG_SetEvent(num->units, "ucombo-selected",
@@ -85,12 +84,10 @@ AG_NumericalNewS(void *parent, Uint flags, const char *unit, const char *label)
 		AG_NumericalSetUnitSystem(num, unit);
 		AG_WidgetSetFocusable(num->units, 0);
 	}
-#endif
 	AG_ObjectAttach(parent, num);
 	return (num);
 }
 
-#ifdef HAVE_FLOAT
 AG_Numerical *
 AG_NumericalNewDbl(void *parent, Uint flags, const char *unit, const char *label,
     double *v)
@@ -132,7 +129,6 @@ AG_NumericalNewFltR(void *parent, Uint flags, const char *unit,
 	AG_SetFloat(num, "max", max);
 	return (num);
 }
-#endif /* HAVE_FLOAT */
 
 AG_Numerical *
 AG_NumericalNewInt(void *parent, Uint flags, const char *unit, const char *label,
@@ -175,7 +171,6 @@ AG_NumericalNewUintR(void *parent, Uint flags, const char *unit, const char *lab
 	return (num);
 }
 
-#ifdef AG_TIMERS
 static Uint32
 UpdateTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -186,7 +181,6 @@ UpdateTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	}
 	return (to->ival);
 }
-#endif /* AG_TIMERS */
 
 #undef SET_DEF
 #define SET_DEF(fn,dmin,dmax,dinc) { 					\
@@ -200,26 +194,20 @@ OnShow(AG_Event *_Nonnull event)
 	AG_Numerical *num = AG_NUMERICAL_SELF();
 	AG_Variable *V;
 
-#ifdef AG_TIMERS
 	if ((num->flags & AG_NUMERICAL_EXCL) == 0)
 		AG_AddTimer(num, &num->updateTo, 250, UpdateTimeout, NULL);
-#endif
+
 	if ((V = AG_AccessVariable(num, "value")) == NULL) {
 		if (num->flags & AG_NUMERICAL_INT) {
 			V = AG_SetInt(num, "value", 0);
-		}
-#ifdef HAVE_FLOAT
-		else {
+		} else {
 			V = AG_SetDouble(num, "value", 0.0);
 		}
-#endif
 		AG_LockVariable(V);
 	}
 	switch (AG_VARIABLE_TYPE(V)) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:  SET_DEF(AG_SetFloat, -AG_FLT_MAX, AG_FLT_MAX, 0.1f); break;
 	case AG_VARIABLE_DOUBLE: SET_DEF(AG_SetDouble, -AG_DBL_MAX, AG_DBL_MAX, 0.1); break;
-#endif
 	case AG_VARIABLE_INT:    SET_DEF(AG_SetInt, AG_INT_MIN+1, AG_INT_MAX-1, 1); break;
 	case AG_VARIABLE_UINT:   SET_DEF(AG_SetUint, 0U, AG_UINT_MAX-1, 1U); break;
 	case AG_VARIABLE_UINT8:  SET_DEF(AG_SetUint8, 0U, 0xffU, 1U); break;
@@ -235,12 +223,10 @@ OnShow(AG_Event *_Nonnull event)
 	default: break;
 	}
 	switch (AG_VARIABLE_TYPE(V)) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:
 	case AG_VARIABLE_DOUBLE:
 		AG_TextboxSetFltOnly(num->input, 1);
 		break;
-#endif
 	default:
 		AG_TextboxSetIntOnly(num->input, 1);
 		break;
@@ -289,15 +275,12 @@ UpdateFromText(AG_Event *_Nonnull event)
 	maxb = AG_GetVariable(num, "max", &max);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:
 		SET_NUM(float, AG_Unit2Base(strtod(num->inTxt,NULL),num->unit));
 		break;
 	case AG_VARIABLE_DOUBLE:
 		SET_NUM(double, AG_Unit2Base(strtod(num->inTxt,NULL),num->unit));
 		break;
-#endif /* HAVE_FLOAT */
-
 	case AG_VARIABLE_INT:    SET_NUM(int, strtol(num->inTxt,NULL,10));	break;
 	case AG_VARIABLE_UINT:   SET_NUM(Uint, strtoul(num->inTxt,NULL,10));	break;
 	case AG_VARIABLE_UINT8:  SET_NUM(Uint8, strtoul(num->inTxt,NULL,10));	break;
@@ -354,7 +337,6 @@ ButtonIncrement(AG_Event *_Nonnull event)
 	pf[dir](num);
 }
 
-#ifdef HAVE_FLOAT
 static void
 UpdateUnitSelector(AG_Numerical *_Nonnull num)
 {
@@ -363,6 +345,7 @@ UpdateUnitSelector(AG_Numerical *_Nonnull num)
 	    WIDGET(num)->window->visible)
 		AG_NumericalUpdate(num);
 }
+
 static void
 UnitSelected(AG_Event *_Nonnull event)
 {
@@ -374,6 +357,7 @@ UnitSelected(AG_Event *_Nonnull event)
 	UpdateUnitSelector(num);
 	AG_ObjectUnlock(num);
 }
+
 int
 AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 {
@@ -439,7 +423,6 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	AG_ObjectUnlock(num);
 	return (0);
 }
-#endif /* HAVE_FLOAT */
 
 /* Update the input text from the binding value. */
 void
@@ -454,7 +437,6 @@ AG_NumericalUpdate(AG_Numerical *num)
 	}
 	valueb = AG_GetVariable(num, "value", &value);
 	switch (AG_VARIABLE_TYPE(valueb)) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_DOUBLE:
 		Snprintf(s, sizeof(s), num->format,
 		    AG_Base2Unit(*(double *)value, num->unit));
@@ -463,7 +445,6 @@ AG_NumericalUpdate(AG_Numerical *num)
 		Snprintf(s, sizeof(s), num->format,
 		    AG_Base2Unit(*(float *)value, num->unit));
 		break;
-#endif
 	case AG_VARIABLE_INT:	 StrlcpyInt(s, *(int *)value, sizeof(s));	break;
 	case AG_VARIABLE_UINT:	 StrlcpyUint(s, *(Uint *)value, sizeof(s));	break;
 	case AG_VARIABLE_UINT8:	 StrlcpyUint(s, *(Uint8 *)value, sizeof(s));	break;
@@ -515,17 +496,15 @@ Init(void *_Nonnull obj)
 	num->hUnitSel = 0;
 	num->inTxt[0] = '\0';
 	Strlcpy(num->format, "%.02f", sizeof(num->format));
-#ifdef AG_TIMERS
+
 	AG_InitTimer(&num->updateTo, "update", 0);
-#endif
+
 	num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
 	AG_TextboxBindASCII(num->input, num->inTxt, sizeof(num->inTxt));
 	AG_TextboxSizeHint(num->input, "8888.88");
 
-#ifdef HAVE_FLOAT
 	num->unit = AG_FindUnit("identity");
 	num->units = NULL;
-#endif
 
 	num->incbu = AG_ButtonNewS(num, AG_BUTTON_REPEAT, _("+"));
 	AG_ButtonSetPadding(num->incbu, 0,0,0,0);
@@ -582,7 +561,6 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	if (a->h < 4 || a->w < wBtn+spacing)
 		return (-1);
 
-#ifdef HAVE_FLOAT
 	if (num->units != NULL) {
 		if (wUnitSel > a->w - wBtn-spacing) {
 			wUnitSel = a->w - wBtn-spacing;
@@ -590,9 +568,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		if (hUnitSel > a->h) {
 			hUnitSel = a->h;
 		}
-	} else
-#endif
-	{
+	} else {
 		wUnitSel = 0;
 		hUnitSel = 0;
 	}
@@ -606,14 +582,12 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	aChld.x += aChld.w + 2;
 
 	/* Size unit selector */
-#ifdef HAVE_FLOAT
 	if (num->units != NULL) {
 		aChld.w = wUnitSel;
 		aChld.h = a->h;
 		AG_WidgetSizeAlloc(num->units, &aChld);
 		aChld.x += aChld.w + 2;
 	}
-#endif
 
 	/* Size increment buttons */
 	aChld.w = wBtn;
@@ -633,10 +607,10 @@ Draw(void *_Nonnull obj)
 	AG_Numerical *num = obj;
 
 	AG_WidgetDraw(num->input);
-#ifdef HAVE_FLOAT
-	if (num->units != NULL)
+
+	if (num->units)
 		AG_WidgetDraw(num->units);
-#endif
+
 	AG_WidgetDraw(num->incbu);
 	AG_WidgetDraw(num->decbu);
 }
@@ -673,10 +647,8 @@ AG_NumericalIncrement(AG_Numerical *num)
 	incb = AG_GetVariable(num, "inc", &inc);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		ADD_REAL(float);	break;
 	case AG_VARIABLE_DOUBLE:	ADD_REAL(double);	break;
-#endif
 	case AG_VARIABLE_INT:		ADD_INT(int);		break;
 	case AG_VARIABLE_UINT:		ADD_INT(Uint);		break;
 	case AG_VARIABLE_UINT8:		ADD_INT(Uint8);		break;
@@ -737,10 +709,8 @@ AG_NumericalDecrement(AG_Numerical *num)
 	incb = AG_GetVariable(num, "inc", &inc);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		SUB_REAL(float);	break;
 	case AG_VARIABLE_DOUBLE:	SUB_REAL(double);	break;
-#endif
 	case AG_VARIABLE_INT:		SUB_INT(int);		break;
 	case AG_VARIABLE_UINT:		SUB_INT(Uint);		break;
 	case AG_VARIABLE_UINT8:		SUB_INT(Uint8);		break;
@@ -781,7 +751,6 @@ AG_NumericalSetPrecision(AG_Numerical *num, const char *mode, int precision)
 	AG_ObjectUnlock(num);
 }
 
-#ifdef HAVE_FLOAT
 void
 AG_NumericalSelectUnit(AG_Numerical *num, const char *uname)
 {
@@ -803,7 +772,6 @@ AG_NumericalSelectUnit(AG_Numerical *num, const char *uname)
 	AG_ObjectUnlock(num->units->list);
 	AG_ObjectUnlock(num);
 }
-#endif /* HAVE_FLOAT */
 
 void
 AG_NumericalSetWriteable(AG_Numerical *num, int enable)
@@ -823,7 +791,6 @@ AG_NumericalSetWriteable(AG_Numerical *num, int enable)
 	AG_ObjectUnlock(num);
 }
 
-#ifdef HAVE_FLOAT
 /* Convert the bound value to a float. */
 float
 AG_NumericalGetFlt(AG_Numerical *num)
@@ -843,10 +810,10 @@ AG_NumericalGetFlt(AG_Numerical *num)
 	case AG_VARIABLE_SINT16:	return (float)(*(Sint16 *)value);
 	case AG_VARIABLE_UINT32:	return (float)(*(Uint32 *)value);
 	case AG_VARIABLE_SINT32:	return (float)(*(Sint32 *)value);
-# ifdef HAVE_64BIT
+#ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:	return (float)(*(Uint64 *)value);
 	case AG_VARIABLE_SINT64:	return (float)(*(Sint64 *)value);
-# endif
+#endif
 	default:			return (0.0f);
 	}
 }
@@ -870,14 +837,13 @@ AG_NumericalGetDbl(AG_Numerical *num)
 	case AG_VARIABLE_SINT16:	return (double)(*(Sint16 *)value);
 	case AG_VARIABLE_UINT32:	return (double)(*(Uint32 *)value);
 	case AG_VARIABLE_SINT32:	return (double)(*(Sint32 *)value);
-# ifdef HAVE_64BIT
+#ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:	return (double)(*(Uint64 *)value);
 	case AG_VARIABLE_SINT64:	return (double)(*(Sint64 *)value);
-# endif
+#endif
 	default:			return (0.0);
 	}
 }
-#endif /* HAVE_FLOAT */
 
 /* Convert the bound value to a natural integer. */
 int

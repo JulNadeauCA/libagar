@@ -102,11 +102,9 @@ AG_Size        AG_TextboxCopyString(AG_Textbox *_Nonnull, char *_Nonnull,
 
 int    AG_TextboxInt(AG_Textbox *_Nonnull);
 void   AG_TextboxSetIntOnly(AG_Textbox *, int);
-#ifdef AG_HAVE_FLOAT
 float  AG_TextboxFloat(AG_Textbox *_Nonnull);
 double AG_TextboxDouble(AG_Textbox *_Nonnull);
 void   AG_TextboxSetFltOnly(AG_Textbox *, int);
-#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

@@ -154,14 +154,12 @@ AG_TextboxSetExcl(AG_Textbox *tb, int flag)
 	AG_EditableSetExcl(tb->ed, flag);
 }
 
-#ifdef AG_HAVE_FLOAT
 /* Clear or set the FLT_ONLY option. */
 void
 AG_TextboxSetFltOnly(AG_Textbox *tb, int flag)
 {
 	AG_EditableSetFltOnly(tb->ed, flag);
 }
-#endif
 
 /* Clear or set the INT_ONLY option. */
 void
@@ -261,7 +259,6 @@ AG_TextboxInt(AG_Textbox *tb)
 	return AG_EditableInt(tb->ed);
 }
 
-#ifdef HAVE_FLOAT
 float
 AG_TextboxFloat(AG_Textbox *tb)
 {
@@ -273,7 +270,6 @@ AG_TextboxDouble(AG_Textbox *tb)
 {
 	return AG_EditableDbl(tb->ed);
 }
-#endif
 
 static void
 Draw(void *_Nonnull p)

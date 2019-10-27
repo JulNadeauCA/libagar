@@ -27,7 +27,7 @@
  * Agar file browser widget.
  */
 #include <agar/core/core.h>
-#if defined(AG_WIDGETS) && defined(AG_SERIALIZATION)
+#if defined(AG_WIDGETS)
 
 #include <agar/core/config.h>
 
@@ -980,7 +980,6 @@ SelectedType(AG_Event *_Nonnull event)
 			AG_BindInt(num, "min", &fo->data.i.min);
 			AG_BindInt(num, "max", &fo->data.i.max);
 			break;
-#ifdef HAVE_FLOAT
 		case AG_FILEDLG_FLOAT:
 			num = AG_NumericalNewS(fd->optsCtr, AG_NUMERICAL_HFILL,
 			    fo->unit, fo->descr);
@@ -995,7 +994,6 @@ SelectedType(AG_Event *_Nonnull event)
 			AG_BindDouble(num, "min", &fo->data.dbl.min);
 			AG_BindDouble(num, "max", &fo->data.dbl.max);
 			break;
-#endif
 		case AG_FILEDLG_STRING:
 			tbox = AG_TextboxNewS(fd->optsCtr,
 			    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
@@ -1331,12 +1329,11 @@ AG_FileDlgNew(void *parent, Uint flags)
 	AG_SetEvent(fd->tlFiles, "tlist-selected", FileSelected, "%p", fd);
 	AG_SetEvent(fd->tlFiles, "tlist-dblclick", FileDblClicked, "%p", fd);
 
-#ifdef AG_ENABLE_STRING
 	/* Current directory label. */
 	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL, ("Directory: %s"), &fd->cwd[0]);
 	AG_LabelSizeHint(fd->lbCwd, 1, _("Directory: XXXXXXXXXXXXX"));
 	AG_SetStyle(fd->lbCwd, "font-size", "90%");
-#endif
+
 	/* Manual file/directory entry textbox. */
 	fd->tbFile = AG_TextboxNewS(fd, AG_TEXTBOX_EXCL, _("File: "));
 	AG_SetEvent(fd->tbFile, "textbox-postchg", TextboxChanged, "%p", fd);
@@ -1679,7 +1676,6 @@ AG_FileDlgCopyTypes(AG_FileDlg *fdDst, const AG_FileDlg *fdSrc)
 				    so->data.i.min,
 				    so->data.i.max);
 				break;
-#ifdef HAVE_FLOAT
 			case AG_FILEDLG_FLOAT:
 				AG_FileOptionNewFlt(dt, so->descr, so->key,
 				    so->data.flt.val,
@@ -1694,7 +1690,6 @@ AG_FileDlgCopyTypes(AG_FileDlg *fdDst, const AG_FileDlg *fdSrc)
 				    so->data.dbl.max,
 				    so->unit);
 				break;
-#endif
 			case AG_FILEDLG_STRING:
 				AG_FileOptionNewString(dt, so->descr, so->key,
 				    so->data.s);
@@ -1819,8 +1814,6 @@ AG_FileOptionNewInt(AG_FileType *ft, const char *descr, const char *key,
 	return (fto);
 }
 
-#ifdef HAVE_FLOAT
-
 AG_FileOption *
 AG_FileOptionNewFlt(AG_FileType *ft, const char *descr, const char *key,
     float dflt, float min, float max, const char *unit)
@@ -1862,8 +1855,6 @@ AG_FileOptionNewDbl(AG_FileType *ft, const char *descr, const char *key,
 	AG_ObjectUnlock(ft->fd);
 	return (fto);
 }
-
-#endif /* HAVE_FLOAT */
 
 AG_FileOption *
 AG_FileOptionNewString(AG_FileType *ft, const char *descr, const char *key,
@@ -1916,8 +1907,6 @@ AG_FileOptionBool(AG_FileType *ft, const char *key)
 	return AG_FileOptionInt(ft, key);
 }
 
-#ifdef HAVE_FLOAT
-
 float
 AG_FileOptionFlt(AG_FileType *ft, const char *key)
 {
@@ -1943,8 +1932,6 @@ AG_FileOptionDbl(AG_FileType *ft, const char *key)
 	AG_ObjectUnlock(ft->fd);
 	return (rv);
 }
-
-#endif /* HAVE_FLOAT */
 
 char *
 AG_FileOptionString(AG_FileType *ft, const char *key)
@@ -1976,4 +1963,4 @@ AG_WidgetClass agFileDlgClass = {
 	SizeAllocate
 };
 
-#endif /* AG_WIDGETS and AG_SERIALIZATION */
+#endif /* AG_WIDGETS */

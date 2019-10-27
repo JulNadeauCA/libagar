@@ -3,9 +3,6 @@
 #ifndef _AGAR_WIDGET_UNITS_H_
 #define _AGAR_WIDGET_UNITS_H_
 
-#include <agar/config/have_float.h>
-#ifdef HAVE_FLOAT
-
 #include <agar/gui/begin.h>
 
 typedef struct ag_unit {
@@ -85,5 +82,4 @@ int AG_UnitFormat(double, const AG_Unit[_Nonnull],
 __END_DECLS
 
 #include <agar/gui/close.h>
-#endif /* HAVE_FLOAT */
 #endif /* _AGAR_WIDGET_UNITS_H_ */

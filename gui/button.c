@@ -161,7 +161,6 @@ AG_ButtonInvertState(AG_Button *bu, int flag)
 }
 
 
-#ifdef AG_TIMERS
 /* Delay/repeat timer callbacks for AG_BUTTON_REPEAT */
 static Uint32
 ExpireRepeat(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -180,7 +179,6 @@ ExpireDelay(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	AG_AddTimer(bu, &bu->repeatTo, repeatIval, ExpireRepeat, NULL);
 	return (0);
 }
-#endif /* AG_TIMERS */
 
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
@@ -192,13 +190,11 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	const int x = AG_INT(2);
 	const int y = AG_INT(3);
 
-#ifdef AG_TIMERS
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimer(bu, &bu->repeatTo);
 		AG_DelTimer(bu, &bu->delayTo);
 		return;
 	}
-#endif
 	if (AG_WidgetDisabled(bu) ||
 	   !AG_WidgetRelativeArea(bu, x,y))
 		return;
@@ -241,14 +237,12 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	}
 	AG_UnlockVariable(bState);
 
-#ifdef AG_TIMERS
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimer(bu, &bu->repeatTo);
 		AG_PostEvent(bu, "button-pushed", "%i", 1);
 		AG_AddTimer(bu, &bu->delayTo, agMouseSpinDelay,
 		    ExpireDelay, "%i", agMouseSpinIval);
 	}
-#endif
 }
 
 static void
@@ -283,12 +277,11 @@ KeyUp(AG_Event *_Nonnull event)
 	
 	if (AG_WidgetDisabled(bu))
 		return;
-#ifdef AG_TIMERS
+
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimer(bu, &bu->delayTo);
 		AG_DelTimer(bu, &bu->repeatTo);
 	}
-#endif
 	if (keysym != AG_KEY_RETURN &&		/* TODO AG_Action */
 	    keysym != AG_KEY_KP_ENTER &&
 	    keysym != AG_KEY_SPACE) {
@@ -324,13 +317,12 @@ KeyDown(AG_Event *_Nonnull event)
 	SetState(bu, bState, pState, 1);
 	AG_PostEvent(bu, "button-pushed", "%i", 1);
 	bu->flags |= AG_BUTTON_KEYDOWN;
-#ifdef AG_TIMERS
+
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimer(bu, &bu->repeatTo);
 		AG_AddTimer(bu, &bu->delayTo, agKbdDelay,
 		    ExpireDelay, "%i", agKbdRepeat);
 	}
-#endif
 	AG_UnlockVariable(bState);
 }
 
@@ -372,10 +364,10 @@ Init(void *_Nonnull obj)
 	bu->rPad = 4;
 	bu->tPad = 3;
 	bu->bPad = 3;
-#ifdef AG_TIMERS
+
 	AG_InitTimer(&bu->delayTo, "delay", 0);
 	AG_InitTimer(&bu->repeatTo, "repeat", 0);
-#endif
+
 	AG_AddEvent(bu, "widget-shown", OnShow, NULL);
 	AG_SetEvent(bu, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(bu, "mouse-button-down", MouseButtonDown, NULL);
@@ -650,10 +642,8 @@ AG_ButtonSetRepeatMode(AG_Button *bu, int repeat)
 	if (repeat) {
 		bu->flags |= (AG_BUTTON_REPEAT);
 	} else {
-#ifdef AG_TIMERS
 		AG_DelTimer(bu, &bu->repeatTo);
 		AG_DelTimer(bu, &bu->delayTo);
-#endif
 		bu->flags &= ~(AG_BUTTON_REPEAT);
 	}
 	AG_ObjectUnlock(bu);

@@ -1,8 +1,5 @@
 /*	Public domain	*/
 
-#include <agar/config/ag_serialization.h>
-#ifdef AG_SERIALIZATION
-
 #include <agar/gui/begin.h>
 __BEGIN_DECLS
 int AG_XCFLoad(AG_DataSource *_Nonnull, AG_Offset,
@@ -11,5 +8,3 @@ int AG_XCFLoad(AG_DataSource *_Nonnull, AG_Offset,
 	       void *_Nullable);
 __END_DECLS
 #include <agar/gui/close.h>
-
-#endif /* AG_SERIALIZATION */

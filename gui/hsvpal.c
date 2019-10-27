@@ -24,7 +24,7 @@
  */
 
 #include <agar/core/core.h>
-#if defined(AG_WIDGETS) && defined(AG_HAVE_FLOAT)
+#if defined(AG_WIDGETS)
 
 #include <agar/gui/gui.h>
 #include <agar/gui/hsvpal.h>
@@ -1011,4 +1011,4 @@ AG_WidgetClass agHSVPalClass = {
 	SizeAllocate
 };
 
-#endif /* AG_WIDGETS and AG_HAVE_FLOAT */
+#endif /* AG_WIDGETS */

@@ -38,11 +38,7 @@ typedef Uint32 AG_Pixel;
 #define AG_OPAQUE      AG_COLOR_LAST	/* Fully opaque */
 
 typedef struct ag_color_hsv {
-#ifdef AG_HAVE_FLOAT
 	float h,s,v,a;
-#else
-	Uint32 h,s,v,a;
-#endif
 } AG_ColorHSV;
 
 typedef struct ag_color_name {
@@ -50,33 +46,18 @@ typedef struct ag_color_name {
 	AG_Color c;
 } AG_ColorName;
 
-#ifdef AG_HAVE_FLOAT
-# define AG_4to8(c)    (Uint8)((float)(c)/15.0f * 255.0f)
-# define AG_4to16(c)  (Uint16)((float)(c)/15.0f * 65535.0f)
-# define AG_4to32(c)  (Uint32)((float)(c)/15.0f * 4294967295.0f)
-# define AG_8to4(c)    (Uint8)((float)(c)/255.0f * 15.0f)
-# define AG_8to16(c)  (Uint16)((float)(c)/255.0f * 65535.0f)
-# define AG_8to32(c)  (Uint32)((float)(c)/255.0f * 4294967295.0f)
-# define AG_16to4(c)   (Uint8)((float)(c)/65535.0f * 15.0f)
-# define AG_16to8(c)   (Uint8)((float)(c)/65535.0f * 255.0f)
-# define AG_16to32(c) (Uint32)((float)(c)/65535.0f * 4294967295.0f)
-# define AG_32to4(c)   (Uint8)((float)(c)/4294967295.0f * 15.0f)
-# define AG_32to8(c)   (Uint8)((float)(c)/4294967295.0f * 255.0f)
-# define AG_32to16(c) (Uint16)((float)(c)/4294967295.0f * 65535.0f)
-#else
-# define AG_4to8(c)    (Uint8)((c)/15 * 255)
-# define AG_4to16(c)  (Uint16)((c)/15 * 65535)
-# define AG_4to32(c)  (Uint32)((c)/15 * 4294967295)
-# define AG_8to4(c)    (Uint8)((c)/255 * 15)
-# define AG_8to16(c)  (Uint16)((c)/255 * 65535)
-# define AG_8to32(c)  (Uint32)((c)/255 * 4294967295)
-# define AG_16to4(c)   (Uint8)((c)/65535 * 15)
-# define AG_16to8(c)   (Uint8)((c)/65535 * 255)
-# define AG_16to32(c) (Uint32)((c)/65535 * 4294967295)
-# define AG_32to4(c)   (Uint8)((c)/4294967295 * 15)
-# define AG_32to8(c)   (Uint8)((c)/4294967295 * 255)
-# define AG_32to16(c) (Uint16)((c)/4294967295 * 65535)
-#endif
+#define AG_4to8(c)    (Uint8)((float)(c)/15.0f * 255.0f)
+#define AG_4to16(c)  (Uint16)((float)(c)/15.0f * 65535.0f)
+#define AG_4to32(c)  (Uint32)((float)(c)/15.0f * 4294967295.0f)
+#define AG_8to4(c)    (Uint8)((float)(c)/255.0f * 15.0f)
+#define AG_8to16(c)  (Uint16)((float)(c)/255.0f * 65535.0f)
+#define AG_8to32(c)  (Uint32)((float)(c)/255.0f * 4294967295.0f)
+#define AG_16to4(c)   (Uint8)((float)(c)/65535.0f * 15.0f)
+#define AG_16to8(c)   (Uint8)((float)(c)/65535.0f * 255.0f)
+#define AG_16to32(c) (Uint32)((float)(c)/65535.0f * 4294967295.0f)
+#define AG_32to4(c)   (Uint8)((float)(c)/4294967295.0f * 15.0f)
+#define AG_32to8(c)   (Uint8)((float)(c)/4294967295.0f * 255.0f)
+#define AG_32to16(c) (Uint16)((float)(c)/4294967295.0f * 65535.0f)
 
 #if AG_MODEL == AG_LARGE
 
@@ -125,12 +106,9 @@ extern AG_ColorName agColorNames[];
 void AG_ColorFromString(AG_Color *_Nonnull, const char *_Nonnull,
                         const AG_Color *_Nullable);
 
-#ifdef AG_SERIALIZATION
 void AG_ReadColor(AG_Color *_Nonnull, AG_DataSource *_Nonnull);
 void AG_WriteColor(AG_DataSource *_Nonnull, const AG_Color *_Nonnull);
-#endif
 
-#ifdef AG_HAVE_FLOAT
 void  AG_MapRGB8_HSVf(Uint8,Uint8,Uint8,
                       float *_Nonnull, float *_Nonnull, float *_Nonnull);
 void  AG_MapRGB16_HSVf(Uint16,Uint16,Uint16,
@@ -139,7 +117,6 @@ void  AG_MapHSVf_RGB8(float,float,float,
                       Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull);
 void  AG_MapHSVf_RGB16(float,float,float,
                        Uint16 *_Nonnull, Uint16 *_Nonnull, Uint16 *_Nonnull);
-#endif
 
 #ifdef AG_INLINE_SURFACE
 # define AG_INLINE_HEADER
@@ -166,10 +143,8 @@ void ag_color_interpolate(AG_Color *_Nonnull, const AG_Color *_Nonnull,
                           const AG_Color *_Nonnull, int, int);
 int  ag_color_compare(const AG_Color *_Nonnull, const AG_Color *_Nonnull)
                      _Pure_Attribute;
-#ifdef AG_HAVE_FLOAT
 void ag_color_2_hsv(const AG_Color *_Nonnull, float *_Nonnull, float *_Nonnull, float *_Nonnull);
 void ag_hsv_2_color(float, float, float, AG_Color *_Nonnull);
-#endif
 
 #define AG_Grayscale8(v,a)         ag_grayscale_8((v),(a))
 #define AG_Grayscale16(v,a)        ag_grayscale_16((v),(a))

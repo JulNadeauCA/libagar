@@ -405,7 +405,6 @@ AG_EditableSetExcl(AG_Editable *ed, int enable)
 	AG_ObjectUnlock(ed);
 }
 
-#ifdef HAVE_FLOAT
 /* Toggle floating-point only input */
 void
 AG_EditableSetFltOnly(AG_Editable *ed, int enable)
@@ -419,7 +418,6 @@ AG_EditableSetFltOnly(AG_Editable *ed, int enable)
 	}
 	AG_ObjectUnlock(ed);
 }
-#endif /* HAVE_FLOAT */
 
 /* Toggle integer only input */
 void
@@ -458,7 +456,6 @@ CharIsIntOnly(AG_Char c)
 	}
 }
 
-#ifdef HAVE_FLOAT
 /* Evaluate if a character is acceptable in float-only mode. */
 static __inline__ int
 CharIsFltOnly(AG_Char c)
@@ -488,7 +485,6 @@ CharIsFltOnly(AG_Char c)
 		return (0);
 	}
 }
-#endif /* HAVE_FLOAT */
 
 /*
  * Process a keystroke. May be invoked from the repeat timeout routine or
@@ -514,13 +510,10 @@ ProcessKey(AG_Editable *_Nonnull ed, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 		if ((ed->flags & AG_EDITABLE_INT_ONLY) &&
 		    !CharIsIntOnly((AG_Char)ks)) {
 			return (0);
-		}
-#ifdef HAVE_FLOAT
-		else if ((ed->flags & AG_EDITABLE_FLT_ONLY) &&
+		} else if ((ed->flags & AG_EDITABLE_FLT_ONLY) &&
 		           !CharIsFltOnly((AG_Char)ks)) {
 			return (0);
 		}
-#endif
 	}
 
 	if ((buf = GetBuffer(ed)) == NULL)
@@ -568,7 +561,6 @@ out:
 	return (1);
 }
 
-#ifdef AG_TIMERS
 /* Timer callback for handling key repeat */
 static Uint32
 KeyRepeatTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -627,7 +619,6 @@ OnFocusLoss(AG_Event *_Nonnull event)
 
 	AG_Redraw(ed);
 }
-#endif /* AG_TIMERS */
 
 static void
 OnHide(AG_Event *_Nonnull event)
@@ -637,9 +628,7 @@ OnHide(AG_Event *_Nonnull event)
 	if (ed->pm != NULL) {
 		AG_PopupHide(ed->pm);
 	}
-#ifdef AG_TIMERS
 	OnFocusLoss(event);
-#endif
 }
 
 static void
@@ -767,7 +756,6 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 				}
 				break;
 #endif /* HAVE_FREETYPE */
-#ifdef AG_SERIALIZATION
 			case AG_FONT_BITMAP:
 				{
 					AG_Glyph *gl;
@@ -776,7 +764,6 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 					x += gl->su->w;
 				}
 				break;
-#endif /* AG_SERIALIZATION */
 			case AG_FONT_DUMMY:
 				break;
 			}
@@ -840,7 +827,6 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			}
 			break;
 #endif /* HAVE_FREETYPE */
-#ifdef AG_SERIALIZATION
 		case AG_FONT_BITMAP:
 			{
 				AG_Glyph *gl;
@@ -855,7 +841,6 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 				x += gl->su->w;
 			}
 			break;
-#endif /* AG_SERIALIZATION */
 		case AG_FONT_DUMMY:
 			break;
 		}
@@ -1208,14 +1193,10 @@ KeyDown(AG_Event *_Nonnull event)
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 
 	if (ProcessKey(ed, keysym, keymod, ch) == 1) {
-#ifdef AG_TIMERS
 		AG_AddTimer(ed, &ed->toRepeat, agKbdDelay,
 		    KeyRepeatTimeout, "%i,%i,%lu", keysym, keymod, ch);
-#endif
 	} else {
-#ifdef AG_TIMERS
 		AG_DelTimer(ed, &ed->toRepeat);
-#endif
 	}
 	AG_Redraw(ed);
 }
@@ -1226,9 +1207,8 @@ KeyUp(AG_Event *_Nonnull event)
 	AG_Editable *ed = AG_EDITABLE_SELF();
 	const int keysym = AG_INT(1);
 
-#ifdef AG_TIMERS
 	AG_DelTimer(ed, &ed->toRepeat);
-#endif
+
 	if ((keysym == AG_KEY_RETURN || keysym == AG_KEY_KP_ENTER) &&
 	   (ed->flags & AG_EDITABLE_MULTILINE) == 0) {
 		if (ed->flags & AG_EDITABLE_ABANDON_FOCUS) {
@@ -1245,9 +1225,8 @@ MouseDoubleClick(AG_Editable *_Nonnull ed)
 	AG_EditableBuffer *buf;
 	AG_Char *c;
 
-#ifdef AG_TIMERS
 	AG_DelTimer(ed, &ed->toDblClick);
-#endif
+
 	ed->selDblClick = -1;
 	ed->flags |= AG_EDITABLE_WORDSELECT;
 
@@ -1371,12 +1350,10 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 		}
 	} else if (ed->flags & AG_EDITABLE_FLT_ONLY) {
 		for (c = &cb->s[0]; *c != '\0'; c++) {
-#ifdef HAVE_FLOAT
 			if (!CharIsFltOnly(*c)) {
 				AG_SetError(_("Non-float input near `%c'"), (char)*c);
 				goto fail;
 			}
-#endif
 		}
 	}
 
@@ -1598,7 +1575,6 @@ PopupMenu(AG_Editable *_Nonnull ed)
 	return (pm);
 }
 
-#ifdef AG_TIMERS
 /* Timer for detecting double clicks. */
 static Uint32
 DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -1608,7 +1584,6 @@ DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	ed->selDblClick = -1;
 	return (0);
 }
-#endif /* AG_TIMERS */
 
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
@@ -1641,10 +1616,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			MouseDoubleClick(ed);
 		} else {
 			ed->selDblClick = ed->pos;
-#ifdef AG_TIMERS
 			AG_AddTimer(ed, &ed->toDblClick, agMouseDblclickDelay,
 			    DoubleClickTimeout, NULL);
-#endif
 		}
 		break;
 	case AG_MOUSE_RIGHT:
@@ -1931,7 +1904,6 @@ AG_EditableInt(AG_Editable *ed)
 	return (i);
 }
 
-#ifdef HAVE_FLOAT
 /* Perform trivial conversion from string to float . */
 float
 AG_EditableFlt(AG_Editable *ed)
@@ -1944,11 +1916,11 @@ AG_EditableFlt(AG_Editable *ed)
 	if ((buf = GetBuffer(ed)) == NULL) {
 		AG_FatalError(NULL);
 	}
-# ifdef AG_UNICODE
+#ifdef AG_UNICODE
 	AG_ExportUnicode("UTF-8", abuf, buf->s, sizeof(abuf));
-# else
+#else
 	Strlcpy(abuf, (const char *)buf->s, sizeof(abuf));
-# endif
+#endif
 	flt = (float)strtod(abuf, NULL);
 	ReleaseBuffer(ed, buf);
 	AG_ObjectUnlock(ed);
@@ -1967,7 +1939,7 @@ AG_EditableDbl(AG_Editable *ed)
 	if ((buf = GetBuffer(ed)) == NULL) {
 		AG_FatalError(NULL);
 	}
-# ifdef AG_UNICODE
+#ifdef AG_UNICODE
 	AG_ExportUnicode("UTF-8", abuf, buf->s, sizeof(abuf));
 #else
 	Strlcpy(abuf, (const char *)buf->s, sizeof(abuf));
@@ -1977,7 +1949,6 @@ AG_EditableDbl(AG_Editable *ed)
 	AG_ObjectUnlock(ed);
 	return (flt);
 }
-#endif /* HAVE_FLOAT */
 
 static void
 OnBindingChange(AG_Event *_Nonnull event)
@@ -2057,13 +2028,13 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(ed, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(ed, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(ed, "mouse-motion", MouseMotion, NULL);
-#ifdef AG_TIMERS
 	AG_SetEvent(ed, "widget-gainfocus", OnFocusGain, NULL);
 	AG_SetEvent(ed, "widget-lostfocus", OnFocusLoss, NULL);
+
 	AG_InitTimer(&ed->toRepeat, "repeat", 0);
 	AG_InitTimer(&ed->toCursorBlink, "cursorBlink", 0);
 	AG_InitTimer(&ed->toDblClick, "dblClick", 0);
-#endif
+
 #ifdef AG_UNICODE
 	AG_BindPointer(ed, "text", (void *)ed->text);
 #else

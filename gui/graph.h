@@ -149,9 +149,7 @@ void AG_GraphEdgeColorLabel(AG_GraphEdge *_Nonnull, Uint8,Uint8,Uint8);
 void AG_GraphEdgeColor(AG_GraphEdge *_Nonnull, Uint8,Uint8,Uint8);
 void AG_GraphEdgePopupMenu(AG_GraphEdge *_Nonnull, struct ag_popup_menu *_Nullable);
 
-#ifdef AG_HAVE_FLOAT
 void AG_GraphAutoPlace(AG_Graph *_Nonnull, Uint,Uint);
-#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

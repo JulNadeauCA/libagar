@@ -457,9 +457,8 @@ MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
 
-#ifdef AG_TIMERS
 	AG_DelTimer(sb, &sb->moveTo);
-#endif
+
 	switch (sb->curBtn) {
 	case AG_SCROLLBAR_BUTTON_DEC:
 		if (sb->buttonDecFn) {
@@ -480,7 +479,6 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	AG_Redraw(sb);
 }
 
-#ifdef AG_TIMERS
 /* Timer for scrolling controlled by buttons (mouse spin setting). */
 static Uint32
 MoveButtonsTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -515,7 +513,6 @@ MoveKbdTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 
 	return (Increment(sb, dir) != 1) ? agKbdRepeat : 0;
 }
-#endif /* AG_TIMERS */
 
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
@@ -541,10 +538,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		} else {
 			if (Increment(sb,-1) != 1) {
 				sb->xSeek = -1;
-#ifdef AG_TIMERS
 				AG_AddTimer(sb, &sb->moveTo, agScrollButtonIval,
 				    MoveButtonsTimeout, "%i", -1);
-#endif
 			}
 		}
 	} else if (x > len - (sbThick << 1)) {			/* Increment */
@@ -554,10 +549,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		} else {
 			if (Increment(sb,+1) != 1) {
 				sb->xSeek = -1;
-#ifdef AG_TIMERS
 				AG_AddTimer(sb, &sb->moveTo, agScrollButtonIval,
 				    MoveButtonsTimeout, "%i", +1);
-#endif
 			}
 		}
 	} else {
@@ -573,11 +566,9 @@ MouseButtonDown(AG_Event *_Nonnull event)
 					sb->curBtn = AG_SCROLLBAR_BUTTON_DEC;
 					if (Increment(sb,-1) != 1) {
 						sb->xSeek = x;
-#ifdef AG_TIMERS
 						AG_AddTimer(sb, &sb->moveTo,
 						    agScrollButtonIval,
 						    MoveButtonsTimeout, "%i,", -1);
-#endif
 					}
 				} else {
 					SeekToPxCoords(sb, x - (len >> 1));
@@ -589,11 +580,9 @@ MouseButtonDown(AG_Event *_Nonnull event)
 					sb->curBtn = AG_SCROLLBAR_BUTTON_INC;
 					if (Increment(sb,+1) != 1) {
 						sb->xSeek = x;
-#ifdef AG_TIMERS
 						AG_AddTimer(sb, &sb->moveTo,
 						    agScrollButtonIval,
 						    MoveButtonsTimeout, "%i", +1);
-#endif
 					}
 				} else {
 					SeekToPxCoords(sb, x - (len >> 1));
@@ -617,25 +606,20 @@ KeyDown(AG_Event *_Nonnull event)
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
 		if (Increment(sb,-1) != 1) {
-#ifdef AG_TIMERS
 			AG_AddTimer(sb, &sb->moveTo, agKbdDelay,
 			    MoveKbdTimeout, "%i", -1);
-#endif
 		}
 		break;
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
 		if (Increment(sb,+1) != 1) {
-#ifdef AG_TIMERS
 			AG_AddTimer(sb, &sb->moveTo, agKbdDelay,
 			    MoveKbdTimeout, "%i", +1);
-#endif
 		}
 		break;
 	}
 }
 
-#ifdef AG_TIMERS
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
@@ -659,7 +643,6 @@ OnFocusLoss(AG_Event *_Nonnull event)
 
 	AG_DelTimer(sb, &sb->moveTo);
 }
-#endif /* AG_TIMERS */
 
 #define SET_DEF(fn,dmin,dmax,dinc) { 					\
 	if (!AG_Defined(sb, "min")) { fn(sb, "min", dmin); }		\
@@ -718,7 +701,6 @@ OnShowGeneral(AG_Scrollbar *_Nonnull sb, const AG_Event *_Nonnull event,
 }
 #undef SET_DEF
 
-#ifdef AG_TIMERS
 static void
 OnHide(AG_Event *_Nonnull event)
 {
@@ -726,7 +708,6 @@ OnHide(AG_Event *_Nonnull event)
 	
 	AG_DelTimer(sb, &sb->moveTo);
 }
-#endif /* AG_TIMERS */
 
 static void
 Init(void *_Nonnull obj)
@@ -754,12 +735,12 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(sb, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(sb, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(sb, "key-down", KeyDown, NULL);
-#ifdef AG_TIMERS
+
 	AG_InitTimer(&sb->moveTo, "move", 0);
+
 	AG_AddEvent(sb, "widget-hidden", OnHide, NULL);
 	AG_SetEvent(sb, "widget-lostfocus", OnFocusLoss, NULL);
 	AG_SetEvent(sb, "key-up", KeyUp, NULL);
-#endif
 }
 
 static void
@@ -1078,14 +1059,13 @@ Edit(void *_Nonnull obj)
 
 	AG_SeparatorNewHoriz(box);
 
-#ifdef AG_ENABLE_STRING
 	AG_LabelNewPolled(box, AG_LABEL_HFILL, "Button: #%d (mouse over #%d)",
 	    &sb->curBtn, &sb->mouseOverBtn);
 	AG_LabelNewPolled(box, AG_LABEL_HFILL, "xOffs: %d, xSeek: %d",
 	    &sb->xOffs, &sb->xSeek);
 	AG_LabelNewPolled(box, AG_LABEL_HFILL, "wBarLast: %d, hArrow: %d",
 	    &sb->wBarLast, &sb->hArrow);
-#endif
+
 	return (box);
 }
 

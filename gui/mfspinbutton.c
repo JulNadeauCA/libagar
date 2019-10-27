@@ -24,7 +24,7 @@
  */
 
 #include <agar/core/core.h>
-#if defined(AG_WIDGETS) && defined(AG_HAVE_FLOAT)
+#if defined(AG_WIDGETS)
 
 #include <agar/gui/mfspinbutton.h>
 #include <agar/gui/window.h>
@@ -62,7 +62,6 @@ AG_MFSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *sep,
 	return (fsu);
 }
 
-#ifdef AG_TIMERS
 static Uint32
 UpdateTimeout(AG_Timer *to, AG_Event *event)
 {
@@ -73,7 +72,6 @@ UpdateTimeout(AG_Timer *to, AG_Event *event)
 	}
 	return (to->ival);
 }
-#endif /* AG_TIMERS */
 
 static void
 OnShow(AG_Event *event)
@@ -81,10 +79,9 @@ OnShow(AG_Event *event)
 	AG_MFSpinbutton *fsu = AG_MFSPINBUTTON_SELF();
 	AG_Variable *Vx, *Vy;
 
-#ifdef AG_TIMERS
 	if ((fsu->flags & AG_MFSPINBUTTON_EXCL) == 0)
 		AG_AddTimer(fsu, &fsu->updateTo, 250, UpdateTimeout, NULL);
-#endif
+
 	if ((Vx = AG_AccessVariable(fsu, "xvalue")) == NULL) {
 		fsu->xvalue = 0.0;
 		Vx = AG_BindDouble(fsu, "xvalue", &fsu->xvalue);
@@ -382,9 +379,9 @@ Init(void *obj)
 		AG_LabelSetPadding(b[i]->lbl, 0,0,0,0);
 		AG_WidgetSetFocusable(b[i], 0);
 	}
-#ifdef AG_TIMERS
+
 	AG_InitTimer(&fsu->updateTo, "update", 0);
-#endif
+
 	AG_AddEvent(fsu, "widget-shown", OnShow, NULL);
 	AG_SetEvent(fsu, "key-down", KeyDown, NULL);
 	AG_SetEvent(fsu->input, "textbox-return", TextChanged, "%p,%i",fsu,1);
@@ -694,4 +691,4 @@ AG_WidgetClass agMFSpinbuttonClass = {
 	SizeAllocate
 };
 
-#endif /* AG_WIDGETS and AG_HAVE_FLOAT */
+#endif /* AG_WIDGETS */

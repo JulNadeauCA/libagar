@@ -177,9 +177,7 @@ typedef struct ag_widget_pvt {
 	AG_Tbl actions;				 	/* Registered actions */
 	AG_TAILQ_HEAD_(ag_action_tie) mouseActions;	/* Mouse action ties */
 	AG_TAILQ_HEAD_(ag_action_tie) keyActions;	/* Kbd action ties */
-#ifdef AG_TIMERS
 	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies;	/* For AG_RedrawOn*() */
-#endif
 	AG_TAILQ_HEAD_(ag_cursor_area) cursorAreas;	/* Cursor-change areas */
 } AG_WidgetPvt;
 

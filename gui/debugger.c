@@ -30,7 +30,7 @@
 
 #include <agar/core/core.h>
 
-#if defined(AG_WIDGETS) && defined(AG_DEBUG) && defined(AG_TIMERS)
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
 
 #include <agar/gui/gui.h>
 #include <agar/gui/box.h>
@@ -344,7 +344,6 @@ WidgetSelected(AG_Event *_Nonnull event)
 		    sizeof(OBJECT(wid)->name));
 #endif
 		AG_LabelNew(nt, 0, _("Class: " AGSI_BOLD "%s" AGSI_RST "(3)"), OBJECT(wid)->cls->name);
-#ifdef AG_ENABLE_STRING
 		AG_LabelNewPolledMT(nt, AG_LABEL_HFILL, &OBJECT(wid)->pvt.lock,
 		    _("Parent window: " AGSI_YEL "%[objName]" AGSI_RST
 		      " @ (" AGSI_CYAN "AG_Window" AGSI_RST " *)%p"),
@@ -357,7 +356,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 		    _("Driver class: " AGSI_BOLD "%[objClassName]" AGSI_RST "(3)"
 		      " @ (" AGSI_CYAN "AG_DriverClass" AGSI_RST " *)%p"),
 		    &wid->drvOps, &wid->drvOps);
-#endif
+
 		AG_SeparatorNewHoriz(nt);
 
 		sv = AG_ScrollviewNew(nt, AG_SCROLLVIEW_BY_MOUSE |
@@ -486,4 +485,4 @@ AG_GuiDebugger(AG_Window *_Nonnull tgt)
 	return (win);
 }
 
-#endif /* AG_DEBUG and AG_TIMERS */
+#endif /* AG_DEBUG */

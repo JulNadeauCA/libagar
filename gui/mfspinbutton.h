@@ -3,9 +3,6 @@
 #ifndef _AGAR_WIDGET_MFSPINBUTTON_H_
 #define _AGAR_WIDGET_MFSPINBUTTON_H_
 
-#include <agar/config/have_float.h>
-#if defined(HAVE_FLOAT)
-
 #include <agar/gui/widget.h>
 #include <agar/gui/textbox.h>
 #include <agar/gui/button.h>
@@ -69,5 +66,4 @@ void AG_MFSpinbuttonSetWriteable(AG_MFSpinbutton *_Nonnull, int);
 __END_DECLS
 
 #include <agar/gui/close.h>
-#endif /* HAVE_FLOAT */
 #endif /* _AGAR_WIDGET_MFSPINBUTTON_H_ */

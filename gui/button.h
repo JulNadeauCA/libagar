@@ -29,10 +29,8 @@ typedef struct ag_button {
 #define AG_BUTTON_EXPAND	(AG_BUTTON_HFILL|AG_BUTTON_VFILL)
 
 	int lPad, rPad, tPad, bPad;	/* Padding in pixels */
-#ifdef AG_TIMERS
 	Uint32 _pad;
 	AG_Timer delayTo, repeatTo;	/* For AG_BUTTON_REPEAT */
-#endif
 } AG_Button;
 
 #define AGBUTTON(obj)            ((AG_Button *)(obj))

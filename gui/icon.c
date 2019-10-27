@@ -56,7 +56,6 @@ AG_IconFromSurface(AG_Surface *su)
 	return (icon);
 }
 
-#ifdef AG_SERIALIZATION
 AG_Icon *
 AG_IconFromBMP(const char *bmpfile)
 {
@@ -71,7 +70,6 @@ AG_IconFromBMP(const char *bmpfile)
 	AG_IconSetSurfaceNODUP(icon, bmp);
 	return (icon);
 }
-#endif /* AG_SERIALIZATION */
 
 static void
 Init(void *_Nonnull obj)
@@ -92,9 +90,7 @@ Init(void *_Nonnull obj)
 	icon->wSaved = -1;
 	icon->hSaved = -1;
 	AG_ColorNone(&icon->cBackground);
-#ifdef AG_TIMERS
 	AG_InitTimer(&icon->toDblClick, "dblClick", 0);
-#endif
 }
 
 static void

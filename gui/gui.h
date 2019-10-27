@@ -39,11 +39,7 @@ extern int agTextComposition, agTextBidi;
 #endif
 extern int agTextCache, agTextTabWidth, agTextBlinkRate, agTextSymbols;
 extern int agScreenshotQuality;
-#ifdef AG_HAVE_FLOAT
 extern double agZoomValues[AG_ZOOM_MAX];
-#else
-extern int    agZoomValues[AG_ZOOM_MAX];
-#endif
 
 #ifdef AG_EVENT_LOOP
 void  AG_QuitGUI(void);
@@ -65,7 +61,7 @@ int   AG_SetVideoSurfaceSDL(void *_Nonnull);
 
 #ifdef AG_WIDGETS
 struct ag_window *_Nullable AG_StyleEditor(struct ag_window *_Nonnull);
-# if defined(AG_DEBUG) && defined(AG_TIMERS)
+# ifdef AG_DEBUG
 struct ag_window *_Nullable AG_GuiDebugger(struct ag_window *_Nonnull);
 # endif
 #endif

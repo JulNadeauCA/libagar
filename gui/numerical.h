@@ -24,11 +24,9 @@ typedef struct ag_numerical {
 #define AG_NUMERICAL_EXCL	0x08	/* Exclusive access to bindings */
 #define AG_NUMERICAL_READONLY	0x10	/* Read-only mode */
 
-	char format[28];		/* Print format (for reals) */
-#ifdef AG_HAVE_FLOAT
-	const AG_Unit *_Nonnull unit;	/* Conversion unit in use */
-	AG_UCombo *_Nullable units;	/* Unit selector */
-#endif
+	char format[28];			/* Print format (for reals) */
+	const AG_Unit *_Nonnull unit;		/* Conversion unit in use */
+	AG_UCombo *_Nullable units;		/* Unit selector */
 	char inTxt[AG_NUMERICAL_INPUT_MAX];	/* Input text buffer */
 	AG_Textbox *_Nonnull input;		/* Input textbox */
 	AG_Button *_Nonnull incbu;		/* Increment button */
@@ -36,9 +34,7 @@ typedef struct ag_numerical {
 	int wUnitSel, hUnitSel;			/* Size hints for entry box */
 	int wPreUnit;				/* Size hint for unit selector */
 	Uint32 _pad;
-#ifdef AG_TIMERS
-	AG_Timer updateTo;		/* Timer for non-EXCL mode */
-#endif
+	AG_Timer updateTo;			/* Timer (for non-EXCL mode) */
 } AG_Numerical;
 
 #define AGNUMERICAL(obj)            ((AG_Numerical *)(obj))
@@ -73,24 +69,21 @@ AG_Numerical *_Nonnull AG_NumericalNewIntR(void *_Nullable, Uint,
 
 AG_Numerical *_Nonnull AG_NumericalNewUint(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, Uint *_Nonnull);
 AG_Numerical *_Nonnull AG_NumericalNewUintR(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, Uint *_Nonnull, Uint,Uint);
-#ifdef AG_HAVE_FLOAT
 AG_Numerical *_Nonnull AG_NumericalNewFlt(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, float *_Nonnull);
 AG_Numerical *_Nonnull AG_NumericalNewFltR(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, float *_Nonnull, float,float);
 AG_Numerical *_Nonnull AG_NumericalNewDbl(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, double *_Nonnull);
 AG_Numerical *_Nonnull AG_NumericalNewDblR(void *_Nullable, Uint, const char *_Nullable, const char *_Nullable, double *_Nonnull, double,double);
-float       AG_NumericalGetFlt(AG_Numerical *_Nonnull);
-double      AG_NumericalGetDbl(AG_Numerical *_Nonnull);
-#endif /* AG_HAVE_FLOAT */
+
+float  AG_NumericalGetFlt(AG_Numerical *_Nonnull);
+double AG_NumericalGetDbl(AG_Numerical *_Nonnull);
 
 void AG_NumericalSizeHint(AG_Numerical *_Nonnull, const char *_Nullable);
 void AG_NumericalIncrement(AG_Numerical *_Nonnull);
 void AG_NumericalDecrement(AG_Numerical *_Nonnull);
 void AG_NumericalUpdate(AG_Numerical *_Nonnull);
 
-#ifdef AG_HAVE_FLOAT
 void AG_NumericalSelectUnit(AG_Numerical *_Nonnull, const char *_Nonnull);
 int  AG_NumericalSetUnitSystem(AG_Numerical *_Nonnull, const char *_Nonnull);
-#endif
 
 void AG_NumericalSetWriteable(AG_Numerical *_Nonnull, int);
 void AG_NumericalSetPrecision(AG_Numerical *_Nonnull, const char *_Nonnull, int);

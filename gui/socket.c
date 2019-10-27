@@ -61,7 +61,6 @@ AG_SocketFromSurface(void *parent, Uint flags, AG_Surface *S)
 	return (sock);
 }
 
-#ifdef AG_SERIALIZATION
 AG_Socket *
 AG_SocketFromBMP(void *parent, Uint flags, const char *bmpfile)
 {
@@ -75,7 +74,6 @@ AG_SocketFromBMP(void *parent, Uint flags, const char *bmpfile)
 	AG_SocketBgPixmapNODUP(sock, bmp);
 	return (sock);
 }
-#endif /* AG_SERIALIZATION */
 
 void
 AG_SocketInsertFn(AG_Socket *sock, int (*fn)(AG_Socket *, AG_Icon *))

@@ -34,9 +34,6 @@
    This code currently supports Win32 DIBs in uncompressed 8 and 24 bpp.
 */
 
-#include <agar/config/ag_serialization.h>
-#ifdef AG_SERIALIZATION
-
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
 #include <agar/gui/surface.h>
@@ -726,5 +723,3 @@ AG_SurfaceExportBMP(const AG_Surface *_Nonnull S, const char *_Nonnull path,
 	AG_CloseFile(ds);
 	return (0);
 }
-
-#endif /* AG_SERIALIZATION */

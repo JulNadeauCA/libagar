@@ -58,7 +58,6 @@
 #endif /* _AGAR_INTERNAL or _USE_AGAR_GUI_MATH */
 
 __BEGIN_DECLS
-#ifdef AG_HAVE_FLOAT
 static __inline__ int
 AG_Truncf(double d)
 {
@@ -99,7 +98,6 @@ static __inline__ double
 AG_QuadraticNegative(double a, double b, double c) {
 	return ((-1 * b) - AG_Sqrt(AG_Square(b) - 4 * a * c)) / ( 2 * a);
 }
-#endif /* AG_HAVE_FLOAT */
 __END_DECLS
 
 #include <agar/gui/close.h>

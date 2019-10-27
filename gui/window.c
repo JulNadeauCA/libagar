@@ -315,9 +315,8 @@ Detach(AG_Event *_Nonnull event)
 	AG_Window *win = AG_WINDOW_SELF();
 	AG_Driver *drv;
 	AG_Window *other, *subwin;
-#ifdef AG_TIMERS
 	AG_Timer *to, *toNext;
-#endif
+
 #ifdef AG_DEBUG_GUI
 	Debug(NULL, "AG_ObjectDetach(Window %s, \"%s\")\n", OBJECT(win)->name,
 	    win->caption);
@@ -328,7 +327,6 @@ Detach(AG_Event *_Nonnull event)
 	/* Mark window detach in progress */
 	win->flags |= AG_WINDOW_DETACHING;
 
-#ifdef AG_TIMERS
 	/* Cancel any running timer attached to the window. */
 	AG_LockTiming();
 	for (to = TAILQ_FIRST(&OBJECT(win)->timers);
@@ -338,7 +336,7 @@ Detach(AG_Event *_Nonnull event)
 		AG_DelTimer(win, to);
 	}
 	AG_UnlockTiming();
-#endif
+
 	/* Implicitely detach window dependencies. */
 	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 		AG_OBJECT_ISA(drv, "AG_Driver:*");
@@ -391,7 +389,6 @@ Detach(AG_Event *_Nonnull event)
 	AG_UnlockVFS(&agDrivers);
 }
 
-#ifdef AG_TIMERS
 static Uint32
 FadeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -422,7 +419,6 @@ FadeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 		}
 	}
 }
-#endif /* AG_TIMERS */
 
 /*
  * Make a window a logical child of the specified window. If the logical
@@ -766,10 +762,9 @@ OnShow(AG_Event *_Nonnull event)
 			}
 			AGDRIVER_MW(drv)->flags |= AG_DRIVER_MW_OPEN;
 		}
-#ifdef AG_TIMERS
 		if (win->flags & AG_WINDOW_FADEIN)
 			AG_WindowSetOpacity(win, 0.0f);
-#endif
+
 		if (AGDRIVER_MW_CLASS(drv)->mapWindow(win) == -1) {
 			AG_FatalError(NULL);
 		}
@@ -797,14 +792,12 @@ OnShow(AG_Event *_Nonnull event)
 	/* We can now allow cursor changes. */
 	win->flags &= ~(AG_WINDOW_NOCURSORCHG);
 
-#ifdef AG_TIMERS
 	if (win->flags & AG_WINDOW_FADEIN) {
 		AG_AddTimer(win, &win->pvt.fadeTo,
 		    (Uint32)((win->pvt.fadeInTime*1000.0) /
 		             (1.0/win->pvt.fadeInIncr)),
 		    FadeTimeout, "%i", 1);
 	}
-#endif
 }
 
 /* Handler for "widget-hidden", generated when the window is to be unmapped. */
@@ -1036,16 +1029,13 @@ AG_WindowHide(AG_Window *win)
 	if (!win->visible) {
 		goto out;
 	}
-#ifdef AG_TIMERS
 	if ((win->flags & AG_WINDOW_FADEOUT) &&
 	   !(win->flags & AG_WINDOW_DETACHING)) {
 		AG_AddTimer(win, &win->pvt.fadeTo,
 		    (Uint32)((win->pvt.fadeOutTime * 1000.0) /
 		             (1.0 / win->pvt.fadeOutIncr)),
 		    FadeTimeout, "%i", -1);
-	} else
-#endif
-	{
+	} else {
 #ifdef AG_THREADS
 		if (!AG_ThreadEqual(AG_ThreadSelf(), agEventThread)) {
 			AG_LockVFS(&agDrivers);
@@ -1740,7 +1730,6 @@ IconMotion(AG_Event *_Nonnull event)
 }
 #endif /* AG_WIDGETS */
 
-#ifdef AG_TIMERS
 /* Timer for double click on minimized icon. */
 static Uint32
 IconDoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
@@ -1750,7 +1739,6 @@ IconDoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	icon->flags &= ~(AG_ICON_DBLCLICKED);
 	return (0);
 }
-#endif /* AG_TIMERS */
 
 static void
 IconButtonDown(AG_Event *_Nonnull event)
@@ -1759,7 +1747,6 @@ IconButtonDown(AG_Event *_Nonnull event)
 
 	WIDGET(icon)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
 	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
-#ifdef AG_TIMERS
 	if (icon->flags & AG_ICON_DBLCLICKED) {
 		AG_Window *win = AG_WINDOW_PTR(1);
 
@@ -1771,7 +1758,6 @@ IconButtonDown(AG_Event *_Nonnull event)
 		AG_AddTimer(icon, &icon->toDblClick, agMouseDblclickDelay,
 		    IconDoubleClickTimeout, NULL);
 	}
-#endif /* AG_TIMERS */
 }
 
 static void
@@ -2596,23 +2582,16 @@ AG_WindowSetOpacity(AG_Window *win, float f)
 	drv = OBJECT(win)->parent;
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
 
-#ifdef AG_TIMERS
 	win->pvt.fadeOpacity = (f > 1.0f) ? 1.0f : f;
 	if (drv && AGDRIVER_MULTIPLE(drv) &&
 	    AGDRIVER_MW_CLASS(drv)->setOpacity != NULL)
 		rv = AGDRIVER_MW_CLASS(drv)->setOpacity(win, win->pvt.fadeOpacity);
-#else
-	if (drv && AGDRIVER_MULTIPLE(drv) &&
-	    AGDRIVER_MW_CLASS(drv)->setOpacity != NULL)
-		rv = AGDRIVER_MW_CLASS(drv)->setOpacity(win, f);
-#endif
 	
 	/* TODO: support compositing under single-window drivers. */
 	AG_ObjectUnlock(win);
 	return (rv);
 }
 
-#ifdef AG_TIMERS
 /*
  * Set window fade-in/out parameters (for compositing window managers).
  */
@@ -2630,7 +2609,6 @@ AG_WindowSetFadeOut(AG_Window *win, float fadeTime, float fadeIncr)
 	win->pvt.fadeOutTime = fadeTime;
 	win->pvt.fadeOutIncr = fadeIncr;
 }
-#endif /* AG_TIMERS */
 
 /* Set the window zoom level. The scales are defined in agZoomValues[]. */
 void
@@ -2950,14 +2928,14 @@ Init(void *_Nonnull obj)
 	win->pinnedTo = NULL;
 
 	TAILQ_INIT(&win->pvt.subwins);
-#ifdef AG_TIMERS
+
 	win->pvt.fadeInTime = 0.06f;
 	win->pvt.fadeInIncr = 0.2f;
 	win->pvt.fadeOutTime = 0.06f;
 	win->pvt.fadeOutIncr = 0.2f;
 	win->pvt.fadeOpacity = 1.0f;
 	AG_InitTimer(&win->pvt.fadeTo, "fade", 0);
-#endif
+
 	TAILQ_INIT(&win->pvt.cursorAreas);
 	for (i = 0; i < 5; i++)
 		win->pvt.caResize[i] = NULL;

@@ -22,9 +22,6 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <agar/config/ag_serialization.h>
-#ifdef AG_SERIALIZATION
-
 #include <agar/core/core.h>
 #include <agar/core/config.h>
 #include <agar/gui/font_selector.h>
@@ -412,5 +409,3 @@ AG_WidgetClass agFontSelectorClass = {
 	SizeRequest,
 	SizeAllocate
 };
-
-#endif /* AG_SERIALIZATION */

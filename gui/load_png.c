@@ -27,9 +27,6 @@
  * Loader for PNG images via libpng.
  */
 
-#include <agar/config/ag_serialization.h>
-#ifdef AG_SERIALIZATION
-
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
 #include <agar/gui/surface.h>
@@ -579,4 +576,3 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 }
 
 #endif /* HAVE_PNG */
-#endif /* AG_SERIALIZATION */

@@ -23,7 +23,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <agar/core/core.h>
-#if defined(AG_WIDGETS) && defined(AG_SERIALIZATION)
+#if defined(AG_WIDGETS)
 
 #include <agar/gui/objsel.h>
 #include <agar/gui/window.h>
@@ -201,4 +201,4 @@ AG_WidgetClass agObjectSelectorClass = {
 	AG_WidgetInheritSizeAllocate
 };
 
-#endif /* AG_WIDGETS and AG_SERIALIZATION */
+#endif /* AG_WIDGETS */

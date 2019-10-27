@@ -1132,7 +1132,6 @@ WaitUnmapNotify(Display *d, XEvent *xe, char *arg) {
 	return (xe->type == UnmapNotify) && (xe->xmap.window == (Window)arg);
 }
 
-#ifdef AG_TIMERS
 static Uint32
 InitExposeTimeout(AG_Timer *_Nonnull timer, AG_Event *_Nonnull event)
 {
@@ -1141,7 +1140,6 @@ InitExposeTimeout(AG_Timer *_Nonnull timer, AG_Event *_Nonnull event)
 	win->dirty = 1;
 	return (0);
 }
-#endif /* AG_TIMERS */
 
 static int
 GLX_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
@@ -1306,11 +1304,12 @@ GLX_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 		TAILQ_INSERT_HEAD(&drv->cursors, ac, cursors);
 		drv->nCursors++;
 	}
+
 	AG_InitStockCursors(drv);
-#ifdef AG_TIMERS
+
 	AG_InitTimer(&glx->toInitExpose, "init", 0);
 	AG_AddTimer(glx, &glx->toInitExpose, 1, InitExposeTimeout, "%p", win);
-#endif
+
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
 	

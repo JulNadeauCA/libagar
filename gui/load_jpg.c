@@ -27,9 +27,6 @@
  * Loader for JPEG images via libjpeg.
  */
 
-#include <agar/config/ag_serialization.h>
-#ifdef AG_SERIALIZATION
-
 #include <agar/core/core.h>
 
 #include <agar/gui/gui.h>
@@ -319,4 +316,3 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 }
 
 #endif /* HAVE_JPEG */
-#endif /* AG_SERIALIZATION */
