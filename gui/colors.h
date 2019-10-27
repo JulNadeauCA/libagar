@@ -10,7 +10,6 @@
 # define AG_COLOR_LASTF 65535.0f
 # define AG_COLOR_LASTD 65535.0
 typedef struct ag_color { Uint16 r,g,b,a; } AG_Color;
-typedef struct ag_color_offset { Sint16 r,g,b,a; } AG_ColorOffset;
 typedef struct ag_grayscale { Uint32 v,a; } AG_Grayscale;
 typedef Uint16 AG_Component;
 typedef Sint16 AG_ComponentOffset;
@@ -22,7 +21,6 @@ typedef Uint64 AG_Pixel;
 # define AG_COLOR_LASTF 255.0f
 # define AG_COLOR_LASTD 255.0
 typedef struct ag_color { Uint8 r,g,b,a; } AG_Color;
-typedef struct ag_color_offset { Sint8 r,g,b,a; } AG_ColorOffset;
 typedef struct ag_grayscale { Uint16 v,a; } AG_Grayscale;
 typedef Uint8  AG_Component;
 typedef Sint8  AG_ComponentOffset;
@@ -122,8 +120,6 @@ typedef struct ag_color_name {
 #define AG_HSV2RGB(h,s,v, r,g,b) AG_MapHSVf_RGB8((h),(s),(v),(r),(g),(b))
 
 __BEGIN_DECLS
-extern AG_ColorOffset agSunkColor, agRaisedColor, agLowColor, agHighColor;
-extern AG_ColorOffset agTint, agShade;
 extern AG_ColorName agColorNames[];
 
 void AG_ColorFromString(AG_Color *_Nonnull, const char *_Nonnull,
@@ -162,10 +158,10 @@ void ag_color_hex_32(AG_Color *_Nonnull, Uint32);
 #if AG_MODEL == AG_LARGE
 void ag_color_hex_64(AG_Color *_Nonnull, Uint64);
 #endif
-void ag_color_add(AG_Color *_Nonnull, const AG_Color *_Nonnull,
-                  const AG_ColorOffset *_Nonnull);
-void ag_color_add_scaled(AG_Color *_Nonnull, const AG_Color *_Nonnull,
-                         const AG_ColorOffset *_Nonnull, int);
+
+void ag_color_lighten(AG_Color *_Nonnull, int);
+void ag_color_darken(AG_Color *_Nonnull, int);
+
 void ag_color_interpolate(AG_Color *_Nonnull, const AG_Color *_Nonnull,
                           const AG_Color *_Nonnull, int, int);
 int  ag_color_compare(const AG_Color *_Nonnull, const AG_Color *_Nonnull)
@@ -189,8 +185,8 @@ void ag_hsv_2_color(float, float, float, AG_Color *_Nonnull);
 #define AG_Color2HSV(c,h,s,v)      ag_color_2_hsv((c),(h),(s),(v))
 #define AG_HSV2Color(h,s,v,c)      ag_hsv_2_color((h),(s),(v),(c))
 
-#define AG_ColorAdd(d,c,offs)                ag_color_add((d),(c),(offs))
-#define AG_ColorAddScaled(d,c,offs,fac)      ag_color_add_scaled((d),(c),(offs),(fac))
+#define AG_ColorDarken(c,shade)              ag_color_darken((c),(shade))
+#define AG_ColorLighten(c,shade)             ag_color_lighten((c),(shade))
 #define AG_ColorInterpolate(d,c1,c2,num,den) ag_color_interpolate((d),(c1),(c2),(num),(den))
 
 #endif /* !AG_INLINE_SURFACE */

@@ -160,18 +160,19 @@ Draw(void *obj)
 {
 	AG_Notebook *nb = obj;
 	AG_NotebookTab *tab;
-	AG_Color c,cDark, cHigh,cLow;
+	AG_Color c = WCOLOR(nb,0);
+	AG_Color cHigh = c;
+	AG_Color cLow = c;
 	AG_Rect r;
+	const int w = WIDTH(nb);
+	const int h = HEIGHT(nb);
 	int boxDia = WFONT(nb)->height;
 	int x=0, y=0, xSelFirst=0, xSelLast=0, tabIdx=0;
 
-	c = WCOLOR_SEL(nb,0);
-	AG_ColorAddScaled(&cDark, &c, &agShade, 2);	/* Contrast */
-
 	AG_DrawRectFilled(nb, &nb->r, &c);
-	AG_ColorAdd(&cHigh, &c, &agHighColor);
-	AG_ColorAdd(&cLow,  &c, &agLowColor);
-	AG_DrawLineV(nb, 0, nb->bar_h, HEIGHT(nb)-1,
+	AG_ColorLighten(&cHigh, 2);
+	AG_ColorDarken(&cLow, 2);
+	AG_DrawLineV(nb, 0, nb->bar_h, h-1,
 	    (nb->selTab == TAILQ_FIRST(&nb->tabs)) ? &cLow : &cHigh);
 	
 	if (nb->selTab) {
@@ -191,8 +192,8 @@ Draw(void *obj)
 		r.w = (lbl ? WIDTH(lbl) : 0);
 		r.h = isSelected ? nb->bar_h : nb->bar_h-2;
 	
-		if (r.x+r.w > WIDTH(nb)) {
-			r.w = WIDTH(nb) - r.x;
+		if (r.x+r.w > w) {
+			r.w = w - r.x;
 			if (r.w <= boxDia) {
 				boxDia -= (boxDia - r.w);
 				if (boxDia < 3)
@@ -242,11 +243,11 @@ Draw(void *obj)
 	if (xSelFirst > 0) {
 		AG_DrawLineH(nb, 0, xSelFirst, nb->bar_h, &cHigh);
 	}
-	if (xSelLast < WIDTH(nb)) {
-		AG_DrawLineH(nb, xSelLast-1, WIDTH(nb)-1, nb->bar_h, &cHigh);
+	if (xSelLast < w) {
+		AG_DrawLineH(nb, xSelLast-1, w-1, nb->bar_h, &cHigh);
 	}
-	AG_DrawLineH(nb, 0, WIDTH(nb)-1, HEIGHT(nb)-1,       &cLow);
-	AG_DrawLineV(nb, WIDTH(nb), nb->bar_h+1, HEIGHT(nb), &cLow);
+	AG_DrawLineH(nb, 0, w-1,         h-1, &cLow);
+	AG_DrawLineV(nb, w, nb->bar_h+1, h,   &cLow);
 }
 
 static void

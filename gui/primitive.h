@@ -134,31 +134,29 @@ void ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
 # define AG_DrawFrame(o,r,z,c)			ag_draw_frame((o),(r),(z),(c))
 # define AG_DrawBox(o,r,z,c)			ag_draw_box((o),(r),(z),(c))
 # define AG_DrawBoxDisabled(o,r,z,c1,c2)	ag_draw_box_disabled((o),(r),(z),(c1),(c2))
-# define AG_DrawFrameBlended(o,r,c,fn)		ag_draw_frame_blended((o),(r),(c),(fn))
 # define AG_DrawRectOutline(o,r,c)		ag_draw_rect_outline((o),(r),(c))
 # define AG_DrawLine2(o,x1,y1,x2,y2,c)		ag_draw_line_2((o),(x1),(y1),(x2),(y2),(c))
-# ifdef AG_HAVE_FLOAT
-#  define AG_DrawArrowLine(o,x1,y1,x2,y2,t,l,th,c) ag_draw_arrow_line((o),(x1),(y1),(x2),(y2),(t),(l),(th),(c))
-# else
-#  define AG_DrawArrowLine(o,x1,y1,x2,y2,t,l,th,c)
-# endif
+# define AG_DrawArrowLine(o,x1,y1,x2,y2,t,l,th,c) ag_draw_arrow_line((o),(x1),(y1),(x2),(y2),(t),(l),(th),(c))
 #endif /* !AG_INLINE_WIDGET */
 
 int AG_GetLineIntersection(int,int, int,int, int,int, int,int,
                            int *_Nonnull, int *_Nonnull);
 
-#ifdef AG_HAVE_FLOAT
 void AG_ClipLine(int,int, int,int, int,int, int *_Nonnull,int *_Nonnull);
+
 void AG_ClipLineCircle(int,int, int, int,int, int,int,
                        int *_Nonnull,int *_Nonnull);
 
 void AG_DrawArrowhead(void *_Nonnull, int, int, int,int, int, double,
                       const AG_Color *_Nonnull);
-#endif /* AG_HAVE_FLOAT */
 
 void AG_DrawVector(void *_Nonnull, int,int, const AG_Rect *_Nonnull,
                    const AG_Color *_Nonnull, const AG_VectorElement *_Nonnull,
                    int,int);
+
+void AG_DrawFrame_Blended(AG_Widget *_Nonnull, const AG_Rect *_Nonnull,
+                          const AG_Color *_Nonnull, const AG_Color *_Nonnull,
+                          int, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

@@ -477,11 +477,8 @@ Draw(void *_Nonnull obj)
 	r.h = tl->r.h - 4;
 	AG_PushClipRect(tl, &r);
 
-	if (zoomLvl < AG_ZOOM_1_1) {
-		/* Tint the lines to create an illusion of distance. */
-		AG_ColorAddScaled(&cLine, &cLine, &agTint,
-		                  AG_ZOOM_1_1 - zoomLvl);
-	}
+	if (zoomLvl < AG_ZOOM_1_1)                         /* Distance effect */
+		AG_ColorLighten(&cLine, AG_ZOOM_1_1-zoomLvl);
 
 	yLast = h;
 	TAILQ_FOREACH(it, &tl->items, items) {

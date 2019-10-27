@@ -463,7 +463,6 @@ AG_TablePrintCell(const AG_TableCell *c, char *buf, AG_Size bufsz)
 		}
 	case AG_CELL_PUINT:
 		return Snprintf(buf, bufsz, c->fmt, *(Uint *)c->data.p);
-#ifdef HAVE_FLOAT
 	case AG_CELL_FLOAT:
 		return Snprintf(buf, bufsz, c->fmt, (float)c->data.f);
 	case AG_CELL_PFLOAT:
@@ -472,7 +471,6 @@ AG_TablePrintCell(const AG_TableCell *c, char *buf, AG_Size bufsz)
 		return Snprintf(buf, bufsz, c->fmt, c->data.f);
 	case AG_CELL_PDOUBLE:
 		return Snprintf(buf, bufsz, c->fmt, *(double *)c->data.p);
-#endif
 	default:
 		return PrintCellGeneral(c, buf, bufsz);
 	}
@@ -574,15 +572,18 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Table *t = obj;
-	AG_Color *cBG = &WCOLOR(t,0);
+	AG_Color *cBG;
 	AG_Rect r, rCol, rCell;
 	AG_Color cLine;
+	const int zoomLvl = WIDGET(t)->window->zoom;
 	int n,m, hCol;
 
 	r.x = 0;					/* Background */
 	r.y = 0;
 	r.w = WIDTH(t);
 	r.h = HEIGHT(t);
+
+	cBG = &WCOLOR(t,0);
 	if (cBG->a > 0)
 		AG_DrawBox(t, &r, -1, cBG);
 	
@@ -603,11 +604,9 @@ Draw(void *_Nonnull obj)
 	rCol.h = hCol + t->r.h - 2;
 
 	cLine = WCOLOR(t, LINE_COLOR);
-	if (WIDGET(t)->window->zoom < AG_ZOOM_1_1) {
-		/* Tint the lines to create an illusion of distance. */
-		AG_ColorAddScaled(&cLine, &cLine, &agTint,
-		                  AG_ZOOM_1_1 - WIDGET(t)->window->zoom);
-	}
+
+	if (zoomLvl < AG_ZOOM_1_1)                         /* Distance effect */
+		AG_ColorLighten(&cLine, AG_ZOOM_1_1-zoomLvl);
 
 	AG_PushClipRect(t, &r);
 
@@ -1053,13 +1052,11 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 		return (c1->data.i - c2->data.i);
 	case AG_CELL_UINT:
 		return ((Uint)c1->data.i - (Uint)c2->data.i);
-#ifdef HAVE_FLOAT
 	/* TODO */
 	case AG_CELL_FLOAT:
 		return (int)((c1->data.f - c2->data.f)*1000000.0f);
 	case AG_CELL_DOUBLE:
 		return (int)((c1->data.f - c2->data.f)*1000000.0);
-#endif
 	case AG_CELL_WIDGET:
 		/* TODO hooks */
 		return (1);
@@ -2198,7 +2195,6 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				}
 			}
 			break;
-#ifdef HAVE_FLOAT
 		case 'f':
 		case 'g':
 			if (lflag) {
@@ -2217,7 +2213,6 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				}
 			}
 			break;
-#endif /* HAVE_FLOAT */
 		case 'p':
 			c->type = AG_CELL_POINTER;
 			c->data.p = va_arg(ap, void *);

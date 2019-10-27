@@ -407,29 +407,36 @@ ag_draw_arrow_left(void *obj, int x0, int y0, int h, const AG_Color *c)
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_DrawBoxRounded(void *_Nonnull obj, const AG_Rect *_Nonnull r, int z, int rad,
-    const AG_Color *cBg)
+    const AG_Color *color)
 #else
 void
 ag_draw_box_rounded(void *obj, const AG_Rect *r, int z, int rad,
-    const AG_Color *cBg)
+    const AG_Color *color)
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color c[3];
+	AG_Color c1 = *color;
+	AG_Color c2 = *color;
+	AG_Color c3 = *color;
 	AG_Rect rd;
 	
 	AG_OBJECT_ISA(obj, "AG_Widget:*");
 
-	AG_ColorAdd(&c[0], cBg,   (z<0) ? &agSunkColor : &agRaisedColor);
-	AG_ColorAdd(&c[1], &c[0], (z<0) ? &agLowColor  : &agHighColor);
-	AG_ColorAdd(&c[2], &c[0], (z<0) ? &agHighColor : &agLowColor);
+	if (z < 0) {
+		AG_ColorDarken(&c1, 1);
+		AG_ColorDarken(&c2, 2);
+		AG_ColorLighten(&c2, 2);
+	} else {
+		AG_ColorLighten(&c1, 1);
+		AG_ColorLighten(&c2, 2);
+		AG_ColorDarken(&c2, 2);
+	}
 
 	rd.x = wid->rView.x1 + r->x;
 	rd.y = wid->rView.y1 + r->y;
 	rd.w = r->w;
 	rd.h = r->h;
-	wid->drvOps->drawBoxRounded(wid->drv, &rd, z, rad,
-	                            &c[0], &c[1], &c[2]);
+	wid->drvOps->drawBoxRounded(wid->drv, &rd, z, rad, &c1,&c2,&c3);
 }
 
 /*
@@ -438,15 +445,16 @@ ag_draw_box_rounded(void *obj, const AG_Rect *r, int z, int rad,
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_DrawBoxRoundedTop(void *_Nonnull obj, const AG_Rect *_Nonnull r, int z,
-    int rad, const AG_Color *_Nonnull cBg)
+    int rad, const AG_Color *_Nonnull color)
 #else
 void
 ag_draw_box_rounded_top(void *obj, const AG_Rect *r, int z, int rad,
-    const AG_Color *cBg)
+    const AG_Color *color)
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color c1,c2;
+	AG_Color c1 = *color;
+	AG_Color c2 = *color;
 	AG_Rect rd;
 	
 	AG_OBJECT_ISA(obj, "AG_Widget:*");
@@ -456,10 +464,15 @@ ag_draw_box_rounded_top(void *obj, const AG_Rect *r, int z, int rad,
 	rd.w = r->w;
 	rd.h = r->h;
 
-	AG_ColorAdd(&c1, cBg, (z<0) ? &agLowColor  : &agHighColor);
-	AG_ColorAdd(&c2, cBg, (z<0) ? &agHighColor : &agLowColor);
+	if (z < 0) {
+		AG_ColorDarken(&c1, 2);
+		AG_ColorLighten(&c2, 2);
+	} else {
+		AG_ColorLighten(&c1, 2);
+		AG_ColorDarken(&c2, 2);
+	}
 
-	wid->drvOps->drawBoxRoundedTop(wid->drv, &rd, z, rad, cBg, &c1,&c2);
+	wid->drvOps->drawBoxRoundedTop(wid->drv, &rd, z, rad, color, &c1,&c2);
 }
 
 /*
@@ -635,21 +648,21 @@ ag_draw_rect_dithered(void *obj, const AG_Rect *r, const AG_Color *c)
 }
 
 /*
- * Render a 3D-style frame
+ * Render a 3D-style raised box frame or well (depending on z).
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_DrawFrame(void *_Nonnull obj, const AG_Rect *_Nonnull r, int z,
-    const AG_Color *_Nonnull cBase)
+    const AG_Color *_Nonnull color)
 #else
 void
-ag_draw_frame(void *obj, const AG_Rect *r, int z, const AG_Color *cBase)
+ag_draw_frame(void *obj, const AG_Rect *r, int z, const AG_Color *color)
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Driver *drv = wid->drv;
 	AG_DriverClass *drvOps = wid->drvOps;
-	AG_Color c[2];
+	AG_Color c1, c2;
 	AG_Rect rd;
 	int y2, x2;
 	
@@ -660,25 +673,25 @@ ag_draw_frame(void *obj, const AG_Rect *r, int z, const AG_Color *cBase)
 	rd.w = r->w;
 	rd.h = r->h;
 
-	AG_ColorAdd(&c[0], cBase, (z<0) ? &agLowColor  : &agHighColor);
-	AG_ColorAdd(&c[1], cBase, (z<0) ? &agHighColor : &agLowColor);
-
+	c1 = *color;
+	c2 = *color;
+	if (z < 0) {
+		AG_ColorDarken(&c1,  4);
+		AG_ColorLighten(&c2, 4);
+	} else {
+		AG_ColorLighten(&c1, 4);
+		AG_ColorDarken(&c2,  4);
+	}
 	x2 = rd.x + r->w - 1;
 	y2 = rd.y + r->h - 1;
 
-	if (c[0].a < AG_OPAQUE) {
-		drvOps->drawLineBlended(drv, rd.x, rd.y, x2,   rd.y, &c[0], AG_ALPHA_SRC, AG_ALPHA_ZERO);
-		drvOps->drawLineBlended(drv, rd.x, rd.y, rd.x, y2,   &c[0], AG_ALPHA_SRC, AG_ALPHA_ZERO);
+	if (c1.a < AG_OPAQUE) {
+		AG_DrawFrame_Blended(wid, &rd, &c1,&c2, x2,y2);
 	} else {
-		drvOps->drawLineH(drv, rd.x, x2,   rd.y, &c[0]);
-		drvOps->drawLineV(drv, rd.x, rd.y, y2,   &c[0]);
-	}
-	if (c[1].a < AG_OPAQUE) {
-		drvOps->drawLineBlended(drv, rd.x, y2,   x2, y2, &c[1], AG_ALPHA_SRC, AG_ALPHA_ZERO);
-		drvOps->drawLineBlended(drv, x2,   rd.y, x2, y2, &c[1], AG_ALPHA_SRC, AG_ALPHA_ZERO);
-	} else {
-		drvOps->drawLineH(drv, rd.x, x2,   y2, &c[1]);
-		drvOps->drawLineV(drv, x2,   rd.y, y2, &c[1]);
+		drvOps->drawLineH(drv, rd.x, x2,   rd.y, &c1);
+		drvOps->drawLineV(drv, rd.x, rd.y, y2,   &c1);
+		drvOps->drawLineH(drv, rd.x, x2,   y2,   &c2);
+		drvOps->drawLineV(drv, x2,   rd.y, y2,   &c2);
 	}
 }
 
@@ -688,14 +701,13 @@ ag_draw_frame(void *obj, const AG_Rect *r, int z, const AG_Color *cBase)
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_DrawBox(void *_Nonnull obj, const AG_Rect *_Nonnull r, int z,
-    const AG_Color *_Nonnull C)
+    const AG_Color *_Nonnull color)
 #else
 void
-ag_draw_box(void *obj, const AG_Rect *r, int z, const AG_Color *C)
+ag_draw_box(void *obj, const AG_Rect *r, int z, const AG_Color *color)
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Driver *drv = wid->drv;
 	AG_Color c;
 	AG_Rect rd;
 	
@@ -706,14 +718,22 @@ ag_draw_box(void *obj, const AG_Rect *r, int z, const AG_Color *C)
 	rd.w = r->w;
 	rd.h = r->h;
 
-	AG_ColorAdd(&c, C, (z < 0) ? &agSunkColor : &agRaisedColor);
+	c = *color;
+
+	if (z < 0) {
+		AG_ColorDarken(&c, 1);
+	} else {
+		AG_ColorLighten(&c, 1);
+	}
 
 	if (c.a < AG_OPAQUE) {
-		wid->drvOps->drawRectBlended(drv, &rd, &c, AG_ALPHA_SRC,
-		    AG_ALPHA_ONE_MINUS_SRC);
+		wid->drvOps->drawRectBlended(wid->drv, &rd, &c,
+		                             AG_ALPHA_SRC,
+		                             AG_ALPHA_ONE_MINUS_SRC);
 	} else {
-		wid->drvOps->drawRectFilled(drv, &rd, &c);
+		wid->drvOps->drawRectFilled(wid->drv, &rd, &c);
 	}
+
 	AG_DrawFrame(wid, r, z, &c);
 }
 
@@ -743,35 +763,14 @@ ag_draw_box_disabled(void *obj, const AG_Rect *r, int z,
 
 	wid->drvOps->drawRectFilled(wid->drv, &rd, c1);
 	AG_DrawFrame(wid, r, z, c1);
-	AG_ColorAdd(&c, c2, (z<0) ? &agSunkColor : &agRaisedColor);
+
+	c = *c2;
+	if (z < 0) {
+		AG_ColorDarken(&c, 1);
+	} else {
+		AG_ColorLighten(&c, 1);
+	}
 	wid->drvOps->drawRectDithered(wid->drv, &rd, &c);
-}
-
-/*
- * Render 3D-style frame using a specific blending mode.
- */
-#ifdef AG_INLINE_HEADER
-static __inline__ void
-AG_DrawFrameBlended(void *_Nonnull obj, const AG_Rect *_Nonnull r,
-    const AG_Color *_Nonnull c, AG_AlphaFn fnSrc)
-#else
-void
-ag_draw_frame_blended(void *obj, const AG_Rect *r, const AG_Color *_Nonnull c,
-    AG_AlphaFn fnSrc)
-#endif
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Driver *drv = wid->drv;
-	AG_DriverClass *drvOps = wid->drvOps;
-	const int x = wid->rView.x1 + r->x;
-	const int y = wid->rView.y1 + r->y;
-	const int x2 = x + r->w - 1;
-	const int y2 = y + r->h - 1;
-
-	drvOps->drawLineBlended(drv, x,  y,  x2,  y,  c, fnSrc, AG_ALPHA_ZERO);
-	drvOps->drawLineBlended(drv, x,  y,  x,   y2, c, fnSrc, AG_ALPHA_ZERO);
-	drvOps->drawLineBlended(drv, x,  y2, x2,  y2, c, fnSrc, AG_ALPHA_ZERO);
-	drvOps->drawLineBlended(drv, x2, y,  x2,  y2, c, fnSrc, AG_ALPHA_ZERO);
 }
 
 /*
@@ -818,38 +817,40 @@ ag_draw_rect_outline(void *obj, const AG_Rect *r, const AG_Color *_Nonnull c)
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_DrawLine2(void *_Nonnull obj, int x1, int y1, int x2, int y2,
-    const AG_Color *_Nonnull C)
+    const AG_Color *_Nonnull color)
 #else
 void
 ag_draw_line_2(void *obj, int x1, int y1, int x2, int y2,
-    const AG_Color *C)
+    const AG_Color *color)
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color c;
+	AG_Color c = *color;
 
 	x1 += wid->rView.x1;
 	y1 += wid->rView.y1;
 	x2 += wid->rView.x1;
 	y2 += wid->rView.y1;
 
-	AG_ColorAdd(&c, C, &agHighColor);
+	AG_ColorLighten(&c, 2);
 	wid->drvOps->drawLine(wid->drv, x1,y1, x2,y2, &c);
 
-	AG_ColorAdd(&c, C, &agLowColor);
+	AG_ColorDarken(&c, 2);
 	wid->drvOps->drawLine(wid->drv, x1+1,y1+1, x2+1,y2+1, &c);
 }
 
-#ifdef AG_HAVE_FLOAT
-# ifdef AG_INLINE_HEADER
+/*
+ * Wrapper around AG_DrawLine() and AG_DrawArrowhead().
+ */
+#ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_DrawArrowLine(void *_Nonnull obj, int x1, int y1, int x2, int y2,
     AG_ArrowLineType t, int length, double theta, const AG_Color *_Nonnull C)
-# else
+#else
 void
 ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
     AG_ArrowLineType t, int length, double theta, const AG_Color *C)
-# endif
+#endif
 {
 	AG_OBJECT_ISA(obj, "AG_Widget:*");
 
@@ -862,4 +863,3 @@ ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
 		AG_DrawArrowhead(obj, x2,y2, x1,y1, length, theta, C);
 	}
 }
-#endif /* AG_HAVE_FLOAT */

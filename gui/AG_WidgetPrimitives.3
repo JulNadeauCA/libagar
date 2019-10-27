@@ -164,11 +164,7 @@ are checked, and intersected against active clipping rectangles (see
 .Xr AG_Widget 3 ) .
 .Pp
 .Fn AG_DrawFrame
-draws a 3D-style frame.
-.Fn AG_DrawFrameBlended
-draws a frame with alpha-blending, with the color
-.Fa c
-specified as an array of RGBA components, and the given blending mode.
+draws a 3D-style frame to create a raised box (if z>0) or well (if z<0).
 .Pp
 .Fn AG_DrawCircle
 draws a circle with the origin at
@@ -248,7 +244,6 @@ be taken to point to (
 .Fa x2,
 .Fa y2
 ).
-This function requires floating point support.
 .Sh SIMPLE GRAPHICAL ELEMENTS
 .nr nS 1
 .Ft void
@@ -265,9 +260,6 @@ This function requires floating point support.
 .Pp
 .Ft void
 .Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "int z" "AG_Color c"
-.Pp
-.Ft void
-.Fn AG_DrawFrameBlended "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_AlphaFn blendFn"
 .Pp
 .nr nS 0
 The
@@ -374,8 +366,7 @@ this point).
 defines the length from tip to base of the arrowhead.
 .Fa theta
 defines the angle of the lines which converge at the tip of the arrowhead. The
-arrowhead is always drawn in a solid / fully filled style. This function
-requires floating point support.
+arrowhead is always drawn in a solid / fully filled style.
 .Sh UTILITY ROUTINES
 .nr nS 1
 .Ft int

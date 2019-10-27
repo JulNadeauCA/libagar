@@ -317,10 +317,8 @@ GetPxCoordsGeneral(AG_Scrollbar *_Nonnull sb, int *_Nonnull x, int *_Nonnull len
 	int rv = 0;
 
 	switch (bvType) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:   GET_PX_COORDS(float);   break;
 	case AG_VARIABLE_DOUBLE:  GET_PX_COORDS(double);  break;
-#endif
 	case AG_VARIABLE_UINT8:   GET_PX_COORDS(Uint8);   break;
 	case AG_VARIABLE_SINT8:   GET_PX_COORDS(Sint8);   break;
 	case AG_VARIABLE_UINT16:  GET_PX_COORDS(Uint16);  break;
@@ -348,10 +346,8 @@ SeekToPxCoordsGeneral(AG_Scrollbar *_Nonnull sb, int x,
 	const int sbLen = SBLEN(sb) - (sbThick << 1);
 	
 	switch (bvType) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:   MAP_PX_COORDS(float);   break;
 	case AG_VARIABLE_DOUBLE:  MAP_PX_COORDS(double);  break;
-#endif
 	case AG_VARIABLE_UINT8:   MAP_PX_COORDS(Uint8);   break;
 	case AG_VARIABLE_SINT8:   MAP_PX_COORDS(Sint8);   break;
 	case AG_VARIABLE_UINT16:  MAP_PX_COORDS(Uint16);  break;
@@ -439,10 +435,8 @@ IncrementGeneral(AG_Scrollbar *_Nonnull sb, void *_Nonnull pVal,
 	int rv = 0;
 
 	switch (bvType) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:	  INCREMENT(float);	break;
 	case AG_VARIABLE_DOUBLE:  INCREMENT(double);	break;
-#endif
 	case AG_VARIABLE_UINT8:   INCREMENT(Uint8);	break;
 	case AG_VARIABLE_SINT8:   INCREMENT(Sint8);	break;
 	case AG_VARIABLE_UINT16:  INCREMENT(Uint16);	break;
@@ -708,10 +702,8 @@ OnShowGeneral(AG_Scrollbar *_Nonnull sb, const AG_Event *_Nonnull event,
     const AG_Variable *_Nonnull V)
 {
 	switch (AG_VARIABLE_TYPE(V)) {
-#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:	 SET_DEF(AG_SetFloat,  0.0f, 1.0f, 0.1f); break;
 	case AG_VARIABLE_DOUBLE: SET_DEF(AG_SetDouble, 0.0,  1.0,  0.1); break;
-#endif
 	case AG_VARIABLE_UINT8:  SET_DEF(AG_SetUint8,  0U, 0xffU, 1U); break;
 	case AG_VARIABLE_SINT8:  SET_DEF(AG_SetSint8,  0,  0x7f,  1); break;
 	case AG_VARIABLE_UINT16: SET_DEF(AG_SetUint16, 0U,  0xffffU, 1U); break;
@@ -912,8 +904,9 @@ DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 	c = (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_SCROLL) ?
 	    &WCOLOR_HOV(sb,0) :
 	    &WCOLOR(sb,0);
-	if (r.h < AG_SCROLLBAR_HOT) {		/* Increase contrast */
-		AG_ColorAddScaled(&cTinted, c, &agTint, AG_SCROLLBAR_HOT-r.h);
+	if (r.h < AG_SCROLLBAR_HOT) {			/* Increase contrast */
+		cTinted = *c;
+		AG_ColorLighten(&cTinted, AG_SCROLLBAR_HOT-r.h);
 		c = &cTinted;
 	}
 	AG_DrawBox(sb, &r,
@@ -989,7 +982,8 @@ DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 	    &WCOLOR_HOV(sb,0) :
 	    &WCOLOR(sb,0);
 	if (r.w < AG_SCROLLBAR_HOT) {			/* Increase contrast */
-		AG_ColorAddScaled(&cTinted, c, &agTint, AG_SCROLLBAR_HOT-r.w);
+		cTinted = *c;
+		AG_ColorLighten(&cTinted, AG_SCROLLBAR_HOT-r.w);
 		c = &cTinted;
 	}
 	AG_DrawBox(sb, &r,

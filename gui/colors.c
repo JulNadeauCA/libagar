@@ -38,25 +38,6 @@
 #include <ctype.h>
 
 /*
- * Color offsets used by 3D-style widget primitives.
- */
-#if AG_MODEL == AG_LARGE
-AG_ColorOffset agSunkColor   = { -2500, -2500, -5100 };
-AG_ColorOffset agRaisedColor = {  7700,  7700,  5100 };
-AG_ColorOffset agLowColor    = { -7700, -7700, -5100 };
-AG_ColorOffset agHighColor   = { 10000, 10000, 10000 };
-AG_ColorOffset agTint        = {  2000,  2000,  2000 };
-AG_ColorOffset agShade       = { -2000, -2000, -2000 };
-#else
-AG_ColorOffset agSunkColor   = { -10, -10, -20 };
-AG_ColorOffset agRaisedColor = {  10,  10,  20 };
-AG_ColorOffset agLowColor    = { -20, -20, -10 };
-AG_ColorOffset agHighColor   = {  40,  40,  40 };
-AG_ColorOffset agTint        = {   8,   8,   8 };
-AG_ColorOffset agShade       = {  -8,  -8,  -8 };
-#endif /* !AG_LARGE */
-
-/*
  * Color name keywords used by the style engine.
  */
 AG_ColorName agColorNames[] = {
@@ -713,7 +694,7 @@ AG_MapHSVf_RGB8(float h, float s, float v,
 	float vR, vG, vB, hv, var[3];
 	int iv;
 
-	if (s == 0.0) {
+	if (s == 0.0f) {
 		*r = (Uint8)(v * 255.0f);
 		*g = (Uint8)(v * 255.0f);
 		*b = (Uint8)(v * 255.0f);
@@ -751,18 +732,18 @@ AG_MapHSVf_RGB16(float h, float s, float v,
 	float vR, vG, vB, hv, var[3];
 	int iv;
 
-	if (s == 0.0) {
+	if (s == 0.0f) {
 		*r = (Uint16)(v * 65535.0f);
 		*g = (Uint16)(v * 65535.0f);
 		*b = (Uint16)(v * 65535.0f);
 		return;
 	}
 	
-	hv = h/60.0F;
+	hv = h/60.0f;
 	iv = Floor(hv);
-	var[0] = v * (1.0F - s);
-	var[1] = v * (1.0F - s*(hv - iv));
-	var[2] = v * (1.0F - s*(1.0F - (hv - iv)));
+	var[0] = v * (1.0f - s);
+	var[1] = v * (1.0f - s*(hv - iv));
+	var[2] = v * (1.0f - s*(1.0f - (hv - iv)));
 
 	switch (iv) {
 	case 0:		vR = v;		vG = var[2];	vB = var[0];	break;

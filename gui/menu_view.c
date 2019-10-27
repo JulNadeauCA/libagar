@@ -376,14 +376,15 @@ Draw(void *_Nonnull obj)
 			x += itemh + mv->spIconLbl;
 
 		if (mi->flags & AG_MENU_ITEM_SEPARATOR) {
-			AG_Color c[2];
-			int x1 = mv->lPad;
-			int x2 = WIDTH(mv) - mv->rPad - 1;
-			
-			AG_ColorAdd(&c[0], &WCOLOR(mv,0), &agLowColor);
-			AG_ColorAdd(&c[1], &WCOLOR(mv,0), &agHighColor);
-			AG_DrawLineH(mv, x1, x2, (r.y + itemh_2 - 1), &c[0]);
-			AG_DrawLineH(mv, x1, x2, (r.y + itemh_2),     &c[1]);
+			AG_Color c1 = WCOLOR(mv,0);
+			AG_Color c2 = c1;
+			const int x1 = mv->lPad;
+			const int x2 = WIDTH(mv) - mv->rPad - 1;
+	
+			AG_ColorDarken(&c1, 2);
+			AG_ColorLighten(&c2, 2);
+			AG_DrawLineH(mv, x1,x2, (r.y + itemh_2 - 1), &c1);
+			AG_DrawLineH(mv, x1,x2, (r.y + itemh_2),     &c2);
 		} else {
 			int lbl;
 

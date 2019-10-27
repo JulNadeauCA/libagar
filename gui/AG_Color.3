@@ -110,10 +110,10 @@ is fully opaque.
 .Fn AG_ColorWhite "AG_Color *c"
 .Pp
 .Ft void
-.Fn AG_ColorAdd "AG_Color *sum" "const AG_Color *c" "const AG_ColorOffset *offs"
+.Fn AG_ColorLighten "AG_Color *c" "int shade"
 .Pp
 .Ft void
-.Fn AG_ColorAddScaled "AG_Color *sum" "const AG_Color *c" "const AG_ColorOffset *offs" "int factor"
+.Fn AG_ColorDarken "AG_Color *c" "int shade"
 .Pp
 .Ft void
 .Fn AG_ColorInterpolate "AG_Color *cx" "const AG_Color *c1" "const AG_Color *c2"
@@ -188,17 +188,16 @@ and
 .Fn AG_ColorWhite
 initialize the respective fully opaque color.
 .Pp
-.Fn AG_ColorAdd
-adds the components of a color
+.Fn AG_ColorLighten
+and
+.Fa AG_ColorDarken
+increase and decrease the overall value of
 .Fa c
-to the signed components of
-.Fa offs
-and returns the clamped result.
-The
-.Fn AG_ColorAddScaled
-variant multiplies each component by a constant
-.Fa factor
-before clamping.
+by some small increment multiplied by
+.Fa shade .
+A
+.Fa shade
+argument of 0 leaves the color value unchanged.
 .Pp
 .Fn AG_ColorInterpolate
 traces an imaginary line in RGB color space between
@@ -211,19 +210,6 @@ the color closest to the point described by the fraction
 .Fa num
 over
 .Fa denom .
-.Pp
-The
-.Ft AG_ColorOffset
-structure is declared as:
-.Bd -literal
-typedef struct ag_color_offset {
-#if AG_MODEL == AG_LARGE
-	Sint16 r,g,b,a;
-#else
-	Sint8  r,g,b,a;
-#endif
-} AG_ColorOffset;
-.Ed
 .Pp
 .Fn AG_ColorCompare
 returns non-zero if the two colors differ.

@@ -228,45 +228,52 @@ ag_color_hex_64(AG_Color *c, Uint64 h)
 #endif /* AG_LARGE */
 
 /*
- * Compute the clamped sum of a color c and an offset offs.
+ * Ligten a color c by a value of shade*8 (MD), or shade*11 (LG).
+ * Leave alpha unchanged.
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
-AG_ColorAdd(AG_Color *_Nonnull dst, const AG_Color *_Nonnull c,
-    const AG_ColorOffset *_Nonnull offs)
+AG_ColorLighten(AG_Color *_Nonnull c, int shade)
 #else
 void
-ag_color_add(AG_Color *dst, const AG_Color *c, const AG_ColorOffset *offs)
+ag_color_lighten(AG_Color *c, int shade)
 #endif
 {
-	dst->r = AG_MIN(AG_COLOR_LAST, c->r + offs->r);
-	dst->g = AG_MIN(AG_COLOR_LAST, c->g + offs->g);
-	dst->b = AG_MIN(AG_COLOR_LAST, c->b + offs->b);
-	dst->a = AG_MIN(AG_COLOR_LAST, c->a + offs->a);
+#if AG_MODEL == AG_LARGE
+	const int shadeOffs = (shade << 11);
+#else
+	const int shadeOffs = (shade << 3);
+#endif
+	if (c->r + shadeOffs < AG_COLOR_LAST-shadeOffs) { c->r += shadeOffs; }
+	if (c->g + shadeOffs < AG_COLOR_LAST-shadeOffs) { c->g += shadeOffs; }
+	if (c->b + shadeOffs < AG_COLOR_LAST-shadeOffs) { c->b += shadeOffs; }
 }
 
 /*
- * Compute the sum of a color c and an offset offs added (factor) times
- * and clamped to AG_COLOR_LAST.
+ * Darken a color c by a value of shade*8 (MD), or shade*11 (LG).
+ * Leave alpha unchanged.
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
-AG_ColorAddScaled(AG_Color *_Nonnull dst, const AG_Color *_Nonnull c,
-    const AG_ColorOffset *_Nonnull offs, int factor)
+AG_ColorDarken(AG_Color *_Nonnull c, int shade)
 #else
 void
-ag_color_add_scaled(AG_Color *dst, const AG_Color *c,
-    const AG_ColorOffset *offs, int factor)
+ag_color_darken(AG_Color *c, int shade)
 #endif
 {
-	dst->r = AG_MIN(AG_COLOR_LAST, c->r + offs->r*factor);
-	dst->g = AG_MIN(AG_COLOR_LAST, c->g + offs->g*factor);
-	dst->b = AG_MIN(AG_COLOR_LAST, c->b + offs->b*factor);
-	dst->a = AG_MIN(AG_COLOR_LAST, c->a + offs->a*factor);
+#if AG_MODEL == AG_LARGE
+	const int shadeOffs = (shade << 11);
+#else
+	const int shadeOffs = (shade << 3);
+#endif
+	if (c->r - shadeOffs >= 0) { c->r -= shadeOffs; }
+	if (c->g - shadeOffs >= 0) { c->g -= shadeOffs; }
+	if (c->b - shadeOffs >= 0) { c->b -= shadeOffs; }
 }
 
 /*
  * Compute the point in RGB space between c1 and c2 closest to (num/denom).
+ * Return the alpha from c1 unchanged.
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
@@ -281,7 +288,7 @@ ag_color_interpolate(AG_Color *dst, const AG_Color *c1, const AG_Color *c2,
 	dst->r = c1->r + (c2->r - c1->r)*num/denom;
 	dst->g = c1->g + (c2->g - c1->g)*num/denom;
 	dst->b = c1->b + (c2->b - c1->b)*num/denom;
-	dst->a = c1->a + (c2->a - c1->a)*num/denom;
+	dst->a = c1->a;
 }
 
 /* Compute the difference between two colors. */

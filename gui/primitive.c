@@ -136,7 +136,6 @@ AG_GetLineIntersection(int x1,int y1, int x2,int y2, int x3,int y3,
 
 #undef SAME_SIGNS
 
-#ifdef HAVE_FLOAT
 /* If the circle with the center (xc, yc) and radius r intersects with the line
  * (x1, y1), (x2, y2), then xi and yi are updated to reflect the point at which
  * the intersection occurs. In the event of two intersections, xi and yi are
@@ -342,7 +341,6 @@ AG_DrawArrowhead(void *obj, int x1, int y1, int x2, int y2, int length,
 
 	AG_DrawTriangle(wid, &P_tip, &P1, &P2, c);
 }
-#endif /* HAVE_FLOAT */
 
 /*
  * Render a vector graphic made from a display list of elements on a fixed
@@ -649,17 +647,16 @@ DrawVectorMxN(void *_Nonnull obj, const AG_Rect *_Nonnull r,
     const AG_Color *_Nonnull pal, int m, int n,
     const AG_VectorElement *_Nonnull elemBase, int elemFirst, int elemLast)
 {
-#ifdef HAVE_FLOAT
 	const int w = r->w;
 	const int h = r->h;
 	int a,b, i;
 
-# ifdef AG_DEBUG
+#ifdef AG_DEBUG
 	AG_OBJECT_ISA(obj, "AG_Widget:*");
 
 	if (elemFirst < 0 || elemFirst > elemLast)
 		AG_FatalError("elemFirst/elemLast");
-# endif
+#endif
 	for (i = elemFirst; i < elemLast; i++) {
 		const AG_VectorElement *elem = &elemBase[i];
 
@@ -726,7 +723,18 @@ DrawVectorMxN(void *_Nonnull obj, const AG_Rect *_Nonnull r,
 			break;
 		}
 	}
-#else
-/* TODO */
-#endif /* HAVE_FLOAT */
+}
+
+/* Called by AG_DrawFrame() to handle non-opaque case. */
+void
+AG_DrawFrame_Blended(AG_Widget *wid, const AG_Rect *rd, const AG_Color *c1,
+    const AG_Color *c2, int x2, int y2)
+{
+	AG_Driver *drv = wid->drv;
+	AG_DriverClass *drvOps = wid->drvOps;
+
+	drvOps->drawLineBlended(drv, rd->x, rd->y, x2,    rd->y, c1, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	drvOps->drawLineBlended(drv, rd->x, rd->y, rd->x, y2,    c1, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	drvOps->drawLineBlended(drv, rd->x, y2,    x2,    y2,    c2, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	drvOps->drawLineBlended(drv, x2,    rd->y, x2,    y2,    c2, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 }
