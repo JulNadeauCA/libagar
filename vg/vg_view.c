@@ -793,7 +793,7 @@ DrawGrid(VG_View *_Nonnull vv, const VG_Grid *_Nonnull grid)
 			   grid->color.b);
 		for (; y < y2; y += ival) {
 			for (x = x0; x < x2; x += ival)
-				glVertex2s(x, y);
+				glVertex2i(x, y);
 		}
 		glEnd();
 	} else
