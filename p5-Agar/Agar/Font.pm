@@ -16,7 +16,7 @@ Agar::Font - encapsulate Agar's conception of a font
   use Agar;
   use Agar::Font;
   
-  Agar::Font->new("Bitstream Vera.ttf", 12)->setDefault();
+  Agar::Font->new("Courier", 12)->setDefault();
 
 =head1 DESCRIPTION
 
