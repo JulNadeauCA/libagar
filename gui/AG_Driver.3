@@ -162,12 +162,16 @@ typedef struct ag_driver_class {
     Uint flags;                /* Driver class options */
     int rev;                   /* Driver revision number */ 
 
-    /* Initialization */
+    /*
+     * Initialization
+     */
     int  (*open)(void *d, const char *spec);
     void (*close)(void *d);
     int  (*getDisplaySize)(Uint *w, Uint *h);
 
-    /* Event processing */
+    /*
+     * Event processing
+     */
     void (*beginEventProcessing)(void *d);
     int  (*pendingEvents)(void *d);
     int  (*getNextEvent)(void *d, AG_DriverEvent *dev);
@@ -176,38 +180,46 @@ typedef struct ag_driver_class {
     void (*endEventProcessing)(void *d);
     void (*terminate)(void);
 
-    /* Rendering and texture management */
+    /*
+     * Rendering and texture management
+     */
     void (*beginRendering)(void *d);
     void (*renderWindow)(AG_Window *w);
     void (*endRendering)(void *d);
     void (*fillRect)(void *d, const AG_Rect *r, const AG_Color *c);
     void (*updateRegion)(void *d, const AG_Rect *r);
-    void (*uploadTexture)(void *d, Uint *id, AG_Surface *s,
-                                    AG_TexCoord *tc);
-    int  (*updateTexture)(void *d, Uint id, AG_Surface *s,
-                                    AG_TexCoord *tc);
+    void (*uploadTexture)(void *d, Uint *id,AG_Surface *s, AG_TexCoord *c);
+    int  (*updateTexture)(void *d, Uint id, AG_Surface *s, AG_TexCoord *c);
     void (*deleteTexture)(void *d, Uint id);
     int (*setRefreshRate)(void *d, int fps);
 
-    /* Clipping and blending control (rendering context) */
+    /*
+     * Clipping and blending control (rendering context)
+     */
     void (*pushClipRect)(void *d, const AG_Rect *r);
     void (*popClipRect)(void *d);
     void (*pushBlendingMode)(void *d, AG_AlphaFn s, AG_AlphaFn d);
     void (*popBlendingMode)(void *d);
 
-    /* Hardware cursor interface */
+    /*
+     * Hardware cursor interface
+     */
     AG_Cursor *(*createCursor)(void *d, Uint w, Uint h,
                                const Uint8 *data, const Uint8 *mask,
                                int xHot, int yHot);
+
     void (*freeCursor)(void *d, AG_Cursor *curs);
     int  (*setCursor)(void *d, AG_Cursor *curs);
     void (*unsetCursor)(void *d);
     int  (*getCursorVisibility)(void *d);
     void (*setCursorVisibility)(void *d, int flag);
 
-    /* Widget surface operations (rendering context) */
+    /*
+     * Widget surface operations (rendering context)
+     */
     void (*blitSurface)(void *d, AG_Widget *wid, AG_Surface *s,
                         int x, int y);
+
     void (*blitSurfaceFrom)(void *d, AG_Widget *wid, int s,
                             const AG_Rect *r, int x, int y);
 #ifdef HAVE_OPENGL
@@ -222,36 +234,51 @@ typedef struct ag_driver_class {
     void (*restoreSurfaces)(void *d, AG_Widget *wid);
     int  (*renderToSurface)(void *d, AG_Widget *wid, AG_Surface **s);
 
-    /* Rendering operations (rendering context) */
+    /*
+     * Rendering operations (rendering context)
+     */
     void (*putPixel)(void *d, int x, int y, const AG_Color *c);
     void (*putPixel32)(void *d, int x, int y, Uint32 px);
     void (*putPixelRGB8)(void *d, int x, int y, Uint8 r, Uint8 g, Uint8 b);
 #if AG_MODEL == AG_LARGE
     void (*putPixel64)(void *d, int x, int y, Uint64 px);
-    void (*putPixelRGB16)(void *d, int x, int y, Uint16 r, Uint16 g,
-                          Uint16 b);
+    void (*putPixelRGB16)(void *d, int x, int y,
+                          Uint16 r, Uint16 g, Uint16 b);
 #endif
     void (*blendPixel)(void *d, int x, int y, const AG_Color *c,
                        AG_AlphaFn fnSrc, AG_AlphaFn fnDst);
-    void (*drawLine)(void *d, int x1, int y1, int x2, int y2, const AG_Color *c);
+
+    void (*drawLine)(void *d, int x1, int y1, int x2, int y2,
+                     const AG_Color *c);
     void (*drawLineH)(void *d, int x1, int x2, int y, const AG_Color *c);
     void (*drawLineV)(void *d, int x, int y1, int y2, const AG_Color *c);
+
     void (*drawLineBlended)(void *d, int x1, int y1, int x2, int y2,
                             const AG_Color *c,
                             AG_AlphaFn fnSrc, AG_AlphaFn fnDst);
+
+    void (*drawLineW)(void *d, int x1, int y1, int x2, int y2,
+                      const AG_Color *c, float width);
+
+    void (*drawLineW_Sti16)(void *d, int x1, int y1, int x2, int y2,
+                            const AG_Color *c, float width, Uint16 mask);
+
     void (*drawArrow)(void *d, float angle, int x, int y, int h,
                       const AG_Color *c1, const AG_Color *c2);
+
     void (*drawBoxRounded)(void *d, const AG_Rect *r, int z, int rad,
                            const AG_Color *c1, const AG_Color *c2);
     void (*drawBoxRoundedTop)(void *d, const AG_Rect *r, int z, int rad,
                               const AG_Color *c1, const AG_Color *c2,
                               const AG_Color *c3);
+
     void (*drawCircle)(void *d, int x, int y, int r, const AG_Color *c);
     void (*drawCircle2)(void *d, int x, int y, int r, const AG_Color *c);
     void (*drawRectFilled)(void *d, const AG_Rect *r, const AG_Color *c);
     void (*drawRectBlended)(void *d, const AG_Rect *r, const AG_Color *c,
                             AG_AlphaFn fnSrc, AG_AlphaFn fnDst);
     void (*drawRectDithered)(void *d, const AG_Rect *r, const AG_Color *c);
+
     void (*updateGlyph)(void *d, AG_Glyph *gl);
     void (*drawGlyph)(void *d, const AG_Glyph *gl, int x, int y);
 

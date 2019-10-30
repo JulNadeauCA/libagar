@@ -83,13 +83,16 @@ void AG_GL_DrawLineH(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
 void AG_GL_DrawLineV(void *_Nonnull, int, int,int, const AG_Color *_Nonnull);
 void AG_GL_DrawLineBlended(void *_Nonnull, int,int, int,int,
                            const AG_Color *_Nonnull, AG_AlphaFn, AG_AlphaFn);
+void AG_GL_DrawLineW(void *_Nonnull, int,int, int,int, const AG_Color *, float);
+void AG_GL_DrawLineW_Sti16(void *_Nonnull, int,int, int,int, const AG_Color *,
+                     float, Uint16);
 void AG_GL_DrawTriangle(void *_Nonnull, const AG_Pt *_Nonnull,
                         const AG_Pt *_Nonnull, const AG_Pt *_Nonnull,
                         const AG_Color *_Nonnull);
 void AG_GL_DrawPolygon(void *_Nonnull, const AG_Pt *_Nonnull, Uint,
                        const AG_Color *_Nonnull);
-void AG_GL_DrawPolygonSti32(void *_Nonnull, const AG_Pt *_Nonnull, Uint,
-                            const AG_Color *_Nonnull, const Uint8 *_Nonnull);
+void AG_GL_DrawPolygon_Sti32(void *_Nonnull, const AG_Pt *_Nonnull, Uint,
+                             const AG_Color *_Nonnull, const Uint8 *_Nonnull);
 void AG_GL_DrawArrow(void *_Nonnull, Uint8, int,int, int,
                      const AG_Color *_Nonnull);
 void AG_GL_DrawRectDithered(void *_Nonnull, const AG_Rect *_Nonnull,

@@ -302,6 +302,54 @@ ag_draw_line_blended(void *obj, int x1, int y1, int x2, int y2,
 }
 
 /*
+ * Draw a styled line from (x1,y1) to (x2,y2).
+ * Handle line widths > 0.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_DrawLineW(void *_Nonnull obj, int x1, int y1, int x2, int y2,
+    const AG_Color *_Nonnull c, float width)
+#else
+void
+ag_draw_line_w(void *obj, int x1, int y1, int x2, int y2,
+    const AG_Color *c, float width)
+#endif
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+
+	wid->drvOps->drawLineW(wid->drv,
+	    wid->rView.x1 + x1,
+	    wid->rView.y1 + y1,
+	    wid->rView.x1 + x2,
+	    wid->rView.y1 + y2,
+	    c, width);
+}
+
+/*
+ * Draw a styled line from (x1,y1) to (x2,y2).
+ * Handle line widths > 0 and a 16-bit stipple pattern.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_DrawLineW_Sti16(void *_Nonnull obj, int x1, int y1, int x2, int y2,
+    const AG_Color *_Nonnull c, float width, Uint16 mask)
+#else
+void
+ag_draw_line_w_sti16(void *obj, int x1, int y1, int x2, int y2,
+    const AG_Color *c, float width, Uint16 mask)
+#endif
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+
+	wid->drvOps->drawLineW_Sti16(wid->drv,
+	    wid->rView.x1 + x1,
+	    wid->rView.y1 + y1,
+	    wid->rView.x1 + x2,
+	    wid->rView.y1 + y2,
+	    c, width, mask);
+}
+
+/*
  * Render a triangle between three given points.
  */
 #ifdef AG_INLINE_HEADER
@@ -809,34 +857,6 @@ ag_draw_rect_outline(void *obj, const AG_Rect *r, const AG_Color *_Nonnull c)
 		}
 		drvOps->drawLineV(drv, x2, y,  y2, c);
 	}
-}
-
-/*
- * Render a 3D-style line.
- */
-#ifdef AG_INLINE_HEADER
-static __inline__ void
-AG_DrawLine2(void *_Nonnull obj, int x1, int y1, int x2, int y2,
-    const AG_Color *_Nonnull color)
-#else
-void
-ag_draw_line_2(void *obj, int x1, int y1, int x2, int y2,
-    const AG_Color *color)
-#endif
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color c = *color;
-
-	x1 += wid->rView.x1;
-	y1 += wid->rView.y1;
-	x2 += wid->rView.x1;
-	y2 += wid->rView.y1;
-
-	AG_ColorLighten(&c, 2);
-	wid->drvOps->drawLine(wid->drv, x1,y1, x2,y2, &c);
-
-	AG_ColorDarken(&c, 2);
-	wid->drvOps->drawLine(wid->drv, x1+1,y1+1, x2+1,y2+1, &c);
 }
 
 /*

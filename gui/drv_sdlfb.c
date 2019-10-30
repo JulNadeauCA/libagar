@@ -909,6 +909,25 @@ SDLFB_DrawLineBlended(void *_Nonnull obj, int x1, int y1, int x2, int y2,
 }
 
 static void
+SDLFB_DrawLineW(void *_Nonnull obj, int x1, int y1, int x2, int y2,
+    const AG_Color *_Nonnull color, float width)
+{
+	/* TODO */
+	(void)width;
+	return SDLFB_DrawLine(obj, x1,y1, x2,y2, color);
+}
+
+static void
+SDLFB_DrawLineW_Sti16(void *_Nonnull obj, int x1, int y1, int x2, int y2,
+    const AG_Color *_Nonnull color, float width, Uint16 mask)
+{
+	/* TODO */
+	(void)width;
+	(void)mask;
+	return SDLFB_DrawLine(obj, x1,y1, x2,y2, color);
+}
+
+static void
 SDLFB_DrawTriangle_FlatBot(void *_Nonnull obj, const AG_Pt *_Nonnull v1,
     const AG_Pt *_Nonnull v2, const AG_Pt *_Nonnull v3,
     const AG_Color *_Nonnull c)
@@ -1075,10 +1094,11 @@ SDLFB_DrawPolygon(void *obj, const AG_Pt *pts, Uint nPts, const AG_Color *c)
 }
 
 static void
-SDLFB_DrawPolygonSti32(void *_Nonnull obj, const AG_Pt *_Nonnull pts, Uint nPts,
+SDLFB_DrawPolygon_Sti32(void *_Nonnull obj, const AG_Pt *_Nonnull pts, Uint nPts,
     const AG_Color *_Nonnull c, const Uint8 *_Nonnull stipple)
 {
-	Debug(obj, "drawPolygonSti32() not implemented\n");
+	/* TODO */
+	Debug(obj, "drawPolygon_Sti32() not implemented\n");
 }
 
 static int
@@ -1846,9 +1866,11 @@ AG_DriverSwClass agDriverSDLFB = {
 		SDLFB_DrawLineH,
 		SDLFB_DrawLineV,
 		SDLFB_DrawLineBlended,
+		SDLFB_DrawLineW,
+		SDLFB_DrawLineW_Sti16,
 		SDLFB_DrawTriangle,
 		SDLFB_DrawPolygon,
-		SDLFB_DrawPolygonSti32,
+		SDLFB_DrawPolygon_Sti32,
 		SDLFB_DrawArrow,
 		SDLFB_DrawBoxRounded,
 		SDLFB_DrawBoxRoundedTop,

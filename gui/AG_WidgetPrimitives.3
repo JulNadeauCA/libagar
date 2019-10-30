@@ -37,16 +37,16 @@
 #include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
-Agar provides a set of basic rendering operations designed for rendering GUI
-elements efficiently (as opposed to general-purpose graphics, as would be
-handled by libraries such as OpenGL or
-.Xr VG 3 ) .
-It is illegal to invoke these routines outside of the
+The Agar library provides a set of low-level primitives which Widget
+code can invoke to render user-interface elements.
+.Pp
+These primitives must be called from the
 .Fn draw
 method of an
 .Xr AG_Widget 3
 (what we refer to as
 .Sq rendering context ) .
+It is illegal to call these functions under any other context.
 .Pp
 The
 .Fa x
@@ -60,7 +60,7 @@ argument's local coordinate system.
 .Sh PRIMITIVES
 .nr nS 1
 .Ft void
-.Fn AG_PutPixel "AG_Widget *widget" "int x" "int y" "AG_Color c"
+.Fn AG_PutPixel "AG_Widget *widget" "int x" "int y" "const AG_Color *c"
 .Pp
 .Ft void
 .Fn AG_PutPixelRGB "AG_Widget *widget" "int x" "int y" "AG_Component r" "AG_Component g" "AG_Component b"
@@ -78,7 +78,7 @@ argument's local coordinate system.
 .Fn AG_PutPixel64 "AG_Widget *widget" "int x" "int y" "Uint64 px"
 .Pp
 .Ft void
-.Fn AG_BlendPixel "AG_Widget *widget" "int x" "int y" "AG_Color c" "AG_AlphaFn blendFn"
+.Fn AG_BlendPixel "AG_Widget *widget" "int x" "int y" "const AG_Color *c" "AG_AlphaFn blendFn"
 .Pp
 .Ft void
 .Fn AG_BlendPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 c" "AG_AlphaFn blendFn"
@@ -87,40 +87,43 @@ argument's local coordinate system.
 .Fn AG_BlendPixel64 "AG_Widget *widget" "int x" "int y" "Uint64 c" "AG_AlphaFn blendFn"
 .Pp
 .Ft void
-.Fn AG_DrawCircle "AG_Widget *widget" "int x" "int y" "int radius" "AG_Color c"
+.Fn AG_DrawCircle "AG_Widget *widget" "int x" "int y" "int radius" "const AG_Color *c"
 .Pp
 .Ft void
-.Fn AG_DrawCircle2 "AG_Widget *widget" "int x" "int y" "int radius" "AG_Color c"
+.Fn AG_DrawCircle2 "AG_Widget *widget" "int x" "int y" "int radius" "const AG_Color *c"
 .Pp
 .Ft void
-.Fn AG_DrawLine "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "AG_Color c"
+.Fn AG_DrawLine "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "const AG_Color *c"
 .Pp
 .Ft void
-.Fn AG_DrawLine2 "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "AG_Color c"
+.Fn AG_DrawLineBlended "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint8 c[4]" "AG_AlphaFn fnSrc" "AG_AlphaFn fnDst"
 .Pp
 .Ft void
-.Fn AG_DrawLineBlended "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint8 c[4]" "AG_AlphaFn blendFn"
+.Fn AG_DrawLineW "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "const AG_Color *c" "float width"
 .Pp
 .Ft void
-.Fn AG_DrawLineH "AG_Widget *widget" "int x1" "int x2" "int y" "AG_Color c"
+.Fn AG_DrawLineW_Sti16 "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "const AG_Color *c" "float width" "Uint16 stipple"
 .Pp
 .Ft void
-.Fn AG_DrawLineV "AG_Widget *widget" "int x" "int y1" "int y2" "AG_Color c"
+.Fn AG_DrawLineH "AG_Widget *widget" "int x1" "int x2" "int y" "const AG_Color *c"
 .Pp
 .Ft void
-.Fn AG_DrawRect "AG_Widget *widget" "AG_Rect r" "AG_Color c"
+.Fn AG_DrawLineV "AG_Widget *widget" "int x" "int y1" "int y2" "const AG_Color *c"
 .Pp
 .Ft void
-.Fn AG_DrawRectOutline "AG_Widget *widget" "AG_Rect r" "AG_Color c"
+.Fn AG_DrawRect "AG_Widget *widget" "AG_Rect r" "const AG_Color *c"
 .Pp
 .Ft void
-.Fn AG_DrawRectFilled "AG_Widget *widget" "AG_Rect r" "AG_Color c"
+.Fn AG_DrawRectOutline "AG_Widget *widget" "AG_Rect r" "const AG_Color *c"
 .Pp
 .Ft void
-.Fn AG_DrawRectBlended "AG_Widget *widget" "AG_Rect r" "AG_Color c" "AG_AlphaFn fnSrc" "AG_AlphaFn fnDst"
+.Fn AG_DrawRectFilled "AG_Widget *widget" "AG_Rect r" "const AG_Color *c"
 .Pp
 .Ft void
-.Fn AG_DrawArrowLine "void *_Nonnull obj" "int x1" "int y1" "int x2" "int y2" "AG_ArrowLineType t" "int length" "double theta" "const AG_Color *C"
+.Fn AG_DrawRectBlended "AG_Widget *widget" "AG_Rect r" "const AG_Color *c" "AG_AlphaFn fnSrc" "AG_AlphaFn fnDst"
+.Pp
+.Ft void
+.Fn AG_DrawArrowLine "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "AG_ArrowLineType t" "int length" "double theta" "const AG_Color *c"
 .Pp
 .nr nS 0
 .Fn AG_PutPixel
@@ -150,11 +153,11 @@ The
 function blends an existing pixel against a given
 .Xr AG_Color 3 ,
 overwriting the pixel with the best native-display approximation of the result.
-.Pp
+The
 .Fn AG_BlendPixel32
 and
 .Fn AG_BlendPixel64
-accept a 32- and 64-bit pixel value.
+variants take a 32- and a 64-bit pixel value respectively.
 .Pp
 Coordinates to
 .Fn AG_PutPixel*
@@ -164,36 +167,68 @@ are checked, and intersected against active clipping rectangles (see
 .Xr AG_Widget 3 ) .
 .Pp
 .Fn AG_DrawFrame
-draws a 3D-style frame to create a raised box (if z>0) or well (if z<0).
+draws a 3D raised box (if z>0) or a 3D well (if z<0).
 .Pp
 .Fn AG_DrawCircle
-draws a circle with the origin at
+draws a circle around
 .Fa x ,
 .Fa y
-and a radius of
+of
 .Fa radius
 pixels.
 .Pp
 .Fn AG_DrawLine
-scan-converts a line segment going from point
+draws a line segment from point
 .Fa x1 ,
 .Fa y1
-to point
+to
 .Fa x2 ,
 .Fa y2 .
-The variants
-.Fn AG_DrawLineH
-and
-.Fn AG_DrawLineV
-render horizontal and vertical line segments, respectively.
-.Fn AG_DrawLine2
-renders two line segments for a 3D-style effect.
 .Pp
+.Fn AG_DrawLineH
+draws a horizontal line from point
+.Fa x ,
+.Fa y1
+to
+.Fa x ,
+.Fa y2 .
+.Pp
+.Fn AG_DrawLineV
+draws a vertical line from point
+.Fa x1 ,
+.Fa y
+to
+.Fa x2 ,
+.Fa y .
+.Pp
+.Fn AG_DrawLineW
+draws a line of specified
+.Fa width
+(where 1.0f = 1 pixel) between
+.Fa x1 ,
+.Fa y1
+and
+.Fa x2 ,
+.Fa y2 .
+.Pp
+.Fn AG_DrawLineW_Sti16
+draws a line of specified
+.Fa width
+(where 1.0f = 1 pixel)
+and 16-bit
+.Fa stipple
+pattern between
+.Fa x1 ,
+.Fa y1
+and
+.Fa x2 ,
+.Fa y2 .
+.Pp
+The
 .Fn AG_DrawLineBlended
-renders an alpha-blended line, where the RGBA components are passed as the
+variant performs alpha blending if the alpha component of
 .Fa c
-array, and the blending function is specified in
-.Fa blendFn .
+is not fully opaque.
 .Pp
 The
 .Fn AG_DrawRect
@@ -247,19 +282,19 @@ be taken to point to (
 .Sh SIMPLE GRAPHICAL ELEMENTS
 .nr nS 1
 .Ft void
-.Fn AG_DrawBox "AG_Widget *widget" "AG_Rect r" "int z" "AG_Color c"
+.Fn AG_DrawBox "AG_Widget *widget" "AG_Rect r" "int z" "const AG_Color *c"
 .Pp
 .Ft void
-.Fn AG_DrawBoxDisabled "AG_Widget *widget" "AG_Rect r" "int z" "AG_Color c1" "AG_Color c2"
+.Fn AG_DrawBoxDisabled "AG_Widget *widget" "AG_Rect r" "int z" "const AG_Color *c1" "const AG_Color *c2"
 .Pp
 .Ft void
-.Fn AG_DrawBoxRounded "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "AG_Color c"
+.Fn AG_DrawBoxRounded "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "const AG_Color *c"
 .Pp
 .Ft void
-.Fn AG_DrawBoxRoundedTop "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "AG_Color c"
+.Fn AG_DrawBoxRoundedTop "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "const AG_Color *c"
 .Pp
 .Ft void
-.Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "int z" "AG_Color c"
+.Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "int z" "const AG_Color *c"
 .Pp
 .nr nS 0
 The
@@ -290,31 +325,31 @@ variant only rounds the top two corners.
 .Sh SYMBOLS
 .nr nS 1
 .Ft void
-.Fn AG_DrawTriangle "AG_Widget *widget" "AG_Pt v1" "AG_Pt v2" "AG_Pt v3" "AG_Color c"
+.Fn AG_DrawTriangle "AG_Widget *widget" "AG_Pt v1" "AG_Pt v2" "AG_Pt v3" "const AG_Color *c"
 .Pp
 .Ft void
 .Fn AG_DrawPolygon "AG_Widget *widget" "const AG_Pt *pts" "Uint nPts" "const AG_Color *c"
 .Pp
 .Ft void
-.Fn AG_DrawPolygonSti32 "AG_Widget *widget" "const AG_Pt *pts" "Uint nPts" "const AG_Color *c" "const Uint8 *stipplePattern"
+.Fn AG_DrawPolygon_Sti32 "AG_Widget *widget" "const AG_Pt *pts" "Uint nPts" "const AG_Color *c" "const Uint8 *stipplePattern"
 .Pp
 .Ft void
 .Fn AG_DrawVector "AG_Widget *widget" "int dim" "const AG_Rect *r" "const AG_VectorElement *elements" "int elemFirst" "int elemLast"
 .Pp
 .Ft void
-.Fn AG_DrawArrowUp "AG_Widget *widget" "int x" "int y" "int h" "AG_Color c1" "AG_Color c2"
+.Fn AG_DrawArrowUp "AG_Widget *widget" "int x" "int y" "int h" "const AG_Color *c1" "const AG_Color *c2"
 .Pp
 .Ft void
-.Fn AG_DrawArrowDown "AG_Widget *widget" "int x" "int y" "int h" "AG_Color c1" "AG_Color c2"
+.Fn AG_DrawArrowDown "AG_Widget *widget" "int x" "int y" "int h" "const AG_Color *c1" "const AG_Color *c2"
 .Pp
 .Ft void
-.Fn AG_DrawArrowLeft "AG_Widget *widget" "int x" "int y" "int w" "AG_Color c1" "AG_Color c2"
+.Fn AG_DrawArrowLeft "AG_Widget *widget" "int x" "int y" "int w" "const AG_Color *c1" "const AG_Color *c2"
 .Pp
 .Ft void
-.Fn AG_DrawArrowRight "AG_Widget *widget" "int x" "int y" "int w" "AG_Color c1" "AG_Color c2"
+.Fn AG_DrawArrowRight "AG_Widget *widget" "int x" "int y" "int w" "const AG_Color *c1" "const AG_Color *c2"
 .Pp
 .Ft void
-.Fn AG_DrawArrowhead "void *_Nonnull obj" "int x1" "int y1" "int x2" "int y2" "int length" "double theta" "const AG_Color *_Nonnull c"
+.Fn AG_DrawArrowhead "void *obj" "int x1" "int y1" "int x2" "int y2" "int length" "double theta" "const AG_Color *c"
 .Pp
 .nr nS 0
 .Fn AG_DrawTriangle

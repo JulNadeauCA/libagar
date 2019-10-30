@@ -851,8 +851,8 @@ AG_GL_DrawLine(void *obj, int x1, int y1, int x2, int y2, const AG_Color *c)
 {
 	glBegin(GL_LINES);
 	GL_Color3uH(c->r, c->g, c->b);
-	glVertex2s(x1, y1);
-	glVertex2s(x2, y2);
+	glVertex2i(x1, y1);
+	glVertex2i(x2, y2);
 	glEnd();
 }
 
@@ -862,8 +862,8 @@ AG_GL_DrawLineH(void *obj, int x1, int x2, int y, const AG_Color *c)
 {
 	glBegin(GL_LINES);
 	GL_Color3uH(c->r, c->g, c->b);
-	glVertex2s(x1, y);
-	glVertex2s(x2, y);
+	glVertex2i(x1, y);
+	glVertex2i(x2, y);
 	glEnd();
 }
 
@@ -873,8 +873,8 @@ AG_GL_DrawLineV(void *obj, int x, int y1, int y2, const AG_Color *c)
 {
 	glBegin(GL_LINES);
 	GL_Color3uH(c->r, c->g, c->b);
-	glVertex2s(x, y1);
-	glVertex2s(x, y2);
+	glVertex2i(x, y1);
+	glVertex2i(x, y2);
 	glEnd();
 }
 
@@ -889,10 +889,59 @@ AG_GL_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2,
 	                                      AG_TEXTURE_ENV_REPLACE);
 	glBegin(GL_LINES);
 	GL_Color4uH(c->r, c->g, c->b, a);
-	glVertex2s(x1, y1);
-	glVertex2s(x2, y2);
+	glVertex2i(x1, y1);
+	glVertex2i(x2, y2);
 	glEnd();
 	AGDRIVER_CLASS(obj)->popBlendingMode(obj);
+}
+
+/*
+ * Draw a line from (x1,y1) to (x2,y2).
+ * Handle widths > 0.
+ */
+void
+AG_GL_DrawLineW(void *obj, int x1, int y1, int x2, int y2, const AG_Color *c,
+    float width)
+{
+	float widthSaved;
+
+	glGetFloatv(GL_LINE_WIDTH, &widthSaved);
+	if (widthSaved != width) { glLineWidth(width); }
+ 
+	glBegin(GL_LINES);
+	GL_Color3uH(c->r, c->g, c->b);
+	glVertex2i(x1, y1);
+	glVertex2i(x2, y2);
+	glEnd();
+	
+	if (widthSaved != width) { glLineWidth(widthSaved); }
+}
+
+/*
+ * Draw a line from (x1,y1) to (x2,y2).
+ * Handle widths > 0 and 16-bit stipple pattern.
+ */
+void
+AG_GL_DrawLineW_Sti16(void *obj, int x1, int y1, int x2, int y2,
+    const AG_Color *c, float width, Uint16 stipple)
+{
+	float widthSaved;
+	int stipSaved;
+	
+	glGetFloatv(GL_LINE_WIDTH, &widthSaved);
+	if (widthSaved != width) { glLineWidth(width); }
+
+	stipSaved = glIsEnabled(GL_LINE_STIPPLE);
+	if (!stipSaved) { glEnable(GL_LINE_STIPPLE); }
+	
+	glBegin(GL_LINES);
+	GL_Color3uH(c->r, c->g, c->b);
+	glVertex2i(x1, y1);
+	glVertex2i(x2, y2);
+	glEnd();
+	
+	if (!stipSaved) { glDisable(GL_LINE_STIPPLE); }
+	if (widthSaved != width) { glLineWidth(widthSaved); }
 }
 
 /* Draw a solid triangle from 3 points. */
@@ -925,7 +974,7 @@ AG_GL_DrawPolygon(void *obj, const AG_Pt *pts, Uint nPts, const AG_Color *c)
 
 /* Draw a stippled polygon from n points with a 32x32-bit stipple pattern. */
 void
-AG_GL_DrawPolygonSti32(void *obj, const AG_Pt *pts, Uint nPts,
+AG_GL_DrawPolygon_Sti32(void *obj, const AG_Pt *pts, Uint nPts,
     const AG_Color *c, const Uint8 *stipple)
 {
 	Uint8 stipplePrev[32*4];

@@ -514,6 +514,22 @@ DUMMY_DrawLineBlended(void *_Nonnull obj, int x1, int y1, int x2, int y2,
 }
 
 static void
+DUMMY_DrawLineW(void *_Nonnull obj, int x1, int y1, int x2, int y2,
+    const AG_Color *_Nonnull c, float width)
+{
+	Debug(obj, "DrawLineW([%d,%d -> %d,%d], [%x:%x:%x:%x], R%.02f)\n",
+	    x1,y1, x2,y2, c->r, c->g, c->b, c->a, width);
+}
+
+static void
+DUMMY_DrawLineW_Sti16(void *_Nonnull obj, int x1, int y1, int x2, int y2,
+    const AG_Color *_Nonnull c, float width, Uint16 mask)
+{
+	Debug(obj, "DrawLineW([%d,%d -> %d,%d], [%x:%x:%x:%x], R%.02f, Sti 0x%x)\n",
+	    x1,y1, x2,y2, c->r, c->g, c->b, c->a, width, mask);
+}
+
+static void
 DUMMY_DrawTriangle(void *_Nonnull obj, const AG_Pt *_Nonnull v1,
     const AG_Pt *_Nonnull v2, const AG_Pt *_Nonnull v3,
     const AG_Color *_Nonnull c)
@@ -536,7 +552,7 @@ DUMMY_DrawPolygon(void *_Nonnull obj, const AG_Pt *_Nonnull pts, Uint nPts,
 }
 
 static void
-DUMMY_DrawPolygonSti32(void *_Nonnull obj, const AG_Pt *_Nonnull pts, Uint nPts,
+DUMMY_DrawPolygon_Sti32(void *_Nonnull obj, const AG_Pt *_Nonnull pts, Uint nPts,
     const AG_Color *_Nonnull c, const Uint8 *_Nonnull stipplePattern)
 {
 #ifdef AG_DEBUG
@@ -1134,9 +1150,11 @@ AG_DriverMwClass agDriverDUMMY = {
 		DUMMY_DrawLineH,
 		DUMMY_DrawLineV,
 		DUMMY_DrawLineBlended,
+		DUMMY_DrawLineW,
+		DUMMY_DrawLineW_Sti16,
 		DUMMY_DrawTriangle,
 		DUMMY_DrawPolygon,
-		DUMMY_DrawPolygonSti32,
+		DUMMY_DrawPolygon_Sti32,
 		DUMMY_DrawArrow,
 		DUMMY_DrawBoxRounded,
 		DUMMY_DrawBoxRoundedTop,

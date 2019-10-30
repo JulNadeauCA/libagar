@@ -61,6 +61,11 @@ void ag_draw_line_h(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
 void ag_draw_line_v(void *_Nonnull, int, int,int, const AG_Color *_Nonnull);
 void ag_draw_line_blended(void *_Nonnull, int,int, int,int,
                           const AG_Color *_Nonnull, AG_AlphaFn, AG_AlphaFn);
+void ag_draw_line_w(void *_Nonnull, int,int, int,int, const AG_Color *_Nonnull,
+                    float);
+void ag_draw_line_w_sti16(void *_Nonnull, int,int, int,int,
+                          const AG_Color *_Nonnull, float, Uint16);
+
 void ag_draw_triangle(void *_Nonnull, const AG_Pt *, const AG_Pt *, const AG_Pt *,
                       const AG_Color *_Nonnull);
 void ag_draw_polygon(void *_Nonnull, const AG_Pt *_Nonnull, Uint, const AG_Color *);
@@ -103,39 +108,40 @@ void ag_draw_line_2(void *_Nonnull, int,int, int,int, const AG_Color *_Nonnull);
 void ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
     AG_ArrowLineType t, int length, double theta, const AG_Color *C);
 
-# define AG_PutPixel(o,x,y,c)			ag_put_pixel((o),(x),(y),(c))
-# define AG_PutPixel32(o,x,y,c)			ag_put_pixel_32((o),(x),(y),(c))
-# define AG_PutPixel64(o,x,y,px)		ag_put_pixel_64((o),(x),(y),(px))
-# define AG_PutPixelRGB_8(o,x,y,r,g,b)		ag_put_pixel_rgb_8((o),(x),(y),(r),(g),(b))
-# define AG_PutPixelRGB_16(o,x,y,r,g,b)		ag_put_pixel_rgb_16((o),(x),(y),(r),(g),(b))
-# define AG_BlendPixel(o,x,y,c,fn)		ag_blend_pixel((o),(x),(y),(c),(fn))
-# define AG_BlendPixel32(o,x,y,px,fn)		ag_blend_pixel_32((o),(x),(y),(px),(fn))
-# define AG_BlendPixel64(o,x,y,px,fn)		ag_blend_pixel_64((o),(x),(y),(px),(fn))
-# define AG_BlendPixelRGBA(o,x,y,c,fn)		ag_blend_pixel_rgba((o),(x),(y),(c),(fn))
-# define AG_DrawLine(o,x1,y1,x2,y2,c)		ag_draw_line((o),(x1),(y1),(x2),(y2),(c))
-# define AG_DrawLineH(o,x1,x2,y,c)		ag_draw_line_h((o),(x1),(x2),(y),(c))
-# define AG_DrawLineV(o,x,y1,y2,c)		ag_draw_line_v((o),(x),(y1),(y2),(c))
-# define AG_DrawLineBlended(o,x,y,x2,y2,c,fs,fd) ag_draw_line_blended((o),(x),(y),(x2),(y2),(c),(fs),(fd))
-# define AG_DrawTriangle(o,v1,v2,v3,c)		ag_draw_triangle((o),(v1),(v2),(v3),(c))
-# define AG_DrawPolygon(o,pts,n,c)		ag_draw_polygon((o),(pts),(n),(c))
-# define AG_DrawPolygonSti32(o,pts,n,c,sti)	ag_draw_polygon_sti32((o),(pts),(n),(c),(sti))
-# define AG_DrawArrowUp(o,x,y,h,c)		ag_draw_arrow_up((o),(x),(y),(h),(c))
-# define AG_DrawArrowRight(o,x,y,h,c)		ag_draw_arrow_right((o),(x),(y),(h),(c))
-# define AG_DrawArrowDown(o,x,y,h,c)		ag_draw_arrow_down((o),(x),(y),(h),(c))
-# define AG_DrawArrowLeft(o,x,y,h,c)		ag_draw_arrow_left((o),(x),(y),(h),(c))
-# define AG_DrawBoxRounded(o,r,z,rad,c)		ag_draw_box_rounded((o),(r),(z),(rad),(c))
-# define AG_DrawBoxRoundedTop(o,r,z,rad,c)	ag_draw_box_rounded_top((o),(r),(z),(rad),(c))
-# define AG_DrawCircle(o,x,y,rad,c)		ag_draw_circle((o),(x),(y),(rad),(c))
-# define AG_DrawCircleFilled(o,x,y,rad,c)	ag_draw_circle_filled((o),(x),(y),(rad),(c))
-# define AG_DrawRect(o,r,c)			ag_draw_rect((o),(r),(c))
-# define AG_DrawRectFilled(o,r,c)		ag_draw_rect_filled((o),(r),(c))
-# define AG_DrawRectBlended(o,r,c,sf,df)	ag_draw_rect_blended((o),(r),(c),(sf),(df))
-# define AG_DrawRectDithered(o,r,c)		ag_draw_rect_dithered((o),(r),(c))
-# define AG_DrawFrame(o,r,z,c)			ag_draw_frame((o),(r),(z),(c))
-# define AG_DrawBox(o,r,z,c)			ag_draw_box((o),(r),(z),(c))
-# define AG_DrawBoxDisabled(o,r,z,c1,c2)	ag_draw_box_disabled((o),(r),(z),(c1),(c2))
-# define AG_DrawRectOutline(o,r,c)		ag_draw_rect_outline((o),(r),(c))
-# define AG_DrawLine2(o,x1,y1,x2,y2,c)		ag_draw_line_2((o),(x1),(y1),(x2),(y2),(c))
+# define AG_PutPixel(o,x,y,c)			  ag_put_pixel((o),(x),(y),(c))
+# define AG_PutPixel32(o,x,y,c)			  ag_put_pixel_32((o),(x),(y),(c))
+# define AG_PutPixel64(o,x,y,px)		  ag_put_pixel_64((o),(x),(y),(px))
+# define AG_PutPixelRGB_8(o,x,y,r,g,b)		  ag_put_pixel_rgb_8((o),(x),(y),(r),(g),(b))
+# define AG_PutPixelRGB_16(o,x,y,r,g,b)		  ag_put_pixel_rgb_16((o),(x),(y),(r),(g),(b))
+# define AG_BlendPixel(o,x,y,c,fn)		  ag_blend_pixel((o),(x),(y),(c),(fn))
+# define AG_BlendPixel32(o,x,y,px,fn)		  ag_blend_pixel_32((o),(x),(y),(px),(fn))
+# define AG_BlendPixel64(o,x,y,px,fn)		  ag_blend_pixel_64((o),(x),(y),(px),(fn))
+# define AG_BlendPixelRGBA(o,x,y,c,fn)		  ag_blend_pixel_rgba((o),(x),(y),(c),(fn))
+# define AG_DrawLine(o,x1,y1,x2,y2,c)		  ag_draw_line((o),(x1),(y1),(x2),(y2),(c))
+# define AG_DrawLineH(o,x1,x2,y,c)		  ag_draw_line_h((o),(x1),(x2),(y),(c))
+# define AG_DrawLineV(o,x,y1,y2,c)		  ag_draw_line_v((o),(x),(y1),(y2),(c))
+# define AG_DrawLineBlended(o,x,y,x2,y2,c,fs,fd)  ag_draw_line_blended((o),(x),(y),(x2),(y2),(c),(fs),(fd))
+# define AG_DrawLineW(o,x1,y1,x2,y2,c,w)	  ag_draw_line_w((o),(x1),(y1),(x2),(y2),(c),(w))
+# define AG_DrawLineW_Sti16(o,x1,y1,x2,y2,c,w,m)  ag_draw_line_w_sti16((o),(x1),(y1),(x2),(y2),(c),(w),(m))
+# define AG_DrawTriangle(o,v1,v2,v3,c)		  ag_draw_triangle((o),(v1),(v2),(v3),(c))
+# define AG_DrawPolygon(o,pts,n,c)		  ag_draw_polygon((o),(pts),(n),(c))
+# define AG_DrawPolygon_Sti32(o,pts,n,c,sti)	  ag_draw_polygon_sti32((o),(pts),(n),(c),(sti))
+# define AG_DrawArrowUp(o,x,y,h,c)		  ag_draw_arrow_up((o),(x),(y),(h),(c))
+# define AG_DrawArrowRight(o,x,y,h,c)		  ag_draw_arrow_right((o),(x),(y),(h),(c))
+# define AG_DrawArrowDown(o,x,y,h,c)		  ag_draw_arrow_down((o),(x),(y),(h),(c))
+# define AG_DrawArrowLeft(o,x,y,h,c)		  ag_draw_arrow_left((o),(x),(y),(h),(c))
+# define AG_DrawBoxRounded(o,r,z,rad,c)		  ag_draw_box_rounded((o),(r),(z),(rad),(c))
+# define AG_DrawBoxRoundedTop(o,r,z,rad,c)	  ag_draw_box_rounded_top((o),(r),(z),(rad),(c))
+# define AG_DrawCircle(o,x,y,rad,c)		  ag_draw_circle((o),(x),(y),(rad),(c))
+# define AG_DrawCircleFilled(o,x,y,rad,c)	  ag_draw_circle_filled((o),(x),(y),(rad),(c))
+# define AG_DrawRect(o,r,c)			  ag_draw_rect((o),(r),(c))
+# define AG_DrawRectFilled(o,r,c)		  ag_draw_rect_filled((o),(r),(c))
+# define AG_DrawRectBlended(o,r,c,sf,df)	  ag_draw_rect_blended((o),(r),(c),(sf),(df))
+# define AG_DrawRectDithered(o,r,c)		  ag_draw_rect_dithered((o),(r),(c))
+# define AG_DrawFrame(o,r,z,c)			  ag_draw_frame((o),(r),(z),(c))
+# define AG_DrawBox(o,r,z,c)			  ag_draw_box((o),(r),(z),(c))
+# define AG_DrawBoxDisabled(o,r,z,c1,c2)	  ag_draw_box_disabled((o),(r),(z),(c1),(c2))
+# define AG_DrawRectOutline(o,r,c)		  ag_draw_rect_outline((o),(r),(c))
 # define AG_DrawArrowLine(o,x1,y1,x2,y2,t,l,th,c) ag_draw_arrow_line((o),(x1),(y1),(x2),(y2),(t),(l),(th),(c))
 #endif /* !AG_INLINE_WIDGET */
 

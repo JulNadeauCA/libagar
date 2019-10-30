@@ -132,6 +132,11 @@ typedef struct ag_driver_class {
 	void (*_Nonnull drawLineBlended)(void *_Nonnull, int,int, int,int,
 	                                 const AG_Color *_Nonnull,
 	                                 AG_AlphaFn, AG_AlphaFn);
+	void (*_Nonnull drawLineW)(void *_Nonnull, int,int, int,int,
+	                           const AG_Color *_Nonnull, float);
+	void (*_Nonnull drawLineW_Sti16)(void *_Nonnull, int,int, int,int,
+	                                 const AG_Color *_Nonnull, float, Uint16);
+
 	void (*_Nonnull drawTriangle)(void *_Nonnull, const AG_Pt *_Nonnull,
 	                              const AG_Pt *_Nonnull, const AG_Pt *_Nonnull,
 	                              const AG_Color *_Nonnull);
