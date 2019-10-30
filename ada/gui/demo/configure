@@ -1581,7 +1581,10 @@ echo '* This software requires a C compiler'
 echo '# * This software requires a C compiler' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency cc not found"
+echo "***"
+echo "*** ERROR: Required dependency cc not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for Ada compiler...'
@@ -2026,7 +2029,10 @@ echo '* This software requires Ada compiler'
 echo '# * This software requires Ada compiler' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency ada not found"
+echo "***"
+echo "*** ERROR: Required dependency ada not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for Agar...'
@@ -2246,7 +2252,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar not found"
+echo "***"
+echo "*** ERROR: Required dependency agar not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -2260,7 +2269,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar version mismatch"
+echo "***"
+echo "*** ERROR: Required dependency agar version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for Agar definitions...'
@@ -2675,7 +2687,6 @@ static const struct {
 	{ "SIZEOF_AG_ANIMFRAME", sizeof(AG_AnimFrame) },
 	{ "SIZEOF_AG_CACHEDTEXT", sizeof(AG_CachedText) },
 	{ "SIZEOF_AG_COLOR", sizeof(AG_Color) },
-	{ "SIZEOF_AG_COLOROFFSET", sizeof(AG_ColorOffset) },
 	{ "SIZEOF_AG_CONSOLELINE", sizeof(AG_ConsoleLine) },
 	{ "SIZEOF_AG_CURSORAREA", sizeof(AG_CursorArea) },
 	{ "SIZEOF_AG_EDITABLECLIPBOARD", sizeof(AG_EditableClipboard) },
@@ -2829,7 +2840,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar.defs not found"
+echo "***"
+echo "*** ERROR: Required dependency agar.defs not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -2843,7 +2857,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar.defs version mismatch"
+echo "***"
+echo "*** ERROR: Required dependency agar.defs version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for Ada bindings to Agar-Core...'
@@ -3084,7 +3101,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar-ada-core not found"
+echo "***"
+echo "*** ERROR: Required dependency agar-ada-core not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -3098,7 +3118,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar-ada-core version mismatch"
+echo "***"
+echo "*** ERROR: Required dependency agar-ada-core version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for Ada bindings to Agar-GUI...'
@@ -3342,7 +3365,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar-ada not found"
+echo "***"
+echo "*** ERROR: Required dependency agar-ada not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -3356,7 +3382,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar-ada version mismatch"
+echo "***"
+echo "*** ERROR: Required dependency agar-ada version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 mv -f agar.def agar_ada_demo_agar.def
@@ -3503,10 +3532,10 @@ if [ "${srcdir}" != '' ]; then
 	fi
 	echo 'ok'
 fi
-echo '*'
-echo '* Configuration successful!'
-echo '*'
-echo '* Use "make depend all" to compile. When finished,'
-$ECHO_N '* run "make install" to install under '
+echo '**'
+echo '** Configuration successful!'
+echo '**'
+echo '** Use "make depend all" to compile. When finished,'
+$ECHO_N '** run "make install" to install under '
 echo "${PREFIX}."
-echo '*'
+echo '**'

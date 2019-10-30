@@ -209,16 +209,17 @@ package Agar.Text is
     with Convention => C;
 #end if;
   type AG_Text_State is record
-    Font     : Font_not_null_Access;    -- Font face
-    Color    : SU.AG_Color;             -- Foreground text color
-    Color_BG : SU.AG_Color;             -- Background color
-    Justify  : AG_Text_Justify;         -- Justification mode
-    Valign   : AG_Text_Valign;          -- Vertical alignment
-    Tab_Wd   : C.int;                   -- Width of tabs in pixels
+    Font       : Font_not_null_Access;    -- Font face
+    Color      : SU.AG_Color;             -- Foreground text color
+    Color_BG   : SU.AG_Color;             -- Background color
+    Color_ANSI : SU.Color_Access;         -- ANSI color palette (3/4-bit)
+    Justify    : AG_Text_Justify;         -- Justification mode
+    Valign     : AG_Text_Valign;          -- Vertical alignment
+    Tab_Wd     : C.int;                   -- Width of tabs in pixels
 #if AG_DEBUG
-    C_Tag    : AG_Text_State_Tag;
+    C_Tag      : AG_Text_State_Tag;
 #end if;
-    C_Pad1   : Unsigned_32;
+    C_Pad1     : Unsigned_32;
   end record
     with Convention => C;
  

@@ -418,6 +418,21 @@ package Agar.Widget is
      Color     : SU.Color_not_null_Access;
      Source_Fn : SU.Alpha_Func;
      Dest_Fn   : SU.Alpha_Func) with Convention => C;
+  
+  type Draw_Wide_Line_Func_Access is access procedure
+    (Driver    : Driver_not_null_Access;
+     X1,Y1     : C.int;
+     X2,Y2     : C.int;
+     Color     : SU.Color_not_null_Access;
+     Width     : C.C_float) with Convention => C;
+
+  type Draw_Wide_Sti16_Line_Func_Access is access procedure
+    (Driver    : Driver_not_null_Access;
+     X1,Y1     : C.int;
+     X2,Y2     : C.int;
+     Color     : SU.Color_not_null_Access;
+     Width     : C.C_float;
+     Stipple   : Unsigned_16) with Convention => C;
 
   type Draw_Triangle_Func_Access is access procedure
     (Driver    : Driver_not_null_Access;
@@ -429,6 +444,13 @@ package Agar.Widget is
      Points : SU.AG_Pt_not_null_Access;
      Count  : C.unsigned;
      Color  : SU.Color_not_null_Access) with Convention => C;
+
+  type Draw_Polygon_Sti32_Func_Access is access procedure
+    (Driver  : Driver_not_null_Access;
+     Points  : SU.AG_Pt_not_null_Access;
+     Count   : C.unsigned;
+     Color   : SU.Color_not_null_Access;
+     Stipple : System.Address) with Convention => C;
 
   type Draw_Arrow_Func_Access is access procedure
     (Driver  : Driver_not_null_Access;
@@ -513,6 +535,7 @@ package Agar.Widget is
     Open_Func        : Open_Func_Access;
     Close_Func       : Close_Func_Access;
     Get_Display_Size : Get_Display_Size_Func_Access;
+
     -- Low-level Events --
     Begin_Event_Processing : Begin_Event_Processing_Func_Access;
     Pending_Events         : Pending_Events_Func_Access;
@@ -521,6 +544,7 @@ package Agar.Widget is
     Generic_Event_Loop     : Generic_Event_Loop_Func_Access;
     End_Event_Processing   : End_Event_Processing_Func_Access;
     Terminate_Func         : Terminate_Func_Access;
+
     -- Rendering Ops --
     Begin_Rendering  : Begin_Rendering_Func_Access;
     Render_Window    : Render_Window_Func_Access;
@@ -531,11 +555,13 @@ package Agar.Widget is
     Update_Texture   : Update_Texture_Func_Access;
     Delete_Texture   : Delete_Texture_Func_Access;
     Set_Refresh_Rate : Set_Refresh_Rate_Func_Access;
+
     -- Clipping and Blending --
     Push_Clip_Rect     : Push_Clip_Rect_Func_Access;
     Pop_Clip_Rect      : Pop_Clip_Rect_Func_Access;
     Push_Blending_Mode : Push_Blending_Mode_Func_Access;
     Pop_Blending_Mode  : Pop_Blending_Mode_Func_Access;
+
     -- Hardware Cursors --
     Create_Cursor         : Create_Cursor_Func_Access;
     Free_Cursor           : Free_Cursor_Func_Access;
@@ -543,6 +569,7 @@ package Agar.Widget is
     Unset_Cursor          : Unset_Cursor_Func_Access;
     Get_Cursor_Visibility : Get_Cursor_Visibility_Func_Access;
     Set_Cursor_Visibility : Set_Cursor_Visibility_Func_Access;
+
     -- Surface / Textures --
     Blit_Surface            : Blit_Surface_Func_Access;
     Blit_Surface_From       : Blit_Surface_From_Func_Access;
@@ -552,6 +579,7 @@ package Agar.Widget is
     Backup_Surfaces         : Backup_Surfaces_Func_Access;
     Restore_Surfaces        : Restore_Surfaces_Func_Access;
     Render_to_Surface       : Render_to_Surface_Func_Access;
+
     -- Rendering Ops --
     Put_Pixel            : Put_Pixel_Func_Access;
     Put_Pixel_32         : Put_Pixel_32_Func_Access;
@@ -565,9 +593,11 @@ package Agar.Widget is
     Draw_Horizonal_Line  : Draw_Horizontal_Line_Func_Access;
     Draw_Vertical_Line   : Draw_Vertical_Line_Func_Access;
     Draw_Blended_Line    : Draw_Blended_Line_Func_Access;
+    Draw_Wide_Line       : Draw_Wide_Line_Func_Access;
+    Draw_Wide_Sti16_Line : Draw_Wide_Sti16_Line_Func_Access;
     Draw_Triangle        : Draw_Triangle_Func_Access;
     Draw_Polygon         : Draw_Polygon_Func_Access;
-    Draw_Polygon_Sti_32  : Draw_Polygon_Func_Access;
+    Draw_Polygon_Sti32   : Draw_Polygon_Sti32_Func_Access;
     Draw_Arrow           : Draw_Arrow_Func_Access;
     Draw_Box_Rounded     : Draw_Box_Rounded_Func_Access;
     Draw_Box_Rounded_Top : Draw_Box_Rounded_Top_Func_Access;
@@ -1337,9 +1367,10 @@ package Agar.Widget is
      Surface  : in SU.Surface_not_null_Access;
      X,Y      : in Natural := 0);
 
+#if HAVE_OPENGL
   --
   -- Coordinate-free variants of Blit_Surface for OpenGL-only widgets.
-  -- Rely on GL transformations instead of coordinates. No-op without GL.
+  -- Rely on GL transformations instead of coordinates.
   --
   procedure Blit_Surface_GL
     (Widget        : in Widget_not_null_Access;
@@ -1362,17 +1393,16 @@ package Agar.Widget is
   --
   -- Destroy all GL resources associated with a widget and its children
   -- (but in a way that allows us to regenerate the GL context later).
-  -- No-op without GL.
   --
   procedure Free_GL_Resources (Widget : in Widget_not_null_Access)
     with Import, Convention => C, Link_Name => "AG_WidgetFreeResourcesGL";
   
   --
   -- Regenerate GL resources associated with a widget after loss of GL context.
-  -- No-op without GL.
   --
   procedure Regen_GL_Resources (Widget : in Widget_not_null_Access)
     with Import, Convention => C, Link_Name => "AG_WidgetRegenResourcesGL";
+#end if;
 
   --
   -- Test whether widget is sensitive to view coordinates X,Y.
