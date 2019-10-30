@@ -21,13 +21,21 @@ struct ag_cursor;
 struct ag_font;
 
 #ifndef AG_ACTION_NAME_MAX
-#define AG_ACTION_NAME_MAX 60
+#define AG_ACTION_NAME_MAX 28
 #endif
 
-/* Widget size requisition and allocation. */
+/*
+ * Size Requisition. Child widgets use this structure to ask their parent
+ * container widgets for a preferred initial geometry in pixels.
+ */
 typedef struct ag_size_req {
 	int w, h;			/* Requested geometry in pixels */
 } AG_SizeReq;
+
+/*
+ * Size Allocation. Parent container widgets use this structure to communicate
+ * to their child widgets their final allocated position and size in pixels.
+ */
 typedef struct ag_size_alloc {
 	int w, h;			/* Allocated geometry in pixels */
 	int x, y;			/* Allocated position in pixels */
@@ -45,11 +53,11 @@ typedef struct ag_widget_class {
 
 /* Relative size specification of visual element. */
 typedef enum ag_widget_sizespec {
-	AG_WIDGET_BAD_SPEC,		/* Parser error */
-	AG_WIDGET_PIXELS,		/* Pixel count */
-	AG_WIDGET_PERCENT,		/* % of available space */
-	AG_WIDGET_STRINGLEN,		/* Width of given string */
-	AG_WIDGET_FILL			/* Fill remaining space */
+	AG_WIDGET_BAD_SPEC,	/* Parser error */
+	AG_WIDGET_PIXELS,	/*              Pixel count: "123px"   */
+	AG_WIDGET_PERCENT,	/* Ratio to available space: "50%"     */
+	AG_WIDGET_STRINGLEN,	/*    Width of given string: "<hello>" */
+	AG_WIDGET_FILL		/*     Fill remaining space: "-"       */
 } AG_SizeSpec;
 
 /* Flag description (i.e., for AG_Checkbox(3)) */
@@ -77,13 +85,14 @@ typedef enum ag_action_type {
 
 typedef struct ag_action {
 	AG_ActionType type;			/* Type of action */
-	Uint32 _pad;
-	struct ag_widget *_Nonnull widget;	/* Back pointer to widget */
+	char name[AG_ACTION_NAME_MAX];		/* Action name */
 	AG_Event *_Nullable fn;			/* Callback function */
 	void *_Nullable p;			/* Target (for SET_*) */
 	int val;				/* Value (for SET_*) */
 	Uint bitmask;				/* Bitmask (for SET_FLAG) */
 } AG_Action;
+
+typedef AG_VEC_HEAD(AG_Action *) AG_ActionVec;
 
 typedef enum ag_action_event_type {
 	AG_ACTION_ON_BUTTONDOWN,	/* On mouse-button-down */
@@ -174,7 +183,6 @@ typedef struct ag_widget_gl {
 #endif
 
 typedef struct ag_widget_pvt {
-	AG_Tbl actions;				 	/* Registered actions */
 	AG_TAILQ_HEAD_(ag_action_tie) mouseActions;	/* Mouse action ties */
 	AG_TAILQ_HEAD_(ag_action_tie) keyActions;	/* Kbd action ties */
 	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies;	/* For AG_RedrawOn*() */
@@ -242,6 +250,7 @@ typedef struct ag_widget {
 #ifdef HAVE_OPENGL
 	AG_WidgetGL *_Nullable gl;      /* Saved GL context (for USE_OPENGL) */
 #endif
+	AG_ActionVec actions;		/* Registered Widget Actions */
 	AG_WidgetPvt pvt;               /* Private data */
 } AG_Widget;
 
@@ -382,7 +391,7 @@ void AG_ActionOnKeyUp(void *_Nonnull, AG_KeySym, AG_KeyMod, const char *_Nonnull
 
 int AG_ExecMouseAction(void *_Nonnull, AG_ActionEventType, int, int, int);
 int AG_ExecKeyAction(void *_Nonnull, AG_ActionEventType, AG_KeySym, AG_KeyMod);
-int AG_ExecAction(void *_Nonnull, AG_Action *_Nonnull);
+int AG_ExecAction(void *_Nonnull, const AG_Action *_Nonnull);
 
 void AG_WidgetEnable(void *_Nonnull);
 void AG_WidgetDisable(void *_Nonnull);

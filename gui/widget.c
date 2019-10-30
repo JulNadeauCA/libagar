@@ -408,7 +408,7 @@ Init(void *_Nonnull obj)
 	wid->surfaceFlags = NULL;
 	wid->textures = NULL;
 	wid->texcoords = NULL;
-	AG_TblInit(&wid->pvt.actions, 32, 0);
+	AG_VEC_INIT(&wid->actions);
 	TAILQ_INIT(&wid->pvt.mouseActions);
 	TAILQ_INIT(&wid->pvt.keyActions);
 	
@@ -653,14 +653,17 @@ ActionKeyRepeatTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Widget *wid = AG_WIDGET_SELF();
 	AG_ActionTie *at = AG_PTR(1);
-	AG_Action *a;
+	int i;
 
-	if (AG_TblLookupPointer(&wid->pvt.actions, at->action, (void *)&a) == -1 ||
-	    a == NULL) {
-		return (0);
+	for (i = 0; i < wid->actions.length; i++) {
+		AG_Action *a = wid->actions.data[i];
+
+		if (strcmp(at->action, a->name) == 0) {
+			AG_ExecAction(wid, a);
+			return (agKbdRepeat);
+		}
 	}
-	AG_ExecAction(wid, a);
-	return (agKbdRepeat);
+	return (0);
 }
 
 /* Tie an action to a key-down event, with key repeat. */
@@ -702,7 +705,7 @@ AG_ActionFn(void *obj, const char *name, AG_EventFn fn, const char *fnArgs,...)
 
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_FN;
-	a->widget = wid;
+	Strlcpy(a->name, name, sizeof(a->name));
 
 	AG_ObjectLock(wid);
 	a->fn = AG_SetEvent(wid, NULL, fn, NULL);
@@ -713,7 +716,7 @@ AG_ActionFn(void *obj, const char *name, AG_EventFn fn, const char *fnArgs,...)
 		AG_EventGetArgs(a->fn, fnArgs, ap);
 		va_end(ap);
 	}
-	AG_TblInsertPointer(&wid->pvt.actions, name, a);
+	AG_VEC_PUSH(&wid->actions, a);
 	AG_ObjectUnlock(wid);
 	return (a);
 }
@@ -729,13 +732,13 @@ AG_ActionSetInt(void *obj, const char *name, int *p, int val)
 
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_SET_INT;
-	a->widget = wid;
+	Strlcpy(a->name, name, sizeof(a->name));
 	a->fn = NULL;
 	a->p = (void *)p;
 	a->val = val;
 
 	AG_ObjectLock(wid);
-	AG_TblInsertPointer(&wid->pvt.actions, name, a);
+	AG_VEC_PUSH(&wid->actions, a);
 	AG_ObjectUnlock(wid);
 	return (a);
 }
@@ -751,12 +754,12 @@ AG_ActionToggleInt(void *obj, const char *name, int *p)
 
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_TOGGLE_INT;
-	a->widget = wid;
+	Strlcpy(a->name, name, sizeof(a->name));
 	a->fn = NULL;
 	a->p = (void *)p;
 
 	AG_ObjectLock(wid);
-	AG_TblInsertPointer(&wid->pvt.actions, name, a);
+	AG_VEC_PUSH(&wid->actions, a);
 	AG_ObjectUnlock(wid);
 	return (a);
 }
@@ -772,14 +775,14 @@ AG_ActionSetFlag(void *obj, const char *name, Uint *p, Uint bitmask, int val)
 
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_SET_INT;
-	a->widget = wid;
+	Strlcpy(a->name, name, sizeof(a->name));
 	a->fn = NULL;
 	a->p = (void *)p;
 	a->bitmask = bitmask;
 	a->val = val;
 
 	AG_ObjectLock(wid);
-	AG_TblInsertPointer(&wid->pvt.actions, name, a);
+	AG_VEC_PUSH(&wid->actions, a);
 	AG_ObjectUnlock(wid);
 	return (a);
 }
@@ -795,20 +798,20 @@ AG_ActionToggleFlag(void *obj, const char *name, Uint *p, Uint bitmask)
 
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_TOGGLE_FLAG;
-	a->widget = wid;
+	Strlcpy(a->name, name, sizeof(a->name));
 	a->fn = NULL;
 	a->p = (void *)p;
 	a->bitmask = bitmask;
 
 	AG_ObjectLock(wid);
-	AG_TblInsertPointer(&wid->pvt.actions, name, a);
+	AG_VEC_PUSH(&wid->actions, a);
 	AG_ObjectUnlock(wid);
 	return (a);
 }
 
 /* Execute an action (usually called internally from AG_ExecFooAction()) */
 int
-AG_ExecAction(void *obj, AG_Action *a)
+AG_ExecAction(void *obj, const AG_Action *a)
 {
 	AG_OBJECT_ISA(obj, "AG_Widget:*");
 
@@ -848,12 +851,11 @@ AG_ExecAction(void *obj, AG_Action *a)
  * mouse event arguments to the function.
  */
 int
-AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
-    int xCurs, int yCurs)
+AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button, int x, int y)
 {
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
-	AG_Action *a;
+	int i;
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 #ifdef AG_DEBUG
@@ -870,13 +872,13 @@ AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
 	if (at == NULL) {
 		return (0);
 	}
-	if (AG_TblLookupPointer(&wid->pvt.actions, at->action, (void *)&a) == -1 ||
-	    a == NULL) {
-		return (0);
-	}
-	if (a->fn) {
-		AG_PostEventByPtr(wid, a->fn, "%i,%i,%i", button, xCurs,yCurs);
-		return (1);
+	for (i = 0; i < wid->actions.length; i++) {
+		const AG_Action *a = wid->actions.data[i];
+		
+		if (strcmp(a->name, at->action) == 0 && a->fn) {
+			AG_PostEventByPtr(wid, a->fn, "%i,%i,%i", button, x,y);
+			return (1);
+		}
 	}
 	return (0);
 }
@@ -887,8 +889,7 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 {
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
-	AG_Action *a;
-	int rv;
+	int i, rv;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 #ifdef AG_DEBUG
@@ -907,14 +908,19 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 		     at->data.key.sym == sym))
 			break;
 	}
-	if (at == NULL) {
-		return (0);
-	}
-	if (AG_TblLookupPointer(&wid->pvt.actions, at->action, (void *)&a) == -1 ||
-	    a == NULL)
+	if (at == NULL)
 		return (0);
 
-	rv = AG_ExecAction(wid, a);
+	for (i = 0; i < wid->actions.length; i++) {
+		const AG_Action *a = wid->actions.data[i];
+		
+		if (strcmp(a->name, at->action) == 0 && a->fn) {
+			rv = AG_ExecAction(wid, a);
+			break;
+		}
+	}
+	if (i == wid->actions.length)
+		return (0);
 
 	if (at->type == AG_ACTION_ON_KEYREPEAT) {
 		if (et == AG_ACTION_ON_KEYDOWN) {
@@ -1082,8 +1088,7 @@ Destroy(void *_Nonnull obj)
 	AG_CursorArea *ca, *caNext;
 	AG_RedrawTie *rt, *rtNext;
 	AG_ActionTie *at, *atNext;
-	AG_Variable *V;
-	Uint i, j;
+	Uint i;
 
 	for (ca = TAILQ_FIRST(&wid->pvt.cursorAreas);
 	     ca != TAILQ_END(&wid->pvt.cursorAreas);
@@ -1110,11 +1115,10 @@ Destroy(void *_Nonnull obj)
 		free(at);
 	}
 
-	/* Free the action tables. */
-	AG_TBL_FOREACH(V, i,j, &wid->pvt.actions) {
-		Free(V->data.p);
+	for (i = 0; i < wid->actions.length; i++) {
+		Free(wid->actions.data[i]);
 	}
-	AG_TblDestroy(&wid->pvt.actions);
+	AG_VEC_DESTROY(&wid->actions);
 
 	/*
 	 * Free surfaces. We can assume that drivers have already deleted
