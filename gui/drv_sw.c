@@ -80,7 +80,7 @@ UnminimizeWindow(AG_Event *_Nonnull event)
 
 #if defined(AG_DEBUG)
 static void
-OpenGuiDebugger(AG_Event *_Nonnull event)
+OpenDebugger(AG_Event *_Nonnull event)
 {
 	AG_Window *win;
 
@@ -88,6 +88,15 @@ OpenGuiDebugger(AG_Event *_Nonnull event)
 		AG_WindowShow(win);
 }
 #endif /* AG_DEBUG */
+
+static void
+OpenStyleEditor(AG_Event *_Nonnull event)
+{
+	AG_Window *win;
+
+	if ((win = AG_StyleEditor(agWindowFocused)) != NULL)
+		AG_WindowShow(win);
+}
 
 static void
 ExitApplication(AG_Event *_Nonnull event)
@@ -126,9 +135,9 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	if (nWindows > 0) {
 		AG_MenuSeparator(mi);
 	}
+	AG_MenuAction(mi, _("Style editor"), agIconGear.s, OpenStyleEditor, NULL);
 #ifdef AG_DEBUG
-	AG_MenuAction(mi, _("GUI debugger"), agIconMagnifier.s,
-	    OpenGuiDebugger, NULL);
+	AG_MenuAction(mi, _("GUI debugger"), agIconMagnifier.s, OpenDebugger, NULL);
 #else
 	AG_MenuDisable(AG_MenuNode(mi, _("GUI debugger"), agIconMagnifier.s));
 #endif
