@@ -768,7 +768,7 @@ GLX_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	AG_Window *win;
 	AG_Driver *drv;
 	AG_SizeAlloc a;
-	int rv = 1;
+	int rv=1, useText;
 
 	if ((win = dev->win) == NULL ||
 	    win->flags & AG_WINDOW_DETACHING)
@@ -777,7 +777,7 @@ GLX_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	AG_LockVFS(&agDrivers);
 	drv = WIDGET(win)->drv;
 
-	if (win->flags & AG_WINDOW_USE_TEXT) {
+	if ((useText = (win->flags & AG_WINDOW_USE_TEXT))) {
 		AG_PushTextState();
 		AG_TextFont(WIDGET(win)->font);
 		AG_TextColor(&WIDGET(win)->pal.c[WIDGET(win)->state]
@@ -850,7 +850,7 @@ GLX_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		break;
 	}
 
-	if (win->flags & AG_WINDOW_USE_TEXT) {
+	if (useText) {
 		AG_PopTextState();
 	}
 	AG_UnlockVFS(&agDrivers);
