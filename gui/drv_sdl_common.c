@@ -875,6 +875,7 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 {
 	AG_DriverSw *dsw = (AG_DriverSw *)drv;
 	AG_Window *win, *winTop = NULL;
+	int useText;
 
 	if (dev->type == AG_DRIVER_MOUSE_BUTTON_UP) {
 		dsw->winop = AG_WINOP_NONE;
@@ -882,13 +883,12 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 	}
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
 		AG_ObjectLock(win);
-
 		/* XXX TODO move invisible windows to different tailq! */
 		if (!win->visible) {
 			AG_ObjectUnlock(win);
 			continue;
 		}
-		if (win->flags & AG_WINDOW_USE_TEXT) {
+		if ((useText = (win->flags & AG_WINDOW_USE_TEXT))) {
 			AG_PushTextState();
 			AG_TextFont(WIDGET(win)->font);
 			AG_TextColor(&WIDGET(win)->pal.c[WIDGET(win)->state]
@@ -898,11 +898,7 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 		case AG_DRIVER_MOUSE_MOTION:
 			if (dsw->winop != AG_WINOP_NONE) {
 				if (dsw->winSelected != win) {
-					AG_ObjectUnlock(win);
-					if (win->flags & AG_WINDOW_USE_TEXT) {
-						AG_PopTextState();
-					}
-					continue;
+					goto next_window;
 				}
 				AG_WM_MouseMotion(dsw, win,
 				    drv->mouse->xRel,
@@ -926,11 +922,7 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 			    dev->data.button.which);
 			if (agWindowToFocus != NULL ||
 			    !TAILQ_EMPTY(&agWindowDetachQ)) {
-				if (win->flags & AG_WINDOW_USE_TEXT) {
-					AG_PopTextState();
-				}
-				AG_ObjectUnlock(win);
-				return (1);
+				goto event_processed;
 			}
 			break;
 		case AG_DRIVER_MOUSE_BUTTON_DOWN:
@@ -939,11 +931,7 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 				AG_ProcessMouseButtonDown(win,
 				    dev->data.button.x, dev->data.button.y,
 				    dev->data.button.which);
-				if (win->flags & AG_WINDOW_USE_TEXT) {
-					AG_PopTextState();
-				}
-				AG_ObjectUnlock(win);
-				continue;
+				goto next_window;
 			}
 			if (win->wBorderBot > 0 &&
 			    !(win->flags & AG_WINDOW_NORESIZE)) {
@@ -952,21 +940,13 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 				if (dsw->winop != AG_WINOP_NONE) {
 					win->dirty = 1;
 					dsw->winSelected = win;
-					if (win->flags & AG_WINDOW_USE_TEXT) {
-						AG_PopTextState();
-					}
-					AG_ObjectUnlock(win);
-					return (1);
+					goto event_processed;
 				}
 			}
 			AG_ProcessMouseButtonDown(win,
 			    dev->data.button.x, dev->data.button.y,
 			    dev->data.button.which);
-			if (win->flags & AG_WINDOW_USE_TEXT) {
-				AG_PopTextState();
-			}
-			AG_ObjectUnlock(win);
-			return (1);
+			goto event_processed;
 		case AG_DRIVER_KEY_UP:
 			if (dsw->winLastKeydown != NULL &&
 			    dsw->winLastKeydown != win) {
@@ -987,9 +967,8 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 		default:
 			break;
 		}
-		if (win->flags & AG_WINDOW_USE_TEXT) {
-			AG_PopTextState();
-		}
+next_window:
+		if (useText) { AG_PopTextState(); }
 		AG_ObjectUnlock(win);
 	}
 	if (dev->type == AG_DRIVER_MOUSE_MOTION &&
@@ -997,6 +976,10 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 		AGDRIVER_CLASS(drv)->unsetCursor(drv);
 	}
 	return (0);
+event_processed:
+	if (useText) { AG_PopTextState(); }
+	AG_ObjectUnlock(win);
+	return (1);
 }
 
 /* Standard processEvent() method for SDL drivers. */
