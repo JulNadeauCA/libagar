@@ -222,6 +222,15 @@ returns non-zero if the two colors differ.
 .Xr AG_Surface 3 ,
 .Xr AG_Widget 3
 .Sh HISTORY
-Agar originally used packed pixels in a reference format to describe colors.
-Agar 1.6 introduced color offsets and interpolation, as well as support for
-16-bit / component "Deep Color".
+Agar 1.0 through 1.3 described colors using packed pixels in a 32-bit reference
+format.
+The
+.Nm
+structure first appeared in Agar 1.4.
+Agar 1.6 introduced the
+.Dv AG_LARGE
+memory model and 64-bit "Deep Color".
+.Fn AG_Color{Darken,Lighten}
+and
+.Fn AG_ColorInterpolate
+appeared in 1.6.
