@@ -231,7 +231,7 @@ SDLGL_CaptureOutput(AG_DriverSDLGL *_Nonnull sgl)
 	AG_DriverSw *dsw = (AG_DriverSw *)sgl;
 	int w = dsw->w;
 	int h = dsw->h;
-	AG_Surface *s;
+	AG_Surface *S;
 
 	Snprintf(path, sizeof(path), sgl->outPath, sgl->outFrame);
 	glReadPixels(0,0, w,h, GL_RGBA, GL_UNSIGNED_BYTE, sgl->outBuf);
@@ -239,22 +239,22 @@ SDLGL_CaptureOutput(AG_DriverSDLGL *_Nonnull sgl)
 	if (AG_PackedPixelFlip(sgl->outBuf, h,w*4) == -1) {
 		goto fail_disable;
 	}
-	s = AG_SurfaceFromPixelsRGBA(sgl->outBuf, w,h, 32,
+	S = AG_SurfaceFromPixelsRGBA(sgl->outBuf, w,h, 32,
 	    0x000000ff,
 	    0x0000ff00,
 	    0x00ff0000, 0);
-	if (s == NULL)
+	if (S == NULL)
 		goto fail;
 
 	switch (sgl->outMode) {
 	case AG_SDLGL_OUT_JPEG:
-		if (AG_SurfaceExportJPEG(s, path, sgl->outJpegQual,
+		if (AG_SurfaceExportJPEG(S, path, sgl->outJpegQual,
 		    sgl->outJpegFlags) == -1) {
 			goto fail;
 		}
 		break;
 	case AG_SDLGL_OUT_PNG:
-		if (AG_SurfaceExportPNG(s, path, 0) == -1) {
+		if (AG_SurfaceExportPNG(S, path, 0) == -1) {
 			goto fail;
 		}
 		break;
@@ -266,10 +266,10 @@ SDLGL_CaptureOutput(AG_DriverSDLGL *_Nonnull sgl)
 		Verbose("SDLGL: Reached last frame; terminating\n");
 		AG_Terminate(0);
 	}
-	AG_SurfaceFree(s);
+	AG_SurfaceFree(S);
 	return;
 fail:
-	AG_SurfaceFree(s);
+	AG_SurfaceFree(S);
 fail_disable:
 	Verbose("SDLGL: %s; disabling capture\n", AG_GetError());
 	sgl->outMode = AG_SDLGL_OUT_NONE;
@@ -597,6 +597,7 @@ SDLGL_VideoCapture(void *_Nonnull obj)
 	const Uint w = dsw->w;
 	const Uint h = dsw->h;
 	Uint8 *pixels;
+	AG_Surface *S;
 
 	if ((pixels = AG_TryMalloc((w*h) << 2)) == NULL) {
 		return (NULL);
@@ -604,10 +605,13 @@ SDLGL_VideoCapture(void *_Nonnull obj)
 	glReadPixels(0,0, w,h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	AG_PackedPixelFlip(pixels, h, (w << 2));
 
-	return AG_SurfaceFromPixelsRGBA(pixels, w,h, 32,
+	S = AG_SurfaceFromPixelsRGBA(pixels, w,h, 32,
 	    0x000000ff,
 	    0x0000ff00,
 	    0x00ff0000, 0);
+
+	free(pixels);
+	return (S);
 }
 
 static void

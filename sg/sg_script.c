@@ -1277,17 +1277,23 @@ GenerateUnderlay(SG_ScriptEditCtx *_Nonnull e)
 {
 	AG_Rect2 r = WIDGET(e->sv)->rView;
 	Uint8 *buf = NULL;
+	AG_Surface *S;
 	
-	if ((buf = TryMalloc(r.w*r.h*4)) == NULL)
+	if ((buf = TryMalloc((r.w*r.h) << 2)) == NULL)
 		return (NULL);
 
 	glReadPixels(r.x1, WIDGET(e->win)->h - r.y2,
 		     r.w, r.h,
 		     GL_RGBA, GL_UNSIGNED_BYTE, buf);
-	AG_PackedPixelFlip(buf, r.h, r.w*4);
+	AG_PackedPixelFlip(buf, r.h, r.w << 2);
 
-	return AG_SurfaceFromPixelsRGBA(buf, r.w, r.h, 32,
-	    0x000000ff, 0x0000ff00, 0x00ff0000, 0);
+	S = AG_SurfaceFromPixelsRGBA(buf, r.w, r.h, 32,
+	    0x000000ff,
+	    0x0000ff00,
+	    0x00ff0000, 0);
+
+	free(buf);
+	return (S);
 }
 
 static void
@@ -1521,7 +1527,7 @@ Render(AG_Event *_Nonnull event)
 	
 	SG_Clear(e->sg);
 
-	if ((buf = TryMalloc(r.w*r.h*4)) == NULL)
+	if ((buf = TryMalloc((r.w*r.h) << 2)) == NULL)
 		goto fail;
 	
 	printf("Rendering %s to %s (@ %f fps)\n",
@@ -1534,7 +1540,7 @@ Render(AG_Event *_Nonnull event)
 	     scr->t++) {
 		SG_ScriptFrame *sf = &scr->frames[scr->t];
 		SG_ScriptInsn *si;
-		AG_Surface *s;
+		AG_Surface *S;
 		
 		fprintf(stderr, "Rendering #%d (", scr->t);
 		
@@ -1563,19 +1569,21 @@ Render(AG_Event *_Nonnull event)
 			glReadPixels(r.x1, WIDGET(e->win)->h - r.y2,
 				     r.w, r.h,
 				     GL_RGBA, GL_UNSIGNED_BYTE, buf);
-			AG_PackedPixelFlip(buf, r.h, r.w*4);
+			AG_PackedPixelFlip(buf, r.h, r.w << 2);
 
-			s = AG_SurfaceFromPixelsRGBA(buf, r.w, r.h, 32,
-			    0x000000ff, 0x0000ff00, 0x00ff0000, 0);
-			if (s == NULL)
+			S = AG_SurfaceFromPixelsRGBA(buf, r.w, r.h, 32,
+			    0x000000ff,
+			    0x0000ff00,
+			    0x00ff0000, 0);
+			if (S == NULL)
 				goto fail;
 
-			if (AG_SurfaceExportJPEG(s, path, 100,
+			if (AG_SurfaceExportJPEG(S, path, 100,
 			    AG_EXPORT_JPEG_JDCT_ISLOW) == -1) {
-				AG_SurfaceFree(s);
+				AG_SurfaceFree(S);
 				goto fail;
 			}
-			AG_SurfaceFree(s);
+			AG_SurfaceFree(S);
 
 			nOutFrames++;
 		}
