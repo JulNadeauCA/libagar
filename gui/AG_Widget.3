@@ -29,7 +29,7 @@
 .ds oS Agar 1.5
 .Sh NAME
 .Nm AG_Widget
-.Nd agar GUI base widget
+.Nd agar graphical user interface element
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -37,31 +37,45 @@
 .Ed
 .Sh DESCRIPTION
 .Nm
-is the base class for GUI widgets (and windows) in Agar GUI.
-Instances of
-.Nm
-can be attached (using
-.Xr AG_ObjectAttach 3 )
-to any other
-.Nm
-(known as the
-.Em container
-widget).
-General-purpose container widgets include
-.Xr AG_Window 3
-and
-.Xr AG_Box 3 .
+is the base class for Agar graphical user interface elements.
 .Pp
-The class registration interface of
+Widgets are organized into an ordered virtual filesystem of
 .Xr AG_Object 3
-allows new widgets to be implemented (or derived from existing classes).
-Widgets use the object system's
-.Xr AG_Event 3
-to handle (and deliver) events.
+where the parent of a widget object is referred to as its
+.Em container .
+General-purpose container widgets include
+.Xr AG_Box 3 ,
+.Xr AG_Pane 3 ,
+.Xr AG_Scrollview 3 ,
+.Xr AG_Titlebar 3
+and
+.Xr AG_Window 3
+itself.
+.Pp
+A widget is attached to its container using
+.Xr AG_ObjectAttach 3 .
+It can be detached using
+.Xr AG_ObjectDetach 3
+and freed with
+.Xr AG_ObjectDestroy 3 .
+.Pp
+Parentless widgets form the root of their own virtual filesystem.
+It is customary for high-level constructor routines (such as
+.Xr AG_ButtonNew 3 )
+to accept a NULL
+.Fa parent
+argument, allowing the caller to make an explicit
+.Xr AG_ObjectAttach 3
+call at a later time.
+.Pp
+The
 .Xr AG_Variable 3
-provides the basis for memory bindings (see
-.Sx BINDINGS
-section).
+table of
+.Ft AG_Object
+is used to store bindings data, style property overrides and user data.
+.Xr AG_Event 3
+is used to handle both low-level events (such as "mouse-button-down") as well
+as high-level widget-defined events (such as "button-pushed").
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
@@ -81,16 +95,16 @@ typedef struct ag_widget_class {
 .Ed
 .Pp
 .Fn draw
-renders the widget to the graphics display (using OpenGL,
-.Xr AG_WidgetPrimitives 3 ,
+renders the widget to the graphics display (e.g., using OpenGL,
+.Xr AG_WidgetPrimitives 3
 or other methods).
 The code under
 .Fn draw
-is referred to as
-.Em Rendering Context .
-Widget primitives and functions such as
+is referred to as the
+.Em rendering context .
+Widget primitives and operations such as
 .Fn AG_WidgetBlitSurface
-are unsafe to call outside of Rendering Context.
+must be called from rendering context.
 .Pp
 .Fn size_request
 should return an initial, preferred geometry in pixels (without any guarantee
@@ -272,19 +286,17 @@ Style attributes include fonts, colors and spacing (margins and padding).
 The
 .Fn AG_SetStyle
 function sets the specified style attribute to the given value.
-Available attributes for
-.Fa attr
-include:
+Standard style attributes include:
 .Pp
 .Bl -tag -compact -width "font-family "
 .It font-family
-Font face specification: "Courier", "Terminal"
+Font face specification: "Courier", "Terminal", "my.bmp".
 .It font-size
-Font size: "10pts", "10.5pts", "80%" (relative to parent)
+Font size: "10pts", "10.5pts", "80%" (relative to parent).
 .It font-weight
-Font weight: "bold", "normal" or "!parent"
+Font weight: "normal", "semibold", "bold" or "!parent".
 .It font-style
-Font style: "italic", "normal" or "!parent"
+Font style: "normal", "italic", "upright-italic" or "!parent".
 .It color
 Main (or background) color for the widget.
 Colors are:
@@ -461,7 +473,7 @@ variant accepts widget coordinates.
 .Sh BLITTING SURFACES
 These routines allow graphical surfaces to be managed (mapped in hardware or
 software) and efficiently copied.
-They must be called from Rendering Context (i.e., the
+They must be called from rendering context (i.e., the
 .Fn draw
 operation of
 .Nm )
@@ -502,7 +514,7 @@ function performs a software->hardware blit from the surface
 .Fa src
 to the video display at the given widget coordinates.
 .Fn AG_WidgetBlit
-must invoked in Rendering Context.
+must invoked in rendering context.
 See
 .Xr AG_Surface 3
 for more information on the Agar surface structure.
@@ -569,7 +581,7 @@ and
 will not immediately delete any previous texture associated with the previous
 surface.
 Instead, it will queue the delete operation for future execution from
-Rendering Context, as required by thread safety.
+rendering context, as required by thread safety.
 .Pp
 The
 .Fn AG_WidgetUpdateSurface
@@ -589,7 +601,7 @@ onto the destination widget
 at coordinates
 .Fa x ,
 .Fa y .
-This function must be invoked in Rendering Context.
+This function must be invoked in rendering context.
 .Pp
 The
 .Fn AG_WidgetBlitSurface
@@ -602,7 +614,7 @@ and
 (and
 .Fa rs
 set to NULL).
-.Sh BINDINGS
+.Sh USING BINDINGS
 Widget states can be bound to memory locations containing data in a
 supported format.
 For example, the "state" binding of
@@ -610,7 +622,7 @@ For example, the "state" binding of
 can be tied to an integer (or bits in an integer), such that the user pressing
 the button directly manipulates the integer value in memory.
 .Pp
-Bindings are documented under the
+Bindings are documented under the heading
 .Dq BINDINGS
 section of the widget's manual page.
 For instance,
@@ -668,7 +680,7 @@ function signals that the widget must be redrawn to the video display.
 It is equivalent to setting the
 .Va dirty
 variable of the widget's parent window to 1.
-If called from Rendering Context,
+If called from rendering context,
 .Fn AG_Redraw
 is a no-op.
 .Pp
@@ -808,7 +820,7 @@ on this stack.
 .Fn AG_PushClipRect
 and
 .Fn AG_PopClipRect
-must be invoked in Rendering Context.
+must be invoked in rendering context.
 .Pp
 The
 .Fn AG_WidgetDraw
