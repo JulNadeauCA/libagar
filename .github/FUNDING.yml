@@ -1,5 +1,6 @@
 # These are supported funding model platforms
 
+github: JulNadeauCA
 patreon: libagar
-custom: ['http://libagar.org/contribute.html', 'https://csoft.net', 'https://electrontubestore.com']
+custom: ['http://libagar.org/contribute.html']
 
