@@ -65,6 +65,7 @@ section).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
+.\" MANLINK(AG_WidgetClass)
 .Sh CLASS OPERATIONS
 Object operations specific to the
 .Nm
@@ -120,6 +121,8 @@ to work at all (in which case the
 flag will be set and
 .Fn draw
 will not run).
+.\" MANLINK(AG_SizeReq)
+.\" MANLINK(AG_SizeAlloc)
 .Sh SIZING
 .nr nS 1
 .Ft "void"
@@ -334,9 +337,8 @@ Widget represents an active selection.
 .Pp
 .Fn AG_SetFont
 inherits "font-family", "font-size", "font-weight" and "font-style" from
-the specified font (see
-.Xr AG_Text 3
-for details).
+the given
+.Xr AG_Font 3 .
 .Sh INPUT STATE
 .nr nS 1
 .Ft "void"

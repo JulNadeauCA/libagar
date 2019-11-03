@@ -38,6 +38,7 @@
 .Nm
 provides a consistent interface to basic filesystem operations (which may be
 implemented differently under different platforms).
+.\" MANLINK(AG_FileInfo)
 .Sh FILES
 .nr nS 1
 .Ft "int"
@@ -114,6 +115,7 @@ File is marked as hidden
 .It AG_FILE_TEMPORARY
 File is marked as temporary
 .El
+.\" MANLINK(AG_Dir)
 .Sh DIRECTORIES
 .nr nS 1
 .Ft "int"
@@ -162,7 +164,6 @@ assumed to be
 .Fa dstLen
 bytes in size.
 .Pp
-.\" MANLINK(AG_Dir)
 .Fn AG_OpenDir
 opens the specified directory.
 If successful, the function returns a newly allocated
@@ -184,6 +185,7 @@ is in UTF-8 encoding.
 .Pp
 .Fn AG_CloseDir
 closes the given directory.
+.\" MANLINK(AG_FileExtMapping)
 .Sh UTILITY ROUTINES
 .nr nS 1
 .Ft "const char *"

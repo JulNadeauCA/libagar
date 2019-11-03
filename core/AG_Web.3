@@ -125,6 +125,7 @@ If the
 flag is non-zero, this instance will be able to serve requests for
 text/event-stream, multiplexing Push events to the client until the connection
 is closed.
+.\" MANLINK(WEB_Application)
 The
 .Fa app
 structure should be partially initialized:
@@ -181,6 +182,7 @@ The
 function registers a new module (and invokes the module's
 .Fn init
 method).
+.\" MANLINK(WEB_Module)
 The
 .Fa mod
 argument must point to an initialized
@@ -258,6 +260,7 @@ generated contents.
 This method is expected to write HTML code into
 .Fa V .
 .Pp
+.\" MANLINK(WEB_Command)
 The
 .Va commands
 table maps method names to a module's functions:
@@ -446,6 +449,7 @@ If the header already exists, its value is updated.
 Otherwise, a new header is created.
 .Fn WEB_AppendHeader
 appends the given header unconditionally (without checking for duplicates).
+.\" MANLINK(WEB_Cookie)
 .Pp
 .Fn WEB_SetCookie
 sets the HTTP cookie identified by
@@ -917,6 +921,7 @@ outputs a complete text/html document with a body displaying error message
 sets the $_error variable to contain a dismissible HTML error message.
 .Fn WEB_SetSuccess
 sets the $_error variable to contain a dismissible HTML "success" message.
+.\" MANLINK(WEB_Variable)
 .Pp
 The
 .Ft WEB_Variable
@@ -1067,6 +1072,7 @@ Anonymous variables must be freed explicitely by the caller:
 	WEB_VAR_CatS(v, "world!");
 	WEB_VAR_Free(v);
 .Ed
+.\" MANLINK(WEB_SessionOps)
 .Sh AUTHENTICATION
 The
 .Ft sessOps
@@ -1390,6 +1396,7 @@ The session with the given session ID.
 Based on return value of
 .Fa filterFn .
 .El
+.\" MANLINK(WEB_EventFilterFn)
 .Pp
 A custom event filter can be used by passing NULL to
 .Fa match
