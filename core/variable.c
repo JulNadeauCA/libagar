@@ -215,17 +215,11 @@ AG_CompareVariables(const AG_Variable *a, const AG_Variable *b)
  * The variable is returned locked. Returns NULL if the variable is undefined.
  */
 AG_Variable *
-AG_GetVariable(void *pObj, const char *name, ...)
+AG_GetVariable(void *pObj, const char *name, void **p)
 {
 	AG_Object *obj = pObj;
-	void **p;
 	AG_Variable *V;
-	va_list ap;
 	
-	va_start(ap, name);
-	p = va_arg(ap, void **);
-	va_end(ap);
-
 	AG_ObjectLock(obj);
 	if ((V = AG_AccessVariable(obj, name)) == NULL) {
 #ifdef AG_VERBOSITY
@@ -234,10 +228,8 @@ AG_GetVariable(void *pObj, const char *name, ...)
 		AG_FatalErrorV("E20", "No such variable");
 #endif
 	}
-	if (p != NULL) {
-		*p = (agVariableTypes[V->type].indirLvl > 0) ?
-		    V->data.p : (void *)&V->data;
-	}
+	*p = (agVariableTypes[V->type].indirLvl > 0) ? V->data.p :
+	                                               (void *)&V->data;
 	AG_ObjectUnlock(obj);
 	return (V);
 }

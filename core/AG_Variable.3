@@ -168,21 +168,20 @@ The object
 .Fa obj
 must be locked.
 .Pp
-The
 .Fn AG_GetVariable
-function searches for a variable
+searches for a variable
 .Fa name
 under
-.Fa obj ,
-and returns the matching
+.Fa obj
+and returns a pointer to the corresponding
 .Ft AG_Variable
-in a locked condition (or NULL if undefined).
+in a locked condition.
 The caller must use
 .Fn AG_UnlockVariable
 when finished accessing the variable data.
-A pointer to the data is also returned in the
+A pointer to the data itself is also returned in the
 .Fa data
-argument if it is not NULL.
+argument.
 If the variable is undefined, a fatal exception is raised.
 .Pp
 The

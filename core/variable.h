@@ -175,7 +175,8 @@ typedef struct ag_variable {
 __BEGIN_DECLS
 extern const AG_VariableTypeInfo agVariableTypes[];
 
-AG_Variable *_Nullable AG_GetVariable(void *_Nonnull, const char *_Nonnull, ...)
+AG_Variable *_Nullable AG_GetVariable(void *_Nonnull, const char *_Nonnull,
+                                      void *_Nonnull *_Nonnull)
                                      _Pure_Attribute_If_Unthreaded
                                      _Warn_Unused_Result;
 #ifdef AG_ENABLE_STRING
