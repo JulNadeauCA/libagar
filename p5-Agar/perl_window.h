@@ -19,7 +19,6 @@ static const AP_FlagNames agWindowFlagNames[] = {
 	{ "hMaximize",     AG_WINDOW_HMAXIMIZE },
 	{ "vMaximize",     AG_WINDOW_VMAXIMIZE },
 	{ "noMove",        AG_WINDOW_NOMOVE },
-	{ "noClipping",    AG_WINDOW_NOCLIPPING },
 	{ "modKeyEvents",  AG_WINDOW_MODKEYEVENTS },
 	{ "noCursorChg",   AG_WINDOW_NOCURSORCHG },
 	{ "fadeIn",        AG_WINDOW_FADEIN },
