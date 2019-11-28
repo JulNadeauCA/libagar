@@ -75,7 +75,6 @@ AG_ScrollbarNewVert(void *parent, Uint flags)
 }
 
 /* Set an alternate handler for UP/LEFT button click. */
-
 AG_Scrollbar *
 AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 {
@@ -93,6 +92,7 @@ AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 	return (sb);
 }
 
+/* Set an alternate handler for Increment (UP or LEFT button). */
 void
 AG_ScrollbarSetIncFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 {
@@ -112,7 +112,7 @@ AG_ScrollbarSetIncFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectUnlock(sb);
 }
 
-/* Set an alternate handler for DOWN/RIGHT button click. */
+/* Set an alternate handler for Decrement (DOWN or RIGHT button). */
 void
 AG_ScrollbarSetDecFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 {
@@ -786,8 +786,8 @@ DrawText(AG_Scrollbar *_Nonnull sb)
 	AG_Rect r;
 
 	AG_PushTextState();
-	AG_TextColor(&WCOLOR(sb,TEXT_COLOR));
-	AG_TextBGColor(&WCOLOR(sb,BG_COLOR));
+	AG_TextColor(&WCOLOR(sb, TEXT_COLOR));
+	AG_TextBGColor(&WCOLOR(sb, BG_COLOR));
 
 	Snprintf(label, sizeof(label),
 	    (sb->type == AG_SCROLLBAR_HORIZ) ?
@@ -840,11 +840,21 @@ Draw(void *_Nonnull obj)
 		DrawText(sb);
 }
 
+#define DRAW_BUTTON(which, color)			\
+	if (sb->curBtn == (which)) {			\
+		AG_DrawBoxSunk(sb, &r, (color));	\
+	} else {					\
+		AG_DrawBoxRaised(sb, &r, (color));	\
+	}
+
 static void
 DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 {
 	AG_Rect r;
-	AG_Color *c, cTinted;
+	AG_Color cTinted;
+	const AG_Color *cFg = &WCOLOR(sb, FG_COLOR);
+	const AG_Color *cLine = &WCOLOR(sb, LINE_COLOR);
+	const AG_Color *c;
 	const int w = WIDTH(sb);
 	const int h = HEIGHT(sb);
 	const int mid = (w >> 1);
@@ -856,26 +866,18 @@ DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 		return;
 	}
 
-	/* XXX overdraw */
-	r.x = 0;
+	r.x = 1;
 	r.y = 0;
-	r.w = w;
+	r.w = w-1;
 	r.h = h;
-	AG_DrawBox(sb, &r, -1, &WCOLOR(sb,0));		/* Background */
+	AG_DrawFrameSunk(sb, &r);
 	
-	/*
-	 * Decrement button
-	 */
+	/* Decrement Button */
 	r.h = sbThick;
-	AG_DrawBox(sb, &r,
-	    (sb->curBtn       == AG_SCROLLBAR_BUTTON_DEC) ? -1 : 1,
-	    (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_DEC) ? &WCOLOR_HOV(sb,0) :
-	                                                    &WCOLOR(sb,0));
-	AG_DrawArrowUp(sb, mid, (sbThick>>1), hArrow, &WCOLOR(sb,SHAPE_COLOR));
+	DRAW_BUTTON(AG_SCROLLBAR_BUTTON_DEC, cFg);
+	AG_DrawArrowUp(sb, mid, (sbThick>>1), hArrow, cLine);
 
-	/*
-	 * Control bar
-	 */
+	/* Control Bar */
 	r.y = sbThick + y;
 	r.h = MIN(len, h - (sbThick>>1));
 	if (r.h < 4) {
@@ -883,35 +885,30 @@ DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 		r.y -= (r.h >> 1);
 	}
 	c = (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_SCROLL) ?
-	    &WCOLOR_HOV(sb,0) :
-	    &WCOLOR(sb,0);
+	    &WCOLOR_HOVER(sb, FG_COLOR) : cFg;
+
 	if (r.h < AG_SCROLLBAR_HOT) {			/* Increase contrast */
 		cTinted = *c;
 		AG_ColorLighten(&cTinted, AG_SCROLLBAR_HOT-r.h);
 		c = &cTinted;
 	}
-	AG_DrawBox(sb, &r,
-	    (sb->curBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? -1 : 1,
-	    c);
+	DRAW_BUTTON(AG_SCROLLBAR_BUTTON_SCROLL, c);
 	
-	/*
-	 * Increment button
-	 */
+	/* Increment Button */
 	r.y = h - sbThick;
 	r.h = sbThick;
-	AG_DrawBox(sb, &r,
-	    (sb->curBtn == AG_SCROLLBAR_BUTTON_INC) ? -1 : 1,
-	    (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_INC) ? &WCOLOR_HOV(sb,0) :
-	                                                    &WCOLOR(sb,0));
-	AG_DrawArrowDown(sb, mid, r.y + (sbThick>>1), hArrow,
-	    &WCOLOR(sb,SHAPE_COLOR));
+	DRAW_BUTTON(AG_SCROLLBAR_BUTTON_INC, cFg);
+	AG_DrawArrowDown(sb, mid, r.y + (sbThick>>1), hArrow, cLine);
 }
 
 static void
 DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 {
 	AG_Rect r;
-	AG_Color *c, cTinted;
+	AG_Color cTinted;
+	const AG_Color *cFg = &WCOLOR(sb, FG_COLOR);
+	const AG_Color *cLine = &WCOLOR(sb, LINE_COLOR);
+	const AG_Color *c;
 	const int w = WIDTH(sb);
 	const int h = HEIGHT(sb);
 	const int mid = h >> 1;
@@ -923,36 +920,24 @@ DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 		return;
 	}
 
-	/* XXX overdraw */
 	r.x = 0;
 	r.y = 0;
 	r.w = w;
 	r.h = h;
-	AG_DrawBox(sb, &r, -1, &WCOLOR(sb,0));	/* Background */
+	AG_DrawFrameSunk(sb, &r);
 
-	/*
-	 * Decrement button
-	 */
+	/* Decrement Button */
 	r.w = sbThick;
 	r.h = h;
-	AG_DrawBox(sb, &r,
-	    (sb->curBtn == AG_SCROLLBAR_BUTTON_DEC) ? -1 : 1,
-	    &WCOLOR(sb,0));
-	AG_DrawArrowLeft(sb, sbThick>>1, mid, hArrow, &WCOLOR(sb,SHAPE_COLOR));
+	DRAW_BUTTON(AG_SCROLLBAR_BUTTON_DEC, cFg);
+	AG_DrawArrowLeft(sb, sbThick>>1, mid, hArrow, cLine);
 
-	/*
-	 * Increment button
-	 */
+	/* Increment Button */
 	r.x = w - sbThick;
-	AG_DrawBox(sb,  &r,
-	    (sb->curBtn == AG_SCROLLBAR_BUTTON_INC) ? -1 : 1,
-	    &WCOLOR(sb,0));
-	AG_DrawArrowRight(sb, r.x + (sbThick>>1), mid, hArrow,
-	    &WCOLOR(sb,SHAPE_COLOR));
+	DRAW_BUTTON(AG_SCROLLBAR_BUTTON_INC, cFg);
+	AG_DrawArrowRight(sb, r.x + (sbThick>>1), mid, hArrow, cLine);
 
-	/*
-	 * Control bar
-	 */
+	/* Control Bar */
 	r.x = sbThick + x;
 	r.w = MIN(len, w - (sbThick<<1));
 	if (r.w < 4) {
@@ -960,17 +945,17 @@ DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 		r.x -= (r.w >> 1);
 	}
 	c = (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_SCROLL) ?
-	    &WCOLOR_HOV(sb,0) :
-	    &WCOLOR(sb,0);
+	    &WCOLOR_HOVER(sb, FG_COLOR) : cFg;
+
 	if (r.w < AG_SCROLLBAR_HOT) {			/* Increase contrast */
 		cTinted = *c;
 		AG_ColorLighten(&cTinted, AG_SCROLLBAR_HOT-r.w);
 		c = &cTinted;
 	}
-	AG_DrawBox(sb, &r,
-	    (sb->curBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? -1 : 1,
-	    c);
+	DRAW_BUTTON(AG_SCROLLBAR_BUTTON_SCROLL, c);
 }
+
+#undef DRAW_BUTTON
 
 static void
 DrawVertUndersize(AG_Scrollbar *_Nonnull sb)
@@ -982,13 +967,13 @@ DrawVertUndersize(AG_Scrollbar *_Nonnull sb)
 	r.y = 0;
 	r.w = WIDTH(sb);
 	r.h = HEIGHT(sb);
-	AG_DrawBox(sb, &r, 1, &WCOLOR(sb,0));
+	AG_DrawBoxRaised(sb, &r, &WCOLOR(sb, FG_COLOR));
 	
 	mid = (r.w >> 1);
 	s = MIN(r.h>>2, r.w);
 
-	AG_DrawArrowUp(sb,   mid, s,          s, &WCOLOR(sb,SHAPE_COLOR));
-	AG_DrawArrowDown(sb, mid, (r.h>>1)+s, s, &WCOLOR(sb,SHAPE_COLOR));
+	AG_DrawArrowUp(sb,   mid, s,          s, &WCOLOR(sb, LINE_COLOR));
+	AG_DrawArrowDown(sb, mid, (r.h>>1)+s, s, &WCOLOR(sb, LINE_COLOR));
 }
 
 static void
@@ -1001,13 +986,13 @@ DrawHorizUndersize(AG_Scrollbar *_Nonnull sb)
 	r.y = 0;
 	r.w = WIDTH(sb);
 	r.h = HEIGHT(sb);
-	AG_DrawBox(sb, &r, 1, &WCOLOR(sb,0));
+	AG_DrawBoxRaised(sb, &r, &WCOLOR(sb, FG_COLOR));
 
 	mid = (r.h >> 1);
 	s = MIN(r.w>>2, r.h);
 
-	AG_DrawArrowLeft(sb,  s,          mid, s, &WCOLOR(sb,SHAPE_COLOR));
-	AG_DrawArrowRight(sb, (r.w>>1)+s, mid, s, &WCOLOR(sb,SHAPE_COLOR));
+	AG_DrawArrowLeft(sb,  s,          mid, s, &WCOLOR(sb, LINE_COLOR));
+	AG_DrawArrowRight(sb, (r.w>>1)+s, mid, s, &WCOLOR(sb, LINE_COLOR));
 }
 
 /*

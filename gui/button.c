@@ -351,7 +351,6 @@ Init(void *_Nonnull obj)
 	WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE |
 	                     AG_WIDGET_UNFOCUSED_MOTION |
 			     AG_WIDGET_UNFOCUSED_BUTTONUP |
-			     AG_WIDGET_TABLE_EMBEDDABLE |
 			     AG_WIDGET_USE_TEXT |
 			     AG_WIDGET_USE_MOUSEOVER;
 	bu->state = 0;
@@ -458,13 +457,10 @@ Draw(void *_Nonnull p)
 	rd.w = WIDTH(bu);
 	rd.h = HEIGHT(bu);
 
-	if (AG_WidgetEnabled(bu)) {
-		AG_DrawBox(bu, &rd, pressed ? -1 : 1,
-		    &WCOLOR(bu,0));
+	if (pressed) {
+		AG_DrawBoxSunk(bu, &rd, &WCOLOR(bu, FG_COLOR));
 	} else {
-		AG_DrawBoxDisabled(bu, &rd, pressed ? -1 : 1,
-		    &WCOLOR_DEF(bu,0),
-		    &WCOLOR_DIS(bu,0));
+		AG_DrawBoxRaised(bu, &rd, &WCOLOR(bu, FG_COLOR));
 	}
 
 	if ((lbl = bu->lbl) != NULL) {

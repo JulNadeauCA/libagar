@@ -91,16 +91,15 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		WIDGET(tb->ed)->flags |= AG_WIDGET_CATCH_TAB;
 	}
 
-	if (flags & AG_TEXTBOX_NOEMACS)		tb->ed->flags |= AG_EDITABLE_NOEMACS;
-	if (flags & AG_TEXTBOX_NOLATIN1)	tb->ed->flags |= AG_EDITABLE_NOLATIN1;
-	if (flags & AG_TEXTBOX_NOPOPUP)		tb->ed->flags |= AG_EDITABLE_NOPOPUP;
-	if (flags & AG_TEXTBOX_MULTILINGUAL)	tb->ed->flags |= AG_EDITABLE_MULTILINGUAL;
+	if (flags & AG_TEXTBOX_NOEMACS)      tb->ed->flags |= AG_EDITABLE_NOEMACS;
+	if (flags & AG_TEXTBOX_NOLATIN1)     tb->ed->flags |= AG_EDITABLE_NOLATIN1;
+	if (flags & AG_TEXTBOX_NOPOPUP)      tb->ed->flags |= AG_EDITABLE_NOPOPUP;
+	if (flags & AG_TEXTBOX_MULTILINGUAL) tb->ed->flags |= AG_EDITABLE_MULTILINGUAL;
 	
 	if (flags & AG_TEXTBOX_MULTILINE) {
 		tb->ed->flags |= AG_EDITABLE_MULTILINE;
 
-		tb->vBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_VERT,
-		    AG_SCROLLBAR_EXCL);
+		tb->vBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
 		AG_SetInt(tb->vBar, "min", 0);
 		AG_BindInt(tb->vBar, "max", &tb->ed->yMax);
 		AG_BindInt(tb->vBar, "visible", &tb->ed->yVis);
@@ -175,18 +174,21 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 	AG_EditableSetWordWrap(tb->ed, flag);
 
 	if (tb->ed->flags & AG_EDITABLE_MULTILINE) {
-		if (tb->hBar != NULL) {
-			AG_ObjectDetach(tb->hBar);
-			AG_ObjectDestroy(tb->hBar);
+		AG_Scrollbar *bar;
+
+		if ((bar = tb->hBar) != NULL) {
 			tb->hBar = NULL;
+			AG_ObjectDetach(bar);
+			AG_ObjectDestroy(bar);
 		}
 		if (!flag) {
-			tb->hBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_HORIZ,
-			    AG_SCROLLBAR_EXCL);
-			AG_SetInt(tb->hBar, "min", 0);
-			AG_BindInt(tb->hBar, "max", &tb->ed->xMax);
-			AG_BindInt(tb->hBar, "visible", &WIDTH(tb->ed));
-			AG_BindInt(tb->hBar, "value", &tb->ed->x);
+			bar = tb->hBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_HORIZ,
+			                                 AG_SCROLLBAR_EXCL);
+			AG_SetInt(bar,  "min",     0);
+			AG_BindInt(bar, "max",     &tb->ed->xMax);
+			AG_BindInt(bar, "visible", &WIDTH(tb->ed));
+			AG_BindInt(bar, "value",   &tb->ed->x);
+
 			AG_TextboxSizeHintLines(tb, 4);
 		}
 	}
@@ -275,51 +277,23 @@ static void
 Draw(void *_Nonnull p)
 {
 	AG_Textbox *tb = p;
-	
-	if (AG_WidgetDisabled(tb)) {			/* Background */
-		AG_DrawBoxDisabled(tb, &tb->r,
-		    (tb->flags & AG_TEXTBOX_COMBO) ? 1 : -1,
-		    &WCOLOR_DEF(tb,AG_BG_COLOR),
-		    &WCOLOR_DIS(tb,AG_BG_COLOR));
+//	const AG_Color *cBg = &WCOLOR(tb, BG_COLOR);
+
+	if ((tb->flags & AG_TEXTBOX_COMBO)) {
+		AG_DrawFrameRaised(tb, &tb->r);
 	} else {
-		AG_DrawBox(tb, &tb->r,
-		    (tb->flags & AG_TEXTBOX_COMBO) ? 1 : -1,
-		    &WCOLOR(tb,AG_BG_COLOR));
+		AG_DrawFrameSunk(tb, &tb->r);
 	}
 
-	if (tb->lbl != NULL)				/* Label, if any */
+	if (tb->lbl)
 		AG_WidgetDraw(tb->lbl);
 
-	AG_PushClipRect(tb, &tb->r);
+	AG_WidgetDraw(tb->ed);
 
-	if (tb->flags & AG_TEXTBOX_MULTILINE) {		/* Multiline box */
-		AG_Rect r;
-
-		if (tb->vBar != NULL && AG_ScrollbarVisible(tb->vBar)) {
-			int d = WIDTH(tb->vBar);
-			r.x = WIDTH(tb) - d;
-			r.y = HEIGHT(tb) - d;
-			r.w = d;
-			r.h = d;
-		} else if (tb->hBar != NULL && AG_ScrollbarVisible(tb->hBar)) {
-			int d = HEIGHT(tb->hBar);
-			r.x = WIDTH(tb) - d;
-			r.y = HEIGHT(tb) - d;
-			r.w = d;
-			r.h = d;
-		}
-		AG_DrawBox(tb, &r, -1, &WCOLOR(tb,0));
-		AG_WidgetUpdate(tb);
-	}
-
-	AG_WidgetDraw(tb->ed);				/* Edit area itself */
-
-	if (tb->hBar != NULL)				/* Scrollbars */
+	if (tb->hBar)
 		AG_WidgetDraw(tb->hBar);
-	if (tb->vBar != NULL)
+	if (tb->vBar)
 		AG_WidgetDraw(tb->vBar);
-
-	AG_PopClipRect(tb);
 }
 
 static void
@@ -334,7 +308,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	r->w = (tb->boxPadX << 1) + rEd.w + 2;
 	r->h = (tb->boxPadY << 1) + rEd.h + 2;
 
-	if (tb->lbl != NULL) {
+	if (tb->lbl) {
 		AG_WidgetSizeReq(tb->lbl, &rLbl);
 		r->w += rLbl.w;
 	}
@@ -356,7 +330,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	   (a->h < (boxPadH << 1)))
 		return (-1);
 
-	if (tb->lbl != NULL) {
+	if (tb->lbl) {
 		AG_WidgetSizeReq(tb->lbl, &r);
 		aLbl.x = boxPadW;
 		aLbl.y = boxPadH;
@@ -365,8 +339,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		AG_WidgetSizeAlloc(tb->lbl, &aLbl);
 	}
 	if (tb->flags & AG_TEXTBOX_MULTILINE) {
-		if (tb->hBar != NULL &&
-		    AG_WidgetVisible(tb->hBar)) {
+		if (tb->hBar && AG_WidgetVisible(tb->hBar)) {
 			AG_WidgetSizeReq(tb->hBar, &r);
 			hBarSz = MIN(r.h, a->h);
 			aSb.x = 0;
@@ -377,8 +350,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 //			if (AG_ScrollbarVisible(tb->hBar))
 				hBar = aSb.h;
 		}
-		if (tb->vBar != NULL &&
-		    AG_WidgetVisible(tb->vBar)) {
+		if (tb->vBar && AG_WidgetVisible(tb->vBar)) {
 			AG_WidgetSizeReq(tb->vBar, &r);
 			wBarSz = MIN(r.w, a->w);
 			aSb.x = a->w - wBarSz;
@@ -552,8 +524,7 @@ Init(void *_Nonnull obj)
 {
 	AG_Textbox *tb = obj;
 	
-	WIDGET(tb)->flags |= AG_WIDGET_TABLE_EMBEDDABLE |
-	                     AG_WIDGET_USE_TEXT |
+	WIDGET(tb)->flags |= AG_WIDGET_USE_TEXT |
 			     AG_WIDGET_USE_MOUSEOVER;
 
 	tb->ed = AG_EditableNew(tb, 0);

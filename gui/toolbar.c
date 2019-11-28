@@ -96,7 +96,7 @@ StickyUpdate(AG_Event *_Nonnull event)
 		OBJECT_FOREACH_CHILD(oBtn, bar->rows[i], ag_button) {
 			int *state;
 
-			stateb = AG_GetVariable(oBtn, "state", &state);
+			stateb = AG_GetVariable(oBtn, "state", (void *)&state);
 			if (bar->flags & AG_TOOLBAR_MULTI_STICKY) {
 				*state = !(*state);
 			} else {
@@ -218,7 +218,7 @@ AG_ToolbarSelectOnly(AG_Toolbar *bar, AG_Button *bSel)
 	AG_ObjectLock(bar);
 	for (i = 0; i < bar->nRows; i++) {
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
-			stateb = AG_GetVariable(b, "state", &state);
+			stateb = AG_GetVariable(b, "state", (void *)&state);
 			*state = (b == bSel);
 			AG_UnlockVariable(stateb);
 		}
@@ -237,7 +237,7 @@ AG_ToolbarSelectAll(AG_Toolbar *bar)
 	AG_ObjectLock(bar);
 	for (i = 0; i < bar->nRows; i++) {
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
-			stateb = AG_GetVariable(b, "state", &state);
+			stateb = AG_GetVariable(b, "state", (void *)&state);
 			*state = 1;
 			AG_UnlockVariable(stateb);
 		}
@@ -256,7 +256,7 @@ AG_ToolbarDeselectAll(AG_Toolbar *bar)
 	AG_ObjectLock(bar);
 	for (i = 0; i < bar->nRows; i++) {
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
-			stateb = AG_GetVariable(b, "state", &state);
+			stateb = AG_GetVariable(b, "state", (void *)&state);
 			*state = 0;
 			AG_UnlockVariable(stateb);
 		}

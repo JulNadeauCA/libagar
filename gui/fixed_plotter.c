@@ -184,10 +184,10 @@ Draw(void *obj)
 	r.y = 0;
 	r.w = WIDTH(fpl);
 	r.h = HEIGHT(fpl);
-	AG_DrawBox(fpl, &r, 0, &WCOLOR(fpl,0));
+	AG_DrawBoxRaised(fpl, &r, &WCOLOR(fpl, BG_COLOR));
 
 	if (fpl->flags & AG_FIXED_PLOTTER_XAXIS)
-		AG_DrawLineH(fpl, 0, r.w-1, yOrigin+1, &WCOLOR(fpl,LINE_COLOR));
+		AG_DrawLineH(fpl, 0, r.w-1, yOrigin+1, &WCOLOR(fpl, LINE_COLOR));
 
 	TAILQ_FOREACH(gi, &fpl->items, items) {
 		if (fpl->xoffs > gi->nvals || fpl->xoffs < 0)

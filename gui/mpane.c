@@ -58,7 +58,7 @@ Init(void *obj)
 	AG_BoxSetPadding(&mp->box, 0);
 	AG_BoxSetSpacing(&mp->box, 0);
 	for (i = 0; i < 4; i++) {
-		mp->panes[i] = AG_BoxNew(NULL, AG_BOX_VERT, AG_BOX_FRAME);
+		mp->panes[i] = AG_BoxNew(NULL, AG_BOX_VERT, 0);
 		AG_BoxSetSpacing(mp->panes[i], 0);
 		AG_BoxSetPadding(mp->panes[i], 0);
 	}

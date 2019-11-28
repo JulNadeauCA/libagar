@@ -278,7 +278,7 @@ Init(void *_Nonnull obj)
 {
 	AG_Label *lbl = obj;
 
-	WIDGET(lbl)->flags |= AG_WIDGET_USE_TEXT|AG_WIDGET_TABLE_EMBEDDABLE;
+	WIDGET(lbl)->flags |= AG_WIDGET_USE_TEXT;
 
 	lbl->type = AG_LABEL_STATIC;
 	lbl->flags = 0;
@@ -420,8 +420,6 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Label *lbl = obj;
-	const AG_Color *textColor = &WCOLOR(lbl, AG_TEXT_COLOR);
-	const AG_Color *bgColor   = &WCOLOR(lbl, AG_BG_COLOR);
 	AG_Surface *S;
 	AG_Rect r;
 	int x, y, cw = 0;			/* make compiler happy */
@@ -431,7 +429,7 @@ Draw(void *_Nonnull obj)
 		r.y = 0;
 		r.w = WIDTH(lbl);
 		r.h = HEIGHT(lbl);
-		AG_DrawFrame(lbl, &r, -1, &WCOLOR(lbl,LINE_COLOR));
+		AG_DrawFrameSunk(lbl, &r);
 	}
 	if ((lbl->flags & AG_LABEL_PARTIAL) && lbl->surfaceCont != -1) {
 		cw = WSURFACE(lbl,lbl->surfaceCont)->w;
@@ -456,8 +454,8 @@ Draw(void *_Nonnull obj)
 	
 	AG_TextJustify(lbl->justify);
 	AG_TextValign(lbl->valign);
-	AG_TextColor(textColor);
-	AG_TextBGColor(bgColor);
+	AG_TextColor(&WCOLOR(lbl, TEXT_COLOR));
+	AG_TextBGColor(&WCOLOR(lbl, BG_COLOR));
 
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:

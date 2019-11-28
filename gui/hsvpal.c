@@ -189,14 +189,14 @@ UpdatePixelFromHSVA(AG_HSVPal *_Nonnull pal)
 		AG_PixelFormat **pFormat;
 		AG_Variable *bFormat;
 		
-		if ((bFormat = AG_GetVariable(pal, "pixel-format", &pFormat))) {
+		if ((bFormat = AG_GetVariable(pal, "pixel-format", (void *)&pFormat))) {
 			AG_SetUint32(pal, "pixel",
 			    AG_MapPixel32_RGBA8(*pFormat, r,g,b,a));
 		}
 		AG_UnlockVariable(bFormat);
 	}
 
-	bColor = AG_GetVariable(pal, "color", &pColor);
+	bColor = AG_GetVariable(pal, "color", (void *)&pColor);
 	pColor->r = AG_8toH(r);
 	pColor->g = AG_8toH(g);
 	pColor->b = AG_8toH(b);
@@ -214,7 +214,7 @@ UpdateHSVFromPixel(AG_HSVPal *_Nonnull pal, Uint32 px)
 	AG_Variable *bFormat;
 	AG_PixelFormat **pFormat;
 	
-	bFormat = AG_GetVariable(pal, "pixel-format", &pFormat);
+	bFormat = AG_GetVariable(pal, "pixel-format", (void *)&pFormat);
 	if (*pFormat != NULL) {
 		AG_GetColor32_RGBA8(px, *pFormat, &r,&g,&b,&a);
 		AG_RGB2HSV(r, g, b, &h,&s,&v);

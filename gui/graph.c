@@ -714,7 +714,7 @@ Draw(void *obj)
 				r.w = su->w + 4;
 				r.h = su->h + 4;
 				AG_DrawRectOutline(gf, &r,
-				    &WCOLOR_HOV(gf,LINE_COLOR));
+				    &WCOLOR_HOVER(gf, LINE_COLOR));
 			}
 			r.x = lblX;
 			r.y = lblY;

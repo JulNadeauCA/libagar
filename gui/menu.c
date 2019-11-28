@@ -1282,7 +1282,7 @@ Draw(void *_Nonnull obj)
 	r.y = 0;
 	r.w = WIDTH(m);
 	r.h = HEIGHT(m);
-	AG_DrawBox(m, &r, 1, &WCOLOR(m,0));
+	AG_DrawBoxRaised(m, &r, &WCOLOR(m, FG_COLOR));
 
 	AG_PushClipRect(m, &m->r);
 
@@ -1294,14 +1294,14 @@ Draw(void *_Nonnull obj)
 		}
 		if (activeState) {
 			if (mi->lblMenu[1] == -1) {
-				AG_TextColor(&WCOLOR(m,TEXT_COLOR));
+				AG_TextColor(&WCOLOR(m, TEXT_COLOR));
 				mi->lblMenu[1] = (mi->text == NULL) ? -1 :
 				    AG_WidgetMapSurface(m, AG_TextRender(mi->text));
 			}
 			lbl = mi->lblMenu[1];
 		} else {
 			if (mi->lblMenu[0] == -1) {
-				AG_TextColor(&WCOLOR_DIS(m,TEXT_COLOR));
+				AG_TextColor(&WCOLOR_DISABLED(m, TEXT_COLOR));
 				mi->lblMenu[0] = (mi->text == NULL) ? -1 :
 				    AG_WidgetMapSurface(m, AG_TextRender(mi->text));
 			}
@@ -1314,7 +1314,7 @@ Draw(void *_Nonnull obj)
 			r.y = mi->y;
 			r.w = m->lPadLbl + wLbl + m->rPadLbl;
 			r.h = m->tPadLbl + hLbl + m->bPadLbl;
-			AG_DrawRect(m, &r, &WCOLOR_SEL(m,0));
+			AG_DrawRect(m, &r, &WCOLOR(m, SELECTION_COLOR));
 		}
 		AG_WidgetBlitSurface(m, lbl,
 		    mi->x + m->lPadLbl,

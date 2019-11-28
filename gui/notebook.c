@@ -160,29 +160,30 @@ Draw(void *obj)
 {
 	AG_Notebook *nb = obj;
 	AG_NotebookTab *tab;
-	AG_Color c = WCOLOR(nb,0);
-	AG_Color cHigh = c;
-	AG_Color cLow = c;
+	const AG_Color *cBg = &WCOLOR(nb, BG_COLOR);
+	const AG_Color *cHi = &WCOLOR(nb, HIGH_COLOR);
+	const AG_Color *cLo = &WCOLOR(nb, LOW_COLOR);
 	AG_Rect r;
 	const int w = WIDTH(nb);
 	const int h = HEIGHT(nb);
 	int boxDia = WFONT(nb)->height;
 	int x=0, y=0, xSelFirst=0, xSelLast=0, tabIdx=0;
 
-	AG_DrawRectFilled(nb, &nb->r, &c);
-	AG_ColorLighten(&cHigh, 2);
-	AG_ColorDarken(&cLow, 2);
+	if (cBg->a > 0)
+		AG_DrawRectFilled(nb, &nb->r, cBg);
+
 	AG_DrawLineV(nb, 0, nb->bar_h, h-1,
-	    (nb->selTab == TAILQ_FIRST(&nb->tabs)) ? &cLow : &cHigh);
+	    (nb->selTab == TAILQ_FIRST(&nb->tabs)) ? cLo : cHi);
 	
 	if (nb->selTab) {
 /*		AG_PushClipRect(nb, &nb->r); */
 		AG_WidgetDraw(nb->selTab);
 /*		AG_PopClipRect(nb); */
 	}
-	if (nb->flags & AG_NOTEBOOK_HIDE_TABS) {
+
+	if (nb->flags & AG_NOTEBOOK_HIDE_TABS)
 		return;
-	}
+
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
 		const int isSelected = (nb->selTab == tab);
 		AG_Label *lbl = tab->lbl;
@@ -200,29 +201,30 @@ Draw(void *obj)
 					break;
 			}
 		}
-		if (isSelected || tabIdx == nb->mouseOver) {
-			AG_DrawBoxRoundedTop(nb, &r, -1, boxDia >> 1, &c);
-		} else {
-			AG_DrawBoxRoundedTop(nb, &r, +1, boxDia >> 1, &c);
-		}
+
+		AG_DrawBoxRoundedTop(nb, &r,
+		    (isSelected || tabIdx == nb->mouseOver) ? -1 : +1,
+		    (boxDia >> 1), &WCOLOR(nb, FG_COLOR));
 
 		if (lbl) {
 			if (isSelected) {
-				const int boxRad = (boxDia >> 1);
 				AG_Color cHalf;
-
-				AG_ColorInterpolate(&cHalf,
-						    &WCOLOR_SEL(nb,SHAPE_COLOR),
-						    &WCOLOR_SEL(nb,0),
-						    1,2);
+				const int boxRad = (boxDia >> 1);
+				
 				lbl->tPad--;
 
-				AG_PutPixel(nb, x+boxRad-1, 2, &cHalf);
+				AG_ColorInterpolate(&cHalf,
+				    &WCOLOR(nb, LINE_COLOR),
+				    &WCOLOR(nb, FG_COLOR),
+				    1,2);
+
+				AG_PutPixel(nb, x+boxRad-1,   2, &cHalf);
 				AG_PutPixel(nb, x+r.w-boxRad, 2, &cHalf);
-				AG_DrawLineH(nb, x+boxRad, x+r.w-boxRad,
-				             1, &WCOLOR_SEL(nb,SHAPE_COLOR));
-				AG_DrawLineH(nb, x+boxRad, x+r.w-boxRad,
-				             2, &cHalf);
+
+				AG_DrawLineH(nb, x+boxRad, x+r.w-boxRad, 1,
+				             &WCOLOR(nb, LINE_COLOR));
+				AG_DrawLineH(nb, x+boxRad, x+r.w-boxRad, 2,
+				             &cHalf);
 			}
 
 			AG_WidgetDraw(lbl);
@@ -236,18 +238,17 @@ Draw(void *obj)
 			xSelFirst = x - (r.w+1);
 			xSelLast = x;
 		}
-	
 		tabIdx++;
 	}
 
 	if (xSelFirst > 0) {
-		AG_DrawLineH(nb, 0, xSelFirst, nb->bar_h, &cHigh);
+		AG_DrawLineH(nb, 0, xSelFirst, nb->bar_h, cHi);
 	}
 	if (xSelLast < w) {
-		AG_DrawLineH(nb, xSelLast-1, w-1, nb->bar_h, &cHigh);
+		AG_DrawLineH(nb, xSelLast-1, w-1, nb->bar_h, cHi);
 	}
-	AG_DrawLineH(nb, 0, w-1,         h-1, &cLow);
-	AG_DrawLineV(nb, w, nb->bar_h+1, h,   &cLow);
+	AG_DrawLineH(nb, 0, w-1,         h-1, cLo);
+	AG_DrawLineV(nb, w, nb->bar_h+1, h,   cLo);
 }
 
 static void

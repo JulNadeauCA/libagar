@@ -488,8 +488,9 @@ OnShow(AG_Event *_Nonnull event)
 {
 	AG_Slider *sl = AG_SLIDER_SELF();
 	AG_Variable *V;
+	void *dummy;
 	
-	if ((V = AG_GetVariable(sl, "value", NULL)) == NULL) {
+	if ((V = AG_GetVariable(sl, "value", &dummy)) == NULL) {
 		V = AG_SetInt(sl, "value", 0);
 		AG_LockVariable(V);
 	}
@@ -527,8 +528,7 @@ Init(void *_Nonnull obj)
 
 	WIDGET(sl)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP |
 	                     AG_WIDGET_UNFOCUSED_MOTION |
-			     AG_WIDGET_FOCUSABLE |
-			     AG_WIDGET_TABLE_EMBEDDABLE;
+			     AG_WIDGET_FOCUSABLE;
 
 	sl->type = AG_SLIDER_HORIZ;
 	sl->ctlPressed = 0;
@@ -584,6 +584,7 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Slider *sl = obj;
+	const AG_Color *cFg = &WCOLOR(sl, FG_COLOR);
 	AG_Rect r;
 	int x;
 
@@ -597,16 +598,24 @@ Draw(void *_Nonnull obj)
 
 	switch (sl->type) {
 	case AG_SLIDER_VERT:
-		AG_DrawBox(sl, &r, -1, &WCOLOR(sl,0));
+		AG_DrawBoxSunk(sl, &r, cFg);
 		r.y = x;
 		r.h = sl->wControl;
-		AG_DrawBox(sl, &r, sl->ctlPressed ? -1 : 1, &WCOLOR(sl,0));
+		if (sl->ctlPressed) {
+			AG_DrawBoxSunk(sl, &r, cFg);
+		} else {
+			AG_DrawBoxRaised(sl, &r, cFg);
+		}
 		break;
 	case AG_SLIDER_HORIZ:
-		AG_DrawBox(sl, &r, -1, &WCOLOR(sl,0));
+		AG_DrawBoxSunk(sl, &r, cFg);
 		r.x = x;
 		r.w = sl->wControl;
-		AG_DrawBox(sl, &r, sl->ctlPressed ? -1 : 1, &WCOLOR(sl,0));
+		if (sl->ctlPressed) {
+			AG_DrawBoxSunk(sl, &r, cFg);
+		} else {
+			AG_DrawBoxRaised(sl, &r, cFg);
+		}
 		break;
 	}
 }

@@ -151,7 +151,7 @@ SelectItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 	AG_Variable *selectedb;
 	void **sel_ptr;
 
-	selectedb = AG_GetVariable(tl, "selected", &sel_ptr);
+	selectedb = AG_GetVariable(tl, "selected", (void *)&sel_ptr);
 	*sel_ptr = it->p1;
 	if (!it->selected) {
 		it->selected = 1;
@@ -171,7 +171,7 @@ DeselectItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 	AG_Variable *selectedb;
 	void **sel_ptr;
 
-	selectedb = AG_GetVariable(tl, "selected", &sel_ptr);
+	selectedb = AG_GetVariable(tl, "selected", (void *)&sel_ptr);
 	*sel_ptr = NULL;
 	if (it->selected) {
 		it->selected = 0;
@@ -424,7 +424,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	aBar.x = a->w - rBar.w;
 	aBar.y = 0;
 	AG_WidgetSizeAlloc(tl->sbar, &aBar);
-	tl->wRow = a->w - aBar.w;
+	tl->wRow = a->w - aBar.w - 2;
 
 	tl->r.w = tl->wRow;
 	tl->r.h = a->h;
@@ -443,7 +443,9 @@ Draw(void *_Nonnull obj)
 	AG_Tlist *tl = obj;
 	AG_TlistItem *it;
 	AG_Rect r;
-	AG_Color cSel, cLine;
+	AG_Color cSel = WCOLOR(tl, SELECTION_COLOR);
+	AG_Color cLine = WCOLOR(tl, LINE_COLOR);
+	const AG_Color *cText = &WCOLOR(tl, TEXT_COLOR);
 	const int wSpace = tl->wSpace;
 	const int hItem = tl->item_h;
 	const int wIcon = tl->icon_w;
@@ -454,9 +456,8 @@ Draw(void *_Nonnull obj)
 
 	UpdatePolled(tl);
 
-	AG_DrawBox(tl, &tl->r, -1, &WCOLOR(tl,AG_BG_COLOR));
-	cSel = WCOLOR_SEL(tl,AG_BG_COLOR);
-	cLine = WCOLOR(tl,AG_LINE_COLOR);
+	AG_DrawBoxSunk(tl, &tl->r, &WCOLOR(tl, BG_COLOR));
+
 	AG_WidgetDraw(tl->sbar);
 
 	r.x = 2;
@@ -522,9 +523,7 @@ Draw(void *_Nonnull obj)
 			if (it->color) {
 				AG_TextColor(it->color);
 			} else {
-				AG_TextColor(it->selected ?
-				             &WCOLOR_SEL(tl,AG_TEXT_COLOR) :
-					     &WCOLOR(tl,AG_TEXT_COLOR));
+				AG_TextColor(cText);
 			}
 			if (it->font) {
 				AG_PushTextState();
@@ -568,7 +567,7 @@ DrawExpandCollapseSign(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it,
     int x, int y)
 {
 	AG_Rect r;
-	const AG_Color *cLine = &WCOLOR(tl,LINE_COLOR);
+	const AG_Color *cLine = &WCOLOR(tl, LINE_COLOR);
 	static AG_VectorElement expdSign[] = {
 		{ AG_VE_LINE,    3,5,  1,0, 0, NULL },            /* - */
 		{ AG_VE_LINE,    1,7,  1,0, 0, NULL },            /* | */
@@ -585,7 +584,7 @@ DrawExpandCollapseSign(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it,
 		r.h++;
 	}
 
-	AG_DrawRectFilled(tl, &r, &WCOLOR(tl, AG_BG_COLOR));
+	AG_DrawRectFilled(tl, &r, &WCOLOR(tl, BG_COLOR));
 
 	if (it->flags & AG_TLIST_ITEM_EXPANDED) {
 		AG_DrawVector(tl, 3,3, &r, cLine, expdSign, 0,1);    /* - */

@@ -143,7 +143,7 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Separator *sep = obj;
-	AG_Color c1 = WCOLOR(sep,0);
+	AG_Color c1 = WCOLOR(sep, LINE_COLOR);
 	AG_Color c2 = c1;
 	const int padding = sep->padding;
 

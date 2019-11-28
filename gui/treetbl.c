@@ -1338,7 +1338,7 @@ DrawSubnodeIndicator(AG_Treetbl *_Nonnull tt, const AG_Rect *_Nonnull r,
 		{ AG_VE_LINE,    3,5,  1,0, 0, NULL },            /* - */
 		{ AG_VE_LINE,    1,7,  1,0, 0, NULL },            /* | */
 	};
-	const AG_Color *cLine = &WCOLOR(tt,AG_LINE_COLOR);
+	const AG_Color *cLine = &WCOLOR(tt, LINE_COLOR);
 	AG_Color c;
 
 	AG_ColorRGBA_8(&c, 0,0,0, 64);
@@ -1410,9 +1410,9 @@ DrawColumn(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 		rd.h = tt->hCol;
 		if ((col->flags & (AG_TREETBL_COL_SELECTED |
 		                   AG_TREETBL_COL_SORTING))) {
-			AG_DrawBox(tt, &rd, -1, &WCOLOR_SEL(tt,0));
+			AG_DrawBoxSunk(tt, &rd, &WCOLOR(tt, SELECTION_COLOR));
 		} else {
-			AG_DrawBox(tt, &rd, 1, &WCOLOR(tt,0));
+			AG_DrawBoxRaised(tt, &rd, &WCOLOR(tt, FG_COLOR));
 		}
 
 		if (col->label[0] != '\0') {
@@ -1480,7 +1480,7 @@ DrawColumn(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 		rd.y = 0;
 		rd.w = tt->r.w - x2;
 		rd.h = tt->hCol;
-		AG_DrawBox(tt, &rd, 1, &WCOLOR(tt,0));
+		AG_DrawBoxRaised(tt, &rd, &WCOLOR(tt, FG_COLOR));
 	}
 	return (1);
 }
@@ -1579,7 +1579,7 @@ Draw(void *_Nonnull obj)
 	    AG_GetTicks() > tt->visible.redraw_last + tt->visible.redraw_rate)
 		update = 1;
 	
-	AG_DrawBox(tt, &tt->r, -1, &WCOLOR(tt,0));
+	AG_DrawBoxSunk(tt, &tt->r, &WCOLOR(tt, FG_COLOR));
 
 	w = tt->r.w;
 	hRow = tt->hRow;
@@ -1601,7 +1601,7 @@ Draw(void *_Nonnull obj)
 			rd.y = y;
 			rd.w = w-2;
 			rd.h = hRow;
-			AG_DrawBox(tt, &rd, 1, &WCOLOR_SEL(tt,0));
+			AG_DrawBoxRaised(tt, &rd, &WCOLOR(tt, SELECTION_COLOR));
 		}
 		y += hRow;
 	}

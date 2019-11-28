@@ -344,8 +344,8 @@ AG_MSpinbuttonAddValue(AG_MSpinbutton *sbu, const char *which, int inc)
 
 	AG_ObjectLock(sbu);
 	valueb = AG_GetVariable(sbu, which, &value);
-	minb = AG_GetVariable(sbu, "min", &min);
-	maxb = AG_GetVariable(sbu, "max", &max);
+	minb = AG_GetVariable(sbu, "min", (void *)&min);
+	maxb = AG_GetVariable(sbu, "max", (void *)&max);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
 	case AG_VARIABLE_INT:
@@ -411,8 +411,8 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 
 	AG_ObjectLock(sbu);
 	valueb = AG_GetVariable(sbu, which, &value);
-	minb = AG_GetVariable(sbu, "min", &min);
-	maxb = AG_GetVariable(sbu, "max", &max);
+	minb = AG_GetVariable(sbu, "min", (void *)&min);
+	maxb = AG_GetVariable(sbu, "max", (void *)&max);
 
 	va_start(ap, which);
 	switch (AG_VARIABLE_TYPE(valueb)) {
@@ -541,7 +541,7 @@ AG_MSpinbuttonSetMin(AG_MSpinbutton *sbu, int nmin)
 	int *min;
 
 	AG_ObjectLock(sbu);
-	minb = AG_GetVariable(sbu, "min", &min);
+	minb = AG_GetVariable(sbu, "min", (void *)&min);
 	*min = nmin;
 	AG_UnlockVariable(minb);
 	AG_ObjectUnlock(sbu);
@@ -554,7 +554,7 @@ AG_MSpinbuttonSetMax(AG_MSpinbutton *sbu, int nmax)
 	int *max;
 
 	AG_ObjectLock(sbu);
-	maxb = AG_GetVariable(sbu, "max", &max);
+	maxb = AG_GetVariable(sbu, "max", (void *)&max);
 	*max = nmax;
 	AG_UnlockVariable(maxb);
 	AG_ObjectUnlock(sbu);
@@ -567,8 +567,8 @@ AG_MSpinbuttonSetRange(AG_MSpinbutton *sbu, int nmin, int nmax)
 	int *min, *max;
 
 	AG_ObjectLock(sbu);
-	minb = AG_GetVariable(sbu, "min", &min);
-	maxb = AG_GetVariable(sbu, "max", &max);
+	minb = AG_GetVariable(sbu, "min", (void *)&min);
+	maxb = AG_GetVariable(sbu, "max", (void *)&max);
 	*min = nmin;
 	*max = nmax;
 	AG_UnlockVariable(minb);

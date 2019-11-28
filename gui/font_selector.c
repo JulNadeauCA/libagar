@@ -86,7 +86,7 @@ UpdateFontSelection(AG_FontSelector *fs)
 		Verbose(_("Error opening font: %s\n"), AG_GetError());
 		return;
 	}
-	bFont = AG_GetVariable(fs, "font", &pFont);
+	bFont = AG_GetVariable(fs, "font", (void *)&pFont);
 	*pFont = font;
 	AG_UnlockVariable(bFont);
 }
@@ -98,7 +98,7 @@ UpdatePreview(AG_FontSelector *fs)
 	AG_Font **pFont;
 	AG_Surface *s;
 	
-	bFont = AG_GetVariable(fs, "font", &pFont);
+	bFont = AG_GetVariable(fs, "font", (void *)&pFont);
 	AG_PushTextState();
 
 	if (*pFont != NULL) {
@@ -128,7 +128,7 @@ OnShow(AG_Event *event)
 	                         22,24,26,28,32,48,64 }; /* XXX use fontconfig? */
 	const int nStdSizes = sizeof(stdSizes) / sizeof(stdSizes[0]);
 	
-	bFont = AG_GetVariable(fs, "font", &pFont);
+	bFont = AG_GetVariable(fs, "font", (void *)&pFont);
 	AG_PushTextState();
 
 	fs->flags &= ~(AG_FONTSELECTOR_UPDATE);
@@ -350,10 +350,11 @@ Draw(void *obj)
 	AG_FontSelector *fs = obj;
 	AG_Widget *chld;
 
-	OBJECT_FOREACH_CHILD(chld, obj, ag_widget) {
+	OBJECT_FOREACH_CHILD(chld, obj, ag_widget)
 		AG_WidgetDraw(chld);
-	}
-	AG_DrawBox(fs, &fs->rPreview, -1, &WCOLOR(fs,0));
+
+	AG_DrawBoxSunk(fs, &fs->rPreview, &WCOLOR(fs, BG_COLOR));
+
 	if (fs->sPreview != -1) {
 		AG_Surface *su = WSURFACE(fs,fs->sPreview);
 

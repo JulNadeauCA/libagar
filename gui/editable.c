@@ -75,7 +75,7 @@ GetBuffer(AG_Editable *_Nonnull ed)
 	if (AG_Defined(ed, "text")) {			/* AG_Text element */
 		AG_Text *txt;
 
-		buf->var = AG_GetVariable(ed, "text", &txt);
+		buf->var = AG_GetVariable(ed, "text", (void *)&txt);
 		buf->reallocable = 1;
 
 		AG_MutexLock(&txt->lock);
@@ -105,7 +105,7 @@ GetBuffer(AG_Editable *_Nonnull ed)
 	{					/* Fixed-size buffer */
 		char *s;
 
-		buf->var = AG_GetVariable(ed, "string", &s);
+		buf->var = AG_GetVariable(ed, "string", (void *)&s);
 		buf->reallocable = 0;
 
 		if ((ed->flags & AG_EDITABLE_EXCL) == 0 ||
@@ -925,7 +925,8 @@ Draw(void *_Nonnull obj)
 	AG_Driver *drv = WIDGET(ed)->drv;
 	AG_DriverClass *drvOps = WIDGET(ed)->drvOps;
 	AG_EditableBuffer *buf;
-	const AG_Color *bgColor = &WCOLOR(ed, AG_BG_COLOR);
+/*	const AG_Color *cBg = &WCOLOR(ed, BG_COLOR); */
+	const AG_Color *cSel = &WCOLOR(ed, SELECTION_COLOR);
 	AG_Rect2 rClip;
 	const int pos = ed->pos;
 	const int sel = ed->sel;
@@ -933,14 +934,6 @@ Draw(void *_Nonnull obj)
 	const int lineSkip = ed->lineSkip;
 	int i, dx,dy, x,y, yCurs, inSel=0;
 
-	if (bgColor->a != AG_TRANSPARENT) {
-		AG_Rect r;
-		r.x = 0;
-		r.y = 0;
-		r.w = WIDTH(ed);
-		r.h = HEIGHT(ed);
-		AG_DrawRectFilled(ed, &r, bgColor);
-	}
 	if ((buf = GetBuffer(ed)) == NULL) {
 		return;
 	}
@@ -1012,7 +1005,7 @@ Draw(void *_Nonnull obj)
 				r.y = y;
 				r.w = agTextTabWidth + 1;
 				r.h = lineSkip + 1;
-				AG_DrawRectFilled(ed, &r, &WCOLOR_SEL(ed,0));
+				AG_DrawRectFilled(ed, &r, cSel);
 			}
 			x += agTextTabWidth;
 			continue;
@@ -1039,7 +1032,7 @@ Draw(void *_Nonnull obj)
 			r.y = y;
 			r.w = gl->su->w + 1;
 			r.h = gl->su->h;
-			AG_DrawRectFilled(ed, &r, &WCOLOR_SEL(ed,0));
+			AG_DrawRectFilled(ed, &r, cSel);
 		}
 
 		/* Render the glyph */
@@ -1060,7 +1053,7 @@ Draw(void *_Nonnull obj)
 		AG_DrawLineV(ed,
 		    ed->xCurs - ed->x + 1, (yCurs + 1),
 		    (yCurs + lineSkip - 1),
-		    &WCOLOR(ed,AG_TEXT_COLOR));
+		    &WCOLOR(ed, TEXT_COLOR));
 	}
 	
 	/* Process any scrolling requests. */
@@ -1553,7 +1546,7 @@ PopupMenu(AG_Editable *_Nonnull ed)
 #ifdef AG_UNICODE
 	if ((ed->flags & AG_EDITABLE_MULTILINGUAL) &&
 	    AG_Defined(ed, "text") &&
-	    (vText = AG_GetVariable(ed, "text", &txt)) != NULL) {
+	    (vText = AG_GetVariable(ed, "text", (void *)&txt)) != NULL) {
 		AG_MenuItem *mLang;
 		int i;
 		
@@ -1846,11 +1839,11 @@ AG_EditableDupString(AG_Editable *ed)
 	AG_ObjectLock(ed);
 	if (AG_Defined(ed, "text")) {
 		AG_Text *txt;
-		var = AG_GetVariable(ed, "text", &txt);
+		var = AG_GetVariable(ed, "text", (void *)&txt);
 		s = txt->ent[ed->lang].buf;
 		sDup = TryStrdup((s != NULL) ? s : "");
 	} else {
-		var = AG_GetVariable(ed, "string", &s);
+		var = AG_GetVariable(ed, "string", (void *)&s);
 		sDup = TryStrdup(s);
 	}
 	AG_UnlockVariable(var);
@@ -1869,11 +1862,11 @@ AG_EditableCopyString(AG_Editable *ed, char *dst, AG_Size dst_size)
 	AG_ObjectLock(ed);
 	if (AG_Defined(ed, "text")) {
 		AG_Text *txt;
-		var = AG_GetVariable(ed, "text", &txt);
+		var = AG_GetVariable(ed, "text", (void *)&txt);
 		s = txt->ent[ed->lang].buf;
 		rv = Strlcpy(dst, (s != NULL) ? s : "", dst_size);
 	} else {
-		var = AG_GetVariable(ed, "string", &s);
+		var = AG_GetVariable(ed, "string", (void *)&s);
 		rv = Strlcpy(dst, s, dst_size);
 	}
 	AG_UnlockVariable(var);
@@ -1968,9 +1961,10 @@ Init(void *_Nonnull obj)
 {
 	AG_Editable *ed = obj;
 
-	WIDGET(ed)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_UNFOCUSED_MOTION |
-			     AG_WIDGET_TABLE_EMBEDDABLE | AG_WIDGET_USE_TEXT |
-			     AG_WIDGET_USE_MOUSEOVER;
+	WIDGET(ed)->flags |= AG_WIDGET_FOCUSABLE |
+	                     AG_WIDGET_UNFOCUSED_MOTION |
+			     AG_WIDGET_USE_TEXT |
+	                     AG_WIDGET_USE_MOUSEOVER;
 #ifdef AG_UNICODE
 	ed->encoding = "UTF-8";
 	ed->text = AG_TextNew(0);

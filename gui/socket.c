@@ -217,19 +217,13 @@ Draw(void *_Nonnull obj)
 		r.y = 0;
 		r.w = WIDTH(sock);
 		r.h = HEIGHT(sock);
-		if (AG_WidgetEnabled(sock)) {
-			AG_DrawBox(sock, &r, -1, &WCOLOR(sock,0));
-		} else {
-			AG_DrawBoxDisabled(sock, &r, -1,
-			    &WCOLOR(sock,0),
-			    &WCOLOR_DIS(sock,0));
-		}
+		AG_DrawBoxSunk(sock, &r, &WCOLOR(sock, FG_COLOR));
 		break;
 	case AG_SOCKET_CIRCLE:
 		AG_DrawCircle(sock,
 		    WIDTH(sock) >> 1,
 		    HEIGHT(sock) >> 1,
-		    sock->bgData.circle.r, &WCOLOR(sock,0));
+		    sock->bgData.circle.r, &WCOLOR(sock, FG_COLOR));
 		break;
 	}
 
@@ -249,7 +243,7 @@ Draw(void *_Nonnull obj)
 				r.w = WIDTH(sock) - sock->lPad - sock->rPad;
 				r.h = HEIGHT(sock) - sock->tPad - sock->bPad;
 				AG_DrawRectOutline(sock, &r,
-				    &WCOLOR_SEL(sock,LINE_COLOR));
+				    &WCOLOR(sock, LINE_COLOR));
 			}
 			break;
 		case AG_SOCKET_CIRCLE:
@@ -258,7 +252,7 @@ Draw(void *_Nonnull obj)
 				    WIDTH(sock) >> 1,
 				    HEIGHT(sock) >> 1,
 				    sock->bgData.circle.r - sock->lPad,
-				    &WCOLOR_SEL(sock,LINE_COLOR));
+				    &WCOLOR(sock, LINE_COLOR));
 			}
 			break;
 		}

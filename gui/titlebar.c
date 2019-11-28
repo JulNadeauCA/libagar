@@ -49,13 +49,14 @@ MaximizeWindow(AG_Event *_Nonnull event)
 static void
 CreateMaximizeButton(AG_Titlebar *_Nonnull tbar)
 {
-	tbar->maximize_btn = AG_ButtonNewS(tbar, AG_BUTTON_VFILL, NULL);
-	AG_ButtonJustify(tbar->maximize_btn, AG_TEXT_LEFT);
-	AG_ButtonSetFocusable(tbar->maximize_btn, 0);
-	AG_ButtonSurface(tbar->maximize_btn, agIconWinMaximize.s);
-	AG_ButtonSetPadding(tbar->maximize_btn, 0,2,1,1);
-	AG_SetEvent(tbar->maximize_btn, "button-pushed",
-	    MaximizeWindow, "%Cp", tbar);
+	AG_Button *bu;
+
+	bu = tbar->maximize_btn = AG_ButtonNewS(tbar, AG_BUTTON_VFILL, NULL);
+	AG_ButtonJustify(bu, AG_TEXT_LEFT);
+	AG_ButtonSetFocusable(bu, 0);
+	AG_ButtonSurface(bu, agIconWinMaximize.s);
+	AG_ButtonSetPadding(bu, 0,2,1,1);
+	AG_SetEvent(bu, "button-pushed", MaximizeWindow, "%Cp", tbar);
 }
 
 static void
@@ -69,13 +70,14 @@ MinimizeWindow(AG_Event *_Nonnull event)
 static void
 CreateMinimizeButton(AG_Titlebar *_Nonnull tbar)
 {
-	tbar->minimize_btn = AG_ButtonNewS(tbar, AG_BUTTON_VFILL, NULL);
-	AG_ButtonJustify(tbar->minimize_btn, AG_TEXT_LEFT);
-	AG_ButtonSetFocusable(tbar->minimize_btn, 0);
-	AG_ButtonSurface(tbar->minimize_btn, agIconWinMinimize.s);
-	AG_ButtonSetPadding(tbar->minimize_btn, 0,2,1,1);
-	AG_SetEvent(tbar->minimize_btn, "button-pushed",
-	    MinimizeWindow, "%Cp", tbar);
+	AG_Button *bu;
+
+	bu = tbar->minimize_btn = AG_ButtonNewS(tbar, AG_BUTTON_VFILL, NULL);
+	AG_ButtonJustify(bu, AG_TEXT_LEFT);
+	AG_ButtonSetFocusable(bu, 0);
+	AG_ButtonSurface(bu, agIconWinMinimize.s);
+	AG_ButtonSetPadding(bu, 0,2,1,1);
+	AG_SetEvent(bu, "button-pushed", MinimizeWindow, "%Cp", tbar);
 }
 
 static void
@@ -90,13 +92,14 @@ CloseWindow(AG_Event *_Nonnull event)
 static void
 CreateCloseButton(AG_Titlebar *_Nonnull tbar)
 {
-	tbar->close_btn = AG_ButtonNewS(tbar, AG_BUTTON_VFILL, NULL);
-	AG_ButtonJustify(tbar->close_btn, AG_TEXT_LEFT);
-	AG_ButtonSetFocusable(tbar->close_btn, 0);
-	AG_ButtonSurface(tbar->close_btn, agIconWinClose.s);
-	AG_ButtonSetPadding(tbar->close_btn, 0,2,1,1);
-	AG_SetEvent(tbar->close_btn, "button-pushed",
-	    CloseWindow, "%Cp", tbar);
+	AG_Button *bu;
+
+	bu = tbar->close_btn = AG_ButtonNewS(tbar, AG_BUTTON_VFILL, NULL);
+	AG_ButtonJustify(bu, AG_TEXT_LEFT);
+	AG_ButtonSetFocusable(bu, 0);
+	AG_ButtonSurface(bu, agIconWinClose.s);
+	AG_ButtonSetPadding(bu, 0,2,1,1);
+	AG_SetEvent(bu, "button-pushed", CloseWindow, "%Cp", tbar);
 }
 
 AG_Titlebar *
@@ -172,9 +175,8 @@ Init(void *_Nonnull obj)
 	tbar->minimize_btn = NULL;
 	tbar->close_btn = NULL;
 	
-	tbar->label = AG_LabelNewS(tbar,
-	    AG_LABEL_HFILL | AG_LABEL_NOMINSIZE,
-	    _("Untitled"));
+	tbar->label = AG_LabelNewS(tbar, AG_LABEL_HFILL | AG_LABEL_NOMINSIZE,
+	                           _("Untitled"));
 	tbar->label->wPre = 16;
 	tbar->label->hPre = 1;
 	AG_LabelSetPadding(tbar->label, 5,5,2,2);
@@ -187,16 +189,22 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Titlebar *tbar = obj;
+	const AG_Color *cFg;
 	AG_Rect r;
 
 	r.x = 0;
 	r.y = 0;
 	r.w = WIDTH(tbar);
 	r.h = HEIGHT(tbar);
-	AG_DrawBox(tbar, &r,
-	    (tbar->flags & AG_TITLEBAR_PRESSED) ? -1 : 1,
-	    AG_WindowIsFocused(tbar->win) ? &WCOLOR(tbar,0) :
-	                                    &WCOLOR_DIS(tbar,0));
+
+	cFg = AG_WindowIsFocused(tbar->win) ? &WCOLOR(tbar, FG_COLOR) :
+	                             &WCOLOR_DISABLED(tbar, FG_COLOR);
+
+	if (tbar->flags & AG_TITLEBAR_PRESSED) {
+		AG_DrawBoxSunk(tbar, &r, cFg);
+	} else {
+		AG_DrawBoxRaised(tbar, &r, cFg);
+	}
 
 	WIDGET_SUPER_OPS(tbar)->draw(tbar);
 }

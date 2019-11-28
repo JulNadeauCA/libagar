@@ -225,6 +225,8 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Radio *rad = obj;
+	const AG_Color *cBg = &WCOLOR(rad, BG_COLOR);
+	const AG_Color *cLine = &WCOLOR(rad, LINE_COLOR);
 	AG_Rect r;
 	int xPadding = rad->xPadding;
 	int radius = rad->radius;
@@ -234,14 +236,16 @@ Draw(void *_Nonnull obj)
 	int ySpacing_2 = (rad->ySpacing >> 1);
 	int value, i;
 
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(rad);
-	r.h = HEIGHT(rad);
-	AG_DrawBox(rad, &r, -1, &WCOLOR(rad,AG_BG_COLOR));
+	if (cBg->a > 0) {
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(rad);
+		r.h = HEIGHT(rad);
+		AG_DrawBoxSunk(rad, &r, cBg);
+	}
 	
 	value = AG_GetInt(rad, "value");
-	AG_PushClipRect(rad, &rad->r);
+	AG_PushClipRect(rad, &rad->r);		/* TODO pre-test in sizealloc */
 
 	for (i = 0; i < rad->nItems; i++) {
 		AG_RadioItem *ri = &rad->items[i];
@@ -256,23 +260,23 @@ Draw(void *_Nonnull obj)
 			r.y = y;
 			r.w = WIDTH(rad) - (xPadding << 1);
 			r.h = itemHeight;
-			AG_DrawRectBlended(rad, &r, &WCOLOR_HOV(rad,0),
+			AG_DrawRectBlended(rad, &r,
+			    &WCOLOR_HOVER(rad, FG_COLOR),
 			    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 		}
 
 		xc = xPadding + radius;
 		yc = y + itemHeight_2;
 
-		AG_DrawCircleFilled(rad, xc,yc, radius, &WCOLOR(rad,SHAPE_COLOR));
-		AG_DrawCircle(rad, xc,yc, radius, &WCOLOR(rad,LINE_COLOR));
+		AG_DrawCircleFilled(rad, xc,yc, radius, cLine);
+		AG_DrawCircle(rad, xc,yc, radius, cLine);
 
 		if (i == value) {
-			AG_DrawCircleFilled(rad, xc,yc, (radius >> 1),
-			    &WCOLOR_SEL(rad,SHAPE_COLOR));
+			AG_DrawCircleFilled(rad, xc,yc, (radius >> 1), cLine);
 		}
 		if (i == rad->oversel) {
 			AG_DrawCircle(rad, xc,yc, radius-2,
-			    &WCOLOR_HOV(rad,LINE_COLOR));
+			    &WCOLOR_HOVER(rad, LINE_COLOR));
 		}
 		AG_WidgetBlitSurface(rad, ri->surface, x, y+ySpacing_2);
 
@@ -363,7 +367,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	if (!AG_WidgetIsFocused(rad))
 		AG_WidgetFocus(rad);
 
-	value = AG_GetVariable(rad, "value", &sel);
+	value = AG_GetVariable(rad, "value", (void *)&sel);
 	switch (button) {
 	case AG_MOUSE_LEFT:
 		selNew = ((y - rad->yPadding) / rad->itemHeight);
@@ -391,7 +395,7 @@ KeyDown(AG_Event *_Nonnull event)
 	const int keysym = AG_INT(1);
 	int selNew = -1, i;
 
-	value = AG_GetVariable(rad, "value", &sel);
+	value = AG_GetVariable(rad, "value", (void *)&sel);
 	switch (keysym) {
 	case AG_KEY_DOWN:
 		selNew = *sel;
@@ -452,7 +456,6 @@ Init(void *_Nonnull obj)
 
 	WIDGET(rad)->flags |= AG_WIDGET_FOCUSABLE |
 	                      AG_WIDGET_UNFOCUSED_MOTION |
-			      AG_WIDGET_TABLE_EMBEDDABLE |
 			      AG_WIDGET_USE_TEXT;
 
 	rad->flags = 0;

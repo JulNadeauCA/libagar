@@ -203,8 +203,8 @@ Init(void *_Nonnull obj)
 
 	pa->type = AG_PANE_VERT;
 	pa->flags = 0;
-	pa->div[0] = AG_BoxNew(pa, AG_BOX_VERT, AG_BOX_FRAME);
-	pa->div[1] = AG_BoxNew(pa, AG_BOX_VERT, AG_BOX_FRAME);
+	pa->div[0] = AG_BoxNew(pa, AG_BOX_VERT, 0);
+	pa->div[1] = AG_BoxNew(pa, AG_BOX_VERT, 0);
 	pa->dx = 0;
 	pa->rx = -1;
 	pa->rxPct = -1;
@@ -302,7 +302,7 @@ AG_PaneResizeAction(AG_Pane *pa, enum ag_pane_resize_action ra)
 static void
 DrawHorizDivider(AG_Pane *_Nonnull pa, int x, int y)
 {
-	AG_Color *cShape;
+	const AG_Color *cLine = &WCOLOR(pa, LINE_COLOR);
 	AG_Rect r;
 	int wDiv = pa->wDiv;
 	int xMid = x + (wDiv >> 1);
@@ -311,18 +311,22 @@ DrawHorizDivider(AG_Pane *_Nonnull pa, int x, int y)
 	r.y = 0;
 	r.w = wDiv-2;
 	r.h = HEIGHT(pa);
-	AG_DrawBox(pa, &r, pa->dmoving ? -1 : 1, &WCOLOR(pa,0));
 
-	cShape = &WCOLOR(pa,SHAPE_COLOR);
-	AG_PutPixel(pa, xMid, y,   cShape);
-	AG_PutPixel(pa, xMid, y-5, cShape);
-	AG_PutPixel(pa, xMid, y+5, cShape);
+	if (pa->dmoving) {
+		AG_DrawBoxSunk(pa, &r, &WCOLOR(pa, FG_COLOR));
+	} else {
+		AG_DrawBoxRaised(pa, &r, &WCOLOR(pa, FG_COLOR));
+	}
+
+	AG_PutPixel(pa, xMid, y,   cLine);
+	AG_PutPixel(pa, xMid, y-5, cLine);
+	AG_PutPixel(pa, xMid, y+5, cLine);
 }
 
 static void
 DrawVertDivider(AG_Pane *_Nonnull pa, int x, int y)
 {
-	AG_Color *cShape;
+	const AG_Color *cLine = &WCOLOR(pa, LINE_COLOR);
 	AG_Rect r;
 	int wDiv = pa->wDiv;
 	int yMid = y + (wDiv >> 1);
@@ -331,12 +335,16 @@ DrawVertDivider(AG_Pane *_Nonnull pa, int x, int y)
 	r.y = y+1;
 	r.w = WIDTH(pa);
 	r.h = wDiv-2;
-	AG_DrawBox(pa, &r, pa->dmoving ? -1 : 1, &WCOLOR(pa,0));
+	
+	if (pa->dmoving) {
+		AG_DrawBoxSunk(pa, &r, &WCOLOR(pa, FG_COLOR));
+	} else {
+		AG_DrawBoxRaised(pa, &r, &WCOLOR(pa, FG_COLOR));
+	}
 
-	cShape = &WCOLOR(pa,SHAPE_COLOR);
-	AG_PutPixel(pa, x, yMid,   cShape);
-	AG_PutPixel(pa, x-5, yMid, cShape);
-	AG_PutPixel(pa, x+5, yMid, cShape);
+	AG_PutPixel(pa, x, yMid,   cLine);
+	AG_PutPixel(pa, x-5, yMid, cLine);
+	AG_PutPixel(pa, x+5, yMid, cLine);
 }
 
 static void

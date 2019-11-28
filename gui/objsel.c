@@ -121,7 +121,7 @@ SelectObject(AG_Event *event)
 	AG_Variable *V;
 	void **object;
 	
-	V = AG_GetVariable(os, "object", &object);
+	V = AG_GetVariable(os, "object", (void *)&object);
 
 	if (*object != NULL) {
 		if (os->flags & AG_OBJSEL_PAGE_DATA)

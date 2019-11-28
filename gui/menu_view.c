@@ -314,6 +314,7 @@ Draw(void *_Nonnull obj)
 	AG_MenuView *mv = obj;
 	AG_MenuItem *miRoot = mv->pitem, *mi;
 	AG_Menu *m = mv->pmenu;
+	const AG_Color *cSel = &WCOLOR(mv, SELECTION_COLOR);
 	const AG_Font *font = WFONT(mv);
 	AG_Rect r;
 	const int itemh = m->itemh;
@@ -329,7 +330,6 @@ Draw(void *_Nonnull obj)
 	AG_ObjectLock(m);
 
 	TAILQ_FOREACH(mi, &miRoot->subItems, items) {
-		AG_Color c;
 		const AG_Surface *Sicon = mi->iconSrc;
 		const int mi_state = mi->state;
 		int x = mv->lPad;
@@ -341,7 +341,7 @@ Draw(void *_Nonnull obj)
 			UpdateItem(m, mi);
 
 		if (mi == miRoot->sel_subitem && mi_state)    /* Is selected */
-			AG_DrawRect(mv, &r, &WCOLOR_SEL(mv,0));
+			AG_DrawRect(mv, &r, cSel);
 
 		if (mi->icon == -1 && Sicon) {
 			mi->icon = AG_WidgetMapSurface(mv, AG_SurfaceDup(Sicon));
@@ -356,14 +356,14 @@ Draw(void *_Nonnull obj)
 			bv = (mi->value != -1) ? mi->value : GetItemBoolValue(mi);
 			if (bv) {
 				AG_Rect rFrame;
+				AG_Color c;
 
 				rFrame.x = x;
 				rFrame.y = r.y + 2;
 				rFrame.w = r.h;
 				rFrame.h = r.h - 2;
-
-				AG_ColorRGB_8(&c, 223,207,128);	/* XXX */
-				AG_DrawFrame(mv, &rFrame, 1, &c);
+				AG_DrawFrameRaised(mv, &rFrame);
+				c = *cSel;
 				c.a = AG_OPAQUE/4;
 				AG_DrawRectBlended(mv, &rFrame, &c,
 				    AG_ALPHA_SRC,
@@ -376,7 +376,7 @@ Draw(void *_Nonnull obj)
 			x += itemh + mv->spIconLbl;
 
 		if (mi->flags & AG_MENU_ITEM_SEPARATOR) {
-			AG_Color c1 = WCOLOR(mv,0);
+			AG_Color c1 = WCOLOR(mv, FG_COLOR);
 			AG_Color c2 = c1;
 			const int x1 = mv->lPad;
 			const int x2 = WIDTH(mv) - mv->rPad - 1;
@@ -391,7 +391,7 @@ Draw(void *_Nonnull obj)
 			/* Render the menu item's text string */
 			if (mi_state) {
 				if (mi->lblView[1] == -1) {
-					AG_TextColor(&WCOLOR(mv,TEXT_COLOR));
+					AG_TextColor(&WCOLOR(mv, TEXT_COLOR));
 					mi->lblView[1] = (mi->text==NULL) ? -1 :
 					    AG_WidgetMapSurface(mv,
 					    AG_TextRender(mi->text));
@@ -399,7 +399,7 @@ Draw(void *_Nonnull obj)
 				lbl = mi->lblView[1];
 			} else {
 				if (mi->lblView[0] == -1) {
-					AG_TextColor(&WCOLOR_DIS(mv,TEXT_COLOR));
+					AG_TextColor(&WCOLOR_DISABLED(mv, TEXT_COLOR));
 					mi->lblView[0] =
 					    (mi->text == NULL) ? -1 :
 					    AG_WidgetMapSurface(mv,
