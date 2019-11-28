@@ -39,6 +39,13 @@ AG_FixedNew(void *parent, Uint flags)
 	AG_ObjectInit(fx, &agFixedClass);
 	fx->flags |= flags;
 
+#ifdef AG_LEGACY
+	if (flags & AG_FIXED_BOX)         { fx->style = AG_FIXED_STYLE_BOX; }
+	else if (flags & AG_FIXED_INVBOX) { fx->style = AG_FIXED_STYLE_WELL; }
+	else if (flags & AG_FIXED_FRAME)  { fx->style = AG_FIXED_STYLE_FRAME; }
+	else if (flags & AG_FIXED_FILLBG) { fx->style = AG_FIXED_STYLE_PLAIN; }
+#endif
+
 	if (flags & AG_FIXED_HFILL) { AG_ExpandHoriz(fx); }
 	if (flags & AG_FIXED_VFILL) { AG_ExpandVert(fx); }
 
@@ -52,6 +59,7 @@ Init(void *_Nonnull obj)
 	AG_Fixed *fx = obj;
 
 	fx->flags = 0;
+	fx->style = AG_FIXED_STYLE_WELL;		/* 3D well */
 	fx->wPre = 0;
 	fx->hPre = 0;
 }
@@ -96,6 +104,12 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 static void
 Draw(void *_Nonnull obj)
 {
+	static void (*pfBox[])(void *, const AG_Rect *, const AG_Color *) = {
+		ag_draw_rect_noop,  /* NONE */
+		ag_draw_box_raised, /* BOX */
+		ag_draw_box_sunk,   /* WELL */
+		ag_draw_rect        /* PLAIN */
+	};
 	AG_Fixed *fx = obj;
 	AG_Widget *chld;
 	AG_Rect r;
@@ -105,15 +119,11 @@ Draw(void *_Nonnull obj)
 	r.w = WIDTH(fx);
 	r.h = HEIGHT(fx);
 
-	if (fx->flags & AG_FIXED_BOX) {
-		AG_DrawBox(fx, &r, -1, &WCOLOR(fx,0));
-	} else if (fx->flags & AG_FIXED_INVBOX) {
-		AG_DrawBox(fx, &r, -1, &WCOLOR(fx,0));
-	} else if (fx->flags & AG_FIXED_FRAME) {
-		AG_DrawFrame(fx, &r, -1, &WCOLOR(fx,0));
-	} else if (fx->flags & AG_FIXED_FILLBG) {
-		AG_DrawRect(fx, &r, &WCOLOR(fx,0));
-	}
+#ifdef AG_DEBUG
+	if (fx->style < 0 || fx->style >= AG_FIXED_STYLE_LAST)
+		AG_FatalError("style");
+#endif
+	pfBox[fx->style](fx, &r, &WCOLOR(fx, BG_COLOR));
 
 	OBJECT_FOREACH_CHILD(chld, fx, ag_widget)
 		AG_WidgetDraw(chld);

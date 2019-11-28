@@ -7,9 +7,17 @@
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/begin.h>
 
-enum ag_scrollview_packing {
+enum ag_scrollview_type {
 	AG_SCROLLVIEW_HORIZ,
 	AG_SCROLLVIEW_VERT
+};
+
+enum ag_scrollview_style {
+	AG_SCROLLVIEW_STYLE_NONE,	/* No graphic */
+	AG_SCROLLVIEW_STYLE_BOX,	/* 3D raised box */
+	AG_SCROLLVIEW_STYLE_WELL,	/* 3D well */
+	AG_SCROLLVIEW_STYLE_PLAIN,	/* Filled rectangle */
+	AG_SCROLLVIEW_STYLE_LAST
 };
 
 typedef struct ag_scrollview {
@@ -27,14 +35,16 @@ typedef struct ag_scrollview {
 #define AG_SCROLLVIEW_EXPAND       (AG_SCROLLVIEW_HFILL|AG_SCROLLVIEW_VFILL)
 #define AG_SCROLLVIEW_NOPAN_XY     (AG_SCROLLVIEW_NOPAN_X|AG_SCROLLVIEW_NOPAN_Y)
 
-	enum ag_scrollview_packing pack; /* Packing mode */
+	enum ag_scrollview_type type;	/* Packing mode */
+	enum ag_scrollview_style style;	/* Graphical style */
+	Uint32 _pad;
 	int wPre, hPre;			/* Requested geometry */
 	int xOffs, yOffs;		/* Display offset */
 	int xMin, xMax, yMin, yMax;	/* Display boundaries */
-	AG_Rect r;			/* Available space for widgets */
+	int wBar, hBar;			/* Effective scrollbar sizes */
+	AG_Rect r;			/* Widget space (scrollbars excluded) */
 	AG_Scrollbar *_Nullable hbar;	/* Horizontal scrollbar */
 	AG_Scrollbar *_Nullable vbar;	/* Vertical scrollbar */
-	int wBar, hBar;			/* Effective scrollbar sizes */
 } AG_Scrollview;
 
 #define AGSCROLLVIEW(obj)            ((AG_Scrollview *)(obj))

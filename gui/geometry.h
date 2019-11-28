@@ -25,13 +25,16 @@ typedef struct ag_rect2 {
 	int x2, y2;		/* Lower-right */
 } AG_Rect2;
 
+/* Clipping rectangle */
 typedef struct ag_clip_rect {
 	AG_Rect r;		/* Clipping rectangle coordinates */
-	double eqns[4][4];	/* Cached plane equations (GL mode) */
+	double eqns[4][4];	/* Plane equations (calculated) */
 } AG_ClipRect;
 
+/* Floating-point texture coordinate */
 typedef struct ag_texcoord {
-	float x,y, w,h;		/* Texture coordinates (GL mode) */
+	float x, y;		/* Upper left coordinate */
+	float w, h;		/* Rectangle size */
 } AG_TexCoord;
 
 __BEGIN_DECLS

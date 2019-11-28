@@ -83,7 +83,7 @@ PlaceWidgets(AG_Scrollview *_Nonnull sv, int *_Nullable wTot,
 		aChld.w = rChld.w;
 		aChld.h = rChld.h;
 		AG_WidgetSizeAlloc(chld, &aChld);
-		switch (sv->pack) {
+		switch (sv->type) {
 		case AG_SCROLLVIEW_HORIZ:
 			aChld.x += aChld.w;
 			break;
@@ -93,7 +93,7 @@ PlaceWidgets(AG_Scrollview *_Nonnull sv, int *_Nullable wTot,
 		}
 		ClipWidgets(sv, chld);
 	}
-	switch (sv->pack) {
+	switch (sv->type) {
 	case AG_SCROLLVIEW_HORIZ:
 		if (wTot != NULL)
 			*wTot = aChld.x + sv->xOffs;
@@ -277,8 +277,8 @@ void
 AG_ScrollviewSetIncrement(AG_Scrollview *sv, int incr)
 {
 	AG_ObjectLock(sv);
-	if (sv->hbar != NULL) { AG_SetInt(sv->hbar, "inc", incr); }
-	if (sv->vbar != NULL) { AG_SetInt(sv->vbar, "inc", incr); }
+	if (sv->hbar) { AG_SetInt(sv->hbar, "inc", incr); }
+	if (sv->vbar) { AG_SetInt(sv->vbar, "inc", incr); }
 	AG_ObjectUnlock(sv);
 }
 
@@ -288,23 +288,21 @@ Init(void *_Nonnull obj)
 	AG_Scrollview *sv = obj;
 
 	sv->flags = 0;
+	sv->type = AG_SCROLLVIEW_VERT;			/* Pack vertically */
+	sv->style = AG_SCROLLVIEW_STYLE_WELL;		/* 3D well */
 	sv->wPre = (AG_MODEL * 8);
 	sv->hPre = (AG_MODEL * 8);
-	sv->xOffs = 0;
-	sv->yOffs = 0;
-	sv->xMin = 0;
-	sv->yMin = 0;
-	sv->xMax = 0;
-	sv->yMax = 0;
-	sv->hbar = NULL;
-	sv->vbar = NULL;
-	sv->wBar = 0;
-	sv->hBar = 0;
-	sv->pack = AG_SCROLLVIEW_VERT;
-	sv->r.x = 0;
-	sv->r.y = 0;
-	sv->r.w = 0;
-	sv->r.h = 0;
+	memset(&sv->xOffs, 0, sizeof(int) +		/* xOffs */
+	                      sizeof(int) +		/* yOffs */
+	                      sizeof(int) +		/* xMin */
+	                      sizeof(int) +		/* xMax */
+	                      sizeof(int) +		/* yMin */
+	                      sizeof(int) +		/* yMax */
+	                      sizeof(int) +		/* wBar */
+	                      sizeof(int) +		/* hBar */
+			      sizeof(AG_Rect) +		/* r */
+			      sizeof(AG_Scrollbar *) +	/* hbar */
+			      sizeof(AG_Scrollbar *));	/* vbar */
 
 	AG_SetInt(sv, "x-scroll-amount", 40);
 	AG_SetInt(sv, "y-scroll-amount", 40);
@@ -328,11 +326,11 @@ SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 	r->w = sv->wPre;
 	r->h = sv->hPre;
 	
-	if (sv->hbar != NULL) {
+	if (sv->hbar) {
 		AG_WidgetSizeReq(sv->hbar, &rBar);
 		r->h += rBar.h;
 	}
-	if (sv->vbar != NULL) {
+	if (sv->vbar) {
 		AG_WidgetSizeReq(sv->vbar, &rBar);
 		r->w += rBar.w;
 	}
@@ -344,7 +342,7 @@ SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 		AG_WidgetSizeReq(chld, &rChld);
 		if (rChld.w > wMax) { wMax = rChld.w; }
 		if (rChld.h > hMax) { hMax = rChld.h; }
-		switch (sv->pack) {
+		switch (sv->type) {
 		case AG_SCROLLVIEW_HORIZ:
 			r->h = MAX(r->h, hMax);
 			r->w += rChld.w;
@@ -368,7 +366,7 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 	sv->r.w = a->w;
 	sv->r.h = a->h;
 
-	if (sv->hbar != NULL) {
+	if (sv->hbar) {
 		AG_WidgetSizeReq(sv->hbar, &rBar);
 		aBar.w = a->w - rBar.h;
 		aBar.h = rBar.h;
@@ -381,7 +379,7 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 	} else {
 		sv->hBar = 0;
 	}
-	if (sv->vbar != NULL) {
+	if (sv->vbar) {
 		AG_WidgetSizeReq(sv->vbar, &rBar);
 		aBar.w = rBar.w;
 		aBar.h = a->h - rBar.w;
@@ -399,11 +397,11 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 	sv->xMax = wTot;
 	sv->yMax = hTot;
 
-	if (sv->hbar != NULL) {
+	if (sv->hbar) {
 		if ((sv->xMax - sv->r.w - sv->xOffs) < 0)
 			sv->xOffs = MAX(0, sv->xMax - sv->r.w);
 	}
-	if (sv->vbar != NULL) {
+	if (sv->vbar) {
 		if ((sv->yMax - sv->r.h - sv->yOffs) < 0)
 			sv->yOffs = MAX(0, sv->yMax - sv->r.h);
 	}
@@ -423,21 +421,29 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 static void
 Draw(void *_Nonnull p)
 {
+	static void (*pfBox[])(void *, const AG_Rect *, const AG_Color *) = {
+		ag_draw_rect_noop,  /* NONE */
+		ag_draw_box_raised, /* BOX */
+		ag_draw_box_sunk,   /* WELL */
+		ag_draw_rect        /* PLAIN */
+	};
 	AG_Scrollview *sv = p;
 	AG_Widget *chld;
 	AG_Rect r;
 	int x2,y2;
 
-	if (sv->flags & AG_SCROLLVIEW_FRAME) {
-		r.x = 0;
-		r.y = 0;
-		r.w = WIDTH(sv);
-		r.h = HEIGHT(sv);
-		AG_DrawBox(sv, &r, -1, &WCOLOR(sv,0));
-	}
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(sv);
+	r.h = HEIGHT(sv);
+#ifdef AG_DEBUG
+	if (sv->style < 0 || sv->style >= AG_SCROLLVIEW_STYLE_LAST)
+		AG_FatalError("style");
+#endif
+	pfBox[sv->style](sv, &r, &WCOLOR(sv, BG_COLOR));
 
-	if (sv->hbar != NULL) { AG_WidgetDraw(sv->hbar); }
-	if (sv->vbar != NULL) { AG_WidgetDraw(sv->vbar); }
+	if (sv->hbar) { AG_WidgetDraw(sv->hbar); }
+	if (sv->vbar) { AG_WidgetDraw(sv->vbar); }
 
 	x2 = WIDGET(sv)->rView.x2 - sv->wBar;
 	y2 = WIDGET(sv)->rView.y2 - sv->hBar;
@@ -447,6 +453,11 @@ Draw(void *_Nonnull p)
 	r.y++;
 	r.w -= 2;
 	r.h -= 2;
+	
+	/*
+	 * TODO determine earlier if there are partially visible widgets
+	 * and a clipping rectangle is really needed.
+	 */
 	AG_PushClipRect(sv, &r);
 
 	OBJECT_FOREACH_CHILD(chld, sv, ag_widget) {
