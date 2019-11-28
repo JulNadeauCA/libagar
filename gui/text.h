@@ -263,10 +263,18 @@ typedef struct ag_font {
 	struct ag_object obj;
 	AG_FontSpec spec;		/* Input font specification */
 	Uint flags;
-#define AG_FONT_BOLD		0x01	/* Render as bold */
-#define AG_FONT_ITALIC		0x02	/* Render as italic */
-#define AG_FONT_UNDERLINE	0x04	/* Render with underline */
-#define AG_FONT_UPPERCASE	0x08	/* Force uppercase display */
+#define AG_FONT_BOLD           0x01	/* Bold weight (or SW.Bold fallback) */
+#define AG_FONT_ITALIC         0x02	/* Italic style (or SW.Italic fallback) */
+#define AG_FONT_UNDERLINE      0x04	/* Underlined */
+#define AG_FONT_UPPERCASE      0x08	/* Force uppercase */
+#define AG_FONT_SEMIBOLD       0x10	/* Semibold (not SW) */
+#define AG_FONT_UPRIGHT_ITALIC 0x20	/* Upright italic (not SW) */
+#define AG_FONT_SEMICONDENSED  0x40	/* Semi-condensed (not SW) */
+#define AG_FONT_CONDENSED      0x80	/* Condensed (not SW) */
+#define AG_FONT_BOLDS          (AG_FONT_SEMIBOLD | AG_FONT_BOLD)
+#define AG_FONT_ITALICS        (AG_FONT_ITALIC | AG_FONT_UPRIGHT_ITALIC)
+#define AG_FONT_WIDTH_VARIANTS (AG_FONT_SEMICONDENSED | AG_FONT_CONDENSED)
+
 	int height;			/* Body size in pixels */
 	int ascent;			/* Ascent (relative to baseline) */
 	int descent;			/* Descent (relative to baseline) */

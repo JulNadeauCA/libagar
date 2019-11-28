@@ -39,14 +39,8 @@
 .\" IMAGE(http://libagar.org/widgets/AG_Textbox.png, "The AG_Textbox(3) widget")
 The
 .Nm
-interface enables Agar applications to size and render text.
-Currently, the following engines:
-.Dv AG_FONT_VECTOR
-(if FreeType is available),
-.Dv AG_FONT_BITMAP
-(simple built-in bitmap font renderer) and
-.Dv AG_FONT_DUMMY
-(a no-op renderer).
+interface allows Agar GUI widgets to render text using a vector or a bitmap engine.
+FreeType is used by default if it is available.
 .Sh RENDERING ATTRIBUTES
 Agar maintains a stack of rendering attributes which influence the operation
 of text rendering and sizing routines.
@@ -403,19 +397,35 @@ which displays the message for a specific amount of time, given in milliseconds.
 .nr nS 0
 .Fn AG_FetchFont
 loads (or retrieves from cache) the font corresponding to the specified
-.Fa face
-and
+.Fa face ,
 .Fa size
-in points.
-.Pp
-Recognized
-.Fa flags
-by
-.Fn AG_FetchFont
-include
-.Dv AG_FONT_BOLD
 and
-.Dv AG_FONT_ITALIC .
+.Fa flags
+attributes.
+.Fa face
+can be the name of an installed (system) font, or a specific filename to
+load from
+.Va font-path .
+The
+.Fa size
+argument is in points (fractional sizes are permitted).
+Possible
+.Fa flags
+include:
+.Bd -literal
+#define AG_FONT_BOLD           0x01 /* Bold weight (or SW fallback) */
+#define AG_FONT_ITALIC         0x02 /* Italic style (or SW fallback) */
+#define AG_FONT_UNDERLINE      0x04 /* Underlined */
+#define AG_FONT_UPPERCASE      0x08 /* Force uppercase */
+#define AG_FONT_SEMIBOLD       0x10 /* Semibold (not SW) */
+#define AG_FONT_UPRIGHT_ITALIC 0x20 /* Upright italic (not SW) */
+#define AG_FONT_SEMICONDENSED  0x40 /* Semi-condensed (not SW) */
+#define AG_FONT_CONDENSED      0x80 /* Condensed (not SW) */
+#define AG_FONT_BOLDS          (AG_FONT_SEMIBOLD | AG_FONT_BOLD)
+#define AG_FONT_ITALICS        (AG_FONT_ITALIC | AG_FONT_UPRIGHT_ITALIC)
+#define AG_FONT_WIDTH_VARIANTS (AG_FONT_SEMICONDENSED | AG_FONT_CONDENSED)
+.Ed
+.Pp
 The font is loaded from file if not currently resident (unless the fontconfig
 library is available, the font file should reside in one of the directories
 specified in the
@@ -481,6 +491,4 @@ The
 interface first appeared in Agar 1.0.
 Rendering attributes were introduced in Agar 1.3.
 Fontconfig support was added in Agar 1.5.
-The
-.Fn AG_TEXT_STATE_CUR
-macro was added in Agar 1.6.
+Semibold and width variants were added in Agar 1.6.
