@@ -645,6 +645,8 @@ AG_PopTextState(void)
 void
 AG_UnusedFont(AG_Font *font)
 {
+	AG_OBJECT_ISA(font, "AG_Font:*");
+
 	AG_MutexLock(&agTextLock);
 	if (font != agDefaultFont) {
 		if (--font->nRefs == 0) {
