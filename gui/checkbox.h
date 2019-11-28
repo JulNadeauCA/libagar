@@ -18,7 +18,7 @@ typedef struct ag_checkbox {
 #define AG_CHECKBOX_INVERT	0x08	/* Initialize "invert" to 1 */
 	int state;			/* Default "state" binding */
 	int spacing;			/* Spacing in pixels */
-	int invert;			/* Invert the state */
+	int suCheckmark;		/* Rendered checkmark surface */
 	AG_Label *_Nullable lbl;	/* Text label */
 } AG_Checkbox;
 

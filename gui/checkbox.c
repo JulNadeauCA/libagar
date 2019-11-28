@@ -128,8 +128,6 @@ AG_CheckboxNewS(void *parent, Uint flags, const char *label)
 	}
 	if (flags & AG_CHECKBOX_SET)
 		cb->state = 1;
-	if (flags & AG_CHECKBOX_INVERT)
-		cb->invert = 1;
 
 	AG_ObjectAttach(parent, cb);
 	return (cb);
@@ -171,26 +169,39 @@ KeyDown(AG_Event *_Nonnull event)
 }
 
 static void
+StyleChanged(AG_Event *_Nonnull event)
+{
+	AG_Checkbox *cb = AG_CHECKBOX_SELF();
+
+	if (cb->suCheckmark != -1) {
+		AG_WidgetUnmapSurface(cb, cb->suCheckmark);
+		cb->suCheckmark = -1;
+	}
+}
+
+static void
 Init(void *_Nonnull obj)
 {
 	AG_Checkbox *cb = obj;
 
 	WIDGET(cb)->flags |= AG_WIDGET_FOCUSABLE |
-	                     AG_WIDGET_TABLE_EMBEDDABLE |
 			     AG_WIDGET_USE_TEXT |
 			     AG_WIDGET_USE_MOUSEOVER;
 
 	cb->flags = 0;
 	cb->state = 0;
 	cb->spacing = 4;
-	cb->invert = 0;
+	cb->suCheckmark = -1;
 	cb->lbl = NULL;
 	
 	AG_BindInt(cb, "state", &cb->state);
-	AG_RedrawOnChange(cb, 100, "state");
+	AG_RedrawOnChange(cb, 300, "state");
 	
 	AG_SetEvent(cb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(cb, "key-down", KeyDown, NULL);
+
+	AG_AddEvent(cb, "font-changed",    StyleChanged, NULL);
+	AG_AddEvent(cb, "palette-changed", StyleChanged, NULL);
 }
 
 static void
@@ -202,26 +213,20 @@ Draw(void *_Nonnull obj)
 	AG_Rect r;
 	int state;
 
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(cb);
-	r.h = HEIGHT(cb);
-	AG_PushClipRect(cb, &r); /* XXX */
-
 	V = AG_GetVariable(cb, "state", &p);
 	switch (V->type) {
 	case AG_VARIABLE_INT:				/* Natural integer */
 	case AG_VARIABLE_UINT:
-		state = V->data.i;
+		state = (V->data.i) ? 1 : 0;
 		AG_UnlockVariable(V);
 		break;
 	case AG_VARIABLE_P_INT:
 	case AG_VARIABLE_P_UINT:
-		state = *(int *)p;
+		state = (*(int *)p) ? 1 : 0;
 		AG_UnlockVariable(V);
 		break;
 	case AG_VARIABLE_P_FLAG:
-		state = *(Uint *)p & V->info.bitmask.u;
+		state = (*(Uint *)p & V->info.bitmask.u) ? 1 : 0;
 		AG_UnlockVariable(V);
 		break;
 	default:					/* General case */
@@ -230,7 +235,7 @@ Draw(void *_Nonnull obj)
 		break;
 	}
 
-	if (cb->invert)
+	if (cb->flags & AG_CHECKBOX_INVERT)
 		state = !state;
 
 	if (WIDGET(cb)->flags & AG_WIDGET_MOUSEOVER)
@@ -241,16 +246,36 @@ Draw(void *_Nonnull obj)
 	r.w = WFONT(cb)->height;
 	r.h = r.w;
 
-	if (AG_WidgetEnabled(cb)) {
-		AG_DrawBox(cb, &r, state ? -1 : 1, &WCOLOR(cb,0));
+	if (state) {
+		AG_Color cFgDark;
+
+		cFgDark = WCOLOR(cb, FG_COLOR);
+		AG_ColorDarken(&cFgDark, 2);
+		AG_DrawBoxSunk(cb, &r, &cFgDark);
 	} else {
-		AG_DrawBoxDisabled(cb, &r, state ? -1 : 1, &WCOLOR(cb,0),
-		                                           &WCOLOR_DIS(cb,0));
+		AG_DrawBoxRaised(cb, &r, &WCOLOR(cb, FG_COLOR));
 	}
-	if (cb->lbl != NULL) {
+
+	if (cb->lbl)
 		AG_WidgetDraw(cb->lbl);
+
+	if (state) {
+		AG_Surface *S;
+
+		if (cb->suCheckmark == -1) {
+			AG_TextFontLookup("dejavu-sans",
+			                  WFONT(cb)->spec.size,
+					  WFONT(cb)->flags);
+
+			/* U+2713 (CHECK MARK) */
+			cb->suCheckmark = AG_WidgetMapSurface(cb,
+			    AG_TextRender("\xe2\x9c\x93"));
+		}
+		S = WSURFACE(cb, cb->suCheckmark);
+		AG_WidgetBlitFrom(cb, cb->suCheckmark, NULL,
+		    (r.w >> 1) - (S->w >> 1),
+		    (r.h >> 1) - (S->h >> 1));
 	}
-	AG_PopClipRect(cb);
 }
 
 /* Return the checkbox state. */
@@ -313,7 +338,7 @@ AG_CheckboxGetState(AG_Checkbox *cb)
 	}
 	AG_UnlockVariable(bState);
 	AG_ObjectUnlock(cb);
-	return (rv);
+	return (rv) ? 1 : 0;
 }
 
 static void
@@ -377,7 +402,7 @@ AG_CheckboxSetState(AG_Checkbox *cb, int newState)
 	void *p;
 
 	AG_ObjectLock(cb);
-	if (cb->invert) {
+	if (cb->flags & AG_CHECKBOX_INVERT) {
 		newState = !newState;
 	}
 	V = AG_GetVariable(cb, "state", &p);
