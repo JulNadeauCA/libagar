@@ -56,7 +56,7 @@ OnOverlay(AG_Event *_Nonnull event)
 	char text[128];
 	
 	AG_Snprintf(text, sizeof(text), "%s", OBJECT(pv)->name);
-	AG_TextColor(&WCOLOR(pv,TEXT_COLOR));
+	AG_TextColor(&WCOLOR(pv, TEXT_COLOR));
 	if ((su = AG_TextRender(text)) != NULL) {
 		AG_WidgetBlit(pv, su, 0, HEIGHT(pv) - su->h);
 		AG_SurfaceFree(su);

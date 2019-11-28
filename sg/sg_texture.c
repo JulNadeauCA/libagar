@@ -379,7 +379,7 @@ PreviewTexture(AG_Event *_Nonnull event)
 	AG_Surface *suFile, *suScaled = NULL;
 
 	if ((suFile = AG_SurfaceFromFile(path)) == NULL) {
-		AG_TextColor(&WCOLOR(px,TEXT_COLOR));
+		AG_TextColor(&WCOLOR(px, TEXT_COLOR));
 		AG_PixmapReplaceSurface(px, px->n, AG_TextRender(AG_GetError()));
 		return;
 	}

@@ -29,7 +29,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SpacerNewHoriz(win);
 
 	AG_LabelNewS(win, 0, "Bounded checkboxes (bits):");
-	box = AG_BoxNewVert(win, AG_BOX_FRAME | AG_BOX_EXPAND);
+	box = AG_BoxNewVert(win, AG_BOX_EXPAND);
 #ifdef AG_ENABLE_STRING
 	AG_LabelNewPolled(box, AG_LABEL_EXPAND, "Value: 0x%x", &ti->myFlags);
 	for (i = 0, mask = 0x0001; i < 16; i++) {

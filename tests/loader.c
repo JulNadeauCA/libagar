@@ -140,7 +140,7 @@ TestGUI(void *obj, AG_Window *win)
 		 * widgets for type specific options. We specify where those
 		 * widgets will be created here.
 		 */
-		box = AG_BoxNewVert(nt, AG_BOX_HFILL | AG_BOX_FRAME);
+		box = AG_BoxNewVert(nt, AG_BOX_HFILL);
 		AG_BoxSetPadding(box, 10);
 		AG_FileDlgSetOptionContainer(fd, box);
 	}

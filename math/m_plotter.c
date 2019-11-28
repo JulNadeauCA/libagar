@@ -498,6 +498,8 @@ static void
 Draw(void *_Nonnull obj)
 {
 	M_Plotter *ptr = obj;
+	const AG_Color *cBg = &WCOLOR(ptr, BG_COLOR);
+	const AG_Color *cText = &WCOLOR(ptr, TEXT_COLOR);
 	M_Plot *pl;
 	M_PlotLabel *plbl;
 	AG_Rect r;
@@ -511,7 +513,7 @@ Draw(void *_Nonnull obj)
 	r.w = WIDTH(ptr)-2;
 	r.h = HEIGHT(ptr)-2;
 
-	AG_DrawBox(ptr, &r, -1, &WCOLOR(ptr,0));
+	AG_DrawBoxSunk(ptr, &r, cBg);
 
 	AG_PushClipRect(ptr, &r);
 	
@@ -538,8 +540,7 @@ Draw(void *_Nonnull obj)
 			if (pl->flags & M_PLOT_SELECTED) {
 				AG_DrawRectOutline(ptr, &r, &color);
 			} else if (pl->flags & M_PLOT_MOUSEOVER) {
-				AG_DrawRectOutline(ptr, &r,
-				    &WCOLOR(ptr,TEXT_COLOR));
+				AG_DrawRectOutline(ptr, &r, cText);
 			}
 			AG_WidgetBlitSurface(ptr, pl->label, xLabel, yLabel);
 		}
@@ -580,16 +581,16 @@ Draw(void *_Nonnull obj)
 
 		TAILQ_FOREACH(plbl, &pl->labels, labels) {
 			AG_Surface *su = WSURFACE(ptr,plbl->text_surface);
-			AG_Color colBG, colLine;
+			AG_Color cLblBg, cLine;
 			int xLbl, yLbl;
 
 			switch (plbl->type) {
 			case M_LABEL_X:
 				xLbl = plbl->x - xOffs;
 				yLbl = h - su->h - 4 - plbl->y;
-				colLine = pl->color;
-				colLine.a >>= 1;
-				AG_DrawLineV(ptr, xLbl, 1, h-2, &colLine);
+				cLine = pl->color;
+				cLine.a >>= 1;
+				AG_DrawLineV(ptr, xLbl, 1, h-2, &cLine);
 				break;
 			case M_LABEL_Y:
 				xLbl = plbl->x - xOffs;
@@ -604,13 +605,14 @@ Draw(void *_Nonnull obj)
 				yLbl = 4 + plbl->y;
 				break;
 			}
-			colBG = WCOLOR(ptr,0);
-			colBG.a = 200;
+			cLblBg = *cBg;
+			cLblBg.a = AG_8toH(200);
+
 			r.x = xLbl + 2;
 			r.y = yLbl;
 			r.w = su->w;
 			r.h = su->h;
-			AG_DrawRect(ptr, &r, &colBG);
+			AG_DrawRect(ptr, &r, &cLblBg);
 			AG_WidgetBlitSurface(ptr, plbl->text_surface, r.x, r.y);
 		}
 	}

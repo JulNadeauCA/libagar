@@ -96,15 +96,12 @@ Draw(void *_Nonnull p)
 	AG_Color c;
 	AG_Rect r;
 
-	/*
-	 * Draw a box spanning the widget area. Use the widget's
-	 * default color (the "color" style property).
-	 */
+	/* Draw a raised 3D box over the widget area; use background-color. */
 	r.x = 0;
 	r.y = 0;
 	r.w = AGWIDGET(my)->w;
 	r.h = AGWIDGET(my)->h;
-	AG_DrawBox(my, &r, 1, &AG_WCOLOR(my,0));
+	AG_DrawBoxRaised(my, &r, &AG_WCOLOR(my, AG_BG_COLOR));
 
 	if (my->label == -1) {
 		AG_TextFontPct(500);

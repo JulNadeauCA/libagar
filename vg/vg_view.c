@@ -731,7 +731,7 @@ Draw(void *_Nonnull obj)
 
 	if (vv->status[0] != '\0') {
 		AG_PushTextState();
-		AG_TextColor(&WCOLOR(vv,TEXT_COLOR));
+		AG_TextColor(&WCOLOR(vv, TEXT_COLOR));
 		if ((su = AG_TextCacheGet(vv->tCache, vv->status)) != -1) {
 			AG_WidgetBlitSurface(vv, su,
 			    0,

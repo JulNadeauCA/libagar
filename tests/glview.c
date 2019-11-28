@@ -337,7 +337,7 @@ TestGUI(void *obj, AG_Window *win)
 			AG_BindFloat(pal, "RGBAv", ti->specular);
 		}
 	}
-	hb = AG_BoxNewHoriz(win, AG_BOX_FRAME|AG_BOX_HFILL);
+	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
 		AG_RadioNewInt(hb, 0, primitiveNames, (void *)&ti->primitive);
 		AG_SeparatorNewVert(hb);

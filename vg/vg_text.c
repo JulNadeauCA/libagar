@@ -387,7 +387,7 @@ Edit(void *_Nonnull obj, VG_View *_Nonnull vv)
 	AG_TextboxBindASCII(tb, vt->text, sizeof(vt->text));
 #endif
 
-	bAlv = AG_BoxNewVertNS(vPane->div[1], AG_BOX_HFILL|AG_BOX_FRAME);
+	bAlv = AG_BoxNewVertNS(vPane->div[1], AG_BOX_HFILL);
 	AG_LabelNew(bAlv, 0, _("Alignment: "));
 	bAl = AG_BoxNewHorizNS(bAlv, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	AG_ButtonNewFn(bAl, 0, _("TL"), SetAlign, "%p,%i", vt, VG_ALIGN_TL);

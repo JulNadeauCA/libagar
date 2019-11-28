@@ -228,11 +228,11 @@ DrawNumerical(M_Matview *_Nonnull mv)
 	int xInc = mv->wEnt + mv->hSpacing;
 	int xEnd = mv->r.w, yEnd = mv->r.h;
 
-	AG_DrawBox(mv, &mv->r, -1, &WCOLOR(mv,0));
+	AG_DrawBoxSunk(mv, &mv->r, &WCOLOR(mv, BG_COLOR));
 	AG_PushClipRect(mv, &mv->r);
 	
 	AG_PushTextState();
-	AG_TextColor(&WCOLOR(mv,TEXT_COLOR));
+	AG_TextColor(&WCOLOR(mv, TEXT_COLOR));
 
 	for (m=0, y=yOffs;
 	     m < MROWS(M) && y < yEnd;
@@ -249,8 +249,8 @@ DrawNumerical(M_Matview *_Nonnull mv)
 		}
 	}
 	
-	AG_DrawLineV(mv, xMin-2, 2, y, &WCOLOR(mv,LINE_COLOR));
-	AG_DrawLineV(mv, xMax+4, 2, y, &WCOLOR(mv,LINE_COLOR));
+	AG_DrawLineV(mv, xMin-2, 2, y, &WCOLOR(mv, LINE_COLOR));
+	AG_DrawLineV(mv, xMax+4, 2, y, &WCOLOR(mv, LINE_COLOR));
 
 	AG_PopTextState();
 	AG_PopClipRect(mv);
@@ -268,7 +268,7 @@ DrawGreyscale(M_Matview *_Nonnull mv)
 	int yOffs = -mv->yOffs*scale;
 	int xEnd = mv->r.w, yEnd = mv->r.h;
 
-	AG_DrawBox(mv, &mv->r, -1, &WCOLOR(mv,0));
+	AG_DrawBoxSunk(mv, &mv->r, &WCOLOR(mv, BG_COLOR));
 	AG_PushClipRect(mv, &mv->r);
 
 	for (m = 0; m < MROWS(A); m++) {

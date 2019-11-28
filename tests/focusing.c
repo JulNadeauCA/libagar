@@ -85,8 +85,10 @@ TestUnfocusedMotion(AG_Event *event)
 	AG_FixedMove(fx1, btn, 0, 64);
 	AG_FixedSize(fx1, btn, 32, 32);
 
-	fx2 = AG_FixedNew(fx1, AG_FIXED_BOX);
-	AGWIDGET(fx2)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
+	fx2 = AG_FixedNew(fx1, 0);
+	fx2->style = AG_FIXED_STYLE_BOX;
+	AGWIDGET(fx2)->flags |= AG_WIDGET_FOCUSABLE |
+		                AG_WIDGET_UNFOCUSED_MOTION;
 	AG_FixedMove(fx1, fx2, 64, 16);
 	AG_FixedSize(fx1, fx2, 200, 140);
 	AG_SetEvent(fx2, "mouse-motion", mousemotion, NULL);

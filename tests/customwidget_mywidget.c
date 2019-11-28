@@ -101,14 +101,13 @@ Draw(void *_Nonnull p)
 	AG_Rect r;
 	
 	/*
-	 * Draw a box spanning the widget area. Use the widget's
-	 * default color (the "color" style property).
+	 * Draw a box over the widget area; use "background-color".
 	 */
 	r.x = 0;
 	r.y = 0;
 	r.w = AGWIDGET(my)->w;
 	r.h = AGWIDGET(my)->h;
-	AG_DrawBox(my, &r, 1, &AG_WCOLOR(my,0));
+	AG_DrawBox(my, &r, 1, &AG_WCOLOR(my, AG_BG_COLOR));
 
 	/* Establish a clipping rectangle over the entire widget area. */
 	AG_PushClipRect(my, &r);

@@ -1829,7 +1829,7 @@ Edit(void *_Nonnull obj)
 		    AllocFrames, "%p,%p", scr, numAlloc);
 	}
 
-	statBox = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_FRAME);
+	statBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	e->stat = AG_LabelNew(statBox, AG_LABEL_STATIC | AG_LABEL_HFILL,
 	    _("Idle"));
 

@@ -36,8 +36,8 @@ TestGUI(void *obj, AG_Window *win)
 	                           AG_SCROLLVIEW_BY_MOUSE |
 				   AG_SCROLLVIEW_PAN_RIGHT);
 
-	hBox = AG_BoxNewHoriz(sv, AG_BOX_FRAME);
-	vBox = AG_BoxNewVert(hBox, AG_BOX_FRAME);
+	hBox = AG_BoxNewHoriz(sv, 0);
+	vBox = AG_BoxNewVert(hBox, 0);
 	
 #ifdef AG_ENABLE_STRING
 	/*
@@ -185,7 +185,7 @@ TestGUI(void *obj, AG_Window *win)
 		AG_LabelNewS(vBox, 0, AG_GetError());
 	}
 	
-	vBox = AG_BoxNewVert(hBox, AG_BOX_FRAME);
+	vBox = AG_BoxNewVert(hBox, 0);
 
 	/*
 	 * Load/save a PNG file in palettized mode.

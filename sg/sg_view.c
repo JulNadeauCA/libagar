@@ -241,7 +241,7 @@ OnOverlayCameraStatus(SG_View *_Nonnull sv)
 	} else {
 		Strlcpy(text, _("No camera"), sizeof(text));
 	}
-	AG_TextColor(&WCOLOR(sv,TEXT_COLOR));
+	AG_TextColor(&WCOLOR(sv, TEXT_COLOR));
 	su = AG_TextRender(text);
 	AG_WidgetBlit(sv, su, 0, HEIGHT(sv) - su->h);
 	AG_SurfaceFree(su);
@@ -275,7 +275,7 @@ OnOverlay(AG_Event *_Nonnull event)
 	}
 	if (sv->flags & SG_VIEW_EDIT_STATUS &&
 	    sv->editStatus[0] != '\0') {
-		AG_TextColor(&WCOLOR(sv,TEXT_COLOR));
+		AG_TextColor(&WCOLOR(sv, TEXT_COLOR));
 		su = AG_TextRender(sv->editStatus);
 		AG_WidgetBlit(sv, su, 0, HEIGHT(sv) - su->h);
 		AG_SurfaceFree(su);

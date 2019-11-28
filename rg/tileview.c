@@ -1114,7 +1114,7 @@ DrawStatusText(RG_Tileview *_Nonnull tv, const char *_Nonnull label)
 	int su, w,h, wSu,hSu;
 
 	AG_PushTextState();
-	AG_TextColor(&WCOLOR(tv,TEXT_COLOR));
+	AG_TextColor(&WCOLOR(tv, TEXT_COLOR));
 	su = AG_TextCacheGet(tv->tCache, label);
 	AG_PopTextState();
 
@@ -1130,7 +1130,7 @@ DrawStatusText(RG_Tileview *_Nonnull tv, const char *_Nonnull label)
 	r.y = h - hSu - 2;
 	r.w = w;
 	r.h = h;
-	AG_DrawRect(tv, &r, &WCOLOR(tv,0));
+	AG_DrawRect(tv, &r, &WCOLOR(tv, BG_COLOR));
 
 	AG_WidgetBlitSurface(tv, su, w-wSu-1, h-hSu-1);
 }

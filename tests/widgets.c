@@ -457,7 +457,7 @@ TestGUI(void *obj, AG_Window *win)
 			AG_TableAddCol(table, "sin(x)", "33%", NULL);
 			AG_TableAddCol(table, "cos(x)", "33%", NULL);
 
-			AG_SetStyle(table, "font-size", "120%");
+			AG_SetStyle(table, "font-size", "80%");
 
 			for (f = 0.0f; f < 60.0f; f += 0.3f) {
 				/*
