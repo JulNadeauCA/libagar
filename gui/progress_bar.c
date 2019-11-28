@@ -101,7 +101,6 @@ Init(void *_Nonnull obj)
 
 	WIDGET(pb)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP |
 	                     AG_WIDGET_UNFOCUSED_MOTION |
-			     AG_WIDGET_TABLE_EMBEDDABLE |
 			     AG_WIDGET_USE_TEXT;
 
 	pb->type = AG_PROGRESS_BAR_HORIZ;
@@ -233,7 +232,7 @@ Draw(void *_Nonnull obj)
 	rd.y = 0;
 	rd.w = WIDTH(pb);
 	rd.h = HEIGHT(pb);
-	AG_DrawBox(pb, &rd, -1, &WCOLOR(pb,0));
+	AG_DrawBoxSunk(pb, &rd, &WCOLOR(pb, FG_COLOR));
 
 	if ((max - min) <= 0)
 		return;
@@ -255,7 +254,7 @@ Draw(void *_Nonnull obj)
 		rd.h -= pad2;
 		break;
 	}
-	AG_DrawRect(pb, &rd, &WCOLOR_SEL(pb,0));
+	AG_DrawRect(pb, &rd, &WCOLOR(pb, SELECTION_COLOR));
 
 	if (pb->flags & AG_PROGRESS_BAR_SHOW_PCT)
 		DrawPercentText(pb);

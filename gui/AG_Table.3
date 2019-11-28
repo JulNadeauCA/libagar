@@ -484,18 +484,7 @@ Same as "%[Fs]", except that Agar will never try to free
 the returned surface (similarly to
 .Xr AG_WidgetMapSurfaceNODUP 3 ) .
 .It %[W]
-A widget to insert into the table.
-The widget must have the
-.Dv AG_WIDGET_TABLE_EMBEDDABLE
-flag set or the operation will fail.
-Note that for efficiency reasons,
-.Nm
-is not treated like a standard widget container, so widgets that are
-inserted into the table in this way should not be attached to any parent
-(e.g., the
-.Fa parent
-argument of standard constructor routines should be NULL).
-Embedded widgets are automatically freed when cells are deleted.
+A widget instance to insert into the table.
 .El
 .Pp
 The functions

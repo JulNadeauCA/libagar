@@ -489,8 +489,7 @@ Init(void *_Nonnull obj)
 {
 	AG_Numerical *num = obj;
 
-	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE |
-	                      AG_WIDGET_TABLE_EMBEDDABLE;
+	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE;
 	num->flags = 0;
 	num->wUnitSel = 0;
 	num->hUnitSel = 0;

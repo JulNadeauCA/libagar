@@ -322,8 +322,6 @@ Init(void *_Nonnull obj)
 {
 	AG_Pixmap *px = obj;
 	
-	WIDGET(px)->flags |= AG_WIDGET_TABLE_EMBEDDABLE;
-
 	px->flags = AG_PIXMAP_UPDATE;
 	px->n = 0;
 	px->s = 0;

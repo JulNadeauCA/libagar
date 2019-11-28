@@ -349,8 +349,7 @@ Init(void *obj)
 	AG_Button *b[4];
 	int i;
 
-	WIDGET(fsu)->flags |= AG_WIDGET_FOCUSABLE|
-	                      AG_WIDGET_TABLE_EMBEDDABLE;
+	WIDGET(fsu)->flags |= AG_WIDGET_FOCUSABLE;
 
 	fsu->flags = 0;
 	fsu->writeable = 1;
@@ -472,8 +471,8 @@ Draw(void *obj)
 	AG_WidgetDraw(fsu->xdecbu);
 	AG_WidgetDraw(fsu->ydecbu);
 
-	xvalueb = AG_GetVariable(fsu, "xvalue", &xvalue);
-	yvalueb = AG_GetVariable(fsu, "yvalue", &yvalue);
+	xvalueb = AG_GetVariable(fsu, "xvalue", (void *)&xvalue);
+	yvalueb = AG_GetVariable(fsu, "yvalue", (void *)&yvalue);
 
 	Snprintf(fsu->inTxt, sizeof(fsu->inTxt), fsu->format,
 	    *xvalue/fsu->unit->divider,
@@ -494,8 +493,8 @@ AG_MFSpinbuttonAddValue(AG_MFSpinbutton *fsu, const char *which, double inc)
 	
 	inc *= fsu->unit->divider;
 	valueb = AG_GetVariable(fsu, which, &value);
-	minb = AG_GetVariable(fsu, "min", &min);
-	maxb = AG_GetVariable(fsu, "max", &max);
+	minb = AG_GetVariable(fsu, "min", (void *)&min);
+	maxb = AG_GetVariable(fsu, "max", (void *)&max);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
 	case AG_VARIABLE_DOUBLE:
@@ -532,8 +531,8 @@ AG_MFSpinbuttonSetValue(AG_MFSpinbutton *fsu, const char *which,
 	AG_ObjectLock(fsu);
 
 	valueb = AG_GetVariable(fsu, which, &value);
-	minb = AG_GetVariable(fsu, "min", &min);
-	maxb = AG_GetVariable(fsu, "max", &max);
+	minb = AG_GetVariable(fsu, "min", (void *)&min);
+	maxb = AG_GetVariable(fsu, "max", (void *)&max);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
 	case AG_VARIABLE_DOUBLE:
@@ -566,7 +565,7 @@ AG_MFSpinbuttonSetMin(AG_MFSpinbutton *fsu, double nmin)
 	void *min;
 	
 	AG_ObjectLock(fsu);
-	minb = AG_GetVariable(fsu, "min", &min);
+	minb = AG_GetVariable(fsu, "min", (void *)&min);
 	switch (AG_VARIABLE_TYPE(minb)) {
 	case AG_VARIABLE_DOUBLE:
 		*(double *)min = nmin;
@@ -588,7 +587,7 @@ AG_MFSpinbuttonSetMax(AG_MFSpinbutton *fsu, double nmax)
 	void *max;
 	
 	AG_ObjectLock(fsu);
-	maxb = AG_GetVariable(fsu, "max", &max);
+	maxb = AG_GetVariable(fsu, "max", (void *)&max);
 	switch (AG_VARIABLE_TYPE(maxb)) {
 	case AG_VARIABLE_DOUBLE:
 		*(double *)max = nmax;

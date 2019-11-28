@@ -274,17 +274,16 @@ void AG_TableSelectCol(AG_Table *_Nonnull, int);
 void AG_TableDeselectCol(AG_Table *_Nonnull, int);
 int  AG_TableSaveASCII(AG_Table *_Nonnull, void *_Nonnull, char);
 
-
 #ifdef AG_LEGACY
 #define AG_TablePrescale(c,r) AG_TableSizeHint((c),(r))
 #define AG_TableSetSelectionColor(t,r,g,b,a) {				\
-	WCOLOR((t),SEL_COLOR).r = r;					\
-	WCOLOR((t),SEL_COLOR).g = g;					\
-	WCOLOR((t),SEL_COLOR).b = b;					\
-	WCOLOR((t),SEL_COLOR).a = a;					\
+	AG_WCOLOR((t),AG_SELECTION_COLOR).r = r;			\
+	AG_WCOLOR((t),AG_SELECTION_COLOR).g = g;			\
+	AG_WCOLOR((t),AG_SELECTION_COLOR).b = b;			\
+	AG_WCOLOR((t),AG_SELECTION_COLOR).a = a;			\
 	AG_Verbose("AG_TableSetSelectionColor() is deprecated\n");	\
 }
-#endif
+#endif /* AG_LEGACY */
 __END_DECLS
 
 #include <agar/gui/close.h>

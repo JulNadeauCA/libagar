@@ -264,8 +264,6 @@ Init(void *_Nonnull obj)
 {
 	AG_Combo *com = obj;
 
-	WIDGET(com)->flags |= AG_WIDGET_TABLE_EMBEDDABLE;
-
 	com->flags = 0;
 	
 	com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO | AG_TEXTBOX_EXCL, NULL);
@@ -327,7 +325,7 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Combo *com = obj;
-
+	
 	AG_WidgetDraw(com->tbox);
 	AG_WidgetDraw(com->button);
 }

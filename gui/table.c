@@ -568,21 +568,18 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Table *t = obj;
-	AG_Color *cBG;
+	const AG_Color *cBg  = &WCOLOR(t, BG_COLOR);
+	const AG_Color *cSel = &WCOLOR(t, SELECTION_COLOR);
+	AG_Color cLine       =  WCOLOR(t, LINE_COLOR);
 	AG_Rect r, rCol, rCell;
-	AG_Color cLine;
 	const int zoomLvl = WIDGET(t)->window->zoom;
 	int n,m, hCol;
 
-	r.x = 0;					/* Background */
+	r.x = 0;
 	r.y = 0;
 	r.w = WIDTH(t);
 	r.h = HEIGHT(t);
 
-	cBG = &WCOLOR(t,0);
-	if (cBG->a > 0)
-		AG_DrawBox(t, &r, -1, cBG);
-	
 	AG_WidgetDraw(t->vbar);
 	AG_WidgetDraw(t->hbar);
 	
@@ -598,8 +595,6 @@ Draw(void *_Nonnull obj)
 	hCol = t->hCol;
 	rCol.y = 0;
 	rCol.h = hCol + t->r.h - 2;
-
-	cLine = WCOLOR(t, LINE_COLOR);
 
 	if (zoomLvl < AG_ZOOM_1_1)                         /* Distance effect */
 		AG_ColorLighten(&cLine, AG_ZOOM_1_1-zoomLvl);
@@ -622,7 +617,7 @@ Draw(void *_Nonnull obj)
 		/* Column header and separator */
 		if (rCol.x > 0 && rCol.x < t->r.w) {
 			AG_DrawLineV(t, rCol.x, hCol-1, rCol.h,
-			    &WCOLOR(t,LINE_COLOR));
+			    &WCOLOR(t, LINE_COLOR));           /* (not cLine) */
 		}
 		AG_PushClipRect(t, &rCol);
 
@@ -630,9 +625,12 @@ Draw(void *_Nonnull obj)
 		r.y = 0;
 		r.w = rCol.w+1;
 		r.h = hCol;
-		AG_DrawBox(t, &r,
-		    col->selected ? -1 : 1,
-		    col->selected ? &WCOLOR_SEL(t,0) : cBG);
+
+		if (col->selected) {
+			AG_DrawBoxSunk(t, &r, cSel);
+		} else {
+			AG_DrawBoxRaised(t, &r, cBg);
+		}
 
 		/* Column header label */
 		if (col->name[0] != '\0') {
@@ -648,12 +646,12 @@ Draw(void *_Nonnull obj)
 				AG_DrawArrowUp(t,
 				    rCell.x + w - COLUMN_RESIZE_RANGE,
 				    hCol>>1, 10,
-				    &WCOLOR(t,SHAPE_COLOR));
+				    &cLine);
 			} else if (col->flags & AG_TABLE_SORT_DESCENDING) {
 				AG_DrawArrowDown(t,
 				    rCell.x + w - COLUMN_RESIZE_RANGE,
 				    hCol>>1, 10,
-				    &WCOLOR(t,SHAPE_COLOR));
+				    &cLine);
 			}
 		}
 
@@ -664,10 +662,10 @@ Draw(void *_Nonnull obj)
 			AG_TableCell *c = &t->cells[m][n];
 
 			if (c->selected) {
-				AG_DrawRect(t, &rCell, &WCOLOR_SEL(t,0));
+				AG_DrawRect(t, &rCell, cSel);
 			}
 			AG_DrawLineH(t, 0, t->r.w - 1, rCell.y,
-			    c->selected ? &WCOLOR_SEL(t,LINE_COLOR) : &cLine);
+			    c->selected ? cSel : &cLine);
 			DrawCell(t, c, &rCell);
 			rCell.y += t->hRow;
 		}
@@ -2097,13 +2095,6 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				a.h = 0;
 				c->type = AG_CELL_WIDGET;
 				c->widget = c->data.p;
-				if (!(c->widget->flags &
-				      AG_WIDGET_TABLE_EMBEDDABLE)) {
-					AG_SetError("%s widgets are not "
-					            "%%[W]-embeddable",
-					    AGOBJECT_CLASS(c->widget)->name);
-					goto fail;
-				}
 				AG_ObjectAttach(t, c->widget);
 				AG_WidgetSizeAlloc(c->widget, &a);
 				t->flags |= AG_TABLE_WIDGETS;

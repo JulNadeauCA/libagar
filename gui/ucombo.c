@@ -209,8 +209,7 @@ Init(void *_Nonnull obj)
 {
 	AG_UCombo *com = obj;
 
-	WIDGET(com)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP |
-	                      AG_WIDGET_TABLE_EMBEDDABLE;
+	WIDGET(com)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
 
 	com->flags = 0;
 	com->panel = NULL;
