@@ -1706,7 +1706,10 @@ echo '* This software requires a C compiler'
 echo '# * This software requires a C compiler' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency cc not found"
+echo "***"
+echo "*** ERROR: Required dependency cc not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 case "${host}" in
@@ -1980,7 +1983,10 @@ else
 if [ "${byte_order}" = "BE" ]; then
 _MK_BYTE_ORDER="BE"
 else
-echo "Usage: --byte-order=[LE|BE]"
+echo "***"
+echo "*** ERROR: Usage: --byte-order=[LE|BE]"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -5326,17 +5332,6 @@ else
 echo '#undef AG_DEBUG_CORE' >$bb_incdir/ag_debug_core.h
 echo 'hdefs["AG_DEBUG_CORE"] = nil' >>configure.lua
 fi
-if [ "${enable_debug_gui}" = 'yes' ]; then
-AG_DEBUG_GUI="yes"
-bb_o=$bb_incdir/ag_debug_gui.h
-echo '#ifndef AG_DEBUG_GUI' >$bb_o
-echo "#define AG_DEBUG_GUI \"$AG_DEBUG_GUI\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"AG_DEBUG_GUI\"] = \"$AG_DEBUG_GUI\"" >>configure.lua
-else
-echo '#undef AG_DEBUG_GUI' >$bb_incdir/ag_debug_gui.h
-echo 'hdefs["AG_DEBUG_GUI"] = nil' >>configure.lua
-fi
 if [ "${enable_dso}" != 'no' ]; then
 AG_ENABLE_DSO="yes"
 bb_o=$bb_incdir/ag_enable_dso.h
@@ -6488,7 +6483,10 @@ echo "* Please indicate correct x11 prefix (or omit for autodetect)."
 echo "# * Please indicate correct x11 prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -6508,7 +6506,10 @@ echo "* Please indicate correct x11 prefix (or omit for autodetect)."
 echo "# * Please indicate correct x11 prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -6528,7 +6529,10 @@ echo "* Please indicate correct x11 prefix (or omit for autodetect)."
 echo "# * Please indicate correct x11 prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -6994,7 +6998,10 @@ echo "* Please indicate correct xinerama prefix (or omit for autodetect)."
 echo "# * Please indicate correct xinerama prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -7014,7 +7021,10 @@ echo "* Please indicate correct xinerama prefix (or omit for autodetect)."
 echo "# * Please indicate correct xinerama prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -7034,7 +7044,10 @@ echo "* Please indicate correct xinerama prefix (or omit for autodetect)."
 echo "# * Please indicate correct xinerama prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -7579,7 +7592,10 @@ echo "* Please indicate correct freetype2 prefix (or omit for autodetect)."
 echo "# * Please indicate correct freetype2 prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -7599,7 +7615,10 @@ echo "* Please indicate correct freetype2 prefix (or omit for autodetect)."
 echo "# * Please indicate correct freetype2 prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -7619,7 +7638,10 @@ echo "* Please indicate correct freetype2 prefix (or omit for autodetect)."
 echo "# * Please indicate correct freetype2 prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -7891,7 +7913,10 @@ echo "* Please indicate correct fontconfig prefix (or omit for autodetect)."
 echo "# * Please indicate correct fontconfig prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -7911,7 +7936,10 @@ echo "* Please indicate correct fontconfig prefix (or omit for autodetect)."
 echo "# * Please indicate correct fontconfig prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -7931,7 +7959,10 @@ echo "* Please indicate correct fontconfig prefix (or omit for autodetect)."
 echo "# * Please indicate correct fontconfig prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -11898,7 +11929,10 @@ echo "* Please indicate correct sndfile prefix (or omit for autodetect)."
 echo "# * Please indicate correct sndfile prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -11918,7 +11952,10 @@ echo "* Please indicate correct sndfile prefix (or omit for autodetect)."
 echo "# * Please indicate correct sndfile prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -11938,7 +11975,10 @@ echo "* Please indicate correct sndfile prefix (or omit for autodetect)."
 echo "# * Please indicate correct sndfile prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -12089,7 +12129,10 @@ echo "* Please indicate correct portaudio-2.0 prefix (or omit for autodetect)."
 echo "# * Please indicate correct portaudio-2.0 prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -12109,7 +12152,10 @@ echo "* Please indicate correct portaudio-2.0 prefix (or omit for autodetect)."
 echo "# * Please indicate correct portaudio-2.0 prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -12129,7 +12175,10 @@ echo "* Please indicate correct portaudio-2.0 prefix (or omit for autodetect)."
 echo "# * Please indicate correct portaudio-2.0 prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -14377,10 +14426,10 @@ if [ "${srcdir}" != '' ]; then
 	fi
 	echo 'ok'
 fi
-echo '*'
-echo '* Configuration successful!'
-echo '*'
-echo '* Use "make depend all" to compile. When finished,'
-$ECHO_N '* run "make install" to install under '
+echo '**'
+echo '** Configuration successful!'
+echo '**'
+echo '** Use "make depend all" to compile. When finished,'
+$ECHO_N '** run "make install" to install under '
 echo "${PREFIX}."
-echo '*'
+echo '**'

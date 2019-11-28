@@ -319,7 +319,6 @@ else
 fi
 hdefine_if("${enable_ansi_color}" != 'no',    AG_ANSI_COLOR)
 hdefine_if("${enable_debug_core}" = 'yes',    AG_DEBUG_CORE)
-hdefine_if("${enable_debug_gui}" = 'yes',     AG_DEBUG_GUI)
 hdefine_if("${enable_dso}" != 'no',           AG_ENABLE_DSO)
 hdefine_if("${enable_exec}" != 'no',          AG_ENABLE_EXEC)
 hdefine_if("${enable_legacy}" = 'yes',        AG_LEGACY)
