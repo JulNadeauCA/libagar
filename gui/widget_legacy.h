@@ -72,6 +72,8 @@
 #define AG_WidgetShownRecursive		AG_WidgetShowAll
 #define AG_WidgetHiddenRecursive	AG_WidgetHideAll
 
+#define AG_WIDGET_TABLE_EMBEDDABLE 0
+
 __BEGIN_DECLS
 AG_Variable *_Nullable AG_WidgetBind(void *_Nonnull, const char *_Nonnull, AG_VariableType, ...)
     DEPRECATED_ATTRIBUTE;

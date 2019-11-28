@@ -871,7 +871,7 @@ GLX_RenderWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	AG_GL_Context *gl = &glx->gl;
-	AG_Color c = WCOLOR(win,0);
+	const AG_Color *cBg = &WCOLOR(win, BG_COLOR);
 
 	if (!glx->w)		/* XXX is this needed? */
 		return;
@@ -881,10 +881,11 @@ GLX_RenderWindow(AG_Window *_Nonnull win)
 	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
 	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
 
-	glClearColor((float)c.r/AG_COLOR_LASTF,
-	             (float)c.g/AG_COLOR_LASTF,
-		     (float)c.b/AG_COLOR_LASTF, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	glClearColor((float)cBg->r/AG_COLOR_LASTF,
+	             (float)cBg->g/AG_COLOR_LASTF,
+		     (float)cBg->b/AG_COLOR_LASTF, 1.0);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);
 }

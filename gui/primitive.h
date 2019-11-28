@@ -71,7 +71,6 @@ void ag_draw_triangle(void *_Nonnull, const AG_Pt *, const AG_Pt *, const AG_Pt 
 void ag_draw_polygon(void *_Nonnull, const AG_Pt *_Nonnull, Uint, const AG_Color *);
 void ag_draw_polygon_sti32(void *_Nonnull, const AG_Pt *_Nonnull, Uint,
                            const AG_Color *_Nonnull, const Uint8 *_Nonnull);
-
 void ag_draw_arrow_up(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
 void ag_draw_arrow_right(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
 void ag_draw_arrow_down(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
@@ -83,28 +82,21 @@ void ag_draw_box_rounded_top(void *_Nonnull, const AG_Rect *_Nonnull, int, int,
 void ag_draw_circle(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
 void ag_draw_circle_filled(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
 void ag_draw_rect(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull);
-void ag_draw_rect_filled(void *_Nonnull, const AG_Rect *_Nonnull,
-                         const AG_Color *_Nonnull);
+void ag_draw_rect_filled(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull);
 void ag_draw_rect_blended(void *_Nonnull, const AG_Rect *_Nonnull,
                           const AG_Color *_Nonnull,
 			  AG_AlphaFn, AG_AlphaFn);
-void ag_draw_rect_dithered(void *_Nonnull, const AG_Rect *_Nonnull,
-                           const AG_Color *_Nonnull);
-void ag_draw_frame(void *_Nonnull, const AG_Rect *_Nonnull, int,
-                   const AG_Color *_Nonnull);
-void ag_draw_box(void *_Nonnull, const AG_Rect *_Nonnull, int,
-                 const AG_Color *_Nonnull);
+void ag_draw_rect_dithered(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull);
+void ag_draw_frame(void *_Nonnull, const AG_Rect *_Nonnull, int, const AG_Color *_Nonnull);
+void ag_draw_frame_raised(void *_Nonnull, const AG_Rect *_Nonnull);
+void ag_draw_frame_sunk(void *_Nonnull, const AG_Rect *_Nonnull);
+void ag_draw_box(void *_Nonnull, const AG_Rect *_Nonnull, int, const AG_Color *_Nonnull);
+void ag_draw_box_raised(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull);
+void ag_draw_box_sunk(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull);
 void ag_draw_box_disabled(void *_Nonnull, const AG_Rect *_Nonnull, int,
                           const AG_Color *_Nonnull, const AG_Color *_Nonnull);
-void ag_draw_frame_blended(void *_Nonnull, const AG_Rect *_Nonnull,
-                           const AG_Color *_Nonnull, AG_AlphaFn);
 void ag_draw_rect_outline(void *_Nonnull, const AG_Rect *_Nonnull,
                           const AG_Color *_Nonnull);
-void ag_draw_plus(void *_Nonnull, const AG_Rect *_Nonnull,
-                  const AG_Color *_Nonnull, AG_AlphaFn);
-void ag_draw_minus(void *_Nonnull, const AG_Rect *_Nonnull,
-                   const AG_Color *_Nonnull, AG_AlphaFn);
-void ag_draw_line_2(void *_Nonnull, int,int, int,int, const AG_Color *_Nonnull);
 void ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
     AG_ArrowLineType t, int length, double theta, const AG_Color *C);
 
@@ -139,11 +131,17 @@ void ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
 # define AG_DrawRectBlended(o,r,c,sf,df)	  ag_draw_rect_blended((o),(r),(c),(sf),(df))
 # define AG_DrawRectDithered(o,r,c)		  ag_draw_rect_dithered((o),(r),(c))
 # define AG_DrawFrame(o,r,z,c)			  ag_draw_frame((o),(r),(z),(c))
+# define AG_DrawFrameRaised(o,r)		  ag_draw_frame_raised((o),(r))
+# define AG_DrawFrameSunk(o,r)			  ag_draw_frame_sunk((o),(r))
 # define AG_DrawBox(o,r,z,c)			  ag_draw_box((o),(r),(z),(c))
+# define AG_DrawBoxRaised(o,r,c)		  ag_draw_box_raised((o),(r),(c))
+# define AG_DrawBoxSunk(o,r,c)		  	  ag_draw_box_sunk((o),(r),(c))
 # define AG_DrawBoxDisabled(o,r,z,c1,c2)	  ag_draw_box_disabled((o),(r),(z),(c1),(c2))
 # define AG_DrawRectOutline(o,r,c)		  ag_draw_rect_outline((o),(r),(c))
 # define AG_DrawArrowLine(o,x1,y1,x2,y2,t,l,th,c) ag_draw_arrow_line((o),(x1),(y1),(x2),(y2),(t),(l),(th),(c))
 #endif /* !AG_INLINE_WIDGET */
+
+void ag_draw_rect_noop(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull);
 
 int AG_GetLineIntersection(int,int, int,int, int,int, int,int,
                            int *_Nonnull, int *_Nonnull);

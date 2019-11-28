@@ -40,8 +40,9 @@ int
 AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_Variable *Vsrc)
 {
 	AG_Variable *Vdst;
+	void *dummy;
 
-	if ((Vdst = AG_GetVariable(wDst, nDst, NULL)) == NULL) {
+	if ((Vdst = AG_GetVariable(wDst, nDst, &dummy)) == NULL) {
 		return (-1);
 	}
 	Vdst->type = Vsrc->type;

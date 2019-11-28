@@ -31,7 +31,6 @@
 #include <agar/core/config.h>
 
 #include <agar/config/have_opengl.h>
-#include <agar/config/ag_debug_gui.h>
 
 #include <agar/gui/gui.h>
 #include <agar/gui/box.h>

@@ -696,7 +696,7 @@ ag_draw_rect_dithered(void *obj, const AG_Rect *r, const AG_Color *c)
 }
 
 /*
- * Render a 3D-style raised box frame or well (depending on z).
+ * Render a colorized 3D-style border for a raised box or a well (based on z).
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
@@ -744,7 +744,77 @@ ag_draw_frame(void *obj, const AG_Rect *r, int z, const AG_Color *color)
 }
 
 /*
- * Render a 3D-style box
+ * Render a colorized 3D-style border for a raised box.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_DrawFrameRaised(void *_Nonnull obj, const AG_Rect *_Nonnull r)
+#else
+void
+ag_draw_frame_raised(void *obj, const AG_Rect *r)
+#endif
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+	const AG_Color *cLo = &AG_WCOLOR(wid, AG_LOW_COLOR);
+	const AG_Color *cHi = &AG_WCOLOR(wid, AG_HIGH_COLOR);
+	AG_Driver *drv = wid->drv;
+	AG_DriverClass *drvOps = wid->drvOps;
+	AG_Rect rd;
+	int y2, x2;
+	
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+
+	rd.x = wid->rView.x1 + r->x;
+	rd.y = wid->rView.y1 + r->y;
+	rd.w = r->w;
+	rd.h = r->h;
+
+	x2 = rd.x + r->w - 1;
+	y2 = rd.y + r->h - 1;
+
+	drvOps->drawLineH(drv, rd.x, x2,   rd.y, cHi);
+	drvOps->drawLineV(drv, rd.x, rd.y, y2,   cHi);
+	drvOps->drawLineH(drv, rd.x, x2,   y2,   cLo);
+	drvOps->drawLineV(drv, x2,   rd.y, y2,   cLo);
+}
+
+/*
+ * Render a colorized 3D-style border for a well.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_DrawFrameSunk(void *_Nonnull obj, const AG_Rect *_Nonnull r)
+#else
+void
+ag_draw_frame_sunk(void *obj, const AG_Rect *r)
+#endif
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+	const AG_Color *cLo = &AG_WCOLOR(wid, AG_LOW_COLOR);
+	const AG_Color *cHi = &AG_WCOLOR(wid, AG_HIGH_COLOR);
+	AG_Driver *drv = wid->drv;
+	AG_DriverClass *drvOps = wid->drvOps;
+	AG_Rect rd;
+	int y2, x2;
+	
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+
+	rd.x = wid->rView.x1 + r->x;
+	rd.y = wid->rView.y1 + r->y;
+	rd.w = r->w;
+	rd.h = r->h;
+
+	x2 = rd.x + r->w - 1;
+	y2 = rd.y + r->h - 1;
+
+	drvOps->drawLineH(drv, rd.x, x2,   rd.y, cLo);
+	drvOps->drawLineV(drv, rd.x, rd.y, y2,   cLo);
+	drvOps->drawLineH(drv, rd.x, x2,   y2,   cHi);
+	drvOps->drawLineV(drv, x2,   rd.y, y2,   cHi);
+}
+
+/*
+ * Render a 3D-style box or well (based on z argument).
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
@@ -756,7 +826,6 @@ ag_draw_box(void *obj, const AG_Rect *r, int z, const AG_Color *color)
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color c;
 	AG_Rect rd;
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
@@ -766,40 +835,37 @@ ag_draw_box(void *obj, const AG_Rect *r, int z, const AG_Color *color)
 	rd.w = r->w;
 	rd.h = r->h;
 
-	c = *color;
+	if (color->a < AG_OPAQUE) {
+		wid->drvOps->drawRectBlended(wid->drv, &rd, color,
+		    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	} else {
+		wid->drvOps->drawRectFilled(wid->drv, &rd, color);
+	}
+	if (wid->state == AG_DISABLED_STATE) {
+		wid->drvOps->drawRectDithered(wid->drv, &rd,
+		    &AG_WCOLOR_DISABLED(wid, AG_FG_COLOR));
+	}
 
 	if (z < 0) {
-		AG_ColorDarken(&c, 1);
+		AG_DrawFrameSunk(wid, r);
 	} else {
-		AG_ColorLighten(&c, 1);
+		AG_DrawFrameRaised(wid, r);
 	}
-
-	if (c.a < AG_OPAQUE) {
-		wid->drvOps->drawRectBlended(wid->drv, &rd, &c,
-		                             AG_ALPHA_SRC,
-		                             AG_ALPHA_ONE_MINUS_SRC);
-	} else {
-		wid->drvOps->drawRectFilled(wid->drv, &rd, &c);
-	}
-
-	AG_DrawFrame(wid, r, z, &c);
 }
 
 /*
- * Render a textured 3D-style box in "disabled" style.
+ * Render a 3D-style raised box.
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
-AG_DrawBoxDisabled(void *_Nonnull obj, const AG_Rect *_Nonnull r, int z,
-    const AG_Color *_Nonnull c1, const AG_Color *_Nonnull c2)
+AG_DrawBoxRaised(void *_Nonnull obj, const AG_Rect *_Nonnull r,
+    const AG_Color *_Nonnull color)
 #else
 void
-ag_draw_box_disabled(void *obj, const AG_Rect *r, int z,
-    const AG_Color *c1, const AG_Color *c2)
+ag_draw_box_raised(void *obj, const AG_Rect *r, const AG_Color *color)
 #endif
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color c;
 	AG_Rect rd;
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
@@ -809,16 +875,54 @@ ag_draw_box_disabled(void *obj, const AG_Rect *r, int z,
 	rd.w = r->w;
 	rd.h = r->h;
 
-	wid->drvOps->drawRectFilled(wid->drv, &rd, c1);
-	AG_DrawFrame(wid, r, z, c1);
-
-	c = *c2;
-	if (z < 0) {
-		AG_ColorDarken(&c, 1);
+	if (color->a < AG_OPAQUE) {
+		wid->drvOps->drawRectBlended(wid->drv, &rd, color,
+		    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	} else {
-		AG_ColorLighten(&c, 1);
+		wid->drvOps->drawRectFilled(wid->drv, &rd, color);
 	}
-	wid->drvOps->drawRectDithered(wid->drv, &rd, &c);
+	if (wid->state == AG_DISABLED_STATE) {
+		wid->drvOps->drawRectDithered(wid->drv, &rd,
+		    &AG_WCOLOR_DISABLED(wid, AG_FG_COLOR));
+	}
+
+	AG_DrawFrameRaised(wid, r);
+}
+
+/*
+ * Render a 3D-style well.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_DrawBoxSunk(void *_Nonnull obj, const AG_Rect *_Nonnull r,
+    const AG_Color *_Nonnull color)
+#else
+void
+ag_draw_box_sunk(void *obj, const AG_Rect *r, const AG_Color *color)
+#endif
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Rect rd;
+	
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+
+	rd.x = wid->rView.x1 + r->x;
+	rd.y = wid->rView.y1 + r->y;
+	rd.w = r->w;
+	rd.h = r->h;
+
+	if (color->a < AG_OPAQUE) {
+		wid->drvOps->drawRectBlended(wid->drv, &rd, color,
+		    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	} else {
+		wid->drvOps->drawRectFilled(wid->drv, &rd, color);
+	}
+	if (wid->state == AG_DISABLED_STATE) {
+		wid->drvOps->drawRectDithered(wid->drv, &rd,
+		    &AG_WCOLOR_DISABLED(wid, AG_FG_COLOR));
+	}
+
+	AG_DrawFrameSunk(wid, r);
 }
 
 /*

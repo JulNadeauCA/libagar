@@ -917,17 +917,18 @@ COCOA_RenderWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
 	AG_GL_Context *gl = &co->gl;
-	AG_Color c = WCOLOR(win,0);
+	const AG_Color *cBg = &WCOLOR(win, BG_COLOR);
 	
 	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
 	gl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1); glEnable(GL_CLIP_PLANE1);
 	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
 	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
 
-	glClearColor((float)c.r/AG_COLOR_LASTF,
-	             (float)c.g/AG_COLOR_LASTF,
-		     (float)c.b/AG_COLOR_LASTF, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	glClearColor((float)cBg->r/AG_COLOR_LASTF,
+	             (float)cBg->g/AG_COLOR_LASTF,
+		     (float)cBg->b/AG_COLOR_LASTF, 1.0);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);
 }
@@ -1042,7 +1043,7 @@ COCOA_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r,
 					          screen:selScreen];
 	}
 	co->win->_agarWindow = win;
-	SetBackgroundColor(co, &WCOLOR(win,0));
+	SetBackgroundColor(co, &WCOLOR(win, BG_COLOR));
 
 	if (win->flags & AG_WINDOW_MAIN)
 		[co->win makeMainWindow];

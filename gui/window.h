@@ -99,7 +99,6 @@ typedef struct ag_window {
 #define AG_WINDOW_HMAXIMIZE	0x00040000 /* Keep maximized horizontally */
 #define AG_WINDOW_VMAXIMIZE	0x00080000 /* Keep maximized vertically */
 #define AG_WINDOW_NOMOVE	0x00100000 /* Disallow movement of window */
-#define AG_WINDOW_NOCLIPPING	0x00200000 /* Don't set a clipping rectangle over the window area */
 #define AG_WINDOW_MODKEYEVENTS	0x00400000 /* Mod keys generate key{up,down} */
 #define AG_WINDOW_DETACHING	0x00800000 /* Being detached (read-only) */
 #define AG_WINDOW_NOCURSORCHG	0x04000000 /* Inhibit any cursor change */

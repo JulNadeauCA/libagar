@@ -41,66 +41,145 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <agar/config/ag_debug_gui.h>
-
 /* Overly verbose focus-related debugging */
 /* #define DEBUG_FOCUS */
 
-/* Built-in style attributes */
-const char *agWidgetStyleNames[] = {
-	"font-family",
-	"font-size",
-	"font-weight",
-	"font-style",
+/* Style Properties */
+const char *agStyleAttributes[] = {
+	/* --- Color --- */
 	"color",
+	"background-color",
 	"text-color",
 	"line-color",
-	"shape-color",
-	"border-color",
+	"high-color",
+	"low-color",
+	"selection-color",
+	"unused-color",
+
+	/* --- Text --- */
+	"font-family",    /* Font face or filename */
+	"font-size",      /* Font size (in pts, px or %) */
+	"font-weight",    /* Boldness (normal semibold bold !parent) */
+	"font-style",     /* Style (normal italic upright-italic !parent) */
+	"font-stretch",   /* Width variant (normal condensed semi-condensed !parent) */
+
+	/* --- Box Model --- */
+	"margin",         /* Margin (between border & outer bounding box) */
+	"margin-top",       /* above border */
+	"margin-bottom",    /* below border */
+	"margin-left",      /* at left of border */
+	"margin-right",     /* at right of border */
+
+	"border",         /* Border (between padding & margin, in px) */
+	"border-top",       /* above padding */
+	"border-bottom",    /* below padding */
+	"border-left",      /* at left of padding */
+	"border-right",     /* at right of padding */
+
+	"padding",        /* Padding (between content & border, in px) */
+	"padding-top",      /* above content */
+	"padding-bottom",   /* below content */
+	"padding-left",     /* at left of content */
+	"padding-right",    /* at right of content */
+
 	NULL
 };
 
-/* Possible style states */
+/* Style-effecting State Names */
 const char *agWidgetStateNames[] = {
-	"",				/* #default */
-	"#disabled",
-	"#focused",
-	"#hover",
-	"#selected",
+	"",                          /* Unfocused (default) */
+	"#disabled",                 /* Disabled */
+	"#focused",                  /* Focused */
+	"#hover",                    /* Mouseover */
 	NULL
 };
 
-/* Names of palette entries */
-const char *agWidgetColorNames[] = {
-	"color",
-	"text-color",
-	"line-color",
-	"shape-color",
-	"border-color",
-	NULL
-};
-
-/* Initial color palette */
+/* Per-Widget Color Palette */
 AG_WidgetPalette agDefaultPalette = {{
-       /*
-        *    Color (BG)         Text (FG)         Line (FG)       Shape (FG)       Border (FG->BG)
-	*/
-#if AG_MODEL == AG_MEDIUM
-/*def*/	{{125,125,125,255}, {240,240,240,255}, {50,50,50,255}, {200,200,200,255}, {100,100,100,255}},
-/*dis*/	{{160,160,160,255}, {240,240,240,255}, {70,70,70,255}, {150,150,150,255}, {100,100,100,255}},
-/*foc*/	{{125,125,125,255}, {240,240,240,255}, {50,50,50,255}, {200,200,200,255}, {100,100,100,255}},
-/*hov*/	{{130,130,130,255}, {240,240,240,255}, {50,50,50,255}, {220,220,220,255}, {100,100,100,255}},
-/*sel*/	{{ 50, 50,120,255}, {255,255,255,255}, {50,50,60,255}, { 50, 50, 50,255}, {100,100,100,255}},
-#elif AG_MODEL == AG_LARGE
-        /*
-	 *         Color (BG)                     Text (FG)                      Line (FG)                      Shape (FG)                   Border (FG->BG)
-	 */
-/*def*/	{{0x7d7d,0x7d7d,0x7d7d,0xffff}, {0xf0f0,0xf0f0,0xf0f0,0xffff}, {0x3232,0x3232,0x3232,0xffff}, {0xc8c8,0xc8c8,0xc8c8,0xffff}, {0x6464,0x6464,0x6464,0xffff}},
-/*dis*/	{{0xa0a0,0xa0a0,0xa0a0,0xffff}, {0xf0f0,0xf0f0,0xf0f0,0xffff}, {0x4646,0x4646,0x4646,0xffff}, {0x9696,0x9696,0x9696,0xffff}, {0x6464,0x6464,0x6464,0xffff}},
-/*foc*/	{{0x7d7d,0x7d7d,0x7d7d,0xffff}, {0xf0f0,0xf0f0,0xf0f0,0xffff}, {0x3232,0x3232,0x3232,0xffff}, {0xc8c8,0xc8c8,0xc8c8,0xffff}, {0x6464,0x6464,0x6464,0xffff}},
-/*hov*/	{{0x8282,0x8282,0x8282,0xffff}, {0xf0f0,0xf0f0,0xf0f0,0xffff}, {0x3232,0x3232,0x3232,0xffff}, {0xdcdc,0xdcdc,0xdcdc,0xffff}, {0x6464,0x6464,0x6464,0xffff}},
-/*sel*/	{{0x3232,0x3232,0x7878,0xffff}, {0xffff,0xffff,0xffff,0xffff}, {0x3232,0x3232,0x3c3c,0xffff}, {0x3232,0x3232,0x3232,0xffff}, {0x6464,0x6464,0x6464,0xffff}},
-#endif
+#if AG_MODEL == AG_MEDIUM           /* --- Truecolor --- */
+{       /* unfocused */
+	{125,125,125,255},          /*             color */
+	{  0,  0,  0,  0},          /*  background-color */
+	{240,240,240,255},          /*        text-color */
+	{ 50, 50, 50,255},          /*        line-color */
+	{ 90, 90, 90,255},          /*        high-color */
+	{ 80, 80, 80,255},          /*         low-color */
+	{  0,  0, 80,255},          /*   selection-color */
+	{  0,  0,  0,  0}
+}, {
+	/* #disabled */
+	{160,160,160,255},          /*             color */
+	{  0,  0,  0,  0},          /*  background-color */
+	{240,240,240,255},          /*        text-color */
+	{150,150,150,255},          /*        line-color */
+	{120,120,120,255},          /*        high-color */
+	{ 90, 90, 90,255},          /*         low-color */
+	{  0,  0,120,255},          /*   selection-color */
+	{  0,  0,  0,  0}
+}, {
+	/* #focused */
+	{125,125,125,255},          /*             color */
+	{  0,  0,  0,  0},          /*  background-color */
+	{240,240,240,255},          /*        text-color */
+	{ 50, 50, 50,255},          /*        line-color */
+	{110,110,110,255},          /*        high-color */
+	{ 80, 80, 80,255},          /*         low-color */
+	{  0,  0,120,255},          /*   selection-color */
+	{  0,  0,  0,  0}
+}, {
+	/* #hover */
+	{130,130,130,255},            /*             color */
+	{  0,  0,  0,  0},            /*  background-color */
+	{240,240,240,255},            /*        text-color */
+	{ 50, 50, 50,255},            /*        line-color */
+	{110,110,110,255},            /*        high-color */
+	{ 80, 80, 80,255},            /*         low-color */
+	{  0,  0,120,255},            /*   selection-color */
+	{  0,  0,  0,  0}
+},
+#elif AG_MODEL == AG_LARGE                /* --- Deepcolor --- */
+{
+	/* unfocused */
+	{0x7d7d,0x7d7d,0x7d7d,0xffff},    /*             color */
+	{0x0000,0x0000,0x0000,0x0000},    /*  background-color */
+	{0xf0f0,0xf0f0,0xf0f0,0xffff},    /*        text-color */
+	{0x3232,0x3232,0x3232,0xffff},    /*        line-color */
+	{0x9090,0x9090,0x9090,0xffff},    /*        high-color */
+	{0x5050,0x5050,0x5050,0xffff},    /*         low-color */
+	{0x0000,0x0000,0x7878,0xffff},    /*   selection-color */
+	{0x0000,0x0000,0x0000,0x0000}
+}, {
+	/* #disabled */
+	{0xa0a0,0xa0a0,0xa0a0,0xffff},    /*             color */
+	{0x0000,0x0000,0x0000,0x0000},    /*  background-color */
+	{0xf0f0,0xf0f0,0xf0f0,0xffff},    /*        text-color */
+	{0x4646,0x4646,0x4646,0xffff},    /*        line-color */
+	{0x7878,0x7878,0x7878,0xffff},    /*        high-color */
+	{0x5a5a,0x5a5a,0x5a5a,0xffff},    /*         low-color */
+	{0x0000,0x0000,0x7878,0xffff},    /*   selection-color */
+	{0x0000,0x0000,0x0000,0x0000}
+}, {
+	/* #focused */
+	{0x7d7d,0x7d7d,0x7d7d,0xffff},
+	{0x0000,0x0000,0x0000,0x0000},    /*  background-color */
+	{0xf0f0,0xf0f0,0xf0f0,0xffff},    /*        text-color */
+	{0x3232,0x3232,0x3232,0xffff},    /*        line-color */
+	{0xaaaa,0xaaaa,0xaaaa,0xffff},    /*        high-color */
+	{0x5555,0x5555,0x5555,0xffff},    /*         low-color */
+	{0x0000,0x0000,0x7878,0xffff},    /*   selection-color */
+	{0x0000,0x0000,0x0000,0x0000}
+}, {
+	/* #hover */
+	{0x8282,0x8282,0x8282,0xffff},
+	{0x0000,0x0000,0x0000,0x0000},    /*  background-color */
+	{0xf0f0,0xf0f0,0xf0f0,0xffff},    /*        text-color */
+	{0x3232,0x3232,0x3232,0xffff},    /*        line-color */
+	{0xaaaa,0xaaaa,0xaaaa,0xffff},    /*        high-color */
+	{0x5555,0x5555,0x5555,0xffff},    /*         low-color */
+	{0x0000,0x0000,0x7878,0xffff},    /*   selection-color */
+	{0x0000,0x0000,0x0000,0x0000}
+}
+#endif /* AG_LARGE */
 }};
 
 /* Import inlinables */
@@ -205,10 +284,6 @@ OnAttach(AG_Event *_Nonnull event)
 		/*
 		 * This is a widget attaching to a window.
 		 */
-#ifdef AG_DEBUG_GUI
-		Debug(widget, "Attach to %s window (\"%s\")\n",
-		    OBJECT(parent)->name, AGWINDOW(parent)->caption);
-#endif
 		SetParentWindow(widget, AGWINDOW(wParent));
 		if (AGWINDOW(wParent)->visible) {
 			widget->flags |= AG_WIDGET_UPDATE_WINDOW;
@@ -231,10 +306,6 @@ OnAttach(AG_Event *_Nonnull event)
 #ifdef AG_DEBUG
 		if (window) { AG_OBJECT_ISA(window, "AG_Widget:AG_Window:*"); }
 #endif
-#ifdef AG_DEBUG_GUI
-		Debug(widget, "Attach to %s in %s\n", OBJECT_CLASS(parent)->name,
-		    window ? OBJECT(window)->name : "<>");
-#endif
 		SetParentWindow(widget, window);
 		if (window && window->visible) {
 			AG_PostEvent(widget, "widget-shown", NULL);
@@ -245,10 +316,6 @@ OnAttach(AG_Event *_Nonnull event)
 		/*
 		 * This is a Window attaching to a low-level Driver.
 		 */
-#ifdef AG_DEBUG_GUI
-		Debug(widget, "Attach to %s (%s)\n", OBJECT_CLASS(parent)->name,
-		   OBJECT(parent)->name);
-#endif
 		SetParentDriver(widget, drvParent);
 	} else {
 #ifdef AG_VERBOSITY
@@ -286,7 +353,6 @@ OnDetach(AG_Event *_Nonnull event)
 	}
 }
 
-/* Timer callback for AG_RedrawOnTick(). */
 static Uint32
 RedrawOnTickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -299,7 +365,6 @@ RedrawOnTickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	return (to->ival);
 }
 
-/* Timer callback for AG_RedrawOnChange(). */
 static Uint32
 RedrawOnChangeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -322,7 +387,6 @@ RedrawOnChangeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	return (to->ival);
 }
 
-/* "widget-shown" handler */
 static void
 OnShow(AG_Event *_Nonnull event)
 {
@@ -352,7 +416,6 @@ OnShow(AG_Event *_Nonnull event)
 	}
 }
 
-/* "widget-hidden" handler */
 static void
 OnHide(AG_Event *_Nonnull event)
 {
@@ -383,49 +446,44 @@ Init(void *_Nonnull obj)
 	OBJECT(wid)->flags |= AG_OBJECT_NAME_ONATTACH;
 
 	wid->flags = 0;
-	wid->rView.x1 = -1;
-	wid->rView.y1 = -1;
-	wid->rView.w = -1;
-	wid->rView.h = -1;
-	wid->rView.x2 = -1;
-	wid->rView.y2 = -1;
-	wid->rSens.x1 = 0;
-	wid->rSens.y1 = 0;
-	wid->rSens.w = 0;
-	wid->rSens.h = 0;
-	wid->rSens.x2 = 0;
-	wid->rSens.y2 = 0;
-	wid->x = -1;
-	wid->y = -1;
-	wid->w = -1;
-	wid->h = -1;
-	wid->focusFwd = NULL;
-	wid->window = NULL;
-	wid->drv = NULL;
-	wid->drvOps = NULL;
-	wid->nSurfaces = 0;
-	wid->surfaces = NULL;
-	wid->surfaceFlags = NULL;
-	wid->textures = NULL;
-	wid->texcoords = NULL;
-	AG_VEC_INIT(&wid->actions);
-	TAILQ_INIT(&wid->pvt.mouseActions);
-	TAILQ_INIT(&wid->pvt.keyActions);
-	
-	wid->state = AG_DEFAULT_STATE;
-	wid->css = NULL;
+
+	memset(&wid->x, 0xff, sizeof(int) +               /* (-1) -> x */
+	                      sizeof(int) +                       /* y */
+	                      sizeof(int) +                       /* w */
+	                      sizeof(int) +                       /* h */
+			      sizeof(AG_Rect2) +                  /* rView */
+			      sizeof(AG_Rect2));                  /* rSens */
+
+	memset(&wid->nSurfaces, 0, sizeof(Uint) +                 /* nSurfaces */
+	                           sizeof(AG_Surface **) +        /* surfaces */
+	                           sizeof(Uint *) +               /* surfaceFlags */
+	                           sizeof(Uint *) +               /* textures */
+	                           sizeof(AG_TexCoord *) +        /* texcoords */
+	                           sizeof(AG_Widget *) +          /* focusFwd */
+	                           sizeof(AG_Window *) +          /* window */
+	                           sizeof(AG_Driver *) +          /* drv */
+	                           sizeof(AG_DriverClass *) +     /* drvOps */
+	                           sizeof(AG_StyleSheet *) +      /* css */
+	                           sizeof(enum ag_widget_state) + /* state */
+	                           sizeof(Uint) +                 /* margin */
+	                           sizeof(Uint) +                 /* padding */
+	                           sizeof(Uint));                 /* borders */
+
 	wid->font = agDefaultFont;
 	wid->pal = agDefaultPalette;
 #ifdef HAVE_OPENGL
 	wid->gl = NULL;
 #endif
+	AG_VEC_INIT(&wid->actions);
+	TAILQ_INIT(&wid->pvt.mouseActions);
+	TAILQ_INIT(&wid->pvt.keyActions);
+	TAILQ_INIT(&wid->pvt.redrawTies);
+	TAILQ_INIT(&wid->pvt.cursorAreas);
+
 	AG_SetEvent(wid, "attached", OnAttach, NULL);
 	AG_SetEvent(wid, "detached", OnDetach, NULL);
 	AG_SetEvent(wid, "widget-shown", OnShow, NULL);
 	AG_SetEvent(wid, "widget-hidden", OnHide, NULL);
-
-	TAILQ_INIT(&wid->pvt.redrawTies);
-	TAILQ_INIT(&wid->pvt.cursorAreas);
 }
 
 /* Arrange for a redraw whenever a given binding value changes. */
@@ -1127,7 +1185,8 @@ Destroy(void *_Nonnull obj)
 	for (i = 0; i < wid->nSurfaces; i++) {
 		AG_Surface *S;
 
-		if ((S = wid->surfaces[i]) && !WSURFACE_NODUP(wid,i)) {
+		if ((S = wid->surfaces[i]) != NULL &&
+		    !(wid->surfaceFlags[i] & AG_WIDGET_SURFACE_NODUP)) {
 			S->flags &= ~(AG_SURFACE_MAPPED);
 			AG_SurfaceFree(S);
 		}
@@ -1891,7 +1950,7 @@ int
 AG_WidgetMapSurface(void *obj, AG_Surface *S)
 {
 	AG_Widget *wid = obj;
-	int i, n, s = -1;
+	int i, n, id = -1;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
@@ -1899,27 +1958,27 @@ AG_WidgetMapSurface(void *obj, AG_Surface *S)
 	n = wid->nSurfaces;
 	for (i = 0; i < n; i++) {
 		if (wid->surfaces[i] == NULL) {
-			s = i;
+			id = i;
 			break;
 		}
 	}
 	if (i == n) {
 		++n;
-		wid->surfaces= Realloc(wid->surfaces, n*sizeof(AG_Surface *));
+		wid->surfaces = Realloc(wid->surfaces, n*sizeof(AG_Surface *));
 		wid->surfaceFlags = Realloc(wid->surfaceFlags, n*sizeof(Uint));
 		wid->textures = Realloc(wid->textures, n*sizeof(Uint));
 		wid->texcoords = Realloc(wid->texcoords, n*sizeof(AG_TexCoord));
-		s = wid->nSurfaces++;
+		id = wid->nSurfaces++;
 	}
-	wid->surfaces[s] = S;
-	wid->surfaceFlags[s] = 0;
-	wid->textures[s] = 0;
+	wid->surfaces[id] = S;
+	wid->surfaceFlags[id] = 0;
+	wid->textures[id] = 0;
 
 	if (S) {
 		S->flags |= AG_SURFACE_MAPPED;
 	}
 	AG_ObjectUnlock(wid);
-	return (s);
+	return (id);
 }
 
 /*
@@ -1927,17 +1986,17 @@ AG_WidgetMapSurface(void *obj, AG_Surface *S)
  * If hardware textures are not used, this is a no-op.
  */
 void
-AG_WidgetUpdateSurface(void *obj, int name)
+AG_WidgetUpdateSurface(void *obj, int id)
 {
 #ifdef HAVE_OPENGL
 	AG_Widget *wid = obj;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 # ifdef AG_DEBUG
-	if (name < 0 || name >= wid->nSurfaces)
+	if (id < 0 || id >= wid->nSurfaces)
 		AG_FatalError("No such surface");
 # endif
-	wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_REGEN;
+	wid->surfaceFlags[id] |= AG_WIDGET_SURFACE_REGEN;
 #endif
 }
 
@@ -1946,24 +2005,24 @@ AG_WidgetUpdateSurface(void *obj, int name)
  * If a hardware texture was created, it is deleted asynchronously.
  */
 void
-AG_WidgetUnmapSurface(void *obj, int name)
+AG_WidgetUnmapSurface(void *obj, int id)
 {
 	AG_OBJECT_ISA(obj, "AG_Widget:*");
-	AG_WidgetReplaceSurface(obj, name, NULL);
+	AG_WidgetReplaceSurface(obj, id, NULL);
 }
 
 /*
- * Perform an image transfer from a mapped surface (by name) to specified
+ * Perform an image transfer from a mapped surface (by surface ID) to specified
  * target coordinates x,y (relative to the widget). If a texture unit is
  * available, this is done entirely in hardware.
  *
  * This must be called from rendering context (the Widget draw() operation).
  */
 void
-AG_WidgetBlitSurface(void *obj, int name, int x, int y)
+AG_WidgetBlitSurface(void *obj, int id, int x, int y)
 {
 	AG_OBJECT_ISA(obj, "AG_Widget:*");
-	AG_WidgetBlitFrom(obj, name, NULL, x,y);
+	AG_WidgetBlitFrom(obj, id, NULL, x,y);
 }
 
 /*
@@ -1971,7 +2030,7 @@ AG_WidgetBlitSurface(void *obj, int name, int x, int y)
  * to calling AG_WidgetUnmapSurface().
  */
 void
-AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *S)
+AG_WidgetReplaceSurface(void *obj, int id, AG_Surface *S)
 {
 	AG_Widget *wid = obj;
 	AG_Surface *Sprev;
@@ -1979,28 +2038,29 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *S)
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 #ifdef AG_DEBUG
-	if (s < 0 || s >= wid->nSurfaces)
+	if (id < 0 || id >= wid->nSurfaces)
 		AG_FatalError("No such surface");
 #endif
-	if ((Sprev = wid->surfaces[s]) && !WSURFACE_NODUP(wid,s)) {
+	if ((Sprev = wid->surfaces[id]) &&
+	    !(wid->surfaceFlags[id] & AG_WIDGET_SURFACE_NODUP)) {
 		Sprev->flags &= ~(AG_SURFACE_MAPPED);
 		AG_SurfaceFree(Sprev);
 	}
 	if (S) {
 		S->flags |= AG_SURFACE_MAPPED;
 	}
-	wid->surfaces[s] = S;
-	wid->surfaceFlags[s] &= ~(AG_WIDGET_SURFACE_NODUP);
+	wid->surfaces[id] = S;
+	wid->surfaceFlags[id] &= ~(AG_WIDGET_SURFACE_NODUP);
 
 	/*
 	 * Queue the previous texture for deletion and set the texture handle
 	 * to 0 so the texture will be regenerated at the next blit.
 	 */
-	if (wid->textures[s] != 0 && wid->drv) {
+	if (wid->textures[id] != 0 && wid->drv) {
 		AG_OBJECT_ISA(wid->drv, "AG_Driver:*");
 		if (wid->drvOps->deleteTexture != NULL) {
-			wid->drvOps->deleteTexture(wid->drv, wid->textures[s]);
-			wid->textures[s] = 0;
+			wid->drvOps->deleteTexture(wid->drv, wid->textures[id]);
+			wid->textures[id] = 0;
 		}
 	}
 	AG_ObjectUnlock(wid);
@@ -2021,14 +2081,16 @@ Apply_Font_Weight(Uint *fontFlags, Uint parentFontFlags, const char *spec)
 {
 	if (AG_Strcasecmp(spec, "bold") == 0) {
 		*fontFlags |= AG_FONT_BOLD;
-	} else if (AG_Strcasecmp(spec, "normal") == 0) {
-		*fontFlags &= ~(AG_FONT_BOLD);
+	} else if (AG_Strcasecmp(spec, "semibold") == 0) {
+		*fontFlags &= ~(AG_FONT_SEMIBOLD);
 	} else if (AG_Strcasecmp(spec, "!parent") == 0) {
-		if (parentFontFlags & AG_FONT_BOLD) {
-			*fontFlags &= ~(AG_FONT_BOLD);
+		if (parentFontFlags & AG_FONT_BOLDS) {
+			*fontFlags &= ~(AG_FONT_BOLDS);
 		} else {
 			*fontFlags |= AG_FONT_BOLD;
 		}
+	} else {				/* "normal" or "regular" */
+		*fontFlags &= ~(AG_FONT_BOLDS);
 	}
 }
 	
@@ -2036,15 +2098,41 @@ static void
 Apply_Font_Style(Uint *fontFlags, Uint parentFontFlags, const char *spec)
 {
 	if (AG_Strcasecmp(spec, "italic") == 0) {
-		*fontFlags |= AG_FONT_ITALIC;
-	} else if (AG_Strcasecmp(spec, "normal") == 0) {
+		*fontFlags |=   AG_FONT_ITALIC;
+		*fontFlags &= ~(AG_FONT_UPRIGHT_ITALIC);
+	} else if (AG_Strcasecmp(spec, "upright-italic") == 0) {
+		*fontFlags |=   AG_FONT_UPRIGHT_ITALIC;
 		*fontFlags &= ~(AG_FONT_ITALIC);
 	} else if (AG_Strcasecmp(spec, "!parent") == 0) {
-		if (parentFontFlags & AG_FONT_ITALIC) {
-			*fontFlags &= ~(AG_FONT_ITALIC);
+		if (parentFontFlags & AG_FONT_ITALICS) {
+			*fontFlags &= ~(AG_FONT_ITALICS);
 		} else {
 			*fontFlags |= AG_FONT_ITALIC;
 		}
+	} else {                                   /* "normal" or "regular" */
+		*fontFlags &= ~(AG_FONT_ITALICS);
+	}
+}
+
+static void
+Apply_Font_Stretch(Uint *fontFlags, Uint parentFontFlags, const char *spec)
+{
+	if (AG_Strcasecmp(spec, "normal") == 0) {
+		*fontFlags &= ~(AG_FONT_WIDTH_VARIANTS);
+	} else if (AG_Strcasecmp(spec, "condensed") == 0) {
+		*fontFlags |=   AG_FONT_CONDENSED;
+		*fontFlags &= ~(AG_FONT_SEMICONDENSED);
+	} else if (AG_Strcasecmp(spec, "semi-condensed") == 0) {
+		*fontFlags |=   AG_FONT_SEMICONDENSED;
+		*fontFlags &= ~(AG_FONT_CONDENSED);
+	} else if (AG_Strcasecmp(spec, "!parent") == 0) {
+		if (parentFontFlags & AG_FONT_WIDTH_VARIANTS) {
+			*fontFlags &= ~(AG_FONT_WIDTH_VARIANTS);
+		} else {
+			*fontFlags |= AG_FONT_CONDENSED;
+		}
+	} else {                                   /* "normal" or "regular" */
+			*fontFlags &= ~(AG_FONT_WIDTH_VARIANTS);
 	}
 }
 
@@ -2080,9 +2168,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		}
 	}
 
-	/*
-	 * Apply the font attributes.
-	 */
+	/* Font face */
 	if ((V = AG_AccessVariable(wid, "font-family")) != NULL) {
 		fontFace = Strdup(V->data.s);
 		AG_UnlockVariable(V);
@@ -2091,6 +2177,8 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	} else {
 		fontFace = Strdup(parentFace);
 	}
+
+	/* Font size (pts or %) */
 	if ((V = AG_AccessVariable(wid, "font-size")) != NULL) {
 		Apply_Font_Size(&fontSize, parentFontSize, V->data.s);
 		AG_UnlockVariable(V);
@@ -2099,27 +2187,42 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	} else {
 		fontSize = parentFontSize;
 	}
+
+	/* Font weight (normal, semibold, bold, !parent) */
 	if ((V = AG_AccessVariable(wid, "font-weight")) != NULL) {
 		Apply_Font_Weight(&fontFlags, parentFontFlags, V->data.s);
 		AG_UnlockVariable(V);
 	} else if (AG_LookupStyleSheet(css, wid, "font-weight", &cssData)) {
 		Apply_Font_Weight(&fontFlags, parentFontFlags, cssData);
 	} else {
-		fontFlags &= ~(AG_FONT_BOLD);
-		fontFlags |= (parentFontFlags & AG_FONT_BOLD);
+		fontFlags &= ~(AG_FONT_BOLDS);
+		fontFlags |= (parentFontFlags & AG_FONT_BOLDS);
 	}
+
+	/* Font style (normal, italic, upright-italic, !parent) */
 	if ((V = AG_AccessVariable(wid, "font-style")) != NULL) {
 		Apply_Font_Style(&fontFlags, parentFontFlags, V->data.s);
 		AG_UnlockVariable(V);
 	} else if (AG_LookupStyleSheet(css, wid, "font-style", &cssData)) {
 		Apply_Font_Style(&fontFlags, parentFontFlags, cssData);
 	} else {
-		fontFlags &= ~(AG_FONT_ITALIC);
-		fontFlags |= (parentFontFlags & AG_FONT_ITALIC);
+		fontFlags &= ~(AG_FONT_ITALICS);
+		fontFlags |= (parentFontFlags & AG_FONT_ITALICS);
+	}
+	
+	/* Width variant (normal, semi-condensed, condensed, !parent) */
+	if ((V = AG_AccessVariable(wid, "font-stretch")) != NULL) {
+		Apply_Font_Stretch(&fontFlags, parentFontFlags, V->data.s);
+		AG_UnlockVariable(V);
+	} else if (AG_LookupStyleSheet(css, wid, "font-stretch", &cssData)) {
+		Apply_Font_Stretch(&fontFlags, parentFontFlags, cssData);
+	} else {
+		fontFlags &= ~(AG_FONT_WIDTH_VARIANTS);
+		fontFlags |= (parentFontFlags & AG_FONT_WIDTH_VARIANTS);
 	}
 	
 	/*
-	 * Compile the color palette.
+	 * Update palette. Signal "palette-changed" if any entries have changed.
 	 */
 	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
 		for (j = 0; j < AG_WIDGET_NCOLORS; j++) {
@@ -2127,7 +2230,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 			char name[AG_VARIABLE_NAME_MAX];
 			AG_Color cNew;
 
-			Strlcpy(name, agWidgetColorNames[j], sizeof(name));
+			Strlcpy(name, agStyleAttributes[j], sizeof(name));
 			Strlcat(name, agWidgetStateNames[i], sizeof(name));
 
 			if ((V = AG_AccessVariable(wid, name)) != NULL) {
@@ -2136,7 +2239,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 			} else if (AG_LookupStyleSheet(css, wid, name, &cssData)) {
 				AG_ColorFromString(&cNew, cssData, cParent);
 			} else {
-				Strlcpy(name, agWidgetColorNames[j], sizeof(name));
+				Strlcpy(name, agStyleAttributes[j], sizeof(name));
 				if (AG_LookupStyleSheet(css, wid, name, &cssData)) {
 					AG_ColorFromString(&cNew, cssData, cParent);
 				} else {
@@ -2152,30 +2255,30 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	if (paletteChanged)
 		AG_PostEvent(wid, "palette-changed", NULL);
 
-	/* Load any font required */
-	if (wid->flags & AG_WIDGET_USE_TEXT) {
+	if (wid->flags & AG_WIDGET_USE_TEXT) {    /* Load any fonts required */
 		char *pFace = fontFace, *tok;
 		AG_Font *fontNew = NULL;
 
 		while ((tok = AG_Strsep(&pFace, ",")) != NULL) {
-			fontNew = AG_FetchFont(fontFace, fontSize, fontFlags);
-			if (fontNew != NULL)
+			if ((fontNew = AG_FetchFont(fontFace, fontSize,
+			                            fontFlags)) != NULL)
 				break;
 		}
 		if (fontNew == NULL) {
 			fontNew = AG_FetchFont(NULL, fontSize, fontFlags);
 			AG_OBJECT_ISA(fontNew, "AG_Font:*");
 		}
-		if (fontNew != NULL && wid->font != fontNew) {
-			if (wid->font != NULL) {
-				AG_OBJECT_ISA(wid->font, "AG_Font:*");
+		if (fontNew && wid->font != fontNew) {
+			if (wid->font) {
 				AG_UnusedFont(wid->font);
 			}
 			wid->font = fontNew;
+
 			AG_PushTextState();
 			AG_TextFont(wid->font);
 			AG_PostEvent(wid, "font-changed", NULL);
 			AG_PopTextState();
+
 			AG_Redraw(wid);
 		}
 	}
@@ -2184,7 +2287,6 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		CompileStyleRecursive(chld, fontFace, fontSize, fontFlags,
 		                      &wid->pal);
 	}
-	
 	free(fontFace);
 }
 void
@@ -2230,7 +2332,6 @@ AG_WidgetFreeStyle(void *obj)
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	if (wid->font) {
-		AG_OBJECT_ISA(wid->font, "AG_Font:*");
 		AG_UnusedFont(wid->font);
 		wid->font = NULL;
 	}
@@ -2251,7 +2352,7 @@ AG_WidgetCopyStyle(void *objDst, void *objSrc)
 	AG_OBJECT_ISA(widDst, "AG_Widget:*");
 	AG_ObjectLock(widSrc);
 	AG_ObjectLock(widDst);
-	for (s = &agWidgetStyleNames[0]; *s != NULL; s++) {
+	for (s = &agStyleAttributes[0]; *s != NULL; s++) {
 		if ((V = AG_AccessVariable(widSrc, *s)) != NULL) {
 			AG_SetString(widDst, *s, V->data.s);
 			AG_UnlockVariable(V);
@@ -2266,8 +2367,7 @@ AG_WidgetCopyStyle(void *objDst, void *objSrc)
 }
 
 /*
- * Set the default font parameters for a widget.
- * If a NULL argument is provided, the parameter is inherited from parent.
+ * Inherit the font-related style attributes of the specified font.
  */
 void
 AG_SetFont(void *obj, const AG_Font *font)

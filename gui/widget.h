@@ -41,26 +41,31 @@ typedef struct ag_size_alloc {
 	int x, y;			/* Allocated position in pixels */
 } AG_SizeAlloc;
 
-/* Widget class description. */
+/* Widget class description */
 typedef struct ag_widget_class {
 	struct ag_object_class _inherit;     /* [AG_Object] -> [AG_Widget] */
 
+	/* Rendering routine (rendering context) */
 	void (*_Nullable draw)(void *_Nonnull);
+	
+	/* Size requisition (indicate preferred initial size to parent) */
 	void (*_Nullable size_request)(void *_Nonnull, AG_SizeReq *_Nonnull);
+
+	/* Size allocation (handle final size returned by parent) */
 	int  (*_Nullable size_allocate)(void *_Nonnull,
 	                                const AG_SizeAlloc *_Nonnull);
 } AG_WidgetClass;
 
-/* Relative size specification of visual element. */
+/* A constant size for some visual element (possibly a relative to a parent) */
 typedef enum ag_widget_sizespec {
-	AG_WIDGET_BAD_SPEC,	/* Parser error */
-	AG_WIDGET_PIXELS,	/*              Pixel count: "123px"   */
-	AG_WIDGET_PERCENT,	/* Ratio to available space: "50%"     */
-	AG_WIDGET_STRINGLEN,	/*    Width of given string: "<hello>" */
-	AG_WIDGET_FILL		/*     Fill remaining space: "-"       */
+	AG_WIDGET_BAD_SPEC,    /* Parser error */
+	AG_WIDGET_PIXELS,      /* Pixel count ("123px", "1.5px") */
+	AG_WIDGET_PERCENT,     /* Ratio to available space ("50%") */
+	AG_WIDGET_STRINGLEN,   /* Width of rendered text ("<Hello...>") */
+	AG_WIDGET_FILL         /* Expand to fill remaining space ("-") */
 } AG_SizeSpec;
 
-/* Flag description (i.e., for AG_Checkbox(3)) */
+/* Bit flag description (used by AG_Checkbox(3) for example). */
 typedef struct ag_flag_descr {
 #ifdef AG_HAVE_64BIT
 	Uint64 bitmask;			/* Bitmask */
@@ -73,184 +78,236 @@ typedef struct ag_flag_descr {
 } AG_FlagDescr;
 
 /* 
- * Widget Actions
+ * High-level widget action.
  */
 typedef enum ag_action_type {
-	AG_ACTION_FN,			/* Execute function */
-	AG_ACTION_SET_INT,		/* Set an integer */
-	AG_ACTION_TOGGLE_INT,		/* Toggle an integer */
-	AG_ACTION_SET_FLAG,		/* Set specified bits in a word */
-	AG_ACTION_TOGGLE_FLAG		/* Toggle specified bits in a word */
+	AG_ACTION_FN,             /* Execute function */
+	AG_ACTION_SET_INT,        /* Set an integer */
+	AG_ACTION_TOGGLE_INT,     /* Toggle an integer */
+	AG_ACTION_SET_FLAG,       /* Set specified bits in a word */
+	AG_ACTION_TOGGLE_FLAG     /* Toggle specified bits in a word */
 } AG_ActionType;
 
 typedef struct ag_action {
-	AG_ActionType type;			/* Type of action */
-	char name[AG_ACTION_NAME_MAX];		/* Action name */
-	AG_Event *_Nullable fn;			/* Callback function */
-	void *_Nullable p;			/* Target (for SET_*) */
-	int val;				/* Value (for SET_*) */
-	Uint bitmask;				/* Bitmask (for SET_FLAG) */
+	AG_ActionType type;              /* Type of action */
+	char name[AG_ACTION_NAME_MAX];   /* Action name */
+	AG_Event *_Nullable fn;          /* Callback function */
+	void *_Nullable p;               /* Target (for SET_*) */
+	int val;                         /* Value (for SET_*) */
+	Uint bitmask;                    /* Bitmask (for SET_FLAG) */
 } AG_Action;
 
 typedef AG_VEC_HEAD(AG_Action *) AG_ActionVec;
 
+/*
+ * Connection between an Action and a low-level event.
+ */
 typedef enum ag_action_event_type {
-	AG_ACTION_ON_BUTTONDOWN,	/* On mouse-button-down */
-	AG_ACTION_ON_BUTTONUP,		/* On mouse-button-up */
-	AG_ACTION_ON_KEYDOWN,		/* On key-down */
-	AG_ACTION_ON_KEYUP,		/* On key-up */
-	AG_ACTION_ON_KEYREPEAT		/* On key-down, with key repeat */
+	AG_ACTION_ON_BUTTONDOWN,         /* On mouse-button-down */
+	AG_ACTION_ON_BUTTONUP,           /* On mouse-button-up */
+	AG_ACTION_ON_KEYDOWN,            /* On key-down */
+	AG_ACTION_ON_KEYUP,              /* On key-up */
+	AG_ACTION_ON_KEYREPEAT           /* On key-down, with key repeat */
 #define AG_ACTION_ON_BUTTON \
-	AG_ACTION_ON_BUTTONDOWN		/* For mousewheel events */
+	AG_ACTION_ON_BUTTONDOWN          /* For mousewheel events */
 } AG_ActionEventType;
 
 typedef struct ag_action_tie {
-	AG_ActionEventType type;		/* Trigger event type */
-	char action[AG_ACTION_NAME_MAX];	/* Action name */
+	AG_ActionEventType type;               /* Trigger event type */
+	char action[AG_ACTION_NAME_MAX];       /* Action name */
 	union {
-		AG_MouseButton button;		/* Button index */
+		AG_MouseButton button;         /* Button index */
 		struct {
-			AG_KeySym sym;		/* Matching symbol */
-			AG_KeyMod mod;		/* Matching modifier */
-			AG_Timer toRepeat;	/* Key repeat timer */
+			AG_KeySym sym;         /* Matching symbol */
+			AG_KeyMod mod;         /* Matching modifier */
+			AG_Timer toRepeat;     /* Key repeat timer */
 		} key;
 	} data;
 	AG_TAILQ_ENTRY(ag_action_tie) ties;
 } AG_ActionTie;
 
-/* Redraw tie (for AG_RedrawOn*() feature). */
+/*
+ * Instruction to redraw at specified interval in ticks, or whenever
+ * the value of a given variable changes.
+ */
 enum ag_redraw_tie_type {
 	AG_REDRAW_ON_CHANGE,
 	AG_REDRAW_ON_TICK
 };
 typedef struct ag_redraw_tie {
 	enum ag_redraw_tie_type type;
-	char name[AG_VARIABLE_NAME_MAX];	/* Polled variable */
-	AG_Variable Vlast;			/* Last accessed data */
+	char name[AG_VARIABLE_NAME_MAX];           /* Polled variable */
+	AG_Variable Vlast;                         /* Last accessed data */
 	int         VlastInited;
-	Uint ival;				/* Polling interval */
-	AG_Timer to;				/* Polling timer */
-	AG_TAILQ_ENTRY(ag_redraw_tie) redrawTies; /* In widget */
+	Uint ival;                                 /* Polling interval */
+	AG_Timer to;                               /* Polling timer */
+	AG_TAILQ_ENTRY(ag_redraw_tie) redrawTies;  /* Entry in Widget */
 } AG_RedrawTie;
 
 /* Cursor-change area */
 typedef struct ag_cursor_area {
-	AG_Rect r;					/* Area in window */
-	struct ag_cursor *_Nullable c;			/* Associated cursor */
-	struct ag_widget *_Nonnull wid;			/* Associated widget */
-	int stock;					/* Stock cursor? */
+	AG_Rect r;                           /* Area in window */
+	struct ag_cursor *_Nullable c;       /* Associated cursor */
+	struct ag_widget *_Nonnull wid;      /* Associated widget */
+	int stock;                           /* Stock cursor? */
 	Uint32 _pad;
 	AG_TAILQ_ENTRY(ag_cursor_area) cursorAreas;
 } AG_CursorArea;
+ 
+/*
+ * Widget states that effect styling.
+ * SYNC: agWidgetStateNames[]
+ */
+enum ag_widget_state {
+	AG_DEFAULT_STATE,    /* Not focused (default) */
+	AG_DISABLED_STATE,   /* Inactive ("#disabled") */
+	AG_FOCUSED_STATE,    /* Holds focus ("#focused")  */
+	AG_HOVER_STATE       /* Cursor is over widget ("#hover") */
+};
+#define AG_WIDGET_NSTATES 4
 
 /*
- * Widget's color palette. Generated from CSS style attributes.
- * SYNC: agWidgetStateNames[], agWidgetColorNames[], agDefaultPalette[].
+ * Per-widget 32-color palette (4 states x 8 colors).
+ *
+ * Initialized by the style engine. Read-only except in rendering context,
+ * where container widgets are allowed to modify the palette entries of
+ * child widgets.
  */
-#define AG_WIDGET_NSTATES 5
-#define AG_WIDGET_NCOLORS 5
-enum ag_widget_state {
-	AG_DEFAULT_STATE,		/* Unfocused state */
-	AG_DISABLED_STATE,		/* Inactive state (#disabled) */
-	AG_FOCUSED_STATE,		/* Active / focused state (#focused) */
-	AG_HOVER_STATE,			/* "Mouse over" state (#hover) */
-	AG_SELECTED_STATE		/* "Selected" state (#selected) */
-};
 enum ag_widget_color {
-	AG_BG_COLOR     = 0,		/* Background ("color") */
-	AG_TEXT_COLOR   = 1,		/* Rendered text ("text-color") */
-	AG_LINE_COLOR   = 2,		/* Line drawing ("line-color") */
-	AG_SHAPE_COLOR  = 3,		/* Filled shapes ("shape-color") */
-	AG_BORDER_COLOR	= 4		/* Decorative borders ("border-color") */
+	AG_FG_COLOR        = 0,  /*            "color" : Foreground primary */
+	AG_BG_COLOR        = 1,  /* "background-color" : Background primary */
+	AG_TEXT_COLOR      = 2,  /*       "text-color" : Text & vector icons */
+	AG_LINE_COLOR      = 3,  /*       "line-color" : Lines & filled shapes */
+	AG_HIGH_COLOR      = 4,  /*       "high-color" : Shading top & left */
+	AG_LOW_COLOR       = 5,  /*        "low-color" : Shading bottom & right */
+	AG_SELECTION_COLOR = 6,  /*  "selection-color" : Selection primary */
+	AG_UNUSED_COLOR    = 7
 };
+#define AG_WIDGET_NCOLORS 8
+
 typedef struct {
 	AG_Color c[AG_WIDGET_NSTATES]
 	          [AG_WIDGET_NCOLORS];
 } AG_WidgetPalette;
 
-#define AG_WCOLOR(wid,which)	 AGWIDGET(wid)->pal.c[AGWIDGET(wid)->state][which]
-#define AG_WCOLOR_DEF(wid,which) AGWIDGET(wid)->pal.c[AG_DEFAULT_STATE][which]
-#define AG_WCOLOR_DIS(wid,which) AGWIDGET(wid)->pal.c[AG_DISABLED_STATE][which]
-#define AG_WCOLOR_HOV(wid,which) AGWIDGET(wid)->pal.c[AG_HOVER_STATE][which]
-#define AG_WCOLOR_SEL(wid,which) AGWIDGET(wid)->pal.c[AG_SELECTED_STATE][which]
+/* Index a palette entry according to the current widget's state */
+#define AG_WCOLOR(wid,id) AGWIDGET(wid)->pal.c[AGWIDGET(wid)->state][id]
+
+/* Index a palette entry for a given widget state */
+#define AG_WCOLOR_DEFAULT(wid,id)  AGWIDGET(wid)->pal.c[AG_DEFAULT_STATE][id]
+#define AG_WCOLOR_DISABLED(wid,id) AGWIDGET(wid)->pal.c[AG_DISABLED_STATE][id]
+#define AG_WCOLOR_FOCUSED(wid,id)  AGWIDGET(wid)->pal.c[AG_FOCUSED_STATE][id]
+#define AG_WCOLOR_HOVER(wid,id)    AGWIDGET(wid)->pal.c[AG_HOVER_STATE][id]
 
 #ifdef HAVE_OPENGL
-/* Saved OpenGL context (for WIDGET_USE_OPENGL) */
+/* Per-widget saved OpenGL context (for USE_OPENGL). */
 typedef struct ag_widget_gl {
-	float mProjection[16];				/* Projection matrix */
-	float mModelview[16];				/* Modelview matrix */
+	float mProjection[16];                       /* Projection matrix */
+	float mModelview[16];                        /* Modelview matrix */
 } AG_WidgetGL;
 #endif
 
+/* Per-widget Private Data */
 typedef struct ag_widget_pvt {
-	AG_TAILQ_HEAD_(ag_action_tie) mouseActions;	/* Mouse action ties */
-	AG_TAILQ_HEAD_(ag_action_tie) keyActions;	/* Kbd action ties */
-	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies;	/* For AG_RedrawOn*() */
-	AG_TAILQ_HEAD_(ag_cursor_area) cursorAreas;	/* Cursor-change areas */
+	AG_TAILQ_HEAD_(ag_action_tie) mouseActions;  /* Mouse action ties */
+	AG_TAILQ_HEAD_(ag_action_tie) keyActions;    /* Kbd action ties */
+	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies;    /* For AG_RedrawOn*() */
+	AG_TAILQ_HEAD_(ag_cursor_area) cursorAreas;  /* Cursor-change areas */
 } AG_WidgetPvt;
 
-/* Agar widget instance */
+/*
+ * Agar widget instance.
+ */
 typedef struct ag_widget {
-	struct ag_object obj;			/* AG_Object -> AG_Widget */
+	struct ag_object obj;                      /* AG_Object -> AG_Widget */
 
 	Uint flags;
-#define AG_WIDGET_FOCUSABLE		0x000001 /* Can grab focus */
-#define AG_WIDGET_FOCUSED		0x000002 /* Holds focus (computed) */
-#define AG_WIDGET_UNFOCUSED_MOTION	0x000004 /* All mousemotion events */
-#define AG_WIDGET_UNFOCUSED_BUTTONUP	0x000008 /* All mousebuttonup events */
-#define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x000010 /* All mousebuttondown events */
-#define AG_WIDGET_VISIBLE		0x000020 /* Widget is visible (computed) */
-#define AG_WIDGET_HFILL			0x000040 /* Expand to fill width */
-#define AG_WIDGET_VFILL			0x000080 /* Expand to fill height */
-#define AG_WIDGET_USE_OPENGL		0x000100 /* Set up separate GL context */
-#define AG_WIDGET_HIDE			0x000200 /* Don't draw this widget */
-#define AG_WIDGET_DISABLED		0x000400 /* Don't respond to input */
-                                                 /* (TODO make this an int) */
-#define AG_WIDGET_MOUSEOVER		0x000800 /* Mouseover state (computed) */
-#define AG_WIDGET_CATCH_TAB		0x001000 /* Receive focus-cycling key events */
-#define AG_WIDGET_GL_RESHAPE		0x002000 /* Pending GL view reshape */
-#define AG_WIDGET_UNDERSIZE		0x004000 /* Size alloc failed (computed) */
-#define AG_WIDGET_NOSPACING		0x008000 /* No box model (container-specific) */
-#define AG_WIDGET_UNFOCUSED_KEYDOWN	0x010000 /* Receive keydowns w/o focus */
-#define AG_WIDGET_UNFOCUSED_KEYUP	0x020000 /* Receive keyups w/o focus */
-#define AG_WIDGET_TABLE_EMBEDDABLE	0x080000 /* Can be used in a polled AG_Table(3) */
-#define AG_WIDGET_UPDATE_WINDOW		0x100000 /* Request AG_WindowUpdate() ASAP */
-#define AG_WIDGET_QUEUE_SURFACE_BACKUP	0x200000 /* Must backup surfaces ASAP */
-#define AG_WIDGET_USE_TEXT		0x400000 /* Use Agar's font engine */
-#define AG_WIDGET_USE_MOUSEOVER		0x800000 /* Generate mouseover events (and maintain MOUSEOVER flag) */
-#define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL | AG_WIDGET_VFILL)
+#define AG_WIDGET_FOCUSABLE             0x00000001 /* Can grab focus */
+#define AG_WIDGET_FOCUSED               0x00000002 /* is currently focused (RO) */
+#define AG_WIDGET_UNFOCUSED_MOTION      0x00000004 /* Receive all motion events */
+#define AG_WIDGET_UNFOCUSED_BUTTONUP    0x00000008 /* Receive all buttonup events */
+#define AG_WIDGET_UNFOCUSED_BUTTONDOWN  0x00000010 /* Receive all buttondown events */
+#define AG_WIDGET_VISIBLE               0x00000020 /* is visible (RO) */
+#define AG_WIDGET_HFILL                 0x00000040 /* Expand to fill width */
+#define AG_WIDGET_VFILL                 0x00000080 /* Expand to fill height */
+#define AG_WIDGET_USE_OPENGL            0x00000100 /* Create a private GL context */
+#define AG_WIDGET_HIDE                  0x00000200 /* Don't display */
+#define AG_WIDGET_DISABLED              0x00000400 /* Inactive state */
+#define AG_WIDGET_MOUSEOVER             0x00000800 /* Cursor is hovering (RO) */
+#define AG_WIDGET_CATCH_TAB             0x00001000 /* Receive focus-cycling key events */
+#define AG_WIDGET_GL_RESHAPE            0x00002000 /* Pending GL view reshape */
+#define AG_WIDGET_UNDERSIZE             0x00004000 /* Allocation could not be met (RO) */
+#define AG_WIDGET_NOSPACING             0x00008000 /* Inhibit spacing (container-specific) */
+#define AG_WIDGET_UNFOCUSED_KEYDOWN     0x00010000 /* Receive keydowns w/o focus */
+#define AG_WIDGET_UNFOCUSED_KEYUP       0x00020000 /* Receive keyups w/o focus */
+                                     /* 0x00040000 */
+                                     /* 0x00080000 */
+#define AG_WIDGET_UPDATE_WINDOW         0x00100000 /* Request WindowUpdate() ASAP */
+#define AG_WIDGET_QUEUE_SURFACE_BACKUP  0x00200000 /* Software-backup surfaces now */
+#define AG_WIDGET_USE_TEXT              0x00400000 /* Allow Text{Size,Render}() */
+#define AG_WIDGET_USE_MOUSEOVER         0x00800000 /* Use MOUSEOVER flag & events */
+#define AG_WIDGET_EXPAND               (AG_WIDGET_HFILL | AG_WIDGET_VFILL)
 
-	int x, y;			/* Coordinates in container */
-	int w, h;			/* Allocated geometry */
-	AG_Rect2 rView;			/* Effective view coordinates */
-	AG_Rect2 rSens;			/* Effective sensitivity rectangle */
+	int x, y;                          /* Coordinates in container */
+	int w, h;                          /* Allocated geometry */
+	AG_Rect2 rView;                    /* Effective view coordinates */
+	AG_Rect2 rSens;                    /* Effective sensitivity rectangle */
 
-	Uint                            nSurfaces;
-	AG_Surface *_Nullable *_Nullable surfaces;     /* Mapped surfaces */
-	Uint *_Nullable                  surfaceFlags; /* Mapped surface flags: */
-#define AG_WIDGET_SURFACE_NODUP	0x01                   /* Don't auto-free */
-#define AG_WIDGET_SURFACE_REGEN	0x02                   /* Regenerate textures */
+	Uint                            nSurfaces; /* Mapped surface count */
+	AG_Surface *_Nullable *_Nullable surfaces; /* Mapped surfaces */
 
-	Uint        *_Nullable textures;       /* Cached hardware textures */
-	AG_TexCoord *_Nullable texcoords;      /* Cached texture coordinates */
+	Uint *_Nullable surfaceFlags;      /* Per-surface flags: */
+#define AG_WIDGET_SURFACE_NODUP	0x01       /* Do not SurfaceFree() on cleanup */
+#define AG_WIDGET_SURFACE_REGEN	0x02       /* Request hardware texture update */
 
-	struct ag_widget *_Nullable focusFwd;     /* For ForwardFocus() */
-	struct ag_window *_Nullable window;       /* Parent window (or null) */
-	struct ag_driver *_Nullable drv;          /* Parent driver instance (null = no parent window) */
-	struct ag_driver_class *_Nullable drvOps; /* Parent driver class (null = no parent window) */
+	Uint        *_Nullable textures;   /* Cached hardware textures */
+	AG_TexCoord *_Nullable texcoords;  /* Cached texture coordinates */
 
-	AG_StyleSheet *_Nullable css;      /* Style sheet (null = use default) */
-	enum ag_widget_state state;        /* Current state for styling */
-	Uint32 _pad1;
-	struct ag_font *_Nullable font;    /* Computed font reference */
-	AG_WidgetPalette pal;              /* Computed color palette */
+	struct ag_widget *_Nullable focusFwd;     /* TODO use a Variable for this */ 
+	struct ag_window *_Nullable window;       /* Parent window (NULL=none) */
+	struct ag_driver *_Nullable drv;          /* Parent driver instance */
+	struct ag_driver_class *_Nullable drvOps; /* Parent driver class */
+
+	AG_StyleSheet *_Nullable css;       /* Style sheet (null = use default) */
+	enum ag_widget_state state;         /* Style-effecting state */
+
+	Uint margin;                        /* Margin around border (px) */
+#define AG_WIDGET_MARGIN_TOP    (0x000000ff)
+#define AG_WIDGET_MARGIN_BOTTOM (0x0000ff00)
+#define AG_WIDGET_MARGIN_LEFT   (0x00ff0000)
+#define AG_WIDGET_MARGIN_RIGHT  (0xff000000)
+	
+	Uint padding;                       /* Padding around contents (px) */
+#define AG_WIDGET_PADDING_TOP    (0x000000ff)
+#define AG_WIDGET_PADDING_BOTTOM (0x0000ff00)
+#define AG_WIDGET_PADDING_LEFT   (0x00ff0000)
+#define AG_WIDGET_PADDING_RIGHT  (0xff000000)
+
+	Uint borders;                       /* Border styles */
+#define AG_WIDGET_BORDER_SOLID         0x1 /* Solid line (--------) */
+#define AG_WIDGET_BORDER_DOTTED        0x2 /* Dotted line (- - - -) */
+#define AG_WIDGET_BORDER_DASHED        0x3 /* Dashed line (-- -- -) */
+#define AG_WIDGET_BORDER_ROUNDED       0x4 /* Rounded corners */
+#define AG_WIDGET_BORDER_BEVELED       0x8 /* Beveled corners (regular) */
+#define AG_WIDGET_BORDER_ROUNDED_BEVEL 0xc /* Beveled corners (rounded) */
+#define AG_WIDGET_BORDER_TOP          (0x0000000f)
+#define AG_WIDGET_BORDER_BOTTOM       (0x00000f00)
+#define AG_WIDGET_BORDER_LEFT         (0x000f0000)
+#define AG_WIDGET_BORDER_RIGHT        (0x0f000000)
+#define AG_WIDGET_BORDER_RADIUS_TL    (0x000000f0) /* Radius (or bevel width) */
+#define AG_WIDGET_BORDER_RADIUS_BL    (0x0000f000)
+#define AG_WIDGET_BORDER_RADIUS_BR    (0x00f00000)
+#define AG_WIDGET_BORDER_RADIUS_TR    (0xf0000000)
+
+	struct ag_font *_Nullable font;    /* Active font (style-generated) */
+	AG_WidgetPalette pal;              /* Color palette (style-generated) */
 #if AG_MODEL == AG_MEDIUM
 	Uint32 _pad2;
 #endif
 #ifdef HAVE_OPENGL
 	AG_WidgetGL *_Nullable gl;      /* Saved GL context (for USE_OPENGL) */
 #endif
-	AG_ActionVec actions;		/* Registered Widget Actions */
+	AG_ActionVec actions;           /* Registered Widget Actions */
 	AG_WidgetPvt pvt;               /* Private data */
 } AG_Widget;
 
@@ -265,47 +322,45 @@ typedef AG_VEC_HEAD(AG_Widget *) AG_WidgetVec;
 #define AG_CONST_WIDGET_PTR(n)   AGCWIDGET( AG_CONST_OBJECT((n),"AG_Widget:*") )
 #define AG_CONST_WIDGET_NAMED(n) AGCWIDGET( AG_CONST_OBJECT((n),"AG_Widget:*") )
 
-#define AGWIDGET_OPS(wi)	((AG_WidgetClass *)AGOBJECT(wi)->cls)
-#define AGWIDGET_SUPER_OPS(wi)	((AG_WidgetClass *)AGOBJECT(wi)->cls->super)
+#define AGWIDGET_OPS(wi)          ((AG_WidgetClass *)AGOBJECT(wi)->cls)
+#define AGWIDGET_SUPER_OPS(wi)    ((AG_WidgetClass *)AGOBJECT(wi)->cls->super)
 
-#define AGWIDGET_SURFACE(wi, ind)	AGWIDGET(wi)->surfaces[ind]
-#define AGWIDGET_TEXTURE(wi, ind)	AGWIDGET(wi)->textures[ind]
-#define AGWIDGET_SURFACE_NODUP(wi, ind)	(AGWIDGET(wi)->surfaceFlags[ind] & \
-					 AG_WIDGET_SURFACE_NODUP)
-
+#define AGWIDGET_SURFACE(wi, ind) AGWIDGET(wi)->surfaces[ind]
+#define AGWIDGET_TEXTURE(wi, ind) AGWIDGET(wi)->textures[ind]
 #ifdef AG_DEBUG
 # define AGWIDGET_FONT(wi) ((AGWIDGET(wi)->flags & AG_WIDGET_USE_TEXT) ? \
                              AGWIDGET(wi)->font : (AG_Font *) \
-			     AG_GenericMismatch("by AGWIDGET_FONT(). " \
-			                        "Did you forget USE_TEXT?"))
+                             AG_GenericMismatch("by AGWIDGET_FONT(). " \
+                                                "Did you forget USE_TEXT?"))
 #else
 # define AGWIDGET_FONT(wi) AGWIDGET(wi)->font
 #endif
-
-#define AGWIDGET_KEYBOARD(obj) \
-    (((obj) != NULL) ? AGWIDGET(obj)->drv->kbd : \
-     (agDriverSw != NULL) ? AGDRIVER(agDriverSw)->kbd: NULL)
+#define AGWIDGET_KEYBOARD(obj) ((obj) ? AGWIDGET(obj)->drv->kbd : \
+                                (agDriverSw) ? AGDRIVER(agDriverSw)->kbd : NULL)
+#define AGWIDGET_MOUSE(obj) ((obj) ? AGWIDGET(obj)->drv->mouse : \
+                             (agDriverSw) ? AGDRIVER(agDriverSw)->mouse : NULL)
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_GUI)
-# define WIDGET(wi)			AGWIDGET(wi)
-# define WIDGET_OPS(wi)			AGWIDGET_OPS(wi)
-# define WIDGET_SUPER_OPS(wi)		AGWIDGET_SUPER_OPS(wi)
-# define WSURFACE(wi,ind)		AGWIDGET_SURFACE((wi),(ind))
-# define WTEXTURE(wi,ind)		AGWIDGET_TEXTURE((wi),(ind))
-# define WSURFACE_NODUP(wi,ind)		AGWIDGET_SURFACE_NODUP((wi),(ind))
-# define WFONT(wi)                      AGWIDGET_FONT(wi)
-# define WIDTH(p)			AGWIDGET(p)->w
-# define HEIGHT(p)			AGWIDGET(p)->h
-# define WCOLOR(wid,which)		AG_WCOLOR((wid),(which))
-# define WCOLOR_DEF(wid,which)		AG_WCOLOR_DEF((wid),(which))
-# define WCOLOR_DIS(wid,which)		AG_WCOLOR_DIS((wid),(which))
-# define WCOLOR_HOV(wid,which)		AG_WCOLOR_HOV((wid),(which))
-# define WCOLOR_SEL(wid,which)		AG_WCOLOR_SEL((wid),(which))
-# define BG_COLOR			AG_BG_COLOR
-# define TEXT_COLOR			AG_TEXT_COLOR
-# define LINE_COLOR			AG_LINE_COLOR
-# define SHAPE_COLOR			AG_SHAPE_COLOR
-# define BORDER_COLOR			AG_BORDER_COLOR
+# define WIDGET(wid)             AGWIDGET(wid)
+# define WIDGET_OPS(wid)         AGWIDGET_OPS(wid)
+# define WIDGET_SUPER_OPS(wid)   AGWIDGET_SUPER_OPS(wid)
+# define WSURFACE(wid,id)        AGWIDGET_SURFACE((wid),(id))
+# define WTEXTURE(wid,id)        AGWIDGET_TEXTURE((wid),(id))
+# define WFONT(wid)              AGWIDGET_FONT(wid)
+# define WIDTH(wid)              AGWIDGET(wid)->w
+# define HEIGHT(wid)             AGWIDGET(wid)->h
+# define WCOLOR(wid,id)          AG_WCOLOR((wid),(id))
+# define WCOLOR_DEFAULT(wid,id)  AG_WCOLOR_DEFAULT((wid),(id))
+# define WCOLOR_DISABLED(wid,id) AG_WCOLOR_DISABLED((wid),(id))
+# define WCOLOR_FOCUSED(wid,id)  AG_WCOLOR_FOCUSED((wid),(id))
+# define WCOLOR_HOVER(wid,id)    AG_WCOLOR_HOVER((wid),(id))
+# define FG_COLOR                AG_FG_COLOR
+# define BG_COLOR                AG_BG_COLOR
+# define TEXT_COLOR              AG_TEXT_COLOR
+# define LINE_COLOR              AG_LINE_COLOR
+# define HIGH_COLOR              AG_HIGH_COLOR
+# define LOW_COLOR               AG_LOW_COLOR
+# define SELECTION_COLOR         AG_SELECTION_COLOR
 #endif /* _AGAR_INTERNAL or _USE_AGAR_GUI */
 
 struct ag_window;
@@ -314,9 +369,8 @@ AG_TAILQ_HEAD(ag_widgetq, ag_widget);
 
 __BEGIN_DECLS
 extern AG_WidgetClass agWidgetClass;
-extern const char *_Nullable agWidgetStyleNames[];
+extern const char *_Nullable agStyleAttributes[];
 extern const char *_Nullable agWidgetStateNames[];
-extern const char *_Nullable agWidgetColorNames[];
 extern AG_WidgetPalette agDefaultPalette;
 
 void AG_WidgetDraw(void *_Nonnull);
@@ -412,7 +466,6 @@ void AG_SetStyleF(void *_Nonnull, const char *_Nonnull, const char *_Nullable, .
 # define AG_INLINE_HEADER
 # include <agar/gui/inline_widget.h>
 #else /* !AG_INLINE_WIDGET */
-
 int  ag_widget_enabled(const void *_Nonnull) _Pure_Attribute;
 int  ag_widget_disabled(const void *_Nonnull) _Pure_Attribute;
 int  ag_widget_visible(const void *_Nonnull) _Pure_Attribute;
@@ -426,8 +479,7 @@ void ag_expand_vert(void *_Nonnull);
 void ag_widget_update(void *_Nonnull);
 void ag_push_clip_rect(void *_Nonnull, const AG_Rect *_Nonnull);
 void ag_pop_clip_rect(void *_Nonnull);
-void ag_push_blending_mode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn,
-                           AG_TextureEnvMode);
+void ag_push_blending_mode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn, AG_TextureEnvMode);
 void ag_pop_blending_mode(void *_Nonnull);
 int  ag_widget_map_surface_nodup(void *_Nonnull, AG_Surface *_Nonnull);
 void ag_widget_replace_surface_nodup(void *_Nonnull, int, AG_Surface *_Nullable);
@@ -463,7 +515,7 @@ void ag_set_mod_state(void *_Nonnull, Uint);
 # define AG_GetKeyCount(o)                   ag_get_key_count(o)
 # define AG_GetModState(o)                   ag_get_mod_state(o)
 # define AG_SetModState(o)                   ag_set_mod_state((o),(ms))
-#endif /* AG_INLINE_WIDGET */
+#endif /* !AG_INLINE_WIDGET */
 __END_DECLS
 
 #ifdef AG_LEGACY

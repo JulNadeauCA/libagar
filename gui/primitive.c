@@ -33,6 +33,13 @@
 #undef AG_INLINE_HEADER
 #include "inline_primitive.h"
 
+/* No-op provided for symmetry with AG_Draw{Rect,Box,Frame}(). */
+void
+ag_draw_rect_noop(void *widget, const AG_Rect *rd, const AG_Color *c)
+{
+	/* nothing */
+}
+
 /*
  * Return 0 in the case that the lines ((x1,y1), (x2,y2)) and ((x3,y3),(x4,y4))
  * do not intersect, and 1 in the case that they do. If they do intersect, xi
@@ -738,3 +745,4 @@ AG_DrawFrame_Blended(AG_Widget *wid, const AG_Rect *rd, const AG_Color *c1,
 	drvOps->drawLineBlended(drv, rd->x, y2,    x2,    y2,    c2, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	drvOps->drawLineBlended(drv, x2,    rd->y, x2,    y2,    c2, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 }
+

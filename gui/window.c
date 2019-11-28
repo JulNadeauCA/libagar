@@ -42,8 +42,6 @@
 #include <agar/gui/separator.h>
 #endif
 
-#include <agar/config/ag_debug_gui.h>
-
 #include <string.h>
 #include <stdarg.h>
 
@@ -316,11 +314,6 @@ Detach(AG_Event *_Nonnull event)
 	AG_Driver *drv;
 	AG_Window *other, *subwin;
 	AG_Timer *to, *toNext;
-
-#ifdef AG_DEBUG_GUI
-	Debug(NULL, "AG_ObjectDetach(Window %s, \"%s\")\n", OBJECT(win)->name,
-	    win->caption);
-#endif
 
 	AG_LockVFS(&agDrivers);
 
@@ -605,60 +598,59 @@ Selected_WM_Op(AG_Window *_Nonnull win, enum ag_wm_operation op)
 	        AGDRIVER_SW(drv)->winop == op);
 }
 
+#define DRAW_BORDER(winop,c)			\
+	if (Selected_WM_Op(win, winop)) {	\
+		AG_DrawBoxSunk(win, &r, c);	\
+	} else {				\
+		AG_DrawBoxRaised(win, &r, c);	\
+	}
+
 static void
 Draw(void *_Nonnull obj)
 {
 	AG_Window *win = obj;
+	const AG_Color *cHigh = &WCOLOR(win, HIGH_COLOR);
+	const AG_Color *cLow  = &WCOLOR(win, LOW_COLOR);
 	AG_Widget *chld;
 	AG_Rect r;
-	AG_Color *cBorder;
-	int flags = win->flags;
-	int w = WIDTH(win);
-	int h = HEIGHT(win);
-	int hBar = (win->tbar) ? HEIGHT(win->tbar) : 0;
-	int wBorderBot = win->wBorderBot, wBorderSide;
+	const int w = WIDTH(win);
+	const int h = HEIGHT(win);
+	const int hBar = (win->tbar) ? HEIGHT(win->tbar) : 0;
+	const int wBorderBot = win->wBorderBot;
+	int wBorderSide;
 
 	if (UpdateNeeded(WIDGET(win)))
 		AG_WindowUpdate(win);
 
 	/* Render window background. */
-	if ((flags & AG_WINDOW_NOBACKGROUND) == 0 &&
+	if ((win->flags & AG_WINDOW_NOBACKGROUND) == 0 &&
 	    (WIDGET(win)->drv->flags & AG_DRIVER_WINDOW_BG) == 0) {
 		r.x = 0;
 		r.y = hBar-1;
 		r.w = w;
 		r.h = h-hBar;
-		AG_DrawRect(win, &r, &WCOLOR(win,0));
+		AG_DrawRect(win, &r, &WCOLOR(win, BG_COLOR));
 	}
 
 	/* Render decorative borders. */
-	cBorder = &WCOLOR(win,BORDER_COLOR);
 	if (wBorderBot > 0) {
-		int wResizeCtrl = win->wResizeCtrl;
-		int wResizeCtrl2 = (wResizeCtrl << 1);
+		const int wResizeCtrl = win->wResizeCtrl;
+		const int wResizeCtrl2 = (wResizeCtrl << 1);
 
 		r.x = 0;
 		r.y = h - wBorderBot;
 		r.h = wBorderBot;
-		if ((flags & AG_WINDOW_NORESIZE) == 0 && w > wResizeCtrl2) {
+		if ((win->flags & AG_WINDOW_NORESIZE) == 0 && w > wResizeCtrl2) {
 			r.w = wResizeCtrl;
-			AG_DrawBox(win, &r,
-			    Selected_WM_Op(win,AG_WINOP_LRESIZE) ? -1 : 1,
-			    cBorder);
-
+			DRAW_BORDER(AG_WINOP_LRESIZE, cHigh);
 			r.x = w - wResizeCtrl;
-			AG_DrawBox(win, &r,
-			    Selected_WM_Op(win,AG_WINOP_RRESIZE) ? -1 : 1,
-			    cBorder);
-
+			DRAW_BORDER(AG_WINOP_RRESIZE, cLow);
 			r.x = wResizeCtrl;
 			r.w = w - wResizeCtrl2;
-			AG_DrawBox(win, &r,
-			    Selected_WM_Op(win,AG_WINOP_HRESIZE) ? -1 : 1,
-			    cBorder);
+			DRAW_BORDER(AG_WINOP_HRESIZE, cLow);
 		} else {
 			r.w = w;
-			AG_DrawBox(win, &r, 1, cBorder);
+			AG_DrawBoxRaised(win, &r, cLow);
 		}
 	}
 	if ((wBorderSide = win->wBorderSide) > 0) {
@@ -666,20 +658,16 @@ Draw(void *_Nonnull obj)
 		r.y = hBar;
 		r.w = wBorderSide;
 		r.h = h - wBorderBot - hBar;
-		AG_DrawBox(win, &r, 1, cBorder);
+		AG_DrawBoxRaised(win, &r, cHigh);
 		r.x = w - wBorderSide;
-		AG_DrawBox(win, &r, 1, cBorder);
+		AG_DrawBoxRaised(win, &r, cLow);
 	}
 
-	if ((flags & AG_WINDOW_NOCLIPPING) == 0) {
-		AG_PushClipRect(win, &win->r);
-	}
-	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
+	OBJECT_FOREACH_CHILD(chld, win, ag_widget)
 		AG_WidgetDraw(chld);
-	}
-	if ((flags & AG_WINDOW_NOCLIPPING) == 0)
-		AG_PopClipRect(win);
 }
+
+#undef DRAW_BORDER
 
 /* Handler for "widget-shown", generated when the window becomes visible. */
 static void
@@ -2315,17 +2303,11 @@ AG_WindowProcessDetachQueue(void)
 #ifdef AG_DEBUG
 	int debugLvlSave;
 #endif
-#ifdef AG_DEBUG_GUI
-	Debug(NULL, "AG_WindowProcessDetachQueue() Begin\n");
-#endif
 	TAILQ_FOREACH(win, &agWindowDetachQ, pvt.detach) {
 		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		if (!win->visible) {
 			continue;
 		}
-#ifdef AG_DEBUG_GUI
-		Debug(NULL, "Hiding: %s (\"%s\")\n", OBJECT(win)->name, win->caption);
-#endif
 		/*
 		 * Note: `widget-hidden' event handlers may cause new windows
 		 * to be added to agWindowDetachQ.
@@ -2339,9 +2321,6 @@ AG_WindowProcessDetachQueue(void)
 		 * event cycle, just in case the underlying WM cannot hide and
 		 * unmap a window in the same event cycle.
 		 */
-#ifdef AG_DEBUG_GUI
-		Debug(NULL, "Defer Detach (%d windows hidden)\n", nHidden);
-#endif
 		return;
 	}
 
@@ -2349,13 +2328,10 @@ AG_WindowProcessDetachQueue(void)
 	     win != TAILQ_END(&agWindowDetachQ);
 	     win = winNext) {
 		winNext = TAILQ_NEXT(win, pvt.detach);
-
 		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		drv = WIDGET(win)->drv;
 		AG_OBJECT_ISA(drv, "AG_Driver:*");
-#ifdef AG_DEBUG_GUI
-		Debug(NULL, "Detach: %s (\"%s\")\n", OBJECT(win)->name, win->caption);
-#endif
+
 		/* Notify all widgets of the window detach. */
 		AG_PostEvent(win, "detached", "%p", drv);
 
@@ -2405,20 +2381,10 @@ AG_WindowProcessDetachQueue(void)
 				break;
 		}
 		if (drv == NULL) {
-#ifdef AG_DEBUG_GUI
-			Debug(NULL, "AG_WindowProcessDetachQueue() Exit Normally\n");
-#endif
 #ifdef AG_EVENT_LOOP
 			AG_Terminate(0);
 #endif
 		}
-#ifdef AG_DEBUG_GUI
-		Debug(NULL, "AG_WindowProcessDetachQueue() End (MAIN window remains)\n");
-#endif
-	} else {
-#ifdef AG_DEBUG_GUI
-		Debug(NULL, "AG_WindowProcessDetachQueue() End\n");
-#endif
 	}
 }
 
@@ -3006,7 +2972,6 @@ Edit(void *_Nonnull obj)
 	    { AG_WINDOW_HMAXIMIZE,	"Keep horizontally maximized",	1 },
 	    { AG_WINDOW_VMAXIMIZE,	"Keep vertically maximized",	1 },
 	    { AG_WINDOW_NOMOVE,		"Unmoveable",			1 },
-	    { AG_WINDOW_NOCLIPPING,	"Disable over-window clipping", 1 },
 	    { AG_WINDOW_MODKEYEVENTS,	"Mod keys generate events",	1 },
 	    { AG_WINDOW_DETACHING,	"Is being detached",		0 },
 	    { AG_WINDOW_NOCURSORCHG,	"Inhibit cursor changes",	1 },

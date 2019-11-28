@@ -260,8 +260,6 @@ WidgetSelected(AG_Event *_Nonnull event)
 	AG_ObjectFreeChildren(box);
 	
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
-	AG_SetStyle(nb, "color#selected", "rgb(125,125,125)");	/* XXX */
-	
 	nt = AG_NotebookAdd(nb, _("Style Attributes"), AG_BOX_VERT);
 	{
 		const char **s;
@@ -272,14 +270,14 @@ WidgetSelected(AG_Event *_Nonnull event)
 
 		AG_LabelNew(sv, 0, AGSI_YEL "%s" AGSI_RST " {", OBJECT(tgt)->name);
 
-		for (s = &agWidgetStyleNames[0]; *s != NULL; s++) {
+		for (s = &agStyleAttributes[0]; *s != NULL; s++) {
 			AG_Box *ln;
 
 			if (!AG_Defined(tgt, *s)) {
 				continue;
 			}
 			ln = AG_BoxNewHoriz(sv, AG_BOX_HFILL);
-			AG_WidgetHide( AG_CheckboxNew(ln, AG_CHECKBOX_SET, NULL) );
+			AG_WidgetDisable( AG_CheckboxNew(ln, AG_CHECKBOX_SET, NULL) );
 			AG_LabelNew(ln, 0, "%s: %s", *s, AG_GetStringP(tgt,*s));
 		}
 		

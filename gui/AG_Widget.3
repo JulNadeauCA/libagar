@@ -256,7 +256,7 @@ calls made in event context, or manual modifications of the
 fields of the
 .Nm
 structure.
-.Sh STYLING
+.Sh STYLE ATTRIBUTES
 Style attributes for widgets may be defined:
 .Bl -bullet -compact
 .It
@@ -271,35 +271,7 @@ on a per-class basis in an
 .El
 .Pp
 Style attributes include fonts, colors and spacing (margins and padding).
-.Pp
-.nr nS 1
-.Ft "void"
-.Fn AG_SetStyle "AG_Widget *obj" "const char *attr" "const char *value"
-.Pp
-.Ft "void"
-.Fn AG_SetStyleF "AG_Widget *obj" "const char *attr" "const char *fmt" "..."
-.Pp
-.Ft "void"
-.Fn AG_SetFont "AG_Widget *obj" "const AG_Font *font"
-.Pp
-.nr nS 0
-The
-.Fn AG_SetStyle
-function sets the specified style attribute to the given value.
-Standard style attributes include:
-.Pp
-.Bl -tag -compact -width "font-family "
-.It font-family
-Font face specification: "Courier", "Terminal", "my.bmp".
-.It font-size
-Font size: "10pts", "10.5pts", "80%" (relative to parent).
-.It font-weight
-Font weight: "normal", "semibold", "bold" or "!parent".
-.It font-style
-Font style: "normal", "italic", "upright-italic" or "!parent".
-.It color
-Main (or background) color for the widget.
-Colors are:
+Colors can be specified using any one of the representations:
 .Pp
 .Bl -tag -width "Real hue/saturation/value " -compact
 .It "8-bit Device RGB"
@@ -320,37 +292,69 @@ Colors are:
 "CIEXYZ:X/Y/Z"
 .El
 .Pp
-Both RGB and HSV components can be expressed in "%" of the same color
-in the parent widget's palette.
+RGBA and HSV components may be expressed in "%" (in relation to the
+same color entry in the parent widget's palette).
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn AG_SetStyle "AG_Widget *obj" "const char *attr" "const char *value"
+.Pp
+.Ft "void"
+.Fn AG_SetStyleF "AG_Widget *obj" "const char *attr" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_SetFont "AG_Widget *obj" "const AG_Font *font"
+.Pp
+.nr nS 0
+The
+.Fn AG_SetStyle
+function sets the specified style attribute to the given value.
+Standard style attributes include:
+.Pp
+.Bl -tag -compact -width "background-color "
+.It font-family
+"Courier", "DejaVu Sans", "my.bmp"
+.It font-size
+"10pts", "10.5pts", "80%"
+.It font-weight
+"normal", "semibold", "bold" or "!parent"
+.It font-style
+"normal", "italic", "upright-italic" or "!parent"
+.It color
+Foreground primary
+.It background-color
+Background primary
 .It text-color
-Color for rendered text (see above)
+Text and vector icons
 .It line-color
-Color for line drawings (see above)
-.It shape-color
-Color for polygons and other filled shapes (see above)
-.It border-color
-Color for cosmetic borders (see above)
+Lines and filled shapes
+.It high-color
+Shading (top and left)
+.It low-color
+Shading (bottom and right)
+.It selection-color
+Selection primary
 .El
 .Pp
 An optional selector may be appended to the attribute names:
 .Pp
 .Bl -tag -compact -width "disabled "
 .It "(none)"
-Default, unfocused state.
+Unfocused state (default).
 .It "#disabled"
-Widget is in disabled state (DISABLED is set).
+Disabled state (DISABLED is set).
 .It "#focused"
-Widget holds focus (FOCUSED is set).
+Focused state (FOCUSED is set).
 .It "#hover"
-Cursor is hovering over (USE_MOUSEOVER and MOUSEOVER are set).
-.It "#selected"
-Widget represents an active selection.
+Cursor is over the widget (MOUSEOVER is set).
 .El
 .Pp
+The
 .Fn AG_SetFont
-inherits "font-family", "font-size", "font-weight" and "font-style" from
-the given
-.Xr AG_Font 3 .
+routine inherits "font-family", "font-size", "font-weight" and
+"font-style" from an existing
+.Xr AG_Font 3
+object.
 .Sh INPUT STATE
 .nr nS 1
 .Ft "void"
@@ -553,12 +557,9 @@ structure.
 The surface pointer must remain valid for the lifetime of the widget (if in
 doubt, use
 .Xr AG_SurfaceDup 3 ) .
-.Pp
-Under multithreading,
 .Fn AG_WidgetMapSurface
-may be invoked from any context, but the returned name is only valid as
-long as the widget is locked (see
-.Xr AG_ObjectLock 3 ) .
+may be invoked from any context, but in a multithreaded context the returned
+name is only valid as long as the widget remains locked.
 .Pp
 .Fn AG_WidgetReplaceSurface
 replaces the contents of a previously-mapped surface with the contents of
@@ -1173,24 +1174,41 @@ Option flags (see
 .Sx FLAGS
 section below).
 .It Ft int x, y
-Pixel coordinates of the widget relative to its parent.
+Location of the upper-left pixel (relative to the parent widget).
+Read-only (set by container).
 .It Ft int w, h
-Dimensions of the widget in pixels.
+Size in pixels.
+Read-only (set by container).
 .It Ft AG_Rect2 rView
-Absolute view coordinates of the widget (relative to the parent
-driver device).
+Cached position & size in absolute display coordinates.
+Read-only with one exception: before calling
+.Xr AG_WidgetDraw 3
+to render a child widget, a container widget may temporarily override its
+.Va rView
+coordinates to render the child widget to a different position
+(a slight offset for example).
 .It Ft AG_Rect2 rSens
-Rectangle of sensivity to mouse events (also in absolute view coordinates).
+Rectangle of sensitivity to mouse events (in absolute display coordinates).
+Scrolling containers such as
+.Xr AG_Scrollview 3
+may adjust this rectangle for partially-visible widgets along its edges.
 .It Ft AG_WidgetPalette pal
-Effective palette of primaries, a two-dimensional array of
+Color palette: a 4 x 8 (or
 .Dv AG_WIDGET_NSTATES
-x
-.Dv AG_WIDGET_NCOLORS .
+by
+.Dv AG_WIDGET_NCOLORS )
+array of
+.Xr AG_Color 3 .
+Entries are set by the current
+.Xr AG_StyleSheet 3 .
 Read-only (use
 .Fn AG_SetStyle
-to change).
+to change) with one exception: before calling
+.Xr AG_WidgetDraw 3
+to render a child widget, a container widget may temporarily override and
+restore its palette entries.
 .It Ft AG_Font *font
-Pointer to the effective font associated with the widget (see
+Current font associated with the widget (see
 .Xr AG_Font 3 ) .
 Read-only (use
 .Fn AG_SetStyle
