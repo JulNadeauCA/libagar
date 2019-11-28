@@ -109,24 +109,27 @@ package Agar.Widget is
   end record
     with Convention => C;
   
-  -------------------
-  -- Widget Colors --
-  -------------------
+  -----------------------------------------------------
+  -- Widget Color Palette (4 states x 8 = 32 colors) --
+  -----------------------------------------------------
   type Widget_State is
-    (DEFAULT_STATE,			-- The default state
-     DISABLED_STATE,			-- Disabled input (#disabled)
+    (DEFAULT_STATE,			-- Not focused (default state)
+     DISABLED_STATE,			-- Disabled (#disabled)
      FOCUSED_STATE,			-- Holds focus (#focused)
-     HOVER_STATE,			-- Has mouseover (#hover)
-     SELECTED_STATE);			-- Is an active selection (#selected)
+     HOVER_STATE);                      -- Cursor is over (#hover)
   for Widget_State'Size use C.int'Size;
 
   type Widget_Color is
-    (COLOR_BACKGROUND,			-- Background fill
-     COLOR_TEXT,			-- Text elements
-     COLOR_LINE,			-- Line elements
-     COLOR_SHAPE,			-- Filled shapes such as polygons
-     COLOR_BORDER);			-- Cosmetic borders
-  
+    (FG_COLOR,            -- Foreground primary      ("color")
+     BG_COLOR,            -- Background primary      ("background-color")
+     TEXT_COLOR,          -- Text and vector icons   ("text-color")
+     LINE_COLOR,          -- Lines and filled shapes ("line-color")
+     HIGH_COLOR,          -- Top and left shading    ("high-color")
+     LOW_COLOR,           -- Bottom/right shading    ("low-color")
+     SELECTION_COLOR,     -- Selection primary       ("selection-color")
+     UNUSED_COLOR);       -- Currently unused
+
+  -- TODO
   type Widget_Palette is array (1 .. $SIZEOF_AG_WidgetPalette)
     of aliased Unsigned_8 with Convention => C;
   for Widget_Palette'Size use $SIZEOF_AG_WidgetPalette * System.Storage_Unit;
@@ -932,16 +935,21 @@ package Agar.Widget is
     Driver_Ops       : Driver_Class_Access;      -- Parent driver class
 
     Stylesheet       : System.Address;           -- TODO Alternate CSS stylesheet
-    Color_State      : Widget_State;             -- Current CSS color state
-    C_Pad1           : Interfaces.Unsigned_32;
-    Font             : System.Address;           -- TODO Current font
-    Palette          : Widget_Palette;           -- Computed color palette
+    State            : Widget_State;             -- Style-effecting state
+    Margin           : C.unsigned;               -- Margin in px (0xRRLLBBTT)
+    Padding          : C.unsigned;               -- Padding in px (0xRRLLBBTT)
+    Borders          : C.unsigned;               -- Border styles (0xRWLWBWTW)
+    Font             : System.Address;           -- Active font (TODO)
+    Palette          : Widget_Palette;           -- Color palette
 #if AG_MODEL = AG_MEDIUM
     C_Pad2           : Interfaces.Unsigned_32;
 #end if;
 #if HAVE_OPENGL
     GL_Context       : Widget_GL_Context_Access; -- Context for USE_OPENGL
 #end if;
+    Actions_Data     : System.Address;           -- TODO
+    Actions_Length   : C.int;                    -- TODO
+    Actions_Capacity : C.int;                    -- TODO
     Private_Data     : Widget_Private_t;
   end record
     with Convention => C;
@@ -965,7 +973,6 @@ package Agar.Widget is
   WIDGET_NO_SPACING           : constant C.unsigned := 16#00_8000#; -- Ignore box model
   WIDGET_UNFOCUSED_KEYDOWN    : constant C.unsigned := 16#01_0000#; -- Receive keydowns regardless of focus
   WIDGET_UNFOCUSED_KEYUP      : constant C.unsigned := 16#02_0000#; -- Receive keyups regardless of focus
-  WIDGET_TABLE_EMBEDDABLE     : constant C.unsigned := 16#08_0000#; -- Can be used in a polled AG_Table
   WIDGET_UPDATE_WINDOW        : constant C.unsigned := 16#10_0000#; -- Request Window_Update ASAP
   WIDGET_QUEUE_SURFACE_BACKUP : constant C.unsigned := 16#20_0000#; -- Backup surfaces ASAP
   WIDGET_USE_TEXT             : constant C.unsigned := 16#40_0000#; -- Use font engine
