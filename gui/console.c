@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>,
- * 2019 Charles A Daniels <charles@cdaniels.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2019 Charles A Daniels <charles@cdaniels.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,8 +68,8 @@ static __inline__ void
 AdjustXoffs(AG_Console *_Nonnull cons)
 {
 	Uint i;
-	int wCons = WIDTH(cons);
-	int wBar = WIDTH(cons->vBar) + cons->padding;
+	const int wCons = WIDTH(cons);
+	const int wBar = WIDTH(cons->vBar) + cons->padding;
 
 	for (i = 0, cons->wMax = 0;
 	     i < cons->nLines;
@@ -419,7 +419,7 @@ BeginSelect(AG_Event *_Nonnull event)
 	if (!AG_WidgetIsFocused(cons))
 		AG_WidgetFocus(cons);
 
-	if (cons->pm != NULL)
+	if (cons->pm)
 		AG_PopupHide(cons->pm);
 
 	if (cons->nLines > 0) {
@@ -459,7 +459,7 @@ PopupMenu(AG_Event *_Nonnull event)
 	if (cons->flags & AG_CONSOLE_NOPOPUP)
 		return;
 
-	if (cons->pm != NULL) {
+	if (cons->pm) {
 		AG_PopupShowAt(cons->pm, x,y);
 		return;
 	}
@@ -546,14 +546,14 @@ ComputeVisible(AG_Console *_Nonnull cons)
 }
 
 static void
-OnFontChange(AG_Event *_Nonnull event)
+StyleChanged(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
 	Uint i;
 	int j;
 
 	cons->lineskip = WFONT(cons)->lineskip + 1;
-	cons->rOffs = 0;
+/*	cons->rOffs = 0; */
 	ComputeVisible(cons);
 
 	for (i = 0; i < cons->nLines; i++) {
@@ -606,8 +606,6 @@ Init(void *_Nonnull obj)
 	AG_BindUint(sb, "value",   &cons->rOffs);
 	AG_BindUint(sb, "visible", &cons->rVisible);
 	cons->vBar = sb;
-	AG_SetStyle(sb, "color",       "rgb(100,100,100)");
-	AG_SetStyle(sb, "color#hover", "rgb(100,100,100)");
 
 	sb = AG_ScrollbarNew(cons, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL |
 	                                               AG_SCROLLBAR_SMOOTH);
@@ -618,8 +616,6 @@ Init(void *_Nonnull obj)
 	AG_BindInt(sb, "value",   &cons->xOffs);
 	AG_BindInt(sb, "max",     &cons->wMax);
 	cons->hBar = sb;
-	AG_SetStyle(sb, "color",       "rgb(100,100,100)");
-	AG_SetStyle(sb, "color#hover", "rgb(100,100,100)");
 
 	AG_ActionFn(cons, "BeginSelect", BeginSelect, NULL);
 	AG_ActionFn(cons, "CloseSelect", CloseSelect, NULL);
@@ -651,8 +647,12 @@ Init(void *_Nonnull obj)
 	AG_ActionOnKey(cons, AG_KEY_END,      AG_KEYMOD_ANY, "GoToBottom");
 
 	AG_SetEvent(cons, "mouse-motion", MouseMotion, NULL);
-	AG_AddEvent(cons, "font-changed", OnFontChange, NULL);
-	AG_AddEvent(cons, "widget-shown", OnFontChange, NULL);
+
+	AG_AddEvent(cons, "font-changed",     StyleChanged, NULL);
+	AG_AddEvent(cons, "palette-changed",  StyleChanged, NULL);
+	AG_AddEvent(cons, "widget-shown",     StyleChanged, NULL);
+	AG_AddEvent(cons, "widget-gainfocus", StyleChanged, NULL);
+	AG_AddEvent(cons, "widget-lostfocus", StyleChanged, NULL);
 }
 
 static void
@@ -682,7 +682,6 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 	cons->r.x = 0;
 	cons->r.y = 0;
 	cons->r.w = (a->w - aBar.w);
-	cons->r.h = a->h;
 
 	AG_WidgetSizeReq(cons->hBar, &rBar);
 	aBar.x = 0;
@@ -690,6 +689,8 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 	aBar.w = a->w - rBar.h;
 	aBar.h = rBar.h;
 	AG_WidgetSizeAlloc(cons->hBar, &aBar);
+
+	cons->r.h = (a->h - aBar.h);
 
 	ComputeVisible(cons);
 	ClampVisible(cons);
@@ -701,16 +702,20 @@ static void
 Draw(void *_Nonnull p)
 {
 	AG_Console *cons = p;
-	AG_Surface *su;
+	const AG_Color *cBg = &WCOLOR(cons, BG_COLOR);
+	const AG_Color *cSel = &WCOLOR(cons, SELECTION_COLOR);
+	const AG_Color *cText = &WCOLOR(cons, TEXT_COLOR);
 	AG_Rect r;
 	Uint lnIdx;
 	int pos, sel;
 
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(cons);
-	r.h = HEIGHT(cons);
-	AG_DrawRect(cons, &r, &WCOLOR(cons,AG_BG_COLOR));
+	if (cBg->a > 0) {
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(cons)  - WIDTH(cons->vBar);
+		r.h = HEIGHT(cons) - HEIGHT(cons->hBar);
+		AG_DrawRectFilled(cons, &r, cBg);
+	}
 
 	if (cons->nLines == 0)
 		goto out;
@@ -723,7 +728,7 @@ Draw(void *_Nonnull p)
 	AG_PushClipRect(cons, &cons->r);
 	r.x = cons->padding - cons->xOffs;
 	r.y = cons->padding;
-	r.w = WIDGET(cons)->w - (cons->padding << 1);
+//	r.w = WIDGET(cons)->w - (cons->padding << 1);
 	r.h = cons->lineskip + 1;
 	pos = cons->pos;
 	sel = cons->sel;
@@ -732,46 +737,50 @@ Draw(void *_Nonnull p)
 	     lnIdx < cons->nLines && r.y < WIDGET(cons)->h;
 	     lnIdx++) {
 		AG_ConsoleLine *ln = cons->lines[lnIdx];
-		AG_Color *cTxt = &WCOLOR(cons,AG_TEXT_COLOR);
-		int suIdx = 0;
+		int isSelected;
 
-		if (pos != -1) {
-			if ((lnIdx == pos) ||
-			    ((sel > 0 && lnIdx > pos && lnIdx < pos+sel+1) ||
-			     (sel < 0 && lnIdx < pos && lnIdx > pos+sel-1))) {
-				AG_Rect rSel;
+		if ((pos != -1) &&
+		    ((lnIdx == pos) ||
+		     ((sel > 0 && lnIdx > pos && lnIdx < pos+sel+1) ||
+		      (sel < 0 && lnIdx < pos && lnIdx > pos+sel-1)))) {
+			AG_Rect rSel;
 
-				rSel.x = 0;
-				rSel.y = r.y;
-				rSel.w = WIDGET(cons)->w;
-				rSel.h = r.h;
-				AG_DrawRectFilled(cons, &rSel,
-				    &WCOLOR_SEL(cons,AG_BG_COLOR));
-				cTxt = &WCOLOR_SEL(cons,AG_TEXT_COLOR);
-				suIdx = 1;
-			}
+			rSel = r;
+			rSel.x = 0;
+			AG_DrawRectFilled(cons, &rSel, cSel);
+			isSelected = 1;
+		} else {
+			isSelected = 0;
 		}
-		if (ln->surface[suIdx] == -1) {
 
-			if (ln->parent != NULL) {
-				/* take the parent's color */
-				AG_TextColor((ln->parent->c.a != 0) ? &ln->parent->c : cTxt);
+		if (ln->surface[isSelected] == -1) {
+			AG_Surface *S;
+
+			if (ln->parent) {	/* Take the parent's color. */
+				AG_TextColor((ln->parent->c.a != 0) ?
+					     &ln->parent->c : cText);
 			} else {
-				AG_TextColor((ln->c.a != 0) ? &ln->c : cTxt);
+				AG_TextColor((ln->c.a != 0) ? &ln->c : cText);
 			}
-			if ((su = AG_TextRender(ln->text)) == NULL) {
+			AG_TextBGColor(isSelected ? cSel : cBg);
+
+			if ((S = AG_TextRender(ln->text)) == NULL) {
 				continue;
 			}
-			ln->surface[suIdx] = AG_WidgetMapSurface(cons, su);
+			ln->surface[isSelected] = AG_WidgetMapSurface(cons, S);
 		}
 
-		AG_WidgetBlitSurface(cons, ln->surface[suIdx],
-				/* make extra space for group indicator */
-			(ln->parent != NULL) ? r.x + 9 : r.x, r.y);
+		/*
+		 * Blit rendered label -> display.
+		 * Make extra space for group indicator.
+		 */
+		AG_WidgetBlitSurface(cons, ln->surface[isSelected],
+		    (ln->parent) ? r.x + 9 : r.x, r.y);
 
-		/* group indicator */
-		if (ln->parent != NULL) {
-			AG_DrawLine(cons, r.x + 5, r.y, r.x + 5, r.y + cons->lineskip, &WCOLOR_SEL(cons, AG_TEXT_COLOR));
+		if (ln->parent) {			/* Group indicator */
+			AG_DrawLine(cons, r.x + 5, r.y,
+					  r.x + 5, r.y + cons->lineskip,
+			            cText);
 		}
 
 		r.y += cons->lineskip;
@@ -802,7 +811,7 @@ Destroy(void *_Nonnull p)
 {
 	AG_Console *cons = p;
 
-	if (cons->pm != NULL) {
+	if (cons->pm) {
 		AG_PopupDestroy(cons->pm);
 	}
 	FreeLines(cons);
