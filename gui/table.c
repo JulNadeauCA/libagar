@@ -148,17 +148,17 @@ AG_TableDeselectCell(AG_Table *t, int m, int n)
 int
 AG_TableColSelected(AG_Table *t, int n)
 {
-	return (t->cols[n].selected);
+	return (t->cols[n].flags & AG_TABLE_COL_SELECTED);
 }
 void
 AG_TableSelectCol(AG_Table *t, int n)
 {
-	t->cols[n].selected = 1;
+	t->cols[n].flags |= AG_TABLE_COL_SELECTED;
 }
 void
 AG_TableDeselectCol(AG_Table *t, int n)
 {
-	t->cols[n].selected = 0;
+	t->cols[n].flags &= ~(AG_TABLE_COL_SELECTED);
 }
 
 void
@@ -568,7 +568,7 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Table *t = obj;
-	const AG_Color *cBg  = &WCOLOR(t, BG_COLOR);
+	const AG_Color *cFg  = &WCOLOR(t, FG_COLOR);
 	const AG_Color *cSel = &WCOLOR(t, SELECTION_COLOR);
 	AG_Color cLine       =  WCOLOR(t, LINE_COLOR);
 	AG_Rect r, rCol, rCell;
@@ -626,10 +626,10 @@ Draw(void *_Nonnull obj)
 		r.w = rCol.w+1;
 		r.h = hCol;
 
-		if (col->selected) {
+		if (col->flags & AG_TABLE_COL_SELECTED) {
 			AG_DrawBoxSunk(t, &r, cSel);
 		} else {
-			AG_DrawBoxRaised(t, &r, cBg);
+			AG_DrawBoxRaised(t, &r, cFg);
 		}
 
 		/* Column header label */
@@ -642,12 +642,12 @@ Draw(void *_Nonnull obj)
 			    rCell.x + (w >> 1) - (WSURFACE(t,col->surface)->w >> 1),
 			           (hCol >> 1) - (WSURFACE(t,col->surface)->h >> 1));
 
-			if (col->flags & AG_TABLE_SORT_ASCENDING) {
+			if (col->flags & AG_TABLE_COL_ASCENDING) {
 				AG_DrawArrowUp(t,
 				    rCell.x + w - COLUMN_RESIZE_RANGE,
 				    hCol>>1, 10,
 				    &cLine);
-			} else if (col->flags & AG_TABLE_SORT_DESCENDING) {
+			} else if (col->flags & AG_TABLE_COL_DESCENDING) {
 				AG_DrawArrowDown(t,
 				    rCell.x + w - COLUMN_RESIZE_RANGE,
 				    hCol>>1, 10,
@@ -671,7 +671,8 @@ Draw(void *_Nonnull obj)
 		}
 
 		/* Indicate column selection. */
-		if ((t->flags & AG_TABLE_HIGHLIGHT_COLS) && col->selected) {
+		if ((t->flags & AG_TABLE_HIGHLIGHT_COLS) &&
+		    (col->flags & AG_TABLE_COL_SELECTED)) {
 			AG_Color c;
 
 			AG_ColorRGBA_8(&c, 0,0,250, 32);
@@ -847,10 +848,10 @@ AG_TableSort(AG_Table *t)
 	for (i = 0; i < t->n; i++) {
 		const AG_TableCol *tc = &t->cols[i];
 
-		if (tc->flags & AG_TABLE_SORT_ASCENDING) {
+		if (tc->flags & AG_TABLE_COL_ASCENDING) {
 			sortFn = SortCellsAscending;
 			break;
-		} else if (tc->flags & AG_TABLE_SORT_DESCENDING) {
+		} else if (tc->flags & AG_TABLE_COL_DESCENDING) {
 			sortFn = SortCellsDescending;
 			break;
 		}
@@ -1013,13 +1014,10 @@ RestoreRowSelections(AG_Table *_Nonnull t)
 				}
 				c->surface = cPrev->surface;
 				cPrev->surface = -1;
-				if (!(cPrev->flags & AG_TABLE_CELL_NOCOMPARE)) {
-					if (cPrev->selected)
-						nMatched++;
-				}
+				if (cPrev->selected)
+					nMatched++;
 			}
-			if (!(c->flags & AG_TABLE_CELL_NOCOMPARE))
-				nCompared++;
+			nCompared++;
 		}
 		if (nMatched == nCompared)
 			AG_TableSelectRow(t, m);
@@ -1248,18 +1246,18 @@ ColumnLeftClickSort(AG_Table *_Nonnull t, AG_TableCol *_Nonnull tc)
 		AG_TableCol *tcOther = &t->cols[n];
 
 		if (tcOther != tc) {
-			tcOther->flags &= ~(AG_TABLE_SORT_ASCENDING);
-			tcOther->flags &= ~(AG_TABLE_SORT_DESCENDING);
+			tcOther->flags &= ~(AG_TABLE_COL_ASCENDING);
+			tcOther->flags &= ~(AG_TABLE_COL_DESCENDING);
 		}
 	}
-	if (tc->flags & AG_TABLE_SORT_ASCENDING) {
+	if (tc->flags & AG_TABLE_COL_ASCENDING) {
 		Debug(t, "Sorting column \"%s\" descending\n", tc->name);
-		tc->flags &= ~(AG_TABLE_SORT_ASCENDING);
-		tc->flags |= AG_TABLE_SORT_DESCENDING;
+		tc->flags &= ~(AG_TABLE_COL_ASCENDING);
+		tc->flags |= AG_TABLE_COL_DESCENDING;
 	} else {
 		Debug(t, "Sorting column \"%s\" ascending\n", tc->name);
-		tc->flags &= ~(AG_TABLE_SORT_DESCENDING);
-		tc->flags |= AG_TABLE_SORT_ASCENDING;
+		tc->flags &= ~(AG_TABLE_COL_DESCENDING);
+		tc->flags |= AG_TABLE_COL_ASCENDING;
 	}
 	t->flags |= AG_TABLE_NEEDSORT;
 }
@@ -1301,9 +1299,10 @@ ColumnLeftClick(AG_Table *_Nonnull t, int px)
 					Debug(t, "Selecting col#%d (\"%s\")\n",
 					    n, tc->name);
 					if (multi) {
-						tc->selected = !tc->selected;
+						AG_INVFLAGS(tc->flags,
+						    AG_TABLE_COL_SELECTED);
 					} else {
-						tc->selected = 1;
+						tc->flags |= AG_TABLE_COL_SELECTED;
 					}
 				}
 				if (t->colAction & AG_TABLE_COL_SORT) {
@@ -1330,7 +1329,7 @@ ColumnLeftClick(AG_Table *_Nonnull t, int px)
 			AG_Redraw(t);
 		}
 		if (!multi) {
-			tc->selected = 0;
+			tc->flags &= ~(AG_TABLE_COL_SELECTED);
 			AG_Redraw(t);
 		}
 cont:
@@ -1343,17 +1342,26 @@ static void
 CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 {
 	AG_TableCell *c;
-	AG_TableCol *tc;
+	AG_TableCol *col;
 	AG_Event *ev;
 	int m, n, i, j, nc;
+	int xCol = 0;
 	
+	if (t->n < 1)
+		return;
+
 	for (nc = 0; nc < t->n; nc++) {
-		tc = &t->cols[nc];
-		if ((x + t->xOffs) > tc->x &&
-		    (x + t->xOffs) < tc->x+tc->w)
+		col = &t->cols[nc];
+
+		if (((t->xOffs + x) >= xCol &&                    /* Inside */
+		     (t->xOffs + x) <  xCol + col->w) ||
+		    (col->flags & AG_TABLE_COL_FILL)) {
 			break;
+		}
+		xCol += col->w;
 	}
-	if (nc == t->n) { nc = t->n-1; }
+	if (nc == t->n)
+		nc = (t->n - 1);
 
 	switch (t->selMode) {
 	case AG_TABLE_SEL_ROWS:
@@ -1487,13 +1495,17 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 			}
 		} else if (SelectingMultiple(t)) {
 			for (n = 0; n < t->n; n++) {
-				tc = &t->cols[n];
-				tc->selected = !tc->selected;
+				col = &t->cols[n];
+				AG_INVFLAGS(col->flags, AG_TABLE_COL_SELECTED);
 			}
 		} else {
 			for (n = 0; n < t->n; n++) {
-				tc = &t->cols[n];
-				tc->selected = ((int)n == nc);
+				col = &t->cols[n];
+				if (n == nc) {
+					col->flags |= AG_TABLE_COL_SELECTED;
+				} else {
+					col->flags &= ~(AG_TABLE_COL_SELECTED);
+				}
 			}
 			if ((ev = t->fn[AG_TABLE_FN_COL_CLICK]))
 				AG_PostEventByPtr(t, ev, "%i", nc);
@@ -1890,7 +1902,7 @@ AG_TableSelectAllCols(AG_Table *t)
 
 	AG_ObjectLock(t);
 	for (n = 0; n < t->n; n++) {
-		t->cols[n].selected = 1;
+		t->cols[n].flags |= AG_TABLE_COL_SELECTED;
 	}
 	AG_ObjectUnlock(t);
 	AG_Redraw(t);
@@ -1903,7 +1915,7 @@ AG_TableDeselectAllCols(AG_Table *t)
 
 	AG_ObjectLock(t);
 	for (n = 0; n < t->n; n++) {
-		t->cols[n].selected = 0;
+		t->cols[n].flags &= ~(AG_TABLE_COL_SELECTED);
 	}
 	AG_ObjectUnlock(t);
 	AG_Redraw(t);
@@ -1913,7 +1925,7 @@ int
 AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
     int (*sortFn)(const void *, const void *))
 {
-	AG_TableCol *tc, *lc;
+	AG_TableCol *tc;
 	AG_TableCol *colsNew;
 	int m, n;
 
@@ -1934,18 +1946,11 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	}
 	tc->flags = 0;
 	tc->sortFn = sortFn;
-	tc->selected = 0;
 	tc->w = 0;
 	tc->wPct = -1;
 	tc->surface = -1;
 	tc->ca = NULL;
 
-	if (t->n > 0) {
-		lc = &t->cols[t->n - 1];
-		tc->x = lc->x+lc->w;
-	} else {
-		tc->x = 0;
-	}
 	if (size_spec != NULL) {
 		switch (AG_WidgetParseSizeSpec(size_spec, &tc->w)) {
 		case AG_WIDGET_PERCENT:
@@ -1995,7 +2000,6 @@ AG_TableInitCell(AG_Table *t, AG_TableCell *c)
 	c->widget = NULL;
 	c->tbl = t;
 	c->id = 0;
-	c->flags = 0;
 	c->nPrev = 0;
 }
 

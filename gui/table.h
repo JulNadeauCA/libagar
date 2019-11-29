@@ -14,7 +14,7 @@
 #define AG_TABLE_COL_NAME_MAX (AG_MODEL)  /* Length of column label */
 #endif
 
-#define AG_TABLE_FMT_MAX     16		/* Length of cell specifier string */
+#define AG_TABLE_FMT_MAX     20		/* Length of cell specifier string */
 #define AG_TABLE_HASHBUF_MAX 64		/* Buffer used in hash function */
 
 struct ag_table;
@@ -81,9 +81,9 @@ enum ag_table_cell_type {
 };
 
 typedef struct ag_table_cell {
-	enum ag_table_cell_type type;
-	Uint flags;
-#define AG_TABLE_CELL_NOCOMPARE	0x01  /* Don't compare against backing store */
+	enum ag_table_cell_type type;		/* Type of cell */
+	char fmt[AG_TABLE_FMT_MAX];		/* Format specifier */
+
 	union {
 		char s[AG_TABLE_BUF_MAX];
 		int i;
@@ -96,8 +96,6 @@ typedef struct ag_table_cell {
 		Uint32 u64[2];
 #endif
 	} data;
-
-	char fmt[AG_TABLE_FMT_MAX];		/* Format string */
 
 	AG_Surface *_Nonnull (*_Nullable fnSu)(void *_Nullable, int,int);
 	AG_Size              (*_Nullable fnTxt)(void *_Nullable, char *_Nonnull,
@@ -122,16 +120,12 @@ typedef struct ag_table_col {
 	char name[AG_TABLE_COL_NAME_MAX];
 	int (*_Nullable sortFn)(const void *_Nonnull, const void *_Nonnull);
 	Uint flags;
-#define AG_TABLE_COL_FILL	 0x01
-#define AG_TABLE_SORT_ASCENDING	 0x02
-#define AG_TABLE_SORT_DESCENDING 0x04
-#define AG_TABLE_HFILL		 0x08
-#define AG_TABLE_VFILL		 0x10
-#define AG_TABLE_EXPAND		 (AG_TABLE_HFILL|AG_TABLE_VFILL)
-	int selected;			/* Entire column is selected */
-	int w;				/* Width (px) */
-	int wPct;			/* Width (percent or -1) */
-	int x;				/* Current position */
+#define AG_TABLE_COL_FILL       0x01    /* Expand to fill any remaining space */
+#define AG_TABLE_COL_ASCENDING  0x02    /* Sort rows ascending */
+#define AG_TABLE_COL_DESCENDING 0x04    /* Sort rows descending */
+#define AG_TABLE_COL_SELECTED   0x10    /* Selection flag */
+	int w;				/* Width (effective; px) */
+	int wPct;			/* Width in % (or -1) */
 	int surface;			/* Text surface mapping */
 	AG_CursorArea *_Nullable ca;	/* Column resize cursor-change area */
 } AG_TableCol;
@@ -139,15 +133,18 @@ typedef struct ag_table_col {
 typedef struct ag_table {
 	struct ag_widget wid;		/* AG_Widget -> AG_Table */
 	Uint flags;
-#define AG_TABLE_MULTI		0x001	/* Multiple selections (ctrl/shift) */
-#define AG_TABLE_MULTITOGGLE	0x002	/* Toggle multiple selections */
-#define AG_TABLE_REDRAW_CELLS	0x004	/* Redraw the cells */
-#define AG_TABLE_POLL		0x008	/* Table is polled */
-#define AG_TABLE_HIGHLIGHT_COLS	0x040	/* Highlight column selection */
-#define AG_TABLE_WIDGETS	0x080	/* Embedded widgets are in use */
-#define AG_TABLE_MULTIMODE	(AG_TABLE_MULTI|AG_TABLE_MULTITOGGLE)
-#define AG_TABLE_NOAUTOSORT	0x100	/* Disable automatic sorting */
-#define AG_TABLE_NEEDSORT	0x200	/* Need sorting */
+#define AG_TABLE_MULTI          0x001	/* Multiple selections (ctrl/shift) */
+#define AG_TABLE_MULTITOGGLE    0x002	/* Toggle multiple selections */
+#define AG_TABLE_REDRAW_CELLS   0x004	/* Redraw the cells */
+#define AG_TABLE_POLL           0x008	/* Table is polled */
+#define AG_TABLE_HFILL          0x010
+#define AG_TABLE_VFILL          0x020
+#define AG_TABLE_EXPAND        (AG_TABLE_HFILL|AG_TABLE_VFILL)
+#define AG_TABLE_HIGHLIGHT_COLS 0x040	/* Highlight column selection */
+#define AG_TABLE_WIDGETS        0x080	/* Embedded widgets are in use */
+#define AG_TABLE_NOAUTOSORT     0x100	/* Disable automatic sorting */
+#define AG_TABLE_NEEDSORT       0x200	/* Need sorting */
+
 	enum ag_table_selmode selMode;	/* Selection mode */
 	int wHint, hHint;		/* Size hint */
 

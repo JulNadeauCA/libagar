@@ -596,17 +596,11 @@ For the
 .Ft AG_TableCell
 structure:
 .Pp
-.Bl -tag -compact -width "AG_Widget *widget "
+.Bl -tag -compact -width "enum ag_table_cell_type type "
 .It enum ag_table_cell_type type
-Cell data type (see below).
+Data type (see below).
 .It Uint id
-Optional user-specified ID or 0.
-.It Uint flags
-Option flags.
-If
-.Dv AG_TABLE_CELL_NOCOMPARE
-is set, this cell will be ignored when comparing cells of a polled table
-against the backing store in order to restore selection state.
+Optional user-specified ID (or 0).
 .It char fmt[]
 Format string (read-only; see
 .Fn AG_TableAddRow ) .
@@ -629,12 +623,21 @@ structure:
 .Bl -tag -compact -width "char name[] "
 .It char name[]
 Column header text string (read-only).
-.It int selected
-Column is selected (assuming column selection mode).
+.It Uint flags
+Flags including
+.Dv AG_TABLE_COL_FILL
+(expand to fill remaining space),
+.Dv AG_TABLE_COL_ASCENDING
+(sort ascending),
+.Dv AG_TABLE_COL_DESCENDING
+(sort descending)
+and
+.Dv AG_TABLE_COL_SELECTED
+(column selection flag).
 .It int w
 Column width in pixels (read-only).
-.It int x
-Current column position (local widget coordinates).
+.It int wPct
+Column width in % (or -1).
 .El
 .Sh CELL DATA TYPES
 The cell data type is determined by
