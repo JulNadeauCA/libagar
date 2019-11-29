@@ -16,9 +16,15 @@ const char *agStyleDefault_Data =
 	" * Agar cascading stylesheets are documented in: AG_StyleSheet(3) and\n"
 	" * AG_Widget(3) (under the STYLING section).\n"
 	" */\n"
+	"AG_Widget {\n"
+	"background-color: #0000;\n"
+	"background-color#focused: #0000;\n"
+	"background-color#disabled: #0000;\n"
+	"background-color#hover: #0000;\n"
+	"}\n"
 	"AG_Window {\n"
-	"background-color: #666;\n"
-	"background-color#focused: #666;\n"
+	"background-color: #656565;\n"
+	"background-color#focused: #666666;\n"
 	"}\n"
 	"AG_Label {\n"
 	"background-color: #0000;\n"
@@ -55,7 +61,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	1369,
+	1512,
 	&agStyleDefault_Data,
 	NULL
 };
