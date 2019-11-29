@@ -226,7 +226,9 @@ Draw(void *_Nonnull obj)
 {
 	AG_Radio *rad = obj;
 	const AG_Color *cBg = &WCOLOR(rad, BG_COLOR);
+	const AG_Color *cFg = &WCOLOR(rad, FG_COLOR);
 	const AG_Color *cLine = &WCOLOR(rad, LINE_COLOR);
+	const AG_Color *cSel = &WCOLOR(rad, SELECTION_COLOR);
 	AG_Rect r;
 	int xPadding = rad->xPadding;
 	int radius = rad->radius;
@@ -268,11 +270,11 @@ Draw(void *_Nonnull obj)
 		xc = xPadding + radius;
 		yc = y + itemHeight_2;
 
-		AG_DrawCircleFilled(rad, xc,yc, radius, cLine);
+		AG_DrawCircleFilled(rad, xc,yc, radius, cFg);
 		AG_DrawCircle(rad, xc,yc, radius, cLine);
 
 		if (i == value) {
-			AG_DrawCircleFilled(rad, xc,yc, (radius >> 1), cLine);
+			AG_DrawCircleFilled(rad, xc,yc, (radius >> 1), cSel);
 		}
 		if (i == rad->oversel) {
 			AG_DrawCircle(rad, xc,yc, radius-2,
