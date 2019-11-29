@@ -277,12 +277,11 @@ static void
 Draw(void *_Nonnull p)
 {
 	AG_Textbox *tb = p;
-//	const AG_Color *cBg = &WCOLOR(tb, BG_COLOR);
 
 	if ((tb->flags & AG_TEXTBOX_COMBO)) {
-		AG_DrawFrameRaised(tb, &tb->r);
+		AG_DrawBoxRaised(tb, &tb->r, &WCOLOR(tb, FG_COLOR));
 	} else {
-		AG_DrawFrameSunk(tb, &tb->r);
+		AG_DrawBoxSunk(tb, &tb->r, &WCOLOR(tb, BG_COLOR));
 	}
 
 	if (tb->lbl)
