@@ -232,7 +232,7 @@ Draw(void *_Nonnull obj)
 	rd.y = 0;
 	rd.w = WIDTH(pb);
 	rd.h = HEIGHT(pb);
-	AG_DrawBoxSunk(pb, &rd, &WCOLOR(pb, FG_COLOR));
+	AG_DrawBoxSunk(pb, &rd, &WCOLOR(pb, BG_COLOR));
 
 	if ((max - min) <= 0)
 		return;
