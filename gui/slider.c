@@ -584,6 +584,7 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Slider *sl = obj;
+	const AG_Color *cBg = &WCOLOR(sl, BG_COLOR);
 	const AG_Color *cFg = &WCOLOR(sl, FG_COLOR);
 	AG_Rect r;
 	int x;
@@ -598,7 +599,7 @@ Draw(void *_Nonnull obj)
 
 	switch (sl->type) {
 	case AG_SLIDER_VERT:
-		AG_DrawBoxSunk(sl, &r, cFg);
+		AG_DrawBoxSunk(sl, &r, cBg);
 		r.y = x;
 		r.h = sl->wControl;
 		if (sl->ctlPressed) {
@@ -608,7 +609,7 @@ Draw(void *_Nonnull obj)
 		}
 		break;
 	case AG_SLIDER_HORIZ:
-		AG_DrawBoxSunk(sl, &r, cFg);
+		AG_DrawBoxSunk(sl, &r, cBg);
 		r.x = x;
 		r.w = sl->wControl;
 		if (sl->ctlPressed) {
