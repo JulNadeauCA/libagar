@@ -34,31 +34,28 @@
 #include <stdarg.h>
 #include <string.h>
 
-/*
- * Clip widgets completely outside of the view in a more efficient way,
- * and adjust the sensitivity rectangle of partially hidden widgets.
- */
+/* Detect and clip widgets which are completely hidden. */
 static void
 ClipWidgets(AG_Scrollview *_Nonnull sv, AG_Widget *_Nonnull wt)
 {
-	AG_Rect2 rView, rx;
+	AG_Rect2 r, rx;
 	AG_Widget *chld;
 
-	memcpy(&rView, &WIDGET(sv)->rView, sizeof(AG_Rect2));
-
-	rView.w -= sv->wBar;
-	rView.h -= sv->hBar;
-	rView.x2 = rView.x1+rView.w;
-	rView.y2 = rView.y1+rView.h;
+	r = WIDGET(sv)->rView;
+	r.w -= sv->wBar;
+	r.h -= sv->hBar;
+	r.x2 = r.x1 + r.w;
+	r.y2 = r.y1 + r.h;
 	
-	if (rView.w < 0 || rView.h < 0)
+	if (r.w < 0 || r.h < 0)
 		return;
 
-	if (!AG_RectIntersect2(&rx, &rView, &wt->rView)) {
+	if (!AG_RectIntersect2(&rx, &r, &wt->rView)) {
 		AG_WidgetHideAll(wt);
 	} else {
 		AG_WidgetShowAll(wt);
 	}
+
 	OBJECT_FOREACH_CHILD(chld, wt, ag_widget)
 		ClipWidgets(sv, chld);
 }
