@@ -114,7 +114,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{150,150,150,255},          /*        line-color */
 	{120,120,120,255},          /*        high-color */
 	{ 90, 90, 90,255},          /*         low-color */
-	{  0,  0,120,255},          /*   selection-color */
+	{ 80, 80,120,255},          /*   selection-color */
 	{  0,  0,  0,  0}
 }, {
 	/* #focused */
@@ -156,7 +156,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{0x4646,0x4646,0x4646,0xffff},    /*        line-color */
 	{0x7878,0x7878,0x7878,0xffff},    /*        high-color */
 	{0x5a5a,0x5a5a,0x5a5a,0xffff},    /*         low-color */
-	{0x0000,0x0000,0x7878,0xffff},    /*   selection-color */
+	{0x5050,0x5050,0x7878,0xffff},    /*   selection-color */
 	{0x0000,0x0000,0x0000,0x0000}
 }, {
 	/* #focused */
