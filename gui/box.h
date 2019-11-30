@@ -12,6 +12,14 @@ enum ag_box_type {
 	AG_BOX_VERT
 };
 
+enum ag_box_style {
+	AG_BOX_STYLE_NONE,	/* No graphic */
+	AG_BOX_STYLE_BOX,	/* 3D raised box */
+	AG_BOX_STYLE_WELL,	/* 3D well */
+	AG_BOX_STYLE_PLAIN,	/* Filled rectangle */
+	AG_BOX_STYLE_LAST
+};
+
 enum ag_box_align {
 	AG_BOX_LEFT	= 0,
 	AG_BOX_TOP	= 0,
@@ -26,17 +34,16 @@ struct ag_label;
 typedef struct ag_box {
 	struct ag_widget wid;		/* AG_Widget -> AG_Box */
 	enum ag_box_type type;
+	enum ag_box_style style;	/* Graphical style */
 	Uint flags;
-#define AG_BOX_HOMOGENOUS	0x01	/* Divide space evenly */
-#define AG_BOX_HFILL		0x02	/* Expand to fill available width */
-#define AG_BOX_VFILL		0x04	/* Expand to fill available height */
-#define AG_BOX_FRAME		0x08	/* 3d-style frame and background */
-#define AG_BOX_BORDER		0x10	/* Border only */
-#define AG_BOX_EXPAND		(AG_BOX_HFILL|AG_BOX_VFILL)
+#define AG_BOX_HOMOGENOUS 0x01	/* Divide space evenly */
+#define AG_BOX_HFILL      0x02	/* Expand to fill available width */
+#define AG_BOX_VFILL      0x04	/* Expand to fill available height */
+#define AG_BOX_SHADING    0x08	/* 3D-style shading even if BG is transparent */
+#define AG_BOX_EXPAND    (AG_BOX_HFILL|AG_BOX_VFILL)
 	int padding;			/* Padding around widgets */
 	int spacing;			/* Spacing between widgets */
-	int depth;			/* Depth of frame (for AG_BOX_FRAME) */
-	Uint32 _pad;
+	int depth;			/* Depth for SHADING */
 	struct ag_label *_Nonnull lbl;	/* Optional text label */
 	enum ag_box_align hAlign;	/* Horizontal alignment */
 	enum ag_box_align vAlign;	/* Vertical alignment */
@@ -88,6 +95,7 @@ void AG_BoxSetHorizAlign(AG_Box *_Nonnull, enum ag_box_align);
 void AG_BoxSetVertAlign(AG_Box *_Nonnull, enum ag_box_align);
 
 #ifdef AG_LEGACY
+#define AG_BOX_FRAME AG_BOX_SHADING
 #define AG_HBoxInit(b,fl)          AG_BoxInit((b),AG_BOX_HORIZ,(fl))
 #define AG_HBoxSetHomogenous(b,fl) AG_BoxSetHomogenous((b),(fl))
 #define AG_HBoxSetPadding(b,pad)   AG_BoxSetPadding((b),(pad))

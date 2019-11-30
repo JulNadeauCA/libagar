@@ -139,10 +139,8 @@ include:
 .Bl -tag -width "AG_BOX_HOMOGENOUS "
 .It AG_BOX_HOMOGENOUS
 Divide space into equal parts.
-.It AG_BOX_FRAME
-Draw a 3D-style frame and background.
-.It AG_BOX_BORDER
-Draw a simple border of "line-color".
+.It AG_BOX_SHADING
+Draw 3D-style shading even if no "background-color" is set.
 .It AG_BOX_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -190,11 +188,9 @@ sets the spacing between individual child widgets to
 .Fa spacing
 pixels.
 .Pp
-Assuming that the
-.Dv AG_BOX_FRAME
-flag was given,
 .Fn AG_BoxSetDepth
-sets the depth of the frame.
+sets the depth of the shading for
+.Dv AG_BOX_SHADING .
 .Pp
 The
 .Fn AG_BoxSetHorizAlign

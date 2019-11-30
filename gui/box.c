@@ -150,10 +150,8 @@ AG_BoxSetLabel(AG_Box *box, const char *fmt, ...)
 		va_end(ap);
 		AG_BoxSetLabelS(box, s);
 		free(s);
-		box->flags |= AG_BOX_FRAME;
 	} else {
 		AG_BoxSetLabelS(box, NULL);
-		box->flags &= ~(AG_BOX_FRAME);
 	}
 }
 
@@ -194,6 +192,7 @@ Init(void *_Nonnull obj)
 	AG_Box *box = obj;
 
 	box->flags = 0;
+	box->style = AG_BOX_STYLE_BOX;
 	box->type = AG_BOX_VERT;
 	box->depth = -1;
 	box->padding = 4;
@@ -209,22 +208,30 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Box *box = obj;
-	const int flags = box->flags;
+	const AG_Color *cBg = &WCOLOR(box, BG_COLOR);
 	AG_Widget *chld;
+	AG_Rect r;
 
-	if (flags & (AG_BOX_FRAME | AG_BOX_BORDER)) {
-		AG_Rect r;
-
-		r.x = 0;
-		r.y = 0;
-		r.w = WIDTH(box);
-		r.h = HEIGHT(box);
-		if (flags & AG_BOX_FRAME) {
-			AG_DrawBox(box, &r, box->depth, &WCOLOR(box,AG_BG_COLOR));
+	if (cBg->a > 0) {
+		static void (*pfBox[])(void *, const AG_Rect *, const AG_Color *) = {
+			ag_draw_rect_noop,  /* NONE */
+			ag_draw_box_raised, /* BOX */
+			ag_draw_box_sunk,   /* WELL */
+			ag_draw_rect        /* PLAIN */
+		};
+#ifdef AG_DEBUG
+		if (box->style < 0 || box->style >= AG_BOX_STYLE_LAST)
+			AG_FatalError("style");
+#endif
+		pfBox[box->style](box, &r, cBg);
+	} else if (box->flags & AG_BOX_SHADING) {            /* Shading only */
+		if (box->depth < 0) {
+			AG_DrawFrameSunk(box, &r);
 		} else {
-			AG_DrawRectOutline(box, &r, &WCOLOR(box,AG_LINE_COLOR));
+			AG_DrawFrameRaised(box, &r);
 		}
 	}
+
 	OBJECT_FOREACH_CHILD(chld, box, ag_widget)
 		AG_WidgetDraw(chld);
 }
@@ -538,12 +545,9 @@ Edit(void *_Nonnull obj)
 	cb = AG_CheckboxNewFlag(box, 0, _("Homogenous"), &tgt->flags, AG_BOX_HOMOGENOUS);
 	AG_SetEvent(cb, "checkbox-changed", UpdateWindowOf,"%p",tgt);
 
-	cb = AG_CheckboxNewFlag(box, 0, _("Frame"), &tgt->flags, AG_BOX_FRAME);
+	cb = AG_CheckboxNewFlag(box, 0, _("Shading"), &tgt->flags, AG_BOX_SHADING);
 	AG_SetEvent(cb, "checkbox-changed", UpdateWindowOf,"%p",tgt);
 	
-	cb = AG_CheckboxNewFlag(box, 0, _("Border"), &tgt->flags, AG_BOX_BORDER);
-	AG_SetEvent(cb, "checkbox-changed", UpdateWindowOf,"%p",tgt);
-
 	return (box);
 }
 #endif /* AG_DEBUG */
