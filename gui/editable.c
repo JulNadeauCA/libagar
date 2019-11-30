@@ -82,7 +82,7 @@ GetBuffer(AG_Editable *_Nonnull ed)
 
 		if ((ed->flags & AG_EDITABLE_EXCL) == 0 ||
 		    buf->s == NULL) {
-			AG_TextEnt *te = &txt->ent[ed->lang];
+			const AG_TextEnt *te = &txt->ent[ed->lang];
 
 			if (te->buf != NULL) {
 				buf->s = AG_ImportUnicode("UTF-8", te->buf,
@@ -125,7 +125,7 @@ GetBuffer(AG_Editable *_Nonnull ed)
 	}
 	return (buf);
 fail:
-	if ((ed->flags & AG_EDITABLE_EXCL) == 0) { Free(buf); }
+	if ((ed->flags & AG_EDITABLE_EXCL) == 0) { free(buf); }
 	return (NULL);
 }
 
@@ -672,12 +672,16 @@ IsSpaceNat(AG_Char c)
 	return (0);
 }
 
-/* Evaluate word wrapping at given character. */
+/*
+ * Evaluate word wrapping at given character (possibly rendering it).
+ */
 static __inline__ int
-WrapAtChar(AG_Editable *_Nonnull ed, int x, AG_Char *_Nonnull s)
+WrapAtChar(AG_Editable *_Nonnull ed, int x, AG_Char *_Nonnull s,
+    const AG_Font *_Nonnull font, const AG_Color *_Nonnull cBg,
+    const AG_Color *_Nonnull cFg)
 {
 	AG_Driver *drv = WIDGET(ed)->drv;
-	AG_Glyph *gl;
+	AG_Glyph *G;
 	AG_Char *t;
 	int x2;
 
@@ -688,8 +692,8 @@ WrapAtChar(AG_Editable *_Nonnull ed, int x, AG_Char *_Nonnull s)
 	for (t = &s[1], x2 = x;
 	     *t != '\0';
 	     t++) {
-		gl = AG_TextRenderGlyph(drv, *t);
-		x2 += gl->advance;
+		G = AG_TextRenderGlyph(drv, font, cBg, cFg, *t);
+		x2 += G->advance;
 		if (IsSpaceNat(*t) || *t == '\n') {
 			if (x2 > WIDTH(ed)) {
 				return (1);
@@ -710,8 +714,10 @@ int
 AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
     int *pos)
 {
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Driver *drv = WIDGET(ed)->drv;
-	AG_Font *font = WFONT(ed);
+	const AG_Font *font = WFONT(ed);
+	AG_TextANSI ansi;
 	AG_Char ch;
 	int i, x, y, line = 0;
 	int nLines = 1;
@@ -729,8 +735,8 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 	y = 0;
  	for (i = 0; i < buf->len; i++) {
 		AG_Char ch = buf->s[i];
-
-		if (WrapAtChar(ed, x, &buf->s[i])) {
+		
+		if (WrapAtChar(ed, x, &buf->s[i], font, &ts->colorBG, &ts->color)) {
 			x = 0;
 			nLines++;
 		}
@@ -739,29 +745,39 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			nLines++;
 		} else if (ch == '\t') {
 			x += agTextTabWidth;
+		} else if (ch == 0x1b &&
+		           buf->s[i+1] >= 0x40 && buf->s[i+1] <= 0x5f &&
+			   buf->s[i+2] != '\0') {
+			if (AG_TextParseANSI(ts, &ansi, &buf->s[i+1]) == 0) {
+				i += ansi.len;
+				continue;
+			}
 		} else {
 			switch (font->spec.type) {
 #ifdef HAVE_FREETYPE
 			case AG_FONT_VECTOR:
 				{
 					AG_TTFFont *ttf = font->ttf;
-					AG_TTFGlyph *glyph;
+					AG_TTFGlyph *Gttf;
 
 					if (AG_TTFFindGlyph(ttf, ch,
-					    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
+					    TTF_CACHED_METRICS |
+					    TTF_CACHED_BITMAP) != 0) {
 						continue;
 					}
-					glyph = ttf->current;
-					x += glyph->advance;
+					Gttf = ttf->current;
+					x += Gttf->advance;
 				}
 				break;
 #endif /* HAVE_FREETYPE */
 			case AG_FONT_BITMAP:
 				{
-					AG_Glyph *gl;
+					AG_Glyph *G;
 			
-					gl = AG_TextRenderGlyph(drv, ch);
-					x += gl->su->w;
+					G = AG_TextRenderGlyph(drv, font,
+					    &ts->colorBG, &ts->color, ch);
+
+					x += G->su->w;
 				}
 				break;
 			case AG_FONT_DUMMY:
@@ -777,7 +793,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			*pos = i;
 			goto out;
 		}
-		if (WrapAtChar(ed, x, &buf->s[i])) {
+		if (WrapAtChar(ed, x, &buf->s[i], font, &ts->colorBG, &ts->color)) {
 			if (ON_LINE(yMouse,y) && mx > x) {
 				*pos = i;
 				goto out;
@@ -803,6 +819,13 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			}
 			x += agTextTabWidth;
 			continue;
+		} else if (ch == 0x1b &&
+		           buf->s[i+1] >= 0x40 && buf->s[i+1] <= 0x5f &&
+			   buf->s[i+2] != '\0') {
+			if (AG_TextParseANSI(ts, &ansi, &buf->s[i+1]) == 0) {
+				i += ansi.len;
+				continue;
+			}
 		}
 		
 		switch (font->spec.type) {
@@ -810,35 +833,38 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 		case AG_FONT_VECTOR:
 			{
 				AG_TTFFont *ttf = font->ttf;
-				AG_TTFGlyph *glyph;
+				AG_TTFGlyph *Gttf;
 
 				if (AG_TTFFindGlyph(ttf, ch,
-				    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
+				    TTF_CACHED_METRICS |
+				    TTF_CACHED_BITMAP) != 0) {
 					continue;
 				}
-				glyph = ttf->current;
+				Gttf = ttf->current;
 
-				if (ON_LINE(yMouse,y) && ON_CHAR(mx,x,glyph)) {
-					*pos = (mx < x+(glyph->advance >> 1)) ?
+				if (ON_LINE(yMouse,y) && ON_CHAR(mx,x,Gttf)) {
+					*pos = (mx < x+(Gttf->advance >> 1)) ?
 					       i : i+1;
 					goto out;
 				}
-				x += glyph->advance;
+				x += Gttf->advance;
 			}
 			break;
 #endif /* HAVE_FREETYPE */
 		case AG_FONT_BITMAP:
 			{
-				AG_Glyph *gl;
+				AG_Glyph *G;
 			
-				gl = AG_TextRenderGlyph(drv, ch);
+				G = AG_TextRenderGlyph(drv, font,
+				    &ts->colorBG, &ts->color, ch);
+
 				if (ON_LINE(yMouse,y) &&
 				    mx >= x &&
-				    mx <= x+gl->su->w) {
+				    mx <= x + G->su->w) {
 					*pos = i;
 					goto out;
 				}
-				x += gl->su->w;
+				x += G->su->w;
 			}
 			break;
 		case AG_FONT_DUMMY:
@@ -921,17 +947,23 @@ MoveCursorToView(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf)
 static void
 Draw(void *_Nonnull obj)
 {
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Editable *ed = obj;
 	AG_Driver *drv = WIDGET(ed)->drv;
-	AG_DriverClass *drvOps = WIDGET(ed)->drvOps;
+	const AG_DriverClass *drvOps = WIDGET(ed)->drvOps;
 	AG_EditableBuffer *buf;
-/*	const AG_Color *cBg = &WCOLOR(ed, BG_COLOR); */
 	const AG_Color *cSel = &WCOLOR(ed, SELECTION_COLOR);
-	AG_Rect2 rClip;
+	AG_Color cFg = ts->color;
+	AG_Color cBg = ts->colorBG;
+	const AG_Font *font = ts->font;
 	const int pos = ed->pos;
 	const int sel = ed->sel;
 	const int flags = ed->flags;
 	const int lineSkip = ed->lineSkip;
+	const int clipX1 = WIDGET(ed)->rView.x1 - (ed->fontMaxHeight << 1);
+	const int clipX2 = WIDGET(ed)->rView.x2 + (ed->fontMaxHeight << 1);
+	const int clipY1 = WIDGET(ed)->rView.y1 - lineSkip;
+	const int clipY2 = WIDGET(ed)->rView.y2 + lineSkip;
 	int i, dx,dy, x,y, yCurs, inSel=0;
 
 	if ((buf = GetBuffer(ed)) == NULL) {
@@ -939,13 +971,6 @@ Draw(void *_Nonnull obj)
 	}
 	AG_EditableValidateSelection(ed, buf);
 	
-	/* Tweak the clipping rectangle to allow a bit of overflow. */
-	rClip = WIDGET(ed)->rView;
-	rClip.x1 -= (ed->fontMaxHeight << 1);
-	rClip.y1 -= lineSkip;
-	rClip.x2 += (ed->fontMaxHeight << 1);
-	rClip.y2 += lineSkip;
-
 	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC,
 	                    AG_TEXTURE_ENV_REPLACE);
 	AG_PushClipRect(ed, &ed->r);
@@ -955,8 +980,9 @@ Draw(void *_Nonnull obj)
 	ed->xMax = 10;
 	ed->yMax = 1;
 	for (i = 0; i <= buf->len; i++) {
-		AG_Glyph *gl;
+		AG_Glyph *G;
 		AG_Char c = buf->s[i];
+		AG_Rect r;
 
 		if (i == pos) {				/* At cursor */
 			ed->xCurs = x;
@@ -984,7 +1010,7 @@ Draw(void *_Nonnull obj)
 		if (i == buf->len)
 			break;
 
-		if (WrapAtChar(ed, x, &buf->s[i])) {
+		if (WrapAtChar(ed, x, &buf->s[i], font, &cBg, &cFg)) {
 			y += lineSkip;
 			ed->xMax = MAX(ed->xMax, x);
 			ed->yMax++;
@@ -997,10 +1023,7 @@ Draw(void *_Nonnull obj)
 			x = 0;
 			continue;
 		} else if (c == '\t') {
-			/* TODO subroutine this */
 			if (inSel) {
-				AG_Rect r;
-
 				r.x = x - ed->x;
 				r.y = y;
 				r.w = agTextTabWidth + 1;
@@ -1009,36 +1032,60 @@ Draw(void *_Nonnull obj)
 			}
 			x += agTextTabWidth;
 			continue;
+		} else if (c == 0x1b &&
+		    buf->s[i+1] >= 0x40 && buf->s[i+1] <= 0x5f &&
+		    buf->s[i+2] != '\0') {
+			AG_TextANSI ansi;
+			
+			if (AG_TextParseANSI(ts, &ansi, &buf->s[i+1]) == 0) {
+				if (ansi.ctrl == AG_ANSI_CSI_SGR) {
+					switch (ansi.sgr) {
+					case AG_SGR_RESET:
+					case AG_SGR_NO_FG_NO_BG:
+						cFg = ts->color;
+						cBg = ts->colorBG;
+						break;
+					case AG_SGR_FG:
+						cFg = ansi.color;
+						break;
+					case AG_SGR_BG:
+						cBg = ansi.color;
+						break;
+					case AG_SGR_BOLD:
+						break;
+					case AG_SGR_UNDERLINE:
+						break;
+					}
+				}
+				i += ansi.len;
+				continue;
+			}
 		}
 
 		if      (flags & AG_EDITABLE_PASSWORD)  { c = '*'; }
 		else if (flags & AG_EDITABLE_UPPERCASE) { c = toupper(c); }
 		else if (flags & AG_EDITABLE_LOWERCASE) { c = tolower(c); }
 
-		gl = AG_TextRenderGlyph(drv, c);
+		G = AG_TextRenderGlyph(drv, font, &cBg, &cFg, c);
 		dx = WIDGET(ed)->rView.x1 + x - ed->x;
 		dy = WIDGET(ed)->rView.y1 + y;
 
-		if (!AG_RectInside2(&rClip, dx, dy)) {
-			x += gl->advance;
+		if (dx < clipX1 || dx >= clipX2 ||               /* Outside */
+		    dy < clipY1 || dy >= clipY2) {
+			x += G->advance;
 			continue;
 		}
-
-		/* Indicate active selection */
-		if (inSel) {
-			AG_Rect r;
-
+		if (inSel) {                                    /* Selected */
 			r.x = x - ed->x;
 			r.y = y;
-			r.w = gl->su->w + 1;
-			r.h = gl->su->h;
+			r.w = G->su->w + 1;
+			r.h = G->su->h;
 			AG_DrawRectFilled(ed, &r, cSel);
 		}
 
-		/* Render the glyph */
-		drvOps->drawGlyph(drv, gl, dx,dy);
+		drvOps->drawGlyph(drv, G, dx,dy);
 
-		x += gl->advance;
+		x += G->advance;
 	}
 	if (ed->yMax == 1)
 		ed->xMax = x;
@@ -1625,13 +1672,13 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		break;
 	case AG_MOUSE_WHEELUP:
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
-			ed->y -= AG_GetInt(ed, "line-scroll-amount");
+			ed->y -= ed->lineScrollAmount;
 			if (ed->y < 0) { ed->y = 0; }
 		}
 		break;
 	case AG_MOUSE_WHEELDOWN:
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
-			ed->y += AG_GetInt(ed, "line-scroll-amount");
+			ed->y += ed->lineScrollAmount;
 			ed->y = MIN(ed->y, ed->yMax - ed->yVis);
 		}
 		break;
@@ -1965,6 +2012,9 @@ Init(void *_Nonnull obj)
 	                     AG_WIDGET_UNFOCUSED_MOTION |
 			     AG_WIDGET_USE_TEXT |
 	                     AG_WIDGET_USE_MOUSEOVER;
+
+	ed->flags = AG_EDITABLE_BLINK_ON | AG_EDITABLE_MARKPREF;
+	ed->lineScrollAmount = 5;
 #ifdef AG_UNICODE
 	ed->encoding = "UTF-8";
 	ed->text = AG_TextNew(0);
@@ -1972,51 +2022,49 @@ Init(void *_Nonnull obj)
 	ed->encoding = "US-ASCII";
 	ed->text[0] = '\0';
 #endif
-	ed->flags = AG_EDITABLE_BLINK_ON | AG_EDITABLE_MARKPREF;
-	ed->pos = 0;
-	ed->sel = 0;
+	ed->hPre = 1;
+	memset(&ed->wPre, 0, sizeof(int) +               /* wPre */
+			     sizeof(int) +               /* pos */
+			     sizeof(int) +               /* sel */
+			     sizeof(int) +               /* selDblClick */
+			     sizeof(AG_Char) +           /* compose */
+			     sizeof(int) +               /* xCurs */
+			     sizeof(int) +               /* yCurs */
+			     sizeof(int) +               /* xSelStart */
+			     sizeof(int) +               /* ySelStart */
+			     sizeof(int) +               /* xSelEnd */
+			     sizeof(int) +               /* ySelEnd */
+			     sizeof(int) +               /* xCursPref */
+			     sizeof(int) +               /* x */
+			     sizeof(int) +               /* xMax */
+			     sizeof(int) +               /* y */
+			     sizeof(int) +               /* yMax */
+			     sizeof(int) +               /* yVis */
+			     sizeof(Uint32) +            /* wheelTicks */
+			     sizeof(Uint32) +            /* _pad2 */
+			     sizeof(AG_EditableBuffer) + /* sBuf */
+			     sizeof(AG_Rect) +           /* r */
+			     sizeof(AG_CursorArea) +     /* ca */
+			     sizeof(enum ag_language) +  /* lang */
+			     sizeof(int) +               /* xScrollPx */
+			     sizeof(AG_PopupMenu *) +    /* pm */
+			     sizeof(int *) +             /* xScrollTo */
+			     sizeof(int *));             /* yScrollTo */
+	
 	ed->selDblClick = -1;
-	ed->compose = 0;
-	ed->xCurs = 0;
-	ed->yCurs = 0;
-	ed->xCursPref = 0;
-	ed->xSelStart = 0;
-	ed->ySelStart = 0;
-	ed->xScrollTo = NULL;
-	ed->yScrollTo = NULL;
-	ed->xScrollPx = 0;
-
-	ed->x = 0;
-	ed->xMax = 10;
-	ed->y = 0;
-	ed->yMax = 1;
-	ed->yVis = 1;
-	ed->wheelTicks = 0;
-	ed->r.x = 0;
-	ed->r.y = 0;
-	ed->r.w = 0;
-	ed->r.h = 0;
-	ed->ca = NULL;
 	ed->fontMaxHeight = agTextFontHeight;
 	ed->lineSkip = agTextFontLineSkip;
-	ed->pm = NULL;
-	ed->lang = AG_LANG_NONE;
-	ed->wPre = 0;
-	ed->hPre = 1;
-
-	ed->sBuf.var = NULL;
-	ed->sBuf.s = NULL;
-	ed->sBuf.len = 0;
-	ed->sBuf.maxLen = 0;
-	ed->sBuf.reallocable = 0;
-
-	AG_SetInt(ed, "line-scroll-amount", 5);
+	
+	AG_InitTimer(&ed->toRepeat, "repeat", 0);
+	AG_InitTimer(&ed->toCursorBlink, "cursorBlink", 0);
+	AG_InitTimer(&ed->toDblClick, "dblClick", 0);
 
 	AG_SetEvent(ed, "bound", OnBindingChange, NULL);
 	OBJECT(ed)->flags |= AG_OBJECT_BOUND_EVENTS;
 
 	AG_AddEvent(ed, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(ed, "widget-hidden", OnHide, NULL);
+
 	AG_SetEvent(ed, "key-down", KeyDown, NULL);
 	AG_SetEvent(ed, "key-up", KeyUp, NULL);
 	AG_SetEvent(ed, "mouse-button-down", MouseButtonDown, NULL);
@@ -2024,10 +2072,6 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(ed, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(ed, "widget-gainfocus", OnFocusGain, NULL);
 	AG_SetEvent(ed, "widget-lostfocus", OnFocusLoss, NULL);
-
-	AG_InitTimer(&ed->toRepeat, "repeat", 0);
-	AG_InitTimer(&ed->toCursorBlink, "cursorBlink", 0);
-	AG_InitTimer(&ed->toDblClick, "dblClick", 0);
 
 #ifdef AG_UNICODE
 	AG_BindPointer(ed, "text", (void *)ed->text);
@@ -2105,22 +2149,25 @@ AG_EditableReadOnly(AG_Editable *_Nonnull ed)
 }
 
 /*
- * Ensure that the selection range is valid. The Editable and buffer
- * must both be locked.
+ * Ensure that the cursor position and selection range lie within the size
+ * of the given buffer; clamp or normalize them if necessary.
+ * 
+ * The Editable and buffer must both be locked.
  */
 void
-AG_EditableValidateSelection(AG_Editable *ed, AG_EditableBuffer *buf)
+AG_EditableValidateSelection(AG_Editable *ed, const AG_EditableBuffer *buf)
 {
-	if ((Uint)ed->pos > buf->len) {
+	if (ed->pos > (int)buf->len) {   /* Allow one character past the end */
 		ed->pos = (int)buf->len;
 		ed->sel = 0;
 	}
-	if (ed->sel != 0) {
-		int ep = ed->pos + ed->sel;
+	if (ed->sel != 0) {                           /* Normalize selection */
+		const int ep = ed->pos + ed->sel;
+
 		if (ep < 0) {
 			ed->pos = 0;
 			ed->sel = 0;
-		} else if ((Uint)ep > buf->len) {
+		} else if (ep > (int)buf->len) {
 			ed->pos = (int)buf->len;
 			ed->sel = 0;
 		}

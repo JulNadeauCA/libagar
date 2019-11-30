@@ -73,7 +73,7 @@ TextSize_Nat(void *obj)
 
 	AG_MutexLock(&ti->lock);
 	for (i = 0; i < 50; i++) {
-		AG_TextSizeNat(text, &w, &h);
+		AG_TextSizeInternal(text, &w, &h);
 	}
 	AG_MutexUnlock(&ti->lock);
 }
@@ -103,10 +103,11 @@ TextRender_Nat(void *obj)
 #ifdef AG_THREADS
 	MyTestInstance *ti = obj;
 #endif
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Surface *S;
 
 	AG_MutexLock(&ti->lock);
-	S = AG_TextRenderNat(text);
+	S = AG_TextRenderInternal(text, ts->font, &ts->colorBG, &ts->color);
 	AG_MutexUnlock(&ti->lock);
 	AG_SurfaceFree(S);
 }

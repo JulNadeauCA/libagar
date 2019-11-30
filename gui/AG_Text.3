@@ -218,22 +218,22 @@ in a copy-on-write fashion.
 .Fn AG_TextRenderF "const char *fmt" "..."
 .Pp
 .Ft "AG_Surface *"
-.Fn AG_TextRenderNat "const AG_Char *text"
+.Fn AG_TextRenderInternal "const AG_Char *text" "const AG_Font *font" "const AG_Color *cBg" "const AG_Color *cFg"
 .Pp
 .Ft "AG_Glyph *"
-.Fn AG_TextRenderGlyph "AG_Char ch"
+.Fn AG_TextRenderGlyph "AG_Driver *drv" "const AG_Font *font" "const AG_Color *cBg" "const AG_Color *cFg" "AG_Char ch"
 .Pp
 .Ft "void"
 .Fn AG_TextSize "const char *text" "int *w" "int *h"
 .Pp
 .Ft "void"
-.Fn AG_TextSizeNat "const AG_Char *text" "int *w" "int *h"
+.Fn AG_TextSizeInternal"const AG_Char *text" "int *w" "int *h"
 .Pp
 .Ft "void"
 .Fn AG_TextSizeMulti "const char *text" "int *w" "int *h" "Uint **wLines" "Uint *nLines"
 .Pp
 .Ft "void"
-.Fn AG_TextSizeMultiNat "const AG_Char *text" "int *w" "int *h" "Uint **wLines" "Uint *nLines"
+.Fn AG_TextSizeMultiInternal "const AG_Char *text" "int *w" "int *h" "Uint **wLines" "Uint *nLines"
 .Pp
 .nr nS 0
 The
@@ -245,7 +245,7 @@ If
 .Dv AG_UNICODE
 is supported, the input text may contain UTF-8.
 .Pp
-.Fn AG_TextRenderNat
+.Fn AG_TextRenderInternal
 renders onto a new surface text in native
 .Ft AG_Char
 encoding (which is either an ASCII
@@ -272,13 +272,13 @@ Amount of translation (in pixels) recommended to follow when rendering text
 The
 .Fn AG_TextSize
 and
-.Fn AG_TextSizeNat
+.Fn AG_TextSizeInternal
 functions return the minimal bounding box in pixels required for rendering the
 given text.
 The
 .Fn AG_TextSizeMulti
 and
-.Fn AG_TextSizeMultiNat
+.Fn AG_TextSizeMultiInternal
 variants also return the number of lines into
 .Fa nLines
 and the width in pixels of each line in the array

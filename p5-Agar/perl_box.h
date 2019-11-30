@@ -2,7 +2,7 @@
 
 static const AP_FlagNames apBoxFlagNames[] = {
 	{ "homogenous",		AG_BOX_HOMOGENOUS },
-	{ "frame",		AG_BOX_FRAME },
+	{ "shading",		AG_BOX_SHADING },
 	{ NULL,			0 }
 };
 

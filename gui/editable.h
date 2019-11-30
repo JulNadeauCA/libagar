@@ -59,7 +59,8 @@ typedef struct ag_editable {
 #define AG_EDITABLE_READONLY	  0x200000 /* Disable user input */
 #define AG_EDITABLE_MULTILINGUAL  0x400000 /* Multilingual edition */
 
-	Uint32 _pad1;
+	int lineScrollAmount;		/* Lines to scroll per event */
+
 	const char *_Nonnull encoding;	/* Character set (default "US-ASCII"
 	                                   or "UTF-8" if Unicode supported) */
 #ifdef AG_UNICODE
@@ -67,9 +68,10 @@ typedef struct ag_editable {
 #else
 	char text[6];
 #endif
-	int wPre, hPre;			/* Size hint */
-	int pos;			/* Cursor position */
-	int sel;			/* Selection offset / range */
+	int hPre;			/* Vertical size hint (# of lines) */
+	int wPre;			/* Horizontal size hint (px) */
+	int pos;			/* Cursor position (char index) */
+	int sel;			/* Active selection (or 0) */
 	int selDblClick;		/* Double click position */
 	AG_Char compose;		/* For input composition */
 	int xCurs, yCurs;		/* Last cursor position */
@@ -86,13 +88,13 @@ typedef struct ag_editable {
 	AG_EditableBuffer sBuf;		/* Working buffer (for EXCL) */
 	AG_Rect r;			/* View area */
 	AG_CursorArea *_Nullable ca;	/* Text cursor-change area */
-	int fontMaxHeight;		/* Maximum character height */
-	int lineSkip;			/* Y-increment in multiline mode */
-	struct ag_popup_menu *_Nullable pm; /* Right-click popup menu */
 	enum ag_language lang;		/* Selected language (for AG_Text) */
 	int xScrollPx;			/* Explicit scroll request in pixels */
+	struct ag_popup_menu *_Nullable pm; /* Right-click popup menu */
 	int *_Nullable xScrollTo;	/* Scroll to that X-position */
 	int *_Nullable yScrollTo;	/* Scroll to that Y-position */
+	int fontMaxHeight;		/* Maximum character height */
+	int lineSkip;			/* Y-increment in multiline mode */
 	AG_Timer toRepeat;		/* Key repeat timer */
 	AG_Timer toCursorBlink;		/* Cursor blink timer */
 	AG_Timer toDblClick;		/* Double click timer */
@@ -175,7 +177,7 @@ int  AG_EditableSetCursorPos(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
 int  AG_EditableReadOnly(AG_Editable *_Nonnull)
                         _Pure_Attribute_If_Unthreaded;
 
-void AG_EditableValidateSelection(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
+void AG_EditableValidateSelection(AG_Editable *_Nonnull, const AG_EditableBuffer *_Nonnull);
 
 #ifdef AG_LEGACY
 #define AG_EditablePrescale(ed,s) AG_EditableSizeHint((ed),(s))

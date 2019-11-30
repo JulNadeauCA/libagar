@@ -480,15 +480,20 @@ TestGUI(void *obj, AG_Window *win)
 				rad = AG_RadioNewUint(nt, 0, selModes, &table->selMode);
 				AG_SetStyle(rad, "font-size", "80%");
 			}
-			AG_CheckboxNewFlag(nt, 0,
-			    "Allow multiple selections",
-			    &table->flags, AG_TABLE_MULTI);
-			AG_CheckboxNewFlag(nt, 0,
-			    "Enforce multiple selections",
-			    &table->flags, AG_TABLE_MULTITOGGLE);
-			AG_CheckboxNewFlag(nt, 0,
-			    "Highlight columns",
-			    &table->flags, AG_TABLE_HIGHLIGHT_COLS);
+			
+
+			vBox = AG_BoxNewVert(nt, 0);
+			AG_SetStyle(vBox, "font-size", "80%");
+			{
+				AG_CheckboxNewFlag(vBox, 0, "Select multiple with ctrl/shift",
+				    &table->flags, AG_TABLE_MULTI);
+
+				AG_CheckboxNewFlag(vBox, 0, "Select multiple always",
+				    &table->flags, AG_TABLE_MULTITOGGLE);
+
+				AG_CheckboxNewFlag(vBox, 0, "Highlight columns",
+				    &table->flags, AG_TABLE_HIGHLIGHT_COLS);
+			}
 
 			/*
 			 * Append an event handler for the DELETE function.

@@ -242,20 +242,21 @@ typedef struct ag_font_spec {
 	} source;
 } AG_FontSpec;
 
-/* Cached glyph surface/texture information. */
+/* A cached rendering of a glyph of a given font and color. */
 typedef struct ag_glyph {
-	struct ag_font *_Nonnull font;	/* Font face */
-	AG_Color color;			/* Base color */
+	struct ag_font *_Nonnull font;  /* Font face */
+	AG_Color colorBG;               /* Background color */
+	AG_Color color;                 /* Foreground color */
 #if AG_MODEL == AG_MEDIUM
 	Uint32 _pad1;
 #endif
-	AG_Surface *_Nonnull su;	/* Rendered surface */
-	AG_Char ch;			/* Native character */
-	int advance;			/* Pixel advance */
-	Uint texture;			/* Cached texture (driver-specific) */
-	AG_TexCoord texcoords;		/* Texture coordinates */
+	AG_Surface *_Nonnull su;         /* Rendered surface */
+	AG_Char ch;                      /* Native character */
+	int advance;                     /* Advance (px) */
+	Uint texture;                    /* Mapped texture (driver-specific) */
+	AG_TexCoord texcoords;           /* Mapped texture coordinates */
 	Uint32 _pad2;
-	AG_SLIST_ENTRY(ag_glyph) glyphs;
+	AG_SLIST_ENTRY(ag_glyph) glyphs; /* Entry in glyph cache */
 } AG_Glyph;
 
 /* Loaded font */
@@ -373,9 +374,13 @@ void AG_TextSize(const char *_Nullable, int *_Nullable, int *_Nullable);
 void AG_TextSizeMulti(const char *_Nonnull, int *_Nonnull, int *_Nonnull,
                       Uint *_Nullable *_Nonnull, Uint *_Nullable);
 
-void AG_TextSizeNat(const AG_Char *_Nullable, int *_Nullable, int *_Nullable);
-void AG_TextSizeMultiNat(const AG_Char *_Nonnull, int *_Nullable,
-                         int *_Nullable, Uint *_Nullable *_Nonnull, Uint *_Nonnull);
+void AG_TextSizeInternal(const AG_Char *_Nullable, int *_Nullable, int *_Nullable);
+void AG_TextSizeMultiInternal(const AG_Char *_Nonnull, int *_Nullable,
+                              int *_Nullable, Uint *_Nullable *_Nonnull, Uint *_Nonnull);
+#ifdef AG_UNICODE
+#define AG_TextSizeUCS4(s,w,h)            AG_TextSizeInternal((s),(w),(h))
+#define AG_TextSizeMultiUCS4(s,w,h,wL,nL) AG_TextSizeMultiInternal((s),(w),(h),(wL),(nL))
+#endif
 
 void AG_TextMsgS(enum ag_text_msg_title, const char *_Nonnull);
 void AG_TextMsg(enum ag_text_msg_title, const char *_Nonnull, ...)
@@ -404,10 +409,24 @@ int  AG_TextValignOffset(int, int) _Pure_Attribute;
 
 AG_Surface *_Nonnull AG_TextRenderF(const char *_Nonnull, ...) _Warn_Unused_Result;
 AG_Surface *_Nonnull AG_TextRender(const char *_Nonnull) _Warn_Unused_Result;
-AG_Surface *_Nonnull AG_TextRenderNat(const AG_Char *_Nonnull) _Warn_Unused_Result;
+AG_Surface *_Nonnull AG_TextRenderInternal(const AG_Char *_Nonnull,
+                                           const AG_Font *_Nonnull,
+					   const AG_Color *_Nonnull,
+					   const AG_Color *_Nonnull)
+                                          _Warn_Unused_Result;
+#ifdef AG_UNICODE
+# define AG_TextRenderUCS4(s) AG_TextRenderInternal((s), AG_TEXT_STATE_CUR()->font, \
+                                                        &AG_TEXT_STATE_CUR()->colorBG, \
+                                                        &AG_TEXT_STATE_CUR()->color)
+#endif
 
-AG_Glyph *_Nonnull AG_TextRenderGlyph(AG_Driver *_Nonnull, AG_Char)
+AG_Glyph *_Nonnull AG_TextRenderGlyph(AG_Driver *_Nonnull, const AG_Font *_Nonnull,
+                                      const AG_Color *_Nonnull, const AG_Color *_Nonnull,
+				      AG_Char)
                                      _Warn_Unused_Result;
+
+int  AG_TextParseANSI(const AG_TextState *_Nonnull, AG_TextANSI *_Nonnull,
+                      const AG_Char *_Nonnull);
 
 void AG_TextColor(const AG_Color *_Nonnull);
 void AG_TextColorRGB(Uint8, Uint8, Uint8);
@@ -430,12 +449,6 @@ struct ag_window *_Nonnull AG_TextPromptOptions(struct ag_button *_Nonnull *_Non
 
 int  AG_InitTextSubsystem(void);
 void AG_DestroyTextSubsystem(void);
-
-#ifdef AG_LEGACY
-# define AG_TextRenderUCS4(s)                        AG_TextRenderNat(s)
-# define AG_TextSizeUCS4((s),(w),(h))                AG_TextSizeNat((s),(w),(h))
-# define AG_TextSizeMultiUCS4((s),(w),(h),(wL),(nL)) AG_TextSizeMultiNat((s),(w),(h),(wL),(nL))
-#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

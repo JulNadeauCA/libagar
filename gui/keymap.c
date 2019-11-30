@@ -123,7 +123,7 @@ Insert(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 #ifdef AG_UNICODE
 	if (!(ed->flags & AG_EDITABLE_MULTILINE)) {	/* Optimize case */
 		int wIns;
-		AG_TextSizeNat(ins, &wIns, NULL);
+		AG_TextSizeInternal(ins, &wIns, NULL);
 		ed->xScrollPx += wIns;
 	} else
 #endif
@@ -166,7 +166,7 @@ Delete(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 		} else {
 #ifdef AG_UNICODE
 			if (len > 0) {
-				AG_TextSizeNat(&buf->s[len-1], &wDel, NULL);
+				AG_TextSizeInternal(&buf->s[len-1], &wDel, NULL);
 				if (ed->x > 0) { ed->x -= wDel; }
 			}
 #else
@@ -189,7 +189,7 @@ Delete(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	
 		cDel[0] = buf->s[ed->pos];
 		cDel[1] = '\0';
-		AG_TextSizeNat(cDel, &wDel, NULL);
+		AG_TextSizeInternal(cDel, &wDel, NULL);
 		if (ed->x > 0) { ed->x -= wDel; }
 #else
 		/* TODO */

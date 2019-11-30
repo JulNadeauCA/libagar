@@ -196,11 +196,10 @@ const char *agTextMsgTitles[] = {		/* For enum ag_text_msg_title */
 static TAILQ_HEAD(ag_fontq, ag_font) fonts;
 
 #ifdef HAVE_FREETYPE
-static void TextRenderFT(const AG_Char *_Nonnull, AG_Surface *_Nonnull, const AG_TextMetrics *_Nonnull);
-static int  TextParseANSI(const AG_TextState *_Nonnull, AG_TextANSI *_Nonnull, const AG_Char *_Nonnull);
+static void TextRenderFT(const AG_Char *_Nonnull, AG_Surface *_Nonnull, const AG_TextMetrics *_Nonnull, const AG_Font *_Nonnull, const AG_Color *_Nonnull, const AG_Color *_Nonnull);
 static void TextRenderFT_Underline(AG_TTFFont *_Nonnull, AG_Surface *_Nonnull, int);
 #endif
-static AG_Glyph *_Nonnull TextRenderGlyph_Miss(AG_Driver *_Nonnull, AG_Char);
+static AG_Glyph *_Nonnull TextRenderGlyph_Miss(AG_Driver *_Nonnull, const AG_Font *_Nonnull, const AG_Color *_Nonnull, const AG_Color *_Nonnull, AG_Char);
 static AG_Surface *_Nonnull GetBitmapGlyph(const AG_Font *_Nonnull, AG_Char);
 
 #if !defined(HAVE_FREETYPE)
@@ -745,7 +744,7 @@ TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extende
 		    ch[1] >= 0x40 && ch[1] <= 0x5f && ch[2] != '\0') {
 			AG_TextANSI ansi;
 			
-			if (TextParseANSI(ts, &ansi, &ch[1]) == 0) {
+			if (AG_TextParseANSI(ts, &ansi, &ch[1]) == 0) {
 				ch += ansi.len;
 				continue;
 			}
@@ -831,15 +830,19 @@ TextSizeBitmap(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 /* Render UCS-4 text to a new surface using a bitmap font. */
 static void
 TextRenderBitmap(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
-    const AG_TextMetrics *_Nonnull tm)
+    const AG_TextMetrics *_Nonnull tm, const AG_Font *_Nonnull font,
+    const AG_Color *_Nonnull cBgOrig, const AG_Color *_Nonnull cFgOrig)
 {
-	AG_TextState *ts = AG_TEXT_STATE_CUR();
-	const AG_Font *font = ts->font;
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	const int lineskip = font->lineskip;
 	AG_Surface *Sglyph;
 	const AG_Char *c;
 	AG_Rect rd;
 	int line;
+
+	/* TODO colorize mode */
+	(void)cBgOrig;
+	(void)cFgOrig;
 
 	rd.x = (tm->nLines > 1) ? AG_TextJustifyOffset(tm->w, tm->wLines[0]) : 0;
 	rd.y = 0;
@@ -880,7 +883,8 @@ GetBitmapGlyph(const AG_Font *_Nonnull font, AG_Char c)
 
 static void
 TextRenderDummy(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
-    const AG_TextMetrics *_Nonnull tm)
+    const AG_TextMetrics *_Nonnull tm, const AG_Font *_Nonnull font,
+    const AG_Color *_Nonnull cBgOrig, const AG_Color *_Nonnull cFgOrig)
 {
 	/* no-op */
 }
@@ -902,11 +906,11 @@ AG_TextSize(const char *text, int *w, int *h)
 	}
 #ifdef AG_UNICODE
 	if ((s = AG_ImportUnicode("UTF-8", text, NULL, NULL)) != NULL) {
-		AG_TextSizeNat(s, w,h);
+		AG_TextSizeInternal(s, w,h);
 		free(s);
 	}
 #else
-	AG_TextSizeNat((const Uint8 *)text, w,h);
+	AG_TextSizeInternal((const Uint8 *)text, w,h);
 #endif
 }
 
@@ -915,7 +919,7 @@ AG_TextSize(const char *text, int *w, int *h)
  * may be internal UCS-4 or ASCII).
  */
 void
-AG_TextSizeNat(const AG_Char *s, int *w, int *h)
+AG_TextSizeInternal(const AG_Char *s, int *w, int *h)
 {
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	void (*pfSize[])(const AG_Char *_Nonnull, AG_TextMetrics *_Nonnull, int) = {
@@ -1351,48 +1355,50 @@ AG_TextRenderF(const char *fmt, ...)
 }
 
 /*
- * Allocate a transparent surface and render text on it (string form).
- * The string may contain UTF-8 sequences.
+ * Render text (UTF-8 encoded) onto a newly-allocated surface.
+ * Inherit font, FG and BG colors from current text state.
  */
 AG_Surface *
 AG_TextRender(const char *text)
 {
-	AG_Surface *su;
+	AG_TextState *ts = AG_TEXT_STATE_CUR();
+	AG_Surface *S;
 #ifdef AG_UNICODE
-	AG_Char *s;
+	AG_Char *us;
 
-	if ((s = AG_ImportUnicode("UTF-8", text, NULL, NULL)) == NULL) {
+	if ((us = AG_ImportUnicode("UTF-8", text, NULL, NULL)) == NULL) {
 		AG_FatalError(NULL);
 	}
-	su = AG_TextRenderNat(s);
-	free(s);
+	S = AG_TextRenderInternal(us, ts->font, &ts->colorBG, &ts->color);
+	free(us);
 #else
-	su = AG_TextRenderNat((const Uint8 *)text);
+	S = AG_TextRenderInternal((const Uint8 *)text, ts->font,
+	                          &ts->colorBG, &ts->color);
 #endif
-	return (su);
+	return (S);
 }
 
 /*
- * Render text (in internal AG_Char format which is UCS-4 or ASCII)
- * onto a newly allocated, native-format transparent surface.
+ * Render text in native internal format (AG_Char, which is UCS-4 or ASCII)
+ * onto a newly allocated surface.
  */
 AG_Surface *
-AG_TextRenderNat(const AG_Char *text)
+AG_TextRenderInternal(const AG_Char *text, const AG_Font *font,
+    const AG_Color *cBg, const AG_Color *cFg)
 {
 	void (*pfSize[])(const AG_Char *_Nonnull, AG_TextMetrics *_Nonnull, int) = {
-		TextSizeFT,
-		TextSizeBitmap,
-		TextSizeDummy
+		TextSizeFT,       /* VECTOR */
+		TextSizeBitmap,   /* BITMAP */
+		TextSizeDummy     /* DUMMY */
 	};
 	void (*pfRender[])(const AG_Char *_Nonnull, AG_Surface *_Nonnull,
-	                   const AG_TextMetrics *_Nonnull) = {
-		TextRenderFT,
-		TextRenderBitmap,
-		TextRenderDummy
+	                   const AG_TextMetrics *_Nonnull, const AG_Font *_Nonnull,
+			   const AG_Color *_Nonnull, const AG_Color *_Nonnull) = {
+		TextRenderFT,     /* VECTOR */
+		TextRenderBitmap, /* BITMAP */
+		TextRenderDummy   /* DUMMY */
 	};
-	const AG_TextState *ts = AG_TEXT_STATE_CUR();
-	const AG_Color *colorBG = &ts->colorBG;
-	const enum ag_font_type engine = ts->font->spec.type;
+	const enum ag_font_type engine = font->spec.type;
 	AG_TextMetrics tm;
 	AG_Surface *S;
 
@@ -1405,18 +1411,19 @@ AG_TextRenderNat(const AG_Char *text)
 
 	S = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
 
-	/*
-	 * Fill the background. If fully transparent, set a colorkey to avoid
-	 * further unnecessary blending ops with transparent pixels.
-	 */
-	AG_FillRect(S, NULL, colorBG);
-	if (colorBG->a == AG_TRANSPARENT)
-		AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
-		    AG_MapPixel(&S->format, colorBG));
+	AG_FillRect(S, NULL, cBg);
 
-	/* Finally render the text. */
+	if (cBg->a == AG_TRANSPARENT) {
+		/*
+		 * Prevent unneeded blending against fully transparent pixels
+		 * in subsequent blit operations.
+		 */
+		AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
+		    AG_MapPixel(&S->format, cBg));
+	}
+
 	if (tm.w > 0 && tm.h > 0)
-		pfRender[engine](text, S, &tm);
+		pfRender[engine](text, S, &tm, font, cBg, cFg);
 
 	FreeMetrics(&tm);
 	return (S);
@@ -1429,16 +1436,16 @@ AG_TextRenderNat(const AG_Char *text)
  */
 static void
 TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
-    const AG_TextMetrics *_Nonnull tm)
+    const AG_TextMetrics *_Nonnull tm, const AG_Font *_Nonnull font,
+    const AG_Color *_Nonnull cBgOrig, const AG_Color *_Nonnull cFgOrig)
 {
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
-	const AG_Font *font = ts->font;
 	AG_TTFFont *ttf = font->ttf;
 	AG_TTFGlyph *G;
 	const AG_Char *ch;
 	Uint8 *src, *dst;
-	AG_Color cFG = ts->color;
-	AG_Color cBG = ts->colorBG;
+	AG_Color cBg = *cBgOrig;
+	AG_Color cFg = *cFgOrig;
 	FT_UInt prev_index = 0;
 	const int BytesPerPixel = S->format.BytesPerPixel;
 	const int tabWd = ts->tabWd;
@@ -1468,19 +1475,19 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 		    ch[1] >= 0x40 && ch[1] <= 0x5f && ch[2] != '\0') {
 			AG_TextANSI ansi;
 
-			if (TextParseANSI(ts, &ansi, &ch[1]) == 0) {
+			if (AG_TextParseANSI(ts, &ansi, &ch[1]) == 0) {
 				if (ansi.ctrl == AG_ANSI_CSI_SGR) {
 					switch (ansi.sgr) {
 					case AG_SGR_RESET:
 					case AG_SGR_NO_FG_NO_BG:
-						cFG = ts->color;
-						cBG = ts->colorBG;
+						cFg = *cFgOrig;
+						cBg = *cBgOrig;
 						break;
 					case AG_SGR_FG:
-						cFG = ansi.color;
+						cFg = ansi.color;
 						break;
 					case AG_SGR_BG:
-						cBG = ansi.color;
+						cBg = ansi.color;
 						break;
 					case AG_SGR_BOLD:
 						break;
@@ -1533,17 +1540,17 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 			src = (Uint8 *)(G->pixmap.buffer +
 			                G->pixmap.pitch*y);
 
-			if (cBG.a == AG_TRANSPARENT) {
+			if (cBg.a == AG_TRANSPARENT) {
 				for (x = 0; x < w; x++) {
-					cFG.a = AG_8toH(*src++);
+					cFg.a = AG_8toH(*src++);
 					AG_SurfacePut_At(S, dst,
-					    AG_MapPixel(&S->format, &cFG));
+					    AG_MapPixel(&S->format, &cFg));
 					dst += BytesPerPixel;
 				}
 			} else {
 				for (x = 0; x < w; x++) {
-					cFG.a = AG_8toH(*src++);
-					AG_SurfaceBlend_At(S, dst, &cFG,
+					cFg.a = AG_8toH(*src++);
+					AG_SurfaceBlend_At(S, dst, &cFg,
 					    AG_ALPHA_DST);
 					dst += BytesPerPixel;
 				}
@@ -1558,13 +1565,14 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	if (ttf->style & AG_TTF_STYLE_UNDERLINE)
 		TextRenderFT_Underline(ttf, S, tm->nLines);
 }
+#endif /* HAVE_FREETYPE */
 
 /*
  * Interpret a possible ANSI escape sequence within a native string and write
  * a normalized description into *ansi. Return 0 on success, -1 on failure.
  */
-static int
-TextParseANSI(const AG_TextState *ts, AG_TextANSI *_Nonnull ansi,
+int
+AG_TextParseANSI(const AG_TextState *ts, AG_TextANSI *_Nonnull ansi,
     const AG_Char *_Nonnull s)
 {
 	const AG_Char *c = &s[0];
@@ -1678,10 +1686,6 @@ TextParseANSI(const AG_TextState *ts, AG_TextANSI *_Nonnull ansi,
 					ansi->color.g = (tok = Strsep(&pBuf, ":;")) ? AG_8toH(atoi(tok)) : 0;
 					ansi->color.b = (tok = Strsep(&pBuf, ":;")) ? AG_8toH(atoi(tok)) : 0;
 					ansi->color.a = AG_OPAQUE;
-					AG_Verbose("24-bit color: %d,%d,%d\n",
-					    ansi->color.r,
-					    ansi->color.g,
-					    ansi->color.b);
 					break;
 				case '5':                   /* 8-bit indexed */
 					if (!(tok = Strsep(&pBuf, ":;")) || tok[0] == '\0') {
@@ -1776,6 +1780,7 @@ fail_param:
 	return (-1);
 }
 
+#ifdef HAVE_FREETYPE
 /*
  * Render underline style.
  * Surface must be at least ftFont->underline_height pixels high.
@@ -1817,51 +1822,53 @@ TextRenderFT_Underline(AG_TTFFont *_Nonnull ftFont, AG_Surface *_Nonnull S,
  * Must be called from GUI rendering context.
  */
 AG_Glyph *
-AG_TextRenderGlyph(AG_Driver *drv, AG_Char ch)
+AG_TextRenderGlyph(AG_Driver *drv, const AG_Font *font,
+    const AG_Color *cBg, const AG_Color *cFg, AG_Char ch)
 {
-	AG_Glyph *gl;
-	const AG_TextState *ts = AG_TEXT_STATE_CUR();
+	AG_Glyph *G;
 	const Uint h = (Uint)(ch % AG_GLYPH_NBUCKETS);
 
-	AG_SLIST_FOREACH(gl, &drv->glyphCache[h].glyphs, glyphs) {
-		if (ch == gl->ch &&
-		    ts->font == gl->font &&
-		    AG_ColorCompare(&ts->color, &gl->color) == 0)
+	SLIST_FOREACH(G, &drv->glyphCache[h].glyphs, glyphs) {
+		if (ch == G->ch &&
+		    font == G->font &&
+		    AG_ColorCompare(cBg, &G->colorBG) == 0 &&
+		    AG_ColorCompare(cFg, &G->color) == 0)
 			break;
 	}
-	if (gl == NULL) {
-		gl = TextRenderGlyph_Miss(drv, ch);
-		AG_SLIST_INSERT_HEAD(&drv->glyphCache[h].glyphs, gl, glyphs);
+	if (G == NULL) {
+		G = TextRenderGlyph_Miss(drv, font, cBg, cFg, ch);
+		SLIST_INSERT_HEAD(&drv->glyphCache[h].glyphs, G, glyphs);
 	}
-	return (gl);
+	return (G);
 }
 
 /* Render a glyph following a cache miss; called from AG_TextRenderGlyph(). */
 static AG_Glyph *_Nonnull
-TextRenderGlyph_Miss(AG_Driver *_Nonnull drv, AG_Char ch)
+TextRenderGlyph_Miss(AG_Driver *_Nonnull drv, const AG_Font *_Nonnull font,
+    const AG_Color *_Nonnull cBg, const AG_Color *_Nonnull cFg, AG_Char ch)
 {
-	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Glyph *G;
 	AG_Char s[2];
 
 	G = Malloc(sizeof(AG_Glyph));
-	G->font = ts->font;
-	G->color = ts->color;
+	G->font = (AG_Font *)font;
+	G->colorBG = *cBg;
+	G->color = *cFg;
 	G->ch = ch;
 
 	s[0] = ch;
 	s[1] = '\0';
-	G->su = AG_TextRenderNat(s);
+	G->su = AG_TextRenderInternal(s, font, cBg, cFg);
 
-	switch (ts->font->spec.type) {
+	switch (font->spec.type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
 		{
 			AG_TTFGlyph *Gttf;
 
-			if (AG_TTFFindGlyph(ts->font->ttf, ch,
+			if (AG_TTFFindGlyph(font->ttf, ch,
 			    TTF_CACHED_METRICS | TTF_CACHED_BITMAP) == 0) {
-				Gttf = ((AG_TTFFont *)ts->font->ttf)->current;
+				Gttf = ((AG_TTFFont *)font->ttf)->current;
 				G->advance = Gttf->advance;
 			} else {
 				G->advance = G->su->w;

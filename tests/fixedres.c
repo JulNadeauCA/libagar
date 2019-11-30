@@ -48,7 +48,7 @@ TestGUI(void *obj, AG_Window *win)
 	 * We can always embed a normal AG_Box and items inside will
 	 * be packed normally.
 	 */
-	box = AG_BoxNewVert(NULL, AG_BOX_BORDER);
+	box = AG_BoxNewVert(NULL, 0);
 	AG_SetStyle(box, "font-family", "Serif");
 	AG_SetStyle(box, "font-size", "90%");
 	AG_SetStyle(box, "line-color", "rgb(150,150,0)");
@@ -58,7 +58,7 @@ TestGUI(void *obj, AG_Window *win)
 		int i;
 
 		AG_LabelNewS(box, 0, "I am in a normal box");
-		hBox = AG_BoxNewHoriz(box, AG_BOX_HFILL | AG_BOX_BORDER);
+		hBox = AG_BoxNewHoriz(box, AG_BOX_HFILL);
 		for (i = 0; i < 5; i++)
 			AG_ButtonNew(hBox, 0, "%c", '1'+i);
 	}
