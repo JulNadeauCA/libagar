@@ -221,29 +221,29 @@ static AG_Surface *_Nonnull GetBitmapGlyph(const AG_Font *_Nonnull, AG_Char);
 
 /* Load an individual glyph from a bitmap font file. */
 static void
-LoadBitmapGlyph(AG_Surface *_Nonnull su, const char *_Nonnull lbl,
+LoadBitmapGlyph(AG_Surface *_Nonnull S, const char *_Nonnull lbl,
     void *_Nonnull pFont)
 {
 	AG_Font *font = pFont;
 
-	if (font->nglyphs == 0) {
-		Strlcpy(font->bspec, lbl, sizeof(font->bspec));
+	if (font->data.bmp.nGlyphs == 0) {   /* Expect "MAP:x-y" label first */
+		Strlcpy(font->data.bmp.spec, lbl, AG_FONT_BITMAP_SPEC_MAX);
 	}
-	font->bglyphs = Realloc(font->bglyphs,
-	                        (font->nglyphs+1)*sizeof(AG_Surface *));
-	font->bglyphs[font->nglyphs++] = su;
+	font->data.bmp.glyphs = Realloc(font->data.bmp.glyphs,
+	    (font->data.bmp.nGlyphs + 1) * sizeof(AG_Surface *));
+	font->data.bmp.glyphs[font->data.bmp.nGlyphs++] = S;
 }
 
 /* Load a bitmap font. */
 static int
-OpenBitmapFont(AG_Font *_Nonnull font)
+BitmapOpenFont(AG_Font *_Nonnull font, const char *path)
 {
 	char *s, *msig, *c0, *c1;
 	AG_DataSource *ds;
 
 	switch (font->spec.sourceType) {
 	case AG_FONT_SOURCE_FILE:
-		ds = AG_OpenFile(font->spec.source.file, "rb");
+		ds = AG_OpenFile(path, "rb");
 		break;
 	case AG_FONT_SOURCE_MEMORY:
 		ds = AG_OpenConstCore(font->spec.source.mem.data,
@@ -256,43 +256,51 @@ OpenBitmapFont(AG_Font *_Nonnull font)
 	if (ds == NULL)
 		return (-1);
 
-	/* Allocate the glyph array. */
-	if ((font->bglyphs = TryMalloc(sizeof(AG_Surface *))) == NULL) {
+	if ((font->data.bmp.glyphs = TryMalloc(sizeof(AG_Surface *))) == NULL) {
 		AG_CloseDataSource(ds);
 		return (-1);
 	}
-	font->nglyphs = 0;
+	font->data.bmp.nGlyphs = 0;
+	font->data.bmp.spec = Malloc(AG_FONT_BITMAP_SPEC_MAX);
+	font->data.bmp.spec[0] = '\0';
 
 	/* Load the glyphs from the XCF layers. */
 	if (AG_XCFLoad(ds, 0, LoadBitmapGlyph, font) == -1) {
 		AG_CloseDataSource(ds);
-		return (-1);
+		goto fail;
 	}
 	AG_CloseDataSource(ds);
 
 	/* Get the range of characters from the "MAP:x-y" string. */
-	s = font->bspec;
+	s = font->data.bmp.spec;
 	msig = AG_Strsep(&s, ":");
 	c0 = AG_Strsep(&s, "-");
 	c1 = AG_Strsep(&s, "-");
-	if (font->nglyphs < 1 ||
+	if (font->data.bmp.nGlyphs < 1 ||
 	    msig == NULL || strcmp(msig, "MAP") != 0 ||
 	    c0 == NULL || c1 == NULL ||
 	    c0[0] == '\0' || c1[0] == '\0') {
-		AG_SetErrorS("XCF is missing the \"MAP:x-y\" string");
-		return (-1);
+		AG_SetErrorS("XCF is missing \"MAP:x-y\" label");
+		goto fail;
 	}
-	font->c0 = (AG_Char)strtol(c0, NULL, 10);
-	font->c1 = (AG_Char)strtol(c1, NULL, 10);
-	if (font->nglyphs < (font->c1 - font->c0)) {
+	font->data.bmp.c0 = (AG_Char)strtol(c0, NULL, 10);
+	font->data.bmp.c1 = (AG_Char)strtol(c1, NULL, 10);
+	if (font->data.bmp.nGlyphs < (font->data.bmp.c1 - font->data.bmp.c0)) {
 		AG_SetErrorS("XCF has inconsistent bitmap fontspec");
-		return (-1);
+		goto fail;
 	}
-	font->height = font->bglyphs[0]->h;
+	font->height = font->data.bmp.glyphs[0]->h;
 	font->ascent = font->height;
 	font->descent = 0;
 	font->lineskip = font->height;
+
+	free(font->data.bmp.spec);
+	font->data.bmp.spec = NULL;
 	return (0);
+fail:
+	free(font->data.bmp.spec);
+	font->data.bmp.spec = NULL;
+	return (-1);
 }
 
 /*
@@ -328,6 +336,15 @@ AG_PushTextState(void)
 #ifdef AG_DEBUG
 	snprintf(ts->name, sizeof(ts->name), "TS%d", agTextStateCur);
 #endif
+}
+
+/* Create a copy of the current text state in dst. */
+void
+AG_CopyTextState(AG_TextState *dst)
+{
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
+
+	memcpy(dst, ts, sizeof(AG_TextState));
 }
 
 /*
@@ -417,6 +434,7 @@ AG_TextFontPct(int pct)
 AG_Font *
 AG_FetchFont(const char *face, float fontSize, Uint flags)
 {
+	char fontPath[AG_PATHNAME_MAX];
 	char name[AG_OBJECT_NAME_MAX];
 	AG_Config *cfg = AG_ConfigObject();
 	AG_StaticFont *builtin = NULL;
@@ -485,11 +503,12 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 
 	spec->type = AG_FONT_VECTOR;
 	spec->sourceType = AG_FONT_SOURCE_FILE;
+	fontPath[0] = '\0';
 	isInFontPath = 0;
 
 	if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, name,	/* Exact file match */
-	    spec->source.file, sizeof(spec->source.file)) == 0) {
-		const char *pExt = strrchr(spec->source.file, '.');
+	    fontPath, sizeof(fontPath)) == 0) {
+		const char *pExt = strrchr(fontPath, '.');
 
 		/*
 		 * Non-FreeType bitmap fonts must be referred to by their full
@@ -509,7 +528,7 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 			Strlcpy(path, name, sizeof(path));
 			Strlcat(path, *ffe, sizeof(path));
 			if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
-			    spec->source.file, sizeof(spec->source.file)) == 0) {
+			    fontPath, sizeof(fontPath)) == 0) {
 				isInFontPath = 1;
 				break;
 			}
@@ -551,7 +570,7 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 			AG_SetErrorS("Fontconfig FC_FILE missing");
 			goto fail;
 		}
-		Strlcpy(spec->source.file, (const char *)filename, sizeof(spec->source.file));
+		Strlcpy(fontPath, (const char *)filename, sizeof(fontPath));
 	
 		if (FcPatternGetInteger(fpat, FC_INDEX, 0, &spec->index)  != FcResultMatch) {
 			AG_SetErrorS("Fontconfig FC_INDEX missing");
@@ -582,13 +601,13 @@ init_font:
 			AG_SetErrorS("FreeType is not initialized");
 			goto fail;
 		}
-		if (AG_TTFOpenFont(font) == -1) {
+		if (AG_TTFOpenFont(font, fontPath) == -1) {
 			goto fail;
 		}
 		break;
 #endif
 	case AG_FONT_BITMAP:
-		if (OpenBitmapFont(font) == -1) {
+		if (BitmapOpenFont(font, fontPath) == -1) {
 			goto fail;
 		}
 		break;
@@ -712,7 +731,7 @@ TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extende
 {
 	AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Font *font = ts->font;
-	AG_TTFFont *ftFont = font->ttf;
+	AG_TTFFont *ftFont = font->data.vec.ttf;
 	AG_TTFGlyph *G;
 	const AG_Char *ch;
 	const int lineskip = font->lineskip;
@@ -812,6 +831,15 @@ TextSizeBitmap(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 			tm->w += tabWd;
 			continue;
 		}
+		if (*c == 0x1b &&
+		    c[1] >= 0x40 && c[1] <= 0x5f && c[2] != '\0') {
+			AG_TextANSI ansi;
+			
+			if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0) {
+				c += ansi.len;
+				continue;
+			}
+		}
 		Sglyph = GetBitmapGlyph(ts->font, *c);
 		wLine += Sglyph->w;
 		tm->w += Sglyph->w;
@@ -857,15 +885,27 @@ TextRenderBitmap(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 			rd.x += ts->tabWd;
 			continue;
 		}
+		if (*c == 0x1b &&
+		    c[1] >= 0x40 && c[1] <= 0x5f && c[2] != '\0') {
+			AG_TextANSI ansi;
+			
+			if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0) {
+				c += ansi.len;
+				continue;
+			}
+		}
 		Sglyph = GetBitmapGlyph(font, *c);
 		if (*c != ' ') {
 			AG_SurfaceBlit(Sglyph, NULL, S, rd.x, rd.y);
 		}
 		rd.x += Sglyph->w;
 	}
+
 	AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
 	    AG_MapPixel_RGBA(&S->format, 0,0,0,0));
-	AG_SurfaceSetAlpha(S, AG_SURFACE_ALPHA, font->bglyphs[0]->alpha);
+
+	AG_SurfaceSetAlpha(S, AG_SURFACE_ALPHA,
+	    font->data.bmp.glyphs[0]->alpha);
 }
 
 static AG_Surface *_Nonnull
@@ -875,10 +915,10 @@ GetBitmapGlyph(const AG_Font *_Nonnull font, AG_Char c)
 	    (isalpha((int)c) && islower((int)c))) {
 		c = (AG_Char)toupper((int)c);
 	}
-	if (c < font->c0 || c > font->c1) {
-		return (AG_TEXT_STATE_CUR()->font->bglyphs[0]);
+	if (c < font->data.bmp.c0 || c > font->data.bmp.c1) {
+		return (AG_TEXT_STATE_CUR()->font->data.bmp.glyphs[0]);
 	}
-	return (font->bglyphs[c - font->c0 + 1]);
+	return (font->data.bmp.glyphs[c - font->data.bmp.c0 + 1]);
 }
 
 static void
@@ -923,9 +963,9 @@ AG_TextSizeInternal(const AG_Char *s, int *w, int *h)
 {
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	void (*pfSize[])(const AG_Char *_Nonnull, AG_TextMetrics *_Nonnull, int) = {
-		TextSizeFT,
-		TextSizeBitmap,
-		TextSizeDummy
+		TextSizeFT,     /* VECTOR */
+		TextSizeBitmap, /* BITMAP */
+		TextSizeDummy   /* DUMMY */
 	};
 	AG_TextMetrics tm;
 
@@ -957,12 +997,12 @@ AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
 	AG_Char *s;
 
 	if ((s = AG_ImportUnicode("UTF-8", text, NULL, NULL)) != NULL) {
-		AG_TextSizeMultiNat(s, w, h, wLines, nLines);
+		AG_TextSizeMultiInternal(s, w, h, wLines, nLines);
 		free(s);
 		return;
 	}
 #else
-	AG_TextSizeMultiNat((const Uint8 *)text, w, h, wLines, nLines);
+	AG_TextSizeMultiInternal((const Uint8 *)text, w, h, wLines, nLines);
 #endif
 }
 
@@ -971,14 +1011,14 @@ AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
  * be UCS-4 or ASCII). Return a line count and an array of line widths.
  */
 void
-AG_TextSizeMultiNat(const AG_Char *s, int *w, int *h, Uint **wLines,
+AG_TextSizeMultiInternal(const AG_Char *s, int *w, int *h, Uint **wLines,
     Uint *nLines)
 {
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	void (*pfSize[])(const AG_Char *_Nonnull, AG_TextMetrics *_Nonnull, int) = {
-		TextSizeFT,
-		TextSizeBitmap,
-		TextSizeDummy
+		TextSizeFT,     /* VECTOR */
+		TextSizeBitmap, /* BITMAP */
+		TextSizeDummy   /* DUMMY */
 	};
 	AG_TextMetrics tm;
 	const enum ag_font_type engine = ts->font->spec.type;
@@ -1440,7 +1480,7 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
     const AG_Color *_Nonnull cBgOrig, const AG_Color *_Nonnull cFgOrig)
 {
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
-	AG_TTFFont *ttf = font->ttf;
+	AG_TTFFont *ttf = font->data.vec.ttf;
 	AG_TTFGlyph *G;
 	const AG_Char *ch;
 	Uint8 *src, *dst;
@@ -1866,9 +1906,9 @@ TextRenderGlyph_Miss(AG_Driver *_Nonnull drv, const AG_Font *_Nonnull font,
 		{
 			AG_TTFGlyph *Gttf;
 
-			if (AG_TTFFindGlyph(font->ttf, ch,
+			if (AG_TTFFindGlyph(font->data.vec.ttf, ch,
 			    TTF_CACHED_METRICS | TTF_CACHED_BITMAP) == 0) {
-				Gttf = ((AG_TTFFont *)font->ttf)->current;
+				Gttf = ((AG_TTFFont *)font->data.vec.ttf)->current;
 				G->advance = Gttf->advance;
 			} else {
 				G->advance = G->su->w;
@@ -1997,12 +2037,14 @@ AG_SetDefaultFont(AG_Font *font)
 }
 
 /*
- * Parse a command-line font specification and set the default font.
- * The format is <face>,<size>,<flags>. Acceptable flags include:
- * 
- *	b: Bold
- *	i: Italic / Oblique
- *	U: Force uppercase
+ * Set the default font from a string "<Face>,<Size>,<Flags>".
+ * Size is in points (integer). Flags may include:
+ *
+ *   'b'  =>  bold
+ *   'i'  =>  italic
+ *   'U'  =>  uppercase
+ *   'I'  =>  upright italic
+ *   's'  =>  semibold
  */
 void
 AG_TextParseFontSpec(const char *fontspec)
@@ -2025,46 +2067,37 @@ AG_TextParseFontSpec(const char *fontspec)
 
 		for (c = &s[0]; *c != '\0'; c++) {
 			switch (*c) {
-			case 'b': flags |= AG_FONT_BOLD;	break;
-			case 'i': flags |= AG_FONT_ITALIC;	break;
-			case 'U': flags |= AG_FONT_UPPERCASE;	break;
+			case 'b': flags |= AG_FONT_BOLD;           break;
+			case 'i': flags |= AG_FONT_ITALIC;         break;
+			case 'U': flags |= AG_FONT_UPPERCASE;      break;
+			case 'I': flags |= AG_FONT_UPRIGHT_ITALIC; break;
+			case 's': flags |= AG_FONT_SEMIBOLD;       break;
 			}
 		}
 		AG_SetUint(cfg, "font.flags", flags);
 	}
 }
 
-/* AG_Font init() method */
+/* Initialize an AG_Font object. */
 static void
 AG_Font_Init(void *_Nonnull obj)
 {
 	AG_Font *font = obj;
-	AG_FontSpec *spec = &font->spec;
 
-	spec->size = 0.0;
-	spec->index = 0;
-	spec->type = AG_FONT_VECTOR;
-	spec->sourceType = AG_FONT_SOURCE_FILE;
-	spec->matrix.xx = 1.0;
-	spec->matrix.xy = 0.0;
-	spec->matrix.yx = 0.0;
-	spec->matrix.yy = 1.0;
-	spec->source.file[0] = '\0';
+	memset(&font->spec, 0, sizeof(AG_FontSpec) + /* spec */
+	                       sizeof(Uint) +        /* flags */
+	                       sizeof(int) +         /* height */
+	                       sizeof(int) +         /* ascent */
+	                       sizeof(int) +         /* descent */
+	                       sizeof(int) +         /* lineskip */
+	                       sizeof(Uint));        /* nRefs */
 
-	font->flags = 0;
-	font->height = 0;
-	font->ascent = 0;
-	font->descent = 0;
-	font->lineskip = 0;
-	font->bspec[0] = '\0';
-	font->ttf = NULL;
-
-	font->c0 = 0;
-	font->c1 = 0;
-	font->nRefs = 0;
+	/* font->spec.type = AG_FONT_VECTOR; */
+	/* font->spec.source = AG_FONT_SOURCE_FILE; */
+	font->spec.matrix.xx = 1.0;
+	font->spec.matrix.yy = 1.0;
 }
 
-/* AG_Font destroy() method */
 static void
 AG_Font_Destroy(void *_Nonnull obj)
 {
@@ -2080,10 +2113,10 @@ AG_Font_Destroy(void *_Nonnull obj)
 		{
 			int i;
 
-			for (i = 0; i < font->nglyphs; i++) {
-				AG_SurfaceFree(font->bglyphs[i]);
+			for (i = 0; i < font->data.bmp.nGlyphs; i++) {
+				AG_SurfaceFree(font->data.bmp.glyphs[i]);
 			}
-			Free(font->bglyphs);
+			free(font->data.bmp.glyphs);
 		}
 		break;
 	case AG_FONT_DUMMY:

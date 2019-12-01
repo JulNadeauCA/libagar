@@ -757,7 +757,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 #ifdef HAVE_FREETYPE
 			case AG_FONT_VECTOR:
 				{
-					AG_TTFFont *ttf = font->ttf;
+					AG_TTFFont *ttf = font->data.vec.ttf;
 					AG_TTFGlyph *Gttf;
 
 					if (AG_TTFFindGlyph(ttf, ch,
@@ -832,7 +832,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 #ifdef HAVE_FREETYPE
 		case AG_FONT_VECTOR:
 			{
-				AG_TTFFont *ttf = font->ttf;
+				AG_TTFFont *ttf = font->data.vec.ttf;
 				AG_TTFGlyph *Gttf;
 
 				if (AG_TTFFindGlyph(ttf, ch,
@@ -1574,6 +1574,9 @@ PopupMenu(AG_Editable *_Nonnull ed)
 	if ((pm = AG_PopupNew(ed)) == NULL) {
 		return (NULL);
 	}
+
+	AG_MenuSeparator(pm->root);
+
 	mi = AG_MenuAction(pm->root, _("Cut"), NULL, MenuCut, "%p", ed);
 	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCutActive, "%p", ed);
 

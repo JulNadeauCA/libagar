@@ -63,7 +63,7 @@ struct ag_font;
 
 int  AG_TTFInit(void);
 void AG_TTFDestroy(void);
-int  AG_TTFOpenFont(struct ag_font *_Nonnull);
+int  AG_TTFOpenFont(struct ag_font *_Nonnull, const char *_Nonnull);
 void AG_TTFCloseFont(struct ag_font *_Nonnull);
 int  AG_TTFFindGlyph(AG_TTFFont *_Nonnull, AG_Char, int);
 __END_DECLS

@@ -100,7 +100,7 @@ FlushCache(AG_TTFFont *_Nonnull ttf)
 
 /* Load a vector font (font->spec should be initialized). */
 int
-AG_TTFOpenFont(AG_Font *font)
+AG_TTFOpenFont(AG_Font *font, const char *path)
 {
 	AG_FontSpec *spec = &font->spec;
 	AG_TTFFont *ttf;
@@ -115,19 +115,19 @@ AG_TTFOpenFont(AG_Font *font)
 
 	switch (spec->sourceType) {
 	case AG_FONT_SOURCE_FILE:
-		rv = FT_New_Face(ftLibrary, spec->source.file, spec->index,
-		    &ttf->face);
+		rv = FT_New_Face(ftLibrary, path, spec->index, &ttf->face);
 		break;
 	case AG_FONT_SOURCE_MEMORY:
 		rv = FT_New_Memory_Face(ftLibrary, spec->source.mem.data,
-		    spec->source.mem.size, spec->index, &ttf->face);
+		                        spec->source.mem.size, spec->index,
+		                        &ttf->face);
 		break;
 	default:
 		rv = 1;
 		break;
 	}
 	if (rv) {
-		AG_SetError("FreeType error 0x%x", rv);
+		AG_SetError("FT_New_Face failed: %x", rv);
 		goto fail;
 	}
 	face = ttf->face;
@@ -148,7 +148,7 @@ AG_TTFOpenFont(AG_Font *font)
 	}
 	if (FT_IS_SCALABLE(face)) {
 		if ((rv = FT_Set_Char_Size(face, 0, spec->size*64, 0, 0)) != 0) {
-			AG_SetError("FreeType FT_Set_Char_Size failed (0x%x)", rv);
+			AG_SetError("FT_Set_Char_Size failed: %x", rv);
 			goto fail_face;
 		}
 		scale = face->size->metrics.y_scale;
@@ -167,18 +167,19 @@ AG_TTFOpenFont(AG_Font *font)
 			spec->size = (double)fixedSize;
 		}
 		ttf->font_size_family = (int)spec->size;
+
 		(void)FT_Set_Pixel_Sizes(face,
 		    face->available_sizes[fixedSize].height,
 		    face->available_sizes[fixedSize].width);
 		/*
 		 * With non-scalable fonts, Freetype2 likes to fill many of the
-		 * font metrics with the value of 0. The size of the
-		 * non-scalable fonts must be determined differently or
-		 * sometimes cannot be determined.
+		 * font metrics with 0. The size of the non-scalable fonts must
+		 * be determined differently or sometimes cannot be determined.
 		 */
-		/* XXX arbitrary offset */
 	  	ttf->ascent = face->available_sizes[fixedSize].height - 4;
-		if (ttf->ascent < 0) { ttf->ascent = 0; }
+		if (ttf->ascent < 0) {
+			ttf->ascent = 0;
+		}
 	  	ttf->descent = 0;
 	  	ttf->height = face->available_sizes[fixedSize].height;
 	  	ttf->lineskip = ttf->height;
@@ -194,9 +195,9 @@ AG_TTFOpenFont(AG_Font *font)
 
 	/* Apply the standard style modifiers */
 	ttf->style = 0;
-	if (font->flags & AG_FONT_BOLD) { ttf->style |= AG_TTF_STYLE_BOLD; }
-	if (font->flags & AG_FONT_ITALIC) { ttf->style |= AG_TTF_STYLE_ITALIC; }
-	if (font->flags & AG_FONT_UNDERLINE) { ttf->style |= AG_TTF_STYLE_UNDERLINE;}
+	if (font->flags & AG_FONT_BOLD)      { ttf->style |= AG_TTF_STYLE_BOLD; }
+	if (font->flags & AG_FONT_ITALIC)    { ttf->style |= AG_TTF_STYLE_ITALIC; }
+	if (font->flags & AG_FONT_UNDERLINE) { ttf->style |= AG_TTF_STYLE_UNDERLINE; }
 	
 	/* The Agar font should inherit the metrics. */
 	font->height = ttf->height;
@@ -204,7 +205,7 @@ AG_TTFOpenFont(AG_Font *font)
 	font->descent = ttf->descent;
 	font->lineskip = ttf->lineskip;
 
-	font->ttf = ttf;
+	font->data.vec.ttf = ttf;
 	return (0);
 fail_face:
 	FT_Done_Face(ttf->face);
@@ -216,7 +217,7 @@ fail:
 void
 AG_TTFCloseFont(AG_Font *font)
 {
-	AG_TTFFont *ttf = (AG_TTFFont *)font->ttf;
+	AG_TTFFont *ttf = (AG_TTFFont *)font->data.vec.ttf;
 
 	if (ttf == NULL) {
 		return;
@@ -224,7 +225,7 @@ AG_TTFCloseFont(AG_Font *font)
 	FlushCache(ttf);
 	FT_Done_Face(ttf->face);
 	free(ttf);
-	font->ttf = NULL;
+	font->data.vec.ttf = NULL;
 }
 
 /* Process the bold style. */

@@ -82,11 +82,7 @@ package Agar.Surface is
   -- Native Color in HSVA --
   --------------------------
   type AG_Color_HSV is record
-#if HAVE_FLOAT
     H,S,V,A : C.c_float;
-#else
-    H,S,V,A : Interfaces.Unsigned_32;
-#end if;
   end record
     with Convention => C;
   
@@ -148,9 +144,7 @@ package Agar.Surface is
   type AG_Clip_Equations is array (1 .. 16) of aliased C.double;
   type AG_Clip_Rect is record
     R    : AG_Rect;
-#if HAVE_FLOAT
     Eqns : AG_Clip_Equations;
-#end if;
   end record
     with Convention => C;
 
@@ -161,11 +155,7 @@ package Agar.Surface is
   -- Texture Coordinate (GL-optional) --
   --------------------------------------
   type AG_Texcoord is record
-#if HAVE_FLOAT
     X,Y,W,H : C.C_float;
-#else
-    X,Y,W,H : C.int;
-#end if;  
   end record
     with Convention => C;
 

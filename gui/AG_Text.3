@@ -65,6 +65,9 @@ flag set.
 .Fn AG_PushTextState "void"
 .Pp
 .Ft void
+.Fn AG_CopyTextState "AG_TextState *dst"
+.Pp
+.Ft void
 .Fn AG_PopTextState "void"
 .Pp
 .Ft "AG_TextState *"
@@ -121,7 +124,10 @@ increments the attribute stack pointer and creates a copy of the previous
 state in the current state.
 .Fn AG_PopTextState
 decrements the stack pointer, discarding the current state.
-This stack can hold up to
+.Fn AG_CopyTextState
+copies the current text state to
+.Fa dst .
+The text state stack can hold up to
 .Dv AG_TEXT_STATES_MAX
 elements.
 .Pp
@@ -129,6 +135,7 @@ The
 .Fn AG_TEXT_STATE_CUR
 macro expands to an expression returning the pointer to the current
 .Ft AG_TextState .
+In debug mode, an additional validity test is performed.
 .Pp
 The
 .Fn AG_TextFont

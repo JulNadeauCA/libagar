@@ -225,13 +225,12 @@ typedef struct ag_font_spec {
 	int index;				/* Font index (FC_INDEX) */
 	enum ag_font_type type;			/* Font engine type */
 	enum ag_font_spec_source sourceType;	/* Source type */
-	Uint32 _pad;
 	struct {				/* Transformation matrix */
 		double xx, xy;
 		double yx, yy;
 	} matrix;
 	union {
-		char file[AG_PATHNAME_MAX];          /* Source font file */
+		/* char *file; */
 		struct {
 			const Uint8 *_Nonnull data;  /* Source memory region */
 			AG_Size size;                /* Size in bytes */
@@ -247,9 +246,6 @@ typedef struct ag_glyph {
 	struct ag_font *_Nonnull font;  /* Font face */
 	AG_Color colorBG;               /* Background color */
 	AG_Color color;                 /* Foreground color */
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad1;
-#endif
 	AG_Surface *_Nonnull su;         /* Rendered surface */
 	AG_Char ch;                      /* Native character */
 	int advance;                     /* Advance (px) */
@@ -261,36 +257,42 @@ typedef struct ag_glyph {
 
 /* Loaded font */
 typedef struct ag_font {
-	struct ag_object obj;
-	AG_FontSpec spec;		/* Input font specification */
+	struct ag_object obj;           /* AG_Object -> AG_Font */
+	AG_FontSpec spec;               /* Input specification */
 	Uint flags;
-#define AG_FONT_BOLD           0x01	/* Bold weight (or SW.Bold fallback) */
-#define AG_FONT_ITALIC         0x02	/* Italic style (or SW.Italic fallback) */
-#define AG_FONT_UNDERLINE      0x04	/* Underlined */
-#define AG_FONT_UPPERCASE      0x08	/* Force uppercase */
-#define AG_FONT_SEMIBOLD       0x10	/* Semibold (not SW) */
-#define AG_FONT_UPRIGHT_ITALIC 0x20	/* Upright italic (not SW) */
-#define AG_FONT_SEMICONDENSED  0x40	/* Semi-condensed (not SW) */
-#define AG_FONT_CONDENSED      0x80	/* Condensed (not SW) */
+#define AG_FONT_BOLD           0x01     /* Bold weight (or SW fallback) */
+#define AG_FONT_ITALIC         0x02     /* Italic style (or SW fallback) */
+#define AG_FONT_UNDERLINE      0x04     /* Underlined */
+#define AG_FONT_UPPERCASE      0x08     /* Force uppercase */
+#define AG_FONT_SEMIBOLD       0x10     /* Semibold (not SW) */
+#define AG_FONT_UPRIGHT_ITALIC 0x20     /* Upright italic (not SW) */
+#define AG_FONT_SEMICONDENSED  0x40     /* Semi-condensed (not SW) */
+#define AG_FONT_CONDENSED      0x80     /* Condensed (not SW) */
 #define AG_FONT_BOLDS          (AG_FONT_SEMIBOLD | AG_FONT_BOLD)
 #define AG_FONT_ITALICS        (AG_FONT_ITALIC | AG_FONT_UPRIGHT_ITALIC)
 #define AG_FONT_WIDTH_VARIANTS (AG_FONT_SEMICONDENSED | AG_FONT_CONDENSED)
 
-	int height;			/* Body size in pixels */
-	int ascent;			/* Ascent (relative to baseline) */
-	int descent;			/* Descent (relative to baseline) */
-	int lineskip;			/* Multiline y-increment */
-	char bspec[28];			/* Bitmap font specification */
-	void *_Nonnull ttf;		/* AG_TTFFont object */
-
-	AG_Surface *_Nullable *_Nullable bglyphs; /* Bitmap glyph surfaces */
-	Uint nglyphs;                             /* Bitmap glyph count */
-	AG_Char c0, c1;			          /* Bitmap font spec */
-
-	Uint nRefs;			/* Reference count */
-
-	AG_TAILQ_ENTRY(ag_font) fonts;
+	int height;                        /* Body size in pixels */
+	int ascent;                        /* Ascent (relative to baseline) */
+	int descent;                       /* Descent (relative to baseline) */
+	int lineskip;                      /* Multiline y-increment */
+	Uint nRefs;                        /* Global reference count */
+	AG_TAILQ_ENTRY(ag_font) fonts;     /* Entry in global fonts list */
+	union {
+		struct {
+			void *_Nonnull ttf;      /* TTF object (AG_TTFFont) */
+		} vec;
+		struct {
+			char *spec;                               /* "MAP:x-y" label */
+			AG_Surface *_Nullable *_Nullable glyphs;  /* Glyph surfaces */
+			Uint                            nGlyphs;  /* Glyph count */
+			AG_Char c0, c1;                           /* Character mapping (range) */
+			Uint32 _pad;
+		} bmp;
+	} data;
 } AG_Font;
+
+#define AG_FONT_BITMAP_SPEC_MAX 28
 
 /*
  * An element of the rendering attribute stack.
@@ -360,6 +362,7 @@ extern const char *agFontTypeNames[];
 extern const char *agTextMsgTitles[];
 
 void               AG_PushTextState(void);
+void               AG_CopyTextState(AG_TextState *);
 void               AG_TextColorANSI(enum ag_ansi_color, const AG_Color *_Nonnull);
 AG_Font *_Nullable AG_TextFontLookup(const char *_Nullable, float, Uint);
 AG_Font *_Nullable AG_TextFontPts(float);

@@ -23,11 +23,19 @@ package Agar.Text is
   use type C.int;
   use type C.unsigned;
 
-  TEXT_STATES_MAX : constant C.unsigned := $AG_TEXT_STATES_MAX;
-  FONT_BOLD       : constant C.unsigned := 16#01#;
-  FONT_ITALIC     : constant C.unsigned := 16#02#;
-  FONT_UNDERLINE  : constant C.unsigned := 16#04#;
-  FONT_UPPERCASE  : constant C.unsigned := 16#08#;
+  TEXT_STATES_MAX     : constant C.unsigned := $AG_TEXT_STATES_MAX;
+
+  FONT_BOLD           : constant C.unsigned := 16#01#;
+  FONT_ITALIC         : constant C.unsigned := 16#02#;
+  FONT_UNDERLINE      : constant C.unsigned := 16#04#;
+  FONT_UPPERCASE      : constant C.unsigned := 16#08#;
+  FONT_SEMIBOLD       : constant C.unsigned := 16#10#;
+  FONT_UPRIGHT_ITALIC : constant C.unsigned := 16#20#;
+  FONT_SEMICONDENSED  : constant C.unsigned := 16#40#;
+  FONT_CONDENSED      : constant C.unsigned := 16#80#;
+  FONT_BOLDS          : constant C.unsigned := 16#11#; -- (BOLD | SEMIBOLD) --
+  FONT_ITALICS        : constant C.unsigned := 16#22#; -- (ITALIC | UPRIGHT_ITALIC) --
+  FONT_WIDTH_VARIANTS : constant C.unsigned := 16#c0#; -- (CONDENSED | SEMICONDENSED) --
 
   -----------------------------------
   -- Horizontal Justification Mode --
@@ -95,19 +103,9 @@ package Agar.Text is
   ----------------------------
   -- Size of font in points --
   ----------------------------
-#if HAVE_FLOAT
-  subtype AG_Font_Points is C.double;
-#else
-  subtype AG_Font_Points is C.int;
-#end if;
+  subtype AG_Font_Points is C.C_float;
   type Font_Points_Access is access all AG_Font_Points with Convention => C;
 
-  ----------------------
-  -- Filename of font --
-  ----------------------
-  type AG_Font_Source_Filename is array (1 .. $AG_FILENAME_MAX) of
-    aliased C.char with Convention => C;
- 
   -----------------------------
   -- Agar font specification --
   -----------------------------
@@ -118,21 +116,20 @@ package Agar.Text is
     Index       : C.int;                       -- Font index (FC_INDEX)
     Font_Type   : AG_Font_Type;                -- Font engine
     Font_Source : AG_Font_Spec_Source;         -- Source type
-    C_Pad1      : Interfaces.Unsigned_32;
-#if HAVE_FLOAT
+
     Matrix_XX   : C.double;       -- 1 --      -- Transformation matrix
     Matrix_XY   : C.double;       -- 0 --
     Matrix_YX   : C.double;       -- 0 --
     Matrix_YY   : C.double;       -- 1 --
-#end if;
+
     case Spec_Source is
     when FONT_FILE =>
-      File_Source   : AG_Font_Source_Filename;   -- Source font file
+      null;
     when FONT_IN_MEMORY =>
       Memory_Source : access Unsigned_8;         -- Source memory region
       Memory_Size   : AG_Size;                   -- Size in bytes
 #if AG_MODEL = AG_MEDIUM
-      C_Pad2        : Interfaces.Unsigned_32;
+      C_Pad1        : Interfaces.Unsigned_32;
 #end if;
     end case;
   end record
@@ -140,6 +137,7 @@ package Agar.Text is
   pragma Unchecked_Union (AG_Font_Spec);
 
   type Font_Spec_Access is access all AG_Font_Spec with Convention => C;
+  subtype Font_Spec_not_null_Access is not null Font_Spec_Access;
 
   ------------------
   -- An Agar Font --
@@ -152,28 +150,32 @@ package Agar.Text is
     Prev : access Font_Access;
   end record
     with Convention => C;
-  type AG_Font_Bitmap_Spec is array (1 .. 28) of aliased C.char
-    with Convention => C;
 
-  type AG_Font is limited record
-    Super         : aliased Agar.Object.Object;  -- [Font]
-    Spec          : aliased AG_Font_Spec;        -- Font specification
-    Flags         : C.unsigned;                  -- Options
-    Height        : C.int;                       -- Height in pixels
-    Ascent        : C.int;                       -- Ascent relative to baseline
-    Descent       : C.int;                       -- Descent relative to baseline
-    Line_Skip     : C.int;                       -- Multiline Y-increment
-
-    Bitmap_Spec        : aliased AG_Font_Bitmap_Spec; -- Bitmap font spec
-    TTF                : System.Address;              -- TODO TTF interface
-    Bitmap_Glyphs      : System.Address;              -- TODO Bitmap glyph array
-    Bitmap_Glyph_Count : C.unsigned;                  -- Bitmap glyph count
-    Char_0, Char_1     : AG_Char;                     -- Bitmap font spec
-
-    Reference_Count    : C.unsigned;             -- Reference count for cache
-    Entry_in_Cache     : AG_Font_Entry;          -- Entry in cache
+  type AG_Font (Font_Type : AG_Font_Type := VECTOR) is limited record
+    Super           : aliased Agar.Object.Object;  -- [Font]
+    Spec            : aliased AG_Font_Spec;        -- Font specification
+    Flags           : C.unsigned;                  -- Options
+    Height          : C.int;                       -- Height in pixels
+    Ascent          : C.int;                       -- Ascent relative to baseline
+    Descent         : C.int;                       -- Descent relative to baseline
+    Line_Skip       : C.int;                       -- Multiline Y-increment
+    Reference_Count : C.unsigned;                  -- Reference count for cache
+    Entry_in_Cache  : AG_Font_Entry;               -- Entry in cache
+    case Font_Type is
+    when VECTOR =>
+      TTF                : System.Address;         -- TTF internal object (TODO)
+    when BITMAP =>
+      Bitmap_Spec        : CS.chars_ptr;           -- Bitmap font spec
+      Bitmap_Glyphs      : System.Address;         -- TODO Bitmap glyph array
+      Bitmap_Glyph_Count : C.unsigned;             -- Bitmap glyph count
+      Char_0, Char_1     : AG_Char;                -- Bitmap font spec
+      C_Pad1             : Interfaces.Unsigned_32;
+    when DUMMY =>
+      null;
+    end case;
   end record
     with Convention => C;
+  pragma Unchecked_Union (AG_Font);
 
   ----------------------------------
   -- A rendered (in-memory) glyph --
@@ -186,8 +188,9 @@ package Agar.Text is
   end record
     with Convention => C;
   type AG_Glyph is limited record
-    Font           : Font_not_null_Access;       -- Back pointer to font
-    Color          : SU.AG_Color;                -- Base color
+    Font           : Font_not_null_Access;       -- Font face
+    Color_BG       : SU.AG_Color;                -- Background color
+    Color          : SU.AG_Color;                -- Foreground color
 #if AG_MODEL = AG_MEDIUM
     C_Pad1         : Interfaces.Unsigned_32;
 #end if;
@@ -210,18 +213,20 @@ package Agar.Text is
 #end if;
   type AG_Text_State is record
     Font       : Font_not_null_Access;    -- Font face
-    Color      : SU.AG_Color;             -- Foreground text color
-    Color_BG   : SU.AG_Color;             -- Background color
+    Color      : aliased SU.AG_Color;     -- Foreground text color
+    Color_BG   : aliased SU.AG_Color;     -- Background color
     Color_ANSI : SU.Color_Access;         -- ANSI color palette (3/4-bit)
     Justify    : AG_Text_Justify;         -- Justification mode
     Valign     : AG_Text_Valign;          -- Vertical alignment
-    Tab_Wd     : C.int;                   -- Width of tabs in pixels
+    Tab_Width  : C.int;                   -- Width of tabs in pixels
 #if AG_DEBUG
     C_Tag      : AG_Text_State_Tag;
 #end if;
     C_Pad1     : Unsigned_32;
   end record
     with Convention => C;
+  type AG_Text_State_Access is access all AG_Text_State with Convention => C;
+  subtype AG_Text_State_not_null_Access is not null AG_Text_State_Access;
  
   ------------------------------------------
   -- Statically-compiled font description --
@@ -272,12 +277,14 @@ package Agar.Text is
     with Import, Convention => C, Link_Name => "AG_SetDefaultFont";
 
   --
-  -- Set the default Agar font (by a font specification string).
+  -- Set the default font from a string "<Face>,<Size>,<Flags>".
+  -- Size is in points (integer). Flags may include:
   --
-  -- Syntax: "(family):(size):(style)". Valid field separators include
-  -- `:', `,', `.' and `/'. This works with fontconfig if available.
-  -- Size is whole points (no fractional allowed with the default font).
-  -- Style may include `b' (bold), `i' (italic) and `U' (uppercase).
+  --  'b'  =>  bold
+  --  'i'  =>  italic
+  --  'U'  =>  uppercase
+  --  'I'  =>  upright italic
+  --  's'  =>  semibold
   --
   procedure Set_Default_Font (Spec : in String);
 
@@ -285,12 +292,16 @@ package Agar.Text is
   -- Load (or fetch from cache) a font.
   --
   function Fetch_Font
-    (Family     : in String         := "_agFontVera";
-     Size       : in AG_Font_Points := AG_Font_Points(12);
-     Bold       : in Boolean        := False;
-     Italic     : in Boolean        := False;
-     Underlined : in Boolean        := False;
-     Uppercase  : in Boolean        := False) return Font_Access;
+    (Family         : in String         := "_agFontVera";
+     Size           : in AG_Font_Points := AG_Font_Points(12);
+     Bold           : in Boolean        := False;
+     Italic         : in Boolean        := False;
+     Underlined     : in Boolean        := False;
+     Uppercase      : in Boolean        := False;
+     Semibold       : in Boolean        := False;
+     Upright_Italic : in Boolean        := False;
+     Semicondensed  : in Boolean        := False;
+     Condensed      : in Boolean        := False) return Font_Access;
 
   --
   -- Decrement the reference count of a font (and free unreferenced fonts).
@@ -305,17 +316,24 @@ package Agar.Text is
     with Import, Convention => C, Link_Name => "AG_PushTextState";
   procedure Pop_Text_State
     with Import, Convention => C, Link_Name => "AG_PopTextState";
+  procedure Copy_Text_State
+    (Target : in AG_Text_State_not_null_Access)
+    with Import, Convention => C, Link_Name => "AG_CopyTextState";
 
   --
   -- Set the current font to the specified family+size+style (or just size).
   --
   procedure Text_Set_Font
-    (Family     : in String;
-     Size       : in AG_Font_Points := AG_Font_Points(12);
-     Bold       : in Boolean := False;
-     Italic     : in Boolean := False;
-     Underlined : in Boolean := False;
-     Uppercase  : in Boolean := False);
+    (Family         : in String         := "_agFontVera";
+     Size           : in AG_Font_Points := AG_Font_Points(12);
+     Bold           : in Boolean        := False;
+     Italic         : in Boolean        := False;
+     Underlined     : in Boolean        := False;
+     Uppercase      : in Boolean        := False;
+     Semibold       : in Boolean        := False;
+     Upright_Italic : in Boolean        := False;
+     Semicondensed  : in Boolean        := False;
+     Condensed      : in Boolean        := False);
 
   --
   -- Set the current font to a given % of the current font size.
@@ -383,8 +401,11 @@ package Agar.Text is
   function Text_Render
     (Text : in String) return SU.Surface_not_null_Access;
   function Text_Render
-    (Text : in AG_Char_not_null_Access) return SU.Surface_not_null_Access
-    with Import, Convention => C, Link_Name => "AG_TextRenderNat";
+    (Text     : in AG_Char_not_null_Access;
+     Font     : in Font_not_null_Access;
+     Color_BG : in SU.Color_not_null_Access;
+     Color    : in SU.Color_not_null_Access) return SU.Surface_not_null_Access
+    with Import, Convention => C, Link_Name => "AG_TextRenderInternal";
 
   --
   -- Render text and blit it to an existing surface.
@@ -402,8 +423,11 @@ package Agar.Text is
   -- Lookup (possibly bringing into cache), a glyph.
   --
   function Text_Render_Glyph
-    (Driver : in WID.Driver_not_null_Access;
-     Char   : in AG_Char) return Glyph_not_null_Access
+    (Driver   : in WID.Driver_not_null_Access;
+     Font     : in Font_not_null_Access;
+     Color_BG : in SU.Color_not_null_Access;
+     Color    : in SU.Color_not_null_Access;
+     Char     : in AG_Char) return Glyph_not_null_Access
     with Import, Convention => C, Link_Name => "AG_TextRenderGlyph";
 
   --

@@ -37,12 +37,7 @@ package body Agar.Text is
   end;
 
   --
-  -- Set the default Agar font (by a font specification string).
-  --
-  -- Syntax: "(family):(size):(style)". Valid field separators include
-  -- `:', `,', `.' and `/'. This works with fontconfig if available.
-  -- Size is whole points (no fractional allowed with the default font).
-  -- Style may include `b' (bold), `i' (italic) and `U' (uppercase).
+  -- Set the default font from a "<Face>:<Size>:<Flags>" string.
   --
   procedure Set_Default_Font (Spec : in String)
   is
@@ -56,21 +51,29 @@ package body Agar.Text is
   -- Load (or fetch from cache) a font.
   --
   function Fetch_Font
-    (Family     : in String         := "_agFontVera";
-     Size       : in AG_Font_Points := AG_Font_Points(12);
-     Bold       : in Boolean        := False;
-     Italic     : in Boolean        := False;
-     Underlined : in Boolean        := False;
-     Uppercase  : in Boolean        := False) return Font_Access
+    (Family         : in String         := "_agFontVera";
+     Size           : in AG_Font_Points := AG_Font_Points(12);
+     Bold           : in Boolean        := False;
+     Italic         : in Boolean        := False;
+     Underlined     : in Boolean        := False;
+     Uppercase      : in Boolean        := False;
+     Semibold       : in Boolean        := False;
+     Upright_Italic : in Boolean        := False;
+     Semicondensed  : in Boolean        := False;
+     Condensed      : in Boolean        := False) return Font_Access
   is
     Ch_Family : aliased C.char_array := C.To_C(Family);
     C_Size    : aliased AG_Font_Points := Size;
     Flags     : aliased C.unsigned := 0;
   begin
-    if Bold       then Flags := Flags or FONT_BOLD;		end if;
-    if Italic     then Flags := Flags or FONT_ITALIC;		end if;
-    if Underlined then Flags := Flags or FONT_UNDERLINE;	end if;
-    if Uppercase  then Flags := Flags or FONT_UPPERCASE;	end if;
+    if Bold           then Flags := Flags or FONT_BOLD;           end if;
+    if Italic         then Flags := Flags or FONT_ITALIC;         end if;
+    if Underlined     then Flags := Flags or FONT_UNDERLINE;      end if;
+    if Uppercase      then Flags := Flags or FONT_UPPERCASE;      end if;
+    if Semibold       then Flags := Flags or FONT_SEMIBOLD;       end if;
+    if Upright_Italic then Flags := Flags or FONT_UPRIGHT_ITALIC; end if;
+    if Semicondensed  then Flags := Flags or FONT_SEMICONDENSED;  end if;
+    if Condensed      then Flags := Flags or FONT_CONDENSED;      end if;
 
     return AG_FetchFont
       (Family => CS.To_Chars_Ptr(Ch_Family'Unchecked_Access),
@@ -82,22 +85,30 @@ package body Agar.Text is
   -- Set the current font to the specified family+size+style (or just size).
   --
   procedure Text_Set_Font
-    (Family     : in String;
-     Size       : in AG_Font_Points := AG_Font_Points(12);
-     Bold       : in Boolean := False;
-     Italic     : in Boolean := False;
-     Underlined : in Boolean := False;
-     Uppercase  : in Boolean := False)
+    (Family         : in String         := "_agFontVera";
+     Size           : in AG_Font_Points := AG_Font_Points(12);
+     Bold           : in Boolean        := False;
+     Italic         : in Boolean        := False;
+     Underlined     : in Boolean        := False;
+     Uppercase      : in Boolean        := False;
+     Semibold       : in Boolean        := False;
+     Upright_Italic : in Boolean        := False;
+     Semicondensed  : in Boolean        := False;
+     Condensed      : in Boolean        := False)
   is
     Ch_Family : aliased C.char_array := C.To_C(Family);
     C_Size    : aliased AG_Font_Points := Size;
     Flags     : aliased C.unsigned := 0;
     Result    : aliased Font_Access;
   begin
-    if Bold       then Flags := Flags or FONT_BOLD;      end if;
-    if Italic     then Flags := Flags or FONT_ITALIC;    end if;
-    if Underlined then Flags := Flags or FONT_UNDERLINE; end if;
-    if Uppercase  then Flags := Flags or FONT_UPPERCASE; end if;
+    if Bold           then Flags := Flags or FONT_BOLD;           end if;
+    if Italic         then Flags := Flags or FONT_ITALIC;         end if;
+    if Underlined     then Flags := Flags or FONT_UNDERLINE;      end if;
+    if Uppercase      then Flags := Flags or FONT_UPPERCASE;      end if;
+    if Semibold       then Flags := Flags or FONT_SEMIBOLD;       end if;
+    if Upright_Italic then Flags := Flags or FONT_UPRIGHT_ITALIC; end if;
+    if Semicondensed  then Flags := Flags or FONT_SEMICONDENSED;  end if;
+    if Condensed      then Flags := Flags or FONT_CONDENSED;      end if;
 
     Result := AG_TextFontLookup
       (Family => CS.To_Chars_Ptr(Ch_Family'Unchecked_Access),
@@ -384,13 +395,23 @@ package body Agar.Text is
      Surface : in SU.Surface_not_null_Access;
      X,Y     : in Natural := 0)
   is
-    Tmp_Surface : constant SU.Surface_not_null_Access := Text_Render(Text);
+    Text_State  : aliased AG_Text_State;
+    Tmp_Surface : SU.Surface_Access;
   begin
+    Copy_Text_State(Text_State'Unchecked_Access);
+
+    Tmp_Surface := Text_Render
+      (Text     => Text,
+       Font     => Text_State.Font,
+       Color_BG => Text_State.Color_BG'Unchecked_Access,
+       Color    => Text_State.Color'Unchecked_Access);
+
     SU.Blit_Surface
       (Source => Tmp_Surface,
        Target => Surface,
        Dst_X  => X,
        Dst_Y  => Y);
+
     SU.Free_Surface
       (Surface => Tmp_Surface);
   end;
