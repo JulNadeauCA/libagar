@@ -88,9 +88,11 @@ MouseButtonDown(AG_Event *event)
 	const int y = AG_INT(3);
 	
 	AG_WindowFocus(AG_ParentWindow(nb));
+	
+	if (nb->flags & AG_NOTEBOOK_HIDE_TABS)
+		return;
 
-	if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0 &&
-	    y <= nb->bar_h) {
+	if (y <= nb->bar_h) {
 		int tx = 0;
 
 		TAILQ_FOREACH(nt, &nb->tabs, tabs) {
@@ -131,23 +133,19 @@ Init(void *obj)
 	WIDGET(nb)->flags |= AG_WIDGET_USE_TEXT |
 	                     AG_WIDGET_UNFOCUSED_MOTION;
 
-	nb->tab_align = AG_NOTEBOOK_TABS_TOP;
-	nb->flags = 0;
-	nb->bar_w = -1;
-	nb->bar_h = -1;
-	nb->cont_w = -1;
-	nb->cont_h = -1;
-	nb->spacing = -1;
-	nb->padding = -1;
-	nb->mouseOver = -1;
-	nb->nTabs = 0;
-	nb->selTab = NULL;
+	memset(&nb->bar_w, 0xff, sizeof(int) + /* bar_w (= -1) */
+	                         sizeof(int) + /* bar_h */
+	                         sizeof(int) + /* cont_w */
+	                         sizeof(int) + /* cont_h */
+	                         sizeof(int) + /* mouseOver */
+	                         sizeof(int)); /* selTabID */
+
+	memset(&nb->flags, 0, sizeof(Uint) +              /* flags */
+	                      sizeof(Uint) +              /* nTabs */
+	                      sizeof(AG_NotebookTab *) +  /* selTab */
+			      sizeof(AG_Rect));           /* r */
+
 	TAILQ_INIT(&nb->tabs);
-	nb->r.x = 0;
-	nb->r.y = 0;
-	nb->r.w = 0;
-	nb->r.h = 0;
-	nb->selTabID = -1;
 
 	AG_AddEvent(nb, "widget-shown", OnShow, NULL);
 	AG_AddEvent(nb, "widget-hidden", OnHide, NULL);
@@ -332,24 +330,21 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 void
-AG_NotebookSetTabAlignment(AG_Notebook *nb, enum ag_notebook_tab_alignment ta)
-{
-	nb->tab_align = ta;
-	AG_Redraw(nb);
-}
-
-void
 AG_NotebookSetSpacing(AG_Notebook *nb, int spacing)
 {
-	nb->spacing = spacing;
-	AG_Redraw(nb);
+	AG_NotebookTab *nt;
+
+	TAILQ_FOREACH(nt, &nb->tabs, tabs)
+		AG_BoxSetSpacing(AGBOX(nt), spacing);
 }
 
 void
 AG_NotebookSetPadding(AG_Notebook *nb, int padding)
 {
-	nb->padding = padding;
-	AG_Redraw(nb);
+	AG_NotebookTab *nt;
+
+	TAILQ_FOREACH(nt, &nb->tabs, tabs)
+		AG_BoxSetPadding(AGBOX(nt), padding);
 }
 
 AG_NotebookTab *
@@ -364,11 +359,6 @@ AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 	AG_Expand(tab);
 
 	AG_ObjectLock(nb);
-
-	if (nb->padding >= 0)
-		AG_BoxSetPadding(&tab->box, nb->padding);
-	if (nb->spacing >= 0)
-		AG_BoxSetSpacing(&tab->box, nb->spacing);
 
 	if (label && label[0] != '\0') {
 		tab->lbl = AG_LabelNewS(nb, 0, label);
