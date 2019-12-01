@@ -35,7 +35,9 @@ typedef struct vg_text {
 #define VG_TEXT_SCALED    0x08		 /* Try to scale the text */
 
 	char text[VG_TEXT_MAX];		/* Text or format string */
+
 	Uint            argsCount;	/* Number of arguments */
+	Uint32 _pad;
 	void *_Nullable args;		/* Argument data */
 	int  *_Nullable argSizes;	/* Sizes of format strings in text */
 

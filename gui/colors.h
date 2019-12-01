@@ -44,6 +44,9 @@ typedef struct ag_color_hsv {
 typedef struct ag_color_name {
 	const char *name;
 	AG_Color c;
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
 } AG_ColorName;
 
 #define AG_4to8(c)    (Uint8)((float)(c)/15.0f * 255.0f)

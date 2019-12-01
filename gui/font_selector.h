@@ -23,6 +23,7 @@ typedef struct ag_font_selector {
 	Uint curStyle;				/* Current style flags */
 	int  sPreview;				/* Preview surface */
 	float curSize;				/* Current size */
+	Uint32 _pad;
 
 	AG_Pane *_Nonnull  hPane;		/* Base container */
 	AG_Pane *_Nonnull  hPane2;		/* Right horizontal container */

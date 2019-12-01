@@ -29,6 +29,9 @@ typedef struct sg_script_insn {
 			AG_ObjectClass *_Nullable cls;	/* Node class */
 			void *_Nullable data;		/* Saved dataset */
 			AG_Size size;			/* Dataset size */
+#if AG_MODEL == AG_MEDIUM
+			Uint32 _pad;
+#endif
 		} create; 
 		SG_Action action;
 #ifdef _AGAR_SG_INTERNAL

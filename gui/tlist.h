@@ -88,7 +88,7 @@ typedef struct ag_tlist {
 	AG_Rect r;			/* Clipping rectangle */
 	int wSpace;			/* Icon/text spacing */
 	int icon_w;			/* Item icon width */
-	int wRow;			/* Row width */
+	Uint pollDelay;			/* Refresh rate for POLL mode */
 	int rOffs;			/* Row display offset */
 	void *_Nullable dblClicked;	/* For double click test */
 	AG_TlistItemQ items;		/* Current Items */
@@ -109,7 +109,6 @@ typedef struct ag_tlist {
 	AG_Timer moveTo;		/* Timer for keyboard motion */
 	AG_Timer refreshTo;		/* Timer for polled mode updates */
 	AG_Timer dblClickTo;		/* Timer for detecting double clicks */
-	Uint     pollDelay;		/* Refresh rate for POLL mode */
 } AG_Tlist;
 
 #define AGTLIST(obj)            ((AG_Tlist *)(obj))

@@ -795,7 +795,6 @@ Init(void *_Nonnull obj)
 	sv->editNode = NULL;
 	AG_ColorBlack(&sv->transFadeColor);
 	sv->transDuration = 500;
-	sv->editStatus[0] = '\0';
 	sv->pmView = NULL;
 	sv->pmNode = NULL;
 	AG_InitTimer(&sv->toTransFade, "transFade", 0);
@@ -822,6 +821,7 @@ Init(void *_Nonnull obj)
 		sv->move[i].vMax = 5;
 		sv->move[i].incr = 0.02;
 	}
+	sv->editStatus[0] = '\0';
 
 	AG_AddEvent(sv, "widget-shown", OnShow, NULL);
 	AG_AddEvent(sv, "widget-hidden", OnHide, NULL);

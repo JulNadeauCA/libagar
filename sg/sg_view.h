@@ -7,7 +7,7 @@
 struct sg_camera;
 
 #ifndef SG_VIEW_STATUS_MAX
-#define SG_VIEW_STATUS_MAX 120
+#define SG_VIEW_STATUS_MAX 124
 #endif
 
 /* Managed per-view texture. */
@@ -69,8 +69,6 @@ typedef struct sg_view {
 	struct sg_camera *_Nullable cam;	/* Current camera */
 	struct sg_camera *_Nullable camTrans;	/* Transitioning to camera */
 
-	char editStatus[SG_VIEW_STATUS_MAX];	/* Status text */
-
 	M_Vector3 rSens;		/* Rotational sensitivity (mouse) */
 	M_Vector3 tSens;		/* Translational sensitivity (mouse) */
 
@@ -81,7 +79,8 @@ typedef struct sg_view {
 	SG_ViewCamAction move[3];	/* Keyboard controlled translate */
 	AG_Timer toRot, toMove;
 	AG_KeySym lastKeyDown;		/* Last pressed key */
-	Uint32 _pad2;
+
+	char editStatus[SG_VIEW_STATUS_MAX];	/* Status text */
 
 	AG_PopupMenu *_Nonnull pmView;	/* Popup menu per view */
 	AG_PopupMenu *_Nonnull pmNode;	/* Popup menu per node */

@@ -40,6 +40,7 @@ typedef struct vg_text_tool {
 	VG_Tool _inherit;			/* VG_Tool(3) -> VG_TextTool */
 	VG_Text *_Nullable vtIns;		/* Text being edited */
 	char text[VG_TEXT_MAX];			/* Initial input text */
+	Uint32 _pad;
 } VG_TextTool;
 
 static void

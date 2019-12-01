@@ -58,13 +58,14 @@ typedef struct sg_script_edit_ctx {
 	SG_ScriptInsn *siNew;		/* New instruction */
 	AG_Label *stat;			/* Status bar label */
 	AG_Timer toCamMove;		/* Camera motion timer */
+	Uint8 _pad1[8];
 	M_Vector3   vCamMove;		/* Camera motion vector */
 	M_Vector3   vCamMoveSum;	/* Camera motion vector sum */
 	int          camMoving;
-	Uint32 _pad1;
+	Uint32 _pad2;
 	AG_Slider *slTime;		/* Time slider */
 	AG_Surface *suUnder;		/* Underlay (for animation) */
-	Uint8 _pad2[8];
+	Uint8 _pad3[8];
 } SG_ScriptEditCtx;
 
 /* Rendering context for a SG_Script. */

@@ -424,9 +424,8 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	aBar.x = a->w - rBar.w;
 	aBar.y = 0;
 	AG_WidgetSizeAlloc(tl->sbar, &aBar);
-	tl->wRow = a->w - aBar.w - 2;
 
-	tl->r.w = tl->wRow;
+	tl->r.w = a->w - aBar.w - 2;
 	tl->r.h = a->h;
 
 	/* Limit vertical scrollbar parameters */
@@ -449,7 +448,7 @@ Draw(void *_Nonnull obj)
 	const int wSpace = tl->wSpace;
 	const int hItem = tl->item_h;
 	const int wIcon = tl->icon_w;
-	const int wRow = tl->wRow;
+	const int wRow = tl->r.w;
 	const int rOffs = tl->rOffs;
 	const int zoomLvl = WIDGET(tl)->window->zoom;
 	int x, y=0, i=0, selSeen=0, selPos=1, h=HEIGHT(tl), yLast;
@@ -462,7 +461,7 @@ Draw(void *_Nonnull obj)
 
 	r.x = 2;
 	r.y = 2;
-	r.w = tl->r.w - 4;
+	r.w = wRow - 4;
 	r.h = tl->r.h - 4;
 	AG_PushClipRect(tl, &r);
 
@@ -1293,7 +1292,7 @@ Init(void *_Nonnull obj)
 	tl->r.h = 0;
 	tl->wSpace = 4;
 	tl->icon_w = tl->item_h + 1;
-	tl->wRow = 0;
+	tl->pollDelay = 250;
 	tl->rOffs = 0;
 	tl->dblClicked = NULL;
 	TAILQ_INIT(&tl->items);
@@ -1311,8 +1310,6 @@ Init(void *_Nonnull obj)
 	AG_InitTimer(&tl->moveTo, "move", 0);
 	AG_InitTimer(&tl->refreshTo, "refresh", 0);
 	AG_InitTimer(&tl->dblClickTo, "dblClick", 0);
-
-	tl->pollDelay = 250;
 
 	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
 	AG_SetInt(tl->sbar, "min", 0);

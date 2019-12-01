@@ -185,9 +185,6 @@ typedef struct ag_table {
 #define AG_TABLE_COL_SELECT	0x01	/* Select column */
 #define AG_TABLE_COL_SORT	0x02	/* Set sorting mode */
 
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad;
-#endif
 	AG_SLIST_HEAD_(ag_table_popup) popups; /* Registered popup menus */
 
 	Uint nSorting;			/* Index of sorting column */

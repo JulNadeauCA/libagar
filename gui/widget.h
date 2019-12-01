@@ -301,9 +301,6 @@ typedef struct ag_widget {
 
 	struct ag_font *_Nullable font;    /* Active font (style-generated) */
 	AG_WidgetPalette pal;              /* Color palette (style-generated) */
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad2;
-#endif
 #ifdef HAVE_OPENGL
 	AG_WidgetGL *_Nullable gl;      /* Saved GL context (for USE_OPENGL) */
 #endif

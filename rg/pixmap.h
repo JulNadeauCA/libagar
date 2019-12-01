@@ -4,7 +4,7 @@
 #define _AGAR_RG_PIXMAP_H_
 #include <agar/rg/begin.h>
 
-#define RG_PIXMAP_NAME_MAX 74
+#define RG_PIXMAP_NAME_MAX 72
 
 struct ag_window;
 struct ag_toolbar;
@@ -52,7 +52,7 @@ typedef struct rg_brush {
 
 typedef struct rg_pixmap {
 	char name[RG_PIXMAP_NAME_MAX];
-	int flags;
+	Uint flags;
 	int xorig, yorig;		/* Pixmap origin point */
 	Uint nRefs;			/* Number of tile references */
 	struct rg_tileset *_Nonnull ts; /* Back pointer to tileset */
