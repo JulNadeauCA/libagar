@@ -58,6 +58,7 @@
 
 /* Print low-level X events */
 /* #define DEBUG_XEVENTS */
+/* #define DEBUG_MOTION_XEVENTS */
 
 static int nDrivers = 0;		/* Drivers open */
 static int agScreen = 0;		/* Default X screen (shared) */
@@ -558,7 +559,7 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		if ((win = LookupWindowByID(xev.xmotion.window)) == NULL) {
 			return (-1);
 		}
-#ifdef DEBUG_XEVENTS
+#ifdef DEBUG_MOTION_XEVENTS
 		Debug(win, "MotionNotify(%d,%d)\n", xev.xmotion.x, xev.xmotion.y);
 #endif
 		x = AGDRIVER_BOUNDED_WIDTH(win, xev.xmotion.x);
@@ -688,9 +689,6 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		dev->win = win;
 		break;
 	case KeymapNotify:					/* Internal */
-#ifdef DEBUG_XEVENTS
-		Debug(NULL, "KeymapNotify\n");
-#endif
 		UpdateKeyboardAll();
 		return (0);
 	case MappingNotify:					/* Internal */
@@ -704,9 +702,6 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	case ConfigureNotify:					/* Internal */
 		if ((win = LookupWindowByID(xev.xconfigure.window))) {
 			Window ignore;
-#ifdef DEBUG_XEVENTS
-			Debug(win, "ConfigureNotify(%d,%d)\n", xev.xconfigure.width, xev.xconfigure.height);
-#endif
 			AG_MutexLock(&agDisplayLock);
 			XTranslateCoordinates(agDisplay,
 			    xev.xconfigure.window,
@@ -715,7 +710,9 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 			    &x, &y,
 			    &ignore);
 			AG_MutexUnlock(&agDisplayLock);
-
+#ifdef DEBUG_XEVENTS
+			Debug(win, "ConfigureNotify(%d,%d, %d,%d)\n", x,y, xev.xconfigure.width, xev.xconfigure.height);
+#endif
 			dev->type = AG_DRIVER_VIDEORESIZE;
 			dev->win = win;
 			dev->data.videoresize.x = x;

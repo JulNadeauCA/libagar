@@ -45,8 +45,9 @@
 #include <string.h>
 #include <stdarg.h>
 
-/* Trace AG_Redraw() requests. */
+/* #define DEBUG_FOCUS */
 /* #define DEBUG_REDRAW */
+/* #define DEBUG_RAISE_LOWER */
 
 int agWindowSideBorderDefault = 0;
 int agWindowBotBorderDefault = 8;
@@ -609,8 +610,7 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Window *win = obj;
-	const AG_Color *cHigh = &WCOLOR(win, HIGH_COLOR);
-	const AG_Color *cLow  = &WCOLOR(win, LOW_COLOR);
+	const AG_Color *cFg = &WCOLOR(win, FG_COLOR);
 	AG_Widget *chld;
 	AG_Rect r;
 	const int w = WIDTH(win);
@@ -642,15 +642,15 @@ Draw(void *_Nonnull obj)
 		r.h = wBorderBot;
 		if ((win->flags & AG_WINDOW_NORESIZE) == 0 && w > wResizeCtrl2) {
 			r.w = wResizeCtrl;
-			DRAW_BORDER(AG_WINOP_LRESIZE, cHigh);
+			DRAW_BORDER(AG_WINOP_LRESIZE, cFg);
 			r.x = w - wResizeCtrl;
-			DRAW_BORDER(AG_WINOP_RRESIZE, cLow);
+			DRAW_BORDER(AG_WINOP_RRESIZE, cFg);
 			r.x = wResizeCtrl;
 			r.w = w - wResizeCtrl2;
-			DRAW_BORDER(AG_WINOP_HRESIZE, cLow);
+			DRAW_BORDER(AG_WINOP_HRESIZE, cFg);
 		} else {
 			r.w = w;
-			AG_DrawBoxRaised(win, &r, cLow);
+			AG_DrawBoxRaised(win, &r, cFg);
 		}
 	}
 	if ((wBorderSide = win->wBorderSide) > 0) {
@@ -658,9 +658,9 @@ Draw(void *_Nonnull obj)
 		r.y = hBar;
 		r.w = wBorderSide;
 		r.h = h - wBorderBot - hBar;
-		AG_DrawBoxRaised(win, &r, cHigh);
+		AG_DrawBoxRaised(win, &r, cFg);
 		r.x = w - wBorderSide;
-		AG_DrawBoxRaised(win, &r, cLow);
+		AG_DrawBoxRaised(win, &r, cFg);
 	}
 
 	OBJECT_FOREACH_CHILD(chld, win, ag_widget)
@@ -916,7 +916,9 @@ OnGainFocus(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_WINDOW_SELF();
 
-/*	Verbose("%s (\"%s\"): Gained Focus\n", OBJECT(win)->name, win->caption); */
+#ifdef DEBUG_FOCUS
+	Debug(win, "Focus Gained (\"%s\")\n", win->caption);
+#endif
 	WidgetGainFocus(WIDGET(win));
 }
 
@@ -925,7 +927,9 @@ OnLostFocus(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_WINDOW_SELF();
 
-/*	Verbose("%s (\"%s\"): Lost Focus\n", OBJECT(win)->name, win->caption); */
+#ifdef DEBUG_FOCUS
+	Debug(win, "Focus Lost (\"%s\")\n", win->caption);
+#endif
 	WidgetLostFocus(WIDGET(win));
 }
 
@@ -937,11 +941,12 @@ AG_WindowLower(AG_Window *win)
 	
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
-	
+#ifdef DEBUG_RAISE_LOWER
+	Debug(drv, "Lowering %s to bottom\n", OBJECT(win)->name);
+#endif
 	AG_LockVFS(&agDrivers);
 	AG_ObjectLock(drv);
 	AG_ObjectLock(win);
-	Debug(drv, "Lowering %s to bottom\n", OBJECT(win)->name);
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_MULTIPLE:
 		AGDRIVER_MW_CLASS(drv)->lowerWindow(win);
@@ -964,11 +969,12 @@ AG_WindowRaise(AG_Window *win)
 	
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
-	
+#ifdef DEBUG_RAISE_LOWER
+	Debug(drv, "Raising %s to top\n", OBJECT(win)->name);
+#endif
 	AG_LockVFS(&agDrivers);
 	AG_ObjectLock(drv);
 	AG_ObjectLock(win);
-	Debug(drv, "Raising %s to top\n", OBJECT(win)->name);
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_MULTIPLE:
 		AGDRIVER_MW_CLASS(drv)->raiseWindow(win);

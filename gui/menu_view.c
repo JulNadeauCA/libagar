@@ -110,7 +110,6 @@ static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mview = AG_MENUVIEW_SELF();
-	AG_MenuItem *miRoot = mview->pitem;
 	AG_Menu *m = mview->pmenu;
 	const int mx = AG_INT(2);
 	const int my = AG_INT(3);
@@ -122,9 +121,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		if (AG_WidgetFindPoint("AG_Widget:AG_MenuView:*",
 		    WIDGET(mview)->rView.x1 + mx,
 		    WIDGET(mview)->rView.y1 + my) == NULL) {
-			AG_MenuCollapse(miRoot);
-			m->itemSel = NULL;
-			m->selecting = 0;
+			AG_MenuCollapseAll(m);
 		}
 	}
 }
@@ -140,34 +137,25 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	const int w = WIDTH(mview);
 	const int h = HEIGHT(mview);
 	int y = mview->tPad, itemh;
-#if 1
+
 	if (mx < 0 || mx >= w || my < 0 || my >= h) {
-		Debug(mview, "MouseButtonUp: Out of bounds\n");
 		return;
 	}
-#endif
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 	itemh = m->itemh;
 
 	/* TODO: Scrolling */
 
-	Debug(mview, "click @%d,%d (in %dx%d, itemh = %d)\n", mx,my, w,h, itemh);
-
 	TAILQ_FOREACH(mi, &miRoot->subItems, items) {
 		int mi_state;
 
 		if (mi->poll) {
-			Debug(mview, "Updating [%s] (lbl=[%d,%d])\n", mi->text,
-			    mi->lblView[0],
-			    mi->lblView[1]);
 			UpdateItem(m, mi);
 		}
 		if ((y += itemh) < my) {
 			continue;
 		}
-		Debug(mview, "Item: [%s]\n", mi->text);
-		Debug(mview, "[%s]: Processing (state=%d)\n", mi->text, mi->state);
 
 		mi_state = mi->state;
 		if (mi->stateFn != NULL) {
@@ -175,21 +163,15 @@ MouseButtonUp(AG_Event *_Nonnull event)
 		}
 		if (!mi_state) {
 			/* Nothing to do */
-			Debug(mview, "[%s]: Inactive item\n", mi->text);
 		} else if (mi->clickFn != NULL) {
 			AG_MenuCollapseAll(m);
 			if (mi->clickFn->fn != NULL) {
-				Debug(mview, "[%s]: Calling %p\n", mi->text,
-				    mi->clickFn);
 				mi->clickFn->fn(mi->clickFn);
-			} else {
-				Debug(mview, "[%s]: No clickFn\n", mi->text);
 			}
 		} else if (mi->bind_type != AG_MENU_NO_BINDING) {
 #ifdef AG_THREADS
 			if (mi->bind_lock) { AG_MutexLock(mi->bind_lock); }
 #endif
-			Debug(mview, "[%s]: Setting bool\n", mi->text);
 			SetItemBoolValue(mi);
 #ifdef AG_THREADS
 			if (mi->bind_lock) { AG_MutexUnlock(mi->bind_lock); }
@@ -198,10 +180,8 @@ MouseButtonUp(AG_Event *_Nonnull event)
 		}
 		AG_Redraw(mview);
 		
-		if (y > my) {
-			Debug(mview, "[%s]: Break\n", mi->text);
+		if (y > my)
 			break;
-		}
 	}
 	AG_ObjectUnlock(m);
 }

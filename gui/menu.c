@@ -34,6 +34,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+#define DEBUG_EXPAND
+
 static int agMenuCounter = 0;
 AG_Menu   *agAppMenu = NULL;		/* Global application menu (SW mode) */
 AG_Window *agAppMenuWin = NULL;		/* Application menu window */
@@ -106,23 +108,30 @@ exists:
 }
 
 static void
-MenuCollapseAll(AG_Event *_Nonnull event)
+OnWindowClose(AG_Event *_Nonnull event)
 {
 	AG_Menu *m = AG_MENU_PTR(1);
 
+#ifdef DEBUG_EXPAND
+	Debug(m, "Collapse (by `window-close')\n");
+#endif
 	AG_MenuCollapseAll(m);
 }
 
 static void
-ModalCollapse(AG_Event *_Nonnull event)
+OnMouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_WINDOW_SELF();
 	AG_Menu *m = AG_MENU_PTR(1);
 	const int x = AG_INT(2);
 	const int y = AG_INT(3);
 
-	if (x < 0 || y < 0 || x > WIDTH(win) || y > HEIGHT(win))
+	if (x < 0 || y < 0 || x > WIDTH(win) || y > HEIGHT(win)) {
+#ifdef DEBUG_EXPAND
+		Debug(m, "Collapse (clicked %d,%d)\n", x,y);
+#endif
 		AG_MenuCollapseAll(m);
+	}
 }
 
 static __inline__ int
@@ -227,18 +236,19 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	if (mi->view) {
 		win = WIDGET(mi->view)->window;
 		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
-		Debug(m, "Expand: [%s] -> %s\n", mi->text, OBJECT(win)->name);
+#ifdef DEBUG_EXPAND
+		Debug(m, "Expand [%s] -> " AGSI_RED "%s" AGSI_RST " (cached)\n",
+		    mi->text, OBJECT(win)->name);
+#endif
 		AG_WindowSetGeometry(win, x,y, -1,-1);
 		AG_WindowRaise(win);
 		AG_WindowShow(win);
 		return (win);
 	}
-		
-	Debug(m, "Expand: [%s] -> (new)\n", mi->text);
 
 	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
 	                   AG_WINDOW_NOBORDERS | AG_WINDOW_NORESIZE |
-			   AG_WINDOW_DENYFOCUS | AG_WINDOW_KEEPABOVE);
+			   AG_WINDOW_DENYFOCUS);
 	if (win == NULL) {
 		return (NULL);
 	}
@@ -248,10 +258,14 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	AG_ObjectSetName(win, "menu%u", agMenuCounter++);
 	AG_WindowSetPadding(win, 0,0,0,0);
 
+#ifdef DEBUG_EXPAND
+	Debug(m, "Expand [%s] -> " AGSI_BR_RED "%s" AGSI_RST " (new)\n",
+	    mi->text, OBJECT(win)->name);
+#endif
 	/* Collapse if user clicks outside of the window boundaries. */
 	WIDGET(win)->flags |= AG_WIDGET_UNFOCUSED_BUTTONDOWN;
-	AG_SetEvent(win, "mouse-button-down", ModalCollapse, "%p", m);
-	AG_SetEvent(win, "window-close", MenuCollapseAll, "%p", m);
+	AG_SetEvent(win, "mouse-button-down", OnMouseButtonDown, "%p", m);
+	AG_SetEvent(win, "window-close", OnWindowClose, "%p", m);
 	
 	mi->view = Malloc(sizeof(AG_MenuView));
 	AG_ObjectInit(mi->view, &agMenuViewClass);
@@ -358,7 +372,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			continue;
 		}
 	    	if (m->itemSel == mi) {
-			AG_MenuCollapse(mi);
+			AG_MenuCollapseAll(m);
 			m->itemSel = NULL;
 			m->selecting = 0;
 		} else {

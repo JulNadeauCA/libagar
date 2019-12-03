@@ -50,7 +50,7 @@ SetWordWrap(AG_Event *event)
 static void
 TestMenuFn(AG_Event *event)
 {
-	char *text = AG_STRING(1);
+	const char *text = AG_STRING(1);
 
 	AG_TextMsgS(AG_MSG_INFO, text);
 }
@@ -429,6 +429,7 @@ TestGUI(void *obj, AG_Window *win)
 			    TestMenuFn, "%s", "Submenu D selected!");
 			AG_MenuAction(mSub, "Submenu E", agIconTrash.s,
 			    TestMenuFn, "%s", "Submenu E selected!");
+			AG_MenuIntBool(mSub, "Togglable Binding #1", agIconUp.s, &myInt[0], 0);
 
 			AG_MenuSeparator(m);
 			AG_MenuSectionS(m, "Non-selectable text");
