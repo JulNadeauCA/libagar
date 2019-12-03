@@ -269,7 +269,24 @@ PostMouseButtonUp(
 void
 AG_ProcessMouseButtonDown(AG_Window *win, int x, int y, AG_MouseButton button)
 {
+	AG_Driver *drv;
+	AG_Window *winModal;
 	AG_Widget *wid;
+	
+	if ((win->flags & AG_WINDOW_MODAL) == 0) {
+		OBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+			AG_OBJECT_ISA(drv, "AG_Driver:*");
+
+			OBJECT_FOREACH_CHILD(winModal, drv, ag_window) {
+				if (winModal == win || !winModal->visible ||
+				   (winModal->flags & AG_WINDOW_MODAL) == 0) {
+					continue;
+				}
+				AG_OBJECT_ISA(winModal, "AG_Widget:AG_Window:*");
+				AG_PostEvent(winModal, "window-close", NULL);
+			}
+		}
+	}
 
 	OBJECT_FOREACH_CHILD(wid, win, ag_widget)
 		PostMouseButtonDown(win, wid, x, y, button);
