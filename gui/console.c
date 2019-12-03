@@ -412,12 +412,12 @@ BeginSelect(AG_Event *_Nonnull event)
 	AG_Console *cons = AG_CONSOLE_SELF();
 	const int x = AG_INT(2);
 	const int y = AG_INT(3);
+	
+	if (!AG_WidgetIsFocused(cons))
+		AG_WidgetFocus(cons);
 
 	if (x < cons->r.x || x > cons->r.x+cons->r.w)
 		return;
-
-	if (!AG_WidgetIsFocused(cons))
-		AG_WidgetFocus(cons);
 
 	if (cons->pm)
 		AG_PopupHide(cons->pm);
@@ -455,6 +455,9 @@ PopupMenu(AG_Event *_Nonnull event)
 	const int y = AG_INT(3);
 	AG_PopupMenu *pm;
 	AG_MenuItem *mi;
+	
+	if (!AG_WidgetIsFocused(cons))
+		AG_WidgetFocus(cons);
 
 	if (cons->flags & AG_CONSOLE_NOPOPUP)
 		return;
@@ -466,6 +469,7 @@ PopupMenu(AG_Event *_Nonnull event)
 	if ((pm = cons->pm = AG_PopupNew(cons)) == NULL) {
 		return;
 	}
+	AG_MenuSeparator(pm->root);
 	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy, "%p", cons);
 	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCopyActive, "%Cp", cons);
 	AG_MenuAction(pm->root, _("Export to file..."), NULL,
