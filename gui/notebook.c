@@ -167,8 +167,11 @@ Draw(void *obj)
 	int boxDia = WFONT(nb)->height;
 	int x=0, y=0, xSelFirst=0, xSelLast=0, tabIdx=0;
 
-	if (cBg->a > 0)
+	if (cBg->a == AG_OPAQUE) {
 		AG_DrawRectFilled(nb, &nb->r, cBg);
+	} else if (cBg->a > 0) {
+		AG_DrawRectBlended(nb, &nb->r, cBg, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	}
 
 	AG_DrawLineV(nb, 0, nb->bar_h, h-1,
 	    (nb->selTab == TAILQ_FIRST(&nb->tabs)) ? cLo : cHi);
