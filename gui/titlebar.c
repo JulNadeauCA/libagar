@@ -39,6 +39,7 @@ MaximizeWindow(AG_Event *_Nonnull event)
 
 	AG_ObjectLock(win);
 	if (win->flags & AG_WINDOW_MAXIMIZED) {
+		AG_ClearBackground();
 		AG_WindowUnmaximize(win);
 	} else {
 		AG_WindowMaximize(win);
@@ -143,6 +144,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 
 	if (AGDRIVER_SINGLE(WIDGET(tbar)->drv))
 		AG_WM_MoveBegin(tbar->win);
+
+	AG_Redraw(tbar);
 }
 
 static void
@@ -189,6 +192,7 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Titlebar *tbar = obj;
+	AG_Window *win = tbar->win;
 	const AG_Color *cFg;
 	AG_Rect r;
 
@@ -197,13 +201,13 @@ Draw(void *_Nonnull obj)
 	r.w = WIDTH(tbar);
 	r.h = HEIGHT(tbar);
 
-	cFg = AG_WindowIsFocused(tbar->win) ? &WCOLOR(tbar, FG_COLOR) :
-	                             &WCOLOR_DISABLED(tbar, FG_COLOR);
+	cFg = AG_WindowIsFocused(win) ? &WCOLOR(tbar, FG_COLOR) :
+	                                &WCOLOR_DISABLED(tbar, FG_COLOR);
 
 	if (tbar->flags & AG_TITLEBAR_PRESSED) {
-		AG_DrawBoxSunk(tbar, &r, cFg);
+		AG_DrawBoxSunk(win, &r, cFg);
 	} else {
-		AG_DrawBoxRaised(tbar, &r, cFg);
+		AG_DrawBoxRaised(win, &r, cFg);
 	}
 
 	WIDGET_SUPER_OPS(tbar)->draw(tbar);
