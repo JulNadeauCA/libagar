@@ -192,7 +192,7 @@ Init(void *_Nonnull obj)
 	AG_Box *box = obj;
 
 	box->flags = 0;
-	box->style = AG_BOX_STYLE_BOX;
+	box->style = AG_BOX_STYLE_NONE;
 	box->type = AG_BOX_VERT;
 	box->depth = -1;
 	box->padding = 4;
