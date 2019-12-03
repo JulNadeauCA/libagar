@@ -41,7 +41,6 @@
 #include <string.h>
 #include <ctype.h>
 
-/* Overly verbose focus-related debugging */
 /* #define DEBUG_FOCUS */
 
 /* Style Properties */
@@ -96,7 +95,7 @@ const char *agWidgetStateNames[] = {
 
 /* Per-Widget Color Palette */
 AG_WidgetPalette agDefaultPalette = {{
-#if AG_MODEL == AG_MEDIUM           /* --- Truecolor --- */
+#if AG_MODEL == AG_MEDIUM           /* --- TrueColor --- */
 {       /* unfocused */
 	{125,125,125,255},          /*             color */
 	{  0,  0,  0,  0},          /*  background-color */
@@ -118,7 +117,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{  0,  0,  0,  0}
 }, {
 	/* #focused */
-	{125,125,125,255},          /*             color */
+	{135,135,135,255},          /*             color */
 	{  0,  0,  0,  0},          /*  background-color */
 	{240,240,240,255},          /*        text-color */
 	{ 50, 50, 50,255},          /*        line-color */
@@ -137,7 +136,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{  0,  0,120,255},            /*   selection-color */
 	{  0,  0,  0,  0}
 },
-#elif AG_MODEL == AG_LARGE                /* --- Deepcolor --- */
+#elif AG_MODEL == AG_LARGE                /* --- DeepColor --- */
 {
 	/* unfocused */
 	{0x7d7d,0x7d7d,0x7d7d,0xffff},    /*             color */
@@ -160,7 +159,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{0x0000,0x0000,0x0000,0x0000}
 }, {
 	/* #focused */
-	{0x7d7d,0x7d7d,0x7d7d,0xffff},
+	{0x8787,0x8787,0x8787,0xffff},    /*             color */
 	{0x0000,0x0000,0x0000,0x0000},    /*  background-color */
 	{0xf0f0,0xf0f0,0xf0f0,0xffff},    /*        text-color */
 	{0x3232,0x3232,0x3232,0xffff},    /*        line-color */
@@ -170,7 +169,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{0x0000,0x0000,0x0000,0x0000}
 }, {
 	/* #hover */
-	{0x8282,0x8282,0x8282,0xffff},
+	{0x8282,0x8282,0x8282,0xffff},    /*             color */
 	{0x0000,0x0000,0x0000,0x0000},    /*  background-color */
 	{0xf0f0,0xf0f0,0xf0f0,0xffff},    /*        text-color */
 	{0x3232,0x3232,0x3232,0xffff},    /*        line-color */
