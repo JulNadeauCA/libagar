@@ -41,6 +41,9 @@ typedef struct ag_color_hsv {
 	float h,s,v,a;
 } AG_ColorHSV;
 
+#define AG_SATURATION_EPSILON 0.01f
+#define AG_VALUE_EPSILON      0.01f
+
 typedef struct ag_color_name {
 	const char *name;
 	AG_Color c;

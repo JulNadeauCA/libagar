@@ -694,10 +694,16 @@ AG_MapHSVf_RGB8(float h, float s, float v,
 	float vR, vG, vB, hv, var[3];
 	int iv;
 
-	if (s == 0.0f) {
+	if (s < AG_SATURATION_EPSILON) {        /* Short-circuit pure grays */
 		*r = (Uint8)(v * 255.0f);
 		*g = (Uint8)(v * 255.0f);
 		*b = (Uint8)(v * 255.0f);
+		return;
+	}
+	if (v < AG_VALUE_EPSILON) {             /* Short-circuit pure black */
+		*r = 0;
+		*g = 0;
+		*b = 0;
 		return;
 	}
 	
@@ -732,10 +738,16 @@ AG_MapHSVf_RGB16(float h, float s, float v,
 	float vR, vG, vB, hv, var[3];
 	int iv;
 
-	if (s == 0.0f) {
+	if (s < AG_SATURATION_EPSILON) {        /* Short-circuit pure grays */
 		*r = (Uint16)(v * 65535.0f);
 		*g = (Uint16)(v * 65535.0f);
 		*b = (Uint16)(v * 65535.0f);
+		return;
+	}
+	if (v < AG_VALUE_EPSILON) {             /* Short-circuit pure black */
+		*r = 0;
+		*g = 0;
+		*b = 0;
 		return;
 	}
 	

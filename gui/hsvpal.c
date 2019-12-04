@@ -40,6 +40,8 @@ static AG_Mutex CopyLock = AG_MUTEX_INITIALIZER;	/* Copy buffer lock */
 #endif
 static float cH = 0.0, cS = 0.0, cV = 0.0, cA = 0.0;	/* Copy buffer */
 
+static void UpdatePixelFromHSVA(AG_HSVPal *_Nonnull);
+
 AG_HSVPal *
 AG_HSVPalNew(void *parent, Uint flags)
 {
@@ -109,101 +111,6 @@ SetAlpha8(AG_HSVPal *_Nonnull pal, Uint8 a)
 		break;
 	}
 	AG_UnlockVariable(bAlpha);
-}
-
-static __inline__ void
-UpdatePixelFromHSVA(AG_HSVPal *_Nonnull pal)
-{
-	Uint8 r, g, b, a;
-	AG_Variable *bColor, *bv;
-	AG_Color *pColor;
-	void *v;
-
-	AG_HSV2RGB(AG_GetFloat(pal, "hue"),
-	           AG_GetFloat(pal, "saturation"),
-		   AG_GetFloat(pal, "value"), &r, &g, &b);
-	a = GetAlpha8(pal);
-	
-	if ((bv = AG_AccessVariable(pal, "RGBv")) != NULL) {
-		v = bv->data.p;
-		switch (AG_VARIABLE_TYPE(bv)) {
-		case AG_VARIABLE_FLOAT:
-			((float *)v)[0] = (float)r/255.0f;
-			((float *)v)[1] = (float)g/255.0f;
-			((float *)v)[2] = (float)b/255.0f;
-			break;
-		case AG_VARIABLE_DOUBLE:
-			((double *)v)[0] = (double)r/255.0;
-			((double *)v)[1] = (double)g/255.0;
-			((double *)v)[2] = (double)b/255.0;
-			break;
-		case AG_VARIABLE_INT:
-			((int *)v)[0] = (int)r;
-			((int *)v)[1] = (int)g;
-			((int *)v)[2] = (int)b;
-			break;
-		case AG_VARIABLE_UINT8:
-			((Uint8 *)v)[0] = r;
-			((Uint8 *)v)[1] = g;
-			((Uint8 *)v)[2] = b;
-			break;
-		default:
-			break;
-		}
-		AG_UnlockVariable(bv);
-	}
-	if ((bv = AG_AccessVariable(pal, "RGBAv")) != NULL) {
-		v = bv->data.p;
-		switch (AG_VARIABLE_TYPE(bv)) {
-		case AG_VARIABLE_FLOAT:
-			((float *)v)[0] = (float)r/255.0;
-			((float *)v)[1] = (float)g/255.0;
-			((float *)v)[2] = (float)b/255.0;
-			((float *)v)[3] = (float)a/255.0;
-			break;
-		case AG_VARIABLE_DOUBLE:
-			((double *)v)[0] = (double)r/255.0;
-			((double *)v)[1] = (double)g/255.0;
-			((double *)v)[2] = (double)b/255.0;
-			((double *)v)[3] = (double)a/255.0;
-			break;
-		case AG_VARIABLE_INT:
-			((int *)v)[0] = (int)r;
-			((int *)v)[1] = (int)g;
-			((int *)v)[2] = (int)b;
-			((int *)v)[3] = (int)a;
-			break;
-		case AG_VARIABLE_UINT8:
-			((Uint8 *)v)[0] = r;
-			((Uint8 *)v)[1] = g;
-			((Uint8 *)v)[2] = b;
-			((Uint8 *)v)[3] = a;
-			break;
-		default:
-			break;
-		}
-		AG_UnlockVariable(bv);
-	}
-
-	if (pal->flags & AG_HSVPAL_PIXEL) {
-		AG_PixelFormat **pFormat;
-		AG_Variable *bFormat;
-		
-		if ((bFormat = AG_GetVariable(pal, "pixel-format", (void *)&pFormat))) {
-			AG_SetUint32(pal, "pixel",
-			    AG_MapPixel32_RGBA8(*pFormat, r,g,b,a));
-		}
-		AG_UnlockVariable(bFormat);
-	}
-
-	bColor = AG_GetVariable(pal, "color", (void *)&pColor);
-	pColor->r = AG_8toH(r);
-	pColor->g = AG_8toH(g);
-	pColor->b = AG_8toH(b);
-	pColor->a = AG_8toH(a);
-	AG_UnlockVariable(bColor);
-
-	AG_Redraw(pal);
 }
 
 static void
@@ -349,23 +256,25 @@ AG_HSVPal_UpdateHue(AG_HSVPal *_Nonnull pal, int x, int y)
 void
 AG_HSVPal_UpdateSV(AG_HSVPal *_Nonnull pal, int ax, int ay)
 {
-	float s, v, hTri;
+	float s,v, hTri;
 	int x = ax - pal->triangle.x;
 	int y = ay - pal->triangle.y;
-	int y_2 = y>>1;
+	int y_2;
 
+	if (y >= pal->triangle.h) { y = pal->triangle.h-1; }
+	y_2 = y >> 1;
 	if (x < -y_2) { x = -y_2; }
 	if (x > y_2)  { x =  y_2; }
-	if (y > pal->triangle.h-1) { y = pal->triangle.h-1; }
 
 	hTri = (float)pal->triangle.h;
 	s = 1.0f - (float)(y) / hTri;
 	v = 1.0f - (float)(x + y_2) / hTri;
 
-	if (s < 0.0f)      { s = 0.00001f; }
-	else if (s > 1.0f) { s = 1.0f; }
-	if (v < 0.0f)      { v = 0.0001f; }
-	else if (v > 1.0f) { v = 1.0f; }
+	if (s < AG_SATURATION_EPSILON) { s = 0.00001f; }
+	else if (s > 1.0f)             { s = 1.0f; }
+
+	if (v < AG_VALUE_EPSILON)      { v = 0.0001f; }
+	else if (v > 1.0f)             { v = 1.0f; }
 
 	AG_SetFloat(pal, "saturation", s);
 	AG_SetFloat(pal, "value", v);
@@ -373,6 +282,103 @@ AG_HSVPal_UpdateSV(AG_HSVPal *_Nonnull pal, int ax, int ay)
 	UpdatePixelFromHSVA(pal);
 	AG_PostEvent(pal, "sv-changed", NULL);
 	pal->flags |= AG_HSVPAL_DIRTY;
+	AG_Redraw(pal);
+}
+
+static void
+UpdatePixelFromHSVA(AG_HSVPal *_Nonnull pal)
+{
+	Uint8 r,g,b,a;
+	AG_Variable *bColor, *bv;
+	AG_Color *pColor;
+	void *v;
+
+	AG_MapHSVf_RGB8(AG_GetFloat(pal, "hue"),
+	                AG_GetFloat(pal, "saturation"),
+	                AG_GetFloat(pal, "value"),
+	                &r, &g, &b);
+
+	a = GetAlpha8(pal);
+
+	if ((bv = AG_AccessVariable(pal, "RGBv")) != NULL) {
+		v = bv->data.p;
+		switch (AG_VARIABLE_TYPE(bv)) {
+		case AG_VARIABLE_FLOAT:
+			((float *)v)[0] = (float)r/255.0f;
+			((float *)v)[1] = (float)g/255.0f;
+			((float *)v)[2] = (float)b/255.0f;
+			break;
+		case AG_VARIABLE_DOUBLE:
+			((double *)v)[0] = (double)r/255.0;
+			((double *)v)[1] = (double)g/255.0;
+			((double *)v)[2] = (double)b/255.0;
+			break;
+		case AG_VARIABLE_INT:
+			((int *)v)[0] = (int)r;
+			((int *)v)[1] = (int)g;
+			((int *)v)[2] = (int)b;
+			break;
+		case AG_VARIABLE_UINT8:
+			((Uint8 *)v)[0] = r;
+			((Uint8 *)v)[1] = g;
+			((Uint8 *)v)[2] = b;
+			break;
+		default:
+			break;
+		}
+		AG_UnlockVariable(bv);
+	}
+	if ((bv = AG_AccessVariable(pal, "RGBAv")) != NULL) {
+		v = bv->data.p;
+		switch (AG_VARIABLE_TYPE(bv)) {
+		case AG_VARIABLE_FLOAT:
+			((float *)v)[0] = (float)r/255.0;
+			((float *)v)[1] = (float)g/255.0;
+			((float *)v)[2] = (float)b/255.0;
+			((float *)v)[3] = (float)a/255.0;
+			break;
+		case AG_VARIABLE_DOUBLE:
+			((double *)v)[0] = (double)r/255.0;
+			((double *)v)[1] = (double)g/255.0;
+			((double *)v)[2] = (double)b/255.0;
+			((double *)v)[3] = (double)a/255.0;
+			break;
+		case AG_VARIABLE_INT:
+			((int *)v)[0] = (int)r;
+			((int *)v)[1] = (int)g;
+			((int *)v)[2] = (int)b;
+			((int *)v)[3] = (int)a;
+			break;
+		case AG_VARIABLE_UINT8:
+			((Uint8 *)v)[0] = r;
+			((Uint8 *)v)[1] = g;
+			((Uint8 *)v)[2] = b;
+			((Uint8 *)v)[3] = a;
+			break;
+		default:
+			break;
+		}
+		AG_UnlockVariable(bv);
+	}
+
+	if (pal->flags & AG_HSVPAL_PIXEL) {
+		AG_PixelFormat **pFormat;
+		AG_Variable *bFormat;
+		
+		if ((bFormat = AG_GetVariable(pal, "pixel-format", (void *)&pFormat))) {
+			AG_SetUint32(pal, "pixel",
+			    AG_MapPixel32_RGBA8(*pFormat, r,g,b,a));
+		}
+		AG_UnlockVariable(bFormat);
+	}
+
+	bColor = AG_GetVariable(pal, "color", (void *)&pColor);
+	pColor->r = AG_8toH(r);
+	pColor->g = AG_8toH(g);
+	pColor->b = AG_8toH(b);
+	pColor->a = AG_8toH(a);
+	AG_UnlockVariable(bColor);
+
 	AG_Redraw(pal);
 }
 
@@ -586,7 +592,7 @@ static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_HSVPal *pal = AG_HSVPAL_SELF();
-	int btn = AG_INT(1);
+	const int btn = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
 	float r;
@@ -632,8 +638,8 @@ static void
 MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_HSVPal *pal = AG_HSVPAL_SELF();
-	int x = AG_INT(1);
-	int y = AG_INT(2);
+	const int x = AG_INT(1);
+	const int y = AG_INT(2);
 
 	switch (pal->state) {
 	case AG_HSVPAL_SEL_NONE:
@@ -696,7 +702,8 @@ Init(void *_Nonnull obj)
 {
 	AG_HSVPal *pal = obj;
 
-	WIDGET(pal)->flags |= AG_WIDGET_FOCUSABLE;
+	WIDGET(pal)->flags |= AG_WIDGET_FOCUSABLE |
+	                      AG_WIDGET_USE_TEXT;
 
 	pal->flags = 0;
 	pal->h = 0.0f;
@@ -735,7 +742,7 @@ static void
 RenderPalette(AG_HSVPal *_Nonnull pal)
 {
 	AG_Surface *S = pal->surface;
-	float h, hue, sat, val;
+	float hue,sat, val, h;
 	AG_Color c;
 	AG_Pixel px;
 	int x, y, i;
@@ -744,9 +751,9 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 	AG_FillRect(S, NULL, &c);
 	/* XXX overdraw */
 
-	hue = (AG_GetFloat(pal, "hue")/360.0f) * 2.0f*AG_PI;
-	sat =  AG_GetFloat(pal, "saturation");
-	val =  AG_GetFloat(pal, "value");
+	hue = AG_GetFloat(pal, "hue");
+	sat = AG_GetFloat(pal, "saturation");
+	val = AG_GetFloat(pal, "value");
 
 	/* Render the circle of hues. */
 	for (h = 0.0f; h < 2.0f*AG_PI; h += pal->circle.dh) {
@@ -774,9 +781,7 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 		            (float)(pal->triangle.h);
 
 		for (x = 0; x < y; x++) {
-			AG_MapHSVf_RGB(
-			    (hue/(2.0f*AG_PI))*360.0f,
-			    sat,
+			AG_MapHSVf_RGB(hue, sat,
 			    1.0f - ((float)x/(float)pal->triangle.h),
 			    &c.r, &c.g, &c.b);
 
@@ -815,8 +820,7 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 			}
 		}
 
-		AG_MapHSVf_RGB((hue/(2.0f*AG_PI))*360.0f, sat, val,
-		    &c.r, &c.g, &c.b);
+		AG_MapHSVf_RGB(hue, sat, val, &c.r, &c.g, &c.b);
 
 		for (y = pal->rPrev.y+8; y < S->h; y++) {
 			for (x = 0, c.a = 0; x < S->w; x++) {
@@ -840,24 +844,29 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
-	const int padding = 5;
+	int padding = 5;
 	AG_HSVPal *pal = obj;
 
 	if (a->w < 32 || a->h < 32) {
 		return (-1);
 	} else if (a->w < 50 || a->h < 50) {
-		pal->circle.width = 2;
-		pal->selcircle_r = 2;
-	} else if (a->w < 100 || a->h < 100) {
+		padding = 0;
 		pal->circle.width = 4;
+		pal->selcircle_r = 3;
+	} else if (a->w < 100 || a->h < 100) {
+		padding = 0;
+		pal->circle.width = 6;
 		pal->selcircle_r = 2;
 	} else if (a->w < 200 || a->h < 200) {
-		pal->circle.width = 10;
-		pal->selcircle_r = 4;
+		padding = 5;
+		pal->circle.width = 12;
+		pal->selcircle_r = 2;
 	} else if (a->w < 300 || a->h < 300) {
+		padding = 10;
 		pal->circle.width = 20;
 		pal->selcircle_r = 4;
 	} else {
+		padding = 20;
 		pal->circle.width = 30;
 		pal->selcircle_r = 6;
 	}
@@ -876,13 +885,10 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	pal->circle.y = (a->h - pal->rPrev.h) >> 1;
 
 	pal->triangle.x = a->w >> 1;
-	pal->triangle.y = pal->circle.y+pal->circle.width-pal->circle.rOut;
+	pal->triangle.y = pal->circle.y + pal->circle.width + (padding >> 1) - pal->circle.rOut;
 	pal->triangle.h = pal->circle.rIn*Sin((37.0f  / 360.0f)*(2.0f * AG_PI))
-			 -pal->circle.rIn*Sin((270.0f / 360.0f)*(2.0f * AG_PI));
-	
-	if (pal->surface != NULL) {
-		AG_SurfaceResize(pal->surface, a->w, a->h);
-	}
+			 -pal->circle.rIn*Sin((270.0f / 360.0f)*(2.0f * AG_PI)) - padding;
+
 	pal->flags |= AG_HSVPAL_DIRTY;
 	return (0);
 }
@@ -891,11 +897,13 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_HSVPal *pal = obj;
-	AG_Color c;
-	float hue, sat, val;
+	AG_Color c, cInv, cBlack;
+	float hueDeg, hueRad, sat, val;
 	Uint8 r, g, b, a;
-	int w = WIDTH(pal);
+	const int w = WIDTH(pal);
+	const int h = HEIGHT(pal);
 	int x, y, rad;
+	int xSel, ySel;
 
 	if (pal->surface == NULL) {
 #ifdef HAVE_OPENGL
@@ -908,49 +916,73 @@ Draw(void *_Nonnull obj)
 		                             agSurfaceFmt->Bmask);
 #endif
 		pal->surfaceId = AG_WidgetMapSurface(pal, pal->surface);
+	} else if (pal->surface->w != w || pal->surface->h != h) {
+		AG_SurfaceResize(pal->surface, w,h);
+		pal->flags |= AG_HSVPAL_DIRTY;
 	}
 	if (pal->flags & AG_HSVPAL_DIRTY) {
 		pal->flags &= ~(AG_HSVPAL_DIRTY);
 		RenderPalette(pal);
 		AG_WidgetUpdateSurface(pal, pal->surfaceId);
 	}
-
-	hue = (AG_GetFloat(pal, "hue") / 360.0f) * 2.0f*AG_PI;
-	sat =  AG_GetFloat(pal, "saturation");
-	val =  AG_GetFloat(pal, "value");
-	a = (Uint8)(AG_GetFloat(pal, "alpha")*255.0f);
-
 	AG_WidgetBlitFrom(pal, pal->surfaceId, NULL, 0, 0);
 
-	/* Indicate the current selection. */
-	/* TODO xor */
+	hueDeg = AG_GetFloat(pal, "hue");
+	hueRad = (hueDeg / 360.0f) * 2.0f*AG_PI;
+	sat = AG_GetFloat(pal, "saturation");
+	val = AG_GetFloat(pal, "value");
+	a = (Uint8)(AG_GetFloat(pal, "alpha")*255.0f);
+	AG_MapHSVf_RGB8(hueDeg, sat, val, &r,&g,&b);
+
+	c.r = AG_8toH(r);
+	c.g = AG_8toH(g);
+	c.b = AG_8toH(b);
+	c.a = AG_OPAQUE;
+
+	cInv.r = AG_OPAQUE - c.r;
+	cInv.g = AG_OPAQUE - c.g;
+	cInv.b = AG_OPAQUE - c.b;
+	cInv.a = AG_OPAQUE;
+
+	AG_ColorBlack(&cBlack);
+
+	/* Hue */
 	rad = pal->circle.rIn + (pal->circle.width >> 1);
-	AG_ColorBlack(&c);
-	AG_DrawCircle(pal,
-	    pal->circle.x + rad*Cos(hue),
-	    pal->circle.y + rad*Sin(hue),
-	    pal->selcircle_r,
+	xSel = pal->circle.x + rad*Cos(hueRad);
+	ySel = pal->circle.y + rad*Sin(hueRad);
+	AG_DrawCircleFilled(pal, xSel, ySel,
+	    pal->selcircle_r + ((pal->state == AG_HSVPAL_SEL_H) ? 2 : 0),
 	    &c);
+	AG_DrawCircle(pal, xSel, ySel,
+	    pal->selcircle_r + 1 + ((pal->state == AG_HSVPAL_SEL_H) ? 2 : 0),
+	    &cInv);
+	AG_DrawCircle(pal, xSel, ySel,
+	    pal->selcircle_r + 2 + ((pal->state == AG_HSVPAL_SEL_H) ? 2 : 0),
+	    &cBlack);
 	
+	/* Saturation and Value */
 	/* The rendering routine uses (v = 1 - x/h), so (x = -v*h + h). */
 	y = (int)((1.0 - sat) * (float)pal->triangle.h);
 	x = (int)(-(val*(float)pal->triangle.h - (float)pal->triangle.h));
 	if (x < 0) { x = 0; }
 	if (x > y) { x = y; }
-	AG_DrawCircle(pal,
-	    pal->triangle.x + x - y/2,
-	    pal->triangle.y + y,
-	    pal->selcircle_r,
+	xSel = pal->triangle.x + x - (y >> 1);
+	ySel = pal->triangle.y + y;
+	AG_DrawCircle(pal, xSel, ySel,
+	    pal->selcircle_r + ((pal->state == AG_HSVPAL_SEL_SV) ? 2 : 0),
 	    &c);
-
-	AG_MapHSVf_RGB8((hue * 360.0f)/(2.0f*AG_PI), sat, val, &r,&g,&b);
+	AG_DrawCircle(pal, xSel, ySel,
+	    pal->selcircle_r + 1 + ((pal->state == AG_HSVPAL_SEL_SV) ? 2 : 0),
+	    &cInv);
+	AG_DrawCircle(pal, xSel, ySel,
+	    pal->selcircle_r + 2 + ((pal->state == AG_HSVPAL_SEL_SV) ? 2 : 0),
+	    &cBlack);
 
 	/* Draw the color preview rectangle. */
 	if (!(pal->flags & AG_HSVPAL_NOPREVIEW)) {
 		AG_Rect rPrev = pal->rPrev;
 
 		rPrev.h >>= 1;
-		AG_ColorRGB_8(&c, r,g,b);
 		AG_DrawRectFilled(pal, &rPrev, &c);
 	}
 
@@ -961,36 +993,54 @@ Draw(void *_Nonnull obj)
 		int ly2 = pal->rPrev.y + pal->rPrev.h;
 
 		if (lx > w-2) { lx = w-2; }
-		AG_ColorBlack(&c);
-		AG_DrawLineV(pal, lx,   ly1, ly2, &c);
-		AG_DrawLineV(pal, lx+2, ly1, ly2, &c);
+		AG_DrawLineV(pal, lx,   ly1, ly2, &WCOLOR(pal, LINE_COLOR));
+		AG_DrawLineV(pal, lx+2, ly1, ly2, &WCOLOR(pal, LINE_COLOR));
 	}
 
 	/* Display RGB/HSV values */
-	if (pal->flags & (AG_HSVPAL_SHOW_RGB|AG_HSVPAL_SHOW_HSV)) {
-		AG_Surface *s;
+	if (pal->flags & (AG_HSVPAL_SHOW_RGB | AG_HSVPAL_SHOW_HSV)) {
+		AG_Surface *S;
+		AG_Color cWhite;
 
-		/* XXX inefficient */
-		AG_PushTextState();
-		AG_TextBGColorRGB(0,0,0);
-		AG_TextColorRGB(255,255,255);
+		AG_ColorWhite(&cWhite);
+
+		/* XXX TODO cache rendered text */
+		AG_TextBGColor(&c);
+
+		/* TODO move this to stylesheet */
+		AG_TextFontLookup("league-gothic", WFONT(pal)->spec.size+4.0f, 0);
+	
+		if (sat > 0.66f) {
+			if (val < 0.66f || ((hueDeg > 25.0f && hueDeg < 200.0f))) {
+				AG_TextColor(&cBlack);
+			} else {
+				AG_TextColor(&cWhite);
+			}
+		} else {
+			if (val < 0.66f) {
+				AG_TextColor(&cWhite);
+			} else {
+				AG_TextColor(&cBlack);
+			}
+		}
+
 		if ((pal->flags & AG_HSVPAL_SHOW_RGB) &&
 		    (pal->flags & AG_HSVPAL_SHOW_HSV)) {
-			s = AG_TextRenderF(
-			    "RGB: %u,%u,%u\n"
-			    "HSV: %.02f,%.02f,%.02f",
-			    r,g,b, (hue*360.0f) / (2.0f*AG_PI), sat, val);
+			S = AG_TextRenderF(
+			    " R:%u G:%u B:%u \n"
+			    " H:%.0f\xc2\xb0 S:%.1f V:%.1f ",
+			    r,g,b, hueDeg, sat, val);
 		} else if (pal->flags & AG_HSVPAL_SHOW_RGB) {
-			s = AG_TextRenderF("RGB: %u,%u,%u", r, g, b);
+			S = AG_TextRenderF(" R:%u G:%u B:%u ", r, g, b);
 		} else {
-			s = AG_TextRenderF("HSV: %.01f,%.02f,%.02f",
-			    (hue*360.0f) / (2.0f*AG_PI), sat, val);
+			S = AG_TextRenderF(" H:%.0f\xc2\xb0 S:%.1f V:%.1f ",
+			                   hueDeg, sat, val);
 		}
-		AG_WidgetBlit(pal, s,
-		    (w >> 1) - (s->w >> 1),
-		    pal->rPrev.y + (pal->rPrev.h >> 1) - (s->h >> 1));
-		AG_SurfaceFree(s);
-		AG_PopTextState();
+
+		AG_WidgetBlit(pal, S,         (w >> 1) - (S->w >> 1),
+		    pal->rPrev.y + (pal->rPrev.h >> 1) - (S->h >> 1));
+
+		AG_SurfaceFree(S);
 	}
 }
 
