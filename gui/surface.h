@@ -242,6 +242,19 @@ AG_Surface *_Nonnull AG_SurfaceRGBA(Uint,Uint, int, Uint,
                                     AG_Pixel,AG_Pixel,AG_Pixel,AG_Pixel)
 				   _Warn_Unused_Result;
 
+#define AG_SurfaceStdRGB(w,h) \
+        AG_SurfaceRGB((w),(h), agSurfaceFmt->BitsPerPixel, 0, \
+	                       agSurfaceFmt->Rmask, \
+			       agSurfaceFmt->Gmask, \
+			       agSurfaceFmt->Bmask)
+#define AG_SurfaceStdRGBA(w,h) \
+        AG_SurfaceRGBA((w),(h), \
+	               agSurfaceFmt->BitsPerPixel, 0, \
+                       agSurfaceFmt->Rmask, \
+	               agSurfaceFmt->Gmask, \
+	               agSurfaceFmt->Bmask, \
+	               agSurfaceFmt->Amask)
+
 AG_Surface *_Nonnull AG_SurfaceFromPixelsRGB(const void *_Nonnull,
                                              Uint,Uint, Uint,
                                              AG_Pixel,AG_Pixel,AG_Pixel)
@@ -365,7 +378,6 @@ void AG_GetColor32_Gray16(Uint32, AG_GrayscaleMode,
                           Uint16 *_Nonnull, Uint16 *_Nonnull);
 
 #if AG_MODEL == AG_LARGE
-
 # define AG_SurfaceGet(S,x,y)                 AG_SurfaceGet64((S),(x),(y))
 # define AG_SurfaceGet_At(S,p)                AG_SurfaceGet64_At((S),(p))
 # define AG_GetColor(c,px,pf)                 AG_GetColor64((c),(px),(pf))
@@ -413,7 +425,6 @@ void AG_GetColor64_Gray16(Uint64, AG_GrayscaleMode,
 # define AG_GetColor_RGBA8(px,pf,r,g,b,a)     AG_GetColor32_RGBA8((px),(pf),(r),(g),(b),(a))
 # define AG_GetColor_RGB16(px,pf,r,g,b)       AG_GetColor32_RGB16((px),(pf),(r),(g),(b))
 # define AG_GetColor_RGBA16(px,pf,r,g,b,a)    AG_GetColor32_RGBA16((px),(pf),(r),(g),(b),(a))
-
 #endif /* AG_LARGE */
 
 void AG_AnimStateInit(AG_AnimState *_Nonnull, AG_Surface *_Nonnull);
@@ -423,8 +434,8 @@ void AG_AnimSetPingPong(AG_AnimState *_Nonnull, int);
 int  AG_AnimPlay(AG_AnimState *_Nonnull);
 void AG_AnimStop(AG_AnimState *_Nonnull);
 
-int AG_SurfaceAddFrame(AG_Surface *_Nonnull, const AG_Surface *_Nonnull,
-                       const AG_Rect *_Nullable, AG_AnimDispose, Uint, Uint);
+int  AG_SurfaceAddFrame(AG_Surface *_Nonnull, const AG_Surface *_Nonnull,
+                        const AG_Rect *_Nullable, AG_AnimDispose, Uint, Uint);
 
 /*
  * Inlinables
@@ -517,15 +528,6 @@ void ag_surface_set_colorkey(AG_Surface *_Nonnull, Uint, AG_Pixel);
 #endif /* !AG_INLINE_SURFACE */
 
 #ifdef AG_LEGACY
-# define AG_SurfaceStdRGB(w,h) \
-         AG_SurfaceRGB((w),(h), agSurfaceFmt->BitsPerPixel,0, \
-             agSurfaceFmt->Rmask, agSurfaceFmt->Gmask, agSurfaceFmt->Bmask)
-# define AG_SurfaceStdRGBA(w,h) \
-         AG_SurfaceRGBA((w),(h), agSurfaceFmt->BitsPerPixel,0, \
-	    agSurfaceFmt->Rmask, agSurfaceFmt->Gmask, agSurfaceFmt->Bmask, \
-	    agSurfaceFmt->Amask)
-/* -> AG_SurfaceNew(agSurfaceFmt, ...) */
-
 # define AG_AnimNew		AG_SurfaceNew
 # define AG_AnimEmpty		AG_SurfaceEmpty
 # define AG_AnimIndexed		AG_SurfaceIndexed
@@ -540,8 +542,6 @@ void ag_surface_set_colorkey(AG_Surface *_Nonnull, Uint, AG_Pixel);
 # define AG_AnimSetOrigFPS(s,f)
 # define AG_AnimSetFPS(ast,f)
 /* -> (now handled in AG_Surface) */
-
-#define AG_BlendFn AG_AlphaFn			/* less confusing */
 
 /* Flags renamed for readability */
 # define AG_SRCCOLORKEY		AG_SURFACE_COLORKEY
@@ -565,9 +565,10 @@ void ag_surface_set_colorkey(AG_Surface *_Nonnull, Uint, AG_Pixel);
 	if (!AG_SurfaceClipped((s), (x),(y))) 				\
 		AG_SurfaceBlendRGB8((s), (x),(y), (r),(g),(b),(a), (fn))
 
-/* AG_ALPHA_x renamed in 1.6 */
+/* AG_ALPHA_* and AG_BlendFn renamed in 1.6 */
 # define AG_ALPHA_TRANSPARENT AG_TRANSPARENT
 # define AG_ALPHA_OPAQUE      AG_OPAQUE
+# define AG_BlendFn           AG_AlphaFn
 
 void        AG_SurfaceLock(AG_Surface *_Nonnull) DEPRECATED_ATTRIBUTE;
 void        AG_SurfaceUnlock(AG_Surface *_Nonnull) DEPRECATED_ATTRIBUTE;

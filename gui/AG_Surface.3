@@ -78,6 +78,12 @@ Image transfers honor a settable per-surface clipping rectangle.
 .Fn AG_SurfaceRGBA "Uint w" "Uint h" "int bitsPerPixel" "Uint flags" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask" "Uint32 Amask"
 .Pp
 .Ft "AG_Surface *"
+.Fn AG_SurfaceStdRGB "Uint w" "Uint h"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceStdRGBA "Uint w" "Uint h"
+.Pp
+.Ft "AG_Surface *"
 .Fn AG_SurfaceFromPixelsRGB "void *pixels" "Uint w" "Uint h" "int bitsPerPixel" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask"
 .Pp
 .Ft "AG_Surface *"
@@ -243,6 +249,22 @@ are used to retrieve the individual 8-bit red, green, blue and alpha components.
 implicitely sets the
 .Dv AG_SURFACE_ALPHA
 flag by default.
+.Pp
+The
+.Fn AG_SurfaceStdRGB
+and
+.Fn AG_SurfaceStdRGBA
+macros are shorthands for
+.Fn AG_SurfaceRGB
+or
+.Fn AG_SurfaceRGBA
+with
+.Fa flags
+of 0
+and
+.Fa bitsPerPixel /
+.Fa [RGBA]mask
+set according to the reference format (agSurfaceFmt).
 .Pp
 .Fn AG_SurfaceFromPixelsRGB
 and
