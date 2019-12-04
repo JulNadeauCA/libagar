@@ -239,8 +239,11 @@ MyOverlayFunction(AG_Event *event)
 static void
 ButtonDown(AG_Event *event)
 {
+	AG_GLView *glv = AG_GLVIEW_SELF();
 	MyTestInstance *ti = AG_PTR(1);
 	int button = AG_INT(2);
+
+	AG_WidgetFocus(glv);
 
 	switch (button) {
 	case AG_MOUSE_WHEELDOWN:

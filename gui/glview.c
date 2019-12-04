@@ -77,7 +77,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_GLView *glv = AG_GLVIEW_SELF();
 
-	if (!AG_WidgetIsFocused(glv))
+	if ((WIDGET(glv)->flags & AG_WIDGET_FOCUSABLE) &&
+	    !AG_WidgetIsFocused(glv))
 		AG_WidgetFocus(glv);
 }
 
@@ -103,15 +104,15 @@ Init(void *_Nonnull obj)
 	glv->flags = AG_GLVIEW_INIT_MATRICES;
 	glv->wPre = 100;
 	glv->hPre = 100;
-	glv->draw_ev = NULL;
-	glv->underlay_ev = NULL;
-	glv->overlay_ev = NULL;
-	glv->scale_ev = NULL;
-	glv->keydown_ev = NULL;
-	glv->btndown_ev = NULL;
-	glv->keyup_ev = NULL;
-	glv->btnup_ev = NULL;
-	glv->motion_ev = NULL;
+	memset(&glv->draw_ev, 0, sizeof(AG_Event *) + /* draw_ev */
+	                         sizeof(AG_Event *) + /* overlay_ev */
+	                         sizeof(AG_Event *) + /* underlay_ev */
+	                         sizeof(AG_Event *) + /* scale_ev */
+	                         sizeof(AG_Event *) + /* keydown_ev */
+	                         sizeof(AG_Event *) + /* keyup_ev */
+	                         sizeof(AG_Event *) + /* btndown_ev */
+	                         sizeof(AG_Event *) + /* btnup_ev */
+	                         sizeof(AG_Event *)); /* motion_ev */
 	
 	AG_ColorBlack(&glv->bgColor);
 
