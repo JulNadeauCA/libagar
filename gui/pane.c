@@ -82,8 +82,12 @@ static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Pane *pa = AG_PANE_SELF();
+	AG_Window *wParent = AG_ParentWindow(pa);
 	int button = AG_INT(1);
 
+	if (!AG_WindowIsFocused(wParent))
+		AG_WindowFocus(wParent);
+	
 	if (button == AG_MOUSE_LEFT &&
 	    !(pa->flags & AG_PANE_UNMOVABLE)) {
 		pa->dmoving = OverDivControl(pa,
