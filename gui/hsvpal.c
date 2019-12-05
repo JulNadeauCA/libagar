@@ -597,7 +597,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	int y = AG_INT(3);
 	float r;
 
-	if (!AG_WidgetIsFocused(pal))
+	if ((WIDGET(pal)->flags & AG_WIDGET_FOCUSABLE) &&
+	    !AG_WidgetIsFocused(pal))
 		AG_WidgetFocus(pal);
 
 	switch (btn) {
@@ -847,7 +848,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	int padding = 5;
 	AG_HSVPal *pal = obj;
 
-	if (a->w < 32 || a->h < 32) {
+	if (a->w < 20 || a->h < 20) {
 		return (-1);
 	} else if (a->w < 50 || a->h < 50) {
 		padding = 0;
@@ -907,13 +908,9 @@ Draw(void *_Nonnull obj)
 
 	if (pal->surface == NULL) {
 #ifdef HAVE_OPENGL
-		pal->surface = AG_SurfaceStdGL(w, HEIGHT(pal));
+		pal->surface = AG_SurfaceStdGL(w, h);
 #else
-		pal->surface = AG_SurfaceRGB(w, HEIGHT(pal),
-		                             agSurfaceFmt->BitsPerPixel, 0,
-		                             agSurfaceFmt->Rmask,
-		                             agSurfaceFmt->Gmask,
-		                             agSurfaceFmt->Bmask);
+		pal->surface = AG_SurfaceStdRGB(w, h);
 #endif
 		pal->surfaceId = AG_WidgetMapSurface(pal, pal->surface);
 	} else if (pal->surface->w != w || pal->surface->h != h) {
@@ -979,12 +976,8 @@ Draw(void *_Nonnull obj)
 	    &cBlack);
 
 	/* Draw the color preview rectangle. */
-	if (!(pal->flags & AG_HSVPAL_NOPREVIEW)) {
-		AG_Rect rPrev = pal->rPrev;
-
-		rPrev.h >>= 1;
-		AG_DrawRectFilled(pal, &rPrev, &c);
-	}
+	if (!(pal->flags & AG_HSVPAL_NOPREVIEW))
+		AG_DrawRectFilled(pal, &pal->rPrev, &c);
 
 	/* Overlay the slider over the trasparency preview. */
 	if (!(pal->flags & AG_HSVPAL_NOALPHA)) {
@@ -998,27 +991,30 @@ Draw(void *_Nonnull obj)
 	}
 
 	/* Display RGB/HSV values */
-	if (pal->flags & (AG_HSVPAL_SHOW_RGB | AG_HSVPAL_SHOW_HSV)) {
+	if (pal->flags & AG_HSVPAL_SHOW_RGB_HSV) {
+		AG_Rect rClip;
 		AG_Surface *S;
-		AG_Color cWhite;
-
-		AG_ColorWhite(&cWhite);
-
+	
 		/* XXX TODO cache rendered text */
 		AG_TextBGColor(&c);
 
-		/* TODO move this to stylesheet */
-		AG_TextFontLookup("league-gothic", WFONT(pal)->spec.size+4.0f, 0);
+		if (w < 80) {
+			AG_TextFontLookup("league-gothic-condensed",
+			                  WFONT(pal)->spec.size+3.0f, 0);
+		} else {
+			AG_TextFontLookup("league-gothic",
+			                  WFONT(pal)->spec.size+3.0f, 0);
+		}
 	
 		if (sat > 0.66f) {
 			if (val < 0.66f || ((hueDeg > 25.0f && hueDeg < 200.0f))) {
 				AG_TextColor(&cBlack);
 			} else {
-				AG_TextColor(&cWhite);
+				AG_TextColorRGB(255,255,255);
 			}
 		} else {
 			if (val < 0.66f) {
-				AG_TextColor(&cWhite);
+				AG_TextColorRGB(255,255,255);
 			} else {
 				AG_TextColor(&cBlack);
 			}
@@ -1027,18 +1023,29 @@ Draw(void *_Nonnull obj)
 		if ((pal->flags & AG_HSVPAL_SHOW_RGB) &&
 		    (pal->flags & AG_HSVPAL_SHOW_HSV)) {
 			S = AG_TextRenderF(
-			    " R:%u G:%u B:%u \n"
-			    " H:%.0f\xc2\xb0 S:%.1f V:%.1f ",
+			    " %u  %u  %u \n"
+			    " %.1f  %.2f  %.2f ",
 			    r,g,b, hueDeg, sat, val);
 		} else if (pal->flags & AG_HSVPAL_SHOW_RGB) {
-			S = AG_TextRenderF(" R:%u G:%u B:%u ", r, g, b);
+			S = AG_TextRenderF(" %u  %u  %u ", r, g, b);
 		} else {
-			S = AG_TextRenderF(" H:%.0f\xc2\xb0 S:%.1f V:%.1f ",
+			S = AG_TextRenderF(" %.1f  %.2f  %.2f ",
 			                   hueDeg, sat, val);
 		}
 
+		if (S->w > w-2) {
+			rClip.x = 0;
+			rClip.y = 0;
+			rClip.w = w-2;
+			rClip.h = h-2;
+			AG_PushClipRect(pal, &rClip);
+		}
+		
 		AG_WidgetBlit(pal, S,         (w >> 1) - (S->w >> 1),
 		    pal->rPrev.y + (pal->rPrev.h >> 1) - (S->h >> 1));
+		
+		if (S->w > w-2)
+			AG_PopClipRect(pal);
 
 		AG_SurfaceFree(S);
 	}

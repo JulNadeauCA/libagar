@@ -21,6 +21,7 @@ typedef struct ag_hsvpal {
 #define AG_HSVPAL_NOPREVIEW	0x20	/* Disable color preview */
 #define AG_HSVPAL_SHOW_RGB	0x40	/* Print RGB value */
 #define AG_HSVPAL_SHOW_HSV	0x80	/* Print HSV value */
+#define AG_HSVPAL_SHOW_RGB_HSV	0xc0	/* Print both RGB and HSV values */
 #define AG_HSVPAL_EXPAND (AG_HSVPAL_HFILL|AG_HSVPAL_VFILL)
 
 	float h, s, v, a;		/* Default bindings */
