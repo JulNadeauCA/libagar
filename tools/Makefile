@@ -3,6 +3,7 @@ include ${TOP}/Makefile.config
 
 SUBDIR=	agardb \
 	agar-disasm \
+	mapedit \
 	rgedit \
 	sgedit \
 	skedit \
