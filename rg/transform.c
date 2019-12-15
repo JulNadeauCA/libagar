@@ -53,9 +53,6 @@ TransformRotate(struct map_item *r, int angle)
 	case MAP_ITEM_TILE:
 		su = AG_SPRITE(r->r_sprite.obj,r->r_sprite.offs).su;
 		break;
-	case MAP_ITEM_ANIM:
-		su = AG_ANIM_FRAME(r, &AG_ANIM(r->r_anim.obj,r->r_anim.offs));
-		break;
 	default:
 		return (NULL);
 	}

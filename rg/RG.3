@@ -42,16 +42,13 @@ The Agar-RG library implements a feature-based pixel graphic format.
 The central class of the library is
 .Ft RG_Tileset ,
 which acts as a container for graphics resources:
-.Bl -tag -width "Animations "
+.Bl -tag -width "Textures "
 .It Tiles
-Transparent graphic surfaces, generated from a set of instructions (or
+Graphic surfaces (static or possibly animated) generated from a set of
+instructions (or
 .Sq features ) .
 See
 .Xr RG_Tile 3 .
-.It Animations
-Simple 2D animations also generated from a set of instructions.
-See
-.Xr RG_Anim 3 .
 .It Textures
 References to tiles with additional information related to texturing.
 See
@@ -67,17 +64,12 @@ See
 .Xr RG_Sketch 3 .
 .El
 .Pp
-The
 .Nm
-structure also provides tiles, animations and textures with unique integer
-IDs, such that items can be added or removed on the fly without invalidating
-existing external references.
-To take advantage of this feature, code should reference tiles and animations
-using the
+provides tiles and textures with unique integer IDs such that items can be
+added or removed on the fly without invalidating existing external references.
+To take advantage of this feature, code should reference tiles using the
 .Va tiletbl
-and
-.Va animtbl
-members of the
+member of the
 .Nm
 structure.
 .Sh INHERITANCE HIERARCHY
@@ -104,14 +96,8 @@ defined.
 .Ft RG_Tile *
 .Fn RGTILE "RG_Tileset *tileset" "Uint32 tileID"
 .Pp
-.Ft RG_Anim *
-.Fn RGANIM "RG_Tileset *tileset" "Uint32 animID"
-.Pp
 .Ft int
 .Fn RG_LookupTile "RG_Tileset *tileset" "Uint32 tileID" "RG_Tile **rTile"
-.Pp
-.Ft int
-.Fn RG_LookupAnim "RG_Tileset *tileset" "Uint32 animID" "RG_Anim **rAnim"
 .Pp
 .Ft "RG_Tile *"
 .Fn RG_TilesetFindTile "RG_Tileset *tileset" "const char *name"
@@ -131,21 +117,12 @@ defined.
 .nr nS 0
 The
 .Fn RGTILE
-and
-.Fn RGANIM
-macros return the tile or animation of the given name.
-If debugging is enabled, a non-existing resource will trigger a fatal
-error.
+macro returns a tile by name.
 .Pp
 .Fn RG_LookupTile
-and
-.Fn RG_LookupAnim
-search for a tile or animation with the given name.
+searches for a tile by name.
 If one is found, it is returned into
-.Fa rTile
-or
-.Fa rAnim .
-The function returns 0 on success and -1 if no such tile exists.
+.Fa rTile .
 .Pp
 .Fn RG_TilesetFindTile ,
 .Fn RG_TilesetFindSketch
@@ -159,7 +136,6 @@ variants use the VFS path name for the
 .Nm
 object itself.
 .Sh SEE ALSO
-.Xr RG_Anim 3 ,
 .Xr RG_Feature 3 ,
 .Xr RG_Pixmap 3 ,
 .Xr RG_Sketch 3 ,

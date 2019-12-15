@@ -49,9 +49,6 @@ Element types include:
 .It MAP_ITEM_TILE
 Pointer to a
 .Xr RG_Tile 3 .
-.It MAP_ITEM_ANIM
-Pointer to a
-.Xr RG_Anim 3 .
 .It MAP_ITEM_WARP
 Pointer to some other node, possibly on another map.
 This is commonly used by
@@ -196,9 +193,7 @@ and
 associate a new tile or animation to the element
 .Fa r
 (of type
-.Dv MAP_ITEM_TILE
-or
-.Dv MAP_ITEM_ANIM ) .
+.Dv MAP_ITEM_TILE ) .
 .Pp
 The
 .Fn MAP_ItemSetLayer

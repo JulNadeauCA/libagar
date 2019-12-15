@@ -10,7 +10,6 @@ struct rg_tile;
 /* struct rg_sketch; */
 struct rg_pixmap;
 struct rg_feature;
-struct rg_anim;
 struct rg_texture;
 
 #include <agar/rg/transform.h>
@@ -19,7 +18,6 @@ struct rg_texture;
 #include <agar/rg/feature.h>
 #include <agar/rg/pixmap.h>
 /* #include <agar/rg/sketch.h> */
-#include <agar/rg/animation.h>
 #include <agar/rg/texture.h>
 #include <agar/rg/prim.h>
 
@@ -32,8 +30,6 @@ struct rg_texture;
 #define RG_TILESET_NAME_MAX	32	/* MAX({TILE,SKETCH,PIXMAP}_NAME_MAX) */
 #define RG_TILE_ID_MAX		(0xffffffff-1)
 #define RG_TILE_ID_MINREUSE	(0xffff)
-#define RG_ANIM_ID_MAX		(0xffffffff-1)
-#define RG_ANIM_ID_MINREUSE	(0xffff)
 
 typedef struct rg_tileset {
 	struct ag_object obj;
@@ -46,16 +42,12 @@ typedef struct rg_tileset {
 	Uint                         nTileTbl;
 	RG_Tile *_Nullable *_Nullable tileTbl;	/* Tile ID mappings */
 
-	RG_Anim *_Nullable *_Nullable animTbl;	/* Animation ID mappings */
-	Uint                         nAnimTbl;
-	Uint32 _pad;
 	AG_TAILQ_HEAD_(rg_tile) tiles;
 #if 0
 	AG_TAILQ_HEAD_(rg_sketch) sketches;
 #endif
 	AG_TAILQ_HEAD_(rg_pixmap) pixmaps;
 	AG_TAILQ_HEAD_(rg_feature) features;
-	AG_TAILQ_HEAD_(rg_anim) animations;
 	AG_TAILQ_HEAD_(rg_texture) textures;
 } RG_Tileset;
 
@@ -70,10 +62,8 @@ typedef struct rg_tileset {
 
 #ifdef AG_DEBUG
 # define RGTILE(ts,id) RG_GetTile((ts),(id))
-# define RGANIM(ts,id) RG_GetAnim((ts),(id))
 #else
 # define RGTILE(ts,id) (ts)->tileTbl[(id)]
-# define RGANIM(ts,id) (ts)->animTbl[(id)]
 #endif
 
 __BEGIN_DECLS
@@ -88,7 +78,6 @@ RG_Tile *_Nullable RG_TilesetFindTile(RG_Tileset *_Nonnull, const char *_Nonnull
 RG_Sketch *_Nullable RG_TilesetFindSketch(RG_Tileset *_Nonnull, const char *_Nonnull);
 #endif
 RG_Pixmap *_Nullable RG_TilesetFindPixmap(RG_Tileset *_Nonnull, const char *_Nonnull);
-RG_Anim   *_Nullable RG_TilesetFindAnim(RG_Tileset *_Nonnull, const char *_Nonnull);
 
 RG_Pixmap *_Nullable RG_TilesetResvPixmap(void *_Nonnull, const char *_Nonnull,
                                           const char *_Nonnull);
@@ -116,20 +105,6 @@ RG_LookupTile(RG_Tileset *_Nonnull ts, Uint32 id,
 	}
 	return (0);
 }
-static __inline__ int
-RG_LookupAnim(RG_Tileset *_Nonnull ts, Uint32 id,
-    RG_Anim *_Nullable *_Nullable anim)
-{
-	if (id >= ts->nAnimTbl || ts->animTbl[id] == NULL) {
-		AG_SetError("%s: no such anim: %u", AGOBJECT(ts)->name,
-		    (Uint)id);
-		return (-1);
-	}
-	if (anim != NULL) {
-		*anim = ts->animTbl[id];
-	}
-	return (0);
-}
 static __inline__ RG_Tile *_Nonnull
 RG_GetTile(RG_Tileset *_Nonnull ts, Uint32 id)
 {
@@ -138,15 +113,6 @@ RG_GetTile(RG_Tileset *_Nonnull ts, Uint32 id)
 		AG_FatalError(NULL);
 	}
 	return (t);
-}
-static __inline__ RG_Anim *_Nonnull
-RG_GetAnim(RG_Tileset *_Nonnull ts, Uint32 id)
-{
-	RG_Anim *a;
-	if (RG_LookupAnim(ts, id, &a) == -1) {
-		AG_FatalError(NULL);
-	}
-	return (a);
 }
 __END_DECLS
 

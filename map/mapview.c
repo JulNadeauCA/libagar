@@ -110,10 +110,8 @@ MAP_ViewSelectTool(MAP_View *mv, MAP_Tool *ntool, void *p)
 		}
 		mv->curtool->mv = NULL;
 
-		AG_WidgetReplaceSurface(mv->status, mv->status->surface,
-		    AG_TextRender(
-		    _("Select a tool or double-click on an element to insert.")
-		    ));
+		AG_LabelTextS(mv->status,
+		    _("Select a tool or double-click on an element to insert."));
 	}
 	mv->curtool = ntool;
 
@@ -351,96 +349,6 @@ CenterToOrigin(MAP_View *_Nonnull mv)
 }
 
 /*
- * Return a pointer to the referenced animation frame.
- * If there are transforms to apply, return a pointer to a matching
- * entry in the anim transformation cache, or allocate a new one.
- */
-static void
-RenderAnimItem(MAP_Item *_Nonnull r, RG_Anim *_Nonnull anim,
-    AG_Surface *_Nonnull *_Nonnull pSurface,
-    Uint *_Nullable pTexture) /* TODO */
-{
-	RG_Tileset *ts = r->r_anim.obj;
-	RG_AnimVariant *var;
-	RG_AnimFrame *frame;
-	RG_Transform *xf, *xf2;
-
-	if (TAILQ_EMPTY(&r->transforms)) {
-		frame = RG_ANIM_FRAME(anim, *r->r_anim.curframe);
-		*pSurface = frame->su;
-		return;
-	}
-	SLIST_FOREACH(var, &anim->vars, vars) {
-		for (xf = TAILQ_FIRST(&r->transforms),
-		     xf2 = TAILQ_FIRST(&var->transforms);
-		     xf != TAILQ_END(&r->transforms) &&
-		     xf2 != TAILQ_END(&var->transforms);
-		     xf = TAILQ_NEXT(xf, transforms),
-		     xf2 = TAILQ_NEXT(xf2, transforms)) {
-			if (!RG_TransformCompare(xf, xf2))
-				break;
-		}
-		if (xf == TAILQ_END(&r->transforms) &&
-		    xf2 == TAILQ_END(&var->transforms))
-			break;
-	}
-	if (var == NULL) {
-		RG_AnimVariant *var;
-		Uint32 i;
-
-		/*
-		 * Create a new variant. Inherit the generated frames and
-		 * apply the transformations. Ignore the source instructions.
-		 */
-		var = Malloc(sizeof(RG_AnimVariant));
-		TAILQ_INIT(&var->transforms);
-		RG_TransformChainDup(&r->transforms, &var->transforms);
-		var->anim = Malloc(sizeof(RG_Anim));
-		RG_AnimInit(var->anim, ts, anim->name, (anim->flags &
-		                                        RG_ANIM_DUPED_FLAGS));
-		var->anim->w = anim->w;
-		var->anim->h = anim->h;
-
-		for (i = 0; i < anim->nFrames; i++) {
-			RG_AnimFrame *vframe;
-			AG_Surface *Sx, *Sframe;
-			Uint32 frame_no;
-
-			/* Duplicate the original frame surface. */
-			frame = &anim->frames[i];
-			Sframe = frame->su;
-			Sx = AG_SurfaceRGBA(Sframe->w, Sframe->h,
-			    Sframe->format.BitsPerPixel,
-			    Sframe->flags & (AG_SURFACE_ALPHA|AG_SURFACE_COLORKEY),
-			    Sframe->format.Rmask,
-			    Sframe->format.Gmask,
-			    Sframe->format.Bmask,
-			    Sframe->format.Amask);
-			if (Sx == NULL) {
-				AG_FatalError(NULL);
-			}
-			frame_no = RG_AnimInsertFrame(var->anim, Sx);
-			vframe = &var->anim->frames[frame_no];
-			AG_SurfaceCopy(vframe->su, frame->su);
-
-			/* Apply the transform chain. */
-			TAILQ_FOREACH(xf, &r->transforms, transforms) {
-				Sx = xf->func(vframe->su, xf->nArgs, xf->args);
-				if (Sx != vframe->su) {
-					AG_SurfaceFree(vframe->su);
-					vframe->su = Sx;
-				}
-			}
-		}
-		SLIST_INSERT_HEAD(&anim->vars, var, vars);
-	}
-
-	var->last_drawn = AG_GetTicks();
-	frame = RG_ANIM_FRAME(var->anim, *r->r_anim.curframe);
-	*pSurface = frame->su;
-}
-
-/*
  * Return a pointer to a tile item surface. If there are transforms to
  * apply, perform a cache lookup/insert.
  */
@@ -517,7 +425,6 @@ DrawItem(MAP_View *_Nonnull mv, MAP *_Nonnull m, MAP_Item *_Nonnull r,
 	AG_Surface *su;
 	int tilesz = m->cameras[cam].tilesz;
 	RG_Tile *tile;
-	RG_Anim *anim;
 	int x, y;
 
 	switch (r->type) {
@@ -526,17 +433,6 @@ DrawItem(MAP_View *_Nonnull mv, MAP *_Nonnull m, MAP_Item *_Nonnull r,
 			RenderTileItem(r, tile, &su, NULL);
 		} else {
 			Snprintf(num, sizeof(num), "(s%u)", (Uint)r->r_tile.id);
-			AG_TextColorRGBA(250,250,50,150);
-			su = AG_TextRender(num);
-			debug_su++;
-			goto draw;
-		}
-		break;
-	case MAP_ITEM_ANIM:
-		if (RG_LookupAnim(r->r_anim.obj,r->r_anim.id, &anim) == 0) {
-			RenderAnimItem(r, anim, &su, NULL);
-		} else {
-			Snprintf(num, sizeof(num), "(a%u)", r->r_anim.id);
 			AG_TextColorRGBA(250,250,50,150);
 			su = AG_TextRender(num);
 			debug_su++;

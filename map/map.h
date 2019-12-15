@@ -22,10 +22,8 @@
 #include <agar/map/begin.h>
 
 /* Type of item contained in a MAP_Node stack. */
-/* TODO 1.6 get rid of ANIM type which AG_Surface now handles. */
 enum map_item_type {
 	MAP_ITEM_TILE,		/* Reference to a tile */
-	MAP_ITEM_ANIM,		/* Reference to an animation */
 	MAP_ITEM_WARP		/* Reference to another location */
 };
 
@@ -63,12 +61,6 @@ typedef struct map_item {
 			Uint32 _pad;
 		} tile;
 		struct {
-			RG_Tileset *_Nonnull obj;	/* Tileset object */
-			Uint id;			/* Animation ID */
-			Uint32 _pad;
-			Uint *_Nonnull curframe;	/* Current frame# */
-		} anim;
-		struct {
 			char *_Nullable map;		/* Target map name */
 			int x, y;			/* At coordinates */
 			Uint dir;			/* Towards direction */
@@ -79,7 +71,6 @@ typedef struct map_item {
 	MAP_NodeMaskQ masks;			/* Collision detection masks */
 	AG_TAILQ_ENTRY(map_item) nrefs;		/* Node's reference stack */
 #define r_tile		nref.tile
-#define r_anim		nref.anim
 #define r_warp		nref.warp
 } MAP_Item;
 
@@ -230,8 +221,6 @@ void MAP_PageOut(MAP *_Nonnull, const char *_Nonnull, void *_Nonnull);
 
 void MAP_ItemSetTile(MAP_Item *_Nonnull, MAP *_Nonnull,
                      RG_Tileset *_Nonnull, Uint);
-void MAP_ItemSetAnim(MAP_Item *_Nonnull, MAP *_Nonnull,
-                     RG_Tileset *_Nonnull, Uint);
 void MAP_ItemAttrColor(Uint, int, AG_Color *_Nonnull);
 
 MAP_Item *_Nullable MAP_ItemLocate(MAP *_Nonnull, int,int, int);
@@ -258,8 +247,6 @@ void MAP_NodeDelItem(MAP *_Nonnull, MAP_Node *_Nonnull, MAP_Item *_Nonnull);
 void MAP_NodeSwapLayers(MAP *_Nonnull, MAP_Node *_Nonnull, int,int);
 
 MAP_Item *_Nonnull MAP_NodeAddTile(MAP *_Nonnull, MAP_Node *_Nonnull,
-                                   RG_Tileset *_Nonnull, Uint32);
-MAP_Item *_Nonnull MAP_NodeAddAnim(MAP *_Nonnull, MAP_Node *_Nonnull,
                                    RG_Tileset *_Nonnull, Uint32);
 MAP_Item *_Nonnull MAP_NodeAddWarpPoint(MAP *_Nonnull, MAP_Node *_Nonnull,
                                         const char *_Nonnull, int,int, Uint);

@@ -119,10 +119,6 @@ MAP_ItemInit(MAP_Item *r, enum map_item_type type)
 		r->r_gfx.rs.w = 0;
 		r->r_gfx.rs.h = 0;
 		break;
-	case MAP_ITEM_ANIM:
-		r->r_anim.obj = NULL;
-		r->r_anim.id = 0;
-		break;
 	case MAP_ITEM_WARP:
 		r->r_warp.map = NULL;
 		r->r_warp.x = 0;
@@ -195,15 +191,6 @@ MAP_ItemDestroy(MAP *m, MAP_Item *r)
 				AG_FatalError(NULL);
 #endif
 			MAP_PageOut(m, "TS-", r->r_tile.obj);
-		}
-		break;
-	case MAP_ITEM_ANIM:
-		if (r->r_anim.obj != NULL) {
-#ifdef AG_DEBUG
-			if (!AG_OfClass(r->r_anim.obj, "RG_Tileset:*"))
-				AG_FatalError(NULL);
-#endif
-			MAP_PageOut(m, "TS-", r->r_anim.obj);
 		}
 		break;
 	case MAP_ITEM_WARP:
@@ -637,51 +624,6 @@ MAP_NodeAddTile(MAP *map, MAP_Node *node, RG_Tileset *ts, Uint32 tileid)
 }
 
 /*
- * Create a tile animation reference item.
- * The map must be locked.
- */
-void
-MAP_ItemSetAnim(MAP_Item *r, MAP *map, RG_Tileset *ts, Uint anim_id)
-{
-	RG_Anim *anim;
-
-	if (r->r_anim.obj != ts && r->r_anim.obj != NULL) {
-		MAP_PageOut(map, "TS-", r->r_anim.obj);
-	} else {
-		MAP_PageIn(map, "TS-", ts);
-	}
-
-	r->r_anim.obj = ts;
-	r->r_anim.id = anim_id;
-	r->r_gfx.rs.x = 0;
-	r->r_gfx.rs.y = 0;
-	r->r_gfx.rs.w = 0;
-	r->r_gfx.rs.h = 0;
-
-	if (ts != NULL && 
-	    RG_LookupAnim(ts, anim_id, &anim) == 0) {
-		r->r_gfx.rs.w = anim->w;
-		r->r_gfx.rs.h = anim->h;
-	}
-}
-
-/*
- * Insert a reference to an animation.
- * The map must be locked.
- */
-MAP_Item *
-MAP_NodeAddAnim(MAP *map, MAP_Node *node, RG_Tileset *ts, Uint32 animid)
-{
-	MAP_Item *r;
-
-	r = Malloc(sizeof(MAP_Item));
-	MAP_ItemInit(r, MAP_ITEM_ANIM);
-	MAP_ItemSetAnim(r, map, ts, animid);
-	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
-	return (r);
-}
-
-/*
  * Insert a reference to a location on another map.
  * The map must be locked.
  */
@@ -722,10 +664,6 @@ MAP_NodeMoveItem(MAP *sm, MAP_Node *sn, MAP_Item *r, MAP *dm, MAP_Node *dn,
 	case MAP_ITEM_TILE:
 		MAP_PageOut(sm, "TS-", r->r_tile.obj);
 		MAP_PageIn(dm, "TS-", r->r_tile.obj);
-		break;
-	case MAP_ITEM_ANIM:
-		MAP_PageOut(sm, "TS-", r->r_anim.obj);
-		MAP_PageIn(dm, "TS-", r->r_anim.obj);
 		break;
 	default:
 		break;
@@ -776,16 +714,6 @@ MAP_NodeCopyItem(const MAP_Item *sr, MAP *dm, MAP_Node *dn, int dlayer)
 	switch (sr->type) {
 	case MAP_ITEM_TILE:
 		dr = MAP_NodeAddTile(dm, dn, sr->r_tile.obj, sr->r_tile.id);
-		dr->r_gfx.xcenter = sr->r_gfx.xcenter;
-		dr->r_gfx.ycenter = sr->r_gfx.ycenter;
-		dr->r_gfx.xmotion = sr->r_gfx.xmotion;
-		dr->r_gfx.ymotion = sr->r_gfx.ymotion;
-		dr->r_gfx.xorigin = sr->r_gfx.xorigin;
-		dr->r_gfx.yorigin = sr->r_gfx.yorigin;
-		memcpy(&dr->r_gfx.rs, &sr->r_gfx.rs, sizeof(AG_Rect));
-		break;
-	case MAP_ITEM_ANIM:
-		dr = MAP_NodeAddAnim(dm, dn, sr->r_anim.obj, sr->r_anim.id);
 		dr->r_gfx.xcenter = sr->r_gfx.xcenter;
 		dr->r_gfx.ycenter = sr->r_gfx.ycenter;
 		dr->r_gfx.xmotion = sr->r_gfx.xmotion;
@@ -988,29 +916,6 @@ MAP_ItemLoad(MAP *m, AG_DataSource *ds, MAP_Node *node, MAP_Item **r)
 			return (-1);
 		}
 		*r = MAP_NodeAddTile(m,node, ts,offs);
-		(*r)->flags = flags;
-		(*r)->layer = layer;
-		(*r)->friction = friction;
-		(*r)->r_gfx.xcenter = AG_ReadSint16(ds);
-		(*r)->r_gfx.ycenter = AG_ReadSint16(ds);
-		(*r)->r_gfx.xmotion = AG_ReadSint16(ds);
-		(*r)->r_gfx.ymotion = AG_ReadSint16(ds);
-		(*r)->r_gfx.xorigin = AG_ReadSint16(ds);
-		(*r)->r_gfx.yorigin = AG_ReadSint16(ds);
-		(*r)->r_gfx.rs.x = AG_ReadSint16(ds);
-		(*r)->r_gfx.rs.y = AG_ReadSint16(ds);
-		(*r)->r_gfx.rs.w = AG_ReadUint16(ds);
-		(*r)->r_gfx.rs.h = AG_ReadUint16(ds);
-		break;
-	case MAP_ITEM_ANIM:					/* TODO remove */
-		AG_CopyString(tileset, ds, sizeof(tileset));
-		offs = AG_ReadUint32(ds);
-		ts = AG_ObjectFindChild(OBJECT(m)->root, tileset);
-		if (ts == NULL || !AG_OfClass(ts, "RG_Tileset:*")) {
-			AG_SetError(_("No such tileset: \"%s\""), tileset);
-			return (-1);
-		}
-		*r = MAP_NodeAddAnim(m, node, ts, offs);
 		(*r)->flags = flags;
 		(*r)->layer = layer;
 		(*r)->friction = friction;
@@ -1282,10 +1187,6 @@ MAP_ItemSave(MAP *m, AG_DataSource *ds, MAP_Item *r)
 		AG_WriteString(ds, OBJECT(r->r_tile.obj)->name);
 		AG_WriteUint32(ds, r->r_tile.id);
 		break;
-	case MAP_ITEM_ANIM:
-		AG_WriteString(ds, OBJECT(r->r_anim.obj)->name);
-		AG_WriteUint32(ds, r->r_anim.id);
-		break;
 	case MAP_ITEM_WARP:
 		AG_WriteString(ds, r->r_warp.map);
 		AG_WriteUint32(ds, (Uint32)r->r_warp.x);
@@ -1295,7 +1196,7 @@ MAP_ItemSave(MAP *m, AG_DataSource *ds, MAP_Item *r)
 	default:
 		break;
 	}
-	if (r->type == MAP_ITEM_TILE || r->type == MAP_ITEM_ANIM) {
+	if (r->type == MAP_ITEM_TILE) {
 		AG_WriteSint16(ds, r->r_gfx.xcenter);
 		AG_WriteSint16(ds, r->r_gfx.ycenter);
 		AG_WriteSint16(ds, r->r_gfx.xmotion);
@@ -1552,9 +1453,7 @@ MAP_ItemExtent(MAP *m, MAP_Item *r, AG_Rect *rd, int cam)
 	int tilesz = m->cameras[cam].tilesz;
 
 	if ((r->type == MAP_ITEM_TILE &&
-	     RG_LookupTile(r->r_tile.obj, r->r_tile.id, NULL) == -1) ||
-	    (r->type == MAP_ITEM_ANIM &&
-	     RG_LookupAnim(r->r_anim.obj, r->r_anim.id, NULL) == -1)) {
+	     RG_LookupTile(r->r_tile.obj, r->r_tile.id, NULL) == -1)) {
 		return (-1);
 	}
 	if (tilesz != MAPTILESZ) {
@@ -2311,7 +2210,6 @@ EditItemProps(AG_Event *_Nonnull event)
 
 	AG_LabelNew(win, 0, _("Type: %s"),
 	    (r->type == MAP_ITEM_TILE) ? _("Tile") :
-	    (r->type == MAP_ITEM_ANIM) ? _("Animation") :
 	    (r->type == MAP_ITEM_WARP) ? _("Warp point") : "?");
 	msb = AG_MSpinbuttonNew(win, 0, ",", _("Centering: "));
 	AG_BindSint16(msb, "xvalue", &r->r_gfx.xcenter);
@@ -2430,10 +2328,8 @@ RemoveAllRefsToTileset(AG_Event *_Nonnull event)
 			     r != TAILQ_END(&n->nrefs);
 			     r = r2) {
 				r2 = TAILQ_NEXT(r, nrefs);
-				if ((r->type == MAP_ITEM_TILE &&
-				     r->r_tile.obj == ts) ||
-				    (r->type == MAP_ITEM_ANIM &&
-				     r->r_anim.obj == ts))
+				if (r->type == MAP_ITEM_TILE &&
+				    r->r_tile.obj == ts)
 					MAP_NodeDelItem(m, n, r);
 			}
 		}
@@ -2708,9 +2604,9 @@ Edit(void *_Nonnull p)
 	AG_PaneMoveDividerPct(hPane, 40);
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 40);
 
-	AG_WidgetReplaceSurface(mv->status, mv->status->surface,
-	    AG_TextRender(
-	    _("Select a tool or double-click on an element to insert.")));
+	AG_LabelTextS(mv->status,
+	    _("Select a tool or double-click on an element to insert."));
+
 	AG_WidgetFocus(mv);
 	return (win);
 }

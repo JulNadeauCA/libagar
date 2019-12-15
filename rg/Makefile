@@ -15,10 +15,10 @@ LIB_GUID=	"54223b00-f4c5-4b49-ab84-cd2576c7f8d6"
 LIB_LINKS=	${AGMATH_LINKS_STATIC} ${GUI_LINKS_STATIC} ${CORE_LINKS_STATIC} \
 		${RG_LIBS}
 
-MAN3=	RG_Anim.3 RG_Feature.3 RG_Pixmap.3 RG_Tile.3 RG.3 RG_Tileview.3
+MAN3=	RG_Feature.3 RG_Pixmap.3 RG_Tile.3 RG.3 RG_Tileview.3
 
 SRCS=	tileset.c tileview.c tile.c feature.c fill.c pixmap.c prim.c \
-	animation.c texture.c texsel.c transform.c animview.c
+	texture.c texsel.c transform.c
 
 # TODO
 #SRCS+= sketch.c sketch_line.c sketch_circle.c sketch_polygon.c sketchproj.c
