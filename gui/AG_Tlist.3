@@ -57,6 +57,9 @@ optimizes for cases where contents are cleared and regenerated frequently
 .Ft "AG_Tlist *"
 .Fn AG_TlistNewPolled "AG_Widget *parent" "Uint flags" "void (*eventFn)(AG_Event *)" "const char *eventArgs" "..."
 .Pp
+.Ft "AG_Tlist *"
+.Fn AG_TlistNewPolledMs "AG_Widget *parent" "Uint flags" "int ms" "void (*eventFn)(AG_Event *)" "const char *eventArgs" "..."
+.Pp
 .Ft void
 .Fn AG_TlistSetRefresh "AG_Tlist *tl" "int ms"
 .Pp
@@ -96,11 +99,16 @@ widget.
 .Pp
 The
 .Fn AG_TlistNewPolled
-variant sets the
+variant enables
 .Dv AG_TLIST_POLL
-flag and configures a default
-.Sq tlist-poll
-event handler.
+and configures the specified routine
+.Fa eventFn
+to run every 1 second.
+.Pp
+The
+.Fn AG_TlistNewPolledMs
+variant accepts a specified update rate in milliseconds
+.Fa ms .
 .Pp
 Acceptable
 .Fa flags

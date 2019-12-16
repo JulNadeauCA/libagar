@@ -148,6 +148,9 @@ AG_Tlist *_Nonnull AG_TlistNew(void *_Nullable, Uint);
 AG_Tlist *_Nonnull AG_TlistNewPolled(void *_Nullable, Uint,
                                      _Nonnull AG_EventFn,
 				     const char *_Nullable, ...);
+AG_Tlist *_Nonnull AG_TlistNewPolledMs(void *_Nullable, Uint, int,
+                                       _Nonnull AG_EventFn,
+				       const char *_Nullable, ...);
 
 void AG_TlistSizeHint(AG_Tlist *_Nonnull, const char *_Nonnull, int);
 void AG_TlistSizeHintPixels(AG_Tlist *_Nonnull, int,int);

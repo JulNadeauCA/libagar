@@ -75,7 +75,35 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 		va_end(ap);
 	}
 	AG_ObjectUnlock(tl);
+
 	AG_RedrawOnTick(tl, 1000);
+
+	return (tl);
+}
+
+AG_Tlist *
+AG_TlistNewPolledMs(void *parent, Uint flags, int ms, AG_EventFn fn,
+    const char *fmt, ...)
+{
+	AG_Tlist *tl;
+	AG_Event *ev;
+
+	tl = AG_TlistNew(parent, flags);
+	AG_ObjectLock(tl);
+	tl->flags |= AG_TLIST_POLL;
+	ev = AG_SetEvent(tl, "tlist-poll", fn, NULL);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
+	AG_ObjectUnlock(tl);
+
+	AG_RedrawOnTick(tl, ms);
+	tl->pollDelay = ms;
+
 	return (tl);
 }
 
@@ -301,7 +329,8 @@ OnShow(AG_Event *_Nonnull event)
 
 	if (tl->flags & AG_TLIST_POLL) {
 		tl->flags |= AG_TLIST_REFRESH;
-		AG_AddTimer(tl, &tl->refreshTo, tl->pollDelay, PollRefreshTimeout, NULL);
+		AG_AddTimer(tl, &tl->refreshTo, tl->pollDelay,
+		    PollRefreshTimeout, NULL);
 	}
 }
 
@@ -1292,7 +1321,7 @@ Init(void *_Nonnull obj)
 	tl->r.h = 0;
 	tl->wSpace = 4;
 	tl->icon_w = tl->item_h + 1;
-	tl->pollDelay = 250;
+	tl->pollDelay = 1000;
 	tl->rOffs = 0;
 	tl->dblClicked = NULL;
 	TAILQ_INIT(&tl->items);
