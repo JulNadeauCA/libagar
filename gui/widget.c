@@ -2177,7 +2177,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		fontFace = Strdup(parentFace);
 	}
 
-	/* Font size (pts or %) */
+	/* Font size (pts, pixels, or % relative to parent) */
 	if ((V = AG_AccessVariable(wid, "font-size")) != NULL) {
 		Apply_Font_Size(&fontSize, parentFontSize, V->data.s);
 		AG_UnlockVariable(V);
@@ -2220,30 +2220,26 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		fontFlags |= (parentFontFlags & AG_FONT_WIDTH_VARIANTS);
 	}
 	
-	/*
-	 * Update palette. Signal "palette-changed" if any entries have changed.
-	 */
+	/* Color palette */
 	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
 		for (j = 0; j < AG_WIDGET_NCOLORS; j++) {
+			char nameFull[AG_VARIABLE_NAME_MAX];
 			const AG_Color *cParent = &parentPalette->c[i][j];
-			char name[AG_VARIABLE_NAME_MAX];
+			const char *name = agStyleAttributes[j];
 			AG_Color cNew;
 
-			Strlcpy(name, agStyleAttributes[j], sizeof(name));
-			Strlcat(name, agWidgetStateNames[i], sizeof(name));
+			Strlcpy(nameFull, name, sizeof(nameFull));
+			Strlcat(nameFull, agWidgetStateNames[i], sizeof(nameFull));
 
-			if ((V = AG_AccessVariable(wid, name)) != NULL) {
+			if ((V = AG_AccessVariable(wid, nameFull)) != NULL ||
+			    (V = AG_AccessVariable(wid, name)) != NULL) {
 				AG_ColorFromString(&cNew, V->data.s, cParent);
 				AG_UnlockVariable(V);
-			} else if (AG_LookupStyleSheet(css, wid, name, &cssData)) {
+			} else if (AG_LookupStyleSheet(css, wid, nameFull, &cssData) ||
+			           AG_LookupStyleSheet(css, wid, name, &cssData)) {
 				AG_ColorFromString(&cNew, cssData, cParent);
 			} else {
-				Strlcpy(name, agStyleAttributes[j], sizeof(name));
-				if (AG_LookupStyleSheet(css, wid, name, &cssData)) {
-					AG_ColorFromString(&cNew, cssData, cParent);
-				} else {
-					cNew = *cParent;
-				}
+				cNew = *cParent;
 			}
 			if (AG_ColorCompare(&cNew, &wid->pal.c[i][j]) != 0) {
 				wid->pal.c[i][j] = cNew;
