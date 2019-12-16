@@ -219,8 +219,8 @@ static void WidgetSelected(AG_Event *_Nonnull);
 static void
 AddAttribute(AG_Event *_Nonnull event)
 {
-	AG_Textbox *tb = AG_TEXTBOX_SELF();
-	AG_Widget *tgt = AG_WIDGET_PTR(1);
+	AG_Textbox *tb = AG_TEXTBOX_PTR(1);
+	AG_Widget *tgt = AG_WIDGET_PTR(2);
 	char *s = AG_TextboxDupString(tb), *ps = s;
 	const char *key = Strsep(&ps, ":");
 	const char *val = Strsep(&ps, ":");
@@ -235,8 +235,35 @@ AddAttribute(AG_Event *_Nonnull event)
 
 	AG_SetStyle(tgt, key, val[0] != '\0' ? val : NULL);
 	AG_WindowUpdate(AG_ParentWindow(tgt));
+	AG_TextboxClearString(tb);
 
 	free(s);
+}
+
+static void
+PollAttributes(AG_Event *_Nonnull event)
+{
+	char text[AG_TLIST_LABEL_MAX];
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Widget *tgt = AG_WIDGET_PTR(1);
+	const char **attr;
+
+	AG_TlistBegin(tl);
+
+	for (attr = &agStyleAttributes[0]; *attr != NULL; attr++) {
+		char *attrVal;
+
+		if (!AG_Defined(tgt, *attr)) {
+			continue;
+		}
+		attrVal = AG_GetStringP(tgt, *attr);
+		Strlcpy(text, *attr,   sizeof(text));
+		Strlcat(text, ": ",    sizeof(text));
+		Strlcat(text, attrVal, sizeof(text));
+		AG_TlistAddPtr(tl, NULL, text, attrVal);
+	}
+
+	AG_TlistEnd(tl);
 }
 
 static void
@@ -248,6 +275,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 	AG_Widget *tgt = ti->p1;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;
+	AG_Tlist *tlAttrs;
 	int savedTabID;
 
 	AG_OBJECT_ISA(tgt, "AG_Widget:*");
@@ -263,32 +291,17 @@ WidgetSelected(AG_Event *_Nonnull event)
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
 	nt = AG_NotebookAdd(nb, _("Style Attributes"), AG_BOX_VERT);
 	{
-		const char **s;
-		AG_Scrollview *sv;
 		AG_Textbox *tb;
+		AG_Box *hBox;
 
-		sv = AG_ScrollviewNew(nt, AG_SCROLLVIEW_EXPAND);
+		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 250,
+		    PollAttributes, "%p", tgt);
 
-		AG_LabelNew(sv, 0, AGSI_YEL "%s" AGSI_RST " {", OBJECT(tgt)->name);
-
-		for (s = &agStyleAttributes[0]; *s != NULL; s++) {
-			AG_Box *ln;
-
-			if (!AG_Defined(tgt, *s)) {
-				continue;
-			}
-			ln = AG_BoxNewHoriz(sv, AG_BOX_HFILL);
-			AG_WidgetDisable( AG_CheckboxNew(ln, AG_CHECKBOX_SET, NULL) );
-			AG_LabelNew(ln, 0, "%s: %s", *s, AG_GetStringP(tgt,*s));
-		}
-		
-		tb = AG_TextboxNewS(sv, 0, "+");
+		hBox = AG_BoxNewHoriz(nt, AG_BOX_HFILL);
+		tb = AG_TextboxNewS(hBox, AG_TEXTBOX_HFILL, "+");
 		AG_TextboxSizeHint(tb, "<XXXXXXXXXXX>: <XXXXXXXXXXX>");
-		AG_SetEvent(tb, "textbox-return", AddAttribute, "%p", tgt);
-	
-		AG_LabelNewS(sv, 0, "}");
-
-		(AG_SeparatorNewHoriz(sv))->minLen = 300;
+		AG_SetEvent(tb, "textbox-return", AddAttribute, "%p,%p", tb,tgt);
+		AG_ButtonNewFn(hBox, 0, _("Add"), AddAttribute, "%p,%p", tb,tgt);
 	}
 
 	nt = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
@@ -406,7 +419,7 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	    AGOBJECT(tgt)->name,
 	    AGWINDOW(tgt)->caption);
 	
-	tlVFS = AG_TlistNewPolledMs(NULL, 0, 100, PollWidgets, "%Cp", tgt);
+	tlVFS = AG_TlistNewPolledMs(NULL, 0, 125, PollWidgets, "%Cp", tgt);
 	AG_TlistSizeHint(tlVFS, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 10);
 	AG_Expand(tlVFS);
 
