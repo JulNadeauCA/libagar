@@ -758,7 +758,7 @@ CreateToolbarButtonBool(AG_MenuItem *_Nonnull mi,
 
 	bu = CreateToolbarButton(mi, icon, text);
 	AG_ButtonSetSticky(bu, 1);
-	AG_ButtonInvertState(bu, inv);
+	AG_ButtonSetInverted(bu, inv);
 	return (bu);
 }
 
@@ -915,7 +915,7 @@ AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 		{
 			AG_BindInt(mi->tbButton, "state", pBool);
 		}
-		AG_ButtonInvertState(mi->tbButton, inv);
+		AG_ButtonSetInverted(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(m);
 	return (mi);
@@ -948,7 +948,7 @@ AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 		{
 			AG_BindUint8(mi->tbButton, "state", pBool);
 		}
-		AG_ButtonInvertState(mi->tbButton, inv);
+		AG_ButtonSetInverted(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(m);
 	return (mi);
@@ -984,7 +984,7 @@ AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 			AG_BindFlag(mi->tbButton, "state", (Uint *)pFlags,
 			    (Uint)flags);
 		}
-		AG_ButtonInvertState(mi->tbButton, inv);
+		AG_ButtonSetInverted(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(m);
 	return (mi);
@@ -1018,7 +1018,7 @@ AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 		{
 			AG_BindFlag8(mi->tbButton, "state", pFlags, flags);
 		}
-		AG_ButtonInvertState(mi->tbButton, inv);
+		AG_ButtonSetInverted(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(m);
 	return (mi);
@@ -1053,7 +1053,7 @@ AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 		{
 			AG_BindFlag16(mi->tbButton, "state", pFlags, flags);
 		}
-		AG_ButtonInvertState(mi->tbButton, inv);
+		AG_ButtonSetInverted(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(m);
 	return (mi);
@@ -1088,7 +1088,7 @@ AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 		{
 			AG_BindFlag32(mi->tbButton, "state", pFlags, flags);
 		}
-		AG_ButtonInvertState(mi->tbButton, inv);
+		AG_ButtonSetInverted(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(m);
 	return (mi);
@@ -1117,7 +1117,7 @@ AG_MenuSetIntBoolMp(AG_MenuItem *mi, int *pBool, int inv, AG_Mutex *lock)
 		{
 			AG_BindInt(mi->tbButton, "state", pBool);
 		}
-		AG_ButtonInvertState(mi->tbButton, inv);
+		AG_ButtonSetInverted(mi->tbButton, inv);
 		AG_ButtonSetSticky(mi->tbButton, 1);
 	}
 	AG_ObjectUnlock(m);
@@ -1150,7 +1150,7 @@ AG_MenuSetIntFlagsMp(AG_MenuItem *mi, int *pFlags, int flags, int inv,
 			AG_BindFlag(mi->tbButton, "state", (Uint *)pFlags,
 			    (Uint)flags);
 		}
-		AG_ButtonInvertState(mi->tbButton, inv);
+		AG_ButtonSetInverted(mi->tbButton, inv);
 		AG_ButtonSetSticky(mi->tbButton, 1);
 	}
 	AG_ObjectUnlock(m);

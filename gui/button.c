@@ -153,10 +153,10 @@ AG_ButtonSetSticky(AG_Button *bu, int flag)
 }
 
 void
-AG_ButtonInvertState(AG_Button *bu, int flag)
+AG_ButtonSetInverted(AG_Button *bu, int flag)
 {
 	AG_ObjectLock(bu);
-	AG_SETFLAGS(bu->flags, AG_BUTTON_INVSTATE, flag);
+	AG_SETFLAGS(bu->flags, AG_BUTTON_INVERTED, flag);
 	AG_ObjectUnlock(bu);
 }
 
@@ -184,7 +184,7 @@ static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
-	AG_Variable *bState;
+	AG_Variable *V;
 	void *pState;
 	const int button = AG_INT(1);
 	const int x = AG_INT(2);
@@ -199,14 +199,14 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	   !AG_WidgetRelativeArea(bu, x,y))
 		return;
 	
-	bState = AG_GetVariable(bu, "state", &pState);
-	if (GetState(bu, bState, pState) &&
+	V = AG_GetVariable(bu, "state", &pState);
+	if (GetState(bu, V, pState) &&
 	    button == AG_MOUSE_LEFT &&
 	    !(bu->flags & AG_BUTTON_STICKY)) {
-	    	SetState(bu, bState, pState, 0);
+	    	SetState(bu, V, pState, 0);
 		AG_PostEvent(bu, "button-pushed", "%i", 0);
 	}
-	AG_UnlockVariable(bState);
+	AG_UnlockVariable(V);
 }
 
 static void
@@ -214,7 +214,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
 	const int button = AG_INT(1);
-	AG_Variable *bState;
+	AG_Variable *V;
 	void *pState;
 	int newState;
 	
@@ -227,15 +227,15 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	if (button != AG_MOUSE_LEFT)
 		return;
 	
-	bState = AG_GetVariable(bu, "state", &pState);
+	V = AG_GetVariable(bu, "state", &pState);
 	if (!(bu->flags & AG_BUTTON_STICKY)) {
-		SetState(bu, bState, pState, 1);
+		SetState(bu, V, pState, 1);
 	} else {
-		newState = !GetState(bu, bState, pState);
-		SetState(bu, bState, pState, newState);
+		newState = !GetState(bu, V, pState);
+		SetState(bu, V, pState, newState);
 		AG_PostEvent(bu, "button-pushed", "%i", newState);
 	}
-	AG_UnlockVariable(bState);
+	AG_UnlockVariable(V);
 
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimer(bu, &bu->repeatTo);
@@ -249,7 +249,7 @@ static void
 MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
-	AG_Variable *bState;
+	AG_Variable *V;
 	void *pState;
 	const int x = AG_INT(1);
 	const int y = AG_INT(2);
@@ -257,21 +257,21 @@ MouseMotion(AG_Event *_Nonnull event)
 	if (AG_WidgetDisabled(bu))
 		return;
 
-	bState = AG_GetVariable(bu, "state", &pState);
+	V = AG_GetVariable(bu, "state", &pState);
 	if (!AG_WidgetRelativeArea(bu, x,y)) {
 		if ((bu->flags & AG_BUTTON_STICKY) == 0 &&
-		    GetState(bu, bState, pState) == 1) {
-			SetState(bu, bState, pState, 0);
+		    GetState(bu, V, pState) == 1) {
+			SetState(bu, V, pState, 0);
 		}
 	}
-	AG_UnlockVariable(bState);
+	AG_UnlockVariable(V);
 }
 
 static void
 KeyUp(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
-	AG_Variable *bState;
+	AG_Variable *V;
 	void *pState;
 	const int keysym = AG_INT(1);
 	
@@ -287,9 +287,9 @@ KeyUp(AG_Event *_Nonnull event)
 	    keysym != AG_KEY_SPACE) {
 		return;
 	}
-	bState = AG_GetVariable(bu, "state", &pState);
-	SetState(bu, bState, pState, 0);
-	AG_UnlockVariable(bState);
+	V = AG_GetVariable(bu, "state", &pState);
+	SetState(bu, V, pState, 0);
+	AG_UnlockVariable(V);
 
 	if (bu->flags & AG_BUTTON_KEYDOWN) {
 		bu->flags &= ~(AG_BUTTON_KEYDOWN);
@@ -301,7 +301,7 @@ static void
 KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
-	AG_Variable *bState;
+	AG_Variable *V;
 	void *pState;
 	const int keysym = AG_INT(1);
 	
@@ -313,8 +313,8 @@ KeyDown(AG_Event *_Nonnull event)
 	    keysym != AG_KEY_SPACE) {
 		return;
 	}
-	bState = AG_GetVariable(bu, "state", &pState);
-	SetState(bu, bState, pState, 1);
+	V = AG_GetVariable(bu, "state", &pState);
+	SetState(bu, V, pState, 1);
 	AG_PostEvent(bu, "button-pushed", "%i", 1);
 	bu->flags |= AG_BUTTON_KEYDOWN;
 
@@ -323,7 +323,7 @@ KeyDown(AG_Event *_Nonnull event)
 		AG_AddTimer(bu, &bu->delayTo, agKbdDelay,
 		    ExpireDelay, "%i", agKbdRepeat);
 	}
-	AG_UnlockVariable(bState);
+	AG_UnlockVariable(V);
 }
 
 static void
@@ -332,12 +332,12 @@ OnShow(AG_Event *_Nonnull event)
 	AG_Button *bu = AG_BUTTON_SELF();
 
 	if (bu->flags & AG_BUTTON_SET) {
-		AG_Variable *bState;
+		AG_Variable *V;
 		void *pState;
 
-		bState = AG_GetVariable(bu, "state", &pState);
-		SetState(bu, bState, pState, 1);
-		AG_UnlockVariable(bState);
+		V = AG_GetVariable(bu, "state", &pState);
+		SetState(bu, V, pState, 1);
+		AG_UnlockVariable(V);
 	}
 	if ((bu->flags & AG_BUTTON_EXCL) == 0)
 		AG_RedrawOnChange(bu, 100, "state");
@@ -418,10 +418,10 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 }
 
 static void
-SetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState, void *_Nonnull p,
+SetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull V, void *_Nonnull p,
     int v)
 {
-	switch (AG_VARIABLE_TYPE(bState)) {
+	switch (AG_VARIABLE_TYPE(V)) {
 	case AG_VARIABLE_INT:
 		*(int *)p = v;
 		break;
@@ -429,10 +429,10 @@ SetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState, void *_Nonnull p,
 		*(Uint *)p = v;
 		break;
 	case AG_VARIABLE_P_FLAG:
-		AG_SETFLAGS(*(Uint *)p, bState->info.bitmask.u, v);
+		AG_SETFLAGS(*(Uint *)p, V->info.bitmask.u, v);
 		break;
 	default:
-		SetStateGeneral(bu, bState, p, v);
+		SetStateGeneral(bu, V, p, v);
 		break;
 	}
 	AG_Redraw(bu);
@@ -442,15 +442,15 @@ static void
 Draw(void *_Nonnull p)
 {
 	AG_Button *bu = p;
-	AG_Variable *bState;
+	AG_Variable *V;
 	void *pState;
 	AG_Label *lbl;
 	AG_Rect rd;
 	int pressed, surface;
 	
-	bState = AG_GetVariable(bu, "state", &pState);
-	pressed = GetState(bu, bState, pState);
-	AG_UnlockVariable(bState);
+	V = AG_GetVariable(bu, "state", &pState);
+	pressed = GetState(bu, V, pState);
+	AG_UnlockVariable(V);
 
 	rd.x = 0;
 	rd.y = 0;
@@ -498,12 +498,64 @@ Draw(void *_Nonnull p)
 	}
 }
 
+/* Return the current boolean state of the button. */
+int
+AG_ButtonGetState(AG_Button *bu)
+{
+	AG_Variable *V;
+	void *pState;
+	int stateCur;
+
+	V = AG_GetVariable(bu, "state", &pState);
+	stateCur = GetState(bu, V, pState);
+	AG_UnlockVariable(V);
+
+	return (stateCur);
+}
+
+/* Set the boolean state of the button and return the previous state. */
+int
+AG_ButtonSetState(AG_Button *bu, int stateNew)
+{
+	AG_Variable *V;
+	void *pState;
+	int statePrev;
+
+	V = AG_GetVariable(bu, "state", &pState);
+
+	statePrev = GetState(bu, V, pState);
+	SetState(bu, V, pState, 1);
+
+	AG_UnlockVariable(V);
+
+	return (statePrev);
+}
+
+/* Atomically toggle the boolean state of the button and return the new state. */
+int
+AG_ButtonToggle(AG_Button *bu)
+{
+	AG_Variable *V;
+	void *pState;
+	int statePrev, stateNew;
+
+	V = AG_GetVariable(bu, "state", &pState);
+
+	statePrev = GetState(bu, V, pState);
+	stateNew = !statePrev;
+	SetState(bu, V, pState, stateNew);
+
+	AG_UnlockVariable(V);
+
+	return (stateNew);
+}
+
 static int
-GetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState, void *_Nonnull p)
+GetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull V, void *_Nonnull p)
 {
 	int v;
 
-	switch (AG_VARIABLE_TYPE(bState)) {
+	switch (AG_VARIABLE_TYPE(V)) {
 	case AG_VARIABLE_INT:
 		v = *(int *)p;
 		break;
@@ -511,22 +563,22 @@ GetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState, void *_Nonnull p)
 		v = *(Uint *)p;
 		break;
 	case AG_VARIABLE_P_FLAG:
-		v = (int)(*(Uint *)p & bState->info.bitmask.u);
+		v = (int)(*(Uint *)p & V->info.bitmask.u);
 		break;
 	default:
-		v = GetStateGeneral(bu, bState, p);
+		v = GetStateGeneral(bu, V, p);
 		break;
 	}
-	if (bu->flags & AG_BUTTON_INVSTATE) {
+	if (bu->flags & AG_BUTTON_INVERTED) {
 		v = !v;
 	}
 	return (v);
 }
+
 static int
-GetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState,
-    void *_Nonnull p)
+GetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull V, void *_Nonnull p)
 {
-	switch (AG_VARIABLE_TYPE(bState)) {
+	switch (AG_VARIABLE_TYPE(V)) {
 	case AG_VARIABLE_UINT8:
 		return (int)(*(Uint8 *)p);
 	case AG_VARIABLE_UINT16:
@@ -534,11 +586,11 @@ GetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState,
 	case AG_VARIABLE_UINT32:
 		return (int)(*(Uint32 *)p);
 	case AG_VARIABLE_P_FLAG8:
-		return (int)(*(Uint8 *)p & bState->info.bitmask.u8);
+		return (int)(*(Uint8 *)p & V->info.bitmask.u8);
 	case AG_VARIABLE_P_FLAG16:
-		return (int)(*(Uint16 *)p & bState->info.bitmask.u16);
+		return (int)(*(Uint16 *)p & V->info.bitmask.u16);
 	case AG_VARIABLE_P_FLAG32:
-		return (int)(*(Uint32 *)p & bState->info.bitmask.u32);
+		return (int)(*(Uint32 *)p & V->info.bitmask.u32);
 	default:
 		break;
 	}
@@ -546,10 +598,10 @@ GetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState,
 }
 
 static void
-SetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState,
+SetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull V,
     void *_Nonnull p, int v)
 {
-	switch (AG_VARIABLE_TYPE(bState)) {
+	switch (AG_VARIABLE_TYPE(V)) {
 	case AG_VARIABLE_UINT8:
 		*(Uint8 *)p = v;
 		break;
@@ -560,13 +612,13 @@ SetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull bState,
 		*(Uint32 *)p = v;
 		break;
 	case AG_VARIABLE_P_FLAG8:
-		AG_SETFLAGS(*(Uint8 *)p, bState->info.bitmask.u8, v);
+		AG_SETFLAGS(*(Uint8 *)p, V->info.bitmask.u8, v);
 		break;
 	case AG_VARIABLE_P_FLAG16:
-		AG_SETFLAGS(*(Uint16 *)p, bState->info.bitmask.u16, v);
+		AG_SETFLAGS(*(Uint16 *)p, V->info.bitmask.u16, v);
 		break;
 	case AG_VARIABLE_P_FLAG32:
-		AG_SETFLAGS(*(Uint32 *)p, bState->info.bitmask.u32, v);
+		AG_SETFLAGS(*(Uint32 *)p, V->info.bitmask.u32, v);
 		break;
 	}
 }

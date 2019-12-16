@@ -65,7 +65,7 @@ an integer or one or more bits in an integer).
 .Fn AG_ButtonNewFlag "AG_Widget *parent" "Uint flags" "const char *label" "Uint *p" "Uint bitmask"
 .Pp
 .Ft void
-.Fn AG_ButtonInvertState "AG_Button *button" "int flag"
+.Fn AG_ButtonSetInverted "AG_Button *button" "int flag"
 .Pp
 .Ft void
 .Fn AG_ButtonSetPadding "AG_Button *button" "int lPad" "int rPad" "int tPad" "int bPad"
@@ -96,6 +96,15 @@ an integer or one or more bits in an integer).
 .Pp
 .Ft void
 .Fn AG_ButtonTextS "AG_Button *button" "const char *label"
+.Pp
+.Ft int
+.Fn AG_ButtonGetState "AG_Button *button"
+.Pp
+.Ft int
+.Fn AG_ButtonSetState "AG_Button *button" "int stateNew"
+.Pp
+.Ft int
+.Fn AG_ButtonToggle "AG_Button *button"
 .Pp
 .nr nS 0
 The
@@ -142,10 +151,11 @@ to the value of the bit(s) indicated by
 contained within the natural integer at
 .Fa p .
 .Pp
-To invert the boolean interpretation of a binding, call
-.Fn AG_ButtonInvertState
-or set
-.Dv AG_BUTTON_INVSTATE .
+.Fn AG_ButtonSetInverted
+inverts the interpretation of the "state" binding
+(sets the
+.Dv AG_BUTTON_INVERTED
+flag).
 .Pp
 .Fn AG_ButtonSetPadding
 sets the padding around the label in pixels.
@@ -209,6 +219,15 @@ If a text label currently exists, it is removed.
 .Fn AG_ButtonText
 sets the label of the button from the specified text string.
 If a surface is currently set, it is removed.
+.Pp
+.Fn AG_ButtonGetState
+returns the current boolean state of the button (1 = pressed, 0 = released).
+.Fn AG_ButtonSetState
+sets the state to
+.Fa stateNew
+and returns the previous state.
+.Fn AG_ButtonToggle
+atomically toggles the state of the button and returns the new state.
 .Sh BUTTON FLAGS
 The following
 .Va flags
@@ -226,9 +245,9 @@ Repeat mode is enabled (read-only, see
 .Fn AG_ButtonSetRepeatMode ) .
 .It AG_BUTTON_SET
 Set "state" to 1 when the button becomes visible.
-.It AG_BUTTON_INVSTATE
-Invert the interpretation of the "state" binding.
-By default, a value of 1 causes the button to be pressed.
+.It AG_BUTTON_INVERTED
+Invert the interpretation of the "state" binding
+(Default: 0=Released, 1=Pressed).
 .It AG_BUTTON_EXCL
 Disable the test for redrawing the button upon external changes to the
 "state" binding.

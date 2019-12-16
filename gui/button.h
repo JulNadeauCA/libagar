@@ -21,7 +21,7 @@ typedef struct ag_button {
 #define AG_BUTTON_REPEAT	0x0008	/* Repeat button-pushed (needs TIMERS) */
 #define AG_BUTTON_HFILL		0x0010	/* Fill available width */
 #define AG_BUTTON_VFILL		0x0020	/* Fill available height */
-#define AG_BUTTON_INVSTATE	0x0400	/* Invert value of "state" binding */
+#define AG_BUTTON_INVERTED      0x0400	/* Invert value of "state" binding */
 #define AG_BUTTON_KEYDOWN	0x0800	/* Got `key-down' before `key-up' */
 #define AG_BUTTON_EXCL		0x1000
 #define AG_BUTTON_NOEXCL	0x2000	/* For AG_ButtonNewFn() */
@@ -64,7 +64,11 @@ void    AG_ButtonSetPadding(AG_Button *_Nonnull, int,int,int,int);
 
 void AG_ButtonSetFocusable(AG_Button *_Nonnull, int);
 void AG_ButtonSetSticky(AG_Button *_Nonnull, int);
-void AG_ButtonInvertState(AG_Button *_Nonnull, int);
+void AG_ButtonSetInverted(AG_Button *_Nonnull, int);
+
+int  AG_ButtonGetState(AG_Button *_Nonnull);
+int  AG_ButtonSetState(AG_Button *_Nonnull, int);
+int  AG_ButtonToggle(AG_Button *_Nonnull);
 
 void AG_ButtonJustify(AG_Button *_Nonnull, enum ag_text_justify);
 void AG_ButtonValign(AG_Button *_Nonnull, enum ag_text_valign);
@@ -76,12 +80,14 @@ void AG_ButtonText(AG_Button *_Nonnull, const char *_Nonnull, ...)
 void AG_ButtonTextS(AG_Button *_Nonnull, const char *_Nullable);
 
 #ifdef AG_LEGACY
+# define AG_BUTTON_INVSTATE AG_BUTTON_INVERTED
 # define AG_ButtonAct AG_ButtonNewFn
 # define AG_ButtonSetSurface(bu,su) AG_ButtonSurface((bu),(su))
 # define AG_ButtonPrintf AG_ButtonText
 # define AG_ButtonEnable AG_WidgetEnable
 # define AG_ButtonDisable AG_WidgetDisable
 # define AG_ButtonSetJustification AG_ButtonJustify
+# define AG_ButtonInvertState AG_ButtonSetInverted
 #endif /* AG_LEGACY */
 __END_DECLS
 

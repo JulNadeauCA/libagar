@@ -1648,8 +1648,7 @@ AG_FileDlgAddImageTypes(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 }
 
 /*
- * Inherit the set of AG_FileType (and all of their options),
- * from one AG_FileDlg to another.
+ * Inherit the set of FileTypes (and FileOptions) from another FileDlg.
  */
 void
 AG_FileDlgCopyTypes(AG_FileDlg *fdDst, const AG_FileDlg *fdSrc)
