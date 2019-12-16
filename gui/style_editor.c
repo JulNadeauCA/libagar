@@ -243,7 +243,8 @@ static void
 WidgetSelected(AG_Event *_Nonnull event)
 {
 	AG_Box *box = AG_BOX_PTR(1);
-	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
+	AG_Button *buCapture = AG_BUTTON_PTR(2);
+	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(3);
 	AG_Widget *tgt = ti->p1;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;
@@ -300,7 +301,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 	}
 	
 	nt = AG_NotebookAdd(nb, _("Appearance"), AG_BOX_VERT);
-	{
+	if (AG_ButtonGetState(buCapture)) {
 		AG_Pixmap *px;
 		AG_Label *lbl;
 		AG_Surface *S;
@@ -332,6 +333,12 @@ WidgetSelected(AG_Event *_Nonnull event)
 		} else {
 			AG_LabelNewS(nt, 0, AG_GetError());
 		}
+	} else {
+		AG_Label *lbl;
+
+		lbl = AG_LabelNewS(nt, 0,
+		    _("Capture is disabled. Click on \xe2\x96\xa6 (and refresh) to enable."));
+		AG_SetStyle(lbl, "font-family", "dejavu-sans");
 	}
 	
 	AG_NotebookSelectByID(nb, savedTabID);		/* Restore active tab */
@@ -385,6 +392,7 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	AG_MenuItem *mi;
 	AG_Box *hBox;
 	AG_Tlist *tlVFS;
+	AG_Button *buCapture;
 
 	if (tgt == NULL) {
 		AG_TextError(_("No window is focused.\n"
@@ -398,7 +406,7 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	    AGOBJECT(tgt)->name,
 	    AGWINDOW(tgt)->caption);
 	
-	tlVFS = AG_TlistNewPolled(NULL, 0, PollWidgets, "%Cp", tgt);
+	tlVFS = AG_TlistNewPolledMs(NULL, 0, 100, PollWidgets, "%Cp", tgt);
 	AG_TlistSizeHint(tlVFS, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 10);
 	AG_Expand(tlVFS);
 
@@ -408,21 +416,28 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	{
 		AG_Button *btn;
 
+		/* Set pick mode */
 		btn = AG_ButtonNewFn(hBox, AG_BUTTON_STICKY,
 		    "\xe2\x87\xb1",				/* U+21F1 */
 		    SetPickStatus, "%p", win);
 		AG_ButtonSetPadding(btn, 5,5,0,0);
 
+		/* Toggle VFS autorefresh */
 		btn = AG_ButtonNewFn(hBox, AG_BUTTON_STICKY | AG_BUTTON_SET,
 		    "\xe2\xa5\x81",				/* U+2941 */
 		    SetListRefresh, "%p", tlVFS);
 		AG_ButtonSetPadding(btn, 5,10,0,0);
+
+		/* Toggle appearance capture */
+		buCapture = AG_ButtonNewS(hBox, AG_BUTTON_STICKY,
+		                                "\xe2\x96\xa6"); /* U+2941 */
+		AG_ButtonSetPadding(buCapture, 4,7,0,0);
 	}
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 	{
 		AG_SetEvent(tlVFS, "tlist-dblclick",
-		    WidgetSelected, "%p", pane->div[1]);
+		    WidgetSelected, "%p,%p", pane->div[1], buCapture);
 		AG_ObjectAttach(pane->div[0], tlVFS);
 		AG_WidgetFocus(tlVFS);
 
