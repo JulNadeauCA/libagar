@@ -283,21 +283,28 @@ typedef struct ag_widget {
 #define AG_WIDGET_PADDING_LEFT   (0x00ff0000)
 #define AG_WIDGET_PADDING_RIGHT  (0xff000000)
 
-	Uint borders;                       /* Border styles */
-#define AG_WIDGET_BORDER_SOLID         0x1 /* Solid line (--------) */
-#define AG_WIDGET_BORDER_DOTTED        0x2 /* Dotted line (- - - -) */
-#define AG_WIDGET_BORDER_DASHED        0x3 /* Dashed line (-- -- -) */
-#define AG_WIDGET_BORDER_ROUNDED       0x4 /* Rounded corners */
-#define AG_WIDGET_BORDER_BEVELED       0x8 /* Beveled corners (regular) */
-#define AG_WIDGET_BORDER_ROUNDED_BEVEL 0xc /* Beveled corners (rounded) */
-#define AG_WIDGET_BORDER_TOP          (0x0000000f)
-#define AG_WIDGET_BORDER_BOTTOM       (0x00000f00)
-#define AG_WIDGET_BORDER_LEFT         (0x000f0000)
-#define AG_WIDGET_BORDER_RIGHT        (0x0f000000)
-#define AG_WIDGET_BORDER_RADIUS_TL    (0x000000f0) /* Radius (or bevel width) */
-#define AG_WIDGET_BORDER_RADIUS_BL    (0x0000f000)
-#define AG_WIDGET_BORDER_RADIUS_BR    (0x00f00000)
-#define AG_WIDGET_BORDER_RADIUS_TR    (0xf0000000)
+	Uint borders;
+#define AG_WIDGET_BORDER_NONE     0     /* No border style */
+#define AG_WIDGET_BORDER_WD_1     1     /* Solid 1-pixel */
+#define AG_WIDGET_BORDER_WD_2     2     /* Solid 2-pixel */
+#define AG_WIDGET_BORDER_WD_3     3     /* Solid 3-pixel */
+#define AG_WIDGET_BORDER_WD_4     4     /* Solid 4-pixel */
+#define AG_WIDGET_BORDER_WD_5     5     /* Solid 5-pixel */
+#define AG_WIDGET_BORDER_WD_6     6     /* Solid 6-pixel */
+#define AG_WIDGET_BORDER_WD_7     7     /* Solid 7-pixel */
+#define AG_WIDGET_BORDER_DASHED   8     /* Dashed #1 (--- --- ) */
+#define AG_WIDGET_BORDER_DASHED_2 9     /* Dashed #2 (-- -- --) */
+#define AG_WIDGET_BORDER_DOTTED   10    /* Dotted #1 (- - - - ) */
+#define AG_WIDGET_BORDER_DOTTED_2 11    /* Dotted #2 (-  -  - ) */
+
+#define AG_WIDGET_BORDER_STYLE_TOP    (0x0000000f) /* Style, top border */
+#define AG_WIDGET_BORDER_STYLE_BOTTOM (0x00000f00) /* Style, bottom border */
+#define AG_WIDGET_BORDER_STYLE_LEFT   (0x000f0000) /* Style, left border */
+#define AG_WIDGET_BORDER_STYLE_RIGHT  (0x0f000000) /* Style, right border */
+#define AG_WIDGET_BORDER_RADIUS_TL    (0x000000f0) /* Radius, top left corner */
+#define AG_WIDGET_BORDER_RADIUS_BL    (0x0000f000) /* Radius, bottom left corner */
+#define AG_WIDGET_BORDER_RADIUS_BR    (0x00f00000) /* Radius, bottom right corner */
+#define AG_WIDGET_BORDER_RADIUS_TR    (0xf0000000) /* Radius, top right corner */
 
 	struct ag_font *_Nullable font;    /* Active font (style-generated) */
 	AG_WidgetPalette pal;              /* Color palette (style-generated) */
