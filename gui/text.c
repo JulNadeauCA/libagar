@@ -623,6 +623,8 @@ out:
 	AG_MutexUnlock(&agTextLock);
 	return (font);
 fail:
+	Debug(NULL, "Font (\"%s\":%.02f:%x): %s\n", face, fontSize, flags,
+	    AG_GetError());
 	AG_MutexUnlock(&agTextLock);
 	AG_ObjectDestroy(font);
 	return (NULL);
@@ -2096,6 +2098,8 @@ AG_Font_Init(void *_Nonnull obj)
 	/* font->spec.source = AG_FONT_SOURCE_FILE; */
 	font->spec.matrix.xx = 1.0;
 	font->spec.matrix.yy = 1.0;
+
+	font->data.vec.ttf = NULL;
 }
 
 static void

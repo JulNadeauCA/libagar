@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include "agartest.h"
 
+#include <agar/core/agsi.h>
+
 static int
 TestGUI(void *obj, AG_Window *win)
 {
@@ -24,6 +26,9 @@ TestGUI(void *obj, AG_Window *win)
 	 * container will cover the entire window.
 	 */
 	fx = AG_FixedNew(win, AG_FIXED_EXPAND);
+	AG_SetStyle(fx, "font-family", "fraktur");
+	AG_SetStyle(fx, "font-size", "120%");
+	AG_SetStyle(fx, "text-color", "#eee");
 
 	/* agColors[WINDOW_BG_COLOR] = AG_ColorRGB(0,0,0); */
 
@@ -41,23 +46,25 @@ TestGUI(void *obj, AG_Window *win)
 	 * Create two labels. We don't initially attach the labels to a
 	 * parent, so we must use AG_FixedPut().
 	 */
-	lb1 = AG_LabelNew(NULL, 0, "I am at 20,32 in %s", AGOBJECT(fx)->name);
+	lb1 = AG_LabelNew(NULL, 0, "I'm at 20,32\n"
+	                           "(in " AGSI_YEL "%s" AGSI_RST ")\n",
+	                           AGOBJECT(fx)->name);
+	AG_SetStyle(lb1, "font-family", "cm-serif");
 	AG_FixedPut(fx, lb1, 20, 32);
+	AG_FixedSize(fx, lb1, 180, 64);
 
 	/*
 	 * We can always embed a normal AG_Box and items inside will
 	 * be packed normally.
 	 */
 	box = AG_BoxNewVert(NULL, 0);
-	AG_SetStyle(box, "font-family", "Serif");
+	AG_SetStyle(box, "font-family", "cm-serif");
 	AG_SetStyle(box, "font-size", "90%");
-	AG_SetStyle(box, "line-color", "rgb(150,150,0)");
-	AG_SetStyle(box, "line-color#focused", "rgb(200,200,0)");
 	{
 		AG_Box *hBox;
 		int i;
 
-		AG_LabelNewS(box, 0, "I am in a normal box");
+		AG_LabelNewS(box, 0, "I'm in a normal box");
 		hBox = AG_BoxNewHoriz(box, AG_BOX_HFILL);
 		for (i = 0; i < 5; i++)
 			AG_ButtonNew(hBox, 0, "%c", '1'+i);
@@ -81,15 +88,25 @@ TestGUI(void *obj, AG_Window *win)
 	AG_FixedMove(fx, btn, 204+192, 48);
 	AG_FixedSize(fx, btn, 32, 32);
 
+	/*
+	 * Make this window non-resizable (alternatively, we could also
+	 * have put everything into an AG_Scrollview).
+	 */
+	win->flags |= AG_WINDOW_NORESIZE;
+
+	/* Disable padding around borders. */
 	AG_WindowSetPadding(win, 0,0,0,0);
+
+	/* Request an explicit size in pixels. */
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 641, 195);
+
 	return (0);
 }
 
 const AG_TestCase fixedResTest = {
 	"fixedRes",
 	N_("Test the AG_Fixed(3) container widget"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */
