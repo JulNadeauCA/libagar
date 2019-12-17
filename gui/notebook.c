@@ -215,7 +215,7 @@ Draw(void *obj)
 				lbl->tPad--;
 
 				AG_ColorInterpolate(&cHalf,
-				    &WCOLOR(nb, LINE_COLOR),
+				    &WCOLOR(nb, SELECTION_COLOR),
 				    &WCOLOR(nb, FG_COLOR),
 				    1,2);
 
@@ -223,7 +223,7 @@ Draw(void *obj)
 				AG_PutPixel(nb, x+r.w-boxRad, 2, &cHalf);
 
 				AG_DrawLineH(nb, x+boxRad, x+r.w-boxRad, 1,
-				             &WCOLOR(nb, LINE_COLOR));
+				             &WCOLOR(nb, SELECTION_COLOR));
 				AG_DrawLineH(nb, x+boxRad, x+r.w-boxRad, 2,
 				             &cHalf);
 			}
@@ -367,7 +367,7 @@ AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 		tab->lbl = AG_LabelNewS(nb, 0, label);
 		AG_LabelSetPadding(tab->lbl, 8,8,5,0);
 		AG_SetStyle(tab->lbl, "font-family", "cm-sans-demicondensed");
-		AG_SetStyle(tab->lbl, "font-size", "120%");
+		AG_SetStyle(tab->lbl, "font-size", "115%");
 	} else {
 		tab->lbl = NULL;
 	}
