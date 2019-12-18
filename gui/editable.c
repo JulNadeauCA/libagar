@@ -615,6 +615,7 @@ OnFocusLoss(AG_Event *_Nonnull event)
 	AG_DelTimer(ed, &ed->toCursorBlink);
 	AG_DelTimer(ed, &ed->toDblClick);
 	ed->flags &= ~(AG_EDITABLE_BLINK_ON | AG_EDITABLE_CURSOR_MOVING);
+	ed->returnHeld = 0;
 	AG_UnlockTimers(ed);
 
 	AG_Redraw(ed);
@@ -1214,6 +1215,12 @@ KeyDown(AG_Event *_Nonnull event)
 	const AG_Char ch = AG_CHAR(3);
 
 	switch (keysym) {
+	case AG_KEY_RETURN:
+	case AG_KEY_KP_ENTER:
+		if ((ed->flags & AG_EDITABLE_MULTILINE) == 0) {
+			ed->returnHeld = 1;
+		}
+		break;
 	case AG_KEY_LSHIFT:
 	case AG_KEY_RSHIFT:
 	case AG_KEY_LALT:
@@ -1255,6 +1262,7 @@ KeyUp(AG_Event *_Nonnull event)
 			AG_WidgetUnfocus(ed);
 		}
 		AG_PostEvent(ed, "editable-return", NULL);
+		ed->returnHeld = 0;
 	}
 	AG_Redraw(ed);
 }
@@ -2044,7 +2052,7 @@ Init(void *_Nonnull obj)
 			     sizeof(int) +               /* yMax */
 			     sizeof(int) +               /* yVis */
 			     sizeof(Uint32) +            /* wheelTicks */
-			     sizeof(Uint32) +            /* _pad2 */
+			     sizeof(int) +               /* returnHeld */
 			     sizeof(AG_EditableBuffer) + /* sBuf */
 			     sizeof(AG_Rect) +           /* r */
 			     sizeof(AG_CursorArea) +     /* ca */

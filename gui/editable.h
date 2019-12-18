@@ -37,7 +37,7 @@ typedef struct ag_editable {
 	Uint flags;
 #define AG_EDITABLE_HFILL         0x000001
 #define AG_EDITABLE_VFILL         0x000002
-#define AG_EDITABLE_EXPAND        (AG_EDITABLE_HFILL|AG_EDITABLE_VFILL)
+#define AG_EDITABLE_EXPAND       (AG_EDITABLE_HFILL | AG_EDITABLE_VFILL)
 #define AG_EDITABLE_MULTILINE     0x000004 /* Multiline edition */
 #define AG_EDITABLE_BLINK_ON      0x000008 /* Cursor blink state (internal) */
 #define AG_EDITABLE_PASSWORD      0x000010 /* Password (hidden) input */
@@ -84,7 +84,7 @@ typedef struct ag_editable {
 	int yMax;			/* Lowest y (lines) */
 	int yVis;			/* Maximum visible area (lines) */
 	Uint32 wheelTicks;		/* For wheel acceleration */
-	Uint32 _pad2;
+	int returnHeld;			/* RETURN key is held */
 	AG_EditableBuffer sBuf;		/* Working buffer (for EXCL) */
 	AG_Rect r;			/* View area */
 	AG_CursorArea *_Nullable ca;	/* Text cursor-change area */

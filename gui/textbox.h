@@ -7,6 +7,7 @@
 #include <agar/gui/editable.h>
 #include <agar/gui/label.h>
 #include <agar/gui/scrollbar.h>
+#include <agar/gui/button.h>
 #include <agar/gui/begin.h>
 
 typedef struct ag_textbox {
@@ -29,10 +30,11 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_INT_ONLY      0x000200 /* Accepts only valid strtol() input */
 #define AG_TEXTBOX_FLT_ONLY      0x000400 /* Accepts only valid strtof() input */
 #define AG_TEXTBOX_CATCH_TAB     0x000800 /* Enter literal tabs into text
-					    instead of cycling focus */
+					     (instead of cycling focus) */
 #define AG_TEXTBOX_CURSOR_MOVING 0x001000 /* Cursor is being moved */
 #define AG_TEXTBOX_EXCL          0x004000 /* Exclusive access to buffer */
 #define AG_TEXTBOX_NOEMACS       0x008000 /* Disable emacs-style fn keys */
+#define AG_TEXTBOX_RETURN_BUTTON 0x010000 /* Display a RETURN button. */
 #define AG_TEXTBOX_NOLATIN1      0x020000 /* Disable LATIN-1 combinations */
 #define AG_TEXTBOX_WORDWRAP	 0x040000 /* Enable word wrapping */
 #define AG_TEXTBOX_NOPOPUP	 0x080000 /* Disable popup menu */
@@ -48,6 +50,7 @@ typedef struct ag_textbox {
 #else
 	char text[6];
 #endif
+	AG_Button *_Nullable btnRet;	/* Optional RETURN button */
 } AG_Textbox;
 
 #define AGTEXTBOX(obj)            ((AG_Textbox *)(obj))

@@ -49,6 +49,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 
+static void EditableReturn(AG_Event *_Nonnull);
+
 AG_Textbox *
 AG_TextboxNew(void *parent, Uint flags, const char *fmt, ...)
 {
@@ -105,7 +107,15 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		AG_BindInt(tb->vBar, "visible", &tb->ed->yVis);
 		AG_BindInt(tb->vBar, "value", &tb->ed->y);
 	}
-	
+	if (flags & AG_TEXTBOX_RETURN_BUTTON) {
+		tb->btnRet = AG_ButtonNewInt(tb, 0,
+		    "\xe2\x8f\x8e",                             /* U+23CE */
+		    &tb->ed->returnHeld);
+
+		AG_SetStyle(tb->btnRet, "font-family", "dejavu-sans");
+		AG_SetEvent(tb->btnRet, "button-pushed", EditableReturn, "%p", tb);
+	}
+
 	AG_TextboxSetExcl(tb, (flags & AG_TEXTBOX_EXCL));
 	AG_TextboxSetWordWrap(tb, (flags & AG_TEXTBOX_WORDWRAP));
 
@@ -284,15 +294,13 @@ Draw(void *_Nonnull p)
 		AG_DrawBoxSunk(tb, &tb->r, &WCOLOR(tb, BG_COLOR));
 	}
 
-	if (tb->lbl)
-		AG_WidgetDraw(tb->lbl);
+	if (tb->lbl)    { AG_WidgetDraw(tb->lbl);    }
 
 	AG_WidgetDraw(tb->ed);
 
-	if (tb->hBar)
-		AG_WidgetDraw(tb->hBar);
-	if (tb->vBar)
-		AG_WidgetDraw(tb->vBar);
+	if (tb->btnRet) { AG_WidgetDraw(tb->btnRet); }
+	if (tb->hBar)   { AG_WidgetDraw(tb->hBar);   }
+	if (tb->vBar)   { AG_WidgetDraw(tb->vBar);   }
 }
 
 static void
@@ -319,10 +327,10 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Textbox *tb = obj;
 	AG_Editable *ed = tb->ed;
-	int boxPadW = (tb->boxPadX << 1);
-	int boxPadH = (tb->boxPadY << 1);
-	int wBar = 0, hBar = 0, wBarSz = 0, hBarSz = 0;
-	AG_SizeAlloc aLbl, aEd, aSb;
+	const int boxPadW = (tb->boxPadX << 1);
+	const int boxPadH = (tb->boxPadY << 1);
+	int wBar=0, hBar=0, wBarSz=0, hBarSz=0, wBtn;
+	AG_SizeAlloc aLbl, aEd, aSb, aBtn;
 	AG_SizeReq r;
 
 	if (a->w < (boxPadW << 1) ||
@@ -372,11 +380,26 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		tb->r.h = a->h;
 	}
 	
+	if (tb->btnRet) {
+		AG_WidgetSizeReq(tb->btnRet, &r);
+		wBtn = r.w;
+	} else {
+		wBtn = 0;
+	}
+
 	aEd.x = ((tb->lbl != NULL) ? WIDTH(tb->lbl) : 0) + tb->boxPadX;
 	aEd.y = tb->boxPadY;
-	aEd.w = a->w - boxPadW - aEd.x - wBar;
+	aEd.w = a->w - boxPadW - aEd.x - wBtn - wBar;
 	aEd.h = a->h - boxPadH - hBar;
 	AG_WidgetSizeAlloc(ed, &aEd);
+
+	if (tb->btnRet) {
+		aBtn.x = aEd.x + aEd.w;
+		aBtn.y = tb->boxPadY;
+		aBtn.w = wBtn;
+		aBtn.h = aEd.h;
+		AG_WidgetSizeAlloc(tb->btnRet, &aBtn);
+	}
 
 	if (ed->x + WIDTH(ed) >= ed->xMax) {
 		ed->x = MAX(0, ed->xMax - WIDTH(ed));
@@ -543,6 +566,7 @@ Init(void *_Nonnull obj)
 #else
 	tb->text[0] = '\0';
 #endif
+	tb->btnRet = NULL;
 
 	AG_SetEvent(tb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tb, "widget-disabled", Disabled, NULL);

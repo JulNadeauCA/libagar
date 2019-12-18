@@ -217,7 +217,7 @@ PollVariables(AG_Event *_Nonnull event)
 static void WidgetSelected(AG_Event *_Nonnull);
 
 static void
-AddAttribute(AG_Event *_Nonnull event)
+InputAttribute(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_TEXTBOX_PTR(1);
 	AG_Widget *tgt = AG_WIDGET_PTR(2);
@@ -294,14 +294,15 @@ WidgetSelected(AG_Event *_Nonnull event)
 		AG_Textbox *tb;
 		AG_Box *hBox;
 
-		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 250,
+		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
 		    PollAttributes, "%p", tgt);
 
 		hBox = AG_BoxNewHoriz(nt, AG_BOX_HFILL);
-		tb = AG_TextboxNewS(hBox, AG_TEXTBOX_HFILL, "+");
+		tb = AG_TextboxNewS(hBox, AG_TEXTBOX_HFILL |
+		                          AG_TEXTBOX_RETURN_BUTTON, "+");
 		AG_TextboxSizeHint(tb, "<XXXXXXXXXXX>: <XXXXXXXXXXX>");
-		AG_SetEvent(tb, "textbox-return", AddAttribute, "%p,%p", tb,tgt);
-		AG_ButtonNewFn(hBox, 0, _("Add"), AddAttribute, "%p,%p", tb,tgt);
+		AG_SetEvent(tb, "textbox-return", InputAttribute, "%p,%p", tb,tgt);
+		AG_WidgetFocus(tb);
 	}
 
 	nt = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
