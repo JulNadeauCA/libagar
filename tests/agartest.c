@@ -36,9 +36,7 @@ extern const AG_TestCase glviewTest;
 extern const AG_TestCase imageLoadingTest;
 extern const AG_TestCase keyEventsTest;
 extern const AG_TestCase loaderTest;
-#ifdef AG_ENABLE_STRING
 extern const AG_TestCase mathTest;
-#endif
 extern const AG_TestCase maximizedTest;
 extern const AG_TestCase minimalTest;
 extern const AG_TestCase modalWindowHandlerTest;
@@ -55,9 +53,7 @@ extern const AG_TestCase renderToSurfaceTest;
 extern const AG_TestCase scrollbarTest;
 extern const AG_TestCase scrollviewTest;
 extern const AG_TestCase socketsTest;
-#ifdef AG_ENABLE_STRING
 extern const AG_TestCase stringTest;
-#endif
 extern const AG_TestCase tableTest;
 extern const AG_TestCase textboxTest;
 extern const AG_TestCase textDlgTest;
@@ -94,9 +90,7 @@ const AG_TestCase *testCases[] = {
 	&imageLoadingTest,
 	&keyEventsTest,
 	&loaderTest,
-#ifdef AG_ENABLE_STRING
 	&mathTest,
-#endif
 	&maximizedTest,
 	&minimalTest,
 	&modalWindowHandlerTest,
@@ -113,9 +107,7 @@ const AG_TestCase *testCases[] = {
 	&scrollbarTest,
 	&scrollviewTest,
 	&socketsTest,
-#ifdef AG_ENABLE_STRING
 	&stringTest,
-#endif
 	&tableTest,
 	&textboxTest,
 	&textDlgTest,
@@ -151,9 +143,6 @@ const char *agarBuildOpts[] = {
 #endif
 #ifdef AG_SERIALIZATION
 	"SERIALIZATION ",
-#endif
-#ifdef AG_ENABLE_STRING
-	"STRING ",
 #endif
 #ifdef AG_THREADS
 	"THREADS ",

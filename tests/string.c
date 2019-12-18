@@ -5,7 +5,6 @@
  */
 
 #include <agar/config/ag_enable_string.h>
-#ifdef AG_ENABLE_STRING
 
 #include "agartest.h"
 
@@ -91,5 +90,3 @@ const AG_TestCase stringTest = {
 	NULL,		/* testGUI */
 	NULL		/* bench */
 };
-
-#endif /* AG_ENABLE_STRING */

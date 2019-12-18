@@ -36,11 +36,7 @@ LoadConfig(AG_Event *event)
 	TAILQ_FOREACH(V, &cfg->vars, vars) {
 		char val[AG_LABEL_MAX];
 
-#ifdef AG_ENABLE_STRING
 		AG_PrintVariable(val, sizeof(val), V);
-#else
-		val[0] = '\0';
-#endif
 		TestMsg(ti, "%s: (%s) %s -> %s", cfg->name,
 		    agVariableTypes[V->type].name, V->name, val);
 	}

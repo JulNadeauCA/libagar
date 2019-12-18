@@ -165,7 +165,6 @@ TestGUI(void *obj, AG_Window *win)
 			AG_SetStyle(lbl, "font-size", "80%");
 		}
 
-#ifdef AG_ENABLE_STRING
 		{
 			AG_Label *lbl;
 
@@ -180,9 +179,6 @@ TestGUI(void *obj, AG_Window *win)
 			    "Window is at 000,000 (000x000)");
 			AG_LabelJustify(lbl, AG_TEXT_CENTER);
 		}
-#else
-		AG_LabelNewS(div1, 0, "(polled labels require --enable-string)");
-#endif
 	}
 
 	/*
@@ -230,11 +226,7 @@ TestGUI(void *obj, AG_Window *win)
 		 * an boolean (integer) value or a bitmask.
 		 */
 		for (i = 0; i < 5; i++)
-#ifdef AG_ENABLE_STRING
 			AG_ButtonNewS(hBox, 0, AG_Printf("%c", 0x41+i));
-#else
-			AG_ButtonNewS(hBox, 0, "Hello");
-#endif
 	}
 
 	hBox = AG_BoxNewHoriz(div1, AG_BOX_HFILL);

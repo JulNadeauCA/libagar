@@ -96,7 +96,6 @@ Init(void *obj)
 	return (0);
 }
 
-#ifdef AG_ENABLE_STRING
 static void
 StartTimerInspector(AG_Event *event)
 {
@@ -108,7 +107,6 @@ StartTimerInspector(AG_Event *event)
 		AG_WindowShow(win);
 	}
 }
-#endif
 
 static int
 TestGUI(void *obj, AG_Window *win)
@@ -120,12 +118,9 @@ TestGUI(void *obj, AG_Window *win)
 	ti->win = win;
 	AG_LabelNewS(win, 0, "Test for AG_Timer(3) facility");
 	AG_LabelNew(win, 0, "timeOps: %s", agTimeOps->name);
-#ifdef AG_ENABLE_STRING
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Open Timer Inspector",
 	    StartTimerInspector, "%p", ti);
-#else
-	AG_LabelNewS(win, 0, "(inspector requires --enable-string)");
-#endif
+
 	AG_SeparatorNewHoriz(win);
 
 	hBox = AG_BoxNewHoriz(win, 0);

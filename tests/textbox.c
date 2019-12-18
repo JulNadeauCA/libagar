@@ -111,12 +111,9 @@ DebugStuff(AG_NotebookTab *nt, AG_Textbox *textbox)
 	AG_Checkbox *cb;
 
 	AG_SeparatorNewHoriz(nt);
-
-#ifdef AG_ENABLE_STRING
 	AG_LabelNewPolled(nt, AG_LABEL_HFILL, "Cursor at: %i", &ed->pos);
 	AG_LabelNewPolled(nt, AG_LABEL_HFILL, "Selection: %i", &ed->sel);
 	AG_LabelNewPolled(nt, AG_LABEL_HFILL, "x: %i", &ed->x);
-#endif
 	AG_SeparatorNewHoriz(nt);
 
 	box = AG_BoxNewVert(nt, AG_BOX_EXPAND);
@@ -301,14 +298,8 @@ MultiLineExample(AG_Event *event)
 	AG_CheckboxNewFn(win, 0, "Uppercase", SetUppercase, "%p", textbox);
 	AG_CheckboxNewFn(win, 0, "Lowercase", SetLowercase, "%p", textbox);
 	AG_SeparatorNewHoriz(win);
-	{
-#ifdef AG_ENABLE_STRING
-		AG_LabelNewPolled(win, AG_LABEL_HFILL,
-		    "Lines: %d", &textbox->ed->yMax);
-		AG_LabelNewPolled(win, AG_LABEL_HFILL,
-		    "Cursor position: %d", &textbox->ed->pos);
-#endif
-	}
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Lines: %d", &textbox->ed->yMax);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Cursor @ %d", &textbox->ed->pos);
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 540, 380);
 	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);

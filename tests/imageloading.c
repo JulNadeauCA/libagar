@@ -39,7 +39,6 @@ TestGUI(void *obj, AG_Window *win)
 	hBox = AG_BoxNewHoriz(sv, 0);
 	vBox = AG_BoxNewVert(hBox, 0);
 	
-#ifdef AG_ENABLE_STRING
 	/*
 	 * Load BMP files in different flavors of the format.
 	 * Demonstrate how AG_Printf() can be used to construct path names.
@@ -77,7 +76,6 @@ TestGUI(void *obj, AG_Window *win)
 			AG_LabelNewS(vBox, 0, AG_GetError());
 		}
 	}
-#endif /* AG_ENABLE_STRING */
 
 	/*
 	 * Load, display and export a PNG file in RGBA format.
