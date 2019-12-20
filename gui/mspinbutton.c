@@ -199,7 +199,7 @@ Init(void *obj)
 	AG_TextboxBindASCII(sbu->input, sbu->inTxt, sizeof(sbu->inTxt));
 	AG_SetEvent(sbu->input, "textbox-return", TextReturn, "%p", sbu);
 	AG_SetEvent(sbu->input, "textbox-postchg", TextChanged, "%p", sbu);
-	AG_TextboxSizeHint(sbu->input, "88888");
+	AG_TextboxSizeHint(sbu->input, "8888 x 8888");
 
 	sbu->xdecbu = b[0] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
 	sbu->xincbu = b[1] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
