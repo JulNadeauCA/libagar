@@ -217,6 +217,8 @@ The label is partially hidden (read-only).
 Force re-rendering of the text at next draw (used internally by
 .Fn AG_LabelString ,
 etc.)
+.It AG_LABEL_SLOW
+Update polled labels every 2s (as opposed to 500ms).
 .It AG_LABEL_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .

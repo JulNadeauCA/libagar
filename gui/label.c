@@ -31,6 +31,11 @@
 #include <agar/gui/label.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/text_cache.h>
+#include <agar/gui/box.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/radio.h>
+#include <agar/gui/numerical.h>
+#include <agar/gui/separator.h>
 
 #include <string.h>
 #include <stdarg.h>
@@ -89,7 +94,7 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	va_end(ap);
 	/* AG_LEGACY */
 
-	AG_RedrawOnTick(lbl, 500);
+	AG_RedrawOnTick(lbl, (flags & AG_LABEL_SLOW) ? 2000 : 500);
 	AG_ObjectAttach(parent, lbl);
 	return (lbl);
 }
@@ -148,7 +153,7 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mu, const char *fmt, ...
 	}
 	va_end(ap);
 
-	AG_RedrawOnTick(lbl, 500);
+	AG_RedrawOnTick(lbl, (flags & AG_LABEL_SLOW) ? 2000 : 500);
 	AG_ObjectAttach(parent, lbl);
 	return (lbl);
 }
@@ -227,7 +232,6 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Label *lbl = obj;
 	int wLbl, hLbl;
-	AG_Surface *s;
 	
 	if (a->w < 1 || a->h < 1) {
 		return (-1);
@@ -247,10 +251,12 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_TextSize(lbl->text, &wLbl, &hLbl);
 
 	if ((wLbl + lbl->lPad + lbl->rPad) > a->w) {
+		AG_Surface *S;
+
 		lbl->flags |= AG_LABEL_PARTIAL;
 		if (lbl->surfaceCont == -1 &&
-		    (s = AG_TextRender("... ")) != NULL) {
-			lbl->surfaceCont = AG_WidgetMapSurface(lbl, s);
+		    (S = AG_TextRender("... ")) != NULL) {
+			lbl->surfaceCont = AG_WidgetMapSurface(lbl, S);
 		}
 	} else {
 		lbl->flags &= ~AG_LABEL_PARTIAL;
@@ -505,6 +511,45 @@ Destroy(void *_Nonnull p)
 		AG_TextCacheDestroy(lbl->tCache);
 }
 
+static void *_Nullable
+Edit(void *_Nonnull p)
+{
+	static const AG_FlagDescr flagDescr[] = {
+	    { AG_LABEL_NOMINSIZE, _("No minimum size"),      1 },
+	    { AG_LABEL_PARTIAL,   _("Partial horizontally"), 0 },
+	    { AG_LABEL_REGEN,     _("Regenerate"),           0 },
+	    { AG_LABEL_FRAME,     _("Render Frame"),         1 },
+	    { 0,                  NULL,                      0 }
+	};
+	AG_Label *lbl = p;
+	AG_Box *box;
+
+	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+	
+	AG_LabelNew(box, 0, _("Label Type: %s"),
+	    (lbl->type == AG_LABEL_STATIC) ? _("Static") :
+	                                     _("Polled"));
+
+	AG_CheckboxSetFromFlags(box, 0, &lbl->flags, flagDescr);
+
+	AG_SeparatorNewHoriz(box);
+
+	AG_NumericalNewInt(box, 0, NULL, _("Padding Left"),   &lbl->lPad);
+	AG_NumericalNewInt(box, 0, NULL, _("Padding Right"),  &lbl->rPad);
+	AG_NumericalNewInt(box, 0, NULL, _("Padding Top"),    &lbl->tPad);
+	AG_NumericalNewInt(box, 0, NULL, _("Padding Bottom"), &lbl->bPad);
+	
+	AG_SeparatorNewHoriz(box);
+	AG_LabelNewS(box, 0, _("Justify:"));
+	AG_RadioNewUint(box, 0, agTextJustifyNames, &lbl->justify);
+
+	AG_SeparatorNewHoriz(box);
+	AG_LabelNewS(box, 0, _("Vertical Alignment:"));
+	AG_RadioNewUint(box, 0, agTextValignNames, &lbl->valign);
+
+	return (box);
+}
+
 AG_WidgetClass agLabelClass = {
 	{
 		"Agar(Widget:Label)",
@@ -515,7 +560,7 @@ AG_WidgetClass agLabelClass = {
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-		NULL		/* edit */
+		Edit
 	},
 	Draw,
 	SizeRequest,
