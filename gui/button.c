@@ -557,16 +557,14 @@ GetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull V, void *_Nonnull p)
 
 	switch (AG_VARIABLE_TYPE(V)) {
 	case AG_VARIABLE_INT:
-		v = *(int *)p;
-		break;
 	case AG_VARIABLE_UINT:
-		v = *(Uint *)p;
+		v = (*(Uint *)p) ? 1 : 0;
 		break;
 	case AG_VARIABLE_P_FLAG:
-		v = (int)(*(Uint *)p & V->info.bitmask.u);
+		v = (*(Uint *)p & V->info.bitmask.u) ? 1 : 0;
 		break;
 	default:
-		v = GetStateGeneral(bu, V, p);
+		v = GetStateGeneral(bu, V, p) ? 1 : 0;
 		break;
 	}
 	if (bu->flags & AG_BUTTON_INVERTED) {
