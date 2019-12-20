@@ -92,14 +92,17 @@ DupString(AG_Event *event)
 }
 
 static void
-CopyString(AG_Event *event)
+TruncateString(AG_Event *event)
 {
 	AG_Textbox *tb = AG_TEXTBOX_PTR(1);
+	char *full = AG_TextboxDupString(tb);
 	char tinybuf[15];
 
 	AG_TextboxCopyString(tb, tinybuf, sizeof(tinybuf));
-	AG_TextMsg(AG_MSG_INFO, "Truncated to fit %d-byte buffer:\n"
-	                        "\"%s\"", (int)sizeof(tinybuf), tinybuf);
+	AG_TextMsg(AG_MSG_INFO, "Full string:\n\"%s\"\n\n"
+			        "Truncated to fit %d-byte buffer:\n"
+	                        "\"%s\"", full, (int)sizeof(tinybuf), tinybuf);
+	free(full);
 }
 
 #undef  CB_DEBUG_FLAG
@@ -142,7 +145,7 @@ DebugStuff(AG_NotebookTab *nt, AG_Textbox *tb)
 		AG_ButtonNewFn(hBox, 0, "Clear", ClearString,"%p",tb);
 		AG_ButtonNewFn(hBox, 0, "Set", SetString,"%p",tb);
 		AG_ButtonNewFn(hBox, 0, "Dup", DupString,"%p",tb);
-		AG_ButtonNewFn(hBox, 0, "Copy", CopyString,"%p",tb);
+		AG_ButtonNewFn(hBox, 0, "Trunc", TruncateString,"%p",tb);
 	}
 }
 
