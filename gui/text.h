@@ -360,6 +360,8 @@ extern AG_Font *_Nullable      agDefaultFont;
 extern const char *agFontFileExts[];
 extern const char *agFontTypeNames[];
 extern const char *agTextMsgTitles[];
+extern const char *agTextJustifyNames[];
+extern const char *agTextValignNames[];
 
 void               AG_PushTextState(void);
 void               AG_CopyTextState(AG_TextState *);

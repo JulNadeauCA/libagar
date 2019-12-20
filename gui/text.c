@@ -190,7 +190,20 @@ const char *agFontFileExts[] = {
 const char *agTextMsgTitles[] = {		/* For enum ag_text_msg_title */
 	N_("Error"),
 	N_("Warning"),
-	N_("Information")
+	N_("Information"),
+	NULL
+};
+const char *agTextJustifyNames[] = {
+	N_("Left"),
+	N_("Center"),
+	N_("Right"),
+	NULL
+};
+const char *agTextValignNames[] = {
+	N_("Top"),
+	N_("Middle"),
+	N_("Bottom"),
+	NULL
 };
 
 static TAILQ_HEAD(ag_fontq, ag_font) fonts;
