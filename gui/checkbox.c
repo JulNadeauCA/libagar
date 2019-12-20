@@ -124,7 +124,7 @@ AG_CheckboxNewS(void *parent, Uint flags, const char *label)
 
 	if (label != NULL) {
 		cb->lbl = AG_LabelNewS(cb, 0, label);
-		AG_LabelValign(cb->lbl, AG_TEXT_MIDDLE);
+		cb->lbl->lPad = 6;
 	}
 	if (flags & AG_CHECKBOX_SET)
 		cb->state = 1;
@@ -190,7 +190,6 @@ Init(void *_Nonnull obj)
 
 	cb->flags = 0;
 	cb->state = 0;
-	cb->spacing = 4;
 	cb->suCheckmark = -1;
 	cb->lbl = NULL;
 	
@@ -243,7 +242,7 @@ Draw(void *_Nonnull obj)
 
 	r.x = 0;
 	r.y = 0;
-	r.w = WFONT(cb)->height;
+	r.w = HEIGHT(cb);
 	r.h = r.w;
 
 	if (state) {
@@ -361,7 +360,7 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Checkbox *cb = obj;
-	const int hFont = WFONT(cb)->height;
+	const int hFont = WFONT(cb)->lineskip;
 	AG_SizeReq rLbl;
 
 	r->h = hFont;
@@ -369,8 +368,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	
 	if (cb->lbl != NULL) {
 		AG_WidgetSizeReq(cb->lbl, &rLbl);
-		r->w += cb->spacing + rLbl.w;
-		r->h = MAX(r->h, rLbl.h);
+		r->w += rLbl.w;
 	}
 }
 
@@ -378,14 +376,11 @@ static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Checkbox *cb = obj;
-	const int hFont = WFONT(cb)->height;
+	const int hFont = WFONT(cb)->lineskip;
 	AG_SizeAlloc aLbl;
 
-	if (a->w < hFont) {
-		return (-1);
-	}
 	if (cb->lbl != NULL) {
-		aLbl.x = hFont + cb->spacing;
+		aLbl.x = hFont;
 		aLbl.y = 0;
 		aLbl.w = a->w - aLbl.x;
 		aLbl.h = a->h;
