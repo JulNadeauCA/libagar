@@ -51,6 +51,9 @@ const char *agBoxVertAlignNames[] = {
 	NULL
 };
 
+static int SizeAllocateHomogenous(AG_Box *_Nonnull, const AG_SizeAlloc *_Nonnull,
+                                  int);
+
 AG_Box *
 AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
 {
@@ -212,7 +215,7 @@ Draw(void *_Nonnull obj)
 	AG_Widget *chld;
 	AG_Rect r;
 
-	if (cBg->a > 0) {
+	if (box->style != AG_BOX_STYLE_NONE && cBg->a > 0) {
 		static void (*pfBox[])(void *, const AG_Rect *, const AG_Color *) = {
 			ag_draw_rect_noop,  /* NONE */
 			ag_draw_box_raised, /* BOX */
@@ -310,57 +313,6 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 }
 
 static int
-SizeAllocateHomogenous(AG_Box *_Nonnull box, const AG_SizeAlloc *_Nonnull a,
-    int nWidgets)
-{
-	int wSize, totUsed = 0, avail;
-	AG_Widget *chld, *chldLast = NULL;
-	AG_SizeAlloc aChld;
-	const int padding2 = box->padding << 1;
-
-	avail = ((box->type == AG_BOX_HORIZ) ? a->w : a->h);
-	avail -= padding2;
-	wSize = (avail - nWidgets - 1) / nWidgets;
-
-	aChld.x = box->padding;
-	aChld.y = box->padding;
-	OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
-		aChld.w = (box->type==AG_BOX_HORIZ) ? wSize : (a->w - padding2);
-		aChld.h = (box->type==AG_BOX_VERT)  ? wSize : (a->h - padding2);
-
-		AG_WidgetSizeAlloc(chld, &aChld);
-		if (chld->flags & AG_WIDGET_UNDERSIZE)
-			continue;
-
-		if (OBJECT(chld) ==
-		    TAILQ_LAST(&OBJECT(box)->children,ag_objectq)) {
-			chldLast = chld;
-		} else {
-			if (box->type == AG_BOX_HORIZ) {
-				aChld.x += aChld.w + 1;
-			} else {
-				aChld.y += aChld.h + 1;
-			}
-		}
-		totUsed += ((box->type == AG_BOX_HORIZ) ? aChld.w : aChld.h)+1;
-	}
-	/* Compensate for rounding error due to division. */
-	if (chldLast != NULL && totUsed < avail) {
-		switch (box->type) {
-		case AG_BOX_VERT:
-			aChld.h += avail - totUsed;
-			AG_WidgetSizeAlloc(chldLast, &aChld);
-			break;
-		case AG_BOX_HORIZ:
-			aChld.w += avail - totUsed;
-			AG_WidgetSizeAlloc(chldLast, &aChld);
-			break;
-		}
-	}
-	return (0);
-}
-
-static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Box *box = obj;
@@ -416,6 +368,12 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 			}
 			AG_WidgetSizeAlloc(chld, &aChld);
 			x += aChld.w + box->spacing;
+
+			if (aChld.w > 0) {
+				chld->flags |= AG_WIDGET_VISIBLE;
+			} else {
+				chld->flags &= ~(AG_WIDGET_VISIBLE);
+			}
 			break;
 		case AG_BOX_VERT:
 			aChld.w = (chld->flags & AG_WIDGET_HFILL) ?
@@ -433,12 +391,71 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 			}
 			AG_WidgetSizeAlloc(chld, &aChld);
 			y += aChld.h + box->spacing;
+
+			if (aChld.h > 0) {
+				chld->flags |= AG_WIDGET_VISIBLE;
+			} else {
+				chld->flags &= ~(AG_WIDGET_VISIBLE);
+			}
 			break;
 		}
 	}
 	return (0);
 }
 
+static int
+SizeAllocateHomogenous(AG_Box *_Nonnull box, const AG_SizeAlloc *_Nonnull a,
+    int nWidgets)
+{
+	AG_Widget *chld, *chldLast=NULL;
+	AG_SizeAlloc aChld;
+	const int padding2 = (box->padding << 1);
+	int wSize, wUsed=0, avail;
+
+	avail = ((box->type == AG_BOX_HORIZ) ? a->w : a->h);
+	avail -= padding2;
+	wSize = (avail - nWidgets - 1) / nWidgets;
+
+	aChld.x = box->padding;
+	aChld.y = box->padding;
+	OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
+		aChld.w = (box->type==AG_BOX_HORIZ) ? wSize : (a->w - padding2);
+		aChld.h = (box->type==AG_BOX_VERT)  ? wSize : (a->h - padding2);
+
+		AG_WidgetSizeAlloc(chld, &aChld);
+		if (chld->flags & AG_WIDGET_UNDERSIZE)
+			continue;
+
+		if (OBJECT(chld) ==
+		    TAILQ_LAST(&OBJECT(box)->children, ag_objectq)) {
+			chldLast = chld;
+		} else {
+			if (box->type == AG_BOX_HORIZ) {
+				aChld.x += aChld.w + 1;
+			} else {
+				aChld.y += aChld.h + 1;
+			}
+		}
+		wUsed += ((box->type == AG_BOX_HORIZ) ? aChld.w : aChld.h)+1;
+	}
+
+	/* Compensate for rounding error due to division. */
+	if (chldLast != NULL && wUsed < avail) {
+		switch (box->type) {
+		case AG_BOX_VERT:
+			aChld.h += avail - wUsed;
+			AG_WidgetSizeAlloc(chldLast, &aChld);
+			break;
+		case AG_BOX_HORIZ:
+			aChld.w += avail - wUsed;
+			AG_WidgetSizeAlloc(chldLast, &aChld);
+			break;
+		}
+	}
+	return (0);
+}
+
+/* Enable/Disable HOMOGENOUS (divide space equally) mode. */
 void
 AG_BoxSetHomogenous(AG_Box *box, int enable)
 {
@@ -448,6 +465,7 @@ AG_BoxSetHomogenous(AG_Box *box, int enable)
 	AG_Redraw(box);
 }
 
+/* Set padding around contents in pixels. */
 void
 AG_BoxSetPadding(AG_Box *box, int padding)
 {
@@ -455,6 +473,7 @@ AG_BoxSetPadding(AG_Box *box, int padding)
 	AG_Redraw(box);
 }
 
+/* Set spacing between children in pixels. */
 void
 AG_BoxSetSpacing(AG_Box *box, int spacing)
 {
@@ -462,6 +481,7 @@ AG_BoxSetSpacing(AG_Box *box, int spacing)
 	AG_Redraw(box);
 }
 
+/* Set depth of shading in pixels. */
 void
 AG_BoxSetDepth(AG_Box *box, int depth)
 {
@@ -469,6 +489,7 @@ AG_BoxSetDepth(AG_Box *box, int depth)
 	AG_Redraw(box);
 }
 
+/* Set packing alignment (HORIZ or VERT). */
 void
 AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 {
@@ -485,6 +506,7 @@ AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 	AG_Redraw(box);
 }
 
+/* Set horizontal alignment (LEFT, CENTER, RIGHT). */
 void
 AG_BoxSetHorizAlign(AG_Box *box, enum ag_box_align align)
 {
@@ -492,6 +514,7 @@ AG_BoxSetHorizAlign(AG_Box *box, enum ag_box_align align)
 	AG_Redraw(box);
 }
 
+/* Set vertical alignment (TOP, MIDDLE, BOTTOM). */
 void
 AG_BoxSetVertAlign(AG_Box *box, enum ag_box_align align)
 {
@@ -510,7 +533,7 @@ UpdateWindowOf(AG_Event *_Nonnull event)
 	AG_WindowUpdate(win);
 }
 
-static void *
+static void *_Nullable
 Edit(void *_Nonnull obj)
 {
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND), *hBox;
