@@ -41,10 +41,9 @@ The
 .Nm
 widget implements text edition.
 .Nm
-may be bound to a fixed-size buffer containing a "C" string (i.e., a
-NUL-terminated string), or a dynamically-sized
-.Xr AG_Text 3
-buffer.
+may be bound to a fixed-size buffer containing a "C" string (a NUL-terminated string)
+or a dynamically-sized
+.Xr AG_TextElement 3 .
 .Pp
 .\" IMAGE(http://libagar.org/widgets/AG_TextboxMulti.png, "A multi-line AG_Textbox(3) widget")
 The string bound to
@@ -56,17 +55,15 @@ support).
 .Pp
 Most of the functionality of
 .Nm
-is actually implemented by the
-.Xr AG_Editable 3
-class (the
-.Nm
-widget itself simply embeds an
-.Ft AG_Editable
-along with scrollbars and cosmetics such as text labels).
+is actually implemented in
+.Xr AG_Editable 3 .
 The
-.Xr AG_Editable 3
-API also provides direct buffer-access routines for more advanced text
-processing.
+.Nm
+widget itself only acts as a container for an
+.Ft AG_Editable
+(adding an optional text label, scrollbars and buttons).
+Direct buffer-access routines are available in
+.Xr AG_Editable 3 .
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -80,13 +77,13 @@ processing.
 .Fn AG_TextboxNewS "AG_Widget *parent" "Uint flags" "const char *label"
 .Pp
 .Ft "void"
-.Fn AG_TextboxBindUTF8 "AG_Textbox *textbox" "char *buffer" "AG_Size bufferSize"
+.Fn AG_TextboxBindUTF8 "AG_Textbox *textbox" "char *buffer" "AG_Size size"
 .Pp
 .Ft "void"
-.Fn AG_TextboxBindASCII "AG_Textbox *textbox" "char *buffer" "AG_Size bufferSize"
+.Fn AG_TextboxBindASCII "AG_Textbox *textbox" "char *buffer" "AG_Size size"
 .Pp
 .Ft "void"
-.Fn AG_TextboxBindEncoded "AG_Textbox *textbox" "const char *encoding" "char *buffer" "AG_Size bufferSize"
+.Fn AG_TextboxBindEncoded "AG_Textbox *textbox" "const char *encoding" "char *buffer" "AG_Size size"
 .Pp
 .Ft "void"
 .Fn AG_TextboxBindText "AG_Textbox *textbox" "AG_Text *txt"
@@ -143,8 +140,7 @@ display area.
 .It AG_TEXTBOX_MULTILINGUAL
 Allow the user to select different languages from the right-click popup
 menu (provided the widget is bound to an
-.Xr AG_Text 3
-element).
+.Xr AG_TextElement 3 ) .
 .It AG_TEXTBOX_RETURN_BUTTON
 Display a RETURN button which generates "textbox-return" when clicked.
 .It AG_TEXTBOX_EXCL
@@ -209,15 +205,13 @@ Shorthand for
 .Dv AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL .
 .El
 .Pp
-The
 .Fn AG_TextboxBindUTF8
 and
 .Fn AG_TextboxBindASCII
-functions bind the textbox to a text buffer in UTF-8 or plain ASCII encoding,
-respectively.
-The
-.Fa bufferSize
-argument indicates the complete size of the buffer in bytes.
+connect a textbox to a buffer containing Unicode or US-ASCII, respectively.
+.Fa size
+is the size of the buffer in bytes (which must include space for
+the terminating NUL).
 .Pp
 .Fn AG_TextboxBindEncoded
 binds to a fixed-size buffer containing a C string in the specified
@@ -229,19 +223,17 @@ support (see
 .Xr iconv_open 3
 for the complete list of supported encodings).
 .Pp
-The
 .Fn AG_EditableBindText
-function binds the
+connects the
 .Nm
-to a multilingual, variable-length
-.Xr AG_Text 3
-element.
+to a
+.Xr AG_TextElement 3
+object, which can represent text in different languages.
 .Pp
 The
 .Fn AG_EditableSetLang
 function selects the specified language for the current
-.Xr AG_Text 3
-binding.
+.Xr AG_TextElement 3 .
 .Pp
 The
 .Fn AG_TextboxSetExcl
@@ -416,13 +408,12 @@ widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "char *string "
 .It Va char *string
-Bound fixed-size buffer containing a "C" string (i.e., a NUL-terminated string)
-in the specified encoding (UTF-8 by default).
+Fixed-size buffer containing a "C" string (a NUL-terminated string) in the
+specified encoding (UTF-8 by default).
 .It Va AG_Text *text
 Bound
-.Xr AG_Text 3
-element containing an table of variable-length C strings (entries in
-this table map to different languages).
+.Xr AG_TextElement 3 ,
+which can represent text in different languages.
 .El
 .Sh EVENTS
 The
@@ -457,8 +448,8 @@ A call to
 will create a new label object.
 .It Ft AG_Text *text
 An initially empty
-.Xr AG_Text 3
-object used as the default binding (where
+.Xr AG_TextElement 3
+used as the default binding (where
 .Fn AG_TextboxBind*
 is not used).
 .El
@@ -489,18 +480,17 @@ s = AG_TextboxDupString(tb);
 .Ed
 .Pp
 Exclusive access to an
-.Xr AG_Text 3
-element is an efficient option for editing potentially large,
-dynamically-allocated strings:
+.Xr AG_TextElement 3
+is an efficient option for editing potentially large, dynamically-allocated
+strings:
 .Bd -literal -offset indent
-AG_Text *myLargeText;
+AG_Text *txt;
 AG_Textbox *tb;
 
-myLargeText = AG_TextNew(0);
-tb = AG_TextboxNew(parent,
-    AG_TEXTBOX_EXCL|AG_TEXTBOX_MULTILINE,
-    NULL);
-AG_TextboxBindText(tb, myLargeText);
+txt = AG_TextNew(0);
+tb = AG_TextboxNew(parent, AG_TEXTBOX_EXCL |
+                           AG_TEXTBOX_MULTILINE, NULL);
+AG_TextboxBindText(tb, txt);
 .Ed
 .Pp
 Also see
@@ -524,3 +514,6 @@ It was mostly rewritten as
 .Xr AG_Editable 3
 was added in Agar 1.3.2.
 Support for dynamically-resized text buffers was added in Agar 1.4.0.
+The
+.Dv AG_TEXTBOX_RETURN_BUTTON
+option was added in Agar 1.6.0.
