@@ -1020,7 +1020,7 @@ AG_ScrollbarVisible(AG_Scrollbar *sb)
 	return (rv);
 }
 
-static void *
+static void *_Nullable
 Edit(void *_Nonnull obj)
 {
 	static const AG_FlagDescr flagDescr[] = {
