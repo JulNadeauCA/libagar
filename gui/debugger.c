@@ -53,7 +53,9 @@
 #include <string.h>
 #include <ctype.h>
 
-static int agDbgrCounter = 0;
+static AG_Window *_Nullable agDebuggerWindow = NULL;
+static AG_Label *_Nullable agDebuggerLabel = NULL;
+static AG_Box *_Nullable agDebuggerBox = NULL;
 
 static void
 FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
@@ -89,14 +91,14 @@ static void
 FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 {
 	const char *name = OBJECT(win)->name;
-	AG_Window *wSub;
+/*	AG_Window *wSub; */
 	AG_Widget *wChild;
 	AG_TlistItem *it;
-
+#if 0
 	if ((strncmp(name, "menu", 4) == 0 ||
 	     strncmp(name, "icon", 4) == 0) && isdigit(name[4]))
 		return;
-
+#endif
 	if (strncmp(name, "win", 3) == 0 && isdigit(name[4])) {
 		it = AG_TlistAddS(tl, NULL, win->caption[0] !='\0' ?
 		                            win->caption : _("Untitled"));
@@ -115,29 +117,40 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 	}
 	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
 	    AG_TlistVisibleChildren(tl, it)) {
-		TAILQ_FOREACH(wSub, &win->pvt.subwins, pvt.swins)
-			FindWindows(tl, wSub, depth+1);
+//		TAILQ_FOREACH(wSub, &win->pvt.subwins, pvt.swins)
+//			FindWindows(tl, wSub, depth+1);
 		OBJECT_FOREACH_CHILD(wChild, win, ag_widget)
 			FindWidgets(wChild, tl, depth+1);
 	}
 }
 
 static void
+TargetRoot(void)
+{
+	AG_LabelText(agDebuggerLabel,
+	    _("Target: " AGSI_YEL "/" AGSI_RST));
+	AG_WindowSetCaptionS(agDebuggerWindow,
+	    _("Agar GUI Debugger: / (root)"));
+}
+
+static void
 PollWidgets(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
-	const AG_Window *win = AG_CONST_WINDOW_PTR(1);
+	const AG_Window *tgt = agTargetWindow;
 	AG_Driver *drv;
-	
+
 	AG_TlistBegin(tl);
 
-	if (win != NULL) {
-		FindWindows(tl, win, 0);
-	} else {
+	if (tgt != NULL && AG_OBJECT_VALID(tgt)) {
+		FindWindows(tl, tgt, 0);
+	} else {					/* Retarget root */
+		TargetRoot();
+
 		AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 			AG_LockVFS(drv);
-			AG_FOREACH_WINDOW(win, drv) {
-				FindWindows(tl, win, 0);
+			AG_FOREACH_WINDOW(tgt, drv) {
+				FindWindows(tl, tgt, 0);
 			}
 			AG_UnlockVFS(drv);
 		}
@@ -288,16 +301,16 @@ PollVariables(AG_Event *_Nonnull event)
 static void
 WidgetSelected(AG_Event *_Nonnull event)
 {
-	AG_Box *box = AG_BOX_PTR(1);
-	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
-	AG_Widget *wid = ti->p1;
+	AG_Box *box = agDebuggerBox;
+	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(1);
+	AG_Widget *tgt = ti->p1;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;
 	AG_Textbox *tb;
-	AG_MSpinbutton *msb;
-	AG_Scrollview *sv;
 	int savedTabID;
-	
+
+	agTargetWidget = tgt;
+
 	if ((nb = AG_ObjectFindChild(box, "notebook0")) != NULL) {
 		savedTabID = nb->selTabID;
 	} else {
@@ -306,8 +319,6 @@ WidgetSelected(AG_Event *_Nonnull event)
 	AG_ObjectFreeChildren(box);
 
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
-	AG_SetStyle(nb, "color#selected", "rgb(125,125,125)");	/* XXX */
-
 	nt = AG_NotebookAdd(nb, "AG_Widget", AG_BOX_VERT);
 	nt->id = 1;
 	{
@@ -318,15 +329,17 @@ WidgetSelected(AG_Event *_Nonnull event)
 		    { AG_WIDGET_HIDE,			"HIDE",			1 },
 		    { AG_WIDGET_VISIBLE,		"VISIBLE",		0 },
 		    { AG_WIDGET_UNDERSIZE,		"UNDERSIZE",		0 },
-		    { AG_WIDGET_UPDATE_WINDOW,		"UPDATE_WINDOW",	1 },
 		    { AG_WIDGET_HFILL,			"HFILL",		1 },
 		    { AG_WIDGET_VFILL,			"VFILL",		1 },
 		    { AG_WIDGET_USE_MOUSEOVER,		"USE_MOUSEOVER",	1 },
 		    { AG_WIDGET_MOUSEOVER,		"MOUSEOVER",		0 },
+#if 0
+		    { AG_WIDGET_UPDATE_WINDOW,		"UPDATE_WINDOW",	1 },
 		    { AG_WIDGET_USE_TEXT,		"USE_TEXT",		0 },
 		    { AG_WIDGET_CATCH_TAB,		"CATCH_TAB",		1 },
 		    { AG_WIDGET_USE_OPENGL,		"USE_OPENGL",		0 },
 		    { AG_WIDGET_NOSPACING,		"NOSPACING",		1 },
+#endif
 		    { AG_WIDGET_UNFOCUSED_MOTION,	"UNFOCUSED_MOTION",	1 },
 		    { AG_WIDGET_UNFOCUSED_BUTTONUP,	"UNFOCUSED_BUTTONUP",	1 },
 		    { AG_WIDGET_UNFOCUSED_BUTTONDOWN,	"UNFOCUSED_BUTTONDOWN",	1 },
@@ -334,68 +347,72 @@ WidgetSelected(AG_Event *_Nonnull event)
 		    { AG_WIDGET_UNFOCUSED_KEYUP,	"UNFOCUSED_KEYUP",	1 },
 		    { 0,				NULL,0 }
 		};
+		AG_MSpinbutton *msb;
+		AG_Box *box2;
 
 		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL, _("Name: "));
 #ifdef AG_UNICODE
-		AG_TextboxBindUTF8(tb, OBJECT(wid)->name,
-		    sizeof(OBJECT(wid)->name));
+		AG_TextboxBindUTF8(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
 #else
-		AG_TextboxBindASCII(tb, OBJECT(wid)->name,
-		    sizeof(OBJECT(wid)->name));
+		AG_TextboxBindASCII(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
 #endif
-		AG_LabelNew(nt, 0, _("Class: " AGSI_BOLD "%s" AGSI_RST "(3)"), OBJECT(wid)->cls->name);
-		AG_LabelNewPolledMT(nt, AG_LABEL_HFILL, &OBJECT(wid)->pvt.lock,
+		AG_LabelNew(nt, 0, _("Class: " AGSI_BOLD "%s" AGSI_RST "(3)"), OBJECT(tgt)->cls->name);
+
+		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
+		    &OBJECT(tgt)->pvt.lock,
 		    _("Parent window: " AGSI_YEL "%[objName]" AGSI_RST
 		      " @ (" AGSI_CYAN "AG_Window" AGSI_RST " *)%p"),
-		    &wid->window, &wid->window);
-		AG_LabelNewPolledMT(nt, AG_LABEL_HFILL, &OBJECT(wid)->pvt.lock,
+		    &tgt->window, &tgt->window);
+
+		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
+		    &OBJECT(tgt)->pvt.lock,
 		    _("Parent driver: " AGSI_YEL "%[objName]" AGSI_RST
 		      " @ (" AGSI_CYAN "AG_Driver" AGSI_RST " *)%p"),
-		    &wid->drv, &wid->drv);
-		AG_LabelNewPolledMT(nt, AG_LABEL_HFILL, &OBJECT(wid)->pvt.lock,
+		    &tgt->drv, &tgt->drv);
+
+		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
+		    &OBJECT(tgt)->pvt.lock,
 		    _("Driver class: " AGSI_BOLD "%[objClassName]" AGSI_RST "(3)"
 		      " @ (" AGSI_CYAN "AG_DriverClass" AGSI_RST " *)%p"),
-		    &wid->drvOps, &wid->drvOps);
+		    &tgt->drvOps, &tgt->drvOps);
 
 		AG_SeparatorNewHoriz(nt);
 
-		sv = AG_ScrollviewNew(nt, AG_SCROLLVIEW_BY_MOUSE |
-		                          AG_SCROLLVIEW_EXPAND);
-		AG_CheckboxSetFromFlags(sv, 0, &wid->flags, flagDescr);
-		AG_SetStyle(sv, "font-family", "Courier");
-		AG_SetStyle(sv, "font-size", "80%");
+		msb = AG_MSpinbuttonNew(nt, AG_MSPINBUTTON_NOHFILL, "x",
+		                        _("Size: "));
+		AG_BindInt(msb, "xvalue", &tgt->w);
+		AG_BindInt(msb, "yvalue", &tgt->h);
+		AG_WidgetDisable(msb);
+
+		msb = AG_MSpinbuttonNew(nt, AG_MSPINBUTTON_NOHFILL, ",",
+		                        _("Position (parent): "));
+		AG_BindInt(msb, "xvalue", &tgt->x);
+		AG_BindInt(msb, "yvalue", &tgt->y);
+		AG_WidgetDisable(msb);
+
+		msb = AG_MSpinbuttonNew(nt, AG_MSPINBUTTON_NOHFILL, ",",
+		                        _("Position (display): "));
+		AG_BindInt(msb, "xvalue", &tgt->rView.x1);
+		AG_BindInt(msb, "yvalue", &tgt->rView.y1);
+
+		AG_SeparatorNewHoriz(nt);
+
+		box2 = AG_BoxNewVert(nt, AG_BOX_VFILL);
+		AG_CheckboxSetFromFlags(box2, 0, &tgt->flags, flagDescr);
 	}
 
-	if (OBJECT_CLASS(wid)->edit != NULL) {
-		nt = AG_NotebookAdd(nb, OBJECT(wid)->cls->name, AG_BOX_VERT);
+	if (OBJECT_CLASS(tgt)->edit != NULL) {
+		nt = AG_NotebookAdd(nb, OBJECT(tgt)->cls->name, AG_BOX_VERT);
 		nt->id = 2;
-		AG_ObjectAttach(nt, OBJECT_CLASS(wid)->edit(wid));
+		AG_ObjectAttach(nt, OBJECT_CLASS(tgt)->edit(tgt));
 	}
 	nt = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
 	nt->id = 3;
 	{
-		AG_TlistNewPolled(nt, AG_TLIST_EXPAND,
-		    PollVariables, "%p", wid);
+		AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
+		                    PollVariables,"%p",tgt);
 	}
-	nt = AG_NotebookAdd(nb, _("Geometry"), AG_BOX_VERT);
-	nt->id = 4;
-	{
-		msb = AG_MSpinbuttonNew(nt, 0, ",", "Container coords: ");
-		AG_BindInt(msb, "xvalue", &wid->x);
-		AG_BindInt(msb, "yvalue", &wid->y);
 
-		msb = AG_MSpinbuttonNew(nt, 0, "x", "Geometry: ");
-		AG_BindInt(msb, "xvalue", &wid->w);
-		AG_BindInt(msb, "yvalue", &wid->h);
-		
-		msb = AG_MSpinbuttonNew(nt, 0, ",", "View coords (UL): ");
-		AG_BindInt(msb, "xvalue", &wid->rView.x1);
-		AG_BindInt(msb, "yvalue", &wid->rView.y1);
-		
-		msb = AG_MSpinbuttonNew(nt, 0, ",", "View coords (LR): ");
-		AG_BindInt(msb, "xvalue", &wid->rView.x2);
-		AG_BindInt(msb, "yvalue", &wid->rView.y2);
-	}
 	nt = AG_NotebookAdd(nb, _("Surfaces"), AG_BOX_VERT);
 	nt->id = 5;
 	AG_BoxSetHomogenous(&nt->box, 1);
@@ -409,9 +426,9 @@ WidgetSelected(AG_Event *_Nonnull event)
 		px = AG_PixmapNew(pane->div[0], AG_PIXMAP_EXPAND, 320, 240);
 
 		tl = AG_TlistNewPolled(pane->div[1], AG_TLIST_EXPAND,
-		    PollSurfaces, "%p", wid);
-		AG_SetEvent(tl, "tlist-selected",
-		    SelectedSurface, "%p", px);
+		                       PollSurfaces,"%p",tgt);
+
+		AG_SetEvent(tl, "tlist-selected", SelectedSurface,"%p",px);
 
 		mi = AG_TlistSetPopup(tl, "surface");
 		AG_MenuAction(mi, _("Export to image file..."), agIconSave.s,
@@ -448,10 +465,37 @@ ContextualMenu(AG_Event *_Nonnull event)
 	}
 }
 
-/* Create the GUI debugger window. Return NULL if window exists. */
+static void
+CloseDebuggerWindow(AG_Event *_Nonnull event)
+{
+	agDebuggerWindow = NULL;
+	agDebuggerBox = NULL;
+	agTargetWindow = NULL;
+}
+
+void
+AG_GuiDebuggerDetachTarget(void)
+{
+	AG_ObjectFreeChildren(agDebuggerBox);
+	agTargetWidget = NULL;
+}
+
+void
+AG_GuiDebuggerDetachWindow(void)
+{
+	AG_ObjectFreeChildren(agDebuggerBox);
+	agTargetWindow = NULL;
+	agTargetWidget = NULL;
+	TargetRoot();
+}
+
+/*
+ * Open the GUI debugger window with tgt at the root.
+ */
 AG_Window *_Nullable
 AG_GuiDebugger(AG_Window *_Nonnull tgt)
 {
+	char path[AG_OBJECT_PATH_MAX];
 	AG_Window *win;
 	AG_Pane *pane;
 	AG_Tlist *tl;
@@ -462,25 +506,55 @@ AG_GuiDebugger(AG_Window *_Nonnull tgt)
 		               "Focus on a window to target it in Debugger."));
 		return (NULL);
 	}
-	if ((win = AG_WindowNewNamed(0, "dbgr%u", agDbgrCounter++)) == NULL) {
+	if (tgt == agDebuggerWindow) {				/* Unsafe */
 		return (NULL);
 	}
-	AG_WindowSetCaption(win,
-	    _("Agar GUI Debugger: <%s> (\"%s\")"),
-	    OBJECT(tgt)->name, AGWINDOW(tgt)->caption);
+	if ((win = agDebuggerWindow) != NULL) {
+		AG_WindowFocus(win);
+		if (agTargetWindow != tgt) {
+			agTargetWindow = tgt;
+
+			AG_WindowSetCaption(win,
+			    _("Agar GUI Debugger: <%s> (\"%s\")"),
+	   		    OBJECT(tgt)->name, AGWINDOW(tgt)->caption);
+
+			AG_ObjectFreeChildren(agDebuggerBox);
+
+			AG_ObjectCopyName(tgt, path, sizeof(path));
+			AG_LabelText(agDebuggerLabel,
+	                    _("Target: " AGSI_YEL "%s" AGSI_RST), path);
+		}
+		return (win);
+	}
+
+	if ((win = agDebuggerWindow = AG_WindowNewNamedS(0, "_agDbgr")) == NULL)
+		return (NULL);
+
+	agTargetWindow = tgt;
+
+	AG_WindowSetCaption(win, _("Agar GUI Debugger: <%s> (\"%s\")"),
+	                    OBJECT(tgt)->name, AGWINDOW(tgt)->caption);
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
+	agDebuggerBox = pane->div[1];
 
-	tl = AG_TlistNewPolled(pane->div[0], 0, PollWidgets, "%Cp", tgt);
-	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 10);
-	AG_SetEvent(tl, "tlist-dblclick", WidgetSelected, "%p", pane->div[1]);
-	AG_Expand(tl);
+	AG_ObjectCopyName(tgt, path, sizeof(path));
+	agDebuggerLabel = AG_LabelNew(pane->div[0], AG_LABEL_HFILL,
+	                              _("Target: " AGSI_YEL "%s" AGSI_RST),
+	                              path);
+
+	tl = AG_TlistNewPolledMs(pane->div[0], AG_TLIST_EXPAND, 250,
+	                         PollWidgets, NULL);
+
+	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXX>", 15);
+	AG_SetEvent(tl, "tlist-dblclick", WidgetSelected, NULL);
 	AG_WidgetFocus(tl);
 
 	mi = AG_TlistSetPopup(tl, "window");
 	AG_MenuSetPollFn(mi, ContextualMenu, "%p", tl);
 
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_BR, 1000, 550);
+	AG_AddEvent(win, "window-close", CloseDebuggerWindow, NULL);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_BR, 40, 40);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	return (win);
 }

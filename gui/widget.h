@@ -376,6 +376,9 @@ extern AG_WidgetClass agWidgetClass;
 extern const char *_Nullable agStyleAttributes[];
 extern const char *_Nullable agWidgetStateNames[];
 extern AG_WidgetPalette agDefaultPalette;
+#if defined(AG_DEBUG) && defined(AG_WIDGETS)
+extern AG_Widget *_Nullable agTargetWidget;
+#endif
 
 void AG_WidgetDraw(void *_Nonnull);
 void AG_WidgetSizeReq(void *_Nonnull, AG_SizeReq *_Nonnull);

@@ -181,6 +181,10 @@ AG_WidgetPalette agDefaultPalette = {{
 #endif /* AG_LARGE */
 }};
 
+#if defined(AG_DEBUG) && defined(AG_WIDGETS)
+AG_Widget *_Nullable agTargetWidget = NULL;
+#endif
+
 /* Import inlinables */
 #undef AG_INLINE_HEADER
 #include "inline_widget.h"
@@ -331,7 +335,12 @@ OnDetach(AG_Event *_Nonnull event)
 {
 	AG_Widget *widget = AG_WIDGET_SELF();
 	const void *parent = AG_PTR(1);
-	
+
+#if defined(AG_DEBUG) && defined(AG_WIDGETS)
+	if (widget == agTargetWidget)
+		AG_GuiDebuggerDetachTarget();
+#endif
+
 	if (AG_OfClass(parent, "AG_Widget:*") &&
 	    AG_OfClass(widget, "AG_Widget:*")) {
 		if (widget->window) {

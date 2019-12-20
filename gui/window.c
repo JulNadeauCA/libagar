@@ -59,6 +59,10 @@ AG_WindowQ agWindowHideQ;			/* Windows to hide */
 AG_Window *agWindowToFocus = NULL;		/* Window to focus */
 AG_Window *agWindowFocused = NULL;		/* Window holding focus */
 
+#if defined(AG_DEBUG) && defined(AG_WIDGETS)
+AG_Window *_Nullable agTargetWindow = NULL;     /* For GUI debugger */
+#endif
+
 #ifdef AG_WM_HINTS
 /* Map enum ag_window_wm_type to EWMH window type */
 const char *agWindowWmTypeNames[] = {
@@ -871,6 +875,11 @@ OnDetach(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_WINDOW_SELF();
 	AG_Object *chld;
+
+#if defined(AG_DEBUG) && defined(AG_WIDGETS)
+	if (win == agTargetWindow)
+		AG_GuiDebuggerDetachWindow();
+#endif
 
 	/* Propagate to child objects */
 	OBJECT_FOREACH_CHILD(chld, win, ag_object) {
@@ -2953,7 +2962,7 @@ WindowCaptionChanged(AG_Event *event)
 	AG_WindowSetCaptionS(win, caption);
 }
 
-static void *
+static void *_Nullable
 Edit(void *_Nonnull obj)
 {
 	static const AG_FlagDescr flagDescr[] = {
@@ -3008,17 +3017,23 @@ Edit(void *_Nonnull obj)
 
 	rBox = AG_BoxNewVert(hBox, AG_BOX_EXPAND);
 
-	AG_LabelNewPolled(rBox, AG_LABEL_HFILL, "nFocused: %i", &tgt->nFocused);
-	AG_LabelNewPolled(rBox, AG_LABEL_HFILL, _("Zoom Level: %i"), &tgt->zoom);
-	AG_LabelNewPolledMT(rBox, AG_LABEL_HFILL, &OBJECT(tgt)->pvt.lock,
-	    _("Parent: %[objName] @ (AG_Window *)%p"),
-	    &tgt->parent, &tgt->parent);
-	AG_LabelNewPolledMT(rBox, AG_LABEL_HFILL, &OBJECT(tgt)->pvt.lock,
-	    _("Transient for: %[objName] @ (AG_Window *)%p"),
-	    &tgt->transientFor, &tgt->transientFor);
-	AG_LabelNewPolledMT(rBox, AG_LABEL_HFILL, &OBJECT(tgt)->pvt.lock,
-	    _("Pinned to: %[objName] @ (AG_Window *)%p"),
-	    &tgt->pinnedTo, &tgt->pinnedTo);
+	AG_LabelNewPolled(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
+	                  _("Zoom Level: %i"), &tgt->zoom);
+
+	AG_LabelNewPolledMT(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
+	                    &OBJECT(tgt)->pvt.lock,
+	                    _("Parent: %[objName] @ (AG_Window *)%p"),
+	                    &tgt->parent, &tgt->parent);
+
+	AG_LabelNewPolledMT(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
+	                    &OBJECT(tgt)->pvt.lock,
+	                    _("Transient for: %[objName] @ (AG_Window *)%p"),
+	                    &tgt->transientFor, &tgt->transientFor);
+
+	AG_LabelNewPolledMT(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
+	                    &OBJECT(tgt)->pvt.lock,
+	                   _("Pinned to: %[objName] @ (AG_Window *)%p"),
+	                   &tgt->pinnedTo, &tgt->pinnedTo);
 
 	AG_NumericalNewInt(rBox, 0, NULL, _("View X: "), &WIDGET(tgt)->x);
 	AG_NumericalNewInt(rBox, 0, NULL, _("View Y: "), &WIDGET(tgt)->y);

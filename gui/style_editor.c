@@ -295,7 +295,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 		AG_Box *hBox;
 
 		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
-		    PollAttributes, "%p", tgt);
+		                              PollAttributes, "%p", tgt);
 
 		hBox = AG_BoxNewHoriz(nt, AG_BOX_HFILL);
 		tb = AG_TextboxNewS(hBox, AG_TEXTBOX_HFILL |
@@ -309,7 +309,8 @@ WidgetSelected(AG_Event *_Nonnull event)
 	{
 		AG_Tlist *tl;
 
-		tl = AG_TlistNewPolled(nt, AG_TLIST_EXPAND, PollVariables, "%p", tgt);
+		tl = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
+		                         PollVariables,"%p",tgt);
 		AG_SetStyle(tl, "font-family", "courier-prime");
 		AG_SetStyle(tl, "font-size", "120%");
 	}
@@ -350,7 +351,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 	} else {
 		AG_Label *lbl;
 
-		lbl = AG_LabelNewS(nt, 0,
+		lbl = AG_LabelNewS(nt, AG_LABEL_HFILL,
 		    _("Capture is disabled. Click on \xe2\x96\xa6 (and refresh) to enable."));
 		AG_SetStyle(lbl, "font-family", "dejavu-sans");
 	}
@@ -420,8 +421,9 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	    AGOBJECT(tgt)->name,
 	    AGWINDOW(tgt)->caption);
 	
-	tlVFS = AG_TlistNewPolledMs(NULL, 0, 125, PollWidgets, "%Cp", tgt);
-	AG_TlistSizeHint(tlVFS, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 10);
+	tlVFS = AG_TlistNewPolledMs(NULL, 0, 125,
+	                            PollWidgets, "%Cp", tgt);
+	AG_TlistSizeHint(tlVFS, "<XXXXX/XXXXX/XXXXX/XXXXX>", 10);
 	AG_Expand(tlVFS);
 
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
@@ -450,18 +452,23 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 	{
+		AG_Label *lbl;
+
 		AG_SetEvent(tlVFS, "tlist-dblclick",
 		    WidgetSelected, "%p,%p", pane->div[1], buCapture);
 		AG_ObjectAttach(pane->div[0], tlVFS);
 		AG_WidgetFocus(tlVFS);
 
-		(AG_SpacerNewHoriz(pane->div[1]))->minLen = 400;
+		lbl = AG_LabelNewS(pane->div[1], AG_LABEL_HFILL,
+		    _("Select a widget on the left "
+		     "(or use \xe2\x87\xb1 in the toolbar to pick)."));
+		AG_SetStyle(lbl, "font-family", "dejavu-sans");
 
 		mi = AG_TlistSetPopup(tlVFS, "window");
 		AG_MenuSetPollFn(mi, MenuForWindow, "%p", tlVFS);
 	}
 
-	AG_WindowSetPosition(win, AG_WINDOW_BC, 1);
+	AG_WindowSetPosition(win, AG_WINDOW_BR, 1);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	return (win);
 }

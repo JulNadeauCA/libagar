@@ -158,6 +158,9 @@ extern AG_WindowQ agWindowShowQ;		/* AG_WindowShow() queue */
 extern AG_WindowQ agWindowHideQ;		/* AG_WindowHide() queue */
 extern AG_Window *_Nullable agWindowToFocus;	/* Window to focus next */
 extern AG_Window *_Nullable agWindowFocused;	/* Window holding focus */
+#if defined(AG_DEBUG) && defined(AG_WIDGETS)
+extern AG_Window *_Nullable agTargetWindow;     /* For GUI debugger */
+#endif
 
 AG_Window *_Nullable AG_WindowNew(Uint);
 AG_Window *_Nullable AG_WindowNewSw(void *_Nonnull, Uint);
