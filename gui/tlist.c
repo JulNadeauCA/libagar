@@ -1274,6 +1274,7 @@ KeyDown(AG_Event *_Nonnull event)
 		AG_TlistScrollToEnd(tl);
 		break;
 	case AG_KEY_RETURN:
+	case AG_KEY_KP_ENTER:
 		if ((ti = AG_TlistSelectedItemPtr(tl)) != NULL) {
 			AG_PostEvent(tl, "tlist-return", "%p", ti);
 		}
