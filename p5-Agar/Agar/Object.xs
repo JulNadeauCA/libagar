@@ -309,7 +309,11 @@ getString(self, name)
 	Agar::Widget self
 	const char * name
 CODE:
-	RETVAL = newSVpv(AG_GetStringDup(self, name), 0);
+	if (AG_Defined(self, name)) {
+		RETVAL = newSVpv(AG_GetStringDup(self, name), 0);
+	} else {
+		RETVAL = newSVpv(AG_Strdup(""), 0);
+	}
 OUTPUT:
 	RETVAL
 
