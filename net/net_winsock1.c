@@ -30,6 +30,7 @@
 #include <sys/types.h>
 
 #include <agar/core/core.h>
+#include <agar/net/net.h>
 
 #undef SLIST_ENTRY
 

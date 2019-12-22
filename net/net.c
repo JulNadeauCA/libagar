@@ -28,6 +28,11 @@
  */
 
 #include <agar/core/core.h>
+#include <agar/net/net.h>
+
+#include <agar/config/have_getaddrinfo.h>
+#include <agar/config/have_winsock1.h>
+#include <agar/config/have_winsock2.h>
 
 const char *agNetAddrFamilyNames[] = {
 	"none",
@@ -487,6 +492,17 @@ out:
 int
 AG_InitNetworkSubsystem(const AG_NetOps *ops)
 {
+	if (ops == NULL) {
+#if defined(HAVE_WINSOCK2)
+		ops = &agNetOps_winsock2;
+#elif defined(HAVE_WINSOCK1)
+		ops = &agNetOps_winsock1;
+#elif defined(HAVE_GETADDRINFO)
+		ops = &agNetOps_bsd;
+#else
+		ops = &agNetOps_dummy;
+#endif
+	}
 	if (agNetOps == ops) {
 		return (0);
 	}
@@ -497,3 +513,11 @@ AG_InitNetworkSubsystem(const AG_NetOps *ops)
 	return (ops->init != NULL) ? ops->init() : 0;
 }
 
+void
+AG_DestroyNetworkSubsystem(void)
+{
+	if (agNetOps != NULL && agNetOps->destroy != NULL) {
+		agNetOps->destroy();
+	}
+	agNetOps = NULL;
+}

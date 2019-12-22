@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include <agar/core/begin.h>
+#include <agar/net/begin.h>
 
 /* Address families */
 enum ag_net_addr_family {
@@ -170,7 +170,8 @@ extern const AG_NetOps agNetOps_dummy;
 extern const char *_Nonnull agNetAddrFamilyNames[];
 extern const char *_Nonnull agNetSocketTypeNames[];
 
-int AG_InitNetworkSubsystem(const AG_NetOps *_Nonnull);
+int  AG_InitNetworkSubsystem(const AG_NetOps *_Nullable);
+void AG_DestroyNetworkSubsystem(void);
 
 AG_NetSocket *_Nullable AG_NetSocketNew(enum ag_net_addr_family,
                                         enum ag_net_socket_type, int);
@@ -223,4 +224,4 @@ int AG_NetWrite(AG_NetSocket *_Nonnull, const void *_Nonnull, AG_Size,
 void AG_NetClose(AG_NetSocket *_Nonnull);
 __END_DECLS
 
-#include <agar/core/close.h>
+#include <agar/net/close.h>

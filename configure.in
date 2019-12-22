@@ -15,9 +15,10 @@ register_section("Libraries to build:")
 register("--enable-au",		"AU: Audio and sound toolkit [yes]")
 register("--enable-dev",	"DEV: Debugger and developer tools [yes]")
 register("--enable-gui",	"GUI: The Agar GUI library [yes]")
-register("--enable-map",	"MAP: Feature-based 2D levels [yes]")
+register("--enable-map",	"MAP: 2D tile map engine [yes]")
 register("--enable-math",	"MATH: Math library and advanced rendering [yes]")
 register("--enable-micro",	"MA: The Micro-Agar GUI library [auto]")
+register("--enable-net",	"NET: Network interface library [yes]")
 register("--enable-rg",		"RG: Feature-based graphics packages [yes]")
 register("--enable-sg",		"SG: Scene Graph and 3D engine toolkit [auto]")
 register("--enable-sk",		"SK: 2D sketcher and constraint solver [auto]")
@@ -44,18 +45,15 @@ register("--enable-exec",		"The AG_Execute(3) interface [check]")
 register("--enable-event-loop",		"The standard AG_EventLoop(3) [check]")
 register("--enable-namespaces",		"Namespaces for object classes [check]")
 register("--enable-named-args",		"Named AG_Event arguments [check]")
-register("--enable-network",		"The AG_Net(3) network interface [check]")
 register("--enable-serialization",	"File I/O and serialization [check]")
 register("--enable-string",		"AG_Printf(3) formatting engine [check]")
 register("--enable-timers",		"The AG_Timer(3) interface [check]")
 register("--enable-unicode",		"Support for Unicode [check]")
 register("--enable-user",		"The AG_User(3) interface [check]")
 register("--enable-verbosity",		"Verbose error messages [check]")
-register("--enable-web",		"HTTP/1.1 application server [no]")
 register("--with-db[45][=PREFIX]",	"AG_Db: Berkeley DB backend [no]")
 register("--with-mysql[=PREFIX]",	"AG_Db: MySQL backend [no]")
 register("--with-iconv[=PREFIX]",	"Character set conversion [check]")
-register("--with-z[=PREFIX]",		"zlib compression library [check]")
 register("--with-inline-byteswap",	"Inline endianness swaps [yes]")
 register("--with-inline-error",		"Inline malloc() wrappers [yes]")
 register("--with-inline-event",		"Inline event argument accessors [yes]")
@@ -71,6 +69,10 @@ register("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
 register("--with-altivec[=inline]",	"AltiVec-optimized routines [check]")
 register("--with-sse[=inline]",		"SSE-optimized routines [check]")
 register("--with-sse[234]",		"SSE2 SSE3 SSE4 routines [check]")
+
+register_section("Options specific to NET library:")
+register("--enable-web",		"HTTP/1.1 application server [no]")
+register("--with-z[=PREFIX]",		"zlib compression library [check]")
 
 register_section("Options specific to GUI library:")
 register("--enable-widgets",		"The standard widget library [yes]")
@@ -164,7 +166,7 @@ bbc | c64 | c128 | geos | nes)
 	enable_event_loop="no"
 	enable_namespaces="no"
 	enable_named_args="no"
-	enable_network="no"
+	enable_net="no"
 	enable_serialization="no"
 	enable_string="no"
 	enable_threads="no"
@@ -562,8 +564,10 @@ else
 	mdefine(SUBDIR_micro, "")
 fi
 
-# Enable network interface unless requested otherwise.
-if [ "${enable_network}" != 'no' ]; then
+# Enable the network library (ag_net).
+if [ "${enable_net}" != 'no' ]; then
+	mdefine(SUBDIR_net, "net")
+
 	check(getaddrinfo)
 	check(siocgifconf)
 	check(sockopts)
@@ -571,6 +575,8 @@ if [ "${enable_network}" != 'no' ]; then
 	mdefine(HAVE_NETWORK, "yes")
 	hdefine(AG_NETWORK, "yes")
 else
+	mdefine(SUBDIR_net, "")
+
 	disable(getaddrinfo)
 	disable(siocgifconf)
 	disable(sockopts)
@@ -579,7 +585,7 @@ else
 	hundef(AG_NETWORK)
 fi
 
-# Enable web application server if requested
+# Build HTTP application server support into the ag_net library.
 if [ "${enable_web}" = 'yes' ]; then
 	check(zlib, 0, ${prefix_z})
 	check_header(sys/uio.h)
@@ -919,15 +925,17 @@ if [ "${HAVE_MYSQL}" = 'yes' ]; then
 	mappend(SRCS_CORE, "db_mysql.c")
 fi
 if [ "${HAVE_NETWORK}" = 'yes' ]; then
-	mappend(SRCS_CORE, "net.c net_dummy.c")
 	if [ "${HAVE_WINSOCK1}" = 'yes' ]; then
-		mappend(SRCS_CORE, "net_winsock1.c")
+		mappend(SRCS_NET, "net_winsock1.c")
 	fi
 	if [ "${HAVE_WINSOCK2}" = 'yes' ]; then
-		mappend(SRCS_CORE, "net_winsock2.c")
+		mappend(SRCS_NET, "net_winsock2.c")
 	fi
 	if [ "${HAVE_GETADDRINFO}" = 'yes' ]; then
-		mappend(SRCS_CORE, "net_bsd.c")
+		mappend(SRCS_NET, "net_bsd.c")
+	fi
+	if [ "${HAVE_WEB}" = 'yes' ]; then
+		mappend(SRCS_NET, "web.c web_auth.c web_var.c")
 	fi
 fi
 if [ "${HAVE_GETPWUID}" = 'yes' ]; then
@@ -938,9 +946,6 @@ if [ "${HAVE_XBOX}" = 'yes' ]; then
 fi
 if [ "${HAVE_CSIDL}" = 'yes' ]; then
 	mappend(SRCS_CORE, "user_win32.c")
-fi
-if [ "${HAVE_WEB}" = 'yes' ]; then
-	mappend(SRCS_CORE, "web.c web_auth.c web_var.c")
 fi
 
 #
@@ -993,24 +998,23 @@ config_script(agar-config,\
 	 ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} \
 	 ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} \
 	 ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} \
-	 ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS} \
-	 ${ZLIB_CFLAGS}",\
+	 ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}",\
 	"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} \
 	 ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} \
 	 ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} \
 	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
-	 ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
+	 ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}")
 pkgconfig_mod(agar, "Agar cross-platform GUI toolkit", \
 	"${X11_PC} ${SDL_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} \
 	 ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}", \
 	"", \
 	"-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} \
 	 ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} \
-	 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}", \
+	 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}", \
 	"-L\${libdir} -lag_gui -lag_core", \
 	"-lag_gui -lag_core ${COCOA_LIBS} ${MATH_LIBS} ${PTHREADS_LIBS} \
 	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
-	 ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
+	 ${CLOCK_LIBS} ${ICONV_LIBS}")
 #
 # Micro-Agar config.
 # Implies: CORE.
@@ -1023,18 +1027,18 @@ config_script(agar-micro-config,\
 #
 config_script(agar-core-config,\
 	"-I${INCLDIR} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
-	 ${CLOCK_CFLAGS} ${ZLIB_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}",\
+	 ${CLOCK_CFLAGS} ${ICONV_CFLAGS}",\
 	"-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} \
 	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
-	 ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
+	 ${CLOCK_LIBS} ${ICONV_LIBS}")
 pkgconfig_mod(agar-core, "Agar object system and base library", "", "", \
 	"-I\${includedir}/agar ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS} \
 	 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} \
-	 ${MYSQL_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}", \
+	 ${MYSQL_CFLAGS} ${CLOCK_CFLAGS}", \
 	"-L\${libdir} -lag_core", \
 	"-lag_core ${PTHREADS_XOPEN_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
 	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} \
-	 ${WINSOCK2_LIBS} ${ZLIB_LIBS}")
+	 ${WINSOCK2_LIBS}")
 #
 # Agar-AU config.
 # Implies: GUI (optionally), CORE.
@@ -1065,7 +1069,7 @@ if [ "${enable_map}" != "no" -a "${enable_gui}" != "no" -a "${enable_rg}" != "no
 	MDEFINE(SUBDIR_map, "map")
 fi
 config_script(agar-map-config,"-I${INCLDIR}","-L${LIBDIR} -lag_map")
-pkgconfig_mod(agar-map, "Agar feature-based levels library", \
+pkgconfig_mod(agar-map, "Agar 2D tile map engine", \
 	"agar-rg agar-math agar", "", \
 	"-I\${includedir}/agar", \
 	"-L\${libdir} -lag_map", \
@@ -1090,6 +1094,17 @@ pkgconfig_mod(agar-math, "Agar math library", "${AGAR_MATH_REQUIRES}",\
 	 ${SSE3_CFLAGS} ${MATH_CFLAGS}", \
 	"-L\${libdir} -lag_math", \
 	"-lag_math ${MATH_LIBS}")
+#
+# Agar-NET config.
+# Implies: CORE.
+#
+config_script(agar-net-config,\
+	"-I${INCLDIR} ${ZLIB_CFLAGS}",\
+	"-L${LIBDIR} -lag_net ${ZLIB_LIBS}")
+pkgconfig_mod(agar-net, "Agar network interface", "", "", \
+	"-I\${includedir}/agar ${ZLIB_CFLAGS}", \
+	"-L\${libdir} -lag_core", \
+	"-lag_net ${WINSOCK1_LIBS} ${WINSOCK2_LIBS} ${ZLIB_LIBS}")
 #
 # Agar-RG config.
 # Implies: MATH, GUI, CORE.

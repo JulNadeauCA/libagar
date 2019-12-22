@@ -39,6 +39,8 @@
 #endif
 
 #include <agar/core/core.h>
+#include <agar/net/net.h>
+
 #include <agar/core/queue_close.h>	/* Avoid <sys/queue.h> conflicts */
 
 #include <sys/types.h>

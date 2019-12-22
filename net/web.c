@@ -29,7 +29,7 @@
  * concurrently behind a cluster of Frontend processes.
  *
  * Frontend processes work as HTTP/1.1 servers. They handle authentication,
- * user registration and other (and session-less operations). They are also
+ * user registration and other (and sessionless operations). They are also
  * responsible for managing the pool of Worker processes and forwarding HTTP
  * queries to them.
  *
@@ -73,7 +73,7 @@
  */
 
 #include <agar/core/core.h>
-#include <agar/core/web.h>
+#include <agar/net/web.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>

@@ -1,14 +1,12 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_CORE_WEB_H_
-#define _AGAR_CORE_WEB_H_
+#ifndef _AGAR_NET_WEB_H_
+#define _AGAR_NET_WEB_H_
 
 #include <agar/config/ag_web.h>
-#ifndef AG_WEB
-#error "recompile Agar with --enable-web"
-#endif
+#ifdef AG_WEB
 
-#include <agar/core/begin.h>
+#include <agar/net/begin.h>
 
 #include <sys/socket.h>
 #include <string.h>
@@ -1167,6 +1165,7 @@ __END_DECLS
 # define SESSION(p)   WEB_SESSION(p)
 #endif /* _USE_AGAR_WEB */
 
-#include <agar/core/close.h>
+#include <agar/net/close.h>
 
-#endif /* _AGAR_CORE_WEB_H_ */
+#endif /* AG_WEB */
+#endif /* _AGAR_NET_WEB_H_ */

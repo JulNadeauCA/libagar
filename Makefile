@@ -7,13 +7,14 @@ PROJCONFIGDIR=	include/agar/config
 
 include ${TOP}/Makefile.proj
 
-INCDIR=		au core dev gui micro map math rg sg sk vg
+INCDIR=		au core dev gui micro map math net rg sg sk vg
 SUBDIR=		core \
 		${SUBDIR_gui} \
 		${SUBDIR_micro} \
 		${SUBDIR_dev} \
 		${SUBDIR_au} \
 		${SUBDIR_math} \
+		${SUBDIR_net} \
 		${SUBDIR_sk} \
 		${SUBDIR_rg} \
 		${SUBDIR_sg} \
@@ -67,8 +68,6 @@ install-includes:
 		echo "${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h ${INCLDIR}/agar/$${INC}.h"; \
 		${SUDO} ${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h ${DESTDIR}${INCLDIR}/agar/$${INC}.h; \
 	done
-	@echo "${INSTALL_INCL} include/agar/core/web.h ${INCLDIR}/agar/web.h"
-	@${SUDO} ${INSTALL_INCL} include/agar/core/web.h ${DESTDIR}${INCLDIR}/agar/web.h
 
 deinstall-includes:
 	@echo "rm -rf ${INCLDIR}/agar"

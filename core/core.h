@@ -103,7 +103,6 @@
 # include <agar/core/db.h>
 # include <agar/core/exec.h>
 # include <agar/core/user.h>
-# include <agar/core/net.h>
 
 #endif /* _AGAR_INTERNAL */
 

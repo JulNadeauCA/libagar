@@ -28,7 +28,7 @@
  */
 
 #include <agar/core/core.h>
-#include <agar/core/web.h>
+#include <agar/net/web.h>
 
 #include <sys/stat.h>
 

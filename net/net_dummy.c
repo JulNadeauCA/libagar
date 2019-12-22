@@ -5,6 +5,7 @@
  */
 
 #include <agar/core/core.h>
+#include <agar/net/net.h>
 
 /* List local network interfaces */
 static int

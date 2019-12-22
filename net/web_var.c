@@ -29,7 +29,7 @@
  */
 
 #include <agar/core/core.h>
-#include <agar/core/web.h>
+#include <agar/net/web.h>
 
 #define VAR_GETTEXT_MAX 256	/* Max string length for $_(foo) */
 

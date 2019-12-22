@@ -33,7 +33,6 @@
 #include <agar/config/enable_nls.h>
 #include <agar/config/localedir.h>
 #include <agar/config/ag_threads.h>
-#include <agar/config/ag_network.h>
 #include <agar/config/have_clock_gettime.h>
 #include <agar/config/have_nanosleep.h>
 #include <agar/config/have_gettimeofday.h>
@@ -42,9 +41,6 @@
 #include <agar/config/have_db5.h>
 #include <agar/config/have_getpwuid.h>
 #include <agar/config/have_getuid.h>
-#include <agar/config/have_getaddrinfo.h>
-#include <agar/config/have_winsock1.h>
-#include <agar/config/have_winsock2.h>
 #include <agar/config/have_csidl.h>
 #ifdef AG_THREADS
 # include <agar/config/have_pthreads_xopen.h>
@@ -171,23 +167,6 @@ AG_InitCore(const char *progname, Uint flags)
 #else
 	AG_SetTimeOps(&agTimeOps_dummy);
 #endif
-#ifdef AG_NETWORK
-	/* Select the network access routines. */
-	{
-		int rv;
-# if defined(HAVE_WINSOCK2)
-		rv = AG_InitNetworkSubsystem(&agNetOps_winsock2);
-# elif defined(HAVE_WINSOCK1)
-		rv = AG_InitNetworkSubsystem(&agNetOps_winsock1);
-# elif defined(HAVE_GETADDRINFO)
-		rv = AG_InitNetworkSubsystem(&agNetOps_bsd);
-# else
-		rv = AG_InitNetworkSubsystem(&agNetOps_dummy);
-# endif
-		if (rv != 0)
-			return (-1);
-	}
-#endif /* AG_NETWORK */
 
 #ifdef AG_USER
 	/* Select the user account interface routines. */
@@ -274,12 +253,6 @@ AG_Destroy(void)
 #endif
 #ifdef AG_TIMERS
 	AG_DestroyTimers();
-#endif
-#ifdef AG_NETWORK
-	if (agNetOps != NULL && agNetOps->destroy != NULL) {
-		agNetOps->destroy();
-	}
-	agNetOps = NULL;
 #endif
 	AG_DestroyClassTbl();
 

@@ -451,9 +451,10 @@ echo 'Libraries to build:'
 echo '    --enable-au                 AU: Audio and sound toolkit [yes]'
 echo '    --enable-dev                DEV: Debugger and developer tools [yes]'
 echo '    --enable-gui                GUI: The Agar GUI library [yes]'
-echo '    --enable-map                MAP: Feature-based 2D levels [yes]'
+echo '    --enable-map                MAP: 2D tile map engine [yes]'
 echo '    --enable-math               MATH: Math library and advanced rendering [yes]'
 echo '    --enable-micro              MA: The Micro-Agar GUI library [auto]'
+echo '    --enable-net                NET: Network interface library [yes]'
 echo '    --enable-rg                 RG: Feature-based graphics packages [yes]'
 echo '    --enable-sg                 SG: Scene Graph and 3D engine toolkit [auto]'
 echo '    --enable-sk                 SK: 2D sketcher and constraint solver [auto]'
@@ -480,18 +481,15 @@ echo '    --enable-exec               The AG_Execute(3) interface [check]'
 echo '    --enable-event-loop         The standard AG_EventLoop(3) [check]'
 echo '    --enable-namespaces         Namespaces for object classes [check]'
 echo '    --enable-named-args         Named AG_Event arguments [check]'
-echo '    --enable-network            The AG_Net(3) network interface [check]'
 echo '    --enable-serialization      File I/O and serialization [check]'
 echo '    --enable-string             AG_Printf(3) formatting engine [check]'
 echo '    --enable-timers             The AG_Timer(3) interface [check]'
 echo '    --enable-unicode            Support for Unicode [check]'
 echo '    --enable-user               The AG_User(3) interface [check]'
 echo '    --enable-verbosity          Verbose error messages [check]'
-echo '    --enable-web                HTTP/1.1 application server [no]'
 echo '    --with-db[45][=PREFIX]      AG_Db: Berkeley DB backend [no]'
 echo '    --with-mysql[=PREFIX]       AG_Db: MySQL backend [no]'
 echo '    --with-iconv[=PREFIX]       Character set conversion [check]'
-echo '    --with-z[=PREFIX]           zlib compression library [check]'
 echo '    --with-inline-byteswap      Inline endianness swaps [yes]'
 echo '    --with-inline-error         Inline malloc() wrappers [yes]'
 echo '    --with-inline-event         Inline event argument accessors [yes]'
@@ -507,6 +505,10 @@ echo '    --with-<mode>-fp            Precision (single|double|quad) [double]'
 echo '    --with-altivec[=inline]     AltiVec-optimized routines [check]'
 echo '    --with-sse[=inline]         SSE-optimized routines [check]'
 echo '    --with-sse[234]             SSE2 SSE3 SSE4 routines [check]'
+echo ''
+echo 'Options specific to NET library:'
+echo '    --enable-web                HTTP/1.1 application server [no]'
+echo '    --with-z[=PREFIX]           zlib compression library [check]'
 echo ''
 echo 'Options specific to GUI library:'
 echo '    --enable-widgets            The standard widget library [yes]'
@@ -1734,7 +1736,7 @@ echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
 	enable_event_loop="no"
 	enable_namespaces="no"
 	enable_named_args="no"
-	enable_network="no"
+	enable_net="no"
 	enable_serialization="no"
 	enable_string="no"
 	enable_threads="no"
@@ -8781,8 +8783,9 @@ echo 'hdefs["ENABLE_MICRO"] = nil' >>configure.lua
 ENABLE_MICRO_LIBS=""
 SUBDIR_micro=""
 fi
-if [ "${enable_network}" != 'no' ]
+if [ "${enable_net}" != 'no' ]
  then
+SUBDIR_net="net"
 $ECHO_N 'checking for getaddrinfo()...'
 $ECHO_N '# checking for getaddrinfo()...' >>config.log
 # BEGIN getaddrinfo
@@ -9289,6 +9292,7 @@ echo "#define AG_NETWORK \"$AG_NETWORK\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"AG_NETWORK\"] = \"$AG_NETWORK\"" >>configure.lua
 else
+SUBDIR_net=""
 echo 'not enabling getaddrinfo()'
 echo '# not enabling getaddrinfo()' >>config.log
 HAVE_GETADDRINFO="no"
@@ -12645,18 +12649,21 @@ SRCS_CORE="${SRCS_CORE} db_mysql.c"
 fi
 if [ "${HAVE_NETWORK}" = 'yes' ]
  then
-SRCS_CORE="${SRCS_CORE} net.c net_dummy.c"
 	if [ "${HAVE_WINSOCK1}" = 'yes' ]
  then
-SRCS_CORE="${SRCS_CORE} net_winsock1.c"
+SRCS_NET="${SRCS_NET} net_winsock1.c"
 	fi
 	if [ "${HAVE_WINSOCK2}" = 'yes' ]
  then
-SRCS_CORE="${SRCS_CORE} net_winsock2.c"
+SRCS_NET="${SRCS_NET} net_winsock2.c"
 	fi
 	if [ "${HAVE_GETADDRINFO}" = 'yes' ]
  then
-SRCS_CORE="${SRCS_CORE} net_bsd.c"
+SRCS_NET="${SRCS_NET} net_bsd.c"
+	fi
+	if [ "${HAVE_WEB}" = 'yes' ]
+ then
+SRCS_NET="${SRCS_NET} web.c web_auth.c web_var.c"
 	fi
 fi
 if [ "${HAVE_GETPWUID}" = 'yes' ]
@@ -12670,10 +12677,6 @@ fi
 if [ "${HAVE_CSIDL}" = 'yes' ]
  then
 SRCS_CORE="${SRCS_CORE} user_win32.c"
-fi
-if [ "${HAVE_WEB}" = 'yes' ]
- then
-SRCS_CORE="${SRCS_CORE} web.c web_auth.c web_var.c"
 fi
 SRCS_GUI=""
 if [ "${HAVE_SDL}" = 'yes' ]
@@ -12751,9 +12754,9 @@ fi
 CFLAGS="$CFLAGS -I$BLD/include"
 CXXFLAGS="$CXXFLAGS -I$BLD/include"
 config_script_out="agar-config"
-config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}"
 if [ "${HAVE_CC65}" = "yes" ]; then
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
 config_libs_cc65=""
 bb_save_IFS=$IFS
 IFS=" "
@@ -12768,7 +12771,7 @@ done
 IFS=$bb_save_IFS
 config_script_libs="$config_libs_cc65"
 else
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
 fi
 cat << EOT > $config_script_out
 #!/bin/sh
@@ -12845,9 +12848,9 @@ pkgconfig_module_out="agar"
 pkgconfig_module_desc="Agar cross-platform GUI toolkit"
 pkgconfig_module_requires="${X11_PC} ${SDL_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}"
 pkgconfig_module_conflicts=""
-pkgconfig_module_cflags="-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}"
+pkgconfig_module_cflags="-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
 pkgconfig_module_libs="-L\${libdir} -lag_gui -lag_core"
-pkgconfig_module_libs_pvt="-lag_gui -lag_core ${COCOA_LIBS} ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}"
+pkgconfig_module_libs_pvt="-lag_gui -lag_core ${COCOA_LIBS} ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
 cat << EOT > $pkgconfig_module_out.pc
 # ${PACKAGE} pkg-config source file.
 #
@@ -12961,9 +12964,9 @@ done
 EOT
 AVAIL_CONFIGSCRIPTS="$AVAIL_CONFIGSCRIPTS agar-micro-config"
 config_script_out="agar-core-config"
-config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}"
+config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}"
 if [ "${HAVE_CC65}" = "yes" ]; then
-config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}"
+config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
 config_libs_cc65=""
 bb_save_IFS=$IFS
 IFS=" "
@@ -12978,7 +12981,7 @@ done
 IFS=$bb_save_IFS
 config_script_libs="$config_libs_cc65"
 else
-config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}"
+config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
 fi
 cat << EOT > $config_script_out
 #!/bin/sh
@@ -13055,9 +13058,9 @@ pkgconfig_module_out="agar-core"
 pkgconfig_module_desc="Agar object system and base library"
 pkgconfig_module_requires=""
 pkgconfig_module_conflicts=""
-pkgconfig_module_cflags="-I\${includedir}/agar ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}"
+pkgconfig_module_cflags="-I\${includedir}/agar ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${CLOCK_CFLAGS}"
 pkgconfig_module_libs="-L\${libdir} -lag_core"
-pkgconfig_module_libs_pvt="-lag_core ${PTHREADS_XOPEN_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} ${WINSOCK2_LIBS} ${ZLIB_LIBS}"
+pkgconfig_module_libs_pvt="-lag_core ${PTHREADS_XOPEN_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} ${WINSOCK2_LIBS}"
 cat << EOT > $pkgconfig_module_out.pc
 # ${PACKAGE} pkg-config source file.
 #
@@ -13413,7 +13416,7 @@ done
 EOT
 AVAIL_CONFIGSCRIPTS="$AVAIL_CONFIGSCRIPTS agar-map-config"
 pkgconfig_module_out="agar-map"
-pkgconfig_module_desc="Agar feature-based levels library"
+pkgconfig_module_desc="Agar 2D tile map engine"
 pkgconfig_module_requires="agar-rg agar-math agar"
 pkgconfig_module_conflicts=""
 pkgconfig_module_cflags="-I\${includedir}/agar"
@@ -13565,6 +13568,125 @@ Libs.private: $pkgconfig_module_libs_pvt
 Cflags: $pkgconfig_module_cflags
 EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-math.pc"
+config_script_out="agar-net-config"
+config_script_cflags="-I${INCLDIR} ${ZLIB_CFLAGS}"
+if [ "${HAVE_CC65}" = "yes" ]; then
+config_script_libs="-L${LIBDIR} -lag_net ${ZLIB_LIBS}"
+config_libs_cc65=""
+bb_save_IFS=$IFS
+IFS=" "
+for lib in $config_script_libs; do
+case "$lib" in
+-l*)
+lib_bare=`echo "$lib" |sed "s/^-l//"`
+config_libs_cc65="${config_libs_cc65} ${prefix}/lib/${lib_bare}.lib"
+;;
+esac
+done
+IFS=$bb_save_IFS
+config_script_libs="$config_libs_cc65"
+else
+config_script_libs="-L${LIBDIR} -lag_net ${ZLIB_LIBS}"
+fi
+cat << EOT > $config_script_out
+#!/bin/sh
+# Generated by ${PACKAGE}'s BSDBuild configure script.
+#
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/)
+# ${PACKAGE} ${VERSION}
+
+prefix='${PREFIX}'
+exec_prefix='${EXEC_PREFIX}'
+exec_prefix_set='no'
+libdir='${LIBDIR}'
+
+usage='\
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
+
+if test \$# -eq 0; then
+	echo "\${usage}" 1>&2
+	exit 1
+fi
+
+while test \$# -gt 0; do
+	case "\$1" in
+	-*=*)
+		optarg=\`echo "\$1" | LC_ALL='C' sed 's/[-_a-zA-Z0-9]*=//'\`
+		;;
+	*)
+		optarg=
+		;;
+	esac
+
+	case \$1 in
+	--prefix=*)
+		prefix=\$optarg
+		if test \$exec_prefix_set = no ; then
+			exec_prefix=\$optarg
+		fi
+		;;
+	--prefix)
+		echo "\$prefix"
+		;;
+	--exec-prefix=*)
+		exec_prefix=\$optarg
+		exec_prefix_set=yes
+		;;
+	--exec-prefix)
+		echo "\$exec_prefix"
+		;;
+	--host)
+		echo '${host}'
+		;;
+	--version)
+		echo '${VERSION}'
+		;;
+	--release)
+		echo '${RELEASE}'
+		;;
+	--cflags)
+		echo '$config_script_cflags'
+		;;
+	--libs | --static-libs)
+		echo '$config_script_libs'
+		;;
+	*)
+		echo "\${usage}" 1>&2
+		exit 1
+		;;
+	esac
+	shift
+done
+EOT
+AVAIL_CONFIGSCRIPTS="$AVAIL_CONFIGSCRIPTS agar-net-config"
+pkgconfig_module_out="agar-net"
+pkgconfig_module_desc="Agar network interface"
+pkgconfig_module_requires=""
+pkgconfig_module_conflicts=""
+pkgconfig_module_cflags="-I\${includedir}/agar ${ZLIB_CFLAGS}"
+pkgconfig_module_libs="-L\${libdir} -lag_core"
+pkgconfig_module_libs_pvt="-lag_net ${WINSOCK1_LIBS} ${WINSOCK2_LIBS} ${ZLIB_LIBS}"
+cat << EOT > $pkgconfig_module_out.pc
+# ${PACKAGE} pkg-config source file.
+#
+# Generated by ${PACKAGE}'s BSDBuild-based configure script.
+# BSDBuild 3.2 (http://bsdbuild.hypertriton.com/).
+
+prefix=${PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: $pkgconfig_module_out
+Description: $pkgconfig_module_desc
+Version: ${VERSION}
+Requires: $pkgconfig_module_requires
+Conflicts: $pkgconfig_module_conflicts
+Libs: $pkgconfig_module_libs
+Libs.private: $pkgconfig_module_libs_pvt
+Cflags: $pkgconfig_module_cflags
+EOT
+AVAIL_PCMODULES="$AVAIL_PCMODULES agar-net.pc"
 if [ "${enable_rg}" != "no" -a "${enable_gui}" != "no" ]
  then
 SUBDIR_rg="rg"
@@ -14356,6 +14478,8 @@ echo "SRCS_CORE=$SRCS_CORE" >>Makefile.config
 echo "mdefs[\"SRCS_CORE\"] = \"$SRCS_CORE\"" >>configure.lua
 echo "SRCS_GUI=$SRCS_GUI" >>Makefile.config
 echo "mdefs[\"SRCS_GUI\"] = \"$SRCS_GUI\"" >>configure.lua
+echo "SRCS_NET=$SRCS_NET" >>Makefile.config
+echo "mdefs[\"SRCS_NET\"] = \"$SRCS_NET\"" >>configure.lua
 echo "SSE2_CFLAGS=$SSE2_CFLAGS" >>Makefile.config
 echo "mdefs[\"SSE2_CFLAGS\"] = \"$SSE2_CFLAGS\"" >>configure.lua
 echo "SSE3_CFLAGS=$SSE3_CFLAGS" >>Makefile.config
@@ -14376,6 +14500,8 @@ echo "SUBDIR_math=$SUBDIR_math" >>Makefile.config
 echo "mdefs[\"SUBDIR_math\"] = \"$SUBDIR_math\"" >>configure.lua
 echo "SUBDIR_micro=$SUBDIR_micro" >>Makefile.config
 echo "mdefs[\"SUBDIR_micro\"] = \"$SUBDIR_micro\"" >>configure.lua
+echo "SUBDIR_net=$SUBDIR_net" >>Makefile.config
+echo "mdefs[\"SUBDIR_net\"] = \"$SUBDIR_net\"" >>configure.lua
 echo "SUBDIR_rg=$SUBDIR_rg" >>Makefile.config
 echo "mdefs[\"SUBDIR_rg\"] = \"$SUBDIR_rg\"" >>configure.lua
 echo "SUBDIR_sg=$SUBDIR_sg" >>Makefile.config
