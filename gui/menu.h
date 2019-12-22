@@ -72,9 +72,13 @@ typedef struct ag_menu_item {
 #define AG_CONST_MENU_ITEM_SELF() AGCMENUITEM( AG_CONST_MENU_ITEM(0) )
 
 #ifdef AG_TYPE_SAFETY
+# define AG_MENU_ITEM_VALID(p)     (strncmp(AGMENUITEM(p)->tag, AG_MENU_ITEM_TAG, AG_MENU_ITEM_TAG_LEN) == 0)
+# define AG_MENU_ITEM_IS_VALID(p)  if (!AG_MENU_ITEM_VALID(p)) { AG_FatalError("Illegal AG_MenuItem access"); }
 # define AG_MENU_ITEM_PTR(v)       AG_MenuGetItemPtr(event,(v),0)
 # define AG_CONST_MENU_ITEM_PTR(v) AG_MenuGetItemPtr(event,(v),1)
 #else
+# define AG_MENU_ITEM_VALID(p)     1
+# define AG_MENU_ITEM_IS_VALID(p)
 # define AG_MENU_ITEM_PTR(v)       event->argv[v].data.p
 # define AG_CONST_MENU_ITEM_PTR(v) event->argv[v].data.p
 #endif
