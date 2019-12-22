@@ -137,6 +137,8 @@ include:
 Causes newlines to be entered literally into the string, and arranges for
 horizontal and vertical scrollbars to appear if the text is larger than the
 display area.
+.It AG_TEXTBOX_WORDWRAP
+Enable word wrapping in multiline mode.
 .It AG_TEXTBOX_MULTILINGUAL
 Allow the user to select different languages from the right-click popup
 menu (provided the widget is bound to an
@@ -192,17 +194,12 @@ except that the textbox is not grayed out.
 .It AG_TEXTBOX_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
-This flag renders the use of
-.Fn AG_TextboxSizeHint
-unnecessary.
 .It AG_TEXTBOX_VFILL
 Expand vertically in parent (equivalent to invoking
 .Xr AG_ExpandVert 3 ) .
-This flag is recommended for multi-line text as an alternative to calling
-.Fn AG_TextboxSizeHintLines .
 .It AG_TEXTBOX_EXPAND
 Shorthand for
-.Dv AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL .
+.Dv AG_TEXTBOX_HFILL | AG_TEXTBOX_VFILL .
 .El
 .Pp
 .Fn AG_TextboxBindUTF8
