@@ -94,6 +94,9 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 /*	AG_Window *wSub; */
 	AG_Widget *wChild;
 	AG_TlistItem *it;
+
+	if (strcmp(name, "_agDbgr") == 0)			/* Unsafe */
+		return;
 #if 0
 	if ((strncmp(name, "menu", 4) == 0 ||
 	     strncmp(name, "icon", 4) == 0) && isdigit(name[4]))
@@ -476,14 +479,18 @@ CloseDebuggerWindow(AG_Event *_Nonnull event)
 void
 AG_GuiDebuggerDetachTarget(void)
 {
-	AG_ObjectFreeChildren(agDebuggerBox);
+	if (agDebuggerBox) {
+		AG_ObjectFreeChildren(agDebuggerBox);
+	}
 	agTargetWidget = NULL;
 }
 
 void
 AG_GuiDebuggerDetachWindow(void)
 {
-	AG_ObjectFreeChildren(agDebuggerBox);
+	if (agDebuggerBox) {
+		AG_ObjectFreeChildren(agDebuggerBox);
+	}
 	agTargetWindow = NULL;
 	agTargetWidget = NULL;
 	TargetRoot();
