@@ -387,17 +387,22 @@ Edit(void *_Nonnull obj, VG_View *_Nonnull vv)
 	AG_TextboxBindASCII(tb, vt->text, sizeof(vt->text));
 #endif
 
-	bAlv = AG_BoxNewVertNS(vPane->div[1], AG_BOX_HFILL);
+	bAlv = AG_BoxNewVert(vPane->div[1], AG_BOX_HFILL | AG_BOX_NO_SPACING);
 	AG_LabelNew(bAlv, 0, _("Alignment: "));
-	bAl = AG_BoxNewHorizNS(bAlv, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	bAl = AG_BoxNewHoriz(bAlv, AG_BOX_HFILL | AG_BOX_HOMOGENOUS |
+	                           AG_BOX_NO_SPACING);
 	AG_ButtonNewFn(bAl, 0, _("TL"), SetAlign, "%p,%i", vt, VG_ALIGN_TL);
 	AG_ButtonNewFn(bAl, 0, _("TC"), SetAlign, "%p,%i", vt, VG_ALIGN_TC);
 	AG_ButtonNewFn(bAl, 0, _("TR"), SetAlign, "%p,%i", vt, VG_ALIGN_TR);
-	bAl = AG_BoxNewHorizNS(bAlv, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+
+	bAl = AG_BoxNewHoriz(bAlv, AG_BOX_HFILL | AG_BOX_HOMOGENOUS |
+	                           AG_BOX_NO_SPACING);
 	AG_ButtonNewFn(bAl, 0, _("ML"), SetAlign, "%p,%i", vt, VG_ALIGN_ML);
 	AG_ButtonNewFn(bAl, 0, _("MC"), SetAlign, "%p,%i", vt, VG_ALIGN_MC);
 	AG_ButtonNewFn(bAl, 0, _("MR"), SetAlign, "%p,%i", vt, VG_ALIGN_MR);
-	bAl = AG_BoxNewHorizNS(bAlv, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+
+	bAl = AG_BoxNewHoriz(bAlv, AG_BOX_HFILL | AG_BOX_HOMOGENOUS |
+	                           AG_BOX_NO_SPACING);
 	AG_ButtonNewFn(bAl, 0, _("BL"), SetAlign, "%p,%i", vt, VG_ALIGN_BL);
 	AG_ButtonNewFn(bAl, 0, _("BC"), SetAlign, "%p,%i", vt, VG_ALIGN_BC);
 	AG_ButtonNewFn(bAl, 0, _("BR"), SetAlign, "%p,%i", vt, VG_ALIGN_BR);

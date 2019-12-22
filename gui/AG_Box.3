@@ -29,7 +29,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm AG_Box
-.Nd agar general container widget
+.Nd agar box container widget
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -37,45 +37,28 @@
 .Ed
 .Sh DESCRIPTION
 .\" IMAGE(http://libagar.org/widgets/AG_Box.png, "A horizontal box (top), and a vertical box (right)")
-The
 .Nm
-widget is a general-purpose container which packs its child widgets
-horizontally or vertically, with padding and spacing.
+is a general-purpose container widget which aligns and packs its widgets either
+horizontally or vertically based on their size requisitions and adds
+spacing and padding.
+Overflowing widgets are clipped.
 .Pp
-.Nm
-honors the
+Widgets with
 .Dv AG_WIDGET_HFILL
-and
+expand horizontally to fill remaining space.
+Widgets with
 .Dv AG_WIDGET_VFILL
-flags of its children.
-These flags are passed to widget constructors or set by call to
-.Xr AG_ExpandHoriz 3 ,
-.Xr AG_ExpandVert 3
-or
-.Xr AG_Expand 3 ) .
-For instance, a vertical
-.Nm
-will arrange widgets top to bottom.
-All widgets with the HFILL flag will expand to fit the width of the box,
-and up to one widget with the VFILL flag can expand to fill the remaining
-space vertically.
-A vertical box can hold a maximum of one VFILL widget, and a horizontal box
-can hold a maximum of one HFILL widget.
-.Bd -literal
- <----------- AG_Box width ------------>
- ---------------------------------------
-| [ Widget without HFILL ]              |
-| [ Another ]                           |
-| [ ....... Widget with HFILL ....... ] |
-| [ ............ Another ............ ] |
-|  -----------------------------------  |
-| | ................................. | |
-| | .... Widget with VFILL|HFILL .... | |
-| | ..... Fills remaining space ..... | |
-| | ................................. | |
-|  -----------------------------------  |
- ---------------------------------------
-.Ed
+expand vertically to fill remaining space.
+.Pp
+Horizontal boxes allow only up to 1 widget with
+.Dv AG_WIDGET_HFILL
+(and any number with
+.Dv AG_WIDGET_VFILL ) .
+.Pp
+Vertical boxes allow only up to 1 widget with
+.Dv AG_WIDGET_VFILL
+(and any number with
+.Dv AG_WIDGET_HFILL ) .
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -90,12 +73,6 @@ can hold a maximum of one HFILL widget.
 .Pp
 .Ft "AG_Box *"
 .Fn AG_BoxNewVert "AG_Widget *parent" "Uint flags"
-.Pp
-.Ft "AG_Box *"
-.Fn AG_BoxNewHorizNS "AG_Widget *parent" "Uint flags"
-.Pp
-.Ft "AG_Box *"
-.Fn AG_BoxNewVertNS "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft void
 .Fn AG_BoxSetLabel "AG_Box *box" "const char *format" "..."
@@ -149,7 +126,12 @@ Expand vertically in parent (equivalent to invoking
 .Xr AG_ExpandVert 3 ) .
 .It AG_BOX_EXPAND
 Shorthand for
-.Dv AG_BOX_HFILL|AG_BOX_VFILL .
+.Dv AG_BOX_HFILL | AG_BOX_VFILL .
+.It AG_BOX_NO_SPACING
+Set initial spacing and padding to 0 (see
+.Fn AG_BoxSetSpacing
+and
+.Fn AG_BoxSetPadding ) .
 .El
 .Pp
 The
@@ -160,12 +142,6 @@ variants are equivalent to setting
 .Dv AG_BOX_HORIZ
 and
 .Dv AG_BOX_VERT .
-The
-.Fn AG_BoxNewHorizNS
-and
-.Fn AG_BoxNewVertNS
-(no spacing) variants implicitely set default padding and spacing parameters
-to 0 pixels.
 .Pp
 The
 .Fn AG_BoxSetLabel

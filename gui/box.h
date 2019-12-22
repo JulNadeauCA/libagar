@@ -40,6 +40,7 @@ typedef struct ag_box {
 #define AG_BOX_HFILL      0x02	/* Expand to fill available width */
 #define AG_BOX_VFILL      0x04	/* Expand to fill available height */
 #define AG_BOX_SHADING    0x08	/* 3D-style shading even if BG is transparent */
+#define AG_BOX_NO_SPACING 0x10  /* Disable spacing (constructor) */
 #define AG_BOX_EXPAND    (AG_BOX_HFILL|AG_BOX_VFILL)
 	int padding;			/* Padding around widgets */
 	int spacing;			/* Spacing between widgets */
@@ -76,13 +77,9 @@ extern AG_WidgetClass agBoxClass;
 
 AG_Box *_Nonnull  AG_BoxNew(void *_Nullable, enum ag_box_type, Uint);
 AG_Box *_Nonnull  AG_BoxNewHoriz(void *_Nullable, Uint);
-AG_Box *_Nonnull  AG_BoxNewHorizNS(void *_Nullable, Uint);
 AG_Box *_Nonnull  AG_BoxNewVert(void *_Nullable, Uint);
-AG_Box *_Nonnull  AG_BoxNewVertNS(void *_Nullable, Uint);
 AG_HBox *_Nonnull AG_HBoxNew(void *_Nullable, Uint);
-AG_HBox *_Nonnull AG_HBoxNewNS(void *_Nullable, Uint);
 AG_VBox *_Nonnull AG_VBoxNew(void *_Nullable, Uint);
-AG_VBox *_Nonnull AG_VBoxNewNS(void *_Nullable, Uint);
 
 void AG_BoxSetLabel(AG_Box *_Nonnull, const char *_Nullable, ...);
 void AG_BoxSetLabelS(AG_Box *_Nonnull, const char *_Nullable);
