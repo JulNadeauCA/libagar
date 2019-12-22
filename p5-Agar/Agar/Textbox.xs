@@ -82,3 +82,39 @@ CODE:
 OUTPUT:
 	RETVAL
 
+SV *
+getString(self)
+	Agar::Textbox self
+CODE:
+	RETVAL = newSVpv(AG_TextboxDupString(self), 0);
+OUTPUT:
+	RETVAL
+
+void
+setString(self, val)
+	Agar::Textbox self
+	const char * val
+CODE:
+	AG_TextboxSetString(self, val);
+
+void
+clearString(self, val)
+	Agar::Textbox self
+CODE:
+	AG_TextboxClearString(self);
+
+int
+getInt(self)
+	Agar::Textbox self
+CODE:
+	RETVAL = AG_TextboxInt(self);
+OUTPUT:
+	RETVAL
+
+float
+getFloat(self)
+	Agar::Textbox self
+CODE:
+	RETVAL = AG_TextboxFloat(self);
+OUTPUT:
+	RETVAL

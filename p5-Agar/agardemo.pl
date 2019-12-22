@@ -16,6 +16,7 @@ GetOptions("driver=s" => \$driver);
 
 Agar::InitCore('Agar Perl demo', { verbose=>1 }) || die Agar::GetError();
 Agar::InitGraphics($driver) || die Agar::GetError();
+Agar::BindStdGlobalKeys();
 
 my $win = Agar::Window->newNamed("main");
 $win->caption("perl $0");
@@ -153,13 +154,13 @@ $toolbar->addTextButton("InfoIgnorable")->setEvent('button-pushed', sub {
 $toolbar->addTextButton("WarningIgnorable")->setEvent('button-pushed', sub {
 	Agar::WarningMsgIgnorable('demo.ignore-warn', "Look, a three-headed monkey!");
 });
-$toolbar->setActiveRow(4);
-$toolbar->addTextButton("Ask me")->setEvent('button-pushed', sub {
-	Agar::PromptMsg("What are you?", sub {
-		my $what = $_[0]->string(1);
-		$con->msg("you are '$what'");
-	});
-});
+#$toolbar->setActiveRow(4);
+#$toolbar->addTextButton("Ask me")->setEvent('button-pushed', sub {
+#	Agar::PromptMsg("What are you?", sub {
+#		my $what = $_[0]->string(1);
+#		$con->msg("you are '$what'");
+#	});
+#});
 
 ################################
 # List (under 2nd tab)
@@ -199,11 +200,11 @@ $radio->setEvent('radio-changed', sub {
 	$con->msg("radio button changed to $index");
 });
 $textbox->setEvent('textbox-return', sub {
-	my $text = $_[0]->receiver()->downcast()->getString('string');
-	$con->msg("entered text '$text' pressed return");
+	my $text = $_[0]->receiver()->cast('Agar::Textbox')->getString();
+	$con->msg("entered text '$text' (return)");
 });
 $textbox->setEvent('textbox-postchg', sub {
-	my $text = $_[0]->receiver()->downcast()->getString('string');
+	my $text = $_[0]->receiver()->cast('Agar::Textbox')->getString();
 	$con->msg("entered text '$text'");
 });
 $spin->setEvent('numerical-changed', sub {

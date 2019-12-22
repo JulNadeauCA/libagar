@@ -46,8 +46,6 @@ Z<>
 
 =back
 
-=item B<$widget-E<gt>setTabAlignment($mode)>
-
 =item B<$tab = $widget-E<gt>addHorizTab($label)>
 
 =item B<$tab = $widget-E<gt>addVertTab($label)>

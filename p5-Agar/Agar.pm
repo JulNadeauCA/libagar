@@ -49,6 +49,10 @@ sub Agar::Object::downcast {
 	}
 }
 
+sub Agar::Object::cast {
+	return bless $_[0], $_[1];
+}
+
 1;
 
 __END__
@@ -65,6 +69,7 @@ Agar - Perl interface to the Agar GUI library
 
   Agar::InitCore() || die Agar::GetError();
   Agar::InitGraphics() || die Agar::GetError();
+  Agar::BindStdGlobalKeys();
   
   my $win = Agar::Window->new({ plain => 1 });
   my $lbl = Agar::Label->new($win);

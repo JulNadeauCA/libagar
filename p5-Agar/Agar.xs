@@ -311,3 +311,8 @@ QuitGUI()
 CODE:
 	AG_QuitGUI();
 
+void
+BindStdGlobalKeys()
+CODE:
+	AG_BindStdGlobalKeys();
+

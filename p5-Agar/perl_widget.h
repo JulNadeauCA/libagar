@@ -19,7 +19,6 @@ static const AP_FlagNames apWidgetFlagNames[] = {
 	{ "noSpacing",			AG_WIDGET_NOSPACING },
 	{ "unfocusedKeyDown",		AG_WIDGET_UNFOCUSED_KEYDOWN },
 	{ "unfocusedKeyUp",		AG_WIDGET_UNFOCUSED_KEYUP },
-	{ "tableEmbeddable",		AG_WIDGET_TABLE_EMBEDDABLE },
 	{ "updateWindow",		AG_WIDGET_UPDATE_WINDOW },
 	{ "queueSurfaceBackup",		AG_WIDGET_QUEUE_SURFACE_BACKUP },
 	{ "useText",			AG_WIDGET_USE_TEXT },

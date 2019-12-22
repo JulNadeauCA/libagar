@@ -21,22 +21,6 @@ CODE:
 OUTPUT:
 	RETVAL
 
-void
-setTabAlignment(self, mode)
-	Agar::Notebook self
-	const char * mode
-CODE:
-	switch (mode[0]) {
-		case 'T': case 't':
-		AG_NotebookSetTabAlignment(self,AG_NOTEBOOK_TABS_TOP); break;
-		case 'B': case 'b':
-		AG_NotebookSetTabAlignment(self,AG_NOTEBOOK_TABS_BOTTOM); break;
-		case 'L': case 'l':
-		AG_NotebookSetTabAlignment(self,AG_NOTEBOOK_TABS_LEFT); break;
-		case 'R': case 'r':
-		AG_NotebookSetTabAlignment(self,AG_NOTEBOOK_TABS_RIGHT); break;
-	}
-
 Agar::NotebookTab
 addHorizTab(self, label)
 	Agar::Notebook self
