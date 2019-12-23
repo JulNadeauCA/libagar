@@ -32,7 +32,11 @@ Tick(AG_Timer *to, AG_Event *event)
 	Animal *animal = ANIMAL_SELF();
 
 	animal->age += 1.0;
-	animal->cellCount *= 2;
+	animal->cellCount <<= 1;
+
+	if (animal->cellCount < 1) {
+		return (0);
+	}
 	return (to->ival);
 }
 
@@ -56,8 +60,8 @@ OnAttach(AG_Event *event)
 static void
 FindPrimes(AG_Event *event)
 {
-	Animal *animal = ANIMAL_SELF();
-	const int nPrimes = AG_INT(1);
+	Animal *animal = ANIMAL_PTR(1);
+	const int nPrimes = AG_NumericalGetInt(AG_NUMERICAL_PTR(2));
 	int n, i, nFound=1;
 
 	for (n=0; nFound <= nPrimes; n++) {
@@ -77,6 +81,8 @@ FindPrimes(AG_Event *event)
 			}
 		}
 	}
+
+	/* Count total */
 	AG_SetInt(animal,"found-primes",
 	    AG_GetInt(animal,"found-primes") + nFound);
 }
@@ -110,7 +116,6 @@ Init(void *obj)
 	/* Event handlers and methods */
 	AG_SetEvent(animal, "attached", OnAttach, NULL);
 	AG_SetEvent(animal, "detached", OnDetach, NULL);
-	AG_SetEvent(animal, "find-primes", FindPrimes, NULL);
 }
 
 /*
@@ -158,14 +163,29 @@ Edit(void *obj)
 {
 	Animal *animal = obj;
 	AG_Window *win;
+	AG_Box *box;
+	AG_Numerical *numPrimes;
+	AG_Label *lbl;
 
 	if ((win = AG_WindowNew(0)) == NULL) {
 		AG_FatalError(NULL);
 	}
 	AG_WindowSetCaption(win, "Animal: %s", AGOBJECT(animal)->name);
 
-	AG_NumericalNewFlt(win, 0, "sec", "Age: ", &animal->age);
-	AG_NumericalNewInt(win, 0, NULL, "Cell count: ", &animal->cellCount);
+	lbl = AG_LabelNewS(win, AG_LABEL_HFILL, AGOBJECT(animal)->name);
+	AG_SetStyle(lbl, "font-size", "200%");
+
+	AG_NumericalNewFlt(win, AG_NUMERICAL_HFILL, "sec", "Age: ", &animal->age);
+	AG_NumericalNewInt(win, AG_NUMERICAL_HFILL, NULL, "Cell count: ", &animal->cellCount);
+
+	AG_SeparatorNewHoriz(win);
+
+	box = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
+	numPrimes = AG_NumericalNewS(box, AG_NUMERICAL_INT | AG_NUMERICAL_HFILL,
+	                             NULL, _("Find "));
+	AG_NumericalSizeHint(numPrimes, "<88>");
+	AG_LabelNewS(box, 0, _("primes"));
+	AG_ButtonNewFn(box, 0, _("Start"), FindPrimes,"%p,%p", animal, numPrimes);
 
 	return (win);
 }

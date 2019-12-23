@@ -58,28 +58,27 @@ Destroy(void *obj)
 	}
 }
 
-static void
-StartBrowser(AG_Event *event)
-{
-	MyTestInstance *ti = AG_PTR(1);
-	AG_Window *winParent = AG_WINDOW_PTR(2), *win;
-
-	if ((win = DEV_Browser(&ti->vfsRoot)) != NULL)
-		AG_WindowAttach(winParent, win);
-}
-
 static int
 TestGUI(void *obj, AG_Window *win)
 {
 	MyTestInstance *ti = obj;
+	AG_Window *winBrowser;
+	AG_Box *box = AG_BoxNewVert(win, AG_BOX_EXPAND);
+	AG_Object *chld;
 
 	if (AG_ObjectLoad(&ti->vfsRoot) == 0) {
-		AG_LabelNewS(win, 0, "Test VFS loaded");
+		AG_LabelNewS(box, 0, "Test VFS loaded OK.");
+		AGOBJECT_FOREACH_CHILD(chld, &ti->vfsRoot, ag_object) {
+			AG_LabelNew(box, 0, "Loaded %s (a %s)\n", chld->name,
+			            AGOBJECT_CLASS(chld)->name);
+		}
 	} else {
-		AG_LabelNewS(win, 0, "New test VFS");
+		AG_LabelNewS(box, 0, "Test VFS could not be loaded. "
+		                     "Creating new one.");
 	}
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Start VFS browser",
-	    StartBrowser, "%p,%p", ti, win);
+	if ((winBrowser = DEV_Browser(&ti->vfsRoot)) != NULL) {
+		AG_WindowAttach(win, winBrowser);
+	}
 	return (0);
 }
 

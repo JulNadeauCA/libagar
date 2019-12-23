@@ -64,12 +64,16 @@ Edit(void *obj)
 	AG_Window *win, *winSuper;
 	AG_HSVPal *pal;
 	AG_ObjectClass *super;
+	AG_Label *lbl;
 	char *s;
 
 	if ((win = AG_WindowNew(0)) == NULL) {
 		AG_FatalError(NULL);
 	}
 	AG_WindowSetCaption(win, "Mammal: %s", AGOBJECT(mammal)->name);
+
+	lbl = AG_LabelNewS(win, AG_LABEL_HFILL, AGOBJECT(mammal)->name);
+	AG_SetStyle(lbl, "font-size", "200%");
 
 	/* Get the name of this object instance. */
 	if ((s = AG_ObjectGetName(mammal)) != NULL) {
@@ -97,7 +101,7 @@ Edit(void *obj)
 
 	/* Allow user to edit paramters specific to this class. */
 	AG_LabelNew(win, 0, "Hair color:");
-	pal = AG_HSVPalNew(win, AG_HSVPAL_EXPAND);
+	pal = AG_HSVPalNew(win, AG_HSVPAL_EXPAND | AG_HSVPAL_SHOW_HSV);
 	AG_BindFloat(pal, "hue", &mammal->hairColor.h);
 	AG_BindFloat(pal, "saturation", &mammal->hairColor.s);
 	AG_BindFloat(pal, "value", &mammal->hairColor.v);

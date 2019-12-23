@@ -517,6 +517,12 @@ DoDebugger(void)
 	if ((win = AG_GuiDebugger(agWindowFocused)) != NULL)
 		AG_WindowShow(win);
 }
+
+static void
+RunDebugger(AG_Event *event)
+{
+	DoDebugger();
+}
 #endif /* AG_DEBUG and AG_TIMERS */
 
 static void
@@ -526,6 +532,12 @@ DoStyleEditor(void)
 
 	if ((win = AG_StyleEditor(agWindowFocused)) != NULL)
 		AG_WindowShow(win);
+}
+
+static void
+RunStyleEditor(AG_Event *event)
+{
+	DoStyleEditor();
 }
 
 /* Redirect AG_Debug() and AG_Verbose() to the AG_Console. */
@@ -629,8 +641,11 @@ TestPopupMenu(AG_Event *event)
 	}
 	pm = AG_PopupNew(tl);
 
+	AG_MenuSeparator(pm->root);
+
 	AG_MenuAction(pm->root, _("Test Information"), agIconMagnifier.s,
 	    TestInfo, "%Cp", tc);
+
 	AG_MenuAction(pm->root, _("View Source"), agIconDoc.s,
 	    TestViewSource, "%Cp", tc);
 	
@@ -772,7 +787,7 @@ main(int argc, char *argv[])
 
 	AG_LabelNewS(pane->div[0], 0, _("Available tests: "));
 	tl = AG_TlistNew(pane->div[0], AG_TLIST_EXPAND);
-	AG_TlistSizeHint(tl, "XXXXXXXXXXXXXXXXXX", 5);
+	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXX>", 10);
 	for (pTest = &testCases[0]; *pTest != NULL; pTest++) {
 		char path[AG_FILENAME_MAX];
 		AG_Surface *S;
@@ -789,13 +804,33 @@ main(int argc, char *argv[])
 		}
 	}
 
-	hBox = AG_BoxNewHoriz(pane->div[0], AG_BOX_HFILL);
+	hBox = AG_BoxNewHoriz(pane->div[0], AG_BOX_HFILL | AG_BOX_HOMOGENOUS |
+	                                    AG_BOX_NO_SPACING);
+	AG_SetStyle(hBox, "font-family", "dejavu-sans");
 	{
-		btnTest = AG_ButtonNew(hBox, AG_BUTTON_EXCL, _("Run Test"));
-		btnBench = AG_ButtonNew(hBox, AG_BUTTON_EXCL, _("Run Benchmark"));
+		btnTest = AG_ButtonNew(hBox, AG_BUTTON_EXCL,
+		    _(AGSI_BLU "\xe2\x96\xb6 " AGSI_RST "Run"));                        /* U+25B6 */
 		AG_WidgetDisable(btnTest);
+
+		btnBench = AG_ButtonNew(hBox, AG_BUTTON_EXCL,
+		    _(AGSI_BLU "\xe2\x9c\x93 " AGSI_RST           /* U+2713 */
+		      "Bench"));
 		AG_WidgetDisable(btnBench);
 	}
+
+	hBox = AG_BoxNewHoriz(pane->div[0], AG_BOX_HFILL | AG_BOX_HOMOGENOUS |
+	                                    AG_BOX_NO_SPACING);
+	AG_SetStyle(hBox, "font-family", "dejavu-sans");
+	AG_SetStyle(hBox, "font-size", "80%");
+	{
+#if defined(AG_DEBUG) && defined(AG_TIMERS)
+		AG_ButtonNewFn(hBox, 0, _("\xe2\x80\xa0 Debugger"), /* U+2020 */
+		    RunDebugger, NULL);
+#endif
+		AG_ButtonNewFn(hBox, 0, _("\xe2\x9c\x92 Style Editor"), /* U+2712 */
+		    RunStyleEditor, NULL);
+	}
+
 	console = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
 	AG_SetStyle(console, "font-family", "courier-prime");
 	AG_SetStyle(console, "text-color", "#ddd");
