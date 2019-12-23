@@ -23,6 +23,7 @@ typedef struct ag_numerical {
 #define AG_NUMERICAL_INT	0x04	/* Default binding should be int */
 #define AG_NUMERICAL_EXCL	0x08	/* Exclusive access to bindings */
 #define AG_NUMERICAL_READONLY	0x10	/* Read-only mode */
+#define AG_NUMERICAL_SLOW	0x20	/* Update every 2s instead of 250ms */
 
 	char format[28];			/* Print format (for reals) */
 	const AG_Unit *_Nonnull unit;		/* Conversion unit in use */

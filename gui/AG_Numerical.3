@@ -1,4 +1,4 @@
-.\" Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -125,17 +125,20 @@ include:
 If no "value" binding has been set when the widget is first shown,
 use a built-in variable of type
 .Ft int
-(by default, a builtin variable of type
+(by default, a built-in
 .Ft double
 is used).
 .It AG_NUMERICAL_EXCL
-Advise that no external changes to the
+No external changes to the
 .Va value
-binding are expected.
-By default, the value is periodically checked and the widget is redrawn if
-a change is detected.
-Note that this setting only influences redraw -- external changes to the
-binding values are handled safely regardless.
+binding are to be expected and
+.Nm
+can perform optimizations based on the assumption of exclusive access
+(by default, the value is checked periodically and the widget is redrawn
+if a change is detected).
+.It AG_NUMERICAL_SLOW
+In non-EXCL case, check value every 2 seconds instead of the default
+of 250ms.
 .It AG_NUMERICAL_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
