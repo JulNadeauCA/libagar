@@ -40,6 +40,8 @@ threads support.
   GUI Standard Widgets
 * [MATH](http://libagar.org/man3/AG_Intro#AGAR-MATH):
   Matrices, Vectors, Advanced Rendering Methods
+* [NET](http://libagar.org/man3/AG_Intro#AGAR-NET):
+  Network Interface and HTTP Application Server
 * [SG](http://libagar.org/man3/AG_Intro#AGAR-SG):
   3D Engine
 * [SK](http://libagar.org/man3/AG_Intro#AGAR-SK):
