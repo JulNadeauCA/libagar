@@ -223,7 +223,7 @@ DEV_BrowserOpenData(void *p)
 		if (AG_ObjectLoadGenericFromFile(ob, NULL) == -1 ||
 		    AG_ObjectLoadDataFromFile(ob, &dataFound, NULL) == -1) {
 			if (!dataFound) {
-				if (AG_ObjectSave(ob) == -1) {
+				if (AG_ObjectSaveAll(ob) == -1) {
 					AG_TextMsg(AG_MSG_ERROR, "%s: %s",
 					    ob->name, AG_GetError());
 					return;
@@ -257,7 +257,7 @@ static void
 SaveObjectToFile(AG_Event *_Nonnull event)
 {
 	AG_Object *ob = AG_OBJECT_PTR(1);
-	char *path = AG_STRING(2);
+	const char *path = AG_STRING(2);
 	int loadedTmp = 0;
 	int dataFound;
 
@@ -273,9 +273,16 @@ SaveObjectToFile(AG_Event *_Nonnull event)
 		AG_PostEvent(ob, "edit-post-load", NULL);
 		loadedTmp = 1;
 	}
-	if (AG_ObjectSaveToFile(ob, path) == -1) {
-		AG_SetError("%s: %s", ob->name, AG_GetError());
-		goto fail;
+	if (path[0] != '\0') {
+		if (AG_ObjectSaveToFile(ob, path) == -1) {
+			AG_SetError("%s: %s", path, AG_GetError());
+			goto fail;
+		}
+	} else {
+		if (AG_ObjectSaveAll(ob) == -1) {
+			AG_SetError("%s: %s", ob->name, AG_GetError());
+			goto fail;
+		}
 	}
 
 	Verbose("OK\n");
@@ -339,8 +346,9 @@ DEV_BrowserSaveToDlg(void *p, const char *name)
 	}
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
 	fd = AG_FileDlgNewMRU(win, "dev.mru.object-import",
-	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_SAVE| AG_FILEDLG_EXPAND);
-	AG_FileDlgAddType(fd, name, ext, SaveObjectToFile, "%p", ob);
+	                      AG_FILEDLG_CLOSEWIN | AG_FILEDLG_SAVE |
+	                      AG_FILEDLG_EXPAND);
+	AG_FileDlgAddType(fd, name, ext, SaveObjectToFile,"%p",ob);
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->cls->name);
 	AG_WindowShow(win);
 	return (win);
@@ -417,7 +425,7 @@ ObjectOp(AG_Event *_Nonnull event)
 				AG_Event ev;
 
 				AG_EventInit(&ev);
-				AG_EventArgs(&ev, "%p", ob);
+				AG_EventArgs(&ev, "%p,%s", ob, "");
 				SaveObjectToFile(&ev);
 			}
 			break;
@@ -477,7 +485,7 @@ DEV_BrowserGenericSave(AG_Event *_Nonnull event)
 {
 	AG_Object *ob = AG_OBJECT_PTR(1);
 
-	if (AG_ObjectSave(ob) == -1) {
+	if (AG_ObjectSaveAll(ob) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, _("Save failed: %s: %s"), ob->name,
 		    AG_GetError());
 	} else {
@@ -603,7 +611,7 @@ SaveObject(AG_Event *_Nonnull event)
 {
 	AG_Object *ob = AG_OBJECT_PTR(1);
 
-	if (AG_ObjectSave(ob) == -1) {
+	if (AG_ObjectSaveAll(ob) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name, AG_GetError());
 	} else {
 		AG_TextTmsg(AG_MSG_INFO, 1000,
@@ -867,7 +875,7 @@ DEV_PageOutCallback(AG_Event *_Nonnull event)
 {
 	AG_Object *obj = AG_OBJECT_PTR(1);
 	
-	if (AG_ObjectSave(obj) == -1)
+	if (AG_ObjectSaveAll(obj) == -1)
 		AG_TextMsgFromError();
 }
 
