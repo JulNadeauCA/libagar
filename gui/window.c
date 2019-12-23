@@ -2966,38 +2966,26 @@ static void *_Nullable
 Edit(void *_Nonnull obj)
 {
 	static const AG_FlagDescr flagDescr[] = {
-	    { AG_WINDOW_MODAL,		"Is application-modal",		0 },
-	    { AG_WINDOW_MAXIMIZED,	"Is maximized",			0 },
-	    { AG_WINDOW_MINIMIZED,	"Is minimized",			0 },
-	    { AG_WINDOW_KEEPABOVE,	"Keep above others",		1 },
-	    { AG_WINDOW_KEEPBELOW,	"Keep below others",		1 },
-	    { AG_WINDOW_DENYFOCUS,	"Deny focus",			1 },
-	    { AG_WINDOW_NOTITLE,	"No titlebar",			0 },
-	    { AG_WINDOW_NOBORDERS,	"No borders",			0 },
-	    { AG_WINDOW_NOHRESIZE,	"No horizontal resize",		1 },
-	    { AG_WINDOW_NOVRESIZE,	"No vertical resize",		1 },
-	    { AG_WINDOW_NOCLOSE,	"No close button",		0 },
-	    { AG_WINDOW_NOMINIMIZE,	"No minimize button",		0 },
-	    { AG_WINDOW_NOMAXIMIZE,	"No maximize button",		0 },
-	    { AG_WINDOW_TILING,		"Tiling by WM",			1 },
-	    { AG_WINDOW_MINSIZEPCT,	"Minsize is in %",		0 },
-	    { AG_WINDOW_NOBACKGROUND,	"Disable background",		1 },
-	    { AG_WINDOW_MAIN,		"Main window",			1 },
-	    { AG_WINDOW_FOCUSONATTACH,	"Focus on attach",		0 },
-	    { AG_WINDOW_HMAXIMIZE,	"Keep horizontally maximized",	1 },
-	    { AG_WINDOW_VMAXIMIZE,	"Keep vertically maximized",	1 },
-	    { AG_WINDOW_NOMOVE,		"Unmoveable",			1 },
-	    { AG_WINDOW_MODKEYEVENTS,	"Mod keys generate events",	1 },
-	    { AG_WINDOW_DETACHING,	"Is being detached",		0 },
-	    { AG_WINDOW_NOCURSORCHG,	"Inhibit cursor changes",	1 },
-	    { AG_WINDOW_FADEIN,		"Compositor fade-in",		0 },
-	    { AG_WINDOW_FADEOUT,	"Compositor fade-out",		0 },
-	    { AG_WINDOW_USE_TEXT,	"Is using the font engine",	0 },
+	    { AG_WINDOW_MODAL,		N_("Application-modal"),	0 },
+	    { AG_WINDOW_MAXIMIZED,	N_("Maximized"),		0 },
+	    { AG_WINDOW_MINIMIZED,	N_("Minimized"),		0 },
+	    { AG_WINDOW_KEEPABOVE,	N_("Keep above others"),	1 },
+	    { AG_WINDOW_KEEPBELOW,	N_("Keep below others"),	1 },
+	    { AG_WINDOW_DENYFOCUS,	N_("Deny focus"),		1 },
+	    { AG_WINDOW_NOHRESIZE,	N_("No horizontal resize"),	1 },
+	    { AG_WINDOW_NOVRESIZE,	N_("No vertical resize"),	1 },
+	    { AG_WINDOW_NOBACKGROUND,	N_("Disable background"),	1 },
+	    { AG_WINDOW_MAIN,		N_("Main window"),		1 },
+	    { AG_WINDOW_NOMOVE,		N_("Unmoveable"),		1 },
+	    { AG_WINDOW_MODKEYEVENTS,	N_("Mod keys generate events"),	1 },
+	    { AG_WINDOW_NOCURSORCHG,	N_("Inhibit cursor changes"),	1 },
+	    { AG_WINDOW_USE_TEXT,	N_("Using the font engine"),	0 },
 	    { 0,			NULL,				0 }
 	};
 	AG_Window *tgt = obj;
 	AG_Box *box, *hBox, *lBox, *rBox;
 	AG_Textbox *tb;
+	const Uint nuFl = AG_NUMERICAL_SLOW;
 
 	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
@@ -3018,48 +3006,56 @@ Edit(void *_Nonnull obj)
 	rBox = AG_BoxNewVert(hBox, AG_BOX_EXPAND);
 
 	AG_LabelNewPolled(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
-	                  _("Zoom Level: %i"), &tgt->zoom);
+	                  "X=%i Y=%i W=%i H=%i Zoom=%i",
+			  &WIDGET(tgt)->x,
+			  &WIDGET(tgt)->y,
+			  &tgt->r.w,
+			  &tgt->r.h,
+			  &tgt->zoom);
 
 	AG_LabelNewPolledMT(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
 	                    &OBJECT(tgt)->pvt.lock,
 	                    _("Parent: %[objName] @ (AG_Window *)%p"),
 	                    &tgt->parent, &tgt->parent);
 
+	AG_SeparatorNewHoriz(rBox);
+
+#if 0
 	AG_LabelNewPolledMT(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
 	                    &OBJECT(tgt)->pvt.lock,
 	                    _("Transient for: %[objName] @ (AG_Window *)%p"),
 	                    &tgt->transientFor, &tgt->transientFor);
-
 	AG_LabelNewPolledMT(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
 	                    &OBJECT(tgt)->pvt.lock,
 	                   _("Pinned to: %[objName] @ (AG_Window *)%p"),
 	                   &tgt->pinnedTo, &tgt->pinnedTo);
+#endif
 
-	AG_NumericalNewInt(rBox, 0, NULL, _("View X: "), &WIDGET(tgt)->x);
-	AG_NumericalNewInt(rBox, 0, NULL, _("View Y: "), &WIDGET(tgt)->y);
-	AG_NumericalNewInt(rBox, 0, NULL, _("View W: "), &tgt->r.w);
-	AG_NumericalNewInt(rBox, 0, NULL, _("View H: "), &tgt->r.h);
 #if 0
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("View X: "), &WIDGET(tgt)->x);
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("View Y: "), &WIDGET(tgt)->y);
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("View W: "), &tgt->r.w);
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("View H: "), &tgt->r.h);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Saved X: "), &tgt->rSaved.x);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Saved Y: "), &tgt->rSaved.y);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Saved W: "), &tgt->rSaved.w);
 	AG_NumericalNewInt(rBox, 0, NULL, _("Saved H: "), &tgt->rSaved.h);
 #endif
-	AG_NumericalNewInt(rBox, 0, NULL, _("Spacing: "), &tgt->spacing);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Padding Left: "), &tgt->lPad);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Padding Right: "), &tgt->rPad);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Padding Top: "), &tgt->tPad);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Padding Bottom: "), &tgt->bPad);
-	AG_WidgetDisable(AG_NumericalNewInt(rBox, 0, NULL, _("Requested W: "), &tgt->wReq));
-	AG_WidgetDisable(AG_NumericalNewInt(rBox, 0, NULL, _("Requested H: "), &tgt->hReq));
-	AG_NumericalNewInt(rBox, 0, NULL, _("Minimum W: "), &tgt->wMin);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Minimum H: "), &tgt->hMin);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Bottom Border W: "), &tgt->wBorderBot);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Side Border W: "), &tgt->wBorderSide);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Resize Ctrl W: "), &tgt->wResizeCtrl);
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("Spacing: "), &tgt->spacing);
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("Padding Left: "), &tgt->lPad);
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("Padding Right: "), &tgt->rPad);
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("Padding Top: "), &tgt->tPad);
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("Padding Bottom: "), &tgt->bPad);
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("Minimum W: "), &tgt->wMin);
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("Minimum H: "), &tgt->hMin);
+#if 0
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("Bottom Border W: "), &tgt->wBorderBot);
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("Side Border W: "), &tgt->wBorderSide);
+	AG_NumericalNewInt(rBox, nuFl, NULL, _("Resize Ctrl W: "), &tgt->wResizeCtrl);
+#endif
 
 	if (tgt->flags & AG_WINDOW_MINSIZEPCT)
-		AG_NumericalNewInt(rBox, 0, "%", _("Minimum size: "), &tgt->minPct);
+		AG_NumericalNewInt(rBox, nuFl, "%", _("Minimum Pct: "), &tgt->minPct);
 #if 0	
 	AG_SpacerNewHoriz(rBox);
 

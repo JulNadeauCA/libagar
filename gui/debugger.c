@@ -331,7 +331,9 @@ WidgetSelected(AG_Event *_Nonnull event)
 		    { AG_WIDGET_DISABLED,		"DISABLED",		1 },
 		    { AG_WIDGET_HIDE,			"HIDE",			1 },
 		    { AG_WIDGET_VISIBLE,		"VISIBLE",		0 },
+#if 0
 		    { AG_WIDGET_UNDERSIZE,		"UNDERSIZE",		0 },
+#endif
 		    { AG_WIDGET_HFILL,			"HFILL",		1 },
 		    { AG_WIDGET_VFILL,			"VFILL",		1 },
 		    { AG_WIDGET_USE_MOUSEOVER,		"USE_MOUSEOVER",	1 },
@@ -353,14 +355,17 @@ WidgetSelected(AG_Event *_Nonnull event)
 		AG_MSpinbutton *msb;
 		AG_Box *box2;
 
-		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL, _("Name: "));
+		AG_LabelNew(nt, AG_LABEL_HFILL, _("Class: %s(3)"),
+		            OBJECT(tgt)->cls->name);
+
+		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL |
+		                        AG_TEXTBOX_NO_PADDING |
+		                        AG_TEXTBOX_NO_SHADING, _("Name:"));
 #ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
 #else
 		AG_TextboxBindASCII(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
 #endif
-		AG_LabelNew(nt, 0, _("Class: " AGSI_BOLD "%s" AGSI_RST "(3)"), OBJECT(tgt)->cls->name);
-
 		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
 		    &OBJECT(tgt)->pvt.lock,
 		    _("Parent window: " AGSI_YEL "%[objName]" AGSI_RST
