@@ -115,6 +115,10 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		AG_SetStyle(tb->btnRet, "font-family", "dejavu-sans");
 		AG_SetEvent(tb->btnRet, "button-pushed", EditableReturn, "%p", tb);
 	}
+	if (flags & AG_TEXTBOX_NO_PADDING) {
+		tb->boxPadX = 0;
+		tb->boxPadY = 0;
+	}
 
 	AG_TextboxSetExcl(tb, (flags & AG_TEXTBOX_EXCL));
 	AG_TextboxSetWordWrap(tb, (flags & AG_TEXTBOX_WORDWRAP));
@@ -288,10 +292,12 @@ Draw(void *_Nonnull p)
 {
 	AG_Textbox *tb = p;
 
-	if ((tb->flags & AG_TEXTBOX_COMBO)) {
-		AG_DrawBoxRaised(tb, &tb->r, &WCOLOR(tb, FG_COLOR));
-	} else {
-		AG_DrawBoxSunk(tb, &tb->r, &WCOLOR(tb, BG_COLOR));
+	if ((tb->flags & AG_TEXTBOX_NO_SHADING) == 0) {
+		if ((tb->flags & AG_TEXTBOX_COMBO)) {
+			AG_DrawBoxRaised(tb, &tb->r, &WCOLOR(tb, FG_COLOR));
+		} else {
+			AG_DrawBoxSunk(tb, &tb->r, &WCOLOR(tb, BG_COLOR));
+		}
 	}
 
 	if (tb->lbl)    { AG_WidgetDraw(tb->lbl);    }

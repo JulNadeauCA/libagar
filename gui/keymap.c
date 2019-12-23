@@ -81,7 +81,7 @@ Insert(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	if (ch == 0) { return (0); }
 	if (ch == '\r') { ch = '\n'; }
 
-	if (Strcasecmp(ed->encoding, "US-ASCII") == 0 &&
+	if (strcmp(ed->encoding, "US-ASCII") == 0 &&
 	    (ch & ~0x7f) != 0)
 		return (0);
 

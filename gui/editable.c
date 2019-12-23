@@ -72,21 +72,21 @@ GetBuffer(AG_Editable *_Nonnull ed)
 	}
 
 #ifdef AG_UNICODE
-	if (AG_Defined(ed, "text")) {			/* AG_Text element */
-		AG_Text *txt;
+	if (AG_Defined(ed, "text")) {                    /* AG_TextElement(3) */
+		AG_TextElement *txt;
 
 		buf->var = AG_GetVariable(ed, "text", (void *)&txt);
 		buf->reallocable = 1;
 
 		AG_MutexLock(&txt->lock);
 
-		if ((ed->flags & AG_EDITABLE_EXCL) == 0 ||
-		    buf->s == NULL) {
+		if ((ed->flags & AG_EDITABLE_EXCL) == 0 || buf->s == NULL) {
 			const AG_TextEnt *te = &txt->ent[ed->lang];
 
 			if (te->buf != NULL) {
 				buf->s = AG_ImportUnicode("UTF-8", te->buf,
-				    &buf->len, &buf->maxLen);
+				                          &buf->len,
+				                          &buf->maxLen);
 			} else {
 				if ((buf->s = TryMalloc(sizeof(AG_Char))) != NULL) {
 					buf->s[0] = (AG_Char)'\0';
@@ -102,17 +102,16 @@ GetBuffer(AG_Editable *_Nonnull ed)
 		}
 	} else
 #endif /* AG_UNICODE */
-	{					/* Fixed-size buffer */
+	{                                                       /* "C" string */
 		char *s;
 
 		buf->var = AG_GetVariable(ed, "string", (void *)&s);
 		buf->reallocable = 0;
 
-		if ((ed->flags & AG_EDITABLE_EXCL) == 0 ||
-		    buf->s == NULL) {
+		if ((ed->flags & AG_EDITABLE_EXCL) == 0 || buf->s == NULL) {
 #ifdef AG_UNICODE
 			buf->s = AG_ImportUnicode(ed->encoding, s, &buf->len,
-			    &buf->maxLen);
+			                          &buf->maxLen);
 #else
 			buf->s = (Uint8 *)TryStrdup(s);
 			buf->maxLen = buf->len = strlen(s);
@@ -144,27 +143,24 @@ static void
 CommitBuffer(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf)
 {
 #ifdef AG_UNICODE
-	if (AG_Defined(ed, "text")) {			/* AG_Text binding */
-		AG_Text *txt = buf->var->data.p;
+	if (AG_Defined(ed, "text")) {                    /* AG_TextElement(3) */
+		AG_TextElement *txt = buf->var->data.p;
 		AG_TextEnt *te = &txt->ent[ed->lang];
-		AG_Size lenEnc;
+		AG_Size len;
 
-		if (AG_LengthUTF8FromUCS4(buf->s, &lenEnc) == -1) {
+		if (AG_LengthUTF8FromUCS4(buf->s, &len) == -1)
 			goto fail;
-		}
-		lenEnc++;
 
-		if (lenEnc > te->maxLen &&
-		    AG_TextRealloc(te, lenEnc) == -1) {
+		if ((++len > te->maxLen) && AG_TextRealloc(te, len) == -1)
 			goto fail;
-		}
+
 		if (AG_ExportUnicode(ed->encoding, te->buf, buf->s,
-		    te->maxLen+1) == -1) {
+		                     te->maxLen + 1) == -1)
 			goto fail;
-		}
-	} else {					/* C string binding */
-		if (AG_ExportUnicode(ed->encoding, buf->var->data.s, buf->s,
-		    buf->var->info.size) == -1)
+	} else {                                                /* "C" string */
+		if (AG_ExportUnicode(ed->encoding,
+		                     buf->var->data.s, buf->s,
+				     buf->var->info.size) == -1)
 			goto fail;
 	}
 #else  /* !AG_UNICODE */
@@ -187,10 +183,8 @@ static __inline__ void
 ReleaseBuffer(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf)
 {
 #ifdef AG_UNICODE
-	if (AG_Defined(ed, "text")) {
-		AG_Text *txt = buf->var->data.p;
-		AG_MutexUnlock(&txt->lock);
-	}
+	if (AG_Defined(ed, "text"))
+		AG_MutexUnlock(&AGTEXTELEMENT(buf->var->data.p)->lock);
 #endif
 	if (buf->var != NULL) {
 		AG_UnlockVariable(buf->var);
@@ -234,7 +228,7 @@ AG_EditableGrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, AG_Char *ins,
 	newLen = (buf->len + nIns + 1)*sizeof(AG_Char);
 
 #ifdef AG_UNICODE
-	if (Strcasecmp(ed->encoding, "UTF-8") == 0) {
+	if (strcmp(ed->encoding, "UTF-8") == 0) {
 		AG_Size sLen, insLen;
 
 		if (AG_LengthUTF8FromUCS4(buf->s, &sLen) == -1 ||
@@ -242,14 +236,14 @@ AG_EditableGrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, AG_Char *ins,
 			return (-1);
 		}
 		convLen = sLen + insLen + 1;
-	} else if (Strcasecmp(ed->encoding, "US-ASCII") == 0) {
+	} else if (strcmp(ed->encoding, "US-ASCII") == 0) {
 		convLen = AG_LengthUCS4(buf->s) + nIns + 1;
 	} else {
 		/* TODO Proper estimates for other charsets */
 		convLen = newLen;
 	}
 #else /* !AG_UNICODE */
-	if (Strcasecmp(ed->encoding, "US-ASCII") == 0) {
+	if (strcmp(ed->encoding, "US-ASCII") == 0) {
 		convLen = strlen((const char *)buf->s) + nIns + 1;
 	} else {
 		convLen = newLen;
@@ -339,9 +333,9 @@ AG_EditableBindEncoded(AG_Editable *ed, const char *encoding, char *buf,
 	AG_ObjectUnlock(ed);
 }
 
-/* Bind to an AG_Text element. */
+/* Bind to an AG_TextElement(3). */
 void
-AG_EditableBindText(AG_Editable *ed, AG_Text *txt)
+AG_EditableBindText(AG_Editable *ed, AG_TextElement *txt)
 {
 	AG_ObjectLock(ed);
 	AG_Unset(ed, "string");
@@ -350,7 +344,7 @@ AG_EditableBindText(AG_Editable *ed, AG_Text *txt)
 	AG_ObjectUnlock(ed);
 }
 
-/* Set the active language (when bound to an AG_Text(3) element) */
+/* Set the active language (when bound to an AG_TextElement(3)) */
 void
 AG_EditableSetLang(AG_Editable *ed, enum ag_language lang)
 {
@@ -1577,7 +1571,7 @@ PopupMenu(AG_Editable *_Nonnull ed)
 	AG_MenuItem *mi;
 #ifdef AG_UNICODE
 	AG_Variable *vText;
-	AG_Text *txt;
+	AG_TextElement *txt;
 #endif
 	if ((pm = AG_PopupNew(ed)) == NULL) {
 		return (NULL);
@@ -1641,7 +1635,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
 	const int btn = AG_INT(1);
-	int mx = AG_INT(2);
+	const int mx = AG_INT(2);
 	const int my = AG_INT(3);
 	AG_EditableBuffer *buf;
 
@@ -1654,11 +1648,10 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			AG_PopupHide(ed->pm);
 		}
 		ed->flags |= AG_EDITABLE_CURSOR_MOVING | AG_EDITABLE_BLINK_ON;
-		mx += ed->x;
 		if ((buf = GetBuffer(ed)) == NULL) {
 			return;
 		}
-		AG_EditableMoveCursor(ed, buf, mx, my);
+		AG_EditableMoveCursor(ed, buf, (ed->x + mx), my);
 		ReleaseBuffer(ed, buf);
 		ed->flags |= AG_EDITABLE_MARKPREF;
 
@@ -1896,7 +1889,8 @@ AG_EditableDupString(AG_Editable *ed)
 
 	AG_ObjectLock(ed);
 	if (AG_Defined(ed, "text")) {
-		AG_Text *txt;
+		AG_TextElement *txt;
+
 		var = AG_GetVariable(ed, "text", (void *)&txt);
 		s = txt->ent[ed->lang].buf;
 		sDup = TryStrdup((s != NULL) ? s : "");
@@ -1919,7 +1913,8 @@ AG_EditableCopyString(AG_Editable *ed, char *dst, AG_Size dst_size)
 
 	AG_ObjectLock(ed);
 	if (AG_Defined(ed, "text")) {
-		AG_Text *txt;
+		AG_TextElement *txt;
+
 		var = AG_GetVariable(ed, "text", (void *)&txt);
 		s = txt->ent[ed->lang].buf;
 		rv = Strlcpy(dst, (s != NULL) ? s : "", dst_size);
