@@ -169,7 +169,7 @@ typedef struct ag_text {
 #endif
 } AG_Text, AG_TextElement;
 
-#define AGTEXT(p) ((AG_Text *)(p))
+#define AGTEXTELEMENT(p) ((AG_TextElement *)(p))
 
 __BEGIN_DECLS
 #include <agar/config/ag_unicode.h>
