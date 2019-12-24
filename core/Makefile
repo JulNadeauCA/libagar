@@ -17,7 +17,7 @@ MAN3=	AG_ByteSwap.3 AG_CPUInfo.3 AG_Config.3 AG_Core.3 AG_DSO.3 \
 	AG_Execute.3 AG_File.3 AG_Getopt.3 AG_Intro.3 AG_Limits.3 \
 	AG_Object.3 AG_Queue.3 AG_String.3 AG_Tbl.3 AG_TextElement.3 \
 	AG_Threads.3 AG_Time.3 AG_Timer.3 AG_User.3 AG_Variable.3 \
-	AG_Version.3 AG_Web.3
+	AG_Version.3
 
 SRCS=	byteswap.c class.c config.c core.c cpuinfo.c data_source.c \
 	db.c dir.c dso.c error.c event.c exec.c file.c getopt.c \
