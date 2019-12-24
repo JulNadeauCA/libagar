@@ -20,20 +20,6 @@
 package body Agar.Widget is
   
   --
-  -- Search for a widget by name (e.g., "MyWindow/MyBox/MyWidget #1").
-  --
-  function Find
-    (Driver : Driver_not_null_Access;
-     Path   : String) return Widget_Access
-  is
-    Ch_Path : aliased C.char_array := C.To_C(Path);
-  begin
-    return AG_WidgetFind
-      (Driver => Driver,
-       Path   => CS.To_Chars_Ptr(Ch_Path'Unchecked_Access));
-  end;
-  
-  --
   -- Return the first visible widget intersecting a point or enclosing a
   -- rectangle (in view coordinates). Scan all drivers and return first match.
   --

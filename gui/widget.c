@@ -999,83 +999,6 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 	return (rv);
 }
 
-static void *_Nullable
-WidgetFindPath(const AG_Object *_Nonnull parent, const char *_Nonnull name)
-{
-	char node_name[AG_OBJECT_PATH_MAX];
-	void *rv;
-	char *s;
-	AG_Object *chld;
-
-	Strlcpy(node_name, name, sizeof(node_name));
-	if ((s = strchr(node_name, '/')) != NULL) {
-		*s = '\0';
-	}
-	if (AG_OfClass(parent, "AG_Driver:*")) {
-		AG_Driver *drv = AGDRIVER(parent);
-		AG_Window *win;
-
-		AG_FOREACH_WINDOW(win, drv) {
-			AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
-			if (strcmp(AGOBJECT(win)->name, node_name) != 0) {
-				continue;
-			}
-			if ((s = strchr(name, '/')) != NULL) {
-				rv = WidgetFindPath(AGOBJECT(win), &s[1]);
-				if (rv) {
-					return (rv);
-				} else {
-					return (NULL);
-				}
-			}
-			return (win);
-		}
-	} else {
-		TAILQ_FOREACH(chld, &parent->children, cobjs) {
-			AG_OBJECT_ISA(chld, "AG_Widget:*");
-			if (strcmp(chld->name, node_name) != 0) {
-				continue;
-			}
-			if ((s = strchr(name, '/')) != NULL) {
-				rv = WidgetFindPath(chld, &s[1]);
-				if (rv) {
-					return (rv);
-				} else {
-					return (NULL);
-				}
-			}
-			return (chld);
-		}
-	}
-	return (NULL);
-}
-
-/*
- * Find a widget by name (e.g., "Window/Widget1/Widget2"). This works
- * similarly to the more general AG_ObjectFind(3). Return value is only
- * valid as long as the Driver VFS is locked.
- *
- * XXX how does this differ from AG_ObjectFind() now?
- */
-void *
-AG_WidgetFind(void *obj, const char *name)
-{
-	AG_Driver *drv = obj;
-	void *rv;
-
-#ifdef AG_DEBUG
-	if (name[0] != '/') { AG_FatalError("Not an absolute path"); }
-#endif
-	AG_OBJECT_ISA(drv, "AG_Driver:*");
-	AG_LockVFS(drv);
-	rv = WidgetFindPath(OBJECT(drv), &name[1]);
-	AG_UnlockVFS(drv);
-	if (rv == NULL) {
-		AG_SetError(_("The widget `%s' does not exist."), name);
-	}
-	return (rv);
-}
-
 /* Set the FOCUSABLE flag on a widget. */
 int
 AG_WidgetSetFocusable(void *obj, int enable)
@@ -1935,7 +1858,7 @@ AG_WidgetSurface(void *obj)
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_LockVFS(wid);
 	if (wid->drvOps->renderToSurface == NULL) {
-		AG_SetError("renderToSurface not supported by driver");
+		AG_SetErrorS(_("Render-to-surface is not supported"));
 		rv = -1;
 	} else {
 		rv = wid->drvOps->renderToSurface(wid->drv, wid, &S);

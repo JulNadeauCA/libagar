@@ -1176,13 +1176,6 @@ package Agar.Widget is
                                                    WINDOW_NO_BORDERS;
 
   --
-  -- Search for a widget by name (e.g., "MyWindow/MyBox/MyWidget #1").
-  --
-  function Find
-    (Driver : Driver_not_null_Access;
-     Path   : String) return Widget_Access;
-
-  --
   -- Return the first visible widget intersecting a point or enclosing a
   -- rectangle (in view coordinates). Scan all drivers and return first match.
   --
@@ -1464,11 +1457,6 @@ package Agar.Widget is
     with Import, Convention => C, Link_Name => "AG_TextClearGlyphCache";
   
   private
-  
-  function AG_WidgetFind
-    (Driver : Driver_not_null_Access;
-     Path   : CS.chars_ptr) return Widget_Access
-    with Import, Convention => C, Link_Name => "AG_WidgetFind";
   
   function AG_WidgetSetFocusable
     (Widget : in Widget_not_null_Access;

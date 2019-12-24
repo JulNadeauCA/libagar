@@ -75,58 +75,60 @@
 #define AG_WIDGET_TABLE_EMBEDDABLE 0
 
 __BEGIN_DECLS
+void *_Nullable AG_WidgetFind(void *_Nonnull, const char *_Nonnull)
+                             DEPRECATED_ATTRIBUTE;
 AG_Variable *_Nullable AG_WidgetBind(void *_Nonnull, const char *_Nonnull, AG_VariableType, ...)
-    DEPRECATED_ATTRIBUTE;
+                                    DEPRECATED_ATTRIBUTE;
 AG_Variable *_Nullable AG_WidgetBindMp(void *_Nonnull, const char *_Nonnull, _Nonnull_Mutex AG_Mutex *_Nonnull, AG_VariableType, ...)
-    DEPRECATED_ATTRIBUTE;
+                                      DEPRECATED_ATTRIBUTE;
 int AG_WidgetCopyBinding(void *_Nonnull, const char *_Nonnull, AG_Variable *_Nonnull)
-    DEPRECATED_ATTRIBUTE;
+                        DEPRECATED_ATTRIBUTE;
 size_t AG_WidgetCopyString(void *_Nonnull, const char *_Nonnull, char *_Nonnull, size_t)
-    DEPRECATED_ATTRIBUTE;
+                          DEPRECATED_ATTRIBUTE;
 int AG_WidgetInt(void *_Nonnull, const char *_Nonnull)
-    DEPRECATED_ATTRIBUTE;
+                DEPRECATED_ATTRIBUTE;
 Uint AG_WidgetUint(void *_Nonnull, const char *_Nonnull)
-    DEPRECATED_ATTRIBUTE;
+                  DEPRECATED_ATTRIBUTE;
 Uint8 AG_WidgetUint8(void *_Nonnull, const char *_Nonnull)
-    DEPRECATED_ATTRIBUTE;
+                    DEPRECATED_ATTRIBUTE;
 Sint8 AG_WidgetSint8(void *_Nonnull, const char *_Nonnull)
-    DEPRECATED_ATTRIBUTE;
+                    DEPRECATED_ATTRIBUTE;
 Uint16 AG_WidgetUint16(void *_Nonnull, const char *_Nonnull)
-    DEPRECATED_ATTRIBUTE;
+                      DEPRECATED_ATTRIBUTE;
 Sint16 AG_WidgetSint16(void *_Nonnull, const char *_Nonnull)
-    DEPRECATED_ATTRIBUTE;
+                      DEPRECATED_ATTRIBUTE;
 Uint32 AG_WidgetUint32(void *_Nonnull, const char *_Nonnull)
-    DEPRECATED_ATTRIBUTE;
+                      DEPRECATED_ATTRIBUTE;
 Sint32 AG_WidgetSint32(void *_Nonnull, const char *_Nonnull)
-    DEPRECATED_ATTRIBUTE;
+                      DEPRECATED_ATTRIBUTE;
 float AG_WidgetFloat(void *_Nonnull, const char *_Nonnull)
-    DEPRECATED_ATTRIBUTE;
+                    DEPRECATED_ATTRIBUTE;
 double AG_WidgetDouble(void *_Nonnull, const char *_Nonnull)
-    DEPRECATED_ATTRIBUTE;
+                      DEPRECATED_ATTRIBUTE;
 char *_Nonnull AG_WidgetString(void *_Nonnull, const char *_Nonnull)
-    DEPRECATED_ATTRIBUTE;
+                              DEPRECATED_ATTRIBUTE;
 void *_Nullable AG_WidgetPointer(void *_Nonnull, const char *_Nonnull)
-    DEPRECATED_ATTRIBUTE;
+                                DEPRECATED_ATTRIBUTE;
 void AG_WidgetSetInt(void *_Nonnull, const char *_Nonnull, int)
-    DEPRECATED_ATTRIBUTE;
+                    DEPRECATED_ATTRIBUTE;
 void AG_WidgetSetUint(void *_Nonnull, const char *_Nonnull, Uint)
-    DEPRECATED_ATTRIBUTE;
+                     DEPRECATED_ATTRIBUTE;
 void AG_WidgetSetUint8(void *_Nonnull, const char *_Nonnull, Uint8)
-    DEPRECATED_ATTRIBUTE;
+                      DEPRECATED_ATTRIBUTE;
 void AG_WidgetSetSint8(void *_Nonnull, const char *_Nonnull, Sint8)
-    DEPRECATED_ATTRIBUTE;
+                      DEPRECATED_ATTRIBUTE;
 void AG_WidgetSetUint16(void *_Nonnull, const char *_Nonnull, Uint16)
-    DEPRECATED_ATTRIBUTE;
+                       DEPRECATED_ATTRIBUTE;
 void AG_WidgetSetSint16(void *_Nonnull, const char *_Nonnull, Sint16)
-    DEPRECATED_ATTRIBUTE;
+                       DEPRECATED_ATTRIBUTE;
 void AG_WidgetSetUint32(void *_Nonnull, const char *_Nonnull, Uint32)
-    DEPRECATED_ATTRIBUTE;
+                       DEPRECATED_ATTRIBUTE;
 void AG_WidgetSetSint32(void *_Nonnull, const char *_Nonnull, Sint32)
-    DEPRECATED_ATTRIBUTE;
+                       DEPRECATED_ATTRIBUTE;
 void AG_WidgetSetFloat(void *_Nonnull, const char *_Nonnull, float)
-    DEPRECATED_ATTRIBUTE;
+                      DEPRECATED_ATTRIBUTE;
 void AG_WidgetSetDouble(void *_Nonnull, const char *_Nonnull, double)
-    DEPRECATED_ATTRIBUTE;
+                       DEPRECATED_ATTRIBUTE;
 void AG_WidgetSetPointer(void *_Nonnull, const char *_Nonnull, void *_Nullable)
-    DEPRECATED_ATTRIBUTE;
+                        DEPRECATED_ATTRIBUTE;
 __END_DECLS

@@ -35,6 +35,13 @@
 
 #ifdef AG_LEGACY
 
+/* Lookup a widget by pathname (equivalent to AG_ObjectFind() on &agDrivers) */
+void *
+AG_WidgetFind(void *root, const char *pathname)
+{
+	return AG_ObjectFindS(&agDrivers, pathname);
+}
+
 /* Duplicate a widget binding. */
 int
 AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_Variable *Vsrc)

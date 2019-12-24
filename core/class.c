@@ -670,8 +670,12 @@ AG_ClassIsNamedGeneral(const AG_ObjectClass *C, const char *cn)
 }
 
 /*
- * Return an array of AG_ObjectClass pointers for every member of the
- * inheritance hierarchy of obj.
+ * Return an array of class description pointers ("AG_ObjectClass *") for
+ * each class in the inheritance hierarchy of obj. For example:
+ *
+ *   "AG_Widget:AG_Box:AG_Titlebar" -> { &agWidgetClass,
+ *                                       &agBoxClass,
+ *                                       &agTitlebarClass }
  */
 int
 AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)
