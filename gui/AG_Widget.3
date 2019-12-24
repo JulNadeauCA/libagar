@@ -29,7 +29,7 @@
 .ds oS Agar 1.5
 .Sh NAME
 .Nm AG_Widget
-.Nd agar graphical user interface element
+.Nd agar user interface element
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -37,13 +37,13 @@
 .Ed
 .Sh DESCRIPTION
 .Nm
-is the base class for Agar graphical user interface elements.
+is the base class for user interface elements in Agar.
+Widgets are organized in an ordered virtual filesystem of
+.Xr AG_Object 3 .
 .Pp
-Widgets are organized into an ordered virtual filesystem of
-.Xr AG_Object 3
-where the parent of a widget object is referred to as its
+The parent of a widget is referred to as its
 .Em container .
-General-purpose container widgets include
+General-purpose container widgets include:
 .Xr AG_Box 3 ,
 .Xr AG_Pane 3 ,
 .Xr AG_Scrollview 3 ,
@@ -51,13 +51,31 @@ General-purpose container widgets include
 and
 .Xr AG_Window 3
 itself.
+Special-purpose containers include
+.Xr AG_Button 3
+(which embeds an
+.Xr AG_Label 3 )
+and
+.Xr AG_FileDlg 3 .
 .Pp
-A widget is attached to its container using
-.Xr AG_ObjectAttach 3 .
-It can be detached using
-.Xr AG_ObjectDetach 3
-and freed with
+Widgets are attached to their containers with
+.Xr AG_ObjectAttach 3
+and detached with
+.Xr AG_ObjectDetach 3 .
+Unattached widgets can be freed using
 .Xr AG_ObjectDestroy 3 .
+Agar handles garbage collection of windows (and their attached widgets)
+internally.
+Destroying an active
+.Xr AG_Window 3
+or a widget which is still attached to a parent is an error which would
+trigger a fatal assertion in debug mode.
+.Pp
+Unless renamed with
+.Xr AG_ObjectSetName 3 ,
+widget instances are given a generic name (e.g., "button0").
+.Xr AG_ObjectFind 3
+can be used to get a pointer to a widget by pathname (e.g., "box0/button0").
 .Pp
 Parentless widgets form the root of their own virtual filesystem.
 It is customary for high-level constructor routines (such as
@@ -72,10 +90,11 @@ The
 .Xr AG_Variable 3
 table of
 .Ft AG_Object
-is used to store bindings data, style property overrides and user data.
+is used to store bindings data, style properties and general user data.
+The
 .Xr AG_Event 3
-is used to handle both low-level events (such as "mouse-button-down") as well
-as high-level widget-defined events (such as "button-pushed").
+framework is used to handle both low-level (e.g., "mouse-button-down") as well
+as high-level (e.g., "button-pushed") events.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
@@ -370,31 +389,25 @@ object.
 .Fn AG_WidgetDisabled "AG_Widget *obj"
 .Pp
 .nr nS 0
-The "enabled" flag of a widget determines whether the user is allowed to modify
-whatever data the widget is accessing.
-The interpretation of this flag is widget-specific.
+A widget in DISABLED state will not accept user input other than that
+required for navigation (i.e., scrolling).
 .Fn AG_WidgetEnable
-sets the flag,
+clears the DISABLED flag and
 .Fn AG_WidgetDisable
-clears it.
+sets it.
 These functions will raise the
 .Sq widget-enabled
 and
 .Sq widget-disabled
 events accordingly.
 .Pp
-The functions
 .Fn AG_WidgetEnabled
 and
 .Fn AG_WidgetDisabled
-return the current "enabled" state of the widget.
-The
-.Nm
-object must be locked when the call is made.
+return the current state.
 .Sh FOCUS STATE
-The focus state of widgets enables the reception of specific types of
-events which are filtered by default.
-The focus state also affects the behavior and appearance of some widgets.
+Focus enables reception of input events which would be otherwise filtered out.
+It also affects the behavior and appearance of some widgets.
 A widget holding focus (in a currently focused window) will receive mouse
 events
 .Fn mouse-motion ,
@@ -402,11 +415,7 @@ events
 as well as keyboard events
 .Fn key-up
 and
-.Fn key-down
-(note that unfocused widgets can be configured to receive those events
-unfiltered as well using the
-.Dv AG_WIDGET_UNFOCUSED_*
-options).
+.Fn key-down .
 .Pp
 .nr nS 1
 .Ft "int"
@@ -715,9 +724,6 @@ call is disabled.
 .Fn AG_ParentWindow "AG_Widget *widget"
 .Pp
 .Ft "AG_Widget *"
-.Fn AG_WidgetFind "AG_Driver *drv" "const char *path"
-.Pp
-.Ft "AG_Widget *"
 .Fn AG_WidgetFindFocused "AG_Window *win"
 .Pp
 .Ft "AG_Widget *"
@@ -733,19 +739,6 @@ returns a pointer to the parent
 for the given widget instance.
 The pointer is valid only as long as the parent VFS remains locked.
 If the widget is not attached, NULL is returned.
-.Pp
-.Fn AG_WidgetFind
-locates a widget instance by name, where
-.Fa path
-is a
-.Sq /
-separated path name relative to the
-.Xr AG_Driver 3
-VFS root, for example: "My Window/Box #1/My button".
-If the widget exists, the function returns a pointer to the
-.Nm
-instance.
-The returned pointer is valid only as long as the parent VFS remains locked.
 .Pp
 .Fn AG_WidgetFindFocused
 returns the top-most focused widget under
@@ -764,16 +757,15 @@ The
 .Fn AG_WidgetFindRect
 variant requires that the widget enclose the whole given rectangle.
 .Pp
-Similarly to
-.Fn AG_WidgetFind ,
-the
-.Nm
-pointer returned by
+The pointer returned by
 .Fn AG_WidgetFindFocused ,
 .Fn AG_WidgetFindPoint
 and
 .Fn AG_WidgetFindRect
-should be considered valid only for as long as the parent VFS is locked.
+is valid only for as long as the parent VFS is locked.
+.Pp
+See also:
+.Xr AG_ObjectFind 3 .
 .Sh RENDERING CONTROL
 .nr nS 1
 .Ft void

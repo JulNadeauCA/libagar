@@ -333,13 +333,15 @@ variant generates a name using the specified prefix instead of the class name.
 .Fn AG_ObjectSetFn
 sets the variable named
 .Fa key
-to a function pointer, where
-.Fa fn
-is an Agar-style event handler function.
-.Fn AG_ObjectSetFn
-arranges for the arguments optionally specified in
+to a function pointer pointing to
+.Fa fn .
+This should be a function that accepts a single
+.Ft "AG_Event *"
+argument.
+The following arguments (indicated by
 .Fa fmt
-to be passed to that function.
+if not NULL) are passed to
+.Fa fn .
 If
 .Fa fn
 is NULL, the variable named
