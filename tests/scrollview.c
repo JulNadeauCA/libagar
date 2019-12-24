@@ -6,7 +6,7 @@
 #include "agartest.h"
 
 static void
-TestWithReactiveWidgets(AG_Event *event)
+TestWithButtons(AG_Event *event)
 {
 	AG_Window *winParent = AG_WINDOW_PTR(1), *win;
 	AG_Box *hBox;
@@ -17,7 +17,7 @@ TestWithReactiveWidgets(AG_Event *event)
 		return;
 	}
 
-	AG_LabelNewS(win, 0, "AG_Scrollview(3) with reactive widgets");
+	AG_LabelNewS(win, 0, "AG_Scrollview(3) with arrays of AG_Button(3)");
 	AG_ButtonNew(win, AG_BUTTON_EXCL, "Foo");
 	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);
 	for (y = 0; y < 20; y++) {
@@ -35,26 +35,46 @@ TestWithReactiveWidgets(AG_Event *event)
 }
 
 static void
-TestWithPassiveWidgets(AG_Event *event)
+OnLabelShown(AG_Event *event)
+{
+	Debug(AG_LABEL_SELF(), "Shown!\n");
+}
+
+static void
+OnLabelHidden(AG_Event *event)
+{
+	Debug(AG_LABEL_SELF(), "Hidden!\n");
+}
+
+static void
+TestWithLabels(AG_Event *event)
 {
 	AG_Window *winParent = AG_WINDOW_PTR(1), *win;
 	AG_Box *hBox;
 	AG_Scrollview *sv;
+	AG_Label *lbl;
 	int x, y;
 
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
 	}
-	AG_WindowSetCaption(win, "Scrollview (passive widgets)");
-	AG_LabelNewS(win, 0, "AG_Scrollview(3) with passive widgets");
-	AG_LabelNewS(win, 0, "Panning enabled (middle mouse button)");
+	AG_WindowSetCaption(win, "Scrollview (array of Labels)");
+
+	AG_LabelNewS(win, 0, "AG_Scrollview(3) with arrays of AG_Label(3)");
+
 	AG_SeparatorNewHoriz(win);
-	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND|AG_SCROLLVIEW_BY_MOUSE);
+
+	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND |
+	                           AG_SCROLLVIEW_BY_MOUSE |
+	                           AG_SCROLLVIEW_PAN_LEFT |
+	                           AG_SCROLLVIEW_PAN_RIGHT);
+
 	for (y = 0; y < 20; y++) {
 		hBox = AG_BoxNewHoriz(sv, 0);
-		for (x = 0; x < 10; x++) {
-			AG_LabelNewS(hBox, 0, "Foo");
-			AG_LabelNewS(hBox, 0, "Bar");
+		for (x = 0; x < 5; x++) {
+			lbl = AG_LabelNew(hBox, 0, "Hello (%d,%d)", x,y);
+			AG_AddEvent(lbl, "widget-shown", OnLabelShown, NULL);
+			AG_AddEvent(lbl, "widget-hidden", OnLabelHidden, NULL);
 		}
 	}
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
@@ -65,10 +85,16 @@ TestWithPassiveWidgets(AG_Event *event)
 static int
 TestGUI(void *obj, AG_Window *win)
 {
-	AG_ButtonNewFn(win, 0, "Test with reactive widgets",
-	    TestWithReactiveWidgets, "%p", win);
-	AG_ButtonNewFn(win, 0, "Test with passive widgets",
-	    TestWithPassiveWidgets, "%p", win);
+	AG_Box *box;
+
+	box = AG_BoxNewVert(win, AG_BOX_EXPAND);
+	AG_BoxSetPadding(box, 5);
+	AG_LabelNewS(box, 0, _("Test for AG_Scrollview(3)"));
+	AG_SetStyle(box, "font-size", "150%");
+	AG_ButtonNewFn(box, AG_BUTTON_HFILL, _("Array of Buttons"),
+	               TestWithButtons,"%p",win);
+	AG_ButtonNewFn(box, AG_BUTTON_HFILL, _("Array of Labels"),
+	               TestWithLabels,"%p",win);
 
 	return (0);
 }
