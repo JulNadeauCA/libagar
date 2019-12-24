@@ -47,7 +47,6 @@ typedef struct sk_view {
 	struct ag_widget *_Nullable editBox;	/* Widget container */
 	M_Real rSnap;				/* Snapping radius */
 	AG_TAILQ_HEAD_(sk_tool) tools;		/* Sketching tools */
-	AG_Tbl tblNodeData;			/* Per-node data */
 	AG_PopupMenu *_Nullable pmView;
 } SK_View;
 

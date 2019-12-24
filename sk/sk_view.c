@@ -330,7 +330,6 @@ Init(void *_Nonnull obj)
 	skv->mProj = M_MatIdentity44();
 	skv->pmView = NULL;
 	TAILQ_INIT(&skv->tools);
-	AG_TblInit(&skv->tblNodeData, 100, 0);
 
 	AG_AddEvent(skv, "widget-shown", Shown, NULL);
 }
@@ -340,8 +339,6 @@ Destroy(void *_Nonnull obj)
 {
 	SK_View *skv = obj;
 	SK_Tool *tool, *toolNext;
-	AG_Variable *V;
-	Uint i, j;
 
 	if (skv->pmView != NULL)
 		AG_PopupDestroy(skv->pmView);
@@ -353,11 +350,6 @@ Destroy(void *_Nonnull obj)
 		SK_ToolDestroy(tool);
 		Free(tool);
 	}
-
-	AG_TBL_FOREACH(V, i,j, &skv->tblNodeData) {
-		Free(V->data.p);
-	}
-	AG_TblDestroy(&skv->tblNodeData);
 }
 
 /* Select an SK tool */
@@ -649,30 +641,6 @@ SK_ViewOverPoint(SK_View *skv, M_Vector3 *pos, M_Vector3 *vC, void *ignore)
 		return ((SK_Point *)node);
 	}
 	return (NULL);
-}
-
-/* Retrieve per-node data */
-void *
-SK_ViewGetNodeData(SK_View *skv, void *pNode)
-{
-	char key[16];
-	AG_Variable *V;
-
-	snprintf(key, sizeof(key), "%lu", (unsigned long)pNode);
-	if ((V = AG_TblLookup(&skv->tblNodeData, key)) == NULL) {
-		return (NULL);
-	}
-	return (V->data.p);
-}
-
-/* Assign per-node data */
-void
-SK_ViewSetNodeData(SK_View *skv, void *pNode, void *pData)
-{
-	char key[16];
-
-	snprintf(key, sizeof(key), "%lu", (unsigned long)pNode);
-	AG_TblInsertPointer(&skv->tblNodeData, key, pData);
 }
 
 AG_WidgetClass skViewClass = {
