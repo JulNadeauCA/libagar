@@ -360,7 +360,7 @@ out:
 	AG_SurfaceFree(S);
 }
 static void
-MenuExportToFileDlg(AG_Event *_Nonnull event)
+MenuExportDlg(AG_Event *_Nonnull event)
 {
 	const AG_Console *cons = AG_CONST_CONSOLE_PTR(1);
 	AG_Window *win;
@@ -393,6 +393,12 @@ MenuSelectAll(AG_Event *_Nonnull event)
 	cons->pos = 0;
 	cons->sel = cons->nLines-1;
 	AG_Redraw(cons);
+}
+
+static void
+MenuClear(AG_Event *_Nonnull event)
+{
+	AG_ConsoleClear(AG_CONSOLE_PTR(1));
 }
 
 /* Timer callback for double click. */
@@ -470,14 +476,12 @@ PopupMenu(AG_Event *_Nonnull event)
 		return;
 	}
 	AG_MenuSeparator(pm->root);
-	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy, "%p", cons);
-	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCopyActive, "%Cp", cons);
-	AG_MenuAction(pm->root, _("Export to file..."), NULL,
-	    MenuExportToFileDlg, "%Cp", cons);
+	AG_MenuAction(pm->root, _("Select All"), NULL, MenuSelectAll, "%p", cons);
+	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy,"%p",cons);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCopyActive,"%Cp",cons);
+	AG_MenuAction(pm->root, _("Export to file..."), NULL, MenuExportDlg,"%Cp",cons);
 	AG_MenuSeparator(pm->root);
-
-	AG_MenuAction(pm->root, _("Select All"), NULL,
-	    MenuSelectAll, "%p", cons);
+	AG_MenuAction(pm->root, _("Clear All"), NULL, MenuClear,"%p",cons);
 
 	AG_PopupShowAt(pm, x,y);
 }
