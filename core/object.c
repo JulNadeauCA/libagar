@@ -301,6 +301,8 @@ FindObjectInUse(void *_Nonnull obj, void *_Nonnull robj)
 				goto used;
 			}
 			break;
+		default:
+			break;
 		}
 	}
 	AG_ObjectUnlock(ob);
