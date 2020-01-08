@@ -191,7 +191,7 @@ OnShow(AG_Event *event)
 	{
 		AG_ConfigPath *fpath;
 
-		ti = AG_TlistAdd(fs->tlFaces, NULL, _("Agar Fonts:"));
+		ti = AG_TlistAdd(fs->tlFaces, NULL, _("Agar Core Fonts:"));
 		ti->flags |= AG_TLIST_NO_SELECT;
 		AG_TlistSetFont(fs->tlFaces, ti, AG_TextFontPct(80));
 

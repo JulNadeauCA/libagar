@@ -165,6 +165,7 @@ HideWindow(AG_Event *_Nonnull event)
 	AG_WindowHide(win);
 }
 
+#if 0
 static void
 PollVariables(AG_Event *_Nonnull event)
 {
@@ -213,6 +214,7 @@ PollVariables(AG_Event *_Nonnull event)
 	AG_TlistEnd(tl);
 	AG_ObjectUnlock(obj);
 }
+#endif
 
 static void WidgetSelected(AG_Event *_Nonnull);
 
@@ -247,6 +249,9 @@ PollAttributes(AG_Event *_Nonnull event)
 	AG_Tlist *tl = AG_TLIST_SELF();
 	AG_Widget *tgt = AG_WIDGET_PTR(1);
 	const char **attr;
+
+	if (!AG_OBJECT_VALID(tgt))
+		return;
 
 	AG_TlistBegin(tl);
 
@@ -302,9 +307,8 @@ WidgetSelected(AG_Event *_Nonnull event)
 		                          AG_TEXTBOX_RETURN_BUTTON, "+");
 		AG_TextboxSizeHint(tb, "<XXXXXXXXXXX>: <XXXXXXXXXXX>");
 		AG_SetEvent(tb, "textbox-return", InputAttribute, "%p,%p", tb,tgt);
-		AG_WidgetFocus(tb);
 	}
-
+#if 0
 	nt = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
 	{
 		AG_Tlist *tl;
@@ -314,7 +318,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 		AG_SetStyle(tl, "font-family", "courier-prime");
 		AG_SetStyle(tl, "font-size", "120%");
 	}
-	
+#endif
 	nt = AG_NotebookAdd(nb, _("Appearance"), AG_BOX_VERT);
 	if (AG_ButtonGetState(buCapture)) {
 		AG_Pixmap *px;
@@ -346,13 +350,13 @@ WidgetSelected(AG_Event *_Nonnull event)
 			    ExportImageDlg, "%p", S); /* TODO */
 #endif
 		} else {
-			AG_LabelNewS(nt, 0, AG_GetError());
+			AG_LabelNew(nt, 0, _("* Capture failed (%s)"), AG_GetError());
 		}
 	} else {
 		AG_Label *lbl;
 
 		lbl = AG_LabelNewS(nt, AG_LABEL_HFILL,
-		    _("Capture is disabled. Click on \xe2\x96\xa6 (and refresh) to enable."));
+		    _("* Capture is disabled. Click on \xe2\x96\xa6 (and refresh) to enable."));
 		AG_SetStyle(lbl, "font-family", "dejavu-sans");
 	}
 	
@@ -436,28 +440,27 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 		btn = AG_ButtonNewFn(hBox, AG_BUTTON_STICKY,
 		    "\xe2\x87\xb1",				/* U+21F1 */
 		    SetPickStatus, "%p", win);
-		AG_ButtonSetPadding(btn, 5,5,0,0);
+		AG_SetStyle(btn, "padding", "0 5 0 5");
 
 		/* Toggle VFS autorefresh */
 		btn = AG_ButtonNewFn(hBox, AG_BUTTON_STICKY | AG_BUTTON_SET,
 		    "\xe2\xa5\x81",				/* U+2941 */
 		    SetListRefresh, "%p", tlVFS);
-		AG_ButtonSetPadding(btn, 5,10,0,0);
+		AG_SetStyle(btn, "padding", "0 10 0 5");
 
 		/* Toggle appearance capture */
 		buCapture = AG_ButtonNewS(hBox, AG_BUTTON_STICKY,
 		                                "\xe2\x96\xa6"); /* U+2941 */
-		AG_ButtonSetPadding(buCapture, 4,7,0,0);
+		AG_SetStyle(buCapture, "padding", "0 7 0 4");
 	}
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 	{
 		AG_Label *lbl;
 
-		AG_SetEvent(tlVFS, "tlist-dblclick",
+		AG_SetEvent(tlVFS, "tlist-selected",
 		    WidgetSelected, "%p,%p", pane->div[1], buCapture);
 		AG_ObjectAttach(pane->div[0], tlVFS);
-		AG_WidgetFocus(tlVFS);
 
 		lbl = AG_LabelNewS(pane->div[1], AG_LABEL_HFILL,
 		    _("Select a widget on the left "
@@ -467,7 +470,8 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 		mi = AG_TlistSetPopup(tlVFS, "window");
 		AG_MenuSetPollFn(mi, MenuForWindow, "%p", tlVFS);
 	}
-
+	
+	AG_WidgetFocus(tlVFS);
 	AG_WindowSetPosition(win, AG_WINDOW_BR, 1);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	return (win);

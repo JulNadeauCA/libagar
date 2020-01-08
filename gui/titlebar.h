@@ -11,7 +11,7 @@
 struct ag_window;
 
 typedef struct ag_titlebar {
-	AG_Box hb;
+	AG_Box hb;                      /* AG_Widget -> AG_Box -> AG_Titlebar */
 	Uint flags;
 #define AG_TITLEBAR_NO_CLOSE	0x01	/* No close button */
 #define AG_TITLEBAR_NO_MINIMIZE	0x02	/* No minimize button */

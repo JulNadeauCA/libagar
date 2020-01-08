@@ -36,6 +36,7 @@
 #define AG_TLIST_PADDING 2	/* Label padding (pixels) */
 #endif
 
+static void SelectRange(AG_Tlist *_Nonnull, int);
 static void DrawExpandCollapseSign(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull,
                                    int, int);
 static void StylizeFont(AG_Tlist *_Nonnull, Uint);
@@ -1097,13 +1098,13 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	const int x = AG_INT(2);
 	const int y = AG_INT(3);
 	AG_TlistItem *ti;
-	const int tind = tl->rOffs + y/tl->item_h + 1;
+	const int idx = tl->rOffs + y/tl->item_h + 1;
 	
 	if (!AG_WidgetIsFocused(tl))
 		AG_WidgetFocus(tl);
 	
 	/* XXX use array */
-	if ((ti = AG_TlistFindByIndex(tl, tind)) == NULL)
+	if ((ti = AG_TlistFindByIndex(tl, idx)) == NULL)
 		return;
 	
 	switch (button) {
@@ -1122,9 +1123,9 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		AG_Redraw(tl);
 		break;
 	case AG_MOUSE_LEFT:
-		/* Expand the children if the user clicked on the [+] sign. */
-		if (ti->flags & AG_TLIST_HAS_CHILDREN) {
-			if (x >= ti->depth*tl->icon_w &&
+	case AG_MOUSE_RIGHT:
+		if (ti->flags & AG_TLIST_HAS_CHILDREN) {       /* [+] control */
+			if (x >= (ti->depth)*tl->icon_w &&
 			    x <= (ti->depth+1)*tl->icon_w) {
 				if (ti->flags & AG_TLIST_ITEM_EXPANDED) {
 					ti->flags &= ~AG_TLIST_ITEM_EXPANDED;
@@ -1133,57 +1134,17 @@ MouseButtonDown(AG_Event *_Nonnull event)
 				}
 				tl->flags |= AG_TLIST_REFRESH;
 				AG_Redraw(tl);
-				return;
+				break;
 			}
 		}
 
-		if (ti->flags & AG_TLIST_NO_SELECT) {
-			return;
-		}
-		/*
-		 * Handle range selections.
-		 */
+		if (ti->flags & AG_TLIST_NO_SELECT)
+			break;
+
 		if ((tl->flags & AG_TLIST_MULTI) &&
 		    (AG_GetModState(tl) & AG_KEYMOD_SHIFT)) {
-			AG_TlistItem *oitem;
-			int oind = -1, i = 0, nitems = 0;
-
-			TAILQ_FOREACH(oitem, &tl->items, items) {
-				if (oitem->selected) {
-					oind = i;
-				}
-				i++;
-				nitems++;
-			}
-			if (oind == -1) {
-				return;
-			}
-			if (oind < tind) {			  /* Forward */
-				i = 0;
-				TAILQ_FOREACH(oitem, &tl->items, items) {
-					if (i == tind)
-						break;
-					if (i > oind) {
-						SelectItem(tl, oitem);
-					}
-					i++;
-				}
-			} else if (oind >= tind) {		  /* Backward */
-				i = nitems;
-				TAILQ_FOREACH_REVERSE(oitem, &tl->items,
-				    ag_tlist_itemq, items) {
-					if (i <= oind)
-						SelectItem(tl, oitem);
-					if (i == tind)
-						break;
-					i--;
-				}
-			}
-			break;
+			SelectRange(tl, idx);
 		}
-		/*
-		 * Handle single selections.
-		 */
 		if ((tl->flags & AG_TLIST_MULTITOGGLE) ||
 		    ((tl->flags & AG_TLIST_MULTI) &&
 		     (AG_GetModState(tl) & AG_KEYMOD_CTRL))) {
@@ -1198,8 +1159,11 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		AG_TlistDeselectAll(tl);
 		SelectItem(tl, ti);
 
-		/* Handle double clicks. */
-		/* XXX compare the args as well as p1 */
+		break;
+	}
+
+	switch (button) {
+	case AG_MOUSE_LEFT:
 		if (tl->dblClicked && tl->dblClicked == ti->p1) {
 			AG_DelTimer(tl, &tl->dblClickTo);
 			if (tl->dblClickEv) {
@@ -1210,36 +1174,72 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		} else {
 			tl->dblClicked = ti->p1;
 			AG_AddTimer(tl, &tl->dblClickTo, agMouseDblclickDelay,
-			    DoubleClickTimeout, NULL);
+			            DoubleClickTimeout, NULL);
 		}
 		break;
 	case AG_MOUSE_RIGHT:
-		if (ti->flags & AG_TLIST_NO_POPUP) {
-			return;
-		}
-		if (tl->popupEv) {
-			AG_PostEventByPtr(tl, tl->popupEv, NULL);
-		} else if (ti->cat) {
-			AG_TlistPopup *tp;
-	
-			if (!(tl->flags &
-			    (AG_TLIST_MULTITOGGLE | AG_TLIST_MULTI)) ||
-			    !(AG_GetModState(tl) & (AG_KEYMOD_CTRL |
-			                            AG_KEYMOD_SHIFT)))
-			{
-				AG_TlistDeselectAll(tl);
-				SelectItem(tl, ti);
-			}
-			TAILQ_FOREACH(tp, &tl->popups, popups) {
-				if (strcmp(tp->iclass, ti->cat) == 0)
-					break;
-			}
-			if (tp) {
-				PopupMenu(tl, tp, x,y);
-				return;
+		if ((ti->flags & AG_TLIST_NO_POPUP) == 0) {
+			if (tl->popupEv) {
+				AG_PostEventByPtr(tl, tl->popupEv, NULL);
+			} else if (ti->cat) {
+				AG_TlistPopup *tp;
+		
+				if (!(tl->flags &
+				    (AG_TLIST_MULTITOGGLE | AG_TLIST_MULTI)) ||
+				    !(AG_GetModState(tl) & (AG_KEYMOD_CTRL |
+				                            AG_KEYMOD_SHIFT))) {
+					AG_TlistDeselectAll(tl);
+					SelectItem(tl, ti);
+				}
+				TAILQ_FOREACH(tp, &tl->popups, popups) {
+					if (strcmp(tp->iclass, ti->cat) == 0)
+						break;
+				}
+				if (tp)
+					PopupMenu(tl, tp, x,y);
 			}
 		}
-		break;
+	}
+}
+
+/* Handle multiple selections (shift) */
+static void
+SelectRange(AG_Tlist *tl, int idx)
+{
+	AG_TlistItem *oitem;
+	int idxOther = -1;
+	int i = 0, nItems = 0;
+
+	TAILQ_FOREACH(oitem, &tl->items, items) {
+		if (oitem->selected) {
+			idxOther = i;
+		}
+		i++;
+		nItems++;
+	}
+	if (idxOther == -1) {
+		return;
+	}
+	if (idxOther < idx) {			  /* Forward */
+		i = 0;
+		TAILQ_FOREACH(oitem, &tl->items, items) {
+			if (i == idx)
+				break;
+			if (i > idxOther) {
+				SelectItem(tl, oitem);
+			}
+			i++;
+		}
+	} else if (idxOther >= idx) {		  /* Backward */
+		i = nItems;
+		TAILQ_FOREACH_REVERSE(oitem, &tl->items,
+		    ag_tlist_itemq, items) {
+			if (i <= idxOther)
+				SelectItem(tl, oitem);
+			if (i == idx)
+				break;
+			i--;
+		}
 	}
 }
 

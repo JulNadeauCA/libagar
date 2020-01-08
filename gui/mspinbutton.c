@@ -211,8 +211,7 @@ Init(void *obj)
 	AG_SetEvent(sbu->yincbu, "button-pushed", Increment, "%p%s%i", sbu, "yvalue", +1);
 
 	for (i = 0; i < 4; i++) {
-		AG_ButtonSetPadding(b[i], 0,0,0,0);
-		AG_LabelSetPadding(b[i]->lbl, 0,0,0,0);
+		AG_SetStyle(b[i], "padding", "0");
 		AG_WidgetSetFocusable(b[i], 0);
 	}
 

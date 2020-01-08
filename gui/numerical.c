@@ -494,30 +494,33 @@ Init(void *_Nonnull obj)
 	AG_Numerical *num = obj;
 
 	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE;
+
 	num->flags = 0;
-	num->wUnitSel = 0;
-	num->hUnitSel = 0;
-	num->inTxt[0] = '\0';
 	Strlcpy(num->format, "%.02f", sizeof(num->format));
+	num->unit = AG_FindUnit("identity");
+	num->units = NULL;
+	num->inTxt[0] = '\0';
 
-	AG_InitTimer(&num->updateTo, "update", 0);
-
+	/* Input textbox */
 	num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
 	AG_TextboxBindASCII(num->input, num->inTxt, sizeof(num->inTxt));
 	AG_TextboxSizeHint(num->input, "8888.88");
 
-	num->unit = AG_FindUnit("identity");
-	num->units = NULL;
+	/* Increment (+) button */
+	num->incbu = AG_ButtonNewS(num, AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS,
+	                           _("+"));
+	AG_SetStyle(num->incbu, "padding", "0");
+	AG_SetStyle(num->incbu, "font-size", "80%");
 
-	num->incbu = AG_ButtonNewS(num, AG_BUTTON_REPEAT, _("+"));
-	AG_ButtonSetPadding(num->incbu, 0,0,0,0);
-	AG_LabelSetPadding(num->incbu->lbl, 0,0,0,0);
-	AG_WidgetSetFocusable(num->incbu, 0);
+	/* Decrement (-) button */
+	num->decbu = AG_ButtonNewS(num, AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS,
+	                           _("-"));
+	AG_SetStyle(num->decbu, "padding", "0");
+	AG_SetStyle(num->decbu, "font-size", "80%");
 
-	num->decbu = AG_ButtonNewS(num, AG_BUTTON_REPEAT, _("-"));
-	AG_ButtonSetPadding(num->decbu, 0,0,0,0);
-	AG_LabelSetPadding(num->decbu->lbl, 0,0,0,0);
-	AG_WidgetSetFocusable(num->decbu, 0);
+	num->wUnitSel = 0;
+	num->hUnitSel = 0;
+	num->wPreUnit = 0;
 
 	AG_AddEvent(num, "widget-shown", OnShow, NULL);
 	AG_SetEvent(num, "key-down", KeyDown, NULL);
@@ -526,6 +529,8 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(num->input, "textbox-return",  UpdateFromText, "%p,%i", num, 1);
 	AG_SetEvent(num->input, "textbox-changed", UpdateFromText, "%p,%i", num, 0);
 	AG_AddEvent(num->input->ed, "key-down", InputKeyDown, "%p", num);
+
+	AG_InitTimer(&num->updateTo, "update", 0);
 
 	AG_WidgetForwardFocus(num, num->input);
 }
@@ -547,7 +552,10 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	r->h = MAX(rChld.h, num->hUnitSel);
 
 	AG_WidgetSizeReq(num->incbu, &rInc);
+	r->h = MAX(r->h, rInc.h);
 	AG_WidgetSizeReq(num->decbu, &rDec);
+	r->h = MAX(r->h, rDec.h);
+
 	r->w += MAX(rInc.w, rDec.w) + 4;
 }
 
@@ -564,7 +572,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	if (a->h < 4 || a->w < wBtn+spacing)
 		return (-1);
 
-	if (num->units != NULL) {
+	if (num->units) {
 		if (wUnitSel > a->w - wBtn-spacing) {
 			wUnitSel = a->w - wBtn-spacing;
 		}
@@ -585,7 +593,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	aChld.x += aChld.w + 2;
 
 	/* Size unit selector */
-	if (num->units != NULL) {
+	if (num->units) {
 		aChld.w = wUnitSel;
 		aChld.h = a->h;
 		AG_WidgetSizeAlloc(num->units, &aChld);

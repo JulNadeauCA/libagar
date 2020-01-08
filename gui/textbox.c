@@ -126,7 +126,8 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 	tb->flags |= flags;
 	if (label != NULL) {
 		tb->lbl = AG_LabelNewS(tb, 0, label);
-		AG_LabelSetPadding(tb->lbl, -1, 10, -1, -1);
+		AG_SetStyle(tb->lbl, "padding", "5 10 5 10");
+//		AG_LabelSetPadding(tb->lbl, -1, 10, -1, -1);
 	}
 	AG_ObjectAttach(parent, tb);
 	return (tb);
@@ -440,7 +441,8 @@ AG_TextboxSetLabelS(AG_Textbox *tb, const char *s)
 		AG_LabelTextS(tb->lbl, s);
 	} else {
 		tb->lbl = AG_LabelNewS(tb, 0, s);
-		AG_LabelSetPadding(tb->lbl, -1, 10, -1, -1);
+		AG_SetStyle(tb->lbl, "padding", "5 10 5 10");
+//		AG_LabelSetPadding(tb->lbl, -1, 10, -1, -1);
 	}
 	AG_ObjectUnlock(tb);
 }

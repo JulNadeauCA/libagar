@@ -169,9 +169,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
-	AG_ProgressBar *pb = obj;
-
-	if (a->w < pb->width || a->h < pb->width) {
+	if (a->w < 5 || a->h < 5) {
 		return (-1);
 	}
 	return (0);

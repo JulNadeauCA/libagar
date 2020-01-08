@@ -212,8 +212,6 @@ Draw(void *obj)
 				AG_Color cHalf;
 				const int boxRad = (boxDia >> 1);
 				
-				lbl->tPad--;
-
 				AG_ColorInterpolate(&cHalf,
 				    &WCOLOR(nb, SELECTION_COLOR),
 				    &WCOLOR(nb, FG_COLOR),
@@ -229,9 +227,6 @@ Draw(void *obj)
 			}
 
 			AG_WidgetDraw(lbl);
-
-			if (isSelected)
-				lbl->tPad++;
 		}
 		x += r.w+1;
 
@@ -302,9 +297,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_SizeReq rLbl;
 	int x=0, y=0;
 
-	if (a->h < nb->bar_h || a->w < WFONT(nb)->height) {
+	if (a->h < nb->bar_h || a->w < WFONT(nb)->height)
 		return (-1);
-	}
+
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
 		if (tab->lbl == NULL) {
 			continue;
@@ -364,8 +359,8 @@ AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 	AG_ObjectLock(nb);
 
 	if (label && label[0] != '\0') {
-		tab->lbl = AG_LabelNewS(nb, 0, label);
-		AG_LabelSetPadding(tab->lbl, 8,8,5,0);
+		tab->lbl = AG_LabelNew(nb, 0, " %s ", label);
+		AG_SetStyle(tab->lbl, "padding", "5 10 5 10");
 		AG_SetStyle(tab->lbl, "font-family", "cm-sans-demicondensed");
 		AG_SetStyle(tab->lbl, "font-size", "115%");
 	} else {
@@ -516,8 +511,8 @@ AG_WidgetClass agNotebookTabClass = {
 		NULL		/* edit */
 	},
 	AG_WidgetInheritDraw,
-	AG_WidgetInheritSizeRequest,
-	AG_WidgetInheritSizeAllocate
+	NULL,			/* size_request */
+	NULL			/* size_allocate */
 };
 
 #endif /* AG_WIDGETS */

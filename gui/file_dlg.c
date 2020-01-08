@@ -1297,9 +1297,10 @@ AG_FileDlgNew(void *parent, Uint flags)
 		fd->textbox = AG_TextboxNewS(fd, AG_TEXTBOX_HFILL, _("File:"));
 		AG_TextboxBindUTF8(fd->textbox, fd->cfile, sizeof(fd->cfile));
 		AG_TextboxSizeHint(fd->textbox, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXX>");
-		fd->btnExpand = AG_ButtonNewS(fd, 0, "...");
-		AG_ButtonSetPadding(fd->btnExpand, 1,1,1,1);
-		AG_WidgetSetFocusable(fd->btnExpand, 0);
+
+		fd->btnExpand = AG_ButtonNewS(fd, AG_BUTTON_NO_FOCUS, "...");
+		AG_SetStyle(fd->btnExpand, "padding", "1");
+
 		AG_SetEvent(fd->btnExpand, "button-pushed",
 		    ExpandFromCompact, "%p", fd);
 

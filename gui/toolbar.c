@@ -129,9 +129,8 @@ AG_ToolbarButtonIcon(AG_Toolbar *bar, const AG_Surface *icon, int def,
 
 	AG_ObjectLock(bar);
 
-	bu = AG_ButtonNewS(bar->rows[bar->curRow], 0, NULL);
+	bu = AG_ButtonNewS(bar->rows[bar->curRow], AG_BUTTON_NO_FOCUS, NULL);
 	AG_ButtonSurface(bu, icon);
-	AG_ButtonSetFocusable(bu, 0);
 	AG_ButtonSetSticky(bu, bar->flags & AG_TOOLBAR_STICKY);
 	AG_SetInt(bu, "state", def);
 	bar->nButtons++;
@@ -161,8 +160,7 @@ AG_ToolbarButton(AG_Toolbar *bar, const char *text, int def,
 	
 	AG_ObjectLock(bar);
 
-	bu = AG_ButtonNewS(bar->rows[bar->curRow], 0, text);
-	AG_ButtonSetFocusable(bu, 0);
+	bu = AG_ButtonNewS(bar->rows[bar->curRow], AG_BUTTON_NO_FOCUS, text);
 	AG_ButtonSetSticky(bu, bar->flags & AG_TOOLBAR_STICKY);
 	AG_SetInt(bu, "state", def);
 	bar->nButtons++;
@@ -295,7 +293,7 @@ AG_WidgetClass agToolbarClass = {
 	},
 	AG_WidgetInheritDraw,
 	SizeRequest,
-	AG_WidgetInheritSizeAllocate
+	NULL			/* size_allocate */
 };
 
 #endif /* AG_WIDGETS */

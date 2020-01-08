@@ -268,8 +268,7 @@ Init(void *_Nonnull obj)
 	
 	com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO | AG_TEXTBOX_EXCL, NULL);
 	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY, _(" ... "));
-	AG_ButtonSetPadding(com->button, 0,0,0,0);
-	AG_LabelSetPadding(com->button->lbl, 0,0,0,0);
+	AG_SetStyle(com->button, "padding", "0");
 	AG_WidgetSetFocusable(com->button, 0);
 
 	com->list = Malloc(sizeof(AG_Tlist));
@@ -286,6 +285,7 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 	AG_SetEvent(com->tbox, "textbox-return", Return, "%p", com);
+
 	AG_WidgetForwardFocus(com, com->tbox);
 }
 

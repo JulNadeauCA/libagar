@@ -197,8 +197,8 @@ AG_WidgetClass agObjectSelectorClass = {
 		NULL		/* edit */
 	},
 	AG_WidgetInheritDraw,
-	AG_WidgetInheritSizeRequest,
-	AG_WidgetInheritSizeAllocate
+	NULL,			/* size_request */
+	NULL			/* size_allocate */
 };
 
 #endif /* AG_WIDGETS */

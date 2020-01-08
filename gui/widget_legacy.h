@@ -71,6 +71,8 @@
 #define	AG_WidgetBlendPixelRGBA		AG_BlendPixelRGBA
 #define AG_WidgetShownRecursive		AG_WidgetShowAll
 #define AG_WidgetHiddenRecursive	AG_WidgetHideAll
+#define AG_WidgetInheritSizeRequest     NULL
+#define AG_WidgetInheritSizeAllocate    NULL
 
 #define AG_WIDGET_TABLE_EMBEDDABLE 0
 

@@ -127,17 +127,17 @@ static void
 MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Scrollview *sv = AG_SCROLLVIEW_SELF();
-	int dx = AG_INT(3);
-	int dy = AG_INT(4);
+	const int dx = AG_INT(3);
+	const int dy = AG_INT(4);
 
 	if (sv->flags & AG_SCROLLVIEW_PANNING) {
 		sv->xOffs -= dx;
 		sv->yOffs -= dy;
 
-		if (sv->xOffs+sv->r.w > sv->xMax)
-			sv->xOffs = sv->xMax-sv->r.w;
-		if (sv->yOffs+sv->r.h > sv->yMax)
-			sv->yOffs = sv->yMax-sv->r.h;
+		if (sv->xOffs + sv->r.w > sv->xMax)
+			sv->xOffs = sv->xMax - sv->r.w;
+		if (sv->yOffs + sv->r.h > sv->yMax)
+			sv->yOffs = sv->yMax - sv->r.h;
 		if (sv->xOffs < 0)
 			sv->xOffs = 0;
 		if (sv->yOffs < 0)
