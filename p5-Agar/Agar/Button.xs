@@ -30,7 +30,7 @@ setPadding(self, left, right, top, bottom)
 	int top
 	int bottom
 CODE:
-	AG_ButtonSetPadding(self, left, right, top, bottom);
+	AG_SetStyleF(self, "padding", "%i %i %i %i", top, right, bottom, left);
 
 void
 justify(self, mode)

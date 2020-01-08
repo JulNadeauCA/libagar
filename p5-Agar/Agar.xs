@@ -193,16 +193,6 @@ Agar::Widget
 FindWidget(name)
 	const char * name
 CODE:
-	if ((RETVAL = AG_WidgetFind(agDriverSw, name)) == NULL) {
-		XSRETURN_UNDEF;
-	}
-OUTPUT:
-	RETVAL
-
-Agar::Object
-FindObject(name)
-	const char * name
-CODE:
 	if ((RETVAL = AG_ObjectFindS(AGOBJECT(agDriverSw), name)) == NULL) {
 		XSRETURN_UNDEF;
 	}

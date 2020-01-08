@@ -4,6 +4,11 @@
 #
 # Demonstrates many of the Agar-GUI widgets available through the Perl
 # bindings.
+# 
+# Usage: perl agardemo.pl [--driver=DRIVER]
+# 
+# The "dummy" driver can be used to test from command-line.
+#
 
 use strict;
 use warnings;
@@ -14,14 +19,32 @@ my $driver = "";
 
 GetOptions("driver=s" => \$driver);
 
-Agar::InitCore('Agar Perl demo', { verbose=>1 }) || die Agar::GetError();
+#
+# Initialize the Agar library.
+#
+Agar::InitCore('agarperldemo', { verbose => 1,
+                                 createDataDir => 1 }) || die Agar::GetError();
+
 Agar::InitGraphics($driver) || die Agar::GetError();
+
+# Bind ESCAPE and other standard keys.
 Agar::BindStdGlobalKeys();
 
+# Create a new Agar window.
 my $win = Agar::Window->newNamed("main");
-$win->caption("perl $0");
-$win->setGeometry(80, 60, 640, 480);
+$win->caption("$0 (perl $^V)");
+
+#
+# Arrange for Agar::Quit() to be called when the window is closed.
+#
+# Note: An alternate way to accomplish the same thing would be to
+# pass { main => 1 } to Agar::Window->new().
+#
 $win->setEvent('window-close', sub { Agar::Quit() });
+
+# Set an explicit window geometry (default = auto-size).
+# $win->setGeometry(80,60, 640,480);
+
 
 ################################
 # Load/save dialogs
@@ -141,18 +164,12 @@ $toolbar->setActiveRow(2);
 $toolbar->addTextButton("InfoTimed")->setEvent('button-pushed', sub {
 	Agar::InfoMsgTimed(2000, "Do you know the Mushroom Man?");
 });
-$toolbar->addTextButton("WarningTimed")->setEvent('button-pushed', sub {
-	Agar::WarningMsgTimed(2000, "Look, a three-headed monkey!");
-});
 $toolbar->addTextButton("ErrorTimed")->setEvent('button-pushed', sub {
 	Agar::ErrorMsgTimed(2000, "Look, a three-headed monkey!");
 });
 $toolbar->setActiveRow(3);
 $toolbar->addTextButton("InfoIgnorable")->setEvent('button-pushed', sub {
 	Agar::InfoMsgIgnorable('demo.ignore-info', "Do you know the Mushroom Man?");
-});
-$toolbar->addTextButton("WarningIgnorable")->setEvent('button-pushed', sub {
-	Agar::WarningMsgIgnorable('demo.ignore-warn', "Look, a three-headed monkey!");
 });
 #$toolbar->setActiveRow(4);
 #$toolbar->addTextButton("Ask me")->setEvent('button-pushed', sub {
@@ -234,13 +251,16 @@ $saveDlg->setEvent('file-chosen', sub {
 	$con->msg("chose to save '$path'");
 });
 
+#
+# Move the divider to X = (45% of the total width).
+#
+$pane->moveDividerPct(45);
+
 ################################
 # Finished creating widgets,
 # now run the program!
 ################################
-
 $win->show();
-$pane->moveDividerPct(50);
 
 Agar::EventLoop();
 

@@ -145,13 +145,8 @@ Returns the main Agar::Config object.
 
 =item B<Agar::FindWidget($name)>
 
-Returns the first widget it finds with the specified name, or undef if none
-was found.
-
-=item B<Agar::FindObject($name)>
-
-Returns the first object it finds with the specified name, or undef if none
-was found.
+Returns the first widget it finds with the specified path name (e.g.,
+"box0/button0". Return undef if no widget was found under that name.
 
 =item B<Agar::FindWidgetAtPoint($x, $y)>
 
