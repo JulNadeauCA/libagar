@@ -54,6 +54,8 @@
 #define FT_FLOOR(X)	((X & -64) / 64)
 #define FT_CEIL(X)	(((X + 63) & -64) / 64)
 
+/* #define DEBUG_FONTS */
+
 static FT_Library ftLibrary;
 
 int
@@ -115,9 +117,17 @@ AG_TTFOpenFont(AG_Font *font, const char *path)
 
 	switch (spec->sourceType) {
 	case AG_FONT_SOURCE_FILE:
+#ifdef DEBUG_FONTS
+		Debug(font, "FT_New_Face(%s, %d)\n", path, spec->index);
+#endif
 		rv = FT_New_Face(ftLibrary, path, spec->index, &ttf->face);
 		break;
 	case AG_FONT_SOURCE_MEMORY:
+#ifdef DEBUG_FONTS
+		Debug(font, "FT_New_Memory_Face(%p,%ld, %d)\n",
+		            spec->source.mem.data, spec->source.mem.size,
+			    spec->index);
+#endif
 		rv = FT_New_Memory_Face(ftLibrary, spec->source.mem.data,
 		                        spec->source.mem.size, spec->index,
 		                        &ttf->face);
@@ -132,7 +142,7 @@ AG_TTFOpenFont(AG_Font *font, const char *path)
 	}
 	face = ttf->face;
 
-	/* Apply the tranformation matrix. */
+	/* Apply the tranformation matrix (if not identity). */
 	if (spec->matrix.xx != 1.0 || spec->matrix.yy != 1.0 ||
 	    spec->matrix.xy != 0.0 || spec->matrix.yx != 0.0) {
 		FT_Matrix m;
@@ -260,8 +270,8 @@ static void
 ProcessNonScalablePixmap(FT_Bitmap *_Nonnull src, FT_Bitmap *_Nonnull dst,
     int soffset, int doffset)
 {
-	unsigned char *srcp, *dstp;
-	unsigned char ch;
+	Uint8 *srcp, *dstp;
+	Uint8 ch;
 	int j, k;
 					
 	srcp = src->buffer + soffset;
@@ -295,7 +305,7 @@ LoadGlyph(AG_TTFFont *_Nonnull ttf, AG_Char ch, AG_TTFGlyph *_Nonnull cached,
 		cached->index = FT_Get_Char_Index(face, ch);
 	}
 	if ((rv = FT_Load_Glyph(face, cached->index, FT_LOAD_DEFAULT)) != 0) {
-		AG_SetError("FreeType FT_LoadGlyph failed (0x%x)", rv);
+		AG_SetError("FT_LoadGlyph failed (%d)", rv);
 		return (-1);
 	}
 
@@ -305,8 +315,7 @@ LoadGlyph(AG_TTFFont *_Nonnull ttf, AG_Char ch, AG_TTFGlyph *_Nonnull cached,
 	outline = &glyph->outline;
 
 	/* Get the glyph metrics if desired */
-	if ((want & TTF_CACHED_METRICS) &&
-	    !(cached->stored & TTF_CACHED_METRICS)) {
+	if ((want & TTF_CACHED_METRICS) && !(cached->stored & TTF_CACHED_METRICS)) {
 		if (FT_IS_SCALABLE(face)) {
 			/* Get the bounding box. */
 			cached->minx = FT_FLOOR(metrics->horiBearingX);
@@ -339,12 +348,10 @@ LoadGlyph(AG_TTFFont *_Nonnull ttf, AG_Char ch, AG_TTFGlyph *_Nonnull cached,
 		cached->stored |= TTF_CACHED_METRICS;
 	}
 
-	if (((want & TTF_CACHED_BITMAP) &&
-	    !(cached->stored & TTF_CACHED_BITMAP)) ||
-	    ((want & TTF_CACHED_PIXMAP) &&
-	    !(cached->stored & TTF_CACHED_PIXMAP))) {
-		int i, mono = (want & TTF_CACHED_BITMAP);
+	if (((want & TTF_CACHED_BITMAP) && !(cached->stored & TTF_CACHED_BITMAP)) ||
+	    ((want & TTF_CACHED_PIXMAP) && !(cached->stored & TTF_CACHED_PIXMAP))) {
 		FT_Bitmap *src, *dst;
+	    	const int mono = (want & TTF_CACHED_BITMAP);
 
 		/* Handle the italic style. */
 		if (ttf->style & AG_TTF_STYLE_ITALIC) {
@@ -367,11 +374,7 @@ LoadGlyph(AG_TTFFont *_Nonnull ttf, AG_Char ch, AG_TTFGlyph *_Nonnull cached,
 
 		/* Copy over information to cache. */
 		src = &glyph->bitmap;
-		if (mono) {
-			dst = &cached->bitmap;
-		} else {
-			dst = &cached->pixmap;
-		}
+		dst = (mono) ? &cached->bitmap : &cached->pixmap;
 		memcpy(dst, src, sizeof(*dst));
 
 		/*
@@ -382,7 +385,7 @@ LoadGlyph(AG_TTFFont *_Nonnull ttf, AG_Char ch, AG_TTFGlyph *_Nonnull cached,
 		 * freetype2 documentation under FT_Render_Mode section.
 		 */
 		if (mono || !FT_IS_SCALABLE(face))
-			dst->pitch *= 8;
+			dst->pitch <<= 3;
 
 		/* Adjust for bold and italic text. */
 		if (ttf->style & AG_TTF_STYLE_BOLD) {
@@ -390,31 +393,31 @@ LoadGlyph(AG_TTFFont *_Nonnull ttf, AG_Char ch, AG_TTFGlyph *_Nonnull cached,
 			dst->width += ttf->glyph_overhang;
 		}
 		if (ttf->style & AG_TTF_STYLE_ITALIC) {
-			int bump = (int)Ceil(ttf->glyph_italics);
+			const int bump = (int)Ceil(ttf->glyph_italics);
+
 			dst->pitch += bump;
 			dst->width += bump;
 		}
 
 		if (dst->rows != 0) {
-			if ((dst->buffer = TryMalloc(dst->pitch*dst->rows))
-			    == NULL) {
+			int i;
+
+			if ((dst->buffer = TryMalloc(dst->pitch*dst->rows)) == NULL) {
 				return (-1);
 			}
 			memset(dst->buffer, 0, dst->pitch * dst->rows);
 
 			for (i = 0; i < src->rows; i++) {
-				int soffset = i * src->pitch;
-				int doffset = i * dst->pitch;
+				const int soffset = i * src->pitch;
+				const int doffset = i * dst->pitch;
 
 				if (mono) {
-					unsigned char *srcp, *dstp;
+					Uint8 *srcp = src->buffer + soffset;
+					Uint8 *dstp = dst->buffer + doffset;
 					int j;
 					
-					srcp = src->buffer + soffset;
-					dstp = dst->buffer + doffset;
-
 					for (j = 0; j < src->width; j += 8) {
-						unsigned char ch = *srcp++;
+						Uint8 ch = *srcp++;
 
 						*dstp++ = (ch&0x80) >> 7; ch <<= 1;
 						*dstp++ = (ch&0x80) >> 7; ch <<= 1;
@@ -427,10 +430,11 @@ LoadGlyph(AG_TTFFont *_Nonnull ttf, AG_Char ch, AG_TTFGlyph *_Nonnull cached,
 					}
 				} else if (!FT_IS_SCALABLE(face)) {
 					ProcessNonScalablePixmap(src, dst,
-					    soffset, doffset);
+					                         soffset,
+					                         doffset);
 				} else {
-					memcpy(dst->buffer+doffset,
-					       src->buffer+soffset,
+					memcpy(dst->buffer + doffset,
+					       src->buffer + soffset,
 					       src->pitch);
 				}
 			}

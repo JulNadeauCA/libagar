@@ -101,6 +101,7 @@
 #include <ctype.h>
 
 /* #define SYMBOLS */	    /* Translate "$(x)" symbols to built-in surfaces */
+/* #define DEBUG_FONTS */
 
 /* Default fonts */
 const char *agDefaultFaceFT = "_agFontVera";
@@ -441,8 +442,16 @@ AG_TextFontPct(int pct)
 }
 
 /*
- * Load the given font (or return a pointer to an existing one), with the
- * given specifications.
+ * Load the given font (or return a pointer to an existing one), from
+ * a specified font family (face), size in points and flags.
+ *
+ * For fontconfig-managed fonts, face is case-insensitive.
+ *
+ * For Agar local fonts, face is case-sensitive and corresponds to
+ * a file in `font-path' (e.g., "fraktur" loads fraktur.ttf).
+ *
+ * A face with leading underscore (e.g., "_agFontVera") specifies a built-in
+ * font which will be loaded from memory.
  */
 AG_Font *
 AG_FetchFont(const char *face, float fontSize, Uint flags)
@@ -458,19 +467,23 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 	if (fontSize < AG_FONT_PTS_EPSILON) {
 		fontSize = (float)AG_GetInt(cfg, "font.size");
 	}
-	if (face != NULL && face[0] != '_') {
-		const char *pFace;
-		char *pDst;
-
-		for (pFace=face, pDst=name;
-		    *pFace != '\0' && pDst < &name[sizeof(name)-1];
-		     pFace++) {
-			*pDst = tolower(*pFace);
-			pDst++;
-		}
-		*pDst = '\0';
-	} else {
+	if (face == NULL) {
 		AG_GetString(cfg, "font.face", name, sizeof(name));
+	} else {
+		if (face[0] != '_') {
+			const char *pFace;
+			char *pDst;
+
+			for (pFace=face, pDst=name;
+			    *pFace != '\0' && pDst < &name[sizeof(name)-1];
+			     pFace++) {
+				*pDst = tolower(*pFace);
+				pDst++;
+			}
+			*pDst = '\0';
+		} else {
+			Strlcpy(name, face, sizeof(name));
+		}
 	}
 
 	AG_MutexLock(&agTextLock);
@@ -478,12 +491,17 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 	TAILQ_FOREACH(font, &fonts, fonts) {
 		if (Fabs(font->spec.size - fontSize) < AG_FONT_PTS_EPSILON &&
 		    font->flags == flags &&
-		    Strcasecmp(OBJECT(font)->name, name) == 0)
+		    Strcasecmp(OBJECT(font)->name, name) == 0) {
 			break;
+		}
 	}
 	if (font != NULL)
 		goto out;
 
+#ifdef DEBUG_FONTS
+	Debug(NULL, "FetchFont(\"%s\" [=> %s],%.02f,0x%x)\n",
+	    (face != NULL) ? face : "<default>", name, fontSize, flags);
+#endif
 	if ((font = TryMalloc(sizeof(AG_Font))) == NULL) {
 		AG_MutexUnlock(&agTextLock);
 		return (NULL);
@@ -636,8 +654,10 @@ out:
 	AG_MutexUnlock(&agTextLock);
 	return (font);
 fail:
+#ifdef DEBUG_FONTS
 	Debug(NULL, "Font (\"%s\":%.02f:%x): %s\n", face, fontSize, flags,
 	    AG_GetError());
+#endif
 	AG_MutexUnlock(&agTextLock);
 	AG_ObjectDestroy(font);
 	return (NULL);
@@ -1558,7 +1578,9 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 		}
 		if (AG_TTFFindGlyph(ttf, *ch,
 		    TTF_CACHED_METRICS | TTF_CACHED_PIXMAP)) {
-			Debug(NULL, "TextRenderFT: No 0x%x\n", *ch);
+#ifdef DEBUG_FONTS
+			Debug(NULL, "TextRenderFT: No match for 0x%x\n", *ch);
+#endif
 			return;
 		}
 		G = ttf->current;
