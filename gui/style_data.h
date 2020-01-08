@@ -26,7 +26,11 @@ const char *agStyleDefault_Data =
 	"background-color: #656565;\n"
 	"background-color#focused: #666666;\n"
 	"}\n"
+	"AG_Button {\n"
+	"padding: 3 4 3 4;    /* top right bottom left */\n"
+	"}\n"
 	"AG_Label {\n"
+	"padding: 2 6 2 6;\n"
 	"background-color: #0000;\n"
 	"background-color#focused: #0000;\n"
 	"}\n"
@@ -57,11 +61,20 @@ const char *agStyleDefault_Data =
 	"background-color#disabled: rgb(10,10,10);\n"
 	"text-color: rgb(240,240,240);\n"
 	"}\n"
+	"AG_Radio {\n"
+	"background-color#hover: rgb(80,80,120);\n"
+	"}\n"
+	"AG_Checkbox {\n"
+	"background-color#hover: rgb(80,80,120);\n"
+	"}\n"
+	"AG_Pane {\n"
+	"line-color#hover: rgb(200,200,180);\n"
+	"}\n"
 	"";
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	1512,
+	1750,
 	&agStyleDefault_Data,
 	NULL
 };

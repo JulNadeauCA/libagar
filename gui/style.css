@@ -25,7 +25,11 @@ AG_Window {
 	background-color: #656565;
 	background-color#focused: #666666;
 }
+AG_Button {
+	padding: 5 10 5 10;    /* top right bottom left */
+}
 AG_Label {
+	padding: 2 6 2 6;
 	background-color: #0000;
 	background-color#focused: #0000;
 }
@@ -55,4 +59,13 @@ AG_Console {
 	background-color#focused: rgb(5,5,5);
 	background-color#disabled: rgb(10,10,10);
 	text-color: rgb(240,240,240);
+}
+AG_Radio {
+	background-color#hover: rgb(80,80,120);
+}
+AG_Checkbox {
+	background-color#hover: rgb(80,80,120);
+}
+AG_Pane {
+	line-color#hover: rgb(200,200,180);
 }
