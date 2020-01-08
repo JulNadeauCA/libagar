@@ -37,6 +37,7 @@ static int  GetState(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull)
 static int  GetStateGeneral(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull);
 static void SetStateGeneral(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull, int);
 
+/* Create a new button bound to an integer (representing a boolean). */
 AG_Button *
 AG_ButtonNewInt(void *parent, Uint flags, const char *caption, int *v)
 {
@@ -47,6 +48,7 @@ AG_ButtonNewInt(void *parent, Uint flags, const char *caption, int *v)
 	return (bu);
 }
 
+/* Create a new button bound to one or more bits in a natural integer. */
 AG_Button *
 AG_ButtonNewFlag(void *parent, Uint flags, const char *caption,
     Uint *p, Uint bitmask)
@@ -58,6 +60,7 @@ AG_ButtonNewFlag(void *parent, Uint flags, const char *caption,
 	return (bu);
 }
 
+/* Create a new button with the given text label. */
 AG_Button *
 AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
 {
@@ -77,6 +80,7 @@ AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
 	return (bu);
 }
 
+/* Create a new button and connect "button-pushed" to the given routine. */
 AG_Button *
 AG_ButtonNewFn(void *parent, Uint flags, const char *caption, AG_EventFn fn,
     const char *fmt, ...)
@@ -85,6 +89,10 @@ AG_ButtonNewFn(void *parent, Uint flags, const char *caption, AG_EventFn fn,
 	AG_Event *ev;
 	va_list ap;
 
+	/*
+	 * Make EXCL the default behavior in this constructor since it's less
+	 * common for function-calling buttons to also have a boolean binding.
+	 */
 	if (!(flags & AG_BUTTON_NOEXCL)) { flags |= AG_BUTTON_EXCL;  }
 
 	bu = AG_ButtonNewS(parent, flags, caption);
@@ -97,6 +105,19 @@ AG_ButtonNewFn(void *parent, Uint flags, const char *caption, AG_EventFn fn,
 	return (bu);
 }
 
+static __inline__ void
+SetFocusable(AG_Button *_Nonnull bu, int focusable)
+{
+	if (focusable) {
+		WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE;
+		WIDGET(bu)->flags &= ~(AG_WIDGET_UNFOCUSED_BUTTONUP);
+	} else {
+		WIDGET(bu)->flags &= ~(AG_WIDGET_FOCUSABLE);
+		WIDGET(bu)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
+	}
+}
+
+/* Create a new button with the given text label. */
 AG_Button *
 AG_ButtonNewS(void *parent, Uint flags, const char *label)
 {
@@ -106,41 +127,24 @@ AG_ButtonNewS(void *parent, Uint flags, const char *label)
 	AG_ObjectInit(bu, &agButtonClass);
 
 	if (label != NULL) {
-		bu->lbl = AG_LabelNewS(bu, 0, label);
-		AG_LabelJustify(bu->lbl, bu->justify);
-		AG_LabelValign(bu->lbl, bu->valign);
+		bu->label = TryStrdup(label);
 	}
 	bu->flags |= flags;
 
 	if (flags & AG_BUTTON_HFILL) { AG_ExpandHoriz(bu); }
 	if (flags & AG_BUTTON_VFILL) { AG_ExpandVert(bu); }
+	if (flags & AG_BUTTON_NO_FOCUS) { SetFocusable(bu, 0); }
+	if (flags & AG_BUTTON_REPEAT) { AG_ButtonSetRepeatMode(bu, 1); }
 
 	AG_ObjectAttach(parent, bu);
 	return (bu);
 }
 
 void
-AG_ButtonSetPadding(AG_Button *bu, int lPad, int rPad, int tPad, int bPad)
-{
-	if (lPad != -1) { bu->lPad = lPad; }
-	if (rPad != -1) { bu->rPad = rPad; }
-	if (tPad != -1) { bu->tPad = tPad; }
-	if (bPad != -1) { bu->bPad = bPad; }
-
-	AG_Redraw(bu);
-}
-
-void
-AG_ButtonSetFocusable(AG_Button *bu, int focusable)
+AG_ButtonSetFocusable(AG_Button *bu, int enable)
 {
 	AG_ObjectLock(bu);
-	if (focusable) {
-		WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE;
-		WIDGET(bu)->flags &= ~(AG_WIDGET_UNFOCUSED_BUTTONUP);
-	} else {
-		WIDGET(bu)->flags &= ~(AG_WIDGET_FOCUSABLE);
-		WIDGET(bu)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
-	}
+	SetFocusable(bu, enable);
 	AG_ObjectUnlock(bu);
 }
 
@@ -161,7 +165,7 @@ AG_ButtonSetInverted(AG_Button *bu, int flag)
 }
 
 
-/* Delay/repeat timer callbacks for AG_BUTTON_REPEAT */
+/* Delay/repeat timer callbacks for REPEAT option. */
 static Uint32
 ExpireRepeat(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -176,7 +180,10 @@ ExpireDelay(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	AG_Button *bu = AG_BUTTON_SELF();
 	const int repeatIval = AG_INT(1);
 
-	AG_AddTimer(bu, &bu->repeatTo, repeatIval, ExpireRepeat, NULL);
+	if (bu->repeat == NULL) {
+		return (0);
+	}
+	AG_AddTimer(bu, &bu->repeat->ivalTo, repeatIval, ExpireRepeat, NULL);
 	return (0);
 }
 
@@ -190,9 +197,9 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	const int x = AG_INT(2);
 	const int y = AG_INT(3);
 
-	if (bu->flags & AG_BUTTON_REPEAT) {
-		AG_DelTimer(bu, &bu->repeatTo);
-		AG_DelTimer(bu, &bu->delayTo);
+	if (bu->repeat) {
+		AG_DelTimer(bu, &bu->repeat->ivalTo);
+		AG_DelTimer(bu, &bu->repeat->delayTo);
 		return;
 	}
 	if (AG_WidgetDisabled(bu) ||
@@ -237,10 +244,10 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	}
 	AG_UnlockVariable(V);
 
-	if (bu->flags & AG_BUTTON_REPEAT) {
-		AG_DelTimer(bu, &bu->repeatTo);
+	if (bu->repeat) {
+		AG_DelTimer(bu, &bu->repeat->ivalTo);
 		AG_PostEvent(bu, "button-pushed", "%i", 1);
-		AG_AddTimer(bu, &bu->delayTo, agMouseSpinDelay,
+		AG_AddTimer(bu, &bu->repeat->delayTo, agMouseSpinDelay,
 		    ExpireDelay, "%i", agMouseSpinIval);
 	}
 }
@@ -278,9 +285,9 @@ KeyUp(AG_Event *_Nonnull event)
 	if (AG_WidgetDisabled(bu))
 		return;
 
-	if (bu->flags & AG_BUTTON_REPEAT) {
-		AG_DelTimer(bu, &bu->delayTo);
-		AG_DelTimer(bu, &bu->repeatTo);
+	if (bu->repeat) {
+		AG_DelTimer(bu, &bu->repeat->delayTo);
+		AG_DelTimer(bu, &bu->repeat->ivalTo);
 	}
 	if (keysym != AG_KEY_RETURN &&		/* TODO AG_Action */
 	    keysym != AG_KEY_KP_ENTER &&
@@ -318,9 +325,9 @@ KeyDown(AG_Event *_Nonnull event)
 	AG_PostEvent(bu, "button-pushed", "%i", 1);
 	bu->flags |= AG_BUTTON_KEYDOWN;
 
-	if (bu->flags & AG_BUTTON_REPEAT) {
-		AG_DelTimer(bu, &bu->repeatTo);
-		AG_AddTimer(bu, &bu->delayTo, agKbdDelay,
+	if (bu->repeat) {
+		AG_DelTimer(bu, &bu->repeat->ivalTo);
+		AG_AddTimer(bu, &bu->repeat->delayTo, agKbdDelay,
 		    ExpireDelay, "%i", agKbdRepeat);
 	}
 	AG_UnlockVariable(V);
@@ -340,7 +347,18 @@ OnShow(AG_Event *_Nonnull event)
 		AG_UnlockVariable(V);
 	}
 	if ((bu->flags & AG_BUTTON_EXCL) == 0)
-		AG_RedrawOnChange(bu, 100, "state");
+		AG_RedrawOnChange(bu, 250, "state");
+}
+
+static void
+StyleChanged(AG_Event *_Nonnull event)
+{
+	AG_Button *bu = AG_BUTTON_SELF();
+
+	if (bu->surfaceLbl != -1) {
+		AG_WidgetUnmapSurface(bu, bu->surfaceLbl);
+		bu->surfaceLbl = -1;
+	}
 }
 
 static void
@@ -353,21 +371,20 @@ Init(void *_Nonnull obj)
 			     AG_WIDGET_UNFOCUSED_BUTTONUP |
 			     AG_WIDGET_USE_TEXT |
 			     AG_WIDGET_USE_MOUSEOVER;
+
+	bu->flags = 0;
+	bu->label = NULL;
 	bu->state = 0;
-	bu->surface = -1;
-	bu->lbl = NULL;
+	bu->surfaceLbl = -1;
+	bu->surfaceSrc = -1;
 	bu->justify = AG_TEXT_CENTER;
 	bu->valign = AG_TEXT_MIDDLE;
-	bu->flags = 0;
-	bu->lPad = 4;
-	bu->rPad = 4;
-	bu->tPad = 3;
-	bu->bPad = 3;
-
-	AG_InitTimer(&bu->delayTo, "delay", 0);
-	AG_InitTimer(&bu->repeatTo, "repeat", 0);
+	bu->repeat = NULL;
 
 	AG_AddEvent(bu, "widget-shown", OnShow, NULL);
+	AG_AddEvent(bu, "font-changed", StyleChanged, NULL);
+	AG_AddEvent(bu, "palette-changed", StyleChanged, NULL);
+
 	AG_SetEvent(bu, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(bu, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(bu, "mouse-motion", MouseMotion, NULL);
@@ -381,45 +398,37 @@ static void
 SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
 	AG_Button *bu = p;
-	AG_SizeReq rLbl;
 	
-	r->w = bu->lPad + bu->rPad;
-	r->h = bu->tPad + bu->bPad;
+	r->w = WIDGET(bu)->paddingLeft + WIDGET(bu)->paddingRight;
+	r->h = WIDGET(bu)->paddingTop  + WIDGET(bu)->paddingBottom;
 
-	if (bu->surface != -1) {
-		r->w += WSURFACE(bu,bu->surface)->w;
-		r->h += WSURFACE(bu,bu->surface)->h;
-	} else {
-		if (bu->lbl != NULL) {
-			AG_WidgetSizeReq(bu->lbl, &rLbl);
-			r->w += rLbl.w;
+	if (bu->label && bu->label[0] != '\0') {
+		if (bu->surfaceLbl == -1) {
+			bu->surfaceLbl = AG_WidgetMapSurface(bu,
+			    AG_TextRender(bu->label));
 		}
-		r->h += WFONT(bu)->height;
+		r->w += WSURFACE(bu,bu->surfaceLbl)->w;
+		r->h += WSURFACE(bu,bu->surfaceLbl)->h;
+	} else if (bu->surfaceSrc != -1) {
+		r->w += WSURFACE(bu,bu->surfaceSrc)->w;
+		r->h += WSURFACE(bu,bu->surfaceSrc)->h;
 	}
+
+	bu->wReq = r->w;
+	bu->hReq = r->h;
 }
 
 static int
 SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 {
-	AG_Button *bu = p;
-	AG_SizeAlloc aLbl;
-
 	if (a->w < 2 || a->h < 2) {
 		return (-1);
-	}
-	if (bu->lbl != NULL) {
-		aLbl.x = bu->lPad;
-		aLbl.y = bu->tPad;
-		aLbl.w = a->w - (bu->lPad+bu->rPad);
-		aLbl.h = a->h - (bu->tPad+bu->bPad);
-		AG_WidgetSizeAlloc(bu->lbl, &aLbl);
 	}
 	return (0);
 }
 
 static void
-SetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull V, void *_Nonnull p,
-    int v)
+SetState(AG_Button *bu, AG_Variable *V, void *p, int v)
 {
 	switch (AG_VARIABLE_TYPE(V)) {
 	case AG_VARIABLE_INT:
@@ -444,9 +453,8 @@ Draw(void *_Nonnull p)
 	AG_Button *bu = p;
 	AG_Variable *V;
 	void *pState;
-	AG_Label *lbl;
 	AG_Rect rd;
-	int pressed, surface;
+	int surface, pressed, x=0, y=0;
 	
 	V = AG_GetVariable(bu, "state", &pState);
 	pressed = GetState(bu, V, pState);
@@ -463,39 +471,62 @@ Draw(void *_Nonnull p)
 		AG_DrawBoxRaised(bu, &rd, &WCOLOR(bu, FG_COLOR));
 	}
 
-	if ((lbl = bu->lbl) != NULL) {
-		if (pressed) {
-			WIDGET(lbl)->rView.x1++;
-			WIDGET(lbl)->rView.y1++;
+	if (bu->surfaceSrc != -1) {
+		surface = bu->surfaceSrc;
+	} else {                           
+		if (bu->surfaceLbl == -1) {
+			if (bu->label != NULL) {
+				bu->surfaceLbl = AG_WidgetMapSurface(bu,
+				    AG_TextRender(bu->label));
+			} else {
+				return;
+			}
 		}
-
-		AG_WidgetDraw(lbl);
-
-		if (pressed) {
-			WIDGET(lbl)->rView.x1--;
-			WIDGET(lbl)->rView.y1--;
-		}
-	} else if ((surface = bu->surface) != -1) {
-		const int w = WSURFACE(bu,surface)->w;
-		const int h = WSURFACE(bu,surface)->h;
-		int x=0, y=0;
-
-		switch (bu->justify) {
-		case AG_TEXT_LEFT:    x = bu->lPad;                    break;
-		case AG_TEXT_CENTER:  x = (WIDTH(bu) >> 1)-(w >> 1);   break;
-		case AG_TEXT_RIGHT:   x = WIDTH(bu) - w - bu->rPad;    break;
-		}
-		switch (bu->valign) {
-		case AG_TEXT_TOP:     y = bu->tPad;                    break;
-		case AG_TEXT_MIDDLE:  y = (HEIGHT(bu) >> 1)-(h >> 1);  break;
-		case AG_TEXT_BOTTOM:  y = HEIGHT(bu) - h - bu->bPad;   break;
-		}
-		if (pressed) {
-			x++;
-			y++;
-		}
-		AG_WidgetBlitSurface(bu, surface, x,y);
+		surface = bu->surfaceLbl;
 	}
+
+	switch (bu->justify) {
+	case AG_TEXT_LEFT:
+		x = WIDGET(bu)->paddingLeft;    
+		break;
+	case AG_TEXT_CENTER:
+		x = (WIDTH(bu) >> 1) - (WSURFACE(bu,surface)->w >> 1);
+		break;
+	case AG_TEXT_RIGHT:
+		x = WIDTH(bu) - WSURFACE(bu,surface)->w -
+		    WIDGET(bu)->paddingRight;
+		break;
+	}
+	switch (bu->valign) {
+	case AG_TEXT_TOP:
+		y = WIDGET(bu)->paddingTop;
+		break;
+	case AG_TEXT_MIDDLE:
+		y = (HEIGHT(bu) >> 1) - (WSURFACE(bu,surface)->h >> 1);
+		break;
+	case AG_TEXT_BOTTOM:
+		y = HEIGHT(bu) - WSURFACE(bu,surface)->h -
+		    WIDGET(bu)->paddingBottom;
+		break;
+	}
+	if (pressed) {
+		x++;
+		y++;
+	}
+
+	if (WIDTH(bu) < bu->wReq ||
+	    HEIGHT(bu) < bu->hReq) {
+		rd.x = 1;
+		rd.y = 1;
+		rd.w -= 2;
+		rd.h -= 2;
+		AG_PushClipRect(bu, &rd);
+	}
+
+	AG_WidgetBlitSurface(bu, surface, x,y);
+	
+	if (rd.x == 1)
+		AG_PopClipRect(bu);
 }
 
 /* Return the current boolean state of the button. */
@@ -509,7 +540,6 @@ AG_ButtonGetState(AG_Button *bu)
 	V = AG_GetVariable(bu, "state", &pState);
 	stateCur = GetState(bu, V, pState);
 	AG_UnlockVariable(V);
-
 	return (stateCur);
 }
 
@@ -522,12 +552,9 @@ AG_ButtonSetState(AG_Button *bu, int stateNew)
 	int statePrev;
 
 	V = AG_GetVariable(bu, "state", &pState);
-
 	statePrev = GetState(bu, V, pState);
 	SetState(bu, V, pState, 1);
-
 	AG_UnlockVariable(V);
-
 	return (statePrev);
 }
 
@@ -540,18 +567,15 @@ AG_ButtonToggle(AG_Button *bu)
 	int statePrev, stateNew;
 
 	V = AG_GetVariable(bu, "state", &pState);
-
 	statePrev = GetState(bu, V, pState);
 	stateNew = !statePrev;
 	SetState(bu, V, pState, stateNew);
-
 	AG_UnlockVariable(V);
-
 	return (stateNew);
 }
 
 static int
-GetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull V, void *_Nonnull p)
+GetState(AG_Button *bu, AG_Variable *V, void *p)
 {
 	int v;
 
@@ -574,7 +598,7 @@ GetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull V, void *_Nonnull p)
 }
 
 static int
-GetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull V, void *_Nonnull p)
+GetStateGeneral(AG_Button *bu, AG_Variable *V, void *p)
 {
 	switch (AG_VARIABLE_TYPE(V)) {
 	case AG_VARIABLE_UINT8:
@@ -596,8 +620,7 @@ GetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull V, void *_Nonnull 
 }
 
 static void
-SetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull V,
-    void *_Nonnull p, int v)
+SetStateGeneral(AG_Button *bu, AG_Variable *V, void *p, int v)
 {
 	switch (AG_VARIABLE_TYPE(V)) {
 	case AG_VARIABLE_UINT8:
@@ -621,75 +644,76 @@ SetStateGeneral(AG_Button *_Nonnull bu, AG_Variable *_Nonnull V,
 	}
 }
 
+/* Set horizontal alignment mode. */
 void
 AG_ButtonJustify(AG_Button *bu, enum ag_text_justify jus)
 {
-	AG_ObjectLock(bu);
 	bu->justify = jus;
-	if (bu->lbl != NULL) {
-		AG_LabelJustify(bu->lbl, jus);
-	}
-	AG_ObjectUnlock(bu);
 }
 
+/* Set vertical alignment mode. */
 void
 AG_ButtonValign(AG_Button *bu, enum ag_text_valign va)
 {
-	AG_ObjectLock(bu);
 	bu->valign = va;
-	if (bu->lbl) {
-		AG_LabelValign(bu->lbl, va);
-	}
-	AG_ObjectUnlock(bu);
 }
 
+/*
+ * Set the button label to (a copy of) the given graphics surface.
+ */
 void
-AG_ButtonSurface(AG_Button *bu, const AG_Surface *su)
+AG_ButtonSurface(AG_Button *bu, const AG_Surface *S)
 {
-	AG_Surface *suDup = (su != NULL) ? AG_SurfaceDup(su) : NULL;
+	AG_Surface *Sdup = (S != NULL) ? AG_SurfaceDup(S) : NULL;
 
 	AG_ObjectLock(bu);
-	if (bu->lbl != NULL) {
-		AG_ObjectDetach(bu->lbl);
-		AG_ObjectDestroy(bu->lbl);
-		bu->lbl = NULL;
-	}
-	if (bu->surface != -1) {
-		AG_WidgetReplaceSurface(bu, bu->surface, suDup);
+
+	if (bu->surfaceSrc != -1) {
+		AG_WidgetReplaceSurface(bu, bu->surfaceSrc, Sdup);
 	} else {
-		bu->surface = AG_WidgetMapSurface(bu, suDup);
+		bu->surfaceSrc = AG_WidgetMapSurface(bu, Sdup);
+	}
+
+	AG_ObjectUnlock(bu);
+	AG_Redraw(bu);
+}
+
+/*
+ * Set the button label to the given graphics surface (potentially unsafe).
+ */
+void
+AG_ButtonSurfaceNODUP(AG_Button *bu, AG_Surface *S)
+{
+	AG_ObjectLock(bu);
+
+	if (bu->surfaceSrc != -1) {
+		AG_WidgetReplaceSurfaceNODUP(bu, bu->surfaceSrc, S);
+	} else {
+		bu->surfaceSrc = AG_WidgetMapSurfaceNODUP(bu, S);
 	}
 	AG_ObjectUnlock(bu);
 	AG_Redraw(bu);
 }
 
+/* Enable or Disable repeat mode */
 void
-AG_ButtonSurfaceNODUP(AG_Button *bu, AG_Surface *su)
+AG_ButtonSetRepeatMode(AG_Button *bu, int enable)
 {
 	AG_ObjectLock(bu);
-	if (bu->lbl != NULL) {
-		AG_ObjectDetach(bu->lbl);
-		AG_ObjectDestroy(bu->lbl);
-		bu->lbl = NULL;
-	}
-	if (bu->surface != -1) {
-		AG_WidgetReplaceSurfaceNODUP(bu, bu->surface, su);
+	if (enable) {
+		if (bu->repeat == NULL) {
+			bu->repeat = Malloc(sizeof(AG_ButtonRepeat));
+			AG_InitTimer(&bu->repeat->delayTo, "delay", 0);
+			AG_InitTimer(&bu->repeat->ivalTo, "ival", 0);
+		}
+		bu->flags |= AG_BUTTON_REPEAT;
 	} else {
-		bu->surface = AG_WidgetMapSurfaceNODUP(bu, su);
-	}
-	AG_ObjectUnlock(bu);
-	AG_Redraw(bu);
-}
-
-void
-AG_ButtonSetRepeatMode(AG_Button *bu, int repeat)
-{
-	AG_ObjectLock(bu);
-	if (repeat) {
-		bu->flags |= (AG_BUTTON_REPEAT);
-	} else {
-		AG_DelTimer(bu, &bu->repeatTo);
-		AG_DelTimer(bu, &bu->delayTo);
+		if (bu->repeat != NULL) {
+			AG_DelTimer(bu, &bu->repeat->ivalTo);
+			AG_DelTimer(bu, &bu->repeat->delayTo);
+			free(bu->repeat);
+			bu->repeat = NULL;
+		}
 		bu->flags &= ~(AG_BUTTON_REPEAT);
 	}
 	AG_ObjectUnlock(bu);
@@ -715,17 +739,17 @@ AG_ButtonText(AG_Button *bu, const char *fmt, ...)
 void
 AG_ButtonTextS(AG_Button *bu, const char *label)
 {
+	char *labelDup = TryStrdup(label);
+
 	AG_ObjectLock(bu);
-	if (bu->surface != -1) {
-		AG_ButtonSurface(bu, NULL);
+
+	if (bu->surfaceLbl != -1) {
+		AG_WidgetUnmapSurface(bu, bu->surfaceLbl);
+		bu->surfaceLbl = -1;
 	}
-	if (bu->lbl == NULL) {
-		bu->lbl = AG_LabelNewS(bu, 0, label);
-		AG_LabelJustify(bu->lbl, bu->justify);
-		AG_LabelValign(bu->lbl, bu->valign);
-	} else {
-		AG_LabelTextS(bu->lbl, label);
-	}
+	Free(bu->label);
+	bu->label = labelDup;
+	
 	AG_ObjectUnlock(bu);
 	AG_Redraw(bu);
 }
