@@ -54,8 +54,9 @@
 #include <ctype.h>
 
 static AG_Window *_Nullable agDebuggerWindow = NULL;
-static AG_Label *_Nullable agDebuggerLabel = NULL;
-static AG_Box *_Nullable agDebuggerBox = NULL;
+static AG_Tlist  *_Nullable agDebuggerTlist = NULL;
+static AG_Label  *_Nullable agDebuggerLabel = NULL;
+static AG_Box    *_Nullable agDebuggerBox = NULL;
 
 static void
 FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
@@ -130,10 +131,11 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 static void
 TargetRoot(void)
 {
-	AG_LabelText(agDebuggerLabel,
-	    _("Target: " AGSI_YEL "/" AGSI_RST));
-	AG_WindowSetCaptionS(agDebuggerWindow,
-	    _("Agar GUI Debugger: / (root)"));
+	agTargetWidget = NULL;
+	AG_TlistDeselectAll(agDebuggerTlist);
+
+	AG_LabelText(agDebuggerLabel, _("Target: " AGSI_YEL "/" AGSI_RST));
+	AG_WindowSetCaptionS(agDebuggerWindow, _("Agar GUI Debugger: / (root)"));
 }
 
 static void
@@ -182,9 +184,12 @@ static void
 SelectedSurface(AG_Event *_Nonnull event)
 {
 	AG_Pixmap *px = AG_PIXMAP_PTR(1);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	AG_Pane *pane = AG_PANE_PTR(2);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(3);
 	AG_Surface *S = it->p1;
 	int Smapped;
+	
+	AG_PaneMoveDividerPct(pane, 50);
 
 	Smapped = AG_PixmapAddSurfaceScaled(px, S, S->w << 1, S->h << 1);
 	AG_PixmapSetSurface(px, Smapped);
@@ -301,8 +306,9 @@ PollVariables(AG_Event *_Nonnull event)
 	AG_ObjectUnlock(obj);
 }
 
+/* Select a widget for inspection in Debugger. */
 static void
-WidgetSelected(AG_Event *_Nonnull event)
+TargetWidget(AG_Event *_Nonnull event)
 {
 	AG_Box *box = agDebuggerBox;
 	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(1);
@@ -434,9 +440,9 @@ WidgetSelected(AG_Event *_Nonnull event)
 		px = AG_PixmapNew(pane->div[0], AG_PIXMAP_EXPAND, 320, 240);
 
 		tl = AG_TlistNewPolled(pane->div[1], AG_TLIST_EXPAND,
-		                       PollSurfaces,"%p",tgt);
+		    PollSurfaces,"%p",tgt);
 
-		AG_SetEvent(tl, "tlist-selected", SelectedSurface,"%p",px);
+		AG_SetEvent(tl, "tlist-selected", SelectedSurface,"%p,%p",px,pane);
 
 		mi = AG_TlistSetPopup(tl, "surface");
 		AG_MenuAction(mi, _("Export to image file..."), agIconSave.s,
@@ -477,6 +483,7 @@ static void
 CloseDebuggerWindow(AG_Event *_Nonnull event)
 {
 	agDebuggerWindow = NULL;
+	agDebuggerTlist = NULL;
 	agDebuggerBox = NULL;
 	agTargetWindow = NULL;
 }
@@ -497,7 +504,6 @@ AG_GuiDebuggerDetachWindow(void)
 		AG_ObjectFreeChildren(agDebuggerBox);
 	}
 	agTargetWindow = NULL;
-	agTargetWidget = NULL;
 	TargetRoot();
 }
 
@@ -555,11 +561,12 @@ AG_GuiDebugger(AG_Window *_Nonnull tgt)
 	                              _("Target: " AGSI_YEL "%s" AGSI_RST),
 	                              path);
 
-	tl = AG_TlistNewPolledMs(pane->div[0], AG_TLIST_EXPAND, 250,
-	                         PollWidgets, NULL);
+	tl = agDebuggerTlist = AG_TlistNewPolledMs(pane->div[0],
+	    AG_TLIST_EXPAND, 250,
+	    PollWidgets, NULL);
 
 	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXX>", 15);
-	AG_SetEvent(tl, "tlist-dblclick", WidgetSelected, NULL);
+	AG_SetEvent(tl, "tlist-selected", TargetWidget, NULL);
 	AG_WidgetFocus(tl);
 
 	mi = AG_TlistSetPopup(tl, "window");
