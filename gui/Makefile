@@ -11,7 +11,8 @@ LIB_AGE=	0
 LIB_INSTALL=	Yes
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
 LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LIBS}
-DATAFILES_SRC=	style.css
+DATAFILES_SRC=	style.css \
+		license.txt
 SUBDIR=		fonts
 
 MAN3=	AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
@@ -65,3 +66,12 @@ fonts_data.h: ${SRCDIR}/gui/fonts/vera.ttf ${SRCDIR}/gui/fonts/minimal.xcf
 style_data.h: ${SRCDIR}/gui/style.css
 	bundlecss -o $@ -n agStyleDefault ${SRCDIR}/gui/style.css
 
+style:
+	rm -f style_data.h
+	env SRCDIR=.. ${MAKE} style_data.h
+
+fonts:
+	rm -f fonts_data.h
+	env SRCDIR=.. ${MAKE} fonts_data.h
+
+.PHONY: style fonts
