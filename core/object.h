@@ -7,7 +7,7 @@
 # if AG_MODEL == AG_SMALL
 #  define AG_OBJECT_NAME_MAX 16
 # else
-#  define AG_OBJECT_NAME_MAX 28
+#  define AG_OBJECT_NAME_MAX 36
 # endif
 #endif
 #ifndef AG_OBJECT_TYPE_MAX
