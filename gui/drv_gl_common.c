@@ -770,7 +770,7 @@ AG_GL_PutPixel(void *obj, int x, int y, const AG_Color *c)
 {
 	glBegin(GL_POINTS);
 	GL_Color3uH(c->r, c->g, c->b);
-	glVertex2i(x, y);
+	glVertex2i(x-1, y);
 	glEnd();
 }
 
@@ -862,7 +862,7 @@ AG_GL_DrawLineH(void *obj, int x1, int x2, int y, const AG_Color *c)
 {
 	glBegin(GL_LINES);
 	GL_Color3uH(c->r, c->g, c->b);
-	glVertex2i(x1, y);
+	glVertex2i(x1-1, y);
 	glVertex2i(x2, y);
 	glEnd();
 }
