@@ -82,8 +82,8 @@ TestGUI(void *obj, AG_Window *win)
 	return (0);
 }
 
-const AG_TestCase objSystemTest = {
-	"objSystem",
+const AG_TestCase objsystemTest = {
+	"objsystem",
 	N_("Test basic AG_Object(3) VFS functions"),
 	"1.4.2",
 	0,

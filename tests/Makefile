@@ -17,6 +17,7 @@ CFLAGS+=	${AGAR_MATH_CFLAGS} ${AGAR_DEV_CFLAGS} ${AGAR_CFLAGS}
 LIBS+=		${AGAR_MATH_LIBS} ${AGAR_DEV_LIBS} ${AGAR_LIBS}
 
 SRCS=	agartest.c ${SRCS_EXTRA} \
+	buttons.c \
 	charsets.c \
 	checkbox.c \
 	compositing.c \
@@ -37,7 +38,6 @@ SRCS=	agartest.c ${SRCS_EXTRA} \
 	math.c \
 	maximized.c \
 	minimal.c \
-	modalwindowhandler.c \
 	network.c \
 	objsystem.c \
 	objsystem_animal.c \
@@ -45,6 +45,7 @@ SRCS=	agartest.c ${SRCS_EXTRA} \
 	pane.c \
 	palette.c \
 	plotting.c \
+	radio.c \
 	rendertosurface.c \
 	scrollbar.c \
 	scrollview.c \

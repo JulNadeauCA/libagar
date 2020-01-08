@@ -2,11 +2,6 @@
 
 #include "agartest.h"
 
-typedef struct {
-	AG_TestInstance _inherit;
-	AG_Mutex lock;
-} MyTestInstance;
-
 static void
 SelectedFont(AG_Event *event)
 {
@@ -41,20 +36,19 @@ TestGUI(void *obj, AG_Window *win)
 	return (0);
 }
 
+#if 0
+/*
+ * Unsafe microbenchmark (calls AG_TextRender() and AG_TextSize() outside
+ * of rendering context).
+ */
 static void
 TextSize_UTF8(void *obj)
 {
-#ifdef AG_THREADS
-	MyTestInstance *ti = obj;
-#endif
 	int w, h;
 	int i;
 
-	AG_MutexLock(&ti->lock);
-	for (i = 0; i < 50; i++) {
+	for (i = 0; i < 50; i++)
 		AG_TextSize("The Quick Brown Fox Jumps Over The Lazy Dog", &w, &h);
-	}
-	AG_MutexUnlock(&ti->lock);
 }
 
 static void
@@ -65,30 +59,19 @@ TextSize_Nat(void *obj)
 	                   'J','u','m','p','s',' ','O','v','e','r',' ',
 	                   'T','h','e',' ','L','a','z','y',' ',
 	                   'D','o','g', '\0' };
-#ifdef AG_THREADS
-	MyTestInstance *ti = obj;
-#endif
 	int w, h;
 	int i;
 
-	AG_MutexLock(&ti->lock);
-	for (i = 0; i < 50; i++) {
+	for (i = 0; i < 50; i++)
 		AG_TextSizeInternal(text, &w, &h);
-	}
-	AG_MutexUnlock(&ti->lock);
 }
 
 static void
 TextRender_UTF8(void *obj)
 {
-#ifdef AG_THREADS
-	MyTestInstance *ti = obj;
-#endif
 	AG_Surface *S;
 
-	AG_MutexLock(&ti->lock);
 	S = AG_TextRender("The Quick Brown Fox Jumps Over The Lazy Dog");
-	AG_MutexUnlock(&ti->lock);
 	AG_SurfaceFree(S);
 }
 
@@ -100,63 +83,43 @@ TextRender_Nat(void *obj)
 	                   'J','u','m','p','s',' ','O','v','e','r',' ',
 	                   'T','h','e',' ','L','a','z','y',' ','D','o','g',
 	                   '\0' };
-#ifdef AG_THREADS
-	MyTestInstance *ti = obj;
-#endif
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Surface *S;
 
-	AG_MutexLock(&ti->lock);
 	S = AG_TextRenderInternal(text, ts->font, &ts->colorBG, &ts->color);
-	AG_MutexUnlock(&ti->lock);
 	AG_SurfaceFree(S);
 }
 
 static void
 TextRender_2L(void *obj)
 {
-#ifdef AG_THREADS
-	MyTestInstance *ti = obj;
-#endif
 	AG_Surface *S;
 
-	AG_MutexLock(&ti->lock);
 	S = AG_TextRender("The Quick Brown Fox Jumps Over The Lazy Dog\n"
 	                  "The Quick Brown Fox Jumps Over The Lazy Dog\n");
-	AG_MutexUnlock(&ti->lock);
 	AG_SurfaceFree(S);
 }
 
 static void
 TextRender_3L(void *obj)
 {
-#ifdef AG_THREADS
-	MyTestInstance *ti = obj;
-#endif
 	AG_Surface *S;
 
-	AG_MutexLock(&ti->lock);
 	S = AG_TextRender("The Quick Brown Fox Jumps Over The Lazy Dog\n"
 	                  "The Quick Brown Fox Jumps Over The Lazy Dog\n"
 	                  "The Quick Brown Fox Jumps Over The Lazy Dog\n");
-	AG_MutexUnlock(&ti->lock);
 	AG_SurfaceFree(S);
 }
 
 static void
 TextRender_4L(void *obj)
 {
-#ifdef AG_THREADS
-	MyTestInstance *ti = obj;
-#endif
 	AG_Surface *S;
 
-	AG_MutexLock(&ti->lock);
 	S = AG_TextRender("The Quick Brown Fox Jumps Over The Lazy Dog\n"
 	                  "The Quick Brown Fox Jumps Over The Lazy Dog\n"
 	                  "The Quick Brown Fox Jumps Over The Lazy Dog\n"
 	                  "The Quick Brown Fox Jumps Over The Lazy Dog\n");
-	AG_MutexUnlock(&ti->lock);
 	AG_SurfaceFree(S);
 }
 
@@ -187,26 +150,17 @@ Bench(void *obj)
 	TestExecBenchmark(obj, &fontBench);
 	return (0);
 }
-
-static int
-Init(void *obj)
-{
-#ifdef AG_THREADS
-	MyTestInstance *ti = obj;
-	AG_MutexInit(&ti->lock);
 #endif
-	return (0);
-}
 
 const AG_TestCase fontsTest = {
 	"fonts",
 	N_("Test font engine and AG_FontSelector(3)"),
 	"1.6.0",
 	0,
-	sizeof(MyTestInstance),
-	Init,
-	NULL,		/* destroy */
-	NULL,		/* test */
+	sizeof(AG_TestInstance),
+	NULL,			/* init */
+	NULL,			/* destroy */
+	NULL,			/* test */
 	TestGUI,
-	Bench
+	NULL,			/* bench */
 };

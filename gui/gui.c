@@ -177,7 +177,7 @@ int agKbdDelay = 250;			/* Key repeat delay */
 int agKbdRepeat = 30;			/* Key repeat interval */
 int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
 int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
-int agMouseSpinIval = 50;		/* Spinbutton repeat interval */
+int agMouseSpinIval = 1;		/* Spinbutton repeat interval */
 int agMouseScrollIval = 1;		/* Scrollbar increment interval */
 int agScrollButtonIval = 100;		/* Scrollbar button interval */
 #ifdef AG_UNICODE
@@ -192,9 +192,9 @@ int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
 int agScreenshotQuality = 100;		/* JPEG quality in % */
 
 double agZoomValues[AG_ZOOM_MAX] = {
-	12.5, 18.2, 25.00, 33.33, 50.00, 66.67, 80.00, 90.00,
+	55.0, 60.0, 65.00, 70.00, 75.00, 80.00, 90.00, 95.00,
 	100.00, 110.00, 120.00, 133.00, 150.00, 170.00,
-	200.00, 240.00, 280.00, 400.00, 550.00, 650.00
+	200.00, 210.00, 220.00, 240.00, 250.00, 300.00
 };
 
 /*
@@ -611,6 +611,72 @@ AG_ZoomReset(void)
 		Verbose("No window is focused for zoom-in\n");
 	}
 	AG_UnlockVFS(&agDrivers);
+}
+
+/* Generate "About Agar" dialog window. */
+void
+AG_About(AG_Event *event)
+{
+	AG_Window *win;
+	AG_Label *lbl;
+	AG_Box *hBox;
+	AG_Textbox *tb;
+	FILE *f;
+
+	if ((win = AG_WindowNewNamedS(0, "_agAbout")) == NULL) {
+		return;
+	}
+	AG_WindowSetCaption(win, _("About Agar GUI"));
+	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
+
+	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
+	AG_BoxSetSpacing(hBox, 50);
+	AG_BoxSetHorizAlign(hBox, AG_BOX_CENTER);
+	{
+		char path[AG_PATHNAME_MAX];
+		AG_AgarVersion av;
+
+		AG_GetVersion(&av);
+
+		lbl = AG_LabelNew(hBox, 0,
+		    "Agar %d.%d.%d (r%d, %s, %s)",
+		    av.major, av.minor, av.patch,
+		    av.rev, (av.release) ? av.release : "beta",
+		    AG_MEMORY_MODEL_NAME);
+
+		AG_SetStyle(lbl, "font-family", "cm-sans");
+		AG_SetStyle(lbl, "font-size", "200%");
+
+		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "sq-agar.bmp",
+		    path, sizeof(path)) == 0)
+			AG_PixmapFromFile(hBox, 0, path);
+	}
+
+	tb = AG_TextboxNewS(win, AG_TEXTBOX_MULTILINE | AG_TEXTBOX_EXPAND |
+	                         AG_TEXTBOX_READONLY | AG_TEXTBOX_WORDWRAP, NULL);
+	AG_SetStyle(tb, "font-family", "vera-mono");
+	AG_TextboxSizeHintLines(tb, 20);
+
+	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "license.txt", path, sizeof(path)) == 0 &&
+	   (f = fopen(path, "r")) != NULL) {
+		char *s;
+		AG_Size size;
+
+		fseek(f, 0, SEEK_END);
+		size = (AG_Size)ftell(f);
+		fseek(f, 0, SEEK_SET);
+		s = Malloc(size);
+		fread(s, size, 1, f);
+		fclose(f);
+		s[size] = '\0';
+
+		AG_TextboxBindASCII(tb, s, size);
+	} else {
+		AG_TextboxPrintf(tb, _("Failed to open license.txt"));
+	}
+
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close"), AG_WindowCloseGenEv,"%p",win);
+	AG_WindowShow(win);
 }
 
 #ifdef AG_LEGACY

@@ -255,8 +255,8 @@ TestGUI(void *obj, AG_Window *win)
 	return (0);
 }
 
-const AG_TestCase imageLoadingTest = {
-	"imageLoading",
+const AG_TestCase imageloadingTest = {
+	"imageloading",
 	N_("Test image loader / exporter routines"),
 	"1.6.0",
 	0,

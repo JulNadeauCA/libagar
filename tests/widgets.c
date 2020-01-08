@@ -18,7 +18,7 @@
 
 typedef struct {
 	AG_TestInstance _inherit;
-	char textBuffer[30];
+	char textBuffer[128];
 	char *someText;
 } MyTestInstance;
 
@@ -78,108 +78,103 @@ TableKeyDown(AG_Event *event)
 static int
 TestGUI(void *obj, AG_Window *win)
 {
+	char path[AG_PATHNAME_MAX];
 	MyTestInstance *ti = obj;
 	AG_Box *hBox, *vBox;
-	AG_Pane *pane;
+	AG_Pane *hPane, *vPane;
 	AG_Combo *com;
 	AG_UCombo *ucom;
-	AG_Box *div1, *div2;
 	AG_Textbox *tbox;
+	AG_Surface *S;
 	int i;
 
 	/*
 	 * Pane provides two Box containers which can be resized using
 	 * a control placed in the middle.
 	 */
-	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
-	AG_PaneSetDivisionMin(pane, 0, 50, 100);
-	AG_PaneMoveDividerPct(pane, 40);
-	div1 = pane->div[0];
-	div2 = pane->div[1];
-	{
-		char path[AG_PATHNAME_MAX];
-		AG_Surface *S;
+	hPane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
+	AG_PaneSetDivisionMin(hPane, 0, 50, 100);
+	AG_PaneMoveDividerPct(hPane, 40);
 
-		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-1.bmp",
-		    path, sizeof(path)) == 0) {
-			if ((S = AG_SurfaceFromBMP(path)) != NULL) {
-/*				S->flags |= AG_SURFACE_TRACE; */
-				AG_PixmapFromSurface(div1, 0, S);
-			} else {
-				S = AG_TextRender(AG_GetError());
-				AG_PixmapFromSurface(div1, 0, S);
-				AG_SurfaceFree(S);
-			}
+	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-1.bmp", path, sizeof(path)) == 0) {
+		if ((S = AG_SurfaceFromBMP(path)) != NULL) {
+			AG_PixmapFromSurface(hPane->div[0], 0, S);
 		} else {
 			S = AG_TextRender(AG_GetError());
-			AG_PixmapFromSurface(div1, 0, S);
+			AG_PixmapFromSurface(hPane->div[0], 0, S);
 			AG_SurfaceFree(S);
 		}
-
-		/* Display agar.png. PNG support requires libpng. */
-#include <agar/config/have_png.h>
-#ifdef HAVE_PNG
-		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "sq-agar.bmp",
-		    path, sizeof(path)) == 0) {
-			AG_Surface *S = AG_SurfaceFromFile(path);
-			int i, x,y;
-
-			hBox = AG_BoxNewHoriz(div1, AG_BOX_HOMOGENOUS |
-			                            AG_BOX_HFILL);
-			for (i = 0; i < 5; i++) {
-				for (y = 0; y < S->h; y++) {
-					for (x = 0; x < S->w; x++) {
-						AG_Pixel px = AG_SurfaceGet(S, x,y);
-						AG_Color c ;
-						
-						AG_GetColor(&c, px, &S->format);
-						c.a /= (1+i);
-						AG_SurfacePut(S, x,y,
-						    AG_MapPixel(&S->format, &c));
-					}
-				}
-				AG_PixmapFromSurface(hBox, 0, S);
-			}
-		} else {
-			S = AG_TextRender(AG_GetError());
-			AG_PixmapFromSurface(div1, 0, S);
-			AG_SurfaceFree(S);
-		}
-#else
-		AG_LabelNewS(div1, 0, "PNG support disabled");
-#endif
-	
-		/*
-		 * The Label widget provides a simple static or polled label
-		 * (polled labels use special format strings; see AG_Label(3)
-		 * for details).
-		 */
-		{
-			AG_AgarVersion av;
-			AG_Label *lbl;
-
-			AG_GetVersion(&av);
-			lbl = AG_LabelNew(div1, 0, "Agar v%d.%d.%d (\"%s\")",
-			    av.major, av.minor, av.patch,
-			    av.release ? av.release : "dev");
-			AG_SetStyle(lbl, "font-size", "80%");
-		}
-
-		{
-			AG_Label *lbl;
-
-			lbl = AG_LabelNewPolled(div1, AG_LABEL_HFILL,
-			    "Window is at %i,%i (%ux%u)\n",
-			    &AGWIDGET(win)->x,
-			    &AGWIDGET(win)->y,
-			    &AGWIDGET(win)->w,
-			    &AGWIDGET(win)->h);
-			AG_LabelSizeHint(lbl, 1,
-			    "This is a polled label\n"
-			    "Window is at 000,000 (000x000)");
-			AG_LabelJustify(lbl, AG_TEXT_CENTER);
-		}
+	} else {
+		S = AG_TextRender(AG_GetError());
+		AG_PixmapFromSurface(hPane->div[0], 0, S);
+		AG_SurfaceFree(S);
 	}
+
+	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "sq-agar.bmp", path, sizeof(path)) == 0) {
+		AG_Surface *S = AG_SurfaceFromFile(path);
+		int i, x,y;
+
+		hBox = AG_BoxNewHoriz(hPane->div[0], AG_BOX_HOMOGENOUS |
+		                                     AG_BOX_HFILL);
+		for (i = 0; i < 5; i++) {
+			for (y = 0; y < S->h; y++) {
+				for (x = 0; x < S->w; x++) {
+					AG_Pixel px = AG_SurfaceGet(S, x,y);
+					AG_Color c ;
+						
+					AG_GetColor(&c, px, &S->format);
+					c.a /= (1+i);
+					AG_SurfacePut(S, x,y,
+					    AG_MapPixel(&S->format, &c));
+				}
+			}
+			AG_PixmapFromSurface(hBox, 0, S);
+		}
+	} else {
+		S = AG_TextRender(AG_GetError());
+		AG_PixmapFromSurface(hPane->div[0], 0, S);
+		AG_SurfaceFree(S);
+	}
+	
+	/*
+	 * AG_Label(3) displays either a static text label, or a dynamically
+	 * updated one. Polled (dynamic) labels use a special format documented
+	 * in AG_String(3).
+	 */
+	{
+		AG_AgarVersion av;
+		AG_Label *lbl;
+
+		AG_GetVersion(&av);
+
+		/* A static label */
+		lbl = AG_LabelNew(hPane->div[0], 0,
+		    "Agar v%d.%d.%d (\"%s\")",
+		    av.major, av.minor, av.patch,
+		    av.release ? av.release : "dev");
+
+		AG_SetStyle(lbl, "font-size", "80%");
+
+		/* A dynamically-updated label. */
+		lbl = AG_LabelNewPolled(hPane->div[0], AG_LABEL_HFILL,
+		    "Window is at %i,%i (%ux%u)\n",
+		    &AGWIDGET(win)->x,
+		    &AGWIDGET(win)->y,
+		    &AGWIDGET(win)->w,
+		    &AGWIDGET(win)->h);
+
+		AG_LabelSizeHint(lbl, 1,
+		    "This is a polled label\n"
+		    "Window is at 000,000 (000x000)");
+
+		AG_LabelJustify(lbl, AG_TEXT_CENTER);
+	}
+
+	/*
+	 * Pane provides two Box containers which can be resized using
+	 * a control placed in the middle.
+	 */
+	vPane = AG_PaneNewVert(hPane->div[0], AG_PANE_EXPAND);
 
 	/*
 	 * Tlist is a scrollable list view of items.
@@ -187,7 +182,7 @@ TestGUI(void *obj, AG_Window *win)
 	{
 		AG_Tlist *tl;
 
-		tl = AG_TlistNew(div1, AG_TLIST_EXPAND);
+		tl = AG_TlistNew(vPane->div[0], AG_TLIST_EXPAND);
 		AG_TlistAdd(tl, agIconLeftButton.s, "LeftButton");
 		AG_TlistAdd(tl, agIconMidButton.s, "MidButton");
 		AG_TlistAdd(tl, agIconRightButton.s, "RightButton");
@@ -218,7 +213,7 @@ TestGUI(void *obj, AG_Window *win)
 	 * Box is a general-purpose widget container. AG_BoxNewHoriz() creates
 	 * a container which packs its widgets horizontally.
 	 */
-	hBox = AG_BoxNewHoriz(div1, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
+	hBox = AG_BoxNewHoriz(vPane->div[0], AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 	{
 		/*
 		 * The Button widget is a simple push-button. It is typically
@@ -229,15 +224,18 @@ TestGUI(void *obj, AG_Window *win)
 			AG_ButtonNewS(hBox, 0, AG_Printf("%c", 0x41+i));
 	}
 
-	hBox = AG_BoxNewHoriz(div1, AG_BOX_HFILL);
+	hBox = AG_BoxNewHoriz(vPane->div[0], AG_BOX_HFILL);
 	AG_BoxSetHorizAlign(hBox, AG_BOX_CENTER);
 	AG_BoxSetVertAlign(hBox, AG_BOX_CENTER);
 	{
 		/* The Radio checkbox is a group of radio buttons. */
 		{
 			const char *radioItems[] = {
-				"Radio1",
-				"Radio2",
+				"Homer\n(Simpson)",
+				"Marge",
+				"Bart",
+				"Lisa",
+				"Maggie",
 				NULL
 			};
 			AG_RadioNew(hBox, 0, radioItems);
@@ -250,25 +248,23 @@ TestGUI(void *obj, AG_Window *win)
 			 * The Checkbox widget can bind to boolean values
 			 * and bitmasks.
 			 */
-			AG_CheckboxNew(vBox, 0, "Checkbox 1");
-			AG_CheckboxNew(vBox, 0, "Checkbox 2");
+			AG_CheckboxNew(vBox, 0, "Milhouse");
+			AG_CheckboxNew(vBox, 0, "Ralph Wiggum");
+			AG_CheckboxNew(vBox, 0, "Blinky\n(the fish)");
 		}
 	}
-
-	/* Separator simply renders horizontal or vertical line. */
-	AG_SeparatorNew(div1, AG_SEPARATOR_HORIZ);
 
 	/*
 	 * The Combo widget is a textbox widget with a expander button next
 	 * to it. The button triggers a popup window which displays a list
 	 * (using the AG_Tlist(3) widget).
 	 */
-	com = AG_ComboNew(div1, AG_COMBO_HFILL, "Combo: ");
+	com = AG_ComboNew(vPane->div[1], AG_COMBO_HFILL, "Combo: ");
 	AG_ComboSizeHint(com, "Item #00 ", 10);
 	AG_SetEvent(com, "combo-selected", ComboSelected, NULL);
 
 	/* UCombo is a variant of Combo which looks like a single button. */
-	ucom = AG_UComboNew(div1, AG_UCOMBO_HFILL);
+	ucom = AG_UComboNew(vPane->div[1], AG_UCOMBO_HFILL);
 	AG_UComboSizeHint(ucom, "Item #1234", 5);
 
 	/* Populate the Tlist displayed by the combo widgets we just created. */
@@ -305,15 +301,15 @@ TestGUI(void *obj, AG_Window *win)
 		static float myFloat = 1.0f;
 		static int myInt = 50;
 
-		num = AG_NumericalNewS(div1,
+		num = AG_NumericalNewS(vPane->div[1],
 		    AG_NUMERICAL_EXCL | AG_NUMERICAL_HFILL,
-		    "cm", "Real: ");
+		    "cm", "Numerical: ");
 		AG_BindFloat(num, "value", &myFloat);
 		AG_SetFloat(num, "inc", 1.0f);
 
-		num = AG_NumericalNewS(div1,
+		num = AG_NumericalNewS(vPane->div[1],
 		    AG_NUMERICAL_EXCL | AG_NUMERICAL_HFILL,
-		    NULL, "Int: ");
+		    NULL, "Integer: ");
 		AG_BindInt(num, "value", &myInt);
 		AG_SetInt(num, "min", -100);
 		AG_SetInt(num, "max", +100);
@@ -325,11 +321,14 @@ TestGUI(void *obj, AG_Window *win)
 	 * encoding.
 	 */
 	{
-		AG_Strlcpy(ti->textBuffer, "Foo bar baz bezo", sizeof(ti->textBuffer));
+		AG_Strlcpy(ti->textBuffer,
+		    "The Quick Brown Fox Jumps Over The Lazy Dog",
+		    sizeof(ti->textBuffer));
 
 		/* Create a textbox bound to a fixed-size buffer */
-		tbox = AG_TextboxNew(div1, AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
-		    "Fixed text buffer: ");
+		tbox = AG_TextboxNew(vPane->div[0],
+		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
+		    "Textbox: ");
 #ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tbox, ti->textBuffer, sizeof(ti->textBuffer));
 #else
@@ -337,10 +336,14 @@ TestGUI(void *obj, AG_Window *win)
 #endif
 
 #ifdef AG_UNICODE
-		/* Create a textbox bound to a built-in AG_Text element */
-		tbox = AG_TextboxNew(div1,
+		/*
+		 * Create a textbox connected to a multilingual, dynamically
+		 * sized text element.
+		 */
+		tbox = AG_TextboxNew(vPane->div[1],
 		    AG_TEXTBOX_EXCL | AG_TEXTBOX_MULTILINGUAL | AG_TEXTBOX_HFILL,
-		    "AG_Text element: ");
+		    "TextElement: ");
+
 		AG_TextboxSetString(tbox, "Hello hello hello");
 		AG_TextSetEntS(tbox->text, AG_LANG_EN, "Hello");
 		AG_TextSetEntS(tbox->text, AG_LANG_FR, "Bonjour");
@@ -350,7 +353,8 @@ TestGUI(void *obj, AG_Window *win)
 #endif
 	}
 
-	AG_SeparatorNewHoriz(div1);
+	/* A horizontal cosmetic separator */
+	AG_SeparatorNewHoriz(vPane->div[1]);
 
 	/*
 	 * Scrollbar provides three bindings, "value", "min" and "max",
@@ -363,24 +367,27 @@ TestGUI(void *obj, AG_Window *win)
 		AG_Slider *sl;
 		AG_ProgressBar *pb;
 
-		sb = AG_ScrollbarNew(div1, AG_SCROLLBAR_HORIZ,
-		    AG_SCROLLBAR_EXCL | AG_SCROLLBAR_HFILL);
+		AG_LabelNewS(vPane->div[1], 0, "Scrollbar:");
+		sb = AG_ScrollbarNewHoriz(vPane->div[1], AG_SCROLLBAR_EXCL |
+		                                         AG_SCROLLBAR_HFILL);
 		AG_BindInt(sb, "value", &myVal);
 		AG_BindInt(sb, "min", &myMin);
 		AG_BindInt(sb, "max", &myMax);
 		AG_BindInt(sb, "visible", &myVisible);
 		AG_SetInt(sb, "inc", 10);
 
-		sl = AG_SliderNew(div1, AG_SLIDER_HORIZ,
-		    AG_SLIDER_EXCL | AG_SLIDER_HFILL);
+		AG_LabelNewS(vPane->div[1], 0, "Slider:");
+		sl = AG_SliderNew(vPane->div[1], AG_SLIDER_HORIZ, AG_SLIDER_EXCL |
+		                                                  AG_SLIDER_HFILL);
 		AG_BindInt(sl, "value", &myVal);
 		AG_BindInt(sl, "min", &myMin);
 		AG_BindInt(sl, "max", &myMax);
 		AG_SetInt(sl, "inc", 10);
 
-		pb = AG_ProgressBarNew(div1, AG_PROGRESS_BAR_HORIZ,
-		    AG_PROGRESS_BAR_EXCL | AG_PROGRESS_BAR_SHOW_PCT |
-		    AG_PROGRESS_BAR_HFILL);
+		AG_LabelNewS(vPane->div[1], 0, "ProgressBar:");
+		pb = AG_ProgressBarNewHoriz(vPane->div[1], AG_PROGRESS_BAR_EXCL |
+		                                           AG_PROGRESS_BAR_SHOW_PCT |
+		                                           AG_PROGRESS_BAR_HFILL);
 		AG_BindInt(pb, "value", &myVal);
 		AG_BindInt(pb, "min", &myMin);
 		AG_BindInt(pb, "max", &myMax);
@@ -399,7 +406,7 @@ TestGUI(void *obj, AG_Window *win)
 		static int myInt[2];
 	
 		/* Create a test menu */
-		menu = AG_MenuNew(div2, AG_MENU_HFILL);
+		menu = AG_MenuNew(hPane->div[1], AG_MENU_HFILL);
 		m = AG_MenuNode(menu->root, "File", NULL);
 		{
 			AG_MenuAction(m, "Agar Preferences...", agIconGear.s,
@@ -432,7 +439,7 @@ TestGUI(void *obj, AG_Window *win)
 			AG_MenuIntBool(m, "Inverted Binding #2", agIconDown.s, &myInt[1], 1);
 		}
 
-		nb = AG_NotebookNew(div2, AG_NOTEBOOK_EXPAND);
+		nb = AG_NotebookNew(hPane->div[1], AG_NOTEBOOK_EXPAND);
 
 		nt = AG_NotebookAdd(nb, "Some table", AG_BOX_VERT);
 		{
@@ -478,7 +485,7 @@ TestGUI(void *obj, AG_Window *win)
 			vBox = AG_BoxNewVert(nt, 0);
 			AG_SetStyle(vBox, "font-size", "80%");
 			{
-				AG_CheckboxNewFlag(vBox, 0, "Select multiple with ctrl/shift",
+				AG_CheckboxNewFlag(vBox, 0, "Select multiple\n(with ctrl/shift)",
 				    &table->flags, AG_TABLE_MULTI);
 
 				AG_CheckboxNewFlag(vBox, 0, "Select multiple always",

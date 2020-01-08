@@ -355,7 +355,7 @@ TestGUI(void *obj, AG_Window *win)
 #endif /* HAVE_OPENGL */
 
 const AG_TestCase glviewTest = {
-	"glView",
+	"glview",
 	"Test the AG_GLView(3) widget (OpenGL required)",
 	"1.4.2",
 	AG_TEST_OPENGL,

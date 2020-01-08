@@ -29,8 +29,8 @@ TestGUI(void *obj, AG_Window *win)
 	return (0);
 }
 
-const AG_TestCase fsPathsTest = {
-	"fsPaths",
+const AG_TestCase fspathsTest = {
+	"fspaths",
 	N_("Display filesystem path defaults"),
 	"1.4.2",
 	0,

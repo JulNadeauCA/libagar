@@ -60,6 +60,7 @@ int   AG_SetVideoSurfaceSDL(void *_Nonnull);
 #endif
 
 #ifdef AG_WIDGETS
+void AG_About(struct ag_event *_Nullable);
 struct ag_window *_Nullable AG_StyleEditor(struct ag_window *_Nonnull);
 # ifdef AG_DEBUG
 struct ag_window *_Nullable AG_GuiDebugger(struct ag_window *_Nonnull);

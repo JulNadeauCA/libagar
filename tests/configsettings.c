@@ -125,8 +125,8 @@ TestGUI(void *obj, AG_Window *win)
 	return (0);
 }
 
-const AG_TestCase configSettingsTest = {
-	"configSettings",
+const AG_TestCase configsettingsTest = {
+	"configsettings",
 	N_("Test user-specified AG_Config(3) parameters"),
 	"1.4.2",
 	0,

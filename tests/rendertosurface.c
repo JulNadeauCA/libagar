@@ -50,8 +50,8 @@ TestGUI(void *obj, AG_Window *win)
 	return (0);
 }
 
-const AG_TestCase renderToSurfaceTest = {
-	"renderToSurface",
+const AG_TestCase rendertosurfaceTest = {
+	"rendertosurface",
 	N_("Test rendering Agar GUI widgets to software surfaces"),
 	"1.4.2",
 	0,

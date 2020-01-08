@@ -18,6 +18,7 @@
 #include "config/have_agar_au.h"
 #include "config/datadir.h"
 
+extern const AG_TestCase buttonsTest;
 extern const AG_TestCase checkboxTest;
 #ifdef AG_UNICODE
 extern const AG_TestCase charsetsTest;
@@ -25,38 +26,35 @@ extern const AG_TestCase charsetsTest;
 #if defined(AG_TIMERS) && defined(AG_HAVE_FLOAT)
 extern const AG_TestCase compositingTest;
 #endif
-extern const AG_TestCase configSettingsTest;
+extern const AG_TestCase configsettingsTest;
 extern const AG_TestCase consoleTest;
-extern const AG_TestCase customWidgetTest;
-extern const AG_TestCase fixedResTest;
+extern const AG_TestCase customwidgetTest;
+extern const AG_TestCase fixedresTest;
 extern const AG_TestCase focusingTest;
 extern const AG_TestCase fontsTest;
-extern const AG_TestCase fsPathsTest;
+extern const AG_TestCase fspathsTest;
 extern const AG_TestCase glviewTest;
-extern const AG_TestCase imageLoadingTest;
-extern const AG_TestCase keyEventsTest;
+extern const AG_TestCase imageloadingTest;
+extern const AG_TestCase keyeventsTest;
 extern const AG_TestCase loaderTest;
 extern const AG_TestCase mathTest;
 extern const AG_TestCase maximizedTest;
 extern const AG_TestCase minimalTest;
-extern const AG_TestCase modalWindowHandlerTest;
-#ifdef AG_NETWORK
-extern const AG_TestCase networkTest;
-#endif
 #ifdef AG_TIMERS
-extern const AG_TestCase objSystemTest;
+extern const AG_TestCase objsystemTest;
 #endif
 extern const AG_TestCase paletteTest;
 extern const AG_TestCase paneTest;
 extern const AG_TestCase plottingTest;
-extern const AG_TestCase renderToSurfaceTest;
+extern const AG_TestCase radioTest;
+extern const AG_TestCase rendertosurfaceTest;
 extern const AG_TestCase scrollbarTest;
 extern const AG_TestCase scrollviewTest;
 extern const AG_TestCase socketsTest;
 extern const AG_TestCase stringTest;
 extern const AG_TestCase tableTest;
 extern const AG_TestCase textboxTest;
-extern const AG_TestCase textDlgTest;
+extern const AG_TestCase textdlgTest;
 extern const AG_TestCase threadsTest;
 #ifdef AG_TIMERS
 extern const AG_TestCase timeoutsTest;
@@ -73,44 +71,42 @@ const AG_TestCase *testCases[] = {
 #ifdef AG_UNICODE
 	&charsetsTest,
 #endif
+	&buttonsTest,
 	&checkboxTest,
 #if defined(AG_TIMERS) && defined(AG_HAVE_FLOAT)
 	&compositingTest,
 #endif
-	&configSettingsTest,
+	&configsettingsTest,
 	&consoleTest,
-	&customWidgetTest,
-	&fixedResTest,
+	&customwidgetTest,
+	&fixedresTest,
 	&focusingTest,
 	&fontsTest,
-	&fsPathsTest,
+	&fspathsTest,
 #ifdef HAVE_OPENGL
 	&glviewTest,
 #endif
-	&imageLoadingTest,
-	&keyEventsTest,
+	&imageloadingTest,
+	&keyeventsTest,
 	&loaderTest,
 	&mathTest,
 	&maximizedTest,
 	&minimalTest,
-	&modalWindowHandlerTest,
-#ifdef AG_NETWORK
-	&networkTest,
-#endif
 #ifdef AG_TIMERS
-	&objSystemTest,
+	&objsystemTest,
 #endif
 	&paletteTest,
 	&paneTest,
 	&plottingTest,
-	&renderToSurfaceTest,
+	&radioTest,
+	&rendertosurfaceTest,
 	&scrollbarTest,
 	&scrollviewTest,
 	&socketsTest,
 	&stringTest,
 	&tableTest,
 	&textboxTest,
-	&textDlgTest,
+	&textdlgTest,
 	&threadsTest,
 #ifdef AG_TIMERS
 	&timeoutsTest,
@@ -137,9 +133,6 @@ const char *agarBuildOpts[] = {
 #endif
 #ifdef AG_NAMESPACES
 	"NAMESPACES ",
-#endif
-#ifdef AG_ENABLE_NETWORK
-	"NETWORK ",
 #endif
 #ifdef AG_SERIALIZATION
 	"SERIALIZATION ",
@@ -170,8 +163,10 @@ AG_Window *winMain;				/* Main window */
 AG_Statusbar *statusBar;
 AG_Label *status;
 AG_Console *console = NULL;
-AG_Button *btnTest, *btnBench;
-char consoleBuf[2048];
+AG_Button *btnTest;
+char consoleBuf[1024];
+
+static void RunBench(AG_Event *);
 
 static void
 SelectedTest(AG_Event *event)
@@ -184,11 +179,6 @@ SelectedTest(AG_Event *event)
 		AG_WidgetEnable(btnTest);
 	} else {
 		AG_WidgetDisable(btnTest);
-	}
-	if (tc->bench != NULL) {
-		AG_WidgetEnable(btnBench);
-	} else {
-		AG_WidgetDisable(btnBench);
 	}
 }
 
@@ -252,8 +242,9 @@ RunTest(AG_Event *event)
 	AG_TestCase *tc = AG_TlistSelectedItemPtr(tl);
 	AG_TestInstance *ti;
 
-	if (tc == NULL || (tc->test == NULL && tc->testGUI == NULL))
+	if (tc == NULL)
 		return;
+
 	if (tc->flags & AG_TEST_OPENGL) {
 		if (!(drvClass->flags & AG_DRIVER_OPENGL)) {
 			AG_TextMsg(AG_MSG_ERROR,
@@ -292,6 +283,9 @@ RunTest(AG_Event *event)
 			AG_LabelTextS(status, AG_GetError());
 			goto fail;
 		}
+	}
+	if (tc->bench != NULL) {
+		RunBench(event);
 	}
 	if (tc->testGUI != NULL) {
 		AG_Window *win;
@@ -615,7 +609,6 @@ TestViewSource(AG_Event *event)
 	}
 	tb = AG_TextboxNew(win, AG_TEXTBOX_MULTILINE | AG_TEXTBOX_EXPAND |
 	                        AG_TEXTBOX_READONLY, NULL);
-	AG_SetStyle(tb, "font-family", "Courier,Terminal,Clean");
 	fseek(f, 0, SEEK_END);
 	size = (AG_Size)ftell(f);
 	fseek(f, 0, SEEK_SET);
@@ -672,19 +665,18 @@ main(int argc, char *argv[])
 	AG_Window *win;
 	AG_Tlist *tl;
 	const AG_TestCase **pTest;
+	AG_Menu *menu;
+	AG_MenuItem *mi;
 	AG_Pane *pane;
 	AG_Box *hBox;
 	int c, i, optInd;
 	Uint initFlags = AG_VERBOSE;
-	int noConsoleRedir=0, doBenchmark=0;
+	int noConsoleRedir=0;
 
 	TAILQ_INIT(&tests);
 
-	while ((c = AG_Getopt(argc, argv, "bCWqd:s:t:v?h", &optArg, &optInd)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "CWqd:s:t:v?h", &optArg, &optInd)) != -1) {
 		switch (c) {
-		case 'b':
-			doBenchmark = 1;
-			break;
 		case 'C':
 			noConsoleRedir = 1;
 			break;
@@ -782,6 +774,26 @@ main(int argc, char *argv[])
 		return (1);
 	}
 	AG_WindowSetCaptionS(win, "agartest");
+	
+	menu = (agDriverSw) ? AG_MenuNewGlobal(0) :
+                              AG_MenuNew(win, AG_MENU_HFILL);
+
+	mi = AG_MenuNode(menu->root, ("File"), NULL);
+	{
+		AG_MenuActionKb(mi, _("Quit"), agIconClose.s,
+		    AG_KEY_W, AG_KEYMOD_CTRL,
+		    AG_WindowCloseGenEv, "%p", win);
+	}
+	mi = AG_MenuNode(menu->root, ("Tools"), NULL);
+	{
+		AG_MenuAction(mi, _("Debugger"), NULL, RunStyleEditor, NULL);
+		AG_MenuAction(mi, _("Style Editor"), NULL, RunDebugger, NULL);
+
+	}
+	mi = AG_MenuNode(menu->root, ("Help"), NULL);
+	{
+		AG_MenuAction(mi, _("About Agar GUI"), NULL, AG_About, NULL);
+	}
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 
@@ -806,29 +818,11 @@ main(int argc, char *argv[])
 
 	hBox = AG_BoxNewHoriz(pane->div[0], AG_BOX_HFILL | AG_BOX_HOMOGENOUS |
 	                                    AG_BOX_NO_SPACING);
-	AG_SetStyle(hBox, "font-family", "dejavu-sans");
+//	AG_SetStyle(hBox, "font-family", "dejavu-sans");
 	{
 		btnTest = AG_ButtonNew(hBox, AG_BUTTON_EXCL,
-		    _(AGSI_BLU "\xe2\x96\xb6 " AGSI_RST "Run"));                        /* U+25B6 */
+		    _(AGSI_BLU "\xe2\x96\xb6 " AGSI_RST "Run")); /* U+25B6 */
 		AG_WidgetDisable(btnTest);
-
-		btnBench = AG_ButtonNew(hBox, AG_BUTTON_EXCL,
-		    _(AGSI_BLU "\xe2\x9c\x93 " AGSI_RST           /* U+2713 */
-		      "Bench"));
-		AG_WidgetDisable(btnBench);
-	}
-
-	hBox = AG_BoxNewHoriz(pane->div[0], AG_BOX_HFILL | AG_BOX_HOMOGENOUS |
-	                                    AG_BOX_NO_SPACING);
-	AG_SetStyle(hBox, "font-family", "dejavu-sans");
-	AG_SetStyle(hBox, "font-size", "80%");
-	{
-#if defined(AG_DEBUG) && defined(AG_TIMERS)
-		AG_ButtonNewFn(hBox, 0, _("\xe2\x80\xa0 Debugger"), /* U+2020 */
-		    RunDebugger, NULL);
-#endif
-		AG_ButtonNewFn(hBox, 0, _("\xe2\x9c\x92 Style Editor"), /* U+2712 */
-		    RunStyleEditor, NULL);
 	}
 
 	console = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
@@ -925,7 +919,6 @@ main(int argc, char *argv[])
 	AG_TlistSetPopupFn(tl, TestPopupMenu, NULL);
 
 	AG_SetEvent(btnTest, "button-pushed", RunTest, "%p", tl);
-	AG_SetEvent(btnBench, "button-pushed", RunBench, "%p", tl);
 
 	statusBar = AG_StatusbarNew(win, AG_STATUSBAR_HFILL);
 	status = AG_StatusbarAddLabel(statusBar, _("Please select a test"));
@@ -959,11 +952,7 @@ main(int argc, char *argv[])
 		}
 		AG_TlistSelectPtr(tl, (void *)(*pTest));
 		AG_EventArgs(&ev, "%p,%p", tl, win);
-		if (doBenchmark) {
-			RunBench(&ev);
-		} else {
-			RunTest(&ev);
-		}
+		RunTest(&ev);
 	}
 	if (AG_ConfigSave() == -1)
 		AG_Verbose("ConfigSave: %s\n", AG_GetError());

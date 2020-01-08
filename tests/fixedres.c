@@ -103,8 +103,8 @@ TestGUI(void *obj, AG_Window *win)
 	return (0);
 }
 
-const AG_TestCase fixedResTest = {
-	"fixedRes",
+const AG_TestCase fixedresTest = {
+	"fixedres",
 	N_("Test the AG_Fixed(3) container widget"),
 	"1.6.0",
 	0,

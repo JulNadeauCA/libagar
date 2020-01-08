@@ -30,8 +30,8 @@ TestGUI(void *obj, AG_Window *win)
 	return (0);
 }
 
-const AG_TestCase customWidgetTest = {
-	"customWidget",
+const AG_TestCase customwidgetTest = {
+	"customwidget",
 	N_("Test registering a custom Agar widget"),
 	"1.5.0",
 	0,

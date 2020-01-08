@@ -31,8 +31,8 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase bezierTest = {
-	"bezierWidget",
-	N_("Test Bezier curve drawing"),
+	"bezier",
+	N_("Test B\xc3\xa9zier curve drawing"),
 	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),

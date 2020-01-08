@@ -29,8 +29,8 @@ TestGUI(void *obj, AG_Window *win)
 	return (0);
 }
 
-const AG_TestCase textDlgTest = {
-	"textDlg",
+const AG_TestCase textdlgTest = {
+	"textdlg",
 	N_("Test canned dialogs in AG_Text(3)"),
 	"1.4.2",
 	0,

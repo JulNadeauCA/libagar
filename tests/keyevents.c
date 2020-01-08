@@ -62,8 +62,8 @@ TestGUI(void *obj, AG_Window *win)
 	return (0);
 }
 
-const AG_TestCase keyEventsTest = {
-	"keyEvents",
+const AG_TestCase keyeventsTest = {
+	"keyevents",
 	N_("Test low-level keyboard input"),
 	"1.4.2",
 	0,
