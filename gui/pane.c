@@ -72,10 +72,10 @@ AG_PaneNewVert(void *parent, Uint flags)
 }
 
 static __inline__ int
-OverDivControl(AG_Pane *_Nonnull pa, int pos)
+OverDiv(AG_Pane *_Nonnull pa, int pos)
 {
 	return (pos >= pa->dx &&
-	        pos < (pa->dx+MAX(pa->wDiv,4)));
+	        pos < (pa->dx + pa->wDiv));
 }
 
 static void
@@ -83,15 +83,15 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Pane *pa = AG_PANE_SELF();
 	AG_Window *wParent = AG_ParentWindow(pa);
-	int button = AG_INT(1);
+	const int button = AG_INT(1);
 
 	if (!AG_WindowIsFocused(wParent))
 		AG_WindowFocus(wParent);
 	
 	if (button == AG_MOUSE_LEFT &&
 	    !(pa->flags & AG_PANE_UNMOVABLE)) {
-		pa->dmoving = OverDivControl(pa,
-		    pa->type == AG_PANE_HORIZ ? AG_INT(2) : AG_INT(3));
+		pa->dmoving = OverDiv(pa, (pa->type == AG_PANE_HORIZ) ? AG_INT(2) :
+		                                                        AG_INT(3));
 		if (pa->dmoving && WIDGET(pa)->window != NULL) {
 			/* Set up for receiving motion events exclusively. */
 			WIDGET(pa)->window->widExclMotion = WIDGET(pa);
@@ -150,10 +150,10 @@ static void
 MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Pane *pa = AG_PANE_SELF();
-	int x = AG_INT(1);
-	int y = AG_INT(2);
-	int dx = AG_INT(3);
-	int dy = AG_INT(4);
+	const int x = AG_INT(1);
+	const int y = AG_INT(2);
+	const int dx = AG_INT(3);
+	const int dy = AG_INT(4);
 
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
@@ -165,6 +165,21 @@ MouseMotion(AG_Event *_Nonnull event)
 			pa->rx += dx;
 			if (pa->rx < 2) { pa->rx = 2; }
 			AG_PaneMoveDivider(pa, pa->rx);
+		} else if (OverDiv(pa, x)) {
+			/*
+			 * Synthesize the behavior of USE_MOUSEOVER since we want
+			 * to set MOUSEOVER state only when the cursor is over
+			 * the divider bar (and not the rest of the container).
+			 */
+			if ((WIDGET(pa)->flags & AG_WIDGET_MOUSEOVER) == 0) {
+				WIDGET(pa)->flags |= AG_WIDGET_MOUSEOVER;
+				AG_Redraw(pa);
+			}
+		} else {
+			if (WIDGET(pa)->flags & AG_WIDGET_MOUSEOVER) {
+				WIDGET(pa)->flags &= ~(AG_WIDGET_MOUSEOVER);
+				AG_Redraw(pa);
+			}
 		}
 		break;
 	case AG_PANE_VERT:
@@ -176,6 +191,21 @@ MouseMotion(AG_Event *_Nonnull event)
 			pa->rx += dy;
 			AG_PaneMoveDivider(pa, pa->rx);
 			if (pa->rx < 2) { pa->rx = 2; }
+		} else if (OverDiv(pa, y)) {
+			/*
+			 * Synthesize the behavior of USE_MOUSEOVER since we want
+			 * to set MOUSEOVER state only when the cursor is over
+			 * the divider bar (and not the rest of the container).
+			 */
+			if ((WIDGET(pa)->flags & AG_WIDGET_MOUSEOVER) == 0) {
+				WIDGET(pa)->flags |= AG_WIDGET_MOUSEOVER;
+				AG_Redraw(pa);
+			}
+		} else {
+			if (WIDGET(pa)->flags & AG_WIDGET_MOUSEOVER) {
+				WIDGET(pa)->flags &= ~(AG_WIDGET_MOUSEOVER);
+				AG_Redraw(pa);
+			}
 		}
 		break;
 	}
@@ -202,7 +232,7 @@ Init(void *_Nonnull obj)
 	AG_Pane *pa = obj;
 	int i;
 
-	WIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
+	WIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP |
 			     AG_WIDGET_UNFOCUSED_MOTION;
 
 	pa->type = AG_PANE_VERT;
@@ -308,8 +338,8 @@ DrawHorizDivider(AG_Pane *_Nonnull pa, int x, int y)
 {
 	const AG_Color *cLine = &WCOLOR(pa, LINE_COLOR);
 	AG_Rect r;
-	int wDiv = pa->wDiv;
-	int xMid = x + (wDiv >> 1);
+	const int wDiv = pa->wDiv;
+	int xMid = x + (wDiv >> 1) - 1;
 
 	r.x = x+1;
 	r.y = 0;
@@ -318,6 +348,8 @@ DrawHorizDivider(AG_Pane *_Nonnull pa, int x, int y)
 
 	if (pa->dmoving) {
 		AG_DrawBoxSunk(pa, &r, &WCOLOR(pa, FG_COLOR));
+		xMid++;
+		y++;
 	} else {
 		AG_DrawBoxRaised(pa, &r, &WCOLOR(pa, FG_COLOR));
 	}
@@ -332,7 +364,7 @@ DrawVertDivider(AG_Pane *_Nonnull pa, int x, int y)
 {
 	const AG_Color *cLine = &WCOLOR(pa, LINE_COLOR);
 	AG_Rect r;
-	int wDiv = pa->wDiv;
+	const int wDiv = pa->wDiv;
 	int yMid = y + (wDiv >> 1);
 
 	r.x = 0;
@@ -342,11 +374,13 @@ DrawVertDivider(AG_Pane *_Nonnull pa, int x, int y)
 	
 	if (pa->dmoving) {
 		AG_DrawBoxSunk(pa, &r, &WCOLOR(pa, FG_COLOR));
+		x++;
+		yMid++;
 	} else {
 		AG_DrawBoxRaised(pa, &r, &WCOLOR(pa, FG_COLOR));
 	}
 
-	AG_PutPixel(pa, x, yMid,   cLine);
+	AG_PutPixel(pa, x,   yMid, cLine);
 	AG_PutPixel(pa, x-5, yMid, cLine);
 	AG_PutPixel(pa, x+5, yMid, cLine);
 }
