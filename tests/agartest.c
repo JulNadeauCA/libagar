@@ -786,9 +786,10 @@ main(int argc, char *argv[])
 	}
 	mi = AG_MenuNode(menu->root, ("Tools"), NULL);
 	{
-		AG_MenuAction(mi, _("Debugger"), NULL, RunStyleEditor, NULL);
-		AG_MenuAction(mi, _("Style Editor"), NULL, RunDebugger, NULL);
-
+		AG_MenuAction(mi, _("Style Editor"), NULL, RunStyleEditor, NULL);
+#if defined(AG_DEBUG) && defined(AG_TIMERS)
+		AG_MenuAction(mi, _("Debugger"), NULL, RunDebugger, NULL);
+#endif
 	}
 	mi = AG_MenuNode(menu->root, ("Help"), NULL);
 	{
