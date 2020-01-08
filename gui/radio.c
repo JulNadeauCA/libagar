@@ -89,7 +89,7 @@ AG_RadioItemsFromArray(AG_Radio *rad, const char **itemText)
 		ri->surface = -1;
 		ri->hotkey = 0;
 		AG_TextSize(s, &w, NULL);
-		if (w > rad->max_w) { rad->max_w = w; }
+		if (w > rad->wMax) { rad->wMax = w; }
 	}
 	AG_ObjectUnlock(rad);
 	AG_Redraw(rad);
@@ -110,7 +110,7 @@ AG_RadioAddItemS(AG_Radio *rad, const char *s)
 	Strlcpy(ri->text, s, sizeof(ri->text));
 
 	AG_TextSize(ri->text, &w, NULL);
-	if (w > rad->max_w) { rad->max_w = w; }
+	if (w > rad->wMax) { rad->wMax = w; }
 	rv = rad->nItems++;
 
 	AG_ObjectUnlock(rad);
@@ -137,7 +137,7 @@ AG_RadioAddItem(AG_Radio *rad, const char *fmt, ...)
 	va_end(ap);
 
 	AG_TextSize(ri->text, &w, NULL);
-	if (w > rad->max_w) { rad->max_w = w; }
+	if (w > rad->wMax) { rad->wMax = w; }
 	rv = rad->nItems++;
 
 	AG_ObjectUnlock(rad);
@@ -160,7 +160,7 @@ AG_RadioAddItemHKS(AG_Radio *rad, AG_KeySym hotkey, const char *s)
 	Strlcpy(ri->text, s, sizeof(ri->text));
 
 	AG_TextSize(ri->text, &w, NULL);
-	if (w > rad->max_w) { rad->max_w = w; }
+	if (w > rad->wMax) { rad->wMax = w; }
 	rv = rad->nItems++;
 
 	AG_ObjectUnlock(rad);
@@ -186,7 +186,7 @@ AG_RadioAddItemHK(AG_Radio *rad, AG_KeySym hotkey, const char *fmt, ...)
 	va_end(ap);
 
 	AG_TextSize(ri->text, &w, NULL);
-	if (w > rad->max_w) { rad->max_w = w; }
+	if (w > rad->wMax) { rad->wMax = w; }
 	rv = rad->nItems++;
 
 	AG_ObjectUnlock(rad);
@@ -208,7 +208,7 @@ AG_RadioClearItems(AG_Radio *rad)
 	Free(rad->items);
 	rad->items = Malloc(sizeof(AG_RadioItem));
 	rad->nItems = 0;
-	rad->max_w = 0;
+	rad->wMax = 0;
 	AG_ObjectUnlock(rad);
 	AG_Redraw(rad);
 }
@@ -230,26 +230,33 @@ Draw(void *_Nonnull obj)
 	const AG_Color *cLine = &WCOLOR(rad, LINE_COLOR);
 	const AG_Color *cSel = &WCOLOR(rad, SELECTION_COLOR);
 	AG_Rect r;
-	int xPadding = rad->xPadding;
-	int radius = rad->radius;
-	int x = xPadding + (radius << 1) + rad->xSpacing;
-	int y = rad->yPadding;
-	int itemHeight = rad->itemHeight, itemHeight_2 = (itemHeight >> 1);
-	int ySpacing_2 = (rad->ySpacing >> 1);
-	int value, i;
-
-	if (cBg->a > 0) {
-		r.x = 0;
-		r.y = 0;
-		r.w = WIDTH(rad);
-		r.h = HEIGHT(rad);
-		AG_DrawBoxSunk(rad, &r, cBg);
-	}
+	const int xPadding = 4;
+	const int itemHeight = rad->itemHeight, itemHeight_2 = (itemHeight >> 1);
+	const int radius = itemHeight_2 - 1;
+	const int x = (itemHeight_2 << 1) + xPadding;
+	int value, i, y;
+	
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(rad);
+	r.h = HEIGHT(rad);
+	
+	if (cBg->a > 0)
+		AG_DrawRect(rad, &r, cBg);
+	if (AG_WidgetIsFocused(rad))
+		AG_DrawRectOutline(rad, &r, cLine);
 	
 	value = AG_GetInt(rad, "value");
-	AG_PushClipRect(rad, &rad->r);		/* TODO pre-test in sizealloc */
 
-	for (i = 0; i < rad->nItems; i++) {
+	if (WIDTH(rad) <= rad->wReq) {
+		r.x = 1;
+		r.y = 1;
+		r.w = WIDTH(rad)-2;
+		r.h = HEIGHT(rad)-2;
+		AG_PushClipRect(rad, &r);
+	}
+
+	for (i=0, y=0; i < rad->nItems; i++) {
 		AG_RadioItem *ri = &rad->items[i];
 		int xc, yc;
 	
@@ -257,14 +264,12 @@ Draw(void *_Nonnull obj)
 			ri->surface = AG_WidgetMapSurface(rad,
 			    AG_TextRender(ri->text));
 		}
-		if (i == rad->oversel) {
+		if (i == rad->hoverItem) {
 			r.x = xPadding;
 			r.y = y;
-			r.w = WIDTH(rad) - (xPadding << 1);
+			r.w = WIDTH(rad) - xPadding*2;
 			r.h = itemHeight;
-			AG_DrawRectBlended(rad, &r,
-			    &WCOLOR_HOVER(rad, FG_COLOR),
-			    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+			AG_DrawRect(rad, &r, &WCOLOR_HOVER(rad,BG_COLOR));
 		}
 
 		xc = xPadding + radius;
@@ -276,15 +281,18 @@ Draw(void *_Nonnull obj)
 		if (i == value) {
 			AG_DrawCircleFilled(rad, xc,yc, (radius >> 1), cSel);
 		}
-		if (i == rad->oversel) {
+		if (i == rad->hoverItem) {
 			AG_DrawCircle(rad, xc,yc, radius-2,
 			    &WCOLOR_HOVER(rad, LINE_COLOR));
 		}
-		AG_WidgetBlitSurface(rad, ri->surface, x, y+ySpacing_2);
+		AG_WidgetBlitSurface(rad, ri->surface, x,
+		    y - ((WSURFACE(rad,ri->surface)->h >> 1) - itemHeight_2));
 
 		y += itemHeight;
 	}
-	AG_PopClipRect(rad);
+
+	if (WIDTH(rad) <= rad->wReq)
+		AG_PopClipRect(rad);
 }
 
 static void
@@ -303,37 +311,15 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	if (rad->nItems == 0) {
 		r->w = 0;
 		r->h = 0;
-	} else {
-		r->w = (rad->xPadding << 1) + (rad->radius << 1) +
-		       (rad->xSpacing << 1);
-		if (rad->wPre != -1) {
-			r->w += rad->wPre;
-		} else {
-			r->w += rad->max_w;
-		}
-
-		r->h = (rad->yPadding << 1);
-		if (rad->hPre != -1) {
-			r->h += (rad->hPre * rad->itemHeight);
-		} else {
-			r->h += (rad->nItems * rad->itemHeight);
-		}
+		return;
 	}
-}
 
-static int
-SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
-{
-	AG_Radio *rad = obj;
-	
-	if (a->w < rad->radius) {
-		return (-1);
-	}
-	rad->r.x = rad->xPadding;
-	rad->r.y = rad->yPadding;
-	rad->r.w = a->w - rad->xPadding;
-	rad->r.h = a->h - rad->yPadding;
-	return (0);
+	r->w = rad->itemHeight + 12 + ((rad->wPre != -1) ? rad->wPre :
+	                                                   rad->wMax);
+	r->h = (rad->hPre != -1) ? (rad->hPre * rad->itemHeight) :
+	                           (rad->nItems * rad->itemHeight);
+	rad->wReq = r->w;
+	rad->hReq = r->h;
 }
 
 static void
@@ -341,18 +327,16 @@ MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Radio *rad = AG_RADIO_SELF();
 	const int x = AG_INT(1);
-	int y = AG_INT(2);
+	const int y = AG_INT(2);
 	int sel;
-
-	y -= rad->yPadding;
 
 	if (x < 0 || x > WIDTH(rad) ||
 	    y < 0 || y > HEIGHT(rad)) {
-		rad->oversel = -1;
+		rad->hoverItem = -1;
 		return;
 	}
-	if ((sel = (y / rad->itemHeight)) != rad->oversel) {
-		rad->oversel = sel;
+	if ((sel = (y / rad->itemHeight)) != rad->hoverItem) {
+		rad->hoverItem = sel;
 		AG_Redraw(rad);
 	}
 }
@@ -372,7 +356,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	value = AG_GetVariable(rad, "value", (void *)&sel);
 	switch (button) {
 	case AG_MOUSE_LEFT:
-		selNew = ((y - rad->yPadding) / rad->itemHeight);
+		selNew = y / rad->itemHeight;
 		if (selNew >= rad->nItems) {
 			selNew = rad->nItems - 1;
 		} else if (selNew < 0) {
@@ -428,15 +412,13 @@ KeyDown(AG_Event *_Nonnull event)
 }
 
 static void
-OnFontChange(AG_Event *_Nonnull event)
+StyleChanged(AG_Event *_Nonnull event)
 {
 	AG_Radio *rad = AG_RADIO_SELF();
-	const int fontHeight = WFONT(rad)->height;
 	int i, w;
 
-	rad->itemHeight = fontHeight + (rad->ySpacing << 1);
-	rad->radius = MAX(0, (fontHeight >> 1)-1);
-	rad->max_w = 0;
+	rad->itemHeight = WFONT(rad)->lineskip;
+	rad->wMax = 0;
 
 	for (i = 0; i < rad->nItems; i++) {
 		AG_RadioItem *ri = &rad->items[i];
@@ -446,8 +428,8 @@ OnFontChange(AG_Event *_Nonnull event)
 			ri->surface = -1;
 		}
 		AG_TextSize(ri->text, &w, NULL);
-		if (w > rad->max_w)
-			rad->max_w = w;
+		if (w > rad->wMax)
+			rad->wMax = w;
 	}
 }
 
@@ -462,24 +444,16 @@ Init(void *_Nonnull obj)
 
 	rad->flags = 0;
 	rad->value = -1;
-	rad->max_w = 0;
-	rad->oversel = -1;
-	rad->xPadding = 4;
-	rad->yPadding = 4;
-	rad->xSpacing = 4;
-	rad->ySpacing = 1;
-	rad->itemHeight = agTextFontHeight + (rad->ySpacing << 1);
-	rad->radius = MAX(0, (agTextFontHeight >> 1)-1);
 	rad->items = NULL;
 	rad->nItems = 0;
-	rad->r.x = 0;
-	rad->r.y = 0;
-	rad->r.w = 0;
-	rad->r.h = 0;
+	rad->hoverItem = -1;
+	rad->wMax = 0;
+	rad->itemHeight = agTextFontLineSkip;
 	rad->wPre = -1;
 	rad->hPre = -1;
 
-	AG_AddEvent(rad, "font-changed", OnFontChange, NULL);
+	AG_AddEvent(rad, "font-changed", StyleChanged, NULL);
+	AG_AddEvent(rad, "palette-changed", StyleChanged, NULL);
 	AG_SetEvent(rad, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(rad, "key-down", KeyDown, NULL);
 	AG_SetEvent(rad, "mouse-motion", MouseMotion, NULL);
@@ -523,7 +497,7 @@ AG_WidgetClass agRadioClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	NULL,			/* sizeAlloc */
 };
 
 #endif /* AG_WIDGETS */

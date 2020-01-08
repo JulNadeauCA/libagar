@@ -22,21 +22,14 @@ typedef struct ag_radio {
 	Uint flags;
 #define AG_RADIO_HFILL	0x01
 #define AG_RADIO_VFILL	0x02
-#define AG_RADIO_EXPAND (AG_RADIO_HFILL|AG_RADIO_VFILL)
-
+#define AG_RADIO_EXPAND (AG_RADIO_HFILL | AG_RADIO_VFILL)
 	int value;			/* Default "value" binding */
-
 	AG_RadioItem *_Nullable items;	/* Array of items */
 	int                    nItems;
-	int                  selitem;	/* Selected item index */
-
-	int max_w;			/* Width of widest label */
-	int oversel;			/* Overlapping selection */
-	int xPadding, yPadding;
-	int xSpacing, ySpacing;
-	int radius;			/* Control radius in pixels */
+	int                hoverItem;	/* Mouse hover item index */
+	int wMax;			/* Width of widest label */
 	int itemHeight;
-	AG_Rect r;			/* Display area */
+	int wReq, hReq;			/* Size requisition */
 	int wPre, hPre;			/* Size hint */
 } AG_Radio;
 
