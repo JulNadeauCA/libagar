@@ -951,15 +951,10 @@ ag_draw_rect_outline(void *obj, const AG_Rect *r, const AG_Color *_Nonnull c)
 		drvOps->drawLineBlended(drv, x,  y, x,  y2, c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
 		drvOps->drawLineBlended(drv, x2, y, x,  y2, c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
 	} else {
-		drvOps->drawLineH(drv, x,  x2, y,  c);
-		if (drvOps->flags & AG_DRIVER_OPENGL) {		/* XXX */
-			drvOps->drawLineH(drv, x-1,x2, y2, c);
-			drvOps->drawLineV(drv, x,  y,  y2, c);
-		} else {
-			drvOps->drawLineH(drv, x,  x2+1, y2,   c);
-			drvOps->drawLineV(drv, x,  y,    y2+1, c);
-		}
-		drvOps->drawLineV(drv, x2, y,  y2, c);
+		drvOps->drawLineH(drv, x+1, x2-1, y,  c);
+		drvOps->drawLineH(drv, x+1, x2-1, y2, c);
+		drvOps->drawLineV(drv, x,   y+1,  y2, c);
+		drvOps->drawLineV(drv, x2,  y+1,  y2, c);
 	}
 }
 
