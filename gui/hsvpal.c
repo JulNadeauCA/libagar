@@ -749,7 +749,7 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 	int x, y, i;
 
 	AG_ColorBlack(&c);
-	AG_FillRect(S, NULL, &c);
+	AG_FillRect(S, NULL, &WCOLOR(pal,BG_COLOR));
 	/* XXX overdraw */
 
 	hue = AG_GetFloat(pal, "hue");
@@ -848,7 +848,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	int padding = 5;
 	AG_HSVPal *pal = obj;
 
-	if (a->w < 20 || a->h < 20) {
+	if (a->w < 32 || a->h < 32) {
 		return (-1);
 	} else if (a->w < 50 || a->h < 50) {
 		padding = 0;
@@ -1048,6 +1048,16 @@ Draw(void *_Nonnull obj)
 			AG_PopClipRect(pal);
 
 		AG_SurfaceFree(S);
+	}
+
+	if (AG_WidgetIsFocused(pal)) {
+		AG_Rect r;
+
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(pal);
+		r.h = HEIGHT(pal);
+		AG_DrawRectOutline(pal, &r, &WCOLOR_FOCUSED(pal,LINE_COLOR));
 	}
 }
 
