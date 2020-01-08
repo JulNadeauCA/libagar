@@ -112,7 +112,7 @@ ag_widget_area(const void *obj, int x, int y)
 {
 	const AG_Widget *wid = AGWIDGET(obj);
 
-	return (x > wid->rView.x1 && y > wid->rView.y1 &&
+	return (x >= wid->rView.x1 && y >= wid->rView.y1 &&
 	        x < wid->rView.x2 && y < wid->rView.y2);
 }
 
