@@ -46,40 +46,40 @@
 /* Style Properties */
 const char *agStyleAttributes[] = {
 	/* --- Color --- */
-	"color",
-	"background-color",
-	"text-color",
-	"line-color",
-	"high-color",
-	"low-color",
-	"selection-color",
+	"color",            /* Foreground primary */
+	"background-color", /* Background primary */
+	"text-color",       /* Text and vector icons */
+	"line-color",       /* Lines and filled shapes */
+	"high-color",       /* Left and top borders */
+	"low-color",        /* Right and bottom borders */
+	"selection-color",  /* Selection primary */
 	"unused-color",
 
 	/* --- Text --- */
-	"font-family",    /* Font face or filename */
-	"font-size",      /* Font size (in pts, px or %) */
-	"font-weight",    /* Boldness (normal semibold bold !parent) */
-	"font-style",     /* Style (normal italic upright-italic !parent) */
-	"font-stretch",   /* Width variant (normal condensed semi-condensed !parent) */
+	"font-family",      /* Font face or filename */
+	"font-size",        /* Font size (in pts, px or %) */
+	"font-weight",      /* Boldness (normal semibold bold !parent) */
+	"font-style",       /* Style (normal italic upright-italic !parent) */
+	"font-stretch",     /* Width variant (normal condensed semi-condensed !parent) */
 
 	/* --- Box Model --- */
-	"margin",         /* Margin (between border & outer bounding box) */
-	"margin-top",       /* above border */
-	"margin-bottom",    /* below border */
-	"margin-left",      /* at left of border */
-	"margin-right",     /* at right of border */
+	"margin",           /* Margin (between border & outer bounding box) */
+	"margin-top",         /* above border */
+	"margin-bottom",      /* below border */
+	"margin-left",        /* at left of border */
+	"margin-right",       /* at right of border */
 
-	"border",         /* Border (between padding & margin, in px) */
-	"border-top",       /* above padding */
-	"border-bottom",    /* below padding */
-	"border-left",      /* at left of padding */
-	"border-right",     /* at right of padding */
+	"border",           /* Border (between padding & margin, in px) */
+	"border-top",         /* above padding */
+	"border-bottom",      /* below padding */
+	"border-left",        /* at left of padding */
+	"border-right",       /* at right of padding */
 
-	"padding",        /* Padding (between content & border, in px) */
-	"padding-top",      /* above content */
-	"padding-bottom",   /* below content */
-	"padding-left",     /* at left of content */
-	"padding-right",    /* at right of content */
+	"padding",          /* Padding (between content & border, in px) */
+	"padding-top",        /* above content */
+	"padding-bottom",     /* below content */
+	"padding-left",       /* at left of content */
+	"padding-right",      /* at right of content */
 
 	NULL
 };
@@ -120,7 +120,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{135,135,135,255},          /*             color */
 	{  0,  0,  0,  0},          /*  background-color */
 	{240,240,240,255},          /*        text-color */
-	{ 50, 50, 50,255},          /*        line-color */
+	{ 50, 50, 60,255},          /*        line-color */
 	{110,110,110,255},          /*        high-color */
 	{ 80, 80, 80,255},          /*         low-color */
 	{  0,  0,120,255},          /*   selection-color */
@@ -162,7 +162,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{0x8787,0x8787,0x8787,0xffff},    /*             color */
 	{0x0000,0x0000,0x0000,0x0000},    /*  background-color */
 	{0xf0f0,0xf0f0,0xf0f0,0xffff},    /*        text-color */
-	{0x3232,0x3232,0x3232,0xffff},    /*        line-color */
+	{0x3232,0x3232,0x3c3c,0xffff},    /*        line-color */
 	{0xaaaa,0xaaaa,0xaaaa,0xffff},    /*        high-color */
 	{0x5555,0x5555,0x5555,0xffff},    /*         low-color */
 	{0x0000,0x0000,0x7878,0xffff},    /*   selection-color */
@@ -189,9 +189,6 @@ AG_Widget *_Nullable agTargetWidget = NULL;
 #undef AG_INLINE_HEADER
 #include "inline_widget.h"
 
-static void FocusWidget(AG_Widget *_Nonnull);
-static void UnfocusWidget(AG_Widget *_Nonnull);
-
 #ifdef DEBUG_FOCUS
 # define Debug_Focus AG_Debug
 #else
@@ -203,6 +200,15 @@ static void UnfocusWidget(AG_Widget *_Nonnull);
 #  define Debug_Focus AG_Debug
 # endif
 #endif /* DEBUG_FOCUS */
+
+static void FocusWidget(AG_Widget *_Nonnull);
+static void UnfocusWidget(AG_Widget *_Nonnull);
+static void Apply_Font_Size(float *_Nonnull, float, const char *_Nonnull);
+static void Apply_Font_Weight(Uint *_Nonnull, Uint, const char *_Nonnull);
+static void Apply_Font_Style(Uint *_Nonnull, Uint, const char *_Nonnull);
+static void Apply_Font_Stretch(Uint *_Nonnull, Uint, const char *_Nonnull);
+static void Apply_Padding(AG_Widget *_Nonnull, const char *_Nonnull);
+static void Apply_Margin(AG_Widget *_Nonnull, const char *_Nonnull);
 
 /* Set the parent window/driver pointers on a widget and its children. */
 static void
@@ -473,8 +479,8 @@ Init(void *_Nonnull obj)
 	                           sizeof(AG_DriverClass *) +     /* drvOps */
 	                           sizeof(AG_StyleSheet *) +      /* css */
 	                           sizeof(enum ag_widget_state) + /* state */
-	                           sizeof(Uint) +                 /* margin */
-	                           sizeof(Uint) +                 /* padding */
+	                           sizeof(Uint8)*4 +              /* marginX */
+	                           sizeof(Uint8)*4 +              /* paddingX */
 	                           sizeof(Uint));                 /* borders */
 
 	wid->font = agDefaultFont;
@@ -1324,127 +1330,6 @@ FocusWidget(AG_Widget *_Nonnull wid)
 	}
 }
 
-#ifdef HAVE_OPENGL
-
-static void
-DrawPrologueGL_Reshape(AG_Widget *_Nonnull wid)
-{
-	glMatrixMode(GL_PROJECTION); glPushMatrix();
-	glMatrixMode(GL_MODELVIEW);  glPushMatrix();
-
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	AG_PostEvent(wid, "widget-reshape", NULL);
-	wid->flags &= ~(AG_WIDGET_GL_RESHAPE);
-
-	if (wid->gl == NULL) {
-		wid->gl = Malloc(sizeof(AG_WidgetGL));
-	}
-	glGetFloatv(GL_PROJECTION, wid->gl->mProjection);
-	glGetFloatv(GL_MODELVIEW, wid->gl->mModelview);
-		
-	glMatrixMode(GL_PROJECTION); glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);  glPopMatrix();
-}
-
-static void
-DrawPrologueGL(AG_Widget *_Nonnull wid)
-{
-	Uint hView;
-
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	AG_PostEvent(wid, "widget-underlay", NULL);
-
-	glPushAttrib(GL_TRANSFORM_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
-
-	if (wid->flags & AG_WIDGET_GL_RESHAPE)
-		DrawPrologueGL_Reshape(wid);
-
-	hView = AGDRIVER_SINGLE(wid->drv) ? AGDRIVER_SW(wid->drv)->h :
-	                                    HEIGHT(wid->window);
-	glViewport(wid->rView.x1, (hView - wid->rView.y2),
-	           WIDTH(wid), HEIGHT(wid));
-
-	glMatrixMode(GL_TEXTURE);
-	glPushMatrix();
-	glLoadIdentity();
-
-#ifdef AG_DEBUG
-	if (wid->gl == NULL) { AG_FatalError("!wid->gl"); }
-#endif
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadMatrixf(wid->gl->mProjection);
-		
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadMatrixf(wid->gl->mModelview);
-
-	glDisable(GL_CLIP_PLANE0);
-	glDisable(GL_CLIP_PLANE1);
-	glDisable(GL_CLIP_PLANE2);
-	glDisable(GL_CLIP_PLANE3);
-}
-
-static void
-DrawEpilogueGL(AG_Widget *_Nonnull wid)
-{
-	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
-	glMatrixMode(GL_PROJECTION);	glPopMatrix();
-	glMatrixMode(GL_TEXTURE);	glPopMatrix();
-
-	glPopAttrib(); /* GL_TRANSFORM_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT */
-	
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	AG_PostEvent(wid, "widget-overlay", NULL);
-}
-#endif /* HAVE_OPENGL */
-
-/*
- * Render a widget to the display.
- * Must be invoked from GUI rendering context.
- */
-void
-AG_WidgetDraw(void *p)
-{
-	AG_Widget *wid = p;
-	int flags;
-
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	AG_ObjectLock(wid);
-	flags = wid->flags;
-
-	if (!(wid->flags & AG_WIDGET_VISIBLE) ||
-	     (wid->flags & (AG_WIDGET_HIDE | AG_WIDGET_UNDERSIZE)) ||
-	     WIDGET_OPS(wid)->draw == NULL)
-		goto out;
-
-	if (flags & AG_WIDGET_DISABLED) {       wid->state = AG_DISABLED_STATE; }
-	else if (flags & AG_WIDGET_MOUSEOVER) { wid->state = AG_HOVER_STATE; }
-	else if (flags & AG_WIDGET_FOCUSED) {   wid->state = AG_FOCUSED_STATE; }
-	else {                                  wid->state = AG_DEFAULT_STATE; }
-
-	if (flags & AG_WIDGET_USE_TEXT) {
-		AG_PushTextState();
-		AG_TextFont(wid->font);
-		AG_TextColor(&wid->pal.c[wid->state][AG_TEXT_COLOR]);
-	}
-#ifdef HAVE_OPENGL
-	if (flags & AG_WIDGET_USE_OPENGL)
-		DrawPrologueGL(wid);
-#endif
-
-	WIDGET_OPS(wid)->draw(wid);
-	
-#ifdef HAVE_OPENGL
-	if (flags & AG_WIDGET_USE_OPENGL)
-		DrawEpilogueGL(wid);
-#endif
-	if (flags & AG_WIDGET_USE_TEXT)
-		AG_PopTextState();
-out:
-	AG_ObjectUnlock(wid);
-}
-
 static void
 SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
@@ -1458,6 +1343,12 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 	return (0);
 }
 
+/*
+ * Invoke the size_request() of a widget and return the requested width
+ * and height (in pixels) into r.
+ *
+ * If the size_request() field is NULL, inherit that of the parent class.
+ */
 void
 AG_WidgetSizeReq(void *obj, AG_SizeReq *r)
 {
@@ -1474,8 +1365,18 @@ AG_WidgetSizeReq(void *obj, AG_SizeReq *r)
 		AG_PushTextState();
 		AG_TextFont(wid->font);
 	}
+
 	if (WIDGET_OPS(wid)->size_request != NULL) {
 		WIDGET_OPS(wid)->size_request(wid, r);
+	} else {
+		AG_WidgetClass *Csup;
+
+		while ((Csup = AGWIDGET_SUPER_OPS(wid)) != (void *)&agObjectClass) {
+			if (Csup->size_request != NULL) {
+				Csup->size_request(wid, r);
+				break;
+			}
+		}
 	}
 	if (useText) {
 		AG_PopTextState();
@@ -1483,6 +1384,13 @@ AG_WidgetSizeReq(void *obj, AG_SizeReq *r)
 	AG_ObjectUnlock(wid);
 }
 
+/*
+ * Invoke the size_allocate() of a widget, passing it the final allocated
+ * coordinates (a->x, a->y) and size (a->w, a->h).
+ * 
+ * If the size is negative, normalize it to (0,0) and set UNDERSIZE flag.
+ * If the size_request() field is NULL, inherit that of the parent class.
+ */
 void
 AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 {
@@ -1496,6 +1404,7 @@ AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 		AG_PushTextState();
 		AG_TextFont(wid->font);
 	}
+
 	if (a->w <= 0 || a->h <= 0) {
 		a->w = 0;
 		a->h = 0;
@@ -1503,17 +1412,29 @@ AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 	} else {
 		wid->flags &= ~(AG_WIDGET_UNDERSIZE);
 	}
+
 	wid->x = a->x;
 	wid->y = a->y;
 	wid->w = a->w;
 	wid->h = a->h;
+
 	if (WIDGET_OPS(wid)->size_allocate != NULL) {
 		if (WIDGET_OPS(wid)->size_allocate(wid, a) == -1) {
 			wid->flags |= AG_WIDGET_UNDERSIZE;
 		} else {
 			wid->flags &= ~(AG_WIDGET_UNDERSIZE);
 		}
+	} else {
+		AG_WidgetClass *Csup;
+
+		while ((Csup = AGWIDGET_SUPER_OPS(wid)) != (void *)&agObjectClass) {
+			if (Csup->size_allocate != NULL) {
+				Csup->size_allocate(wid, a);
+				break;
+			}
+		}
 	}
+
 	if (useText) {
 		AG_PopTextState();
 	}
@@ -1831,22 +1752,6 @@ AG_WidgetInheritDraw(void *obj)
 	WIDGET_SUPER_OPS(obj)->draw(obj);
 }
 
-/* Generic inherited size_request() routine. */
-void
-AG_WidgetInheritSizeRequest(void *obj, AG_SizeReq *r)
-{
-	AG_OBJECT_ISA(obj, "AG_Widget:*");
-	WIDGET_SUPER_OPS(obj)->size_request(obj, r);
-}
-
-/* Generic inherited size_allocate() routine. */
-int
-AG_WidgetInheritSizeAllocate(void *obj, const AG_SizeAlloc *a)
-{
-	AG_OBJECT_ISA(obj, "AG_Widget:*");
-	return WIDGET_SUPER_OPS(obj)->size_allocate(obj, a);
-}
-
 /* Render a widget to an AG_Surface(3). */
 AG_Surface *
 AG_WidgetSurface(void *obj)
@@ -1865,6 +1770,124 @@ AG_WidgetSurface(void *obj)
 	}
 	AG_UnlockVFS(wid);
 	return (rv == 0) ? S : NULL;
+}
+
+#ifdef HAVE_OPENGL
+static void
+DrawPrologueGL_Reshape(AG_Widget *_Nonnull wid)
+{
+	glMatrixMode(GL_PROJECTION); glPushMatrix();
+	glMatrixMode(GL_MODELVIEW);  glPushMatrix();
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	AG_PostEvent(wid, "widget-reshape", NULL);
+	wid->flags &= ~(AG_WIDGET_GL_RESHAPE);
+
+	if (wid->gl == NULL) {
+		wid->gl = Malloc(sizeof(AG_WidgetGL));
+	}
+	glGetFloatv(GL_PROJECTION, wid->gl->mProjection);
+	glGetFloatv(GL_MODELVIEW, wid->gl->mModelview);
+	glMatrixMode(GL_PROJECTION); glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);  glPopMatrix();
+}
+
+static void
+DrawPrologueGL(AG_Widget *_Nonnull wid)
+{
+	Uint hView;
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	AG_PostEvent(wid, "widget-underlay", NULL);
+
+	glPushAttrib(GL_TRANSFORM_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
+
+	if (wid->flags & AG_WIDGET_GL_RESHAPE)
+		DrawPrologueGL_Reshape(wid);
+
+	hView = AGDRIVER_SINGLE(wid->drv) ? AGDRIVER_SW(wid->drv)->h :
+	                                    HEIGHT(wid->window);
+	glViewport(wid->rView.x1, (hView - wid->rView.y2),
+	           WIDTH(wid), HEIGHT(wid));
+
+	glMatrixMode(GL_TEXTURE);
+	glPushMatrix();
+	glLoadIdentity();
+#ifdef AG_DEBUG
+	if (wid->gl == NULL) { AG_FatalError("!wid->gl"); }
+#endif
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadMatrixf(wid->gl->mProjection);
+		
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadMatrixf(wid->gl->mModelview);
+
+	glDisable(GL_CLIP_PLANE0);
+	glDisable(GL_CLIP_PLANE1);
+	glDisable(GL_CLIP_PLANE2);
+	glDisable(GL_CLIP_PLANE3);
+}
+
+static void
+DrawEpilogueGL(AG_Widget *_Nonnull wid)
+{
+	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
+	glMatrixMode(GL_PROJECTION);	glPopMatrix();
+	glMatrixMode(GL_TEXTURE);	glPopMatrix();
+
+	glPopAttrib(); /* GL_TRANSFORM_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT */
+	
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	AG_PostEvent(wid, "widget-overlay", NULL);
+}
+#endif /* HAVE_OPENGL */
+
+/*
+ * Render a widget to the display. Invoked from GUI rendering context
+ * (typically the draw() operation of a container widget).
+ */
+void
+AG_WidgetDraw(void *p)
+{
+	AG_Widget *wid = p;
+	int flags;
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	AG_ObjectLock(wid);
+	flags = wid->flags;
+
+	if (!(wid->flags & AG_WIDGET_VISIBLE) ||
+	     (wid->flags & (AG_WIDGET_HIDE | AG_WIDGET_UNDERSIZE)) ||
+	     WIDGET_OPS(wid)->draw == NULL)
+		goto out;
+
+	if (flags & AG_WIDGET_DISABLED) {       wid->state = AG_DISABLED_STATE; }
+	else if (flags & AG_WIDGET_MOUSEOVER) { wid->state = AG_HOVER_STATE; }
+	else if (flags & AG_WIDGET_FOCUSED) {   wid->state = AG_FOCUSED_STATE; }
+	else {                                  wid->state = AG_DEFAULT_STATE; }
+
+	if (flags & AG_WIDGET_USE_TEXT) {
+		AG_PushTextState();
+		AG_TextFont(wid->font);
+		AG_TextColor(&wid->pal.c[wid->state][AG_TEXT_COLOR]);
+	}
+#ifdef HAVE_OPENGL
+	if (flags & AG_WIDGET_USE_OPENGL)
+		DrawPrologueGL(wid);
+#endif
+
+	WIDGET_OPS(wid)->draw(wid);
+	
+#ifdef HAVE_OPENGL
+	if (flags & AG_WIDGET_USE_OPENGL)
+		DrawEpilogueGL(wid);
+#endif
+	if (flags & AG_WIDGET_USE_TEXT)
+		AG_PopTextState();
+out:
+	AG_ObjectUnlock(wid);
 }
 
 /*
@@ -1997,6 +2020,186 @@ AG_WidgetReplaceSurface(void *obj, int id, AG_Surface *S)
 	AG_ObjectUnlock(wid);
 }
 
+/*
+ * Compile style attributes of a widget and its children. Generate color
+ * palette and load any required fonts in the process.
+ *
+ * Per-instance (AG_SetStyle()-set) attributes have precedence over those
+ * of the AG_StyleSheet(3). By default, attributes are inherited from parent.
+ */
+static void
+CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
+    float parentFontSize, Uint parentFontFlags, const AG_WidgetPalette *parentPalette)
+{
+	AG_StyleSheet *css = &agDefaultCSS;
+	char *fontFace, *cssData;
+	AG_Widget *chld;
+	AG_Variable *V;
+	AG_Object *po;
+	float fontSize;
+	Uint fontFlags = parentFontFlags;
+	int i, j, paletteChanged=0;
+	
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+
+	for (po = OBJECT(wid);
+	     po->parent && AG_OfClass(po->parent, "AG_Widget:*");
+	     po = po->parent) {
+		if (WIDGET(po)->css) {               /* alternate stylesheet */
+			css = WIDGET(po)->css;
+			break;
+		}
+	}
+
+	/*
+	 * Font face (fontconfig name, base of filename in `font-path', or
+	 * underscore prefix for memory builts-in such as "_agFontVera").
+	 */
+	if ((V = AG_AccessVariable(wid, "font-family")) != NULL) {
+		fontFace = Strdup(V->data.s);
+		AG_UnlockVariable(V);
+	} else if (AG_LookupStyleSheet(css, wid, "font-family", &cssData)) {
+		fontFace = Strdup(cssData);
+	} else {
+		fontFace = Strdup(parentFace);
+	}
+
+	/*
+	 * Font size (in points, pixels, or % relative to parent).
+	 * Fractional point sizes (e.g., "10.5" are allowed).
+	 */
+	if ((V = AG_AccessVariable(wid, "font-size")) != NULL) {
+		Apply_Font_Size(&fontSize, parentFontSize, V->data.s);
+		AG_UnlockVariable(V);
+	} else if (AG_LookupStyleSheet(css, wid, "font-size", &cssData)) {
+		Apply_Font_Size(&fontSize, parentFontSize, cssData);
+	} else {
+		fontSize = parentFontSize;
+	}
+
+	/*
+	 * Font weight (normal, semibold, bold or !parent)
+	 */
+	if ((V = AG_AccessVariable(wid, "font-weight")) != NULL) {
+		Apply_Font_Weight(&fontFlags, parentFontFlags, V->data.s);
+		AG_UnlockVariable(V);
+	} else if (AG_LookupStyleSheet(css, wid, "font-weight", &cssData)) {
+		Apply_Font_Weight(&fontFlags, parentFontFlags, cssData);
+	} else {
+		fontFlags &= ~(AG_FONT_BOLDS);
+		fontFlags |= (parentFontFlags & AG_FONT_BOLDS);
+	}
+
+	/*
+	 * Font style (normal, italic, upright-italic or !parent)
+	 */
+	if ((V = AG_AccessVariable(wid, "font-style")) != NULL) {
+		Apply_Font_Style(&fontFlags, parentFontFlags, V->data.s);
+		AG_UnlockVariable(V);
+	} else if (AG_LookupStyleSheet(css, wid, "font-style", &cssData)) {
+		Apply_Font_Style(&fontFlags, parentFontFlags, cssData);
+	} else {
+		fontFlags &= ~(AG_FONT_ITALICS);
+		fontFlags |= (parentFontFlags & AG_FONT_ITALICS);
+	}
+
+	/*
+	 * Width variant (normal, semi-condensed, condensed or !parent)
+	 */
+	if ((V = AG_AccessVariable(wid, "font-stretch")) != NULL) {
+		Apply_Font_Stretch(&fontFlags, parentFontFlags, V->data.s);
+		AG_UnlockVariable(V);
+	} else if (AG_LookupStyleSheet(css, wid, "font-stretch", &cssData)) {
+		Apply_Font_Stretch(&fontFlags, parentFontFlags, cssData);
+	} else {
+		fontFlags &= ~(AG_FONT_WIDTH_VARIANTS);
+		fontFlags |= (parentFontFlags & AG_FONT_WIDTH_VARIANTS);
+	}
+
+	/*
+	 * Padding and margin (in pixels) for box model.
+	 *
+	 * The margin is effected by the size_allocate() of a container widget.
+	 * The padding is handled by the widget itself.
+	 */
+	if ((V = AG_AccessVariable(wid, "padding")) != NULL) {
+		Apply_Padding(wid, V->data.s);
+		AG_UnlockVariable(V);
+	} else if (AG_LookupStyleSheet(css, wid, "padding", &cssData)) {
+		Apply_Padding(wid, cssData);
+	}
+	if ((V = AG_AccessVariable(wid, "margin")) != NULL) {
+		Apply_Margin(wid, V->data.s);
+		AG_UnlockVariable(V);
+	} else if (AG_LookupStyleSheet(css, wid, "margin", &cssData)) {
+		Apply_Margin(wid, cssData);
+	}
+	
+	/* Color palette */
+	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
+		for (j = 0; j < AG_WIDGET_NCOLORS; j++) {
+			char nameFull[AG_VARIABLE_NAME_MAX];
+			const AG_Color *cParent = &parentPalette->c[i][j];
+			const char *name = agStyleAttributes[j];
+			AG_Color cNew;
+
+			Strlcpy(nameFull, name, sizeof(nameFull));
+			Strlcat(nameFull, agWidgetStateNames[i], sizeof(nameFull));
+
+			if ((V = AG_AccessVariable(wid, nameFull)) != NULL ||
+			    (V = AG_AccessVariable(wid, name)) != NULL) {
+				AG_ColorFromString(&cNew, V->data.s, cParent);
+				AG_UnlockVariable(V);
+			} else if (AG_LookupStyleSheet(css, wid, nameFull, &cssData) ||
+			           AG_LookupStyleSheet(css, wid, name, &cssData)) {
+				AG_ColorFromString(&cNew, cssData, cParent);
+			} else {
+				cNew = *cParent;
+			}
+			if (AG_ColorCompare(&cNew, &wid->pal.c[i][j]) != 0) {
+				wid->pal.c[i][j] = cNew;
+				paletteChanged = 1;
+			}
+		}
+	}
+	if (paletteChanged)
+		AG_PostEvent(wid, "palette-changed", NULL);
+
+	if (wid->flags & AG_WIDGET_USE_TEXT) {    /* Load any fonts required */
+		char *pFace = fontFace, *tok;
+		AG_Font *fontNew = NULL;
+
+		while ((tok = AG_Strsep(&pFace, ",")) != NULL) {
+			if ((fontNew = AG_FetchFont(fontFace, fontSize,
+			                            fontFlags)) != NULL)
+				break;
+		}
+		if (fontNew == NULL) {
+			fontNew = AG_FetchFont(NULL, fontSize, fontFlags);
+			AG_OBJECT_ISA(fontNew, "AG_Font:*");
+		}
+		if (fontNew && wid->font != fontNew) {
+			if (wid->font) {
+				AG_UnusedFont(wid->font);
+			}
+			wid->font = fontNew;
+
+			AG_PushTextState();
+			AG_TextFont(wid->font);
+			AG_PostEvent(wid, "font-changed", NULL);
+			AG_PopTextState();
+
+			AG_Redraw(wid);
+		}
+	}
+
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		CompileStyleRecursive(chld, fontFace, fontSize, fontFlags,
+		                      &wid->pal);
+	}
+	free(fontFace);
+}
+
 static void
 Apply_Font_Size(float *fontSize, float parentFontSize, const char *spec)
 {
@@ -2067,155 +2270,39 @@ Apply_Font_Stretch(Uint *fontFlags, Uint parentFontFlags, const char *spec)
 	}
 }
 
-/*
- * Compile style attributes of a widget and its children. Generate color
- * palette and load any required fonts in the process.
- *
- * Per-instance (AG_SetStyle()-set) attributes have precedence over those
- * of the AG_StyleSheet(3). By default, attributes are inherited from parent.
- */
 static void
-CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
-    float parentFontSize, Uint parentFontFlags, const AG_WidgetPalette *parentPalette)
+Apply_Padding(AG_Widget *wid, const char *spec)
 {
-	AG_StyleSheet *css = &agDefaultCSS;
-	char *fontFace, *cssData;
-	AG_Widget *chld;
-	AG_Variable *V;
-	AG_Object *po;
-	float fontSize;
-	Uint fontFlags = parentFontFlags;
-	int i, j, paletteChanged=0;
-	
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	char buf[16], *s=&buf[0], *sTop, *sRight;
 
-	/* Select the effective style sheet for this widget. */
-	for (po = OBJECT(wid);
-	     po->parent && AG_OfClass(po->parent, "AG_Widget:*");
-	     po = po->parent) {
-		if (WIDGET(po)->css) {
-			css = WIDGET(po)->css;
-			break;
-		}
+	Strlcpy(buf, spec, sizeof(buf));
+
+	if ((sTop = Strsep(&s, " ")) == NULL)
+		return;
+
+	if ((sRight = Strsep(&s, " ")) == NULL) {           /* "padding: X" */
+		const int val = atoi(sTop);
+
+		wid->paddingTop    = val;
+		wid->paddingRight  = val;
+		wid->paddingBottom = val;
+		wid->paddingLeft   = val;
+	} else {                                     /* "padding: T R [B L]" */
+		const char *sBottom = Strsep(&s, " ");
+		const char *sLeft   = Strsep(&s, " ");
+
+		wid->paddingTop    = atoi(sTop);
+		wid->paddingRight  = atoi(sRight);
+		wid->paddingBottom = (sBottom) ? atoi(sBottom) : 0;
+		wid->paddingLeft   = (sLeft)   ? atoi(sTop)    : 0;
 	}
-
-	/* Font face */
-	if ((V = AG_AccessVariable(wid, "font-family")) != NULL) {
-		fontFace = Strdup(V->data.s);
-		AG_UnlockVariable(V);
-	} else if (AG_LookupStyleSheet(css, wid, "font-family", &cssData)) {
-		fontFace = Strdup(cssData);
-	} else {
-		fontFace = Strdup(parentFace);
-	}
-
-	/* Font size (pts, pixels, or % relative to parent) */
-	if ((V = AG_AccessVariable(wid, "font-size")) != NULL) {
-		Apply_Font_Size(&fontSize, parentFontSize, V->data.s);
-		AG_UnlockVariable(V);
-	} else if (AG_LookupStyleSheet(css, wid, "font-size", &cssData)) {
-		Apply_Font_Size(&fontSize, parentFontSize, cssData);
-	} else {
-		fontSize = parentFontSize;
-	}
-
-	/* Font weight (normal, semibold, bold, !parent) */
-	if ((V = AG_AccessVariable(wid, "font-weight")) != NULL) {
-		Apply_Font_Weight(&fontFlags, parentFontFlags, V->data.s);
-		AG_UnlockVariable(V);
-	} else if (AG_LookupStyleSheet(css, wid, "font-weight", &cssData)) {
-		Apply_Font_Weight(&fontFlags, parentFontFlags, cssData);
-	} else {
-		fontFlags &= ~(AG_FONT_BOLDS);
-		fontFlags |= (parentFontFlags & AG_FONT_BOLDS);
-	}
-
-	/* Font style (normal, italic, upright-italic, !parent) */
-	if ((V = AG_AccessVariable(wid, "font-style")) != NULL) {
-		Apply_Font_Style(&fontFlags, parentFontFlags, V->data.s);
-		AG_UnlockVariable(V);
-	} else if (AG_LookupStyleSheet(css, wid, "font-style", &cssData)) {
-		Apply_Font_Style(&fontFlags, parentFontFlags, cssData);
-	} else {
-		fontFlags &= ~(AG_FONT_ITALICS);
-		fontFlags |= (parentFontFlags & AG_FONT_ITALICS);
-	}
-	
-	/* Width variant (normal, semi-condensed, condensed, !parent) */
-	if ((V = AG_AccessVariable(wid, "font-stretch")) != NULL) {
-		Apply_Font_Stretch(&fontFlags, parentFontFlags, V->data.s);
-		AG_UnlockVariable(V);
-	} else if (AG_LookupStyleSheet(css, wid, "font-stretch", &cssData)) {
-		Apply_Font_Stretch(&fontFlags, parentFontFlags, cssData);
-	} else {
-		fontFlags &= ~(AG_FONT_WIDTH_VARIANTS);
-		fontFlags |= (parentFontFlags & AG_FONT_WIDTH_VARIANTS);
-	}
-	
-	/* Color palette */
-	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
-		for (j = 0; j < AG_WIDGET_NCOLORS; j++) {
-			char nameFull[AG_VARIABLE_NAME_MAX];
-			const AG_Color *cParent = &parentPalette->c[i][j];
-			const char *name = agStyleAttributes[j];
-			AG_Color cNew;
-
-			Strlcpy(nameFull, name, sizeof(nameFull));
-			Strlcat(nameFull, agWidgetStateNames[i], sizeof(nameFull));
-
-			if ((V = AG_AccessVariable(wid, nameFull)) != NULL ||
-			    (V = AG_AccessVariable(wid, name)) != NULL) {
-				AG_ColorFromString(&cNew, V->data.s, cParent);
-				AG_UnlockVariable(V);
-			} else if (AG_LookupStyleSheet(css, wid, nameFull, &cssData) ||
-			           AG_LookupStyleSheet(css, wid, name, &cssData)) {
-				AG_ColorFromString(&cNew, cssData, cParent);
-			} else {
-				cNew = *cParent;
-			}
-			if (AG_ColorCompare(&cNew, &wid->pal.c[i][j]) != 0) {
-				wid->pal.c[i][j] = cNew;
-				paletteChanged = 1;
-			}
-		}
-	}
-	if (paletteChanged)
-		AG_PostEvent(wid, "palette-changed", NULL);
-
-	if (wid->flags & AG_WIDGET_USE_TEXT) {    /* Load any fonts required */
-		char *pFace = fontFace, *tok;
-		AG_Font *fontNew = NULL;
-
-		while ((tok = AG_Strsep(&pFace, ",")) != NULL) {
-			if ((fontNew = AG_FetchFont(fontFace, fontSize,
-			                            fontFlags)) != NULL)
-				break;
-		}
-		if (fontNew == NULL) {
-			fontNew = AG_FetchFont(NULL, fontSize, fontFlags);
-			AG_OBJECT_ISA(fontNew, "AG_Font:*");
-		}
-		if (fontNew && wid->font != fontNew) {
-			if (wid->font) {
-				AG_UnusedFont(wid->font);
-			}
-			wid->font = fontNew;
-
-			AG_PushTextState();
-			AG_TextFont(wid->font);
-			AG_PostEvent(wid, "font-changed", NULL);
-			AG_PopTextState();
-
-			AG_Redraw(wid);
-		}
-	}
-
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
-		CompileStyleRecursive(chld, fontFace, fontSize, fontFlags,
-		                      &wid->pal);
-	}
-	free(fontFace);
 }
+
+static void
+Apply_Margin(AG_Widget *wid, const char *spec)
+{
+}
+
 void
 AG_WidgetCompileStyle(void *obj)
 {
@@ -2227,13 +2314,12 @@ AG_WidgetCompileStyle(void *obj)
 	AG_LockVFS(wid);
 	AG_MutexLock(&agTextLock);
 
-	if ((parent = OBJECT(wid)->parent) != NULL &&
-	    AG_OfClass(parent, "AG_Widget:*") &&
+	if ((parent = OBJECT(wid)->parent) && AG_OfClass(parent, "AG_Widget:*") &&
 	    (parentFont = parent->font) != NULL) {
 		CompileStyleRecursive(wid,	/* Inheritable attributes: */
 		    OBJECT(parentFont)->name,	/* "font-family" */
 		    parentFont->spec.size,	/* "font-size" */
-		    parentFont->flags,		/* "font-{style,weight}" */
+		    parentFont->flags,		/* "font-{style,weight,stretch}" */
 		    &parent->pal);		/* and the color palette */
 	} else {
 		CompileStyleRecursive(wid,
@@ -2352,13 +2438,13 @@ AG_WidgetClass agWidgetClass = {
 		sizeof(AG_Widget),
 		{ 0,0 },
 		Init,
-		NULL,		/* reset */
+		NULL,           /* reset */
 		Destroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
+		NULL,           /* load */
+		NULL,           /* save */
+		NULL            /* edit */
 	},
-	NULL,		/* draw */
+	NULL,                   /* draw */
 	SizeRequest,
 	SizeAllocate
 };

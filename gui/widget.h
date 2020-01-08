@@ -271,17 +271,11 @@ typedef struct ag_widget {
 	AG_StyleSheet *_Nullable css;       /* Style sheet (null = use default) */
 	enum ag_widget_state state;         /* Style-effecting state */
 
-	Uint margin;                        /* Margin around border (px) */
-#define AG_WIDGET_MARGIN_TOP    (0x000000ff)
-#define AG_WIDGET_MARGIN_BOTTOM (0x0000ff00)
-#define AG_WIDGET_MARGIN_LEFT   (0x00ff0000)
-#define AG_WIDGET_MARGIN_RIGHT  (0xff000000)
-	
-	Uint padding;                       /* Padding around contents (px) */
-#define AG_WIDGET_PADDING_TOP    (0x000000ff)
-#define AG_WIDGET_PADDING_BOTTOM (0x0000ff00)
-#define AG_WIDGET_PADDING_LEFT   (0x00ff0000)
-#define AG_WIDGET_PADDING_RIGHT  (0xff000000)
+	Uint8 marginTop, marginRight;       /* Margin around border (px) */
+	Uint8 marginBottom, marginLeft;
+
+	Uint8 paddingTop, paddingRight;     /* Padding around contents (px) */
+	Uint8 paddingBottom, paddingLeft;
 
 	Uint borders;
 #define AG_WIDGET_BORDER_NONE     0     /* No border style */
@@ -416,8 +410,6 @@ void AG_WidgetShowAll(void *_Nonnull);
 void AG_WidgetHideAll(void *_Nonnull);
 
 void AG_WidgetInheritDraw(void *_Nonnull);
-void AG_WidgetInheritSizeRequest(void *_Nonnull, AG_SizeReq *_Nonnull);
-int  AG_WidgetInheritSizeAllocate(void *_Nonnull, const AG_SizeAlloc *_Nonnull);
 
 AG_Surface *_Nullable AG_WidgetSurface(void *_Nonnull);
 
@@ -495,7 +487,6 @@ int *_Nonnull ag_get_key_state(void *_Nonnull) _Pure_Attribute;
 int  ag_get_key_count(void *_Nonnull) _Pure_Attribute;
 Uint ag_get_mod_state(void *_Nonnull) _Pure_Attribute;
 void ag_set_mod_state(void *_Nonnull, Uint);
-
 # define AG_WidgetEnabled(o)                 ag_widget_enabled(o)
 # define AG_WidgetDisabled(o)                ag_widget_disabled(o)
 # define AG_WidgetVisible(o)                 ag_widget_visible(o)

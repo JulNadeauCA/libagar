@@ -52,12 +52,12 @@ CreateMaximizeButton(AG_Titlebar *_Nonnull tbar)
 {
 	AG_Button *bu;
 
-	bu = tbar->maximize_btn = AG_ButtonNewS(tbar, AG_BUTTON_VFILL, NULL);
+	bu = AG_ButtonNewS(tbar, AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS, NULL);
 	AG_ButtonJustify(bu, AG_TEXT_LEFT);
-	AG_ButtonSetFocusable(bu, 0);
-	AG_ButtonSurface(bu, agIconWinMaximize.s);
-	AG_ButtonSetPadding(bu, 0,2,1,1);
+	AG_ButtonSurfaceNODUP(bu, agIconWinMaximize.s);
+	AG_SetStyle(bu, "padding", "1 2 1 0");
 	AG_SetEvent(bu, "button-pushed", MaximizeWindow, "%Cp", tbar);
+	tbar->maximize_btn = bu;
 }
 
 static void
@@ -73,12 +73,12 @@ CreateMinimizeButton(AG_Titlebar *_Nonnull tbar)
 {
 	AG_Button *bu;
 
-	bu = tbar->minimize_btn = AG_ButtonNewS(tbar, AG_BUTTON_VFILL, NULL);
+	bu = AG_ButtonNewS(tbar, AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS, NULL);
 	AG_ButtonJustify(bu, AG_TEXT_LEFT);
-	AG_ButtonSetFocusable(bu, 0);
-	AG_ButtonSurface(bu, agIconWinMinimize.s);
-	AG_ButtonSetPadding(bu, 0,2,1,1);
+	AG_ButtonSurfaceNODUP(bu, agIconWinMinimize.s);
+	AG_SetStyle(bu, "padding", "1 2 1 0");
 	AG_SetEvent(bu, "button-pushed", MinimizeWindow, "%Cp", tbar);
+	tbar->minimize_btn = bu;
 }
 
 static void
@@ -95,12 +95,12 @@ CreateCloseButton(AG_Titlebar *_Nonnull tbar)
 {
 	AG_Button *bu;
 
-	bu = tbar->close_btn = AG_ButtonNewS(tbar, AG_BUTTON_VFILL, NULL);
+	bu = AG_ButtonNewS(tbar, AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS, NULL);
 	AG_ButtonJustify(bu, AG_TEXT_LEFT);
-	AG_ButtonSetFocusable(bu, 0);
-	AG_ButtonSurface(bu, agIconWinClose.s);
-	AG_ButtonSetPadding(bu, 0,2,1,1);
+	AG_ButtonSurfaceNODUP(bu, agIconWinClose.s);
+	AG_SetStyle(bu, "padding", "1 2 1 0");
 	AG_SetEvent(bu, "button-pushed", CloseWindow, "%Cp", tbar);
+	tbar->close_btn = bu;
 }
 
 AG_Titlebar *
@@ -163,14 +163,13 @@ static void
 Init(void *_Nonnull obj)
 {
 	AG_Titlebar *tbar = obj;
-	AG_Box *box = obj;
 
 	WIDGET(tbar)->flags |= AG_WIDGET_HFILL |
 	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
 
-	AG_BoxSetType(box, AG_BOX_HORIZ);
-	AG_BoxSetPadding(&tbar->hb, 3);
-	AG_BoxSetSpacing(&tbar->hb, 1);
+	AG_BoxSetType(AGBOX(tbar), AG_BOX_HORIZ);
+	AG_BoxSetPadding(AGBOX(tbar), 3);
+	AG_BoxSetSpacing(AGBOX(tbar), 1);
 
 	tbar->flags = 0;
 	tbar->win = NULL;
@@ -178,11 +177,10 @@ Init(void *_Nonnull obj)
 	tbar->minimize_btn = NULL;
 	tbar->close_btn = NULL;
 	
-	tbar->label = AG_LabelNewS(tbar, AG_LABEL_HFILL | AG_LABEL_NOMINSIZE,
-	                           _("Untitled"));
+	tbar->label = AG_LabelNewS(tbar, AG_LABEL_HFILL, _("Untitled"));
 	tbar->label->wPre = 16;
 	tbar->label->hPre = 1;
-	AG_LabelSetPadding(tbar->label, 5,5,2,2);
+	AG_SetStyle(tbar->label, "padding", "2 5 2 5");
 
 	AG_SetEvent(tbar, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tbar, "mouse-button-up", MouseButtonUp, NULL);
@@ -226,8 +224,8 @@ AG_WidgetClass agTitlebarClass = {
 		NULL		/* edit */
 	},
 	Draw,
-	AG_WidgetInheritSizeRequest,
-	AG_WidgetInheritSizeAllocate
+	NULL,			/* size_request */
+	NULL,			/* size_allocate */
 };
 
 #endif /* AG_WIDGETS */
