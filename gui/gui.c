@@ -617,6 +617,7 @@ AG_ZoomReset(void)
 void
 AG_About(AG_Event *event)
 {
+	char path[AG_PATHNAME_MAX];
 	AG_Window *win;
 	AG_Label *lbl;
 	AG_Box *hBox;
@@ -633,7 +634,6 @@ AG_About(AG_Event *event)
 	AG_BoxSetSpacing(hBox, 50);
 	AG_BoxSetHorizAlign(hBox, AG_BOX_CENTER);
 	{
-		char path[AG_PATHNAME_MAX];
 		AG_AgarVersion av;
 
 		AG_GetVersion(&av);
