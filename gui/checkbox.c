@@ -34,8 +34,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-static void DrawMouseOver(AG_Checkbox *_Nonnull);
-
 AG_Checkbox *
 AG_CheckboxNewFn(void *parent, Uint flags, const char *label, AG_EventFn fn,
     const char *fmt, ...)
@@ -122,10 +120,9 @@ AG_CheckboxNewS(void *parent, Uint flags, const char *label)
 	AG_ObjectInit(cb, &agCheckboxClass);
 	cb->flags |= flags;
 
-	if (label != NULL) {
-		cb->lbl = AG_LabelNewS(cb, 0, label);
-		cb->lbl->lPad = 6;
-	}
+	if (label)
+		cb->label = Strdup(label);
+
 	if (flags & AG_CHECKBOX_SET)
 		cb->state = 1;
 
@@ -177,6 +174,10 @@ StyleChanged(AG_Event *_Nonnull event)
 		AG_WidgetUnmapSurface(cb, cb->suCheckmark);
 		cb->suCheckmark = -1;
 	}
+	if (cb->suLabel != -1) {
+		AG_WidgetUnmapSurface(cb, cb->suLabel);
+		cb->suLabel = -1;
+	}
 }
 
 static void
@@ -191,7 +192,8 @@ Init(void *_Nonnull obj)
 	cb->flags = 0;
 	cb->state = 0;
 	cb->suCheckmark = -1;
-	cb->lbl = NULL;
+	cb->suLabel = -1;
+	cb->label = NULL;
 	
 	AG_BindInt(cb, "state", &cb->state);
 	AG_RedrawOnChange(cb, 300, "state");
@@ -209,7 +211,7 @@ Draw(void *_Nonnull obj)
 	AG_Checkbox *cb = obj;
 	AG_Variable *V;
 	void *p;
-	AG_Rect r;
+	AG_Rect r, rClip;
 	int state;
 
 	V = AG_GetVariable(cb, "state", &p);
@@ -237,33 +239,60 @@ Draw(void *_Nonnull obj)
 	if (cb->flags & AG_CHECKBOX_INVERT)
 		state = !state;
 
-	if (WIDGET(cb)->flags & AG_WIDGET_MOUSEOVER)
-		DrawMouseOver(cb);
+	if (WIDGET(cb)->flags & AG_WIDGET_MOUSEOVER) {
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(cb);
+		r.h = HEIGHT(cb);
+		AG_DrawRect(cb, &r, &WCOLOR_HOVER(cb,BG_COLOR));
+	}
+	if (AG_WidgetIsFocused(cb)) {
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(cb);
+		r.h = HEIGHT(cb);
+		AG_DrawRectOutline(cb, &r, &WCOLOR(cb,LINE_COLOR));
+	}
 
-	r.x = 0;
-	r.y = 0;
-	r.w = HEIGHT(cb);
+	r.x = 2;
+	r.w = cb->boxWd;
 	r.h = r.w;
+	r.y = cb->boxOffs;
 
 	if (state) {
-		AG_Color cFgDark;
+		AG_Color cFgDark = WCOLOR(cb,FG_COLOR);
 
-		cFgDark = WCOLOR(cb, FG_COLOR);
 		AG_ColorDarken(&cFgDark, 2);
 		AG_DrawBoxSunk(cb, &r, &cFgDark);
 	} else {
 		AG_DrawBoxRaised(cb, &r, &WCOLOR(cb, FG_COLOR));
 	}
 
-	if (cb->lbl)
-		AG_WidgetDraw(cb->lbl);
+	if (cb->label && cb->label[0] != '\0') {
+		if (cb->suLabel == -1)
+			cb->suLabel = AG_WidgetMapSurface(cb,
+			    AG_TextRender(cb->label));
+	
+		if (WIDTH(cb) < cb->wReq || HEIGHT(cb) < cb->hReq) {
+			rClip.x = 1;
+			rClip.y = 1;
+			rClip.w = WIDTH(cb)-2;
+			rClip.h = HEIGHT(cb)-2;
+			AG_PushClipRect(cb, &rClip);
+		}
+
+		AG_WidgetBlitSurface(cb, cb->suLabel, 2+cb->boxWd+2, 0);
+
+		if (WIDTH(cb) < cb->wReq || HEIGHT(cb) < cb->hReq)
+			AG_PopClipRect(cb);
+	}
 
 	if (state) {
 		AG_Surface *S;
 
 		if (cb->suCheckmark == -1) {
 			AG_TextFontLookup("dejavu-sans",
-			                  WFONT(cb)->spec.size,
+			                  WFONT(cb)->spec.size+5.0f,
 					  WFONT(cb)->flags);
 
 			/* U+2713 (CHECK MARK) */
@@ -272,8 +301,8 @@ Draw(void *_Nonnull obj)
 		}
 		S = WSURFACE(cb, cb->suCheckmark);
 		AG_WidgetBlitFrom(cb, cb->suCheckmark, NULL,
-		    (r.w >> 1) - (S->w >> 1),
-		    (r.h >> 1) - (S->h >> 1));
+		    r.x + (r.w >> 1) - (S->w >> 1),
+		    r.y + (r.h >> 1) - (S->h >> 1));
 	}
 }
 
@@ -341,51 +370,28 @@ AG_CheckboxGetState(AG_Checkbox *cb)
 }
 
 static void
-DrawMouseOver(AG_Checkbox *_Nonnull cb)
-{
-	AG_Rect r;
-	AG_Color c;
-
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(cb);
-	r.h = HEIGHT(cb)-1;
-
-	AG_ColorRGBA_8(&c, 255,255,255, 25);
-	AG_DrawRectBlended(cb, &r, &c, AG_ALPHA_SRC,
-	                               AG_ALPHA_ONE_MINUS_SRC);
-}
-
-static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Checkbox *cb = obj;
-	const int hFont = WFONT(cb)->lineskip;
-	AG_SizeReq rLbl;
 
-	r->h = hFont;
-	r->w = hFont;
-	
-	if (cb->lbl != NULL) {
-		AG_WidgetSizeReq(cb->lbl, &rLbl);
-		r->w += rLbl.w;
+	if (cb->label) {
+		AG_TextSize(cb->label, &r->w, &r->h);
+		r->w += WFONT(cb)->lineskip + 4;
+	} else {
+		r->w = WFONT(cb)->height;
+		r->h = r->w;
 	}
+	cb->wReq = r->w;
+	cb->hReq = r->h;
 }
 
 static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Checkbox *cb = obj;
-	const int hFont = WFONT(cb)->lineskip;
-	AG_SizeAlloc aLbl;
 
-	if (cb->lbl != NULL) {
-		aLbl.x = hFont;
-		aLbl.y = 0;
-		aLbl.w = a->w - aLbl.x;
-		aLbl.h = a->h;
-		AG_WidgetSizeAlloc(cb->lbl, &aLbl);
-	}
+	cb->boxWd = MIN(a->h, WFONT(cb)->lineskip - 1);
+	cb->boxOffs = (a->h >> 1) - (cb->boxWd >> 1);            /* Centered */
 	return (0);
 }
 

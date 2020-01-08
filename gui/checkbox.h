@@ -9,17 +9,20 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_checkbox {
-	struct ag_widget wid;		/* AG_Widget -> AG_Checkbox */
+	struct ag_widget wid;           /* AG_Widget -> AG_Checkbox */
 	Uint flags;
-#define AG_CHECKBOX_HFILL	0x01
-#define AG_CHECKBOX_VFILL	0x02
-#define AG_CHECKBOX_EXPAND	(AG_CHECKBOX_HFILL|AG_CHECKBOX_VFILL)
-#define AG_CHECKBOX_SET		0x04	/* Initialize "state" to 1 */
-#define AG_CHECKBOX_INVERT	0x08	/* Initialize "invert" to 1 */
-	int state;			/* Default "state" binding */
-	Uint32 _pad;
-	int suCheckmark;		/* Rendered checkmark surface */
-	AG_Label *_Nullable lbl;	/* Text label */
+#define AG_CHECKBOX_HFILL   0x01
+#define AG_CHECKBOX_VFILL   0x02
+#define AG_CHECKBOX_SET	    0x04        /* Initialize "state" to 1 */
+#define AG_CHECKBOX_INVERT  0x08        /* Initialize "invert" to 1 */
+#define AG_CHECKBOX_EXPAND (AG_CHECKBOX_HFILL | AG_CHECKBOX_VFILL)
+	int state;                      /* Default "state" binding */
+	int boxWd;                      /* Width of box (px) */
+	int boxOffs;                    /* Offset of box (px) */
+	int wReq, hReq;                 /* Size requisition */
+	int suCheckmark;                /* Rendered checkmark surface */
+	int suLabel;                    /* Rendered text label */
+	char *_Nullable label;          /* Text label string */
 } AG_Checkbox;
 
 #define AGCHECKBOX(obj)            ((AG_Checkbox *)(obj))
