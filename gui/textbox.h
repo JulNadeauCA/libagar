@@ -99,6 +99,9 @@ void AG_TextboxBindText(AG_Textbox *_Nonnull, AG_Text *_Nonnull);
 void AG_TextboxSetLang(AG_Textbox *, enum ag_language);
 #endif /* AG_UNICODE */
 
+void AG_TextboxSetPlaceholder(AG_Textbox *_Nonnull, const char *_Nullable, ...);
+void AG_TextboxSetPlaceholderS(AG_Textbox *_Nonnull, const char *_Nullable);
+
 void           AG_TextboxSetString(AG_Textbox *_Nonnull, const char *_Nonnull);
 void           AG_TextboxClearString(AG_Textbox *_Nonnull);
 char *_Nonnull AG_TextboxDupString(AG_Textbox *_Nonnull);

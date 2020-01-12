@@ -636,6 +636,11 @@ OnFontChange(AG_Event *_Nonnull event)
 	ed->fontMaxHeight = height;
 	ed->lineSkip = lineskip;
 	ed->yVis = HEIGHT(ed) / lineskip;
+
+	if (ed->suPlaceholder != -1) {
+		AG_WidgetUnmapSurface(ed, ed->suPlaceholder);
+		ed->suPlaceholder = -1;
+	}
 }
 
 /*
@@ -969,6 +974,25 @@ Draw(void *_Nonnull obj)
 	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC,
 	                    AG_TEXTURE_ENV_REPLACE);
 	AG_PushClipRect(ed, &ed->r);
+
+	if (buf->len == 0 && AG_Defined(ed, "placeholder")) {
+		AG_Variable *Vph;
+
+		if (ed->suPlaceholder == -1 &&
+		    (Vph = AG_AccessVariable(ed, "placeholder")) != NULL) {
+			AG_Color c = WCOLOR(ed, TEXT_COLOR);
+
+			AG_PushTextState();
+			AG_ColorDarken(&c,8);
+			AG_TextColor(&c);
+
+			ed->suPlaceholder = AG_WidgetMapSurface(ed,
+			    AG_TextRender(Vph->data.p));
+			AG_UnlockVariable(Vph);
+			AG_PopTextState();
+		}
+		AG_WidgetBlitFrom(ed, ed->suPlaceholder, NULL, 0,0);
+	}
 
 	x = 0;
 	y = -ed->y * lineSkip;
@@ -2060,6 +2084,7 @@ Init(void *_Nonnull obj)
 	ed->selDblClick = -1;
 	ed->fontMaxHeight = agTextFontHeight;
 	ed->lineSkip = agTextFontLineSkip;
+	ed->suPlaceholder = -1;
 	
 	AG_InitTimer(&ed->toRepeat, "repeat", 0);
 	AG_InitTimer(&ed->toCursorBlink, "cursorBlink", 0);

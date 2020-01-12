@@ -2315,9 +2315,9 @@ WEB_Destroy(void)
 		free(sock);
 	}
 	
-	AG_UnregisterClass(&webModuleClass);
+/*	AG_UnregisterClass(&webModuleClass); */
 #ifdef AG_NAMESPACES
-	AG_UnregisterNamespace("WEB");
+/*	AG_UnregisterNamespace("WEB"); */
 #endif
 }
 

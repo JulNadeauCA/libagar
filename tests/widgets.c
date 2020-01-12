@@ -321,14 +321,15 @@ TestGUI(void *obj, AG_Window *win)
 	 * encoding.
 	 */
 	{
-		AG_Strlcpy(ti->textBuffer,
-		    "The Quick Brown Fox Jumps Over The Lazy Dog",
-		    sizeof(ti->textBuffer));
+		ti->textBuffer[0] = '\0';
 
 		/* Create a textbox bound to a fixed-size buffer */
 		tbox = AG_TextboxNew(vPane->div[0],
 		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
 		    "Textbox: ");
+		
+		AG_SetString(tbox->ed, "placeholder", "First & Last Name");
+
 #ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tbox, ti->textBuffer, sizeof(ti->textBuffer));
 #else

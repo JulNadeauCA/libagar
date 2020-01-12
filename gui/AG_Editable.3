@@ -43,8 +43,7 @@ widget implements low-level text edition.
 .Nm
 may be bound to a fixed-size buffer containing a "C" string (i.e., a
 NUL-terminated string), or a dynamically-sized
-.Xr AG_Text 3
-buffer.
+.Xr AG_TextElement 3 .
 .Pp
 The string bound to
 .Nm
@@ -53,22 +52,25 @@ conversion to/from other encodings requires that Agar be built with
 .Xr iconv 3
 support).
 .Pp
-Most applications will not use
+The
 .Nm
-directly, and instead use
+widget is a "low-level" editor which implements an editable field (single
+or multi-line), but with no decorations or scrolling ability.
+The more commonly used
 .Xr AG_Textbox 3
-(which adds scrollbars and cosmetics such as text labels).
-The bare-bones
+widget itself embeds an
 .Nm
-widget is designed to be easily embeddable into other widgets.
+and also adds decorations, scrollbars and a text label.
 .Pp
-The API also includes methods for accessing the working buffer directly
+The
+.Nm
+API also includes methods for accessing the working buffer directly
 (see
 .Sx BUFFER ACCESS ROUTINES
 section below).
 This provides developers with a consistent interface for extending the
-low-level functionality of the widget (for example, the Copy/Paste/Delete
-or "Select All" functions could be implemented externally in this way).
+low-level functionality of the widget (for example, "Copy", "Paste", "Delete"
+and "Select All" functions can be implemented externally in this way).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -88,7 +90,7 @@ or "Select All" functions could be implemented externally in this way).
 .Fn AG_EditableBindEncoded "AG_Editable *ed" "const char *encoding" "char *buffer" "AG_Size bufferSize"
 .Pp
 .Ft "void"
-.Fn AG_EditableBindText "AG_Editable *ed" "AG_Text *txt"
+.Fn AG_EditableBindText "AG_Editable *ed" "AG_TextElement *txt"
 .Pp
 .Ft void
 .Fn AG_EditableSetLang "AG_Editable *ed" "enum ag_language lang"
@@ -136,8 +138,7 @@ Enable word wrapping in multiline mode.
 .It AG_EDITABLE_MULTILINGUAL
 Allow the user to select different languages from the right-click popup
 menu (provided the widget is bound to an
-.Xr AG_Text 3
-element).
+.Xr AG_TextElement 3 ) .
 .It AG_EDITABLE_EXCL
 By default, external changes to the contents of the buffer are allowed and
 handled in a safe manner (at the cost of frequent character set conversions
@@ -236,15 +237,13 @@ The
 .Fn AG_EditableBindText
 function binds the
 .Nm
-to a multilingual, variable-length
-.Xr AG_Text 3
-element.
+to an
+.Xr AG_TextElement 3 .
 .Pp
 The
 .Fn AG_EditableSetLang
 function selects the specified language for the current
-.Xr AG_Text 3
-binding.
+.Xr AG_TextElement 3 .
 .Pp
 The
 .Fn AG_EditableSetExcl
@@ -504,15 +503,15 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "char *string "
+.Bl -tag -compact -width "AG_TextElement *text "
 .It Va char *string
 Bound fixed-size buffer containing a "C" string (i.e., a NUL-terminated string)
 in the specified encoding (UTF-8 by default).
-.It Va AG_Text *text
+.It Va AG_TextElement *text
 Bound
-.Xr AG_Text 3
-element containing an table of variable-length C strings (entries in
-this table map to different languages).
+.Xr AG_TextElement 3 .
+.It Va char *placeholder
+An optional string of text to display whenever the text buffer is empty.
 .El
 .Sh EVENTS
 The

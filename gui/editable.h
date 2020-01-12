@@ -95,6 +95,8 @@ typedef struct ag_editable {
 	int *_Nullable yScrollTo;	/* Scroll to that Y-position */
 	int fontMaxHeight;		/* Maximum character height */
 	int lineSkip;			/* Y-increment in multiline mode */
+	int suPlaceholder;		/* Rendered "placeholder" text */
+	Uint32 _pad;
 	AG_Timer toRepeat;		/* Key repeat timer */
 	AG_Timer toCursorBlink;		/* Cursor blink timer */
 	AG_Timer toDblClick;		/* Double click timer */

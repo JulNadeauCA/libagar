@@ -113,6 +113,12 @@ Direct buffer-access routines are available in
 .Fn AG_TextboxSetLabelS "AG_Textbox *textbox" "const char *label"
 .Pp
 .Ft void
+.Fn AG_TextboxSetPlaceholder "AG_Textbox *textbox" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_TextboxSetPlaceholderS "AG_Textbox *textbox" "const char *s"
+.Pp
+.Ft void
 .Fn AG_TextboxSizeHint "AG_Textbox *textbox" "const char *text"
 .Pp
 .Ft void
@@ -260,6 +266,10 @@ restricts input to real numbers (see flags).
 .Pp
 .Fn AG_TextboxSetLabel
 changes the current label text to the specified string.
+.Pp
+.Fn AG_TextboxSetPlaceholder
+sets the "place holder" text to display when the buffer is empty.
+An argument of NULL disables placeholder text.
 .Pp
 .Fn AG_TextboxSizeHint
 requests that the initial geometry of

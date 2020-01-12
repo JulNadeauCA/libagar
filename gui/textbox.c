@@ -209,6 +209,7 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 	}
 }
 
+/* Return the current cursor position. */
 int
 AG_TextboxGetCursorPos(const AG_Textbox *tb)
 {
@@ -216,23 +217,29 @@ AG_TextboxGetCursorPos(const AG_Textbox *tb)
 }
 
 #ifdef AG_UNICODE
+/* Bind to a fixed-size UTF-8 encoded text buffer. */
 void
 AG_TextboxBindUTF8(AG_Textbox *tb, char *buf, AG_Size bufSize)
 {
 	AG_EditableBindUTF8(tb->ed, buf, bufSize);
 }
+
+/* Bind to a fixed-size buffer of specified encoding. */
 void
 AG_TextboxBindEncoded(AG_Textbox *tb, const char *encoding, char *buf,
     AG_Size bufSize)
 {
 	AG_EditableBindEncoded(tb->ed, encoding, buf, bufSize);
 }
+
+/* Bind to a multilingual text element. */
 void
 AG_TextboxBindText(AG_Textbox *tb, AG_Text *txt)
 {
 	AG_EditableBindText(tb->ed, txt);
 }
-/* Set the active language (when bound to an AG_Text(3) element) */
+
+/* Set the active language for a multilingual text element. */
 void
 AG_TextboxSetLang(AG_Textbox *tb, enum ag_language lang)
 {
@@ -240,48 +247,77 @@ AG_TextboxSetLang(AG_Textbox *tb, enum ag_language lang)
 }
 #endif /* AG_UNICODE */
 
+/* Bind to a fixed-size buffer of text in US-ASCII encoding. */
 void
 AG_TextboxBindASCII(AG_Textbox *tb, char *buf, AG_Size bufSize)
 {
 	AG_EditableBindASCII(tb->ed, buf, bufSize);
 }
 
+/* Set the "place holder" text to display when the textbox is empty. */
 void
-AG_TextboxSetString(AG_Textbox *tb, const char *text)
+AG_TextboxSetPlaceholder(AG_Textbox *tb, const char *fmt, ...)
 {
-	AG_EditableSetString(tb->ed, text);
+	va_list ap;
+	char *s;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+	AG_SetString(tb->ed, "placeholder", s);
+	free(s);
 }
 
+/* Set the "place holder" text to display when the textbox is empty. */
+void
+AG_TextboxSetPlaceholderS(AG_Textbox *tb, const char *s)
+{
+	AG_SetString(tb->ed, "placeholder", s);
+}
+
+/* Replace the contents of the text buffer with the given string. */
+void
+AG_TextboxSetString(AG_Textbox *tb, const char *s)
+{
+	AG_EditableSetString(tb->ed, s);
+}
+
+/* Clear the text buffer. */
 void
 AG_TextboxClearString(AG_Textbox *tb)
 {
 	AG_EditableSetString(tb->ed, NULL);
 }
 
+/* Return a copy of the buffer contents. */
 char *
 AG_TextboxDupString(AG_Textbox *tb)
 {
 	return AG_EditableDupString(tb->ed);
 }
 
+/* Copy the buffer contents to a fixed-size buffer. */
 AG_Size
 AG_TextboxCopyString(AG_Textbox *tb, char *dst, AG_Size dst_size)
 {
 	return AG_EditableCopyString(tb->ed, dst, dst_size);
 }
 
+/* Convert the buffer contents to an integer and return it. */
 int
 AG_TextboxInt(AG_Textbox *tb)
 {
 	return AG_EditableInt(tb->ed);
 }
 
+/* Convert the buffer contents to a float and return it. */
 float
 AG_TextboxFloat(AG_Textbox *tb)
 {
 	return AG_EditableFlt(tb->ed);
 }
 
+/* Convert the buffer contents to a double and return it. */
 double
 AG_TextboxDouble(AG_Textbox *tb)
 {
