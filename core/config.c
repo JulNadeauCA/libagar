@@ -447,7 +447,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 AG_ObjectClass agConfigClass = {
 	"AG_Config",
 	sizeof(AG_Config),
-	{ 9, 5 },
+	{ 10, 0 },
 	Init,
 	NULL,		/* reset */
 	NULL,		/* destroy */
