@@ -75,6 +75,82 @@ TableKeyDown(AG_Event *event)
 	}
 }
 
+static void
+SayHello(AG_Event *event)
+{
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
+	char *who = AG_TextboxDupString(tb);
+
+	AG_TextInfo(NULL, "Hello, %s!", who);
+
+	Free(who);
+}
+
+/*
+ * Sample autocomplete for Textbox. Parse for "First Last" (or "First,Last")
+ * and provide different suggestions for first names vs. last names. This
+ * routine runs continuously (and independently of timers).
+ */
+static void
+AutocompleteName(AG_Event *event)
+{
+	const char *dictFirst[] = {
+		"Agnes", "Apu", "Artie", "Barbara", "Barry", "Bart", "Bernice",
+		"Brandine", "Carl", "Cecil", "Cletus", "Count", "Disco",
+		"Dondelinger", "Doris", "Drederick", "Eleanor", "Gerald", "Gil",
+		"Gino", "Herman", "Homer", "Jasper", "Jebediah", "Jimbo",
+		"Julius", "Kent", "Kirk", "Lenny", "Lisa", "Maggie", "Marge",
+		"Martha", "Martin", "Manjula", "Marvin", "Maude", "Moe", "Murphy",
+		"Ned", "Rainier", "Robert", "Rod", "Sarah", "Sideshow", "Todd",
+		"\xC3\x9Cter", NULL
+	}, **dp;
+	const char *dictLast[] = {
+		"Abernathy", "Beardly", "Bouvier", "Brockman", "Carlson",
+		"Dracula", "Duffman", "Flanders", "Gunderson", "Harlan",
+		"Hibbert", "Hermann", "Jones", "Krustofsky", "Moleman",
+		"Monroe", "Nahasapeemapetilon", "Leonard", "Mel", "Prince",
+		"Rollolinski", "Samson", "Simpson", "Skinner", "Springfield",
+		"Spuckler", "Szyslak", "Stu", "Tatum", "Terwilliger",
+		"Z\xC3\xB6rker", "Van Houten", "Wiggum", "Wolfcastle", "Ziff",
+		NULL
+	};
+	AG_Editable *ed = AG_EDITABLE_SELF();
+	AG_Tlist *tl = AG_TLIST_PTR(1);
+	char *s = AG_EditableDupString(ed), *sp = s;
+	const char *sFirst, *sLast;
+
+	while (*sp == ' ' || *sp == '\t') {
+		sp++;
+	}
+	sFirst = AG_Strsep(&sp, " ,");
+	do {
+		sLast = AG_Strsep(&sp, " ,");
+	} while (sLast != NULL && *sLast == '\0');
+
+	AG_TlistBegin(tl);
+
+	if (sLast == NULL) {
+		for (dp = dictFirst; *dp != NULL; dp++)
+			if (sFirst[0] == '\0' ||
+			    AG_Strncasecmp(*dp, sFirst, strlen(sFirst)) == 0)
+				AG_TlistAddPtr(tl, NULL, *dp, (void *)*dp);
+	} else {
+		for (dp = dictLast; *dp != NULL; dp++)
+			if (sLast[0] == '\0' ||
+			    AG_Strncasecmp(*dp, sLast, strlen(sLast)) == 0) {
+				char *sd;
+
+				asprintf(&sd, "%s %s", sFirst, *dp);
+				AG_TlistAddPtr(tl, NULL, sd, (void *)sd);
+				Free(sd);
+			}
+	}
+
+	AG_TlistEnd(tl);
+
+	Free(s);
+}
+
 static int
 TestGUI(void *obj, AG_Window *win)
 {
@@ -327,14 +403,16 @@ TestGUI(void *obj, AG_Window *win)
 		tbox = AG_TextboxNew(vPane->div[0],
 		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
 		    "Textbox: ");
-		
-		AG_SetString(tbox->ed, "placeholder", "First & Last Name");
+	
+		AG_TextboxSetPlaceholderS(tbox, "First & Last Name");
+		AG_EditableAutocomplete(tbox->ed, AutocompleteName, NULL);
 
 #ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tbox, ti->textBuffer, sizeof(ti->textBuffer));
 #else
 		AG_TextboxBindASCII(tbox, ti->textBuffer, sizeof(ti->textBuffer));
 #endif
+		AG_SetEvent(tbox, "textbox-return", SayHello, "%p", tbox);
 
 #ifdef AG_UNICODE
 		/*

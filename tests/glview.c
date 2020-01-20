@@ -324,19 +324,20 @@ TestGUI(void *obj, AG_Window *win)
 		/* Edit ambient and diffuse color components. */
 		nbColor = AG_NotebookNew(pa->div[1], AG_NOTEBOOK_EXPAND);
 		{
+			const int flags = AG_HSVPAL_NOALPHA |
+				          AG_HSVPAL_EXPAND |
+					  AG_HSVPAL_SHOW_RGB;
+
 			ntab = AG_NotebookAdd(nbColor, "Amb", AG_BOX_VERT);
-			pal = AG_HSVPalNew(ntab,
-			    AG_HSVPAL_NOALPHA|AG_HSVPAL_EXPAND);
+			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->ambient);
 
 			ntab = AG_NotebookAdd(nbColor, "Dif", AG_BOX_VERT);
-			pal = AG_HSVPalNew(ntab,
-			    AG_HSVPAL_NOALPHA|AG_HSVPAL_EXPAND);
+			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->diffuse);
 
 			ntab = AG_NotebookAdd(nbColor, "Spe", AG_BOX_VERT);
-			pal = AG_HSVPalNew(ntab,
-			    AG_HSVPAL_NOALPHA|AG_HSVPAL_EXPAND);
+			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->specular);
 		}
 	}

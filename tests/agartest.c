@@ -502,7 +502,40 @@ retry:
 	AG_RedrawOnTick(ti->console, -1);
 }
 
-#if defined(AG_DEBUG) && defined(AG_TIMERS)
+#ifdef AG_UNICODE
+static void
+RunUnicodeBrowser(AG_Event *event)
+{
+	AG_Window *win;
+
+	if ((win = DEV_UnicodeBrowser()) == NULL) {
+		return;
+	}
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_RIGHT, 1);
+	AG_SetStyle(win, "font-size", "150%");
+	AG_WindowShow(win);
+}
+#endif
+
+#ifdef AG_TIMERS
+static void RunDriversBrowser(AG_Event *event) { DEV_Browser(&agDrivers); }
+static void RunClassInfo(AG_Event *event) { DEV_ClassInfo(); }
+
+static void
+RunTimerInspector(AG_Event *event)
+{
+	AG_Window *win;
+
+	if ((win = DEV_TimerInspector()) == NULL) {
+		return;
+	}
+	AG_WindowAttach(winMain, win);
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 1);
+	AG_SetStyle(win, "font-size", "80%");
+	AG_WindowShow(win);
+}
+
+# ifdef AG_DEBUG
 static void
 DoDebugger(void)
 {
@@ -511,13 +544,13 @@ DoDebugger(void)
 	if ((win = AG_GuiDebugger(agWindowFocused)) != NULL)
 		AG_WindowShow(win);
 }
-
 static void
 RunDebugger(AG_Event *event)
 {
 	DoDebugger();
 }
-#endif /* AG_DEBUG and AG_TIMERS */
+# endif
+#endif /* AG_TIMERS */
 
 static void
 DoStyleEditor(void)
@@ -788,7 +821,16 @@ main(int argc, char *argv[])
 	{
 		AG_MenuAction(mi, _("Style Editor"), NULL, RunStyleEditor, NULL);
 #if defined(AG_DEBUG) && defined(AG_TIMERS)
-		AG_MenuAction(mi, _("Debugger"), NULL, RunDebugger, NULL);
+		AG_MenuAction(mi, _("GUI Debugger"), NULL, RunDebugger, NULL);
+#endif
+		AG_MenuSeparator(mi);
+#if defined(AG_TIMERS)
+		AG_MenuAction(mi, _("Drivers"), NULL, RunDriversBrowser, NULL);
+		AG_MenuAction(mi, _("Classes"), NULL, RunClassInfo, NULL);
+		AG_MenuAction(mi, _("Timers"), NULL,  RunTimerInspector, NULL);
+#endif
+#if defined(AG_UNICODE)
+		AG_MenuAction(mi, _("Unicode"), NULL, RunUnicodeBrowser, NULL);
 #endif
 	}
 	mi = AG_MenuNode(menu->root, ("Help"), NULL);
@@ -808,8 +850,7 @@ main(int argc, char *argv[])
 		Strlcpy(path, (*pTest)->name, sizeof(path));
 		Strlcat(path, ".png", sizeof(path));
 		if ((S = AG_SurfaceFromPNG(path)) != NULL) {
-			AG_TlistAddPtr(tl, S, (*pTest)->name,
-			    (void *)*pTest);
+			AG_TlistAddPtr(tl, S, (*pTest)->name, (void *)*pTest);
 			AG_SurfaceFree(S);
 		} else {
 			AG_TlistAddPtr(tl, agIconDoc.s, (*pTest)->name,
