@@ -87,21 +87,22 @@ static struct {
 	const char *_Nonnull key;
 	int        *_Nonnull p;
 } agGUIOptions[] = {
-	{ "ag_kbd_delay",		&agKbdDelay		},
-	{ "ag_kbd_repeat",		&agKbdRepeat		},
-	{ "ag_mouse_dblclick_delay",	&agMouseDblclickDelay	},
-	{ "ag_mouse_spin_delay",	&agMouseSpinDelay	},
-	{ "ag_mouse_spin_interval",	&agMouseSpinIval	},
+	{ "kbd_delay",		&agKbdDelay		},
+	{ "kbd_repeat",		&agKbdRepeat		},
+	{ "ms_dblclick_delay",	&agMouseDblclickDelay	},
+	{ "ms_spin_delay",	&agMouseSpinDelay	},
+	{ "ms_spin_interval",	&agMouseSpinIval	},
 #ifdef AG_UNICODE
-	{ "ag_text_composition",	&agTextComposition	},
-	{ "ag_text_bidi",		&agTextBidi		},
+	{ "text_composition",	&agTextComposition	},
 #endif
-	{ "ag_text_cache",		&agTextCache		},
-	{ "ag_text_tab_width",		&agTextTabWidth		},
-	{ "ag_text_blink_rate",		&agTextBlinkRate	},
-	{ "ag_text_symbols",		&agTextSymbols		},
-	{ "ag_page_increment",		&agPageIncrement	},
-	{ "ag_screenshot_quality",	&agScreenshotQuality	},
+	{ "text_cache",		&agTextCache		},
+	{ "text_tab_width",	&agTextTabWidth		},
+	{ "text_blink_rate",	&agTextBlinkRate	},
+	{ "text_symbols",	&agTextSymbols		},
+	{ "page_increment",	&agPageIncrement	},
+	{ "autocomplete_delay",	&agAutocompleteDelay	},
+	{ "autocomplete_rate",	&agAutocompleteRate	},
+	{ "screenshot_quality",	&agScreenshotQuality	},
 };
 const Uint agGUIOptionCount = sizeof(agGUIOptions) / sizeof(agGUIOptions[0]);
 
@@ -182,13 +183,14 @@ int agMouseScrollIval = 1;		/* Scrollbar increment interval */
 int agScrollButtonIval = 100;		/* Scrollbar button interval */
 #ifdef AG_UNICODE
 int agTextComposition = 1;		/* Built-in input composition */
-int agTextBidi = 0;			/* Bidirectionnal text display */
 #endif
 int agTextCache = 1;			/* Dynamic text caching */
 int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
 int agTextSymbols = 1;			/* Process special symbols in text */
 int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
+int agAutocompleteDelay = 100;		/* Delay before autocomplete (ms) */
+int agAutocompleteRate = 50;		/* Autocomplete refresh rate (ms) */
 int agScreenshotQuality = 100;		/* JPEG quality in % */
 
 double agZoomValues[AG_ZOOM_MAX] = {

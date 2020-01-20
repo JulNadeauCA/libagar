@@ -33,9 +33,10 @@ __BEGIN_DECLS
 extern int agGUI, agRenderingContext, agStereo, agXsync;
 extern int agKbdDelay, agKbdRepeat;
 extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval,
-           agMouseScrollIval, agScrollButtonIval, agPageIncrement;
+           agMouseScrollIval, agScrollButtonIval, agPageIncrement,
+           agAutocompleteDelay, agAutocompleteRate;
 #ifdef AG_UNICODE
-extern int agTextComposition, agTextBidi;
+extern int agTextComposition;
 #endif
 extern int agTextCache, agTextTabWidth, agTextBlinkRate, agTextSymbols;
 extern int agScreenshotQuality;
