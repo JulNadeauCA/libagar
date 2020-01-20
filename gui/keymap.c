@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -474,8 +474,8 @@ static int
 CursorUp(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	int prevPos = ed->pos;
-	int prevSel = ed->sel;
+	const int prevPos = ed->pos;
+	const int prevSel = ed->sel;
 
 	if (!(ed->flags & AG_EDITABLE_MULTILINE))
 		return (0);
@@ -501,8 +501,8 @@ static int
 CursorDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	int prevPos = ed->pos;
-	int prevSel = ed->sel;
+	const int prevPos = ed->pos;
+	const int prevSel = ed->sel;
 
 	if (!(ed->flags & AG_EDITABLE_MULTILINE))
 		return (0);
@@ -528,8 +528,8 @@ static int
 PageUp(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	int prevPos = ed->pos;
-	int prevSel = ed->sel;
+	const int prevPos = ed->pos;
+	const int prevSel = ed->sel;
 
 	if (!(ed->flags & AG_EDITABLE_MULTILINE))
 		return (0);
@@ -554,8 +554,8 @@ static int
 PageDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	int prevPos = ed->pos;
-	int prevSel = ed->sel;
+	const int prevPos = ed->pos;
+	const int prevSel = ed->sel;
 
 	if (!(ed->flags & AG_EDITABLE_MULTILINE))
 		return (0);

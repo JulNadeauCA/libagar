@@ -8,6 +8,7 @@
 
 #include <agar/gui/begin.h>
 
+struct ag_window;
 struct ag_popup_menu;
 
 /* Working UCS-4 text buffer for internal use */
@@ -30,6 +31,13 @@ typedef struct ag_editable_clipboard {
 	Uint32 _pad;
 #endif
 } AG_EditableClipboard;
+
+/* Autocomplete context */
+typedef struct ag_autocomplete {
+	AG_Timer to;                      /* Timer for delay after key-up */
+	AG_Event *_Nonnull fn;            /* Callback routine & arguments */
+	char winName[AG_OBJECT_NAME_MAX]; /* Name of expanded window (or "") */
+} AG_Autocomplete;
 
 typedef struct ag_editable {
 	struct ag_widget wid;		/* AG_Widget -> AG_Editable */
@@ -93,6 +101,7 @@ typedef struct ag_editable {
 	struct ag_popup_menu *_Nullable pm; /* Right-click popup menu */
 	int *_Nullable xScrollTo;	/* Scroll to that X-position */
 	int *_Nullable yScrollTo;	/* Scroll to that Y-position */
+	AG_Autocomplete *_Nullable complete; /* Autocomplete context */
 	int fontMaxHeight;		/* Maximum character height */
 	int lineSkip;			/* Y-increment in multiline mode */
 	int suPlaceholder;		/* Rendered "placeholder" text */
@@ -127,6 +136,9 @@ void AG_EditableBindText(AG_Editable *_Nonnull, AG_Text *_Nonnull);
 void AG_EditableSetLang(AG_Editable *_Nonnull, enum ag_language);
 #endif
 
+void AG_EditableAutocomplete(AG_Editable *_Nonnull, _Nullable AG_EventFn,
+                             const char *_Nullable, ...);
+
 AG_EditableBuffer *_Nullable AG_EditableGetBuffer(AG_Editable *_Nonnull);
 void AG_EditableReleaseBuffer(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
 void AG_EditableClearBuffer(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
@@ -156,8 +168,10 @@ void AG_EditableClearString(AG_Editable *_Nonnull);
 void AG_EditablePrintf(void *_Nonnull, const char *_Nullable, ...);
 
 char *_Nonnull AG_EditableDupString(AG_Editable *_Nonnull);
-AG_Size        AG_EditableCopyString(AG_Editable *_Nonnull, char *_Nonnull,
-                                     AG_Size);
+
+AG_Size AG_EditableCopyString(AG_Editable *_Nonnull, char *_Nonnull, AG_Size);
+int     AG_EditableCatString(AG_Editable *_Nonnull, const char *_Nonnull, ...);
+int     AG_EditableCatStringS(AG_Editable *_Nonnull, const char *_Nonnull);
 
 int    AG_EditableInt(AG_Editable *_Nonnull);
 void   AG_EditableSetIntOnly(AG_Editable *_Nonnull, int);

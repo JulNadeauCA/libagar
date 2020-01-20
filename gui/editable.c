@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,8 +24,9 @@
  */
 
 /*
- * Low-level single/multi-line text input widget. This is the base widget
- * used by other widgets such as AG_Textbox(3).
+ * The base Agar text editor. It enables the user to edit single- or multi-line,
+ * NUL-terminated strings. It supports ASCII, UTF-8, UCS-4 and other encodings
+ * through iconv). It interprets ANSI SGR attributes. Used by AG_Textbox(3).
  */
 
 #include <agar/core/core.h>
@@ -39,6 +40,7 @@
 #include <agar/gui/primitive.h>
 #include <agar/gui/cursors.h>
 #include <agar/gui/menu.h>
+#include <agar/gui/tlist.h>
 #include <agar/gui/icons.h>
 #include <agar/gui/gui_math.h>
 
@@ -291,8 +293,8 @@ AG_EditableNew(void *parent, Uint flags)
 
 	ed->flags |= flags;
 
-	/* Set exclusive mode if requested; also sets default redraw rate. */
-	AG_EditableSetExcl(ed, (flags & AG_EDITABLE_EXCL));
+	if ((flags & AG_EDITABLE_EXCL) == 0)
+		AG_RedrawOnTick(ed, 1000);           /* Default update rate */
 
 	AG_ObjectAttach(parent, ed);
 	return (ed);
@@ -380,13 +382,15 @@ AG_EditableSetWordWrap(AG_Editable *ed, int enable)
 }
 
 /*
- * Specify whether the buffer is accessed exclusively by the widget.
- * We can disable periodic redraws in exclusive mode.
+ * Advise as to whether the buffer contents are accessed exclusively by this
+ * particular widget instance. If so, disable periodic redraw (otherwise set
+ * a default refresh rate of 1s).
  */
 void
 AG_EditableSetExcl(AG_Editable *ed, int enable)
 {
 	AG_ObjectLock(ed);
+
 	ClearBuffer(&ed->sBuf);
 
 	if (enable) {
@@ -451,7 +455,7 @@ CharIsIntOnly(AG_Char c)
 }
 
 /* Evaluate if a character is acceptable in float-only mode. */
-static __inline__ int
+static __inline__ _Const_Attribute int
 CharIsFltOnly(AG_Char c)
 {
 	switch (c) {
@@ -620,6 +624,11 @@ OnHide(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
 
+	if (ed->complete) {
+		AG_DelTimer(ed, &ed->complete->to);
+		free(ed->complete);
+		ed->complete = NULL;
+	}
 	if (ed->pm != NULL) {
 		AG_PopupHide(ed->pm);
 	}
@@ -647,7 +656,7 @@ OnFontChange(AG_Event *_Nonnull event)
  * Evaluate whether the given character should be considered
  * a space for word wrapping and word selection.
  */
-static __inline__ int
+static __inline__ _Const_Attribute int
 IsSpaceNat(AG_Char c)
 {
 	switch (c) {
@@ -987,7 +996,8 @@ Draw(void *_Nonnull obj)
 			AG_TextColor(&c);
 
 			ed->suPlaceholder = AG_WidgetMapSurface(ed,
-			    AG_TextRender(Vph->data.p));
+			    AG_TextRender((char *)Vph->data.p));
+
 			AG_UnlockVariable(Vph);
 			AG_PopTextState();
 		}
@@ -1267,6 +1277,86 @@ KeyDown(AG_Event *_Nonnull event)
 }
 
 static void
+AutocompletePoll(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
+
+	if (ed->complete && ed->complete->fn)
+		AG_PostEventByPtr(ed, ed->complete->fn, "%p", tl);
+}
+
+static void
+AutocompleteSelected(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+
+	AG_EditableSetString(ed, NULL);
+	AG_EditableCatStringS(ed, it->text);
+
+	AG_PostEvent(WIDGET(tl)->window, "window-close", NULL);
+}
+
+static Uint32
+AutocompleteTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
+{
+	AG_Editable *ed = AG_EDITABLE_SELF();
+	AG_Window *win, *winParent = WIDGET(ed)->window;
+	AG_Tlist *tl;
+	int xParent, yParent;
+
+	if (AGDRIVER_MULTIPLE(WIDGET(ed)->drv)) {
+		xParent = WIDGET(winParent)->x;
+		yParent = WIDGET(winParent)->y;
+	} else {
+		xParent = 0;
+		yParent = 0;
+	}
+
+	if (ed->complete->winName[0] != '\0') {            /* Focus existing */
+		if ((win = AG_WindowFind(ed->complete->winName)) != NULL) {
+			AG_WindowSetGeometry(win,
+			    xParent + WIDGET(ed)->rView.x1,
+			    yParent + WIDGET(ed)->rView.y1 + HEIGHT(ed),
+			    WIDTH(ed), 200);
+			AG_WindowShow(win);
+			AG_WindowFocus(win);
+		}
+		return (0);
+	}
+
+	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_DENYFOCUS |
+	                   AG_WINDOW_NOTITLE | AG_WINDOW_KEEPABOVE);
+	if (win == NULL) {
+		return (0);
+	}
+	win->wmType = AG_WINDOW_WM_COMBO;
+
+	AG_WindowAttach(winParent, win);
+	AG_WindowSetPadding(win, 0,0,0,0);
+	AG_WindowSetCloseAction(win, AG_WINDOW_HIDE);
+
+	tl = AG_TlistNewPolledMs(win, AG_TLIST_EXPAND, agAutocompleteRate,
+	    AutocompletePoll, "%p", ed);
+	AG_SetEvent(tl, "tlist-selected", AutocompleteSelected, "%p", ed);
+
+	AG_WindowSetGeometry(win,
+	    xParent + WIDGET(ed)->rView.x1,
+	    yParent + WIDGET(ed)->rView.y1 + HEIGHT(ed),
+	    WIDTH(ed),
+	    200);
+
+	AG_WindowShow(win);
+
+	Strlcpy(ed->complete->winName, OBJECT(win)->name,
+	    sizeof(ed->complete->winName));
+
+	return (0);
+}
+
+static void
 KeyUp(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
@@ -1281,8 +1371,78 @@ KeyUp(AG_Event *_Nonnull event)
 		}
 		AG_PostEvent(ed, "editable-return", NULL);
 		ed->returnHeld = 0;
+		AG_Redraw(ed);
 	}
-	AG_Redraw(ed);
+	if (ed->complete) {
+		switch (keysym) {
+		case AG_KEY_HOME:
+		case AG_KEY_END:
+		case AG_KEY_LEFT:
+		case AG_KEY_RIGHT:
+		case AG_KEY_UP:
+		case AG_KEY_DOWN:
+		case AG_KEY_PAGEUP:
+		case AG_KEY_PAGEDOWN:
+		case AG_KEY_BACKSPACE:
+		case AG_KEY_DELETE:
+			break;
+		default:
+			AG_AddTimer(ed, &ed->complete->to, agAutocompleteDelay,
+			    AutocompleteTimeout, NULL);
+			break;
+		}
+	}
+}
+
+/*
+ * Set up an autocomplete context. Function fn will be called to populate
+ * the list of autocomplete candidates.
+ * 
+ * If fn is NULL, disable autocomplete (closing any open windows).
+ * If an autocomplete context exists, replace its function and arguments
+ * (cancelling any running timers).
+ */
+void
+AG_EditableAutocomplete(AG_Editable *ed, AG_EventFn fn, const char *fmt, ...)
+{
+	AG_ObjectLock(ed);
+
+	if (fn == NULL) {                           /* Disable autocomplete */
+		if (ed->complete) {
+			AG_DelTimer(ed, &ed->complete->to);
+			if (ed->complete) {
+				AG_UnsetEventByPtr(ed, ed->complete->fn);
+			}
+			if (ed->complete->winName[0] != '\0') {
+				AG_Window *win;
+
+				if ((win = AG_WindowFind(ed->complete->winName)) != NULL)
+					AG_PostEvent(win, "window-close", NULL);
+			}
+			free(ed->complete);
+			ed->complete = NULL;
+		}
+		goto out;
+	}
+	if (ed->complete == NULL) {
+		ed->complete = Malloc(sizeof(AG_Autocomplete));
+		AG_InitTimer(&ed->complete->to, "complete", 0);
+	} else {                                                /* Replace */
+		AG_UnsetEventByPtr(ed, ed->complete->fn);
+		AG_DelTimer(ed, &ed->complete->to);
+	}
+	ed->complete->fn = AG_SetEvent(ed, NULL, fn, NULL);
+	ed->complete->winName[0] = '\0';
+
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ed->complete->fn, fmt, ap);
+		va_end(ap);
+	}
+out:
+	AG_ObjectUnlock(ed);
 }
 
 static void
@@ -1801,9 +1961,7 @@ out:
 	ReleaseBuffer(ed, buf);
 }
 
-/*
- * Overwrite the contents of the text buffer with the given string.
- */
+/* Replace the contents of the text buffer with a given string. */
 void
 AG_EditableSetString(AG_Editable *ed, const char *text)
 {
@@ -1841,16 +1999,14 @@ out:
 	AG_Redraw(ed);
 }
 
+/* Clear the buffer contents. */
 void
 AG_EditableClearString(AG_Editable *ed)
 {
 	AG_EditableSetString(ed, NULL);
 }
 
-/*
- * Overwrite the contents of the text buffer with the given formatted
- * C string (in UTF-8 encoding).
- */
+/* Replace the buffer contents with the given string. */
 void
 AG_EditablePrintf(void *obj, const char *fmt, ...)
 {
@@ -1904,34 +2060,34 @@ out:
 	AG_Redraw(ed);
 }
 
-/* Return a duplicate of the current string. */
+/* Return a duplicate of the buffer contents. */
 char *
 AG_EditableDupString(AG_Editable *ed)
 {
-	AG_Variable *var;
+	AG_Variable *V;
 	char *sDup, *s;
 
 	AG_ObjectLock(ed);
 	if (AG_Defined(ed, "text")) {
 		AG_TextElement *txt;
 
-		var = AG_GetVariable(ed, "text", (void *)&txt);
+		V = AG_GetVariable(ed, "text", (void *)&txt);
 		s = txt->ent[ed->lang].buf;
 		sDup = TryStrdup((s != NULL) ? s : "");
 	} else {
-		var = AG_GetVariable(ed, "string", (void *)&s);
+		V = AG_GetVariable(ed, "string", (void *)&s);
 		sDup = TryStrdup(s);
 	}
-	AG_UnlockVariable(var);
+	AG_UnlockVariable(V);
 	AG_ObjectUnlock(ed);
 	return (sDup);
 }
 
-/* Copy text to a fixed-size buffer and always NUL-terminate. */
+/* Copy buffer contents to a fixed-size buffer (and NUL-terminate always). */
 AG_Size
 AG_EditableCopyString(AG_Editable *ed, char *dst, AG_Size dst_size)
 {
-	AG_Variable *var;
+	AG_Variable *V;
 	AG_Size rv;
 	char *s;
 
@@ -1939,19 +2095,92 @@ AG_EditableCopyString(AG_Editable *ed, char *dst, AG_Size dst_size)
 	if (AG_Defined(ed, "text")) {
 		AG_TextElement *txt;
 
-		var = AG_GetVariable(ed, "text", (void *)&txt);
+		V = AG_GetVariable(ed, "text", (void *)&txt);
 		s = txt->ent[ed->lang].buf;
 		rv = Strlcpy(dst, (s != NULL) ? s : "", dst_size);
 	} else {
-		var = AG_GetVariable(ed, "string", (void *)&s);
+		V = AG_GetVariable(ed, "string", (void *)&s);
 		rv = Strlcpy(dst, s, dst_size);
 	}
-	AG_UnlockVariable(var);
+	AG_UnlockVariable(V);
 	AG_ObjectUnlock(ed);
 	return (rv);
 }
 
-/* Perform trivial conversion from string to int. */
+/* Append a string to the contents of the text buffer. */
+int
+AG_EditableCatString(AG_Editable *ed, const char *fmt, ...)
+{
+	char *s;
+	va_list ap;
+	int rv;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+	rv = AG_EditableCatStringS(ed, s);
+	free(s);
+	return (rv);
+}
+
+/* Append a string to the end of the text buffer. */
+int
+AG_EditableCatStringS(AG_Editable *ed, const char *s)
+{
+	AG_Variable *V;
+
+	AG_ObjectLock(ed);
+
+	if (AG_Defined(ed, "text")) {
+		AG_TextElement *txt;
+		AG_Language langSave;
+
+		V = AG_GetVariable(ed, "text", (void *)&txt);
+		langSave = txt->lang;
+		txt->lang = ed->lang;
+		if (AG_TextCatS(txt, s) == -1) {		/* XXX pos */
+			txt->lang = langSave;
+			goto fail;
+		}
+		txt->lang = langSave;
+	} else {
+		AG_EditableBuffer *buf;
+		AG_Char *ucs;
+		char *dst;
+		AG_Size ucsLen;
+
+		V = AG_GetVariable(ed, "string", (void *)&dst);
+		if ((ucs = AG_ImportUnicode(ed->encoding, s, &ucsLen, NULL)) == NULL) {
+			goto fail;
+		}
+		if ((buf = GetBuffer(ed)) == NULL) {
+			free(ucs);
+			goto fail;
+		}
+		if (AG_EditableGrowBuffer(ed, buf, ucs, ucsLen) == -1) {
+			ReleaseBuffer(ed, buf);
+			free(ucs);
+			goto fail;
+		}
+		memcpy(&buf->s[buf->len], ucs, ucsLen * sizeof(AG_Char));
+		buf->len += ucsLen;
+		ed->pos += ucsLen;
+		CommitBuffer(ed, buf);
+		ReleaseBuffer(ed, buf);
+		free(ucs);
+	}
+	AG_UnlockVariable(V);
+	AG_ObjectUnlock(ed);
+	AG_Redraw(ed);
+	return (0);
+fail:
+	AG_UnlockVariable(V);
+	AG_ObjectUnlock(ed);
+	AG_Redraw(ed);
+	return (-1);
+}
+
+/* Convert buffer contents to an integer value and return it. */
 int
 AG_EditableInt(AG_Editable *ed)
 {
@@ -1974,7 +2203,7 @@ AG_EditableInt(AG_Editable *ed)
 	return (i);
 }
 
-/* Perform trivial conversion from string to float . */
+/* Convert buffer contents to a single-precision float and return it. */
 float
 AG_EditableFlt(AG_Editable *ed)
 {
@@ -1997,7 +2226,7 @@ AG_EditableFlt(AG_Editable *ed)
 	return (flt);
 }
 
-/* Perform trivial conversion from string to double. */
+/* Convert buffer contents to a double and return it. */
 double
 AG_EditableDbl(AG_Editable *ed)
 {
@@ -2038,12 +2267,11 @@ Init(void *_Nonnull obj)
 {
 	AG_Editable *ed = obj;
 
-	WIDGET(ed)->flags |= AG_WIDGET_FOCUSABLE |
-	                     AG_WIDGET_UNFOCUSED_MOTION |
-			     AG_WIDGET_USE_TEXT |
-	                     AG_WIDGET_USE_MOUSEOVER;
+	WIDGET(ed)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_UNFOCUSED_MOTION |
+			     AG_WIDGET_USE_TEXT | AG_WIDGET_USE_MOUSEOVER;
 
 	ed->flags = AG_EDITABLE_BLINK_ON | AG_EDITABLE_MARKPREF;
+
 	ed->lineScrollAmount = 5;
 #ifdef AG_UNICODE
 	ed->encoding = "UTF-8";
@@ -2079,7 +2307,8 @@ Init(void *_Nonnull obj)
 			     sizeof(int) +               /* xScrollPx */
 			     sizeof(AG_PopupMenu *) +    /* pm */
 			     sizeof(int *) +             /* xScrollTo */
-			     sizeof(int *));             /* yScrollTo */
+			     sizeof(int *) +
+			     sizeof(AG_Autocomplete *)); /* complete */
 	
 	ed->selDblClick = -1;
 	ed->fontMaxHeight = agTextFontHeight;
@@ -2109,7 +2338,6 @@ Init(void *_Nonnull obj)
 #else
 	AG_BindString(ed, "string", ed->text, sizeof(ed->text));
 #endif
-	AG_RedrawOnTick(ed, 1000);
 }
 
 static void
@@ -2117,6 +2345,9 @@ Destroy(void *_Nonnull obj)
 {
 	AG_Editable *ed = obj;
 
+	if (ed->complete != NULL) {
+		free(ed->complete);
+	}
 	if (ed->pm != NULL) {
 		AG_PopupDestroy(ed->pm);
 	}
