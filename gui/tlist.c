@@ -78,7 +78,6 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectUnlock(tl);
 
 	AG_RedrawOnTick(tl, 1000);
-
 	return (tl);
 }
 
@@ -104,7 +103,6 @@ AG_TlistNewPolledMs(void *parent, Uint flags, int ms, AG_EventFn fn,
 
 	AG_RedrawOnTick(tl, ms);
 	tl->pollDelay = ms;
-
 	return (tl);
 }
 
@@ -117,6 +115,8 @@ AG_TlistSetRefresh(AG_Tlist *tl, int ms)
 	} else {
 		AG_AddTimer(tl, &tl->refreshTo, ms, PollRefreshTimeout, NULL);
 	}
+	AG_RedrawOnTick(tl, ms);
+	tl->pollDelay = ms;
 }
 
 /* In AG_TLIST_POLL mode, invoke `tlist-poll' if refresh timer has expired. */
@@ -284,7 +284,20 @@ DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 }
 
 static void
-OnFocusLoss(AG_Event *_Nonnull event)
+OnHide(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+
+	if (tl->flags & AG_TLIST_POLL) {
+		tl->flags &= ~(AG_TLIST_REFRESH);
+		AG_DelTimer(tl, &tl->refreshTo);
+	}
+	AG_DelTimer(tl, &tl->moveTo);
+	AG_DelTimer(tl, &tl->dblClickTo);
+}
+
+static void
+OnLostFocus(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 
@@ -1355,8 +1368,8 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(tl, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tl, "key-down", KeyDown, NULL);
 	AG_AddEvent(tl, "widget-shown", OnShow, NULL);
-	AG_AddEvent(tl, "widget-hidden", OnFocusLoss, NULL);
-	AG_SetEvent(tl, "widget-lostfocus", OnFocusLoss, NULL);
+	AG_AddEvent(tl, "widget-hidden", OnHide, NULL);
+	AG_SetEvent(tl, "widget-lostfocus", OnLostFocus, NULL);
 	AG_SetEvent(tl, "key-up", KeyUp, NULL);
 
 	AG_BindPointer(tl, "selected", &tl->selected);
