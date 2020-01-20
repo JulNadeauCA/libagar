@@ -107,6 +107,26 @@ static void HideMinimizedIcon(AG_Window *_Nonnull);
 #endif
 
 /*
+ * Lookup a window by name.
+ * The agDrivers VFS must be locked.
+ */
+AG_Window *
+AG_WindowFind(const char *name)
+{
+	AG_Driver *drv;
+	AG_Window *win;
+
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		AG_FOREACH_WINDOW(win, drv) {
+			AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+			if (strcmp(OBJECT(win)->name, name) == 0)
+				return (win);
+		}
+	}
+	return (NULL);
+}
+
+/*
  * Initialize a new window.
  * Called internally by AG_WindowNew*().
  */
@@ -134,17 +154,17 @@ InitWindow(AG_Window *win, Uint flags)
 }
 
 /*
- * Create a generic window under a specific single-window driver. Return
- * a pointer to the newly-allocated window, or NULL on failure.
+ * Create a new Agar window attached to an alternate driver instance.
+ * Return a pointer to the newly-allocated window or NULL on failure.
  */
 AG_Window *
-AG_WindowNewSw(void *pDrv, Uint flags)
+AG_WindowNewUnder(void *pDrv, Uint flags)
 {
 	AG_Driver *drv = pDrv;
 	AG_Window *win;
 
-	if (!AG_OBJECT_VALID(drv) || !AG_OfClass(drv, "AG_Driver:AG_DriverSw:*")) {
-		AG_SetErrorS("Bad driver argument");
+	if (!AG_OBJECT_VALID(drv) || !AG_OfClass(drv, "AG_Driver:*")) {
+		AG_SetErrorS("drv is not a Driver");
 		return (NULL);
 	}
 	if ((win = TryMalloc(sizeof(AG_Window))) == NULL) {
@@ -1296,6 +1316,7 @@ AG_WindowFocusNamed(const char *name)
 		AG_FOREACH_WINDOW(owin, drv) {
 			AG_OBJECT_ISA(owin, "AG_Widget:AG_Window:*");
 			if (strcmp(OBJECT(owin)->name, name) == 0) {
+				Debug(NULL, "Match: %s (under %s)\n", OBJECT(owin)->name, OBJECT(drv)->name);
 				AG_WindowShow(owin);
 				AG_WindowFocus(owin);
 			    	rv = 1;
@@ -2810,19 +2831,6 @@ AG_WindowProcessQueued(void)
 }
 
 #ifdef AG_LEGACY
-/* Pre-1.4 */
-AG_Window *
-AG_FindWindow(const char *name)
-{
-	AG_Driver *drv;
-	AG_Window *win;
-
-	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		if ((win = AG_ObjectFindS(drv, name)) != NULL)
-			return (win);
-	}
-	return (NULL);
-}
 void
 AG_ViewAttach(struct ag_window *pWin)
 {

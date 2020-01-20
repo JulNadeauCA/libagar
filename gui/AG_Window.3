@@ -44,7 +44,7 @@ The
 .Xr AG_Widget 3
 objects form a tree structure attached to a parent
 .Nm .
-Agar windows are attached to some parent
+Agar windows are attached to a parent
 .Xr AG_Driver 3
 which provides a bridge between the Agar GUI system and the user's preferred
 graphics platform / backend.
@@ -75,11 +75,9 @@ must be made visible using
 .Pp
 Windows are destroyed by a single call to
 .Xr AG_ObjectDetach 3 .
-The detach operation actually places the window on a queue, and actual
-freeing will occur after the end of the current event processing cycle.
-After a window has been successfully detached, the
-.Sq window-detached
-event is raised.
+This effectively puts the window in a garbage-collection queue (the actual
+freeing of resources will occur only after the end of the current event
+processing cycle).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -96,7 +94,7 @@ event is raised.
 .Fn AG_WindowNewNamedS "Uint flags" "const char *name"
 .Pp
 .Ft "AG_Window *"
-.Fn AG_WindowNewSw "AG_DriverSw *drv" "Uint flags"
+.Fn AG_WindowNewUnder "AG_Driver *drv" "Uint flags"
 .Pp
 .Ft "void"
 .Fn AG_WindowSetCaption "AG_Window *win" "const char *format" "..."
@@ -108,7 +106,7 @@ event is raised.
 .Fn AG_WindowSetIcon "AG_Window *win" "AG_Surface *surface"
 .Pp
 .Ft "void"
-.Fn AG_WindowSetCloseAction "AG_Window *win" "eum ag_window_close_action action"
+.Fn AG_WindowSetCloseAction "AG_Window *win" "AG_WindowCloseAction action"
 .Pp
 .Ft "void"
 .Fn AG_WindowSetPadding "AG_Window *win" "int paddingLeft" "int paddingRight" "int paddingTop" "int paddingBottom"
@@ -228,12 +226,11 @@ The name may contain any printable character, except
 .Sq / .
 .Pp
 The
-.Fn AG_WindowNewSw
-variant creates a new window and attaches it to the specified
-.Xr AG_DriverSw 3
-object.
-This function is only useful to applications that wish to use multiple
-single-window drivers concurrently.
+.Fn AG_WindowNewUnder
+variant creates a new window and attaches it to an alternate
+.Xr AG_Driver 3
+instance
+.Fa drv .
 .Pp
 The
 .Fn AG_WindowSetCaption
@@ -249,27 +246,23 @@ This icon will be used by Agar's internal window manager whenever the window
 is minimized.
 The given surface will be duplicated and rescaled if necessary.
 .Pp
-The
 .Fn AG_WindowSetCloseAction
-function specifies the action to perform when the window is requested to
-be closed.
-Accepted arguments include:
+sets the action to perform on "window-close":
 .Bl -tag -width "AG_WINDOW_IGNORE "
 .It AG_WINDOW_HIDE
 Hide the window.
-This is the default action for windows created with
+This is the default for named windows created with
 .Fn AG_WindowNewNamed .
 .It AG_WINDOW_DETACH
 Detach and destroy the window.
-This is the default action for windows created with
+This is the default for anonymous windows created with
 .Fn AG_WindowNew .
 .It AG_WINDOW_IGNORE
 Ignore the close request.
 .El
 .Pp
-To perform a different action, an event handler can be configured for the
-.Sq window-close
-event (see the
+To perform a different action, a custom event handler routine can be
+set for the "window-close" event (see the
 .Sx EVENTS
 section).
 .Pp
@@ -321,7 +314,7 @@ argument are:
 The special value
 .Dv AG_WINDOW_ALIGNMENT_NONE
 leaves the choice of the initial window position up to the underlying
-window manager (possibly Agar itself, or an external window manager).
+window manager (possibly Agar itself, or an external WM).
 .Pp
 If the
 .Fa tiling
@@ -330,8 +323,7 @@ argument is 1, the
 flag is set (see
 .Sx FLAGS
 section).
-With tiling enabled, the window manager will attempt to avoid overlap between
-existing windows.
+With tiling enabled, the WM will try to avoid overlap between existing windows.
 .Pp
 The
 .Fn AG_WindowSetGeometry
@@ -381,7 +373,7 @@ routine sets the minimum window size in pixels.
 sets the minimum window size in percentage of the requested (computed) size.
 .Pp
 .Fn AG_WindowSetOpacity
-configures an overall per-window opacity (for compositing window managers).
+configures an overall per-window opacity (for compositing WMs).
 The argument can range from 0.0 (transparent) to 1.0 (opaque).
 This function is not available in integer-only builds.
 .Pp
@@ -593,6 +585,9 @@ for details.
 .Fn AG_WindowFocusAtPos "AG_DriverSw *drv" "int x" "int y"
 .Pp
 .Ft "AG_Window *"
+.Fn AG_WindowFind "const char *name"
+.Pp
+.Ft "AG_Window *"
 .Fn AG_WindowFindFocused "void"
 .Pp
 .Ft "int"
@@ -636,6 +631,12 @@ If a window is found,
 .Fn AG_WindowFocus
 is called on it and 1 is returned.
 Otherwise, 0 is returned.
+.Pp
+.Fn AG_WindowFind
+searches all
+.Xr AG_Driver 3
+instances for a named window a returns a pointer to
+it on success or NULL if none was found.
 .Pp
 .Fn AG_WindowFindFocused
 returns a pointer to the window currently holding input focus,
@@ -725,8 +726,8 @@ The
 field of
 .Nm
 hints at the function of the window.
-This setting is used by underlying window managers to tweak window
-appearance and behavior details.
+This setting is used by underlying WMs to tweak window appearance and behavior
+details.
 The values correspond to those specified in Extended Window Manager Hints
 (EWMH) version 1.4.
 .Bd -literal
@@ -755,19 +756,15 @@ object:
 .Bl -tag -width "AG_WINDOW_NOUPDATERECT "
 .It AG_WINDOW_TILING
 If no explicit window position is specified, choose a default position
-using a tiling window manager algorithm.
+using a tiling WM algorithm.
 This method honors the preferred window alignment, and also attempts to
 avoid overlap with other tiling windows.
 Non-tiling windows are ignored in the calculation.
 .It AG_WINDOW_FADEIN
-Enable smooth fade-in for compositing window managers.
+Enable smooth fade-in for compositing WM.
 .It AG_WINDOW_FADEOUT
-Enable smooth fade-out for compositing window managers.
-Only effective with
-.Fn AG_WindowHide
-(i.e., windows destroyed with
-.Fn AG_ObjectDetach ,
-are not faded out).
+Enable smooth fade-out for compositing WM
+(only applies to hide operation, not detach).
 .It AG_WINDOW_MAXIMIZED
 Window is currently maximized (read-only).
 .It AG_WINDOW_MINIMIZED
@@ -799,11 +796,11 @@ Disable automatic updating of the video region corresponding to the
 window area (applicable to framebuffer-based graphics drivers only)
 .It AG_WINDOW_NOTITLE
 Create a window without a titlebar.
-Under some window managers, this option may imply
+Under some WMs, this may imply
 .Dv AG_WINDOW_NOBORDERS .
 .It AG_WINDOW_NOBORDERS
 Don't draw decorative window borders.
-Under some window managers, this option may imply
+Under some WMs, this may imply
 .Dv AG_WINDOW_NOTITLE .
 .It AG_WINDOW_PLAIN
 Create a completely undecorated window (alias for
@@ -816,9 +813,7 @@ Disable horizontal window resize control.
 Disable vertical window resize control.
 .It AG_WINDOW_NORESIZE
 Alias for
-.Dv AG_WINDOW_NOHRESIZE
-and
-.Dv AG_WINDOW_NOVRESIZE .
+.Dv AG_WINDOW_NO[HV]RESIZE .
 .It AG_WINDOW_NOCLOSE
 Disable window close button in titelbar.
 .It AG_WINDOW_NOMINIMIZE
@@ -851,10 +846,19 @@ The GUI system may send
 objects the following events:
 .Bl -tag -width 2n
 .It Fn window-close "void"
-Request to close the window (sent by the user / underlying window system).
-The default behavior is to hide named windows and detach unnamed windows.
-It is safe for an event handler to ignore the request, or to create new
-windows (e.g., a confirmation dialog) in response.
+Request to close the window.
+Set by
+.Fn AG_WindowSetCloseAction .
+The default is to
+.Em hide
+the window (for anonymous windows created by
+.Fn AG_WindowNew )
+or to
+.Em detach
+the window (for those created by
+.Fn AG_WindowNewNamed ) .
+It is safe for a handler to ignore the request or to create new
+windows (e.g., confirmation dialogs) in response.
 .It Fn window-detached "void"
 The window has been successfully detached (as per a previous
 .Xr AG_ObjectDetach 3
@@ -869,30 +873,31 @@ The cursor has entered the window area.
 The cursor has left the window area.
 .El
 .Sh EXAMPLES
-The following code fragment creates an Agar window containing a row of
-buttons.
-The window will be positioned and dimensioned automatically:
+The following code fragment creates an Agar window containing a label
+and a row of buttons.
+It will be positioned and dimensioned automatically:
 .Bd -literal -offset indent
 AG_Window *win;
 AG_Box *box;
-AG_Button *b[3];
 
 win = AG_WindowNew(0);
+AG_LabelNew(win, 0, "Hello!");
 box = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
 {
-	b[0] = AG_ButtonNew(box, 0, "Foo");
-	b[1] = AG_ButtonNew(box, 0, "Bar");
-	b[2] = AG_ButtonNew(box, 0, "Baz");
+	AG_ButtonNew(box, 0, "Foo");
+	AG_ButtonNew(box, 0, "Bar");
+	AG_ButtonNew(box, 0, "Baz");
 }
 AG_WindowShow(win);
 .Ed
 .Pp
-The following code fragment creates an empty Agar window, centers it
-and sets an explicit size of 320x240:
+The following code fragment creates an empty Agar window with a green
+background, centers it and sets an explicit size of 320x240:
 .Bd -literal -offset indent
 AG_Window *win;
 
 win = AG_WindowNew(0);
+AG_SetStyle(win, "background-color", "green");
 AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
 AG_WindowShow(win);
 .Ed
@@ -906,3 +911,10 @@ AG_WindowShow(win);
 The
 .Nm
 system first appeared in Agar 1.0.
+.Fn AG_WindowNewSw
+was replaced by
+.Fn AG_WindowNewUnder
+in Agar 1.6.
+The
+.Fn AG_WindowFind
+function appeared in Agar 1.6.

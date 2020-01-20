@@ -27,12 +27,11 @@ struct ag_cursor;
 #define AG_WINDOW_LOWER_CENTER	AG_WINDOW_BC
 #define AG_WINDOW_LOWER_RIGHT	AG_WINDOW_BR
 
-/* For AG_WindowSetCloseAction() */
-enum ag_window_close_action {
-	AG_WINDOW_HIDE,
-	AG_WINDOW_DETACH,
-	AG_WINDOW_IGNORE
-};
+typedef enum ag_window_close_action {
+	AG_WINDOW_HIDE,               /* Hide the window */
+	AG_WINDOW_DETACH,             /* Detach (destroy) the window */
+	AG_WINDOW_IGNORE              /* Ignore the close request */
+} AG_WindowCloseAction;
 
 /*
  * Window function (used by the underlying window manager to set decoration,
@@ -162,8 +161,13 @@ extern AG_Window *_Nullable agWindowFocused;	/* Window holding focus */
 extern AG_Window *_Nullable agTargetWindow;     /* For GUI debugger */
 #endif
 
+AG_Window *_Nullable AG_WindowFind(const char *_Nonnull)
+                                  _Pure_Attribute
+	                          _Warn_Unused_Result;
+
 AG_Window *_Nullable AG_WindowNew(Uint);
-AG_Window *_Nullable AG_WindowNewSw(void *_Nonnull, Uint);
+AG_Window *_Nullable AG_WindowNewUnder(void *_Nonnull, Uint);
+
 AG_Window *_Nullable AG_WindowNewNamedS(Uint, const char *_Nonnull);
 AG_Window *_Nullable AG_WindowNewNamed(Uint, const char *_Nonnull, ...)
 			              FORMAT_ATTRIBUTE(printf,2,3);
@@ -301,11 +305,12 @@ AG_Window *AG_SettingsWindow(void);
 
 #ifdef AG_LEGACY
 # define AG_WINDOW_CASCADE AG_WINDOW_TILING
-AG_Window *_Nullable AG_FindWindow(const char *_Nonnull) DEPRECATED_ATTRIBUTE;
-void AG_ViewAttach(AG_Window *_Nonnull)                  DEPRECATED_ATTRIBUTE;
-void AG_ViewDetach(AG_Window *_Nonnull)                  DEPRECATED_ATTRIBUTE;
-void AG_WindowSetVisibility(AG_Window *_Nonnull, int)    DEPRECATED_ATTRIBUTE;
-int AG_WindowIntersect(AG_DriverSw *_Nonnull, int, int)  DEPRECATED_ATTRIBUTE _Pure_Attribute;
+# define AG_FindWindow(name) AG_WindowFind(name)
+# define AG_WindowNewSw(drv,flags) AG_WindowNewUnder((drv),(flags))
+void AG_ViewAttach(AG_Window *_Nonnull) DEPRECATED_ATTRIBUTE;
+void AG_ViewDetach(AG_Window *_Nonnull) DEPRECATED_ATTRIBUTE;
+void AG_WindowSetVisibility(AG_Window *_Nonnull, int) DEPRECATED_ATTRIBUTE;
+int AG_WindowIntersect(AG_DriverSw *_Nonnull, int, int) DEPRECATED_ATTRIBUTE _Pure_Attribute;
 #endif /* AG_LEGACY */
 __END_DECLS
 
