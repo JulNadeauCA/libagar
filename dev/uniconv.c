@@ -241,7 +241,7 @@ DEV_UnicodeBrowser(void)
 	AG_ComboSizeHintPixels(comRange, wMax, 10);
 	
 	tt = AG_TreetblNew(win, AG_TREETBL_EXPAND, NULL, NULL);
-	AG_TreetblSizeHint(tt, 200, 6);
+	AG_TreetblSizeHint(tt, 100, 30);
 	AG_TreetblAddCol(tt, 0, "<XXXXXXX>", "Char");
 	AG_TreetblAddCol(tt, 1, "<XXXXXXX>", "Unicode");
 	AG_TreetblAddCol(tt, 2, "<XXXXXXX>", "UTF-8");

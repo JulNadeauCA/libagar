@@ -345,7 +345,7 @@ DEV_BrowserSaveToDlg(void *p, const char *name)
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
-	fd = AG_FileDlgNewMRU(win, "dev.mru.object-import",
+	fd = AG_FileDlgNewMRU(win, "mru.object-import",
 	                      AG_FILEDLG_CLOSEWIN | AG_FILEDLG_SAVE |
 	                      AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, name, ext, SaveObjectToFile,"%p",ob);

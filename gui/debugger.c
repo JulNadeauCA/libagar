@@ -228,7 +228,7 @@ ExportSurfaceDlg(AG_Event *_Nonnull event)
 		return;
 	}
 	AG_WindowSetCaptionS(win, _("Export to image file..."));
-	fd = AG_FileDlgNewMRU(win, "agar.debugger.image-dir",
+	fd = AG_FileDlgNewMRU(win, "debugger.image-dir",
 	                      AG_FILEDLG_SAVE | AG_FILEDLG_CLOSEWIN |
 	                      AG_FILEDLG_MASK_EXT | AG_FILEDLG_EXPAND);
 	AG_FileDlgAddImageTypes(fd, ExportSurface, "%Cp", px);

@@ -377,10 +377,13 @@ ToolMouseButtonDown(void *_Nonnull p, M_Vector3 pos, int btn)
 	if (btn != AG_MOUSE_LEFT) {
 		return (0);
 	}
-	win = AG_WindowNew(0);
+	if ((win = AG_WindowNew(0)) == NULL)
+		return (0);
+
 	fd = AG_FileDlgNewMRU(win, "sk.mru.pixmaps",
 	    AG_FILEDLG_LOAD | AG_FILEDLG_CLOSEWIN | AG_FILEDLG_EXPAND |
 	    AG_FILEDLG_MASK_EXT);
+
 	posDup = M_VectorDup3(&pos);
 	AG_FileDlgAddType(fd, _("PC Bitmap"), "*.bmp",
 	    LoadFromBMP, "%p,%p,%p", t, skv, posDup);

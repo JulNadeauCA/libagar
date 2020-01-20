@@ -227,8 +227,10 @@ SG_GUI_OpenDlg(AG_Event *event)
 	}
 	AG_WindowSetCaptionS(win, _("Open..."));
 
-	fd = AG_FileDlgNewMRU(win, "agar-sg.mru.files",
-	    AG_FILEDLG_LOAD | AG_FILEDLG_CLOSEWIN | AG_FILEDLG_EXPAND);
+	fd = AG_FileDlgNewMRU(win, "sg.mru.files", AG_FILEDLG_LOAD |
+	                                           AG_FILEDLG_CLOSEWIN |
+	                                           AG_FILEDLG_EXPAND);
+
 	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));
 	
 	for (j = 0; j < agFileExtCount; j++) {

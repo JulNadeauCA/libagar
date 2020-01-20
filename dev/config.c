@@ -50,56 +50,6 @@
 
 static AG_Window *_Nullable DEV_ConfigWindow(AG_Config *_Nullable);
 
-#if 0
-static void
-SetPath(AG_Event *_Nonnull event)
-{
-	char path[AG_PATHNAME_MAX];
-	AG_Textbox *tbox = AG_TEXTBOX_SELF();
-	char *varname = AG_STRING(1);
-
-	AG_TextboxCopyString(tbox, path, sizeof(path));
-	AG_SetString(agConfig, varname, path);
-	AG_WidgetUnfocus(tbox);
-}
-#endif
-
-#if 0
-static void
-WarnRestart(AG_Event *_Nonnull event)
-{
-	char *key = AG_STRING(1);
-
-	AG_TextWarning(key,
-	    _("Note: Save the configuration and restart %s "
-	      "for this change to take effect"), agProgName);
-}
-
-static void
-BindSelectedColor(AG_Event *_Nonnull event)
-{
-	AG_HSVPal *hsv = AG_HSVPAL_PTR(1);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
-	AG_Color *c = it->p1;
-
-	AG_BindUint8(hsv, "RGBAv", (Uint8 *)c);
-}
-
-/* Must be invoked from main event/rendering context. */
-static void
-SetColor(AG_Event *_Nonnull event)
-{
-	AG_Tlist *tl = AG_TLIST_PTR(1);
-	AG_TlistItem *it = AG_TlistSelectedItem(tl);
-
-	if (it != NULL && it->p1 == &agColors[BG_COLOR]) {
-		Uint8 r, g, b;
-		AG_ColorsGetRGB(BG_COLOR, &r, &g, &b);
-		AG_ColorsSetRGB(BG_COLOR, r, g, b);
-	}
-}
-#endif
-
 void
 DEV_ConfigShow(void)
 {
@@ -108,61 +58,6 @@ DEV_ConfigShow(void)
 	if ((win = DEV_ConfigWindow(agConfig)) != NULL)
 		AG_WindowShow(win);
 }
-
-#if 0
-static void
-LoadColorSchemeFromACS(AG_Event *_Nonnull event)
-{
-	char *file = AG_STRING(1);
-
-	if (AG_ColorsLoad(file) == -1)
-		AG_TextMsgFromError();
-}
-
-static void
-SaveColorSchemeToACS(AG_Event *_Nonnull event)
-{
-	char *file = AG_STRING(1);
-
-	if (AG_ColorsSave(file) == -1)
-		AG_TextMsgFromError();
-}
-
-static void
-LoadColorSchemeDlg(AG_Event *_Nonnull event)
-{
-	AG_Window *win;
-	AG_FileDlg *fd;
-
-	if ((win = AG_WindowNew(0)) == NULL) {
-		return;
-	}
-	AG_WindowSetCaptionS(win, _("Load color scheme..."));
-	fd = AG_FileDlgNewMRU(win, "dev.mru.color-schemes",
-	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
-	AG_FileDlgSetFilenameS(fd, "colors.acs");
-	AG_FileDlgAddType(fd, _("Agar Color Scheme"), "*.acs",
-	    LoadColorSchemeFromACS, NULL);
-	AG_WindowShow(win);
-}
-
-static void
-SaveColorSchemeDlg(AG_Event *_Nonnull event)
-{
-	AG_Window *win;
-	AG_FileDlg *fd;
-
-	if ((win = AG_WindowNew(0)) == NULL) {
-		return;
-	}
-	AG_WindowSetCaptionS(win, _("Load color scheme..."));
-	fd = AG_FileDlgNewMRU(win, "dev.mru.color-schemes",
-	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
-	AG_FileDlgAddType(fd, _("Agar Color Scheme"), "*.acs",
-	    SaveColorSchemeToACS, NULL);
-	AG_WindowShow(win);
-}
-#endif
 
 static void
 SaveConfig(AG_Event *_Nonnull event)
@@ -221,7 +116,6 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 {
 	AG_Window *win;
 	AG_Box *hb;
-/*	AG_Checkbox *cb; */
 	AG_Notebook *nb;
 	AG_NotebookTab *tab;
 
@@ -243,8 +137,6 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 #ifdef AG_UNICODE
 		AG_CheckboxNewInt(tab, 0, _("Built-in key composition"),
 		    &agTextComposition);
-		AG_CheckboxNewInt(tab, 0, _("Bidirectional"),
-		    &agTextBidi);
 #endif
 		AG_SeparatorNewHoriz(tab);
 		AG_LabelNewS(tab, 0, _("Timer settings (milliseconds):"));
@@ -263,46 +155,6 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 	tab = AG_NotebookAdd(nb, _("Directories"), AG_BOX_VERT);
 	{
 	}
-#if 0
-	tab = AG_NotebookAdd(nb, _("Colors"), AG_BOX_VERT);
-	{
-		AG_Pane *hPane;
-		AG_HSVPal *hsv;
-		AG_Tlist *tl;
-		AG_TlistItem *it;
-		AG_Label *lbl;
-		int i;
-	
-		hPane = AG_PaneNew(tab, AG_PANE_HORIZ, AG_PANE_EXPAND);
-		{
-			tl = AG_TlistNew(hPane->div[0], AG_TLIST_EXPAND);
-			AG_TlistSizeHint(tl, "Tileview text background", 10);
-			for (i = 0; i < LAST_COLOR; i++) {
-				it = AG_TlistAdd(tl, NULL, _(agColorNames[i]));
-				it->p1 = &agColors[i];
-			}
-			hsv = AG_HSVPalNew(hPane->div[1], AG_HSVPAL_EXPAND);
-			AG_SetEvent(hsv, "h-changed", SetColor, "%p", tl);
-			AG_SetEvent(hsv, "sv-changed", SetColor, "%p", tl);
-			AG_SetEvent(tl, "tlist-selected", BindSelectedColor,
-			    "%p", hsv);
-		}
-		
-		lbl = AG_LabelNew(tab, 0,
-		    _("Warning: Some color changes will not "
-		      "take effect until %s is restarted."), agProgName);
-		AG_LabelSetPaddingLeft(lbl, 10);
-		AG_LabelSetPaddingRight(lbl, 10);
-		
-		hb = AG_BoxNewHoriz(tab, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
-		{
-			AG_ButtonNewFn(hb, 0, _("Load scheme"),
-			    LoadColorSchemeDlg, NULL);
-			AG_ButtonNewFn(hb, 0, _("Save scheme"),
-			    SaveColorSchemeDlg, NULL);
-		}
-	}
-#endif
 
 #ifdef AG_DEBUG
 	tab = AG_NotebookAdd(nb, _("Debug"), AG_BOX_VERT);

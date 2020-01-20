@@ -101,10 +101,10 @@ DEV_TimerInspector(void)
 	AG_WindowSetCaptionS(win, _("Timer Inspector"));
 
 	lbl = AG_LabelNew(win, AG_LABEL_HFILL, _("Ticks: ..."));
-	AG_ButtonNewInt(win, AG_BUTTON_STICKY, _("Pause"), &pauseFlag);
+	AG_ButtonNewInt(win, AG_BUTTON_EXCL | AG_BUTTON_STICKY, _("Pause"), &pauseFlag);
 
 	tt = AG_TreetblNew(win, AG_TREETBL_EXPAND, NULL, NULL);
-	AG_TreetblSizeHint(tt, 200, 6);
+	AG_TreetblSizeHint(tt, 100, 30);
 	AG_TreetblAddCol(tt, 0, "<XXXXXXXXXXXXXXX>", _("Name"));
 	AG_TreetblAddCol(tt, 1, "<XXXXX>", _("ID"));
 	AG_TreetblAddCol(tt, 2, "<XXXXXXXX>", _("Ticks"));

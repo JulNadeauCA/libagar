@@ -1698,8 +1698,9 @@ ImportImageDlg(AG_Event *_Nonnull event)
 		return;
 	}
 	AG_WindowSetCaption(win, _("Import %s image from..."), t->name);
-	dlg = AG_FileDlgNewMRU(win, "rg.mru.image-export",
-	    AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
+	dlg = AG_FileDlgNewMRU(win, "mru.image-export", AG_FILEDLG_LOAD |
+	                                                AG_FILEDLG_CLOSEWIN |
+	                                                AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(dlg, _("PNG Image"),	"*.png",	ImportImage, "%p,%p", t, tv);
 	AG_FileDlgAddType(dlg, _("JPEG Image"),	"*.jpg,*.jpeg",	ImportImage, "%p,%p", t, tv);
 	AG_FileDlgAddType(dlg, _("PC bitmap"),	"*.bmp",	ImportImage, "%p,%p", t, tv);
@@ -1733,8 +1734,9 @@ ExportImageDlg(AG_Event *_Nonnull event)
 		return;
 	}
 	AG_WindowSetCaption(win, _("Export %s image to..."), t->name);
-	dlg = AG_FileDlgNewMRU(win, "rg.mru.image-export",
-	    AG_FILEDLG_SAVE|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
+	dlg = AG_FileDlgNewMRU(win, "mru.image-export", AG_FILEDLG_SAVE |
+	                                                AG_FILEDLG_CLOSEWIN |
+	                                                AG_FILEDLG_EXPAND);
 	AG_FileDlgSetFilename(dlg, "%s.bmp", t->name);
 	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp", ExportBMP, "%p", t);
 	AG_WindowAttach(AG_ParentWindow(tv), win);

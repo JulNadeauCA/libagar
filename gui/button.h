@@ -24,7 +24,7 @@ typedef struct ag_button {
 #define AG_BUTTON_VFILL    0x0020       /* Fill available height */
 #define AG_BUTTON_INVERTED 0x0400       /* Invert value of "state" binding */
 #define AG_BUTTON_KEYDOWN  0x0800       /* Got `key-down' before `key-up' */
-#define AG_BUTTON_EXCL     0x1000
+#define AG_BUTTON_EXCL     0x1000	/* Hint exclusive access to "state" */
 #define AG_BUTTON_NOEXCL   0x2000       /* For AG_ButtonNewFn() */
 #define AG_BUTTON_SET      0x4000       /* Initialize "state" to 1 */
 #define AG_BUTTON_SLOW     0x8000

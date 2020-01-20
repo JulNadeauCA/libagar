@@ -114,7 +114,7 @@ typedef struct rg_tile_variant {
 	Uint texture;			/* Cached texture */
 	float texcoords[4];
 
-	Uint32 last_drawn;		/* Time last draw occured */
+	Uint32 last_drawn;		/* Time last draw occurred */
 	AG_SLIST_ENTRY(rg_tile_variant) vars;
 } RG_TileVariant;
 
