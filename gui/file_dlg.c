@@ -545,7 +545,7 @@ ReplaceFileDlg(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull pwin)
 
 	AG_LabelNew(win, 0, _("File %s exists. Overwrite?"), fd->cfile);
 
-	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
+	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS | AG_HBOX_HFILL);
 	{
 		AG_ButtonNewFn(hb, 0, _("Yes"),
 		    ReplaceFileConfirm, "%p,%p,%p", fd, win, pwin);
@@ -970,7 +970,8 @@ SelectedType(AG_Event *_Nonnull event)
 	TAILQ_FOREACH(fo, &ft->opts, opts) {
 		switch (fo->type) {
 		case AG_FILEDLG_BOOL:
-			AG_CheckboxNewInt(fd->optsCtr, 0, fo->descr,
+			AG_CheckboxNewInt(fd->optsCtr, AG_CHECKBOX_EXCL,
+			    fo->descr,
 			    &fo->data.i.val);
 			break;
 		case AG_FILEDLG_INT:
@@ -1294,7 +1295,9 @@ AG_FileDlgNew(void *parent, Uint flags)
 		/*
 		 * Compact Mode
 		 */
-		fd->textbox = AG_TextboxNewS(fd, AG_TEXTBOX_HFILL, _("File:"));
+		fd->textbox = AG_TextboxNewS(fd,
+		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
+		    _("File:"));
 		AG_TextboxBindUTF8(fd->textbox, fd->cfile, sizeof(fd->cfile));
 		AG_TextboxSizeHint(fd->textbox, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXX>");
 
@@ -1349,23 +1352,23 @@ AG_FileDlgNew(void *parent, Uint flags)
 	if (!(flags & AG_FILEDLG_NOMASKOPTS)) {
 		AG_Checkbox *cb;
 
-		fd->cbMaskExt = cb = AG_CheckboxNewFlag(fd, 0,
+		fd->cbMaskExt = cb = AG_CheckboxNewFlag(fd, AG_CHECKBOX_EXCL,
 		    _("Mask files by extension"),
 		    &fd->flags, AG_FILEDLG_MASK_EXT);
 		AG_SetEvent(cb, "checkbox-changed", MaskOptionSelected,"%p",fd);
 		AG_SetStyle(cb, "font-size", "80%");
 	
-		fd->cbMaskHidden = cb = AG_CheckboxNewFlag(fd, 0,
+		fd->cbMaskHidden = cb = AG_CheckboxNewFlag(fd, AG_CHECKBOX_EXCL,
 		    _("Mask hidden files"),
 		    &fd->flags, AG_FILEDLG_MASK_HIDDEN);
 		AG_SetEvent(cb, "checkbox-changed", MaskOptionSelected,"%p",fd);
 		AG_SetStyle(cb, "font-size", "80%");
 	}
 	if (!(flags & AG_FILEDLG_NOBUTTONS)) {
-		fd->btnOk = AG_ButtonNewS(fd, 0, _("OK"));
+		fd->btnOk = AG_ButtonNewS(fd, AG_BUTTON_EXCL, _("OK"));
 		AG_SetEvent(fd->btnOk, "button-pushed", PressedOK, "%p", fd);
 
-		fd->btnCancel = AG_ButtonNewS(fd, 0, _("Cancel"));
+		fd->btnCancel = AG_ButtonNewS(fd, AG_BUTTON_EXCL, _("Cancel"));
 		AG_SetEvent(fd->btnCancel, "button-pushed", PressedCancel, "%p", fd);
 	}
 	AG_ObjectAttach(parent, fd);
@@ -1381,28 +1384,30 @@ Init(void *_Nonnull obj)
 	(void)AG_GetCWD(fd->cwd, sizeof(fd->cwd));
 	fd->cfile[0] = '\0';
 	fd->fdDir = -1;
-	fd->esFollow = NULL;
-	fd->hPane = NULL;
-	fd->tlDirs = NULL;
-	fd->tlFiles = NULL;
-	fd->lbCwd = NULL;
-	fd->tbFile = NULL;
-	fd->comTypes = NULL;
-	fd->cbMaskExt = NULL;
-	fd->cbMaskHidden = NULL;
-	fd->btnOk = NULL;
-	fd->btnCancel = NULL;
-	fd->okAction = NULL;
-	fd->cancelAction = NULL;
-	fd->dirMRU = NULL;
-	fd->optsCtr = NULL;
+
+	memset(&fd->esFollow, 0, sizeof(AG_EventSink *) + /* esFollow */
+	                         sizeof(AG_Pane *) +      /* hPane */
+	                         sizeof(AG_Tlist *) +     /* tlDirs */
+	                         sizeof(AG_Tlist *) +     /* tlFiles */
+	                         sizeof(AG_Label *) +     /* lbCwd */
+	                         sizeof(AG_Textbox *) +   /* tbFile */
+	                         sizeof(AG_Combo *) +     /* comTypes */
+	                         sizeof(AG_Checkbox *) +  /* cbMaskExt */
+	                         sizeof(AG_Checkbox *) +  /* cbMaskHidden */
+	                         sizeof(AG_Button *) +    /* btnOk */
+	                         sizeof(AG_Button *) +    /* btnCancel */
+	                         sizeof(AG_Event *) +     /* okAction */
+	                         sizeof(AG_Event *) +     /* cancelAction */
+	                         sizeof(char *) +         /* dirMRU */
+	                         sizeof(void *) +         /* optsCts */
+	                         sizeof(AG_FileType *) +  /* curType */
+	                         sizeof(AG_Combo *) +     /* comLoc */
+	                         sizeof(AG_Textbox *) +   /* textbox */
+	                         sizeof(AG_Button *) +    /* btnExpand */
+	                         sizeof(AG_Window *) +    /* winExpand */
+	                         sizeof(AG_FileDlg *));   /* fdExpand */
+
 	TAILQ_INIT(&fd->types);
-	fd->curType = NULL;
-	fd->comLoc = NULL;
-	fd->textbox = NULL;
-	fd->btnExpand = NULL;
-	fd->winExpand = NULL;
-	fd->fdExpand = NULL;
 
 	AG_AddEvent(fd, "widget-shown", OnShow, NULL);
 	AG_AddEvent(fd, "widget-hidden", OnHide, NULL);

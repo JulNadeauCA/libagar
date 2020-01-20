@@ -79,6 +79,7 @@ typedef struct ag_file_dlg {
 	char cwd[AG_PATHNAME_MAX];		/* Current working directory */
 	char cfile[AG_PATHNAME_MAX];		/* Current file path */
 	int fdDir;				/* Open directory FD */
+
 	AG_EventSink *_Nullable esFollow;	/* Open directory event sink */
 	AG_Pane *_Nonnull hPane;		/* Horizontal split container */
 	AG_Tlist *_Nonnull tlDirs;		/* List of directories */
@@ -92,16 +93,18 @@ typedef struct ag_file_dlg {
 	AG_Button *_Nullable btnCancel;		/* "Cancel" button */
 	AG_Event *_Nullable okAction;		/* "OK" callback */
 	AG_Event *_Nullable cancelAction;	/* "Cancel" callback */
+
 	char *_Nullable dirMRU;			/* MRU directory */
 	void *_Nullable optsCtr;		/* Extra "Option Container" */
-	AG_TAILQ_HEAD_(ag_file_type) types;	/* File type handlers */
+
 	AG_FileType *_Nullable curType;		/* Selected file type */
 	AG_Combo *_Nonnull comLoc;		/* Locations and Shortcuts */
-
 	AG_Textbox *_Nullable textbox;		/* Compact-mode Textbox */
 	AG_Button *_Nullable btnExpand;		/* Compact-mode "..." button */
 	AG_Window *_Nullable winExpand;		/* Expanded window from compact */
 	struct ag_file_dlg *_Nullable fdExpand; /* Instance in expanded window */
+
+	AG_TAILQ_HEAD_(ag_file_type) types;	/* File type handlers */
 } AG_FileDlg;
 
 #define AGFILEDLG(obj)            ((AG_FileDlg *)(obj))
