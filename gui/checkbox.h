@@ -14,7 +14,8 @@ typedef struct ag_checkbox {
 #define AG_CHECKBOX_HFILL   0x01
 #define AG_CHECKBOX_VFILL   0x02
 #define AG_CHECKBOX_SET	    0x04        /* Initialize "state" to 1 */
-#define AG_CHECKBOX_INVERT  0x08        /* Initialize "invert" to 1 */
+#define AG_CHECKBOX_INVERT  0x08        /* Invert representation of "state" */
+#define AG_CHECKBOX_EXCL    0x10        /* Hint exclusive access to "state" */
 #define AG_CHECKBOX_EXPAND (AG_CHECKBOX_HFILL | AG_CHECKBOX_VFILL)
 	int state;                      /* Default "state" binding */
 	int boxWd;                      /* Width of box (px) */

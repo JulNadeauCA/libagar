@@ -126,6 +126,9 @@ AG_CheckboxNewS(void *parent, Uint flags, const char *label)
 	if (flags & AG_CHECKBOX_SET)
 		cb->state = 1;
 
+	if ((flags & AG_CHECKBOX_EXCL) == 0)
+		AG_RedrawOnChange(cb, 300, "state");
+
 	AG_ObjectAttach(parent, cb);
 	return (cb);
 }
@@ -196,7 +199,6 @@ Init(void *_Nonnull obj)
 	cb->label = NULL;
 	
 	AG_BindInt(cb, "state", &cb->state);
-	AG_RedrawOnChange(cb, 300, "state");
 	
 	AG_SetEvent(cb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(cb, "key-down", KeyDown, NULL);
