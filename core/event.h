@@ -19,7 +19,7 @@
 # if AG_MODEL == AG_SMALL
 #  define AG_EVENT_NAME_MAX 14
 # else
-#  define AG_EVENT_NAME_MAX 24
+#  define AG_EVENT_NAME_MAX 32
 # endif
 #endif
 
@@ -356,6 +356,7 @@ AG_Event *_Nonnull AG_SetEvent(void *_Nonnull, const char *_Nullable ,
 AG_Event *_Nonnull AG_AddEvent(void *_Nonnull, const char *_Nullable,
 			       _Nullable AG_EventFn, const char *_Nullable, ...);
 void               AG_UnsetEvent(void *_Nonnull, const char *_Nonnull);
+void               AG_UnsetEventByPtr(void *_Nonnull, AG_Event *_Nonnull);
 /*
  * TODO AG_AppendEvent(), AG_ReplaceEvent().
  */

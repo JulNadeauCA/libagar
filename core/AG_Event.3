@@ -97,6 +97,9 @@ provides a thread-safe message passing system for multithreaded applications.
 .Ft "void"
 .Fn AG_UnsetEvent "AG_Object *obj" "const char *name"
 .Pp
+.Ft "void"
+.Fn AG_UnsetEventByPtr "AG_Object *obj" "AG_Event *event"
+.Pp
 .Ft "int"
 .Fn AG_PostEvent "AG_Object *obj" "const char *name" "const char *fmt" "..."
 .Pp
@@ -131,9 +134,10 @@ function searches for an event handler by name, returning a pointer to the
 .Nm
 element on success or NULL if there is no match.
 .Pp
-The
 .Fn AG_UnsetEvent
-function deletes the named event handler.
+and
+.Fn AG_UnsetEventByPtr
+delete the given event handler.
 .Pp
 The
 .Fn AG_PostEvent
@@ -695,3 +699,5 @@ The
 structure was first used to represent event handler arguments in Agar 1.3.4.
 Agar 1.6.0 added the CONST argument accessor macros and introduced validity
 and class membership tests for object pointers in event handler arguments.
+.Fn AG_UnsetEventByPtr
+appeared in Agar 1.6.0.

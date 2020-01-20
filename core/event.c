@@ -337,6 +337,19 @@ out:
 	AG_ObjectUnlock(ob);
 }
 
+/* Delete an event handler by reference. */
+void
+AG_UnsetEventByPtr(void *p, AG_Event *ev)
+{
+	AG_Object *ob = p;
+
+	AG_ObjectLock(ob);
+	TAILQ_REMOVE(&ob->events, ev, events);
+	AG_ObjectUnlock(ob);
+
+	free(ev);
+}
+
 /* Look up an AG_Event by name. */
 AG_Event *
 AG_FindEventHandler(void *p, const char *name)
