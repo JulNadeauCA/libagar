@@ -8,7 +8,7 @@
 # if AG_MODEL == AG_SMALL
 #  define AG_VARIABLE_NAME_MAX 8
 # else
-#  define AG_VARIABLE_NAME_MAX 28
+#  define AG_VARIABLE_NAME_MAX 20
 # endif
 #endif
 
