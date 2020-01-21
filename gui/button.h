@@ -19,6 +19,7 @@ typedef struct ag_button {
 	Uint flags;
 #define AG_BUTTON_NO_FOCUS 0x0001       /* Make non-focusable */
 #define AG_BUTTON_STICKY   0x0002       /* Toggle state */
+#define AG_BUTTON_PRESSING 0x0004       /* Button press in progress */
 #define AG_BUTTON_REPEAT   0x0008       /* Trigger "button-pushed" repeatedly */
 #define AG_BUTTON_HFILL    0x0010       /* Fill available width */
 #define AG_BUTTON_VFILL    0x0020       /* Fill available height */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,8 @@
 #include <stdarg.h>
 
 static void SetState(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull, int);
-static int  GetState(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull);
-static int  GetStateGeneral(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull);
+static int  GetState(AG_Button *_Nonnull, const AG_Variable *_Nonnull, void *_Nonnull);
+static int  GetStateGeneral(AG_Button *_Nonnull, const AG_Variable *_Nonnull, void *_Nonnull);
 static void SetStateGeneral(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull, int);
 
 /* Create a new button bound to an integer (representing a boolean). */
@@ -214,6 +214,8 @@ MouseButtonUp(AG_Event *_Nonnull event)
 		AG_PostEvent(bu, "button-pushed", "%i", 0);
 	}
 	AG_UnlockVariable(V);
+	
+	bu->flags &= ~(AG_BUTTON_PRESSING);
 }
 
 static void
@@ -233,7 +235,9 @@ MouseButtonDown(AG_Event *_Nonnull event)
 
 	if (button != AG_MOUSE_LEFT)
 		return;
-	
+
+	bu->flags |= AG_BUTTON_PRESSING;
+
 	V = AG_GetVariable(bu, "state", &pState);
 	if (!(bu->flags & AG_BUTTON_STICKY)) {
 		SetState(bu, V, pState, 1);
@@ -256,7 +260,6 @@ static void
 MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
-	AG_Variable *V;
 	void *pState;
 	const int x = AG_INT(1);
 	const int y = AG_INT(2);
@@ -264,14 +267,18 @@ MouseMotion(AG_Event *_Nonnull event)
 	if (AG_WidgetDisabled(bu))
 		return;
 
-	V = AG_GetVariable(bu, "state", &pState);
-	if (!AG_WidgetRelativeArea(bu, x,y)) {
-		if ((bu->flags & AG_BUTTON_STICKY) == 0 &&
-		    GetState(bu, V, pState) == 1) {
+	if ((bu->flags & AG_BUTTON_STICKY) == 0 &&
+	    (bu->flags & AG_BUTTON_PRESSING) &&
+	    !AG_WidgetRelativeArea(bu, x,y)) {             /* Cursor outside */
+		AG_Variable *V;
+
+		V = AG_GetVariable(bu, "state", &pState);
+		if (GetState(bu, V, pState) == 1) {
 			SetState(bu, V, pState, 0);
+			bu->flags &= ~(AG_BUTTON_PRESSING);
 		}
+		AG_UnlockVariable(V);
 	}
-	AG_UnlockVariable(V);
 }
 
 static void
@@ -430,11 +437,13 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 static void
 SetState(AG_Button *bu, AG_Variable *V, void *p, int v)
 {
-	switch (AG_VARIABLE_TYPE(V)) {
+	switch (V->type) {
 	case AG_VARIABLE_INT:
+	case AG_VARIABLE_P_INT:
 		*(int *)p = v;
 		break;
 	case AG_VARIABLE_UINT:
+	case AG_VARIABLE_P_UINT:
 		*(Uint *)p = v;
 		break;
 	case AG_VARIABLE_P_FLAG:
@@ -575,13 +584,15 @@ AG_ButtonToggle(AG_Button *bu)
 }
 
 static int
-GetState(AG_Button *bu, AG_Variable *V, void *p)
+GetState(AG_Button *bu, const AG_Variable *V, void *p)
 {
 	int v;
 
-	switch (AG_VARIABLE_TYPE(V)) {
+	switch (V->type) {
 	case AG_VARIABLE_INT:
+	case AG_VARIABLE_P_INT:
 	case AG_VARIABLE_UINT:
+	case AG_VARIABLE_P_UINT:
 		v = (*(Uint *)p) ? 1 : 0;
 		break;
 	case AG_VARIABLE_P_FLAG:
@@ -598,9 +609,9 @@ GetState(AG_Button *bu, AG_Variable *V, void *p)
 }
 
 static int
-GetStateGeneral(AG_Button *bu, AG_Variable *V, void *p)
+GetStateGeneral(AG_Button *bu, const AG_Variable *V, void *p)
 {
-	switch (AG_VARIABLE_TYPE(V)) {
+	switch (V->type) {
 	case AG_VARIABLE_UINT8:
 		return (int)(*(Uint8 *)p);
 	case AG_VARIABLE_UINT16:
@@ -622,7 +633,7 @@ GetStateGeneral(AG_Button *bu, AG_Variable *V, void *p)
 static void
 SetStateGeneral(AG_Button *bu, AG_Variable *V, void *p, int v)
 {
-	switch (AG_VARIABLE_TYPE(V)) {
+	switch (V->type) {
 	case AG_VARIABLE_UINT8:
 		*(Uint8 *)p = v;
 		break;
