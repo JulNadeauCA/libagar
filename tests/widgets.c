@@ -405,7 +405,7 @@ TestGUI(void *obj, AG_Window *win)
 		    "Textbox: ");
 	
 		AG_TextboxSetPlaceholderS(tbox, "First & Last Name");
-		AG_EditableAutocomplete(tbox->ed, AutocompleteName, NULL);
+		AG_TextboxAutocomplete(tbox, AutocompleteName, NULL);
 
 #ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tbox, ti->textBuffer, sizeof(ti->textBuffer));
@@ -549,14 +549,15 @@ TestGUI(void *obj, AG_Window *win)
 			}
 			{
 				const char *selModes[] = {
-				    "Select by row",
-				    "Select by cell",
-				    "Select by column",
+				    "By row",
+				    "By cell",
+				    "By column",
 				    NULL
 				};
 				AG_Radio *rad;
 
 				rad = AG_RadioNewUint(nt, 0, selModes, &table->selMode);
+				AG_RadioSetDisposition(rad, AG_RADIO_HORIZ);
 				AG_SetStyle(rad, "font-size", "80%");
 			}
 			

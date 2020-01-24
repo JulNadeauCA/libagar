@@ -254,6 +254,30 @@ AG_TextboxBindASCII(AG_Textbox *tb, char *buf, AG_Size bufSize)
 	AG_EditableBindASCII(tb->ed, buf, bufSize);
 }
 
+/*
+ * Set up an autocomplete context. Function fn will be called to populate
+ * the list of autocomplete candidates.
+ * 
+ * If fn is NULL, disable autocomplete (closing any open windows).
+ * If an autocomplete context already exists, update its function pointer
+ * and arguments (cancelling any running timers).
+ */
+void
+AG_TextboxAutocomplete(AG_Textbox *tb, AG_EventFn fn, const char *fmt, ...)
+{
+	AG_ObjectLock(tb->ed);
+	AG_EditableAutocomplete(tb->ed, fn, NULL);
+
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(tb->ed->complete->fn, fmt, ap);
+		va_end(ap);
+	}
+	AG_ObjectUnlock(tb->ed);
+}
+
 /* Set the "place holder" text to display when the textbox is empty. */
 void
 AG_TextboxSetPlaceholder(AG_Textbox *tb, const char *fmt, ...)
@@ -417,7 +441,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		tb->r.w = a->w;
 		tb->r.h = a->h;
 	} else {
-		tb->r.x = (tb->lbl != NULL) ? WIDTH(tb->lbl) : 0;
+		tb->r.x = (tb->lbl) ? WIDTH(tb->lbl) : 0;
 		tb->r.y = 0;
 		tb->r.w = a->w - tb->r.x;
 		tb->r.h = a->h;
@@ -430,7 +454,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		wBtn = 0;
 	}
 
-	aEd.x = ((tb->lbl != NULL) ? WIDTH(tb->lbl) : 0) + tb->boxPadX;
+	aEd.x = ((tb->lbl) ? WIDTH(tb->lbl) : 0) + tb->boxPadX;
 	aEd.y = tb->boxPadY;
 	aEd.w = a->w - boxPadW - aEd.x - wBtn - wBar;
 	aEd.h = a->h - boxPadH - hBar;
@@ -473,7 +497,7 @@ void
 AG_TextboxSetLabelS(AG_Textbox *tb, const char *s)
 {
 	AG_ObjectLock(tb);
-	if (tb->lbl != NULL) {
+	if (tb->lbl) {
 		AG_LabelTextS(tb->lbl, s);
 	} else {
 		tb->lbl = AG_LabelNewS(tb, 0, s);

@@ -1399,8 +1399,8 @@ KeyUp(AG_Event *_Nonnull event)
  * the list of autocomplete candidates.
  * 
  * If fn is NULL, disable autocomplete (closing any open windows).
- * If an autocomplete context exists, replace its function and arguments
- * (cancelling any running timers).
+ * If an autocomplete context already exists, update its function pointer
+ * and arguments (cancelling any running timers).
  */
 void
 AG_EditableAutocomplete(AG_Editable *ed, AG_EventFn fn, const char *fmt, ...)

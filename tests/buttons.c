@@ -29,7 +29,7 @@ TestGUI(void *obj, AG_Window *win)
 	box = AG_BoxNewVert(win, AG_BOX_EXPAND);
 	AG_LabelNewPolled(box, AG_LABEL_EXPAND, "Value: 0x%x", &ti->myFlags);
 	for (i = 0, mask = 0x0001; i < 16; i++) {
-		AG_ButtonNewFlag(box, 0,
+		AG_ButtonNewFlag(box, AG_BUTTON_STICKY,
 		    AG_Printf("Bit %d (mask 0x%x)", i+1, mask),
 		    &ti->myFlags, mask);
 		mask <<= 1;

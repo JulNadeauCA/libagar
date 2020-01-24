@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -126,6 +126,9 @@ Direct buffer-access routines are available in
 .Pp
 .Ft void
 .Fn AG_TextboxSizeHintLines "AG_Textbox *textbox" "Uint nLines"
+.Pp
+.Ft void
+.Fn AG_TextboxAutocomplete "AG_Textbox *tb" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
 .nr nS 0
 The
@@ -282,6 +285,27 @@ The
 variant accepts arguments in pixels.
 .Fn AG_TextboxSizeHintLines
 accepts a number of lines.
+.Pp
+.Fn AG_TextboxAutocomplete
+sets up an autocomplete routine
+.Fa fn ,
+which will be passed a pointer to an
+.Xr AG_Tlist 3
+as first argument (and a pointer to the
+.Xr AG_Editable 3
+instance as SELF).
+The autocomplete routine is expected to populate the tlist with
+suggestions based on the current buffer contents.
+If the
+.Fa fn
+argument is NULL, disable autocomplete (closing any active windows).
+If an autocomplete context has already been configured, only its function
+and arguments are updated (and any active timers are cancelled).
+If non-NULL,
+.Fa fnArgs
+indicates additional
+.Xr AG_Event 3
+style arguments to be passed to the autocomplete routine.
 .Sh CURSOR MANIPULATION
 .nr nS 1
 .Ft int
