@@ -604,10 +604,11 @@ AG_EditableBindUTF8(ed, name, sizeof(name));
 .Ed
 .Pp
 See
-.Pa tests/textbox.c
-and
-.Pa tests/charsets.c
-in the Agar source distribution.
+.Xr AG_Textbox 3
+for an example autocomplete routine (note that the
+.Fn AG_TextboxAutocomplete
+call is an alias for
+.Fn AG_EditableAutocomplete ) .
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Text 3 ,
@@ -624,6 +625,7 @@ It was rewritten as a front-end to
 .Xr AG_Editable 3
 in Agar 1.3.2.
 The clipboard and direct buffer access routines were added in Agar 1.4.2.
+.Fn AG_EditableAutocomplete ,
 .Fn AG_EditableCatString ,
 .Dv AG_EDITABLE_UPPERCASE
 and

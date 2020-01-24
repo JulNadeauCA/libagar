@@ -514,12 +514,11 @@ AG_TextboxPrintf(tb, "Foo");
 s = AG_TextboxDupString(tb);
 .Ed
 .Pp
-Exclusive access to an
+An
 .Xr AG_TextElement 3
-is an efficient option for editing potentially large, dynamically-allocated
-strings:
+can accomodate a potentially large, dynamically-allocated string:
 .Bd -literal -offset indent
-AG_Text *txt;
+AG_TextElement *txt;
 AG_Textbox *tb;
 
 txt = AG_TextNew(0);
@@ -528,11 +527,41 @@ tb = AG_TextboxNew(parent, AG_TEXTBOX_EXCL |
 AG_TextboxBindText(tb, txt);
 .Ed
 .Pp
-Also see
-.Pa tests/textbox.c
-and
-.Pa tests/charsets.c
-in the Agar source distribution.
+The following code fragment sets up a simple autocomplete routine:
+.Pp
+.Bd -literal
+static void
+MyAutocomplete(AG_Event *event)
+{
+	const char *dict[] = { "Apple", "Orange", "Banana", NULL }, **dp;
+	AG_Editable *ed = AG_EDITABLE_SELF();
+	AG_Tlist *tl = AG_TLIST_PTR(1);
+	char *s, *sp;
+
+	if ((sp = s = AG_EditableDupString(ed)) == NULL) {
+		return;
+	}
+	while (*sp == ' ')                /* Strip leading whitespace */
+		sp++;
+
+	AG_TlistBegin(tl);
+	for (dp = dictFirst; *dp != NULL; dp++) {
+		if (sp[0] == '\0' ||
+		    AG_Strncasecmp(*dp, sp, strlen(sp)) == 0) {
+			AG_TlistAddPtr(tl, NULL, *dp, (void *)*dp);
+		}
+	}
+	AG_TlistEnd(tl);
+	free(s);
+}
+
+...
+
+AG_Textbox *tb;
+
+tb = AG_TextboxNew(NULL, 0, "Fruit: ");
+AG_TextboxAutocomplete(tb, MyAutocomplete, NULL);
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Editable 3 ,
@@ -549,6 +578,7 @@ It was mostly rewritten as
 .Xr AG_Editable 3
 was added in Agar 1.3.2.
 Support for dynamically-resized text buffers was added in Agar 1.4.0.
-The
+.Fn AG_TextboxAutocomplete
+and
 .Dv AG_TEXTBOX_RETURN_BUTTON
-option was added in Agar 1.6.0.
+appeared in Agar 1.6.0.
