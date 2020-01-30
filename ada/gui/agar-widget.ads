@@ -919,8 +919,10 @@ package Agar.Widget is
     Flags            : C.unsigned;               -- WIDGET_* Flags (below)
     X,Y              : C.int;                    -- Coordinates in parent widget
     W,H              : C.int;                    -- Allocated size in pixels
-    View_Rect        : SU.AG_Rect2;              -- Display coordinates
-    Sensitivity_Rect : SU.AG_Rect2;              -- Sensitivity rectangle
+
+    Rect             : SU.AG_Rect;               -- Rectangle at 0,0 (cached)
+    View_Rect        : SU.AG_Rect2;              -- Display coordinates (cached)
+    Sensitivity_Rect : SU.AG_Rect2;              -- Cursor sensitivity rectangle
 
     Surface_Count    : C.unsigned;                  -- Mapped surface count
     Surfaces         : access SU.Surface_Access;    -- Mapped surfaces
@@ -936,14 +938,26 @@ package Agar.Widget is
 
     Stylesheet       : System.Address;           -- TODO Alternate CSS stylesheet
     State            : Widget_State;             -- Style-effecting state
-    Margin           : C.unsigned;               -- Margin in px (0xRRLLBBTT)
-    Padding          : C.unsigned;               -- Padding in px (0xRRLLBBTT)
+    Margin_Top       : Interfaces.Unsigned_8;    -- Margin top (px)
+    Margin_Right     : Interfaces.Unsigned_8;    -- Margin right (px)
+    Margin_Bottom    : Interfaces.Unsigned_8;    -- Margin bottom (px)
+    Margin_Left      : Interfaces.Unsigned_8;    -- Margin left (px)
+
+    Padding_Top      : C.unsigned;               -- Padding top (px)
+    Padding_Right    : C.unsigned;               -- Padding right (px)
+    Padding_Bottom   : C.unsigned;               -- Padding bottom (px)
+    Padding_Left     : C.unsigned;               -- Padding left (px)
+
+    Spacing_Top      : C.unsigned;               -- Spacing top (px)
+    Spacing_Right    : C.unsigned;               -- Spacing right (px)
+    Spacing_Bottom   : C.unsigned;               -- Spacing bottom (px)
+    Spacing_Left     : C.unsigned;               -- Spacing left (px)
+
     Borders          : C.unsigned;               -- Border styles (0xRWLWBWTW)
+
     Font             : System.Address;           -- Active font (TODO)
     Palette          : Widget_Palette;           -- Color palette
-#if AG_MODEL = AG_MEDIUM
-    C_Pad2           : Interfaces.Unsigned_32;
-#end if;
+
 #if HAVE_OPENGL
     GL_Context       : Widget_GL_Context_Access; -- Context for USE_OPENGL
 #end if;
