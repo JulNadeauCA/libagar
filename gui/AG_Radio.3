@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -59,6 +59,9 @@ widget implements a group of "radio" buttons.
 .Fn AG_RadioNewUint "AG_Widget *parent" "Uint flags" "const char *items[]" "Uint *value"
 .Pp
 .Ft void
+.Fn AG_RadioSetDisposition "AG_Radio *radio" "AG_RadioType type"
+.Pp
+.Ft void
 .Fn AG_RadioItemsFromArray "AG_Radio *radio" "const char *items[]"
 .Pp
 .Ft "void"
@@ -103,24 +106,26 @@ Shorthand for
 .Dv AG_RADIO_HFILL|AG_RADIO_VFILL .
 .El
 .Pp
-The
 .Fn AG_RadioNewFn
-variant sets an event handler for the
+creates a new radio group and also sets an event handler for the
 .Sq radio-changed
 event.
-The
-.Fn AG_RadioNew{Int,Uint}
-variants tie the radio button with the specified
-.Fa int
-or
-.Fa Uint
-variable.
 .Pp
-The
+.Fn AG_RadioNew{Int,Uint}
+creates a new radio group bound to an integer.
+.Pp
+.Fn AG_RadioSetDisposition
+selects whether items are packed horizontally or vertically (the default):
+.Bd -literal
+typedef enum ag_radio_type {
+	AG_RADIO_VERT,                  /* Vertical disposition */
+	AG_RADIO_HORIZ                  /* Horizontal disposition */
+} AG_RadioType;
+.Ed
+.Pp
 .Fn AG_RadioItemsFromArray
-function inserts a set of radio buttons from the given NULL-terminated
-array of strings.
-If there are already buttons in the group, they are preserved.
+generates (appends) a set of radio buttons from the given NULL-terminated
+array of C strings.
 .Pp
 .Fn AG_RadioSizeHint
 specifies an alternate initial size requisition expressed as a number
@@ -173,7 +178,7 @@ object:
 Index of last selection under the cursor (read-only).
 .El
 .Sh EXAMPLES
-The following code fragment binds
+The following code fragment connects an
 .Nm
 to an enum:
 .Bd -literal -offset indent
@@ -190,23 +195,25 @@ const char *fruitNames[] = {
 	NULL
 };
 
-AG_Radio *r = AG_RadioNew(NULL, 0, fruitNames);
-AG_BindInt(r, "value", &fruit);
+AG_RadioNewInt(NULL, 0, fruitNames, &fruit);
 .Ed
 .Pp
-To specify a callback routine:
+The following code fragment specifies a callback routine:
 .Bd -literal -offset indent
 void
 MyCallback(AG_Event *event)
 {
-	int newSelection = AG_INT(1);
+	const int newSelection = AG_INT(1);
+
 	printf("Selected item %d\\n", newSelection);
 }
 
 .Li ...
 
-AG_Radio *r = AG_RadioNewFn(NULL, 0, fruitNames, MyCallback, NULL);
-AG_BindInt(r, "value", &fruit);
+AG_Radio *rad;
+
+rad = AG_RadioNewFn(NULL, 0, fruitNames, MyCallback, NULL);
+AG_BindInt(rad, "value", &fruit);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
@@ -216,3 +223,5 @@ AG_BindInt(r, "value", &fruit);
 The
 .Nm
 widget first appeared in Agar 1.0.
+.Fn AG_RadioSetDisposition
+appeared in Agar 1.6.0.

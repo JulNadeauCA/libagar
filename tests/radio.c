@@ -42,31 +42,37 @@ TestGUI(void *obj, AG_Window *win)
 		"Ralph Wiggum",
 		NULL
 	};
-	AG_Box *box;
 	AG_Label *lbl;
 	MyTestInstance *ti = obj;
+	AG_Notebook *nb;
+	AG_NotebookTab *nt;
+	AG_Radio *rad;
 
-	box = AG_BoxNewVert(win, AG_BOX_EXPAND);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
+	nt = AG_NotebookAdd(nb, "Vertical", AG_BOX_VERT);
+	{
+		lbl = AG_LabelNewPolled(nt, AG_LABEL_EXPAND | AG_LABEL_FRAME,
+		    "Radio Group Test\n"
+		    "Value: %i", &ti->myValue);
+		AG_LabelJustify(lbl, AG_TEXT_CENTER);
+		AG_LabelValign(lbl, AG_TEXT_TOP);
+		AG_SetStyle(lbl, "font-size", "150%");
+		AG_RadioNewUint(nt, 0, items, &ti->myValue);
+	}
 
-	AG_LabelNewS(box, AG_LABEL_FRAME, "Hello!");
-	AG_LabelNewS(box, AG_LABEL_FRAME, "Two\nLines");
-	
-	lbl = AG_LabelNewS(box, AG_LABEL_HFILL | AG_LABEL_FRAME,
-	    "Radio Group Test\n"
-	    "Value: 1234");
-	AG_LabelJustify(lbl, AG_TEXT_CENTER);
-	AG_LabelValign(lbl, AG_TEXT_TOP);
-	AG_SetStyle(lbl, "font-size", "150%");
+	nt = AG_NotebookAdd(nb, "Horizontal", AG_BOX_VERT);
+	{
+		lbl = AG_LabelNewPolled(nt, AG_LABEL_EXPAND | AG_LABEL_FRAME,
+		    "Radio Group Test\n"
+		    "Value: %i", &ti->myValue);
+		AG_LabelJustify(lbl, AG_TEXT_CENTER);
+		AG_LabelValign(lbl, AG_TEXT_TOP);
+		AG_SetStyle(lbl, "font-size", "150%");
 
-	lbl = AG_LabelNewPolled(box, AG_LABEL_EXPAND | AG_LABEL_FRAME,
-	    "Radio Group Test\n"
-	    "Value: %i", &ti->myValue);
+		rad = AG_RadioNewUint(nt, 0, items, &ti->myValue);
+		AG_RadioSetDisposition(rad, AG_RADIO_HORIZ);
+	}
 
-	AG_LabelJustify(lbl, AG_TEXT_CENTER);
-	AG_LabelValign(lbl, AG_TEXT_TOP);
-	AG_SetStyle(lbl, "font-size", "150%");
-
-	AG_RadioNewUint(box, 0, items, &ti->myValue);
 	return (0);
 }
 

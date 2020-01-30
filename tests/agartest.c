@@ -691,6 +691,18 @@ TestPopupMenu(AG_Event *event)
 	AG_PopupShow(pm);
 }
 
+static void
+ZoomIn(AG_Event *event)
+{
+	AG_ZoomIn();
+}
+
+static void
+ZoomOut(AG_Event *event)
+{
+	AG_ZoomOut();
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -832,6 +844,11 @@ main(int argc, char *argv[])
 #if defined(AG_UNICODE)
 		AG_MenuAction(mi, _("Unicode"), NULL, RunUnicodeBrowser, NULL);
 #endif
+	}
+	mi = AG_MenuNode(menu->root, ("View"), NULL);
+	{
+		AG_MenuActionKb(mi, _("Zoom In"), NULL, AG_KEY_PLUS, AG_KEYMOD_CTRL, ZoomIn, NULL);
+		AG_MenuActionKb(mi, _("Zoom Out"), NULL, AG_KEY_MINUS, AG_KEYMOD_CTRL, ZoomOut, NULL);
 	}
 	mi = AG_MenuNode(menu->root, ("Help"), NULL);
 	{

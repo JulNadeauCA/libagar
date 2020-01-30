@@ -131,12 +131,12 @@ AutocompleteName(AG_Event *event)
 
 	if (sLast == NULL) {
 		for (dp = dictFirst; *dp != NULL; dp++)
-			if (sFirst[0] == '\0' ||
+			if ((sFirst[0] == '\0' || sFirst[0] == '*') ||
 			    AG_Strncasecmp(*dp, sFirst, strlen(sFirst)) == 0)
 				AG_TlistAddPtr(tl, NULL, *dp, (void *)*dp);
 	} else {
 		for (dp = dictLast; *dp != NULL; dp++)
-			if (sLast[0] == '\0' ||
+			if ((sLast[0] == '\0' || sLast[0] == '*') ||
 			    AG_Strncasecmp(*dp, sLast, strlen(sLast)) == 0) {
 				char *sd;
 
@@ -549,9 +549,9 @@ TestGUI(void *obj, AG_Window *win)
 			}
 			{
 				const char *selModes[] = {
-				    "By row",
-				    "By cell",
-				    "By column",
+				    "Select\nby\nRow",
+				    "Select\nby\nCell",
+				    "Select\nby\nColumn",
 				    NULL
 				};
 				AG_Radio *rad;
