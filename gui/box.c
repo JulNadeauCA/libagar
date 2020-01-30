@@ -501,6 +501,15 @@ Edit(void *_Nonnull obj)
 	AG_Numerical *num;
 	AG_Checkbox *cb;
 	AG_Radio *rad;
+	const char *typeNames[] = {
+		N_("Vertical"),
+		N_("Horizontal"),
+		NULL
+	};
+
+	AG_LabelNewS(box, 0, _("Disposition:"));
+	rad = AG_RadioNewUint(box, 0, typeNames, &tgt->type);
+	AG_SetEvent(rad, "radio-changed", UpdateWindowOf,"%p",tgt);
 
 	AG_LabelNewS(box, 0, _("Alignment:"));
 	hBox = AG_BoxNewHoriz(box, 0);
