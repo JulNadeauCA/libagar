@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -426,13 +426,9 @@ Draw(void *_Nonnull p)
 	};
 	AG_Scrollview *sv = p;
 	AG_Widget *chld;
-	AG_Rect r;
+	AG_Rect r = WIDGET(sv)->r;
 	int x2,y2;
 
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(sv);
-	r.h = HEIGHT(sv);
 #ifdef AG_DEBUG
 	if (sv->style < 0 || sv->style >= AG_SCROLLVIEW_STYLE_LAST)
 		AG_FatalError("style");
@@ -445,7 +441,6 @@ Draw(void *_Nonnull p)
 	x2 = WIDGET(sv)->rView.x2 - sv->wBar;
 	y2 = WIDGET(sv)->rView.y2 - sv->hBar;
 
-	r = sv->r;
 	r.x++;
 	r.y++;
 	r.w -= 2;

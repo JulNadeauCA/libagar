@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -213,7 +213,7 @@ Draw(void *_Nonnull obj)
 	AG_Checkbox *cb = obj;
 	AG_Variable *V;
 	void *p;
-	AG_Rect r, rClip;
+	AG_Rect r;
 	int state;
 
 	V = AG_GetVariable(cb, "state", &p);
@@ -241,20 +241,11 @@ Draw(void *_Nonnull obj)
 	if (cb->flags & AG_CHECKBOX_INVERT)
 		state = !state;
 
-	if (WIDGET(cb)->flags & AG_WIDGET_MOUSEOVER) {
-		r.x = 0;
-		r.y = 0;
-		r.w = WIDTH(cb);
-		r.h = HEIGHT(cb);
-		AG_DrawRect(cb, &r, &WCOLOR_HOVER(cb,BG_COLOR));
-	}
-	if (AG_WidgetIsFocused(cb)) {
-		r.x = 0;
-		r.y = 0;
-		r.w = WIDTH(cb);
-		r.h = HEIGHT(cb);
-		AG_DrawRectOutline(cb, &r, &WCOLOR(cb,LINE_COLOR));
-	}
+	if (WIDGET(cb)->flags & AG_WIDGET_MOUSEOVER)
+		AG_DrawRect(cb, &WIDGET(cb)->r, &WCOLOR_HOVER(cb,BG_COLOR));
+
+	if (AG_WidgetIsFocused(cb))
+		AG_DrawRectOutline(cb, &WIDGET(cb)->r, &WCOLOR(cb,LINE_COLOR));
 
 	r.x = 2;
 	r.w = cb->boxWd;
@@ -275,15 +266,12 @@ Draw(void *_Nonnull obj)
 			cb->suLabel = AG_WidgetMapSurface(cb,
 			    AG_TextRender(cb->label));
 	
-		if (WIDTH(cb) < cb->wReq || HEIGHT(cb) < cb->hReq) {
-			rClip.x = 1;
-			rClip.y = 1;
-			rClip.w = WIDTH(cb)-2;
-			rClip.h = HEIGHT(cb)-2;
-			AG_PushClipRect(cb, &rClip);
-		}
+		if (WIDTH(cb) < cb->wReq || HEIGHT(cb) < cb->hReq)
+			AG_PushClipRect(cb, &WIDGET(cb)->r);
 
-		AG_WidgetBlitSurface(cb, cb->suLabel, 2+cb->boxWd+2, 0);
+		AG_WidgetBlitSurface(cb, cb->suLabel,
+		    cb->boxWd + WIDGET(cb)->spacingHoriz,
+		    0);
 
 		if (WIDTH(cb) < cb->wReq || HEIGHT(cb) < cb->hReq)
 			AG_PopClipRect(cb);
@@ -294,8 +282,8 @@ Draw(void *_Nonnull obj)
 
 		if (cb->suCheckmark == -1) {
 			AG_TextFontLookup("dejavu-sans",
-			                  WFONT(cb)->spec.size+5.0f,
-					  WFONT(cb)->flags);
+			    WFONT(cb)->spec.size + 5.0f,
+			    WFONT(cb)->flags);
 
 			/* U+2713 (CHECK MARK) */
 			cb->suCheckmark = AG_WidgetMapSurface(cb,
@@ -378,7 +366,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 
 	if (cb->label) {
 		AG_TextSize(cb->label, &r->w, &r->h);
-		r->w += WFONT(cb)->lineskip + 4;
+		r->w += WFONT(cb)->lineskip + WIDGET(cb)->spacingHoriz;
 	} else {
 		r->w = WFONT(cb)->height;
 		r->h = r->w;

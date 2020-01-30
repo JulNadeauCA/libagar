@@ -196,7 +196,6 @@ Draw(void *_Nonnull obj)
 	AG_Socket *sock = obj;
 	AG_Variable *binding;
 	void *pBinding;
-	AG_Rect r;
 	int state;
 	
 	binding = AG_GetVariable(sock, "state", &pBinding);
@@ -213,17 +212,11 @@ Draw(void *_Nonnull obj)
 		AG_WidgetBlitSurface(sock, sock->bgData.pixmap.s, 0, 0);
 		break;
 	case AG_SOCKET_RECT:
-		r.x = 0;
-		r.y = 0;
-		r.w = WIDTH(sock);
-		r.h = HEIGHT(sock);
-		AG_DrawBoxSunk(sock, &r, &WCOLOR(sock, FG_COLOR));
+		AG_DrawBoxSunk(sock, &WIDGET(sock)->r, &WCOLOR(sock,FG_COLOR));
 		break;
 	case AG_SOCKET_CIRCLE:
-		AG_DrawCircle(sock,
-		    WIDTH(sock) >> 1,
-		    HEIGHT(sock) >> 1,
-		    sock->bgData.circle.r, &WCOLOR(sock, FG_COLOR));
+		AG_DrawCircle(sock, WIDTH(sock) >> 1, HEIGHT(sock) >> 1,
+		    sock->bgData.circle.r, &WCOLOR(sock,FG_COLOR));
 		break;
 	}
 
@@ -238,6 +231,8 @@ Draw(void *_Nonnull obj)
 			/* TODO */
 		case AG_SOCKET_RECT:
 			if (state) {
+				AG_Rect r;
+
 				r.x = sock->lPad;
 				r.y = sock->tPad;
 				r.w = WIDTH(sock) - sock->lPad - sock->rPad;

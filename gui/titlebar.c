@@ -192,20 +192,14 @@ Draw(void *_Nonnull obj)
 	AG_Titlebar *tbar = obj;
 	AG_Window *win = tbar->win;
 	const AG_Color *cFg;
-	AG_Rect r;
-
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(tbar);
-	r.h = HEIGHT(tbar);
 
 	cFg = AG_WindowIsFocused(win) ? &WCOLOR(tbar, FG_COLOR) :
 	                                &WCOLOR_DISABLED(tbar, FG_COLOR);
 
 	if (tbar->flags & AG_TITLEBAR_PRESSED) {
-		AG_DrawBoxSunk(win, &r, cFg);
+		AG_DrawBoxSunk(win, &WIDGET(tbar)->r, cFg);
 	} else {
-		AG_DrawBoxRaised(win, &r, cFg);
+		AG_DrawBoxRaised(win, &WIDGET(tbar)->r, cFg);
 	}
 
 	WIDGET_SUPER_OPS(tbar)->draw(tbar);

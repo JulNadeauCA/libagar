@@ -206,8 +206,8 @@ DrawPercentText(AG_ProgressBar *_Nonnull pb)
 
 		if (HEIGHT(pb) >= s->h && s->w <= WIDTH(pb)) {
 			AG_WidgetBlitSurface(pb, su,
-			    WIDTH(pb)/2  - s->w/2,
-			    HEIGHT(pb)/2 - s->h/2);
+			    (WIDTH(pb) >> 1)  - (s->w >> 1),
+			    (HEIGHT(pb) >> 1) - (s->h >> 1));
 		}
 	}
 }
@@ -216,7 +216,7 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_ProgressBar *pb = obj;
-	AG_Rect rd;
+	AG_Rect rd = WIDGET(pb)->r;
 	int min, max, val;
 	int pad, pad2;
 
@@ -226,11 +226,7 @@ Draw(void *_Nonnull obj)
 	if (val < min) { val = min; }
 	if (val > max) { val = max; }
 
-	rd.x = 0;
-	rd.y = 0;
-	rd.w = WIDTH(pb);
-	rd.h = HEIGHT(pb);
-	AG_DrawBoxSunk(pb, &rd, &WCOLOR(pb, BG_COLOR));
+	AG_DrawBoxSunk(pb, &rd, &WCOLOR(pb,BG_COLOR));
 
 	if ((max - min) <= 0)
 		return;
@@ -252,7 +248,7 @@ Draw(void *_Nonnull obj)
 		rd.h -= pad2;
 		break;
 	}
-	AG_DrawRect(pb, &rd, &WCOLOR(pb, SELECTION_COLOR));
+	AG_DrawRect(pb, &rd, &WCOLOR(pb,SELECTION_COLOR));
 
 	if (pb->flags & AG_PROGRESS_BAR_SHOW_PCT)
 		DrawPercentText(pb);

@@ -586,16 +586,11 @@ Draw(void *_Nonnull obj)
 	AG_Slider *sl = obj;
 	const AG_Color *cBg = &WCOLOR(sl, BG_COLOR);
 	const AG_Color *cFg = &WCOLOR(sl, FG_COLOR);
-	AG_Rect r;
+	AG_Rect r = WIDGET(sl)->r;
 	int x;
 
 	if (GetPosition(sl, &x) == -1)
 		return;
-
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(sl);
-	r.h = HEIGHT(sl);
 
 	switch (sl->type) {
 	case AG_SLIDER_VERT:

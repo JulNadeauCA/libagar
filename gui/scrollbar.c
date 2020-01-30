@@ -960,39 +960,33 @@ DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 static void
 DrawVertUndersize(AG_Scrollbar *_Nonnull sb)
 {
-	AG_Rect r;
+	const int w = WIDTH(sb);
+	const int h = HEIGHT(sb);
 	int mid, s;
 
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(sb);
-	r.h = HEIGHT(sb);
-	AG_DrawBoxRaised(sb, &r, &WCOLOR(sb, FG_COLOR));
+	AG_DrawBoxRaised(sb, &WIDGET(sb)->r, &WCOLOR(sb,FG_COLOR));
 	
-	mid = (r.w >> 1);
-	s = MIN(r.h>>2, r.w);
+	mid = (w >> 1);
+	s = MIN(h >> 2, w);
 
-	AG_DrawArrowUp(sb,   mid, s,          s, &WCOLOR(sb, LINE_COLOR));
-	AG_DrawArrowDown(sb, mid, (r.h>>1)+s, s, &WCOLOR(sb, LINE_COLOR));
+	AG_DrawArrowUp(sb, mid, s, s,          &WCOLOR(sb,LINE_COLOR));
+	AG_DrawArrowDown(sb, mid, (h>>1)+s, s, &WCOLOR(sb,LINE_COLOR));
 }
 
 static void
 DrawHorizUndersize(AG_Scrollbar *_Nonnull sb)
 {
-	AG_Rect r;
+	const int w = WIDTH(sb);
+	const int h = HEIGHT(sb);
 	int mid, s;
 
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(sb);
-	r.h = HEIGHT(sb);
-	AG_DrawBoxRaised(sb, &r, &WCOLOR(sb, FG_COLOR));
+	AG_DrawBoxRaised(sb, &WIDGET(sb)->r, &WCOLOR(sb,FG_COLOR));
 
-	mid = (r.h >> 1);
-	s = MIN(r.w>>2, r.h);
+	mid = (h >> 1);
+	s = MIN(w >> 2, h);
 
-	AG_DrawArrowLeft(sb,  s,          mid, s, &WCOLOR(sb, LINE_COLOR));
-	AG_DrawArrowRight(sb, (r.w>>1)+s, mid, s, &WCOLOR(sb, LINE_COLOR));
+	AG_DrawArrowLeft(sb, s, mid, s,         &WCOLOR(sb,LINE_COLOR));
+	AG_DrawArrowRight(sb, (w>>1)+s, mid, s, &WCOLOR(sb,LINE_COLOR));
 }
 
 /*

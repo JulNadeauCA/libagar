@@ -319,13 +319,7 @@ Draw(void *_Nonnull obj)
 	Uint hView;
 	
 	if (glv->flags & AG_GLVIEW_BGFILL) {
-		AG_Rect r;
-
-		r.x = 0;
-		r.y = 0;
-		r.w = WIDTH(glv);
-		r.h = HEIGHT(glv);
-		AG_DrawRect(glv, &r, &glv->bgColor);
+		AG_DrawRect(glv, &WIDGET(glv)->r, &glv->bgColor);
 	}
 	if (glv->underlay_ev != NULL)
 		glv->underlay_ev->fn(glv->underlay_ev);

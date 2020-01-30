@@ -84,29 +84,28 @@ typedef struct ag_menu_item {
 #endif
 
 enum ag_menu_style {
-	AG_MENU_DROPDOWN,	/* Drop-down menu */
-	AG_MENU_POPUP,		/* Contextual popup */
-	AG_MENU_GLOBAL		/* Global application menu */
+	AG_MENU_DROPDOWN,       /* Drop-down menu */
+	AG_MENU_POPUP,          /* Contextual popup */
+	AG_MENU_GLOBAL          /* Global application menu */
 };
 
 typedef struct ag_menu {
-	struct ag_widget wid;		/* AG_Widget -> AG_Menu */
+	struct ag_widget wid;             /* AG_Widget -> AG_Menu */
 	Uint flags;
-#define AG_MENU_HFILL	 	0x01
-#define AG_MENU_VFILL	 	0x02
-#define AG_MENU_EXPAND	 	(AG_MENU_HFILL|AG_MENU_VFILL)
-	enum ag_menu_style style;	/* Menu style */
-	AG_MenuItem *_Nonnull root;	/* Root menu item */
-	int selecting;			/* Selection in progress */
-	int lPad, rPad, tPad, bPad;	/* Global padding in pixels */
-	int lPadLbl, rPadLbl;		/* Item label padding in pixels */
+#define AG_MENU_HFILL  0x01
+#define AG_MENU_VFILL  0x02
+#define AG_MENU_EXPAND (AG_MENU_HFILL | AG_MENU_VFILL)
+	enum ag_menu_style style;         /* Menu style */
+	AG_MenuItem *_Nonnull root;       /* Root menu item */
+	int selecting;                    /* Selection in progress */
+	int lPadLbl, rPadLbl;             /* Item label padding in pixels */
 	int tPadLbl, bPadLbl;
-	int itemh;			/* Item height (optimization) */
-	int curState;			/* For MenuState() */
+	int itemh;                        /* Item height (optimization) */
+	int curState;                     /* For MenuState() */
 	Uint32 _pad;
-	AG_MenuItem *_Nullable itemSel;	/* Selected top-level item */
+	AG_MenuItem *_Nullable itemSel;   /* Selected top-level item */
 	AG_Toolbar *_Nullable curToolbar; /* For MenuToolbar() */
-	AG_Rect r;			  /* View area */
+	AG_Rect r;                        /* View area */
 } AG_Menu;
 
 #define AGMENU(obj)            ((AG_Menu *)(obj))
@@ -119,22 +118,22 @@ typedef struct ag_menu {
 #define AG_CONST_MENU_NAMED(n) AGCMENU( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Menu:*") )
 
 typedef struct ag_popup_menu {
-	AG_Widget   *_Nonnull  widget;	/* Parent widget */
-	AG_Menu     *_Nonnull  menu;	/* Menu (allocated) */
-	AG_MenuItem *_Nonnull  root;	/* Alias for menu->root */
-	AG_Window   *_Nullable win;	/* Expanded window */
+	AG_Widget *_Nonnull widget;     /* Parent widget */
+	AG_Menu *_Nonnull menu;         /* Menu (allocated) */
+	AG_MenuItem *_Nonnull root;     /* Alias for menu->root */
+	AG_Window *_Nullable win;       /* Expanded window */
 } AG_PopupMenu;
 
 typedef struct ag_menu_view {
-	struct ag_widget wid;		/* AG_Widget -> AG_MenuView */
+	struct ag_widget wid;           /* AG_Widget -> AG_MenuView */
 
-	AG_Menu     *_Nullable pmenu;	/* Associated menu */
-	AG_MenuItem *_Nullable pitem;	/* Associated menu item */
+	AG_Menu     *_Nullable pmenu;   /* Associated menu */
+	AG_MenuItem *_Nullable pitem;   /* Associated menu item */
 
-	int spIconLbl;			/* Icon and label spacing */
-	int spLblArrow;			/* Label and submenu arrow spacing */
-	int lPad, rPad, tPad, bPad;	/* Padding in pixels */
-	int arrowRight;			/* Right arrow surface handle */
+	int spIconLbl;                  /* Icon and label spacing */
+	int spLblArrow;                 /* Label and submenu arrow spacing */
+	int lPad, rPad, tPad, bPad;     /* Padding in pixels */
+	int arrowRight;                 /* Right arrow surface handle */
 	Uint32 _pad;
 } AG_MenuView;
 
@@ -171,12 +170,7 @@ AG_Window *_Nullable AG_MenuExpand(void *_Nullable, AG_MenuItem *_Nonnull,
 void   	             AG_MenuCollapse(AG_MenuItem *_Nullable);
 void   	             AG_MenuCollapseAll(AG_Menu *_Nonnull);
 
-void	 AG_MenuSetPadding(AG_Menu *_Nonnull, int,int,int,int);
 void	 AG_MenuSetLabelPadding(AG_Menu *_Nonnull, int,int,int,int);
-#define	 AG_MenuSetPaddingLeft(m,v)   AG_MenuSetPadding((m),(v),-1,-1,-1)
-#define	 AG_MenuSetPaddingRight(m,v)  AG_MenuSetPadding((m),-1,(v),-1,-1)
-#define	 AG_MenuSetPaddingTop(m,v)    AG_MenuSetPadding((m),-1,-1,(v),-1)
-#define	 AG_MenuSetPaddingBottom(m,v) AG_MenuSetPadding((m),-1,-1,-1,(v))
 #define	 AG_MenuSetLabelPaddingLeft(m,v) \
 	 AG_MenuSetLabelPadding((m),(v),-1,-1,-1)
 #define	 AG_MenuSetLabelPaddingRight(m,v) \
@@ -314,7 +308,13 @@ AG_MenuItem *_Nullable AG_MenuGetItemPtr(const AG_Event *_Nonnull, int, int);
 #endif
 
 #ifdef AG_LEGACY
-# define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),NULL)
+# define AG_MenuAddItem(m,lbl)        AG_MenuNode((m)->root,(lbl),NULL)
+# define AG_MenuSetPaddingLeft(m,v)   AG_MenuSetPadding((m),(v),-1,-1,-1)
+# define AG_MenuSetPaddingRight(m,v)  AG_MenuSetPadding((m),-1,(v),-1,-1)
+# define AG_MenuSetPaddingTop(m,v)    AG_MenuSetPadding((m),-1,-1,(v),-1)
+# define AG_MenuSetPaddingBottom(m,v) AG_MenuSetPadding((m),-1,-1,-1,(v))
+void AG_MenuSetPadding(AG_Menu *_Nonnull, int,int,int,int)
+                      DEPRECATED_ATTRIBUTE;
 #endif /* AG_LEGACY */
 __END_DECLS
 

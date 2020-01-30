@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2019-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -245,7 +245,6 @@ InputAttribute(AG_Event *_Nonnull event)
 static void
 PollAttributes(AG_Event *_Nonnull event)
 {
-	char text[AG_TLIST_LABEL_MAX];
 	AG_Tlist *tl = AG_TLIST_SELF();
 	AG_Widget *tgt = AG_WIDGET_PTR(1);
 	const char **attr;
@@ -256,19 +255,147 @@ PollAttributes(AG_Event *_Nonnull event)
 	AG_TlistBegin(tl);
 
 	for (attr = &agStyleAttributes[0]; *attr != NULL; attr++) {
-		char *attrVal;
-
 		if (!AG_Defined(tgt, *attr)) {
 			continue;
 		}
-		attrVal = AG_GetStringP(tgt, *attr);
-		Strlcpy(text, *attr,   sizeof(text));
-		Strlcat(text, ": ",    sizeof(text));
-		Strlcat(text, attrVal, sizeof(text));
-		AG_TlistAddPtr(tl, NULL, text, attrVal);
+		AG_TlistAdd(tl, NULL, "%s: %s", *attr, AG_GetStringP(tgt,*attr));
 	}
 
 	AG_TlistEnd(tl);
+}
+
+static void
+CompleteColor(const char *_Nonnull key, const char *_Nonnull val,
+    AG_Tlist *_Nonnull tl)
+{
+	const AG_ColorName *cn;
+	const int icon_w = tl->icon_w;
+
+	for (cn = &agColorNames[0]; cn->name != NULL; cn++) {
+		if (val[0] == '\0' || val[0] == '*' ||
+		    Strncasecmp(cn->name, val, strlen(val)) == 0) {
+			AG_Surface *S;
+
+			S = AG_SurfaceStdRGB(icon_w, icon_w);
+			AG_FillRect(S, NULL, &cn->c);
+			AG_TlistAdd(tl, S, "%s: %s", key, cn->name);
+			AG_SurfaceFree(S);
+		}
+	}
+}
+
+static void
+CompleteFontWeight(const char *_Nonnull key, const char *_Nonnull val,
+    AG_Tlist *_Nonnull tl)
+{
+	const char *values[] = {
+		"normal",
+		"semibold",
+		"bold",
+		"!parent",
+		NULL
+	}, **vp;
+
+	for (vp = values; *vp != NULL; vp++)
+		if (val[0] == '\0' || val[0] == '*' ||
+		    Strncasecmp(*vp, val, strlen(val)) == 0)
+			AG_TlistAdd(tl, NULL, "%s: %s", key, *vp);
+}
+
+static void
+CompleteFontStyle(const char *_Nonnull key, const char *_Nonnull val,
+    AG_Tlist *_Nonnull tl)
+{
+	const char *values[] = {
+		"normal",
+		"italic",
+		"upright-italic",
+		"!parent",
+		NULL
+	}, **vp;
+
+	for (vp = values; *vp != NULL; vp++)
+		if (val[0] == '\0' || val[0] == '*' ||
+		    Strncasecmp(*vp, val, strlen(val)) == 0)
+			AG_TlistAdd(tl, NULL, "%s: %s", key, *vp);
+}
+
+static void
+CompleteFontStretch(const char *_Nonnull key, const char *_Nonnull val,
+    AG_Tlist *_Nonnull tl)
+{
+	const char *values[] = {
+		"normal",
+		"condensed",
+		"semi-condensed",
+		"!parent",
+		NULL
+	}, **vp;
+
+	for (vp = values; *vp != NULL; vp++)
+		if (val[0] == '\0' || val[0] == '*' ||
+		    Strncasecmp(*vp, val, strlen(val)) == 0)
+			AG_TlistAdd(tl, NULL, "%s: %s", key, *vp);
+}
+
+static void
+CompleteAttribute(AG_Event *_Nonnull event)
+{
+	static const struct {
+		const char *_Nonnull key;
+		void (*_Nonnull fn)(const char *_Nonnull, const char *_Nonnull,
+		                    AG_Tlist *_Nonnull);
+	} dict[] = {
+		{ "color",            CompleteColor },
+		{ "background-color", CompleteColor },
+		{ "text-color",       CompleteColor },
+		{ "line-color",       CompleteColor },
+		{ "high-color",       CompleteColor },
+		{ "low-color",        CompleteColor },
+		{ "selection-color",  CompleteColor },
+		{ "font-weight",      CompleteFontWeight },
+		{ "font-style",       CompleteFontStyle },
+		{ "font-stretch",     CompleteFontStretch },
+#if 0
+		{ "font-size",        CompleteFontSize },
+		{ "font-family",      CompleteFontFamily },
+#endif
+		{ NULL,               NULL }
+	}, *dp;
+	AG_Editable *ed = AG_EDITABLE_SELF();
+	AG_Tlist *tl = AG_TLIST_PTR(1);
+	char *s = AG_EditableDupString(ed), *sp = s;
+	const char *sKey, *sVal;
+
+	while (*sp == ' ' || *sp == '\t') {
+		sp++;
+	}
+	sKey = AG_Strsep(&sp, ":");
+	do {
+		sVal = AG_Strsep(&sp, ":");
+	} while (sVal && (*sVal == '\0' || *sVal == ' ' || *sVal == '\t'));
+
+	AG_TlistBegin(tl);
+
+	if (sVal != NULL) {
+		for (dp = &dict[0]; dp->key != NULL; dp++) {
+			if (Strcasecmp(sKey, dp->key) == 0) {
+				dp->fn(sKey, sVal, tl);
+				break;
+			}
+		}
+	} else {
+		const char **attr;
+
+		for (attr = agStyleAttributes; *attr != NULL; attr++) {
+			if (sKey[0] == '\0' || sKey[0] == '*' ||
+			    Strncasecmp(*attr, sKey, strlen(sKey)) == 0)
+				AG_TlistAddS(tl, NULL, *attr);
+		}
+	}
+
+	AG_TlistEnd(tl);
+	Free(s);
 }
 
 static void
@@ -303,9 +430,10 @@ WidgetSelected(AG_Event *_Nonnull event)
 		                              PollAttributes, "%p", tgt);
 
 		hBox = AG_BoxNewHoriz(nt, AG_BOX_HFILL);
-		tb = AG_TextboxNewS(hBox, AG_TEXTBOX_HFILL |
-		                          AG_TEXTBOX_RETURN_BUTTON, "+");
+		tb = AG_TextboxNewS(hBox, AG_TEXTBOX_HFILL | AG_TEXTBOX_EXCL |
+		                          AG_TEXTBOX_RETURN_BUTTON, "+ ");
 		AG_TextboxSizeHint(tb, "<XXXXXXXXXXX>: <XXXXXXXXXXX>");
+		AG_TextboxAutocomplete(tb, CompleteAttribute, NULL);
 		AG_SetEvent(tb, "textbox-return", InputAttribute, "%p,%p", tb,tgt);
 	}
 #if 0
@@ -427,7 +555,8 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	
 	tlVFS = AG_TlistNewPolledMs(NULL, 0, 125,
 	                            PollWidgets, "%Cp", tgt);
-	AG_TlistSizeHint(tlVFS, "<XXXXX/XXXXX/XXXXX/XXXXX>", 10);
+	AG_TlistSizeHint(tlVFS, "<XXXXX/XXXXX/XXXXX/XXXXX>", 30);
+	AG_SetStyle(tlVFS, "font-size", "80%");
 	AG_Expand(tlVFS);
 
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);

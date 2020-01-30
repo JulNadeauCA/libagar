@@ -112,18 +112,12 @@ Draw(void *_Nonnull obj)
 	};
 	AG_Fixed *fx = obj;
 	AG_Widget *chld;
-	AG_Rect r;
-
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(fx);
-	r.h = HEIGHT(fx);
 
 #ifdef AG_DEBUG
 	if (fx->style < 0 || fx->style >= AG_FIXED_STYLE_LAST)
 		AG_FatalError("style");
 #endif
-	pfBox[fx->style](fx, &r, &WCOLOR(fx, BG_COLOR));
+	pfBox[fx->style](fx, &WIDGET(fx)->r, &WCOLOR(fx,BG_COLOR));
 
 	OBJECT_FOREACH_CHILD(chld, fx, ag_widget)
 		AG_WidgetDraw(chld);

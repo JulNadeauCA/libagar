@@ -250,8 +250,10 @@ typedef struct ag_widget {
 
 	int x, y;                          /* Coordinates in container */
 	int w, h;                          /* Allocated geometry */
-	AG_Rect2 rView;                    /* Effective view coordinates */
-	AG_Rect2 rSens;                    /* Effective sensitivity rectangle */
+
+	AG_Rect  r;                        /* Rectangle at 0,0 (cached) */
+	AG_Rect2 rView;                    /* Display coordinates (cached) */
+	AG_Rect2 rSens;                    /* Cursor sensitivity rectangle */
 
 	Uint                            nSurfaces; /* Mapped surface count */
 	AG_Surface *_Nullable *_Nullable surfaces; /* Mapped surfaces */
@@ -263,20 +265,20 @@ typedef struct ag_widget {
 	Uint        *_Nullable textures;   /* Cached hardware textures */
 	AG_TexCoord *_Nullable texcoords;  /* Cached texture coordinates */
 
-	struct ag_widget *_Nullable focusFwd;     /* TODO use a Variable for this */ 
+	struct ag_widget *_Nullable focusFwd;     /* (TODO use a Variable) */ 
 	struct ag_window *_Nullable window;       /* Parent window (NULL=none) */
 	struct ag_driver *_Nullable drv;          /* Parent driver instance */
 	struct ag_driver_class *_Nullable drvOps; /* Parent driver class */
 
 	AG_StyleSheet *_Nullable css;       /* Style sheet (null = use default) */
+	                                    /* (TODO use a Variable) */
+
 	enum ag_widget_state state;         /* Style-effecting state */
-
-	Uint8 marginTop, marginRight;       /* Margin around border (px) */
+	Uint8 marginTop, marginRight;       /* Margin (px outside of border) */
 	Uint8 marginBottom, marginLeft;
-
-	Uint8 paddingTop, paddingRight;     /* Padding around contents (px) */
-	Uint8 paddingBottom, paddingLeft;
-
+	Uint paddingTop, paddingRight;      /* Padding (px around contents) */
+	Uint paddingBottom, paddingLeft;
+	Uint spacingHoriz, spacingVert;     /* Spacing (px between items) */
 	Uint borders;
 #define AG_WIDGET_BORDER_NONE     0     /* No border style */
 #define AG_WIDGET_BORDER_WD_1     1     /* Solid 1-pixel */

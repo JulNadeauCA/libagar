@@ -538,7 +538,7 @@ AG_ColorFromString(AG_Color *cOut, const char *s, const AG_Color *pColor)
 	}
 
 	if (format == FORMAT_NAME) {                 /* Lookup color keyword */
-		AG_ColorName *cn;
+		const AG_ColorName *cn;
 
 		for (cn = &agColorNames[0]; cn->name != NULL; cn++) {
 			if (Strcasecmp(cn->name, pc) == 0)

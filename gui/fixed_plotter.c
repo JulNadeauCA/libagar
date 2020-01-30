@@ -174,42 +174,40 @@ Draw(void *obj)
 	AG_FixedPlotter *fpl = obj;
 	AG_FixedPlotterItem *gi;
 	AG_FixedPlotterValue oval;
-	AG_Rect r;
 	int x, y, ox = 0, oy;
+	const int w = WIDTH(fpl);
+	const int h = HEIGHT(fpl);
 	Uint32 i, yOrigin;
 
 	yOrigin = WIDGET(fpl)->h * fpl->yOrigin / 100;
 
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(fpl);
-	r.h = HEIGHT(fpl);
-	AG_DrawBoxRaised(fpl, &r, &WCOLOR(fpl, BG_COLOR));
+	AG_DrawBoxRaised(fpl, &WIDGET(fpl)->r, &WCOLOR(fpl,BG_COLOR));
 
 	if (fpl->flags & AG_FIXED_PLOTTER_XAXIS)
-		AG_DrawLineH(fpl, 0, r.w-1, yOrigin+1, &WCOLOR(fpl, LINE_COLOR));
+		AG_DrawLineH(fpl, 0, w-1, yOrigin+1,
+		    &WCOLOR(fpl,LINE_COLOR));
 
 	TAILQ_FOREACH(gi, &fpl->items, items) {
 		if (fpl->xoffs > gi->nvals || fpl->xoffs < 0)
 			continue;
 
 		for (x = 2, ox = 0, i = fpl->xoffs;
-		     ++i < gi->nvals && x < r.w;
+		     ++i < gi->nvals && x < w;
 		     ox = x, x += 2) {
 
-			oval = gi->vals[i] * r.h / fpl->yrange;
+			oval = gi->vals[i] * h / fpl->yrange;
 			y = yOrigin - oval;
 			if (i > 1) {
-				oval = gi->vals[i-1] * r.h / fpl->yrange;
+				oval = gi->vals[i-1] * h / fpl->yrange;
 				oy = yOrigin - oval;
 			} else {
 				oy = yOrigin;
 			}
 
-			if (y < 0) { y = 0; }
+			if (y < 0)  { y = 0; }
 			if (oy < 0) { oy = 0; }
-			if (y > r.h) { y = r.h; }
-			if (oy > r.h) { oy = r.h; }
+			if (y > HEIGHT(fpl))  { y = HEIGHT(fpl); }
+			if (oy > HEIGHT(fpl)) { oy = HEIGHT(fpl); }
 
 			switch (fpl->type) {
 			case AG_FIXED_PLOTTER_POINTS:

@@ -437,11 +437,7 @@ Draw(void *_Nonnull obj)
 	AG_Rect r;
 
 	if (lbl->flags & AG_LABEL_FRAME) {
-		r.x = 0;
-		r.y = 0;
-		r.w = WIDTH(lbl);
-		r.h = HEIGHT(lbl);
-		AG_DrawFrameSunk(lbl, &r);
+		AG_DrawFrameSunk(lbl, &WIDGET(lbl)->r);
 	}
 	if (lbl->flags & AG_LABEL_PARTIAL) {
 		if (lbl->surfaceCtd == -1) {
@@ -455,11 +451,7 @@ Draw(void *_Nonnull obj)
 			Sctd = WSURFACE(lbl,lbl->surfaceCtd);
 		}
 		if (WIDTH(lbl) <= Sctd->w) {
-			r.x = 0;
-			r.y = 0;
-			r.w = WIDTH(lbl);
-			r.h = HEIGHT(lbl);
-			AG_PushClipRect(lbl, &r);
+			AG_PushClipRect(lbl, &WIDGET(lbl)->r);
 			AG_WidgetBlitSurface(lbl, lbl->surfaceCtd, 0,
 			                     (r.h >> 1) - (Sctd->h >> 1));
 			AG_PopClipRect(lbl);

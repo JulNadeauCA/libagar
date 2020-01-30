@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,9 @@
 
 /* Style Properties */
 const char *agStyleAttributes[] = {
-	/* --- Color --- */
+	/*
+	 * Color Scheme
+	 */
 	"color",            /* Foreground primary */
 	"background-color", /* Background primary */
 	"text-color",       /* Text and vector icons */
@@ -54,33 +56,36 @@ const char *agStyleAttributes[] = {
 	"low-color",        /* Right and bottom borders */
 	"selection-color",  /* Selection primary */
 	"unused-color",
-
-	/* --- Text --- */
+	/*
+	 * Typography
+	 */
 	"font-family",      /* Font face or filename */
 	"font-size",        /* Font size (in pts, px or %) */
 	"font-weight",      /* Boldness (normal semibold bold !parent) */
 	"font-style",       /* Style (normal italic upright-italic !parent) */
 	"font-stretch",     /* Width variant (normal condensed semi-condensed !parent) */
-
-	/* --- Box Model --- */
+	/*
+	 * Box Model
+	 */
 	"margin",           /* Margin (between border & outer bounding box) */
 	"margin-top",         /* above border */
 	"margin-bottom",      /* below border */
 	"margin-left",        /* at left of border */
 	"margin-right",       /* at right of border */
-
-	"border",           /* Border (between padding & margin, in px) */
+	"border",           /* Border (px between padding & margin) */
 	"border-top",         /* above padding */
 	"border-bottom",      /* below padding */
 	"border-left",        /* at left of padding */
 	"border-right",       /* at right of padding */
-
-	"padding",          /* Padding (between content & border, in px) */
+	"padding",          /* Padding (px between content & border) */
 	"padding-top",        /* above content */
 	"padding-bottom",     /* below content */
 	"padding-left",       /* at left of content */
 	"padding-right",      /* at right of content */
-
+	/*
+	 * Containers
+	 */
+	"spacing",          /* Spacing between elements (px) */
 	NULL
 };
 
@@ -209,6 +214,7 @@ static void Apply_Font_Style(Uint *_Nonnull, Uint, const char *_Nonnull);
 static void Apply_Font_Stretch(Uint *_Nonnull, Uint, const char *_Nonnull);
 static void Apply_Padding(AG_Widget *_Nonnull, const char *_Nonnull);
 static void Apply_Margin(AG_Widget *_Nonnull, const char *_Nonnull);
+static void Apply_Spacing(AG_Widget *_Nonnull, const char *_Nonnull);
 
 /* Set the parent window/driver pointers on a widget and its children. */
 static void
@@ -465,6 +471,7 @@ Init(void *_Nonnull obj)
 	                      sizeof(int) +                       /* y */
 	                      sizeof(int) +                       /* w */
 	                      sizeof(int) +                       /* h */
+			      sizeof(AG_Rect) +                   /* r */
 			      sizeof(AG_Rect2) +                  /* rView */
 			      sizeof(AG_Rect2));                  /* rSens */
 
@@ -479,8 +486,9 @@ Init(void *_Nonnull obj)
 	                           sizeof(AG_DriverClass *) +     /* drvOps */
 	                           sizeof(AG_StyleSheet *) +      /* css */
 	                           sizeof(enum ag_widget_state) + /* state */
-	                           sizeof(Uint8)*4 +              /* marginX */
-	                           sizeof(Uint8)*4 +              /* paddingX */
+	                           sizeof(Uint8)*4 +              /* margin */
+	                           sizeof(Uint)*4 +               /* padding */
+	                           sizeof(Uint)*2 +               /* spacing */
 	                           sizeof(Uint));                 /* borders */
 
 	wid->font = agDefaultFont;
@@ -1418,6 +1426,11 @@ AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 	wid->w = a->w;
 	wid->h = a->h;
 
+	wid->r.x = 0;
+	wid->r.y = 0;
+	wid->r.w = wid->w;
+	wid->r.h = wid->h;
+
 	if (WIDGET_OPS(wid)->size_allocate != NULL) {
 		if (WIDGET_OPS(wid)->size_allocate(wid, a) == -1) {
 			wid->flags |= AG_WIDGET_UNDERSIZE;
@@ -1526,7 +1539,6 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 		x = 0;
 		y = 0;
 	}
-
 	rPrev = wid->rView;
 	wid->rView.x1 = x;
 	wid->rView.y1 = y;
@@ -2134,6 +2146,12 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	} else if (AG_LookupStyleSheet(css, wid, "margin", &cssData)) {
 		Apply_Margin(wid, cssData);
 	}
+	if ((V = AG_AccessVariable(wid, "spacing")) != NULL) {
+		Apply_Spacing(wid, V->data.s);
+		AG_UnlockVariable(V);
+	} else if (AG_LookupStyleSheet(css, wid, "spacing", &cssData)) {
+		Apply_Spacing(wid, cssData);
+	}
 	
 	/* Color palette */
 	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
@@ -2146,12 +2164,14 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 			Strlcpy(nameFull, name, sizeof(nameFull));
 			Strlcat(nameFull, agWidgetStateNames[i], sizeof(nameFull));
 
-			if ((V = AG_AccessVariable(wid, nameFull)) != NULL ||
-			    (V = AG_AccessVariable(wid, name)) != NULL) {
+			if (((V = AG_AccessVariable(wid, nameFull)) != NULL ||
+			     (V = AG_AccessVariable(wid, name)) != NULL) &&
+			      V->data.s[0] != '\0') {
 				AG_ColorFromString(&cNew, V->data.s, cParent);
 				AG_UnlockVariable(V);
-			} else if (AG_LookupStyleSheet(css, wid, nameFull, &cssData) ||
-			           AG_LookupStyleSheet(css, wid, name, &cssData)) {
+			} else if ((AG_LookupStyleSheet(css, wid, nameFull, &cssData) ||
+			            AG_LookupStyleSheet(css, wid, name, &cssData)) &&
+			           cssData[0] != '\0') {
 				AG_ColorFromString(&cNew, cssData, cParent);
 			} else {
 				cNew = *cParent;
@@ -2301,6 +2321,24 @@ Apply_Padding(AG_Widget *wid, const char *spec)
 static void
 Apply_Margin(AG_Widget *wid, const char *spec)
 {
+}
+
+static void
+Apply_Spacing(AG_Widget *wid, const char *spec)
+{
+	char buf[8], *s=&buf[0], *sHoriz, *sVert;
+
+	Strlcpy(buf, spec, sizeof(buf));
+	if ((sHoriz = Strsep(&s, " ")) == NULL) {
+		return;
+	}
+	if ((sVert = Strsep(&s, " ")) != NULL) {
+		wid->spacingHoriz = atoi(sHoriz);
+		wid->spacingVert = atoi(sVert);
+	} else {
+		wid->spacingHoriz = atoi(sHoriz);
+		wid->spacingVert = wid->spacingHoriz;
+	}
 }
 
 void

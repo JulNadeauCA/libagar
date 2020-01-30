@@ -462,22 +462,16 @@ Draw(void *_Nonnull p)
 	AG_Button *bu = p;
 	AG_Variable *V;
 	void *pState;
-	AG_Rect rd;
 	int surface, pressed, x=0, y=0;
 	
 	V = AG_GetVariable(bu, "state", &pState);
 	pressed = GetState(bu, V, pState);
 	AG_UnlockVariable(V);
 
-	rd.x = 0;
-	rd.y = 0;
-	rd.w = WIDTH(bu);
-	rd.h = HEIGHT(bu);
-
 	if (pressed) {
-		AG_DrawBoxSunk(bu, &rd, &WCOLOR(bu, FG_COLOR));
+		AG_DrawBoxSunk(bu, &WIDGET(bu)->r, &WCOLOR(bu, FG_COLOR));
 	} else {
-		AG_DrawBoxRaised(bu, &rd, &WCOLOR(bu, FG_COLOR));
+		AG_DrawBoxRaised(bu, &WIDGET(bu)->r, &WCOLOR(bu, FG_COLOR));
 	}
 
 	if (bu->surfaceSrc != -1) {
@@ -523,18 +517,12 @@ Draw(void *_Nonnull p)
 		y++;
 	}
 
-	if (WIDTH(bu) < bu->wReq ||
-	    HEIGHT(bu) < bu->hReq) {
-		rd.x = 1;
-		rd.y = 1;
-		rd.w -= 2;
-		rd.h -= 2;
-		AG_PushClipRect(bu, &rd);
-	}
+	if (WIDTH(bu) < bu->wReq || HEIGHT(bu) < bu->hReq)
+		AG_PushClipRect(bu, &WIDGET(bu)->r);
 
 	AG_WidgetBlitSurface(bu, surface, x,y);
 	
-	if (rd.x == 1)
+	if (WIDTH(bu) < bu->wReq || HEIGHT(bu) < bu->hReq)
 		AG_PopClipRect(bu);
 }
 

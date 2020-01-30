@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -87,7 +87,8 @@ AG_MenuNewGlobal(Uint flags)
 
 	m = AG_MenuNew(win, flags);
 	m->style = AG_MENU_GLOBAL;
-	AG_MenuSetPadding(m, 4, 4, -1, -1);
+/*	AG_SetStyleF(m, "padding", "4 0 4 0") */
+/*	AG_MenuSetPadding(m, 4, 4, -1, -1); */
 	AG_ExpandHoriz(m);
 
 	agAppMenu = m;
@@ -160,7 +161,7 @@ MouseMotion(AG_Event *_Nonnull event)
 	AG_Menu *m = AG_MENU_SELF();
 	const int x = AG_INT(1);
 	const int y = AG_INT(2);
-	const int bPad = m->bPad - 1;
+	const int bPad = WIDGET(m)->paddingBottom - 1;
 	AG_MenuItem *mi;
 	int hLbl;
 
@@ -344,15 +345,17 @@ AG_MenuCollapseAll(AG_Menu *m)
 	AG_ObjectUnlock(m);
 }
 
+#ifdef AG_LEGACY
 void
 AG_MenuSetPadding(AG_Menu *m, int lPad, int rPad, int tPad, int bPad)
 {
-	if (lPad != -1) { m->lPad = lPad; }
-	if (rPad != -1) { m->rPad = rPad; }
-	if (tPad != -1) { m->tPad = tPad; }
-	if (bPad != -1) { m->bPad = bPad; }
-	AG_Redraw(m);
+	AG_SetStyleF(m, "padding", "%d %d %d %d",
+	    (tPad != -1) ? tPad : 0,
+	    (rPad != -1) ? rPad : 0,
+	    (bPad != -1) ? bPad : 0,
+	    (lPad != -1) ? lPad : 0);
 }
+#endif /* LEGACY */
 
 void
 AG_MenuSetLabelPadding(AG_Menu *m, int lPad, int rPad, int tPad, int bPad)
@@ -370,6 +373,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	AG_Menu *m = AG_MENU_SELF();
 	const int x = AG_INT(2);
 	const int y = AG_INT(3);
+	const int bPad = WIDGET(m)->paddingBottom;
 	AG_MenuItem *mi;
 	int hLbl;
 
@@ -388,7 +392,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			m->itemSel = mi;
 			AG_MenuExpand(m, mi,
 			    mi->x,
-			    mi->y + hLbl + m->bPad - 1);
+			    mi->y + hLbl + bPad - 1);
 			m->selecting = 1;
 		}
 		AG_Redraw(m);
@@ -504,8 +508,6 @@ Init(void *_Nonnull obj)
 	m->root->pmenu = m;
 	m->selecting = 0;
 
-	m->lPad=5;     m->rPad=5;
-	m->tPad=2;     m->bPad=2;
 	m->lPadLbl=6;  m->rPadLbl=7;
 	m->tPadLbl=3;  m->bPadLbl=3;
 
@@ -1326,14 +1328,9 @@ Draw(void *_Nonnull obj)
 {
 	AG_Menu *m = obj;
 	AG_MenuItem *mi;
-	AG_Rect r;
 	int lbl, wLbl, hLbl;
 
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(m);
-	r.h = HEIGHT(m);
-	AG_DrawBoxRaised(m, &r, &WCOLOR(m, FG_COLOR));
+	AG_DrawBoxRaised(m, &WIDGET(m)->r, &WCOLOR(m,FG_COLOR));
 
 	AG_PushClipRect(m, &m->r);
 
@@ -1361,6 +1358,8 @@ Draw(void *_Nonnull obj)
 		wLbl = WSURFACE(m,lbl)->w;
 		hLbl = WSURFACE(m,lbl)->h;
 		if (mi == m->itemSel) {
+			AG_Rect r;
+
 			r.x = mi->x;
 			r.y = mi->y;
 			r.w = m->lPadLbl + wLbl + m->rPadLbl;
@@ -1379,9 +1378,9 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Menu *m = obj;
-	const int lPad = m->lPad;
-	const int tPad = m->tPad;
-	const int bPad = m->bPad;
+	const int lPad = WIDGET(m)->paddingLeft;
+	const int tPad = WIDGET(m)->paddingTop;
+	const int bPad = WIDGET(m)->paddingBottom;
 	AG_Driver *drv = WIDGET(m)->drv;
 	AG_MenuItem *mi;
 	int x, y, wLbl, hLbl;
@@ -1415,20 +1414,22 @@ static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Menu *m = obj;
-	const int lPad = m->lPad;
-	const int tPad = m->tPad;
+	const int tPad = WIDGET(m)->paddingTop;
+	const int rPad = WIDGET(m)->paddingRight;
+	const int bPad = WIDGET(m)->paddingBottom;
+	const int lPad = WIDGET(m)->paddingLeft;
 	AG_MenuItem *mi;
 	int wLbl, hLbl;
 	int x, y;
 	
-	if (a->w < (lPad + m->rPad) ||
-	    a->h < (tPad + m->bPad)) {
+	if (a->w < (lPad + rPad) ||
+	    a->h < (tPad + bPad)) {
 		return (-1);
 	}
 	m->r.x = lPad;
 	m->r.y = tPad;
-	m->r.w = a->w - m->rPad;
-	m->r.h = a->h - m->bPad;
+	m->r.w = a->w - rPad;
+	m->r.h = a->h - bPad;
 
 	x = lPad;
 	y = tPad;

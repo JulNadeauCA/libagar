@@ -876,6 +876,7 @@ AG_TlistAdd(AG_Tlist *tl, const AG_Surface *icon, const char *fmt, ...)
 	
 	AG_ObjectLock(tl);
 	it = AG_TlistItemNew(tl, icon);
+	it->p1 = it->text;
 	va_start(args, fmt);
 	Vsnprintf(it->text, sizeof(it->text), fmt, args);
 	va_end(args);
@@ -892,6 +893,7 @@ AG_TlistAddS(AG_Tlist *tl, const AG_Surface *icon, const char *text)
 
 	AG_ObjectLock(tl);
 	it = AG_TlistItemNew(tl, icon);
+	it->p1 = it->text;
 	Strlcpy(it->text, text, sizeof(it->text));
 	InsertItem(tl, it, 0);
 	AG_ObjectUnlock(tl);
@@ -907,6 +909,7 @@ AG_TlistAddHead(AG_Tlist *tl, const AG_Surface *icon, const char *fmt, ...)
 	
 	AG_ObjectLock(tl);
 	it = AG_TlistItemNew(tl, icon);
+	it->p1 = it->text;
 	va_start(args, fmt);
 	Vsnprintf(it->text, sizeof(it->text), fmt, args);
 	va_end(args);
@@ -923,6 +926,7 @@ AG_TlistAddHeadS(AG_Tlist *tl, const AG_Surface *icon, const char *text)
 
 	AG_ObjectLock(tl);
 	it = AG_TlistItemNew(tl, icon);
+	it->p1 = it->text;
 	Strlcpy(it->text, text, sizeof(it->text));
 	InsertItem(tl, it, 1);
 	AG_ObjectUnlock(tl);

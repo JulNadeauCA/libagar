@@ -364,9 +364,9 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_LabelNew(nt, AG_LABEL_HFILL, _("Class: %s(3)"),
 		            OBJECT(tgt)->cls->name);
 
-		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL |
-		                        AG_TEXTBOX_NO_PADDING |
-		                        AG_TEXTBOX_NO_SHADING, _("Name:"));
+		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL | AG_TEXTBOX_NO_SHADING,
+		    _("Name:"));
+		AG_SetStyle(tb, "padding", "0");
 #ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
 #else

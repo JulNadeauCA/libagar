@@ -32,7 +32,6 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_CATCH_TAB     0x000800 /* Enter literal tabs into text
 					     (instead of cycling focus) */
 #define AG_TEXTBOX_CURSOR_MOVING 0x001000 /* Cursor is being moved */
-#define AG_TEXTBOX_NO_PADDING    0x002000 /* Disable padding around field */
 #define AG_TEXTBOX_EXCL          0x004000 /* Exclusive access to buffer */
 #define AG_TEXTBOX_NOEMACS       0x008000 /* Disable emacs-style fn keys */
 #define AG_TEXTBOX_RETURN_BUTTON 0x010000 /* Display a RETURN button. */
@@ -42,7 +41,6 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_MULTILINGUAL	 0x100000 /* Enable multilingual edition */
 #define AG_TEXTBOX_NO_SHADING    0x200000 /* Disable shading around field */
 
-	int boxPadX, boxPadY;		/* Padding around textbox */
 	Uint32 _pad;
 	AG_Scrollbar *_Nullable hBar;	/* Horizontal bar (for MULTILINE) */
 	AG_Scrollbar *_Nullable vBar;	/* Vertical bar (for MULTILINE) */

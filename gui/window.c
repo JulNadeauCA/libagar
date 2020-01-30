@@ -854,17 +854,15 @@ OnHide(AG_Event *_Nonnull event)
 				agWindowToFocus = wOther;
 		}
 		if (AGDRIVER_CLASS(drv)->type == AG_FRAMEBUFFER) {
-			AG_Rect r;
-
-			r.x = 0;
-			r.y = 0;
-			r.w = WIDTH(win);
-			r.h = HEIGHT(win);
-			AG_DrawRectFilled(win, &r, &dsw->bgColor);
+			AG_DrawRectFilled(win, &WIDGET(win)->r, &dsw->bgColor);
 
 			if (AGDRIVER_CLASS(drv)->updateRegion != NULL) {
+				AG_Rect r;
+
 				r.x = WIDGET(win)->x;
 				r.y = WIDGET(win)->y;
+				r.w = WIDTH(win);
+				r.h = HEIGHT(win);
 				AGDRIVER_CLASS(drv)->updateRegion(drv, &r);
 			}
 		}

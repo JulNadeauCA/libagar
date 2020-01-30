@@ -571,14 +571,9 @@ Draw(void *_Nonnull obj)
 	const AG_Color *cFg  = &WCOLOR(t, FG_COLOR);
 	const AG_Color *cSel = &WCOLOR(t, SELECTION_COLOR);
 	AG_Color cLine       =  WCOLOR(t, LINE_COLOR);
-	AG_Rect r, rCol, rCell;
+	AG_Rect rCol, rCell;
 	const int zoomLvl = WIDGET(t)->window->zoom;
 	int n,m, hCol;
-
-	r.x = 0;
-	r.y = 0;
-	r.w = WIDTH(t);
-	r.h = HEIGHT(t);
 
 	AG_WidgetDraw(t->vbar);
 	AG_WidgetDraw(t->hbar);
@@ -599,13 +594,14 @@ Draw(void *_Nonnull obj)
 	if (zoomLvl < AG_ZOOM_1_1)                         /* Distance effect */
 		AG_ColorLighten(&cLine, AG_ZOOM_1_1-zoomLvl);
 
-	AG_PushClipRect(t, &r);
+	AG_PushClipRect(t, &WIDGET(t)->r);
 
 	for (n = 0, rCell.x = -t->xOffs;
 	     n < t->n && rCell.x < t->r.w;
 	     n++) {
 		AG_TableCol *col = &t->cols[n];
 		const int w = col->w;
+		AG_Rect r;
 	
 		if (w <= 0) {
 			continue;

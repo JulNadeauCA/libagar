@@ -17,17 +17,17 @@ const char *agStyleDefault_Data =
 	" * AG_Widget(3) (under the STYLING section).\n"
 	" */\n"
 	"AG_Widget {\n"
-	"background-color: #0000;\n"
+	"background-color: #0000;                   /* #RGBA */\n"
 	"background-color#focused: #0000;\n"
 	"background-color#disabled: #0000;\n"
 	"background-color#hover: #0000;\n"
 	"}\n"
 	"AG_Window {\n"
-	"background-color: #656565;\n"
+	"background-color: #656565;                 /* #RRGGBB (opaque) */\n"
 	"background-color#focused: #666666;\n"
 	"}\n"
 	"AG_Button {\n"
-	"padding: 3 4 3 4;    /* top right bottom left */\n"
+	"padding: 5 10 5 10;                        /* top right bottom left */\n"
 	"}\n"
 	"AG_Label {\n"
 	"padding: 2 6 2 6;\n"
@@ -38,11 +38,15 @@ const char *agStyleDefault_Data =
 	"background-color: #777;\n"
 	"background-color#focused: #777;\n"
 	"}\n"
+	"AG_Textbox {\n"
+	"spacing: 5;                               /* horizontal */\n"
+	"}\n"
 	"AG_Titlebar {\n"
 	"color: rgb(40,50,60);\n"
 	"color#disabled: rgb(35,35,35);\n"
 	"}\n"
 	"AG_Menu {\n"
+	"padding: 2 5 2 5;\n"
 	"color: rgb(70,70,70);\n"
 	"color#disabled: rgb(40,40,110);\n"
 	"selection-color: rgb(40,40,110);\n"
@@ -62,9 +66,11 @@ const char *agStyleDefault_Data =
 	"text-color: rgb(240,240,240);\n"
 	"}\n"
 	"AG_Radio {\n"
+	"spacing: 5 0;                              /* horizontal vertical */\n"
 	"background-color#hover: rgb(80,80,120);\n"
 	"}\n"
 	"AG_Checkbox {\n"
+	"spacing: 5;\n"
 	"background-color#hover: rgb(80,80,120);\n"
 	"}\n"
 	"AG_Pane {\n"
@@ -74,7 +80,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	1750,
+	2014,
 	&agStyleDefault_Data,
 	NULL
 };

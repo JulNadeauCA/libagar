@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,15 +78,15 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 	tb = Malloc(sizeof(AG_Textbox));
 	AG_ObjectInit(tb, &agTextboxClass);
 
-	if (flags & AG_TEXTBOX_HFILL)		AG_ExpandHoriz(tb);
-	if (flags & AG_TEXTBOX_VFILL)		AG_ExpandVert(tb);
-	if (flags & AG_TEXTBOX_READONLY)	tb->ed->flags |= AG_EDITABLE_READONLY;
-	if (flags & AG_TEXTBOX_PASSWORD)	tb->ed->flags |= AG_EDITABLE_PASSWORD;
-	if (flags & AG_TEXTBOX_UPPERCASE)	tb->ed->flags |= AG_EDITABLE_UPPERCASE;
-	if (flags & AG_TEXTBOX_LOWERCASE)	tb->ed->flags |= AG_EDITABLE_LOWERCASE;
-	if (flags & AG_TEXTBOX_ABANDON_FOCUS)	tb->ed->flags |= AG_EDITABLE_ABANDON_FOCUS;
-	if (flags & AG_TEXTBOX_INT_ONLY)	tb->ed->flags |= AG_EDITABLE_INT_ONLY;
-	if (flags & AG_TEXTBOX_FLT_ONLY)	tb->ed->flags |= AG_EDITABLE_FLT_ONLY;
+	if (flags & AG_TEXTBOX_HFILL)         AG_ExpandHoriz(tb);
+	if (flags & AG_TEXTBOX_VFILL)         AG_ExpandVert(tb);
+	if (flags & AG_TEXTBOX_READONLY)      tb->ed->flags |= AG_EDITABLE_READONLY;
+	if (flags & AG_TEXTBOX_PASSWORD)      tb->ed->flags |= AG_EDITABLE_PASSWORD;
+	if (flags & AG_TEXTBOX_UPPERCASE)     tb->ed->flags |= AG_EDITABLE_UPPERCASE;
+	if (flags & AG_TEXTBOX_LOWERCASE)     tb->ed->flags |= AG_EDITABLE_LOWERCASE;
+	if (flags & AG_TEXTBOX_ABANDON_FOCUS) tb->ed->flags |= AG_EDITABLE_ABANDON_FOCUS;
+	if (flags & AG_TEXTBOX_INT_ONLY)      tb->ed->flags |= AG_EDITABLE_INT_ONLY;
+	if (flags & AG_TEXTBOX_FLT_ONLY)      tb->ed->flags |= AG_EDITABLE_FLT_ONLY;
 
 	if (flags & AG_TEXTBOX_CATCH_TAB) {
 		WIDGET(tb)->flags |= AG_WIDGET_CATCH_TAB;
@@ -115,10 +115,6 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		AG_SetStyle(tb->btnRet, "font-family", "dejavu-sans");
 		AG_SetEvent(tb->btnRet, "button-pushed", EditableReturn, "%p", tb);
 	}
-	if (flags & AG_TEXTBOX_NO_PADDING) {
-		tb->boxPadX = 0;
-		tb->boxPadY = 0;
-	}
 
 	AG_TextboxSetExcl(tb, (flags & AG_TEXTBOX_EXCL));
 	AG_TextboxSetWordWrap(tb, (flags & AG_TEXTBOX_WORDWRAP));
@@ -126,8 +122,6 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 	tb->flags |= flags;
 	if (label != NULL) {
 		tb->lbl = AG_LabelNewS(tb, 0, label);
-		AG_SetStyle(tb->lbl, "padding", "5 10 5 10");
-//		AG_LabelSetPadding(tb->lbl, -1, 10, -1, -1);
 	}
 	AG_ObjectAttach(parent, tb);
 	return (tb);
@@ -361,13 +355,13 @@ Draw(void *_Nonnull p)
 		}
 	}
 
-	if (tb->lbl)    { AG_WidgetDraw(tb->lbl);    }
+	if (tb->lbl) { AG_WidgetDraw(tb->lbl); }
 
 	AG_WidgetDraw(tb->ed);
 
 	if (tb->btnRet) { AG_WidgetDraw(tb->btnRet); }
-	if (tb->hBar)   { AG_WidgetDraw(tb->hBar);   }
-	if (tb->vBar)   { AG_WidgetDraw(tb->vBar);   }
+	if (tb->hBar) { AG_WidgetDraw(tb->hBar); }
+	if (tb->vBar) { AG_WidgetDraw(tb->vBar); }
 }
 
 static void
@@ -379,12 +373,12 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 
 	AG_WidgetSizeReq(tb->ed, &rEd);
 
-	r->w = (tb->boxPadX << 1) + rEd.w + 2;
-	r->h = (tb->boxPadY << 1) + rEd.h + 2;
+	r->w = WIDGET(tb)->paddingLeft + WIDGET(tb)->paddingRight;
+	r->h = WIDGET(tb)->paddingTop + rEd.h + WIDGET(tb)->paddingBottom;
 
 	if (tb->lbl) {
 		AG_WidgetSizeReq(tb->lbl, &rLbl);
-		r->w += rLbl.w;
+		r->w += WIDGET(tb)->spacingHoriz + rLbl.w;
 	}
 	r->h = MAX(r->h, font->lineskip);
 }
@@ -394,24 +388,23 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Textbox *tb = obj;
 	AG_Editable *ed = tb->ed;
-	const int boxPadW = (tb->boxPadX << 1);
-	const int boxPadH = (tb->boxPadY << 1);
 	int wBar=0, hBar=0, wBarSz=0, hBarSz=0, wBtn;
 	AG_SizeAlloc aLbl, aEd, aSb, aBtn;
 	AG_SizeReq r;
 
-	if (a->w < (boxPadW << 1) ||
-	   (a->h < (boxPadH << 1)))
+	if (a->w < WIDGET(tb)->paddingLeft + WIDGET(tb)->paddingRight ||
+	   (a->h < WIDGET(tb)->paddingTop + WIDGET(tb)->paddingBottom))
 		return (-1);
 
 	if (tb->lbl) {
 		AG_WidgetSizeReq(tb->lbl, &r);
-		aLbl.x = boxPadW;
-		aLbl.y = boxPadH;
+		aLbl.x = WIDGET(tb)->paddingLeft;
+		aLbl.y = WIDGET(tb)->paddingTop;
 		aLbl.w = MIN(r.w, a->w);
 		aLbl.h = MIN(r.h, a->h);
 		AG_WidgetSizeAlloc(tb->lbl, &aLbl);
 	}
+
 	if (tb->flags & AG_TEXTBOX_MULTILINE) {
 		if (tb->hBar && AG_WidgetVisible(tb->hBar)) {
 			AG_WidgetSizeReq(tb->hBar, &r);
@@ -441,7 +434,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		tb->r.w = a->w;
 		tb->r.h = a->h;
 	} else {
-		tb->r.x = (tb->lbl) ? WIDTH(tb->lbl) : 0;
+		tb->r.x = (tb->lbl) ? (WIDTH(tb->lbl) + WIDGET(tb)->spacingHoriz) : 0;
 		tb->r.y = 0;
 		tb->r.w = a->w - tb->r.x;
 		tb->r.h = a->h;
@@ -454,15 +447,22 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		wBtn = 0;
 	}
 
-	aEd.x = ((tb->lbl) ? WIDTH(tb->lbl) : 0) + tb->boxPadX;
-	aEd.y = tb->boxPadY;
-	aEd.w = a->w - boxPadW - aEd.x - wBtn - wBar;
-	aEd.h = a->h - boxPadH - hBar;
+	aEd.x = WIDGET(tb)->paddingLeft +
+	        ((tb->lbl) ? (WIDTH(tb->lbl) + WIDGET(tb)->spacingHoriz) : 0);
+	aEd.y = WIDGET(tb)->paddingTop;
+	aEd.w = a->w - aEd.x - wBtn - wBar - WIDGET(tb)->paddingLeft -
+		WIDGET(tb)->paddingRight;
+	if (tb->btnRet) {
+		aEd.w -= WIDGET(tb)->spacingHoriz;
+	}
+
+	aEd.h = a->h - hBar - WIDGET(tb)->paddingTop -
+	        WIDGET(tb)->paddingBottom;
 	AG_WidgetSizeAlloc(ed, &aEd);
 
 	if (tb->btnRet) {
 		aBtn.x = aEd.x + aEd.w;
-		aBtn.y = tb->boxPadY;
+		aBtn.y = WIDGET(tb)->paddingTop;
 		aBtn.w = wBtn;
 		aBtn.h = aEd.h;
 		AG_WidgetSizeAlloc(tb->btnRet, &aBtn);
@@ -501,8 +501,6 @@ AG_TextboxSetLabelS(AG_Textbox *tb, const char *s)
 		AG_LabelTextS(tb->lbl, s);
 	} else {
 		tb->lbl = AG_LabelNewS(tb, 0, s);
-		AG_SetStyle(tb->lbl, "padding", "5 10 5 10");
-//		AG_LabelSetPadding(tb->lbl, -1, 10, -1, -1);
 	}
 	AG_ObjectUnlock(tb);
 }
@@ -620,8 +618,6 @@ Init(void *_Nonnull obj)
 	tb->ed = AG_EditableNew(tb, 0);
 	tb->lbl = NULL;
 
-	tb->boxPadX = 2;
-	tb->boxPadY = 2;
 	tb->flags = 0;
 	tb->hBar = NULL;
 	tb->vBar = NULL;

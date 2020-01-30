@@ -328,10 +328,6 @@ Init(void *_Nonnull obj)
 	px->t = 0;
 	px->pre_w = 64;
 	px->pre_h = 64;
-	px->rClip.x = 0;
-	px->rClip.y = 0;
-	px->rClip.w = 0;
-	px->rClip.h = 0;
 	px->sScaled = -1;
 #if 0
 	AG_BindInt(px, "n", &px->n);
@@ -362,8 +358,6 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	if (a->w < 1 || a->h < 1) {
 		return (-1);
 	}
-	px->rClip.w = a->w;
-	px->rClip.h = a->h;
 	px->flags |= AG_PIXMAP_UPDATE;
 	return (0);
 }
@@ -408,7 +402,7 @@ Draw(void *_Nonnull obj)
 		}
 		AG_WidgetBlitSurface(px, px->sScaled, px->s, px->t);
 	} else {
-		AG_PushClipRect(px, &px->rClip);
+		AG_PushClipRect(px, &WIDGET(px)->r);
 		AG_WidgetBlitSurface(px, px->n, px->s, px->t);
 		AG_PopClipRect(px);
 	}
