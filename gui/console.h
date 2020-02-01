@@ -51,7 +51,7 @@ typedef struct ag_console {
 #define AG_CONSOLE_EXPAND	(AG_CONSOLE_HFILL|AG_CONSOLE_VFILL)
 #define AG_CONSOLE_SELECTING	0x10	/* Selection in progress */
 #define AG_CONSOLE_BEGIN_SELECT 0x20	/* Flag for beginSelectTo */
-	int padding;			/* Padding in pixels */
+	Uint32 _pad;
 	int lineskip;			/* Space between lines */
 	int xOffs;			/* Horizontal display offset (px) */
 
@@ -96,15 +96,15 @@ AG_ConsoleLine *_Nonnull AG_ConsoleMsg(AG_Console *_Nonnull, const char *_Nonnul
 void AG_ConsoleBinary(AG_Console *_Nonnull, const void *_Nonnull, AG_Size,
                       const char *_Nullable, const char *_Nullable);
 
-void AG_ConsoleSetPadding(AG_Console *_Nonnull, int);
 void AG_ConsoleMsgEdit(AG_ConsoleLine *_Nonnull, const char *_Nonnull);
 void AG_ConsoleMsgCatS(AG_ConsoleLine *_Nonnull, const char *_Nonnull);
 void AG_ConsoleMsgPtr(AG_ConsoleLine *_Nonnull, void *_Nullable);
 void AG_ConsoleMsgColor(AG_ConsoleLine *_Nonnull, const AG_Color *_Nonnull);
 void AG_ConsoleClear(AG_Console *_Nonnull);
 
-char *_Nullable AG_ConsoleExportText(const AG_Console *_Nonnull,
-                                     enum ag_newline_type);
+char *_Nullable AG_ConsoleExportText(const AG_Console *_Nonnull, enum ag_newline_type);
+char *_Nullable AG_ConsoleExportBuffer(const AG_Console *_Nonnull, enum ag_newline_type);
+
 AG_ConsoleFile *AG_ConsoleOpenFile(AG_Console *_Nonnull, const char *_Nullable,
                                    const char *_Nullable, enum ag_newline_type,
 				   Uint);
@@ -116,6 +116,8 @@ void            AG_ConsoleClose(AG_Console *_Nonnull, AG_ConsoleFile *_Nonnull);
 
 #ifdef AG_LEGACY
 # define AG_ConsoleSetFont(cons,font) AG_SetFont((cons),(font))
+void AG_ConsoleSetPadding(AG_Console *_Nonnull, int)
+                         DEPRECATED_ATTRIBUTE;
 #endif
 __END_DECLS
 

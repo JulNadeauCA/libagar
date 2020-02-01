@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * Copyright (c) 2019 Charles A Daniels <charles@cdaniels.net>
  * All rights reserved.
  *
@@ -69,12 +69,12 @@ AdjustXoffs(AG_Console *_Nonnull cons)
 {
 	Uint i;
 	const int wCons = WIDTH(cons);
-	const int wBar = WIDTH(cons->vBar) + cons->padding;
+	const int wBar = WIDTH(cons->vBar) + WIDGET(cons)->paddingLeft;
 
 	for (i = 0, cons->wMax = 0;
 	     i < cons->nLines;
 	     i++) {
-		AG_ConsoleLine *ln = cons->lines[i];
+		const AG_ConsoleLine *ln = cons->lines[i];
 		int w;
 
 		if (ln->surface[0] != -1) {
@@ -84,9 +84,9 @@ AdjustXoffs(AG_Console *_Nonnull cons)
 		} else {
 			AG_TextSize(ln->text, &w, NULL);
 		}
-		w += cons->padding << 1;
-		if (w+wBar > cons->wMax)
-			cons->wMax = w+wBar;
+		w += wBar + WIDGET(cons)->paddingRight;
+		if (w > cons->wMax)
+			cons->wMax = w;
 	}
 	if ((cons->wMax - wCons - cons->xOffs) < 0)
 		cons->xOffs = MAX(0, cons->wMax - wCons);
@@ -213,12 +213,12 @@ MapLine(AG_Console *_Nonnull cons, int yMouse, int *_Nonnull nLine)
 {
 	Uint sel;
 
-	if (yMouse < cons->padding) {
+	if (yMouse < WIDGET(cons)->paddingTop) {
 		*nLine = cons->rOffs;
 	} else if (yMouse > WIDGET(cons)->h) {
 		*nLine = (int)cons->nLines - 1;
 	} else {
-		sel = (yMouse - cons->padding) / cons->lineskip;
+		sel = (yMouse - WIDGET(cons)->paddingTop) / cons->lineskip;
 		if ((cons->rOffs + sel) >= cons->nLines) {
 			*nLine = (int)cons->nLines - 1;
 		} else {
@@ -228,18 +228,20 @@ MapLine(AG_Console *_Nonnull cons, int yMouse, int *_Nonnull nLine)
 }
 
 /*
- * Merge all currently selected lines into a single C string, and
- * separate the lines by newlines of the specified variety.
+ * Join currently selected lines into a single C string using a given
+ * type of newline character or sequence.
  */
 char *
 AG_ConsoleExportText(const AG_Console *cons, enum ag_newline_type nl)
 {
 	const AG_NewlineFormat *newline;
 	char *s, *ps;
-	AG_Size sizeReq=1, newlineLen;
-	int i, dir;
+	AG_Size sizeReq, newlineLen;
+	const int pos = cons->pos;
+	const int sel = cons->sel;
+	int i;
 
-	if (cons->pos == -1)
+	if (pos == -1)
 		return (NULL);
 #ifdef AG_DEBUG
 	if (nl >= AG_NEWLINE_LAST) { AG_FatalError("newline arg"); }
@@ -247,31 +249,68 @@ AG_ConsoleExportText(const AG_Console *cons, enum ag_newline_type nl)
 	newline = &agNewlineFormats[nl];
 	newlineLen = newline->len;
 
-	dir = (cons->sel < 0) ? -1 : +1;
-	for (i = cons->pos;
-	     (i >= 0 && i < cons->nLines);
-	     i += dir) {
-		AG_ConsoleLine *ln = cons->lines[i];
+	for (i=0, sizeReq=1; i < cons->nLines; i++) {
+		const AG_ConsoleLine *ln = cons->lines[i];
 
-		sizeReq += ln->len + newlineLen;
-		if (i == cons->pos+cons->sel)
-			break;
+		if (((i == pos) ||
+		     (sel > 0 && i > pos && i < pos+sel+1) ||
+		     (sel < 0 && i < pos && i > pos+sel-1))) {
+			sizeReq += ln->len + newlineLen;
+		}
 	}
 	if ((s = TryMalloc(sizeReq)) == NULL) {
 		return (NULL);
 	}
 	ps = &s[0];
 	*ps = '\0';
-	for (i = cons->pos;
-	     (i >= 0 && i < cons->nLines);
-	     i += dir) {
+	for (i=0; i < cons->nLines; i++) {
 		const AG_ConsoleLine *ln = cons->lines[i];
 
-		memcpy(ps, ln->text, ln->len);
-		memcpy(&ps[ln->len], newline->s, newlineLen+1);
-		ps += newlineLen;
-		if (i == cons->pos+cons->sel)
-			break;
+		if ((i == pos) ||
+		     (sel > 0 && i > pos && i < pos+sel+1) ||
+		     (sel < 0 && i < pos && i > pos+sel-1)) {
+
+			memcpy(ps, ln->text, ln->len);
+			memcpy(&ps[ln->len], newline->s, newlineLen+1);
+			ps += ln->len + newlineLen;
+		}
+	}
+	return (s);
+}
+
+/*
+ * Join entire buffer contents into a single C string using a given
+ * type of newline character or sequence.
+ */
+char *
+AG_ConsoleExportBuffer(const AG_Console *cons, enum ag_newline_type nl)
+{
+	const AG_NewlineFormat *newline;
+	char *s, *ps;
+	AG_Size sizeReq, newlineLen;
+	int i;
+
+#ifdef AG_DEBUG
+	if (nl >= AG_NEWLINE_LAST) { AG_FatalError("newline arg"); }
+#endif
+	newline = &agNewlineFormats[nl];
+	newlineLen = newline->len;
+
+	for (i=0, sizeReq=1; i < cons->nLines; i++) {
+		sizeReq += cons->lines[i]->len + newlineLen;
+	}
+	if ((s = TryMalloc(sizeReq)) == NULL) {
+		return (NULL);
+	}
+	ps = &s[0];
+	*ps = '\0';
+	for (i = 0; i < cons->nLines; i++) {
+		const AG_ConsoleLine *ln = cons->lines[i];
+		const AG_Size len = ln->len; // strlen(ln->text);
+
+		memcpy(ps, ln->text, len);
+		memcpy(&ps[len], newline->s, newlineLen+1);
+		ps += len+newlineLen;
 	}
 	return (s);
 }
@@ -317,11 +356,16 @@ MenuExportToFileTXT(AG_Event *_Nonnull event)
 {
 	const AG_Console *cons = AG_CONST_CONSOLE_PTR(1);
 	const char *path = AG_STRING(2);
+	AG_FileType *ft = AG_PTR(3);
 	char *s;
 	FILE *f;
 
-	if ((s = AG_ConsoleExportText(cons, AG_NEWLINE_NATIVE)) == NULL) {
-		goto fail;
+	if (AG_FileOptionBool(ft, "selected-lines")) {
+		if ((s = AG_ConsoleExportText(cons, AG_NEWLINE_NATIVE)) == NULL)
+			goto fail;
+	} else {
+		if ((s = AG_ConsoleExportBuffer(cons, AG_NEWLINE_NATIVE)) == NULL)
+			goto fail;
 	}
 	if ((f = fopen(path, "wb")) == NULL) {
 		AG_SetError("%s: %s", path, AG_Strerror(errno));
@@ -365,6 +409,7 @@ MenuExportDlg(AG_Event *_Nonnull event)
 	const AG_Console *cons = AG_CONST_CONSOLE_PTR(1);
 	AG_Window *win;
 	AG_FileDlg *fd;
+	AG_FileType *ft;
 
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
@@ -377,10 +422,12 @@ MenuExportDlg(AG_Event *_Nonnull event)
 
 	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));
 
+	ft = AG_FileDlgAddType(fd, _("Text file"), "*.txt,*.log",
+	    MenuExportToFileTXT, "%Cp", cons);
+	AG_FileOptionNewBool(ft, _("Selected Lines Only"), "selected-lines", 0);
+
 	AG_FileDlgAddType(fd, _("Screenshot image"), "*.png,*.bmp,*.jpg",
 	    MenuExportToFileImage, "%p", cons);
-	AG_FileDlgAddType(fd, _("Text file"), "*.txt,*.log",
-	    MenuExportToFileTXT, "%Cp", cons);
 
 	AG_WindowShow(win);
 }
@@ -547,8 +594,10 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 ComputeVisible(AG_Console *_Nonnull cons)
 {
-	cons->rVisible = (int)AG_Floor((float)(cons->r.h - (cons->padding << 1)) /
-	                               (float)cons->lineskip);
+	cons->rVisible = (int)AG_Floor((float)(cons->r.h -
+	    (WIDGET(cons)->paddingTop + WIDGET(cons)->paddingBottom)) /
+	    (float)cons->lineskip);
+
 	if (cons->rVisible > 0)
 		cons->rVisible--;
 }
@@ -585,7 +634,6 @@ Init(void *_Nonnull obj)
 	WIDGET(cons)->flags |= AG_WIDGET_FOCUSABLE |
 	                       AG_WIDGET_USE_TEXT;
 	cons->flags = 0;
-	cons->padding = 4;
 	cons->xOffs = 0;
 	cons->lines = NULL;
 	cons->lineskip = 0;
@@ -734,9 +782,9 @@ Draw(void *_Nonnull p)
 		ClampVisible(cons);
 	}
 	AG_PushClipRect(cons, &cons->r);
-	r.x = cons->padding - cons->xOffs;
-	r.y = cons->padding;
-//	r.w = WIDGET(cons)->w - (cons->padding << 1);
+	r.x = WIDGET(cons)->paddingLeft - cons->xOffs;
+	r.y = WIDGET(cons)->paddingTop;
+	r.w = WIDTH(cons) - WIDTH(cons->vBar);
 	r.h = cons->lineskip + 1;
 	pos = cons->pos;
 	sel = cons->sel;
@@ -825,12 +873,14 @@ Destroy(void *_Nonnull p)
 	FreeLines(cons);
 }
 
+#ifdef AG_LEGACY
 /* Configure padding in pixels */
 void
 AG_ConsoleSetPadding(AG_Console *cons, int padding)
 {
-	cons->padding = padding;
+	AG_SetStyleF(cons, "padding", "%d", padding);
 }
+#endif /* AG_LEGACY */
 
 /* Append a line to the console; backend to AG_ConsoleMsg(). */
 AG_ConsoleLine *
@@ -1082,7 +1132,7 @@ AG_ConsoleMsgCatS(AG_ConsoleLine *ln, const char *s)
 	AG_ObjectLock(cons);
 	newLen = ln->len + sLen + 1;
 	ln->text = Realloc(ln->text, newLen);
-	ln->len = newLen;
+	ln->len = newLen-1;
 	Strlcat(ln->text, s, newLen);
 	InvalidateCachedLabel(cons, ln);
 	AG_ObjectUnlock(cons);
