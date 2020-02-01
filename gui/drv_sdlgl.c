@@ -707,9 +707,12 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_GL_BlitSurfaceGL,
 		AG_GL_BlitSurfaceFromGL,
 		AG_GL_BlitSurfaceFlippedGL,
-#endif
 		AG_GL_BackupSurfaces,
 		AG_GL_RestoreSurfaces,
+#else
+		NULL,                           /* backupSurfaces */
+		NULL,                           /* restoreSurfaces */
+#endif
 		AG_GL_RenderToSurface,
 		AG_GL_PutPixel,
 		AG_GL_PutPixel32,
