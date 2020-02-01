@@ -51,8 +51,9 @@ SRCS=	${SRCS_GUI} drv.c drv_sw.c drv_mw.c drv_dummy.c primitive.c \
 CFLAGS+=${CORE_CFLAGS} \
 	${GUI_CFLAGS} -D_AGAR_GUI_INTERNAL
 
-#LIBS=	-L../core -lag_core \
-#	${GUI_LIBS}
+LIBS=	-L../core -lag_core \
+	${GUI_LIBS} \
+	${CORE_LIBS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk

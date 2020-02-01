@@ -21,9 +21,9 @@ CFLAGS+=${GUI_CFLAGS} \
 	${CORE_CFLAGS} \
 	${AU_CFLAGS} -D_AGAR_AU_INTERNAL
 
-#LIBS=	${ENABLE_GUI_LIBS} \
-#	-L../core -lag_core ${CORE_LIBS} \
-#	${AU_LIBS}
+LIBS=	${ENABLE_GUI_LIBS} \
+	-L../core -lag_core ${CORE_LIBS} \
+	${AU_LIBS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk

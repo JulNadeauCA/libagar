@@ -16,7 +16,9 @@ MAN3=	AG_Net.3 AG_Web.3
 SRCS=	net.c net_dummy.c ${SRCS_NET}
 
 CFLAGS+=${CORE_CFLAGS} ${NET_CFLAGS} -D_AGAR_NET_INTERNAL
-#LIBS=	-L../core -lag_core ${CORE_LIBS} ${NET_LIBS}
+
+LIBS=	-L../core -lag_core ${CORE_LIBS} \
+	${NET_LIBS}
 
 include ${TOP}/mk/build.lib.mk
 include ${TOP}/mk/build.man.mk
