@@ -2273,13 +2273,14 @@ Init(void *_Nonnull obj)
 	ed->flags = AG_EDITABLE_BLINK_ON | AG_EDITABLE_MARKPREF;
 
 	ed->lineScrollAmount = 5;
+
 #ifdef AG_UNICODE
 	ed->encoding = "UTF-8";
-	ed->text = AG_TextNew(0);
 #else
 	ed->encoding = "US-ASCII";
-	ed->text[0] = '\0';
 #endif
+	ed->text[0] = '\0';
+
 	ed->hPre = 1;
 	memset(&ed->wPre, 0, sizeof(int) +               /* wPre */
 			     sizeof(int) +               /* pos */
@@ -2319,9 +2320,6 @@ Init(void *_Nonnull obj)
 	AG_InitTimer(&ed->toCursorBlink, "cursorBlink", 0);
 	AG_InitTimer(&ed->toDblClick, "dblClick", 0);
 
-	AG_SetEvent(ed, "bound", OnBindingChange, NULL);
-	OBJECT(ed)->flags |= AG_OBJECT_BOUND_EVENTS;
-
 	AG_AddEvent(ed, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(ed, "widget-hidden", OnHide, NULL);
 
@@ -2333,11 +2331,12 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(ed, "widget-gainfocus", OnFocusGain, NULL);
 	AG_SetEvent(ed, "widget-lostfocus", OnFocusLoss, NULL);
 
-#ifdef AG_UNICODE
-	AG_BindPointer(ed, "text", (void *)ed->text);
-#else
+	/* Default to a small, built-in text buffer. */
 	AG_BindString(ed, "string", ed->text, sizeof(ed->text));
-#endif
+
+	/* Make binding "string" and "text" mutually exclusive. */
+	AG_SetEvent(ed, "bound", OnBindingChange, NULL);
+	OBJECT(ed)->flags |= AG_OBJECT_BOUND_EVENTS;
 }
 
 static void
@@ -2353,10 +2352,6 @@ Destroy(void *_Nonnull obj)
 	}
 	if (ed->flags & AG_EDITABLE_EXCL)
 		Free(ed->sBuf.s);
-
-#ifdef AG_UNICODE
-	AG_TextFree(ed->text);
-#endif
 }
 
 /* Initialize/release the global clipboards. */

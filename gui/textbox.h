@@ -45,11 +45,7 @@ typedef struct ag_textbox {
 	AG_Scrollbar *_Nullable hBar;	/* Horizontal bar (for MULTILINE) */
 	AG_Scrollbar *_Nullable vBar;	/* Vertical bar (for MULTILINE) */
 	AG_Rect r;			/* View area */
-#ifdef AG_UNICODE
-	AG_Text *_Nonnull text;		/* Pointer to default binding */
-#else
-	char text[6];
-#endif
+	char *text;			/* Default (built-in) buffer */
 	AG_Button *_Nullable btnRet;	/* Optional RETURN button */
 } AG_Textbox;
 
@@ -93,9 +89,11 @@ void AG_TextboxBindASCII(AG_Textbox *_Nonnull, char *_Nonnull, AG_Size);
 void AG_TextboxBindUTF8(AG_Textbox *_Nonnull, char *_Nonnull, AG_Size);
 void AG_TextboxBindEncoded(AG_Textbox *_Nonnull, const char *_Nonnull,
                            char *_Nonnull, AG_Size);
-void AG_TextboxBindText(AG_Textbox *_Nonnull, AG_Text *_Nonnull);
+void AG_TextboxBindText(AG_Textbox *_Nonnull, AG_TextElement *_Nonnull);
 void AG_TextboxSetLang(AG_Textbox *, enum ag_language);
-#endif /* AG_UNICODE */
+#else
+# define AG_TextboxBindUTF8(ed,b,s) AG_TextboxBindASCII((ed),(b),(s))
+#endif
 
 void AG_TextboxAutocomplete(AG_Textbox *_Nonnull, _Nullable AG_EventFn,
                             const char *_Nullable, ...);

@@ -230,14 +230,9 @@ Return(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tbox = AG_TEXTBOX_SELF();
 	AG_Combo *com = AG_COMBO_PTR(1);
-	char *text;
+	const char *text = tbox->text;
 	
 	AG_ObjectLock(com->list);
-#ifdef AG_UNICODE
-	text = tbox->text->ent[0].buf;
-#else
-	text = tbox->text;
-#endif
 
 	if ((com->flags & AG_COMBO_ANY_TEXT) == 0) {
 		AG_TlistItem *it;

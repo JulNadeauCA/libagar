@@ -8,6 +8,12 @@
 
 #include <agar/gui/begin.h>
 
+#if AG_MODEL == AG_LARGE
+# define AG_EDITABLE_MAX 128            /* Built-in (default) buffer size */
+#else
+# define AG_EDITABLE_MAX 64
+#endif
+
 struct ag_window;
 struct ag_popup_menu;
 
@@ -71,11 +77,8 @@ typedef struct ag_editable {
 
 	const char *_Nonnull encoding;	/* Character set (default "US-ASCII"
 	                                   or "UTF-8" if Unicode supported) */
-#ifdef AG_UNICODE
-	AG_Text *_Nonnull text;		/* Default binding */
-#else
-	char text[6];
-#endif
+	char text[AG_EDITABLE_MAX];      /* Built-in buffer */
+
 	int hPre;			/* Vertical size hint (# of lines) */
 	int wPre;			/* Horizontal size hint (px) */
 	int pos;			/* Cursor position (char index) */
@@ -132,8 +135,10 @@ void AG_EditableBindASCII(AG_Editable *_Nonnull, char *_Nonnull, AG_Size);
 void AG_EditableBindUTF8(AG_Editable *_Nonnull, char *_Nonnull, AG_Size);
 void AG_EditableBindEncoded(AG_Editable *_Nonnull, const char *_Nonnull,
                             char *_Nonnull, AG_Size);
-void AG_EditableBindText(AG_Editable *_Nonnull, AG_Text *_Nonnull);
+void AG_EditableBindText(AG_Editable *_Nonnull, AG_TextElement *_Nonnull);
 void AG_EditableSetLang(AG_Editable *_Nonnull, enum ag_language);
+#else
+# define AG_EditableBindUTF8(ed,b,s) AG_EditableBindASCII((ed),(b),(s))
 #endif
 
 void AG_EditableAutocomplete(AG_Editable *_Nonnull, _Nullable AG_EventFn,

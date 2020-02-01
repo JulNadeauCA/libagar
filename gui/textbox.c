@@ -228,7 +228,7 @@ AG_TextboxBindEncoded(AG_Textbox *tb, const char *encoding, char *buf,
 
 /* Bind to a multilingual text element. */
 void
-AG_TextboxBindText(AG_Textbox *tb, AG_Text *txt)
+AG_TextboxBindText(AG_Textbox *tb, AG_TextElement *txt)
 {
 	AG_EditableBindText(tb->ed, txt);
 }
@@ -625,11 +625,7 @@ Init(void *_Nonnull obj)
 	tb->r.y = 0;
 	tb->r.w = 0;
 	tb->r.h = 0;
-#ifdef AG_UNICODE
 	tb->text = tb->ed->text;
-#else
-	tb->text[0] = '\0';
-#endif
 	tb->btnRet = NULL;
 
 	AG_SetEvent(tb, "mouse-button-down", MouseButtonDown, NULL);
