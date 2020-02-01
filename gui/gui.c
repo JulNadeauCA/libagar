@@ -679,6 +679,7 @@ AG_About(AG_Event *event)
 
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close"), AG_WindowCloseGenEv,"%p",win);
 	AG_WindowShow(win);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, -1, -1);
 }
 
 #ifdef AG_LEGACY
