@@ -158,7 +158,10 @@ extern AG_WindowQ agWindowHideQ;		/* AG_WindowHide() queue */
 extern AG_Window *_Nullable agWindowToFocus;	/* Window to focus next */
 extern AG_Window *_Nullable agWindowFocused;	/* Window holding focus */
 #if defined(AG_DEBUG) && defined(AG_WIDGETS)
-extern AG_Window *_Nullable agTargetWindow;     /* For GUI debugger */
+extern AG_Window *_Nullable agDebuggerTgtWindow;     /* For GUI debugger */
+#endif
+#if defined(AG_WIDGETS)
+extern AG_Window *_Nullable agStyleEditorTgtWindow;  /* For Style Editor */
 #endif
 
 AG_Window *_Nullable AG_WindowFind(const char *_Nonnull)

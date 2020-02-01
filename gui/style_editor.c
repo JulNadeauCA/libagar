@@ -56,7 +56,11 @@
 #include <string.h>
 #include <ctype.h>
 
-static int agStylCounter = 0;
+static AG_Window *_Nullable agStyleEditorWindow = NULL;
+static AG_Tlist  *_Nullable agStyleEditorTlist = NULL;
+static AG_Box    *_Nullable agStyleEditorBox = NULL;
+
+static int agStyleEditorCapture = 0;
 
 static void
 FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
@@ -126,24 +130,35 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 }
 
 static void
+TargetRoot(void)
+{
+	agStyleEditorTgt = NULL;
+	AG_TlistDeselectAll(agStyleEditorTlist);
+}
+
+static void
 PollWidgets(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
-	const AG_Window *win = AG_CONST_WINDOW_PTR(1);
+	const AG_Window *tgt = agStyleEditorTgtWindow;
 	AG_Driver *drv;
 	
 	AG_TlistBegin(tl);
 
-	if (win != NULL) {
-		FindWindows(tl, win, 0);
+	if (tgt != NULL && AG_OBJECT_VALID(tgt)) {
+		FindWindows(tl, tgt, 0);
 	} else {
+		TargetRoot();
+		AG_LockVFS(&agDrivers);
 		AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-			AG_LockVFS(drv);
-			AG_FOREACH_WINDOW(win, drv) {
-				FindWindows(tl, win, 0);
+			AG_FOREACH_WINDOW(tgt, drv) {
+				if (tgt == agStyleEditorWindow) {
+					continue;
+				}
+				FindWindows(tl, tgt, 0);
 			}
-			AG_UnlockVFS(drv);
 		}
+		AG_UnlockVFS(&agDrivers);
 	}
 
 	AG_TlistEnd(tl);
@@ -216,7 +231,7 @@ PollVariables(AG_Event *_Nonnull event)
 }
 #endif
 
-static void WidgetSelected(AG_Event *_Nonnull);
+static void TargetWidget(AG_Event *_Nonnull);
 
 static void
 InputAttribute(AG_Event *_Nonnull event)
@@ -399,11 +414,10 @@ CompleteAttribute(AG_Event *_Nonnull event)
 }
 
 static void
-WidgetSelected(AG_Event *_Nonnull event)
+TargetWidget(AG_Event *_Nonnull event)
 {
-	AG_Box *box = AG_BOX_PTR(1);
-	AG_Button *buCapture = AG_BUTTON_PTR(2);
-	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(3);
+	AG_Box *box = agStyleEditorBox;
+	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(1);
 	AG_Widget *tgt = ti->p1;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;
@@ -411,6 +425,8 @@ WidgetSelected(AG_Event *_Nonnull event)
 	int savedTabID;
 
 	AG_OBJECT_ISA(tgt, "AG_Widget:*");
+
+	agStyleEditorTgt = tgt;
 
 	if ((nb = AG_ObjectFindChild(box, "notebook0")) != NULL) {
 		savedTabID = nb->selTabID;
@@ -448,7 +464,7 @@ WidgetSelected(AG_Event *_Nonnull event)
 	}
 #endif
 	nt = AG_NotebookAdd(nb, _("Appearance"), AG_BOX_VERT);
-	if (AG_ButtonGetState(buCapture)) {
+	if (agStyleEditorCapture) {
 		AG_Pixmap *px;
 		AG_Label *lbl;
 		AG_Surface *S;
@@ -519,18 +535,36 @@ MenuForWindow(AG_Event *_Nonnull event)
 static void
 SetPickStatus(AG_Event *_Nonnull event)
 {
+	AG_Window *winSted = AG_WINDOW_PTR(1);
+/*	AG_Tlist *tl = AG_TLIST_PTR(2); */
+	const int enable = AG_INT(3);
+
+	if (enable) {
+		Debug(winSted, "PickStatus(%d)\n", enable);
+	}
 }
 
 static void
 SetListRefresh(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tlVFS = AG_TLIST_PTR(1);
+	AG_Tlist *tl = AG_TLIST_PTR(1);
 	const int enable = AG_INT(2);
 
-	AG_TlistSetRefresh(tlVFS, enable ? 250 : -1);
+	AG_TlistSetRefresh(tl, enable ? 250 : -1);
 }
 
-/* Open the specified window in the GUI Style Editor */
+static void
+CloseStyleEditorWindow(AG_Event *_Nonnull event)
+{
+	agStyleEditorWindow = NULL;
+	agStyleEditorTlist = NULL;
+	agStyleEditorBox = NULL;
+	agStyleEditorTgtWindow = NULL;
+}
+
+/*
+ * Open the Style Editor window (with tgt at the root).
+ */
 AG_Window *_Nullable
 AG_StyleEditor(AG_Window *_Nonnull tgt)
 {
@@ -538,26 +572,39 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	AG_Pane *pane;
 	AG_MenuItem *mi;
 	AG_Box *hBox;
-	AG_Tlist *tlVFS;
-	AG_Button *buCapture;
+	AG_Tlist *tl;
 
 	if (tgt == NULL) {
 		AG_TextError(_("No window is focused.\n"
 		               "Focus on a window to target it in Style Editor."));
 		return (NULL);
 	}
-	if ((win = AG_WindowNewNamed(0, "sted%u", agStylCounter++)) == NULL) {
+	if (tgt == agStyleEditorWindow) {			/* Unsafe */
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("Style Editor: <%s> (\"%s\")"),
-	    AGOBJECT(tgt)->name,
-	    AGWINDOW(tgt)->caption);
+	if ((win = agStyleEditorWindow) != NULL) {
+		AG_WindowFocus(win);
+		if (agStyleEditorTgtWindow != tgt) {
+			agStyleEditorTgtWindow = tgt;
+			AG_ObjectFreeChildren(agStyleEditorBox);
+		}
+		return (win);
+	}
+
+	if ((win = agStyleEditorWindow = AG_WindowNewNamedS(0, "_agSted")) == NULL)
+		return (NULL);
+
+	agStyleEditorTgtWindow = tgt;
+
+	AG_WindowSetCaption(win, _("Agar Style Editor: <%s> (\"%s\")"),
+	    AGOBJECT(tgt)->name, AGWINDOW(tgt)->caption);
 	
-	tlVFS = AG_TlistNewPolledMs(NULL, 0, 125,
-	                            PollWidgets, "%Cp", tgt);
-	AG_TlistSizeHint(tlVFS, "<XXXXX/XXXXX/XXXXX/XXXXX>", 30);
-	AG_SetStyle(tlVFS, "font-size", "80%");
-	AG_Expand(tlVFS);
+	tl = agStyleEditorTlist = AG_TlistNewPolledMs(NULL,
+	    AG_TLIST_EXPAND, 125,
+	    PollWidgets, NULL);
+	AG_TlistSizeHint(tl, "<XXXXX/XXXXX/XXXXX/XXXXX>", 30);
+	AG_SetStyle(tl, "font-size", "80%");
+	AG_SetEvent(tl, "tlist-selected", TargetWidget, NULL);
 
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	AG_SetStyle(hBox, "font-family", "dejavu-sans");
@@ -567,43 +614,64 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 
 		/* Set pick mode */
 		btn = AG_ButtonNewFn(hBox, AG_BUTTON_STICKY,
-		    "\xe2\x87\xb1",				/* U+21F1 */
-		    SetPickStatus, "%p", win);
-		AG_SetStyle(btn, "padding", "0 5 0 5");
+		    "\xe2\x87\xb1",                             /* U+21F1 */
+		    SetPickStatus, "%p,%p", win, tl);
+		AG_SetStyle(btn, "padding", "0 5 3 5");
 
 		/* Toggle VFS autorefresh */
 		btn = AG_ButtonNewFn(hBox, AG_BUTTON_STICKY | AG_BUTTON_SET,
-		    "\xe2\xa5\x81",				/* U+2941 */
-		    SetListRefresh, "%p", tlVFS);
-		AG_SetStyle(btn, "padding", "0 10 0 5");
+		    "\xe2\xa5\x81",                             /* U+2941 */
+		    SetListRefresh, "%p", tl);
+		AG_SetStyle(btn, "padding", "0 10 3 5");
 
 		/* Toggle appearance capture */
-		buCapture = AG_ButtonNewS(hBox, AG_BUTTON_STICKY,
-		                                "\xe2\x96\xa6"); /* U+2941 */
-		AG_SetStyle(buCapture, "padding", "0 7 0 4");
+		btn = AG_ButtonNewInt(hBox, AG_BUTTON_STICKY,
+		    "\xe2\x96\xa6",                             /* U+2941 */
+		    &agStyleEditorCapture);
+		AG_SetStyle(btn, "padding", "0 7 0 5");
 	}
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
+	agStyleEditorBox = pane->div[1];
 	{
 		AG_Label *lbl;
 
-		AG_SetEvent(tlVFS, "tlist-selected",
-		    WidgetSelected, "%p,%p", pane->div[1], buCapture);
-		AG_ObjectAttach(pane->div[0], tlVFS);
+		AG_ObjectAttach(pane->div[0], tl);
 
 		lbl = AG_LabelNewS(pane->div[1], AG_LABEL_HFILL,
 		    _("Select a widget on the left "
 		     "(or use \xe2\x87\xb1 in the toolbar to pick)."));
 		AG_SetStyle(lbl, "font-family", "dejavu-sans");
 
-		mi = AG_TlistSetPopup(tlVFS, "window");
-		AG_MenuSetPollFn(mi, MenuForWindow, "%p", tlVFS);
+		mi = AG_TlistSetPopup(tl, "window");
+		AG_MenuSetPollFn(mi, MenuForWindow, "%p", tl);
 	}
+
+	AG_AddEvent(win, "window-close", CloseStyleEditorWindow, NULL);
 	
-	AG_WidgetFocus(tlVFS);
 	AG_WindowSetPosition(win, AG_WINDOW_BR, 1);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
+	AG_WidgetFocus(tl);
 	return (win);
+}
+
+void
+AG_StyleEditorDetachTarget(void)
+{
+	if (agStyleEditorBox) {
+		AG_ObjectFreeChildren(agStyleEditorBox);
+	}
+	agStyleEditorTgt = NULL;
+}
+
+void
+AG_StyleEditorDetachWindow(void)
+{
+	if (agStyleEditorBox) {
+		AG_ObjectFreeChildren(agStyleEditorBox);
+	}
+	agStyleEditorTgtWindow = NULL;
+	TargetRoot();
 }
 
 #endif /* AG_WIDGETS */

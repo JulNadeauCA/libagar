@@ -187,7 +187,10 @@ AG_WidgetPalette agDefaultPalette = {{
 }};
 
 #if defined(AG_DEBUG) && defined(AG_WIDGETS)
-AG_Widget *_Nullable agTargetWidget = NULL;
+AG_Widget *_Nullable agDebuggerTgt = NULL;
+#endif
+#if defined(AG_WIDGETS)
+AG_Widget *_Nullable agStyleEditorTgt = NULL;
 #endif
 
 /* Import inlinables */
@@ -349,10 +352,13 @@ OnDetach(AG_Event *_Nonnull event)
 	const void *parent = AG_PTR(1);
 
 #if defined(AG_DEBUG) && defined(AG_WIDGETS)
-	if (widget == agTargetWidget)
+	if (widget == agDebuggerTgt)
 		AG_GuiDebuggerDetachTarget();
 #endif
-
+#if defined(AG_WIDGETS)
+	if (widget == agStyleEditorTgt)
+		AG_StyleEditorDetachTarget();
+#endif
 	if (AG_OfClass(parent, "AG_Widget:*") &&
 	    AG_OfClass(widget, "AG_Widget:*")) {
 		if (widget->window) {

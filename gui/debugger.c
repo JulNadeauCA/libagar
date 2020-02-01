@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -131,7 +131,7 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 static void
 TargetRoot(void)
 {
-	agTargetWidget = NULL;
+	agDebuggerTgt = NULL;
 	AG_TlistDeselectAll(agDebuggerTlist);
 
 	AG_LabelText(agDebuggerLabel, _("Target: " AGSI_YEL "/" AGSI_RST));
@@ -142,7 +142,7 @@ static void
 PollWidgets(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
-	const AG_Window *tgt = agTargetWindow;
+	const AG_Window *tgt = agDebuggerTgtWindow;
 	AG_Driver *drv;
 
 	AG_TlistBegin(tl);
@@ -151,14 +151,16 @@ PollWidgets(AG_Event *_Nonnull event)
 		FindWindows(tl, tgt, 0);
 	} else {					/* Retarget root */
 		TargetRoot();
-
+		AG_LockVFS(&agDrivers);
 		AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-			AG_LockVFS(drv);
 			AG_FOREACH_WINDOW(tgt, drv) {
+				if (tgt == agDebuggerWindow) {
+					continue;
+				}
 				FindWindows(tl, tgt, 0);
 			}
-			AG_UnlockVFS(drv);
 		}
+		AG_UnlockVFS(&agDrivers);
 	}
 
 	AG_TlistEnd(tl);
@@ -318,7 +320,7 @@ TargetWidget(AG_Event *_Nonnull event)
 	AG_Textbox *tb;
 	int savedTabID;
 
-	agTargetWidget = tgt;
+	agDebuggerTgt = tgt;
 
 	if ((nb = AG_ObjectFindChild(box, "notebook0")) != NULL) {
 		savedTabID = nb->selTabID;
@@ -485,7 +487,7 @@ CloseDebuggerWindow(AG_Event *_Nonnull event)
 	agDebuggerWindow = NULL;
 	agDebuggerTlist = NULL;
 	agDebuggerBox = NULL;
-	agTargetWindow = NULL;
+	agDebuggerTgtWindow = NULL;
 }
 
 void
@@ -494,7 +496,7 @@ AG_GuiDebuggerDetachTarget(void)
 	if (agDebuggerBox) {
 		AG_ObjectFreeChildren(agDebuggerBox);
 	}
-	agTargetWidget = NULL;
+	agDebuggerTgt = NULL;
 }
 
 void
@@ -503,12 +505,12 @@ AG_GuiDebuggerDetachWindow(void)
 	if (agDebuggerBox) {
 		AG_ObjectFreeChildren(agDebuggerBox);
 	}
-	agTargetWindow = NULL;
+	agDebuggerTgtWindow = NULL;
 	TargetRoot();
 }
 
 /*
- * Open the GUI debugger window with tgt at the root.
+ * Open the GUI debugger window (with tgt at the root).
  */
 AG_Window *_Nullable
 AG_GuiDebugger(AG_Window *_Nonnull tgt)
@@ -529,8 +531,8 @@ AG_GuiDebugger(AG_Window *_Nonnull tgt)
 	}
 	if ((win = agDebuggerWindow) != NULL) {
 		AG_WindowFocus(win);
-		if (agTargetWindow != tgt) {
-			agTargetWindow = tgt;
+		if (agDebuggerTgtWindow != tgt) {
+			agDebuggerTgtWindow = tgt;
 
 			AG_WindowSetCaption(win,
 			    _("Agar GUI Debugger: <%s> (\"%s\")"),
@@ -548,7 +550,7 @@ AG_GuiDebugger(AG_Window *_Nonnull tgt)
 	if ((win = agDebuggerWindow = AG_WindowNewNamedS(0, "_agDbgr")) == NULL)
 		return (NULL);
 
-	agTargetWindow = tgt;
+	agDebuggerTgtWindow = tgt;
 
 	AG_WindowSetCaption(win, _("Agar GUI Debugger: <%s> (\"%s\")"),
 	                    OBJECT(tgt)->name, AGWINDOW(tgt)->caption);
@@ -562,12 +564,10 @@ AG_GuiDebugger(AG_Window *_Nonnull tgt)
 	                              path);
 
 	tl = agDebuggerTlist = AG_TlistNewPolledMs(pane->div[0],
-	    AG_TLIST_EXPAND, 250,
+	    AG_TLIST_EXPAND, 125,
 	    PollWidgets, NULL);
-
 	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXX>", 15);
 	AG_SetEvent(tl, "tlist-selected", TargetWidget, NULL);
-	AG_WidgetFocus(tl);
 
 	mi = AG_TlistSetPopup(tl, "window");
 	AG_MenuSetPollFn(mi, ContextualMenu, "%p", tl);
@@ -575,6 +575,7 @@ AG_GuiDebugger(AG_Window *_Nonnull tgt)
 	AG_AddEvent(win, "window-close", CloseDebuggerWindow, NULL);
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_BR, 40, 40);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
+	AG_WidgetFocus(tl);
 	return (win);
 }
 

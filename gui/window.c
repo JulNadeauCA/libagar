@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,7 +60,10 @@ AG_Window *agWindowToFocus = NULL;		/* Window to focus */
 AG_Window *agWindowFocused = NULL;		/* Window holding focus */
 
 #if defined(AG_DEBUG) && defined(AG_WIDGETS)
-AG_Window *_Nullable agTargetWindow = NULL;     /* For GUI debugger */
+AG_Window *_Nullable agDebuggerTgtWindow = NULL;     /* For GUI debugger */
+#endif
+#if defined(AG_WIDGETS)
+AG_Window *_Nullable agStyleEditorTgtWindow = NULL;  /* For Style Editor */
 #endif
 
 #ifdef AG_WM_HINTS
@@ -634,7 +637,7 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Window *win = obj;
-	const AG_Color *cFg = &WCOLOR(win, FG_COLOR);
+	const AG_Color *cFg = &WCOLOR(win,FG_COLOR);
 	AG_Widget *chld;
 	AG_Rect r;
 	const int w = WIDTH(win);
@@ -653,7 +656,7 @@ Draw(void *_Nonnull obj)
 		r.y = hBar-1;
 		r.w = w;
 		r.h = h-hBar;
-		AG_DrawRect(win, &r, &WCOLOR(win, BG_COLOR));
+		AG_DrawRect(win, &r, &WCOLOR(win,BG_COLOR));
 	}
 
 	/* Render decorative borders. */
@@ -661,7 +664,10 @@ Draw(void *_Nonnull obj)
 		const int wResizeCtrl = win->wResizeCtrl;
 		const int wResizeCtrl2 = (wResizeCtrl << 1);
 
-		r.x = 0;
+		/* XXX top overdraw */
+		AG_DrawRectOutline(win, &WIDGET(win)->r, &WCOLOR(win,LINE_COLOR));
+
+		r.x = 1;
 		r.y = h - wBorderBot;
 		r.h = wBorderBot;
 		if ((win->flags & AG_WINDOW_NORESIZE) == 0 && w > wResizeCtrl2) {
@@ -895,7 +901,7 @@ OnDetach(AG_Event *_Nonnull event)
 	AG_Object *chld;
 
 #if defined(AG_DEBUG) && defined(AG_WIDGETS)
-	if (win == agTargetWindow)
+	if (win == agDebuggerTgtWindow)
 		AG_GuiDebuggerDetachWindow();
 #endif
 

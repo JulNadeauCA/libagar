@@ -58,6 +58,7 @@ AG_MenuView {
 	text-color#disabled: rgb(170,170,170);
 }
 AG_Console {
+	padding: 4;
 	background-color: rgb(0,0,0);
 	background-color#hover: rgb(0,0,30);
 	background-color#focused: rgb(5,5,5);

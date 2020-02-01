@@ -373,7 +373,10 @@ extern const char *_Nullable agStyleAttributes[];
 extern const char *_Nullable agWidgetStateNames[];
 extern AG_WidgetPalette agDefaultPalette;
 #if defined(AG_DEBUG) && defined(AG_WIDGETS)
-extern AG_Widget *_Nullable agTargetWidget;
+extern AG_Widget *_Nullable agDebuggerTgt;
+#endif
+#if defined(AG_WIDGETS)
+extern AG_Widget *_Nullable agStyleEditorTgt;
 #endif
 
 void AG_WidgetDraw(void *_Nonnull);
