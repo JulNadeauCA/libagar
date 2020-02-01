@@ -20,6 +20,7 @@ typedef struct {
 	AG_TestInstance _inherit;
 	char textBuffer[128];
 	char *someText;
+	AG_TextElement *textElement;
 } MyTestInstance;
 
 /* Example callback for combo-selected. */
@@ -398,20 +399,15 @@ TestGUI(void *obj, AG_Window *win)
 	 */
 	{
 		ti->textBuffer[0] = '\0';
+		ti->textElement = AG_TextNew(100);
 
 		/* Create a textbox bound to a fixed-size buffer */
 		tbox = AG_TextboxNew(vPane->div[0],
 		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
 		    "Textbox: ");
-	
 		AG_TextboxSetPlaceholderS(tbox, "First & Last Name");
 		AG_TextboxAutocomplete(tbox, AutocompleteName, NULL);
-
-#ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tbox, ti->textBuffer, sizeof(ti->textBuffer));
-#else
-		AG_TextboxBindASCII(tbox, ti->textBuffer, sizeof(ti->textBuffer));
-#endif
 		AG_SetEvent(tbox, "textbox-return", SayHello, "%p", tbox);
 
 #ifdef AG_UNICODE
@@ -423,12 +419,13 @@ TestGUI(void *obj, AG_Window *win)
 		    AG_TEXTBOX_EXCL | AG_TEXTBOX_MULTILINGUAL | AG_TEXTBOX_HFILL,
 		    "TextElement: ");
 
-		AG_TextboxSetString(tbox, "Hello hello hello");
-		AG_TextSetEntS(tbox->text, AG_LANG_EN, "Hello");
-		AG_TextSetEntS(tbox->text, AG_LANG_FR, "Bonjour");
-		AG_TextSetEntS(tbox->text, AG_LANG_DE, "Guten tag");
-#else
-		AG_LabelNewS(tbox, 0, "(AG_Text needs --enable-unicode)");
+		AG_TextboxSetString(tbox, "Hello");
+
+		AG_TextSetEntS(ti->textElement, AG_LANG_EN, "Hello");
+		AG_TextSetEntS(ti->textElement, AG_LANG_FR, "Bonjour");
+		AG_TextSetEntS(ti->textElement, AG_LANG_DE, "Guten tag");
+
+		AG_TextboxBindText(tbox, ti->textElement);
 #endif
 	}
 
@@ -661,6 +658,7 @@ Destroy(void *obj)
 	MyTestInstance *ti = obj;
 
 	Free(ti->someText);
+	AG_TextFree(ti->textElement);
 }
 
 const AG_TestCase widgetsTest = {

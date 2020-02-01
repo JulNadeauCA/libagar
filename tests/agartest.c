@@ -174,6 +174,7 @@ SelectedTest(AG_Event *event)
 	AG_TlistItem *it = AG_TLIST_ITEM_PTR(1);
 	AG_TestCase *tc = it->p1;
 
+	AG_ButtonText(btnTest, _("Run %s"), tc->name);
 	AG_LabelText(status, "%s: %s", tc->name, tc->descr);
 	if (tc->test != NULL || tc->testGUI != NULL) {
 		AG_WidgetEnable(btnTest);
@@ -877,10 +878,9 @@ main(int argc, char *argv[])
 
 	hBox = AG_BoxNewHoriz(pane->div[0], AG_BOX_HFILL | AG_BOX_HOMOGENOUS |
 	                                    AG_BOX_NO_SPACING);
-//	AG_SetStyle(hBox, "font-family", "dejavu-sans");
 	{
-		btnTest = AG_ButtonNew(hBox, AG_BUTTON_EXCL,
-		    _(AGSI_BLU "\xe2\x96\xb6 " AGSI_RST "Run")); /* U+25B6 */
+		btnTest = AG_ButtonNew(hBox, AG_BUTTON_EXCL, _("Run"));
+		AG_SetStyle(btnTest, "font-size", "120%");
 		AG_WidgetDisable(btnTest);
 	}
 
@@ -932,11 +932,10 @@ main(int argc, char *argv[])
 		ln = AG_ConsoleMsgS(console, "http://libagar.org");
 		AG_ColorFromString(&ln->c, "DarkCyan", NULL);
 
-		ln = AG_ConsoleMsg(console, _("Memory model: %s"), AG_MEMORY_MODEL_NAME);
-		AG_ColorRGB_8(&ln->c, 240,240,0);
-
-		ln = AG_ConsoleMsg(console, _("Color: %d-bit/component "
-		                              "(%u-bit pixels)"),
+		ln = AG_ConsoleMsg(console,
+		    _("Memory model: %s "
+		      "(%d-bit/component color; %u-bit pixels)"),
+		    AG_MEMORY_MODEL_NAME,
 		    AG_COMPONENT_BITS, (Uint)(sizeof(AG_Pixel) << 3));
 		AG_ColorRGB_8(&ln->c, 240,240,0);
 

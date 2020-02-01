@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -65,7 +65,7 @@ DEV_ClassInfo(void)
 	AG_Window *win;
 	AG_Table *tbl;
 
-	if ((win = AG_WindowNewNamedS(0, "DEV_ClassInfo")) == NULL) {
+	if ((win = AG_WindowNew(0)) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaptionS(win, _("Registered classes"));
@@ -77,6 +77,7 @@ DEV_ClassInfo(void)
 	AG_TableAddCol(tbl, _("Hierarchy"), NULL, NULL);
 
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 60);
+	AG_WindowShow(win);
 	return (win);
 }
 
