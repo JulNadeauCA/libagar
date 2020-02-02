@@ -1153,14 +1153,16 @@ FindFocusableWidgets(AG_WidgetVec *W, AG_Widget *_Nonnull wid)
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AG_ObjectLock(wid);
-	if (wid->flags & AG_WIDGET_FOCUSABLE) {
-		AG_VEC_PUSH(W, wid->focusFwd ? wid->focusFwd : wid);
-	}
+	if (wid->flags & AG_WIDGET_FOCUSABLE)
+		AG_VEC_PUSH(W, wid);
 #if 0
 	if (AG_Defined(wid, "tabindex"))
 		/* TODO move to proper index. */
 #endif
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		if (AG_OfClass(chld, "AG_Widget:AG_Window:*")) {
+			continue;
+		}
 		FindFocusableWidgets(W, chld);
 	}
 	AG_ObjectUnlock(wid);
@@ -1168,20 +1170,30 @@ FindFocusableWidgets(AG_WidgetVec *W, AG_Widget *_Nonnull wid)
 
 /*
  * Move the widget focus inside a window.
- * The window must be locked.
+ * The window and agDrivers VFS must be locked.
  */
 void
 AG_WindowCycleFocus(AG_Window *win, int reverse)
 {
 	AG_WidgetVec W;		/* Ordered list of potential candidates */
 	AG_WidgetVec WU;	/* W with duplicates removed */
+	AG_Widget *chld;
 	int i, j;
 
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 
 	AG_VEC_INIT(&W);
 	AG_VEC_INIT(&WU);
-	FindFocusableWidgets(&W, WIDGET(win));
+
+	AG_LockVFS(&agDrivers);
+	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
+		if (AG_OfClass(chld, "AG_Widget:AG_Window:*")) {
+			continue;
+		}
+		FindFocusableWidgets(&W, chld);
+	}
+	AG_UnlockVFS(&agDrivers);
+
 	for (i = 0; i < W.length; i++) {
 		for (j = 0; j < WU.length; j++) {
 			if (W.data[i] == WU.data[j])

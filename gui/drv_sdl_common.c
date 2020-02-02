@@ -957,12 +957,16 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 				dsw->winLastKeydown = NULL;
 				break;
 			}
-			AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED,
-			    dev->data.key.ks, dev->data.key.ucs);
+			if (AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED,
+			    dev->data.key.ks, dev->data.key.ucs) == 1) {
+				goto event_processed;           /* Break out */
+			}
 			break;
 		case AG_DRIVER_KEY_DOWN:
-			AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
-			    dev->data.key.ks, dev->data.key.ucs);
+			if (AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
+			    dev->data.key.ks, dev->data.key.ucs) == 1) {
+				goto event_processed;           /* Break out */
+			}
 			break;
 		default:
 			break;

@@ -30,6 +30,8 @@
 #include <agar/core/core.h>
 #include <agar/gui/window.h>
 
+/* #define DEBUG_KEYBOARD */
+
 /*
  * Agar internal keysyms
  */
@@ -398,28 +400,19 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 	AG_Driver *drv = AGINPUTDEV(kbd)->drv;
 	AG_Widget *wFoc;
 	int tabCycle;
-	int rv = 0;
 
-#if 0
-	const char *keyname;
-	if ((keyname = AG_LookupKeyName(ks)) != NULL) {
-		printf("Key%s: [%s:0x%x]\n",
-		    (action == AG_KEY_PRESSED) ? "Down" : "Up",
-		    keyname, (int)ch);
-	} else {
-		printf("Key%s: [0x%x:0x%x]\n",
-		    (action == AG_KEY_PRESSED) ? "Down" : "Up",
-		    (int)ks, (int)ch);
-	}
+#ifdef DEBUG_KEYBOARD
+	Debug(kbd, "ProcessKey(%s,%s,%s,0x%x)\n",
+	    OBJECT(win)->name, (action == AG_KEY_PRESSED) ? "Down" : "Up",
+	    AG_LookupKeyName(ks), ch);
 #endif
-
 	switch (action) {
 	case AG_KEY_RELEASED:
 		PostUnfocusedKeyUp(WIDGET(win), ks, kbd->modState, ch);
 		break;
 	case AG_KEY_PRESSED:
 		if (AG_ExecGlobalKeys(ks, kbd->modState)) {
-			return (1);
+			return (1);              /* Break out of Window loop */
 		}
 		PostUnfocusedKeyDown(WIDGET(win), ks, kbd->modState, ch);
 		break;
@@ -446,9 +439,8 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 	   (wFoc = AG_WidgetFindFocused(win)) != NULL) {
 		AG_ObjectLock(wFoc);
 		if (ks != AG_KEY_TAB || wFoc->flags & AG_WIDGET_CATCH_TAB) {
-			if (wFoc->flags & AG_WIDGET_CATCH_TAB) {
+			if (wFoc->flags & AG_WIDGET_CATCH_TAB)
 				tabCycle = 0;
-			}
 #ifdef AG_UNICODE
 			AG_PostEvent(wFoc, (action == AG_KEY_RELEASED) ?
 			    "key-up" : "key-down",
@@ -469,17 +461,17 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 				 */
 				AGDRIVER_SW(drv)->winLastKeydown = win;
 			}
-			rv = 1;
 		}
 		AG_ObjectUnlock(wFoc);
 	}
 
 	/* Cycle focus */
-	if (tabCycle && ks == AG_KEY_TAB && action == AG_KEY_RELEASED) {
-		AG_WindowCycleFocus(win, (kbd->modState & AG_KEYMOD_SHIFT)?1:0);
-		rv = 1;
+	if (tabCycle && (ks == AG_KEY_TAB && action == AG_KEY_RELEASED)) {
+		AG_WindowCycleFocus(win,
+		    (kbd->modState & AG_KEYMOD_SHIFT) ? 1 : 0);
+		return (1);                     /* Break out of Window loop */
 	}
-	return (rv);
+	return (0);
 }
 
 /* Return a string describing a given Agar keysym. */

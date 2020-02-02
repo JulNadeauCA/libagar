@@ -442,15 +442,16 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_Textbox *tb;
 		AG_Box *hBox;
 
-		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
-		                              PollAttributes, "%p", tgt);
-
 		hBox = AG_BoxNewHoriz(nt, AG_BOX_HFILL);
 		tb = AG_TextboxNewS(hBox, AG_TEXTBOX_HFILL | AG_TEXTBOX_EXCL |
 		                          AG_TEXTBOX_RETURN_BUTTON, "+ ");
 		AG_TextboxSizeHint(tb, "<XXXXXXXXXXX>: <XXXXXXXXXXX>");
 		AG_TextboxAutocomplete(tb, CompleteAttribute, NULL);
-		AG_SetEvent(tb, "textbox-return", InputAttribute, "%p,%p", tb,tgt);
+		AG_SetEvent(tb, "textbox-return",
+		    InputAttribute, "%p,%p", tb,tgt);
+
+		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
+		    PollAttributes, "%p", tgt);
 	}
 #if 0
 	nt = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
