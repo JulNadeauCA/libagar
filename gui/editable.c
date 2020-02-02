@@ -1293,8 +1293,7 @@ AutocompleteSelected(AG_Event *_Nonnull event)
 	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 
-	AG_EditableSetString(ed, NULL);
-	AG_EditableCatStringS(ed, it->text);
+	AG_EditableSetString(ed, it->text);
 
 	AG_PostEvent(WIDGET(tl)->window, "window-close", NULL);
 }
@@ -1961,44 +1960,6 @@ out:
 	ReleaseBuffer(ed, buf);
 }
 
-/* Replace the contents of the text buffer with a given string. */
-void
-AG_EditableSetString(AG_Editable *ed, const char *text)
-{
-	AG_EditableBuffer *buf;
-
-	AG_ObjectLock(ed);
-	if ((buf = GetBuffer(ed)) == NULL) {
-		goto out;
-	}
-	if (text != NULL) {
-		Free(buf->s);
-#ifdef AG_UNICODE
-		buf->s = AG_ImportUnicode("UTF-8", text, &buf->len, &buf->maxLen);
-#else
-		buf->s = (Uint8 *)TryStrdup(text);
-		buf->maxLen = buf->len = strlen(text);
-#endif
-		if (buf->s != NULL) {
-			ed->pos = buf->len;
-		} else {
-			buf->len = 0;
-		}
-	} else {
-		if (buf->maxLen >= sizeof(AG_Char)) {
-			buf->s[0] = '\0';
-			ed->pos = 0;
-			buf->len = 0;
-		}
-	}
-	ed->sel = 0;
-	CommitBuffer(ed, buf);
-	ReleaseBuffer(ed, buf);
-out:
-	AG_ObjectUnlock(ed);
-	AG_Redraw(ed);
-}
-
 /* Clear the buffer contents. */
 void
 AG_EditableClearString(AG_Editable *ed)
@@ -2006,49 +1967,59 @@ AG_EditableClearString(AG_Editable *ed)
 	AG_EditableSetString(ed, NULL);
 }
 
-/* Replace the buffer contents with the given string. */
+/*
+ * Replace the buffer contents with a formatted string.
+ * Cancel any selection and move the cursor to the end.
+ * If fmt is NULL, replace with empty string ("").
+ */
 void
-AG_EditablePrintf(void *obj, const char *fmt, ...)
+AG_EditablePrintf(AG_Editable *ed, const char *fmt, ...)
 {
-	AG_Editable *ed = obj;
-	AG_EditableBuffer *buf;
 	va_list ap;
 	char *s;
+	
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+	AG_EditableSetString(ed, s);
+	free(s);
+}
 
-#ifdef AG_DEBUG
-	if (!AG_OfClass(obj, "AG_Widget:AG_Editable:*") &&
-	    !AG_OfClass(obj, "AG_Widget:AG_Textbox:*"))
-		AG_FatalError(NULL);
-#endif
+/*
+ * Replace the buffer contents with a given string.
+ * Cancel any selection and move the cursor to the end.
+ * If text is NULL, replace with empty string ("").
+ */
+void
+AG_EditableSetString(AG_Editable *ed, const char *text)
+{
+	AG_EditableBuffer *buf;
+	AG_Char *sNew;
 
 	AG_ObjectLock(ed);
 	if ((buf = GetBuffer(ed)) == NULL) {
 		goto out;
 	}
-	if (fmt != NULL && fmt[0] != '\0') {
-		va_start(ap, fmt);
-		Vasprintf(&s, fmt, ap);
-		va_end(ap);
-
-		Free(buf->s);
+	if (text != NULL) {
 #ifdef AG_UNICODE
-		buf->s = AG_ImportUnicode("UTF-8", s, &buf->len, &buf->maxLen);
+		if ((sNew = AG_ImportUnicode("UTF-8", text, &buf->len, &buf->maxLen)) == NULL)
+			goto out;
 #else
-		buf->s = (Uint8 *)TryStrdup(s);
-		buf->maxLen = buf->len = strlen(s);
+		if ((sNew = (Uint8 *)TryStrdup(text)) == NULL) {
+			goto out;
+		}
+		buf->maxLen = buf->len = strlen(text);
 #endif
-		free(s);
-
-		if (buf->s != NULL) {
-			ed->pos = buf->len;
-		} else {
-			buf->len = 0;
-		}
-	} else {
 		Free(buf->s);
-		if ((buf->s = TryMalloc(sizeof(AG_Char))) != NULL) {
-			buf->s[0] = '\0';
+		buf->s = sNew;
+		ed->pos = buf->len;
+	} else {                                            /* Empty string */
+		if ((sNew = TryMalloc(sizeof(AG_Char))) == NULL) {
+			goto out;
 		}
+		sNew[0] = '\0';
+		Free(buf->s);
+		buf->s = sNew;
 		ed->pos = 0;
 		buf->len = 0;
 	}
@@ -2059,6 +2030,7 @@ out:
 	AG_ObjectUnlock(ed);
 	AG_Redraw(ed);
 }
+
 
 /* Return a duplicate of the buffer contents. */
 char *

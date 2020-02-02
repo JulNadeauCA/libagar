@@ -170,7 +170,7 @@ void AG_EditableSetExcl(AG_Editable *_Nonnull, int);
 
 void AG_EditableSetString(AG_Editable *_Nonnull, const char *_Nullable);
 void AG_EditableClearString(AG_Editable *_Nonnull);
-void AG_EditablePrintf(void *_Nonnull, const char *_Nullable, ...);
+void AG_EditablePrintf(AG_Editable *_Nonnull, const char *_Nullable, ...);
 
 char *_Nonnull AG_EditableDupString(AG_Editable *_Nonnull);
 
