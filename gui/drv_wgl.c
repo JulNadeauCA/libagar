@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -448,15 +448,14 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	if ((drv->videoFmt = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
 		goto fail;
 	}
-#if AG_MODEL == AG_LARGE
 	if (depthReq == 48) {				/* Deep color */
 # if AG_BYTEORDER == AG_BIG_ENDIAN
-		AG_PixelFormatRGB(drv->videoFmt, depthReq,
+		AG_PixelFormatRGB(drv->videoFmt, 48,
 			0xffff000000000000,
 			0x0000ffff00000000,
 			0x00000000ffff0000);
 # else
-		AG_PixelFormatRGB(drv->videoFmt, depthReq,
+		AG_PixelFormatRGB(drv->videoFmt, 48,
 			0x000000000000ffff,
 			0x00000000ffff0000,
 			0x0000ffff00000000);
@@ -465,12 +464,12 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 #endif /* AG_LARGE */
 	{						/* True Color */
 #if AG_BYTEORDER == AG_BIG_ENDIAN
-		AG_PixelFormatRGB(drv->videoFmt, depthReq,
+		AG_PixelFormatRGB(drv->videoFmt, 32,
 			0xff000000,
 			0x00ff0000,
 			0x0000ff00);
 #else
-		AG_PixelFormatRGB(drv->videoFmt, depthReq,
+		AG_PixelFormatRGB(drv->videoFmt, 32,
 			0x000000ff,
 			0x0000ff00,
 			0x00ff0000);
