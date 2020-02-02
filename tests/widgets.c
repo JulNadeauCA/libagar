@@ -152,6 +152,25 @@ AutocompleteName(AG_Event *event)
 	Free(s);
 }
 
+/* Create more checkboxes under "Some checkboxes" */
+static void
+CreateMoreCheckboxes(AG_Event *_Nonnull event)
+{
+	AG_Button *bu = AG_BUTTON_SELF();
+	AG_Box *box = AG_BOX_PTR(1);
+	AG_Pane *pane = AG_PANE_PTR(2);
+
+	AG_WidgetHide(bu);
+
+	AG_CheckboxNew(box, 0, "George Liquor");
+	AG_CheckboxNew(box, 0, "Haggic McHaggis");
+	AG_CheckboxNew(box, 0, "Kowalski, Bubba\nand Jiminy Lummox");
+	AG_CheckboxNew(box, 0, "Wilbur Cobb");
+
+	AG_PaneMoveDivider(pane, pane->dx + 50);
+	AG_SetStyle(box, "font-size", "80%");
+}
+
 static int
 TestGUI(void *obj, AG_Window *win)
 {
@@ -254,39 +273,6 @@ TestGUI(void *obj, AG_Window *win)
 	vPane = AG_PaneNewVert(hPane->div[0], AG_PANE_EXPAND);
 
 	/*
-	 * Tlist is a scrollable list view of items.
-	 */
-	{
-		AG_Tlist *tl;
-
-		tl = AG_TlistNew(vPane->div[0], AG_TLIST_EXPAND);
-		AG_TlistAdd(tl, agIconLeftButton.s, "LeftButton");
-		AG_TlistAdd(tl, agIconMidButton.s, "MidButton");
-		AG_TlistAdd(tl, agIconRightButton.s, "RightButton");
-		AG_TlistAdd(tl, agIconCtrlKey.s, "CtrlKey");
-		AG_TlistAdd(tl, agIconLoad.s, "Load");
-		AG_TlistAdd(tl, agIconSave.s, "Save");
-		AG_TlistAdd(tl, agIconUp.s, "Up");
-		AG_TlistAdd(tl, agIconDown.s, "Down");
-		AG_TlistAdd(tl, agIconTrash.s, "Trash");
-		AG_TlistAdd(tl, agIconClose.s, "Close");
-		AG_TlistAdd(tl, agIconDoc.s, "Doc");
-		AG_TlistAdd(tl, agIconSymLink.s, "SymLink");
-		AG_TlistAdd(tl, agIconDirectory.s, "Directory");
-		AG_TlistAdd(tl, agIconSmallArrowRight.s, "SmallArrowRight");
-		AG_TlistAdd(tl, agIconWinClose.s, "WinClose");
-		AG_TlistAdd(tl, agIconWinMinimize.s, "WinMinimize");
-		AG_TlistAdd(tl, agIconWinMaximize.s, "WinMaximize");
-		AG_TlistAdd(tl, agIconMagnifier.s, "Magnifier");
-		AG_TlistAdd(tl, agIconGear.s, "Gear");
-		AG_TlistAdd(tl, agIconDocImport.s, "DocImport");
-		AG_TlistAdd(tl, agIconWindow.s, "Window");
-
-		AG_TlistSizeHintLargest(tl, 4);
-		AG_TlistSetIconWidth(tl, 16);
-	}
-
-	/*
 	 * Box is a general-purpose widget container. AG_BoxNewHoriz() creates
 	 * a container which packs its widgets horizontally.
 	 */
@@ -305,7 +291,9 @@ TestGUI(void *obj, AG_Window *win)
 	AG_BoxSetHorizAlign(hBox, AG_BOX_CENTER);
 	AG_BoxSetVertAlign(hBox, AG_BOX_CENTER);
 	{
-		/* The Radio checkbox is a group of radio buttons. */
+		/* Radio button group */
+		vBox = AG_BoxNewVert(hBox, 0);
+		AG_BoxSetLabel(vBox, "Radio group:");
 		{
 			const char *radioItems[] = {
 				"Homer\n(Simpson)",
@@ -315,19 +303,27 @@ TestGUI(void *obj, AG_Window *win)
 				"Maggie",
 				NULL
 			};
-			AG_RadioNew(hBox, 0, radioItems);
+			AG_RadioNew(vBox, 0, radioItems);
 		}
 	
 		vBox = AG_BoxNewVert(hBox, 0);
-		AG_BoxSetLabel(vBox, "Some checkboxes");
+		AG_BoxSetLabel(vBox, "Checkboxes:");
 		{
+			AG_Button *btn;
+
 			/*
 			 * The Checkbox widget can bind to boolean values
 			 * and bitmasks.
 			 */
-			AG_CheckboxNew(vBox, 0, "Milhouse");
-			AG_CheckboxNew(vBox, 0, "Ralph Wiggum");
-			AG_CheckboxNew(vBox, 0, "Blinky\n(the fish)");
+			AG_CheckboxNew(vBox, 0, "Ren H" "\xC3\xB6" "ek");
+			AG_CheckboxNew(vBox, 0, "Stimpson J. Cat");
+			AG_CheckboxNew(vBox, 0, "Mr. Horse");
+			AG_CheckboxNew(vBox, 0, "Powdered Toast Man");
+
+			btn = AG_ButtonNewFn(vBox, 0, "Create More ...",
+			    CreateMoreCheckboxes, "%p,%p", vBox, vPane);
+
+			AG_SetStyle(btn, "padding", "2");
 		}
 	}
 
@@ -429,13 +425,13 @@ TestGUI(void *obj, AG_Window *win)
 #endif
 	}
 
-	/* A horizontal cosmetic separator */
+	/* Create a horizontal separator */
 	AG_SeparatorNewHoriz(vPane->div[1]);
 
 	/*
-	 * Scrollbar provides three bindings, "value", "min" and "max",
-	 * which we can bind to integers or floating-point variables.
-	 * Progressbar and Slider have similar interfaces.
+	 * Scrollbar provides "value", "min" and "max" bindings which can be
+	 * connected to integers or floating-point variables. Progressbar and
+	 * Slider offer similar interfaces.
 	 */
 	{
 		static int myVal = 50, myMin = -100, myMax = 100, myVisible = 0;
@@ -620,16 +616,12 @@ TestGUI(void *obj, AG_Window *win)
 				bufSize = strlen(ti->someText)+1;
 			}
 	
-#ifdef AG_UNICODE
 			/*
 			 * Bind the buffer's contents to the Textbox. The
 			 * size argument to AG_TextboxBindUTF8() must include
 			 * space for the terminating NUL.
 			 */
 			AG_TextboxBindUTF8(tbox, ti->someText, bufSize);
-#else
-			AG_TextboxBindASCII(tbox, ti->someText, bufSize);
-#endif
 	
 			/* Add a word wrapping control */
 			AG_CheckboxNewFn(nt, 0, "Word wrapping",
@@ -663,8 +655,8 @@ Destroy(void *obj)
 
 const AG_TestCase widgetsTest = {
 	"widgets",
-	N_("Display various standard Agar widgets"),
-	"1.5.0",
+	N_("Display various Agar-GUI widgets"),
+	"1.6.0",
 	0,
 	sizeof(MyTestInstance),
 	Init,
