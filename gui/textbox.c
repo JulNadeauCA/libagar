@@ -535,18 +535,13 @@ void
 AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
 {
 	va_list ap;
+	char *s;
 
-	AG_ObjectLock(tb);
-	if (tb->surfaceLbl != -1) {
-		AG_WidgetUnmapSurface(tb, tb->surfaceLbl);
-		tb->surfaceLbl = -1;
-	}
-	Free(tb->label);
 	va_start(ap, fmt);
-	Vasprintf(&tb->label, fmt, ap);
+	Vasprintf(&s, fmt, ap);
 	va_end(ap);
-	AG_ObjectUnlock(tb);
-	AG_Redraw(tb);
+	AG_EditableSetString(tb->ed, s);
+	free(s);
 }
 
 /*
