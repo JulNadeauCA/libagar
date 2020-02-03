@@ -1255,7 +1255,9 @@ AG_FileDlgNewCompact(void *parent, const char *label, Uint flags)
 	AG_FileDlg *fd;
 
 	fd = AG_FileDlgNew(parent, (flags | AG_FILEDLG_COMPACT));
-	AG_LabelTextS(fd->textbox->lbl, label);
+	if (label) {
+		AG_TextboxSetLabelS(fd->textbox, label);
+	}
 	return (fd);
 }
 
@@ -1267,7 +1269,8 @@ AG_FileDlgNewCompactMRU(void *parent, const char *mruKey, const char *label,
 	AG_FileDlg *fd;
 
 	fd = AG_FileDlgNew(parent, (flags | AG_FILEDLG_COMPACT));
-	AG_LabelTextS(fd->textbox->lbl, label);
+	if (label)
+		AG_TextboxSetLabelS(fd->textbox, label);
 
 	if (AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, path, sizeof(path))
 	    < sizeof(path)) {

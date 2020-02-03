@@ -1214,22 +1214,20 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Editable *ed = obj;
 	AG_Rect r;
-	int w = a->w;
-	int h = a->h;
 
-	if (w < 2 || h < 2) {
+	if (a->w < 2 || a->h < 2) {
 		return (-1);
 	}
-	ed->yVis = h / ed->lineSkip;
+	ed->yVis = a->h / ed->lineSkip;
 	ed->r.x = -1;
 	ed->r.y = -1;
-	ed->r.w = w-1;
-	ed->r.h = h-1;
+	ed->r.w = a->w - 1;
+	ed->r.h = a->h - 1;
 
 	r.x = 0;
 	r.y = 0;
-	r.w = w;
-	r.h = h;
+	r.w = a->w;
+	r.h = a->h;
 	AG_SetStockCursor(ed, &ed->ca, &r, AG_TEXT_CURSOR);
 	return (0);
 }
@@ -2134,7 +2132,7 @@ AG_EditableCatStringS(AG_Editable *ed, const char *s)
 			free(ucs);
 			goto fail;
 		}
-		memcpy(&buf->s[buf->len], ucs, ucsLen * sizeof(AG_Char));
+		memcpy(&buf->s[buf->len], ucs, ucsLen*sizeof(AG_Char));
 		buf->len += ucsLen;
 		ed->pos += ucsLen;
 		CommitBuffer(ed, buf);

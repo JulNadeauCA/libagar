@@ -204,7 +204,6 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Label *lbl = obj;
-	const AG_Font *font = WFONT(lbl);
 	
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
@@ -215,7 +214,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 			AG_TextSize(lbl->fmt->s, &r->w, &r->h);
 		} else {
 			r->w =  lbl->wPre;
-			r->h = (lbl->hPre * font->lineskip);
+			r->h = (lbl->hPre * WFONT(lbl)->lineskip);
 		}
 		break;
 	}

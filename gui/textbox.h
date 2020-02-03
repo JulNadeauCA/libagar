@@ -12,10 +12,7 @@
 
 typedef struct ag_textbox {
 	struct ag_widget _inherit;        /* AG_Widget -> AG_Textbox */
-
 	struct ag_editable *_Nonnull ed;  /* Input field */
-	AG_Label *_Nullable lbl;          /* Optional text label */
-
 	Uint flags;
 #define AG_TEXTBOX_MULTILINE     0x000001 /* Enable multiline edition */
 #define AG_TEXTBOX_UPPERCASE     0x000002 /* Render in uppercase */
@@ -41,12 +38,14 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_MULTILINGUAL	 0x100000 /* Enable multilingual edition */
 #define AG_TEXTBOX_NO_SHADING    0x200000 /* Disable shading around field */
 
-	Uint32 _pad;
-	AG_Scrollbar *_Nullable hBar;	/* Horizontal bar (for MULTILINE) */
-	AG_Scrollbar *_Nullable vBar;	/* Vertical bar (for MULTILINE) */
-	AG_Rect r;			/* View area */
-	char *text;			/* Default (built-in) buffer */
-	AG_Button *_Nullable btnRet;	/* Optional RETURN button */
+	int surfaceLbl;                   /* Rendered label surface (or -1) */
+        char *_Nullable label;            /* Text label (optional) */
+
+	AG_Scrollbar *_Nullable hBar;   /* Horizontal bar (for MULTILINE) */
+	AG_Scrollbar *_Nullable vBar;   /* Vertical bar (for MULTILINE) */
+	AG_Rect r;                      /* Editable area */
+	char *text;                     /* Default (built-in) buffer */
+	AG_Button *_Nullable btnRet;    /* Optional RETURN button */
 } AG_Textbox;
 
 #define AGTEXTBOX(obj)            ((AG_Textbox *)(obj))

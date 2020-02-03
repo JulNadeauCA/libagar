@@ -443,7 +443,7 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_Box *hBox;
 
 		hBox = AG_BoxNewHoriz(nt, AG_BOX_HFILL);
-		tb = AG_TextboxNewS(hBox, AG_TEXTBOX_HFILL | AG_TEXTBOX_EXCL |
+		tb = AG_TextboxNewS(hBox, AG_TEXTBOX_HFILL |
 		                          AG_TEXTBOX_RETURN_BUTTON, "+ ");
 		AG_TextboxSizeHint(tb, "<XXXXXXXXXXX>: <XXXXXXXXXXX>");
 		AG_TextboxAutocomplete(tb, CompleteAttribute, NULL);

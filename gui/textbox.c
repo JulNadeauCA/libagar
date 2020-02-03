@@ -121,7 +121,7 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 
 	tb->flags |= flags;
 	if (label != NULL) {
-		tb->lbl = AG_LabelNewS(tb, 0, label);
+		tb->label = TryStrdup(label);
 	}
 	AG_ObjectAttach(parent, tb);
 	return (tb);
@@ -354,8 +354,15 @@ Draw(void *_Nonnull p)
 			AG_DrawBoxSunk(tb, &tb->r, &WCOLOR(tb, BG_COLOR));
 		}
 	}
-
-	if (tb->lbl) { AG_WidgetDraw(tb->lbl); }
+	if (tb->label != NULL && tb->label[0] != '\0') {
+		if (tb->surfaceLbl == -1) {
+			tb->surfaceLbl = AG_WidgetMapSurface(tb,
+			    AG_TextRender(tb->label));
+		}
+		AG_WidgetBlitSurface(tb, tb->surfaceLbl,
+		    WIDGET(tb)->paddingLeft,
+		    WIDGET(tb)->paddingTop);
+	}
 
 	AG_WidgetDraw(tb->ed);
 
@@ -368,19 +375,26 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Textbox *tb = obj;
-	AG_SizeReq rEd, rLbl;
-	const AG_Font *font = WFONT(tb);
-
-	AG_WidgetSizeReq(tb->ed, &rEd);
+	AG_SizeReq rEd;
 
 	r->w = WIDGET(tb)->paddingLeft + WIDGET(tb)->paddingRight;
-	r->h = WIDGET(tb)->paddingTop + rEd.h + WIDGET(tb)->paddingBottom;
+	r->h = WIDGET(tb)->paddingTop + WIDGET(tb)->paddingBottom;
 
-	if (tb->lbl) {
-		AG_WidgetSizeReq(tb->lbl, &rLbl);
-		r->w += WIDGET(tb)->spacingHoriz + rLbl.w;
+	AG_WidgetSizeReq(tb->ed, &rEd);                   /* Editable field */
+	r->w += rEd.w;
+	r->h += rEd.h;
+
+	if (tb->label != NULL && tb->label[0] != '\0') {
+		if (tb->surfaceLbl == -1) {
+			tb->surfaceLbl = AG_WidgetMapSurface(tb,
+			    AG_TextRender(tb->label));
+		}
+		r->w += WIDGET(tb)->spacingHoriz;
+		r->w += WSURFACE(tb,tb->surfaceLbl)->w;
+		r->h = MAX(r->h, WSURFACE(tb,tb->surfaceLbl)->h);
+	} else {
+		r->h = MAX(r->h, WFONT(tb)->lineskip);
 	}
-	r->h = MAX(r->h, font->lineskip);
 }
 
 static int
@@ -388,21 +402,22 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Textbox *tb = obj;
 	AG_Editable *ed = tb->ed;
-	int wBar=0, hBar=0, wBarSz=0, hBarSz=0, wBtn;
-	AG_SizeAlloc aLbl, aEd, aSb, aBtn;
+	int wBar=0, hBar=0, wBarSz=0, hBarSz=0, wBtn, wLbl;
+	AG_SizeAlloc aEd, aSb, aBtn;
 	AG_SizeReq r;
 
 	if (a->w < WIDGET(tb)->paddingLeft + WIDGET(tb)->paddingRight ||
-	   (a->h < WIDGET(tb)->paddingTop + WIDGET(tb)->paddingBottom))
+	   (a->h < WIDGET(tb)->paddingTop  + WIDGET(tb)->paddingBottom))
 		return (-1);
 
-	if (tb->lbl) {
-		AG_WidgetSizeReq(tb->lbl, &r);
-		aLbl.x = WIDGET(tb)->paddingLeft;
-		aLbl.y = WIDGET(tb)->paddingTop;
-		aLbl.w = MIN(r.w, a->w);
-		aLbl.h = MIN(r.h, a->h);
-		AG_WidgetSizeAlloc(tb->lbl, &aLbl);
+	if (tb->label) {
+		if (tb->surfaceLbl == -1) {
+			tb->surfaceLbl = AG_WidgetMapSurface(tb,
+			    AG_TextRender(tb->label));
+		}
+		wLbl = WSURFACE(tb,tb->surfaceLbl)->w;
+	} else {
+		wLbl = 0;
 	}
 
 	if (tb->flags & AG_TEXTBOX_MULTILINE) {
@@ -434,7 +449,10 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		tb->r.w = a->w;
 		tb->r.h = a->h;
 	} else {
-		tb->r.x = (tb->lbl) ? (WIDTH(tb->lbl) + WIDGET(tb)->spacingHoriz) : 0;
+		tb->r.x = WIDGET(tb)->paddingLeft;
+		if (tb->label) {
+			tb->r.x += wLbl + WIDGET(tb)->spacingHoriz;
+		}
 		tb->r.y = 0;
 		tb->r.w = a->w - tb->r.x;
 		tb->r.h = a->h;
@@ -447,17 +465,18 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		wBtn = 0;
 	}
 
-	aEd.x = WIDGET(tb)->paddingLeft +
-	        ((tb->lbl) ? (WIDTH(tb->lbl) + WIDGET(tb)->spacingHoriz) : 0);
+	aEd.x = WIDGET(tb)->paddingLeft;
+	if (tb->label) {
+		aEd.x += wLbl + WIDGET(tb)->spacingHoriz;
+	}
 	aEd.y = WIDGET(tb)->paddingTop;
-	aEd.w = a->w - aEd.x - wBtn - wBar - WIDGET(tb)->paddingLeft -
-		WIDGET(tb)->paddingRight;
+	aEd.w = a->w - aEd.x - wBtn - wBar - WIDGET(tb)->paddingRight;
 	if (tb->btnRet) {
 		aEd.w -= WIDGET(tb)->spacingHoriz;
 	}
-
 	aEd.h = a->h - hBar - WIDGET(tb)->paddingTop -
 	        WIDGET(tb)->paddingBottom;
+
 	AG_WidgetSizeAlloc(ed, &aEd);
 
 	if (tb->btnRet) {
@@ -482,14 +501,18 @@ void
 AG_TextboxSetLabel(AG_Textbox *tb, const char *fmt, ...)
 {
 	va_list ap;
-	char *s;
 
+	AG_ObjectLock(tb);
+	if (tb->surfaceLbl != -1) {
+		AG_WidgetUnmapSurface(tb, tb->surfaceLbl);
+		tb->surfaceLbl = -1;
+	}
+	Free(tb->label);
 	va_start(ap, fmt);
-	Vasprintf(&s, fmt, ap);
+	Vasprintf(&tb->label, fmt, ap);
 	va_end(ap);
-
-	AG_TextboxSetLabelS(tb, s);
-	free(s);
+	AG_ObjectUnlock(tb);
+	AG_Redraw(tb);
 }
 
 /* Set the textbox label (C string). */
@@ -497,12 +520,14 @@ void
 AG_TextboxSetLabelS(AG_Textbox *tb, const char *s)
 {
 	AG_ObjectLock(tb);
-	if (tb->lbl) {
-		AG_LabelTextS(tb->lbl, s);
-	} else {
-		tb->lbl = AG_LabelNewS(tb, 0, s);
+	if (tb->surfaceLbl != -1) {
+		AG_WidgetUnmapSurface(tb, tb->surfaceLbl);
+		tb->surfaceLbl = -1;
 	}
+	Free(tb->label);
+	tb->label = TryStrdup(s);
 	AG_ObjectUnlock(tb);
+	AG_Redraw(tb);
 }
 
 /* Set the text from a format string. */
@@ -510,14 +535,18 @@ void
 AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
 {
 	va_list ap;
-	char *s;
 
+	AG_ObjectLock(tb);
+	if (tb->surfaceLbl != -1) {
+		AG_WidgetUnmapSurface(tb, tb->surfaceLbl);
+		tb->surfaceLbl = -1;
+	}
+	Free(tb->label);
 	va_start(ap, fmt);
-	Vasprintf(&s, fmt, ap);
+	Vasprintf(&tb->label, fmt, ap);
 	va_end(ap);
-
-	AG_EditableSetString(tb->ed, s);
-	free(s);
+	AG_ObjectUnlock(tb);
+	AG_Redraw(tb);
 }
 
 /*
@@ -608,6 +637,17 @@ EditableReturn(AG_Event *_Nonnull event)
 }
 
 static void
+OnFontChange(AG_Event *_Nonnull event)
+{
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
+
+	if (tb->surfaceLbl != -1) {
+		AG_WidgetUnmapSurface(tb, tb->surfaceLbl);
+		tb->surfaceLbl = -1;
+	}
+}
+
+static void
 Init(void *_Nonnull obj)
 {
 	AG_Textbox *tb = obj;
@@ -616,9 +656,9 @@ Init(void *_Nonnull obj)
 			     AG_WIDGET_USE_MOUSEOVER;
 
 	tb->ed = AG_EditableNew(tb, 0);
-	tb->lbl = NULL;
-
 	tb->flags = 0;
+	tb->surfaceLbl = -1;
+	tb->label = NULL;
 	tb->hBar = NULL;
 	tb->vBar = NULL;
 	tb->r.x = 0;
@@ -631,6 +671,8 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(tb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tb, "widget-disabled", Disabled, NULL);
 	AG_SetEvent(tb, "widget-enabled", Enabled, NULL);
+	AG_AddEvent(tb, "font-changed", OnFontChange, NULL);
+
 	AG_SetEvent(tb->ed, "editable-prechg", EditablePreChg, "%p", tb);
 	AG_SetEvent(tb->ed, "editable-postchg", EditablePostChg, "%p", tb);
 	AG_SetEvent(tb->ed, "editable-return", EditableReturn, "%p", tb);

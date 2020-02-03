@@ -545,70 +545,62 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Numerical *num = obj;
-	AG_SizeReq rChld, rInc, rDec;
+	AG_SizeReq rInput, rInc, rDec;
 
-	AG_WidgetSizeReq(num->input, &rChld);
-	r->w = rChld.w + num->wUnitSel + 4;
-	r->h = MAX(rChld.h, num->hUnitSel);
-
+	AG_WidgetSizeReq(num->input, &rInput);
 	AG_WidgetSizeReq(num->incbu, &rInc);
-	r->h = MAX(r->h, rInc.h);
 	AG_WidgetSizeReq(num->decbu, &rDec);
-	r->h = MAX(r->h, rDec.h);
 
-	r->w += MAX(rInc.w, rDec.w) + 4;
+	r->w = WIDGET(num)->paddingLeft + rInput.w + num->wUnitSel +
+	       WIDGET(num)->spacingHoriz + MAX(rInc.w,rDec.w) +
+	       WIDGET(num)->paddingRight;
+
+	r->h = WIDGET(num)->paddingTop + MAX(rInput.h, num->hUnitSel) +
+	       WIDGET(num)->paddingBottom;
 }
 
 static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Numerical *num = obj;
-	AG_SizeAlloc aChld;
-	const int spacing = 4;
+	AG_SizeAlloc ac;
+	const int spacing = WIDGET(num)->spacingHoriz;
+	const int spacing2 = (spacing << 1);
 	const int wBtn = a->h >> 1;
-	int wUnitSel = num->wUnitSel + 4;
-	int hUnitSel = num->hUnitSel;
-
-	if (a->h < 4 || a->w < wBtn+spacing)
-		return (-1);
+	int wUnitSel, hUnitSel;
 
 	if (num->units) {
-		if (wUnitSel > a->w - wBtn-spacing) {
-			wUnitSel = a->w - wBtn-spacing;
-		}
-		if (hUnitSel > a->h) {
-			hUnitSel = a->h;
-		}
+		wUnitSel = MIN(num->wUnitSel, a->w - wBtn - spacing2);
+		hUnitSel = MIN(num->hUnitSel, a->h);
 	} else {
 		wUnitSel = 0;
 		hUnitSel = 0;
 	}
+	if (a->h < 4 || a->w < wBtn + wUnitSel + spacing2)
+		return (-1);
 
-	/* Size input textbox */
-	aChld.x = 0;
-	aChld.y = 0;
-	aChld.w = a->w - wUnitSel - wBtn - spacing;
-	aChld.h = a->h;
-	AG_WidgetSizeAlloc(num->input, &aChld);
-	aChld.x += aChld.w + 2;
+	ac.x = 0;                                          /* Input textbox */
+	ac.y = 0;
+	ac.w = a->w - wUnitSel - spacing - (num->units ? spacing : 0) - wBtn;
+	ac.h = a->h;
+	AG_WidgetSizeAlloc(num->input, &ac);
+	ac.x += ac.w;
 
-	/* Size unit selector */
-	if (num->units) {
-		aChld.w = wUnitSel;
-		aChld.h = a->h;
-		AG_WidgetSizeAlloc(num->units, &aChld);
-		aChld.x += aChld.w + 2;
+	if (num->units) {                                  /* Unit selector */
+		ac.w = wUnitSel;
+		ac.h = a->h;
+		AG_WidgetSizeAlloc(num->units, &ac);
+		ac.x += ac.w + spacing;
 	}
 
-	/* Size increment buttons */
-	aChld.w = wBtn;
-	aChld.h = wBtn;
-	AG_WidgetSizeAlloc(num->incbu, &aChld);
-	aChld.y += aChld.h;
-	if ((aChld.h << 1) < a->h) {
-		aChld.h++;
+	ac.w = wBtn;                         /* Increment/decrement buttons */
+	ac.h = wBtn;
+	AG_WidgetSizeAlloc(num->incbu, &ac);
+	ac.y += ac.h;
+	if ((ac.h << 1) < a->h) {
+		ac.h++;
 	}
-	AG_WidgetSizeAlloc(num->decbu, &aChld);
+	AG_WidgetSizeAlloc(num->decbu, &ac);
 	return (0);
 }
 
