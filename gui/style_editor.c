@@ -63,20 +63,14 @@ static AG_Box    *_Nullable agStyleEditorBox = NULL;
 static int agStyleEditorCapture = 0;
 
 static void
-FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
+FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth,
+    int checkedFocused)
 {
 	char text[AG_TLIST_LABEL_MAX];
 	AG_TlistItem *it;
 	AG_Widget *widChld;
 
 	Strlcpy(text, OBJECT(wid)->name, sizeof(text));
-	if (AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
-		AG_Window *win = (AG_Window *)wid;
-
-		Strlcat(text, " (\"", sizeof(text));
-		Strlcat(text, win->caption, sizeof(text));
-		Strlcat(text, "\")", sizeof(text));
-	}
 	it = AG_TlistAddPtr(tl, NULL, text, wid);
 	it->depth = depth;
 	it->cat = "widget";
@@ -84,16 +78,25 @@ FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
 	
 	if (!TAILQ_EMPTY(&OBJECT(wid)->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
+	} else {
+		if (!checkedFocused) {
+			if (wid->flags & AG_WIDGET_FOCUSED) {
+				AG_TlistSelect(tl, it);
+				AG_SetBool(tl, "checked-focused", 1);
+				checkedFocused = 1;
+			}
+		}
 	}
 	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
 	    AG_TlistVisibleChildren(tl, it)) {
 		OBJECT_FOREACH_CHILD(widChld, wid, ag_widget)
-			FindWidgets(widChld, tl, depth+1);
+			FindWidgets(widChld, tl, depth+1, checkedFocused);
 	}
 }
 
 static void
-FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
+FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth,
+    int checkedFocused)
 {
 	const char *name = OBJECT(win)->name;
 	AG_Window *wSub;
@@ -123,9 +126,10 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
 	    AG_TlistVisibleChildren(tl, it)) {
 		TAILQ_FOREACH(wSub, &win->pvt.subwins, pvt.swins)
-			FindWindows(tl, wSub, depth+1);
+			FindWindows(tl, wSub, depth+1, checkedFocused);
+
 		OBJECT_FOREACH_CHILD(wChild, win, ag_widget)
-			FindWidgets(wChild, tl, depth+1);
+			FindWidgets(wChild, tl, depth+1, checkedFocused);
 	}
 }
 
@@ -142,11 +146,12 @@ PollWidgets(AG_Event *_Nonnull event)
 	AG_Tlist *tl = AG_TLIST_SELF();
 	const AG_Window *tgt = agStyleEditorTgtWindow;
 	AG_Driver *drv;
+	const int checkedFocused = AG_Defined(tl, "checked-focused");
 	
 	AG_TlistBegin(tl);
 
 	if (tgt != NULL && AG_OBJECT_VALID(tgt)) {
-		FindWindows(tl, tgt, 0);
+		FindWindows(tl, tgt, 0, checkedFocused);
 	} else {
 		TargetRoot();
 		AG_LockVFS(&agDrivers);
@@ -155,7 +160,7 @@ PollWidgets(AG_Event *_Nonnull event)
 				if (tgt == agStyleEditorWindow) {
 					continue;
 				}
-				FindWindows(tl, tgt, 0);
+				FindWindows(tl, tgt, 0, checkedFocused);
 			}
 		}
 		AG_UnlockVFS(&agDrivers);
