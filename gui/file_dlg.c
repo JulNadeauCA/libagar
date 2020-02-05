@@ -347,6 +347,8 @@ RefreshListing(AG_FileDlg *_Nonnull fd)
 	free(files);
 	AG_TlistRestore(fd->tlDirs);
 	AG_TlistRestore(fd->tlFiles);
+
+	AG_TlistScrollToStart(fd->tlFiles);
 	
 	AG_ObjectUnlock(fd->tlFiles);
 	AG_ObjectUnlock(fd->tlDirs);
