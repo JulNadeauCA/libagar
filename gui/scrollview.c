@@ -435,8 +435,14 @@ Draw(void *_Nonnull p)
 #endif
 	pfBox[sv->style](sv, &r, &WCOLOR(sv, BG_COLOR));
 
-	if (sv->hbar) { AG_WidgetDraw(sv->hbar); }
-	if (sv->vbar) { AG_WidgetDraw(sv->vbar); }
+	if (sv->hbar) {
+		AG_WidgetDraw(sv->hbar);
+		r.h -= HEIGHT(sv->hbar);
+	}
+	if (sv->vbar) {
+		AG_WidgetDraw(sv->vbar);
+		r.w -= WIDTH(sv->vbar);
+	}
 
 	x2 = WIDGET(sv)->rView.x2 - sv->wBar;
 	y2 = WIDGET(sv)->rView.y2 - sv->hBar;
