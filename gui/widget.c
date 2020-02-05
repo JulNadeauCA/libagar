@@ -68,20 +68,8 @@ const char *agStyleAttributes[] = {
 	 * Box Model
 	 */
 	"margin",           /* Margin (between border & outer bounding box) */
-	"margin-top",         /* above border */
-	"margin-bottom",      /* below border */
-	"margin-left",        /* at left of border */
-	"margin-right",       /* at right of border */
 	"border",           /* Border (px between padding & margin) */
-	"border-top",         /* above padding */
-	"border-bottom",      /* below padding */
-	"border-left",        /* at left of padding */
-	"border-right",       /* at right of padding */
 	"padding",          /* Padding (px between content & border) */
-	"padding-top",        /* above content */
-	"padding-bottom",     /* below content */
-	"padding-left",       /* at left of content */
-	"padding-right",      /* at right of content */
 	/*
 	 * Containers
 	 */
@@ -216,6 +204,7 @@ static void Apply_Font_Weight(Uint *_Nonnull, Uint, const char *_Nonnull);
 static void Apply_Font_Style(Uint *_Nonnull, Uint, const char *_Nonnull);
 static void Apply_Font_Stretch(Uint *_Nonnull, Uint, const char *_Nonnull);
 static void Apply_Padding(AG_Widget *_Nonnull, const char *_Nonnull);
+static void Inherit_Padding(AG_Widget *_Nonnull, char *_Nonnull, AG_Size);
 static void Apply_Margin(AG_Widget *_Nonnull, const char *_Nonnull);
 static void Apply_Spacing(AG_Widget *_Nonnull, const char *_Nonnull);
 
@@ -2301,7 +2290,11 @@ Apply_Padding(AG_Widget *wid, const char *spec)
 {
 	char buf[16], *s=&buf[0], *sTop, *sRight;
 
-	Strlcpy(buf, spec, sizeof(buf));
+	if (Strcasecmp(spec, "inherit") == 0) {
+		Inherit_Padding(OBJECT(wid)->parent, buf, sizeof(buf));
+	} else {
+		Strlcpy(buf, spec, sizeof(buf));
+	}
 
 	if ((sTop = Strsep(&s, " ")) == NULL)
 		return;
@@ -2321,6 +2314,17 @@ Apply_Padding(AG_Widget *wid, const char *spec)
 		wid->paddingRight  = atoi(sRight);
 		wid->paddingBottom = (sBottom) ? atoi(sBottom) : 0;
 		wid->paddingLeft   = (sLeft)   ? atoi(sTop)    : 0;
+	}
+}
+
+static void
+Inherit_Padding(AG_Widget *wid, char *buf, AG_Size bufSize)
+{
+	if (AG_Defined(wid, "padding")) {
+		AG_GetString(wid, "padding", buf, sizeof(buf));
+
+		if (Strcasecmp(buf, "inherit") == 0)
+			Inherit_Padding(OBJECT(wid)->parent, buf, sizeof(buf));
 	}
 }
 

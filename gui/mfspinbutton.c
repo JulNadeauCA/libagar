@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -346,8 +346,7 @@ static void
 Init(void *obj)
 {
 	AG_MFSpinbutton *fsu = obj;
-	AG_Button *b[4];
-	int i;
+	const Uint btnFlags = AG_BUTTON_NO_FOCUS | AG_BUTTON_REPEAT;
 
 	WIDGET(fsu)->flags |= AG_WIDGET_FOCUSABLE;
 
@@ -365,18 +364,14 @@ Init(void *obj)
 	fsu->unit = AG_FindUnit("identity");
 	fsu->units = NULL;
 
-	fsu->xincbu = b[0] = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("+"));
-	fsu->xdecbu = b[1] = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("-"));
-	fsu->yincbu = b[2] = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("+"));
-	fsu->ydecbu = b[3] = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("-"));
-	AG_SetEvent(fsu->xincbu, "button-pushed", Increment, "%p,%s", fsu, "xvalue", +1);
-	AG_SetEvent(fsu->xdecbu, "button-pushed", Increment, "%p,%s", fsu, "xvalue", -1);
-	AG_SetEvent(fsu->yincbu, "button-pushed", Increment, "%p,%s", fsu, "yvalue", +1);
-	AG_SetEvent(fsu->ydecbu, "button-pushed", Increment, "%p,%s", fsu, "yvalue", -1);
-	for (i = 0; i < 4; i++) {
-		AG_SetStyle(b[i], "padding", "0");
-		AG_WidgetSetFocusable(b[i], 0);
-	}
+	fsu->xincbu = AG_ButtonNewS(fsu, btnFlags, _("+"));
+	fsu->xdecbu = AG_ButtonNewS(fsu, btnFlags, _("-"));
+	fsu->yincbu = AG_ButtonNewS(fsu, btnFlags, _("+"));
+	fsu->ydecbu = AG_ButtonNewS(fsu, btnFlags, _("-"));
+	AG_SetEvent(fsu->xincbu, "button-pushed", Increment, "%p,%s,%i", fsu, "xvalue", +1);
+	AG_SetEvent(fsu->xdecbu, "button-pushed", Increment, "%p,%s,%i", fsu, "xvalue", -1);
+	AG_SetEvent(fsu->yincbu, "button-pushed", Increment, "%p,%s,%i", fsu, "yvalue", +1);
+	AG_SetEvent(fsu->ydecbu, "button-pushed", Increment, "%p,%s,%i", fsu, "yvalue", -1);
 
 	AG_InitTimer(&fsu->updateTo, "update", 0);
 
@@ -412,24 +407,24 @@ static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_MFSpinbutton *fsu = obj;
-	int szBtn = a->h/2;
-	int wUnitBox = (fsu->units != NULL) ? 25 : 0;
+	const int wBtn = (a->h >> 1);
+	const int wBtn_2 = (wBtn >> 1);
+	const int wBtn3 = (wBtn * 3);
+	const int wUnitBox = (fsu->units) ? 30 : 0; /* XXX */
 	int x = 0, y = 0;
 	AG_SizeAlloc aChld;
 
-	if (a->w < szBtn*3 + wUnitBox + 4)
+	if (a->w < wBtn3+wUnitBox+4)
 		return (-1);
 
-	/* Input textbox */
-	aChld.x = x;
+	aChld.x = x;                                       /* Input textbox */
 	aChld.y = y;
-	aChld.w = a->w - 2 - wUnitBox - 2 - szBtn*3;
+	aChld.w = a->w - 2 - wUnitBox - 2 - wBtn3;
 	aChld.h = a->h;
 	AG_WidgetSizeAlloc(fsu->input, &aChld);
 	x += aChld.w + 2;
 
-	/* Unit selector */
-	if (fsu->units != NULL) {
+	if (fsu->units != NULL) {                          /* Unit selector */
 		aChld.x = x;
 		aChld.y = y;
 		aChld.w = wUnitBox;
@@ -438,20 +433,19 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		x += aChld.w + 2;
 	}
 	
-	/* Increment buttons */
-	aChld.w = szBtn;
-	aChld.h = szBtn;
+	aChld.w = wBtn;                               /* Button arrangement */
+	aChld.h = wBtn;
 	aChld.x = x;
-	aChld.y = y + szBtn/2;
+	aChld.y = y + wBtn_2;
 	AG_WidgetSizeAlloc(fsu->xdecbu, &aChld);
-	aChld.x = x + szBtn*2;
-	aChld.y = y + szBtn/2;
+	aChld.x = x + (wBtn << 1);
+	aChld.y = y + wBtn_2;
 	AG_WidgetSizeAlloc(fsu->xincbu, &aChld);
-	aChld.x = x + szBtn;
+	aChld.x = x + wBtn;
 	aChld.y = y;
 	AG_WidgetSizeAlloc(fsu->ydecbu, &aChld);
-	aChld.x = x + szBtn;
-	aChld.y = y + szBtn;
+	aChld.x = x + wBtn;
+	aChld.y = y + wBtn;
 	AG_WidgetSizeAlloc(fsu->yincbu, &aChld);
 	return (0);
 }

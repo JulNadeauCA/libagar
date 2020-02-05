@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -262,9 +262,9 @@ Init(void *_Nonnull obj)
 	com->flags = 0;
 	
 	com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO | AG_TEXTBOX_EXCL, NULL);
-	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY, _(" ... "));
-	AG_SetStyle(com->button, "padding", "0");
-	AG_WidgetSetFocusable(com->button, 0);
+	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY | AG_BUTTON_NO_FOCUS,
+	                            _(" ... "));
+	AG_SetStyle(com->button, "padding", "2");
 
 	com->list = Malloc(sizeof(AG_Tlist));
 	AG_ObjectInit(com->list, &agTlistClass);
@@ -282,6 +282,8 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(com->tbox, "textbox-return", Return, "%p", com);
 
 	AG_WidgetForwardFocus(com, com->tbox);
+
+	AG_SetString(com->tbox, "padding", "inherit");
 }
 
 void
@@ -334,9 +336,9 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_WidgetSizeReq(com->tbox, &rChld);
 	r->w = rChld.w;
 	r->h = rChld.h;
+
 	AG_WidgetSizeReq(com->button, &rChld);
-	r->w += rChld.w;
-	if (r->h < rChld.h) { r->h = rChld.h; }
+	r->w += WIDGET(com)->spacingHoriz + rChld.w;
 }
 
 static int
@@ -350,12 +352,13 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	if (a->w < rBtn.w) {
 		return (-1);
 	}
-	aChld.x = 0;
+	aChld.x = 0;                                       /* Input textbox */
 	aChld.y = 0;
 	aChld.w = a->w - rBtn.w - 1;
 	aChld.h = a->h;
 	AG_WidgetSizeAlloc(com->tbox, &aChld);
-	aChld.x = aChld.w + 1;
+
+	aChld.x = aChld.w + 1;                              /* [...] button */
 	aChld.w = rBtn.w;
 	AG_WidgetSizeAlloc(com->button, &aChld);
 	return (0);

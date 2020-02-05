@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -423,7 +423,7 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	AG_UComboSizeHintPixels(num->units, num->wPreUnit,
 	    nUnits<6 ? (nUnits + 1) : 6);
 	
-	AG_WidgetUpdate(num);
+	WIDGET(num)->flags |= AG_WIDGET_UPDATE_WINDOW;
 	AG_ObjectUnlock(num);
 	return (0);
 }
@@ -492,6 +492,7 @@ static void
 Init(void *_Nonnull obj)
 {
 	AG_Numerical *num = obj;
+	const Uint btnFlags = AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS;
 
 	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE;
 
@@ -505,16 +506,13 @@ Init(void *_Nonnull obj)
 	num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
 	AG_TextboxBindASCII(num->input, num->inTxt, sizeof(num->inTxt));
 	AG_TextboxSizeHint(num->input, "8888.88");
+	AG_SetStyle(num->input, "padding", "inherit");
 
-	/* Increment (+) button */
-	num->incbu = AG_ButtonNewS(num, AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS,
-	                           _("+"));
+	num->incbu = AG_ButtonNewS(num, btnFlags, _("+"));     /* Increment */
 	AG_SetStyle(num->incbu, "padding", "0");
 	AG_SetStyle(num->incbu, "font-size", "80%");
 
-	/* Decrement (-) button */
-	num->decbu = AG_ButtonNewS(num, AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS,
-	                           _("-"));
+	num->decbu = AG_ButtonNewS(num, btnFlags, _("-"));     /* Decrement */
 	AG_SetStyle(num->decbu, "padding", "0");
 	AG_SetStyle(num->decbu, "font-size", "80%");
 
@@ -524,8 +522,10 @@ Init(void *_Nonnull obj)
 
 	AG_AddEvent(num, "widget-shown", OnShow, NULL);
 	AG_SetEvent(num, "key-down", KeyDown, NULL);
+
 	AG_SetEvent(num->incbu, "button-pushed", ButtonIncrement, "%p,%i", num, 0);
 	AG_SetEvent(num->decbu, "button-pushed", ButtonIncrement, "%p,%i", num, 1);
+
 	AG_SetEvent(num->input, "textbox-return",  UpdateFromText, "%p,%i", num, 1);
 	AG_SetEvent(num->input, "textbox-changed", UpdateFromText, "%p,%i", num, 0);
 	AG_AddEvent(num->input->ed, "key-down", InputKeyDown, "%p", num);
@@ -551,12 +551,10 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_WidgetSizeReq(num->incbu, &rInc);
 	AG_WidgetSizeReq(num->decbu, &rDec);
 
-	r->w = WIDGET(num)->paddingLeft + rInput.w + num->wUnitSel +
-	       WIDGET(num)->spacingHoriz + MAX(rInc.w,rDec.w) +
-	       WIDGET(num)->paddingRight;
+	r->w = rInput.w + num->wUnitSel + WIDGET(num)->spacingHoriz +
+	       MAX(rInc.w,rDec.w);
 
-	r->h = WIDGET(num)->paddingTop + MAX(rInput.h, num->hUnitSel) +
-	       WIDGET(num)->paddingBottom;
+	r->h = MAX(rInput.h, num->hUnitSel);
 }
 
 static int
@@ -564,24 +562,24 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Numerical *num = obj;
 	AG_SizeAlloc ac;
-	const int spacing = WIDGET(num)->spacingHoriz;
-	const int spacing2 = (spacing << 1);
 	const int wBtn = a->h >> 1;
-	int wUnitSel, hUnitSel;
+	int wUnitSel, hUnitSel, spacing;
 
 	if (num->units) {
-		wUnitSel = MIN(num->wUnitSel, a->w - wBtn - spacing2);
+		spacing = WIDGET(num)->spacingHoriz;
+		wUnitSel = MIN(num->wUnitSel, a->w - wBtn - spacing);
 		hUnitSel = MIN(num->hUnitSel, a->h);
 	} else {
+		spacing = 0;
 		wUnitSel = 0;
 		hUnitSel = 0;
 	}
-	if (a->h < 4 || a->w < wBtn + wUnitSel + spacing2)
+	if (a->h < 4 || a->w < wBtn + wUnitSel + spacing)
 		return (-1);
 
 	ac.x = 0;                                          /* Input textbox */
 	ac.y = 0;
-	ac.w = a->w - wUnitSel - spacing - (num->units ? spacing : 0) - wBtn;
+	ac.w = a->w - wUnitSel - spacing - wBtn;
 	ac.h = a->h;
 	AG_WidgetSizeAlloc(num->input, &ac);
 	ac.x += ac.w;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -178,8 +178,7 @@ static void
 Init(void *obj)
 {
 	AG_MSpinbutton *sbu = obj;
-	AG_Button *b[4];
-	int i;
+	const Uint btnFlags = AG_BUTTON_NO_FOCUS | AG_BUTTON_REPEAT;
 
 	sbu->xvalue = 0;
 	sbu->yvalue = 0;
@@ -201,22 +200,18 @@ Init(void *obj)
 	AG_SetEvent(sbu->input, "textbox-postchg", TextChanged, "%p", sbu);
 	AG_TextboxSizeHint(sbu->input, "8888 x 8888");
 
-	sbu->xdecbu = b[0] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
-	sbu->xincbu = b[1] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
-	sbu->ydecbu = b[2] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
-	sbu->yincbu = b[3] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
-	AG_SetEvent(sbu->xdecbu, "button-pushed", Increment, "%p%s%i", sbu, "xvalue", -1);
-	AG_SetEvent(sbu->xincbu, "button-pushed", Increment, "%p%s%i", sbu, "xvalue", +1);
-	AG_SetEvent(sbu->ydecbu, "button-pushed", Increment, "%p%s%i", sbu, "yvalue", -1);
-	AG_SetEvent(sbu->yincbu, "button-pushed", Increment, "%p%s%i", sbu, "yvalue", +1);
-
-	for (i = 0; i < 4; i++) {
-		AG_SetStyle(b[i], "padding", "0");
-		AG_WidgetSetFocusable(b[i], 0);
-	}
+	sbu->xdecbu = AG_ButtonNewS(sbu, btnFlags, _("-"));
+	sbu->xincbu = AG_ButtonNewS(sbu, btnFlags, _("+"));
+	sbu->ydecbu = AG_ButtonNewS(sbu, btnFlags, _("-"));
+	sbu->yincbu = AG_ButtonNewS(sbu, btnFlags, _("+"));
+	AG_SetEvent(sbu->xdecbu, "button-pushed", Increment, "%p,%s,%i", sbu, "xvalue", -1);
+	AG_SetEvent(sbu->xincbu, "button-pushed", Increment, "%p,%s,%i", sbu, "xvalue", +1);
+	AG_SetEvent(sbu->ydecbu, "button-pushed", Increment, "%p,%s,%i", sbu, "yvalue", -1);
+	AG_SetEvent(sbu->yincbu, "button-pushed", Increment, "%p,%s,%i", sbu, "yvalue", +1);
 
 	AG_SetEvent(sbu, "bound", Bound, NULL);
 	OBJECT(sbu)->flags |= AG_OBJECT_BOUND_EVENTS;
+
 	AG_SetEvent(sbu, "key-down", KeyDown, NULL);
 }
 
@@ -242,35 +237,35 @@ static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_MSpinbutton *fsu = obj;
-	int szBtn = a->h/2;
+	const int wBtn = (a->h >> 1);
+	const int wBtn_2 = (wBtn >> 1);
+	const int wBtn3 = (wBtn * 3);
 	int x = 0, y = 0;
 	AG_SizeAlloc aChld;
 
-	if (a->w < szBtn*3 + 4)
+	if (a->w < wBtn3 + 4)
 		return (-1);
 
-	/* Input textbox */
-	aChld.x = x;
+	aChld.x = x;                                       /* Input textbox */
 	aChld.y = y;
-	aChld.w = a->w - 4 - szBtn*3;
+	aChld.w = a->w - 4 - wBtn3;
 	aChld.h = a->h;
 	AG_WidgetSizeAlloc(fsu->input, &aChld);
 	x += aChld.w + 2;
 
-	/* Buttons */
-	aChld.w = szBtn;
-	aChld.h = szBtn;
+	aChld.w = wBtn;                                /* Button arrangement */
+	aChld.h = wBtn;
 	aChld.x = x;
-	aChld.y = y + szBtn/2;
+	aChld.y = y + wBtn_2;
 	AG_WidgetSizeAlloc(fsu->xdecbu, &aChld);
-	aChld.x = x + szBtn*2;
-	aChld.y = y + szBtn/2;
+	aChld.x = x + (wBtn << 1);
+	aChld.y = y + wBtn_2;
 	AG_WidgetSizeAlloc(fsu->xincbu, &aChld);
-	aChld.x = x + szBtn;
+	aChld.x = x + wBtn;
 	aChld.y = y;
 	AG_WidgetSizeAlloc(fsu->ydecbu, &aChld);
-	aChld.x = x + szBtn;
-	aChld.y = y + szBtn;
+	aChld.x = x + wBtn;
+	aChld.y = y + wBtn;
 	AG_WidgetSizeAlloc(fsu->yincbu, &aChld);
 
 	return (0);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -218,9 +218,9 @@ Init(void *_Nonnull obj)
 	com->wPreList = -1;
 	com->hPreList = -1;
 
-	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY, _("..."));
-	AG_SetStyle(com->button, "padding", "0");
-	AG_WidgetSetFocusable(com->button, 0);
+	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY | AG_BUTTON_NO_FOCUS,
+	                            _("..."));
+	AG_SetStyle(com->button, "padding", "1");
 	
 	com->list = Malloc(sizeof(AG_Tlist));
 	AG_ObjectInit(com->list, &agTlistClass);
@@ -269,8 +269,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_SizeReq rButton;
 
 	AG_WidgetSizeReq(com->button, &rButton);
-	r->w = rButton.w;
-	r->h = rButton.h;
+	r->w = WIDGET(com)->paddingLeft + rButton.w + WIDGET(com)->paddingRight;
+	r->h = WIDGET(com)->paddingTop + rButton.h + WIDGET(com)->paddingBottom;
 }
 
 static int

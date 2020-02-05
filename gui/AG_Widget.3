@@ -289,28 +289,6 @@ on a per-class basis in an
 .Xr AG_StyleSheet 3 .
 .El
 .Pp
-Style attributes include fonts, colors and spacing (margins and padding).
-Colors can be specified using any one of the representations:
-.Pp
-.Bl -tag -width "Real hue/saturation/value " -compact
-.It "8-bit Device RGB"
-"r,g,b[,a]" or "rgb(r,g,b[,a])"
-.It "16-bit Device RGB"
-"rgb16(r,g,b[,a])"
-.It "Real hue/saturation/value"
-"hsv(h,s,v[,a])"
-.It "16-bit hex"
-"#rgb[a]"
-.It "32-bit hex"
-"#rrggbb[aa]"
-.It "64-bit hex"
-"#rrrrggggbbbb[aaaa]"
-.It "Color identifier"
-"darkblue"
-.It "Color string (needs CMS)"
-"CIEXYZ:X/Y/Z"
-.El
-.Pp
 RGBA and HSV components may be expressed in "%" (in relation to the
 same color entry in the parent widget's palette).
 .Pp
@@ -328,9 +306,14 @@ same color entry in the parent widget's palette).
 The
 .Fn AG_SetStyle
 function sets the specified style attribute to the given value.
-Standard style attributes include:
+.Pp
+Style attributes include:
 .Pp
 .Bl -tag -compact -width "background-color "
+.It padding
+Pixels, "<Top Right Bottom Left>" or "inherit"
+.It spacing
+Pixels, "<Horizontal Vertical>" or "inherit"
 .It font-family
 "Courier", "DejaVu Sans", "my.bmp"
 .It font-size
@@ -339,6 +322,8 @@ Standard style attributes include:
 "normal", "semibold", "bold" or "!parent"
 .It font-style
 "normal", "italic", "upright-italic" or "!parent"
+.It font-stretch
+"normal", "condensed", "semi-condensed" or "!parent"
 .It color
 Foreground primary
 .It background-color
@@ -355,7 +340,7 @@ Shading (bottom and right)
 Selection primary
 .El
 .Pp
-An optional selector may be appended to the attribute names:
+Color attributes allow an optional state selector:
 .Pp
 .Bl -tag -compact -width "disabled "
 .It "(none)"
@@ -366,6 +351,25 @@ Disabled state (DISABLED is set).
 Focused state (FOCUSED is set).
 .It "#hover"
 Cursor is over the widget (MOUSEOVER is set).
+.El
+.Pp
+Color values can be specified using any one of the representations:
+.Pp
+.Bl -tag -width "Real hue/saturation/value " -compact
+.It "8-bit Device RGB"
+"r,g,b[,a]" or "rgb(r,g,b[,a])"
+.It "16-bit Device RGB"
+"rgb16(r,g,b[,a])"
+.It "Hue, Saturation and Value"
+"hsv(h,s,v[,a])"
+.It "16-bit hex"
+"#rgb[a]"
+.It "32-bit hex"
+"#rrggbb[aa]"
+.It "64-bit hex"
+"#rrrrggggbbbb[aaaa]"
+.It "Color identifier"
+"AntiqueWhite"
 .El
 .Pp
 The
@@ -406,10 +410,8 @@ and
 .Fn AG_WidgetDisabled
 return the current state.
 .Sh FOCUS STATE
-Focus enables reception of input events which would be otherwise filtered out.
-It also affects the behavior and appearance of some widgets.
-A widget holding focus (in a currently focused window) will receive mouse
-events
+Focus enables reception of input events that would be filtered out by default.
+A focused widget (in an actively focused window) will receive
 .Fn mouse-motion ,
 .Fn mouse-button-up ,
 as well as keyboard events
@@ -438,13 +440,12 @@ and
 .Pp
 .nr nS 0
 .Fn AG_WidgetSetFocusable
-sets the
+clears or sets the
 .Dv AG_WIDGET_FOCUSABLE
-flag which allows the widget to receive focus (0 = ignore, 1 = accept focus).
-Returns the previous setting.
+flag and returns the previous setting (0 = Not focusable, 1 = Focusable).
 .Pp
 .Fn AG_WidgetFocus
-gives focus to the specified widget and all of its parent widgets including
+focuses the specified widget and all of its parent widgets including
 the parent
 .Xr AG_Window 3 .
 Returns 1 on success and 0 if the widget is not accepting focus.
@@ -1171,16 +1172,18 @@ Read-only (set by container).
 .It Ft int w, h
 Size in pixels.
 Read-only (set by container).
+.It Ft AG_Rect r
+Cached rectangle at 0,0.
+Read-only.
 .It Ft AG_Rect2 rView
-Cached position & size in absolute display coordinates.
-Read-only with one exception: before calling
+Cached position & size in display coordinates.
+Read-only with exception: before calling
 .Xr AG_WidgetDraw 3
 to render a child widget, a container widget may temporarily override its
 .Va rView
-coordinates to render the child widget to a different position
-(a slight offset for example).
+in order to render it at a given offset.
 .It Ft AG_Rect2 rSens
-Rectangle of sensitivity to mouse events (in absolute display coordinates).
+Rectangle of sensitivity to mouse events (in display coordinates).
 Scrolling containers such as
 .Xr AG_Scrollview 3
 may adjust this rectangle for partially-visible widgets along its edges.
@@ -1247,10 +1250,9 @@ internally if the
 flag is set).
 This flag may affect the way the widget is rendered.
 .It AG_WIDGET_FOCUSABLE
-The widget is allowed to grab the focus; normally set by
+The widget is allowed to grab the focus.
+Set by
 .Fn AG_WidgetSetFocusable .
-Note that the widget may still become "focused" if child widgets are attached
-to it and one of them happens to grab focus.
 .It AG_WIDGET_UNFOCUSED_MOTION
 Receive
 .Sq mouse-motion
