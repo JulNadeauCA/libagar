@@ -120,7 +120,7 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 		a.h = HEIGHT(pa);
 		AG_WidgetSizeAlloc(pa, &a);
 		rv = pa->dx;
-		AG_WidgetUpdate(pa);
+		WIDGET(pa)->flags |= AG_WIDGET_UPDATE_WINDOW;
 		pa->rx = rv;
 	}
 	AG_ObjectUnlock(pa);

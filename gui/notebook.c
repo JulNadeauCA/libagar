@@ -464,7 +464,7 @@ AG_NotebookSelect(AG_Notebook *nb, AG_NotebookTab *tab)
 	AG_WidgetSizeAlloc(tab, &aTab);
 	AG_WidgetShowAll(tab);
 
-	AG_WidgetUpdate(nb);
+	WIDGET(nb)->flags |= AG_WIDGET_UPDATE_WINDOW;
 /* 	AG_WidgetFocus(tab); */
 out:
 	AG_ObjectUnlock(nb);

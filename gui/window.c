@@ -2734,7 +2734,7 @@ AG_WidgetSetPosition(void *_Nonnull obj, int x, int y)
 	AG_ObjectLock(wid);
 	wid->x = x;
 	wid->y = y;
-	AG_WidgetUpdate(wid);
+	wid->flags |= AG_WIDGET_UPDATE_WINDOW;
 	AG_ObjectUnlock(wid);
 }
 
@@ -2748,7 +2748,7 @@ AG_WidgetSetSize(void *_Nonnull obj, int w, int h)
 	AG_ObjectLock(wid);
 	wid->w = w;
 	wid->h = h;
-	AG_WidgetUpdate(wid);
+	wid->flags |= AG_WIDGET_UPDATE_WINDOW;
 	AG_ObjectUnlock(wid);
 }
 
@@ -2764,7 +2764,7 @@ AG_WidgetSetGeometry(void *obj, const AG_Rect *r)
 	wid->y = r->y;
 	wid->w = r->w;
 	wid->h = r->h;
-	AG_WidgetUpdate(wid);
+	wid->flags |= AG_WIDGET_UPDATE_WINDOW;
 	AG_ObjectUnlock(wid);
 }
 

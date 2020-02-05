@@ -1008,8 +1008,9 @@ SelectedType(AG_Event *_Nonnull event)
 		}
 	}
 	AG_SetStyle(fd->optsCtr, "font-size", "90%");
+	WIDGET(fd)->flags |= AG_WIDGET_UPDATE_WINDOW;
 	AG_ObjectUnlock(fd);
-	AG_WidgetUpdate(fd);
+	AG_Redraw(fd);
 }
 
 static void

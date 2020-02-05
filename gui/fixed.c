@@ -127,7 +127,7 @@ static __inline__ void
 UpdateWindow(AG_Fixed *_Nonnull fx)
 {
 	if (!(fx->flags & AG_FIXED_NO_UPDATE))
-		AG_WidgetUpdate(fx);
+		WIDGET(fx)->flags |= AG_WIDGET_UPDATE_WINDOW;
 }
 
 void
