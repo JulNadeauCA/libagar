@@ -760,12 +760,11 @@ CreateToolbarButton(AG_MenuItem *_Nonnull mi, const AG_Surface *_Nullable icon,
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 
 	if (icon) {
-		bu = AG_ButtonNewS(m->curToolbar->rows[0], 0, NULL);
+		bu = AG_ButtonNewS(m->curToolbar->rows[0], AG_BUTTON_NO_FOCUS, NULL);
 		AG_ButtonSurface(bu, icon);
 	} else {
-		bu = AG_ButtonNewS(m->curToolbar->rows[0], 0, text);
+		bu = AG_ButtonNewS(m->curToolbar->rows[0], AG_BUTTON_NO_FOCUS, text);
 	}
-	AG_ButtonSetFocusable(bu, 0);
 	m->curToolbar->nButtons++;
 	mi->tbButton = bu;
 	return (bu);
@@ -878,12 +877,11 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *toolbar, const char *text,
 	AG_ObjectLock(toolbar);
 
 	if (icon) {
-		bu = AG_ButtonNewS(toolbar->rows[0], 0, NULL);
+		bu = AG_ButtonNewS(toolbar->rows[0], AG_BUTTON_NO_FOCUS, NULL);
 		AG_ButtonSurface(bu, icon);
 	} else {
-		bu = AG_ButtonNewS(toolbar->rows[0], 0, text);
+		bu = AG_ButtonNewS(toolbar->rows[0], AG_BUTTON_NO_FOCUS, text);
 	}
-	AG_ButtonSetFocusable(bu, 0);
 	btn_ev = AG_SetEvent(bu, "button-pushed", fn, NULL);
 	if (fmt) {
 		va_list ap;
