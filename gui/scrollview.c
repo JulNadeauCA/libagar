@@ -34,6 +34,7 @@
 #include <stdarg.h>
 #include <string.h>
 
+#if 0
 /* Detect and clip widgets which are completely hidden. */
 static void
 ClipWidgets(AG_Scrollview *_Nonnull sv, AG_Widget *_Nonnull wt)
@@ -59,6 +60,7 @@ ClipWidgets(AG_Scrollview *_Nonnull sv, AG_Widget *_Nonnull wt)
 	OBJECT_FOREACH_CHILD(chld, wt, ag_widget)
 		ClipWidgets(sv, chld);
 }
+#endif
 
 /* Place child widgets at the current offset in the Scrollview. */
 static void
@@ -88,7 +90,10 @@ PlaceWidgets(AG_Scrollview *_Nonnull sv, int *_Nullable wTot,
 			aChld.y += aChld.h;
 			break;
 		}
+#if 0
 		ClipWidgets(sv, chld);
+#endif
+		AG_WidgetUpdateCoords(chld, 0,0);
 	}
 	switch (sv->type) {
 	case AG_SCROLLVIEW_HORIZ:
@@ -107,20 +112,13 @@ PlaceWidgets(AG_Scrollview *_Nonnull sv, int *_Nullable wTot,
 }
 
 static void
-PanView(AG_Scrollview *_Nonnull sv)
-{
-	AG_WidgetUpdate(sv);
-	PlaceWidgets(sv, NULL, NULL);
-	AG_WidgetUpdate(sv);
-	AG_Redraw(sv);
-}
-
-static void
 ScrollbarChanged(AG_Event *_Nonnull event)
 {
 	AG_Scrollview *sv = AG_SCROLLVIEW_PTR(1);
 
-	PanView(sv);
+	PlaceWidgets(sv, NULL, NULL);                    /* Update clipping */
+	WIDGET(sv)->flags |= AG_WIDGET_UPDATE_WINDOW;
+	AG_Redraw(sv);
 }
 
 static void
@@ -143,7 +141,10 @@ MouseMotion(AG_Event *_Nonnull event)
 		if (sv->yOffs < 0)
 			sv->yOffs = 0;
 	}
-	PanView(sv);
+
+	PlaceWidgets(sv, NULL, NULL);                    /* Update clipping */
+	WIDGET(sv)->flags |= AG_WIDGET_UPDATE_WINDOW;
+	AG_Redraw(sv);
 }
 
 static void
@@ -173,8 +174,7 @@ static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Scrollview *sv = AG_SCROLLVIEW_SELF();
-	int button = AG_INT(1);
-	int update = 0;
+	const int button = AG_INT(1);
 
 	switch (button) {
 	case AG_MOUSE_MIDDLE:
@@ -201,30 +201,27 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		if ((sv->yOffs -= AG_GetInt(sv,"y-scroll-amount")) < 0) {
 			sv->yOffs = 0;
 		}
-		update = 1;
 		break;
 	case AG_MOUSE_WHEELDOWN:
 		if ((sv->yOffs += AG_GetInt(sv,"y-scroll-amount")) > sv->xMax) {
 			sv->yOffs = sv->xMax;
 		}
-		update = 1;
 		break;
 	case AG_MOUSE_X1:
 		if ((sv->xOffs -= AG_GetInt(sv,"x-scroll-amount")) < 0) {
 			sv->xOffs = 0;
 		}
-		update = 1;
 		break;
 	case AG_MOUSE_X2:
 		if ((sv->xOffs += AG_GetInt(sv,"x-scroll-amount")) > sv->xMax) {
 			sv->xOffs = sv->xMax;
 		}
-		update = 1;
 		break;
 	}
 
-	if (update)
-		PanView(sv);
+	PlaceWidgets(sv, NULL, NULL);                    /* Update clipping */
+	WIDGET(sv)->flags |= AG_WIDGET_UPDATE_WINDOW;
+	AG_Redraw(sv);
 }
 
 AG_Scrollview *
@@ -260,7 +257,10 @@ AG_ScrollviewNew(void *parent, Uint flags)
 	}
 
 	if (flags & AG_SCROLLVIEW_BY_MOUSE) {
-		WIDGET(sv)->flags |= AG_WIDGET_FOCUSABLE;
+		WIDGET(sv)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
+	                             AG_WIDGET_UNFOCUSED_BUTTONDOWN |
+			             AG_WIDGET_UNFOCUSED_BUTTONUP;
+
 		AG_SetEvent(sv, "mouse-button-down", MouseButtonDown, NULL);
 		AG_SetEvent(sv, "mouse-button-up", MouseButtonUp, NULL);
 		AG_SetEvent(sv, "mouse-motion", MouseMotion, NULL);
