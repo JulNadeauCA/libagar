@@ -180,8 +180,11 @@ AG_Variable *_Nullable AG_GetVariable(void *_Nonnull, const char *_Nonnull,
                                      _Pure_Attribute_If_Unthreaded
                                      _Warn_Unused_Result;
 #ifdef AG_ENABLE_STRING
-void AG_PrintVariable(char *_Nonnull, AG_Size, AG_Variable *_Nonnull);
+AG_Size AG_PrintVariable(char *_Nonnull, AG_Size, AG_Variable *_Nonnull);
+void    AG_VariableSubst(void *_Nonnull, const char *_Nonnull, char *_Nonnull,
+                         AG_Size);
 #endif
+
 int  AG_CopyVariable(AG_Variable *_Nonnull _Restrict,
                      const AG_Variable *_Nonnull _Restrict);
 int  AG_DerefVariable(AG_Variable *_Nonnull _Restrict,
@@ -190,11 +193,6 @@ int  AG_CompareVariables(const AG_Variable *_Nonnull,
                          const AG_Variable *_Nonnull)
                         _Pure_Attribute;
 void AG_Unset(void *_Nonnull, const char *_Nonnull);
-
-#ifdef AG_ENABLE_STRING
-void AG_VariableSubst(void *_Nonnull, const char *_Nonnull, char *_Nonnull,
-                      AG_Size);
-#endif
 
 /*
  * UINT: Natural unsigned integer

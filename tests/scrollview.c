@@ -25,8 +25,8 @@ TestWithButtons(AG_Event *event)
 		AG_BoxSetSpacing(hBox, 1);
 		AG_BoxSetPadding(hBox, 0);
 		for (x = 0; x < 20; x++)
-			AG_ButtonNew(hBox, AG_BUTTON_EXCL,
-			    "Foo\n%c\n%d", (char)(0x41+x), y);
+			AG_ButtonNew(hBox, AG_BUTTON_EXCL, "%c\n%02d",
+			    (char)(0x41+x), y);
 	}
 	AG_ButtonNew(win, AG_BUTTON_EXCL, "Bar");
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 400, 300);

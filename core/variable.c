@@ -236,77 +236,63 @@ AG_GetVariable(void *pObj, const char *name, void **p)
 
 #ifdef AG_ENABLE_STRING
 /*
- * Print a variable's value to fixed-size buffer.
- * The variable must be locked.
+ * Format a variable's value into a fixed-size buffer.
+ *
+ * Return the total length of the string that would have been created
+ * were len unlimited.  The variable must be locked.
  */
-void
+AG_Size
 AG_PrintVariable(char *s, AG_Size len, AG_Variable *V)
 {
 	switch (V->type) {
-	case AG_VARIABLE_UINT:		StrlcpyUint(s, V->data.u, len);				break;
-	case AG_VARIABLE_P_UINT:	StrlcpyUint(s, *(Uint *)V->data.p, len);		break;
-	case AG_VARIABLE_INT:		StrlcpyInt(s, V->data.i, len);				break;
-	case AG_VARIABLE_P_INT:		StrlcpyInt(s, *(int *)V->data.p, len);			break;
-	case AG_VARIABLE_UINT8:		StrlcpyUint(s, (Uint)V->data.u8, len);			break;
-	case AG_VARIABLE_P_UINT8:	StrlcpyUint(s, (Uint)*(Uint8 *)V->data.p, len);		break;
-	case AG_VARIABLE_SINT8:		StrlcpyInt(s, (int)V->data.s8, len);			break;
-	case AG_VARIABLE_P_SINT8:	StrlcpyInt(s, (int)*(Sint8 *)V->data.p, len);		break;
+	case AG_VARIABLE_UINT:      return StrlcpyUint(s, V->data.u, len);
+	case AG_VARIABLE_P_UINT:    return StrlcpyUint(s, *(Uint *)V->data.p, len);
+	case AG_VARIABLE_INT:       return StrlcpyInt(s, V->data.i, len);
+	case AG_VARIABLE_P_INT:     return StrlcpyInt(s, *(int *)V->data.p, len);
+	case AG_VARIABLE_UINT8:     return StrlcpyUint(s, (Uint)V->data.u8, len);
+	case AG_VARIABLE_P_UINT8:   return StrlcpyUint(s, (Uint)*(Uint8 *)V->data.p, len);
+	case AG_VARIABLE_SINT8:     return StrlcpyInt(s, (int)V->data.s8, len);
+	case AG_VARIABLE_P_SINT8:   return StrlcpyInt(s, (int)*(Sint8 *)V->data.p, len);
 # if AG_MODEL != AG_SMALL
-	case AG_VARIABLE_ULONG:		Snprintf(s, len, "%lu", V->data.uli);			break;
-	case AG_VARIABLE_P_ULONG:	Snprintf(s, len, "%lu", *(Ulong *)V->data.p);		break;
-	case AG_VARIABLE_LONG:		Snprintf(s, len, "%ld", V->data.li);			break;
-	case AG_VARIABLE_P_LONG:	Snprintf(s, len, "%ld", *(long *)V->data.p);		break;
-	case AG_VARIABLE_UINT16:	StrlcpyUint(s, (Uint)V->data.u16, len);			break;
-	case AG_VARIABLE_P_UINT16:	StrlcpyUint(s, (Uint)*(Uint16 *)V->data.p, len);	break;
-	case AG_VARIABLE_SINT16:	StrlcpyInt(s, (int)V->data.s16, len);			break;
-	case AG_VARIABLE_P_SINT16:	StrlcpyInt(s, (int)*(Sint16 *)V->data.p, len);		break;
-	case AG_VARIABLE_UINT32:	Snprintf(s, len, "%lu", (Ulong)V->data.u32);		break;
-	case AG_VARIABLE_P_UINT32:	Snprintf(s, len, "%lu", (Ulong)*(Uint32 *)V->data.p);	break;
-	case AG_VARIABLE_SINT32:	Snprintf(s, len, "%ld", (long)V->data.s32);		break;
-	case AG_VARIABLE_P_SINT32:	Snprintf(s, len, "%ld", (long)*(Sint32 *)V->data.p);	break;
+	case AG_VARIABLE_ULONG:     return Snprintf(s,len, "%lu", V->data.uli);
+	case AG_VARIABLE_P_ULONG:   return Snprintf(s,len, "%lu", *(Ulong *)V->data.p);
+	case AG_VARIABLE_LONG:      return Snprintf(s,len, "%ld", V->data.li);
+	case AG_VARIABLE_P_LONG:    return Snprintf(s,len, "%ld", *(long *)V->data.p);
+	case AG_VARIABLE_UINT16:    return StrlcpyUint(s, (Uint)V->data.u16, len);
+	case AG_VARIABLE_P_UINT16:  return StrlcpyUint(s, (Uint)*(Uint16 *)V->data.p, len);
+	case AG_VARIABLE_SINT16:    return StrlcpyInt(s, (int)V->data.s16, len);
+	case AG_VARIABLE_P_SINT16:  return StrlcpyInt(s, (int)*(Sint16 *)V->data.p, len);
+	case AG_VARIABLE_UINT32:    return Snprintf(s,len, "%lu", (Ulong)V->data.u32);
+	case AG_VARIABLE_P_UINT32:  return Snprintf(s,len, "%lu", (Ulong)*(Uint32 *)V->data.p);
+	case AG_VARIABLE_SINT32:    return Snprintf(s,len, "%ld", (long)V->data.s32);
+	case AG_VARIABLE_P_SINT32:  return Snprintf(s,len, "%ld", (long)*(Sint32 *)V->data.p);
 #endif
 #ifdef HAVE_FLOAT
-	case AG_VARIABLE_FLOAT:		Snprintf(s, len, "%.2f", V->data.flt);			break;
-	case AG_VARIABLE_P_FLOAT:	Snprintf(s, len, "%.2f", *(float *)V->data.p);		break;
-	case AG_VARIABLE_DOUBLE:	Snprintf(s, len, "%.2f", V->data.dbl);			break;
-	case AG_VARIABLE_P_DOUBLE:	Snprintf(s, len, "%.2f", *(double *)V->data.p);		break;
+	case AG_VARIABLE_FLOAT:	    return Snprintf(s,len, "%.2f", V->data.flt);
+	case AG_VARIABLE_P_FLOAT:   return Snprintf(s,len, "%.2f", *(float *)V->data.p);
+	case AG_VARIABLE_DOUBLE:    return Snprintf(s,len, "%.2f", V->data.dbl);
+	case AG_VARIABLE_P_DOUBLE:  return Snprintf(s,len, "%.2f", *(double *)V->data.p);
 #endif
 #ifdef HAVE_64BIT
-	case AG_VARIABLE_SINT64:	Snprintf(s, len, "%lld", (long long)V->data.s64);		break;
-	case AG_VARIABLE_P_SINT64:	Snprintf(s, len, "%lld", (long long)*(Sint64 *)V->data.p);	break;
-	case AG_VARIABLE_UINT64:	Snprintf(s, len, "%llu", (unsigned long long)V->data.u64);		break;
-	case AG_VARIABLE_P_UINT64:	Snprintf(s, len, "%llu", (unsigned long long)*(Sint64 *)V->data.p);	break;
+	case AG_VARIABLE_SINT64:    return Snprintf(s,len, "%lld", (long long)V->data.s64);
+	case AG_VARIABLE_P_SINT64:  return Snprintf(s,len, "%lld", (long long)*(Sint64 *)V->data.p);
+	case AG_VARIABLE_UINT64:    return Snprintf(s,len, "%llu", (unsigned long long)V->data.u64);
+	case AG_VARIABLE_P_UINT64:  return Snprintf(s,len, "%llu", (unsigned long long)*(Sint64 *)V->data.p);
 #endif
-	case AG_VARIABLE_STRING:
-		Strlcpy(s, V->data.s, len);
-		break;
-	case AG_VARIABLE_P_STRING:
-		Strlcpy(s, *(char **)V->data.p, len);
-		break;
-	case AG_VARIABLE_POINTER:
-		Snprintf(s, len, "%p", V->data.p);
-		break;
-	case AG_VARIABLE_P_POINTER:
-		Snprintf(s, len, "%p", *(void **)V->data.p);
-		break;
-	case AG_VARIABLE_P_FLAG:
-		Snprintf(s, len, "%s", (*(Uint *)V->data.p & V->info.bitmask.u) ? "YES" : "NO");
-		break;
-	case AG_VARIABLE_P_FLAG8:
-		Snprintf(s, len, "%s", (*(Uint8 *)V->data.p & V->info.bitmask.u8) ? "YES" : "NO");
-		break;
+	case AG_VARIABLE_POINTER:   return Snprintf(s,len, "%p", V->data.p);
+	case AG_VARIABLE_P_POINTER: return Snprintf(s,len, "%p", *(void **)V->data.p);
+	case AG_VARIABLE_P_FLAG:    return Snprintf(s,len, "%s", (*(Uint *)V->data.p & V->info.bitmask.u) ? "YES" : "NO");
+	case AG_VARIABLE_P_FLAG8:   return Snprintf(s,len, "%s", (*(Uint8 *)V->data.p & V->info.bitmask.u8) ? "YES" : "NO");
 # if AG_MODEL != AG_SMALL
-	case AG_VARIABLE_P_FLAG16:
-		Snprintf(s, len, "%s", (*(Uint16 *)V->data.p & V->info.bitmask.u16) ? "YES" : "NO");
-		break;
-	case AG_VARIABLE_P_FLAG32:
-		Snprintf(s, len, "%s", (*(Uint32 *)V->data.p & V->info.bitmask.u32) ? "YES" : "NO");
-		break;
+	case AG_VARIABLE_P_FLAG16:  return Snprintf(s,len, "%s", (*(Uint16 *)V->data.p & V->info.bitmask.u16) ? "YES" : "NO");
+	case AG_VARIABLE_P_FLAG32:  return Snprintf(s,len, "%s", (*(Uint32 *)V->data.p & V->info.bitmask.u32) ? "YES" : "NO");
 # endif
+	case AG_VARIABLE_STRING:
+	case AG_VARIABLE_P_STRING: 
+		return Snprintf(s,len, "\"%s\"", V->data.s);
 	default:
-		s[0] = '?';
-		s[1] = '\0';
-		break;
+		if (len >= 1) { s[0] = '\0'; }
+		return (1);
 	}
 }
 #endif /* AG_ENABLE_STRING */

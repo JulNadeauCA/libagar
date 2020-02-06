@@ -137,7 +137,10 @@ static void
 TargetRoot(void)
 {
 	agStyleEditorTgt = NULL;
-	AG_TlistDeselectAll(agStyleEditorTlist);
+	if (agStyleEditorWindow) {
+		if (agStyleEditorTlist)
+			AG_TlistDeselectAll(agStyleEditorTlist);
+	}
 }
 
 static void

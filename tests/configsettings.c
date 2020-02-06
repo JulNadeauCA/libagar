@@ -116,7 +116,7 @@ TestGUI(void *obj, AG_Window *win)
 		}
 	}
 
-	box = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
 		AG_ButtonNewFn(box, 0, "Load Config", LoadConfig, "%p", ti);
 		AG_ButtonNewFn(box, 0, "Agar Preferences", ShowAgarPrefs, NULL);

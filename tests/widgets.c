@@ -29,7 +29,7 @@ ComboSelected(AG_Event *event)
 {
 	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(1);
 
-	AG_TextMsg(AG_MSG_INFO, "Selected Item: %s", ti->text);
+	AG_TextTmsg(AG_MSG_INFO, 500, "Selected Item: %s", ti->text);
 }
 
 /* Show the agar-dev "Preferences" dialog. */

@@ -132,10 +132,16 @@ static void
 TargetRoot(void)
 {
 	agDebuggerTgt = NULL;
-	AG_TlistDeselectAll(agDebuggerTlist);
+	if (agDebuggerWindow) {
+		AG_WindowSetCaptionS(agDebuggerWindow,
+		    _("Agar GUI Debugger: / (root)"));
 
-	AG_LabelText(agDebuggerLabel, _("Target: " AGSI_YEL "/" AGSI_RST));
-	AG_WindowSetCaptionS(agDebuggerWindow, _("Agar GUI Debugger: / (root)"));
+		if (agDebuggerTlist)
+			AG_TlistDeselectAll(agDebuggerTlist);
+
+		if (agDebuggerLabel)
+			AG_LabelText(agDebuggerLabel, _("Target: " AGSI_YEL "/" AGSI_RST));
+	}
 }
 
 static void
@@ -241,9 +247,12 @@ static void
 PollSurfaces(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
-	AG_Widget *wid = AG_WIDGET_PTR(1);
+	AG_Widget *wid = AG_PTR(1);
 	AG_TlistItem *it;
 	Uint i;
+
+	if (!AG_OBJECT_VALID(wid) || !AG_OfClass(wid, "AG_Widget:*"))
+		return;
 
 	AG_ObjectLock(wid);
 	AG_TlistBegin(tl);
@@ -274,8 +283,13 @@ PollVariables(AG_Event *_Nonnull event)
 {
 	char val[AG_LABEL_MAX];
 	AG_Tlist *tl = AG_TLIST_SELF();
-	AG_Object *obj = AG_OBJECT_PTR(1);
+	AG_Object *obj = AG_PTR(1);
 	AG_Variable *V;
+
+	if (!AG_OBJECT_VALID(obj))
+		return;
+	
+	val[0] = '\0';
 
 	AG_ObjectLock(obj);
 	AG_TlistBegin(tl);
@@ -283,8 +297,7 @@ PollVariables(AG_Event *_Nonnull event)
 		if ((V->type == AG_VARIABLE_P_UINT ||
 		     V->type == AG_VARIABLE_P_INT) &&
 		     strcmp(V->name, "flags") == 0) {
-			Snprintf(val, sizeof(val), "0x%08x",
-			    *(Uint *)V->data.p);
+			Snprintf(val, sizeof(val), "0x%08x", *(Uint *)V->data.p);
 		} else {
 			AG_PrintVariable(val, sizeof(val), V);
 		}
