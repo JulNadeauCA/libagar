@@ -49,7 +49,7 @@ int
 AG_ConfigInit(AG_Config *cfg, Uint flags)
 {
 	AG_ObjectInit(cfg, &agConfigClass);
-	AG_ObjectSetName(cfg, "config");
+	AG_ObjectSetName(cfg, "agConfig");
 
 	if ((flags & AG_CREATE_DATADIR) &&
 	    AG_CreateDataDir() == -1) {
