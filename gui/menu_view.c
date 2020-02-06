@@ -300,7 +300,22 @@ Draw(void *_Nonnull obj)
 	const int itemh = m->itemh;
 	const int itemh_2 = (itemh >> 1);
 	const int fonth_2 = (font->height >> 1);
-	
+
+	if (agDriverSw) {
+		r = WIDGET(mv)->r;
+		r.x++; r.w--;
+		r.h--;
+		AG_DrawRectOutline(mv, &r, &WCOLOR(mv,LINE_COLOR));
+		r.y++;
+		AG_DrawRect(mv, &r, &WCOLOR(mv,BG_COLOR));
+	} else {
+		r = WIDGET(mv)->r;
+		r.x++;
+		r.w--;
+		r.h--;
+		AG_DrawRectOutline(mv, &r, &WCOLOR(mv,LINE_COLOR));
+	}
+
 	r.x = 0;
 	r.y = mv->tPad;
 	r.w = WIDTH(mv);

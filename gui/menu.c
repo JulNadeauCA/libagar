@@ -135,6 +135,10 @@ OnMouseButtonDown(AG_Event *_Nonnull event)
 	}
 }
 
+/*
+ * Test whether x,y intersects a menu item (and also store the height of
+ * the item's label in hLbl).
+ */
 static __inline__ int
 IntersectItem(AG_MenuItem *_Nonnull mi, int x, int y, int *_Nonnull hLbl)
 {
@@ -146,7 +150,7 @@ IntersectItem(AG_MenuItem *_Nonnull mi, int x, int y, int *_Nonnull hLbl)
 	      -1;
 	if (lbl != -1) {
 		wLbl = WSURFACE(m,lbl)->w + m->lPadLbl + m->rPadLbl;
-		*hLbl = WSURFACE(m,lbl)->h + m->tPadLbl + m->bPadLbl;
+		*hLbl = WSURFACE(m,lbl)->h + m->tPadLbl + m->bPadLbl + 1;
 	} else {
 		wLbl = 0;
 		*hLbl = 0;
@@ -202,6 +206,7 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	AG_Menu *m;
 	int x = x1;
 	int y = y1;
+	Uint winFlags;
 
 	AG_MENU_ITEM_IS_VALID(mi);
 
@@ -249,10 +254,14 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 		return (win);
 	}
 
-	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
-	                   AG_WINDOW_NOBORDERS | AG_WINDOW_NORESIZE |
-			   AG_WINDOW_DENYFOCUS);
-	if (win == NULL) {
+	winFlags = AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
+	           AG_WINDOW_NOBORDERS | AG_WINDOW_NORESIZE |
+	           AG_WINDOW_DENYFOCUS;
+
+	if (agDriverSw)
+		winFlags |= AG_WINDOW_NOBACKGROUND;
+
+	if ((win = AG_WindowNew(winFlags)) == NULL) {
 		return (NULL);
 	}
 	win->wmType = (m->style == AG_MENU_DROPDOWN) ?
@@ -392,7 +401,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			m->itemSel = mi;
 			AG_MenuExpand(m, mi,
 			    mi->x,
-			    mi->y + hLbl + bPad - 1);
+			    mi->y + hLbl + bPad);
 			m->selecting = 1;
 		}
 		AG_Redraw(m);
