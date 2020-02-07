@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2019-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,12 +89,12 @@ static const struct {
 	const char *cfgKey;
 	const char *descr;
 } g_interp_opts[] = {
-	{ "lldb.stopOnCont",      N_("Stop on Continue") },
-	{ "lldb.stopOnError",     N_("Stop on Error") },
-	{ "lldb.stopOnCrash",     N_("Stop on Crash") },
-	{ "lldb.echoCommands",    N_("Echo Commands") },
-	{ "lldb.echoCommentCmds", N_("Echo Comment Commands") },
-	{ "lldb.printResults",    N_("Print Results") }
+	{ "lldb.stopOnCont",   N_("Stop on Continue") },
+	{ "lldb.stopOnError",  N_("Stop on Error") },
+	{ "lldb.stopOnCrash",  N_("Stop on Crash") },
+	{ "lldb.echoCommands", N_("Echo Commands") },
+	{ "lldb.echoCommCmds", N_("Echo Comment Commands") },
+	{ "lldb.printResults", N_("Print Results") }
 };
 
 //static bool g_old_stdin_termios_is_valid = false;
@@ -345,7 +345,7 @@ Agardb::Run_LLDB(SBStream &cmds, bool async)
 	ro.SetStopOnError         (AG_GetBool(cfg, "lldb.stopOnError"));
 	ro.SetStopOnCrash         (AG_GetBool(cfg, "lldb.stopOnCrash"));
 	ro.SetEchoCommands        (AG_GetBool(cfg, "lldb.echoCommands"));
-	ro.SetEchoCommentCommands (AG_GetBool(cfg, "lldb.echoCommentCmds"));
+	ro.SetEchoCommentCommands (AG_GetBool(cfg, "lldb.echoCommCmds"));
 	ro.SetPrintResults        (AG_GetBool(cfg, "lldb.printResults"));
 
 	lldb::SBCommandInterpreter interpreter = db.GetCommandInterpreter();
@@ -1187,8 +1187,8 @@ main(int argc, char *const argv[])
 			AG_SetBool(cfg,"lldb.stopOnCrash", ro.GetStopOnCrash());
 		if (!AG_Defined(cfg, "lldb.echoCommands"))
 			AG_SetBool(cfg,"lldb.echoCommands", ro.GetEchoCommands());
-		if (!AG_Defined(cfg, "lldb.echoCommentCmds"))
-			AG_SetBool(cfg,"lldb.echoCommentCmds", ro.GetEchoCommentCommands());
+		if (!AG_Defined(cfg, "lldb.echoCommCmds"))
+			AG_SetBool(cfg,"lldb.echoCommCmds", ro.GetEchoCommentCommands());
 		if (!AG_Defined(cfg, "lldb.printResults"))
 			AG_SetBool(cfg,"lldb.printResults", ro.GetPrintResults());
 
@@ -1208,7 +1208,7 @@ main(int argc, char *const argv[])
 		char pathErr[AG_PATHNAME_MAX];
 		std::FILE *logOut, *logErr;
 
-		AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
+		AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, savePath, sizeof(savePath));
 		Strlcat(savePath, AG_PATHSEP, sizeof(savePath));
 		Snprintf(pathOut, sizeof(pathOut), "%sagardb.out.%d", savePath, getpid());
 		Snprintf(pathErr, sizeof(pathErr), "%sagardb.err.%d", savePath, getpid());
@@ -1244,7 +1244,7 @@ main(int argc, char *const argv[])
 	char pathPID[AG_PATHNAME_MAX];
 	char pathLog[AG_PATHNAME_MAX];
 
-	AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
+	AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, savePath, sizeof(savePath));
 	Strlcat(savePath, AG_PATHSEP, sizeof(savePath));
 	Snprintf(pathPID, sizeof(pathPID), "%sagardb.out.%d", savePath, getpid());
 	Snprintf(pathLog, sizeof(pathLog), "%sagardb.out.log", savePath);
