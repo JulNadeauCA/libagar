@@ -196,6 +196,9 @@ SelectedSurface(AG_Event *_Nonnull event)
 	AG_TlistItem *it = AG_TLIST_ITEM_PTR(3);
 	AG_Surface *S = it->p1;
 	int Smapped;
+
+	if (S == NULL)
+		return;
 	
 	AG_PaneMoveDividerPct(pane, 50);
 
@@ -251,7 +254,8 @@ PollSurfaces(AG_Event *_Nonnull event)
 	AG_TlistItem *it;
 	Uint i;
 
-	if (!AG_OBJECT_VALID(wid) || !AG_OfClass(wid, "AG_Widget:*"))
+	if (!AG_OBJECT_VALID(wid) || !AG_OfClass(wid, "AG_Widget:*") ||
+	    AG_OfClass(wid, "AG_Widget:AG_Console:*"))
 		return;
 
 	AG_ObjectLock(wid);
