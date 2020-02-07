@@ -228,10 +228,10 @@ Draw(void *obj)
 
 			AG_WidgetDraw(lbl);
 		}
-		x += r.w+1;
+		x += r.w;
 
 		if (isSelected) {
-			xSelFirst = x - (r.w+1);
+			xSelFirst = x - (r.w);
 			xSelLast = x;
 		}
 		tabIdx++;
