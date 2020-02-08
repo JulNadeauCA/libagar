@@ -448,6 +448,7 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	if ((drv->videoFmt = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
 		goto fail;
 	}
+#if AG_MODEL == AG_LARGE
 	if (depthReq == 48) {				/* Deep color */
 # if AG_BYTEORDER == AG_BIG_ENDIAN
 		AG_PixelFormatRGB(drv->videoFmt, 48,
