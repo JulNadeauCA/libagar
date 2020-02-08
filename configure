@@ -1981,9 +1981,25 @@ $ECHO_N '# checking for byte order...' >>config.log
 if [ "${byte_order}" != "" ]; then
 if [ "${byte_order}" = "LE" ]; then
 _MK_BYTE_ORDER="LE"
+_MK_LITTLE_ENDIAN="yes"
+bb_o=$bb_incdir/_mk_little_endian.h
+echo '#ifndef _MK_LITTLE_ENDIAN' >$bb_o
+echo "#define _MK_LITTLE_ENDIAN \"$_MK_LITTLE_ENDIAN\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
+echo '#undef _MK_BIG_ENDIAN' >$bb_incdir/_mk_big_endian.h
+echo 'hdefs["_MK_BIG_ENDIAN"] = nil' >>configure.lua
 else
 if [ "${byte_order}" = "BE" ]; then
 _MK_BYTE_ORDER="BE"
+_MK_BIG_ENDIAN="yes"
+bb_o=$bb_incdir/_mk_big_endian.h
+echo '#ifndef _MK_BIG_ENDIAN' >$bb_o
+echo "#define _MK_BIG_ENDIAN \"$_MK_BIG_ENDIAN\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
+echo '#undef _MK_LITTLE_ENDIAN' >$bb_incdir/_mk_little_endian.h
+echo 'hdefs["_MK_LITTLE_ENDIAN"] = nil' >>configure.lua
 else
 echo "***"
 echo "*** ERROR: Usage: --byte-order=[LE|BE]"
