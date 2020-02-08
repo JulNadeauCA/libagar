@@ -193,7 +193,7 @@ bbc | c64 | c128 | geos | nes)
 	if [ "${CROSS_COMPILING}" = "yes" ]; then
 		if [ "${byte_order}" = "" ]; then
 			case "${host}" in
-			*-*-mingw32-*)
+			*-*-mingw32*)
 				echo "*"
 				echo "* Assuming ${host} to be little-endian."
 				echo "*"

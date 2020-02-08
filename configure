@@ -1958,7 +1958,7 @@ echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
 		if [ "${byte_order}" = "" ]
  then
 			case "${host}" in
-			*-*-mingw32-*)
+			*-*-mingw32*)
 				echo "*"
 				echo "* Assuming ${host} to be little-endian."
 				echo "*"
