@@ -552,10 +552,14 @@ bytes).
 .It Ft int depth
 Depth in tree (for
 .Dv AG_TLIST_TREE ) .
-.It Ft Uint8 flags
+.It Ft Uint flags
 Item flags (see
 .Sx ITEM FLAGS
 section below).
+.It Ft Uint fontFlags
+Font style (see
+.Xr AG_FetchFont 3
+for available flags).
 .El
 .Sh ITEM FLAGS
 .Bl -tag -width "AG_TLIST_ITEM_UPPERCASE "
@@ -569,14 +573,6 @@ There is at least one child item.
 Disallow user selection of this item.
 .It AG_TLIST_NO_POPUP
 Disable popup menus (if any have been created).
-.It AG_TLIST_ITEM_BOLD
-Render this item in boldface.
-.It AG_TLIST_ITEM_ITALIC
-Render this item in italic.
-.It AG_TLIST_ITEM_UNDERLINE
-Render this item underlined.
-.It AG_TLIST_ITEM_UPPERCASE
-Render this item in all-caps.
 .El
 .Sh EXAMPLES
 The following code fragment displays an existing tree structure.

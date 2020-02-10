@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -571,9 +571,9 @@ Draw(void *_Nonnull obj)
 				AG_PushTextState();
 				AG_TextFont(it->font);
 				altFont = 1;
-			} else if (it->flags & AG_TLIST_ITEM_STYLE) {
+			} else if (it->fontFlags != 0) {
 				AG_PushTextState();
-				StylizeFont(tl, it->flags);
+				StylizeFont(tl, it->fontFlags);
 				altFont = 1;
 			}
 			it->label = AG_WidgetMapSurface(tl,
@@ -636,15 +636,9 @@ DrawExpandCollapseSign(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it,
 }
 
 static void
-StylizeFont(AG_Tlist *_Nonnull tl, Uint itFlags)
+StylizeFont(AG_Tlist *_Nonnull tl, Uint fontFlags)
 {
 	const AG_Font *defFont = WFONT(tl);
-	Uint fontFlags = 0;
-
-	if (itFlags & AG_TLIST_ITEM_BOLD) { fontFlags |= AG_FONT_BOLD; }
-	if (itFlags & AG_TLIST_ITEM_ITALIC) { fontFlags |= AG_FONT_ITALIC; }
-	if (itFlags & AG_TLIST_ITEM_UNDERLINE) { fontFlags |= AG_FONT_UNDERLINE; }
-	if (itFlags & AG_TLIST_ITEM_UPPERCASE) { fontFlags |= AG_FONT_UPPERCASE; }
 
 	AG_TextFontLookup(OBJECT(defFont)->name, defFont->spec.size, fontFlags);
 }
@@ -831,6 +825,7 @@ AG_TlistItemNew(AG_Tlist *_Nonnull tl, const AG_Surface *icon)
 	it->label = -1;
 	it->depth = 0;
 	it->flags = 0;
+	it->fontFlags = 0;
 	it->text[0] = '\0';
 	it->color = NULL;
 	it->font = NULL;
@@ -1655,15 +1650,16 @@ CompareText(const void *_Nonnull p1, const void *_Nonnull p2)
 }
 
 /* Sort list items by text using quicksort. */
-int
+void
 AG_TlistSort(AG_Tlist *tl)
 {
 	AG_TlistItem *it, **items;
 	Uint i = 0;
 
-	if ((items = TryMalloc(tl->nitems*sizeof(AG_TlistItem *))) == NULL) {
-		return (-1);
-	}
+	if ((items = TryMalloc(tl->nitems * sizeof(AG_TlistItem *))) == NULL)
+		return;
+
+	AG_ObjectLock(tl);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		items[i++] = it;
 	}
@@ -1673,8 +1669,9 @@ AG_TlistSort(AG_Tlist *tl)
 		TAILQ_INSERT_TAIL(&tl->items, items[i], items);
 	}
 	free(items);
+
+	AG_ObjectUnlock(tl);
 	AG_Redraw(tl);
-	return (0);
 }
 
 #ifdef AG_TYPE_SAFETY

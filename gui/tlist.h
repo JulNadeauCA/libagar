@@ -43,19 +43,13 @@ typedef struct ag_tlist_item {
 	int label;			/* Cached label surface */
 	Uint depth;			/* Indent in tree display */
 	Uint flags;
-#define AG_TLIST_ITEM_EXPANDED  0x001	/* Child items visible (tree) */
-#define AG_TLIST_HAS_CHILDREN   0x002	/* Child items exist (tree) */
-#define AG_TLIST_NO_SELECT      0x008	/* Item is not selectable */
-#define AG_TLIST_NO_POPUP       0x010	/* Disable popups for item */
-#define AG_TLIST_ITEM_BOLD      0x020	/* Render font in bold weight */
-#define AG_TLIST_ITEM_ITALIC    0x040	/* Render font in italic */
-#define AG_TLIST_ITEM_UNDERLINE 0x080	/* Render font in underline */
-#define AG_TLIST_ITEM_UPPERCASE 0x100	/* Render font in uppercase */
-#define AG_TLIST_ITEM_STYLE     (AG_TLIST_ITEM_BOLD | \
-				 AG_TLIST_ITEM_ITALIC | \
-				 AG_TLIST_ITEM_UNDERLINE | \
-				 AG_TLIST_ITEM_UPPERCASE)
-	
+#define AG_TLIST_ITEM_EXPANDED 0x01     /* Child items visible (tree) */
+#define AG_TLIST_HAS_CHILDREN  0x02     /* Child items exist (tree) */
+#define AG_TLIST_NO_SELECT     0x08     /* Item is not selectable */
+#define AG_TLIST_NO_POPUP      0x10     /* Disable popups for item */
+
+	Uint fontFlags;                 /* Font style; see AG_FetchFont(3) */
+
 	char text[AG_TLIST_LABEL_MAX];	/* Label text */
 
 	AG_TAILQ_ENTRY(ag_tlist_item) items;	/* Items in list */
@@ -245,7 +239,7 @@ int  AG_TlistComparePtrsAndClasses(const AG_TlistItem *_Nonnull,
                                    const AG_TlistItem *_Nonnull)
                                   _Pure_Attribute;
 
-int  AG_TlistSort(AG_Tlist *_Nonnull);
+void AG_TlistSort(AG_Tlist *_Nonnull);
 int  AG_TlistVisibleChildren(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
 void AG_TlistRefresh(AG_Tlist *_Nonnull);
 
