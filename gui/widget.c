@@ -2093,8 +2093,8 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	} else if (AG_LookupStyleSheet(css, wid, "font-weight", &cssData)) {
 		Apply_Font_Weight(&fontFlags, parentFontFlags, cssData);
 	} else {
-		fontFlags &= ~(AG_FONT_BOLDS);
-		fontFlags |= (parentFontFlags & AG_FONT_BOLDS);
+		fontFlags &= ~(AG_FONT_WEIGHTS);
+		fontFlags |= (parentFontFlags & AG_FONT_WEIGHTS);
 	}
 
 	/*
@@ -2106,8 +2106,8 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	} else if (AG_LookupStyleSheet(css, wid, "font-style", &cssData)) {
 		Apply_Font_Style(&fontFlags, parentFontFlags, cssData);
 	} else {
-		fontFlags &= ~(AG_FONT_ITALICS);
-		fontFlags |= (parentFontFlags & AG_FONT_ITALICS);
+		fontFlags &= ~(AG_FONT_STYLES);
+		fontFlags |= (parentFontFlags & AG_FONT_STYLES);
 	}
 
 	/*
@@ -2119,8 +2119,8 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	} else if (AG_LookupStyleSheet(css, wid, "font-stretch", &cssData)) {
 		Apply_Font_Stretch(&fontFlags, parentFontFlags, cssData);
 	} else {
-		fontFlags &= ~(AG_FONT_WIDTH_VARIANTS);
-		fontFlags |= (parentFontFlags & AG_FONT_WIDTH_VARIANTS);
+		fontFlags &= ~(AG_FONT_WD_VARIANTS);
+		fontFlags |= (parentFontFlags & AG_FONT_WD_VARIANTS);
 	}
 
 	/*
@@ -2230,58 +2230,46 @@ Apply_Font_Weight(Uint *fontFlags, Uint parentFontFlags, const char *spec)
 {
 	if (AG_Strcasecmp(spec, "bold") == 0) {
 		*fontFlags |= AG_FONT_BOLD;
-	} else if (AG_Strcasecmp(spec, "semibold") == 0) {
-		*fontFlags &= ~(AG_FONT_SEMIBOLD);
 	} else if (AG_Strcasecmp(spec, "!parent") == 0) {
-		if (parentFontFlags & AG_FONT_BOLDS) {
-			*fontFlags &= ~(AG_FONT_BOLDS);
+		if (parentFontFlags & AG_FONT_WEIGHTS) {
+			*fontFlags &= ~(AG_FONT_WEIGHTS);
 		} else {
 			*fontFlags |= AG_FONT_BOLD;
 		}
 	} else {				/* "normal" or "regular" */
-		*fontFlags &= ~(AG_FONT_BOLDS);
+		*fontFlags &= ~(AG_FONT_WEIGHTS);
 	}
 }
 	
 static void
 Apply_Font_Style(Uint *fontFlags, Uint parentFontFlags, const char *spec)
 {
+	*fontFlags &= ~(AG_FONT_STYLES);
+
 	if (AG_Strcasecmp(spec, "italic") == 0) {
-		*fontFlags |=   AG_FONT_ITALIC;
-		*fontFlags &= ~(AG_FONT_UPRIGHT_ITALIC);
+		*fontFlags |= AG_FONT_ITALIC;
 	} else if (AG_Strcasecmp(spec, "upright-italic") == 0) {
-		*fontFlags |=   AG_FONT_UPRIGHT_ITALIC;
-		*fontFlags &= ~(AG_FONT_ITALIC);
+		*fontFlags |= AG_FONT_UPRIGHT_ITALIC;
+	} else if (AG_Strcasecmp(spec, "oblique") == 0) {
+		*fontFlags |= AG_FONT_OBLIQUE;
 	} else if (AG_Strcasecmp(spec, "!parent") == 0) {
-		if (parentFontFlags & AG_FONT_ITALICS) {
-			*fontFlags &= ~(AG_FONT_ITALICS);
-		} else {
+		if ((parentFontFlags & AG_FONT_STYLES) == 0)
 			*fontFlags |= AG_FONT_ITALIC;
-		}
-	} else {                                   /* "normal" or "regular" */
-		*fontFlags &= ~(AG_FONT_ITALICS);
 	}
 }
 
 static void
 Apply_Font_Stretch(Uint *fontFlags, Uint parentFontFlags, const char *spec)
 {
-	if (AG_Strcasecmp(spec, "normal") == 0) {
-		*fontFlags &= ~(AG_FONT_WIDTH_VARIANTS);
-	} else if (AG_Strcasecmp(spec, "condensed") == 0) {
-		*fontFlags |=   AG_FONT_CONDENSED;
-		*fontFlags &= ~(AG_FONT_SEMICONDENSED);
+	*fontFlags &= ~(AG_FONT_WD_VARIANTS);
+
+	if (AG_Strcasecmp(spec, "condensed") == 0) {
+		*fontFlags |= AG_FONT_CONDENSED;
 	} else if (AG_Strcasecmp(spec, "semi-condensed") == 0) {
-		*fontFlags |=   AG_FONT_SEMICONDENSED;
-		*fontFlags &= ~(AG_FONT_CONDENSED);
+		*fontFlags |= AG_FONT_SEMICONDENSED;
 	} else if (AG_Strcasecmp(spec, "!parent") == 0) {
-		if (parentFontFlags & AG_FONT_WIDTH_VARIANTS) {
-			*fontFlags &= ~(AG_FONT_WIDTH_VARIANTS);
-		} else {
+		if ((parentFontFlags & AG_FONT_WD_VARIANTS) == 0)
 			*fontFlags |= AG_FONT_CONDENSED;
-		}
-	} else {                                   /* "normal" or "regular" */
-			*fontFlags &= ~(AG_FONT_WIDTH_VARIANTS);
 	}
 }
 

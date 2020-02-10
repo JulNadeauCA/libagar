@@ -124,6 +124,7 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 	}
 	AG_WindowSetCaptionS(win, _("Agar settings"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
+	AG_WindowSetPadding(win, 5,5,5,5);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL | AG_NOTEBOOK_VFILL);
 	tab = AG_NotebookAdd(nb, _("Video"), AG_BOX_VERT);

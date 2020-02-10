@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -335,10 +335,10 @@ RefreshListing(AG_FileDlg *_Nonnull fd)
 		it->p1 = it;
 		switch (attr) {
 		case 'x':
-			it->flags |= AG_TLIST_ITEM_BOLD;
+			it->fontFlags |= AG_FONT_BOLD;
 			break;
 		case 'R':
-			it->flags |= AG_TLIST_ITEM_ITALIC;
+			it->fontFlags |= AG_FONT_ITALIC;
 			break;
 		}
 		free(s);

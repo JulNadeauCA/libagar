@@ -24,7 +24,7 @@ DATAFILES_SRC=	Bedstead-COPYING.txt \
 		cm-LICENSE.txt \
 		cm-README.txt \
 		cm-sans-bold.ttf \
-		cm-sans-demicondensed.ttf \
+		cm-sans-condensed.ttf \
 		cm-sans.ttf \
 		cm-serif-bold-italic.ttf \
 		cm-serif-bold.ttf \

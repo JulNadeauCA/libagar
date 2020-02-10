@@ -39,7 +39,7 @@ typedef struct ag_ttf_font {
 	int ascent;
 	int descent;
 	int lineskip;
-	int style;
+	Uint style;			/* Font flags (AG_FONT_BOLD, ...) */
 	int glyph_overhang;
 	double glyph_italics;
 	int underline_offset;
@@ -52,11 +52,6 @@ typedef struct ag_ttf_font {
 	int font_size_family;		/* For non-scalable formats */
 	Uint32 _pad;
 } AG_TTFFont;
-
-#define AG_TTF_STYLE_NORMAL	0x00
-#define AG_TTF_STYLE_BOLD	0x01
-#define AG_TTF_STYLE_ITALIC	0x02
-#define AG_TTF_STYLE_UNDERLINE	0x04
 
 __BEGIN_DECLS
 struct ag_font;

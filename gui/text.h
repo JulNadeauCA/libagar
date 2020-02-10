@@ -260,17 +260,22 @@ typedef struct ag_font {
 	struct ag_object obj;           /* AG_Object -> AG_Font */
 	AG_FontSpec spec;               /* Input specification */
 	Uint flags;
-#define AG_FONT_BOLD           0x01     /* Bold weight (or SW fallback) */
-#define AG_FONT_ITALIC         0x02     /* Italic style (or SW fallback) */
-#define AG_FONT_UNDERLINE      0x04     /* Underlined */
-#define AG_FONT_UPPERCASE      0x08     /* Force uppercase */
-#define AG_FONT_SEMIBOLD       0x10     /* Semibold (not SW) */
-#define AG_FONT_UPRIGHT_ITALIC 0x20     /* Upright italic (not SW) */
-#define AG_FONT_SEMICONDENSED  0x40     /* Semi-condensed (not SW) */
-#define AG_FONT_CONDENSED      0x80     /* Condensed (not SW) */
-#define AG_FONT_BOLDS          (AG_FONT_SEMIBOLD | AG_FONT_BOLD)
-#define AG_FONT_ITALICS        (AG_FONT_ITALIC | AG_FONT_UPRIGHT_ITALIC)
-#define AG_FONT_WIDTH_VARIANTS (AG_FONT_SEMICONDENSED | AG_FONT_CONDENSED)
+#define AG_FONT_BOLD           0x001    /* Bold style */
+#define AG_FONT_ITALIC         0x002    /* Italic style */
+#define AG_FONT_UNDERLINE      0x004    /* Generate underline */
+#define AG_FONT_UPPERCASE      0x008    /* Force uppercase */
+#define AG_FONT_OBLIQUE        0x010    /* Oblique style */
+#define AG_FONT_UPRIGHT_ITALIC 0x020    /* Upright italic style */
+#define AG_FONT_SEMICONDENSED  0x040    /* Semi-condensed */
+#define AG_FONT_CONDENSED      0x080    /* Condensed */
+#define AG_FONT_SW_BOLD        0x100    /* Software-generated bold */
+#define AG_FONT_SW_OBLIQUE     0x200    /* Software-generated oblique */
+#define AG_FONT_SW_ITALIC      AG_FONT_SW_OBLIQUE
+
+#define AG_FONT_WEIGHTS     (AG_FONT_BOLD | AG_FONT_SW_BOLD)
+#define AG_FONT_STYLES      (AG_FONT_ITALIC | AG_FONT_SW_ITALIC | \
+                             AG_FONT_OBLIQUE | AG_FONT_UPRIGHT_ITALIC) 
+#define AG_FONT_WD_VARIANTS (AG_FONT_SEMICONDENSED | AG_FONT_CONDENSED)
 
 	int height;                        /* Body size in pixels */
 	int ascent;                        /* Ascent (relative to baseline) */
@@ -357,6 +362,7 @@ extern AG_TextState            agTextStateStack[AG_TEXT_STATES_MAX];
 extern Uint                    agTextStateCur;
 extern AG_Font *_Nullable      agDefaultFont;
 
+extern const char *agCoreFonts[];
 extern const char *agFontFileExts[];
 extern const char *agFontTypeNames[];
 extern const char *agTextMsgTitles[];

@@ -6,6 +6,7 @@ Copyright (c) 2019-2020 Charles A. Daniels <cdaniels.net>
 Copyright (c) 2010 Michael J. Wood
 Copyright (c) 2009 Mat Sutcliffe <oktal@gmx.co.uk>
 Copyright (c) 2004 John Blitch
+Copyright (c) 1997-2002 Sam Lantinga
 
 All rights reserved.
 

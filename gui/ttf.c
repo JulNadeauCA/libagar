@@ -204,10 +204,7 @@ AG_TTFOpenFont(AG_Font *font, const char *path)
 	ttf->glyph_italics *= ttf->height;
 
 	/* Apply the standard style modifiers */
-	ttf->style = 0;
-	if (font->flags & AG_FONT_BOLD)      { ttf->style |= AG_TTF_STYLE_BOLD; }
-	if (font->flags & AG_FONT_ITALIC)    { ttf->style |= AG_TTF_STYLE_ITALIC; }
-	if (font->flags & AG_FONT_UNDERLINE) { ttf->style |= AG_TTF_STYLE_UNDERLINE; }
+	ttf->style = font->flags;
 	
 	/* The Agar font should inherit the metrics. */
 	font->height = ttf->height;
@@ -338,11 +335,11 @@ LoadGlyph(AG_TTFFont *_Nonnull ttf, AG_Char ch, AG_TTFGlyph *_Nonnull cached,
 		cached->yoffset = ttf->ascent - cached->maxy;
 		cached->advance = FT_CEIL(metrics->horiAdvance);
 
-		/* Adjust for bold and italic text. */
-		if (ttf->style & AG_TTF_STYLE_BOLD) {
+		/* Adjust for software-generated bold and italic. */
+		if (ttf->style & AG_FONT_SW_BOLD) {
 			cached->maxx += ttf->glyph_overhang;
 		}
-		if (ttf->style & AG_TTF_STYLE_ITALIC) {
+		if (ttf->style & AG_FONT_SW_ITALIC) {
 			cached->maxx += (int)Ceil(ttf->glyph_italics);
 		}
 		cached->stored |= TTF_CACHED_METRICS;
@@ -353,8 +350,7 @@ LoadGlyph(AG_TTFFont *_Nonnull ttf, AG_Char ch, AG_TTFGlyph *_Nonnull cached,
 		FT_Bitmap *src, *dst;
 	    	const int mono = (want & TTF_CACHED_BITMAP);
 
-		/* Handle the italic style. */
-		if (ttf->style & AG_TTF_STYLE_ITALIC) {
+		if (ttf->style & AG_FONT_SW_ITALIC) {    /* Software Italic */
 			FT_Matrix shear;
 
 			shear.xx = 1 << 16;
@@ -387,12 +383,11 @@ LoadGlyph(AG_TTFFont *_Nonnull ttf, AG_Char ch, AG_TTFGlyph *_Nonnull cached,
 		if (mono || !FT_IS_SCALABLE(face))
 			dst->pitch <<= 3;
 
-		/* Adjust for bold and italic text. */
-		if (ttf->style & AG_TTF_STYLE_BOLD) {
+		if (ttf->style & AG_FONT_SW_BOLD) {        /* Software Bold */
 			dst->pitch += ttf->glyph_overhang;
 			dst->width += ttf->glyph_overhang;
 		}
-		if (ttf->style & AG_TTF_STYLE_ITALIC) {
+		if (ttf->style & AG_FONT_SW_ITALIC) {    /* Software Italic */
 			const int bump = (int)Ceil(ttf->glyph_italics);
 
 			dst->pitch += bump;
@@ -440,8 +435,7 @@ LoadGlyph(AG_TTFFont *_Nonnull ttf, AG_Char ch, AG_TTFGlyph *_Nonnull cached,
 			}
 		}
 
-		/* Handle the bold style */
-		if (ttf->style & AG_TTF_STYLE_BOLD)
+		if (ttf->style & AG_FONT_SW_BOLD)          /* Software Bold */
 			ProcessBold(ttf, dst);
 
 		/* Mark that we rendered this format */

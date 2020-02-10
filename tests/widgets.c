@@ -160,11 +160,12 @@ CreateMoreCheckboxes(AG_Event *_Nonnull event)
 	AG_Box *box = AG_BOX_PTR(1);
 	AG_Pane *pane = AG_PANE_PTR(2);
 
-	AG_WidgetHide(bu);
+	AG_WidgetDisable(bu);
 
 	AG_CheckboxNew(box, 0, "George Liquor");
-	AG_CheckboxNew(box, 0, "Haggic McHaggis");
-	AG_CheckboxNew(box, 0, "Kowalski, Bubba\nand Jiminy Lummox");
+	AG_CheckboxNew(box, 0, "Haggis McHaggis");
+	AG_CheckboxNew(box, 0, "Kowalski, Bubba\n"
+	                       "and Jiminy Lummox");
 	AG_CheckboxNew(box, 0, "Wilbur Cobb");
 
 	AG_PaneMoveDivider(pane, pane->dx + 50);
@@ -245,15 +246,14 @@ TestGUI(void *obj, AG_Window *win)
 
 		/* A static label */
 		lbl = AG_LabelNew(hPane->div[0], 0,
-		    "Agar v%d.%d.%d (\"%s\")",
+		    "Agar v%d.%d.%d (" AGSI_FRAK "%s" AGSI_RST ")",
 		    av.major, av.minor, av.patch,
 		    av.release ? av.release : "dev");
 
-		AG_SetStyle(lbl, "font-size", "80%");
-
 		/* A dynamically-updated label. */
 		lbl = AG_LabelNewPolled(hPane->div[0], AG_LABEL_HFILL,
-		    "Window is at %i,%i (%ux%u)\n",
+		    "Window is at " AGSI_FONT9 "%i,%i" AGSI_RST " ( "
+		    AGSI_FONT9 "%ux%u" AGSI_RST " )\n",
 		    &AGWIDGET(win)->x,
 		    &AGWIDGET(win)->y,
 		    &AGWIDGET(win)->w,
@@ -296,7 +296,8 @@ TestGUI(void *obj, AG_Window *win)
 		AG_BoxSetLabel(vBox, "Radio group:");
 		{
 			const char *radioItems[] = {
-				"Homer\n(Simpson)",
+				"Homer\n"
+				"(" AGSI_ITALIC "Simpson" AGSI_RST ")",
 				"Marge",
 				"Bart",
 				"Lisa",
@@ -316,9 +317,16 @@ TestGUI(void *obj, AG_Window *win)
 			 * and bitmasks.
 			 */
 			AG_CheckboxNew(vBox, 0, "Ren H" "\xC3\xB6" "ek");
-			AG_CheckboxNew(vBox, 0, "Stimpson J. Cat");
-			AG_CheckboxNew(vBox, 0, "Mr. Horse");
-			AG_CheckboxNew(vBox, 0, "Powdered Toast Man");
+			AG_CheckboxNew(vBox, 0, "Stimpson "
+			                        AGSI_ITALIC "J." AGSI_RST
+						" Cat");
+			AG_CheckboxNew(vBox, 0, "Mr. " AGSI_BOLD "Horse" AGSI_RST);
+			AG_CheckboxNew(vBox, 0, AGSI_YEL AGSI_BOLD "P" AGSI_RST
+			                        "owdered "
+						AGSI_YEL AGSI_BOLD "T" AGSI_RST
+						"oast "
+						AGSI_YEL AGSI_BOLD "M" AGSI_RST
+						"an");
 
 			btn = AG_ButtonNewFn(vBox, 0, "Create More ...",
 			    CreateMoreCheckboxes, "%p,%p", vBox, vPane);
@@ -352,11 +360,11 @@ TestGUI(void *obj, AG_Window *win)
 
 		it = AG_TlistAddS(com->list, NULL, text);
 		if ((i % 25) == 0) {
-			it->flags |= AG_TLIST_ITEM_UNDERLINE;
+			it->fontFlags |= AG_FONT_UNDERLINE;
 		} else if ((i % 10) == 0) {
-			it->flags |= AG_TLIST_ITEM_BOLD;
+			it->fontFlags |= AG_FONT_BOLD;
 		} else if ((i % 5) == 0) {
-			it->flags |= AG_TLIST_ITEM_ITALIC;
+			it->fontFlags |= AG_FONT_ITALIC;
 		}
 
 		AG_ColorRGB_8(&c, 240, 240, 255 - (i << 2));

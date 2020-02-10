@@ -14,10 +14,11 @@ typedef struct ag_font_selector {
 	AG_Widget wid;
 
 	Uint flags;
-#define AG_FONTSELECTOR_UPDATE	0x01	/* Refresh listing */
-#define AG_FONTSELECTOR_HFILL	0x100
-#define AG_FONTSELECTOR_VFILL	0x200
-#define AG_FONTSELECTOR_EXPAND	(AG_FONTSELECTOR_HFILL|AG_FONTSELECTOR_VFILL)
+#define AG_FONTSELECTOR_UPDATE     0x001    /* Refresh listing */
+#define AG_FONTSELECTOR_ALT_PHRASE 0x002    /* Different preview phrase */
+#define AG_FONTSELECTOR_HFILL      0x100
+#define AG_FONTSELECTOR_VFILL      0x200
+#define AG_FONTSELECTOR_EXPAND    (AG_FONTSELECTOR_HFILL | AG_FONTSELECTOR_VFILL)
 
 	char curFace[AG_OBJECT_NAME_MAX];	/* Current font face */
 	Uint curStyle;				/* Current style flags */
