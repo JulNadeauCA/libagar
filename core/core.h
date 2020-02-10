@@ -31,6 +31,7 @@
 # include <agar/core/vec.h>
 # include <agar/core/cpuinfo.h>
 # include <agar/core/core_init.h>
+# include <agar/core/agsi.h>
 
 #else /* _AGAR_INTERNAL */
 
@@ -49,6 +50,7 @@
 # include <agar/core/types.h>
 # include <agar/core/options.h>
 # include <agar/core/core_init.h>
+# include <agar/core/agsi.h>
 # include <agar/core/error.h>
 # include <agar/core/queue.h>
 # include <agar/core/vec.h>
