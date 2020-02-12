@@ -459,7 +459,7 @@ static void *_Nullable
 Edit(void *_Nonnull obj, SG_View *_Nullable sgv)
 {
 	SG_Camera *cam = obj;
-	AG_Mutex *lock = &OBJECT(cam)->pvt.lock;
+	AG_Mutex *lock = &OBJECT(cam)->lock;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 	AG_Radio *rad;
@@ -598,7 +598,7 @@ MenuInstance(void *_Nonnull obj, AG_MenuItem *_Nonnull m, SG_View *_Nonnull sgv)
 	{
 		AG_MenuItem *mRot;
 		SG_Camera *cam = obj;
-		AG_Mutex *lock = &OBJECT(cam)->pvt.lock;
+		AG_Mutex *lock = &OBJECT(cam)->lock;
 
 		mRot = AG_MenuNode(m, _("Artificial rotation"), NULL);
 

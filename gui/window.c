@@ -3038,7 +3038,7 @@ Edit(void *_Nonnull obj)
 			  &tgt->zoom);
 
 	AG_LabelNewPolledMT(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
-	                    &OBJECT(tgt)->pvt.lock,
+	                    &OBJECT(tgt)->lock,
 	                    _("Parent: %[objName] @ (AG_Window *)%p"),
 	                    &tgt->parent, &tgt->parent);
 
@@ -3046,11 +3046,11 @@ Edit(void *_Nonnull obj)
 
 #if 0
 	AG_LabelNewPolledMT(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
-	                    &OBJECT(tgt)->pvt.lock,
+	                    &OBJECT(tgt)->lock,
 	                    _("Transient for: %[objName] @ (AG_Window *)%p"),
 	                    &tgt->transientFor, &tgt->transientFor);
 	AG_LabelNewPolledMT(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
-	                    &OBJECT(tgt)->pvt.lock,
+	                    &OBJECT(tgt)->lock,
 	                   _("Pinned to: %[objName] @ (AG_Window *)%p"),
 	                   &tgt->pinnedTo, &tgt->pinnedTo);
 #endif

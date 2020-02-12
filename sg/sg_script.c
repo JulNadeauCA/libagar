@@ -1713,7 +1713,7 @@ Edit(void *_Nonnull obj)
 {
 	SG_ScriptEditCtx *e;
 	SG_Script *scr = obj;
-	AG_Mutex *lock = &OBJECT(scr)->pvt.lock;
+	AG_Mutex *lock = &OBJECT(scr)->lock;
 	AG_Window *win;
 	AG_MenuItem *m;
 	AG_Label *lbl;

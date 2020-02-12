@@ -84,7 +84,7 @@ static void *_Nullable
 Edit(void *_Nonnull p, SG_View *_Nullable sgv)
 {
 	SG_Line *ln = p;
-	AG_Mutex *lock = &OBJECT(ln)->pvt.lock;
+	AG_Mutex *lock = &OBJECT(ln)->lock;
 	AG_Box *box;
 	AG_Numerical *num;
 

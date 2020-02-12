@@ -392,19 +392,19 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_TextboxBindASCII(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
 #endif
 		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
-		    &OBJECT(tgt)->pvt.lock,
+		    &OBJECT(tgt)->lock,
 		    _("Parent window: " AGSI_YEL "%[objName]" AGSI_RST
 		      " @ (" AGSI_CYAN "AG_Window" AGSI_RST " *)%p"),
 		    &tgt->window, &tgt->window);
 
 		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
-		    &OBJECT(tgt)->pvt.lock,
+		    &OBJECT(tgt)->lock,
 		    _("Parent driver: " AGSI_YEL "%[objName]" AGSI_RST
 		      " @ (" AGSI_CYAN "AG_Driver" AGSI_RST " *)%p"),
 		    &tgt->drv, &tgt->drv);
 
 		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
-		    &OBJECT(tgt)->pvt.lock,
+		    &OBJECT(tgt)->lock,
 		    _("Driver class: " AGSI_BOLD "%[objClassName]" AGSI_RST "(3)"
 		      " @ (" AGSI_CYAN "AG_DriverClass" AGSI_RST " *)%p"),
 		    &tgt->drvOps, &tgt->drvOps);

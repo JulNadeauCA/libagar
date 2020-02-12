@@ -463,7 +463,7 @@ static void *_Nullable
 Edit(void *_Nonnull obj)
 {
 	SG_Texture *tex = obj;
-	AG_Mutex *lock = &OBJECT(tex)->pvt.lock;
+	AG_Mutex *lock = &OBJECT(tex)->lock;
 	AG_Window *win;
 	AG_Pane *paHoriz;
 	AG_Notebook *nb;

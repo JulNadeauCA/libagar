@@ -80,7 +80,7 @@ static void *_Nullable
 Edit(void *_Nonnull p, SG_View *_Nullable sgv)
 {
 	SG_Sphere *sph = p;
-	AG_Mutex *lock = &OBJECT(sph)->pvt.lock;
+	AG_Mutex *lock = &OBJECT(sph)->lock;
 	AG_Box *box;
 	AG_Numerical *num;
 

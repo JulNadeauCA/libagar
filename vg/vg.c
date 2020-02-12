@@ -1305,7 +1305,7 @@ Edit(void *_Nonnull p)
 			    ops->icon ? ops->icon->s : NULL,
 			    VG_ViewSelectToolEv, "%p,%p,%p", vv, tool, NULL);
 			AG_MenuSetIntBoolMp(mAction, &tool->selected, 0,
-			    &OBJECT(vv)->pvt.lock);
+			    &OBJECT(vv)->lock);
 
 			if (ops == &vgSelectTool) {
 				VG_ViewSetDefaultTool(vv, tool);

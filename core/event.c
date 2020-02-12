@@ -1175,7 +1175,7 @@ restart:
 			}
 			TAILQ_REMOVE(&ob->timers, to, pvt.timers);
 			if (TAILQ_EMPTY(&ob->timers)) {
-				TAILQ_REMOVE(&agTimerObjQ, ob, pvt.tobjs);
+				TAILQ_REMOVE(&agTimerObjQ, ob, tobjs);
 			}
 			if (to->flags & AG_TIMER_AUTO_FREE) {
 				free(to);
@@ -1240,7 +1240,7 @@ gen_id:
 		AG_FatalError("agTimerCount");
 #   endif
 	id = (int)++agTimerCount;			/* XXX */
-	TAILQ_FOREACH(obOther, &agTimerObjQ, pvt.tobjs) {
+	TAILQ_FOREACH(obOther, &agTimerObjQ, tobjs) {
 		TAILQ_FOREACH(toOther, &obOther->timers, pvt.timers) {
 			if (toOther == to) { continue; }
 			if (toOther->id == id) {
@@ -1328,7 +1328,7 @@ restart:
 		}
 	}
 #  ifdef AG_TIMERS
-	TAILQ_FOREACH(ob, &agTimerObjQ, pvt.tobjs) {
+	TAILQ_FOREACH(ob, &agTimerObjQ, tobjs) {
 		TAILQ_FOREACH(to, &ob->timers, pvt.timers) {
 			FD_SET(to->id, &rdFds);
 			if (to->id > nFds) { nFds = to->id; }
@@ -1357,7 +1357,7 @@ restart:
 	for (ob = TAILQ_FIRST(&agTimerObjQ);
 	     ob != TAILQ_END(&agTimerObjQ);
 	     ob = obNext) {
-		obNext = TAILQ_NEXT(ob, pvt.tobjs);
+		obNext = TAILQ_NEXT(ob, tobjs);
 		AG_ObjectLock(ob);
 		for (to = TAILQ_FIRST(&ob->timers);
 		     to != TAILQ_END(&ob->timers);
@@ -1495,7 +1495,7 @@ restart:
 		AG_LockTiming();
 		t = AG_GetTicks();
 		tSoonest = 0xfffffffe;
-		TAILQ_FOREACH(ob, &agTimerObjQ, pvt.tobjs) {
+		TAILQ_FOREACH(ob, &agTimerObjQ, tobjs) {
 			TAILQ_FOREACH(to, &ob->timers, pvt.timers) {
 				if ((to->tSched - t) < tSoonest)
 					tSoonest = (to->tSched - t);

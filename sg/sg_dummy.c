@@ -92,7 +92,7 @@ static void *_Nullable
 Edit(void *_Nonnull obj, SG_View *_Nullable sgv)
 {
 	SG_Dummy *dum = obj;
-	AG_Mutex *lock = &OBJECT(dum)->pvt.lock;
+	AG_Mutex *lock = &OBJECT(dum)->lock;
 	AG_Box *box;
 	AG_Numerical *num;
 

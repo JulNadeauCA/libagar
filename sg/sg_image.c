@@ -498,7 +498,7 @@ static void *_Nullable
 Edit(void *_Nonnull p, SG_View *_Nullable sgv)
 {
 	SG_Image *si = p;
-	AG_Mutex *lock = &OBJECT(si)->pvt.lock;
+	AG_Mutex *lock = &OBJECT(si)->lock;
 	AG_Numerical *nWidth, *nHeight;
 	AG_Checkbox *cb;
 	AG_Box *box, *hBox;

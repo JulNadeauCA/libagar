@@ -123,10 +123,15 @@ package Agar.Object is
     Prev : access Object_Access;
   end record
     with Convention => C;
+  type Entry_in_TimerQ_t is limited record
+    Next : Object_Access;
+    Prev : access Object_Access;
+  end record
+    with Convention => C;
 
-  type Object_Private is array (1 .. $SIZEOF_AG_ObjectPvt) of
+  type Object_Mutex is array (1 .. $SIZEOF_AG_MUTEX) of
     aliased Interfaces.Unsigned_8 with Convention => C;
-  for Object_Private'Size use $SIZEOF_AG_ObjectPvt * System.Storage_Unit;
+  for Object_Mutex'Size use $SIZEOF_AG_MUTEX * System.Storage_Unit;
   
   OBJECT_FLOATING_VARIABLES    : constant C.unsigned := 16#0_0001#;
   OBJECT_NON_PERSISTENT        : constant C.unsigned := 16#0_0002#;
@@ -162,7 +167,8 @@ package Agar.Object is
     Entry_in_Parent : Entry_in_Parent_t;
     Parent          : Object_Access;
     Root            : Object_Access;
-    Private_Data    : Object_Private;
+    Entry_in_TimerQ : Entry_in_TimerQ_t;
+    Lock            : Object_Mutex;
   end record
     with Convention => C;
     

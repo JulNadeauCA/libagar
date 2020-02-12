@@ -1651,7 +1651,7 @@ static void *_Nullable
 Edit(void *_Nonnull obj, SG_View *_Nullable sgv)
 {
 	SG_Object *so = SGOBJECT(obj);
-	AG_Mutex *lock = &OBJECT(so)->pvt.lock;
+	AG_Mutex *lock = &OBJECT(so)->lock;
 	const SG *sg = SGNODE(so)->sg;
 	AG_ObjectSelector *os;
 	AG_Box *box;

@@ -213,7 +213,7 @@ static void *_Nullable
 Edit(void *_Nonnull obj, SG_View *_Nullable sgv)
 {
 	SG_Light *lt = obj;
-	AG_Mutex *lock = &OBJECT(lt)->pvt.lock;
+	AG_Mutex *lock = &OBJECT(lt)->lock;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 	AG_HSVPal *pal;
