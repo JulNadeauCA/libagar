@@ -40,6 +40,8 @@ typedef struct ag_texcoord {
 __BEGIN_DECLS
 void AG_PtInit(AG_Pt *_Nonnull, int,int);
 
+AG_Rect AG_RECT(int,int, int,int);
+
 void AG_RectInit(AG_Rect *_Nonnull, int,int, int,int);
 void AG_Rect2Init(AG_Rect2 *_Nonnull, int,int, int,int);
 void AG_Rect2ToRect(AG_Rect *_Nonnull, const AG_Rect2 *_Nonnull);

@@ -73,6 +73,18 @@ AG_PtInit(AG_Pt *pt, int x, int y)
 	pt->y = y;
 }
 
+AG_Rect
+AG_RECT(int x, int y, int w, int h)
+{
+	AG_Rect r;
+
+	r.x = x;
+	r.y = y;
+	r.w = w;
+	r.h = h;
+	return (r);
+}
+
 /* Return a Rect of dimensions w,h at position x,y. */
 void
 AG_RectInit(AG_Rect *rd, int x, int y, int w, int h)

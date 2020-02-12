@@ -54,7 +54,7 @@ RefreshTableTimeout(AG_Timer *_Nonnull refreshTo, AG_Event *_Nonnull event)
 	AG_TreetblClearRows(tt);
 
 	id = 0;
-	TAILQ_FOREACH(ob, &agTimerObjQ, pvt.tobjs) {
+	TAILQ_FOREACH(ob, &agTimerObjQ, tobjs) {
 		AG_TreetblRow *objRow;
 		AG_Timer *to;
 		

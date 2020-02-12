@@ -2468,6 +2468,17 @@ AG_SetStyle(void *obj, const char *which, const char *value)
 	AG_Redraw(wid);
 }
 
+#ifdef AG_LEGACY
+/*
+ * Lookup a widget by pathname (equivalent to AG_ObjectFind() on &agDrivers).
+ */
+void *
+AG_WidgetFind(void *root, const char *pathname)
+{
+	return AG_ObjectFindS(&agDrivers, pathname);
+}
+#endif /* AG_LEGACY */
+
 AG_WidgetClass agWidgetClass = {
 	{
 		"Agar(Widget)",

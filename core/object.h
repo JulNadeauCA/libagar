@@ -130,10 +130,6 @@ AG_TAILQ_HEAD(ag_objectq, ag_object);
 
 /* Object private data */
 typedef struct ag_object_pvt {
-#ifdef AG_TIMERS
-	AG_TAILQ_ENTRY(ag_object) tobjs;	/* Entry in agTimerObjQ */
-#endif
-	_Nonnull_Mutex AG_Mutex lock;		/* General object lock */
 } AG_ObjectPvt;
 
 /* Object instance */
@@ -179,7 +175,10 @@ typedef struct ag_object {
 	AG_TAILQ_ENTRY(ag_object) cobjs;  /* Entry in parent */
 	void *_Nullable parent;           /* Parent in VFS (NULL = is root) */
 	void *_Nonnull root;              /* VFS root (possibly self) */
-	AG_ObjectPvt pvt;                 /* Private data */
+#ifdef AG_TIMERS
+	AG_TAILQ_ENTRY(ag_object) tobjs;  /* Entry in agTimerObjQ */
+#endif
+	_Nonnull_Mutex AG_Mutex lock;     /* General object lock */
 } AG_Object;
 
 /* Object archive header information. */
@@ -355,6 +354,8 @@ void AG_ObjectReset(void *_Nonnull);
 #if AG_MODEL != AG_SMALL
 char *_Nonnull  AG_ObjectGetClassName(const void *, int);
 char *_Nullable AG_ObjectGetName(void *_Nonnull) _Warn_Unused_Result;
+void            AG_ObjectInitNamed(void *_Nonnull, void *_Nonnull,
+                                   const char *_Nullable);
 int             AG_ObjectCopyName(void *_Nonnull, char *_Nonnull, AG_Size);
 #endif
 
@@ -496,26 +497,26 @@ void ag_unlock_timers(void *_Nullable);
 # define AG_INLINE_HEADER
 # include <agar/core/inline_object.h>
 #else
-# define AG_GetNamespace(s)		ag_get_namespace(s)
-# define AG_ClassIsNamed(C,s)		ag_class_is_named((C),(s))
-# define AG_OfClass(o,s)		ag_of_class((o),(s))
-# define AG_ObjectRoot(o)               ag_object_root(o)
-# define AG_ObjectParent(o)             ag_object_parent(o)
-# define AG_ObjectDelete(o)		ag_object_delete(o)
-# define AG_ObjectFindChild(o,n)	ag_object_find_child((o),(n))
-# define AG_ObjectSuperclass(o)		ag_object_superclass(o)
-# define AG_Defined(o,n)		ag_defined((o),(n))
-# define AG_FetchVariable(o,n,t)	ag_fetch_variable((o),(n),(t))
-# define AG_FetchVariableOfType(o,n,t)	ag_fetch_variable_of_type((o),(n),(t))
-# define AG_AccessVariable(o,n)		ag_access_variable((o),(n))
+# define AG_GetNamespace(s)            ag_get_namespace(s)
+# define AG_ClassIsNamed(C,s)          ag_class_is_named((C),(s))
+# define AG_OfClass(o,s)               ag_of_class((o),(s))
+# define AG_ObjectRoot(o)              ag_object_root(o)
+# define AG_ObjectParent(o)            ag_object_parent(o)
+# define AG_ObjectDelete(o)            ag_object_delete(o)
+# define AG_ObjectFindChild(o,n)       ag_object_find_child((o),(n))
+# define AG_ObjectSuperclass(o)        ag_object_superclass(o)
+# define AG_Defined(o,n)               ag_defined((o),(n))
+# define AG_FetchVariable(o,n,t)       ag_fetch_variable((o),(n),(t))
+# define AG_FetchVariableOfType(o,n,t) ag_fetch_variable_of_type((o),(n),(t))
+# define AG_AccessVariable(o,n)        ag_access_variable((o),(n))
 # ifdef AG_THREADS
-#  define AG_ObjectLock(o)		ag_object_lock(o)
-#  define AG_ObjectUnlock(o)		ag_object_unlock(o)
-#  define AG_LockVFS(o)			ag_lock_vfs(o)
-#  define AG_UnlockVFS(o)		ag_unlock_vfs(o)
+#  define AG_ObjectLock(o)    ag_object_lock(o)
+#  define AG_ObjectUnlock(o)  ag_object_unlock(o)
+#  define AG_LockVFS(o)       ag_lock_vfs(o)
+#  define AG_UnlockVFS(o)     ag_unlock_vfs(o)
 #  ifdef AG_TIMERS
-#   define AG_LockTimers(o)		ag_lock_timers(o)
-#   define AG_UnlockTimers(o)		ag_unlock_timers(o)
+#   define AG_LockTimers(o)   ag_lock_timers(o)
+#   define AG_UnlockTimers(o) ag_unlock_timers(o)
 #  else
 #   define AG_LockTimers(o)
 #   define AG_UnlockTimers(o)
@@ -531,32 +532,27 @@ void ag_unlock_timers(void *_Nullable);
 #endif /* !AG_INLINE_OBJECT */
 
 #ifdef AG_LEGACY
-/* Calls renamed for consistency in 1.6.0 */
-# define AG_ObjectFreeDataset(o)     AG_ObjectReset(o)
-# define AG_ObjectIsClass(o,c)       AG_OfClass((o),(c))
-# define AG_GetStringCopy(o,n,b,s)   AG_GetString((o),(n),(b),(s))
-# define AG_PrtString                AG_SetStringF
-/* Redundant const pointer types removed from AG_Variable in 1.6.0 */
-# define AG_VARIABLE_CONST_STRING	AG_VARIABLE_STRING
-# define AG_VARIABLE_P_CONST_STRING	AG_VARIABLE_P_STRING
-# define AG_VARIABLE_CONST_POINTER	AG_VARIABLE_POINTER
-# define AG_VARIABLE_P_CONST_POINTER	AG_VARIABLE_P_POINTER
-# define AG_SetConstString(o,n,v)	AG_SetString((o),(n),(char *)(v))
-# define AG_BindConstString		AG_BindString
-# define AG_BindConstStringMp		AG_BindStringMp
-# define AG_BindConstStringFn		AG_BindStringFn
-# define AG_GetConstPointer(o,x)	((const void *)AG_GetPointer((o),(x)))
-# define AG_SetConstPointer(o,n,v)	AG_SetPointer((o),(n),(void *)(v))
-# define AG_InitConstPointer(var,v)	AG_InitPointer((var),(void *)(v))
-# define AG_BindConstPointer		AG_BindPointer
-# define AG_BindConstPointerFn		AG_BindPointerFn
-# define AG_BindConstPointerMp		AG_BindPointerMp
-
-void AG_ObjectInitStatic(void *_Nonnull _Restrict, void *_Nullable _Restrict)
-                        DEPRECATED_ATTRIBUTE;
-void AG_ObjectInitNamed(void *_Nonnull _Restrict, void *_Nonnull _Restrict,
-                        const char *_Nullable)
-                       DEPRECATED_ATTRIBUTE;
+/* <1.6 calls renamed */
+# define AG_ObjectFreeDataset(o)   AG_ObjectReset(o)
+# define AG_ObjectIsClass(o,c)     AG_OfClass((o),(c))
+# define AG_GetStringCopy(o,n,b,s) AG_GetString((o),(n),(b),(s))
+# define AG_PrtString              AG_SetStringF
+/* <1.6 redundant pointer types removed from AG_Variable */
+# define AG_VARIABLE_CONST_STRING    AG_VARIABLE_STRING
+# define AG_VARIABLE_P_CONST_STRING  AG_VARIABLE_P_STRING
+# define AG_VARIABLE_CONST_POINTER   AG_VARIABLE_POINTER
+# define AG_VARIABLE_P_CONST_POINTER AG_VARIABLE_P_POINTER
+# define AG_SetConstString(o,n,v)    AG_SetString((o),(n),(char *)(v))
+# define AG_BindConstString          AG_BindString
+# define AG_BindConstStringMp        AG_BindStringMp
+# define AG_BindConstStringFn        AG_BindStringFn
+# define AG_BindConstPointer         AG_BindPointer
+# define AG_BindConstPointerFn       AG_BindPointerFn
+# define AG_BindConstPointerMp       AG_BindPointerMp
+/* <1.6 deprecated (STATIC-flag setting) constructor */
+void AG_ObjectInitStatic(void *_Nonnull, void *_Nullable) DEPRECATED_ATTRIBUTE;
+/* <1.6 replaced by AG_SetString("archive-path", ...) */
+void AG_ObjectSetArchivePath(void *_Nonnull, const char *_Nonnull) DEPRECATED_ATTRIBUTE;
 #endif /* AG_LEGACY */
 __END_DECLS
 

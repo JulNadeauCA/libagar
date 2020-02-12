@@ -1156,8 +1156,6 @@ AG_GetPointer(void *obj, const char *name)
 	return (p);
 }
 
-#if AG_MODEL != AG_SMALL
-# ifdef AG_TYPE_SAFETY
 const void *
 AG_GetConstPointer(void *obj, const char *name)
 {
@@ -1177,8 +1175,6 @@ AG_GetConstPointer(void *obj, const char *name)
 	AG_ObjectUnlock(obj);
 	return (const void *)p;
 }
-# endif /* AG_TYPE_SAFETY */
-#endif /* !AG_SMALL */
 
 AG_Variable *
 AG_SetPointer(void *obj, const char *name, void *v)

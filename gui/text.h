@@ -460,6 +460,11 @@ struct ag_window *_Nonnull AG_TextPromptOptions(struct ag_button *_Nonnull *_Non
 
 int  AG_InitTextSubsystem(void);
 void AG_DestroyTextSubsystem(void);
+
+#ifdef AG_LEGACY
+/* < 1.5 call renamed */
+# define AG_TextRenderf AG_TextRenderF
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

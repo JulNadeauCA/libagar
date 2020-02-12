@@ -685,14 +685,13 @@ AG_About(AG_Event *event)
 #ifdef AG_LEGACY
 /*
  * Initialize Agar with a single-window driver of specified resolution.
- * As of Agar-1.4, this interface obsolete but kept for backward compat.
+ * Kept for backward compatibility with Agar < 1.4.
  */
 int
 AG_InitVideo(int w, int h, int depth, Uint flags)
 {
 	AG_Driver *drv = NULL;
 	AG_DriverClass *dc = NULL, **pd;
-	int i;
 	
 	if (AG_InitGUIGlobals() == -1) {
 		return (-1);

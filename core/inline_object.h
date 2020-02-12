@@ -181,7 +181,7 @@ void
 ag_object_lock(void *p)
 #endif
 {
-	AG_MutexLock(&AGOBJECT(p)->pvt.lock);
+	AG_MutexLock(&AGOBJECT(p)->lock);
 }
 
 /* Release the mutex protecting all resources owned by an object. */
@@ -193,7 +193,7 @@ void
 ag_object_unlock(void *p)
 #endif
 {
-	AG_MutexUnlock(&AGOBJECT(p)->pvt.lock);
+	AG_MutexUnlock(&AGOBJECT(p)->lock);
 }
 
 /* Acquire the mutex protecting all resources owned by an object. */

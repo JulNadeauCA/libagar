@@ -5372,7 +5372,7 @@ else
 echo '#undef AG_ENABLE_EXEC' >$bb_incdir/ag_enable_exec.h
 echo 'hdefs["AG_ENABLE_EXEC"] = nil' >>configure.lua
 fi
-if [ "${enable_legacy}" = 'yes' ]; then
+if [ "${enable_legacy}" != 'no' ]; then
 AG_LEGACY="yes"
 bb_o=$bb_incdir/ag_legacy.h
 echo '#ifndef AG_LEGACY' >$bb_o

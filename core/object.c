@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,7 +82,7 @@ AG_ObjectInit(void *pObj, void *pClass)
 	ob->root = ob;
 	ob->flags = 0;
 
-	AG_MutexInitRecursive(&ob->pvt.lock);
+	AG_MutexInitRecursive(&ob->lock);
 	
 	TAILQ_INIT(&ob->events);
 #ifdef AG_TIMERS
@@ -278,6 +278,18 @@ fail:
 	AG_ObjectUnlock(ob);
 	AG_UnlockVFS(ob);
 	return (NULL);
+}
+
+/* Initialize an AG_Object instance (name argument variant). */
+void
+AG_ObjectInitNamed(void *obj, void *cl, const char *name)
+{
+	AG_ObjectInit(obj, cl);
+	if (name != NULL) {
+		AG_ObjectSetNameS(obj, name);
+	} else {
+		OBJECT(obj)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
 }
 #endif /* !AG_SMALL */
 
@@ -727,7 +739,7 @@ AG_ObjectDestroy(void *p)
 	
 	AG_ObjectFreeVariables(ob);
 	AG_ObjectFreeEvents(ob);
-	AG_MutexDestroy(&ob->pvt.lock);
+	AG_MutexDestroy(&ob->lock);
 #ifdef AG_TYPE_SAFETY
 	memcpy(ob->tag, "FreeMem", 7);
 # ifdef AG_DEBUG
@@ -2087,23 +2099,17 @@ tryname:
 #endif /* !AG_SMALL */
 
 #ifdef AG_LEGACY
-/* Initialize an AG_Object instance (name argument variant). */
-void
-AG_ObjectInitNamed(void *obj, void *cl, const char *name)
-{
-	AG_ObjectInit(obj, cl);
-	if (name != NULL) {
-		AG_ObjectSetNameS(obj, name);
-	} else {
-		OBJECT(obj)->flags |= AG_OBJECT_NAME_ONATTACH;
-	}
-}
-
 /* Initialize an AG_Object instance (static variant). */
 void
 AG_ObjectInitStatic(void *obj, void *C)
 {
 	AG_ObjectInit(obj, C);
 	OBJECT(obj)->flags |= AG_OBJECT_STATIC;
+}
+
+void
+AG_ObjectSetArchivePath(void *obj, const char *path)
+{
+	AG_SetString(obj, "archive-path", path);
 }
 #endif /* !AG_LEGACY */

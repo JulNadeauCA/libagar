@@ -468,12 +468,8 @@ AG_Variable *_Nonnull AG_BindPointerMp(void *_Nonnull, const char *_Nonnull,
 				       _Nonnull_Mutex AG_Mutex *_Nonnull);
 #endif
 #if AG_MODEL != AG_SMALL
-# ifdef AG_TYPE_SAFETY
 const void *_Nullable AG_GetConstPointer(void *_Nonnull, const char *_Nonnull)
                                         _Pure_Attribute_If_Unthreaded;
-# else
-# define              AG_GetConstPointer(o,n) ((const void *)AG_GetPointer((o),(n)))
-# endif
 void                  AG_InitConstPointer(AG_Variable *_Nonnull, const void *_Nullable);
 AG_Variable *_Nonnull AG_SetConstPointer(void *_Nonnull, const char *_Nonnull,
                                          const void *_Nullable);

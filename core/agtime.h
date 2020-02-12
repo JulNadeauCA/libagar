@@ -94,5 +94,9 @@ int  AG_TimerIsRunning(void *_Nullable, AG_Timer *_Nonnull)
                       _Pure_Attribute;
 int  AG_TimerWait(void *_Nullable, AG_Timer *_Nonnull, Uint32);
 void AG_ProcessTimeouts(Uint32);
+
+# ifdef AG_LEGACY
+#  define AG_Timeout AG_Timer
+# endif
 #endif /* AG_TIMERS */
 __END_DECLS

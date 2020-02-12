@@ -40,9 +40,8 @@ AG_FixedNew(void *parent, Uint flags)
 	fx->flags |= flags;
 
 #ifdef AG_LEGACY
-	if (flags & AG_FIXED_BOX)         { fx->style = AG_FIXED_STYLE_BOX; }
-	else if (flags & AG_FIXED_INVBOX) { fx->style = AG_FIXED_STYLE_WELL; }
-	else if (flags & AG_FIXED_FRAME)  { fx->style = AG_FIXED_STYLE_FRAME; }
+	if (flags & AG_FIXED_BOX) { fx->style = AG_FIXED_STYLE_BOX; }
+	else if (flags & (AG_FIXED_INVBOX | AG_FIXED_FRAME)) { fx->style = AG_FIXED_STYLE_WELL; }
 	else if (flags & AG_FIXED_FILLBG) { fx->style = AG_FIXED_STYLE_PLAIN; }
 #endif
 

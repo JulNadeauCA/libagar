@@ -70,5 +70,12 @@ int AG_ScrollbarVisible(AG_Scrollbar *_Nonnull);
 int AG_ScrollbarWidth(AG_Scrollbar *_Nonnull) _Pure_Attribute_If_Unthreaded;
 __END_DECLS
 
+#ifdef AG_LEGACY
+/* <1.5 flag not needed */
+# define AG_SCROLLBAR_NOAUTOHIDE 0
+/* <1.5 */
+void AG_ScrollbarSetControlLength(AG_Scrollbar *_Nonnull, int) DEPRECATED_ATTRIBUTE;
+#endif
+
 #include <agar/gui/close.h>
 #endif /* _AGAR_GUI_SCROLLBAR_H_ */

@@ -1048,6 +1048,10 @@ Edit(void *_Nonnull obj)
 	return (box);
 }
 
+#ifdef AG_LEGACY
+void AG_ScrollbarSetControlLength(AG_Scrollbar *sb, int len) { }
+#endif
+
 AG_WidgetClass agScrollbarClass = {
 	{
 		"Agar(Widget:Scrollbar)",

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -2068,7 +2068,7 @@ Uint32 AG_MapColorRGB(const AG_PixelFormat *pf, AG_Color c) {
 #endif
 }
 Uint32 AG_MapColorRGBA(const AG_PixelFormat *pf, AG_Color c) {
-	return AG_MapPixel32(pf, c);
+	return AG_MapPixel32(pf, &c);
 }
 AG_Surface *AG_DupSurface(AG_Surface *su) {
 	return AG_SurfaceDup((const AG_Surface *)su);
@@ -2086,12 +2086,15 @@ void AG_GetPixelRGBA(Uint32 px, const AG_PixelFormat *pf, Uint8 *r, Uint8 *g, Ui
 	AG_GetColor32_RGBA8(px, pf, r,g,b,a);
 }
 AG_Color AG_GetColorRGB(Uint32 px, const AG_PixelFormat *pf) {
-	AG_Color c = AG_GetColor32(px, pf);
+	AG_Color c;
+	AG_GetColor32(&c, px, pf);
 	c.a = AG_OPAQUE;
 	return (c);
 }
 AG_Color AG_GetColorRGBA(Uint32 px, const AG_PixelFormat *pf) {
-	return AG_GetColor32(px, pf);
+	AG_Color c;
+	AG_GetColor32(&c, px, pf);
+	return (c);
 }
 int AG_SamePixelFmt(const AG_Surface *a, const AG_Surface *b) {
 	return (AG_PixelFormatCompare(&a->format, &b->format)) == 0;

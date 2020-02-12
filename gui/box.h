@@ -91,8 +91,6 @@ void AG_BoxSetType(AG_Box *_Nonnull, enum ag_box_type);
 void AG_BoxSetHorizAlign(AG_Box *_Nonnull, enum ag_box_align);
 void AG_BoxSetVertAlign(AG_Box *_Nonnull, enum ag_box_align);
 
-#ifdef AG_LEGACY
-#define AG_BOX_FRAME AG_BOX_SHADING
 #define AG_HBoxInit(b,fl)          AG_BoxInit((b),AG_BOX_HORIZ,(fl))
 #define AG_HBoxSetHomogenous(b,fl) AG_BoxSetHomogenous((b),(fl))
 #define AG_HBoxSetPadding(b,pad)   AG_BoxSetPadding((b),(pad))
@@ -101,6 +99,11 @@ void AG_BoxSetVertAlign(AG_Box *_Nonnull, enum ag_box_align);
 #define AG_VBoxSetHomogenous(b,fl) AG_BoxSetHomogenous((b),(fl))
 #define AG_VBoxSetPadding(b,pad)   AG_BoxSetPadding((b),(pad))
 #define AG_VBoxSetSpacing(b,sp)    AG_BoxSetSpacing((b),(sp))
+
+#ifdef AG_LEGACY
+# define AG_BOX_FRAME AG_BOX_SHADING
+# define AG_BoxNewHorizNS(p,fl) AG_BoxNewHoriz((p), (fl | AG_BOX_NO_SPACING))
+# define AG_BoxNewVertNS(p,fl)  AG_BoxNewVert((p), (fl | AG_BOX_NO_SPACING))
 #endif
 __END_DECLS
 

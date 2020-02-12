@@ -138,10 +138,6 @@ OnShow(AG_Event *event)
 
 	fs->flags &= ~(AG_FONTSELECTOR_UPDATE);
 
-	ti = AG_TlistAdd(fs->tlFaces, NULL, _("Built-in fonts:"));
-	ti->flags |= AG_TLIST_NO_SELECT;
-	AG_TlistSetFont(fs->tlFaces, ti, AG_TextFontPct(80));
-
 	for (pbf = &agBuiltinFonts[0]; *pbf != NULL; pbf++) {
 		if (strchr((*pbf)->name, '_'))              /* Is a variant */
 			continue;
@@ -162,10 +158,6 @@ OnShow(AG_Event *event)
 		FcFontSet *fset;
 		FcPattern *pat;
 		
-		ti = AG_TlistAdd(fs->tlFaces, NULL, _("System fonts:"));
-		ti->flags |= AG_TLIST_NO_SELECT;
-		AG_TlistSetFont(fs->tlFaces, ti, AG_TextFontPct(80));
-
 		pat = FcPatternCreate();
 		os = FcObjectSetBuild(FC_FAMILY, (char *)0);
 		fset = FcFontList(NULL, pat, os);
@@ -195,10 +187,6 @@ OnShow(AG_Event *event)
 	 */
 	{
 		AG_ConfigPath *fpath;
-
-		ti = AG_TlistAdd(fs->tlFaces, NULL, _("Agar Core Fonts:"));
-		ti->flags |= AG_TLIST_NO_SELECT;
-		AG_TlistSetFont(fs->tlFaces, ti, AG_TextFontPct(80));
 
 		TAILQ_FOREACH(fpath, &agConfig->paths[AG_CONFIG_PATH_FONTS], paths) {
 			AG_Dir *dir;

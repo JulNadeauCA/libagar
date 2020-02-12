@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -111,7 +111,7 @@ AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
 	if (src->caps[AG_SINK_TIMER]) {		/* Unordered list */
 		if (to->obj == NULL) {
 			if (TAILQ_EMPTY(&ob->timers)) {
-				TAILQ_INSERT_TAIL(&agTimerObjQ, ob, pvt.tobjs);
+				TAILQ_INSERT_TAIL(&agTimerObjQ, ob, tobjs);
 			}
 			TAILQ_INSERT_TAIL(&ob->timers, to, pvt.timers);
 			newTimer = 1;
@@ -128,7 +128,7 @@ AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
 			AG_FatalError("to->obj != ob");
 		}
 		if (TAILQ_EMPTY(&ob->timers)) {
-			TAILQ_INSERT_TAIL(&agTimerObjQ, ob, pvt.tobjs);
+			TAILQ_INSERT_TAIL(&agTimerObjQ, ob, tobjs);
 		}
 		to->tSched = AG_GetTicks()+ival;
 reinsert:
@@ -172,7 +172,7 @@ reinsert:
 fail:
 	to->obj = NULL;
 	TAILQ_REMOVE(&ob->timers, to, pvt.timers);
-	if (TAILQ_EMPTY(&ob->timers)) { TAILQ_REMOVE(&agTimerObjQ, ob, pvt.tobjs); }
+	if (TAILQ_EMPTY(&ob->timers)) { TAILQ_REMOVE(&agTimerObjQ, ob, tobjs); }
 	AG_UnlockTimers(ob);
 	return (-1);
 }
@@ -260,7 +260,7 @@ AG_DelTimer(void *p, AG_Timer *to)
 
 	TAILQ_REMOVE(&ob->timers, to, pvt.timers);
 	if (TAILQ_EMPTY(&ob->timers))
-		TAILQ_REMOVE(&agTimerObjQ, ob, pvt.tobjs);
+		TAILQ_REMOVE(&agTimerObjQ, ob, tobjs);
 
 	if (to->flags & AG_TIMER_AUTO_FREE)
 		free(to);
@@ -323,7 +323,7 @@ AG_ProcessTimeouts(Uint32 t)
 	for (ob = TAILQ_FIRST(&agTimerObjQ);
 	     ob != TAILQ_END(&agTimerObjQ);
 	     ob = obNext) {
-		obNext = TAILQ_NEXT(ob, pvt.tobjs);
+		obNext = TAILQ_NEXT(ob, tobjs);
 		AG_ObjectLock(ob);
 rescan:
 		for (to = TAILQ_FIRST(&ob->timers);

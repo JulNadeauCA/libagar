@@ -520,7 +520,25 @@ void ag_set_mod_state(void *_Nonnull, Uint);
 __END_DECLS
 
 #ifdef AG_LEGACY
-# include <agar/gui/widget_legacy.h>
+# define AG_WidgetParentWindow(w) AG_ParentWindow(w)
+# define AG_WidgetFocused         AG_WidgetIsFocused(w)
+# define AG_WidgetPutPixel32      AG_PutPixel32
+# define AG_WidgetPutPixel        AG_PutPixel32
+# define AG_DrawPixel             AG_PutPixel32
+# define AG_WidgetPutPixelRGB     AG_PutPixelRGB
+# define AG_DrawPixelRGB          AG_PutPixelRGB
+# define AG_WidgetBlendPixel      AG_BlendPixel32
+# define AG_WidgetBlendPixel32    AG_BlendPixel32
+# define AG_DrawPixelBlended      AG_BlendPixel32
+# define AG_WidgetBlendPixelRGBA  AG_BlendPixelRGBA
+# define AG_WidgetShownRecursive  AG_WidgetShowAll
+# define AG_WidgetHiddenRecursive AG_WidgetHideAll
+# define AG_WIDGET_TABLE_EMBEDDABLE   0     /* Flag no longer needed */
+# define AG_WidgetInheritSizeRequest  NULL  /* Is default behavior as of 1.6 */
+# define AG_WidgetInheritSizeAllocate NULL  /* Is default behavior as of 1.6 */
+__BEGIN_DECLS
+void *_Nullable AG_WidgetFind(void *_Nonnull, const char *_Nonnull) DEPRECATED_ATTRIBUTE;
+__END_DECLS
 #endif /* AG_LEGACY */
 
 #include <agar/gui/close.h>
