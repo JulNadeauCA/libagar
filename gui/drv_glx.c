@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1380,7 +1380,6 @@ GLX_MapWindow(AG_Window *_Nonnull win)
 		    None,
 		    None,
 		    CurrentTime) == 0 ? 1 : 0);
-		Debug(glx, "Pointer grab: %d\n", glx->ptrIsGrabbed);
 	}
 
 	AG_MutexUnlock(&glx->lock);

@@ -34,7 +34,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-#define DEBUG_EXPAND
+/* #define DEBUG_EXPAND */
 
 static int agMenuCounter = 0;
 AG_Menu   *agAppMenu = NULL;		/* Global application menu (SW mode) */
