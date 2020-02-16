@@ -199,9 +199,13 @@ AG_TTFOpenFont(AG_Font *font, const char *path)
 	if (ttf->underline_height < 1) {
 		ttf->underline_height = 1;
 	}
-	ttf->glyph_overhang = face->size->metrics.y_ppem / 10;
-	ttf->glyph_italics = 0.207;				/* 12 deg */
-	ttf->glyph_italics *= ttf->height;
+	if (ttf->style & AG_FONT_SW_BOLD) {
+		ttf->glyph_overhang = face->size->metrics.y_ppem / 10;
+	}
+	if (ttf->style & AG_FONT_SW_ITALIC) {
+		ttf->glyph_italics = 0.207;			/* 12 deg */
+		ttf->glyph_italics *= ttf->height;
+	}
 
 	/* Apply the standard style modifiers */
 	ttf->style = font->flags;
