@@ -241,7 +241,8 @@ OnShow(AG_Event *event)
 
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Styles:"));
 	ti->flags |= AG_TLIST_NO_SELECT;
-	AG_TlistSetFont(fs->tlFaces, ti, AG_TextFontPct(80));
+	AG_TlistSetFont(fs->tlFaces, ti,
+	    AG_TextFontPctFlags(80, AG_FONT_UNDERLINE));
 
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Regular"));
 	if (*pFont && (*pFont)->flags == 0) { ti->selected++; }
@@ -260,7 +261,8 @@ OnShow(AG_Event *event)
 
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Width variants:"));
 	ti->flags |= AG_TLIST_NO_SELECT;
-	AG_TlistSetFont(fs->tlFaces, ti, AG_TextFontPct(80));
+	AG_TlistSetFont(fs->tlFaces, ti,
+	    AG_TextFontPctFlags(80, AG_FONT_UNDERLINE));
 
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Condensed"));
 	if (*pFont && (*pFont)->flags == AG_FONT_CONDENSED) { ti->selected++; }
@@ -284,7 +286,8 @@ OnShow(AG_Event *event)
 
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software styles:"));
 	ti->flags |= AG_TLIST_NO_SELECT;
-	AG_TlistSetFont(fs->tlFaces, ti, AG_TextFontPct(80));
+	AG_TlistSetFont(fs->tlFaces, ti,
+	    AG_TextFontPctFlags(80, AG_FONT_UNDERLINE));
 
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software Bold"));
 	if (*pFont && (*pFont)->flags == AG_FONT_SW_BOLD) { ti->selected++; }

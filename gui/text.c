@@ -227,7 +227,7 @@ static TAILQ_HEAD(ag_fontq, ag_font) fonts;
 
 #ifdef HAVE_FREETYPE
 static void TextRenderFT(const AG_Char *_Nonnull, AG_Surface *_Nonnull, const AG_TextMetrics *_Nonnull, const AG_Font *_Nonnull, const AG_Color *_Nonnull, const AG_Color *_Nonnull);
-/* static void TextRenderFT_Underline(AG_TTFFont *_Nonnull, AG_Surface *_Nonnull, int); */
+static void TextRenderFT_Underline(AG_TTFFont *_Nonnull, AG_Surface *_Nonnull, int);
 #endif
 static AG_Glyph *_Nonnull TextRenderGlyph_Miss(AG_Driver *_Nonnull, const AG_Font *_Nonnull, const AG_Color *_Nonnull, const AG_Color *_Nonnull, AG_Char);
 static AG_Surface *_Nonnull GetBitmapGlyph(const AG_Font *_Nonnull, AG_Char);
@@ -455,6 +455,16 @@ AG_TextFontPct(int pct)
 	return AG_FetchFont(OBJECT(font)->name,
 	                    font->spec.size * pct / 100.0f,
 	                    font->flags);
+}
+AG_Font *
+AG_TextFontPctFlags(int pct, Uint flags)
+{
+	AG_TextState *ts = AG_TEXT_STATE_CUR();
+	const AG_Font *font = ts->font;
+
+	return AG_FetchFont(OBJECT(font)->name,
+	                    font->spec.size * pct / 100.0f,
+	                    flags);
 }
 
 /*
@@ -1620,10 +1630,7 @@ AG_TextRenderInternal(const AG_Char *text, const AG_Font *font,
 }
 
 #ifdef HAVE_FREETYPE
-/*
- * Render text using FreeType, using its grayscale output to modulate the alpha.
- * TODO subroutine the (AG_TEXT_STATE_CUR()->colorBG.a == 0) case.
- */
+/* Render text using FreeType. */
 static void
 TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
     const AG_TextMetrics *_Nonnull tm, const AG_Font *_Nonnull font,
@@ -1634,6 +1641,7 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	AG_TTFGlyph *G;
 	const AG_Char *ch;
 	Uint8 *src, *dst;
+	AG_TTFFont *ttf;
 	AG_Color cBg = *cBgOrig;
 	AG_Color cFg = *cFgOrig;
 	FT_UInt prev_index = 0;
@@ -1641,12 +1649,10 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	const int lineSkip = font->lineskip;
 	int xStart, yStart, line, x,y, w;
 
- 	xStart = (tm->nLines > 1) ? AG_TextJustifyOffset(tm->w, tm->wLines[0]) : 0;
+ 	xStart = (tm->nLines>1) ? AG_TextJustifyOffset(tm->w, tm->wLines[0]) : 0;
  	yStart = 0;
 
 	for (ch=&ucs[0], line=0; *ch != '\0'; ch++) {
-		AG_TTFFont *ttf;
-
 		switch (*ch) {
 		case '\n':
 			yStart += lineSkip;
@@ -1750,48 +1756,62 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 
 			xStart += delta.x >> 6;
 		}
-		
+	
 		/* Prevent texture wrapping with first glyph. */
 		if ((ch == &ucs[0]) && (G->minx < 0))
 			xStart -= G->minx;
 
-		for (y = 0; y < G->pixmap.rows; y++) {
-			if (y + G->yoffset < 0 ||
-			    y + G->yoffset >= S->h) {
-				continue;
-			}
-			dst = S->pixels +
-			    (yStart + y + G->yoffset)*S->pitch +
-			    (xStart + G->minx)*BytesPerPixel;
+		if (cBg.a == AG_TRANSPARENT) {       /* Put on transparent BG */
+			for (y = 0; y < G->pixmap.rows; y++) {
+				if (y+G->yoffset < 0 || y+G->yoffset >= S->h)
+					continue;
 
-			/* Adjust src for pixmaps to account for pitch. */
-			src = (Uint8 *)(G->pixmap.buffer +
-			                G->pixmap.pitch*y);
-
-			if (cBg.a == AG_TRANSPARENT) {
+				src = (Uint8 *)(G->pixmap.buffer +
+				                G->pixmap.pitch*y);
+				dst = S->pixels +
+				    (yStart + y + G->yoffset)*S->pitch +
+				    (xStart + G->minx)*BytesPerPixel;
+	
 				for (x = 0; x < w; x++) {
-					cFg.a = AG_8toH(*src++);
-					AG_SurfacePut_At(S, dst,
-					    AG_MapPixel(&S->format, &cFg));
+					if ((cFg.a = AG_8toH(*src++)) > 0) {
+						AG_SurfacePut_At(S, dst,
+						    AG_MapPixel(&S->format, &cFg));
+					}
 					dst += BytesPerPixel;
 				}
-			} else {
+			}
+		} else {                            /* Blend against color BG */
+			for (y = 0; y < G->pixmap.rows; y++) {
+				if (y+G->yoffset < 0 || y+G->yoffset >= S->h)
+					continue;
+
+				src = (Uint8 *)(G->pixmap.buffer +
+				                G->pixmap.pitch*y);
+				dst = S->pixels +
+				    (yStart + y + G->yoffset)*S->pitch +
+				    (xStart + G->minx)*BytesPerPixel;
+	
 				for (x = 0; x < w; x++) {
-					cFg.a = AG_8toH(*src++);
-					AG_SurfaceBlend_At(S, dst, &cFg,
-					    AG_ALPHA_DST);
+					if ((cFg.a = AG_8toH(*src++)) > 0) {
+						AG_SurfaceBlend_At(S, dst, &cFg,
+						    AG_ALPHA_DST);
+					}
 					dst += BytesPerPixel;
 				}
 			}
 		}
+
 		xStart += G->advance;
+
 		if (ttf->style & AG_FONT_SW_BOLD) {        /* Software Bold */
 			xStart += ttf->glyph_overhang;
 		}
 		prev_index = G->index;
 	}
-//	if (ttf->style & AG_FONT_UNDERLINE)
-//		TextRenderFT_Underline(ttf, S, tm->nLines);
+
+	ttf = font->data.vec.ttf;
+	if (ttf->style & AG_FONT_UNDERLINE)
+		TextRenderFT_Underline(ttf, S, tm->nLines);
 }
 #endif /* HAVE_FREETYPE */
 
@@ -2009,7 +2029,6 @@ fail_param:
 }
 
 #ifdef HAVE_FREETYPE
-#if 0
 /*
  * Render underline style.
  * Surface must be at least ftFont->underline_height pixels high.
@@ -2044,7 +2063,6 @@ TextRenderFT_Underline(AG_TTFFont *_Nonnull ftFont, AG_Surface *_Nonnull S,
 		y0 += lineskip;
 	}
 }
-#endif
 #endif /* HAVE_FREETYPE */
 
 /*

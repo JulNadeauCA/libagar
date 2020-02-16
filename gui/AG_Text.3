@@ -83,6 +83,9 @@ flag set.
 .Fn AG_TextFontPct "int size_pct"
 .Pp
 .Ft "AG_Font *"
+.Fn AG_TextFontPctFlags "int size_pct" "Uint flags"
+.Pp
+.Ft "AG_Font *"
 .Fn AG_TextFontPts "float size"
 .Pp
 .Ft void
@@ -161,9 +164,12 @@ then the
 default "font.size" is used.
 .Pp
 .Fn AG_TextFontPct
-sets the size of the active font, specified as percentage of current font
-size.
+sets the size of the active font, specified as percentage of current font size.
 An argument of 100% leaves the size unchanged.
+.Fn AG_TextFontPctFlags
+allows an alternate font style via
+.Fa flags
+argument.
 .Pp
 .Fn AG_TextJustify
 selects the justify mode to use in multi-line rendering:

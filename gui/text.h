@@ -375,6 +375,7 @@ void               AG_TextColorANSI(enum ag_ansi_color, const AG_Color *_Nonnull
 AG_Font *_Nullable AG_TextFontLookup(const char *_Nullable, float, Uint);
 AG_Font *_Nullable AG_TextFontPts(float);
 AG_Font *_Nullable AG_TextFontPct(int);
+AG_Font *_Nullable AG_TextFontPctFlags(int, Uint);
 AG_Font	*_Nullable AG_FetchFont(const char *_Nullable, float, Uint)
                                _Warn_Unused_Result;
 void               AG_UnusedFont(AG_Font *_Nonnull);
