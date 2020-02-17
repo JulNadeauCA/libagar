@@ -485,6 +485,7 @@ BeginSelect(AG_Event *_Nonnull event)
 	if (cons->flags & AG_CONSOLE_BEGIN_SELECT) {
 		cons->pos = 0;
 		cons->sel = cons->nLines-1;
+		cons->flags &= ~(AG_CONSOLE_SELECTING);
 	} else {
 		cons->flags |= AG_CONSOLE_BEGIN_SELECT;
 		AG_AddTimer(cons, &cons->beginSelectTo, agMouseDblclickDelay,
@@ -799,11 +800,6 @@ Draw(void *_Nonnull p)
 		    ((lnIdx == pos) ||
 		     ((sel > 0 && lnIdx > pos && lnIdx < pos+sel+1) ||
 		      (sel < 0 && lnIdx < pos && lnIdx > pos+sel-1)))) {
-			AG_Rect rSel;
-
-			rSel = r;
-			rSel.x = 0;
-			AG_DrawRectFilled(cons, &rSel, cSel);
 			isSelected = 1;
 		} else {
 			isSelected = 0;
