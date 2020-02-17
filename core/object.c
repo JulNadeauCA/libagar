@@ -101,6 +101,14 @@ AG_ObjectInit(void *pObj, void *pClass)
 	free(hier);
 }
 
+/* Initialize an AG_Object instance (and set the STATIC flag on it). */
+void
+AG_ObjectInitStatic(void *obj, void *C)
+{
+	AG_ObjectInit(obj, C);
+	OBJECT(obj)->flags |= AG_OBJECT_STATIC;
+}
+
 /*
  * Allocate, initialize and attach a new object instance of the specified
  * class.
@@ -2099,14 +2107,6 @@ tryname:
 #endif /* !AG_SMALL */
 
 #ifdef AG_LEGACY
-/* Initialize an AG_Object instance (static variant). */
-void
-AG_ObjectInitStatic(void *obj, void *C)
-{
-	AG_ObjectInit(obj, C);
-	OBJECT(obj)->flags |= AG_OBJECT_STATIC;
-}
-
 void
 AG_ObjectSetArchivePath(void *obj, const char *path)
 {

@@ -348,6 +348,7 @@ void *_Nullable AG_ObjectNew(void *_Nullable, const char *_Nullable,
 void AG_ObjectAttach(void *_Nullable _Restrict, void *_Nonnull _Restrict);
 
 void AG_ObjectInit(void *_Nonnull _Restrict, void *_Nullable _Restrict);
+void AG_ObjectInitStatic(void *_Nonnull, void *_Nullable);
 void AG_ObjectDetach(void *_Nonnull);
 void AG_ObjectReset(void *_Nonnull);
 
@@ -549,8 +550,6 @@ void ag_unlock_timers(void *_Nullable);
 # define AG_BindConstPointer         AG_BindPointer
 # define AG_BindConstPointerFn       AG_BindPointerFn
 # define AG_BindConstPointerMp       AG_BindPointerMp
-/* <1.6 deprecated (STATIC-flag setting) constructor */
-void AG_ObjectInitStatic(void *_Nonnull, void *_Nullable) DEPRECATED_ATTRIBUTE;
 /* <1.6 replaced by AG_SetString("archive-path", ...) */
 void AG_ObjectSetArchivePath(void *_Nonnull, const char *_Nonnull) DEPRECATED_ATTRIBUTE;
 #endif /* AG_LEGACY */
