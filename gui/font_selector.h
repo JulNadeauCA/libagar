@@ -6,6 +6,7 @@
 #include <agar/gui/pane.h>
 #include <agar/gui/box.h>
 #include <agar/gui/tlist.h>
+#include <agar/gui/hsvpal.h>
 #include <agar/gui/numerical.h>
 
 #include <agar/gui/begin.h>
@@ -32,9 +33,11 @@ typedef struct ag_font_selector {
 	AG_Tlist *_Nonnull tlFaces;		/* List of font faces */
 	AG_Tlist *_Nonnull tlStyles;		/* List of font styles */
 	AG_Tlist *_Nonnull tlSizes;		/* List of available sizes */
+	AG_HSVPal *_Nonnull pal;		/* Preview color picker */
 
 	AG_Rect rPreview;			/* Preview area */
 	AG_Font *_Nullable font;		/* Default `font' binding */
+	AG_Color cPreview;			/* Preview color */
 } AG_FontSelector;
 
 #define AGFONTSELECTOR(obj)            ((AG_FontSelector *)(obj))

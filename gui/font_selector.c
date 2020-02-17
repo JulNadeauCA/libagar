@@ -52,7 +52,7 @@ AG_FontSelectorNew(void *parent, Uint flags)
 }
 
 static void
-Bound(AG_Event *event)
+Bound(AG_Event *_Nonnull event)
 {
 	AG_FontSelector *fs = AG_FONTSELECTOR_SELF();
 	AG_Variable *b = AG_PTR(1);
@@ -76,7 +76,7 @@ Bound(AG_Event *event)
 }
 
 static void
-UpdateFontSelection(AG_FontSelector *fs)
+UpdateFontSelection(AG_FontSelector *_Nonnull fs)
 {
 	AG_Variable *bFont;
 	AG_Font *font, **pFont;
@@ -92,7 +92,7 @@ UpdateFontSelection(AG_FontSelector *fs)
 }
 
 static void
-UpdatePreview(AG_FontSelector *fs)
+UpdatePreview(AG_FontSelector *_Nonnull fs)
 {
 	AG_Variable *bFont;
 	AG_Font **pFont;
@@ -101,6 +101,7 @@ UpdatePreview(AG_FontSelector *fs)
 	bFont = AG_GetVariable(fs, "font", (void *)&pFont);
 	AG_PushTextState();
 
+	AG_TextColor(&fs->cPreview);
 	if (*pFont != NULL) {
 		AG_TextFont(*pFont);
 	}
@@ -121,7 +122,7 @@ UpdatePreview(AG_FontSelector *fs)
 }
 
 static void
-OnShow(AG_Event *event)
+OnShow(AG_Event *_Nonnull event)
 {
 	AG_Variable *bFont;
 	AG_Font **pFont;
@@ -304,7 +305,7 @@ OnShow(AG_Event *event)
 }
 
 static void
-SelectedFace(AG_Event *event)
+SelectedFace(AG_Event *_Nonnull event)
 {
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
 	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
@@ -315,7 +316,7 @@ SelectedFace(AG_Event *event)
 }
 
 static void
-SelectedStyle(AG_Event *event)
+SelectedStyle(AG_Event *_Nonnull event)
 {
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
 	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
@@ -346,7 +347,7 @@ SelectedStyle(AG_Event *event)
 }
 
 static void
-SelectedSize(AG_Event *event)
+SelectedSize(AG_Event *_Nonnull event)
 {
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
 	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
@@ -357,7 +358,7 @@ SelectedSize(AG_Event *event)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_FontSelector *fs = AG_FONTSELECTOR_SELF();
 	const int x = AG_INT(2);
@@ -378,7 +379,15 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+PreviewColorChanged(AG_Event *_Nonnull event)
+{
+	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
+
+	UpdatePreview(fs);
+}
+
+static void
+Init(void *_Nonnull obj)
 {
 	AG_FontSelector *fs = obj;
 	
@@ -387,19 +396,30 @@ Init(void *obj)
 	fs->curStyle = 0;
 	fs->sPreview = -1;
 	fs->curSize = 0.0f;
+
 	fs->hPane = AG_PaneNewHoriz(fs, AG_PANE_EXPAND);
-	fs->tlFaces = AG_TlistNew(fs->hPane->div[0], AG_TLIST_EXPAND);
-	fs->hPane2 = AG_PaneNewHoriz(fs->hPane->div[1], AG_PANE_EXPAND);
-	fs->tlStyles = AG_TlistNew(fs->hPane2->div[0], AG_TLIST_EXPAND);
-	fs->sizeBox = AG_BoxNewVert(fs->hPane2->div[1], AG_BOX_EXPAND);
-	fs->tlSizes = AG_TlistNew(fs->sizeBox, AG_TLIST_EXPAND);
-
+	{
+		fs->tlFaces = AG_TlistNew(fs->hPane->div[0], AG_TLIST_EXPAND);
+		fs->hPane2 = AG_PaneNewHoriz(fs->hPane->div[1], AG_PANE_EXPAND);
+		fs->tlStyles = AG_TlistNew(fs->hPane2->div[0], AG_TLIST_EXPAND);
+		fs->sizeBox = AG_BoxNewVert(fs->hPane2->div[1], AG_BOX_EXPAND);
+		{
+			fs->tlSizes = AG_TlistNew(fs->sizeBox, AG_TLIST_EXPAND);
+			fs->pal = AG_HSVPalNew(fs->sizeBox, AG_HSVPAL_NOPREVIEW |
+			                                    AG_HSVPAL_NOALPHA |
+		                                            AG_HSVPAL_HFILL);
+			AG_BindPointer(fs->pal, "color", (void *)&fs->cPreview);
+			AG_SetEvent(fs->pal, "h-changed", PreviewColorChanged, "%p", fs);
+			AG_SetEvent(fs->pal, "sv-changed", PreviewColorChanged, "%p", fs);
+		}
+	}
+	
 	fs->font = NULL;
-
 	fs->rPreview.x = 0;
 	fs->rPreview.y = 0;
 	fs->rPreview.w = 0;
-	fs->rPreview.h = 64;
+	fs->rPreview.h = 80;
+	AG_ColorWhite(&fs->cPreview);
 
 	AG_TlistSizeHint(fs->tlFaces, "XXXXXXXXXXXXXXXXXXXX", 20);
 	AG_TlistSizeHint(fs->tlStyles, "<Condensed Bold Oblique>", 20);
@@ -419,7 +439,7 @@ Init(void *obj)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_FontSelector *fs = obj;
 	AG_Widget *chld;
@@ -432,14 +452,16 @@ Draw(void *obj)
 	if (fs->sPreview != -1) {
 		const AG_Surface *S = WSURFACE(fs,fs->sPreview);
 
+		AG_PushClipRect(fs, &fs->rPreview);
 		AG_WidgetBlitSurface(fs, fs->sPreview,
 		    fs->rPreview.x + (fs->rPreview.w >> 1) - (S->w >> 1),
 		    fs->rPreview.y + (fs->rPreview.h >> 1) - (S->h >> 1));
+		AG_PopClipRect(fs);
 	}
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_FontSelector *fs = obj;
 	AG_SizeReq rChld;
@@ -450,7 +472,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_FontSelector *fs = obj;
 	AG_SizeAlloc aChld;
