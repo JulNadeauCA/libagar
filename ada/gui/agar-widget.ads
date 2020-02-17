@@ -838,8 +838,6 @@ package Agar.Widget is
     Modal_Window_Stack   : System.Address;        -- Modal window list TODO
 
     Window_Operation     : Window_Operation_t;    -- Window op in progress
-    X_Out_Limit          : C.int;                 -- Left/right boundaries
-    Bottom_Out_Limit     : C.int;                 -- Bottom boundary
     Icon_W, Icon_H       : C.int;                 -- Window icon sizes
     Nominal_FPS          : C.unsigned;            -- Nominal frames/second
     Current_FPS          : C.int;                 -- Last calculated FPS
