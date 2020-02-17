@@ -2,20 +2,25 @@
 
 #include "agartest.h"
 
+static AG_Font *myFont;
+
 static void
 SelectedFont(AG_Event *event)
 {
 /*	AG_Window *win = AG_WINDOW_PTR(1); */
 
-	AG_SetString(agConfig, "font.face", AGOBJECT(agDefaultFont)->name);
-	AG_SetInt(agConfig, "font.size", agDefaultFont->spec.size);
-	AG_SetUint(agConfig, "font.flags", agDefaultFont->flags);
-	if (AG_ConfigSave() == 0) {
+	if (myFont) {
+		AG_SetDefaultFont(myFont);
+		AG_SetString(agConfig, "font.face", AGOBJECT(agDefaultFont)->name);
+		AG_SetInt(agConfig, "font.size", agDefaultFont->spec.size);
+		AG_SetUint(agConfig, "font.flags", agDefaultFont->flags);
+		if (AG_ConfigSave() == 0) {
 #ifdef AG_TIMERS
-		AG_TextTmsg(AG_MSG_INFO, 1000, "Default font has changed.");
+			AG_TextTmsg(AG_MSG_INFO, 1000, "Default font has changed.");
 #endif
-	} else {
-		AG_TextMsgFromError();
+		} else {
+			AG_TextMsgFromError();
+		}
 	}
 }
 
@@ -26,6 +31,8 @@ TestGUI(void *obj, AG_Window *win)
 	AG_Box *box;
 	int i;
 
+	myFont = agDefaultFont;
+
 	for (i = 0; i <= 10; i++) {
 		TestMsg(obj,
 		    "Core Font #%d ("
@@ -35,11 +42,11 @@ TestGUI(void *obj, AG_Window *win)
 	}
 
 	fs = AG_FontSelectorNew(win, AG_FONTSELECTOR_EXPAND);
-	AG_BindPointer(fs, "font", (void *)&agDefaultFont);
+	AG_BindPointer(fs, "font", (void *)&myFont);
 
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonNewFn(box, 0, _("OK"), SelectedFont, "%p", win);
+		AG_ButtonNewFn(box, 0, _("Set as Default Font"), SelectedFont, "%p", win);
 		AG_ButtonNewFn(box, 0, _("Cancel"), AG_WindowCloseGenEv, "%p", win);
 	}
 	return (0);
