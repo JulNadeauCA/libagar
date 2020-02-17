@@ -228,9 +228,13 @@ prev_item:
 			itPrev = TAILQ_PREV(it, ag_tlist_itemq, items);
 			if (itPrev) {
 				if (itPrev->flags & AG_TLIST_NO_SELECT) {
-					DeselectItem(tl, it);
-					it = itPrev;
-					goto prev_item;
+					if (itPrev != TAILQ_FIRST(&tl->items)) {
+						DeselectItem(tl, it);
+						it = itPrev;
+						goto prev_item;
+					} else {
+						break;
+					}
 				}
 				DeselectItem(tl, it);
 				SelectItem(tl, itPrev);
