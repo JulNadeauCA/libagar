@@ -55,20 +55,26 @@ TestGUI(void *obj, AG_Window *win)
 	MyTestInstance *ti = obj;
 #endif
 	AG_HSVPal *pal;
+	AG_Box *box;
 
-	pal = AG_HSVPalNew(win, AG_HSVPAL_EXPAND);
+	pal = AG_HSVPalNew(win, AG_HSVPAL_EXPAND | AG_HSVPAL_SHOW_RGB);
 	pal->h = 240.0f;
 	pal->s = 0.80f;
 	pal->v = 0.90f;
 
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
+	{
 #ifdef AG_TIMERS
-	AG_ButtonNewFn(win, AG_BUTTON_STICKY,
-	    "Rotate Hue", SetRotateHue, "%p,%p", ti, pal);
-#else
-	AG_WidgetDisable(AG_ButtonNewS(win, 0, "Rotate Hue"));
+		AG_ButtonNewFn(box, AG_BUTTON_STICKY, _("Rotate Hue"),
+		    SetRotateHue, "%p,%p", ti, pal);
 #endif
+		AG_ButtonNewFlag(box, AG_BUTTON_STICKY, "RGB",
+		    &pal->flags, AG_HSVPAL_SHOW_RGB);
+		AG_ButtonNewFlag(box, AG_BUTTON_STICKY, "HSV",
+		    &pal->flags, AG_HSVPAL_SHOW_HSV);
+	}
 
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 500, 500);
 	return (0);
 }
 

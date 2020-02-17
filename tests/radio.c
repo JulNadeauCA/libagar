@@ -10,38 +10,6 @@ typedef struct {
 static int
 TestGUI(void *obj, AG_Window *win)
 {
-	const char *items[] = {
-		"Homer Simpson",
-		"Marge Simpson",
-		"Bart Simpson",
-		"Lisa Simpson",
-		"Maggie Simpson",
-		"Santa's Little Helper",
-		"Snowball II/V",
-		"Abraham Simpson",
-		"Abu Nahasapeemapetilon",
-		"Barney Gumble",
-		"Chief Clancy Wiggum",
-		"Dewey Largo",
-		"Eddie",
-		"Edna Krabappel",
-		"Itchy",
-		"Janey Powell",
-		"Jasper Beardsley",
-		"Kent Brockman",
-		"Krusty The Clown",
-		"Lenny Leonard",
-		"Lou",
-		"Martin Prince",
-		"Milhouse Van Houten",
-		"Moe Szyslak",
-		"Mr. Burns",
-		"Ned Flanders",
-		"Otto Mann",
-		"Patty Bouvier",
-		"Ralph Wiggum",
-		NULL
-	};
 	AG_Label *lbl;
 	MyTestInstance *ti = obj;
 	AG_Notebook *nb;
@@ -51,23 +19,37 @@ TestGUI(void *obj, AG_Window *win)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
 	nt = AG_NotebookAdd(nb, "Vertical", AG_BOX_VERT);
 	{
-		lbl = AG_LabelNewPolled(nt, AG_LABEL_EXPAND | AG_LABEL_FRAME,
+		const char *items[] = {
+			"Homer Simpson", "Marge Simpson", "Bart Simpson",
+			"Lisa Simpson", "Maggie Simpson", "Santa's Little Helper",
+			"Snowball II/V", "Abraham Simpson", "Abu Nahasapeemapetilon",
+			"Barney Gumble", "Clancy Wiggum", "Dewey Largo", "Eddie",
+			"Edna Krabappel", "Itchy", "Janey Powell", "Jasper Beardsley",
+			"Kent Brockman", "Krusty The Clown", "Lenny Leonard",
+			"Lou", "Martin Prince", "Milhouse Van Houten", "Moe Szyslak",
+			"Mr. Burns", "Ned Flanders", "Otto Mann", "Patty Bouvier",
+			"Ralph Wiggum", NULL
+		};
+		lbl = AG_LabelNewPolled(nt, AG_LABEL_HFILL | AG_LABEL_FRAME,
 		    "Radio Group Test\n"
-		    "Value: %i", &ti->myValue);
+		    "Value: " AGSI_BOLD "%i" AGSI_RST,
+		    &ti->myValue);
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 		AG_LabelValign(lbl, AG_TEXT_TOP);
-		AG_SetStyle(lbl, "font-size", "150%");
 		AG_RadioNewUint(nt, 0, items, &ti->myValue);
 	}
 
 	nt = AG_NotebookAdd(nb, "Horizontal", AG_BOX_VERT);
 	{
-		lbl = AG_LabelNewPolled(nt, AG_LABEL_EXPAND | AG_LABEL_FRAME,
+		const char *items[] = {
+			"Bart", "Homer", "Lisa", "Maggie", "Marge", NULL
+		};
+		lbl = AG_LabelNewPolled(nt, AG_LABEL_HFILL| AG_LABEL_FRAME,
 		    "Radio Group Test\n"
-		    "Value: %i", &ti->myValue);
+		    "Value: " AGSI_BOLD "%i" AGSI_RST,
+		    &ti->myValue);
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 		AG_LabelValign(lbl, AG_TEXT_TOP);
-		AG_SetStyle(lbl, "font-size", "150%");
 
 		rad = AG_RadioNewUint(nt, 0, items, &ti->myValue);
 		AG_RadioSetDisposition(rad, AG_RADIO_HORIZ);

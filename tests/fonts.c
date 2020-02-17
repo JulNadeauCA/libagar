@@ -23,15 +23,24 @@ static int
 TestGUI(void *obj, AG_Window *win)
 {
 	AG_FontSelector *fs;
-	AG_Box *hBox;
-	
+	AG_Box *box;
+	int i;
+
+	for (i = 0; i <= 10; i++) {
+		TestMsg(obj,
+		    "Core Font #%d ("
+		    AGSI_FONT9 "AGSI_FONT%d" AGSI_RST
+		    "): \x1b[%dm%s\x1b[0m",
+		    i, i, 10+i, agCoreFonts[i]);
+	}
+
 	fs = AG_FontSelectorNew(win, AG_FONTSELECTOR_EXPAND);
 	AG_BindPointer(fs, "font", (void *)&agDefaultFont);
 
-	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonNewFn(hBox, 0, _("OK"), SelectedFont, "%p", win);
-		AG_ButtonNewFn(hBox, 0, _("Cancel"), AG_WindowCloseGenEv, "%p", win);
+		AG_ButtonNewFn(box, 0, _("OK"), SelectedFont, "%p", win);
+		AG_ButtonNewFn(box, 0, _("Cancel"), AG_WindowCloseGenEv, "%p", win);
 	}
 	return (0);
 }
