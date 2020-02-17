@@ -39,6 +39,9 @@ typedef struct ag_radio {
 	int value;            /* Default "value" binding */
 	int wReq, hReq;       /* Size requisition */
 	int wPre, hPre;       /* Size hint */
+	int lastKeyDown;      /* For key repeat */
+	Uint32 _pad;
+	AG_Timer moveTo;      /* Timer for keyboard motion */
 } AG_Radio;
 
 #define AGRADIO(obj)            ((AG_Radio *)(obj))

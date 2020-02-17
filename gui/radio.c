@@ -568,42 +568,100 @@ MouseButtonDown(AG_Event *_Nonnull event)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+MoveSelection(AG_Radio *rad, int delta)
 {
-	AG_Radio *rad = AG_RADIO_SELF();
-	AG_Variable *value;
-	int *sel;
-	const int keysym = AG_INT(1);
-	int selNew = -1, i;
+	AG_Variable *V;
+	int *sel, selNew;
 
-	value = AG_GetVariable(rad, "value", (void *)&sel);
-	switch (keysym) {
-	case AG_KEY_DOWN:
-		selNew = *sel;
-		if (++selNew >= rad->nItems)
-			selNew = rad->nItems - 1;
-		break;
-	case AG_KEY_UP:
-		selNew = *sel;
-		if (--selNew < 0)
-			selNew = 0;
-		break;
-	default:
-		for (i = 0; i < rad->nItems; i++) {
-			if (rad->items[i].hotkey != 0 &&
-			    rad->items[i].hotkey == keysym) {
-				selNew = i;
-				break;
-			}
-		}
-		break;
+	V = AG_GetVariable(rad, "value", (void *)&sel);
+	selNew = *sel + delta;
+	if (selNew >= rad->nItems) {
+		selNew = rad->nItems - 1;
+	} else if (selNew < 0) {
+		selNew = 0;
 	}
 	if (selNew != -1 && selNew != *sel) {
 		*sel = selNew;
 		AG_PostEvent(rad, "radio-changed", "%i", *sel);
 		AG_Redraw(rad);
 	}
-	AG_UnlockVariable(value);
+	AG_UnlockVariable(V);
+}
+
+/* Timer for moving keyboard selection. */
+static Uint32
+MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
+{
+	AG_Radio *rad = AG_RADIO_SELF();
+	const int delta = AG_INT(1);
+
+	if (delta < 0) {
+		MoveSelection(rad, delta);
+	} else {
+		MoveSelection(rad, delta);
+	}
+	return (agKbdRepeat);
+}
+
+static void
+KeyDown(AG_Event *_Nonnull event)
+{
+	AG_Radio *rad = AG_RADIO_SELF();
+	const int keysym = AG_INT(1);
+	int i;
+
+	switch (keysym) {
+	case AG_KEY_DOWN:
+	case AG_KEY_RIGHT:
+		MoveSelection(rad, +1);
+		AG_AddTimer(rad, &rad->moveTo, agKbdDelay, MoveTimeout, "%i", +1);
+		break;
+	case AG_KEY_UP:
+	case AG_KEY_LEFT:
+		MoveSelection(rad, -1);
+		AG_AddTimer(rad, &rad->moveTo, agKbdDelay, MoveTimeout, "%i", -1);
+		break;
+	default:
+		{
+			AG_Variable *V;
+			int *sel, selNew = -1;
+
+			V = AG_GetVariable(rad, "value", (void *)&sel);
+			for (i = 0; i < rad->nItems; i++) {
+				if (rad->items[i].hotkey != 0 &&
+				    rad->items[i].hotkey == keysym) {
+					selNew = i;
+					break;
+				}
+			}
+			if (selNew != -1 && selNew != *sel) {
+				*sel = selNew;
+				AG_PostEvent(rad, "radio-changed", "%i", *sel);
+				AG_Redraw(rad);
+			}
+			AG_UnlockVariable(V);
+		}
+		break;
+	}
+	rad->lastKeyDown = keysym;
+}
+
+static void
+KeyUp(AG_Event *_Nonnull event)
+{
+	AG_Radio *rad = AG_RADIO_SELF();
+	const int keysym = AG_INT(1);
+
+	switch (keysym) {
+	case AG_KEY_UP:
+	case AG_KEY_DOWN:
+	case AG_KEY_LEFT:
+	case AG_KEY_RIGHT:
+		if (keysym == rad->lastKeyDown) {
+			AG_DelTimer(rad, &rad->moveTo);
+		}
+		break;
+	}
 }
 
 static void
@@ -629,6 +687,14 @@ StyleChanged(AG_Event *_Nonnull event)
 }
 
 static void
+OnHide(AG_Event *_Nonnull event)
+{
+	AG_Radio *rad = AG_RADIO_SELF();
+
+	AG_DelTimer(rad, &rad->moveTo);
+}
+
+static void
 Init(void *_Nonnull obj)
 {
 	AG_Radio *rad = obj;
@@ -647,11 +713,17 @@ Init(void *_Nonnull obj)
 /*	rad->itemHeight = agTextFontLineSkip; */
 	rad->wPre = -1;
 	rad->hPre = -1;
+	rad->lastKeyDown = AG_KEY_NONE;
+
+	AG_InitTimer(&rad->moveTo, "move", 0);
 
 	AG_AddEvent(rad, "font-changed", StyleChanged, NULL);
 	AG_AddEvent(rad, "palette-changed", StyleChanged, NULL);
+	AG_AddEvent(rad, "widget-hidden", OnHide, NULL);
+
 	AG_SetEvent(rad, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(rad, "key-down", KeyDown, NULL);
+	AG_SetEvent(rad, "key-up", KeyUp, NULL);
 	AG_SetEvent(rad, "mouse-motion", MouseMotion, NULL);
 
 	AG_BindInt(rad, "value", &rad->value);
