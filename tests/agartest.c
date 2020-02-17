@@ -123,37 +123,37 @@ const AG_TestCase *testCases[] = {
 
 const char *agarBuildOpts[] = {
 #ifdef AG_DEBUG
-	"DEBUG ",
+	"DEBUG  ",
 #endif
 #ifdef AG_ENABLE_DSO
-	"DSO ",
+	"DSO  ",
 #endif
 #ifdef AG_LEGACY
-	"LEGACY ",
+	"LEGACY  ",
 #endif
 #ifdef AG_NAMESPACES
-	"NAMESPACES ",
+	"NAMESPACES  ",
 #endif
 #ifdef AG_SERIALIZATION
-	"SERIALIZATION ",
+	"SERIALIZATION  ",
 #endif
 #ifdef AG_THREADS
-	"THREADS ",
+	"THREADS  ",
 #endif
 #ifdef AG_TIMERS
-	"TIMERS ",
+	"TIMERS  ",
 #endif
 #ifdef AG_TYPE_SAFETY
-	"TYPE_SAFETY ",
+	"TYPE_SAFETY  ",
 #endif
 #ifdef AG_UNICODE
-	"UNICODE ",
+	"UNICODE  ",
 #endif
 #ifdef AG_USER
-	"USER ",
+	"USER  ",
 #endif
 #ifdef AG_VERBOSITY
-	"VERBOSITY ",
+	"VERBOSITY  ",
 #endif
 	NULL
 };
@@ -894,23 +894,16 @@ main(int argc, char *argv[])
 		const char **bopt;
 
 		AG_GetVersion(&av);
-
-		AG_ConsoleMsgS(console, "    _       _       _     ___  ");
-		AG_ConsoleMsgS(console, "  / _ \\   / _ \\   / _ \\  |  _ \\ ");
-		AG_ConsoleMsgS(console, " | |_| | | (_| | | |_| | | |_) |");
-		AG_ConsoleMsgS(console, " |_| |_|  \\__, | |_| |_| |_| |_|");
-		AG_ConsoleMsgS(console, "          |___/                 ");
 		AG_ConsoleMsgS(console, "");
-
 		if (av.release) {
 			if (av.rev > 0) {
 				ln = AG_ConsoleMsg(console,
-				    _("Agar %d.%d.%d for %s (r%d, \"%s\")"),
+				    _("Agar %d.%d.%d for %s (r%d, " AGSI_FRAK "%s" AGSI_RST ")"),
 				    av.major, av.minor, av.patch, agCPU.arch,
 				    av.rev, av.release);
 			} else {
 				ln = AG_ConsoleMsg(console,
-				    _("Agar %d.%d.%d for %s (\"%s\")"),
+				    _("Agar %d.%d.%d for %s (" AGSI_FRAK "%s" AGSI_RST ")"),
 				    av.major, av.minor, av.patch, agCPU.arch,
 				    av.release);
 			}
@@ -919,7 +912,7 @@ main(int argc, char *argv[])
 			    _("Agar %d.%d.%d for %s (r%d)"),
 			    av.major, av.minor, av.patch, agCPU.arch, av.rev);
 		}
-		AG_ColorFromString(&ln->c, "Cyan", NULL);
+		AG_ColorRGB(&ln->c, 200,240,240);
 
 		if (av.rev > 0 && av.rev != AGAR_REVISION) {
 			ln = AG_ConsoleMsg(console,
@@ -929,20 +922,29 @@ main(int argc, char *argv[])
 			AG_ColorRGB_8(&ln->c, 255,100,100);
 		}
 
-		ln = AG_ConsoleMsgS(console, "http://libagar.org");
-		AG_ColorFromString(&ln->c, "DarkCyan", NULL);
+		ln = AG_ConsoleMsgS(console,
+		    AGSI_FONT4
+		    "[ https://libAgar.org/ | "
+		    "https://github.com/JulNadeauCA/ | "
+		    "https://patreon.com/libagar/ ]"
+		    AGSI_RST);
+		AG_ColorRGB(&ln->c, 200,240,240);
+
+		AG_ConsoleMsgS(console, "");
 
 		ln = AG_ConsoleMsg(console,
-		    _("Memory model: %s "
-		      "(%d-bit/component color; %u-bit pixels)"),
+		    _("Memory model: " AGSI_ITALIC "%s" AGSI_RST " "
+		      "(%d-bit/component color & %u-bit aligned pixels)"),
 		    AG_MEMORY_MODEL_NAME,
 		    AG_COMPONENT_BITS, (Uint)(sizeof(AG_Pixel) << 3));
-		AG_ColorRGB_8(&ln->c, 240,240,0);
+		AG_ColorFromString(&ln->c, "AntiqueWhite", NULL);
 
-		ln = AG_ConsoleMsg(console, _("Build options: "));
-		AG_ColorRGB_8(&ln->c, 240,240,0);
+		ln = AG_ConsoleMsg(console, _("Build options: " AGSI_FONT10));
+		AG_ColorFromString(&ln->c, "AntiqueWhite", NULL);
 		for (bopt = &agarBuildOpts[0]; *bopt != NULL; bopt++)
 			AG_ConsoleMsgCatS(ln, *bopt);
+		
+		AG_ConsoleMsgCatS(ln, AGSI_RST);
 
 		AG_ConsoleMsg(console, _("Available drivers:"));
 		for (pd = &agDriverList[0]; *pd != NULL; pd++) {

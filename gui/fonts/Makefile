@@ -55,6 +55,7 @@ DATAFILES_SRC=	Bedstead-COPYING.txt \
 		league-gothic-italic.otf \
 		league-gothic-condensed.otf \
 		league-gothic-condensed-italic.otf \
+		league-spartan.otf \
 		minimal.xcf \
 		serif.xcf \
 		vera.ttf \

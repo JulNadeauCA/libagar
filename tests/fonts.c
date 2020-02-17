@@ -31,7 +31,7 @@ TestGUI(void *obj, AG_Window *win)
 		    "Core Font #%d ("
 		    AGSI_FONT9 "AGSI_FONT%d" AGSI_RST
 		    "): \x1b[%dm%s\x1b[0m",
-		    i, i, 10+i, agCoreFonts[i]);
+		    i+1, i+1, 10+i, agCoreFonts[i]);
 	}
 
 	fs = AG_FontSelectorNew(win, AG_FONTSELECTOR_EXPAND);

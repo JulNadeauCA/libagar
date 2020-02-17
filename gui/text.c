@@ -182,7 +182,7 @@ const char *agCoreFonts[] = {
 	"cm-sans",
 	"cm-serif",
 	"cm-typewriter",
-	"cm-serif-upright-italic",
+	"league-spartan",
 	"bedstead",
 	"charter",
 	"courier-prime",
@@ -598,6 +598,8 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 				Strlcat(path, "-bold-italic", sizeof(path));
 			} else if (flags & AG_FONT_BOLD) {
 				Strlcat(path, "-bold", sizeof(path));
+			} else if (flags & AG_FONT_UPRIGHT_ITALIC) {
+				Strlcat(path, "-upright-italic", sizeof(path));
 			} else if (flags & AG_FONT_ITALIC) {
 				Strlcat(path, "-italic", sizeof(path));
 			} else if (flags & AG_FONT_CONDENSED) {

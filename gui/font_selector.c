@@ -253,6 +253,8 @@ OnShow(AG_Event *event)
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Bold Italic"));
 	if (*pFont && ((*pFont)->flags & AG_FONT_BOLD &&
 	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
+	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Upright Italic"));
+	if (*pFont && (*pFont)->flags == AG_FONT_UPRIGHT_ITALIC) { ti->selected++; }
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Oblique"));
 	if (*pFont && (*pFont)->flags == AG_FONT_OBLIQUE) { ti->selected++; }
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Bold Oblique"));
@@ -323,6 +325,7 @@ SelectedStyle(AG_Event *event)
 	if (!strcmp(it->text, _("Bold")))                   { flags |=  AG_FONT_BOLD; }
 	if (!strcmp(it->text, _("Italic")))                 { flags |=  AG_FONT_ITALIC; }
 	if (!strcmp(it->text, _("Bold Italic")))            { flags |= (AG_FONT_BOLD | AG_FONT_ITALIC); }
+	if (!strcmp(it->text, _("Upright Italic")))         { flags |=  AG_FONT_UPRIGHT_ITALIC; }
 	if (!strcmp(it->text, _("Oblique")))                { flags |=  AG_FONT_OBLIQUE; }
 	if (!strcmp(it->text, _("Bold Oblique")))           { flags |= (AG_FONT_BOLD | AG_FONT_OBLIQUE); }
 

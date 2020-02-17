@@ -126,6 +126,16 @@ Copyright (c) 2010, Caroline Hadilaksono & Micah Rich <caroline@hadilaksono, mic
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is copied below, and is also available with a FAQ at: http://scripts.sil.org/OFL
 
+League Spartan Fonts Copyright
+------------------------------
+Copyright (c) September 22 2014, Micah Rich micah@micahrich.com, with Reserved Font Name: "League Spartan".
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
+
+Version 1.1 - 26 February 2007
+
 UnifrakturMaguntia Fonts Copyright
 ----------------------------------
 Copyright (c) 2010-2017 j. 'mach' wust, Gerrit Ansmann, Georg Duffner with Reserved Font Name UnifrakturMaguntia.
