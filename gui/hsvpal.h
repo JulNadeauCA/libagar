@@ -25,8 +25,11 @@ typedef struct ag_hsvpal {
 #define AG_HSVPAL_EXPAND (AG_HSVPAL_HFILL|AG_HSVPAL_VFILL)
 
 	float h, s, v, a;		/* Default bindings */
-	Uint32 pixel;			/* Calculated pixel */
-	AG_Color color;			/* Calculated color */
+	Uint32 pixel;			/* Packed 32-bit pixel */
+#if AG_MODEL == AG_LARGE
+	Uint64 pixel64;			/* Packed 64-bit pixel */
+#endif
+	AG_Color color;			/* Native Agar color */
 	AG_Rect rPrev;			/* Filled color preview area */
 #if AG_MODEL == AG_MEDIUM
 	Uint32 _pad1;

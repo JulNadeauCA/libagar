@@ -114,7 +114,7 @@ SetAlpha8(AG_HSVPal *_Nonnull pal, Uint8 a)
 }
 
 static void
-UpdateHSVFromPixel(AG_HSVPal *_Nonnull pal, Uint32 px)
+UpdateHSVFromPixel32(AG_HSVPal *_Nonnull pal, Uint32 px)
 {
 	Uint8 r, g, b, a;
 	float h, s, v;
@@ -133,6 +133,29 @@ UpdateHSVFromPixel(AG_HSVPal *_Nonnull pal, Uint32 px)
 	AG_UnlockVariable(bFormat);
 	AG_Redraw(pal);
 }
+
+#if AG_MODEL == AG_LARGE
+static void
+UpdateHSVFromPixel64(AG_HSVPal *_Nonnull pal, Uint64 px)
+{
+	Uint8 r, g, b, a;
+	float h, s, v;
+	AG_Variable *bFormat;
+	AG_PixelFormat **pFormat;
+	
+	bFormat = AG_GetVariable(pal, "pixel-format", (void *)&pFormat);
+	if (*pFormat != NULL) {
+		AG_GetColor64_RGBA8(px, *pFormat, &r,&g,&b,&a);
+		AG_RGB2HSV(r, g, b, &h,&s,&v);
+		AG_SetFloat(pal, "hue", h);
+		AG_SetFloat(pal, "saturation", s);
+		AG_SetFloat(pal, "value", v);
+		SetAlpha8(pal, a);
+	}
+	AG_UnlockVariable(bFormat);
+	AG_Redraw(pal);
+}
+#endif /* AG_LARGE */
 
 static void
 UpdateHSVFromRGBAv(AG_HSVPal *_Nonnull pal)
@@ -368,6 +391,10 @@ UpdatePixelFromHSVA(AG_HSVPal *_Nonnull pal)
 		if ((bFormat = AG_GetVariable(pal, "pixel-format", (void *)&pFormat))) {
 			AG_SetUint32(pal, "pixel",
 			    AG_MapPixel32_RGBA8(*pFormat, r,g,b,a));
+#if AG_MODEL == AG_LARGE
+			AG_SetUint64(pal, "pixel64",
+			    AG_MapPixel64_RGBA8(*pFormat, r,g,b,a));
+#endif
 		}
 		AG_UnlockVariable(bFormat);
 	}
@@ -670,7 +697,13 @@ Bound(AG_Event *_Nonnull event)
 	if (AG_VARIABLE_TYPE(V) == AG_VARIABLE_UINT32 &&
 	    strcmp(V->name, "pixel") == 0) {
 		pal->flags |= AG_HSVPAL_PIXEL;
-		UpdateHSVFromPixel(pal, *(Uint32 *)V->data.p);
+		UpdateHSVFromPixel32(pal, *(Uint32 *)V->data.p);
+#if AG_MODEL == AG_LARGE
+	} else if (AG_VARIABLE_TYPE(V) == AG_VARIABLE_UINT64 &&
+	    strcmp(V->name, "pixel64") == 0) {
+		pal->flags |= AG_HSVPAL_PIXEL;
+		UpdateHSVFromPixel64(pal, *(Uint64 *)V->data.p);
+#endif
 	} else if (strcmp(V->name, "RGBAv") == 0) {
 		UpdateHSVFromRGBAv(pal);
 	} else if (strcmp(V->name, "RGBv") == 0) {
@@ -731,6 +764,9 @@ Init(void *_Nonnull obj)
 	AG_BindFloat(pal, "value", &pal->v);
 	AG_BindFloat(pal, "alpha", &pal->a);
 	AG_BindUint32(pal, "pixel", &pal->pixel);
+#if AG_MODEL == AG_LARGE
+	AG_BindUint64(pal, "pixel64", &pal->pixel64);
+#endif
 	AG_BindPointer(pal, "color", (void *)&pal->color);
 	AG_BindPointer(pal, "pixel-format", NULL);
 	
@@ -873,9 +909,15 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	}
 
 	pal->rPrev.x = 0;
-	pal->rPrev.y = a->h - 32;
-	pal->rPrev.w = a->w;
-	pal->rPrev.h = 32;
+	if ((pal->flags & AG_HSVPAL_NOPREVIEW) == 0) {
+		pal->rPrev.y = a->h - 32;
+		pal->rPrev.w = a->w;
+		pal->rPrev.h = 32;
+	} else {
+		pal->rPrev.y = a->h;
+		pal->rPrev.w = 0;
+		pal->rPrev.h = 0;
+	}
 
 	pal->circle.rOut = MIN(a->w - padding, a->h - padding);
 	pal->circle.rOut = MIN(pal->circle.rOut, (a->h - pal->rPrev.h));

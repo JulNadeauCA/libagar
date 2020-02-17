@@ -45,17 +45,16 @@ The widget can bind directly to different color representations:
 .Pp
 .Bl -bullet -compact
 .It
-Individual Hue / Saturation / Value / Alpha floats.
+A native Agar
+.Xr AG_Color 3 .
 .It
-Individual R/G/B/A component integers or floats.
+Single-precision Hue, Saturation, Value and Alpha.
 .It
-An
-.Xr AG_Color 3
-structure.
+8- or 16-bit integer RGBA components.
 .It
-A pixel element in packed-pixel format (e.g., an
-.Ft Uint32
-and a corresponding
+Floating-point RGBA components.
+.It
+A 32- or 64-bit packed pixel (with corresponding
 .Xr AG_PixelFormat 3 ) .
 .El
 .Sh INHERITANCE HIERARCHY
@@ -126,35 +125,39 @@ The
 widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "AG_PixelFormat **pixel-format "
+.It Va AG_Color *color
+Native Agar
+.Xr AG_Color 3 .
 .It Va float *hue
-Color hue (0..1).
+Hue (0..1).
 .It Va float *saturation
-Color saturation (0..1).
+Saturation (0..1).
 .It Va float *value
-Color brightness (0..1).
+Value (0..1).
 .It Va float *alpha
-Alpha component value (0..1).
+Single-precision component value (0..1).
 .It Va AG_PixelFormat **pixel-format
-Pointer to the
+Pointer to
 .Xr AG_PixelFormat 3
-to use for generating the
+describing the packed-pixel format of
 .Va pixel
-value.
-The
-.Dv AG_HSVPAL_NOALPHA
-flag will be set automatically depending on the presence of an
-alpha component in the newly bound format (use
-.Dv AG_HSVPAL_FORCE_NOALPHA
-to disable this test).
-.It Va Uint32 *pixel
-Resulting pixel value.
-The pixel's components are extracted immediately when this binding is made
-(using the current
-.Va pixel-format )
-so make sure to always bind
+and
+.Va pixel64 .
+Note that
 .Va pixel-format
-prior to
-.Va pixel .
+should be set first.
+If the format has an alpha component,
+.Dv AG_HSVPAL_NOALPHA will be set accordingly
+(use
+.Dv AG_HSVPAL_FORCE_NOALPHA
+to disable).
+.It Va Uint32 *pixel
+32-bit packed pixel value.
+.It Va Uint64 *pixel64
+64-bit packed pixel value.
+Available in
+.Dv AG_LARGE
+build.
 .It Va void *RGBv
 A three-element array containing the RGB components.
 Acceptable binding types include FLOAT and DOUBLE, INT and UINT8.
