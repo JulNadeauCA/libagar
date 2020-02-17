@@ -601,7 +601,11 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 			} else if (flags & AG_FONT_UPRIGHT_ITALIC) {
 				Strlcat(path, "-upright-italic", sizeof(path));
 			} else if (flags & AG_FONT_ITALIC) {
-				Strlcat(path, "-italic", sizeof(path));
+				if (flags & AG_FONT_CONDENSED) {
+					Strlcat(path, "-condensed-italic", sizeof(path));
+				} else {
+					Strlcat(path, "-italic", sizeof(path));
+				}
 			} else if (flags & AG_FONT_CONDENSED) {
 				Strlcat(path, "-condensed", sizeof(path));
 			}
