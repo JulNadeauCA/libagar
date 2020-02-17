@@ -67,8 +67,6 @@ typedef struct ag_driver_sw {
 	struct ag_window *_Nullable winLastKeydown; /* For keyboard processing */
 
 	enum ag_wm_operation winop;	/* WM operation in progress */
-	int windowXOutLimit;		/* Limit past left/right boundary */
-	int windowBotOutLimit;		/* Limit past bottom boundary */
 	int windowIconWidth;		/* Preferred window icon dimensions */
 	int windowIconHeight;
 	Uint rNom;			/* Nominal refresh rate (ms) */
@@ -98,7 +96,6 @@ int  AG_ResizeDisplay(int,int);
 void AG_PostResizeDisplay(AG_DriverSw *_Nonnull);
 void AG_SetVideoResizeCallback(void (*_Nullable)(Uint,Uint));
 
-void AG_WM_LimitWindowToView(struct ag_window *_Nonnull);
 void AG_WM_LimitWindowToDisplaySize(AG_Driver *_Nonnull,
                                     struct ag_size_alloc *_Nonnull);
 void AG_WM_GetPrefPosition(struct ag_window *_Nonnull,

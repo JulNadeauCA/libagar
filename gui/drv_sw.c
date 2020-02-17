@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,8 +57,6 @@ Init(void *_Nonnull obj)
 	dsw->rNom = 1000/60;
 	dsw->rCur = 0;
 	dsw->rLast = 0;
-	dsw->windowXOutLimit = 32;
-	dsw->windowBotOutLimit = 32;
 	dsw->windowIconWidth = 32;
 	dsw->windowIconHeight = 32;
 	dsw->bgPopup = NULL;
@@ -251,12 +249,10 @@ WM_Move(AG_Window *_Nonnull win, int xRel, int yRel)
 
 	WIDGET(win)->x += xRel;
 	WIDGET(win)->y += yRel;
-	AG_WM_LimitWindowToView(win);
 
 	AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 
-	if (dc->type == AG_FRAMEBUFFER) {
-		/* Update the background. */
+	if (dc->type == AG_FRAMEBUFFER) {          /* Update the background. */
 		rNew.x = WIDGET(win)->x;
 		rNew.y = WIDGET(win)->y;
 		rNew.w = WIDTH(win);
@@ -264,26 +260,26 @@ WM_Move(AG_Window *_Nonnull win, int xRel, int yRel)
 		a.w = 0;
 		b.w = 0;
 		if (rNew.x > rPrev.x) {				/* Right */
-			a.x = rPrev.x;
+			a.x = rPrev.x - 2;
 			a.y = rPrev.y;
-			a.w = rNew.x - rPrev.x;
-			a.h = rNew.h;
+			a.w = rNew.x - rPrev.x + 1;
+			a.h = rNew.h + 1;
 		} else if (rNew.x < rPrev.x) {			/* Left */
 			a.x = rNew.x + rNew.w;
-			a.y = rNew.y;
-			a.w = rPrev.x - rNew.x;
-			a.h = rPrev.h;
+			a.y = rNew.y - 1;
+			a.w = rPrev.x - rNew.x + 1;
+			a.h = rPrev.h + 2;
 		}
 		if (rNew.y > rPrev.y) {				/* Down */
-			b.x = rPrev.x;
+			b.x = rPrev.x - 1;
 			b.y = rPrev.y;
-			b.w = rNew.w;
+			b.w = rNew.w + 2;
 			b.h = rNew.y - rPrev.y;
 		} else if (rNew.y < rPrev.y) {			/* Up */
-			b.x = rPrev.x;
+			b.x = rPrev.x - 1;
 			b.y = rNew.y + rNew.h;
-			b.w = rPrev.w;
-			b.h = rPrev.y - rNew.y;
+			b.w = rPrev.w + 2;
+			b.h = rPrev.y - rNew.y + 1;
 		}
 		if (a.w > 0) {
 			AGDRIVER_CLASS(dsw)->fillRect(dsw, &a, &dsw->bgColor);
@@ -453,42 +449,6 @@ AG_WM_LimitWindowToDisplaySize(AG_Driver *drv, AG_SizeAlloc *a)
 	}
 }
 
-
-/*
- * Limit the window geometry/coordinates to the view area.
- * The window must be locked.
- */
-void
-AG_WM_LimitWindowToView(AG_Window *win)
-{
-	AG_DriverSw *dsw = OBJECT(win)->parent;
-	AG_Widget *w = WIDGET(win);
-
-	if (w->x < 0) {
-		w->x = 0;
-	}
-	if (w->y < 0) {
-		w->y = 0;
-	} else if (w->y > dsw->h - dsw->windowBotOutLimit) {
-		w->y = dsw->h - dsw->windowBotOutLimit;
-	}
-	
-#if 0
-	if (w->x + w->w > dsw->w) { w->x = dsw->w - w->w; }
-	if (w->y + w->h > dsw->h) { w->y = dsw->h - w->h; }
-	if (w->x < 0) { w->x = 0; }
-	if (w->y < 0) { w->y = 0; }
-
-	if (w->x+w->w > dsw->w) {
-		w->x = 0;
-		w->w = dsw->w - 1;
-	}
-	if (w->y+w->h > dsw->h) {
-		w->y = 0;
-		w->h = dsw->h - 1;
-	}
-#endif
-}
 
 /* Compute default positions for AG_WINDOW_TILING windows */
 /* TODO optimize this */

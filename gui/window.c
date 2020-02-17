@@ -860,15 +860,19 @@ OnHide(AG_Event *_Nonnull event)
 				agWindowToFocus = wOther;
 		}
 		if (AGDRIVER_CLASS(drv)->type == AG_FRAMEBUFFER) {
-			AG_DrawRectFilled(win, &WIDGET(win)->r, &dsw->bgColor);
+			AG_Rect rFill = WIDGET(win)->r;
+
+			rFill.w++;
+			rFill.h++;
+			AG_DrawRectFilled(win, &rFill, &dsw->bgColor);
 
 			if (AGDRIVER_CLASS(drv)->updateRegion != NULL) {
 				AG_Rect r;
 
 				r.x = WIDGET(win)->x;
 				r.y = WIDGET(win)->y;
-				r.w = WIDTH(win);
-				r.h = HEIGHT(win);
+				r.w = WIDTH(win)+1;
+				r.h = HEIGHT(win)+1;
 				AGDRIVER_CLASS(drv)->updateRegion(drv, &r);
 			}
 		}
@@ -1395,8 +1399,8 @@ UpdateWindowBG(AG_Window *_Nonnull win, const AG_Rect *_Nonnull rPrev)
 	} else if (WIDTH(win) < rPrev->w) {		/* R-resize */
 		r.x = WIDGET(win)->x + WIDTH(win);
 		r.y = WIDGET(win)->y;
-		r.w = rPrev->w - WIDTH(win);
-		r.h = rPrev->h;
+		r.w = rPrev->w - WIDTH(win) + 1;
+		r.h = rPrev->h + 1;
 	} else {
 		r.w = 0;
 		r.h = 0;
@@ -1411,7 +1415,7 @@ UpdateWindowBG(AG_Window *_Nonnull win, const AG_Rect *_Nonnull rPrev)
 		r.x = rPrev->x;
 		r.y = WIDGET(win)->y + HEIGHT(win);
 		r.w = rPrev->w;
-		r.h = rPrev->h - HEIGHT(win);
+		r.h = rPrev->h - HEIGHT(win) + 1;
 			
 		AGDRIVER_CLASS(drv)->fillRect(drv, &r,
 		    &AGDRIVER_SW(drv)->bgColor);
@@ -1986,9 +1990,6 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 
 	win->wReq = r->w;
 	win->hReq = r->h;
-
-	if (WIDGET(win)->drv && AGDRIVER_SINGLE(WIDGET(win)->drv))
-		AG_WM_LimitWindowToView(win);
 }
 
 static int
@@ -2102,14 +2103,10 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		aChld.y += aChld.h + spacing;
 	}
 
-	if (WIDGET(win)->drv && AGDRIVER_SINGLE(WIDGET(win)->drv))
-		AG_WM_LimitWindowToView(win);
-
 	win->r.x = 0;
 	win->r.y = 0;
 	win->r.w = a->w;
 	win->r.h = a->h;
-
 	return (0);
 }
 
