@@ -97,6 +97,7 @@ void AG_ProcessTimeouts(Uint32);
 
 # ifdef AG_LEGACY
 #  define AG_Timeout AG_Timer
+#  define AG_TIMEOUTS_QUEUED() 1
 # endif
 #endif /* AG_TIMERS */
 __END_DECLS
