@@ -169,7 +169,7 @@ AG_TTFOpenFont(AG_Font *font, const char *path)
 		ttf->underline_offset = FT_FLOOR(FT_MulFix(face->underline_position, scale));
 		ttf->underline_height = FT_FLOOR(FT_MulFix(face->underline_thickness, scale));
 	} else {
-		int fixedSize = (int)spec->size;
+		Uint fixedSize = (Uint)spec->size;
 
 		/* Non-scalable font */
 		if (fixedSize >= face->num_fixed_sizes) {
