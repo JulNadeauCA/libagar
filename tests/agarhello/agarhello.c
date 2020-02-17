@@ -17,7 +17,7 @@ main(int argc, char *argv[])
 	win = AG_WindowNew(AG_WINDOW_MAIN);
 	AG_SetStyle(win, "font-size", "250%");
 	AG_LabelNew(win, 0, "Hello, world!");
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "OK", AGWINDETACH(win));
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Bye", AGWINDETACH(win));
 	AG_WindowShow(win);
 
 	AG_EventLoop();
