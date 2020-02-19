@@ -109,6 +109,9 @@ below).
 .Ft "int"
 .Fn AG_TimerIsRunning "void *obj" "AG_Timer *timer"
 .Pp
+.Ft "Uint32"
+.Fn AG_ExecTimer "AG_Timer *timer"
+.Pp
 .Ft "void"
 .Fn AG_ProcessTimeouts "Uint32 ticks"
 .Pp
@@ -226,6 +229,15 @@ if (AG_TimerIsRunning(obj, &timer)) {
 }
 AG_UnlockTimers(obj);
 .Ed
+.Pp
+.Fn AG_ExecTimer
+runs the timer's callback routine artificially and returns its return value.
+The caller is normally expected to use
+.Fn AG_DelTimer
+on a return value of 0 and
+.Fn AG_ResetTimer
+if the returned interval differs from current
+.Va to->ival .
 .Pp
 The
 .Fn AG_ProcessTimeouts

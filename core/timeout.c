@@ -303,6 +303,18 @@ AG_TimerIsRunning(void *p, AG_Timer *to)
 	return (toRunning != NULL);
 }
 
+/* Invoke a timer callback routine artificially. */
+Uint32
+AG_ExecTimer(AG_Timer *to)
+{
+	Uint32 rv;
+
+	AG_LockTiming();
+	rv = to->fn(to, &to->fnEvent);
+	AG_UnlockTiming();
+	return (rv);
+}
+
 /*
  * Execute the callback routines of expired timers using AG_GetTicks()
  * as a time source. This is used on platforms where system timers are not
