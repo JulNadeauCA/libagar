@@ -2155,7 +2155,11 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 			AG_Color cNew;
 
 			Strlcpy(nameFull, name, sizeof(nameFull));
-			Strlcat(nameFull, agWidgetStateNames[i], sizeof(nameFull));
+			if (i != 0)
+				Strlcat(nameFull, agWidgetStateNames[i],
+				    sizeof(nameFull));
+
+/*			Debug(wid, "Color Access: \"%s\" or \"%s\"\n", nameFull, name); */
 
 			if (((V = AG_AccessVariable(wid, nameFull)) != NULL ||
 			     (V = AG_AccessVariable(wid, name)) != NULL) &&
