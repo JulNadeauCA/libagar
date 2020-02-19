@@ -31,6 +31,7 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/window.h>
 #include <agar/gui/editable.h>
+#include <agar/gui/tlist.h>
 #include <agar/gui/keymap.h>
 #include <agar/gui/text.h>
 #include <agar/gui/gui_math.h>
@@ -504,8 +505,18 @@ CursorDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	const int prevPos = ed->pos;
 	const int prevSel = ed->sel;
 
-	if (!(ed->flags & AG_EDITABLE_MULTILINE))
+	if (!(ed->flags & AG_EDITABLE_MULTILINE)) {
+		if (ed->complete && ed->complete->winName[0] != '\0') {
+			AG_Window *win;
+			AG_Tlist *tl;
+
+			if ((win = AG_WindowFind(ed->complete->winName)) != NULL &&
+			    (tl = AG_ObjectFindChild(win, "tlist0")) != NULL) {
+				AG_TlistSelectIdx(tl, 0);
+			}
+		}
 		return (0);
+	}
 
 	AG_EditableMoveCursor(ed, buf, ed->xCursPref,
 	    (ed->yCurs - ed->y + 1)*agTextFontLineSkip + 1);

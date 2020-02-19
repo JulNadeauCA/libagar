@@ -23,6 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Scrollable view container. It allows child widgets to extend past its own
+ * boundaries. It handles clipping (including clipping of mouse events for
+ * partially-visible widgets) and culling of non-visible widgets.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

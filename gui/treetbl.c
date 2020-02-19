@@ -23,6 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Tree-based table widget. This is a table display (comparable to the
+ * AG_Table(3) widget), but its rows are instead stored in a tree structure
+ * and rows and columns are identified numerically.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

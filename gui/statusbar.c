@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Status bar widget. This is just a subclass of AG_Box(3) which embeds
+ * one or more AG_Label(3).
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

@@ -22,6 +22,11 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+/*
+ * A subclass of AG_Combo(3) for selecting an element in a VFS of AG_Objects.
+ */
+
 #include <agar/core/core.h>
 #if defined(AG_WIDGETS)
 
@@ -158,7 +163,7 @@ Init(void *obj)
 	AG_ExpandHoriz(os);
 
 	com->flags |= AG_COMBO_POLL;
-	com->list->flags |= AG_TLIST_POLL|AG_TLIST_TREE;
+	com->list->flags |= AG_TLIST_POLL;
 	
 	os->object = NULL;
 	os->flags = 0;

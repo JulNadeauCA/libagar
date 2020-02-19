@@ -1603,7 +1603,6 @@ ImportMeshFromPLY(AG_Event *_Nonnull event)
 	SG_View *sgv = SG_VIEW_PTR(2);
 	const char *path = AG_STRING(3);
 	AG_FileType *ft = AG_PTR(4);
-	int *status = AG_PTR(5);
 	Uint flags = 0;
 
 	if (AG_FileOptionInt(ft, "ply.vtxnormals")) { flags |= SG_PLY_LOAD_VTX_NORMALS; }
@@ -1612,7 +1611,6 @@ ImportMeshFromPLY(AG_Event *_Nonnull event)
 	if (AG_FileOptionInt(ft, "ply.dups")) { flags |= SG_PLY_DUP_VERTICES; }
 
 	if (SG_ObjectLoadPLY(so, path, flags) == -1) {
-		*status = -1;
 		return;
 	}
 	AG_Redraw(sgv);
@@ -1631,7 +1629,7 @@ ImportMeshDlg(AG_Event *_Nonnull event)
 		return;
 	}
 	AG_WindowSetCaption(win, _("Import Data into %s..."), OBJECT(so)->name);
-	dlg = AG_FileDlgNewMRU(win, "sg.mru.objects",
+	dlg = AG_FileDlgNewMRU(win, "sg-objs",
 	    AG_FILEDLG_LOAD | AG_FILEDLG_CLOSEWIN | AG_FILEDLG_EXPAND |
 	    AG_FILEDLG_MASK_EXT | AG_FILEDLG_MASK_HIDDEN);
 

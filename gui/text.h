@@ -251,7 +251,7 @@ typedef struct ag_glyph {
 	int advance;                     /* Advance (px) */
 	Uint texture;                    /* Mapped texture (driver-specific) */
 	AG_TexCoord texcoords;           /* Mapped texture coordinates */
-	Uint32 _pad2;
+	Uint32 _pad1;
 	AG_SLIST_ENTRY(ag_glyph) glyphs; /* Entry in glyph cache */
 } AG_Glyph;
 

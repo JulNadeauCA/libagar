@@ -23,6 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Radio Group widget. It displays one or more options (text labels) from
+ * a NULL-terminated array of strings. Items can be arranged vertically or
+ * horizontally. The radio group can be connected to an integer representing
+ * the index of the selected item.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 
@@ -434,6 +441,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		if (rad->nItems > 1)
 			r->w -= WIDGET(rad)->spacingHoriz;
 		break;
+	default:
+		break;
 	}
 out:
 	rad->wReq = r->w;
@@ -490,6 +499,8 @@ MouseMotion(AG_Event *_Nonnull event)
 			}
 			cur += w + WIDGET(rad)->spacingHoriz;
 		}
+		break;
+	default:
 		break;
 	}
 out:
@@ -556,6 +567,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			}
 			cur += w + WIDGET(rad)->spacingHoriz;
 		}
+		break;
+	default:
 		break;
 	}
 

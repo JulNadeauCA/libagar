@@ -24,8 +24,10 @@
  */
 
 /*
- * Agar directory browser widget.
+ * Directory Browser. It provides an interface similar to AG_FileDlg(3),
+ * but restricts selection to directories (as opposed to files).
  */
+
 #include <agar/core/core.h>
 #if defined(AG_WIDGETS)
 

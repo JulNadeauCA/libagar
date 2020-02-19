@@ -126,7 +126,7 @@ typedef struct sg_node {
 	Uint flags;
 #define SG_NODE_SELECTED	0x01	/* Selection flag */
 #define SG_NODE_HIDE		0x02	/* Disable rendering */
-	Uint32 _pad1;
+	Uint8 _pad1[12];
 	M_Matrix44 T;			/* Transformation from parent */
 	struct sg *_Nullable sg;	/* Back pointer to sg */
 	AG_TAILQ_ENTRY(sg_node) rnodes;	/* Used for quick inverse traversal */

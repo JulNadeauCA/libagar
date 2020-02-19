@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Button-style combo box widget. The button activates a drop-down menu
+ * (an AG_Tlist(3) displayed in a separate window).
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

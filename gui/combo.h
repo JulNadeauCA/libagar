@@ -16,7 +16,6 @@ typedef struct ag_combo {
 
 	Uint flags;
 #define AG_COMBO_POLL	  	0x01	/* Polled list */
-#define AG_COMBO_TREE	  	0x02	/* Tree display */
 #define AG_COMBO_ANY_TEXT 	0x04	/* Accept text not matching an item */
 #define AG_COMBO_HFILL	  	0x08
 #define AG_COMBO_VFILL	  	0x10
@@ -65,6 +64,10 @@ void AG_ComboSetButtonText(AG_Combo *_Nonnull, const char *_Nonnull);
 void AG_ComboSetButtonSurface(AG_Combo *_Nonnull, AG_Surface *_Nullable);
 void AG_ComboSetButtonSurfaceNODUP(AG_Combo *_Nonnull, AG_Surface *_Nullable);
 __END_DECLS
+
+#ifdef AG_LEGACY
+# define AG_COMBO_TREE 0
+#endif
 
 #include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_COMBO_H_ */

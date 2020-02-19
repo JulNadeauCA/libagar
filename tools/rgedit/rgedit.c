@@ -160,7 +160,7 @@ OpenTilesetDlg(AG_Event *event)
 		return;
 	}
 	AG_WindowSetCaption(win, _("Open tileset..."));
-	fd = AG_FileDlgNewMRU(win, "mru.tilesets",
+	fd = AG_FileDlgNewMRU(win, "rg-tilesets",
 	    AG_FILEDLG_LOAD | AG_FILEDLG_CLOSEWIN | AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, _("AgarPaint tileset"), "*.agt",
 	    OpenTilesetAGT, NULL);
@@ -297,7 +297,7 @@ SaveTilesetAsDlg(AG_Event *event)
 		return;
 	}
 	AG_WindowSetCaption(win, _("Save tileset as..."));
-	fd = AG_FileDlgNewMRU(win, "mru.tilesets",
+	fd = AG_FileDlgNewMRU(win, "rg-tilesets",
 	    AG_FILEDLG_SAVE | AG_FILEDLG_CLOSEWIN | AG_FILEDLG_EXPAND);
 	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));
 
@@ -376,7 +376,7 @@ ImportImagesDlg(AG_Event *event)
 		return;
 	}
 	AG_WindowSetCaption(win, _("Import images..."));
-	fd = AG_FileDlgNewMRU(win, "mru.tilesets",
+	fd = AG_FileDlgNewMRU(win, "rg-images",
 	    AG_FILEDLG_LOAD | AG_FILEDLG_CLOSEWIN | AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, _("Windows bitmap"), "*.bmp",
 	    ImportImageFrom, "%p,%p", ts, AG_SurfaceFromBMP);

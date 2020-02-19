@@ -12,7 +12,7 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_font_selector {
-	AG_Widget wid;
+	AG_Widget wid;                      /* AG_Widget -> AG_FontSelector */
 
 	Uint flags;
 #define AG_FONTSELECTOR_UPDATE     0x001    /* Refresh listing */
@@ -25,7 +25,7 @@ typedef struct ag_font_selector {
 	Uint curStyle;				/* Current style flags */
 	int  sPreview;				/* Preview surface */
 	float curSize;				/* Current size */
-	Uint32 _pad;
+	Uint32 _pad1;
 
 	AG_Pane *_Nonnull  hPane;		/* Base container */
 	AG_Pane *_Nonnull  hPane2;		/* Right horizontal container */
@@ -38,6 +38,9 @@ typedef struct ag_font_selector {
 	AG_Rect rPreview;			/* Preview area */
 	AG_Font *_Nullable font;		/* Default `font' binding */
 	AG_Color cPreview;			/* Preview color */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad2;
+#endif
 } AG_FontSelector;
 
 #define AGFONTSELECTOR(obj)            ((AG_FontSelector *)(obj))

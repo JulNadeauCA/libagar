@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Combo box widget. It embeds an AG_Textbox(3) and a button which activates
+ * a drop-down menu (an AG_Tlist(3) displayed in a separate window).
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 
@@ -63,7 +68,6 @@ AG_ComboNewS(void *parent, Uint flags, const char *label)
 		AG_TextboxSetLabelS(com->tbox, label);
 	}
 	if (flags & AG_COMBO_ANY_TEXT) { AG_WidgetDisable(com->tbox); }
-	if (flags & AG_COMBO_TREE) { com->list->flags |= AG_TLIST_TREE; }
 	if (flags & AG_COMBO_POLL) { com->list->flags |= AG_TLIST_POLL; }
 	if (flags & AG_COMBO_SCROLLTOSEL) {
 		com->list->flags |= AG_TLIST_SCROLLTOSEL;

@@ -43,6 +43,7 @@ typedef struct ag_autocomplete {
 	AG_Timer to;                      /* Timer for delay after key-up */
 	AG_Event *_Nonnull fn;            /* Callback routine & arguments */
 	char winName[AG_OBJECT_NAME_MAX]; /* Name of expanded window (or "") */
+	Uint32 _pad;
 } AG_Autocomplete;
 
 typedef struct ag_editable {

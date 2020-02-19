@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Image display widget. It simply displays a surface or an animation.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

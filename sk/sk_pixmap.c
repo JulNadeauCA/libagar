@@ -380,7 +380,7 @@ ToolMouseButtonDown(void *_Nonnull p, M_Vector3 pos, int btn)
 	if ((win = AG_WindowNew(0)) == NULL)
 		return (0);
 
-	fd = AG_FileDlgNewMRU(win, "sk.mru.pixmaps",
+	fd = AG_FileDlgNewMRU(win, "sk-pixmaps",
 	    AG_FILEDLG_LOAD | AG_FILEDLG_CLOSEWIN | AG_FILEDLG_EXPAND |
 	    AG_FILEDLG_MASK_EXT);
 

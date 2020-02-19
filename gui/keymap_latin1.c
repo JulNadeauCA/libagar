@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Alternate (ALT+SHIFT) entry method for characters from ISO-8859-1.
+ */
+
 #include <agar/config/ag_unicode.h>
 #ifdef AG_UNICODE
 
@@ -30,10 +34,6 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/editable.h>
 #include <agar/gui/keymap.h>
-
-/*
- * Alternate (ALT+SHIFT) entry method for characters from ISO-8859-1.
- */
 
 const struct ag_key_mapping agKeymapLATIN1[] = {
 	{ AG_KEY_Q,		AG_KEYMOD_ALT|AG_KEYMOD_SHIFT,	0x00d1	},

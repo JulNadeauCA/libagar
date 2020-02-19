@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Integer-only plotter widget. Used originally to implement a FPS meter.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

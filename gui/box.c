@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -21,6 +21,14 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * General-purpose container widget which aligns and packs its widgets
+ * horizontally or vertically based on their size requisitions.
+ *
+ * Spacing and padding is added according to style attributes. Widgets
+ * with the HFILL / VFILL bits set are expanded to fill remaining space.
  */
 
 #include <agar/core/core.h>

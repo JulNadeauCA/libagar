@@ -23,6 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Color Picker widget. It can connect to an AG_Color(3), a packed pixel,
+ * RGB component values, or floating-point HSV (Hue/Saturation/Value) and
+ * alpha.  It uses floating-point HSV representation internally.
+ */
+
 #include <agar/core/core.h>
 #if defined(AG_WIDGETS)
 

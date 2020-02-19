@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Drag-and-Drop icon widget. Used with AG_Socket(3).
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

@@ -38,9 +38,10 @@ typedef struct sg_texture {
 #define SG_TEXTURE_SAVED   (SG_TEXTURE_NOLIGHT)
 
 	Uint w, h;			/* Pixel dimensions */
-	Uint32 _pad;
+	Uint32 _pad1;
 	M_Real shininess;		/* Specular exponent */
 					/* (for fixed lighting model) */
+	Uint8 _pad2[8];
 	M_Color emissive;		/* Light emitted by surface (Ke) */
 	M_Color ambient;		/* Ambient reflectance (Ka) */
 	M_Color diffuse;		/* Diffuse reflectance (Kd) */

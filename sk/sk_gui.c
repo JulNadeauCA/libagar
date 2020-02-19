@@ -194,7 +194,7 @@ SK_GUI_OpenDlg(AG_Event *event)
 	}
 	AG_WindowSetCaptionS(win, _("Open..."));
 
-	fd = AG_FileDlgNewMRU(win, "sk.mru.files",
+	fd = AG_FileDlgNewMRU(win, "sk-objs",
 	    AG_FILEDLG_LOAD | AG_FILEDLG_CLOSEWIN | AG_FILEDLG_EXPAND);
 
 	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));

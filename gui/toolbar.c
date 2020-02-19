@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Toolbar widget. This is a simple subclass of AG_Box(3) which packs a set
+ * of AG_Button(3) in one or more rows. It can connect to an AG_Menu(3).
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

@@ -23,6 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Tree/List View widget. It shows a scrollable tree (or list) of clickable
+ * and selectable text items. It provides a polling mode with asset-recycling
+ * for lists which must be cleared and repopulated frequently.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 
@@ -189,7 +195,9 @@ SelectItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 		}
 		AG_PostEvent(tl, "tlist-changed", "%p,%i", it, 1);
 	}
-	AG_PostEvent(tl, "tlist-selected", "%p", it);
+	if ((tl->flags & AG_TLIST_NOSELEVENT) == 0) {
+		AG_PostEvent(tl, "tlist-selected", "%p", it);
+	}
 	AG_UnlockVariable(selectedb);
 	AG_Redraw(tl);
 }
@@ -1042,7 +1050,7 @@ AG_TlistSelectText(AG_Tlist *tl, const char *text)
 	return (it);
 }
 
-/* Set the selection flag on an item. */
+/* Set the selection flag on an item (by reference). */
 void
 AG_TlistSelect(AG_Tlist *tl, AG_TlistItem *it)
 {
@@ -1054,12 +1062,59 @@ AG_TlistSelect(AG_Tlist *tl, AG_TlistItem *it)
 	AG_ObjectUnlock(tl);
 }
 
-/* Clear the selection flag on an item. */
+/* Clear the selection flag on an item (by reference). */
 void
 AG_TlistDeselect(AG_Tlist *tl, AG_TlistItem *it)
 {
 	AG_ObjectLock(tl);
 	DeselectItem(tl, it);
+	AG_ObjectUnlock(tl);
+}
+
+/* Set the selection flag on an item (by index). */
+void
+AG_TlistSelectIdx(AG_Tlist *tl, Uint idx)
+{
+	AG_ObjectLock(tl);
+	if ((tl->flags & AG_TLIST_MULTI) == 0) {
+		AG_TlistDeselectAll(tl);
+	}
+	if (idx == 0) {
+		if (!TAILQ_EMPTY(&tl->items))
+			SelectItem(tl, TAILQ_FIRST(&tl->items));
+	} else {
+		AG_TlistItem *it;
+		Uint i=0;
+
+		TAILQ_FOREACH(it, &tl->items, items) {
+			if (i++ == idx) {
+				SelectItem(tl, it);
+				break;
+			}
+		}
+	}
+	AG_ObjectUnlock(tl);
+}
+
+/* Set the selection flag on an item (by index). */
+void
+AG_TlistDeselectIdx(AG_Tlist *tl, Uint idx)
+{
+	AG_ObjectLock(tl);
+	if (idx == 0) {
+		if (!TAILQ_EMPTY(&tl->items))
+			DeselectItem(tl, TAILQ_FIRST(&tl->items));
+	} else {
+		AG_TlistItem *it;
+		Uint i=0;
+
+		TAILQ_FOREACH(it, &tl->items, items) {
+			if (i++ == idx) {
+				DeselectItem(tl, it);
+				break;
+			}
+		}
+	}
 	AG_ObjectUnlock(tl);
 }
 

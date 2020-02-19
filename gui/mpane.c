@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Paned view container with up to 4 views arranged in a set configuration.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

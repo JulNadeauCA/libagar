@@ -16,6 +16,7 @@ typedef struct ag_button_repeat {
 
 typedef struct ag_button {
 	struct ag_widget wid;           /* AG_Widget -> AG_Button */
+
 	Uint flags;
 #define AG_BUTTON_NO_FOCUS 0x0001       /* Make non-focusable */
 #define AG_BUTTON_STICKY   0x0002       /* Toggle state */
@@ -31,14 +32,13 @@ typedef struct ag_button {
 #define AG_BUTTON_SLOW     0x8000
 #define AG_BUTTON_EXPAND  (AG_BUTTON_HFILL | AG_BUTTON_VFILL)
 
-	char *_Nullable label;          /* Text label (if any) */
 	int state;                      /* Default state binding */
-	Uint32 _pad;
 	int surfaceLbl;                 /* Rendered text label (or -1) */
 	int surfaceSrc;			/* Specified graphical surface (or -1) */
 	enum ag_text_justify justify;   /* Horizontal alignment mode */
 	enum ag_text_valign valign;     /* Vertical alignment mode */
 	int wReq, hReq;                 /* Size requisition */
+	char *_Nullable label;          /* Optional text label */
 	AG_ButtonRepeat *_Nullable repeat; /* Context for REPEAT mode */
 } AG_Button;
 

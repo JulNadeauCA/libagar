@@ -23,6 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Scroll Bar widget. Commonly used as a panning control. It can connect
+ * to integer or floating-point variables representing a minimum, maximum,
+ * current offset, and number of visible items.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 
@@ -447,6 +453,7 @@ IncrementGeneral(AG_Scrollbar *_Nonnull sb, void *_Nonnull pVal,
 	case AG_VARIABLE_UINT64:  INCREMENT(Uint64);	break;
 	case AG_VARIABLE_SINT64:  INCREMENT(Sint64);	break;
 #endif
+	default: break;
 	}
 	return (rv);
 }
@@ -697,6 +704,7 @@ OnShowGeneral(AG_Scrollbar *_Nonnull sb, const AG_Event *_Nonnull event,
 	case AG_VARIABLE_UINT64: SET_DEF(AG_SetUint64, 0ULL, 0xffffffffffffffffULL, 1ULL); break;
 	case AG_VARIABLE_SINT64: SET_DEF(AG_SetSint64, 0LL,  0x7fffffffffffffffLL,  1LL); break;
 #endif
+	default: break;
 	}
 }
 #undef SET_DEF

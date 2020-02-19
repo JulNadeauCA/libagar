@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Socket widget. This is a place-holder for (widgets derived from) AG_Icon(3).
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

@@ -1,5 +1,9 @@
 /*	Public domain	*/
 
+/*
+ * Map AG_KeySym to short strings describing the corresponding key.
+ */
+
 #include <agar/core/core.h>
 
 const char *agKeySyms[] = {

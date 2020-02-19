@@ -163,9 +163,9 @@ OpenMapDlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Load map from..."));
 
-	fd = AG_FileDlgNewMRU(win, "mapedit.mru.maps", AG_FILEDLG_LOAD |
-	                                               AG_FILEDLG_CLOSEWIN |
-	                                               AG_FILEDLG_EXPAND);
+	fd = AG_FileDlgNewMRU(win, "map-maps", AG_FILEDLG_LOAD |
+	                                       AG_FILEDLG_CLOSEWIN |
+	                                       AG_FILEDLG_EXPAND);
 
 	AG_FileDlgAddType(fd, _("Agar-Map Level"), "*.agm",
 	    OpenMapAGM, NULL);
@@ -199,9 +199,9 @@ SaveMapAsDlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Save map as..."));
 
-	fd = AG_FileDlgNewMRU(win, "mapedit.mru.maps", AG_FILEDLG_SAVE |
-	                                               AG_FILEDLG_CLOSEWIN |
-	                                               AG_FILEDLG_EXPAND);
+	fd = AG_FileDlgNewMRU(win, "map-maps", AG_FILEDLG_SAVE |
+	                                       AG_FILEDLG_CLOSEWIN |
+	                                       AG_FILEDLG_EXPAND);
 
 	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));
 

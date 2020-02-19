@@ -22,6 +22,13 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+/*
+ * Font selection widget. It shows available types on the system (including
+ * system fonts as well as Agar's core fonts). It allows the user to preview
+ * a font in different styles, sizes and colors.
+ */
+
 #include <agar/core/core.h>
 #include <agar/core/config.h>
 #include <agar/gui/font_selector.h>

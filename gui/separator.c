@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Simple cosmetic separator / spacer widget.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

@@ -24,6 +24,8 @@
  */
 
 /*
+ * Slider widget. It can connect to an integer or floating-point variable.
+ * 
  * XXX TODO reimplement this whole thing as a tiny subclass of Scrollbar
  * (with a different styling, fixed control bar and no "visible" binding).
  */

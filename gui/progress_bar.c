@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Progress bar widget. It connects to integers representing minimum, maximum
+ * and current values, and displays a progress bar (optionally with "%" label).
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

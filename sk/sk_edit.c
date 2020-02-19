@@ -113,7 +113,7 @@ ImportSketchDlg(AG_Event *_Nonnull event)
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
 	}
-	(void)AG_FileDlgNewMRU(win, "sg.mru.sketches",
+	(void)AG_FileDlgNewMRU(win, "sg-sketches",
 	    AG_FILEDLG_LOAD | AG_FILEDLG_CLOSEWIN | AG_FILEDLG_EXPAND);
 #if 0
 	AG_FileDlgAddType(dlg, _("SVG Format"), "*.svg",
@@ -472,8 +472,7 @@ NodeEditGeneric(SK_Node *_Nonnull node, AG_Widget *_Nonnull box,
 //	AG_LabelFlag(lbl, 0, "SELECTED", SK_NODE_SELECTED);
 
 	AG_LabelNewS(box, 0, _("Geometric constraints: "));
-	tl = AG_TlistNewPolled(box, AG_TLIST_POLL | AG_TLIST_TREE |
-	                            AG_TLIST_EXPAND,
+	tl = AG_TlistNewPolled(box, AG_TLIST_POLL | AG_TLIST_EXPAND,
 	    PollConstraints, "%p,%p", SKNODE(node)->sk, node);
 	AG_WidgetSetFocusable(tl, 0);
 }
@@ -763,7 +762,7 @@ SK_Edit(void *p)
 		ntab = AG_NotebookAdd(nb, _("Nodes"), AG_BOX_VERT);
 		{
 			tl = AG_TlistNewPolled(ntab,
-			    AG_TLIST_TREE | AG_TLIST_EXPAND | AG_TLIST_MULTI |
+			    AG_TLIST_EXPAND | AG_TLIST_MULTI |
 			    AG_TLIST_NOSELSTATE,
 			    PollNodes, "%p", sk);
 
@@ -779,8 +778,7 @@ SK_Edit(void *p)
 
 			vp2 = AG_PaneNew(ntab, AG_PANE_VERT, AG_PANE_EXPAND |
 			                                     AG_PANE_DIV1FILL);
-			tl = AG_TlistNewPolled(vp2->div[0],
-			    AG_TLIST_TREE | AG_TLIST_EXPAND,
+			tl = AG_TlistNewPolled(vp2->div[0], AG_TLIST_EXPAND,
 			    PollConstraints, "%p,%p", sk, NULL);
 
 			AG_TlistSetDblClickFn(tl, ConstraintEdit, "%p", skv);

@@ -21,88 +21,86 @@
 
 /* Popup menu (TODO switch to AG_PopupMenu) */
 typedef struct ag_tlist_popup {
-	const char  *_Nonnull  iclass;	/* Apply to items of this class */
-	AG_Menu     *_Nonnull  menu;	/* The popup menu proper */
-	AG_MenuItem *_Nonnull  item;	/* Root of the popup menu */
-	AG_Window   *_Nullable panel;	/* Created by AG_MenuExpand() */
+	const char *_Nonnull iclass;          /* Apply to items of this class */
+	AG_Menu *_Nonnull menu;               /* The popup menu proper */
+	AG_MenuItem *_Nonnull item;           /* Root of the popup menu */
+	AG_Window *_Nullable panel;           /* Created by AG_MenuExpand() */
 	AG_TAILQ_ENTRY(ag_tlist_popup) popups;
 } AG_TlistPopup;
 
 /* A tree/list item */
 typedef struct ag_tlist_item {
 #ifdef AG_TYPE_SAFETY
-	char tag[AG_TLIST_ITEM_TAG_LEN];       /* Tagged non-object */
+	char tag[AG_TLIST_ITEM_TAG_LEN];      /* Tagged non-object */
 #endif
-	int selected;			/* Effective selection flag */
+	int selected;                         /* Effective selection flag */
 
-	int                   icon;	/* Cached icon surface */
-	AG_Surface *_Nullable iconsrc;	/* Source icon */
-	void       *_Nullable p1;	/* User pointer */
-	const char *_Nullable cat;	/* Category for filter */
-
-	int label;			/* Cached label surface */
-	Uint depth;			/* Indent in tree display */
+	int icon;                             /* Cached icon surface */
+	AG_Surface *_Nullable iconsrc;        /* Icon source image */
+	void *_Nullable p1;                   /* User pointer */
+	const char *_Nullable cat;            /* Category for filter */
+	int label;                            /* Cached label surface */
+	Uint depth;                           /* Indent in tree display */
 	Uint flags;
-#define AG_TLIST_ITEM_EXPANDED 0x01     /* Child items visible (tree) */
-#define AG_TLIST_HAS_CHILDREN  0x02     /* Child items exist (tree) */
-#define AG_TLIST_NO_SELECT     0x08     /* Item is not selectable */
-#define AG_TLIST_NO_POPUP      0x10     /* Disable popups for item */
+#define AG_TLIST_ITEM_EXPANDED 0x01           /* Child items visible (tree) */
+#define AG_TLIST_HAS_CHILDREN  0x02           /* Child items exist (tree) */
+#define AG_TLIST_NO_SELECT     0x08           /* Item is not selectable */
+#define AG_TLIST_NO_POPUP      0x10           /* Disable popups for item */
 
 	Uint fontFlags;                 /* Font style; see AG_FetchFont(3) */
-
 	char text[AG_TLIST_LABEL_MAX];	/* Label text */
-
-	AG_TAILQ_ENTRY(ag_tlist_item) items;	/* Items in list */
-	AG_TAILQ_ENTRY(ag_tlist_item) selitems;	/* Saved selection state */
+	Uint32 _pad;
+	AG_TAILQ_ENTRY(ag_tlist_item) items;    /* Items in list */
+	AG_TAILQ_ENTRY(ag_tlist_item) selitems; /* Saved selection state */
 	
-	AG_Color *_Nullable color;	/* Alternate text-color */
-	AG_Font *_Nullable font;	/* Alternate font */
+	AG_Color *_Nullable color;            /* Alternate text-color */
+	AG_Font *_Nullable font;              /* Alternate font */
 } AG_TlistItem;
 
 typedef AG_TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item) AG_TlistItemQ;
 
 /* Tree/list widget */
 typedef struct ag_tlist {
-	struct ag_widget wid;		/* AG_Widget -> AG_Tlist */
+	struct ag_widget wid;           /* AG_Widget -> AG_Tlist */
 	Uint flags;
-#define AG_TLIST_MULTI		0x001	/* Multiple selections (ctrl/shift) */
-#define AG_TLIST_MULTITOGGLE	0x002	/* Multiple toggle-style selections */
-#define AG_TLIST_POLL		0x004	/* Generate tlist-poll events */
-#define AG_TLIST_TREE		0x010	/* Hack to display trees */
-#define AG_TLIST_HFILL		0x020
-#define AG_TLIST_VFILL		0x040
-#define AG_TLIST_NOSELSTATE	0x100	/* Don't preserve sel state in poll */
-#define AG_TLIST_SCROLLTOSEL	0x200	/* Scroll to initial selection */
-#define AG_TLIST_REFRESH	0x400	/* Repopulate display (for polling) */
-#define AG_TLIST_EXPAND		(AG_TLIST_HFILL|AG_TLIST_VFILL)
+#define AG_TLIST_MULTI       0x001      /* Multiple selections (ctrl/shift) */
+#define AG_TLIST_MULTITOGGLE 0x002      /* Multiple toggle-style selections */
+#define AG_TLIST_POLL        0x004      /* Generate tlist-poll events */
+#define AG_TLIST_NOSELEVENT  0x008      /* Inhibit "tlist-selected" event */
+#define AG_TLIST_HFILL       0x020
+#define AG_TLIST_VFILL       0x040
+#define AG_TLIST_NOSELSTATE  0x100      /* Lose selection state in polled mode */
+#define AG_TLIST_SCROLLTOSEL 0x200      /* Scroll to initial selection */
+#define AG_TLIST_REFRESH     0x400      /* Repopulate now (polled mode) */
+#define AG_TLIST_EXPAND     (AG_TLIST_HFILL | AG_TLIST_VFILL)
 
-	int item_h;			/* Item height */
-	void *_Nullable selected;	/* Default `selected' binding */
-	int wHint, hHint;		/* Size hint */
-	AG_Rect r;			/* Clipping rectangle */
-	int wSpace;			/* Icon/text spacing */
-	int icon_w;			/* Item icon width */
-	Uint pollDelay;			/* Refresh rate for POLL mode */
-	int rOffs;			/* Row display offset */
-	void *_Nullable dblClicked;	/* For double click test */
-	AG_TlistItemQ items;		/* Current Items */
-	AG_TlistItemQ selitems;		/* Saved item state */
-	int nitems;			/* Current item count */
-	int nvisitems;			/* Visible item count */
-	AG_Scrollbar *_Nonnull sbar;	/* Vertical scrollbar */
+	int item_h;                     /* Item height */
+	void *_Nullable selected;       /* Default `selected' binding */
+	int wHint, hHint;               /* Size hint */
+	AG_Rect r;                      /* Clipping rectangle */
+	int wSpace;                     /* Icon/text spacing */
+	int icon_w;                     /* Item icon width */
+	Uint pollDelay;                 /* Refresh rate for POLL mode */
+	int rOffs;                      /* Row display offset */
+	void *_Nullable dblClicked;     /* For double click test */
+	AG_TlistItemQ items;            /* Current Items */
+	AG_TlistItemQ selitems;         /* Saved item state */
+	int nitems;                     /* Current item count */
+	int nvisitems;                  /* Visible item count */
+	AG_Scrollbar *_Nonnull sbar;    /* Vertical scrollbar */
 	AG_TAILQ_HEAD_(ag_tlist_popup) popups; /* Popup menus */
 
 	int (*_Nonnull compare_fn)(const AG_TlistItem *_Nonnull,
 	                           const AG_TlistItem *_Nonnull);
 
-	AG_Event *_Nullable popupEv;	/* Popup menu hook */
-	AG_Event *_Nullable changedEv;	/* Selection change hook */
-	AG_Event *_Nullable dblClickEv;	/* Double click hook */
-	Uint32 wheelTicks;		/* For wheel acceleration */
-	int lastKeyDown;		/* For key repeat */
-	AG_Timer moveTo;		/* Timer for keyboard motion */
-	AG_Timer refreshTo;		/* Timer for polled mode updates */
-	AG_Timer dblClickTo;		/* Timer for detecting double clicks */
+	AG_Event *_Nullable popupEv;    /* Popup menu hook */
+	AG_Event *_Nullable changedEv;  /* Selection change hook */
+	AG_Event *_Nullable dblClickEv; /* Double click hook */
+	Uint32 wheelTicks;              /* For wheel acceleration */
+	int lastKeyDown;                /* For key repeat */
+	AG_Timer moveTo;                /* Timer for keyboard motion */
+	AG_Timer refreshTo;             /* Timer for polled mode updates */
+	AG_Timer dblClickTo;            /* Timer for detecting double clicks */
 } AG_Tlist;
 
 #define AGTLIST(obj)            ((AG_Tlist *)(obj))
@@ -141,10 +139,10 @@ extern AG_WidgetClass agTlistClass;
 AG_Tlist *_Nonnull AG_TlistNew(void *_Nullable, Uint);
 AG_Tlist *_Nonnull AG_TlistNewPolled(void *_Nullable, Uint,
                                      _Nonnull AG_EventFn,
-				     const char *_Nullable, ...);
+                                     const char *_Nullable, ...);
 AG_Tlist *_Nonnull AG_TlistNewPolledMs(void *_Nullable, Uint, int,
                                        _Nonnull AG_EventFn,
-				       const char *_Nullable, ...);
+                                       const char *_Nullable, ...);
 
 void AG_TlistSizeHint(AG_Tlist *_Nonnull, const char *_Nonnull, int);
 void AG_TlistSizeHintPixels(AG_Tlist *_Nonnull, int,int);
@@ -152,7 +150,6 @@ void AG_TlistSizeHintLargest(AG_Tlist *_Nonnull, int);
 void AG_TlistSetItemHeight(AG_Tlist *_Nonnull, int);
 void AG_TlistSetIconWidth(AG_Tlist *_Nonnull, int);
 void AG_TlistSetRefresh(AG_Tlist *_Nonnull, int);
-
 void AG_TlistUniq(AG_Tlist *_Nonnull);
 void AG_TlistClear(AG_Tlist *_Nonnull);
 void AG_TlistRestore(AG_Tlist *_Nonnull);
@@ -169,7 +166,7 @@ AG_TlistItem *_Nonnull AG_TlistAddS(AG_Tlist *_Nonnull,
 AG_TlistItem *_Nonnull AG_TlistAdd(AG_Tlist *_Nonnull,
                                    const AG_Surface *_Nullable,
                                    const char *_Nonnull, ...)
-				  FORMAT_ATTRIBUTE(printf,3,4);
+                                   FORMAT_ATTRIBUTE(printf,3,4);
 
 AG_TlistItem *_Nonnull AG_TlistAddHeadS(AG_Tlist *_Nonnull,
                                         const AG_Surface *_Nullable,
@@ -178,7 +175,7 @@ AG_TlistItem *_Nonnull AG_TlistAddHeadS(AG_Tlist *_Nonnull,
 AG_TlistItem *_Nonnull AG_TlistAddHead(AG_Tlist *_Nonnull,
                                        const AG_Surface *_Nullable,
                                        const char *_Nonnull, ...)
-				      FORMAT_ATTRIBUTE(printf,3,4);
+                                      FORMAT_ATTRIBUTE(printf,3,4);
 
 AG_TlistItem *_Nonnull AG_TlistAddPtr(AG_Tlist *_Nonnull,
                                       const AG_Surface *_Nullable,
@@ -199,6 +196,8 @@ void AG_TlistDel(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
 
 void AG_TlistSelect(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
 void AG_TlistDeselect(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
+void AG_TlistSelectIdx(AG_Tlist *_Nonnull, Uint);
+void AG_TlistDeselectIdx(AG_Tlist *_Nonnull, Uint);
 void AG_TlistSelectAll(AG_Tlist *_Nonnull);
 void AG_TlistDeselectAll(AG_Tlist *_Nonnull);
 
@@ -228,7 +227,7 @@ void AG_TlistSetChangedFn(AG_Tlist *_Nonnull, _Nonnull AG_EventFn,
 
 void AG_TlistSetCompareFn(AG_Tlist *_Nonnull,
                           int (*_Nonnull)(const AG_TlistItem *_Nonnull,
-			                  const AG_TlistItem *_Nonnull));
+                                          const AG_TlistItem *_Nonnull));
 int  AG_TlistCompareStrings(const AG_TlistItem *_Nonnull,
                             const AG_TlistItem *_Nonnull)
                            _Pure_Attribute;
@@ -248,6 +247,7 @@ AG_TlistItem *_Nullable AG_TlistGetItemPtr(const AG_Event *_Nonnull, int, int);
 #endif
 
 #ifdef AG_LEGACY
+#define AG_TLIST_TREE             0
 #define AG_TLIST_EXPANDED         AG_TLIST_ITEM_EXPANDED
 #define AG_TLIST_VISIBLE_CHILDREN AG_TLIST_ITEM_EXPANDED
 #define AG_TlistPrescale(tl,text,n) AG_TlistSizeHint((tl),(text),(n))

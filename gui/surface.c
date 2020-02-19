@@ -23,6 +23,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Agar Graphics Surface. Surfaces can be Packed, Indexed or Grayscale, and
+ * image transfers will handle any necessary inter-format conversion.
+ * 
+ * Packed mode allows 8-, 16-, 24-, 32- or 64-bit wide pixels (RGBA).
+ * Indexed mode is 1-, 2-, 4- or 8-bit per pixel with per-surface palette.
+ * Grayscale mode is a 16- or 32-bit value with a 16- or 32-bit alpha.
+ */
+
 #include <agar/core/core.h>
 #include <agar/gui/surface.h>
 #include <agar/gui/gui_math.h>
@@ -1062,6 +1071,8 @@ AG_SurfaceFree(AG_Surface *S)
 			case AG_ANIM_FRAME_DATA:
 				Free(af->data.header);
 				Free(af->data.p);
+				break;
+			default:
 				break;
 			}
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -345,7 +345,7 @@ DEV_BrowserSaveToDlg(void *p, const char *name)
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
-	fd = AG_FileDlgNewMRU(win, "mru.object-import",
+	fd = AG_FileDlgNewMRU(win, "object-import",
 	                      AG_FILEDLG_CLOSEWIN | AG_FILEDLG_SAVE |
 	                      AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, name, ext, SaveObjectToFile,"%p",ob);
@@ -370,7 +370,7 @@ DEV_BrowserLoadFromDlg(void *p, const char *name)
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("Load %s from..."), ob->name);
-	fd = AG_FileDlgNewMRU(win, "dev.mru.object-import",
+	fd = AG_FileDlgNewMRU(win, "object-import",
 	    AG_FILEDLG_CLOSEWIN | AG_FILEDLG_LOAD | AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, name, ext, ImportObject, "%p", ob);
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->cls->name);
@@ -663,8 +663,7 @@ CreateObjectDlg(AG_Event *_Nonnull event)
 	{
 		AG_LabelNewS(bo, 0, _("Parent object:"));
 
-		tlParents = AG_TlistNewPolled(bo,
-		    AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND,
+		tlParents = AG_TlistNewPolled(bo, AG_TLIST_EXPAND,
 		    PollObjects, "%p", vfsRoot);
 		AG_TlistSizeHint(tlParents, "XXXXXXXXXXXXXXXXXXX", 5);
 	}
@@ -725,7 +724,7 @@ DEV_Browser(void *vfsRoot)
 	AG_WindowSetCaptionS(win, OBJECT(vfsRoot)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_ML, 0);
 	
-	tlObjs = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
+	tlObjs = AG_TlistNew(NULL, AG_TLIST_POLL | AG_TLIST_MULTI |
 	                           AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tlObjs, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
 	AG_SetEvent(tlObjs, "tlist-poll",

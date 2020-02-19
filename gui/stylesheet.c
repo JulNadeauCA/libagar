@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Agar stylesheet parser and interface to style queries.
+ */
+
 #include <agar/core/core.h>
 #include <agar/core/config.h>
 #include <agar/gui/widget.h>

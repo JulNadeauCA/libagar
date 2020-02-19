@@ -55,10 +55,10 @@ MAP_EditorInit(void)
 	AG_ObjectSetName(&mapEditor, "_mapEditor");
 
 	/* Initialize the default tunables. */
-	AG_SetUint32(&mapEditor, "default-map-width", 12);
-	AG_SetUint32(&mapEditor, "default-map-height", 8);
-	AG_SetUint32(&mapEditor, "default-brush-width", 5);
-	AG_SetUint32(&mapEditor, "default-brush-height", 5);
+	AG_SetUint32(&mapEditor, "map-width", 12);
+	AG_SetUint32(&mapEditor, "map-height", 8);
+	AG_SetUint32(&mapEditor, "brush-width", 5);
+	AG_SetUint32(&mapEditor, "brush-height", 5);
 }
 
 static void

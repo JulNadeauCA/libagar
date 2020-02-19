@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Fixed-position container widget. It allows widgets to be sized and
+ * placed at specific positions in pixels.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

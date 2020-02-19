@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Text label widget. Displays single- or multi-line text. Implements
+ * static as well as dynamically-updated labels.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 
@@ -216,6 +221,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 			r->w =  lbl->wPre;
 			r->h = (lbl->hPre * WFONT(lbl)->lineskip);
 		}
+		break;
+	default:
 		break;
 	}
 }

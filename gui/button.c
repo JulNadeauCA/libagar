@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Push-button widget. It can display a text label or an image.
+ * It can trigger events or be connected to a boolean variable.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 
@@ -639,6 +644,8 @@ SetStateGeneral(AG_Button *bu, AG_Variable *V, void *p, int v)
 		break;
 	case AG_VARIABLE_P_FLAG32:
 		AG_SETFLAGS(*(Uint32 *)p, V->info.bitmask.u32, v);
+		break;
+	default:
 		break;
 	}
 }

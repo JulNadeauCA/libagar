@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Checkbox button with included text label.
+ * It can trigger events or control a boolean variable.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

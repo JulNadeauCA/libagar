@@ -134,7 +134,7 @@ Uint         agTextStateCur = 0;
 AG_Color agTextColorANSI[] = {
 #if AG_MODEL == AG_LARGE
 	{ 0x0000, 0x0000, 0x0000, 0xffff },	/* Black */
-	{ 0xdede, 0x3838, 0x2b2b, 0xffff },	/* Red */
+	{ 0xdede, 0x2d2d, 0x2b2b, 0xffff },	/* Red */
 	{ 0x0000, 0xcdcd, 0x0000, 0xffff },	/* Green */
 	{ 0xcdcd, 0xcdcd, 0x0000, 0xffff },	/* Yellow */
 	{ 0x0000, 0x0000, 0xeeee, 0xffff },	/* Blue */
@@ -142,7 +142,7 @@ AG_Color agTextColorANSI[] = {
 	{ 0x0000, 0xcdcd, 0xcdcd, 0xffff },	/* Cyan */
 	{ 0xe5e5, 0xe5e5, 0xe5e5, 0xffff },	/* White */
 	{ 0x7f7f, 0x7f7f, 0x7f7f, 0xffff },	/* Br.Black */
-	{ 0xffff, 0x0000, 0x0000, 0xffff },	/* Br.Red */
+	{ 0xffff, 0x1717, 0x0000, 0xffff },	/* Br.Red */
 	{ 0x0000, 0xffff, 0x0000, 0xffff },	/* Br.Green */
 	{ 0xffff, 0xffff, 0x0000, 0xffff },	/* Br.Yellow */
 	{ 0x5c5c, 0x5c5c, 0xffff, 0xffff },	/* Br.Blue */
@@ -151,7 +151,7 @@ AG_Color agTextColorANSI[] = {
 	{ 0xffff, 0xffff, 0xffff, 0xffff },	/* Br.White */
 #else
 	{ 0,   0,     0, 255 },			/* Black */
-	{ 205, 0,     0, 255 },			/* Red */
+	{ 205, 45,    0, 255 },			/* Red */
 	{ 0,   205,   0, 255 },			/* Green */
 	{ 205, 205,   0, 255 },			/* Yellow */
 	{ 0,   0,   238, 255 },			/* Blue */
@@ -159,7 +159,7 @@ AG_Color agTextColorANSI[] = {
 	{ 0,   205, 205, 255 },			/* Cyan */
 	{ 229, 229, 229, 255 },			/* White */
 	{ 127, 127, 127, 255 },			/* Br.Black */
-	{ 255, 0,     0, 255 },			/* Br.Red */
+	{ 255, 23,    0, 255 },			/* Br.Red */
 	{ 0,   255,   0, 255 },			/* Br.Green */
 	{ 255, 255,   0, 255 },			/* Br.Yellow */
 	{ 92,  92,  255, 255 },			/* Br.Blue */
@@ -925,6 +925,8 @@ TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extende
 					    fontOrig->spec.size,
 					    fontOrig->flags);
 					if (!fontCur) { fontCur = fontOrig; }
+					break;
+				default:
 					break;
 				}
 			}
@@ -1733,6 +1735,8 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 					    font->flags);
 					if (!fontCur) { fontCur = font; }
 					break;
+				default:
+					break;
 				}
 			}
 			ch += ansi.len;
@@ -2134,6 +2138,7 @@ TextRenderGlyph_Miss(AG_Driver *_Nonnull drv, const AG_Font *_Nonnull font,
 		G->advance = G->su->w;
 		break;
 	case AG_FONT_DUMMY:
+	default:
 		break;
 	}
 	AGDRIVER_CLASS(drv)->updateGlyph(drv, G);
@@ -2334,6 +2339,7 @@ AG_Font_Destroy(void *_Nonnull obj)
 		}
 		break;
 	case AG_FONT_DUMMY:
+	default:
 		break;
 	}
 }

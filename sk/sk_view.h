@@ -7,7 +7,7 @@
 #include <agar/sk/sk_tool.h>
 
 #ifndef SK_VIEW_STATUS_MAX
-#define SK_VIEW_STATUS_MAX 124
+#define SK_VIEW_STATUS_MAX 128
 #endif
 
 struct sk;
@@ -18,12 +18,11 @@ typedef struct sk_view {
 	struct ag_widget _inherit;
 
 	Uint flags;
-#define SK_VIEW_HFILL	0x01
-#define SK_VIEW_VFILL	0x02
-#define SK_VIEW_EXPAND	(SK_VIEW_HFILL | SK_VIEW_VFILL)
-#define SK_VIEW_PANNING 0x04
-	
-	char status[SK_VIEW_STATUS_MAX];	/* Status text buffer */
+#define SK_VIEW_HFILL   0x01
+#define SK_VIEW_VFILL   0x02
+#define SK_VIEW_PANNING 0x04                    /* Panning in progress */
+#define SK_VIEW_EXPAND (SK_VIEW_HFILL | SK_VIEW_VFILL)
+	Uint32 _pad;
 
 	struct sk *_Nullable sk;		/* Sketch object */
 	M_Matrix44 mView;			/* Viewing matrix */
@@ -48,6 +47,7 @@ typedef struct sk_view {
 	M_Real rSnap;				/* Snapping radius */
 	AG_TAILQ_HEAD_(sk_tool) tools;		/* Sketching tools */
 	AG_PopupMenu *_Nullable pmView;
+	char status[SK_VIEW_STATUS_MAX];	/* Status text buffer */
 } SK_View;
 
 #define SKVIEW(obj)            ((SK_View *)(obj))

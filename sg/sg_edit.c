@@ -373,7 +373,7 @@ SG_Edit(void *p)
 		nb = AG_NotebookNew(vp->div[0], AG_NOTEBOOK_EXPAND);
 		ntab = AG_NotebookAdd(nb, _("Create Object"), AG_BOX_VERT);
 		{
-			tl = AG_TlistNew(ntab, AG_TLIST_TREE | AG_TLIST_EXPAND);
+			tl = AG_TlistNew(ntab, AG_TLIST_EXPAND);
 			AG_TlistSizeHint(tl, "<Isocahedron>", 2);
 			AG_SetEvent(tl, "tlist-dblclick",
 			    CreateNode, "%p%p%p%p", sg, vp, vp->div[1], sv);
@@ -381,8 +381,8 @@ SG_Edit(void *p)
 		}
 		ntab = AG_NotebookAdd(nb, _("Nodes"), AG_BOX_VERT);
 		{
-			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
-			                       AG_TLIST_EXPAND|AG_TLIST_MULTI);
+			tl = AG_TlistNew(ntab, AG_TLIST_POLL | AG_TLIST_EXPAND |
+			                       AG_TLIST_MULTI);
 			AG_TlistSizeHint(tl, "<Isocahedron>", 2);
 			AG_TlistSetPopupFn(tl, SG_GUI_NodePopupMenu, "%p,%p", sg, sv);
 			AG_SetEvent(tl, "tlist-poll", SG_GUI_PollNodes, "%p", sg);

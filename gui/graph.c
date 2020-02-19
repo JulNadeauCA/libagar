@@ -24,6 +24,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Graph visualization widget. It shows vertices (nodes), and edges which
+ * connect pairs of vertices.  Edges can be directed or undirected.  Edges
+ * and vertices can be colored and labeled.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

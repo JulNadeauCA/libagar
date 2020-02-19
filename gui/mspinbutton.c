@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Integer-only spinbutton group with two directions.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

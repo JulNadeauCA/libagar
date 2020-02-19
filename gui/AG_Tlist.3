@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -39,12 +39,10 @@
 .\" IMAGE(http://libagar.org/widgets/AG_Tlist.png, "An AG_Tlist displaying a tree")
 The
 .Nm
-widget shows a scrollable tree (or list) of clickable and selectable items as
-text labels (with optional icons).
+widget shows a scrollable tree (or list) of clickable and selectable text items.
 .Pp
-.Nm
-optimizes for cases where contents are cleared and regenerated frequently
-(by recycling assets and remembering selection states).
+It provides a polling mode which optimizes for cases where contents are
+cleared and regenerated frequently (by recycling assets).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -114,8 +112,6 @@ Acceptable
 .Fa flags
 include:
 .Bl -tag -width "AG_TLIST_MULTITOGGLE "
-.It AG_TLIST_TREE
-List contents are displayed in a tree layout.
 .It AG_TLIST_MULTI
 Allow multiple selections (with ctrl/shift).
 .It AG_TLIST_MULTITOGGLE
@@ -132,6 +128,10 @@ and
 .Fn AG_TlistEnd .
 Implied by
 .Fn AG_TlistNewPolled .
+.It AG_TLIST_NOSELEVENT
+Don't raise the
+.Sq tlist-selected
+event on select.
 .It AG_TLIST_NOSELSTATE
 When using
 .Dv AG_TLIST_POLL ,
@@ -254,10 +254,16 @@ are provided.
 .Fn AG_TlistSelect "AG_Tlist *tlist" "AG_TlistItem *item"
 .Pp
 .Ft "void"
+.Fn AG_TlistSelectIdx "AG_Tlist *tlist" "Uint index"
+.Pp
+.Ft "void"
 .Fn AG_TlistSelectAll "AG_Tlist *tlist"
 .Pp
 .Ft "void"
 .Fn AG_TlistDeselect "AG_Tlist *tlist" "AG_TlistItem *item"
+.Pp
+.Ft "void"
+.Fn AG_TlistDeselectIdx "AG_Tlist *tlist" "Uint index"
 .Pp
 .Ft "void"
 .Fn AG_TlistDeselectAll "AG_Tlist *tlist"
@@ -368,22 +374,25 @@ compares each item against the previous selections and restores the
 .Va selected
 flag accordingly.
 .Pp
-The
 .Fn AG_TlistSelect
-and
-.Fn AG_TlistDeselect
-functions manipulate the selected flag on
-.Fa item .
-Unless the
+sets the selection flag on
+.Fa item
+(clearing any previous selection unless
 .Dv AG_TLIST_MULTI
-flag is set,
-.Fn AG_TlistSelect
-clears the selection flag on all other items.
-The
-.Fn AG_TlistSelectAll
+is set).
+.Fn AG_TlistDeselect
+clears the selection flag on
+.Fa item .
+.Fn AG_TlistSelectIdx
 and
+.Fn AG_TlistDeselectIdx
+reference the target
+.Ft AG_TlistItem
+by index rather than by pointer.
+.Pp
+.Fn AG_TlistSelectAll
 .Fn AG_TlistDeselectAll
-functions sets/unsets the selection on all items attached to
+sets / clears the selection on all items attached to
 .Fa tlist .
 .Pp
 The
@@ -550,8 +559,7 @@ Text to display (limit of
 .Dv AG_TLIST_LABEL_MAX
 bytes).
 .It Ft int depth
-Depth in tree (for
-.Dv AG_TLIST_TREE ) .
+Depth in tree display.
 .It Ft Uint flags
 Item flags (see
 .Sx ITEM FLAGS
@@ -564,9 +572,7 @@ for available flags).
 .Sh ITEM FLAGS
 .Bl -tag -width "AG_TLIST_ITEM_UPPERCASE "
 .It AG_TLIST_ITEM_EXPANDED
-The node is expanded and child items are visible
-(assuming the parent uses
-.Dv AG_TLIST_TREE ) .
+The node is expanded and child items are visible.
 .It AG_TLIST_HAS_CHILDREN
 There is at least one child item.
 .It AG_TLIST_NO_SELECT
@@ -618,9 +624,13 @@ AG_TlistNewPolled(NULL, 0, UpdateItems, "%p", myTreeRoot);
 The
 .Nm
 widget first appeared in Agar 1.0.
-The BOLD, ITALIC, UNDERLINE and UPPERCASE attributes of
-.Ft AG_TlistItem ,
-.Fn AG_TlistSetColor
-and
+The option called
+.Dv AG_TLIST_TREE
+was deprecated and has no effect as of Agar 1.6.
+.Fn AG_TlistSelectIdx ,
+.Fn AG_TlistDeselectIdx ,
+.Fn AG_TlistSetColor ,
 .Fn AG_TlistSetFont
-were added in Agar 1.6.
+and per-item
+.Va fontFlags
+appeared in Agar 1.6.0.

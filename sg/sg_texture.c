@@ -406,7 +406,7 @@ ImportSurfaceDlg(AG_Event *_Nonnull event)
 
 	hBox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_EXPAND);
 	{
-		fd = AG_FileDlgNewMRU(hBox, "sg.mru.textures",
+		fd = AG_FileDlgNewMRU(hBox, "sg-textures",
 		    AG_FILEDLG_LOAD | AG_FILEDLG_CLOSEWIN | AG_FILEDLG_EXPAND);
 
 		AG_FileDlgAddType(fd, _("JPEG Image"), "*.jpg,*.jpeg",

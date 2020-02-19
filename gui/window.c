@@ -23,6 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * The base container for Agar widgets. Agar windows are attached to some
+ * parent AG_Driver(3), which forms a bridge between the Agar GUI system
+ * and the user's selected graphics backend.
+ */
+
 #include <agar/core/core.h>
 
 #include <agar/gui/gui.h>

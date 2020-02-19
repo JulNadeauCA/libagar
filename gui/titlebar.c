@@ -23,6 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Window titlebar widget. This is a simple subclass of AG_Box(3) which embeds
+ * an AG_Label(3) and a set of AG_Button(3) for maximizing, minimizing and
+ * closing windows. It is only used in single-window (built-in WM) mode.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

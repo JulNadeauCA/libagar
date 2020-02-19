@@ -314,7 +314,6 @@ Init(void *_Nonnull obj)
 	skv->keyup_ev = NULL;
 	skv->btnup_ev = NULL;
 	skv->motion_ev = NULL;
-	skv->status[0] = '\0';
 	skv->mouseLast.x = 0;
 	skv->mouseLast.y = 0;
 	skv->curtool = NULL;
@@ -330,6 +329,7 @@ Init(void *_Nonnull obj)
 	skv->mProj = M_MatIdentity44();
 	skv->pmView = NULL;
 	TAILQ_INIT(&skv->tools);
+	skv->status[0] = '\0';
 
 	AG_AddEvent(skv, "widget-shown", Shown, NULL);
 }

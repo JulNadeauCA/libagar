@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Floating-point spinbutton group with two directions.
+ */
+
 #include <agar/core/core.h>
 #if defined(AG_WIDGETS)
 

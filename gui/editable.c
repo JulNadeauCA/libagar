@@ -790,6 +790,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 				}
 				break;
 			case AG_FONT_DUMMY:
+			default:
 				break;
 			}
 		}
@@ -877,6 +878,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			}
 			break;
 		case AG_FONT_DUMMY:
+		default:
 			break;
 		}
 	}
@@ -1084,6 +1086,8 @@ Draw(void *_Nonnull obj)
 						break;
 					case AG_SGR_UNDERLINE:
 						break;
+					default:
+						break;
 					}
 				}
 				i += ansi.len;
@@ -1257,7 +1261,17 @@ KeyDown(AG_Event *_Nonnull event)
 	case AG_KEY_RCTRL:
 		return;
 	case AG_KEY_TAB:
-		if (!(WIDGET(ed)->flags & AG_WIDGET_CATCH_TAB)) {
+		if (!(ed->flags & AG_EDITABLE_MULTILINE) &&
+		    ed->complete && ed->complete->winName[0] != '\0') {
+			AG_Window *win;
+			AG_Tlist *tl;
+
+			if ((win = AG_WindowFind(ed->complete->winName)) != NULL &&
+			    (tl = AG_ObjectFindChild(win, "tlist0")) != NULL) {
+				AG_TlistSelectIdx(tl, 0);
+			}
+			return;
+		} else if (!(WIDGET(ed)->flags & AG_WIDGET_CATCH_TAB)) {
 			return;
 		}
 		break;
@@ -1418,6 +1432,7 @@ AG_EditableAutocomplete(AG_Editable *ed, AG_EventFn fn, const char *fmt, ...)
 			}
 			free(ed->complete);
 			ed->complete = NULL;
+			WIDGET(ed)->flags &= ~(AG_WIDGET_CATCH_TAB);
 		}
 		goto out;
 	}
@@ -1438,6 +1453,7 @@ AG_EditableAutocomplete(AG_Editable *ed, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(ed->complete->fn, fmt, ap);
 		va_end(ap);
 	}
+	WIDGET(ed)->flags |= AG_WIDGET_CATCH_TAB;
 out:
 	AG_ObjectUnlock(ed);
 }

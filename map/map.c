@@ -1844,9 +1844,7 @@ EditMapParameters(AG_Event *_Nonnull event)
 	{
 		AG_Tlist *tl;
 
-		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
-		                       AG_TLIST_EXPAND);
-		WIDGET(tl)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL;
+		tl = AG_TlistNew(ntab, AG_TLIST_POLL | AG_TLIST_EXPAND);
 		AG_SetEvent(tl, "tlist-poll", PollUndoBlks, "%p", mv->map);
 	}
 
@@ -2494,8 +2492,7 @@ Edit(void *_Nonnull p)
 		nb = AG_NotebookNew(vPane->div[0], AG_NOTEBOOK_EXPAND);
 		ntab = AG_NotebookAdd(nb, _("Library"), AG_BOX_VERT);
 		{
-			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
-			                       AG_TLIST_EXPAND);
+			tl = AG_TlistNew(ntab, AG_TLIST_POLL | AG_TLIST_EXPAND);
 #if 0
 			AG_SetEvent(tl, "tlist-poll", PollLibs, "%p", agWorld);
 #endif
@@ -2520,8 +2517,7 @@ Edit(void *_Nonnull p)
 		}
 		ntab = AG_NotebookAdd(nb, _("Objects"), AG_BOX_VERT);
 		{
-			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
-			                       AG_TLIST_EXPAND);
+			tl = AG_TlistNew(ntab, AG_TLIST_POLL | AG_TLIST_EXPAND);
 			AG_SetEvent(tl, "tlist-poll", PollActors, "%p", mv);
 //			AG_SetEvent(tl, "tlist-changed", select_obj, "%p", mv);
 			mv->objs_tl = tl;

@@ -24,8 +24,11 @@
  */
 
 /*
- * Agar file browser widget.
+ * File browser widget. It shows directories and shortcuts on the left and
+ * those files contained in the selected directory on the right. It provides
+ * a glob(3)-supporting textbox for manual input and a file-type selector.
  */
+
 #include <agar/core/core.h>
 #if defined(AG_WIDGETS)
 

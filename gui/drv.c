@@ -24,7 +24,7 @@
  */
 
 /*
- * Implementation of base AG_Driver object.
+ * Base low-level AG_Driver(3) object instance.
  */
 
 #include <agar/config/have_sdl.h>

@@ -1683,8 +1683,8 @@ RenderDlg(AG_Event *_Nonnull event)
 	AG_SeparatorNewHoriz(win);
 
 	AG_LabelNewS(win, 0, _("Output Directory:"));
-	dd = AG_DirDlgNewMRU(win, "sg-script-output-dir",
-	    AG_DIRDLG_EXPAND|AG_DIRDLG_SAVE|AG_DIRDLG_NOBUTTONS);
+	dd = AG_DirDlgNewMRU(win, "sg-renderout",
+	    AG_DIRDLG_EXPAND | AG_DIRDLG_SAVE | AG_DIRDLG_NOBUTTONS);
 /*	AG_DirDlgOkAction(dd, Render, "%p,%p", e, win); */
 
 	AG_CheckboxNewInt(win, 0, _("Delete Existing Frames"), &re->clearDir);
@@ -1776,9 +1776,9 @@ Edit(void *_Nonnull obj)
 		AG_LabelSizeHint(lbl, 1,
 		    _("Instructions at f0000: "));
 
-		tl = AG_TlistNew(e->paLeft->div[0],
-		    AG_TLIST_POLL | AG_TLIST_TREE | AG_TLIST_EXPAND |
-		    AG_TLIST_MULTI);
+		tl = AG_TlistNew(e->paLeft->div[0], AG_TLIST_POLL |
+		                                    AG_TLIST_EXPAND |
+		                                    AG_TLIST_MULTI);
 		WIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		AG_TlistSizeHint(tl, "<Isocahedron>", 2);
 

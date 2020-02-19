@@ -416,7 +416,7 @@ MenuExportDlg(AG_Event *_Nonnull event)
 	}
 	AG_WindowSetCaption(win, _("Export %s to..."), OBJECT(cons)->name);
 
-	fd = AG_FileDlgNewMRU(win, "console.text-dir",
+	fd = AG_FileDlgNewMRU(win, "console-out",
 	                      AG_FILEDLG_SAVE | AG_FILEDLG_CLOSEWIN |
 	                      AG_FILEDLG_EXPAND);
 

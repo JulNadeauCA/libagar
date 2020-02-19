@@ -23,6 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Table widget. Displays a set of cells organized in one or more columns.
+ * Cells can contain text, numerical values, dynamically-generated content
+ * or embedded Agar widgets. It implements a polled mode with asset-recycling
+ * for tables which must be cleared and reconstructed frequently. Individual
+ * cells, entire rows, or columns can be selected.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 
@@ -1520,6 +1528,8 @@ CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 				    DoubleClickTimeout, "%p", &t->dblClickedCol);
 			}
 		}
+		break;
+	default:
 		break;
 	}
 	AG_Redraw(t);

@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Numerical edition widget. It can connect to an integer or floating-point
+ * value and allow the user to edit the number by either keyboard or mouse.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

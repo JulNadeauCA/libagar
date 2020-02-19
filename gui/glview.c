@@ -23,6 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * OpenGL context widget. No longer needed as of Agar 1.5 (replaced by
+ * the USE_OPENGL feature of the base AG_Widget(3) class), but kept for
+ * backward compatibility.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 #include <agar/config/have_opengl.h>

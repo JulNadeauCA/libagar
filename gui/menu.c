@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Menu bar widget (and base AG_Menu(3) API).
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 

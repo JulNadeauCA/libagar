@@ -1378,8 +1378,8 @@ Edit(void *_Nonnull p)
 	AG_WindowSetSpacing(win, 0);
 	AG_WindowSetPaddingTop(win, 0);
 
-	tlTiles = tl[0] = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_MULTI|
-	                                    AG_TLIST_TREE|AG_TLIST_EXPAND);
+	tlTiles = tl[0] = AG_TlistNew(NULL, AG_TLIST_POLL | AG_TLIST_MULTI |
+	                                    AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tlTiles, "XXXXXXXXXXXXXXXXX (00x00)", 6);
 	AG_SetEvent(tlTiles, "tlist-poll", PollTiles, "%p", ts);
 

@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Paned container widget. It divides space into two partitions (which are
+ * AG_Box(3) containers) with a user-movable separator between them.
+ */
+
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 
@@ -207,6 +212,8 @@ MouseMotion(AG_Event *_Nonnull event)
 				AG_Redraw(pa);
 			}
 		}
+		break;
+	default:
 		break;
 	}
 }
@@ -401,6 +408,8 @@ Draw(void *_Nonnull obj)
 		case AG_PANE_VERT:
 			DrawVertDivider(pa, WIDTH(pa) >> 1, pa->dx);
 			break;
+		default:
+			break;
 		}
 	}
 }
@@ -435,6 +444,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 			r->w = MAX(r->w, wMax);
 			r->h += rDiv.h;
 			break;
+		default:
+			break;
 		}
 	}
 	switch (pa->type) {
@@ -443,6 +454,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		break;
 	case AG_PANE_VERT:
 		r->h += (pa->wDiv > 0) ? (pa->wDiv + 2) : 0;
+		break;
+	default:
 		break;
 	}
 }
@@ -576,6 +589,8 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		r.w = a->w;
 		r.h = pa->wDiv;
 		AG_SetStockCursor(pa, &pa->ca, &r, AG_VRESIZE_CURSOR);
+		break;
+	default:
 		break;
 	}
 	AG_WidgetSizeAlloc(pa->div[0], &a1);
