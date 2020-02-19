@@ -278,10 +278,28 @@ PollAttributes(AG_Event *_Nonnull event)
 	AG_TlistBegin(tl);
 
 	for (attr = &agStyleAttributes[0]; *attr != NULL; attr++) {
+		AG_Surface *S;
+		char *value;
+		AG_TlistItem *it;
+
 		if (!AG_Defined(tgt, *attr)) {
 			continue;
 		}
-		AG_TlistAdd(tl, NULL, "%s: %s", *attr, AG_GetStringP(tgt,*attr));
+		value = AG_GetStringP(tgt, *attr);
+		if (strcmp(*attr, "color") == 0 ||
+		    strstr(*attr, "-color") != NULL) {
+			AG_Color c;
+
+			S = AG_SurfaceStdRGB(tl->icon_w, tl->icon_w);
+			AG_ColorFromString(&c, value, NULL);
+			AG_FillRect(S, NULL, &c);
+		} else {
+			S = NULL;
+		}
+		it = AG_TlistAdd(tl, S, "%s: %s", *attr, value);
+		it->p1 = value;
+		if (S)
+			AG_SurfaceFree(S);
 	}
 
 	AG_TlistEnd(tl);
@@ -422,6 +440,15 @@ CompleteAttribute(AG_Event *_Nonnull event)
 }
 
 static void
+SelectedAttribute(AG_Event *_Nonnull event)
+{
+	AG_Textbox *tb = AG_TEXTBOX_PTR(1);
+	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+
+	AG_TextboxSetString(tb, it->text);
+}
+
+static void
 TargetWidget(AG_Event *_Nonnull event)
 {
 	AG_Box *box = agStyleEditorBox;
@@ -460,6 +487,8 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
 		    PollAttributes, "%p", tgt);
+		AG_SetEvent(tlAttrs, "tlist-selected",
+		    SelectedAttribute, "%p", tb);
 	}
 #if 0
 	nt = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);

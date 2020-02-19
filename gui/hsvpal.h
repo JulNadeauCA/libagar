@@ -64,6 +64,7 @@ typedef struct ag_hsvpal {
 #if AG_MODEL == AG_MEDIUM
 	Uint32 _pad2;
 #endif
+	AG_Timer toMove[4];     /* For 4-way keyboard navigation */
 } AG_HSVPal;
 
 #define AGHSVPAL(obj)            ((AG_HSVPal *)(obj))

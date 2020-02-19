@@ -415,7 +415,7 @@ Init(void *_Nonnull obj)
 			fs->pal = AG_HSVPalNew(fs->sizeBox, AG_HSVPAL_NOPREVIEW |
 			                                    AG_HSVPAL_NOALPHA |
 		                                            AG_HSVPAL_HFILL);
-			AG_BindPointer(fs->pal, "color", (void *)&fs->cPreview);
+			AG_BindPointer(fs->pal, "agcolor", (void *)&fs->cPreview);
 			AG_SetEvent(fs->pal, "h-changed", PreviewColorChanged, "%p", fs);
 			AG_SetEvent(fs->pal, "sv-changed", PreviewColorChanged, "%p", fs);
 		}

@@ -405,7 +405,7 @@ UpdatePixelFromHSVA(AG_HSVPal *_Nonnull pal)
 		AG_UnlockVariable(bFormat);
 	}
 
-	bColor = AG_GetVariable(pal, "color", (void *)&pColor);
+	bColor = AG_GetVariable(pal, "agcolor", (void *)&pColor);
 	pColor->r = AG_8toH(r);
 	pColor->g = AG_8toH(g);
 	pColor->b = AG_8toH(b);
@@ -626,9 +626,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_HSVPal *pal = AG_HSVPAL_SELF();
 	const int btn = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
-	float r;
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 
 	if ((WIDGET(pal)->flags & AG_WIDGET_FOCUSABLE) &&
 	    !AG_WidgetIsFocused(pal))
@@ -640,12 +639,13 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			UpdateAlpha(pal, x);
 			pal->state = AG_HSVPAL_SEL_A;
 		} else {
-			x -= pal->circle.x;
-			y -= pal->circle.y;
-			r = Hypot((float)x, (float)y);
+			const float r = Hypot((float)(x - pal->circle.x),
+			                      (float)(y - pal->circle.y));
 
 			if (r > (float)pal->circle.rIn) {
-				AG_HSVPal_UpdateHue(pal, x,y);
+				AG_HSVPal_UpdateHue(pal,
+				    x - pal->circle.x,
+				    y - pal->circle.y);
 				pal->state = AG_HSVPAL_SEL_H;
 			} else {
 				AG_HSVPal_UpdateSV(pal, x,y);
@@ -690,6 +690,99 @@ MouseMotion(AG_Event *_Nonnull event)
 		UpdateAlpha(pal, x);
 		break;
 	default:
+		break;
+	}
+}
+
+static Uint32
+KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
+{
+	AG_HSVPal *pal = AG_HSVPAL_SELF();
+	int keysym = AG_INT(1);
+	Uint32 rv = to->ival;
+	float sat, value;
+	const float delta = 0.01f;
+
+	switch (keysym) {
+	case AG_KEY_UP:
+ 		sat = AG_GetFloat(pal,"saturation");
+		if ((sat += delta) > 1.0f) {
+			sat = 1.0f;
+			rv = 0;
+		}
+		AG_SetFloat(pal, "saturation", sat);
+		UpdatePixelFromHSVA(pal);
+		AG_PostEvent(pal, "sv-changed", NULL);
+		AG_Redraw(pal);
+		break;
+	case AG_KEY_DOWN:
+ 		sat = AG_GetFloat(pal,"saturation");
+		if ((sat -= delta) < 0.0f) {
+			sat = 0.0f;
+			rv = 0;
+		}
+		AG_SetFloat(pal, "saturation", sat);
+		UpdatePixelFromHSVA(pal);
+		AG_PostEvent(pal, "sv-changed", NULL);
+		AG_Redraw(pal);
+		break;
+	case AG_KEY_LEFT:
+ 		value = AG_GetFloat(pal,"value");
+		if ((value += delta) > 1.0f) {
+			value = 1.0f;
+			rv = 0;
+		}
+		AG_SetFloat(pal, "value", value);
+		UpdatePixelFromHSVA(pal);
+		AG_PostEvent(pal, "sv-changed", NULL);
+		AG_Redraw(pal);
+		break;
+	case AG_KEY_RIGHT:
+ 		value = AG_GetFloat(pal,"value");
+		if ((value -= delta) < 0.0f) {
+			value = 0.0f;
+			rv = 0;
+		}
+		AG_SetFloat(pal, "value", value);
+		UpdatePixelFromHSVA(pal);
+		AG_PostEvent(pal, "sv-changed", NULL);
+		AG_Redraw(pal);
+		break;
+	}
+	return (rv);
+}
+
+static void
+KeyDown(AG_Event *_Nonnull event)
+{
+	AG_HSVPal *pal = AG_HSVPAL_SELF();
+	const int keysym = AG_INT(1);
+
+	switch (keysym) {
+	case AG_KEY_UP:
+	case AG_KEY_DOWN:
+	case AG_KEY_RIGHT:
+	case AG_KEY_LEFT:
+		AG_AddTimer(pal, &pal->toMove[keysym-AG_KEY_UP], 1,
+		    KeyMoveTimeout, "%i", keysym);
+		AG_ExecTimer(&pal->toMove[keysym-AG_KEY_UP]);
+		break;
+	}
+
+}
+
+static void
+KeyUp(AG_Event *_Nonnull event)
+{
+	AG_HSVPal *pal = AG_HSVPAL_SELF();
+	const int keysym = AG_INT(1);
+
+	switch (keysym) {
+	case AG_KEY_UP:
+	case AG_KEY_DOWN:
+	case AG_KEY_LEFT:
+	case AG_KEY_RIGHT:
+		AG_DelTimer(pal, &pal->toMove[keysym-AG_KEY_UP]);
 		break;
 	}
 }
@@ -761,9 +854,16 @@ Init(void *_Nonnull obj)
 	pal->menu_win = NULL;
 	AG_ColorRGB_8(&pal->cTile, 140,140,140);
 
+	AG_InitTimer(&pal->toMove[0], "moveUp", 0);
+	AG_InitTimer(&pal->toMove[1], "moveDown", 0);
+	AG_InitTimer(&pal->toMove[2], "moveLeft", 0);
+	AG_InitTimer(&pal->toMove[3], "moveRight", 0);
+
 	AG_SetEvent(pal, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(pal, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(pal, "mouse-motion", MouseMotion, NULL);
+	AG_SetEvent(pal, "key-down", KeyDown, NULL);
+	AG_SetEvent(pal, "key-up", KeyUp, NULL);
 	
 	AG_BindFloat(pal, "hue", &pal->h);
 	AG_BindFloat(pal, "saturation", &pal->s);
@@ -773,7 +873,7 @@ Init(void *_Nonnull obj)
 #if AG_MODEL == AG_LARGE
 	AG_BindUint64(pal, "pixel64", &pal->pixel64);
 #endif
-	AG_BindPointer(pal, "color", (void *)&pal->color);
+	AG_BindPointer(pal, "agcolor", (void *)&pal->color);
 	AG_BindPointer(pal, "pixel-format", NULL);
 	
 	AG_SetEvent(pal, "bound", Bound, NULL);
