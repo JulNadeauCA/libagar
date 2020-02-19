@@ -24,7 +24,7 @@
  */
 
 /*
- * AG_Widget: The base class of all Agar widgets.
+ * The base class for Agar widgets.
  */
 
 #include <agar/core/core.h>
@@ -68,7 +68,6 @@ const char *agStyleAttributes[] = {
 	 * Box Model
 	 */
 	"margin",           /* Margin (between border & outer bounding box) */
-	"border",           /* Border (px between padding & margin) */
 	"padding",          /* Padding (px between content & border) */
 	/*
 	 * Containers
@@ -94,7 +93,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{  0,  0,  0,  0},          /*  background-color */
 	{240,240,240,255},          /*        text-color */
 	{ 50, 50, 50,255},          /*        line-color */
-	{ 90, 90, 90,255},          /*        high-color */
+	{144,144,144,255},          /*        high-color */
 	{ 80, 80, 80,255},          /*         low-color */
 	{  0,  0, 80,255},          /*   selection-color */
 	{  0,  0,  0,  0}
@@ -483,8 +482,7 @@ Init(void *_Nonnull obj)
 	                           sizeof(enum ag_widget_state) + /* state */
 	                           sizeof(Uint8)*4 +              /* margin */
 	                           sizeof(Uint)*4 +               /* padding */
-	                           sizeof(Uint)*2 +               /* spacing */
-	                           sizeof(Uint));                 /* borders */
+	                           sizeof(Uint)*2);               /* spacing */
 
 	wid->font = agDefaultFont;
 	wid->pal = agDefaultPalette;

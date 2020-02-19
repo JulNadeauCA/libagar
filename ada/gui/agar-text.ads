@@ -191,15 +191,12 @@ package Agar.Text is
     Font           : Font_not_null_Access;       -- Font face
     Color_BG       : SU.AG_Color;                -- Background color
     Color          : SU.AG_Color;                -- Foreground color
-#if AG_MODEL = AG_MEDIUM
-    C_Pad1         : Interfaces.Unsigned_32;
-#end if;
     Surface        : SU.Surface_not_null_Access; -- Rendered surface
     Char           : AG_Char;                    -- Native character
     Advance        : C.int;                      -- Advance in pixels
     Texture        : C.unsigned;                 -- Mapped texture (by driver)
     Texcoords      : SU.AG_Texcoord;             -- Texture coordinates
-    C_Pad2         : Interfaces.Unsigned_32;
+    C_Pad1         : Interfaces.Unsigned_32;
     Entry_in_Cache : AG_Glyph_Entry;             -- Entry in cache
   end record
     with Convention => C;

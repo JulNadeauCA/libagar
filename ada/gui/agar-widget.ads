@@ -951,8 +951,6 @@ package Agar.Widget is
     Spacing_Bottom   : C.unsigned;               -- Spacing bottom (px)
     Spacing_Left     : C.unsigned;               -- Spacing left (px)
 
-    Borders          : C.unsigned;               -- Border styles (0xRWLWBWTW)
-
     Font             : System.Address;           -- Active font (TODO)
     Palette          : Widget_Palette;           -- Color palette
 
