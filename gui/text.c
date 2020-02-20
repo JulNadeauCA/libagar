@@ -130,6 +130,22 @@ _Nonnull_Mutex AG_Mutex agTextLock;
 AG_TextState agTextStateStack[AG_TEXT_STATES_MAX];
 Uint         agTextStateCur = 0;
 
+/*
+ * Small adjustments to the sizes and ascents of core fonts.
+ */
+const AG_FontAdjustment agFontAdjustments[] = {
+/*                                   0.0 10.4 14.0 21.0 23.8 35.0 to- */
+/*                                  10.4 14.0 21.0 23.8 35.0 inf  pts */
+	{ "bedstead",       0.9f, { +1,  +3,  +3,  +4,  +5,  +7 } },
+	{ "cm-sans",        1.1f, { -4,  -4,  -6,  -7,  -9, -16 } },
+	{ "cm-serif",       1.1f, { -3,  -4,  -5,  -5,  -6, -12 } },
+	{ "cm-typewriter",  1.1f, { -2,  -4,  -5,  -5,  -7, -11 } },
+	{ "league-spartan", 0.9f, { -2,  -2,  -3,  -4,  -5,  -8 } },
+	{ "league-gothic",  1.1f, { -1,  -1,  -1,  -2,  -1,  -3 } },
+	{ "fraktur",        1.1f, { -1,  -1,  -1,  -1,  -1,  -1 } },
+	{ NULL,             0.0f, {  0,   0,   0,   0,   0,   0 } }
+};
+
 /* ANSI color scheme (may be overridden by AG_TextState) */
 AG_Color agTextColorANSI[] = {
 #if AG_MODEL == AG_LARGE

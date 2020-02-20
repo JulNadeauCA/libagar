@@ -157,6 +157,15 @@ AG_TTFOpenFont(AG_Font *font, const char *path)
 		FT_Set_Transform(face, &m, &vec);
 	}
 	if (FT_IS_SCALABLE(face)) {
+		const AG_FontAdjustment *fa;
+		int adjRange;
+
+		for (fa = &agFontAdjustments[0]; fa->face != NULL; fa++) {
+			if (strcmp(OBJECT(font)->name, fa->face) == 0) {
+				spec->size *= fa->size_factor;
+				break;
+			}
+		}
 		if ((rv = FT_Set_Char_Size(face, 0, spec->size*64, 0, 0)) != 0) {
 			AG_SetError("FT_Set_Char_Size failed: %x", rv);
 			goto fail_face;
@@ -168,6 +177,20 @@ AG_TTFOpenFont(AG_Font *font, const char *path)
 		ttf->lineskip = FT_CEIL(FT_MulFix(face->height, scale));
 		ttf->underline_offset = FT_FLOOR(FT_MulFix(face->underline_position, scale));
 		ttf->underline_height = FT_FLOOR(FT_MulFix(face->underline_thickness, scale));
+
+		if      (spec->size <= 10.4f) { adjRange = 0; }
+		else if (spec->size <= 14.0f) { adjRange = 1; }
+		else if (spec->size <= 21.0f) { adjRange = 2; }
+		else if (spec->size <= 23.8f) { adjRange = 3; }
+		else if (spec->size <= 35.0f) { adjRange = 4; }
+		else                          { adjRange = 5; }
+
+		for (fa = &agFontAdjustments[0]; fa->face != NULL; fa++) {
+			if (strcmp(OBJECT(font)->name, fa->face) == 0) {
+				ttf->ascent += fa->ascent_offset[adjRange];
+				break;
+			}
+		}
 	} else {
 		Uint fixedSize = (Uint)spec->size;
 

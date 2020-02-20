@@ -241,11 +241,17 @@ typedef struct ag_font_spec {
 	} source;
 } AG_FontSpec;
 
+typedef struct ag_font_adjustment {
+	const char *face;               /* Font family */
+	float size_factor;              /* Scaling tweak */
+	int ascent_offset[6];           /* Ascent tweak (size range specific) */
+} AG_FontAdjustment;
+
 /* A cached rendering of a glyph of a given font and color. */
 typedef struct ag_glyph {
-	struct ag_font *_Nonnull font;  /* Font face */
-	AG_Color colorBG;               /* Background color */
-	AG_Color color;                 /* Foreground color */
+	struct ag_font *_Nonnull font;   /* Font face */
+	AG_Color colorBG;                /* Background color */
+	AG_Color color;                  /* Foreground color */
 	AG_Surface *_Nonnull su;         /* Rendered surface */
 	AG_Char ch;                      /* Native character */
 	int advance;                     /* Advance (px) */
@@ -361,6 +367,8 @@ extern _Nonnull_Mutex AG_Mutex agTextLock;
 extern AG_TextState            agTextStateStack[AG_TEXT_STATES_MAX];
 extern Uint                    agTextStateCur;
 extern AG_Font *_Nullable      agDefaultFont;
+
+extern const AG_FontAdjustment agFontAdjustments[];
 
 extern const char *agCoreFonts[];
 extern const char *agFontFileExts[];

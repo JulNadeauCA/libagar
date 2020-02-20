@@ -294,18 +294,19 @@ OnShow(AG_Event *_Nonnull event)
 	               (*pFont)->flags & AG_FONT_BOLD &&
 	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
 
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software styles:"));
-	ti->flags |= AG_TLIST_NO_SELECT;
-	AG_TlistSetFont(fs->tlFaces, ti,
-	    AG_TextFontPctFlags(80, AG_FONT_UNDERLINE));
+	if (fs->flags & AG_FONTSELECTOR_SW_STYLES) {
+		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software styles:"));
+		ti->flags |= AG_TLIST_NO_SELECT;
+		AG_TlistSetFont(fs->tlFaces, ti,
+		    AG_TextFontPctFlags(80, AG_FONT_UNDERLINE));
 
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software Bold"));
-	if (*pFont && (*pFont)->flags == AG_FONT_SW_BOLD) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software Oblique"));
-	if (*pFont && (*pFont)->flags == AG_FONT_SW_OBLIQUE) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software Bold Oblique"));
-	if (*pFont && (*pFont)->flags == (AG_FONT_SW_BOLD | AG_FONT_SW_OBLIQUE)) { ti->selected++; }
-
+		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software Bold"));
+		if (*pFont && (*pFont)->flags == AG_FONT_SW_BOLD) { ti->selected++; }
+		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software Oblique"));
+		if (*pFont && (*pFont)->flags == AG_FONT_SW_OBLIQUE) { ti->selected++; }
+		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software Bold Oblique"));
+		if (*pFont && (*pFont)->flags == (AG_FONT_SW_BOLD | AG_FONT_SW_OBLIQUE)) { ti->selected++; }
+	}
 	UpdatePreview(fs);
 
 	AG_UnlockVariable(bFont);
@@ -344,9 +345,11 @@ SelectedStyle(AG_Event *_Nonnull event)
 	if (!strcmp(it->text, _("Condensed Bold Italic")))  { flags |= (AG_FONT_CONDENSED | AG_FONT_BOLD | AG_FONT_ITALIC); }
 	if (!strcmp(it->text, _("Condensed Bold Oblique"))) { flags |= (AG_FONT_CONDENSED | AG_FONT_BOLD | AG_FONT_OBLIQUE); }
 
-	if (!strcmp(it->text, _("Software Oblique")))        { flags |=  AG_FONT_SW_ITALIC; }
-	if (!strcmp(it->text, _("Software Bold")))           { flags |=  AG_FONT_SW_BOLD; }
-	if (!strcmp(it->text, _("Software Bold Oblique")))   { flags |= (AG_FONT_SW_BOLD | AG_FONT_SW_ITALIC); }
+	if (fs->flags & AG_FONTSELECTOR_SW_STYLES) {
+		if (!strcmp(it->text, _("Software Oblique")))        { flags |=  AG_FONT_SW_ITALIC; }
+		if (!strcmp(it->text, _("Software Bold")))           { flags |=  AG_FONT_SW_BOLD; }
+		if (!strcmp(it->text, _("Software Bold Oblique")))   { flags |= (AG_FONT_SW_BOLD | AG_FONT_SW_ITALIC); }
+	}
 
 	fs->curStyle = flags;
 	UpdateFontSelection(fs);
