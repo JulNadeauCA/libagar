@@ -192,18 +192,13 @@ static void
 SelectedSurface(AG_Event *_Nonnull event)
 {
 	AG_Pixmap *px = AG_PIXMAP_PTR(1);
-	AG_Pane *pane = AG_PANE_PTR(2);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(3);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 	AG_Surface *S = it->p1;
-	int Smapped;
 
-	if (S == NULL)
+	if (S == NULL || strcmp(it->cat, "surface") != 0)
 		return;
 	
-	AG_PaneMoveDividerPct(pane, 50);
-
-	Smapped = AG_PixmapAddSurfaceScaled(px, S, S->w << 1, S->h << 1);
-	AG_PixmapSetSurface(px, Smapped);
+	AG_PixmapSetSurface(px, AG_PixmapAddSurfaceScaled(px, S, S->w, S->h));
 	AG_Redraw(px);
 }
 
@@ -254,8 +249,7 @@ PollSurfaces(AG_Event *_Nonnull event)
 	AG_TlistItem *it;
 	Uint i;
 
-	if (!AG_OBJECT_VALID(wid) || !AG_OfClass(wid, "AG_Widget:*") ||
-	    AG_OfClass(wid, "AG_Widget:AG_Console:*"))
+	if (!AG_OBJECT_VALID(wid) || !AG_OfClass(wid, "AG_Widget:*"))
 		return;
 
 	AG_ObjectLock(wid);
@@ -269,14 +263,14 @@ PollSurfaces(AG_Event *_Nonnull event)
 		 * Without this check, S will get DE referenced and cause
 		 * a segfault. */
 		if (S == NULL) {
-			AG_TlistAdd(tl, NULL, "Surface%u = NULL", i);
-			continue;
+			it = AG_TlistAdd(tl, NULL, "Surface%u = NULL", i);
+			it->cat = "null-surface";
+		} else {
+			it = AG_TlistAdd(tl, S, "Surface%u (%ux%u, %ubpp)",
+			    i, S->w, S->h, S->format.BitsPerPixel);
+			it->cat = "surface";
 		}
-		it = AG_TlistAdd(tl, S, "Surface%u (%ux%u, %ubpp)",
-		    i, S->w, S->h, S->format.BitsPerPixel);
-
 		it->p1 = (AG_Surface *)S;
-		it->cat = "surface";
 	}
 	AG_TlistEnd(tl);
 	AG_ObjectUnlock(wid);
@@ -461,13 +455,11 @@ TargetWidget(AG_Event *_Nonnull event)
 		tl = AG_TlistNewPolled(pane->div[1], AG_TLIST_EXPAND,
 		    PollSurfaces,"%p",tgt);
 
-		AG_SetEvent(tl, "tlist-selected", SelectedSurface,"%p,%p",px,pane);
+		AG_SetEvent(tl, "tlist-selected", SelectedSurface,"%p",px);
 
 		mi = AG_TlistSetPopup(tl, "surface");
 		AG_MenuAction(mi, _("Export to image file..."), agIconSave.s,
 		    ExportSurfaceDlg, "%Cp", px);
-
-		AG_PaneMoveDividerPct(pane, 50);
 	}
 
 	AG_NotebookSelectByID(nb, savedTabID);		/* Restore active tab */

@@ -805,6 +805,10 @@ Draw(void *_Nonnull p)
 			isSelected = 0;
 		}
 
+		if (ln->text[0] == '\0') {
+			r.y += cons->lineskip;
+			continue;
+		}
 		if (ln->surface[isSelected] == -1) {
 			AG_Surface *S;
 
@@ -817,6 +821,12 @@ Draw(void *_Nonnull p)
 			AG_TextBGColor(isSelected ? cSel : cBg);
 
 			if ((S = AG_TextRender(ln->text)) == NULL) {
+				r.y += cons->lineskip;
+				continue;
+			}
+			if (S->w == 0 || S->h == 0) {
+				AG_SurfaceFree(S);
+				r.y += cons->lineskip;
 				continue;
 			}
 			ln->surface[isSelected] = AG_WidgetMapSurface(cons, S);
