@@ -286,10 +286,6 @@ Draw(void *_Nonnull obj)
 		AG_Surface *S;
 
 		if (cb->suCheckmark == -1) {
-			AG_TextFontLookup("dejavu-sans",
-			    WFONT(cb)->spec.size + 5.0f,
-			    WFONT(cb)->flags);
-
 			/* U+2713 (CHECK MARK) */
 			cb->suCheckmark = AG_WidgetMapSurface(cb,
 			    AG_TextRender("\xe2\x9c\x93"));
@@ -373,7 +369,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		AG_TextSize(cb->label, &r->w, &r->h);
 		r->w += WFONT(cb)->lineskip + WIDGET(cb)->spacingHoriz;
 	} else {
-		r->w = WFONT(cb)->height;
+		r->w = WFONT(cb)->lineskip;
 		r->h = r->w;
 	}
 	cb->wReq = r->w;

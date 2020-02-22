@@ -103,16 +103,15 @@
 /* #define DEBUG_FONTS */
 
 /* Default fonts */
-const char *agDefaultFaceFT = "_agFontVera";
-const char *agDefaultFaceBitmap = "_agFontMinimal";
+const char *agDefaultFaceFT = "_agFontAlgue";
+const char *agDefaultFaceBitmap = "minimal.xcf";
 
 /* Statically compiled fonts */
 AG_StaticFont *agBuiltinFonts[] = {
-	&agFontVera,
-	&agFontVera_Bold,
-	&agFontVera_Italic,
-	&agFontVera_BoldItalic,
-	&agFontMinimal,
+	&agFontAlgue,
+	&agFontAlgue_Bold,
+	&agFontAlgue_Italic,
+	&agFontAlgue_BoldItalic,
 	NULL
 };
 
@@ -134,16 +133,18 @@ Uint         agTextStateCur = 0;
  * Small adjustments to the sizes and ascents of core fonts.
  */
 const AG_FontAdjustment agFontAdjustments[] = {
-/*                                   0.0 10.4 14.0 21.0 23.8 35.0 to- */
-/*                                  10.4 14.0 21.0 23.8 35.0 inf  pts */
-	{ "bedstead",       0.9f, { +1,  +3,  +3,  +4,  +5,  +7 } },
-	{ "cm-sans",        1.1f, { -4,  -4,  -6,  -7,  -9, -16 } },
-	{ "cm-serif",       1.1f, { -3,  -4,  -5,  -5,  -6, -12 } },
-	{ "cm-typewriter",  1.1f, { -2,  -4,  -5,  -5,  -7, -11 } },
-	{ "league-spartan", 0.9f, { -2,  -2,  -3,  -4,  -5,  -8 } },
-	{ "league-gothic",  1.1f, { -1,  -1,  -1,  -2,  -1,  -3 } },
-	{ "fraktur",        1.1f, { -1,  -1,  -1,  -1,  -1,  -1 } },
-	{ NULL,             0.0f, {  0,   0,   0,   0,   0,   0 } }
+/*                                      0.0 10.4 14.0 21.0 23.8 35.0 to- */
+/*                                     10.4 14.0 21.0 23.8 35.0 inf  pts */
+	{ "bedstead",           0.9f, { +1,  +3,  +3,  +4,  +5,  +7 } },
+	{ "cm-sans",            1.1f, { -4,  -4,  -6,  -7,  -9, -16 } },
+	{ "cm-serif",           1.1f, { -3,  -4,  -5,  -5,  -6, -12 } },
+	{ "cm-typewriter",      1.1f, { -2,  -4,  -5,  -5,  -7, -11 } },
+	{ "league-spartan",     0.9f, { -2,  -2,  -3,  -4,  -5,  -8 } },
+	{ "league-gothic",      1.1f, { -1,  -1,  -1,  -2,  -1,  -3 } },
+	{ "fraktur",            1.1f, { +1,  +1,  +1,  +1,  +1,  +1 } },
+	{ "source-han-sans",    1.0f, { -8, -12, -15, -20, -28, -35 } },
+	{ "unialgue",           1.0f, { -3,  -4,  -5,  -7, -11, -12 } },
+	{ NULL,                 0.0f, {  0,   0,   0,   0,   0,   0 } }
 };
 
 /* ANSI color scheme (may be overridden by AG_TextState) */
@@ -193,8 +194,8 @@ const char *agFontTypeNames[] = {		/* For enum ag_font_type */
 	N_("Dummy")
 };
 const char *agCoreFonts[] = {
-	"_agFontVera",
-	"vera-mono",
+	"unialgue",
+	"source-han-sans",
 	"cm-sans",
 	"cm-serif",
 	"cm-typewriter",
@@ -493,7 +494,7 @@ AG_TextFontPctFlags(int pct, Uint flags)
  * (and user-installed fonts), face is case-sensitive and corresponds to a file
  * in agConfig `font-path' (e.g., "fraktur" loads fraktur.ttf).
  *
- * A face with leading underscore (e.g., "_agFontVera") specifies a built-in
+ * A face with leading underscore (e.g., "_agFontAlgue") specifies a built-in
  * font which will be loaded from memory.
  */
 AG_Font *
@@ -610,6 +611,12 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 
 		for (ffe = &agFontFileExts[0]; *ffe != NULL; ffe++) {
 			Strlcpy(path, name, sizeof(path));
+
+			if (flags & AG_FONT_CONDENSED)
+				Strlcat(path, "-condensed", sizeof(path));
+			if (flags & AG_FONT_MONOSPACE)
+				Strlcat(path, "-mono", sizeof(path));
+
 			if ((flags & AG_FONT_BOLD) && (flags & AG_FONT_ITALIC)) {
 				Strlcat(path, "-bold-italic", sizeof(path));
 			} else if (flags & AG_FONT_BOLD) {
@@ -617,13 +624,7 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 			} else if (flags & AG_FONT_UPRIGHT_ITALIC) {
 				Strlcat(path, "-upright-italic", sizeof(path));
 			} else if (flags & AG_FONT_ITALIC) {
-				if (flags & AG_FONT_CONDENSED) {
-					Strlcat(path, "-condensed-italic", sizeof(path));
-				} else {
-					Strlcat(path, "-italic", sizeof(path));
-				}
-			} else if (flags & AG_FONT_CONDENSED) {
-				Strlcat(path, "-condensed", sizeof(path));
+				Strlcat(path, "-italic", sizeof(path));
 			}
 			Strlcat(path, *ffe, sizeof(path));
 			if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
@@ -647,10 +648,18 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 
 		len = strlen(nameBase)+64;
 		s = Malloc(len);
-		if ((fontSize - floorf(fontSize)) > 0.0) {
-			Snprintf(s,len, "%s-%.2f", nameBase, fontSize);
+		if (flags & AG_FONT_MONOSPACE) {
+			if ((fontSize - floorf(fontSize)) > 0.0) {
+				Snprintf(s,len, "%s Mono-%.2f", nameBase, fontSize);
+			} else {
+				Snprintf(s,len, "%s Mono-%.0f", nameBase, fontSize);
+			}
 		} else {
-			Snprintf(s,len, "%s-%.0f", nameBase, fontSize);
+			if ((fontSize - floorf(fontSize)) > 0.0) {
+				Snprintf(s,len, "%s-%.2f", nameBase, fontSize);
+			} else {
+				Snprintf(s,len, "%s-%.0f", nameBase, fontSize);
+			}
 		}
 		if (flags & AG_FONT_BOLD) {
 			Strlcat(s, ":style=", len);
@@ -877,7 +886,7 @@ TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extende
 	int x, z;
 
 	/* Compute the sum of the bounding box of the characters. */
-	yMax = fontCur->height;
+	yMax = fontCur->lineskip;
 	x = 0;
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		AG_TTFFont *ttf;
@@ -1784,12 +1793,17 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 		}
 	
 		/* Prevent texture wrapping with first glyph. */
-		if ((ch == &ucs[0]) && (G->minx < 0))
+		if ((ch == &ucs[0]) && (G->minx < 0)) {
 			xStart -= G->minx;
-
+		}
+		if ((xStart + G->minx) < 0 ||
+		    (xStart + G->minx) >= S->w) {
+			continue;
+		}
 		if (cBg.a == AG_TRANSPARENT) {       /* Put on transparent BG */
 			for (y = 0; y < G->pixmap.rows; y++) {
-				if (y+G->yoffset < 0 || y+G->yoffset >= S->h)
+				if ((yStart + y + G->yoffset) < 0 ||
+				    (yStart + y + G->yoffset) >= S->h)
 					continue;
 
 				src = (Uint8 *)(G->pixmap.buffer +

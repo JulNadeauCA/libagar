@@ -246,14 +246,13 @@ TestGUI(void *obj, AG_Window *win)
 
 		/* A static label */
 		lbl = AG_LabelNew(hPane->div[0], 0,
-		    "Agar v%d.%d.%d (" AGSI_FRAK "%s" AGSI_RST ")",
+		    "Agar v%d.%d.%d ( " AGSI_FRAK "%s" AGSI_RST " )",
 		    av.major, av.minor, av.patch,
 		    av.release ? av.release : "dev");
 
 		/* A dynamically-updated label. */
 		lbl = AG_LabelNewPolled(hPane->div[0], AG_LABEL_HFILL,
-		    "Window is at " AGSI_FONT9 "%i,%i" AGSI_RST " ( "
-		    AGSI_FONT9 "%ux%u" AGSI_RST " )\n",
+		    "Window is at %i,%i (%ux%u)\n",
 		    &AGWIDGET(win)->x,
 		    &AGWIDGET(win)->y,
 		    &AGWIDGET(win)->w,

@@ -8,11 +8,18 @@ DATAFILES_SRC=	Bedstead-COPYING.txt \
 		Charter-LICENSE.txt \
 		DejaVu-LICENSE.txt \
 		OFL-FAQ.txt \
+		Source-Han-LICENSE.txt \
 		Vera-Copyright.txt \
 		Vera-README.txt \
 		Vera-ReleaseNotes.txt \
 		League-Gothic-LICENSE.md \
 		League-Gothic-README.md \
+		League-Spartan-LICENSE.md \
+		League-Spartan-README.md \
+		algue.ttf \
+		algue-bold.ttf \
+		algue-italic.ttf \
+		algue-bold-italic.ttf \
 		bedstead-10-df.png \
 		bedstead-20-df.png \
 		bedstead.otf \
@@ -40,14 +47,6 @@ DATAFILES_SRC=	Bedstead-COPYING.txt \
 		courier-prime-italic.ttf \
 		courier-prime.ttf \
 		cp437-16.bmp \
-		dejavu-sans-bold-italic.ttf \
-		dejavu-sans-bold.ttf \
-		dejavu-sans-mono-bold-italic.ttf \
-		dejavu-sans-mono-bold.ttf \
-		dejavu-sans-mono-italic.ttf \
-		dejavu-sans-mono.ttf \
-		dejavu-sans-italic.ttf \
-		dejavu-sans.ttf \
 		fraktur-FontLog.txt \
 		fraktur-LICENSE.txt \
 		fraktur.ttf \
@@ -58,6 +57,8 @@ DATAFILES_SRC=	Bedstead-COPYING.txt \
 		league-spartan.otf \
 		minimal.xcf \
 		serif.xcf \
+		source-han-sans.otf \
+		unialgue.ttf \
 		vera.ttf \
 		vera-bold-italic.ttf \
 		vera-bold.ttf \

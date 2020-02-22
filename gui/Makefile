@@ -59,12 +59,12 @@ include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
 include ${TOP}/mk/build.man.mk
 
-fonts_data.h: ${SRCDIR}/gui/fonts/vera.ttf ${SRCDIR}/gui/fonts/minimal.xcf
-	bundlefont -o $@ -v -n agFontVera ${SRCDIR}/gui/fonts/vera.ttf
-	bundlefont -o $@ -a -v -n agFontVera_Bold ${SRCDIR}/gui/fonts/vera-bold.ttf
-	bundlefont -o $@ -a -v -n agFontVera_Italic ${SRCDIR}/gui/fonts/vera-italic.ttf
-	bundlefont -o $@ -a -v -n agFontVera_BoldItalic ${SRCDIR}/gui/fonts/vera-bold-italic.ttf
-	bundlefont -o $@ -a -b -n agFontMinimal ${SRCDIR}/gui/fonts/minimal.xcf
+fonts_data.h: ${SRCDIR}/gui/fonts/algue.ttf
+	bundlefont -o $@ -v -n agFontAlgue ${SRCDIR}/gui/fonts/algue.ttf
+	bundlefont -o $@ -a -v -n agFontAlgue_Bold ${SRCDIR}/gui/fonts/algue-bold.ttf
+	bundlefont -o $@ -a -v -n agFontAlgue_Italic ${SRCDIR}/gui/fonts/algue-italic.ttf
+	bundlefont -o $@ -a -v -n agFontAlgue_BoldItalic ${SRCDIR}/gui/fonts/algue-bold-italic.ttf
+#	bundlefont -o $@ -a -b -n agFontMinimal ${SRCDIR}/gui/fonts/minimal.xcf
 #	bundlefont -o $@ -a -b -n agFontMinimalSerif ${SRCDIR}/gui/fonts/serif.xcf
 
 style_data.h: ${SRCDIR}/gui/style.css

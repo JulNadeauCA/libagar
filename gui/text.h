@@ -276,6 +276,7 @@ typedef struct ag_font {
 #define AG_FONT_CONDENSED      0x080    /* Condensed */
 #define AG_FONT_SW_BOLD        0x100    /* Software-generated bold */
 #define AG_FONT_SW_OBLIQUE     0x200    /* Software-generated oblique */
+#define AG_FONT_MONOSPACE      0x400	/* Monospace variant */
 #define AG_FONT_SW_ITALIC      AG_FONT_SW_OBLIQUE
 
 #define AG_FONT_WEIGHTS     (AG_FONT_BOLD | AG_FONT_SW_BOLD)
