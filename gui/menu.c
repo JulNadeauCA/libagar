@@ -503,7 +503,7 @@ OnFontChange(AG_Event *_Nonnull event)
 			}
 		}
 	}
-	m->itemh = font->height + m->tPadLbl + m->bPadLbl;
+	m->itemh = font->lineskip + m->tPadLbl + m->bPadLbl;
 }
 
 static void
@@ -524,7 +524,7 @@ Init(void *_Nonnull obj)
 	m->lPadLbl=6;  m->rPadLbl=7;
 	m->tPadLbl=3;  m->bPadLbl=3;
 
-	m->itemh = agTextFontHeight + m->tPadLbl + m->bPadLbl;
+	m->itemh = agTextFontLineSkip + m->tPadLbl + m->bPadLbl;
 	m->curState = 1;
 
 	m->itemSel = NULL;

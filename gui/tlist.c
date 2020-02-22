@@ -344,7 +344,7 @@ OnFontChange(AG_Event *_Nonnull event)
 			it->label = -1;
 		}
 	}
-	AG_TlistSetItemHeight(tl, WFONT(tl)->height + AG_TLIST_PADDING);
+	AG_TlistSetItemHeight(tl, WFONT(tl)->lineskip + AG_TLIST_PADDING);
 	AG_TlistSetIconWidth(tl, tl->item_h + 1);
 }
 

@@ -303,7 +303,7 @@ Draw(void *_Nonnull obj)
 	AG_Rect r;
 	const int itemh = m->itemh;
 	const int itemh_2 = (itemh >> 1);
-	const int fonth_2 = (font->height >> 1);
+	const int fonth_2 = (font->lineskip >> 1);
 
 	if (agDriverSw) {
 		r = WIDGET(mv)->r;
