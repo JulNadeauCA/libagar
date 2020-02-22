@@ -43,6 +43,18 @@
 extern int agFontconfigInited;		/* text.c */
 #endif
 
+const char *agFontsToIgnore[] = {
+	"ClearlyU Alternate Glyphs",
+	"ClearlyU PUA",
+	"Cursor",
+	"cursor.pcf",
+	"deccurs.pcf",
+	"decsess.pcf",
+	"micro.pcf",
+	"Newspaper",
+	NULL
+};
+
 AG_FontSelector *
 AG_FontSelectorNew(void *parent, Uint flags)
 {
@@ -173,9 +185,19 @@ OnShow(AG_Event *_Nonnull event)
 			for (i = 0; i < fset->nfont; i++) {
 				FcPattern *font = fset->fonts[i];
 				FcChar8 *fam;
+				const char **fignore;
 
 				if (FcPatternGetString(font, FC_FAMILY, 0,
 				    &fam) == FcResultMatch) {
+					for (fignore = &agFontsToIgnore[0];
+					    *fignore != NULL;
+					     fignore++) {
+						if (strcmp(*fignore, (char *)fam) == 0)
+							break;
+					}
+					if (*fignore != NULL)
+						continue;
+
 					ti = AG_TlistAddS(fs->tlFaces, NULL,
 					    (char *)fam);
 					if (*pFont && strcmp((char *)fam,
