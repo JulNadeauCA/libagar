@@ -2038,6 +2038,9 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 		int infmt = 0;
 
 		AG_TableInitCell(t, c);
+		if (s == NULL || s[0] == '\0') {
+			continue;
+		}
 		Strlcpy(c->fmt, s, sizeof(c->fmt));
 		for (sc = &s[0]; *sc != '\0'; sc++) {
 			if (*sc == '%') {
@@ -2051,7 +2054,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				break;
 			} else if (*sc == 'l') {
 				lflag++;
-			} else if (infmt && strchr("sdiufgp]", *sc) != NULL) {
+			} else if (infmt && strchr("sdixufgp]", *sc) != NULL) {
 				break;
 			} else if (strchr(".0123456789", *sc)) {
 				continue;
@@ -2116,8 +2119,16 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				c->type = AG_CELL_PSTRING;
 			} else {
 				c->type = AG_CELL_STRING;
-				Strlcpy(c->data.s, va_arg(ap, char *),
-				    sizeof(c->data.s));
+				{
+					char *sArg = va_arg(ap, char *);
+
+					if (sArg != NULL && sArg[0] != '\0') {
+						Strlcpy(c->data.s, sArg,
+						    sizeof(c->data.s));
+					} else {
+						c->data.s[0] = '\0';
+					}
+				}
 			}
 			break;
 		case 'd':
@@ -2148,6 +2159,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 			}
 			break;
 		case 'u':
+		case 'x':
 			if (lflag == 0) {
 				if (ptr) {
 					c->type = AG_CELL_PUINT;
