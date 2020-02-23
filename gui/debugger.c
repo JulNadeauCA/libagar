@@ -374,12 +374,14 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_MSpinbutton *msb;
 		AG_Box *box2;
 
-		AG_LabelNew(nt, AG_LABEL_HFILL, _("Class: %s(3)"),
-		            OBJECT(tgt)->cls->name);
-
 		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL | AG_TEXTBOX_NO_SHADING,
-		    _("Name:"));
-		AG_SetStyle(tb, "padding", "0");
+		    _("Name: "));
+	/*	AG_SetStyle(tb, "padding", "0"); */
+
+		AG_LabelNew(nt, AG_LABEL_HFILL,
+		    _("Class: " AGSI_BOLD " %s" AGSI_RST "(3)"),
+		    OBJECT(tgt)->cls->name);
+
 #ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
 #else
@@ -388,20 +390,14 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
 		    &OBJECT(tgt)->lock,
 		    _("Parent window: " AGSI_YEL "%[objName]" AGSI_RST
-		      " @ (" AGSI_CYAN "AG_Window" AGSI_RST " *)%p"),
+		      " @ (" AGSI_CYAN AGSI_COURIER "AG_Window" AGSI_RST AGSI_COURIER " *)%p"),
 		    &tgt->window, &tgt->window);
 
 		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
 		    &OBJECT(tgt)->lock,
 		    _("Parent driver: " AGSI_YEL "%[objName]" AGSI_RST
-		      " @ (" AGSI_CYAN "AG_Driver" AGSI_RST " *)%p"),
+		      " @ (" AGSI_CYAN AGSI_COURIER "AG_Driver" AGSI_RST AGSI_COURIER " *)%p"),
 		    &tgt->drv, &tgt->drv);
-
-		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
-		    &OBJECT(tgt)->lock,
-		    _("Driver class: " AGSI_BOLD "%[objClassName]" AGSI_RST "(3)"
-		      " @ (" AGSI_CYAN "AG_DriverClass" AGSI_RST " *)%p"),
-		    &tgt->drvOps, &tgt->drvOps);
 
 		AG_SeparatorNewHoriz(nt);
 

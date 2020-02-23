@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,8 +47,6 @@
 
 static void DrawStatic(AG_Label *_Nonnull);
 static void DrawPolled(AG_Label *_Nonnull);
-static int SizeAllocateStatic(void *_Nonnull, const AG_SizeAlloc *_Nonnull);
-static int SizeAllocatePolled(void *_Nonnull, const AG_SizeAlloc *_Nonnull);
 
 /* Create a new polled (dynamically updated) label. */
 AG_Label *
@@ -215,9 +213,36 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		AG_TextSize(lbl->text, &r->w, &r->h);
 		break;
 	case AG_LABEL_POLLED:
-		if (lbl->fmt->s && lbl->fmt->s[0] != '\0') {
-			AG_TextSize(lbl->fmt->s, &r->w, &r->h);
-		} else {
+		if (lbl->fmt->s && lbl->fmt->s[0] != '\0') {     /* Auto-size */
+			int sCached;
+
+			for (;;) {
+				AG_Size rv;
+
+				rv = AG_ProcessFmtString(lbl->fmt, lbl->pollBuf,
+				    lbl->pollBufSize);
+				if (rv >= lbl->pollBufSize) {
+					char *pbNew;
+					const AG_Size sizeNew = (rv +
+					    AG_FMTSTRING_BUFFER_GROW);
+
+					if ((pbNew = TryRealloc(lbl->pollBuf,
+					    sizeNew)) == NULL) {
+						break;
+					}
+					lbl->pollBuf = pbNew;
+					lbl->pollBufSize = sizeNew;
+				} else {
+					break;
+				}
+			}
+			if ((sCached = AG_TextCacheGet(lbl->tCache, lbl->pollBuf)) != -1) {
+				const AG_Surface *S = WSURFACE(lbl,sCached);
+
+				r->w = S->w;
+				r->h = S->h;
+			}
+		} else {                                /* Explicit size hint */
 			r->w =  lbl->wPre;
 			r->h = (lbl->hPre * WFONT(lbl)->lineskip);
 		}
@@ -225,84 +250,67 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	default:
 		break;
 	}
+	r->w += WIDGET(lbl)->paddingLeft + WIDGET(lbl)->paddingRight;
+	r->h += WIDGET(lbl)->paddingTop + WIDGET(lbl)->paddingBottom;
 }
 
 static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
-	static int (*pfSizeAllocate[])(void *, const AG_SizeAlloc *) = {
-		SizeAllocateStatic,  /* STATIC */
-		SizeAllocatePolled   /* POLLED */
-	};
 	AG_Label *lbl = obj;
+	int wLbl, hLbl, sCached;
 	
 	if (a->w < 1 || a->h < 1)
 		return (-1);
-#ifdef AG_DEBUG
-	if (lbl->type >= AG_LABEL_TYPE_LAST)
-		AG_FatalError("type");
-#endif
-	return pfSizeAllocate[lbl->type](lbl, a);
-}
 
-static int
-SizeAllocateStatic(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
-{
-	AG_Label *lbl = obj;
-	int wLbl, hLbl;
-
-	if (lbl->text == NULL) {
-		lbl->flags &= ~(AG_LABEL_PARTIAL);
-		return (0);
-	}
-
-	AG_TextSize(lbl->text, &wLbl, &hLbl);
-
-	if (wLbl > a->w || hLbl > a->h) {
-		lbl->flags |=   AG_LABEL_PARTIAL;
-	} else {
-		lbl->flags &= ~(AG_LABEL_PARTIAL);
-	}
-	return (0);
-}
-
-static int
-SizeAllocatePolled(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
-{
-	AG_Label *lbl = obj;
-	int sCached;
-
-	if (lbl->fmt == NULL || lbl->fmt->s[0] == '\0') {
-		lbl->flags &= ~(AG_LABEL_PARTIAL);
-		return (0);
-	}
-	for (;;) {
-		AG_Size rv;
-
-		rv = AG_ProcessFmtString(lbl->fmt, lbl->pollBuf, lbl->pollBufSize);
-		if (rv >= lbl->pollBufSize) {
-			char *pbNew;
-			const AG_Size sizeNew = (rv + AG_FMTSTRING_BUFFER_GROW);
-
-			if ((pbNew = TryRealloc(lbl->pollBuf, sizeNew)) == NULL) {
-				return (0);
-			}
-			lbl->pollBuf = pbNew;
-			lbl->pollBufSize = sizeNew;
-		} else {
+	switch (lbl->type) {
+	case AG_LABEL_STATIC:
+		if (lbl->text == NULL) {
+			lbl->flags &= ~(AG_LABEL_PARTIAL);
 			break;
 		}
-	}
-	if ((sCached = AG_TextCacheGet(lbl->tCache, lbl->pollBuf)) != -1) {
-		const AG_Surface *S = WSURFACE(lbl,sCached);
-
-		if (S->w > a->w || S->h > a->h) {
+		AG_TextSize(lbl->text, &wLbl, &hLbl);
+		if (wLbl > a->w || hLbl > a->h) {
 			lbl->flags |=   AG_LABEL_PARTIAL;
 		} else {
 			lbl->flags &= ~(AG_LABEL_PARTIAL);
 		}
-	} else {
-		lbl->flags &= ~(AG_LABEL_PARTIAL);
+		break;
+	case AG_LABEL_POLLED:
+		if (lbl->fmt == NULL || lbl->fmt->s[0] == '\0') {
+			lbl->flags &= ~(AG_LABEL_PARTIAL);
+			break;
+		}
+		for (;;) {
+			AG_Size rv;
+
+			rv = AG_ProcessFmtString(lbl->fmt, lbl->pollBuf,
+			    lbl->pollBufSize);
+			if (rv >= lbl->pollBufSize) {
+				char *pbNew;
+				const AG_Size sizeNew = (rv + AG_FMTSTRING_BUFFER_GROW);
+
+				if ((pbNew = TryRealloc(lbl->pollBuf, sizeNew)) == NULL) {
+					return (0);
+				}
+				lbl->pollBuf = pbNew;
+				lbl->pollBufSize = sizeNew;
+			} else {
+				break;
+			}
+		}
+		if ((sCached = AG_TextCacheGet(lbl->tCache, lbl->pollBuf)) != -1) {
+			const AG_Surface *S = WSURFACE(lbl,sCached);
+
+			if (S->w > a->w || S->h > a->h) {
+				lbl->flags |=   AG_LABEL_PARTIAL;
+			} else {
+				lbl->flags &= ~(AG_LABEL_PARTIAL);
+			}
+		} else {
+			lbl->flags &= ~(AG_LABEL_PARTIAL);
+		}
+		break;
 	}
 	return (0);
 }
@@ -515,7 +523,9 @@ DrawStatic(AG_Label *_Nonnull lbl)
 		const int x = JustifyOffset(lbl, WIDTH(lbl), S->w);
 		const int y = ValignOffset(lbl, HEIGHT(lbl), S->h);
 
-		AG_WidgetBlitSurface(lbl, lbl->surface, x,y);
+		AG_WidgetBlitSurface(lbl, lbl->surface,
+		    WIDGET(lbl)->paddingLeft + x,
+		    WIDGET(lbl)->paddingTop + y);
 	}
 }
 
@@ -574,10 +584,10 @@ static void *_Nullable
 Edit(void *_Nonnull p)
 {
 	static const AG_FlagDescr flagDescr[] = {
-	    { AG_LABEL_PARTIAL,   _("Partial horizontally"), 0 },
-	    { AG_LABEL_REGEN,     _("Regenerate"),           0 },
-	    { AG_LABEL_FRAME,     _("Render Frame"),         1 },
-	    { 0,                  NULL,                      0 }
+	    { AG_LABEL_PARTIAL,   _("Partially visible"), 0 },
+	    { AG_LABEL_REGEN,     _("Regenerate"),        0 },
+	    { AG_LABEL_FRAME,     _("Display a border"),  1 },
+	    { 0,                  NULL,                   0 }
 	};
 	AG_Label *lbl = p;
 	AG_Box *box;

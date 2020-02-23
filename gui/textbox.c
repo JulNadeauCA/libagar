@@ -109,7 +109,7 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 	}
 	if (flags & AG_TEXTBOX_RETURN_BUTTON) {
 		tb->btnRet = AG_ButtonNewInt(tb, 0,
-		    "\xe2\x8f\x8e",                             /* U+23CE */
+		    " \xe2\x8f\x8e  ",                             /* U+23CE */
 		    &tb->ed->returnHeld);
 
 		AG_SetEvent(tb->btnRet, "button-pushed", EditableReturn, "%p", tb);
