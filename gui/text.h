@@ -305,7 +305,7 @@ typedef struct ag_font {
 	} data;
 } AG_Font;
 
-typedef TAILQ_HEAD(ag_fontq, ag_font) AG_FontQ;
+typedef AG_TAILQ_HEAD(ag_fontq, ag_font) AG_FontQ;
 
 #define AG_FONT_BITMAP_SPEC_MAX 28
 
