@@ -12,18 +12,19 @@
 # define AGSI_UNDERLINE	 "\x1b[4m"   /* underlined */
 # define AGSI_REVERSE  	 "\x1b[7m"   /* reverse video */
 # define AGSI_CROSSEDOUT "\x1b[9m"   /* crossed-out */
-# define AGSI_FONT1	 "\x1b[10m"  /* a modification of Bitstream Vera */
-# define AGSI_FONT2	 "\x1b[11m"  /* a modification of Bitstream Vera Mono */
-# define AGSI_FONT3	 "\x1b[12m"  /* a modification of Computer Modern Serif */
-# define AGSI_FONT4	 "\x1b[13m"  /* a modification of Computer Modern Sans */
-# define AGSI_FONT5	 "\x1b[14m"  /* a modification of Computer Modern Typewriter */
-# define AGSI_FONT6	 "\x1b[15m"  /* a modification of Computer Modern Serif Upright Italic */
-# define AGSI_FONT7	 "\x1b[16m"  /* a modification of Bitstream Charter */
-# define AGSI_FONT8	 "\x1b[17m"  /* a modification of Bedstead (Mode 7) */
-# define AGSI_FONT9	 "\x1b[18m"  /* a modification of Courier Prime */
-# define AGSI_FONT10	 "\x1b[19m"  /* a modification of DejaVu Sans */
-# define AGSI_FONT11	 "\x1b[20m"  /* a modification of Unifraktur Maguntia */
-# define AGSI_FRAK	 AGSI_FONT11 /* fraktur style */
+
+# define AGSI_FONT1	 "\x1b[10m"  /* Unialgue */
+# define AGSI_FONT2	 "\x1b[11m"  /* Source Han Sans */
+# define AGSI_FONT3	 "\x1b[12m"  /* CMU Sans Serif */
+# define AGSI_FONT4	 "\x1b[13m"  /* CMU Serif */
+# define AGSI_FONT5	 "\x1b[14m"  /* CMU Typewriter */
+# define AGSI_FONT6	 "\x1b[15m"  /* League Spartan */
+# define AGSI_FONT7	 "\x1b[16m"  /* Bedstead */
+# define AGSI_FONT8	 "\x1b[17m"  /* Charter */
+# define AGSI_FONT9	 "\x1b[18m"  /* Courier Prime */
+# define AGSI_FONT10	 "\x1b[19m"  /* League Gothic */
+# define AGSI_FONT11	 "\x1b[20m"  /* Unifraktur Maguntia */
+
 # define AGSI_FRAMED	 "\x1b[51m"  /* render frame */
 # define AGSI_ENCIRCLED  "\x1b[52m"  /* render encircled */
 # define AGSI_OVERLINED  "\x1b[53m"  /* overlined */
@@ -80,7 +81,6 @@
 # define AGSI_FONT9	 ""
 # define AGSI_FONT10	 ""
 # define AGSI_FONT11	 ""
-# define AGSI_FRAK	 ""
 # define AGSI_FRAMED	 ""
 # define AGSI_ENCIRCLED  ""
 # define AGSI_OVERLINED  ""
@@ -118,6 +118,22 @@
 # define AGSI_BR_WHT_BG	 ""
 
 #endif /* AG_ANSI_COLOR */
+
+/*
+ * Map core font names to SGR sequences.
+ */
+#define AGSI_UNIALGUE       AGSI_FONT1
+#define AGSI_SOURCE_HAN     AGSI_FONT2
+#define AGSI_CMU_SANS       AGSI_FONT3
+#define AGSI_CMU_SERIF      AGSI_FONT4
+#define AGSI_CMU_TYPEWRITER AGSI_FONT5
+#define AGSI_LEAGUE_SPARTAN AGSI_FONT6
+#define AGSI_BEDSTEAD       AGSI_FONT7
+#define AGSI_CHARTER        AGSI_FONT8
+#define AGSI_COURIER        AGSI_FONT9
+#define AGSI_LEAGUE_GOTHIC  AGSI_FONT10
+#define AGSI_FRAKTUR        AGSI_FONT11
+#define AGSI_FRAK           AGSI_FONT11
 
 /*
  * Map AGSI_CMD to the preferred modifier key for application-global commands.
