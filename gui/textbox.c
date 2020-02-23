@@ -112,7 +112,6 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		    "\xe2\x8f\x8e",                             /* U+23CE */
 		    &tb->ed->returnHeld);
 
-		AG_SetStyle(tb->btnRet, "font-family", "dejavu-sans");
 		AG_SetEvent(tb->btnRet, "button-pushed", EditableReturn, "%p", tb);
 	}
 

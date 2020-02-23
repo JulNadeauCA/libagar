@@ -13,7 +13,7 @@ LIB_GUID=	"e0baea2d-5cb8-4a7a-9120-8352f36109e7"
 LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LINKS_STATIC} ${DEV_LIBS}
 
 SRCS=	dev.c browser.c timeouts.c uniconv.c view_params.c cpuinfo.c \
-	config.c object.c classes.c
+	config.c object.c classes.c fonts.c
 
 CFLAGS+=${GUI_CFLAGS} \
 	${CORE_CFLAGS} \

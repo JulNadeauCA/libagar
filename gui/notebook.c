@@ -365,8 +365,6 @@ AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 	if (label && label[0] != '\0') {
 		tab->lbl = AG_LabelNew(nb, 0, " %s ", label);
 		AG_SetStyle(tab->lbl, "padding", "5 10 5 10");
-		AG_SetStyle(tab->lbl, "font-family", "cm-sans-demicondensed");
-		AG_SetStyle(tab->lbl, "font-size", "115%");
 	} else {
 		tab->lbl = NULL;
 	}

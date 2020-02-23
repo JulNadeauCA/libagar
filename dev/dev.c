@@ -39,6 +39,7 @@ static const struct dev_tool_ent {
 } devTools[] = {
 #ifdef AG_TIMERS
 	{ N_("Registered classes"),	DEV_ClassInfo },
+	{ N_("Loaded fonts"),		DEV_FontInfo },
 #endif
 	{ N_("Display Settings"),	DEV_DisplaySettings },
 #if defined(AG_TIMERS) && defined(AG_ENABLE_STRING)

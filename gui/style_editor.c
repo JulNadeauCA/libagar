@@ -535,11 +535,8 @@ TargetWidget(AG_Event *_Nonnull event)
 			AG_LabelNew(nt, 0, _("* Capture failed (%s)"), AG_GetError());
 		}
 	} else {
-		AG_Label *lbl;
-
-		lbl = AG_LabelNewS(nt, AG_LABEL_HFILL,
+		AG_LabelNewS(nt, AG_LABEL_HFILL,
 		    _("* Capture is disabled. Click on \xe2\x96\xa6 (and refresh) to enable."));
-		AG_SetStyle(lbl, "font-family", "dejavu-sans");
 	}
 	
 	AG_NotebookSelectByID(nb, savedTabID);		/* Restore active tab */
@@ -647,7 +644,6 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	AG_SetEvent(tl, "tlist-selected", TargetWidget, NULL);
 
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
-	AG_SetStyle(hBox, "font-family", "dejavu-sans");
 	AG_SetStyle(hBox, "font-size", "150%");
 	{
 		AG_Button *btn;
@@ -681,7 +677,6 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 		lbl = AG_LabelNewS(pane->div[1], AG_LABEL_HFILL,
 		    _("Select a widget on the left "
 		     "(or use \xe2\x87\xb1 in the toolbar to pick)."));
-		AG_SetStyle(lbl, "font-family", "dejavu-sans");
 
 		mi = AG_TlistSetPopup(tl, "window");
 		AG_MenuSetPollFn(mi, MenuForWindow, "%p", tl);

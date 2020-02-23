@@ -243,6 +243,7 @@ typedef struct ag_font_spec {
 
 typedef struct ag_font_adjustment {
 	const char *face;               /* Font family */
+	Uint flags;			/* AG_FONT_BOLD = Regular is bold */
 	float size_factor;              /* Scaling tweak */
 	int ascent_offset[6];           /* Ascent tweak (size range specific) */
 } AG_FontAdjustment;
@@ -303,6 +304,8 @@ typedef struct ag_font {
 		} bmp;
 	} data;
 } AG_Font;
+
+typedef TAILQ_HEAD(ag_fontq, ag_font) AG_FontQ;
 
 #define AG_FONT_BITMAP_SPEC_MAX 28
 
@@ -365,6 +368,7 @@ extern int agTextFontLineSkip;
 extern int agFreetypeInited;
 
 extern _Nonnull_Mutex AG_Mutex agTextLock;
+extern AG_FontQ                agFontCache;
 extern AG_TextState            agTextStateStack[AG_TEXT_STATES_MAX];
 extern Uint                    agTextStateCur;
 extern AG_Font *_Nullable      agDefaultFont;
@@ -430,8 +434,7 @@ int  AG_TextValignOffset(int, int) _Pure_Attribute;
 
 AG_Surface *_Nonnull AG_TextRenderF(const char *_Nonnull, ...) _Warn_Unused_Result;
 AG_Surface *_Nonnull AG_TextRender(const char *_Nonnull) _Warn_Unused_Result;
-AG_Surface *_Nonnull AG_TextRenderInternal(const AG_Char *_Nonnull,
-                                           const AG_Font *_Nonnull,
+AG_Surface *_Nonnull AG_TextRenderInternal(const AG_Char *_Nonnull, AG_Font *_Nonnull,
 					   const AG_Color *_Nonnull,
 					   const AG_Color *_Nonnull)
                                           _Warn_Unused_Result;
@@ -441,7 +444,7 @@ AG_Surface *_Nonnull AG_TextRenderInternal(const AG_Char *_Nonnull,
                                                         &AG_TEXT_STATE_CUR()->color)
 #endif
 
-AG_Glyph *_Nonnull AG_TextRenderGlyph(AG_Driver *_Nonnull, const AG_Font *_Nonnull,
+AG_Glyph *_Nonnull AG_TextRenderGlyph(AG_Driver *_Nonnull, AG_Font *_Nonnull,
                                       const AG_Color *_Nonnull, const AG_Color *_Nonnull,
 				      AG_Char)
                                      _Warn_Unused_Result;

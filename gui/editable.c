@@ -686,7 +686,7 @@ IsSpaceNat(AG_Char c)
  */
 static __inline__ int
 WrapAtChar(AG_Editable *_Nonnull ed, int x, AG_Char *_Nonnull s,
-    const AG_Font *_Nonnull font, const AG_Color *_Nonnull cBg,
+    AG_Font *_Nonnull font, const AG_Color *_Nonnull cBg,
     const AG_Color *_Nonnull cFg)
 {
 	AG_Driver *drv = WIDGET(ed)->drv;
@@ -725,7 +725,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 {
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Driver *drv = WIDGET(ed)->drv;
-	const AG_Font *font = WFONT(ed);
+	AG_Font *font = WFONT(ed);
 	AG_TextANSI ansi;
 	AG_Char ch;
 	int i, x, y, line = 0;
@@ -966,7 +966,7 @@ Draw(void *_Nonnull obj)
 	const AG_Color *cSel = &WCOLOR(ed, SELECTION_COLOR);
 	AG_Color cFg = ts->color;
 	AG_Color cBg = ts->colorBG;
-	const AG_Font *font = ts->font;
+	AG_Font *font = ts->font;
 	const int pos = ed->pos;
 	const int sel = ed->sel;
 	const int flags = ed->flags;

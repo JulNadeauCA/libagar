@@ -32,6 +32,7 @@ AG_Window *_Nullable DEV_BrowserLoadFromDlg(void *_Nonnull, const char *_Nonnull
 void                 DEV_BrowserGenericMenu(void *_Nonnull, void *_Nonnull,
                                             AG_Window *_Nonnull);
 AG_Window *_Nullable DEV_ClassInfo(void);
+AG_Window *_Nullable DEV_FontInfo(void);
 #endif /* AG_TIMERS */
 void                 DEV_ConfigShow(void);
 void *_Nonnull       DEV_ObjectEdit(void *_Nonnull);

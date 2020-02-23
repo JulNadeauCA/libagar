@@ -122,29 +122,30 @@ int agTextFontLineSkip = 0;		/* Default font line skip (px) */
 int agFreetypeInited = 0;		/* Initialized Freetype library */
 int agFontconfigInited = 0;		/* Initialized Fontconfig library */
 
-static int agTextInitedSubsystem = 0;
-
 _Nonnull_Mutex AG_Mutex agTextLock;
+
+AG_FontQ agFontCache;                                        /* Loaded fonts */
 
 AG_TextState agTextStateStack[AG_TEXT_STATES_MAX];
 Uint         agTextStateCur = 0;
 
 /*
  * Small adjustments to the sizes and ascents of core fonts.
+ * Indicate where Bold is also the Regular style.
  */
 const AG_FontAdjustment agFontAdjustments[] = {
-/*                                      0.0 10.4 14.0 21.0 23.8 35.0 to- */
-/*                                     10.4 14.0 21.0 23.8 35.0 inf  pts */
-	{ "bedstead",           0.9f, { +1,  +3,  +3,  +4,  +5,  +7 } },
-	{ "cm-sans",            1.1f, { -4,  -4,  -6,  -7,  -9, -16 } },
-	{ "cm-serif",           1.1f, { -3,  -4,  -5,  -5,  -6, -12 } },
-	{ "cm-typewriter",      1.1f, { -2,  -4,  -5,  -5,  -7, -11 } },
-	{ "league-spartan",     0.9f, { -2,  -2,  -3,  -4,  -5,  -8 } },
-	{ "league-gothic",      1.1f, { -1,  -1,  -1,  -2,  -1,  -3 } },
-	{ "fraktur",            1.1f, { +1,  +1,  +1,  +1,  +1,  +1 } },
-	{ "source-han-sans",    1.0f, { -8, -12, -15, -20, -28, -35 } },
-	{ "unialgue",           1.0f, { -3,  -4,  -5,  -7, -11, -12 } },
-	{ NULL,                 0.0f, {  0,   0,   0,   0,   0,   0 } }
+/*                                                 0.0 10.4 14.0 21.0 23.8 35.0 to- */
+/*                                                10.4 14.0 21.0 23.8 35.0 inf  pts */
+	{ "bedstead",        AG_FONT_BOLD, 0.9f, { +1,  +3,  +3,  +4,  +5,  +7 } },
+	{ "cm-sans",         0,            1.1f, { -4,  -4,  -6,  -7,  -9, -16 } },
+	{ "cm-serif",        0,            1.1f, { -3,  -4,  -5,  -5,  -6, -12 } },
+	{ "cm-typewriter",   0,            1.1f, { -2,  -4,  -5,  -5,  -7, -11 } },
+	{ "league-spartan",  AG_FONT_BOLD, 0.9f, { -2,  -2,  -3,  -4,  -5,  -8 } },
+	{ "league-gothic",   AG_FONT_BOLD, 1.1f, { -1,  -1,  -1,  -2,  -1,  -3 } },
+	{ "fraktur",         0,            1.1f, { +1,  +1,  +1,  +1,  +1,  +1 } },
+	{ "source-han-sans", 0,            1.0f, { -8, -12, -15, -20, -28, -35 } },
+	{ "unialgue",        0,            1.0f, { -3,  -4,  -5,  -7, -11, -12 } },
+	{ NULL,              0,            0.0f, {  0,   0,   0,   0,   0,   0 } }
 };
 
 /* ANSI color scheme (may be overridden by AG_TextState) */
@@ -194,30 +195,24 @@ const char *agFontTypeNames[] = {		/* For enum ag_font_type */
 	N_("Dummy")
 };
 const char *agCoreFonts[] = {
-	"unialgue",
-	"source-han-sans",
-	"cm-sans",
-	"cm-serif",
-	"cm-typewriter",
-	"league-spartan",
-	"bedstead",
-	"charter",
-	"courier-prime",
-	"league-gothic",
-	"fraktur",
+	"unialgue",                             /* Unialgue */
+	"source-han-sans",                      /* Source Han Sans */
+	"cm-sans",                              /* CMU Sans */
+	"cm-serif",                             /* CMU Serif */
+	"cm-typewriter",                        /* CMU Typewriter */
+	"league-spartan",                       /* League Spartan */
+	"bedstead",                             /* Bedstead */
+	"charter",                              /* Charter */
+	"courier-prime",                        /* Courier Prime */
+	"league-gothic",                        /* League Gothic */
+	"fraktur",                              /* Unifraktur Maguntia */
 	NULL
 };
-const char *agFontFileExts[] = {
-	".otf",
-	".ttf",
-	".ttc",
-	".woff2",
-	".woff",
-	".dfont",
-	".fnt",
-	".xcf",
-	".bmp",
-	".png",
+const char *agFontFileExts[] = {                /* Recognized font extensions */
+	".otf", ".ttf", ".ttc",
+	".woff2", ".woff",
+	".dfont", ".fnt",
+	".xcf", ".bmp", ".png",
 	NULL
 };
 
@@ -227,26 +222,26 @@ const char *agTextMsgTitles[] = {		/* For enum ag_text_msg_title */
 	N_("Information"),
 	NULL
 };
-const char *agTextJustifyNames[] = {
+const char *agTextJustifyNames[] = {            /* For enum ag_text_justify */
 	N_("Left"),
 	N_("Center"),
 	N_("Right"),
 	NULL
 };
-const char *agTextValignNames[] = {
+const char *agTextValignNames[] = {             /* For enum ag_text_valign */
 	N_("Top"),
 	N_("Middle"),
 	N_("Bottom"),
 	NULL
 };
 
-static TAILQ_HEAD(ag_fontq, ag_font) fonts;
+static int agTextInitedSubsystem = 0;
 
 #ifdef HAVE_FREETYPE
-static void TextRenderFT(const AG_Char *_Nonnull, AG_Surface *_Nonnull, const AG_TextMetrics *_Nonnull, const AG_Font *_Nonnull, const AG_Color *_Nonnull, const AG_Color *_Nonnull);
+static void TextRenderFT(const AG_Char *_Nonnull, AG_Surface *_Nonnull, const AG_TextMetrics *_Nonnull, AG_Font *_Nonnull, const AG_Color *_Nonnull, const AG_Color *_Nonnull);
 static void TextRenderFT_Underline(AG_TTFFont *_Nonnull, AG_Surface *_Nonnull, int);
 #endif
-static AG_Glyph *_Nonnull TextRenderGlyph_Miss(AG_Driver *_Nonnull, const AG_Font *_Nonnull, const AG_Color *_Nonnull, const AG_Color *_Nonnull, AG_Char);
+static AG_Glyph *_Nonnull TextRenderGlyph_Miss(AG_Driver *_Nonnull, AG_Font *_Nonnull, const AG_Color *_Nonnull, const AG_Color *_Nonnull, AG_Char);
 static AG_Surface *_Nonnull GetBitmapGlyph(const AG_Font *_Nonnull, AG_Char);
 
 #if !defined(HAVE_FREETYPE)
@@ -506,11 +501,9 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 	AG_StaticFont *builtin = NULL;
 	AG_Font *font;
 	AG_FontSpec *spec;
+	const AG_FontAdjustment *fa;
 	int isInFontPath;
 
-	if (fontSize < AG_FONT_PTS_EPSILON) {
-		fontSize = (float)AG_GetInt(cfg, "font.size");
-	}
 	if (face == NULL) {
 		AG_GetString(cfg, "font.face", name, sizeof(name));
 	} else {
@@ -529,14 +522,24 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 			Strlcpy(name, face, sizeof(name));
 		}
 	}
+
+	if (fontSize < AG_FONT_PTS_EPSILON) {
+		fontSize = (float)AG_GetInt(cfg, "font.size");
+	}
+	for (fa = &agFontAdjustments[0]; fa->face != NULL; fa++) {
+		if (strcmp(name, fa->face) == 0) {
+			fontSize *= fa->size_factor;
+			break;
+		}
+	}
 	
 	Strlcpy(nameBase, name, sizeof(nameBase));
 
 	AG_MutexLock(&agTextLock);
 
-	TAILQ_FOREACH(font, &fonts, fonts) {
+	TAILQ_FOREACH(font, &agFontCache, fonts) {
 		if (Strcasecmp(OBJECT(font)->name, name) == 0 &&
-		    font->flags == flags &&
+		    (font->flags == flags) &&
 		    Fabs(font->spec.size - fontSize) < AG_FONT_PTS_EPSILON) {
 			break;
 		}
@@ -617,14 +620,34 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 			if (flags & AG_FONT_MONOSPACE)
 				Strlcat(path, "-mono", sizeof(path));
 
-			if ((flags & AG_FONT_BOLD) && (flags & AG_FONT_ITALIC)) {
-				Strlcat(path, "-bold-italic", sizeof(path));
-			} else if (flags & AG_FONT_BOLD) {
-				Strlcat(path, "-bold", sizeof(path));
-			} else if (flags & AG_FONT_UPRIGHT_ITALIC) {
-				Strlcat(path, "-upright-italic", sizeof(path));
-			} else if (flags & AG_FONT_ITALIC) {
-				Strlcat(path, "-italic", sizeof(path));
+			if (flags & AG_FONT_BOLD) {
+				const AG_FontAdjustment *fa;
+
+				/* Is Regular a Bold? */
+				for (fa = &agFontAdjustments[0];
+				     fa->face != NULL; fa++) {
+					if (strcmp(name, fa->face) != 0) {
+						continue;
+					}
+					if (fa->flags & AG_FONT_BOLD)
+						break;
+				}
+				if (fa->face == NULL) {    /* Regular != Bold */
+					if (flags & AG_FONT_ITALIC) {
+						Strlcat(path, "-bold-italic", sizeof(path));
+					} else {
+						Strlcat(path, "-bold", sizeof(path));
+					}
+				} else {
+					if (flags & AG_FONT_ITALIC)
+						Strlcat(path, "-italic", sizeof(path));
+				}
+			} else {
+				if (flags & AG_FONT_UPRIGHT_ITALIC) {
+					Strlcat(path, "-upright-italic", sizeof(path));
+				} else if (flags & AG_FONT_ITALIC) {
+					Strlcat(path, "-italic", sizeof(path));
+				}
 			}
 			Strlcat(path, *ffe, sizeof(path));
 			if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, path,
@@ -644,7 +667,7 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 		char *s;
 		const char *condensed = (flags & AG_FONT_CONDENSED) ? "Condensed " : NULL;
 		AG_Size len;
-		double sizeDbl;
+/*		double sizeDbl; */
 
 		len = strlen(nameBase)+64;
 		s = Malloc(len);
@@ -719,11 +742,13 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 			AG_SetErrorS("No FC_INDEX");
 			goto fail;
 		}
+#if 0
 		if (FcPatternGetDouble(fpat, FC_SIZE, 0, &sizeDbl) != FcResultMatch) {
 			AG_SetErrorS("No FC_SIZE");
 			goto fail;
 		}
 		spec->size = (float)sizeDbl;
+#endif
 		if (FcPatternGetMatrix(fpat, FC_MATRIX, 0, &mat) == FcResultMatch) {
 			spec->matrix.xx = mat->xx;
 			spec->matrix.yy = mat->yy;
@@ -760,7 +785,7 @@ init_font:
 		AG_SetErrorS("Unsupported font type");
 		goto fail;
 	}
-	TAILQ_INSERT_HEAD(&fonts, font, fonts);
+	TAILQ_INSERT_HEAD(&agFontCache, font, fonts);
 out:
 	font->nRefs++;
 	AG_MutexUnlock(&agTextLock);
@@ -784,9 +809,9 @@ fail:
 void
 AG_PopTextState(void)
 {
-#ifdef AG_DEBUG
 	AG_TextState *ts = AG_TEXT_STATE_CUR();
 
+#ifdef AG_DEBUG
 	if (agTextStateCur == 0)
 		AG_FatalError("PopTextState without Push");
 
@@ -794,12 +819,9 @@ AG_PopTextState(void)
 	    ts->name[1] != 'S' || atoi(&ts->name[2]) != agTextStateCur)
 		AG_FatalErrorF("PopTextState: Bad state #%d", agTextStateCur);
 #endif
-#if 0
-	/* TODO */
-	if (AG_TEXT_STATE_CUR()->font != NULL &&
-	    AG_TEXT_STATE_CUR()->font != agDefaultFont)
-		AG_UnusedFont(AG_TEXT_STATE_CUR()->font);
-#endif
+/*	if (ts->font != NULL) */
+/*		AG_UnusedFont(ts->font); */
+
 	--agTextStateCur;
 }
 
@@ -815,7 +837,7 @@ AG_UnusedFont(AG_Font *font)
 	AG_MutexLock(&agTextLock);
 	if (font != agDefaultFont) {
 		if (--font->nRefs == 0) {
-			TAILQ_REMOVE(&fonts, font, fonts);
+			TAILQ_REMOVE(&agFontCache, font, fonts);
 			AG_ObjectDestroy(font);
 		}
 	}
@@ -877,7 +899,7 @@ static void
 TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extended)
 {
 	AG_TextState *ts = AG_TEXT_STATE_CUR();
-	const AG_Font *fontOrig = ts->font, *fontCur = fontOrig;
+	AG_Font *fontOrig = ts->font, *fontCur = fontOrig;
 	AG_TTFGlyph *G;
 	const AG_Char *ch;
 	const int lineskip = fontCur->lineskip;
@@ -918,21 +940,27 @@ TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extende
 				switch (ansi.sgr) {
 				case AG_SGR_RESET:
 				case AG_SGR_NO_FG_NO_BG:
-					fontCur = fontOrig;
+					if (fontCur != fontOrig) {
+						fontCur = fontOrig;
+					}
 					break;
 				case AG_SGR_BOLD:
 					fontCur = AG_FetchFont(
 					    OBJECT(fontOrig)->name,
 					    fontOrig->spec.size,
 					    fontOrig->flags | AG_FONT_BOLD);
-					if (!fontCur) { fontCur = fontOrig; }
+					if (fontCur == NULL) {
+						fontCur = fontOrig;
+					}
 					break;
 				case AG_SGR_ITALIC:
 					fontCur = AG_FetchFont(
 					    OBJECT(fontOrig)->name,
 					    fontOrig->spec.size,
 					    fontOrig->flags | AG_FONT_ITALIC);
-					if (!fontCur) { fontCur = fontOrig; }
+					if (fontCur == NULL) {
+						fontCur = fontOrig;
+					}
 					break;
 				case AG_SGR_PRI_FONT:
 				case AG_SGR_ALT_FONT_1:
@@ -949,7 +977,9 @@ TextSizeFT(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extende
 					    agCoreFonts[ansi.sgr-10],
 					    fontOrig->spec.size,
 					    fontOrig->flags);
-					if (!fontCur) { fontCur = fontOrig; }
+					if (fontCur == NULL) {
+						fontCur = fontOrig;
+					}
 					break;
 				default:
 					break;
@@ -1051,7 +1081,7 @@ TextSizeBitmap(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 /* Render UCS-4 text to a new surface using a bitmap font. */
 static void
 TextRenderBitmap(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
-    const AG_TextMetrics *_Nonnull tm, const AG_Font *_Nonnull font,
+    const AG_TextMetrics *_Nonnull tm, AG_Font *_Nonnull font,
     const AG_Color *_Nonnull cBgOrig, const AG_Color *_Nonnull cFgOrig)
 {
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
@@ -1116,7 +1146,7 @@ GetBitmapGlyph(const AG_Font *_Nonnull font, AG_Char c)
 
 static void
 TextRenderDummy(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
-    const AG_TextMetrics *_Nonnull tm, const AG_Font *_Nonnull font,
+    const AG_TextMetrics *_Nonnull tm, AG_Font *_Nonnull font,
     const AG_Color *_Nonnull cBgOrig, const AG_Color *_Nonnull cFgOrig)
 {
 	/* no-op */
@@ -1616,8 +1646,8 @@ AG_TextRender(const char *text)
  * onto a newly allocated surface.
  */
 AG_Surface *
-AG_TextRenderInternal(const AG_Char *text, const AG_Font *font,
-    const AG_Color *cBg, const AG_Color *cFg)
+AG_TextRenderInternal(const AG_Char *text, AG_Font *font, const AG_Color *cBg,
+    const AG_Color *cFg)
 {
 	void (*pfSize[])(const AG_Char *_Nonnull, AG_TextMetrics *_Nonnull, int) = {
 		TextSizeFT,       /* VECTOR */
@@ -1625,7 +1655,7 @@ AG_TextRenderInternal(const AG_Char *text, const AG_Font *font,
 		TextSizeDummy     /* DUMMY */
 	};
 	void (*pfRender[])(const AG_Char *_Nonnull, AG_Surface *_Nonnull,
-	                   const AG_TextMetrics *_Nonnull, const AG_Font *_Nonnull,
+	                   const AG_TextMetrics *_Nonnull, AG_Font *_Nonnull,
 			   const AG_Color *_Nonnull, const AG_Color *_Nonnull) = {
 		TextRenderFT,     /* VECTOR */
 		TextRenderBitmap, /* BITMAP */
@@ -1666,11 +1696,11 @@ AG_TextRenderInternal(const AG_Char *text, const AG_Font *font,
 /* Render text using FreeType. */
 static void
 TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
-    const AG_TextMetrics *_Nonnull tm, const AG_Font *_Nonnull font,
+    const AG_TextMetrics *_Nonnull tm, AG_Font *_Nonnull fontOrig,
     const AG_Color *_Nonnull cBgOrig, const AG_Color *_Nonnull cFgOrig)
 {
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
-	const AG_Font *fontCur = font;
+	AG_Font *fontCur = fontOrig;
 	AG_TTFGlyph *G;
 	const AG_Char *ch;
 	Uint8 *src, *dst;
@@ -1679,7 +1709,7 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	AG_Color cFg = *cFgOrig;
 	FT_UInt prev_index = 0;
 	const int BytesPerPixel = S->format.BytesPerPixel;
-	const int lineSkip = font->lineskip;
+	const int lineSkip = fontOrig->lineskip;
 	int xStart, yStart, line, x,y, w;
 
  	xStart = (tm->nLines>1) ? AG_TextJustifyOffset(tm->w, tm->wLines[0]) : 0;
@@ -1713,7 +1743,9 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 				switch (ansi.sgr) {
 				case AG_SGR_RESET:
 				case AG_SGR_NO_FG_NO_BG:
-					fontCur = font;
+					if (fontCur != fontOrig) {
+						fontCur = fontOrig;
+					}
 					cFg = *cFgOrig;
 					cBg = *cBgOrig;
 					break;
@@ -1728,14 +1760,18 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 					    OBJECT(fontCur)->name,
 					    fontCur->spec.size,
 					    fontCur->flags | AG_FONT_BOLD);
-					if (!fontCur) { fontCur = font; }
+					if (fontCur == NULL) {
+						fontCur = fontOrig;
+					}
 					break;
 				case AG_SGR_ITALIC:
 					fontCur = AG_FetchFont(
 					    OBJECT(fontCur)->name,
 					    fontCur->spec.size,
 					    fontCur->flags | AG_FONT_ITALIC);
-					if (!fontCur) { fontCur = font; }
+					if (fontCur == NULL) {
+						fontCur = fontOrig;
+					}
 					break;
 				case AG_SGR_FAINT:
 					/* TODO */
@@ -1756,9 +1792,11 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 				case AG_SGR_FRAKTUR:
 					fontCur = AG_FetchFont(
 					    agCoreFonts[ansi.sgr-10],
-					    font->spec.size,
-					    font->flags);
-					if (!fontCur) { fontCur = font; }
+					    fontCur->spec.size,
+					    fontCur->flags);
+					if (fontCur == NULL) {
+						fontCur = fontOrig;
+					}
 					break;
 				default:
 					break;
@@ -1849,7 +1887,7 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 		prev_index = G->index;
 	}
 
-	ttf = font->data.vec.ttf;
+	ttf = fontOrig->data.vec.ttf;
 	if (ttf->style & AG_FONT_UNDERLINE)
 		TextRenderFT_Underline(ttf, S, tm->nLines);
 }
@@ -2110,7 +2148,7 @@ TextRenderFT_Underline(AG_TTFFont *_Nonnull ftFont, AG_Surface *_Nonnull S,
  * Must be called from GUI rendering context.
  */
 AG_Glyph *
-AG_TextRenderGlyph(AG_Driver *drv, const AG_Font *font,
+AG_TextRenderGlyph(AG_Driver *drv, AG_Font *font,
     const AG_Color *cBg, const AG_Color *cFg, AG_Char ch)
 {
 	AG_Glyph *G;
@@ -2132,7 +2170,7 @@ AG_TextRenderGlyph(AG_Driver *drv, const AG_Font *font,
 
 /* Render a glyph following a cache miss; called from AG_TextRenderGlyph(). */
 static AG_Glyph *_Nonnull
-TextRenderGlyph_Miss(AG_Driver *_Nonnull drv, const AG_Font *_Nonnull font,
+TextRenderGlyph_Miss(AG_Driver *_Nonnull drv, AG_Font *_Nonnull font,
     const AG_Color *_Nonnull cBg, const AG_Color *_Nonnull cFg, AG_Char ch)
 {
 	AG_Glyph *G;
@@ -2424,7 +2462,7 @@ AG_InitTextSubsystem(void)
 		return (0);
 
 	AG_MutexInitRecursive(&agTextLock);
-	TAILQ_INIT(&fonts);
+	TAILQ_INIT(&agFontCache);
 
 	/* Set the default font search path. */
 	AG_ObjectLock(cfg);
@@ -2545,8 +2583,8 @@ AG_DestroyTextSubsystem(void)
 	if (--agTextInitedSubsystem > 0) {
 		return;
 	}
-	for (font = TAILQ_FIRST(&fonts);
-	     font != TAILQ_END(&fonts);
+	for (font = TAILQ_FIRST(&agFontCache);
+	     font != TAILQ_END(&agFontCache);
 	     font = fontNext) {
 		fontNext = TAILQ_NEXT(font, fonts);
 		AG_ObjectDestroy(font);

@@ -47,6 +47,7 @@ const char *agFontsToIgnore[] = {
 	"ClearlyU Alternate Glyphs",
 	"ClearlyU PUA",
 	"Cursor",
+	"DejaVu Math TeX Gyre",
 	"cursor.pcf",
 	"deccurs.pcf",
 	"decsess.pcf",
@@ -120,7 +121,10 @@ UpdatePreview(AG_FontSelector *_Nonnull fs)
 	bFont = AG_GetVariable(fs, "font", (void *)&pFont);
 	AG_PushTextState();
 
-	AG_TextColor(&fs->cPreview);
+	if (fs->cPreviewBG.a > 0) {
+		AG_TextBGColor(&fs->cPreviewBG);
+	}
+	AG_TextColor(&fs->cPreviewFG);
 	if (*pFont != NULL) {
 		AG_TextFont(*pFont);
 	}
@@ -150,10 +154,11 @@ OnShow(AG_Event *_Nonnull event)
 	AG_TlistItem *ti;
 	int i;
 	const int stdSizes[] = { 4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
-	                         22,24,26,28,32,48,64 }; /* XXX use fontconfig? */
+	                         22,24,26,28,32,48,64 };
 	const int nStdSizes = sizeof(stdSizes) / sizeof(stdSizes[0]);
 	
 	bFont = AG_GetVariable(fs, "font", (void *)&pFont);
+
 	AG_PushTextState();
 
 	fs->flags &= ~(AG_FONTSELECTOR_UPDATE);
@@ -285,11 +290,16 @@ OnShow(AG_Event *_Nonnull event)
 	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Upright Italic"));
 	if (*pFont && (*pFont)->flags == AG_FONT_UPRIGHT_ITALIC) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Oblique"));
-	if (*pFont && (*pFont)->flags == AG_FONT_OBLIQUE) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Bold Oblique"));
-	if (*pFont && ((*pFont)->flags & AG_FONT_BOLD &&
-	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
+	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Monospace"));
+	if (*pFont && (*pFont)->flags == AG_FONT_MONOSPACE) { ti->selected++; }
+
+	if (fs->flags & AG_FONTSELECTOR_OBLIQUE_STYLES) {
+		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Oblique"));
+		if (*pFont && (*pFont)->flags == AG_FONT_OBLIQUE) { ti->selected++; }
+		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Bold Oblique"));
+		if (*pFont && ((*pFont)->flags & AG_FONT_BOLD &&
+		               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
+	}
 
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Width variants:"));
 	ti->flags |= AG_TLIST_NO_SELECT;
@@ -308,14 +318,16 @@ OnShow(AG_Event *_Nonnull event)
 	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
 	               (*pFont)->flags & AG_FONT_BOLD &&
 	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Condensed Oblique"));
-	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Condensed Bold Oblique"));
-	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-	               (*pFont)->flags & AG_FONT_BOLD &&
-	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
 
+	if (fs->flags & AG_FONTSELECTOR_OBLIQUE_STYLES) {
+		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Condensed Oblique"));
+		if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
+		               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
+		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Condensed Bold Oblique"));
+		if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
+		               (*pFont)->flags & AG_FONT_BOLD &&
+		               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
+	}
 	if (fs->flags & AG_FONTSELECTOR_SW_STYLES) {
 		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software styles:"));
 		ti->flags |= AG_TLIST_NO_SELECT;
@@ -350,30 +362,35 @@ SelectedStyle(AG_Event *_Nonnull event)
 {
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
 	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
-	Uint flags = 0;
+	const char *s = it->text;
+	Uint fl = 0;
 
 	/* XXX */
-	if (!strcmp(it->text, _("Bold")))                   { flags |=  AG_FONT_BOLD; }
-	if (!strcmp(it->text, _("Italic")))                 { flags |=  AG_FONT_ITALIC; }
-	if (!strcmp(it->text, _("Bold Italic")))            { flags |= (AG_FONT_BOLD | AG_FONT_ITALIC); }
-	if (!strcmp(it->text, _("Upright Italic")))         { flags |=  AG_FONT_UPRIGHT_ITALIC; }
-	if (!strcmp(it->text, _("Oblique")))                { flags |=  AG_FONT_OBLIQUE; }
-	if (!strcmp(it->text, _("Bold Oblique")))           { flags |= (AG_FONT_BOLD | AG_FONT_OBLIQUE); }
 
-	if (!strcmp(it->text, _("Condensed")))              { flags |=  AG_FONT_CONDENSED; }
-	if (!strcmp(it->text, _("Condensed Italic")))       { flags |= (AG_FONT_CONDENSED | AG_FONT_ITALIC); }
-	if (!strcmp(it->text, _("Condensed Oblique")))      { flags |= (AG_FONT_CONDENSED | AG_FONT_OBLIQUE); }
-	if (!strcmp(it->text, _("Condensed Bold")))         { flags |= (AG_FONT_CONDENSED | AG_FONT_BOLD); }
-	if (!strcmp(it->text, _("Condensed Bold Italic")))  { flags |= (AG_FONT_CONDENSED | AG_FONT_BOLD | AG_FONT_ITALIC); }
-	if (!strcmp(it->text, _("Condensed Bold Oblique"))) { flags |= (AG_FONT_CONDENSED | AG_FONT_BOLD | AG_FONT_OBLIQUE); }
+	if (!strcmp(s, _("Bold")))           { fl |=  AG_FONT_BOLD; }
+	if (!strcmp(s, _("Italic")))         { fl |=  AG_FONT_ITALIC; }
+	if (!strcmp(s, _("Bold Italic")))    { fl |= (AG_FONT_BOLD | AG_FONT_ITALIC); }
+	if (!strcmp(s, _("Upright Italic"))) { fl |=  AG_FONT_UPRIGHT_ITALIC; }
+	if (!strcmp(s, _("Monospace")))      { fl |=  AG_FONT_MONOSPACE; }
 
+	if (!strcmp(s, _("Condensed")))              { fl |=  AG_FONT_CONDENSED; }
+	if (!strcmp(s, _("Condensed Italic")))       { fl |= (AG_FONT_CONDENSED | AG_FONT_ITALIC); }
+	if (!strcmp(s, _("Condensed Bold")))         { fl |= (AG_FONT_CONDENSED | AG_FONT_BOLD); }
+	if (!strcmp(s, _("Condensed Bold Italic")))  { fl |= (AG_FONT_CONDENSED | AG_FONT_BOLD | AG_FONT_ITALIC); }
+
+	if (fs->flags & AG_FONTSELECTOR_OBLIQUE_STYLES) {
+		if (!strcmp(s, _("Oblique")))                { fl |=  AG_FONT_OBLIQUE; }
+		if (!strcmp(s, _("Bold Oblique")))           { fl |= (AG_FONT_BOLD | AG_FONT_OBLIQUE); }
+		if (!strcmp(s, _("Condensed Oblique")))      { fl |= (AG_FONT_CONDENSED | AG_FONT_OBLIQUE); }
+		if (!strcmp(s, _("Condensed Bold Oblique"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_BOLD | AG_FONT_OBLIQUE); }
+	}
 	if (fs->flags & AG_FONTSELECTOR_SW_STYLES) {
-		if (!strcmp(it->text, _("Software Oblique")))        { flags |=  AG_FONT_SW_ITALIC; }
-		if (!strcmp(it->text, _("Software Bold")))           { flags |=  AG_FONT_SW_BOLD; }
-		if (!strcmp(it->text, _("Software Bold Oblique")))   { flags |= (AG_FONT_SW_BOLD | AG_FONT_SW_ITALIC); }
+		if (!strcmp(s, _("Software Oblique")))      { fl |=  AG_FONT_SW_ITALIC; }
+		if (!strcmp(s, _("Software Bold")))         { fl |=  AG_FONT_SW_BOLD; }
+		if (!strcmp(s, _("Software Bold Oblique"))) { fl |= (AG_FONT_SW_BOLD | AG_FONT_SW_ITALIC); }
 	}
 
-	fs->curStyle = flags;
+	fs->curStyle = fl;
 	UpdateFontSelection(fs);
 	UpdatePreview(fs);
 }
@@ -419,6 +436,14 @@ PreviewColorChanged(AG_Event *_Nonnull event)
 }
 
 static void
+EditColor(AG_Event *_Nonnull event)
+{
+	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
+
+	AG_BindPointer(fs->pal, "agcolor", AG_PTR(2));
+}
+
+static void
 Init(void *_Nonnull obj)
 {
 	AG_FontSelector *fs = obj;
@@ -431,18 +456,28 @@ Init(void *_Nonnull obj)
 
 	fs->hPane = AG_PaneNewHoriz(fs, AG_PANE_EXPAND);
 	{
+		AG_Box *box;
+
 		fs->tlFaces = AG_TlistNew(fs->hPane->div[0], AG_TLIST_EXPAND);
 		fs->hPane2 = AG_PaneNewHoriz(fs->hPane->div[1], AG_PANE_EXPAND);
 		fs->tlStyles = AG_TlistNew(fs->hPane2->div[0], AG_TLIST_EXPAND);
-		fs->sizeBox = AG_BoxNewVert(fs->hPane2->div[1], AG_BOX_EXPAND);
+
+		box = AG_BoxNewVert(fs->hPane2->div[1], AG_BOX_EXPAND);
 		{
-			fs->tlSizes = AG_TlistNew(fs->sizeBox, AG_TLIST_EXPAND);
-			fs->pal = AG_HSVPalNew(fs->sizeBox, AG_HSVPAL_NOPREVIEW |
-			                                    AG_HSVPAL_NOALPHA |
-		                                            AG_HSVPAL_HFILL);
-			AG_BindPointer(fs->pal, "agcolor", (void *)&fs->cPreview);
+			fs->tlSizes = AG_TlistNew(box, AG_TLIST_EXPAND);
+			fs->pal = AG_HSVPalNew(box, AG_HSVPAL_NOPREVIEW |
+			                            AG_HSVPAL_NOALPHA |
+		                                    AG_HSVPAL_HFILL);
+			AG_BindPointer(fs->pal, "agcolor", (void *)&fs->cPreviewFG);
 			AG_SetEvent(fs->pal, "h-changed", PreviewColorChanged, "%p", fs);
 			AG_SetEvent(fs->pal, "sv-changed", PreviewColorChanged, "%p", fs);
+		}
+
+		box = AG_BoxNewHoriz(fs->hPane2->div[1], AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
+		AG_SetStyle(box, "font-size", "80%");
+		{
+			AG_ButtonNewFn(box, 0, _("BG"), EditColor,"%p,%p", fs, &fs->cPreviewBG);
+			AG_ButtonNewFn(box, 0, _("FG"), EditColor,"%p,%p", fs, &fs->cPreviewFG);
 		}
 	}
 	
@@ -451,7 +486,8 @@ Init(void *_Nonnull obj)
 	fs->rPreview.y = 0;
 	fs->rPreview.w = 0;
 	fs->rPreview.h = 80;
-	AG_ColorWhite(&fs->cPreview);
+	AG_ColorNone(&fs->cPreviewBG);
+	AG_ColorWhite(&fs->cPreviewFG);
 
 	AG_TlistSizeHint(fs->tlFaces, "XXXXXXXXXXXXXXXXXXXX", 20);
 	AG_TlistSizeHint(fs->tlStyles, "<Condensed Bold Oblique>", 20);
@@ -484,6 +520,9 @@ Draw(void *_Nonnull obj)
 	if (fs->sPreview != -1) {
 		const AG_Surface *S = WSURFACE(fs,fs->sPreview);
 
+		if (fs->cPreviewBG.a > 0) {
+			AG_DrawRectFilled(fs, &fs->rPreview, &fs->cPreviewBG);
+		}
 		AG_PushClipRect(fs, &fs->rPreview);
 		AG_WidgetBlitSurface(fs, fs->sPreview,
 		    fs->rPreview.x + (fs->rPreview.w >> 1) - (S->w >> 1),

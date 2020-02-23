@@ -521,6 +521,7 @@ RunUnicodeBrowser(AG_Event *event)
 #ifdef AG_TIMERS
 static void RunDriversBrowser(AG_Event *event) { DEV_Browser(&agDrivers); }
 static void RunClassInfo(AG_Event *event) { DEV_ClassInfo(); }
+static void RunFontsInfo(AG_Event *event) { DEV_FontInfo(); }
 
 static void
 RunTimerInspector(AG_Event *event)
@@ -840,6 +841,7 @@ main(int argc, char *argv[])
 #if defined(AG_TIMERS)
 		AG_MenuAction(mi, _("Drivers"), NULL, RunDriversBrowser, NULL);
 		AG_MenuAction(mi, _("Classes"), NULL, RunClassInfo, NULL);
+		AG_MenuAction(mi, _("Fonts"),   NULL, RunFontsInfo, NULL);
 		AG_MenuAction(mi, _("Timers"), NULL,  RunTimerInspector, NULL);
 #endif
 #if defined(AG_UNICODE)

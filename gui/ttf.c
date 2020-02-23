@@ -160,12 +160,6 @@ AG_TTFOpenFont(AG_Font *font, const char *path)
 		const AG_FontAdjustment *fa;
 		int adjRange;
 
-		for (fa = &agFontAdjustments[0]; fa->face != NULL; fa++) {
-			if (strcmp(OBJECT(font)->name, fa->face) == 0) {
-				spec->size *= fa->size_factor;
-				break;
-			}
-		}
 		if ((rv = FT_Set_Char_Size(face, 0, spec->size*64, 0, 0)) != 0) {
 			AG_SetError("FT_Set_Char_Size failed: %x", rv);
 			goto fail_face;
