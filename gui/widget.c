@@ -42,6 +42,7 @@
 #include <ctype.h>
 
 /* #define DEBUG_FOCUS */
+/* #define DEBUG_SURFACES */
 
 /* Style Properties */
 const char *agStyleAttributes[] = {
@@ -1547,12 +1548,10 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 	wid->rSens.x2 = x + wid->w;
 	wid->rSens.y2 = y + wid->h;
 
-	if (AG_RectCompare2(&wid->rView, &rPrev) != 0) {
-		AG_PostEvent(wid, "widget-moved", NULL);
 #ifdef HAVE_OPENGL
+	if (AG_RectCompare2(&wid->rView, &rPrev) != 0)
 		wid->flags |= AG_WIDGET_GL_RESHAPE;
 #endif
-	}
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
 		AG_WidgetUpdateCoords(chld,
 		    wid->rView.x1 + chld->x,
@@ -1784,7 +1783,6 @@ DrawPrologueGL_Reshape(AG_Widget *_Nonnull wid)
 	glMatrixMode(GL_PROJECTION); glPushMatrix();
 	glMatrixMode(GL_MODELVIEW);  glPushMatrix();
 
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_PostEvent(wid, "widget-reshape", NULL);
 	wid->flags &= ~(AG_WIDGET_GL_RESHAPE);
 
@@ -1802,7 +1800,6 @@ DrawPrologueGL(AG_Widget *_Nonnull wid)
 {
 	Uint hView;
 
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_PostEvent(wid, "widget-underlay", NULL);
 
 	glPushAttrib(GL_TRANSFORM_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
@@ -1844,7 +1841,6 @@ DrawEpilogueGL(AG_Widget *_Nonnull wid)
 
 	glPopAttrib(); /* GL_TRANSFORM_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT */
 	
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_PostEvent(wid, "widget-overlay", NULL);
 }
 #endif /* HAVE_OPENGL */
@@ -1857,7 +1853,7 @@ void
 AG_WidgetDraw(void *p)
 {
 	AG_Widget *wid = p;
-	int flags;
+	Uint flags;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
@@ -1913,7 +1909,6 @@ AG_WidgetMapSurface(void *obj, AG_Surface *S)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
-
 	n = wid->nSurfaces;
 	for (i = 0; i < n; i++) {
 		if (wid->surfaces[i] == NULL) {
@@ -1934,7 +1929,15 @@ AG_WidgetMapSurface(void *obj, AG_Surface *S)
 	wid->textures[id] = 0;
 
 	if (S) {
+#ifdef DEBUG_SURFACES
+		Debug(wid, "Map surface %d -> [ S=%dx%d-%d ]\n", id,
+		    S->w, S->h, S->format.BitsPerPixel);
+#endif
 		S->flags |= AG_SURFACE_MAPPED;
+	} else {
+#ifdef DEBUG_SURFACES
+		Debug(wid, "Map surface %d -> [ NULL ]\n", id);
+#endif
 	}
 	AG_ObjectUnlock(wid);
 	return (id);
@@ -1956,6 +1959,9 @@ AG_WidgetUpdateSurface(void *obj, int id)
 		AG_FatalError("No such surface");
 # endif
 	wid->surfaceFlags[id] |= AG_WIDGET_SURFACE_REGEN;
+#endif
+#ifdef DEBUG_SURFACES
+	Debug(obj, "Regen surface %d\n", id);
 #endif
 }
 
@@ -2006,7 +2012,15 @@ AG_WidgetReplaceSurface(void *obj, int id, AG_Surface *S)
 		AG_SurfaceFree(Sprev);
 	}
 	if (S) {
+#ifdef DEBUG_SURFACES
+		Debug(wid, "Replace surface %d -> [ S=%dx%d-%d ]\n",
+		    id, S->w, S->h, S->format.BitsPerPixel);
+#endif
 		S->flags |= AG_SURFACE_MAPPED;
+	} else {
+#ifdef DEBUG_SURFACES
+		Debug(wid, "Replace surface %d -> [ NULL ]\n", id);
+#endif
 	}
 	wid->surfaces[id] = S;
 	wid->surfaceFlags[id] &= ~(AG_WIDGET_SURFACE_NODUP);

@@ -71,14 +71,6 @@ SetIdentity(GLfloat *_Nonnull M, GLenum which)
 }
 
 static void
-WidgetMoved(AG_Event *_Nonnull event)
-{
-	AG_GLView *glv = AG_GLVIEW_SELF();
-
-	glv->flags |= AG_GLVIEW_RESHAPE;
-}
-
-static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_GLView *glv = AG_GLVIEW_SELF();
@@ -122,7 +114,6 @@ Init(void *_Nonnull obj)
 	
 	AG_ColorBlack(&glv->bgColor);
 
-	AG_SetEvent(glv, "widget-moved", WidgetMoved, NULL);
 	AG_SetEvent(glv, "mouse-button-down", MouseButtonDown, NULL);
 	AG_AddEvent(glv, "attached", OnAttach, NULL);
 }
@@ -338,8 +329,10 @@ Draw(void *_Nonnull obj)
 		SetIdentity(glv->mModelview, GL_MODELVIEW);
 		SetIdentity(glv->mTexture, GL_TEXTURE);
 	}
-	if (glv->flags & AG_GLVIEW_RESHAPE) {
+	if ((glv->flags & AG_GLVIEW_RESHAPE) ||
+	    (WIDGET(glv)->flags & AG_WIDGET_GL_RESHAPE)) {
 		glv->flags &= ~(AG_GLVIEW_RESHAPE);
+		WIDGET(glv)->flags &= ~(AG_WIDGET_GL_RESHAPE);
 		Reshape(glv);
 	}
 
