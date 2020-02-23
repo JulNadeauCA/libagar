@@ -1142,8 +1142,10 @@ restart:
 		AG_Object *ob;
 
 		if (kev->flags & EV_ERROR) {
+#  ifdef DEBUG_TIMERS
 			Verbose("kevent (%ld,%d): %s\n", kev->ident, kev->filter,
 			    AG_Strerror((int)kev->data));
+#  endif
 			continue;
 		}
 		if (esType != AG_SINK_TIMER ||
