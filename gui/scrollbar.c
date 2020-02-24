@@ -532,9 +532,19 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	const int x = SBPOS(sb,mx,my) - sbThick;
 	int posCur, len = SBLEN(sb);
 
-	if (button != AG_MOUSE_LEFT) {
+	switch (button) {
+	case AG_MOUSE_WHEELUP:
+		Increment(sb, -1);
+		return;
+	case AG_MOUSE_WHEELDOWN:
+		Increment(sb, +1);
+		return;
+	case AG_MOUSE_LEFT:
+		break;
+	default:
 		return;
 	}
+
 	if (!AG_WidgetIsFocused(sb)) {
 		AG_WidgetFocus(sb);
 	}
