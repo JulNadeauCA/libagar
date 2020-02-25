@@ -279,7 +279,6 @@ AG_HSVPal_UpdateHue(AG_HSVPal *_Nonnull pal, int x, int y)
 	UpdatePixelFromHSVA(pal);
 	AG_PostEvent(pal, "h-changed", NULL);
 	pal->flags |= AG_HSVPAL_DIRTY;
-	AG_Redraw(pal);
 }
 
 void
@@ -311,7 +310,6 @@ AG_HSVPal_UpdateSV(AG_HSVPal *_Nonnull pal, int ax, int ay)
 	UpdatePixelFromHSVA(pal);
 	AG_PostEvent(pal, "sv-changed", NULL);
 	pal->flags |= AG_HSVPAL_DIRTY;
-	AG_Redraw(pal);
 }
 
 static void
@@ -448,7 +446,6 @@ UpdateAlpha(AG_HSVPal *_Nonnull pal, int x)
 
 	UpdatePixelFromHSVA(pal);
 	AG_PostEvent(pal, "a-changed", NULL);
-	AG_Redraw(pal);
 }
 
 static void
@@ -550,7 +547,6 @@ SetComplementaryColor(AG_Event *_Nonnull event)
 	AG_PostEvent(pal, "h-changed", NULL);
 	AG_PostEvent(pal, "sv-changed", NULL);
 	AG_ObjectUnlock(pal);
-	AG_Redraw(pal);
 }
 
 static void
@@ -589,7 +585,6 @@ PasteColor(AG_Event *_Nonnull event)
 	AG_PostEvent(pal, "sv-changed", NULL);
 
 	AG_ObjectUnlock(pal);
-	AG_Redraw(pal);
 }
 
 static void
@@ -713,7 +708,6 @@ KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 		AG_SetFloat(pal, "saturation", sat);
 		UpdatePixelFromHSVA(pal);
 		AG_PostEvent(pal, "sv-changed", NULL);
-		AG_Redraw(pal);
 		break;
 	case AG_KEY_DOWN:
  		sat = AG_GetFloat(pal,"saturation");
@@ -724,7 +718,6 @@ KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 		AG_SetFloat(pal, "saturation", sat);
 		UpdatePixelFromHSVA(pal);
 		AG_PostEvent(pal, "sv-changed", NULL);
-		AG_Redraw(pal);
 		break;
 	case AG_KEY_LEFT:
  		value = AG_GetFloat(pal,"value");
@@ -735,7 +728,6 @@ KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 		AG_SetFloat(pal, "value", value);
 		UpdatePixelFromHSVA(pal);
 		AG_PostEvent(pal, "sv-changed", NULL);
-		AG_Redraw(pal);
 		break;
 	case AG_KEY_RIGHT:
  		value = AG_GetFloat(pal,"value");
@@ -746,7 +738,6 @@ KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 		AG_SetFloat(pal, "value", value);
 		UpdatePixelFromHSVA(pal);
 		AG_PostEvent(pal, "sv-changed", NULL);
-		AG_Redraw(pal);
 		break;
 	}
 	return (rv);
