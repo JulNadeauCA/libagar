@@ -333,5 +333,5 @@ const char *agKeySyms[] = {
 	NULL
 };
 
-const int agnKeySyms = sizeof(agKeySyms)/sizeof(agKeySyms[0]);
+const int agKeySymCount = sizeof(agKeySyms)/sizeof(agKeySyms[0]);
 

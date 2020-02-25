@@ -191,7 +191,7 @@ TestGUI(void *obj, AG_Window *win)
 	 */
 	hPane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 	AG_PaneSetDivisionMin(hPane, 0, 50, 100);
-	AG_PaneMoveDividerPct(hPane, 40);
+	AG_PaneMoveDividerPct(hPane, 45);
 
 	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-1.bmp", path, sizeof(path)) == 0) {
 		if ((S = AG_SurfaceFromBMP(path)) != NULL) {
@@ -246,13 +246,14 @@ TestGUI(void *obj, AG_Window *win)
 
 		/* A static label */
 		lbl = AG_LabelNew(hPane->div[0], 0,
-		    "Agar v%d.%d.%d ( " AGSI_FRAK "%s" AGSI_RST " )",
+		    "Agar v%d.%d.%d (" AGSI_FRAK "%s" AGSI_RST ")",
 		    av.major, av.minor, av.patch,
 		    av.release ? av.release : "dev");
+		AG_SetStyle(lbl, "font-size", "120%");
 
 		/* A dynamically-updated label. */
 		lbl = AG_LabelNewPolled(hPane->div[0], AG_LABEL_HFILL,
-		    "Window is at %i,%i (%ux%u)\n",
+		    "Window is at %i,%i (%ux%u)",
 		    &AGWIDGET(win)->x,
 		    &AGWIDGET(win)->y,
 		    &AGWIDGET(win)->w,
@@ -262,7 +263,7 @@ TestGUI(void *obj, AG_Window *win)
 		    "This is a polled label\n"
 		    "Window is at 000,000 (000x000)");
 
-		AG_LabelJustify(lbl, AG_TEXT_CENTER);
+		AG_LabelJustify(lbl, AG_TEXT_RIGHT);
 	}
 
 	/*
@@ -405,7 +406,7 @@ TestGUI(void *obj, AG_Window *win)
 		ti->textElement = AG_TextNew(100);
 
 		/* Create a textbox bound to a fixed-size buffer */
-		tbox = AG_TextboxNew(vPane->div[0],
+		tbox = AG_TextboxNew(vPane->div[1],
 		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
 		    "Textbox: ");
 		AG_TextboxSetPlaceholderS(tbox, "First & Last Name");
@@ -443,8 +444,12 @@ TestGUI(void *obj, AG_Window *win)
 	{
 		static int myVal = 50, myMin = -100, myMax = 100, myVisible = 0;
 		AG_Scrollbar *sb;
-		AG_Slider *sl;
 		AG_ProgressBar *pb;
+		AG_Numerical *num;
+
+		num = AG_NumericalNewS(vPane->div[1], AG_NUMERICAL_HFILL,
+		    NULL, "Bound Integer: ");
+		AG_BindInt(num, "value", &myVal);
 
 		AG_LabelNewS(vPane->div[1], 0, "Scrollbar:");
 		sb = AG_ScrollbarNewHoriz(vPane->div[1], AG_SCROLLBAR_EXCL |
@@ -455,13 +460,6 @@ TestGUI(void *obj, AG_Window *win)
 		AG_BindInt(sb, "visible", &myVisible);
 		AG_SetInt(sb, "inc", 10);
 
-		AG_LabelNewS(vPane->div[1], 0, "Slider:");
-		sl = AG_SliderNew(vPane->div[1], AG_SLIDER_HORIZ, AG_SLIDER_EXCL |
-		                                                  AG_SLIDER_HFILL);
-		AG_BindInt(sl, "value", &myVal);
-		AG_BindInt(sl, "min", &myMin);
-		AG_BindInt(sl, "max", &myMax);
-		AG_SetInt(sl, "inc", 10);
 
 		AG_LabelNewS(vPane->div[1], 0, "ProgressBar:");
 		pb = AG_ProgressBarNewHoriz(vPane->div[1], AG_PROGRESS_BAR_EXCL |
@@ -634,6 +632,7 @@ TestGUI(void *obj, AG_Window *win)
 			AG_CheckboxNewFn(nt, 0, "Word wrapping",
 			    SetWordWrap, "%p", tbox);
 		}
+		AG_NotebookSelectTab(nb, nt);
 		
 		nt = AG_NotebookAdd(nb, "Empty tab", AG_BOX_VERT);
 	}

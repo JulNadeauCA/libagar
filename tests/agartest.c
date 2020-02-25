@@ -642,6 +642,7 @@ TestViewSource(AG_Event *event)
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
 	}
+	AG_SetStyle(win, "font-family", "courier-prime");
 	tb = AG_TextboxNew(win, AG_TEXTBOX_MULTILINE | AG_TEXTBOX_EXPAND |
 	                        AG_TEXTBOX_READONLY, NULL);
 	fseek(f, 0, SEEK_END);
@@ -924,14 +925,9 @@ main(int argc, char *argv[])
 			AG_ColorRGB_8(&ln->c, 255,100,100);
 		}
 
-		ln = AG_ConsoleMsgS(console,
-		    AGSI_FONT4
-		    "[ https://libAgar.org/ | "
-		    "https://github.com/JulNadeauCA/ | "
-		    "https://patreon.com/libagar/ ]"
-		    AGSI_RST);
+		AG_ConsoleMsgS(console, "");
+		ln = AG_ConsoleMsgS(console, "https://libAgar.org/ | https://PowerfulAgar.com/");
 		AG_ColorRGB(&ln->c, 200,240,240);
-
 		AG_ConsoleMsgS(console, "");
 
 		ln = AG_ConsoleMsg(console,

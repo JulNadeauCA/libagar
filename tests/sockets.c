@@ -97,7 +97,9 @@ TestGUI(void *obj, AG_Window *win)
 		AG_FixedMove(fx, px, 0, 0);
 	}
 	
-	lbl = AG_LabelNew(NULL, 0, "Drag & Drop Demo");
+	lbl = AG_LabelNew(NULL, 0, AGSI_LEAGUE_SPARTAN "Sockets" AGSI_RST);
+	AG_SetStyle(lbl, "text-color", "#ccc");
+	AG_SetStyle(lbl, "font-size", "200%");
 	AG_FixedPut(fx, lbl, 20, 32);
 
 	/* Load some pixmaps */

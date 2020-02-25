@@ -129,6 +129,7 @@ TestGUI(void *obj, AG_Window *win)
 	}
 
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
+	AG_SetStyle(box, "font-size", "80%");
 	{
 		AG_ButtonNewFn(box, 0, "Clear",
 		    ClearLines, "%p", cons);
@@ -143,6 +144,7 @@ TestGUI(void *obj, AG_Window *win)
 	}
 #if !defined(__WIN32__)
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
+	AG_SetStyle(box, "font-size", "80%");
 	{
 		const char *msglog = "/var/log/messages";
 
@@ -152,6 +154,7 @@ TestGUI(void *obj, AG_Window *win)
 		    CloseFile, "%p,%p,%s", cons, btn, msglog);
 	}
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
+	AG_SetStyle(box, "font-size", "80%");
 	{
 		const char *utxlog = "/var/log/utx.log";
 
@@ -161,8 +164,9 @@ TestGUI(void *obj, AG_Window *win)
 		AG_ButtonNewFn(box, 0, "Close utx.log",
 		    CloseFile, "%p,%p,%s", cons, btn, utxlog);
 	}
-#endif
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_BR, 640, 480);
+#endif /* !_WIN32 */
+
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_BR, 640, 800);
 	return (0);
 }
 

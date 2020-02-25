@@ -1,13 +1,16 @@
 /*	Public domain	*/
 /*
- * This program demonstrates the use of the AG_GLView widget.
+ * This program demonstrates the use of the (now deprecated) AG_GLView(3)
+ * widget, which provides a low-level OpenGL context.
+ * 
+ * Under OpenGL-based Agar display drivers, all the AG_GLView(3) widget
+ * does is to save and restore the relevant GL matrices and states around
+ * calls to Draw().
  *
- * AG_GLView provides a low-level GL context. Under OpenGL-based Agar
- * display drivers, all AG_GLView does is to save and restore the relevant
- * GL matrices and states around calls to Draw().
- *
- * For high-level scene graph functionality, check out the Agar-based
- * FreeSG library at http://freesg.org/.
+ * Since Agar 1.5, this functionality is now implemented in base AG_Widget(3)
+ * class, so any widget (which sets AG_WIDGET_USE_OPENGL) may use OpenGL
+ * commands in draw() and the relevant GL states will be saved and restored
+ * implicitely.
  */
 
 #include "agartest.h"
@@ -290,34 +293,46 @@ TestGUI(void *obj, AG_Window *win)
 		AG_Pane *pa;
 		AG_Notebook *nb, *nbColor;
 		AG_NotebookTab *ntab;
-		int i;
 		
 		pa = AG_PaneNewHoriz(hb, AG_PANE_EXPAND|AG_PANE_DIV1FILL);
 		AG_PaneResizeAction(pa, AG_PANE_EXPAND_DIV1);
 		nb = AG_NotebookNew(pa->div[0], AG_NOTEBOOK_EXPAND);
 
-		for (i = 0; i < 2; i++) {
-			ntab = AG_NotebookAdd(nb, "Test tab", AG_BOX_VERT);
-		
-			/* Create the AG_GLView widget. */
+		/* Test at 30 fps */
+		ntab = AG_NotebookAdd(nb, "GLView", AG_BOX_VERT);
+		{
+			/*
+			 * Create a GLView and size it 320x320. Use USE_TEXT
+			 * because our overlay function needs to render text.
+			 */
 			glv = AG_GLViewNew(ntab, AG_GLVIEW_EXPAND);
-			AG_GLViewSizeHint(glv, 320,320);
-
-			/* Our overlay function uses the font engine. */
 			AGWIDGET(glv)->flags |= AG_WIDGET_USE_TEXT;
-
-			/* Set a periodic redraw at 60fps. */
-			AG_RedrawOnTick(glv, 1000/60);
+			AG_GLViewSizeHint(glv, 320,320);
 			
-			/* Set up our callback functions. */ 
 			AG_GLViewScaleFn(glv, MyScaleFunction, NULL);
 			AG_GLViewDrawFn(glv, MyDrawFunction, "%p", ti);
 			AG_GLViewOverlayFn(glv, MyOverlayFunction, "%p", ti);
 			AG_GLViewButtondownFn(glv, ButtonDown, "%p", ti);
 #ifdef AG_TIMERS
-			/* Update the rotation 30 times per second. */
-			AG_AddTimerAuto(win, 1000/30, 
-			    UpdateRotation, "%p", ti);
+			AG_AddTimerAuto(win, 1000/30,  UpdateRotation, "%p", ti);
+#endif
+			AG_RedrawOnTick(glv, 1000/30);             /* 30fps */
+		}
+
+		ntab = AG_NotebookAdd(nb, "Another tab", AG_BOX_VERT);
+		{
+#if 0
+			glv = AG_GLViewNew(ntab, AG_GLVIEW_EXPAND);
+			AGWIDGET(glv)->flags |= AG_WIDGET_USE_TEXT;
+			AG_GLViewSizeHint(glv, 320,320);
+			AG_GLViewScaleFn(glv, MyScaleFunction, NULL);
+			AG_GLViewDrawFn(glv, MyDrawFunction, "%p", ti);
+			AG_GLViewOverlayFn(glv, MyOverlayFunction, "%p", ti);
+			AG_GLViewButtondownFn(glv, ButtonDown, "%p", ti);
+#ifdef AG_TIMERS
+			AG_AddTimerAuto(win, 1000/60, UpdateRotation, "%p", ti);
+#endif
+			AG_RedrawOnTick(glv, 1000/60);
 #endif
 		}
 

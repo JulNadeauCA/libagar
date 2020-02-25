@@ -310,6 +310,9 @@ typedef struct ag_keyboard {
 __BEGIN_DECLS
 extern AG_ObjectClass agKeyboardClass;
 
+extern const char *agKeySyms[];    /* Map AG_KeySym to a string (or NULL) */
+extern const int agKeySymCount;
+
 AG_Keyboard *_Nullable AG_KeyboardNew(void *_Nonnull, const char *_Nonnull);
 
 int AG_KeyboardUpdate(AG_Keyboard *_Nonnull, AG_KeyboardAction, AG_KeySym);

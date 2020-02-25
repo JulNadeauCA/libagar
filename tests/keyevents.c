@@ -6,6 +6,8 @@
 
 #include "agartest.h"
 
+#include <ctype.h>
+
 /*
  * This is our keyup/keydown event handler. The arguments are documented in
  * the EVENTS section of the AG_Window(3) manual page. See AG_KeySym(3) for
@@ -15,18 +17,35 @@ static void
 MyKeyboardHandler(AG_Event *event)
 {
 	AG_Console *cons = AG_CONSOLE_PTR(1);
-	int sym = AG_INT(2);
-	int mod = AG_INT(3);
-	AG_Char ch = AG_CHAR(4);
+	const int sym = AG_INT(2);
+	const int mod = AG_INT(3);
+	const AG_Char ch = AG_CHAR(4);
+	char pc[8], psym[16];
+
+	/* Format the character for printing */
+	pc[0] = '\0';
+	if      (ch == '\n') { Strlcpy(pc, "\\n", sizeof(pc)); }
+	else if (ch == '\r') { Strlcpy(pc, "\\r", sizeof(pc)); }
+	else if (ch == '\t') { Strlcpy(pc, "\\t", sizeof(pc)); }
+	else if (isprint(ch)) { Snprintf(pc, sizeof(pc), "'%c'", (char)ch); }
+	else                  { Snprintf(pc, sizeof(pc), "U+%lx", (Ulong)ch); }
+
+	/* Agar provides a table of strings for AG_KeySym values. */
+	if (sym < agKeySymCount) {
+		Snprintf(psym, sizeof(psym), "[%10s]",
+		    (agKeySyms[sym] != NULL) ? agKeySyms[sym] : "null");
+	} else {
+		Snprintf(psym, sizeof(psym), "0x%04x", sym);
+	}
 
 #ifdef AG_UNICODE
 	AG_ConsoleMsg(cons,
-	    "%s: sym=%d, modifier=0x%x, ch=0x%lx",
-	    event->name, sym, (unsigned)mod, (long unsigned int)ch);
+	    "%9s: sym=%s [%03u] mod=0x%04x ch=0x%lx (%s)",
+	    event->name, psym, sym, (Uint)mod, (Ulong)ch, pc);
 #else
 	AG_ConsoleMsg(cons,
-	    "%s: sym=%d, modifier=0x%x, ch=%d ('%c')",
-	    event->name, sym, (unsigned)mod, ch, ch);
+	    "%9s: sym=%s [%03u] mod=0x%04x, ch=%d (%s)",
+	    event->name, psym, sym, (Uint)mod, ch, pc);
 #endif
 }
 
@@ -36,11 +55,17 @@ TestGUI(void *obj, AG_Window *win)
 	AG_Label *lbl;
 	AG_Console *cons;
 
-	lbl = AG_LabelNew(win, AG_LABEL_HFILL, "Low-level keyboard events test");
+	lbl = AG_LabelNew(win, AG_LABEL_HFILL, "Keyboard Events");
 	AG_LabelJustify(lbl, AG_TEXT_CENTER);
-	AG_SeparatorNewHoriz(win);
+	AG_SetStyle(lbl, "font-family", "cm-typewriter");
+	AG_SetStyle(lbl, "font-weight", "bold");
+	AG_SetStyle(lbl, "font-size", "200%");
+	AG_SetStyle(lbl, "text-color", "AntiqueWhite");
 
 	cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
+	AG_SetStyle(cons, "font-family", "courier-prime");
+	AG_SetStyle(cons, "background-color", "#333");
+	AG_SetStyle(cons, "text-color", "AntiqueWhite");
 	AG_ConsoleMsg(cons, "Press any key...");
 
 	/*
@@ -65,7 +90,7 @@ TestGUI(void *obj, AG_Window *win)
 const AG_TestCase keyeventsTest = {
 	"keyevents",
 	N_("Test low-level keyboard input"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */
