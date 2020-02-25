@@ -860,6 +860,12 @@ FreeLines(AG_Console *_Nonnull cons)
 
 	for (i = 0; i < cons->nLines; i++) {
 		AG_ConsoleLine *ln = cons->lines[i];
+		int j;
+
+		for (j = 0; j < 2; j++) {
+			if (ln->surface[j] != -1)
+				AG_WidgetUnmapSurface(cons, ln->surface[j]);
+		}
 		free(ln->text);
 		free(ln);
 	}
