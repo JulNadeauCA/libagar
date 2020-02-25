@@ -234,6 +234,9 @@ AG_Debug(void *pObj, const char *fmt, ...)
 	va_list args;
 # ifdef __CC65__
 	Uint8 colorSave, wScr,hScr;
+
+	if (agDebugLvl < 1)
+		return;
 	
 	va_start(args, fmt);
 	colorSave = textcolor(COLOR_CYAN);
@@ -253,6 +256,9 @@ AG_Debug(void *pObj, const char *fmt, ...)
 	}
 # else /* !__CC65__ */
 
+	if (agDebugLvl < 1) {
+		return;
+	}
 	if (agDebugCallback != NULL) {
 		char *buf;
 
@@ -262,14 +268,13 @@ AG_Debug(void *pObj, const char *fmt, ...)
 			if (obj->name[0] != '\0') {
 				bufLen = 5+strlen(obj->name)+6+1;
 				buf = Malloc(bufLen);
-				Strlcpy(buf, "\x1b[37m",  bufLen);
-				Strlcat(buf, obj->name,   bufLen);
-				Strlcat(buf, "\x1b[0m: ", bufLen);
+				Strlcpy(buf, AGSI_ITALIC, bufLen);
+				Strlcat(buf, obj->name, bufLen);
+				Strlcat(buf, AGSI_RST ": ", bufLen);
 			} else {
 				bufLen = 6+2+(AG_MODEL >> 2)+7+1;
 				buf = Malloc(bufLen);
-				Snprintf(buf, bufLen,
-				    "<" "\x1b[37m" "%p" "\x1b[0m" ">: ", obj);
+				Snprintf(buf, bufLen, "<%p>: ", obj);
 			}
 			agDebugCallback(buf);
 			free(buf);
@@ -283,60 +288,58 @@ AG_Debug(void *pObj, const char *fmt, ...)
 		}
 		free(buf);
 	}
-	if (agDebugLvl >= 1) {
-		va_start(args, fmt);
+	va_start(args, fmt);
 #  if defined(DEBUG_TO_FILE)
-		/* Redirect output to foo-debug.txt */
-		{
-			char path[AG_FILENAME_MAX];
-			FILE *f;
+	/* Redirect output to foo-debug.txt */
+	{
+		char path[AG_FILENAME_MAX];
+		FILE *f;
 
-			if (agProgName != NULL) {
-				Strlcpy(path, agProgName, sizeof(path));
-				Strlcat(path, "-debug.txt", sizeof(path));
-			} else {
-				Strlcpy(path, "debug.txt", sizeof(path));
-			}
-			if ((f = fopen(path, "a")) != NULL) {
-				if (obj != NULL) {
-					if (obj->name[0] != '\0') {
-						fprintf(f, "%s: ", obj->name);
-					} else {
-						fprintf(f, "<%p>: ", obj);
-					}
+		if (agProgName != NULL) {
+			Strlcpy(path, agProgName, sizeof(path));
+			Strlcat(path, "-debug.txt", sizeof(path));
+		} else {
+			Strlcpy(path, "debug.txt", sizeof(path));
+		}
+		if ((f = fopen(path, "a")) != NULL) {
+			if (obj != NULL) {
+				if (obj->name[0] != '\0') {
+					fprintf(f, "%s: ", obj->name);
+				} else {
+					fprintf(f, "<%p>: ", obj);
 				}
-				vfprintf(f, fmt, args);
-				fclose(f);
 			}
+			vfprintf(f, fmt, args);
+			fclose(f);
 		}
-#  elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
-		{
-			HANDLE cons;
-			char *buf;
-		
-			cons = GetStdHandle(STD_ERROR_HANDLE);
-			if (cons != NULL && cons != INVALID_HANDLE_VALUE) {
-				if (obj != NULL && obj->name[0] != '\0') {
-					WriteConsole(cons, obj->name, strlen(obj->name), NULL, NULL);
-					WriteConsole(cons, ": ", 2, NULL, NULL);
-				}
-				Vasprintf(&buf, fmt, args);
-				WriteConsole(cons, buf, strlen(buf), NULL, NULL);
-				free(buf);
-			}
-		}
-#  else /* !_WIN32 */
-		if (obj != NULL) {
-			if (obj->name[0] != '\0') {
-				printf(AGSI_FAINT "%s" AGSI_RST ": ", obj->name);
-			} else {
-				printf("<" AGSI_FAINT "%p" AGSI_RST ">: ", obj);
-			}
-		}
-		vprintf(fmt, args);
-#  endif
-		va_end(args);
 	}
+#  elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
+	{
+		HANDLE cons;
+		char *buf;
+		
+		cons = GetStdHandle(STD_ERROR_HANDLE);
+		if (cons != NULL && cons != INVALID_HANDLE_VALUE) {
+			if (obj != NULL && obj->name[0] != '\0') {
+				WriteConsole(cons, obj->name, strlen(obj->name), NULL, NULL);
+				WriteConsole(cons, ": ", 2, NULL, NULL);
+			}
+			Vasprintf(&buf, fmt, args);
+			WriteConsole(cons, buf, strlen(buf), NULL, NULL);
+			free(buf);
+		}
+	}
+#  else /* !_WIN32 */
+	if (obj != NULL) {
+		if (obj->name[0] != '\0') {
+			printf(AGSI_ITALIC "%s" AGSI_RST ": ", obj->name);
+		} else {
+			printf("<" AGSI_ITALIC "%p" AGSI_RST ">: ", obj);
+		}
+	}
+	vprintf(fmt, args);
+#  endif
+	va_end(args);
 # endif /* !__CC65__ */
 #endif /* AG_DEBUG */
 }
