@@ -2412,11 +2412,13 @@ AG_WidgetCopyStyle(void *objDst, void *objSrc)
 	AG_Widget *widDst = objDst;
 	AG_Variable *V;
 	const char **s;
+	int debugLvlSave;
 
 	AG_OBJECT_ISA(widSrc, "AG_Widget:*");
 	AG_OBJECT_ISA(widDst, "AG_Widget:*");
 	AG_ObjectLock(widSrc);
 	AG_ObjectLock(widDst);
+	Debug_Mute(debugLvlSave);
 	for (s = &agStyleAttributes[0]; *s != NULL; s++) {
 		if ((V = AG_AccessVariable(widSrc, *s)) != NULL) {
 			AG_SetString(widDst, *s, V->data.s);
@@ -2424,6 +2426,7 @@ AG_WidgetCopyStyle(void *objDst, void *objSrc)
 		}
 
 	}
+	Debug_Unmute(debugLvlSave);
 	AG_ObjectUnlock(widDst);
 	AG_ObjectUnlock(widSrc);
 
