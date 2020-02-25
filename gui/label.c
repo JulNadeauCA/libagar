@@ -464,6 +464,7 @@ Draw(void *_Nonnull obj)
 		} else {
 			Sctd = WSURFACE(lbl,lbl->surfaceCtd);
 		}
+#if 0
 		if (WIDTH(lbl) <= Sctd->w) {
 			AG_PushClipRect(lbl, &WIDGET(lbl)->r);
 			AG_WidgetBlitSurface(lbl, lbl->surfaceCtd, 0,
@@ -471,6 +472,7 @@ Draw(void *_Nonnull obj)
 			AG_PopClipRect(lbl);
 			return;
 		}
+#endif
 		r.x = 0;
 		r.y = 0;
 		r.w = WIDTH(lbl) - Sctd->w;
@@ -492,9 +494,12 @@ Draw(void *_Nonnull obj)
 	if (Sctd != NULL) {
 		AG_PopClipRect(lbl);
 
-		AG_WidgetBlitSurface(lbl, lbl->surfaceCtd,
-		    WIDTH(lbl) - Sctd->w,
-		    ValignOffset(lbl, HEIGHT(lbl), Sctd->h));
+		if (WIDTH(lbl)  > Sctd->w &&
+		    HEIGHT(lbl) > Sctd->h) {
+			AG_WidgetBlitSurface(lbl, lbl->surfaceCtd,
+			    WIDTH(lbl) - Sctd->w,
+			    ValignOffset(lbl, HEIGHT(lbl), Sctd->h));
+		}
 	}
 }
 
