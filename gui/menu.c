@@ -488,7 +488,7 @@ CreateItem(AG_MenuItem *_Nullable miParent, const char *_Nullable text,
 }
 
 static void
-OnFontChange(AG_Event *_Nonnull event)
+StyleChanged(AG_Event *_Nonnull event)
 {
 	AG_Menu *m = AG_MENU_SELF();
 	const AG_Font *font = WFONT(m);
@@ -537,7 +537,8 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(m, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(m, "mouse-motion", MouseMotion, NULL);
 	AG_AddEvent(m, "attached", OnAttach, NULL);
-	AG_AddEvent(m, "font-changed", OnFontChange, NULL);
+	AG_AddEvent(m, "font-changed", StyleChanged, NULL);
+	AG_AddEvent(m, "palette-changed", StyleChanged, NULL);
 }
 
 /* Change the icon associated with a menu item. */
