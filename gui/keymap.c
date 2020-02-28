@@ -98,7 +98,7 @@ Insert(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	}
 	ins[nIns] = '\0';
 
-	if (ed->sel != 0) {
+	if (ed->selEnd > ed->selStart) {
 		AG_EditableDelete(ed, buf);
 	}
 	if (AG_EditableGrowBuffer(ed, buf, ins, (AG_Size)nIns) == -1) {
@@ -149,7 +149,7 @@ Delete(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	if ((len = buf->len) == 0)
 		return (0);
 
-	if (ed->sel != 0) {
+	if (ed->selEnd > ed->selStart) {
 		AG_EditableDelete(ed, buf);
 		return (1);
 	}
@@ -241,27 +241,28 @@ static int
 Kill(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	if (ed->sel != 0) {
-		AG_EditableValidateSelection(ed, buf);
-		if (ed->sel < 0) {
-			ed->pos += ed->sel;
-			ed->sel = -(ed->sel);
-		}
-	} else {
-		AG_Char *c;
+	if (ed->selEnd == ed->selStart) {                      /* Emacs-style */
+		const AG_Char *c;
 
-		for (c = &buf->s[ed->pos]; c < &buf->s[buf->len]; c++) {
+		ed->selStart = ed->pos;
+		ed->selEnd   = ed->pos;
+
+		for (c = &buf->s[ed->pos];
+		     c < &buf->s[buf->len];
+		     c++) {
 			if (*c == '\n') {
 				break;
 			}
-			ed->sel++;
+			ed->selEnd++;
 		}
-		if (ed->sel == 0)
-			return (0);
 	}
-	
-	AG_EditableCopyChunk(ed, &agEditableKillring, &buf->s[ed->pos], ed->sel);
-	AG_EditableDelete(ed, buf);
+	if (ed->selEnd > ed->selStart) {
+		AG_EditableValidateSelection(ed, buf);
+		AG_EditableCopyChunk(ed, &agEditableKillring,
+		    &buf->s[ed->selStart],
+		    (ed->selEnd - ed->selStart));
+		AG_EditableDelete(ed, buf);
+	}
 	return (1);
 }
 
@@ -273,6 +274,26 @@ Yank(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	return AG_EditablePaste(ed, buf, &agEditableKillring);
 }
 
+static void
+CursorUpdateSelection(AG_Editable *ed, Uint keymod)
+{
+	if (keymod & AG_KEYMOD_SHIFT) {
+		if (ed->posKbdSel < ed->pos) {
+			ed->selStart = ed->posKbdSel;
+			ed->selEnd   = ed->pos;
+		} else if (ed->posKbdSel > ed->pos) {
+			ed->selStart = ed->pos;
+			ed->selEnd   = ed->posKbdSel;
+		} else {
+			ed->selStart = 0;
+			ed->selEnd   = 0;
+		}
+	} else {
+		ed->selStart = 0;
+		ed->selEnd = 0;
+	}
+}
+
 /* Seek one word backwards. */
 static int
 WordBack(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
@@ -281,24 +302,19 @@ WordBack(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	int newPos = ed->pos;
 	AG_Char *c;
 
-	/* XXX: handle other types of spaces */
-	if (ed->pos > 1 && buf->s[newPos-1] == ' ') {
+	if (ed->pos > 1 && AG_CharIsSpace(buf->s[newPos-1])) {
 		newPos -= 2;
 	}
 
 	for (c = &buf->s[newPos];
-	     c > &buf->s[0] && *c != ' ';
+	     c > &buf->s[0] && !AG_CharIsSpace(*c);
 	     c--, newPos--)
 		;;
-	if (*c == ' ')
+	if (AG_CharIsSpace(*c))
 		newPos++;
 
-	if (keymod & AG_KEYMOD_SHIFT) {
-		ed->sel += (ed->pos - newPos);
-	} else {
-		ed->sel = 0;
-	}
 	ed->pos = newPos;
+	CursorUpdateSelection(ed, keymod);
 
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	ed->flags |= AG_EDITABLE_BLINK_ON;
@@ -319,20 +335,16 @@ WordForw(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	if (newPos == buf->len) {
 		return (0);
 	}
-	if (buf->len > 1 && buf->s[newPos] == ' ')
+	if (buf->len > 1 && AG_CharIsSpace(buf->s[newPos]))
 		newPos++;
 	
 	for (c = &buf->s[newPos];
-	     *c != '\0' && *c != ' ';
+	     *c != '\0' && !AG_CharIsSpace(*c);
 	     c++, newPos++)
 		;;
 
-	if (keymod & AG_KEYMOD_SHIFT) {
-		ed->sel += (ed->pos - newPos);
-	} else {
-		ed->sel = 0;
-	}
 	ed->pos = newPos;
+	CursorUpdateSelection(ed, keymod);
 
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	ed->flags |= AG_EDITABLE_BLINK_ON;
@@ -373,12 +385,8 @@ CursorHome(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 		newPos = 0;
 	}
 
-	if (keymod & AG_KEYMOD_SHIFT) {
-		ed->sel += (ed->pos - newPos);
-	} else {
-		ed->sel = 0;
-	}
 	ed->pos = newPos;
+	CursorUpdateSelection(ed, keymod);
 
 	ed->x = 0;
 	ed->flags |= AG_EDITABLE_MARKPREF;
@@ -412,12 +420,8 @@ CursorEnd(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 		newPos = buf->len;
 	}
 
-	if (keymod & AG_KEYMOD_SHIFT) {
-		ed->sel += (ed->pos - newPos);
-	} else {
-		ed->sel = 0;
-	}
 	ed->pos = newPos;
+	CursorUpdateSelection(ed, keymod);
 
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	ed->xScrollTo = &ed->xCurs;
@@ -433,13 +437,7 @@ CursorLeft(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 {
 	if ((ed->pos - 1) >= 0) {
 		ed->pos--;
-		if (keymod & AG_KEYMOD_SHIFT) {
-			ed->sel++;
-		} else {
-			ed->sel = 0;
-		}
-	} else {
-		ed->pos = 0;
+		CursorUpdateSelection(ed, keymod);
 	}
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	ed->flags |= AG_EDITABLE_BLINK_ON;
@@ -456,11 +454,7 @@ CursorRight(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 {
 	if (ed->pos < buf->len) {
 		ed->pos++;
-		if (keymod & AG_KEYMOD_SHIFT) {
-			ed->sel--;
-		} else {
-			ed->sel = 0;
-		}
+		CursorUpdateSelection(ed, keymod);
 	}
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	ed->flags |= AG_EDITABLE_BLINK_ON;
@@ -475,20 +469,13 @@ static int
 CursorUp(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	const int prevPos = ed->pos;
-	const int prevSel = ed->sel;
-
 	if (!(ed->flags & AG_EDITABLE_MULTILINE))
 		return (0);
 
 	AG_EditableMoveCursor(ed, buf, ed->xCursPref,
 	    (ed->yCurs - ed->y - 1)*agTextFontLineSkip + 1);
 
-	if (keymod & AG_KEYMOD_SHIFT) {
-		ed->sel = prevSel - (ed->pos - prevPos);
-	} else {
-		ed->sel = 0;
-	}
+	CursorUpdateSelection(ed, keymod);
 
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 	ed->xScrollTo = &ed->xCurs;
@@ -502,9 +489,6 @@ static int
 CursorDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	const int prevPos = ed->pos;
-	const int prevSel = ed->sel;
-
 	if (!(ed->flags & AG_EDITABLE_MULTILINE)) {
 		if (ed->complete && ed->complete->winName[0] != '\0') {
 			AG_Window *win;
@@ -521,11 +505,7 @@ CursorDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	AG_EditableMoveCursor(ed, buf, ed->xCursPref,
 	    (ed->yCurs - ed->y + 1)*agTextFontLineSkip + 1);
 
-	if (keymod & AG_KEYMOD_SHIFT) {
-		ed->sel = prevSel - (ed->pos - prevPos);
-	} else {
-		ed->sel = 0;
-	}
+	CursorUpdateSelection(ed, keymod);
 
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 	ed->xScrollTo = &ed->xCurs;
@@ -539,20 +519,13 @@ static int
 PageUp(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	const int prevPos = ed->pos;
-	const int prevSel = ed->sel;
-
 	if (!(ed->flags & AG_EDITABLE_MULTILINE))
 		return (0);
 
 	AG_EditableMoveCursor(ed, buf, ed->xCurs,
 	    (ed->yCurs - ed->y - ed->yVis)*agTextFontLineSkip + 1);
-	
-	if (keymod & AG_KEYMOD_SHIFT) {
-		ed->sel = prevSel - (ed->pos - prevPos);
-	} else {
-		ed->sel = 0;
-	}
+
+	CursorUpdateSelection(ed, keymod);
 
 	ed->xScrollTo = &ed->xCurs;
 	ed->yScrollTo = &ed->yCurs;
@@ -565,20 +538,13 @@ static int
 PageDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	const int prevPos = ed->pos;
-	const int prevSel = ed->sel;
-
 	if (!(ed->flags & AG_EDITABLE_MULTILINE))
 		return (0);
 
 	AG_EditableMoveCursor(ed, buf, ed->xCurs,
 	    (ed->yCurs - ed->y + ed->yVis)*agTextFontLineSkip + 1);
 
-	if (keymod & AG_KEYMOD_SHIFT) {
-		ed->sel = prevSel - (ed->pos - prevPos);
-	} else {
-		ed->sel = 0;
-	}
+	CursorUpdateSelection(ed, keymod);
 
 	ed->xScrollTo = &ed->xCurs;
 	ed->yScrollTo = &ed->yCurs;

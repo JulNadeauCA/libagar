@@ -474,6 +474,108 @@ struct ag_window *_Nonnull AG_TextPromptOptions(struct ag_button *_Nonnull *_Non
 int  AG_InitTextSubsystem(void);
 void AG_DestroyTextSubsystem(void);
 
+/*
+ * Test whether the given character should be considered a space
+ * (for word wrapping and word selection).
+ */
+static __inline__ _Const_Attribute int
+AG_CharIsSpace(AG_Char c)
+{
+	switch (c) {
+	case ' ':		/* SPACE */
+	case '\t':		/* TAB */
+		return (1);
+#ifdef AG_UNICODE
+	case 0x00a0:		/* NO-BREAK SPACE */
+	case 0x1680:		/* OGHAM SPACE MARK */
+	case 0x180e:		/* MONGOLIAN VOWEL SEPARATOR */
+	case 0x202f:		/* NARROW NO-BREAK SPACE */
+	case 0x205f:		/* MEDIUM MATHEMATICAL SPACE */
+	case 0x3000:		/* IDEOGRAPHIC SPACE */
+	case 0xfeff:		/* ZERO WIDTH NO-BREAK SPACE */
+		return (1);
+#endif
+	}
+#ifdef AG_UNICODE
+	if (c >= 0x2000 && c <= 0x200b)	/* EN/EM SPACES */
+		return (1);
+#endif
+	return (0);
+}
+
+/*
+ * Test whether the given character should be considered punctuation
+ * (for word selection).
+ */
+static __inline__ _Const_Attribute int
+AG_CharIsPunct(AG_Char c)
+{
+	switch (c) {
+	case '!':
+	case '"':
+	case '#':
+	case '$':
+	case '%':
+	case '&':
+	case '\'':
+	case '(':
+	case ')':
+	case '*':
+	case '+':
+	case ',':
+	case '-':
+	case '.':
+	case '/':
+	case ':':
+	case ';':
+	case '<':
+	case '=':
+	case '>':
+	case '?':
+	case '@':
+	case '[':
+	case '\\':
+	case ']':
+	case '^':
+	case '_':
+	case '`':
+	case '{':
+	case '|':
+	case '}':
+	case '~':
+		return (1);
+#ifdef AG_UNICODE
+	case 0x037e:		/* GREEK QUESTION MARK */
+	case 0x0589:		/* ARMENIAN FULL STOP */
+	case 0x058a:		/* ARMENIAN HYPHEN */
+	case 0x061b:		/* ARABIC SEMICOLON */
+	case 0x061f:		/* ARABIC QUESTION MARK */
+	case 0x07f8:		/* NKO COMMA */
+	case 0x07f9:		/* NKO EXCLAMATION MARK */
+	case 0x10fb:		/* GEORGIAN PARAGRAPH SEPARATOR */
+	case 0x2e18:		/* INVERTED INTERROBANG */
+	case 0x2e2e:		/* REVERSED QUESTION MARK */
+	case 0xa4fe:		/* LISU PUNCTUATION COMMA */
+	case 0xa4ff:		/* LISU PUNCTUATION FULL STOP */
+		return (1);
+#endif
+	}
+#ifdef AG_UNICODE
+	if ((c >= 0x00a1 &&	/* INVERTED EXCLAMATION MARK- */
+	     c <= 0x00bf) ||	/* INVERTED QUESTION MARK. */
+	    (c >= 0x055a &&	/* ARMENIAN APOSTROPHE- */
+	     c <= 0x055f) ||	/* ARMENIAN ABBREVIATION MARK. */
+	    (c >= 0x2010 &&	/* HYPHEN- */
+	     c <= 0x205e) ||	/* VERTICAL FOUR DOTS. */
+	    (c >= 0x3008 &&	/* LEFT ANGLE BRACKET- */
+	     c <= 0x301f))	/* LOW DOUBLE PRIME QUOTATION MARK. */
+		return (1);
+#endif
+	return (0);
+}
+
+#define AG_CharIsSpaceOrPunct(ch) (AG_CharIsSpace(ch) || AG_CharIsPunct(ch))
+
 #ifdef AG_LEGACY
 /* < 1.5 call renamed */
 # define AG_TextRenderf AG_TextRenderF

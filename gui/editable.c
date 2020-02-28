@@ -41,6 +41,9 @@
 #include <agar/gui/cursors.h>
 #include <agar/gui/menu.h>
 #include <agar/gui/tlist.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/label.h>
+#include <agar/gui/separator.h>
 #include <agar/gui/icons.h>
 #include <agar/gui/gui_math.h>
 
@@ -353,7 +356,8 @@ AG_EditableSetLang(AG_Editable *ed, enum ag_language lang)
 	AG_ObjectLock(ed);
 	ed->lang = lang;
 	ed->pos = 0;
-	ed->sel = 0;
+	ed->selStart = 0;
+	ed->selEnd = 0;
 	AG_ObjectUnlock(ed);
 	AG_Redraw(ed);
 }
@@ -376,7 +380,8 @@ AG_EditableSetWordWrap(AG_Editable *ed, int enable)
 	ed->x = 0;
 	ed->y = 0;
 	ed->pos = 0;
-	ed->sel = 0;
+	ed->selStart = 0;
+	ed->selEnd = 0;
 	AG_SETFLAGS(ed->flags, AG_EDITABLE_WORDWRAP, enable);
 	AG_ObjectUnlock(ed);
 }
@@ -653,35 +658,6 @@ OnFontChange(AG_Event *_Nonnull event)
 }
 
 /*
- * Evaluate whether the given character should be considered
- * a space for word wrapping and word selection.
- */
-static __inline__ _Const_Attribute int
-IsSpaceNat(AG_Char c)
-{
-	switch (c) {
-	case ' ':		/* SPACE */
-	case '\t':		/* TAB */
-		return (1);
-#ifdef AG_UNICODE
-	case 0x00a0:		/* NO-BREAK SPACE */
-	case 0x1680:		/* OGHAM SPACE MARK */
-	case 0x180e:		/* MONGOLIAN VOWEL SEPARATOR */
-	case 0x202f:		/* NARROW NO-BREAK SPACE */
-	case 0x205f:		/* MEDIUM MATHEMATICAL SPACE */
-	case 0x3000:		/* IDEOGRAPHIC SPACE */
-	case 0xfeff:		/* ZERO WIDTH NO-BREAK SPACE */
-		return (1);
-#endif
-	}
-#ifdef AG_UNICODE
-	if (c >= 0x2000 && c <= 0x200b)	/* EN/EM SPACES */
-		return (1);
-#endif
-	return (0);
-}
-
-/*
  * Evaluate word wrapping at given character (possibly rendering it).
  */
 static __inline__ int
@@ -695,7 +671,7 @@ WrapAtChar(AG_Editable *_Nonnull ed, int x, AG_Char *_Nonnull s,
 	int x2;
 
 	if (!(ed->flags & AG_EDITABLE_WORDWRAP) ||
-	    x == 0 || !IsSpaceNat(*s)) {
+	    x == 0 || !AG_CharIsSpace(*s)) {
 		return (0);
 	}
 	for (t = &s[1], x2 = x;
@@ -703,7 +679,7 @@ WrapAtChar(AG_Editable *_Nonnull ed, int x, AG_Char *_Nonnull s,
 	     t++) {
 		G = AG_TextRenderGlyph(drv, font, cBg, cFg, *t);
 		x2 += G->advance;
-		if (IsSpaceNat(*t) || *t == '\n') {
+		if (AG_CharIsSpace(*t) || *t == '\n') {
 			if (x2 > WIDTH(ed)) {
 				return (1);
 			} else {
@@ -896,7 +872,8 @@ AG_EditableMoveCursor(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my)
 {
 	AG_ObjectLock(ed);
 	if (AG_EditableMapPosition(ed, buf, mx, my, &ed->pos) == 0) {
-		ed->sel = 0;
+		ed->selStart = 0;
+		ed->selEnd = 0;
 		AG_Redraw(ed);
 	}
 	AG_ObjectUnlock(ed);
@@ -910,7 +887,8 @@ AG_EditableSetCursorPos(AG_Editable *ed, AG_EditableBuffer *buf, int pos)
 
 	AG_ObjectLock(ed);
 	ed->pos = pos;
-	ed->sel = 0;
+	ed->selStart = 0;
+	ed->selEnd = 0;
 	if (ed->pos < 0) {
 		if (pos == -1 || ed->pos > buf->len)
 			ed->pos = buf->len;
@@ -968,13 +946,14 @@ Draw(void *_Nonnull obj)
 	AG_Color cBg = ts->colorBG;
 	AG_Font *font = ts->font;
 	const int pos = ed->pos;
-	const int sel = ed->sel;
 	const int flags = ed->flags;
 	const int lineSkip = ed->lineSkip;
 	const int clipX1 = WIDGET(ed)->rView.x1 - (ed->fontMaxHeight << 1);
 	const int clipX2 = WIDGET(ed)->rView.x2 + (ed->fontMaxHeight << 1);
 	const int clipY1 = WIDGET(ed)->rView.y1 - lineSkip;
 	const int clipY2 = WIDGET(ed)->rView.y2 + lineSkip;
+	int selStart = ed->selStart;
+	int selEnd = ed->selEnd;
 	int i, dx,dy, x,y, yCurs, inSel=0;
 
 	if ((buf = GetBuffer(ed)) == NULL) {
@@ -1024,18 +1003,19 @@ Draw(void *_Nonnull obj)
 			ed->yCurs = y/lineSkip + ed->y;
 			yCurs = y;
 		}
-		if ((sel > 0 && i >= pos && i < pos+sel) ||
-		    (sel < 0 && i <  pos && i > pos+sel-1)) {
-			if (!inSel) {
-				inSel = 1;
-				ed->xSelStart = x;
-				ed->ySelStart = y/lineSkip + ed->y;
-			}
-		} else {
-			if (inSel) {
-				inSel = 0;
-				ed->xSelEnd = x;
-				ed->ySelEnd = y/lineSkip + ed->y;
+		if (selEnd > selStart) {
+			if (i >= selStart && i < selEnd) {
+				if (!inSel) {
+					inSel = 1;
+					ed->xSelStart = x;
+					ed->ySelStart = y/lineSkip + ed->y;
+				}
+			} else {
+				if (inSel) {
+					inSel = 0;
+					ed->xSelEnd = x;
+					ed->ySelEnd = y/lineSkip + ed->y;
+				}
 			}
 		}
 		if (i == buf->len)
@@ -1049,6 +1029,9 @@ Draw(void *_Nonnull obj)
 		}
 		if (c == '\n') {
 			y += lineSkip;
+			if (inSel) {                              /* Selected */
+				AG_DrawLineV(ed, 0, y, y+lineSkip, cSel);
+			}
 			ed->xMax = MAX(ed->xMax, x+10);
 			ed->yMax++;
 			x = 0;
@@ -1253,6 +1236,8 @@ KeyDown(AG_Event *_Nonnull event)
 		break;
 	case AG_KEY_LSHIFT:
 	case AG_KEY_RSHIFT:
+		ed->posKbdSel = ed->pos;
+		return;
 	case AG_KEY_LALT:
 	case AG_KEY_RALT:
 	case AG_KEY_LMETA:
@@ -1375,15 +1360,26 @@ KeyUp(AG_Event *_Nonnull event)
 
 	AG_DelTimer(ed, &ed->toRepeat);
 
-	if ((keysym == AG_KEY_RETURN || keysym == AG_KEY_KP_ENTER) &&
-	   (ed->flags & AG_EDITABLE_MULTILINE) == 0) {
-		if (ed->flags & AG_EDITABLE_ABANDON_FOCUS) {
-			AG_WidgetUnfocus(ed);
+	switch (keysym) {
+	case AG_KEY_LSHIFT:
+	case AG_KEY_RSHIFT:
+		ed->posKbdSel = 0;
+		return;
+	case AG_KEY_RETURN:
+	case AG_KEY_KP_ENTER:
+		if ((ed->flags & AG_EDITABLE_MULTILINE) == 0) {
+			if (ed->flags & AG_EDITABLE_ABANDON_FOCUS) {
+				AG_WidgetUnfocus(ed);
+			}
+			AG_PostEvent(ed, "editable-return", NULL);
+			ed->returnHeld = 0;
+			AG_Redraw(ed);
 		}
-		AG_PostEvent(ed, "editable-return", NULL);
-		ed->returnHeld = 0;
-		AG_Redraw(ed);
+		break;
+	default:
+		break;
 	}
+	
 	if (ed->complete) {
 		switch (keysym) {
 		case AG_KEY_HOME:
@@ -1459,53 +1455,89 @@ out:
 }
 
 static void
-MouseDoubleClick(AG_Editable *_Nonnull ed)
+DoubleClick(AG_Editable *_Nonnull ed)
 {
 	AG_EditableBuffer *buf;
-	AG_Char *c;
+	const AG_Char *c, *cEnd;
+	int pos;
 
 	AG_DelTimer(ed, &ed->toDblClick);
-
-	ed->selDblClick = -1;
 	ed->flags |= AG_EDITABLE_WORDSELECT;
+	ed->selDblClick = -1;
 
 	if ((buf = GetBuffer(ed)) == NULL) {
 		return;
 	}
-	if (ed->pos >= 0 && ed->pos < buf->len) {
-		ed->sel = 0;
+	if ((pos = ed->pos) < 0 || pos >= buf->len) {
+		goto out;
+	}
+	cEnd = &buf->s[buf->len];
+	c = &buf->s[pos];
 
-		c = &buf->s[ed->pos];
-		if (*c == '\n') {
-			goto out;
-		}
-		for (;
-		     ed->pos > 0;
-		     ed->pos--, c--) {
-			if (IsSpaceNat(*c) && ed->pos < buf->len) {
-				c++;
-				ed->pos++;
+	if (*c == '\n')                                      /* An empty line */
+		goto out;
+
+	if (AG_CharIsSpace(*c)) {             /* Select contiguous whitespace */
+		for (ed->selStart = pos-1, c--; c >= &buf->s[0]; c--) {
+			if (!AG_CharIsSpace(*c)) {
 				break;
 			}
+			ed->selStart--;
 		}
-		while ((ed->pos + ed->sel) < buf->len &&
-		    !IsSpaceNat(*c)) {
-			c++;
-			ed->sel++;
+		ed->selStart++;
+		c = &buf->s[pos];
+		for (ed->selEnd = pos; c < cEnd; c++) {
+			if (!AG_CharIsSpace(*c)) {
+				break;
+			}
+			ed->selEnd++;
 		}
+		if (ed->selStart < ed->selEnd) {
+			ed->pos = ed->selStart;
+		}
+		goto out;
+	} else if (AG_CharIsPunct(*c)) {     /* Select a block of punctuation */
+		for (ed->selStart = pos; c >= &buf->s[0]; c--) {
+			if (!AG_CharIsPunct(*c)) {
+				break;
+			}
+			ed->selStart--;
+		}
+		ed->selStart++;
+		c = &buf->s[pos];
+		for (ed->selEnd = pos; c < cEnd; c++) {
+			if (!AG_CharIsPunct(*c)) {
+				break;
+			}
+			ed->selEnd++;
+		}
+		if (ed->selStart < ed->selEnd) {
+			ed->pos = ed->selStart;
+		}
+		goto out;
+	}
+
+	for (ed->selStart = pos; c >= &buf->s[0]; c--) {     /* Select a word */
+		if (*c == '\n' || AG_CharIsSpaceOrPunct(*c)) {
+			ed->selStart++;
+			break;
+		}
+		ed->selStart--;
+	}
+	c = &buf->s[pos];
+	for (ed->selEnd = pos; c < cEnd; c++) {
+		if (*c == '\n' || AG_CharIsSpaceOrPunct(*c)) {
+			break;
+		}
+		ed->selEnd++;
+	}
+	if (ed->selEnd < ed->selStart) {
+		int temp = ed->selStart;
+		ed->selStart = ed->selEnd;
+		ed->selEnd = temp;
 	}
 out:
 	ReleaseBuffer(ed, buf);
-}
-
-/* Ensure selection offset is positive. */
-static __inline__ void
-NormSelection(AG_Editable *_Nonnull ed)
-{
-	if (ed->sel < 0) {
-		ed->pos += ed->sel;
-		ed->sel = -(ed->sel);
-	}
 }
 
 /* Copy specified range to specified clipboard. */
@@ -1531,12 +1563,13 @@ AG_EditableCopyChunk(AG_Editable *ed, AG_EditableClipboard *cb, AG_Char *s,
 int
 AG_EditableCut(AG_Editable *ed, AG_EditableBuffer *buf, AG_EditableClipboard *cb)
 {
-	if (AG_EditableReadOnly(ed) || ed->sel == 0) {
+	const AG_Size selLen = (ed->selEnd - ed->selStart);
+
+	if (AG_EditableReadOnly(ed) || selLen == 0) {
 		return (0);
 	}
 	AG_EditableValidateSelection(ed, buf);
-	NormSelection(ed);
-	AG_EditableCopyChunk(ed, cb, &buf->s[ed->pos], ed->sel);
+	AG_EditableCopyChunk(ed, cb, &buf->s[ed->selStart], selLen);
 	AG_EditableDelete(ed, buf);
 	return (1);
 }
@@ -1545,12 +1578,13 @@ AG_EditableCut(AG_Editable *ed, AG_EditableBuffer *buf, AG_EditableClipboard *cb
 int
 AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf, AG_EditableClipboard *cb)
 {
-	if (ed->sel == 0) {
+	const AG_Size selLen = (ed->selEnd - ed->selStart);
+
+	if (selLen == 0) {
 		return (0);
 	}
 	AG_EditableValidateSelection(ed, buf);
-	NormSelection(ed);
-	AG_EditableCopyChunk(ed, cb, &buf->s[ed->pos], ed->sel);
+	AG_EditableCopyChunk(ed, cb, &buf->s[ed->selStart], selLen);
 	return (1);
 }
 
@@ -1564,7 +1598,7 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 	if (AG_EditableReadOnly(ed))
 		return (0);
 
-	if (ed->sel != 0)
+	if (ed->selEnd > ed->selStart)
 		AG_EditableDelete(ed, buf);
 
 	AG_MutexLock(&cb->lock);
@@ -1622,19 +1656,22 @@ fail:
 int
 AG_EditableDelete(AG_Editable *ed, AG_EditableBuffer *buf)
 {
-	if (AG_EditableReadOnly(ed) || ed->sel == 0)
+	const AG_Size selLen = (ed->selEnd - ed->selStart);
+
+	if (AG_EditableReadOnly(ed) || selLen == 0)
 		return (0);
 
 	AG_EditableValidateSelection(ed, buf);
-	NormSelection(ed);
-	if (ed->pos + ed->sel == buf->len) {
+	if (ed->selEnd == buf->len) {
 		buf->s[ed->pos] = '\0';
 	} else {
-		memmove(&buf->s[ed->pos], &buf->s[ed->pos + ed->sel],
-		    (buf->len - ed->sel + 1 - ed->pos)*sizeof(AG_Char));
+		memmove(&buf->s[ed->selStart], &buf->s[ed->selEnd],
+		    (buf->len - selLen + 1 - ed->pos)*sizeof(AG_Char));
 	}
-	buf->len -= ed->sel;
-	ed->sel = 0;
+	buf->len -= selLen;
+	ed->pos = ed->selStart;
+	ed->selStart = 0;
+	ed->selEnd = 0;
 	ed->xScrollTo = &ed->xCurs;
 	ed->yScrollTo = &ed->yCurs;
 	return (1);
@@ -1644,8 +1681,9 @@ AG_EditableDelete(AG_Editable *ed, AG_EditableBuffer *buf)
 void
 AG_EditableSelectAll(AG_Editable *ed, AG_EditableBuffer *buf)
 {
-	ed->pos = 0;
-	ed->sel = buf->len;
+/*	ed->pos = 0; */
+	ed->selStart = 0;
+	ed->selEnd = buf->len;
 	AG_Redraw(ed);
 }
 
@@ -1671,7 +1709,7 @@ MenuCutActive(AG_Event *_Nonnull event)
 	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	int *enable = AG_PTR(2);
 
-	*enable = (!AG_EditableReadOnly(ed) && ed->sel != 0);
+	*enable = (!AG_EditableReadOnly(ed) && (ed->selEnd > ed->selStart));
 }
 
 static void
@@ -1691,7 +1729,7 @@ MenuCopyActive(AG_Event *_Nonnull event)
 	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	int *enable = AG_PTR(2);
 
-	*enable = (ed->sel != 0);
+	*enable = (ed->selEnd > ed->selStart);
 }
 
 static void
@@ -1735,7 +1773,7 @@ MenuDeleteActive(AG_Event *_Nonnull event)
 	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	int *enable = AG_PTR(2);
 
-	*enable = (!AG_EditableReadOnly(ed) && ed->sel != 0);
+	*enable = (!AG_EditableReadOnly(ed) && (ed->selEnd > ed->selStart));
 }
 
 static void
@@ -1852,9 +1890,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		ReleaseBuffer(ed, buf);
 		ed->flags |= AG_EDITABLE_MARKPREF;
 
-		if (ed->selDblClick != -1 &&
-		    abs(ed->selDblClick - ed->pos) <= 1) {
-			MouseDoubleClick(ed);
+		if (ed->selDblClick != -1 && abs(ed->selDblClick - ed->pos) <= 1) {
+			DoubleClick(ed);
 		} else {
 			ed->selDblClick = ed->pos;
 			AG_AddTimer(ed, &ed->toDblClick, agMouseDblclickDelay,
@@ -1918,58 +1955,65 @@ MouseMotion(AG_Event *_Nonnull event)
 
 	if ((buf = GetBuffer(ed)) == NULL)
 		return;
-	if (AG_EditableMapPosition(ed, buf, ed->x + mx, my, &newPos) == -1)
+	if (AG_EditableMapPosition(ed, buf, ed->x + mx, my, &newPos) == -1 ||
+	    newPos == ed->pos)
 		goto out;
 
-	if (ed->flags & AG_EDITABLE_WORDSELECT) {
-		AG_Char *c;
+	if (ed->flags & AG_EDITABLE_WORDSELECT) {           /* Word selection */
+		const AG_Char *c, *cEnd = &buf->s[buf->len];
 
 		c = &buf->s[newPos];
-		if (*c == '\n') {
-			goto out;
-		}
 		if (newPos > ed->pos) {
-			if (ed->sel < 0) {
-				ed->pos += ed->sel;
-				ed->sel = -(ed->sel);
+			ed->selStart = ed->pos;
+			for (c = &buf->s[ed->pos]; c >= &buf->s[0]; c--) {
+				if (*c == '\n' || AG_CharIsSpaceOrPunct(*c)) {
+					break;
+				}
+				ed->selStart--;
 			}
-			ed->sel = newPos - ed->pos;
-			while (c < &buf->s[buf->len] &&
-			    !IsSpaceNat(*c) && *c != '\n') {
-				c++;
-				ed->sel++;
+			ed->selStart++;
+			ed->selEnd = newPos;
+			for (c = &buf->s[newPos]; c <= cEnd; c++) {
+				if (*c == '\n' || AG_CharIsSpaceOrPunct(*c)) {
+					break;
+				}
+				ed->selEnd++;
 			}
 			ed->xScrollTo = &ed->xSelEnd;
 			ed->yScrollTo = &ed->ySelEnd;
 		} else if (newPos < ed->pos) {
-			if (ed->sel > 0) {
-				ed->pos += ed->sel;
-				ed->sel = -(ed->sel);
+			ed->selStart = newPos;
+			for (c = &buf->s[newPos]; c >= &buf->s[0]; c--) {
+				if (*c == '\n' || AG_CharIsSpaceOrPunct(*c)) {
+					break;
+				}
+				ed->selStart--;
 			}
-			ed->sel = newPos - ed->pos;
-			while (c > &buf->s[0] &&
-			    !IsSpaceNat(*c) && *c != '\n') {
-				c--;
-				ed->sel--;
-			}
-			if (IsSpaceNat(buf->s[ed->pos + ed->sel])) {
-				ed->sel++;
+			ed->selStart++;
+			ed->selEnd = ed->pos;
+			for (c = &buf->s[ed->pos]; c < cEnd; c++) {
+				if (*c == '\n' || AG_CharIsSpaceOrPunct(*c)) {
+					break;
+				}
+				ed->selEnd++;
 			}
 			ed->xScrollTo = &ed->xSelStart;
 			ed->yScrollTo = &ed->ySelStart;
 		}
-		AG_Redraw(ed);
-	} else {
-		ed->sel = newPos - ed->pos;
-		if (ed->sel > 0) {
+	} else {                                       /* Character selection */
+		if (newPos > ed->pos) {
+			ed->selStart  = ed->pos;
+			ed->selEnd    = newPos;
 			ed->xScrollTo = &ed->xSelEnd;
 			ed->yScrollTo = &ed->ySelEnd;
-		} else if (ed->sel < 0) {
+		} else if (newPos <= ed->pos) {
+			ed->selStart  = newPos;
+			ed->selEnd    = ed->pos;
 			ed->xScrollTo = &ed->xSelStart;
 			ed->yScrollTo = &ed->ySelStart;
 		}
-		AG_Redraw(ed);
 	}
+	AG_Redraw(ed);
 out:
 	ReleaseBuffer(ed, buf);
 }
@@ -2037,7 +2081,8 @@ AG_EditableSetString(AG_Editable *ed, const char *text)
 		ed->pos = 0;
 		buf->len = 0;
 	}
-	ed->sel = 0;
+	ed->selStart = 0;
+	ed->selEnd = 0;
 	CommitBuffer(ed, buf);
 	ReleaseBuffer(ed, buf);
 out:
@@ -2285,7 +2330,7 @@ Init(void *_Nonnull obj)
 			     sizeof(int) +               /* y */
 			     sizeof(int) +               /* yMax */
 			     sizeof(int) +               /* yVis */
-			     sizeof(Uint32) +            /* wheelTicks */
+			     sizeof(int) +               /* posKbdSel */
 			     sizeof(int) +               /* returnHeld */
 			     sizeof(AG_EditableBuffer) + /* sBuf */
 			     sizeof(AG_Rect) +           /* r */
@@ -2402,20 +2447,71 @@ AG_EditableValidateSelection(AG_Editable *ed, const AG_EditableBuffer *buf)
 {
 	if (ed->pos > (int)buf->len) {   /* Allow one character past the end */
 		ed->pos = (int)buf->len;
-		ed->sel = 0;
+		ed->selStart = 0;
+		ed->selEnd = 0;
 	}
-	if (ed->sel != 0) {                           /* Normalize selection */
-		const int ep = ed->pos + ed->sel;
+	if (ed->selEnd < ed->selStart) {
+		int temp = ed->selEnd;
 
-		if (ep < 0) {
-			ed->pos = 0;
-			ed->sel = 0;
-		} else if (ep > (int)buf->len) {
-			ed->pos = (int)buf->len;
-			ed->sel = 0;
+		ed->selEnd = ed->selStart;
+		ed->selStart = temp;
+	}
+	if (ed->selEnd > buf->len) {
+		ed->selEnd = buf->len;
+		if (ed->selEnd < ed->selStart) {
+			ed->selStart = 0;
+			ed->selEnd = 0;
 		}
 	}
 }	
+
+static void *_Nullable
+Edit(void *_Nonnull obj)
+{
+	static const AG_FlagDescr flagDescr[] = {
+	    { AG_EDITABLE_CURSOR_MOVING, N_("Cursor moving"),             1 },
+	    { AG_EDITABLE_WORDSELECT,    N_("Word selection mode"),       1 },
+	    { AG_EDITABLE_WORDWRAP,      N_("Word wrapping"),             1 },
+	    { AG_EDITABLE_PASSWORD,      N_("Password entry"),            1 },
+	    { AG_EDITABLE_INT_ONLY,      N_("Integers only"),             1 },
+	    { AG_EDITABLE_FLT_ONLY,      N_("Real numbers only"),         1 },
+	    { AG_EDITABLE_UPPERCASE,     N_("Display in uppercase"),      1 },
+	    { AG_EDITABLE_LOWERCASE,     N_("Display in lowercase"),      1 },
+	    { AG_EDITABLE_NOEMACS,       N_("No emacs-style functions"),  1 },
+	    { AG_EDITABLE_NOLATIN1,      N_("No latin1 key composition"), 1 },
+	    { AG_EDITABLE_EXCL,          N_("Exclusive buffer access"),   0 },
+	    { AG_EDITABLE_MULTILINE,     N_("Multiline mode"),            0 },
+	    { AG_EDITABLE_MULTILINGUAL,  N_("Multilingual field"),        0 },
+	    { 0,                         NULL,                            0 }
+	};
+	AG_Editable *tgt = obj;
+	AG_Box *box;
+
+	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+	AG_SetStyle(box, "font-size", "80%");
+
+	AG_LabelNewPolled(box, AG_LABEL_HFILL,
+	    _("Cursor: " AGSI_BOLD "%i" AGSI_RST " (@ %d,%d)"),
+	    &tgt->pos, &tgt->xCurs, &tgt->yCurs);
+
+	AG_LabelNewPolled(box, AG_LABEL_HFILL,
+	    _("Selection: " AGSI_BOLD "%i-%i" AGSI_RST " (@ %d,%d - %d,%d)"),
+	    &tgt->selStart, &tgt->selEnd,
+	    &tgt->xSelStart, &tgt->ySelEnd,
+	    &tgt->ySelStart, &tgt->ySelEnd);
+
+	AG_LabelNewPolled(box, AG_LABEL_HFILL,
+	    _("Offset: X=" AGSI_FONT5 "%i" AGSI_RST
+	         "/%i, Y=" AGSI_FONT5 "%i" AGSI_RST "/%i"),
+	    &tgt->x, &tgt->xMax,
+	    &tgt->y, &tgt->yMax);
+
+	AG_SeparatorNewHoriz(box);
+
+	AG_CheckboxSetFromFlags(box, 0, &tgt->flags, flagDescr);
+
+	return (box);
+}
 
 AG_WidgetClass agEditableClass = {
 	{
@@ -2427,7 +2523,7 @@ AG_WidgetClass agEditableClass = {
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-		NULL		/* edit */
+		Edit
 	},
 	Draw,
 	SizeRequest,

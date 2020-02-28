@@ -573,8 +573,8 @@ Current selection, expressed as an offset from the cursor
 (0 = there is no selection).
 .It Ft AG_Text *text
 An initially empty
-.Xr AG_Text 3
-object used as the default binding (where
+.Xr AG_TextElement 3
+used as the default binding (where
 .Fn AG_EditableBind*
 is not used).
 .It Ft char *encoding
@@ -585,8 +585,8 @@ Other character sets are supported if Agar was compiled with
 support.
 .It Ft enum ag_language lang
 Currently selected language (for
-.Xr AG_Text 3
-bindings only).
+.Xr AG_TextElement 3
+bindings).
 Read-only; use
 .Fn AG_EditableSetLang
 to change.

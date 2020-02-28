@@ -607,7 +607,7 @@ TestGUI(void *obj, AG_Window *win)
 					fseek(f, 0, SEEK_END);
 					size = ftell(f);
 					fseek(f, 0, SEEK_SET);
-					bufSize = size+1024;
+					bufSize = size + 4096;
 					ti->someText = AG_Malloc(bufSize);
 					(void)fread(ti->someText, size, 1, f);
 					fclose(f);

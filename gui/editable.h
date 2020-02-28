@@ -83,8 +83,8 @@ typedef struct ag_editable {
 	int hPre;			/* Vertical size hint (# of lines) */
 	int wPre;			/* Horizontal size hint (px) */
 	int pos;			/* Cursor position (char index) */
-	int sel;			/* Active selection (or 0) */
-	int selDblClick;		/* Double click position */
+	int selStart;			/* Start of selection */
+	int selEnd;			/* End of selection */
 	AG_Char compose;		/* For input composition */
 	int xCurs, yCurs;		/* Last cursor position */
 	int xSelStart, ySelStart;	/* Last selection start position */
@@ -95,7 +95,7 @@ typedef struct ag_editable {
 	int y;				/* Vertical offset (lines) */
 	int yMax;			/* Lowest y (lines) */
 	int yVis;			/* Maximum visible area (lines) */
-	Uint32 wheelTicks;		/* For wheel acceleration */
+	int posKbdSel;			/* Start of keyboard selection */
 	int returnHeld;			/* RETURN key is held */
 	AG_EditableBuffer sBuf;		/* Working buffer (for EXCL) */
 	AG_Rect r;			/* View area */
@@ -109,7 +109,7 @@ typedef struct ag_editable {
 	int fontMaxHeight;		/* Maximum character height */
 	int lineSkip;			/* Y-increment in multiline mode */
 	int suPlaceholder;		/* Rendered "placeholder" text */
-	Uint32 _pad;
+	int selDblClick;                /* Position of last double click */
 	AG_Timer toRepeat;		/* Key repeat timer */
 	AG_Timer toCursorBlink;		/* Cursor blink timer */
 	AG_Timer toDblClick;		/* Double click timer */

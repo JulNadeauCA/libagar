@@ -119,7 +119,8 @@ DebugStuff(AG_NotebookTab *nt, AG_Textbox *tb)
 
 	AG_SeparatorNewHoriz(nt);
 	AG_LabelNewPolled(nt, AG_LABEL_HFILL, "Cursor at: %i", &ed->pos);
-	AG_LabelNewPolled(nt, AG_LABEL_HFILL, "Selection: %i", &ed->sel);
+	AG_LabelNewPolled(nt, AG_LABEL_HFILL, "Selection: %i-%i",
+	    &ed->selStart, &ed->selEnd);
 	AG_LabelNewPolled(nt, AG_LABEL_HFILL, "x: %i", &ed->x);
 	AG_SeparatorNewHoriz(nt);
 
@@ -175,12 +176,14 @@ TestGUI(void *obj, AG_Window *win)
 
 		tb = AG_TextboxNew(nt, AG_TEXTBOX_HFILL, "Buffer: ");
 		tbBindFn(tb, bufferShd, sizeof(bufferShd));
+		AG_SetStyle(tb, "padding", "5");
 
 		tb2 = AG_TextboxNew(nt, AG_TEXTBOX_HFILL, "Buffer (again): ");
 		tbBindFn(tb2, bufferShd, sizeof(bufferShd));
 		AG_SetStyle(tb2, "font-family", "cm-typewriter");
 		AG_SetStyle(tb2, "font-size", "116%");
 		AG_SetStyle(tb2, "text-color", "AntiqueWhite");
+		AG_SetStyle(tb2, "padding", "5");
 
 //		AG_TextboxSetCursorPos(tb, -1);		/* To end of string */
 		AG_WidgetFocus(tb);
