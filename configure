@@ -5996,6 +5996,23 @@ SDL_LIBS="-L${SDL_PREFIX}/lib -lSDL.dll"
 fi
 ;;
 esac
+bb_save_IFS=$IFS
+IFS=" "
+SDL_LIBS_FIXED=""
+for sdl_lib in $SDL_LIBS; do
+case "${sdl_lib}" in
+-Wl*)
+;;
+-pthread)
+SDL_LIBS_FIXED="$SDL_LIBS_FIXED -lpthread"
+;;
+*)
+SDL_LIBS_FIXED="$SDL_LIBS_FIXED ${sdl_lib}"
+;;
+esac
+done
+IFS=$bb_save_IFS
+SDL_LIBS="${SDL_LIBS_FIXED}"
 bb_o=$bb_incdir/sdl_cflags.h
 echo '#ifndef SDL_CFLAGS' >$bb_o
 echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >>$bb_o
