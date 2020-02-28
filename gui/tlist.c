@@ -1405,7 +1405,6 @@ Init(void *_Nonnull obj)
 	tl->popupEv = NULL;
 	tl->changedEv = NULL;
 	tl->dblClickEv = NULL;
-	tl->wheelTicks = 0;
 	tl->lastKeyDown = AG_KEY_NONE;
 
 	AG_InitTimer(&tl->moveTo, "move", 0);
