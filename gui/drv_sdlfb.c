@@ -1506,17 +1506,17 @@ SDLFB_DrawRectDithered(void *_Nonnull obj, const AG_Rect *r, const AG_Color *C)
 }
 
 static void
-SDLFB_UpdateGlyph(void *_Nonnull drv, AG_Glyph *_Nonnull gl)
+SDLFB_UpdateGlyph(void *_Nonnull drv, AG_Glyph *_Nonnull G)
 {
 	/* Nothing to do */
 }
 
 static void
-SDLFB_DrawGlyph(void *_Nonnull drv, const AG_Glyph *_Nonnull gl, int x, int y)
+SDLFB_DrawGlyph(void *_Nonnull drv, const AG_Glyph *_Nonnull G, int x, int y)
 {
 	AG_DriverSDLFB *sfb = drv;
 	
-	AG_SDL_BlitSurface(gl->su, NULL, sfb->s, x,y);
+	AG_SDL_BlitSurface(G->su, NULL, sfb->s, x,y);
 }
 
 /* Initialize the clipping rectangle stack. */

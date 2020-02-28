@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -363,26 +363,26 @@ AG_GL_SurfaceType(const AG_Surface *S)
  * Return new texture ID in rv.
  */
 void
-AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *s, AG_TexCoord *tc)
+AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *S, AG_TexCoord *tc)
 {
-	AG_Surface *sGL;
+	AG_Surface *GS;
 	GLuint texture;
 
-	if (s->flags & AG_SURFACE_GL_TEXTURE) {
-		sGL = s;
+	if (S->flags & AG_SURFACE_GL_TEXTURE) {
+		GS = S;
 	} else {
-		sGL = AG_SurfaceStdGL(s->w, s->h);
-		AG_SurfaceCopy(sGL, s);
+		GS = AG_SurfaceStdGL(S->w, S->h);
+		AG_SurfaceCopy(GS, S);
 	}
 	if (tc != NULL) {
 		tc->x = 0.0f;
 		tc->y = 0.0f;
-		tc->w = (float)s->w / (float)sGL->w;
-		tc->h = (float)s->h / (float)sGL->h;
+		tc->w = (float)S->w / (float)GS->w;
+		tc->h = (float)S->h / (float)GS->h;
 	}
 	
-	/* Upload as an OpenGL texture. */
 	glGenTextures(1, &texture);
+
 	glBindTexture(GL_TEXTURE_2D, texture);
 #if 0
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -391,15 +391,14 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *s, AG_TexCoord *tc)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 #endif
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-	    sGL->w, sGL->h, 0,
-	    GL_RGBA,
-	    AG_GL_SurfaceType(sGL),
-	    sGL->pixels);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, GS->w, GS->h, 0, GL_RGBA,
+	    AG_GL_SurfaceType(GS),
+	    GS->pixels);
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	if (!(s->flags & AG_SURFACE_GL_TEXTURE)) {
-		AG_SurfaceFree(sGL);
+	if (!(S->flags & AG_SURFACE_GL_TEXTURE)) {
+		AG_SurfaceFree(GS);
 	}
 	*rv = texture;
 }
@@ -412,33 +411,33 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *s, AG_TexCoord *tc)
  * Return 0 on success or -1 on failure.
  */
 int
-AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *s, AG_TexCoord *tc)
+AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *S, AG_TexCoord *tc)
 {
-	AG_Surface *sGL;
+	AG_Surface *GS;
 
-	if (s->flags & AG_SURFACE_GL_TEXTURE) {
-		sGL = s;
+	if (S->flags & AG_SURFACE_GL_TEXTURE) {
+		GS = S;
 	} else {
-		sGL = AG_SurfaceStdGL(s->w, s->h);
-		AG_SurfaceCopy(sGL, s);
+		GS = AG_SurfaceStdGL(S->w, S->h);
+		AG_SurfaceCopy(GS, S);
 	}
 	if (tc != NULL) {
 		tc->x = 0.0f;
 		tc->y = 0.0f;
-		tc->w = (float)sGL->w / (float)s->w;
-		tc->h = (float)sGL->h / (float)s->h;
+		tc->w = (float)GS->w / (float)S->w;
+		tc->h = (float)GS->h / (float)S->h;
 	}
 
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-	    sGL->w, sGL->h, 0,
-	    GL_RGBA,
-	    AG_GL_SurfaceType(sGL),
-	    sGL->pixels);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, GS->w, GS->h, 0, GL_RGBA,
+	    AG_GL_SurfaceType(GS),
+	    GS->pixels);
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	if (!(s->flags & AG_SURFACE_GL_TEXTURE)) {
-		AG_SurfaceFree(sGL);
+	if (!(S->flags & AG_SURFACE_GL_TEXTURE)) {
+		AG_SurfaceFree(GS);
 	}
 	return (0);
 }
@@ -448,7 +447,7 @@ AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *s, AG_TexCoord *tc)
  * polygon at widget coordinates x,y.
  */
 void
-AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
+AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *S, int x, int y)
 {
 	AG_Driver *drv = obj;
 	GLuint texture;
@@ -457,7 +456,7 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
-	AG_GL_UploadTexture(drv, &texture, s, &tc);
+	AG_GL_UploadTexture(drv, &texture, S, &tc);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
@@ -467,8 +466,8 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBegin(GL_POLYGON);
 	{
-		int w = s->w;
-		int h = s->h;
+		const int w = S->w;
+		const int h = S->h;
 
 		glTexCoord2f(tc.x, tc.y);  glVertex2i(x,   y);
 		glTexCoord2f(tc.w, tc.y);  glVertex2i(x+w, y);
@@ -499,13 +498,10 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, int name, const AG_Rect *r,
     int x, int y)
 {
 	AG_Driver *drv = obj;
-	AG_Surface *s = wid->surfaces[name];
-	AG_TexCoord tc;
 	
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
-	/* XXX move this call past pushBlendingMode? */
 	AG_GL_PrepareTexture(wid, name);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
@@ -516,11 +512,13 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, int name, const AG_Rect *r,
 	glBindTexture(GL_TEXTURE_2D, wid->textures[name]);
 	glBegin(GL_POLYGON);
 	{
-		int x2 = x + s->w;
-		int y2 = y + s->h;
+		const AG_Surface *S = wid->surfaces[name];
+		const int x2 = x + S->w;
+		const int y2 = y + S->h;
+		AG_TexCoord tc;
 
 		if (r != NULL) {
-			tc.x = (float)r->x/PowOf2i(r->x); /* XXX */
+			tc.x = (float)r->x/PowOf2i(r->x);
 			tc.y = (float)r->y/PowOf2i(r->y);
 			tc.w = (float)r->w/PowOf2i(r->w);
 			tc.h = (float)r->h/PowOf2i(r->h);
@@ -542,7 +540,7 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, int name, const AG_Rect *r,
  * rectangle of explicit size w,h in GL coordinates.
  */
 void
-AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *s, float w, float h)
+AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *S, float w, float h)
 {
 	AG_Driver *drv = obj;
 	GLuint texture;
@@ -551,7 +549,7 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *s, float w, float h)
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
-	AG_GL_UploadTexture(drv, &texture, s, &tc);
+	AG_GL_UploadTexture(drv, &texture, S, &tc);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
@@ -559,10 +557,11 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *s, float w, float h)
 	    AG_TEXTURE_ENV_REPLACE);
 	
 	glBindTexture(GL_TEXTURE_2D, texture);
+
 	glBegin(GL_POLYGON);
 	{
-		float w_2 = w/2.0f;
-		float h_2 = h/2.0f;
+		const float w_2 = w/2.0f;
+		const float h_2 = h/2.0f;
 
 		glTexCoord2f(tc.x, tc.y);  glVertex2f( w_2,  h_2);
 		glTexCoord2f(tc.w, tc.y);  glVertex2f(-w_2,  h_2);
@@ -570,6 +569,7 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *s, float w, float h)
 		glTexCoord2f(tc.x, tc.h);  glVertex2f( w_2, -h_2);
 	}
 	glEnd();
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDeleteTextures(1, &texture);
 
@@ -588,7 +588,6 @@ AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int name, float w, float h)
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
-	/* XXX move this call past pushBlendingMode? */
 	AG_GL_PrepareTexture(wid, name);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
@@ -599,9 +598,9 @@ AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int name, float w, float h)
 	glBindTexture(GL_TEXTURE_2D, wid->textures[name]);
 	glBegin(GL_POLYGON);
 	{
-		AG_TexCoord tc = wid->texcoords[name];
-		float w_2 = w/2.0f;
-		float h_2 = h/2.0f;
+		const AG_TexCoord tc = wid->texcoords[name];
+		const float w_2 = w/2.0f;
+		const float h_2 = h/2.0f;
 
 		glTexCoord2f(tc.x, tc.y);  glVertex2f( w_2,  h_2);
 		glTexCoord2f(tc.w, tc.y);  glVertex2f(-w_2,  h_2);
@@ -626,7 +625,6 @@ AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int name, float w, float h
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
-	/* XXX move this call past pushBlendingMode? */
 	AG_GL_PrepareTexture(wid, name);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
@@ -637,7 +635,7 @@ AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int name, float w, float h
 	glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[name]);
 	glBegin(GL_POLYGON);
 	{
-		AG_TexCoord tc = wid->texcoords[name];
+		const AG_TexCoord tc = wid->texcoords[name];
 
 		glTexCoord2f(tc.w, tc.y);  glVertex2f(0.0f, 0.0f);
 		glTexCoord2f(tc.x, tc.y);  glVertex2f(w,    0.0f);
@@ -657,7 +655,7 @@ AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int name, float w, float h
 void
 AG_GL_BackupSurfaces(void *obj, AG_Widget *wid)
 {
-	AG_Surface *s;
+	AG_Surface *S;
 	GLint w, h;
 	Uint i;
 	
@@ -666,21 +664,21 @@ AG_GL_BackupSurfaces(void *obj, AG_Widget *wid)
 
 	AG_ObjectLock(wid);
 	for (i = 0; i < wid->nSurfaces; i++)  {
-		if (wid->textures[i] == 0 ||
-		    wid->surfaces[i] != NULL) {
+		if (wid->textures[i] == 0 || wid->surfaces[i] != NULL)
 			continue;
-		}
+
 		glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[i]);
+
 		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
 		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
 
-		s = AG_SurfaceStdGL(w, h);
-		glGetTexImage(GL_TEXTURE_2D, 0,
-		    GL_RGBA,
-		    GL_UNSIGNED_BYTE,
-		    s->pixels);
+		S = AG_SurfaceStdGL(w, h);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+		    S->pixels);
+
 		glBindTexture(GL_TEXTURE_2D, 0);
-		wid->surfaces[i] = s;
+
+		wid->surfaces[i] = S;
 	}
 	glDeleteTextures(wid->nSurfaces, (GLuint *)wid->textures);
 	memset(wid->textures, 0, wid->nSurfaces*sizeof(Uint));
@@ -710,14 +708,15 @@ AG_GL_RestoreSurfaces(void *obj, AG_Widget *wid)
 
 /*
  * Render the specified widget to an AG_Surface.
- * XXX TODO render to offscreen buffer instead of display
- * XXX TODO handle 16-bit depth
+ * TODO render to offscreen buffer instead of display where possible.
  */
 int
-AG_GL_RenderToSurface(void *obj, AG_Widget *wid, AG_Surface **s)
+AG_GL_RenderToSurface(void *obj, AG_Widget *wid, AG_Surface **S)
 {
 	AG_Driver *drv = obj;
 	Uint8 *pixels;
+	const int w = wid->w;
+	const int h = wid->h;
 	int visiblePrev;
 	
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
@@ -730,32 +729,31 @@ AG_GL_RenderToSurface(void *obj, AG_Widget *wid, AG_Surface **s)
 	wid->window->visible = visiblePrev;
 	AG_EndRendering(drv);
 
-	if ((pixels = AG_TryMalloc(wid->w*wid->h*4)) == NULL) {
+	if ((pixels = AG_TryMalloc(w*h*4)) == NULL) {
 		return (-1);
 	}
 	if (AGDRIVER_MULTIPLE(drv)) {
-		glReadPixels(
-		    wid->rView.x1,
+		glReadPixels(wid->rView.x1,
 		    HEIGHT(AGDRIVER_MW(drv)->win) - wid->rView.y2,
-		    wid->w,
-		    wid->h,
+		    w, h,
 		    GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	} else {
-		glReadPixels(
-		    wid->rView.x1,
+		glReadPixels(wid->rView.x1,
 		    agDriverSw->h - wid->rView.y2,
-		    wid->w,
-		    wid->h,
+		    w, h,
 		    GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	}
-	if (AG_PackedPixelFlip(pixels, wid->h, wid->w*4) == -1) {
+
+	if (AG_PackedPixelFlip(pixels, wid->h, w*4) == -1)
 		goto fail;
-	}
-	*s = AG_SurfaceFromPixelsRGBA(pixels,
-	    wid->w, wid->h,
-	    32,
-	    0x000000ff, 0x0000ff00, 0x00ff0000, 0);
-	if (*s == NULL) {
+
+	*S = AG_SurfaceFromPixelsRGBA(pixels, w, h, 32,
+	    0x000000ff,
+	    0x0000ff00,
+	    0x00ff0000,
+	    0);
+
+	if (*S == NULL) {
 		goto fail;
 	}
 	return (0);
@@ -1382,16 +1380,14 @@ AG_GL_UpdateGlyph(void *obj, AG_Glyph *gl)
 
 /* Render an AG_Text(3) glyph at x,y. */
 void
-AG_GL_DrawGlyph(void *obj, const AG_Glyph *gl, int x, int y)
+AG_GL_DrawGlyph(void *obj, const AG_Glyph *G, int x, int y)
 {
-	AG_Surface *s = gl->su;
-
-	glBindTexture(GL_TEXTURE_2D, gl->texture);
+	glBindTexture(GL_TEXTURE_2D, G->texture);
 	glBegin(GL_POLYGON);
 	{
-		const AG_TexCoord tc = gl->texcoords;
-		int w = s->w;
-		int h = s->h;
+		const AG_TexCoord tc = G->texcoords;
+		const int w = G->su->w;
+		const int h = G->su->h;
 
 		glTexCoord2f(tc.x, tc.y);  glVertex2i(x,   y);
 		glTexCoord2f(tc.w, tc.y);  glVertex2i(x+w, y);
@@ -1404,22 +1400,22 @@ AG_GL_DrawGlyph(void *obj, const AG_Glyph *gl, int x, int y)
 
 /* Upload a texture. */
 void
-AG_GL_UploadTexture(void *obj, Uint *name, AG_Surface *su, AG_TexCoord *tc)
+AG_GL_UploadTexture(void *obj, Uint *name, AG_Surface *S, AG_TexCoord *tc)
 {
 	AG_Driver *drv = obj;
 	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
 
-	dc->uploadTexture(drv, name, su, tc);
+	dc->uploadTexture(drv, name, S, tc);
 }
 
 /* Update the contents of an existing GL texture. */
 int
-AG_GL_UpdateTexture(void *obj, Uint name, AG_Surface *su, AG_TexCoord *tc)
+AG_GL_UpdateTexture(void *obj, Uint name, AG_Surface *S, AG_TexCoord *tc)
 {
 	AG_Driver *drv = obj;
 	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
 
-	return dc->updateTexture(drv, name, su, tc);
+	return dc->updateTexture(drv, name, S, tc);
 }
 
 /*
