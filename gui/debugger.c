@@ -425,9 +425,15 @@ TargetWidget(AG_Event *_Nonnull event)
 	}
 
 	if (OBJECT_CLASS(tgt)->edit != NULL) {
+		AG_Widget *editRv;
+
 		nt = AG_NotebookAdd(nb, OBJECT(tgt)->cls->name, AG_BOX_VERT);
 		nt->id = 2;
-		AG_ObjectAttach(nt, OBJECT_CLASS(tgt)->edit(tgt));
+
+		editRv = OBJECT_CLASS(tgt)->edit(tgt);
+		AG_ObjectAttach(nt, editRv);
+		AG_WidgetCompileStyle(editRv);
+		AG_Redraw(editRv);
 	}
 	nt = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
 	nt->id = 3;
