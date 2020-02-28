@@ -2412,8 +2412,9 @@ AG_WidgetCopyStyle(void *objDst, void *objSrc)
 	AG_Widget *widDst = objDst;
 	AG_Variable *V;
 	const char **s;
+#ifdef AG_DEBUG
 	int debugLvlSave;
-
+#endif
 	AG_OBJECT_ISA(widSrc, "AG_Widget:*");
 	AG_OBJECT_ISA(widDst, "AG_Widget:*");
 	AG_ObjectLock(widSrc);

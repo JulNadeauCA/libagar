@@ -39,24 +39,19 @@
 .Nm
 is the base class for user interface elements in Agar.
 Widgets are organized in an ordered virtual filesystem of
-.Xr AG_Object 3 .
-.Pp
+.Xr AG_Object 3
+elements.
 The parent of a widget is referred to as its
-.Em container .
-General-purpose container widgets include:
+.Em Container .
+Container widgets include:
 .Xr AG_Box 3 ,
+.Xr AG_Fixed 3 ,
 .Xr AG_Pane 3 ,
 .Xr AG_Scrollview 3 ,
 .Xr AG_Titlebar 3
 and
 .Xr AG_Window 3
 itself.
-Special-purpose containers include
-.Xr AG_Button 3
-(which embeds an
-.Xr AG_Label 3 )
-and
-.Xr AG_FileDlg 3 .
 .Pp
 Widgets are attached to their containers with
 .Xr AG_ObjectAttach 3
@@ -64,8 +59,7 @@ and detached with
 .Xr AG_ObjectDetach 3 .
 Unattached widgets can be freed using
 .Xr AG_ObjectDestroy 3 .
-Agar handles garbage collection of windows (and their attached widgets)
-internally.
+Agar handles garbage collection of windows (and attached widgets) internally.
 Destroying an active
 .Xr AG_Window 3
 or a widget which is still attached to a parent is an error which would
@@ -119,8 +113,8 @@ renders the widget to the graphics display (e.g., using OpenGL,
 or other methods).
 The code under
 .Fn draw
-is referred to as the
-.Em rendering context .
+is referred to as
+.Em Rendering Context .
 Widget primitives and operations such as
 .Fn AG_WidgetBlitSurface
 must be called from rendering context.
@@ -289,9 +283,6 @@ on a per-class basis in an
 .Xr AG_StyleSheet 3 .
 .El
 .Pp
-RGBA and HSV components may be expressed in "%" (in relation to the
-same color entry in the parent widget's palette).
-.Pp
 .nr nS 1
 .Ft "void"
 .Fn AG_SetStyle "AG_Widget *obj" "const char *attr" "const char *value"
@@ -306,7 +297,6 @@ same color entry in the parent widget's palette).
 The
 .Fn AG_SetStyle
 function sets the specified style attribute to the given value.
-.Pp
 Style attributes include:
 .Pp
 .Bl -tag -compact -width "background-color "
@@ -371,6 +361,9 @@ Color values can be specified using any one of the representations:
 .It "Color identifier"
 "AntiqueWhite"
 .El
+.Pp
+RGBA and HSV components may be expressed in "%" (in relation to the
+same color entry in the parent widget's palette).
 .Pp
 The
 .Fn AG_SetFont
@@ -1175,7 +1168,7 @@ Cached rectangle at 0,0.
 Read-only.
 .It Ft AG_Rect2 rView
 Cached position & size in display coordinates.
-Read-only with exception: before calling
+Read-only with one exception: before calling
 .Xr AG_WidgetDraw 3
 to render a child widget, a container widget may temporarily override its
 .Va rView

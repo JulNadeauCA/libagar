@@ -77,38 +77,38 @@ typedef struct ag_window {
 	struct ag_widget wid;		/* AG_Widget -> AG_Window */
 
 	Uint flags;
-#define AG_WINDOW_MODAL		0x00000001 /* Application-modal window */
-#define AG_WINDOW_MAXIMIZED	0x00000002 /* Window is maximized (read-only) */
-#define AG_WINDOW_MINIMIZED	0x00000004 /* Window is minimized (read-only) */
-#define AG_WINDOW_KEEPABOVE	0x00000008 /* Keep window above others */
-#define AG_WINDOW_KEEPBELOW	0x00000010 /* Keep window below others */
-#define AG_WINDOW_DENYFOCUS	0x00000020 /* Prevent focus gain if possible */
-#define AG_WINDOW_NOTITLE	0x00000040 /* Disable titlebar */
-#define AG_WINDOW_NOBORDERS	0x00000080 /* Disable window borders */
-#define AG_WINDOW_NOHRESIZE	0x00000100 /* Disable horizontal resize ctrl */
-#define AG_WINDOW_NOVRESIZE	0x00000200 /* Disable vertical resize ctrl */
-#define AG_WINDOW_NOCLOSE	0x00000400 /* Disable close button */
-#define AG_WINDOW_NOMINIMIZE	0x00000800 /* Disable minimize button */
-#define AG_WINDOW_NOMAXIMIZE	0x00001000 /* Disable maximize button */
-#define AG_WINDOW_TILING	0x00002000 /* Subject to WM tiling */
-#define AG_WINDOW_MINSIZEPCT	0x00004000 /* Min size is in % (read-only) */
-#define AG_WINDOW_NOBACKGROUND	0x00008000 /* Don't fill the background */
-#define AG_WINDOW_MAIN		0x00010000 /* Break from AG_EventLoop() on close */
-#define AG_WINDOW_FOCUSONATTACH	0x00020000 /* Focus on attach (read-only) */
-#define AG_WINDOW_HMAXIMIZE	0x00040000 /* Keep maximized horizontally */
-#define AG_WINDOW_VMAXIMIZE	0x00080000 /* Keep maximized vertically */
-#define AG_WINDOW_NOMOVE	0x00100000 /* Disallow movement of window */
-#define AG_WINDOW_MODKEYEVENTS	0x00400000 /* Mod keys generate key{up,down} */
-#define AG_WINDOW_DETACHING	0x00800000 /* Being detached (read-only) */
-#define AG_WINDOW_NOCURSORCHG	0x04000000 /* Inhibit any cursor change */
-#define AG_WINDOW_FADEIN	0x08000000 /* Fade-in (compositing WMs) */
-#define AG_WINDOW_FADEOUT	0x10000000 /* Fade-out (compositing WMs) */
-#define AG_WINDOW_USE_TEXT	0x20000000 /* At least one widget has USE_TEXT */
+#define AG_WINDOW_MODAL         0x00000001 /* Application-modal window */
+#define AG_WINDOW_MAXIMIZED     0x00000002 /* Window is maximized (read-only) */
+#define AG_WINDOW_MINIMIZED     0x00000004 /* Window is minimized (read-only) */
+#define AG_WINDOW_KEEPABOVE     0x00000008 /* Keep window above others */
+#define AG_WINDOW_KEEPBELOW     0x00000010 /* Keep window below others */
+#define AG_WINDOW_DENYFOCUS     0x00000020 /* Prevent focus gain if possible */
+#define AG_WINDOW_NOTITLE       0x00000040 /* Disable titlebar */
+#define AG_WINDOW_NOBORDERS     0x00000080 /* Disable window borders */
+#define AG_WINDOW_NOHRESIZE     0x00000100 /* Disable horizontal resize ctrl */
+#define AG_WINDOW_NOVRESIZE     0x00000200 /* Disable vertical resize ctrl */
+#define AG_WINDOW_NOCLOSE       0x00000400 /* Disable close button */
+#define AG_WINDOW_NOMINIMIZE    0x00000800 /* Disable minimize button */
+#define AG_WINDOW_NOMAXIMIZE    0x00001000 /* Disable maximize button */
+#define AG_WINDOW_TILING        0x00002000 /* Subject to WM tiling */
+#define AG_WINDOW_MINSIZEPCT    0x00004000 /* Min size is in % (read-only) */
+#define AG_WINDOW_NOBACKGROUND  0x00008000 /* Don't fill the background */
+#define AG_WINDOW_MAIN          0x00010000 /* Break from AG_EventLoop() on close */
+#define AG_WINDOW_FOCUSONATTACH 0x00020000 /* Focus on attach (read-only) */
+#define AG_WINDOW_HMAXIMIZE     0x00040000 /* Keep maximized horizontally */
+#define AG_WINDOW_VMAXIMIZE     0x00080000 /* Keep maximized vertically */
+#define AG_WINDOW_NOMOVE        0x00100000 /* Disallow movement of window */
+#define AG_WINDOW_MODKEYEVENTS  0x00400000 /* Mod key events (LEGACY, unused) */
+#define AG_WINDOW_DETACHING     0x00800000 /* Being detached (read-only) */
+#define AG_WINDOW_NOCURSORCHG   0x04000000 /* Inhibit any cursor change */
+#define AG_WINDOW_FADEIN        0x08000000 /* Fade-in (compositing WMs) */
+#define AG_WINDOW_FADEOUT       0x10000000 /* Fade-out (compositing WMs) */
+#define AG_WINDOW_USE_TEXT      0x20000000 /* At least one widget has USE_TEXT */
 
-#define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
-#define AG_WINDOW_NOBUTTONS	(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|\
-				 AG_WINDOW_NOMAXIMIZE)
-#define AG_WINDOW_PLAIN		(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS)
+#define AG_WINDOW_NORESIZE     (AG_WINDOW_NOHRESIZE | AG_WINDOW_NOVRESIZE)
+#define AG_WINDOW_NOBUTTONS    (AG_WINDOW_NOCLOSE | AG_WINDOW_NOMINIMIZE | \
+                                AG_WINDOW_NOMAXIMIZE)
+#define AG_WINDOW_PLAIN        (AG_WINDOW_NOTITLE | AG_WINDOW_NOBORDERS)
 
 	char caption[AG_WINDOW_CAPTION_MAX];	/* Window caption */
 	int visible;				/* Window is visible */

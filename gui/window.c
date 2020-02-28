@@ -3004,7 +3004,6 @@ Edit(void *_Nonnull obj)
 	    { AG_WINDOW_NOBACKGROUND,	N_("Disable background"),	1 },
 	    { AG_WINDOW_MAIN,		N_("Main window"),		1 },
 	    { AG_WINDOW_NOMOVE,		N_("Unmoveable"),		1 },
-	    { AG_WINDOW_MODKEYEVENTS,	N_("Mod keys generate events"),	1 },
 	    { AG_WINDOW_NOCURSORCHG,	N_("Inhibit cursor changes"),	1 },
 	    { AG_WINDOW_USE_TEXT,	N_("Using the font engine"),	0 },
 	    { 0,			NULL,				0 }

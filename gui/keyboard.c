@@ -417,22 +417,6 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 		PostUnfocusedKeyDown(WIDGET(win), ks, kbd->modState, ch);
 		break;
 	}
-
-	/* Ignore modifier key events unless requested otherwise. */
-	if (!(win->flags & AG_WINDOW_MODKEYEVENTS)) {
-		switch (ks) {
-		case AG_KEY_LSHIFT:
-		case AG_KEY_RSHIFT:
-		case AG_KEY_LALT:
-		case AG_KEY_RALT:
-		case AG_KEY_LCTRL:
-		case AG_KEY_RCTRL:
-			return (0);
-		default:
-			break;
-		}
-	}
-
 	/* Deliver the event to any focused widget. */
 	tabCycle = 1;
 	if (AG_WindowIsFocused(win) &&
