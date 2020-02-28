@@ -142,7 +142,7 @@ const AG_FontAdjustment agFontAdjustments[] = {
 	{ "cm-typewriter",   0,            1.1f, { -2,  -4,  -5,  -5,  -7, -11 } },
 	{ "league-spartan",  AG_FONT_BOLD, 0.9f, { -2,  -2,  -3,  -4,  -5,  -8 } },
 	{ "league-gothic",   AG_FONT_BOLD, 1.1f, { -1,  -1,  -1,  -2,  -1,  -3 } },
-	{ "fraktur",         0,            1.1f, { +1,  +1,  +1,  +1,  +1,  +1 } },
+	{ "fraktur",         AG_FONT_BOLD, 1.1f, { +1,  +1,  +1,  +1,  +1,  +1 } },
 	{ "source-han-sans", 0,            1.0f, { -8, -12, -15, -20, -28, -35 } },
 	{ "unialgue",        0,            1.0f, { -3,  -4,  -5,  -7, -11, -12 } },
 	{ NULL,              0,            0.0f, {  0,   0,   0,   0,   0,   0 } }
