@@ -312,6 +312,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		aLbl.x = x;
 		aLbl.y = y;
 		aLbl.w = MIN(rLbl.w, WIDTH(nb) - x);
+		if (aLbl.w < 15) {
+			break;
+		}
 		aLbl.h = rLbl.h;
 		AG_WidgetSizeAlloc(tab->lbl, &aLbl);
 
