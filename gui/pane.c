@@ -162,9 +162,6 @@ MouseMotion(AG_Event *_Nonnull event)
 
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
-		if (y < 0 || y > HEIGHT(pa)) {
-			return;
-		}
 		if (pa->dmoving) {
 			pa->rx = pa->dx;
 			pa->rx += dx;
@@ -188,9 +185,6 @@ MouseMotion(AG_Event *_Nonnull event)
 		}
 		break;
 	case AG_PANE_VERT:
-		if (x < 0 || x > WIDTH(pa)) {
-			return;
-		}
 		if (pa->dmoving) {
 			pa->rx = pa->dx;
 			pa->rx += dy;
