@@ -464,7 +464,7 @@ static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	static const int zoomSizes[] = {
-	     5,  5,  5,  5,  5,  5,  6,  7,  /* 12.5% - 90% */
+	     6,  6,  7,  7,  7,  7,  7,  8,  /* 12.5% - 90% */
 	     8,  9, 10, 11, 12, 12,          /* 100% - 170% */
 	    13, 13, 14, 14, 15, 16           /* 200% - 650% */
 	};
