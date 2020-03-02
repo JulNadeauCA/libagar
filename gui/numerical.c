@@ -559,7 +559,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	r->w = rInput.w + num->wUnitSel + WIDGET(num)->spacingHoriz +
 	       MAX(rInc.w,rDec.w);
 
-	r->h = MAX(rInput.h, num->hUnitSel);
+	r->h = rInput.h;
 }
 
 static int
