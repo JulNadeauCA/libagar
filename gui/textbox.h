@@ -37,6 +37,7 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_NOPOPUP	 0x080000 /* Disable popup menu */
 #define AG_TEXTBOX_MULTILINGUAL	 0x100000 /* Enable multilingual edition */
 #define AG_TEXTBOX_NO_SHADING    0x200000 /* Disable shading around field */
+#define AG_TEXTBOX_UNDERSIZE     0x400000 /* Width is insufficient for label */
 
 	int surfaceLbl;                   /* Rendered label surface (or -1) */
         char *_Nullable label;            /* Text label (optional) */

@@ -345,8 +345,9 @@ static void
 Draw(void *_Nonnull p)
 {
 	AG_Textbox *tb = p;
+	const int undersize = (tb->flags & AG_TEXTBOX_UNDERSIZE);
 
-	if ((tb->flags & AG_TEXTBOX_NO_SHADING) == 0) {
+	if (!undersize && (tb->flags & AG_TEXTBOX_NO_SHADING) == 0) {
 		if ((tb->flags & AG_TEXTBOX_COMBO)) {
 			AG_DrawBoxRaised(tb, &tb->r, &WCOLOR(tb, FG_COLOR));
 		} else {
@@ -354,6 +355,9 @@ Draw(void *_Nonnull p)
 		}
 	}
 	if (tb->label != NULL && tb->label[0] != '\0') {
+		if (undersize)
+			AG_PushClipRect(tb, &WIDGET(tb)->r);
+
 		if (tb->surfaceLbl == -1) {
 			tb->surfaceLbl = AG_WidgetMapSurface(tb,
 			    AG_TextRender(tb->label));
@@ -361,9 +365,13 @@ Draw(void *_Nonnull p)
 		AG_WidgetBlitSurface(tb, tb->surfaceLbl,
 		    WIDGET(tb)->paddingLeft,
 		    WIDGET(tb)->paddingTop);
+
+		if (undersize)
+			AG_PopClipRect(tb);
 	}
 
-	AG_WidgetDraw(tb->ed);
+	if (!undersize)
+		AG_WidgetDraw(tb->ed);
 
 	if (tb->btnRet) { AG_WidgetDraw(tb->btnRet); }
 	if (tb->hBar) { AG_WidgetDraw(tb->hBar); }
@@ -428,8 +436,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 			aSb.w = a->w - hBarSz + 1;
 			aSb.h = hBarSz;
 			AG_WidgetSizeAlloc(tb->hBar, &aSb);
-//			if (AG_ScrollbarVisible(tb->hBar))
-				hBar = aSb.h;
+			hBar = aSb.h;
 		}
 		if (tb->vBar && AG_WidgetVisible(tb->vBar)) {
 			AG_WidgetSizeReq(tb->vBar, &r);
@@ -439,8 +446,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 			aSb.w = wBarSz;
 			aSb.h = a->h - hBarSz + 1;
 			AG_WidgetSizeAlloc(tb->vBar, &aSb);
-//			if (AG_ScrollbarVisible(tb->vBar))
-				wBar = aSb.w;
+			wBar = aSb.w;
 		}
 
 		tb->r.x = 0;
@@ -476,6 +482,13 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	aEd.h = a->h - hBar - WIDGET(tb)->paddingTop -
 	        WIDGET(tb)->paddingBottom;
 
+	if (aEd.w < 0 || aEd.h < 0) {
+		aEd.w = 0;
+		aEd.h = 0;
+		tb->flags |= AG_TEXTBOX_UNDERSIZE;
+	} else {
+		tb->flags &= ~(AG_TEXTBOX_UNDERSIZE);
+	}
 	AG_WidgetSizeAlloc(ed, &aEd);
 
 	if (tb->btnRet) {
