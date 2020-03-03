@@ -23,13 +23,22 @@ typedef struct {
 	AG_TextElement *textElement;
 } MyTestInstance;
 
-/* Example callback for combo-selected. */
 static void
-ComboSelected(AG_Event *event)
+ComboSelectedItem(AG_Event *event)
 {
 	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(1);
 
-	AG_TextTmsg(AG_MSG_INFO, 500, "Selected Item: %s", ti->text);
+	AG_TextTmsg(AG_MSG_INFO, 1000,
+	    "Selected item: [ " AGSI_ITALIC "%s" AGSI_RST " ]", ti->text);
+}
+
+static void
+ComboEnteredText(AG_Event *event)
+{
+	const char *text = AG_STRING(1);
+
+	AG_TextTmsg(AG_MSG_INFO, 1000,
+	    "Entered text: \" " AGSI_ITALIC "%s" AGSI_RST " \"", text);
 }
 
 /* Show the agar-dev "Preferences" dialog. */
@@ -340,13 +349,15 @@ TestGUI(void *obj, AG_Window *win)
 	 * to it. The button triggers a popup window which displays a list
 	 * (using the AG_Tlist(3) widget).
 	 */
-	com = AG_ComboNew(vPane->div[1], AG_COMBO_HFILL, "Combo: ");
-	AG_ComboSizeHint(com, "Item #00 ", 10);
-	AG_SetEvent(com, "combo-selected", ComboSelected, NULL);
+	com = AG_ComboNew(vPane->div[1], AG_COMBO_ANY_TEXT | AG_COMBO_HFILL,
+	    "Combo: ");
+	AG_ComboSizeHint(com, "<Item #000>", 10);
+	AG_SetEvent(com, "combo-selected", ComboSelectedItem, NULL);
+	AG_SetEvent(com, "combo-text-entry", ComboEnteredText, NULL);
 
 	/* UCombo is a variant of Combo which looks like a single button. */
 	ucom = AG_UComboNew(vPane->div[1], AG_UCOMBO_HFILL);
-	AG_UComboSizeHint(ucom, "Item #1234", 5);
+	AG_UComboSizeHint(ucom, "<Item #1234>", 5);
 
 	/* Populate the Tlist displayed by the combo widgets we just created. */
 	for (i = 0; i < 50; i++) {

@@ -706,6 +706,12 @@ ZoomOut(AG_Event *event)
 	AG_ZoomOut();
 }
 
+static void
+EditGuiPrefs(AG_Event *event)
+{
+	DEV_ConfigShow();
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -831,6 +837,11 @@ main(int argc, char *argv[])
 		AG_MenuActionKb(mi, _("Quit"), agIconClose.s,
 		    AG_KEY_W, AG_KEYMOD_CTRL,
 		    AG_WindowCloseGenEv, "%p", win);
+	}
+	mi = AG_MenuNode(menu->root, ("Edit"), NULL);
+	{
+		AG_MenuAction(mi, _("GUI Preferences"), agIconGear.s,
+		    EditGuiPrefs, NULL);
 	}
 	mi = AG_MenuNode(menu->root, ("Tools"), NULL);
 	{
