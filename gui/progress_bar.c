@@ -139,18 +139,14 @@ Destroy(void *_Nonnull obj)
 void
 AG_ProgressBarSetWidth(AG_ProgressBar *pb, int width)
 {
-	AG_ObjectLock(pb);
 	pb->width = width;
-	AG_ObjectUnlock(pb);
 	AG_Redraw(pb);
 }
 
 void
 AG_ProgressBarSetLength(AG_ProgressBar *pb, int length)
 {
-	AG_ObjectLock(pb);
 	pb->length = length;
-	AG_ObjectUnlock(pb);
 	AG_Redraw(pb);
 }
 
