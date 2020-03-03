@@ -118,11 +118,13 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	mi = me->itemSel = AG_MenuNode(me->root, NULL, NULL);
 
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
-		const char *name = OBJECT(win)->name;
-
-		if ((strncmp(name, "menu", 4) == 0 ||
-		     strncmp(name, "icon", 4) == 0) && isdigit(name[4])) {
-			continue;
+		switch (win->wmType) {
+			case AG_WINDOW_WM_DND:
+			case AG_WINDOW_WM_DOCK:
+			case AG_WINDOW_WM_COMBO:
+			case AG_WINDOW_WM_POPUP_MENU:
+			case AG_WINDOW_WM_DROPDOWN_MENU:
+				continue;
 		}
 		AG_MenuAction(mi,
 		    (win->caption[0] != '\0') ? win->caption : _("Untitled"),
