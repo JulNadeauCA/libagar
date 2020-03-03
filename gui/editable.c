@@ -1663,10 +1663,10 @@ AG_EditableDelete(AG_Editable *ed, AG_EditableBuffer *buf)
 
 	AG_EditableValidateSelection(ed, buf);
 	if (ed->selEnd == buf->len) {
-		buf->s[ed->pos] = '\0';
+		buf->s[ed->selStart] = '\0';
 	} else {
 		memmove(&buf->s[ed->selStart], &buf->s[ed->selEnd],
-		    (buf->len - selLen + 1 - ed->pos)*sizeof(AG_Char));
+		    (buf->len - selLen + 1 - ed->selStart)*sizeof(AG_Char));
 	}
 	buf->len -= selLen;
 	ed->pos = ed->selStart;
