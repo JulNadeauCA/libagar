@@ -98,11 +98,7 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 
 	if (strcmp(name, "_agDbgr") == 0)			/* Unsafe */
 		return;
-#if 0
-	if ((strncmp(name, "menu", 4) == 0 ||
-	     strncmp(name, "icon", 4) == 0) && isdigit(name[4]))
-		return;
-#endif
+
 	if (strncmp(name, "win", 3) == 0 && isdigit(name[4])) {
 		it = AG_TlistAddS(tl, NULL, win->caption[0] !='\0' ?
 		                            win->caption : _("Untitled"));
@@ -249,8 +245,10 @@ PollSurfaces(AG_Event *_Nonnull event)
 	AG_TlistItem *it;
 	Uint i;
 
-	if (!AG_OBJECT_VALID(wid) || !AG_OfClass(wid, "AG_Widget:*"))
+	if (!AG_OBJECT_VALID(wid) || !AG_OfClass(wid, "AG_Widget:*")) {
+		TargetRoot();
 		return;
+	}
 
 	AG_ObjectLock(wid);
 	AG_TlistBegin(tl);
@@ -284,8 +282,10 @@ PollVariables(AG_Event *_Nonnull event)
 	AG_Object *obj = AG_PTR(1);
 	AG_Variable *V;
 
-	if (!AG_OBJECT_VALID(obj))
+	if (!AG_OBJECT_VALID(obj)) {
+		TargetRoot();
 		return;
+	}
 	
 	val[0] = '\0';
 
@@ -374,14 +374,12 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_MSpinbutton *msb;
 		AG_Box *box2;
 
-		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL | AG_TEXTBOX_NO_SHADING,
-		    _("Name: "));
-	/*	AG_SetStyle(tb, "padding", "0"); */
-
 		AG_LabelNew(nt, AG_LABEL_HFILL,
-		    _("Class: " AGSI_BOLD " %s" AGSI_RST "(3)"),
+		    _("Class: " AGSI_COURIER " %s(3)" AGSI_RST),
 		    OBJECT(tgt)->cls->name);
 
+		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL | AG_TEXTBOX_NO_SHADING,
+		    _("Name: "));
 #ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
 #else
