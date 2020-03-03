@@ -122,48 +122,75 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 	if ((win = AG_WindowNewNamedS(0, "DEV_Config")) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaptionS(win, _("Agar settings"));
+	AG_WindowSetCaptionS(win, _("GUI Preferences"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
-	AG_WindowSetPadding(win, 5,5,5,5);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL | AG_NOTEBOOK_VFILL);
+
 	tab = AG_NotebookAdd(nb, _("Video"), AG_BOX_VERT);
 	{
-		AG_NumericalNewIntR(tab, 0, "%", _("Screenshot quality: "),
+		const AG_Driver *drv = AGWIDGET(win)->drv;
+
+		AG_LabelNew(tab, 0,
+		    _("Driver: " AGSI_COURIER "%s(3)" AGSI_RST "\n"
+		      "Depth: %d bpp\n"
+		      "SDL: %s, "
+		      "OpenGL: %s"),
+		    OBJECT_CLASS(drv)->name,
+		    (drv->videoFmt) ? drv->videoFmt->BitsPerPixel : 32,
+		    (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_SDL) ? _("Yes") : _("No"),
+		    (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL) ? _("Yes") : _("No"));
+
+		if (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL) {
+			AG_WidgetDisable(
+			    AG_CheckboxNewInt(tab, 0, _("Stereo vision"), &agStereo)
+			);
+		}
+		
+		if (AG_OfClass(drv, "AG_Driver:AG_DriverMw:AG_DriverGLX")) {
+			AG_WidgetDisable(
+			    AG_CheckboxNewInt(tab, 0, _("Synchronous X events"), &agXsync)
+			);
+		}
+
+		AG_SeparatorNewHoriz(tab);
+
+		AG_NumericalNewIntR(tab, 0, "%",
+		    _("Screenshot (JPEG) quality: "),
 		    &agScreenshotQuality, 1, 100);
 	}
 
-	tab = AG_NotebookAdd(nb, _("GUI"), AG_BOX_VERT);
+	tab = AG_NotebookAdd(nb, _("Keyboard"), AG_BOX_VERT);
 	{
+		AG_NumericalNewIntR(tab, 0, "ms", _("Key repeat delay: "),
+		    &agKbdDelay, 1, 1000);
+		AG_NumericalNewIntR(tab, 0, "ms", _("Key repeat interval: "),
+		    &agKbdRepeat, 1, 500);
 #ifdef AG_UNICODE
-		AG_CheckboxNewInt(tab, 0, _("Built-in key composition"),
+		AG_SeparatorNewHoriz(tab);
+		AG_CheckboxNewInt(tab, 0, _("Built-in Latin-1 key composition"),
 		    &agTextComposition);
 #endif
-		AG_SeparatorNewHoriz(tab);
-		AG_LabelNewS(tab, 0, _("Timer settings (milliseconds):"));
-		AG_NumericalNewIntR(tab, 0, NULL, _("Double click delay: "),
-		    &agMouseDblclickDelay, 1, 10000);
-		AG_NumericalNewIntR(tab, 0, NULL, _("Cursor spin delay: "),
-		    &agMouseSpinDelay, 1, 10000);
-		AG_NumericalNewIntR(tab, 0, NULL, _("Cursor spin interval: "),
-		    &agMouseSpinIval, 1, 10000);
-		AG_NumericalNewIntR(tab, 0, NULL, _("Key repeat delay: "),
-		    &agKbdDelay, 1, 1000);
-		AG_NumericalNewIntR(tab, 0, NULL, _("Key repeat interval: "),
-		    &agKbdRepeat, 1, 500);
 	}
 
-	tab = AG_NotebookAdd(nb, _("Directories"), AG_BOX_VERT);
+	tab = AG_NotebookAdd(nb, _("Mouse"), AG_BOX_VERT);
 	{
+		AG_NumericalNewIntR(tab, 0, "ms", _("Double click threshold: "),
+		    &agMouseDblclickDelay, 1, 10000);
+		AG_SeparatorNewHoriz(tab);
+		AG_NumericalNewIntR(tab, 0, "ms", _("Mouse spin delay: "),
+		    &agMouseSpinDelay, 1, 10000);
+		AG_NumericalNewIntR(tab, 0, "ms", _("Mouse spin interval: "),
+		    &agMouseSpinIval, 1, 10000);
 	}
 
-#ifdef AG_DEBUG
 	tab = AG_NotebookAdd(nb, _("Debug"), AG_BOX_VERT);
 	{
-		AG_NumericalNewIntR(tab, 0, NULL, _("Debug level: "),
+#ifdef AG_DEBUG
+		AG_NumericalNewIntR(tab, 0, NULL, _("Agar Debug level: "),
 		    &agDebugLvl, 0, 255);
-	}
 #endif
+	}
 
 	hb = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 	{
