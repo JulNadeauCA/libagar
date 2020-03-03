@@ -67,74 +67,81 @@ AG_ComboNewS(void *parent, Uint flags, const char *label)
 	if (label != NULL) {
 		AG_TextboxSetLabelS(com->tbox, label);
 	}
-	if (flags & AG_COMBO_ANY_TEXT) { AG_WidgetDisable(com->tbox); }
-	if (flags & AG_COMBO_POLL) { com->list->flags |= AG_TLIST_POLL; }
-	if (flags & AG_COMBO_SCROLLTOSEL) {
-		com->list->flags |= AG_TLIST_SCROLLTOSEL;
-	}
-	if (flags & AG_COMBO_HFILL) { AG_ExpandHoriz(com); }
-	if (flags & AG_COMBO_VFILL) { AG_ExpandVert(com); }
+	if (flags & AG_COMBO_POLL)        { com->list->flags |= AG_TLIST_POLL; }
+	if (flags & AG_COMBO_SCROLLTOSEL) { com->list->flags |= AG_TLIST_SCROLLTOSEL; }
+	if (flags & AG_COMBO_HFILL)       { AG_ExpandHoriz(com); }
+	if (flags & AG_COMBO_VFILL)       { AG_ExpandVert(com); }
 	
 	AG_ObjectAttach(parent, com);
 	return (com);
 }
 
 static void
-Collapse(AG_Combo *_Nonnull com)
+PanelWindowClose(AG_Event *_Nonnull event)
 {
-	if (com->panel == NULL) {
-		return;
-	}
-	com->wSaved = WIDTH(com->panel);
-	com->hSaved = HEIGHT(com->panel);
+	AG_Window *win = AG_WINDOW_SELF();
+	AG_Combo *com = AG_COMBO_PTR(1);
 
-	AG_ObjectDetach(com->list);		/* Will be recycled */
-	AG_ObjectDetach(com->panel);
-	com->panel = NULL;
-
+	com->wSaved = WIDTH(win);
+	com->hSaved = HEIGHT(win);
+	AG_WindowHide(win);
 	AG_SetInt(com->button, "state", 0);
 }
 
 static void
-ModalCollapse(AG_Event *_Nonnull event)
+PanelMouseButtonDown(AG_Event *_Nonnull event)
 {
-	const AG_Window *win = AG_WINDOW_SELF();
+	AG_Window *win = AG_WINDOW_SELF();
 	AG_Combo *com = AG_COMBO_PTR(1);
 	const int x = AG_INT(2);
 	const int y = AG_INT(3);
 
-	if (com->panel &&
-	    (x < 0 || y < 0 || x > WIDTH(win) || y > HEIGHT(win)))
-		Collapse(com);
+	if (com->panel == NULL)
+		return;
+
+	if ((x < 0 || y < 0 || x > WIDTH(win) || y > HEIGHT(win))) {
+		com->wSaved = WIDTH(win);
+		com->hSaved = HEIGHT(win);
+		AG_WindowHide(win);
+		AG_SetInt(com->button, "state", 0);
+	}
 }
 
+/* User pressed or released the expand ("...") button. */
 static void
-Expand(AG_Event *_Nonnull event)
+ExpandButtonPushed(AG_Event *_Nonnull event)
 {
 	AG_Combo *com = AG_COMBO_PTR(1);
 	AG_Driver *drv = WIDGET(com)->drv;
-	AG_Window *panel, *win;
+	AG_Window *panel, *winParent = WIDGET(com)->window;
 	AG_SizeReq rList;
-	const int expand = AG_INT(2);
+	const int button_state = AG_INT(2);
 	int x, y, w, h;
 	Uint wView, hView;
 
-	if (expand) {
-		panel = com->panel = AG_WindowNew(AG_WINDOW_MODAL |
-		                                  AG_WINDOW_NOTITLE |
-		                                  AG_WINDOW_DENYFOCUS |
-		                                  AG_WINDOW_KEEPABOVE);
-		panel->wmType = AG_WINDOW_WM_COMBO;
-
-		AG_WindowSetPadding(panel, 0,0,0,0);
-		AG_ObjectSetName(panel, "combo%u", agComboCounter++);
-		AG_ObjectAttach(panel, com->list);
-
-		if ((win = WIDGET(com)->window) != NULL) {
-			AG_WindowAttach(win, panel);
-			AG_WindowMakeTransient(win, panel);
-			AG_WindowPin(win, panel);
+	if (button_state) {                                       /* Expand */
+		if (com->panel) {
+			panel = com->panel;
+		} else {
+			if ((panel = AG_WindowNew(AG_WINDOW_MODAL |
+			                          AG_WINDOW_NOTITLE)) == NULL) {
+				return;
+			}
+			panel->wmType = AG_WINDOW_WM_COMBO;
+			AG_WindowSetPadding(panel, 0,0,0,0);
+			AG_ObjectSetName(panel, "_combo%u", agComboCounter++);
+			com->panel = panel;
+			AG_ObjectAttach(panel, com->list);
+			if (winParent) {
+				AG_WindowAttach(winParent, panel);
+				AG_WindowMakeTransient(winParent, panel);
+/*				AG_WindowPin(winParent, panel); */
+			}
+			WIDGET(panel)->flags |= AG_WIDGET_UNFOCUSED_BUTTONDOWN;
+			AG_SetEvent(panel, "window-close", PanelWindowClose, "%p", com);
+			AG_AddEvent(panel, "mouse-button-down", PanelMouseButtonDown, "%p", com);
 		}
+
 		if (com->wSaved > 0) {
 			w = com->wSaved;
 			h = com->hSaved;
@@ -149,30 +156,32 @@ Expand(AG_Event *_Nonnull event)
  		}
 		x = WIDGET(com)->rView.x2 - w;
 		y = WIDGET(com)->rView.y1;
-
 		AG_GetDisplaySize(WIDGET(com)->drv, &wView, &hView);
 		if (x+w > wView) { w = wView - x; }
 		if (y+h > hView) { h = hView - y; }
-
-		if (win && AGDRIVER_CLASS(drv)->wm == AG_WM_MULTIPLE) {
-			x += WIDGET(win)->x;
-			y += WIDGET(win)->y;
+		if (winParent && AGDRIVER_CLASS(drv)->wm == AG_WM_MULTIPLE) {
+			x += WIDGET(winParent)->x;
+			y += WIDGET(winParent)->y;
 		}
 		if (x < 0) { x = 0; }
 		if (y < 0) { y = 0; }
 		if (w < 4 || h < 4) {
-			Collapse(com);
+			Debug(com, "Too small size panel; detaching\n");
+			AG_ObjectDetach(panel);
+			com->panel = NULL;
 			return;
 		}
-
-		/* Collapse if user clicks outside of the window boundaries. */
-		WIDGET(panel)->flags |= AG_WIDGET_UNFOCUSED_BUTTONDOWN;
-		AG_AddEvent(panel, "mouse-button-down", ModalCollapse, "%p", com);
-
+		com->wSaved = w;
+		com->hSaved = h;
 		AG_WindowSetGeometry(panel, x,y, w,h);
 		AG_WindowShow(panel);
-	} else {
-		Collapse(com);
+	} else {                                                /* Collapse */
+		if ((panel = com->panel) != NULL) {
+			com->wSaved = WIDTH(panel);
+			com->hSaved = HEIGHT(panel);
+			AG_WindowHide(panel);
+			AG_SetInt(com->button, "state", 0);
+		}
 	}
 }
 
@@ -180,13 +189,14 @@ Expand(AG_Event *_Nonnull event)
 AG_TlistItem *
 AG_ComboSelectPointer(AG_Combo *com, void *p)
 {
+	AG_Tlist *tl = com->list;
 	AG_TlistItem *it;
 
-	AG_ObjectLock(com->list);
-	if ((it = AG_TlistSelectPtr(com->list, p)) != NULL) {
+	AG_ObjectLock(tl);
+	if ((it = AG_TlistSelectPtr(tl, p)) != NULL) {
 		AG_TextboxSetString(com->tbox, it->text);
 	}
-	AG_ObjectUnlock(com->list);
+	AG_ObjectUnlock(tl);
 	return (it);
 }
 
@@ -194,23 +204,28 @@ AG_ComboSelectPointer(AG_Combo *com, void *p)
 AG_TlistItem *
 AG_ComboSelectText(AG_Combo *com, const char *text)
 {
+	AG_Tlist *tl = com->list;
 	AG_TlistItem *it;
 
-	AG_ObjectLock(com->list);
-	if ((it = AG_TlistSelectText(com->list, text)) != NULL) {
+	AG_ObjectLock(tl);
+	if ((it = AG_TlistSelectText(tl, text)) != NULL) {
 		AG_TextboxSetString(com->tbox, it->text);
 	}
-	AG_ObjectUnlock(com->list);
+	AG_ObjectUnlock(tl);
 	return (it);
 }
 
 void
 AG_ComboSelect(AG_Combo *com, AG_TlistItem *it)
 {
-	AG_ObjectLock(com->list);
+	AG_Tlist *tl = com->list;
+
+	AG_ObjectLock(tl);
+
 	AG_TextboxSetString(com->tbox, it->text);
-	AG_TlistSelect(com->list, it);
-	AG_ObjectUnlock(com->list);
+	AG_TlistSelect(tl, it);
+
+	AG_ObjectUnlock(tl);
 }
 
 static void
@@ -219,6 +234,9 @@ SelectedItem(AG_Event *_Nonnull event)
 	AG_Tlist *tl = AG_TLIST_SELF();
 	AG_Combo *com = AG_COMBO_PTR(1);
 	AG_TlistItem *ti;
+	AG_Window *panel;
+
+	AG_ObjectLock(com);
 
 	AG_ObjectLock(tl);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
@@ -226,7 +244,15 @@ SelectedItem(AG_Event *_Nonnull event)
 		AG_PostEvent(com, "combo-selected", "%p", ti);
 	}
 	AG_ObjectUnlock(tl);
-	Collapse(com);
+
+	if ((panel = com->panel) != NULL) {
+		com->wSaved = WIDTH(panel);
+		com->hSaved = HEIGHT(panel);
+		AG_WindowHide(panel);
+		AG_SetInt(com->button, "state", 0);
+	}
+
+	AG_ObjectUnlock(com);
 }
 
 static void
@@ -234,60 +260,61 @@ Return(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tbox = AG_TEXTBOX_SELF();
 	AG_Combo *com = AG_COMBO_PTR(1);
+	AG_Tlist *tl = com->list;
 	const char *text = tbox->text;
 	
-	AG_ObjectLock(com->list);
+	AG_ObjectLock(tl);
 
 	if ((com->flags & AG_COMBO_ANY_TEXT) == 0) {
 		AG_TlistItem *it;
 	
 		if (text[0] != '\0' &&
-		    (it = AG_TlistSelectText(com->list, text)) != NULL) {
+		    (it = AG_TlistSelectText(tl, text)) != NULL) {
 			AG_TextboxSetString(com->tbox, it->text);
 			AG_PostEvent(com, "combo-selected", "%p", it);
 		} else {
-			AG_TlistDeselectAll(com->list);
+			AG_TlistDeselectAll(tl);
 			AG_TextboxSetString(com->tbox, "");
 			AG_PostEvent(com, "combo-text-unknown", "%s", text);
 		}
 	} else {
-		AG_TlistDeselectAll(com->list);
+		AG_TlistDeselectAll(tl);
 		AG_PostEvent(com, "combo-text-entry", "%s", text);
 	}
 
-	AG_ObjectUnlock(com->list);
+	AG_ObjectUnlock(tl);
 }
 
 static void
 Init(void *_Nonnull obj)
 {
 	AG_Combo *com = obj;
+	AG_Textbox *tb;
+	AG_Button *btn;
+	AG_Tlist *tl;
 
 	com->flags = 0;
 	
-	com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO | AG_TEXTBOX_EXCL, NULL);
-	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY | AG_BUTTON_NO_FOCUS,
-	                            _(" ... "));
-	AG_SetStyle(com->button, "padding", "2");
+	tb = com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO | AG_TEXTBOX_EXCL, NULL);
+	AG_SetEvent(tb, "textbox-return", Return, "%p", com);
+	AG_SetString(tb, "padding", "inherit");
+	AG_WidgetForwardFocus(com, tb);
 
-	com->list = Malloc(sizeof(AG_Tlist));
-	AG_ObjectInit(com->list, &agTlistClass);
-	AG_Expand(com->list);
+	btn = com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY |
+	                                       AG_BUTTON_NO_FOCUS, _(" ... "));
+	AG_SetStyle(btn, "padding", "2");
+	AG_SetEvent(btn, "button-pushed", ExpandButtonPushed, "%p", com);
+
+	tl = com->list = Malloc(sizeof(AG_Tlist));
+	AG_ObjectInit(tl, &agTlistClass);
+	WIDGET(tl)->flags |= AG_WIDGET_EXPAND;
+	AG_SetEvent(tl, "tlist-changed", SelectedItem, "%p", com);
 	
 	com->panel = NULL;
-
 	com->wSaved = 0;
 	com->hSaved = 0;
 	com->wPreList = -1;
 	com->hPreList = -1;
-	
-	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
-	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
-	AG_SetEvent(com->tbox, "textbox-return", Return, "%p", com);
-
-	AG_WidgetForwardFocus(com, com->tbox);
-
-	AG_SetString(com->tbox, "padding", "inherit");
 }
 
 void

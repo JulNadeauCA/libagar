@@ -10,20 +10,19 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_ucombo {
-	struct ag_widget wid;		/* AG_Widget -> AG_UCombo */
+	struct ag_widget wid;          /* AG_Widget -> AG_UCombo */
 	Uint flags;
-#define AG_UCOMBO_HFILL	  	0x01
-#define AG_UCOMBO_VFILL	  	0x02
-#define AG_UCOMBO_SCROLLTOSEL	0x40	/* Scroll to initial selection */
-#define AG_UCOMBO_EXPAND  (AG_UCOMBO_HFILL|AG_UCOMBO_VFILL)
+#define AG_UCOMBO_HFILL       0x01
+#define AG_UCOMBO_VFILL       0x02
+#define AG_UCOMBO_POLL        0x04     /* Pass AG_TLIST_POLL */
+#define AG_UCOMBO_SCROLLTOSEL 0x40     /* Pass AG_TLIST_SCROLLTOSEL */
+#define AG_UCOMBO_EXPAND     (AG_UCOMBO_HFILL | AG_UCOMBO_VFILL)
 	Uint32 _pad;
-
-	AG_Button *_Nonnull  button;	/* Selection button */
-	AG_Tlist  *_Nonnull  list;	/* Item list */
-	AG_Window *_Nullable panel;	/* Expanded panel */
-
-	int wSaved, hSaved;		/* Saved popup list geometry */
-	int wPreList, hPreList;		/* Size hints */
+	AG_Button *_Nonnull button;    /* Selection button */
+	AG_Tlist *_Nonnull list;       /* Item list */
+	AG_Window *_Nullable panel;    /* Expanded window */
+	int wSaved, hSaved;            /* Saved window geometry */
+	int wPreList, hPreList;        /* Size hints */
 } AG_UCombo;
 
 #define AGUCOMBO(obj)            ((AG_UCombo *)(obj))
