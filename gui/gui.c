@@ -482,6 +482,7 @@ AG_InitGraphics(const char *spec)
 			}
 			if (tok == NULL) {
 				AG_SetError(_("No such Agar driver: \"%s\""), specBuf);
+				AG_SetErrorCode(AG_ENOENT);
 				goto fail;
 			}
 		}

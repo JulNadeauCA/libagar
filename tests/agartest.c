@@ -1032,5 +1032,19 @@ main(int argc, char *argv[])
 	return (0);
 fail:
 	printf("Agar initialization failed: %s\n", AG_GetError());
+	if (AG_GetErrorCode() == AG_ENOENT) {
+		AG_DriverClass **pd;
+
+		printf("Available drivers include:\n");
+		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+			AG_DriverClass *dc = *pd;
+
+			printf(_("    -d %5s          # %s, %s (see %s(3))\n"),
+			    dc->name,
+			    agDriverTypeNames[dc->type],
+			    agDriverWmTypeNames[dc->wm],
+			    AGCLASS(dc)->name);
+		}
+	}
 	return (1);
 }
