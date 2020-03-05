@@ -725,7 +725,7 @@ OnShow(AG_Event *_Nonnull event)
 	/* Compile the globally inheritable style attributes. */
 	AG_WidgetCompileStyle(win);
 
-	if (WIDGET(win)->x == -1 && WIDGET(win)->y == -1) {
+	if (WIDGET(win)->x == -1 || WIDGET(win)->y == -1) {
 		/*
 		 * No explicit window geometry was provided; compute a
 		 * default size from the widget sizeReq() operations,
@@ -801,7 +801,6 @@ OnShow(AG_Event *_Nonnull event)
 	
 	/* Notify widgets that the window is now visible. */
 	OBJECT_FOREACH_CHILD(chld, win, ag_object) {
-/*		Debug(win, "Propagating \"widget-shown\"() to %s\n", chld->name); */
 		AG_ForwardEvent(chld, event);
 	}
 	AG_PostEvent(win, "window-shown", NULL);
@@ -895,9 +894,7 @@ OnHide(AG_Event *_Nonnull event)
 		break;
 	}
 	
-	/* Notify widgets that the window is now hidden. */
-	OBJECT_FOREACH_CHILD(chld, win, ag_object) {
-/*		Debug(win, "Propagating \"widget-hidden\"() to %s\n", chld->name); */
+	OBJECT_FOREACH_CHILD(chld, win, ag_object) {     /* Notify children */
 		AG_ForwardEvent(chld, event);
 	}
 	AG_PostEvent(win, "window-hidden", NULL);
@@ -1281,11 +1278,8 @@ AG_WindowFocus(AG_Window *win)
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 
 	AG_LockVFS(&agDrivers);
-
-	if (win == NULL || agWindowFocused == win) {
-		agWindowToFocus = NULL;
+	if (win == NULL || agWindowFocused == win)
 		goto out;
-	}
 
 	/* Abort if there are any visible modal windows. */
 	if (agDriverOps->wm == AG_WM_MULTIPLE) {
@@ -1862,6 +1856,7 @@ CreateMinimizedIcon(AG_Window *_Nonnull win)
 		if (wDND == NULL) {
 			return (-1);
 		}
+		wDND->wmType = AG_WINDOW_WM_DND;
 		AG_ObjectAttach(wDND, icon);
 		AG_ObjectSetName(wDND, "icon%u", agWindowIconCounter++);
 	} else {
@@ -1922,8 +1917,10 @@ HideMinimizedIcon(AG_Window *_Nonnull win)
 		return;
 	}
 	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
-	AG_OBJECT_ISA(icon->wDND, "AG_Widget:AG_Window:*");
-	AG_WindowHide(icon->wDND);
+	if (icon->wDND) {
+		AG_OBJECT_ISA(icon->wDND, "AG_Widget:AG_Window:*");
+		AG_WindowHide(icon->wDND);
+	}
 }
 #endif /* AG_WIDGETS */
 
