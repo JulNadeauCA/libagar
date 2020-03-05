@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,10 +58,9 @@ CreateMaximizeButton(AG_Titlebar *_Nonnull tbar)
 {
 	AG_Button *bu;
 
-	bu = AG_ButtonNewS(tbar, AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS, NULL);
-	AG_ButtonJustify(bu, AG_TEXT_LEFT);
-	AG_ButtonSurfaceNODUP(bu, agIconWinMaximize.s);
-	AG_SetStyle(bu, "padding", "1 2 1 0");
+	bu = AG_ButtonNewS(tbar,
+	    AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS,
+	    "\xE2\x96\xA2");    /* U+25A2 WHITE SQUARE WITH ROUNDED CORNERS */
 	AG_SetEvent(bu, "button-pushed", MaximizeWindow, "%Cp", tbar);
 	tbar->maximize_btn = bu;
 }
@@ -79,10 +78,7 @@ CreateMinimizeButton(AG_Titlebar *_Nonnull tbar)
 {
 	AG_Button *bu;
 
-	bu = AG_ButtonNewS(tbar, AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS, NULL);
-	AG_ButtonJustify(bu, AG_TEXT_LEFT);
-	AG_ButtonSurfaceNODUP(bu, agIconWinMinimize.s);
-	AG_SetStyle(bu, "padding", "1 2 1 0");
+	bu = AG_ButtonNewS(tbar, AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS, " _ ");
 	AG_SetEvent(bu, "button-pushed", MinimizeWindow, "%Cp", tbar);
 	tbar->minimize_btn = bu;
 }
@@ -101,10 +97,9 @@ CreateCloseButton(AG_Titlebar *_Nonnull tbar)
 {
 	AG_Button *bu;
 
-	bu = AG_ButtonNewS(tbar, AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS, NULL);
-	AG_ButtonJustify(bu, AG_TEXT_LEFT);
-	AG_ButtonSurfaceNODUP(bu, agIconWinClose.s);
-	AG_SetStyle(bu, "padding", "1 2 1 0");
+	bu = AG_ButtonNewS(tbar, AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS,
+	    "\xE2\x9C\x95"); /* U+2715 MULTIPLICATION X */
+
 	AG_SetEvent(bu, "button-pushed", CloseWindow, "%Cp", tbar);
 	tbar->close_btn = bu;
 }
@@ -184,9 +179,7 @@ Init(void *_Nonnull obj)
 	tbar->close_btn = NULL;
 	
 	tbar->label = AG_LabelNewS(tbar, AG_LABEL_HFILL, _("Untitled"));
-	tbar->label->wPre = 16;
-	tbar->label->hPre = 1;
-	AG_SetStyle(tbar->label, "padding", "2 5 2 5");
+	AG_SetStyle(tbar->label, "padding", "5 0 0 5");
 
 	AG_SetEvent(tbar, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tbar, "mouse-button-up", MouseButtonUp, NULL);
