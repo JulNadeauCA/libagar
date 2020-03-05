@@ -329,7 +329,7 @@ PollRefreshTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 }
 
 static void
-OnFontChange(AG_Event *_Nonnull event)
+StyleChanged(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	AG_TlistItem *it;
@@ -505,7 +505,6 @@ Draw(void *_Nonnull obj)
 	const int wIcon = tl->icon_w;
 	const int wRow = tl->r.w;
 	const int rOffs = tl->rOffs;
-	const int zoomLvl = WIDGET(tl)->window->zoom;
 	int x, y=0, i=0, selSeen=0, selPos=1, h=HEIGHT(tl), yLast;
 
 	UpdatePolled(tl);
@@ -519,9 +518,6 @@ Draw(void *_Nonnull obj)
 	r.w = wRow - 4;
 	r.h = tl->r.h - 4;
 	AG_PushClipRect(tl, &r);
-
-	if (zoomLvl < AG_ZOOM_1_1)                         /* Distance effect */
-		AG_ColorLighten(&cLine, AG_ZOOM_1_1-zoomLvl);
 
 	yLast = h;
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -1420,8 +1416,8 @@ Init(void *_Nonnull obj)
 	
 	AG_SetInt(tl, "line-scroll-amount", 5);
 
-	AG_AddEvent(tl, "font-changed", OnFontChange, NULL);
-	AG_AddEvent(tl, "palette-changed", OnFontChange, NULL);
+	AG_AddEvent(tl, "font-changed", StyleChanged, NULL);
+	AG_AddEvent(tl, "palette-changed", StyleChanged, NULL);
 	AG_SetEvent(tl, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tl, "key-down", KeyDown, NULL);
 	AG_AddEvent(tl, "widget-shown", OnShow, NULL);
