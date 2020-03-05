@@ -16,26 +16,27 @@
 #endif
 
 typedef struct ag_numerical {
-	struct ag_widget wid;		/* AG_Widget -> AG_Numerical */
+	struct ag_widget wid;          /* AG_Widget -> AG_Numerical */
 	Uint flags;
-#define AG_NUMERICAL_HFILL	0x01
-#define AG_NUMERICAL_VFILL	0x02
-#define AG_NUMERICAL_INT	0x04	/* Default binding should be int */
-#define AG_NUMERICAL_EXCL	0x08	/* Exclusive access to bindings */
-#define AG_NUMERICAL_READONLY	0x10	/* Read-only mode */
-#define AG_NUMERICAL_SLOW	0x20	/* Update every 2s instead of 250ms */
+#define AG_NUMERICAL_HFILL     0x01
+#define AG_NUMERICAL_VFILL     0x02
+#define AG_NUMERICAL_INT       0x04  /* Make the default binding an int */
+                                     /* (default = float) */
+#define AG_NUMERICAL_EXCL      0x08  /* Assume exclusive access to variable */
+#define AG_NUMERICAL_READONLY  0x10  /* Read-only mode */
+#define AG_NUMERICAL_SLOW      0x20  /* Update every 2s (not 250ms) */
 
-	char format[28];			/* Print format (for reals) */
-	const AG_Unit *_Nonnull unit;		/* Conversion unit in use */
-	AG_UCombo *_Nullable units;		/* Unit selector */
-	char inTxt[AG_NUMERICAL_INPUT_MAX];	/* Input text buffer */
-	AG_Textbox *_Nonnull input;		/* Input textbox */
-	AG_Button *_Nonnull incbu;		/* Increment button */
-	AG_Button *_Nonnull decbu;		/* Decrement button */
-	int wUnitSel, hUnitSel;			/* Size hints for entry box */
-	int wPreUnit;				/* Size hint for unit selector */
+	char format[28];                     /* Print format (for reals) */
+	const AG_Unit *_Nonnull unit;        /* Conversion unit in use */
+	AG_UCombo *_Nullable units;          /* Unit selector */
+	char inTxt[AG_NUMERICAL_INPUT_MAX];  /* Input text buffer */
+	AG_Textbox *_Nonnull input;          /* Input textbox */
+	AG_Button *_Nonnull incbu;           /* Increment button */
+	AG_Button *_Nonnull decbu;           /* Decrement button */
+	int wUnitSel, hUnitSel;              /* Size hints for entry box */
+	int wPreUnit;                        /* Size hint for unit selector */
 	Uint32 _pad;
-	AG_Timer updateTo;			/* Timer (for non-EXCL mode) */
+	AG_Timer updateTo;                   /* Timer (for non-EXCL mode) */
 } AG_Numerical;
 
 #define AGNUMERICAL(obj)            ((AG_Numerical *)(obj))

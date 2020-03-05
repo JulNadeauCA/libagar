@@ -1748,7 +1748,9 @@ AG_DriverMwClass agDriverCocoa = {
 		AG_GL_DrawRectDithered,
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph,
-		AG_GL_StdDeleteList
+		AG_GL_StdDeleteList,
+		NULL,				/* getClipboardText */
+		NULL				/* setClipboardText */
 	},
 	COCOA_OpenWindow,
 	COCOA_CloseWindow,

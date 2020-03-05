@@ -127,7 +127,7 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL | AG_NOTEBOOK_VFILL);
 
-	tab = AG_NotebookAdd(nb, _("Video"), AG_BOX_VERT);
+	tab = AG_NotebookAdd(nb, _("Agar GUI"), AG_BOX_VERT);
 	{
 		const AG_Driver *drv = AGWIDGET(win)->drv;
 
@@ -154,6 +154,9 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		}
 
 		AG_SeparatorNewHoriz(tab);
+
+		AG_CheckboxNewInt(tab, 0, _("Clipboard integration"),
+		    &agClipboardIntegration);
 
 		AG_NumericalNewIntR(tab, 0, "%",
 		    _("Screenshot (JPEG) quality: "),

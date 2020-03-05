@@ -1165,7 +1165,9 @@ AG_DriverMwClass agDriverDUMMY = {
 		DUMMY_DrawRectDithered,
 		DUMMY_UpdateGlyph,
 		DUMMY_DrawGlyph,
-		DUMMY_DeleteList
+		DUMMY_DeleteList,
+		NULL,				/* getClipboardText */
+		NULL				/* setClipboardText */
 	},
 	DUMMY_OpenWindow,
 	DUMMY_CloseWindow,

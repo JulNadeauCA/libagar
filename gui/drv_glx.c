@@ -23,6 +23,28 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* The GLX_{Get,Set}ClipboardText() routines are based on code from SDL2 : */
+/*
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2017 Sam Lantinga <slouken@libsdl.org>
+
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
+*/
+
 /*
  * Driver for OpenGL graphics via X Windows System. 
  * One GL context is created for each Agar window.
@@ -56,34 +78,36 @@
 #include <agar/gui/cursors.h>
 #include <agar/gui/opengl.h>
 
-/* Print low-level X events */
 /* #define DEBUG_XEVENTS */
 /* #define DEBUG_MOTION_XEVENTS */
+#define DEBUG_CLIPBOARD
 
-static int nDrivers = 0;		/* Drivers open */
-static int agScreen = 0;		/* Default X screen (shared) */
+static int nDrivers = 0;                         /* Drivers open */
+static int agScreen = 0;                         /* X screen (shared) */
 
-static char           xkbBuf[64];	/* For Unicode key translation */
-static XComposeStatus xkbCompStatus;	/* For Unicode key translation */
+static char           xkbBuf[64];                /* For Unicode translation */
+static XComposeStatus xkbCompStatus;             /* For key composition */
 
-static _Nonnull_Mutex AG_Mutex agDisplayLock;	 /* Lock on agDisplay */
-static Display  *_Nullable     agDisplay = NULL; /* X display handle */
+static _Nonnull_Mutex AG_Mutex agDisplayLock;    /* Lock on agDisplay */
+static Display *_Nullable      agDisplay = NULL; /* X display handle */
 
-AG_EventSink *_Nullable glxEventSink = NULL;	 /* Process X events */
+static Window agClipboardWindow;                 /* For managing SelectionRequest */
+static int    agClipboardSelectionWaiting = 0;   /* Waiting on clipboard event */
+
+AG_EventSink *_Nullable glxEventSink = NULL;     /* Process X events */
 AG_EventSink *_Nullable glxEventEpilogue = NULL; /* Event sink epilogue */
-AG_EventSink *_Nullable glxEventSpinner = NULL;	 /* For agTimeOps_renderer */
+AG_EventSink *_Nullable glxEventSpinner = NULL;  /* For agTimeOps_renderer */
 
 /* Driver instance data */
 typedef struct ag_driver_glx {
 	struct ag_driver_mw _inherit;
-	Window        w;		/* X window */
-	GLXContext    glxCtx;		/* GLX context */
-
-	AG_GL_Context gl;		/* Common OpenGL context data */
-	AG_Mutex      lock;		/* Protect Xlib calls */
-	int           wmHintsSet;	/* WM hints have been set */
-	int           ptrIsGrabbed;	/* Active grab successful */
-	AG_Timer      toInitExpose;	/* Initial Expose */
+	Window w;                    /* X window */
+	GLXContext glxCtx;           /* GLX context */
+	AG_GL_Context gl;            /* Common OpenGL context data */
+	AG_Mutex lock;               /* Protect Xlib calls */
+	int wmHintsSet;              /* WM hints have been set */
+	int ptrIsGrabbed;            /* Active grab successful */
+	AG_Timer toInitExpose;       /* Initial Expose */
 } AG_DriverGLX;
 
 static int modMasksInited = 0;		/* For modifier key translation */
@@ -126,6 +150,7 @@ static int  GLX_InitGlobals(void);
 static void GLX_PostResizeCallback(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
 static void GLX_PostMoveCallback(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
 static void GLX_SetTransientFor(AG_Window *, AG_Window *_Nullable);
+static int  GLX_SetClipboardText(void *_Nonnull, const char *_Nonnull);
 
 #ifdef AG_WM_HINTS
 static void SetHints(AG_Window *_Nonnull);
@@ -752,6 +777,79 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	case DestroyNotify:
 	case ReparentNotify:
 		return (0);
+	case SelectionRequest:
+		if (agClipboardWindow != None &&
+		    agClipboardWindow == xev.xany.window) {
+			const XSelectionRequestEvent *req = &xev.xselectionrequest;
+			XEvent sev;
+			Uchar *selData;
+			Ulong nBytes, overflow;
+			int selFormat;
+#ifdef DEBUG_CLIPBOARD
+			Debug(NULL, "SelectionRequest (0x%lx -> 0x%lx)\n",
+			    req->requestor, req->target);
+#endif
+			memset(&sev, 0, sizeof(XEvent));
+			sev.xany.type = SelectionNotify;
+			sev.xselection.selection = req->selection;
+			sev.xselection.target = None;
+			sev.xselection.property = None;
+			sev.xselection.requestor = req->requestor;
+			sev.xselection.time = req->time;
+
+			if (XGetWindowProperty(agDisplay, DefaultRootWindow(agDisplay),
+			    XInternAtom(agDisplay,"AGAR_CUTBUFFER",False),
+			    0, INT_MAX/4, False, req->target,
+			    &sev.xselection.target, &selFormat, &nBytes,
+			    &overflow, &selData) == Success) {
+				Atom xaTargets = XInternAtom(agDisplay, "TARGETS", 0);
+
+				if (sev.xselection.target == req->target) {
+					XChangeProperty(agDisplay,
+					    req->requestor,
+					    req->property, sev.xselection.target,
+					    selFormat,
+					    PropModeReplace, selData, nBytes);
+				} else if (xaTargets == req->target) {
+					Atom suppFormats[] = {
+					    xaTargets,
+					    sev.xselection.target
+					};
+					XChangeProperty(agDisplay,
+					    req->requestor, req->property,
+					    XA_ATOM, 32, PropModeReplace,
+					    (Uchar *)suppFormats,
+					    sizeof(suppFormats)/sizeof(suppFormats[0]));
+
+					sev.xselection.property = req->property;
+					sev.xselection.target = xaTargets;
+				}
+				XFree(selData);
+			}
+			XSendEvent(agDisplay, req->requestor, False, 0, &sev);
+			XSync(agDisplay, False);
+		}
+		return (0);
+	case SelectionNotify:
+#ifdef DEBUG_CLIPBOARD
+		Debug(NULL, "SelectionNotify\n");
+#endif
+		if (agClipboardWindow != None &&
+		    agClipboardWindow == xev.xany.window) {
+			agClipboardSelectionWaiting = 0;
+		}
+		return (0);
+	case SelectionClear:
+#ifdef DEBUG_CLIPBOARD
+		Debug(NULL, "SelectionClear\n");
+#endif
+#if 0
+		if (agClipboardWindow != None &&
+		    agClipboardWindow == xev.xany.window) {
+			/* TODO Generate an event? */
+		}
+#endif
+		return (0);
 	default:
 		AG_SetError(_("Unknown X event %d"), xev.type);
 		return (-1);
@@ -1112,6 +1210,168 @@ GLX_SetCursorVisibility(void *_Nonnull obj, int flag)
 	/* XXX TODO */
 }
 
+static int
+CreateClipboardWindow(void)
+{
+	XSetWindowAttributes xwAttrs;
+
+	agClipboardWindow = XCreateWindow(agDisplay,
+	    RootWindow(agDisplay, DefaultScreen(agDisplay)),
+	    -10, -10, 1, 1, 0,
+	    CopyFromParent, InputOnly, CopyFromParent, 0, &xwAttrs);
+	if (agClipboardWindow == 0) {
+		AG_SetErrorS("Clipboard window could not be created");
+		return (-1);
+	}
+	XFlush(agDisplay);
+#ifdef DEBUG_CLIPBOARD
+	Debug(NULL, "Created clipboard window\n");
+#endif
+	return (0);
+}
+
+static char *_Nullable
+GLX_GetClipboardText(void *_Nonnull obj)
+{
+	AG_DriverGLX *glx = obj;
+	char *text = NULL;
+	Window owner;
+	Atom xaClipboard, sFormat, selection, selType;
+	Ulong nBytes, overflow;
+	Uchar *src;
+	int selFormat;
+
+#ifdef DEBUG_CLIPBOARD
+	Debug(glx, "GetClipboardText()\n");
+#endif
+	AG_MutexLock(&agDisplayLock);
+
+	if (agClipboardWindow == None &&
+	    CreateClipboardWindow() == -1) {
+		goto out;
+	}
+	if ((xaClipboard = XInternAtom(agDisplay, "CLIPBOARD", 0)) == None) {
+		text = NULL;
+		goto out;
+	}
+#ifdef X_HAVE_UTF8_STRING
+	sFormat = XInternAtom(agDisplay,"UTF8_STRING",False);
+#else
+	sFormat = XA_STRING;
+#endif
+	owner = XGetSelectionOwner(agDisplay, xaClipboard);
+	if (owner == None) {                           /* Legacy (no UTF8) */
+		owner = DefaultRootWindow(agDisplay);
+		selection = XA_CUT_BUFFER0;
+		sFormat = XA_STRING;
+	} else if (owner == agClipboardWindow) {
+		owner = DefaultRootWindow(agDisplay);
+		selection = XInternAtom(agDisplay, "AGAR_CUTBUFFER", False);
+	} else {
+		Uint32 waitStart, waitElapsed;
+
+		owner = agClipboardWindow;
+		selection = XInternAtom(agDisplay, "AGAR_SELECTION", False);
+		XConvertSelection(agDisplay, xaClipboard, sFormat, selection,
+		    owner, CurrentTime);
+
+		/*
+		 * When using synergy on Linux and when data has been put in
+		 * the clipboard on the remote (Windows anyway) machine then
+		 * agClipboardSelectionWaiting may never be set to 0.
+		 * Time out after a while.
+		 */
+		waitStart = AG_GetTicks();
+		agClipboardSelectionWaiting = 1;
+		while (agClipboardSelectionWaiting) {
+			AG_DriverEvent dev;
+
+			/* Pump events */
+			while (XPending(agDisplay)) {
+				if (GLX_GetNextEvent(NULL, &dev) == 1)
+					GLX_ProcessEvent(NULL, &dev);
+			}
+
+			waitElapsed = AG_GetTicks() - waitStart;
+			/*
+			 * Wait one second for a clipboard response.
+			 */
+			if (waitElapsed > 1000) {
+				agClipboardSelectionWaiting = 0;
+				/*
+				 * We need to set the clipboard text so that
+				 * next time we won't timeout, otherwise we
+				 * will hang on every call to this function.
+				 */
+				GLX_SetClipboardText(glx, "");
+				AG_SetError(_("Clipboard timeout"));
+				return Strdup("");
+			}
+		}
+	}
+
+	if (XGetWindowProperty(agDisplay, owner, selection, 0, INT_MAX/4, False,
+	    sFormat, &selType, &selFormat, &nBytes, &overflow, &src) == Success) {
+#ifdef DEBUG_CLIPBOARD
+		Debug(NULL, "XGetWindowProperty: selType=%lx (sFormat=%lx), nBytes=%ld\n",
+		    selType, sFormat, (long)nBytes);
+#endif
+		if (selType == sFormat) {
+			if ((text = TryMalloc(nBytes+1)) != NULL) {
+				memcpy(text, src, nBytes);
+				text[nBytes] = '\0';
+			}
+		}
+		XFree(src);
+	}
+out:
+	AG_MutexUnlock(&agDisplayLock);
+	return (text != NULL) ? text : Strdup("");
+}
+
+static int
+GLX_SetClipboardText(void *_Nonnull obj, const char *_Nonnull text)
+{
+	AG_DriverGLX *glx = obj;
+	Atom xaClipboard;
+
+	AG_MutexLock(&agDisplayLock);
+
+	if (agClipboardWindow == None &&
+	    CreateClipboardWindow() == -1)
+		goto fail;
+
+#ifdef DEBUG_CLIPBOARD
+	Debug(glx, "Change AGAR_CUTBUFFER -> \"%s\" (len %ld)\n", text,
+	    (long)strlen(text));
+#endif
+	/* Save the selection on the root window */
+	XChangeProperty(agDisplay, DefaultRootWindow(agDisplay),
+	    XInternAtom(agDisplay,"AGAR_CUTBUFFER",False),
+#ifdef X_HAVE_UTF8_STRING
+	    XInternAtom(agDisplay,"UTF8_STRING",False),
+#else
+	    XA_STRING,
+#endif
+	    8, PropModeReplace, (const Uchar *)text, strlen(text));
+
+	xaClipboard = XInternAtom(agDisplay, "CLIPBOARD", 0);
+	if (xaClipboard != None &&
+	    (XGetSelectionOwner(agDisplay, xaClipboard) != agClipboardWindow))
+		XSetSelectionOwner(agDisplay, xaClipboard,
+		    agClipboardWindow, CurrentTime);
+
+	if (XGetSelectionOwner(agDisplay, XA_PRIMARY) != agClipboardWindow)
+		XSetSelectionOwner(agDisplay, XA_PRIMARY,
+		    agClipboardWindow, CurrentTime);
+
+	AG_MutexUnlock(&agDisplayLock);
+	return (0);
+fail:
+	AG_MutexUnlock(&agDisplayLock);
+	return (-1);
+}
+
 /*
  * Window operations
  */
@@ -1193,14 +1453,13 @@ GLX_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	xwAttrs.background_pixmap = None;
 	xwAttrs.border_pixel = (xvi->visual == DefaultVisual(agDisplay,agScreen)) ?
 	                       BlackPixel(agDisplay,agScreen) : 0;
-	xwAttrs.event_mask = KeyPressMask|KeyReleaseMask|
-	                     ButtonPressMask|ButtonReleaseMask|
-			     EnterWindowMask|LeaveWindowMask|
-			     PointerMotionMask|ButtonMotionMask|
-			     KeymapStateMask|
-			     StructureNotifyMask|
-			     FocusChangeMask|
-			     ExposureMask;
+
+	xwAttrs.event_mask = KeyPressMask | KeyReleaseMask |
+	                     ButtonPressMask | ButtonReleaseMask |
+			     EnterWindowMask | LeaveWindowMask |
+			     PointerMotionMask | ButtonMotionMask |
+			     KeymapStateMask | StructureNotifyMask |
+			     FocusChangeMask | ExposureMask;
 
 	/* Create a new window. */
 	depth = (depthReq >= 1) ? depthReq : xvi->depth;
@@ -2136,6 +2395,9 @@ GLX_InitGlobals(void)
 	wmNetWmWindowType = XInternAtom(agDisplay, "_NET_WM_WINDOW_TYPE", True);
 	wmNetWmWindowOpacity = XInternAtom(agDisplay, "_NET_WM_WINDOW_OPACITY", True);
 #endif
+
+	agClipboardWindow = None;
+
 	/* Set up event filters for standard AG_EventLoop(). */
 	if ((glxEventSink = AG_AddEventSink(AG_SINK_READ, xfd, 0, GLX_EventSink, "%p", agDisplay)) == NULL ||
 	    (glxEventEpilogue = AG_AddEventEpilogue(GLX_EventEpilogue, "%p", agDisplay)) == NULL) {
@@ -2234,7 +2496,9 @@ AG_DriverMwClass agDriverGLX = {
 		AG_GL_DrawRectDithered,
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph,
-		AG_GL_StdDeleteList
+		AG_GL_StdDeleteList,
+		GLX_GetClipboardText,
+		GLX_SetClipboardText
 	},
 	GLX_OpenWindow,
 	GLX_CloseWindow,

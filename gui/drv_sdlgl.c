@@ -741,7 +741,9 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_GL_DrawRectDithered,
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph,
-		AG_GL_StdDeleteList
+		AG_GL_StdDeleteList,
+		NULL,				/* getClipboardText */
+		NULL				/* setClipboardText */
 	},
 	0,
 	SDLGL_OpenVideo,

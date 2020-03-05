@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -279,11 +279,16 @@ typedef struct ag_driver_class {
                             AG_AlphaFn fnSrc, AG_AlphaFn fnDst);
     void (*drawRectDithered)(void *d, const AG_Rect *r, const AG_Color *c);
 
+    /* Typography */
     void (*updateGlyph)(void *d, AG_Glyph *gl);
     void (*drawGlyph)(void *d, const AG_Glyph *gl, int x, int y);
 
     /* Display list management (GL driver specific) */
     void (*deleteList)(void *d, Uint listID);
+
+    /* Clipboard access */
+    char *(*getClipboardText)(void *);
+    int   (*setClipboardText)(void *, const char *);
 } AG_DriverClass;
 .Ed
 .Pp
@@ -651,6 +656,16 @@ operation arranges for the specified display list to be deleted as soon as
 possible (typically in the
 .Fn endRendering
 routine).
+.Pp
+The optional
+.Fn getClipboardText
+operation returns a newly-allocated string with the clipboard contents (in UTF-8).
+The returned string is freeable by the caller.
+.Pp
+The optional
+.Fn setClipboardText
+operation sets the clipboard contents to a copy of the given UTF-8 string
+and returns 0 on success or -1 on failure.
 .Sh EVENT PROCESSING
 .nr nS 1
 .Ft int

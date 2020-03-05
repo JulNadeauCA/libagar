@@ -24,9 +24,10 @@
  */
 
 /*
- * The base Agar text editor. It enables the user to edit single- or multi-line,
- * NUL-terminated strings. It supports ASCII, UTF-8, UCS-4 and other encodings
- * through iconv). It interprets ANSI SGR attributes. Used by AG_Textbox(3).
+ * The base Agar text editor (the low-level widget behind AG_Textbox(3)).
+ * It enables the user to edit single- or multi-line, NUL-terminated strings.
+ * It supports ASCII, UTF-8, UCS-4 (and other encodings through iconv), and
+ * also interprets ANSI SGR attributes.
  */
 
 #include <agar/core/core.h>
@@ -1578,13 +1579,63 @@ AG_EditableCut(AG_Editable *ed, AG_EditableBuffer *buf, AG_EditableClipboard *cb
 int
 AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf, AG_EditableClipboard *cb)
 {
-	const AG_Size selLen = (ed->selEnd - ed->selStart);
+	AG_Driver *drv = WIDGET(ed)->drv;
+	const AG_DriverClass *drvOps = AGDRIVER_CLASS(drv);
+	AG_Size selLen;
+	const int selStart = ed->selStart;
+	const int selEnd   = ed->selEnd;
 
-	if (selLen == 0) {
-		return (0);
-	}
 	AG_EditableValidateSelection(ed, buf);
-	AG_EditableCopyChunk(ed, cb, &buf->s[ed->selStart], selLen);
+	if ((selLen = (selEnd - selStart)) == 0)
+		return (0);
+
+	if (!agClipboardIntegration ||
+	    drvOps->setClipboardText == NULL) {       /* Internal clipboard */
+		AG_EditableCopyChunk(ed, cb,
+		    &buf->s[selStart], selLen);
+	} else {                                        /* Native clipboard */
+		char *s;
+#ifdef AG_UNICODE
+		AG_Char cEndSave;
+		AG_Size utf8len;
+
+		cEndSave = buf->s[selEnd];
+		buf->s[selEnd] = '\0';
+		if (AG_LengthUTF8FromUCS4(&buf->s[selStart], &utf8len) == -1) {
+			buf->s[selEnd] = cEndSave;
+			return (0);
+		}
+		utf8len++;
+		Debug(ed, "selLen=%ld, utf8len=%ld, startChar=%c, lastChar=%c\n",
+		    (long)selLen, (long)utf8len, (char)buf->s[selStart], (char)cEndSave);
+		if ((s = TryMalloc(utf8len)) == NULL) {
+			Verbose(_("Out of memory for Copy (%lu bytes)\n"), utf8len);
+			buf->s[selEnd] = cEndSave;
+			return (0);
+		}
+		if (AG_ExportUnicode("UTF-8", s, &buf->s[selStart], utf8len)
+		    == -1) {
+			buf->s[selEnd] = cEndSave;
+			Verbose(_("Copy failed (%s)\n"), AG_GetError());
+			return (0);
+		}
+		buf->s[selEnd] = cEndSave;
+#else
+		if ((s = TryMalloc(selLen+1)) == NULL) {
+			Verbose(_("Out of memory for Copy (%lu bytes)\n"),
+			    selLen+1);
+			return (0);
+		}
+		memcpy(s, &buf->s[selStart], selLen);
+		s[selLen] = '\0';
+#endif /* !AG_UNICODE */
+
+		if (drvOps->setClipboardText(drv, s) == -1) {
+			free(s);
+			return (0);
+		}
+		free(s);
+	}
 	return (1);
 }
 
@@ -1593,7 +1644,8 @@ int
 AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
     AG_EditableClipboard *cb)
 {
-	AG_Char *c;
+	AG_Driver *drv = WIDGET(ed)->drv;
+	const AG_DriverClass *drvOps = AGDRIVER_CLASS(drv);
 
 	if (AG_EditableReadOnly(ed))
 		return (0);
@@ -1601,54 +1653,111 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 	if (ed->selEnd > ed->selStart)
 		AG_EditableDelete(ed, buf);
 
-	AG_MutexLock(&cb->lock);
+	if (agClipboardIntegration &&
+	    drvOps->getClipboardText != NULL) {         /* Native clipboard */
+		char *s, *c;
+		AG_Char *ucs;
+		AG_Size ucsLen;
 
-	if (cb->s == NULL)
-		goto out;
+		if ((s = drvOps->getClipboardText(drv)) == NULL) {
+			goto out;
+		}
+		if (!(ed->flags & AG_EDITABLE_MULTILINE) &&
+		    (c = strchr(s, '\n')) != NULL) {
+			*c = '\0';
+		}
 
-	if (!(ed->flags & AG_EDITABLE_MULTILINE)) {
-		for (c = &cb->s[0]; *c != '\0'; c++) {
-			if (*c == '\n') {
-				*c = '\0';
-				break;
+		Debug(drv, "GetClipboardText() -> \"%s\"\n", s);
+
+		if (ed->flags & AG_EDITABLE_INT_ONLY) {
+			for (c = &s[0]; *c != '\0'; c++) {
+				if (!CharIsIntOnly(*c)) {
+					AG_SetError(_("Non-integer input near `%c'"), (char)*c);
+					goto fail;
+				}
+			}
+		} else if (ed->flags & AG_EDITABLE_FLT_ONLY) {
+			for (c = &s[0]; *c != '\0'; c++) {
+				if (!CharIsFltOnly(*c)) {
+					AG_SetError(_("Non-float input near `%c'"), (char)*c);
+					goto fail;
+				}
 			}
 		}
-	}
-	if (ed->flags & AG_EDITABLE_INT_ONLY) {
-		for (c = &cb->s[0]; *c != '\0'; c++) {
-			if (!CharIsIntOnly(*c)) {
-				AG_SetError(_("Non-integer input near `%c'"), (char)*c);
-				goto fail;
-			}
-		}
-	} else if (ed->flags & AG_EDITABLE_FLT_ONLY) {
-		for (c = &cb->s[0]; *c != '\0'; c++) {
-			if (!CharIsFltOnly(*c)) {
-				AG_SetError(_("Non-float input near `%c'"), (char)*c);
-				goto fail;
-			}
-		}
-	}
 
-	if (AG_EditableGrowBuffer(ed, buf, cb->s, cb->len) == -1) {
-		goto fail;
+		if ((ucs = AG_ImportUnicode("UTF-8", s, &ucsLen, NULL)) == NULL) {
+			goto fail;
+		}
+		if (AG_EditableGrowBuffer(ed, buf, ucs, ucsLen) == -1) {
+			free(ucs);
+			goto fail;
+		}
+		if (ed->pos < buf->len) {
+			memmove(&buf->s[ed->pos + ucsLen], &buf->s[ed->pos],
+			    (buf->len - ed->pos)*sizeof(AG_Char));
+		}
+		memcpy(&buf->s[ed->pos], ucs, ucsLen*sizeof(AG_Char));
+		buf->len += ucsLen;
+		buf->s[buf->len] = '\0';
+		ed->pos += ucsLen;
+
+		free(ucs);
+		free(s);
+	} else {                                      /* Internal clipboard */
+		AG_Char *c;
+
+		AG_MutexLock(&cb->lock);
+
+		if (cb->s == NULL) {
+			AG_MutexUnlock(&cb->lock);
+			goto out;
+		}
+		if (!(ed->flags & AG_EDITABLE_MULTILINE)) {
+			for (c = &cb->s[0]; *c != '\0'; c++) {
+				if (*c == '\n') {
+					*c = '\0';
+					break;
+				}
+			}
+		}
+		if (ed->flags & AG_EDITABLE_INT_ONLY) {
+			for (c = &cb->s[0]; *c != '\0'; c++) {
+				if (!CharIsIntOnly(*c)) {
+					AG_SetError(_("Non-integer input near `%c'"), (char)*c);
+					AG_MutexUnlock(&cb->lock);
+					goto fail;
+				}
+			}
+		} else if (ed->flags & AG_EDITABLE_FLT_ONLY) {
+			for (c = &cb->s[0]; *c != '\0'; c++) {
+				if (!CharIsFltOnly(*c)) {
+					AG_SetError(_("Non-float input near `%c'"), (char)*c);
+					AG_MutexUnlock(&cb->lock);
+					goto fail;
+				}
+			}
+		}
+
+		if (AG_EditableGrowBuffer(ed, buf, cb->s, cb->len) == -1) {
+			AG_MutexUnlock(&cb->lock);
+			goto fail;
+		}
+		if (ed->pos < buf->len) {
+			memmove(&buf->s[ed->pos + cb->len], &buf->s[ed->pos],
+			    (buf->len - ed->pos)*sizeof(AG_Char));
+		}
+		memcpy(&buf->s[ed->pos], cb->s, cb->len*sizeof(AG_Char));
+		buf->len += cb->len;
+		buf->s[buf->len] = '\0';
+		ed->pos += cb->len;
+		AG_MutexUnlock(&cb->lock);
 	}
-	if (ed->pos < buf->len) {
-		memmove(&buf->s[ed->pos + cb->len], &buf->s[ed->pos],
-		    (buf->len - ed->pos)*sizeof(AG_Char));
-	}
-	memcpy(&buf->s[ed->pos], cb->s, cb->len*sizeof(AG_Char));
-	buf->len += cb->len;
-	buf->s[buf->len] = '\0';
-	ed->pos += cb->len;
+out:
 	ed->xScrollTo = &ed->xCurs;
 	ed->yScrollTo = &ed->yCurs;
-out:
-	AG_MutexUnlock(&cb->lock);
 	return (1);
 fail:
-	Verbose("Paste Failed: %s\n", AG_GetError());
-	AG_MutexUnlock(&cb->lock);
+	Verbose(_("Paste Failed (%s)\n"), AG_GetError());
 	return (0);
 }
 

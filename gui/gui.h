@@ -30,7 +30,7 @@
 #define AG_VIDEO_SDL           0x2000
 
 __BEGIN_DECLS
-extern int agGUI, agRenderingContext, agStereo, agXsync;
+extern int agGUI, agRenderingContext, agStereo, agXsync, agClipboardIntegration;
 extern int agKbdDelay, agKbdRepeat;
 extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval,
            agMouseScrollIval, agScrollButtonIval, agPageIncrement,

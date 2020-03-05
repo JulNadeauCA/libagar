@@ -168,12 +168,18 @@ typedef struct ag_driver_class {
 	void (*_Nonnull drawRectDithered)(void *_Nonnull, const AG_Rect *_Nonnull,
 	                                  const AG_Color *_Nonnull);
 
-	/* Font engine operations */
+	/* Typography */
 	void (*_Nonnull updateGlyph)(void *_Nonnull, struct ag_glyph *_Nonnull);
-	void (*_Nonnull drawGlyph)(void *_Nonnull,
-	                           const struct ag_glyph *_Nonnull, int,int);
+	void (*_Nonnull drawGlyph)(void *_Nonnull, const struct ag_glyph *_Nonnull,
+	                           int,int);
+
 	/* Display list management */
 	void (*_Nullable deleteList)(void *_Nonnull, Uint);
+
+	/* Clipboard access */
+	char *_Nullable (*_Nullable getClipboardText)(void *_Nonnull);
+	int             (*_Nullable setClipboardText)(void *_Nonnull,
+	                                              const char *_Nonnull);
 } AG_DriverClass;
 
 /* Generic driver instance. */

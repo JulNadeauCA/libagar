@@ -271,7 +271,7 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	win->wmType = (m->style == AG_MENU_DROPDOWN) ?
 	              AG_WINDOW_WM_DROPDOWN_MENU :
 		      AG_WINDOW_WM_POPUP_MENU;
-	AG_ObjectSetName(win, "menu%u", agMenuCounter++);
+	AG_ObjectSetName(win, "_menu%u", agMenuCounter++);
 	AG_WindowSetPadding(win, 0,0,0,0);
 
 #ifdef DEBUG_EXPAND

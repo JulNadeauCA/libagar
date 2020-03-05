@@ -1881,7 +1881,9 @@ AG_DriverSwClass agDriverSDLFB = {
 		SDLFB_DrawRectDithered,
 		SDLFB_UpdateGlyph,
 		SDLFB_DrawGlyph,
-		NULL				/* deleteList */
+		NULL,				/* deleteList */
+		NULL,				/* getClipboardText */
+		NULL				/* setClipboardText */
 	},
 	0,
 	SDLFB_OpenVideo,

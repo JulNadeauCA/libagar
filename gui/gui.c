@@ -174,6 +174,7 @@ int agGUI = 0;				/* GUI is initialized */
 int agRenderingContext = 0;		/* In rendering context */
 int agStereo = 0;			/* Stereoscopic display */
 int agXsync = 0;			/* Synchronous X events */
+int agClipboardIntegration = 1;		/* Native clipboard integration */
 int agKbdDelay = 250;			/* Key repeat delay */
 int agKbdRepeat = 30;			/* Key repeat interval */
 int agMouseDblclickDelay = 250;		/* Mouse double-click delay */

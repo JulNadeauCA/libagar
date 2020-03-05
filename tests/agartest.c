@@ -874,6 +874,7 @@ main(int argc, char *argv[])
 
 	AG_LabelNewS(pane->div[0], 0, _("Available tests: "));
 	tl = AG_TlistNew(pane->div[0], AG_TLIST_EXPAND);
+	AG_SetStyle(tl, "font-family", "vera-mono");
 	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXX>", 10);
 	for (pTest = &testCases[0]; *pTest != NULL; pTest++) {
 		char path[AG_FILENAME_MAX];

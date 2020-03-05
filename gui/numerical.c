@@ -81,10 +81,11 @@ AG_NumericalNewS(void *parent, Uint flags, const char *unit, const char *label)
 
 	if (flags & AG_NUMERICAL_HFILL) { AG_ExpandHoriz(num); }
 	if (flags & AG_NUMERICAL_VFILL) { AG_ExpandVert(num); }
-	if (label != NULL) {
+
+	if (label)
 		AG_TextboxSetLabelS(num->input, label);
-	}
-	if (unit != NULL) {
+
+	if (unit) {
 		num->units = AG_UComboNew(num, 0);
 		AG_SetEvent(num->units, "ucombo-selected",
 		    UnitSelected, "%p", num);
@@ -350,6 +351,7 @@ static void
 UpdateUnitSelector(AG_Numerical *_Nonnull num)
 {
 	AG_ButtonTextS(num->units->button, AG_UnitAbbr(num->unit));
+
 	if (WIDGET(num)->window != NULL &&
 	    WIDGET(num)->window->visible)
 		AG_NumericalUpdate(num);
@@ -424,7 +426,8 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	AG_TlistSizeHintLargest(num->units->list, 5);
 	AG_ObjectUnlock(num->units->list);
 
-	if (num->wPreUnit > 0) { num->wPreUnit += 8; }
+	if (num->wPreUnit > 0) { num->wPreUnit += 8; }       /* XXX */
+
 	AG_UComboSizeHintPixels(num->units, num->wPreUnit,
 	    nUnits<6 ? (nUnits + 1) : 6);
 	

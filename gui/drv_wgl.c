@@ -1465,7 +1465,9 @@ AG_DriverMwClass agDriverWGL = {
 		AG_GL_DrawRectDithered,
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph,
-		AG_GL_StdDeleteList
+		AG_GL_StdDeleteList,
+		NULL,				/* getClipboardText */
+		NULL				/* setClipboardText */
 	},
 	WGL_OpenWindow,
 	WGL_CloseWindow,
