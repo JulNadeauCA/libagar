@@ -179,6 +179,8 @@ AG_TextboxSetIntOnly(AG_Textbox *tb, int flag)
 void
 AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 {
+	AG_Window *winParent;
+
 	AG_EditableSetWordWrap(tb->ed, flag);
 
 	if (tb->ed->flags & AG_EDITABLE_MULTILINE) {
@@ -200,6 +202,9 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 			AG_TextboxSizeHintLines(tb, 4);
 		}
 	}
+
+	if ((winParent = WIDGET(tb)->window) != NULL)
+		AG_WindowUpdate(winParent);
 }
 
 /* Return the current cursor position. */
