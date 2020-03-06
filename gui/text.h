@@ -22,9 +22,13 @@
 #define AG_GLYPH_NBUCKETS (AG_MODEL * 8)
 #endif
 
-/* Ignore any ANSI escape sequence longer than this. */
+/*
+ * Maximum length of ANSI control sequences. Longer sequences are ignored.
+ * Note: Increasing this impacts the performance of backward ansi-scanning
+ * routines such as AG_Editable's CursorLeft().
+ */
 #ifndef AG_TEXT_ANSI_SEQ_MAX
-#define AG_TEXT_ANSI_SEQ_MAX 127
+#define AG_TEXT_ANSI_SEQ_MAX 64
 #endif
 
 /* Maximum ANSI parameter bytes (for those sequences we care about). */

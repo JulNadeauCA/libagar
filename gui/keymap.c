@@ -435,8 +435,28 @@ static int
 CursorLeft(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
+	AG_TextANSI ansi;
+	AG_Char *c;
+	int i;
+
 	if ((ed->pos - 1) >= 0) {
 		ed->pos--;
+
+		for (c  = &buf->s[ed->pos], i = 0;
+		     c >= &buf->s[0] && (i <= AG_TEXT_ANSI_SEQ_MAX);
+		     c--, i++) {
+			if (c[0] == 0x1b &&
+			    c[1] >= 0x40 &&
+			    c[2] <= 0x5f &&
+			    c[3] != '\0') {
+				if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0 &&
+				    i <= ansi.len) {
+					ed->pos -= (ansi.len + 1);
+				}
+				break;
+			}
+		}
 		CursorUpdateSelection(ed, keymod);
 	}
 	ed->flags |= AG_EDITABLE_MARKPREF;
@@ -452,8 +472,21 @@ static int
 CursorRight(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
+	AG_TextANSI ansi;
+	AG_Char *c;
+
 	if (ed->pos < buf->len) {
 		ed->pos++;
+
+		c = &buf->s[ed->pos];
+		if (c[0] == 0x1b &&
+		    c[1] >= 0x40 &&
+		    c[2] <= 0x5f &&
+		    c[3] != '\0') {
+			if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0)
+				ed->pos += (ansi.len + 1);
+		}
 		CursorUpdateSelection(ed, keymod);
 	}
 	ed->flags |= AG_EDITABLE_MARKPREF;

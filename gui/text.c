@@ -23,6 +23,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* TextSizeFT() and TextRenderFT() are based on code from SDL_ttf : */
 /*
  * Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002  Sam Lantinga
  * All rights reserved.
@@ -52,12 +53,9 @@
  */
 
 /*
- * Rendering/sizing of UCS-4 or UTF-8 text using FreeType (if available) or
- * an internal bitmap font engine.
- *
- * TextSizeFT() and TextRenderFT() were originally based on code from SDL_ttf
- * (http://libsdl.org/projects/SDL_ttf/), placed under BSD license with
- * kind permission from Sam Lantinga.
+ * Agar font engine. We handle high-level rendering and sizing of UTF-8 text
+ * (internally converted to UCS-4) using either FreeType or an internal bitmap
+ * font engine (for platforms without FreeType).
  */
 
 #include <agar/config/have_freetype.h>
@@ -101,6 +99,7 @@
 #include <ctype.h>
 
 /* #define DEBUG_FONTS */
+/* #define DEBUG_ANSI */
 
 /* Default fonts */
 const char *agDefaultFaceFT = "_agFontAlgue";
@@ -1932,7 +1931,7 @@ AG_TextParseANSI(const AG_TextState *ts, AG_TextANSI *_Nonnull ansi,
 		goto fail;
 	}
 
-	for (c = &s[1]; (len = (int)(c-s)) < AG_TEXT_ANSI_SEQ_MAX; c++) {
+	for (c = &s[1]; (len = (int)(c-s)) <= AG_TEXT_ANSI_SEQ_MAX; c++) {
 		char buf[AG_TEXT_ANSI_PARAM_MAX], *pBuf;
 		const AG_Char *pSrc;
 		char *tok;
@@ -1954,7 +1953,9 @@ AG_TextParseANSI(const AG_TextState *ts, AG_TextANSI *_Nonnull ansi,
 				pSrc++;
 			}
 			pBuf[-1] = '\0';
-/*			AG_Verbose("SGR (%d bytes): \"%s\"\n", len, buf); */
+#ifdef DEBUG_ANSI
+			Debug(NULL, "SGR (%d bytes): \"%s\"\n", len, buf);
+#endif
 			pBuf = buf;
 			if ((tok = Strsep(&pBuf, ":;")) == NULL) {
 				break;
@@ -1963,7 +1964,9 @@ AG_TextParseANSI(const AG_TextState *ts, AG_TextANSI *_Nonnull ansi,
 				goto fail;
 			}
 			ansi->sgr = (enum ag_text_sgr_parameter) sgr;
-/*			AG_Verbose("SGR parameter %d\n", ansi->sgr); */
+#ifdef DEBUG_ANSI
+			Debug(NULL, "SGR parameter %d\n", ansi->sgr);
+#endif
 			if (sgr == 0) {
 				break;
 			}
