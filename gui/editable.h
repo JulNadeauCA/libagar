@@ -110,9 +110,10 @@ typedef struct ag_editable {
 	int lineSkip;			/* Y-increment in multiline mode */
 	int suPlaceholder;		/* Rendered "placeholder" text */
 	int selDblClick;                /* Position of last double click */
-	AG_Timer toRepeat;		/* Key repeat timer */
+	AG_Timer toRepeat;		/* Key repeat timers (not direction keys) */
 	AG_Timer toCursorBlink;		/* Cursor blink timer */
 	AG_Timer toDblClick;		/* Double click timer */
+	AG_Timer toRepeatDirs[4];	/* Key repeat timers (direction keys) */
 } AG_Editable;
 
 #define AGEDITABLE(obj)            ((AG_Editable *)(obj))

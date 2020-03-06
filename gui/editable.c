@@ -599,9 +599,13 @@ static void
 OnFocusGain(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
+	int i;
 
 	AG_LockTimers(ed);
 	AG_DelTimer(ed, &ed->toRepeat);
+	for (i = 0; i < 4; i++) {
+		AG_DelTimer(ed, &ed->toRepeatDirs[i]);
+	}
 	AG_AddTimer(ed, &ed->toCursorBlink, agTextBlinkRate, BlinkTimeout, NULL);
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 	AG_UnlockTimers(ed);
@@ -613,9 +617,13 @@ static void
 OnFocusLoss(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
+	int i;
 
 	AG_LockTimers(ed);
 	AG_DelTimer(ed, &ed->toRepeat);
+	for (i = 0; i < 4; i++) {
+		AG_DelTimer(ed, &ed->toRepeatDirs[i]);
+	}
 	AG_DelTimer(ed, &ed->toCursorBlink);
 	AG_DelTimer(ed, &ed->toDblClick);
 	ed->flags &= ~(AG_EDITABLE_BLINK_ON | AG_EDITABLE_CURSOR_MOVING);
@@ -1227,6 +1235,7 @@ KeyDown(AG_Event *_Nonnull event)
 	const int keysym = AG_INT(1);
 	const int keymod = AG_INT(2);
 	const AG_Char ch = AG_CHAR(3);
+	int rv;
 
 	switch (keysym) {
 	case AG_KEY_RETURN:
@@ -1265,11 +1274,28 @@ KeyDown(AG_Event *_Nonnull event)
 
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 
-	if (ProcessKey(ed, keysym, keymod, ch) == 1) {
-		AG_AddTimer(ed, &ed->toRepeat, agKbdDelay,
-		    KeyRepeatTimeout, "%i,%i,%lu", keysym, keymod, ch);
-	} else {
-		AG_DelTimer(ed, &ed->toRepeat);
+	rv = ProcessKey(ed, keysym, keymod, ch);
+
+	switch (keysym) {
+	case AG_KEY_UP:
+	case AG_KEY_DOWN:
+	case AG_KEY_RIGHT:
+	case AG_KEY_LEFT:
+		if (rv == 1) {
+			AG_AddTimer(ed, &ed->toRepeatDirs[keysym - AG_KEY_UP],
+			    agKbdDelay,
+			    KeyRepeatTimeout, "%i,%i,%lu", keysym, keymod, ch);
+		} else {
+			AG_DelTimer(ed, &ed->toRepeatDirs[keysym - AG_KEY_UP]);
+		}
+	default:
+		if (rv == 1) {
+			AG_AddTimer(ed, &ed->toRepeat, agKbdDelay,
+			    KeyRepeatTimeout, "%i,%i,%lu", keysym, keymod, ch);
+		} else {
+			AG_DelTimer(ed, &ed->toRepeat);
+		}
+		break;
 	}
 	AG_Redraw(ed);
 }
@@ -1358,10 +1384,16 @@ KeyUp(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
 	const int keysym = AG_INT(1);
-
+	
 	AG_DelTimer(ed, &ed->toRepeat);
 
 	switch (keysym) {
+	case AG_KEY_UP:
+	case AG_KEY_DOWN:
+	case AG_KEY_RIGHT:
+	case AG_KEY_LEFT:
+		AG_DelTimer(ed, &ed->toRepeatDirs[keysym - AG_KEY_UP]);
+		break;
 	case AG_KEY_LSHIFT:
 	case AG_KEY_RSHIFT:
 		ed->posKbdSel = 0;
@@ -2455,8 +2487,12 @@ Init(void *_Nonnull obj)
 	ed->fontMaxHeight = agTextFontHeight;
 	ed->lineSkip = agTextFontLineSkip;
 	ed->suPlaceholder = -1;
-	
+
 	AG_InitTimer(&ed->toRepeat, "repeat", 0);
+	AG_InitTimer(&ed->toRepeatDirs[0], "repeatU", 0);
+	AG_InitTimer(&ed->toRepeatDirs[1], "repeatD", 0);
+	AG_InitTimer(&ed->toRepeatDirs[2], "repeatL", 0);
+	AG_InitTimer(&ed->toRepeatDirs[3], "repeatR", 0);
 	AG_InitTimer(&ed->toCursorBlink, "cursorBlink", 0);
 	AG_InitTimer(&ed->toDblClick, "dblClick", 0);
 

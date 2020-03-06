@@ -179,7 +179,7 @@ int agKbdDelay = 250;			/* Key repeat delay */
 int agKbdRepeat = 30;			/* Key repeat interval */
 int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
 int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
-int agMouseSpinIval = 1;		/* Spinbutton repeat interval */
+int agMouseSpinIval = 30;		/* Spinbutton repeat interval */
 int agMouseScrollIval = 1;		/* Scrollbar increment interval */
 int agScrollButtonIval = 100;		/* Scrollbar button interval */
 #ifdef AG_UNICODE
