@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -117,7 +117,7 @@ include:
 .It AG_BOX_HOMOGENOUS
 Divide space into equal parts.
 .It AG_BOX_SHADING
-Draw 3D-style shading even if no "background-color" is set.
+Show 3D-style shading even if no "background-color".
 .It AG_BOX_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -143,20 +143,34 @@ variants are equivalent to setting
 and
 .Dv AG_BOX_VERT .
 .Pp
-The
+.Fn AG_BoxSetStyle
+selects an alternate background and border style:
+.Pp
+.Bl -tag -compact -width "AG_BOX_STYLE_PLAIN "
+.It Dv AG_BOX_STYLE_NONE
+No background.
+.It Dv AG_BOX_STYLE_BOX
+Raised box & border.
+.It Dv AG_BOX_STYLE_WELL
+3D well & border (the default).
+.It Dv AG_BOX_STYLE_PLAIN
+Filled rectangle.
+.El
+.Pp
+Visible background styles use the style attributes "background-color",
+"low-color" and "high-color".
+.Pp
 .Fn AG_BoxSetLabel
-function arranges for a text label to be displayed over the container.
+arranges for a text label to be displayed over the container.
 If an argument of NULL is passed, the label is removed.
 .Pp
-The
 .Fn AG_BoxSetHomogenous
-function sets/clears the
+sets or clears the
 .Dv AG_BOX_HOMOGENOUS
 flag, which controls whether available space is divided evenly between widgets.
 .Pp
-The
 .Fn AG_BoxSetPadding
-function sets the padding around the group of child widgets to
+sets the padding around the group of child widgets to
 .Fa padding
 pixels.
 .Fn AG_BoxSetSpacing
@@ -168,18 +182,17 @@ pixels.
 sets the depth of the shading for
 .Dv AG_BOX_SHADING .
 .Pp
-The
 .Fn AG_BoxSetHorizAlign
 and
 .Fn AG_BoxSetVertAlign
-functions specify the horizontal or vertical alignment of widgets.
-The horizontal alignment setting may be
+specify the horizontal or vertical alignment of widgets.
+Horizontal alignment can be
 .Dv AG_BOX_LEFT
 (default),
 .Dv AG_BOX_CENTER
 or
 .Dv AG_BOX_RIGHT .
-The vertical alignment may be set to
+Vertical alignment can be
 .Dv AG_BOX_TOP
 (default),
 .Dv AG_BOX_CENTER
@@ -189,6 +202,15 @@ or
 The
 .Nm
 widget does not generate any event.
+.Sh STRUCTURE DATA
+For the
+.Ft AG_Box
+object:
+.Bl -tag -width "enum ag_box_style style "
+.It Ft enum ag_box_style style
+Background style (see
+.Fn AG_BoxSetStyle ) .
+.El
 .Sh EXAMPLES
 The following code fragment packs two columns of buttons:
 .Bd -literal -offset indent

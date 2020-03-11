@@ -81,6 +81,7 @@ AG_Box *_Nonnull  AG_BoxNewVert(void *_Nullable, Uint);
 AG_HBox *_Nonnull AG_HBoxNew(void *_Nullable, Uint);
 AG_VBox *_Nonnull AG_VBoxNew(void *_Nullable, Uint);
 
+void AG_BoxSetStyle(AG_Box *_Nonnull, enum ag_box_style);
 void AG_BoxSetLabel(AG_Box *_Nonnull, const char *_Nullable, ...);
 void AG_BoxSetLabelS(AG_Box *_Nonnull, const char *_Nullable);
 void AG_BoxSetHomogenous(AG_Box *_Nonnull, int);

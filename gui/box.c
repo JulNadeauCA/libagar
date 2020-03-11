@@ -108,6 +108,14 @@ AG_VBoxNew(void *p, Uint flags)
 	return AG_BoxNew(p, AG_BOX_VERT, flags);
 }
 
+/* Set the graphical style of background and borders. */
+void
+AG_BoxSetStyle(AG_Box *box, enum ag_box_style which)
+{
+	box->style = which;
+	AG_Redraw(box);
+}
+
 /* Set the label text (format string). */
 void
 AG_BoxSetLabel(AG_Box *box, const char *fmt, ...)
