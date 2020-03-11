@@ -144,7 +144,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	AG_Checkbox *cb = AG_CHECKBOX_SELF();
 	const int button = AG_INT(1);
 
-	if (!AG_WidgetEnabled(cb))
+	if (AG_WidgetDisabled(cb))
 		return;
 
 	if (button == AG_MOUSE_LEFT) {
@@ -161,7 +161,7 @@ KeyDown(AG_Event *_Nonnull event)
 	AG_Checkbox *cb = AG_CHECKBOX_SELF();
 	const int key = AG_INT(1);
 	
-	if (!AG_WidgetEnabled(cb))
+	if (AG_WidgetDisabled(cb))
 		return;
 
 	switch (key) {
