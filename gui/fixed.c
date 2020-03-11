@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,6 +66,13 @@ Init(void *_Nonnull obj)
 	fx->style = AG_FIXED_STYLE_WELL;		/* 3D well */
 	fx->wPre = 0;
 	fx->hPre = 0;
+}
+
+void
+AG_FixedSetStyle(AG_Fixed *fx, enum ag_fixed_style style)
+{
+	fx->style = style;
+	AG_Redraw(fx);
 }
 
 void

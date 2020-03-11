@@ -18,10 +18,10 @@ enum ag_fixed_style {
 typedef struct ag_fixed {
 	struct ag_widget wid;		/* AG_Widget -> AG_Fixed */
 	Uint flags;
-#define AG_FIXED_HFILL		0x01	/* Expand to fill available width */
-#define AG_FIXED_VFILL		0x02	/* Expand to fill available height */
-#define AG_FIXED_NO_UPDATE	0x04	/* Don't call WINDOW_UPDATE() */
-#define AG_FIXED_EXPAND		(AG_FIXED_HFILL|AG_FIXED_VFILL)
+#define AG_FIXED_HFILL     0x01         /* Expand to fill available width */
+#define AG_FIXED_VFILL     0x02         /* Expand to fill available height */
+#define AG_FIXED_NO_UPDATE 0x04         /* Don't call WINDOW_UPDATE() */
+#define AG_FIXED_EXPAND   (AG_FIXED_HFILL | AG_FIXED_VFILL)
 	enum ag_fixed_style style;	/* Graphical style */
 	int wPre, hPre;			/* Size hint */
 } AG_Fixed;
@@ -30,6 +30,8 @@ __BEGIN_DECLS
 extern AG_WidgetClass agFixedClass;
 
 AG_Fixed *_Nonnull AG_FixedNew(void *_Nullable, Uint);
+
+void AG_FixedSetStyle(AG_Fixed *_Nonnull, enum ag_fixed_style);
 
 void AG_FixedSizeHint(AG_Fixed *_Nonnull, int,int);
 void AG_FixedPut(AG_Fixed *_Nonnull, void *_Nonnull, int,int);

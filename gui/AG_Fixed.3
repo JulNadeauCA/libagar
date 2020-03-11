@@ -39,7 +39,7 @@
 .\" IMAGE(http://libagar.org/widgets/AG_Fixed.png, "Buttons, labels and pixmaps in an AG_Fixed")
 The
 .Nm
-container widgets places its children at specific positions (specified in pixels).
+container widget places its children at specific positions (given in pixels).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -50,6 +50,9 @@ container widgets places its children at specific positions (specified in pixels
 .Fn AG_FixedNew "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft void
+.Fn AG_FixedSetStyle "AG_Fixed *fixed" "enum ag_fixed_style style"
+.Pp
+.Ft void
 .Fn AG_FixedSizeHint "AG_Fixed *fixed" "int w" "int h"
 .Pp
 .nr nS 0
@@ -58,25 +61,17 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-The
+Accepted
 .Fa flags
-may include:
+options include:
 .Bl -tag -width "AG_FIXED_NO_UPDATE "
-.It AG_FIXED_FILLBG
-Fill the widget background with
-.Dv FIXED_BG_COLOR .
-.It AG_FIXED_BOX
-Draw a decorative 3D-style box in the background.
-.It AG_FIXED_FRAME
-Draw a decorative frame in the background.
 .It AG_FIXED_NO_UPDATE
-Disable automatic invocation of
+Don't automatically call
 .Xr AG_WidgetUpdate 3
 whenever widgets are repositioned.
-As an optimisation when large number of widgets are to be positioned, this
-option can be used and
+This allows the caller to, as an optimization use
 .Xr AG_WidgetUpdate 3
-manually invoked only once all widgets are in place.
+only once after all widgets have been positioned.
 .It AG_FIXED_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -85,8 +80,25 @@ Expand vertically in parent (equivalent to invoking
 .Xr AG_ExpandVert 3 ) .
 .It AG_FIXED_EXPAND
 Shorthand for
-.Dv AG_FIXED_HFILL|AG_FIXED_VFILL .
+.Dv AG_FIXED_HFILL | AG_FIXED_VFILL .
 .El
+.Pp
+.Fn AG_FixedSetStyle
+selects an alternate background and border style:
+.Pp
+.Bl -tag -compact -width "AG_FIXED_STYLE_PLAIN "
+.It Dv AG_FIXED_STYLE_NONE
+No background.
+.It Dv AG_FIXED_STYLE_BOX
+Raised box & border.
+.It Dv AG_FIXED_STYLE_WELL
+3D well & border (the default).
+.It Dv AG_FIXED_STYLE_PLAIN
+Filled rectangle.
+.El
+.Pp
+Note that the background uses the style attribute "background-color" and
+3D borders use "high-color" & "low-color".
 .Pp
 .Fn AG_FixedSizeHint
 requests an initial geometry of
@@ -97,16 +109,16 @@ pixels.
 .Sh CHILD WIDGETS
 .nr nS 1
 .Ft "void"
-.Fn AG_FixedPut "AG_Fixed *fixed" "void *child" "int x" "int y"
+.Fn AG_FixedPut "AG_Fixed *fixed" "AG_Widget *child" "int x" "int y"
 .Pp
 .Ft "void"
-.Fn AG_FixedDel "AG_Fixed *fixed" "void *child"
+.Fn AG_FixedDel "AG_Fixed *fixed" "AG_Widget *child"
 .Pp
 .Ft "void"
-.Fn AG_FixedSize "AG_Fixed *fixed" "void *child" "int width" "int height"
+.Fn AG_FixedSize "AG_Fixed *fixed" "AG_Widget *child" "int width" "int height"
 .Pp
 .Ft "void"
-.Fn AG_FixedMove "AG_Fixed *fixed" "void *child" "int new_x" "int new_y"
+.Fn AG_FixedMove "AG_Fixed *fixed" "AG_Widget *child" "int new_x" "int new_y"
 .Pp
 .nr nS 0
 The
@@ -139,6 +151,15 @@ set the size and location of a given widget in pixels.
 The
 .Nm
 widget does not generate any event.
+.Sh STRUCTURE DATA
+For the
+.Ft AG_Fixed
+object:
+.Bl -tag -width "enum ag_fixed_style style "
+.It Ft enum ag_fixed_style style
+Background style (see
+.Fn AG_FixedSetStyle ) .
+.El
 .Sh EXAMPLES
 See
 .Pa tests/fixedres.c
@@ -156,3 +177,14 @@ in the Agar source distribution.
 The
 .Nm
 widget first appeared in Agar 1.0.
+In Agar 1.6.0 the former
+.Dv AG_FIXED_BOX ,
+.Dv AG_FIXED_INVBOX ,
+.Dv AG_FIXED_FRAME
+and
+.Dv AG_FIXED_FILLBG
+flags were replaced by the
+.Fn AG_FixedSetStyle
+and the
+.Va style
+parameter.
