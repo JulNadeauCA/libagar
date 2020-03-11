@@ -42,6 +42,7 @@ const char *agStyleDefault_Data =
 	"spacing: 5;                               /* horizontal */\n"
 	"}\n"
 	"AG_Titlebar {\n"
+	"font-size: 90%;\n"
 	"color: rgb(40,50,60);\n"
 	"color#disabled: rgb(35,35,35);\n"
 	"}\n"
@@ -81,7 +82,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2026,
+	2042,
 	&agStyleDefault_Data,
 	NULL
 };

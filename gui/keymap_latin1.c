@@ -24,7 +24,7 @@
  */
 
 /*
- * Alternate (ALT+SHIFT) entry method for characters from ISO-8859-1.
+ * Alternate (ALT & SHIFT key) entry method for ISO-8859-1 characters.
  */
 
 #include <agar/config/ag_unicode.h>

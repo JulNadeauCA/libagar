@@ -186,10 +186,10 @@ This flag disables this behavior.
 Prevents automatic scrolling like
 .Dv AG_EDITABLE_NOSCROLL ,
 but only for the next rendering cycle.
-.It AG_EDITABLE_NOEMACS
-Disable emacs-style function keys.
-.It AG_EDITABLE_NOLATIN1
-Disable traditional LATIN-1 key combinations.
+.It AG_EDITABLE_NO_KILL_YANK
+Disable Kill (ctrl-K) and Yank (ctrl-Y).
+.It AG_EDITABLE_NO_ALT_LATIN1
+Disable alt-key mappings to extended Latin-1 characters.
 .It AG_EDITABLE_NOPOPUP
 Disable the standard right-click popup menu.
 .It AG_EDITABLE_READONLY
@@ -625,9 +625,21 @@ It was rewritten as a front-end to
 .Xr AG_Editable 3
 in Agar 1.3.2.
 The clipboard and direct buffer access routines were added in Agar 1.4.2.
-.Fn AG_EditableAutocomplete ,
-.Fn AG_EditableCatString ,
 .Dv AG_EDITABLE_UPPERCASE
 and
 .Dv AG_EDITABLE_LOWERCASE
+appeared in Agar 1.6.0.
+The former
+.Dv AG_EDITABLE_NOEMACS
+flag was renamed
+.Dv AG_EDITABLE_NO_KILL_YANK
+and
+.Dv AG_EDITABLE_NOLATIN1
+was renamed
+.Dv AG_EDITABLE_NO_ALT_LATIN1
+in Agar 1.6.0.
+Clipboard integration,
+.Fn AG_EditableAutocomplete
+and
+.Fn AG_EditableCatString
 appeared in Agar 1.6.0.

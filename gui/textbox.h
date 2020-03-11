@@ -30,9 +30,9 @@ typedef struct ag_textbox {
 					     (instead of cycling focus) */
 #define AG_TEXTBOX_CURSOR_MOVING 0x001000 /* Cursor is being moved */
 #define AG_TEXTBOX_EXCL          0x004000 /* Exclusive access to buffer */
-#define AG_TEXTBOX_NOEMACS       0x008000 /* Disable emacs-style fn keys */
-#define AG_TEXTBOX_RETURN_BUTTON 0x010000 /* Display a RETURN button. */
-#define AG_TEXTBOX_NOLATIN1      0x020000 /* Disable LATIN-1 combinations */
+#define AG_TEXTBOX_NO_KILL_YANK  0x008000 /* Disable [K]ill and [Y]ank functions */
+#define AG_TEXTBOX_RETURN_BUTTON 0x010000 /* Display a Return button */
+#define AG_TEXTBOX_NO_ALT_LATIN1 0x020000 /* Disable alt-key LATIN-1 mappings */
 #define AG_TEXTBOX_WORDWRAP	 0x040000 /* Enable word wrapping */
 #define AG_TEXTBOX_NOPOPUP	 0x080000 /* Disable popup menu */
 #define AG_TEXTBOX_MULTILINGUAL	 0x100000 /* Enable multilingual edition */
@@ -113,6 +113,11 @@ float  AG_TextboxFloat(AG_Textbox *_Nonnull);
 double AG_TextboxDouble(AG_Textbox *_Nonnull);
 void   AG_TextboxSetFltOnly(AG_Textbox *, int);
 __END_DECLS
+
+#ifdef AG_LEGACY
+# define AG_TEXTBOX_NOEMACS  AG_TEXTBOX_NO_KILL_YANK
+# define AG_TEXTBOX_NOLATIN1 AG_TEXTBOX_NO_ALT_LATIN1
+#endif
 
 #include <agar/gui/close.h>
 #endif /* _AGAR_GUI_TEXTBOX_H_ */

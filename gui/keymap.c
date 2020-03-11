@@ -39,6 +39,8 @@
 #include <ctype.h>
 #include <string.h>
 
+static void RemoveSelection(AG_Editable *, Uint);
+
 /* Insert a new character at current cursor position. */
 static int
 Insert(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
@@ -57,7 +59,7 @@ Insert(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 #endif
 
 #ifdef AG_UNICODE
-	if (!(ed->flags & AG_EDITABLE_NOLATIN1)) {
+	if (!(ed->flags & AG_EDITABLE_NO_ALT_LATIN1)) {
 		for (i = 0; ; i++) {
 			const struct ag_key_mapping *km = &agKeymapLATIN1[i];
 
@@ -213,7 +215,7 @@ static int
 Copy(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	AG_EditableCopy(ed, buf, &agEditableClipbrd);
+	AG_EditableCopy(ed, buf, &agEditableClipbrd, 0);
 	return (0);
 }
 
@@ -222,7 +224,7 @@ static int
 Cut(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	return AG_EditableCut(ed, buf, &agEditableClipbrd);
+	return AG_EditableCut(ed, buf, &agEditableClipbrd, 0);
 }
 
 /* Paste clipboard contents to current cursor position. */
@@ -230,18 +232,18 @@ static int
 Paste(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	return AG_EditablePaste(ed, buf, &agEditableClipbrd);
+	return AG_EditablePaste(ed, buf, &agEditableClipbrd, 0);
 }
 
 /*
- * Kill the current selection; if there is no selection, cut the
- * characters up to the end of the line (Emacs-style).
+ * Kill the current selection or the remainder of the current line.
+ * The contents are copied to a kill ring independent of the clipboard.
  */
 static int
 Kill(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	if (ed->selEnd == ed->selStart) {                      /* Emacs-style */
+	if (ed->selEnd == ed->selStart) {         /* Kill up to end of line */
 		const AG_Char *c;
 
 		ed->selStart = ed->pos;
@@ -266,32 +268,15 @@ Kill(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	return (1);
 }
 
-/* Paste the contents of the Emacs-style kill ring at cursor position. */
+/*
+ * Paste the contents of a previous Kill at the current cursor position.
+ * The contents are copied from a kill ring independent of the clipboard.
+ */
 static int
 Yank(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	return AG_EditablePaste(ed, buf, &agEditableKillring);
-}
-
-static void
-CursorUpdateSelection(AG_Editable *ed, Uint keymod)
-{
-	if (keymod & AG_KEYMOD_SHIFT) {
-		if (ed->posKbdSel < ed->pos) {
-			ed->selStart = ed->posKbdSel;
-			ed->selEnd   = ed->pos;
-		} else if (ed->posKbdSel > ed->pos) {
-			ed->selStart = ed->pos;
-			ed->selEnd   = ed->posKbdSel;
-		} else {
-			ed->selStart = 0;
-			ed->selEnd   = 0;
-		}
-	} else {
-		ed->selStart = 0;
-		ed->selEnd = 0;
-	}
+	return AG_EditablePaste(ed, buf, &agEditableKillring, 1);
 }
 
 /* Seek one word backwards. */
@@ -302,19 +287,29 @@ WordBack(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	int newPos = ed->pos;
 	AG_Char *c;
 
-	if (ed->pos > 1 && AG_CharIsSpace(buf->s[newPos-1])) {
-		newPos -= 2;
+	if (newPos == 0) {
+		return (0);
+	}
+	for (c = &buf->s[newPos];
+	     newPos >= 0;
+	     c--, newPos--) {
+		if (AG_CharIsSpaceOrLF(*c)) {
+			while (AG_CharIsSpaceOrLF(*c) && newPos >= 0) {
+				c--;
+				newPos--;
+			}
+			while (!AG_CharIsSpaceOrLF(*c) && newPos >= 0) {
+				c--;
+				newPos--;
+			}
+			c++;
+			newPos++;
+			break;
+		}
 	}
 
-	for (c = &buf->s[newPos];
-	     c > &buf->s[0] && !AG_CharIsSpace(*c);
-	     c--, newPos--)
-		;;
-	if (AG_CharIsSpace(*c))
-		newPos++;
-
 	ed->pos = newPos;
-	CursorUpdateSelection(ed, keymod);
+	RemoveSelection(ed, keymod);
 
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	ed->flags |= AG_EDITABLE_BLINK_ON;
@@ -335,16 +330,34 @@ WordForw(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	if (newPos == buf->len) {
 		return (0);
 	}
-	if (buf->len > 1 && AG_CharIsSpace(buf->s[newPos]))
-		newPos++;
-	
-	for (c = &buf->s[newPos];
-	     *c != '\0' && !AG_CharIsSpace(*c);
-	     c++, newPos++)
-		;;
+	if (AG_CharIsSpaceOrLF(buf->s[newPos])) {
+		for (c = &buf->s[newPos];
+		    *c != '\0' && newPos <= buf->len;
+		     c++, newPos++) {
+			if (AG_CharIsSpaceOrLF(*c)) {
+				while (AG_CharIsSpaceOrLF(*c) && newPos <= buf->len) {
+					c++;
+					newPos++;
+				}
+				break;
+			}
+		}
+	} else {
+		for (c = &buf->s[newPos];
+		    *c != '\0' && newPos <= buf->len;
+		     c++, newPos++) {
+			if (AG_CharIsSpaceOrLF(*c)) {
+				while (AG_CharIsSpaceOrLF(*c) && newPos <= buf->len) {
+					c++;
+					newPos++;
+				}
+				break;
+			}
+		}
+	}
 
 	ed->pos = newPos;
-	CursorUpdateSelection(ed, keymod);
+	RemoveSelection(ed, keymod);
 
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	ed->flags |= AG_EDITABLE_BLINK_ON;
@@ -386,7 +399,7 @@ CursorHome(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	}
 
 	ed->pos = newPos;
-	CursorUpdateSelection(ed, keymod);
+	RemoveSelection(ed, keymod);
 
 	ed->x = 0;
 	ed->flags |= AG_EDITABLE_MARKPREF;
@@ -421,7 +434,7 @@ CursorEnd(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	}
 
 	ed->pos = newPos;
-	CursorUpdateSelection(ed, keymod);
+	RemoveSelection(ed, keymod);
 
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	ed->xScrollTo = &ed->xCurs;
@@ -430,7 +443,7 @@ CursorEnd(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	return (0);
 }
 
-/* Move cursor left. */
+/* Move cursor left by one character. */
 static int
 CursorLeft(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
@@ -440,25 +453,35 @@ CursorLeft(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	AG_Char *c;
 	int i;
 
-	if ((ed->pos - 1) >= 0) {
-		ed->pos--;
-
-		for (c  = &buf->s[ed->pos], i = 0;
-		     c >= &buf->s[0] && (i <= AG_TEXT_ANSI_SEQ_MAX);
-		     c--, i++) {
-			if (c[0] == 0x1b &&
-			    c[1] >= 0x40 &&
-			    c[2] <= 0x5f &&
-			    c[3] != '\0') {
-				if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0 &&
-				    i <= ansi.len) {
-					ed->pos -= (ansi.len + 1);
-				}
-				break;
-			}
-		}
-		CursorUpdateSelection(ed, keymod);
+	if ((ed->pos - 1) < 0) {
+		goto out;
 	}
+	ed->pos--;
+
+	for (c  = &buf->s[ed->pos], i = 0;
+	     c >= &buf->s[0] && (i <= AG_TEXT_ANSI_SEQ_MAX);
+	     c--, i++) {
+		if (c[0] == 0x1b &&
+		    c[1] >= 0x40 &&
+		    c[2] <= 0x5f &&
+		    c[3] != '\0') {
+			if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0 &&
+			    i <= ansi.len) {
+				ed->pos -= (ansi.len + 1);
+			}
+			break;
+		}
+	}
+	if (ed->flags & AG_EDITABLE_SHIFT_SELECT) {
+		RemoveSelection(ed, keymod);
+	} else {
+		if (ed->selEnd > ed->selStart) {
+			ed->pos = ed->selStart;
+			if ((ed->flags & AG_EDITABLE_SHIFT_SELECT) == 0)
+				RemoveSelection(ed, keymod);
+		}
+	}
+out:
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 	ed->xScrollTo = &ed->xCurs;
@@ -467,7 +490,7 @@ CursorLeft(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	return (0);
 }
 
-/* Move cursor right. */
+/* Move the cursor right by one character. */
 static int
 CursorRight(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
@@ -476,19 +499,28 @@ CursorRight(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	AG_TextANSI ansi;
 	AG_Char *c;
 
-	if (ed->pos < buf->len) {
-		ed->pos++;
-
-		c = &buf->s[ed->pos];
-		if (c[0] == 0x1b &&
-		    c[1] >= 0x40 &&
-		    c[2] <= 0x5f &&
-		    c[3] != '\0') {
-			if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0)
-				ed->pos += (ansi.len + 1);
-		}
-		CursorUpdateSelection(ed, keymod);
+	if (ed->pos >= buf->len) {
+		goto out;
 	}
+	ed->pos++;
+
+	c = &buf->s[ed->pos];
+	if (c[0] == 0x1b &&
+	    c[1] >= 0x40 &&
+	    c[2] <= 0x5f &&
+	    c[3] != '\0') {
+		if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0)
+			ed->pos += (ansi.len + 1);
+	}
+	if (ed->flags & AG_EDITABLE_SHIFT_SELECT) {
+		RemoveSelection(ed, keymod);
+	} else {
+		if (ed->selEnd > ed->selStart) {
+			ed->pos = ed->selEnd;
+			RemoveSelection(ed, keymod);
+		}
+	}
+out:
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 	ed->xScrollTo = &ed->xCurs;
@@ -505,10 +537,10 @@ CursorUp(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	if (!(ed->flags & AG_EDITABLE_MULTILINE))
 		return (0);
 
-	AG_EditableMoveCursor(ed, buf, ed->xCursPref,
-	    (ed->yCurs - ed->y - 1)*agTextFontLineSkip + 1);
-
-	CursorUpdateSelection(ed, keymod);
+	if (AG_EditableMapPosition(ed, buf, ed->xCursPref,
+	    (ed->yCurs - ed->y - 1)*ed->lineSkip + 1,
+	    &ed->pos) == 0)
+		RemoveSelection(ed, keymod);
 
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 	ed->xScrollTo = &ed->xCurs;
@@ -523,28 +555,49 @@ CursorDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	if (!(ed->flags & AG_EDITABLE_MULTILINE)) {
-		if (ed->complete && ed->complete->winName[0] != '\0') {
+		if (ed->complete &&                         /* Autocomplete */
+		    ed->complete->winName[0] != '\0') {
 			AG_Window *win;
 			AG_Tlist *tl;
 
 			if ((win = AG_WindowFind(ed->complete->winName)) != NULL &&
-			    (tl = AG_ObjectFindChild(win, "tlist0")) != NULL) {
+			    (tl = AG_ObjectFindChild(win, "tlist0")) != NULL)
 				AG_TlistSelectIdx(tl, 0);
-			}
 		}
 		return (0);
 	}
 
-	AG_EditableMoveCursor(ed, buf, ed->xCursPref,
-	    (ed->yCurs - ed->y + 1)*agTextFontLineSkip + 1);
-
-	CursorUpdateSelection(ed, keymod);
+	if (AG_EditableMapPosition(ed, buf, ed->xCursPref,
+	    (ed->yCurs - ed->y + 1)*ed->lineSkip + 1,
+	    &ed->pos) == 0)
+		RemoveSelection(ed, keymod);
 
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 	ed->xScrollTo = &ed->xCurs;
 	ed->yScrollTo = &ed->yCurs;
 	AG_Redraw(ed);
 	return (0);
+}
+
+/* Remove the active selection. */
+static void
+RemoveSelection(AG_Editable *ed, Uint keymod)
+{
+	if (keymod & AG_KEYMOD_SHIFT) {
+		if (ed->posKbdSel < ed->pos) {
+			ed->selStart = ed->posKbdSel;
+			ed->selEnd   = ed->pos;
+		} else if (ed->posKbdSel > ed->pos) {
+			ed->selStart = ed->pos;
+			ed->selEnd   = ed->posKbdSel;
+		} else {
+			ed->selStart = 0;
+			ed->selEnd   = 0;
+		}
+	} else {
+		ed->selStart = 0;
+		ed->selEnd = 0;
+	}
 }
 
 /* Move cursor one page up in a multi-line string. */
@@ -556,9 +609,9 @@ PageUp(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 		return (0);
 
 	AG_EditableMoveCursor(ed, buf, ed->xCurs,
-	    (ed->yCurs - ed->y - ed->yVis)*agTextFontLineSkip + 1);
+	    (ed->yCurs - ed->y - ed->yVis)*ed->lineSkip + 1);
 
-	CursorUpdateSelection(ed, keymod);
+	RemoveSelection(ed, keymod);
 
 	ed->xScrollTo = &ed->xCurs;
 	ed->yScrollTo = &ed->yCurs;
@@ -575,9 +628,9 @@ PageDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 		return (0);
 
 	AG_EditableMoveCursor(ed, buf, ed->xCurs,
-	    (ed->yCurs - ed->y + ed->yVis)*agTextFontLineSkip + 1);
+	    (ed->yCurs - ed->y + ed->yVis)*ed->lineSkip + 1);
 
-	CursorUpdateSelection(ed, keymod);
+	RemoveSelection(ed, keymod);
 
 	ed->xScrollTo = &ed->xCurs;
 	ed->yScrollTo = &ed->yCurs;
@@ -591,42 +644,42 @@ PageDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
  * modifiers string is passed to AG_CompareKeyMods(3).
  *
  * Available flags:
- *	"w" = Require a writeable buffer
- *	"e" = AG_EDITABLE_NOEMACS must be unset
+ *	"w" = Require a writeable buffer (enabled widget state & !READONLY).
+ *	"k" = Require [K]ill and [Y]ank to be enabled (!NO_KILL_YANK).
  */
 const struct ag_keycode agKeymap[] = {
 #ifdef __APPLE__
-	{ AG_KEY_LEFT,	AG_KEYMOD_CTRL | AG_KEYMOD_META, CursorHome, "" },
-	{ AG_KEY_RIGHT,	AG_KEYMOD_CTRL | AG_KEYMOD_META, CursorEnd,  "" },
-	{ AG_KEY_LEFT,	AG_KEYMOD_ALT,  WordBack,  "" },
-	{ AG_KEY_RIGHT,	AG_KEYMOD_ALT,  WordForw,  "" },
-	{ AG_KEY_A,	AG_KEYMOD_META,	SelectAll, "" },
-	{ AG_KEY_C,	AG_KEYMOD_META,	Copy,      "" },
-	{ AG_KEY_X,	AG_KEYMOD_META,	Cut,       "w" },
-	{ AG_KEY_V,	AG_KEYMOD_META,	Paste,     "w" },
-	{ AG_KEY_K,	AG_KEYMOD_META,	Kill,      "we" },
-	{ AG_KEY_Y,	AG_KEYMOD_META,	Yank,      "we" },
+	{ AG_KEY_LEFT,      AG_KEYMOD_CTRL|AG_KEYMOD_META, CursorHome,  "" },
+	{ AG_KEY_RIGHT,     AG_KEYMOD_CTRL|AG_KEYMOD_META, CursorEnd,   "" },
+	{ AG_KEY_LEFT,      AG_KEYMOD_ALT,                 WordBack,    "" },
+	{ AG_KEY_RIGHT,     AG_KEYMOD_ALT,                 WordForw,    "" },
+	{ AG_KEY_A,         AG_KEYMOD_META,                SelectAll,   "" },
+	{ AG_KEY_C,         AG_KEYMOD_META,                Copy,        "" },
+	{ AG_KEY_X,         AG_KEYMOD_META,                Cut,         "w" },
+	{ AG_KEY_V,         AG_KEYMOD_META,                Paste,       "w" },
+	{ AG_KEY_K,         AG_KEYMOD_META,                Kill,        "kw" },
+	{ AG_KEY_Y,         AG_KEYMOD_META,                Yank,        "kw" },
 #else /* __APPLE__ */
-	{ AG_KEY_LEFT,	AG_KEYMOD_CTRL,	WordBack,  "" },
-	{ AG_KEY_LEFT,	AG_KEYMOD_ALT,	WordBack,  "" },
-	{ AG_KEY_RIGHT,	AG_KEYMOD_CTRL,	WordForw,  "" },
-	{ AG_KEY_RIGHT,	AG_KEYMOD_ALT,	WordForw,  "" },
-	{ AG_KEY_A,	AG_KEYMOD_CTRL,	SelectAll, "" },
-	{ AG_KEY_C,	AG_KEYMOD_CTRL,	Copy,      "" },
-	{ AG_KEY_X,	AG_KEYMOD_CTRL,	Cut,       "w" },
-	{ AG_KEY_V,	AG_KEYMOD_CTRL,	Paste,     "w" },
-	{ AG_KEY_K,	AG_KEYMOD_CTRL,	Kill,      "we" },
-	{ AG_KEY_Y,	AG_KEYMOD_CTRL,	Yank,      "we" },
+	{ AG_KEY_LEFT,      AG_KEYMOD_CTRL,                WordBack,    "" },
+	{ AG_KEY_LEFT,      AG_KEYMOD_ALT,                 WordBack,    "" },
+	{ AG_KEY_RIGHT,     AG_KEYMOD_CTRL,                WordForw,    "" },
+	{ AG_KEY_RIGHT,     AG_KEYMOD_ALT,                 WordForw,    "" },
+	{ AG_KEY_A,         AG_KEYMOD_CTRL,                SelectAll,   "" },
+	{ AG_KEY_C,         AG_KEYMOD_CTRL,                Copy,        "" },
+	{ AG_KEY_X,         AG_KEYMOD_CTRL,                Cut,         "w" },
+	{ AG_KEY_V,         AG_KEYMOD_CTRL,                Paste,       "w" },
+	{ AG_KEY_K,         AG_KEYMOD_CTRL,                Kill,        "kw" },
+	{ AG_KEY_Y,         AG_KEYMOD_CTRL,                Yank,        "kw" },
 #endif /* !__APPLE__ */
-	{ AG_KEY_HOME,      0,	CursorHome,  "" },
-	{ AG_KEY_END,       0,	CursorEnd,   "" },
-	{ AG_KEY_LEFT,      0,	CursorLeft,  "" },
-	{ AG_KEY_RIGHT,     0,	CursorRight, "" },
-	{ AG_KEY_UP,        0,	CursorUp,    "" },
-	{ AG_KEY_DOWN,      0,	CursorDown,  "" },
-	{ AG_KEY_PAGEUP,    0,	PageUp,      "" },
-	{ AG_KEY_PAGEDOWN,  0,	PageDown,    "" },
-	{ AG_KEY_BACKSPACE, 0,	Delete,      "w" },
-	{ AG_KEY_DELETE,    0,	Delete,      "w" },
-	{ AG_KEY_LAST,      0,	Insert,      "w" },
+	{ AG_KEY_HOME,      0,                             CursorHome,  "" },
+	{ AG_KEY_END,       0,                             CursorEnd,   "" },
+	{ AG_KEY_LEFT,      0,                             CursorLeft,  "" },
+	{ AG_KEY_RIGHT,     0,                             CursorRight, "" },
+	{ AG_KEY_UP,        0,                             CursorUp,    "" },
+	{ AG_KEY_DOWN,      0,                             CursorDown,  "" },
+	{ AG_KEY_PAGEUP,    0,                             PageUp,      "" },
+	{ AG_KEY_PAGEDOWN,  0,                             PageDown,    "" },
+	{ AG_KEY_BACKSPACE, 0,                             Delete,      "w" },
+	{ AG_KEY_DELETE,    0,                             Delete,      "w" },
+	{ AG_KEY_LAST,      0,                             Insert,      "w" },
 };

@@ -579,6 +579,7 @@ AG_CharIsPunct(AG_Char c)
 }
 
 #define AG_CharIsSpaceOrPunct(ch) (AG_CharIsSpace(ch) || AG_CharIsPunct(ch))
+#define AG_CharIsSpaceOrLF(ch) (AG_CharIsSpace(ch) || (ch == '\n'))
 
 #ifdef AG_LEGACY
 /* < 1.5 call renamed */

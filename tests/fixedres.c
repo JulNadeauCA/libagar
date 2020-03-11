@@ -30,8 +30,6 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SetStyle(fx, "font-size", "120%");
 	AG_SetStyle(fx, "text-color", "#eee");
 
-	/* agColors[WINDOW_BG_COLOR] = AG_ColorRGB(0,0,0); */
-
 	/* Create some background pixmap from an image file. */
 	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "menubg.bmp", path, sizeof(path))) {
 		if ((px = AG_PixmapFromFile(fx, 0, path)) == NULL) {
@@ -49,7 +47,7 @@ TestGUI(void *obj, AG_Window *win)
 	lb1 = AG_LabelNew(NULL, 0, "I'm at 20,32\n"
 	                           "(in " AGSI_YEL "%s" AGSI_RST ")\n",
 	                           AGOBJECT(fx)->name);
-	AG_SetStyle(lb1, "font-family", "cm-serif");
+	AG_SetStyle(lb1, "font-family", "vera-mono");
 	AG_FixedPut(fx, lb1, 20, 32);
 	AG_FixedSize(fx, lb1, 180, 64);
 
@@ -58,8 +56,9 @@ TestGUI(void *obj, AG_Window *win)
 	 * be packed normally.
 	 */
 	box = AG_BoxNewVert(NULL, 0);
-	AG_SetStyle(box, "font-family", "cm-serif");
-	AG_SetStyle(box, "font-size", "90%");
+	AG_SetStyle(box, "font-family", "vera");
+	AG_SetStyle(box, "font-size", "80%");
+	AG_SetStyle(box, "font-style", "italic");
 	{
 		AG_Box *hBox;
 		int i;

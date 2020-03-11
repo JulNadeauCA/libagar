@@ -11,11 +11,15 @@ static const AP_FlagNames apTextboxFlagNames[] = {
 	{ "catchTab",		AG_TEXTBOX_CATCH_TAB },
 /*	{ "cursorMoving",	AG_TEXTBOX_CURSOR_MOVING }, */
 	{ "excl",		AG_TEXTBOX_EXCL },
-	{ "noEmacs",		AG_TEXTBOX_NOEMACS },
-	{ "noLatin1",		AG_TEXTBOX_NOLATIN1 },
+	{ "noKillYank",		AG_TEXTBOX_NO_KILL_YANK },
+	{ "noAltLatin1",	AG_TEXTBOX_NO_ALT_LATIN1 },
 	{ "wordWrap",		AG_TEXTBOX_WORDWRAP },
 	{ "noPopup",		AG_TEXTBOX_NOPOPUP },
 	{ "multilingual",	AG_TEXTBOX_MULTILINGUAL },
+#ifdef AG_LEGACY
+	{ "noEmacs",		AG_TEXTBOX_NO_KILL_YANK },
+	{ "noLatin1",		AG_TEXTBOX_NO_ALT_LATIN1 },
+#endif
 	{ NULL,			0 }
 };
 

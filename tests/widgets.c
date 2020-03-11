@@ -499,6 +499,8 @@ TestGUI(void *obj, AG_Window *win)
 		{
 			AG_MenuAction(m, "Agar Preferences...", agIconGear.s,
 			    Preferences, NULL);
+			AG_MenuAction(m, "Close this test", agIconClose.s,
+			    AG_WindowCloseGenEv, "%p", win);
 		}
 		m = AG_MenuNode(menu->root, "Test Menu", NULL);
 		{

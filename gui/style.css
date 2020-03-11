@@ -41,6 +41,7 @@ AG_Textbox {
 	spacing: 5;                               /* horizontal */
 }
 AG_Titlebar {
+	font-size: 90%;
 	color: rgb(40,50,60);
 	color#disabled: rgb(35,35,35);
 }

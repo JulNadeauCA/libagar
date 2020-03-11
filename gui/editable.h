@@ -66,13 +66,14 @@ typedef struct ag_editable {
 #define AG_EDITABLE_LOWERCASE     0x001000 /* Render as lowercase */
 #define AG_EDITABLE_MARKPREF      0x002000 /* Mark current cursor position */
 #define AG_EDITABLE_EXCL          0x004000 /* Exclusive access to buffer */
-#define AG_EDITABLE_NOEMACS       0x008000 /* Disable emacs-style fn keys */
-#define AG_EDITABLE_NOLATIN1      0x020000 /* Disable LATIN-1 combinations */
+#define AG_EDITABLE_NO_KILL_YANK  0x008000 /* Disable [K]ill and [Y]ank functions */
+#define AG_EDITABLE_NO_ALT_LATIN1 0x020000 /* Disable alt-key LATIN-1 mappings */
 #define AG_EDITABLE_WORDWRAP      0x040000 /* Word wrapping */
 #define AG_EDITABLE_NOPOPUP	  0x080000 /* Disable popup menu */
 #define AG_EDITABLE_WORDSELECT	  0x100000 /* Select whole words */
 #define AG_EDITABLE_READONLY	  0x200000 /* Disable user input */
 #define AG_EDITABLE_MULTILINGUAL  0x400000 /* Multilingual edition */
+#define AG_EDITABLE_SHIFT_SELECT  0x800000 /* Keyboard (shift) selection mode */
 
 	int lineScrollAmount;		/* Lines to scroll per event */
 
@@ -116,6 +117,9 @@ typedef struct ag_editable {
 	AG_Timer toRepeatDirs[4];	/* Key repeat timers (direction keys) */
 } AG_Editable;
 
+#define AGEDITABLE_IS_READONLY(ed) (((ed)->flags & AG_EDITABLE_READONLY) || \
+                                    AG_WidgetDisabled(ed))
+
 #define AGEDITABLE(obj)            ((AG_Editable *)(obj))
 #define AGCEDITABLE(obj)           ((const AG_Editable *)(obj))
 #define AG_EDITABLE_SELF()          AGEDITABLE( AG_OBJECT(0,"AG_Widget:AG_Editable:*") )
@@ -153,13 +157,13 @@ int  AG_EditableGrowBuffer(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                            AG_Char *_Nonnull, AG_Size);
 
 int  AG_EditableCut(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
-                    AG_EditableClipboard *_Nonnull);
+                    AG_EditableClipboard *_Nonnull, int);
 int  AG_EditableCopy(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
-                     AG_EditableClipboard *_Nonnull);
+                     AG_EditableClipboard *_Nonnull, int);
 void AG_EditableCopyChunk(AG_Editable *_Nonnull, AG_EditableClipboard *_Nonnull,
                           AG_Char *_Nonnull, AG_Size);
 int  AG_EditablePaste(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
-                      AG_EditableClipboard *_Nonnull);
+                      AG_EditableClipboard *_Nonnull, int);
 int  AG_EditableDelete(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
 void AG_EditableSelectAll(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
 
@@ -203,7 +207,9 @@ int  AG_EditableReadOnly(AG_Editable *_Nonnull)
 void AG_EditableValidateSelection(AG_Editable *_Nonnull, const AG_EditableBuffer *_Nonnull);
 
 #ifdef AG_LEGACY
-#define AG_EditablePrescale(ed,s) AG_EditableSizeHint((ed),(s))
+# define AG_EDITABLE_NOEMACS       AG_EDITABLE_NO_KILL_YANK
+# define AG_EDITABLE_NOLATIN1      AG_EDITABLE_NO_ALT_LATIN1
+# define AG_EditablePrescale(ed,s) AG_EditableSizeHint((ed),(s))
 #endif
 __END_DECLS
 

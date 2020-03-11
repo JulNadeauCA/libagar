@@ -128,16 +128,16 @@ DebugStuff(AG_NotebookTab *nt, AG_Textbox *tb)
 	cb = AG_CheckboxNewFn(box, 0, "Disable input", SetDisable, "%p", tb);
 	AGWIDGET(cb)->flags &= ~(AG_WIDGET_FOCUSABLE);
 
-	CB_DEBUG_FLAG("Blink",               AG_EDITABLE_BLINK_ON);
-	CB_DEBUG_FLAG("Read-only",	     AG_EDITABLE_READONLY);
-	CB_DEBUG_FLAG("Password input",      AG_EDITABLE_PASSWORD);
-	CB_DEBUG_FLAG("Display uppercase",   AG_EDITABLE_UPPERCASE);
-	CB_DEBUG_FLAG("Display lowercase",   AG_EDITABLE_LOWERCASE);
-	CB_DEBUG_FLAG("Force integer input", AG_EDITABLE_INT_ONLY);
-	CB_DEBUG_FLAG("Force float input",   AG_EDITABLE_FLT_ONLY);
-	CB_DEBUG_FLAG("Keep cursor in view", AG_EDITABLE_KEEPVISCURSOR);
-	CB_DEBUG_FLAG("No emacs keys",       AG_EDITABLE_NOEMACS);
-	CB_DEBUG_FLAG("No latin1 keys",      AG_EDITABLE_NOLATIN1);
+	CB_DEBUG_FLAG("Blink",                      AG_EDITABLE_BLINK_ON);
+	CB_DEBUG_FLAG("Read-only",	            AG_EDITABLE_READONLY);
+	CB_DEBUG_FLAG("Password input",             AG_EDITABLE_PASSWORD);
+	CB_DEBUG_FLAG("Display uppercase",          AG_EDITABLE_UPPERCASE);
+	CB_DEBUG_FLAG("Display lowercase",          AG_EDITABLE_LOWERCASE);
+	CB_DEBUG_FLAG("Force integer input",        AG_EDITABLE_INT_ONLY);
+	CB_DEBUG_FLAG("Force float input",          AG_EDITABLE_FLT_ONLY);
+	CB_DEBUG_FLAG("Keep cursor in view",        AG_EDITABLE_KEEPVISCURSOR);
+	CB_DEBUG_FLAG("No Kill and Yank functions", AG_EDITABLE_NO_KILL_YANK);
+	CB_DEBUG_FLAG("No alt-key Latin1 mappings", AG_EDITABLE_NO_ALT_LATIN1);
 
 	AG_SeparatorNewHoriz(nt);
 
@@ -176,14 +176,17 @@ TestGUI(void *obj, AG_Window *win)
 
 		tb = AG_TextboxNew(nt, AG_TEXTBOX_HFILL, "Buffer: ");
 		tbBindFn(tb, bufferShd, sizeof(bufferShd));
+		AG_SetStyle(tb, "font-size", "120%");
 		AG_SetStyle(tb, "padding", "5");
+
+		AG_SpacerNewHoriz(nt);
 
 		tb2 = AG_TextboxNew(nt, AG_TEXTBOX_HFILL, "Buffer (again): ");
 		tbBindFn(tb2, bufferShd, sizeof(bufferShd));
 		AG_SetStyle(tb2, "font-family", "cm-typewriter");
-		AG_SetStyle(tb2, "font-size", "116%");
+		AG_SetStyle(tb2, "font-size", "120%");
 		AG_SetStyle(tb2, "text-color", "AntiqueWhite");
-		AG_SetStyle(tb2, "padding", "5");
+		AG_SetStyle(tb2, "padding", "0");
 
 //		AG_TextboxSetCursorPos(tb, -1);		/* To end of string */
 		AG_WidgetFocus(tb);
@@ -191,6 +194,7 @@ TestGUI(void *obj, AG_Window *win)
 	}
 	
 	nt = AG_NotebookAdd(nb, "Multi-line", AG_BOX_VERT);
+	AG_NotebookSelect(nb, nt);
 	{
 		char path[AG_PATHNAME_MAX];
 		char *someText;
@@ -201,6 +205,8 @@ TestGUI(void *obj, AG_Window *win)
 		                        AG_TEXTBOX_CATCH_TAB |
 		                        AG_TEXTBOX_EXPAND |
 		                        AG_TEXTBOX_EXCL, NULL);
+		AG_TextboxSizeHintPixels(tb, 600, 600);
+
 		/*
 		 * Load the contents of this file. Make the buffer a bit
 		 * larger so users can try entering text.

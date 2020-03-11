@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -171,7 +171,7 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		    &agKbdRepeat, 1, 500);
 #ifdef AG_UNICODE
 		AG_SeparatorNewHoriz(tab);
-		AG_CheckboxNewInt(tab, 0, _("Built-in Latin-1 key composition"),
+		AG_CheckboxNewInt(tab, 0, _("Input text composition"),
 		    &agTextComposition);
 #endif
 	}

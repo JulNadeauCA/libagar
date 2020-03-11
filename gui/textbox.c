@@ -93,10 +93,10 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		WIDGET(tb->ed)->flags |= AG_WIDGET_CATCH_TAB;
 	}
 
-	if (flags & AG_TEXTBOX_NOEMACS)      tb->ed->flags |= AG_EDITABLE_NOEMACS;
-	if (flags & AG_TEXTBOX_NOLATIN1)     tb->ed->flags |= AG_EDITABLE_NOLATIN1;
-	if (flags & AG_TEXTBOX_NOPOPUP)      tb->ed->flags |= AG_EDITABLE_NOPOPUP;
-	if (flags & AG_TEXTBOX_MULTILINGUAL) tb->ed->flags |= AG_EDITABLE_MULTILINGUAL;
+	if (flags & AG_TEXTBOX_NO_KILL_YANK)  tb->ed->flags |= AG_EDITABLE_NO_KILL_YANK;
+	if (flags & AG_TEXTBOX_NO_ALT_LATIN1) tb->ed->flags |= AG_EDITABLE_NO_ALT_LATIN1;
+	if (flags & AG_TEXTBOX_NOPOPUP)       tb->ed->flags |= AG_EDITABLE_NOPOPUP;
+	if (flags & AG_TEXTBOX_MULTILINGUAL)  tb->ed->flags |= AG_EDITABLE_MULTILINGUAL;
 	
 	if (flags & AG_TEXTBOX_MULTILINE) {
 		tb->ed->flags |= AG_EDITABLE_MULTILINE;

@@ -32,7 +32,6 @@ extern AG_WidgetClass agFixedClass;
 AG_Fixed *_Nonnull AG_FixedNew(void *_Nullable, Uint);
 
 void AG_FixedSetStyle(AG_Fixed *_Nonnull, enum ag_fixed_style);
-
 void AG_FixedSizeHint(AG_Fixed *_Nonnull, int,int);
 void AG_FixedPut(AG_Fixed *_Nonnull, void *_Nonnull, int,int);
 void AG_FixedDel(AG_Fixed *_Nonnull, void *_Nonnull);

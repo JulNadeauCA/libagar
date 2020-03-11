@@ -606,9 +606,9 @@ TestInfo(AG_Event *event)
 	const AG_TestCase *tc = AG_CONST_PTR(1);
 
 	AG_TextMsg(AG_MSG_INFO,
-	    _("Test: %s\n"
-	      "Needs at least: agar %s\n"
-	      "%s"),
+	    _("Test: " AGSI_BOLD "%s" AGSI_RST "\n"
+	      "Agar >= %s required.\n"
+	      AGSI_ITALIC "%s" AGSI_RST),
 	    tc->name,
 	    tc->minVer ? tc->minVer : "1.0",
 	    _(tc->descr));
@@ -874,7 +874,6 @@ main(int argc, char *argv[])
 
 	AG_LabelNewS(pane->div[0], 0, _("Available tests: "));
 	tl = AG_TlistNew(pane->div[0], AG_TLIST_EXPAND);
-	AG_SetStyle(tl, "font-family", "vera-mono");
 	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXX>", 10);
 	for (pTest = &testCases[0]; *pTest != NULL; pTest++) {
 		char path[AG_FILENAME_MAX];
