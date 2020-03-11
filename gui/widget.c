@@ -1492,8 +1492,7 @@ AG_WidgetFindFocused(void *p)
 
 	if (!AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
 		if ((wid->flags & AG_WIDGET_FOCUSED) == 0 ||
-		    (wid->flags & AG_WIDGET_VISIBLE) == 0 ||
-		    (wid->flags & AG_WIDGET_DISABLED)) {
+		    (wid->flags & AG_WIDGET_VISIBLE) == 0) {
 			goto fail;
 		}
 	}
