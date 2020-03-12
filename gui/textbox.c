@@ -346,36 +346,49 @@ AG_TextboxDouble(AG_Textbox *tb)
 	return AG_EditableDbl(tb->ed);
 }
 
+static __inline__ void
+RenderLabel(AG_Textbox *_Nonnull tb)
+{
+	if (tb->surfaceLbl == -1) {
+		const AG_Font *font = WFONT(tb);
+
+		AG_TextFontLookup(OBJECT(font)->name,         /* TODO style */
+		    font->spec.size*0.95f,
+		    font->flags);
+
+		tb->surfaceLbl = AG_WidgetMapSurface(tb,
+		    AG_TextRender(tb->label));
+	}
+}
+
 static void
 Draw(void *_Nonnull p)
 {
 	AG_Textbox *tb = p;
-	const int undersize = (tb->flags & AG_TEXTBOX_UNDERSIZE);
+	const int isUndersize = (tb->flags & AG_TEXTBOX_UNDERSIZE);
 
-	if (!undersize && (tb->flags & AG_TEXTBOX_NO_SHADING) == 0) {
+	if (!isUndersize && (tb->flags & AG_TEXTBOX_NO_SHADING) == 0) {
 		if ((tb->flags & AG_TEXTBOX_COMBO)) {
 			AG_DrawBoxRaised(tb, &tb->r, &WCOLOR(tb, FG_COLOR));
 		} else {
 			AG_DrawBoxSunk(tb, &tb->r, &WCOLOR(tb, BG_COLOR));
 		}
 	}
-	if (tb->label != NULL && tb->label[0] != '\0') {
-		if (undersize)
+	if (tb->label != NULL &&
+	    tb->label[0] != '\0') {
+		if (isUndersize)
 			AG_PushClipRect(tb, &WIDGET(tb)->r);
 
-		if (tb->surfaceLbl == -1) {
-			tb->surfaceLbl = AG_WidgetMapSurface(tb,
-			    AG_TextRender(tb->label));
-		}
+		RenderLabel(tb);
 		AG_WidgetBlitSurface(tb, tb->surfaceLbl,
 		    WIDGET(tb)->paddingLeft,
 		    WIDGET(tb)->paddingTop);
 
-		if (undersize)
+		if (isUndersize)
 			AG_PopClipRect(tb);
 	}
 
-	if (!undersize)
+	if (!isUndersize)
 		AG_WidgetDraw(tb->ed);
 
 	if (tb->btnRet) { AG_WidgetDraw(tb->btnRet); }
@@ -397,10 +410,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	r->h += rEd.h;
 
 	if (tb->label != NULL && tb->label[0] != '\0') {
-		if (tb->surfaceLbl == -1) {
-			tb->surfaceLbl = AG_WidgetMapSurface(tb,
-			    AG_TextRender(tb->label));
-		}
+		RenderLabel(tb);
 		r->w += WIDGET(tb)->spacingHoriz;
 		r->w += WSURFACE(tb,tb->surfaceLbl)->w;
 		r->h = MAX(r->h, WSURFACE(tb,tb->surfaceLbl)->h);
@@ -423,10 +433,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		return (-1);
 
 	if (tb->label) {
-		if (tb->surfaceLbl == -1) {
-			tb->surfaceLbl = AG_WidgetMapSurface(tb,
-			    AG_TextRender(tb->label));
-		}
+		RenderLabel(tb);
 		wLbl = WSURFACE(tb,tb->surfaceLbl)->w;
 	} else {
 		wLbl = 0;
