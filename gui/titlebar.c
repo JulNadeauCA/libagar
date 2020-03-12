@@ -54,33 +54,11 @@ MaximizeWindow(AG_Event *_Nonnull event)
 }
 
 static void
-CreateMaximizeButton(AG_Titlebar *_Nonnull tbar)
-{
-	AG_Button *bu;
-
-	bu = AG_ButtonNewS(tbar,
-	    AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS,
-	    "\xE2\x96\xA2");    /* U+25A2 WHITE SQUARE WITH ROUNDED CORNERS */
-	AG_SetEvent(bu, "button-pushed", MaximizeWindow, "%Cp", tbar);
-	tbar->maximize_btn = bu;
-}
-
-static void
 MinimizeWindow(AG_Event *_Nonnull event)
 {
 	const AG_Titlebar *tbar = AG_CONST_TITLEBAR_PTR(1);
 
 	AG_WindowMinimize(tbar->win);
-}
-
-static void
-CreateMinimizeButton(AG_Titlebar *_Nonnull tbar)
-{
-	AG_Button *bu;
-
-	bu = AG_ButtonNewS(tbar, AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS, " _ ");
-	AG_SetEvent(bu, "button-pushed", MinimizeWindow, "%Cp", tbar);
-	tbar->minimize_btn = bu;
 }
 
 static void
@@ -92,22 +70,12 @@ CloseWindow(AG_Event *_Nonnull event)
 	AG_PostEvent(win, "window-close", NULL);
 }
 
-static void
-CreateCloseButton(AG_Titlebar *_Nonnull tbar)
-{
-	AG_Button *bu;
-
-	bu = AG_ButtonNewS(tbar, AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS,
-	    "\xE2\x9C\x95"); /* U+2715 MULTIPLICATION X */
-
-	AG_SetEvent(bu, "button-pushed", CloseWindow, "%Cp", tbar);
-	tbar->close_btn = bu;
-}
-
 AG_Titlebar *
 AG_TitlebarNew(void *parent, Uint flags)
 {
 	AG_Titlebar *tbar;
+	AG_Button *btn;
+	const Uint btnFlags = (AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS);
 
 	tbar = Malloc(sizeof(AG_Titlebar));
 	AG_ObjectInit(tbar, &agTitlebarClass);
@@ -115,24 +83,40 @@ AG_TitlebarNew(void *parent, Uint flags)
 	
 	AG_ObjectAttach(parent, tbar);
 
+	AG_ObjectLock(tbar);
 	/*
 	 * Manually update the window/driver pointers since AG_TitlebarNew()
 	 * is called from the Window attach routine.
 	 */
-	AG_ObjectLock(tbar);
 	tbar->win = AGWINDOW(parent);
+
 	WIDGET(tbar)->window = tbar->win;
 	WIDGET(tbar)->drv = WIDGET(parent)->drv;
 	WIDGET(tbar)->drvOps = AGDRIVER_CLASS(WIDGET(tbar)->drv);
-	AG_ObjectUnlock(tbar);
 	
-	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0)
-		CreateMaximizeButton(tbar);
-	if ((flags & AG_TITLEBAR_NO_MINIMIZE) == 0)
-		CreateMinimizeButton(tbar);
-	if ((flags & AG_TITLEBAR_NO_CLOSE) == 0)
-		CreateCloseButton(tbar);
+	if ((flags & AG_TITLEBAR_NO_MINIMIZE) == 0) {
+		btn = AG_ButtonNewS(tbar, btnFlags, " _ ");
+		AG_SetStyle(btn, "font-size", "80%");
+		AG_ObjectSetNameS(btn, "minimize");
+		AG_SetEvent(btn, "button-pushed", MinimizeWindow, "%Cp", tbar);
+	}
+	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0) {
+		btn = AG_ButtonNewS(tbar, btnFlags, "\xE2\x96\xA2"); /* U+25A2 */
+		AG_SetStyle(btn, "font-size", "80%");
+		AG_ObjectSetNameS(btn, "maximize");
+		AG_SetEvent(btn, "button-pushed", MaximizeWindow, "%Cp", tbar);
+	}
+	if ((flags & AG_TITLEBAR_NO_CLOSE) == 0) {
+		btn = AG_ButtonNewS(tbar, btnFlags, "\xE2\x9C\x95"); /* U+2715 */
+		AG_SetStyle(btn, "font-size", "80%");
+		AG_ObjectSetNameS(btn, "close");
+		AG_SetEvent(btn, "button-pushed", CloseWindow, "%Cp", tbar);
+	}
 
+	if ((flags & AG_TITLEBAR_NO_BUTTONS) == 0)
+		AG_SetStyle(tbar->label, "padding", "2 0 0 2");
+
+	AG_ObjectUnlock(tbar);
 	return (tbar);
 }
 
@@ -174,12 +158,7 @@ Init(void *_Nonnull obj)
 
 	tbar->flags = 0;
 	tbar->win = NULL;
-	tbar->maximize_btn = NULL;
-	tbar->minimize_btn = NULL;
-	tbar->close_btn = NULL;
-	
 	tbar->label = AG_LabelNewS(tbar, AG_LABEL_HFILL, _("Untitled"));
-	AG_SetStyle(tbar->label, "padding", "5 0 0 5");
 
 	AG_SetEvent(tbar, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tbar, "mouse-button-up", MouseButtonUp, NULL);
