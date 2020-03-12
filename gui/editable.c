@@ -2113,15 +2113,29 @@ static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
-	const int btn = AG_INT(1);
+	const int button = AG_INT(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 
-	switch (btn) {
-	case AG_MOUSE_LEFT:
+	if (button != AG_MOUSE_LEFT)
+		return;
+	
+	ed->flags &= ~(AG_EDITABLE_WORDSELECT);
+
+	if ((ed->flags & AG_EDITABLE_CURSOR_MOVING)) {
+		AG_EditableBuffer *buf;
+
 		ed->flags &= ~(AG_EDITABLE_CURSOR_MOVING);
-		ed->flags &= ~(AG_EDITABLE_WORDSELECT);
-		AG_Redraw(ed);
-		break;
+
+		if ((buf = GetBuffer(ed)) == NULL) {
+			return;
+		}
+		AG_EditableMapPosition(ed, buf, ed->x + x, y, &ed->pos);
+		ReleaseBuffer(ed, buf);
+		ed->flags |= AG_EDITABLE_MARKPREF;
 	}
+
+	AG_Redraw(ed);
 }
 
 static void
@@ -2657,7 +2671,7 @@ static void *_Nullable
 Edit(void *_Nonnull obj)
 {
 	static const AG_FlagDescr flagDescr[] = {
-	    { AG_EDITABLE_CURSOR_MOVING, N_("Cursor moving"),             1 },
+	    { AG_EDITABLE_CURSOR_MOVING, N_("Cursor is moving"),          1 },
 	    { AG_EDITABLE_WORDSELECT,    N_("Word selection mode"),       1 },
 	    { AG_EDITABLE_WORDWRAP,      N_("Word wrapping"),             1 },
 	    { AG_EDITABLE_PASSWORD,      N_("Password entry"),            1 },
