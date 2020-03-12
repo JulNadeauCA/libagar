@@ -1530,7 +1530,7 @@ DoubleClick(AG_Editable *_Nonnull ed)
 
 	/*
 	 * Select a word, including ANSI sequences but excluding adjacent
-	 * punctuation (unlike "mouse-motion" which includes punctuation).
+	 * punctuation (further "mouse-motion" would include punctuation).
 	 */
 	for (ed->selStart = pos; c >= &buf->s[0]; c--) {
 		if (*c == '\n' || AG_CharIsSpaceOrPunct(*c)) {
@@ -1542,8 +1542,10 @@ DoubleClick(AG_Editable *_Nonnull ed)
 			break;
 		}
 		ed->selStart--;
-
 	}
+	if (ed->selStart < 0)
+		ed->selStart = 0;
+
 	c = &buf->s[pos];
 	for (ed->selEnd = pos; c < cEnd; c++) {
 		if (*c == '\n' || AG_CharIsSpaceOrPunct(*c)) {
