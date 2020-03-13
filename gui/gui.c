@@ -190,8 +190,8 @@ int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
 int agTextSymbols = 1;			/* Process special symbols in text */
 int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
-int agAutocompleteDelay = 100;		/* Delay before autocomplete (ms) */
-int agAutocompleteRate = 50;		/* Autocomplete refresh rate (ms) */
+int agAutocompleteDelay = 1;		/* Delay before autocomplete (ms) */
+int agAutocompleteRate = 80;		/* Autocomplete refresh rate (ms) */
 int agScreenshotQuality = 100;		/* JPEG quality in % */
 
 double agZoomValues[AG_ZOOM_MAX] = {

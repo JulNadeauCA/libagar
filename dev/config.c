@@ -118,6 +118,8 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 	AG_Box *hb;
 	AG_Notebook *nb;
 	AG_NotebookTab *tab;
+	const Uint numFl = AG_NUMERICAL_HFILL;
+
 
 	if ((win = AG_WindowNewNamedS(0, "DEV_Config")) == NULL) {
 		return (NULL);
@@ -141,6 +143,8 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		    (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_SDL) ? _("Yes") : _("No"),
 		    (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL) ? _("Yes") : _("No"));
 
+		AG_SeparatorNewHoriz(tab);
+
 		if (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL) {
 			AG_WidgetDisable(
 			    AG_CheckboxNewInt(tab, 0, _("Stereo vision"), &agStereo)
@@ -158,17 +162,23 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		AG_CheckboxNewInt(tab, 0, _("Clipboard integration"),
 		    &agClipboardIntegration);
 
-		AG_NumericalNewIntR(tab, 0, "%",
+		AG_SeparatorNewHoriz(tab);
+
+		AG_NumericalNewIntR(tab, numFl, "%",
 		    _("Screenshot (JPEG) quality: "),
 		    &agScreenshotQuality, 1, 100);
 	}
 
 	tab = AG_NotebookAdd(nb, _("Keyboard"), AG_BOX_VERT);
 	{
-		AG_NumericalNewIntR(tab, 0, "ms", _("Key repeat delay: "),
+		AG_NumericalNewIntR(tab, numFl, "ms", _("Key repeat delay: "),
 		    &agKbdDelay, 1, 1000);
-		AG_NumericalNewIntR(tab, 0, "ms", _("Key repeat interval: "),
+		AG_NumericalNewIntR(tab, numFl, "ms", _("Key repeat interval: "),
 		    &agKbdRepeat, 1, 500);
+		AG_NumericalNewIntR(tab, numFl, "ms", _("Autocomplete delay: "),
+		    &agAutocompleteDelay, 1, 5000);
+		AG_NumericalNewIntR(tab, numFl, "ms", _("Autocomplete rate: "),
+		    &agAutocompleteRate, 1, 1000);
 #ifdef AG_UNICODE
 		AG_SeparatorNewHoriz(tab);
 		AG_CheckboxNewInt(tab, 0, _("Input text composition"),
@@ -178,19 +188,19 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 
 	tab = AG_NotebookAdd(nb, _("Mouse"), AG_BOX_VERT);
 	{
-		AG_NumericalNewIntR(tab, 0, "ms", _("Double click threshold: "),
+		AG_NumericalNewIntR(tab, numFl, "ms", _("Double click threshold: "),
 		    &agMouseDblclickDelay, 1, 10000);
 		AG_SeparatorNewHoriz(tab);
-		AG_NumericalNewIntR(tab, 0, "ms", _("Mouse spin delay: "),
+		AG_NumericalNewIntR(tab, numFl, "ms", _("Mouse spin delay: "),
 		    &agMouseSpinDelay, 1, 10000);
-		AG_NumericalNewIntR(tab, 0, "ms", _("Mouse spin interval: "),
+		AG_NumericalNewIntR(tab, numFl, "ms", _("Mouse spin interval: "),
 		    &agMouseSpinIval, 1, 10000);
 	}
 
 	tab = AG_NotebookAdd(nb, _("Debug"), AG_BOX_VERT);
 	{
 #ifdef AG_DEBUG
-		AG_NumericalNewIntR(tab, 0, NULL, _("Agar Debug level: "),
+		AG_NumericalNewIntR(tab, numFl, NULL, _("Agar Debug level: "),
 		    &agDebugLvl, 0, 255);
 #endif
 	}
@@ -200,5 +210,6 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		AG_ButtonNewFn(hb, 0, _("Close"), AGWINDETACH(win));
 		AG_ButtonNewFn(hb, 0, _("Save"), SaveConfig, NULL);
 	}
+
 	return (win);
 }

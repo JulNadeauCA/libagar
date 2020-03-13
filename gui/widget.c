@@ -62,7 +62,7 @@ const char *agStyleAttributes[] = {
 	 */
 	"font-family",      /* Font face or filename */
 	"font-size",        /* Font size (in pts, px or %) */
-	"font-weight",      /* Boldness (normal semibold bold !parent) */
+	"font-weight",      /* Boldness (normal bold !parent) */
 	"font-style",       /* Style (normal italic upright-italic !parent) */
 	"font-stretch",     /* Width variant (normal condensed semi-condensed !parent) */
 	/*
@@ -2096,7 +2096,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	}
 
 	/*
-	 * Font weight (normal, semibold, bold or !parent)
+	 * Font weight (normal, bold or !parent)
 	 */
 	if ((V = AG_AccessVariable(wid, "font-weight")) != NULL) {
 		Apply_Font_Weight(&fontFlags, parentFontFlags, V->data.s);

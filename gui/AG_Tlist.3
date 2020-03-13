@@ -530,7 +530,7 @@ For the
 .Ft AG_Tlist
 object:
 .Pp
-.Bl -tag -compact -width "TAILQ items "
+.Bl -tag -compact -width "Uint pollDelay "
 .It Ft TAILQ items
 List of all
 .Ft AG_TlistItem
@@ -538,9 +538,9 @@ objects (read-only, items are writeable).
 .It Ft int nitems
 Number of items in the list (read-only).
 .It Ft Uint pollDelay
-Delay in millisecond between updates in
+Delay in between updates in
 .Dv AG_TLIST_POLL
-mode.
+mode (ms).
 .El
 .Pp
 For the

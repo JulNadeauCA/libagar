@@ -32,6 +32,7 @@
  */
 
 #include <agar/core/core.h>
+#include <agar/core/config.h>
 
 #ifdef AG_WIDGETS
 
@@ -55,6 +56,13 @@
 
 #include <string.h>
 #include <ctype.h>
+
+/* For "font-family" autocomplete. */
+#include <agar/config/have_fontconfig.h>
+#ifdef HAVE_FONTCONFIG
+#include <fontconfig/fontconfig.h>
+extern int agFontconfigInited;		/* text.c */
+#endif
 
 static AG_Window *_Nullable agStyleEditorWindow = NULL;
 static AG_Tlist  *_Nullable agStyleEditorTlist = NULL;
@@ -331,7 +339,6 @@ CompleteFontWeight(const char *_Nonnull key, const char *_Nonnull val,
 {
 	const char *values[] = {
 		"normal",
-		"semibold",
 		"bold",
 		"!parent",
 		NULL
@@ -380,6 +387,108 @@ CompleteFontStretch(const char *_Nonnull key, const char *_Nonnull val,
 }
 
 static void
+CompleteFontFamily(const char *_Nonnull key, const char *_Nonnull val,
+    AG_Tlist *_Nonnull tl)
+{
+	AG_StaticFont **pbf;
+	AG_ConfigPath *fpath;
+	AG_TlistItem *it;
+
+	/*
+	 * Agar core fonts.
+	 */
+	for (pbf = &agBuiltinFonts[0]; *pbf != NULL; pbf++) {
+		if (strchr((*pbf)->name, '_')) {            /* Is a variant */
+			continue;
+		}
+		if (val[0] == '\0' || val[0] == '*' ||
+		    Strncasecmp((*pbf)->name, val, strlen(val)) == 0) {
+			it = AG_TlistAdd(tl, NULL, "%s: %s", key, (*pbf)->name);
+			it->p1 = (void *)(*pbf)->name;
+		}
+	}
+	TAILQ_FOREACH(fpath, &agConfig->paths[AG_CONFIG_PATH_FONTS], paths) {
+		AG_Dir *dir;
+		int i;
+
+		if ((dir = AG_OpenDir(fpath->s)) == NULL) {
+			continue;
+		}
+		for (i = 0; i < dir->nents; i++) {
+			char path[AG_FILENAME_MAX];
+			AG_FileInfo info;
+			char *file = dir->ents[i], *pExt;
+			const char **ffe;
+
+			if (file[0] == '.' ||
+			    (pExt = strrchr(file, '.')) == NULL) {
+				continue;
+			}
+			for (ffe = &agFontFileExts[0]; *ffe != NULL;
+			     ffe++) {
+				if (Strcasecmp(pExt, *ffe) == 0)
+					break;
+			}
+			if (*ffe == NULL)
+				continue;
+
+			Strlcpy(path, fpath->s, sizeof(path));
+			Strlcat(path, AG_PATHSEP, sizeof(path));
+			Strlcat(path, file, sizeof(path));
+
+			if (AG_GetFileInfo(path, &info) == -1 ||
+			    info.type != AG_FILE_REGULAR) {
+				continue;
+			}
+			*pExt = '\0';
+
+			if (val[0] == '\0' || val[0] == '*' ||
+			    Strncasecmp(file, val, strlen(val)) == 0) {
+				it = AG_TlistAdd(tl, NULL, "%s: %s", key, file);
+				it->p1 = file;
+			}
+		}
+		AG_CloseDir(dir);
+	}
+
+	/*
+	 * System fonts.
+	 */
+#ifdef HAVE_FONTCONFIG
+	if (agFontconfigInited) {
+		FcObjectSet *os;
+		FcFontSet *fset;
+		FcPattern *pat;
+		int i;
+		
+		pat = FcPatternCreate();
+		os = FcObjectSetBuild(FC_FAMILY, (char *)0);
+		fset = FcFontList(NULL, pat, os);
+		if (fset != NULL) {
+			for (i = 0; i < fset->nfont; i++) {
+				FcPattern *font = fset->fonts[i];
+				FcChar8 *fam;
+
+				if (FcPatternGetString(font, FC_FAMILY, 0, &fam)
+				    != FcResultMatch) {
+					continue;
+				}
+				if (val[0] == '\0' || val[0] == '*' ||
+				    Strncasecmp((char *)fam, val, strlen(val)) == 0) {
+					it = AG_TlistAdd(tl, NULL, "%s: %s",
+					    key, (char *)fam);
+					it->p1 = (void *)fam;
+				}
+			}
+			FcFontSetDestroy(fset);
+		}
+		FcObjectSetDestroy(os);
+		FcPatternDestroy(pat);
+	}
+#endif /* HAVE_FONTCONFIG */
+}
+
+static void
 CompleteAttribute(AG_Event *_Nonnull event)
 {
 	static const struct {
@@ -397,45 +506,72 @@ CompleteAttribute(AG_Event *_Nonnull event)
 		{ "font-weight",      CompleteFontWeight },
 		{ "font-style",       CompleteFontStyle },
 		{ "font-stretch",     CompleteFontStretch },
+		{ "font-family",      CompleteFontFamily },
 #if 0
 		{ "font-size",        CompleteFontSize },
-		{ "font-family",      CompleteFontFamily },
 #endif
 		{ NULL,               NULL }
 	}, *dp;
 	AG_Editable *ed = AG_EDITABLE_SELF();
 	AG_Tlist *tl = AG_TLIST_PTR(1);
 	char *s = AG_EditableDupString(ed), *sp = s;
-	const char *sKey, *sVal;
+	const char *key, *val, **attr;
 
-	while (*sp == ' ' || *sp == '\t') {
+	while (*sp == ' ' || *sp == '\t') {        /* Skip leading whitespace */
 		sp++;
 	}
-	sKey = AG_Strsep(&sp, ":");
-	do {
-		sVal = AG_Strsep(&sp, ":");
-	} while (sVal && (*sVal == '\0' || *sVal == ' ' || *sVal == '\t'));
+	key = AG_Strsep(&sp, ":");
+	val = AG_Strsep(&sp, ":");
 
 	AG_TlistBegin(tl);
 
-	if (sVal != NULL) {
-		for (dp = &dict[0]; dp->key != NULL; dp++) {
-			if (Strcasecmp(sKey, dp->key) == 0) {
-				dp->fn(sKey, sVal, tl);
+	if (key == NULL || key[0] == '*' || key[0] == ' ') {      /* All keys */
+		for (attr = agStyleAttributes; *attr != NULL; attr++)
+			AG_TlistAdd(tl, NULL, "%s: ", *attr);
+	} else {
+		if (val == NULL) {                             /* Partial key */
+			for (attr = agStyleAttributes; *attr != NULL; attr++) {
+				if (Strncasecmp(*attr, key, strlen(key)) != 0) {
+					continue;
+				}
+				AG_TlistAdd(tl, NULL, "%s: ", *attr);
+			}
+		} else if (val[0] == '*' ||                     /* All values */
+		          (val[0] == ' ' && val[1] == '\0')) {
+			for (dp = &dict[0]; dp->key != NULL; dp++) {
+				if (Strcasecmp(key, dp->key) == 0) {
+					dp->fn(key, "", tl);
+					break;
+				}
+			}
+		} else {                       /* Partial (or complete) value */
+			while (*val == ' ' || *val == '\t') {
+				val++;
+			}
+			for (dp = &dict[0]; dp->key != NULL; dp++) {
+				if (Strncasecmp(key, dp->key, strlen(key)) != 0) {
+					continue;
+				}
+				dp->fn(key, val, tl);
 				break;
 			}
-		}
-	} else {
-		const char **attr;
-
-		for (attr = agStyleAttributes; *attr != NULL; attr++) {
-			if (sKey[0] == '\0' || sKey[0] == '*' ||
-			    Strncasecmp(*attr, sKey, strlen(sKey)) == 0)
-				AG_TlistAddS(tl, NULL, *attr);
 		}
 	}
 
 	AG_TlistEnd(tl);
+
+	if (tl->nitems == 0) {
+		AG_EditableCloseAutocomplete(ed);
+	} else if (tl->nitems == 1) {
+		char *sOrig = AG_EditableDupString(ed);
+
+		if (AG_TlistFindText(tl, sOrig)) {
+			AG_EditableCloseAutocomplete(ed);
+		}
+		Free(sOrig);
+	} else {
+		AG_TlistSort(tl);
+	}
 	Free(s);
 }
 
@@ -475,11 +611,9 @@ TargetWidget(AG_Event *_Nonnull event)
 	nt = AG_NotebookAdd(nb, _("Style Attributes"), AG_BOX_VERT);
 	{
 		AG_Textbox *tb;
-		AG_Box *hBox;
 
-		hBox = AG_BoxNewHoriz(nt, AG_BOX_HFILL);
-		tb = AG_TextboxNewS(hBox, AG_TEXTBOX_HFILL |
-		                          AG_TEXTBOX_RETURN_BUTTON, "+ ");
+		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL |
+		                        AG_TEXTBOX_RETURN_BUTTON, "+ ");
 		AG_TextboxSizeHint(tb, "<XXXXXXXXXXX>: <XXXXXXXXXXX>");
 		AG_TextboxAutocomplete(tb, CompleteAttribute, NULL);
 		AG_SetEvent(tb, "textbox-return",
