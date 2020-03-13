@@ -122,6 +122,9 @@ and "Select All" functions can be implemented externally in this way).
 .Ft "void"
 .Fn AG_EditableAutocomplete "AG_Editable *ed" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
+.Ft "void"
+.Fn AG_EditableCloseAutocomplete "AG_Editable *ed"
+.Pp
 .nr nS 0
 The
 .Fn AG_EditableNew
@@ -298,7 +301,12 @@ If non-NULL,
 .Fa fnArgs
 indicates additional
 .Xr AG_Event 3
-style arguments to be passed to the autocomplete function.
+style arguments to be passed to the autocomplete routine.
+.Pp
+.Fn AG_EditableCloseAutocomplete
+closes any active autocomplete windows.
+If there are no autocomplete windows open or an autocomplete context has
+not been defined then this routine is a no-op.
 .Sh STRING UTILITY ROUTINES
 .nr nS 1
 .Ft void

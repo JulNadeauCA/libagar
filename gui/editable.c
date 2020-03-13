@@ -1412,16 +1412,8 @@ AG_EditableAutocomplete(AG_Editable *ed, AG_EventFn fn, const char *fmt, ...)
 
 	if (fn == NULL) {                           /* Disable autocomplete */
 		if (ed->complete) {
-			AG_DelTimer(ed, &ed->complete->to);
-			if (ed->complete) {
-				AG_UnsetEventByPtr(ed, ed->complete->fn);
-			}
-			if (ed->complete->winName[0] != '\0') {
-				AG_Window *win;
-
-				if ((win = AG_WindowFind(ed->complete->winName)) != NULL)
-					AG_PostEvent(win, "window-close", NULL);
-			}
+			AG_EditableCloseAutocomplete(ed);
+			AG_UnsetEventByPtr(ed, ed->complete->fn);
 			free(ed->complete);
 			ed->complete = NULL;
 			WIDGET(ed)->flags &= ~(AG_WIDGET_CATCH_TAB);
@@ -1448,6 +1440,23 @@ AG_EditableAutocomplete(AG_Editable *ed, AG_EventFn fn, const char *fmt, ...)
 	WIDGET(ed)->flags |= AG_WIDGET_CATCH_TAB;
 out:
 	AG_ObjectUnlock(ed);
+}
+
+/* Close any active autocomplete windows and cancel any running timers. */
+void
+AG_EditableCloseAutocomplete(AG_Editable *ed)
+{
+	if (ed->complete == NULL)
+		return;
+
+	AG_DelTimer(ed, &ed->complete->to);
+
+	if (ed->complete->winName[0] != '\0') {
+		AG_Window *win;
+
+		if ((win = AG_WindowFind(ed->complete->winName)) != NULL)
+			AG_PostEvent(win, "window-close", NULL);
+	}
 }
 
 static void

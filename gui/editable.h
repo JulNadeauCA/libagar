@@ -149,6 +149,7 @@ void AG_EditableSetLang(AG_Editable *_Nonnull, enum ag_language);
 
 void AG_EditableAutocomplete(AG_Editable *_Nonnull, _Nullable AG_EventFn,
                              const char *_Nullable, ...);
+void AG_EditableCloseAutocomplete(AG_Editable *_Nonnull);
 
 AG_EditableBuffer *_Nullable AG_EditableGetBuffer(AG_Editable *_Nonnull);
 void AG_EditableReleaseBuffer(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);

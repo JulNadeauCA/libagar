@@ -976,10 +976,10 @@ main(int argc, char *argv[])
 		       " and " AGSI_BOLD AGSI_CMD "[=]" AGSI_RST " to zoom"));
 # if defined(AG_DEBUG) && defined(AG_TIMERS)
 		AG_ConsoleMsg(console,
-		    _("Press " AGSI_BOLD "F7 or Ctrl-Shift-D" AGSI_RST " to start Debugger"));
+		    _("Press " AGSI_BOLD "Ctrl-Shift-D or F7" AGSI_RST " to start Debugger"));
 #endif
 		AG_ConsoleMsg(console,
-		    _("Press " AGSI_BOLD "F8 or Ctrl-Shift-C" AGSI_RST " to start Style Editor"));
+		    _("Press " AGSI_BOLD "Ctrl-Shift-C or F8" AGSI_RST " to start Style Editor"));
 		AG_ConsoleMsg(console, "");
 	}
 

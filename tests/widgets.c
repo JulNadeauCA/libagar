@@ -91,15 +91,15 @@ SayHello(AG_Event *event)
 	AG_Textbox *tb = AG_TEXTBOX_SELF();
 	char *who = AG_TextboxDupString(tb);
 
-	AG_TextInfo(NULL, "Hello, %s!", who);
+	AG_TextTmsg(AG_MSG_INFO, 2000, "Hello, %s!", who);
 
 	Free(who);
 }
 
 /*
- * Sample autocomplete for Textbox. Parse for "First Last" (or "First,Last")
- * and provide different suggestions for first names vs. last names. This
- * routine runs continuously (and independently of timers).
+ * Sample autocomplete routine for Textbox. Parse "First Last" or "First,Last"
+ * and provide different suggestions for first and last names based on two
+ * separate dictionaries.
  */
 static void
 AutocompleteName(AG_Event *event)
@@ -128,6 +128,8 @@ AutocompleteName(AG_Event *event)
 	AG_Tlist *tl = AG_TLIST_PTR(1);
 	char *s = AG_EditableDupString(ed), *sp = s;
 	const char *sFirst, *sLast;
+	AG_TlistItem *it;
+	int nSpaces=0;
 
 	while (*sp == ' ' || *sp == '\t') {
 		sp++;
@@ -135,29 +137,53 @@ AutocompleteName(AG_Event *event)
 	sFirst = AG_Strsep(&sp, " ,");
 	do {
 		sLast = AG_Strsep(&sp, " ,");
+		nSpaces++;
 	} while (sLast != NULL && *sLast == '\0');
 
 	AG_TlistBegin(tl);
 
-	if (sLast == NULL) {
+	if (sFirst[0] == '\0' || sFirst[0] == '*') {
 		for (dp = dictFirst; *dp != NULL; dp++)
-			if ((sFirst[0] == '\0' || sFirst[0] == '*') ||
-			    AG_Strncasecmp(*dp, sFirst, strlen(sFirst)) == 0)
-				AG_TlistAddPtr(tl, NULL, *dp, (void *)*dp);
-	} else {
-		for (dp = dictLast; *dp != NULL; dp++)
-			if ((sLast[0] == '\0' || sLast[0] == '*') ||
-			    AG_Strncasecmp(*dp, sLast, strlen(sLast)) == 0) {
-				char *sd;
-
-				asprintf(&sd, "%s %s", sFirst, *dp);
-				AG_TlistAddPtr(tl, NULL, sd, (void *)sd);
-				Free(sd);
+			AG_TlistAddPtr(tl, NULL, *dp, (void *)*dp);
+	} else if (sLast != NULL) {
+		if (sLast[0] == '\0' || sLast[0] == '*') {
+			for (dp = dictLast; *dp != NULL; dp++) {
+				it = AG_TlistAdd(tl, NULL, "%s %s", sFirst, *dp);
+				it->p1 = (void *)*dp;
 			}
+		} else {
+			for (dp = dictLast; *dp != NULL; dp++) {
+				if (AG_Strncasecmp(*dp, sLast, strlen(sLast)) == 0) {
+					it = AG_TlistAdd(tl, NULL, "%s %s", sFirst, *dp);
+					it->p1 = (void *)*dp;
+				}
+			}
+		}
+	} else {
+		if (nSpaces > 1) {
+			for (dp = dictLast; *dp != NULL; dp++) {
+				it = AG_TlistAdd(tl, NULL, "%s %s", sFirst, *dp);
+				it->p1 = (void *)*dp;
+			}
+		} else {
+			for (dp = dictFirst; *dp != NULL; dp++)
+				if (AG_Strncasecmp(*dp, sFirst, strlen(sFirst)) == 0)
+					AG_TlistAddPtr(tl, NULL, *dp, (void *)*dp);
+		}
 	}
 
 	AG_TlistEnd(tl);
 
+	if (tl->nitems == 0) {
+		AG_EditableCloseAutocomplete(ed);
+	} else if (tl->nitems == 1) {
+		char *sOrig = AG_EditableDupString(ed);
+
+		if (AG_TlistFindText(tl, sOrig)) {
+			AG_EditableCloseAutocomplete(ed);
+		}
+		Free(sOrig);
+	}
 	Free(s);
 }
 
@@ -175,7 +201,7 @@ CreateMoreCheckboxes(AG_Event *_Nonnull event)
 	AG_CheckboxNew(box, 0, "Haggis McHaggis");
 	AG_CheckboxNew(box, 0, "Kowalski, Bubba\n"
 	                       "and Jiminy Lummox");
-	AG_CheckboxNew(box, 0, "Wilbur Cobb");
+	AG_CheckboxNew(box, 0, "Wilbern Cobb");
 
 	AG_PaneMoveDivider(pane, pane->dx + 50);
 	AG_SetStyle(box, "font-size", "80%");
