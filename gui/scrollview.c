@@ -436,7 +436,7 @@ Draw(void *_Nonnull p)
 	int x2,y2;
 
 #ifdef AG_DEBUG
-	if (sv->style < 0 || sv->style >= AG_SCROLLVIEW_STYLE_LAST)
+	if (sv->style >= AG_SCROLLVIEW_STYLE_LAST)
 		AG_FatalError("style");
 #endif
 	pfBox[sv->style](sv, &r, &WCOLOR(sv, BG_COLOR));

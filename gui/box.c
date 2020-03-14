@@ -199,7 +199,7 @@ Draw(void *_Nonnull obj)
 			ag_draw_rect        /* PLAIN */
 		};
 #ifdef AG_DEBUG
-		if (box->style < 0 || box->style >= AG_BOX_STYLE_LAST)
+		if (box->style >= AG_BOX_STYLE_LAST)
 			AG_FatalError("style");
 #endif
 		pfBox[box->style](box, &r, cBg);

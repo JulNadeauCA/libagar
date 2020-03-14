@@ -460,7 +460,7 @@ DUMMY_PutPixelRGB8(void *_Nonnull obj, int x, int y, Uint8 r, Uint8 g, Uint8 b)
 static void
 DUMMY_PutPixel64(void *_Nonnull obj, int x, int y, Uint64 px)
 {
-	Debug(obj, "PutPixel64(%d,%d, 0x%lx)\n", x,y, px);
+	Debug(obj, "PutPixel64(%d,%d, 0x%llx)\n", x,y, px);
 }
 
 static void

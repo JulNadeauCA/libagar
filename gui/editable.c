@@ -1657,7 +1657,7 @@ AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf,
 		    (long)selLen, (long)utf8len, (char)buf->s[selStart], (char)cEndSave);
 #endif
 		if ((s = TryMalloc(utf8len)) == NULL) {
-			Verbose(_("Out of memory for Copy (%lu bytes)\n"), utf8len);
+			Verbose(_("Out of memory for Copy (%lu bytes)\n"), (Ulong)utf8len);
 			buf->s[selEnd] = cEndSave;
 			return (0);
 		}

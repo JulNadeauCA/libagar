@@ -421,8 +421,8 @@ DrawVectorFixed(void *_Nonnull obj, const AG_Pt *_Nonnull vtx, Uint nVtx,
 #ifdef AG_DEBUG
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
-	if (elemFirst < 0 || elemFirst > elemLast)
-		AG_FatalError("elemFirst/elemLast");
+	if (elemFirst > elemLast)
+		AG_FatalError("elemFirst>elemLast");
 #endif
 	for (i = elemFirst; i < elemLast; i++) {
 		const AG_VectorElement *elem = &elemBase[i];

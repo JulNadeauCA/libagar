@@ -125,7 +125,7 @@ Draw(void *_Nonnull obj)
 	AG_Widget *chld;
 
 #ifdef AG_DEBUG
-	if (fx->style < 0 || fx->style >= AG_FIXED_STYLE_LAST)
+	if (fx->style >= AG_FIXED_STYLE_LAST)
 		AG_FatalError("style");
 #endif
 	pfBox[fx->style](fx, &WIDGET(fx)->r, &WCOLOR(fx,BG_COLOR));
