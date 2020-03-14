@@ -310,6 +310,11 @@ if [ "${enable_warnings}" = 'yes' ]; then
 	c_option(-Werror)
 	c_option(-Wmissing-prototypes)
 	c_option(-Wno-switch)
+	case "${host}" in
+	*-*-darwin*)
+		c_option(-Wno-deprecated-declarations)
+		;;
+	esac
 fi
 if [ "${enable_debug}" = 'yes' ]; then
 	hdefine(AG_DEBUG, "yes")

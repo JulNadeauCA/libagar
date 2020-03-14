@@ -59,17 +59,20 @@
 
 #ifdef _WIN32
 # include <agar/core/queue_close.h>			/* Conflicts */
-#ifdef _XBOX
-# include <xtl.h>
-#else
-# include <windows.h>
-#endif
+# ifdef _XBOX
+#  include <xtl.h>
+# else
+#  include <windows.h>
+# endif
 # include <agar/core/queue_close.h>
 # include <agar/core/queue.h>
 #else
 # include <agar/config/_mk_have_sys_stat_h.h>
 # ifdef _MK_HAVE_SYS_STAT_H
 #  include <sys/stat.h>
+# endif
+# ifdef __APPLE__
+#  define _DARWIN_C_SOURCE
 # endif
 # include <dirent.h>
 # include <unistd.h>
@@ -219,17 +222,17 @@ AG_OpenDir(const char *path)
 	{
 		struct dirent *dent;
 		
-		if ((dir->dirp = opendir(path)) == NULL) {
+		if ((dir->dirp = (void *)opendir(path)) == NULL) {
 			AG_SetError(_("%s: Failed to open directory (%s)"),
 			    path, strerror(errno));
 			goto fail;
 		}
-		while ((dent = readdir(dir->dirp)) != NULL) {
+		while ((dent = readdir((DIR *)dir->dirp)) != NULL) {
 			dir->ents = Realloc(dir->ents,
 			    (dir->nents+1)*sizeof(char *));
 			dir->ents[dir->nents++] = Strdup(dent->d_name);
 		}
-		dir->fd = dirfd(dir->dirp);
+		dir->fd = dirfd((DIR *)dir->dirp);
 	}
 #endif /* !_WIN32 */
 

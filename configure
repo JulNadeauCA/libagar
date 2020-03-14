@@ -4345,9 +4345,19 @@ echo 'hdefs["HAVE_MACH_O_DYLD_H"] = nil' >>configure.lua
 fi
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.c
+#ifdef __APPLE__
+# include <Availability.h>
+# ifdef __MAC_OS_X_VERSION_MIN_REQUIRED
+#  if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
+#   error "deprecated in Lion and later"
+#  endif
+# endif
+#endif
+
 #ifdef HAVE_MACH_O_DYLD_H
 #include <mach-o/dyld.h>
 #endif
+
 int
 main(int argc, char *argv[])
 {
@@ -5297,6 +5307,12 @@ CFLAGS="$CFLAGS -Wmissing-prototypes"
 CXXFLAGS="$CXXFLAGS -Wmissing-prototypes"
 CFLAGS="$CFLAGS -Wno-switch"
 CXXFLAGS="$CXXFLAGS -Wno-switch"
+	case "${host}" in
+	*-*-darwin*)
+CFLAGS="$CFLAGS -Wno-deprecated-declarations"
+CXXFLAGS="$CXXFLAGS -Wno-deprecated-declarations"
+		;;
+	esac
 fi
 if [ "${enable_debug}" = 'yes' ]
  then

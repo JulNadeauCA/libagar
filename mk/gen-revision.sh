@@ -28,7 +28,7 @@ if [ -e "${TOP}/.svn" ]; then
 	done
 	if [ "${SVN}" != "" ]; then
 		SVN_REV=`${SVN} info -R --show-item revision |sort -n |tail -n 1 |awk '{print $1}'`
-		if [ "$?" = "0" ]; then
+		if [ "$?" = "0" -a "${SVN_REV}" != "" ]; then
 			echo "#define $DEFN $SVN_REV"
 		else
 			echo '/* svn info failed */'

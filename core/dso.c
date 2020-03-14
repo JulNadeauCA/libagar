@@ -411,10 +411,10 @@ AG_LoadDSO(const char *name, Uint flags)
 	dso = LoadDSO_WIN32(path);
 #elif defined(HAVE_SHL_LOAD)
 	dso = LoadDSO_SHL(path);
-#elif defined(HAVE_DYLD)
-	dso = LoadDSO_DYLD(path);
 #elif defined(HAVE_DLOPEN)
 	dso = LoadDSO_DLOPEN(path);
+#elif defined(HAVE_DYLD)
+	dso = LoadDSO_DYLD(path);
 #else
 	AG_SetError("Dynamic linking is not supported on this platform");
 	dso = NULL;
@@ -626,7 +626,6 @@ static int
 SymDSO_DYLD(AG_DSO_Generic *_Nonnull d, const char *_Nonnull sym,
     void *_Nonnull *_Nullable p)
 {
-	int rv;
 	NSSymbol symbol;
 	size_t symLen = strlen(sym);
 	char *symUnder = Malloc(symLen+2);
