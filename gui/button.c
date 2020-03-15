@@ -196,30 +196,30 @@ static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
-	AG_Variable *V;
 	void *pState;
 	const int button = AG_INT(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
 
+	if (button != AG_MOUSE_LEFT) {
+		return;
+	}
 	if (bu->repeat) {
 		AG_DelTimer(bu, &bu->repeat->ivalTo);
 		AG_DelTimer(bu, &bu->repeat->delayTo);
-		return;
 	}
-	if (AG_WidgetDisabled(bu) ||
-	   !AG_WidgetRelativeArea(bu, x,y))
+	if (AG_WidgetDisabled(bu))
 		return;
-	
-	V = AG_GetVariable(bu, "state", &pState);
-	if (GetState(bu, V, pState) &&
-	    button == AG_MOUSE_LEFT &&
-	    !(bu->flags & AG_BUTTON_STICKY)) {
-	    	SetState(bu, V, pState, 0);
-		AG_PostEvent(bu, "button-pushed", "%i", 0);
+
+	if ((bu->flags & AG_BUTTON_STICKY) == 0) {
+		AG_Variable *V;
+
+		V = AG_GetVariable(bu, "state", &pState);
+		if (GetState(bu, V, pState)) {
+		    	SetState(bu, V, pState, 0);
+			AG_PostEvent(bu, "button-pushed", "%i", 0);
+		}
+		AG_UnlockVariable(V);
 	}
-	AG_UnlockVariable(V);
-	
+
 	bu->flags &= ~(AG_BUTTON_PRESSING);
 }
 
@@ -258,31 +258,6 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		AG_PostEvent(bu, "button-pushed", "%i", 1);
 		AG_AddTimer(bu, &bu->repeat->delayTo, agMouseSpinDelay,
 		    ExpireDelay, "%i", agMouseSpinIval);
-	}
-}
-
-static void
-MouseMotion(AG_Event *_Nonnull event)
-{
-	AG_Button *bu = AG_BUTTON_SELF();
-	void *pState;
-	const int x = AG_INT(1);
-	const int y = AG_INT(2);
-
-	if (AG_WidgetDisabled(bu))
-		return;
-
-	if ((bu->flags & AG_BUTTON_STICKY) == 0 &&
-	    (bu->flags & AG_BUTTON_PRESSING) &&
-	    !AG_WidgetRelativeArea(bu, x,y)) {             /* Cursor outside */
-		AG_Variable *V;
-
-		V = AG_GetVariable(bu, "state", &pState);
-		if (GetState(bu, V, pState) == 1) {
-			SetState(bu, V, pState, 0);
-			bu->flags &= ~(AG_BUTTON_PRESSING);
-		}
-		AG_UnlockVariable(V);
 	}
 }
 
@@ -399,7 +374,6 @@ Init(void *_Nonnull obj)
 
 	AG_SetEvent(bu, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(bu, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(bu, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(bu, "key-up", KeyUp, NULL);
 	AG_SetEvent(bu, "key-down", KeyDown, NULL);
 
