@@ -69,7 +69,7 @@ struct ag_dbt;
 #include <agar/core/event.h>
 #include <agar/core/agtime.h>
 
-/* Agar Object class specification */
+/* Object class specification (generated) */
 typedef struct ag_object_class_spec {
 	char hier[AG_OBJECT_HIER_MAX];	/* Inheritance hierarchy (normalized) */
 	char spec[AG_OBJECT_HIER_MAX];	/* Full class string + optional @libs */
@@ -79,7 +79,7 @@ typedef struct ag_object_class_spec {
 #endif
 } AG_ObjectClassSpec;
 
-/* Global name space registration (for NAMESPACES) */
+/* Registered name space (for NAMESPACES) */
 typedef struct ag_namespace {
 	const char *_Nonnull name;	/* Name string */
 	const char *_Nonnull pfx;	/* Prefix string */
@@ -101,36 +101,32 @@ typedef int (*AG_ObjectSaveFn)(void *_Nonnull, void *_Nonnull);
 #endif
 typedef void *_Nullable (*AG_ObjectEditFn) (void *_Nonnull);
 
-/* Agar Object class description (internally-generated part) */
+/* Object class description (private, generated section) */
 typedef struct ag_object_class_pvt {
 	char libs[AG_OBJECT_LIBS_MAX];              /* List of required modules */
 	AG_TAILQ_HEAD_(ag_object_class) sub;        /* Direct subclasses */
 	AG_TAILQ_ENTRY(ag_object_class) subclasses; /* Subclass entry */
 } AG_ObjectClassPvt;
 
-/* Agar Object class description. */
-typedef struct ag_object_class {
-	char       hier[AG_OBJECT_HIER_MAX];	/* Inheritance hierarchy */
-	AG_Size    size;			/* Structure size */
-	AG_Version ver;				/* Data version */
+/* Object class description */
+typedef struct ag_object_class {              /* --- Required fields --- */
+	char hier[AG_OBJECT_HIER_MAX];        /* Inheritance hierarchy */
+	AG_Size size;                         /* Instance structure size (bytes) */
+	AG_Version ver;                       /* Serialized version (or 0.0) */
+	_Nullable AG_ObjectInitFn init;       /* Initialization */
+	_Nullable AG_ObjectResetFn reset;     /* Pre-serialization code */
+	_Nullable AG_ObjectDestroyFn destroy; /* Finalization */
+	_Nullable AG_ObjectLoadFn load;       /* Deserialization (reading) */
+	_Nullable AG_ObjectSaveFn save;       /* Serialization (writing) */
+	_Nullable AG_ObjectEditFn edit;       /* User-defined editor callback */
 
-	_Nullable AG_ObjectInitFn    init;	/* Initialization routine */
-	_Nullable AG_ObjectResetFn   reset;	/* Reset state for load */
-	_Nullable AG_ObjectDestroyFn destroy;	/* Release data */
-	_Nullable AG_ObjectLoadFn    load;	/* Deserialize */
-	_Nullable AG_ObjectSaveFn    save;	/* Serialize */
-	_Nullable AG_ObjectEditFn    edit;	/* User-defined edit callback */
-
+	                                         /* --- Generated fields --- */
 	char name[AG_OBJECT_TYPE_MAX];		 /* Short name of this class */
 	struct ag_object_class *_Nullable super; /* Direct superclass */
 	AG_ObjectClassPvt pvt;			 /* Private data */
 } AG_ObjectClass;
 
 AG_TAILQ_HEAD(ag_objectq, ag_object);
-
-/* Object private data */
-typedef struct ag_object_pvt {
-} AG_ObjectPvt;
 
 /* Object instance */
 typedef struct ag_object {
