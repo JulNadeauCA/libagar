@@ -303,6 +303,15 @@ KeyUp(AG_Event *_Nonnull event)
 	}
 }
 
+static void
+LostFocus(AG_Event *_Nonnull event)
+{
+	AG_Numerical *num = AG_NUMERICAL_PTR(1);
+
+	AG_DelTimer(num, &num->toInc);
+	AG_DelTimer(num, &num->toDec);
+}
+
 /*
  * Update the numerical value from the textbox.
  */
@@ -558,6 +567,7 @@ Init(void *_Nonnull obj)
 
 	AG_AddEvent(num->input->ed, "key-down", KeyDown, "%p", num);
 	AG_AddEvent(num->input->ed, "key-up", KeyUp, "%p", num);
+	AG_AddEvent(num->input->ed, "widget-lostfocus", LostFocus, "%p", num);
 
 	AG_InitTimer(&num->toUpdate, "update", 0);
 	AG_InitTimer(&num->toInc, "increment", 0);
