@@ -109,6 +109,7 @@ typedef struct sk_node {
 
 	Uint nEdges;			/* For solver */
 	Uint32 _pad;
+	void *userData;			/* Optional user pointer */
 
 	AG_TAILQ_ENTRY(sk_node) sknodes; /* Entry in transformation tree */
 	AG_TAILQ_ENTRY(sk_node) nodes;	 /* Entry in flat node list */

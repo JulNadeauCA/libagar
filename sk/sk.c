@@ -288,6 +288,7 @@ SK_NodeInit(void *np, const void *ops, Uint handle, Uint flags)
 	n->cons = Malloc(sizeof(SK_Constraint *));
 	n->nCons = 0;
 	M_MatIdentity44v(&n->T);
+	n->userData = NULL;
 	TAILQ_INIT(&n->cnodes);
 }
 

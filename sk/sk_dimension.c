@@ -349,11 +349,10 @@ GetNodeData(SK_View *_Nonnull skv, SK_Dimension *_Nonnull dim)
 {
 	SK_DimensionView *dimv;
 
-	if ((dimv = SK_ViewGetNodeData(skv, dim)) == NULL) {
+	if ((dimv = SKNODE(dim)->userData) == NULL) {
 		dimv = Malloc(sizeof(SK_DimensionView));
 		dimv->lbl = -1;
-		printf("set node data %p -> %p\n", dim, dimv);
-		SK_ViewSetNodeData(skv, dim, dimv);
+		SKNODE(dim)->userData = dimv;
 	}
 	return (dimv);
 }
