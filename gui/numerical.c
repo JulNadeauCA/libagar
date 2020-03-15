@@ -203,7 +203,7 @@ OnShow(AG_Event *_Nonnull event)
 	AG_Variable *V;
 
 	if ((num->flags & AG_NUMERICAL_EXCL) == 0)
-		AG_AddTimer(num, &num->updateTo,
+		AG_AddTimer(num, &num->toUpdate,
 		            (num->flags & AG_NUMERICAL_SLOW) ? 2000 : 250,
 		            UpdateTimeout, NULL);
 
@@ -246,18 +246,57 @@ OnShow(AG_Event *_Nonnull event)
 	AG_NumericalUpdate(num);
 }
 
-static void
-KeyDown(AG_Event *_Nonnull event)
+static Uint32
+KeyRepeat(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Numerical *num = AG_NUMERICAL_SELF();
-	const int keysym = AG_INT(1);
+	AG_KeySym key = AG_INT(1);
 
-	switch (keysym) {
+	switch (key) {
 	case AG_KEY_UP:
 		AG_NumericalIncrement(num);
 		break;
 	case AG_KEY_DOWN:
 		AG_NumericalDecrement(num);
+		break;
+	default:
+		break;
+	}
+	return ((to->ival >> 1) >= 1) ? (to->ival >> 1) : 1;
+}
+
+static void
+KeyDown(AG_Event *_Nonnull event)
+{
+	AG_Numerical *num = AG_NUMERICAL_PTR(1);
+	const int keysym = AG_INT(2);
+
+	switch (keysym) {
+	case AG_KEY_UP:
+		AG_NumericalIncrement(num);
+		AG_AddTimer(num, &num->toInc, 250, KeyRepeat, "%i", AG_KEY_UP);
+		break;
+	case AG_KEY_DOWN:
+		AG_NumericalDecrement(num);
+		AG_AddTimer(num, &num->toDec, 250, KeyRepeat, "%i", AG_KEY_DOWN);
+		break;
+	default:
+		break;
+	}
+}
+
+static void
+KeyUp(AG_Event *_Nonnull event)
+{
+	AG_Numerical *num = AG_NUMERICAL_PTR(1);
+	const int keysym = AG_INT(2);
+
+	switch (keysym) {
+	case AG_KEY_UP:
+		AG_DelTimer(num, &num->toInc);
+		break;
+	case AG_KEY_DOWN:
+		AG_DelTimer(num, &num->toDec);
 		break;
 	default:
 		break;
@@ -478,25 +517,6 @@ AG_NumericalUpdate(AG_Numerical *num)
 }
 
 static void
-InputKeyDown(AG_Event *_Nonnull event)
-{
-	AG_Numerical *num = AG_NUMERICAL_PTR(1);
-	const int keysym = AG_INT(2);
-/*	const int keymod = AG_INT(3); */
-	
-	/* TODO */
-
-	switch (keysym) {
-	case AG_KEY_UP:
-		AG_NumericalIncrement(num);
-		break;
-	case AG_KEY_DOWN:
-		AG_NumericalDecrement(num);
-		break;
-	}
-}
-
-static void
 Init(void *_Nonnull obj)
 {
 	AG_Numerical *num = obj;
@@ -529,16 +549,19 @@ Init(void *_Nonnull obj)
 	num->wPreUnit = 0;
 
 	AG_AddEvent(num, "widget-shown", OnShow, NULL);
-	AG_SetEvent(num, "key-down", KeyDown, NULL);
 
 	AG_SetEvent(num->incbu, "button-pushed", ButtonIncrement, "%p,%i", num, 0);
 	AG_SetEvent(num->decbu, "button-pushed", ButtonIncrement, "%p,%i", num, 1);
 
 	AG_SetEvent(num->input, "textbox-return",  UpdateFromText, "%p,%i", num, 1);
 	AG_SetEvent(num->input, "textbox-changed", UpdateFromText, "%p,%i", num, 0);
-	AG_AddEvent(num->input->ed, "key-down", InputKeyDown, "%p", num);
 
-	AG_InitTimer(&num->updateTo, "update", 0);
+	AG_AddEvent(num->input->ed, "key-down", KeyDown, "%p", num);
+	AG_AddEvent(num->input->ed, "key-up", KeyUp, "%p", num);
+
+	AG_InitTimer(&num->toUpdate, "update", 0);
+	AG_InitTimer(&num->toInc, "increment", 0);
+	AG_InitTimer(&num->toDec, "decrement", 0);
 
 	AG_WidgetForwardFocus(num, num->input);
 }

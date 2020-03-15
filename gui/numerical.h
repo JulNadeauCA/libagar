@@ -24,7 +24,7 @@ typedef struct ag_numerical {
                                      /* (default = float) */
 #define AG_NUMERICAL_EXCL      0x08  /* Assume exclusive access to variable */
 #define AG_NUMERICAL_READONLY  0x10  /* Read-only mode */
-#define AG_NUMERICAL_SLOW      0x20  /* Update every 2s (not 250ms) */
+#define AG_NUMERICAL_SLOW      0x20  /* Update every 2s (default = 250ms) */
 
 	char format[28];                     /* Print format (for reals) */
 	const AG_Unit *_Nonnull unit;        /* Conversion unit in use */
@@ -36,7 +36,8 @@ typedef struct ag_numerical {
 	int wUnitSel, hUnitSel;              /* Size hints for entry box */
 	int wPreUnit;                        /* Size hint for unit selector */
 	Uint32 _pad;
-	AG_Timer updateTo;                   /* Timer (for non-EXCL mode) */
+	AG_Timer toUpdate;                   /* For refresh (not in EXCL mode) */
+	AG_Timer toInc, toDec;               /* For keyboard increment/decrement */
 } AG_Numerical;
 
 #define AGNUMERICAL(obj)            ((AG_Numerical *)(obj))
