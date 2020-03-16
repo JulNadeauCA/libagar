@@ -284,7 +284,9 @@ static int
 WordBack(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	int newPos = ed->pos;
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
+	int newPos = ed->pos, i;
+	AG_TextANSI ansi;
 	AG_Char *c;
 
 	if (newPos == 0) {
@@ -307,8 +309,22 @@ WordBack(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 			break;
 		}
 	}
+	for (c  = &buf->s[newPos], i = 0;
+	     c >= &buf->s[0] && (i <= AG_TEXT_ANSI_SEQ_MAX);
+	     c--, i++) {
+		if (c[0] == 0x1b &&
+		    c[1] >= 0x40 && c[1] <= 0x5f &&
+		    c[2] != '\0') {
+			if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0 &&
+			    i <= ansi.len) {
+				newPos += (ansi.len + 1);
+			}
+			break;
+		}
+	}
 
 	ed->pos = newPos;
+
 	RemoveSelection(ed, keymod);
 
 	ed->flags |= AG_EDITABLE_MARKPREF;
@@ -324,8 +340,10 @@ static int
 WordForw(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	int newPos = ed->pos;
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
+	AG_TextANSI ansi;
 	AG_Char *c;
+	int newPos = ed->pos;
 	
 	if (newPos == buf->len) {
 		return (0);
@@ -355,8 +373,15 @@ WordForw(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 			}
 		}
 	}
+	if (c[0] == 0x1b &&
+	    c[1] >= 0x40 && c[1] <= 0x5f &&
+	    c[2] != '\0') {
+		if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0)
+			newPos += (ansi.len + 1);
+	}
 
 	ed->pos = newPos;
+
 	RemoveSelection(ed, keymod);
 
 	ed->flags |= AG_EDITABLE_MARKPREF;
@@ -462,9 +487,8 @@ CursorLeft(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	     c >= &buf->s[0] && (i <= AG_TEXT_ANSI_SEQ_MAX);
 	     c--, i++) {
 		if (c[0] == 0x1b &&
-		    c[1] >= 0x40 &&
-		    c[2] <= 0x5f &&
-		    c[3] != '\0') {
+		    c[1] >= 0x40 && c[1] <= 0x5f &&
+		    c[2] != '\0') {
 			if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0 &&
 			    i <= ansi.len) {
 				ed->pos -= (ansi.len + 1);
@@ -477,6 +501,14 @@ CursorLeft(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	} else {
 		if (ed->selEnd > ed->selStart) {
 			ed->pos = ed->selStart;
+
+			c = &buf->s[ed->pos];
+			if (c[0] == 0x1b &&
+			    c[1] >= 0x40 && c[1] <= 0x5f &&
+			    c[2] != '\0' &&
+			    AG_TextParseANSI(ts, &ansi, &c[1]) == 0) {
+				ed->pos += ansi.len+1;
+			}
 			if ((ed->flags & AG_EDITABLE_SHIFT_SELECT) == 0)
 				RemoveSelection(ed, keymod);
 		}
@@ -506,9 +538,8 @@ CursorRight(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 
 	c = &buf->s[ed->pos];
 	if (c[0] == 0x1b &&
-	    c[1] >= 0x40 &&
-	    c[2] <= 0x5f &&
-	    c[3] != '\0') {
+	    c[1] >= 0x40 && c[1] <= 0x5f &&
+	    c[2] != '\0') {
 		if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0)
 			ed->pos += (ansi.len + 1);
 	}

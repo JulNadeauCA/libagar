@@ -268,7 +268,7 @@ InputAttribute(AG_Event *_Nonnull event)
 
 	AG_SetStyle(tgt, key, val[0] != '\0' ? val : NULL);
 	AG_WindowUpdate(AG_ParentWindow(tgt));
-	AG_TextboxClearString(tb);
+/*	AG_TextboxClearString(tb); */
 
 	free(s);
 }
