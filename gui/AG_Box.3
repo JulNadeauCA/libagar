@@ -81,6 +81,9 @@ Vertical boxes allow only up to 1 widget with
 .Fn AG_BoxSetLabelS "AG_Box *box" "const char *text"
 .Pp
 .Ft void
+.Fn AG_BoxSizeHint "AG_Box *box" "int width" "int height"
+.Pp
+.Ft void
 .Fn AG_BoxSetHomogenous "AG_Box *box" "int homogenous"
 .Pp
 .Ft void
@@ -99,17 +102,16 @@ Vertical boxes allow only up to 1 widget with
 .Fn AG_BoxSetVertAlign "AG_Box *box" "enum ag_box_align align"
 .Pp
 .nr nS 0
-The
 .Fn AG_BoxNew
-function allocates, initializes, and attaches a new
+allocates, initializes, and attaches a new
 .Nm
-widget.
-The
+container.
 .Fa type
-argument defines the packing as
+can be
 .Dv AG_BOX_HORIZ
-or
-.Dv AG_BOX_VERT .
+for horizontal packing
+.Dv AG_BOX_VERT
+for vertical packing.
 Acceptable
 .Fa flags
 include:
@@ -163,6 +165,10 @@ Visible background styles use the style attributes "background-color",
 .Fn AG_BoxSetLabel
 arranges for a text label to be displayed over the container.
 If an argument of NULL is passed, the label is removed.
+.Pp
+.Fn AG_BoxSizeHint
+sets a specific size requisition in pixels (-1 = auto).
+The default is determined by the size requisition of attached widgets.
 .Pp
 .Fn AG_BoxSetHomogenous
 sets or clears the

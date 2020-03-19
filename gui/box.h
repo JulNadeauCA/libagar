@@ -8,8 +8,9 @@
 #include <agar/gui/begin.h>
 
 enum ag_box_type {
-	AG_BOX_HORIZ,
-	AG_BOX_VERT
+	AG_BOX_HORIZ = 0,
+	AG_BOX_VERT  = 1
+#define AG_BOX_TYPE_LAST    2
 };
 
 enum ag_box_style {
@@ -32,22 +33,21 @@ enum ag_box_align {
 struct ag_label;
 
 typedef struct ag_box {
-	struct ag_widget wid;		/* AG_Widget -> AG_Box */
-	enum ag_box_type type;
-	enum ag_box_style style;	/* Graphical style */
+	struct ag_widget wid;           /* AG_Widget -> AG_Box */
+	enum ag_box_type type;          /* Horizontal or vertical */
+	enum ag_box_style style;        /* Graphical style */
 	Uint flags;
-#define AG_BOX_HOMOGENOUS 0x01	/* Divide space evenly */
-#define AG_BOX_HFILL      0x02	/* Expand to fill available width */
-#define AG_BOX_VFILL      0x04	/* Expand to fill available height */
-#define AG_BOX_SHADING    0x08	/* 3D-style shading even if BG is transparent */
-#define AG_BOX_NO_SPACING 0x10  /* Disable spacing (constructor) */
-#define AG_BOX_EXPAND    (AG_BOX_HFILL|AG_BOX_VFILL)
-	int padding;			/* Padding around widgets */
-	int spacing;			/* Spacing between widgets */
-	int depth;			/* Depth for SHADING */
-	struct ag_label *_Nonnull lbl;	/* Optional text label */
-	enum ag_box_align hAlign;	/* Horizontal alignment */
-	enum ag_box_align vAlign;	/* Vertical alignment */
+#define AG_BOX_HOMOGENOUS 0x01          /* Divide space evenly */
+#define AG_BOX_HFILL      0x02          /* Expand to fill available width */
+#define AG_BOX_VFILL      0x04          /* Expand to fill available height */
+#define AG_BOX_SHADING    0x08          /* 3D shading even if transparent BG */
+#define AG_BOX_NO_SPACING 0x10          /* Initialize padding & spacing to 0 */
+#define AG_BOX_EXPAND    (AG_BOX_HFILL | AG_BOX_VFILL)
+	int wPre, hPre;                 /* Size hint (or -1) */
+	int depth;                      /* Depth for SHADING */
+	struct ag_label *_Nonnull lbl;  /* Optional text label */
+	enum ag_box_align hAlign;       /* Horizontal alignment */
+	enum ag_box_align vAlign;       /* Vertical alignment */
 } AG_Box, AG_HBox, AG_VBox;
 
 #define AG_HBOX_HOMOGENOUS AG_BOX_HOMOGENOUS
@@ -84,9 +84,8 @@ AG_VBox *_Nonnull AG_VBoxNew(void *_Nullable, Uint);
 void AG_BoxSetStyle(AG_Box *_Nonnull, enum ag_box_style);
 void AG_BoxSetLabel(AG_Box *_Nonnull, const char *_Nullable, ...);
 void AG_BoxSetLabelS(AG_Box *_Nonnull, const char *_Nullable);
+void AG_BoxSizeHint(AG_Box *_Nonnull, int, int);
 void AG_BoxSetHomogenous(AG_Box *_Nonnull, int);
-void AG_BoxSetPadding(AG_Box *_Nonnull, int);
-void AG_BoxSetSpacing(AG_Box *_Nonnull, int);
 void AG_BoxSetDepth(AG_Box *_Nonnull, int);
 void AG_BoxSetType(AG_Box *_Nonnull, enum ag_box_type);
 void AG_BoxSetHorizAlign(AG_Box *_Nonnull, enum ag_box_align);
@@ -105,6 +104,8 @@ void AG_BoxSetVertAlign(AG_Box *_Nonnull, enum ag_box_align);
 # define AG_BOX_FRAME AG_BOX_SHADING
 # define AG_BoxNewHorizNS(p,fl) AG_BoxNewHoriz((p), (fl | AG_BOX_NO_SPACING))
 # define AG_BoxNewVertNS(p,fl)  AG_BoxNewVert((p), (fl | AG_BOX_NO_SPACING))
+# define AG_BoxSetPadding(p,px) AG_SetStyleF((p), "padding", "%d", (px))
+# define AG_BoxSetSpacing(p,px) AG_SetStyleF((p), "spacing", "%d", (px))
 #endif
 __END_DECLS
 
