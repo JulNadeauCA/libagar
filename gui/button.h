@@ -88,19 +88,19 @@ void AG_ButtonText(AG_Button *_Nonnull, const char *_Nonnull, ...)
 void AG_ButtonTextS(AG_Button *_Nonnull, const char *_Nullable);
 
 #ifdef AG_LEGACY
-# define AG_BUTTON_INVSTATE AG_BUTTON_INVERTED
-# define AG_ButtonAct AG_ButtonNewFn
-# define AG_ButtonSetSurface(bu,su) AG_ButtonSurface((bu),(su))
-# define AG_ButtonPrintf AG_ButtonText
-# define AG_ButtonEnable AG_WidgetEnable
-# define AG_ButtonDisable AG_WidgetDisable
-# define AG_ButtonSetJustification AG_ButtonJustify
-# define AG_ButtonInvertState AG_ButtonSetInverted
-# define AG_ButtonSetPadding(bu,l,r,t,b) AG_SetStyleF((bu), "padding", "%d %d %d %d", (t),(r),(b),(l))
-# define AG_ButtonSetPaddingLeft(bu,v)   AG_SetStyleF((bu), "padding-left", "%d", (v))
-# define AG_ButtonSetPaddingRight(bu,v)  AG_SetStyleF((bu), "padding-right", "%d", (v))
-# define AG_ButtonSetPaddingTop(bu,v)    AG_SetStyleF((bu), "padding-top", "%d", (v))
-# define AG_ButtonSetPaddingBottom(bu,v) AG_SetStyleF((bu), "padding-bottom", "%d", (v))
+# define AG_BUTTON_INVSTATE               AG_BUTTON_INVERTED
+# define AG_ButtonAct                     AG_ButtonNewFn
+# define AG_ButtonDisable                 AG_WidgetDisable
+# define AG_ButtonEnable                  AG_WidgetEnable
+# define AG_ButtonInvertState             AG_ButtonSetInverted
+# define AG_ButtonPrintf                  AG_ButtonText
+# define AG_ButtonSetJustification        AG_ButtonJustify
+# define AG_ButtonSetPadding(bu,l,r,t,b)  AG_SetStyleF((bu), "padding", "%d %d %d %d", (t),(r),(b),(l))
+# define AG_ButtonSetPaddingLeft(bu,v)    AG_SetStyleF((bu), "padding", "%d 0 0 0", (v))
+# define AG_ButtonSetPaddingRight(bu,v)   AG_SetStyleF((bu), "padding", "0 %d 0 0", (v))
+# define AG_ButtonSetPaddingTop(bu,v)     AG_SetStyleF((bu), "padding", "0 0 %d 0", (v))
+# define AG_ButtonSetPaddingBottom(bu,v)  AG_SetStyleF((bu), "padding", "0 0 0 %d", (v))
+# define AG_ButtonSetSurface(bu,su)       AG_ButtonSurface((bu),(su))
 #endif /* AG_LEGACY */
 __END_DECLS
 

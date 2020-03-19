@@ -101,10 +101,10 @@ void AG_LabelTextS(AG_Label *_Nonnull, const char *_Nonnull);
 # define AG_LabelPrescale AG_LabelSizeHint
 # define AG_LabelSetFont AG_SetFont
 # define AG_LabelSetPadding(lbl,l,r,t,b) AG_SetStyleF((lbl), "padding", "%d %d %d %d", (t),(r),(b),(l))
-# define AG_LabelSetPaddingLeft(lbl,v)   AG_SetStyleF((lbl), "padding-left", "%d", (v))
-# define AG_LabelSetPaddingRight(lbl,v)  AG_SetStyleF((lbl), "padding-right", "%d", (v))
-# define AG_LabelSetPaddingTop(lbl,v)    AG_SetStyleF((lbl), "padding-top", "%d", (v))
-# define AG_LabelSetPaddingBottom(lbl,v) AG_SetStyleF((lbl), "padding-bottom", "%d", (v))
+# define AG_LabelSetPaddingLeft(lbl,v)   AG_SetStyleF((lbl), "padding", "%d 0 0 0", (v))
+# define AG_LabelSetPaddingRight(lbl,v)  AG_SetStyleF((lbl), "padding", "0 %d 0 0", (v))
+# define AG_LabelSetPaddingTop(lbl,v)    AG_SetStyleF((lbl), "padding", "0 0 %d 0", (v))
+# define AG_LabelSetPaddingBottom(lbl,v) AG_SetStyleF((lbl), "padding", "0 0 0 %d", (v))
 #endif /* AG_LEGACY */
 __END_DECLS
 
