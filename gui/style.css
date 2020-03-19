@@ -25,6 +25,10 @@ AG_Window {
 	background-color: #656565;                 /* #RRGGBB (opaque) */
 	background-color#focused: #666666;
 }
+AG_Box {
+	padding: 2;
+	spacing: 3;
+}
 AG_Button {
 	padding: 5 10 5 10;                        /* top right bottom left */
 }

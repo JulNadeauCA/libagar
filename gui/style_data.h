@@ -26,6 +26,10 @@ const char *agStyleDefault_Data =
 	"background-color: #656565;                 /* #RRGGBB (opaque) */\n"
 	"background-color#focused: #666666;\n"
 	"}\n"
+	"AG_Box {\n"
+	"padding: 2;\n"
+	"spacing: 3;\n"
+	"}\n"
 	"AG_Button {\n"
 	"padding: 5 10 5 10;                        /* top right bottom left */\n"
 	"}\n"
@@ -82,7 +86,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2042,
+	2077,
 	&agStyleDefault_Data,
 	NULL
 };
