@@ -11,8 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-char bufferShd[60];	/* Shared text buffer */
-char bufferExcl[60];	/* Exclusive text buffer */
+char bufferShd[256];	/* Shared text buffer */
+char bufferExcl[256];	/* Exclusive text buffer */
 
 static void
 SetDisable(AG_Event *event)

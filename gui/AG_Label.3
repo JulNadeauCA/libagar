@@ -40,10 +40,10 @@
 The
 .Nm
 widget displays single-line or multi-line text.
-In the case of
-.Sq polled
-labels, the text can contain elements which are going to be dereferenced
-on rendering.
+It supports static labels as well as
+.Em polled
+labels (labels containing dynamically-updated data which will be dereferenced
+on rendering).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -187,13 +187,6 @@ accepts an Agar-style format string (see
 for details).
 Subsequent arguments must be pointers (as opposed to literal data),
 and the formatting engine also provides Agar-specific extensions.
-.Pp
-Note that the length of polled labels is difficult to determine automatically,
-so
-.Fn AG_LabelSizeHint
-and
-.Xr AG_ExpandHoriz 3
-are typically used with polled labels.
 .Sh EVENTS
 The
 .Nm
@@ -215,18 +208,12 @@ etc.)
 .It AG_LABEL_SLOW
 Update polled labels every 2s (as opposed to 500ms).
 .It AG_LABEL_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
-Polled labels, whenever possible, should use this option (otherwise a
-.Fn AG_LabelSizeHint
-call is needed).
+Expand horizontally in parent container.
 .It AG_LABEL_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
-This option is useful with dynamically changing multi-line labels.
+Expand vertically in parent container.
 .It AG_LABEL_EXPAND
 Shorthand for
-.Dv AG_LABEL_HFILL|AG_LABEL_VFILL .
+.Dv AG_LABEL_HFILL | AG_LABEL_VFILL .
 .El
 .Sh EXAMPLES
 The following code snippet creates a window containing both a static label

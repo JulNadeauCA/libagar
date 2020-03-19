@@ -162,14 +162,12 @@ This flag is writeable, but is automatically set or cleared by keyboard events.
 .It AG_TABLE_HIGHLIGHT_COLS
 Highlight the currently selected column(s) using transparency.
 .It AG_TABLE_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
+Expand horizontally in parent container.
 .It AG_TABLE_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
+Expand vertically in parent container.
 .It AG_TABLE_EXPAND
 Shorthand for
-.Dv AG_TABLE_HFILL|AG_TABLE_VFILL .
+.Dv AG_TABLE_HFILL | AG_TABLE_VFILL .
 This is recommended as an alternative to calling
 .Fn AG_TableSizeHint .
 .It AG_TABLE_NOAUTOSORT

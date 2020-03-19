@@ -39,7 +39,8 @@
 .\" IMAGE(http://libagar.org/widgets/AG_Fixed.png, "Buttons, labels and pixmaps in an AG_Fixed")
 The
 .Nm
-container widget places its children at specific positions (given in pixels).
+container widget positions and sizes its children at constant positions
+specified in pixels.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -73,11 +74,9 @@ This allows the caller to, as an optimization use
 .Xr AG_WidgetUpdate 3
 only once after all widgets have been positioned.
 .It AG_FIXED_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
+Expand horizontally in parent container.
 .It AG_FIXED_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
+Expand vertically in parent container.
 .It AG_FIXED_EXPAND
 Shorthand for
 .Dv AG_FIXED_HFILL | AG_FIXED_VFILL .
@@ -101,7 +100,7 @@ Visible background styles use the style attributes "background-color",
 "low-color" and "high-color".
 .Pp
 .Fn AG_FixedSizeHint
-requests an initial geometry of
+requests an initial size of
 .Fa w
 by
 .Fa h

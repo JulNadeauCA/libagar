@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -37,14 +37,14 @@
 .Ed
 .Sh DESCRIPTION
 .\" IMAGE(http://libagar.org/widgets/AG_FixedPlotter.png, "An AG_FixedPlotter widget")
-The
 .Nm
-widget is a scrollable plotter widget that accepts integer values.
-It is mainly designed for displaying performance measurements.
+traces lines or dots over recorded integer values along a horizontal axis.
+Originally designed to monitor frame rates, it can be useful for performance
+monitoring in general.
 .Pp
-Note: A much more featureful floating-point plotting widget is available as
+Note: For general-purpose and more advanced plotting functions,
 .Xr M_Plotter 3
-in the ag_math library.
+is available as part of the ag_math library.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -79,14 +79,12 @@ Always scroll to the end of the plot if it is not visible.
 .It AG_FIXED_PLOTTER_XAXIS
 Display the X-axis line.
 .It AG_FIXED_PLOTTER_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
+Expand horizontally in parent container.
 .It AG_FIXED_PLOTTER_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
+Expand vertically in parent container.
 .It AG_FIXED_PLOTTER_EXPAND
 Shorthand for
-.Dv AG_FIXED_PLOTTER_HFILL|AG_FIXED_PLOTTER_VFILL .
+.Dv AG_FIXED_PLOTTER_HFILL | AG_FIXED_PLOTTER_VFILL .
 .El
 .Sh PLOTTING
 .nr nS 1
