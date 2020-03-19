@@ -284,9 +284,7 @@ static int
 WordBack(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	int newPos = ed->pos, i;
-	AG_TextANSI ansi;
 	AG_Char *c;
 
 	if (newPos == 0) {
@@ -315,6 +313,9 @@ WordBack(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 		if (c[0] == 0x1b &&
 		    c[1] >= 0x40 && c[1] <= 0x5f &&
 		    c[2] != '\0') {
+			AG_TextANSI ansi;
+			const AG_TextState *ts = AG_TEXT_STATE_CUR();
+
 			if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0 &&
 			    i <= ansi.len) {
 				newPos += (ansi.len + 1);
@@ -340,8 +341,6 @@ static int
 WordForw(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	const AG_TextState *ts = AG_TEXT_STATE_CUR();
-	AG_TextANSI ansi;
 	AG_Char *c;
 	int newPos = ed->pos;
 	
@@ -376,6 +375,9 @@ WordForw(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	if (c[0] == 0x1b &&
 	    c[1] >= 0x40 && c[1] <= 0x5f &&
 	    c[2] != '\0') {
+		AG_TextANSI ansi;
+		const AG_TextState *ts = AG_TEXT_STATE_CUR();
+
 		if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0)
 			newPos += (ansi.len + 1);
 	}
@@ -416,13 +418,24 @@ CursorHome(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 		for (c = &buf->s[newPos - 1];
 		     c >= &buf->s[0] && newPos >= 0;
 		     c--, newPos--) {
-			if (*c == '\n')
+			if (*c == '\n') {
+				c++;
 				break;
+			}
 		}
 	} else {
 		newPos = 0;
+		c = &buf->s[0];
 	}
+	if (c[0] == 0x1b &&
+	    c[1] >= 0x40 && c[1] <= 0x5f &&
+	    c[2] != '\0') {
+		AG_TextANSI ansi;
+		const AG_TextState *ts = AG_TEXT_STATE_CUR();
 
+		if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0)
+			newPos += (ansi.len + 1);
+	}
 	ed->pos = newPos;
 	RemoveSelection(ed, keymod);
 
@@ -473,8 +486,8 @@ static int
 CursorLeft(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_TextANSI ansi;
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Char *c;
 	int i;
 
@@ -527,8 +540,6 @@ static int
 CursorRight(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	const AG_TextState *ts = AG_TEXT_STATE_CUR();
-	AG_TextANSI ansi;
 	AG_Char *c;
 
 	if (ed->pos >= buf->len) {
@@ -540,6 +551,9 @@ CursorRight(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	if (c[0] == 0x1b &&
 	    c[1] >= 0x40 && c[1] <= 0x5f &&
 	    c[2] != '\0') {
+		AG_TextANSI ansi;
+		const AG_TextState *ts = AG_TEXT_STATE_CUR();
+
 		if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0)
 			ed->pos += (ansi.len + 1);
 	}
@@ -565,6 +579,8 @@ static int
 CursorUp(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
+	AG_Char *c;
+
 	if (!(ed->flags & AG_EDITABLE_MULTILINE))
 		return (0);
 
@@ -572,6 +588,17 @@ CursorUp(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	    (ed->yCurs - ed->y - 1)*ed->lineSkip + 1,
 	    &ed->pos) == 0)
 		RemoveSelection(ed, keymod);
+
+	c = &buf->s[ed->pos];
+	if (c[0] == 0x1b &&
+	    c[1] >= 0x40 && c[1] <= 0x5f &&
+	    c[2] != '\0') {
+		AG_TextANSI ansi;
+		const AG_TextState *ts = AG_TEXT_STATE_CUR();
+
+		if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0)
+			ed->pos += (ansi.len + 1);
+	}
 
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 	ed->xScrollTo = &ed->xCurs;
@@ -585,6 +612,8 @@ static int
 CursorDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
+	AG_Char *c;
+
 	if (!(ed->flags & AG_EDITABLE_MULTILINE)) {
 		if (ed->complete &&                         /* Autocomplete */
 		    ed->complete->winName[0] != '\0') {
@@ -602,6 +631,17 @@ CursorDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	    (ed->yCurs - ed->y + 1)*ed->lineSkip + 1,
 	    &ed->pos) == 0)
 		RemoveSelection(ed, keymod);
+
+	c = &buf->s[ed->pos];
+	if (c[0] == 0x1b &&
+	    c[1] >= 0x40 && c[1] <= 0x5f &&
+	    c[2] != '\0') {
+		AG_TextANSI ansi;
+		const AG_TextState *ts = AG_TEXT_STATE_CUR();
+
+		if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0)
+			ed->pos += (ansi.len + 1);
+	}
 
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 	ed->xScrollTo = &ed->xCurs;
