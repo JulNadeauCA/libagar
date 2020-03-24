@@ -2316,7 +2316,7 @@ Apply_Padding(AG_Widget *wid, const char *spec)
 		wid->paddingTop    = atoi(sTop);
 		wid->paddingRight  = atoi(sRight);
 		wid->paddingBottom = (sBottom) ? atoi(sBottom) : 0;
-		wid->paddingLeft   = (sLeft)   ? atoi(sTop)    : 0;
+		wid->paddingLeft   = (sLeft)   ? atoi(sLeft)   : 0;
 	}
 }
 
