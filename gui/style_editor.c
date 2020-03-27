@@ -614,7 +614,6 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL |
 		                        AG_TEXTBOX_RETURN_BUTTON, "+ ");
-		AG_TextboxSizeHint(tb, "<XXXXXXXXXXX>: <XXXXXXXXXXX>");
 		AG_TextboxAutocomplete(tb, CompleteAttribute, NULL);
 		AG_SetEvent(tb, "textbox-return",
 		    InputAttribute, "%p,%p", tb,tgt);
@@ -771,9 +770,9 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	    AGOBJECT(tgt)->name, AGWINDOW(tgt)->caption);
 	
 	tl = agStyleEditorTlist = AG_TlistNewPolledMs(NULL,
-	    AG_TLIST_EXPAND, 125,
+	    AG_TLIST_EXPAND, 64,
 	    PollWidgets, NULL);
-	AG_TlistSizeHint(tl, "<XXXXX/XXXXX/XXXXX/XXXXX>", 30);
+	AG_TlistSizeHint(tl, "<XXXXX/XXXXX/XXXXX/XXXXX>", 25);
 	AG_SetStyle(tl, "font-size", "80%");
 	AG_SetEvent(tl, "tlist-selected", TargetWidget, NULL);
 

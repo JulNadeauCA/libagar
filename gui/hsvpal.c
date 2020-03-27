@@ -419,6 +419,8 @@ UpdateAlpha(AG_HSVPal *_Nonnull pal, int x)
 	AG_Variable *bAlpha;
 	void *pAlpha;
 
+	x -= WIDGET(pal)->paddingLeft;
+
 	bAlpha = AG_GetVariable(pal, "alpha", &pAlpha);
 	switch (AG_VARIABLE_TYPE(bAlpha)) {
 	case AG_VARIABLE_FLOAT:
@@ -843,7 +845,8 @@ Init(void *_Nonnull obj)
 	pal->menu = NULL;
 	pal->menu_item = NULL;
 	pal->menu_win = NULL;
-	AG_ColorRGB_8(&pal->cTile, 140,140,140);
+	AG_ColorRGB_8(&pal->cTile[0], 140,140,140);
+	AG_ColorRGB_8(&pal->cTile[1], 70,70,70);
 
 	AG_InitTimer(&pal->toMove[0], "moveUp", 0);
 	AG_InitTimer(&pal->toMove[1], "moveDown", 0);
@@ -932,17 +935,15 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 	}
 
 	if (!(pal->flags & AG_HSVPAL_NOALPHA)) {
+#if 0
 		AG_Rect rd;
-
-		/* Render the color preview. */
-		/* XXX overblending */
 		for (y = 16; y < pal->rPrev.h+16; y+=8) {
 			for (x = 0; x < pal->rPrev.w; x+=16) {
 				rd.w = 8;
 				rd.h = 8;
 				rd.x = pal->rPrev.x+x;
 				rd.y = pal->rPrev.y+y;
-				AG_FillRect(S, &rd, &pal->cTile);
+				AG_FillRect(S, &rd, &pal->cTile[0]);
 			}
 			y += 8;
 			for (x = 8; x < pal->rPrev.w; x+=16) {
@@ -950,19 +951,23 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 				rd.h = 8;
 				rd.x = pal->rPrev.x+x;
 				rd.y = pal->rPrev.y+y;
-				AG_FillRect(S, &rd, &pal->cTile);
+				AG_FillRect(S, &rd, &pal->cTile[1]);
 			}
 		}
-
+#endif
 		AG_MapHSVf_RGB(hue, sat, val, &c.r, &c.g, &c.b);
 
-		for (y = pal->rPrev.y+8; y < S->h; y++) {
-			for (x = 0, c.a = 0; x < S->w; x++) {
+		for (y = pal->rPrev.y;
+		     y < pal->rPrev.y + pal->rPrev.h;
+		     y++) {
+			for (x = pal->rPrev.x, i=0, c.a=0;
+			     x < pal->rPrev.x + pal->rPrev.w;
+			     x++, i++) {
 				AG_SurfaceBlendRGB(S, x,y,
 				    c.r, c.g, c.b, c.a,
 				    AG_ALPHA_SRC);
 
-				c.a = x*AG_OPAQUE/S->w;
+				c.a = i*AG_OPAQUE/pal->rPrev.w;
 			}
 		}
 	}
@@ -971,63 +976,71 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
-	r->w = 128;
-	r->h = 128;
+	AG_HSVPal *pal = obj;
+
+	r->w = WIDGET(pal)->paddingLeft + 128 + WIDGET(pal)->paddingRight;
+	r->h = WIDGET(pal)->paddingTop + 128 + WIDGET(pal)->paddingBottom;
 }
 
 static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
-	int padding = 5;
 	AG_HSVPal *pal = obj;
+	const int paddingLeft   = WIDGET(pal)->paddingLeft;
+	const int paddingRight  = WIDGET(pal)->paddingRight;
+	const int paddingTop    = WIDGET(pal)->paddingTop;
+	const int paddingBottom = WIDGET(pal)->paddingBottom;
+	const int wAvail = a->w - paddingLeft - paddingRight;
+	int hPreview = MAX(0, 32 - paddingBottom);
 
 	if (a->w < 32 || a->h < 32) {
 		return (-1);
 	} else if (a->w < 50 || a->h < 50) {
-		padding = 0;
 		pal->circle.width = 4;
 		pal->selcircle_r = 3;
+		hPreview = 16;
 	} else if (a->w < 100 || a->h < 100) {
-		padding = 0;
 		pal->circle.width = 6;
 		pal->selcircle_r = 2;
 	} else if (a->w < 200 || a->h < 200) {
-		padding = 5;
 		pal->circle.width = 12;
 		pal->selcircle_r = 2;
 	} else if (a->w < 300 || a->h < 300) {
-		padding = 10;
 		pal->circle.width = 20;
 		pal->selcircle_r = 4;
 	} else {
-		padding = 20;
 		pal->circle.width = 30;
 		pal->selcircle_r = 6;
 	}
 
-	pal->rPrev.x = 0;
+	pal->rPrev.x = paddingLeft;
+	pal->rPrev.y = a->h - hPreview - paddingBottom;
 	if ((pal->flags & AG_HSVPAL_NOPREVIEW) == 0) {
-		pal->rPrev.y = a->h - 32;
-		pal->rPrev.w = a->w;
-		pal->rPrev.h = 32;
+		pal->rPrev.w = wAvail;
+		pal->rPrev.h = hPreview;
 	} else {
-		pal->rPrev.y = a->h;
 		pal->rPrev.w = 0;
 		pal->rPrev.h = 0;
 	}
 
-	pal->circle.rOut = MIN(a->w - padding, a->h - padding);
-	pal->circle.rOut = MIN(pal->circle.rOut, (a->h - pal->rPrev.h));
+	pal->circle.rOut = MIN(wAvail, a->h - paddingTop - paddingBottom);
+	pal->circle.rOut = MIN(pal->circle.rOut,
+	                       (a->h - pal->rPrev.h - paddingTop - paddingBottom));
 	pal->circle.rOut >>= 1;
+	if (pal->circle.rOut < 16)
+		return (-1);
+
 	pal->circle.rIn = pal->circle.rOut - pal->circle.width;
+
 	pal->circle.dh = (float)(1.0/(pal->circle.rOut*AG_PI));
-	pal->circle.x = a->w >> 1;
+
+	pal->circle.x = paddingLeft + (wAvail >> 1);
 	pal->circle.y = (a->h - pal->rPrev.h) >> 1;
 
-	pal->triangle.x = a->w >> 1;
-	pal->triangle.y = pal->circle.y + pal->circle.width + (padding >> 1) - pal->circle.rOut;
+	pal->triangle.x = pal->circle.x;
+	pal->triangle.y = pal->circle.y + pal->circle.width - pal->circle.rOut;
 	pal->triangle.h = pal->circle.rIn*Sin((37.0f  / 360.0f)*(2.0f * AG_PI))
-			 -pal->circle.rIn*Sin((270.0f / 360.0f)*(2.0f * AG_PI)) - padding;
+			 -pal->circle.rIn*Sin((270.0f / 360.0f)*(2.0f * AG_PI));
 
 	pal->flags |= AG_HSVPAL_DIRTY;
 	return (0);
@@ -1114,12 +1127,7 @@ Draw(void *_Nonnull obj)
 	    pal->selcircle_r + 2 + ((pal->state == AG_HSVPAL_SEL_SV) ? 2 : 0),
 	    &cBlack);
 
-	/* Draw the color preview rectangle. */
-	if (!(pal->flags & AG_HSVPAL_NOPREVIEW))
-		AG_DrawRectFilled(pal, &pal->rPrev, &c);
-
-	/* Overlay the slider over the trasparency preview. */
-	if (!(pal->flags & AG_HSVPAL_NOALPHA)) {
+	if (!(pal->flags & AG_HSVPAL_NOALPHA)) {    /* Transparency preview */
 		int lx  = 1 + pal->rPrev.x + ((a*pal->rPrev.w) >> 8);
 		int ly1 = pal->rPrev.y;
 		int ly2 = pal->rPrev.y + pal->rPrev.h;
@@ -1127,6 +1135,11 @@ Draw(void *_Nonnull obj)
 		if (lx > w-2) { lx = w-2; }
 		AG_DrawLineV(pal, lx,   ly1, ly2, &WCOLOR(pal, LINE_COLOR));
 		AG_DrawLineV(pal, lx+2, ly1, ly2, &WCOLOR(pal, LINE_COLOR));
+
+		AG_DrawRectOutline(pal, &pal->rPrev, &WCOLOR(pal,LINE_COLOR));
+	} else {
+		if (!(pal->flags & AG_HSVPAL_NOPREVIEW))
+			AG_DrawRectFilled(pal, &pal->rPrev, &c);
 	}
 
 	/* Display RGB/HSV values */

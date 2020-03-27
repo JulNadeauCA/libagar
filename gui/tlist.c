@@ -500,9 +500,9 @@ Draw(void *_Nonnull obj)
 	AG_Color cSel = WCOLOR(tl, SELECTION_COLOR);
 	AG_Color cLine = WCOLOR(tl, LINE_COLOR);
 	const AG_Color *cText = &WCOLOR(tl, TEXT_COLOR);
-	const int wSpace = tl->wSpace;
 	const int hItem = tl->item_h;
 	const int wIcon = tl->icon_w;
+	const int xLabel = wIcon + tl->wSpace;
 	const int wRow = tl->r.w;
 	const int rOffs = tl->rOffs;
 	int x, y=0, i=0, selSeen=0, selPos=1, h=HEIGHT(tl), yLast;
@@ -592,7 +592,7 @@ Draw(void *_Nonnull obj)
 		}
 
 		AG_WidgetBlitSurface(tl, it->label,
-		    x + wIcon + wSpace,
+		    x + xLabel,
 		    y + AG_TLIST_PADDING);
 		
 		y += hItem;

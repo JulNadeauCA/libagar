@@ -385,11 +385,12 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	}
 	aChld.x = 0;                                       /* Input textbox */
 	aChld.y = 0;
-	aChld.w = a->w - rBtn.w - 1;
+	aChld.w = a->w - rBtn.w - WIDGET(com)->spacingHoriz -
+	                          WIDGET(com)->paddingRight;
 	aChld.h = a->h;
 	AG_WidgetSizeAlloc(com->tbox, &aChld);
-
-	aChld.x = aChld.w + 1;                              /* [...] button */
+	
+	aChld.x = aChld.w + WIDGET(com)->spacingHoriz;      /* [...] Button */
 	aChld.w = rBtn.w;
 	AG_WidgetSizeAlloc(com->button, &aChld);
 	return (0);

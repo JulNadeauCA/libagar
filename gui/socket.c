@@ -345,8 +345,6 @@ static void
 IconMotion(AG_Event *_Nonnull event)
 {
 	AG_Icon *icon = AG_ICON_PTR(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
 	const int xRel = AG_INT(4);
 	const int yRel = AG_INT(5);
 	AG_Window *wDND = icon->wDND;

@@ -46,7 +46,7 @@ typedef struct ag_hsvpal {
 	} circle;
 	struct {
 		int x, y;		/* Coordinates of triangle */
-		int w, h;		/* Dimensions of triangle */
+		int _pad2, h;		/* Dimensions of triangle */
 	} triangle;
 	enum {
 		AG_HSVPAL_SEL_NONE,
@@ -59,10 +59,10 @@ typedef struct ag_hsvpal {
 	AG_MenuItem *_Nullable menu_item;
 	AG_Window   *_Nullable menu_win;
 
-	AG_Color cTile;		/* Tiling fill color (TODO use style) */
+	AG_Color cTile[2];		/* Tiling fill color (TODO use style) */
 
 #if AG_MODEL == AG_MEDIUM
-	Uint32 _pad2;
+	Uint32 _pad3;
 #endif
 	AG_Timer toMove[4];     /* For 4-way keyboard navigation */
 } AG_HSVPal;

@@ -489,9 +489,9 @@ Init(void *_Nonnull obj)
 	AG_ColorNone(&fs->cPreviewBG);
 	AG_ColorWhite(&fs->cPreviewFG);
 
-	AG_TlistSizeHint(fs->tlFaces, "XXXXXXXXXXXXXXXXXXXX", 20);
-	AG_TlistSizeHint(fs->tlStyles, "<Condensed Bold Oblique>", 20);
-	AG_TlistSizeHint(fs->tlSizes, "100", 20);
+	AG_TlistSizeHint(fs->tlFaces, "<New Century Schoolbook>", 15);
+	AG_TlistSizeHint(fs->tlStyles, "<Condensed Bold Oblique>", 15);
+	AG_TlistSizeHint(fs->tlSizes, "100", 10);
 	
 	/* Handle "font" binding programmatically */
 	AG_BindPointer(fs, "font", (void *)&fs->font);
@@ -538,8 +538,12 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_SizeReq rChld;
 
 	AG_WidgetSizeReq(fs->hPane, &rChld);
-	r->w = rChld.w;
-	r->h = rChld.h + fs->rPreview.h;
+
+	r->w = WIDGET(fs)->paddingLeft + rChld.w +
+	       WIDGET(fs)->paddingRight;
+
+	r->h = WIDGET(fs)->paddingTop + rChld.h + fs->rPreview.h +
+	       WIDGET(fs)->paddingBottom;
 }
 
 static int
@@ -547,17 +551,21 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_FontSelector *fs = obj;
 	AG_SizeAlloc aChld;
+	const int paddingLeft   = WIDGET(fs)->paddingLeft;
+	const int paddingRight  = WIDGET(fs)->paddingRight;
+	const int paddingTop    = WIDGET(fs)->paddingTop;
+	const int paddingBottom = WIDGET(fs)->paddingBottom;
 
 	/* Size horizontal pane */
-	aChld.x = 0;
-	aChld.y = 0;
-	aChld.w = a->w;
-	aChld.h = a->h - fs->rPreview.h;
+	aChld.x = paddingLeft;
+	aChld.y = paddingTop;
+	aChld.w = a->w - paddingLeft - paddingRight;
+	aChld.h = a->h - fs->rPreview.h - paddingTop - paddingBottom;
 	AG_WidgetSizeAlloc(fs->hPane, &aChld);
 
-	fs->rPreview.x = 0;
-	fs->rPreview.y = a->h - fs->rPreview.h;
-	fs->rPreview.w = a->w;
+	fs->rPreview.x = paddingLeft;
+	fs->rPreview.y = a->h - fs->rPreview.h - paddingBottom;
+	fs->rPreview.w = a->w - paddingLeft - paddingRight;
 	return (0);
 }
 

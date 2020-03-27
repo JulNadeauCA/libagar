@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2010-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -814,16 +814,24 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_DirDlg *dd = obj;
-	AG_SizeReq rChld, rOk, rCancel;
+	AG_SizeReq rc;
 
-	r->w = 0;
-	r->h = 4;
-	AG_WidgetSizeReq(dd->tbInput, &rChld);
-	r->h += rChld.h+2;
+	r->w = WIDGET(dd)->paddingLeft +
+	       WIDGET(dd)->paddingRight;
+
+	r->h = WIDGET(dd)->paddingTop +
+	       WIDGET(dd)->paddingBottom;
+
+	AG_WidgetSizeReq(dd->tbInput, &rc);
+	r->h += rc.h + WIDGET(dd)->spacingVert;
 
 	if (!(dd->flags & AG_DIRDLG_NOBUTTONS)) {
+		AG_SizeReq rOk, rCancel;
+
 		AG_WidgetSizeReq(dd->btnOk, &rOk);
 		AG_WidgetSizeReq(dd->btnCancel, &rCancel);
+
+		r->w += rOk.w + rCancel.w;
 		r->h += MAX(rOk.h,rCancel.h)+1;
 	}
 }
@@ -832,48 +840,57 @@ static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_DirDlg *dd = obj;
-	AG_SizeReq r, rLoc, rInput;
-	AG_SizeAlloc aChld;
-	int hBtn = 0, wBtn = a->w >> 1;
+	AG_SizeReq rLoc, rInput;
+	AG_SizeAlloc ca;
+	const int paddingLeft  = WIDGET(dd)->paddingLeft;
+	const int paddingRight = WIDGET(dd)->paddingRight;
+	const int paddingTop   = WIDGET(dd)->paddingTop;
+	const int spacingVert  = WIDGET(dd)->spacingVert;
+	int hBtn;
 
-	if (!(dd->flags & AG_DIRDLG_NOBUTTONS)) {
-		AG_WidgetSizeReq(dd->btnOk, &r);
-		hBtn = MAX(hBtn, r.h);
-		AG_WidgetSizeReq(dd->btnCancel, &r);
-		hBtn = MAX(hBtn, r.h);
+	if ((dd->flags & AG_DIRDLG_NOBUTTONS) == 0) {
+		AG_SizeReq rBtn;
+
+		AG_WidgetSizeReq(dd->btnOk, &rBtn);
+		hBtn = rBtn.h;
+		AG_WidgetSizeReq(dd->btnCancel, &rBtn);
+		if (rBtn.h > hBtn) { hBtn = rBtn.h; }
+	} else {
+		hBtn = 0;
 	}
-
 	AG_WidgetSizeReq(dd->comLoc, &rLoc);
 	AG_WidgetSizeReq(dd->tbInput, &rInput);
 
-	/* Shortcuts */
-	aChld.x = 0;
-	aChld.y = 0;
-	aChld.w = a->w;
-	aChld.h = rLoc.h;
-	AG_WidgetSizeAlloc(dd->comLoc, &aChld);
+	/* Shortcuts combo box */
+	ca.x = paddingLeft;
+	ca.y = paddingTop;
+	ca.w = a->w - (ca.x + paddingRight);
+	ca.h = rLoc.h;
+	AG_WidgetSizeAlloc(dd->comLoc, &ca);
 
-	/* Listing */
-	aChld.w = a->w;
-	aChld.h = a->h - (hBtn + rInput.h + rLoc.h + 4);
-	aChld.y += rLoc.h;
-	AG_WidgetSizeAlloc(dd->tlDirs, &aChld);
+	/* Directory listing */
+	ca.y += rLoc.h + spacingVert;
+	ca.w = a->w - paddingLeft - paddingRight;
+	ca.h = a->h - hBtn - rInput.h - rLoc.h - spacingVert*3 - paddingTop -
+						 WIDGET(dd)->paddingBottom;
+	AG_WidgetSizeAlloc(dd->tlDirs, &ca);
 
-	/* Input textbox */
-	aChld.y += aChld.h+4;
-	aChld.h = rInput.h;
-	AG_WidgetSizeAlloc(dd->tbInput, &aChld);
+	/* Input box */
+	ca.y += ca.h + spacingVert;
+	ca.h = rInput.h;
+	AG_WidgetSizeAlloc(dd->tbInput, &ca);
 
-	if (!(dd->flags & AG_DIRDLG_NOBUTTONS)) {
-		/* Size buttons */
-		aChld.y += aChld.h+2;
-		aChld.w = wBtn;
-		aChld.h = hBtn;
-		AG_WidgetSizeAlloc(dd->btnOk, &aChld);
-		aChld.x = wBtn;
-		if ((wBtn << 1) < a->w) { aChld.w++; }
-		aChld.h = hBtn;
-		AG_WidgetSizeAlloc(dd->btnCancel, &aChld);
+	/* "OK" and "Cancel" buttons */
+	if ((dd->flags & AG_DIRDLG_NOBUTTONS) == 0) {
+		const int spacingHoriz = WIDGET(dd)->spacingHoriz;
+
+		ca.w = (a->w - paddingLeft - paddingRight - spacingHoriz) >> 1;
+		ca.y += ca.h + spacingVert;
+		ca.h = hBtn;
+		AG_WidgetSizeAlloc(dd->btnOk, &ca);
+
+		ca.x = paddingLeft + ca.w + spacingHoriz;
+		AG_WidgetSizeAlloc(dd->btnCancel, &ca);
 	}
 	return (0);
 }

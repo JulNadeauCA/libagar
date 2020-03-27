@@ -252,10 +252,10 @@ Draw(void *_Nonnull obj)
 	if (AG_WidgetIsFocused(cb))
 		AG_DrawRectOutline(cb, &WIDGET(cb)->r, &WCOLOR(cb,LINE_COLOR));
 
-	r.x = 2;
+	r.x = WIDGET(cb)->paddingLeft;
+	r.y = cb->boxOffs;
 	r.w = cb->boxWd;
 	r.h = r.w;
-	r.y = cb->boxOffs;
 
 	if (state) {
 		AG_Color cFgDark = WCOLOR(cb,FG_COLOR);
@@ -275,8 +275,8 @@ Draw(void *_Nonnull obj)
 			AG_PushClipRect(cb, &WIDGET(cb)->r);
 
 		AG_WidgetBlitSurface(cb, cb->suLabel,
-		    cb->boxWd + WIDGET(cb)->spacingHoriz,
-		    0);
+		    WIDGET(cb)->paddingLeft + cb->boxWd + WIDGET(cb)->spacingHoriz,
+		    WIDGET(cb)->paddingTop);
 
 		if (WIDTH(cb) < cb->wReq || HEIGHT(cb) < cb->hReq)
 			AG_PopClipRect(cb);
@@ -367,10 +367,18 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 
 	if (cb->label) {
 		AG_TextSize(cb->label, &r->w, &r->h);
-		r->w += WFONT(cb)->lineskip + WIDGET(cb)->spacingHoriz;
+
+		r->w += WIDGET(cb)->paddingLeft +
+			WIDGET(cb)->paddingRight +
+		        WFONT(cb)->lineskip +
+			WIDGET(cb)->spacingHoriz;
+
+		r->h += WIDGET(cb)->paddingTop +
+		        WIDGET(cb)->paddingBottom;
 	} else {
-		r->w = WFONT(cb)->lineskip;
-		r->h = r->w;
+		r->h = r->w = WIDGET(cb)->paddingLeft +
+		              WIDGET(cb)->paddingRight +
+		              WFONT(cb)->lineskip;
 	}
 	cb->wReq = r->w;
 	cb->hReq = r->h;

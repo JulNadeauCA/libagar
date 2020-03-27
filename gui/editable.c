@@ -57,6 +57,8 @@
 AG_EditableClipboard agEditableClipbrd;		/* For Copy/Cut/Paste */
 AG_EditableClipboard agEditableKillring;	/* For Emacs-style Kill/Yank */
 
+static Uint32 AutocompleteTimeout(AG_Timer *_Nonnull, AG_Event *_Nonnull);
+
 /*
  * Return a new working buffer. The variable is returned locked; the caller
  * should invoke ReleaseBuffer() after use.
@@ -908,6 +910,7 @@ Draw(void *_Nonnull obj)
 	AG_Driver *drv = WIDGET(ed)->drv;
 	const AG_DriverClass *drvOps = WIDGET(ed)->drvOps;
 	AG_EditableBuffer *buf;
+	const AG_Color *cEditableBg = &WCOLOR(ed, BG_COLOR);
 	const AG_Color *cSel = &WCOLOR(ed, SELECTION_COLOR);
 	AG_Color cFg = ts->color;
 	AG_Color cBg = ts->colorBG;
@@ -921,7 +924,11 @@ Draw(void *_Nonnull obj)
 	const int clipY2 = WIDGET(ed)->rView.y2 + lineSkip;
 	const int selStart = ed->selStart;
 	const int selEnd = ed->selEnd;
+	const int paddingLeft = WIDGET(ed)->paddingLeft;
 	int i, dx,dy, x,y, yCurs, selected=0;
+
+	if (cEditableBg->a > 0)
+		AG_DrawRectFilled(ed, &WIDGET(ed)->r, cEditableBg);
 
 	if ((buf = GetBuffer(ed)) == NULL) {
 		return;
@@ -952,8 +959,8 @@ Draw(void *_Nonnull obj)
 		AG_WidgetBlitFrom(ed, ed->suPlaceholder, NULL, 0,0);
 	}
 
-	x = 0;
-	y = -ed->y * lineSkip;
+	x = paddingLeft;
+	y = WIDGET(ed)->paddingTop - ed->y*lineSkip;
 	ed->xMax = 10;
 	ed->yMax = 1;
 	for (i = 0; i <= buf->len; i++) {
@@ -992,7 +999,7 @@ Draw(void *_Nonnull obj)
 			y += lineSkip;
 			ed->xMax = MAX(ed->xMax, x);
 			ed->yMax++;
-			x = 0;
+			x = paddingLeft;
 		}
 		if (c == '\n') {
 			y += lineSkip;
@@ -1001,7 +1008,7 @@ Draw(void *_Nonnull obj)
 			}
 			ed->xMax = MAX(ed->xMax, x+10);
 			ed->yMax++;
-			x = 0;
+			x = paddingLeft;
 			continue;
 		} else if (c == '\t') {
 			if (selected) {
@@ -1162,8 +1169,11 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Editable *ed = obj;
 
-	r->w = ed->wPre;
-	r->h = ed->hPre*ed->lineSkip + 2;
+	r->w = WIDGET(ed)->paddingLeft + ed->wPre +
+	       WIDGET(ed)->paddingRight;
+
+	r->h = WIDGET(ed)->paddingTop + ed->hPre*ed->lineSkip +
+	       WIDGET(ed)->paddingBottom;
 }
 
 static int
@@ -1171,15 +1181,20 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Editable *ed = obj;
 	AG_Rect r;
+	const int paddingLeft   = WIDGET(ed)->paddingLeft;
+	const int paddingRight  = WIDGET(ed)->paddingRight;
+	const int paddingTop    = WIDGET(ed)->paddingTop;
+	const int paddingBottom = WIDGET(ed)->paddingBottom;
 
-	if (a->w < 2 || a->h < 2) {
+	if (a->w < paddingLeft + paddingRight ||
+	   (a->h < paddingTop + paddingBottom))
 		return (-1);
-	}
-	ed->yVis = a->h / ed->lineSkip;
-	ed->r.x = -1;
-	ed->r.y = -1;
-	ed->r.w = a->w - 1;
-	ed->r.h = a->h - 1;
+
+	ed->yVis = (a->h - paddingTop - paddingBottom) / ed->lineSkip;
+	ed->r.x = paddingLeft;
+	ed->r.y = paddingTop;
+	ed->r.w = a->w - paddingLeft - paddingRight - 1;
+	ed->r.h = a->h - paddingTop - paddingBottom - 1;
 
 	r.x = 0;
 	r.y = 0;
@@ -1218,13 +1233,19 @@ KeyDown(AG_Event *_Nonnull event)
 	case AG_KEY_RCTRL:
 		return;
 	case AG_KEY_TAB:
-		if (!(ed->flags & AG_EDITABLE_MULTILINE) &&
-		    ed->complete && ed->complete->winName[0] != '\0') {
+		if (ed->complete &&                           /* Autocomplete */
+		   (ed->flags & AG_EDITABLE_MULTILINE) == 0) {
 			AG_Window *win;
 			AG_Tlist *tl;
 
-			if ((win = AG_WindowFind(ed->complete->winName)) != NULL &&
-			    (tl = AG_ObjectFindChild(win, "tlist0")) != NULL) {
+			if (ed->complete->winName[0] == '\0') {
+				AG_AddTimer(ed, &ed->complete->to,
+				    agAutocompleteDelay,
+				    AutocompleteTimeout, NULL);
+				AG_ExecTimer(&ed->complete->to);
+			}
+			if ((win = AG_WindowFind(ed->complete->winName)) &&
+			    (tl = AG_ObjectFindChild(win, "suggestions")) != NULL) {
 				AG_TlistSelectIdx(tl, 0);
 			}
 			return;
@@ -1325,6 +1346,7 @@ AutocompleteTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 
 	tl = AG_TlistNewPolledMs(win, AG_TLIST_EXPAND, agAutocompleteRate,
 	    AutocompletePoll, "%p", ed);
+	AG_ObjectSetNameS(tl, "suggestions");
 	AG_SetEvent(tl, "tlist-selected", AutocompleteSelected, "%p", ed);
 
 	AG_WindowSetGeometry(win,
@@ -1386,8 +1408,7 @@ KeyUp(AG_Event *_Nonnull event)
 		case AG_KEY_DOWN:
 		case AG_KEY_PAGEUP:
 		case AG_KEY_PAGEDOWN:
-		case AG_KEY_BACKSPACE:
-		case AG_KEY_DELETE:
+			/* Don't let directional keys trigger autocomplete */
 			break;
 		default:
 			AG_AddTimer(ed, &ed->complete->to, agAutocompleteDelay,
@@ -1475,17 +1496,42 @@ DoubleClick(AG_Editable *_Nonnull ed)
 	if ((buf = GetBuffer(ed)) == NULL) {
 		return;
 	}
-	if ((pos = ed->pos) < 0 || pos >= buf->len) {
+	if (buf->len == 0) {
 		goto out;
 	}
+	if ((pos = ed->pos) < 0) {                       /* Select first word */
+		/* TODO */
+		goto out;
+	} else if (pos >= buf->len) {                     /* Select last word */
+		pos = buf->len-1;
+		c = &buf->s[pos];
+		if (*c == '\n') {
+			goto out;
+		}
+		while (AG_CharIsSpace(*c) && c >= &buf->s[0]) {
+			c--;
+			pos--;
+		}
+		for (ed->selStart = pos, ed->selEnd = pos+1;
+		     c >= &buf->s[0];
+		     c--, ed->selStart--) {
+			if (AG_CharIsSpaceOrLF(*c)) {
+				ed->selStart++;
+				break;
+			}
+		}
+		goto out;
+	}
+
 	cEnd = &buf->s[buf->len];
 	c = &buf->s[pos];
-
 	if (*c == '\n')                                      /* An empty line */
 		goto out;
 
 	if (AG_CharIsSpace(*c)) {             /* Select contiguous whitespace */
-		for (ed->selStart = pos-1, c--; c >= &buf->s[0]; c--) {
+		for (ed->selStart = pos-1, c--;
+		     c >= &buf->s[0];
+		     c--) {
 			if (!AG_CharIsSpace(*c)) {
 				break;
 			}
@@ -1504,7 +1550,9 @@ DoubleClick(AG_Editable *_Nonnull ed)
 		}
 		goto out;
 	} else if (AG_CharIsPunct(*c)) {     /* Select a block of punctuation */
-		for (ed->selStart = pos; c >= &buf->s[0]; c--) {
+		for (ed->selStart = pos;
+		     c >= &buf->s[0];
+		     c--) {
 			if (!AG_CharIsPunct(*c)) {
 				break;
 			}
@@ -2059,8 +2107,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
 	const int btn = AG_INT(1);
-	const int mx = AG_INT(2);
-	const int my = AG_INT(3);
+	const int mx = AG_INT(2) - WIDGET(ed)->paddingLeft;
+	const int my = AG_INT(3) - WIDGET(ed)->paddingTop;
 	AG_EditableBuffer *buf;
 
 	if (!AG_WidgetIsFocused(ed))
@@ -2123,8 +2171,8 @@ MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
 	const int button = AG_INT(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
+	const int x = AG_INT(2) - WIDGET(ed)->paddingLeft;
+	const int y = AG_INT(3) - WIDGET(ed)->paddingTop;
 
 	if (button != AG_MOUSE_LEFT)
 		return;
@@ -2152,8 +2200,8 @@ MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_EDITABLE_SELF();
 	AG_EditableBuffer *buf;
-	const int mx = AG_INT(1);
-	const int my = AG_INT(2);
+	const int mx = AG_INT(1) - WIDGET(ed)->paddingLeft;
+	const int my = AG_INT(2) - WIDGET(ed)->paddingTop;
 	int newPos;
 
 	if (!AG_WidgetIsFocused(ed) ||
@@ -2162,6 +2210,7 @@ MouseMotion(AG_Event *_Nonnull event)
 
 	if ((buf = GetBuffer(ed)) == NULL)
 		return;
+
 	if (AG_EditableMapPosition(ed, buf, ed->x + mx, my, &newPos) == -1 ||
 	    newPos == ed->pos)
 		goto out;

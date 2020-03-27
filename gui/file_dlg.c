@@ -1510,115 +1510,144 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_FileDlg *fd = obj;
-	AG_SizeReq rChld, rOk, rCancel;
+	AG_SizeReq rc;
+	const int spacingVert = WIDGET(fd)->spacingVert;
 
-	if (fd->flags & AG_FILEDLG_COMPACT) {			/* Compact */
-		AG_WidgetSizeReq(fd->textbox, &rChld);
-		r->w = rChld.w;
-		r->h = rChld.h;
-		AG_WidgetSizeReq(fd->btnExpand, &rChld);
-		r->w += rChld.w;
-		r->h = MAX(r->h, rChld.h);
+	if (fd->flags & AG_FILEDLG_COMPACT) {               /* Compact mode */
+		AG_WidgetSizeReq(fd->textbox, &rc);
+		r->w = rc.w;
+		r->h = rc.h;
+		AG_WidgetSizeReq(fd->btnExpand, &rc);
+		r->w += rc.w;
+		if (rc.h > r->h) { r->h = rc.h; }
 		return;
 	}
-	AG_WidgetSizeReq(fd->hPane, &rChld);
-	r->w = rChld.w;
-	r->h = rChld.h+4;
-	AG_WidgetSizeReq(fd->lbCwd, &rChld);
-	r->h += rChld.h+5;
-	AG_WidgetSizeReq(fd->tbFile, &rChld);
-	r->h += rChld.h+5;
+
+	AG_WidgetSizeReq(fd->hPane, &rc);
+	r->w = rc.w;
+	r->h = rc.h + spacingVert;
+	AG_WidgetSizeReq(fd->lbCwd, &rc);
+	r->h += rc.h + spacingVert;
+	AG_WidgetSizeReq(fd->tbFile, &rc);
+	r->h += rc.h + spacingVert;
 	if (fd->comTypes) {
-		AG_WidgetSizeReq(fd->comTypes, &rChld);
-		r->h += rChld.h+4;
+		AG_WidgetSizeReq(fd->comTypes, &rc);
+		r->h += rc.h + spacingVert;
 	}
 	if (!(fd->flags & AG_FILEDLG_NOMASKOPTS)) {
-		AG_WidgetSizeReq(fd->cbMaskExt, &rChld);
-		r->h += rChld.h+2;
-		AG_WidgetSizeReq(fd->cbMaskHidden, &rChld);
-		r->h += rChld.h+4;
+		AG_WidgetSizeReq(fd->cbMaskExt, &rc);
+		r->h += rc.h + spacingVert;
+		AG_WidgetSizeReq(fd->cbMaskHidden, &rc);
+		r->h += rc.h + spacingVert;
 	}
 	if (!(fd->flags & AG_FILEDLG_NOBUTTONS)) {
+		AG_SizeReq rOk, rCancel;
+
 		AG_WidgetSizeReq(fd->btnOk, &rOk);
 		AG_WidgetSizeReq(fd->btnCancel, &rCancel);
-		r->h += MAX(rOk.h,rCancel.h)+1;
+
+		r->h += MAX(rOk.h, rCancel.h) + 1;
 	}
 }
 
 static int
-SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull aParent)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull aFD)
 {
 	AG_FileDlg *fd = obj;
 	AG_SizeReq r;
 	AG_SizeAlloc a;
-	int wBtn, hBtn;
+	const int paddingLeft   = WIDGET(fd)->paddingLeft;
+	const int paddingRight  = WIDGET(fd)->paddingRight;
+	const int paddingTop    = WIDGET(fd)->paddingTop;
+	const int spacingVert   = WIDGET(fd)->spacingVert;
+	int hBtn;
 	
-	if (fd->flags & AG_FILEDLG_COMPACT) {
-		AG_WidgetSizeReq(fd->textbox, &r);	hBtn = r.h;
-		AG_WidgetSizeReq(fd->btnExpand, &r);	hBtn = MAX(hBtn, r.h);
-		wBtn = r.w;
+	if (fd->flags & AG_FILEDLG_COMPACT) {               /* Compact mode */
+		AG_WidgetSizeReq(fd->textbox, &r);
+		hBtn = r.h;
+		AG_WidgetSizeReq(fd->btnExpand, &r);
+		hBtn = MAX(hBtn, r.h);
 		a.x = 0;
 		a.y = 0;
-		a.w = aParent->w - wBtn;
-		a.h = MIN(hBtn, aParent->h);
+		a.w = aFD->w - r.w;
+		a.h = MIN(hBtn, aFD->h);
 		AG_WidgetSizeAlloc(fd->textbox, &a);
-		a.x += a.w;				/* aParent->w - wBtn */
-		a.w = wBtn;
+		a.x += a.w;                                /* aFD->w - r.w */
+		a.w = r.w;
 		AG_WidgetSizeAlloc(fd->btnExpand, &a);
 		return (0);
 	}
 
-	if (!(fd->flags & AG_FILEDLG_NOBUTTONS)) {
-		wBtn = (aParent->w >> 1);
+	if ((fd->flags & AG_FILEDLG_NOBUTTONS) == 0) {     /* OK and Cancel */
 		AG_WidgetSizeReq(fd->btnOk, &r);
 		hBtn = r.h;
 		AG_WidgetSizeReq(fd->btnCancel, &r);
 		hBtn = MAX(hBtn, r.h);
 	} else {
-		wBtn = 0;
 		hBtn = 0;
 	}
 
-	a.x = 0;
-	a.y = 0;
-	a.w = aParent->w;
-	a.h = aParent->h - hBtn - 10;
+	a.x = paddingLeft;
+	a.y = paddingTop;
+	a.w = aFD->w - paddingLeft - paddingRight;
+	a.h = aFD->h - hBtn - paddingTop - WIDGET(fd)->paddingBottom;
 
-	AG_WidgetSizeReq(fd->lbCwd, &r);		a.h -= r.h;
-	AG_WidgetSizeReq(fd->tbFile, &r);		a.h -= r.h;
-
-	if (fd->comTypes) {
-		AG_WidgetSizeReq(fd->comTypes, &r);	a.h -= r.h+4;
-	}
-	if (!(fd->flags & AG_FILEDLG_NOMASKOPTS)) {
-		AG_WidgetSizeReq(fd->cbMaskExt, &r);	a.h -= r.h+2;
-		AG_WidgetSizeReq(fd->cbMaskHidden, &r);	a.h -= r.h+4;
-	}
-							a.h -= 10;
-	AG_WidgetSizeAlloc(fd->hPane, &a);		a.y += a.h+4;
-	AG_WidgetSizeReq(fd->lbCwd, &r);		a.h  = r.h;
-	AG_WidgetSizeAlloc(fd->lbCwd, &a);		a.y += a.h+5;
-	AG_WidgetSizeReq(fd->tbFile, &r);		a.h  = r.h;
-	AG_WidgetSizeAlloc(fd->tbFile, &a);		a.y += a.h+5;
+	AG_WidgetSizeReq(fd->lbCwd, &r);
+	a.h -= r.h;
+	AG_WidgetSizeReq(fd->tbFile, &r);
+	a.h -= r.h;
 
 	if (fd->comTypes) {
-		AG_WidgetSizeReq(fd->comTypes, &r);	a.h  = r.h;
-		AG_WidgetSizeAlloc(fd->comTypes, &a);	a.y += a.h+4;
+		AG_WidgetSizeReq(fd->comTypes, &r);
+		a.h -= r.h + spacingVert;
 	}
 	if (!(fd->flags & AG_FILEDLG_NOMASKOPTS)) {
-		AG_WidgetSizeReq(fd->cbMaskExt, &r);      a.h  = r.h;
-		AG_WidgetSizeAlloc(fd->cbMaskExt, &a);    a.y += a.h+2;
-		AG_WidgetSizeReq(fd->cbMaskHidden, &r);   a.h  = r.h;
-		AG_WidgetSizeAlloc(fd->cbMaskHidden, &a); a.y += a.h+4;
+		AG_WidgetSizeReq(fd->cbMaskExt, &r);
+		a.h -= r.h + spacingVert;
+		AG_WidgetSizeReq(fd->cbMaskHidden, &r);
+		a.h -= r.h + spacingVert;
+	}
+	a.h -= spacingVert;
+	if (fd->comTypes)
+		a.h -= spacingVert;
+	if ((fd->flags & AG_FILEDLG_NOMASKOPTS) == 0)
+		a.h -= spacingVert;
+
+	AG_WidgetSizeAlloc(fd->hPane, &a);
+	a.y += a.h + spacingVert;
+	AG_WidgetSizeReq(fd->lbCwd, &r);
+	a.h  = r.h;
+	AG_WidgetSizeAlloc(fd->lbCwd, &a);
+	a.y += a.h + spacingVert;
+	AG_WidgetSizeReq(fd->tbFile, &r);
+	a.h  = r.h;
+	AG_WidgetSizeAlloc(fd->tbFile, &a);
+	a.y += a.h + spacingVert;
+
+	if (fd->comTypes) {                           /* File type selector */
+		AG_WidgetSizeReq(fd->comTypes, &r);
+		a.h  = r.h;
+		AG_WidgetSizeAlloc(fd->comTypes, &a);
+		a.y += a.h + spacingVert;
+	}
+	if ((fd->flags & AG_FILEDLG_NOMASKOPTS) == 0) {   /* Masking options */
+		AG_WidgetSizeReq(fd->cbMaskExt, &r);
+		a.h  = r.h;
+		AG_WidgetSizeAlloc(fd->cbMaskExt, &a); 
+		a.y += a.h + spacingVert;
+		AG_WidgetSizeReq(fd->cbMaskHidden, &r);
+		a.h  = r.h;
+		AG_WidgetSizeAlloc(fd->cbMaskHidden, &a);
+		a.y += a.h + spacingVert;
 	}
 
-	if (!(fd->flags & AG_FILEDLG_NOBUTTONS)) {
-		a.w = wBtn;
+	if ((fd->flags & AG_FILEDLG_NOBUTTONS) == 0) {      /* OK and Cancel */
+		const int spacingHoriz = WIDGET(fd)->spacingHoriz;
+
+		a.w = ((aFD->w - paddingLeft - paddingRight - spacingHoriz) >> 1);
 		a.h = hBtn;
 		AG_WidgetSizeAlloc(fd->btnOk, &a);
-		a.x = wBtn;
-		if ((wBtn << 1) < aParent->w) { a.w++; }
-		a.h = hBtn;
+		a.x = paddingLeft + a.w + spacingHoriz;
 		AG_WidgetSizeAlloc(fd->btnCancel, &a);
 	}
 	return (0);

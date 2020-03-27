@@ -26,6 +26,15 @@ typedef struct ag_fixed {
 	int wPre, hPre;			/* Size hint */
 } AG_Fixed;
 
+#define AGFIXED(obj)            ((AG_Fixed *)(obj))
+#define AGCFIXED(obj)           ((const AG_Fixed *)(obj))
+#define AG_FIXED_SELF()          AGFIXED( AG_OBJECT(0,"AG_Widget:AG_Fixed:*") )
+#define AG_FIXED_PTR(n)          AGFIXED( AG_OBJECT((n),"AG_Widget:AG_Fixed:*") )
+#define AG_FIXED_NAMED(n)        AGFIXED( AG_OBJECT_NAMED((n),"AG_Widget:AG_Fixed:*") )
+#define AG_CONST_FIXED_SELF()   AGCFIXED( AG_CONST_OBJECT(0,"AG_Widget:AG_Fixed:*") )
+#define AG_CONST_FIXED_PTR(n)   AGCFIXED( AG_CONST_OBJECT((n),"AG_Widget:AG_Fixed:*") )
+#define AG_CONST_FIXED_NAMED(n) AGCFIXED( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Fixed:*") )
+
 __BEGIN_DECLS
 extern AG_WidgetClass agFixedClass;
 

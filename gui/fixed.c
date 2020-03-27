@@ -58,6 +58,16 @@ AG_FixedNew(void *parent, Uint flags)
 }
 
 static void
+MouseButtonDown(AG_Event *_Nonnull event)
+{
+	AG_Fixed *fx = AG_FIXED_SELF();
+	AG_Window *wParent = AG_ParentWindow(fx);
+
+	if (!AG_WindowIsFocused(wParent))
+		AG_WindowFocus(wParent);
+}
+
+static void
 Init(void *_Nonnull obj)
 {
 	AG_Fixed *fx = obj;
@@ -66,6 +76,8 @@ Init(void *_Nonnull obj)
 	fx->style = AG_FIXED_STYLE_WELL;		/* 3D well */
 	fx->wPre = 0;
 	fx->hPre = 0;
+
+	AG_SetEvent(fx, "mouse-button-down", MouseButtonDown, NULL);
 }
 
 void
@@ -98,15 +110,15 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_Widget *chld;
 	AG_SizeAlloc aChld;
 
+	/*
+	 * Trivially run sizeAllocate() over existing coordinates.
+	 * Ignore HFILL and VFILL.
+	 */
 	OBJECT_FOREACH_CHILD(chld, fx, ag_widget) {
 		aChld.x = chld->x;
 		aChld.y = chld->y;
 		aChld.w = chld->w;
 		aChld.h = chld->h;
-#if 0
-		if (chld->flags & AG_WIDGET_HFILL) { aChld.w = a->w; }
-		if (chld->flags & AG_WIDGET_VFILL) { aChld.h = a->h; }
-#endif		
 		AG_WidgetSizeAlloc(chld, &aChld);
 	}
 	return (0);
@@ -141,6 +153,10 @@ UpdateWindow(AG_Fixed *_Nonnull fx)
 		WIDGET(fx)->flags |= AG_WIDGET_UPDATE_WINDOW;
 }
 
+/*
+ * Attach a new widget to the container and set initial coordinates to x,y
+ * in pixels. Auto-size according to sizeRequest().
+ */
 void
 AG_FixedPut(AG_Fixed *fx, void *p, int x, int y)
 {
@@ -165,6 +181,7 @@ AG_FixedPut(AG_Fixed *fx, void *p, int x, int y)
 	AG_Redraw(fx);
 }
 
+/* Move an existing widget to coordinates x,y. */
 void
 AG_FixedMove(AG_Fixed *fx, void *p, int x, int y)
 {
@@ -188,6 +205,7 @@ AG_FixedMove(AG_Fixed *fx, void *p, int x, int y)
 	AG_Redraw(fx);
 }
 
+/* Resize a widget to w x h pixels. */
 void
 AG_FixedSize(AG_Fixed *fx, void *p, int w, int h)
 {
@@ -210,6 +228,7 @@ AG_FixedSize(AG_Fixed *fx, void *p, int w, int h)
 	AG_Redraw(fx);
 }
 
+/* Detach a widget from the container. */
 void
 AG_FixedDel(AG_Fixed *fx, void *chld)
 {

@@ -99,7 +99,7 @@ typedef struct ag_editable {
 	int posKbdSel;			/* Start of keyboard selection */
 	int returnHeld;			/* RETURN key is held */
 	AG_EditableBuffer sBuf;		/* Working buffer (for EXCL) */
-	AG_Rect r;			/* View area */
+	AG_Rect r;			/* Clipping rectangle */
 	AG_CursorArea *_Nullable ca;	/* Text cursor-change area */
 	enum ag_language lang;		/* Selected language (for AG_Text) */
 	int xScrollPx;			/* Explicit scroll request in pixels */
@@ -117,9 +117,6 @@ typedef struct ag_editable {
 	AG_Timer toRepeatDirs[4];	/* Key repeat timers (direction keys) */
 } AG_Editable;
 
-#define AGEDITABLE_IS_READONLY(ed) (((ed)->flags & AG_EDITABLE_READONLY) || \
-                                    AG_WidgetDisabled(ed))
-
 #define AGEDITABLE(obj)            ((AG_Editable *)(obj))
 #define AGCEDITABLE(obj)           ((const AG_Editable *)(obj))
 #define AG_EDITABLE_SELF()          AGEDITABLE( AG_OBJECT(0,"AG_Widget:AG_Editable:*") )
@@ -128,6 +125,9 @@ typedef struct ag_editable {
 #define AG_CONST_EDITABLE_SELF()   AGCEDITABLE( AG_CONST_OBJECT(0,"AG_Widget:AG_Editable:*") )
 #define AG_CONST_EDITABLE_PTR(n)   AGCEDITABLE( AG_CONST_OBJECT((n),"AG_Widget:AG_Editable:*") )
 #define AG_CONST_EDITABLE_NAMED(n) AGCEDITABLE( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Editable:*") )
+
+#define AGEDITABLE_IS_READONLY(ed) (((ed)->flags & AG_EDITABLE_READONLY) || \
+                                    AG_WidgetDisabled(ed))
 
 __BEGIN_DECLS
 extern AG_WidgetClass agEditableClass;

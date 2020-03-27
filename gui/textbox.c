@@ -463,7 +463,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 
 		tb->r.x = 0;
 		tb->r.y = 0;
-		tb->r.w = a->w;
+		tb->r.w = a->w - WIDGET(tb)->paddingRight;
 		tb->r.h = a->h;
 	} else {
 		tb->r.x = WIDGET(tb)->paddingLeft;
@@ -471,7 +471,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 			tb->r.x += wLbl + WIDGET(tb)->spacingHoriz;
 		}
 		tb->r.y = 0;
-		tb->r.w = a->w - tb->r.x;
+		tb->r.w = a->w - tb->r.x - WIDGET(tb)->paddingRight;
 		tb->r.h = a->h;
 	}
 	
@@ -487,7 +487,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		aEd.x += wLbl + WIDGET(tb)->spacingHoriz;
 	}
 	aEd.y = WIDGET(tb)->paddingTop;
-	aEd.w = a->w - aEd.x - wBtn - wBar - WIDGET(tb)->paddingRight;
+	aEd.w = a->w - aEd.x - wBtn - wBar - WIDGET(tb)->paddingRight - 1;
 	if (tb->btnRet) {
 		aEd.w -= WIDGET(tb)->spacingHoriz;
 	}
@@ -616,9 +616,18 @@ static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_TEXTBOX_SELF();
+	const int btn = AG_INT(1);
+	const int mx = AG_INT(2);
+	const int my = AG_INT(3);
 
-	AG_WidgetFocus(tb);
-	AG_ForwardEvent(tb->ed, event);
+	if (btn == AG_MOUSE_LEFT)
+		AG_WidgetFocus(tb);
+
+	if (mx >= tb->r.x &&
+	    mx <= WIDTH(tb) - WIDGET(tb)->paddingRight &&
+	    my >= WIDGET(tb)->paddingTop &&
+	    my < HEIGHT(tb) - WIDGET(tb)->paddingBottom)
+		AG_ForwardEvent(tb->ed, event);
 }
 
 static void
