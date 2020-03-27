@@ -123,6 +123,9 @@ processing cycle).
 .Ft "void"
 .Fn AG_WindowSetPosition "AG_Window *win" "enum ag_window_alignment alignment" "int tiling"
 .Pp
+.Ft "int"
+.Fn AG_WindowMove "AG_Window *win" "int xRel" "int yRel"
+.Pp
 .Ft "void"
 .Fn AG_WindowSetGeometry "AG_Window *win" "int x" "int y" "int w" "int h"
 .Pp
@@ -325,9 +328,14 @@ flag is set (see
 section).
 With tiling enabled, the WM will try to avoid overlap between existing windows.
 .Pp
-The
+.Fn AG_WindowMove
+moves the window to a new position
+.Fa xRel ,
+.Fa yRel
+relative to the window's current position.
+.Pp
 .Fn AG_WindowSetGeometry
-function moves/resizes a window to the specific position and geometry, given
+moves/resizes a window to the specific position and geometry, given
 in pixels.
 If a value of -1 is passed for
 .Fa w

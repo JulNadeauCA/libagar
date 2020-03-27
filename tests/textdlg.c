@@ -13,9 +13,7 @@ TestCanned(AG_Event *event)
 {
 	AG_TextWarning("my-warning-key", "This is a warning");
 	AG_TextError("This is an error message");
-#ifdef AG_TIMERS
 	AG_TextTmsg(AG_MSG_INFO, 3000, "This is a timed message");
-#endif
 	AG_TextMsg(AG_MSG_INFO, "This is an informational message");
 	AG_TextInfo("infomsg",
 	    "This is an informational message with \n"

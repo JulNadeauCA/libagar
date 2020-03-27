@@ -22,14 +22,14 @@ typedef struct ag_icon {
 	int surface;			/* Icon surface */
 	char labelTxt[AG_LABEL_MAX];	/* Optional text label */
 	int  labelSurface;		/* Optional label surface */
-	int  labelPad;			/* Icon-label spacing */
+	Uint32 _pad1;
 	struct ag_window *_Nullable wDND; /* Drag/drop window object */
 	struct ag_socket *_Nullable sock; /* Back pointer to socket */
 	int xSaved, ySaved;		/* Saved coordinates */
 	int wSaved, hSaved;		/* Saved geometry */
 	AG_Color cBackground;		/* Background fill color */
 #if AG_MODEL == AG_MEDIUM
-	Uint32 _pad;
+	Uint32 _pad2;
 #endif
 	AG_Timer toDblClick;		/* For double click detection */
 } AG_Icon;

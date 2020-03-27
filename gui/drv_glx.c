@@ -1630,14 +1630,12 @@ GLX_MapWindow(AG_Window *_Nonnull win)
 	AG_GL_SetViewport(&glx->gl, &rVP);
 
 	if (win->flags & AG_WINDOW_MODAL) {
-		glx->ptrIsGrabbed = (XGrabPointer(agDisplay,
-		    glx->w,				/* grab_window */
-		    True,				/* owner_events */
-		    ButtonPress,
-		    GrabModeAsync,
-		    GrabModeAsync,
-		    None,
-		    None,
+		glx->ptrIsGrabbed = (XGrabPointer(agDisplay, glx->w, True,
+		    PointerMotionMask | ButtonPressMask | ButtonReleaseMask,
+		    GrabModeAsync, /* pointer_mode */
+		    GrabModeAsync, /* keyboard_mode */
+		    None,          /* confine_to */
+		    None,          /* cursor */
 		    CurrentTime) == 0 ? 1 : 0);
 	}
 

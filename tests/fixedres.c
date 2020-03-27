@@ -16,9 +16,10 @@ TestGUI(void *obj, AG_Window *win)
 	char path[AG_PATHNAME_MAX];
 	AG_Fixed *fx;
 	AG_Label *lb1;
-	AG_Button *btn;
+	AG_Button *btn[4];
 	AG_Pixmap *px;
 	AG_Box *box;
+	int i;
 
 	/*
 	 * Create a container which allows manual setting of the coordinates
@@ -61,12 +62,16 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SetStyle(box, "font-style", "italic");
 	{
 		AG_Box *hBox;
+		AG_Button *btnNum;
 		int i;
 
 		AG_LabelNewS(box, 0, "I'm in a normal box");
-		hBox = AG_BoxNewHoriz(box, AG_BOX_HFILL);
-		for (i = 0; i < 5; i++)
-			AG_ButtonNew(hBox, 0, "%c", '1'+i);
+		hBox = AG_BoxNewHoriz(box, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
+		for (i = 0; i < 5; i++) {
+			btnNum = AG_ButtonNew(hBox, 0, "%c", '1'+i);
+			AG_SetStyle(btnNum, "padding", "5");
+			AG_SetStyle(btnNum, "color", "#233");
+		}
 	}
 	AG_FixedPut(fx, box, 450, 35);
 
@@ -74,18 +79,20 @@ TestGUI(void *obj, AG_Window *win)
 	 * Create a series of 32x32 buttons at the right. We initially attach
 	 * the buttons to the container, so we must use AG_FixedMove().
 	 */
-	btn = AG_ButtonNew(fx, 0, "A");
-	AG_FixedMove(fx, btn, 204, 48);
-	AG_FixedSize(fx, btn, 32, 32);
-	btn = AG_ButtonNew(fx, 0, "B");
-	AG_FixedMove(fx, btn, 204+64, 48);
-	AG_FixedSize(fx, btn, 32, 32);
-	btn = AG_ButtonNew(fx, 0, "C");
-	AG_FixedMove(fx, btn, 204+128, 48);
-	AG_FixedSize(fx, btn, 32, 32);
-	btn = AG_ButtonNew(fx, 0, "D");
-	AG_FixedMove(fx, btn, 204+192, 48);
-	AG_FixedSize(fx, btn, 32, 32);
+	btn[0] = AG_ButtonNew(fx, 0, "A");
+	AG_FixedMove(fx, btn[0], 204, 48);
+	btn[1] = AG_ButtonNew(fx, 0, "B");
+	AG_FixedMove(fx, btn[1], 204+64, 48);
+	btn[2] = AG_ButtonNew(fx, 0, "C");
+	AG_FixedMove(fx, btn[2], 204+128, 48);
+	btn[3] = AG_ButtonNew(fx, 0, "D");
+	AG_FixedMove(fx, btn[3], 204+192, 48);
+	for (i = 0; i < 4; i++) {
+		AG_FixedSize(fx, btn[i], 32, 32);
+		AG_SetStyle(btn[i], "color", "black");
+		AG_SetStyle(btn[i], "high-color", "#775");
+		AG_SetStyle(btn[i], "low-color", "#333");
+	}
 
 	/*
 	 * Make this window non-resizable (alternatively, we could also
@@ -97,7 +104,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_WindowSetPadding(win, 0,0,0,0);
 
 	/* Request an explicit size in pixels. */
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 641, 195);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 642, 200);
 
 	return (0);
 }

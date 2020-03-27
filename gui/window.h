@@ -193,6 +193,8 @@ void AG_WindowSetPadding(AG_Window *_Nonnull, int,int,int,int);
 void AG_WindowSetPosition(AG_Window *_Nonnull, enum ag_window_alignment, int);
 void AG_WindowSetCloseAction(AG_Window *_Nonnull, enum ag_window_close_action);
 
+int  AG_WindowMove(AG_Window *, int, int);
+
 void AG_WindowSetMinSize(AG_Window *_Nonnull, int, int);
 void AG_WindowSetMinSizePct(AG_Window *_Nonnull, int);
 

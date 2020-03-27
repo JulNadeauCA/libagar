@@ -172,32 +172,33 @@ AG_ProcessMouseMotion(AG_Window *win, int x, int y, int xRel, int yRel,
  * all widgets with USE_MOUSEOVER enabled.
  */
 static void
-PostMouseMotion(
-    AG_Window *_Nonnull _Restrict win,
-    AG_Widget *_Nonnull _Restrict wid,
-    int x, int y, int xRel, int yRel, Uint state)
+PostMouseMotion(AG_Window *_Nonnull _Restrict win,
+    AG_Widget *_Nonnull _Restrict wid, int x, int y, int xRel, int yRel,
+    Uint state)
 {
 	AG_Widget *chld;
+	Uint flags;
 
 	AG_ObjectLock(wid);
-	if (wid->flags & AG_WIDGET_VISIBLE) {
-		if (wid->flags & AG_WIDGET_USE_MOUSEOVER) {
+	flags = wid->flags;
+	if (flags & AG_WIDGET_VISIBLE) {
+		if (flags & AG_WIDGET_USE_MOUSEOVER) {
 			if (AG_WidgetArea(wid, x,y)) {
-				if ((wid->flags & AG_WIDGET_MOUSEOVER) == 0) {
+				if ((flags & AG_WIDGET_MOUSEOVER) == 0) {
 					wid->flags |= AG_WIDGET_MOUSEOVER;
 					AG_PostEvent(wid, "mouse-over", NULL);
 					AG_Redraw(wid);
 				}
 			} else {
-				if (wid->flags & AG_WIDGET_MOUSEOVER) {
+				if (flags & AG_WIDGET_MOUSEOVER) {
 					wid->flags &= ~(AG_WIDGET_MOUSEOVER);
 					AG_PostEvent(wid, "mouse-over", NULL);
 					AG_Redraw(wid);
 				}
 			}
 		}
-		if ((wid->flags & AG_WIDGET_FOCUSED) ||
-		    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
+		if ((flags & AG_WIDGET_FOCUSED) ||
+		    (flags & AG_WIDGET_UNFOCUSED_MOTION)) {
 			AG_PostEvent(wid, "mouse-motion",
 			    "%i(x),%i(y),%i(xRel),%i(yRel),%i(buttons)",
 			    x - wid->rView.x1,
@@ -236,17 +237,17 @@ AG_ProcessMouseButtonUp(AG_Window *win, int x, int y, AG_MouseButton button)
  * either focused or have UNFOCUSED_BUTTONUP set. 
  */
 static void
-PostMouseButtonUp(
-    AG_Window *_Nonnull _Restrict win,
-    AG_Widget *_Nonnull _Restrict wid,
-    int x, int y, AG_MouseButton button)
+PostMouseButtonUp(AG_Window *_Nonnull _Restrict win,
+    AG_Widget *_Nonnull _Restrict wid, int x, int y, AG_MouseButton button)
 {
 	AG_Widget *chld;
+	Uint flags;
 
 	AG_ObjectLock(wid);
-	if ((wid->flags & AG_WIDGET_VISIBLE)) {
-		if ((wid->flags & AG_WIDGET_FOCUSED) ||
-		    (wid->flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
+	flags = wid->flags;
+	if (flags & AG_WIDGET_VISIBLE) {
+		if ((flags & AG_WIDGET_FOCUSED) ||
+		    (flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
 			AG_PostEvent(wid, "mouse-button-up",
 			    "%i(button),%i(x),%i(y)",
 			    (int)button,
@@ -298,10 +299,8 @@ AG_ProcessMouseButtonDown(AG_Window *win, int x, int y, AG_MouseButton button)
  * widget which has a `mouse-button-down' handler defined).
  */
 static int
-PostMouseButtonDown(
-    AG_Window *_Nonnull _Restrict win,
-    AG_Widget *_Nonnull _Restrict wid,
-    int x, int y, AG_MouseButton button)
+PostMouseButtonDown(AG_Window *_Nonnull _Restrict win,
+    AG_Widget *_Nonnull _Restrict wid, int x, int y, AG_MouseButton button)
 {
 	AG_Widget *chld;
 	AG_Event *ev;

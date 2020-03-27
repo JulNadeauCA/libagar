@@ -32,17 +32,16 @@ InsertHelmet(AG_Socket *sock, AG_Icon *icon)
 	char itemType[64];
 
 	AG_GetString(icon, "item-type", itemType, sizeof(itemType));
+
 	if (strcmp(itemType, "helmet") == 0) {
 		if (icon->sock != NULL) {
 			AG_SocketRemoveIcon(icon->sock);
 		}
 		AG_SocketInsertIcon(sock, icon);
 	} else {
-#ifdef AG_TIMERS
-		AG_TextTmsg(AG_MSG_ERROR, 1000, "Not a helmet!");
-#else
-		AG_TextMsg(AG_MSG_ERROR, "Not a helmet!");
-#endif
+		AG_TextTmsg(AG_MSG_ERROR, 1000,
+		    _("%s is a %s (not a helmet)"),
+		    AGOBJECT(icon)->name, itemType);
 	}
 	return (1);
 }
@@ -54,17 +53,16 @@ InsertWeapon(AG_Socket *sock, AG_Icon *icon)
 	char itemType[64];
 
 	AG_GetString(icon, "item-type", itemType, sizeof(itemType));
+
 	if (strcmp(itemType, "weapon") == 0) {
 		if (icon->sock != NULL) {
 			AG_SocketRemoveIcon(icon->sock);
 		}
 		AG_SocketInsertIcon(sock, icon);
 	} else {
-#ifdef AG_TIMERS
-		AG_TextTmsg(AG_MSG_ERROR, 1000, "Not a weapon!");
-#else
-		AG_TextMsg(AG_MSG_ERROR, "Not a weapon!");
-#endif
+		AG_TextTmsg(AG_MSG_ERROR, 1000,
+		    _("%s is a %s (not a weapon)"),
+		    AGOBJECT(icon)->name, itemType);
 	}
 	return (1);
 }
@@ -79,11 +77,6 @@ TestGUI(void *obj, AG_Window *win)
 	AG_Pixmap *px;
 	AG_Icon *helmet, *sword, *axe;
 	int i;
-
-	if (agDriverOps->wm != AG_WM_SINGLE) {
-		AG_SetError("Test is only applicable to single-window drivers");
-		return (-1);
-	}
 
 	/* Create a fixed widget container */
 	fx = AG_FixedNew(win, AG_FIXED_EXPAND);
@@ -101,6 +94,11 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SetStyle(lbl, "text-color", "#ccc");
 	AG_SetStyle(lbl, "font-size", "200%");
 	AG_FixedPut(fx, lbl, 20, 32);
+
+	lbl = AG_LabelNew(NULL, 0, AGSI_LEAGUE_GOTHIC "( in an AG_Fixed )" AGSI_RST);
+	AG_SetStyle(lbl, "text-color", "#aaa");
+	AG_SetStyle(lbl, "font-size", "120%");
+	AG_FixedPut(fx, lbl, 20, 64);
 
 	/* Load some pixmaps */
 	for (i = 0; i < LAST_IMAGE; i++) {
@@ -130,15 +128,20 @@ TestGUI(void *obj, AG_Window *win)
 	AG_FixedSize(fx, sock, 32, 32);
 
 	/*
-	 * Create some icons.
+	 * Create some drag-and-droppable icons.
 	 */
 
 	helmet = AG_IconFromSurface(pixmaps[HELMET]);
 	AG_SetString(helmet, "item-type", "helmet");
+	AG_IconSetTextS(helmet, AGSI_LEAGUE_GOTHIC "Helmet" AGSI_RST);
+
 	sword = AG_IconFromSurface(pixmaps[SWORD]);
 	AG_SetString(sword, "item-type", "weapon");
+	AG_IconSetTextS(sword, AGSI_LEAGUE_GOTHIC "Sword" AGSI_RST);
+
 	axe = AG_IconFromSurface(pixmaps[AXE]);
 	AG_SetString(axe, "item-type", "weapon");
+	AG_IconSetTextS(axe, AGSI_LEAGUE_GOTHIC "Axe" AGSI_RST);
 
 	/*
 	 * Create some populated sockets.
@@ -163,7 +166,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SocketInsertIcon(sock, axe);
 
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_BC, 640, 128+64);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_BC, 642, 200);
 	return (0);
 }
 

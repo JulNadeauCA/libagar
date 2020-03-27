@@ -15,9 +15,7 @@ SelectedFont(AG_Event *event)
 		AG_SetInt(agConfig, "font.size", agDefaultFont->spec.size);
 		AG_SetUint(agConfig, "font.flags", agDefaultFont->flags);
 		if (AG_ConfigSave() == 0) {
-#ifdef AG_TIMERS
 			AG_TextTmsg(AG_MSG_INFO, 1000, "Default font has changed.");
-#endif
 		} else {
 			AG_TextMsgFromError();
 		}

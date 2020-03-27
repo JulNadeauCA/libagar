@@ -88,7 +88,6 @@ Init(void *_Nonnull obj)
 	icon->sock = NULL;
 	icon->labelTxt[0] = '\0';
 	icon->labelSurface = -1;
-	icon->labelPad = 4;
 	icon->xSaved = -1;
 	icon->ySaved = -1;
 	icon->wSaved = -1;
@@ -116,7 +115,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		} else {
 			AG_TextSize(icon->labelTxt, &wLbl, &hLbl);
 		}
-		r->h += icon->labelPad + hLbl;
+		r->h += WIDGET(icon)->spacingVert + hLbl;
 		r->w = MAX(r->w, wLbl);
 	}
 }
@@ -154,7 +153,6 @@ Draw(void *_Nonnull obj)
 			icon->labelSurface = -1;
 		}
 		if (icon->labelSurface == -1) {
-			AG_TextBGColorRGB(0,0,0);	/* TODO make stylable */
 			icon->labelSurface = AG_WidgetMapSurface(icon,
 			    AG_TextRender(icon->labelTxt));
 		}
@@ -167,7 +165,7 @@ Draw(void *_Nonnull obj)
 		}
 		AG_WidgetBlitSurface(icon, icon->labelSurface,
 		    w_2 - (WSURFACE(icon,icon->labelSurface)->w >> 1),
-		    WSURFACE(icon,icon->surface)->h + icon->labelPad);
+		    WSURFACE(icon,icon->surface)->h + WIDGET(icon)->spacingVert);
 	}
 }
 

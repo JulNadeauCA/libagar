@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  */
 
 /*
- * Socket widget. This is a place-holder for (widgets derived from) AG_Icon(3).
+ * Socket widget. Holds a drag-and-droppable AG_Icon(3).
  */
 
 #include <agar/core/core.h>
@@ -345,6 +345,8 @@ static void
 IconMotion(AG_Event *_Nonnull event)
 {
 	AG_Icon *icon = AG_ICON_PTR(1);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 	const int xRel = AG_INT(4);
 	const int yRel = AG_INT(5);
 	AG_Window *wDND = icon->wDND;
@@ -354,7 +356,7 @@ IconMotion(AG_Event *_Nonnull event)
 	r.y = WIDGET(wDND)->y + yRel;
 	r.w = WIDTH(wDND);
 	r.h = HEIGHT(wDND);
-	AG_WindowSetGeometryRect(wDND, &r, 1);
+	AG_WindowMove(wDND, xRel, yRel);
 }
 
 static void
@@ -389,6 +391,7 @@ static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Socket *sock = AG_SOCKET_SELF();
+	AG_Window *winParent = WIDGET(sock)->window;
 	const int button = AG_INT(1);
 	AG_Variable *binding;
 	void *pState;
@@ -416,22 +419,33 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		AG_Pixmap *px;
 		AG_Window *wDND;
 		
-		wDND = icon->wDND = AG_WindowNew(AG_WINDOW_PLAIN |
-		                                 AG_WINDOW_NOBACKGROUND);
+		wDND = icon->wDND = AG_WindowNew(AG_WINDOW_MODAL |
+		                                 AG_WINDOW_PLAIN |
+		                                 AG_WINDOW_NOBACKGROUND |
+						 AG_WINDOW_KEEPABOVE);
+		wDND->wmType = AG_WINDOW_WM_DND;
+
 		px = AG_PixmapFromSurface(wDND, 0, WSURFACE(icon,icon->surface));
+/*		winParent->widExclMotion = WIDGET(px); */
 
 		AG_ObjectLock(px);
 		WIDGET(px)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
 		                     AG_WIDGET_UNFOCUSED_BUTTONUP;
-		AG_SetEvent(px, "mouse-motion", IconMotion,"%p",icon);
-		AG_SetEvent(px, "mouse-button-up", IconButtonUp,"%p",icon);
+		AG_AddEvent(px, "mouse-motion", IconMotion,"%p",icon);
+		AG_AddEvent(px, "mouse-button-up", IconButtonUp,"%p",icon);
 		AG_ObjectUnlock(px);
 
-		AG_WindowSetGeometry(wDND,
-		    WIDGET(icon)->rView.x1,
-		    WIDGET(icon)->rView.y1,
-		    WIDTH(icon),
-		    HEIGHT(icon));
+		if (AGDRIVER_SINGLE(WIDGET(sock)->drv)) {
+			AG_WindowSetGeometry(wDND,
+			    WIDGET(icon)->rView.x1,
+			    WIDGET(icon)->rView.y1,
+			    WIDTH(icon), HEIGHT(icon));
+		} else {
+			AG_WindowSetGeometry(wDND,
+			    WIDGET(winParent)->x + WIDGET(icon)->rView.x1,
+			    WIDGET(winParent)->y + WIDGET(icon)->rView.y1,
+			    WIDTH(icon), HEIGHT(icon));
+		}
 		AG_WindowShow(wDND);
 	}
 }
@@ -517,6 +531,7 @@ AG_SocketBgPixmapNODUP(AG_Socket *sock, AG_Surface *S)
 void
 AG_SocketInsertIcon(AG_Socket *sock, AG_Icon *icon)
 {
+	AG_Window *wParent = AG_ParentWindow(sock);
 	AG_SizeAlloc a;
 	
 	AG_ObjectLock(sock);
@@ -528,14 +543,16 @@ AG_SocketInsertIcon(AG_Socket *sock, AG_Icon *icon)
 
 	a.w = WIDTH(sock);
 	a.h = HEIGHT(sock);
-	a.x = WIDGET(sock)->rView.x1;
-	a.y = WIDGET(sock)->rView.y1;
+	a.x = 0;
+	a.y = 0;
 	AG_WidgetSizeAlloc(icon, &a);
 	AG_WidgetUpdateCoords(icon, a.x, a.y);
 	
 	AG_ObjectUnlock(icon);
 	AG_ObjectUnlock(sock);
+
 	AG_Redraw(sock);
+	AG_WindowUpdate(wParent);
 }
 
 void

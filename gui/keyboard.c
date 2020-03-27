@@ -449,11 +449,13 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 		AG_ObjectUnlock(wFoc);
 	}
 
-	/* Cycle focus */
-	if (tabCycle && (ks == AG_KEY_TAB && action == AG_KEY_RELEASED)) {
-		AG_WindowCycleFocus(win,
-		    (kbd->modState & AG_KEYMOD_SHIFT) ? 1 : 0);
-		return (1);                     /* Break out of Window loop */
+	if (!AGDRIVER_SINGLE(drv)) {
+		/* Cycle focus */
+		if (tabCycle && (ks == AG_KEY_TAB && action == AG_KEY_RELEASED)) {
+			AG_WindowCycleFocus(win,
+			    (kbd->modState & AG_KEYMOD_SHIFT) ? 1 : 0);
+			return (1);                     /* Break out of Window loop */
+		}
 	}
 	return (0);
 }

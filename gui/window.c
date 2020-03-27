@@ -110,9 +110,7 @@ const char *agWindowAlignmentNames[] = {
 static int agWindowIconCounter = 0;
 
 #ifdef AG_WIDGETS
-static int CreateMinimizedIcon(AG_Window *_Nonnull);
 static void AttachTitlebarAndIcons(AG_Driver *_Nonnull, AG_Window *_Nonnull);
-static void HideMinimizedIcon(AG_Window *_Nonnull);
 #endif
 
 /*
@@ -1540,6 +1538,54 @@ fail:
 	return (-1);
 }
 
+/* Move a window by relative distances in pixels. */
+int
+AG_WindowMove(AG_Window *win, int xRel, int yRel)
+{
+	AG_Driver *drv = WIDGET(win)->drv;
+	const AG_DriverClass *dc = AGDRIVER_CLASS(drv);
+	AG_Rect rPrev;
+	
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
+	AG_ObjectLock(win);
+
+	rPrev.x = WIDGET(win)->x;
+	rPrev.y = WIDGET(win)->y;
+	rPrev.w = WIDGET(win)->w;
+	rPrev.h = WIDGET(win)->h;
+
+	AG_WidgetUpdateCoords(win,
+	    WIDGET(win)->x + xRel,
+	    WIDGET(win)->y + yRel);
+
+	switch (AGDRIVER_CLASS(drv)->wm) {
+	case AG_WM_SINGLE:
+		WIDGET(win)->x += xRel;
+		WIDGET(win)->y += yRel;
+
+		if (dc->type == AG_FRAMEBUFFER && win->visible) {
+			UpdateWindowBG(win, &rPrev);
+		}
+		break;
+	case AG_WM_MULTIPLE:
+		if ((AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
+		    AGDRIVER_MW_CLASS(drv)->moveWindow(win,
+		    WIDGET(win)->x + xRel,
+		    WIDGET(win)->y + yRel) == -1) {
+			goto fail;
+		}
+		break;
+	}
+
+	win->dirty = 1;
+	AG_ObjectUnlock(win);
+	return (0);
+fail:
+	AG_ObjectUnlock(win);
+	return (-1);
+}
+
 /* Configure minimum window size in percentage of computed geometry. */
 void
 AG_WindowSetMinSizePct(AG_Window *win, int pct)
@@ -1730,10 +1776,11 @@ AG_WindowUnmaximize(AG_Window *win)
 
 #ifdef AG_WIDGETS
 /*
- * Mouse-motion callback for a minimized window icon in SW mode.
+ * Drag-and-droppable AG_Icon(3) are used to represent minimized windows
+ * in single-window mode. Set event handlers to unminimize on double-click.
  */
 static void
-IconMotion(AG_Event *_Nonnull event)
+IconMouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Icon *icon = AG_ICON_SELF();
 	AG_Driver *drv = WIDGET(icon)->drv;
@@ -1748,7 +1795,7 @@ IconMotion(AG_Event *_Nonnull event)
 
 		AG_OBJECT_ISA(wDND, "AG_Widget:AG_Window:*");
 
-		if (drv && AGDRIVER_SINGLE(drv)) {
+		if (drv && AGDRIVER_SINGLE(drv)) {         /* Must clear BG */
 			r.x = 0;
 			r.y = 0;
 			r.w = AGDRIVER_SW(drv)->w;
@@ -1764,7 +1811,7 @@ IconMotion(AG_Event *_Nonnull event)
 		r.y = WIDGET(wDND)->y + yRel;
 		r.w = WIDTH(wDND);
 		r.h = HEIGHT(wDND);
-		AG_WindowSetGeometryRect(wDND, &r, 1);
+		AG_WindowSetGeometryRect(wDND, &r, 0);
 		 
 		icon->xSaved = WIDGET(wDND)->x;
 		icon->ySaved = WIDGET(wDND)->y;
@@ -1772,9 +1819,7 @@ IconMotion(AG_Event *_Nonnull event)
 		icon->hSaved = HEIGHT(wDND);
 	}
 }
-#endif /* AG_WIDGETS */
 
-/* Timer for double click on minimized icon. */
 static Uint32
 IconDoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
@@ -1785,12 +1830,13 @@ IconDoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 }
 
 static void
-IconButtonDown(AG_Event *_Nonnull event)
+IconMouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Icon *icon = AG_ICON_SELF();
 
 	WIDGET(icon)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
 	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
+
 	if (icon->flags & AG_ICON_DBLCLICKED) {
 		AG_Window *win = AG_WINDOW_PTR(1);
 
@@ -1805,7 +1851,7 @@ IconButtonDown(AG_Event *_Nonnull event)
 }
 
 static void
-IconButtonUp(AG_Event *_Nonnull event)
+IconMouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Icon *icon = AG_ICON_SELF();
 	
@@ -1813,6 +1859,64 @@ IconButtonUp(AG_Event *_Nonnull event)
 	WIDGET(icon)->flags &= ~(AG_WIDGET_UNFOCUSED_BUTTONUP);
 	icon->flags &= ~(AG_ICON_DND);
 }
+
+static int
+CreateMinimizedIcon(AG_Window *_Nonnull win)
+{
+	AG_Window *wDND;
+	AG_Icon *icon = win->icon;
+
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
+	if ((wDND = icon->wDND) == NULL) {
+		wDND = icon->wDND = AG_WindowNew(
+		    AG_WINDOW_PLAIN | AG_WINDOW_KEEPBELOW |
+		    AG_WINDOW_DENYFOCUS | AG_WINDOW_NOBACKGROUND);
+		if (wDND == NULL) {
+			return (-1);
+		}
+		wDND->wmType = AG_WINDOW_WM_DND;
+		AG_ObjectAttach(wDND, icon);
+		AG_ObjectSetName(wDND, "icon%u", agWindowIconCounter++);
+	} else {
+		AG_WindowShow(wDND);
+	}
+	icon->flags &= ~(AG_ICON_DND | AG_ICON_DBLCLICKED);
+
+	AG_SetEvent(icon, "mouse-motion", IconMouseMotion, NULL);
+	AG_SetEvent(icon, "mouse-button-up", IconMouseButtonUp, NULL);
+	AG_SetEvent(icon, "mouse-button-down", IconMouseButtonDown, "%p", win);
+
+	if (icon->xSaved != -1) {
+		AG_WindowShow(wDND);
+		AG_WindowSetGeometry(wDND,
+		    icon->xSaved, icon->ySaved,
+		    icon->wSaved, icon->hSaved);
+	} else {
+		AG_WindowSetPosition(wDND, AG_WINDOW_LOWER_LEFT, 1);
+		AG_WindowShow(wDND);
+		icon->xSaved = WIDGET(wDND)->x;
+		icon->ySaved = WIDGET(wDND)->y;
+		icon->wSaved = WIDTH(wDND);
+		icon->hSaved = HEIGHT(wDND);
+	}
+	return (0);
+}
+
+static void
+HideMinimizedIcon(AG_Window *_Nonnull win)
+{
+	AG_Icon *icon;
+
+	if ((icon = win->icon) == NULL) {
+		return;
+	}
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
+	if (icon->wDND) {
+		AG_OBJECT_ISA(icon->wDND, "AG_Widget:AG_Window:*");
+		AG_WindowHide(icon->wDND);
+	}
+}
+#endif /* AG_WIDGETS */
 
 /* Minimize a window */
 void
@@ -1841,50 +1945,6 @@ out:
 	AG_ObjectUnlock(win);
 }
 
-#ifdef AG_WIDGETS
-static int
-CreateMinimizedIcon(AG_Window *_Nonnull win)
-{
-	AG_Window *wDND;
-	AG_Icon *icon = win->icon;
-
-	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
-	if ((wDND = icon->wDND) == NULL) {
-		wDND = icon->wDND = AG_WindowNew(
-		    AG_WINDOW_PLAIN | AG_WINDOW_KEEPBELOW |
-		    AG_WINDOW_DENYFOCUS | AG_WINDOW_NOBACKGROUND);
-		if (wDND == NULL) {
-			return (-1);
-		}
-		wDND->wmType = AG_WINDOW_WM_DND;
-		AG_ObjectAttach(wDND, icon);
-		AG_ObjectSetName(wDND, "icon%u", agWindowIconCounter++);
-	} else {
-		AG_WindowShow(wDND);
-	}
-	icon->flags &= ~(AG_ICON_DND | AG_ICON_DBLCLICKED);
-
-	AG_SetEvent(icon, "mouse-motion", IconMotion, NULL);
-	AG_SetEvent(icon, "mouse-button-up", IconButtonUp, NULL);
-	AG_SetEvent(icon, "mouse-button-down", IconButtonDown, "%p", win);
-
-	if (icon->xSaved != -1) {
-		AG_WindowShow(wDND);
-		AG_WindowSetGeometry(wDND,
-		    icon->xSaved, icon->ySaved,
-		    icon->wSaved, icon->hSaved);
-	} else {
-		AG_WindowSetPosition(wDND, AG_WINDOW_LOWER_LEFT, 1);
-		AG_WindowShow(wDND);
-		icon->xSaved = WIDGET(wDND)->x;
-		icon->ySaved = WIDGET(wDND)->y;
-		icon->wSaved = WIDTH(wDND);
-		icon->hSaved = HEIGHT(wDND);
-	}
-	return (0);
-}
-#endif /* AG_WIDGETS */
-
 /* Unminimize a window */
 void
 AG_WindowUnminimize(AG_Window *win)
@@ -1908,20 +1968,6 @@ AG_WindowUnminimize(AG_Window *win)
 }
 
 #ifdef AG_WIDGETS
-static void
-HideMinimizedIcon(AG_Window *_Nonnull win)
-{
-	AG_Icon *icon;
-
-	if ((icon = win->icon) == NULL) {
-		return;
-	}
-	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
-	if (icon->wDND) {
-		AG_OBJECT_ISA(icon->wDND, "AG_Widget:AG_Window:*");
-		AG_WindowHide(icon->wDND);
-	}
-}
 #endif /* AG_WIDGETS */
 
 /* AGWINDETACH(): General-purpose "detach window" event handler. */
