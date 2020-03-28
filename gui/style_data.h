@@ -72,6 +72,7 @@ const char *agStyleDefault_Data =
 	"text-color#disabled: rgb(170,170,170);\n"
 	"}\n"
 	"AG_MenuView {\n"
+	"padding: 4 8 4 8;\n"
 	"color: rgb(70,70,70);\n"
 	"selection-color: rgb(40,40,110);\n"
 	"color#disabled: rgb(40,40,110);\n"
@@ -88,7 +89,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2015,
+	2033,
 	&agStyleDefault_Data,
 	NULL
 };

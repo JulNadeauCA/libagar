@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,13 +64,13 @@ SelectItem(AG_MenuItem *_Nonnull mi, AG_MenuItem *_Nullable subitem)
 static void
 MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_MenuView *mview = AG_MENUVIEW_SELF();
-	AG_MenuItem *mi = mview->pitem, *miSub;
-	AG_Menu *m = mview->pmenu;
+	AG_MenuView *mv = AG_MENUVIEW_SELF();
+	AG_MenuItem *mi = mv->pitem, *miSub;
+	AG_Menu *m = mv->pmenu;
 	const int mx = AG_INT(1);
 	const int my = AG_INT(2);
-	const int w = WIDTH(mview);
-	int y = mview->tPad, itemh;
+	const int w = WIDTH(mv);
+	int y = WIDGET(mv)->paddingTop, itemh;
 	
 	if (my < 0)
 		return;
@@ -97,13 +97,13 @@ MouseMotion(AG_Event *_Nonnull event)
 		    (miSub->flags & AG_MENU_ITEM_NOSELECT) == 0) {
 			SelectItem(mi, miSub);
 		}
-		AG_Redraw(mview);
+		AG_Redraw(mv);
 		goto out;
 	}
 no_select:
 	if (mi->sel_subitem != NULL &&
 	    mi->sel_subitem->nSubItems == 0) {
-		AG_Redraw(mview);
+		AG_Redraw(mv);
 		SelectItem(mi, NULL);
 	}
 out:
@@ -113,38 +113,35 @@ out:
 static void
 MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_MenuView *mview = AG_MENUVIEW_SELF();
-	AG_Menu *m = mview->pmenu;
+	AG_MenuView *mv = AG_MENUVIEW_SELF();
+	AG_Menu *m = mv->pmenu;
 	const int mx = AG_INT(2);
 	const int my = AG_INT(3);
-	const int w = WIDTH(mview);
-	const int h = HEIGHT(mview);
 
-	if ((mx < 0 || mx >= w || my < 0 || my >= h) &&
+	if ((mx < 0 || mx >= WIDTH(mv) ||
+	     my < 0 || my >= HEIGHT(mv)) &&
 	    !AG_WidgetArea(m, mx,my)) {
 		if (AG_WidgetFindPoint("AG_Widget:AG_MenuView:*",
-		    WIDGET(mview)->rView.x1 + mx,
-		    WIDGET(mview)->rView.y1 + my) == NULL) {
+		    WIDGET(mv)->rView.x1 + mx,
+		    WIDGET(mv)->rView.y1 + my) == NULL)
 			AG_MenuCollapseAll(m);
-		}
 	}
 }
 
 static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_MenuView *mview = AG_MENUVIEW_SELF();
-	AG_MenuItem *miRoot = mview->pitem, *mi;
-	AG_Menu *m = mview->pmenu;
+	AG_MenuView *mv = AG_MENUVIEW_SELF();
+	AG_MenuItem *miRoot = mv->pitem, *mi;
+	AG_Menu *m = mv->pmenu;
 	const int mx = AG_INT(2);
 	const int my = AG_INT(3);
-	const int w = WIDTH(mview);
-	const int h = HEIGHT(mview);
-	int y = mview->tPad, itemh;
+	int y = WIDGET(mv)->paddingTop, itemh;
 
-	if (mx < 0 || mx >= w || my < 0 || my >= h) {
+	if (mx < 0 || mx >= WIDTH(mv) ||
+	    my < 0 || my >= HEIGHT(mv))
 		return;
-	}
+
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 	itemh = m->itemh;
@@ -157,9 +154,8 @@ MouseButtonUp(AG_Event *_Nonnull event)
 		if (mi->poll) {
 			UpdateItem(m, mi);
 		}
-		if ((y += itemh) < my) {
+		if ((y += itemh) < my)
 			continue;
-		}
 
 		mi_state = mi->state;
 		if (mi->stateFn != NULL) {
@@ -182,7 +178,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 #endif
 			AG_MenuCollapseAll(m);
 		}
-		AG_Redraw(mview);
+		AG_Redraw(mv);
 		
 		if (y > my)
 			break;
@@ -231,18 +227,6 @@ SetItemBoolValue(AG_MenuItem *_Nonnull mi)
 }
 
 static void
-OnShow(AG_Event *_Nonnull event)
-{
-	AG_MenuView *mview = AG_MENUVIEW_SELF();
-
-	/* XXX wasteful */
-	if (mview->arrowRight == -1) {
-		mview->arrowRight = AG_WidgetMapSurface(mview,
-		    AG_SurfaceDup(agIconSmallArrowRight.s));
-	}
-}
-
-static void
 OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mv = AG_MENUVIEW_SELF();
@@ -268,28 +252,23 @@ OnFontChange(AG_Event *_Nonnull event)
 static void
 Init(void *_Nonnull obj)
 {
-	AG_MenuView *mview = obj;
+	AG_MenuView *mv = obj;
 
-	WIDGET(mview)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
-	                        AG_WIDGET_UNFOCUSED_BUTTONDOWN |
-	                        AG_WIDGET_UNFOCUSED_BUTTONUP |
-				AG_WIDGET_USE_TEXT;
+	WIDGET(mv)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
+	                     AG_WIDGET_UNFOCUSED_BUTTONDOWN |
+	                     AG_WIDGET_UNFOCUSED_BUTTONUP |
+	                     AG_WIDGET_USE_TEXT;
 
-	mview->pmenu = NULL;
-	mview->pitem = NULL;
-	mview->spIconLbl = 8;
-	mview->spLblArrow = 16;
-	mview->lPad = 8;
-	mview->rPad = 8;
-	mview->tPad = 4;
-	mview->bPad = 4;
-	mview->arrowRight = -1;
+	mv->pmenu = NULL;
+	mv->pitem = NULL;
+	mv->spIconLbl = 8;
+	mv->spLblArrow = 16;
+	mv->arrowRight = -1;
 
-	AG_SetEvent(mview, "mouse-motion", MouseMotion, NULL);
-	AG_SetEvent(mview, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(mview, "mouse-button-up", MouseButtonUp, NULL);
-	AG_AddEvent(mview, "widget-shown", OnShow, NULL);
-	AG_AddEvent(mview, "font-changed", OnFontChange, NULL);
+	AG_SetEvent(mv, "mouse-motion", MouseMotion, NULL);
+	AG_SetEvent(mv, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(mv, "mouse-button-up", MouseButtonUp, NULL);
+	AG_AddEvent(mv, "font-changed", OnFontChange, NULL);
 }
 
 static void
@@ -304,6 +283,7 @@ Draw(void *_Nonnull obj)
 	const int itemh = m->itemh;
 	const int itemh_2 = (itemh >> 1);
 	const int fonth_2 = (font->lineskip >> 1);
+	const int paddingLeft = WIDGET(mv)->paddingLeft;
 
 	if (agDriverSw) {
 		r = WIDGET(mv)->r;
@@ -321,7 +301,7 @@ Draw(void *_Nonnull obj)
 	}
 
 	r.x = 0;
-	r.y = mv->tPad;
+	r.y = WIDGET(mv)->paddingTop;
 	r.w = WIDTH(mv);
 	r.h = itemh;
 	
@@ -331,7 +311,7 @@ Draw(void *_Nonnull obj)
 	TAILQ_FOREACH(mi, &miRoot->subItems, items) {
 		const AG_Surface *Sicon = mi->iconSrc;
 		const int mi_state = mi->state;
-		int x = mv->lPad;
+		int x = paddingLeft;
 
 		if (mi->stateFn != NULL)
 			AG_PostEventByPtr(m, mi->stateFn, "%p", &mi_state);
@@ -377,8 +357,8 @@ Draw(void *_Nonnull obj)
 		if (mi->flags & AG_MENU_ITEM_SEPARATOR) {
 			AG_Color c1 = WCOLOR(mv, FG_COLOR);
 			AG_Color c2 = c1;
-			const int x1 = mv->lPad;
-			const int x2 = WIDTH(mv) - mv->rPad - 1;
+			const int x1 = paddingLeft;
+			const int x2 = WIDTH(mv) - WIDGET(mv)->paddingRight - 1;
 	
 			AG_ColorDarken(&c1, 2);
 			AG_ColorLighten(&c2, 2);
@@ -414,6 +394,10 @@ Draw(void *_Nonnull obj)
 		/* TODO use a vector icon */
 		if (mi->nSubItems > 0) {
 			x += mv->spLblArrow;
+			if (mv->arrowRight == -1) {
+				mv->arrowRight = AG_WidgetMapSurface(mv,
+				    AG_SurfaceDup(agIconSmallArrowRight.s));
+			}
 			AG_WidgetBlitSurface(mv, mv->arrowRight,
 			    x,
 			    r.y + itemh_2-(agIconSmallArrowRight.s->h >> 1)-1);
@@ -458,20 +442,21 @@ GetItemBoolValue(AG_MenuItem *_Nonnull mi)
 static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
-	AG_MenuView *mview = obj;
-	AG_MenuItem *mi = mview->pitem, *item;
-	AG_Menu *m = mview->pmenu;
+	AG_MenuView *mv = obj;
+	AG_MenuItem *mi = mv->pitem, *item;
+	AG_Menu *m = mv->pmenu;
 	const int itemh = m->itemh;
+	const int paddingHoriz = WIDGET(mv)->paddingLeft +
+	                         WIDGET(mv)->paddingRight;
 
 	r->w = 0;
-	r->h = mview->tPad + mview->bPad;
+	r->h = WIDGET(mv)->paddingTop + WIDGET(mv)->paddingBottom;
 	
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 	
 	TAILQ_FOREACH(item, &mi->subItems, items) {
-		int wReq = mview->lPad + mview->rPad;
-		int wLbl;
+		int wReq = paddingHoriz, wLbl;
 
 		if (item->poll)
 			UpdateItem(m, item);
@@ -480,13 +465,13 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 			wReq += item->iconSrc->w;
 		}
 		if (mi->flags & AG_MENU_ITEM_ICONS)
-			wReq += itemh + mview->spIconLbl;
+			wReq += itemh + mv->spIconLbl;
 	
 		AG_TextSize(item->text, &wLbl, NULL);
 		wReq += wLbl;
 
 		if (item->nSubItems > 0) {
-			wReq += mview->spLblArrow + agIconSmallArrowRight.s->w;
+			wReq += mv->spLblArrow + agIconSmallArrowRight.s->w;
 		}
 		if (wReq > r->w) {
 			r->w = wReq;
@@ -500,7 +485,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
-	if (a->w < 4 || a->h < 4) {
+	if (a->w < WIDGET(obj)->paddingLeft + WIDGET(obj)->paddingRight ||
+	    a->h < WIDGET(obj)->paddingTop + WIDGET(obj)->paddingBottom) {
 		return (-1);
 	}
 	return (0);

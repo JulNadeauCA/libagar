@@ -73,6 +73,7 @@ AG_Menu {
 	text-color#disabled: rgb(170,170,170);
 }
 AG_MenuView {
+	padding: 4 8 4 8;
 	color: rgb(70,70,70);
 	selection-color: rgb(40,40,110);
 	color#disabled: rgb(40,40,110);
