@@ -453,7 +453,7 @@ SK_DimensionEdit(void *p, AG_Widget *box, SK_View *skv)
 	msb = AG_MSpinbuttonNew(box, 0, ",", "Padding: ");
 	AG_BindInt(msb, "xvalue", &dim->xPad);
 	AG_BindInt(msb, "yvalue", &dim->yPad);
-	mfsb = AG_MFSpinbuttonNew(box, 0, NULL, ",", "Position: ");
+	mfsb = AG_MFSpinbuttonNew(box, 0, ",", "Position: ");
 #if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
 	AG_BindFloat(mfsb, "xvalue", &dim->vLbl.x);
 	AG_BindFloat(mfsb, "yvalue", &dim->vLbl.y);

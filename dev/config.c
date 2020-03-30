@@ -167,6 +167,11 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		AG_NumericalNewIntR(tab, numFl, "%",
 		    _("Screenshot (JPEG) quality: "),
 		    &agScreenshotQuality, 1, 100);
+#ifdef AG_DEBUG
+		AG_NumericalNewIntR(tab, numFl, NULL,
+		   _("Debug level: "),
+		    &agDebugLvl, 0, 255);
+#endif
 	}
 
 	tab = AG_NotebookAdd(nb, _("Keyboard"), AG_BOX_VERT);
@@ -195,14 +200,6 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		    &agMouseSpinDelay, 1, 10000);
 		AG_NumericalNewIntR(tab, numFl, "ms", _("Mouse spin interval: "),
 		    &agMouseSpinIval, 1, 10000);
-	}
-
-	tab = AG_NotebookAdd(nb, _("Debug"), AG_BOX_VERT);
-	{
-#ifdef AG_DEBUG
-		AG_NumericalNewIntR(tab, numFl, NULL, _("Agar Debug level: "),
-		    &agDebugLvl, 0, 255);
-#endif
 	}
 
 	hb = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);

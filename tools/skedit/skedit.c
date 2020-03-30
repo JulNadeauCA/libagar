@@ -57,6 +57,15 @@ DoDebugger(void)
 }
 #endif /* AG_DEBUG and AG_TIMERS */
 
+static void
+DoStyleEditor(void)
+{
+	AG_Window *win;
+
+	if ((win = AG_StyleEditor(agWindowFocused)) != NULL)
+		AG_WindowShow(win);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -116,7 +125,10 @@ main(int argc, char *argv[])
 	AG_BindStdGlobalKeys();
 #if defined(AG_DEBUG) && defined(AG_TIMERS)
 	AG_BindGlobalKey(AG_KEY_F7, AG_KEYMOD_ANY, DoDebugger);
+	AG_BindGlobalKey(AG_KEY_D,  AGSI_CMD_MOD,  DoDebugger);
 #endif
+	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_NONE, DoStyleEditor);
+	AG_BindGlobalKey(AG_KEY_C,  AGSI_CMD_MOD,   DoStyleEditor);
 
 	/* Initialize Agar-Math and Agar-SK */
 	M_InitSubsystem();
