@@ -410,28 +410,8 @@ TestGUI(void *obj, AG_Window *win)
 		AG_TlistAddS(ucom->list, NULL, text);
 	}
 
-	/*
-	 * Numerical binds to an integral or floating-point number.
-	 * It can also provides built-in unit conversion (see AG_Units(3)).
-	 */
-	{
-		AG_Numerical *num;
-		static float myFloat = 1.0f;
-		static int myInt = 50;
-
-		num = AG_NumericalNewS(vPane->div[1],
-		    AG_NUMERICAL_EXCL | AG_NUMERICAL_HFILL,
-		    "cm", "Numerical: ");
-		AG_BindFloat(num, "value", &myFloat);
-		AG_SetFloat(num, "inc", 1.0f);
-
-		num = AG_NumericalNewS(vPane->div[1],
-		    AG_NUMERICAL_EXCL | AG_NUMERICAL_HFILL,
-		    NULL, "Integer: ");
-		AG_BindInt(num, "value", &myInt);
-		AG_SetInt(num, "min", -100);
-		AG_SetInt(num, "max", +100);
-	}
+	/* Create a horizontal separator */
+	AG_SeparatorNewHoriz(vPane->div[1]);
 
 	/*
 	 * Textbox is a single or multiline text edition widget. It can bind
@@ -468,6 +448,46 @@ TestGUI(void *obj, AG_Window *win)
 
 		AG_TextboxBindText(tbox, ti->textElement);
 #endif
+	}
+
+	/* Create a horizontal separator */
+	AG_SeparatorNewHoriz(vPane->div[1]);
+
+	/*
+	 * Numerical binds to an integral or floating-point number.
+	 * It can also provides built-in unit conversion (see AG_Units(3)).
+	 */
+	{
+		AG_Numerical *num;
+		static float myFloat = 1.0f;
+		static int myInt = 50;
+
+		num = AG_NumericalNewS(vPane->div[1],
+		    AG_NUMERICAL_EXCL | AG_NUMERICAL_HFILL,
+		    "cm", "Numerical (flt): ");
+		AG_BindFloat(num, "value", &myFloat);
+		AG_SetFloat(num, "inc", 1.0f);
+
+		num = AG_NumericalNewS(vPane->div[1],
+		    AG_NUMERICAL_EXCL | AG_NUMERICAL_HFILL,
+		    NULL, "Numerical (int): ");
+		AG_BindInt(num, "value", &myInt);
+		AG_SetInt(num, "min", -100);
+		AG_SetInt(num, "max", +100);
+	}
+
+	/*
+	 * MSpinbutton is a two-dimensional spinbutton which binds to
+	 * two integer values "xvalue" and "yvalue".
+	 */
+	{
+		AG_MSpinbutton *msb;
+		static int myX=0, myY=0;
+
+		msb = AG_MSpinbuttonNew(vPane->div[1], AG_MSPINBUTTON_HFILL,
+		    ",", "MSpinbutton:");
+		AG_BindInt(msb, "xvalue", &myX);
+		AG_BindInt(msb, "yvalue", &myY);
 	}
 
 	/* Create a horizontal separator */

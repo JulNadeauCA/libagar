@@ -9,8 +9,13 @@
 
 #include <agar/gui/begin.h>
 
-#define AG_MSPINBUTTON_NOHFILL	0x01
-#define AG_MSPINBUTTON_VFILL	0x02
+#define AG_MSPINBUTTON_HFILL 0x01
+#define AG_MSPINBUTTON_VFILL 0x02
+
+#define AG_MSPINBUTTON_UP    0
+#define AG_MSPINBUTTON_LEFT  1
+#define AG_MSPINBUTTON_DOWN  2
+#define AG_MSPINBUTTON_RIGHT 3
 
 typedef struct ag_mspinbutton {
 	struct ag_widget wid;			/* AG_Widget -> AG_MSpinbutton */
@@ -22,10 +27,7 @@ typedef struct ag_mspinbutton {
 	int writeable;				/* 0 = read-only */
 	char inTxt[64];				/* Input text buffer */
 	AG_Textbox *_Nonnull input;		/* Input field */
-	AG_Button *_Nonnull xincbu;		/* X-increment button */
-	AG_Button *_Nonnull xdecbu;		/* X-decrement button */
-	AG_Button *_Nonnull yincbu;		/* Y-increment button */
-	AG_Button *_Nonnull ydecbu;		/* Y-decrement button */
+	AG_Button *_Nonnull btn[4];		/* Directional buttons */
 } AG_MSpinbutton;
 
 #define AGMSPINBUTTON(obj)            ((AG_MSpinbutton *)(obj))

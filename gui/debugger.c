@@ -399,20 +399,17 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		AG_SeparatorNewHoriz(nt);
 
-		msb = AG_MSpinbuttonNew(nt, AG_MSPINBUTTON_NOHFILL, "x",
-		                        _("Size: "));
+		msb = AG_MSpinbuttonNew(nt, 0, "x", _("Size: "));
 		AG_BindInt(msb, "xvalue", &tgt->w);
 		AG_BindInt(msb, "yvalue", &tgt->h);
 		AG_WidgetDisable(msb);
 
-		msb = AG_MSpinbuttonNew(nt, AG_MSPINBUTTON_NOHFILL, ",",
-		                        _("Position (parent): "));
+		msb = AG_MSpinbuttonNew(nt, 0, ",", _("Position (parent): "));
 		AG_BindInt(msb, "xvalue", &tgt->x);
 		AG_BindInt(msb, "yvalue", &tgt->y);
 		AG_WidgetDisable(msb);
 
-		msb = AG_MSpinbuttonNew(nt, AG_MSPINBUTTON_NOHFILL, ",",
-		                        _("Position (display): "));
+		msb = AG_MSpinbuttonNew(nt, 0, ",", _("Position (display): "));
 		AG_BindInt(msb, "xvalue", &tgt->rView.x1);
 		AG_BindInt(msb, "yvalue", &tgt->rView.y1);
 

@@ -7,9 +7,13 @@
 #include <agar/gui/textbox.h>
 #include <agar/gui/button.h>
 #include <agar/gui/ucombo.h>
-#include <agar/gui/units.h>
 
 #include <agar/gui/begin.h>
+
+#define AG_MFSPINBUTTON_UP    0
+#define AG_MFSPINBUTTON_LEFT  1
+#define AG_MFSPINBUTTON_DOWN  2
+#define AG_MFSPINBUTTON_RIGHT 3
 
 typedef struct ag_mfspinbutton {
 	struct ag_widget wid;		/* AG_Widget -> AG_MFSpinbutton */
@@ -24,14 +28,9 @@ typedef struct ag_mfspinbutton {
 	double inc;			/* Increment for buttons */
 	char format[32];		/* Printing format */
 	const char *_Nonnull sep;	/* x/y field separator */
-	const AG_Unit *_Nonnull unit;	/* Conversion unit */
 	char inTxt[128];		/* Input text buffer */
 	AG_Textbox *_Nonnull input;	/* Input field */
-	AG_UCombo  *_Nullable units;	/* Unit selector */
-	AG_Button  *_Nonnull xincbu;	/* X-increment button */
-	AG_Button  *_Nonnull xdecbu;	/* X-decrement button */
-	AG_Button  *_Nonnull yincbu;	/* Y-increment button */
-	AG_Button  *_Nonnull ydecbu;	/* Y-decrement button */
+	AG_Button *_Nonnull btn[4];	/* Direction buttons */
 	AG_Timer updateTo;
 } AG_MFSpinbutton;
 
@@ -48,7 +47,6 @@ __BEGIN_DECLS
 extern AG_WidgetClass agMFSpinbuttonClass;
 
 AG_MFSpinbutton	*_Nonnull AG_MFSpinbuttonNew(void *_Nullable, Uint,
-                                             const char *_Nullable,
                                              const char *_Nonnull,
                                              const char *_Nullable);
 
@@ -59,7 +57,6 @@ void AG_MFSpinbuttonSetMin(AG_MFSpinbutton *_Nonnull, double);
 void AG_MFSpinbuttonSetMax(AG_MFSpinbutton *_Nonnull, double);
 void AG_MFSpinbuttonSetRange(AG_MFSpinbutton *_Nonnull, double,double);
 void AG_MFSpinbuttonSetIncrement(AG_MFSpinbutton *_Nonnull, double);
-void AG_MFSpinbuttonSelectUnit(AG_MFSpinbutton *_Nonnull, const char *_Nonnull);
 void AG_MFSpinbuttonSetPrecision(AG_MFSpinbutton *_Nonnull, const char *_Nonnull,
                                  int);
 void AG_MFSpinbuttonSetWriteable(AG_MFSpinbutton *_Nonnull, int);

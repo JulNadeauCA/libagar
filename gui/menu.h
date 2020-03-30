@@ -132,7 +132,6 @@ typedef struct ag_menu_view {
 
 	int spIconLbl;                  /* Icon and label spacing */
 	int spLblArrow;                 /* Label and submenu arrow spacing */
-	int lPad, rPad, tPad, bPad;     /* Padding in pixels */
 	int arrowRight;                 /* Right arrow surface handle */
 	Uint32 _pad;
 } AG_MenuView;
