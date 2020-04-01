@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2012-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -130,7 +130,7 @@ AG_LoadStyleSheet(void *obj, const char *path)
 	buf[fileSize] = '\0';
 	s = buf;
 	while ((line = Strsep(&s, "\n")) != NULL) {
-		char *c = &line[0], *cKey, *cVal, *t, *cComment;
+		char *c = &line[0], *cKey, *cVal, *t, *cComment, *cEp;
 		AG_StyleEntry *cssEnt;
 		int len;
 	
@@ -211,6 +211,9 @@ AG_LoadStyleSheet(void *obj, const char *path)
 		}
 		Strlcpy(cssEnt->key, cKey, sizeof(cssEnt->key));
 		Strlcpy(cssEnt->value, cVal, sizeof(cssEnt->value));
+		if ((cEp = strchr(cssEnt->value, ';')) != NULL) {
+			*cEp = '\0';
+		}
 		if (cssBlk == NULL) {
 			AG_SetError(_("Entry is not inside {}: \"%s\""),
 			    cssEnt->key);
