@@ -120,7 +120,6 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 	AG_NotebookTab *tab;
 	const Uint numFl = AG_NUMERICAL_HFILL;
 
-
 	if ((win = AG_WindowNewNamedS(0, "DEV_Config")) == NULL) {
 		return (NULL);
 	}
@@ -164,12 +163,20 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 
 		AG_SeparatorNewHoriz(tab);
 
-		AG_NumericalNewIntR(tab, numFl, "%",
-		    _("Screenshot (JPEG) quality: "),
+		AG_NumericalNewIntR(tab, numFl, "px", _("Tab width: "),
+		    &agTextTabWidth, 0, 1000);
+
+		AG_NumericalNewIntR(tab, numFl, "ms", _("Cursor Blink Rate: "),
+		    &agTextBlinkRate, 0, 500);
+
+		AG_SeparatorNewHoriz(tab);
+
+		AG_NumericalNewIntR(tab, numFl, "%", _("Screenshot Quality: "),
 		    &agScreenshotQuality, 1, 100);
+
+		AG_SeparatorNewHoriz(tab);
 #ifdef AG_DEBUG
-		AG_NumericalNewIntR(tab, numFl, NULL,
-		   _("Debug level: "),
+		AG_NumericalNewIntR(tab, numFl, NULL, _("Debug level: "),
 		    &agDebugLvl, 0, 255);
 #endif
 	}
@@ -184,22 +191,27 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		    &agAutocompleteDelay, 1, 5000);
 		AG_NumericalNewIntR(tab, numFl, "ms", _("Autocomplete rate: "),
 		    &agAutocompleteRate, 1, 1000);
-#ifdef AG_UNICODE
+
 		AG_SeparatorNewHoriz(tab);
-		AG_CheckboxNewInt(tab, 0, _("Input text composition"),
+
+		AG_CheckboxNewInt(tab, 0, _("Unicode character composition"),
 		    &agTextComposition);
-#endif
 	}
 
 	tab = AG_NotebookAdd(nb, _("Mouse"), AG_BOX_VERT);
 	{
-		AG_NumericalNewIntR(tab, numFl, "ms", _("Double click threshold: "),
+		AG_NumericalNewIntR(tab, numFl, "ms",
+		    _("Double click threshold: "),
 		    &agMouseDblclickDelay, 1, 10000);
+
 		AG_SeparatorNewHoriz(tab);
+
 		AG_NumericalNewIntR(tab, numFl, "ms", _("Mouse spin delay: "),
 		    &agMouseSpinDelay, 1, 10000);
 		AG_NumericalNewIntR(tab, numFl, "ms", _("Mouse spin interval: "),
 		    &agMouseSpinIval, 1, 10000);
+		AG_NumericalNewIntR(tab, numFl, "ms", _("Mouse scroll interval: "),
+		    &agMouseScrollIval, 1, 10000);
 	}
 
 	hb = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
