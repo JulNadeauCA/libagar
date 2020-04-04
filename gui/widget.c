@@ -205,6 +205,7 @@ static void Apply_Font_Style(Uint *_Nonnull, Uint, const char *_Nonnull);
 static void Apply_Font_Stretch(Uint *_Nonnull, Uint, const char *_Nonnull);
 static void Apply_Padding(AG_Widget *_Nonnull, const char *_Nonnull);
 static void Inherit_Padding(AG_Widget *_Nonnull, char *_Nonnull, AG_Size);
+static void Inherit_Margin(AG_Widget *_Nonnull, char *_Nonnull, AG_Size);
 static void Apply_Margin(AG_Widget *_Nonnull, const char *_Nonnull);
 static void Apply_Spacing(AG_Widget *_Nonnull, const char *_Nonnull);
 
@@ -510,6 +511,7 @@ AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
 	AG_RedrawTie *rt;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	AG_ObjectLock(wid);
 
 	TAILQ_FOREACH(rt, &wid->pvt.redrawTies, redrawTies) {
 		if (rt->type == AG_REDRAW_ON_CHANGE &&
@@ -519,7 +521,7 @@ AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
 	}
 	if (rt) {
 		AG_ResetTimer(wid, &rt->to, refresh_ms);
-		return;
+		goto out;
 	}
 	
 	rt = Malloc(sizeof(AG_RedrawTie));
@@ -538,6 +540,8 @@ AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
 	} else {
 		/* Fire from OnShow() */
 	}
+out:
+	AG_ObjectUnlock(wid);
 }
 
 /* Arrange for an unconditional redraw at a periodic interval. */
@@ -548,6 +552,7 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 	AG_RedrawTie *rt;
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	AG_ObjectLock(wid);
 
 	if (refresh_ms == -1) {
 		TAILQ_FOREACH(rt, &wid->pvt.redrawTies, redrawTies) {
@@ -559,7 +564,7 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 			AG_DelTimer(wid, &rt->to);
 			free(rt);
 		}
-		return;
+		goto out;
 	}
 
 	rt = Malloc(sizeof(AG_RedrawTie));
@@ -574,6 +579,8 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 	} else {
 		/* Fire from OnShow() */
 	}
+out:
+	AG_ObjectUnlock(wid);
 }
 
 /* Default event handler for "key-down" (for widgets using Actions). */
@@ -1016,9 +1023,11 @@ AG_WidgetSetFocusable(void *obj, int enable)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	prev = (wid->flags & AG_WIDGET_FOCUSABLE);
 	AG_SETFLAGS(wid->flags, AG_WIDGET_FOCUSABLE, enable);
 	Debug_Focus(wid, "SetFocusable: %d => %d\n", prev, enable);
+
 	AG_ObjectUnlock(wid);
 	return (prev);
 }
@@ -1031,12 +1040,14 @@ AG_WidgetEnable(void *obj)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	/* TODO make the "disabled" flag a (locklessly settable) int. */
 	if (wid->flags & AG_WIDGET_DISABLED) {
 		wid->flags &= ~(AG_WIDGET_DISABLED);
 		AG_PostEvent(wid, "widget-enabled", NULL);
 		AG_Redraw(wid);
 	}
+
 	AG_ObjectUnlock(wid);
 }
 
@@ -1048,12 +1059,14 @@ AG_WidgetDisable(void *obj)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	/* TODO make the "disabled" flag a (locklessly settable) int. */
 	if (!(wid->flags & AG_WIDGET_DISABLED)) {
 		wid->flags |= AG_WIDGET_DISABLED;
 		AG_PostEvent(wid, "widget-disabled", NULL);
 		AG_Redraw(wid);
 	}
+
 	AG_ObjectUnlock(wid);
 }
 
@@ -1065,6 +1078,7 @@ AG_WidgetForwardFocus(void *obj, void *objFwd)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	if (objFwd) {
 		AG_OBJECT_ISA(objFwd, "AG_Widget:*");
 		wid->flags |= AG_WIDGET_FOCUSABLE;
@@ -1075,6 +1089,7 @@ AG_WidgetForwardFocus(void *obj, void *objFwd)
 		wid->focusFwd = NULL;
 		Debug_Focus(wid, "ForwardFocus(NULL)\n");
 	}
+
 	AG_ObjectUnlock(wid);
 }
 
@@ -1210,6 +1225,7 @@ AG_WidgetUnfocus(void *p)
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	if ((focusFwd = wid->focusFwd) != NULL) {
 		AG_OBJECT_ISA(focusFwd, "AG_Widget:*");
 		AG_ObjectLock(focusFwd);
@@ -1221,9 +1237,9 @@ AG_WidgetUnfocus(void *p)
 	if (wid->flags & AG_WIDGET_FOCUSED) {
 		UnfocusWidget(wid);
 	}
-	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		AG_WidgetUnfocus(cwid);
-	}
+
 	AG_ObjectUnlock(wid);
 }
 
@@ -1266,8 +1282,10 @@ AG_WidgetFocus(void *obj)
 		   !(focusFwd->flags & AG_WIDGET_FOCUSED)) {
 			AG_OBJECT_ISA(focusFwd, "AG_Widget:*");
 			AG_ObjectLock(focusFwd);
+
 			Debug_Focus(wid, "Forward focus to %s\n", OBJECT(focusFwd)->name);
 			FocusWidget(focusFwd);
+
 			AG_ObjectUnlock(focusFwd);
 			goto out;
 		}
@@ -1322,6 +1340,7 @@ FocusWidget(AG_Widget *_Nonnull wid)
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	wid->flags |= AG_WIDGET_FOCUSED;
+
 	if ((win = wid->window) != NULL) {
 		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		AG_PostEvent(wid, "widget-gainfocus", NULL);
@@ -1332,6 +1351,7 @@ FocusWidget(AG_Widget *_Nonnull wid)
 	}
 }
 
+/* Size requisition function */
 static void
 SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
@@ -1339,6 +1359,7 @@ SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 	r->h = 0;
 }
 
+/* Size allocation callback */
 static int
 SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 {
@@ -1346,10 +1367,11 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 }
 
 /*
- * Invoke the size_request() of a widget and return the requested width
- * and height (in pixels) into r.
+ * Size Requisition: Invoke the size_request() of a widget and return
+ * the requested width and height (in pixels) into r.
  *
- * If the size_request() field is NULL, inherit that of the parent class.
+ * If the widget class defines a NULL "size_request" field then inherit the
+ * size_request() operation of the parent class.
  */
 void
 AG_WidgetSizeReq(void *obj, AG_SizeReq *r)
@@ -1387,11 +1409,13 @@ AG_WidgetSizeReq(void *obj, AG_SizeReq *r)
 }
 
 /*
- * Invoke the size_allocate() of a widget, passing it the final allocated
- * coordinates (a->x, a->y) and size (a->w, a->h).
+ * Size allocation callback. Invoke the size_allocate() of a widget,
+ * passing it the final allocated coordinates (x, y) and size (w, h).
  * 
- * If the size is negative, normalize it to (0,0) and set UNDERSIZE flag.
- * If the size_request() field is NULL, inherit that of the parent class.
+ * If the size is negative, normalize it to (0, 0) and set UNDERSIZE flag.
+ *
+ * If the widget class defines a NULL "size_allocate" field then inherit the
+ * size_allocate() operation of the parent class.
  */
 void
 AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
@@ -1401,6 +1425,7 @@ AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	useText = (wid->flags & AG_WIDGET_USE_TEXT);
 	if (useText) {
 		AG_PushTextState();
@@ -1524,6 +1549,7 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
+
 	wid->flags &= ~(AG_WIDGET_UPDATE_WINDOW);
 
 	if (wid->drv && AGDRIVER_MULTIPLE(wid->drv) &&
@@ -1601,8 +1627,10 @@ AG_WidgetShow(void *obj)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	wid->flags &= ~(AG_WIDGET_HIDE);
 	AG_PostEvent(wid, "widget-shown", NULL);
+
 	if (wid->window) {
 		AG_WindowUpdate(wid->window);
 	}
@@ -1617,8 +1645,10 @@ AG_WidgetHide(void *obj)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	wid->flags |= AG_WIDGET_HIDE;
 	AG_PostEvent(wid, "widget-hidden", NULL);
+
 	if (wid->window) {
 		AG_WindowUpdate(wid->window);
 	}
@@ -1765,13 +1795,16 @@ AG_WidgetSurface(void *obj)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_LockVFS(wid);
+
 	if (wid->drvOps->renderToSurface == NULL) {
 		AG_SetErrorS(_("Render-to-surface is not supported"));
 		rv = -1;
 	} else {
 		rv = wid->drvOps->renderToSurface(wid->drv, wid, &S);
 	}
+
 	AG_UnlockVFS(wid);
+
 	return (rv == 0) ? S : NULL;
 }
 
@@ -1856,17 +1889,18 @@ AG_WidgetDraw(void *p)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	flags = wid->flags;
 
-	if (!(wid->flags & AG_WIDGET_VISIBLE) ||
-	     (wid->flags & (AG_WIDGET_HIDE | AG_WIDGET_UNDERSIZE)) ||
+	if (!(flags & AG_WIDGET_VISIBLE) ||
+	     (flags & (AG_WIDGET_HIDE | AG_WIDGET_UNDERSIZE)) ||
 	     WIDGET_OPS(wid)->draw == NULL)
 		goto out;
 
-	if (flags & AG_WIDGET_DISABLED) {       wid->state = AG_DISABLED_STATE; }
-	else if (flags & AG_WIDGET_MOUSEOVER) { wid->state = AG_HOVER_STATE; }
-	else if (flags & AG_WIDGET_FOCUSED) {   wid->state = AG_FOCUSED_STATE; }
-	else {                                  wid->state = AG_DEFAULT_STATE; }
+	if (flags & AG_WIDGET_DISABLED)       { wid->state = AG_DISABLED_STATE; }
+	else if (flags & AG_WIDGET_MOUSEOVER) { wid->state = AG_HOVER_STATE;    }
+	else if (flags & AG_WIDGET_FOCUSED)   { wid->state = AG_FOCUSED_STATE;  }
+	else                                  { wid->state = AG_DEFAULT_STATE;  }
 
 	if (flags & AG_WIDGET_USE_TEXT) {
 		AG_PushTextState();
@@ -1908,6 +1942,7 @@ AG_WidgetMapSurface(void *obj, AG_Surface *S)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	n = wid->nSurfaces;
 	for (i = 0; i < n; i++) {
 		if (wid->surfaces[i] == NULL) {
@@ -1938,6 +1973,7 @@ AG_WidgetMapSurface(void *obj, AG_Surface *S)
 		Debug(wid, "Map surface %d -> [ NULL ]\n", id);
 #endif
 	}
+
 	AG_ObjectUnlock(wid);
 	return (id);
 }
@@ -1972,6 +2008,7 @@ void
 AG_WidgetUnmapSurface(void *obj, int id)
 {
 	AG_OBJECT_ISA(obj, "AG_Widget:*");
+
 	AG_WidgetReplaceSurface(obj, id, NULL);
 }
 
@@ -1986,6 +2023,7 @@ void
 AG_WidgetBlitSurface(void *obj, int id, int x, int y)
 {
 	AG_OBJECT_ISA(obj, "AG_Widget:*");
+
 	AG_WidgetBlitFrom(obj, id, NULL, x,y);
 }
 
@@ -2001,6 +2039,7 @@ AG_WidgetReplaceSurface(void *obj, int id, AG_Surface *S)
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 #ifdef AG_DEBUG
 	if (id < 0 || id >= wid->nSurfaces)
 		AG_FatalError("No such surface");
@@ -2035,6 +2074,7 @@ AG_WidgetReplaceSurface(void *obj, int id, AG_Surface *S)
 			wid->textures[id] = 0;
 		}
 	}
+
 	AG_ObjectUnlock(wid);
 }
 
@@ -2334,6 +2374,44 @@ Inherit_Padding(AG_Widget *wid, char *buf, AG_Size bufSize)
 static void
 Apply_Margin(AG_Widget *wid, const char *spec)
 {
+	char buf[16], *s=&buf[0], *sTop, *sRight;
+
+	if (Strcasecmp(spec, "inherit") == 0) {
+		Inherit_Margin(OBJECT(wid)->parent, buf, sizeof(buf));
+	} else {
+		Strlcpy(buf, spec, sizeof(buf));
+	}
+
+	if ((sTop = Strsep(&s, " ")) == NULL)
+		return;
+
+	if ((sRight = Strsep(&s, " ")) == NULL) {           /* "margin: X" */
+		const int val = atoi(sTop);
+
+		wid->marginTop    = val;
+		wid->marginRight  = val;
+		wid->marginBottom = val;
+		wid->marginLeft   = val;
+	} else {                                     /* "margin: T R [B L]" */
+		const char *sBottom = Strsep(&s, " ");
+		const char *sLeft   = Strsep(&s, " ");
+
+		wid->marginTop    = atoi(sTop);
+		wid->marginRight  = atoi(sRight);
+		wid->marginBottom = (sBottom) ? atoi(sBottom) : 0;
+		wid->marginLeft   = (sLeft)   ? atoi(sLeft)   : 0;
+	}
+}
+
+static void
+Inherit_Margin(AG_Widget *wid, char *buf, AG_Size bufSize)
+{
+	if (AG_Defined(wid, "margin")) {
+		AG_GetString(wid, "margin", buf, sizeof(buf));
+
+		if (Strcasecmp(buf, "inherit") == 0)
+			Inherit_Margin(OBJECT(wid)->parent, buf, sizeof(buf));
+	}
 }
 
 static void
@@ -2418,15 +2496,16 @@ AG_WidgetCopyStyle(void *objDst, void *objSrc)
 	AG_OBJECT_ISA(widDst, "AG_Widget:*");
 	AG_ObjectLock(widSrc);
 	AG_ObjectLock(widDst);
+
 	Debug_Mute(debugLvlSave);
 	for (s = &agStyleAttributes[0]; *s != NULL; s++) {
 		if ((V = AG_AccessVariable(widSrc, *s)) != NULL) {
 			AG_SetString(widDst, *s, V->data.s);
 			AG_UnlockVariable(V);
 		}
-
 	}
 	Debug_Unmute(debugLvlSave);
+
 	AG_ObjectUnlock(widDst);
 	AG_ObjectUnlock(widSrc);
 
@@ -2467,6 +2546,7 @@ AG_SetStyleF(void *obj, const char *which, const char *fmt, ...)
 	va_end(ap);
 
 	AG_SetStyle(wid, which, val);
+
 	free(val);
 }
 

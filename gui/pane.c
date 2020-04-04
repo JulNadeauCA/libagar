@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -112,7 +112,9 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 	AG_SizeAlloc a;
 	int rv;
 
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	AG_ObjectLock(pa);
+
 	if (pa->rx == -1) {		/* Geometry not yet allocated */
 		pa->rx = dx;
 		pa->dx = dx;
@@ -128,6 +130,7 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 		WIDGET(pa)->flags |= AG_WIDGET_UPDATE_WINDOW;
 		pa->rx = rv;
 	}
+
 	AG_ObjectUnlock(pa);
 	AG_Redraw(pa);
 	return (rv);
@@ -139,7 +142,9 @@ AG_PaneMoveDividerPct(AG_Pane *pa, int pct)
 {
 	int rv;
 
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	AG_ObjectLock(pa);
+
 	if (pa->rx == -1) {		/* Geometry not yet allocated */
 		pa->rxPct = pct;
 		rv = 0;
@@ -147,6 +152,7 @@ AG_PaneMoveDividerPct(AG_Pane *pa, int pct)
 		int size = (pa->type == AG_PANE_HORIZ) ? WIDTH(pa) : HEIGHT(pa);
 		rv = AG_PaneMoveDivider(pa, pct*size/100);
 	}
+
 	AG_ObjectUnlock(pa);
 	return (rv);
 }
@@ -258,11 +264,6 @@ Init(void *_Nonnull obj)
 	AG_SetEvent(pa, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(pa, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(pa, "mouse-motion", MouseMotion, NULL);
-#if 0
-	AG_BindInt(pa, "dmoving", &pa->dmoving);
-	AG_BindInt(pa, "dx", &pa->dx);
-	AG_BindInt(pa, "rx", &pa->rx);
-#endif
 }
 
 /*
@@ -273,6 +274,8 @@ Init(void *_Nonnull obj)
 void
 AG_PaneSetDividerWidth(AG_Pane *pa, int wDiv)
 {
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
+
 	if (wDiv == -1) {
 		pa->flags &= ~(AG_PANE_OVERRIDE_WDIV);
 		pa->wDiv = 0;
@@ -286,12 +289,14 @@ AG_PaneSetDividerWidth(AG_Pane *pa, int wDiv)
 void
 AG_PaneSetDivisionPacking(AG_Pane *pa, int which, enum ag_box_type packing)
 {
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	AG_BoxSetType(pa->div[which], packing);
 }
 
 void
 AG_PaneSetDivisionMin(AG_Pane *pa, int which, int wMin, int hMin)
 {
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	pa->wMin[which] = wMin;
 	pa->hMin[which] = hMin;
 }
@@ -299,7 +304,9 @@ AG_PaneSetDivisionMin(AG_Pane *pa, int which, int wMin, int hMin)
 void
 AG_PaneAttachBox(AG_Pane *pa, int which, AG_Box *box)
 {
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	AG_ObjectLock(pa);
+	AG_OBJECT_ISA(box, "AG_Widget:AG_Box:*");
 	AG_ObjectLock(box);
 
 	/* XXX */
@@ -321,9 +328,12 @@ AG_PaneAttachBox(AG_Pane *pa, int which, AG_Box *box)
 void
 AG_PaneAttachBoxes(AG_Pane *pa, AG_Box *box1, AG_Box *box2)
 {
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	AG_ObjectLock(pa);
+
 	AG_PaneAttachBox(pa, 0, box1);
 	AG_PaneAttachBox(pa, 1, box2);
+
 	AG_ObjectUnlock(pa);
 	AG_Redraw(pa);
 }
@@ -331,6 +341,7 @@ AG_PaneAttachBoxes(AG_Pane *pa, AG_Box *box1, AG_Box *box2)
 void
 AG_PaneResizeAction(AG_Pane *pa, enum ag_pane_resize_action ra)
 {
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	pa->resizeAction = ra;
 }
 

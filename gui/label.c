@@ -359,6 +359,7 @@ Init(void *_Nonnull obj)
 void
 AG_LabelSizeHint(AG_Label *lbl, Uint nLines, const char *text)
 {
+	AG_OBJECT_ISA(lbl, "AG_Widget:AG_Label:*");
 	AG_TextSize(text, &lbl->wPre, NULL);
 	lbl->hPre = (nLines > 0) ? nLines : 1;
 }
@@ -367,8 +368,8 @@ AG_LabelSizeHint(AG_Label *lbl, Uint nLines, const char *text)
 void
 AG_LabelJustify(AG_Label *lbl, enum ag_text_justify justify)
 {
+	AG_OBJECT_ISA(lbl, "AG_Widget:AG_Label:*");
 	lbl->justify = justify;
-
 	AG_Redraw(lbl);
 }
 
@@ -376,8 +377,8 @@ AG_LabelJustify(AG_Label *lbl, enum ag_text_justify justify)
 void
 AG_LabelValign(AG_Label *lbl, enum ag_text_valign valign)
 {
+	AG_OBJECT_ISA(lbl, "AG_Widget:AG_Label:*");
 	lbl->valign = valign;
-
 	AG_Redraw(lbl);
 }
 
@@ -387,6 +388,7 @@ AG_LabelText(AG_Label *lbl, const char *fmt, ...)
 {
 	va_list ap;
 
+	AG_OBJECT_ISA(lbl, "AG_Widget:AG_Label:*");
 	AG_ObjectLock(lbl);
 
 	Free(lbl->text);
@@ -405,6 +407,7 @@ AG_LabelText(AG_Label *lbl, const char *fmt, ...)
 void
 AG_LabelTextS(AG_Label *lbl, const char *s)
 {
+	AG_OBJECT_ISA(lbl, "AG_Widget:AG_Label:*");
 	AG_ObjectLock(lbl);
 
 	Free(lbl->text);

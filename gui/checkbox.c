@@ -252,7 +252,7 @@ Draw(void *_Nonnull obj)
 	if (AG_WidgetIsFocused(cb))
 		AG_DrawRectOutline(cb, &WIDGET(cb)->r, &WCOLOR(cb,LINE_COLOR));
 
-	r.x = WIDGET(cb)->paddingLeft;
+	r.x = 1 + WIDGET(cb)->paddingLeft;
 	r.y = cb->boxOffs;
 	r.w = cb->boxWd;
 	r.h = r.w;

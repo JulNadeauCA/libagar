@@ -34,12 +34,8 @@ extern int agGUI, agRenderingContext, agStereo, agXsync, agClipboardIntegration;
 extern int agKbdDelay, agKbdRepeat;
 extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval,
            agMouseScrollIval, agScrollButtonIval, agPageIncrement,
-           agAutocompleteDelay, agAutocompleteRate;
-#ifdef AG_UNICODE
-extern int agTextComposition;
-#endif
-extern int agTextCache, agTextTabWidth, agTextBlinkRate, agTextSymbols;
-extern int agScreenshotQuality;
+           agAutocompleteDelay, agAutocompleteRate, agScreenshotQuality;
+extern int agTextComposition, agTextTabWidth, agTextBlinkRate;
 extern double agZoomValues[AG_ZOOM_MAX];
 
 #ifdef AG_EVENT_LOOP

@@ -24,8 +24,8 @@
  */
 
 /*
- * This tool allows the user to browse through the widget tree and manipulate
- * generic Widget and Window parameters.
+ * This tool allows a developer to inspect a live VFS of Agar widgets
+ * and manipulate both generic and class-specific attributes of them.
  */
 
 #include <agar/core/core.h>

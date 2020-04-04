@@ -241,6 +241,7 @@ AG_ConsoleExportText(const AG_Console *cons, enum ag_newline_type nl)
 	const int sel = cons->sel;
 	int i;
 
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
 	if (pos == -1)
 		return (NULL);
 #ifdef AG_DEBUG
@@ -290,6 +291,7 @@ AG_ConsoleExportBuffer(const AG_Console *cons, enum ag_newline_type nl)
 	AG_Size sizeReq, newlineLen;
 	int i;
 
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
 #ifdef AG_DEBUG
 	if (nl >= AG_NEWLINE_LAST) { AG_FatalError("newline arg"); }
 #endif
@@ -900,6 +902,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 {
 	AG_ConsoleLine *ln;
 
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
 	AG_ObjectLock(cons);
 
 	if (s && (strchr(s, agNewlineFormats[AG_NEWLINE_NATIVE].s[0]))) {
@@ -987,6 +990,7 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 	va_list args;
 	AG_Size len;
 
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
 	AG_ObjectLock(cons);
 	if ((ln = AG_ConsoleAppendLine(cons, NULL)) == NULL) {
 		goto fail;
@@ -1014,6 +1018,7 @@ AG_ConsoleMsgS(AG_Console *cons, const char *s)
 	AG_ConsoleLine *ln;
 	AG_Size len;
 
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
 	AG_ObjectLock(cons);
 	if ((ln = AG_ConsoleAppendLine(cons, s)) == NULL) {
 		goto fail;
@@ -1043,6 +1048,8 @@ AG_ConsoleBinary(AG_Console *cons, const void *data, AG_Size size,
 	char *buf;
 	AG_Size bufSize = size*3 + 1 + (2+columnWd+1) + 1;	/* One line */
 	int lineWd = 0;
+
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
 
 	if (label) {
 		bufSize += 1+strlen(label)+2;
@@ -1124,10 +1131,13 @@ AG_ConsoleMsgEdit(AG_ConsoleLine *ln, const char *s)
 {
 	AG_Console *cons = ln->cons;
 
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
 	AG_ObjectLock(cons);
+
 	free(ln->text);
 	ln->text = Strdup(s);
 	ln->len = strlen(s);
+
 	InvalidateCachedLabel(cons, ln);
 	AG_ObjectUnlock(cons);
 }
@@ -1141,11 +1151,14 @@ AG_ConsoleMsgCatS(AG_ConsoleLine *ln, const char *s)
 
 	sLen = strlen(s);
 
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
 	AG_ObjectLock(cons);
+
 	newLen = ln->len + sLen + 1;
 	ln->text = Realloc(ln->text, newLen);
 	ln->len = newLen-1;
 	Strlcat(ln->text, s, newLen);
+
 	InvalidateCachedLabel(cons, ln);
 	AG_ObjectUnlock(cons);
 }
@@ -1154,31 +1167,44 @@ AG_ConsoleMsgCatS(AG_ConsoleLine *ln, const char *s)
 void
 AG_ConsoleMsgPtr(AG_ConsoleLine *ln, void *p)
 {
-	AG_ObjectLock(ln->cons);
+	AG_Console *cons = ln->cons;
+
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+	AG_ObjectLock(cons);
+
 	ln->p = p;
-	AG_ObjectUnlock(ln->cons);
+
+	AG_ObjectUnlock(cons);
 }
 
 /* Assign an alternate color to a log entry. */
 void
 AG_ConsoleMsgColor(AG_ConsoleLine *ln, const AG_Color *c)
 {
-	AG_ObjectLock(ln->cons);
+	AG_Console *cons = ln->cons;
+
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+	AG_ObjectLock(cons);
+
 	memcpy(&ln->c, c, sizeof(AG_Color));
-	AG_ObjectUnlock(ln->cons);
+
+	AG_ObjectUnlock(cons);
 }
 
 /* Delete all log entries. */
 void
 AG_ConsoleClear(AG_Console *cons)
 {
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
 	AG_ObjectLock(cons);
+
 	FreeLines(cons);
 	cons->rOffs = 0;
 	cons->pos = -1;
 	cons->sel = 0;
-	AG_Redraw(cons);
+
 	AG_ObjectUnlock(cons);
+	AG_Redraw(cons);
 }
 
 /*
@@ -1280,6 +1306,8 @@ AG_ConsoleOpenFD(AG_Console *cons, const char *lbl, int fd,
 	AG_ConsoleFile *mon;
 	FILE *f;
 
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+
 	if ((f = fdopen(fd, "r")) == NULL) {
 		AG_SetErrorS("fdopen");
 		return (NULL);
@@ -1298,6 +1326,8 @@ AG_ConsoleOpenFile(AG_Console *cons, const char *lbl, const char *file,
 {
 	FILE *f;
 
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+
 	if ((f = fopen(file, "r")) == NULL) {
 		AG_SetError(_("Could not open %s"), file);
 		return (NULL);
@@ -1313,6 +1343,8 @@ AG_ConsoleOpenStream(AG_Console *cons, const char *lbl, void *pFILE,
 {
 	FILE *f = (FILE *)pFILE;
 	AG_ConsoleFile *cf;
+
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
 
 	if ((cf = TryMalloc(sizeof(AG_ConsoleFile))) == NULL) {
 		return (NULL);
@@ -1338,9 +1370,12 @@ AG_ConsoleOpenStream(AG_Console *cons, const char *lbl, void *pFILE,
 	return (cf);
 }
 
+/* Close an open file or stream being followed. */
 void
 AG_ConsoleClose(AG_Console *cons, AG_ConsoleFile *cf)
 {
+	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+
 	if ((cf->flags & AG_CONSOLE_FILE_LEAVE_OPEN) == 0) {
 		if (cf->pFILE != NULL) {
 			fclose((FILE *)cf->pFILE);

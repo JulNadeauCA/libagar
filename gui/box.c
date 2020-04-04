@@ -117,6 +117,7 @@ AG_VBoxNew(void *p, Uint flags)
 void
 AG_BoxSetStyle(AG_Box *box, enum ag_box_style which)
 {
+	AG_OBJECT_ISA(box, "AG_Widget:AG_Box:*");
 	box->style = which;
 	AG_Redraw(box);
 }
@@ -143,6 +144,8 @@ AG_BoxSetLabel(AG_Box *box, const char *fmt, ...)
 void
 AG_BoxSetLabelS(AG_Box *box, const char *s)
 {
+	AG_OBJECT_ISA(box, "AG_Widget:AG_Box:*");
+
 	AG_ObjectLock(box);
 	if (s != NULL) {
 		if (box->lbl == NULL) {
@@ -538,6 +541,7 @@ SizeAllocateHomogenousVert(AG_Box *_Nonnull box,
 void
 AG_BoxSizeHint(AG_Box *box, int w, int h)
 {
+	AG_OBJECT_ISA(box, "AG_Widget:AG_Box:*");
 	box->wPre = w;
 	box->hPre = h;
 	AG_Redraw(box);
@@ -547,8 +551,11 @@ AG_BoxSizeHint(AG_Box *box, int w, int h)
 void
 AG_BoxSetHomogenous(AG_Box *box, int enable)
 {
+	AG_OBJECT_ISA(box, "AG_Widget:AG_Box:*");
 	AG_ObjectLock(box);
+
 	AG_SETFLAGS(box->flags, AG_BOX_HOMOGENOUS, enable);
+
 	AG_ObjectUnlock(box);
 	AG_Redraw(box);
 }
@@ -557,6 +564,7 @@ AG_BoxSetHomogenous(AG_Box *box, int enable)
 void
 AG_BoxSetDepth(AG_Box *box, int depth)
 {
+	AG_OBJECT_ISA(box, "AG_Widget:AG_Box:*");
 	box->depth = depth;
 	AG_Redraw(box);
 }
@@ -567,13 +575,16 @@ AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 {
 	AG_SizeAlloc a;
 
+	AG_OBJECT_ISA(box, "AG_Widget:AG_Box:*");
 	AG_ObjectLock(box);
+
 	box->type = type;
 	a.x = WIDGET(box)->x;
 	a.y = WIDGET(box)->y;
 	a.w = WIDGET(box)->w;
 	a.h = WIDGET(box)->h;
 	SizeAllocate(box, &a);
+
 	AG_ObjectUnlock(box);
 	AG_Redraw(box);
 }
@@ -582,6 +593,7 @@ AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 void
 AG_BoxSetHorizAlign(AG_Box *box, enum ag_box_align align)
 {
+	AG_OBJECT_ISA(box, "AG_Widget:AG_Box:*");
 	box->hAlign = align;
 	AG_Redraw(box);
 }
@@ -590,6 +602,7 @@ AG_BoxSetHorizAlign(AG_Box *box, enum ag_box_align align)
 void
 AG_BoxSetVertAlign(AG_Box *box, enum ag_box_align align)
 {
+	AG_OBJECT_ISA(box, "AG_Widget:AG_Box:*");
 	box->vAlign = align;
 	AG_Redraw(box);
 }

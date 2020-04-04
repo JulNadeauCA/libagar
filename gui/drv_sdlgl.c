@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -534,23 +534,18 @@ SDLGL_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 
 	Debug(sgl, "VideoResize event (%u x %u)\n", w,h);
 
-	sFlags = sgl->s->flags & (SDL_SWSURFACE|SDL_HWSURFACE|SDL_ASYNCBLIT|
-				  SDL_ANYFORMAT|SDL_HWPALETTE|SDL_DOUBLEBUF|
-				  SDL_FULLSCREEN|SDL_OPENGL|SDL_OPENGLBLIT|
-				  SDL_RESIZABLE|SDL_NOFRAME);
-	                          
+	sFlags = sgl->s->flags & (SDL_SWSURFACE | SDL_HWSURFACE | SDL_ASYNCBLIT |
+	                          SDL_ANYFORMAT | SDL_HWPALETTE | SDL_DOUBLEBUF |
+	                          SDL_FULLSCREEN | SDL_OPENGL | SDL_OPENGLBLIT |
+	                          SDL_RESIZABLE | SDL_NOFRAME);
 
-	/* Backup all widget surfaces prior to GL context loss. */
-	AG_FOREACH_WINDOW(win, sgl) {
+	AG_FOREACH_WINDOW(win, sgl)                 /* Save mapped textures */
 		AG_WidgetFreeResourcesGL(win);
-	}
 
-	/* Invalidate the font cache. */
 	AG_TextClearGlyphCache(drv);
 	
 	if ((S = SDL_SetVideoMode(w, h, 0, sFlags)) == NULL) {
-		AG_SetError("Cannot resize display to %ux%u: %s", w, h,
-		    SDL_GetError());
+		AG_SetError("SDL_SetVideoMode(%ux%u): %s", w,h, SDL_GetError());
 		return (-1);
 	}
 	sgl->s = S;
@@ -562,24 +557,21 @@ SDLGL_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 	dsw->h = S->h;
 	dsw->depth = (Uint)S->format->BitsPerPixel;
 
-	/* Resize the output capture buffer. */
-	if (sgl->outBuf != NULL) {
+	if (sgl->outBuf != NULL) {          /* Resize output capture buffer */
 		free(sgl->outBuf);
-		if ((sgl->outBuf = AG_TryMalloc(dsw->w*dsw->h*4)) == NULL) {
+		if ((sgl->outBuf = AG_TryMalloc(dsw->w * dsw->h * 4)) == NULL) {
 			Verbose("SDLGL: Out of memory; disabling capture\n");
 			sgl->outMode = AG_SDLGL_OUT_NONE;
 		}
 	}
 
-	/* Update the viewport coordinates. */
-	rVP.x = 0;
+	rVP.x = 0;                                    /* Resize GL viewport */
 	rVP.y = 0;
 	rVP.w = dsw->w;
 	rVP.h = dsw->h;
 	AG_GL_SetViewport(&sgl->gl, &rVP);
 	
-	/* Regenerate all widget textures. */
-	AG_FOREACH_WINDOW(win, sgl) {
+	AG_FOREACH_WINDOW(win, sgl) {            /* Restore mapped textures */
 		AG_WidgetRegenResourcesGL(win);
 		win->dirty = 1;
 	}
@@ -599,7 +591,7 @@ SDLGL_VideoCapture(void *_Nonnull obj)
 	Uint8 *pixels;
 	AG_Surface *S;
 
-	if ((pixels = AG_TryMalloc((w*h) << 2)) == NULL) {
+	if ((pixels = AG_TryMalloc((w * h) << 2)) == NULL) {
 		return (NULL);
 	}
 	glReadPixels(0,0, w,h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
@@ -617,9 +609,9 @@ SDLGL_VideoCapture(void *_Nonnull obj)
 static void
 SDLGL_VideoClear(void *_Nonnull obj, const AG_Color *_Nonnull c)
 {
-	glClearColor(c->r/AG_COLOR_LASTF,
-	             c->g/AG_COLOR_LASTF,
-		     c->b/AG_COLOR_LASTF, 1.0);
+	glClearColor(c->r / AG_COLOR_LASTF,
+	             c->g / AG_COLOR_LASTF,
+		     c->b / AG_COLOR_LASTF, 1.0);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
@@ -630,26 +622,26 @@ SDLGL_SetVideoContext(void *_Nonnull obj, void *_Nonnull pSurface)
 	AG_DriverSDLGL *sgl = obj;
 	AG_GL_Context *gl = &sgl->gl;
 	AG_DriverSw *dsw = obj;
-	SDL_Surface *su = pSurface;
+	SDL_Surface *S = pSurface;
 
-	sgl->s = su;
-	dsw->w = su->w;
-	dsw->h = su->h;
-	dsw->depth = (Uint)su->format->BitsPerPixel;
+	sgl->s = S;
+	dsw->w = S->w;
+	dsw->h = S->h;
+	dsw->depth = (Uint)S->format->BitsPerPixel;
 
 	if (dsw->flags & AG_DRIVER_SW_OVERLAY) {
 		AG_ClipRect *cr0 = &gl->clipRects[0];
 
 		/* Just update clipping rectangle 0. */
-		cr0->r.w = su->w;
-		cr0->r.h = su->h;
+		cr0->r.w = S->w;
+		cr0->r.h = S->h;
 	} else {
 		AG_Rect rVP;
 
 		rVP.x = 0;
 		rVP.y = 0;
-		rVP.w = su->w;
-		rVP.h = su->h;
+		rVP.w = S->w;
+		rVP.h = S->h;
 		AG_GL_SetViewport(gl, &rVP);
 	}
 	return (0);

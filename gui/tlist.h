@@ -33,13 +33,14 @@ typedef struct ag_tlist_item {
 #ifdef AG_TYPE_SAFETY
 	char tag[AG_TLIST_ITEM_TAG_LEN];      /* Tagged non-object */
 #endif
-	int selected;                         /* Effective selection flag */
-
 	int icon;                             /* Cached icon surface */
+	int label;                            /* Cached label surface */
+	const char *_Nullable cat;            /* Category for filter */
 	AG_Surface *_Nullable iconsrc;        /* Icon source image */
 	void *_Nullable p1;                   /* User pointer */
-	const char *_Nullable cat;            /* Category for filter */
-	int label;                            /* Cached label surface */
+	AG_Color *_Nullable color;            /* Alternate color */
+	AG_Font *_Nullable font;              /* Alternate font */
+	int selected;                         /* Effective selection flag */
 	Uint depth;                           /* Indent in tree display */
 	Uint flags;
 #define AG_TLIST_ITEM_EXPANDED 0x01           /* Child items visible (tree) */
@@ -47,14 +48,11 @@ typedef struct ag_tlist_item {
 #define AG_TLIST_NO_SELECT     0x08           /* Item is not selectable */
 #define AG_TLIST_NO_POPUP      0x10           /* Disable popups for item */
 
-	Uint fontFlags;                 /* Font style; see AG_FetchFont(3) */
-	char text[AG_TLIST_LABEL_MAX];	/* Label text */
-	Uint32 _pad;
+	Uint fontFlags;                       /* Font style; see AG_FetchFont(3) */
+	char text[AG_TLIST_LABEL_MAX];        /* Label text */
+	Uint32 _pad2;
 	AG_TAILQ_ENTRY(ag_tlist_item) items;    /* Items in list */
 	AG_TAILQ_ENTRY(ag_tlist_item) selitems; /* Saved selection state */
-	
-	AG_Color *_Nullable color;            /* Alternate text-color */
-	AG_Font *_Nullable font;              /* Alternate font */
 } AG_TlistItem;
 
 typedef AG_TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item) AG_TlistItemQ;
@@ -156,8 +154,8 @@ void AG_TlistRestore(AG_Tlist *_Nonnull);
 void AG_TlistBegin(AG_Tlist *_Nonnull);
 void AG_TlistEnd(AG_Tlist *_Nonnull);
 
-AG_TlistItem *_Nonnull AG_TlistItemNew(AG_Tlist *_Nonnull,
-                                       const AG_Surface *_Nullable);
+#define AG_TlistClear(tl)   AG_TlistBegin(tl)
+#define AG_TlistRestore(tl) AG_TlistEnd(tl)
 
 AG_TlistItem *_Nonnull AG_TlistAddS(AG_Tlist *_Nonnull,
                                     const AG_Surface *_Nullable,
@@ -184,6 +182,8 @@ AG_TlistItem *_Nonnull AG_TlistAddPtr(AG_Tlist *_Nonnull,
 AG_TlistItem *_Nonnull AG_TlistAddPtrHead(AG_Tlist *_Nonnull,
                                           const AG_Surface *_Nullable,
                                           const char *_Nonnull, void *_Nullable);
+
+AG_TlistItem *_Nonnull AG_TlistItemNew(const AG_Surface *_Nullable);
 
 void AG_TlistSetIcon(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull,
                      const AG_Surface *_Nullable);

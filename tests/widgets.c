@@ -212,7 +212,7 @@ TestGUI(void *obj, AG_Window *win)
 {
 	char path[AG_PATHNAME_MAX];
 	MyTestInstance *ti = obj;
-	AG_Box *hBox, *vBox;
+	AG_Box *hBox, *vBox, *div;
 	AG_Pane *hPane, *vPane;
 	AG_Combo *com;
 	AG_UCombo *ucom;
@@ -227,18 +227,19 @@ TestGUI(void *obj, AG_Window *win)
 	hPane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 	AG_PaneSetDivisionMin(hPane, 0, 50, 100);
 	AG_PaneMoveDividerPct(hPane, 45);
+	div = hPane->div[0];
 
 	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-1.bmp", path, sizeof(path)) == 0) {
 		if ((S = AG_SurfaceFromBMP(path)) != NULL) {
-			AG_PixmapFromSurface(hPane->div[0], 0, S);
+			AG_PixmapFromSurface(div, 0, S);
 		} else {
 			S = AG_TextRender(AG_GetError());
-			AG_PixmapFromSurface(hPane->div[0], 0, S);
+			AG_PixmapFromSurface(div, 0, S);
 			AG_SurfaceFree(S);
 		}
 	} else {
 		S = AG_TextRender(AG_GetError());
-		AG_PixmapFromSurface(hPane->div[0], 0, S);
+		AG_PixmapFromSurface(div, 0, S);
 		AG_SurfaceFree(S);
 	}
 
@@ -246,8 +247,7 @@ TestGUI(void *obj, AG_Window *win)
 		AG_Surface *S = AG_SurfaceFromFile(path);
 		int i, x,y;
 
-		hBox = AG_BoxNewHoriz(hPane->div[0], AG_BOX_HOMOGENOUS |
-		                                     AG_BOX_HFILL);
+		hBox = AG_BoxNewHoriz(div, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 		for (i = 0; i < 5; i++) {
 			for (y = 0; y < S->h; y++) {
 				for (x = 0; x < S->w; x++) {
@@ -264,7 +264,7 @@ TestGUI(void *obj, AG_Window *win)
 		}
 	} else {
 		S = AG_TextRender(AG_GetError());
-		AG_PixmapFromSurface(hPane->div[0], 0, S);
+		AG_PixmapFromSurface(div, 0, S);
 		AG_SurfaceFree(S);
 	}
 	
@@ -280,14 +280,14 @@ TestGUI(void *obj, AG_Window *win)
 		AG_GetVersion(&av);
 
 		/* A static label */
-		lbl = AG_LabelNew(hPane->div[0], 0,
+		lbl = AG_LabelNew(div, 0,
 		    "Agar v%d.%d.%d (" AGSI_FRAK "%s" AGSI_RST ")",
 		    av.major, av.minor, av.patch,
 		    av.release ? av.release : "dev");
 		AG_SetStyle(lbl, "font-size", "120%");
 
 		/* A dynamically-updated label. */
-		lbl = AG_LabelNewPolled(hPane->div[0], AG_LABEL_HFILL,
+		lbl = AG_LabelNewPolled(div, AG_LABEL_HFILL,
 		    "Window is at %i,%i (%ux%u)",
 		    &AGWIDGET(win)->x,
 		    &AGWIDGET(win)->y,
@@ -305,13 +305,14 @@ TestGUI(void *obj, AG_Window *win)
 	 * Pane provides two Box containers which can be resized using
 	 * a control placed in the middle.
 	 */
-	vPane = AG_PaneNewVert(hPane->div[0], AG_PANE_EXPAND);
+	vPane = AG_PaneNewVert(div, AG_PANE_EXPAND);
+	div = vPane->div[0];
 
 	/*
 	 * Box is a general-purpose widget container. AG_BoxNewHoriz() creates
 	 * a container which packs its widgets horizontally.
 	 */
-	hBox = AG_BoxNewHoriz(vPane->div[0], AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
+	hBox = AG_BoxNewHoriz(div, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 	{
 		/*
 		 * The Button widget is a simple push-button. It is typically
@@ -322,7 +323,7 @@ TestGUI(void *obj, AG_Window *win)
 			AG_ButtonNewS(hBox, 0, AG_Printf("%c", 0x41+i));
 	}
 
-	hBox = AG_BoxNewHoriz(vPane->div[0], AG_BOX_HFILL);
+	hBox = AG_BoxNewHoriz(div, AG_BOX_HFILL);
 	AG_BoxSetHorizAlign(hBox, AG_BOX_CENTER);
 	AG_BoxSetVertAlign(hBox, AG_BOX_CENTER);
 	{
@@ -370,88 +371,65 @@ TestGUI(void *obj, AG_Window *win)
 		}
 	}
 
+	div = vPane->div[1];
+
 	/*
 	 * The Combo widget is a textbox widget with a expander button next
 	 * to it. The button triggers a popup window which displays a list
 	 * (using the AG_Tlist(3) widget).
 	 */
-	com = AG_ComboNew(vPane->div[1], AG_COMBO_ANY_TEXT | AG_COMBO_HFILL,
-	    "Combo: ");
+	com = AG_ComboNew(div, AG_COMBO_ANY_TEXT | AG_COMBO_HFILL, "Combo: ");
 	AG_ComboSizeHint(com, "<Item #000>", 10);
 	AG_SetEvent(com, "combo-selected", ComboSelectedItem, NULL);
 	AG_SetEvent(com, "combo-text-entry", ComboEnteredText, NULL);
 
 	/* UCombo is a variant of Combo which looks like a single button. */
-	ucom = AG_UComboNew(vPane->div[1], AG_UCOMBO_HFILL);
+	ucom = AG_UComboNew(div, AG_UCOMBO_HFILL);
 	AG_UComboSizeHint(ucom, "<Item #1234>", 5);
 
 	/* Populate the Tlist displayed by the combo widgets we just created. */
 	for (i = 0; i < 50; i++) {
-		AG_Color c;
 		char text[32];
-		AG_TlistItem *it;
 
-		/* This is more efficient than AG_Printf() */
 		AG_Strlcpy(text, "Item #", sizeof(text));
 		AG_StrlcatInt(text, i, sizeof(text));
 
-		it = AG_TlistAddS(com->list, NULL, text);
-		if ((i % 25) == 0) {
-			it->fontFlags |= AG_FONT_UNDERLINE;
-		} else if ((i % 10) == 0) {
-			it->fontFlags |= AG_FONT_BOLD;
-		} else if ((i % 5) == 0) {
-			it->fontFlags |= AG_FONT_ITALIC;
-		}
-
-		AG_ColorRGB_8(&c, 240, 240, 255 - (i << 2));
-		AG_TlistSetColor(com->list, it, &c);
-
+		AG_TlistAddS(com->list, NULL, text);
 		AG_TlistAddS(ucom->list, NULL, text);
 	}
 
 	/* Create a horizontal separator */
-	AG_SeparatorNewHoriz(vPane->div[1]);
+	AG_SeparatorNewHoriz(div);
 
 	/*
 	 * Textbox is a single or multiline text edition widget. It can bind
 	 * to fixed-size or dynamically-sized buffers in any character set
 	 * encoding.
 	 */
-	{
-		ti->textBuffer[0] = '\0';
-		ti->textElement = AG_TextNew(100);
+	ti->textBuffer[0] = '\0';
+	ti->textElement = AG_TextNew(100);
 
-		/* Create a textbox bound to a fixed-size buffer */
-		tbox = AG_TextboxNew(vPane->div[1],
-		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
-		    "Textbox: ");
-		AG_TextboxSetPlaceholderS(tbox, "First & Last Name");
-		AG_TextboxAutocomplete(tbox, AutocompleteName, NULL);
-		AG_TextboxBindUTF8(tbox, ti->textBuffer, sizeof(ti->textBuffer));
-		AG_SetEvent(tbox, "textbox-return", SayHello, "%p", tbox);
+	/* Create a textbox bound to a fixed-size buffer */
+	tbox = AG_TextboxNew(div, AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL, "Textbox: ");
+	AG_TextboxSetPlaceholderS(tbox, "First & Last Name");
+	AG_TextboxAutocomplete(tbox, AutocompleteName, NULL);
+	AG_TextboxBindUTF8(tbox, ti->textBuffer, sizeof(ti->textBuffer));
+	AG_SetEvent(tbox, "textbox-return", SayHello, "%p", tbox);
 
-#ifdef AG_UNICODE
-		/*
-		 * Create a textbox connected to a multilingual, dynamically
-		 * sized text element.
-		 */
-		tbox = AG_TextboxNew(vPane->div[1],
-		    AG_TEXTBOX_EXCL | AG_TEXTBOX_MULTILINGUAL | AG_TEXTBOX_HFILL,
-		    "TextElement: ");
-
-		AG_TextboxSetString(tbox, "Hello");
-
-		AG_TextSetEntS(ti->textElement, AG_LANG_EN, "Hello");
-		AG_TextSetEntS(ti->textElement, AG_LANG_FR, "Bonjour");
-		AG_TextSetEntS(ti->textElement, AG_LANG_DE, "Guten tag");
-
-		AG_TextboxBindText(tbox, ti->textElement);
-#endif
-	}
+	/*
+	 * Create a textbox connected to a dynamically-sized, multilingual
+	 * text element.
+	 */
+	tbox = AG_TextboxNew(div, AG_TEXTBOX_EXCL | AG_TEXTBOX_MULTILINGUAL |
+	                          AG_TEXTBOX_HFILL, "TextElement: ");
+	AG_TextboxSetString(tbox, "Hello");
+	AG_TextSetEntS(ti->textElement, AG_LANG_EN, "Hello");
+	AG_TextSetEntS(ti->textElement, AG_LANG_FR, "Bonjour");
+	AG_TextSetEntS(ti->textElement, AG_LANG_DE, "Guten tag");
+	AG_TextboxBindText(tbox, ti->textElement);
 
 	/* Create a horizontal separator */
-	AG_SeparatorNewHoriz(vPane->div[1]);
+	AG_SeparatorNewHoriz(div);
 
 	/*
 	 * Numerical binds to an integral or floating-point number.
@@ -462,13 +440,13 @@ TestGUI(void *obj, AG_Window *win)
 		static float myFloat = 1.0f;
 		static int myInt = 50;
 
-		num = AG_NumericalNewS(vPane->div[1],
+		num = AG_NumericalNewS(div,
 		    AG_NUMERICAL_EXCL | AG_NUMERICAL_HFILL,
 		    "cm", "Numerical (flt): ");
 		AG_BindFloat(num, "value", &myFloat);
 		AG_SetFloat(num, "inc", 1.0f);
 
-		num = AG_NumericalNewS(vPane->div[1],
+		num = AG_NumericalNewS(div,
 		    AG_NUMERICAL_EXCL | AG_NUMERICAL_HFILL,
 		    NULL, "Numerical (int): ");
 		AG_BindInt(num, "value", &myInt);
@@ -484,14 +462,14 @@ TestGUI(void *obj, AG_Window *win)
 		AG_MSpinbutton *msb;
 		static int myX=0, myY=0;
 
-		msb = AG_MSpinbuttonNew(vPane->div[1], AG_MSPINBUTTON_HFILL,
-		    ",", "MSpinbutton:");
+		msb = AG_MSpinbuttonNew(div, AG_MSPINBUTTON_HFILL, ",",
+		    "MSpinbutton:");
 		AG_BindInt(msb, "xvalue", &myX);
 		AG_BindInt(msb, "yvalue", &myY);
 	}
 
 	/* Create a horizontal separator */
-	AG_SeparatorNewHoriz(vPane->div[1]);
+	AG_SeparatorNewHoriz(div);
 
 	/*
 	 * Scrollbar provides "value", "min" and "max" bindings which can be
@@ -504,24 +482,35 @@ TestGUI(void *obj, AG_Window *win)
 		AG_ProgressBar *pb;
 		AG_Numerical *num;
 
-		num = AG_NumericalNewS(vPane->div[1], AG_NUMERICAL_HFILL,
-		    NULL, "Bound Integer: ");
+		num = AG_NumericalNewS(div, AG_NUMERICAL_HFILL, NULL,
+		    "Bound Integer: ");
 		AG_BindInt(num, "value", &myVal);
 
-		AG_LabelNewS(vPane->div[1], 0, "Scrollbar:");
-		sb = AG_ScrollbarNewHoriz(vPane->div[1], AG_SCROLLBAR_EXCL |
-		                                         AG_SCROLLBAR_HFILL);
+		AG_LabelNewS(div, 0, "Scrollbar:");
+		sb = AG_ScrollbarNewHoriz(div, AG_SCROLLBAR_EXCL |
+		                               AG_SCROLLBAR_HFILL);
 		AG_BindInt(sb, "value", &myVal);
 		AG_BindInt(sb, "min", &myMin);
 		AG_BindInt(sb, "max", &myMax);
 		AG_BindInt(sb, "visible", &myVisible);
 		AG_SetInt(sb, "inc", 10);
 
+		AG_LabelNewS(div, 0, "ProgressBar (Horiz | Vert):");
 
-		AG_LabelNewS(vPane->div[1], 0, "ProgressBar:");
-		pb = AG_ProgressBarNewHoriz(vPane->div[1], AG_PROGRESS_BAR_EXCL |
-		                                           AG_PROGRESS_BAR_SHOW_PCT |
-		                                           AG_PROGRESS_BAR_HFILL);
+		hBox = AG_BoxNewHoriz(div, AG_BOX_HFILL);
+
+		pb = AG_ProgressBarNewHoriz(hBox, AG_PROGRESS_BAR_EXCL |
+		                                  AG_PROGRESS_BAR_SHOW_PCT |
+		                                  AG_PROGRESS_BAR_HFILL);
+		AG_BindInt(pb, "value", &myVal);
+		AG_BindInt(pb, "min", &myMin);
+		AG_BindInt(pb, "max", &myMax);
+
+		AG_SeparatorNewVert(hBox);
+
+		pb = AG_ProgressBarNewVert(hBox, AG_PROGRESS_BAR_EXCL |
+		                                 AG_PROGRESS_BAR_SHOW_PCT);
+		AG_ProgressBarSetLength(pb, 50);
 		AG_BindInt(pb, "value", &myVal);
 		AG_BindInt(pb, "min", &myMin);
 		AG_BindInt(pb, "max", &myMax);

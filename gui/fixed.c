@@ -83,6 +83,7 @@ Init(void *_Nonnull obj)
 void
 AG_FixedSetStyle(AG_Fixed *fx, enum ag_fixed_style style)
 {
+	AG_OBJECT_ISA(fx, "AG_Widget:AG_Fixed:*");
 	fx->style = style;
 	AG_Redraw(fx);
 }
@@ -90,6 +91,7 @@ AG_FixedSetStyle(AG_Fixed *fx, enum ag_fixed_style style)
 void
 AG_FixedSizeHint(AG_Fixed *fx, int w, int h)
 {
+	AG_OBJECT_ISA(fx, "AG_Widget:AG_Fixed:*");
 	fx->wPre = w;
 	fx->hPre = h;
 }
@@ -164,7 +166,9 @@ AG_FixedPut(AG_Fixed *fx, void *p, int x, int y)
 	AG_SizeReq r;
 	AG_SizeAlloc a;
 
+	AG_OBJECT_ISA(fx, "AG_Widget:AG_Fixed:*");
 	AG_ObjectLock(fx);
+	AG_OBJECT_ISA(chld, "AG_Widget:*");
 	AG_ObjectLock(chld);
 	
 	AG_ObjectAttach(fx, chld);
@@ -189,7 +193,9 @@ AG_FixedMove(AG_Fixed *fx, void *p, int x, int y)
 	AG_SizeReq r;
 	AG_SizeAlloc a;
 	
+	AG_OBJECT_ISA(fx, "AG_Widget:AG_Fixed:*");
 	AG_ObjectLock(fx);
+	AG_OBJECT_ISA(chld, "AG_Widget:*");
 	AG_ObjectLock(chld);
 
 	AG_WidgetSizeReq(chld, &r);
@@ -212,7 +218,9 @@ AG_FixedSize(AG_Fixed *fx, void *p, int w, int h)
 	AG_Widget *chld = p;
 	AG_SizeAlloc a;
 	
+	AG_OBJECT_ISA(fx, "AG_Widget:AG_Fixed:*");
 	AG_ObjectLock(fx);
+	AG_OBJECT_ISA(chld, "AG_Widget:*");
 	AG_ObjectLock(chld);
 
 	a.w = (w == -1) ? chld->w : w;
@@ -232,7 +240,9 @@ AG_FixedSize(AG_Fixed *fx, void *p, int w, int h)
 void
 AG_FixedDel(AG_Fixed *fx, void *chld)
 {
+	AG_OBJECT_ISA(fx, "AG_Widget:AG_Fixed:*");
 	AG_ObjectLock(fx);
+	AG_OBJECT_ISA(chld, "AG_Widget:*");
 	AG_ObjectLock(chld);
 	
 	AG_ObjectDetach(chld);

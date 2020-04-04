@@ -71,6 +71,7 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 	AG_Event *ev;
 
 	tl = AG_TlistNew(parent, flags);
+
 	AG_ObjectLock(tl);
 	tl->flags |= AG_TLIST_POLL;
 	ev = AG_SetEvent(tl, "tlist-poll", fn, NULL);
@@ -95,6 +96,7 @@ AG_TlistNewPolledMs(void *parent, Uint flags, int ms, AG_EventFn fn,
 	AG_Event *ev;
 
 	tl = AG_TlistNew(parent, flags);
+
 	AG_ObjectLock(tl);
 	tl->flags |= AG_TLIST_POLL;
 	ev = AG_SetEvent(tl, "tlist-poll", fn, NULL);
@@ -105,10 +107,10 @@ AG_TlistNewPolledMs(void *parent, Uint flags, int ms, AG_EventFn fn,
 		AG_EventGetArgs(ev, fmt, ap);
 		va_end(ap);
 	}
+	tl->pollDelay = ms;
 	AG_ObjectUnlock(tl);
 
 	AG_RedrawOnTick(tl, ms);
-	tl->pollDelay = ms;
 	return (tl);
 }
 
@@ -116,13 +118,15 @@ AG_TlistNewPolledMs(void *parent, Uint flags, int ms, AG_EventFn fn,
 void
 AG_TlistSetRefresh(AG_Tlist *tl, int ms)
 {
+	AG_ObjectLock(tl);
 	if (ms == -1) {
 		AG_DelTimer(tl, &tl->refreshTo);
 	} else {
 		AG_AddTimer(tl, &tl->refreshTo, ms, PollRefreshTimeout, NULL);
 	}
-	AG_RedrawOnTick(tl, ms);
 	tl->pollDelay = ms;
+	AG_ObjectUnlock(tl);
+	AG_RedrawOnTick(tl, ms);
 }
 
 /* In AG_TLIST_POLL mode, invoke `tlist-poll' if refresh timer has expired. */
@@ -378,15 +382,19 @@ MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 void
 AG_TlistSizeHint(AG_Tlist *tl, const char *text, int nitems)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
+
 	AG_TextSize(text, &tl->wHint, NULL);
-	tl->hHint = (tl->item_h+2)*nitems;
+	tl->hHint = (tl->item_h + 2)*nitems;
 }
 
 void
 AG_TlistSizeHintPixels(AG_Tlist *tl, int w, int nitems)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
+
 	tl->wHint = w;
-	tl->hHint = (tl->item_h+2)*nitems;
+	tl->hHint = (tl->item_h + 2)*nitems;
 }
 
 /*
@@ -399,7 +407,9 @@ AG_TlistSizeHintLargest(AG_Tlist *tl, int nitems)
 	AG_TlistItem *it;
 	int w;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	UpdatePolled(tl);
 	tl->wHint = 0;
 	AG_TLIST_FOREACH(it, tl) {
@@ -407,20 +417,26 @@ AG_TlistSizeHintLargest(AG_Tlist *tl, int nitems)
 		if (w > tl->wHint) { tl->wHint = w; }
 	}
 	tl->wHint += (tl->icon_w << 2);
-	tl->hHint = (tl->item_h+2)*nitems;
+	tl->hHint = (tl->item_h + 2)*nitems;
+
 	AG_ObjectUnlock(tl);
 }
 
-static void
+static __inline__ void
 FreeItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 {
-	if (it->iconsrc)
-		AG_SurfaceFree(it->iconsrc);
 	if (it->icon != -1)
 		AG_WidgetUnmapSurface(tl, it->icon);
 	if (it->label != -1)
 		AG_WidgetUnmapSurface(tl, it->label);
-
+	if (it->iconsrc)
+		AG_SurfaceFree(it->iconsrc);
+	if (it->color)
+		free(it->color);
+#if 0
+	if (it->font)
+		AG_UnusedFont(it->font);
+#endif
 	free(it);
 }
 
@@ -556,8 +572,8 @@ Draw(void *_Nonnull obj)
 				cSel.a >>= 1;
 				r.x = x;
 				r.y = y;
-				r.w = wIcon;
-				r.h = hItem;
+				r.w = wIcon+1;
+				r.h = hItem+1;
 				AG_DrawRectBlended(tl, &r, &cSel,
 				    AG_ALPHA_SRC,
 				    AG_ALPHA_ONE_MINUS_SRC);
@@ -655,7 +671,9 @@ StylizeFont(AG_Tlist *_Nonnull tl, Uint fontFlags)
 void
 AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	TAILQ_REMOVE(&tl->items, it, items);
 	tl->nitems--;
 	FreeItem(tl, it);
@@ -664,8 +682,9 @@ AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 	if (tl->rOffs+tl->nvisitems > tl->nitems) {
 		tl->rOffs = MAX(0, tl->nitems - tl->nvisitems);
 	}
-	AG_ObjectUnlock(tl);
+
 	AG_Redraw(tl);
+	AG_ObjectUnlock(tl);
 }
 
 /* Remove duplicate items from the list. */
@@ -674,6 +693,7 @@ AG_TlistUniq(AG_Tlist *tl)
 {
 	AG_TlistItem *it, *it2;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
 restart:							/* XXX */
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -694,6 +714,7 @@ AG_TlistBegin(AG_Tlist *tl)
 {
 	AG_TlistItem *it, *nit;
 	
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
 
 	for (it = TAILQ_FIRST(&tl->items);
@@ -709,9 +730,9 @@ AG_TlistBegin(AG_Tlist *tl)
 	}
 	TAILQ_INIT(&tl->items);
 	tl->nitems = 0;
-	AG_ObjectUnlock(tl);
 
 	AG_Redraw(tl);
+	AG_ObjectUnlock(tl);
 }
 
 /* Generic string compare routine. */
@@ -742,8 +763,11 @@ void
 AG_TlistSetCompareFn(AG_Tlist *tl,
     int (*fn)(const AG_TlistItem *_Nonnull, const AG_TlistItem *_Nonnull))
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	tl->compare_fn = fn;
+
 	AG_ObjectUnlock(tl);
 }
 
@@ -753,6 +777,7 @@ AG_TlistEnd(AG_Tlist *tl)
 {
 	AG_TlistItem *sit, *cit, *nsit;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
 
 	for (sit = TAILQ_FIRST(&tl->selitems);
@@ -779,18 +804,6 @@ AG_TlistEnd(AG_Tlist *tl)
 	AG_ObjectUnlock(tl);
 }
 
-void
-AG_TlistRestore(AG_Tlist *tl)
-{
-	AG_TlistEnd(tl);
-}
-
-void
-AG_TlistClear(AG_Tlist *tl)
-{
-	AG_TlistBegin(tl);
-}
-
 int
 AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *cit)
 {
@@ -809,49 +822,37 @@ AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *cit)
 void
 AG_TlistRefresh(AG_Tlist *_Nonnull tl)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	tl->flags |= AG_TLIST_REFRESH;
+
 	AG_Redraw(tl);
 	AG_ObjectUnlock(tl);
 }
 
-/* Return a newly allocated and initialized AG_TlistItem */
-AG_TlistItem *
-AG_TlistItemNew(AG_Tlist *_Nonnull tl, const AG_Surface *icon)
-{
-	AG_TlistItem *it;
-
-	it = Malloc(sizeof(AG_TlistItem));
-#ifdef AG_TYPE_SAFETY
-	Strlcpy(it->tag, AG_TLIST_ITEM_TAG, sizeof(it->tag));
-#endif
-	it->selected = 0;
-	it->icon = -1;
-	it->iconsrc = (icon) ? AG_SurfaceDup(icon) : NULL;
-	it->p1 = NULL;
-	it->cat = "";
-	it->label = -1;
-	it->depth = 0;
-	it->flags = 0;
-	it->fontFlags = 0;
-	it->text[0] = '\0';
-	it->color = NULL;
-	it->font = NULL;
-	return (it);
-}
-
-/* The Tlist must be locked. */
 static __inline__ void
-InsertItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it, int ins_head)
+InsertItemHead(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 {
-	if (ins_head) {
-		TAILQ_INSERT_HEAD(&tl->items, it, items);
-	} else {
-		TAILQ_INSERT_TAIL(&tl->items, it, items);
-	}
+	AG_ObjectLock(tl);
+
+	TAILQ_INSERT_HEAD(&tl->items, it, items);
 	tl->nitems++;
 
 	AG_Redraw(tl);
+	AG_ObjectUnlock(tl);
+}
+
+static __inline__ void
+InsertItemTail(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
+{
+	AG_ObjectLock(tl);
+
+	TAILQ_INSERT_TAIL(&tl->items, it, items);
+	tl->nitems++;
+
+	AG_Redraw(tl);
+	AG_ObjectUnlock(tl);
 }
 
 /* Add an item to the tail of the list (user pointer) */
@@ -861,12 +862,13 @@ AG_TlistAddPtr(AG_Tlist *tl, const AG_Surface *icon, const char *text,
 {
 	AG_TlistItem *it;
 
-	AG_ObjectLock(tl);
-	it = AG_TlistItemNew(tl, icon);
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
+
+	it = AG_TlistItemNew(icon);
 	it->p1 = p1;
 	Strlcpy(it->text, text, sizeof(it->text));
-	InsertItem(tl, it, 0);
-	AG_ObjectUnlock(tl);
+
+	InsertItemTail(tl, it);
 	return (it);
 }
 
@@ -876,15 +878,16 @@ AG_TlistAdd(AG_Tlist *tl, const AG_Surface *icon, const char *fmt, ...)
 {
 	AG_TlistItem *it;
 	va_list args;
+
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	
-	AG_ObjectLock(tl);
-	it = AG_TlistItemNew(tl, icon);
+	it = AG_TlistItemNew(icon);
 	it->p1 = it->text;
 	va_start(args, fmt);
 	Vsnprintf(it->text, sizeof(it->text), fmt, args);
 	va_end(args);
-	InsertItem(tl, it, 0);
-	AG_ObjectUnlock(tl);
+
+	InsertItemTail(tl, it);
 	return (it);
 }
 
@@ -894,12 +897,13 @@ AG_TlistAddS(AG_Tlist *tl, const AG_Surface *icon, const char *text)
 {
 	AG_TlistItem *it;
 
-	AG_ObjectLock(tl);
-	it = AG_TlistItemNew(tl, icon);
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
+
+	it = AG_TlistItemNew(icon);
 	it->p1 = it->text;
 	Strlcpy(it->text, text, sizeof(it->text));
-	InsertItem(tl, it, 0);
-	AG_ObjectUnlock(tl);
+
+	InsertItemTail(tl, it);
 	return (it);
 }
 
@@ -909,15 +913,16 @@ AG_TlistAddHead(AG_Tlist *tl, const AG_Surface *icon, const char *fmt, ...)
 {
 	AG_TlistItem *it;
 	va_list args;
+
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	
-	AG_ObjectLock(tl);
-	it = AG_TlistItemNew(tl, icon);
+	it = AG_TlistItemNew(icon);
 	it->p1 = it->text;
 	va_start(args, fmt);
 	Vsnprintf(it->text, sizeof(it->text), fmt, args);
 	va_end(args);
-	InsertItem(tl, it, 1);
-	AG_ObjectUnlock(tl);
+
+	InsertItemHead(tl, it);
 	return (it);
 }
 
@@ -927,12 +932,13 @@ AG_TlistAddHeadS(AG_Tlist *tl, const AG_Surface *icon, const char *text)
 {
 	AG_TlistItem *it;
 
-	AG_ObjectLock(tl);
-	it = AG_TlistItemNew(tl, icon);
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
+
+	it = AG_TlistItemNew(icon);
 	it->p1 = it->text;
 	Strlcpy(it->text, text, sizeof(it->text));
-	InsertItem(tl, it, 1);
-	AG_ObjectUnlock(tl);
+
+	InsertItemHead(tl, it);
 	return (it);
 }
 
@@ -943,12 +949,39 @@ AG_TlistAddPtrHead(AG_Tlist *tl, const AG_Surface *icon, const char *text,
 {
 	AG_TlistItem *it;
 
-	AG_ObjectLock(tl);
-	it = AG_TlistItemNew(tl, icon);
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
+
+	it = AG_TlistItemNew(icon);
 	it->p1 = p1;
 	Strlcpy(it->text, text, sizeof(it->text));
-	InsertItem(tl, it, 1);
-	AG_ObjectUnlock(tl);
+
+	InsertItemHead(tl, it);
+	return (it);
+}
+
+/* Return a newly allocated and initialized AG_TlistItem */
+AG_TlistItem *
+AG_TlistItemNew(const AG_Surface *icon)
+{
+	AG_TlistItem *it;
+
+	it = Malloc(sizeof(AG_TlistItem));
+#ifdef AG_TYPE_SAFETY
+	Strlcpy(it->tag, AG_TLIST_ITEM_TAG, sizeof(it->tag));
+#endif
+	it->icon = -1;
+	it->label = -1;
+	it->cat = "";
+	it->iconsrc = (icon) ? AG_SurfaceDup(icon) : NULL;
+
+	memset(&it->p1, 0, sizeof(void *) +         /* p1 */
+	                   sizeof(AG_Color *) +     /* color */
+	                   sizeof(AG_Font *) +      /* font */
+	                   sizeof(int) +            /* selected */
+	                   sizeof(Uint) +           /* depth */
+	                   sizeof(Uint) +           /* flags */
+	                   sizeof(Uint) +           /* fontFlags */
+	                   sizeof(char));           /* text[0] */
 	return (it);
 }
 
@@ -956,7 +989,9 @@ AG_TlistAddPtrHead(AG_Tlist *tl, const AG_Surface *icon, const char *text,
 void
 AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, const AG_Surface *S)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	if (it->iconsrc) {
 		AG_SurfaceFree(it->iconsrc);
 	}
@@ -965,15 +1000,18 @@ AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, const AG_Surface *S)
 		AG_WidgetUnmapSurface(tl, it->icon);
 		it->icon = -1;
 	}
-	AG_ObjectUnlock(tl);
+
 	AG_Redraw(tl);
+	AG_ObjectUnlock(tl);
 }
 
 /* Set an alternate, per-item text color. */
 void
 AG_TlistSetColor(AG_Tlist *tl, AG_TlistItem *it, const AG_Color *c)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	if (it->color) {
 		free(it->color);
 	}
@@ -983,6 +1021,7 @@ AG_TlistSetColor(AG_Tlist *tl, AG_TlistItem *it, const AG_Color *c)
 	} else {
 		it->color = NULL;
 	}
+
 	AG_ObjectUnlock(tl);
 }
 
@@ -990,16 +1029,19 @@ AG_TlistSetColor(AG_Tlist *tl, AG_TlistItem *it, const AG_Color *c)
 void
 AG_TlistSetFont(AG_Tlist *tl, AG_TlistItem *it, AG_Font *font)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
-	if (it->font && it->font != agDefaultFont) {
+#if 0
+	if (it->font)
 		AG_UnusedFont(it->font);
-	}
+#endif
 	if (font) {
 		font->nRefs++;
 		it->font = font;
 	} else {
 		it->font = NULL;
 	}
+
 	AG_ObjectUnlock(tl);
 }
 
@@ -1009,7 +1051,9 @@ AG_TlistSelectPtr(AG_Tlist *tl, void *p)
 {
 	AG_TlistItem *it;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	UpdatePolled(tl);
 	if ((tl->flags & AG_TLIST_MULTI) == 0) {
 		AG_TlistDeselectAll(tl);
@@ -1020,6 +1064,7 @@ AG_TlistSelectPtr(AG_Tlist *tl, void *p)
 			break;
 		}
 	}
+
 	AG_ObjectUnlock(tl);
 	return (it);
 }
@@ -1030,7 +1075,9 @@ AG_TlistSelectText(AG_Tlist *tl, const char *text)
 {
 	AG_TlistItem *it;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	UpdatePolled(tl);
 	if ((tl->flags & AG_TLIST_MULTI) == 0) {
 		AG_TlistDeselectAll(tl);
@@ -1042,6 +1089,7 @@ AG_TlistSelectText(AG_Tlist *tl, const char *text)
 			break;
 		}
 	}
+
 	AG_ObjectUnlock(tl);
 	return (it);
 }
@@ -1050,11 +1098,14 @@ AG_TlistSelectText(AG_Tlist *tl, const char *text)
 void
 AG_TlistSelect(AG_Tlist *tl, AG_TlistItem *it)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	if ((tl->flags & AG_TLIST_MULTI) == 0) {
 		AG_TlistDeselectAll(tl);
 	}
 	SelectItem(tl, it);
+
 	AG_ObjectUnlock(tl);
 }
 
@@ -1062,8 +1113,11 @@ AG_TlistSelect(AG_Tlist *tl, AG_TlistItem *it)
 void
 AG_TlistDeselect(AG_Tlist *tl, AG_TlistItem *it)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	DeselectItem(tl, it);
+
 	AG_ObjectUnlock(tl);
 }
 
@@ -1071,7 +1125,9 @@ AG_TlistDeselect(AG_Tlist *tl, AG_TlistItem *it)
 void
 AG_TlistSelectIdx(AG_Tlist *tl, Uint idx)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	if ((tl->flags & AG_TLIST_MULTI) == 0) {
 		AG_TlistDeselectAll(tl);
 	}
@@ -1089,6 +1145,7 @@ AG_TlistSelectIdx(AG_Tlist *tl, Uint idx)
 			}
 		}
 	}
+
 	AG_ObjectUnlock(tl);
 }
 
@@ -1096,7 +1153,9 @@ AG_TlistSelectIdx(AG_Tlist *tl, Uint idx)
 void
 AG_TlistDeselectIdx(AG_Tlist *tl, Uint idx)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	if (idx == 0) {
 		if (!TAILQ_EMPTY(&tl->items))
 			DeselectItem(tl, TAILQ_FIRST(&tl->items));
@@ -1111,6 +1170,7 @@ AG_TlistDeselectIdx(AG_Tlist *tl, Uint idx)
 			}
 		}
 	}
+
 	AG_ObjectUnlock(tl);
 }
 
@@ -1120,10 +1180,12 @@ AG_TlistSelectAll(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
-	TAILQ_FOREACH(it, &tl->items, items) {
+
+	TAILQ_FOREACH(it, &tl->items, items)
 		SelectItem(tl, it);
-	}
+
 	AG_ObjectUnlock(tl);
 }
 
@@ -1133,10 +1195,12 @@ AG_TlistDeselectAll(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
-	TAILQ_FOREACH(it, &tl->items, items) {
+
+	TAILQ_FOREACH(it, &tl->items, items)
 		DeselectItem(tl, it);
-	}
+
 	AG_ObjectUnlock(tl);
 }
 
@@ -1438,13 +1502,16 @@ AG_TlistFindByIndex(AG_Tlist *tl, int index)
 	AG_TlistItem *it;
 	int i = 0;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (++i == index) {
 			AG_ObjectUnlock(tl);
 			return (it);
 		}
 	}
+
 	AG_ObjectUnlock(tl);
 	return (NULL);
 }
@@ -1458,13 +1525,16 @@ AG_TlistSelectedItem(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected) {
 			AG_ObjectUnlock(tl);
 			return (it);
 		}
 	}
+
 	AG_ObjectUnlock(tl);
 	return (NULL);
 }
@@ -1479,7 +1549,9 @@ AG_TlistSelectedItemPtr(AG_Tlist *tl)
 	AG_TlistItem *it;
 	void *rv;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected) {
 			rv = it->p1;
@@ -1487,6 +1559,7 @@ AG_TlistSelectedItemPtr(AG_Tlist *tl)
 			return (rv);
 		}
 	}
+
 	AG_ObjectUnlock(tl);
 	return (NULL);
 }
@@ -1501,7 +1574,9 @@ AG_TlistFindPtr(AG_Tlist *tl)
 	AG_TlistItem *it;
 	void *rv;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected) {
 			rv = it->p1;
@@ -1509,6 +1584,7 @@ AG_TlistFindPtr(AG_Tlist *tl)
 			return (rv);
 		}
 	}
+
 	AG_ObjectUnlock(tl);
 	return (NULL);
 }
@@ -1522,13 +1598,16 @@ AG_TlistFindText(AG_Tlist *tl, const char *text)
 {
 	AG_TlistItem *it;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (strcmp(it->text, text) == 0) {
 			AG_ObjectUnlock(tl);
 			return (it);
 		}
 	}
+
 	AG_ObjectUnlock(tl);
 	return (NULL);
 }
@@ -1542,8 +1621,11 @@ AG_TlistFirstItem(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	it = TAILQ_FIRST(&tl->items);
+
 	AG_ObjectUnlock(tl);
 	return (it);
 }
@@ -1557,8 +1639,11 @@ AG_TlistLastItem(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	it = TAILQ_LAST(&tl->items, ag_tlist_itemq);
+
 	AG_ObjectUnlock(tl);
 	return (it);
 }
@@ -1570,8 +1655,11 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 	AG_TlistItem *it;
 	AG_Surface *sScaled;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	tl->item_h = ih;
+
 	TAILQ_FOREACH(it, &tl->items, items) {		/* Rescale icons */
 		if (it->icon == -1) {
 			continue;
@@ -1582,8 +1670,9 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 		}
 		AG_WidgetReplaceSurface(tl, it->icon, sScaled);
 	}
-	AG_ObjectUnlock(tl);
+
 	AG_Redraw(tl);
+	AG_ObjectUnlock(tl);
 }
 
 /* Set the width to use for item icons. */
@@ -1593,8 +1682,11 @@ AG_TlistSetIconWidth(AG_Tlist *tl, int iw)
 	AG_TlistItem *it;
 	AG_Surface *sScaled;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	tl->icon_w = iw;
+
 	TAILQ_FOREACH(it, &tl->items, items) {		/* Rescale icons */
 		if (it->icon == -1) {
 			continue;
@@ -1605,16 +1697,20 @@ AG_TlistSetIconWidth(AG_Tlist *tl, int iw)
 		}
 		AG_WidgetReplaceSurface(tl, it->icon, sScaled);
 	}
-	AG_ObjectUnlock(tl);
+
 	AG_Redraw(tl);
+	AG_ObjectUnlock(tl);
 }
 
 /* Set a callback to run when the user double clicks on an item. */
 void
 AG_TlistSetDblClickFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	tl->dblClickEv = AG_SetEvent(tl, NULL, fn, NULL);
+
 	if (fmt) {
 		va_list ap;
 
@@ -1622,6 +1718,7 @@ AG_TlistSetDblClickFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(tl->dblClickEv, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(tl);
 }
 
@@ -1629,8 +1726,11 @@ AG_TlistSetDblClickFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 void
 AG_TlistSetPopupFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	tl->popupEv = AG_SetEvent(tl, NULL, fn, NULL);
+
 	if (fmt) {
 		va_list ap;
 
@@ -1638,6 +1738,7 @@ AG_TlistSetPopupFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(tl->popupEv, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(tl);
 }
 
@@ -1645,8 +1746,11 @@ AG_TlistSetPopupFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 void
 AG_TlistSetChangedFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	tl->changedEv = AG_SetEvent(tl, NULL, fn, NULL);
+
 	if (fmt) {
 		va_list ap;
 
@@ -1654,6 +1758,7 @@ AG_TlistSetChangedFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(tl->changedEv, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(tl);
 }
 
@@ -1662,6 +1767,8 @@ AG_MenuItem *
 AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 {
 	AG_TlistPopup *tp;
+
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 
 	tp = Malloc(sizeof(AG_TlistPopup));
 	tp->iclass = iclass;
@@ -1682,6 +1789,7 @@ AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 void
 AG_TlistScrollToStart(AG_Tlist *tl)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	tl->rOffs = 0;
 	AG_Redraw(tl);
 }
@@ -1690,6 +1798,7 @@ AG_TlistScrollToStart(AG_Tlist *tl)
 void
 AG_TlistScrollToEnd(AG_Tlist *tl)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	tl->rOffs = MAX(0, tl->nitems - tl->nvisitems);
 	AG_Redraw(tl);
 }
@@ -1713,19 +1822,21 @@ AG_TlistSort(AG_Tlist *tl)
 	if ((items = TryMalloc(tl->nitems * sizeof(AG_TlistItem *))) == NULL)
 		return;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	TAILQ_FOREACH(it, &tl->items, items) {
 		items[i++] = it;
 	}
 	qsort(items, tl->nitems, sizeof(AG_TlistItem *), CompareText);
 	TAILQ_INIT(&tl->items);
-	for (i = 0; i < tl->nitems; i++) {
+	for (i = 0; i < tl->nitems; i++)
 		TAILQ_INSERT_TAIL(&tl->items, items[i], items);
-	}
-	free(items);
 
-	AG_ObjectUnlock(tl);
 	AG_Redraw(tl);
+	AG_ObjectUnlock(tl);
+
+	free(items);
 }
 
 #ifdef AG_TYPE_SAFETY

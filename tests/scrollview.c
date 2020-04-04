@@ -22,8 +22,8 @@ TestWithButtons(AG_Event *event)
 	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);
 	for (y = 0; y < 20; y++) {
 		hBox = AG_BoxNewHoriz(sv, 0);
-		AG_BoxSetSpacing(hBox, 1);
-		AG_BoxSetPadding(hBox, 0);
+		AG_SetStyle(hBox, "spacing", "0");
+		AG_SetStyle(hBox, "padding", "0");
 		for (x = 0; x < 20; x++)
 			AG_ButtonNew(hBox, AG_BUTTON_EXCL, "%c\n%02d",
 			    (char)(0x41+x), y);
@@ -88,7 +88,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_Box *box;
 
 	box = AG_BoxNewVert(win, AG_BOX_EXPAND);
-	AG_BoxSetPadding(box, 5);
+	AG_SetStyle(box, "padding", "0");
 	AG_LabelNewS(box, 0, _("Test for AG_Scrollview(3)"));
 	AG_SetStyle(box, "font-size", "150%");
 	AG_ButtonNewFn(box, AG_BUTTON_HFILL, _("Array of Buttons"),

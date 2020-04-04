@@ -1422,7 +1422,15 @@ UpdateWindowBG(AG_Window *_Nonnull win, const AG_Rect *_Nonnull rPrev)
 	}
 }
 
-/* Set window position and size (no bounds) */
+/*
+ * Set the coordinates and geometry of a window.
+ *
+ * If r.x or r.y is -1 then the window is auto-placed (according to the
+ * AG_WindowSetPosition() settings but subject to native WM limitations).
+ *
+ * If r.w or r.w is -1 then the window size is set automatically (according
+ * to the size requisition of the currently attached widgets).
+ */
 int
 AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 {
@@ -1436,7 +1444,18 @@ AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 	return AG_WindowSetGeometryRect(win, &r, 0);
 }
 
-/* Set the coordinates and geometry of a window. */
+/*
+ * Set the coordinates and geometry of a window.
+ *
+ * If r.x or r.y is -1 then the window is auto-placed (according to the
+ * AG_WindowSetPosition() settings but subject to native WM limitations).
+ *
+ * If r.w or r.w is -1 then the window size is set automatically (according
+ * to the size requisition of the currently attached widgets).
+ * 
+ * If bounded is 1 then the window geometry (or position) is clamped so that
+ * the window will not exceed the boundaries of the display.
+ */
 int
 AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 {
@@ -1445,9 +1464,7 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 	AG_SizeReq rWin;
 	AG_SizeAlloc a;
 	AG_Rect rPrev;
-	int new;
-	int nw, nh;
-	int wMin, hMin;
+	int autoplace, nw, nh, wMin, hMin;
 	Uint wDisp = 0, hDisp = 0;
 	
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
@@ -1458,10 +1475,9 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 	rPrev.y = WIDGET(win)->y;
 	rPrev.w = WIDGET(win)->w;
 	rPrev.h = WIDGET(win)->h;
-	new = ((WIDGET(win)->x == -1 || WIDGET(win)->y == -1));
+	autoplace = ((WIDGET(win)->x == -1 || WIDGET(win)->y == -1));
 
-	/* Compute the final window size. */
-	if (r->w == -1 || r->h == -1) {
+	if (r->w == -1 || r->h == -1) {                         /* Autosize */
 		AG_WidgetSizeReq(win, &rWin);
 		nw = (r->w == -1) ? rWin.w : r->w;
 		nh = (r->h == -1) ? rWin.h : r->h;
@@ -1469,9 +1485,9 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 		nw = r->w;
 		nh = r->h;
 	}
-	if (win->flags & AG_WINDOW_MINSIZEPCT) {
-		wMin = win->minPct*win->wReq/100;
-		hMin = win->minPct*win->hReq/100;
+	if (win->flags & AG_WINDOW_MINSIZEPCT) {        /* [wh]Min are in % */
+		wMin = win->minPct * win->wReq / 100;
+		hMin = win->minPct * win->hReq / 100;
 	} else {
 		wMin = win->wMin;
 		hMin = win->hMin;
@@ -1510,7 +1526,7 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
-		if (dc->type == AG_FRAMEBUFFER && win->visible && !new) {
+		if (dc->type == AG_FRAMEBUFFER && win->visible && !autoplace) {
 			UpdateWindowBG(win, &rPrev);
 		}
 		break;
@@ -1523,10 +1539,11 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 	}
 
 	win->dirty = 1;
+
 	AG_ObjectUnlock(win);
 	return (0);
 fail:
-	if (!new) {						/* Revert */
+	if (!autoplace) {                                         /* Revert */
 		a.x = rPrev.x;
 		a.y = rPrev.y;
 		a.w = rPrev.w;

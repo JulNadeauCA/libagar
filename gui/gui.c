@@ -87,22 +87,21 @@ static struct {
 	const char *_Nonnull key;
 	int        *_Nonnull p;
 } agGUIOptions[] = {
-	{ "kbd_delay",		&agKbdDelay		},
-	{ "kbd_repeat",		&agKbdRepeat		},
-	{ "ms_dblclick_delay",	&agMouseDblclickDelay	},
-	{ "ms_spin_delay",	&agMouseSpinDelay	},
-	{ "ms_spin_interval",	&agMouseSpinIval	},
-#ifdef AG_UNICODE
-	{ "text_composition",	&agTextComposition	},
-#endif
-	{ "text_cache",		&agTextCache		},
-	{ "text_tab_width",	&agTextTabWidth		},
-	{ "text_blink_rate",	&agTextBlinkRate	},
-	{ "text_symbols",	&agTextSymbols		},
-	{ "page_increment",	&agPageIncrement	},
-	{ "autocomplete_delay",	&agAutocompleteDelay	},
-	{ "autocomplete_rate",	&agAutocompleteRate	},
-	{ "screenshot_quality",	&agScreenshotQuality	},
+	{ "ClipboardIntegration", &agClipboardIntegration },
+	{ "KbdDelay",             &agKbdDelay             },
+	{ "KbdRepeat",            &agKbdRepeat            },
+	{ "MouseDblclickDelay",   &agMouseDblclickDelay   },
+	{ "MouseSpinDelay",       &agMouseSpinDelay       },
+	{ "MouseSpinIval",        &agMouseSpinIval        },
+	{ "MouseScrollIval",      &agMouseScrollIval      },
+	{ "ScrollButtonIval",     &agScrollButtonIval     },
+	{ "PageIncrement",        &agPageIncrement        },
+	{ "AutocompleteDelay",    &agAutocompleteDelay    },
+	{ "AutocompleteRate",     &agAutocompleteRate     },
+	{ "TextComposition",      &agTextComposition      },
+	{ "ScreenshotQuality",    &agScreenshotQuality    },
+	{ "TextTabWidth",         &agTextTabWidth         },
+	{ "TextBlinkRate",        &agTextBlinkRate        },
 };
 const Uint agGUIOptionCount = sizeof(agGUIOptions) / sizeof(agGUIOptions[0]);
 
@@ -182,17 +181,13 @@ int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
 int agMouseSpinIval = 30;		/* Spinbutton repeat interval */
 int agMouseScrollIval = 1;		/* Scrollbar increment interval */
 int agScrollButtonIval = 100;		/* Scrollbar button interval */
-#ifdef AG_UNICODE
-int agTextComposition = 1;		/* Built-in input composition */
-#endif
-int agTextCache = 1;			/* Dynamic text caching */
-int agTextTabWidth = 40;		/* Tab width (px) */
-int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
-int agTextSymbols = 1;			/* Process special symbols in text */
 int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
 int agAutocompleteDelay = 1;		/* Delay before autocomplete (ms) */
 int agAutocompleteRate = 80;		/* Autocomplete refresh rate (ms) */
 int agScreenshotQuality = 100;		/* JPEG quality in % */
+int agTextComposition = 1;		/* Input character composition */
+int agTextTabWidth = 40;		/* Tab width (px) */
+int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
 
 double agZoomValues[AG_ZOOM_MAX] = {
 	55.0, 60.0, 65.00, 70.00, 75.00, 80.00, 90.00, 95.00,
