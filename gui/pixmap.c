@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,8 +45,8 @@ AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
 	AG_ObjectInit(px, &agPixmapClass);
 	px->flags |= flags;
 	px->flags |= AG_PIXMAP_FORCE_SIZE;
-	px->pre_w = w;
-	px->pre_h = h;
+	px->wPre = w;
+	px->hPre = h;
 
 	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
 	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
@@ -208,17 +208,20 @@ AG_PixmapFromTexture(void *parent, Uint flags, Uint name, int lod)
  * Returned surface ID is valid as long as pixmap is locked.
  */
 int
-AG_PixmapAddSurface(AG_Pixmap *px, const AG_Surface *suOrig)
+AG_PixmapAddSurface(AG_Pixmap *px, const AG_Surface *Sorig)
 {
+	AG_Surface *S;
 	int name;
-	AG_Surface *su;
 
-	if ((su = AG_SurfaceConvert(suOrig, agSurfaceFmt)) == NULL)
+	if ((S = AG_SurfaceConvert(Sorig, agSurfaceFmt)) == NULL)
 		return (-1);
 
+	AG_OBJECT_ISA(px, "AG_Widget:AG_Pixmap:*");
 	AG_ObjectLock(px);
-	name = AG_WidgetMapSurface(px, su);
+
+	name = AG_WidgetMapSurface(px, S);
 	px->flags |= AG_PIXMAP_UPDATE;
+
 	AG_ObjectUnlock(px);
 	return (name);
 }
@@ -228,18 +231,21 @@ AG_PixmapAddSurface(AG_Pixmap *px, const AG_Surface *suOrig)
  * Returned surface ID is valid as long as pixmap is locked.
  */
 int
-AG_PixmapAddSurfaceScaled(AG_Pixmap *px, const AG_Surface *suOrig,
+AG_PixmapAddSurfaceScaled(AG_Pixmap *px, const AG_Surface *Sorig,
     Uint w, Uint h)
 {
-	AG_Surface *suScaled = NULL;
+	AG_Surface *S = NULL;
 	int name;
 	
-	if ((suScaled = AG_SurfaceScale(suOrig, w,h, 0)) == NULL)
+	if ((S = AG_SurfaceScale(Sorig, w,h, 0)) == NULL)
 		return (-1);
 
+	AG_OBJECT_ISA(px, "AG_Widget:AG_Pixmap:*");
 	AG_ObjectLock(px);
-	name = AG_WidgetMapSurface(px, suScaled);
+
+	name = AG_WidgetMapSurface(px, S);
 	px->flags |= AG_PIXMAP_UPDATE;
+
 	AG_ObjectUnlock(px);
 	return (name);
 }
@@ -262,9 +268,12 @@ AG_PixmapAddSurfaceFromFile(AG_Pixmap *px, const char *path)
 		return (-1);
 	}
 	
+	AG_OBJECT_ISA(px, "AG_Widget:AG_Pixmap:*");
 	AG_ObjectLock(px);
+
 	name = AG_WidgetMapSurface(px, su);
 	px->flags |= AG_PIXMAP_UPDATE;
+
 	AG_ObjectUnlock(px);
 
 	AG_SurfaceFree(suFile);
@@ -291,25 +300,40 @@ AG_PixmapUpdateSurface(AG_Pixmap *px, int name)
 int
 AG_PixmapSetSurface(AG_Pixmap *px, int name)
 {
+	AG_OBJECT_ISA(px, "AG_Widget:AG_Pixmap:*");
 	AG_ObjectLock(px);
+
 	if (name < 0 || name >= (int)AGWIDGET(px)->nSurfaces) {
 		AG_ObjectUnlock(px);
 		return (-1);
 	}
 	px->n = name;
 	px->flags |= AG_PIXMAP_UPDATE;
+
 	AG_ObjectUnlock(px);
 	AG_Redraw(px);
 	return (0);
+}
+
+/* Request an explicit size requisition in pixels. */
+void
+AG_PixmapSizeHint(AG_Pixmap *px, int w, int h)
+{
+	AG_OBJECT_ISA(px, "AG_Widget:AG_Pixmap:*");
+	px->wPre = w;
+	px->hPre = h;
 }
 
 /* Set texture coordinates. */
 void
 AG_PixmapSetCoords(AG_Pixmap *px, int s, int t)
 {
+	AG_OBJECT_ISA(px, "AG_Widget:AG_Pixmap:*");
 	AG_ObjectLock(px);
+
 	px->s = s;
 	px->t = t;
+
 	AG_ObjectUnlock(px);
 	AG_Redraw(px);
 }
@@ -330,14 +354,9 @@ Init(void *_Nonnull obj)
 	px->n = 0;
 	px->s = 0;
 	px->t = 0;
-	px->pre_w = 64;
-	px->pre_h = 64;
+	px->wPre = 64;
+	px->hPre = 64;
 	px->sScaled = -1;
-#if 0
-	AG_BindInt(px, "n", &px->n);
-	AG_BindInt(px, "s", &px->s);
-	AG_BindInt(px, "t", &px->t);
-#endif
 }
 
 static void
@@ -345,12 +364,15 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Pixmap *px = obj;
 
+	r->w = WIDGET(px)->paddingLeft + WIDGET(px)->paddingRight;
+	r->h = WIDGET(px)->paddingTop + WIDGET(px)->paddingBottom;
+
 	if ((px->flags & AG_PIXMAP_FORCE_SIZE) == 0 && px->n >= 0) {
-		r->w = WSURFACE(px,px->n)->w;
-		r->h = WSURFACE(px,px->n)->h;
+		r->w += WSURFACE(px,px->n)->w;
+		r->h += WSURFACE(px,px->n)->h;
 	} else {
-		r->w = px->pre_w;
-		r->h = px->pre_h;
+		r->w += px->wPre;
+		r->h += px->hPre;
 	}
 }
 
@@ -359,7 +381,8 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Pixmap *px = obj;
 	
-	if (a->w < 1 || a->h < 1) {
+	if (a->w < WIDGET(px)->paddingLeft + 1 + WIDGET(px)->paddingRight ||
+	    a->h < WIDGET(px)->paddingTop + 1 + WIDGET(px)->paddingBottom) {
 		return (-1);
 	}
 	px->flags |= AG_PIXMAP_UPDATE;
@@ -369,19 +392,19 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 static void
 UpdateScaled(AG_Pixmap *_Nonnull px)
 {
-	AG_Surface *sOrig, *sScaled;
+	AG_Surface *Sorig, *S;
 
-	if (px->n < 0 || WIDTH(px) == 0 || HEIGHT(px) == 0) {
+	if (px->n < 0 || WIDTH(px) == 0 || HEIGHT(px) == 0)
 		goto fail;
-	}
-	sOrig = WSURFACE(px, px->n);
-	if ((sScaled = AG_SurfaceScale(sOrig, WIDTH(px),HEIGHT(px), 0)) == NULL) {
+
+	Sorig = WSURFACE(px, px->n);
+	if ((S = AG_SurfaceScale(Sorig, WIDTH(px),HEIGHT(px), 0)) == NULL) {
 		goto fail;
 	}
 	if (px->sScaled == -1) {
-		px->sScaled = AG_WidgetMapSurface(px, sScaled);
+		px->sScaled = AG_WidgetMapSurface(px, S);
 	} else {
-		AG_WidgetReplaceSurface(px, px->sScaled, sScaled);
+		AG_WidgetReplaceSurface(px, px->sScaled, S);
 	}
 	return;
 fail:
@@ -404,10 +427,16 @@ Draw(void *_Nonnull obj)
 			UpdateScaled(px);
 			px->flags &= ~(AG_PIXMAP_UPDATE);
 		}
-		AG_WidgetBlitSurface(px, px->sScaled, px->s, px->t);
+		AG_WidgetBlitSurface(px, px->sScaled,
+		    WIDGET(px)->paddingLeft + px->s,
+		    WIDGET(px)->paddingTop  + px->t);
 	} else {
 		AG_PushClipRect(px, &WIDGET(px)->r);
-		AG_WidgetBlitSurface(px, px->n, px->s, px->t);
+
+		AG_WidgetBlitSurface(px, px->n,
+		    WIDGET(px)->paddingLeft + px->s,
+		    WIDGET(px)->paddingTop  + px->t);
+
 		AG_PopClipRect(px);
 	}
 }

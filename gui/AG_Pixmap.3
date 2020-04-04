@@ -47,13 +47,13 @@ to display interface decorations.
 Multiple images may be associated with an
 .Nm
 instance.
-This allows animations to be displayed (i.e., by mapping the frames using
+Animation can be done by mapping frames with
 .Fn AG_PixmapAddSurface
 and calling
 .Fn AG_PixmapSetSurface
 from an
 .Xr AG_Timer 3
-callback or a separate thread).
+callback or a separate thread.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -160,6 +160,9 @@ If OpenGL support is not available, an error is returned.
 .Fn AG_PixmapUpdateSurface "AG_Pixmap *pixmap" "int surface_name"
 .Pp
 .Ft "void"
+.Fn AG_PixmapSizeHint "AG_Pixmap *pixmap" "int w" "int h"
+.Pp
+.Ft "void"
 .Fn AG_PixmapSetCoords "AG_Pixmap *pixmap" "int s" "int t"
 .Pp
 .nr nS 0
@@ -197,6 +200,10 @@ If the contents of a currently mapped surface are directly modified,
 .Fn AG_PixmapUpdateSurface
 should be called.
 This routine may or may not be a no-op depending on the graphics mode.
+.Pp
+.Fn AG_PixmapSizeHint
+requests a specific geometry in pixels.
+The default geometry is that of the source surface passed to the constructor.
 .Pp
 The
 .Fn AG_PixmapSetCoords

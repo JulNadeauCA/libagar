@@ -19,7 +19,7 @@ typedef struct ag_pixmap {
 
 	int n;			/* Current surface (or -1) */
 	int s, t;		/* Source coordinates */
-	int pre_w, pre_h;	/* Geometry to use if there is no surface */
+	int wPre, hPre;		/* Size hint */
 	int sScaled;		/* Scaled surface (for RESCALE) */
 	Uint32 _pad;
 } AG_Pixmap;
@@ -55,6 +55,7 @@ int AG_PixmapAddSurfaceFromFile(AG_Pixmap *_Nonnull, const char *_Nonnull);
 void AG_PixmapReplaceSurface(AG_Pixmap *_Nonnull, int, AG_Surface *_Nonnull);
 void AG_PixmapUpdateSurface(AG_Pixmap *_Nonnull, int);
 int  AG_PixmapSetSurface(AG_Pixmap *_Nonnull, int);
+void AG_PixmapSizeHint(AG_Pixmap *px, int,int);
 void AG_PixmapSetCoords(AG_Pixmap *_Nonnull, int,int);
 
 AG_Surface *_Nonnull AG_PixmapGetSurface(const AG_Pixmap *_Nonnull, int);
