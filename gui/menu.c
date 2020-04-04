@@ -86,7 +86,7 @@ AG_MenuNewGlobal(Uint flags)
 	if (win == NULL) {
 		goto exists;
 	}
-	AG_WindowSetPadding(win, 0, 0, 0, 0);
+	AG_WindowSetPadding(win, 0,0,0,0);
 	AG_WindowSetCaptionS(win, agProgName ? agProgName : "agarapp");
 
 	m = AG_MenuNew(win, flags);
@@ -245,13 +245,14 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	if (mi->nSubItems == 0)
 		return (NULL);
 
-	if (mi->view) {
+	if (mi->view != NULL) {                                   /* Cached */
 		win = WIDGET(mi->view)->window;
 		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 #ifdef DEBUG_EXPAND
 		Debug(m, "Expand [%s] -> " AGSI_RED "%s" AGSI_RST " (cached)\n",
 		    mi->text, OBJECT(win)->name);
 #endif
+/*		AG_WidgetCompileStyle(win); */
 		AG_WindowSetGeometry(win, x,y, -1,-1);
 		AG_WindowRaise(win);
 		AG_WindowShow(win);
@@ -288,6 +289,7 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	mi->view->pmenu = m;
 	mi->view->pitem = mi;
 	AG_ObjectAttach(win, mi->view);
+	AG_WidgetCompileStyle(win);
 
 	if (winParent) {
 		AG_WindowAttach(winParent, win);
@@ -373,6 +375,7 @@ AG_MenuSetPadding(AG_Menu *m, int lPad, int rPad, int tPad, int bPad)
 void
 AG_MenuSetLabelPadding(AG_Menu *m, int lPad, int rPad, int tPad, int bPad)
 {
+	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	if (lPad != -1) { m->lPadLbl = lPad; }
 	if (rPad != -1) { m->rPadLbl = rPad; }
 	if (tPad != -1) { m->tPadLbl = tPad; }
@@ -563,8 +566,8 @@ AG_MenuSetIcon(AG_MenuItem *mi, const AG_Surface *iconSrc)
 		mi->icon = -1;
 	}
 
-	AG_ObjectUnlock(m);
 	AG_Redraw(m);
+	AG_ObjectUnlock(m);
 }
 
 /* Change menu item text (format string). */
@@ -585,8 +588,8 @@ AG_MenuSetLabel(AG_MenuItem *mi, const char *fmt, ...)
 
 	AG_MenuInvalidateLabels(mi);
 
-	AG_ObjectUnlock(m);
 	AG_Redraw(m);
+	AG_ObjectUnlock(m);
 }
 
 /* Change menu item text (C string). */
@@ -603,8 +606,8 @@ AG_MenuSetLabelS(AG_MenuItem *mi, const char *s)
 	mi->text = Strdup(s);
 	AG_MenuInvalidateLabels(mi);
 
-	AG_ObjectUnlock(m);
 	AG_Redraw(m);
+	AG_ObjectUnlock(m);
 }
 
 /* Create a menu separator. */
@@ -1320,6 +1323,7 @@ AG_MenuState(AG_MenuItem *mi, int state)
 
 	AG_MENU_ITEM_IS_VALID(mi);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
+
 	m->curState = state;
 }
 
@@ -1329,9 +1333,11 @@ AG_MenuToolbar(AG_MenuItem *mi, AG_Toolbar *tb)
 	AG_Menu *m = mi->pmenu;
 
 	AG_MENU_ITEM_IS_VALID(mi);
-	AG_ObjectLock(m);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
+	AG_ObjectLock(m);
+
 	m->curToolbar = tb;
+
 	AG_ObjectUnlock(m);
 }
 
