@@ -24,11 +24,8 @@
  */
 
 /*
- * This tool allows the user to inspect Agar widget instances, and also:
- *
- * - set local style attributes on live widgets
- * - create/edit style rules at the CSS level
- * - edit Agar stylesheet files (with syntax highlighting)
+ * This tool allows the user to inspect a live VFS of Agar widgets
+ * and to define or edit style attributes in real time.
  */
 
 #include <agar/core/core.h>
@@ -769,9 +766,9 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	AG_WindowSetCaption(win, _("Agar Style Editor: <%s> (\"%s\")"),
 	    AGOBJECT(tgt)->name, AGWINDOW(tgt)->caption);
 	
-	tl = agStyleEditorTlist = AG_TlistNewPolledMs(NULL,
-	    AG_TLIST_EXPAND, 64,
+	tl = agStyleEditorTlist = AG_TlistNewPolledMs(NULL, AG_TLIST_EXPAND, 80,
 	    PollWidgets, NULL);
+
 	AG_TlistSizeHint(tl, "<XXXXX/XXXXX/XXXXX/XXXXX>", 25);
 	AG_SetStyle(tl, "font-size", "80%");
 	AG_SetEvent(tl, "tlist-selected", TargetWidget, NULL);

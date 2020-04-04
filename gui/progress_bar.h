@@ -27,7 +27,7 @@ typedef struct ag_progress_bar {
 	enum ag_progress_bar_type type;	/* Style */
 	int width;			/* Width in pixels */
 	int length;			/* Length in pixels */
-	int pad;			/* Padding in pixels */
+	Uint32 _pad;
 	struct ag_text_cache *_Nonnull tCache; /* For SHOW_PCT */
 } AG_ProgressBar;
 

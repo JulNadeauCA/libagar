@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  */
 
 /*
- * Scroll Bar widget. Commonly used as a panning control. It can connect
+ * Scrollbar control.  Often used for panning / scrolling.  It can connect
  * to integer or floating-point variables representing a minimum, maximum,
  * current offset, and number of visible items.
  */
@@ -102,6 +102,7 @@ AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 void
 AG_ScrollbarSetIncFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_OBJECT_ISA(sb, "AG_Widget:AG_Scrollbar:*");
 	AG_ObjectLock(sb);
 	if (fn) {
 		sb->buttonIncFn = AG_SetEvent(sb, NULL, fn, NULL);
@@ -122,6 +123,7 @@ AG_ScrollbarSetIncFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 void
 AG_ScrollbarSetDecFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_OBJECT_ISA(sb, "AG_Widget:AG_Scrollbar:*");
 	AG_ObjectLock(sb);
 	if (fn) {
 		sb->buttonDecFn = AG_SetEvent(sb, NULL, fn, NULL);
@@ -766,18 +768,23 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Scrollbar *sb = obj;
 	const int zoomLvl = WIDGET(sb)->window->zoom;
+
 #ifdef AG_DEBUG
 	if (zoomLvl < 0 || zoomLvl >= sizeof(zoomSizes)/sizeof(int))
 		AG_FatalError("zoomLvl");
 #endif
 	switch (sb->type) {
 	case AG_SCROLLBAR_HORIZ:
-		r->h = zoomSizes[zoomLvl];
-		r->w = r->h << 2;
+		r->h = WIDGET(sb)->paddingTop + zoomSizes[zoomLvl] +
+		       WIDGET(sb)->paddingBottom;
+		r->w = WIDGET(sb)->paddingLeft + (r->h << 2) +
+		       WIDGET(sb)->paddingRight;
 		break;
 	case AG_SCROLLBAR_VERT:
-		r->w = zoomSizes[zoomLvl];
-		r->h = r->w << 2;
+		r->w = WIDGET(sb)->paddingLeft + zoomSizes[zoomLvl] +
+		       WIDGET(sb)->paddingRight;
+		r->h = WIDGET(sb)->paddingTop + (r->w << 2) +
+		       WIDGET(sb)->paddingBottom;
 		break;
 	}
 }
@@ -787,6 +794,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Scrollbar *sb = obj;
 	const int zoomLvl = WIDGET(sb)->window->zoom;
+
 #ifdef AG_DEBUG
 	if (zoomLvl < 0 || zoomLvl >= sizeof(zoomSizes)/sizeof(int))
 		AG_FatalError("zoomLvl");
@@ -1019,7 +1027,9 @@ AG_ScrollbarVisible(AG_Scrollbar *sb)
 {
 	int rv, x, len;
 
+	AG_OBJECT_ISA(sb, "AG_Widget:AG_Scrollbar:*");
 	AG_ObjectLock(sb);
+
 	if (!AG_Defined(sb, "value") ||
 	    !AG_Defined(sb, "min") ||
 	    !AG_Defined(sb, "max") ||
@@ -1028,6 +1038,7 @@ AG_ScrollbarVisible(AG_Scrollbar *sb)
 		return (1);
 	}
 	rv = (GetPxCoords(sb, &x, &len) == -1) ? 0 : 1;
+
 	AG_ObjectUnlock(sb);
 	return (rv);
 }

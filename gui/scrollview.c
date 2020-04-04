@@ -77,8 +77,8 @@ PlaceWidgets(AG_Scrollview *_Nonnull sv, int *_Nullable wTot,
 	AG_SizeAlloc aChld;
 	AG_Widget *chld;
 
-	aChld.x = -sv->xOffs;
-	aChld.y = -sv->yOffs;
+	aChld.x = WIDGET(sv)->paddingLeft - sv->xOffs;
+	aChld.y = WIDGET(sv)->paddingTop - sv->yOffs;
 
 	OBJECT_FOREACH_CHILD(chld, sv, ag_widget) {
 		if (chld == WIDGET(sv->vbar) || chld == WIDGET(sv->hbar)) {
@@ -103,16 +103,24 @@ PlaceWidgets(AG_Scrollview *_Nonnull sv, int *_Nullable wTot,
 	}
 	switch (sv->type) {
 	case AG_SCROLLVIEW_HORIZ:
-		if (wTot != NULL)
-			*wTot = aChld.x + sv->xOffs;
-		if (hTot != NULL)
-			*hTot = aChld.y+aChld.h + sv->yOffs;
+		if (wTot != NULL) {
+			*wTot = aChld.x + sv->xOffs +
+		                WIDGET(sv)->paddingRight;
+		}
+		if (hTot != NULL) {
+			*hTot = aChld.y+aChld.h + sv->yOffs +
+			        WIDGET(sv)->paddingBottom;
+		}
 		break;
 	case AG_SCROLLVIEW_VERT:
-		if (wTot != NULL)
-			*wTot = aChld.x+aChld.w + sv->xOffs;
-		if (hTot != NULL)
-			*hTot = aChld.y + sv->yOffs;
+		if (wTot != NULL) {
+			*wTot = aChld.x+aChld.w + sv->xOffs +
+			        WIDGET(sv)->paddingRight;
+		}
+		if (hTot != NULL) {
+			*hTot = aChld.y + sv->yOffs +
+			        WIDGET(sv)->paddingBottom;
+		}
 		break;
 	}
 }
@@ -157,7 +165,7 @@ static void
 MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Scrollview *sv = AG_SCROLLVIEW_SELF();
-	int button = AG_INT(1);
+	const int button = AG_INT(1);
 
 	switch (button) {
 	case AG_MOUSE_MIDDLE:
@@ -279,9 +287,12 @@ AG_ScrollviewNew(void *parent, Uint flags)
 void
 AG_ScrollviewSetIncrement(AG_Scrollview *sv, int incr)
 {
+	AG_OBJECT_ISA(sv, "AG_Widget:AG_Scrollview:*");
 	AG_ObjectLock(sv);
+
 	if (sv->hbar) { AG_SetInt(sv->hbar, "inc", incr); }
 	if (sv->vbar) { AG_SetInt(sv->vbar, "inc", incr); }
+
 	AG_ObjectUnlock(sv);
 }
 
@@ -293,27 +304,29 @@ Init(void *_Nonnull obj)
 	sv->flags = 0;
 	sv->type = AG_SCROLLVIEW_VERT;			/* Pack vertically */
 	sv->style = AG_SCROLLVIEW_STYLE_WELL;		/* 3D well */
-	sv->wPre = (AG_MODEL * 8);
-	sv->hPre = (AG_MODEL * 8);
-	memset(&sv->xOffs, 0, sizeof(int) +		/* xOffs */
-	                      sizeof(int) +		/* yOffs */
-	                      sizeof(int) +		/* xMin */
-	                      sizeof(int) +		/* xMax */
-	                      sizeof(int) +		/* yMin */
-	                      sizeof(int) +		/* yMax */
-	                      sizeof(int) +		/* wBar */
-	                      sizeof(int) +		/* hBar */
-			      sizeof(AG_Rect) +		/* r */
-			      sizeof(AG_Scrollbar *) +	/* hbar */
-			      sizeof(AG_Scrollbar *));	/* vbar */
+	memset(&sv->wPre, 0, sizeof(int) +              /* wPre */
+	                     sizeof(int) +		/* hPre */
+	                     sizeof(int) +		/* xOffs */
+	                     sizeof(int) +		/* yOffs */
+	                     sizeof(int) +		/* xMin */
+	                     sizeof(int) +		/* xMax */
+	                     sizeof(int) +		/* yMin */
+	                     sizeof(int) +		/* yMax */
+	                     sizeof(int) +		/* wBar */
+	                     sizeof(int) +		/* hBar */
+	                     sizeof(AG_Rect) +		/* r */
+	                     sizeof(AG_Scrollbar *) +	/* hbar */
+	                     sizeof(AG_Scrollbar *));	/* vbar */
 
 	AG_SetInt(sv, "x-scroll-amount", 40);
 	AG_SetInt(sv, "y-scroll-amount", 40);
 }
 
+/* Request an explicit size in pixels (default = 0 = auto) */
 void
 AG_ScrollviewSizeHint(AG_Scrollview *sv, Uint w, Uint h)
 {
+	AG_OBJECT_ISA(sv, "AG_Widget:AG_Scrollview:*");
 	sv->wPre = w;
 	sv->hPre = h;
 }
@@ -324,10 +337,9 @@ SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 	AG_Scrollview *sv = p;
 	AG_SizeReq rBar, rChld;
 	AG_Widget *chld;
-	int wMax = 0, hMax = 0;
 	
-	r->w = sv->wPre;
-	r->h = sv->hPre;
+	r->w = WIDGET(sv)->paddingLeft + sv->wPre + WIDGET(sv)->paddingRight;
+	r->h = WIDGET(sv)->paddingTop + sv->hPre + WIDGET(sv)->paddingBottom;
 	
 	if (sv->hbar) {
 		AG_WidgetSizeReq(sv->hbar, &rBar);
@@ -337,23 +349,27 @@ SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 		AG_WidgetSizeReq(sv->vbar, &rBar);
 		r->w += rBar.w;
 	}
-	
-	OBJECT_FOREACH_CHILD(chld, sv, ag_widget) {
-		if (chld == WIDGET(sv->vbar) || chld == WIDGET(sv->hbar)) {
-			continue;
-		}
-		AG_WidgetSizeReq(chld, &rChld);
-		if (rChld.w > wMax) { wMax = rChld.w; }
-		if (rChld.h > hMax) { hMax = rChld.h; }
-		switch (sv->type) {
-		case AG_SCROLLVIEW_HORIZ:
-			r->h = MAX(r->h, hMax);
-			r->w += rChld.w;
-			break;
-		case AG_SCROLLVIEW_VERT:
-			r->w = MAX(r->w, wMax);
-			r->h += rChld.h;
-			break;
+	if (sv->wPre == 0 || sv->hPre == 0) {                  /* Auto-size */
+		int wMax = 0, hMax = 0;
+
+		OBJECT_FOREACH_CHILD(chld, sv, ag_widget) {
+			if (chld == WIDGET(sv->vbar) ||
+			    chld == WIDGET(sv->hbar)) {
+				continue;
+			}
+			AG_WidgetSizeReq(chld, &rChld);
+			if (rChld.w > wMax) { wMax = rChld.w; }
+			if (rChld.h > hMax) { hMax = rChld.h; }
+			switch (sv->type) {
+			case AG_SCROLLVIEW_HORIZ:
+				r->h = MAX(r->h, hMax);
+				r->w += rChld.w;
+				break;
+			case AG_SCROLLVIEW_VERT:
+				r->w = MAX(r->w, wMax);
+				r->h += rChld.h;
+				break;
+			}
 		}
 	}
 }

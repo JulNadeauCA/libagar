@@ -1,15 +1,15 @@
 /*
- * Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2010-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 1. Redistributions of source code must retain the above copyright
- *	  notice, this list of conditions and the following disclaimer.
+ *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
- *	  notice, this list of conditions and the following disclaimer in the
- *	  documentation and/or other materials provided with the distribution.
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -95,7 +95,7 @@ OnFontChange(AG_Event *_Nonnull event)
 	AG_ProgressBar *pb = AG_PROGRESSBAR_SELF();
 	const AG_Font *font = WFONT(pb);
 
-	pb->width = font->height + 10;
+	pb->width = font->height + 10; /* XXX style */
 	AG_TextCacheClear(pb->tCache);
 }
 
@@ -113,9 +113,8 @@ Init(void *_Nonnull obj)
 	pb->value = 0;
 	pb->min = 0;
 	pb->max = 100;
-	pb->width = agTextFontHeight+10;
+	pb->width = agTextFontHeight+10; /* XXX style */
 	pb->length = 300;
-	pb->pad = 2;
 	pb->tCache = AG_TextCacheNew(pb, 100, 1);
 	
 	AG_BindInt(pb, "value", &pb->value);
@@ -124,8 +123,6 @@ Init(void *_Nonnull obj)
 	
 	AG_AddEvent(pb, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(pb, "widget-shown", OnShow, NULL);
-
-	AG_SetString(pb, "font-size", "90%");
 }
 
 static void
@@ -139,6 +136,7 @@ Destroy(void *_Nonnull obj)
 void
 AG_ProgressBarSetWidth(AG_ProgressBar *pb, int width)
 {
+	AG_OBJECT_ISA(pb, "AG_Widget:AG_ProgressBar:*");
 	pb->width = width;
 	AG_Redraw(pb);
 }
@@ -146,6 +144,7 @@ AG_ProgressBarSetWidth(AG_ProgressBar *pb, int width)
 void
 AG_ProgressBarSetLength(AG_ProgressBar *pb, int length)
 {
+	AG_OBJECT_ISA(pb, "AG_Widget:AG_ProgressBar:*");
 	pb->length = length;
 	AG_Redraw(pb);
 }
@@ -155,14 +154,17 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_ProgressBar *pb = obj;
 
+	r->w = WIDGET(pb)->paddingLeft + WIDGET(pb)->paddingRight;
+	r->h = WIDGET(pb)->paddingTop + WIDGET(pb)->paddingBottom;
+
 	switch (pb->type) {
 	case AG_PROGRESS_BAR_HORIZ:
-		r->w = pb->length;
-		r->h = pb->width;
+		r->w += pb->length;
+		r->h += pb->width;
 		break;
 	case AG_PROGRESS_BAR_VERT:
-		r->w = pb->width;
-		r->h = pb->length;
+		r->w += pb->width;
+		r->h += pb->length;
 		break;
 	}
 }
@@ -170,21 +172,26 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
-	if (a->w < 5 || a->h < 5) {
+	if (a->w < WIDGET(obj)->paddingLeft + 5 + WIDGET(obj)->paddingRight ||
+	    a->h < WIDGET(obj)->paddingTop + 5 + WIDGET(obj)->paddingBottom) {
 		return (-1);
 	}
 	return (0);
 }
 
+/* Return current value in %. */
 int
 AG_ProgressBarPercent(AG_ProgressBar *pb)
 {
 	int min, max, val;
 
+	AG_OBJECT_ISA(pb, "AG_Widget:AG_ProgressBar:*");
 	AG_ObjectLock(pb);
+
 	min = AG_GetInt(pb, "min");
 	max = AG_GetInt(pb, "max");
 	val = AG_GetInt(pb, "value");
+
 	AG_ObjectUnlock(pb);
 
 	if (val < min) { val = min; }
@@ -197,18 +204,18 @@ static void
 DrawPercentText(AG_ProgressBar *_Nonnull pb)
 {
 	char s[32];
-	int su;
+	int ent;
 
 	StrlcpyInt(s, AG_ProgressBarPercent(pb), sizeof(s));
 	Strlcat(s, "%", sizeof(s));
 
-	if ((su = AG_TextCacheGet(pb->tCache, s)) != -1) {
-		AG_Surface *s = WSURFACE(pb,su);
+	if ((ent = AG_TextCacheGet(pb->tCache, s)) != -1) {
+		AG_Surface *S = WSURFACE(pb, ent);
 
-		if (HEIGHT(pb) >= s->h && s->w <= WIDTH(pb)) {
-			AG_WidgetBlitSurface(pb, su,
-			    (WIDTH(pb) >> 1)  - (s->w >> 1),
-			    (HEIGHT(pb) >> 1) - (s->h >> 1));
+		if (HEIGHT(pb) >= S->h && S->w <= WIDTH(pb)) {
+			AG_WidgetBlitSurface(pb, ent,
+			    (WIDTH(pb) >> 1)  - (S->w >> 1),
+			    (HEIGHT(pb) >> 1) - (S->h >> 1));
 		}
 	}
 }
@@ -218,8 +225,11 @@ Draw(void *_Nonnull obj)
 {
 	AG_ProgressBar *pb = obj;
 	AG_Rect rd = WIDGET(pb)->r;
+	const int paddingLeft   = WIDGET(pb)->paddingLeft;
+	const int paddingRight  = WIDGET(pb)->paddingRight;
+	const int paddingTop    = WIDGET(pb)->paddingTop;
+	const int paddingBottom = WIDGET(pb)->paddingBottom;
 	int min, max, val;
-	int pad, pad2;
 
 	min = AG_GetInt(pb, "min");
 	max = AG_GetInt(pb, "max");
@@ -231,22 +241,21 @@ Draw(void *_Nonnull obj)
 
 	if ((max - min) <= 0)
 		return;
-	
-	pad = pb->pad;
-	pad2 = pad << 1;
+
+	rd.x = paddingLeft;
+	rd.y = paddingTop;
 
 	switch (pb->type) {
 	case AG_PROGRESS_BAR_VERT:
-		rd.x = pad;
-		rd.y = pad + (val - min)*(rd.h - pad2)/(max - min);
-		rd.w -= pad2;
+		rd.h -= (paddingTop + paddingBottom);
+		rd.y += rd.h - (val-min)*(rd.h)/(max-min) - 1;
+		rd.h = HEIGHT(pb) - paddingTop - rd.y + 1;
+		rd.w -= (paddingLeft + paddingRight);
 		break;
 	case AG_PROGRESS_BAR_HORIZ:
 	default:
-		rd.x = pad;
-		rd.y = pad;
-		rd.w = (val - min)*(rd.w - pad2)/(max - min);
-		rd.h -= pad2;
+		rd.w = (val-min)*(rd.w - paddingLeft - paddingRight)/(max-min);
+		rd.h -= (paddingTop + paddingBottom);
 		break;
 	}
 	AG_DrawRect(pb, &rd, &WCOLOR(pb,SELECTION_COLOR));

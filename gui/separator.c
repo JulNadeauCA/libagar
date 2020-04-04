@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,25 +35,6 @@
 #include <agar/gui/primitive.h>
 
 AG_Separator *
-AG_SeparatorNew(void *parent, enum ag_separator_type type)
-{
-	AG_Separator *sep;
-
-	sep = Malloc(sizeof(AG_Separator));
-	AG_ObjectInit(sep, &agSeparatorClass);
-	sep->type = type;
-	sep->visible = 1;
-
-	if (type == AG_SEPARATOR_HORIZ) {
-		AG_ExpandHoriz(sep);
-	} else {
-		AG_ExpandVert(sep);
-	}
-	AG_ObjectAttach(parent, sep);
-	return (sep);
-}
-
-AG_Separator *
 AG_SeparatorNewHoriz(void *parent)
 {
 	return AG_SeparatorNew(parent, AG_SEPARATOR_HORIZ);
@@ -66,14 +47,13 @@ AG_SeparatorNewVert(void *parent)
 }
 
 AG_Separator *
-AG_SpacerNew(void *parent, enum ag_separator_type type)
+AG_SeparatorNew(void *parent, enum ag_separator_type type)
 {
 	AG_Separator *sep;
 
 	sep = Malloc(sizeof(AG_Separator));
 	AG_ObjectInit(sep, &agSeparatorClass);
 	sep->type = type;
-	sep->visible = 0;
 
 	if (type == AG_SEPARATOR_HORIZ) {
 		AG_ExpandHoriz(sep);
@@ -96,14 +76,32 @@ AG_SpacerNewVert(void *parent)
 	return AG_SpacerNew(parent, AG_SEPARATOR_VERT);
 }
 
+AG_Separator *
+AG_SpacerNew(void *parent, enum ag_separator_type type)
+{
+	AG_Separator *sep;
+
+	sep = Malloc(sizeof(AG_Separator));
+	AG_ObjectInit(sep, &agSeparatorClass);
+	sep->type = type;
+
+	WIDGET(sep)->flags |= AG_WIDGET_HIDE;
+
+	if (type == AG_SEPARATOR_HORIZ) {
+		AG_ExpandHoriz(sep);
+	} else {
+		AG_ExpandVert(sep);
+	}
+	AG_ObjectAttach(parent, sep);
+	return (sep);
+}
+
 static void
 Init(void *_Nonnull obj)
 {
 	AG_Separator *sep = obj;
 
 	sep->type = AG_SEPARATOR_HORIZ;
-	sep->padding = 4;
-	sep->visible = 1;
 	sep->minLen = 0;
 }
 
@@ -111,22 +109,31 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Separator *sep = obj;
-	const int padding2 = (sep->padding << 1) + 2;
 
 	if (sep->minLen > 0) {
 		switch (sep->type) {
 		case AG_SEPARATOR_HORIZ:
 			r->w = sep->minLen;
-			r->h = padding2;
+			r->h = WIDGET(sep)->paddingTop +
+		               WIDGET(sep)->paddingBottom;
 			break;
 		case AG_SEPARATOR_VERT:
-			r->w = padding2;
+			r->w = WIDGET(sep)->paddingLeft +
+			       WIDGET(sep)->paddingRight;
 			r->h = sep->minLen;
 			break;
 		}
 	} else {
-		r->w = padding2;
-		r->h = padding2;
+		switch (sep->type) {
+		case AG_SEPARATOR_HORIZ:
+			r->w = WIDGET(sep)->paddingLeft + WIDGET(sep)->paddingRight;
+			r->h = WIDGET(sep)->paddingTop + 2 + WIDGET(sep)->paddingBottom;
+			break;
+		case AG_SEPARATOR_VERT:
+			r->w = WIDGET(sep)->paddingLeft + 2 + WIDGET(sep)->paddingRight;
+			r->h = WIDGET(sep)->paddingTop + WIDGET(sep)->paddingBottom;
+			break;
+		}
 	}
 }
 
@@ -134,10 +141,9 @@ static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Separator *sep = obj;
-	const int padding2 = (sep->padding << 1) + 2;
 
-	if (a->w < padding2 ||
-	    a->h < padding2) {
+	if (a->w < WIDGET(sep)->paddingLeft + WIDGET(sep)->paddingRight ||
+	    a->h < WIDGET(sep)->paddingTop + WIDGET(sep)->paddingBottom) {
 		return (-1);
 	}
 	return (0);
@@ -149,31 +155,36 @@ Draw(void *_Nonnull obj)
 	AG_Separator *sep = obj;
 	AG_Color c1 = WCOLOR(sep, LINE_COLOR);
 	AG_Color c2 = c1;
-	const int padding = sep->padding;
-
-	if (!sep->visible)
-		return;
 
 	AG_ColorDarken(&c1, 2);
-	AG_ColorLighten(&c2, 2);
+	AG_ColorLighten(&c2, 3);
 
 	switch (sep->type) {
 	case AG_SEPARATOR_HORIZ:
-		AG_DrawLineH(sep, 0, WIDTH(sep), padding,   &c1);
-		AG_DrawLineH(sep, 0, WIDTH(sep), padding+1, &c2);
+		AG_DrawLineH(sep,
+		    WIDGET(sep)->paddingLeft,                /* x1 */
+		    WIDTH(sep) - WIDGET(sep)->paddingRight,  /* x2 */
+		    WIDGET(sep)->paddingTop,                 /* y */
+		    &c1);
+		AG_DrawLineH(sep,
+		    WIDGET(sep)->paddingLeft,
+		    WIDTH(sep) - WIDGET(sep)->paddingRight,
+		    WIDGET(sep)->paddingTop+1,
+		    &c2);
 		break;
 	case AG_SEPARATOR_VERT:
-		AG_DrawLineV(sep, padding,   0, HEIGHT(sep), &c1);
-		AG_DrawLineV(sep, padding+1, 0, HEIGHT(sep), &c2);
+		AG_DrawLineV(sep,
+		    WIDGET(sep)->paddingLeft,                 /* x */
+		    WIDGET(sep)->paddingTop,                  /* y1 */
+		    HEIGHT(sep) - WIDGET(sep)->paddingBottom, /* y2 */
+		    &c1);
+		AG_DrawLineV(sep,
+		    WIDGET(sep)->paddingLeft+1,
+		    WIDGET(sep)->paddingTop,
+		    HEIGHT(sep) - WIDGET(sep)->paddingBottom,
+		    &c2);
 		break;
 	}
-}
-
-void
-AG_SeparatorSetPadding(AG_Separator *sep, Uint pixels)
-{
-	sep->padding = pixels;
-	AG_Redraw(sep);
 }
 
 void
@@ -182,6 +193,14 @@ AG_SeparatorSetLength(AG_Separator *sep, Uint minLen)
 	sep->minLen = minLen;
 	AG_Redraw(sep);
 }
+
+#ifdef AG_LEGACY
+void
+AG_SeparatorSetPadding(AG_Separator *sep, Uint pixels)
+{
+	AG_SetStyleF(sep, "padding", "%d", pixels);
+}
+#endif
 
 AG_WidgetClass agSeparatorClass = {
 	{

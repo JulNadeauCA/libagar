@@ -456,7 +456,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_ObjectLock(m);
 	
 	TAILQ_FOREACH(item, &mi->subItems, items) {
-		int wReq = paddingHoriz, wLbl;
+		int wReq = 0, wLbl;
 
 		if (item->poll)
 			UpdateItem(m, item);
@@ -473,11 +473,13 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		if (item->nSubItems > 0) {
 			wReq += mv->spLblArrow + agIconSmallArrowRight.s->w;
 		}
-		if (wReq > r->w) {
-			r->w = wReq;
+		if (paddingHoriz+wReq > r->w) {
+			r->w = paddingHoriz+wReq;
 		}
 		r->h += itemh;
 	}
+
+	r->w += paddingHoriz;
 	
 	AG_ObjectUnlock(m);
 }

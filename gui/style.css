@@ -1,18 +1,11 @@
 /*
  * Default Agar Stylesheet.
  *
- * Widgets inherit the style attributes of their parents, unless overridden
- * either by an instance AG_Variable or a matching stylesheet definition.
+ * Colors and font attributes of parents are inherited by default (unless
+ * overridden by an instance Variable or matching stylesheet definition).
+ * Padding and spacing attributes are not inherited by default.
  *
- * Agar Stylesheet definitions are blocks of attribute-value pairs which can
- * match widgets in different ways:
- *
- * - By Agar class: "AG_Label", "AG_Label:*", "Agar(Label):My(Label)"
- * - By "id" Variable: "#mine", "AG_Button.#mine"
- * - By "class" Variable: ".dark", "AG_Button.dark"
- *
- * Agar cascading stylesheets are documented in: AG_StyleSheet(3) and
- * AG_Widget(3) (under the STYLING section).
+ * See: AG_StyleSheet(3) and "STYLE ATTRIBUTES" section of AG_Widget(3).
  */
 
 AG_Widget {
@@ -85,4 +78,12 @@ AG_Pane {
 AG_Radio {
 	spacing: 1;
 	background-color#hover: rgb(80,80,120);
+}
+AG_ProgressBar {
+	font-family: league-gothic;
+	font-size: 90%;
+	padding: 2;
+}
+AG_Separator {
+	padding: 4;
 }

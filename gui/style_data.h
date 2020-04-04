@@ -3,18 +3,11 @@ const char *agStyleDefault_Data =
 	"/*\n"
 	" * Default Agar Stylesheet.\n"
 	" *\n"
-	" * Widgets inherit the style attributes of their parents, unless overridden\n"
-	" * either by an instance AG_Variable or a matching stylesheet definition.\n"
+	" * Colors and font attributes of parents are inherited by default (unless\n"
+	" * overridden by an instance Variable or matching stylesheet definition).\n"
+	" * Padding and spacing attributes are not inherited by default.\n"
 	" *\n"
-	" * Agar Stylesheet definitions are blocks of attribute-value pairs which can\n"
-	" * match widgets in different ways:\n"
-	" *\n"
-	" * - By Agar class: \"AG_Label\", \"AG_Label:*\", \"Agar(Label):My(Label)\"\n"
-	" * - By \"id\" Variable: \"#mine\", \"AG_Button.#mine\"\n"
-	" * - By \"class\" Variable: \".dark\", \"AG_Button.dark\"\n"
-	" *\n"
-	" * Agar cascading stylesheets are documented in: AG_StyleSheet(3) and\n"
-	" * AG_Widget(3) (under the STYLING section).\n"
+	" * See: AG_StyleSheet(3) and \"STYLE ATTRIBUTES\" section of AG_Widget(3).\n"
 	" */\n"
 	"AG_Widget {\n"
 	"background-color: #0000;                   /* #RGBA */\n"
@@ -85,11 +78,19 @@ const char *agStyleDefault_Data =
 	"spacing: 1;\n"
 	"background-color#hover: rgb(80,80,120);\n"
 	"}\n"
+	"AG_ProgressBar {\n"
+	"font-family: league-gothic;\n"
+	"font-size: 90%;\n"
+	"padding: 2;\n"
+	"}\n"
+	"AG_Separator {\n"
+	"padding: 4;\n"
+	"}\n"
 	"";
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2033,
+	1850,
 	&agStyleDefault_Data,
 	NULL
 };

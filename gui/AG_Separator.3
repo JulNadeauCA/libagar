@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -65,9 +65,6 @@ widget draws a horizontal or vertical line or spacer.
 .Fn AG_SpacerNewVert "AG_Widget *parent"
 .Pp
 .Ft void
-.Fn AG_SeparatorSetPadding "AG_Separator *sep" "Uint pixels"
-.Pp
-.Ft void
 .Fn AG_SeparatorSetLength "AG_Separator *sep" "Uint pixels"
 .Pp
 .nr nS 0
@@ -101,11 +98,6 @@ on horizontal separators or
 .Xr AG_ExpandVert 3
 on vertical separators, they are expanded by default.
 .Pp
-.Fn AG_SeparatorSetPadding
-sets the padding around the separator line in pixels.
-The total width of the separation will be
-.Va pixels*2 .
-.Pp
 By default,
 .Nm
 expands to fit available space in parent container.
@@ -123,3 +115,5 @@ widget does not generate any event.
 The
 .Nm
 widget first appeared in Agar 1.0.
+.Fn AG_SeparatorSetPadding
+was replaced by the generic "padding" style attribute in Agar 1.6.0.
