@@ -43,13 +43,12 @@ AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
 
 	px = Malloc(sizeof(AG_Pixmap));
 	AG_ObjectInit(px, &agPixmapClass);
-	px->flags |= flags;
-	px->flags |= AG_PIXMAP_FORCE_SIZE;
+
+	if (flags & AG_PIXMAP_HFILL) { WIDGET(px)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_PIXMAP_VFILL) { WIDGET(px)->flags |= AG_WIDGET_VFILL; }
+	px->flags |= (flags | AG_PIXMAP_FORCE_SIZE);
 	px->wPre = w;
 	px->hPre = h;
-
-	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
-	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
 
 	AG_WidgetMapSurface(px, AG_SurfaceEmpty());
 	AG_ObjectAttach(parent, px);
@@ -64,11 +63,11 @@ AG_PixmapFromSurface(void *parent, Uint flags, const AG_Surface *su)
 
 	px = Malloc(sizeof(AG_Pixmap));
 	AG_ObjectInit(px, &agPixmapClass);
+
+	if (flags & AG_PIXMAP_HFILL) { WIDGET(px)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_PIXMAP_VFILL) { WIDGET(px)->flags |= AG_WIDGET_VFILL; }
 	px->flags |= flags;
 
-	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
-	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
-	
 	AG_ObjectAttach(parent, px);
 
 	AG_WidgetMapSurface(px, (su) ? AG_SurfaceConvert(su, agSurfaceFmt) :
@@ -84,11 +83,11 @@ AG_PixmapFromSurfaceNODUP(void *parent, Uint flags, AG_Surface *su)
 
 	px = Malloc(sizeof(AG_Pixmap));
 	AG_ObjectInit(px, &agPixmapClass);
+
+	if (flags & AG_PIXMAP_HFILL) { WIDGET(px)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_PIXMAP_VFILL) { WIDGET(px)->flags |= AG_WIDGET_VFILL; }
 	px->flags |= flags;
 
-	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
-	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
-	
 	AG_ObjectAttach(parent, px);
 
 	AG_WidgetMapSurfaceNODUP(px, su);
@@ -105,11 +104,11 @@ AG_PixmapFromSurfaceScaled(void *parent, Uint flags, const AG_Surface *su,
 
 	px = Malloc(sizeof(AG_Pixmap));
 	AG_ObjectInit(px, &agPixmapClass);
+
+	if (flags & AG_PIXMAP_HFILL) { WIDGET(px)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_PIXMAP_VFILL) { WIDGET(px)->flags |= AG_WIDGET_VFILL; }
 	px->flags |= flags;
 
-	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
-	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
-	
 	AG_ObjectAttach(parent, px);
 
 	if (su != NULL) {
@@ -135,11 +134,11 @@ AG_PixmapFromFile(void *parent, Uint flags, const char *file)
 
 	px = Malloc(sizeof(AG_Pixmap));
 	AG_ObjectInit(px, &agPixmapClass);
+
+	if (flags & AG_PIXMAP_HFILL) { WIDGET(px)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_PIXMAP_VFILL) { WIDGET(px)->flags |= AG_WIDGET_VFILL; }
 	px->flags |= flags;
 
-	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
-	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
-	
 	AG_ObjectAttach(parent, px);
 	AG_WidgetMapSurface(px, S);
 /*	AG_WidgetMapSurface(px, AG_SurfaceConvert(S, agSurfaceFmt)); */
@@ -153,14 +152,14 @@ AG_Pixmap *
 AG_PixmapFromTexture(void *parent, Uint flags, Uint name, int lod)
 {
 	AG_Pixmap *px;
-	AG_Surface *su;
+	AG_Surface *S;
 	GLint w, h;
 
 	glBindTexture(GL_TEXTURE_2D, (GLuint)name);
 	glGetTexLevelParameteriv(GL_TEXTURE_2D, lod, GL_TEXTURE_WIDTH, &w);
 	glGetTexLevelParameteriv(GL_TEXTURE_2D, lod, GL_TEXTURE_HEIGHT, &h);
 
-	su = AG_SurfaceRGBA(w, h, 32, 0,
+	S = AG_SurfaceRGBA(w, h, 32, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 		0xff000000,
 		0x00ff0000,
@@ -173,22 +172,21 @@ AG_PixmapFromTexture(void *parent, Uint flags, Uint name, int lod)
 		0xff000000
 #endif
 	);
-	if (su == NULL) {
+	if (S == NULL) {
 		AG_FatalError(NULL);
 	}
-	glGetTexImage(GL_TEXTURE_2D, lod, GL_RGBA, GL_UNSIGNED_BYTE,
-	    su->pixels);
+	glGetTexImage(GL_TEXTURE_2D, lod, GL_RGBA, GL_UNSIGNED_BYTE, S->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	px = Malloc(sizeof(AG_Pixmap));
 	AG_ObjectInit(px, &agPixmapClass);
-	px->flags |= flags;
 
-	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
-	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
+	if (flags & AG_PIXMAP_HFILL) { WIDGET(px)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_PIXMAP_VFILL) { WIDGET(px)->flags |= AG_WIDGET_VFILL; }
+	px->flags |= flags;
 	
 	AG_ObjectAttach(parent, px);
-	AG_WidgetMapSurface(px, su);
+	AG_WidgetMapSurface(px, S);
 	return (px);
 }
 
@@ -197,7 +195,7 @@ AG_PixmapFromTexture(void *parent, Uint flags, Uint name, int lod)
 AG_Pixmap *
 AG_PixmapFromTexture(void *parent, Uint flags, Uint name, int lod)
 {
-	AG_SetError("Agar was not compiled with OpenGL support");
+	AG_SetErrorS("Agar was not compiled with OpenGL support");
 	return (NULL);
 }
 
@@ -310,8 +308,8 @@ AG_PixmapSetSurface(AG_Pixmap *px, int name)
 	px->n = name;
 	px->flags |= AG_PIXMAP_UPDATE;
 
-	AG_ObjectUnlock(px);
 	AG_Redraw(px);
+	AG_ObjectUnlock(px);
 	return (0);
 }
 
@@ -334,8 +332,8 @@ AG_PixmapSetCoords(AG_Pixmap *px, int s, int t)
 	px->s = s;
 	px->t = t;
 
-	AG_ObjectUnlock(px);
 	AG_Redraw(px);
+	AG_ObjectUnlock(px);
 }
 
 /* Return a copy of the surface at given index. */

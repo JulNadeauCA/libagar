@@ -78,20 +78,20 @@ AG_NumericalNewS(void *parent, Uint flags, const char *unit, const char *label)
 	AG_ObjectInit(num, &agNumericalClass);
 
 	num->flags |= flags;
+	if (flags & AG_NUMERICAL_HFILL) { WIDGET(num)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_NUMERICAL_VFILL) { WIDGET(num)->flags |= AG_WIDGET_VFILL; }
 
-	if (flags & AG_NUMERICAL_HFILL) { AG_ExpandHoriz(num); }
-	if (flags & AG_NUMERICAL_VFILL) { AG_ExpandVert(num); }
-
-	if (label)
+	if (label != NULL) {
 		AG_TextboxSetLabelS(num->input, label);
-
-	if (unit) {
+	}
+	if (unit != NULL) {
 		num->units = AG_UComboNew(num, 0);
 		AG_SetEvent(num->units, "ucombo-selected",
 		    UnitSelected, "%p", num);
 		AG_NumericalSetUnitSystem(num, unit);
 		AG_WidgetSetFocusable(num->units, 0);
 	}
+
 	AG_ObjectAttach(parent, num);
 	return (num);
 }
@@ -412,8 +412,10 @@ UnitSelected(AG_Event *_Nonnull event)
 	const AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
 
 	AG_ObjectLock(num);
+
 	num->unit = (const AG_Unit *)ti->p1;
 	UpdateUnitSelector(num);
+
 	AG_ObjectUnlock(num);
 }
 
@@ -422,9 +424,11 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 {
 	const AG_Unit *unit = NULL;
 	const AG_Unit *ugroup = NULL;
+	AG_Tlist *tl;
 	int found = 0, i;
 	int w, h, nUnits = 0;
 
+	AG_OBJECT_ISA(num, "AG_Widget:AG_Numerical:*");
 	AG_ObjectLock(num);
 
 	for (i = 0; i < agnUnitGroups; i++) {
@@ -440,8 +444,7 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	}
 	if (!found) {
 		AG_SetError(_("No such unit: %s"), unit_key);
-		AG_ObjectUnlock(num);
-		return (-1);
+		goto fail;
 	}
 	num->unit = unit;
 	UpdateUnitSelector(num);
@@ -450,9 +453,12 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	num->hUnitSel = 0;
 	num->wPreUnit = 0;
 
-	AG_ObjectLock(num->units->list);
-	AG_TlistDeselectAll(num->units->list);
-	AG_TlistBegin(num->units->list);
+	tl = num->units->list;
+	AG_ObjectLock(tl);
+
+	AG_TlistDeselectAll(tl);
+	AG_TlistBegin(tl);
+
 	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
 		AG_TlistItem *it;
 	
@@ -463,16 +469,16 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 		AG_TextSize(unit->name, &w, NULL);
 		if (w > num->wPreUnit) { num->wPreUnit = w; }
 
-		it = AG_TlistAddPtr(num->units->list, NULL, _(unit->name),
-		    (void *)unit);
+		it = AG_TlistAddPtr(tl, NULL, _(unit->name), (void *)unit);
 		if (unit == num->unit)
 			it->selected++;
 
 		nUnits++;
 	}
-	AG_TlistEnd(num->units->list);
-	AG_TlistSizeHintLargest(num->units->list, 5);
-	AG_ObjectUnlock(num->units->list);
+	AG_TlistEnd(tl);
+	AG_TlistSizeHintLargest(tl, 5);
+
+	AG_ObjectUnlock(tl);
 
 	if (num->wPreUnit > 0) { num->wPreUnit += 8; }       /* XXX */
 
@@ -480,17 +486,26 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	    nUnits<6 ? (nUnits + 1) : 6);
 	
 	WIDGET(num)->flags |= AG_WIDGET_UPDATE_WINDOW;
+
 	AG_ObjectUnlock(num);
 	return (0);
+fail:
+	AG_ObjectUnlock(num);
+	return (-1);
 }
 
-/* Update the input text from the binding value. */
+/*
+ * Update the input text from the binding value.
+ * The Numerical object must be locked.
+ */
 void
 AG_NumericalUpdate(AG_Numerical *num)
 {
 	char s[64];
 	AG_Variable *valueb;
 	void *value;
+
+	AG_OBJECT_ISA(num, "AG_Widget:AG_Numerical:*");
 
 	if (!AG_Defined(num,"value")) {
 		return;
@@ -579,7 +594,12 @@ Init(void *_Nonnull obj)
 void
 AG_NumericalSizeHint(AG_Numerical *num, const char *text)
 {
+	AG_OBJECT_ISA(num, "AG_Widget:AG_Numerical:*");
+	AG_ObjectLock(num);
+
 	AG_TextboxSizeHint(num->input, text);
+
+	AG_ObjectUnlock(num);
 }
 
 static void
@@ -682,7 +702,9 @@ AG_NumericalIncrement(AG_Numerical *num)
 	AG_Variable *valueb, *minb, *maxb, *incb;
 	void *value, *min, *max, *inc;
 
+	AG_OBJECT_ISA(num, "AG_Widget:AG_Numerical:*");
 	AG_ObjectLock(num);
+
 	valueb = AG_GetVariable(num, "value", &value);
 	minb = AG_GetVariable(num, "min", &min);
 	maxb = AG_GetVariable(num, "max", &max);
@@ -744,7 +766,9 @@ AG_NumericalDecrement(AG_Numerical *num)
 	AG_Variable *valueb, *minb, *maxb, *incb;
 	void *value, *min, *max, *inc;
 
+	AG_OBJECT_ISA(num, "AG_Widget:AG_Numerical:*");
 	AG_ObjectLock(num);
+
 	valueb = AG_GetVariable(num, "value", &value);
 	minb = AG_GetVariable(num, "min", &min);
 	maxb = AG_GetVariable(num, "max", &max);
@@ -783,12 +807,15 @@ AG_NumericalDecrement(AG_Numerical *num)
 void
 AG_NumericalSetPrecision(AG_Numerical *num, const char *mode, int precision)
 {
+	AG_OBJECT_ISA(num, "AG_Widget:AG_Numerical:*");
 	AG_ObjectLock(num);
+
 	num->format[0] = '%';
 	num->format[1] = '.';
 	num->format[2] = '\0';
 	StrlcatInt(num->format, precision, sizeof(num->format));
 	Strlcat(num->format, mode, sizeof(num->format));
+
 	AG_NumericalUpdate(num);
 	AG_ObjectUnlock(num);
 }
@@ -796,12 +823,17 @@ AG_NumericalSetPrecision(AG_Numerical *num, const char *mode, int precision)
 void
 AG_NumericalSelectUnit(AG_Numerical *num, const char *uname)
 {
+	AG_Tlist *tl;
 	AG_TlistItem *it;
 
+	AG_OBJECT_ISA(num, "AG_Widget:AG_Numerical:*");
 	AG_ObjectLock(num);
-	AG_ObjectLock(num->units->list);
-	AG_TlistDeselectAll(num->units->list);
-	TAILQ_FOREACH(it, &num->units->list->items, items) {
+	tl = num->units->list;
+	AG_ObjectLock(tl);
+
+	AG_TlistDeselectAll(tl);
+
+	TAILQ_FOREACH(it, &tl->items, items) {
 		const AG_Unit *unit = it->p1;
 
 		if (strcmp(unit->key, uname) == 0) {
@@ -811,14 +843,17 @@ AG_NumericalSelectUnit(AG_Numerical *num, const char *uname)
 			break;
 		}
 	}
-	AG_ObjectUnlock(num->units->list);
+
+	AG_ObjectUnlock(tl);
 	AG_ObjectUnlock(num);
 }
 
 void
 AG_NumericalSetWriteable(AG_Numerical *num, int enable)
 {
+	AG_OBJECT_ISA(num, "AG_Widget:AG_Numerical:*");
 	AG_ObjectLock(num);
+
 	if (enable) {
 		num->flags &= ~(AG_NUMERICAL_READONLY);
 		AG_WidgetEnable(num->incbu);
@@ -830,6 +865,7 @@ AG_NumericalSetWriteable(AG_Numerical *num, int enable)
 		AG_WidgetDisable(num->decbu);
 		AG_WidgetDisable(num->input);
 	}
+
 	AG_ObjectUnlock(num);
 }
 

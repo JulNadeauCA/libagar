@@ -69,8 +69,8 @@ AG_ComboNewS(void *parent, Uint flags, const char *label)
 	}
 	if (flags & AG_COMBO_POLL)        { com->list->flags |= AG_TLIST_POLL; }
 	if (flags & AG_COMBO_SCROLLTOSEL) { com->list->flags |= AG_TLIST_SCROLLTOSEL; }
-	if (flags & AG_COMBO_HFILL)       { AG_ExpandHoriz(com); }
-	if (flags & AG_COMBO_VFILL)       { AG_ExpandVert(com); }
+	if (flags & AG_COMBO_HFILL)       { WIDGET(com)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_COMBO_VFILL)       { WIDGET(com)->flags |= AG_WIDGET_VFILL; }
 	
 	AG_ObjectAttach(parent, com);
 	return (com);
@@ -189,13 +189,16 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 AG_TlistItem *
 AG_ComboSelectPointer(AG_Combo *com, void *p)
 {
-	AG_Tlist *tl = com->list;
+	AG_Tlist *tl;
 	AG_TlistItem *it;
 
+	AG_OBJECT_ISA(com, "AG_Widget:AG_Combo:*");
+	tl = com->list;
 	AG_ObjectLock(tl);
-	if ((it = AG_TlistSelectPtr(tl, p)) != NULL) {
+
+	if ((it = AG_TlistSelectPtr(tl, p)) != NULL)
 		AG_TextboxSetString(com->tbox, it->text);
-	}
+
 	AG_ObjectUnlock(tl);
 	return (it);
 }
@@ -204,13 +207,16 @@ AG_ComboSelectPointer(AG_Combo *com, void *p)
 AG_TlistItem *
 AG_ComboSelectText(AG_Combo *com, const char *text)
 {
-	AG_Tlist *tl = com->list;
+	AG_Tlist *tl;
 	AG_TlistItem *it;
 
+	AG_OBJECT_ISA(com, "AG_Widget:AG_Combo:*");
+	tl = com->list;
 	AG_ObjectLock(tl);
-	if ((it = AG_TlistSelectText(tl, text)) != NULL) {
+
+	if ((it = AG_TlistSelectText(tl, text)) != NULL)
 		AG_TextboxSetString(com->tbox, it->text);
-	}
+
 	AG_ObjectUnlock(tl);
 	return (it);
 }
@@ -218,8 +224,10 @@ AG_ComboSelectText(AG_Combo *com, const char *text)
 void
 AG_ComboSelect(AG_Combo *com, AG_TlistItem *it)
 {
-	AG_Tlist *tl = com->list;
+	AG_Tlist *tl;
 
+	AG_OBJECT_ISA(com, "AG_Widget:AG_Combo:*");
+	tl = com->list;
 	AG_ObjectLock(tl);
 
 	AG_TextboxSetString(com->tbox, it->text);
@@ -320,6 +328,7 @@ Init(void *_Nonnull obj)
 void
 AG_ComboSizeHint(AG_Combo *com, const char *text, int h)
 {
+	AG_OBJECT_ISA(com, "AG_Widget:AG_Combo:*");
 	AG_TextSize(text, &com->wPreList, NULL);
 	com->hPreList = h;
 }
@@ -327,6 +336,7 @@ AG_ComboSizeHint(AG_Combo *com, const char *text, int h)
 void
 AG_ComboSizeHintPixels(AG_Combo *com, int w, int h)
 {
+	AG_OBJECT_ISA(com, "AG_Widget:AG_Combo:*");
 	com->wPreList = w;
 	com->hPreList = h;
 }
@@ -334,18 +344,21 @@ AG_ComboSizeHintPixels(AG_Combo *com, int w, int h)
 void
 AG_ComboSetButtonText(AG_Combo *com, const char *text)
 {
+	AG_OBJECT_ISA(com, "AG_Widget:AG_Combo:*");
 	AG_ButtonTextS(com->button, text);
 }
 
 void
 AG_ComboSetButtonSurface(AG_Combo *com, AG_Surface *su)
 {
+	AG_OBJECT_ISA(com, "AG_Widget:AG_Combo:*");
 	AG_ButtonSurface(com->button, su);
 }
 
 void
 AG_ComboSetButtonSurfaceNODUP(AG_Combo *com, AG_Surface *su)
 {
+	AG_OBJECT_ISA(com, "AG_Widget:AG_Combo:*");
 	AG_ButtonSurfaceNODUP(com->button, su);
 }
 

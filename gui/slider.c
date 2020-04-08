@@ -48,11 +48,12 @@ AG_SliderNew(void *parent, enum ag_slider_type type, Uint flags)
 
 	sl = Malloc(sizeof(AG_Slider));
 	AG_ObjectInit(sl, &agSliderClass);
-	sl->type = type;
+
+	if (flags & AG_SLIDER_HFILL) { WIDGET(sl)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_SLIDER_VFILL) { WIDGET(sl)->flags |= AG_WIDGET_VFILL; }
 	sl->flags |= flags;
 
-	if (flags & AG_SLIDER_HFILL) { AG_ExpandHoriz(sl); }
-	if (flags & AG_SLIDER_VFILL) { AG_ExpandVert(sl); }
+	sl->type = type;
 
 	AG_ObjectAttach(parent, sl);
 	return (sl);
@@ -148,8 +149,11 @@ AG_SliderNewDblR(void *parent, enum ag_slider_type type, Uint flags,
 void
 AG_SliderSetControlSize(AG_Slider *sl, int size)
 {
+	AG_OBJECT_ISA(sl, "AG_Widget:AG_Slider:*");
 	AG_ObjectLock(sl);
+
 	sl->wControlPref = size;
+
 	switch (sl->type) {
 	case AG_SLIDER_HORIZ:
 		sl->wControl = MIN(size, HEIGHT(sl));
@@ -158,8 +162,9 @@ AG_SliderSetControlSize(AG_Slider *sl, int size)
 		sl->wControl = MIN(size, WIDTH(sl));
 		break;
 	}
-	AG_ObjectUnlock(sl);
+
 	AG_Redraw(sl);
+	AG_ObjectUnlock(sl);
 }
 
 /*

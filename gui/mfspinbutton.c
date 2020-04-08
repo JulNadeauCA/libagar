@@ -44,8 +44,8 @@ AG_MFSpinbuttonNew(void *parent, Uint flags, const char *sep, const char *label)
 	AG_ObjectInit(msb, &agMFSpinbuttonClass);
 	msb->sep = sep;
 	msb->flags |= flags;
-	if (!(flags & AG_MFSPINBUTTON_NOHFILL))	{ AG_ExpandHoriz(msb); }
-	if (  flags & AG_MFSPINBUTTON_VFILL)	{ AG_ExpandVert(msb); }
+	if (!(flags & AG_MFSPINBUTTON_NOHFILL))	{ WIDGET(msb)->flags |= AG_WIDGET_HFILL; }
+	if (  flags & AG_MFSPINBUTTON_VFILL)	{ WIDGET(msb)->flags |= AG_WIDGET_VFILL; }
 
 	if (label != NULL)
 		AG_TextboxSetLabelS(msb->input, label);
@@ -360,6 +360,7 @@ AG_MFSpinbuttonAddValue(AG_MFSpinbutton *msb, const char *which, double inc)
 	void *value;
 	double *min, *max;
 
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MFSpinbutton:*");
 	AG_ObjectLock(msb);
 	
 	valueb = AG_GetVariable(msb, which, &value);
@@ -400,6 +401,7 @@ AG_MFSpinbuttonSetValue(AG_MFSpinbutton *msb, const char *which,
 	void *value;
 	double *min, *max;
 	
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MFSpinbutton:*");
 	AG_ObjectLock(msb);
 
 	valueb = AG_GetVariable(msb, which, &value);
@@ -436,7 +438,9 @@ AG_MFSpinbuttonSetMin(AG_MFSpinbutton *msb, double nmin)
 	AG_Variable *minb;
 	void *min;
 	
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MFSpinbutton:*");
 	AG_ObjectLock(msb);
+
 	minb = AG_GetVariable(msb, "min", (void *)&min);
 	switch (AG_VARIABLE_TYPE(minb)) {
 	case AG_VARIABLE_DOUBLE:
@@ -449,6 +453,7 @@ AG_MFSpinbuttonSetMin(AG_MFSpinbutton *msb, double nmin)
 		break;
 	}
 	AG_UnlockVariable(minb);
+
 	AG_ObjectUnlock(msb);
 }
 
@@ -458,7 +463,9 @@ AG_MFSpinbuttonSetMax(AG_MFSpinbutton *msb, double nmax)
 	AG_Variable *maxb;
 	void *max;
 	
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MFSpinbutton:*");
 	AG_ObjectLock(msb);
+
 	maxb = AG_GetVariable(msb, "max", (void *)&max);
 	switch (AG_VARIABLE_TYPE(maxb)) {
 	case AG_VARIABLE_DOUBLE:
@@ -471,12 +478,14 @@ AG_MFSpinbuttonSetMax(AG_MFSpinbutton *msb, double nmax)
 		break;
 	}
 	AG_UnlockVariable(maxb);
+
 	AG_ObjectUnlock(msb);
 }
 
 void
 AG_MFSpinbuttonSetIncrement(AG_MFSpinbutton *msb, double inc)
 {
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MFSpinbutton:*");
 	msb->inc = inc;
 }
 
@@ -484,8 +493,11 @@ void
 AG_MFSpinbuttonSetPrecision(AG_MFSpinbutton *msb, const char *mode,
     int precision)
 {
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MFSpinbutton:*");
 	AG_ObjectLock(msb);
+
 	Snprintf(msb->format, sizeof(msb->format), "%%.%d%s", precision, mode);
+
 	AG_MFSpinbuttonUpdate(msb);
 	AG_ObjectUnlock(msb);
 }
@@ -493,6 +505,9 @@ AG_MFSpinbuttonSetPrecision(AG_MFSpinbutton *msb, const char *mode,
 void
 AG_MFSpinbuttonSetWriteable(AG_MFSpinbutton *msb, int writeable)
 {
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MFSpinbutton:*");
+	AG_ObjectLock(msb);
+
 	msb->writeable = writeable;
 
 	if (writeable) {
@@ -508,7 +523,9 @@ AG_MFSpinbuttonSetWriteable(AG_MFSpinbutton *msb, int writeable)
 		AG_WidgetDisable(msb->btn[AG_MFSPINBUTTON_UP]);
 		AG_WidgetDisable(msb->input);
 	}
+
 	AG_Redraw(msb);
+	AG_ObjectUnlock(msb);
 }
 
 void

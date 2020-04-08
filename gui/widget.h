@@ -392,8 +392,6 @@ void AG_WidgetHide(void *_Nonnull);
 void AG_WidgetShowAll(void *_Nonnull);
 void AG_WidgetHideAll(void *_Nonnull);
 
-void AG_WidgetInheritDraw(void *_Nonnull);
-
 AG_Surface *_Nullable AG_WidgetSurface(void *_Nonnull);
 
 void AG_RedrawOnChange(void *_Nonnull, int, const char *_Nonnull);
@@ -495,7 +493,6 @@ void ag_set_mod_state(void *_Nonnull, Uint);
 # define AG_GetModState(o)                   ag_get_mod_state(o)
 # define AG_SetModState(o)                   ag_set_mod_state((o),(ms))
 #endif /* !AG_INLINE_WIDGET */
-__END_DECLS
 
 #ifdef AG_LEGACY
 # define AG_WidgetParentWindow(w) AG_ParentWindow(w)
@@ -514,10 +511,11 @@ __END_DECLS
 # define AG_WIDGET_TABLE_EMBEDDABLE   0     /* Flag no longer needed */
 # define AG_WidgetInheritSizeRequest  NULL  /* Is default behavior as of 1.6 */
 # define AG_WidgetInheritSizeAllocate NULL  /* Is default behavior as of 1.6 */
-__BEGIN_DECLS
 void *_Nullable AG_WidgetFind(void *_Nonnull, const char *_Nonnull) DEPRECATED_ATTRIBUTE;
-__END_DECLS
+void AG_WidgetInheritDraw(void *_Nonnull) DEPRECATED_ATTRIBUTE;
 #endif /* AG_LEGACY */
+
+__END_DECLS
 
 #include <agar/gui/close.h>
 #endif /* _AGAR_GUI_WIDGET_H_ */

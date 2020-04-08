@@ -43,12 +43,13 @@ AG_UComboNew(void *parent, Uint flags)
 
 	com = Malloc(sizeof(AG_UCombo));
 	AG_ObjectInit(com, &agUComboClass);
-	com->flags |= flags;
 
 	if (flags & AG_UCOMBO_POLL)        { com->list->flags |= AG_TLIST_POLL; }
 	if (flags & AG_UCOMBO_SCROLLTOSEL) { com->list->flags |= AG_TLIST_SCROLLTOSEL; }
-	if (flags & AG_UCOMBO_HFILL)       { AG_ExpandHoriz(com); }
-	if (flags & AG_UCOMBO_VFILL)       { AG_ExpandVert(com); }
+	if (flags & AG_UCOMBO_HFILL)       { WIDGET(com)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_UCOMBO_VFILL)       { WIDGET(com)->flags |= AG_WIDGET_VFILL; }
+
+	com->flags |= flags;
 
 	AG_ObjectAttach(parent, com);
 	return (com);
@@ -244,13 +245,19 @@ Init(void *_Nonnull obj)
 void
 AG_UComboSizeHint(AG_UCombo *com, const char *text, int h)
 {
+	AG_OBJECT_ISA(com, "AG_Widget:AG_UCombo:*");
+	AG_ObjectLock(com);
+
 	AG_TextSize(text, &com->wPreList, NULL);
 	com->hPreList = h;
+
+	AG_ObjectUnlock(com);
 }
 
 void
 AG_UComboSizeHintPixels(AG_UCombo *com, int w, int h)
 {
+	AG_OBJECT_ISA(com, "AG_Widget:AG_UCombo:*");
 	com->wPreList = w;
 	com->hPreList = h;
 }

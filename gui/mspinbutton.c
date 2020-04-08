@@ -43,10 +43,11 @@ AG_MSpinbuttonNew(void *parent, Uint flags, const char *sep, const char *label)
 
 	msb = Malloc(sizeof(AG_MSpinbutton));
 	AG_ObjectInit(msb, &agMSpinbuttonClass);
-	msb->sep = sep;
 
-	if (flags & AG_MSPINBUTTON_HFILL) { AG_ExpandHoriz(msb); }
-	if (flags & AG_MSPINBUTTON_VFILL) { AG_ExpandVert(msb); }
+	if (flags & AG_MSPINBUTTON_HFILL) { WIDGET(msb)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_MSPINBUTTON_VFILL) { WIDGET(msb)->flags |= AG_WIDGET_VFILL; }
+
+	msb->sep = sep;
 
 	if (label != NULL) {
 		AG_TextboxSetLabelS(msb->input, label);
@@ -138,6 +139,7 @@ TextReturn(AG_Event *event)
 	char *tp = &inTxt[0], *s;
 
 	AG_ObjectLock(msb);
+
 	Strlcpy(inTxt, msb->inTxt, sizeof(inTxt));
 	if ((s = AG_Strsep(&tp, msb->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(msb, "xvalue", atoi(s));
@@ -147,8 +149,9 @@ TextReturn(AG_Event *event)
 	}
 	AG_PostEvent(msb, "mspinbutton-return", NULL);
 	AG_WidgetUnfocus(msb->input);
-	AG_ObjectUnlock(msb);
+
 	AG_Redraw(msb);
+	AG_ObjectUnlock(msb);
 }
 
 static void
@@ -159,6 +162,7 @@ TextChanged(AG_Event *event)
 	char *tp = &inTxt[0], *s;
 	
 	AG_ObjectLock(msb);
+
 	Strlcpy(inTxt, msb->inTxt, sizeof(inTxt));
 	if ((s = AG_Strsep(&tp, msb->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(msb, "xvalue", atoi(s));
@@ -167,8 +171,9 @@ TextChanged(AG_Event *event)
 		AG_MSpinbuttonSetValue(msb, "yvalue", atoi(s));
 	}
 	AG_PostEvent(msb, "mspinbutton-changed", NULL);
-	AG_ObjectUnlock(msb);
+
 	AG_Redraw(msb);
+	AG_ObjectUnlock(msb);
 }
 
 static void
@@ -353,7 +358,9 @@ AG_MSpinbuttonAddValue(AG_MSpinbutton *msb, const char *which, int inc)
 	void *value;
 	int *min, *max;
 
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
 	AG_ObjectLock(msb);
+
 	valueb = AG_GetVariable(msb, which, &value);
 	minb = AG_GetVariable(msb, "min", (void *)&min);
 	maxb = AG_GetVariable(msb, "max", (void *)&max);
@@ -408,9 +415,9 @@ AG_MSpinbuttonAddValue(AG_MSpinbutton *msb, const char *which, int inc)
 	AG_UnlockVariable(maxb);
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(valueb);
-	AG_ObjectUnlock(msb);
 
 	AG_Redraw(msb);
+	AG_ObjectUnlock(msb);
 }
 
 void
@@ -421,7 +428,9 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *msb, const char *which, ...)
 	int *min, *max;
 	va_list ap;
 
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
 	AG_ObjectLock(msb);
+
 	valueb = AG_GetVariable(msb, which, &value);
 	minb = AG_GetVariable(msb, "min", (void *)&min);
 	maxb = AG_GetVariable(msb, "max", (void *)&max);
@@ -542,9 +551,9 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *msb, const char *which, ...)
 	AG_UnlockVariable(valueb);
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(maxb);
-	AG_ObjectUnlock(msb);
 
 	AG_Redraw(msb);
+	AG_ObjectUnlock(msb);
 }
 
 void
@@ -553,10 +562,13 @@ AG_MSpinbuttonSetMin(AG_MSpinbutton *msb, int nmin)
 	AG_Variable *minb;
 	int *min;
 
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
 	AG_ObjectLock(msb);
+
 	minb = AG_GetVariable(msb, "min", (void *)&min);
 	*min = nmin;
 	AG_UnlockVariable(minb);
+
 	AG_ObjectUnlock(msb);
 }
 
@@ -566,10 +578,13 @@ AG_MSpinbuttonSetMax(AG_MSpinbutton *msb, int nmax)
 	AG_Variable *maxb;
 	int *max;
 
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
 	AG_ObjectLock(msb);
+
 	maxb = AG_GetVariable(msb, "max", (void *)&max);
 	*max = nmax;
 	AG_UnlockVariable(maxb);
+
 	AG_ObjectUnlock(msb);
 }
 
@@ -579,25 +594,32 @@ AG_MSpinbuttonSetRange(AG_MSpinbutton *msb, int nmin, int nmax)
 	AG_Variable *minb, *maxb;
 	int *min, *max;
 
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
 	AG_ObjectLock(msb);
+
 	minb = AG_GetVariable(msb, "min", (void *)&min);
 	maxb = AG_GetVariable(msb, "max", (void *)&max);
 	*min = nmin;
 	*max = nmax;
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(maxb);
+
 	AG_ObjectUnlock(msb);
 }
 
 void
 AG_MSpinbuttonSetIncrement(AG_MSpinbutton *msb, int inc)
 {
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
 	msb->inc = inc;
 }
 
 void
 AG_MSpinbuttonSetWriteable(AG_MSpinbutton *msb, int writeable)
 {
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
+	AG_ObjectLock(msb);
+
 	msb->writeable = writeable;
 
 	if (writeable) {
@@ -613,6 +635,8 @@ AG_MSpinbuttonSetWriteable(AG_MSpinbutton *msb, int writeable)
 		AG_WidgetDisable(msb->btn[AG_MSPINBUTTON_UP]);
 		AG_WidgetDisable(msb->input);
 	}
+
+	AG_Redraw(msb);
 	AG_ObjectUnlock(msb);
 }
 

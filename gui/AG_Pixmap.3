@@ -237,8 +237,9 @@ widget, allowing the user to pan the view:
 AG_Scrollview *sv;
 AG_Pixmap *px;
 
-sv = AG_ScrollviewNew(window, AG_SCROLLVIEW_BY_MOUSE);
-AG_Expand(sv);
+sv = AG_ScrollviewNew(window, AG_SCROLLVIEW_BY_MOUSE |
+                              AG_SCROLLVIEW_EXPAND);
+
 px = AG_PixmapFromSurface(sv, 0, mySurface);
 .Ed
 .Pp

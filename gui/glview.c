@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,10 +50,10 @@ AG_GLViewNew(void *parent, Uint flags)
 
 	glv = Malloc(sizeof(AG_GLView));
 	AG_ObjectInit(glv, &agGLViewClass);
-	glv->flags |= flags;
 
-	if (flags & AG_GLVIEW_HFILL) { AG_ExpandHoriz(glv); }
-	if (flags & AG_GLVIEW_VFILL) { AG_ExpandVert(glv); }
+	if (flags & AG_GLVIEW_HFILL) { WIDGET(glv)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_GLVIEW_VFILL) { WIDGET(glv)->flags |= AG_WIDGET_VFILL; }
+	glv->flags |= flags;
 
 	AG_ObjectAttach(parent, glv);
 	return (glv);
@@ -122,6 +122,7 @@ Init(void *_Nonnull obj)
 void
 AG_GLViewSizeHint(AG_GLView *glv, int w, int h)
 {
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	glv->wPre = w;
 	glv->hPre = h;
 }
@@ -132,7 +133,9 @@ AG_GLViewDrawFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->draw_ev = AG_SetEvent(glv, NULL, fn, NULL);
 	if (fmt) {
 		va_list ap;
@@ -141,6 +144,7 @@ AG_GLViewDrawFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(glv->draw_ev, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(glv);
 }
 
@@ -150,7 +154,9 @@ AG_GLViewUnderlayFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->underlay_ev = AG_SetEvent(glv, NULL, fn, NULL);
 	if (fmt) {
 		va_list ap;
@@ -159,6 +165,7 @@ AG_GLViewUnderlayFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(glv->underlay_ev, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(glv);
 }
 
@@ -168,7 +175,9 @@ AG_GLViewOverlayFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->overlay_ev = AG_SetEvent(glv, NULL, fn, NULL);
 	if (fmt) {
 		va_list ap;
@@ -177,6 +186,7 @@ AG_GLViewOverlayFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(glv->overlay_ev, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(glv);
 }
 
@@ -186,7 +196,9 @@ AG_GLViewScaleFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->scale_ev = AG_SetEvent(glv, NULL, fn, NULL);
 	if (fmt) {
 		va_list ap;
@@ -195,6 +207,7 @@ AG_GLViewScaleFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(glv->scale_ev, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(glv);
 }
 
@@ -204,7 +217,9 @@ AG_GLViewKeydownFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->keydown_ev = AG_SetEvent(glv, "key-down", fn, NULL);
 	if (fmt) {
 		va_list ap;
@@ -213,6 +228,7 @@ AG_GLViewKeydownFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(glv->keydown_ev, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(glv);
 }
 
@@ -222,7 +238,9 @@ AG_GLViewKeyupFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->keyup_ev = AG_SetEvent(glv, "key-up", fn, NULL);
 	if (fmt) {
 		va_list ap;
@@ -231,6 +249,7 @@ AG_GLViewKeyupFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(glv->keyup_ev, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(glv);
 }
 
@@ -240,7 +259,9 @@ AG_GLViewButtondownFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->btndown_ev = AG_SetEvent(glv, "mouse-button-down", fn, NULL);
 	if (fmt) {
 		va_list ap;
@@ -249,6 +270,7 @@ AG_GLViewButtondownFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(glv->btndown_ev, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(glv);
 }
 
@@ -258,7 +280,9 @@ AG_GLViewButtonupFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->btnup_ev = AG_SetEvent(glv, "mouse-button-up", fn, NULL);
 	if (fmt) {
 		va_list ap;
@@ -267,6 +291,7 @@ AG_GLViewButtonupFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(glv->btnup_ev, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(glv);
 }
 
@@ -276,7 +301,9 @@ AG_GLViewMotionFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->motion_ev = AG_SetEvent(glv, "mouse-motion", fn, NULL);
 	if (fmt) {
 		va_list ap;
@@ -285,6 +312,7 @@ AG_GLViewMotionFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(glv->motion_ev, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(glv);
 }
 
@@ -303,8 +331,11 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 void
 AG_GLViewSetBgColor(AG_GLView *glv, const AG_Color *c)
 {
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	memcpy(&glv->bgColor, c, sizeof(AG_Color));
+
 	AG_ObjectUnlock(glv);
 }
 

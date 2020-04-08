@@ -44,10 +44,13 @@ AG_ProgressBarNew(void *parent, enum ag_progress_bar_type type, Uint flags)
 
 	pb = Malloc(sizeof(AG_ProgressBar));
 	AG_ObjectInit(pb, &agProgressBarClass);
+
 	pb->type = type;
+
+	if (flags & AG_PROGRESS_BAR_HFILL) { WIDGET(pb)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_PROGRESS_BAR_VFILL) { WIDGET(pb)->flags |= AG_WIDGET_VFILL; }
 	pb->flags |= flags;
-	if (flags & AG_PROGRESS_BAR_HFILL) { AG_ExpandHoriz(pb); }
-	if (flags & AG_PROGRESS_BAR_VFILL) { AG_ExpandVert(pb); }
+
 	AG_ObjectAttach(parent, pb);
 	return (pb);
 }

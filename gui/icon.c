@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -100,33 +100,27 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Icon *icon = obj;
-	int wLbl, hLbl;
+	const int paddingHoriz = WIDGET(icon)->paddingLeft +
+	                         WIDGET(icon)->paddingRight;
+	int wLbl, hLbl, su;
 
-	if (icon->surface == -1) {
-		r->w = 0;
-		r->h = 0;
+	r->w = paddingHoriz;
+	r->h = WIDGET(icon)->paddingTop + WIDGET(icon)->paddingBottom;
+
+	if ((su = icon->surface) != -1) {
+		r->w += WSURFACE(icon,su)->w;
+		r->h += WSURFACE(icon,su)->h;
 	}
-	r->w = WSURFACE(icon,icon->surface)->w;
-	r->h = WSURFACE(icon,icon->surface)->h;
 	if (icon->labelTxt[0] != '\0') {
-		if (icon->labelSurface != -1) {
+		if (icon->labelSurface == -1) {
+			AG_TextSize(icon->labelTxt, &wLbl, &hLbl);
+		} else {
 			wLbl = WSURFACE(icon,icon->labelSurface)->w;
 			hLbl = WSURFACE(icon,icon->labelSurface)->h;
-		} else {
-			AG_TextSize(icon->labelTxt, &wLbl, &hLbl);
 		}
 		r->h += WIDGET(icon)->spacingVert + hLbl;
-		r->w = MAX(r->w, wLbl);
+		r->w = MAX(r->w, wLbl + paddingHoriz);
 	}
-}
-
-static int
-SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
-{
-	if (a->w < 1 || a->h < 1) {
-		return (-1);
-	}
-	return (0);
 }
 
 static void
@@ -172,37 +166,48 @@ Draw(void *_Nonnull obj)
 void
 AG_IconSetBackgroundFill(AG_Icon *icon, int enable, const AG_Color *c)
 {
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
+	AG_ObjectLock(icon);
+
 	AG_SETFLAGS(icon->flags, AG_ICON_BGFILL, enable);
 	memcpy(&icon->cBackground, c, sizeof(AG_Color));
 	AG_Redraw(icon);
+
+	AG_ObjectUnlock(icon);
 }
 
 void
-AG_IconSetSurface(AG_Icon *icon, const AG_Surface *su)
+AG_IconSetSurface(AG_Icon *icon, const AG_Surface *S)
 {
-	AG_Surface *suDup = (su != NULL) ? AG_SurfaceDup(su) : NULL;
+	AG_Surface *Sdup = (S != NULL) ? AG_SurfaceDup(S) : NULL;
 
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
 	AG_ObjectLock(icon);
+
 	if (icon->surface != -1) {
-		AG_WidgetReplaceSurface(icon, icon->surface, suDup);
+		AG_WidgetReplaceSurface(icon, icon->surface, Sdup);
 	} else {
-		icon->surface = AG_WidgetMapSurface(icon, suDup);
+		icon->surface = AG_WidgetMapSurface(icon, Sdup);
 	}
-	AG_ObjectUnlock(icon);
+
 	AG_Redraw(icon);
+	AG_ObjectUnlock(icon);
 }
 
 void
 AG_IconSetSurfaceNODUP(AG_Icon *icon, AG_Surface *su)
 {
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
 	AG_ObjectLock(icon);
+
 	if (icon->surface != -1) {
 		AG_WidgetReplaceSurfaceNODUP(icon, icon->surface, su);
 	} else {
 		icon->surface = AG_WidgetMapSurfaceNODUP(icon, su);
 	}
-	AG_ObjectUnlock(icon);
+
 	AG_Redraw(icon);
+	AG_ObjectUnlock(icon);
 }
 
 void
@@ -210,7 +215,9 @@ AG_IconSetText(AG_Icon *icon, const char *fmt, ...)
 {
 	va_list ap;
 
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
 	AG_ObjectLock(icon);
+
 	if (fmt[0] == '\0') {
 		if (icon->labelSurface != -1) {
 			AG_WidgetUnmapSurface(icon, icon->labelSurface);
@@ -223,14 +230,17 @@ AG_IconSetText(AG_Icon *icon, const char *fmt, ...)
 		va_end(ap);
 		icon->flags |= AG_ICON_REGEN_LABEL;
 	}
-	AG_ObjectUnlock(icon);
+
 	AG_Redraw(icon);
+	AG_ObjectUnlock(icon);
 }
 
 void
 AG_IconSetTextS(AG_Icon *icon, const char *s)
 {
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
 	AG_ObjectLock(icon);
+
 	if (s == NULL || s[0] == '\0') {
 		if (icon->labelSurface != -1) {
 			AG_WidgetUnmapSurface(icon, icon->labelSurface);
@@ -241,8 +251,9 @@ AG_IconSetTextS(AG_Icon *icon, const char *s)
 		Strlcpy(icon->labelTxt, s, sizeof(icon->labelTxt));
 		icon->flags |= AG_ICON_REGEN_LABEL;
 	}
-	AG_ObjectUnlock(icon);
+
 	AG_Redraw(icon);
+	AG_ObjectUnlock(icon);
 }
 
 AG_WidgetClass agIconClass = {
@@ -259,7 +270,7 @@ AG_WidgetClass agIconClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	NULL			/* size_allocate */
 };
 
 #endif /* AG_WIDGETS */

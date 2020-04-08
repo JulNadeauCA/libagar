@@ -87,10 +87,10 @@ AG_RadioNew(void *parent, Uint flags, const char **itemText)
 
 	rad = Malloc(sizeof(AG_Radio));
 	AG_ObjectInit(rad, &agRadioClass);
-	rad->flags |= flags;
 
-	if (flags & AG_RADIO_HFILL) { AG_ExpandHoriz(rad); }
-	if (flags & AG_RADIO_VFILL) { AG_ExpandVert(rad); }
+	if (flags & AG_RADIO_HFILL) { WIDGET(rad)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_RADIO_VFILL) { WIDGET(rad)->flags |= AG_WIDGET_VFILL; }
+	rad->flags |= flags;
 
 	if (itemText != NULL) {
 		AG_RadioItemsFromArray(rad, itemText);
@@ -106,6 +106,7 @@ AG_RadioNew(void *parent, Uint flags, const char **itemText)
 void
 AG_RadioSetDisposition(AG_Radio *rad, AG_RadioType type)
 {
+	AG_OBJECT_ISA(rad, "AG_Widget:AG_Radio:*");
 	rad->type = type;
 	AG_Redraw(rad);
 }
@@ -118,7 +119,9 @@ AG_RadioItemsFromArray(AG_Radio *rad, const char **itemText)
 	AG_RadioItem *ri;
 	int i, w;
 	
+	AG_OBJECT_ISA(rad, "AG_Widget:AG_Radio:*");
 	AG_ObjectLock(rad);
+
 	for (i=0, pItems=itemText; (s = *pItems++) != NULL; i++) {
 		rad->items = Realloc(rad->items, (rad->nItems+1) *
 		                                 sizeof(AG_RadioItem));
@@ -129,8 +132,9 @@ AG_RadioItemsFromArray(AG_Radio *rad, const char **itemText)
 		AG_TextSize(s, &w, NULL);
 		if (w > rad->extent) { rad->extent = w; }
 	}
-	AG_ObjectUnlock(rad);
+
 	AG_Redraw(rad);
+	AG_ObjectUnlock(rad);
 }
 
 /* Create a radio item and return its index (C string). */
@@ -140,7 +144,9 @@ AG_RadioAddItemS(AG_Radio *rad, const char *s)
 	AG_RadioItem *ri;
 	int w, rv;
 
+	AG_OBJECT_ISA(rad, "AG_Widget:AG_Radio:*");
 	AG_ObjectLock(rad);
+
 	rad->items = Realloc(rad->items, (rad->nItems+1)*sizeof(AG_RadioItem));
 	ri = &rad->items[rad->nItems];
 	ri->surface = -1;
@@ -151,8 +157,9 @@ AG_RadioAddItemS(AG_Radio *rad, const char *s)
 	if (w > rad->extent) { rad->extent = w; }
 	rv = rad->nItems++;
 
-	AG_ObjectUnlock(rad);
 	AG_Redraw(rad);
+	AG_ObjectUnlock(rad);
+
 	return (rv);
 }
 
@@ -164,7 +171,9 @@ AG_RadioAddItem(AG_Radio *rad, const char *fmt, ...)
 	va_list ap;
 	int w, rv;
 
+	AG_OBJECT_ISA(rad, "AG_Widget:AG_Radio:*");
 	AG_ObjectLock(rad);
+
 	rad->items = Realloc(rad->items, (rad->nItems+1)*sizeof(AG_RadioItem));
 	ri = &rad->items[rad->nItems];
 	ri->surface = -1;
@@ -178,8 +187,9 @@ AG_RadioAddItem(AG_Radio *rad, const char *fmt, ...)
 	if (w > rad->extent) { rad->extent = w; }
 	rv = rad->nItems++;
 
-	AG_ObjectUnlock(rad);
 	AG_Redraw(rad);
+	AG_ObjectUnlock(rad);
+
 	return (rv);
 }
 
@@ -190,7 +200,9 @@ AG_RadioAddItemHKS(AG_Radio *rad, AG_KeySym hotkey, const char *s)
 	AG_RadioItem *ri;
 	int w, rv;
 
+	AG_OBJECT_ISA(rad, "AG_Widget:AG_Radio:*");
 	AG_ObjectLock(rad);
+
 	rad->items = Realloc(rad->items, (rad->nItems+1)*sizeof(AG_RadioItem));
 	ri = &rad->items[rad->nItems];
 	ri->surface = -1;
@@ -201,8 +213,9 @@ AG_RadioAddItemHKS(AG_Radio *rad, AG_KeySym hotkey, const char *s)
 	if (w > rad->extent) { rad->extent = w; }
 	rv = rad->nItems++;
 
-	AG_ObjectUnlock(rad);
 	AG_Redraw(rad);
+	AG_ObjectUnlock(rad);
+
 	return (rv);
 }
 
@@ -214,7 +227,9 @@ AG_RadioAddItemHK(AG_Radio *rad, AG_KeySym hotkey, const char *fmt, ...)
 	va_list ap;
 	int w, rv;
 
+	AG_OBJECT_ISA(rad, "AG_Widget:AG_Radio:*");
 	AG_ObjectLock(rad);
+
 	rad->items = Realloc(rad->items, (rad->nItems+1)*sizeof(AG_RadioItem));
 	ri = &rad->items[rad->nItems];
 	ri->surface = -1;
@@ -227,8 +242,9 @@ AG_RadioAddItemHK(AG_Radio *rad, AG_KeySym hotkey, const char *fmt, ...)
 	if (w > rad->extent) { rad->extent = w; }
 	rv = rad->nItems++;
 
-	AG_ObjectUnlock(rad);
 	AG_Redraw(rad);
+	AG_ObjectUnlock(rad);
+
 	return (rv);
 }
 
@@ -238,7 +254,9 @@ AG_RadioClearItems(AG_Radio *rad)
 {
 	int i;
 
+	AG_OBJECT_ISA(rad, "AG_Widget:AG_Radio:*");
 	AG_ObjectLock(rad);
+
 	for (i = 0; i < rad->nItems; i++) {
 		if (rad->items[i].surface != -1)
 			AG_WidgetUnmapSurface(rad, rad->items[i].surface);
@@ -247,14 +265,17 @@ AG_RadioClearItems(AG_Radio *rad)
 	rad->items = Malloc(sizeof(AG_RadioItem));
 	rad->nItems = 0;
 	rad->extent = 0;
-	AG_ObjectUnlock(rad);
+
 	AG_Redraw(rad);
+	AG_ObjectUnlock(rad);
 }
 
 /* Specify an alternate initial size requisition. */
 void
 AG_RadioSizeHint(AG_Radio *rad, int nLines, const char *text)
 {
+	AG_OBJECT_ISA(rad, "AG_Widget:AG_Radio:*");
+
 	AG_TextSize(text, &rad->wPre, NULL);
 	rad->hPre = nLines;
 }
@@ -398,11 +419,15 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Radio *rad = obj;
+	const int paddingHoriz = WIDGET(rad)->paddingLeft +
+	                         WIDGET(rad)->paddingRight;
+	const int paddingVert = WIDGET(rad)->paddingTop +
+	                        WIDGET(rad)->paddingBottom;
 	const int dia = WFONT(rad)->lineskip;
 	int i;
 
-	r->w = WIDGET(rad)->paddingLeft + WIDGET(rad)->paddingRight;
-	r->h = WIDGET(rad)->paddingTop + WIDGET(rad)->paddingBottom;
+	r->w = paddingHoriz;
+	r->h = paddingVert;
 
 	if (rad->wPre != -1 &&
 	    rad->hPre != -1) {
@@ -422,8 +447,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 
 			AG_TextSize(radi->text, &w, &h);
 			r->h += h + WIDGET(rad)->spacingVert;
-			if (r->w < dia+4+w)
-				r->w = dia+4+w;
+			r->w = MAX(r->w, dia + WIDGET(rad)->spacingHoriz + w +
+			                 paddingHoriz);
 		}
 		if (rad->nItems > 1)
 			r->h -= WIDGET(rad)->spacingVert;
@@ -435,8 +460,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 
 			AG_TextSize(radi->text, &w, &h);
 			r->w += w + WIDGET(rad)->spacingHoriz;
-			if (r->h < dia+4+h)
-				r->h = dia+4+h;
+			r->h = MAX(r->h, dia + WIDGET(rad)->spacingVert + h +
+			                 paddingVert);
 		}
 		if (rad->nItems > 1)
 			r->w -= WIDGET(rad)->spacingHoriz;
@@ -757,7 +782,7 @@ AG_WidgetClass agRadioClass = {
 	},
 	Draw,
 	SizeRequest,
-	NULL,			/* sizeAlloc */
+	NULL,			/* size_allocate */
 };
 
 #endif /* AG_WIDGETS */

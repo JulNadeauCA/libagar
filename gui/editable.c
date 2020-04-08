@@ -210,7 +210,9 @@ AG_EditableGetBuffer(AG_Editable *ed)
 {
 	AG_EditableBuffer *buf;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	if ((buf = GetBuffer(ed)) == NULL) {
 		AG_ObjectUnlock(ed);
 	}
@@ -221,6 +223,8 @@ AG_EditableGetBuffer(AG_Editable *ed)
 void
 AG_EditableClearBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
+
 	ClearBuffer(buf);
 }
 
@@ -232,6 +236,8 @@ AG_EditableGrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, AG_Char *ins,
 	AG_Size newLen;		/* UCS-4 buffer size in bytes */
 	AG_Size convLen;	/* Converted string length in bytes */
 	AG_Char *sNew;
+
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 
 	newLen = (buf->len + nIns + 1)*sizeof(AG_Char);
 
@@ -278,7 +284,10 @@ AG_EditableGrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, AG_Char *ins,
 void
 AG_EditableReleaseBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
+
 	ReleaseBuffer(ed, buf);
+
 	AG_ObjectUnlock(ed);
 }
 
@@ -290,12 +299,9 @@ AG_EditableNew(void *parent, Uint flags)
 	ed = Malloc(sizeof(AG_Editable));
 	AG_ObjectInit(ed, &agEditableClass);
 
-	if (flags & AG_EDITABLE_HFILL)
-		AG_ExpandHoriz(ed);
-	if (flags & AG_EDITABLE_VFILL)
-		AG_ExpandVert(ed);
-	if (flags & AG_EDITABLE_CATCH_TAB)
-		WIDGET(ed)->flags |= AG_WIDGET_CATCH_TAB;
+	if (flags & AG_EDITABLE_HFILL) { WIDGET(ed)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_EDITABLE_VFILL) { WIDGET(ed)->flags |= AG_WIDGET_VFILL; }
+	if (flags & AG_EDITABLE_CATCH_TAB) { WIDGET(ed)->flags |= AG_WIDGET_CATCH_TAB; }
 
 	ed->flags |= flags;
 
@@ -310,10 +316,13 @@ AG_EditableNew(void *parent, Uint flags)
 void
 AG_EditableBindASCII(AG_Editable *ed, char *buf, AG_Size bufSize)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	AG_Unset(ed, "text");
 	AG_BindString(ed, "string", buf, bufSize);
 	ed->encoding = "US-ASCII";
+
 	AG_ObjectUnlock(ed);
 }
 
@@ -322,10 +331,13 @@ AG_EditableBindASCII(AG_Editable *ed, char *buf, AG_Size bufSize)
 void
 AG_EditableBindUTF8(AG_Editable *ed, char *buf, AG_Size bufSize)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	AG_Unset(ed, "text");
 	AG_BindString(ed, "string", buf, bufSize);
 	ed->encoding = "UTF-8";
+
 	AG_ObjectUnlock(ed);
 }
 
@@ -334,10 +346,13 @@ void
 AG_EditableBindEncoded(AG_Editable *ed, const char *encoding, char *buf,
     AG_Size bufSize)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	AG_Unset(ed, "text");
 	AG_BindString(ed, "string", buf, bufSize);
 	ed->encoding = encoding;
+
 	AG_ObjectUnlock(ed);
 }
 
@@ -345,10 +360,13 @@ AG_EditableBindEncoded(AG_Editable *ed, const char *encoding, char *buf,
 void
 AG_EditableBindText(AG_Editable *ed, AG_TextElement *txt)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	AG_Unset(ed, "string");
 	AG_BindPointer(ed, "text", (void *)txt);
 	ed->encoding = "UTF-8";
+
 	AG_ObjectUnlock(ed);
 }
 
@@ -356,13 +374,16 @@ AG_EditableBindText(AG_Editable *ed, AG_TextElement *txt)
 void
 AG_EditableSetLang(AG_Editable *ed, enum ag_language lang)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	ed->lang = lang;
 	ed->pos = 0;
 	ed->selStart = 0;
 	ed->selEnd = 0;
-	AG_ObjectUnlock(ed);
+
 	AG_Redraw(ed);
+	AG_ObjectUnlock(ed);
 }
 #endif /* AG_UNICODE */
 
@@ -370,8 +391,11 @@ AG_EditableSetLang(AG_Editable *ed, enum ag_language lang)
 void
 AG_EditableSetPassword(AG_Editable *ed, int enable)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	AG_SETFLAGS(ed->flags, AG_EDITABLE_PASSWORD, enable);
+
 	AG_ObjectUnlock(ed);
 }
 
@@ -379,13 +403,17 @@ AG_EditableSetPassword(AG_Editable *ed, int enable)
 void
 AG_EditableSetWordWrap(AG_Editable *ed, int enable)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	ed->x = 0;
 	ed->y = 0;
 	ed->pos = 0;
 	ed->selStart = 0;
 	ed->selEnd = 0;
+
 	AG_SETFLAGS(ed->flags, AG_EDITABLE_WORDWRAP, enable);
+
 	AG_ObjectUnlock(ed);
 }
 
@@ -397,6 +425,7 @@ AG_EditableSetWordWrap(AG_Editable *ed, int enable)
 void
 AG_EditableSetExcl(AG_Editable *ed, int enable)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
 
 	ClearBuffer(&ed->sBuf);
@@ -415,13 +444,16 @@ AG_EditableSetExcl(AG_Editable *ed, int enable)
 void
 AG_EditableSetFltOnly(AG_Editable *ed, int enable)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	if (enable) {
 		ed->flags |= AG_EDITABLE_FLT_ONLY;
 		ed->flags &= ~(AG_EDITABLE_INT_ONLY);
 	} else {
 		ed->flags &= ~(AG_EDITABLE_FLT_ONLY);
 	}
+
 	AG_ObjectUnlock(ed);
 }
 
@@ -429,13 +461,16 @@ AG_EditableSetFltOnly(AG_Editable *ed, int enable)
 void
 AG_EditableSetIntOnly(AG_Editable *ed, int enable)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	if (enable) {
 		ed->flags |= AG_EDITABLE_INT_ONLY;
 		ed->flags &= ~(AG_EDITABLE_FLT_ONLY);
 	} else {
 		ed->flags &= ~(AG_EDITABLE_INT_ONLY);
 	}
+
 	AG_ObjectUnlock(ed);
 }
 
@@ -720,6 +755,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 	AG_TextANSI ansi;
 	int i, x, y, yMouse;
 	
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
 
 	if ((yMouse = my + ed->y*ed->lineSkip) < 0) {
@@ -839,12 +875,15 @@ out:
 void
 AG_EditableMoveCursor(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	if (AG_EditableMapPosition(ed, buf, mx, my, &ed->pos) == 0) {
 		ed->selStart = 0;
 		ed->selEnd = 0;
 		AG_Redraw(ed);
 	}
+
 	AG_ObjectUnlock(ed);
 }
 
@@ -854,7 +893,9 @@ AG_EditableSetCursorPos(AG_Editable *ed, AG_EditableBuffer *buf, int pos)
 {
 	int rv;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	ed->pos = pos;
 	ed->selStart = 0;
 	ed->selEnd = 0;
@@ -865,9 +906,10 @@ AG_EditableSetCursorPos(AG_Editable *ed, AG_EditableBuffer *buf, int pos)
 	rv = ed->pos;
 	ed->xScrollTo = &ed->xCurs;
 	ed->yScrollTo = &ed->yCurs;
-	AG_ObjectUnlock(ed);
-	
+
 	AG_Redraw(ed);
+	AG_ObjectUnlock(ed);
+
 	return (rv);
 }
 
@@ -1143,24 +1185,31 @@ AG_EditableSizeHint(AG_Editable *ed, const char *text)
 {
 	int hPre;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	AG_TextSize(text, &ed->wPre, &hPre);
 	ed->hPre = MIN(1, hPre/ed->lineSkip);
+
 	AG_ObjectUnlock(ed);
 }
 
 void
 AG_EditableSizeHintPixels(AG_Editable *ed, Uint w, Uint h)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	ed->wPre = w;
 	ed->hPre = MIN(1, h/ed->lineSkip);
+
 	AG_ObjectUnlock(ed);
 }
 
 void
 AG_EditableSizeHintLines(AG_Editable *ed, Uint nLines)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	ed->hPre = nLines;
 }
 
@@ -1429,6 +1478,7 @@ KeyUp(AG_Event *_Nonnull event)
 void
 AG_EditableAutocomplete(AG_Editable *ed, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
 
 	if (fn == NULL) {                           /* Disable autocomplete */
@@ -1467,6 +1517,8 @@ out:
 void
 AG_EditableCloseAutocomplete(AG_Editable *ed)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
+
 	if (ed->complete == NULL)
 		return;
 
@@ -1633,7 +1685,10 @@ AG_EditableCopyChunk(AG_Editable *ed, AG_EditableClipboard *cb, AG_Char *s,
 {
 	AG_Char *sNew;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
+	AG_ObjectLock(ed);
 	AG_MutexLock(&cb->lock);
+
 	sNew = TryRealloc(cb->s, (len+1)*sizeof(AG_Char));
 	if (sNew != NULL) {
 		cb->s = sNew;
@@ -1642,7 +1697,9 @@ AG_EditableCopyChunk(AG_Editable *ed, AG_EditableClipboard *cb, AG_Char *s,
 		cb->len = len;
 	}
 	Strlcpy(cb->encoding, ed->encoding, sizeof(cb->encoding));
+
 	AG_MutexUnlock(&cb->lock);
+	AG_ObjectUnlock(ed);
 }
 
 /*
@@ -1650,18 +1707,27 @@ AG_EditableCopyChunk(AG_Editable *ed, AG_EditableClipboard *cb, AG_Char *s,
  * Return 1 = buffer changed or 0 = copy failed or no change.
  */
 int
-AG_EditableCut(AG_Editable *ed, AG_EditableBuffer *buf,
-    AG_EditableClipboard *cb, int internalOnly)
+AG_EditableCut(AG_Editable *ed, AG_EditableBuffer *buf, AG_EditableClipboard *cb,
+    int internalOnly)
 {
-	const AG_Size selLen = (ed->selEnd - ed->selStart);
+	AG_Size selLen;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
+	AG_ObjectLock(ed);
+
+	selLen = (ed->selEnd - ed->selStart);
 	if (AGEDITABLE_IS_READONLY(ed) || selLen == 0) {
-		return (0);
+		goto no_change;
 	}
 	AG_EditableValidateSelection(ed, buf);
+
 	if (AG_EditableCopy(ed, buf, cb, internalOnly)) {
 		AG_EditableDelete(ed, buf);
 	}
+	AG_ObjectUnlock(ed);
+	return (1);
+no_change:
+	AG_ObjectUnlock(ed);
 	return (1);
 }
 
@@ -1679,9 +1745,13 @@ AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf,
 	const int selStart = ed->selStart;
 	const int selEnd   = ed->selEnd;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
+	AG_ObjectLock(ed);
+
 	AG_EditableValidateSelection(ed, buf);
+
 	if ((selLen = (selEnd - selStart)) == 0)
-		return (0);
+		goto no_change;
 
 	if (internalOnly || !agClipboardIntegration || /* Internal clipboard */
 	    drvOps->setClipboardText == NULL) {
@@ -1697,7 +1767,7 @@ AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf,
 		buf->s[selEnd] = '\0';
 		if (AG_LengthUTF8FromUCS4(&buf->s[selStart], &utf8len) == -1) {
 			buf->s[selEnd] = cEndSave;
-			return (0);
+			goto no_change;
 		}
 		utf8len++;
 #if 0
@@ -1707,20 +1777,20 @@ AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf,
 		if ((s = TryMalloc(utf8len)) == NULL) {
 			Verbose(_("Out of memory for Copy (%lu bytes)\n"), (Ulong)utf8len);
 			buf->s[selEnd] = cEndSave;
-			return (0);
+			goto no_change;
 		}
 		if (AG_ExportUnicode("UTF-8", s, &buf->s[selStart], utf8len)
 		    == -1) {
 			buf->s[selEnd] = cEndSave;
 			Verbose(_("Copy failed (%s)\n"), AG_GetError());
-			return (0);
+			goto no_change;
 		}
 		buf->s[selEnd] = cEndSave;
 #else
 		if ((s = TryMalloc(selLen+1)) == NULL) {
 			Verbose(_("Out of memory for Copy (%lu bytes)\n"),
 			    selLen+1);
-			return (0);
+			goto no_change;
 		}
 		memcpy(s, &buf->s[selStart], selLen);
 		s[selLen] = '\0';
@@ -1728,11 +1798,15 @@ AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf,
 
 		if (drvOps->setClipboardText(drv, s) == -1) {
 			free(s);
-			return (0);
+			goto no_change;
 		}
 		free(s);
 	}
+	AG_ObjectUnlock(ed);
 	return (1);
+no_change:
+	AG_ObjectUnlock(ed);
+	return (0);
 }
 
 /*
@@ -1746,8 +1820,11 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 	AG_Driver *drv = WIDGET(ed)->drv;
 	const AG_DriverClass *drvOps = AGDRIVER_CLASS(drv);
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
+	AG_ObjectLock(ed);
+
 	if (AGEDITABLE_IS_READONLY(ed))
-		return (0);
+		goto no_change;
 
 	if (ed->selEnd > ed->selStart)
 		AG_EditableDelete(ed, buf);
@@ -1854,9 +1931,12 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 out:
 	ed->xScrollTo = &ed->xCurs;
 	ed->yScrollTo = &ed->yCurs;
+	AG_ObjectUnlock(ed);
 	return (1);
 fail:
 	Verbose(_("Paste Failed (%s)\n"), AG_GetError());
+no_change:
+	AG_ObjectUnlock(ed);
 	return (0);
 }
 
@@ -1867,10 +1947,14 @@ fail:
 int
 AG_EditableDelete(AG_Editable *ed, AG_EditableBuffer *buf)
 {
-	const AG_Size selLen = (ed->selEnd - ed->selStart);
+	AG_Size selLen;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
+	AG_ObjectLock(ed);
+
+	selLen = (ed->selEnd - ed->selStart);
 	if (AGEDITABLE_IS_READONLY(ed) || selLen == 0)
-		return (0);
+		goto no_change;
 
 	AG_EditableValidateSelection(ed, buf);
 	if (ed->selEnd == buf->len) {
@@ -1885,17 +1969,27 @@ AG_EditableDelete(AG_Editable *ed, AG_EditableBuffer *buf)
 	ed->selEnd = 0;
 	ed->xScrollTo = &ed->xCurs;
 	ed->yScrollTo = &ed->yCurs;
+
+	AG_ObjectUnlock(ed);
 	return (1);
+no_change:
+	AG_ObjectUnlock(ed);
+	return (0);
 }
 
 /* Perform "Select All" on buffer. */
 void
 AG_EditableSelectAll(AG_Editable *ed, AG_EditableBuffer *buf)
 {
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
+	AG_ObjectLock(ed);
+
 /*	ed->pos = 0; */
 	ed->selStart = 0;
 	ed->selEnd = buf->len;
+
 	AG_Redraw(ed);
+	AG_ObjectUnlock(ed);
 }
 
 /*
@@ -2310,7 +2404,9 @@ AG_EditableSetString(AG_Editable *ed, const char *text)
 	AG_EditableBuffer *buf;
 	AG_Char *sNew;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	if ((buf = GetBuffer(ed)) == NULL) {
 		goto out;
 	}
@@ -2342,8 +2438,8 @@ AG_EditableSetString(AG_Editable *ed, const char *text)
 	CommitBuffer(ed, buf);
 	ReleaseBuffer(ed, buf);
 out:
-	AG_ObjectUnlock(ed);
 	AG_Redraw(ed);
+	AG_ObjectUnlock(ed);
 }
 
 
@@ -2354,7 +2450,9 @@ AG_EditableDupString(AG_Editable *ed)
 	AG_Variable *V;
 	char *sDup, *s;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	if (AG_Defined(ed, "text")) {
 		AG_TextElement *txt;
 
@@ -2366,6 +2464,7 @@ AG_EditableDupString(AG_Editable *ed)
 		sDup = TryStrdup(s);
 	}
 	AG_UnlockVariable(V);
+
 	AG_ObjectUnlock(ed);
 	return (sDup);
 }
@@ -2378,7 +2477,9 @@ AG_EditableCopyString(AG_Editable *ed, char *dst, AG_Size dst_size)
 	AG_Size rv;
 	char *s;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	if (AG_Defined(ed, "text")) {
 		AG_TextElement *txt;
 
@@ -2390,6 +2491,7 @@ AG_EditableCopyString(AG_Editable *ed, char *dst, AG_Size dst_size)
 		rv = Strlcpy(dst, s, dst_size);
 	}
 	AG_UnlockVariable(V);
+
 	AG_ObjectUnlock(ed);
 	return (rv);
 }
@@ -2416,6 +2518,7 @@ AG_EditableCatStringS(AG_Editable *ed, const char *s)
 {
 	AG_Variable *V;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
 
 	if (AG_Defined(ed, "text")) {
@@ -2457,13 +2560,13 @@ AG_EditableCatStringS(AG_Editable *ed, const char *s)
 		free(ucs);
 	}
 	AG_UnlockVariable(V);
-	AG_ObjectUnlock(ed);
+
 	AG_Redraw(ed);
+	AG_ObjectUnlock(ed);
 	return (0);
 fail:
 	AG_UnlockVariable(V);
 	AG_ObjectUnlock(ed);
-	AG_Redraw(ed);
 	return (-1);
 }
 
@@ -2475,10 +2578,11 @@ AG_EditableInt(AG_Editable *ed)
 	AG_EditableBuffer *buf;
 	int i;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
-	if ((buf = GetBuffer(ed)) == NULL) {
+
+	if ((buf = GetBuffer(ed)) == NULL)
 		AG_FatalError(NULL);
-	}
 #ifdef AG_UNICODE
 	AG_ExportUnicode("UTF-8", abuf, buf->s, sizeof(abuf));
 #else
@@ -2486,6 +2590,7 @@ AG_EditableInt(AG_Editable *ed)
 #endif
 	i = atoi(abuf);
 	ReleaseBuffer(ed, buf);
+
 	AG_ObjectUnlock(ed);
 	return (i);
 }
@@ -2498,10 +2603,11 @@ AG_EditableFlt(AG_Editable *ed)
 	AG_EditableBuffer *buf;
 	float flt;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
-	if ((buf = GetBuffer(ed)) == NULL) {
+
+	if ((buf = GetBuffer(ed)) == NULL)
 		AG_FatalError(NULL);
-	}
 #ifdef AG_UNICODE
 	AG_ExportUnicode("UTF-8", abuf, buf->s, sizeof(abuf));
 #else
@@ -2509,6 +2615,7 @@ AG_EditableFlt(AG_Editable *ed)
 #endif
 	flt = (float)strtod(abuf, NULL);
 	ReleaseBuffer(ed, buf);
+
 	AG_ObjectUnlock(ed);
 	return (flt);
 }
@@ -2521,10 +2628,11 @@ AG_EditableDbl(AG_Editable *ed)
 	AG_EditableBuffer *buf;
 	double flt;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
-	if ((buf = GetBuffer(ed)) == NULL) {
+
+	if ((buf = GetBuffer(ed)) == NULL)
 		AG_FatalError(NULL);
-	}
 #ifdef AG_UNICODE
 	AG_ExportUnicode("UTF-8", abuf, buf->s, sizeof(abuf));
 #else
@@ -2532,6 +2640,7 @@ AG_EditableDbl(AG_Editable *ed)
 #endif
 	flt = strtod(abuf, NULL);
 	ReleaseBuffer(ed, buf);
+
 	AG_ObjectUnlock(ed);
 	return (flt);
 }
@@ -2690,8 +2799,11 @@ AG_EditableReadOnly(AG_Editable *_Nonnull ed)
 {
 	int flag;
 
+	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
+
 	flag = AGEDITABLE_IS_READONLY(ed);
+
 	AG_ObjectUnlock(ed);
 	return (flag);
 }

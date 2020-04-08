@@ -38,7 +38,6 @@ typedef struct ag_socket {
 		} circle;
 	} bgData;
 	enum ag_text_justify lblJustify; /* Label justification */
-	int lPad, rPad, tPad, bPad;	 /* Padding around contained Icon */
 	Uint32 _pad;
 	struct ag_icon *_Nullable icon;	 /* Icon in socket if any */
 
@@ -76,19 +75,23 @@ void AG_SocketRemoveFn(AG_Socket *_Nonnull,
 void AG_SocketOverlayFn(AG_Socket *_Nonnull,
                         _Nullable AG_EventFn, const char *_Nullable, ...);
 
-void    AG_SocketSetPadding(AG_Socket *_Nonnull, int,int,int,int);
-#define	AG_SocketSetPaddingLeft(b,v)   AG_SocketSetPadding((b),(v),-1,-1,-1)
-#define	AG_SocketSetPaddingRight(b,v)  AG_SocketSetPadding((b),-1,(v),-1,-1)
-#define AG_SocketSetPaddingTop(b,v)    AG_SocketSetPadding((b),-1,-1,(v),-1)
-#define	AG_SocketSetPaddingBottom(b,v) AG_SocketSetPadding((b),-1,-1,-1,(v))
-
 void AG_SocketBgRect(AG_Socket *_Nonnull, Uint,Uint);
 void AG_SocketBgCircle(AG_Socket *_Nonnull, Uint);
-void AG_SocketBgPixmap(AG_Socket *_Nonnull, AG_Surface *_Nullable);
+void AG_SocketBgPixmap(AG_Socket *_Nonnull, const AG_Surface *_Nullable);
 void AG_SocketBgPixmapNODUP(AG_Socket *_Nonnull, AG_Surface *_Nullable);
 
 void AG_SocketInsertIcon(AG_Socket *_Nonnull, struct ag_icon *_Nonnull);
 void AG_SocketRemoveIcon(AG_Socket *_Nonnull);
+
+#ifdef AG_LEGACY
+void    AG_SocketSetPadding(AG_Socket *_Nonnull, int,int,int,int)
+                           DEPRECATED_ATTRIBUTE;
+#define	AG_SocketSetPaddingLeft(b,v)   AG_SetStyleF((b),"padding","0 0 0 %d",(v))
+#define	AG_SocketSetPaddingRight(b,v)  AG_SetStyleF((b),"padding","0 %d 0 0",(v))
+#define AG_SocketSetPaddingTop(b,v)    AG_SetStyleF((b),"padding","%d 0 0 0",(v))
+#define	AG_SocketSetPaddingBottom(b,v) AG_SetStyleF((b),"padding","0 0 %d 0",(v))
+#endif /* AG_LEGACY */
+
 __END_DECLS
 
 #include <agar/gui/close.h>

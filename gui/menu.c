@@ -55,10 +55,9 @@ AG_MenuNew(void *parent, Uint flags)
 	m = Malloc(sizeof(AG_Menu));
 	AG_ObjectInit(m, &agMenuClass);
 
+	if (flags & AG_MENU_HFILL) { WIDGET(m)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_MENU_VFILL) { WIDGET(m)->flags |= AG_WIDGET_VFILL; }
 	m->flags |= flags;
-
-	if (flags & AG_MENU_HFILL) { AG_ExpandHoriz(m); }
-	if (flags & AG_MENU_VFILL) { AG_ExpandVert(m); }
 
 	AG_ObjectAttach(parent, m);
 	return (m);
@@ -93,7 +92,7 @@ AG_MenuNewGlobal(Uint flags)
 	m->style = AG_MENU_GLOBAL;
 /*	AG_SetStyleF(m, "padding", "4 0 4 0") */
 /*	AG_MenuSetPadding(m, 4, 4, -1, -1); */
-	AG_ExpandHoriz(m);
+	WIDGET(m)->flags |= AG_WIDGET_HFILL;
 
 	agAppMenu = m;
 	agAppMenuWin = win;

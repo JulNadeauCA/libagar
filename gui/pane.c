@@ -43,11 +43,12 @@ AG_PaneNew(void *parent, enum ag_pane_type type, Uint flags)
 
 	pa = Malloc(sizeof(AG_Pane));
 	AG_ObjectInit(pa, &agPaneClass);
-	pa->type = type;
-	pa->flags |= flags;
 
-	if (flags & AG_PANE_HFILL) { AG_ExpandHoriz(pa); }
-	if (flags & AG_PANE_VFILL) { AG_ExpandVert(pa); }
+	pa->type = type;
+
+	if (flags & AG_PANE_HFILL) { WIDGET(pa)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_PANE_VFILL) { WIDGET(pa)->flags |= AG_WIDGET_VFILL; }
+	pa->flags |= flags;
 
 #ifdef AG_LEGACY
 	if (flags & AG_PANE_DIV)
@@ -131,8 +132,8 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 		pa->rx = rv;
 	}
 
-	AG_ObjectUnlock(pa);
 	AG_Redraw(pa);
+	AG_ObjectUnlock(pa);
 	return (rv);
 }
 
@@ -275,6 +276,7 @@ void
 AG_PaneSetDividerWidth(AG_Pane *pa, int wDiv)
 {
 	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
+	AG_ObjectLock(pa);
 
 	if (wDiv == -1) {
 		pa->flags &= ~(AG_PANE_OVERRIDE_WDIV);
@@ -284,13 +286,19 @@ AG_PaneSetDividerWidth(AG_Pane *pa, int wDiv)
 		pa->wDiv = wDiv;
 	}
 	AG_Redraw(pa);
+
+	AG_ObjectUnlock(pa);
 }
 
 void
 AG_PaneSetDivisionPacking(AG_Pane *pa, int which, enum ag_box_type packing)
 {
 	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
+	AG_ObjectLock(pa);
+
 	AG_BoxSetType(pa->div[which], packing);
+
+	AG_ObjectUnlock(pa);
 }
 
 void
@@ -321,8 +329,8 @@ AG_PaneAttachBox(AG_Pane *pa, int which, AG_Box *box)
 	WIDGET(box)->flags |= AG_WIDGET_EXPAND;
 	
 	AG_ObjectUnlock(box);
-	AG_ObjectUnlock(pa);
 	AG_Redraw(pa);
+	AG_ObjectUnlock(pa);
 }
 
 void
@@ -334,8 +342,8 @@ AG_PaneAttachBoxes(AG_Pane *pa, AG_Box *box1, AG_Box *box2)
 	AG_PaneAttachBox(pa, 0, box1);
 	AG_PaneAttachBox(pa, 1, box2);
 
-	AG_ObjectUnlock(pa);
 	AG_Redraw(pa);
+	AG_ObjectUnlock(pa);
 }
 
 void

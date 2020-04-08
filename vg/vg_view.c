@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,11 +60,12 @@ VG_ViewNew(void *parent, VG *vg, Uint flags)
 
 	vv = Malloc(sizeof(VG_View));
 	AG_ObjectInit(vv, &vgViewClass);
-	vv->flags |= flags;
-	vv->vg = vg;
 	
-	if (flags & VG_VIEW_HFILL) { AG_ExpandHoriz(vv); }
-	if (flags & VG_VIEW_VFILL) { AG_ExpandVert(vv); }
+	if (flags & VG_VIEW_HFILL) { WIDGET(vv)->flags |= AG_WIDGET_HFILL; }
+	if (flags & VG_VIEW_VFILL) { WIDGET(vv)->flags |= AG_WIDGET_VFILL; }
+	vv->flags |= flags;
+
+	vv->vg = vg;
 
 	AG_ObjectAttach(parent, vv);
 	return (vv);

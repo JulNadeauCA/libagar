@@ -57,8 +57,8 @@ AG_ConsoleNew(void *parent, Uint flags)
 	AG_ObjectInit(cons, &agConsoleClass);
 	cons->flags |= flags;
 
-	if (flags & AG_CONSOLE_HFILL) { AG_ExpandHoriz(cons); }
-	if (flags & AG_CONSOLE_VFILL) { AG_ExpandVert(cons); }
+	if (flags & AG_CONSOLE_HFILL) { WIDGET(cons)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_CONSOLE_VFILL) { WIDGET(cons)->flags |= AG_WIDGET_VFILL; }
 
 	AG_ObjectAttach(parent, cons);
 	return (cons);
@@ -992,6 +992,7 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 
 	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
 	AG_ObjectLock(cons);
+
 	if ((ln = AG_ConsoleAppendLine(cons, NULL)) == NULL) {
 		goto fail;
 	}
@@ -1004,6 +1005,7 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 		ln->text[len-1] = '\0';
 		ln->len--;
 	}
+
 	AG_ObjectUnlock(cons);
 	return (ln);
 fail:
@@ -1020,6 +1022,7 @@ AG_ConsoleMsgS(AG_Console *cons, const char *s)
 
 	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
 	AG_ObjectLock(cons);
+
 	if ((ln = AG_ConsoleAppendLine(cons, s)) == NULL) {
 		goto fail;
 	}
@@ -1028,6 +1031,7 @@ AG_ConsoleMsgS(AG_Console *cons, const char *s)
 		ln->text[len-1] = '\0';
 		ln->len--;
 	}
+
 	AG_ObjectUnlock(cons);
 	return (ln);
 fail:

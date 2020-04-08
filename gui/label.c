@@ -65,9 +65,9 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	lbl->pollBufSize = AG_FMTSTRING_BUFFER_INIT;
 	lbl->pollBuf = Malloc(lbl->pollBufSize);
 
+	if (flags & AG_LABEL_HFILL) { WIDGET(lbl)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_LABEL_VFILL) { WIDGET(lbl)->flags |= AG_WIDGET_VFILL; }
 	lbl->flags |= flags;
-	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(lbl); }
-	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
 
 	/* Build the format string */
 	fs = lbl->fmt = Malloc(sizeof(AG_FmtString));
@@ -119,9 +119,9 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mu, const char *fmt, ...
 	lbl->pollBufSize = AG_FMTSTRING_BUFFER_INIT;
 	lbl->pollBuf = Malloc(lbl->pollBufSize);
 
+	if (flags & AG_LABEL_HFILL) { WIDGET(lbl)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_LABEL_VFILL) { WIDGET(lbl)->flags |= AG_WIDGET_VFILL; }
 	lbl->flags |= flags;
-	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(lbl); }
-	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
 
 	/* Build the format string (legacy style) */
 	if ((fs = lbl->fmt = TryMalloc(sizeof(AG_FmtString))) == NULL) {
@@ -169,9 +169,11 @@ AG_LabelNew(void *parent, Uint flags, const char *fmt, ...)
 	AG_ObjectInit(lbl, &agLabelClass);
 
 	lbl->type = AG_LABEL_STATIC;
+
+	if (flags & AG_LABEL_HFILL) { WIDGET(lbl)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_LABEL_VFILL) { WIDGET(lbl)->flags |= AG_WIDGET_VFILL; }
 	lbl->flags |= flags;
-	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(lbl); }
-	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
+
 	if (fmt != NULL) {
 		va_start(ap, fmt);
 		Vasprintf(&lbl->text, fmt, ap);
@@ -194,9 +196,11 @@ AG_LabelNewS(void *parent, Uint flags, const char *text)
 	AG_ObjectInit(lbl, &agLabelClass);
 
 	lbl->type = AG_LABEL_STATIC;
+
+	if (flags & AG_LABEL_HFILL) { WIDGET(lbl)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_LABEL_VFILL) { WIDGET(lbl)->flags |= AG_WIDGET_VFILL; }
 	lbl->flags |= flags;
-	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(lbl); }
-	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
+
 	lbl->text = (text != NULL) ? Strdup(text) : NULL;
 
 	AG_ObjectAttach(parent, lbl);
@@ -399,8 +403,8 @@ AG_LabelText(AG_Label *lbl, const char *fmt, ...)
 
 	lbl->flags |= AG_LABEL_REGEN;
 
-	AG_ObjectUnlock(lbl);
 	AG_Redraw(lbl);
+	AG_ObjectUnlock(lbl);
 }
 
 /* Change the text displayed by the label (C string). */
@@ -415,8 +419,8 @@ AG_LabelTextS(AG_Label *lbl, const char *s)
 	lbl->text = Strdup(s);
 	lbl->flags |= AG_LABEL_REGEN;
 
-	AG_ObjectUnlock(lbl);
 	AG_Redraw(lbl);
+	AG_ObjectUnlock(lbl);
 }
 
 /* Calculate offset for horizontal justify */
@@ -592,10 +596,10 @@ static void *_Nullable
 Edit(void *_Nonnull p)
 {
 	static const AG_FlagDescr flagDescr[] = {
-	    { AG_LABEL_PARTIAL,   _("Partially visible"), 0 },
-	    { AG_LABEL_REGEN,     _("Regenerate"),        0 },
-	    { AG_LABEL_FRAME,     _("Display a border"),  1 },
-	    { 0,                  NULL,                   0 }
+	    { AG_LABEL_PARTIAL, _("Partially visible"), 0 },
+	    { AG_LABEL_REGEN,   _("Regenerate"),        0 },
+	    { AG_LABEL_FRAME,   _("Display a border"),  1 },
+	    { 0,                NULL,                   0 }
 	};
 	AG_Label *lbl = p;
 	AG_Box *box;

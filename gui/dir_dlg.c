@@ -67,9 +67,11 @@ AG_DirDlgNew(void *parent, Uint flags)
 
 	dd = Malloc(sizeof(AG_DirDlg));
 	AG_ObjectInit(dd, &agDirDlgClass);
+
 	dd->flags |= flags;
-	if (flags & AG_DIRDLG_HFILL) { AG_ExpandHoriz(dd); }
-	if (flags & AG_DIRDLG_VFILL) { AG_ExpandVert(dd); }
+
+	if (flags & AG_DIRDLG_HFILL) { WIDGET(dd)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_DIRDLG_VFILL) { WIDGET(dd)->flags |= AG_WIDGET_VFILL; }
 	if (flags & AG_DIRDLG_MULTI) { dd->tlDirs->flags |= AG_TLIST_MULTI; }
 	
 	if (flags & AG_DIRDLG_NOBUTTONS) {
@@ -248,6 +250,7 @@ DirSelected(AG_Event *_Nonnull event)
 
 	AG_ObjectLock(dd);
 	AG_ObjectLock(tl);
+
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
 		if (AG_DirDlgSetDirectoryS(dd, ti->text) == -1) {
 			/* AG_TextMsgFromError() */
@@ -256,6 +259,7 @@ DirSelected(AG_Event *_Nonnull event)
 			RefreshListing(dd);
 		}
 	}
+
 	AG_ObjectUnlock(tl);
 	AG_ObjectUnlock(dd);
 }
@@ -282,7 +286,9 @@ AG_DirDlgCheckReadAccess(AG_DirDlg *dd)
 {
 	AG_FileInfo info;
 
+	AG_OBJECT_ISA(dd, "AG_Widget:AG_DirDlg:*");
 	AG_ObjectLock(dd);
+
 	if (AG_GetFileInfo(dd->cwd, &info) == -1) {
 		goto fail;
 	}
@@ -290,6 +296,7 @@ AG_DirDlgCheckReadAccess(AG_DirDlg *dd)
 		AG_SetError(_("%s: Read permission denied"), dd->cwd);
 		goto fail;
 	}
+
 	AG_ObjectUnlock(dd);
 	return (0);
 fail:
@@ -302,7 +309,9 @@ AG_DirDlgCheckWriteAccess(AG_DirDlg *dd)
 {
 	AG_FileInfo info;
 	
+	AG_OBJECT_ISA(dd, "AG_Widget:AG_DirDlg:*");
 	AG_ObjectLock(dd);
+
 	if (AG_GetFileInfo(dd->cwd, &info) == -1) {
 		goto fail;
 	}
@@ -310,23 +319,12 @@ AG_DirDlgCheckWriteAccess(AG_DirDlg *dd)
 		AG_SetError(_("%s: Write permission denied"), dd->cwd);
 		goto fail;
 	}
+
 	AG_ObjectUnlock(dd);
 	return (0);
 fail:
 	AG_ObjectUnlock(dd);
 	return (-1);
-}
-
-static void
-ChooseDir(AG_DirDlg *_Nonnull dd, AG_Window *_Nonnull pwin)
-{
-	AG_ObjectLock(dd);
-	AG_PostEvent(dd, "dir-chosen", "%s", dd->cwd);
-	if (dd->flags & AG_DIRDLG_CLOSEWIN) {
-/*		AG_PostEvent(pwin, "window-close", NULL); */
-		AG_ObjectDetach(pwin);
-	}
-	AG_ObjectUnlock(dd);
 }
 
 static void
@@ -359,7 +357,13 @@ CheckAccessAndChoose(AG_DirDlg *_Nonnull dd)
 			return;
 		}
 	}
-	ChooseDir(dd, pwin);
+
+	AG_PostEvent(dd, "dir-chosen", "%s", dd->cwd);
+
+	if (dd->flags & AG_DIRDLG_CLOSEWIN) {
+/*		AG_PostEvent(pwin, "window-close", NULL); */
+		AG_ObjectDetach(pwin);
+	}
 }
 
 static void
@@ -549,6 +553,7 @@ TextboxReturn(AG_Event *_Nonnull event)
 	int endSep;
 	
 	AG_ObjectLock(dd);
+
 	AG_TextboxCopyString(tb, dir, sizeof(dir));
 #ifdef HAVE_GLOB
 	if (GlobExpansion(dd, dir, sizeof(dir)))
@@ -585,6 +590,7 @@ PressedCancel(AG_Event *_Nonnull event)
 	AG_Window *pwin;
 
 	AG_ObjectLock(dd);
+
 	if (dd->cancelAction != NULL) {
 		AG_PostEventByPtr(dd, dd->cancelAction, NULL);
 	} else if (dd->flags & AG_DIRDLG_CLOSEWIN) {
@@ -593,6 +599,7 @@ PressedCancel(AG_Event *_Nonnull event)
 			AG_ObjectDetach(pwin);
 		}
 	}
+
 	AG_ObjectUnlock(dd);
 }
 
@@ -607,6 +614,7 @@ OnShow(AG_Event *_Nonnull event)
 	dd->flags &= ~(AG_DIRDLG_RESET_ONSHOW);
 
 	AG_WidgetFocus(dd->tbInput);
+
 	RefreshListing(dd);
 	RefreshShortcuts(dd, 1);
 }
@@ -632,6 +640,7 @@ AG_DirDlgSetDirectoryS(AG_DirDlg *dd, const char *dir)
 	AG_FileInfo info;
 	char ncwd[AG_PATHNAME_MAX], *c;
 	
+	AG_OBJECT_ISA(dd, "AG_Widget:AG_DirDlg:*");
 	AG_ObjectLock(dd);
 
 	if (dir[0] == '.' && dir[1] == '\0') {
@@ -703,6 +712,7 @@ AG_DirDlgSetDirectoryMRU(AG_DirDlg *dd, const char *key, const char *dflt)
 	AG_Config *cfg = agConfig;
 	char *s;
 
+	AG_OBJECT_ISA(dd, "AG_Widget:AG_DirDlg:*");
 	AG_ObjectLock(dd);
 	AG_ObjectLock(cfg);
 
@@ -761,7 +771,9 @@ Init(void *_Nonnull obj)
 void
 AG_DirDlgOkAction(AG_DirDlg *dd, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_OBJECT_ISA(dd, "AG_Widget:AG_DirDlg:*");
 	AG_ObjectLock(dd);
+
 	if (dd->okAction) {
 		AG_UnsetEvent(dd, dd->okAction->name);
 	}
@@ -773,12 +785,16 @@ AG_DirDlgOkAction(AG_DirDlg *dd, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(dd->okAction, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(dd);
 }
+
 void
 AG_DirDlgCancelAction(AG_DirDlg *dd, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_OBJECT_ISA(dd, "AG_Widget:AG_DirDlg:*");
 	AG_ObjectLock(dd);
+
 	if (dd->cancelAction != NULL) {
 		AG_UnsetEvent(dd, dd->cancelAction->name);
 	}
@@ -790,6 +806,7 @@ AG_DirDlgCancelAction(AG_DirDlg *dd, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(dd->cancelAction, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(dd);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,10 +63,10 @@ AG_TableNew(void *parent, Uint flags)
 
 	t = Malloc(sizeof(AG_Table));
 	AG_ObjectInit(t, &agTableClass);
-	t->flags |= flags;
 
-	if (flags & AG_TABLE_HFILL) { AG_ExpandHoriz(t); }
-	if (flags & AG_TABLE_VFILL) { AG_ExpandVert(t); }
+	if (flags & AG_TABLE_HFILL) { WIDGET(t)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_TABLE_VFILL) { WIDGET(t)->flags |= AG_WIDGET_VFILL; }
+	t->flags |= flags;
 
 	AG_ObjectAttach(parent, t);
 	return (t);
@@ -121,6 +121,7 @@ AG_TableNewPolled(void *parent, Uint flags, void (*fn)(AG_Event *),
 AG_TableCell *
 AG_TableGetCell(AG_Table *t, int m, int n)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 #ifdef AG_DEBUG
 	if (m < 0 || m >= t->m ||
 	    n < 0 || n >= t->n)
@@ -136,16 +137,22 @@ AG_TableGetCell(AG_Table *t, int m, int n)
 int
 AG_TableCellSelected(AG_Table *t, int m, int n)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+
 	return (t->cells[m][n].selected);
 }
 void
 AG_TableSelectCell(AG_Table *t, int m, int n)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+
 	t->cells[m][n].selected = 1;
 }
 void
 AG_TableDeselectCell(AG_Table *t, int m, int n)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+
 	t->cells[m][n].selected = 0;
 }
 
@@ -156,28 +163,37 @@ AG_TableDeselectCell(AG_Table *t, int m, int n)
 int
 AG_TableColSelected(AG_Table *t, int n)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+
 	return (t->cols[n].flags & AG_TABLE_COL_SELECTED);
 }
 void
 AG_TableSelectCol(AG_Table *t, int n)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+
 	t->cols[n].flags |= AG_TABLE_COL_SELECTED;
 }
 void
 AG_TableDeselectCol(AG_Table *t, int n)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+
 	t->cols[n].flags &= ~(AG_TABLE_COL_SELECTED);
 }
 
 void
 AG_TableSetPollInterval(AG_Table *t, Uint ival)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
+
 	if (ival == 0) {
 		AG_DelTimer(t, &t->pollTo);
 	} else {
 		AG_AddTimer(t, &t->pollTo, ival, PollTimeout, NULL);
 	}
+
 	AG_ObjectUnlock(t);
 }
 
@@ -185,6 +201,8 @@ AG_TableSetPollInterval(AG_Table *t, Uint ival)
 void
 AG_TableSizeHint(AG_Table *t, int w, int n)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+
 	if (w != -1) { t->wHint = w; }
 	if (n != -1) { t->hHint = n*agTextFontHeight; }
 }
@@ -193,6 +211,8 @@ AG_TableSizeHint(AG_Table *t, int w, int n)
 void
 AG_TableSetSelectionMode(AG_Table *t, enum ag_table_selmode mode)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+
 	t->selMode = mode;
 }
 
@@ -200,6 +220,8 @@ AG_TableSetSelectionMode(AG_Table *t, enum ag_table_selmode mode)
 void
 AG_TableSetColumnAction(AG_Table *t, Uint flags)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+
 	t->colAction = flags;
 }
 
@@ -207,8 +229,11 @@ AG_TableSetColumnAction(AG_Table *t, Uint flags)
 void
 AG_TableSetSeparator(AG_Table *t, const char *sep)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
+
 	t->sep = sep;
+
 	AG_ObjectUnlock(t);
 }
 
@@ -216,7 +241,10 @@ AG_TableSetSeparator(AG_Table *t, const char *sep)
 void
 AG_TableSetColHeight(AG_Table *t, int h)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+
 	t->hCol = h;
+
 	AG_WidgetUpdate(t);
 	AG_Redraw(t);
 }
@@ -225,7 +253,10 @@ AG_TableSetColHeight(AG_Table *t, int h)
 void
 AG_TableSetRowHeight(AG_Table *t, int h)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+
 	t->hRow = h;
+
 	AG_WidgetUpdate(t);
 	AG_Redraw(t);
 }
@@ -236,14 +267,18 @@ AG_TableSetColMin(AG_Table *t, int w)
 {
 	int n;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
+
 	t->wColMin = w;
+
 	for (n = 0; n < t->n; n++) {
 		AG_TableCol *tc = &t->cols[n];
 
 		if (tc->w < t->wColMin)
 			tc->w = t->wColMin;
 	}
+
 	AG_ObjectUnlock(t);
 }
 
@@ -254,6 +289,8 @@ AG_TableSetColMin(AG_Table *t, int w)
 void
 AG_TableSetDefaultColWidth(AG_Table *t, int w)
 {
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+
 	t->wColDefault = w;
 }
 
@@ -264,11 +301,13 @@ AG_TableSetPopup(AG_Table *t, int m, int n)
 	AG_TablePopup *tp;
 	AG_MenuItem *rv;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
+
 	SLIST_FOREACH(tp, &t->popups, popups) {
 		if (tp->m == m && tp->n == n) {
-			AG_ObjectUnlock(t);
-			return (tp->item);
+			rv = tp->item;
+			goto out;
 		}
 	}
 	tp = Malloc(sizeof(AG_TablePopup));
@@ -279,8 +318,8 @@ AG_TableSetPopup(AG_Table *t, int m, int n)
 	tp->item = tp->menu->root;			/* XXX redundant */
 	SLIST_INSERT_HEAD(&t->popups, tp, popups);
 	rv = tp->item;
+out:
 	AG_ObjectUnlock(t);
-
 	return (rv);
 }
 
@@ -292,6 +331,9 @@ AG_TableSetFn(AG_Table *t, enum ag_table_fn which, AG_EventFn fn,
 	if (which >= AG_TABLE_FN_LAST) {
 		return;
 	}
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+	AG_ObjectLock(t);
+
 	t->fn[which] = AG_SetEvent(t, NULL, fn, NULL);
 	if (fmt) {
 		va_list ap;
@@ -300,6 +342,8 @@ AG_TableSetFn(AG_Table *t, enum ag_table_fn which, AG_EventFn fn,
 		AG_EventGetArgs(t->fn[which], fmt, ap);
 		va_end(ap);
 	}
+
+	AG_ObjectUnlock(t);
 }
 
 /* Compute the effective widths of the columns. */
@@ -341,9 +385,9 @@ SizeColumns(AG_Table *_Nonnull t)
 	}
 
 	/* Update the cursor change areas for column resize. */
-	r.y = 0;
+	r.y = WIDGET(t)->paddingTop;
 	r.h = t->hCol;
-	for (n = 0, x = 0; n < t->n; n++) {
+	for (n = 0, x = WIDGET(t)->paddingLeft; n < t->n; n++) {
 		tc = &t->cols[n];
 		
 		r.x = x - COLUMN_RESIZE_RANGE/2 - t->xOffs;
@@ -360,15 +404,16 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_SizeReq rBar;
 	int n;
 
-	r->h = t->hHint;
+	r->h = WIDGET(t)->paddingTop + t->hHint + WIDGET(t)->paddingBottom;
+	r->w = WIDGET(t)->paddingLeft + WIDGET(t)->paddingRight;
+
 	if (t->wHint != -1) {
-		r->w = t->wHint;
+		r->w += t->wHint;
 	} else {
 		for (n = 0; n < t->n; n++) {
 			AG_TableCol *tc = &t->cols[n];
 		
-			if (tc->flags & AG_TABLE_COL_FILL ||
-			    tc->wPct != -1) {
+			if (tc->flags & AG_TABLE_COL_FILL || tc->wPct != -1) {
 				r->w += t->wColDefault;
 			} else {
 				r->w += tc->w;
@@ -393,10 +438,11 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_SizeReq rBar;
 	AG_SizeAlloc aBar;
 	int vBarSz=0, hBarSz=0;
-	
-	t->r.w = a->w;
-	t->r.h = a->h - t->hCol;
-	t->r.y = t->hCol;
+
+	t->r.x = WIDGET(t)->paddingLeft;
+	t->r.y = WIDGET(t)->paddingTop + t->hCol;
+	t->r.w = a->w - t->r.x - WIDGET(t)->paddingRight;
+	t->r.h = a->h - t->r.y - WIDGET(t)->paddingBottom;
 
 	if (t->r.h <= 0)
 		return (-1);
@@ -431,12 +477,10 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 
 	SizeColumns(t);
 
-	/* Limit horizontal scrollbar parameters */
-	if (t->xOffs + t->r.w >= t->wTot)
+	if (t->xOffs + t->r.w >= t->wTot)                /* Horiz scrollbar */
 		t->xOffs = MAX(0, t->wTot - t->r.w);
 
-	/* Limit vertical scrollbar parameters */
-	t->mVis = t->r.h/t->hRow;
+	t->mVis = t->r.h/t->hRow;                         /* Vert scrollbar */
 	if (t->mOffs+t->mVis >= t->m)
 		t->mOffs = MAX(0, t->m - t->mVis);
 
@@ -580,7 +624,8 @@ Draw(void *_Nonnull obj)
 	const AG_Color *cSel = &WCOLOR(t, SELECTION_COLOR);
 	AG_Color cLine       =  WCOLOR(t, LINE_COLOR);
 	AG_Rect rCol, rCell;
-	const int zoomLvl = WIDGET(t)->window->zoom;
+	const int paddingTop  = WIDGET(t)->paddingTop;
+	const int paddingLeft = WIDGET(t)->paddingLeft;
 	int n,m, hCol;
 
 	AG_WidgetDraw(t->vbar);
@@ -593,18 +638,15 @@ Draw(void *_Nonnull obj)
 	    t->flags & AG_TABLE_NEEDSORT)
 		AG_TableSort(t);
 
-	rCell.h = t->hRow+1;
+	rCell.h = t->hRow + 1;
 
 	hCol = t->hCol;
 	rCol.y = 0;
 	rCol.h = hCol + t->r.h - 2;
 
-	if (zoomLvl < AG_ZOOM_1_1)                         /* Distance effect */
-		AG_ColorLighten(&cLine, AG_ZOOM_1_1-zoomLvl);
-
 	AG_PushClipRect(t, &WIDGET(t)->r);
 
-	for (n = 0, rCell.x = -t->xOffs;
+	for (n = 0, rCell.x = paddingLeft - t->xOffs;
 	     n < t->n && rCell.x < t->r.w;
 	     n++) {
 		AG_TableCol *col = &t->cols[n];
@@ -626,7 +668,7 @@ Draw(void *_Nonnull obj)
 		AG_PushClipRect(t, &rCol);
 
 		r.x = rCol.x;
-		r.y = 0;
+		r.y = paddingTop;
 		r.w = rCol.w+1;
 		r.h = hCol;
 
@@ -644,23 +686,23 @@ Draw(void *_Nonnull obj)
 			}
 			AG_WidgetBlitSurface(t, col->surface,
 			    rCell.x + (w >> 1) - (WSURFACE(t,col->surface)->w >> 1),
-			           (hCol >> 1) - (WSURFACE(t,col->surface)->h >> 1));
+			    paddingTop + (hCol >> 1) - (WSURFACE(t,col->surface)->h >> 1));
 
 			if (col->flags & AG_TABLE_COL_ASCENDING) {
 				AG_DrawArrowUp(t,
 				    rCell.x + w - COLUMN_RESIZE_RANGE,
-				    hCol>>1, 10,
+				    paddingTop + (hCol >> 1), 10,
 				    &cLine);
 			} else if (col->flags & AG_TABLE_COL_DESCENDING) {
 				AG_DrawArrowDown(t,
 				    rCell.x + w - COLUMN_RESIZE_RANGE,
-				    hCol>>1, 10,
+				    paddingTop + (hCol >> 1), 10,
 				    &cLine);
 			}
 		}
 
 		/* Rows of this column */
-		for (m = t->mOffs, rCell.y = hCol;
+		for (m = t->mOffs, rCell.y = paddingTop + hCol;
 		     m < t->m && (rCell.y < rCol.h);
 		     m++) {
 			AG_TableCell *c = &t->cells[m][n];
@@ -832,7 +874,7 @@ UpdateEmbeddedWidgets(AG_Table *_Nonnull t)
 void
 AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 {
-	if (c->widget) {
+	if (c->widget != NULL) {
 		AG_ObjectDetach(c->widget);
 		AG_ObjectDestroy(c->widget);
 	}
@@ -849,6 +891,9 @@ AG_TableSort(AG_Table *t)
 	int (*sortFn)(const void *, const void *) = NULL;
 	int i;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+	AG_ObjectLock(t);
+
 	for (i = 0; i < t->n; i++) {
 		const AG_TableCol *tc = &t->cols[i];
 
@@ -861,11 +906,13 @@ AG_TableSort(AG_Table *t)
 		}
 	}
 	if (i == t->n) {
-		return;
+		goto out;
 	}
 	t->nSorting = i;
 	qsort(t->cells, t->m, sizeof(AG_TableCell *), sortFn);
+out:
 	t->flags &= ~(AG_TABLE_NEEDSORT);
+	AG_ObjectUnlock(t);
 }
 
 static int
@@ -925,6 +972,7 @@ AG_TableBegin(AG_Table *t)
 {
 	int m, n;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);		/* Lock across TableBegin/End */
 
 	/* Copy the existing cells to the backing store and free the table. */
@@ -960,6 +1008,8 @@ AG_TableEnd(AG_Table *t)
 		RestoreColSelections,		/* SEL_COLS */
 	};
 	AG_TableCell *tc, *tcNext;
+
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 
 	if (t->n == 0)
 		goto out;
@@ -1632,8 +1682,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_TABLE_SELF();
 	const int button = AG_INT(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
+	const int x = AG_INT(2) - WIDGET(t)->paddingLeft;
+	const int y = AG_INT(3) - WIDGET(t)->paddingTop;
 	int m;
 	
 	if (!AG_WidgetIsFocused(t))
@@ -1750,11 +1800,10 @@ static void
 MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_TABLE_SELF();
-	const int x = AG_INT(1);
-	const int y = AG_INT(2);
+	const int x = AG_INT(1) - WIDGET(t)->paddingLeft;
 	const int xrel = AG_INT(3);
 
-	if (x < 0 || y < 0 || x >= WIDTH(t) || y >= HEIGHT(t))
+	if (x < 0 || x >= WIDTH(t))
 		return;
 
 	if (t->nResizing >= 0 && t->nResizing < t->n) {
@@ -1829,7 +1878,9 @@ AG_TableRowSelected(AG_Table *t, int m)
 {
 	int n;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
+
 	if (m >= t->m) {
 		goto out;
 	}
@@ -1849,14 +1900,18 @@ AG_TableSelectRow(AG_Table *t, int m)
 {
 	int n;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
+
 	if (m < t->m) {
-		for (n = 0; n < t->n; n++)
+		for (n = 0; n < t->n; n++) {
 			t->cells[m][n].selected = 1;
+		}
 		AG_PostEvent(t, "row-selected", "%i", m);
 	}
-	AG_ObjectUnlock(t);
+
 	AG_Redraw(t);
+	AG_ObjectUnlock(t);
 }
 
 void
@@ -1864,13 +1919,15 @@ AG_TableDeselectRow(AG_Table *t, int m)
 {
 	int n;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
-	if (m < t->m) {
+
+	if (m < t->m)
 		for (n = 0; n < t->n; n++)
 			t->cells[m][n].selected = 0;
-	}
-	AG_ObjectUnlock(t);
+
 	AG_Redraw(t);
+	AG_ObjectUnlock(t);
 }
 
 void
@@ -1878,13 +1935,16 @@ AG_TableSelectAllRows(AG_Table *t)
 {
 	int m, n;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
+
 	for (n = 0; n < t->n; n++) {
 		for (m = 0; m < t->m; m++)
 			t->cells[m][n].selected = 1;
 	}
-	AG_ObjectUnlock(t);
+
 	AG_Redraw(t);
+	AG_ObjectUnlock(t);
 }
 
 void
@@ -1892,13 +1952,16 @@ AG_TableDeselectAllRows(AG_Table *t)
 {
 	int m, n;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
+
 	for (n = 0; n < t->n; n++) {
 		for (m = 0; m < t->m; m++)
 			t->cells[m][n].selected = 0;
 	}
-	AG_ObjectUnlock(t);
+
 	AG_Redraw(t);
+	AG_ObjectUnlock(t);
 }
 
 void
@@ -1906,12 +1969,14 @@ AG_TableSelectAllCols(AG_Table *t)
 {
 	int n;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
-	for (n = 0; n < t->n; n++) {
+
+	for (n = 0; n < t->n; n++)
 		t->cols[n].flags |= AG_TABLE_COL_SELECTED;
-	}
-	AG_ObjectUnlock(t);
+
 	AG_Redraw(t);
+	AG_ObjectUnlock(t);
 }
 
 void
@@ -1919,28 +1984,29 @@ AG_TableDeselectAllCols(AG_Table *t)
 {
 	int n;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
-	for (n = 0; n < t->n; n++) {
+
+	for (n = 0; n < t->n; n++)
 		t->cols[n].flags &= ~(AG_TABLE_COL_SELECTED);
-	}
-	AG_ObjectUnlock(t);
+
 	AG_Redraw(t);
+	AG_ObjectUnlock(t);
 }
 
 int
 AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
     int (*sortFn)(const void *, const void *))
 {
-	AG_TableCol *tc;
-	AG_TableCol *colsNew;
+	AG_TableCol *tc, *colsNew;
 	int m, n;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
 
-	/* Initialize the column information structure. */
-	if ((colsNew = TryRealloc(t->cols, (t->n+1)*sizeof(AG_TableCol)))
-	    == NULL) {
-		goto fail;
+	if ((colsNew = TryRealloc(t->cols, (t->n+1)*sizeof(AG_TableCol))) == NULL) {
+		n = -1;
+		goto out;
 	}
 	t->cols = colsNew;
 
@@ -1978,20 +2044,19 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 		AG_TableCell *cNew;
 
 		if ((cNew = TryRealloc(t->cells[m],
-		    (t->n+1)*sizeof(AG_TableCell))) == NULL) {
-			goto fail;
+		    (t->n + 1)*sizeof(AG_TableCell))) == NULL) {
+			n = -1;
+			goto out;
 		}
 		t->cells[m] = cNew;
 		AG_TableInitCell(t, &t->cells[m][t->n]);
 	}
 	n = t->n++;
 	t->flags |= AG_TABLE_NEEDSORT;
-	AG_ObjectUnlock(t);
 	AG_Redraw(t);
-	return (n);
-fail:
+out:
 	AG_ObjectUnlock(t);
-	return (-1);
+	return (n);
 }
 
 void
@@ -2019,14 +2084,17 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 
 	Strlcpy(fmt, fmtp, sizeof(fmt));
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
 
 	if ((cNew = TryRealloc(t->cells, (t->m+1)*sizeof(AG_TableCell))) == NULL) {
-		goto fail;
+		rv = -1;
+		goto out;
 	}
 	if ((cNew[t->m] = TryMalloc(t->n*sizeof(AG_TableCell))) == NULL) {
 		Free(cNew);
-		goto fail;
+		rv = -1;
+		goto out;
 	}
 	t->cells = cNew;
 
@@ -2212,14 +2280,13 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	va_end(ap);
 
 	rv = t->m++;
+
 	t->flags |= AG_TABLE_NEEDSORT;
-	AG_ObjectUnlock(t);
 
 	AG_Redraw(t);
-	return (rv);
-fail:
+out:
 	AG_ObjectUnlock(t);
-	return (-1);
+	return (rv);
 }
 
 void
@@ -2227,11 +2294,16 @@ AG_TableDelRow(AG_Table *t, int m)
 {
 	int n;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
+	AG_ObjectLock(t);
+
 	for (n = 0; n < t->n; n++) {
 		AG_TableCell *c = &t->cells[m][n];
 
 		AG_Debug(t, "cell: %d, sel=%d\n", n, c->selected);
 	}
+
+	AG_ObjectUnlock(t);
 }
 
 int
@@ -2242,7 +2314,9 @@ AG_TableSaveASCII(AG_Table *t, void *pf, char sep)
 	AG_Size cSize;
 	int m, n;
 
+	AG_OBJECT_ISA(t, "AG_Widget:AG_Table:*");
 	AG_ObjectLock(t);
+
 	for (n = 0; n < t->n; n++) {
 		if (t->cols[n].name[0] == '\0') {
 			continue;
@@ -2270,6 +2344,7 @@ AG_TableSaveASCII(AG_Table *t, void *pf, char sep)
 		}
 		fputc('\n', f);
 	}
+
 	AG_ObjectUnlock(t);
 	return (0);
 }

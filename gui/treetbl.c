@@ -57,12 +57,13 @@ AG_TreetblNew(void *parent, Uint flags, AG_TreetblDataFn cellDataFn,
 
 	tt = Malloc(sizeof(AG_Treetbl));
 	AG_ObjectInit(tt, &agTreetblClass);
+
+	tt->flags |= flags;
+	if (flags & AG_TREETBL_HFILL) { WIDGET(tt)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_TREETBL_VFILL) { WIDGET(tt)->flags |= AG_WIDGET_VFILL; }
+
 	tt->cellDataFn = cellDataFn;
 	tt->sortFn = sortFn;
-	tt->flags |= flags;
-
-	if (flags & AG_TREETBL_HFILL)	{ AG_ExpandHoriz(tt); }
-	if (flags & AG_TREETBL_VFILL)	{ AG_ExpandVert(tt); }
 
 	AG_ObjectAttach(parent, tt);
 	return (tt);
@@ -592,14 +593,22 @@ Init(void *_Nonnull obj)
 void
 AG_TreetblSizeHint(AG_Treetbl *tt, int w, int nrows)
 {
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
+	AG_ObjectLock(tt);
+
 	tt->wHint = w;
 	tt->hHint = tt->hCol + tt->hRow*nrows;
+
+	AG_ObjectUnlock(tt);
 }
 
 void
 AG_TreetblSetColHeight(AG_Treetbl *tt, int h)
 {
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
+
 	tt->hCol = h;
+
 	AG_WidgetUpdate(tt);
 	AG_Redraw(tt);
 }
@@ -616,6 +625,7 @@ AG_TreetblAddCol(AG_Treetbl *tt, int colID, const char *width, const char *text,
 	if (colID == -1)
 		return (NULL);
 
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
 
 	/* Check for existing column ID */
@@ -667,8 +677,9 @@ AG_TreetblAddCol(AG_Treetbl *tt, int colID, const char *width, const char *text,
 	}
 
 	tt->visible.dirty = 1;
-	AG_ObjectUnlock(tt);
+
 	AG_Redraw(tt);
+	AG_ObjectUnlock(tt);
 	return (col);
 fail:
 	AG_ObjectUnlock(tt);
@@ -681,19 +692,23 @@ AG_TreetblSetSortCol(AG_Treetbl *tt, AG_TreetblCol *col)
 {
 	int i;
 
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
+
 	for (i = 0; i < tt->n; i++) {
 		tt->column[i].flags &= ~(AG_TREETBL_COL_SORTING);
 	}
 	col->flags |= AG_TREETBL_COL_SORTING;
-	AG_ObjectUnlock(tt);
+
 	AG_Redraw(tt);
+	AG_ObjectUnlock(tt);
 }
 
 /* Set the sorting order */
 void
 AG_TreetblSetSortMode(AG_Treetbl *tt, enum ag_treetbl_sort_mode mode)
 {
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	tt->sortMode = mode;
 	AG_Redraw(tt);
 }
@@ -704,33 +719,42 @@ AG_TreetblSetExpanderCol(AG_Treetbl *tt, AG_TreetblCol *col)
 {
 	int i;
 
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
+
 	for (i = 0; i < tt->n; i++) {
 		tt->column[i].flags &= ~(AG_TREETBL_COL_EXPANDER);
 	}
 	col->flags |= AG_TREETBL_COL_EXPANDER;
-	AG_ObjectUnlock(tt);
+
 	AG_Redraw(tt);
+	AG_ObjectUnlock(tt);
 }
 
 /* Select a column. */
 void
 AG_TreetblSelectCol(AG_Treetbl *tt, AG_TreetblCol *col)
 {
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
+
 	col->flags |= AG_TREETBL_COL_SELECTED;
-	AG_ObjectUnlock(tt);
+
 	AG_Redraw(tt);
+	AG_ObjectUnlock(tt);
 }
 
 /* Deselect a column. */
 void
 AG_TreetblDeselectCol(AG_Treetbl *tt, AG_TreetblCol *col)
 {
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
+
 	col->flags &= ~(AG_TREETBL_COL_SELECTED);
-	AG_ObjectUnlock(tt);
+
 	AG_Redraw(tt);
+	AG_ObjectUnlock(tt);
 }
 
 /* Select a column by ID */
@@ -739,19 +763,24 @@ AG_TreetblSelectColID(AG_Treetbl *tt, int colID)
 {
 	int i;
 
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
+
         for (i = 0; i < tt->n; i++) {
                 if (tt->column[i].cid == colID)
 			break;
         }
 	if (i == tt->n) {
-		AG_ObjectUnlock(tt);
-		return (-1);
+		goto no_match;
 	}
 	tt->column[i].flags |= AG_TREETBL_COL_SELECTED;
-	AG_ObjectUnlock(tt);
+
 	AG_Redraw(tt);
+	AG_ObjectUnlock(tt);
 	return (0);
+no_match:
+	AG_ObjectUnlock(tt);
+	return (-1);
 }
 
 /* Deselect a column by ID */
@@ -760,24 +789,30 @@ AG_TreetblDeselectColID(AG_Treetbl *tt, int colID)
 {
 	int i;
 
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
+
         for (i = 0; i < tt->n; i++) {
                 if (tt->column[i].cid == colID)
 			break;
         }
 	if (i == tt->n) {
-		AG_ObjectUnlock(tt);
-		return (-1);
+		goto no_match;
 	}
 	tt->column[i].flags &= ~(AG_TREETBL_COL_SELECTED);
-	AG_ObjectUnlock(tt);
+
 	AG_Redraw(tt);
+	AG_ObjectUnlock(tt);
 	return (0);
+no_match:
+	AG_ObjectUnlock(tt);
+	return (-1);
 }
 
 void
 AG_TreetblSetRefreshRate(AG_Treetbl *tt, Uint ms)
 {
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	tt->visible.redraw_rate = ms;
 }
 
@@ -810,10 +845,10 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 	va_list ap;
 
 	Strlcpy(argBuf, argSpec, sizeof(argBuf));
-	while (AG_Strsep(&pArg, ", ") != NULL) {
+	while (AG_Strsep(&pArg, ", ") != NULL)
 		nArgs++;
-	}
 
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
 
 	/* Check if row ID is already use */
@@ -919,8 +954,11 @@ AG_TreetblLookupRow(AG_Treetbl *tt, int rowID)
 {
 	AG_TreetblRow *row;
 
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
+
 	row = AG_TreetblLookupRowRecurse(&tt->children, rowID);
+
 	AG_ObjectUnlock(tt);
 	return (row);
 }
@@ -931,7 +969,11 @@ AG_TreetblDelRowID(AG_Treetbl *tt, int rowID)
 {
 	AG_TreetblRow *row;
 
-	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
+
+	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) {
+		return (-1);
+	}
 	AG_TreetblDelRow(tt, row);
 	return (0);
 }
@@ -941,6 +983,8 @@ int
 AG_TreetblSelectRowID(AG_Treetbl *tt, int rowID)
 {
 	AG_TreetblRow *row;
+
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 
 	if ((row = AG_TreetblLookupRow(tt, rowID)) == NULL) {
 		return (-1);
@@ -955,6 +999,8 @@ AG_TreetblDeselectRowID(AG_Treetbl *tt, int rowID)
 {
 	AG_TreetblRow *row;
 
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
+
 	if ((row = AG_TreetblLookupRow(tt, rowID)) == NULL) {
 		return (-1);
 	}
@@ -968,6 +1014,8 @@ AG_TreetblExpandRowID(AG_Treetbl *tt, int rowID)
 {
 	AG_TreetblRow *row;
 
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
+
 	if ((row = AG_TreetblLookupRow(tt, rowID)) == NULL) {
 		return (-1);
 	}
@@ -980,6 +1028,8 @@ int
 AG_TreetblCollapseRowID(AG_Treetbl *tt, int rowID)
 {
 	AG_TreetblRow *row;
+
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 
 	if ((row = AG_TreetblLookupRow(tt, rowID)) == NULL) {
 		return (-1);
@@ -1010,6 +1060,7 @@ AG_TreetblDelRow(AG_Treetbl *tt, AG_TreetblRow *row)
 {
 	AG_TreetblRow *row1, *row2;
 
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
 
 	/* first remove children */
@@ -1036,8 +1087,9 @@ AG_TreetblDelRow(AG_Treetbl *tt, AG_TreetblRow *row)
 	DestroyRow(tt, row);
 out:
 	tt->visible.dirty = 1;
-	AG_ObjectUnlock(tt);
+
 	AG_Redraw(tt);
+	AG_ObjectUnlock(tt);
 }
 
 /*
@@ -1049,7 +1101,9 @@ AG_TreetblClearRows(AG_Treetbl *tt)
 {
 	AG_TreetblRow *row1, *row2;
 
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
+
 	row1 = TAILQ_FIRST(&tt->children);
 	while (row1 != NULL) {
 		row2 = TAILQ_NEXT(row1, siblings);
@@ -1060,8 +1114,9 @@ AG_TreetblClearRows(AG_Treetbl *tt)
 	
 	tt->nExpandedRows = 0;
 	tt->visible.dirty = 1;
-	AG_ObjectUnlock(tt);
+
 	AG_Redraw(tt);
+	AG_ObjectUnlock(tt);
 }
 
 void
@@ -1070,6 +1125,7 @@ AG_TreetblRestoreRows(AG_Treetbl *tt)
 	AG_TreetblRow *row, *nrow, *srow;
 	int i;
 
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
 		
 	for (row = TAILQ_FIRST(&tt->backstore);
@@ -1095,8 +1151,8 @@ AG_TreetblRestoreRows(AG_Treetbl *tt)
 	}
 	TAILQ_INIT(&tt->backstore);
 
-	AG_ObjectUnlock(tt);
 	AG_Redraw(tt);
+	AG_ObjectUnlock(tt);
 }
 
 void
@@ -1115,14 +1171,17 @@ AG_TreetblEnd(AG_Treetbl *tt)
 void
 AG_TreetblSelectRow(AG_Treetbl *tt, AG_TreetblRow *row)
 {
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
+
 	if (!(tt->flags & AG_TREETBL_MULTI) &&
 	    !(tt->flags & AG_TREETBL_MULTITOGGLE)) {
 		AG_TreetblDeselectRow(tt, NULL);
 	}
 	row->flags |= AG_TREETBL_ROW_SELECTED;
-	AG_ObjectUnlock(tt);
+
 	AG_Redraw(tt);
+	AG_ObjectUnlock(tt);
 }
 
 static void
@@ -1142,16 +1201,19 @@ SelectAll(AG_TreetblRowQ *_Nonnull children)
 void
 AG_TreetblSelectAll(AG_Treetbl *tt, AG_TreetblRow *root)
 {
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
+	AG_ObjectLock(tt);
+
 	if (!(tt->flags & AG_TREETBL_MULTI) &&
 	    !(tt->flags & AG_TREETBL_MULTITOGGLE))
-		return;
+		goto out;
 
-	AG_ObjectLock(tt);
 	if (root == NULL) {
 		SelectAll(&tt->children);
 	} else {
 		SelectAll(&root->children);
 	}
+out:
 	AG_ObjectUnlock(tt);
 }
 
@@ -1159,12 +1221,15 @@ AG_TreetblSelectAll(AG_Treetbl *tt, AG_TreetblRow *root)
 void
 AG_TreetblDeselectRow(AG_Treetbl *tt, AG_TreetblRow *row)
 {
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
+
 	if (row == NULL) {
 		DeselectAll(&tt->children);
 	} else {
 		DeselectAll(&row->children);
 	}
+
 	AG_ObjectUnlock(tt);
 }
 
@@ -1172,7 +1237,9 @@ AG_TreetblDeselectRow(AG_Treetbl *tt, AG_TreetblRow *row)
 void
 AG_TreetblExpandRow(AG_Treetbl *tt, AG_TreetblRow *in)
 {
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
+
 	if (!(in->flags & AG_TREETBL_ROW_EXPANDED)) {
 		in->flags |= AG_TREETBL_ROW_EXPANDED;
 		if (RowIsVisible(in)) {
@@ -1181,6 +1248,7 @@ AG_TreetblExpandRow(AG_Treetbl *tt, AG_TreetblRow *in)
 			AG_Redraw(tt);
 		}
 	}
+
 	AG_ObjectUnlock(tt);
 }
 
@@ -1188,7 +1256,9 @@ AG_TreetblExpandRow(AG_Treetbl *tt, AG_TreetblRow *in)
 void
 AG_TreetblCollapseRow(AG_Treetbl *tt, AG_TreetblRow *in)
 {
+	AG_OBJECT_ISA(tt, "AG_Widget:AG_Treetbl:*");
 	AG_ObjectLock(tt);
+
 	if (in->flags & AG_TREETBL_ROW_EXPANDED) {
 		in->flags &= ~(AG_TREETBL_ROW_EXPANDED);
 		if (RowIsVisible(in)) {
@@ -1197,6 +1267,7 @@ AG_TreetblCollapseRow(AG_Treetbl *tt, AG_TreetblRow *in)
 			AG_Redraw(tt);
 		}
 	}
+
 	AG_ObjectUnlock(tt);
 }
 
@@ -1619,20 +1690,19 @@ Draw(void *_Nonnull obj)
 		tt->visible.redraw_last = AG_GetTicks();
 }
 
-/* Return a pointer to the currently selected row or NULL. */
+/*
+ * Return a pointer to the currently selected row or NULL.
+ * The Treetbl object must be locked.
+ */
 AG_TreetblRow *
 AG_TreetblSelectedRow(AG_Treetbl *tt)
 {
 	AG_TreetblRow *row;
 
-	AG_ObjectLock(tt);
 	TAILQ_FOREACH(row, &tt->children, siblings) {
-		if (row->flags & AG_TREETBL_ROW_SELECTED) {
-			AG_ObjectUnlock(tt);
+		if (row->flags & AG_TREETBL_ROW_SELECTED)
 			return (row);
-		}
 	}
-	AG_ObjectUnlock(tt);
 	return (NULL);
 }
 

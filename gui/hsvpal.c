@@ -55,10 +55,10 @@ AG_HSVPalNew(void *parent, Uint flags)
 
 	pal = Malloc(sizeof(AG_HSVPal));
 	AG_ObjectInit(pal, &agHSVPalClass);
-	pal->flags |= flags;
 
-	if (flags & AG_HSVPAL_HFILL) { AG_ExpandHoriz(pal); }
-	if (flags & AG_HSVPAL_VFILL) { AG_ExpandVert(pal); }
+	if (flags & AG_HSVPAL_HFILL) { WIDGET(pal)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_HSVPAL_VFILL) { WIDGET(pal)->flags |= AG_WIDGET_VFILL; }
+	pal->flags |= flags;
 
 	AG_ObjectAttach(parent, pal);
 	return (pal);
@@ -270,6 +270,8 @@ AG_HSVPal_UpdateHue(AG_HSVPal *_Nonnull pal, int x, int y)
 {
 	float h;
 
+	AG_OBJECT_ISA(pal, "AG_Widget:AG_HSVPal:*");
+
 	h = Atan2((float)y, (float)x);
 	if (h < 0) {
 		h += (2.0f*AG_PI);
@@ -288,6 +290,8 @@ AG_HSVPal_UpdateSV(AG_HSVPal *_Nonnull pal, int ax, int ay)
 	int x = ax - pal->triangle.x;
 	int y = ay - pal->triangle.y;
 	int y_2;
+
+	AG_OBJECT_ISA(pal, "AG_Widget:AG_HSVPal:*");
 
 	if (y >= pal->triangle.h) { y = pal->triangle.h-1; }
 	y_2 = y >> 1;

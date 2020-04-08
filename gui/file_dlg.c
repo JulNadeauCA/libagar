@@ -71,8 +71,11 @@ static void RefreshListing(AG_FileDlg *_Nonnull);
 void
 AG_FileDlgSetOptionContainer(AG_FileDlg *fd, void *ctr)
 {
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	AG_ObjectLock(fd);
+
 	fd->optsCtr = ctr;
+
 	AG_ObjectUnlock(fd);
 }
 
@@ -448,6 +451,7 @@ RefreshShortcuts(AG_FileDlg *_Nonnull fd, int init)
 void
 AG_FileDlgRefresh(AG_FileDlg *fd)
 {
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	RefreshListing(fd);
 	RefreshShortcuts(fd, 0);
 }
@@ -461,6 +465,7 @@ DirSelected(AG_Event *_Nonnull event)
 
 	AG_ObjectLock(fd);
 	AG_ObjectLock(tl);
+
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
 		if (AG_FileDlgSetDirectoryS(fd, ti->text) == -1) {
 			/* AG_TextMsgFromError() */
@@ -469,6 +474,7 @@ DirSelected(AG_Event *_Nonnull event)
 			RefreshListing(fd);
 		}
 	}
+
 	AG_ObjectUnlock(tl);
 	AG_ObjectUnlock(fd);
 }
@@ -566,7 +572,9 @@ AG_FileDlgCheckReadAccess(AG_FileDlg *fd)
 {
 	AG_FileInfo info;
 
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	AG_ObjectLock(fd);
+
 	if (AG_GetFileInfo(fd->cfile, &info) == -1) {
 		goto fail;
 	}
@@ -574,6 +582,7 @@ AG_FileDlgCheckReadAccess(AG_FileDlg *fd)
 		AG_SetError(_("%s: Read permission denied"), fd->cfile);
 		goto fail;
 	}
+
 	AG_ObjectUnlock(fd);
 	return (0);
 fail:
@@ -586,7 +595,9 @@ AG_FileDlgCheckWriteAccess(AG_FileDlg *fd)
 {
 	AG_FileInfo info;
 	
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	AG_ObjectLock(fd);
+
 	if (AG_GetFileInfo(fd->cfile, &info) == -1) {
 		goto fail;
 	}
@@ -594,6 +605,7 @@ AG_FileDlgCheckWriteAccess(AG_FileDlg *fd)
 		AG_SetError(_("%s: Write permission denied"), fd->cfile);
 		goto fail;
 	}
+
 	AG_ObjectUnlock(fd);
 	return (0);
 fail:
@@ -648,6 +660,8 @@ FileSelected(AG_Event *_Nonnull event)
 	AG_TlistItem *ti;
 	char *ext;
 
+	AG_ObjectLock(fd);
+
 	AG_ObjectLock(tl);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
 		AG_FileDlgSetFilenameS(fd, ti->text);
@@ -679,6 +693,8 @@ FileSelected(AG_Event *_Nonnull event)
 		}
 		AG_ObjectUnlock(fd->comTypes->list);
 	}
+
+	AG_ObjectUnlock(fd);
 }
 
 static void
@@ -690,6 +706,7 @@ FileDblClicked(AG_Event *_Nonnull event)
 
 	AG_ObjectLock(fd);
 	AG_ObjectLock(tl);
+
 	if ((itFile = AG_TlistSelectedItem(tl)) != NULL) {
 		AG_FileDlgSetFilenameS(fd, itFile->text);
 
@@ -700,6 +717,7 @@ FileDblClicked(AG_Event *_Nonnull event)
 			CheckAccessAndChoose(fd);
 		}
 	}
+
 	AG_ObjectUnlock(tl);
 	AG_ObjectUnlock(fd);
 }
@@ -710,11 +728,13 @@ PressedOK(AG_Event *_Nonnull event)
 	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 
 	AG_ObjectLock(fd);
+
 	if (fd->okAction) {
 		AG_PostEventByPtr(fd, fd->okAction, "%s", fd->cfile);
 	} else {
 		CheckAccessAndChoose(fd);
 	}
+
 	AG_ObjectUnlock(fd);
 }
 
@@ -742,8 +762,10 @@ TextboxChanged(AG_Event *_Nonnull event)
 	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 
 	AG_ObjectLock(fd);
+
 	AG_TextboxCopyString(tb, path, sizeof(path));
 	SetFilename(fd, path);
+
 	AG_ObjectUnlock(fd);
 }
 
@@ -760,6 +782,7 @@ SelectGlobResult(AG_Event *_Nonnull event)
 	int endSep;
 
 	AG_ObjectLock(fd);
+
 	Strlcpy(file, ti->text, sizeof(file));
 	endSep = (file[strlen(file)-1]==AG_PATHSEPCHAR) ? 1 : 0;
 	AG_TextboxSetString(tb, file);
@@ -802,7 +825,9 @@ ExpandGlobResults(AG_FileDlg *_Nonnull fd, glob_t *_Nonnull gl,
 	AG_Tlist *tl;
 	int i;
 	
-	win = AG_WindowNew(0);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
 	AG_WindowAttach(winParent, win);
 	AG_WindowSetCaption(win, _("Matching \"%s\""), pattern);
 
@@ -899,6 +924,7 @@ TextboxReturn(AG_Event *_Nonnull event)
 	int endSep;
 	
 	AG_ObjectLock(fd);
+
 	AG_TextboxCopyString(tb, file, sizeof(file));
 #ifdef HAVE_GLOB
 	if (GlobExpansion(fd, file, sizeof(file)))
@@ -936,6 +962,7 @@ PressedCancel(AG_Event *_Nonnull event)
 	AG_Window *pwin;
 
 	AG_ObjectLock(fd);
+
 	if (fd->cancelAction) {
 		AG_PostEventByPtr(fd, fd->cancelAction, NULL);
 	} else if (fd->flags & AG_FILEDLG_CLOSEWIN) {
@@ -944,6 +971,7 @@ PressedCancel(AG_Event *_Nonnull event)
 /*			AG_ObjectDetach(pwin); */
 		}
 	}
+
 	AG_ObjectUnlock(fd);
 }
 
@@ -958,6 +986,7 @@ SelectedType(AG_Event *_Nonnull event)
 	AG_Textbox *tbox;
 
 	AG_ObjectLock(fd);
+
 	if (it) {
 		ft = it->p1;
 	} else {
@@ -965,10 +994,8 @@ SelectedType(AG_Event *_Nonnull event)
 	}
 	fd->curType = ft;
 
-	if (fd->optsCtr == NULL) {
-		AG_ObjectUnlock(fd);
-		return;
-	}
+	if (fd->optsCtr == NULL)
+		goto no_change;
 
 	AG_ObjectFreeChildren(fd->optsCtr);
 	
@@ -1014,8 +1041,9 @@ SelectedType(AG_Event *_Nonnull event)
 	}
 	AG_SetStyle(fd->optsCtr, "font-size", "90%");
 	WIDGET(fd)->flags |= AG_WIDGET_UPDATE_WINDOW;
-	AG_ObjectUnlock(fd);
 	AG_Redraw(fd);
+no_change:
+	AG_ObjectUnlock(fd);
 }
 
 static void
@@ -1064,6 +1092,7 @@ OnHide(AG_Event *_Nonnull event)
 char *
 AG_FileDlgGetFilename(AG_FileDlg *fd)
 {
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	return Strdup(fd->cfile);
 }
 
@@ -1071,6 +1100,7 @@ AG_FileDlgGetFilename(AG_FileDlg *fd)
 char *
 AG_FileDlgGetDirectory(AG_FileDlg *fd)
 {
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	return Strdup(fd->cwd);
 }
 
@@ -1078,6 +1108,7 @@ AG_FileDlgGetDirectory(AG_FileDlg *fd)
 AG_Size
 AG_FileDlgCopyFilename(AG_FileDlg *fd, char *dst, AG_Size dstSize)
 {
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	return AG_Strlcpy(dst, fd->cfile, dstSize);
 }
 
@@ -1085,6 +1116,7 @@ AG_FileDlgCopyFilename(AG_FileDlg *fd, char *dst, AG_Size dstSize)
 AG_Size
 AG_FileDlgCopyDirectory(AG_FileDlg *fd, char *dst, AG_Size dstSize)
 {
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	return AG_Strlcpy(dst, fd->cwd, dstSize);
 }
 
@@ -1109,6 +1141,7 @@ AG_FileDlgSetDirectoryS(AG_FileDlg *fd, const char *dir)
 	AG_FileInfo info;
 	char ncwd[AG_PATHNAME_MAX], *c;
 	
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	AG_ObjectLock(fd);
 
 	if (dir[0] == '.' && dir[1] == '\0') {
@@ -1149,7 +1182,7 @@ AG_FileDlgSetDirectoryS(AG_FileDlg *fd, const char *dir)
 		AG_SetError(_("%s: Not a directory"), ncwd);
 		goto fail;
 	}
-	if ((info.perms & (AG_FILE_READABLE|AG_FILE_EXECUTABLE)) == 0) {
+	if ((info.perms & (AG_FILE_READABLE | AG_FILE_EXECUTABLE)) == 0) {
 		AG_SetError(_("%s: Permission denied"), ncwd);
 		goto fail;
 	}
@@ -1179,6 +1212,7 @@ AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 	AG_Config *cfg = agConfig;
 	char *s;
 
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	AG_ObjectLock(fd);
 	AG_ObjectLock(cfg);
 
@@ -1210,12 +1244,15 @@ AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 	Vsnprintf(file, sizeof(file), fmt, ap);
 	va_end(ap);
 
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	AG_ObjectLock(fd);
+
 	SetFilename(fd, file);
 	if (fd->tbFile) {
 		AG_TextboxSetString(fd->tbFile, file);
 /*		AG_TextboxSetCursorPos(fd->tbFile, -1); */
 	}
+
 	AG_ObjectUnlock(fd);
 }
 
@@ -1223,12 +1260,15 @@ AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 void
 AG_FileDlgSetFilenameS(AG_FileDlg *fd, const char *s)
 {
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	AG_ObjectLock(fd);
+
 	SetFilename(fd, s);
 	if (fd->tbFile) {
 		AG_TextboxSetString(fd->tbFile, s);
 /*		AG_TextboxSetCursorPos(fd->tbFile, -1); */
 	}
+
 	AG_ObjectUnlock(fd);
 }
 
@@ -1292,9 +1332,10 @@ AG_FileDlgNew(void *parent, Uint flags)
 
 	fd = Malloc(sizeof(AG_FileDlg));
 	AG_ObjectInit(fd, &agFileDlgClass);
+
 	fd->flags |= flags;
-	if (flags & AG_FILEDLG_HFILL) { AG_ExpandHoriz(fd); }
-	if (flags & AG_FILEDLG_VFILL) { AG_ExpandVert(fd); }
+	if (flags & AG_FILEDLG_HFILL) { WIDGET(fd)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_FILEDLG_VFILL) { WIDGET(fd)->flags |= AG_WIDGET_VFILL; }
 
 	if (flags & AG_FILEDLG_MULTI) {
 		if (fd->tlFiles)
@@ -1429,7 +1470,9 @@ Init(void *_Nonnull obj)
 void
 AG_FileDlgOkAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	AG_ObjectLock(fd);
+
 	if (fd->okAction) {
 		AG_UnsetEvent(fd, fd->okAction->name);
 	}
@@ -1450,7 +1493,9 @@ AG_FileDlgOkAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 void
 AG_FileDlgCancelAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 	AG_ObjectLock(fd);
+
 	if (fd->cancelAction) {
 		AG_UnsetEvent(fd, fd->cancelAction->name);
 	}
@@ -1462,6 +1507,7 @@ AG_FileDlgCancelAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(fd->cancelAction, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(fd);
 }
 
@@ -1556,10 +1602,10 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull aFD)
 	AG_FileDlg *fd = obj;
 	AG_SizeReq r;
 	AG_SizeAlloc a;
-	const int paddingLeft   = WIDGET(fd)->paddingLeft;
-	const int paddingRight  = WIDGET(fd)->paddingRight;
-	const int paddingTop    = WIDGET(fd)->paddingTop;
-	const int spacingVert   = WIDGET(fd)->spacingVert;
+	const int paddingLeft  = WIDGET(fd)->paddingLeft;
+	const int paddingRight = WIDGET(fd)->paddingRight;
+	const int paddingTop   = WIDGET(fd)->paddingTop;
+	const int spacingVert  = WIDGET(fd)->spacingVert;
 	int hBtn;
 	
 	if (fd->flags & AG_FILEDLG_COMPACT) {               /* Compact mode */
@@ -1662,6 +1708,8 @@ AG_FileDlgAddImageTypes(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_FileType *ftBMP;
 
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
+
 	ftBMP = AG_FileDlgAddType(fd, _("Windows Bitmap"), "*.bmp", NULL, NULL);
 	if (fn) {
 		ftBMP->action = AG_SetEvent(fd, NULL, fn, NULL);
@@ -1699,6 +1747,9 @@ AG_FileDlgCopyTypes(AG_FileDlg *fdDst, const AG_FileDlg *fdSrc)
 {
 	AG_FileType *st, *dt;		/* Source type, destination type */
 	const AG_FileOption *so;	/* Source option */
+
+	AG_OBJECT_ISA(fdSrc, "AG_Widget:AG_FileDlg:*");
+	AG_OBJECT_ISA(fdDst, "AG_Widget:AG_FileDlg:*");
 		
 	TAILQ_FOREACH(st, &fdSrc->types, types) {
 		dt = AG_FileDlgAddType(fdDst, st->descr, st->allExts, NULL,NULL);
@@ -1751,6 +1802,8 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 	AG_FileType *ft;
 	char *dexts, *ds, *ext;
 	AG_TlistItem *it;
+
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 
 	ft = Malloc(sizeof(AG_FileType));
 	ft->fd = fd;
@@ -1821,7 +1874,10 @@ AG_FileOption *
 AG_FileOptionNewBool(AG_FileType *ft, const char *descr, const char *key,
     int dflt)
 {
+	AG_FileDlg *fd = ft->fd;
 	AG_FileOption *fto;
+
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 
 	fto = Malloc(sizeof(AG_FileOption));
 	fto->descr = Strdup(descr);
@@ -1830,9 +1886,10 @@ AG_FileOptionNewBool(AG_FileType *ft, const char *descr, const char *key,
 	fto->type = AG_FILEDLG_BOOL;
 	fto->data.i.val = dflt;
 	
-	AG_ObjectLock(ft->fd);
+	AG_ObjectLock(fd);
 	TAILQ_INSERT_TAIL(&ft->opts, fto, opts);
-	AG_ObjectUnlock(ft->fd);
+	AG_ObjectUnlock(fd);
+
 	return (fto);
 }
 
@@ -1840,7 +1897,10 @@ AG_FileOption *
 AG_FileOptionNewInt(AG_FileType *ft, const char *descr, const char *key,
     int dflt, int min, int max)
 {
+	AG_FileDlg *fd = ft->fd;
 	AG_FileOption *fto;
+
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 
 	fto = Malloc(sizeof(AG_FileOption));
 	fto->descr = Strdup(descr);
@@ -1851,9 +1911,10 @@ AG_FileOptionNewInt(AG_FileType *ft, const char *descr, const char *key,
 	fto->data.i.min = min;
 	fto->data.i.max = max;
 	
-	AG_ObjectLock(ft->fd);
+	AG_ObjectLock(fd);
 	TAILQ_INSERT_TAIL(&ft->opts, fto, opts);
-	AG_ObjectUnlock(ft->fd);
+	AG_ObjectUnlock(fd);
+
 	return (fto);
 }
 
@@ -1861,6 +1922,7 @@ AG_FileOption *
 AG_FileOptionNewFlt(AG_FileType *ft, const char *descr, const char *key,
     float dflt, float min, float max, const char *unit)
 {
+	AG_FileDlg *fd = ft->fd;
 	AG_FileOption *fto;
 
 	fto = Malloc(sizeof(AG_FileOption));
@@ -1872,9 +1934,10 @@ AG_FileOptionNewFlt(AG_FileType *ft, const char *descr, const char *key,
 	fto->data.flt.min = min;
 	fto->data.flt.max = max;
 	
-	AG_ObjectLock(ft->fd);
+	AG_ObjectLock(fd);
 	TAILQ_INSERT_TAIL(&ft->opts, fto, opts);
-	AG_ObjectUnlock(ft->fd);
+	AG_ObjectUnlock(fd);
+
 	return (fto);
 }
 
@@ -1882,6 +1945,7 @@ AG_FileOption *
 AG_FileOptionNewDbl(AG_FileType *ft, const char *descr, const char *key,
     double dflt, double min, double max, const char *unit)
 {
+	AG_FileDlg *fd = ft->fd;
 	AG_FileOption *fto;
 
 	fto = Malloc(sizeof(AG_FileOption));
@@ -1893,9 +1957,10 @@ AG_FileOptionNewDbl(AG_FileType *ft, const char *descr, const char *key,
 	fto->data.dbl.min = min;
 	fto->data.dbl.max = max;
 	
-	AG_ObjectLock(ft->fd);
+	AG_ObjectLock(fd);
 	TAILQ_INSERT_TAIL(&ft->opts, fto, opts);
-	AG_ObjectUnlock(ft->fd);
+	AG_ObjectUnlock(fd);
+
 	return (fto);
 }
 
@@ -1903,6 +1968,7 @@ AG_FileOption *
 AG_FileOptionNewString(AG_FileType *ft, const char *descr, const char *key,
     const char *dflt)
 {
+	AG_FileDlg *fd = ft->fd;
 	AG_FileOption *fto;
 
 	fto = Malloc(sizeof(AG_FileOption));
@@ -1912,9 +1978,10 @@ AG_FileOptionNewString(AG_FileType *ft, const char *descr, const char *key,
 	fto->type = AG_FILEDLG_STRING;
 	Strlcpy(fto->data.s, dflt, sizeof(fto->data.s));
 	
-	AG_ObjectLock(ft->fd);
+	AG_ObjectLock(fd);
 	TAILQ_INSERT_TAIL(&ft->opts, fto, opts);
-	AG_ObjectUnlock(ft->fd);
+	AG_ObjectUnlock(fd);
+
 	return (fto);
 }
 
@@ -1934,13 +2001,16 @@ AG_FileOptionGet(AG_FileType *ft, const char *key)
 int
 AG_FileOptionInt(AG_FileType *ft, const char *key)
 {
+	AG_FileDlg *fd = ft->fd;
 	AG_FileOption *fo;
 	int rv;
 
-	AG_ObjectLock(ft->fd);
+	AG_ObjectLock(fd);
+
 	fo = AG_FileOptionGet(ft, key);
 	rv = (fo != NULL) ? fo->data.i.val : -1;
-	AG_ObjectUnlock(ft->fd);
+
+	AG_ObjectUnlock(fd);
 	return (rv);
 }
 
@@ -1953,39 +2023,48 @@ AG_FileOptionBool(AG_FileType *ft, const char *key)
 float
 AG_FileOptionFlt(AG_FileType *ft, const char *key)
 {
+	AG_FileDlg *fd = ft->fd;
 	AG_FileOption *fo;
 	float rv;
 
-	AG_ObjectLock(ft->fd);
+	AG_ObjectLock(fd);
+
 	fo = AG_FileOptionGet(ft, key);
 	rv = (fo != NULL) ? fo->data.flt.val : 0.0;
-	AG_ObjectUnlock(ft->fd);
+
+	AG_ObjectUnlock(fd);
 	return (rv);
 }
 
 double
 AG_FileOptionDbl(AG_FileType *ft, const char *key)
 {
+	AG_FileDlg *fd = ft->fd;
 	AG_FileOption *fo;
 	double rv;
 
-	AG_ObjectLock(ft->fd);
+	AG_ObjectLock(fd);
+
 	fo = AG_FileOptionGet(ft, key);
 	rv = (fo != NULL) ? fo->data.dbl.val : 0.0;
-	AG_ObjectUnlock(ft->fd);
+
+	AG_ObjectUnlock(fd);
 	return (rv);
 }
 
 char *
 AG_FileOptionString(AG_FileType *ft, const char *key)
 {
+	AG_FileDlg *fd = ft->fd;
 	AG_FileOption *fo;
 	char *rv;
 
-	AG_ObjectLock(ft->fd);
+	AG_ObjectLock(fd);
+
 	fo = AG_FileOptionGet(ft, key);
 	rv = (fo != NULL) ? fo->data.s : "";
-	AG_ObjectUnlock(ft->fd);
+
+	AG_ObjectUnlock(fd);
 	return (rv);
 }
 

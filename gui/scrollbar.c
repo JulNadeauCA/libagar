@@ -88,11 +88,12 @@ AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 
 	sb = Malloc(sizeof(AG_Scrollbar));
 	AG_ObjectInit(sb, &agScrollbarClass);
-	sb->type = type;
-	sb->flags |= flags;
 
-	if (flags & AG_SCROLLBAR_HFILL) { AG_ExpandHoriz(sb); }
-	if (flags & AG_SCROLLBAR_VFILL) { AG_ExpandVert(sb); }
+	sb->type = type;
+
+	if (flags & AG_SCROLLBAR_HFILL) { WIDGET(sb)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_SCROLLBAR_VFILL) { WIDGET(sb)->flags |= AG_WIDGET_VFILL; }
+	sb->flags |= flags;
 
 	AG_ObjectAttach(parent, sb);
 	return (sb);
@@ -104,6 +105,7 @@ AG_ScrollbarSetIncFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_OBJECT_ISA(sb, "AG_Widget:AG_Scrollbar:*");
 	AG_ObjectLock(sb);
+
 	if (fn) {
 		sb->buttonIncFn = AG_SetEvent(sb, NULL, fn, NULL);
 		if (fmt) {
@@ -116,6 +118,7 @@ AG_ScrollbarSetIncFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 	} else {
 		sb->buttonIncFn = NULL;
 	}
+
 	AG_ObjectUnlock(sb);
 }
 
@@ -125,6 +128,7 @@ AG_ScrollbarSetDecFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_OBJECT_ISA(sb, "AG_Widget:AG_Scrollbar:*");
 	AG_ObjectLock(sb);
+
 	if (fn) {
 		sb->buttonDecFn = AG_SetEvent(sb, NULL, fn, NULL);
 		if (fmt) {
@@ -137,6 +141,7 @@ AG_ScrollbarSetDecFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 	} else {
 		sb->buttonDecFn = NULL;
 	}
+
 	AG_ObjectUnlock(sb);
 }
 

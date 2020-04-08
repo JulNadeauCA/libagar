@@ -246,10 +246,10 @@ AG_ScrollviewNew(void *parent, Uint flags)
 
 	sv = Malloc(sizeof(AG_Scrollview));
 	AG_ObjectInit(sv, &agScrollviewClass);
-	sv->flags |= flags;
 
-	if (flags & AG_SCROLLVIEW_HFILL) { AG_ExpandHoriz(sv); }
-	if (flags & AG_SCROLLVIEW_VFILL) { AG_ExpandVert(sv); }
+	if (flags & AG_SCROLLVIEW_HFILL) { WIDGET(sv)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_SCROLLVIEW_VFILL) { WIDGET(sv)->flags |= AG_WIDGET_VFILL; }
+	sv->flags |= flags;
 
 	if (!(flags & AG_SCROLLVIEW_NOPAN_X)) {
 		sb = sv->hbar = AG_ScrollbarNew(sv, AG_SCROLLBAR_HORIZ,

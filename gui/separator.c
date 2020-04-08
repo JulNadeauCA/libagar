@@ -53,13 +53,15 @@ AG_SeparatorNew(void *parent, enum ag_separator_type type)
 
 	sep = Malloc(sizeof(AG_Separator));
 	AG_ObjectInit(sep, &agSeparatorClass);
-	sep->type = type;
 
 	if (type == AG_SEPARATOR_HORIZ) {
-		AG_ExpandHoriz(sep);
+		WIDGET(sep)->flags |= AG_WIDGET_HFILL;
 	} else {
-		AG_ExpandVert(sep);
+		WIDGET(sep)->flags |= AG_WIDGET_VFILL;
 	}
+
+	sep->type = type;
+
 	AG_ObjectAttach(parent, sep);
 	return (sep);
 }
@@ -83,15 +85,17 @@ AG_SpacerNew(void *parent, enum ag_separator_type type)
 
 	sep = Malloc(sizeof(AG_Separator));
 	AG_ObjectInit(sep, &agSeparatorClass);
-	sep->type = type;
 
 	WIDGET(sep)->flags |= AG_WIDGET_HIDE;
 
+	sep->type = type;
+
 	if (type == AG_SEPARATOR_HORIZ) {
-		AG_ExpandHoriz(sep);
+		WIDGET(sep)->flags |= AG_WIDGET_HFILL;
 	} else {
-		AG_ExpandVert(sep);
+		WIDGET(sep)->flags |= AG_WIDGET_VFILL;
 	}
+
 	AG_ObjectAttach(parent, sep);
 	return (sep);
 }
@@ -190,6 +194,7 @@ Draw(void *_Nonnull obj)
 void
 AG_SeparatorSetLength(AG_Separator *sep, Uint minLen)
 {
+	AG_OBJECT_ISA(sep, "AG_Widget:AG_Separator:*");
 	sep->minLen = minLen;
 	AG_Redraw(sep);
 }

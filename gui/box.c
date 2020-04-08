@@ -77,8 +77,8 @@ AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
 	box->type = type;
 	box->flags |= flags;
 
-	if (flags & AG_BOX_HFILL) { AG_ExpandHoriz(box); }
-	if (flags & AG_BOX_VFILL) { AG_ExpandVert(box); }
+	if (flags & AG_BOX_HFILL) { WIDGET(box)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_BOX_VFILL) { WIDGET(box)->flags |= AG_WIDGET_VFILL; }
 
 	if (flags & AG_BOX_NO_SPACING) {
 		AG_SetStyle(box, "spacing", "0");
@@ -145,8 +145,8 @@ void
 AG_BoxSetLabelS(AG_Box *box, const char *s)
 {
 	AG_OBJECT_ISA(box, "AG_Widget:AG_Box:*");
-
 	AG_ObjectLock(box);
+
 	if (s != NULL) {
 		if (box->lbl == NULL) {
 			box->lbl = AG_LabelNewS(box, 0, s);
@@ -159,6 +159,7 @@ AG_BoxSetLabelS(AG_Box *box, const char *s)
 		AG_ObjectDestroy(box->lbl);
 		box->lbl = NULL;
 	}
+
 	AG_Redraw(box);
 	AG_ObjectUnlock(box);
 }
@@ -607,9 +608,8 @@ AG_BoxSetVertAlign(AG_Box *box, enum ag_box_align align)
 	AG_Redraw(box);
 }
 
-#ifdef AG_DEBUG
 static void
-UpdateWindowOf(AG_Event *_Nonnull event)
+UpdateWindowOfTgt(AG_Event *_Nonnull event)
 {
 	AG_Box *box = AG_BOX_PTR(1);
 	AG_Window *win = AG_ParentWindow(box);
@@ -631,37 +631,47 @@ Edit(void *_Nonnull obj)
 		N_("Horizontal"),
 		NULL
 	};
+	const char *styleNames[] = {
+		N_("None"),
+		N_("Box"),
+		N_("Well"),
+		N_("Plain"),
+		NULL
+	};
 
 	AG_LabelNewS(box, 0, _("Disposition:"));
 	rad = AG_RadioNewUint(box, 0, typeNames, &tgt->type);
-	AG_SetEvent(rad, "radio-changed", UpdateWindowOf,"%p",tgt);
+	AG_SetEvent(rad, "radio-changed", UpdateWindowOfTgt,"%p",tgt);
+
+	AG_LabelNewS(box, 0, _("Style:"));
+	rad = AG_RadioNewUint(box, 0, styleNames, &tgt->style);
+	AG_SetEvent(rad, "radio-changed", UpdateWindowOfTgt,"%p",tgt);
 
 	AG_LabelNewS(box, 0, _("Alignment:"));
 	hBox = AG_BoxNewHoriz(box, 0);
 	{
 		rad = AG_RadioNewUint(hBox, 0, agBoxHorizAlignNames, &tgt->hAlign);
-		AG_SetEvent(rad, "radio-changed", UpdateWindowOf,"%p",tgt);
+		AG_SetEvent(rad, "radio-changed", UpdateWindowOfTgt,"%p",tgt);
 	
 		rad = AG_RadioNewUint(hBox, 0, agBoxVertAlignNames, &tgt->vAlign);
-		AG_SetEvent(rad, "radio-changed", UpdateWindowOf,"%p",tgt);
+		AG_SetEvent(rad, "radio-changed", UpdateWindowOfTgt,"%p",tgt);
 	}
 
 	AG_SpacerNewHoriz(box);
 
 	num = AG_NumericalNewIntR(box, 0, NULL, _("Depth: "), &tgt->depth, -127, 127);
-	AG_SetEvent(num, "numerical-changed", UpdateWindowOf,"%p",tgt);
+	AG_SetEvent(num, "numerical-changed", UpdateWindowOfTgt,"%p",tgt);
 	
 	AG_SpacerNewHoriz(box);
 
 	cb = AG_CheckboxNewFlag(box, 0, _("Homogenous"), &tgt->flags, AG_BOX_HOMOGENOUS);
-	AG_SetEvent(cb, "checkbox-changed", UpdateWindowOf,"%p",tgt);
+	AG_SetEvent(cb, "checkbox-changed", UpdateWindowOfTgt,"%p",tgt);
 
 	cb = AG_CheckboxNewFlag(box, 0, _("Shading"), &tgt->flags, AG_BOX_SHADING);
-	AG_SetEvent(cb, "checkbox-changed", UpdateWindowOf,"%p",tgt);
+	AG_SetEvent(cb, "checkbox-changed", UpdateWindowOfTgt,"%p",tgt);
 	
 	return (box);
 }
-#endif /* AG_DEBUG */
 
 AG_WidgetClass agBoxClass = {
 	{
@@ -673,11 +683,7 @@ AG_WidgetClass agBoxClass = {
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
-#ifdef AG_DEBUG
 		Edit
-#else
-		NULL		/* edit */
-#endif
 	},
 	Draw,
 	SizeRequest,

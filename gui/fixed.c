@@ -42,6 +42,9 @@ AG_FixedNew(void *parent, Uint flags)
 
 	fx = Malloc(sizeof(AG_Fixed));
 	AG_ObjectInit(fx, &agFixedClass);
+
+	if (flags & AG_FIXED_HFILL) { WIDGET(fx)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_FIXED_VFILL) { WIDGET(fx)->flags |= AG_WIDGET_VFILL; }
 	fx->flags |= flags;
 
 #ifdef AG_LEGACY
@@ -49,9 +52,6 @@ AG_FixedNew(void *parent, Uint flags)
 	else if (flags & (AG_FIXED_INVBOX | AG_FIXED_FRAME)) { fx->style = AG_FIXED_STYLE_WELL; }
 	else if (flags & AG_FIXED_FILLBG) { fx->style = AG_FIXED_STYLE_PLAIN; }
 #endif
-
-	if (flags & AG_FIXED_HFILL) { AG_ExpandHoriz(fx); }
-	if (flags & AG_FIXED_VFILL) { AG_ExpandVert(fx); }
 
 	AG_ObjectAttach(parent, fx);
 	return (fx);
@@ -181,8 +181,8 @@ AG_FixedPut(AG_Fixed *fx, void *p, int x, int y)
 	UpdateWindow(fx);
 	
 	AG_ObjectUnlock(chld);
-	AG_ObjectUnlock(fx);
 	AG_Redraw(fx);
+	AG_ObjectUnlock(fx);
 }
 
 /* Move an existing widget to coordinates x,y. */
@@ -207,8 +207,8 @@ AG_FixedMove(AG_Fixed *fx, void *p, int x, int y)
 	UpdateWindow(fx);
 	
 	AG_ObjectUnlock(chld);
-	AG_ObjectUnlock(fx);
 	AG_Redraw(fx);
+	AG_ObjectUnlock(fx);
 }
 
 /* Resize a widget to w x h pixels. */
@@ -232,8 +232,8 @@ AG_FixedSize(AG_Fixed *fx, void *p, int w, int h)
 	UpdateWindow(fx);
 
 	AG_ObjectUnlock(chld);
-	AG_ObjectUnlock(fx);
 	AG_Redraw(fx);
+	AG_ObjectUnlock(fx);
 }
 
 /* Detach a widget from the container. */
@@ -249,8 +249,8 @@ AG_FixedDel(AG_Fixed *fx, void *chld)
 	UpdateWindow(fx);
 	
 	AG_ObjectUnlock(chld);
-	AG_ObjectUnlock(fx);
 	AG_Redraw(fx);
+	AG_ObjectUnlock(fx);
 }
 
 AG_WidgetClass agFixedClass = {

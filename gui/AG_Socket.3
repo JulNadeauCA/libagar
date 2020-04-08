@@ -81,7 +81,7 @@ binding.
 .Fn AG_SocketBgCircle "AG_Socket *socket" "Uint radius"
 .Pp
 .Ft void
-.Fn AG_SocketBgPixmap "AG_Socket *socket" "AG_Surface *s"
+.Fn AG_SocketBgPixmap "AG_Socket *socket" "const AG_Surface *s"
 .Pp
 .Ft void
 .Fn AG_SocketBgPixmapNODUP "AG_Socket *socket" "AG_Surface *s"
@@ -150,10 +150,10 @@ dimensions in pixels.
 arranges for the socket to use a circular shape of the given radius in pixels.
 .Pp
 .Fn AG_SocketBgPixmap
-uses the given surface as background image.
+uses (a duplicate of) the given surface as background image.
 The
 .Fn AG_SocketBgPixmapNODUP
-variant prevents the surface from being copied.
+variant uses the surface without copy (potentially unsafe).
 .Sh EVENTS
 The
 .Nm

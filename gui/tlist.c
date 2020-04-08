@@ -55,10 +55,10 @@ AG_TlistNew(void *parent, Uint flags)
 
 	tl = Malloc(sizeof(AG_Tlist));
 	AG_ObjectInit(tl, &agTlistClass);
-	tl->flags |= flags;
 
-	if (flags & AG_TLIST_HFILL) { AG_ExpandHoriz(tl); }
-	if (flags & AG_TLIST_VFILL) { AG_ExpandVert(tl); }
+	if (flags & AG_TLIST_HFILL) { WIDGET(tl)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_TLIST_VFILL) { WIDGET(tl)->flags |= AG_WIDGET_VFILL; }
+	tl->flags |= flags;
 
 	AG_ObjectAttach(parent, tl);
 	return (tl);
@@ -118,15 +118,18 @@ AG_TlistNewPolledMs(void *parent, Uint flags, int ms, AG_EventFn fn,
 void
 AG_TlistSetRefresh(AG_Tlist *tl, int ms)
 {
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
+
 	if (ms == -1) {
 		AG_DelTimer(tl, &tl->refreshTo);
 	} else {
 		AG_AddTimer(tl, &tl->refreshTo, ms, PollRefreshTimeout, NULL);
 	}
 	tl->pollDelay = ms;
-	AG_ObjectUnlock(tl);
+
 	AG_RedrawOnTick(tl, ms);
+	AG_ObjectUnlock(tl);
 }
 
 /* In AG_TLIST_POLL mode, invoke `tlist-poll' if refresh timer has expired. */
@@ -383,18 +386,24 @@ void
 AG_TlistSizeHint(AG_Tlist *tl, const char *text, int nitems)
 {
 	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
+	AG_ObjectLock(tl);
 
 	AG_TextSize(text, &tl->wHint, NULL);
 	tl->hHint = (tl->item_h + 2)*nitems;
+
+	AG_ObjectUnlock(tl);
 }
 
 void
 AG_TlistSizeHintPixels(AG_Tlist *tl, int w, int nitems)
 {
 	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
+	AG_ObjectLock(tl);
 
 	tl->wHint = w;
 	tl->hHint = (tl->item_h + 2)*nitems;
+
+	AG_ObjectUnlock(tl);
 }
 
 /*

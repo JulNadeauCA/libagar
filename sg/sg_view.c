@@ -40,19 +40,23 @@ SG_ViewNew(void *parent, SG *sg, Uint flags)
 
 	sv = Malloc(sizeof(SG_View));
 	AG_ObjectInit(sv, &sgViewClass);
+
+	if (flags & SG_VIEW_HFILL) { WIDGET(sv)->flags |= AG_WIDGET_HFILL; }
+	if (flags & SG_VIEW_VFILL) { WIDGET(sv)->flags |= AG_WIDGET_VFILL; }
 	sv->flags |= flags;
+
 	sv->sg = sg;
 
-	if (flags & SG_VIEW_HFILL) { AG_ExpandHoriz(sv); }
-	if (flags & SG_VIEW_VFILL) { AG_ExpandVert(sv); }
-
 	if (sg != NULL) {
+		AG_OBJECT_ISA(sg, "SG:*");
 		AG_ObjectLock(sg);
-		if (sg->def.cam != NULL) {
+
+		if (sg->def.cam != NULL)
 			SG_ViewSetCamera(sv, sg->def.cam);
-		}
+
 		AG_ObjectUnlock(sg);
 	}
+
 	AG_ObjectAttach(parent, sv);
 	return (sv);
 }

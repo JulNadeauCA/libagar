@@ -42,10 +42,10 @@ AG_MPaneNew(void *parent, enum ag_mpane_layout layout, Uint flags)
 
 	mp = Malloc(sizeof(AG_MPane));
 	AG_ObjectInit(mp, &agMPaneClass);
-	mp->flags |= flags;
 	
-	if (flags & AG_MPANE_HFILL) { AG_ExpandHoriz(mp); }
-	if (flags & AG_MPANE_VFILL) { AG_ExpandVert(mp); }
+	if (flags & AG_MPANE_HFILL) { WIDGET(mp)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_MPANE_VFILL) { WIDGET(mp)->flags |= AG_WIDGET_VFILL; }
+	mp->flags |= flags;
 
 	AG_MPaneSetLayout(mp, layout);
 	AG_ObjectAttach(parent, mp);
@@ -75,6 +75,7 @@ AG_MPaneSetLayout(AG_MPane *mp, enum ag_mpane_layout layout)
 {
 	AG_Pane *vp = NULL, *hp = NULL, *dp = NULL;
 
+	AG_OBJECT_ISA(mp, "AG_Widget:AG_Box:AG_MPane:*");
 	AG_ObjectLock(mp);
 
 	AG_ObjectFreeChildren(OBJECT(mp));

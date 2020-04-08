@@ -1361,8 +1361,14 @@ SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 
 /* Size allocation callback */
 static int
-SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
+	AG_Widget *wid = obj;
+
+	if (a->w < wid->paddingLeft + wid->paddingRight ||
+	    a->h < wid->paddingTop + wid->paddingBottom) {
+		return (-1);
+	}
 	return (0);
 }
 
@@ -1777,14 +1783,6 @@ AG_WidgetFindRect(const char *type, int x, int y, int w, int h)
 	return (NULL);
 }
 
-/* Generic inherited draw() routine. */
-void
-AG_WidgetInheritDraw(void *obj)
-{
-	AG_OBJECT_ISA(obj, "AG_Widget:*");
-	WIDGET_SUPER_OPS(obj)->draw(obj);
-}
-
 /* Render a widget to an AG_Surface(3). */
 AG_Surface *
 AG_WidgetSurface(void *obj)
@@ -1892,9 +1890,8 @@ AG_WidgetDraw(void *p)
 
 	flags = wid->flags;
 
-	if (!(flags & AG_WIDGET_VISIBLE) ||
-	     (flags & (AG_WIDGET_HIDE | AG_WIDGET_UNDERSIZE)) ||
-	     WIDGET_OPS(wid)->draw == NULL)
+	if ((flags & AG_WIDGET_VISIBLE) == 0 ||
+	    (flags & (AG_WIDGET_HIDE | AG_WIDGET_UNDERSIZE)))
 		goto out;
 
 	if (flags & AG_WIDGET_DISABLED)       { wid->state = AG_DISABLED_STATE; }
@@ -1912,7 +1909,18 @@ AG_WidgetDraw(void *p)
 		DrawPrologueGL(wid);
 #endif
 
-	WIDGET_OPS(wid)->draw(wid);
+	if (WIDGET_OPS(wid)->draw != NULL) {
+		WIDGET_OPS(wid)->draw(wid);
+	} else {
+		AG_WidgetClass *Csuper;
+
+		while ((Csuper = AGWIDGET_SUPER_OPS(wid)) != (void *)&agObjectClass) {
+			if (Csuper->draw != NULL) {
+				Csuper->draw(wid);
+				break;
+			}
+		}
+	}
 	
 #ifdef HAVE_OPENGL
 	if (flags & AG_WIDGET_USE_OPENGL)
@@ -2575,6 +2583,13 @@ void *
 AG_WidgetFind(void *root, const char *pathname)
 {
 	return AG_ObjectFindS(&agDrivers, pathname);
+}
+
+/* Generic inherited draw() routine (now equivalent to a NULL "draw" op). */
+void
+AG_WidgetInheritDraw(void *obj)
+{
+	WIDGET_SUPER_OPS(obj)->draw(obj);
 }
 #endif /* AG_LEGACY */
 

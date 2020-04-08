@@ -156,25 +156,14 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 			);
 		}
 
-		AG_SeparatorNewHoriz(tab);
-
 		AG_CheckboxNewInt(tab, 0, _("Clipboard integration"),
-		    &agClipboardIntegration);
-
-		AG_SeparatorNewHoriz(tab);
-
+		                  &agClipboardIntegration);
 		AG_NumericalNewIntR(tab, numFl, "px", _("Tab width: "),
-		    &agTextTabWidth, 0, 1000);
-
+		                    &agTextTabWidth, 0, 1000);
 		AG_NumericalNewIntR(tab, numFl, "ms", _("Cursor Blink Rate: "),
-		    &agTextBlinkRate, 0, 500);
-
-		AG_SeparatorNewHoriz(tab);
-
+		                    &agTextBlinkRate, 0, 500);
 		AG_NumericalNewIntR(tab, numFl, "%", _("Screenshot Quality: "),
-		    &agScreenshotQuality, 1, 100);
-
-		AG_SeparatorNewHoriz(tab);
+		                    &agScreenshotQuality, 1, 100);
 #ifdef AG_DEBUG
 		AG_NumericalNewIntR(tab, numFl, NULL, _("Debug level: "),
 		    &agDebugLvl, 0, 255);
@@ -200,8 +189,7 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 
 	tab = AG_NotebookAdd(nb, _("Mouse"), AG_BOX_VERT);
 	{
-		AG_NumericalNewIntR(tab, numFl, "ms",
-		    _("Double click threshold: "),
+		AG_NumericalNewIntR(tab, numFl, "ms", _("Double click threshold: "),
 		    &agMouseDblclickDelay, 1, 10000);
 
 		AG_SeparatorNewHoriz(tab);

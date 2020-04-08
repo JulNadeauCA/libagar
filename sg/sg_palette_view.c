@@ -41,8 +41,8 @@ SG_PaletteViewNew(void *parent, SG_Palette *pal, Uint flags)
 	pv->flags |= flags;
 	pv->pal = pal;
 
-	if (flags & SG_PALETTE_VIEW_HFILL) { AG_ExpandHoriz(pv); }
-	if (flags & SG_PALETTE_VIEW_VFILL) { AG_ExpandVert(pv); }
+	if (flags & SG_PALETTE_VIEW_HFILL) { WIDGET(pv)->flags |= AG_WIDGET_HFILL; }
+	if (flags & SG_PALETTE_VIEW_VFILL) { WIDGET(pv)->flags |= AG_WIDGET_VFILL; }
 
 	AG_ObjectAttach(parent, pv);
 	return (pv);

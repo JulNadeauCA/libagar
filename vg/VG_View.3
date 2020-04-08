@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008-2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2008-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -137,14 +137,12 @@ Display VG elements marked as "for construction", such as the points used to
 construct a polygon.
 The exact interpretation of this setting is element-specific.
 .It VG_VIEW_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
+Expand horizontally in parent container.
 .It VG_VIEW_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
+Expand vertically in parent container.
 .It VG_VIEW_EXPAND
 Shorthand for
-.Dv VG_VIEW_HFILL|VG_VIEW_VFILL .
+.Dv VG_VIEW_HFILL | VG_VIEW_VFILL .
 .El
 .Pp
 The VG object displayed can be changed at runtime with

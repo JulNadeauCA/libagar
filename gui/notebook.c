@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,10 +41,10 @@ AG_NotebookNew(void *parent, Uint flags)
 
 	nb = Malloc(sizeof(AG_Notebook));
 	AG_ObjectInit(nb, &agNotebookClass);
-	nb->flags |= flags;
 	
-	if (flags & AG_NOTEBOOK_HFILL) { AG_ExpandHoriz(nb); }
-	if (flags & AG_NOTEBOOK_VFILL) { AG_ExpandVert(nb); }
+	if (flags & AG_NOTEBOOK_HFILL) { WIDGET(nb)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_NOTEBOOK_VFILL) { WIDGET(nb)->flags |= AG_WIDGET_VFILL; }
+	nb->flags |= flags;
 
 	AG_ObjectAttach(parent, nb);
 	return (nb);
@@ -339,8 +339,13 @@ AG_NotebookSetSpacing(AG_Notebook *nb, int spacing)
 {
 	AG_NotebookTab *nt;
 
+	AG_OBJECT_ISA(nb, "AG_Widget:AG_Notebook:*");
+	AG_ObjectLock(nb);
+
 	TAILQ_FOREACH(nt, &nb->tabs, tabs)
 		AG_BoxSetSpacing(AGBOX(nt), spacing);
+
+	AG_ObjectUnlock(nb);
 }
 
 void
@@ -348,8 +353,13 @@ AG_NotebookSetPadding(AG_Notebook *nb, int padding)
 {
 	AG_NotebookTab *nt;
 
+	AG_OBJECT_ISA(nb, "AG_Widget:AG_Notebook:*");
+	AG_ObjectLock(nb);
+
 	TAILQ_FOREACH(nt, &nb->tabs, tabs)
 		AG_BoxSetPadding(AGBOX(nt), padding);
+
+	AG_ObjectUnlock(nb);
 }
 
 AG_NotebookTab *
@@ -357,11 +367,14 @@ AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 {
 	AG_NotebookTab *tab;
 
+	AG_OBJECT_ISA(nb, "AG_Widget:AG_Notebook:*");
+
 	tab = Malloc(sizeof(AG_NotebookTab));
 	AG_ObjectInit(tab, &agNotebookTabClass);
 	AG_ObjectSetName(tab, "tab%u", nb->nTabs);
 	AG_BoxSetType(&tab->box, btype);
-	AG_Expand(tab);
+
+	WIDGET(tab)->flags |= AG_WIDGET_EXPAND;
 
 	AG_ObjectLock(nb);
 
@@ -376,12 +389,16 @@ AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 	TAILQ_INSERT_TAIL(&nb->tabs, tab, tabs);
 	tab->id = nb->nTabs++;
 
-	AG_ObjectUnlock(nb);
 	AG_Redraw(nb);
+	AG_ObjectUnlock(nb);
+
 	return (tab);
 }
 
-/* Return a notebook tab by numerical ID. */
+/*
+ * Return an active tab by numerical ID.
+ * The Notebook must be locked.
+ */
 AG_NotebookTab *
 AG_NotebookGetByID(AG_Notebook *nb, int id)
 {
@@ -394,7 +411,10 @@ AG_NotebookGetByID(AG_Notebook *nb, int id)
 	return (NULL);
 }
 
-/* Return a notebook tab by comparing text labels. */
+/*
+ * Return an active tab by text contents.
+ * The Notebook must be locked.
+ */
 AG_NotebookTab *
 AG_NotebookGetByName(AG_Notebook *nb, const char *label)
 {
@@ -411,6 +431,7 @@ AG_NotebookGetByName(AG_Notebook *nb, const char *label)
 void
 AG_NotebookDel(AG_Notebook *nb, AG_NotebookTab *tab)
 {
+	AG_OBJECT_ISA(nb, "AG_Widget:AG_Notebook:*");
 	AG_ObjectLock(nb);
 
 	if (nb->selTab == tab) {
@@ -426,8 +447,8 @@ AG_NotebookDel(AG_Notebook *nb, AG_NotebookTab *tab)
 	AG_ObjectDetach(tab);
 	AG_ObjectDestroy(tab);
 
-	AG_ObjectUnlock(nb);
 	AG_Redraw(nb);
+	AG_ObjectUnlock(nb);
 }
 
 void
@@ -435,8 +456,15 @@ AG_NotebookSelectByID(AG_Notebook *nb, int id)
 {
 	AG_NotebookTab *nt;
 
+	AG_OBJECT_ISA(nb, "AG_Widget:AG_Notebook:*");
+	AG_ObjectLock(nb);
+	AG_LockVFS(nb);
+
 	if ((nt = AG_NotebookGetByID(nb,id)) != NULL)
 		AG_NotebookSelect(nb, nt);
+
+	AG_UnlockVFS(nb);
+	AG_ObjectUnlock(nb);
 }
 
 void
@@ -445,11 +473,12 @@ AG_NotebookSelect(AG_Notebook *nb, AG_NotebookTab *tab)
 	AG_SizeReq rTab;
 	AG_SizeAlloc aTab;
 
-	AG_LockVFS(nb);
+	AG_OBJECT_ISA(nb, "AG_Widget:AG_Notebook:*");
 	AG_ObjectLock(nb);
+	AG_LockVFS(nb);
 
 	if (nb->selTab == tab) {
-		goto out;
+		goto no_change;
 	} else if (nb->selTab) {
 		AG_WidgetHideAll(nb->selTab);
 	}
@@ -472,18 +501,22 @@ AG_NotebookSelect(AG_Notebook *nb, AG_NotebookTab *tab)
 	WIDGET(nb)->flags |= AG_WIDGET_UPDATE_WINDOW;
 /* 	AG_WidgetFocus(tab); */
 out:
-	AG_ObjectUnlock(nb);
-	AG_UnlockVFS(nb);
 	AG_Redraw(nb);
+no_change:
+	AG_UnlockVFS(nb);
+	AG_ObjectUnlock(nb);
 }
 
 void
 AG_NotebookSetTabVisibility(AG_Notebook *nb, int flag)
 {
+	AG_OBJECT_ISA(nb, "AG_Widget:AG_Notebook:*");
 	AG_ObjectLock(nb);
+
 	AG_SETFLAGS(nb->flags, AG_NOTEBOOK_HIDE_TABS, flag);
-	AG_ObjectUnlock(nb);
+
 	AG_Redraw(nb);
+	AG_ObjectUnlock(nb);
 }
 
 AG_WidgetClass agNotebookClass = {
@@ -515,7 +548,7 @@ AG_WidgetClass agNotebookTabClass = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	AG_WidgetInheritDraw,
+	NULL,			/* draw */
 	NULL,			/* size_request */
 	NULL			/* size_allocate */
 };

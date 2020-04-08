@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,55 +39,64 @@
 AG_Statusbar *
 AG_StatusbarNew(void *parent, Uint flags)
 {
-	AG_Statusbar *sbar;
+	AG_Statusbar *stb;
 
-	sbar = Malloc(sizeof(AG_Statusbar));
-	AG_ObjectInit(sbar, &agStatusbarClass);
-	sbar->flags |= flags;
-	if (flags & AG_STATUSBAR_HFILL) { AG_ExpandHoriz(sbar); }
-	if (flags & AG_STATUSBAR_VFILL) { AG_ExpandVert(sbar); }
-	AG_ObjectAttach(parent, sbar);
-	return (sbar);
+	stb = Malloc(sizeof(AG_Statusbar));
+	AG_ObjectInit(stb, &agStatusbarClass);
+
+	if (flags & AG_STATUSBAR_HFILL) { WIDGET(stb)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_STATUSBAR_VFILL) { WIDGET(stb)->flags |= AG_WIDGET_VFILL; }
+	stb->flags |= flags;
+
+	AG_ObjectAttach(parent, stb);
+	return (stb);
 }
 
 static void
 Init(void *_Nonnull obj)
 {
-	AG_Statusbar *sbar = obj;
+	AG_Statusbar *stb = obj;
 	AG_Box *box = obj;
 
 	AG_BoxSetType(box, AG_BOX_VERT);
 	AG_BoxSetPadding(box, 2);
 	AG_BoxSetSpacing(box, 1);
-	sbar->flags = 0;
-	sbar->nLabels = 0;
+
+	stb->flags = 0;
+	stb->nLabels = 0;
 }
 
 AG_Label *
-AG_StatusbarAddLabel(AG_Statusbar *sbar, const char *fmt, ...)
+AG_StatusbarAddLabel(AG_Statusbar *stb, const char *fmt, ...)
 {
 	AG_Label *lab;
 	va_list ap;
 
-	AG_ObjectLock(sbar);
+	AG_OBJECT_ISA(stb, "AG_Widget:AG_Box:AG_Statusbar:*");
+	AG_ObjectLock(stb);
+
 #ifdef AG_DEBUG
-	if (sbar->nLabels+1 >= AG_STATUSBAR_MAX_LABELS)
+	if (stb->nLabels+1 >= AG_STATUSBAR_MAX_LABELS)
 		AG_FatalError("AG_StatusbarAddLabel: Too many labels");
 #endif
-	sbar->labels[sbar->nLabels] = Malloc(sizeof(AG_Label));
-	lab = sbar->labels[sbar->nLabels];
+	stb->labels[stb->nLabels] = Malloc(sizeof(AG_Label));
+	lab = stb->labels[stb->nLabels];
 
 	AG_ObjectInit(lab, &agLabelClass);
+
+	WIDGET(lab)->flags |= AG_WIDGET_HFILL;
+
 	lab->type = AG_LABEL_STATIC;
 	va_start(ap, fmt);
 	Vasprintf(&lab->text, fmt, ap);
 	va_end(ap);
-	AG_ExpandHoriz(lab);
 
-	AG_ObjectAttach(&sbar->box, lab);
-	lab = sbar->labels[sbar->nLabels++];
-	AG_ObjectUnlock(sbar);
-	AG_Redraw(sbar);
+	AG_ObjectAttach(&stb->box, lab);
+	lab = stb->labels[stb->nLabels++];
+
+	AG_Redraw(stb);
+	AG_ObjectUnlock(stb);
+
 	return (lab);
 }
 
@@ -103,7 +112,7 @@ AG_WidgetClass agStatusbarClass = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	AG_WidgetInheritDraw,
+	NULL,			/* draw */
 	NULL,			/* size_request */
 	NULL			/* size_allocate */
 };

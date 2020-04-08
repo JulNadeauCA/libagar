@@ -136,8 +136,8 @@ AG_ButtonNewS(void *parent, Uint flags, const char *label)
 	}
 	bu->flags |= flags;
 
-	if (flags & AG_BUTTON_HFILL) { AG_ExpandHoriz(bu); }
-	if (flags & AG_BUTTON_VFILL) { AG_ExpandVert(bu); }
+	if (flags & AG_BUTTON_HFILL) { WIDGET(bu)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_BUTTON_VFILL) { WIDGET(bu)->flags |= AG_WIDGET_VFILL; }
 	if (flags & AG_BUTTON_NO_FOCUS) { SetFocusable(bu, 0); }
 	if (flags & AG_BUTTON_REPEAT) { AG_ButtonSetRepeatMode(bu, 1); }
 
@@ -148,24 +148,33 @@ AG_ButtonNewS(void *parent, Uint flags, const char *label)
 void
 AG_ButtonSetFocusable(AG_Button *bu, int enable)
 {
+	AG_OBJECT_ISA(bu, "AG_Widget:AG_Button:*");
 	AG_ObjectLock(bu);
+
 	SetFocusable(bu, enable);
+
 	AG_ObjectUnlock(bu);
 }
 
 void
 AG_ButtonSetSticky(AG_Button *bu, int flag)
 {
+	AG_OBJECT_ISA(bu, "AG_Widget:AG_Button:*");
 	AG_ObjectLock(bu);
+
 	AG_SETFLAGS(bu->flags, AG_BUTTON_STICKY, flag);
+
 	AG_ObjectUnlock(bu);
 }
 
 void
 AG_ButtonSetInverted(AG_Button *bu, int flag)
 {
+	AG_OBJECT_ISA(bu, "AG_Widget:AG_Button:*");
 	AG_ObjectLock(bu);
+
 	AG_SETFLAGS(bu->flags, AG_BUTTON_INVERTED, flag);
+
 	AG_ObjectUnlock(bu);
 }
 
@@ -386,7 +395,7 @@ SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 	AG_Button *bu = p;
 	
 	r->w = WIDGET(bu)->paddingLeft + WIDGET(bu)->paddingRight;
-	r->h = WIDGET(bu)->paddingTop  + WIDGET(bu)->paddingBottom;
+	r->h = WIDGET(bu)->paddingTop + WIDGET(bu)->paddingBottom;
 
 	if (bu->label && bu->label[0] != '\0') {
 		if (bu->surfaceLbl == -1) {
@@ -628,6 +637,7 @@ SetStateGeneral(AG_Button *bu, AG_Variable *V, void *p, int v)
 void
 AG_ButtonJustify(AG_Button *bu, enum ag_text_justify jus)
 {
+	AG_OBJECT_ISA(bu, "AG_Widget:AG_Button:*");
 	bu->justify = jus;
 }
 
@@ -635,6 +645,7 @@ AG_ButtonJustify(AG_Button *bu, enum ag_text_justify jus)
 void
 AG_ButtonValign(AG_Button *bu, enum ag_text_valign va)
 {
+	AG_OBJECT_ISA(bu, "AG_Widget:AG_Button:*");
 	bu->valign = va;
 }
 
@@ -646,6 +657,7 @@ AG_ButtonSurface(AG_Button *bu, const AG_Surface *S)
 {
 	AG_Surface *Sdup = (S != NULL) ? AG_SurfaceDup(S) : NULL;
 
+	AG_OBJECT_ISA(bu, "AG_Widget:AG_Button:*");
 	AG_ObjectLock(bu);
 
 	if (bu->surfaceSrc != -1) {
@@ -654,8 +666,8 @@ AG_ButtonSurface(AG_Button *bu, const AG_Surface *S)
 		bu->surfaceSrc = AG_WidgetMapSurface(bu, Sdup);
 	}
 
-	AG_ObjectUnlock(bu);
 	AG_Redraw(bu);
+	AG_ObjectUnlock(bu);
 }
 
 /*
@@ -664,6 +676,7 @@ AG_ButtonSurface(AG_Button *bu, const AG_Surface *S)
 void
 AG_ButtonSurfaceNODUP(AG_Button *bu, AG_Surface *S)
 {
+	AG_OBJECT_ISA(bu, "AG_Widget:AG_Button:*");
 	AG_ObjectLock(bu);
 
 	if (bu->surfaceSrc != -1) {
@@ -671,15 +684,18 @@ AG_ButtonSurfaceNODUP(AG_Button *bu, AG_Surface *S)
 	} else {
 		bu->surfaceSrc = AG_WidgetMapSurfaceNODUP(bu, S);
 	}
-	AG_ObjectUnlock(bu);
+
 	AG_Redraw(bu);
+	AG_ObjectUnlock(bu);
 }
 
 /* Enable or Disable repeat mode */
 void
 AG_ButtonSetRepeatMode(AG_Button *bu, int enable)
 {
+	AG_OBJECT_ISA(bu, "AG_Widget:AG_Button:*");
 	AG_ObjectLock(bu);
+
 	if (enable) {
 		if (bu->repeat == NULL) {
 			bu->repeat = Malloc(sizeof(AG_ButtonRepeat));
@@ -696,6 +712,7 @@ AG_ButtonSetRepeatMode(AG_Button *bu, int enable)
 		}
 		bu->flags &= ~(AG_BUTTON_REPEAT);
 	}
+
 	AG_ObjectUnlock(bu);
 }
 
@@ -721,6 +738,7 @@ AG_ButtonTextS(AG_Button *bu, const char *label)
 {
 	char *labelDup = TryStrdup(label);
 
+	AG_OBJECT_ISA(bu, "AG_Widget:AG_Button:*");
 	AG_ObjectLock(bu);
 
 	if (bu->surfaceLbl != -1) {
@@ -730,8 +748,8 @@ AG_ButtonTextS(AG_Button *bu, const char *label)
 	Free(bu->label);
 	bu->label = labelDup;
 	
-	AG_ObjectUnlock(bu);
 	AG_Redraw(bu);
+	AG_ObjectUnlock(bu);
 }
 
 AG_WidgetClass agButtonClass = {

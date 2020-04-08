@@ -46,10 +46,10 @@ AG_SocketNew(void *parent, Uint flags)
 
 	sock = Malloc(sizeof(AG_Socket));
 	AG_ObjectInit(sock, &agSocketClass);
-	sock->flags |= flags;
 	
-	if (flags & AG_SOCKET_HFILL) { AG_ExpandHoriz(sock); }
-	if (flags & AG_SOCKET_VFILL) { AG_ExpandVert(sock); }
+	if (flags & AG_SOCKET_HFILL) { WIDGET(sock)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_SOCKET_VFILL) { WIDGET(sock)->flags |= AG_WIDGET_VFILL; }
+	sock->flags |= flags;
 
 	AG_ObjectAttach(parent, sock);
 	return (sock);
@@ -82,23 +82,31 @@ AG_SocketFromBMP(void *parent, Uint flags, const char *bmpfile)
 void
 AG_SocketInsertFn(AG_Socket *sock, int (*fn)(AG_Socket *, AG_Icon *))
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
+
 	sock->insertFn = fn;
+
 	AG_ObjectUnlock(sock);
 }
 
 void
 AG_SocketRemoveFn(AG_Socket *sock, void (*fn)(AG_Socket *, AG_Icon *))
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
+
 	sock->removeFn = fn;
+
 	AG_ObjectUnlock(sock);
 }
 
 void
 AG_SocketOverlayFn(AG_Socket *sock, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
+
 	if (fn) {
 		sock->overlayFn = AG_SetEvent(sock, NULL, fn, NULL);
 		if (fmt) {
@@ -111,6 +119,7 @@ AG_SocketOverlayFn(AG_Socket *sock, AG_EventFn fn, const char *fmt, ...)
 	} else {
 		sock->overlayFn = NULL;
 	}
+
 	AG_ObjectUnlock(sock);
 }
 
@@ -118,35 +127,26 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Socket *sock = obj;
+	AG_Surface *S;
+
+	r->w = WIDGET(sock)->paddingLeft + WIDGET(sock)->paddingRight;
+	r->h = WIDGET(sock)->paddingTop + WIDGET(sock)->paddingBottom;
 
 	switch (sock->bgType) {
 	case AG_SOCKET_PIXMAP:
-		r->w = WSURFACE(sock,sock->bgData.pixmap.s)->w;
-		r->h = WSURFACE(sock,sock->bgData.pixmap.s)->h;
+		S = WSURFACE(sock, sock->bgData.pixmap.s);
+		r->w += S->w;
+		r->h += S->h;
 		break;
 	case AG_SOCKET_RECT:
-		r->w = sock->bgData.rect.w;
-		r->h = sock->bgData.rect.h;
+		r->w += sock->bgData.rect.w;
+		r->h += sock->bgData.rect.h;
 		break;
 	case AG_SOCKET_CIRCLE:
-		r->w = sock->bgData.circle.r*2;
-		r->h = sock->bgData.circle.r*2;
+		r->w += (sock->bgData.circle.r << 1);
+		r->h += (sock->bgData.circle.r << 1);
 		break;
 	}
-	r->w += sock->lPad + sock->rPad;
-	r->h += sock->tPad + sock->bPad;
-}
-
-static int
-SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
-{
-	AG_Socket *sock = obj;
-
-	if (a->w < (sock->lPad + sock->rPad) ||
-	    a->h < (sock->tPad + sock->bPad)) {
-		return (-1);
-	}
-	return (0);
 }
 
 static __inline__ int
@@ -213,7 +213,10 @@ Draw(void *_Nonnull obj)
 	/* Draw background */
 	switch (sock->bgType) {
 	case AG_SOCKET_PIXMAP:
-		AG_WidgetBlitSurface(sock, sock->bgData.pixmap.s, 0, 0);
+		AG_WidgetBlitSurface(sock,
+		    sock->bgData.pixmap.s,
+		    WIDGET(sock)->paddingLeft,
+		    WIDGET(sock)->paddingTop);
 		break;
 	case AG_SOCKET_RECT:
 		AG_DrawBoxSunk(sock, &WIDGET(sock)->r, &WCOLOR(sock,FG_COLOR));
@@ -237,10 +240,13 @@ Draw(void *_Nonnull obj)
 			if (state) {
 				AG_Rect r;
 
-				r.x = sock->lPad;
-				r.y = sock->tPad;
-				r.w = WIDTH(sock) - sock->lPad - sock->rPad;
-				r.h = HEIGHT(sock) - sock->tPad - sock->bPad;
+				r.x = WIDGET(sock)->paddingLeft;
+				r.y = WIDGET(sock)->paddingTop;
+				r.w = WIDTH(sock) - r.x -
+				      WIDGET(sock)->paddingRight;
+				r.h = HEIGHT(sock) - r.y -
+				      WIDGET(sock)->paddingBottom;
+
 				AG_DrawRectOutline(sock, &r,
 				    &WCOLOR(sock, LINE_COLOR));
 			}
@@ -250,7 +256,9 @@ Draw(void *_Nonnull obj)
 				AG_DrawCircle(sock,
 				    WIDTH(sock) >> 1,
 				    HEIGHT(sock) >> 1,
-				    sock->bgData.circle.r - sock->lPad,
+				    (sock->bgData.circle.r -
+				     WIDGET(sock)->paddingLeft -
+				     WIDGET(sock)->paddingRight),
 				    &WCOLOR(sock, LINE_COLOR));
 			}
 			break;
@@ -354,6 +362,7 @@ IconMotion(AG_Event *_Nonnull event)
 	r.y = WIDGET(wDND)->y + yRel;
 	r.w = WIDTH(wDND);
 	r.h = HEIGHT(wDND);
+
 	AG_WindowMove(wDND, xRel, yRel);
 }
 
@@ -473,69 +482,78 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	AG_UnlockVariable(binding);
 }
 
-void
-AG_SocketSetPadding(AG_Socket *sock, int lPad, int rPad, int tPad, int bPad)
-{
-	if (lPad != -1) { sock->lPad = lPad; }
-	if (rPad != -1) { sock->rPad = rPad; }
-	if (tPad != -1) { sock->tPad = tPad; }
-	if (bPad != -1) { sock->bPad = bPad; }
-	AG_Redraw(sock);
-}
-
+/* Render as a rectangle of w x h pixels. */
 void
 AG_SocketBgRect(AG_Socket *sock, Uint w, Uint h)
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
+
 	sock->bgType = AG_SOCKET_RECT;
 	sock->bgData.rect.w = w;
 	sock->bgData.rect.h = h;
-	AG_ObjectUnlock(sock);
+
 	AG_Redraw(sock);
+	AG_ObjectUnlock(sock);
 }
 
+/* Render as a circle of radius r in pixels. */
 void
 AG_SocketBgCircle(AG_Socket *sock, Uint r)
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
+
 	sock->bgType = AG_SOCKET_CIRCLE;
 	sock->bgData.circle.r = r;
-	AG_ObjectUnlock(sock);
+
 	AG_Redraw(sock);
+	AG_ObjectUnlock(sock);
 }
 
+/* Render as a given surface (duplicated). */
 void
-AG_SocketBgPixmap(AG_Socket *sock, AG_Surface *S)
+AG_SocketBgPixmap(AG_Socket *sock, const AG_Surface *S)
 {
 	AG_Surface *Sdup = S ? AG_SurfaceDup(S) : NULL;
 
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
+
 	sock->bgType = AG_SOCKET_PIXMAP;
 	sock->bgData.pixmap.s = AG_WidgetMapSurface(sock, Sdup);
-	AG_ObjectUnlock(sock);
+
 	AG_Redraw(sock);
+	AG_ObjectUnlock(sock);
 }
 
+/* Render as a given surface without duplicating (potentially unsafe). */
 void
 AG_SocketBgPixmapNODUP(AG_Socket *sock, AG_Surface *S)
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
+
 	sock->bgType = AG_SOCKET_PIXMAP;
 	sock->bgData.pixmap.s = AG_WidgetMapSurface(sock, S);
-	AG_ObjectUnlock(sock);
+
 	AG_Redraw(sock);
+	AG_ObjectUnlock(sock);
 }
 
+/* Insert an icon in the socket (reparenting it). */
 void
 AG_SocketInsertIcon(AG_Socket *sock, AG_Icon *icon)
 {
-	AG_Window *wParent = AG_ParentWindow(sock);
 	AG_SizeAlloc a;
-	
+
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
+	AG_LockVFS(sock);
 	AG_ObjectLock(sock);
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
 	AG_ObjectLock(icon);
 
-	AG_ObjectAttach(sock, icon);
+	AG_ObjectAttach(sock, icon);                            /* Reparent */
 	sock->icon = icon;
 	icon->sock = sock;
 
@@ -545,34 +563,39 @@ AG_SocketInsertIcon(AG_Socket *sock, AG_Icon *icon)
 	a.y = 0;
 	AG_WidgetSizeAlloc(icon, &a);
 	AG_WidgetUpdateCoords(icon, a.x, a.y);
-	
-	AG_ObjectUnlock(icon);
-	AG_ObjectUnlock(sock);
+	AG_WidgetCompileStyle(sock);
 
 	AG_Redraw(sock);
-	AG_WindowUpdate(wParent);
+	AG_WindowUpdate(AG_ParentWindow(sock));
+
+	AG_ObjectUnlock(icon);
+	AG_ObjectUnlock(sock);
+	AG_UnlockVFS(sock);
 }
 
+/* Remove an icon from the socket (detaching it). */
 void
 AG_SocketRemoveIcon(AG_Socket *sock)
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
+	AG_LockVFS(sock);
 	AG_ObjectLock(sock);
 
 	if (sock->icon != NULL) {
 		AG_ObjectLock(sock->icon);
 		if (sock->removeFn != NULL) {
 			sock->removeFn(sock, sock->icon);
+		} else {
+			sock->icon->sock = NULL;
+			AG_ObjectDetach(sock->icon);
 			AG_ObjectUnlock(sock->icon);
-			goto out;
 		}
-		sock->icon->sock = NULL;
-		AG_ObjectDetach(sock->icon);
-		AG_ObjectUnlock(sock->icon);
 	}
 	sock->icon = NULL;
-out:
-	AG_ObjectUnlock(sock);
+
 	AG_Redraw(sock);
+	AG_ObjectUnlock(sock);
+	AG_UnlockVFS(sock);
 }
 
 static void
@@ -590,10 +613,6 @@ Init(void *_Nonnull obj)
 	sock->bgData.rect.w = 32;
 	sock->bgData.rect.h = 32;
 	sock->lblJustify = AG_TEXT_LEFT;
-	sock->lPad = 2;
-	sock->rPad = 2;
-	sock->tPad = 2;
-	sock->bPad = 2;
 	sock->icon = NULL;
 	sock->insertFn = NULL;
 	sock->removeFn = NULL;
@@ -610,21 +629,33 @@ Init(void *_Nonnull obj)
 	AG_RedrawOnChange(sock, 500, "count");
 }
 
+#ifdef AG_LEGACY
+void
+AG_SocketSetPadding(AG_Socket *sock, int lPad, int rPad, int tPad, int bPad)
+{
+	AG_SetStyleF(sock, "padding", "%d %d %d %d",
+	    (tPad != -1) ? tPad : 0,
+	    (rPad != -1) ? rPad : 0,
+	    (bPad != -1) ? bPad : 0,
+	    (lPad != -1) ? lPad : 0);
+}
+#endif /* AG_LEGACY */
+
 AG_WidgetClass agSocketClass = {
 	{
 		"Agar(Widget:Socket)",
 		sizeof(AG_Socket),
 		{ 0,0 },
 		Init,
-		NULL,		/* reset */
-		NULL,		/* destroy */
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
+		NULL,    /* reset */
+		NULL,    /* destroy */
+		NULL,    /* load */
+		NULL,    /* save */
+		NULL     /* edit */
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	NULL             /* size_allocate */  
 };
 
 #endif /* AG_WIDGETS */

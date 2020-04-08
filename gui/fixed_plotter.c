@@ -51,11 +51,12 @@ AG_FixedPlotterNew(void *parent, enum ag_fixed_plotter_type type, Uint flags)
 
 	fpl = Malloc(sizeof(AG_FixedPlotter));
 	AG_ObjectInit(fpl, &agFixedPlotterClass);
-	fpl->type = type;
-	fpl->flags |= flags;
 
-	if (flags & AG_FIXED_PLOTTER_HFILL) { AG_ExpandHoriz(fpl); }
-	if (flags & AG_FIXED_PLOTTER_VFILL) { AG_ExpandVert(fpl); }
+	fpl->type = type;
+
+	if (flags & AG_FIXED_PLOTTER_HFILL) { WIDGET(fpl)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_FIXED_PLOTTER_VFILL) { WIDGET(fpl)->flags |= AG_WIDGET_VFILL; }
+	fpl->flags |= flags;
 
 	AG_ObjectAttach(parent, fpl);
 	return (fpl);
@@ -84,6 +85,7 @@ Init(void *obj)
 void
 AG_FixedPlotterSetRange(AG_FixedPlotter *fpl, AG_FixedPlotterValue range)
 {
+	AG_OBJECT_ISA(fpl, "AG_Widget:AG_FixedPlotter:*");
 	fpl->yrange = range;
 	AG_Redraw(fpl);
 }
@@ -231,6 +233,8 @@ AG_FixedPlotterCurve(AG_FixedPlotter *fpl, const char *name,
 {
 	AG_FixedPlotterItem *gi;
 
+	AG_OBJECT_ISA(fpl, "AG_Widget:AG_FixedPlotter:*");
+
  	gi = Malloc(sizeof(AG_FixedPlotterItem));
 	Strlcpy(gi->name, name, sizeof(gi->name));
 	AG_ColorRGB_8(&gi->color, r,g,b);
@@ -242,23 +246,26 @@ AG_FixedPlotterCurve(AG_FixedPlotter *fpl, const char *name,
 
 	AG_ObjectLock(fpl);
 	TAILQ_INSERT_HEAD(&fpl->items, gi, items);
-	AG_ObjectUnlock(fpl);
-	
 	AG_Redraw(fpl);
+	AG_ObjectUnlock(fpl);
+
 	return (gi);
 }
 
 void
 AG_FixedPlotterDatum(AG_FixedPlotterItem *gi, AG_FixedPlotterValue val)
 {
-	AG_ObjectLock(gi->fpl);
+	AG_FixedPlotter *fpl = gi->fpl;
+
+	AG_OBJECT_ISA(fpl, "AG_Widget:AG_FixedPlotter:*");
+	AG_ObjectLock(fpl);
 	
 	gi->vals[gi->nvals] = val;
 
 	if (gi->nvals+1 >= gi->limit) {
 		memmove(gi->vals, gi->vals+1,
 		        gi->nvals*sizeof(AG_FixedPlotterValue));
-		gi->fpl->flags &= ~(AG_FIXED_PLOTTER_SCROLL);
+		fpl->flags &= ~(AG_FIXED_PLOTTER_SCROLL);
 	} else {
 		if (gi->nvals+1 >= gi->maxvals) {
 			gi->vals = Realloc(gi->vals,
@@ -269,8 +276,8 @@ AG_FixedPlotterDatum(AG_FixedPlotterItem *gi, AG_FixedPlotterValue val)
 		gi->nvals++;
 	}
 	
-	AG_ObjectUnlock(gi->fpl);
-	AG_Redraw(gi->fpl);
+	AG_Redraw(fpl);
+	AG_ObjectUnlock(fpl);
 }
 
 void
@@ -278,7 +285,9 @@ AG_FixedPlotterFreeItems(AG_FixedPlotter *fpl)
 {
 	AG_FixedPlotterItem *git, *nextgit;
 	
+	AG_OBJECT_ISA(fpl, "AG_Widget:AG_FixedPlotter:*");
 	AG_ObjectLock(fpl);
+
 	for (git = TAILQ_FIRST(&fpl->items);
 	     git != TAILQ_END(&fpl->items);
 	     git = nextgit) {
@@ -287,8 +296,9 @@ AG_FixedPlotterFreeItems(AG_FixedPlotter *fpl)
 		Free(git);
 	}
 	TAILQ_INIT(&fpl->items);
-	AG_ObjectUnlock(fpl);
+
 	AG_Redraw(fpl);
+	AG_ObjectUnlock(fpl);
 }
 
 static void
@@ -309,8 +319,13 @@ Destroy(void *obj)
 void
 AG_FixedPlotterScroll(AG_FixedPlotter *_Nonnull fpl, int i)
 {
+	AG_OBJECT_ISA(fpl, "AG_Widget:AG_FixedPlotter:*");
+	AG_ObjectLock(fpl);
+
 	if (fpl->flags & AG_FIXED_PLOTTER_SCROLL)
 		fpl->xoffs += i;
+
+	AG_ObjectUnlock(fpl);
 }
 
 AG_WidgetClass agFixedPlotterClass = {

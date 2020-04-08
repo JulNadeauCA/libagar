@@ -74,38 +74,38 @@ AG_Textbox *
 AG_TextboxNewS(void *parent, Uint flags, const char *label)
 {
 	AG_Textbox *tb;
+	AG_Scrollbar *sb;
 
 	tb = Malloc(sizeof(AG_Textbox));
 	AG_ObjectInit(tb, &agTextboxClass);
 
-	if (flags & AG_TEXTBOX_HFILL)         AG_ExpandHoriz(tb);
-	if (flags & AG_TEXTBOX_VFILL)         AG_ExpandVert(tb);
+	if (flags & AG_TEXTBOX_HFILL)         WIDGET(tb)->flags |= AG_WIDGET_HFILL;
+	if (flags & AG_TEXTBOX_VFILL)         WIDGET(tb)->flags |= AG_WIDGET_VFILL;
 	if (flags & AG_TEXTBOX_READONLY)      tb->ed->flags |= AG_EDITABLE_READONLY;
 	if (flags & AG_TEXTBOX_PASSWORD)      tb->ed->flags |= AG_EDITABLE_PASSWORD;
 	if (flags & AG_TEXTBOX_UPPERCASE)     tb->ed->flags |= AG_EDITABLE_UPPERCASE;
 	if (flags & AG_TEXTBOX_LOWERCASE)     tb->ed->flags |= AG_EDITABLE_LOWERCASE;
-	if (flags & AG_TEXTBOX_ABANDON_FOCUS) tb->ed->flags |= AG_EDITABLE_ABANDON_FOCUS;
 	if (flags & AG_TEXTBOX_INT_ONLY)      tb->ed->flags |= AG_EDITABLE_INT_ONLY;
 	if (flags & AG_TEXTBOX_FLT_ONLY)      tb->ed->flags |= AG_EDITABLE_FLT_ONLY;
+	if (flags & AG_TEXTBOX_ABANDON_FOCUS) tb->ed->flags |= AG_EDITABLE_ABANDON_FOCUS;
+	if (flags & AG_TEXTBOX_NO_KILL_YANK)  tb->ed->flags |= AG_EDITABLE_NO_KILL_YANK;
+	if (flags & AG_TEXTBOX_NO_ALT_LATIN1) tb->ed->flags |= AG_EDITABLE_NO_ALT_LATIN1;
+	if (flags & AG_TEXTBOX_NOPOPUP)       tb->ed->flags |= AG_EDITABLE_NOPOPUP;
+	if (flags & AG_TEXTBOX_MULTILINGUAL)  tb->ed->flags |= AG_EDITABLE_MULTILINGUAL;
 
 	if (flags & AG_TEXTBOX_CATCH_TAB) {
 		WIDGET(tb)->flags |= AG_WIDGET_CATCH_TAB;
 		WIDGET(tb->ed)->flags |= AG_WIDGET_CATCH_TAB;
 	}
-
-	if (flags & AG_TEXTBOX_NO_KILL_YANK)  tb->ed->flags |= AG_EDITABLE_NO_KILL_YANK;
-	if (flags & AG_TEXTBOX_NO_ALT_LATIN1) tb->ed->flags |= AG_EDITABLE_NO_ALT_LATIN1;
-	if (flags & AG_TEXTBOX_NOPOPUP)       tb->ed->flags |= AG_EDITABLE_NOPOPUP;
-	if (flags & AG_TEXTBOX_MULTILINGUAL)  tb->ed->flags |= AG_EDITABLE_MULTILINGUAL;
-	
 	if (flags & AG_TEXTBOX_MULTILINE) {
 		tb->ed->flags |= AG_EDITABLE_MULTILINE;
 
-		tb->vBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
-		AG_SetInt(tb->vBar, "min", 0);
-		AG_BindInt(tb->vBar, "max", &tb->ed->yMax);
-		AG_BindInt(tb->vBar, "visible", &tb->ed->yVis);
-		AG_BindInt(tb->vBar, "value", &tb->ed->y);
+		sb = tb->vBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_VERT,
+		                                    AG_SCROLLBAR_EXCL);
+		AG_SetInt(sb,  "min",     0);
+		AG_BindInt(sb, "max",     &tb->ed->yMax);
+		AG_BindInt(sb, "visible", &tb->ed->yVis);
+		AG_BindInt(sb, "value",   &tb->ed->y);
 	}
 	if (flags & AG_TEXTBOX_RETURN_BUTTON) {
 		tb->btnRet = AG_ButtonNewInt(tb, 0,
@@ -114,14 +114,17 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 
 		AG_SetEvent(tb->btnRet, "button-pushed", EditableReturn, "%p", tb);
 	}
+	if (flags & AG_TEXTBOX_EXCL)
+		AG_EditableSetExcl(tb->ed, 1);
 
-	AG_TextboxSetExcl(tb, (flags & AG_TEXTBOX_EXCL));
-	AG_TextboxSetWordWrap(tb, (flags & AG_TEXTBOX_WORDWRAP));
+	if (flags & AG_TEXTBOX_WORDWRAP)
+		AG_EditableSetWordWrap(tb->ed, 1);
 
 	tb->flags |= flags;
-	if (label != NULL) {
+
+	if (label != NULL)
 		tb->label = TryStrdup(label);
-	}
+
 	AG_ObjectAttach(parent, tb);
 	return (tb);
 }
@@ -181,6 +184,9 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 {
 	AG_Window *winParent;
 
+	AG_OBJECT_ISA(tb, "AG_Widget:AG_Textbox:*");
+	AG_ObjectLock(tb);
+
 	AG_EditableSetWordWrap(tb->ed, flag);
 
 	if (tb->ed->flags & AG_EDITABLE_MULTILINE) {
@@ -205,6 +211,8 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 
 	if ((winParent = WIDGET(tb)->window) != NULL)
 		AG_WindowUpdate(winParent);
+
+	AG_ObjectUnlock(tb);
 }
 
 /* Return the current cursor position. */
@@ -273,6 +281,7 @@ AG_TextboxAutocomplete(AG_Textbox *tb, AG_EventFn fn, const char *fmt, ...)
 		AG_EventGetArgs(tb->ed->complete->fn, fmt, ap);
 		va_end(ap);
 	}
+
 	AG_ObjectUnlock(tb->ed);
 }
 
@@ -376,16 +385,14 @@ Draw(void *_Nonnull p)
 	}
 	if (tb->label != NULL &&
 	    tb->label[0] != '\0') {
-		if (isUndersize)
-			AG_PushClipRect(tb, &WIDGET(tb)->r);
+		if (isUndersize) { AG_PushClipRect(tb, &WIDGET(tb)->r); }
 
 		RenderLabel(tb);
 		AG_WidgetBlitSurface(tb, tb->surfaceLbl,
 		    WIDGET(tb)->paddingLeft,
 		    WIDGET(tb)->paddingTop);
 
-		if (isUndersize)
-			AG_PopClipRect(tb);
+		if (isUndersize) { AG_PopClipRect(tb); }
 	}
 
 	if (!isUndersize)
@@ -526,7 +533,9 @@ AG_TextboxSetLabel(AG_Textbox *tb, const char *fmt, ...)
 {
 	va_list ap;
 
+	AG_OBJECT_ISA(tb, "AG_Widget:AG_Textbox:*");
 	AG_ObjectLock(tb);
+
 	if (tb->surfaceLbl != -1) {
 		AG_WidgetUnmapSurface(tb, tb->surfaceLbl);
 		tb->surfaceLbl = -1;
@@ -535,23 +544,27 @@ AG_TextboxSetLabel(AG_Textbox *tb, const char *fmt, ...)
 	va_start(ap, fmt);
 	Vasprintf(&tb->label, fmt, ap);
 	va_end(ap);
-	AG_ObjectUnlock(tb);
+
 	AG_Redraw(tb);
+	AG_ObjectUnlock(tb);
 }
 
 /* Set the textbox label (C string). */
 void
 AG_TextboxSetLabelS(AG_Textbox *tb, const char *s)
 {
+	AG_OBJECT_ISA(tb, "AG_Widget:AG_Textbox:*");
 	AG_ObjectLock(tb);
+
 	if (tb->surfaceLbl != -1) {
 		AG_WidgetUnmapSurface(tb, tb->surfaceLbl);
 		tb->surfaceLbl = -1;
 	}
 	Free(tb->label);
 	tb->label = TryStrdup(s);
-	AG_ObjectUnlock(tb);
+
 	AG_Redraw(tb);
+	AG_ObjectUnlock(tb);
 }
 
 /* Set the text from a format string. */

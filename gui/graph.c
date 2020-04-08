@@ -48,10 +48,10 @@ AG_GraphNew(void *parent, Uint flags)
 
 	gf = Malloc(sizeof(AG_Graph));
 	AG_ObjectInit(gf, &agGraphClass);
-	gf->flags |= flags;
 
-	if (flags & AG_GRAPH_HFILL) { AG_ExpandHoriz(gf); }
-	if (flags & AG_GRAPH_VFILL) { AG_ExpandVert(gf); }
+	if (flags & AG_GRAPH_HFILL) { WIDGET(gf)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_GRAPH_VFILL) { WIDGET(gf)->flags |= AG_WIDGET_VFILL; }
+	gf->flags |= flags;
 
 	AG_ObjectAttach(parent, gf);
 	return (gf);
@@ -177,6 +177,8 @@ AG_GraphEdgeFind(AG_Graph *gf, void *userPtr)
 {
 	AG_GraphEdge *edge;
 
+	AG_OBJECT_ISA(gf, "AG_Widget:AG_Graph:*");
+
 	TAILQ_FOREACH(edge, &gf->edges, edges) {
 		if (edge->userPtr == userPtr)
 			return (edge);
@@ -190,6 +192,8 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
     void *userPtr)
 {
 	AG_GraphEdge *edge, *edgeOrig;
+
+	AG_OBJECT_ISA(gf, "AG_Widget:AG_Graph:*");
 
 	edge = Malloc(sizeof(AG_GraphEdge));
 	edge->type = AG_GRAPH_EDGE_UNDIRECTED;
@@ -250,35 +254,45 @@ AG_GraphEdgeFree(AG_GraphEdge *edge)
 }
 
 void
-AG_GraphEdgeLabelS(AG_GraphEdge *ge, const char *s)
+AG_GraphEdgeLabelS(AG_GraphEdge *edge, const char *s)
 {
-	AG_ObjectLock(ge->graph);
-	Strlcpy(ge->labelTxt, s, sizeof(ge->labelTxt));
-	if (ge->labelSu >= 0) {
-		AG_WidgetUnmapSurface(ge->graph, ge->labelSu);
+	AG_Graph *gf = edge->graph;
+
+	AG_OBJECT_ISA(gf, "AG_Widget:AG_Graph:*");
+	AG_ObjectLock(gf);
+
+	Strlcpy(edge->labelTxt, s, sizeof(edge->labelTxt));
+	if (edge->labelSu >= 0) {
+		AG_WidgetUnmapSurface(gf, edge->labelSu);
 	}
-	AG_TextColor(&ge->labelColor);
-	ge->labelSu = AG_WidgetMapSurface(ge->graph, AG_TextRender(ge->labelTxt));
-	AG_ObjectUnlock(ge->graph);
-	AG_Redraw(ge->graph);
+	AG_TextColor(&edge->labelColor);
+	edge->labelSu = AG_WidgetMapSurface(gf, AG_TextRender(edge->labelTxt));
+
+	AG_Redraw(gf);
+	AG_ObjectUnlock(gf);
 }
 
 void
-AG_GraphEdgeLabel(AG_GraphEdge *ge, const char *fmt, ...)
+AG_GraphEdgeLabel(AG_GraphEdge *edge, const char *fmt, ...)
 {
+	AG_Graph *gf = edge->graph;
 	va_list ap;
 
-	AG_ObjectLock(ge->graph);
+	AG_OBJECT_ISA(gf, "AG_Widget:AG_Graph:*");
+	AG_ObjectLock(gf);
+
 	va_start(ap, fmt);
-	Vsnprintf(ge->labelTxt, sizeof(ge->labelTxt), fmt, ap);
+	Vsnprintf(edge->labelTxt, sizeof(edge->labelTxt), fmt, ap);
 	va_end(ap);
-	if (ge->labelSu >= 0) {
-		AG_WidgetUnmapSurface(ge->graph, ge->labelSu);
+
+	if (edge->labelSu >= 0) {
+		AG_WidgetUnmapSurface(gf, edge->labelSu);
 	}
-	AG_TextColor(&ge->labelColor);
-	ge->labelSu = AG_WidgetMapSurface(ge->graph, AG_TextRender(ge->labelTxt));
-	AG_ObjectUnlock(ge->graph);
-	AG_Redraw(ge->graph);
+	AG_TextColor(&edge->labelColor);
+	edge->labelSu = AG_WidgetMapSurface(gf, AG_TextRender(edge->labelTxt));
+
+	AG_Redraw(gf);
+	AG_ObjectUnlock(gf);
 }
 
 void
@@ -300,10 +314,13 @@ AG_GraphEdgePopupMenu(AG_GraphEdge *edge, struct ag_popup_menu *pm)
 {
 	AG_Graph *gf = edge->graph;
 
+	AG_OBJECT_ISA(gf, "AG_Widget:AG_Graph:*");
 	AG_ObjectLock(gf);
+
 	edge->popupMenu = pm;
-	AG_ObjectUnlock(gf);
+
 	AG_Redraw(gf);
+	AG_ObjectUnlock(gf);
 }
 
 static void
@@ -500,6 +517,7 @@ AG_GraphFreeVertices(AG_Graph *gf)
 	AG_GraphVertex *vtx, *vtxNext;
 	AG_GraphEdge *edge, *edgeNext;
 
+	AG_OBJECT_ISA(gf, "AG_Widget:AG_Graph:*");
 	AG_ObjectLock(gf);
 
 	for (vtx = TAILQ_FIRST(&gf->vertices);
@@ -524,8 +542,8 @@ AG_GraphFreeVertices(AG_Graph *gf)
 	gf->yMax = 0;
 	gf->flags &= ~(AG_GRAPH_DRAGGING);
 
-	AG_ObjectUnlock(gf);
 	AG_Redraw(gf);
+	AG_ObjectUnlock(gf);
 }
 
 static void
@@ -538,6 +556,7 @@ Destroy(void *p)
 void
 AG_GraphSizeHint(AG_Graph *gf, Uint w, Uint h)
 {
+	AG_OBJECT_ISA(gf, "AG_Widget:AG_Graph:*");
 	gf->wPre = w;
 	gf->hPre = h;
 }
@@ -794,6 +813,8 @@ AG_GraphVertexFind(AG_Graph *gf, void *userPtr)
 {
 	AG_GraphVertex *vtx;
 
+	AG_OBJECT_ISA(gf, "AG_Widget:AG_Graph:*");
+
 	TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
 		if (vtx->userPtr == userPtr)
 			return (vtx);
@@ -806,6 +827,8 @@ AG_GraphVertex *
 AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 {
 	AG_GraphVertex *vtx;
+
+	AG_OBJECT_ISA(gf, "AG_Widget:AG_Graph:*");
 
 	vtx = Malloc(sizeof(AG_GraphVertex));
 	vtx->labelTxt[0] = '\0';
@@ -827,9 +850,9 @@ AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 	AG_ObjectLock(gf);
 	TAILQ_INSERT_TAIL(&gf->vertices, vtx, vertices);
 	gf->nVertices++;
+	AG_Redraw(gf);
 	AG_ObjectUnlock(gf);
 
-	AG_Redraw(gf);
 	return (vtx);
 }
 
@@ -874,15 +897,20 @@ AG_GraphVertexLabel(AG_GraphVertex *vtx, const char *fmt, ...)
 void
 AG_GraphVertexLabelS(AG_GraphVertex *vtx, const char *s)
 {
-	AG_ObjectLock(vtx->graph);
+	AG_Graph *gf = vtx->graph;
+
+	AG_OBJECT_ISA(gf, "AG_Widget:AG_Graph:*");
+	AG_ObjectLock(gf);
+
 	Strlcpy(vtx->labelTxt, s, sizeof(vtx->labelTxt));
 	if (vtx->labelSu >= 0) {
-		AG_WidgetUnmapSurface(vtx->graph, vtx->labelSu);
+		AG_WidgetUnmapSurface(gf, vtx->labelSu);
 	}
 	AG_TextColor(&vtx->labelColor);
-	vtx->labelSu = AG_WidgetMapSurface(vtx->graph, AG_TextRender(vtx->labelTxt));
-	AG_ObjectUnlock(vtx->graph);
-	AG_Redraw(vtx->graph);
+	vtx->labelSu = AG_WidgetMapSurface(gf, AG_TextRender(vtx->labelTxt));
+
+	AG_Redraw(gf);
+	AG_ObjectUnlock(gf);
 }
 
 void
@@ -890,6 +918,7 @@ AG_GraphVertexPosition(AG_GraphVertex *vtx, int x, int y)
 {
 	AG_Graph *gf = vtx->graph;
 
+	AG_OBJECT_ISA(gf, "AG_Widget:AG_Graph:*");
 	AG_ObjectLock(gf);
 
 	vtx->x = x;
@@ -900,8 +929,8 @@ AG_GraphVertexPosition(AG_GraphVertex *vtx, int x, int y)
 	if (x > gf->xMax) { gf->xMax = x; }
 	if (y > gf->yMax) { gf->yMax = y; }
 
-	AG_ObjectUnlock(gf);
 	AG_Redraw(gf);
+	AG_ObjectUnlock(gf);
 }
 
 void
@@ -922,9 +951,14 @@ AG_GraphVertexStyle(AG_GraphVertex *vtx, enum ag_graph_vertex_style style)
 void
 AG_GraphVertexPopupMenu(AG_GraphVertex *vtx, struct ag_popup_menu *pm)
 {
-	AG_ObjectLock(vtx->graph);
+	AG_Graph *gf = vtx->graph;
+
+	AG_OBJECT_ISA(gf, "AG_Widget:AG_Graph:*");
+	AG_ObjectLock(gf);
+
 	vtx->popupMenu = pm;
-	AG_ObjectUnlock(vtx->graph);
+
+	AG_ObjectUnlock(gf);
 }
 
 static int
@@ -1004,6 +1038,7 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 	Uint i, nSorted=0;
 	int tx, ty;
 
+	AG_OBJECT_ISA(gf, "AG_Widget:AG_Graph:*");
 	AG_ObjectLock(gf);
 
 	if (gf->nVertices == 0 || gf->nEdges == 0) {

@@ -63,9 +63,10 @@ AG_FontSelectorNew(void *parent, Uint flags)
 
 	fs = Malloc(sizeof(AG_FontSelector));
 	AG_ObjectInit(fs, &agFontSelectorClass);
+
+	if (flags & AG_FONTSELECTOR_HFILL) { WIDGET(fs)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_FONTSELECTOR_VFILL) { WIDGET(fs)->flags |= AG_WIDGET_VFILL; }
 	fs->flags |= flags;
-	if (flags & AG_FONTSELECTOR_HFILL) { AG_ExpandHoriz(fs); }
-	if (flags & AG_FONTSELECTOR_VFILL) { AG_ExpandVert(fs); }
 	
 	AG_ObjectAttach(parent, fs);
 	return (fs);
@@ -81,24 +82,17 @@ Bound(AG_Event *_Nonnull event)
 	if (strcmp(b->name, "font") != 0)
 		return;
 
-	AG_ObjectLock(fs);
-
 	pFont = b->data.p;
 	AG_SetPointer(fs, "font", *pFont);
 	Strlcpy(fs->curFace, OBJECT(*pFont)->name, sizeof(fs->curFace));
 	fs->curSize = (*pFont)->spec.size;
 	fs->curStyle = (*pFont)->flags;
-#if 0
-	fs->tlFaces->flags |= AG_TLIST_SCROLLTOSEL;
-	fs->tlSizes->flags |= AG_TLIST_SCROLLTOSEL;
-#endif
-	AG_ObjectUnlock(fs);
 }
 
 static void
 UpdateFontSelection(AG_FontSelector *_Nonnull fs)
 {
-	AG_Variable *bFont;
+	AG_Variable *Vfont;
 	AG_Font *font, **pFont;
 
 	font = AG_FetchFont(fs->curFace, fs->curSize, fs->curStyle);
@@ -106,19 +100,20 @@ UpdateFontSelection(AG_FontSelector *_Nonnull fs)
 		Verbose(_("Error opening font: %s\n"), AG_GetError());
 		return;
 	}
-	bFont = AG_GetVariable(fs, "font", (void *)&pFont);
+
+	Vfont = AG_GetVariable(fs, "font", (void *)&pFont);
 	*pFont = font;
-	AG_UnlockVariable(bFont);
+	AG_UnlockVariable(Vfont);
 }
 
 static void
 UpdatePreview(AG_FontSelector *_Nonnull fs)
 {
-	AG_Variable *bFont;
+	AG_Variable *Vfont;
 	AG_Font **pFont;
 	AG_Surface *S;
 	
-	bFont = AG_GetVariable(fs, "font", (void *)&pFont);
+	Vfont = AG_GetVariable(fs, "font", (void *)&pFont);
 	AG_PushTextState();
 
 	if (fs->cPreviewBG.a > 0) {
@@ -141,13 +136,13 @@ UpdatePreview(AG_FontSelector *_Nonnull fs)
 	}
 
 	AG_PopTextState();
-	AG_UnlockVariable(bFont);
+	AG_UnlockVariable(Vfont);
 }
 
 static void
 OnShow(AG_Event *_Nonnull event)
 {
-	AG_Variable *bFont;
+	AG_Variable *Vfont;
 	AG_Font **pFont;
 	AG_FontSelector *fs = AG_FONTSELECTOR_SELF();
 	AG_StaticFont **pbf;
@@ -157,7 +152,7 @@ OnShow(AG_Event *_Nonnull event)
 	                         22,24,26,28,32,48,64 };
 	const int nStdSizes = sizeof(stdSizes) / sizeof(stdSizes[0]);
 	
-	bFont = AG_GetVariable(fs, "font", (void *)&pFont);
+	Vfont = AG_GetVariable(fs, "font", (void *)&pFont);
 
 	AG_PushTextState();
 
@@ -343,7 +338,7 @@ OnShow(AG_Event *_Nonnull event)
 	}
 	UpdatePreview(fs);
 
-	AG_UnlockVariable(bFont);
+	AG_UnlockVariable(Vfont);
 }
 
 static void

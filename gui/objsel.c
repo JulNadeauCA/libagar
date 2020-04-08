@@ -110,11 +110,15 @@ PollObjects(AG_Event *event)
 	AG_ObjectSelector *os = AG_OBJECTSELECTOR_PTR(1);
 
 	AG_TlistClear(tl);
+
 	AG_ObjectLock(os);
 	AG_LockVFS(os->root);
+
 	FindObjects(os, tl, os->root, 0);
+
 	AG_UnlockVFS(os->root);
 	AG_ObjectUnlock(os);
+
 	AG_TlistRestore(tl);
 }
 
@@ -160,7 +164,7 @@ Init(void *obj)
 	AG_Combo *com = obj;
 	AG_ObjectSelector *os = obj;
 
-	AG_ExpandHoriz(os);
+	WIDGET(os)->flags |= AG_WIDGET_HFILL;
 
 	com->flags |= AG_COMBO_POLL;
 	com->list->flags |= AG_TLIST_POLL;
@@ -184,8 +188,11 @@ Init(void *obj)
 void
 AG_ObjectSelectorMaskType(AG_ObjectSelector *os, const char *type)
 {
+	AG_OBJECT_ISA(os, "AG_Widget:AG_Combo:AG_ObjectSelector:*");
 	AG_ObjectLock(os);
+
 	Strlcpy(os->type_mask, type, sizeof(os->type_mask));
+
 	AG_ObjectUnlock(os);
 }
 
@@ -201,7 +208,7 @@ AG_WidgetClass agObjectSelectorClass = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	AG_WidgetInheritDraw,
+	NULL,			/* draw */
 	NULL,			/* size_request */
 	NULL			/* size_allocate */
 };
