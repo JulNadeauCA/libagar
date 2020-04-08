@@ -506,7 +506,7 @@ CreateTargetDlg(AG_Event *event)
 		return;
 	}
 	AG_WindowSetCaption(win, _("New Debugger Target"));
-	AG_WindowSetPadding(win, 5,5,5,5);
+	AG_SetStyle(win, "padding", "5");
 
 	AG_SpacerNewHoriz(win);
 

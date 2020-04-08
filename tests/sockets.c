@@ -165,7 +165,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_FixedSize(fx, sock, 32, 32);
 	AG_SocketInsertIcon(sock, axe);
 
-	AG_WindowSetPadding(win, 0, 0, 0, 0);
+	AG_SetStyle(win, "padding", "0");
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_BC, 642, 200);
 	return (0);
 }

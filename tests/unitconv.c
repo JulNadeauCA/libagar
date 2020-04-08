@@ -45,7 +45,7 @@ TestGUI(void *obj, AG_Window *win)
 	int i;
 	AG_Toolbar *tb;
 
-	AG_WindowSetPadding(win, 10, 10, 10, 10);
+	AG_SetStyle(win, "padding", "10");
 
 	tb = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 2, AG_TOOLBAR_HOMOGENOUS|
 	                                             AG_TOOLBAR_STICKY|

@@ -808,9 +808,9 @@ fail:
 void
 AG_PopTextState(void)
 {
+#ifdef AG_DEBUG
 	AG_TextState *ts = AG_TEXT_STATE_CUR();
 
-#ifdef AG_DEBUG
 	if (agTextStateCur == 0)
 		AG_FatalError("PopTextState without Push");
 
@@ -2439,7 +2439,7 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	}
 	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_WindowSetSpacing(win, 8);
+	AG_SetStyle(win, "spacing", "8");
 
 	AG_LabelNewS(win, 0, text);
 	free(text);

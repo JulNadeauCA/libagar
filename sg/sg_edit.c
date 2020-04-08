@@ -342,8 +342,11 @@ SG_Edit(void *p)
 		return (NULL);
 	}
 	AG_WindowSetCaptionS(win, OBJECT(sg)->name);
-	AG_WindowSetPaddingTop(win, 0);
-	AG_WindowSetSpacing(win, 0);
+	AG_SetStyle(win, "spacing", "0");
+	AG_SetStyleF(win, "padding", "0 %d %d %d",
+	    WIDGET(win)->paddingRight,
+	    WIDGET(win)->paddingBottom,
+	    WIDGET(win)->paddingLeft);
 
 	/* Main SG_View(3), later attached to Pane */
 	sv = SG_ViewNew(NULL, sg, SG_VIEW_EXPAND | SG_VIEW_EDIT);

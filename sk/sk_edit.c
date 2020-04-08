@@ -317,8 +317,12 @@ CreateNewView(AG_Event *_Nonnull event)
 		return;
 	}
 	AG_WindowSetCaptionS(win, OBJECT(sk)->name);
-	AG_WindowSetPaddingTop(win, 0);
-	AG_WindowSetSpacing(win, 0);
+
+	AG_SetStyle(win, "spacing", "0");
+	AG_SetStyleF(win, "padding", "0 %d %d %d",
+	    WIDGET(win)->paddingRight,
+	    WIDGET(win)->paddingBottom,
+	    WIDGET(win)->paddingLeft);
 
 	skv = SK_ViewNew(win, sk, SK_VIEW_EXPAND);
 
@@ -699,8 +703,12 @@ SK_Edit(void *p)
 		AG_FatalError(NULL);
 	}
 	AG_WindowSetCaptionS(win, OBJECT(sk)->name);
-	AG_WindowSetPaddingTop(win, 0);
-	AG_WindowSetSpacing(win, 0);
+
+	AG_SetStyle(win, "spacing", "0");
+	AG_SetStyleF(win, "padding", "0 %d %d %d",
+	    WIDGET(win)->paddingRight,
+	    WIDGET(win)->paddingBottom,
+	    WIDGET(win)->paddingLeft);
 
 	skv = SK_ViewNew(NULL, sk, SK_VIEW_EXPAND);
 	AG_SetEvent(skv, "widget-overlay", OnOverlay, NULL);

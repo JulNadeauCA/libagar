@@ -87,12 +87,6 @@ Vertical boxes allow only up to 1 widget with
 .Fn AG_BoxSetHomogenous "AG_Box *box" "int homogenous"
 .Pp
 .Ft void
-.Fn AG_BoxSetPadding "AG_Box *box" "int padding"
-.Pp
-.Ft void
-.Fn AG_BoxSetSpacing "AG_Box *box" "int spacing"
-.Pp
-.Ft void
 .Fn AG_BoxSetDepth "AG_Box *box" "int depth"
 .Pp
 .Ft void
@@ -128,10 +122,7 @@ Expand vertically in parent container.
 Shorthand for
 .Dv AG_BOX_HFILL | AG_BOX_VFILL .
 .It AG_BOX_NO_SPACING
-Set initial spacing and padding to 0 (see
-.Fn AG_BoxSetSpacing
-and
-.Fn AG_BoxSetPadding ) .
+Set "padding" and "spacing" style attributes to "0".
 .El
 .Pp
 The
@@ -172,15 +163,6 @@ The default is determined by the size requisition of attached widgets.
 sets or clears the
 .Dv AG_BOX_HOMOGENOUS
 flag, which controls whether available space is divided evenly between widgets.
-.Pp
-.Fn AG_BoxSetPadding
-sets the padding around the group of child widgets to
-.Fa padding
-pixels.
-.Fn AG_BoxSetSpacing
-sets the spacing between individual child widgets to
-.Fa spacing
-pixels.
 .Pp
 .Fn AG_BoxSetDepth
 sets the depth of the shading for
@@ -242,3 +224,9 @@ AG_WindowShow(win);
 The
 .Nm
 widget first appeared in Agar 1.0.
+In Agar 1.6, the
+.Fn AG_BoxSetPadding
+and
+.Fn AG_BoxSetSpacing
+functions were deprecated in favor of the generic "padding" and "spacing"
+style attributes.

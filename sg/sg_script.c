@@ -1733,8 +1733,11 @@ Edit(void *_Nonnull obj)
 		return (NULL);
 	}
 	AG_WindowSetCaptionS(win, OBJECT(scr)->name);
-	AG_WindowSetPaddingTop(win, 0);
-	AG_WindowSetSpacing(win, 0);
+	AG_SetStyle(win, "spacing", "0");
+	AG_SetStyleF(win, "padding", "0 %d %d %d",
+	    WIDGET(win)->paddingRight,
+	    WIDGET(win)->paddingBottom,
+	    WIDGET(win)->paddingLeft);
 
 	e->scr = scr;
 	e->sg = SG_New(&sgVfsRoot, NULL, 0);

@@ -1332,7 +1332,6 @@ out:
 static int
 GLX_SetClipboardText(void *_Nonnull obj, const char *_Nonnull text)
 {
-	AG_DriverGLX *glx = obj;
 	Atom xaClipboard;
 
 	AG_MutexLock(&agDisplayLock);
@@ -1342,7 +1341,7 @@ GLX_SetClipboardText(void *_Nonnull obj, const char *_Nonnull text)
 		goto fail;
 
 #ifdef DEBUG_CLIPBOARD
-	Debug(glx, "Change AGAR_CUTBUFFER -> \"%s\" (len %ld)\n", text,
+	Debug(obj, "Change AGAR_CUTBUFFER -> \"%s\" (len %ld)\n", text,
 	    (long)strlen(text));
 #endif
 	/* Save the selection on the root window */

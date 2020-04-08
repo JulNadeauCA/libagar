@@ -101,7 +101,7 @@ TestGUI(void *obj, AG_Window *win)
 	win->flags |= AG_WINDOW_NORESIZE;
 
 	/* Disable padding around borders. */
-	AG_WindowSetPadding(win, 0,0,0,0);
+	AG_SetStyle(win, "padding", "0");
 
 	/* Request an explicit size in pixels. */
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 642, 200);

@@ -15,6 +15,7 @@ AG_Widget {
 	background-color#hover: #0000;
 }
 AG_Window {
+	padding: 0 3 4 3;
 	background-color: #656565;                 /* #RRGGBB */
 	background-color#focused: #666666;
 }
@@ -25,8 +26,14 @@ AG_Box {
 }
 AG_Titlebar {
 	font-size: 90%;
+	padding: 3;
+	spacing: 1;
 	color: rgb(40,50,60);
 	color#disabled: rgb(35,35,35);
+}
+AG_Toolbar {
+	padding: 0;
+	spacing: 1;
 }
 AG_Textbox {
 	spacing: 5;
@@ -67,6 +74,7 @@ AG_Menu {
 }
 AG_MenuView {
 	padding: 4 8 4 8;
+	spacing: 8 0;
 	color: rgb(70,70,70);
 	selection-color: rgb(40,40,110);
 	color#disabled: rgb(40,40,110);
@@ -86,4 +94,11 @@ AG_ProgressBar {
 }
 AG_Separator {
 	padding: 4;
+}
+AG_Statusbar {
+	padding: 2;
+	spacing: 1;
+}
+AG_Tlist {
+	spacing: 4 0;
 }

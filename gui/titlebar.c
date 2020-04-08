@@ -153,8 +153,6 @@ Init(void *_Nonnull obj)
 	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
 
 	AG_BoxSetType(AGBOX(tbar), AG_BOX_HORIZ);
-	AG_BoxSetPadding(AGBOX(tbar), 3);
-	AG_BoxSetSpacing(AGBOX(tbar), 1);
 
 	tbar->flags = 0;
 	tbar->win = NULL;

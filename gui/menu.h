@@ -130,10 +130,8 @@ typedef struct ag_menu_view {
 	AG_Menu     *_Nullable pmenu;   /* Associated menu */
 	AG_MenuItem *_Nullable pitem;   /* Associated menu item */
 
-	int spIconLbl;                  /* Icon and label spacing */
 	int spLblArrow;                 /* Label and submenu arrow spacing */
 	int arrowRight;                 /* Right arrow surface handle */
-	Uint32 _pad;
 } AG_MenuView;
 
 #define AGMENUVIEW(obj)            ((AG_MenuView *)(obj))

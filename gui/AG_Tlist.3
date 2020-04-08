@@ -533,8 +533,10 @@ object:
 List of all
 .Ft AG_TlistItem
 objects (read-only, items are writeable).
-.It Ft int nitems
-Number of items in the list (read-only).
+.It Ft int nItems
+Number of items in total (read-only).
+.It Ft int nVisible
+Number of items on screen (read-only).
 .It Ft Uint pollDelay
 Delay in between updates in
 .Dv AG_TLIST_POLL

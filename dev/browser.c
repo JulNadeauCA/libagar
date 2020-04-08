@@ -658,8 +658,8 @@ CreateObjectDlg(AG_Event *_Nonnull event)
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
-	AG_BoxSetPadding(bo, 0);
-	AG_BoxSetSpacing(bo, 0);
+	AG_SetStyle(bo, "padding", "0");
+	AG_SetStyle(bo, "spacing", "0");
 	{
 		AG_LabelNewS(bo, 0, _("Parent object:"));
 
@@ -903,7 +903,7 @@ DEV_QuitCallback(AG_Event *_Nonnull event)
 {
 	AG_Object *vfsRoot = AG_OBJECT_PTR(1);
 	AG_Window *win;
-	AG_Box *bo;
+	AG_Box *box;
 	
 	if (!AG_ObjectChangedAll(vfsRoot)) {
 		AG_QuitGUI();
@@ -916,15 +916,23 @@ DEV_QuitCallback(AG_Event *_Nonnull event)
 	}
 	AG_WindowSetCaptionS(win, _("Exit application?"));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_WindowSetSpacing(win, 8);
+	AG_SetStyle(win, "spacing", "8");
+
 	AG_LabelNewS(win, 0, _("Unsaved objects have been modified. "
 	                       "Exit application?"));
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
-	AG_BoxSetSpacing(bo, 0);
-	AG_BoxSetPadding(bo, 0);
-	AG_ButtonNewFn(bo, 0, _("Quit"), ConfirmQuit, NULL);
-	AG_WidgetFocus(AG_ButtonNewFn(bo, 0, _("Cancel"), AbortQuit,
-	    "%p", win));
+
+	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
+	{
+		AG_SetStyle(box, "padding", "0");
+		AG_SetStyle(box, "spacing", "0");
+		AG_ButtonNewFn(box, 0, _("Quit"), ConfirmQuit, NULL);
+
+		AG_WidgetFocus(
+		    AG_ButtonNewFn(box, 0, _("Cancel"),
+		        AbortQuit, "%p", win)
+		);
+	}
+
 	AG_WindowShow(win);
 }
 

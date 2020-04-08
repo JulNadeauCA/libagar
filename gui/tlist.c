@@ -181,7 +181,7 @@ ScrollToSelection(AG_Tlist *_Nonnull tl)
 			m++;
 			continue;
 		}
-		tl->rOffs = (tl->rOffs > m) ? m : MAX(0, m - tl->nvisitems+1);
+		tl->rOffs = (tl->rOffs > m) ? m : MAX(0, m - tl->nVisible+1);
 		AG_Redraw(tl);
 		return;
 	}
@@ -383,25 +383,25 @@ MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 }
 
 void
-AG_TlistSizeHint(AG_Tlist *tl, const char *text, int nitems)
+AG_TlistSizeHint(AG_Tlist *tl, const char *text, int nItems)
 {
 	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
 
 	AG_TextSize(text, &tl->wHint, NULL);
-	tl->hHint = (tl->item_h + 2)*nitems;
+	tl->hHint = (tl->item_h + 2)*nItems;
 
 	AG_ObjectUnlock(tl);
 }
 
 void
-AG_TlistSizeHintPixels(AG_Tlist *tl, int w, int nitems)
+AG_TlistSizeHintPixels(AG_Tlist *tl, int w, int nItems)
 {
 	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
 
 	tl->wHint = w;
-	tl->hHint = (tl->item_h + 2)*nitems;
+	tl->hHint = (tl->item_h + 2)*nItems;
 
 	AG_ObjectUnlock(tl);
 }
@@ -411,7 +411,7 @@ AG_TlistSizeHintPixels(AG_Tlist *tl, int w, int nitems)
  * the current list of items, and the given number of items.
  */
 void
-AG_TlistSizeHintLargest(AG_Tlist *tl, int nitems)
+AG_TlistSizeHintLargest(AG_Tlist *tl, int nItems)
 {
 	AG_TlistItem *it;
 	int w;
@@ -426,7 +426,7 @@ AG_TlistSizeHintLargest(AG_Tlist *tl, int nitems)
 		if (w > tl->wHint) { tl->wHint = w; }
 	}
 	tl->wHint += (tl->icon_w << 2);
-	tl->hHint = (tl->item_h + 2)*nitems;
+	tl->hHint = (tl->item_h + 2)*nItems;
 
 	AG_ObjectUnlock(tl);
 }
@@ -484,8 +484,13 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_SizeReq rBar;
 
 	AG_WidgetSizeReq(tl->sbar, &rBar);
-	r->w = tl->icon_w + (tl->wSpace << 1) + tl->wHint + rBar.w;
-	r->h = tl->hHint;
+
+	r->w = WIDGET(tl)->paddingLeft +
+	       tl->icon_w + WIDGET(tl)->spacingHoriz + tl->wHint + rBar.w +
+	       WIDGET(tl)->paddingRight;
+
+	r->h = WIDGET(tl)->paddingTop + tl->hHint +
+	       WIDGET(tl)->paddingBottom;
 }
 
 static int
@@ -502,16 +507,15 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	aBar.w = rBar.w;
 	aBar.h = a->h;
 	aBar.x = a->w - rBar.w;
-	aBar.y = 0;
+	aBar.y = WIDGET(tl)->paddingTop;
 	AG_WidgetSizeAlloc(tl->sbar, &aBar);
 
 	tl->r.w = a->w - aBar.w - 2;
-	tl->r.h = a->h;
+	tl->r.h = a->h - WIDGET(tl)->paddingBottom;
 
-	/* Limit vertical scrollbar parameters */
-	tl->nvisitems = a->h/tl->item_h;
-	if (tl->rOffs+tl->nvisitems >= tl->nitems) {
-		tl->rOffs = MAX(0, tl->nitems - tl->nvisitems);
+	tl->nVisible = a->h/tl->item_h;              /* Vertical scrollbar */
+	if (tl->rOffs + tl->nVisible >= tl->nItems) {
+		tl->rOffs = MAX(0, tl->nItems - tl->nVisible);
 	}
 	return (0);
 }
@@ -525,25 +529,26 @@ Draw(void *_Nonnull obj)
 	AG_Color cSel = WCOLOR(tl, SELECTION_COLOR);
 	AG_Color cLine = WCOLOR(tl, LINE_COLOR);
 	const AG_Color *cText = &WCOLOR(tl, TEXT_COLOR);
+	const int paddingLeft = WIDGET(tl)->paddingLeft;
 	const int hItem = tl->item_h;
 	const int wIcon = tl->icon_w;
-	const int xLabel = wIcon + tl->wSpace;
+	const int xLabel = wIcon + WIDGET(tl)->spacingHoriz;
 	const int wRow = tl->r.w;
 	const int rOffs = tl->rOffs;
-	int x, y=0, i=0, selSeen=0, selPos=1, h=HEIGHT(tl), yLast;
+	int x,y, i=0, selSeen=0, selPos=1, h=HEIGHT(tl), yLast;
 
 	UpdatePolled(tl);
 
-	AG_DrawBoxSunk(tl, &tl->r, &WCOLOR(tl, BG_COLOR));
+	AG_DrawBoxSunk(tl, &WIDGET(tl)->r, &WCOLOR(tl, BG_COLOR));
 
 	AG_WidgetDraw(tl->sbar);
 
-	r.x = 2;
-	r.y = 2;
-	r.w = wRow - 4;
-	r.h = tl->r.h - 4;
+	r = WIDGET(tl)->r;
+	r.h -= WIDGET(tl)->paddingBottom;
+	r.w -= WIDTH(tl->sbar);
 	AG_PushClipRect(tl, &r);
 
+	y = WIDGET(tl)->paddingTop;
 	yLast = h;
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (i++ < rOffs) {
@@ -555,7 +560,7 @@ Draw(void *_Nonnull obj)
 		if (y > yLast)
 			break;
 
-		x = wIcon * it->depth;
+		x = paddingLeft + wIcon*it->depth;
 
 		if (it->selected) {
 			r.x = x + wIcon;
@@ -684,12 +689,12 @@ AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 	AG_ObjectLock(tl);
 
 	TAILQ_REMOVE(&tl->items, it, items);
-	tl->nitems--;
+	tl->nItems--;
 	FreeItem(tl, it);
 
 	/* Update the scrollbar range and offset accordingly. */
-	if (tl->rOffs+tl->nvisitems > tl->nitems) {
-		tl->rOffs = MAX(0, tl->nitems - tl->nvisitems);
+	if (tl->rOffs + tl->nVisible > tl->nItems) {
+		tl->rOffs = MAX(0, tl->nItems - tl->nVisible);
 	}
 
 	AG_Redraw(tl);
@@ -738,7 +743,7 @@ AG_TlistBegin(AG_Tlist *tl)
 		}
 	}
 	TAILQ_INIT(&tl->items);
-	tl->nitems = 0;
+	tl->nItems = 0;
 
 	AG_Redraw(tl);
 	AG_ObjectUnlock(tl);
@@ -846,7 +851,7 @@ InsertItemHead(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 	AG_ObjectLock(tl);
 
 	TAILQ_INSERT_HEAD(&tl->items, it, items);
-	tl->nitems++;
+	tl->nItems++;
 
 	AG_Redraw(tl);
 	AG_ObjectUnlock(tl);
@@ -858,7 +863,7 @@ InsertItemTail(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 	AG_ObjectLock(tl);
 
 	TAILQ_INSERT_TAIL(&tl->items, it, items);
-	tl->nitems++;
+	tl->nItems++;
 
 	AG_Redraw(tl);
 	AG_ObjectUnlock(tl);
@@ -1235,8 +1240,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	const int button = AG_INT(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
+	const int x = AG_INT(2) - WIDGET(tl)->paddingLeft;
+	const int y = AG_INT(3) - WIDGET(tl)->paddingTop;
 	AG_TlistItem *ti;
 	const int idx = tl->rOffs + y/tl->item_h + 1;
 	
@@ -1257,8 +1262,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		break;
 	case AG_MOUSE_WHEELDOWN:
 		tl->rOffs += AG_GetInt(tl,"line-scroll-amount");
-		if (tl->rOffs > (tl->nitems - tl->nvisitems)) {
-			tl->rOffs = MAX(0, tl->nitems - tl->nvisitems);
+		if (tl->rOffs > (tl->nItems - tl->nVisible)) {
+			tl->rOffs = MAX(0, tl->nItems - tl->nVisible);
 		}
 		AG_Redraw(tl);
 		break;
@@ -1460,15 +1465,14 @@ Init(void *_Nonnull obj)
 	tl->r.y = 0;
 	tl->r.w = 0;
 	tl->r.h = 0;
-	tl->wSpace = 4;
 	tl->icon_w = tl->item_h + 1;
 	tl->pollDelay = 1000;
 	tl->rOffs = 0;
 	tl->dblClicked = NULL;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
-	tl->nitems = 0;
-	tl->nvisitems = 0;
+	tl->nItems = 0;
+	tl->nVisible = 0;
 	TAILQ_INIT(&tl->popups);
 	tl->compare_fn = AG_TlistComparePtrs;
 	tl->popupEv = NULL;
@@ -1482,8 +1486,8 @@ Init(void *_Nonnull obj)
 
 	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
 	AG_SetInt(tl->sbar, "min", 0);
-	AG_BindInt(tl->sbar, "max", &tl->nitems);
-	AG_BindInt(tl->sbar, "visible", &tl->nvisitems);
+	AG_BindInt(tl->sbar, "max", &tl->nItems);
+	AG_BindInt(tl->sbar, "visible", &tl->nVisible);
 	AG_BindInt(tl->sbar, "value", &tl->rOffs);
 	AG_WidgetSetFocusable(tl->sbar, 0);
 	
@@ -1808,7 +1812,7 @@ void
 AG_TlistScrollToEnd(AG_Tlist *tl)
 {
 	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
-	tl->rOffs = MAX(0, tl->nitems - tl->nvisitems);
+	tl->rOffs = MAX(0, tl->nItems - tl->nVisible);
 	AG_Redraw(tl);
 }
 
@@ -1828,7 +1832,7 @@ AG_TlistSort(AG_Tlist *tl)
 	AG_TlistItem *it, **items;
 	Uint i = 0;
 
-	if ((items = TryMalloc(tl->nitems * sizeof(AG_TlistItem *))) == NULL)
+	if ((items = TryMalloc(tl->nItems * sizeof(AG_TlistItem *))) == NULL)
 		return;
 
 	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
@@ -1837,9 +1841,9 @@ AG_TlistSort(AG_Tlist *tl)
 	TAILQ_FOREACH(it, &tl->items, items) {
 		items[i++] = it;
 	}
-	qsort(items, tl->nitems, sizeof(AG_TlistItem *), CompareText);
+	qsort(items, tl->nItems, sizeof(AG_TlistItem *), CompareText);
 	TAILQ_INIT(&tl->items);
-	for (i = 0; i < tl->nitems; i++)
+	for (i = 0; i < tl->nItems; i++)
 		TAILQ_INSERT_TAIL(&tl->items, items[i], items);
 
 	AG_Redraw(tl);

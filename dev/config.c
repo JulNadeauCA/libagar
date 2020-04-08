@@ -125,6 +125,7 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 	}
 	AG_WindowSetCaptionS(win, _("GUI Preferences"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
+	AG_SetStyle(win, "padding", "5");
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL | AG_NOTEBOOK_VFILL);
 

@@ -108,12 +108,15 @@ ConfigEditor(void *_Nonnull p)
 	AG_WindowSetCaptionS(win, _("Map editor settings"));
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
-	AG_BoxSetSpacing(bo, 5);
+	AG_SetStyle(bo, "spacing", "5");
+
 	AG_CheckboxNewInt(bo, 0, _("Moving tiles"), &mapViewAnimatedBg);
+
 	AG_NumericalNewIntR(bo, 0, "px", _("Tile size: "),
 	    &mapViewBgTileSize, 2, 16384);
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
+
 	AG_CheckboxNewInt(bo, 0, _("Selection-bounded edition"),
 	    &mapViewEditSelOnly);
 

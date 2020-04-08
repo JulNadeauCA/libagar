@@ -78,7 +78,7 @@ CreateNewDlg(AG_Event *event)
 		return;
 	}
 	AG_WindowSetCaptionS(win, "vgedit");
-	AG_WindowSetPadding(win, 20, 20, 20, 20);
+	AG_SetStyle(win, "padding", "20");
 
 	lbl = AG_LabelNewS(win, AG_LABEL_HFILL, "vgedit");
 	AG_SetStyle(lbl, "font-size", "250%");

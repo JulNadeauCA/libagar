@@ -59,13 +59,12 @@ Init(void *_Nonnull obj)
 	AG_Box *box = obj;
 
 	AG_BoxSetType(box, AG_BOX_VERT);
-	AG_BoxSetPadding(box, 2);
-	AG_BoxSetSpacing(box, 1);
 
 	stb->flags = 0;
 	stb->nLabels = 0;
 }
 
+/* Add a Label to the container and set its contents. */
 AG_Label *
 AG_StatusbarAddLabel(AG_Statusbar *stb, const char *fmt, ...)
 {

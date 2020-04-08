@@ -630,7 +630,7 @@ AG_About(AG_Event *event)
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
-	AG_BoxSetSpacing(hBox, 50);
+	AG_SetStyle(hBox, "spacing", "50");
 	AG_BoxSetHorizAlign(hBox, AG_BOX_CENTER);
 	{
 		AG_AgarVersion av;

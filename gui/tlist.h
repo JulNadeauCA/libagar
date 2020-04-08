@@ -76,15 +76,15 @@ typedef struct ag_tlist {
 	void *_Nullable selected;       /* Default `selected' binding */
 	int wHint, hHint;               /* Size hint */
 	AG_Rect r;                      /* Clipping rectangle */
-	int wSpace;                     /* Icon/text spacing */
+	Uint32 _pad1;
 	int icon_w;                     /* Item icon width */
 	Uint pollDelay;                 /* Refresh rate for POLL mode */
 	int rOffs;                      /* Row display offset */
 	void *_Nullable dblClicked;     /* For double click test */
 	AG_TlistItemQ items;            /* Current Items */
 	AG_TlistItemQ selitems;         /* Saved item state */
-	int nitems;                     /* Current item count */
-	int nvisitems;                  /* Visible item count */
+	int nItems;                     /* Number of items total */
+	int nVisible;                   /* Number of items on screen */
 	AG_Scrollbar *_Nonnull sbar;    /* Vertical scrollbar */
 	AG_TAILQ_HEAD_(ag_tlist_popup) popups; /* Popup menus */
 
@@ -94,7 +94,7 @@ typedef struct ag_tlist {
 	AG_Event *_Nullable popupEv;    /* Popup menu hook */
 	AG_Event *_Nullable changedEv;  /* Selection change hook */
 	AG_Event *_Nullable dblClickEv; /* Double click hook */
-	Uint32 _pad;
+	Uint32 _pad2;
 	int lastKeyDown;                /* For key repeat */
 	AG_Timer moveTo;                /* Timer for keyboard motion */
 	AG_Timer refreshTo;             /* Timer for polled mode updates */

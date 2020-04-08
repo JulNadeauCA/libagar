@@ -60,14 +60,14 @@ setPadding(self, padding)
 	Agar::Box self
 	int padding
 CODE:
-	AG_BoxSetPadding(self, padding);
+	AG_SetStyleF(self, "padding", "%d", padding);
 
 void
 setSpacing(self, spacing)
 	Agar::Box self
 	int spacing
 CODE:
-	AG_BoxSetSpacing(self, spacing);
+	AG_SetStyleF(self, "spacing", "%d", padding);
 
 void
 setHoriz(self)

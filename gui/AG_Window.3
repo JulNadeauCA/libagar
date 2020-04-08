@@ -109,12 +109,6 @@ processing cycle).
 .Fn AG_WindowSetCloseAction "AG_Window *win" "AG_WindowCloseAction action"
 .Pp
 .Ft "void"
-.Fn AG_WindowSetPadding "AG_Window *win" "int paddingLeft" "int paddingRight" "int paddingTop" "int paddingBottom"
-.Pp
-.Ft "void"
-.Fn AG_WindowSetSpacing "AG_Window *win" "int spacing"
-.Pp
-.Ft "void"
 .Fn AG_WindowSetSideBorders "AG_Window *win" "int pixels"
 .Pp
 .Ft "void"
@@ -268,28 +262,6 @@ To perform a different action, a custom event handler routine can be
 set for the "window-close" event (see the
 .Sx EVENTS
 section).
-.Pp
-The
-.Fn AG_WindowSetPadding
-function defines the space in pixels separating the widgets from the edges
-of the window.
-.Pp
-The
-.Fn AG_WindowSetSpacing
-function defines the space separating the widgets from each other.
-The default is 2 pixels.
-.Pp
-Note that
-.Fn AG_WindowSetSpacing
-only affects the widgets which are directly attached to the window.
-For widgets that are attached to container widgets, it is the container
-widgets that define spacing, as well as other aspects of widget
-organization.
-For instance, the
-.Xr AG_Box 3
-container widget provides a
-.Fn AG_BoxSetSpacing
-function .
 .Pp
 .Fn AG_WindowSetSideBorders
 sets the thickness of the left and right window borders in pixels.
@@ -916,10 +888,13 @@ AG_WindowShow(win);
 The
 .Nm
 system first appeared in Agar 1.0.
-.Fn AG_WindowNewSw
-was replaced by
-.Fn AG_WindowNewUnder
-in Agar 1.6.
-The
+In Agar 1.6, the
 .Fn AG_WindowFind
-function appeared in Agar 1.6.
+call was added and
+.Fn AG_WindowNewSw
+was renamed
+.Fn AG_WindowNewUnder .
+.Fn AG_WindowSetPadding
+and
+.Fn AG_WindowSetSpacing
+were deprecated in favor of the "padding" and "spacing" style attributes.

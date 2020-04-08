@@ -128,16 +128,19 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 				return;
 			}
 			panel->wmType = AG_WINDOW_WM_COMBO;
-			AG_WindowSetPadding(panel, 0,0,0,0);
+			AG_SetStyle(panel, "padding", "0");
 			AG_ObjectSetName(panel, "_combo%u", agComboCounter++);
 			com->panel = panel;
 			AG_ObjectAttach(panel, com->list);
+
 			if (winParent) {
 				AG_WindowAttach(winParent, panel);
 				AG_WindowMakeTransient(winParent, panel);
 /*				AG_WindowPin(winParent, panel); */
 			}
+
 			WIDGET(panel)->flags |= AG_WIDGET_UNFOCUSED_BUTTONDOWN;
+
 			AG_SetEvent(panel, "window-close", PanelWindowClose, "%p", com);
 			AG_AddEvent(panel, "mouse-button-down", PanelMouseButtonDown, "%p", com);
 		}

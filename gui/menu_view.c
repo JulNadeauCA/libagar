@@ -261,7 +261,6 @@ Init(void *_Nonnull obj)
 
 	mv->pmenu = NULL;
 	mv->pitem = NULL;
-	mv->spIconLbl = 8;
 	mv->spLblArrow = 16;
 	mv->arrowRight = -1;
 
@@ -352,7 +351,7 @@ Draw(void *_Nonnull obj)
 
 		/* Keep columns aligned if there are icons. */
 		if (miRoot->flags & AG_MENU_ITEM_ICONS)
-			x += itemh + mv->spIconLbl;
+			x += itemh + WIDGET(mv)->spacingHoriz;
 
 		if (mi->flags & AG_MENU_ITEM_SEPARATOR) {
 			AG_Color c1 = WCOLOR(mv, FG_COLOR);
@@ -465,7 +464,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 			wReq += item->iconSrc->w;
 		}
 		if (mi->flags & AG_MENU_ITEM_ICONS)
-			wReq += itemh + mv->spIconLbl;
+			wReq += itemh + WIDGET(mv)->spacingHoriz;
 	
 		AG_TextSize(item->text, &wLbl, NULL);
 		wReq += wLbl;
@@ -473,8 +472,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		if (item->nSubItems > 0) {
 			wReq += mv->spLblArrow + agIconSmallArrowRight.s->w;
 		}
-		if (paddingHoriz+wReq > r->w) {
-			r->w = paddingHoriz+wReq;
+		if (paddingHoriz + wReq > r->w) {
+			r->w = paddingHoriz + wReq;
 		}
 		r->h += itemh;
 	}
@@ -482,16 +481,6 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	r->w += paddingHoriz;
 	
 	AG_ObjectUnlock(m);
-}
-
-static int
-SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
-{
-	if (a->w < WIDGET(obj)->paddingLeft + WIDGET(obj)->paddingRight ||
-	    a->h < WIDGET(obj)->paddingTop + WIDGET(obj)->paddingBottom) {
-		return (-1);
-	}
-	return (0);
 }
 
 AG_WidgetClass agMenuViewClass = {
@@ -508,7 +497,7 @@ AG_WidgetClass agMenuViewClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	NULL			/* size_allocate */
 };
 
 #endif /* AG_WIDGETS */

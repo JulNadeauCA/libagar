@@ -334,6 +334,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	return (0);
 }
 
+/* Set a common "spacing" attribute over all tabs. */
 void
 AG_NotebookSetSpacing(AG_Notebook *nb, int spacing)
 {
@@ -343,11 +344,12 @@ AG_NotebookSetSpacing(AG_Notebook *nb, int spacing)
 	AG_ObjectLock(nb);
 
 	TAILQ_FOREACH(nt, &nb->tabs, tabs)
-		AG_BoxSetSpacing(AGBOX(nt), spacing);
+		AG_SetStyleF(nt, "spacing", "%d", spacing);
 
 	AG_ObjectUnlock(nb);
 }
 
+/* Set a common "padding" attribute over all tabs. */
 void
 AG_NotebookSetPadding(AG_Notebook *nb, int padding)
 {
@@ -357,7 +359,7 @@ AG_NotebookSetPadding(AG_Notebook *nb, int padding)
 	AG_ObjectLock(nb);
 
 	TAILQ_FOREACH(nt, &nb->tabs, tabs)
-		AG_BoxSetPadding(AGBOX(nt), padding);
+		AG_SetStyleF(nt, "padding", "%d", padding);
 
 	AG_ObjectUnlock(nb);
 }

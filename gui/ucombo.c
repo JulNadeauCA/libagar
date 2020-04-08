@@ -131,15 +131,18 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 			panel->wmType = AG_WINDOW_WM_COMBO;
 
 			AG_ObjectSetName(panel, "_ucombo%u", agUcomboCounter++);
-			AG_WindowSetPadding(panel, 0,0,0,0);
+			AG_SetStyle(panel, "padding", "0");
 			com->panel = panel;
 			AG_ObjectAttach(panel, com->list);
+
 			if (winParent) {
 				AG_WindowAttach(WIDGET(com)->window, panel);
 				AG_WindowMakeTransient(WIDGET(com)->window, panel);
 /*				AG_WindowPin(WIDGET(com)->window, panel); */
 			}
+
 			WIDGET(panel)->flags |= AG_WIDGET_UNFOCUSED_BUTTONDOWN;
+
 			AG_SetEvent(panel, "window-close", PanelWindowClose, "%p", com);
 			AG_AddEvent(panel, "mouse-button-down", PanelMouseButtonDown, "%p", com);
 		}

@@ -64,13 +64,10 @@ AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nRows, Uint flags)
 		}
 		if (flags & AG_TOOLBAR_HFILL) { WIDGET(row)->flags |= AG_WIDGET_HFILL; }
 		if (flags & AG_TOOLBAR_VFILL) { WIDGET(row)->flags |= AG_WIDGET_VFILL; }
-		AG_BoxSetPadding(row, 1);
-		AG_BoxSetSpacing(row, 1);
+		AG_SetStyle(row, "padding", "1");
+		AG_SetStyle(row, "spacing", "1");
 		bar->nRows++;
 	}
-
-	AG_BoxSetPadding(AGBOX(bar), 0);
-	AG_BoxSetSpacing(AGBOX(bar), 1);
 
 	AG_ObjectAttach(parent, bar);
 	return (bar);
@@ -116,6 +113,10 @@ StickyUpdate(AG_Event *_Nonnull event)
 	AG_ObjectUnlock(bar);
 }
 
+/*
+ * Select the active row for subsequent AG_ToolbarButton*() calls
+ * and AG_ToolbarSeparator() calls.
+ */
 void
 AG_ToolbarRow(AG_Toolbar *bar, int row)
 {
@@ -131,6 +132,7 @@ AG_ToolbarRow(AG_Toolbar *bar, int row)
 	AG_ObjectUnlock(bar);
 }
 
+/* Create a new Button (with icon) and attach to the Toolbar. */
 AG_Button *
 AG_ToolbarButtonIcon(AG_Toolbar *bar, const AG_Surface *icon, int def,
     void (*handler)(AG_Event *), const char *fmt, ...)
@@ -163,6 +165,7 @@ AG_ToolbarButtonIcon(AG_Toolbar *bar, const AG_Surface *icon, int def,
 	return (bu);
 }
 
+/* Create a new Button (no icon) and attach to the Toolbar. */
 AG_Button *
 AG_ToolbarButton(AG_Toolbar *bar, const char *text, int def,
     void (*handler)(AG_Event *), const char *fmt, ...)
@@ -194,6 +197,7 @@ AG_ToolbarButton(AG_Toolbar *bar, const char *text, int def,
 	return (bu);
 }
 
+/* Create a new separator. */
 void
 AG_ToolbarSeparator(AG_Toolbar *bar)
 {
@@ -208,6 +212,7 @@ AG_ToolbarSeparator(AG_Toolbar *bar)
 	AG_ObjectUnlock(bar);
 }
 
+/* Set the boolean state of a Button to 1. */
 void
 AG_ToolbarSelect(AG_Toolbar *bar, AG_Button *bSel)
 {
@@ -215,6 +220,7 @@ AG_ToolbarSelect(AG_Toolbar *bar, AG_Button *bSel)
 	AG_Redraw(bar);
 }
 
+/* Set the boolean state of a Button to 0. */
 void
 AG_ToolbarDeselect(AG_Toolbar *bar, AG_Button *bSel)
 {
@@ -222,6 +228,7 @@ AG_ToolbarDeselect(AG_Toolbar *bar, AG_Button *bSel)
 	AG_Redraw(bar);
 }
 
+/* Set the boolean state of a Button to 1 and reset all others to 0. */
 void
 AG_ToolbarSelectOnly(AG_Toolbar *bar, AG_Button *bSel)
 {
@@ -244,6 +251,7 @@ AG_ToolbarSelectOnly(AG_Toolbar *bar, AG_Button *bSel)
 	AG_ObjectUnlock(bar);
 }
 
+/* Set the boolean state of all buttons to 1. */
 void
 AG_ToolbarSelectAll(AG_Toolbar *bar)
 {
@@ -266,6 +274,7 @@ AG_ToolbarSelectAll(AG_Toolbar *bar)
 	AG_ObjectUnlock(bar);
 }
 
+/* Set the boolean state of all buttons to 0. */
 void
 AG_ToolbarDeselectAll(AG_Toolbar *bar)
 {

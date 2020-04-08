@@ -141,7 +141,7 @@ TestGUI(void *obj, AG_Window *win)
 		 * widgets will be created here.
 		 */
 		box = AG_BoxNewVert(nt, AG_BOX_HFILL);
-		AG_BoxSetPadding(box, 10);
+		AG_SetStyle(box, "padding", "10");
 		AG_FileDlgSetOptionContainer(fd, box);
 	}
 	nt = AG_NotebookAdd(nb, _("Select directory\n(a DirDlg)"), AG_BOX_VERT);

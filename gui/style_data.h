@@ -16,6 +16,7 @@ const char *agStyleDefault_Data =
 	"background-color#hover: #0000;\n"
 	"}\n"
 	"AG_Window {\n"
+	"padding: 0 3 4 3;\n"
 	"background-color: #656565;                 /* #RRGGBB */\n"
 	"background-color#focused: #666666;\n"
 	"}\n"
@@ -25,8 +26,14 @@ const char *agStyleDefault_Data =
 	"}\n"
 	"AG_Titlebar {\n"
 	"font-size: 90%;\n"
+	"padding: 3;\n"
+	"spacing: 1;\n"
 	"color: rgb(40,50,60);\n"
 	"color#disabled: rgb(35,35,35);\n"
+	"}\n"
+	"AG_Toolbar {\n"
+	"padding: 0;\n"
+	"spacing: 1;\n"
 	"}\n"
 	"AG_Textbox {\n"
 	"spacing: 5;\n"
@@ -66,6 +73,7 @@ const char *agStyleDefault_Data =
 	"}\n"
 	"AG_MenuView {\n"
 	"padding: 4 8 4 8;\n"
+	"spacing: 8 0;\n"
 	"color: rgb(70,70,70);\n"
 	"selection-color: rgb(40,40,110);\n"
 	"color#disabled: rgb(40,40,110);\n"
@@ -86,11 +94,18 @@ const char *agStyleDefault_Data =
 	"AG_Separator {\n"
 	"padding: 4;\n"
 	"}\n"
+	"AG_Statusbar {\n"
+	"padding: 2;\n"
+	"spacing: 1;\n"
+	"}\n"
+	"AG_Tlist {\n"
+	"spacing: 4 0;\n"
+	"}\n"
 	"";
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	1850,
+	2013,
 	&agStyleDefault_Data,
 	NULL
 };

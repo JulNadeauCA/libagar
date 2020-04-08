@@ -1388,10 +1388,9 @@ AutocompleteTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 		return (0);
 	}
 	win->wmType = AG_WINDOW_WM_COMBO;
-
 	AG_WindowAttach(winParent, win);
-	AG_WindowSetPadding(win, 0,0,0,0);
 	AG_WindowSetCloseAction(win, AG_WINDOW_HIDE);
+	AG_SetStyle(win, "padding", "0");
 
 	tl = AG_TlistNewPolledMs(win, AG_TLIST_EXPAND, agAutocompleteRate,
 	    AutocompletePoll, "%p", ed);

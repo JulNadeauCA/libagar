@@ -1464,7 +1464,7 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 	AG_SizeReq rWin;
 	AG_SizeAlloc a;
 	AG_Rect rPrev;
-	int autoplace, nw, nh, wMin, hMin;
+	int autoplace, nw, nh, wMin, hMin, paddingHoriz, paddingVert;
 	Uint wDisp = 0, hDisp = 0;
 	
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
@@ -1485,6 +1485,7 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 		nw = r->w;
 		nh = r->h;
 	}
+
 	if (win->flags & AG_WINDOW_MINSIZEPCT) {        /* [wh]Min are in % */
 		wMin = win->minPct * win->wReq / 100;
 		hMin = win->minPct * win->hReq / 100;
@@ -1492,8 +1493,12 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 		wMin = win->wMin;
 		hMin = win->hMin;
 	}
-	if (nw < wMin) { nw = wMin; }
-	if (nh < hMin) { nh = hMin; }
+
+	paddingHoriz = WIDGET(win)->paddingLeft + WIDGET(win)->paddingRight;
+	paddingVert = WIDGET(win)->paddingTop + WIDGET(win)->paddingBottom;
+
+	if (nw < paddingHoriz + wMin) { nw = paddingHoriz + wMin; }
+	if (nh < paddingVert + hMin) { nh = paddingVert + hMin; }
 
 	if (WIDGET(win)->x == -1 ||
 	    WIDGET(win)->y == -1) {
@@ -2027,13 +2032,14 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_Widget *chld;
 	AG_SizeReq rChld, rTbar;
 	AG_Titlebar *tbar = win->tbar;
-	const int spacing = win->spacing;
+	const int spacingVert = WIDGET(win)->spacingVert;
+	const int wTotal = WIDGET(win)->paddingLeft + (win->wBorderSide << 1) +
+	                   WIDGET(win)->paddingRight;
 	int nWidgets;
-	int wTot;
-	
-	wTot = win->lPad + win->rPad + (win->wBorderSide << 1);
-	r->w = wTot;
-	r->h = win->bPad+win->tPad + win->wBorderBot;
+
+	r->w = wTotal;
+	r->h = WIDGET(win)->paddingBottom + win->wBorderBot +
+	       WIDGET(win)->paddingTop;
 
 	if (tbar) {
 		AG_WidgetSizeReq(tbar, &rTbar);
@@ -2047,12 +2053,12 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		}
 		AG_OBJECT_ISA(chld, "AG_Widget:*");
 		AG_WidgetSizeReq(chld, &rChld);
-		r->w = MAX(r->w, rChld.w + wTot);
-		r->h += rChld.h + spacing;
+		r->w = MAX(r->w, rChld.w + wTotal);
+		r->h += rChld.h + spacingVert;
 		nWidgets++;
 	}
-	if (nWidgets > 0 && r->h >= spacing)
-		r->h -= spacing;
+	if (nWidgets > 0 && r->h >= spacingVert)
+		r->h -= spacingVert;
 
 	win->wReq = r->w;
 	win->hReq = r->h;
@@ -2066,7 +2072,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_SizeReq rChld;
 	AG_SizeAlloc aChld;
 	AG_Rect r;
-	const int spacing = win->spacing;
+	const int spacingVert = WIDGET(win)->spacingVert;
 	const int wBorderSide = win->wBorderSide;
 	const int wBorderBot = win->wBorderBot;
 	int wAvail, hAvail, totFixed, nWidgets;
@@ -2103,11 +2109,11 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		    AG_LLDIAG_CURSOR);
 	}
 
-	/* Calculate total space available for widgets. */
-	wAvail = a->w - win->lPad - win->rPad - (wBorderSide << 1);
-	hAvail = a->h - win->bPad - win->tPad - wBorderBot;
+	wAvail = a->w - WIDGET(win)->paddingLeft - WIDGET(win)->paddingRight -
+	         (wBorderSide << 1);
+	hAvail = a->h - WIDGET(win)->paddingTop - WIDGET(win)->paddingBottom -
+	          wBorderBot;
 
-	/* Calculate the space occupied by non-fill widgets. */
 	nWidgets = 0;
 	totFixed = 0;
 	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
@@ -2117,12 +2123,12 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 			totFixed += rChld.h;
 		}
 		if (chld != WIDGET(win->tbar)) {
-			totFixed += spacing;
+			totFixed += spacingVert;
 		}
 		nWidgets++;
 	}
-	if (nWidgets > 0 && totFixed >= spacing)
-		totFixed -= spacing;
+	if (nWidgets > 0 && totFixed >= spacingVert)
+		totFixed -= spacingVert;
 
 	if (win->tbar) {					/* Titlebar */
 		AG_WidgetSizeReq(win->tbar, &rChld);
@@ -2131,11 +2137,11 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		aChld.w = a->w;
 		aChld.h = rChld.h;
 		AG_WidgetSizeAlloc(win->tbar, &aChld);
-		aChld.x = win->lPad + wBorderSide;
-		aChld.y = rChld.h + win->tPad;
+		aChld.x = WIDGET(win)->paddingLeft + wBorderSide;
+		aChld.y = WIDGET(win)->paddingTop + rChld.h;
 	} else {
-		aChld.x = win->lPad + wBorderSide;
-		aChld.y = win->tPad;
+		aChld.x = WIDGET(win)->paddingLeft + wBorderSide;
+		aChld.y = WIDGET(win)->paddingTop;
 	}
 	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {		/* Widgets */
 		AG_OBJECT_ISA(chld, "AG_Widget:*");
@@ -2157,7 +2163,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 			chldNext = OBJECT_NEXT_CHILD(chld, ag_widget);
 			if (chldNext == NULL ||
 			    !(chldNext->flags & AG_WIDGET_NOSPACING)) {
-				aChld.y += spacing;
+				aChld.y += spacingVert;
 			}
 			continue;
 		}
@@ -2166,7 +2172,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		aChld.h = (chld->flags & AG_WIDGET_VFILL) ?
 		          hAvail-totFixed : rChld.h;
 		AG_WidgetSizeAlloc(chld, &aChld);
-		aChld.y += aChld.h + spacing;
+		aChld.y += aChld.h + spacingVert;
 	}
 
 	win->r.x = 0;
@@ -2200,31 +2206,6 @@ AG_WindowSetBottomBorder(AG_Window *win, int pixels)
 	} else {
 		agWindowBotBorderDefault = pixels;
 	}
-}
-
-/* Change the spacing between child widgets. */
-void
-AG_WindowSetSpacing(AG_Window *win, int spacing)
-{
-	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
-	win->spacing = spacing;
-	win->dirty = 1;
-}
-
-/* Change the padding around child widgets. */
-void
-AG_WindowSetPadding(AG_Window *win, int lPad, int rPad, int tPad, int bPad)
-{
-	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
-	AG_ObjectLock(win);
-
-	if (lPad != -1) { win->lPad = lPad; }
-	if (rPad != -1) { win->rPad = rPad; }
-	if (tPad != -1) { win->tPad = tPad; }
-	if (bPad != -1) { win->bPad = bPad; }
-
-	win->dirty = 1;
-	AG_ObjectUnlock(win);
 }
 
 /* Request a specific initial window position. */
@@ -2921,6 +2902,20 @@ AG_ViewDetach(AG_Window *win)
 	AG_ObjectDetach(win);
 }
 void
+AG_WindowSetPadding(AG_Window *win, int lPad, int rPad, int tPad, int bPad)
+{
+	AG_SetStyleF(win, "padding", "%d %d %d %d",
+	    (tPad != -1) ? tPad : 0,
+	    (rPad != -1) ? rPad : 0,
+	    (bPad != -1) ? bPad : 0,
+	    (lPad != -1) ? lPad : 0);
+}
+void
+AG_WindowSetSpacing(AG_Window *win, int spacing)
+{
+	AG_SetStyleF(win, "spacing", "%d", spacing);
+}
+void
 AG_WindowSetVisibility(AG_Window *win, int flag)
 {
 	AG_ObjectLock(win);
@@ -2966,15 +2961,10 @@ Init(void *_Nonnull obj)
 	win->alignment = AG_WINDOW_ALIGNMENT_NONE;
 	win->tbar = NULL;
 	win->icon = NULL;
-	win->spacing = 3;
-	win->tPad = 2;
-	win->bPad = 2;
-	win->lPad = 2;
-	win->rPad = 2;
 	win->wReq = 0;
 	win->hReq = 0;
-	win->wMin = win->lPad + win->rPad + 16;
-	win->hMin = win->tPad + win->bPad + 16;
+	win->wMin = 0;
+	win->hMin = 0;
 	win->wBorderBot = agWindowBotBorderDefault;
 	win->wBorderSide = agWindowSideBorderDefault;
 	win->wResizeCtrl = 16;
@@ -3117,21 +3107,6 @@ Edit(void *_Nonnull obj)
 	                   &tgt->pinnedTo, &tgt->pinnedTo);
 #endif
 
-#if 0
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("View X: "), &WIDGET(tgt)->x);
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("View Y: "), &WIDGET(tgt)->y);
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("View W: "), &tgt->r.w);
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("View H: "), &tgt->r.h);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Saved X: "), &tgt->rSaved.x);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Saved Y: "), &tgt->rSaved.y);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Saved W: "), &tgt->rSaved.w);
-	AG_NumericalNewInt(rBox, 0, NULL, _("Saved H: "), &tgt->rSaved.h);
-#endif
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("Spacing: "), &tgt->spacing);
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("Padding Left: "), &tgt->lPad);
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("Padding Right: "), &tgt->rPad);
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("Padding Top: "), &tgt->tPad);
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("Padding Bottom: "), &tgt->bPad);
 	AG_NumericalNewInt(rBox, nuFl, NULL, _("Minimum W: "), &tgt->wMin);
 	AG_NumericalNewInt(rBox, nuFl, NULL, _("Minimum H: "), &tgt->hMin);
 #if 0

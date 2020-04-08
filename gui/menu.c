@@ -85,13 +85,12 @@ AG_MenuNewGlobal(Uint flags)
 	if (win == NULL) {
 		goto exists;
 	}
-	AG_WindowSetPadding(win, 0,0,0,0);
+	AG_SetStyle(win, "padding", "0");
 	AG_WindowSetCaptionS(win, agProgName ? agProgName : "agarapp");
 
 	m = AG_MenuNew(win, flags);
 	m->style = AG_MENU_GLOBAL;
 /*	AG_SetStyleF(m, "padding", "4 0 4 0") */
-/*	AG_MenuSetPadding(m, 4, 4, -1, -1); */
 	WIDGET(m)->flags |= AG_WIDGET_HFILL;
 
 	agAppMenu = m;
@@ -272,7 +271,7 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	              AG_WINDOW_WM_DROPDOWN_MENU :
 		      AG_WINDOW_WM_POPUP_MENU;
 	AG_ObjectSetName(win, "_menu%u", agMenuCounter++);
-	AG_WindowSetPadding(win, 0,0,0,0);
+	AG_SetStyle(win, "padding", "0");
 
 #ifdef DEBUG_EXPAND
 	Debug(m, "Expand [%s] -> " AGSI_BR_RED "%s" AGSI_RST " (new)\n",
@@ -359,18 +358,6 @@ AG_MenuCollapseAll(AG_Menu *m)
 	AG_ObjectUnlock(m);
 }
 
-#ifdef AG_LEGACY
-void
-AG_MenuSetPadding(AG_Menu *m, int lPad, int rPad, int tPad, int bPad)
-{
-	AG_SetStyleF(m, "padding", "%d %d %d %d",
-	    (tPad != -1) ? tPad : 0,
-	    (rPad != -1) ? rPad : 0,
-	    (bPad != -1) ? bPad : 0,
-	    (lPad != -1) ? lPad : 0);
-}
-#endif /* LEGACY */
-
 void
 AG_MenuSetLabelPadding(AG_Menu *m, int lPad, int rPad, int tPad, int bPad)
 {
@@ -415,6 +402,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	}
 }
 
+#if 0
 static void
 OnAttach(AG_Event *_Nonnull event)
 {
@@ -426,6 +414,7 @@ OnAttach(AG_Event *_Nonnull event)
 	if ((win = AG_ParentWindow(pwid)) != NULL)
 		AG_WindowSetPadding(win, -1, -1, 0, win->bPad);
 }
+#endif
 
 /* Parent Menu (if any) must be locked. */
 static AG_MenuItem *_Nonnull
@@ -538,7 +527,7 @@ Init(void *_Nonnull obj)
 
 	AG_SetEvent(m, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(m, "mouse-motion", MouseMotion, NULL);
-	AG_AddEvent(m, "attached", OnAttach, NULL);
+/*	AG_AddEvent(m, "attached", OnAttach, NULL); */
 	AG_AddEvent(m, "font-changed", StyleChanged, NULL);
 	AG_AddEvent(m, "palette-changed", StyleChanged, NULL);
 }
@@ -1595,6 +1584,18 @@ AG_MenuGetItemPtr(const AG_Event *event, int idx, int isConst)
 	return (V->data.p);
 }
 #endif /* AG_TYPE_SAFETY */
+
+#ifdef AG_LEGACY
+void
+AG_MenuSetPadding(AG_Menu *m, int lPad, int rPad, int tPad, int bPad)
+{
+	AG_SetStyleF(m, "padding", "%d %d %d %d",
+	    (tPad != -1) ? tPad : 0,
+	    (rPad != -1) ? rPad : 0,
+	    (bPad != -1) ? bPad : 0,
+	    (lPad != -1) ? lPad : 0);
+}
+#endif /* LEGACY */
 
 AG_WidgetClass agMenuClass = {
 	{

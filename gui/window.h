@@ -118,8 +118,7 @@ typedef struct ag_window {
 	struct ag_titlebar *_Nullable tbar;	/* Titlebar (or NULL) */
 	struct ag_icon *_Nullable     icon;	/* Window icon (internal WM) */
 
-	int spacing;				/* Default spacing (px) */
-	int tPad, bPad, lPad, rPad;		/* Window padding (px) */
+	Uint32 _pad;
 	int wReq, hReq;				/* Requested geometry (px) */
 	int wMin, hMin;				/* Minimum geometry (px) */
 	int wBorderBot;				/* Bottom border size (px) */
@@ -180,15 +179,8 @@ void AG_WindowSetCaption(AG_Window *_Nonnull, const char *_Nonnull, ...)
 void AG_WindowSetCaptionS(AG_Window *_Nonnull, const char *_Nonnull);
 void AG_WindowSetIcon(AG_Window *_Nonnull, const AG_Surface *_Nonnull);
 
-void AG_WindowSetSpacing(AG_Window *_Nonnull, int);
 void AG_WindowSetSideBorders(AG_Window *_Nonnull, int);
 void AG_WindowSetBottomBorder(AG_Window *_Nonnull, int);
-void AG_WindowSetPadding(AG_Window *_Nonnull, int,int,int,int);
-
-#define	AG_WindowSetPaddingLeft(w,p)   AG_WindowSetPadding((w),(p),-1,-1,-1)
-#define	AG_WindowSetPaddingRight(w,p)  AG_WindowSetPadding((w),-1,(p),-1,-1)
-#define	AG_WindowSetPaddingTop(w,p)    AG_WindowSetPadding((w),-1,-1,(p),-1)
-#define	AG_WindowSetPaddingBottom(w,p) AG_WindowSetPadding((w),-1,-1,-1,(p))
 
 void AG_WindowSetPosition(AG_Window *_Nonnull, enum ag_window_alignment, int);
 void AG_WindowSetCloseAction(AG_Window *_Nonnull, enum ag_window_close_action);
@@ -309,9 +301,16 @@ AG_Window *AG_SettingsWindow(void);
 	AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, ag_window)
 
 #ifdef AG_LEGACY
-# define AG_WINDOW_CASCADE AG_WINDOW_TILING
-# define AG_FindWindow(name) AG_WindowFind(name)
-# define AG_WindowNewSw(drv,flags) AG_WindowNewUnder((drv),(flags))
+# define AG_WINDOW_CASCADE              AG_WINDOW_TILING
+# define AG_FindWindow(name)            AG_WindowFind(name)
+# define AG_WindowNewSw(drv,flags)      AG_WindowNewUnder((drv),(flags))
+# define AG_WindowSetPaddingLeft(w,p)   AG_WindowSetPadding((w),(p),-1,-1,-1)
+# define AG_WindowSetPaddingRight(w,p)  AG_WindowSetPadding((w),-1,(p),-1,-1)
+# define AG_WindowSetPaddingTop(w,p)    AG_WindowSetPadding((w),-1,-1,(p),-1)
+# define AG_WindowSetPaddingBottom(w,p) AG_WindowSetPadding((w),-1,-1,-1,(p))
+ 
+void AG_WindowSetSpacing(AG_Window *_Nonnull, int) DEPRECATED_ATTRIBUTE;
+void AG_WindowSetPadding(AG_Window *_Nonnull, int,int,int,int) DEPRECATED_ATTRIBUTE;
 void AG_ViewAttach(AG_Window *_Nonnull) DEPRECATED_ATTRIBUTE;
 void AG_ViewDetach(AG_Window *_Nonnull) DEPRECATED_ATTRIBUTE;
 void AG_WindowSetVisibility(AG_Window *_Nonnull, int) DEPRECATED_ATTRIBUTE;

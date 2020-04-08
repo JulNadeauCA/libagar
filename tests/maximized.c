@@ -12,7 +12,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_Table *table;
 	int i;
 
-	AG_WindowSetPadding(win, 0, 0, 0, 0);
+	AG_SetStyle(win, "padding", "0");
 
 	lbl = AG_LabelNew(win, AG_LABEL_HFILL, "Testing AG_WindowMaximize(3)");
 	AG_LabelJustify(lbl, AG_TEXT_CENTER);

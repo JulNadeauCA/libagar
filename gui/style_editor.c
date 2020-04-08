@@ -557,9 +557,9 @@ CompleteAttribute(AG_Event *_Nonnull event)
 
 	AG_TlistEnd(tl);
 
-	if (tl->nitems == 0) {
+	if (tl->nItems == 0) {
 		AG_EditableCloseAutocomplete(ed);
-	} else if (tl->nitems == 1) {
+	} else if (tl->nItems == 1) {
 		char *sOrig = AG_EditableDupString(ed);
 
 		if (AG_TlistFindText(tl, sOrig)) {
