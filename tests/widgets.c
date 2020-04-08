@@ -454,20 +454,6 @@ TestGUI(void *obj, AG_Window *win)
 		AG_SetInt(num, "max", +100);
 	}
 
-	/*
-	 * MSpinbutton is a two-dimensional spinbutton which binds to
-	 * two integer values "xvalue" and "yvalue".
-	 */
-	{
-		AG_MSpinbutton *msb;
-		static int myX=0, myY=0;
-
-		msb = AG_MSpinbuttonNew(div, AG_MSPINBUTTON_HFILL, ",",
-		    "MSpinbutton:");
-		AG_BindInt(msb, "xvalue", &myX);
-		AG_BindInt(msb, "yvalue", &myY);
-	}
-
 	/* Create a horizontal separator */
 	AG_SeparatorNewHoriz(div);
 
