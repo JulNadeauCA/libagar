@@ -39,12 +39,10 @@
 #include <agar/gui/primitive.h>
 #include <agar/gui/text.h>
 #include <agar/gui/label.h>
-#ifdef AG_DEBUG
 #include <agar/gui/numerical.h>
 #include <agar/gui/checkbox.h>
 #include <agar/gui/radio.h>
 #include <agar/gui/separator.h>
-#endif
 
 const char *agBoxHorizAlignNames[] = {
 	N_("Left"),
@@ -621,8 +619,7 @@ UpdateWindowOfTgt(AG_Event *_Nonnull event)
 static void *_Nullable
 Edit(void *_Nonnull obj)
 {
-	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND), *hBox;
-	AG_Box *tgt = obj;
+	AG_Box *tgt = obj, *box, *hBox;
 	AG_Numerical *num;
 	AG_Checkbox *cb;
 	AG_Radio *rad;
@@ -638,6 +635,8 @@ Edit(void *_Nonnull obj)
 		N_("Plain"),
 		NULL
 	};
+
+	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
 	AG_LabelNewS(box, 0, _("Disposition:"));
 	rad = AG_RadioNewUint(box, 0, typeNames, &tgt->type);
