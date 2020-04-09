@@ -876,7 +876,7 @@ check-libtool:
 	        (cd ${LTBASE} && env CC="${CC}" OBJC="${OBJC}" CXX="${CXX}" \
 	            CFLAGS="${CFLAGS}" OBJCFLAGS="${OBJCFLAGS}" CXXFLAGS="${CXXFLAGS}" \
 		    ${SH} ./configure --build=${BUILD} --host=${HOST}); \
-	        if [ $? != 0 ]; then \
+	        if [ $$? != 0 ]; then \
 	    	    echo "USE_LIBTOOL=Yes and ${LTCONFIG} failed"; \
 	    	    exit 1; \
 	        fi; \

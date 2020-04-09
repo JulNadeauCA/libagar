@@ -49,6 +49,7 @@ void M_DrawBezier2(AG_Widget* widget,
 	M_PointSet2 ctrl;
 	M_Vector2 pt;
 	M_Vector2 prev;
+	int k;
 
 	pt.x = 0;
 	pt.y = 0;
@@ -67,7 +68,7 @@ void M_DrawBezier2(AG_Widget* widget,
 
 	M_BezierForm2(&points, &ctrl);
 
-	for (int k = 0 ; k < detail ; k++) {
+	for (k = 0 ; k < detail ; k++) {
 		prev = pt;
 		M_BezierCurve2(&ctrl, ((float) k) / ((float) detail), &pt);
 		if (k != 0) {
