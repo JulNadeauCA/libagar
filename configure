@@ -14216,7 +14216,6 @@ Libs.private: $pkgconfig_module_libs_pvt
 Cflags: $pkgconfig_module_cflags
 EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-vg.pc"
-(cd ${SRCDIR} && ${SH} mk/gen-revision.sh "${SRCDIR}" AGAR_REVISION > $bb_incdir/revision.h)
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
 echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
 echo "AVAIL_CONFIGSCRIPTS=$AVAIL_CONFIGSCRIPTS" >>Makefile.config

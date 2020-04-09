@@ -927,7 +927,7 @@ main(int argc, char *argv[])
 			    av.major, av.minor, av.patch, agCPU.arch, av.rev);
 		}
 		AG_ColorRGB(&ln->c, 200,240,240);
-
+#if 0
 		if (av.rev > 0 && av.rev != AGAR_REVISION) {
 			ln = AG_ConsoleMsg(console,
 			    _("WARNING: Agartest compiled against SVN r%d, but "
@@ -935,6 +935,7 @@ main(int argc, char *argv[])
 			      AGAR_REVISION, av.rev);
 			AG_ColorRGB_8(&ln->c, 255,100,100);
 		}
+#endif
 
 		AG_ConsoleMsgS(console, "");
 		ln = AG_ConsoleMsgS(console, "https://libAgar.org/ | https://PowerfulAgar.com/");

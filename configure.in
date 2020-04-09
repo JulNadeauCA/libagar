@@ -1160,5 +1160,5 @@ pkgconfig_mod(agar-vg, "Agar vector graphics library", "agar", "", \
 #
 # Get the SVN revision number (or 0)
 #
-(cd ${SRCDIR} && \
- ${SH} mk/gen-revision.sh "${SRCDIR}" AGAR_REVISION > $bb_incdir/revision.h)
+#(cd ${SRCDIR} && \
+# ${SH} mk/gen-revision.sh "${SRCDIR}" AGAR_REVISION > $bb_incdir/revision.h)
