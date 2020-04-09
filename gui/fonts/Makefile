@@ -2,27 +2,20 @@ TOP=	../..
 include ${TOP}/Makefile.config
 
 DATADIR=	${TTFDIR}
-DATAFILES_SRC=	Bedstead-COPYING.txt \
-		Bedstead-NEWS.txt \
-		Bedstead-VERSION.txt \
+DATAFILES_SRC=	OFL-FAQ.txt \
 		Charter-LICENSE.txt \
 		DejaVu-LICENSE.txt \
-		OFL-FAQ.txt \
 		Source-Han-LICENSE.txt \
 		Vera-Copyright.txt \
-		Vera-README.txt \
-		Vera-ReleaseNotes.txt \
 		League-Gothic-LICENSE.md \
 		League-Gothic-README.md \
 		League-Spartan-LICENSE.md \
 		League-Spartan-README.md \
+		Mukta-OFL.txt \
 		algue.ttf \
 		algue-bold.ttf \
 		algue-italic.ttf \
 		algue-bold-italic.ttf \
-		bedstead-10-df.png \
-		bedstead-20-df.png \
-		bedstead.otf \
 		charter-bold-italic.otf \
 		charter-bold.otf \
 		charter-italic.otf \

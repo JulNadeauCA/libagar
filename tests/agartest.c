@@ -11,7 +11,6 @@
 
 #include <agar/config/ag_unicode.h>
 #include <agar/config/have_opengl.h>
-#include <agar/config/revision.h>
 
 #include <agar/core/agsi.h>
 

@@ -135,11 +135,11 @@ Uint         agTextStateCur = 0;
 const AG_FontAdjustment agFontAdjustments[] = {
 /*                                                 0.0 10.4 14.0 21.0 23.8 35.0 to- */
 /*                                                10.4 14.0 21.0 23.8 35.0 inf  pts */
-	{ "bedstead",        AG_FONT_BOLD, 0.9f, { +1,  +3,  +3,  +4,  +5,  +7 } },
+/*	{ "bedstead",        AG_FONT_BOLD, 0.9f, { +1,  +3,  +3,  +4,  +5,  +7 } }, */
 	{ "cm-sans",         0,            1.1f, { -4,  -4,  -6,  -7,  -9, -16 } },
 	{ "cm-serif",        0,            1.1f, { -3,  -4,  -5,  -5,  -4,  -5 } },
 	{ "cm-typewriter",   0,            1.1f, { -2,  -4,  -5,  -5,  -7,  -7 } },
-	{ "league-spartan",  AG_FONT_BOLD, 0.9f, { -2,  -2,  -3,  -4,  -5,  -8 } },
+	{ "league-spartan",  AG_FONT_BOLD, 0.9f, { -1,  -1,  -3,  -4,  -5,  -7 } },
 	{ "league-gothic",   AG_FONT_BOLD, 1.1f, { -1,  -1,  -1,  -2,  -1,  -3 } },
 	{ "fraktur",         AG_FONT_BOLD, 1.1f, { +1,  +1,  +1,  +1,  +1,  +1 } },
 	{ "source-han-sans", 0,            1.0f, { -8, -12, -15, -20, -28, -35 } },
@@ -194,15 +194,15 @@ const char *agFontTypeNames[] = {		/* For enum ag_font_type */
 	N_("Dummy")
 };
 const char *agCoreFonts[] = {
-	"unialgue",                             /* Unialgue */
-	"source-han-sans",                      /* Source Han Sans */
+	"unialgue",                             /* Unialgue (not RFN) */
+	"",                                     /* (unused) */
 	"cm-sans",                              /* CMU Sans */
 	"cm-serif",                             /* CMU Serif */
 	"cm-typewriter",                        /* CMU Typewriter */
-	"league-spartan",                       /* League Spartan */
-	"bedstead",                             /* Bedstead */
 	"charter",                              /* Charter */
 	"courier-prime",                        /* Courier Prime */
+	"source-han-sans",                      /* Source Han Sans */
+	"league-spartan",                       /* League Spartan */
 	"league-gothic",                        /* League Gothic */
 	"fraktur",                              /* Unifraktur Maguntia */
 	NULL

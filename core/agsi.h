@@ -13,15 +13,15 @@
 # define AGSI_REVERSE  	 "\x1b[7m"   /* reverse video */
 # define AGSI_CROSSEDOUT "\x1b[9m"   /* crossed-out */
 
-# define AGSI_FONT1	 "\x1b[10m"  /* Unialgue */
-# define AGSI_FONT2	 "\x1b[11m"  /* Source Han Sans */
+# define AGSI_FONT1	 "\x1b[10m"  /* Unialgue (not RFN) */
+# define AGSI_FONT2	 "\x1b[11m"  /* (unused) */
 # define AGSI_FONT3	 "\x1b[12m"  /* CMU Sans Serif */
 # define AGSI_FONT4	 "\x1b[13m"  /* CMU Serif */
 # define AGSI_FONT5	 "\x1b[14m"  /* CMU Typewriter */
-# define AGSI_FONT6	 "\x1b[15m"  /* League Spartan */
-# define AGSI_FONT7	 "\x1b[16m"  /* Bedstead */
-# define AGSI_FONT8	 "\x1b[17m"  /* Charter */
-# define AGSI_FONT9	 "\x1b[18m"  /* Courier Prime */
+# define AGSI_FONT6	 "\x1b[15m"  /* Charter */
+# define AGSI_FONT7	 "\x1b[16m"  /* Courier Prime */
+# define AGSI_FONT8	 "\x1b[17m"  /* Source Han Sans */
+# define AGSI_FONT9	 "\x1b[18m"  /* League Spartan */
 # define AGSI_FONT10	 "\x1b[19m"  /* League Gothic */
 # define AGSI_FONT11	 "\x1b[20m"  /* Unifraktur Maguntia */
 
@@ -122,18 +122,27 @@
 /*
  * Map core font names to SGR sequences.
  */
-#define AGSI_UNIALGUE       AGSI_FONT1
-#define AGSI_SOURCE_HAN     AGSI_FONT2
-#define AGSI_CMU_SANS       AGSI_FONT3
-#define AGSI_CMU_SERIF      AGSI_FONT4
-#define AGSI_CMU_TYPEWRITER AGSI_FONT5
-#define AGSI_LEAGUE_SPARTAN AGSI_FONT6
-#define AGSI_BEDSTEAD       AGSI_FONT7
-#define AGSI_CHARTER        AGSI_FONT8
-#define AGSI_COURIER        AGSI_FONT9
-#define AGSI_LEAGUE_GOTHIC  AGSI_FONT10
-#define AGSI_FRAKTUR        AGSI_FONT11
-#define AGSI_FRAK           AGSI_FONT11
+#define AGSI_UNIALGUE            AGSI_FONT1
+/* #define AGSI_UNUSED_FONT1     AGSI_FONT2 */
+#define AGSI_CMU_SANS            AGSI_FONT3
+#define AGSI_CMU_SERIF           AGSI_FONT4
+#define AGSI_CMU_TYPEWRITER      AGSI_FONT5
+#define AGSI_CHARTER             AGSI_FONT6
+#define AGSI_COURIER_PRIME       AGSI_FONT7
+#define AGSI_SOURCE_HAN_SANS     AGSI_FONT8
+#define AGSI_LEAGUE_SPARTAN      AGSI_FONT9
+#define AGSI_LEAGUE_GOTHIC       AGSI_FONT10
+#define AGSI_UNIFRAKTUR_MAGUNTIA AGSI_FONT11
+
+#define AGSI_UNI           AGSI_UNIALGUE
+#define AGSI_CM_SANS       AGSI_CMU_SANS
+#define AGSI_CM_SERIF      AGSI_CMU_SERIF
+#define AGSI_CM_TYPEWRITER AGSI_CMU_TYPEWRITER
+#define AGSI_COURIER       AGSI_COURIER_PRIME
+#define AGSI_SOURCE_HAN    AGSI_SOURCE_HAN_SANS
+#define AGSI_CJK           AGSI_SOURCE_HAN_SANS
+#define AGSI_FRAKTUR       AGSI_UNIFRAKTUR_MAGUNTIA
+#define AGSI_FRAK          AGSI_UNIFRAKTUR_MAGUNTIA
 
 /*
  * Map AGSI_CMD to the preferred modifier key for application-global commands.

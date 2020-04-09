@@ -33,7 +33,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	TestMsg(obj,
 	    "Al-arabiyyah: "
-	    AGSI_FONT1     /* unialgue */
+	    AGSI_UNI
 	    "\xD9\x8F\xD8\xA9\xD9\x91\xD9\x8E"
 	    "\xD9\x8A\xD9\x90\xD8\xA8\xD9\x8E"
 	    "\xD8\xB1\xD9\x8E\xD8\xB9\xD9\x92"
@@ -42,7 +42,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	TestMsg(obj,
 	    "Devanagari: "
-	    AGSI_FONT1     /* unialgue */
+	    AGSI_UNI
 	    "\xE0\xA4\xA6 " /* U+0926 DA */
 	    "\xE0\xA4\xB5 " /* U+0926 VA */
 	    "\xE0\xA4\xA8 " /* U+0928 NA */
@@ -52,7 +52,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	TestMsg(obj,
 	    "Ellinik\xC3\xA1: "
-	    AGSI_FONT1     /* unialgue */
+	    AGSI_UNI
 	    "\xCE\xB5"
 	    "\xCE\xBB"
 	    "\xCE\xBB"
@@ -65,14 +65,14 @@ TestGUI(void *obj, AG_Window *win)
 
 	TestMsg(obj,
 	    "Gu\xC4\x81nhu\xC3\xA0: "
-	    AGSI_FONT2     /* source-han-sans */
+	    AGSI_CJK
 	    "\xE5\xAE\x98" /* U+5b98 */
 	    "\xE8\xAF\x9D" /* U+8bdd */
 	    AGSI_RST);
 
 	TestMsg(obj,
 	    "Hanguk-eo: "
-	    AGSI_FONT2     /* source-han-sans */
+	    AGSI_CJK
 	    "\xED\x95\x9C"
 	    "\xEA\xB5\xAD"
 	    "\xEC\x96\xB4"
@@ -80,7 +80,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	TestMsg(obj,
 	    "Ivrit: "
-	    AGSI_FONT1     /* unialgue */
+	    AGSI_UNI
 	    "\xD7\xAA"
 	    "\xD7\x99"
 	    "\xD7\xA8"
@@ -90,7 +90,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	TestMsg(obj,
 	    "Inuktitut: "
-	    AGSI_FONT1     /* unialgue */
+	    AGSI_UNI
 	    "\xE1\x90\x83"
 	    "\xE1\x93\x84"
 	    "\xE1\x92\x83"
@@ -101,7 +101,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	TestMsg(obj,
 	    "Kartuli: "
-	    AGSI_FONT1     /* unialgue */
+	    AGSI_UNI
 	    "\xE1\x83\xA5"
 	    "\xE1\x83\x90"
 	    "\xE1\x83\xA0"
@@ -113,7 +113,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	TestMsg(obj,
 	    "Nihongo: "
-	    AGSI_FONT2     /* source-han-sans */
+	    AGSI_CJK
 	    "\xE6\x97\xA5"
 	    "\xE6\x9C\xAC"
 	    "\xE8\xAA\x9E"
@@ -121,7 +121,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	TestMsg(obj,
 	    "Phasa Lao: "
-	    AGSI_FONT1     /* unialgue */
+	    AGSI_UNI
 	    "\xE0\xBA\x9E"
 	    "\xE0\xBA\xB2"
 	    "\xE0\xBA\xAA"
@@ -133,7 +133,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	TestMsg(obj,
 	    "Phasa Thai: "
-	    AGSI_FONT1     /* unialgue */
+	    AGSI_UNI
 	    "\xE0\xB8\xA0"
 	    "\xE0\xB8\xB2"
 	    "\xE0\xB8\xA9"
@@ -145,7 +145,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	TestMsg(obj,
 	    "Russkiy: "
-	    AGSI_FONT1     /* unialgue */
+	    AGSI_UNI
 	    "\xD1\x80"
 	    "\xD1\x83"
 	    "\xD1\x81"
@@ -157,7 +157,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	TestMsg(obj,
 	    "Tibetan digits: "
-	    AGSI_FONT1     /* unialgue */
+	    AGSI_UNI
 	    "\xE0\xBC\xA0 "
 	    "\xE0\xBC\xA1 "
 	    "\xE0\xBC\xA2 "
