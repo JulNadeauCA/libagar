@@ -63,10 +63,10 @@ SRCS=	agartest.c ${SRCS_EXTRA} \
 
 MAN1=	agartest.1
 
-DATAFILES= BigImage.jpg agar.png agar-index.png agar.bmp agar-1.bmp agar-2.bmp \
-           agar-3.bmp agar-4.bmp axe.bmp axe.png compositing.png glView.png \
-           helmet.png helmet.bmp helmet-socket.bmp loss.txt menubg.bmp pepe.jpg \
-           sword.bmp sword-socket.bmp
+DATAFILES= agar.png agar-index.png agar.bmp agar-1.bmp agar-2.bmp agar-3.bmp \
+	   agar-4.bmp axe.bmp axe.png compositing.png glView.png helmet.png \
+	   helmet.bmp helmet-socket.bmp loss.txt menubg.bmp pepe.jpg sword.bmp \
+	   sword-socket.bmp
 
 CLEANFILES+=	agar-index-save.png agar-save.png axe-save.png pepe-save.jpg
 

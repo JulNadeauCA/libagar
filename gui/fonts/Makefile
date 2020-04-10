@@ -8,9 +8,7 @@ DATAFILES_SRC=	OFL-FAQ.txt \
 		Source-Han-LICENSE.txt \
 		Vera-Copyright.txt \
 		League-Gothic-LICENSE.md \
-		League-Gothic-README.md \
 		League-Spartan-LICENSE.md \
-		League-Spartan-README.md \
 		Mukta-OFL.txt \
 		algue.ttf \
 		algue-bold.ttf \
@@ -20,9 +18,7 @@ DATAFILES_SRC=	OFL-FAQ.txt \
 		charter-bold.otf \
 		charter-italic.otf \
 		charter.otf \
-		cm-Changes.txt \
 		cm-LICENSE.txt \
-		cm-README.txt \
 		cm-sans-bold.ttf \
 		cm-sans-condensed.ttf \
 		cm-sans.ttf \
@@ -40,7 +36,6 @@ DATAFILES_SRC=	OFL-FAQ.txt \
 		courier-prime-italic.ttf \
 		courier-prime.ttf \
 		cp437-16.bmp \
-		fraktur-FontLog.txt \
 		fraktur-LICENSE.txt \
 		fraktur.ttf \
 		league-gothic.otf \
@@ -49,7 +44,6 @@ DATAFILES_SRC=	OFL-FAQ.txt \
 		league-gothic-condensed-italic.otf \
 		league-spartan.otf \
 		minimal.xcf \
-		serif.xcf \
 		source-han-sans.otf \
 		unialgue.ttf \
 		vera.ttf \

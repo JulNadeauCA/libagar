@@ -11,19 +11,27 @@
 #     $ cat configure.in |mkconfigure > configure
 #
 
+# Specify an alternate location for config.guess.
+config_guess("../../mk/config.guess")
+
 # Name and version of the application.
 package("AgarHello")
 version("1.0-beta")
+# release("codename")
 
 # Register our configure options.
+# register_section("My subsection header:")
 register("--enable-warnings",	 "Enable compiler warnings [default: no]")
 register("--with-agar[=PREFIX]", "Agar installation path [default: auto]")
 
 # Require a C compiler.
 require(cc)
 
-# Require Agar core and GUI libraries.
+# Require Agar GUI (which implies ag_core).
 require(agar, 1.6.0, ${prefix_agar})
+
+# For a non-graphical application, link against ag_core only:
+#require(agar-core, 1.6.0, ${prefix_agar})
 
 # Require Agar extension libraries.
 #require(agar-au, 1.6.0, ${prefix_agar})

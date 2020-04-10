@@ -465,12 +465,12 @@ if [ "${build_arg}" != '' ]; then
 	build="${build_arg}"
 else
 	if [ "${srcdir}" != '' ]; then
-		build_guessed=`sh ${srcdir}/mk/config.guess`
+		build_guessed=`sh ${srcdir}/../../mk/config.guess`
 	else
-		build_guessed=`sh mk/config.guess`
+		build_guessed=`sh ../../mk/config.guess`
 	fi
 	if [ $? != 0 ]; then
-		echo 'mk/config.guess failed, please specify --build'
+		echo '../../mk/config.guess failed, please specify --build'
 		exit 1
 	fi
 	build="${build_guessed}"
