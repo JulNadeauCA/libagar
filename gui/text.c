@@ -137,8 +137,8 @@ const AG_FontAdjustment agFontAdjustments[] = {
 /*                                                10.4 14.0 21.0 23.8 35.0 inf  pts */
 /*	{ "bedstead",        AG_FONT_BOLD, 0.9f, { +1,  +3,  +3,  +4,  +5,  +7 } }, */
 	{ "cm-sans",         0,            1.1f, { -4,  -4,  -6,  -7,  -9, -16 } },
-	{ "cm-serif",        0,            1.1f, { -3,  -4,  -5,  -5,  -4,  -5 } },
-	{ "cm-typewriter",   0,            1.1f, { -2,  -4,  -5,  -5,  -7,  -7 } },
+	{ "cm-serif",        0,            1.1f, { -3,  -4,  -5,  -5,  -6, -10 } },
+	{ "cm-typewriter",   0,            1.1f, { -2,  -4,  -5,  -5,  -7,  -8 } },
 	{ "league-spartan",  AG_FONT_BOLD, 0.9f, { -1,  -1,  -3,  -4,  -5,  -7 } },
 	{ "league-gothic",   AG_FONT_BOLD, 1.1f, { -1,  -1,  -1,  -2,  -1,  -3 } },
 	{ "fraktur",         AG_FONT_BOLD, 1.1f, { +1,  +1,  +1,  +1,  +1,  +1 } },
