@@ -67,7 +67,7 @@ setSpacing(self, spacing)
 	Agar::Box self
 	int spacing
 CODE:
-	AG_SetStyleF(self, "spacing", "%d", padding);
+	AG_SetStyleF(self, "spacing", "%d", spacing);
 
 void
 setHoriz(self)

@@ -25,7 +25,7 @@ setPadding(self, pixels)
 	Agar::Console self
 	int pixels
 CODE:
-	AG_ConsoleSetPadding(self, pixels);
+	AG_SetStyleF(self, "padding", "%d", pixels);
 
 void
 msg(self, text)

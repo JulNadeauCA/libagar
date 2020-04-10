@@ -79,7 +79,7 @@ setPadding(self, pixels)
 	Agar::Separator self
 	Uint pixels
 CODE:
-	AG_SeparatorSetPadding(self, pixels);
+	AG_SetStyleF(self, "padding", "%d", pixels);
 
 void
 setFlag(self, name)

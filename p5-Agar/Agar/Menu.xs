@@ -70,7 +70,7 @@ setPadding(self, l, r, t, b)
 	int t
 	int b
 CODE:
-	AG_MenuSetPadding(self, l, r, t, b);
+	AG_SetStyleF(self, "padding", "%d %d %d %d", l,r,t,b);
 
 void
 setLabelPadding(self, l, r, t, b)
