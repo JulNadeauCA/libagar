@@ -160,7 +160,6 @@ typedef struct ag_driver_class {
     enum ag_driver_type type;  /* Driver type */
     enum ag_driver_wm_type wm; /* Window manager type */
     Uint flags;                /* Driver class options */
-    int rev;                   /* Driver revision number */ 
 
     /*
      * Initialization
@@ -259,9 +258,17 @@ typedef struct ag_driver_class {
 
     void (*drawLineW)(void *d, int x1, int y1, int x2, int y2,
                       const AG_Color *c, float width);
-
     void (*drawLineW_Sti16)(void *d, int x1, int y1, int x2, int y2,
                             const AG_Color *c, float width, Uint16 mask);
+
+    void (*_Nonnull drawTriangle)(void *_Nonnull, const AG_Pt *_Nonnull,
+                                  const AG_Pt *_Nonnull, const AG_Pt *_Nonnull,
+                                  const AG_Color *_Nonnull);
+    void (*_Nonnull drawPolygon)(void *_Nonnull, const AG_Pt *_Nonnull, Uint,
+                                 const AG_Color *_Nonnull);
+    void (*_Nonnull drawPolygonSti32)(void *_Nonnull, const AG_Pt *_Nonnull,
+                                      Uint, const AG_Color *_Nonnull,
+                                      const Uint8 *_Nonnull);
 
     void (*drawArrow)(void *d, float angle, int x, int y, int h,
                       const AG_Color *c1, const AG_Color *c2);
@@ -273,7 +280,7 @@ typedef struct ag_driver_class {
                               const AG_Color *c3);
 
     void (*drawCircle)(void *d, int x, int y, int r, const AG_Color *c);
-    void (*drawCircle2)(void *d, int x, int y, int r, const AG_Color *c);
+    void (*drawCircleFilled)(void *d, int x, int y, int r, const AG_Color *c);
     void (*drawRectFilled)(void *d, const AG_Rect *r, const AG_Color *c);
     void (*drawRectBlended)(void *d, const AG_Rect *r, const AG_Color *c,
                             AG_AlphaFn fnSrc, AG_AlphaFn fnDst);
@@ -823,3 +830,14 @@ while (AG_PendingEvents(NULL) > 0) {
 The
 .Nm
 interface first appeared in Agar 1.4.0.
+Agar 1.6.0 added the driver operations
+.Fn putPixel64 ,
+.Fn putPixelRGB16 ,
+.Fn drawTriangle ,
+.Fn drawPolygon ,
+.Fn drawPolygonSti32 ,
+.Fn drawLineW ,
+.Fn drawLineW_Sti16 ,
+.Fn getClipboardText
+and
+.Fn setClipboardText .

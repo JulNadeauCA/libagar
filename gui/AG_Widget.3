@@ -270,19 +270,6 @@ fields of the
 .Nm
 structure.
 .Sh STYLE ATTRIBUTES
-Style attributes for widgets may be defined:
-.Bl -bullet -compact
-.It
-on a per-instance basis by calling
-.Fn AG_SetStyle .
-.It
-on a per-instance basis (by "#id") in an
-.Xr AG_StyleSheet 3 .
-.It
-on a per-class basis in an
-.Xr AG_StyleSheet 3 .
-.El
-.Pp
 .nr nS 1
 .Ft "void"
 .Fn AG_SetStyle "AG_Widget *obj" "const char *attr" "const char *value"
@@ -297,73 +284,9 @@ on a per-class basis in an
 The
 .Fn AG_SetStyle
 function sets the specified style attribute to the given value.
-Style attributes include:
-.Pp
-.Bl -tag -compact -width "background-color "
-.It padding
-Pixels, "<Top Right Bottom Left>" or "inherit"
-.It spacing
-Pixels, "<Horizontal Vertical>" or "inherit"
-.It font-family
-"Courier", "DejaVu Sans", "my.bmp"
-.It font-size
-"10pts", "10.5pts", "80%"
-.It font-weight
-"normal", "semibold", "bold" or "!parent"
-.It font-style
-"normal", "italic", "upright-italic" or "!parent"
-.It font-stretch
-"normal", "condensed", "semi-condensed" or "!parent"
-.It color
-Foreground primary
-.It background-color
-Background primary
-.It text-color
-Text and vector icons
-.It line-color
-Lines and filled shapes
-.It high-color
-Shading (top and left)
-.It low-color
-Shading (bottom and right)
-.It selection-color
-Selection primary
-.El
-.Pp
-Color attributes allow an optional state selector:
-.Pp
-.Bl -tag -compact -width "disabled "
-.It "(none)"
-Unfocused state (default).
-.It "#disabled"
-Disabled state (DISABLED is set).
-.It "#focused"
-Focused state (FOCUSED is set).
-.It "#hover"
-Cursor is over the widget (MOUSEOVER is set).
-.El
-.Pp
-Color values can be specified using any one of the representations:
-.Pp
-.Bl -tag -width "Real hue/saturation/value " -compact
-.It "8-bit Device RGB"
-"r,g,b[,a]" or "rgb(r,g,b[,a])"
-.It "16-bit Device RGB"
-"rgb16(r,g,b[,a])"
-.It "Hue, Saturation and Value"
-"hsv(h,s,v[,a])"
-.It "16-bit hex"
-"#rgb[a]"
-.It "32-bit hex"
-"#rrggbb[aa]"
-.It "64-bit hex"
-"#rrrrggggbbbb[aaaa]"
-.It "Color identifier"
-"AntiqueWhite"
-.El
-.Pp
-RGBA and HSV components may be expressed in "%" (in relation to the
-same color entry in the parent widget's palette).
+Refer to
+.Xr AG_StyleSheet 3
+for the list of available attributes.
 .Pp
 The
 .Fn AG_SetFont
@@ -1333,10 +1256,12 @@ Actions were introduced in Agar 1.4.
 .Dv AG_WIDGET_USE_OPENGL
 first appeared in Agar 1.5, replacing
 .Xr AG_GLView 3 .
-The "font-changed" and "palette-changed" events were added in Agar 1.6.
-Structure members
+Agar 1.6.0 added
+.Fn AG_SetStyleF ,
+the "font-changed" and "palette-changed" events.
+The
 .Va actions ,
 .Va pal
 and
 .Va rSens
-were made public in Agar 1.6.
+structure members were made public in Agar 1.6.0.

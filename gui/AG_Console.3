@@ -284,9 +284,15 @@ User pointer
 The
 .Nm
 widget first appeared in Agar 1.3.
-Support for multi-line entries appeared in Agar 1.6.
-File monitoring features and the
-.Fn AG_ConsoleExportBuffer
-call also appeared in Agar 1.6.
+In Agar 1.6.0,
 .Fn AG_ConsoleSetPadding
-was replaced by the "padding" style attribute.
+was deprecated by the generic "padding" style attribute.
+Agar 1.6.0 added support for multi-line entries and introduced
+.Fn AG_ConsoleOpenFile ,
+.Fn AG_ConsoleOpenFD ,
+.Fn AG_ConsoleOpenStream ,
+.Fn AG_ConsoleClose ,
+.Fn AG_ConsoleMsgCatS ,
+.Fn AG_ConsoleBinary
+and
+.Fn AG_ConsoleExportBuffer .

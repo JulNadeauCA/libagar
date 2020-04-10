@@ -2,92 +2,93 @@
 
 ### What is it?
 
-Agar is a type of sugar polymer obtained from seaweed and red algae. Agar
-becomes gelatinous in water and is primarly used as a culture medium for
-microbiological work. Agar is also the name of an open source GUI toolkit,
-a set of software libraries for building graphical user interfaces.
+Agar is a type of sugar polymer obtained from seaweed and red algae. It becomes
+gelatinous in water and is primarly used as a culture medium for microbiological
+work. Agar is also the name of an open source GUI toolkit, a set of software
+libraries for building graphical user interfaces.
 
-Agar works with a wide variety of platforms and graphics systems, from
-modern desktops to classic consoles and embedded devices. Agar's low-level
-layers are modular, extensible and easily ported to new hardware platforms
-and graphics systems. Standard [drivers](http://libagar.org/man3/AG_Driver)
-include:
+Agar works with a wide variety of platforms and graphics systems, from modern
+desktops to classic consoles and embedded devices. Agar's low-level layers are
+modular, extensible and easily ported to new hardware platforms and graphics
+systems. Standard [AG_Drivers](https://libagar.org/man3/AG_Driver) include:
 
-* sdlfb (SDL, frame-buffer)
-* sdlgl (SDL, OpenGL)
-* glx (X11, OpenGL)
-* cocoa (MacOS X, OpenGL)
-* wgl (Windows, OpenGL)
+* [sdlfb](https://libagar.org/man3/AG_DriverSDLFB) (SDL, frame-buffer)
+* [sdlgl](https://libagar.org/man3/AG_DriverSDLGL) (SDL, OpenGL)
+* [glx](https://libagar.org/man3/AG_DriverGLX) (X11, OpenGL)
+* [cocoa](https://libagar.org/man3/AG_DriverCocoa) (MacOS X, OpenGL)
+* [wgl](https://libagar.org/man3/AG_DriverWGL) (Windows, OpenGL)
 
-For graphics systems without window capabilities, a _single-window_ mode
-is provided (in which case Agar provides an internal window manager).
+For graphics systems without window capabilities (or cases where a MDI-style
+interface is preferred over desktop integration), a _single-window_ mode is
+provided in which case Agar provides its own internal window manager.
 
-A set of general-purpose widgets are included in the Agar distribution.
-Agar's class registration interface allows new widgets to be implemented
-externally (i.e., as part of an application or library). GUI elements are
-styled with [Cascading Stylesheets](http://libagar.org/man3/AG_StyleSheet).
+Agar includes a good standard library of general-purpose widgets, but it is
+meant to be extended. It is customary to write new Agar widgets as part of an
+application or an external library. Complex user interface elements can be
+realized often using very few lines of code. The [class registration interface](https://libagar.org/man3/AG_Object#CLASSES)
+simplifies the process.
 
-Agar is [thread-safe](http://libagar.org/man3/AG_Threads) when built with
-threads support.
+Agar provides a powerful styling engine and a real-time "Style Editor" with
+support for cascading [stylesheets](https://libagar.org/man3/AG_StyleSheet).
 
-### Libraries Included
+Agar is [thread-safe](https://libagar.org/man3/AG_Threads) when built with threads support. Public calls are reentrant
+(unless documented otherwise). Agar does not rely on threads for its own operation.
 
-* [CORE](http://libagar.org/man3/AG_Intro#AGAR-CORE):
-  Platform, I/O, Object System
-* [GUI (Base)](http://libagar.org/man3/AG_Intro#AGAR-GUI:_BASE_SYSTEM):
-  GUI Framework
-* [GUI (Widgets)](http://libagar.org/man3/AG_Intro#AGAR-GUI:_STANDARD_WIDGETS):
+To help developers with the debugging process, the Debug build performs
+extensive object validity and class-membership tests on all pointers passed to
+Agar API calls, so memory errors trigger run-time "Illegal access" assertions
+as early as possible.
+
+### Libraries Included (stable)
+
+* [CORE](https://libagar.org/man3/AG_Intro#AGAR-CORE):
+  Platform, I/O, Object System (non graphical)
+* [GUI (Base)](https://libagar.org/man3/AG_Intro#AGAR-GUI:_BASE_SYSTEM):
+  GUI Base Framework
+* [GUI (Widgets)](https://libagar.org/man3/AG_Intro#AGAR-GUI:_STANDARD_WIDGETS):
   GUI Standard Widgets
-* [MATH](http://libagar.org/man3/AG_Intro#AGAR-MATH):
+* [MATH](https://libagar.org/man3/AG_Intro#AGAR-MATH):
   Matrices, Vectors, Advanced Rendering Methods
-* [NET](http://libagar.org/man3/AG_Intro#AGAR-NET):
-  Network Interface and HTTP Application Server
-* [SG](http://libagar.org/man3/AG_Intro#AGAR-SG):
-  3D Engine
-* [SK](http://libagar.org/man3/AG_Intro#AGAR-SK):
-  2D Sketch and Constraint Solver
-* [RG](http://libagar.org/man3/AG_Intro#AGAR-RG):
-  Feature-based Tileable Graphics
-* [AU](http://libagar.org/man3/AG_Intro#AGAR-AU):
-  Audio Interface Library
-* [MAP](http://libagar.org/man3/AG_Intro#AGAR-MAP):
-  Simple Tile Engine
-* [VG](http://libagar.org/man3/AG_Intro#AGAR-VG):
+* [NET](https://libagar.org/man3/AG_Intro#AGAR-NET):
+  Network Interface, HTTP Application Server
+* [VG](https://libagar.org/man3/AG_Intro#AGAR-VG):
   Simple 2D Vector Graphics
 
-**CORE** implements Agar's [Object System](http://libagar.org/man3/AG_Object),
-a single-inheritance system that can be used from different languages (for
-example, it is possible to subclass an Agar class written in C with one
-written in Ada and vice-versa). Agar objects are serializable (and **CORE**
-provides [serialization routines](http://libagar.org/man3/AG_DataSource)
-to help with that). A tree of Agar objects is referred to as a VFS or
-_virtual filesystem_. The **CORE** library is non-graphical and usable by
-command-line programs or daemons. It provides simple interfaces to operating
-system services such as filesystem access, dynamic library loading, network
-services, process execution, I/O multiplexing, timers and threads.
+### Libraries Included (beta)
+
+* [AU](https://libagar.org/man3/AG_Intro#AGAR-AU):
+  Audio Interface Library
+* [SG](https://libagar.org/man3/AG_Intro#AGAR-SG):
+  3D Engine
+* [SK](https://libagar.org/man3/AG_Intro#AGAR-SK):
+  2D Sketch and Constraint Solver
+* [RG](https://libagar.org/man3/AG_Intro#AGAR-RG):
+  Feature-based Tileable Graphics
+* [MAP](https://libagar.org/man3/AG_Intro#AGAR-MAP):
+  Simple Tile Engine
 
 ### Installation
 
-* **[On BSD](http://libagar.org/docs/inst/bsd.html)**
+* **[On BSD](https://libagar.org/docs/inst/bsd.html)**
   ![BSD](img/bsd.png)
-* **[On Linux](http://libagar.org/docs/inst/linux.html)**
+* **[On Linux](https://libagar.org/docs/inst/linux.html)**
   ![BSD](img/linux.png)
-* **[On MacOS](http://libagar.org/docs/inst/osx.html)**
+* **[On MacOS](https://libagar.org/docs/inst/osx.html)**
   ![BSD](img/osx.png)
-* **[On Unix](http://libagar.org/docs/inst/unix.html)**
+* **[On Unix](https://libagar.org/docs/inst/unix.html)**
   ![BSD](img/sunhp.png)
-* **[On Windows with MingGW32](http://libagar.org/docs/inst/win-mingw.html)**
+* **[On Windows with MingGW32](https://libagar.org/docs/inst/win-mingw.html)**
   ![BSD](img/win.png)
-* **[On Windows with MingGW64](http://libagar.org/docs/inst/win-mingw64.html)**
+* **[On Windows with MingGW64](https://libagar.org/docs/inst/win-mingw64.html)**
   ![BSD](img/win.png)
-* **[On Windows with Visual Studio](http://libagar.org/docs/inst/win-vs.html)**
+* **[On Windows with Visual Studio](https://libagar.org/docs/inst/win-vs.html)**
   ![BSD](img/win.png)
 
 ### Availability
 
 #### Latest Stable Release
 
-* [Download Source](http://libagar.org/download.html#stable)
+* [Download Source](https://libagar.org/download.html#stable)
 * On FreeBSD: ***pkg install agar***
 
 #### Latest Development Sources
@@ -97,7 +98,7 @@ services, process execution, I/O multiplexing, timers and threads.
 
 #### Portability
 
-Agar is [portable](http://libagar.org/portable.html) to different platforms
+Agar is [portable](https://libagar.org/portable.html) to different platforms
 including FreeBSD, IRIX, Linux, MacOS Classic, MacOS X, NetBSD, OpenBSD,
 Solaris and Windows. Agar has been used on ARM embedded devices. It has even
 been ported to game consoles such as the GP2x, the Nintendo Gamecube/Wii and
@@ -105,9 +106,14 @@ the Xbox.
 
 #### License
 
-* [BSD 2-Clause License](http://libagar.org/license.html)
+* [BSD 2-Clause License](https://libagar.org/license.html)
 
-#### Contributing
+### Contributing
 
-* [Contribute to the project](http://libagar.org/contribute.html)
+* [Contribute to the project](https://libagar.org/contribute.html)
+
+#### Support us on Patreon
+
+For exclusive content, tutorials and articles, sign up for the [LibAgar Patreon](https://patreon.com/libagar)
+(as low as $1/month).
 

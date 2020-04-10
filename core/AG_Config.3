@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@hypertriton.com>
+.\" Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@hypertriton.com>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -88,15 +88,13 @@ a parameter value to be specified as a pointer to an external piece of data.
 .Fn AG_ConfigDelPathS "AG_ConfigPathGroup group" "const char *pathname"
 .Pp
 .nr nS 0
-The
 .Fn AG_ConfigObject
-function returns a pointer to the global
-.Nm
+returns a pointer to the global
+.Va agConfig
 object.
 .Pp
-The
 .Fn AG_ConfigLoad
-function loads the configuration data from disk, returning 0 on sucess
+loads the configuration data from disk, returning 0 on sucess
 or -1 on failure.
 It is equivalent to calling
 .Xr AG_ObjectLoad 3
@@ -108,9 +106,8 @@ Note that
 must be called after the initialization of all Agar libraries
 (i.e., if an application uses Agar-GUI, then the
 .Fn AG_ConfigLoad
-call must follow the
-.Fn AG_InitGraphics
-call).
+call must follow
+.Fn AG_InitGraphics ) .
 .Pp
 The
 .Fn AG_ConfigSave
@@ -172,7 +169,9 @@ AG_ConfigSave();
 The following Agar-GUI code displays a checkbox controlling the value
 of "my-setting":
 .Bd -literal -offset indent
-AG_Checkbox *cb = AG_CheckboxNew(win, 0, "My setting");
+AG_Checkbox *cb;
+
+cb = AG_CheckboxNew(win, 0, "My setting");
 AG_BindVariable(cb, "state", agConfig, "my-setting");
 .Ed
 .Pp
@@ -208,4 +207,10 @@ for (i=0; i<AG_CONFIG_PATH_LAST; i++) {
 .Sh HISTORY
 The
 .Nm
-interface first appeared in Agar 1.0
+interface first appeared in Agar 1.0.
+.Fn AG_ConfigFind ,
+.Fn AG_ConfigAddPath ,
+.Fn AG_ConfigSetPath
+and
+.Fn AG_ConfigDelPath
+were introduced in Agar 1.6.0.
