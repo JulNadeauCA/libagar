@@ -39,8 +39,7 @@
 #include <agar/gui/statusbar.h>
 #include <agar/gui/tlist.h>
 
-#include <agar/rg/tileset.h>
-
+#include <agar/map/rg_tileset.h>
 #include <agar/map/map.h>
 #include <agar/map/icons_data.h>
 #include <agar/map/insert.h>

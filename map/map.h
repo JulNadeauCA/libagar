@@ -3,7 +3,7 @@
 #ifndef _AGAR_MAP_MAP_H_
 #define _AGAR_MAP_MAP_H_
 
-#include <agar/rg/tileset.h>
+#include <agar/map/rg_tileset.h>
 
 #define MAPTILESZ 16		/* Default tile size in pixels */
 

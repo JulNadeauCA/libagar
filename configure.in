@@ -12,17 +12,16 @@ version("1.6.0")
 release("Nullability Complete")
 
 register_section("Libraries to build:")
-register("--enable-au",		"AU: Audio and sound toolkit [yes]")
-register("--enable-dev",	"DEV: Debugger and developer tools [yes]")
-register("--enable-gui",	"GUI: The Agar GUI library [yes]")
-register("--enable-map",	"MAP: 2D tile map engine [yes]")
-register("--enable-math",	"MATH: Math library and advanced rendering [yes]")
-register("--enable-micro",	"MA: The Micro-Agar GUI library [auto]")
-register("--enable-net",	"NET: Network interface library [yes]")
-register("--enable-rg",		"RG: Feature-based graphics packages [yes]")
-register("--enable-sg",		"SG: Scene Graph and 3D engine toolkit [auto]")
-register("--enable-sk",		"SK: 2D sketcher and constraint solver [auto]")
-register("--enable-vg",		"VG: Simple 2D vector graphics [yes]")
+register("--enable-au",    "AU: Audio and sound toolkit [no]")
+register("--enable-dev",   "DEV: Debugger and developer tools [yes]")
+register("--enable-gui",   "GUI: The Agar GUI library [yes]")
+register("--enable-map",   "MAP: 2D tile engine [no]")
+register("--enable-math",  "MATH: Math library and advanced rendering [yes]")
+register("--enable-micro", "MA: Micro-Agar GUI library [no]")
+register("--enable-net",   "NET: Network interface library [yes]")
+register("--enable-sg",    "SG: Scene graph and 3D engine [no]")
+register("--enable-sk",    "SK: Sketch and constraint solver [no]")
+register("--enable-vg",    "VG: Simple 2D vector graphics [yes]")
 
 register_section("Global Agar options:")
 register("--with-memory-model=(S|M|L)",	"Select Agar memory model [auto]")
@@ -215,7 +214,7 @@ bbc | c64 | c128 | geos | nes)
 esac
 
 # Force a static build if requested.
-if [ "${enable_shared}" != "no" ]; then
+if [ "${enable_shared}" != 'no' ]; then
 	mdefine(LIB_SHARED, "Yes")
 else
 	mdefine(LIB_SHARED, "No")
@@ -227,7 +226,7 @@ fi
 # same attributes available to it as the compiler that was used to build the
 # Agar library itself. If not, --without-attributes should be used.
 #
-if [ "${with_attributes}" != "no" ]; then
+if [ "${with_attributes}" != 'no' ]; then
 	check(cc_attributes)
 else
 	disable(cc_attributes)
@@ -238,7 +237,7 @@ hdefine_if("${with_attributes}" != 'no', AG_USE_ATTRIBUTES)
 # Expand inlinables by default. Keep a dlsymmable copy of all
 # functions available (with names in lowercase form).
 #
-if [ "${with_inline}" = "no" ]; then
+if [ "${with_inline}" = 'no' ]; then
 	with_inline_byteswap="no"
 	with_inline_error="no"
 	with_inline_io="no"
@@ -840,7 +839,7 @@ fi
 #
 # AU: Enable the AU library (needs GUI).
 #
-if [ "${enable_au}" != 'no' -a "${enable_gui}" != 'no' ]; then
+if [ "${enable_au}" = 'yes' -a "${enable_gui}" != 'no' ]; then
 	hdefine(ENABLE_AU, "yes")
 	mdefine(SUBDIR_au, "au")
 
@@ -855,9 +854,20 @@ else
 fi
 
 #
+# MAP: Enable the MAP library (needs GUI).
+#
+if [ "${enable_map}" = 'yes' -a "${enable_gui}" != 'no' ]; then
+	hdefine(ENABLE_MAP, "yes")
+	mdefine(SUBDIR_map, "map")
+else
+	hundef(ENABLE_MAP)
+	mdefine(SUBDIR_map, "")
+fi
+
+#
 # SG: Enable the SG library (needs MATH, GUI).
 #
-if [ "${enable_sg}" != 'no' -a "${enable_gui}" != 'no' \
+if [ "${enable_sg}" = 'yes' -a "${enable_gui}" != 'no' \
   -a "${enable_math}" != 'no' -a "${enable_threads}" != 'no' \
   -a "${HAVE_OPENGL}" = 'yes' ]; then
 	hdefine(ENABLE_SG, "yes")
@@ -891,7 +901,7 @@ fi
 #
 # SK: Enable the SK library (needs MATH, GUI).
 #
-if [ "${enable_sk}" != 'no' -a "${enable_gui}" != 'no' \
+if [ "${enable_sk}" = 'yes' -a "${enable_gui}" != 'no' \
   -a "${enable_math}" != 'no' -a "${HAVE_OPENGL}" = 'yes' ]; then
 	hdefine(ENABLE_SK, "yes")
 	mdefine(SUBDIR_sk, "sk")
@@ -923,7 +933,7 @@ if [ "${HAVE_GETTIMEOFDAY}" = 'yes' ]; then
 		mappend(SRCS_CORE, "time_gettimeofday.c")
 	fi
 fi
-if [ "${HAVE_DB4}" = 'yes' -o "${HAVE_DB5}" = "yes" ]; then
+if [ "${HAVE_DB4}" = 'yes' -o "${HAVE_DB5}" = 'yes' ]; then
 	mappend(SRCS_CORE, "db_bdb.c")
 fi
 if [ "${HAVE_MYSQL}" = 'yes' ]; then
@@ -995,48 +1005,17 @@ c_incdir($BLD/include)
 c_incdir_config($BLD/include/agar/config)
 
 #
-# Agar-GUI config.
-# Implies: CORE.
+# "agar-config" script and pc(5) module generation:
 #
-config_script(agar-config,\
-	"-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} \
-	 ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} \
-	 ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} \
-	 ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} \
-	 ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}",\
-	"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} \
-	 ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} \
-	 ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} \
-	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
-	 ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}")
-pkgconfig_mod(agar, "Agar cross-platform GUI toolkit", \
-	"${X11_PC} ${SDL_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} \
-	 ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}", \
-	"", \
-	"-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} \
-	 ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} \
-	 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}", \
-	"-L\${libdir} -lag_gui -lag_core", \
-	"-lag_gui -lag_core ${COCOA_LIBS} ${MATH_LIBS} ${PTHREADS_LIBS} \
-	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
-	 ${CLOCK_LIBS} ${ICONV_LIBS}")
-#
-# Micro-Agar config.
-# Implies: CORE.
-#
-config_script(agar-micro-config,\
-	"-I${INCLDIR}",\
-	"-L${LIBDIR} -lag_micro_gui -lag_core")
-#
-# Agar-CORE config.
-#
+
 config_script(agar-core-config,\
 	"-I${INCLDIR} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
 	 ${CLOCK_CFLAGS} ${ICONV_CFLAGS}",\
 	"-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} \
 	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
 	 ${CLOCK_LIBS} ${ICONV_LIBS}")
-pkgconfig_mod(agar-core, "Agar object system and base library", "", "", \
+
+pkgconfig_mod(agar-core, "Agar object system and utility library", "", "", \
 	"-I\${includedir}/agar ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS} \
 	 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} \
 	 ${MYSQL_CFLAGS} ${CLOCK_CFLAGS}", \
@@ -1044,118 +1023,125 @@ pkgconfig_mod(agar-core, "Agar object system and base library", "", "", \
 	"-lag_core ${PTHREADS_XOPEN_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
 	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} \
 	 ${WINSOCK2_LIBS}")
-#
-# Agar-AU config.
-# Implies: GUI (optionally), CORE.
-#
-config_script(agar-au-config,\
-	"-I${INCLDIR} ${PORTAUDIO_CFLAGS} ${SNDFILE_CFLAGS}",\
-	"-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}")
-pkgconfig_mod(agar-au, "Agar audio library", \
-	"agar ${PORTAUDIO_PC} ${SNDFILE_PC}", "", \
-	"-I\${includedir}/agar", \
-	"-L\${libdir} -lag_au", \
-	"-lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}")
-#
-# Agar-DEV config.
-# Implies: GUI, CORE.
-#
-config_script(agar-dev-config, "-I${INCLDIR}", "-L${LIBDIR} -lag_dev")
-pkgconfig_mod(agar-dev, "Agar extra developer tools", \
-	"agar", "", \
-	"-I\${includedir}/agar", \
-	"-L\${libdir} -lag_dev", \
-	"-lag_dev")
-#
-# Agar-MAP config.
-# Implies: RG, MATH, GUI, CORE.
-#
-if [ "${enable_map}" != "no" -a "${enable_gui}" != "no" -a "${enable_rg}" != "no" ]; then
-	MDEFINE(SUBDIR_map, "map")
-fi
-config_script(agar-map-config,"-I${INCLDIR}","-L${LIBDIR} -lag_map")
-pkgconfig_mod(agar-map, "Agar 2D tile map engine", \
-	"agar-rg agar-math agar", "", \
-	"-I\${includedir}/agar", \
-	"-L\${libdir} -lag_map", \
-	"-lag_map")
-#
-# Agar-MATH config.
-# Implies: GUI (optionally), CORE.
-#
-config_script(agar-math-config,\
-	"-I${INCLDIR} ${MATH_CFLAGS} ${ALTIVEC_CFLAGS} \
-	${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}", \
-	"-L${LIBDIR} -lag_math ${MATH_LIBS}")
 
 if [ "${enable_gui}" != 'no' ]; then
-	AGAR_MATH_REQUIRES="agar"
-else
-	AGAR_MATH_REQUIRES="agar-core"
+	config_script(agar-config,\
+		"-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} \
+		 ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} \
+		 ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} \
+		 ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} \
+		 ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}",\
+		"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} \
+		 ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} \
+		 ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} \
+		 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
+		 ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}")
+	
+	pkgconfig_mod(agar, "Agar cross-platform GUI toolkit", \
+		"${X11_PC} ${SDL_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} \
+		 ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}", \
+		"", \
+		"-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} \
+		 ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} \
+		 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}", \
+		"-L\${libdir} -lag_gui -lag_core", \
+		"-lag_gui -lag_core ${COCOA_LIBS} ${MATH_LIBS} ${PTHREADS_LIBS} \
+		 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
+		 ${CLOCK_LIBS} ${ICONV_LIBS}")
 fi
-pkgconfig_mod(agar-math, "Agar math library", "${AGAR_MATH_REQUIRES}",\
-	"", \
-	"-I\${includedir}/agar ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} \
-	 ${SSE3_CFLAGS} ${MATH_CFLAGS}", \
-	"-L\${libdir} -lag_math", \
-	"-lag_math ${MATH_LIBS}")
-#
-# Agar-NET config.
-# Implies: CORE.
-#
-config_script(agar-net-config,\
-	"-I${INCLDIR} ${ZLIB_CFLAGS}",\
-	"-L${LIBDIR} -lag_net ${ZLIB_LIBS}")
-pkgconfig_mod(agar-net, "Agar network interface", "", "", \
-	"-I\${includedir}/agar ${ZLIB_CFLAGS}", \
-	"-L\${libdir} -lag_core", \
-	"-lag_net ${WINSOCK1_LIBS} ${WINSOCK2_LIBS} ${ZLIB_LIBS}")
-#
-# Agar-RG config.
-# Implies: MATH, GUI, CORE.
-#
-if [ "${enable_rg}" != "no" -a "${enable_gui}" != "no" ]; then
-	MDEFINE(SUBDIR_rg, "rg")
+
+if [ "${enable_micro}" = 'yes' ]; then
+	config_script(agar-micro-config,"-I${INCLDIR}",\
+		"-L${LIBDIR} -lag_micro_gui -lag_core")
 fi
-config_script(agar-rg-config,"-I${INCLDIR}","-L${LIBDIR} -lag_rg")
-pkgconfig_mod(agar-rg, "Agar feature-based graphics library", \
-	"agar-math agar", "", \
-	"-I\${includedir}/agar ${OPENGL_CFLAGS}", \
-	"-L\${libdir} -lag_rg", \
-	"-lag_rg ${OPENGL_LIBS}")
-#
-# Agar-SG config.
-# Implies: MATH, GUI, CORE.
-#
-config_script(agar-sg-config,\
-	"-I${INCLDIR} ${AGAR_MATH_CFLAGS} ${CG_CFLAGS} ${GLU_CFLAGS}",\
-	"-L${LIBDIR} -lag_sg ${AGAR_MATH_LIBS} ${CG_LIBS} ${GLU_LIBS}")
-pkgconfig_mod(agar-sg, "Agar 3D scene graph library", \
-	"agar-math agar", "", \
-	"-I\${includedir}/agar ${CG_CFLAGS} ${GLU_CFLAGS}", \
-	"-L\${libdir} -lag_sg", \
-	"-lag_sg ${AGAR_MATH_LIBS} ${CG_LIBS} ${GLU_LIBS}")
-#
-# Agar-SK config.
-# Implies: MATH, GUI, CORE.
-#
-config_script(agar-sk-config,\
-	"-I${INCLDIR} ${AGAR_MATH_CFLAGS}",\
-	"-L${LIBDIR} -lag_sk ${AGAR_MATH_LIBS}")
-pkgconfig_mod(agar-sk, "Agar sketch engine library", \
-	"agar-math agar", "", \
-	"-I\${includedir}/agar", \
-	"-L\${libdir} -lag_sk", \
-	"-lag_sk ${AGAR_MATH_LIBS}")
-#
-# Agar-VG config.
-# Implies: GUI, CORE.
-#
-config_script(agar-vg-config, "-I${INCLDIR}", "-L${LIBDIR} -lag_vg")
-pkgconfig_mod(agar-vg, "Agar vector graphics library", "agar", "", \
-	"-I\${includedir}/agar ${MATH_CFLAGS}", \
-	"-L\${libdir} -lag_vg", \
-	"-lag_vg ${MATH_LIBS}")
+
+if [ "${enable_au}" = 'yes' ]; then
+	config_script(agar-au-config,\
+		"-I${INCLDIR} ${PORTAUDIO_CFLAGS} ${SNDFILE_CFLAGS}",\
+		"-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}")
+
+	pkgconfig_mod(agar-au, "Agar audio library", \
+		"agar ${PORTAUDIO_PC} ${SNDFILE_PC}", "", \
+		"-I\${includedir}/agar", \
+		"-L\${libdir} -lag_au", \
+		"-lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}")
+fi
+
+if [ "${enable_dev}" != 'no' ]; then
+	config_script(agar-dev-config, "-I${INCLDIR}", "-L${LIBDIR} -lag_dev")
+	pkgconfig_mod(agar-dev, "Agar extra developer tools", "agar", "", \
+		"-I\${includedir}/agar", "-L\${libdir} -lag_dev", "-lag_dev")
+fi
+
+if [ "${enable_map}" = 'yes' -a "${enable_gui}" != 'no' ]; then
+	config_script(agar-map-config,"-I${INCLDIR}","-L${LIBDIR} -lag_map")
+	pkgconfig_mod(agar-map, "Agar 2D tile engine", \
+		"agar-rg agar-math agar", "", \
+		"-I\${includedir}/agar ${OPENGL_CFLAGS}", \
+		"-L\${libdir} -lag_map", \
+		"-lag_map ${OPENGL_LIBS}")
+fi
+
+if [ "${enable_math}" != 'no' ]; then
+	config_script(agar-math-config,\
+		"-I${INCLDIR} ${MATH_CFLAGS} ${ALTIVEC_CFLAGS} \
+		${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}", \
+		"-L${LIBDIR} -lag_math ${MATH_LIBS}")
+
+	if [ "${enable_gui}" != 'no' ]; then
+		AGAR_MATH_REQUIRES="agar"
+	else
+		AGAR_MATH_REQUIRES="agar-core"
+	fi
+	pkgconfig_mod(agar-math, "Agar math library", "${AGAR_MATH_REQUIRES}",\
+		"", \
+		"-I\${includedir}/agar ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} \
+		 ${SSE3_CFLAGS} ${MATH_CFLAGS}", \
+		"-L\${libdir} -lag_math", \
+		"-lag_math ${MATH_LIBS}")
+fi
+
+if [ "${enable_net}" != 'no' ]; then
+	config_script(agar-net-config,\
+		"-I${INCLDIR} ${ZLIB_CFLAGS}",\
+		"-L${LIBDIR} -lag_net ${ZLIB_LIBS}")
+
+	pkgconfig_mod(agar-net, "Agar network interface", "", "", \
+		"-I\${includedir}/agar ${ZLIB_CFLAGS}", \
+		"-L\${libdir} -lag_core", \
+		"-lag_net ${WINSOCK1_LIBS} ${WINSOCK2_LIBS} ${ZLIB_LIBS}")
+fi
+
+if [ "${enable_sg}" = 'yes' ]; then
+	config_script(agar-sg-config,\
+		"-I${INCLDIR} ${AGAR_MATH_CFLAGS} ${CG_CFLAGS} ${GLU_CFLAGS}",\
+		"-L${LIBDIR} -lag_sg ${AGAR_MATH_LIBS} ${CG_LIBS} ${GLU_LIBS}")
+
+	pkgconfig_mod(agar-sg, "Agar 3D scene graph library", \
+		"agar-math agar", "", \
+		"-I\${includedir}/agar ${CG_CFLAGS} ${GLU_CFLAGS}", \
+		"-L\${libdir} -lag_sg", \
+		"-lag_sg ${AGAR_MATH_LIBS} ${CG_LIBS} ${GLU_LIBS}")
+fi
+
+if [ "${enable_sk}" = 'yes' ]; then
+	config_script(agar-sk-config,\
+		"-I${INCLDIR} ${AGAR_MATH_CFLAGS}",\
+		"-L${LIBDIR} -lag_sk ${AGAR_MATH_LIBS}")
+	pkgconfig_mod(agar-sk, "Agar sketch engine library", \
+		"agar-math agar", "", \
+		"-I\${includedir}/agar", \
+		"-L\${libdir} -lag_sk", \
+		"-lag_sk ${AGAR_MATH_LIBS}")
+fi
+
+if [ "${enable_vg}" != 'no' ]; then
+	config_script(agar-vg-config, "-I${INCLDIR}", "-L${LIBDIR} -lag_vg")
+	pkgconfig_mod(agar-vg, "Agar vector graphics library", "agar", "", \
+		"-I\${includedir}/agar ${MATH_CFLAGS}", \
+		"-L\${libdir} -lag_vg", \
+		"-lag_vg ${MATH_LIBS}")
+fi
 
 #
 # Get the SVN revision number (or 0)
