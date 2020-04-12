@@ -15,16 +15,11 @@
 #include <agar/core/agsi.h>
 
 #include "config/have_agar_au.h"
+#include "config/have_agar_math.h"
 #include "config/datadir.h"
 
 extern const AG_TestCase buttonsTest;
 extern const AG_TestCase checkboxTest;
-#ifdef AG_UNICODE
-extern const AG_TestCase charsetsTest;
-#endif
-#if defined(AG_TIMERS) && defined(AG_HAVE_FLOAT)
-extern const AG_TestCase compositingTest;
-#endif
 extern const AG_TestCase configsettingsTest;
 extern const AG_TestCase consoleTest;
 extern const AG_TestCase customwidgetTest;
@@ -32,49 +27,54 @@ extern const AG_TestCase fixedresTest;
 extern const AG_TestCase focusingTest;
 extern const AG_TestCase fontsTest;
 extern const AG_TestCase fspathsTest;
-extern const AG_TestCase glviewTest;
 extern const AG_TestCase imageloadingTest;
 extern const AG_TestCase keyeventsTest;
 extern const AG_TestCase loaderTest;
-extern const AG_TestCase mathTest;
 extern const AG_TestCase maximizedTest;
 extern const AG_TestCase minimalTest;
-#ifdef AG_TIMERS
-extern const AG_TestCase objsystemTest;
-#endif
 extern const AG_TestCase paletteTest;
 extern const AG_TestCase paneTest;
-extern const AG_TestCase plottingTest;
 extern const AG_TestCase radioTest;
 extern const AG_TestCase rendertosurfaceTest;
 extern const AG_TestCase scrollbarTest;
 extern const AG_TestCase scrollviewTest;
 extern const AG_TestCase socketsTest;
-extern const AG_TestCase stringTest;
 extern const AG_TestCase tableTest;
 extern const AG_TestCase textboxTest;
 extern const AG_TestCase textdlgTest;
 extern const AG_TestCase threadsTest;
+extern const AG_TestCase unitconvTest;
+extern const AG_TestCase widgetsTest;
+extern const AG_TestCase windowsTest;
+#if defined(AG_TIMERS) && defined(AG_HAVE_FLOAT)
+extern const AG_TestCase compositingTest;
+#endif
+#ifdef AG_UNICODE
+extern const AG_TestCase charsetsTest;
+#endif
+#ifdef HAVE_AGAR_AU
+extern const AG_TestCase audioTest;
+#endif
+#ifdef HAVE_OPENGL
+extern const AG_TestCase glviewTest;
+#endif
 #ifdef AG_TIMERS
+extern const AG_TestCase objsystemTest;
 extern const AG_TestCase timeoutsTest;
 #endif
-extern const AG_TestCase unitconvTest;
 #ifdef AG_USER
 extern const AG_TestCase userTest;
 #endif
-extern const AG_TestCase widgetsTest;
-extern const AG_TestCase windowsTest;
+#ifdef HAVE_AGAR_MATH
 extern const AG_TestCase bezierTest;
+extern const AG_TestCase mathTest;
+extern const AG_TestCase plottingTest;
+extern const AG_TestCase stringTest;
+#endif
 
 const AG_TestCase *testCases[] = {
-#ifdef AG_UNICODE
-	&charsetsTest,
-#endif
 	&buttonsTest,
 	&checkboxTest,
-#if defined(AG_TIMERS) && defined(AG_HAVE_FLOAT)
-	&compositingTest,
-#endif
 	&configsettingsTest,
 	&consoleTest,
 	&customwidgetTest,
@@ -82,41 +82,50 @@ const AG_TestCase *testCases[] = {
 	&focusingTest,
 	&fontsTest,
 	&fspathsTest,
-#ifdef HAVE_OPENGL
-	&glviewTest,
-#endif
 	&imageloadingTest,
 	&keyeventsTest,
 	&loaderTest,
-	&mathTest,
 	&maximizedTest,
 	&minimalTest,
-#ifdef AG_TIMERS
-	&objsystemTest,
-#endif
 	&paletteTest,
 	&paneTest,
-	&plottingTest,
 	&radioTest,
 	&rendertosurfaceTest,
 	&scrollbarTest,
 	&scrollviewTest,
 	&socketsTest,
-	&stringTest,
 	&tableTest,
 	&textboxTest,
 	&textdlgTest,
 	&threadsTest,
+	&unitconvTest,
+	&widgetsTest,
+	&windowsTest,
+#ifdef HAVE_AGAR_AU
+	&audioTest,
+#endif
+#if defined(AG_TIMERS) && defined(AG_HAVE_FLOAT)
+	&compositingTest,
+#endif
+#ifdef AG_UNICODE
+	&charsetsTest,
+#endif
+#ifdef HAVE_OPENGL
+	&glviewTest,
+#endif
 #ifdef AG_TIMERS
+	&objsystemTest,
 	&timeoutsTest,
 #endif
-	&unitconvTest,
 #ifdef AG_USER
 	&userTest,
 #endif
-	&widgetsTest,
-	&windowsTest,
+#ifdef HAVE_AGAR_MATH
 	&bezierTest,
+	&mathTest,
+	&plottingTest,
+	&stringTest,
+#endif
 	NULL
 };
 
@@ -888,6 +897,7 @@ main(int argc, char *argv[])
 			    (void *)*pTest);
 		}
 	}
+	AG_TlistSort(tl);
 
 	hBox = AG_BoxNewHoriz(pane->div[0], AG_BOX_HFILL | AG_BOX_HOMOGENOUS |
 	                                    AG_BOX_NO_SPACING);

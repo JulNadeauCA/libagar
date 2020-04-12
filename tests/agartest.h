@@ -10,8 +10,6 @@
 #include <agar/config/ag_debug.h>
 #include <agar/config/have_64bit.h>
 #include <agar/config/have_opengl.h>
-#include <agar/config/enable_au.h>
-#include <agar/config/enable_vg.h>
 
 /* Test case definition */
 typedef struct ag_test_case {

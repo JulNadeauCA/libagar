@@ -1,6 +1,9 @@
 # Public domain
 # ex:syn=bsdbuild
 
+package("agartest")
+version("1.0")
+
 config_guess("../mk/config.guess")
 
 register_section("Agar test suite options:")
@@ -14,7 +17,7 @@ default_dir(LOCALEDIR, "${DATADIR}/locale")
 require(cc)
 require(agar, 1.6.0, ${prefix_agar})
 require(agar-dev, 1.6.0, ${prefix_agar})
-require(agar-math, 1.6.0, ${prefix_agar})
+check(agar-math, 1.6.0, ${prefix_agar})
 check(agar-vg, 1.6.0, ${prefix_agar})
 check(agar-au, 1.6.0, ${prefix_agar})
 check(rand48)
@@ -39,10 +42,15 @@ if [ "${enable_debug}" = "yes" ]; then
 	mdefine(CFLAGS, "${CFLAGS} -g")
 fi
 
-#mdefine(SRCS_EXTRA, "")
-#if [ "${HAVE_AGAR_AU}" = "yes" ]; then
-#	mappend(SRCS_EXTRA, "audio.c")
-#fi
+mdefine(SRCS_AUDIO, "")
+if [ "${HAVE_AGAR_AU}" = "yes" ]; then
+	mappend(SRCS_AUDIO, "audio.c")
+fi
+
+mdefine(SRCS_MATH, "")
+if [ "${HAVE_AGAR_MATH}" = "yes" ]; then
+	mappend(SRCS_MATH, "bezier.c bezier_widget.c math.c plotting.c string.c")
+fi
 
 c_incdir($BLD)
 c_incdir_config($BLD/config)

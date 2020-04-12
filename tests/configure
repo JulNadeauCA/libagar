@@ -887,6 +887,18 @@ echo '#ifndef MANDIR' >$bb_o
 echo "#define MANDIR \"$MANDIR\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"MANDIR\"] = \"$MANDIR\"" >>configure.lua
+PACKAGE="agartest"
+bb_o=$bb_incdir/package.h
+echo '#ifndef PACKAGE' >$bb_o
+echo "#define PACKAGE \"$PACKAGE\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
+VERSION="1.0"
+bb_o=$bb_incdir/version.h
+echo '#ifndef VERSION' >$bb_o
+echo "#define VERSION \"$VERSION\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
 if [ "${DATADIR_SPECIFIED}" != 'yes' ]; then
 DATADIR="${PREFIX}/share/agartest"
 bb_o=$bb_incdir/datadir.h
@@ -1086,8 +1098,8 @@ echo '# C: HAVE_CC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1112,7 +1124,7 @@ if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
-TEST_CFLAGS="-Wall -Werror"
+TEST_CFLAGS="-Wall"
 fi
 $ECHO_N 'cc: checking for float and double...'
 $ECHO_N '# cc: checking for float and double...' >>config.log
@@ -1521,7 +1533,10 @@ echo '* This software requires a C compiler'
 echo '# * This software requires a C compiler' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency cc not found"
+echo "***"
+echo "*** ERROR: Required dependency cc not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for Agar...'
@@ -1664,7 +1679,9 @@ main(int argc, char *argv[])
 {
 	AG_InitCore("conf-test", 0);
 	AG_InitGraphics(AG_NULL);
+#ifdef AG_EVENT_LOOP
 	AG_EventLoop();
+#endif
 	AG_Quit();
 	return (0);
 }
@@ -1739,7 +1756,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar not found"
+echo "***"
+echo "*** ERROR: Required dependency agar not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -1753,7 +1773,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar version mismatch"
+echo "***"
+echo "*** ERROR: Required dependency agar version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for Agar-DEV...'
@@ -2018,7 +2041,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar-dev not found"
+echo "***"
+echo "*** ERROR: Required dependency agar-dev not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -2032,7 +2058,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar-dev version mismatch"
+echo "***"
+echo "*** ERROR: Required dependency agar-dev version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for Agar-Math...'
@@ -2290,32 +2319,6 @@ echo '#undef AGAR_MATH_LIBS' >$bb_incdir/agar_math_libs.h
 echo 'hdefs["AGAR_MATH_LIBS"] = nil' >>configure.lua
 fi
 # END agar-math
-if [ "${HAVE_AGAR_MATH}" != "yes" ]; then
-echo '* '
-echo '# * ' >>config.log
-echo "* $PACKAGE requires Agar-Math (version 1.6.0 or newer)."
-echo "# * $PACKAGE requires Agar-Math (version 1.6.0 or newer)." >>config.log
-echo '* WWW: http://libagar.org'
-echo '# * WWW: http://libagar.org' >>config.log
-echo '* '
-echo '# * ' >>config.log
-echo "Required dependency agar-math not found"
-exit 1
-fi
-if [ "${MK_VERSION_OK}" != "yes" ]; then
-echo '* '
-echo '# * ' >>config.log
-echo '* This software requires agar-math version >= 1.6.0,'
-echo '# * This software requires agar-math version >= 1.6.0,' >>config.log
-echo '* please update that package and try again.'
-echo '# * please update that package and try again.' >>config.log
-echo '* WWW: http://libagar.org'
-echo '# * WWW: http://libagar.org' >>config.log
-echo '* '
-echo '# * ' >>config.log
-echo "Required dependency agar-math version mismatch"
-exit 1
-fi
 $ECHO_N 'checking for Agar-VG...'
 $ECHO_N '# checking for Agar-VG...' >>config.log
 # BEGIN agar-vg(1.6.0 ${prefix_agar})
@@ -2502,8 +2505,14 @@ cat << EOT >conftest$$.c
 #include <agar/vg.h>
 
 int main(int argc, char *argv[]) {
-	VG vg;
-	VG_Init(&vg, 0);
+	VG *vg;
+	AG_InitCore(NULL, 0);
+	VG_InitSubsystem();
+	if ((vg = VG_New(0)) != NULL) {
+		AG_ObjectDestroy(vg);
+	}
+	VG_DestroySubsystem();
+	AG_Quit();
 	return (0);
 }
 EOT
@@ -2899,6 +2908,16 @@ if [ "${enable_debug}" = "yes" ]
  then
 CFLAGS="${CFLAGS} -g"
 fi
+SRCS_AUDIO=""
+if [ "${HAVE_AGAR_AU}" = "yes" ]
+ then
+SRCS_AUDIO="${SRCS_AUDIO} audio.c"
+fi
+SRCS_MATH=""
+if [ "${HAVE_AGAR_MATH}" = "yes" ]
+ then
+SRCS_MATH="${SRCS_MATH} bezier.c bezier_widget.c math.c plotting.c string.c"
+fi
 CFLAGS="$CFLAGS -I$BLD"
 CXXFLAGS="$CXXFLAGS -I$BLD"
 echo "AGAR_AU_CFLAGS=$AGAR_AU_CFLAGS" >>Makefile.config
@@ -2977,6 +2996,8 @@ echo "MANDIR=$MANDIR" >>Makefile.config
 echo "mdefs[\"MANDIR\"] = \"$MANDIR\"" >>configure.lua
 echo "MODULEDIR=$MODULEDIR" >>Makefile.config
 echo "mdefs[\"MODULEDIR\"] = \"$MODULEDIR\"" >>configure.lua
+echo "PACKAGE=$PACKAGE" >>Makefile.config
+echo "mdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
 echo "PATH_SEPARATOR=$PATH_SEPARATOR" >>Makefile.config
 echo "mdefs[\"PATH_SEPARATOR\"] = \"$PATH_SEPARATOR\"" >>configure.lua
 echo "PKGCONFIG=$PKGCONFIG" >>Makefile.config
@@ -2999,10 +3020,16 @@ echo "PROG_SUFFIX=$PROG_SUFFIX" >>Makefile.config
 echo "mdefs[\"PROG_SUFFIX\"] = \"$PROG_SUFFIX\"" >>configure.lua
 echo "PROG_TRANSFORM=$PROG_TRANSFORM" >>Makefile.config
 echo "mdefs[\"PROG_TRANSFORM\"] = \"$PROG_TRANSFORM\"" >>configure.lua
+echo "SRCS_AUDIO=$SRCS_AUDIO" >>Makefile.config
+echo "mdefs[\"SRCS_AUDIO\"] = \"$SRCS_AUDIO\"" >>configure.lua
+echo "SRCS_MATH=$SRCS_MATH" >>Makefile.config
+echo "mdefs[\"SRCS_MATH\"] = \"$SRCS_MATH\"" >>configure.lua
 echo "STATEDIR=$STATEDIR" >>Makefile.config
 echo "mdefs[\"STATEDIR\"] = \"$STATEDIR\"" >>configure.lua
 echo "SYSCONFDIR=$SYSCONFDIR" >>Makefile.config
 echo "mdefs[\"SYSCONFDIR\"] = \"$SYSCONFDIR\"" >>configure.lua
+echo "VERSION=$VERSION" >>Makefile.config
+echo "mdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
 echo "WNO_UNINITIALIZED=$WNO_UNINITIALIZED" >>Makefile.config
 echo "mdefs[\"WNO_UNINITIALIZED\"] = \"$WNO_UNINITIALIZED\"" >>configure.lua
 if [ "${srcdir}" != '' ]; then
@@ -3013,7 +3040,10 @@ if [ "${srcdir}" != '' ]; then
 	fi
 	echo 'ok'
 fi
-echo '*'
-echo '* Configuration successful. Use the "make" command to compile,'
-echo '* and complete the installation using "make install".'
-echo '*'
+echo '**'
+echo '** Configuration successful!'
+echo '**'
+echo '** Use "make depend all" to compile. When finished,'
+$ECHO_N '** run "make install" to install under '
+echo "${PREFIX}."
+echo '**'
