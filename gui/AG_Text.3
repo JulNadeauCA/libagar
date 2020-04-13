@@ -467,12 +467,21 @@ sets the specified font object as the default font.
 A pointer to the previous default font is returned.
 .Pp
 .Fn AG_TextParseFontSpec
-parses for "<face>,<size>,<style>" and loads the matching font.
-If successful, it is set as default.
-Possible field separators include ":", "," and "/".
-This function is commonly used prior to
+parses a "<Face>[:<Size>][:<Style>]" format specification, loads the matching
+font and (if successful) sets it as the default font.
+Exceptionally, it is safe to invoke
+.Fn AG_TextParseFontSpec
+before the initial
 .Fn AG_InitGraphics
-to set a font from a command-line argument.
+call so that the default font can be set from a command-line argument.
+If
+.Fa fontspec
+is NULL then it's a no-op.
+.Pp
+Field separators "," and "/" are also recognized in addition to ":".
+Possible
+.Va Style
+flags include "b" = bold, "i" = italic, "I" = upright italic and "U" = uppercase.
 .Sh SEE ALSO
 .Xr AG_Config 3 ,
 .Xr AG_Editable 3 ,

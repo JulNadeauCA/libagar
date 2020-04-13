@@ -2119,7 +2119,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 
 	/*
 	 * Font face (fontconfig name, base of filename in `font-path', or
-	 * underscore prefix for memory builts-in such as "_agFontVera").
+	 * underscore prefix for memory builts-in such as "_agFontAlgue").
 	 */
 	if ((V = AG_AccessVariable(wid, "font-family")) != NULL) {
 		fontFace = Strdup(V->data.s);

@@ -470,7 +470,7 @@ void AG_TextValign(enum ag_text_valign);
 void AG_TextTabWidth(int);
 
 AG_Font *AG_SetDefaultFont(AG_Font *_Nonnull);
-void AG_TextParseFontSpec(const char *_Nonnull);
+void AG_TextParseFontSpec(const char *_Nullable);
 
 struct ag_window *_Nonnull AG_TextPromptOptions(struct ag_button *_Nonnull *_Nonnull ,
                                                 Uint, const char *_Nonnull, ...);

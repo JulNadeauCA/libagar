@@ -2336,13 +2336,17 @@ AG_SetDefaultFont(AG_Font *font)
  *   'I'  =>  upright italic
  */
 void
-AG_TextParseFontSpec(const char *fontspec)
+AG_TextParseFontSpec(const char *spec)
 {
 	char buf[AG_TEXT_FONTSPEC_MAX];
 	AG_Config *cfg = AG_ConfigObject();
 	char *fs, *s, *c;
 
-	Strlcpy(buf, fontspec, sizeof(buf));
+	if (spec == NULL) {
+		buf[0] = '\0';
+	} else {
+		Strlcpy(buf, spec, sizeof(buf));
+	}
 	fs = &buf[0];
 
 	if ((s = AG_Strsep(&fs, ":,/")) != NULL && s[0] != '\0') {
