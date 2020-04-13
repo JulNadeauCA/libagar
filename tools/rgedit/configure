@@ -449,7 +449,7 @@ echo '    --with-manpages            Generate Unix manual pages [yes]'
 echo ''
 echo 'rgedit options:'
 echo '    --with-agar[=PREFIX]        Location of Agar library [check]'
-echo '    --with-agar-rg[=PREFIX]     Location of Agar-RG library [check]'
+echo '    --with-agar-map[=PREFIX]    Location of Agar-MAP library [check]'
 echo ''
 echo 'Some influential environment variables:'
 echo '    CC           C compiler command'
@@ -1097,8 +1097,8 @@ echo '# C: HAVE_CC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1123,7 +1123,7 @@ if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
-TEST_CFLAGS="-Wall -Werror"
+TEST_CFLAGS="-Wall"
 fi
 $ECHO_N 'cc: checking for float and double...'
 $ECHO_N '# cc: checking for float and double...' >>config.log
@@ -1532,7 +1532,10 @@ echo '* This software requires a C compiler'
 echo '# * This software requires a C compiler' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency cc not found"
+echo "***"
+echo "*** ERROR: Required dependency cc not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for Agar...'
@@ -1675,7 +1678,9 @@ main(int argc, char *argv[])
 {
 	AG_InitCore("conf-test", 0);
 	AG_InitGraphics(AG_NULL);
+#ifdef AG_EVENT_LOOP
 	AG_EventLoop();
+#endif
 	AG_Quit();
 	return (0);
 }
@@ -1750,7 +1755,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar not found"
+echo "***"
+echo "*** ERROR: Required dependency agar not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -1764,48 +1772,51 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar version mismatch"
+echo "***"
+echo "*** ERROR: Required dependency agar version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
-$ECHO_N 'checking for Agar-RG...'
-$ECHO_N '# checking for Agar-RG...' >>config.log
-# BEGIN agar-rg(1.6.0 ${prefix_agar_rg})
-AGAR_RG_VERSION=
-if [ "${prefix_agar_rg}" != "" ]; then
-if [ -e "${prefix_agar_rg}/bin/agar-rg-config" ]; then
-AGAR_RG_VERSION=`${prefix_agar_rg}/bin/agar-rg-config --version`
+$ECHO_N 'checking for Agar-MAP...'
+$ECHO_N '# checking for Agar-MAP...' >>config.log
+# BEGIN agar-map(1.6.0 ${prefix_agar})
+AGAR_MAP_VERSION=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-map-config" ]; then
+AGAR_MAP_VERSION=`${prefix_agar}/bin/agar-map-config --version`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar_rg}/bin/agar-rg-config"
+MK_EXEC_PATH="${prefix_agar}/bin/agar-map-config"
 fi
 else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-rg-config" ]; then
-AGAR_RG_VERSION=`${path}/agar-rg-config --version`
+if [ -e "${path}/agar-map-config" ]; then
+AGAR_MAP_VERSION=`${path}/agar-map-config --version`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-rg-config"
+MK_EXEC_PATH="${path}/agar-map-config"
 break
-elif [ -e "${path}/agar-rg-config.exe" ]; then
-AGAR_RG_VERSION=`${path}/agar-rg-config.exe --version`
+elif [ -e "${path}/agar-map-config.exe" ]; then
+AGAR_MAP_VERSION=`${path}/agar-map-config.exe --version`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-rg-config.exe"
+MK_EXEC_PATH="${path}/agar-map-config.exe"
 break
 fi
 done
 IFS=$bb_save_IFS
 fi
-if [ "${AGAR_RG_VERSION}" != "" ]; then
-if [ "${prefix_agar_rg}" != "" ]; then
-echo "yes ($AGAR_RG_VERSION in ${prefix_agar_rg})"
-echo "# yes ($AGAR_RG_VERSION in ${prefix_agar_rg})" >>config.log
+if [ "${AGAR_MAP_VERSION}" != "" ]; then
+if [ "${prefix_agar}" != "" ]; then
+echo "yes ($AGAR_MAP_VERSION in ${prefix_agar})"
+echo "# yes ($AGAR_MAP_VERSION in ${prefix_agar})" >>config.log
 else
-echo "yes ($AGAR_RG_VERSION)"
-echo "# yes ($AGAR_RG_VERSION)" >>config.log
+echo "yes ($AGAR_MAP_VERSION)"
+echo "# yes ($AGAR_MAP_VERSION)" >>config.log
 fi
-MK_VERSION_MAJOR=`echo "$AGAR_RG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
-MK_VERSION_MINOR=`echo "$AGAR_RG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
-MK_VERSION_MICRO=`echo "$AGAR_RG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_MAJOR=`echo "$AGAR_MAP_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$AGAR_MAP_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$AGAR_MAP_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
 MK_VERSION_OK=no
 if [ $MK_VERSION_MAJOR -gt 1 ]; then
 MK_VERSION_OK=yes
@@ -1829,15 +1840,15 @@ fi
 if [ "${MK_VERSION_OK}" = "no" ]; then
 echo '*'
 echo '# *' >>config.log
-echo "* Minimum required version is 1.6.0 (found $AGAR_RG_VERSION)"
-echo "# * Minimum required version is 1.6.0 (found $AGAR_RG_VERSION)" >>config.log
+echo "* Minimum required version is 1.6.0 (found $AGAR_MAP_VERSION)"
+echo "# * Minimum required version is 1.6.0 (found $AGAR_MAP_VERSION)" >>config.log
 echo '*'
 echo '# *' >>config.log
 fi
 else
-if [ "${prefix_agar_rg}" != "" ]; then
-echo "no (not in ${prefix_agar_rg})"
-echo "# no (not in ${prefix_agar_rg})" >>config.log
+if [ "${prefix_agar}" != "" ]; then
+echo "no (not in ${prefix_agar})"
+echo "# no (not in ${prefix_agar})" >>config.log
 else
 echo 'no'
 echo '# no' >>config.log
@@ -1845,14 +1856,14 @@ fi
 MK_VERSION_OK="no"
 fi
 if [ "${MK_VERSION_OK}" = "yes" ]; then
-$ECHO_N 'checking whether Agar-RG works...'
-$ECHO_N '# checking whether Agar-RG works...' >>config.log
+$ECHO_N 'checking whether Agar-MAP works...'
+$ECHO_N '# checking whether Agar-MAP works...' >>config.log
 AGAR_CFLAGS=
-if [ "${prefix_agar_rg}" != "" ]; then
-if [ -e "${prefix_agar_rg}/bin/agar-config" ]; then
-AGAR_CFLAGS=`${prefix_agar_rg}/bin/agar-config --cflags`
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar_rg}/bin/agar-config"
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
 fi
 else
 bb_save_IFS=$IFS
@@ -1873,11 +1884,11 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
-if [ "${prefix_agar_rg}" != "" ]; then
-if [ -e "${prefix_agar_rg}/bin/agar-config" ]; then
-AGAR_LIBS=`${prefix_agar_rg}/bin/agar-config --libs`
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-config" ]; then
+AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar_rg}/bin/agar-config"
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
 fi
 else
 bb_save_IFS=$IFS
@@ -1897,51 +1908,51 @@ fi
 done
 IFS=$bb_save_IFS
 fi
-AGAR_RG_CFLAGS=
-if [ "${prefix_agar_rg}" != "" ]; then
-if [ -e "${prefix_agar_rg}/bin/agar-rg-config" ]; then
-AGAR_RG_CFLAGS=`${prefix_agar_rg}/bin/agar-rg-config --cflags`
+AGAR_MAP_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-map-config" ]; then
+AGAR_MAP_CFLAGS=`${prefix_agar}/bin/agar-map-config --cflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar_rg}/bin/agar-rg-config"
+MK_EXEC_PATH="${prefix_agar}/bin/agar-map-config"
 fi
 else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-rg-config" ]; then
-AGAR_RG_CFLAGS=`${path}/agar-rg-config --cflags`
+if [ -e "${path}/agar-map-config" ]; then
+AGAR_MAP_CFLAGS=`${path}/agar-map-config --cflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-rg-config"
+MK_EXEC_PATH="${path}/agar-map-config"
 break
-elif [ -e "${path}/agar-rg-config.exe" ]; then
-AGAR_RG_CFLAGS=`${path}/agar-rg-config.exe --cflags`
+elif [ -e "${path}/agar-map-config.exe" ]; then
+AGAR_MAP_CFLAGS=`${path}/agar-map-config.exe --cflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-rg-config.exe"
+MK_EXEC_PATH="${path}/agar-map-config.exe"
 break
 fi
 done
 IFS=$bb_save_IFS
 fi
-AGAR_RG_LIBS=
-if [ "${prefix_agar_rg}" != "" ]; then
-if [ -e "${prefix_agar_rg}/bin/agar-rg-config" ]; then
-AGAR_RG_LIBS=`${prefix_agar_rg}/bin/agar-rg-config --libs`
+AGAR_MAP_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-map-config" ]; then
+AGAR_MAP_LIBS=`${prefix_agar}/bin/agar-map-config --libs`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar_rg}/bin/agar-rg-config"
+MK_EXEC_PATH="${prefix_agar}/bin/agar-map-config"
 fi
 else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-rg-config" ]; then
-AGAR_RG_LIBS=`${path}/agar-rg-config --libs`
+if [ -e "${path}/agar-map-config" ]; then
+AGAR_MAP_LIBS=`${path}/agar-map-config --libs`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-rg-config"
+MK_EXEC_PATH="${path}/agar-map-config"
 break
-elif [ -e "${path}/agar-rg-config.exe" ]; then
-AGAR_RG_LIBS=`${path}/agar-rg-config.exe --libs`
+elif [ -e "${path}/agar-map-config.exe" ]; then
+AGAR_MAP_LIBS=`${path}/agar-map-config.exe --libs`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-rg-config.exe"
+MK_EXEC_PATH="${path}/agar-map-config.exe"
 break
 fi
 done
@@ -1951,23 +1962,24 @@ MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.c
 #include <agar/core.h>
 #include <agar/gui.h>
-#include <agar/rg.h>
+#include <agar/map.h>
 
 int main(int argc, char *argv[]) {
-	RG_Tileset *ts;
-
-	ts = RG_TilesetNew(NULL, "foo", 0);
-	AG_ObjectDestroy(ts);
+	MAP *m;
+	if (AG_InitCore(NULL, 0) == -1) { return (1); }
+	m = MAP_New(NULL, "foo");
+	AG_ObjectDestroy(m);
+	AG_Destroy();
 	return (0);
 }
 EOT
 echo >>config.log
-echo '# C: HAVE_AGAR_RG' >>config.log
+echo '# C: HAVE_AGAR_MAP' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_RG_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_RG_LIBS} ${AGAR_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_RG_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_RG_LIBS} ${AGAR_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_MAP_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_MAP_LIBS} ${AGAR_LIBS} 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_MAP_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_MAP_LIBS} ${AGAR_LIBS} 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1975,77 +1987,83 @@ fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
-HAVE_AGAR_RG=yes
-bb_o=$bb_incdir/have_agar_rg.h
-echo '#ifndef HAVE_AGAR_RG' >$bb_o
-echo "#define HAVE_AGAR_RG \"$HAVE_AGAR_RG\"" >>$bb_o
+HAVE_AGAR_MAP=yes
+bb_o=$bb_incdir/have_agar_map.h
+echo '#ifndef HAVE_AGAR_MAP' >$bb_o
+echo "#define HAVE_AGAR_MAP \"$HAVE_AGAR_MAP\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_AGAR_RG\"] = \"$HAVE_AGAR_RG\"" >>configure.lua
+echo "hdefs[\"HAVE_AGAR_MAP\"] = \"$HAVE_AGAR_MAP\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
-HAVE_AGAR_RG=no
-echo '#undef HAVE_AGAR_RG' >$bb_incdir/have_agar_rg.h
-echo 'hdefs["HAVE_AGAR_RG"] = nil' >>configure.lua
+HAVE_AGAR_MAP=no
+echo '#undef HAVE_AGAR_MAP' >$bb_incdir/have_agar_map.h
+echo 'hdefs["HAVE_AGAR_MAP"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_AGAR_RG}" = "yes" ]; then
-bb_o=$bb_incdir/agar_rg_cflags.h
-echo '#ifndef AGAR_RG_CFLAGS' >$bb_o
-echo "#define AGAR_RG_CFLAGS \"$AGAR_RG_CFLAGS\"" >>$bb_o
+if [ "${HAVE_AGAR_MAP}" = "yes" ]; then
+bb_o=$bb_incdir/agar_map_cflags.h
+echo '#ifndef AGAR_MAP_CFLAGS' >$bb_o
+echo "#define AGAR_MAP_CFLAGS \"$AGAR_MAP_CFLAGS\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"AGAR_RG_CFLAGS\"] = \"$AGAR_RG_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/agar_rg_libs.h
-echo '#ifndef AGAR_RG_LIBS' >$bb_o
-echo "#define AGAR_RG_LIBS \"$AGAR_RG_LIBS\"" >>$bb_o
+echo "hdefs[\"AGAR_MAP_CFLAGS\"] = \"$AGAR_MAP_CFLAGS\"" >>configure.lua
+bb_o=$bb_incdir/agar_map_libs.h
+echo '#ifndef AGAR_MAP_LIBS' >$bb_o
+echo "#define AGAR_MAP_LIBS \"$AGAR_MAP_LIBS\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"AGAR_RG_LIBS\"] = \"$AGAR_RG_LIBS\"" >>configure.lua
+echo "hdefs[\"AGAR_MAP_LIBS\"] = \"$AGAR_MAP_LIBS\"" >>configure.lua
 else
-echo '#undef AGAR_RG_CFLAGS' >$bb_incdir/agar_rg_cflags.h
-echo 'hdefs["AGAR_RG_CFLAGS"] = nil' >>configure.lua
-AGAR_RG_CFLAGS=""
-echo '#undef AGAR_RG_LIBS' >$bb_incdir/agar_rg_libs.h
-echo 'hdefs["AGAR_RG_LIBS"] = nil' >>configure.lua
-AGAR_RG_LIBS=""
+echo '#undef AGAR_MAP_CFLAGS' >$bb_incdir/agar_map_cflags.h
+echo 'hdefs["AGAR_MAP_CFLAGS"] = nil' >>configure.lua
+AGAR_MAP_CFLAGS=""
+echo '#undef AGAR_MAP_LIBS' >$bb_incdir/agar_map_libs.h
+echo 'hdefs["AGAR_MAP_LIBS"] = nil' >>configure.lua
+AGAR_MAP_LIBS=""
 fi
 else
-HAVE_AGAR_RG="no"
-AGAR_RG_CFLAGS=""
-AGAR_RG_LIBS=""
-echo '#undef HAVE_AGAR_RG' >$bb_incdir/have_agar_rg.h
-echo 'hdefs["HAVE_AGAR_RG"] = nil' >>configure.lua
-echo '#undef AGAR_RG_CFLAGS' >$bb_incdir/agar_rg_cflags.h
-echo 'hdefs["AGAR_RG_CFLAGS"] = nil' >>configure.lua
-echo '#undef AGAR_RG_LIBS' >$bb_incdir/agar_rg_libs.h
-echo 'hdefs["AGAR_RG_LIBS"] = nil' >>configure.lua
+HAVE_AGAR_MAP="no"
+AGAR_MAP_CFLAGS=""
+AGAR_MAP_LIBS=""
+echo '#undef HAVE_AGAR_MAP' >$bb_incdir/have_agar_map.h
+echo 'hdefs["HAVE_AGAR_MAP"] = nil' >>configure.lua
+echo '#undef AGAR_MAP_CFLAGS' >$bb_incdir/agar_map_cflags.h
+echo 'hdefs["AGAR_MAP_CFLAGS"] = nil' >>configure.lua
+echo '#undef AGAR_MAP_LIBS' >$bb_incdir/agar_map_libs.h
+echo 'hdefs["AGAR_MAP_LIBS"] = nil' >>configure.lua
 fi
-# END agar-rg
-if [ "${HAVE_AGAR_RG}" != "yes" ]; then
+# END agar-map
+if [ "${HAVE_AGAR_MAP}" != "yes" ]; then
 echo '* '
 echo '# * ' >>config.log
-echo "* $PACKAGE requires Agar-RG (version 1.6.0 or newer)."
-echo "# * $PACKAGE requires Agar-RG (version 1.6.0 or newer)." >>config.log
+echo "* $PACKAGE requires Agar-MAP (version 1.6.0 or newer)."
+echo "# * $PACKAGE requires Agar-MAP (version 1.6.0 or newer)." >>config.log
 echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar-rg not found"
+echo "***"
+echo "*** ERROR: Required dependency agar-map not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
 echo '* '
 echo '# * ' >>config.log
-echo '* This software requires agar-rg version >= 1.6.0,'
-echo '# * This software requires agar-rg version >= 1.6.0,' >>config.log
+echo '* This software requires agar-map version >= 1.6.0,'
+echo '# * This software requires agar-map version >= 1.6.0,' >>config.log
 echo '* please update that package and try again.'
 echo '# * please update that package and try again.' >>config.log
 echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar-rg version mismatch"
+echo "***"
+echo "*** ERROR: Required dependency agar-map version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${enable_nls}" = "yes" ]
@@ -2297,7 +2315,10 @@ echo '* This software requires a gettext library in libc'
 echo '# * This software requires a gettext library in libc' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency gettext not found"
+echo "***"
+echo "*** ERROR: Required dependency gettext not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -2317,10 +2338,10 @@ echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
 echo "mdefs[\"AGAR_CFLAGS\"] = \"$AGAR_CFLAGS\"" >>configure.lua
 echo "AGAR_LIBS=$AGAR_LIBS" >>Makefile.config
 echo "mdefs[\"AGAR_LIBS\"] = \"$AGAR_LIBS\"" >>configure.lua
-echo "AGAR_RG_CFLAGS=$AGAR_RG_CFLAGS" >>Makefile.config
-echo "mdefs[\"AGAR_RG_CFLAGS\"] = \"$AGAR_RG_CFLAGS\"" >>configure.lua
-echo "AGAR_RG_LIBS=$AGAR_RG_LIBS" >>Makefile.config
-echo "mdefs[\"AGAR_RG_LIBS\"] = \"$AGAR_RG_LIBS\"" >>configure.lua
+echo "AGAR_MAP_CFLAGS=$AGAR_MAP_CFLAGS" >>Makefile.config
+echo "mdefs[\"AGAR_MAP_CFLAGS\"] = \"$AGAR_MAP_CFLAGS\"" >>configure.lua
+echo "AGAR_MAP_LIBS=$AGAR_MAP_LIBS" >>Makefile.config
+echo "mdefs[\"AGAR_MAP_LIBS\"] = \"$AGAR_MAP_LIBS\"" >>configure.lua
 echo "BINDIR=$BINDIR" >>Makefile.config
 echo "mdefs[\"BINDIR\"] = \"$BINDIR\"" >>configure.lua
 echo "CC=$CC" >>Makefile.config
@@ -2343,8 +2364,8 @@ echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
 echo "mdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
 echo "HAVE_AGAR=$HAVE_AGAR" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR\"] = \"$HAVE_AGAR\"" >>configure.lua
-echo "HAVE_AGAR_RG=$HAVE_AGAR_RG" >>Makefile.config
-echo "mdefs[\"HAVE_AGAR_RG\"] = \"$HAVE_AGAR_RG\"" >>configure.lua
+echo "HAVE_AGAR_MAP=$HAVE_AGAR_MAP" >>Makefile.config
+echo "mdefs[\"HAVE_AGAR_MAP\"] = \"$HAVE_AGAR_MAP\"" >>configure.lua
 echo "HAVE_CC=$HAVE_CC" >>Makefile.config
 echo "mdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
 echo "HAVE_CC65=$HAVE_CC65" >>Makefile.config
@@ -2413,7 +2434,10 @@ if [ "${srcdir}" != '' ]; then
 	fi
 	echo 'ok'
 fi
-echo '*'
-echo '* Configuration successful. Use the "make" command to compile,'
-echo '* and complete the installation using "make install".'
-echo '*'
+echo '**'
+echo '** Configuration successful!'
+echo '**'
+echo '** Use "make depend all" to compile. When finished,'
+$ECHO_N '** run "make install" to install under '
+echo "${PREFIX}."
+echo '**'

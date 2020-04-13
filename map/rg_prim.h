@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_RG_PRIM_H_
 #define _AGAR_RG_PRIM_H_
-#include <agar/rg/begin.h>
+#include <agar/map/begin.h>
 
 struct rg_tile;
 
@@ -41,5 +41,5 @@ RG_PutPixel(AG_Surface *_Nonnull su, int x, int y, Uint32 pc)
 
 __END_DECLS
 
-#include <agar/rg/close.h>
+#include <agar/map/close.h>
 #endif	/* _AGAR_RG_PRIM_H_ */

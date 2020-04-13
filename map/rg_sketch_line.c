@@ -26,8 +26,8 @@
 #include <agar/core.h>
 #include <agar/gui.h>
 
-#include <agar/rg/tileset.h>
-#include <agar/rg/tileview.h>
+#include <agar/map/rg_tileset.h>
+#include <agar/map/rg_tileview.h>
 
 struct line_tool {
 	RG_TileviewTool tool;

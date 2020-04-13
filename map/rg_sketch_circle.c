@@ -26,9 +26,9 @@
 #include <agar/core.h>
 #include <agar/gui.h>
 
-#include <agar/rg/tileset.h>
-#include <agar/rg/tileview.h>
-#include <agar/rg/rg_math.h>
+#include <agar/map/rg_tileset.h>
+#include <agar/map/rg_tileview.h>
+#include <agar/map/rg_math.h>
 
 struct circle_tool {
 	RG_TileviewTool tool;

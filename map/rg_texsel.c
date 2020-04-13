@@ -28,11 +28,12 @@
  */
 
 #include <agar/core/core.h>
+
 #include <agar/gui/gui.h>
 #include <agar/gui/tlist.h>
 
-#include <agar/rg/tileset.h>
-#include <agar/rg/texsel.h>
+#include <agar/map/rg_tileset.h>
+#include <agar/map/rg_texsel.h>
 
 RG_TextureSelector *
 RG_TextureSelectorNew(void *parent, RG_Tileset *tset, Uint flags)

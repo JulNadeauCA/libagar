@@ -37,9 +37,9 @@
 #include <agar/gui/textbox.h>
 #include <agar/gui/tlist.h>
 
-#include <agar/rg/tileset.h>
-#include <agar/rg/tileview.h>
-#include <agar/rg/icons.h>
+#include <agar/map/rg_tileset.h>
+#include <agar/map/rg_tileview.h>
+#include <agar/map/rg_icons.h>
 
 #include <string.h>
 #include <stdlib.h>

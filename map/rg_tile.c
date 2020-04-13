@@ -43,11 +43,11 @@
 #include <agar/gui/file_dlg.h>
 #include <agar/gui/tlist.h>
 
-#include <agar/rg/tileset.h>
-#include <agar/rg/tileview.h>
-#include <agar/rg/fill.h>
-#include <agar/rg/sketchproj.h>
-#include <agar/rg/icons.h>
+#include <agar/map/rg_tileset.h>
+#include <agar/map/rg_tileview.h>
+#include <agar/map/rg_fill.h>
+#include <agar/map/rg_sketchproj.h>
+#include <agar/map/rg_icons.h>
 
 #include <string.h>
 

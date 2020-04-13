@@ -5,7 +5,6 @@ config_guess("../../mk/config.guess")
 
 register_section("mapedit options:")
 register("--with-agar[=PREFIX]",	"Location of Agar library [check]")
-register("--with-agar-rg[=PREFIX]",	"Location of Agar-RG library [check]")
 register("--with-agar-map[=PREFIX]",	"Location of Agar-MAP library [check]")
 
 package("mapedit")
@@ -15,7 +14,6 @@ default_dir(LOCALEDIR, "${DATADIR}/locale")
 
 require(cc)
 require(agar, 1.6.0, ${prefix_agar})
-require(agar-rg, 1.6.0, ${prefix_agar_rg})
 require(agar-map, 1.6.0, ${prefix_agar_map})
 
 if [ "${enable_nls}" = "yes" ]; then

@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_RG_TEXTURE_H_
 #define _AGAR_RG_TEXTURE_H_
-#include <agar/rg/begin.h>
+#include <agar/map/begin.h>
 
 #define RG_TEXTURE_NAME_MAX 32
 
@@ -42,5 +42,5 @@ RG_Texture *_Nullable RG_TextureFind(struct rg_tileset *_Nonnull,
 struct ag_window *_Nonnull RG_TextureEdit(void *_Nonnull, RG_Texture *_Nonnull);
 __END_DECLS
 
-#include <agar/rg/close.h>
+#include <agar/map/close.h>
 #endif	/* _AGAR_RG_TEXTURE_H_ */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,9 +24,11 @@
  */
 
 #include <agar/core.h>
+
 #include <agar/gui.h>
 #include <agar/gui/load_xcf.h>
-#include <agar/rg.h>
+
+#include <agar/map/rg.h>
 
 #include "config/datadir.h"
 #include "config/version.h"

@@ -9,7 +9,7 @@
 #include <math.h>
 #endif
 
-#include <agar/rg/begin.h>
+#include <agar/map/begin.h>
 
 #ifdef M_PI
 #define RG_PI M_PI
@@ -83,5 +83,5 @@ static __inline__ double RG_Fracf(double d) { return (d - floor(d)); }
 static __inline__ double RG_FracInvf(double d) { return (1 - (d - floor(d))); }
 __END_DECLS
 
-#include <agar/rg/close.h>
+#include <agar/map/close.h>
 #endif /* _AGAR_RG_MATH_H_ */

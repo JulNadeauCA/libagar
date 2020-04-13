@@ -12,16 +12,16 @@ struct rg_pixmap;
 struct rg_feature;
 struct rg_texture;
 
-#include <agar/rg/transform.h>
+#include <agar/map/rg_transform.h>
 /* #include <agar/vg/vg.h> */
-#include <agar/rg/tile.h>
-#include <agar/rg/feature.h>
-#include <agar/rg/pixmap.h>
-/* #include <agar/rg/sketch.h> */
-#include <agar/rg/texture.h>
-#include <agar/rg/prim.h>
+#include <agar/map/rg_tile.h>
+#include <agar/map/rg_feature.h>
+#include <agar/map/rg_pixmap.h>
+/* #include <agar/map/rg_sketch.h> */
+#include <agar/map/rg_texture.h>
+#include <agar/map/rg_prim.h>
 
-#include <agar/rg/begin.h>
+#include <agar/map/begin.h>
 
 #ifndef RG_TILESZ
 #define RG_TILESZ 16
@@ -116,5 +116,5 @@ RG_GetTile(RG_Tileset *_Nonnull ts, Uint32 id)
 }
 __END_DECLS
 
-#include <agar/rg/close.h>
+#include <agar/map/close.h>
 #endif	/* _AGAR_RG_TILESET_H_ */

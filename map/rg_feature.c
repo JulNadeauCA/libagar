@@ -24,11 +24,13 @@
  */
 
 #include <agar/core/core.h>
+
 #include <agar/gui/gui.h>
 #include <agar/gui/widget.h>
 #include <agar/gui/window.h>
-#include <agar/rg/tileset.h>
-#include <agar/rg/tileview.h>
+
+#include <agar/map/rg_tileset.h>
+#include <agar/map/rg_tileview.h>
 
 #include <string.h>
 

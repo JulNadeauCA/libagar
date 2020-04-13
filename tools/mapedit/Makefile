@@ -13,8 +13,8 @@ SRCS=		mapedit.c
 DATAFILES_SRC=	mapedit.bmp
 MAN1=		mapedit.1
 
-CFLAGS+=	${AGAR_MAP_CFLAGS} ${AGAR_RG_CFLAGS} ${AGAR_CFLAGS}
-LIBS+=		${AGAR_MAP_LIBS} ${AGAR_RG_LIBS} ${AGAR_LIBS}
+CFLAGS+=	${AGAR_MAP_CFLAGS} ${AGAR_CFLAGS}
+LIBS+=		${AGAR_MAP_LIBS} ${AGAR_LIBS}
 
 include ${TOP}/mk/build.prog.mk
 include ${TOP}/mk/build.man.mk

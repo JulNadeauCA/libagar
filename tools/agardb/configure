@@ -1562,7 +1562,10 @@ echo '* This software requires a C compiler'
 echo '# * This software requires a C compiler' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency cc not found"
+echo "***"
+echo "*** ERROR: Required dependency cc not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for Agar...'
@@ -1782,7 +1785,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar not found"
+echo "***"
+echo "*** ERROR: Required dependency agar not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -1796,7 +1802,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar version mismatch"
+echo "***"
+echo "*** ERROR: Required dependency agar version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for Agar-DEV...'
@@ -2061,7 +2070,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar-dev not found"
+echo "***"
+echo "*** ERROR: Required dependency agar-dev not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -2075,7 +2087,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar-dev version mismatch"
+echo "***"
+echo "*** ERROR: Required dependency agar-dev version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for a C++ compiler...'
@@ -2268,7 +2283,10 @@ echo '* This software requires a C++ compiler'
 echo '# * This software requires a C++ compiler' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency cxx not found"
+echo "***"
+echo "*** ERROR: Required dependency cxx not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for the LLDB debugger...'
@@ -3087,7 +3105,10 @@ echo '* WWW: https://lldb.llvm.org/'
 echo '# * WWW: https://lldb.llvm.org/' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency lldb not found"
+echo "***"
+echo "*** ERROR: Required dependency lldb not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -3101,7 +3122,10 @@ echo '* WWW: https://lldb.llvm.org/'
 echo '# * WWW: https://lldb.llvm.org/' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency lldb version mismatch"
+echo "***"
+echo "*** ERROR: Required dependency lldb version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${enable_lldb_utility}" = "no" ]
@@ -3361,7 +3385,10 @@ echo '* This software requires a gettext library in libc'
 echo '# * This software requires a gettext library in libc' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency gettext not found"
+echo "***"
+echo "*** ERROR: Required dependency gettext not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -3534,10 +3561,10 @@ if [ "${srcdir}" != '' ]; then
 	fi
 	echo 'ok'
 fi
-echo '*'
-echo '* Configuration successful!'
-echo '*'
-echo '* Use "make depend all" to compile. When finished,'
-$ECHO_N '* run "make install" to install under '
+echo '**'
+echo '** Configuration successful!'
+echo '**'
+echo '** Use "make depend all" to compile. When finished,'
+$ECHO_N '** run "make install" to install under '
 echo "${PREFIX}."
-echo '*'
+echo '**'

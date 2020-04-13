@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_RG_SKETCH_H_
 #define _AGAR_RG_SKETCH_H_
-#include <agar/rg/begin.h>
+#include <agar/map/begin.h>
 
 #define RG_SKETCH_NAME_MAX 32
 
@@ -72,5 +72,5 @@ void RG_SketchCloseMenu(struct rg_tileview *);
 void RG_SketchDrawPolygon(RG_Tile *, VG *, VG_Element *);
 __END_DECLS
 
-#include <agar/rg/close.h>
+#include <agar/map/close.h>
 #endif	/* _AGAR_RG_SKETCH_H_ */

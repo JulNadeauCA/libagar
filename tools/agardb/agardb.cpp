@@ -713,7 +713,8 @@ Agardb::GUI::GUI()
 		Verbose("Agar-GUI failed: %s\n", AG_GetError());
 		FatalError();
 	}
-	AG_SetStringF(agConfig, "load-path", ".:%s", DATADIR);
+	AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, DATADIR);
+	AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, ".");
 
 	AG_BindStdGlobalKeys();
 #ifdef __APPLE__

@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_RG_SKETCHPROJ_H_
 #define _AGAR_RG_SKETCHPROJ_H_
-#include <agar/rg/begin.h>
+#include <agar/map/begin.h>
 
 struct rg_sketchproj {
 	RG_Feature ft;
@@ -20,5 +20,5 @@ void       RG_SketchProjApply(void *, RG_Tile *, int, int);
 AG_Window *RG_SketchProjEdit(void *, RG_Tileview *);
 __END_DECLS
 
-#include <agar/rg/close.h>
+#include <agar/map/close.h>
 #endif /* _AGAR_RG_SKETCHPROJ_H_ */

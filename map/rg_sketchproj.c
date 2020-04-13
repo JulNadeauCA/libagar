@@ -27,9 +27,9 @@
 #include <agar/gui.h>
 #include <agar/vg.h>
 
-#include <agar/rg/tileset.h>
-#include <agar/rg/tileview.h>
-#include <agar/rg/sketchproj.h>
+#include <agar/map/rg_tileset.h>
+#include <agar/map/rg_tileview.h>
+#include <agar/map/rg_sketchproj.h>
 
 const AG_Version rgSketchProjVer = { 0, 0 };
 const RG_FeatureOps rgSketchProjOps = {

@@ -26,8 +26,8 @@
 #include <agar/core/core.h>
 #include <agar/gui/widget.h>
 
-#include <agar/rg/tileset.h>
-#include <agar/rg/rg_math.h>
+#include <agar/map/rg_tileset.h>
+#include <agar/map/rg_math.h>
 
 #include <math.h>
 #include <stdlib.h>

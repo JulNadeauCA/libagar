@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_RG_FEATURE_H_
 #define _AGAR_RG_FEATURE_H_
-#include <agar/rg/begin.h>
+#include <agar/map/begin.h>
 
 #include <agar/gui/keyboard.h>
 
@@ -91,5 +91,5 @@ void RG_FeatureOpenMenu(struct rg_tileview *_Nonnull, int,int);
 void RG_FeatureCloseMenu(struct rg_tileview *_Nonnull);
 __END_DECLS
 
-#include <agar/rg/close.h>
+#include <agar/map/close.h>
 #endif	/* _AGAR_RG_FEATURE_H_ */

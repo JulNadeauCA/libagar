@@ -43,11 +43,11 @@
 #include <agar/gui/radio.h>
 #include <agar/gui/textbox.h>
 
-#include <agar/rg/tileset.h>
-#include <agar/rg/tileview.h>
-#include <agar/rg/texsel.h>
-#include <agar/rg/icons.h>
-#include <agar/rg/icons_data.h>
+#include <agar/map/rg_tileset.h>
+#include <agar/map/rg_tileview.h>
+#include <agar/map/rg_texsel.h>
+#include <agar/map/rg_icons.h>
+#include <agar/map/rg_icons_data.h>
 
 #include <ctype.h>
 #include <string.h>

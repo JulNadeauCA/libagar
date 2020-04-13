@@ -23,15 +23,19 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Sketch feature using VG(3).
+ */
+
 #include <agar/core.h>
 #include <agar/gui.h>
 #include <agar/vg.h>
 
-#include <agar/rg/tileset.h>
-#include <agar/rg/tileview.h>
-#include <agar/rg/texsel.h>
-#include <agar/rg/icons.h>
-#include <agar/rg/rg_math.h>
+#include <agar/map/rg_tileset.h>
+#include <agar/map/rg_tileview.h>
+#include <agar/map/rg_texsel.h>
+#include <agar/map/rg_icons.h>
+#include <agar/map/rg_math.h>
 
 #include <string.h>
 

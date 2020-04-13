@@ -37,8 +37,8 @@
 #include <agar/gui/primitive.h>
 #include <agar/gui/opengl.h>
 
-#include <agar/rg/tileview.h>
-#include <agar/rg/icons.h>
+#include <agar/map/rg_tileview.h>
+#include <agar/map/rg_icons.h>
 
 #include <stdarg.h>
 #include <string.h>
