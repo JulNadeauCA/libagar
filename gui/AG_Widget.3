@@ -691,6 +691,12 @@ See also:
 .Ft void
 .Fn AG_PopClipRect "AG_Widget *obj"
 .Pp
+.Ft void
+.Fn AG_PushBlendingMode "AG_Widget *obj" "AG_AlphaFn fnSrc" "AG_AlphaFn fnDst" "AG_TextureEnvMode texenvMode"
+.Pp
+.Ft void
+.Fn AG_PopBlendingMode "AG_Widget *obj"
+.Pp
 .Ft "void"
 .Fn AG_WidgetDraw "AG_Widget *obj"
 .Pp
@@ -727,10 +733,29 @@ clipping rectangles, and
 pops the last entry from the clipping rectangle stack.
 The effective clipping rectangle will be the intersection of all rectangles
 on this stack.
-.Fn AG_PushClipRect
-and
-.Fn AG_PopClipRect
+.Fn AG_{Push,Pop}ClipRect
 must be invoked in rendering context.
+.Pp
+.Fn AG_PushBlendingMode
+pushes the given source/destination
+.Xr AG_AlphaFn 3
+and texture environment setting onto the stack of blending modes.
+.Fa fnSrc
+determines the function for the source pixel and
+.Fa fnDst
+that of the destination pixel.
+Values for
+.Fa texEnvMode
+include
+.Dv AG_TEXTURE_ENV_MODULATE ,
+.Dv AG_TEXTURE_ENV_DECAL ,
+.Dv AG_TEXTURE_ENV_BLEND
+and
+.Dv AG_TEXTURE_ENV_REPLACE .
+.Fn AG_PopBlendingMode
+pops the the last entry off the blending mode stack.
+.Fn AG_{Push,Pop}BlendingMode
+must be invoked from rendering context.
 .Pp
 The
 .Fn AG_WidgetDraw
@@ -1251,17 +1276,19 @@ The
 interface first appeared in Agar 1.0.
 Widget-level variable bindings have been replaced by generic
 .Xr AG_Variable 3
-pointers in Agar 1.3.4.
+pointers in Agar 1.3.
 Actions were introduced in Agar 1.4.
 .Dv AG_WIDGET_USE_OPENGL
 first appeared in Agar 1.5, replacing
 .Xr AG_GLView 3 .
-Agar 1.6.0 added
-.Fn AG_SetStyleF ,
-the "font-changed" and "palette-changed" events.
 The
 .Va actions ,
 .Va pal
 and
 .Va rSens
-structure members were made public in Agar 1.6.0.
+structure members were made public in Agar 1.6.
+Agar 1.6 also added
+.Fn AG_SetStyleF ,
+.Fn AG_PushBlendingMode ,
+.Fn AG_PopBlendingMode ,
+and introduced the "font-changed" and "palette-changed" events.

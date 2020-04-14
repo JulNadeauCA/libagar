@@ -12,7 +12,9 @@
 
 #include "agartest.h"
 #include "bezier_widget.h"
-#include <agar/math.h>
+
+#include <agar/math/m.h>
+#include <agar/math/m_gui.h>
 
 /*
  * This is a generic constructor function. It is completely optional, but

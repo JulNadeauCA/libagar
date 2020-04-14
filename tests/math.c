@@ -8,7 +8,8 @@
 
 #include "agartest.h"
 
-#include <agar/math.h>
+#include <agar/math/m.h>
+#include <agar/math/m_gui.h>
 
 #include <agar/config/have_altivec.h>
 #include <agar/config/have_altivec_h.h>

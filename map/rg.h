@@ -6,7 +6,9 @@
 
 #include <agar/core.h>
 #include <agar/gui.h>
-#include <agar/math.h>
+
+#include <agar/math/m.h>
+#include <agar/math/m_gui.h>
 
 #include <agar/map/rg_tileset.h>
 #include <agar/map/rg_tileview.h>
