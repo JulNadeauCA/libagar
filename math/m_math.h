@@ -195,7 +195,7 @@ typedef struct m_matrix {
 # define M_TINYVAL	 3.0e-7f
 # define M_HUGEVAL	 3.4e+37f
 #endif
-#define M_INFINITY HUGE_VAL
+#define M_INFINITY M_HUGEVAL
 #define M_MACHZERO(n) ((n) >= -M_MACHEP && (n) <= +M_MACHEP)
 
 /*

@@ -294,7 +294,7 @@ DrawGreyscale(M_Matview *_Nonnull mv)
 			if (dv == 0.0) {
 				continue;
 			}
-			if (dv == HUGE_VAL) {
+			if (dv == M_HUGEVAL) {
 				AG_ColorRGB_8(&c, 200,0,0);
 			} else {
 				if (dv >= 0.0) {
