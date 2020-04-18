@@ -20,20 +20,19 @@ To help developers with the debugging process, the Debug build performs extensiv
 
 ### Libraries Included (stable)
 
-* [CORE](https://libagar.org/man3/AG_Intro#AGAR-CORE): Platform, I/O, Object System (non graphical)
-* [GUI (Base)](https://libagar.org/man3/AG_Intro#AGAR-GUI:_BASE_SYSTEM): GUI Base Framework
-* [GUI (Widgets)](https://libagar.org/man3/AG_Intro#AGAR-GUI:_STANDARD_WIDGETS): GUI Standard Widgets
-* [MATH](https://libagar.org/man3/AG_Intro#AGAR-MATH): Matrices, Vectors, Advanced Rendering Methods
-* [NET](https://libagar.org/man3/AG_Intro#AGAR-NET): Network Interface, HTTP Application Server
-* [VG](https://libagar.org/man3/AG_Intro#AGAR-VG): Simple 2D Vector Graphics
+* [CORE](https://libagar.org/man3/AG_Intro#AGAR-CORE): Platform, I/O, object system (non graphical)
+* [GUI (Base)](https://libagar.org/man3/AG_Intro#AGAR-GUI:_BASE_SYSTEM): GUI base framework
+* [GUI (Widgets)](https://libagar.org/man3/AG_Intro#AGAR-GUI:_STANDARD_WIDGETS): GUI standard widgets
+* [MATH](https://libagar.org/man3/AG_Intro#AGAR-MATH): Matrices, vectors & advanced rendering methods
+* [NET](https://libagar.org/man3/AG_Intro#AGAR-NET): Network interface, HTTP application server
+* [VG](https://libagar.org/man3/AG_Intro#AGAR-VG): Vector graphics
 
 ### Libraries Included (beta)
 
-* [AU](https://libagar.org/man3/AG_Intro#AGAR-AU): Audio Interface Library
-* [SG](https://libagar.org/man3/AG_Intro#AGAR-SG): 3D Engine
-* [SK](https://libagar.org/man3/AG_Intro#AGAR-SK): 2D Sketch and Constraint Solver
-* [RG](https://libagar.org/man3/AG_Intro#AGAR-RG): Feature-based Tileable Graphics
-* [MAP](https://libagar.org/man3/AG_Intro#AGAR-MAP): Simple Tile Engine
+* [AU](https://libagar.org/man3/AG_Intro#AGAR-AU): Audio interface library
+* [SG](https://libagar.org/man3/AG_Intro#AGAR-SG): General-purpose 3D engine
+* [SK](https://libagar.org/man3/AG_Intro#AGAR-SK): Sketches with constraints
+* [MAP](https://libagar.org/man3/AG_Intro#AGAR-MAP): Tile engine
 
 ### Installation Guides
 

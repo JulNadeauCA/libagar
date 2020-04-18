@@ -29,5 +29,6 @@ LIBS=	${ENABLE_GUI_LIBS} ${GUI_LIBS} \
 	-L../core -lag_core ${CORE_LIBS} \
 	${VG_LIBS}
 
+include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
 include ${TOP}/mk/build.man.mk
