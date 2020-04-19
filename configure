@@ -455,8 +455,8 @@ echo '    --enable-map                MAP: 2D tile engine [no]'
 echo '    --enable-math               MATH: Math library and advanced rendering [yes]'
 echo '    --enable-micro              MA: Micro-Agar GUI library [no]'
 echo '    --enable-net                NET: Network interface library [yes]'
-echo '    --enable-sg                 SG: Scene graph and 3D engine [no]'
-echo '    --enable-sk                 SK: Sketch and constraint solver [no]'
+echo '    --enable-sg                 SG: Scene graph and 3D engine [yes]'
+echo '    --enable-sk                 SK: Sketch and constraint solver [yes]'
 echo '    --enable-vg                 VG: Simple 2D vector graphics [yes]'
 echo ''
 echo 'Global Agar options:'
@@ -475,17 +475,17 @@ echo ''
 echo 'Options specific to CORE library:'
 echo '    --enable-ansi-color         Produce colorized output [yes]'
 echo '    --enable-debug-core         Expensive AG_Object debugging [no]'
-echo '    --enable-dso                Dynamically loaded modules [check]'
-echo '    --enable-exec               The AG_Execute(3) interface [check]'
-echo '    --enable-event-loop         The standard AG_EventLoop(3) [check]'
-echo '    --enable-namespaces         Namespaces for object classes [check]'
-echo '    --enable-named-args         Named AG_Event arguments [check]'
-echo '    --enable-serialization      File I/O and serialization [check]'
-echo '    --enable-string             AG_Printf(3) formatting engine [check]'
-echo '    --enable-timers             The AG_Timer(3) interface [check]'
-echo '    --enable-unicode            Support for Unicode [check]'
-echo '    --enable-user               The AG_User(3) interface [check]'
-echo '    --enable-verbosity          Verbose error messages [check]'
+echo '    --enable-dso                Dynamically loaded modules [yes]'
+echo '    --enable-exec               The AG_Execute(3) interface [yes]'
+echo '    --enable-event-loop         The standard AG_EventLoop(3) [yes]'
+echo '    --enable-namespaces         Namespaces for object classes [yes]'
+echo '    --enable-named-args         Named AG_Event arguments [yes]'
+echo '    --enable-serialization      File I/O and serialization [yes]'
+echo '    --enable-string             AG_Printf(3) formatting engine [yes]'
+echo '    --enable-timers             The AG_Timer(3) interface [yes]'
+echo '    --enable-unicode            Support for Unicode [yes]'
+echo '    --enable-user               The AG_User(3) interface [yes]'
+echo '    --enable-verbosity          Verbose error messages [yes]'
 echo '    --with-db[45][=PREFIX]      AG_Db: Berkeley DB backend [no]'
 echo '    --with-mysql[=PREFIX]       AG_Db: MySQL backend [no]'
 echo '    --with-iconv[=PREFIX]       Character set conversion [check]'
@@ -12461,7 +12461,7 @@ echo '#undef ENABLE_MAP' >$bb_incdir/enable_map.h
 echo 'hdefs["ENABLE_MAP"] = nil' >>configure.lua
 SUBDIR_map=""
 fi
-if [ "${enable_sg}" = 'yes' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' -a "${enable_threads}" != 'no' -a "${HAVE_OPENGL}" = 'yes' ]
+if [ "${enable_sg}" != 'no' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' -a "${enable_threads}" != 'no' -a "${HAVE_OPENGL}" = 'yes' ]
  then
 ENABLE_SG="yes"
 bb_o=$bb_incdir/enable_sg.h
@@ -12660,7 +12660,7 @@ echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
 echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
 echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
 fi
-if [ "${enable_sk}" = 'yes' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' -a "${HAVE_OPENGL}" = 'yes' ]
+if [ "${enable_sk}" != 'no' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' -a "${HAVE_OPENGL}" = 'yes' ]
  then
 ENABLE_SK="yes"
 bb_o=$bb_incdir/enable_sk.h
@@ -13767,7 +13767,7 @@ Cflags: $pkgconfig_module_cflags
 EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-net.pc"
 fi
-if [ "${enable_sg}" = 'yes' ]
+if [ "${enable_sg}" != 'no' ]
  then
 config_script_out="agar-sg-config"
 config_script_cflags="-I${INCLDIR} ${AGAR_MATH_CFLAGS} ${CG_CFLAGS} ${GLU_CFLAGS}"
@@ -13889,7 +13889,7 @@ Cflags: $pkgconfig_module_cflags
 EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-sg.pc"
 fi
-if [ "${enable_sk}" = 'yes' ]
+if [ "${enable_sk}" != 'no' ]
  then
 config_script_out="agar-sk-config"
 config_script_cflags="-I${INCLDIR} ${AGAR_MATH_CFLAGS}"

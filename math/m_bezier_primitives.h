@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#ifndef M_BEZIER_PRIMITIVES_H
-#define M_BEZIER_PRIMITIVES_H
+#ifndef _AGAR_MATH_M_BEZIER_PRIMITIVES_H
+#define _AGAR_MATH_M_BEZIER_PRIMITIVES_H
 
 #include <agar/math/begin.h>
 
@@ -14,4 +14,4 @@ __END_DECLS
 
 #include <agar/math/close.h>
 
-#endif /* M_BEZIER_PRIMITIVES_H */
+#endif /* _AGAR_MATH_M_BEZIER_PRIMITIVES_H */

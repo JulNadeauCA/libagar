@@ -55,7 +55,7 @@ install-includes:
 	@${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}
 	@echo ${INSTALL_INCL_DIR} ${INCLDIR}/agar
 	@${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}/agar
-	@(cd include/agar && for DIR in ${INCDIR} config; do \
+	@(cd include/agar && for DIR in ${INCDIR} config math; do \
 	    echo "${SH} mk/install-includes.sh $$DIR ${INCLDIR}/agar"; \
 	    ${SUDO} env \
 	      DESTDIR="${DESTDIR}" \

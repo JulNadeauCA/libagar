@@ -19,8 +19,8 @@ register("--enable-map",   "MAP: 2D tile engine [no]")
 register("--enable-math",  "MATH: Math library and advanced rendering [yes]")
 register("--enable-micro", "MA: Micro-Agar GUI library [no]")
 register("--enable-net",   "NET: Network interface library [yes]")
-register("--enable-sg",    "SG: Scene graph and 3D engine [no]")
-register("--enable-sk",    "SK: Sketch and constraint solver [no]")
+register("--enable-sg",    "SG: Scene graph and 3D engine [yes]")
+register("--enable-sk",    "SK: Sketch and constraint solver [yes]")
 register("--enable-vg",    "VG: Simple 2D vector graphics [yes]")
 
 register_section("Global Agar options:")
@@ -39,17 +39,17 @@ register("--with-inline",		"Inline functions [yes]")
 register_section("Options specific to CORE library:")
 register("--enable-ansi-color",		"Produce colorized output [yes]")
 register("--enable-debug-core",		"Expensive AG_Object debugging [no]")
-register("--enable-dso",		"Dynamically loaded modules [check]")
-register("--enable-exec",		"The AG_Execute(3) interface [check]")
-register("--enable-event-loop",		"The standard AG_EventLoop(3) [check]")
-register("--enable-namespaces",		"Namespaces for object classes [check]")
-register("--enable-named-args",		"Named AG_Event arguments [check]")
-register("--enable-serialization",	"File I/O and serialization [check]")
-register("--enable-string",		"AG_Printf(3) formatting engine [check]")
-register("--enable-timers",		"The AG_Timer(3) interface [check]")
-register("--enable-unicode",		"Support for Unicode [check]")
-register("--enable-user",		"The AG_User(3) interface [check]")
-register("--enable-verbosity",		"Verbose error messages [check]")
+register("--enable-dso",		"Dynamically loaded modules [yes]")
+register("--enable-exec",		"The AG_Execute(3) interface [yes]")
+register("--enable-event-loop",		"The standard AG_EventLoop(3) [yes]")
+register("--enable-namespaces",		"Namespaces for object classes [yes]")
+register("--enable-named-args",		"Named AG_Event arguments [yes]")
+register("--enable-serialization",	"File I/O and serialization [yes]")
+register("--enable-string",		"AG_Printf(3) formatting engine [yes]")
+register("--enable-timers",		"The AG_Timer(3) interface [yes]")
+register("--enable-unicode",		"Support for Unicode [yes]")
+register("--enable-user",		"The AG_User(3) interface [yes]")
+register("--enable-verbosity",		"Verbose error messages [yes]")
 register("--with-db[45][=PREFIX]",	"AG_Db: Berkeley DB backend [no]")
 register("--with-mysql[=PREFIX]",	"AG_Db: MySQL backend [no]")
 register("--with-iconv[=PREFIX]",	"Character set conversion [check]")
@@ -867,7 +867,7 @@ fi
 #
 # SG: Enable the SG library (needs MATH, GUI).
 #
-if [ "${enable_sg}" = 'yes' -a "${enable_gui}" != 'no' \
+if [ "${enable_sg}" != 'no' -a "${enable_gui}" != 'no' \
   -a "${enable_math}" != 'no' -a "${enable_threads}" != 'no' \
   -a "${HAVE_OPENGL}" = 'yes' ]; then
 	hdefine(ENABLE_SG, "yes")
@@ -901,7 +901,7 @@ fi
 #
 # SK: Enable the SK library (needs MATH, GUI).
 #
-if [ "${enable_sk}" = 'yes' -a "${enable_gui}" != 'no' \
+if [ "${enable_sk}" != 'no' -a "${enable_gui}" != 'no' \
   -a "${enable_math}" != 'no' -a "${HAVE_OPENGL}" = 'yes' ]; then
 	hdefine(ENABLE_SK, "yes")
 	mdefine(SUBDIR_sk, "sk")
@@ -1112,7 +1112,7 @@ if [ "${enable_net}" != 'no' ]; then
 		"-lag_net ${WINSOCK1_LIBS} ${WINSOCK2_LIBS} ${ZLIB_LIBS}")
 fi
 
-if [ "${enable_sg}" = 'yes' ]; then
+if [ "${enable_sg}" != 'no' ]; then
 	config_script(agar-sg-config,\
 		"-I${INCLDIR} ${AGAR_MATH_CFLAGS} ${CG_CFLAGS} ${GLU_CFLAGS}",\
 		"-L${LIBDIR} -lag_sg ${AGAR_MATH_LIBS} ${CG_LIBS} ${GLU_LIBS}")
@@ -1124,7 +1124,7 @@ if [ "${enable_sg}" = 'yes' ]; then
 		"-lag_sg ${AGAR_MATH_LIBS} ${CG_LIBS} ${GLU_LIBS}")
 fi
 
-if [ "${enable_sk}" = 'yes' ]; then
+if [ "${enable_sk}" != 'no' ]; then
 	config_script(agar-sk-config,\
 		"-I${INCLDIR} ${AGAR_MATH_CFLAGS}",\
 		"-L${LIBDIR} -lag_sk ${AGAR_MATH_LIBS}")
