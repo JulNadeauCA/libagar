@@ -1,4 +1,4 @@
-.\" Copyright (c) 2010-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2010-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 .ds oS Agar 1.4.1
 .Sh NAME
 .Nm AG_InitGraphics
-.Nd agar graphics initialization
+.Nd agar GUI initialization
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -39,26 +39,34 @@
 .\" IMAGE(http://libagar.org/widgets/AG_DriverGLX.png, "The Xorg/glx driver")
 After having initialized the Agar-Core library with
 .Xr AG_InitCore 3 ,
-Agar-GUI applications must initialize the GUI system and select a driver.
+Agar-GUI applications must initialize the GUI system.
 .Sh AVAILABLE DRIVERS
-As of Agar-1.6, the driver modules included in the distribution are:
+As of Agar-1.6.0, the drivers included in the distribution are:
 .Pp
 .Bl -tag -width "sdlfb " -compact
-.It glx
-Native X11 interface (GL); see
-.Xr AG_DriverGLX 3 .
-.It wgl
-Native Microsoft Windows interface (GL); see
-.Xr AG_DriverWGL 3 .
 .It cocoa
-Native MacOS X Cocoa interface (GL); see
+Integrated MacOS X Cocoa interface.
+See
 .Xr AG_DriverCocoa 3 .
+.It dummy
+A "no-op" driver which prints all low-level requests and arguments on the console.
+See
+.Xr AG_DriverDUMMY 3 .
+.It glx
+Integrated X Windows interface.
+See
+.Xr AG_DriverGLX 3 .
 .It sdlfb
-SDL 1.x interface (framebuffer); see
+SDL 1.x interface (using Framebuffer).
+See
 .Xr AG_DriverSDLFB 3 .
 .It sdlgl
-SDL 1.x interface (GL); see
+SDL 1.x interface (using OpenGL).
+See
 .Xr AG_DriverSDLGL 3 .
+.It wgl
+Integrated MS Windows interface; see
+.Xr AG_DriverWGL 3 .
 .El
 .Sh INITIALIZATION
 .nr nS 1
@@ -84,19 +92,30 @@ argument is NULL (the usual case), Agar selects the "best" driver available
 on the current platform.
 If
 .Fa drivers
-is non-NULL, it should be a comma-separated list of drivers, in order of
-preference (the special strings "<OpenGL>" and "<SDL>" may be used to select
-any driver with GL or SDL capability).
-The list of compiled-in drivers may be obtained by calling
+is non-NULL, it should be a comma-separated list of drivers in order of
+preference.
+Special selectors are available to include drivers based on capabilities.
+"<OpenGL>" selects any driver with support for OpenGL 1.1 or later.
+"<SDL>" any driver based on SDL 1.x and "<FB>" any driver based on a
+software framebuffer.
+.Pp
+The full list of compiled-in drivers may be obtained by calling
 .Xr AG_ListDriverNames 3 .
-Driver-specific parameters (which are documented on the driver's respective
-manual page) may be specified as a colon-separated list between
-parentheses:
+Driver-specific parameters may be specified as a colon-separated list
+enclosed in parentheses.
+The available options are documented on the driver's respective manual page:
 .Bd -literal
-	sdlfb,sdlgl(width=640:height=480:depth=32)
-	<OpenGL>(stereo=1)
+	sdlfb,sdlgl
 	<SDL>(width=640:height=480:depth=32)
+	<openGL>(stereo=1)
 .Ed
+.Pp
+It is recommended that applications provide a way for the user to specify
+alternate drivers, for example
+.Xr agartest 1
+accepts the
+.Op Fl d Ar agar-driver
+command-line arguments.
 .Pp
 The
 .Fn AG_DestroyGraphics
@@ -121,8 +140,9 @@ for each X11 connection.
 .Xr AG_InitVideoSDL 3 ,
 .Xr AG_Intro 3
 .Sh HISTORY
-The
+An
 .Fn AG_InitVideo
-function first appeared in Agar 1.0, and was replaced by
+function first appeared in Agar 1.0.
+It was replaced by
 .Fn AG_InitGraphics
-in Agar 1.4.
+in Agar 1.4.0.

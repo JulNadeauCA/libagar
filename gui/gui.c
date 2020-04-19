@@ -425,10 +425,7 @@ AG_InitGraphics(const char *spec)
 		Strlcpy(specBuf, spec, sizeof(specBuf));
 		s = &specBuf[0];
 
-		if (strncmp(s, "<OpenGL>", 8) == 0) {
-			/*
-			 * Select preferred OpenGL-compatible driver.
-			 */
+		if (Strncasecmp(s, "<OpenGL>", 8) == 0) {    /* Any GL driver */
 			sOpts = &s[8];
 			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 				if ((*pd)->flags & AG_DRIVER_OPENGL &&
@@ -441,10 +438,7 @@ AG_InitGraphics(const char *spec)
 				AG_SetErrorS(_("No OpenGL drivers are available"));
 				goto fail;
 			}
-		} else if (strncmp(s, "<SDL>", 5) == 0) {
-			/*
-			 * Select preferred SDL-compatible driver.
-			 */
+		} else if (Strncasecmp(s, "<SDL>", 5) == 0) { /* Any SDL driver */
 			sOpts = &s[5];
 			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 				if ((*pd)->flags & AG_DRIVER_SDL &&
@@ -455,6 +449,19 @@ AG_InitGraphics(const char *spec)
 			}
 			if (dc == NULL) {
 				AG_SetErrorS(_("No SDL drivers are available"));
+				goto fail;
+			}
+		} else if (Strncasecmp(s, "<FB>", 4) == 0) { /* Any framebuffer driver */
+			sOpts = &s[5];
+			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+				if ((*pd)->type == AG_FRAMEBUFFER &&
+				   (drv = AG_DriverOpen(*pd)) != NULL) {
+					dc = *pd;
+					break;
+				}
+			}
+			if (dc == NULL) {
+				AG_SetErrorS(_("No framebuffer drivers are available"));
 				goto fail;
 			}
 		} else {
@@ -676,7 +683,6 @@ AG_About(AG_Event *event)
 
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close"), AG_WindowCloseGenEv,"%p",win);
 	AG_WindowShow(win);
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, -1, -1);
 }
 
 #ifdef AG_LEGACY

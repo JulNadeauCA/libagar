@@ -2,6 +2,23 @@
 All notable changes to Agar will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Build system: [**CMake**](https://cmake.org) support.
+- Driver for [**SDL 2.0**](https://libsdl.org) series.
+- Remote debugger [**agardb**](https://libagar.org/man1/agardb).
+- Interface builder to help the process of constructing static or fixed-resolution interfaces.
+- Add widget classes to the new Ada bindings in `ada/gui/`.
+- [**AG_Console**](https://libagar.org/man3/AG_Console): Handle ansi cursor and terminal operations. Clipboard integration.
+- [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): Display only those styles that are available for a given font (as opposed to a static list of styles).
+- [**AG_Notebook**](https://libagar.org/man3/AG_Notebook): Add disposition modes Bottom, Left & Right.
+- [**AG_Pixmap**](https://libagar.org/man3/AG_Pixmap) & [**AG_Fixed**](https://libagar.org/man3/AG_Fixed): Zoom operations.
+- [**AG_StyleEditor**](https://libagar.org/man3/AG_StyleEditor): Edition of stylesheet rules.
+- [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): Gradients and border styles. New selector `"E > F"` (an `F` element child of an `E` element).
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Filters. Stencil operations.
+- [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) & [**AG_Editable**](https://libagar.org/man3/AG_Editable): Extend SGR support. Syntax highlighting & rich-text editing methods.
+- [**AG_WidgetPrimitives**](https://libagar.org/man3/AG_WidgetPrimitives): Dithering. Shadow effects.
+- [**AG_Window**](https://libagar.org/man3/AG_Window): MRU API to simplify the process of remembering geometries. New gravity methods for autoplacing.
+- [**glx**](https://libagar.org/man3/AG_DriverGLX): Fix incorrect behavior when resizing windows by the left or by the top (handle combined move+resize).
+- [**glx**](https://libagar.org/man3/AG_DriverGLX): Make drag-and-drop (`sockets` test) work correctly (possibly using `AG_WindowMove()`).
 
 ## [1.6.0] - 2020-04-16
 ### Added
@@ -22,7 +39,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Editable**](https://libagar.org/man3/AG_Editable) & [**AG_Textbox**](https://libagar.org/man3/AG_Textbox): New property _"placeholder"_ to specify a text label to show whenever the buffer is empty. Thanks Federico for the suggestion!
 - [**AG_Editable**](https://libagar.org/man3/AG_Editable) & [**AG_Textbox**](https://libagar.org/man3/AG_Textbox): New options `UPPERCASE` and `LOWERCASE`.
 - [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): Added [AG_FileDlgAddImageTypes()](https://libagar.org/man3/AG_FileDlgAddImageTypes).
-- [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): New `COMPACT` option. In this mode, the widget becomes a single-line Textbox+Button. The Button triggers the FileDlg to instantiate a clone of itself in a new window. New constructors [AG_FileDlgNewCompact()](https://libagar.org/man3/AG_FileDlgNewCompact) and [AG_FileDlgNewCompactMRU()](https://libagar.org/man3/AG_FileDlgNewCompactMRU).
+- [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): New `COMPACT` option. In this mode, the widget becomes a single-line ( Textbox & Button ). The Button triggers the FileDlg to instantiate a clone of itself in a new window. New constructors [AG_FileDlgNewCompact()](https://libagar.org/man3/AG_FileDlgNewCompact) and [AG_FileDlgNewCompactMRU()](https://libagar.org/man3/AG_FileDlgNewCompactMRU).
 - [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): Added special syntaxes to `AG_FileType` item. `"<-x>"` tests whether a file is executable by the effective user. `"<=FILENAME>"` matches filenames exactly. `"<=FILENAME/i>"` performs case-insensitive matching.
 - [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): New functions [AG_FileDlgGetDirectory()](https://libagar.org/man3/AG_FileDlgGetDirectory), [AG_FileDlgGetFilename()](https://libagar.org/man3/AG_FileDlgGetFilename), [AG_FileDlgCopyDirectory()](https://libagar.org/man3/AG_FileDlgCopyDirectory), [AG_FileDlgCopyFilename()](https://libagar.org/man3/AG_FileDlgCopyFilename) and [AG_FileDlgCopyTypes()](https://libagar.org/man3/AG_FileDlgCopyTypes).
 - [**AG_Graph**](https://libagar.org/man3/AG_Graph): Add support for directed graphs. Edges now include distinct types `UNDIRECTED` and `DIRECTED`. Thanks Chuck!
@@ -35,15 +52,15 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): Handle multiline items. Implement key repeat.
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): Implement horizontal layout. New function [AG_RadioSetDisposition()](https://libagar.org/man3/AG_RadioSetDisposition). Thanks Federico!
 - [**AG_Separator**](https://libagar.org/man3/AG_Separator): New function [AG_SeparatorSetLength()](https://libagar.org/man3/AG_SeparatorSetLength) to set a requisition when placing separators in containers of indeterminate size.
-- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add support for 48- and 64-bit surfaces (`LARGE` model).
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add support for 48- and 64-bit surfaces (under `LARGE` memory model).
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add support for 1-bit (monochrome), 2-bit (4-color), and 4-bit (16 color) palettized modes. Cache `PixelsPerByte` in `format` field.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add support for Grayscale+Alpha modes (32-bit and 64-bit).
 - [**AG_Text**](https://libagar.org/man3/AG_Text): Add support for ANSI SGR attributes in [AG_TextSize()](https://libagar.org/man3/AG_TextSize) and [AG_TextRender()](https://libagar.org/man3/AG_TextRender). Map the SGR Alternative Fonts to our core fonts.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New functions [AG_TextFontPctFlags()](https://libagar.org/man3/AG_TextFontPctFlags) and [AG_CopyTextState()](https://libagar.org/man3/AG_CopyTextState).
-- [**AG_Timer**](https://libagar.org/man3/AG_Timer): New functions [AG_ExecTimer()](https://libagar.org/man3/AG_ExecTimer), [AG_DelTimers()](https://libagar.org/man3/AG_DelTimers).
+- [**AG_Timer**](https://libagar.org/man3/AG_Timer): New functions [AG_ExecTimer()](https://libagar.org/man3/AG_ExecTimer) & [AG_DelTimers()](https://libagar.org/man3/AG_DelTimers).
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Implement per-item alternate colors and font flags. New functions [AG_TlistSetColor()](https://libagar.org/man3/AG_TlistSetColor) and [AG_TlistSetFont()](https://libagar.org/man3/AG_TlistSetFont) to style items individually.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): New function [AG_SetStyleF()](https://libagar.org/man3/AG_SetStyleF).
-- [**AG_Widget**](https://libagar.org/man3/AG_Widget): New events _"font-changed"_ and _"palette-changed"_. They are generated by the style compiler to signal when a widget's font or palette entries have been changed.
+- [**AG_Widget**](https://libagar.org/man3/AG_Widget): New events _"font-changed"_ and _"palette-changed"_. They are generated by the style compiler to signal whenever a widget's `font` or any entries in its palette (`pal`) have been changed.
 - [**AG_Window**](https://libagar.org/man3/AG_Window): New function [AG_WindowMove()](https://libagar.org/man3/AG_WindowMove) for moving windows more efficiently when no resize is required.
 - New color manipulation routines [AG_ColorDarken()](https://libagar.org/man3/AG_ColorDarken), [AG_ColorLighten()](https://libagar.org/man3/AG_ColorLighten) and [AG_ColorInterpolate()](https://libagar.org/man3/AG_ColorInterpolate).
 - New size hinting functions [AG_PixmapSizeHint()](https://libagar.org/man3/AG_PixmapSizeHint), [AG_BoxSizeHint()](https://libagar.org/man3/AG_BoxSizeHint), [AG_RadioSizeHint()](https://libagar.org/man3/AG_RadioSizeHint) and [AG_FixedSizeHint()](https://libagar.org/man3/AG_FixedSizeHint), for specifying explicit size requisitions in pixels.
@@ -51,7 +68,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - New function [AG_DrawArrowhead()](https://libagar.org/man3/AG_DrawArrowhead) for drawing arrowheads of arbitrary size and angle aligned to arbitrary vectors. New function [AG_DrawArrowLine()](https://libagar.org/man3/AG_DrawArrowLine) for drawing lines with arrowheads. Thanks Chuck!
 - New function [AG_About()](https://libagar.org/man3/AG_About) to generate a simple "About Agar" dialog with license text.
 - [**dummy**](https://libagar.org/man3/AG_DriverDUMMY): A new **no-op** driver which prints out calls and arguments to the console. In [agartest](https://libagar.org/man1/agartest), use the "-C" option to see the output (e.g., "agartest -C -d dummy").
-- [**glx**](https://libagar.org/man3/AG_DriverGLX): Added "xsync" driver option to enable synchronous X events ("-d glx(xsync)") useful for debugging.
+- [**glx**](https://libagar.org/man3/AG_DriverGLX): New driver option _"xsync"_ to enable synchronous X events (e.g., `"-d glx(xsync)"`). This is useful when debugging issues involving any call into the X Window system.
 - New [style](https://libagar.org/man3/AG_StyleSheet) attributes for colors. Primaries are _"color"_, _"background-color"_, _"text-color"_, _"line-color"_, _"high-color"_, _"low-color"_ and _"selection-color"_. States are _#unfocused_, _#disabled_, _#focused_ and _#hover_.
 - New [style](https://libagar.org/man3/AG_StyleSheet) attributes _"font-family"_, _"font-size"_, _"font-weight"_, _"font-style"_ and _"font-stretch"_.
 - New [style](https://libagar.org/man3/AG_StyleSheet) attribute _"padding"_. Allowed syntaxes are `"padding: X"` (set all paddings) and `"padding: T R B L"` (set Top, Right, Bottom & Left separately). For example, the padding of an [AG_Button](https://libagar.org/man3/AG_Button) sets the space in pixels between the text label and the button's outer edges. The padding of an [AG_Box](https://libagar.org/man3/AG_Box) sets the padding around the entire set of attached child widgets.
@@ -70,7 +87,7 @@ All notable changes to Agar will be documented in this file. The format is based
 	- #10: [_League Gothic_](https://www.theleagueofmoveabletype.com/league-gothic) (Latin).
 	- #11: [_Unifraktur Maguntia_](http://unifraktur.sourceforge.net/maguntia.html) (Latin).
 - Clipboard integration (currently implemented in [**glx**](https://libagar.org/man3/AG_DriverGLX)). Added new [AG_Driver](https://libagar.org/man3/AG_Driver) operations `getClipboardText()` and `setClipboardText()`.
-- Provide dlsym()mable copies of inline functions in lowercase form. For example, the symbol `AG_LengthUTF8()` is now guaranteed to have a dlsymmable copy called `ag_length_utf8()`. This helps avoid the need for glue code in language bindings. Thanks Brian and Federico!
+- Provide `dlsym()`mable copies of inline functions in lowercase form. For example, the symbol `AG_LengthUTF8()` is now guaranteed to have a dlsymmable copy called `ag_length_utf8()`. This helps avoid the need for glue code in language bindings. Thanks Brian and Federico!
 - **Nullability**: Introduce `_Nullable` and `_Nonnull` pointer annotations to help prevent programming mistakes and make prototypes more expressive.
 - Define special nullability annotations for thread types which require special handling since they may or may not be pointer types depending on the platform. Define `_{Nullable,Nonnull,Null_unspecified}_{Mutex,Cond,Thread}`.
 - New pointer-type-safe accessor macros for event handlers. Instead of using the generic pointer accessors `AG_SELF()`, `AG_PTR()` or `AG_PTR_NAMED()` to retrieve an object pointer from an event handler, one can now use the more specific `AG_OBJECT_SELF()`, `AG_OBJECT_PTR()` and `AG_OBJECT_PTR_NAMED()` macros. In a _Debug_ build, such macros will perform a run-time validity and class-membership test. In a _Release_ build, no tests are done. Class-specific accessor macros are also provided, for example [AG\_Button](https://libagar.org/man3/AG_Button) defines `AG_BUTTON_SELF()`, `AG_BUTTON_PTR()` and `AG_BUTTON_PTR_NAMED()`.
