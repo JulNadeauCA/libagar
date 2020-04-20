@@ -671,7 +671,7 @@ AG_About(AG_Event *event)
 		fseek(f, 0, SEEK_END);
 		size = (AG_Size)ftell(f);
 		fseek(f, 0, SEEK_SET);
-		s = Malloc(size);
+		s = Malloc(size + 1);
 		fread(s, size, 1, f);
 		fclose(f);
 		s[size] = '\0';
