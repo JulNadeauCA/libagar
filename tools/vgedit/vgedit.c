@@ -136,7 +136,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	while ((c = AG_Getopt(argc, argv, "ASDvd:t:?h", &optArg, &optInd)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "ASDvd:t:?hp:", &optArg, &optInd)) != -1) {
 		switch (c) {
 		case 'A':
 		case 'S':
@@ -157,6 +157,8 @@ main(int argc, char *argv[])
 			break;
 		case 't':
 			fontSpec = optArg;
+			break;
+		case 'p':
 			break;
 		default:
 			PrintUsage();

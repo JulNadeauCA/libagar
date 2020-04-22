@@ -737,7 +737,7 @@ main(int argc, char *argv[])
 
 	TAILQ_INIT(&tests);
 
-	while ((c = AG_Getopt(argc, argv, "CWqd:s:t:v?h", &optArg, &optInd)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "CWqd:s:t:v?hp:", &optArg, &optInd)) != -1) {
 		switch (c) {
 		case 'C':
 			noConsoleRedir = 1;
@@ -782,6 +782,8 @@ main(int argc, char *argv[])
 				}
 				return (0);
 			}
+			break;
+		case 'p':
 			break;
 		case '?':
 		case 'h':

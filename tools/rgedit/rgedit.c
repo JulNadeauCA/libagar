@@ -480,7 +480,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	while ((c = AG_Getopt(argc, argv, "?vDd:t:", &optArg, &optInd)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "?vDd:t:p:", &optArg, &optInd)) != -1) {
 		switch (c) {
 		case 'v':
 			printf("rgedit %s\n", VERSION);
@@ -493,6 +493,8 @@ main(int argc, char *argv[])
 			break;
 		case 't':
 			fontSpec = optArg;
+			break;
+		case 'p':
 			break;
 		case '?':
 		default:

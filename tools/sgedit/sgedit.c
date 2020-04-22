@@ -77,7 +77,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	while ((c = AG_Getopt(argc, argv, "3SRTEMvDsd:t:e:?h", &optArg, &optInd)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "3SRTEMvDsd:t:e:?hp:", &optArg, &optInd)) != -1) {
 		switch (c) {
 		case '3':
 			forceStereo = 1;
@@ -106,6 +106,8 @@ main(int argc, char *argv[])
 			break;
 		case 'e':
 			sgEyeSeparation = (M_Real)strtod(optArg, NULL);
+			break;
+		case 'p':
 			break;
 		default:
 			PrintUsage();
