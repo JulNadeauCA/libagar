@@ -982,7 +982,7 @@ main(int argc, char *argv[])
 				AG_ConsoleMsgCatS(ln, _(" [current]"));
 			}
 		}
-		AG_ConsoleMsg(console, "");
+		AG_ConsoleMsgS(console, "");
 		AG_ConsoleMsg(console,
 		    _("Press " AGSI_BOLD AGSI_CMD "[-]" AGSI_RST
 		       " and " AGSI_BOLD AGSI_CMD "[=]" AGSI_RST " to zoom"));
@@ -992,7 +992,7 @@ main(int argc, char *argv[])
 #endif
 		AG_ConsoleMsg(console,
 		    _("Press " AGSI_BOLD "Ctrl-Shift-C or F8" AGSI_RST " to start Style Editor"));
-		AG_ConsoleMsg(console, "");
+		AG_ConsoleMsgS(console, "");
 	}
 
 	AG_TlistSetChangedFn(tl, SelectedTest, NULL);

@@ -461,18 +461,19 @@ AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 			switch (biBitCount) {
 			case 15:
 			case 16: {
-				Uint16 *px = (Uint16 *)bits;
-				for (i = 0; i < S->w; i++) {
-					px[i] = AG_Swap16(px[i]);
+					Uint16 *px = (Uint16 *)bits;
+
+					for (i = 0; i < S->w; i++)
+						px[i] = AG_Swap16(px[i]);
+					break;
 				}
-				break;
-			}
 			case 32: {
-				Uint32 *px = (Uint32 *)bits;
-				for (i = 0; i < S->w; i++) {
-					px[i] = AG_Swap32(px[i]);
+					Uint32 *px = (Uint32 *)bits;
+
+					for (i = 0; i < S->w; i++)
+						px[i] = AG_Swap32(px[i]);
+					break;
 				}
-				break;
 			}
 #endif /* BE */
 			break;
