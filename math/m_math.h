@@ -11,13 +11,8 @@
 # include <math.h>
 #endif
 
-/* AltiVec extensions */
+/* AltiVec extensions. No need to include <altivec.h> since we use -faltivec. */
 #include <agar/config/have_altivec.h>
-#include <agar/config/have_altivec_h.h>
-#include <agar/config/inline_altivec.h>
-#if defined(HAVE_ALTIVEC) && defined(HAVE_ALTIVEC_H)
-# include <altivec.h>
-#endif
 
 /* SSE extensions */
 #include <agar/config/have_sse.h>

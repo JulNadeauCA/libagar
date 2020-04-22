@@ -636,7 +636,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 
 	switch (btn) {
 	case AG_MOUSE_LEFT:
-		if (y > pal->rPrev.y) {
+		if ((pal->flags & AG_HSVPAL_NOALPHA) == 0 &&
+		    y > pal->rPrev.y) {
 			UpdateAlpha(pal, x);
 			pal->state = AG_HSVPAL_SEL_A;
 		} else {
@@ -699,51 +700,94 @@ static Uint32
 KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_HSVPal *pal = AG_HSVPAL_SELF();
-	int keysym = AG_INT(1);
+	const int keysym = AG_INT(1);
+	const int keymod = AG_INT(2);
+	const int doHue = (keymod & AG_KEYMOD_SHIFT) ||
+	                  (keymod & AG_KEYMOD_CTRL) ||
+	                  (keymod & AG_KEYMOD_ALT);
 	Uint32 rv = to->ival;
-	float sat, value;
-	const float delta = 0.01f;
+	float sat, x;
 
 	switch (keysym) {
 	case AG_KEY_UP:
- 		sat = AG_GetFloat(pal,"saturation");
-		if ((sat += delta) > 1.0f) {
-			sat = 1.0f;
-			rv = 0;
+		if (doHue) {
+	 		x = AG_GetFloat(pal,"hue");
+			if ((x -= 2.0f) < 0.0f) {
+				x = 360.0f;
+			}
+			AG_SetFloat(pal, "hue", x);
+			UpdatePixelFromHSVA(pal);
+			AG_PostEvent(pal, "h-changed", NULL);
+		} else {
+	 		sat = AG_GetFloat(pal,"saturation");
+			if ((sat += 0.015f) > 1.0f) {
+				sat = 1.0f;
+				rv = 0;
+			}
+			AG_SetFloat(pal, "saturation", sat);
+			UpdatePixelFromHSVA(pal);
+			AG_PostEvent(pal, "sv-changed", NULL);
 		}
-		AG_SetFloat(pal, "saturation", sat);
-		UpdatePixelFromHSVA(pal);
-		AG_PostEvent(pal, "sv-changed", NULL);
 		break;
 	case AG_KEY_DOWN:
- 		sat = AG_GetFloat(pal,"saturation");
-		if ((sat -= delta) < 0.0f) {
-			sat = 0.0f;
-			rv = 0;
+		if (doHue) {
+	 		x = AG_GetFloat(pal,"hue");
+			if ((x += 2.0f) > 360.0f) {
+				x = 0.0f;
+			}
+			AG_SetFloat(pal, "hue", x);
+			UpdatePixelFromHSVA(pal);
+			AG_PostEvent(pal, "h-changed", NULL);
+		} else {
+	 		sat = AG_GetFloat(pal,"saturation");
+			if ((sat -= 0.015f) < 0.0f) {
+				sat = 0.0f;
+				rv = 0;
+			}
+			AG_SetFloat(pal, "saturation", sat);
+			UpdatePixelFromHSVA(pal);
+			AG_PostEvent(pal, "sv-changed", NULL);
 		}
-		AG_SetFloat(pal, "saturation", sat);
-		UpdatePixelFromHSVA(pal);
-		AG_PostEvent(pal, "sv-changed", NULL);
 		break;
 	case AG_KEY_LEFT:
- 		value = AG_GetFloat(pal,"value");
-		if ((value += delta) > 1.0f) {
-			value = 1.0f;
-			rv = 0;
+		if (doHue) {
+	 		x = AG_GetFloat(pal,"hue");
+			if ((x -= 2.0f) < 0.0f) {
+				x = 360.0f;
+			}
+			AG_SetFloat(pal, "hue", x);
+			UpdatePixelFromHSVA(pal);
+			AG_PostEvent(pal, "h-changed", NULL);
+		} else {
+	 		x = AG_GetFloat(pal,"value");
+			if ((x += 0.01f) > 1.0f) {
+				x = 1.0f;
+				rv = 0;
+			}
+			AG_SetFloat(pal, "value", x);
+			UpdatePixelFromHSVA(pal);
+			AG_PostEvent(pal, "sv-changed", NULL);
 		}
-		AG_SetFloat(pal, "value", value);
-		UpdatePixelFromHSVA(pal);
-		AG_PostEvent(pal, "sv-changed", NULL);
 		break;
 	case AG_KEY_RIGHT:
- 		value = AG_GetFloat(pal,"value");
-		if ((value -= delta) < 0.0f) {
-			value = 0.0f;
-			rv = 0;
+		if (doHue) {
+	 		x = AG_GetFloat(pal,"hue");
+			if ((x += 2.0f) > 360.0f) {
+				x = 0.0f;
+			}
+			AG_SetFloat(pal, "hue", x);
+			UpdatePixelFromHSVA(pal);
+			AG_PostEvent(pal, "h-changed", NULL);
+		} else {
+	 		x = AG_GetFloat(pal,"value");
+			if ((x -= 0.01f) < 0.0f) {
+				x = 0.0f;
+				rv = 0;
+			}
+			AG_SetFloat(pal, "value", x);
+			UpdatePixelFromHSVA(pal);
+			AG_PostEvent(pal, "sv-changed", NULL);
 		}
-		AG_SetFloat(pal, "value", value);
-		UpdatePixelFromHSVA(pal);
-		AG_PostEvent(pal, "sv-changed", NULL);
 		break;
 	}
 	return (rv);
@@ -754,15 +798,16 @@ KeyDown(AG_Event *_Nonnull event)
 {
 	AG_HSVPal *pal = AG_HSVPAL_SELF();
 	const int keysym = AG_INT(1);
+	const int keymod = AG_INT(2);
 
 	switch (keysym) {
 	case AG_KEY_UP:
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
 	case AG_KEY_LEFT:
-		AG_AddTimer(pal, &pal->toMove[keysym-AG_KEY_UP], 1,
-		    KeyMoveTimeout, "%i", keysym);
-		AG_ExecTimer(&pal->toMove[keysym-AG_KEY_UP]);
+		AG_AddTimer(pal, &pal->toMove[keysym - AG_KEY_UP], 1,
+		    KeyMoveTimeout, "%i,%i", keysym, keymod);
+		AG_ExecTimer(&pal->toMove[keysym - AG_KEY_UP]);
 		break;
 	}
 

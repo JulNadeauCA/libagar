@@ -24,15 +24,11 @@
  */
 
 /*
- * Single or multi-line text input widget.
+ * Text editor widget.
  *
- * Note that text processing is actually implemented in AG_Editable(3).
- * AG_Textbox is only a container widget which implements the following
- * features on top of AG_Editable(3):
- *
- *  - Horizontal and vertical scrollbars.
- *  - Optional text label.
- *  - Layout padding.
+ * It embeds an AG_Editable(3) field along with an optional text label.
+ * In MULTILINE mode it also embeds horizontal & vertical scrollbars.
+ * Direct buffer access routines are available through the AG_Editable(3) API.
  */
 
 #include <agar/core/core.h>
@@ -295,7 +291,9 @@ AG_TextboxSetPlaceholder(AG_Textbox *tb, const char *fmt, ...)
 	va_start(ap, fmt);
 	Vasprintf(&s, fmt, ap);
 	va_end(ap);
+
 	AG_SetString(tb->ed, "placeholder", s);
+
 	free(s);
 }
 
@@ -385,14 +383,17 @@ Draw(void *_Nonnull p)
 	}
 	if (tb->label != NULL &&
 	    tb->label[0] != '\0') {
-		if (isUndersize) { AG_PushClipRect(tb, &WIDGET(tb)->r); }
+		if (isUndersize)
+			AG_PushClipRect(tb, &WIDGET(tb)->r);
 
 		RenderLabel(tb);
+
 		AG_WidgetBlitSurface(tb, tb->surfaceLbl,
 		    WIDGET(tb)->paddingLeft,
 		    WIDGET(tb)->paddingTop);
 
-		if (isUndersize) { AG_PopClipRect(tb); }
+		if (isUndersize)
+			AG_PopClipRect(tb);
 	}
 
 	if (!isUndersize)
@@ -577,7 +578,9 @@ AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
 	va_start(ap, fmt);
 	Vasprintf(&s, fmt, ap);
 	va_end(ap);
+
 	AG_EditableSetString(tb->ed, s);
+
 	free(s);
 }
 

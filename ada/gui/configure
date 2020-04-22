@@ -2684,7 +2684,6 @@ static const struct {
 	{ "SIZEOF_AG_OBJECTCLASS", sizeof(AG_ObjectClass) },
 	{ "SIZEOF_AG_OBJECTCLASSPVT", sizeof(AG_ObjectClassPvt) },
 	{ "SIZEOF_AG_OBJECTHEADER", sizeof(AG_ObjectHeader) },
-	{ "SIZEOF_AG_OBJECTPVT", sizeof(AG_ObjectPvt) },
 	{ "SIZEOF_AG_TBL", sizeof(AG_Tbl) },
 	{ "SIZEOF_AG_TBLBUCKET", sizeof(AG_TblBucket) },
 	{ "SIZEOF_AG_TEXT", sizeof(AG_Text) },

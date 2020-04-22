@@ -678,7 +678,7 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 		if (AG_Defined(drv, "width")) {
 			AG_GetString(drv, "width", buf, sizeof(buf));
 			if (buf[0] == 'a') { /* auto */
-				*w = wDisp*2/3;
+				*w = wDisp;
 			} else {
 				Uint wNew = strtol(buf, &ep, 10);
 				if (ep != NULL && ep[0] == '%') {
@@ -688,14 +688,14 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 				}
 			}
 		} else {
-			*w = wDisp*2/3;
+			*w = (wDisp > 1000) ? (wDisp - wDisp*0.05) : wDisp;
 		}
 	}
 	if (*h == 0) {
 		if (AG_Defined(drv, "height")) {
 			AG_GetString(drv, "height", buf, sizeof(buf));
 			if (buf[0] == 'a') { /* auto */
-				*h = hDisp*2/3;
+				*h = hDisp;
 			} else {
 				Uint hNew = strtol(buf, &ep, 10);
 				if (ep != NULL && ep[0] == '%') {
@@ -705,7 +705,7 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 				}
 			}
 		} else {
-			*h = hDisp*2/3;
+			*h = (hDisp > 700) ? (hDisp - hDisp*0.1) : hDisp;
 		}
 	}
 	if (*depth == 0) {

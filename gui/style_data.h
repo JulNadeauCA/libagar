@@ -43,6 +43,7 @@ const char *agStyleDefault_Data =
 	"background-color#hover: rgb(80,80,120);\n"
 	"}\n"
 	"AG_Console {\n"
+	"font-family: courier-prime;\n"
 	"padding: 4;\n"
 	"background-color: rgb(0,0,0);\n"
 	"background-color#hover: rgb(0,0,30);\n"
@@ -105,7 +106,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2013,
+	2041,
 	&agStyleDefault_Data,
 	NULL
 };

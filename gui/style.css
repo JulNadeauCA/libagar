@@ -44,6 +44,7 @@ AG_Checkbox {
 	background-color#hover: rgb(80,80,120);
 }
 AG_Console {
+	font-family: courier-prime;
 	padding: 4;
 	background-color: rgb(0,0,0);
 	background-color#hover: rgb(0,0,30);

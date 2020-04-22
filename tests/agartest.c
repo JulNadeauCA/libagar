@@ -908,7 +908,7 @@ main(int argc, char *argv[])
 	}
 
 	console = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
-	AG_SetStyle(console, "font-family", "courier-prime");
+/*	AG_SetStyle(console, "font-family", "courier-prime"); */
 	AG_SetStyle(console, "text-color", "#ddd");
 	{
 		AG_AgarVersion av;

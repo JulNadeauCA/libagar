@@ -626,7 +626,7 @@ AG_About(AG_Event *event)
 	char path[AG_PATHNAME_MAX];
 	AG_Window *win;
 	AG_Label *lbl;
-	AG_Box *hBox;
+	AG_Box *box;
 	AG_Textbox *tb;
 	FILE *f;
 
@@ -636,26 +636,25 @@ AG_About(AG_Event *event)
 	AG_WindowSetCaption(win, _("About Agar GUI"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
-	AG_SetStyle(hBox, "spacing", "50");
-	AG_BoxSetHorizAlign(hBox, AG_BOX_CENTER);
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
+	AG_BoxSetHorizAlign(box, AG_BOX_CENTER);
+	AG_SetStyle(box, "spacing", "50");
 	{
 		AG_AgarVersion av;
 
 		AG_GetVersion(&av);
 
-		lbl = AG_LabelNew(hBox, 0,
-		    "Agar %d.%d.%d (r%d, %s, %s)",
+		lbl = AG_LabelNew(box, 0,
+		    "Agar %d.%d.%d (" AGSI_FRAK "%s" AGSI_RST ")",
 		    av.major, av.minor, av.patch,
-		    av.rev, (av.release) ? av.release : "beta",
-		    AG_MEMORY_MODEL_NAME);
+		    (av.release) ? av.release : "beta");
 
 		AG_SetStyle(lbl, "font-family", "cm-sans");
-		AG_SetStyle(lbl, "font-size", "200%");
+		AG_SetStyle(lbl, "font-size", "220%");
 
 		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "sq-agar.bmp",
 		    path, sizeof(path)) == 0)
-			AG_PixmapFromFile(hBox, 0, path);
+			AG_PixmapFromFile(box, 0, path);
 	}
 
 	tb = AG_TextboxNewS(win, AG_TEXTBOX_MULTILINE | AG_TEXTBOX_EXPAND |

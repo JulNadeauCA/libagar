@@ -3,7 +3,8 @@ All notable changes to Agar will be documented in this file. The format is based
 
 ## [Unreleased]
 - Build system: [**CMake**](https://cmake.org) support.
-- Driver for [**SDL 2.0**](https://libsdl.org) series.
+- A driver for the [**SDL 2.0**](https://libsdl.org) series.
+- A software framebuffer driver for X Windows.
 - Remote debugger [**agardb**](https://libagar.org/man1/agardb).
 - Interface builder to help the process of constructing static or fixed-resolution interfaces.
 - Add widget classes to the new Ada bindings in `ada/gui/`.

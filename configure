@@ -4398,8 +4398,8 @@ if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_DYLD}" = "yes" ]; then
-echo 'checking for NSLINKMODULE_OPTION_RETURN_ON_ERROR'
-echo '# checking for NSLINKMODULE_OPTION_RETURN_ON_ERROR' >>config.log
+$ECHO_N 'checking for NSLINKMODULE_OPTION_RETURN_ON_ERROR'
+$ECHO_N '# checking for NSLINKMODULE_OPTION_RETURN_ON_ERROR' >>config.log
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.c
 #ifdef HAVE_MACH_O_DYLD_H
