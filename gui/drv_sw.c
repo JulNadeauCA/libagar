@@ -119,12 +119,14 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
 		switch (win->wmType) {
-			case AG_WINDOW_WM_DND:
-			case AG_WINDOW_WM_DOCK:
-			case AG_WINDOW_WM_COMBO:
-			case AG_WINDOW_WM_POPUP_MENU:
-			case AG_WINDOW_WM_DROPDOWN_MENU:
-				continue;
+		case AG_WINDOW_WM_DND:
+		case AG_WINDOW_WM_DOCK:
+		case AG_WINDOW_WM_COMBO:
+		case AG_WINDOW_WM_POPUP_MENU:
+		case AG_WINDOW_WM_DROPDOWN_MENU:
+			continue;
+		default:
+			break;
 		}
 		AG_MenuAction(mi,
 		    (win->caption[0] != '\0') ? win->caption : _("Untitled"),

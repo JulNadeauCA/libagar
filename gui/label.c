@@ -315,6 +315,8 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 			lbl->flags &= ~(AG_LABEL_PARTIAL);
 		}
 		break;
+	default:
+		break;
 	}
 	return (0);
 }
