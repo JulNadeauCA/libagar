@@ -1261,6 +1261,84 @@ echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 	TEST_CFLAGS=''
 fi
 if [ "${HAVE_CC}" = "yes" ]; then
+$ECHO_N 'cc: checking whether compiler is Clang...'
+$ECHO_N '# cc: checking whether compiler is Clang...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__clang__)
+# error "is not clang"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_CLANG' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_CLANG=yes
+bb_o=$bb_incdir/have_cc_clang.h
+echo '#ifndef HAVE_CC_CLANG' >$bb_o
+echo "#define HAVE_CC_CLANG \"$HAVE_CC_CLANG\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_CLANG=no
+echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking whether compiler is GCC...'
+$ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__GNUC__) || defined(__clang__)
+# error "is not gcc"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_GCC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_GCC=yes
+bb_o=$bb_incdir/have_cc_gcc.h
+echo '#ifndef HAVE_CC_GCC' >$bb_o
+echo "#define HAVE_CC_GCC \"$HAVE_CC_GCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_GCC=no
+echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
 $ECHO_N 'cc: checking for compiler warning options...'
 $ECHO_N '# cc: checking for compiler warning options...' >>config.log
 MK_COMPILE_STATUS=OK
@@ -1678,6 +1756,10 @@ LIBTOOLOPTS_SHARED=""
 TEST_CFLAGS=""
 echo '#undef HAVE_CC' >$bb_incdir/have_cc.h
 echo 'hdefs["HAVE_CC"] = nil' >>configure.lua
+echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
 echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
 echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
 echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
@@ -4347,8 +4429,8 @@ cat << EOT >conftest$$.c
 #ifdef __APPLE__
 # include <Availability.h>
 # ifdef __MAC_OS_X_VERSION_MIN_REQUIRED
-#  if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
-#   error "deprecated in Lion and later"
+#  if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+#   error "deprecated in Leopard and later"
 #  endif
 # endif
 #endif
@@ -14211,6 +14293,10 @@ echo "HAVE_CC=$HAVE_CC" >>Makefile.config
 echo "mdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
 echo "HAVE_CC65=$HAVE_CC65" >>Makefile.config
 echo "mdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+echo "HAVE_CC_CLANG=$HAVE_CC_CLANG" >>Makefile.config
+echo "mdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
+echo "HAVE_CC_GCC=$HAVE_CC_GCC" >>Makefile.config
+echo "mdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
 echo "HAVE_CC_MCONSOLE=$HAVE_CC_MCONSOLE" >>Makefile.config
 echo "mdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
 echo "HAVE_CC_MWINDOWS=$HAVE_CC_MWINDOWS" >>Makefile.config
