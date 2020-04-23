@@ -18,7 +18,7 @@ Agar includes a good standard library of general-purpose widgets, but it is alwa
 
 To help developers with the debugging process, the Debug build performs extensive object validity and class-membership tests on all pointers passed to API calls, so memory errors trigger run-time "Illegal access" assertions as early as possible. Agar is [thread-safe](https://libagar.org/man3/AG_Threads) when built with threads support. Public API calls are reentrant (unless documented otherwise), but Agar does not rely on threads for its own operation.
 
-### Libraries Included (stable)
+### Libraries included (stable)
 
 * [CORE](https://libagar.org/man3/AG_Intro#AGAR-CORE): Platform, I/O, object system (non graphical)
 * [GUI (Base)](https://libagar.org/man3/AG_Intro#AGAR-GUI:_BASE_SYSTEM): GUI base framework
@@ -27,14 +27,16 @@ To help developers with the debugging process, the Debug build performs extensiv
 * [NET](https://libagar.org/man3/AG_Intro#AGAR-NET): Network interface, HTTP application server
 * [VG](https://libagar.org/man3/AG_Intro#AGAR-VG): Vector graphics
 
-### Libraries Included (beta)
+### Libraries included (beta)
 
 * [AU](https://libagar.org/man3/AG_Intro#AGAR-AU): Audio interface library
 * [SG](https://libagar.org/man3/AG_Intro#AGAR-SG): General-purpose 3D engine
 * [SK](https://libagar.org/man3/AG_Intro#AGAR-SK): Sketches with constraints
 * [MAP](https://libagar.org/man3/AG_Intro#AGAR-MAP): Tile engine
 
-### Installation Guides
+### How to install
+
+See [**INSTALL.md**](INSTALL.md), or:
 
 - **[On BSD](https://libagar.org/docs/inst/bsd.html)** ![](img/bsd.png)
 - **[On Linux](https://libagar.org/docs/inst/linux.html)** ![](img/linux.png)

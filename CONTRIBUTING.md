@@ -2,7 +2,7 @@
 
 #### **Support us on Patreon or GitHub**
 
-Exclusive content including articles, code and tutorials will be available on the [LibAgar Patreon](https://patreon.com/libagar). The same tiers are also made available also through [GitHub Sponsors](https://github.com/sponsors/JulNadeauCA).
+Exclusive content including articles, code and tutorials will be available on the [LibAgar Patreon](https://patreon.com/libagar). The same tiers are available also through [GitHub Sponsors](https://github.com/sponsors/JulNadeauCA).
 
 #### **Reporting bugs**
 
@@ -18,19 +18,29 @@ You do not need to purchase a license in order to use Agar in commercial applica
 
 #### **Try Csoft.net Hosting**
 
-The Canadian based [Csoft.net Hosting](https://csoft.net) Company, which first advertised on Slashdot back in 1998, has been providing funding and resources for developing Agar since the start of the project. Now located in New York City, csoft.net's servers still offer secure, high-performance Unix hosting on dedicated servers starting from $5/month.
+The Canadian-based [Csoft.net](https://csoft.net), which first advertised on [Slashdot](https://slashdot.org) back in 1998, has been supporting the Agar project since the beginning. With its new server farm located in New York City, the same team still works every day to provide secure, high-performance Unix hosting.
 
 #### **Buy from ElectronTubeStore.com**
 
-[ElectronTubeStore](https://electrontubestore.com) provides raw materials, useful parts and components. ElectronTubeStore ships worldwide, quickly and economically. If you are looking for a reputable supplier for a specific chip, transistor, vacuum tube, connector, hard to find material, or any metal alloy in any shape, check out ElectronTubeStore.
+[**ElectronTubeStore.com**](https://electrontubestore.com) provides materials, parts and components worldwide. Shipping is quick and economical. If you are looking for a specific chip, transistor, tube, connector or a specialty metal or alloy in sheet, rod or wire shape, check it out.
 
-#### **Donating hardware**
+#### **Donate software or hardware**
 
-We are always interested in porting Agar to new hardware platforms, operating systems and devices. Please contact [Julien](mailto:vedge@csoft.net) if you wish to donate hardware.
+We are always interested in porting Agar to new platforms, operating systems and devices. Please contact [Julien](mailto:vedge@csoft.net) if you wish to donate. Some currently wanted items:
+- Color monitor / adapter box for Amiga 500.
+- Color monitor / adapter box for Apple IIc.
+- Color monitor / adapter box for Apple IIGS.
+- GP2x or any successor device to it.
+- MacOS X, any version from 10.7 through 10.15 (help improve the [**cocoa**](https://libagar.org/man3/AG_DriverCocoa) driver).
+- Nintendo DS.
+- Raspberry Pi 3 & 4 (help improve the [**glx**](https://libagar.org/man3/AG_DriverGLX) driver).
+- Windows 8, Windows 10 (help improve the [**wgl**](https://libagar.org/man3/AG_DriverWGL) driver).
+- Interesting input devices (gamepads, tablets, IR remotes, etc).
+- More on [Julien's Amazon Wishlist](https://libagar.org/wishlist).
 
 #### **Make a cash donation**
 
-To make a cash donation donation via PayPal, see: [Contribute to the Agar project](https://libagar.org/contribute.html).
+- [**Donate via PayPal**](https://sourceforge.net/donate/index.php?group_id=77100)
 
 Thanks! :heart: :heart: :heart:
 

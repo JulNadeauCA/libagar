@@ -34,9 +34,10 @@
 #define DEFAULT_DIR "C:\\Program Files\\Agar"
 
 const char *miscFiles[] = {
-	"README.txt",
+	"CHANGELOG.txt",
+	"INSTALL.txt",
 	"LICENSE.txt",
-	"LICENSE-Vera.txt",
+	"README.txt",
 	"Logo.png",
 	"VisualC.html"
 };
