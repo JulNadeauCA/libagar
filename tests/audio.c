@@ -4,7 +4,7 @@
  */
 
 #include "config/have_agar_au.h"
-#ifdef HAVE_AGAR_AU
+#if defined(HAVE_AGAR_AU) && !defined(_WIN32)
 
 #include "agartest.h"
 
@@ -118,4 +118,4 @@ const AG_TestCase audioTest = {
 	NULL			/* bench */
 };
 
-#endif /* HAVE_AGAR_AU */
+#endif /* HAVE_AGAR_AU && !_WIN32 */

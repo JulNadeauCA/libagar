@@ -489,7 +489,7 @@ Edit(void *_Nonnull obj, SG_View *_Nullable sgv)
 
 		rad = AG_RadioNew(sbox, 0, projModes);
 		if (sgv != NULL) {
-			AG_BindUintMp(rad, "value", &cam->pmode, lock);
+			AG_BindUintMp(rad, "value", (Uint *)&cam->pmode, lock);
 			AG_SetEvent(rad, "radio-changed",
 			    UpdateProjection, "%p", sgv);
 		} else {
@@ -540,7 +540,7 @@ Edit(void *_Nonnull obj, SG_View *_Nullable sgv)
 		AG_LabelNewS(ntab, 0, _("Front-facing:"));
 
 		rad = AG_RadioNew(ntab, 0, rasModes);
-		AG_BindUintMp(rad, "value", &cam->polyFace.mode, lock);
+		AG_BindUintMp(rad, "value", (Uint *)&cam->polyFace.mode, lock);
 
 		cb = AG_CheckboxNew(ntab, 0, _("Cull all"));
 		AG_BindIntMp(cb, "value", &cam->polyFace.cull, lock);
@@ -549,7 +549,7 @@ Edit(void *_Nonnull obj, SG_View *_Nullable sgv)
 		
 		AG_LabelNewS(ntab, 0, _("Back-facing:"));
 		rad = AG_RadioNew(ntab, 0, rasModes);
-		AG_BindUintMp(rad, "value", &cam->polyBack.mode, lock);
+		AG_BindUintMp(rad, "value", (Uint *)&cam->polyBack.mode, lock);
 
 		cb = AG_CheckboxNew(ntab, 0, _("Cull all"));
 		AG_BindIntMp(cb, "value", &cam->polyBack.cull, lock);
@@ -565,7 +565,7 @@ Edit(void *_Nonnull obj, SG_View *_Nullable sgv)
 		};
 
 		rad = AG_RadioNew(ntab, 0, rotModes);
-		AG_BindUintMp(rad, "value", &cam->rotCtrl, lock);
+		AG_BindUintMp(rad, "value", (Uint *)&cam->rotCtrl, lock);
 #if 0
 		AG_LabelNewPolled(ntab, AG_LABEL_HFILL, "Center: %s",
 		    AGOBJECT(&cam->focus[0])->name);

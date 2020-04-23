@@ -6,6 +6,7 @@
 
 #include "agartest.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -52,7 +53,7 @@ extern const AG_TestCase compositingTest;
 #ifdef AG_UNICODE
 extern const AG_TestCase charsetsTest;
 #endif
-#ifdef HAVE_AGAR_AU
+#if defined(HAVE_AGAR_AU) && !defined(_WIN32)
 extern const AG_TestCase audioTest;
 #endif
 #ifdef HAVE_OPENGL
@@ -101,7 +102,7 @@ const AG_TestCase *testCases[] = {
 	&unitconvTest,
 	&widgetsTest,
 	&windowsTest,
-#ifdef HAVE_AGAR_AU
+#if defined(HAVE_AGAR_AU) && !defined(_WIN32)
 	&audioTest,
 #endif
 #if defined(AG_TIMERS) && defined(AG_HAVE_FLOAT)
@@ -1024,7 +1025,7 @@ main(int argc, char *argv[])
 		AG_Event ev;
 
 		for (pTest = &testCases[0]; *pTest != NULL; pTest++) {
-			if (strcasecmp((*pTest)->name, argv[i]) == 0)
+			if (AG_Strcasecmp((*pTest)->name, argv[i]) == 0)
 				break;
 		}
 		if (*pTest == NULL) {

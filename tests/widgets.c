@@ -153,7 +153,7 @@ AutocompleteName(AG_Event *event)
 			}
 		} else {
 			for (dp = dictLast; *dp != NULL; dp++) {
-				if (AG_Strncasecmp(*dp, sLast, strlen(sLast)) == 0) {
+				if (AG_Strncasecmp(*dp, sLast, (AG_Size)strlen(sLast)) == 0) {
 					it = AG_TlistAdd(tl, NULL, "%s %s", sFirst, *dp);
 					it->p1 = (void *)*dp;
 				}
@@ -167,7 +167,7 @@ AutocompleteName(AG_Event *event)
 			}
 		} else {
 			for (dp = dictFirst; *dp != NULL; dp++)
-				if (AG_Strncasecmp(*dp, sFirst, strlen(sFirst)) == 0)
+				if (AG_Strncasecmp(*dp, sFirst, (AG_Size)strlen(sFirst)) == 0)
 					AG_TlistAddPtr(tl, NULL, *dp, (void *)*dp);
 		}
 	}
@@ -249,8 +249,8 @@ TestGUI(void *obj, AG_Window *win)
 
 		hBox = AG_BoxNewHoriz(div, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 		for (i = 0; i < 5; i++) {
-			for (y = 0; y < S->h; y++) {
-				for (x = 0; x < S->w; x++) {
+			for (y = 0; y < (int)S->h; y++) {
+				for (x = 0; x < (int)S->w; x++) {
 					AG_Pixel px = AG_SurfaceGet(S, x,y);
 					AG_Color c ;
 						
@@ -588,7 +588,7 @@ TestGUI(void *obj, AG_Window *win)
 				};
 				AG_Radio *rad;
 
-				rad = AG_RadioNewUint(nt, 0, selModes, &table->selMode);
+				rad = AG_RadioNewUint(nt, 0, selModes, (Uint *)&table->selMode);
 				AG_RadioSetDisposition(rad, AG_RADIO_HORIZ);
 				AG_SetStyle(rad, "font-size", "80%");
 			}
@@ -648,11 +648,11 @@ TestGUI(void *obj, AG_Window *win)
 					ti->someText[size] = '\0';
 				} else {
 					ti->someText = Strdup(path);
-					bufSize = strlen(ti->someText)+1;
+					bufSize = (AG_Size)strlen(ti->someText)+1;
 				}
 			} else {
 				ti->someText = AG_Strdup("loss.txt not found");
-				bufSize = strlen(ti->someText)+1;
+				bufSize = (AG_Size)strlen(ti->someText)+1;
 			}
 	
 			/*

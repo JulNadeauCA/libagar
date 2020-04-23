@@ -35,8 +35,6 @@ TestGUI(void *obj, AG_Window *win)
 	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "menubg.bmp", path, sizeof(path))) {
 		if ((px = AG_PixmapFromFile(fx, 0, path)) == NULL) {
 			AG_LabelNewS(win, 0, AG_GetError());
-			fprintf(stderr, "%s\n", AG_GetError());
-			exit(1);
 		}
 		AG_FixedMove(fx, px, 0, 0);
 	}

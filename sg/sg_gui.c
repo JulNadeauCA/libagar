@@ -237,7 +237,7 @@ SG_GUI_OpenDlg(AG_Event *event)
 		const AG_FileExtMapping *me = &agFileExtMap[j];
 		char lbl[64], ext[16];
 
-		snprintf(lbl, sizeof(lbl), _("Agar-SG %s file"), me->descr);
+		Snprintf(lbl, sizeof(lbl), _("Agar-SG %s file"), me->descr);
 		Strlcpy(ext, "*", sizeof(ext));
 		Strlcat(ext, me->ext, sizeof(ext));
 		AG_FileDlgAddType(fd, lbl, ext, LoadObject, "%p", me->cls);
@@ -307,7 +307,7 @@ SG_GUI_SaveAsDlg(AG_Event *event)
 		char lbl[64], ext[16];
 
 		if (AG_OfClass(obj, cls->hier)) {
-			snprintf(lbl, sizeof(lbl), _("Agar-SG %s file"),
+			Snprintf(lbl, sizeof(lbl), _("Agar-SG %s file"),
 			    me->descr);
 			Strlcpy(ext, "*", sizeof(ext));
 			Strlcat(ext, me->ext, sizeof(ext));

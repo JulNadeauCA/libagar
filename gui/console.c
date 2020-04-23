@@ -1384,8 +1384,10 @@ AG_ConsoleClose(AG_Console *cons, AG_ConsoleFile *cf)
 		if (cf->pFILE != NULL) {
 			fclose((FILE *)cf->pFILE);
 		} else {
+#if !defined(_WIN32)
 			if (cf->fd != -1)
 				close(cf->fd);
+#endif
 		}
 	}
 	TAILQ_REMOVE(&cons->files, cf, files);

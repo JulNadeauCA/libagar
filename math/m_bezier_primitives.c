@@ -45,10 +45,8 @@ void M_DrawBezier2(AG_Widget* widget,
 		int detail, AG_Color* c
 	)
 {
-	M_PointSet2 points;
-	M_PointSet2 ctrl;
-	M_Vector2 pt;
-	M_Vector2 prev;
+	M_PointSet2 points, ctrl;
+	M_Vector2 pt, prev, v;
 	int k;
 
 	pt.x = 0;
@@ -61,10 +59,18 @@ void M_DrawBezier2(AG_Widget* widget,
 	M_PointSetAlloc2(&points, 4);
 	M_PointSetAlloc2(&ctrl, 4);
 
-	M_PointSetAdd2(&points, (M_Vector2) {.x = x1, .y = y1});
-	M_PointSetAdd2(&points, (M_Vector2) {.x = x2, .y = y2});
-	M_PointSetAdd2(&points, (M_Vector2) {.x = cx1, .y = cy1});
-	M_PointSetAdd2(&points, (M_Vector2) {.x = cx2, .y = cy2});
+	v.x = x1;
+	v.y = y1;
+	M_PointSetAdd2(&points, v);
+	v.x = x2;
+	v.y = y2;
+	M_PointSetAdd2(&points, v);
+	v.x = cx1;
+	v.y = cy1;
+	M_PointSetAdd2(&points, v);
+	v.x = cx2;
+	v.y = cy2;
+	M_PointSetAdd2(&points, v);
 
 	M_BezierForm2(&points, &ctrl);
 

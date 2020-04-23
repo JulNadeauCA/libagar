@@ -161,7 +161,7 @@ SG_ActionPrint(const SG_Action *a, char *buf, AG_Size len)
 	case SG_ACTION_ZMOVE:
 	case SG_ACTION_ZMOVE_BEGIN:
 	case SG_ACTION_ZMOVE_END:
-		snprintf(buf, len, "%s(%.03f,%.03f,%.03f)",
+		Snprintf(buf, len, "%s(%.03f,%.03f,%.03f)",
 		    sgActionNames[a->type],
 		    a->act_move.x,
 		    a->act_move.y,
@@ -170,7 +170,7 @@ SG_ActionPrint(const SG_Action *a, char *buf, AG_Size len)
 	case SG_ACTION_ROTATE:
 	case SG_ACTION_ROTATE_BEGIN:
 	case SG_ACTION_ROTATE_END:
-		snprintf(buf, len, "%s(%.01f\xc2\xb0 @ %.01f,%.01f,%.01f)",
+		Snprintf(buf, len, "%s(%.01f\xc2\xb0 @ %.01f,%.01f,%.01f)",
 		    sgActionNames[a->type],
 		    M_Degrees(a->act_rotate.theta),
 		    a->act_rotate.axis.x,
@@ -180,14 +180,14 @@ SG_ActionPrint(const SG_Action *a, char *buf, AG_Size len)
 	case SG_ACTION_SCALE:
 	case SG_ACTION_SCALE_BEGIN:
 	case SG_ACTION_SCALE_END:
-		snprintf(buf, len, "%s(%.03f,%.03f,%.03f)",
+		Snprintf(buf, len, "%s(%.03f,%.03f,%.03f)",
 		    sgActionNames[a->type],
 		    a->act_scale.x,
 		    a->act_scale.y,
 		    a->act_scale.z);
 		break;
 	default:
-		snprintf(buf, len, "%s()", sgActionNames[a->type]);
+		Snprintf(buf, len, "%s()", sgActionNames[a->type]);
 		break;
 	}
 }

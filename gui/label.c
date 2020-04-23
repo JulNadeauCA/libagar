@@ -430,9 +430,13 @@ static __inline__ int
 JustifyOffset(const AG_Label *_Nonnull lbl, int w, int wLine)
 {
 	switch (lbl->justify) {
-	case AG_TEXT_LEFT:	return (0);
-	case AG_TEXT_CENTER:	return ((w >> 1) - (wLine >> 1));
-	case AG_TEXT_RIGHT:	return (w - wLine);
+	case AG_TEXT_LEFT:
+	default:
+		return (0);
+	case AG_TEXT_CENTER:
+		return ((w >> 1) - (wLine >> 1));
+	case AG_TEXT_RIGHT:
+		return (w - wLine);
 	}
 }
 
@@ -617,11 +621,11 @@ Edit(void *_Nonnull p)
 	AG_SeparatorNewHoriz(box);
 
 	AG_LabelNewS(box, 0, _("Justify:"));
-	AG_RadioNewUint(box, 0, agTextJustifyNames, &lbl->justify);
+	AG_RadioNewUint(box, 0, agTextJustifyNames, (Uint *)&lbl->justify);
 
 	AG_SeparatorNewHoriz(box);
 	AG_LabelNewS(box, 0, _("Vertical Alignment:"));
-	AG_RadioNewUint(box, 0, agTextValignNames, &lbl->valign);
+	AG_RadioNewUint(box, 0, agTextValignNames, (Uint *)&lbl->valign);
 
 	return (box);
 }

@@ -25,7 +25,7 @@ mousemotion(AG_Event *event)
 			 */
 			AG_WindowFocus(AG_ParentWindow(w));
 			AG_WidgetFocus(w);
-			printf("%s: focused\n", AGOBJECT(w)->name);
+			Debug(w, "Focused\n");
 		}
 	} else {
 		if (w->flags & AG_WIDGET_FOCUSED) {
@@ -37,7 +37,7 @@ mousemotion(AG_Event *event)
 			 * of the window list holds focus).
 			 */
 			AG_WidgetUnfocus(w);
-			printf("%s: unfocused\n", AGOBJECT(w)->name);
+			Debug(w, "Unfocused\n");
 		}
 	}
 }
@@ -48,7 +48,7 @@ keydown(AG_Event *event)
 	AG_Widget *w = AG_WIDGET_SELF();
 	int kb = AG_INT(1);
 
-	printf("%s: key %d\n", AGOBJECT(w)->name, kb);
+	Debug(w, "key %d\n", kb);
 }
 
 static void

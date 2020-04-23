@@ -274,7 +274,7 @@ AG_HSVPal_UpdateHue(AG_HSVPal *_Nonnull pal, int x, int y)
 
 	h = Atan2((float)y, (float)x);
 	if (h < 0) {
-		h += (2.0f*AG_PI);
+		h += 2.0f*(float)AG_PI;
 	}
 	AG_SetFloat(pal, "hue", h/(2.0f*AG_PI)*360.0f);
 

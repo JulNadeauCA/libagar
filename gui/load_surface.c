@@ -149,7 +149,7 @@ AG_ReadSurface(AG_DataSource *ds)
 	flags = (AG_ReadUint16(ds) & AG_SAVED_SURFACE_FLAGS);
 	w = AG_ReadUint16(ds);
 	h = AG_ReadUint16(ds);
-	mode = (AG_SurfaceMode)AG_ReadUint8(ds);
+	mode = pf.mode = (AG_SurfaceMode)AG_ReadUint8(ds);
 	BitsPerPixel = AG_ReadUint8(ds);
 
 	if (!AG_PixelFormatIsSupported(mode, BitsPerPixel)) {

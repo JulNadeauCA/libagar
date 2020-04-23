@@ -639,20 +639,20 @@ Edit(void *_Nonnull obj)
 	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
 	AG_LabelNewS(box, 0, _("Disposition:"));
-	rad = AG_RadioNewUint(box, 0, typeNames, &tgt->type);
+	rad = AG_RadioNewUint(box, 0, typeNames, (Uint *)&tgt->type);
 	AG_SetEvent(rad, "radio-changed", UpdateWindowOfTgt,"%p",tgt);
 
 	AG_LabelNewS(box, 0, _("Style:"));
-	rad = AG_RadioNewUint(box, 0, styleNames, &tgt->style);
+	rad = AG_RadioNewUint(box, 0, styleNames, (Uint *)&tgt->style);
 	AG_SetEvent(rad, "radio-changed", UpdateWindowOfTgt,"%p",tgt);
 
 	AG_LabelNewS(box, 0, _("Alignment:"));
 	hBox = AG_BoxNewHoriz(box, 0);
 	{
-		rad = AG_RadioNewUint(hBox, 0, agBoxHorizAlignNames, &tgt->hAlign);
+		rad = AG_RadioNewUint(hBox, 0, agBoxHorizAlignNames, (Uint *)&tgt->hAlign);
 		AG_SetEvent(rad, "radio-changed", UpdateWindowOfTgt,"%p",tgt);
 	
-		rad = AG_RadioNewUint(hBox, 0, agBoxVertAlignNames, &tgt->vAlign);
+		rad = AG_RadioNewUint(hBox, 0, agBoxVertAlignNames, (Uint *)&tgt->vAlign);
 		AG_SetEvent(rad, "radio-changed", UpdateWindowOfTgt,"%p",tgt);
 	}
 

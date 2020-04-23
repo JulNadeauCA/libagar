@@ -525,7 +525,7 @@ Edit(void *_Nonnull p, SG_View *_Nullable sgv)
 	{
 		AG_LabelNewS(hBox, 0, _("Shape:  "));
 		rad = AG_RadioNew(hBox, 0, siModes);
-		AG_BindUintMp(rad, "value", &si->shape, lock);
+		AG_BindUintMp(rad, "value", (Uint *)&si->shape, lock);
 		AG_SetEvent(rad, "radio-changed", UpdateMode, "%p", si);
 	}
 
@@ -534,9 +534,9 @@ Edit(void *_Nonnull p, SG_View *_Nullable sgv)
 		AG_LabelNewS(hBox, 0, _("Contour: "));
 		sl = AG_SliderNew(hBox, AG_SLIDER_HORIZ, AG_SLIDER_HFILL);
 		AG_BindFloatMp(sl, "value", &si->tolContour, lock);
-		AG_SetFloat(sl, "min", 0.01);
-		AG_SetFloat(sl, "max", 20.0);
-		AG_SetFloat(sl, "inc", 0.1);
+		AG_SetFloat(sl, "min", 0.01f);
+		AG_SetFloat(sl, "max", 20.0f);
+		AG_SetFloat(sl, "inc", 0.1f);
 		AG_SetEvent(sl, "slider-changed", ClearCache, "%p", si);
 	}
 	hBox = AG_BoxNewHoriz(box, AG_BOX_HFILL);
@@ -544,9 +544,9 @@ Edit(void *_Nonnull p, SG_View *_Nullable sgv)
 		AG_LabelNewS(hBox, 0, _("    Holes: "));
 		sl = AG_SliderNew(hBox, AG_SLIDER_HORIZ, AG_SLIDER_HFILL);
 		AG_BindFloatMp(sl, "value", &si->tolHoles, lock);
-		AG_SetFloat(sl, "min", 0.01);
-		AG_SetFloat(sl, "max", 20.0);
-		AG_SetFloat(sl, "inc", 0.1);
+		AG_SetFloat(sl, "min", 0.01f);
+		AG_SetFloat(sl, "max", 20.0f);
+		AG_SetFloat(sl, "inc", 0.1f);
 		AG_SetEvent(sl, "slider-changed", ClearCache, "%p", si);
 	}
 	hBox = AG_BoxNewHoriz(box, AG_BOX_HFILL);
@@ -1056,7 +1056,7 @@ loop:
 						si->holes[si->nHoles++] = Phole;
 					}
 #ifdef DEBUG_DUMP
-					snprintf(pdump, sizeof(pdump), "/tmp/hole%u.jpg", nDebugCholes++);
+					Snprintf(pdump, sizeof(pdump), "/tmp/hole%u.jpg", nDebugCholes++);
 					DumpPointSet(si, &cHole, pdump);
 #endif
 					M_PointSetFree2i(&cHole);
@@ -1124,7 +1124,7 @@ loop:
 							si->holes[si->nHoles++] = Phole;
 						}
 #ifdef DEBUG_DUMP
-						snprintf(pdump, sizeof(pdump), "/tmp/hole%u.jpg", nDebugCholes++);
+						Snprintf(pdump, sizeof(pdump), "/tmp/hole%u.jpg", nDebugCholes++);
 						DumpPointSet(si, &cHole, pdump);
 #endif
 						M_PointSetFree2i(&cHole);
@@ -1368,7 +1368,7 @@ CompilePoly(SG_Image *_Nonnull si, SG_View *_Nonnull view)
 				    (int)Phole->v[j].y,
 				    AG_MapPixelRGB(suDbg->format, 0,0,0));
 			}
-			snprintf(path, sizeof(path), "/tmp/hole%u.jpg", nDebugHole++);
+			Snprintf(path, sizeof(path), "/tmp/hole%u.jpg", nDebugHole++);
 			AG_SurfaceExportJPEG(suDbg, path, 100, 0);
 			AG_SurfaceFree(suDbg);
 		}

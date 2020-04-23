@@ -223,7 +223,7 @@ TestGUI(void *obj, AG_Window *win)
 			someText[size] = '\0';
 		} else {
 			someText = AG_Strdup("Failed to load loss.txt");
-			bufSize = strlen(someText)+1;
+			bufSize = (AG_Size)strlen(someText)+1;
 		}
 
 		/* Connect the Textbox with the buffer. */

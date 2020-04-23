@@ -90,7 +90,7 @@ Draw(void *_Nonnull obj, SG_View *_Nonnull view)
 
 	switch (w->style) {
 	case SG_WIDGET_DISC:
-		for (z = -0.1; z <= 0.1; z += 0.033) {
+		for (z = -0.1f; z <= 0.1f; z += 0.033f) {
 			GL_Begin(GL_POLYGON);
 			GL_Color3ub(128, 128, 128);
 			for (i = 0; i < 7; i++) {

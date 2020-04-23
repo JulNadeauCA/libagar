@@ -395,7 +395,7 @@ SG_ScriptPrintInsn(const SG_ScriptInsn *si, char *buf, AG_Size len)
 	}
 	switch (si->type) {
 	case SG_INSN_CREATE:
-		snprintf(buf, len, "%s(<%s> %s%s)",
+		Snprintf(buf, len, "%s(<%s> %s%s)",
 		    sgScriptInsnNames[si->type],
 		    si->si_create.cls->name,
 		    si->tgtName, si->si_create.name);
@@ -406,14 +406,14 @@ SG_ScriptPrintInsn(const SG_ScriptInsn *si, char *buf, AG_Size len)
 			char abuf[128];
 
 			SG_ActionPrint(&si->si_action, abuf, sizeof(abuf));
-			snprintf(buf, len, "%s(%s -> %s): %s",
+			Snprintf(buf, len, "%s(%s -> %s): %s",
 			    sgScriptInsnNames[si->type],
 			    sgActionNames[si->si_action.type],
 			    si->tgtName, abuf);
 		}
 		break;
 	default:
-		snprintf(buf, len, "%s(%s)",
+		Snprintf(buf, len, "%s(%s)",
 		    sgScriptInsnNames[si->type],
 		    si->tgtName);
 		break;
@@ -1677,7 +1677,7 @@ RenderDlg(AG_Event *_Nonnull event)
 			N_("Linear Interpolation"),
 			NULL
 		};
-		AG_RadioNewUint(win, 0, items, &re->interp);
+		AG_RadioNewUint(win, 0, items, (Uint *)&re->interp);
 	}
 
 	AG_SeparatorNewHoriz(win);

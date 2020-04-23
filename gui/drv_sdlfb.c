@@ -914,7 +914,7 @@ SDLFB_DrawLineW(void *_Nonnull obj, int x1, int y1, int x2, int y2,
 {
 	/* TODO */
 	(void)width;
-	return SDLFB_DrawLine(obj, x1,y1, x2,y2, color);
+	SDLFB_DrawLine(obj, x1,y1, x2,y2, color);
 }
 
 static void
@@ -924,7 +924,7 @@ SDLFB_DrawLineW_Sti16(void *_Nonnull obj, int x1, int y1, int x2, int y2,
 	/* TODO */
 	(void)width;
 	(void)mask;
-	return SDLFB_DrawLine(obj, x1,y1, x2,y2, color);
+	SDLFB_DrawLine(obj, x1,y1, x2,y2, color);
 }
 
 static void

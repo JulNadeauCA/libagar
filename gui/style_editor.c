@@ -702,13 +702,12 @@ SetPickStatus(AG_Event *_Nonnull event)
 {
 #ifdef AG_DEBUG
 	AG_Window *winSted = AG_WINDOW_PTR(1);
-#endif
 /*	AG_Tlist *tl = AG_TLIST_PTR(2); */
 	const int enable = AG_INT(3);
 
-	if (enable) {
+	if (enable)
 		Debug(winSted, "PickStatus(%d)\n", enable);
-	}
+#endif
 }
 
 static void
