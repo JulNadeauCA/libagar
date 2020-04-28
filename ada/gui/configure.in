@@ -25,6 +25,7 @@ default_dir(INCLDIR, "${PREFIX}/include/agar/ada")
 require(cc)
 require(ada)
 require(agar, 1.6.0, ${prefix_agar})
+require(agar-core, 1.6.0, ${prefix_agar})
 require(agar.defs, 1.6.0, ${prefix_agar})
 require(agar-ada-core, 1.6.0, ${prefix_agar_ada_core})
 

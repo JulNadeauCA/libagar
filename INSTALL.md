@@ -25,25 +25,41 @@
 ##### Installing from source
 
 1. [**Download**](https://libagar.org/download.html) and unpack the sources to a temporary location:
+
 	`$ wget https://stable.hypertriton.com/agar/agar-1.6.0.tar.gz`
+
 	`$ tar -xzf agar-1.6.0.tar.gz`
+
 	`$ cd agar-1.6.0`
+
 2. Run the **configure** script. Use `--help` to see available options. Some examples:
 	- Install to an alternate location (default = `/usr/local`):
+
 	`$ ./configure --prefix=$HOME`
+
 	- Enable run-time assertions, type-safety checks & [GUI debugger](https://libagar.org/man3/AG_GuiDebugger):
+
 	`$ ./configure --enable-debug`
+
 	- Disable support for [multithreading](https://libagar.org/man3/AG_Threads):
+
 	`$ ./configure --disable-threads`
+
 	- Enable beta extension libraries such as [**AU**](https://libagar.org/man3/AU), [**MAP**](https://libagar.org/man3/MAP) & [**AG_Web**](https://libagar.org/man3/AG_Web).
+
 	`$ ./configure --enable-{au,map,web}`
+
 	- Enable _Deep Color_ (is the default on 64-bit platforms):
+
 	`$ ./configure --with-memory-model=L`
+
 3. Build and install the library:
+
 	`$ make depend all`
+
 	`# make install`
 
-### On [Linux Mint](https://linuxmint.com), [Debian](https://www.debian.org), [Ubuntu](https://ubuntu.com) & other `apt-get`-based distros
+### On [Linux Mint](https://linuxmint.com), [Debian](https://www.debian.org), [Ubuntu](https://ubuntu.com) & other `apt-get`-based distros ![](img/linux.png)
 
 ##### Prerequisites
 - A C compiler such as [clang](https://clang.llvm.org) or [gcc](https://gcc.gnu.org) (`apt-get install clang` or `apt-get install gcc`).
@@ -60,27 +76,46 @@
 ##### Installing from source
 
 1. [**Download**](https://libagar.org/download.html) and unpack the sources to a temporary location:
+
 	`$ wget https://stable.hypertriton.com/agar/agar-1.6.0.tar.gz`
+
 	`$ tar -xzf agar-1.6.0.tar.gz`
+
 	`$ cd agar-1.6.0`
+
 2. Run the **configure** script. Use `--help` to see available options. Some examples:
+
 	- Install to an alternate location (default = `/usr/local`):
+
 	`$ ./configure --prefix=$HOME`
+
 	- Enable run-time assertions, type-safety checks & [GUI debugger](https://libagar.org/man3/AG_GuiDebugger):
+
 	`$ ./configure --enable-debug`
+
 	- Disable support for [multithreading](https://libagar.org/man3/AG_Threads):
+
 	`$ ./configure --disable-threads`
+
 	- Enable beta extension libraries such as [**AU**](https://libagar.org/man3/AU), [**MAP**](https://libagar.org/man3/MAP) & [**AG_Web**](https://libagar.org/man3/AG_Web).
+
 	`$ ./configure --enable-{au,map,web}`
+
 	- Enable _Deep Color_ (is the default on 64-bit platforms):
+
 	`$ ./configure --with-memory-model=L`
+
 3. Build and install the library:
+
 	`$ make depend all`
+
 	`# make install`
+
 4. If necessary refresh your [ld.so](http://man7.org/linux/man-pages/man8/ld.so.8.html) cache:
+
 	`# ldconfig`
 
-### On Linux [Fedora](https://fedoraproject.org) & other `yum`-based distros
+### On Linux [Fedora](https://fedoraproject.org) & other `yum`-based distros ![](img/linux.png)
 
 ##### Prerequisites
 - A C compiler such as [clang](https://clang.llvm.org) or [gcc](https://gcc.gnu.org) (`yum install clang` or `yum install gcc`).
@@ -97,28 +132,48 @@
 ##### Installing from source
 
 1. [**Download**](https://libagar.org/download.html) and unpack the sources to a temporary location:
+
 	`$ wget https://stable.hypertriton.com/agar/agar-1.6.0.tar.gz`
+
 	`$ tar -xzf agar-1.6.0.tar.gz`
+
 	`$ cd agar-1.6.0`
+
 2. Run the **configure** script. Use `--help` to see available options. Some examples:
+
 	- Install to an alternate location (default = `/usr/local`):
+
 	`$ ./configure --prefix=$HOME`
+
 	- Enable run-time assertions, type-safety checks & [GUI debugger](https://libagar.org/man3/AG_GuiDebugger):
+
 	`$ ./configure --enable-debug`
+
 	- Disable support for [multithreading](https://libagar.org/man3/AG_Threads):
+
 	`$ ./configure --disable-threads`
+
 	- Enable beta extension libraries such as [**AU**](https://libagar.org/man3/AU), [**MAP**](https://libagar.org/man3/MAP) & [**AG_Web**](https://libagar.org/man3/AG_Web).
+
 	`$ ./configure --enable-{au,map,web}`
+
 	- Enable _Deep Color_ (is the default on 64-bit platforms):
+
 	`$ ./configure --with-memory-model=L`
+
 3. Build and install the library:
+
 	`$ make depend all`
+
 	`# make install`
+
 4. If necessary add `/usr/local/lib` to `/etc/ld.so.conf` and refresh your [ld.so](http://man7.org/linux/man-pages/man8/ld.so.8.html) cache:
+
 	`# echo "/usr/local/lib" >> /etc/ld.so.conf`
+
 	`# ldconfig`
 
-### On [MacOS / OS X](https://en.wikipedia.org/wiki/MacOS)
+### On [MacOS / OS X](https://en.wikipedia.org/wiki/MacOS) ![](img/osx.png)
 
 ##### Prerequisites
 - [Xcode](https://developer.apple.com/xcode) 3.14 or later.
@@ -131,28 +186,48 @@
 ##### Installing from source
 
 1. [**Download**](https://libagar.org/download.html) and unpack the sources to a temporary location:
+
 	`$ wget https://stable.hypertriton.com/agar/agar-1.6.0.tar.gz`
+
 	`$ tar -xzf agar-1.6.0.tar.gz`
+
 	`$ cd agar-1.6.0`
+
 2. Run the **configure** script. Use `--help` to see available options. Some examples:
+
 	- Install to an alternate location (default = `/usr/local`):
+
 	`$ ./configure --prefix=$HOME`
+
 	- Enable run-time assertions, type-safety checks & [GUI debugger](https://libagar.org/man3/AG_GuiDebugger):
+
 	`$ ./configure --enable-debug`
+
 	- Disable support for [multithreading](https://libagar.org/man3/AG_Threads):
+
 	`$ ./configure --disable-threads`
+
 	- Enable beta extension libraries such as [**AU**](https://libagar.org/man3/AU), [**MAP**](https://libagar.org/man3/MAP) & [**AG_Web**](https://libagar.org/man3/AG_Web).
+
 	`$ ./configure --enable-{au,map,web}`
+
 	- Enable _Deep Color_ (is the default on 64-bit platforms):
+
 	`$ ./configure --with-memory-model=L`
+
 3. Build and install the library:
+
 	`$ make depend all`
+
 	`# make install`
+
 4. If necessary add `/usr/local/lib` to `/etc/ld.so.conf` and refresh your [ld.so](http://man7.org/linux/man-pages/man8/ld.so.8.html) cache:
+
 	`# echo "/usr/local/lib" >> /etc/ld.so.conf`
+
 	`# ldconfig`
 
-### On [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows)
+### On [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows) ![](img/win.png)
 
 - [**Windows / MinGW-w64** build](https://libagar.org/docs/inst/win-mingw64.html)
 - [**Windows / MinGW32** build](https://libagar.org/docs/inst/win-mingw.html)

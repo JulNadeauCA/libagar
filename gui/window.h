@@ -58,18 +58,22 @@ enum ag_window_wm_type {
 
 typedef AG_TAILQ_HEAD(ag_cursor_areaq, ag_cursor_area) AG_CursorAreaQ;
 
-typedef struct ag_window_pvt {
-	AG_TAILQ_ENTRY(ag_window) detach;	/* In agWindowDetachQ */
-	AG_TAILQ_ENTRY(ag_window) visibility;	/* In agWindow{Show,Hide}Q */
-	AG_TAILQ_HEAD_(ag_window) subwins;	/* For AG_WindowAttach() */
-	AG_TAILQ_ENTRY(ag_window) swins;	/* Entry in logical parent window */
-	AG_Timer fadeTo;			/* Fade timer */
-	float fadeInTime, fadeOutTime;		/* Fade time (s) */
-	float fadeInIncr, fadeOutIncr;		/* Fade increment */
-	float fadeOpacity;			/* Fade opacity */
+typedef struct ag_window_fade_ctx {
+	float inTime, outTime;                /* Total fade time (in s) */
+	float inIncr, outIncr;                /* Delta (in opacity units) */
+	float opacity;                        /* Current opacity */
 	Uint32 _pad;
-	AG_CursorAreaQ cursorAreas;		/* Cursor-change areas */
-	AG_CursorArea *_Nullable caResize[5];	/* Window-resize areas */
+	AG_Timer timer;                       /* Fade timer */
+} AG_WindowFadeCtx;
+
+typedef struct ag_window_pvt {
+	AG_TAILQ_ENTRY(ag_window) detach;     /* in agWindowDetachQ */
+	AG_TAILQ_ENTRY(ag_window) visibility; /* in agWindow{Show,Hide}Q */
+	AG_TAILQ_HEAD_(ag_window) subwins;    /* For AG_WindowAttach() */
+	AG_TAILQ_ENTRY(ag_window) swins;      /* in logical parent window */
+	AG_WindowFadeCtx *fade;               /* Fadein/fadeout context */
+	AG_CursorAreaQ cursorAreas;           /* Cursor-change areas */
+	AG_CursorArea *_Nullable caResize[5]; /* Window-resize areas */
 } AG_WindowPvt;
 
 /* Window instance */
@@ -98,6 +102,7 @@ typedef struct ag_window {
 #define AG_WINDOW_HMAXIMIZE     0x00040000 /* Keep maximized horizontally */
 #define AG_WINDOW_VMAXIMIZE     0x00080000 /* Keep maximized vertically */
 #define AG_WINDOW_NOMOVE        0x00100000 /* Disallow movement of window */
+#define AG_WINDOW_UPDATECAPTION 0x00200000 /* Caption text was updated */
 #define AG_WINDOW_MODKEYEVENTS  0x00400000 /* Mod key events (LEGACY, unused) */
 #define AG_WINDOW_DETACHING     0x00800000 /* Being detached (read-only) */
 #define AG_WINDOW_NOCURSORCHG   0x04000000 /* Inhibit any cursor change */
@@ -156,6 +161,8 @@ extern AG_WindowQ agWindowShowQ;		/* AG_WindowShow() queue */
 extern AG_WindowQ agWindowHideQ;		/* AG_WindowHide() queue */
 extern AG_Window *_Nullable agWindowToFocus;	/* Window to focus next */
 extern AG_Window *_Nullable agWindowFocused;	/* Window holding focus */
+extern Uint agWindowPinnedCount;                /* Number of pinned windows */
+
 #if defined(AG_DEBUG) && defined(AG_WIDGETS)
 extern AG_Window *_Nullable agDebuggerTgtWindow;     /* For GUI debugger */
 #endif

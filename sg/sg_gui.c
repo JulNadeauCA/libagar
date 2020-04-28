@@ -404,7 +404,7 @@ SG_GUI_SelectFontDlg(AG_Event *event)
 
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	AG_ButtonNewFn(hBox, 0, _("OK"), SelectedFont, "%p", win);
-	AG_ButtonNewFn(hBox, 0, _("Cancel"), AG_WindowCloseGenEv, "%p", win);
+	AG_ButtonNewFn(hBox, 0, _("Cancel"), AGWINCLOSE(win));
 	
 	AG_SeparatorNewHoriz(win);
 
@@ -453,8 +453,9 @@ SG_GUI_CreateNewDlg(AG_Event *event)
 	}
 	
 	AG_SeparatorNewHoriz(win);
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Quit"),
-	    AG_WindowCloseGenEv, "%p", win);
+
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Quit"), AGWINCLOSE(win));
+
 	AG_WindowSetPosition(win, AG_WINDOW_MC, 0);
 	AG_WindowShow(win);
 }

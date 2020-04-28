@@ -846,8 +846,7 @@ main(int argc, char *argv[])
 	mi = AG_MenuNode(menu->root, ("File"), NULL);
 	{
 		AG_MenuActionKb(mi, _("Quit"), agIconClose.s,
-		    AG_KEY_W, AG_KEYMOD_CTRL,
-		    AG_WindowCloseGenEv, "%p", win);
+		    AG_KEY_W, AG_KEYMOD_CTRL, AGWINCLOSE(win));
 	}
 	mi = AG_MenuNode(menu->root, ("Edit"), NULL);
 	{
@@ -887,7 +886,8 @@ main(int argc, char *argv[])
 	tl = AG_TlistNew(pane->div[0], AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXX>", 10);
 	for (pTest = &testCases[0]; *pTest != NULL; pTest++) {
-		char path[AG_FILENAME_MAX];
+#if 0
+		char path[AG_FILENAME_MAX];                    /* with icon */
 		AG_Surface *S;
 
 		Strlcpy(path, (*pTest)->name, sizeof(path));
@@ -895,7 +895,9 @@ main(int argc, char *argv[])
 		if ((S = AG_SurfaceFromPNG(path)) != NULL) {
 			AG_TlistAddPtr(tl, S, (*pTest)->name, (void *)*pTest);
 			AG_SurfaceFree(S);
-		} else {
+		} else
+#endif
+		{
 			AG_TlistAddPtr(tl, agIconDoc.s, (*pTest)->name,
 			    (void *)*pTest);
 		}

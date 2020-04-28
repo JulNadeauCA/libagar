@@ -96,8 +96,7 @@ CreateNewDlg(AG_Event *event)
 	
 	AG_SeparatorNewHoriz(win);
 
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Quit"),
-	    AG_WindowCloseGenEv, "%p", win);
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Quit"), AGWINCLOSE(win));
 
 	AG_WindowSetPosition(win, AG_WINDOW_MC, 0);
 	AG_WindowShow(win);

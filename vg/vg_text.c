@@ -359,7 +359,7 @@ SelectFontDlg(AG_Event *_Nonnull event)
 
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	AG_ButtonNewFn(hBox, 0, _("OK"), SelectFont, "%p,%p,%p", vt, win, fs);
-	AG_ButtonNewFn(hBox, 0, _("Close"), AG_WindowCloseGenEv, "%p", win);
+	AG_ButtonNewFn(hBox, 0, _("Close"), AGWINCLOSE(win));
 
 	AG_WindowShow(win);
 	if ((winParent = AG_ParentWindow(vv)) != NULL)

@@ -106,7 +106,8 @@ package body Agar.Widget is
   end;
   
   --
-  -- Update the effective view coordinates of a widget and its descendants.
+  -- Update the cached absolute display (rView) coordinates of a widget, and
+  -- of its descendants. The Widget and its parent VFS must both be locked.
   --
   procedure Update_Coordinates
     (Widget : in Widget_not_null_Access;

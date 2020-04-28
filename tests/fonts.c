@@ -183,7 +183,7 @@ TestGUI(void *obj, AG_Window *win)
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
 	{
 		AG_ButtonNewFn(box, 0, _("Set as Default Font"), SelectedFont, "%p", win);
-		AG_ButtonNewFn(box, 0, _("Cancel"), AG_WindowCloseGenEv, "%p", win);
+		AG_ButtonNewFn(box, 0, _("Cancel"), AGWINCLOSE(win));
 	}
 	return (0);
 }

@@ -21,8 +21,9 @@ register("--enable-debug",           "Enable debugging [no]")
 require(cc)
 require(ada)
 require(agar, 1.6.0, ${prefix_agar})
+require(agar-core, 1.6.0, ${prefix_agar})
 require(agar.defs, 1.6.0, ${prefix_agar})
-require(agar-ada-core, 1.6.0, ${prefix_agar_ada_core})
+require(agar-ada-core, 1.6.0, ${prefix_agar_ada})
 require(agar-ada, 1.6.0, ${prefix_agar_ada})
 
 mv -f agar.def agar_ada_demo_agar.def

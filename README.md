@@ -2,21 +2,22 @@
 
 ### What is it?
 
-Agar is a type of sugar polymer obtained from seaweed and red algae. It becomes gelatinous in water and is primarly used as a culture medium for microbiological work. Agar is also the name of an open source GUI toolkit, a set of software libraries for building graphical user interfaces.
+Agar is a type of sugar polymer obtained from seaweed and red algae. It becomes gelatinous in water and is primarly used as a culture medium for microbiological work. **Agar** (or ***LibAgar***) is also the name of an open source GUI toolkit, a set of software libraries for building graphical user interfaces.
 
-Agar works with a wide variety of platforms and graphics systems, from modern desktops to classic consoles and embedded devices. Agar's low-level layers are modular, extensible and easily ported to new hardware platforms and graphics systems. Standard [AG_Drivers](https://libagar.org/man3/AG_Driver) include:
+Agar works with a wide variety of platforms and graphics systems, from modern desktops to classic consoles and embedded devices. Its low-level layers are modular, extensible and easily ported to new hardware platforms and graphics systems. Standard [drivers](https://libagar.org/man3/AG_Driver) include:
+* [**cocoa**](https://libagar.org/man3/AG_DriverCocoa) ([_MacOS_](https://en.wikipedia.org/wiki/MacOS), OpenGL, multi-window)
+* [**glx**](https://libagar.org/man3/AG_DriverGLX) ([_X Windows_](https://x.org), OpenGL, multi-window)
+* [**sdlfb**](https://libagar.org/man3/AG_DriverSDLFB) ([_SDL 1.2_](https://libsdl.org), frame-buffer, single-window)
+* [**sdlgl**](https://libagar.org/man3/AG_DriverSDLGL) ([_SDL 1.2_](https://libsdl.org), OpenGL, single-window)
+* [**wgl**](https://libagar.org/man3/AG_DriverWGL) ([_Windows_](https://en.wikipedia.org/wiki/Microsoft_Windows), OpenGL, multi-window)
 
-* [sdlfb](https://libagar.org/man3/AG_DriverSDLFB) (SDL, frame-buffer)
-* [sdlgl](https://libagar.org/man3/AG_DriverSDLGL) (SDL, OpenGL)
-* [glx](https://libagar.org/man3/AG_DriverGLX) (X11, OpenGL)
-* [cocoa](https://libagar.org/man3/AG_DriverCocoa) (MacOS X, OpenGL)
-* [wgl](https://libagar.org/man3/AG_DriverWGL) (Windows, OpenGL)
+For graphics systems without multi-window capabilities (or cases where a MDI-style interface is preferred over desktop integration), a [**single-window**](https://libagar.org/man3/AG_DriverSw) mode is provided in which case Agar provides its own internal window manager.
 
-For graphics systems without window capabilities (or cases where a MDI-style interface is preferred over desktop integration), a _single-window_ mode is provided in which case Agar provides its own internal window manager. Agar implements a powerful styling engine and includes a real-time "Style Editor" with support for cascading [stylesheets](https://libagar.org/man3/AG_StyleSheet).
+Agar's cascading [**Style Engine**](https://libagar.org/man3/AG_StyleSheet) separates presentation details from underlying code. Style attributes including typography, colors, paddings and spacings of widgets can be assigned from a [style sheet](https://dev.csoft.net/agar/trunk/gui/style.css) using a common language. **Style Editor** tool allows style changes to be viewed in real-time.
 
-Agar includes a good standard library of general-purpose widgets, but it is always meant to be extended. It is customary to write new widgets as part of an application or an external library. Complex user interface elements can be realized often using very few lines of code. The [class registration interface](https://libagar.org/man3/AG_Object#CLASSES) simplifies the process.
+Agar includes a standard standard library of general-purpose widgets, and is also designed to be extended externally. New Agar widgets can be implemented as part of an application or an external library. Complex user interface elements can be realized often using very few lines of code. The [class registration interface](https://libagar.org/man3/AG_Object#CLASSES) simplifies the process.
 
-To help developers with the debugging process, the Debug build performs extensive object validity and class-membership tests on all pointers passed to API calls, so memory errors trigger run-time "Illegal access" assertions as early as possible. Agar is [thread-safe](https://libagar.org/man3/AG_Threads) when built with threads support. Public API calls are reentrant (unless documented otherwise), but Agar does not rely on threads for its own operation.
+To aid debugging, the Debug version performs type checking, object-validity and class-membership tests against object pointers passed to API calls at run-time. Agar is [thread-safe](https://libagar.org/man3/AG_Threads) when built with threads support. Public API calls are reentrant unless documented otherwise, although Agar does not rely on threads for its own operation.
 
 ### Libraries included (stable)
 
@@ -36,15 +37,14 @@ To help developers with the debugging process, the Debug build performs extensiv
 
 ### How to install
 
-See [**INSTALL.md**](INSTALL.md), or:
-
-- **[On BSD](https://libagar.org/docs/inst/bsd.html)** ![](img/bsd.png)
-- **[On Linux](https://libagar.org/docs/inst/linux.html)** ![](img/linux.png)
-- **[On MacOS](https://libagar.org/docs/inst/osx.html)** ![](img/osx.png)
-- **[On Unix](https://libagar.org/docs/inst/unix.html)** ![](img/sunhp.png)
-- **[On Windows with MingGW32](https://libagar.org/docs/inst/win-mingw.html)** ![](img/win.png)
-- **[On Windows with MingGW64](https://libagar.org/docs/inst/win-mingw64.html)** ![](img/win.png)
-- **[On Windows with Visual Studio](https://libagar.org/docs/inst/win-vs.html)** ![](img/win.png)
+See the provided [**INSTALL.md**](INSTALL.md) or an online installation guide:
+- **[on BSD](https://libagar.org/docs/inst/bsd.html)** ![](img/bsd.png)
+- **[on Linux](https://libagar.org/docs/inst/linux.html)** ![](img/linux.png)
+- **[on MacOS](https://libagar.org/docs/inst/osx.html)** ![](img/osx.png)
+- **[on Unix](https://libagar.org/docs/inst/unix.html)** ![](img/sunhp.png)
+- **[on Windows with MingGW32](https://libagar.org/docs/inst/win-mingw.html)** ![](img/win.png)
+- **[on Windows with MingGW64](https://libagar.org/docs/inst/win-mingw64.html)** ![](img/win.png)
+- **[on Windows with Visual Studio](https://libagar.org/docs/inst/win-vs.html)** ![](img/win.png)
 
 ### Availability
 
@@ -57,10 +57,6 @@ See [**INSTALL.md**](INSTALL.md), or:
 
 * Main Repo: [https://dev.csoft.net/agar/trunk](https://dev.csoft.net/agar/trunk)
 * On GitHub: [JulNadeauCA/libagar](https://github.com/JulNadeauCA/libagar)
-
-#### Portability
-
-Agar is [portable](https://libagar.org/portable.html) to different platforms including FreeBSD, IRIX, Linux, MacOS Classic, MacOS X, NetBSD, OpenBSD, Solaris and Windows. Agar has been used on ARM embedded devices. It has even been ported to game consoles such as the GP2x, the Nintendo Gamecube/Wii and the Xbox.
 
 #### License
 

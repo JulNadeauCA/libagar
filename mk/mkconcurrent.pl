@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+# Copyright (c) 2003-2020 Julien Nadeau Carriere <vedge@csoft.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without

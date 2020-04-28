@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@hypertriton.com>
+# Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -272,7 +272,7 @@ _prog_objs:
 
 # Compile and link the program
 ${PROG}: ${SRCS_GENERATED} _prog_objs ${OBJS}
-	@if [ "${PROG}" != "" -a "${SRCS}" != "" ]; then \
+	@if [ "${PROG}" != "" -a "${SRCS}" != "" -a "${.TARGETS}" != "install" ]; then \
 	    if [ "${PROG_TYPE}" = "GUI" ]; then \
 	    	_prog_ldflags="${PROG_GUI_FLAGS}"; \
 	    else \

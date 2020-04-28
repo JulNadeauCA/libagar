@@ -179,6 +179,9 @@ will not run).
 .Ft void
 .Fn AG_WidgetUpdate "AG_Widget *obj"
 .Pp
+.Ft void
+.Fn AG_WidgetUpdateCoords "AG_Widget *obj" "int x" "int y"
+.Pp
 .nr nS 0
 .Fn AG_Expand
 makes the widget fill all available space in its parent.
@@ -269,6 +272,19 @@ calls made in event context, or manual modifications of the
 fields of the
 .Nm
 structure.
+.Pp
+.Fn AG_WidgetUpdateCoords
+is called internally to update the cached absolute display coordinates (the
+.Va rView
+rectangle) of
+.Fa wid
+and its descendents based on their current relative coordinates (the
+.Va x ,
+.Va y ,
+.Va w ,
+.Va h
+members).
+The widget and its parent VFS must be locked.
 .Sh STYLE ATTRIBUTES
 .nr nS 1
 .Ft "void"

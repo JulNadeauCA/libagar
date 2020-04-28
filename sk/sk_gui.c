@@ -330,7 +330,7 @@ SK_GUI_SelectFontDlg(AG_Event *event)
 
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	AG_ButtonNewFn(hBox, 0, _("OK"), SelectedFont, "%p", win);
-	AG_ButtonNewFn(hBox, 0, _("Cancel"), AG_WindowCloseGenEv, "%p", win);
+	AG_ButtonNewFn(hBox, 0, _("Cancel"), AGWINCLOSE(win));
 	AG_WindowShow(win);
 }
 

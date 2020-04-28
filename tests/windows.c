@@ -92,8 +92,6 @@ TestDesktopAlign(AG_Event *event)
 			AG_WindowShow(win);
 		}
 	}
-	
-	AG_LabelNewS(winParent, 0, "OK");
 }
 
 static void
@@ -141,20 +139,27 @@ TestGUI(void *obj, AG_Window *win)
 		{ AG_WINDOW_DENYFOCUS,		"DENYFOCUS",	1 },
 		{ 0,				NULL,		0 }
 	};
+	AG_Box *box;
 
 	ti->testFlags = 0;
 	ti->makeTransient = 0;
 	ti->makePinned = 0;
 
-	AG_LabelNewS(win, 0, "Create test window with flags:");
-	AG_CheckboxSetFromFlags(win, 0, &ti->testFlags, winFlags);
-	AG_CheckboxNewInt(win, 0, "Make transient", &ti->makeTransient);
-	AG_CheckboxNewInt(win, 0, "Make pinned", &ti->makePinned);
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Create Test Window",
+	box = AG_BoxNewVert(win, AG_BOX_EXPAND);
+
+	AG_LabelNewS(box, 0, "Create test window with flags:");
+	AG_CheckboxSetFromFlags(box, 0, &ti->testFlags, winFlags);
+	AG_CheckboxNewInt(box, 0, "Make transient", &ti->makeTransient);
+	AG_CheckboxNewInt(box, 0, "Make pinned", &ti->makePinned);
+
+	AG_ButtonNewFn(box, AG_BUTTON_HFILL, "Create Test Window",
 	    CreateTestWindow, "%p,%p", ti, win);
-	AG_SeparatorNewHoriz(win);
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Test Desktop Alignment",
+
+	AG_SeparatorNewHoriz(box);
+
+	AG_ButtonNewFn(box, AG_BUTTON_HFILL, "Test Desktop Alignment",
 	    TestDesktopAlign, "%p", win);
+
 	return (0);
 }
 

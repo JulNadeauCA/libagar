@@ -639,11 +639,19 @@ routine requests closure of the currently focused window, if any.
 .Ft "AG_Window *"
 .Fn AG_About "void"
 .Pp
+.Ft "void"
+.Fn AG_ViewCapture "void"
+.Pp
 .nr nS 0
 .Fn AG_About
 generates an "About Agar GUI" dialog box with copyright information
 for the Agar GUI library and core fonts (from
 .Pa gui/license.txt ) .
+.Pp
+.Fn AG_ViewCapture
+is only available with single-window drivers.
+It dumps the contents of the display surface to
+.Pa ~/.<progname>/screenshot/.
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Window

@@ -2426,8 +2426,7 @@ Edit(void *_Nonnull p)
 	pitem = AG_MenuNode(menu->root, _("File"), NULL);
 	{
 		AG_MenuActionKb(pitem, _("Close map"), agIconClose.s,
-		    AG_KEY_W, AG_KEYMOD_CTRL,
-		    AG_WindowCloseGenEv, "%p", win);
+		    AG_KEY_W, AG_KEYMOD_CTRL, AGWINCLOSE(win));
 	}
 	
 	pitem = AG_MenuNode(menu->root, _("Edit"), NULL);

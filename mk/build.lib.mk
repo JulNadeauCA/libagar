@@ -319,7 +319,8 @@ _lib_ltobjs:
 
 # Build a static library.
 lib${LIB}.a: ${SRCS_GENERATED} _lib_objs ${OBJS}
-	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "No" -a "${SRCS}" != "" ]; then \
+	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "No" -a \
+	      "${SRCS}" != "" -a "${.TARGETS}" != "install" ]; then \
 	    _objs="${OBJS}"; \
 	    if [ "$$_objs" = "" ]; then \
 	        for F in ${SRCS}; do \
@@ -346,8 +347,10 @@ lib${LIB}.a: ${SRCS_GENERATED} _lib_objs ${OBJS}
 
 # Build a shared library (without Libtool)
 lib${LIB}.so: ${SRCS_GENERATED} _lib_objs ${OBJS}
-	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" \
-	      -a "${USE_LIBTOOL}" = "No" -a "${SRCS}" != "" ]; then \
+	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" -a \
+	      "${USE_LIBTOOL}" = "No" -a "${SRCS}" != "" -a \
+	      "${.TARGETS}" != "install" ]; then \
+	    \
 	    case "${HOST}" in \
 	    *-darwin*) \
 	        _libout="lib${LIB}.${LIB_CURRENT}.dylib"; \
@@ -451,7 +454,8 @@ lib${LIB}.so: ${SRCS_GENERATED} _lib_objs ${OBJS}
 
 # Build a shared library using libtool
 lib${LIB}.la: check-libtool ${SRCS_GENERATED} _lib_ltobjs ${SHOBJS}
-	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" -a "${SRCS}" != "" ]; then \
+	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" -a \
+	      "${SRCS}" != "" -a "${.TARGETS}" != "install" ]; then \
 	    _ltobjs="${SHOBJS}"; \
 	    _moduleopts=""; \
 	    if [ "$$_ltobjs" = "" ]; then \

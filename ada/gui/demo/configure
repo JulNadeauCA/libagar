@@ -1135,6 +1135,84 @@ echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 	TEST_CFLAGS=''
 fi
 if [ "${HAVE_CC}" = "yes" ]; then
+$ECHO_N 'cc: checking whether compiler is Clang...'
+$ECHO_N '# cc: checking whether compiler is Clang...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__clang__)
+# error "is not clang"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_CLANG' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_CLANG=yes
+bb_o=$bb_incdir/have_cc_clang.h
+echo '#ifndef HAVE_CC_CLANG' >$bb_o
+echo "#define HAVE_CC_CLANG \"$HAVE_CC_CLANG\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_CLANG=no
+echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking whether compiler is GCC...'
+$ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__GNUC__) || defined(__clang__)
+# error "is not gcc"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_GCC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_GCC=yes
+bb_o=$bb_incdir/have_cc_gcc.h
+echo '#ifndef HAVE_CC_GCC' >$bb_o
+echo "#define HAVE_CC_GCC \"$HAVE_CC_GCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_GCC=no
+echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
 $ECHO_N 'cc: checking for compiler warning options...'
 $ECHO_N '# cc: checking for compiler warning options...' >>config.log
 MK_COMPILE_STATUS=OK
@@ -1552,6 +1630,10 @@ LIBTOOLOPTS_SHARED=""
 TEST_CFLAGS=""
 echo '#undef HAVE_CC' >$bb_incdir/have_cc.h
 echo 'hdefs["HAVE_CC"] = nil' >>configure.lua
+echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
 echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
 echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
 echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
@@ -2275,6 +2357,259 @@ echo "*** Failed! See ./config.log for more details."
 echo "***"
 exit 1
 fi
+$ECHO_N 'checking for Agar-Core...'
+$ECHO_N '# checking for Agar-Core...' >>config.log
+# BEGIN agar-core(1.6.0 ${prefix_agar})
+AGAR_CORE_VERSION=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-core-config" ]; then
+AGAR_CORE_VERSION=`${prefix_agar}/bin/agar-core-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-core-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/agar-core-config" ]; then
+AGAR_CORE_VERSION=`${path}/agar-core-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-core-config"
+break
+elif [ -e "${path}/agar-core-config.exe" ]; then
+AGAR_CORE_VERSION=`${path}/agar-core-config.exe --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-core-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+if [ "${AGAR_CORE_VERSION}" != "" ]; then
+if [ "${prefix_agar}" != "" ]; then
+echo "yes ($AGAR_CORE_VERSION in ${prefix_agar})"
+echo "# yes ($AGAR_CORE_VERSION in ${prefix_agar})" >>config.log
+else
+echo "yes ($AGAR_CORE_VERSION)"
+echo "# yes ($AGAR_CORE_VERSION)" >>config.log
+fi
+MK_VERSION_MAJOR=`echo "$AGAR_CORE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$AGAR_CORE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$AGAR_CORE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK=no
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+MK_VERSION_OK=yes
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+if [ "$MK_VERSION_MINOR" = '' ]; then
+MK_VERSION_OK=yes
+else
+if [ $MK_VERSION_MINOR -gt 6 ]; then
+MK_VERSION_OK=yes
+elif [ $MK_VERSION_MINOR -eq 6 ]; then
+if [ "$MK_VERSION_MICRO" = '' ]; then
+MK_VERSION_OK=yes
+else
+if [ $MK_VERSION_MICRO -ge 0 ]; then
+MK_VERSION_OK=yes
+fi
+fi
+fi
+fi
+fi
+if [ "${MK_VERSION_OK}" = "no" ]; then
+echo '*'
+echo '# *' >>config.log
+echo "* Minimum required version is 1.6.0 (found $AGAR_CORE_VERSION)"
+echo "# * Minimum required version is 1.6.0 (found $AGAR_CORE_VERSION)" >>config.log
+echo '*'
+echo '# *' >>config.log
+fi
+else
+if [ "${prefix_agar}" != "" ]; then
+echo "no (not in ${prefix_agar})"
+echo "# no (not in ${prefix_agar})" >>config.log
+else
+echo 'no'
+echo '# no' >>config.log
+fi
+MK_VERSION_OK="no"
+fi
+if [ "${MK_VERSION_OK}" = "yes" ]; then
+$ECHO_N 'checking whether Agar-Core works...'
+$ECHO_N '# checking whether Agar-Core works...' >>config.log
+AGAR_CORE_CFLAGS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-core-config" ]; then
+AGAR_CORE_CFLAGS=`${prefix_agar}/bin/agar-core-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-core-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/agar-core-config" ]; then
+AGAR_CORE_CFLAGS=`${path}/agar-core-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-core-config"
+break
+elif [ -e "${path}/agar-core-config.exe" ]; then
+AGAR_CORE_CFLAGS=`${path}/agar-core-config.exe --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-core-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+AGAR_CORE_LIBS=
+if [ "${prefix_agar}" != "" ]; then
+if [ -e "${prefix_agar}/bin/agar-core-config" ]; then
+AGAR_CORE_LIBS=`${prefix_agar}/bin/agar-core-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-core-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/agar-core-config" ]; then
+AGAR_CORE_LIBS=`${path}/agar-core-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-core-config"
+break
+elif [ -e "${path}/agar-core-config.exe" ]; then
+AGAR_CORE_LIBS=`${path}/agar-core-config.exe --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-core-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <agar/core.h>
+
+AG_ObjectClass FooClass = {
+	"FooClass",
+	sizeof(AG_Object),
+	{ 0,0 },
+	AG_NULL,		/* init */
+	AG_NULL,		/* reset */
+	AG_NULL,		/* destroy */
+	AG_NULL,		/* load */
+	AG_NULL,		/* save */
+	AG_NULL			/* edit */
+};
+
+int
+main(int argc, char *argv[])
+{
+	AG_Object obj;
+
+	AG_InitCore("conf-test", 0);
+	AG_RegisterClass(&FooClass);
+	AG_ObjectInit(&obj, &FooClass);
+	obj.flags |= AG_OBJECT_STATIC;
+	AG_ObjectDestroy(&obj);
+	AG_Quit();
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_AGAR_CORE' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CORE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_CORE_LIBS} 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_CORE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_CORE_LIBS} 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_AGAR_CORE=yes
+bb_o=$bb_incdir/have_agar_core.h
+echo '#ifndef HAVE_AGAR_CORE' >$bb_o
+echo "#define HAVE_AGAR_CORE \"$HAVE_AGAR_CORE\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_AGAR_CORE\"] = \"$HAVE_AGAR_CORE\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_AGAR_CORE=no
+echo '#undef HAVE_AGAR_CORE' >$bb_incdir/have_agar_core.h
+echo 'hdefs["HAVE_AGAR_CORE"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_AGAR_CORE}" = "yes" ]; then
+bb_o=$bb_incdir/agar_core_cflags.h
+echo '#ifndef AGAR_CORE_CFLAGS' >$bb_o
+echo "#define AGAR_CORE_CFLAGS \"$AGAR_CORE_CFLAGS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AGAR_CORE_CFLAGS\"] = \"$AGAR_CORE_CFLAGS\"" >>configure.lua
+bb_o=$bb_incdir/agar_core_libs.h
+echo '#ifndef AGAR_CORE_LIBS' >$bb_o
+echo "#define AGAR_CORE_LIBS \"$AGAR_CORE_LIBS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AGAR_CORE_LIBS\"] = \"$AGAR_CORE_LIBS\"" >>configure.lua
+else
+echo '#undef AGAR_CORE_CFLAGS' >$bb_incdir/agar_core_cflags.h
+echo 'hdefs["AGAR_CORE_CFLAGS"] = nil' >>configure.lua
+AGAR_CORE_CFLAGS=""
+echo '#undef AGAR_CORE_LIBS' >$bb_incdir/agar_core_libs.h
+echo 'hdefs["AGAR_CORE_LIBS"] = nil' >>configure.lua
+AGAR_CORE_LIBS=""
+fi
+else
+HAVE_AGAR_CORE="no"
+AGAR_CORE_CFLAGS=""
+AGAR_CORE_LIBS=""
+echo '#undef HAVE_AGAR_CORE' >$bb_incdir/have_agar_core.h
+echo 'hdefs["HAVE_AGAR_CORE"] = nil' >>configure.lua
+echo '#undef AGAR_CORE_CFLAGS' >$bb_incdir/agar_core_cflags.h
+echo 'hdefs["AGAR_CORE_CFLAGS"] = nil' >>configure.lua
+echo '#undef AGAR_CORE_LIBS' >$bb_incdir/agar_core_libs.h
+echo 'hdefs["AGAR_CORE_LIBS"] = nil' >>configure.lua
+fi
+# END agar-core
+if [ "${HAVE_AGAR_CORE}" != "yes" ]; then
+echo '* '
+echo '# * ' >>config.log
+echo "* $PACKAGE requires Agar-Core (version 1.6.0 or newer)."
+echo "# * $PACKAGE requires Agar-Core (version 1.6.0 or newer)." >>config.log
+echo '* WWW: http://libagar.org'
+echo '# * WWW: http://libagar.org' >>config.log
+echo '* '
+echo '# * ' >>config.log
+echo "***"
+echo "*** ERROR: Required dependency agar-core not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
+if [ "${MK_VERSION_OK}" != "yes" ]; then
+echo '* '
+echo '# * ' >>config.log
+echo '* This software requires agar-core version >= 1.6.0,'
+echo '# * This software requires agar-core version >= 1.6.0,' >>config.log
+echo '* please update that package and try again.'
+echo '# * please update that package and try again.' >>config.log
+echo '* WWW: http://libagar.org'
+echo '# * WWW: http://libagar.org' >>config.log
+echo '* '
+echo '# * ' >>config.log
+echo "***"
+echo "*** ERROR: Required dependency agar-core version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
 $ECHO_N 'checking for Agar definitions...'
 $ECHO_N '# checking for Agar definitions...' >>config.log
 # BEGIN agar.defs(1.6.0 ${prefix_agar})
@@ -2859,13 +3194,13 @@ exit 1
 fi
 $ECHO_N 'checking for Ada bindings to Agar-Core...'
 $ECHO_N '# checking for Ada bindings to Agar-Core...' >>config.log
-# BEGIN agar-ada-core(1.6.0 ${prefix_agar_ada_core})
+# BEGIN agar-ada-core(1.6.0 ${prefix_agar_ada})
 AGAR_ADA_CORE_VERSION=
-if [ "${prefix_agar_ada_core}" != "" ]; then
-if [ -e "${prefix_agar_ada_core}/bin/agar-ada-core-config" ]; then
-AGAR_ADA_CORE_VERSION=`${prefix_agar_ada_core}/bin/agar-ada-core-config --version`
+if [ "${prefix_agar_ada}" != "" ]; then
+if [ -e "${prefix_agar_ada}/bin/agar-ada-core-config" ]; then
+AGAR_ADA_CORE_VERSION=`${prefix_agar_ada}/bin/agar-ada-core-config --version`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar_ada_core}/bin/agar-ada-core-config"
+MK_EXEC_PATH="${prefix_agar_ada}/bin/agar-ada-core-config"
 fi
 else
 bb_save_IFS=$IFS
@@ -2886,9 +3221,9 @@ done
 IFS=$bb_save_IFS
 fi
 if [ "${AGAR_ADA_CORE_VERSION}" != "" ]; then
-if [ "${prefix_agar_ada_core}" != "" ]; then
-echo "yes ($AGAR_ADA_CORE_VERSION in ${prefix_agar_ada_core})"
-echo "# yes ($AGAR_ADA_CORE_VERSION in ${prefix_agar_ada_core})" >>config.log
+if [ "${prefix_agar_ada}" != "" ]; then
+echo "yes ($AGAR_ADA_CORE_VERSION in ${prefix_agar_ada})"
+echo "# yes ($AGAR_ADA_CORE_VERSION in ${prefix_agar_ada})" >>config.log
 else
 echo "yes ($AGAR_ADA_CORE_VERSION)"
 echo "# yes ($AGAR_ADA_CORE_VERSION)" >>config.log
@@ -2925,9 +3260,9 @@ echo '*'
 echo '# *' >>config.log
 fi
 else
-if [ "${prefix_agar_ada_core}" != "" ]; then
-echo "no (not in ${prefix_agar_ada_core})"
-echo "# no (not in ${prefix_agar_ada_core})" >>config.log
+if [ "${prefix_agar_ada}" != "" ]; then
+echo "no (not in ${prefix_agar_ada})"
+echo "# no (not in ${prefix_agar_ada})" >>config.log
 else
 echo 'no'
 echo '# no' >>config.log
@@ -2938,11 +3273,11 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether Agar-Core Ada bindings work...'
 $ECHO_N '# checking whether Agar-Core Ada bindings work...' >>config.log
 AGAR_ADA_CORE_CFLAGS=
-if [ "${prefix_agar_ada_core}" != "" ]; then
-if [ -e "${prefix_agar_ada_core}/bin/agar-ada-core-config" ]; then
-AGAR_ADA_CORE_CFLAGS=`${prefix_agar_ada_core}/bin/agar-ada-core-config --cflags`
+if [ "${prefix_agar_ada}" != "" ]; then
+if [ -e "${prefix_agar_ada}/bin/agar-ada-core-config" ]; then
+AGAR_ADA_CORE_CFLAGS=`${prefix_agar_ada}/bin/agar-ada-core-config --cflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar_ada_core}/bin/agar-ada-core-config"
+MK_EXEC_PATH="${prefix_agar_ada}/bin/agar-ada-core-config"
 fi
 else
 bb_save_IFS=$IFS
@@ -2963,11 +3298,11 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_ADA_CORE_LIBS=
-if [ "${prefix_agar_ada_core}" != "" ]; then
-if [ -e "${prefix_agar_ada_core}/bin/agar-ada-core-config" ]; then
-AGAR_ADA_CORE_LIBS=`${prefix_agar_ada_core}/bin/agar-ada-core-config --libs`
+if [ "${prefix_agar_ada}" != "" ]; then
+if [ -e "${prefix_agar_ada}/bin/agar-ada-core-config" ]; then
+AGAR_ADA_CORE_LIBS=`${prefix_agar_ada}/bin/agar-ada-core-config --libs`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar_ada_core}/bin/agar-ada-core-config"
+MK_EXEC_PATH="${prefix_agar_ada}/bin/agar-ada-core-config"
 fi
 else
 bb_save_IFS=$IFS
@@ -2988,7 +3323,7 @@ done
 IFS=$bb_save_IFS
 fi
 ada_cflags=""
-for F in ${AGAR_ADA_CORE_CFLAGS}; do
+for F in ${AGAR_ADA_CORE_CFLAGS} ${AGAR_CORE_CFLAGS}; do
     case "$F" in
     -I*)
         ada_cflags="$ada_cflags $F";
@@ -3027,8 +3362,8 @@ echo "binder failed $?"
 echo "# binder failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
 else
-echo "$ADALINK $ADALFLAGS $ada_cflags conftest ${AGAR_ADA_CORE_LIBS} 2>>config.log">>config.log
-$ADALINK $ADALFLAGS $ada_cflags conftest ${AGAR_ADA_CORE_LIBS} 2>>config.log
+echo "$ADALINK $ADALFLAGS $ada_cflags conftest ${AGAR_ADA_CORE_LIBS} ${AGAR_CORE_LIBS} 2>>config.log">>config.log
+$ADALINK $ADALFLAGS $ada_cflags conftest ${AGAR_ADA_CORE_LIBS} ${AGAR_CORE_LIBS} 2>>config.log
 if [ "$?" != "0" ]; then
 echo "linker failed $?"
 echo "# linker failed $?" >>config.log
@@ -3146,6 +3481,8 @@ fi
 done
 IFS=$bb_save_IFS
 fi
+echo 'AGAR_ADA_VERSION = '
+echo '# AGAR_ADA_VERSION = ' >>config.log
 if [ "${AGAR_ADA_VERSION}" != "" ]; then
 if [ "${prefix_agar_ada}" != "" ]; then
 echo "yes ($AGAR_ADA_VERSION in ${prefix_agar_ada})"
@@ -3424,6 +3761,10 @@ echo "AGAR_ADA_LIBS=$AGAR_ADA_LIBS" >>Makefile.config
 echo "mdefs[\"AGAR_ADA_LIBS\"] = \"$AGAR_ADA_LIBS\"" >>configure.lua
 echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
 echo "mdefs[\"AGAR_CFLAGS\"] = \"$AGAR_CFLAGS\"" >>configure.lua
+echo "AGAR_CORE_CFLAGS=$AGAR_CORE_CFLAGS" >>Makefile.config
+echo "mdefs[\"AGAR_CORE_CFLAGS\"] = \"$AGAR_CORE_CFLAGS\"" >>configure.lua
+echo "AGAR_CORE_LIBS=$AGAR_CORE_LIBS" >>Makefile.config
+echo "mdefs[\"AGAR_CORE_LIBS\"] = \"$AGAR_CORE_LIBS\"" >>configure.lua
 echo "AGAR_LIBS=$AGAR_LIBS" >>Makefile.config
 echo "mdefs[\"AGAR_LIBS\"] = \"$AGAR_LIBS\"" >>configure.lua
 echo "BINDIR=$BINDIR" >>Makefile.config
@@ -3456,12 +3797,18 @@ echo "HAVE_AGAR_ADA=$HAVE_AGAR_ADA" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR_ADA\"] = \"$HAVE_AGAR_ADA\"" >>configure.lua
 echo "HAVE_AGAR_ADA_CORE=$HAVE_AGAR_ADA_CORE" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR_ADA_CORE\"] = \"$HAVE_AGAR_ADA_CORE\"" >>configure.lua
+echo "HAVE_AGAR_CORE=$HAVE_AGAR_CORE" >>Makefile.config
+echo "mdefs[\"HAVE_AGAR_CORE\"] = \"$HAVE_AGAR_CORE\"" >>configure.lua
 echo "HAVE_AGAR_DEFS=$HAVE_AGAR_DEFS" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR_DEFS\"] = \"$HAVE_AGAR_DEFS\"" >>configure.lua
 echo "HAVE_CC=$HAVE_CC" >>Makefile.config
 echo "mdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
 echo "HAVE_CC65=$HAVE_CC65" >>Makefile.config
 echo "mdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+echo "HAVE_CC_CLANG=$HAVE_CC_CLANG" >>Makefile.config
+echo "mdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
+echo "HAVE_CC_GCC=$HAVE_CC_GCC" >>Makefile.config
+echo "mdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
 echo "HAVE_CC_MCONSOLE=$HAVE_CC_MCONSOLE" >>Makefile.config
 echo "mdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
 echo "HAVE_CC_MWINDOWS=$HAVE_CC_MWINDOWS" >>Makefile.config

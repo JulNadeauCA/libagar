@@ -723,8 +723,7 @@ SK_Edit(void *p)
 		    ImportSketchDlg, "%p,%p", sk, win);
 		AG_MenuSeparator(pitem);
 		AG_MenuActionKb(pitem, _("Close sketch"), NULL,
-		    AG_KEY_W, AG_KEYMOD_CTRL,
-		    AG_WindowCloseGenEv, "%p", win);
+		    AG_KEY_W, AG_KEYMOD_CTRL, AGWINCLOSE(win));
 	}
 	pitem = AG_MenuNode(menu->root, _("Edit"), NULL);
 	{
