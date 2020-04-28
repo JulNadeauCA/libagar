@@ -867,8 +867,10 @@ GenericMouseOverCtrl(AG_Window *_Nonnull win, int x, int y)
 
 /*
  * Process an input device event.
+ *
  * The agDrivers VFS must be locked.
- * TODO: generalize this code to SW drivers.
+ *
+ * TODO: generalize this code for single-window drivers in general.
  */
 static int
 ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
@@ -882,12 +884,10 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 		dsw->winSelected = NULL;
 	}
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
-		AG_ObjectLock(win);
-		/* XXX TODO move invisible windows to different tailq! */
 		if (!win->visible) {
-			AG_ObjectUnlock(win);
 			continue;
 		}
+		AG_ObjectLock(win);
 		if ((useText = (win->flags & AG_WINDOW_USE_TEXT))) {
 			AG_PushTextState();
 			AG_TextFont(WIDGET(win)->font);
@@ -995,6 +995,7 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 	int rv = 1;
 
 	AG_LockVFS(&agDrivers);
+
 	switch (dev->type) {
 	case AG_DRIVER_MOUSE_MOTION:
 		rv = ProcessInputEvent(drv, dev);
@@ -1031,14 +1032,16 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		}
 		break;
 	case AG_DRIVER_CLOSE:
+		AG_UnlockVFS(&agDrivers);
 		AG_Terminate(0);
-		break;
+		/* NOTREACHED */
+		return (rv);
 	default:
 		rv = 0;
 		break;
 	}
-	AG_UnlockVFS(&agDrivers);
 
+	AG_UnlockVFS(&agDrivers);
 	return (rv);
 }
 
