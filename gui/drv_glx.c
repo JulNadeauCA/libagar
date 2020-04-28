@@ -1595,33 +1595,19 @@ GLX_MapWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
-	AG_SizeAlloc a;
 	AG_Rect rVP;
-	int x,y;
 
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
+
 #ifdef AG_WM_HINTS
 	if (!glx->wmHintsSet)
-		SetHints(win);		/* Set window manager hints */
+		SetHints(win);                  /* Set window manager hints */
 #endif
 	XMapWindow(agDisplay, glx->w);
 	XIfEvent(agDisplay, &xev, WaitMapNotify, (char *)glx->w);
 
-	/* Update per-widget coordinate information. */
-	x = WIDGET(win)->x;
-	y = WIDGET(win)->y;
-	a.x = 0;
-	a.y = 0;
-	a.w = WIDTH(win);
-	a.h = HEIGHT(win);
-	AG_WidgetSizeAlloc(win, &a);
-	AG_WidgetUpdateCoords(win, 0, 0);
-	WIDGET(win)->x = x;
-	WIDGET(win)->y = y;
-
-	/* Set the GL viewport. */
-	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
+	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);  /* Set GL viewport */
 	rVP.x = 0;
 	rVP.y = 0;
 	rVP.w = WIDTH(win);
@@ -1719,8 +1705,9 @@ SetHints(AG_Window *_Nonnull win)
 
 	/* Honor NOCLOSE and DENYFOCUS */
 	nwmprot = 0;
-	if (!(win->flags & AG_WINDOW_NOCLOSE))
+	if (!(win->flags & AG_WINDOW_NOCLOSE)) {
 		wmprot[nwmprot++] = wmDeleteWindow;
+	}
 	if (win->flags & AG_WINDOW_DENYFOCUS) {
 		XWMHints h;
 		h.flags = InputHint;
@@ -1728,8 +1715,7 @@ SetHints(AG_Window *_Nonnull win)
 		XSetWMHints(agDisplay, glx->w, &h);
 		wmprot[nwmprot++] = wmTakeFocus;
 	}
-	XChangeProperty(agDisplay, glx->w,
-	    wmProtocols, XA_ATOM, 32,
+	XChangeProperty(agDisplay, glx->w, wmProtocols, XA_ATOM, 32,
 	    PropModeReplace,
 	    (Uchar *)wmprot, nwmprot);
 }
@@ -2027,7 +2013,7 @@ GLX_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 	aNew.w = a->w;
 	aNew.h = a->h;
 	AG_WidgetSizeAlloc(win, &aNew);
-	AG_WidgetUpdateCoords(win, 0, 0);
+	AG_WidgetUpdateCoords(win, 0,0);
 	WIDGET(win)->x = a->x;
 	WIDGET(win)->y = a->y;
 	win->dirty = 1;
@@ -2064,13 +2050,13 @@ GLX_PostMoveCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 	aNew.w = a->w;
 	aNew.h = a->h;
 	AG_WidgetSizeAlloc(win, &aNew);
-	AG_WidgetUpdateCoords(win, 0, 0);
+	AG_WidgetUpdateCoords(win, 0,0);
 	WIDGET(win)->x = a->x;
 	WIDGET(win)->y = a->y;
 	win->dirty = 1;
 
-	/* Move other windows pinned to this one. */
-	AG_WindowMovePinned(win, xRel, yRel);
+	if (agWindowPinnedCount > 0)
+		AG_WindowMovePinned(win, xRel,yRel);
 
 	AG_MutexUnlock(&agDisplayLock);
 	AG_MutexUnlock(&glx->lock);

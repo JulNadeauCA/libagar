@@ -319,7 +319,6 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 		0, 0, 0, 0, 0            /* All other attributes are not used */
 	};
 	RECT wndRect;
-	AG_SizeAlloc a;
 	AG_Rect rVP;
 	int x,y;
 
@@ -481,21 +480,12 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	WGL_InitDefaultCursor(wgl);
 	AG_InitStockCursors(drv);
 
-	/* Update agar's idea of the actual window coordinates. */
-	a.x = x;
-	a.y = y;
-	a.w = r->w;
-	a.h = r->h;
-	AG_WidgetSizeAlloc(win, &a);
-	AG_WidgetUpdateCoords(win, a.x, a.y);
-
 	/* Focus the window. */
 	if (!(win->flags & AG_WINDOW_DENYFOCUS)) {
 		SetFocus(wgl->hwnd);
 		agWindowFocused = win;
 		AG_PostEvent(win, "window-gainfocus", NULL);
 	}
-	
 	return (0);
 fail:
 	wglDeleteContext(wgl->hglrc);
@@ -1002,6 +992,7 @@ static int
 WGL_MapWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+
 	ShowWindow(wgl->hwnd, SW_SHOW);
 	return (0);
 }
@@ -1010,6 +1001,7 @@ static int
 WGL_UnmapWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+
 	ShowWindow(wgl->hwnd, SW_HIDE);
 	return (0);
 }
@@ -1018,6 +1010,7 @@ static int
 WGL_RaiseWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+
 	SetWindowPos(wgl->hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	return (0);
 }
@@ -1026,6 +1019,7 @@ static int
 WGL_LowerWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+
 	SetWindowPos(wgl->hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	return (0);
 }
@@ -1068,6 +1062,7 @@ static int
 WGL_SetInputFocus(AG_Window *win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+
 	SetFocus(wgl->hwnd);
 	return (0);
 }
@@ -1343,7 +1338,7 @@ WGL_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 	a->x = 0;
 	a->y = 0;
 	AG_WidgetSizeAlloc(win, a);
-	AG_WidgetUpdateCoords(win, 0, 0);
+	AG_WidgetUpdateCoords(win, 0,0);
 
 	/* Viewport dimensions have changed */
 	wglMakeCurrent(wgl->hdc, wgl->hglrc);
@@ -1373,13 +1368,13 @@ WGL_PostMoveCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 	aNew.w = a->w;
 	aNew.h = a->h;
 	AG_WidgetSizeAlloc(win, &aNew);
-	AG_WidgetUpdateCoords(win, 0, 0);
+	AG_WidgetUpdateCoords(win, 0,0);
 	WIDGET(win)->x = a->x;
 	WIDGET(win)->y = a->y;
 	win->dirty = 1;
 
-	/* Move other windows pinned to this one. */
-	AG_WindowMovePinned(win, xRel, yRel);
+	if (agWindowPinnedCount > 0)
+		AG_WindowMovePinned(win, xRel,yRel);
 }
 
 AG_DriverMwClass agDriverWGL = {

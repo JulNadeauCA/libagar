@@ -1545,22 +1545,21 @@ fail:
 	return (NULL);
 }
 
-/* Compute the absolute view coordinates of a widget and its descendents. */
+/*
+ * Compute the absolute view coordinates of a widget and its descendents.
+ * 
+ * The Widget and its parent VFS must be locked.
+ */
 void
 AG_WidgetUpdateCoords(void *obj, int x, int y)
 {
 	AG_Widget *wid = obj, *chld;
 	AG_Rect2 rPrev;
 
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	AG_LockVFS(wid);
-	AG_ObjectLock(wid);
-
 	wid->flags &= ~(AG_WIDGET_UPDATE_WINDOW);
 
 	if (wid->drv && AGDRIVER_MULTIPLE(wid->drv) &&
 	    AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
-		/* Multiple-window drivers use window coordinate systems */
 		x = 0;
 		y = 0;
 	}
@@ -1583,14 +1582,10 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 	if (AG_RectCompare2(&wid->rView, &rPrev) != 0)
 		wid->flags |= AG_WIDGET_GL_RESHAPE;
 #endif
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)               /* Recurse */
 		AG_WidgetUpdateCoords(chld,
 		    wid->rView.x1 + chld->x,
 		    wid->rView.y1 + chld->y);
-	}
-
-	AG_ObjectUnlock(wid);
-	AG_UnlockVFS(wid);
 }
 
 /* Parse a generic size specification. */

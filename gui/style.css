@@ -56,7 +56,12 @@ AG_Button {
 	padding: 5 10 5 10;
 }
 AG_Editable {
+	padding: 1;
 	background-color: #0000;
+}
+AG_FileDlg {
+	spacing: 2;
+	padding: 3;
 }
 AG_Icon {
 	spacing: 4 0;

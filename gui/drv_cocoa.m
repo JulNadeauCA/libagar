@@ -1354,11 +1354,10 @@ COCOA_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 	
 	AG_MutexLock(&co->lock);
 
-	/* Update per-widget coordinate information. */
 	a->x = 0;
 	a->y = 0;
-	(void)AG_WidgetSizeAlloc(win, a);
-	AG_WidgetUpdateCoords(win, 0, 0);
+	AG_WidgetSizeAlloc(win, a);
+	AG_WidgetUpdateCoords(win, 0,0);
 
 	/* The viewport coordinates have changed. */
 	[co->glCtx makeCurrentContext];
@@ -1415,13 +1414,13 @@ COCOA_PostMoveCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 	aNew.w = a->w;
 	aNew.h = a->h;
 	AG_WidgetSizeAlloc(win, &aNew);
-	AG_WidgetUpdateCoords(win, 0, 0);
+	AG_WidgetUpdateCoords(win, 0,0);
 	WIDGET(win)->x = a->x;
 	WIDGET(win)->y = a->y;
 	win->dirty = 1;
-	
-	/* Move other windows pinned to this one. */
-	AG_WindowMovePinned(win, xRel, yRel);
+
+	if (agWindowPinnedCount > 0)
+		AG_WindowMovePinned(win, xRel, yRel);
 
 	AG_MutexUnlock(&co->lock);
 }

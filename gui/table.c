@@ -817,7 +817,7 @@ UpdateEmbeddedWidgets(AG_Table *_Nonnull t)
 	AG_TableCell *c;
 	const int hRow = t->hRow;
 	int m, n;
-	int update = 0;
+	int updateCoords = 0;
 
 	rd.h = hRow;
 
@@ -839,7 +839,7 @@ UpdateEmbeddedWidgets(AG_Table *_Nonnull t)
 				wa.w = rd.w;
 				wa.h = rd.h;
 				AG_WidgetSizeAlloc(wt, &wa);
-				update++;
+				updateCoords++;
 			}
 
 			/*
@@ -860,7 +860,7 @@ UpdateEmbeddedWidgets(AG_Table *_Nonnull t)
 	}
 
 	/* Apply any changes to widget size allocations. */
-	if (update) {
+	if (updateCoords) {
 		AG_WidgetUpdateCoords(t,
 		    WIDGET(t)->rView.x1,
 		    WIDGET(t)->rView.y1);

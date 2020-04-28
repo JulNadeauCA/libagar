@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -680,7 +680,7 @@ AG_About(AG_Event *event)
 		AG_TextboxPrintf(tb, _("Failed to open license.txt"));
 	}
 
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close"), AG_WindowCloseGenEv,"%p",win);
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close"), AGWINCLOSE(win));
 	AG_WindowShow(win);
 }
 

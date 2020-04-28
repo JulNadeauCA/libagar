@@ -152,7 +152,11 @@ AG_GetDriverByID(Uint id)
 	return (NULL);
 }
 
-/* Enter GUI rendering context. */
+/*
+ * Enter GUI rendering context. In a standard event loop, single-window drivers
+ * will invoke this function once per frame (rendering all windows in batch).
+ * Multi-window drivers will invoke it several times (once per window).
+ */
 void
 AG_BeginRendering(void *drv)
 {
@@ -160,7 +164,9 @@ AG_BeginRendering(void *drv)
 	if (agTimeOps == &agTimeOps_renderer)		/* Renderer-aware ops */
 		AG_CondBroadcast(&agCondBeginRender);
 #endif
+
 	agRenderingContext = 1;
+
 	AGDRIVER_CLASS(drv)->beginRendering(drv);
 }
 
@@ -169,7 +175,9 @@ void
 AG_EndRendering(void *drv)
 {
 	AGDRIVER_CLASS(drv)->endRendering(drv);
+
 	agRenderingContext = 0;
+
 #if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
 	if (agTimeOps == &agTimeOps_renderer)		/* Renderer-aware ops */
 		AG_CondBroadcast(&agCondEndRender);
@@ -249,7 +257,9 @@ AG_UsingGL(void *drv)
 int
 AG_UsingSDL(void *drv)
 {
-	AG_DriverClass *dc = (drv != NULL) ? AGDRIVER_CLASS(drv) : agDriverOps;
+	AG_DriverClass *dc = (drv != NULL) ? AGDRIVER_CLASS(drv) :
+	                                     agDriverOps;
+
 	return (dc->flags & AG_DRIVER_SDL);
 }
 

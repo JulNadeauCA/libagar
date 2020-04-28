@@ -557,10 +557,10 @@ AG_SocketInsertIcon(AG_Socket *sock, AG_Icon *icon)
 	sock->icon = icon;
 	icon->sock = sock;
 
-	a.w = WIDTH(sock);
-	a.h = HEIGHT(sock);
 	a.x = 0;
 	a.y = 0;
+	a.w = WIDTH(sock);
+	a.h = HEIGHT(sock);
 	AG_WidgetSizeAlloc(icon, &a);
 	AG_WidgetUpdateCoords(icon, a.x, a.y);
 	AG_WidgetCompileStyle(sock);

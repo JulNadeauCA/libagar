@@ -269,9 +269,9 @@ WM_Move(AG_Window *_Nonnull win, int xRel, int yRel)
 			a.w = rNew.x - rPrev.x + 1;
 			a.h = rNew.h + 1;
 		} else if (rNew.x < rPrev.x) {			/* Left */
-			a.x = rNew.x + rNew.w;
+			a.x = rNew.x + rNew.w - 1;
 			a.y = rNew.y - 1;
-			a.w = rPrev.x - rNew.x + 1;
+			a.w = rPrev.x - rNew.x + 2;
 			a.h = rPrev.h + 2;
 		}
 		if (rNew.y > rPrev.y) {				/* Down */
@@ -299,7 +299,8 @@ WM_Move(AG_Window *_Nonnull win, int xRel, int yRel)
 
 	win->dirty = 1;
 
-	AG_WindowMovePinned(win, xRel, yRel);
+	if (agWindowPinnedCount > 0)
+		AG_WindowMovePinned(win, xRel, yRel);
 }
 
 /* Handle a window resize operation initiated by the WM. */

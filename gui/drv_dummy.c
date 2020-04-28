@@ -848,24 +848,11 @@ DUMMY_CloseWindow(AG_Window *_Nonnull win)
 static int
 DUMMY_MapWindow(AG_Window *_Nonnull win)
 {
-	AG_SizeAlloc a;
-	int x,y;
 #ifdef AG_DEBUG
 	AG_DriverDUMMY *dum = (AG_DriverDUMMY *)WIDGET(win)->drv;
 
 	Debug(win, "MapWindow (%s)\n", OBJECT(dum)->name);
 #endif
-	/* Update per-widget coordinate information. */
-	x = WIDGET(win)->x;
-	y = WIDGET(win)->y;
-	a.x = 0;
-	a.y = 0;
-	a.w = WIDTH(win);
-	a.h = HEIGHT(win);
-	AG_WidgetSizeAlloc(win, &a);
-	AG_WidgetUpdateCoords(win, 0,0);
-	WIDGET(win)->x = x;
-	WIDGET(win)->y = y;
 	return (0);
 }
 

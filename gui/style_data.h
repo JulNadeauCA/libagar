@@ -55,7 +55,12 @@ const char *agStyleDefault_Data =
 	"padding: 5 10 5 10;\n"
 	"}\n"
 	"AG_Editable {\n"
+	"padding: 1;\n"
 	"background-color: #0000;\n"
+	"}\n"
+	"AG_FileDlg {\n"
+	"spacing: 2;\n"
+	"padding: 3;\n"
 	"}\n"
 	"AG_Icon {\n"
 	"spacing: 4 0;\n"
@@ -106,7 +111,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2041,
+	2092,
 	&agStyleDefault_Data,
 	NULL
 };
