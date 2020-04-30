@@ -389,6 +389,9 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Checkbox *cb = obj;
 
+	if (a->w < 2 || a->h < 2) {
+		return (-1);
+	}
 	cb->boxWd = MIN(a->h, WFONT(cb)->lineskip) - 2;
 	cb->boxOffs = (a->h >> 1) - (cb->boxWd >> 1);            /* Centered */
 	return (0);

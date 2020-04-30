@@ -299,10 +299,14 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_NotebookTab *tab;
 	AG_SizeAlloc aTab, aLbl;
 	AG_SizeReq rLbl;
-	int x=0, y=0;
+	int x=0, y=0, wMin;
+	const int boxDia = WFONT(nb)->height;
 
 	if (a->h < nb->bar_h || a->w < WFONT(nb)->height)
 		return (-1);
+
+	AG_TextSize("...", &wMin, NULL);
+	wMin += boxDia;
 
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
 		if (tab->lbl == NULL) {
@@ -312,13 +316,18 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		aLbl.x = x;
 		aLbl.y = y;
 		aLbl.w = MIN(rLbl.w, WIDTH(nb) - x);
-		if (aLbl.w < 15) {
+		if (aLbl.w < wMin) {
+			WIDGET(tab->lbl)->flags |= AG_WIDGET_UNDERSIZE;
 			break;
+		} else {
+			WIDGET(tab->lbl)->flags &= ~(AG_WIDGET_UNDERSIZE);
 		}
 		aLbl.h = rLbl.h;
 		AG_WidgetSizeAlloc(tab->lbl, &aLbl);
 
 		x += aLbl.w;
+		if (x > WIDTH(nb))
+			break;
 	}
 	if ((tab = nb->selTab) != NULL) {
 		aTab.x = 0;
