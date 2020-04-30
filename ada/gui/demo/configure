@@ -3481,8 +3481,6 @@ fi
 done
 IFS=$bb_save_IFS
 fi
-echo 'AGAR_ADA_VERSION = '
-echo '# AGAR_ADA_VERSION = ' >>config.log
 if [ "${AGAR_ADA_VERSION}" != "" ]; then
 if [ "${prefix_agar_ada}" != "" ]; then
 echo "yes ($AGAR_ADA_VERSION in ${prefix_agar_ada})"

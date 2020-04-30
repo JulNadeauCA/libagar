@@ -54,6 +54,16 @@ LoadImage(AG_Event *event)
 		}
 	}
 
+	box = AG_BoxNewVert(win, AG_BOX_HFILL);
+	AG_SetStyle(box, "font-size", "90%");
+	{
+		AG_LabelNew(box, 0,
+		    AGSI_COURIER "%s" AGSI_RST " (%u x %u x %d bpp):",
+		    AG_ShortFilename(file),
+		    S->w, S->h, S->format.BitsPerPixel);
+	}
+
+
 	if (S->w > 320 && S->h > 240) { 			/* "Large" */
 		AG_Scrollview *sv;
 
@@ -61,15 +71,6 @@ LoadImage(AG_Event *event)
 		                           AG_SCROLLVIEW_PAN_LEFT |
 		                           AG_SCROLLVIEW_PAN_RIGHT |
 		                           AG_SCROLLVIEW_EXPAND);
-		box = AG_BoxNewVert(sv, 0);
-		{
-			AG_LabelNew(box, 0, "%s (%u x %u x %d bpp):",
-			    AG_ShortFilename(file),
-			    S->w, S->h, S->format.BitsPerPixel);
-			AG_SetStyle(box, "font-family", "Courier");
-			AG_SetStyle(box, "font-size", "90%");
-		}
-
 		AG_PixmapFromSurfaceScaled(sv, 0, S, S->w, S->h);
 
 		AG_WindowSetGeometry(win, -1, -1,

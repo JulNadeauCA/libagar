@@ -536,7 +536,7 @@ CreateTargetDlg(AG_Event *event)
 
 	/* Arguments to the program */
 	tbArgs = AG_TextboxNewS(win, AG_TEXTBOX_HFILL, _("Arguments: "));
-	AG_SetStyle(tbArgs, "font-style", "Courier");
+	AG_SetStyle(tbArgs, "font-style", "courier-prime");
 	AG_SetPointer(win, "tbArgs", tbArgs);
 
 	AG_SeparatorNewHoriz(win);
@@ -800,11 +800,9 @@ Agardb::GUI::GUI()
 		AG_Textbox *tb;
 
 		g_console = AG_ConsoleNew(nt, AG_CONSOLE_EXPAND);
-		AG_SetStyle(g_console, "font-family", "Bedstead,Courier");
 		PrintVersion();
 
 		box = AG_BoxNewHoriz(nt, AG_BOX_HFILL);
-		AG_SetStyle(box, "font-family", "Bedstead,Courier");
 		AG_SetStyle(box, "font-weight", "bold");
 		AG_SetStyle(box, "font-size", "120%");
 		tb = g_textbox_prompt = AG_TextboxNew(box,

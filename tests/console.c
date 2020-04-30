@@ -114,9 +114,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_Textbox *tb;
 
 	cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
-	AG_SetStyle(cons, "font-family", "Courier");
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
-	AG_SetStyle(box, "font-size", "200%");
 	{
 		tb = AG_TextboxNew(box,
 		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,

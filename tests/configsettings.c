@@ -108,11 +108,11 @@ TestGUI(void *obj, AG_Window *win)
 	{
 		AG_TAILQ_FOREACH(cp, &agConfig->paths[AG_CONFIG_PATH_DATA], paths) {
 			lbl = AG_LabelNew(box, 0, "Data: %s", cp->s);
-			AG_SetStyle(lbl, "font-family", "Courier");
+			AG_SetStyle(lbl, "font-family", "courier-prime");
 		}
 		AG_TAILQ_FOREACH(cp, &agConfig->paths[AG_CONFIG_PATH_FONTS], paths) {
 			lbl = AG_LabelNew(box, 0, "Fonts: %s", cp->s);
-			AG_SetStyle(lbl, "font-family", "Courier");
+			AG_SetStyle(lbl, "font-family", "courier-prime");
 		}
 	}
 

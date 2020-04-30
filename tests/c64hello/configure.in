@@ -4,10 +4,10 @@
 # A sample Agar program on the C64.
 #
 
-CONFIG_GUESS("../../mk/config.guess")
+config_guess("../../mk/config.guess")
 
-REGISTER_SECTION("Options for this test program:")
-REGISTER("--with-agar[=PREFIX]",	"Location of Agar GUI library [check]")
+register_section("Options for this test program:")
+register("--with-agar[=PREFIX]",	"Location of Agar GUI library [check]")
 
 if [ "${host}" != "c64" ]; then
 	echo "*"
