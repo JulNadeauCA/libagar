@@ -68,7 +68,10 @@ $saveWin->setEvent('window-close', sub { $saveWin->hide() });
 
 my $menuroot = Agar::Menu->new($win);
 my $menu = $menuroot->rootItem()->nodeItem('Menu');
-$menu->actionItem('Click me!', sub { Agar::InfoMsg("Don't do that! ;)") });
+$menu->actionItem('Click me!', sub {
+	Agar::InfoMsg("Don't do that! " .
+                      "\xF0\x9F\x98\x89");              # U+1f609 WINKING FACE
+ });
 $menu->separator();
 my $submenu = $menu->nodeItem('Hover over me');
 $submenu->actionItem('Click me, too!', sub { Agar::InfoMsg("Oi!") });
