@@ -666,7 +666,7 @@ TestGUI(void *obj, AG_Window *win)
 			AG_CheckboxNewFn(nt, 0, "Word wrapping",
 			    SetWordWrap, "%p", tbox);
 		}
-		AG_NotebookSelectTab(nb, nt);
+		AG_NotebookSelect(nb, nt);
 		
 		nt = AG_NotebookAdd(nb, "Empty tab", AG_BOX_VERT);
 	}
