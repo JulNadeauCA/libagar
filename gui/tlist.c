@@ -564,9 +564,9 @@ Draw(void *_Nonnull obj)
 
 		if (it->selected) {
 			r.x = x + wIcon;
-			r.y = y + 1;
+			r.y = y;
 			r.w = wRow - x - wIcon - 1;
-			r.h = hItem;
+			r.h = hItem + 1;
 			AG_DrawRect(tl, &r, &cSel);
 			selSeen = 1;
 		}
