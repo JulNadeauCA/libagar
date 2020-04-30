@@ -447,7 +447,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	if (t->r.h <= 0)
 		return (-1);
 	
-	if (t->vbar && AG_WidgetVisible(t->vbar)) {
+	if (t->vbar) {
 		AG_WidgetSizeReq(t->vbar, &rBar);
 		if (rBar.w > (a->w >> 1)) { rBar.w = (a->w >> 1); }
 		aBar.x = a->w - rBar.w;
@@ -457,7 +457,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		AG_WidgetSizeAlloc(t->vbar, &aBar);
 		vBarSz = WIDTH(t->vbar);
 	}
-	if (t->hbar && AG_WidgetVisible(t->hbar)) {
+	if (t->hbar) {
 		if (vBarSz) {
 			aBar.h -= rBar.w;
 			AG_WidgetSizeAlloc(t->vbar, &aBar);

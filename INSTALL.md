@@ -49,7 +49,7 @@
 
 	`$ ./configure --enable-{au,map,web}`
 
-	- Enable _Deep Color_ (is the default on 64-bit platforms):
+	- Enable [_Deep color_](https://en.wikipedia.org/wiki/Deep_color) (is the default on 64-bit platforms):
 
 	`$ ./configure --with-memory-model=L`
 
@@ -101,7 +101,7 @@
 
 	`$ ./configure --enable-{au,map,web}`
 
-	- Enable _Deep Color_ (is the default on 64-bit platforms):
+	- Enable [_Deep color_](https://en.wikipedia.org/wiki/Deep_color) (is the default on 64-bit platforms):
 
 	`$ ./configure --with-memory-model=L`
 
@@ -157,7 +157,7 @@
 
 	`$ ./configure --enable-{au,map,web}`
 
-	- Enable _Deep Color_ (is the default on 64-bit platforms):
+	- Enable [_Deep color_](https://en.wikipedia.org/wiki/Deep_color) (is the default on 64-bit platforms):
 
 	`$ ./configure --with-memory-model=L`
 
@@ -211,7 +211,7 @@
 
 	`$ ./configure --enable-{au,map,web}`
 
-	- Enable _Deep Color_ (is the default on 64-bit platforms):
+	- Enable [_Deep color_](https://en.wikipedia.org/wiki/Deep_color) (is the default on 64-bit platforms):
 
 	`$ ./configure --with-memory-model=L`
 

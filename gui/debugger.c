@@ -372,10 +372,10 @@ TargetWidget(AG_Event *_Nonnull event)
 		    { 0,				NULL,0 }
 		};
 		AG_MSpinbutton *msb;
-		AG_Box *box2;
+		AG_Box *vbox;
 
 		AG_LabelNew(nt, AG_LABEL_HFILL,
-		    _("Class: " AGSI_COURIER " %s(3)" AGSI_RST),
+		    _("Class: " AGSI_BOLD AGSI_GRN "%s" AGSI_RST),
 		    OBJECT(tgt)->cls->name);
 
 		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL | AG_TEXTBOX_NO_SHADING,
@@ -399,24 +399,36 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		AG_SeparatorNewHoriz(nt);
 
-		msb = AG_MSpinbuttonNew(nt, 0, "x", _("Size: "));
-		AG_BindInt(msb, "xvalue", &tgt->w);
-		AG_BindInt(msb, "yvalue", &tgt->h);
-		AG_WidgetDisable(msb);
+		vbox = AG_BoxNewVert(nt, AG_BOX_HFILL);
+		AG_SetStyle(vbox, "padding", "4");
+		{
+			const Uint fl = AG_MSPINBUTTON_HFILL;
 
-		msb = AG_MSpinbuttonNew(nt, 0, ",", _("Position (parent): "));
-		AG_BindInt(msb, "xvalue", &tgt->x);
-		AG_BindInt(msb, "yvalue", &tgt->y);
-		AG_WidgetDisable(msb);
+			msb = AG_MSpinbuttonNew(vbox, fl, "x", _("Size: "));
+			AG_BindInt(msb, "xvalue", &tgt->w);
+			AG_BindInt(msb, "yvalue", &tgt->h);
+			AG_SetStyle(msb, "font-size", "120%");
 
-		msb = AG_MSpinbuttonNew(nt, 0, ",", _("Position (display): "));
-		AG_BindInt(msb, "xvalue", &tgt->rView.x1);
-		AG_BindInt(msb, "yvalue", &tgt->rView.y1);
+			msb = AG_MSpinbuttonNew(vbox, fl, ",", _("Position: "));
+			AG_BindInt(msb, "xvalue", &tgt->x);
+			AG_BindInt(msb, "yvalue", &tgt->y);
+			AG_SetStyle(msb, "font-size", "120%");
+
+			msb = AG_MSpinbuttonNew(vbox, fl, ",", _("View UL: "));
+			AG_BindInt(msb, "xvalue", &tgt->rView.x1);
+			AG_BindInt(msb, "yvalue", &tgt->rView.y1);
+			AG_SetStyle(msb, "font-size", "120%");
+
+			msb = AG_MSpinbuttonNew(vbox, fl, ",", _("View LR: "));
+			AG_BindInt(msb, "xvalue", &tgt->rView.x2);
+			AG_BindInt(msb, "yvalue", &tgt->rView.y2);
+			AG_SetStyle(msb, "font-size", "120%");
+		}
 
 		AG_SeparatorNewHoriz(nt);
 
-		box2 = AG_BoxNewVert(nt, AG_BOX_VFILL);
-		AG_CheckboxSetFromFlags(box2, 0, &tgt->flags, flagDescr);
+		vbox = AG_BoxNewVert(nt, AG_BOX_VFILL);
+		AG_CheckboxSetFromFlags(vbox, 0, &tgt->flags, flagDescr);
 	}
 
 	if (OBJECT_CLASS(tgt)->edit != NULL) {

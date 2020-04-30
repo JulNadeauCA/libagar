@@ -74,7 +74,7 @@ binding would be tied to the number of lines that can be displayed on-screen
 .Fn AG_ScrollbarNewVert "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft int
-.Fn AG_ScrollbarVisible "AG_Scrollbar *scrollbar"
+.Fn AG_ScrollbarIsUseful "AG_Scrollbar *scrollbar"
 .Pp
 .Ft void
 .Fn AG_ScrollbarSetIncFn "AG_Scrollbar *scrollbar" "AG_EventFn fn" "const char *fmt" "..."
@@ -127,10 +127,13 @@ Display the minimum, current and maximum values in text.
 This is primarily useful for debugging.
 .El
 .Pp
-The
-.Fn AG_ScrollbarVisible
-function returns 1 if the current range is such that the scrollbar is useful
-to display, otherwise it returns 0.
+.Fn AG_ScrollbarIsUseful
+evaluates whether the current value ("value") can be moved within the current
+range ("min", "max").
+It returns 1=Yes or 0=No.
+Container widgets may wish to call it from
+.Fn size_allocate
+in order to determine whether scrollbars need to be allocated or not.
 .Pp
 The
 .Fn AG_ScrollbarSetDecFn
@@ -236,6 +239,9 @@ widget first appeared in Agar 1.0.
 The
 .Va inc
 binding was introduced in Agar 1.5.0.
-The
+Agar 1.6.0 added the
 .Dv AG_SCROLLBAR_SMOOTH
-option appeared in Agar 1.6.0.
+option and renamed
+.Fn AG_ScrollbarVisible
+to
+.Fn AG_ScrollbarIsUseful .

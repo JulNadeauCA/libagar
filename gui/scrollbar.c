@@ -1021,14 +1021,14 @@ DrawHorizUndersize(AG_Scrollbar *_Nonnull sb)
 }
 
 /*
- * Evaluate whether it would be useful to display a scrollbar given its
- * current "value" and range ("min","max","visible"). Return 1=yes, 0=no.
+ * Evaluate whether it would be useful to display a scrollbar given its current
+ * "value" and range ("min","max","visible"). Return 1=Yes or 0=No.
  *
  * This may be called by the size_allocate() of container widgets in order
  * to determine whether to allocate space for scrollbars or not.
  */
 int
-AG_ScrollbarVisible(AG_Scrollbar *sb)
+AG_ScrollbarIsUseful(AG_Scrollbar *sb)
 {
 	int rv, x, len;
 
@@ -1083,7 +1083,8 @@ Edit(void *_Nonnull obj)
 }
 
 #ifdef AG_LEGACY
-void AG_ScrollbarSetControlLength(AG_Scrollbar *sb, int len) { }
+void AG_ScrollbarSetControlLength(AG_Scrollbar *_Nonnull sb, int len) { }
+int  AG_ScrollbarVisible(AG_Scrollbar *_Nonnull sb) { return AG_ScrollbarIsUseful(sb); }
 #endif
 
 AG_WidgetClass agScrollbarClass = {

@@ -448,7 +448,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	}
 
 	if (tb->flags & AG_TEXTBOX_MULTILINE) {
-		if (tb->hBar && AG_WidgetVisible(tb->hBar)) {
+		if (tb->hBar) {
 			AG_WidgetSizeReq(tb->hBar, &r);
 			hBarSz = MIN(r.h, a->h);
 			aSb.x = 0;
@@ -458,7 +458,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 			AG_WidgetSizeAlloc(tb->hBar, &aSb);
 			hBar = aSb.h;
 		}
-		if (tb->vBar && AG_WidgetVisible(tb->vBar)) {
+		if (tb->vBar) {
 			AG_WidgetSizeReq(tb->vBar, &r);
 			wBarSz = MIN(r.w, a->w);
 			aSb.x = a->w - wBarSz;
