@@ -33,6 +33,8 @@
 
 #define DEFAULT_DIR "C:\\Program Files\\Agar"
 
+char *dstArch = "x86";
+
 const char *miscFiles[] = {
 	"CHANGELOG.txt",
 	"INSTALL.txt",
@@ -71,7 +73,8 @@ InstallLibs(const char *dir)
 			free(dstFile);
 			continue;
 		}
-		sprintf_s(dest, sizeof(dest), "%s\\lib\\%s", dir, dstFile);
+		sprintf_s(dest, sizeof(dest), "%s\\lib\\%s\\%s", dir,
+		    dstArch, dstFile);
 		printf("%s -> %s\n", fdata.cFileName, dest);
 		if (CopyFile(fdata.cFileName, dest, 0) == 0) {
 			printf("%s: CopyFile() failed\n", dest);
@@ -232,13 +235,27 @@ main(int argc, char *argv[])
 	int i;
 	DWORD attrs;
 
-	if (argc > 1) {
-		dir = argv[1];
-	}
 	printf("Agar SDK Installation\n");
 	printf("=====================\n");
-	dir = Prompt("Installation directory", DEFAULT_DIR);
-	printf("Will install into %s\n", dir);
+
+	if (argc > 2) {
+		dstArch = argv[1];
+		dir = argv[2];
+	} else if (argc > 1) {
+		dir = argv[1];
+		dstArch = Prompt("Architecture (x86 or x64)", "x86");
+	} else {
+		dir = Prompt("Installation directory", DEFAULT_DIR);
+		dstArch = Prompt("Architecture (x86 or x64)", "x86");
+	}
+	if (strcmp(dstArch, "x86") != 0 &&
+	    strcmp(dstArch, "x64") != 0) {
+		printf("No such architecture \"%s\" (use x86 or x64)\n",
+		    dstArch);
+		AnyKey();
+		exit(1);
+	}
+	printf("Will install %s binaries into %s\n", dstArch, dir);
 
 	if ((attrs = GetFileAttributes(dir)) != INVALID_FILE_ATTRIBUTES) {
 		if (attrs & FILE_ATTRIBUTE_DIRECTORY) {
@@ -263,6 +280,9 @@ main(int argc, char *argv[])
 	sprintf_s(libdir, sizeof(libdir), "%s\\lib", dir);
 	CreateDirectory(libdir, NULL);
 
+	sprintf_s(libdir, sizeof(libdir), "%s\\lib\\%s", dir, dstArch);
+	CreateDirectory(libdir, NULL);
+
 	if (InstallLibs(dir) == -1) {
 		printf("Failed to install libraries\n");
 		exit(1);
@@ -277,12 +297,12 @@ main(int argc, char *argv[])
 		sprintf_s(path, sizeof(path), "%s\\%s", dir, miscFiles[i]);
 		printf("%s\n", path);
 		if (CopyFile(miscFiles[i], path, 0) == 0) {
-			printf("%s: CopyFile() failed; ignoring\n", dir);
+			printf("%s: CopyFile() failed; ignoring\n", path);
 			continue;
 		}
 	}
 
-	printf("The Agar SDK was successfully installed into %s\n", dir);
+	printf("\nAgar SDK was successfully installed under %s\n", dir);
 	AnyKey();
 
 	exit(0);

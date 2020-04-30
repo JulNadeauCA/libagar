@@ -796,6 +796,9 @@ main(int argc, char *argv[])
 	if (AG_InitCore("agartest", initFlags) == -1) {
 		goto fail;
 	}
+#ifdef _WIN32
+	AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, "..\\gui\\fonts");
+#endif
 	if (fontSpec != NULL) {
 		AG_TextParseFontSpec(fontSpec);
 	}
@@ -1012,6 +1015,9 @@ main(int argc, char *argv[])
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 980, 540);
 	AG_WindowShow(win);
 
+#ifdef _WIN32
+	optInd++;                                 /* Skip pathname argument */
+#endif
 	if (optInd == argc &&
 	    AG_GetBool(agConfig,"initial-run") == 1) {
 		AG_Event ev;

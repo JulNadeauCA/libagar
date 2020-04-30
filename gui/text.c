@@ -2494,9 +2494,11 @@ AG_InitTextSubsystem(void)
 			AG_ConfigAddPath(AG_CONFIG_PATH_FONTS, "%s\\Fonts",
 			    sysUser->home);
 		}
-		if (GetWindowsDirectoryA(windir, sizeof(windir)) > 0)
+		if (GetWindowsDirectoryA(windir, sizeof(windir)) > 0) {
 			AG_ConfigAddPath(AG_CONFIG_PATH_FONTS, "%s\\Fonts",
 			    windir);
+		}
+		AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, ".");
 	}
 #else /* !WIN32 & !APPLE */
 	if (sysUser != NULL && sysUser->home != NULL) {
