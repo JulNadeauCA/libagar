@@ -668,6 +668,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	AG_HSVPal *pal = AG_HSVPAL_SELF();
 
 	pal->state = AG_HSVPAL_SEL_NONE;
+	AG_Redraw(pal);
 }
 
 static void
@@ -705,7 +706,7 @@ KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	const int doHue = (keymod & AG_KEYMOD_SHIFT) ||
 	                  (keymod & AG_KEYMOD_CTRL) ||
 	                  (keymod & AG_KEYMOD_ALT);
-	Uint32 rv = to->ival;
+	Uint32 rv = 10;
 	float sat, x;
 
 	switch (keysym) {
@@ -716,8 +717,7 @@ KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 				x = 360.0f;
 			}
 			AG_SetFloat(pal, "hue", x);
-			UpdatePixelFromHSVA(pal);
-			AG_PostEvent(pal, "h-changed", NULL);
+			goto hue_changed;
 		} else {
 	 		sat = AG_GetFloat(pal,"saturation");
 			if ((sat += 0.015f) > 1.0f) {
@@ -725,8 +725,7 @@ KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 				rv = 0;
 			}
 			AG_SetFloat(pal, "saturation", sat);
-			UpdatePixelFromHSVA(pal);
-			AG_PostEvent(pal, "sv-changed", NULL);
+			goto sv_changed;
 		}
 		break;
 	case AG_KEY_DOWN:
@@ -736,8 +735,7 @@ KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 				x = 0.0f;
 			}
 			AG_SetFloat(pal, "hue", x);
-			UpdatePixelFromHSVA(pal);
-			AG_PostEvent(pal, "h-changed", NULL);
+			goto hue_changed;
 		} else {
 	 		sat = AG_GetFloat(pal,"saturation");
 			if ((sat -= 0.015f) < 0.0f) {
@@ -745,8 +743,7 @@ KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 				rv = 0;
 			}
 			AG_SetFloat(pal, "saturation", sat);
-			UpdatePixelFromHSVA(pal);
-			AG_PostEvent(pal, "sv-changed", NULL);
+			goto sv_changed;
 		}
 		break;
 	case AG_KEY_LEFT:
@@ -756,8 +753,7 @@ KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 				x = 360.0f;
 			}
 			AG_SetFloat(pal, "hue", x);
-			UpdatePixelFromHSVA(pal);
-			AG_PostEvent(pal, "h-changed", NULL);
+			goto hue_changed;
 		} else {
 	 		x = AG_GetFloat(pal,"value");
 			if ((x += 0.01f) > 1.0f) {
@@ -765,8 +761,7 @@ KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 				rv = 0;
 			}
 			AG_SetFloat(pal, "value", x);
-			UpdatePixelFromHSVA(pal);
-			AG_PostEvent(pal, "sv-changed", NULL);
+			goto sv_changed;
 		}
 		break;
 	case AG_KEY_RIGHT:
@@ -776,8 +771,7 @@ KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 				x = 0.0f;
 			}
 			AG_SetFloat(pal, "hue", x);
-			UpdatePixelFromHSVA(pal);
-			AG_PostEvent(pal, "h-changed", NULL);
+			goto hue_changed;
 		} else {
 	 		x = AG_GetFloat(pal,"value");
 			if ((x -= 0.01f) < 0.0f) {
@@ -785,11 +779,20 @@ KeyMoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 				rv = 0;
 			}
 			AG_SetFloat(pal, "value", x);
-			UpdatePixelFromHSVA(pal);
-			AG_PostEvent(pal, "sv-changed", NULL);
+			goto sv_changed;
 		}
 		break;
 	}
+	return (rv);
+hue_changed:
+	UpdatePixelFromHSVA(pal);
+	pal->flags |= AG_HSVPAL_DIRTY;
+	AG_PostEvent(pal, "h-changed", NULL);
+	return (rv);
+sv_changed:
+	UpdatePixelFromHSVA(pal);
+	pal->flags |= AG_HSVPAL_DIRTY;
+	AG_PostEvent(pal, "sv-changed", NULL);
 	return (rv);
 }
 
@@ -805,7 +808,7 @@ KeyDown(AG_Event *_Nonnull event)
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
 	case AG_KEY_LEFT:
-		AG_AddTimer(pal, &pal->toMove[keysym - AG_KEY_UP], 1,
+		AG_AddTimer(pal, &pal->toMove[keysym - AG_KEY_UP], 250,
 		    KeyMoveTimeout, "%i,%i", keysym, keymod);
 		AG_ExecTimer(&pal->toMove[keysym - AG_KEY_UP]);
 		break;
@@ -924,8 +927,9 @@ Init(void *_Nonnull obj)
 	AG_AddEvent(pal, "attached", OnAttach, NULL);
 }
 
+/* Render static components (for a given Hue) to a surface. */
 static void
-RenderPalette(AG_HSVPal *_Nonnull pal)
+RenderStatic(AG_HSVPal *_Nonnull pal)
 {
 	AG_Surface *S = pal->surface;
 	float hue,sat, val, h;
@@ -933,9 +937,7 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 	AG_Pixel px;
 	int x, y, i;
 
-	AG_ColorBlack(&c);
 	AG_FillRect(S, NULL, &WCOLOR(pal,BG_COLOR));
-	/* XXX overdraw */
 
 	hue = AG_GetFloat(pal, "hue");
 	sat = AG_GetFloat(pal, "saturation");
@@ -1020,6 +1022,7 @@ RenderPalette(AG_HSVPal *_Nonnull pal)
 			}
 		}
 	}
+	AG_WidgetUpdateSurface(pal, pal->surfaceId);
 }
 
 static void
@@ -1120,8 +1123,7 @@ Draw(void *_Nonnull obj)
 	}
 	if (pal->flags & AG_HSVPAL_DIRTY) {
 		pal->flags &= ~(AG_HSVPAL_DIRTY);
-		RenderPalette(pal);
-		AG_WidgetUpdateSurface(pal, pal->surfaceId);
+		RenderStatic(pal);
 	}
 	AG_WidgetBlitFrom(pal, pal->surfaceId, NULL, 0, 0);
 
