@@ -21,8 +21,8 @@ static Uint32
 RotateHue(AG_Timer *t, AG_Event *event)
 {
 	AG_HSVPal *pal = AG_HSVPAL_PTR(1);
-	float s_save = pal->s;
-	float v_save = pal->v;
+	const float s_save = pal->s;
+	const float v_save = pal->v;
 
 	pal->h += 1.0f;
 	if (pal->h > 360.0f) { pal->h = 0.0f; }
@@ -37,7 +37,7 @@ SetRotateHue(AG_Event *event)
 {
 	MyTestInstance *ti = AG_PTR(1);
 	AG_HSVPal *pal = AG_HSVPAL_PTR(2);
-	int enable = AG_INT(3);
+	const int enable = AG_INT(3);
 
 	if (enable) {
 		ti->tRotHue = AG_AddTimerAuto(pal, 10, RotateHue, "%p", pal);
@@ -81,7 +81,7 @@ TestGUI(void *obj, AG_Window *win)
 		    &pal->flags, AG_HSVPAL_NOPREVIEW);
 	}
 
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 500, 500);
+/*	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 500, 500); */
 	return (0);
 }
 

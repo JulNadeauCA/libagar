@@ -189,20 +189,18 @@ SDLGL_BeginRendering(void *_Nonnull obj)
 	AG_DriverSDLGL *sgl = obj;
 	AG_GL_Context *gl = &sgl->gl;
 
-	glPushAttrib(GL_VIEWPORT_BIT|GL_TRANSFORM_BIT|GL_LIGHTING_BIT|
-	             GL_ENABLE_BIT);
-	
 	if (AGDRIVER_SW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
 		AG_Rect r;
 		AG_Driver *drv = obj;
+
+		glPushAttrib(GL_VIEWPORT_BIT | GL_TRANSFORM_BIT |
+		             GL_LIGHTING_BIT | GL_ENABLE_BIT);
 
 		/* Reinitialize Agar's OpenGL context. */
 		if (drv->gl != NULL) {
 			AG_GL_DestroyContext(drv);
 		}
-		if (AG_GL_InitContext(drv, gl) == -1) {
-			AG_FatalError(NULL);
-		}
+		AG_GL_InitContext(drv, gl);
 		r.x = 0;
 		r.y = 0;
 		r.w = AGDRIVER_SW(sgl)->w;
@@ -211,11 +209,6 @@ SDLGL_BeginRendering(void *_Nonnull obj)
 	} else {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
-
-	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
-	gl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1); glEnable(GL_CLIP_PLANE1);
-	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
-	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
 }
 
 static void
@@ -279,30 +272,15 @@ static void
 SDLGL_EndRendering(void *_Nonnull drv)
 {
 	AG_DriverSDLGL *sgl = drv;
-	AG_GL_Context *gl = &sgl->gl;
 	
-	/* Render to specified capture output. */
-	if (sgl->outMode != AG_SDLGL_OUT_NONE)
+	if (sgl->outMode != AG_SDLGL_OUT_NONE)            /* Capture output */
 		SDLGL_CaptureOutput(sgl);
 
-	glPopAttrib();
-	
 	if (AGDRIVER_SW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
-		/*
-		 * Restore the OpenGL state exactly to its former state
-		 * (all textures are display lists are deleted).
-		 */
-		AG_GL_DestroyContext(gl);
+		glPopAttrib();
+		AG_GL_DestroyContext(&sgl->gl);     /* Restore former state */
 	} else {
 		SDL_GL_SwapBuffers();
-		if (gl->clipStates[0])	{ glEnable(GL_CLIP_PLANE0); }
-		else			{ glDisable(GL_CLIP_PLANE0); }
-		if (gl->clipStates[1])	{ glEnable(GL_CLIP_PLANE1); }
-		else			{ glDisable(GL_CLIP_PLANE1); }
-		if (gl->clipStates[2])	{ glEnable(GL_CLIP_PLANE2); }
-		else			{ glDisable(GL_CLIP_PLANE2); }
-		if (gl->clipStates[3])	{ glEnable(GL_CLIP_PLANE3); }
-		else			{ glDisable(GL_CLIP_PLANE3); }
 	}
 }
 
@@ -421,9 +399,7 @@ SDLGL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 	AG_InitStockCursors(drv);
 	
 	/* Initialize our OpenGL context and viewport. */
-	if (AG_GL_InitContext(sgl, &sgl->gl) == -1) {
-		goto fail;
-	}
+	AG_GL_InitContext(sgl, &sgl->gl);
 	rVP.x = 0;
 	rVP.y = 0;
 	rVP.w = dsw->w;
@@ -489,9 +465,7 @@ SDLGL_OpenVideoContext(void *_Nonnull obj, void *_Nonnull ctx, Uint flags)
 	    dsw->w, dsw->h, (int)drv->videoFmt->BitsPerPixel);
 	
 	/* Initialize our OpenGL context and viewport. */
-	if (AG_GL_InitContext(sgl, &sgl->gl) == -1) {
-		goto fail;
-	}
+	AG_GL_InitContext(sgl, &sgl->gl);
 	rVP.x = 0;
 	rVP.y = 0;
 	rVP.w = dsw->w;

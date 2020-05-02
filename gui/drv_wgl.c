@@ -427,9 +427,7 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 		WGL_SetWindowsError("wglMakeCurrent failed", GetLastError());
 		return (-1);
 	}
-	if (AG_GL_InitContext(wgl, &wgl->gl) == -1) {
-		return (-1);
-	}
+	AG_GL_InitContext(wgl, &wgl->gl);
 	rVP.x = 0;
 	rVP.y = 0;
 	rVP.w = WIDTH(win);
@@ -956,11 +954,6 @@ WGL_RenderWindow(AG_Window *_Nonnull win)
 	AG_GL_Context *gl = &wgl->gl;
 	const AG_Color *cBg = &WCOLOR(win, BG_COLOR);
 
-	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
-	gl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1); glEnable(GL_CLIP_PLANE1);
-	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
-	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
-	
 	glClearColor((float)cBg->r / AG_COLOR_LASTF,
 	             (float)cBg->g / AG_COLOR_LASTF,
 		     (float)cBg->b / AG_COLOR_LASTF, 1.0f);

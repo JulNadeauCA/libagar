@@ -505,13 +505,13 @@ Draw(void *_Nonnull p)
 		y++;
 	}
 
-	if (WIDTH(bu) < bu->wReq || HEIGHT(bu) < bu->hReq)
+	if (WIDTH(bu) < bu->wReq || HEIGHT(bu) < bu->hReq) {
 		AG_PushClipRect(bu, &WIDGET(bu)->r);
-
-	AG_WidgetBlitSurface(bu, surface, x,y);
-	
-	if (WIDTH(bu) < bu->wReq || HEIGHT(bu) < bu->hReq)
+		AG_WidgetBlitSurface(bu, surface, x,y);
 		AG_PopClipRect(bu);
+	} else {
+		AG_WidgetBlitSurface(bu, surface, x,y);
+	}
 }
 
 /* Return the current boolean state of the button. */

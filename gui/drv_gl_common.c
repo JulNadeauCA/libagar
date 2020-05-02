@@ -51,7 +51,7 @@
  * type drivers may Init or Destroy the context during rendering (i.e., using
  * AG_DRIVER_SW_OVERLAY). Agar must be resilient against GL context loss.
  */
-int
+void
 AG_GL_InitContext(void *obj, AG_GL_Context *gl)
 {
 	AG_Driver *drv = obj;
@@ -74,22 +74,24 @@ AG_GL_InitContext(void *obj, AG_GL_Context *gl)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	
 	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_CLIP_PLANE0);
+	glEnable(GL_CLIP_PLANE1);
+	glEnable(GL_CLIP_PLANE2);
+	glEnable(GL_CLIP_PLANE3);
+
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DITHER);
 	glDisable(GL_BLEND);
 	glDisable(GL_LIGHTING);
 
-	/* Initialize our clipping rectangles. */
-	if ((gl->clipRects = TryMalloc(sizeof(AG_ClipRect))) == NULL) {
-		return (-1);
-	}
-	gl->nClipRects = 1;
-	memset(gl->clipStates, 0, sizeof(gl->clipStates));
+	/* Clipping rectangle stack */
+	gl->clipRects = Malloc(sizeof(AG_ClipRect));
+	gl->maxClipRects = gl->nClipRects = 1;
 
-	/* Initialize the first alpha blending state */
-	gl->nBlendStates = 1;
+	/* Alpha blending state stack */
 	gl->blendStates = Malloc(sizeof(AG_GL_BlendState));
+	gl->maxBlendStates = gl->nBlendStates = 1;
 	bs = &gl->blendStates[0];
 	bs->enabled = 0;
 	bs->srcFactor = GL_ONE;
@@ -109,7 +111,6 @@ AG_GL_InitContext(void *obj, AG_GL_Context *gl)
 	cr->eqns[3][2] = 0.0;	cr->eqns[3][3] = 0.0; /* h */
 	
 	drv->gl = gl;
-	return (0);
 }
 
 /*
@@ -119,16 +120,15 @@ void
 AG_GL_SetViewport(AG_GL_Context *gl, const AG_Rect *vp)
 {
 	AG_ClipRect *cr = &gl->clipRects[0];
-	int w = vp->w;
-	int h = vp->h;
+	const int w = vp->w;
+	const int h = vp->h;
 
-	/* Set up the view port and projection */
 	glViewport(vp->x, vp->y, w,h);
+
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0, w, h, 0, -1.0, 1.0);
 
-	/* Update clipping rectangle 0. */
 	cr->r.w = w;
 	cr->r.h = h;
 	cr->eqns[2][3] = (double)w;
@@ -147,16 +147,6 @@ AG_GL_DestroyContext(void *obj)
 	if (gl == NULL)
 		return;
 
-	/* Restore the previous clipping rectangle state. */
-	if (gl->clipStates[0])	{ glEnable(GL_CLIP_PLANE0); }
-	else			{ glDisable(GL_CLIP_PLANE0); }
-	if (gl->clipStates[1])	{ glEnable(GL_CLIP_PLANE1); }
-	else			{ glDisable(GL_CLIP_PLANE1); }
-	if (gl->clipStates[2])	{ glEnable(GL_CLIP_PLANE2); }
-	else			{ glDisable(GL_CLIP_PLANE2); }
-	if (gl->clipStates[3])	{ glEnable(GL_CLIP_PLANE3); }
-	else			{ glDisable(GL_CLIP_PLANE3); }
-	
 	/* Invalidate any cached glyph renderings. */
 	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
 		SLIST_FOREACH(glyph, &drv->glyphCache[i].glyphs, glyphs) {
@@ -180,6 +170,7 @@ AG_GL_DestroyContext(void *obj)
 	free(gl->clipRects);
 	gl->clipRects = NULL;
 	gl->nClipRects = 0;
+	gl->maxClipRects = 0;
 
 	drv->gl = NULL;
 }
@@ -191,36 +182,32 @@ AG_GL_StdPushClipRect(void *obj, const AG_Rect *r)
 	AG_Driver *drv = obj;
 	AG_GL_Context *gl = drv->gl;
 	AG_ClipRect *cr, *crPrev;
-	int x = r->x;
-	int y = r->y;
 
-	gl->clipRects = Realloc(gl->clipRects, (gl->nClipRects + 1) *
-                                               sizeof(AG_ClipRect));
+	if (gl->nClipRects+1 > gl->maxClipRects) {
+/*		Debug(NULL, "maxClipRects -> %d\n", gl->nClipRects+1); */
+		gl->clipRects = Realloc(gl->clipRects, (gl->nClipRects+1) *
+		                                       sizeof(AG_ClipRect));
+		gl->maxClipRects++;
+	}
 	crPrev = &gl->clipRects[gl->nClipRects-1];
-	cr = &gl->clipRects[gl->nClipRects++];
+	cr     = &gl->clipRects[gl->nClipRects++];
 
-	cr->eqns[0][0] = 1.0;
-	cr->eqns[0][1] = 0.0;
-	cr->eqns[0][2] = 0.0;
-	cr->eqns[0][3] = MIN(crPrev->eqns[0][3], -(double)(x));
+	AG_RectIntersect(&cr->r, &crPrev->r, r);
+
+	cr->eqns[0][0] =  1.0;  cr->eqns[0][1] =  0.0;
+	cr->eqns[0][2] =  0.0;  cr->eqns[0][3] = -(double)(cr->r.x);
 	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
 	
-	cr->eqns[1][0] = 0.0;
-	cr->eqns[1][1] = 1.0;
-	cr->eqns[1][2] = 0.0;
-	cr->eqns[1][3] = MIN(crPrev->eqns[1][3], -(double)(y));
+	cr->eqns[1][0] =  0.0;  cr->eqns[1][1] =  1.0;
+	cr->eqns[1][2] =  0.0;  cr->eqns[1][3] = -(double)(cr->r.y);
 	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
 		
-	cr->eqns[2][0] = -1.0;
-	cr->eqns[2][1] = 0.0;
-	cr->eqns[2][2] = 0.0;
-	cr->eqns[2][3] = MIN(crPrev->eqns[2][3], (double)(x + r->w));
+	cr->eqns[2][0] = -1.0;  cr->eqns[2][1] =  0.0;
+	cr->eqns[2][2] =  0.0;  cr->eqns[2][3] = (double)(cr->r.x + cr->r.w);
 	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
 		
-	cr->eqns[3][0] = 0.0;
-	cr->eqns[3][1] = -1.0;
-	cr->eqns[3][2] = 0.0;
-	cr->eqns[3][3] = MIN(crPrev->eqns[3][3], (double)(y + r->h));
+	cr->eqns[3][0] =  0.0;  cr->eqns[3][1] = -1.0;
+	cr->eqns[3][2] =  0.0;  cr->eqns[3][3] = (double)(cr->r.y + cr->r.h);
 	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
 }
 void
@@ -229,13 +216,12 @@ AG_GL_StdPopClipRect(void *obj)
 	AG_Driver *drv = obj;
 	AG_GL_Context *gl = drv->gl;
 	AG_ClipRect *cr;
-	
+
 #ifdef AG_DEBUG
 	if (gl->nClipRects < 1)
-		AG_FatalError("PopClipRect() without PushClipRect()");
+		AG_FatalError("PopClipRect() without Push");
 #endif
-	cr = &gl->clipRects[gl->nClipRects-2];
-	gl->nClipRects--;
+	cr = &gl->clipRects[(--gl->nClipRects) - 1];
 
 	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
 	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
@@ -278,9 +264,13 @@ AG_GL_StdPushBlendingMode(void *obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst,
 	AG_Driver *drv = obj;
 	AG_GL_Context *gl = drv->gl;
 	AG_GL_BlendState *bs;
-	
-	gl->blendStates = Realloc(gl->blendStates, (gl->nBlendStates + 1) *
-	                                           sizeof(AG_GL_BlendState));
+
+	if (gl->nBlendStates+1 > gl->maxBlendStates) {
+/*		Debug(NULL, "maxBlendStates-> %d\n", gl->maxBlendStates+1); */
+		gl->blendStates = Realloc(gl->blendStates, (gl->nBlendStates + 1) *
+		                                           sizeof(AG_GL_BlendState));
+		gl->maxBlendStates++;
+	}
 	bs = &gl->blendStates[gl->nBlendStates++];
 	
 	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &bs->texEnvMode);
@@ -305,10 +295,9 @@ AG_GL_StdPopBlendingMode(void *obj)
 
 #ifdef AG_DEBUG
 	if (gl->nBlendStates < 1)
-		AG_FatalError("PopBlendingMode() without PushBlendingMode()");
+		AG_FatalError("PopBlendingMode() without Push");
 #endif
-	bs = &gl->blendStates[gl->nBlendStates-2];
-	gl->nBlendStates--;
+	bs = &gl->blendStates[(--gl->nBlendStates) - 1];
 
 	if (bs->enabled) {
 		glEnable(GL_BLEND);
@@ -1090,13 +1079,14 @@ AG_GL_DrawRectDithered(void *obj, const AG_Rect *r, const AG_Color *c)
 {
 	AG_Driver *drv = obj;
 	AG_GL_Context *gl = drv->gl;
-	int stipplePrev;
-	
-	stipplePrev = glIsEnabled(GL_POLYGON_STIPPLE);
+	const int stipplePrev = glIsEnabled(GL_POLYGON_STIPPLE);
+
 	glEnable(GL_POLYGON_STIPPLE);
 	glPushAttrib(GL_POLYGON_STIPPLE_BIT);
+
 	glPolygonStipple((GLubyte *)gl->dither);
 	AG_GL_DrawRectFilled(obj, r, c);
+
 	glPopAttrib();
 	if (!stipplePrev) { glDisable(GL_POLYGON_STIPPLE); }
 }

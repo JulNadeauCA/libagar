@@ -412,7 +412,7 @@ LookupWindowByID(Window xw)
 	}
 fail:
 	AG_UnlockVFS(&agDrivers);
-	AG_SetErrorS(_("X event from unknown window"));
+	AG_SetErrorS("X event from unknown window");
 	return (NULL);
 }
 
@@ -923,15 +923,23 @@ GLX_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		}
 		break;
 	case AG_DRIVER_VIDEORESIZE:
-		a.x = dev->data.videoresize.x;
-		a.y = dev->data.videoresize.y;
-		a.w = dev->data.videoresize.w;
-		a.h = dev->data.videoresize.h;
-		if (a.x != WIDGET(win)->x || a.y != WIDGET(win)->y) {
-			GLX_PostMoveCallback(win, &a);
-		}
-		if (a.w != WIDTH(win) || a.h != HEIGHT(win)) {
-			GLX_PostResizeCallback(win, &a);
+		{
+			AG_DriverGLX *glx = (AG_DriverGLX *)drv;
+
+			AG_MutexLock(&glx->lock);
+
+			a.x = dev->data.videoresize.x;
+			a.y = dev->data.videoresize.y;
+			a.w = dev->data.videoresize.w;
+			a.h = dev->data.videoresize.h;
+
+			if (a.w != WIDTH(win) || a.h != HEIGHT(win))
+				GLX_PostResizeCallback(win, &a);
+
+			if (a.x != WIDGET(win)->x || a.y != WIDGET(win)->y)
+				GLX_PostMoveCallback(win, &a);
+
+			AG_MutexUnlock(&glx->lock);
 		}
 		break;
 	case AG_DRIVER_CLOSE:
@@ -964,25 +972,19 @@ GLX_BeginRendering(void *_Nonnull obj)
 static void
 GLX_RenderWindow(AG_Window *_Nonnull win)
 {
-	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
-	AG_GL_Context *gl = &glx->gl;
 	const AG_Color *cBg = &WCOLOR(win, BG_COLOR);
 
-	if (!glx->w)		/* XXX is this needed? */
-		return;
+	AG_PushClipRect(win, &WIDGET(win)->r);
 
-	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
-	gl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1); glEnable(GL_CLIP_PLANE1);
-	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
-	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
-
-	glClearColor((float)cBg->r/AG_COLOR_LASTF,
-	             (float)cBg->g/AG_COLOR_LASTF,
-		     (float)cBg->b/AG_COLOR_LASTF, 1.0);
+	glClearColor((float)cBg->r / AG_COLOR_LASTF,
+	             (float)cBg->g / AG_COLOR_LASTF,
+		     (float)cBg->b / AG_COLOR_LASTF, 1.0);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);
+
+	AG_PopClipRect(win);
 }
 
 static void
@@ -1136,6 +1138,7 @@ GLX_FreeCursor(void *_Nonnull obj, AG_Cursor *_Nonnull ac)
 	
 	if (ac == drv->activeCursor)
 		drv->activeCursor = NULL;
+
 	if (!acGLX->shared)
 		XFreeCursor(agDisplay, acGLX->xc);
 	
@@ -1165,14 +1168,13 @@ GLX_SetCursor(void *_Nonnull obj, AG_Cursor *_Nonnull ac)
 	} else {
 		XDefineCursor(agDisplay, glx->w, acGLX->xc);
 	}
-
-	AG_MutexUnlock(&glx->lock);
-	AG_MutexUnlock(&agDisplayLock);
-	
 	XSync(agDisplay, False);
 
 	drv->activeCursor = ac;
 	acGLX->visible = 1;
+
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 }
 
@@ -1189,12 +1191,11 @@ GLX_UnsetCursor(void *_Nonnull obj)
 	AG_MutexLock(&glx->lock);
 
 	XUndefineCursor(agDisplay, glx->w);
+	XSync(agDisplay, False);
 	drv->activeCursor = TAILQ_FIRST(&drv->cursors);
 	
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
-	
-	XSync(agDisplay, False);
 }
 
 static int
@@ -1404,7 +1405,6 @@ GLX_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	AG_Driver *drv = WIDGET(win)->drv;
-	AG_Rect rVP;
 	int glxAttrs[16];
 	XSetWindowAttributes xwAttrs;
 	XVisualInfo *xvi;
@@ -1505,14 +1505,7 @@ GLX_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	/* Create the GLX rendering context. */
 	glx->glxCtx = glXCreateContext(agDisplay, xvi, 0, GL_TRUE);
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
-	if (AG_GL_InitContext(glx, &glx->gl) == -1) {
-		goto fail_win;
-	}
-	rVP.x = 0;
-	rVP.y = 0;
-	rVP.w = WIDTH(win);
-	rVP.h = HEIGHT(win);
-	AG_GL_SetViewport(&glx->gl, &rVP);
+	AG_GL_InitContext(glx, &glx->gl);
 	
 	/* Set the pixel formats. */
 	if ((drv->videoFmt = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
@@ -1575,7 +1568,6 @@ fail_ctx:
 	AG_GL_DestroyContext(glx);
 	glXMakeCurrent(agDisplay, None, NULL);
 	glXDestroyContext(agDisplay, glx->glxCtx);
-fail_win:
 	XDestroyWindow(agDisplay, glx->w);
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
@@ -1985,10 +1977,8 @@ GLX_PreResizeCallback(AG_Window *_Nonnull win)
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 
 	/*
-	 * Backup all GL resources since it is not portable to assume that a
+	 * Backup GL resources since it is not portable to assume that a
 	 * display resize will not cause a change in GL contexts
-	 * (XXX TODO test for platforms where this is unnecessary)
-	 * (XXX is this correctly done?)
 	 */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
 	GLX_FreeWidgetResources(WIDGET(win));
@@ -2001,69 +1991,51 @@ GLX_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
-	AG_SizeAlloc aNew;
+	AG_SizeAlloc wa;
 	AG_Rect rVP;
-	
-	AG_MutexLock(&agDisplayLock);
-	AG_MutexLock(&glx->lock);
 
-	/* Update the window size and coordinates. */
-	aNew.x = 0;
-	aNew.y = 0;
-	aNew.w = a->w;
-	aNew.h = a->h;
-	AG_WidgetSizeAlloc(win, &aNew);
+	wa.x = 0;
+	wa.y = 0;
+	wa.w = a->w;
+	wa.h = a->h;
+	AG_WidgetSizeAlloc(win, &wa);
 	AG_WidgetUpdateCoords(win, 0,0);
 	WIDGET(win)->x = a->x;
 	WIDGET(win)->y = a->y;
+
 	win->dirty = 1;
 
-	/* Update the viewport. */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
 	rVP.x = 0;
 	rVP.y = 0;
 	rVP.w = WIDTH(win);
 	rVP.h = HEIGHT(win);
 	AG_GL_SetViewport(&glx->gl, &rVP);
-	
-	AG_MutexUnlock(&glx->lock);
-	AG_MutexUnlock(&agDisplayLock);
 }
 
 static void
 GLX_PostMoveCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 {
-	AG_Driver *drv = WIDGET(win)->drv;
-	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
-	AG_SizeAlloc aNew;
-	int xRel, yRel;
+	AG_SizeAlloc wa;
 	
-	AG_MutexLock(&agDisplayLock);
-	AG_MutexLock(&glx->lock);
-
-	xRel = a->x - WIDGET(win)->x;
-	yRel = a->y - WIDGET(win)->y;
-
-	/* Update the window coordinates. */
-	aNew.x = 0;
-	aNew.y = 0;
-	aNew.w = a->w;
-	aNew.h = a->h;
-	AG_WidgetSizeAlloc(win, &aNew);
+	wa.x = 0;
+	wa.y = 0;
+	wa.w = a->w;
+	wa.h = a->h;
+	AG_WidgetSizeAlloc(win, &wa);
 	AG_WidgetUpdateCoords(win, 0,0);
 	WIDGET(win)->x = a->x;
 	WIDGET(win)->y = a->y;
+
 	win->dirty = 1;
 
 	if (agWindowPinnedCount > 0)
-		AG_WindowMovePinned(win, xRel,yRel);
-
-	AG_MutexUnlock(&agDisplayLock);
-	AG_MutexUnlock(&glx->lock);
+		AG_WindowMovePinned(win, a->x - WIDGET(win)->x,
+		                         a->y - WIDGET(win)->y);
 }
 
 static int
-GLX_MoveWindow(AG_Window *_Nonnull win, int x, int y)
+GLX_MoveWindow(AG_Window *_Nonnull win, int dx, int dy)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
@@ -2071,17 +2043,15 @@ GLX_MoveWindow(AG_Window *_Nonnull win, int x, int y)
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
 
-	XMoveWindow(agDisplay, glx->w, x, y);
+	XMoveWindow(agDisplay, glx->w, dx,dy);
 	XIfEvent(agDisplay, &xev, WaitConfigureNotify, (char *)glx->w);
 
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
-
 	return (0);
 }
 
 #if 0
-/* Save/restore associated widget GL resources (for GL context changes). */
 static void
 GLX_FreeWidgetResources(AG_Widget *_Nonnull wid)
 {
@@ -2092,9 +2062,7 @@ GLX_FreeWidgetResources(AG_Widget *_Nonnull wid)
 	}
 	AG_WidgetFreeResourcesGL(wid);
 }
-#endif
 
-#if 0
 static void
 RegenWidgetResources(AG_Widget *_Nonnull wid)
 {

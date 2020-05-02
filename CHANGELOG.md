@@ -23,7 +23,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**glx**](https://libagar.org/man3/AG_DriverGLX): Make drag-and-drop (`sockets` test) work correctly (possibly using `AG_WindowMove()`).
 - [**wgl**](https://libagar.org/man2/AG_DriverWGL): Clipboard integration.
 
-## [1.6.0] - 2020-04-30
+## [1.6.0] - 2020-05-03
 ### Added
 - Integrated [**Style Editor**](https://libagar.org/man3/AG_StyleEditor) tool. It allows a developer to inspect a live VFS of widgets, to pick elements, to add/edit style attributes and look at the results in real time.
 - Integrated [**GUI Debugger**](https://libagar.org/man3/AG_GuiDebugger) utility. Inspect a live VFS of widgets in real time. Available in Debug builds only.
@@ -93,7 +93,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Provide `dlsym()`mable copies of inline functions in lowercase form. For example, the symbol `AG_LengthUTF8()` is now guaranteed to have a dlsymmable copy called `ag_length_utf8()`. This helps avoid the need for glue code in language bindings. Thanks Brian and Federico!
 - **Nullability**: Introduce `_Nullable` and `_Nonnull` pointer annotations to help prevent programming mistakes and make prototypes more expressive.
 - Define special nullability annotations for thread types which require special handling since they may or may not be pointer types depending on the platform. Define `_{Nullable,Nonnull,Null_unspecified}_{Mutex,Cond,Thread}`.
-- New pointer-type-safe accessor macros for event handlers. Instead of using the generic pointer accessors `AG_SELF()`, `AG_PTR()` or `AG_PTR_NAMED()` to retrieve an object pointer from an event handler, one can now use the more specific `AG_OBJECT_SELF()`, `AG_OBJECT_PTR()` and `AG_OBJECT_PTR_NAMED()` macros. In a _Debug_ build, such macros will perform a run-time validity and class-membership test. In a _Release_ build, no tests are done. Class-specific accessor macros are also provided, for example [AG\_Button](https://libagar.org/man3/AG_Button) defines `AG_BUTTON_SELF()`, `AG_BUTTON_PTR()` and `AG_BUTTON_PTR_NAMED()`.
+- New pointer-type-safe accessor macros for event handlers. Instead of using the generic pointer accessors `AG_SELF()`, `AG_PTR()` or `AG_PTR_NAMED()` to retrieve an object pointer from an event handler, one can now use the more specific `AG_OBJECT_SELF()`, `AG_OBJECT_PTR()` and `AG_OBJECT_PTR_NAMED()` macros. In a _Debug_ build, such macros will perform a run-time validity and class-membership test. In a _Release_ build, no tests are done. Class-specific accessor macros are also provided, for example [AG_Button](https://libagar.org/man3/AG_Button) defines `AG_BUTTON_SELF()`, `AG_BUTTON_PTR()` and `AG_BUTTON_PTR_NAMED()`.
 - New build option `--enable-type-safety` (implied by `--enable-debug`).
 - New build option `--with-memory-model`. `SMALL` targets 8-bit machines (for _ag_micro_ only). `MEDIUM` has a smaller memory footprint and can handle up to 24-bit "True Color" surfaces (the default on non 64-bit hosts). The `LARGE` model adds support for 48-bit "Deep Color" surfaces (the default on 64-bit hosts). Either `MEDIUM` or `LARGE` will work on both 32-bit and 64-bit hosts (the choice comes down to performance tuning). Introduce `AG_Size` and `AG_Offset` types.
 - New build option `--disable-widgets` build with base framework, but without the standard widget library.
@@ -101,10 +101,10 @@ All notable changes to Agar will be documented in this file. The format is based
 - _ag_core_: Colorize debugging output. Added `--disable-ansi-color` build option.
 - _ag_core_: New [AG_SetErrorS()](https://libagar.org/man3/AG_SetErrorS) function variant.
 - _ag_math_: New functions [AG_Square()](https://libagar.org/man3/AG_Square), [AG_HaveQuadraticSolution()](https://libagar.org/man3/AG_HaveQuadraticSolution), [AG_QuadraticPositive()](https://libagar.org/man3/AG_QuadraticPositive), [AG_QuadraticNegative()](https://libagar.org/man3/AG_QuadraticNegative) & [AG_Distance()](https://libagar.org/man3/AG_Distance). Thanks Chuck!
-- _ag_math_: New [M_Bezier](https://libagar.org/man3/M_Bezier) module for computing Bézier curves. Thanks Chuck!
-- _ag_net_: Introduce [AG_Web](https://libagar.org/man3/AG_Web), a multiprocess HTTP/1.1 application server. It handles authentication, session/process management, push events and templates (not in default build, must use `--enable-web`).
-- _ag_vg_: Make [VG](https://libagar.org/man3/VG) an [AG_Object](https://libagar.org/man3/AG_Object) class since we may wish to subclass it or set variables and events on it.
-- _ag_vg_: Introduce [vgedit](https://libagar.org/man1/vgedit), a basic editor for [VG](https://libagar.org/man3/VG) object files. It is also a good demonstration of [VG_View](https://libagar.org/man3/VG_View) widget usage.
+- _ag_math_: New [**M_Bezier**](https://libagar.org/man3/M_Bezier) module for computing Bézier curves. Thanks Chuck!
+- _ag_net_: Introduce [**AG_Web**](https://libagar.org/man3/AG_Web), a multiprocess HTTP/1.1 application server. It handles authentication, session/process management, push events and templates (not in default build, must use `--enable-web`).
+- _ag_vg_: Make [**VG**](https://libagar.org/man3/VG) an [AG_Object](https://libagar.org/man3/AG_Object) class since we may wish to subclass it or set variables and events on it.
+- _ag_vg_: Introduce [**vgedit**](https://libagar.org/man1/vgedit), a basic editor for [**VG**](https://libagar.org/man3/VG) object files. It is also a good demonstration of [**VG_View**](https://libagar.org/man3/VG_View) widget usage.
 
 ### Removed
 - [**AG_Event**](https://libagar.org/man3/AG_Event): In [AG_PostEvent()](https://libagar.org/man3/AG_PostEvent), remove the mandatory "sender" first argument. Sender objects can be passed instead as regular arguments.
@@ -124,7 +124,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Editable**](https://libagar.org/man3/AG_Editable) & [**AG_Textbox**](https://libagar.org/man3/AG_Textbox): Improve keyboard handling. Use 4 independent keyrepeat timers for the direction keys.
 - [**AG_Editable**](https://libagar.org/man3/AG_Editable) & [**AG_Textbox**](https://libagar.org/man3/AG_Textbox): Improvements to the word-selection behavior (triggered by ALT or double-click followed by mouse motion).
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): Include Agar core fonts and user fonts in the listing (scanning _"font-path"_ for files with supported extensions). Add _"pixel64"_ binding in Large mode. Embed a color picker to preview fonts in different colors. Add Upright Italic and width variants. Add an alternate sample phrase.
-- [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): Refresh automatically when directory contents change when running on platforms with support for filesystem notifications (using an [AG_EventSink(3)](https://libagar.org/man3/AG_EventSink) of type `FSEVENT`).
+- [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): Refresh automatically when directory contents change when running on platforms with support for filesystem notifications (using an [event sink](https://libagar.org/man3/AG_EventSink) of type `FSEVENT`).
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Improve responsiveness of menu expansions. Draw a rectangular outline to avoid blending into the background.
 - [**AG_Notebook**](https://libagar.org/man3/AG_Notebook): Legibility and rendering fixes. Render a stripe in _"selected-color"_ over the selected tab. Handle multiline text correctly in tab labels.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Make [AG_Variables](https://libagar.org/man3/AG_Variable) of type `P_FLAG*` mutable to `INT` and `UINT*` types. In [AG_CompareVariables()](https://libagar.org/man3/AG_CompareVariables), compare discrete `STRING` variables by string value as opposed to comparing by reference. The `AG_GetVariableLocked()` function was renamed [AG_AccessVariable()](https://libagar.org/man3/AG_AccessVariable). Dependencies are now represented more compactly as AG\_Variables of type `P_OBJECT` and `P_VARIABLE`.

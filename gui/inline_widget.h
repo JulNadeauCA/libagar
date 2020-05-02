@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,23 +29,30 @@
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Pure_Attribute
-AG_WidgetEnabled(const void *_Nonnull p)
+AG_WidgetEnabled(const void *_Nonnull obj)
 #else
 int
-ag_widget_enabled(const void *p)
+ag_widget_enabled(const void *obj)
 #endif
 {
-	return !(AGWIDGET(p)->flags & AG_WIDGET_DISABLED);
+	AG_Widget *wid = AGWIDGET(obj);
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	return !(wid->flags & AG_WIDGET_DISABLED);
 }
+
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Pure_Attribute
-AG_WidgetDisabled(const void *_Nonnull p)
+AG_WidgetDisabled(const void *_Nonnull obj)
 #else
 int
-ag_widget_disabled(const void *p)
+ag_widget_disabled(const void *obj)
 #endif
 {
-	return (AGWIDGET(p)->flags & AG_WIDGET_DISABLED);
+	AG_Widget *wid = AGWIDGET(obj);
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	return (wid->flags & AG_WIDGET_DISABLED);
 }
 
 /*
@@ -54,13 +61,16 @@ ag_widget_disabled(const void *p)
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Pure_Attribute
-AG_WidgetVisible(const void *_Nonnull p)
+AG_WidgetVisible(const void *_Nonnull obj)
 #else
 int
-ag_widget_visible(const void *p)
+ag_widget_visible(const void *obj)
 #endif
 {
-	return (AGWIDGET(p)->flags & AG_WIDGET_VISIBLE);
+	AG_Widget *wid = AGWIDGET(obj);
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	return (wid->flags & AG_WIDGET_VISIBLE);
 }
 
 /*
@@ -78,7 +88,6 @@ ag_widget_is_focused(const void *obj)
 	AG_Widget *wid = AGWIDGET(obj);
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-
 	return ((wid->flags & AG_WIDGET_FOCUSED) &&
                 (wid->window == NULL || agWindowFocused == wid->window));
 }
@@ -95,7 +104,10 @@ int
 ag_widget_is_focused_in_window(const void *obj)
 #endif
 {
-	return (AGWIDGET(obj)->flags & AG_WIDGET_FOCUSED);
+	AG_Widget *wid = AGWIDGET(obj);
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	return (wid->flags & AG_WIDGET_FOCUSED);
 }
 
 /*
@@ -111,6 +123,8 @@ ag_widget_area(const void *obj, int x, int y)
 #endif
 {
 	const AG_Widget *wid = AGWIDGET(obj);
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	return (x >= wid->rView.x1 && y >= wid->rView.y1 &&
 	        x < wid->rView.x2 && y < wid->rView.y2);
@@ -128,6 +142,8 @@ int
 ag_widget_relative_area(const void *obj, int x, int y)
 #endif
 {
+	AG_OBJECT_ISA(obj, "AG_Widget:*");
+
 	return (x >= 0 &&
 	        y >= 0 &&
 	        x < WIDTH(obj) &&
@@ -146,8 +162,11 @@ void
 ag_expand(void *wid)
 #endif
 {
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	AGWIDGET(wid)->flags |= AG_WIDGET_EXPAND;
+
 	AG_ObjectUnlock(wid);
 }
 
@@ -162,8 +181,11 @@ void
 ag_expand_horiz(void *wid)
 #endif
 {
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	AGWIDGET(wid)->flags |= AG_WIDGET_HFILL;
+
 	AG_ObjectUnlock(wid);
 }
 
@@ -178,8 +200,11 @@ void
 ag_expand_vert(void *wid)
 #endif
 {
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	AGWIDGET(wid)->flags |= AG_WIDGET_VFILL;
+
 	AG_ObjectUnlock(wid);
 }
 
@@ -197,10 +222,13 @@ void
 ag_widget_update(void *obj)
 #endif
 {
-	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Widget *wid = AGWIDGET(obj);
 
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 	wid->flags |= AG_WIDGET_UPDATE_WINDOW;
+
 	AG_ObjectUnlock(wid);
 }
 
@@ -216,8 +244,10 @@ void
 ag_push_clip_rect(void *obj, const AG_Rect *_Nonnull pr)
 #endif
 {
-	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Widget *wid = AGWIDGET(obj);
 	AG_Rect r;
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	r.x = wid->rView.x1 + pr->x;
 	r.y = wid->rView.y1 + pr->y;
@@ -238,7 +268,9 @@ void
 ag_pop_clip_rect(void *obj)
 #endif
 {
-	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Widget *wid = AGWIDGET(obj);
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	wid->drvOps->popClipRect(wid->drv);
 }
@@ -257,7 +289,9 @@ ag_push_blending_mode(void *obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst,
     AG_TextureEnvMode texEnvMode)
 #endif
 {
-	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Widget *wid = AGWIDGET(obj);
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	wid->drvOps->pushBlendingMode(wid->drv, fnSrc, fnDst, texEnvMode);
 }
@@ -274,7 +308,9 @@ void
 ag_pop_blending_mode(void *obj)
 #endif
 {
-	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Widget *wid = AGWIDGET(obj);
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
 	wid->drvOps->popBlendingMode(wid->drv);
 }
@@ -291,13 +327,15 @@ int
 ag_widget_map_surface_nodup(void *obj, AG_Surface *S)
 #endif
 {
-	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Widget *wid = AGWIDGET(obj);
 	int name;
 
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
-	if ((name = AG_WidgetMapSurface(wid, S)) != -1) {
+
+	if ((name = AG_WidgetMapSurface(wid, S)) != -1)
 		wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_NODUP;
-	}
+
 	AG_ObjectUnlock(wid);
 	return (name);
 }
@@ -313,15 +351,18 @@ void
 ag_widget_replace_surface_nodup(void *obj, int name, AG_Surface *S)
 #endif
 {
-	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Widget *wid = AGWIDGET(obj);
 
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
+
 #ifdef AG_DEBUG
 	if (name < 0 || name >= (int)wid->nSurfaces)
 		AG_FatalError("Bad surface handle");
 #endif
 	AG_WidgetReplaceSurface(wid, name, S);
 	wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_NODUP;
+
 	AG_ObjectUnlock(wid);
 }
 
@@ -338,7 +379,9 @@ void
 ag_widget_blit(void *obj, AG_Surface *S, int x, int y)
 #endif
 {
-	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Widget *wid = AGWIDGET(obj);
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	wid->drvOps->blitSurface(wid->drv, wid, S,
 	    wid->rView.x1 + x,
@@ -357,7 +400,9 @@ void
 ag_widget_blit_from(void *obj, int s, AG_Rect *r, int x, int y)
 #endif
 {
-	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Widget *wid = AGWIDGET(obj);
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
 	if (s == -1 || wid->surfaces[s] == NULL)
 		return;
@@ -411,6 +456,7 @@ ag_get_key_count(void *obj)
 #endif
 {
 	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
+
 	return (kbd->keyCount);
 }
 
@@ -426,6 +472,7 @@ ag_get_mod_state(void *obj)
 #endif
 {
 	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
+
 	return (kbd->modState);
 }
 
@@ -441,5 +488,6 @@ ag_set_mod_state(void *obj, Uint ms)
 #endif
 {
 	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
+
 	kbd->modState = ms;
 }

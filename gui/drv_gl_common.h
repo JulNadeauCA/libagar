@@ -20,10 +20,11 @@ typedef struct ag_gl_blend_state {
 typedef struct ag_gl_context {
 	AG_ClipRect *_Nullable clipRects;	/* Clipping rectangle coords */
 	Uint                  nClipRects;
-	int                    clipStates[4];	/* Last GL_CLIP_PLANE[0-4] states */
+	Uint                maxClipRects;
 
-	Uint                       nBlendStates;
 	AG_GL_BlendState *_Nullable blendStates;  /* Alpha blending states */
+	Uint                       nBlendStates;
+	Uint                     maxBlendStates;
 
 	Uint *_Nullable textureGC;	  /* Textures queued for deletion */
 	Uint           nTextureGC;
@@ -35,7 +36,7 @@ typedef struct ag_gl_context {
 } AG_GL_Context;
 
 __BEGIN_DECLS
-int  AG_GL_InitContext(void *_Nonnull, AG_GL_Context *_Nonnull);
+void AG_GL_InitContext(void *_Nonnull, AG_GL_Context *_Nonnull);
 void AG_GL_SetViewport(AG_GL_Context *_Nonnull, const AG_Rect *_Nonnull);
 void AG_GL_DestroyContext(void *_Nonnull);
 

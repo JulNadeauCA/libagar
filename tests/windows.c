@@ -23,7 +23,7 @@ TestDesktopAlign(AG_Event *event)
 		if ((win = AG_WindowNew(0))) {
 			AG_WindowSetCaption(win, "Auto%d", i);
 			AG_LabelNew(win, 0, "Autopositioned #%d", i);
-			AG_LabelNewS(win, 0, "(AG_WINDOW_ALIGNMENT_NONE)");
+			AG_LabelNewS(win, 0, AGSI_COURIER "(AG_WINDOW_ALIGNMENT_NONE)" AGSI_RST);
 			AG_WindowAttach(winParent, win);
 			AG_WindowMakeTransient(winParent, win);
 			AG_WindowShow(win);
@@ -31,7 +31,7 @@ TestDesktopAlign(AG_Event *event)
 		if ((win = AG_WindowNew(0))) {
 			AG_WindowSetCaption(win, "TL%d", i);
 			AG_LabelNew(win, 0, "Top Left #%d", i);
-			AG_LabelNewS(win, 0, "(AG_WINDOW_TL)");
+			AG_LabelNewS(win, 0, AGSI_COURIER "(AG_WINDOW_TL)" AGSI_RST);
 			AG_WindowSetPosition(win, AG_WINDOW_TL, 1);
 			AG_WindowAttach(winParent, win);
 			AG_WindowMakeTransient(winParent, win);
@@ -40,7 +40,7 @@ TestDesktopAlign(AG_Event *event)
 		if ((win = AG_WindowNew(0))) {
 			AG_WindowSetCaption(win, "TC%d", i);
 			AG_LabelNew(win, 0, "Top Center #%d", i);
-			AG_LabelNewS(win, 0, "(AG_WINDOW_TC)");
+			AG_LabelNewS(win, 0, AGSI_COURIER "(AG_WINDOW_TC)" AGSI_RST);
 			AG_WindowSetPosition(win, AG_WINDOW_TC, 1);
 			AG_WindowAttach(winParent, win);
 			AG_WindowMakeTransient(winParent, win);
@@ -49,7 +49,7 @@ TestDesktopAlign(AG_Event *event)
 		if ((win = AG_WindowNew(0))) {
 			AG_WindowSetCaption(win, "TR%d", i);
 			AG_LabelNew(win, 0, "Top Right #%d", i);
-			AG_LabelNewS(win, 0, "(AG_WINDOW_TR)");
+			AG_LabelNewS(win, 0, AGSI_COURIER "(AG_WINDOW_TR)" AGSI_RST);
 			AG_WindowSetPosition(win, AG_WINDOW_TR, 1);
 			AG_WindowAttach(winParent, win);
 			AG_WindowMakeTransient(winParent, win);
@@ -58,7 +58,7 @@ TestDesktopAlign(AG_Event *event)
 		if ((win = AG_WindowNew(0))) {
 			AG_WindowSetCaption(win, "MC%d", i);
 			AG_LabelNew(win, 0, "Center #%d", i);
-			AG_LabelNewS(win, 0, "(AG_WINDOW_MC)");
+			AG_LabelNewS(win, 0, AGSI_COURIER "(AG_WINDOW_MC)" AGSI_RST);
 			AG_WindowSetPosition(win, AG_WINDOW_MC, 1);
 			AG_WindowAttach(winParent, win);
 			AG_WindowMakeTransient(winParent, win);
@@ -67,7 +67,7 @@ TestDesktopAlign(AG_Event *event)
 		if ((win = AG_WindowNew(0))) {
 			AG_WindowSetCaption(win, "BL%d", i);
 			AG_LabelNew(win, 0, "Bottom Left #%d", i);
-			AG_LabelNewS(win, 0, "(AG_WINDOW_BL)");
+			AG_LabelNewS(win, 0, AGSI_COURIER "(AG_WINDOW_BL)" AGSI_RST);
 			AG_WindowSetPosition(win, AG_WINDOW_BL, 1);
 			AG_WindowAttach(winParent, win);
 			AG_WindowMakeTransient(winParent, win);
@@ -76,7 +76,7 @@ TestDesktopAlign(AG_Event *event)
 		if ((win = AG_WindowNew(0))) {
 			AG_WindowSetCaption(win, "BR%d", i);
 			AG_LabelNew(win, 0, "Bottom Right #%d", i);
-			AG_LabelNewS(win, 0, "(AG_WINDOW_BR)");
+			AG_LabelNewS(win, 0, AGSI_COURIER "(AG_WINDOW_BR)" AGSI_RST);
 			AG_WindowSetPosition(win, AG_WINDOW_BR, 1);
 			AG_WindowAttach(winParent, win);
 			AG_WindowMakeTransient(winParent, win);
@@ -85,7 +85,7 @@ TestDesktopAlign(AG_Event *event)
 		if ((win = AG_WindowNew(0))) {
 			AG_WindowSetCaption(win, "BC%d", i);
 			AG_LabelNew(win, 0, "Bottom Center #%d", i);
-			AG_LabelNewS(win, 0, "(AG_WINDOW_BC)");
+			AG_LabelNewS(win, 0, AGSI_COURIER "(AG_WINDOW_BC)" AGSI_RST);
 			AG_WindowSetPosition(win, AG_WINDOW_BC, 1);
 			AG_WindowAttach(winParent, win);
 			AG_WindowMakeTransient(winParent, win);
@@ -145,19 +145,26 @@ TestGUI(void *obj, AG_Window *win)
 	ti->makeTransient = 0;
 	ti->makePinned = 0;
 
+	AG_LabelNewS(win, 0, "Create test window with flags:");
+	
 	box = AG_BoxNewVert(win, AG_BOX_EXPAND);
+	AG_SetStyle(box, "font-family", "courier-prime");
+	{
+		AG_CheckboxSetFromFlags(box, 0, &ti->testFlags, winFlags);
+	}
 
-	AG_LabelNewS(box, 0, "Create test window with flags:");
-	AG_CheckboxSetFromFlags(box, 0, &ti->testFlags, winFlags);
-	AG_CheckboxNewInt(box, 0, "Make transient", &ti->makeTransient);
-	AG_CheckboxNewInt(box, 0, "Make pinned", &ti->makePinned);
+	box = AG_BoxNewVert(win, AG_BOX_HFILL);
+	{
+		AG_CheckboxNewInt(box, 0, "Make transient", &ti->makeTransient);
+		AG_CheckboxNewInt(box, 0, "Make pinned", &ti->makePinned);
+	}
 
-	AG_ButtonNewFn(box, AG_BUTTON_HFILL, "Create Test Window",
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Create Test Window",
 	    CreateTestWindow, "%p,%p", ti, win);
 
-	AG_SeparatorNewHoriz(box);
+	AG_SeparatorNewHoriz(win);
 
-	AG_ButtonNewFn(box, AG_BUTTON_HFILL, "Test Desktop Alignment",
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Test Desktop Alignment",
 	    TestDesktopAlign, "%p", win);
 
 	return (0);

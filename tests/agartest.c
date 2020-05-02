@@ -311,10 +311,12 @@ RunTest(AG_Event *event)
 			ti->win = win;
 			AG_ConsoleMsg(console, _("%s: Interactive test started"),
 			    tc->name);
+
 			AG_SeparatorNewHoriz(win);
+
 			ti->closeBtn = AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close this test"),
 			    RequestTestClose, "%p", win);
-			AG_WindowSetPosition(win, AG_WINDOW_MC, 0);
+
 			AG_WindowAttach(winMain, win);
 			AG_WindowShow(win);
 		} else {
@@ -875,8 +877,21 @@ main(int argc, char *argv[])
 	}
 	mi = AG_MenuNode(menu->root, ("View"), NULL);
 	{
-		AG_MenuActionKb(mi, _("Zoom In"), NULL, AG_KEY_PLUS, AG_KEYMOD_CTRL, ZoomIn, NULL);
-		AG_MenuActionKb(mi, _("Zoom Out"), NULL, AG_KEY_MINUS, AG_KEYMOD_CTRL, ZoomOut, NULL);
+		AG_MenuActionKb(mi, _("Zoom In"),
+		    AG_TextRender("\xE2\x8A\x9E"), /* U+229E SQUARED PLUS */
+		    AG_KEY_PLUS, AG_KEYMOD_CTRL,
+		    ZoomIn, NULL);
+
+		AG_MenuActionKb(mi, _("Zoom Out"),
+		    AG_TextRender("\xE2\x8A\x9F"), /* U+229F SQUARED MINUS */
+		    AG_KEY_MINUS, AG_KEYMOD_CTRL,
+		    ZoomOut, NULL);
+#ifdef AG_DEBUG
+		AG_MenuSeparator(mi);
+		AG_MenuBool(mi, _("Debug Messages"),
+		    AG_TextRender("\xE2\x8B\x84"), /* U+22C4 DIAMOND OPERATOR */
+		    &agDebugLvl, 0);
+#endif
 	}
 	mi = AG_MenuNode(menu->root, ("Help"), NULL);
 	{
