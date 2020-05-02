@@ -918,6 +918,8 @@ COCOA_RenderWindow(AG_Window *_Nonnull win)
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
 	AG_GL_Context *gl = &co->gl;
 	const AG_Color *cBg = &WCOLOR(win, BG_COLOR);
+
+	AG_PushClipRect(win, &WIDGET(win)->r);
 	
 	glClearColor((float)cBg->r / AG_COLOR_LASTF,
 	             (float)cBg->g / AG_COLOR_LASTF,
@@ -926,6 +928,8 @@ COCOA_RenderWindow(AG_Window *_Nonnull win)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);
+
+	AG_PopClipRect(win);
 }
 
 static void

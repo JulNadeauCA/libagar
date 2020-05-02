@@ -19,7 +19,6 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_WidgetPrimitives**](https://libagar.org/man3/AG_WidgetPrimitives): Dithering. Shadow effects.
 - [**AG_Window**](https://libagar.org/man3/AG_Window): MRU API to simplify the process of remembering geometries. New gravity methods for autoplacing.
 - [**cocoa**](https://libagar.org/man2/AG_DriverCocoa): Cursor operations. Clipboard integration.
-- [**glx**](https://libagar.org/man3/AG_DriverGLX): Fix incorrect behavior when resizing windows by the left or by the top (handle combined move+resize).
 - [**glx**](https://libagar.org/man3/AG_DriverGLX): Make drag-and-drop (`sockets` test) work correctly (possibly using `AG_WindowMove()`).
 - [**wgl**](https://libagar.org/man2/AG_DriverWGL): Clipboard integration.
 

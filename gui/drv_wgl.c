@@ -954,6 +954,8 @@ WGL_RenderWindow(AG_Window *_Nonnull win)
 	AG_GL_Context *gl = &wgl->gl;
 	const AG_Color *cBg = &WCOLOR(win, BG_COLOR);
 
+	AG_PushClipRect(win, &WIDGET(win)->r);
+	
 	glClearColor((float)cBg->r / AG_COLOR_LASTF,
 	             (float)cBg->g / AG_COLOR_LASTF,
 		     (float)cBg->b / AG_COLOR_LASTF, 1.0f);
@@ -961,6 +963,8 @@ WGL_RenderWindow(AG_Window *_Nonnull win)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);
+
+	AG_PopClipRect(win);
 }
 
 static void
