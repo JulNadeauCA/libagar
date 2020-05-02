@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -128,16 +128,19 @@ AG_UnbindGlobalKey(AG_KeySym keysym, AG_KeyMod keymod)
 	struct ag_global_key *gk;
 
 	AG_MutexLock(&agGlobalKeysLock);
+
 	SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
 		if (gk->keysym == keysym && gk->keymod == keymod) {
 			SLIST_REMOVE(&agGlobalKeys, gk, ag_global_key, gkeys);
-			free(gk);
 			AG_MutexUnlock(&agGlobalKeysLock);
+			free(gk);
 			return (0);
 		}
 	}
+
 	AG_MutexUnlock(&agGlobalKeysLock);
-	AG_SetError("No such key binding");
+
+	AG_SetErrorS("No such key binding");
 	return (-1);
 }
 
@@ -148,6 +151,7 @@ AG_ClearGlobalKeys(void)
 	struct ag_global_key *gk, *gkNext;
 
 	AG_MutexLock(&agGlobalKeysLock);
+
 	for (gk = SLIST_FIRST(&agGlobalKeys);
 	     gk != SLIST_END(&agGlobalKeys);
 	     gk = gkNext) {
@@ -155,10 +159,11 @@ AG_ClearGlobalKeys(void)
 		free(gk);
 	}
 	SLIST_INIT(&agGlobalKeys);
+
 	AG_MutexUnlock(&agGlobalKeysLock);
 }
 
-static __inline__ int
+static __inline__ _Const_Attribute int
 TestKeyMod(AG_KeyMod mod, AG_KeyMod mask)
 {
 	if (mod == 0) {
@@ -183,6 +188,7 @@ AG_ExecGlobalKeys(AG_KeySym sym, AG_KeyMod mod)
 	int rv = 0;
 
 	AG_MutexLock(&agGlobalKeysLock);
+
 	SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
 		if ((gk->keysym == AG_KEY_ANY    || gk->keysym == sym) &&
 		    (gk->keymod == AG_KEYMOD_ANY || TestKeyMod(gk->keymod, mod))) {
@@ -197,6 +203,7 @@ AG_ExecGlobalKeys(AG_KeySym sym, AG_KeyMod mod)
 			rv = 1;
 		}
 	}
+
 	AG_MutexUnlock(&agGlobalKeysLock);
 	return (rv);
 }
