@@ -106,12 +106,11 @@ proj:
 		    ${MKPROJFILES} > ${PREMAKEOUT}; \
 	        perl ${TOP}/mk/cmpfiles.pl; \
 		_premakeos="$$_tgtos"; \
-		if [ "$$_tgtos" = "windows-xp" ]; then _premakeos="windows"; fi; \
-		if [ "$$_tgtos" = "windows-vista" ]; then _premakeos="windows"; fi; \
-		if [ "$$_tgtos" = "windows-7" ]; then _premakeos="windows"; fi; \
-		if [ "$$_tgtos" = "windows-xp-x64" ]; then _premakeos="windows"; fi; \
-		if [ "$$_tgtos" = "windows-vista-x64" ]; then _premakeos="windows"; fi; \
-		if [ "$$_tgtos" = "windows-7-x64" ]; then _premakeos="windows"; fi; \
+		case "$$_tgtos" in \
+		windows-*) \
+		    _premakeos="windows"; \
+		    ;; \
+		esac; \
 	        echo "${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} \
 		    --os $$_premakeos --target $$_tgtproj"; \
 	        ${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} \
