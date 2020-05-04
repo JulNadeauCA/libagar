@@ -375,7 +375,7 @@ AG_PushTextState(void)
 	                        tsPrev->font->spec.size,
 		                tsPrev->font->flags);
 #ifdef AG_DEBUG
-	snprintf(ts->name, sizeof(ts->name), "TS%d", agTextStateCur);
+	Snprintf(ts->name, sizeof(ts->name), "TS%d", agTextStateCur);
 #endif
 }
 
