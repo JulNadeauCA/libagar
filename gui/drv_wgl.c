@@ -213,7 +213,7 @@ static void
 WGL_Close(void *_Nonnull obj)
 {
 	AG_Driver *drv = obj;
-	AG_DriverEvent *dev, *devNext;
+/*	AG_DriverEvent *dev, *devNext; */
 
 #ifdef AG_DEBUG
 	if (nDrivers == 0) { AG_FatalError("Driver close without open"); }
@@ -221,13 +221,14 @@ WGL_Close(void *_Nonnull obj)
 	if (--nDrivers == 0) {
 		AG_DelEventSink(wglEventSpinner); wglEventSpinner = NULL;
 		AG_DelEventEpilogue(wglEventEpilogue); wglEventEpilogue = NULL;
-
+#if 0
 		for (dev = TAILQ_FIRST(&wglEventQ);
 		     dev != TAILQ_LAST(&wglEventQ, ag_driver_eventq);
 		     dev = devNext) {
 			devNext = TAILQ_NEXT(dev, events);
 			free(dev);
 		}
+#endif
 		TAILQ_INIT(&wglEventQ);
 
 		AG_MutexDestroy(&wglClassLock);
@@ -428,6 +429,7 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 		return (-1);
 	}
 	AG_GL_InitContext(wgl, &wgl->gl);
+
 	rVP.x = 0;
 	rVP.y = 0;
 	rVP.w = WIDTH(win);
@@ -841,8 +843,8 @@ WGL_GetNextEvent(void *_Nonnull drvCaller, AG_DriverEvent *_Nonnull dev)
 	return (0);
 get_event:
 	devFirst = TAILQ_FIRST(&wglEventQ);
-	TAILQ_REMOVE(&wglEventQ, devFirst, events);
 	memcpy(dev, devFirst, sizeof(AG_DriverEvent));
+	TAILQ_REMOVE(&wglEventQ, devFirst, events);
 	free(devFirst);
 	return (1);
 }
@@ -1008,7 +1010,7 @@ WGL_RaiseWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 
-	SetWindowPos(wgl->hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	SetWindowPos(wgl->hwnd, HWND_TOP, 0,0, 0,0, SWP_NOMOVE | SWP_NOSIZE);
 	return (0);
 }
 
@@ -1017,7 +1019,7 @@ WGL_LowerWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 
-	SetWindowPos(wgl->hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	SetWindowPos(wgl->hwnd, HWND_BOTTOM, 0,0, 0,0, SWP_NOMOVE | SWP_NOSIZE);
 	return (0);
 }
 
@@ -1070,7 +1072,7 @@ WGL_MoveWindow(AG_Window *win, int x, int y)
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 	AG_SizeAlloc a;
 
-	SetWindowPos(wgl->hwnd, NULL, x, y, 0, 0, SWP_NOZORDER|SWP_NOSIZE);
+	SetWindowPos(wgl->hwnd, NULL, x,y, 0,0, SWP_NOZORDER | SWP_NOSIZE);
 	a.x = x;
 	a.y = y;
 	a.w = WIDTH(win);
@@ -1091,8 +1093,7 @@ WGL_ResizeWindow(AG_Window *win, Uint w, Uint h)
 	r.w = w;
 	r.h = h;
 	WGL_GetWndRect(win, &r);
-	SetWindowPos(wgl->hwnd, NULL, 0, 0, r.w, r.h,
-	    SWP_NOZORDER|SWP_NOMOVE);	
+	SetWindowPos(wgl->hwnd, NULL, 0,0, r.w,r.h, SWP_NOZORDER | SWP_NOMOVE);	
 
 	a.x = WIDGET(win)->x;
 	a.y = WIDGET(win)->y;
@@ -1327,51 +1328,49 @@ WGL_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverWGL *wgl = (AG_DriverWGL *)drv;
+	AG_SizeAlloc wa;
 	AG_Rect rVP;
-	int x = (a->x == -1) ? WIDGET(win)->x : a->x;
-	int y = (a->y == -1) ? WIDGET(win)->y : a->y;
-	
-	/* Update per-widget coordinate information */
-	a->x = 0;
-	a->y = 0;
-	AG_WidgetSizeAlloc(win, a);
-	AG_WidgetUpdateCoords(win, 0,0);
+	const int x = (a->x == -1) ? WIDGET(win)->x : a->x;
+	const int y = (a->y == -1) ? WIDGET(win)->y : a->y;
 
-	/* Viewport dimensions have changed */
+	wa.x = 0;
+	wa.y = 0;
+	wa.w = a->w;
+	wa.h = a->h;
+	AG_WidgetSizeAlloc(win, &wa);
+	AG_WidgetUpdateCoords(win, 0,0);
+	WIDGET(win)->x = x;
+	WIDGET(win)->y = y;
+
+	win->dirty = 1;
+
 	wglMakeCurrent(wgl->hdc, wgl->hglrc);
 	rVP.x = 0;
 	rVP.y = 0;
 	rVP.w = WIDTH(win);
 	rVP.h = HEIGHT(win);
 	AG_GL_SetViewport(&wgl->gl, &rVP);
-	
-	/* Save the new effective window position. */
-	WIDGET(win)->x = a->x = x;
-	WIDGET(win)->y = a->y = y;
 }
 
 static void
 WGL_PostMoveCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 {
-	AG_SizeAlloc aNew;
-	int xRel, yRel;
+	AG_SizeAlloc wa;
 	
-	xRel = a->x - WIDGET(win)->x;
-	yRel = a->y - WIDGET(win)->y;
-
-	/* Update the window coordinates. */
-	aNew.x = 0;
-	aNew.y = 0;
-	aNew.w = a->w;
-	aNew.h = a->h;
-	AG_WidgetSizeAlloc(win, &aNew);
+	wa.x = 0;
+	wa.y = 0;
+	wa.w = a->w;
+	wa.h = a->h;
+	AG_WidgetSizeAlloc(win, &wa);
 	AG_WidgetUpdateCoords(win, 0,0);
 	WIDGET(win)->x = a->x;
 	WIDGET(win)->y = a->y;
+
 	win->dirty = 1;
 
 	if (agWindowPinnedCount > 0)
-		AG_WindowMovePinned(win, xRel,yRel);
+		AG_WindowMovePinned(win, a->x - WIDGET(win)->x,
+		                         a->y - WIDGET(win)->y);
 }
 
 AG_DriverMwClass agDriverWGL = {

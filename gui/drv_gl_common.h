@@ -48,7 +48,7 @@ void AG_GL_StdPopBlendingMode(void *_Nonnull);
 
 void AG_GL_StdUploadTexture(void *_Nonnull, Uint *_Nonnull, AG_Surface *_Nonnull,
                             AG_TexCoord *_Nullable);
-int  AG_GL_StdUpdateTexture(void *_Nonnull, Uint, AG_Surface *_Nonnull,
+void AG_GL_StdUpdateTexture(void *_Nonnull, Uint, AG_Surface *_Nonnull,
                             AG_TexCoord *_Nullable);
 
 void AG_GL_StdDeleteTexture(void *_Nonnull, Uint);
@@ -118,9 +118,8 @@ void AG_GL_DrawGlyph(void *_Nonnull, const struct ag_glyph *_Nonnull, int,int);
 
 void AG_GL_UploadTexture(void *_Nonnull, Uint *_Nonnull, AG_Surface *_Nonnull,
                          AG_TexCoord *_Nullable);
-int  AG_GL_UpdateTexture(void *_Nonnull, Uint, AG_Surface *_Nonnull,
+void AG_GL_UpdateTexture(void *_Nonnull, Uint, AG_Surface *_Nonnull,
                          AG_TexCoord *_Nullable);
-void AG_GL_PrepareTexture(void *_Nonnull, int);
 void AG_GL_DeleteTexture(void *_Nonnull, Uint);
 void AG_GL_DeleteList(void *_Nonnull, Uint);
 __END_DECLS

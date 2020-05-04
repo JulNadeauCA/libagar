@@ -1117,15 +1117,21 @@ Draw(void *_Nonnull obj)
 		pal->surface = AG_SurfaceStdRGB(w, h);
 #endif
 		pal->surfaceId = AG_WidgetMapSurface(pal, pal->surface);
-	} else if (pal->surface->w != w || pal->surface->h != h) {
-		AG_SurfaceResize(pal->surface, w,h);
+	} else if (pal->surface->w != w ||                       /* Resized */
+	           pal->surface->h != h) {
+#ifdef HAVE_OPENGL
+		pal->surface = AG_SurfaceStdGL(w, h);
+#else
+		pal->surface = AG_SurfaceStdRGB(w, h);
+#endif
+		AG_WidgetReplaceSurface(pal, pal->surfaceId, pal->surface);
 		pal->flags |= AG_HSVPAL_DIRTY;
 	}
 	if (pal->flags & AG_HSVPAL_DIRTY) {
 		pal->flags &= ~(AG_HSVPAL_DIRTY);
 		RenderStatic(pal);
 	}
-	AG_WidgetBlitFrom(pal, pal->surfaceId, NULL, 0, 0);
+	AG_WidgetBlitFrom(pal, pal->surfaceId, NULL, 0,0);
 
 	hueDeg = AG_GetFloat(pal, "hue");
 	hueRad = (hueDeg / 360.0f) * 2.0f*AG_PI;

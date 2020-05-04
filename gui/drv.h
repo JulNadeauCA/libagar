@@ -71,7 +71,7 @@ typedef struct ag_driver_class {
 	void (*_Nullable uploadTexture)(void *_Nonnull, Uint *_Nonnull,
 	                                AG_Surface *_Nonnull,
 	                                AG_TexCoord *_Nullable);
-	int  (*_Nullable updateTexture)(void *_Nonnull, Uint,
+	void (*_Nullable updateTexture)(void *_Nonnull, Uint,
 	                                AG_Surface *_Nonnull,
 	                                AG_TexCoord *_Nullable);
 	void (*_Nullable deleteTexture)(void *_Nonnull, Uint);

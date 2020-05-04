@@ -72,8 +72,9 @@ AG_GL_InitContext(void *obj, AG_GL_Context *gl)
 
 	glShadeModel(GL_FLAT);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	
+
 	glEnable(GL_TEXTURE_2D);
+	
 	glEnable(GL_CLIP_PLANE0);
 	glEnable(GL_CLIP_PLANE1);
 	glEnable(GL_CLIP_PLANE2);
@@ -335,7 +336,7 @@ static __inline__ GLenum
 AG_GL_SurfaceType(const AG_Surface *S)
 {
 #if AG_MODEL == AG_LARGE
-	if (S->format.BitsPerPixel == 64) {
+	if (S->format.BitsPerPixel >= 48) {                   /* Deep color */
 		return (GL_UNSIGNED_SHORT);
 	} else
 #endif
@@ -356,8 +357,9 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *S, AG_TexCoord *tc)
 {
 	AG_Surface *GS;
 	GLuint texture;
+	const int isGLtexture = (S->flags & AG_SURFACE_GL_TEXTURE);
 
-	if (S->flags & AG_SURFACE_GL_TEXTURE) {
+	if (isGLtexture) {
 		GS = S;
 	} else {
 		GS = AG_SurfaceStdGL(S->w, S->h);
@@ -371,25 +373,18 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *S, AG_TexCoord *tc)
 	}
 	
 	glGenTextures(1, &texture);
-
 	glBindTexture(GL_TEXTURE_2D, texture);
-#if 0
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-#else
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-#endif
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, GS->w, GS->h, 0, GL_RGBA,
-	    AG_GL_SurfaceType(GS),
-	    GS->pixels);
+	    AG_GL_SurfaceType(GS), GS->pixels);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	if (!(S->flags & AG_SURFACE_GL_TEXTURE)) {
+	if (!isGLtexture) {
 		AG_SurfaceFree(GS);
 	}
-	*rv = texture;
+	*rv = (Uint)texture;
 }
 
 /*
@@ -397,14 +392,14 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *S, AG_TexCoord *tc)
  *
  * If needed, convert the surface to the required format.
  * Fill in texture coordinates in tc if not NULL.
- * Return 0 on success or -1 on failure.
  */
-int
+void
 AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *S, AG_TexCoord *tc)
 {
 	AG_Surface *GS;
+	const int isGLtexture = (S->flags & AG_SURFACE_GL_TEXTURE);
 
-	if (S->flags & AG_SURFACE_GL_TEXTURE) {
+	if (isGLtexture) {
 		GS = S;
 	} else {
 		GS = AG_SurfaceStdGL(S->w, S->h);
@@ -418,17 +413,14 @@ AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *S, AG_TexCoord *tc)
 	}
 
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texture);
-
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, GS->w, GS->h, 0, GL_RGBA,
-	    AG_GL_SurfaceType(GS),
-	    GS->pixels);
-
+	    AG_GL_SurfaceType(GS), GS->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	if (!(S->flags & AG_SURFACE_GL_TEXTURE)) {
+	if (!isGLtexture)
 		AG_SurfaceFree(GS);
-	}
-	return (0);
 }
 
 /*
@@ -439,13 +431,13 @@ void
 AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *S, int x, int y)
 {
 	AG_Driver *drv = obj;
-	GLuint texture;
 	AG_TexCoord tc;
+	GLuint texture;
 	
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
-	AG_GL_UploadTexture(drv, &texture, S, &tc);
+	AGDRIVER_CLASS(drv)->uploadTexture(drv, &texture, S, &tc);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
@@ -474,9 +466,25 @@ static __inline__ int _Const_Attribute
 PowOf2i(int i)
 {
 	int val = 1;
+
 	while (val < i) { val <<= 1; }
 	return (val);
 }
+
+static __inline__ void
+PrepareTexture(AG_Driver *_Nonnull drv, AG_Widget *_Nonnull wid, int name)
+{
+	if (wid->textures[name] == 0) {
+		AGDRIVER_CLASS(drv)->uploadTexture(drv, &wid->textures[name],
+		    wid->surfaces[name], &wid->texcoords[name]);
+	} else if (wid->surfaceFlags[name] & AG_WIDGET_SURFACE_REGEN) {
+		wid->surfaceFlags[name] &= ~(AG_WIDGET_SURFACE_REGEN);
+
+		AGDRIVER_CLASS(drv)->updateTexture(drv, name,
+		    wid->surfaces[name], &wid->texcoords[name]);
+	}
+}
+
 
 /*
  * Perform an accelerated image transfer from a mapped surface (by name)
@@ -488,10 +496,10 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, int name, const AG_Rect *r,
 {
 	AG_Driver *drv = obj;
 	
-	AG_OBJECT_ISA(obj, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
-	AG_GL_PrepareTexture(wid, name);
+	PrepareTexture(drv, wid, name);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
@@ -532,20 +540,20 @@ void
 AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *S, float w, float h)
 {
 	AG_Driver *drv = obj;
-	GLuint texture;
 	AG_TexCoord tc;
+	GLuint name;
 	
-	AG_OBJECT_ISA(obj, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
-	AG_GL_UploadTexture(drv, &texture, S, &tc);
+	AGDRIVER_CLASS(drv)->uploadTexture(drv, &name, S, &tc);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
 	    AG_ALPHA_ONE_MINUS_SRC,
 	    AG_TEXTURE_ENV_REPLACE);
 	
-	glBindTexture(GL_TEXTURE_2D, texture);
+	glBindTexture(GL_TEXTURE_2D, name);
 
 	glBegin(GL_POLYGON);
 	{
@@ -560,7 +568,7 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *S, float w, float h)
 	glEnd();
 
 	glBindTexture(GL_TEXTURE_2D, 0);
-	glDeleteTextures(1, &texture);
+	glDeleteTextures(1, &name);
 
 	AGDRIVER_CLASS(drv)->popBlendingMode(drv);
 }
@@ -577,7 +585,7 @@ AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int name, float w, float h)
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
-	AG_GL_PrepareTexture(wid, name);
+	PrepareTexture(drv, wid, name);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
@@ -614,7 +622,7 @@ AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int name, float w, float h
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
-	AG_GL_PrepareTexture(wid, name);
+	PrepareTexture(drv, wid, name);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
@@ -678,20 +686,24 @@ AG_GL_BackupSurfaces(void *obj, AG_Widget *wid)
 void
 AG_GL_RestoreSurfaces(void *obj, AG_Widget *wid)
 {
+	AG_Driver *drv = obj;
 	Uint i;
 	
-	AG_OBJECT_ISA(obj, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AG_ObjectLock(wid);
+
 	for (i = 0; i < wid->nSurfaces; i++)  {
 		if (wid->surfaces[i] != NULL) {
-			AG_GL_UploadTexture(wid->drv, &wid->textures[i],
-			    wid->surfaces[i], &wid->texcoords[i]);
+			AGDRIVER_CLASS(drv)->uploadTexture(drv,
+			    &wid->textures[i], wid->surfaces[i],
+			    &wid->texcoords[i]);
 		} else {
 			wid->textures[i] = 0;
 		}
 	}
+
 	AG_ObjectUnlock(wid);
 }
 
@@ -1365,7 +1377,12 @@ AG_GL_DrawRectBlended(void *obj, const AG_Rect *r, const AG_Color *c,
 void
 AG_GL_UpdateGlyph(void *obj, AG_Glyph *gl)
 {
-	AG_GL_UploadTexture(obj, &gl->texture, gl->su, &gl->texcoords);
+	AG_Driver *drv = (AG_Driver *)obj;
+
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
+
+	AGDRIVER_CLASS(drv)->uploadTexture(drv,
+	    &gl->texture, gl->su, &gl->texcoords);
 }
 
 /* Render an AG_Text(3) glyph at x,y. */
@@ -1393,41 +1410,17 @@ void
 AG_GL_UploadTexture(void *obj, Uint *name, AG_Surface *S, AG_TexCoord *tc)
 {
 	AG_Driver *drv = obj;
-	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
 
-	dc->uploadTexture(drv, name, S, tc);
+	AGDRIVER_CLASS(drv)->uploadTexture(drv, name, S, tc);
 }
 
 /* Update the contents of an existing GL texture. */
-int
+void
 AG_GL_UpdateTexture(void *obj, Uint name, AG_Surface *S, AG_TexCoord *tc)
 {
 	AG_Driver *drv = obj;
-	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
 
-	return dc->updateTexture(drv, name, S, tc);
-}
-
-/*
- * Make sure that the named texture is available for hardware rendering.
- * Upload or update hardware textures if needed.
- */
-void
-AG_GL_PrepareTexture(void *_Nonnull obj, int name)
-{
-	AG_Widget *wid = obj;
-	AG_Driver *drv = wid->drv;
-
-	if (wid->textures[name] == 0) {
-		AG_GL_UploadTexture(drv, &wid->textures[name],
-		                          wid->surfaces[name],
-		                         &wid->texcoords[name]);
-	} else if (wid->surfaceFlags[name] & AG_WIDGET_SURFACE_REGEN) {
-		wid->surfaceFlags[name] &= ~(AG_WIDGET_SURFACE_REGEN);
-		AG_GL_UpdateTexture(drv, wid->textures[name],
-		                         wid->surfaces[name],
-					&wid->texcoords[name]);
-	}
+	AGDRIVER_CLASS(drv)->updateTexture(drv, name, S, tc);
 }
 
 /* Queue a GL texture for deletion. */
@@ -1435,9 +1428,8 @@ void
 AG_GL_DeleteTexture(void *_Nonnull obj, Uint name)
 {
 	AG_Driver *drv = obj;
-	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
 
-	dc->deleteTexture(drv, name);
+	AGDRIVER_CLASS(drv)->deleteTexture(drv, name);
 }
 
 /* Queue a GL display list for deletion. */
