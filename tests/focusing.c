@@ -45,10 +45,12 @@ mousemotion(AG_Event *event)
 static void
 keydown(AG_Event *event)
 {
+#ifdef AG_DEBUG
 	AG_Widget *w = AG_WIDGET_SELF();
 	int kb = AG_INT(1);
 
 	Debug(w, "key %d\n", kb);
+#endif
 }
 
 static void

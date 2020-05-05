@@ -318,7 +318,7 @@ DUMMY_UploadTexture(void *_Nonnull obj, Uint *_Nonnull rv,
 	*rv = 0;
 }
 
-static int
+static void
 DUMMY_UpdateTexture(void *_Nonnull obj, Uint texture, AG_Surface *_Nonnull S,
     AG_TexCoord *_Nullable tc)
 {
@@ -331,7 +331,6 @@ DUMMY_UpdateTexture(void *_Nonnull obj, Uint texture, AG_Surface *_Nonnull S,
 		tc->w = (float)S->w;
 		tc->h = (float)S->h;
 	}
-	return (0);
 }
 
 static void
