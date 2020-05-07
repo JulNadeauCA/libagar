@@ -355,11 +355,9 @@ DUMMY_PopClipRect(void *_Nonnull obj)
 }
 
 static void
-DUMMY_PushBlendingMode(void *_Nonnull obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst,
-    AG_TextureEnvMode texEnvMode)
+DUMMY_PushBlendingMode(void *_Nonnull obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 {
-	Debug(obj, "PushBlendingMode(%d,%d, %d)\n", fnSrc, fnDst,
-	    texEnvMode);
+	Debug(obj, "PushBlendingMode(%d, %d)\n", fnSrc, fnDst);
 }
 
 static void

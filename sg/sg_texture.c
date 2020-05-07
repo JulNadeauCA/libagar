@@ -663,9 +663,10 @@ SG_TextureBind(SG_Texture *tex, SG_View *view)
 			vt->frame = -1;
 			TAILQ_INSERT_TAIL(&tex->vtex, vt, textures);
 		}
-		AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
-		    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC,
-		    AG_TEXTURE_ENV_REPLACE);
+
+		AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
+		                                           AG_ALPHA_ONE_MINUS_SRC);
+
 		glBindTexture(GL_TEXTURE_2D, vt->name);
 	}
 

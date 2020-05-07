@@ -265,6 +265,19 @@ SDLFB_UpdateRegion(void *_Nonnull obj, const AG_Rect *_Nonnull rRegion)
 	rSDL->h = r.h;
 }
 
+static void
+SDLFB_UpdateTexture(void *_Nonnull obj, Uint texture, AG_Surface *_Nonnull S,
+    AG_TexCoord *_Nullable c)
+{
+	/* No-op */
+}
+
+static void
+SDLFB_DeleteTexture(void *_Nonnull obj, Uint texture)
+{
+	/* No-op */
+}
+
 /*
  * Clipping and blending control (rendering context)
  */
@@ -312,8 +325,7 @@ SDLFB_PopClipRect(void *_Nonnull obj)
 }
 
 static void
-SDLFB_PushBlendingMode(void *_Nonnull drv, AG_AlphaFn fnSrc, AG_AlphaFn fnDst,
-    AG_TextureEnvMode texEnvMode)
+SDLFB_PushBlendingMode(void *_Nonnull drv, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 {
 	/* No-op (handle blending on a per-blit basis) */
 }
@@ -1831,8 +1843,8 @@ AG_DriverSwClass agDriverSDLFB = {
 		SDLFB_FillRect,
 		SDLFB_UpdateRegion,
 		NULL,				/* uploadTexture */
-		NULL,				/* updateTexture */
-		NULL,				/* deleteTexture */
+		SDLFB_UpdateTexture,
+		SDLFB_DeleteTexture,
 		AG_SDL_SetRefreshRate,
 		SDLFB_PushClipRect,
 		SDLFB_PopClipRect,

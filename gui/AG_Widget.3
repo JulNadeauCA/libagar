@@ -708,7 +708,7 @@ See also:
 .Fn AG_PopClipRect "AG_Widget *obj"
 .Pp
 .Ft void
-.Fn AG_PushBlendingMode "AG_Widget *obj" "AG_AlphaFn fnSrc" "AG_AlphaFn fnDst" "AG_TextureEnvMode texenvMode"
+.Fn AG_PushBlendingMode "AG_Widget *obj" "AG_AlphaFn fnSrc" "AG_AlphaFn fnDst"
 .Pp
 .Ft void
 .Fn AG_PopBlendingMode "AG_Widget *obj"
@@ -753,25 +753,16 @@ on this stack.
 must be invoked in rendering context.
 .Pp
 .Fn AG_PushBlendingMode
-pushes the given source/destination
+pushes the given source & destination
 .Xr AG_AlphaFn 3
-and texture environment setting onto the stack of blending modes.
+modes onto the stack of alpha blending modes.
 .Fa fnSrc
 determines the function for the source pixel and
 .Fa fnDst
 that of the destination pixel.
-Values for
-.Fa texEnvMode
-include
-.Dv AG_TEXTURE_ENV_MODULATE ,
-.Dv AG_TEXTURE_ENV_DECAL ,
-.Dv AG_TEXTURE_ENV_BLEND
-and
-.Dv AG_TEXTURE_ENV_REPLACE .
 .Fn AG_PopBlendingMode
 pops the the last entry off the blending mode stack.
-.Fn AG_{Push,Pop}BlendingMode
-must be invoked from rendering context.
+Both functions must be invoked from rendering context.
 .Pp
 The
 .Fn AG_WidgetDraw

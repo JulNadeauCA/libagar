@@ -457,7 +457,7 @@ void ag_expand_vert(void *_Nonnull);
 void ag_widget_update(void *_Nonnull);
 void ag_push_clip_rect(void *_Nonnull, const AG_Rect *_Nonnull);
 void ag_pop_clip_rect(void *_Nonnull);
-void ag_push_blending_mode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn, AG_TextureEnvMode);
+void ag_push_blending_mode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn);
 void ag_pop_blending_mode(void *_Nonnull);
 int  ag_widget_map_surface_nodup(void *_Nonnull, AG_Surface *_Nonnull);
 void ag_widget_replace_surface_nodup(void *_Nonnull, int, AG_Surface *_Nullable);
@@ -481,7 +481,7 @@ void ag_set_mod_state(void *_Nonnull, Uint);
 # define AG_WidgetUpdate(o)                  ag_widget_update(o)
 # define AG_PushClipRect(o,r)                ag_push_clip_rect((o),(r))
 # define AG_PopClipRect(o)                   ag_pop_clip_rect(o)
-# define AG_PushBlendingMode(o,fs,fd,te)     ag_push_blending_mode((o),(fs),(fd),(te))
+# define AG_PushBlendingMode(o,fs,fd)        ag_push_blending_mode((o),(fs),(fd))
 # define AG_PopBlendingMode(o)               ag_pop_blending_mode(o)
 # define AG_WidgetMapSurfaceNODUP(o,S)       ag_widget_map_surface_nodup((o),(S))
 # define AG_WidgetReplaceSurfaceNODUP(o,n,S) ag_widget_replace_surface_nodup((o),(n),(S))

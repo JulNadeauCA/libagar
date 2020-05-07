@@ -13,7 +13,6 @@ typedef struct ag_gl_blend_state {
 	char _pad[3];
 	GLint srcFactor;		/* GL_BLEND_SRC mode */
 	GLint dstFactor;		/* GL_BLEND_DST mode */
-	GLfloat texEnvMode;		/* GL_TEXTURE_ENV mode */
 } AG_GL_BlendState;
 
 /* Common OpenGL context data */
@@ -28,9 +27,11 @@ typedef struct ag_gl_context {
 
 	Uint *_Nullable textureGC;	  /* Textures queued for deletion */
 	Uint           nTextureGC;
+	Uint         maxTextureGC;
 
-	Uint           nListGC;
 	Uint *_Nullable listGC;           /* Display lists queued for deletion */
+	Uint           nListGC;
+	Uint         maxListGC;
 
 	Uint32 dither[32];		  /* 32x32 stipple pattern */
 } AG_GL_Context;
@@ -42,8 +43,7 @@ void AG_GL_DestroyContext(void *_Nonnull);
 
 void AG_GL_StdPushClipRect(void *_Nonnull, const AG_Rect *_Nonnull);
 void AG_GL_StdPopClipRect(void *_Nonnull);
-void AG_GL_StdPushBlendingMode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn,
-                               AG_TextureEnvMode);
+void AG_GL_StdPushBlendingMode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn);
 void AG_GL_StdPopBlendingMode(void *_Nonnull);
 
 void AG_GL_StdUploadTexture(void *_Nonnull, Uint *_Nonnull, AG_Surface *_Nonnull,

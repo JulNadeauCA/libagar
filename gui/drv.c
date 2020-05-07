@@ -38,6 +38,9 @@
 #include <agar/gui/window.h>
 #include <agar/gui/text.h>
 
+/* Extra debugging output (rendering times in ms) */
+/* #define DEBUG_RENDER */
+
 #if defined(HAVE_GLX)
 extern AG_DriverClass agDriverGLX;
 #endif
@@ -167,6 +170,9 @@ AG_BeginRendering(void *drv)
 
 	agRenderingContext = 1;
 
+#ifdef DEBUG_RENDER
+	AGDRIVER(drv)->tRender = AG_GetTicks();
+#endif
 	AGDRIVER_CLASS(drv)->beginRendering(drv);
 }
 
@@ -177,6 +183,10 @@ AG_EndRendering(void *drv)
 	AGDRIVER_CLASS(drv)->endRendering(drv);
 
 	agRenderingContext = 0;
+
+#ifdef DEBUG_RENDER
+	Debug(drv, "Rendered in %u ms\n", AG_GetTicks() - AGDRIVER(drv)->tRender);
+#endif
 
 #if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
 	if (agTimeOps == &agTimeOps_renderer)		/* Renderer-aware ops */
@@ -231,11 +241,11 @@ AG_ViewCapture(void)
 			break;			/* XXX race condition */
 	}
 	if (AG_SurfaceExportJPEG(S, file, 100, 0) == 0) {
-		Verbose("%s: Saved %u x %u x %ubpp screenshot to %s\n",
+		Verbose(_("%s: Saved %u x %u x %ubpp screenshot to %s\n"),
 		    OBJECT(agDriverSw)->name,
 		    S->w, S->h, S->format.BitsPerPixel, AG_ShortFilename(file));
 	} else {
-		AG_TextError("Screenshot failed: %s (jpeg)\n", AG_GetError());
+		AG_TextError(_("Screenshot failed (%s)"), AG_GetError());
 	}
 	AG_SurfaceFree(S);
 out:

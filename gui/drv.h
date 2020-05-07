@@ -68,19 +68,20 @@ typedef struct ag_driver_class {
 	void (*_Nonnull  fillRect)(void *_Nonnull, const AG_Rect *_Nonnull,
 	                           const AG_Color *_Nonnull);
 	void (*_Nullable updateRegion)(void *_Nonnull, const AG_Rect *_Nonnull);
+
 	void (*_Nullable uploadTexture)(void *_Nonnull, Uint *_Nonnull,
 	                                AG_Surface *_Nonnull,
 	                                AG_TexCoord *_Nullable);
-	void (*_Nullable updateTexture)(void *_Nonnull, Uint,
+	void (*_Nonnull  updateTexture)(void *_Nonnull, Uint,
 	                                AG_Surface *_Nonnull,
 	                                AG_TexCoord *_Nullable);
-	void (*_Nullable deleteTexture)(void *_Nonnull, Uint);
+	void (*_Nonnull  deleteTexture)(void *_Nonnull, Uint);
+
 	int  (*_Nullable setRefreshRate)(void *_Nonnull, int);
 
 	void (*_Nonnull  pushClipRect)(void *_Nonnull, const AG_Rect *_Nonnull);
 	void (*_Nonnull  popClipRect)(void *_Nonnull);
-	void (*_Nonnull  pushBlendingMode)(void *_Nonnull, AG_AlphaFn, AG_AlphaFn,
-	                                   AG_TextureEnvMode);
+	void (*_Nonnull  pushBlendingMode)(void *_Nonnull, AG_AlphaFn, AG_AlphaFn);
 	void (*_Nonnull  popBlendingMode)(void *_Nonnull);
 
 	/* Hardware Cursor Operations */
@@ -202,7 +203,7 @@ typedef struct ag_driver {
 	AG_TAILQ_HEAD_(ag_cursor) cursors;	  /* Available cursors */
 	Uint                     nCursors;
 
-	Uint32 _pad;
+	Uint32 tRender;                           /* Rendering start (ticks) */
 } AG_Driver;
 
 /* Generic driver event (for custom event loops). */

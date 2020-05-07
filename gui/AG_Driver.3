@@ -188,7 +188,7 @@ typedef struct ag_driver_class {
     void (*fillRect)(void *d, const AG_Rect *r, const AG_Color *c);
     void (*updateRegion)(void *d, const AG_Rect *r);
     void (*uploadTexture)(void *d, Uint *id,AG_Surface *s, AG_TexCoord *c);
-    int  (*updateTexture)(void *d, Uint id, AG_Surface *s, AG_TexCoord *c);
+    void (*updateTexture)(void *d, Uint id, AG_Surface *s, AG_TexCoord *c);
     void (*deleteTexture)(void *d, Uint id);
     int (*setRefreshRate)(void *d, int fps);
 

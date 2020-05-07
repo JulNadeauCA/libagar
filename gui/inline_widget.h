@@ -281,19 +281,17 @@ ag_pop_clip_rect(void *obj)
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
-AG_PushBlendingMode(void *_Nonnull obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst,
-    AG_TextureEnvMode texEnvMode)
+AG_PushBlendingMode(void *_Nonnull obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 #else
 void
-ag_push_blending_mode(void *obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst,
-    AG_TextureEnvMode texEnvMode)
+ag_push_blending_mode(void *obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 #endif
 {
 	AG_Widget *wid = AGWIDGET(obj);
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
-	wid->drvOps->pushBlendingMode(wid->drv, fnSrc, fnDst, texEnvMode);
+	wid->drvOps->pushBlendingMode(wid->drv, fnSrc, fnDst);
 }
 
 /*

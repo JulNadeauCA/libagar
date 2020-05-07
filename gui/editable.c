@@ -977,10 +977,7 @@ Draw(void *_Nonnull obj)
 	}
 	AG_EditableValidateSelection(ed, buf);
 	
-	AG_PushBlendingMode(ed,
-	    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC,
-	    AG_TEXTURE_ENV_REPLACE);
-
+	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	AG_PushClipRect(ed, &ed->r);
 
 	if (buf->len == 0 && AG_Defined(ed, "placeholder")) {
