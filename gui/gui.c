@@ -177,7 +177,7 @@ int agClipboardIntegration = 1;		/* Native clipboard integration */
 int agKbdDelay = 250;			/* Key repeat delay */
 int agKbdRepeat = 30;			/* Key repeat interval */
 int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
-int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
+int agMouseSpinDelay = 350;		/* Spinbutton repeat delay */
 int agMouseSpinIval = 30;		/* Spinbutton repeat interval */
 int agMouseScrollIval = 1;		/* Scrollbar increment interval */
 int agScrollButtonIval = 100;		/* Scrollbar button interval */
@@ -221,12 +221,17 @@ AG_InitGUIGlobals(void)
 	if ((agSurfaceFmt = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
 		return (-1);
 	}
-	AG_PixelFormatRGBA(agSurfaceFmt,
-	    32,
+	AG_PixelFormatRGBA(agSurfaceFmt, 32,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
-	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
+	    0xff000000,
+	    0x00ff0000,
+	    0x0000ff00,
+	    0x000000ff
 #else
-	    0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
+	    0x000000ff,
+	    0x0000ff00,
+	    0x00ff0000,
+	    0xff000000
 #endif
 	);
 	

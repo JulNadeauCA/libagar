@@ -181,7 +181,7 @@ AG_ButtonSetInverted(AG_Button *bu, int flag)
 
 /* Delay/repeat timer callbacks for REPEAT option. */
 static Uint32
-ExpireRepeat(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
+MouseSpinRepeat(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
 
@@ -189,15 +189,14 @@ ExpireRepeat(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	return (to->ival);
 }
 static Uint32
-ExpireDelay(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
+MouseSpinDelay(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_BUTTON_SELF();
-	const int repeatIval = AG_INT(1);
 
-	if (bu->repeat == NULL) {
-		return (0);
+	if (bu->repeat != NULL) {
+		AG_AddTimer(bu, &bu->repeat->ivalTo, agMouseSpinIval,
+		    MouseSpinRepeat, NULL);
 	}
-	AG_AddTimer(bu, &bu->repeat->ivalTo, repeatIval, ExpireRepeat, NULL);
 	return (0);
 }
 
@@ -211,6 +210,9 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	if (button != AG_MOUSE_LEFT) {
 		return;
 	}
+
+	bu->flags &= ~(AG_BUTTON_PRESSING);
+
 	if (bu->repeat) {
 		AG_DelTimer(bu, &bu->repeat->ivalTo);
 		AG_DelTimer(bu, &bu->repeat->delayTo);
@@ -228,8 +230,6 @@ MouseButtonUp(AG_Event *_Nonnull event)
 		}
 		AG_UnlockVariable(V);
 	}
-
-	bu->flags &= ~(AG_BUTTON_PRESSING);
 }
 
 static void
@@ -253,20 +253,19 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	bu->flags |= AG_BUTTON_PRESSING;
 
 	V = AG_GetVariable(bu, "state", &pState);
-	if (!(bu->flags & AG_BUTTON_STICKY)) {
-		SetState(bu, V, pState, 1);
-	} else {
+	if (bu->flags & AG_BUTTON_STICKY) {
 		newState = !GetState(bu, V, pState);
 		SetState(bu, V, pState, newState);
 		AG_PostEvent(bu, "button-pushed", "%i", newState);
+	} else {
+		SetState(bu, V, pState, 1);
 	}
 	AG_UnlockVariable(V);
 
 	if (bu->repeat) {
 		AG_DelTimer(bu, &bu->repeat->ivalTo);
-		AG_PostEvent(bu, "button-pushed", "%i", 1);
 		AG_AddTimer(bu, &bu->repeat->delayTo, agMouseSpinDelay,
-		    ExpireDelay, "%i", agMouseSpinIval);
+		    MouseSpinDelay, NULL);
 	}
 }
 
@@ -319,14 +318,15 @@ KeyDown(AG_Event *_Nonnull event)
 	V = AG_GetVariable(bu, "state", &pState);
 	SetState(bu, V, pState, 1);
 	AG_PostEvent(bu, "button-pushed", "%i", 1);
+	AG_UnlockVariable(V);
+
 	bu->flags |= AG_BUTTON_KEYDOWN;
 
 	if (bu->repeat) {
 		AG_DelTimer(bu, &bu->repeat->ivalTo);
-		AG_AddTimer(bu, &bu->repeat->delayTo, agKbdDelay,
-		    ExpireDelay, "%i", agKbdRepeat);
+		AG_AddTimer(bu, &bu->repeat->delayTo, agMouseSpinDelay,
+		    MouseSpinDelay, NULL);
 	}
-	AG_UnlockVariable(V);
 }
 
 static void
@@ -389,6 +389,15 @@ Init(void *_Nonnull obj)
 	AG_BindInt(bu, "state", &bu->state);
 }
 
+static __inline__ void
+RenderLabel(AG_Button *_Nonnull bu)
+{
+	AG_TextColor(&WCOLOR(bu, TEXT_COLOR));
+/*	AG_TextBGColor(&WCOLOR(bu, FG_COLOR)); */
+
+	bu->surfaceLbl = AG_WidgetMapSurface(bu, AG_TextRender(bu->label));
+}
+
 static void
 SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
@@ -399,8 +408,7 @@ SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 
 	if (bu->label && bu->label[0] != '\0') {
 		if (bu->surfaceLbl == -1) {
-			bu->surfaceLbl = AG_WidgetMapSurface(bu,
-			    AG_TextRender(bu->label));
+			RenderLabel(bu);
 		}
 		r->w += WSURFACE(bu,bu->surfaceLbl)->w;
 		r->h += WSURFACE(bu,bu->surfaceLbl)->h;
@@ -466,12 +474,10 @@ Draw(void *_Nonnull p)
 		surface = bu->surfaceSrc;
 	} else {                           
 		if (bu->surfaceLbl == -1) {
-			if (bu->label != NULL) {
-				bu->surfaceLbl = AG_WidgetMapSurface(bu,
-				    AG_TextRender(bu->label));
-			} else {
+			if (bu->label == NULL) {                /* No label */
 				return;
 			}
+			RenderLabel(bu);
 		}
 		surface = bu->surfaceLbl;
 	}
@@ -505,6 +511,8 @@ Draw(void *_Nonnull p)
 		y++;
 	}
 
+	AG_PushBlendingMode(bu, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	
 	if (WIDTH(bu) < bu->wReq || HEIGHT(bu) < bu->hReq) {
 		AG_PushClipRect(bu, &WIDGET(bu)->r);
 		AG_WidgetBlitSurface(bu, surface, x,y);
@@ -512,6 +520,8 @@ Draw(void *_Nonnull p)
 	} else {
 		AG_WidgetBlitSurface(bu, surface, x,y);
 	}
+
+	AG_PopBlendingMode(bu);
 }
 
 /* Return the current boolean state of the button. */
