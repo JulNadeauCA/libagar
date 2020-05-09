@@ -250,7 +250,7 @@ static Uint32
 KeyRepeat(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Numerical *num = AG_NUMERICAL_SELF();
-	AG_KeySym key = AG_INT(1);
+	const AG_KeySym key = AG_INT(1);
 
 	switch (key) {
 	case AG_KEY_UP:
@@ -274,11 +274,11 @@ KeyDown(AG_Event *_Nonnull event)
 	switch (keysym) {
 	case AG_KEY_UP:
 		AG_NumericalIncrement(num);
-		AG_AddTimer(num, &num->toInc, 250, KeyRepeat, "%i", AG_KEY_UP);
+		AG_AddTimer(num, &num->toInc, agKbdDelay, KeyRepeat, "%i", AG_KEY_UP);
 		break;
 	case AG_KEY_DOWN:
 		AG_NumericalDecrement(num);
-		AG_AddTimer(num, &num->toDec, 250, KeyRepeat, "%i", AG_KEY_DOWN);
+		AG_AddTimer(num, &num->toDec, agKbdDelay, KeyRepeat, "%i", AG_KEY_DOWN);
 		break;
 	default:
 		break;
@@ -624,16 +624,14 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_Numerical *num = obj;
 	AG_SizeAlloc ac;
 	const int wBtn = a->h >> 1;
-	int wUnitSel, hUnitSel, spacing;
+	int wUnitSel, spacing;
 
 	if (num->units) {
 		spacing = WIDGET(num)->spacingHoriz;
 		wUnitSel = MIN(num->wUnitSel, a->w - wBtn - spacing);
-		hUnitSel = MIN(num->hUnitSel, a->h);
 	} else {
 		spacing = 0;
 		wUnitSel = 0;
-		hUnitSel = 0;
 	}
 	if (a->h < 4 || a->w < wBtn + wUnitSel + spacing)
 		return (-1);

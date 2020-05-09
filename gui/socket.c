@@ -356,12 +356,6 @@ IconMotion(AG_Event *_Nonnull event)
 	const int xRel = AG_INT(4);
 	const int yRel = AG_INT(5);
 	AG_Window *wDND = icon->wDND;
-	AG_Rect r;
-
-	r.x = WIDGET(wDND)->x + xRel;
-	r.y = WIDGET(wDND)->y + yRel;
-	r.w = WIDTH(wDND);
-	r.h = HEIGHT(wDND);
 
 	AG_WindowMove(wDND, xRel, yRel);
 }

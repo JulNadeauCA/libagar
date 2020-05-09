@@ -1597,23 +1597,22 @@ AG_TextValignOffset(int h, int hLine)
 }
 
 /*
- * Allocate a transparent surface and render text on it (printf form).
- * The string may contain UTF-8 sequences.
+ * Render text (UTF-8 encoded) onto a newly-allocated surface.
+ * Inherit font, FG and BG colors from current text state.
  */
 AG_Surface *
 AG_TextRenderF(const char *fmt, ...)
 {
-	char *s;
+	AG_Surface *S;
+	char *text;
 	va_list args;
-	AG_Surface *su;
 
 	va_start(args, fmt);
-	Vasprintf(&s, fmt, args);
+	Vasprintf(&text, fmt, args);
 	va_end(args);
-
-	su = AG_TextRender(s);
-	free(s);
-	return (su);
+	S = AG_TextRender(text);
+	free(text);
+	return (S);
 }
 
 /*
@@ -1672,18 +1671,16 @@ AG_TextRenderInternal(const AG_Char *text, AG_Font *font, const AG_Color *cBg,
 	pfSize[engine](text, &tm, 1);
 
 	S = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
-
 	AG_FillRect(S, NULL, cBg);
 
-	if (cBg->a == AG_TRANSPARENT) {
-		/*
-		 * Prevent unneeded blending against fully transparent pixels
-		 * in subsequent blit operations.
-		 */
-		AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
+	if (cBg->a == AG_OPAQUE)
+		S->format.Amask = 0;                  /* No blending needed */
+#if 0
+	if (cBg->a == AG_TRANSPARENT)
+		AG_SurfaceSetColorKey(S,              /* Basic transparency */
+		    AG_SURFACE_COLORKEY,
 		    AG_MapPixel(&S->format, cBg));
-	}
-
+#endif
 	if (tm.w > 0 && tm.h > 0)
 		pfRender[engine](text, S, &tm, font, cBg, cFg);
 

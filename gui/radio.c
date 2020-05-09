@@ -289,6 +289,8 @@ Draw(void *_Nonnull obj)
 	};
 	AG_Radio *rad = obj;
 	const AG_Color *cBg = &WCOLOR(rad, BG_COLOR);
+	const int isUndersize = ( WIDTH(rad) <= rad->wReq ||
+	                          HEIGHT(rad) <= rad->hReq );
 	
 	if (cBg->a > 0)
 		AG_DrawRect(rad, &WIDGET(rad)->r, cBg);
@@ -296,9 +298,10 @@ Draw(void *_Nonnull obj)
 	if (AG_WidgetIsFocused(rad))
 		AG_DrawRectOutline(rad, &WIDGET(rad)->r, &WCOLOR(rad,LINE_COLOR));
 
-	if (WIDTH(rad)  <= rad->wReq ||
-	    HEIGHT(rad) <= rad->hReq)
+	if (isUndersize)
 		AG_PushClipRect(rad, &WIDGET(rad)->r);
+
+	AG_PushBlendingMode(rad, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
 #ifdef AG_DEBUG
 	if (rad->type >= AG_RADIO_TYPE_LAST)
@@ -306,7 +309,9 @@ Draw(void *_Nonnull obj)
 #endif
 	pfDraw[rad->type](rad);
 
-	if (WIDTH(rad) <= rad->wReq || HEIGHT(rad) <= rad->hReq)
+	AG_PopBlendingMode(rad);
+
+	if (isUndersize)
 		AG_PopClipRect(rad);
 }
 

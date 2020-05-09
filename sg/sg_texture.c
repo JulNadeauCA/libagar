@@ -266,7 +266,7 @@ SG_TextureAddSurface(SG_Texture *tex, const AG_Surface *su)
 /*
  * Add a new surface to a texture object (NODUP variant).
  * As the surface is referenced directly, it must have been created
- * with AG_SurfaceStdGL() and must remain valid.
+ * with AG_SurfaceStdRGBA() and must remain valid.
  */
 SG_TextureSurface *
 SG_TextureAddSurfaceNODUP(SG_Texture *tex, AG_Surface *su)
@@ -591,7 +591,7 @@ SG_TextureCompile(SG_Texture *tex)
 	if (tex->surface != NULL) {
 		AG_SurfaceFree(tex->surface);
 	}
-	if ((tex->surface = AG_SurfaceStdGL(tex->w, tex->h)) == NULL) {
+	if ((tex->surface = AG_SurfaceStdRGBA(tex->w, tex->h)) == NULL) {
 		return (-1);
 	}
 	AG_ColorRGB(&c,

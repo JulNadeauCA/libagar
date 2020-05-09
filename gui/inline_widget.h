@@ -401,10 +401,11 @@ ag_widget_blit_from(void *obj, int s, AG_Rect *r, int x, int y)
 	AG_Widget *wid = AGWIDGET(obj);
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	
-	if (s == -1 || wid->surfaces[s] == NULL)
-		return;
 
+#ifdef AG_DEBUG
+	if (s == -1 || wid->surfaces[s] == NULL)
+		AG_FatalError("Bad surface handle");
+#endif
 	wid->drvOps->blitSurfaceFrom(wid->drv, wid, s, r,
 	    wid->rView.x1 + x,
 	    wid->rView.y1 + y);

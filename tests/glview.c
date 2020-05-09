@@ -37,6 +37,8 @@ typedef struct {
 	GLfloat diffuse[4];
 	GLfloat specular[4];
 	int wireframe;
+	int subdiv;
+	int overlay;
 } MyTestInstance;
 
 static GLdouble isoVtx[12][3] = {    
@@ -110,11 +112,12 @@ static void
 MyDrawFunction(AG_Event *event)
 {
 	MyTestInstance *ti = AG_PTR(1);
+	const int subdiv = ti->subdiv;
 	GLfloat pos[4];
 	int i;
 
 	glLoadIdentity();
-	glPushAttrib(GL_POLYGON_BIT|GL_LIGHTING_BIT|GL_DEPTH_BUFFER_BIT);
+	glPushAttrib(GL_POLYGON_BIT | GL_LIGHTING_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -184,7 +187,7 @@ MyDrawFunction(AG_Event *event)
 			DrawTriangle(isoVtx[isoInd[i][0]],
 			             isoVtx[isoInd[i][1]],
 				     isoVtx[isoInd[i][2]],
-				     2, 1.0f);
+				     subdiv, 1.0f);
 		}
     		glEnd();
 	}
@@ -214,6 +217,9 @@ MyOverlayFunction(AG_Event *event)
 	AG_GLView *glv = AG_GLVIEW_SELF();
 	MyTestInstance *ti = AG_PTR(1);
 	AG_Surface *myText;
+
+	if (!ti->overlay)
+		return;
 
 	/* Render a text string using the font engine. */
 	AG_PushTextState();
@@ -277,6 +283,8 @@ Init(void *obj)
 		ti->specular[i] = spe[i];
 	}
 	ti->wireframe = 0;
+	ti->overlay = 0;
+	ti->subdiv = 3;
 	return (0);
 }
 
@@ -339,31 +347,41 @@ TestGUI(void *obj, AG_Window *win)
 		/* Edit ambient and diffuse color components. */
 		nbColor = AG_NotebookNew(pa->div[1], AG_NOTEBOOK_EXPAND);
 		{
-			const int flags = AG_HSVPAL_NOALPHA |
-				          AG_HSVPAL_EXPAND |
-					  AG_HSVPAL_SHOW_RGB;
+			const Uint flags = AG_HSVPAL_NOALPHA | AG_HSVPAL_EXPAND;
 
-			ntab = AG_NotebookAdd(nbColor, "Amb", AG_BOX_VERT);
+			ntab = AG_NotebookAdd(nbColor, "Ambient", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->ambient);
 
-			ntab = AG_NotebookAdd(nbColor, "Dif", AG_BOX_VERT);
+			ntab = AG_NotebookAdd(nbColor, "Diffuse", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->diffuse);
 
-			ntab = AG_NotebookAdd(nbColor, "Spe", AG_BOX_VERT);
+			ntab = AG_NotebookAdd(nbColor, "Specular", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->specular);
 		}
 	}
 	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
+		AG_Box *vb;
+		AG_Numerical *num;
+
 		AG_RadioNewInt(hb, 0, primitiveNames, (void *)&ti->primitive);
+
 		AG_SeparatorNewVert(hb);
+
+		num = AG_NumericalNewIntR(hb, 0, NULL,
+		                          "Sphere\nsubdiv: ", &ti->subdiv, 0, 8);
+		AG_SetStyle(num->input->ed, "font-size", "140%");
+
 		AG_RadioNewInt(hb, 0, shadingNames, (void *)&ti->shading);
 		AG_SeparatorNewVert(hb);
-		AG_ButtonNewInt(hb, AG_BUTTON_STICKY, "Wireframe Mode",
-		    &ti->wireframe);
+		vb = AG_BoxNewVert(hb, AG_BOX_EXPAND);
+		{
+			AG_CheckboxNewInt(vb, 0, "Wireframe", &ti->wireframe);
+			AG_CheckboxNewInt(vb, 0, "Text Overlay", &ti->overlay);
+		}
 	}
 	return (0);
 }

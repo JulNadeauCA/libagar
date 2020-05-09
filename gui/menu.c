@@ -1338,6 +1338,7 @@ Draw(void *_Nonnull obj)
 
 	AG_DrawBoxRaised(m, &WIDGET(m)->r, &WCOLOR(m,FG_COLOR));
 
+	AG_PushBlendingMode(m, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	AG_PushClipRect(m, &m->r);
 
 	TAILQ_FOREACH(mi, &m->root->subItems, items) {
@@ -1378,6 +1379,7 @@ Draw(void *_Nonnull obj)
 	}
 
 	AG_PopClipRect(m);
+	AG_PopBlendingMode(m);
 }
 
 static void

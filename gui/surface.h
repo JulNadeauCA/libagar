@@ -247,6 +247,7 @@ AG_Surface *_Nonnull AG_SurfaceRGBA(Uint,Uint, int, Uint,
 	                       agSurfaceFmt->Rmask, \
 			       agSurfaceFmt->Gmask, \
 			       agSurfaceFmt->Bmask)
+
 #define AG_SurfaceStdRGBA(w,h) \
         AG_SurfaceRGBA((w),(h), \
 	               agSurfaceFmt->BitsPerPixel, 0, \
@@ -265,10 +266,6 @@ AG_Surface *_Nonnull AG_SurfaceFromPixelsRGBA(const void *_Nonnull,
 	                                     _Warn_Unused_Result;
 
 #include <agar/config/have_opengl.h>
-#ifdef HAVE_OPENGL
-AG_Surface *_Nonnull AG_SurfaceStdGL(Uint, Uint)
-                                    _Warn_Unused_Result;
-#endif
 
 void AG_SurfaceSetAddress(AG_Surface *_Nonnull, Uint8 *_Nonnull);
 void AG_SurfaceSetColors(AG_Surface *_Nonnull, AG_Color *_Nonnull, Uint, Uint);
@@ -600,6 +597,10 @@ int         AG_SamePixelFmt(const AG_Surface *_Nonnull, const AG_Surface *_Nonnu
 /*       -> AG_PixelFormatCompare(a,b) */
 int         AG_ScaleSurface(const AG_Surface *_Nonnull, Uint16, Uint16, AG_Surface *_Nonnull *_Nullable) DEPRECATED_ATTRIBUTE;
 /*       -> AG_SurfaceScale(s, w,h, 0) */
+
+AG_Surface *_Nonnull AG_SurfaceStdGL(Uint, Uint) _Warn_Unused_Result DEPRECATED_ATTRIBUTE;
+/*                -> AG_SurfaceStdRGBA(w,h) */
+
 #endif /* AG_LEGACY */
 __END_DECLS
 

@@ -425,16 +425,22 @@ Draw(void *_Nonnull obj)
 			UpdateScaled(px);
 			px->flags &= ~(AG_PIXMAP_UPDATE);
 		}
+		AG_PushBlendingMode(px, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 		AG_WidgetBlitSurface(px, px->sScaled,
 		    WIDGET(px)->paddingLeft + px->s,
 		    WIDGET(px)->paddingTop  + px->t);
+
+		AG_PopBlendingMode(px);
 	} else {
 		AG_PushClipRect(px, &WIDGET(px)->r);
+		AG_PushBlendingMode(px, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
 		AG_WidgetBlitSurface(px, px->n,
 		    WIDGET(px)->paddingLeft + px->s,
 		    WIDGET(px)->paddingTop  + px->t);
 
+		AG_PopBlendingMode(px);
 		AG_PopClipRect(px);
 	}
 }

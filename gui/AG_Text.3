@@ -240,7 +240,7 @@ in a copy-on-write fashion.
 .Fn AG_TextSize "const char *text" "int *w" "int *h"
 .Pp
 .Ft "void"
-.Fn AG_TextSizeInternal"const AG_Char *text" "int *w" "int *h"
+.Fn AG_TextSizeInternal "const AG_Char *text" "int *w" "int *h"
 .Pp
 .Ft "void"
 .Fn AG_TextSizeMulti "const char *text" "int *w" "int *h" "Uint **wLines" "Uint *nLines"
@@ -249,14 +249,15 @@ in a copy-on-write fashion.
 .Fn AG_TextSizeMultiInternal "const AG_Char *text" "int *w" "int *h" "Uint **wLines" "Uint *nLines"
 .Pp
 .nr nS 0
-The
 .Fn AG_TextRender
-function renders text to a new surface.
-The current rendering attributes determine the font, text and BG colors as
-well as line and tab spacings.
-If
-.Dv AG_UNICODE
-is supported, the input text may contain UTF-8.
+renders the C string
+.Fa text
+onto a newly-allocated surface.
+The font, colors and spacings are according to the current
+.Em Rendering Attributes .
+The input
+.Fa text
+may contain UTF-8 characters and ANSI SGR sequences.
 .Pp
 .Fn AG_TextRenderInternal
 renders onto a new surface text in native

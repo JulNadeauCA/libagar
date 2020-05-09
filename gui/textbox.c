@@ -397,9 +397,13 @@ Draw(void *_Nonnull p)
 
 		RenderLabel(tb);
 
+		AG_PushBlendingMode(tb, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 		AG_WidgetBlitSurface(tb, tb->surfaceLbl,
 		    WIDGET(tb)->paddingLeft,
 		    WIDGET(tb)->paddingTop);
+
+		AG_PopBlendingMode(tb);
 
 		if (isUndersize)
 			AG_PopClipRect(tb);

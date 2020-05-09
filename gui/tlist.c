@@ -547,6 +547,7 @@ Draw(void *_Nonnull obj)
 	r.h -= WIDGET(tl)->paddingBottom;
 	r.w -= WIDTH(tl->sbar);
 	AG_PushClipRect(tl, &r);
+	AG_PushBlendingMode(tl, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
 	y = WIDGET(tl)->paddingTop;
 	yLast = h;
@@ -639,6 +640,7 @@ Draw(void *_Nonnull obj)
 	} else {
 		tl->flags &= ~(AG_TLIST_SCROLLTOSEL);
 	}
+	AG_PopBlendingMode(tl);
 	AG_PopClipRect(tl);
 }
 

@@ -282,30 +282,30 @@ SetParentDriver(AG_Widget *_Nonnull wid, AG_Driver *_Nullable drv)
 static void
 OnAttach(AG_Event *_Nonnull event)
 {
-	AG_Widget *widget = AG_WIDGET_SELF();
+	AG_Widget *wid = AG_WIDGET_SELF();
 	const void *parent = AG_PTR(1);
 
 	if (AG_OfClass(parent, "AG_Widget:AG_Window:*") &&
-	    AG_OfClass(widget, "AG_Widget:*")) {
+	    AG_OfClass(wid, "AG_Widget:*")) {
 		AG_Widget *wParent = WIDGET(parent);
 		Uint i;
 		/*
 		 * This is a widget attaching to a window.
 		 */
-		SetParentWindow(widget, AGWINDOW(wParent));
+		SetParentWindow(wid, AGWINDOW(wParent));
 		if (AGWINDOW(wParent)->visible) {
-			widget->flags |= AG_WIDGET_UPDATE_WINDOW;
-			AG_PostEvent(widget, "widget-shown", NULL);
+			wid->flags |= AG_WIDGET_UPDATE_WINDOW;
+			AG_PostEvent(wid, "widget-shown", NULL);
 		}
 		/*
 		 * Widget may have previously been detached from another
 		 * driver; textures may need regenerating.
 		 */
-		for (i = 0; i < widget->nSurfaces; i++) {
-			widget->textures[i] = 0;
+		for (i = 0; i < wid->nSurfaces; i++) {
+			wid->textures[i] = 0;
 		}
 	} else if (AG_OfClass(parent, "AG_Widget:*") &&
-	           AG_OfClass(widget, "AG_Widget:*")) {
+	           AG_OfClass(wid, "AG_Widget:*")) {
 		AG_Widget *wParent = WIDGET(parent);
 		AG_Window *window = wParent->window;
 		/*
@@ -314,20 +314,20 @@ OnAttach(AG_Event *_Nonnull event)
 #ifdef AG_DEBUG
 		if (window) { AG_OBJECT_ISA(window, "AG_Widget:AG_Window:*"); }
 #endif
-		SetParentWindow(widget, window);
+		SetParentWindow(wid, window);
 		if (window && window->visible) {
-			AG_PostEvent(widget, "widget-shown", NULL);
+			AG_PostEvent(wid, "widget-shown", NULL);
 		}
 	} else if (AG_OfClass(parent, "AG_Driver:*") &&
-	           AG_OfClass(widget, "AG_Widget:AG_Window:*")) {
+	           AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
 		AG_Driver *drvParent = AGDRIVER(parent);
 		/*
 		 * This is a Window attaching to a low-level Driver.
 		 */
-		SetParentDriver(widget, drvParent);
+		SetParentDriver(wid, drvParent);
 	} else {
 #ifdef AG_VERBOSITY
-		AG_FatalErrorF("Cannot attach %s to %s", OBJECT(widget)->name,
+		AG_FatalErrorF("Cannot attach %s to %s", OBJECT(wid)->name,
 		    OBJECT(parent)->name);
 #else
 		AG_FatalError("Cannot attach to parent");
@@ -338,31 +338,44 @@ OnAttach(AG_Event *_Nonnull event)
 static void
 OnDetach(AG_Event *_Nonnull event)
 {
-	AG_Widget *widget = AG_WIDGET_SELF();
+	AG_Widget *wid = AG_WIDGET_SELF();
 	const void *parent = AG_PTR(1);
 
 #if defined(AG_DEBUG) && defined(AG_WIDGETS)
-	if (widget == agDebuggerTgt)
+	if (wid == agDebuggerTgt)
 		AG_GuiDebuggerDetachTarget();
 #endif
 #if defined(AG_WIDGETS)
-	if (widget == agStyleEditorTgt)
+	if (wid == agStyleEditorTgt)
 		AG_StyleEditorDetachTarget();
 #endif
-	if (AG_OfClass(parent, "AG_Widget:*") &&
-	    AG_OfClass(widget, "AG_Widget:*")) {
-		if (widget->window) {
-			AG_UnmapAllCursors(widget->window, widget);
+	if (wid->drv != NULL) {                           /* Unmap textures */
+		Uint id;
+		int tex;
+
+		for (id = 0; id < wid->nSurfaces; id++) {
+			if ((tex = wid->textures[id]) == 0) {
+				continue;
+			}
+			wid->drvOps->deleteTexture(wid->drv, tex);
+			wid->textures[id] = 0;
 		}
-		SetParentWindow(widget, NULL);
+	}
+
+	if (AG_OfClass(parent, "AG_Widget:*") &&
+	    AG_OfClass(wid, "AG_Widget:*")) {
+		if (wid->window) {
+			AG_UnmapAllCursors(wid->window, wid);
+		}
+		SetParentWindow(wid, NULL);
 	} else if (AG_OfClass(parent, "AG_Driver:*") &&
-	           AG_OfClass(widget, "AG_Widget:AG_Window:*")) {
-		SetParentDriver(widget, NULL);
+	           AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
+		SetParentDriver(wid, NULL);
 	} else {
 #ifdef AG_VERBOSITY
 		AG_FatalErrorF("Unexpected parent on detach. "
 		               "Why is %s attached to %s?",
-			       OBJECT(widget)->name, OBJECT(parent)->name);
+			       OBJECT(wid)->name, OBJECT(parent)->name);
 #else
 		AG_FatalError("Unexpected parent on detach");
 #endif
@@ -450,6 +463,19 @@ OnHide(AG_Event *_Nonnull event)
 		case AG_REDRAW_ON_CHANGE:
 			AG_DelTimer(wid, &rt->to);
 			break;
+		}
+	}
+
+	if (wid->drv != NULL) {                           /* Unmap textures */
+		Uint id;
+		int tex;
+
+		for (id = 0; id < wid->nSurfaces; id++) {
+			if ((tex = wid->textures[id]) == 0) {
+				continue;
+			}
+			wid->drvOps->deleteTexture(wid->drv, tex);
+			wid->textures[id] = 0;
 		}
 	}
 }

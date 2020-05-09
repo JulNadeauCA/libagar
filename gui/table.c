@@ -645,6 +645,7 @@ Draw(void *_Nonnull obj)
 	rCol.h = hCol + t->r.h - 2;
 
 	AG_PushClipRect(t, &WIDGET(t)->r);
+	AG_PushBlendingMode(t, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
 	for (n = 0, rCell.x = paddingLeft - t->xOffs;
 	     n < t->n && rCell.x < t->r.w;
@@ -730,6 +731,7 @@ Draw(void *_Nonnull obj)
 		rCell.x += w;
 	}
 
+	AG_PopBlendingMode(t);
 	AG_PopClipRect(t);
 
 	if (rCell.x > 0 &&

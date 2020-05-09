@@ -1111,26 +1111,20 @@ Draw(void *_Nonnull obj)
 	int xSel, ySel;
 
 	if (pal->surface == NULL) {
-#ifdef HAVE_OPENGL
-		pal->surface = AG_SurfaceStdGL(w, h);
-#else
-		pal->surface = AG_SurfaceStdRGB(w, h);
-#endif
+		pal->surface = AG_SurfaceStdRGBA(w,h);
 		pal->surfaceId = AG_WidgetMapSurface(pal, pal->surface);
+		RenderStatic(pal);
 	} else if (pal->surface->w != w ||                       /* Resized */
 	           pal->surface->h != h) {
-#ifdef HAVE_OPENGL
-		pal->surface = AG_SurfaceStdGL(w, h);
-#else
-		pal->surface = AG_SurfaceStdRGB(w, h);
-#endif
+		pal->surface = AG_SurfaceStdRGBA(w,h);
+		RenderStatic(pal);
 		AG_WidgetReplaceSurface(pal, pal->surfaceId, pal->surface);
 		pal->flags |= AG_HSVPAL_DIRTY;
-	}
-	if (pal->flags & AG_HSVPAL_DIRTY) {
-		pal->flags &= ~(AG_HSVPAL_DIRTY);
+	} else if (pal->flags & AG_HSVPAL_DIRTY) {
 		RenderStatic(pal);
+		AG_WidgetUpdateSurface(pal, pal->surfaceId);
 	}
+	pal->flags &= ~(AG_HSVPAL_DIRTY);
 	AG_WidgetBlitFrom(pal, pal->surfaceId, NULL, 0,0);
 
 	hueDeg = AG_GetFloat(pal, "hue");

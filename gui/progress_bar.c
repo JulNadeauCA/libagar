@@ -213,12 +213,16 @@ DrawPercentText(AG_ProgressBar *_Nonnull pb)
 	Strlcat(s, "%", sizeof(s));
 
 	if ((ent = AG_TextCacheGet(pb->tCache, s)) != -1) {
-		AG_Surface *S = WSURFACE(pb, ent);
+		const AG_Surface *S = WSURFACE(pb, ent);
 
 		if (HEIGHT(pb) >= S->h && S->w <= WIDTH(pb)) {
+			AG_PushBlendingMode(pb, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 			AG_WidgetBlitSurface(pb, ent,
 			    (WIDTH(pb) >> 1)  - (S->w >> 1),
 			    (HEIGHT(pb) >> 1) - (S->h >> 1));
+
+			AG_PopBlendingMode(pb);
 		}
 	}
 }

@@ -915,10 +915,6 @@ package Agar.Surface is
      A_Mask         : in AG_Pixel) return Surface_Access
     with Import, Convention => C, Link_Name => "AG_SurfaceFromPixelsRGBA";
 
-  function AG_SurfaceStdGL
-    (W,H : in C.unsigned) return Surface_Access
-    with Import, Convention => C, Link_Name => "AG_SurfaceStdGL";
-
   function AG_SurfaceFromFile
     (File : in CS.chars_ptr) return Surface_Access
     with Import, Convention => C, Link_Name => "AG_SurfaceFromFile";

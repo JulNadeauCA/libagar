@@ -461,12 +461,16 @@ Draw(void *_Nonnull obj)
 	};
 	AG_Label *lbl = obj;
 	AG_Surface *Sctd;
+	const AG_Color *cBg = &WCOLOR(lbl, BG_COLOR);
 	AG_Rect r;
 
-	if (lbl->flags & AG_LABEL_FRAME) {
+	if (lbl->flags & AG_LABEL_FRAME)
 		AG_DrawFrameSunk(lbl, &WIDGET(lbl)->r);
-	}
-	if (lbl->flags & AG_LABEL_PARTIAL) {
+
+	if (cBg->a < AG_OPAQUE)
+		AG_PushBlendingMode(lbl, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
+	if (lbl->flags & AG_LABEL_PARTIAL) {                   /* Truncated */
 		if (lbl->surfaceCtd == -1) {
 #ifdef AG_UNICODE
 			Sctd = AG_TextRender("\xE2\x80\xA6 "); /* U+2026 */
@@ -477,15 +481,6 @@ Draw(void *_Nonnull obj)
 		} else {
 			Sctd = WSURFACE(lbl,lbl->surfaceCtd);
 		}
-#if 0
-		if (WIDTH(lbl) <= Sctd->w) {
-			AG_PushClipRect(lbl, &WIDGET(lbl)->r);
-			AG_WidgetBlitSurface(lbl, lbl->surfaceCtd, 0,
-			                     (r.h >> 1) - (Sctd->h >> 1));
-			AG_PopClipRect(lbl);
-			return;
-		}
-#endif
 		r.x = 0;
 		r.y = 0;
 		r.w = WIDTH(lbl) - Sctd->w;
@@ -496,7 +491,7 @@ Draw(void *_Nonnull obj)
 	}
 	
 	AG_TextColor(&WCOLOR(lbl, TEXT_COLOR));
-	AG_TextBGColor(&WCOLOR(lbl, BG_COLOR));
+	AG_TextBGColor(cBg);
 
 #ifdef AG_DEBUG
 	if (lbl->type >= AG_LABEL_TYPE_LAST)
@@ -514,6 +509,9 @@ Draw(void *_Nonnull obj)
 			    ValignOffset(lbl, HEIGHT(lbl), Sctd->h));
 		}
 	}
+
+	if (cBg->a < AG_OPAQUE)
+		AG_PopBlendingMode(lbl);
 }
 
 /* Render a static label. */

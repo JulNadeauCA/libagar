@@ -346,6 +346,22 @@ AG_SurfaceInit(AG_Surface *S, const AG_PixelFormat *pf, Uint w, Uint h,
 		memcpy(&S->format, pf, sizeof(AG_PixelFormat));
 		switch (pf->mode) {
 		case AG_SURFACE_PACKED:
+			if ((flags & AG_SURFACE_GL_TEXTURE) == 0 &&
+			    pf->BitsPerPixel == 32) {
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+				if (pf->Rmask == 0xff000000 &&
+				    pf->Gmask == 0x00ff0000 &&
+				    pf->Bmask == 0x0000ff00 &&
+				    pf->Amask == 0x000000ff)
+					S->flags |= AG_SURFACE_GL_TEXTURE;
+#else
+				if (pf->Rmask == 0x000000ff &&
+				    pf->Gmask == 0x0000ff00 &&
+				    pf->Bmask == 0x00ff0000 &&
+				    pf->Amask == 0xff000000)
+					S->flags |= AG_SURFACE_GL_TEXTURE;
+#endif
+			}
 			break;
 		case AG_SURFACE_INDEXED:
 			S->format.palette = NULL;
@@ -438,6 +454,22 @@ AG_SurfaceRGBA(Uint w, Uint h, int BitsPerPixel, Uint flags,
 	S = Malloc(sizeof(AG_Surface));
 	AG_SurfaceInit(S, NULL, w,h, flags);
 	AG_PixelFormatRGBA(&S->format, BitsPerPixel, Rmask, Gmask, Bmask, Amask);
+
+	if ((flags & AG_SURFACE_GL_TEXTURE) == 0 && BitsPerPixel == 32) {
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+		if (Rmask == 0xff000000 &&
+		    Gmask == 0x00ff0000 &&
+		    Bmask == 0x0000ff00 &&
+		    Amask == 0x000000ff)
+			S->flags |= AG_SURFACE_GL_TEXTURE;
+#else
+		if (Rmask == 0x000000ff &&
+		    Gmask == 0x0000ff00 &&
+		    Bmask == 0x00ff0000 &&
+		    Amask == 0xff000000)
+			S->flags |= AG_SURFACE_GL_TEXTURE;
+#endif
+	}
 	AG_SurfaceAllocPixels(S);
 	return (S);
 }
@@ -537,49 +569,6 @@ AG_SurfaceExportFile(const AG_Surface *S, const char *path)
 	}
 	return (0);
 }
-
-#ifdef HAVE_OPENGL
-static __inline__ int _Const_Attribute
-PowOf2i(int i)
-{
-	int val = 1;
-	while (val < i) { val <<= 1; }
-	return (val);
-}
-/*
- * Create a new surface suitable to be used as an OpenGL texture. The
- * returned surface size may be different from requested (unless the
- * NPOT extension is available).
- */
-AG_Surface *
-AG_SurfaceStdGL(Uint rw, Uint rh)
-{
-	AG_Surface *Sgl;
-	int w, h;
-
-	/* TODO check for GL_ARB_texture_non_power_of_two. */
-	w = PowOf2i(rw);
-	h = PowOf2i(rh);
-	Sgl = AG_SurfaceRGBA(w, h, 32, 0,
-#if AG_BYTEORDER == AG_BIG_ENDIAN
-		0xff000000,
-		0x00ff0000,
-		0x0000ff00,
-		0x000000ff
-#else
-		0x000000ff,
-		0x0000ff00,
-		0x00ff0000,
-		0xff000000
-#endif
-	);
-	if (Sgl == NULL) {
-		AG_FatalError(NULL);
-	}
-	Sgl->flags |= AG_SURFACE_GL_TEXTURE;
-	return (Sgl);
-}
-#endif /* HAVE_OPENGL */
 
 /* Set pixel data to an external address (or NULL = revert to auto-allocated) */
 void
@@ -2053,12 +2042,8 @@ AG_SurfaceAddFrame(AG_Surface *Sanim, const AG_Surface *Sframe,
 }
 
 #ifdef AG_LEGACY
-/*
- * Legacy interfaces
- */
-void AG_SurfaceLock(AG_Surface *su) { /* No-op */ }
-void AG_SurfaceUnlock(AG_Surface *su) { /* No-op */ }
-
+void AG_SurfaceLock(AG_Surface *su) { }
+void AG_SurfaceUnlock(AG_Surface *su) { }
 Uint32 AG_MapRGB(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b) {
 	return AG_MapPixel32_RGB8(pf, r,g,b);
 }
@@ -2113,5 +2098,8 @@ int AG_SamePixelFmt(const AG_Surface *a, const AG_Surface *b) {
 int AG_ScaleSurface(const AG_Surface *s, Uint16 w, Uint16 h, AG_Surface **pDS) {
 	*pDS = AG_SurfaceScale(s, (Uint)w, (Uint)h, 0);
 	return (0);
+}
+AG_Surface *AG_SurfaceStdGL(Uint w, Uint h) {
+	return AG_SurfaceStdRGBA(w, h);
 }
 #endif /* AG_LEGACY */

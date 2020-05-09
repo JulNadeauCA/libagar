@@ -266,19 +266,24 @@ Draw(void *_Nonnull obj)
 		AG_DrawBoxRaised(cb, &r, &WCOLOR(cb, FG_COLOR));
 	}
 
+	AG_PushBlendingMode(cb, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 	if (cb->label && cb->label[0] != '\0') {
+		const int isUndersize = (WIDTH(cb) < cb->wReq) ||
+		                        (HEIGHT(cb) < cb->hReq);
+
 		if (cb->suLabel == -1)
 			cb->suLabel = AG_WidgetMapSurface(cb,
 			    AG_TextRender(cb->label));
 	
-		if (WIDTH(cb) < cb->wReq || HEIGHT(cb) < cb->hReq)
+		if (isUndersize)
 			AG_PushClipRect(cb, &WIDGET(cb)->r);
 
 		AG_WidgetBlitSurface(cb, cb->suLabel,
 		    WIDGET(cb)->paddingLeft + cb->boxWd + WIDGET(cb)->spacingHoriz,
 		    WIDGET(cb)->paddingTop);
 
-		if (WIDTH(cb) < cb->wReq || HEIGHT(cb) < cb->hReq)
+		if (isUndersize)
 			AG_PopClipRect(cb);
 	}
 
@@ -295,6 +300,8 @@ Draw(void *_Nonnull obj)
 		    r.x + (r.w >> 1) - (S->w >> 1),
 		    r.y + (r.h >> 1) - (S->h >> 1));
 	}
+
+	AG_PopBlendingMode(cb);
 }
 
 /* Return the checkbox state. */

@@ -25,6 +25,7 @@ typedef struct ag_numerical {
 #define AG_NUMERICAL_EXCL      0x08  /* Assume exclusive access to variable */
 #define AG_NUMERICAL_READONLY  0x10  /* Read-only mode */
 #define AG_NUMERICAL_SLOW      0x20  /* Update every 2s (default = 250ms) */
+#define AG_NUMERICAL_EXPAND   (AG_NUMERICAL_HFILL | AG_NUMERICAL_VFILL)
 
 	char format[28];                     /* Print format (for reals) */
 	const AG_Unit *_Nonnull unit;        /* Conversion unit in use */

@@ -307,6 +307,8 @@ Draw(void *_Nonnull obj)
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
+	AG_PushBlendingMode(mv, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 	TAILQ_FOREACH(mi, &miRoot->subItems, items) {
 		const AG_Surface *Sicon = mi->iconSrc;
 		const int mi_state = mi->state;
@@ -404,7 +406,9 @@ Draw(void *_Nonnull obj)
 
 		r.y += itemh;
 	}
-	
+
+	AG_PopBlendingMode(mv);
+
 	AG_ObjectUnlock(m);
 }
 

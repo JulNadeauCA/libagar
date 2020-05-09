@@ -708,7 +708,7 @@ See also:
 .Fn AG_PopClipRect "AG_Widget *obj"
 .Pp
 .Ft void
-.Fn AG_PushBlendingMode "AG_Widget *obj" "AG_AlphaFn fnSrc" "AG_AlphaFn fnDst"
+.Fn AG_PushBlendingMode "AG_Widget *obj" "AG_AlphaFn src" "AG_AlphaFn dst"
 .Pp
 .Ft void
 .Fn AG_PopBlendingMode "AG_Widget *obj"
@@ -749,19 +749,35 @@ clipping rectangles, and
 pops the last entry from the clipping rectangle stack.
 The effective clipping rectangle will be the intersection of all rectangles
 on this stack.
-.Fn AG_{Push,Pop}ClipRect
-must be invoked in rendering context.
+Both functions must be invoked in rendering context.
 .Pp
 .Fn AG_PushBlendingMode
-pushes the given source & destination
+selects the source and destination functions for further pixel blending
+operations.
+It also pushes the current state onto the stack of alpha blending modes.
+Setting
+.Fa src
+to
+.Dv AG_ALPHA_ZERO
+and
+.Fa dst
+to
+.Dv AG_ALPHA_ONE
+(the default) effectively disables blending.
+Setting
+.Fa src 
+to
+.Dv AG_ALPHA_SRC
+and
+.Fa dst
+to
+.Dv AG_ALPHA_ONE_MINUS_SRC
+is the most common case.
+See
 .Xr AG_AlphaFn 3
-modes onto the stack of alpha blending modes.
-.Fa fnSrc
-determines the function for the source pixel and
-.Fa fnDst
-that of the destination pixel.
+for the list of possible alpha blending modes.
 .Fn AG_PopBlendingMode
-pops the the last entry off the blending mode stack.
+pops the the last entry off of the stack of alpha blending modes.
 Both functions must be invoked from rendering context.
 .Pp
 The

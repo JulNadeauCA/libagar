@@ -360,18 +360,6 @@ package body Agar.Surface is
   end;
   
   --
-  -- Create a surface in the "best" format suitable for OpenGL textures.
-  --
-  function New_Surface_GL
-    (W,H : in Natural) return Surface_Access
-  is
-  begin
-    return AG_SurfaceStdGL
-      (W => C.unsigned(W),
-       H => C.unsigned(H));
-  end;
-  
-  --
   -- Return a Color from 8-bit RGBA components.
   --
   function Color_8

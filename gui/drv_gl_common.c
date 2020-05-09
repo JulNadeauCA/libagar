@@ -65,7 +65,6 @@ AG_GL_InitContext(void *obj, AG_GL_Context *gl)
 #ifdef DEBUG_GL
 	Debug(drv, "GL Context Init\n");
 #endif
-	
 	gl->textureGC = NULL;
 	gl->nTextureGC = 0;
 	gl->maxTextureGC = 0;
@@ -113,14 +112,14 @@ AG_GL_InitContext(void *obj, AG_GL_Context *gl)
 	/* Initialize the first clipping rectangle. */
 	cr = &gl->clipRects[0];
 	AG_RectInit(&cr->r, 0,0,0,0);
-	cr->eqns[0][0] = 1.0;	cr->eqns[0][1] = 0.0;
-	cr->eqns[0][2] = 0.0;	cr->eqns[0][3] = 0.0;
-	cr->eqns[1][0] = 0.0;	cr->eqns[1][1] = 1.0;
-	cr->eqns[1][2] = 0.0;	cr->eqns[1][3] = 0.0;
-	cr->eqns[2][0] = -1.0;	cr->eqns[2][1] = 0.0;
-	cr->eqns[2][2] = 0.0;	cr->eqns[2][3] = 0.0; /* w */
-	cr->eqns[3][0] = 0.0;	cr->eqns[3][1] = -1.0;
-	cr->eqns[3][2] = 0.0;	cr->eqns[3][3] = 0.0; /* h */
+	cr->eqns[0][0] =  1.0;    cr->eqns[0][1] =  0.0;
+	cr->eqns[0][2] =  0.0;    cr->eqns[0][3] =  0.0;
+	cr->eqns[1][0] =  0.0;    cr->eqns[1][1] =  1.0;
+	cr->eqns[1][2] =  0.0;    cr->eqns[1][3] =  0.0;
+	cr->eqns[2][0] = -1.0;    cr->eqns[2][1] =  0.0;
+	cr->eqns[2][2] =  0.0;    cr->eqns[2][3] =  0.0; /* w */
+	cr->eqns[3][0] =  0.0;    cr->eqns[3][1] = -1.0;
+	cr->eqns[3][2] =  0.0;    cr->eqns[3][3] =  0.0; /* h */
 	
 	drv->gl = gl;
 }
@@ -178,9 +177,6 @@ AG_GL_DestroyContext(void *obj)
 			Debug(drv, "GL delete texture #%d\n", gl->textureGC[i]);
 #endif
 		glDeleteTextures(gl->nTextureGC, gl->textureGC);
-		for (i = 0; i < gl->nListGC; i++) {
-			glDeleteLists(gl->listGC[i], 1);
-		}
 		gl->nTextureGC = 0;
 		free(gl->textureGC);
 	}
@@ -224,15 +220,15 @@ AG_GL_StdPushClipRect(void *obj, const AG_Rect *r)
 	cr->eqns[0][0] =  1.0;  cr->eqns[0][1] =  0.0;
 	cr->eqns[0][2] =  0.0;  cr->eqns[0][3] = -(double)(cr->r.x);
 	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
-	
+
 	cr->eqns[1][0] =  0.0;  cr->eqns[1][1] =  1.0;
 	cr->eqns[1][2] =  0.0;  cr->eqns[1][3] = -(double)(cr->r.y);
 	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
-		
+
 	cr->eqns[2][0] = -1.0;  cr->eqns[2][1] =  0.0;
 	cr->eqns[2][2] =  0.0;  cr->eqns[2][3] = (double)(cr->r.x + cr->r.w);
 	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
-		
+
 	cr->eqns[3][0] =  0.0;  cr->eqns[3][1] = -1.0;
 	cr->eqns[3][2] =  0.0;  cr->eqns[3][3] = (double)(cr->r.y + cr->r.h);
 	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
@@ -279,22 +275,27 @@ AG_GL_StdPushBlendingMode(void *obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 	AG_GL_Context *gl = drv->gl;
 	AG_GL_BlendState *bs;
 
+/*	Debug(obj, "pushBlendingMode(%d,%d)\n", (int)fnSrc, (int)fnDst);  */
+
 	if (gl->nBlendStates+1 > gl->maxBlendStates) {
 		gl->maxBlendStates += 16;
+#ifdef DEBUG_GL
 		Debug(NULL, "maxBlendStates-> %d\n", gl->maxBlendStates);
+#endif
 		gl->blendStates = Realloc(gl->blendStates, gl->maxBlendStates *
 		                                           sizeof(AG_GL_BlendState));
 	}
 	bs = &gl->blendStates[gl->nBlendStates++];
-	
-	glGetBooleanv(GL_BLEND, &bs->enabled);
-	glGetIntegerv(GL_BLEND_SRC, &bs->srcFactor);
-	glGetIntegerv(GL_BLEND_DST, &bs->dstFactor);
+	bs->enabled = !(fnSrc == AG_ALPHA_ONE && fnDst == AG_ALPHA_ZERO);
+	bs->srcFactor = AG_GL_GetBlendingFunc(fnSrc);
+	bs->dstFactor = AG_GL_GetBlendingFunc(fnDst);
 
-	glEnable(GL_BLEND);
-
-	glBlendFunc(AG_GL_GetBlendingFunc(fnSrc),
-	            AG_GL_GetBlendingFunc(fnDst));
+	if (bs->enabled) {
+		glEnable(GL_BLEND);
+		glBlendFunc(bs->srcFactor, bs->dstFactor);
+	} else {
+		glDisable(GL_BLEND);
+	}
 }
 void
 AG_GL_StdPopBlendingMode(void *obj)
@@ -309,12 +310,14 @@ AG_GL_StdPopBlendingMode(void *obj)
 #endif
 	bs = &gl->blendStates[(--gl->nBlendStates) - 1];
 
+/*	Debug(obj, "popBlendingMode (n->%d)\n", gl->nBlendStates); */
+
 	if (bs->enabled) {
 		glEnable(GL_BLEND);
+		glBlendFunc(bs->srcFactor, bs->dstFactor);
 	} else {
 		glDisable(GL_BLEND);
 	}
-	glBlendFunc(bs->srcFactor, bs->dstFactor);
 }
 
 /* Delete a texture by name */
@@ -367,10 +370,21 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *S, AG_TexCoord *tc)
 	GLuint texture;
 	const int isGLtexture = (S->flags & AG_SURFACE_GL_TEXTURE);
 
+	glGenTextures(1, &texture);
+
 	if (isGLtexture) {
 		GS = S;
+#ifdef DEBUG_GL
+		Debug(obj, "GL upload (%d x %d) surface %p -> #%u\n",
+		    S->w, S->h, S, texture);
+#endif
 	} else {
-		GS = AG_SurfaceStdGL(S->w, S->h);
+#ifdef DEBUG_GL
+		Debug(obj, "GL upload " AGSI_BOLD "converted" AGSI_RST
+		    " (%d x %d) surface %p -> #%u\n",
+		    S->w, S->h, S, texture);
+#endif
+		GS = AG_SurfaceStdRGBA(S->w, S->h);
 		AG_SurfaceCopy(GS, S);
 	}
 	if (tc != NULL) {
@@ -380,7 +394,6 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *S, AG_TexCoord *tc)
 		tc->h = (float)S->h / (float)GS->h;
 	}
 	
-	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -409,8 +422,17 @@ AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *S, AG_TexCoord *tc)
 
 	if (isGLtexture) {
 		GS = S;
+#ifdef DEBUG_GL
+		Debug(obj, "GL update (%d x %d) surface %p -> #%u\n",
+		    S->w, S->h, S, texture);
+#endif
 	} else {
-		GS = AG_SurfaceStdGL(S->w, S->h);
+#ifdef DEBUG_GL
+		Debug(obj, "GL update " AGSI_BOLD "converted" AGSI_RST
+		    " (%d x %d) surface %p -> #%u\n",
+		    S->w, S->h, S, texture);
+#endif
+		GS = AG_SurfaceStdRGBA(S->w, S->h);
 		AG_SurfaceCopy(GS, S);
 	}
 	if (tc != NULL) {
@@ -441,15 +463,18 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *S, int x, int y)
 	AG_Driver *drv = obj;
 	AG_TexCoord tc;
 	GLuint texture;
+/*	Uint32 Amask; */
 	
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AGDRIVER_CLASS(drv)->uploadTexture(drv, &texture, S, &tc);
 
-	AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
-	                                           AG_ALPHA_ONE_MINUS_SRC);
-
+#if 0
+	if ((Amask = S->format.Amask) != 0)
+		AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
+		                                           AG_ALPHA_ONE_MINUS_SRC);
+#endif
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBegin(GL_POLYGON);
 	{
@@ -464,8 +489,10 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *S, int x, int y)
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDeleteTextures(1, &texture);
-
-	AGDRIVER_CLASS(drv)->popBlendingMode(drv);
+#if 0
+	if (Amask != 0)
+		AGDRIVER_CLASS(drv)->popBlendingMode(drv);
+#endif
 }
 
 static __inline__ int _Const_Attribute
@@ -486,11 +513,10 @@ PrepareTexture(AG_Driver *_Nonnull drv, AG_Widget *_Nonnull wid, int name)
 	} else if (wid->surfaceFlags[name] & AG_WIDGET_SURFACE_REGEN) {
 		wid->surfaceFlags[name] &= ~(AG_WIDGET_SURFACE_REGEN);
 
-		AGDRIVER_CLASS(drv)->updateTexture(drv, name,
+		AGDRIVER_CLASS(drv)->updateTexture(drv, wid->textures[name],
 		    wid->surfaces[name], &wid->texcoords[name]);
 	}
 }
-
 
 /*
  * Perform an accelerated image transfer from a mapped surface (by name)
@@ -501,28 +527,30 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, int name, const AG_Rect *r,
     int x, int y)
 {
 	AG_Driver *drv = obj;
+	const AG_Surface *S = wid->surfaces[name];
+/*	Uint32 Amask; */
 	
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	PrepareTexture(drv, wid, name);
-
-	AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
-	                                           AG_ALPHA_ONE_MINUS_SRC);
-
+#if 0
+	if ((Amask = S->format.Amask) != 0)
+		AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
+		                                           AG_ALPHA_ONE_MINUS_SRC);
+#endif
 	glBindTexture(GL_TEXTURE_2D, wid->textures[name]);
 	glBegin(GL_POLYGON);
 	{
-		const AG_Surface *S = wid->surfaces[name];
 		const int x2 = x + S->w;
 		const int y2 = y + S->h;
 		AG_TexCoord tc;
 
 		if (r != NULL) {
-			tc.x = (float)r->x/PowOf2i(r->x);
-			tc.y = (float)r->y/PowOf2i(r->y);
-			tc.w = (float)r->w/PowOf2i(r->w);
-			tc.h = (float)r->h/PowOf2i(r->h);
+			tc.x = (float)r->x / PowOf2i(r->x);
+			tc.y = (float)r->y / PowOf2i(r->y);
+			tc.w = (float)r->w / PowOf2i(r->w);
+			tc.h = (float)r->h / PowOf2i(r->h);
 		} else {
 			tc = wid->texcoords[name];
 		}
@@ -533,7 +561,10 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, int name, const AG_Rect *r,
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
-	AGDRIVER_CLASS(drv)->popBlendingMode(drv);
+#if 0
+	if (Amask != 0)
+		AGDRIVER_CLASS(drv)->popBlendingMode(drv);
+#endif
 }
 
 /*
@@ -546,21 +577,23 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *S, float w, float h)
 	AG_Driver *drv = obj;
 	AG_TexCoord tc;
 	GLuint name;
+/*	Uint32 Amask; */
 	
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AGDRIVER_CLASS(drv)->uploadTexture(drv, &name, S, &tc);
-
-	AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
-	                                           AG_ALPHA_ONE_MINUS_SRC);
-	
+#if 0
+	if ((Amask = S->format.Amask) != 0)
+		AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
+		                                           AG_ALPHA_ONE_MINUS_SRC);
+#endif
 	glBindTexture(GL_TEXTURE_2D, name);
 
 	glBegin(GL_POLYGON);
 	{
-		const float w_2 = w/2.0f;
-		const float h_2 = h/2.0f;
+		const float w_2 = w / 2.0f;
+		const float h_2 = h / 2.0f;
 
 		glTexCoord2f(tc.x, tc.y);  glVertex2f( w_2,  h_2);
 		glTexCoord2f(tc.w, tc.y);  glVertex2f(-w_2,  h_2);
@@ -571,8 +604,10 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *S, float w, float h)
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDeleteTextures(1, &name);
-
-	AGDRIVER_CLASS(drv)->popBlendingMode(drv);
+#if 0
+	if (Amask != 0)
+		AGDRIVER_CLASS(drv)->popBlendingMode(drv);
+#endif
 }
 
 /*
@@ -583,21 +618,23 @@ void
 AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int name, float w, float h)
 {
 	AG_Driver *drv = obj;
+/*	Uint32 Amask; */
 	
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
 	PrepareTexture(drv, wid, name);
-
-	AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
-	                                           AG_ALPHA_ONE_MINUS_SRC);
-	
+#if 0
+	if ((Amask = wid->surfaces[name]->format.Amask) != 0)
+		AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
+		                                           AG_ALPHA_ONE_MINUS_SRC);
+#endif
 	glBindTexture(GL_TEXTURE_2D, wid->textures[name]);
 	glBegin(GL_POLYGON);
 	{
 		const AG_TexCoord tc = wid->texcoords[name];
-		const float w_2 = w/2.0f;
-		const float h_2 = h/2.0f;
+		const float w_2 = w / 2.0f;
+		const float h_2 = h / 2.0f;
 
 		glTexCoord2f(tc.x, tc.y);  glVertex2f( w_2,  h_2);
 		glTexCoord2f(tc.w, tc.y);  glVertex2f(-w_2,  h_2);
@@ -606,8 +643,10 @@ AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int name, float w, float h)
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	AGDRIVER_CLASS(drv)->popBlendingMode(drv);
+#if 0
+	if (Amask != 0)
+		AGDRIVER_CLASS(drv)->popBlendingMode(drv);
+#endif
 }
 
 /*
@@ -618,15 +657,17 @@ void
 AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int name, float w, float h)
 {
 	AG_Driver *drv = obj;
+/*	Uint32 Amask; */
 	
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
 	PrepareTexture(drv, wid, name);
-
-	AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
-	                                           AG_ALPHA_ONE_MINUS_SRC);
-	
+#if 0
+	if ((Amask = wid->surfaces[name]->format.Amask) != 0)
+		AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
+		                                           AG_ALPHA_ONE_MINUS_SRC);
+#endif
 	glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[name]);
 	glBegin(GL_POLYGON);
 	{
@@ -639,8 +680,10 @@ AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int name, float w, float h
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	AGDRIVER_CLASS(drv)->popBlendingMode(drv);
+#if 0
+	if (Amask != 0)
+		AGDRIVER_CLASS(drv)->popBlendingMode(drv);
+#endif
 }
 
 /*
@@ -667,7 +710,7 @@ AG_GL_BackupSurfaces(void *obj, AG_Widget *wid)
 		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
 		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
 
-		S = AG_SurfaceStdGL(w, h);
+		S = AG_SurfaceStdRGBA(w, h);
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE,
 		    S->pixels);
 
@@ -881,17 +924,17 @@ void
 AG_GL_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2,
     const AG_Color *c, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 {
-	int a = c->a;
-
-	AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst);
+	if (c->a < AG_OPAQUE)
+		AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst);
 
 	glBegin(GL_LINES);
-	GL_Color4uH(c->r, c->g, c->b, a);
+	GL_Color4uH(c->r, c->g, c->b, c->a);
 	glVertex2i(x1, y1);
 	glVertex2i(x2, y2);
 	glEnd();
 
-	AGDRIVER_CLASS(obj)->popBlendingMode(obj);
+	if (c->a < AG_OPAQUE)
+		AGDRIVER_CLASS(obj)->popBlendingMode(obj);
 }
 
 /*
@@ -1361,7 +1404,8 @@ AG_GL_DrawRectBlended(void *obj, const AG_Rect *r, const AG_Color *c,
 	int x2 = x1 + r->w - 1;
 	int y2 = y1 + r->h - 1;
 
-	AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst);
+	if (c->a < AG_OPAQUE)
+		AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst);
 
 	glBegin(GL_POLYGON);
 	GL_Color4uH(c->r, c->g, c->b, c->a);
@@ -1371,7 +1415,8 @@ AG_GL_DrawRectBlended(void *obj, const AG_Rect *r, const AG_Color *c,
 	glVertex2i(x1, y2);
 	glEnd();
 
-	AGDRIVER_CLASS(obj)->popBlendingMode(obj);
+	if (c->a < AG_OPAQUE)
+		AGDRIVER_CLASS(obj)->popBlendingMode(obj);
 }
 
 /* Prepare for rendering an AG_Text(3) glyph. */

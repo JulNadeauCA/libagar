@@ -617,6 +617,7 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
 		    PollAttributes, "%p", tgt);
+
 		AG_SetEvent(tlAttrs, "tlist-selected",
 		    SelectedAttribute, "%p", tb);
 	}
@@ -633,7 +634,6 @@ TargetWidget(AG_Event *_Nonnull event)
 #endif
 	nt = AG_NotebookAdd(nb, _("Appearance"), AG_BOX_VERT);
 	if (agStyleEditorCapture) {
-		AG_Pixmap *px;
 		AG_Label *lbl;
 		AG_Surface *S;
 
@@ -654,7 +654,7 @@ TargetWidget(AG_Event *_Nonnull event)
 				                  AG_SCROLLVIEW_PAN_RIGHT |
 						  AG_SCROLLVIEW_FRAME);
 
-			px = AG_PixmapFromSurface(sv, AG_PIXMAP_EXPAND, Sx);
+			AG_PixmapFromSurface(sv, AG_PIXMAP_EXPAND, Sx);
 			AG_SurfaceFree(Sx);
 #if 0
 			AG_SeparatorNewHoriz(nt);
@@ -799,13 +799,11 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 	agStyleEditorBox = pane->div[1];
 	{
-		AG_Label *lbl;
-
 		AG_ObjectAttach(pane->div[0], tl);
 
-		lbl = AG_LabelNewS(pane->div[1], AG_LABEL_HFILL,
+		AG_LabelNewS(pane->div[1], AG_LABEL_HFILL,
 		    _("Select a widget on the left "
-		     "(or use \xe2\x87\xb1 in the toolbar to pick)."));
+		     "(or use \xe2\x87\xb1 to pick)."));
 
 		mi = AG_TlistSetPopup(tl, "window");
 		AG_MenuSetPollFn(mi, MenuForWindow, "%p", tl);
