@@ -1909,7 +1909,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		AG_MenuSeparator(mi);
 		
 		AG_MenuActionKb(mi, _("Close tileset"), agIconClose.s,
-		    AG_KEY_W, AG_KEYMOD_CTRL, AGWINCLOSE(win);
+		    AG_KEY_W, AG_KEYMOD_CTRL, AGWINCLOSE(win));
 	}
 	
 	mi = AG_MenuNode(me->root, _("Edit"), NULL);

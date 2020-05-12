@@ -8,20 +8,12 @@
  * See: AG_StyleSheet(3) and "STYLE ATTRIBUTES" section of AG_Widget(3).
  */
 
-AG_Widget {
-	background-color: #0000;                   /* #RGBA */
-	background-color#focused: #0000;
-	background-color#disabled: #0000;
-	background-color#hover: #0000;
-}
 AG_Window {
-	padding: 0 3 4 3;
-	background-color: #656565;                 /* #RRGGBB */
-	background-color#focused: #666666;
+	padding: 0 3 4 3;                          /* top right bottom left */
+	background-color: #575757;                 /* #RRGGBB */
 }
-
 AG_Box {
-	padding: 2 3 2 3;                          /* top right bottom left */
+	padding: 2 3 2 3;
 	spacing: 3 2;                              /* horiz vert */
 }
 AG_Titlebar {
@@ -54,6 +46,10 @@ AG_Console {
 }
 AG_Button {
 	padding: 5 10 5 10;
+	color#focused: #808081;
+	color#hover: #818180;
+	selection-color#focused: #646496;
+	selection-color#hover: #969664;
 }
 AG_Editable {
 	padding: 1;
@@ -97,6 +93,9 @@ AG_ProgressBar {
 	font-family: league-gothic;
 	font-size: 90%;
 	padding: 2;
+}
+AG_Scrollbar {
+	line-color#hover: rgb(200,200,180);
 }
 AG_Separator {
 	padding: 4;

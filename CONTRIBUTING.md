@@ -27,20 +27,18 @@ The Canadian-based [Csoft.net](https://csoft.net), which first advertised on [Sl
 #### **Donate software or hardware**
 
 We are always interested in porting Agar to new platforms, operating systems and devices. Please contact [Julien](mailto:vedge@csoft.net) if you wish to donate. Some currently wanted items:
-- Color monitor / adapter box for Amiga 500.
-- Color monitor / adapter box for Apple IIc.
-- Color monitor / adapter box for Apple IIGS.
-- GP2x or any successor device to it.
-- MacOS X, any version from 10.7 through 10.15 (help improve the [**cocoa**](https://libagar.org/man3/AG_DriverCocoa) driver).
-- Nintendo DS.
-- Raspberry Pi 3 & 4 (help improve the [**glx**](https://libagar.org/man3/AG_DriverGLX) driver).
+- Raspberry Pi 3 or 4 (help improve the [**glx**](https://libagar.org/man3/AG_DriverGLX) driver).
+- An Intel Mac with working graphics; MacOS any version from 10.7 to 10.15 (help improve the [**cocoa**](https://libagar.org/man3/AG_DriverCocoa) driver).
 - Windows 8, Windows 10 (help improve the [**wgl**](https://libagar.org/man3/AG_DriverWGL) driver).
-- Interesting input devices (gamepads, tablets, IR remotes, etc).
-- More on [Julien's Amazon Wishlist](https://libagar.org/wishlist).
+- Any interesting device to port to for which open-source devkits exist (GP2x, Nintendo DS).
+- Color monitors / adapter boxes for Amiga 500, Apple IIc, Apple IIGS.
+- Any interesting input devices (gamepads, tablets, IR remotes, etc).
+- [EverDrive N8 NES / Mega EverDrive X5](https://libagar.org/wishlist).
 
-#### **Make a cash donation**
+#### **Make a donation**
 
 - [**Donate via PayPal**](https://sourceforge.net/donate/index.php?group_id=77100)
+- [**Buy me coffee**](https://libagar.org/wishlist)
 
 Thanks! :heart: :heart: :heart:
 

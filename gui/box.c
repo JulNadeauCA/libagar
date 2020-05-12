@@ -93,20 +93,8 @@ AG_BoxNewHoriz(void *p, Uint flags)
 	return AG_BoxNew(p, AG_BOX_HORIZ, flags);
 }
 
-AG_HBox *
-AG_HBoxNew(void *p, Uint flags)
-{
-	return AG_BoxNew(p, AG_BOX_HORIZ, flags);
-}
-
 AG_Box *
 AG_BoxNewVert(void *p, Uint flags)
-{
-	return AG_BoxNew(p, AG_BOX_VERT, flags);
-}
-
-AG_VBox *
-AG_VBoxNew(void *p, Uint flags)
 {
 	return AG_BoxNew(p, AG_BOX_VERT, flags);
 }
@@ -239,7 +227,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	r->h = WIDGET(box)->paddingTop  + WIDGET(box)->paddingBottom;
 
 #ifdef AG_DEBUG
-	if (box->type >= AG_BOX_TYPE_LAST) { AG_FatalError("box->type"); }
+	if (box->type >= AG_BOX_TYPE_LAST) AG_FatalError("box->type");
 #endif
 	nWidgets = pfSizeRequest[box->type](box, &totFixed);
 
@@ -345,7 +333,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	int nWidgets, totFixed;
 
 #ifdef AG_DEBUG
-	if (box->type >= AG_BOX_TYPE_LAST) { AG_FatalError("box->type"); }
+	if (box->type >= AG_BOX_TYPE_LAST) AG_FatalError("box->type");
 #endif
 	nWidgets = pfSizeRequest[box->type](box, &totFixed);
 
@@ -353,7 +341,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		return (0);
 	}
 	if (box->flags & AG_BOX_HOMOGENOUS) {
-		pfSizeAllocate[box->type+2](box, a, nWidgets);
+		pfSizeAllocate[box->type + 2](box, a, nWidgets);
 	} else {
 		pfSizeAllocate[box->type](box, a, totFixed);
 	}
@@ -543,7 +531,6 @@ AG_BoxSizeHint(AG_Box *box, int w, int h)
 	AG_OBJECT_ISA(box, "AG_Widget:AG_Box:*");
 	box->wPre = w;
 	box->hPre = h;
-	AG_Redraw(box);
 }
 
 /* Enable/Disable HOMOGENOUS (divide space equally) mode. */
@@ -574,6 +561,10 @@ AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 {
 	AG_SizeAlloc a;
 
+#ifdef AG_DEBUG
+	if (type >= AG_BOX_TYPE_LAST)
+		AG_FatalError("Box type");
+#endif
 	AG_OBJECT_ISA(box, "AG_Widget:AG_Box:*");
 	AG_ObjectLock(box);
 
@@ -671,6 +662,20 @@ Edit(void *_Nonnull obj)
 	
 	return (box);
 }
+
+#ifdef AG_LEGACY
+AG_HBox *
+AG_HBoxNew(void *p, Uint flags)
+{
+	return AG_BoxNew(p, AG_BOX_HORIZ, flags);
+}
+
+AG_VBox *
+AG_VBoxNew(void *p, Uint flags)
+{
+	return AG_BoxNew(p, AG_BOX_VERT, flags);
+}
+#endif /* AG_LEGACY */
 
 AG_WidgetClass agBoxClass = {
 	{

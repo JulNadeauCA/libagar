@@ -36,7 +36,6 @@
 #include <agar/config/have_kqueue.h>
 #include <agar/config/have_timerfd.h>
 #include <agar/config/have_select.h>
-#include <agar/config/ag_debug_core.h>
 
 #if defined(HAVE_KQUEUE)
 # ifdef __NetBSD__
@@ -58,6 +57,9 @@
 # include <unistd.h>
 # include <errno.h>
 #endif
+
+/* Expensive debugging output related to event delivery. */
+/* #define DEBUG_EVENTS */
 
 AG_EventSource *_Nullable agEventSource = NULL;	/* Event source (thread-local) */
 #ifdef AG_THREADS
@@ -377,10 +379,9 @@ EventTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	const char *eventName = AG_STRING(1);
 	AG_Event *ev;
 
-# ifdef AG_DEBUG_CORE
-	if (agDebugLvl >= 2)
-		Debug(obj, "Event <%s> timeout (%u ticks)\n", eventName,
-		    (Uint)to->ival);
+# ifdef DEBUG_EVENTS
+	Debug(obj, "Event <%s> timeout (%u ticks)\n", eventName,
+	    (Uint)to->ival);
 # endif
 	TAILQ_FOREACH(ev, &obj->events, events) {
 		if (strcmp(eventName, ev->name) == 0)
@@ -407,8 +408,8 @@ AG_PostEventByPtr(void *pObj, AG_Event *ev, const char *fmt, ...)
 	AG_Object *obj = pObj;
 	va_list ap;
 
-# ifdef AG_DEBUG_CORE
-	if (agDebugLvl>=2) Debug(obj, "Event %p posted\n", ev);
+# ifdef DEBUG_EVENTS
+	Debug(obj, "Event %p posted\n", ev);
 # endif
 	AG_ObjectLock(obj);
 # if AG_MODEL == AG_SMALL
@@ -459,8 +460,8 @@ AG_PostEvent(void *pObj, const char *evname, const char *fmt, ...)
 #ifdef AG_DEBUG
 	if (obj == NULL) { AG_FatalError("NULL object"); }
 #endif
-#ifdef AG_DEBUG_CORE
-	if (agDebugLvl>=2) Debug(obj, "PostEvent <%s>\n", evname);
+#ifdef DEBUG_EVENTS
+	Debug(obj, "PostEvent <%s>\n", evname);
 #endif
 	AG_ObjectLock(obj);
 	TAILQ_FOREACH(ev, &obj->events, events) {
@@ -524,9 +525,8 @@ AG_ForwardEvent(void *pObj, const AG_Event *event)
 	AG_Object *obj = pObj;
 	AG_Event *ev;
 
-#ifdef AG_DEBUG_CORE
-	if (agDebugLvl >= 2)
-		Debug(obj, "Event <%s> forwarded\n", event->name);
+#ifdef DEBUG_EVENTS
+	Debug(obj, "Event <%s> forwarded\n", event->name);
 #endif
 	AG_ObjectLock(obj);
 	TAILQ_FOREACH(ev, &obj->events, events) {

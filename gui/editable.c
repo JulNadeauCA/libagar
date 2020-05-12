@@ -967,7 +967,7 @@ Draw(void *_Nonnull obj)
 	const int selStart = ed->selStart;
 	const int selEnd = ed->selEnd;
 	const int paddingLeft = WIDGET(ed)->paddingLeft;
-	int i, dx,dy, x,y, yCurs, selected=0;
+	int i, dx,dy, x,y, yCurs=0, selected=0;
 
 	if (cEditableBg->a > 0)
 		AG_DrawRectFilled(ed, &WIDGET(ed)->r, cEditableBg);
@@ -1043,7 +1043,7 @@ Draw(void *_Nonnull obj)
 		if (c == '\n') {
 			y += lineSkip;
 			if (selected) {
-				AG_DrawLineV(ed, 0, y, y+lineSkip, cSel);
+				AG_DrawLineV(ed, 1, y, y+lineSkip, cSel);
 			}
 			ed->xMax = MAX(ed->xMax, x+10);
 			ed->yMax++;
@@ -1155,9 +1155,11 @@ Draw(void *_Nonnull obj)
 		if ((yScrollTo - ed->y) < 0) {
 			ed->y += (yScrollTo - ed->y);
 			if (ed->y < 0) { ed->y = 0; }
-		}
-		if ((yScrollTo - ed->y) > ed->yVis - 1) {
+		} else if ((yScrollTo - ed->y) > ed->yVis - 1) {
 			ed->y = yScrollTo - ed->yVis + 1;
+		} else if (yScrollTo <= ed->y) {
+			if (ed->y > 0)
+				ed->y--;
 		}
 		ed->yScrollTo = NULL;
 		WIDGET(ed)->window->dirty = 1;

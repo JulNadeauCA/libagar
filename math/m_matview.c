@@ -230,7 +230,8 @@ DrawNumerical(M_Matview *_Nonnull mv)
 
 	AG_DrawBoxSunk(mv, &mv->r, &WCOLOR(mv, BG_COLOR));
 	AG_PushClipRect(mv, &mv->r);
-	
+	AG_PushBlendingMode(mv, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 	AG_PushTextState();
 	AG_TextColor(&WCOLOR(mv, TEXT_COLOR));
 
@@ -253,6 +254,7 @@ DrawNumerical(M_Matview *_Nonnull mv)
 	AG_DrawLineV(mv, xMax+4, 2, y, &WCOLOR(mv, LINE_COLOR));
 
 	AG_PopTextState();
+	AG_PopBlendingMode(mv);
 	AG_PopClipRect(mv);
 }
 

@@ -126,13 +126,19 @@ typedef struct sg_node {
 	Uint flags;
 #define SG_NODE_SELECTED	0x01	/* Selection flag */
 #define SG_NODE_HIDE		0x02	/* Disable rendering */
+
+#ifdef AG_DEBUG
 	Uint8 _pad1[12];
+#else
+	Uint8 _pad1[20];
+#endif
 	M_Matrix44 T;			/* Transformation from parent */
 	struct sg *_Nullable sg;	/* Back pointer to sg */
 	AG_TAILQ_ENTRY(sg_node) rnodes;	/* Used for quick inverse traversal */
 	AG_TAILQ_ENTRY(sg_node) nodes;	/* For flat list */
 	AG_TAILQ_HEAD_(sg_action) actions; /* Enabled node actions */
-	Uint8 _pad2[8];
+	Uint32 _pad2;
+	Uint32 _pad3;
 } SG_Node;
 
 /* Scene graph object */

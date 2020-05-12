@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>,
- * 2019 Charles A. Daniels, <charles@cdaniels.net>
+ * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2019 Charles A. Daniels, <charles@cdaniels.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -619,6 +619,8 @@ Draw(void *obj)
 	AG_ColorRGB_8(&c, 128,128,128);
 	AG_DrawRectOutline(gf, &r, &c);
 
+	AG_PushBlendingMode(gf, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 	/* Draw the edges */
 	TAILQ_FOREACH(edge, &gf->edges, edges) {
 		if (edge->flags & AG_GRAPH_HIDDEN)
@@ -804,6 +806,7 @@ Draw(void *obj)
 		}
 	}
 
+	AG_PopBlendingMode(gf);
 	AG_PopClipRect(gf);
 }
 

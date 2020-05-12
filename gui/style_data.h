@@ -9,16 +9,9 @@ const char *agStyleDefault_Data =
 	" *\n"
 	" * See: AG_StyleSheet(3) and \"STYLE ATTRIBUTES\" section of AG_Widget(3).\n"
 	" */\n"
-	"AG_Widget {\n"
-	"background-color: #0000;                   /* #RGBA */\n"
-	"background-color#focused: #0000;\n"
-	"background-color#disabled: #0000;\n"
-	"background-color#hover: #0000;\n"
-	"}\n"
 	"AG_Window {\n"
 	"padding: 0 3 4 3;\n"
-	"background-color: #656565;                 /* #RRGGBB */\n"
-	"background-color#focused: #666666;\n"
+	"background-color: #575757;                    /* #RGB */\n"
 	"}\n"
 	"AG_Box {\n"
 	"padding: 2 3 2 3;                          /* top right bottom left */\n"
@@ -53,6 +46,10 @@ const char *agStyleDefault_Data =
 	"}\n"
 	"AG_Button {\n"
 	"padding: 5 10 5 10;\n"
+	"color#focused: #808081;\n"
+	"color#hover: #818180;\n"
+	"selection-color#focused: #646496;\n"
+	"selection-color#hover: #969664;\n"
 	"}\n"
 	"AG_Editable {\n"
 	"padding: 1;\n"
@@ -97,6 +94,9 @@ const char *agStyleDefault_Data =
 	"font-size: 90%;\n"
 	"padding: 2;\n"
 	"}\n"
+	"AG_Scrollbar {\n"
+	"line-color#hover: rgb(200,200,180);\n"
+	"}\n"
 	"AG_Separator {\n"
 	"padding: 4;\n"
 	"}\n"
@@ -111,7 +111,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2092,
+	2055,
 	&agStyleDefault_Data,
 	NULL
 };

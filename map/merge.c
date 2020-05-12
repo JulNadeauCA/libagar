@@ -323,14 +323,14 @@ static void
 Init(MAP_Tool *_Nonnull t)
 {
 	AG_Window *win;
-	AG_HBox *hb;
+	AG_Box *hb;
 	AG_Button *bu;
 	AG_Textbox *tb;
 
 	if ((win = MAP_ToolWindow(t, "mapedit-tool-merge")) == NULL)
 		return;
 
-	hb = AG_HBoxNew(win, AG_HBOX_HFILL);
+	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
 		tb = AG_TextboxNewS(hb, AG_TEXTBOX_FOCUS, _("Name: "));
 		AG_SetEvent(tb, "textbox-return", CreateBrush, "%p", tb);
@@ -341,7 +341,7 @@ Init(MAP_Tool *_Nonnull t)
 		AG_SetEvent(bu, "button-pushed", CreateBrush, "%p", tb);
 	}
 
-	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
+	hb = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 	{
 #if 0
 		bu = AG_ButtonNew(hb, 0, _("Load set"));
@@ -356,7 +356,7 @@ Init(MAP_Tool *_Nonnull t)
 	}
 
 	/* XXX */
-	brushes_tl = AG_TlistNew(win, AG_TLIST_MULTI|AG_TLIST_EXPAND);
+	brushes_tl = AG_TlistNew(win, AG_TLIST_MULTI | AG_TLIST_EXPAND);
 }
 
 

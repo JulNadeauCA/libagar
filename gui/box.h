@@ -8,9 +8,9 @@
 #include <agar/gui/begin.h>
 
 enum ag_box_type {
-	AG_BOX_HORIZ = 0,
-	AG_BOX_VERT  = 1
-#define AG_BOX_TYPE_LAST    2
+	AG_BOX_HORIZ,
+	AG_BOX_VERT,
+	AG_BOX_TYPE_LAST
 };
 
 enum ag_box_style {
@@ -78,8 +78,6 @@ extern AG_WidgetClass agBoxClass;
 AG_Box *_Nonnull  AG_BoxNew(void *_Nullable, enum ag_box_type, Uint);
 AG_Box *_Nonnull  AG_BoxNewHoriz(void *_Nullable, Uint);
 AG_Box *_Nonnull  AG_BoxNewVert(void *_Nullable, Uint);
-AG_HBox *_Nonnull AG_HBoxNew(void *_Nullable, Uint);
-AG_VBox *_Nonnull AG_VBoxNew(void *_Nullable, Uint);
 
 void AG_BoxSetStyle(AG_Box *_Nonnull, enum ag_box_style);
 void AG_BoxSetLabel(AG_Box *_Nonnull, const char *_Nullable, ...);
@@ -91,24 +89,24 @@ void AG_BoxSetType(AG_Box *_Nonnull, enum ag_box_type);
 void AG_BoxSetHorizAlign(AG_Box *_Nonnull, enum ag_box_align);
 void AG_BoxSetVertAlign(AG_Box *_Nonnull, enum ag_box_align);
 
-#define AG_HBoxInit(b,fl)          AG_BoxInit((b),AG_BOX_HORIZ,(fl))
-#define AG_HBoxSetHomogenous(b,fl) AG_BoxSetHomogenous((b),(fl))
-#define AG_VBoxInit(b,fl)          AG_BoxInit((b),AG_BOX_VERT,(fl))
-#define AG_VBoxSetHomogenous(b,fl) AG_BoxSetHomogenous((b),(fl))
-
 #ifdef AG_LEGACY
+AG_HBox *_Nonnull AG_HBoxNew(void *_Nullable, Uint) DEPRECATED_ATTRIBUTE;
+AG_VBox *_Nonnull AG_VBoxNew(void *_Nullable, Uint) DEPRECATED_ATTRIBUTE;
 # define AG_BOX_FRAME AG_BOX_SHADING
-# define AG_BoxNewHorizNS(p,fl) AG_BoxNewHoriz((p), (fl | AG_BOX_NO_SPACING))
-# define AG_BoxNewVertNS(p,fl)  AG_BoxNewVert((p), (fl | AG_BOX_NO_SPACING))
+# define AG_BoxNewHorizNS(p,fl)     AG_BoxNewHoriz((p), (fl | AG_BOX_NO_SPACING))
+# define AG_BoxNewVertNS(p,fl)      AG_BoxNewVert((p), (fl | AG_BOX_NO_SPACING))
+# define AG_BoxSetPadding(p,px)     AG_SetStyleF((p), "padding", "%d", (px))
+# define AG_BoxSetSpacing(p,px)     AG_SetStyleF((p), "spacing", "%d", (px))
 
-# define AG_BoxSetPadding(p,px) AG_SetStyleF((p), "padding", "%d", (px))
-# define AG_BoxSetSpacing(p,px) AG_SetStyleF((p), "spacing", "%d", (px))
-
-# define AG_HBoxSetPadding(b,pad) AG_BoxSetPadding((b),(pad))
-# define AG_HBoxSetSpacing(b,sp)  AG_BoxSetSpacing((b),(sp))
-# define AG_VBoxSetPadding(b,pad) AG_BoxSetPadding((b),(pad))
-# define AG_VBoxSetSpacing(b,sp)  AG_BoxSetSpacing((b),(sp))
-#endif
+# define AG_VBoxInit(b,fl)          AG_BoxInit((b),AG_BOX_VERT,(fl))
+# define AG_HBoxInit(b,fl)          AG_BoxInit((b),AG_BOX_HORIZ,(fl))
+# define AG_HBoxSetHomogenous(b,fl) AG_BoxSetHomogenous((b),(fl))
+# define AG_VBoxSetHomogenous(b,fl) AG_BoxSetHomogenous((b),(fl))
+# define AG_HBoxSetPadding(b,pad)   AG_BoxSetPadding((b),(pad))
+# define AG_HBoxSetSpacing(b,sp)    AG_BoxSetSpacing((b),(sp))
+# define AG_VBoxSetPadding(b,pad)   AG_BoxSetPadding((b),(pad))
+# define AG_VBoxSetSpacing(b,sp)    AG_BoxSetSpacing((b),(sp))
+#endif /* AG_LEGACY */
 __END_DECLS
 
 #include <agar/gui/close.h>

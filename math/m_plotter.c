@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -156,13 +156,16 @@ M_PlotUpdateLabel(M_Plot *pl)
 {
 	M_Plotter *ptr = pl->plotter;
 
-	if (pl->label >= 0) {
+	if (pl->label >= 0)
 		AG_WidgetUnmapSurface(ptr, pl->label);
-	}
+
+	AG_PushTextState();
 	AG_TextFont(ptr->font);
 	AG_TextColor(&pl->color);
 	pl->label = (pl->label_txt[0] != '\0') ? -1 :
 	    AG_WidgetMapSurface(ptr, AG_TextRender(pl->label_txt));
+	AG_PopTextState();
+
 	AG_Redraw(ptr);
 }
 
@@ -520,6 +523,8 @@ Draw(void *_Nonnull obj)
 	AG_DrawLineH(ptr, 1, w-2, y0 - ptr->yOffs, &ptr->colors[0]);
 	AG_DrawLineV(ptr, ptr->xMax-1, r.y, r.h,   &ptr->colors[0]);
 
+	AG_PushBlendingMode(ptr, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 	/* First pass */
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
 		AG_Color color = pl->color;
@@ -617,6 +622,7 @@ Draw(void *_Nonnull obj)
 		}
 	}
 
+	AG_PopBlendingMode(ptr);
 	AG_PopClipRect(ptr);
 	
 	AG_WidgetDraw(ptr->hbar);
@@ -863,9 +869,13 @@ M_PlotLabelSetText(M_Plot *pl, M_PlotLabel *plbl, const char *fmt, ...)
 	va_end(args);
 
 	AG_WidgetUnmapSurface(ptr, plbl->text_surface);
+
+	AG_PushTextState();
 	AG_TextFont(ptr->font);
 	AG_TextColor(&pl->color);
 	plbl->text_surface = AG_WidgetMapSurface(ptr, AG_TextRender(plbl->text));
+	AG_PopTextState();
+
 	AG_Redraw(ptr);
 }
 

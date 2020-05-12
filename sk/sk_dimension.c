@@ -404,6 +404,8 @@ SK_DimensionDraw(void *p, SK_View *skv)
 		break;
 	}
 
+	AG_PushBlendingMode(skv, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 	GL_Translate(dim->vLbl);
 	AG_WidgetBlitSurfaceFlippedGL(skv, dimv->lbl,
 	    (float)dim->wLbl, (float)dim->hLbl);
@@ -417,6 +419,8 @@ SK_DimensionDraw(void *p, SK_View *skv)
 	}
 	GL_End();
 	GL_PopMatrix();
+
+	AG_PopBlendingMode(skv);
 }
 
 void
@@ -594,8 +598,7 @@ AddDimConstraintDlg(struct sk_dimension_tool *_Nonnull t, SK *_Nonnull sk,
 {
 	AG_Window *win;
 	AG_Numerical *num;
-	AG_VBox *vb;
-	AG_HBox *hb;
+	AG_Box *hb, *vb;
 	const char *unit = NULL;
 
 #if 0
@@ -608,11 +611,12 @@ AddDimConstraintDlg(struct sk_dimension_tool *_Nonnull t, SK *_Nonnull sk,
 		return (-1);
 	}
 #endif
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE|
+	win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOVRESIZE |
 	                   AG_WINDOW_NOCLOSE);
+
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
+	vb = AG_BoxNewVert(win, AG_BOX_HFILL);
 	{
 		switch (dim->type) {
 		case SK_DIMENSION_DISTANCE:
@@ -635,7 +639,8 @@ AddDimConstraintDlg(struct sk_dimension_tool *_Nonnull t, SK *_Nonnull sk,
 			return (-1);
 		}
 	}
-	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
+
+	vb = AG_BoxNewVert(win, AG_BOX_HFILL);
 	{
 		static double v;
 
@@ -649,7 +654,8 @@ AddDimConstraintDlg(struct sk_dimension_tool *_Nonnull t, SK *_Nonnull sk,
 		AG_SetEvent(num, "numerical-return",
 		    AddDimConstraint, "%p,%p,%p,%p", win, t, dim, num);
 	}
-	hb = AG_HBoxNew(win, AG_HBOX_HFILL|AG_HBOX_HOMOGENOUS);
+
+	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
 	{
 		AG_ButtonNewFn(hb, 0, _("OK"),
 		    AddDimConstraint, "%p,%p,%p,%p", win, t, dim, num);

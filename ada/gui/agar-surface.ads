@@ -469,11 +469,6 @@ package Agar.Surface is
      GL_Texture   : in Boolean := false) return Surface_Access;
 
   --
-  -- Create a surface in the "best" format suitable for OpenGL textures.
-  --
-  function New_Surface_GL (W,H : in Natural) return Surface_Access;
-
-  --
   -- Return an AG_Color from RGBA components.
   --
   function Color_8

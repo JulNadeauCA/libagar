@@ -55,6 +55,7 @@ M_PolygonRead(AG_DataSource *ds)
 	for (i = 0; i < P.n; i++) {
 		P.v[i] = M_ReadVector2(ds);
 	}
+	P._pad = 0;
 	return (P);
 }
 
@@ -113,6 +114,7 @@ M_PolygonFromPts(Uint n, const M_Vector2 *v)
 	P.v = Malloc(n*sizeof(M_Vector2));
 	P.n = n;
 	memcpy(P.v, v, n*sizeof(M_Vector2));
+	P._pad = 0;
 	return (P);
 }
 
@@ -125,6 +127,7 @@ M_PolygonFromPointSet2(const M_PointSet2 *ps)
 	P.v = Malloc(ps->n*sizeof(M_Vector2));
 	P.n = ps->n;
 	memcpy(P.v, ps->p, ps->n*sizeof(M_Vector2));
+	P._pad = 0;
 	return (P);
 }
 
@@ -141,6 +144,7 @@ M_PolygonFromPointSet2i(const M_PointSet2i *ps)
 		P.v[i].x = ((M_Real)ps->x[i])/ps->w;
 		P.v[i].y = ((M_Real)ps->y[i])/ps->h;
 	}
+	P._pad = 0;
 	return (P);
 }
 
@@ -187,6 +191,7 @@ M_PolygonFromLines(Uint n, const M_Line2 *ln)
 	for (i = 0; i < n; i++) {
 		P.v[i] = ln[i].p;
 	}
+	P._pad = 0;
 	return (P);
 }
 

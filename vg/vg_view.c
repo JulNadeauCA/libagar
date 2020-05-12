@@ -732,12 +732,14 @@ Draw(void *_Nonnull obj)
 
 	if (vv->status[0] != '\0') {
 		AG_PushTextState();
+		AG_PushBlendingMode(vv, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 		AG_TextColor(&WCOLOR(vv, TEXT_COLOR));
 		if ((su = AG_TextCacheGet(vv->tCache, vv->status)) != -1) {
 			AG_WidgetBlitSurface(vv, su,
 			    0,
 			    HEIGHT(vv) - WSURFACE(vv,su)->h);
 		}
+		AG_PopBlendingMode(vv);
 		AG_PopTextState();
 	}
 	AG_PopClipRect(vv);
@@ -1093,6 +1095,8 @@ VG_EditNode(VG_View *vv, Uint editArea, VG_Node *vn)
 void
 VG_DrawSurface(VG_View *vv, int x, int y, float degs, int su)
 {
+	AG_PushBlendingMode(vv, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 #ifdef HAVE_OPENGL
 	if (AGDRIVER_CLASS(WIDGET(vv)->drv)->flags & AG_DRIVER_OPENGL) {
 		glPushMatrix();
@@ -1102,15 +1106,15 @@ VG_DrawSurface(VG_View *vv, int x, int y, float degs, int su)
 		if (degs != 0.0f) {
 			glRotatef(degs, 0.0f, 0.0f, 1.0f);
 		}
-		AG_WidgetBlitSurfaceGL(vv, su,
-		    WSURFACE(vv,su)->w,
-		    WSURFACE(vv,su)->h);
+		AG_WidgetBlitSurfaceGL(vv, su, WSURFACE(vv,su)->w,
+		                               WSURFACE(vv,su)->h);
 		glPopMatrix();
 	} else
 #endif /* HAVE_OPENGL */
 	{
 		AG_WidgetBlitSurface(vv, su, x, y);
 	}
+	AG_PopBlendingMode(vv);
 }
 
 AG_WidgetClass vgViewClass = {

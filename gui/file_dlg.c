@@ -549,14 +549,14 @@ ReplaceFileDlg(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull pwin)
 {
 	AG_Window *win;
 	AG_Button *btn;
-	AG_HBox *hb;
+	AG_Box *hb;
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 
 	AG_LabelNew(win, 0, _("File %s exists. Overwrite?"), fd->cfile);
 
-	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS | AG_HBOX_HFILL);
+	hb = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 	{
 		AG_ButtonNewFn(hb, 0, _("Yes"),
 		    ReplaceFileConfirm, "%p,%p,%p", fd, win, pwin);

@@ -1684,7 +1684,9 @@ Draw(void *_Nonnull obj)
 	}
 
 	/* draw columns */
+	AG_PushBlendingMode(tt, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	FOREACH_VISIBLE_COLUMN(tt, DrawColumn, &update, NULL);
+	AG_PopBlendingMode(tt);
 
 	if (update)
 		tt->visible.redraw_last = AG_GetTicks();

@@ -525,27 +525,27 @@ void ag_surface_set_colorkey(AG_Surface *_Nonnull, Uint, AG_Pixel);
 #endif /* !AG_INLINE_SURFACE */
 
 #ifdef AG_LEGACY
-# define AG_AnimNew		AG_SurfaceNew
-# define AG_AnimEmpty		AG_SurfaceEmpty
-# define AG_AnimIndexed		AG_SurfaceIndexed
-# define AG_AnimRGB		AG_SurfaceRGB
-# define AG_AnimRGBA		AG_SurfaceRGBA
-# define AG_AnimSetPalette	AG_SurfaceSetColors
-# define AG_AnimDup		AG_SurfaceDup
-# define AG_AnimResize		AG_SurfaceResize
-# define AG_AnimFree		AG_SurfaceFree
-# define AG_AnimSetColorkey	AG_SurfaceSetColorkey
-# define AG_AnimSetAlpha	AG_SurfaceSetAlpha
+
+# define AG_SRCCOLORKEY       AG_SURFACE_COLORKEY
+# define AG_SRCALPHA          AG_SURFACE_ALPHA
+# define AG_SURFACE_GLTEXTURE AG_SURFACE_GL_TEXTURE
+# define AG_ALPHA_TRANSPARENT AG_TRANSPARENT
+# define AG_ALPHA_OPAQUE      AG_OPAQUE
+# define AG_BlendFn           AG_AlphaFn
+# define AG_AnimNew           AG_SurfaceNew
+# define AG_AnimEmpty         AG_SurfaceEmpty
+# define AG_AnimIndexed       AG_SurfaceIndexed
+# define AG_AnimRGB           AG_SurfaceRGB
+# define AG_AnimRGBA          AG_SurfaceRGBA
+# define AG_AnimSetPalette    AG_SurfaceSetColors
+# define AG_AnimDup           AG_SurfaceDup
+# define AG_AnimResize        AG_SurfaceResize
+# define AG_AnimFree          AG_SurfaceFree
+# define AG_AnimSetColorkey   AG_SurfaceSetColorkey
+# define AG_AnimSetAlpha      AG_SurfaceSetAlpha
 # define AG_AnimSetOrigFPS(s,f)
 # define AG_AnimSetFPS(ast,f)
-/* -> (now handled in AG_Surface) */
-
-/* Flags renamed for readability */
-# define AG_SRCCOLORKEY		AG_SURFACE_COLORKEY
-# define AG_SRCALPHA		AG_SURFACE_ALPHA
-# define AG_SURFACE_GLTEXTURE   AG_SURFACE_GL_TEXTURE
-
-/* Pre-1.6 pixel access routines. */
+/* Pre-1.6 surface pixel access routines. */
 # define AG_CLIPPED_PIXEL(s, x,y) AG_SurfaceClipped((s), (x),(y))
 # define AG_GET_PIXEL(s, p)       AG_SurfaceGet32_At((s), (p))
 # define AG_GET_PIXEL2(s, x,y)    AG_SurfaceGet32((s), (x),(y))
@@ -554,52 +554,45 @@ void ag_surface_set_colorkey(AG_Surface *_Nonnull, Uint, AG_Pixel);
 # define AG_PUT_PIXEL2_CLIPPED(s, x,y, c) \
 	if (!AG_SurfaceClipped((s), (x),(y))) \
 		AG_SurfacePut32((s), (x),(y), (c))
-# define AG_BLEND_RGBA(s, p, r,g,b,a, fn)				\
+# define AG_BLEND_RGBA(s, p, r,g,b,a, fn) \
          AG_SurfaceBlendRGB8_At((s), (p), (r),(g),(b),(a), (fn))
-# define AG_BLEND_RGBA2(s, x,y, r,g,b,a, fn)				\
+# define AG_BLEND_RGBA2(s, x,y, r,g,b,a, fn) \
          AG_SurfaceBlendRGB8((s), (x),(y), (r),(g),(b),(a), (fn))
-# define AG_BLEND_RGBA2_CLIPPED(s, x,y, r,g,b,a, fn)			\
-	if (!AG_SurfaceClipped((s), (x),(y))) 				\
+# define AG_BLEND_RGBA2_CLIPPED(s, x,y, r,g,b,a, fn) \
+	if (!AG_SurfaceClipped((s), (x),(y))) \
 		AG_SurfaceBlendRGB8((s), (x),(y), (r),(g),(b),(a), (fn))
-
-/* AG_ALPHA_* and AG_BlendFn renamed in 1.6 */
-# define AG_ALPHA_TRANSPARENT AG_TRANSPARENT
-# define AG_ALPHA_OPAQUE      AG_OPAQUE
-# define AG_BlendFn           AG_AlphaFn
-
 void        AG_SurfaceLock(AG_Surface *_Nonnull) DEPRECATED_ATTRIBUTE;
 void        AG_SurfaceUnlock(AG_Surface *_Nonnull) DEPRECATED_ATTRIBUTE;
 Uint32      AG_MapRGB(const AG_PixelFormat *_Nonnull, Uint8, Uint8, Uint8) DEPRECATED_ATTRIBUTE _Pure_Attribute;
-/*       -> AG_MapPixel32_RGB8(pf, r,g,b) */
+/*       => AG_MapPixel32_RGB8(pf, r,g,b) */
 Uint32      AG_MapRGBA(const AG_PixelFormat *_Nonnull, Uint8, Uint8, Uint8, Uint8) DEPRECATED_ATTRIBUTE _Pure_Attribute;
-/*       -> AG_MapPixel32_RGBA8(pf, r,g,b,a) */
+/*       => AG_MapPixel32_RGBA8(pf, r,g,b,a) */
 Uint32      AG_MapPixelRGB(const AG_PixelFormat *_Nonnull, Uint8, Uint8, Uint8) DEPRECATED_ATTRIBUTE _Pure_Attribute;
-/*       -> AG_MapPixel32_RGB8(pf, r,g,b) */
+/*       => AG_MapPixel32_RGB8(pf, r,g,b) */
 Uint32      AG_MapPixelRGBA(const AG_PixelFormat *_Nonnull, Uint8, Uint8, Uint8, Uint8) DEPRECATED_ATTRIBUTE _Pure_Attribute;
-/*       -> AG_MapPixel32_RGBA8(pf, r,g,b,a) */
+/*       => AG_MapPixel32_RGBA8(pf, r,g,b,a) */
 Uint32      AG_MapColorRGB(const AG_PixelFormat *_Nonnull, AG_Color) DEPRECATED_ATTRIBUTE _Pure_Attribute;
-/*       -> AG_MapPixel32(pf, c); */
+/*       => AG_MapPixel32(pf, c); */
 Uint32      AG_MapColorRGBA(const AG_PixelFormat *_Nonnull, AG_Color) DEPRECATED_ATTRIBUTE _Pure_Attribute;
-/*       -> AG_MapPixel32(pf, c) */
+/*       => AG_MapPixel32(pf, c) */
 void        AG_GetRGB(Uint32, const AG_PixelFormat *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull) DEPRECATED_ATTRIBUTE;
 void        AG_GetPixelRGB(Uint32, const AG_PixelFormat *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull) DEPRECATED_ATTRIBUTE;
-/*       -> AG_GetColor32_RGB8(px, pf, r,g,b) */
+/*       => AG_GetColor32_RGB8(px, pf, r,g,b) */
 void        AG_GetRGBA(Uint32, const AG_PixelFormat *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull) DEPRECATED_ATTRIBUTE;
 void        AG_GetPixelRGBA(Uint32, const AG_PixelFormat *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull) DEPRECATED_ATTRIBUTE;
-/*       -> AG_GetColor32_RGBA8(px, pf, r,g,b,a) */
+/*       => AG_GetColor32_RGBA8(px, pf, r,g,b,a) */
 AG_Color    AG_GetColorRGB(Uint32, const AG_PixelFormat *_Nonnull) DEPRECATED_ATTRIBUTE;
-/*       -> AG_GetColor32(px, pf), c.a=AG_OPAQUE */
+/*       => AG_GetColor32(px, pf), c.a=AG_OPAQUE */
 AG_Color    AG_GetColorRGBA(Uint32, const AG_PixelFormat *_Nonnull) DEPRECATED_ATTRIBUTE;
-/*       -> AG_GetColor32(px, pf) */
+/*       => AG_GetColor32(px, pf) */
 AG_Surface *_Nonnull AG_DupSurface(AG_Surface *_Nonnull) DEPRECATED_ATTRIBUTE;
-/*       -> AG_SurfaceDup(s) */
+/*                => AG_SurfaceDup(s) */
 int         AG_SamePixelFmt(const AG_Surface *_Nonnull, const AG_Surface *_Nonnull) DEPRECATED_ATTRIBUTE _Pure_Attribute;
-/*       -> AG_PixelFormatCompare(a,b) */
+/*       => AG_PixelFormatCompare(a,b) */
 int         AG_ScaleSurface(const AG_Surface *_Nonnull, Uint16, Uint16, AG_Surface *_Nonnull *_Nullable) DEPRECATED_ATTRIBUTE;
-/*       -> AG_SurfaceScale(s, w,h, 0) */
-
+/*       => AG_SurfaceScale(s, w,h, 0) */
 AG_Surface *_Nonnull AG_SurfaceStdGL(Uint, Uint) _Warn_Unused_Result DEPRECATED_ATTRIBUTE;
-/*                -> AG_SurfaceStdRGBA(w,h) */
+/*                => AG_SurfaceStdRGBA(w,h) */
 
 #endif /* AG_LEGACY */
 __END_DECLS

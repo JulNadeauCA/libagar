@@ -50,7 +50,7 @@
 void M_BezierForm2(M_PointSet2* p, M_PointSet2* c)
 {
 	int k;
-	M_Real n, choose;
+	M_Real n, choose = 1.0;
 	n = p->n - 1;
 
 	M_PointSetAlloc2(c, p->n);
@@ -58,7 +58,7 @@ void M_BezierForm2(M_PointSet2* p, M_PointSet2* c)
 	/* XXX: should be an error condition of n < c->n */
 
 	for(k = 0; k <= n; k++) {
-		if (k == 0) choose = 1;
+		if (k == 0) choose = 1.0;
 		else if (k == 1) choose = n;
 		else choose = choose *(n-k+1)/k;
 		c->p[k].x = p->p[k].x *choose;
@@ -72,7 +72,7 @@ void M_BezierForm2(M_PointSet2* p, M_PointSet2* c)
 void M_BezierForm3(M_PointSet3* p, M_PointSet3* c)
 {
 	int k;
-	M_Real n, choose;
+	M_Real n, choose = 1.0;
 	n = p->n - 1;
 
 	M_PointSetAlloc3(c, p->n);
@@ -80,7 +80,7 @@ void M_BezierForm3(M_PointSet3* p, M_PointSet3* c)
 	/* XXX: should be an error condition of n < c->n */
 
 	for(k = 0; k <= n; k++) {
-		if (k == 0) choose = 1;
+		if (k == 0) choose = 1.0;
 		else if (k == 1) choose = n;
 		else choose = choose *(n-k+1)/k;
 		c->p[k].x = p->p[k].x *choose;

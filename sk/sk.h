@@ -108,12 +108,14 @@ typedef struct sk_node {
 	struct sk_constraint *_Nonnull *_Nonnull cons;	/* Constraint edges */
 
 	Uint nEdges;			/* For solver */
-	Uint32 _pad;
+	Uint32 _pad1;
 	void *userData;			/* Optional user pointer */
 
 	AG_TAILQ_ENTRY(sk_node) sknodes; /* Entry in transformation tree */
 	AG_TAILQ_ENTRY(sk_node) nodes;	 /* Entry in flat node list */
 	AG_TAILQ_ENTRY(sk_node) rnodes;	 /* Reverse entry (optimization) */
+	Uint32 _pad2;
+	Uint32 _pad3;
 } SK_Node;
 
 /* Pair of nodes */

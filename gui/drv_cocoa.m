@@ -915,8 +915,6 @@ COCOA_BeginRendering(void *_Nonnull obj)
 static void
 COCOA_RenderWindow(AG_Window *_Nonnull win)
 {
-	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
-	AG_GL_Context *gl = &co->gl;
 	const AG_Color *cBg = &WCOLOR(win, BG_COLOR);
 
 	AG_PushClipRect(win, &WIDGET(win)->r);

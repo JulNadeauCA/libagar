@@ -32,48 +32,23 @@
 .Nm AG_Intro
 .Nd agar introduction
 .Sh DESCRIPTION
-Agar is a graphical application toolkit.
-It provides all types of graphical applications, written in different languages,
+Agar is a general-purpose graphical application toolkit.
+It provides all types of applications (possibly written in different languages)
 with consistent interfaces across a multiple platforms.
 .Pp
-This document summarizes the various interfaces provided by the standard
-libraries included in the official Agar source distribution (such as
-.Em ag_core ,
-.Em ag_gui ,
-etc.)
-These libraries share the same version number and release cycle, but they are
-separate and can be packaged independently.
-.Pp
-Manual pages are provided for most Agar object classes.
-Some sections are standard throughout the documentation:
-.Bl -tag -width "INHERITANCE HIERARCHY "
-.It INHERITANCE HIERARCHY
-List of inherited parent classes (see
-.Xr AG_Object 3
-for details on inheritance).
-.It EVENTS
-The list of events defined (or raised) by this object (see
-.Xr AG_Event 3
-for details on events).
-.It STRUCTURE DATA
-List of public structure members which are safe to access directly.
-Multithreaded applications must use
-.Xr AG_ObjectLock 3
-prior to accessing this data (although in some contexts, such as inside event
-handler routines, objects can be presumed locked; see
-.Xr AG_Threads 3
-for details).
-.El
 .Sh AGAR-CORE
-Agar's non-graphical utility library is named
+Agar's non-graphical core and utility library is
 .Em ag_core .
-It implements the
+It implements the base
 .Xr AG_Object 3
-system which is used by all Agar libraries.
+system,
+.Xr AG_Event 3
+mechanism and
+.Xr AG_Timers 3 .
 It also provides cross-platform interfaces to operating system services
-(such as kernel-based event mechanisms, timers, threads and filesystems).
+such as kernel-based events, timers, threads and filesystems.
 .Pp
-To use this library (without GUI), link against
+To use this library (without GUI) link against
 .Sq agar-core-config --libs
 .Pp
 .\" SYNC WITH AG_Core(3) "SEE ALSO"
@@ -123,10 +98,12 @@ Datafile versioning.
 .Sh AGAR-GUI: BASE SYSTEM
 The
 .Em ag_gui
-library implements the Agar GUI system.
+library is the Agar GUI system and standard widget library.
 .Pp
-To use this library (and ag_core), link against
-.Sq agar-config --libs .
+To use this library (and
+.Em ag_core ) ,
+link against
+.Sq agar-config --libs
 .Pp
 .Bl -tag -width "AG_WidgetPrimitives(3) " -compact
 .It Xr AG_AlphaFn 3
@@ -385,9 +362,8 @@ Voxel object.
 .El
 .Sh AGAR-SK
 (Beta)
-The
 .Em ag_sk
-library implements dimensioned 2D sketching and constraint solving.
+implements dimensioned 2D sketches with constraint solving.
 Sketches can contain sets of metric relations (i.e., distances, angles)
 and logical relations (i.e., coincidence, parallelism, tangency), and SK's
 attempts to find a solution using degree-of-freedom analysis.
@@ -405,7 +381,10 @@ Agar visualization widget for sketch objects.
 (Beta)
 The
 .Em ag_au
-library provides a basic cross-platform interface to audio hardware.
+library is intended to provide a cross-platform sound interface and to
+extend
+.Em ag_gui
+with widgets useful in audio applications.
 .Pp
 To use this library, link against
 .Sq agar-au-config --libs .
@@ -449,11 +428,15 @@ Base tile element.
 Edition and visualization widget.
 .El
 .Sh AGAR-VG
-A simple but extensible 2D vector graphics library which allows users to
-view and edit hierarchical sketches consisting of elements with attributes
-(such as lines, curves, text).
-It is floating-point based and uses linear transformations to define the
-placement of geometrical entities.
+.Em ag_vg
+handles visualization and edition of 2D vector drawings.
+.Xr VG 3
+vector drawings are composed of elements such as lines, polygons, curves,
+images or text.
+The format is meant to be extended with application-specific elements and
+edition tools.
+Geometrical placement of elements is determined by linear transformations
+using floating-point methods.
 .Pp
 To use this library, link against
 .Sq agar-vg-config --libs .
@@ -474,3 +457,31 @@ Polygon entity.
 .It Xr VG_Text 3
 Text entity.
 .El
+.Sh COMMON MANUAL SECTIONS
+Manual pages are provided for most Agar object classes.
+Some sections are standard throughout the documentation:
+.Bl -tag -width "INHERITANCE HIERARCHY "
+.It INHERITANCE HIERARCHY
+List of inherited parent classes (see
+.Xr AG_Object 3
+for details on inheritance).
+.It EVENTS
+The list of events defined (or raised) by this object (see
+.Xr AG_Event 3
+for details on events).
+.It STRUCTURE DATA
+List of public structure members which are safe to access directly.
+Multithreaded applications must use
+.Xr AG_ObjectLock 3
+prior to accessing this data (although in some contexts, such as inside event
+handler routines, objects can be presumed locked; see
+.Xr AG_Threads 3
+for details).
+.El
+.Sh SEE ALSO
+.Pp
+.Lk https://libAgar.org/
+.Pp
+.Lk https://github.com/JulNadeauCA/libagar
+.Pp
+.Lk https://powerfulAgar.com/

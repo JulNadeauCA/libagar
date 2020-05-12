@@ -127,18 +127,19 @@ static void
 Draw(void *_Nonnull obj)
 {
 	AG_Icon *icon = obj;
+	AG_Surface *S;
 	AG_Rect r;
-	int hIcon, w_2;
+	int w_2;
 
-	if (icon->surface == -1)
+	if (icon->surface == -1) {
 		return;
-
+	}
+	S = WSURFACE(icon, icon->surface);
 	r.w = WIDTH(icon);
 	w_2 = r.w >> 1;
 
-	AG_WidgetBlitSurface(icon, icon->surface,
-	    w_2 - (WSURFACE(icon,icon->surface)->w >> 1),
-	    0);
+	AG_PushBlendingMode(icon, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	AG_WidgetBlitSurface(icon, icon->surface, w_2 - (S->w >> 1), 0);
 
 	if (icon->labelTxt[0] != '\0') {
 		if (icon->labelSurface != -1 &&
@@ -150,17 +151,18 @@ Draw(void *_Nonnull obj)
 			icon->labelSurface = AG_WidgetMapSurface(icon,
 			    AG_TextRender(icon->labelTxt));
 		}
-		hIcon = WSURFACE(icon,icon->surface)->h;
 		if (icon->flags & AG_ICON_BGFILL) {
 			r.x = 0;
-			r.y = hIcon;
-			r.h = HEIGHT(icon) - hIcon;
+			r.y = S->h;
+			r.h = HEIGHT(icon) - r.y;
 			AG_DrawRect(icon, &r, &icon->cBackground);
 		}
 		AG_WidgetBlitSurface(icon, icon->labelSurface,
 		    w_2 - (WSURFACE(icon,icon->labelSurface)->w >> 1),
-		    WSURFACE(icon,icon->surface)->h + WIDGET(icon)->spacingVert);
+		    S->h + WIDGET(icon)->spacingVert);
 	}
+
+	AG_PopBlendingMode(icon);
 }
 
 void

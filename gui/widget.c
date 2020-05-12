@@ -95,7 +95,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{240,240,240,255},          /*        text-color */
 	{ 50, 50, 50,255},          /*        line-color */
 	{144,144,144,255},          /*        high-color */
-	{ 80, 80, 80,255},          /*         low-color */
+	{ 70, 70, 70,255},          /*         low-color */
 	{  0,  0, 80,255},          /*   selection-color */
 	{  0,  0,  0,  0}
 }, {
@@ -115,7 +115,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{240,240,240,255},          /*        text-color */
 	{ 50, 50, 60,255},          /*        line-color */
 	{110,110,110,255},          /*        high-color */
-	{ 80, 80, 80,255},          /*         low-color */
+	{ 70, 70, 70,255},          /*         low-color */
 	{  0,  0,120,255},          /*   selection-color */
 	{  0,  0,  0,  0}
 }, {
@@ -125,7 +125,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{240,240,240,255},            /*        text-color */
 	{ 50, 50, 50,255},            /*        line-color */
 	{110,110,110,255},            /*        high-color */
-	{ 80, 80, 80,255},            /*         low-color */
+	{ 70, 70, 70,255},            /*         low-color */
 	{  0,  0,120,255},            /*   selection-color */
 	{  0,  0,  0,  0}
 },
@@ -137,7 +137,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{0xf0f0,0xf0f0,0xf0f0,0xffff},    /*        text-color */
 	{0x3232,0x3232,0x3232,0xffff},    /*        line-color */
 	{0x9090,0x9090,0x9090,0xffff},    /*        high-color */
-	{0x5050,0x5050,0x5050,0xffff},    /*         low-color */
+	{0x4646,0x4646,0x4646,0xffff},    /*         low-color */
 	{0x0000,0x0000,0x7878,0xffff},    /*   selection-color */
 	{0x0000,0x0000,0x0000,0x0000}
 }, {
@@ -157,7 +157,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{0xf0f0,0xf0f0,0xf0f0,0xffff},    /*        text-color */
 	{0x3232,0x3232,0x3c3c,0xffff},    /*        line-color */
 	{0xaaaa,0xaaaa,0xaaaa,0xffff},    /*        high-color */
-	{0x5555,0x5555,0x5555,0xffff},    /*         low-color */
+	{0x4646,0x4646,0x4646,0xffff},    /*         low-color */
 	{0x0000,0x0000,0x7878,0xffff},    /*   selection-color */
 	{0x0000,0x0000,0x0000,0x0000}
 }, {
@@ -167,7 +167,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{0xf0f0,0xf0f0,0xf0f0,0xffff},    /*        text-color */
 	{0x3232,0x3232,0x3232,0xffff},    /*        line-color */
 	{0xaaaa,0xaaaa,0xaaaa,0xffff},    /*        high-color */
-	{0x5555,0x5555,0x5555,0xffff},    /*         low-color */
+	{0x4646,0x4646,0x4646,0xffff},    /*         low-color */
 	{0x0000,0x0000,0x7878,0xffff},    /*   selection-color */
 	{0x0000,0x0000,0x0000,0x0000}
 }
@@ -996,7 +996,7 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 {
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
-	int i, rv;
+	int i, rv = 0;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 #ifdef AG_DEBUG

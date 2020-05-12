@@ -254,8 +254,8 @@ AG_ConsoleExportText(const AG_Console *cons, enum ag_newline_type nl)
 		const AG_ConsoleLine *ln = cons->lines[i];
 
 		if (((i == pos) ||
-		     (sel > 0 && i > pos && i < pos+sel+1) ||
-		     (sel < 0 && i < pos && i > pos+sel-1))) {
+		     (sel > 0 && i > pos && i <= pos+sel+1) ||
+		     (sel < 0 && i < pos && i >= pos+sel-1))) {
 			sizeReq += ln->len + newlineLen;
 		}
 	}
@@ -268,8 +268,8 @@ AG_ConsoleExportText(const AG_Console *cons, enum ag_newline_type nl)
 		const AG_ConsoleLine *ln = cons->lines[i];
 
 		if ((i == pos) ||
-		     (sel > 0 && i > pos && i < pos+sel+1) ||
-		     (sel < 0 && i < pos && i > pos+sel-1)) {
+		     (sel > 0 && i > pos && i <= pos+sel+1) ||
+		     (sel < 0 && i < pos && i >= pos+sel-1)) {
 
 			memcpy(ps, ln->text, ln->len);
 			memcpy(&ps[ln->len], newline->s, newlineLen+1);
@@ -374,7 +374,28 @@ MenuExportToFileTXT(AG_Event *_Nonnull event)
 		free(s);
 		goto fail;
 	}
-	fwrite(s, strlen(s), 1, f);
+	if (AG_FileOptionBool(ft, "strip-ansi")) {
+		AG_TextANSI ansi;
+		AG_Char *ucs, *ch;
+
+		ucs = AG_ImportUnicode("US-ASCII", s, NULL, NULL);
+		for (ch = &ucs[0]; *ch != '\0'; ch++) {
+			if (ch[0] == 0x1b &&
+			    ch[1] >= 0x40 &&
+			    ch[1] <= 0x5f &&
+			    ch[2] != '\0') {
+				if (AG_TextParseANSI(AG_TEXT_STATE_CUR(),
+				                     &ansi, &ch[1]) == 0) {
+					ch += ansi.len;
+					continue;
+				}
+			}
+			fputc((char)(*ch), f);
+		}
+		free(ucs);
+	} else {
+		fwrite(s, strlen(s), 1, f);
+	}
 	fclose(f);
 	free(s);
 	AG_TextTmsg(AG_MSG_INFO, 1250, _("Saved to %s OK"), AG_ShortFilename(path));
@@ -426,7 +447,9 @@ MenuExportDlg(AG_Event *_Nonnull event)
 
 	ft = AG_FileDlgAddType(fd, _("Text file"), "*.txt,*.log",
 	    MenuExportToFileTXT, "%Cp", cons);
+
 	AG_FileOptionNewBool(ft, _("Selected Lines Only"), "selected-lines", 0);
+	AG_FileOptionNewBool(ft, _("Strip ANSI"), "strip-ansi", 1);
 
 	AG_FileDlgAddType(fd, _("Screenshot image"), "*.png,*.bmp,*.jpg",
 	    MenuExportToFileImage, "%p", cons);
@@ -557,7 +580,7 @@ MouseMotion(AG_Event *_Nonnull event)
 			AG_Redraw(cons);
 		}
 		return;
-	} else if (x > cons->r.x+cons->r.w) {
+	} else if (x > cons->r.x + cons->r.w) {
 		const int ssa = AG_GetInt(cons->hBar,"inc");
 		const int wMax = cons->wMax - WIDTH(cons);
 
@@ -574,22 +597,21 @@ MouseMotion(AG_Event *_Nonnull event)
 		cons->rOffs--;
 		AG_Redraw(cons);
 	} else if (y > HEIGHT(cons) &&
-	          cons->rOffs < (cons->nLines - cons->rVisible)) {
+	          (cons->rOffs + cons->rVisible) < cons->nLines) {
 		cons->rOffs++;
 		AG_Redraw(cons);
 	}
-	if (cons->nLines > 0) {
+	if (y > 0 && cons->nLines > 0) {
 		MapLine(cons, y, &newPos);
-		newSel = newPos - cons->pos;
-		if ((cons->pos + newSel) == 0) {
-			cons->pos = 0;
-			if (cons->sel != cons->nLines-1) {
-				cons->sel = cons->nLines-1;
+		if (newPos < cons->nLines) {
+			if ((newSel = newPos - cons->pos) != cons->sel) {
+				if (cons->pos + newSel == 0) {
+					cons->sel = newSel+1;
+				} else {
+					cons->sel = newSel;
+				}
 				AG_Redraw(cons);
 			}
-		} else if (newSel != cons->sel) {
-			cons->sel = newSel;
-			AG_Redraw(cons);
 		}
 	}
 }
@@ -800,8 +822,8 @@ Draw(void *_Nonnull p)
 
 		if ((pos != -1) &&
 		    ((lnIdx == pos) ||
-		     ((sel > 0 && lnIdx > pos && lnIdx < pos+sel+1) ||
-		      (sel < 0 && lnIdx < pos && lnIdx > pos+sel-1)))) {
+		     ((sel > 0 && lnIdx > pos && lnIdx <= pos+sel+1) ||
+		      (sel < 0 && lnIdx < pos && lnIdx >= pos+sel-1)))) {
 			isSelected = 1;
 		} else {
 			isSelected = 0;

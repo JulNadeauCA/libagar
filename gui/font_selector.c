@@ -109,16 +109,23 @@ UpdateFontSelection(AG_FontSelector *_Nonnull fs)
 static void
 UpdatePreview(AG_FontSelector *_Nonnull fs)
 {
+	if (fs->sPreview != -1) {
+		AG_WidgetUnmapSurface(fs, fs->sPreview);
+		fs->sPreview = -1;
+	}
+}
+
+static void
+RenderPreview(AG_FontSelector *_Nonnull fs)
+{
 	AG_Variable *Vfont;
 	AG_Font **pFont;
 	AG_Surface *S;
 	
 	Vfont = AG_GetVariable(fs, "font", (void *)&pFont);
+
 	AG_PushTextState();
 
-	if (fs->cPreviewBG.a > 0) {
-		AG_TextBGColor(&fs->cPreviewBG);
-	}
 	AG_TextColor(&fs->cPreviewFG);
 	if (*pFont != NULL) {
 		AG_TextFont(*pFont);
@@ -136,6 +143,7 @@ UpdatePreview(AG_FontSelector *_Nonnull fs)
 	}
 
 	AG_PopTextState();
+
 	AG_UnlockVariable(Vfont);
 }
 
@@ -506,24 +514,32 @@ Draw(void *_Nonnull obj)
 {
 	AG_FontSelector *fs = obj;
 	AG_Widget *chld;
+	const AG_Surface *S;
 
 	OBJECT_FOREACH_CHILD(chld, obj, ag_widget)
 		AG_WidgetDraw(chld);
 
 	AG_DrawBoxSunk(fs, &fs->rPreview, &WCOLOR(fs,BG_COLOR));
 
-	if (fs->sPreview != -1) {
-		const AG_Surface *S = WSURFACE(fs,fs->sPreview);
+	AG_PushBlendingMode(fs, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
-		if (fs->cPreviewBG.a > 0) {
-			AG_DrawRectFilled(fs, &fs->rPreview, &fs->cPreviewBG);
-		}
-		AG_PushClipRect(fs, &fs->rPreview);
-		AG_WidgetBlitSurface(fs, fs->sPreview,
-		    fs->rPreview.x + (fs->rPreview.w >> 1) - (S->w >> 1),
-		    fs->rPreview.y + (fs->rPreview.h >> 1) - (S->h >> 1));
-		AG_PopClipRect(fs);
+	if (fs->sPreview == -1) {
+		RenderPreview(fs);
 	}
+	S = WSURFACE(fs,fs->sPreview);
+
+	if (fs->cPreviewBG.a > 0)
+		AG_DrawRectFilled(fs, &fs->rPreview, &fs->cPreviewBG);
+
+	AG_PushClipRect(fs, &fs->rPreview);
+
+	AG_WidgetBlitSurface(fs, fs->sPreview,
+	    fs->rPreview.x + (fs->rPreview.w >> 1) - (S->w >> 1),
+	    fs->rPreview.y + (fs->rPreview.h >> 1) - (S->h >> 1));
+
+	AG_PopClipRect(fs);
+	
+	AG_PopBlendingMode(fs);
 }
 
 static void

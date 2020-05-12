@@ -504,7 +504,6 @@ Init(void *_Nonnull obj)
 
 	WIDGET(m)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
 	                    AG_WIDGET_UNFOCUSED_BUTTONUP |
-	                    AG_WIDGET_NOSPACING |
 			    AG_WIDGET_USE_TEXT;
 	m->flags = 0;
 	m->style = AG_MENU_DROPDOWN;

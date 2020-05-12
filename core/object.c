@@ -34,7 +34,11 @@
 #include <ctype.h>
 #include <string.h>
 
-#include <agar/config/ag_debug_core.h>
+/* Expensive debugging output related to AG_Object VFS operations. */
+/* #define DEBUG_OBJECT */
+
+/* Extra debugging output related to serialization. */
+/* #define DEBUG_SERIALIZATION */
 
 AG_ObjectClass agObjectClass = {
 	"AG_Object",
@@ -430,11 +434,10 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	/* Attach the object. */
 	TAILQ_INSERT_TAIL(&parent->children, chld, cobjs);
       
-	/* Notify both the parent and child objects. */
+	/* Notify the child object. */
 	AG_PostEvent(chld, "attached", "%p", parent);
-	AG_PostEvent(parent, "child-attached", "%p", chld);
 
-#ifdef AG_DEBUG_CORE
+#ifdef DEBUG_OBJECT
 	if (chld->name[0] != '\0') {
 		Debug(parent, "Attached child: %s\n", chld->name);
 	} else {
@@ -445,7 +448,7 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	} else {
 		Debug(chld, "New parent: <%p>\n", parent);
 	}
-#endif /* AG_DEBUG_CORE */
+#endif /* DEBUG_OBJECT */
 
 out:
 	AG_ObjectUnlock(chld);
@@ -496,14 +499,13 @@ AG_ObjectDetach(void *pChld)
 	AG_UnlockTiming();
 #endif
 	AG_PostEvent(chld, "detached", "%p", parent);
-	AG_PostEvent(parent, "child-detached", "%p", chld);
 	
 	/* Detach the object. */
 	TAILQ_REMOVE(&parent->children, chld, cobjs);
 	chld->parent = NULL;
 	chld->root = chld;
 
-#ifdef AG_DEBUG_CORE
+#ifdef DEBUG_OBJECT
 	if (chld->name[0] != '\0') {
 		Debug(parent, "Detached child: %s\n", chld->name);
 	} else {
@@ -512,7 +514,7 @@ AG_ObjectDetach(void *pChld)
 	if (parent->name[0] != '\0') {
 		Debug(chld, "New parent: NULL\n");
 	}
-#endif /* AG_DEBUG_CORE */
+#endif /* DEBUG_OBJECT */
 
 out:
 	AG_ObjectUnlock(chld);
@@ -635,46 +637,30 @@ fail:
 	return (NULL);
 }
 
-/* Detach and free all children. None of them must be in use. */
-static void
-FreeChildObject(AG_Object *_Nonnull obj)
-{
-	AG_Object *cob, *ncob;
-
-	AG_ObjectLock(obj);
-	for (cob = TAILQ_FIRST(&obj->children);
-	     cob != TAILQ_END(&obj->children);
-	     cob = ncob) {
-		ncob = TAILQ_NEXT(cob, cobjs);
-		FreeChildObject(cob);
-	}
-	AG_ObjectUnlock(obj);
-
-#ifdef AG_DEBUG_CORE
-	if (obj->name[0] != '\0') {
-		Debug(NULL, "Freeing: %s\n", obj->name);
-	} else {
-		Debug(NULL, "Freeing: <%p>\n", obj);
-	}
-#endif
-	AG_ObjectDetach(obj);
-	AG_ObjectDestroy(obj);
-}
+/* Detach and destroy all child objects of a given parent object. */
 void
-AG_ObjectFreeChildren(void *p)
+AG_ObjectFreeChildren(void *obj)
 {
-	AG_Object *pob = p;
-	AG_Object *cob, *ncob;
+	AG_Object *parent = obj;
+	AG_Object *child, *childNext;
 
-	AG_ObjectLock(pob);
-	for (cob = TAILQ_FIRST(&pob->children);
-	     cob != TAILQ_END(&pob->children);
-	     cob = ncob) {
-		ncob = TAILQ_NEXT(cob, cobjs);
-		FreeChildObject(cob);
+	AG_ObjectLock(parent);
+	for (child = TAILQ_FIRST(&parent->children);
+	     child != TAILQ_END(&parent->children);
+	     child = childNext) {
+		childNext = TAILQ_NEXT(child, cobjs);
+#ifdef DEBUG_OBJECT
+		if (child->name[0] != '\0') {
+			Debug(parent, "Freeing child: %s\n", child->name);
+		} else {
+			Debug(parent, "Freeing child: <%p>\n", child);
+		}
+#endif
+		AG_ObjectDetach(child);
+		AG_ObjectDestroy(child);
 	}
-	TAILQ_INIT(&pob->children);
-	AG_ObjectUnlock(pob);
+	TAILQ_INIT(&parent->children);
+	AG_ObjectUnlock(parent);
 }
 
 /* Destroy the object variables. */
@@ -1206,7 +1192,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1)
 			goto fail_unlock;
 	}
-#ifdef AG_DEBUG_CORE
+#ifdef DEBUG_SERIALIZATION
 	Debug(ob, "Loading generic data from %s\n", path);
 #endif
 	if ((ds = AG_OpenFile(path, "rb")) == NULL)
@@ -1294,7 +1280,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 			AG_SetErrorS("E14");
 #endif
 			if (agObjectIgnoreUnknownObjs) {
-#ifdef AG_DEBUG_CORE
+#ifdef DEBUG_SERIALIZATION
 				Debug(ob, "%s; ignoring\n", AG_GetError());
 #endif
 				continue;
@@ -1355,7 +1341,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 			goto fail_unlock;
 		}
 	}
-#ifdef AG_DEBUG_CORE
+#ifdef DEBUG_SERIALIZATION
 	Debug(ob, "Loading dataset from %s\n", path);
 #endif
 	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
@@ -1381,7 +1367,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	AG_ObjectReset(ob);
 
 	for (i = 0; i < nHier; i++) {
-#ifdef AG_DEBUG_CORE
+#ifdef DEBUG_SERIALIZATION
 		Debug(ob, "Loading as %s\n", hier[i]->name);
 #endif
 		if (hier[i]->load == NULL)
@@ -1525,7 +1511,7 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 		goto fail;
 	}
 	for (i = 0; i < nHier; i++) {
-#ifdef AG_DEBUG_CORE
+#ifdef DEBUG_SERIALIZATION
 		Debug(ob, "Saving as %s\n", hier[i]->name);
 #endif
 		if (hier[i]->save == NULL)
@@ -1611,7 +1597,7 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 		goto fail_dbg;
 	}
 	for (i = 0; i < nHier; i++) {
-#ifdef AG_DEBUG_CORE
+#ifdef DEBUG_SERIALIZATION
 		Debug(ob, "Loading as %s\n", hier[i]->name);
 #endif
 		if (hier[i]->load == NULL)
@@ -1693,7 +1679,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 			Strlcat(path, ob->cls->name, sizeof(path));
 		}
 	}
-#ifdef AG_DEBUG_CORE
+#ifdef DEBUG_SERIALIZATION
 	Debug(ob, "Saving object to %s\n", path);
 #endif
 	if (agObjectBackups) {

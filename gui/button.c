@@ -512,7 +512,17 @@ Draw(void *_Nonnull p)
 	}
 
 	AG_PushBlendingMode(bu, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
-	
+
+	if (AG_WidgetIsFocused(bu)) {
+		AG_DrawLineH(bu, 1, WIDTH(bu) - 3 + pressed,     /* x1,x2,y */
+		                   HEIGHT(bu) - 3 + pressed,
+		             &WCOLOR(bu, SELECTION_COLOR));
+
+		AG_DrawLineV(bu, WIDTH(bu) - 3 + pressed,        /* x,y1,y2 */
+		             1, HEIGHT(bu) - 3 + pressed,
+		             &WCOLOR(bu, SELECTION_COLOR));
+	}
+
 	if (WIDTH(bu) < bu->wReq || HEIGHT(bu) < bu->hReq) {
 		AG_PushClipRect(bu, &WIDGET(bu)->r);
 		AG_WidgetBlitSurface(bu, surface, x,y);

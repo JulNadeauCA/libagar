@@ -39,7 +39,7 @@ AG_Window *
 DEV_DisplaySettings(void)
 {
 	AG_Window *win;
-	AG_VBox *vb;
+	AG_Box *vb;
 /*	AG_Label *lbl; */
 
 	if ((win = AG_WindowNewNamedS(0, "DEV_DisplaySettings")) == NULL) {
@@ -53,7 +53,7 @@ DEV_DisplaySettings(void)
 		return (win);
 	}
 
-	vb = AG_VBoxNew(win, 0);
+	vb = AG_BoxNewVert(win, 0);
 	{
 		AG_LabelNew(vb, 0, _("Driver: %s"), agDriverOps->name);
 		AG_LabelNew(vb, 0, _("OpenGL support: %s"),

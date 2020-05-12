@@ -41,7 +41,10 @@ typedef struct sg_texture {
 	Uint32 _pad1;
 	M_Real shininess;		/* Specular exponent */
 					/* (for fixed lighting model) */
-	Uint8 _pad2[8];
+#ifdef AG_DEBUG
+	Uint32 _pad2;
+	Uint32 _pad3;
+#endif
 	M_Color emissive;		/* Light emitted by surface (Ke) */
 	M_Color ambient;		/* Ambient reflectance (Ka) */
 	M_Color diffuse;		/* Diffuse reflectance (Kd) */

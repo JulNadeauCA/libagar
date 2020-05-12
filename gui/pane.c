@@ -375,8 +375,8 @@ DrawHorizDivider(AG_Pane *_Nonnull pa, int x, int y)
 	}
 
 	AG_PutPixel(pa, xMid, y,   cLine);
-	AG_PutPixel(pa, xMid, y-5, cLine);
-	AG_PutPixel(pa, xMid, y+5, cLine);
+	if (y-5 > 0)   { AG_PutPixel(pa, xMid, y-5, cLine); }
+	if (y+5 < r.h) { AG_PutPixel(pa, xMid, y+5, cLine); }
 }
 
 static void
@@ -401,8 +401,8 @@ DrawVertDivider(AG_Pane *_Nonnull pa, int x, int y)
 	}
 
 	AG_PutPixel(pa, x,   yMid, cLine);
-	AG_PutPixel(pa, x-5, yMid, cLine);
-	AG_PutPixel(pa, x+5, yMid, cLine);
+	if (x-5 > 0)   { AG_PutPixel(pa, x-5, yMid, cLine); }
+	if (x+5 < r.w) { AG_PutPixel(pa, x+5, yMid, cLine); }
 }
 
 static void

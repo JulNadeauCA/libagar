@@ -97,6 +97,7 @@ Draw(void *_Nonnull p)
 	MyWidget *my = p;
 	const int x = my->x;
 	const int y = my->y;
+	const AG_Surface *S;
 	AG_Color c;
 	AG_Rect r;
 	
@@ -119,23 +120,28 @@ Draw(void *_Nonnull p)
 		    AG_TextRenderF("%c", my->lastKey));
 	}
 
+	/*
+	 * Draw some lines and circles.
+	 */
 	AG_ColorRGB_8(&c, 250,250,0);
-
 	AG_DrawLine(my, 0,   0,   x, y, &c);
 	AG_DrawLine(my, r.w, 0,   x, y, &c);
 	AG_DrawLine(my, 0,   r.h, x, y, &c);
 	AG_DrawLine(my, r.w, r.h, x, y, &c);
-
 	AG_DrawCircle(my, x,y, my->radius, &c);
 	AG_DrawCircle(my, x + (my->radius >> 1),
 	                  y - (my->radius >> 1),
 			  my->radius/10, &c);
 
-	/* Draw the mapped surface centered around the cursor. */
-	AG_WidgetBlitSurface(my, my->label,
-	    x - (AGWIDGET_SURFACE(my,my->label)->w >> 1),
-	    y - (AGWIDGET_SURFACE(my,my->label)->h >> 1));
-	
+	/*
+	 * Draw a mapped label surface centered at the cursor.
+	 */
+	AG_PushBlendingMode(my, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	S = AGWIDGET_SURFACE(my, my->label);
+	AG_WidgetBlitSurface(my, my->label, x - (S->w >> 1),
+	                                    y - (S->h >> 1));
+	AG_PopBlendingMode(my);
+
 	AG_PopClipRect(my);
 }
 

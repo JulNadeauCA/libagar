@@ -741,7 +741,8 @@ Init(void *_Nonnull obj)
 
 	WIDGET(sb)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP |
 	                     AG_WIDGET_UNFOCUSED_MOTION |
-			     AG_WIDGET_FOCUSABLE;
+			     AG_WIDGET_FOCUSABLE |
+			     AG_WIDGET_USE_MOUSEOVER;
 
 	sb->type = AG_SCROLLBAR_HORIZ;
 	sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
@@ -871,13 +872,6 @@ Draw(void *_Nonnull obj)
 		DrawText(sb);
 }
 
-#define DRAW_BUTTON(which, color)			\
-	if (sb->curBtn == (which)) {			\
-		AG_DrawBoxSunk(sb, &r, (color));	\
-	} else {					\
-		AG_DrawBoxRaised(sb, &r, (color));	\
-	}
-
 static void
 DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 {
@@ -891,45 +885,59 @@ DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 	const int mid = (w >> 1);
 	const int sbThick = SBTHICK(sb);
 	const int hArrow = MIN(w, sb->hArrow);
+	const int x = (sbThick >> 1);
+	const int btn = sb->curBtn;
 
-	if (h < (sbThick<<1)) {
+	if (h < (sbThick << 1)) {
 		DrawVertUndersize(sb);
 		return;
 	}
 
 	r.x = 1;
 	r.y = 0;
-	r.w = w-1;
+	r.w = w - 1;
 	r.h = h;
 	AG_DrawFrameSunk(sb, &r);
 	
-	/* Decrement Button */
-	r.h = sbThick;
-	DRAW_BUTTON(AG_SCROLLBAR_BUTTON_DEC, cFg);
-	AG_DrawArrowUp(sb, mid, (sbThick>>1), hArrow, cLine);
+	r.h = sbThick;                                  /* Decrement button */
+	if (btn == AG_SCROLLBAR_BUTTON_DEC) {
+		AG_DrawBoxSunk(sb, &r, cFg);
+		AG_DrawArrowUp(sb, mid+1, x+1, hArrow, cLine);
+	} else {
+		AG_DrawBoxRaised(sb, &r, cFg);
+		AG_DrawArrowUp(sb, mid, x, hArrow, cLine);
+	}
 
-	/* Control Bar */
-	r.y = sbThick + y;
-	r.h = MIN(len, h - (sbThick>>1));
+	r.y = sbThick + y;                                   /* Control bar */
+	r.h = MIN(len, h - x);
 	if (r.h < 4) {
 		r.h = 4;
 		r.y -= (r.h >> 1);
 	}
-	c = (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_SCROLL) ?
-	    &WCOLOR_HOVER(sb, FG_COLOR) : cFg;
-
-	if (r.h < AG_SCROLLBAR_HOT) {			/* Increase contrast */
+	c = (btn == AG_SCROLLBAR_BUTTON_SCROLL) ? &WCOLOR_HOVER(sb, FG_COLOR) :
+	                                          cFg;
+	if (r.h < AG_SCROLLBAR_HOT) {
 		cTinted = *c;
-		AG_ColorLighten(&cTinted, AG_SCROLLBAR_HOT-r.h);
+		AG_ColorLighten(&cTinted, AG_SCROLLBAR_HOT - r.h);
 		c = &cTinted;
 	}
-	DRAW_BUTTON(AG_SCROLLBAR_BUTTON_SCROLL, c);
+	if (btn == AG_SCROLLBAR_BUTTON_SCROLL) {
+		AG_DrawBoxSunk(sb, &r, cFg);
+/*		AG_PutPixel(sb, mid+1, r.y + (r.h >> 1) + 1, cLine); */
+	} else {
+		AG_DrawBoxRaised(sb, &r, cFg);
+/*		AG_PutPixel(sb, mid,   r.y + (r.h >> 1),     cLine); */
+	}
 	
-	/* Increment Button */
-	r.y = h - sbThick;
+	r.y = h - sbThick;                              /* Increment button */
 	r.h = sbThick;
-	DRAW_BUTTON(AG_SCROLLBAR_BUTTON_INC, cFg);
-	AG_DrawArrowDown(sb, mid, r.y + (sbThick>>1), hArrow, cLine);
+	if (btn == AG_SCROLLBAR_BUTTON_INC) {
+		AG_DrawBoxSunk(sb, &r, cFg);
+		AG_DrawArrowDown(sb, mid+1, x+r.y+1, hArrow, cLine);
+	} else {
+		AG_DrawBoxRaised(sb, &r, cFg);
+		AG_DrawArrowDown(sb, mid, x+r.y, hArrow, cLine);
+	}
 }
 
 static void
@@ -945,8 +953,10 @@ DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 	const int mid = h >> 1;
 	const int sbThick = SBTHICK(sb);
 	const int hArrow = MIN(h, sb->hArrow);
+	const int y = (sbThick >> 1);
+	const int btn = sb->curBtn;
 	
-	if (w < (sbThick<<1)) {
+	if (w < (sbThick << 1)) {
 		DrawHorizUndersize(sb);
 		return;
 	}
@@ -957,19 +967,26 @@ DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 	r.h = h;
 	AG_DrawFrameSunk(sb, &r);
 
-	/* Decrement Button */
-	r.w = sbThick;
+	r.w = sbThick;                                  /* Decrement button */
 	r.h = h;
-	DRAW_BUTTON(AG_SCROLLBAR_BUTTON_DEC, cFg);
-	AG_DrawArrowLeft(sb, sbThick>>1, mid, hArrow, cLine);
+	if (btn == AG_SCROLLBAR_BUTTON_DEC) {
+		AG_DrawBoxSunk(sb, &r, cFg);
+		AG_DrawArrowLeft(sb, y+1, mid+1, hArrow, cLine);
+	} else {
+		AG_DrawBoxRaised(sb, &r, cFg);
+		AG_DrawArrowLeft(sb, y, mid, hArrow, cLine);
+	}
 
-	/* Increment Button */
-	r.x = w - sbThick;
-	DRAW_BUTTON(AG_SCROLLBAR_BUTTON_INC, cFg);
-	AG_DrawArrowRight(sb, r.x + (sbThick>>1), mid, hArrow, cLine);
+	r.x = w - sbThick;                              /* Increment button */
+	if (btn == AG_SCROLLBAR_BUTTON_INC) {
+		AG_DrawBoxSunk(sb, &r, cFg);
+		AG_DrawArrowRight(sb, r.x+y+1, mid+1, hArrow, cLine);
+	} else {
+		AG_DrawBoxRaised(sb, &r, cFg);
+		AG_DrawArrowRight(sb, r.x+y, mid, hArrow, cLine);
+	}
 
-	/* Control Bar */
-	r.x = sbThick + x;
+	r.x = sbThick + x;                                   /* Control bar */
 	r.w = MIN(len, w - (sbThick<<1));
 	if (r.w < 4) {
 		r.w = 4;
@@ -977,16 +994,19 @@ DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 	}
 	c = (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_SCROLL) ?
 	    &WCOLOR_HOVER(sb, FG_COLOR) : cFg;
-
-	if (r.w < AG_SCROLLBAR_HOT) {			/* Increase contrast */
+	if (r.w < AG_SCROLLBAR_HOT) {
 		cTinted = *c;
 		AG_ColorLighten(&cTinted, AG_SCROLLBAR_HOT-r.w);
 		c = &cTinted;
 	}
-	DRAW_BUTTON(AG_SCROLLBAR_BUTTON_SCROLL, c);
+	if (btn == AG_SCROLLBAR_BUTTON_SCROLL) {
+		AG_DrawBoxSunk(sb, &r, c);
+/*		AG_PutPixel(sb, r.x + (r.w >> 1) + 1, mid, cLine); */
+	} else {
+		AG_DrawBoxRaised(sb, &r, c);
+/*		AG_PutPixel(sb, r.x + (r.w >> 1),     mid, cLine); */
+	}
 }
-
-#undef DRAW_BUTTON
 
 static void
 DrawVertUndersize(AG_Scrollbar *_Nonnull sb)

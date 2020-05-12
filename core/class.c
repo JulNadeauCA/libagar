@@ -28,7 +28,6 @@
  */
 
 #include <agar/core/core.h>
-#include <agar/config/ag_debug_core.h>
 
 #include <string.h>
 #include <ctype.h>

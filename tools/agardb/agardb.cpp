@@ -505,7 +505,7 @@ CreateTargetDlg(AG_Event *event)
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
 	}
-	AG_WindowSetCaption(win, _("New Debugger Target"));
+	AG_WindowSetCaption(win, _("New Target"));
 	AG_SetStyle(win, "padding", "5");
 
 	AG_SpacerNewHoriz(win);
@@ -599,7 +599,6 @@ CreateTargetDlg(AG_Event *event)
 	AG_SetEvent(fdCore->textbox, "textbox-return", MoveFocus, "%p", fdSyms->textbox);
 	AG_SetEvent(fdSyms->textbox, "textbox-return", MoveFocus, "%p", btnOK);
 
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 400, -1);
 	AG_WindowShow(win);
 }
 

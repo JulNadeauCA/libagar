@@ -237,9 +237,14 @@ MyOverlayFunction(AG_Event *event)
 	 * (hardware->hardware copy), unless the text changes frequently.
 	 */
 	if (myText != NULL) {
+		AG_PushBlendingMode(glv, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 		AG_WidgetBlit(glv, myText,
 		    0,
 		    AGWIDGET(glv)->h - AGWIDGET_FONT(glv)->height*2.66f);
+
+		AG_PopBlendingMode(glv);
+
 		AG_SurfaceFree(myText);
 	}
 }

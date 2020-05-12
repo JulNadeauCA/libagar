@@ -68,7 +68,10 @@ typedef struct sg_view {
 #endif
 	struct sg_camera *_Nullable cam;	/* Current camera */
 	struct sg_camera *_Nullable camTrans;	/* Transitioning to camera */
-	Uint8 _pad2[8];
+#ifdef AG_DEBUG
+	Uint32 _pad2;
+	Uint32 _pad3;
+#endif
 	M_Vector3 rSens;		/* Rotational sensitivity (mouse) */
 	M_Vector3 tSens;		/* Translational sensitivity (mouse) */
 

@@ -305,7 +305,11 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	if (a->h < nb->bar_h || a->w < WFONT(nb)->height)
 		return (-1);
 
+#ifdef AG_UNICODE
+	AG_TextSize("\xE2\x80\xA6", &wMin, NULL); /* U+2026 ELLIPSIS */
+#else
 	AG_TextSize("...", &wMin, NULL);
+#endif
 	wMin += boxDia;
 
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
@@ -336,10 +340,10 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		aTab.h = a->h - nb->bar_h;
 		AG_WidgetSizeAlloc(tab, &aTab);
 	}
-	nb->r.x = 0;
-	nb->r.y = nb->bar_h;
-	nb->r.w = a->w;
-	nb->r.h = a->h - nb->bar_h;
+	nb->r.x = WIDGET(nb)->paddingLeft;
+	nb->r.y = nb->bar_h + WIDGET(nb)->paddingTop;
+	nb->r.w = a->w - WIDGET(nb)->paddingRight;
+	nb->r.h = a->h - nb->bar_h - WIDGET(nb)->paddingBottom;
 	return (0);
 }
 
@@ -391,7 +395,7 @@ AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 
 	if (label && label[0] != '\0') {
 		tab->lbl = AG_LabelNew(nb, 0, " %s ", label);
-		AG_SetStyle(tab->lbl, "padding", "5 10 5 10");
+		AG_SetStyle(tab->lbl, "padding", "5 10 5 10");  /* TODO E>F */
 	} else {
 		tab->lbl = NULL;
 	}

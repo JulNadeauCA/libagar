@@ -1290,7 +1290,7 @@ void
 AG_TextMsgS(enum ag_text_msg_title title, const char *s)
 {
 	AG_Window *win;
-	AG_VBox *vb;
+	AG_Box *vb;
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
 	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
@@ -1301,11 +1301,11 @@ AG_TextMsgS(enum ag_text_msg_title title, const char *s)
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	vb = AG_VBoxNew(win, 0);
+	vb = AG_BoxNewVert(win, 0);
 	AG_SetStyle(vb, "font-size", "120%");
 	AG_LabelNewS(vb, 0, s);
 
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_EXPAND);
+	vb = AG_BoxNewVert(win, AG_BOX_HOMOGENOUS | AG_BOX_EXPAND);
 	AG_WidgetFocus( AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)) );
 	AG_WindowShow(win);
 }
@@ -1348,7 +1348,7 @@ void
 AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
 {
 	AG_Window *win;
-	AG_VBox *vb;
+	AG_Box *vb;
 	AG_Timer *to;
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
@@ -1360,7 +1360,7 @@ AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	vb = AG_VBoxNew(win, 0);
+	vb = AG_BoxNewVert(win, 0);
 	AG_SetStyle(vb, "font-size", "120%");
 	AG_LabelNewS(vb, 0, s);
 	AG_WindowShow(win);
@@ -1395,7 +1395,7 @@ AG_TextInfoS(const char *key, const char *s)
 	char disableSw[64];
 	AG_Variable *Vdisable;
 	AG_Window *win;
-	AG_VBox *vb;
+	AG_Box *vb;
 	AG_Checkbox *cb;
 	
 	if (key != NULL) {
@@ -1415,11 +1415,11 @@ AG_TextInfoS(const char *key, const char *s)
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_INFO]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	vb = AG_VBoxNew(win, 0);
+	vb = AG_BoxNewVert(win, 0);
 	AG_SetStyle(vb, "font-size", "120%");
 	AG_LabelNewS(vb, 0, s);
 
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_EXPAND);
+	vb = AG_BoxNewVert(win, AG_BOX_HOMOGENOUS | AG_BOX_EXPAND);
 	AG_WidgetFocus( AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)) );
 	if (key != NULL) {
 		cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL,
@@ -1457,7 +1457,7 @@ AG_TextWarningS(const char *key, const char *s)
 	char disableSw[64];
 	AG_Variable *Vdisable;
 	AG_Window *win;
-	AG_VBox *vb;
+	AG_Box *vb;
 	AG_Checkbox *cb;
 
 	if (key != NULL) {
@@ -1477,11 +1477,11 @@ AG_TextWarningS(const char *key, const char *s)
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_WARNING]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	vb = AG_VBoxNew(win, 0);
+	vb = AG_BoxNewVert(win, 0);
 	AG_SetStyle(vb, "font-size", "120%");
 	AG_LabelNewS(vb, 0, s);
 
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_EXPAND);
+	vb = AG_BoxNewVert(win, AG_BOX_HOMOGENOUS | AG_BOX_EXPAND);
 	AG_WidgetFocus( AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)) );
 
 	if (key != NULL) {
@@ -1515,7 +1515,7 @@ void
 AG_TextErrorS(const char *s)
 {
 	AG_Window *win;
-	AG_VBox *vb;
+	AG_Box *vb;
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
 	                   AG_WINDOW_NOMINIMIZE | AG_WINDOW_NOMAXIMIZE);
@@ -1526,11 +1526,11 @@ AG_TextErrorS(const char *s)
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_ERROR]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	vb = AG_VBoxNew(win, 0);
+	vb = AG_BoxNewVert(win, 0);
 	AG_SetStyle(vb, "font-size", "120%");
 	AG_LabelNewS(vb, 0, s);
 
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS | AG_VBOX_EXPAND);
+	vb = AG_BoxNewVert(win, AG_BOX_HOMOGENOUS | AG_BOX_EXPAND);
 	AG_WidgetFocus( AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)) );
 	AG_WindowShow(win);
 }

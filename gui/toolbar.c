@@ -61,6 +61,8 @@ AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nRows, Uint flags)
 		case AG_TOOLBAR_VERT:
 			row = bar->rows[i] = AG_BoxNew(bar, AG_BOX_VERT, bflags);
 			break;
+		default:
+			AG_FatalError("Bad type");
 		}
 		if (flags & AG_TOOLBAR_HFILL) { WIDGET(row)->flags |= AG_WIDGET_HFILL; }
 		if (flags & AG_TOOLBAR_VFILL) { WIDGET(row)->flags |= AG_WIDGET_VFILL; }
@@ -78,8 +80,6 @@ Init(void *_Nonnull obj)
 {
 	AG_Toolbar *bar = obj;
 	
-	WIDGET(bar)->flags |= AG_WIDGET_NOSPACING;
-
 	bar->flags = 0;
 	bar->type = AG_TOOLBAR_HORIZ;
 	bar->nRows = 0;

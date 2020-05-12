@@ -237,7 +237,7 @@ typedef struct ag_widget {
 #define AG_WIDGET_CATCH_TAB             0x00001000 /* Receive focus-cycling key events */
 #define AG_WIDGET_GL_RESHAPE            0x00002000 /* Pending GL view reshape */
 #define AG_WIDGET_UNDERSIZE             0x00004000 /* Allocation could not be met (RO) */
-#define AG_WIDGET_NOSPACING             0x00008000 /* Inhibit spacing (container-specific) */
+                                     /* 0x00008000 */
 #define AG_WIDGET_UNFOCUSED_KEYDOWN     0x00010000 /* Receive keydowns w/o focus */
 #define AG_WIDGET_UNFOCUSED_KEYUP       0x00020000 /* Receive keyups w/o focus */
                                      /* 0x00040000 */
@@ -495,6 +495,10 @@ void ag_set_mod_state(void *_Nonnull, Uint);
 #endif /* !AG_INLINE_WIDGET */
 
 #ifdef AG_LEGACY
+# define AG_WIDGET_NOSPACING 0
+# define AG_WIDGET_TABLE_EMBEDDABLE 0
+# define AG_WidgetInheritSizeRequest  NULL /* is default behavior in 1.6 */
+# define AG_WidgetInheritSizeAllocate NULL /* is default behavior in 1.6 */
 # define AG_WidgetParentWindow(w) AG_ParentWindow(w)
 # define AG_WidgetFocused         AG_WidgetIsFocused(w)
 # define AG_WidgetPutPixel32      AG_PutPixel32
@@ -508,9 +512,6 @@ void ag_set_mod_state(void *_Nonnull, Uint);
 # define AG_WidgetBlendPixelRGBA  AG_BlendPixelRGBA
 # define AG_WidgetShownRecursive  AG_WidgetShowAll
 # define AG_WidgetHiddenRecursive AG_WidgetHideAll
-# define AG_WIDGET_TABLE_EMBEDDABLE   0     /* Flag no longer needed */
-# define AG_WidgetInheritSizeRequest  NULL  /* Is default behavior as of 1.6 */
-# define AG_WidgetInheritSizeAllocate NULL  /* Is default behavior as of 1.6 */
 void *_Nullable AG_WidgetFind(void *_Nonnull, const char *_Nonnull) DEPRECATED_ATTRIBUTE;
 void AG_WidgetInheritDraw(void *_Nonnull) DEPRECATED_ATTRIBUTE;
 #endif /* AG_LEGACY */

@@ -68,8 +68,7 @@ static AG_Box    *_Nullable agStyleEditorBox = NULL;
 static int agStyleEditorCapture = 0;
 
 static void
-FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth,
-    int checkedFocused)
+FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
 {
 	char text[AG_TLIST_LABEL_MAX];
 	AG_TlistItem *it;
@@ -83,25 +82,16 @@ FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth,
 	
 	if (!TAILQ_EMPTY(&OBJECT(wid)->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
-	} else {
-		if (!checkedFocused) {
-			if (wid->flags & AG_WIDGET_FOCUSED) {
-				AG_TlistSelect(tl, it);
-				AG_SetBool(tl, "checked-focused", 1);
-				checkedFocused = 1;
-			}
-		}
 	}
 	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
 	    AG_TlistVisibleChildren(tl, it)) {
 		OBJECT_FOREACH_CHILD(widChld, wid, ag_widget)
-			FindWidgets(widChld, tl, depth+1, checkedFocused);
+			FindWidgets(widChld, tl, depth+1);
 	}
 }
 
 static void
-FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth,
-    int checkedFocused)
+FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 {
 	const char *name = OBJECT(win)->name;
 	AG_Window *wSub;
@@ -131,10 +121,10 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth,
 	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
 	    AG_TlistVisibleChildren(tl, it)) {
 		TAILQ_FOREACH(wSub, &win->pvt.subwins, pvt.swins)
-			FindWindows(tl, wSub, depth+1, checkedFocused);
+			FindWindows(tl, wSub, depth+1);
 
 		OBJECT_FOREACH_CHILD(wChild, win, ag_widget)
-			FindWidgets(wChild, tl, depth+1, checkedFocused);
+			FindWidgets(wChild, tl, depth+1);
 	}
 }
 
@@ -154,12 +144,11 @@ PollWidgets(AG_Event *_Nonnull event)
 	AG_Tlist *tl = AG_TLIST_SELF();
 	const AG_Window *tgt = agStyleEditorTgtWindow;
 	AG_Driver *drv;
-	const int checkedFocused = AG_Defined(tl, "checked-focused");
 	
 	AG_TlistBegin(tl);
 
 	if (tgt != NULL && AG_OBJECT_VALID(tgt)) {
-		FindWindows(tl, tgt, 0, checkedFocused);
+		FindWindows(tl, tgt, 0);
 	} else {
 		TargetRoot();
 		AG_LockVFS(&agDrivers);
@@ -168,7 +157,7 @@ PollWidgets(AG_Event *_Nonnull event)
 				if (tgt == agStyleEditorWindow) {
 					continue;
 				}
-				FindWindows(tl, tgt, 0, checkedFocused);
+				FindWindows(tl, tgt, 0);
 			}
 		}
 		AG_UnlockVFS(&agDrivers);
@@ -697,6 +686,7 @@ MenuForWindow(AG_Event *_Nonnull event)
 	}
 }
 
+#if 0
 static void
 SetPickStatus(AG_Event *_Nonnull event)
 {
@@ -709,9 +699,10 @@ SetPickStatus(AG_Event *_Nonnull event)
 		Debug(winSted, "PickStatus(%d)\n", enable);
 #endif
 }
+#endif
 
 static void
-SetListRefresh(AG_Event *_Nonnull event)
+SetAutorefresh(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_PTR(1);
 	const int enable = AG_INT(2);
@@ -737,7 +728,7 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	AG_Window *win;
 	AG_Pane *pane;
 	AG_MenuItem *mi;
-	AG_Box *hBox;
+	AG_Box *toolbar;
 	AG_Tlist *tl;
 
 	if (tgt == NULL) {
@@ -772,25 +763,25 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	AG_SetStyle(tl, "font-size", "80%");
 	AG_SetEvent(tl, "tlist-selected", TargetWidget, NULL);
 
-	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
-	AG_SetStyle(hBox, "font-size", "150%");
+	toolbar = AG_BoxNewHoriz(win, AG_BOX_HFILL);
+	AG_SetStyle(toolbar, "font-size", "150%");
 	{
 		AG_Button *btn;
-
+#if 0
 		/* Set pick mode */
-		btn = AG_ButtonNewFn(hBox, AG_BUTTON_STICKY,
+		btn = AG_ButtonNewFn(toolbar, AG_BUTTON_STICKY,
 		    "\xe2\x87\xb1",                             /* U+21F1 */
 		    SetPickStatus, "%p,%p", win, tl);
 		AG_SetStyle(btn, "padding", "0 5 3 5");
-
+#endif
 		/* Toggle VFS autorefresh */
-		btn = AG_ButtonNewFn(hBox, AG_BUTTON_STICKY | AG_BUTTON_SET,
+		btn = AG_ButtonNewFn(toolbar, AG_BUTTON_STICKY | AG_BUTTON_SET,
 		    "\xe2\xa5\x81",                             /* U+2941 */
-		    SetListRefresh, "%p", tl);
+		    SetAutorefresh, "%p", tl);
 		AG_SetStyle(btn, "padding", "0 10 3 5");
 
 		/* Toggle appearance capture */
-		btn = AG_ButtonNewInt(hBox, AG_BUTTON_STICKY,
+		btn = AG_ButtonNewInt(toolbar, AG_BUTTON_STICKY,
 		    "\xe2\x96\xa6",                             /* U+2941 */
 		    &agStyleEditorCapture);
 		AG_SetStyle(btn, "padding", "0 7 0 5");

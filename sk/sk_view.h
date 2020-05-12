@@ -22,9 +22,13 @@ typedef struct sk_view {
 #define SK_VIEW_VFILL   0x02
 #define SK_VIEW_PANNING 0x04                    /* Panning in progress */
 #define SK_VIEW_EXPAND (SK_VIEW_HFILL | SK_VIEW_VFILL)
-	Uint32 _pad;
+	Uint32 _pad1;
 
 	struct sk *_Nullable sk;		/* Sketch object */
+#if !defined(AG_DEBUG)
+	Uint32 _pad2;
+	Uint32 _pad3;
+#endif
 	M_Matrix44 mView;			/* Viewing matrix */
 	M_Matrix44 mProj;			/* Projection matrix */
 	M_Real wPixel, hPixel;			/* Display pixel ratio */

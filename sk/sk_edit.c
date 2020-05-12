@@ -492,8 +492,8 @@ NodeEdit(AG_Event *_Nonnull event)
 	if (node->ops->edit == NULL) {
 		return;
 	}
-	skv->editBox = (AG_Widget *)
-	    AG_BoxNew(skv->editPane->div[1], AG_BOX_VERT, AG_BOX_EXPAND);
+	skv->editBox = (AG_Widget *)AG_BoxNewVert(skv->editPane->div[1],
+	                                          AG_BOX_EXPAND);
 	node->ops->edit(node, skv->editBox, skv);
 	NodeEditGeneric(node, skv->editBox, skv);
 	SK_ViewResizePanes(skv);
@@ -663,6 +663,8 @@ OnOverlay(AG_Event *_Nonnull event)
 		break;
 	}
 
+	AG_PushBlendingMode(skv, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 	lbl = AG_TextRender(skv->sk->statusText);
 	x = WIDGET(skv)->w - lbl->w;
 	y = WIDGET(skv)->h - lbl->h;
@@ -679,6 +681,8 @@ OnOverlay(AG_Event *_Nonnull event)
 	
 	AG_SurfaceFree(lbl);
 	AG_PopTextState();
+
+	AG_PopBlendingMode(skv);
 }
 
 void *
@@ -763,8 +767,7 @@ SK_Edit(void *p)
 				     tool->ops->icon->s : NULL,
 				    _(tool->ops->name), tool);
 			}
-			AG_SetEvent(tl, "tlist-selected", SelectTool, "%p",
-			    skv);
+			AG_SetEvent(tl, "tlist-selected", SelectTool,"%p",skv);
 		}
 		ntab = AG_NotebookAdd(nb, _("Nodes"), AG_BOX_VERT);
 		{
@@ -781,7 +784,7 @@ SK_Edit(void *p)
 		}
 		ntab = AG_NotebookAdd(nb, _("Constraints"), AG_BOX_VERT);
 		{
-			AG_HBox *bCmds;
+			AG_Box *hb;
 
 			vp2 = AG_PaneNew(ntab, AG_PANE_VERT, AG_PANE_EXPAND |
 			                                     AG_PANE_DIV1FILL);
@@ -804,12 +807,10 @@ SK_Edit(void *p)
 			AG_TableAddCol(tbl, "n3", NULL, NULL);
 /*			AG_WidgetSetFocusable(tbl, 0); */
 			
-			bCmds = AG_HBoxNew(vp2->div[1], AG_HBOX_HFILL |
-			                                AG_HBOX_HOMOGENOUS);
-			AG_ButtonNewFn(bCmds, 0, "All",
-			    ExecInsns, "%p,%p", sk, tbl);
-			AG_ButtonNewFn(bCmds, 0, "Sel",
-			    ExecSelectedInsns, "%p,%p", sk, tbl);
+			hb = AG_BoxNewHoriz(vp2->div[1], AG_BOX_HFILL |
+			                                 AG_BOX_HOMOGENOUS);
+			AG_ButtonNewFn(hb, 0, "All", ExecInsns, "%p,%p", sk, tbl);
+			AG_ButtonNewFn(hb, 0, "Sel", ExecSelectedInsns, "%p,%p", sk, tbl);
 		}
 	}
 

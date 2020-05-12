@@ -1132,7 +1132,9 @@ DrawStatusText(RG_Tileview *_Nonnull tv, const char *_Nonnull label)
 	r.h = h;
 	AG_DrawRect(tv, &r, &WCOLOR(tv, BG_COLOR));
 
+	AG_PushBlendingMode(tv, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	AG_WidgetBlitSurface(tv, su, w-wSu-1, h-hSu-1);
+	AG_PopBlendingMode(tv);
 }
 
 void

@@ -213,10 +213,21 @@ Draw(void *_Nonnull obj)
 	/* Draw background */
 	switch (sock->bgType) {
 	case AG_SOCKET_PIXMAP:
-		AG_WidgetBlitSurface(sock,
-		    sock->bgData.pixmap.s,
-		    WIDGET(sock)->paddingLeft,
-		    WIDGET(sock)->paddingTop);
+		{
+			const AG_Surface *S = WSURFACE(sock, sock->bgData.pixmap.s);
+			Uint32 Amask;
+
+			if ((Amask = S->format.Amask) != 0)
+				AG_PushBlendingMode(sock, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
+			AG_WidgetBlitSurface(sock,
+			    sock->bgData.pixmap.s,
+			    WIDGET(sock)->paddingLeft,
+			    WIDGET(sock)->paddingTop);
+
+			if (Amask != 0)
+				AG_PopBlendingMode(sock);
+		}
 		break;
 	case AG_SOCKET_RECT:
 		AG_DrawBoxSunk(sock, &WIDGET(sock)->r, &WCOLOR(sock,FG_COLOR));

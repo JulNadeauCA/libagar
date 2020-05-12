@@ -71,9 +71,6 @@
 # ifdef _MK_HAVE_SYS_STAT_H
 #  include <sys/stat.h>
 # endif
-# ifdef __APPLE__
-#  define _DARWIN_C_SOURCE
-# endif
 # include <dirent.h>
 # include <unistd.h>
 #endif

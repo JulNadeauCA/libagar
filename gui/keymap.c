@@ -486,9 +486,9 @@ static int
 CursorLeft(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	AG_TextANSI ansi;
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
-	AG_Char *c;
+	const AG_Char *c;
+	AG_TextANSI ansi;
 	int i;
 
 	if ((ed->pos - 1) < 0) {
@@ -579,7 +579,7 @@ static int
 CursorUp(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	AG_Char *c;
+	const AG_Char *c;
 
 	if (!(ed->flags & AG_EDITABLE_MULTILINE))
 		return (0);

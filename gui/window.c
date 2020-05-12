@@ -2186,24 +2186,6 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		if (chld == WIDGET(win->tbar)) {
 			continue;
 		}
-		if (chld->flags & AG_WIDGET_NOSPACING) {
-			AG_SizeAlloc aTmp;
-			AG_Widget *chldNext;
-
-			aTmp.x = 0;
-			aTmp.y = aChld.y;
-			aTmp.w = a->w;
-			aTmp.h = rChld.h;
-			AG_WidgetSizeAlloc(chld, &aTmp);
-			aChld.y += aTmp.h;
-
-			chldNext = OBJECT_NEXT_CHILD(chld, ag_widget);
-			if (chldNext == NULL ||
-			    !(chldNext->flags & AG_WIDGET_NOSPACING)) {
-				aChld.y += spacingVert;
-			}
-			continue;
-		}
 		aChld.w = (chld->flags & AG_WIDGET_HFILL) ?
 		          wAvail : MIN(wAvail,rChld.w);
 		aChld.h = (chld->flags & AG_WIDGET_VFILL) ?

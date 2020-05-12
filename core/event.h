@@ -157,8 +157,8 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 	if ((ev)->argc >= AG_EVENT_ARGS_MAX) { AG_FatalError("AG_Event: Too many args"); }
 # define AG_EVENT_POP_ARG_PRECOND(ev) \
 	if ((ev)->argc < 1) { AG_FatalError("AG_Event: Pop without Push"); }
-# define AG_EVENT_POP_ARG_POSTCOND(V, vtype) \
-	if ((V)->type != (vtype)) { AG_FatalError("AG_Event: Illegal Pop type"); }
+# define AG_EVENT_POP_ARG_POSTCOND(v, vtype) \
+	if ((v)->type != (vtype)) { AG_FatalError("AG_Event: Illegal Pop type"); }
 #else
 # define AG_EVENT_PUSH_ARG_PRECOND(ev)
 # define AG_EVENT_POP_ARG_PRECOND(ev)
@@ -199,6 +199,7 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 
 #define AG_EVENT_POP_FN(vtype, memb)		\
 	AG_Variable *V;				\
+						\
 	AG_EVENT_POP_ARG_PRECOND(ev)		\
 	V = &ev->argv[ev->argc--];		\
 	AG_EVENT_POP_ARG_POSTCOND(V, vtype)	\
@@ -209,22 +210,20 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
  * Used by AG_{Set,Add,Post}Event() and AG_EventArgs().
  */
 #ifdef AG_THREADS
-# define AG_EVENT_INS_ARG(eev, ap, tname, member, t) {	\
+# define AG_EVENT_INS_ARG(eev, ap, tname, member, t)    \
 	V = &(eev)->argv[(eev)->argc];			\
 	AG_EVENT_PUSH_ARG_PRECOND(eev)			\
 	V->type = (tname);				\
 	V->mutex = NULL;				\
 	V->data.member = va_arg(ap,t);			\
-	(eev)->argc++;					\
-}
+	(eev)->argc++
 #else /* !AG_THREADS */
-# define AG_EVENT_INS_ARG(eev, ap, tname, member, t) {	\
+# define AG_EVENT_INS_ARG(eev, ap, tname, member, t)	\
 	V = &(eev)->argv[(eev)->argc];			\
 	AG_EVENT_PUSH_ARG_PRECOND(eev)			\
 	V->type = (tname);				\
 	V->data.member = va_arg(ap,t);			\
-	(eev)->argc++;					\
-}
+	(eev)->argc++
 #endif /* !AG_THREADS */
 
 #if AG_MODEL != AG_SMALL
@@ -286,7 +285,7 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 #endif
 
 #define AG_EVENT_PUSH_ARG(ap,ev) {					\
-	AG_Variable *V;							\
+	AG_Variable *V = NULL;						\
 									\
 	switch (*c) {							\
 	case 'p':							\
@@ -327,7 +326,9 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 	  AG_EVENT_PARSER_ERROR;					\
 	}								\
 	c++;								\
-	AG_EVENT_GET_NAMED_ARG();					\
+	if (V != NULL) {						\
+		AG_EVENT_GET_NAMED_ARG();				\
+	}								\
 }
 #define AG_EVENT_GET_ARGS(ev, fmtp)					\
 	if (fmtp != NULL) {						\

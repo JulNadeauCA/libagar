@@ -120,7 +120,11 @@ SK_PixmapDraw(void *p, SK_View *skv)
 
 	GL_PushMatrix();
 	GL_Translatev(&v);
+
+	AG_PushBlendingMode(skv, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	AG_WidgetBlitSurfaceGL(skv, px->s, (float)px->w, (float)px->h);
+	AG_PopBlendingMode(skv);
+
 	GL_PopMatrix();
 }
 

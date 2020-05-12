@@ -39,9 +39,6 @@ typedef struct ag_font_selector {
 	AG_Rect rPreview;			/* Preview area */
 	AG_Font *_Nullable font;		/* Default `font' binding */
 	AG_Color cPreviewBG, cPreviewFG;	/* Preview colors */
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad2;
-#endif
 } AG_FontSelector;
 
 #define AGFONTSELECTOR(obj)            ((AG_FontSelector *)(obj))

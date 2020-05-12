@@ -328,8 +328,9 @@ M_Range
 M_ReadRange(AG_DataSource *ds)
 {
 	M_Range r;
+
 	r.min = M_ReadReal(ds);
-	r.typ = M_ReadReal(ds);
+	r.v = r.typ = M_ReadReal(ds);
 	r.max = M_ReadReal(ds);
 	return (r);
 }
@@ -357,8 +358,9 @@ M_TimeRange
 M_ReadTimeRange(AG_DataSource *ds)
 {
 	M_TimeRange r;
+
 	r.min = M_ReadTime(ds);
-	r.typ = M_ReadTime(ds);
+	r.v = r.typ = M_ReadTime(ds);
 	r.max = M_ReadTime(ds);
 	return (r);
 }

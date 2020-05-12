@@ -55,16 +55,11 @@ typedef struct ag_hsvpal {
 		AG_HSVPAL_SEL_A	  /* Selecting transparency value */
 	} state;
 
-	AG_Menu     *_Nullable menu;    /* Popup menu (TODO use AG_PopupMenu) */
+	AG_Menu *_Nullable menu;        /* Popup menu (TODO use AG_PopupMenu) */
 	AG_MenuItem *_Nullable menu_item;
-	AG_Window   *_Nullable menu_win;
-
+	AG_Window *_Nullable menu_win;
 	AG_Color cTile[2];		/* Tiling fill color (TODO use style) */
-
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad3;
-#endif
-	AG_Timer toMove[4];     /* For 4-way keyboard navigation */
+	AG_Timer toMove[4];             /* For 4-way keyboard navigation */
 } AG_HSVPal;
 
 #define AGHSVPAL(obj)            ((AG_HSVPal *)(obj))

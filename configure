@@ -474,7 +474,6 @@ echo '    --with-inline               Inline functions [yes]'
 echo ''
 echo 'Options specific to CORE library:'
 echo '    --enable-ansi-color         Produce colorized output [yes]'
-echo '    --enable-debug-core         Expensive AG_Object debugging [no]'
 echo '    --enable-dso                Dynamically loaded modules [yes]'
 echo '    --enable-exec               The AG_Execute(3) interface [yes]'
 echo '    --enable-event-loop         The standard AG_EventLoop(3) [yes]'
@@ -512,7 +511,6 @@ echo ''
 echo 'Options specific to GUI library:'
 echo '    --enable-widgets            The standard widget library [yes]'
 echo '    --enable-wm-hints           Interface with window managers [yes]'
-echo '    --enable-debug-gui          Expensive GUI debugging [no]'
 echo '    --with-freetype[=PREFIX]    Enable FreeType support [check]'
 echo '    --with-fontconfig[=PREFIX]  Enable Fontconfig support [check]'
 echo '    --with-gl[=PREFIX]          OpenGL rendering support [check]'
@@ -962,7 +960,14 @@ if [ "${mandir}" != '' ]; then
 	MANDIR="${mandir}"
 	MANDIR_SPECIFIED='yes'
 else
-	MANDIR="${PREFIX}/man"
+	case "${host}" in
+	*-*-darwin*)
+		MANDIR="${PREFIX}/share/man"
+		;;
+	*)
+		MANDIR="${PREFIX}/man"
+		;;
+	esac
 fi
 bb_o=$bb_incdir/mandir.h
 echo '#ifndef MANDIR' >$bb_o
@@ -5436,17 +5441,6 @@ else
 echo '#undef AG_ANSI_COLOR' >$bb_incdir/ag_ansi_color.h
 echo 'hdefs["AG_ANSI_COLOR"] = nil' >>configure.lua
 fi
-if [ "${enable_debug_core}" = 'yes' ]; then
-AG_DEBUG_CORE="yes"
-bb_o=$bb_incdir/ag_debug_core.h
-echo '#ifndef AG_DEBUG_CORE' >$bb_o
-echo "#define AG_DEBUG_CORE \"$AG_DEBUG_CORE\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"AG_DEBUG_CORE\"] = \"$AG_DEBUG_CORE\"" >>configure.lua
-else
-echo '#undef AG_DEBUG_CORE' >$bb_incdir/ag_debug_core.h
-echo 'hdefs["AG_DEBUG_CORE"] = nil' >>configure.lua
-fi
 if [ "${enable_dso}" != 'no' ]; then
 AG_ENABLE_DSO="yes"
 bb_o=$bb_incdir/ag_enable_dso.h
@@ -5457,6 +5451,17 @@ echo "hdefs[\"AG_ENABLE_DSO\"] = \"$AG_ENABLE_DSO\"" >>configure.lua
 else
 echo '#undef AG_ENABLE_DSO' >$bb_incdir/ag_enable_dso.h
 echo 'hdefs["AG_ENABLE_DSO"] = nil' >>configure.lua
+fi
+if [ "${enable_event_loop}" != 'no' ]; then
+AG_EVENT_LOOP="yes"
+bb_o=$bb_incdir/ag_event_loop.h
+echo '#ifndef AG_EVENT_LOOP' >$bb_o
+echo "#define AG_EVENT_LOOP \"$AG_EVENT_LOOP\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"AG_EVENT_LOOP\"] = \"$AG_EVENT_LOOP\"" >>configure.lua
+else
+echo '#undef AG_EVENT_LOOP' >$bb_incdir/ag_event_loop.h
+echo 'hdefs["AG_EVENT_LOOP"] = nil' >>configure.lua
 fi
 if [ "${enable_exec}" != 'no' ]; then
 AG_ENABLE_EXEC="yes"
@@ -5480,16 +5485,16 @@ else
 echo '#undef AG_LEGACY' >$bb_incdir/ag_legacy.h
 echo 'hdefs["AG_LEGACY"] = nil' >>configure.lua
 fi
-if [ "${enable_event_loop}" != 'no' ]; then
-AG_EVENT_LOOP="yes"
-bb_o=$bb_incdir/ag_event_loop.h
-echo '#ifndef AG_EVENT_LOOP' >$bb_o
-echo "#define AG_EVENT_LOOP \"$AG_EVENT_LOOP\"" >>$bb_o
+if [ "${enable_named_args}" != 'no' ]; then
+AG_NAMED_ARGS="yes"
+bb_o=$bb_incdir/ag_named_args.h
+echo '#ifndef AG_NAMED_ARGS' >$bb_o
+echo "#define AG_NAMED_ARGS \"$AG_NAMED_ARGS\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"AG_EVENT_LOOP\"] = \"$AG_EVENT_LOOP\"" >>configure.lua
+echo "hdefs[\"AG_NAMED_ARGS\"] = \"$AG_NAMED_ARGS\"" >>configure.lua
 else
-echo '#undef AG_EVENT_LOOP' >$bb_incdir/ag_event_loop.h
-echo 'hdefs["AG_EVENT_LOOP"] = nil' >>configure.lua
+echo '#undef AG_NAMED_ARGS' >$bb_incdir/ag_named_args.h
+echo 'hdefs["AG_NAMED_ARGS"] = nil' >>configure.lua
 fi
 if [ "${enable_namespaces}" != 'no' ]; then
 AG_NAMESPACES="yes"
@@ -5501,17 +5506,6 @@ echo "hdefs[\"AG_NAMESPACES\"] = \"$AG_NAMESPACES\"" >>configure.lua
 else
 echo '#undef AG_NAMESPACES' >$bb_incdir/ag_namespaces.h
 echo 'hdefs["AG_NAMESPACES"] = nil' >>configure.lua
-fi
-if [ "${enable_named_args}" != 'no' ]; then
-AG_NAMED_ARGS="yes"
-bb_o=$bb_incdir/ag_named_args.h
-echo '#ifndef AG_NAMED_ARGS' >$bb_o
-echo "#define AG_NAMED_ARGS \"$AG_NAMED_ARGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"AG_NAMED_ARGS\"] = \"$AG_NAMED_ARGS\"" >>configure.lua
-else
-echo '#undef AG_NAMED_ARGS' >$bb_incdir/ag_named_args.h
-echo 'hdefs["AG_NAMED_ARGS"] = nil' >>configure.lua
 fi
 if [ "${enable_serialization}" != 'no' ]; then
 AG_SERIALIZATION="yes"

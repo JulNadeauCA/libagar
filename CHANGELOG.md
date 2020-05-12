@@ -108,10 +108,12 @@ All notable changes to Agar will be documented in this file. The format is based
 
 ### Removed
 - [**AG_Event**](https://libagar.org/man3/AG_Event): In [AG_PostEvent()](https://libagar.org/man3/AG_PostEvent), remove the mandatory "sender" first argument. Sender objects can be passed instead as regular arguments.
-- [**AG_Event**](https://libagar.org/man3/AG_Event): Removed the optimization-hindering `ASYNC` and `PROPAGATE` flags. Both behaviors are more flexibly implementable in the event handler routine itself.
+- [**AG_Event**](https://libagar.org/man3/AG_Event): Removed the `ASYNC` and `PROPAGATE` option flags. Both behaviors can be implemented more flexibly in the event handler routine itself.
+- [**AG_Event**](https://libagar.org/man3/AG_Event): Removed the `child-attached` and `child-detached` events.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Removed the `AG_ObjectDep` structure and linkage. Dependencies are now represented with less overhead using [AG_Variables](https://libagar.org/man3/AG_Variable).
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Removed the `save_pfx` and `archivePath` fields (replaced by the _"archive-path"_ property).
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Remove typed virtual functions. This improves performance and allows `AG_Get*()` functions to be declared `pure` in unthreaded builds.
+- [**AG_Widget**](https://libagar.org/man3/AG_Widget): Removed the options `NOSPACING` and `TABLE_EMBEDDABLE` which are no longer relevant.
 
 ### Changed
 - [**AG_Button**](https://libagar.org/man3/AG_Button): Renamed `AG_ButtonInvertState()` -> [AG_ButtonSetInverted()](https://libagar.org/man3/AG_ButtonSetInverted).

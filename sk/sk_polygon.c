@@ -218,6 +218,7 @@ SK_PolygonValue(SK_Polygon *poly)
 		M_Line2 ln = SK_LineValue(poly->s[i]);
 		P.v[i] = ln.p;
 	}
+	P._pad = 0;
 	return (P);
 }
 

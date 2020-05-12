@@ -16,7 +16,6 @@ static const AP_FlagNames apWidgetFlagNames[] = {
 	{ "catchTab",			AG_WIDGET_CATCH_TAB },
 	{ "glReshape",			AG_WIDGET_GL_RESHAPE },
 	{ "undersize",			AG_WIDGET_UNDERSIZE },
-	{ "noSpacing",			AG_WIDGET_NOSPACING },
 	{ "unfocusedKeyDown",		AG_WIDGET_UNFOCUSED_KEYDOWN },
 	{ "unfocusedKeyUp",		AG_WIDGET_UNFOCUSED_KEYUP },
 	{ "updateWindow",		AG_WIDGET_UPDATE_WINDOW },
