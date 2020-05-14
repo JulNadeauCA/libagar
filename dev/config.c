@@ -151,6 +151,10 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 			);
 		}
 		
+		AG_CheckboxNewInt(tab, 0,
+		    _("Enable " AGSI_COURIER "GL_DEBUG_OUTPUT" AGSI_RST),
+		    &agGLdebugOutput);
+
 		if (AG_OfClass(drv, "AG_Driver:AG_DriverMw:AG_DriverGLX")) {
 			AG_WidgetDisable(
 			    AG_CheckboxNewInt(tab, 0, _("Synchronous X events"), &agXsync)

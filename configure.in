@@ -1111,14 +1111,14 @@ fi
 
 if [ "${enable_sg}" != 'no' ]; then
 	config_script(agar-sg-config,\
-		"-I${INCLDIR} ${AGAR_MATH_CFLAGS} ${CG_CFLAGS} ${GLU_CFLAGS}",\
-		"-L${LIBDIR} -lag_sg ${AGAR_MATH_LIBS} ${CG_LIBS} ${GLU_LIBS}")
+		"-I${INCLDIR} ${AGAR_MATH_CFLAGS} ${GLU_CFLAGS}",\
+		"-L${LIBDIR} -lag_sg ${AGAR_MATH_LIBS} ${GLU_LIBS}")
 
 	pkgconfig_mod(agar-sg, "Agar 3D scene graph library", \
 		"agar-math agar", "", \
-		"-I\${includedir}/agar ${CG_CFLAGS} ${GLU_CFLAGS}", \
+		"-I\${includedir}/agar ${GLU_CFLAGS}", \
 		"-L\${libdir} -lag_sg", \
-		"-lag_sg ${AGAR_MATH_LIBS} ${CG_LIBS} ${GLU_LIBS}")
+		"-lag_sg ${AGAR_MATH_LIBS} ${GLU_LIBS}")
 fi
 
 if [ "${enable_sk}" != 'no' ]; then

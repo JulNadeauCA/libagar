@@ -44,6 +44,9 @@ SH?=		sh
 FIND?=		find
 AWK?=		awk
 LN?=		ln
+ECHO_N?=	echo -n
+
+INSTALL_DESTDIR=mkdir -p
 
 INSTALL_PROG=	install -c -m 755
 INSTALL_LIB=	install -c -m 644

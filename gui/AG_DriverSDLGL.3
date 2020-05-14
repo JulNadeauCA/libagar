@@ -63,6 +63,10 @@ AG_InitVideoSDL(an_existing_SDL_screen, 0);
 .Ed
 .Sh OPTIONS
 .Bl -tag -compact -width "outFirst "
+.It debug
+Capture
+.Dv GL_DEBUG_OUTPUT
+errors.
 .It stereo
 Request a stereoscopic visual.
 .It width
@@ -110,3 +114,4 @@ integer method, "ifast" for fast but less accurate integer method, or
 The
 .Va sdlgl
 driver first appeared in Agar 1.4.0.
+The "debug" option appeared in Agar 1.6.0.

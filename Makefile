@@ -69,10 +69,10 @@ install-includes:
 	done
 
 deinstall-includes:
-	@echo "rm -rf ${INCLDIR}/agar"
-	@${SUDO} rm -rf ${INCLDIR}/agar
-	@echo "${DEINSTALL_INCL_DIR} ${INCLDIR}"
-	@-${SUDO} ${DEINSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}
+	@if [ -e "${INCLDIR}" -a -e "${INCLDIR}/agar" ]; then \
+		echo "rm -rf ${INCLDIR}/agar"; \
+		${SUDO} rm -rf ${INCLDIR}/agar; \
+	fi
 
 install-config:
 	@for F in ${AVAIL_CONFIGSCRIPTS}; do \

@@ -262,6 +262,9 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 				r->h -= WIDGET(box)->spacingVert;
 		}
 		break;
+	case AG_BOX_TYPE_LAST:
+	default:
+		break;
 	}
 	if (box->wPre != -1) { r->w = box->wPre; }
 	if (box->hPre != -1) { r->h = box->hPre; }

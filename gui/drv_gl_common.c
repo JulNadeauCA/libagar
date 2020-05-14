@@ -47,6 +47,17 @@
 /* Expensive debugging of GL context & resource management. */
 /* #define DEBUG_GL */
 
+#if defined(AG_DEBUG) && defined(GL_DEBUG_OUTPUT)
+static void GLAPIENTRY
+AG_GL_DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+    GLsizei length, const GLchar *message, const void *userParam)
+{
+	Verbose("%s: (type %x, severity %x)  %s\n",
+	    (type == GL_DEBUG_TYPE_ERROR ? "GL(ERROR)": "GL"),
+	    type, severity, message);
+}
+#endif /* AG_DEBUG && GL_DEBUG_OUTPUT */
+
 /*
  * Initialize an OpenGL context for Agar GUI rendering.
  *
@@ -96,6 +107,13 @@ AG_GL_InitContext(void *obj, AG_GL_Context *gl)
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DITHER);
 	glDisable(GL_LIGHTING);
+
+#if defined(AG_DEBUG) && defined(GL_DEBUG_OUTPUT)
+	if (agGLdebugOutput) {
+		glEnable(GL_DEBUG_OUTPUT);
+		glDebugMessageCallback(AG_GL_DebugCallback, 0);
+	}
+#endif
 
 	/* Clipping rectangle stack */
 	gl->clipRects = Malloc(sizeof(AG_ClipRect));
@@ -154,6 +172,11 @@ AG_GL_DestroyContext(void *obj)
 	AG_GL_Context *gl = drv->gl;
 	AG_Glyph *glyph;
 	int i;
+
+#if defined(AG_DEBUG) && defined(GL_DEBUG_OUTPUT)
+	if (agGLdebugOutput)
+		glDisable(GL_DEBUG_OUTPUT);
+#endif
 
 #ifdef DEBUG_GL
 	Debug(drv, "GL Context Destroy\n");

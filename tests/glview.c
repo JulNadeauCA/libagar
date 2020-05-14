@@ -124,7 +124,7 @@ MyDrawFunction(AG_Event *event)
 	glEnable(GL_LIGHT1);
 	glEnable(GL_DEPTH_TEST);
 
-	glPolygonMode(GL_FRONT_AND_BACK, ti->wireframe ? GL_LINE : GL_POLYGON);
+	glPolygonMode(GL_FRONT_AND_BACK, ti->wireframe ? GL_LINE : GL_FILL);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ti->ambient);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, ti->diffuse);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, ti->specular);
@@ -288,7 +288,7 @@ Init(void *obj)
 		ti->specular[i] = spe[i];
 	}
 	ti->wireframe = 0;
-	ti->overlay = 0;
+	ti->overlay = 1;
 	ti->subdiv = 3;
 	return (0);
 }

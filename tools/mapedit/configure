@@ -1,15 +1,14 @@
 #!/bin/sh
 #
 # Do not edit!
-# This file was generated from configure.in by BSDBuild 3.2.
+# 
+# This file was generated from configure.in. To regenerate it properly, get
+# BSDBuild 3.2 or later from https://bsdbuild.hypertriton.com/ and use:
 #
-# To regenerate this file, get the latest BSDBuild release from
-# http://bsdbuild.hypertriton.com/, and use the command:
+#     $ mkconfigure < configure.in > configure
 #
-#     $ cat configure.in | mkconfigure > configure
-#
-echo 'BSDBuild 3.2 <http://bsdbuild.hypertriton.com/>'
-echo '# BSDBuild 3.2 <http://bsdbuild.hypertriton.com/>' > config.log
+echo 'BSDBuild 3.2 <https://bsdbuild.hypertriton.com/>'
+echo '# BSDBuild 3.2 <https://bsdbuild.hypertriton.com/>' > config.log
 echo '# ex:syn=sh' >> config.log
 echo '#!/bin/sh' >config.status
 echo >>config.status
@@ -439,13 +438,12 @@ echo '    --statedir=DIR|NONE        Modifiable single-machine data [PREFIX/var]
 echo '    --sysconfdir=DIR|NONE      System configuration files [PREFIX/etc]'
 echo '    --testdir=DIR              Execute all tests in this directory [.]'
 echo '    --with-bundles             Generate application/library bundles [yes]'
-echo '    --with-catman              Install cat files for manual pages [auto-detect]'
 echo '    --with-ctags               Generate ctags tag files [no]'
 echo '    --with-docs                Generate printable documentation [no]'
 echo '    --with-gettext             Use gettext for multi-language [auto-detect]'
 echo '    --with-libtool=STRING      Use GNU libtool [path or "bundled"]'
-echo '    --with-manlinks            Add manual entries for every function [no]'
-echo '    --with-manpages            Generate Unix manual pages [yes]'
+echo '    --with-manlinks            Manual page entries for all functions [no]'
+echo '    --with-manpages            Generate manual pages [yes]'
 echo ''
 echo 'mapedit options:'
 echo '    --with-agar[=PREFIX]        Location of Agar library [check]'
@@ -509,6 +507,7 @@ echo "HOST=${host}" >> Makefile.config
 echo "CROSS_COMPILING=${CROSS_COMPILING}" >> Makefile.config
 echo "SRCDIR=${SRC}" >> Makefile.config
 echo "BLDDIR=${BLD}" >> Makefile.config
+echo "ECHO_N=${ECHO_N}" >> Makefile.config
 
 if [ "${SUDO}" != "" ]; then
 	if [ -e "${PREFIX}" ]; then
@@ -663,22 +662,6 @@ if [ "${HAVE_MANDOC}" = 'no' ]; then
 else
 	echo 'HAVE_MANDOC=yes' >> Makefile.config
 	echo "MANDOC=${MANDOC}" >> Makefile.config
-	if [ "${with_catman}" = "no" ]; then
-		echo 'NOCATMAN=yes' >> Makefile.config
-	else
-		if [ "${with_catman}" = "yes" ]; then
-			echo 'NOCATMAN=no' >> Makefile.config
-		else
-			case "${host}" in
-			*-*-freebsd*)
-				echo 'NOCATMAN=yes' >> Makefile.config
-				;;
-			*)
-				echo 'NOCATMAN=no' >> Makefile.config
-				;;
-			esac
-		fi
-	fi
 	if [ "${with_manpages}" = 'no' ]; then
 		echo 'NOMAN=yes' >> Makefile.config
 		echo 'NOMANLINKS=yes' >> Makefile.config

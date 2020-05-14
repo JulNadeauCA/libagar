@@ -72,15 +72,8 @@ LoadImage(AG_Event *event)
 		                           AG_SCROLLVIEW_PAN_RIGHT |
 		                           AG_SCROLLVIEW_EXPAND);
 		AG_PixmapFromSurfaceScaled(sv, 0, S, S->w, S->h);
-
-		AG_WindowSetGeometry(win, -1, -1,
-		    AG_MIN(640, S->w + 32),
-		    AG_MIN(480, S->h + 32));
 	} else {						/* Compact */
 		AG_PixmapFromSurfaceScaled(win, 0, S, S->w, S->h);
-		AG_WindowSetGeometry(win, -1, -1,
-		    S->w + 20,
-		    S->h + agTextFontHeight + 30);
 	}
 	
 	AG_SurfaceFree(S);

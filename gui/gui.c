@@ -188,6 +188,7 @@ int agScreenshotQuality = 100;		/* JPEG quality in % */
 int agTextComposition = 1;		/* Input character composition */
 int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
+int agGLdebugOutput = 0;		/* Enable GL_DEBUG_OUTPUT */
 
 double agZoomValues[AG_ZOOM_MAX] = {
 	55.0, 60.0, 65.00, 70.00, 75.00, 80.00, 90.00, 95.00,
@@ -527,6 +528,9 @@ AG_InitGraphics(const char *spec)
 					continue;
 				} else if (Strcasecmp(key, "xsync") == 0) {
 					agXsync = 1;
+					continue;
+				} else if (Strcasecmp(key, "debug") == 0) {
+					agGLdebugOutput = 1;
 					continue;
 				}
 				if ((val = AG_Strsep(&tok, "=")) != NULL) {

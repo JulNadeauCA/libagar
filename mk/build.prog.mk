@@ -418,7 +418,14 @@ cleandir-prog:
 	fi
 
 install-prog:
-	@if [ ! -e "${DESTDIR}${BINDIR}" ]; then \
+	@if [ "${DESTDIR}" != "" ]; then \
+	    echo "# Installing under DESTDIR=${DESTDIR}:"; \
+	    if [ ! -e "${DESTDIR}" ]; then \
+	        echo "${INSTALL_DESTDIR} ${DESTDIR}"; \
+	        ${SUDO} ${INSTALL_DESTDIR} ${DESTDIR}; \
+	    fi; \
+	fi; \
+	if [ ! -e "${DESTDIR}${BINDIR}" ]; then \
 	    echo "${INSTALL_PROG_DIR} ${BINDIR}"; \
 	    ${SUDO} ${INSTALL_PROG_DIR} ${DESTDIR}${BINDIR}; \
 	fi
@@ -580,9 +587,7 @@ configure-prog:
 			echo "cat configure.in | mkconfigure > configure"; \
 			cat configure.in | mkconfigure > configure; \
 			if [ ! -e configure ]; then \
-				echo "mkconfigure failed."; \
-				echo "Note: mkconfigure is part of BSDBuild"; \
-				echo "(http://bsdbuild.hypertriton.com/)"; \
+				echo "mkconfigure (BSDBuild) failed."; \
 				exit 1; \
 			fi; \
 			if [ ! -x configure ]; then \

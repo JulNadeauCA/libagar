@@ -47,10 +47,14 @@ is usually the default driver.
 .Bd -literal -offset indent
 AG_InitGraphics("glx");
 AG_InitGraphics("glx(stereo)");
-AG_InitGraphics("glx(xsync)");
+AG_InitGraphics("glx(debug:xsync)");
 .Ed
 .Sh OPTIONS
 .Bl -tag -compact -width "stereo "
+.It debug
+Capture
+.Dv GL_DEBUG_OUTPUT
+errors.
 .It stereo
 Request a stereoscopic visual.
 .It xsync
@@ -69,3 +73,4 @@ Enable synchonous X events.
 The
 .Va glx
 driver first appeared in Agar 1.4.0.
+The "debug" option appeared in Agar 1.6.0.
