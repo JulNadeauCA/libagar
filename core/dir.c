@@ -58,6 +58,7 @@
 #include <sys/types.h>
 
 #ifdef _WIN32
+
 # include <agar/core/queue_close.h>			/* Conflicts */
 # ifdef _XBOX
 #  include <xtl.h>
@@ -66,14 +67,30 @@
 # endif
 # include <agar/core/queue_close.h>
 # include <agar/core/queue.h>
-#else
+
+#else /* !_WIN32 */
+
 # include <agar/config/_mk_have_sys_stat_h.h>
 # ifdef _MK_HAVE_SYS_STAT_H
 #  include <sys/stat.h>
 # endif
+
+# ifdef __APPLE__
+#  ifndef _DARWIN_C_SOURCE
+#   define _DARWIN_C_SOURCE /* for dirfd() */
+#   define _AGAR_DEFINED_DARWIN_C_SOURCE
+#  endif
+# endif
+
 # include <dirent.h>
+
+# ifdef _AGAR_DEFINED_DARWIN_C_SOURCE
+#  undef _DARWIN_C_SOURCE
+# endif
+
 # include <unistd.h>
-#endif
+#endif /* !_WIN32 */
+
 #include <string.h>
 #include <errno.h>
 
