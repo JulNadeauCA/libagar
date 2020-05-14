@@ -10,15 +10,23 @@
 #  include <agar/core/win32.h>
 # endif
 
-# define GL_GLEXT_PROTOTYPES
+# include <agar/config/have_glext.h>
+# ifdef HAVE_GLEXT
+#  define GL_GLEXT_PROTOTYPES
+# endif
 
 # ifdef _USE_OPENGL_FRAMEWORK
 #  include <OpenGL/gl.h>
+#  ifdef HAVE_GLEXT
 #  include <OpenGL/glext.h>
+#  endif
 # else
 #  include <GL/gl.h>
+#  ifdef HAVE_GLEXT
 #  include <GL/glext.h>
+#  endif
 # endif
+
 # ifdef _AGAR_GUI_INTERNAL
 #  include <agar/config/have_glx.h>
 #  ifdef HAVE_GLX

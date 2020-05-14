@@ -47,8 +47,8 @@
 /* Expensive debugging of GL context & resource management. */
 /* #define DEBUG_GL */
 
-#if defined(AG_DEBUG) && defined(GL_DEBUG_OUTPUT)
-static void GLAPIENTRY
+#if defined(AG_DEBUG) && defined(HAVE_GLEXT) && defined(GL_DEBUG_OUTPUT)
+static void
 AG_GL_DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
     GLsizei length, const GLchar *message, const void *userParam)
 {
@@ -56,7 +56,7 @@ AG_GL_DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
 	    (type == GL_DEBUG_TYPE_ERROR ? "GL(ERROR)": "GL"),
 	    type, severity, message);
 }
-#endif /* AG_DEBUG && GL_DEBUG_OUTPUT */
+#endif /* AG_DEBUG && HAVE_GLEXT && GL_DEBUG_OUTPUT */
 
 /*
  * Initialize an OpenGL context for Agar GUI rendering.
@@ -108,13 +108,12 @@ AG_GL_InitContext(void *obj, AG_GL_Context *gl)
 	glDisable(GL_DITHER);
 	glDisable(GL_LIGHTING);
 
-#if defined(AG_DEBUG) && defined(GL_DEBUG_OUTPUT)
+#if defined(AG_DEBUG) && defined(HAVE_GLEXT) && defined(GL_DEBUG_OUTPUT)
 	if (agGLdebugOutput) {
 		glEnable(GL_DEBUG_OUTPUT);
 		glDebugMessageCallback(AG_GL_DebugCallback, 0);
 	}
 #endif
-
 	/* Clipping rectangle stack */
 	gl->clipRects = Malloc(sizeof(AG_ClipRect));
 	gl->maxClipRects = gl->nClipRects = 1;

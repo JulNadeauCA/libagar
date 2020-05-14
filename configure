@@ -6521,6 +6521,61 @@ echo 'hdefs["OPENGL_LIBS"] = nil' >>configure.lua
 OPENGL_LIBS=""
 fi
 fi
+$ECHO_N 'checking for OpenGL glext...'
+$ECHO_N '# checking for OpenGL glext...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#define GL_GLEXT_PROTOTYPES
+#ifdef _USE_OPENGL_FRAMEWORK
+# include <OpenGL/gl.h>
+# include <OpenGL/glext.h>
+#else
+# include <GL/gl.h>
+# include <GL/glext.h>
+#endif
+
+static void
+DebugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+    GLsizei length, const GLchar *message, const void *userParam)
+{
+}
+
+int main(int argc, char *argv[]) {
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(DebugMessageCallback, 0);
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_GLEXT' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_GLEXT=yes
+bb_o=$bb_incdir/have_glext.h
+echo '#ifndef HAVE_GLEXT' >$bb_o
+echo "#define HAVE_GLEXT \"$HAVE_GLEXT\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_GLEXT\"] = \"$HAVE_GLEXT\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_GLEXT=no
+echo '#undef HAVE_GLEXT' >$bb_incdir/have_glext.h
+echo 'hdefs["HAVE_GLEXT"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
 else
 echo 'no'
 echo '# no' >>config.log
@@ -6546,11 +6601,14 @@ SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
 echo 'not enabling OpenGL'
 echo '# not enabling OpenGL' >>config.log
 HAVE_OPENGL="no"
+HAVE_GLEXT="no"
 OPENGL_CFLAGS=""
 OPENGL_LIBS=""
 OPENGL_PC=""
 echo '#undef HAVE_OPENGL' >$bb_incdir/have_opengl.h
 echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
+echo '#undef HAVE_GLEXT' >$bb_incdir/have_glext.h
+echo 'hdefs["HAVE_GLEXT"] = nil' >>configure.lua
 echo '#undef OPENGL_CFLAGS' >$bb_incdir/opengl_cflags.h
 echo 'hdefs["OPENGL_CFLAGS"] = nil' >>configure.lua
 echo '#undef OPENGL_LIBS' >$bb_incdir/opengl_libs.h
@@ -6560,11 +6618,14 @@ echo 'hdefs["OPENGL_LIBS"] = nil' >>configure.lua
 echo 'not enabling OpenGL'
 echo '# not enabling OpenGL' >>config.log
 HAVE_OPENGL="no"
+HAVE_GLEXT="no"
 OPENGL_CFLAGS=""
 OPENGL_LIBS=""
 OPENGL_PC=""
 echo '#undef HAVE_OPENGL' >$bb_incdir/have_opengl.h
 echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
+echo '#undef HAVE_GLEXT' >$bb_incdir/have_glext.h
+echo 'hdefs["HAVE_GLEXT"] = nil' >>configure.lua
 echo '#undef OPENGL_CFLAGS' >$bb_incdir/opengl_cflags.h
 echo 'hdefs["OPENGL_CFLAGS"] = nil' >>configure.lua
 echo '#undef OPENGL_LIBS' >$bb_incdir/opengl_libs.h
@@ -8787,11 +8848,14 @@ echo 'hdefs["COCOA_LIBS"] = nil' >>configure.lua
 echo 'not enabling OpenGL'
 echo '# not enabling OpenGL' >>config.log
 HAVE_OPENGL="no"
+HAVE_GLEXT="no"
 OPENGL_CFLAGS=""
 OPENGL_LIBS=""
 OPENGL_PC=""
 echo '#undef HAVE_OPENGL' >$bb_incdir/have_opengl.h
 echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
+echo '#undef HAVE_GLEXT' >$bb_incdir/have_glext.h
+echo 'hdefs["HAVE_GLEXT"] = nil' >>configure.lua
 echo '#undef OPENGL_CFLAGS' >$bb_incdir/opengl_cflags.h
 echo 'hdefs["OPENGL_CFLAGS"] = nil' >>configure.lua
 echo '#undef OPENGL_LIBS' >$bb_incdir/opengl_libs.h
@@ -14310,6 +14374,8 @@ echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
 echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
 echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
 echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
+echo "HAVE_GLEXT=$HAVE_GLEXT" >>Makefile.config
+echo "mdefs[\"HAVE_GLEXT\"] = \"$HAVE_GLEXT\"" >>configure.lua
 echo "HAVE_GLU=$HAVE_GLU" >>Makefile.config
 echo "mdefs[\"HAVE_GLU\"] = \"$HAVE_GLU\"" >>configure.lua
 echo "HAVE_GLX=$HAVE_GLX" >>Makefile.config
