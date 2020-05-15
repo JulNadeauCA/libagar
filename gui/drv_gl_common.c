@@ -378,6 +378,15 @@ AG_GL_SurfaceType(const AG_Surface *S)
 	}
 }
 
+static __inline__ int _Const_Attribute
+PowOf2i(int i)
+{
+	int val = 1;
+
+	while (val < i) { val <<= 1; }
+	return (val);
+}
+
 /*
  * Create a hardware texture from the given AG_Surface.
  *
@@ -391,22 +400,24 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *S, AG_TexCoord *tc)
 	AG_Surface *GS;
 	GLuint texture;
 	const int isGLtexture = (S->flags & AG_SURFACE_GL_TEXTURE);
+	const int w = (agGLuseNPOT) ? S->w : PowOf2i(S->w);
+	const int h = (agGLuseNPOT) ? S->h : PowOf2i(S->h);
 
 	glGenTextures(1, &texture);
 
-	if (isGLtexture) {
+	if (isGLtexture && (w == S->w) && (h == S->h)) {  /* POT & compatible */
 		GS = S;
 #ifdef DEBUG_GL
-		Debug(obj, "GL upload (%d x %d) surface %p -> #%u\n",
-		    S->w, S->h, S, texture);
+		Debug(obj, "GL upload (%dx%d) surface %p -> #%u (%dx%d)\n",
+		    S->w, S->h, S, texture, w,h);
 #endif
-	} else {
+	} else {                         /* Need POT adjustment or conversion */
 #ifdef DEBUG_GL
 		Debug(obj, "GL upload " AGSI_BOLD "converted" AGSI_RST
-		    " (%d x %d) surface %p -> #%u\n",
-		    S->w, S->h, S, texture);
+		    " (%dx%d) surface %p -> #%u (%dx%d)\n",
+		    S->w, S->h, S, texture, w,h);
 #endif
-		GS = AG_SurfaceStdRGBA(S->w, S->h);
+		GS = AG_SurfaceStdRGBA(w,h);
 		AG_SurfaceCopy(GS, S);
 	}
 	if (tc != NULL) {
@@ -419,14 +430,14 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *S, AG_TexCoord *tc)
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, GS->w, GS->h, 0, GL_RGBA,
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w,h, 0, GL_RGBA,
 	    AG_GL_SurfaceType(GS), GS->pixels);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	if (!isGLtexture) {
+	if (GS != S)
 		AG_SurfaceFree(GS);
-	}
+
 	*rv = (Uint)texture;
 }
 
@@ -441,37 +452,39 @@ AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *S, AG_TexCoord *tc)
 {
 	AG_Surface *GS;
 	const int isGLtexture = (S->flags & AG_SURFACE_GL_TEXTURE);
+	const int w = (agGLuseNPOT) ? S->w : PowOf2i(S->w);
+	const int h = (agGLuseNPOT) ? S->h : PowOf2i(S->h);
 
-	if (isGLtexture) {
+	if (isGLtexture && (w == S->w) && (h == S->h)) {  /* POT & compatible */
 		GS = S;
 #ifdef DEBUG_GL
-		Debug(obj, "GL update (%d x %d) surface %p -> #%u\n",
-		    S->w, S->h, S, texture);
+		Debug(obj, "GL update (%dx%d) surface %p -> #%u (%dx%d)\n",
+		    S->w, S->h, S, texture, w,h);
 #endif
-	} else {
+	} else {                         /* Need POT adjustment or conversion */
 #ifdef DEBUG_GL
 		Debug(obj, "GL update " AGSI_BOLD "converted" AGSI_RST
-		    " (%d x %d) surface %p -> #%u\n",
-		    S->w, S->h, S, texture);
+		    " (%dx%d) surface %p -> #%u (%dx%d)\n", S->w, S->h,
+		    S, texture, w,h);
 #endif
-		GS = AG_SurfaceStdRGBA(S->w, S->h);
+		GS = AG_SurfaceStdRGBA(w,h);
 		AG_SurfaceCopy(GS, S);
 	}
 	if (tc != NULL) {
 		tc->x = 0.0f;
 		tc->y = 0.0f;
-		tc->w = (float)GS->w / (float)S->w;
-		tc->h = (float)GS->h / (float)S->h;
+		tc->w = (float)S->w / (float)GS->w;
+		tc->h = (float)S->h / (float)GS->h;
 	}
 
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, GS->w, GS->h, 0, GL_RGBA,
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w,h, 0, GL_RGBA,
 	    AG_GL_SurfaceType(GS), GS->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	if (!isGLtexture)
+	if (GS != S)
 		AG_SurfaceFree(GS);
 }
 
@@ -485,18 +498,12 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *S, int x, int y)
 	AG_Driver *drv = obj;
 	AG_TexCoord tc;
 	GLuint texture;
-/*	Uint32 Amask; */
 	
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AGDRIVER_CLASS(drv)->uploadTexture(drv, &texture, S, &tc);
 
-#if 0
-	if ((Amask = S->format.Amask) != 0)
-		AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
-		                                           AG_ALPHA_ONE_MINUS_SRC);
-#endif
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBegin(GL_POLYGON);
 	{
@@ -511,19 +518,6 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *S, int x, int y)
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDeleteTextures(1, &texture);
-#if 0
-	if (Amask != 0)
-		AGDRIVER_CLASS(drv)->popBlendingMode(drv);
-#endif
-}
-
-static __inline__ int _Const_Attribute
-PowOf2i(int i)
-{
-	int val = 1;
-
-	while (val < i) { val <<= 1; }
-	return (val);
 }
 
 static __inline__ void
@@ -550,17 +544,12 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, int name, const AG_Rect *r,
 {
 	AG_Driver *drv = obj;
 	const AG_Surface *S = wid->surfaces[name];
-/*	Uint32 Amask; */
 	
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	PrepareTexture(drv, wid, name);
-#if 0
-	if ((Amask = S->format.Amask) != 0)
-		AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
-		                                           AG_ALPHA_ONE_MINUS_SRC);
-#endif
+
 	glBindTexture(GL_TEXTURE_2D, wid->textures[name]);
 	glBegin(GL_POLYGON);
 	{
@@ -583,10 +572,6 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, int name, const AG_Rect *r,
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
-#if 0
-	if (Amask != 0)
-		AGDRIVER_CLASS(drv)->popBlendingMode(drv);
-#endif
 }
 
 /*
@@ -599,19 +584,12 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *S, float w, float h)
 	AG_Driver *drv = obj;
 	AG_TexCoord tc;
 	GLuint name;
-/*	Uint32 Amask; */
 	
 	AG_OBJECT_ISA(drv, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AGDRIVER_CLASS(drv)->uploadTexture(drv, &name, S, &tc);
-#if 0
-	if ((Amask = S->format.Amask) != 0)
-		AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
-		                                           AG_ALPHA_ONE_MINUS_SRC);
-#endif
 	glBindTexture(GL_TEXTURE_2D, name);
-
 	glBegin(GL_POLYGON);
 	{
 		const float w_2 = w / 2.0f;
@@ -626,10 +604,6 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *S, float w, float h)
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDeleteTextures(1, &name);
-#if 0
-	if (Amask != 0)
-		AGDRIVER_CLASS(drv)->popBlendingMode(drv);
-#endif
 }
 
 /*
@@ -640,17 +614,12 @@ void
 AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int name, float w, float h)
 {
 	AG_Driver *drv = obj;
-/*	Uint32 Amask; */
 	
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
 	PrepareTexture(drv, wid, name);
-#if 0
-	if ((Amask = wid->surfaces[name]->format.Amask) != 0)
-		AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
-		                                           AG_ALPHA_ONE_MINUS_SRC);
-#endif
+
 	glBindTexture(GL_TEXTURE_2D, wid->textures[name]);
 	glBegin(GL_POLYGON);
 	{
@@ -665,10 +634,6 @@ AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int name, float w, float h)
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
-#if 0
-	if (Amask != 0)
-		AGDRIVER_CLASS(drv)->popBlendingMode(drv);
-#endif
 }
 
 /*
@@ -679,17 +644,12 @@ void
 AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int name, float w, float h)
 {
 	AG_Driver *drv = obj;
-/*	Uint32 Amask; */
 	
 	AG_OBJECT_ISA(obj, "AG_Driver:*");
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
 	PrepareTexture(drv, wid, name);
-#if 0
-	if ((Amask = wid->surfaces[name]->format.Amask) != 0)
-		AGDRIVER_CLASS(drv)->pushBlendingMode(drv, AG_ALPHA_SRC,
-		                                           AG_ALPHA_ONE_MINUS_SRC);
-#endif
+
 	glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[name]);
 	glBegin(GL_POLYGON);
 	{
@@ -702,10 +662,6 @@ AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int name, float w, float h
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
-#if 0
-	if (Amask != 0)
-		AGDRIVER_CLASS(drv)->popBlendingMode(drv);
-#endif
 }
 
 /*

@@ -155,6 +155,9 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		    _("Enable " AGSI_COURIER "GL_DEBUG_OUTPUT" AGSI_RST),
 		    &agGLdebugOutput);
 
+		AG_CheckboxNewInt(tab, 0,
+		    _("NPOT (non power of two) textures"), &agGLuseNPOT);
+
 		if (AG_OfClass(drv, "AG_Driver:AG_DriverMw:AG_DriverGLX")) {
 			AG_WidgetDisable(
 			    AG_CheckboxNewInt(tab, 0, _("Synchronous X events"), &agXsync)

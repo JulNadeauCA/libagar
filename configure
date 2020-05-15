@@ -6521,8 +6521,8 @@ echo 'hdefs["OPENGL_LIBS"] = nil' >>configure.lua
 OPENGL_LIBS=""
 fi
 fi
-$ECHO_N 'checking for OpenGL glext...'
-$ECHO_N '# checking for OpenGL glext...' >>config.log
+$ECHO_N 'checking whether OpenGL has glext...'
+$ECHO_N '# checking whether OpenGL has glext...' >>config.log
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.c
 #define GL_GLEXT_PROTOTYPES
@@ -6537,8 +6537,7 @@ cat << EOT >conftest$$.c
 static void
 DebugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
     GLsizei length, const GLchar *message, const void *userParam)
-{
-}
+{ }
 
 int main(int argc, char *argv[]) {
 	glEnable(GL_DEBUG_OUTPUT);
@@ -6579,6 +6578,9 @@ fi
 else
 echo 'no'
 echo '# no' >>config.log
+HAVE_GLEXT="no"
+echo '#undef HAVE_GLEXT' >$bb_incdir/have_glext.h
+echo 'hdefs["HAVE_GLEXT"] = nil' >>configure.lua
 fi
 if [ "${HAVE_OPENGL}" = "yes" ]; then
 OPENGL_PC="gl"

@@ -656,7 +656,7 @@ install-lib: check-libtool
 	    	        echo "${INSTALL_PROG} $$_libout ${BINDIR}"; \
 	                ${SUDO} ${INSTALL_PROG} $$_libout ${DESTDIR}${BINDIR}; \
 	    	        echo "${INSTALL_LIB} lib${LIB}_dll.lib ${LIBDIR}"; \
-	                ${SUDO} ${INSTALL_LIB} lib${LIB}.dll.lib ${DESTDIR}${LIBDIR}; \
+	                ${SUDO} ${INSTALL_LIB} lib${LIB}_dll.lib ${DESTDIR}${LIBDIR}; \
 			echo "(cd ${LIBDIR} && ${LN} -fs $$_libout lib${LIB}.so.${LIB_CURRENT})"; \
 			(cd ${DESTDIR}${LIBDIR} && ${SUDO} ${LN} -fs $$_libout lib${LIB}.so.${LIB_CURRENT}); \
 			echo "(cd ${LIBDIR} && ${LN} -fs $$_libout lib${LIB}.so)"; \

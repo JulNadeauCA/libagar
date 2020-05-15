@@ -22,14 +22,14 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**glx**](https://libagar.org/man3/AG_DriverGLX): Make drag-and-drop (`sockets` test) work correctly (possibly using `AG_WindowMove()`).
 - [**wgl**](https://libagar.org/man2/AG_DriverWGL): Clipboard integration. Live resize. Fix cursor bugs.
 
-## [1.6.0] - 2020-05-10
+## [1.6.0] - 2020-05-16
 ### Added
 - Integrated [**Style Editor**](https://libagar.org/man3/AG_StyleEditor) tool. It allows a developer to inspect a live VFS of widgets, to pick elements, to add/edit style attributes and look at the results in real time.
 - Integrated [**GUI Debugger**](https://libagar.org/man3/AG_GuiDebugger) utility. Inspect a live VFS of widgets in real time. Available in Debug builds only.
 - [**AG_Button**](https://libagar.org/man3/AG_Button): New functions [AG_ButtonGetState()](https://libagar.org/man3/AG_ButtonGetState), [AG_ButtonSetState](https://libagar.org/man3/AG_ButtonSetState) and atomic [AG_ButtonToggle()](https://libagar.org/man3/AG_ButtonToggle). New option flag `SET` to force initial _"state"_ to **1**). New option flag `RETURN_BUTTON` to embed a "Return" button which raises _"textbox-return"_ when pressed.
 - [**AG_Checkbox**](https://libagar.org/man3/AG_Checkbox): Display a check mark (U+2713). Thanks Federico!
 - [**AG_Checkbox**](https://libagar.org/man3/AG_Checkbox): New option flag `INVERT`.
-- [**AG_Config**](https://libagar.org/man3/AG_Config): New settings: "Tab Width", "Cursor Blink Rate" and "Mouse Scroll Interval".
+- [**AG_Config**](https://libagar.org/man3/AG_Config): New settings: "Tab Width", "Cursor Blink Rate", "Mouse Scroll Interval", "Enable `GL_DEBUG_OUTPUT`" and "NPOT (non power of two) textures".
 - [**AG_Console**](https://libagar.org/man3/AG_Console): Handle multiline entries. [AG_ConsoleMsg()](https://libagar.org/man3/AG_ConsoleMsg) will now split multiline strings into multiple, grouped lines that are displayed in an indented style. Thanks Chuck!
 - [**AG_Console**](https://libagar.org/man3/AG_Console): Introduce [event sink](https://libagar.org/man3/AG_EventSink)-based file monitoring features. New functions [AG_ConsoleOpenFile](https://libagar.org/man3/AG_ConsoleOpenFile), [AG_ConsoleOpenFD](https://libagar.org/man3/AG_ConsoleOpenFD), [AG_ConsoleOpenStream()](https://libagar.org/man3/AG_ConsoleOpenStream) and [AG_ConsoleClose()](https://libagar.org/man3/AG_ConsoleClose).
 - [**AG_Console**](https://libagar.org/man3/AG_Console): New function [AG_ConsoleBinary()](https://libagar.org/man3/AG_ConsoleBinary) to produce data in canonical (hex + ASCII) format. New function [AG_ConsoleMsgCatS()](https://libagar.org/man3/AG_ConsoleMsgCatS) for appending to an existing entry.

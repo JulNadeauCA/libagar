@@ -288,8 +288,8 @@ Init(void *obj)
 		ti->specular[i] = spe[i];
 	}
 	ti->wireframe = 0;
-	ti->overlay = 1;
-	ti->subdiv = 3;
+	ti->overlay = 0;
+	ti->subdiv = 4;
 	return (0);
 }
 
@@ -332,37 +332,44 @@ TestGUI(void *obj, AG_Window *win)
 			AG_RedrawOnTick(glv, 1000/30);             /* 30fps */
 		}
 
-		ntab = AG_NotebookAdd(nb, "Another tab", AG_BOX_VERT);
-		{
-#if 0
-			glv = AG_GLViewNew(ntab, AG_GLVIEW_EXPAND);
-			AGWIDGET(glv)->flags |= AG_WIDGET_USE_TEXT;
-			AG_GLViewSizeHint(glv, 320,320);
-			AG_GLViewScaleFn(glv, MyScaleFunction, NULL);
-			AG_GLViewDrawFn(glv, MyDrawFunction, "%p", ti);
-			AG_GLViewOverlayFn(glv, MyOverlayFunction, "%p", ti);
-			AG_GLViewButtondownFn(glv, ButtonDown, "%p", ti);
-#ifdef AG_TIMERS
-			AG_AddTimerAuto(win, 1000/60, UpdateRotation, "%p", ti);
-#endif
-			AG_RedrawOnTick(glv, 1000/60);
-#endif
-		}
-
-		/* Edit ambient and diffuse color components. */
+		/*
+		 * Edit Ambient, Diffuse and Specular color components.
+		 */
 		nbColor = AG_NotebookNew(pa->div[1], AG_NOTEBOOK_EXPAND);
 		{
 			const Uint flags = AG_HSVPAL_NOALPHA | AG_HSVPAL_EXPAND;
+			AG_Label *lbl;
 
-			ntab = AG_NotebookAdd(nbColor, "Ambient", AG_BOX_VERT);
+			/* Ambient */
+			ntab = AG_NotebookAdd(nbColor,
+			    "\xE2\x98\x80", /* U+2600 BLACK SUN WITH RAYS */
+			    AG_BOX_VERT);
+			AG_BoxSetHorizAlign(AGBOX(ntab), AG_BOX_CENTER); 
+			lbl = AG_LabelNewS(ntab, 0, "Ambient");
+			AG_SetStyle(lbl, "font-family", "league-spartan");
+
 			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->ambient);
 
-			ntab = AG_NotebookAdd(nbColor, "Diffuse", AG_BOX_VERT);
+			/* Diffuse */
+			ntab = AG_NotebookAdd(nbColor,
+			    "\xE2\x9A\x9E", /* U+269E THREE LINES CONVERGING RIGHT */
+			    AG_BOX_VERT);
+			AG_BoxSetHorizAlign(AGBOX(ntab), AG_BOX_CENTER); 
+			lbl = AG_LabelNewS(ntab, 0, "Diffuse");
+			AG_SetStyle(lbl, "font-family", "league-spartan");
+
 			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->diffuse);
 
-			ntab = AG_NotebookAdd(nbColor, "Specular", AG_BOX_VERT);
+			/* Specular */
+			ntab = AG_NotebookAdd(nbColor,
+			    "\xE2\x98\x87", /* U+2607 LIGHTNING */
+			    AG_BOX_VERT);
+			AG_BoxSetHorizAlign(AGBOX(ntab), AG_BOX_CENTER); 
+			lbl = AG_LabelNewS(ntab, 0, "Specular");
+			AG_SetStyle(lbl, "font-family", "league-spartan");
+
 			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->specular);
 		}

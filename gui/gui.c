@@ -102,6 +102,8 @@ static struct {
 	{ "ScreenshotQuality",    &agScreenshotQuality    },
 	{ "TextTabWidth",         &agTextTabWidth         },
 	{ "TextBlinkRate",        &agTextBlinkRate        },
+	{ "GLdebugOutput",        &agGLdebugOutput        },
+	{ "GLuseNPOT",            &agGLuseNPOT            },
 };
 const Uint agGUIOptionCount = sizeof(agGUIOptions) / sizeof(agGUIOptions[0]);
 
@@ -189,6 +191,7 @@ int agTextComposition = 1;		/* Input character composition */
 int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
 int agGLdebugOutput = 0;		/* Enable GL_DEBUG_OUTPUT */
+int agGLuseNPOT = 0;			/* Use non-power-of-two textures */
 
 double agZoomValues[AG_ZOOM_MAX] = {
 	55.0, 60.0, 65.00, 70.00, 75.00, 80.00, 90.00, 95.00,
