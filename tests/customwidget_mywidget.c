@@ -115,7 +115,7 @@ Draw(void *_Nonnull p)
 
 	/* Render the last pressed key as a text surface. */
 	if (my->label == -1) {
-		AG_TextFontPct(500);
+		AG_TextFontPts(36.0f);
 		my->label = AG_WidgetMapSurface(my,
 		    AG_TextRenderF("%c", my->lastKey));
 	}
@@ -137,9 +137,11 @@ Draw(void *_Nonnull p)
 	 * Draw a mapped label surface centered at the cursor.
 	 */
 	AG_PushBlendingMode(my, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 	S = AGWIDGET_SURFACE(my, my->label);
 	AG_WidgetBlitSurface(my, my->label, x - (S->w >> 1),
-	                                    y - (S->h >> 1));
+	                                    y - (S->h >> 1) - (S->h >> 1));
+
 	AG_PopBlendingMode(my);
 
 	AG_PopClipRect(my);

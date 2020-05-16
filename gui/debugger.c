@@ -177,8 +177,8 @@ PollWidgets(AG_Event *_Nonnull event)
 
 	AG_TlistEnd(tl);
 
-	AG_LabelText(lblStats, _("%u windows, %u containers, %u leaves"),
-	    nWindows, nContainers, nLeaves);
+	AG_LabelText(lblStats, _("%u windows, %u containers & %u leaves (t = %ums)"),
+	    nWindows, nContainers, nLeaves, (Uint)AG_GetTicks());
 }
 
 static void
@@ -630,8 +630,9 @@ AG_GuiDebugger(AG_Window *_Nonnull tgt)
 	agDebuggerLabel = AG_LabelNew(div, AG_LABEL_HFILL,
 	    _("Target: " AGSI_YEL "%s" AGSI_RST), path);
 
-	lblStats = AG_LabelNewS(div, AG_LABEL_HFILL, "...");
-	AG_SetStyle(lblStats, "font-size", "90%");
+	lblStats = AG_LabelNewS(div, AG_LABEL_HFILL,
+	    _("XX windows, XX containers & XX leaves (t = XXXXXms)"));
+	AG_SetStyle(lblStats, "font-size", "80%");
 
 	tl = agDebuggerTlist = AG_TlistNewPolledMs(div,
 	    AG_TLIST_EXPAND, 125,

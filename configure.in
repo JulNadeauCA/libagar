@@ -13,7 +13,6 @@ release("Nullability Complete")
 
 register_section("Libraries to build:")
 register("--enable-au",    "AU: Audio and sound toolkit [no]")
-register("--enable-dev",   "DEV: Debugger and developer tools [yes]")
 register("--enable-gui",   "GUI: The Agar GUI library [yes]")
 register("--enable-map",   "MAP: 2D tile engine [no]")
 register("--enable-math",  "MATH: Math library and advanced rendering [yes]")
@@ -823,17 +822,6 @@ else
 fi
 
 #
-# DEV: Enable the DEV library (needs GUI).
-#
-if [ "${enable_dev}" != 'no' -a "${enable_gui}" != 'no' ]; then
-	hdefine(ENABLE_DEV, "yes")
-	mdefine(SUBDIR_dev, "dev")
-else
-	hundef(ENABLE_DEV)
-	mdefine(SUBDIR_dev, "")
-fi
-
-#
 # AU: Enable the AU library (needs GUI).
 #
 if [ "${enable_au}" = 'yes' -a "${enable_gui}" != 'no' ]; then
@@ -1062,12 +1050,6 @@ if [ "${enable_au}" = 'yes' ]; then
 		"-I\${includedir}/agar", \
 		"-L\${libdir} -lag_au", \
 		"-lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}")
-fi
-
-if [ "${enable_dev}" != 'no' ]; then
-	config_script(agar-dev-config, "-I${INCLDIR}", "-L${LIBDIR} -lag_dev")
-	pkgconfig_mod(agar-dev, "Agar extra developer tools", "agar", "", \
-		"-I\${includedir}/agar", "-L\${libdir} -lag_dev", "-lag_dev")
 fi
 
 if [ "${enable_map}" = 'yes' -a "${enable_gui}" != 'no' ]; then

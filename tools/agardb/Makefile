@@ -7,7 +7,7 @@ PROJECT=	"agardb"
 PROG=		agardb
 PROG_TYPE=	"GUI"
 PROG_GUID=	"883e7d87-8ab0-11e9-b0bb-ac9e17b8d45b"
-PROG_LINKS=	ag_dev ag_gui ag_core
+PROG_LINKS=	ag_gui ag_core
 
 SRCS=		agardb.cpp
 #DATAFILES_SRC=	agardb.bmp

@@ -28,11 +28,12 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/window.h>
 #include <agar/gui/label.h>
 #include <agar/gui/separator.h>
 #include <agar/gui/tlist.h>
-#include <agar/dev/dev.h>
 	
 static AG_FlagDescr archExtns[] = {
 	{ AG_EXT_CPUID,		"CPUID Instruction",			1 },
@@ -66,7 +67,7 @@ static AG_FlagDescr archExtns[] = {
 };
 
 AG_Window *
-DEV_CPUInfo(void)
+AG_DEV_CPUInfo(void)
 {
 	AG_Window *win;
 	AG_FlagDescr *fd;
@@ -95,3 +96,5 @@ DEV_CPUInfo(void)
 	}
 	return (win);
 }
+
+#endif /* AG_WIDGETS */

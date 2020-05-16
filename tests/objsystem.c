@@ -1,14 +1,11 @@
 /*	Public domain	*/
 /*
  * This application demonstrates the basic functionality of the Agar
- * object system. It uses the "Object Browser" which is part of the
- * Agar-DEV library.
+ * object system. It uses the "Object Browser" from gui/dev_browser.c.
  */
 
 #include "agartest.h"
 #ifdef AG_TIMERS
-
-#include <agar/dev.h>
 
 #include "objsystem_animal.h"
 #include "objsystem_mammal.h"
@@ -26,8 +23,6 @@ Init(void *obj)
 	MyTestInstance *ti = obj;
 
 	if (inited++ == 0) {
-		DEV_InitSubsystem(0);
-
 		/* Register the Agar object classes which we implement. */
 		AG_RegisterClass(&AnimalClass);
 		AG_RegisterClass(&MammalClass);
@@ -76,7 +71,7 @@ TestGUI(void *obj, AG_Window *win)
 		AG_LabelNewS(box, 0, "Test VFS could not be loaded. "
 		                     "Creating new one.");
 	}
-	if ((winBrowser = DEV_Browser(&ti->vfsRoot)) != NULL) {
+	if ((winBrowser = AG_DEV_Browser(&ti->vfsRoot)) != NULL) {
 		AG_WindowAttach(win, winBrowser);
 	}
 	return (0);

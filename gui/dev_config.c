@@ -28,6 +28,8 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/core/config.h>
 
 #include <agar/gui/window.h>
@@ -45,19 +47,6 @@
 #include <agar/gui/file_dlg.h>
 #include <agar/gui/dir_dlg.h>
 #include <agar/gui/pane.h>
-
-#include <agar/dev/dev.h>
-
-static AG_Window *_Nullable DEV_ConfigWindow(AG_Config *_Nullable);
-
-void
-DEV_ConfigShow(void)
-{
-	AG_Window *win;
-
-	if ((win = DEV_ConfigWindow(agConfig)) != NULL)
-		AG_WindowShow(win);
-}
 
 static void
 SaveConfig(AG_Event *_Nonnull event)
@@ -112,7 +101,7 @@ SelectPath(AG_Event *_Nonnull event)
 #endif
 
 static AG_Window *_Nullable
-DEV_ConfigWindow(AG_Config *_Nullable cfg)
+AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 {
 	AG_Window *win;
 	AG_Box *hb;
@@ -218,3 +207,14 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 
 	return (win);
 }
+
+void
+AG_DEV_ConfigShow(void)
+{
+	AG_Window *win;
+
+	if ((win = AG_DEV_ConfigWindow(agConfig)) != NULL)
+		AG_WindowShow(win);
+}
+
+#endif /* AG_WIDGETS */

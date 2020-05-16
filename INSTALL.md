@@ -15,13 +15,6 @@
 - [libiconv](https://gnu.org/software/libiconv) (`pkg install libiconv`). Support encodings other than ASCII & UTF-8 in [**Textbox**](https://libagar.org/man3/AG_Textbox)/[**Editable**](https://libagar.org/man3/AG_Editable).
 - [gettext](https://gnu.org/software/gettext) (`pkg install gettext-runtime gettext-tools`). Enables native language support.
 
-##### Installing from Ports & Packages
-
-###### On FreeBSD
-
-- Install the binary package: `pkg install agar`
-- Compile from ports sources: `(cd /usr/ports/devel/agar && make install clean)`
-
 ##### Installing from source
 
 1. [**Download**](https://libagar.org/download.html) and unpack the sources to a temporary location:
@@ -58,6 +51,11 @@
 	`$ make depend all`
 
 	`# make install`
+
+##### Installing from FreeBSD ports and packages
+
+- Install the binary package: `pkg install agar`
+- Compile from ports sources: `(cd /usr/ports/devel/agar && make install clean)`
 
 ### On [Linux Mint](https://linuxmint.com), [Debian](https://www.debian.org), [Ubuntu](https://ubuntu.com) & other `apt-get`-based distros ![](img/linux.png)
 

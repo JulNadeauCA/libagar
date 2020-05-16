@@ -58,7 +58,7 @@ int   AG_SetVideoSurfaceSDL(void *_Nonnull);
 #endif
 
 #ifdef AG_WIDGETS
-void AG_About(struct ag_event *_Nullable);
+void                        AG_About(struct ag_event *_Nullable);
 struct ag_window *_Nullable AG_StyleEditor(struct ag_window *_Nonnull);
 void                        AG_StyleEditorDetachTarget(void);
 void                        AG_StyleEditorDetachWindow(void);
@@ -67,7 +67,21 @@ struct ag_window *_Nullable AG_GuiDebugger(struct ag_window *_Nonnull);
 void                        AG_GuiDebuggerDetachTarget(void);
 void                        AG_GuiDebuggerDetachWindow(void);
 # endif
-#endif
+void                        AG_DEV_ConfigShow(void);
+void *_Nullable             AG_DEV_ObjectEdit(void *_Nonnull);
+# ifdef AG_TIMERS
+struct ag_window *_Nullable AG_DEV_Browser(void *_Nonnull);
+struct ag_window *_Nullable AG_DEV_ClassInfo(void);
+struct ag_window *_Nullable AG_DEV_FontInfo(void);
+#  ifdef AG_ENABLE_STRING
+struct ag_window *_Nullable AG_DEV_TimerInspector(void);
+#  endif
+# endif
+# ifdef AG_UNICODE
+struct ag_window *_Nullable AG_DEV_UnicodeBrowser(void);
+# endif
+struct ag_window *_Nullable AG_DEV_CPUInfo(void);
+#endif /* AG_WIDGETS */
 
 #ifdef AG_LEGACY
 int  AG_InitVideo(int,int, int, Uint) DEPRECATED_ATTRIBUTE;

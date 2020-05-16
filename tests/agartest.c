@@ -520,7 +520,7 @@ RunUnicodeBrowser(AG_Event *event)
 {
 	AG_Window *win;
 
-	if ((win = DEV_UnicodeBrowser()) == NULL) {
+	if ((win = AG_DEV_UnicodeBrowser()) == NULL) {
 		return;
 	}
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_RIGHT, 1);
@@ -530,16 +530,16 @@ RunUnicodeBrowser(AG_Event *event)
 #endif
 
 #ifdef AG_TIMERS
-static void RunDriversBrowser(AG_Event *event) { DEV_Browser(&agDrivers); }
-static void RunClassInfo(AG_Event *event) { DEV_ClassInfo(); }
-static void RunFontsInfo(AG_Event *event) { DEV_FontInfo(); }
+static void RunDriversBrowser(AG_Event *event) { AG_DEV_Browser(&agDrivers); }
+static void RunClassInfo(AG_Event *event) { AG_DEV_ClassInfo(); }
+static void RunFontsInfo(AG_Event *event) { AG_DEV_FontInfo(); }
 
 static void
 RunTimerInspector(AG_Event *event)
 {
 	AG_Window *win;
 
-	if ((win = DEV_TimerInspector()) == NULL) {
+	if ((win = AG_DEV_TimerInspector()) == NULL) {
 		return;
 	}
 	AG_WindowAttach(winMain, win);
@@ -720,7 +720,7 @@ ZoomOut(AG_Event *event)
 static void
 EditGuiPrefs(AG_Event *event)
 {
-	DEV_ConfigShow();
+	AG_DEV_ConfigShow();
 }
 
 int

@@ -3,7 +3,6 @@ include Makefile.config
 include Makefile.proj
 include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
-include ${TOP}/dev/Makefile.inc
 include ${TOP}/math/Makefile.inc
 include ${TOP}/au/Makefile.inc
 
@@ -12,13 +11,10 @@ PROJECT=	"agartest"
 PROG=		agartest
 PROG_TYPE=	"GUI"
 PROG_GUID=	"11d6c9ff-522e-43ed-b3eb-92a2c636cca7"
-PROG_LINKS=	${AGMATH_LINKS} ${DEV_LINKS} ${GUI_LINKS} ${CORE_LINKS}
+PROG_LINKS=	${AGMATH_LINKS} ${GUI_LINKS} ${CORE_LINKS}
 
-CFLAGS+=	${AGAR_AU_CFLAGS} ${AGAR_MATH_CFLAGS} ${AGAR_DEV_CFLAGS} \
-		${AGAR_CFLAGS}
-
-LIBS+=		${AGAR_AU_LIBS} ${AGAR_MATH_LIBS} ${AGAR_DEV_LIBS} \
-		${AGAR_LIBS}
+CFLAGS+=	${AGAR_AU_CFLAGS} ${AGAR_MATH_CFLAGS} ${AGAR_CFLAGS}
+LIBS+=		${AGAR_AU_LIBS} ${AGAR_MATH_LIBS} ${AGAR_LIBS}
 
 SRCS=	agartest.c ${SRCS_AUDIO} ${SRCS_MATH} \
 	buttons.c \

@@ -5,8 +5,6 @@
 
 #include "agartest.h"
 
-#include <agar/dev.h>
-
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
@@ -41,11 +39,11 @@ ComboEnteredText(AG_Event *event)
 	    "Entered text: \" " AGSI_ITALIC "%s" AGSI_RST " \"", text);
 }
 
-/* Show the agar-dev "Preferences" dialog. */
+/* Suggested "GUI Preferences" dialog. */
 static void
 Preferences(AG_Event *event)
 {
-	DEV_ConfigShow();
+	AG_DEV_ConfigShow();
 }
 
 static void
@@ -680,7 +678,6 @@ Init(void *obj)
 
 	ti->textBuffer[0] = '\0';
 	ti->someText = NULL;
-	DEV_InitSubsystem(0);
 	return (0);
 }
 

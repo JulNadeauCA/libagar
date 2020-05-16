@@ -28,14 +28,13 @@
  * all the characters within that range. Useful for testing fonts.
  */
 
-#include <agar/config/ag_unicode.h>
-#ifdef AG_UNICODE
+#include <agar/core/core.h>
+#if defined(AG_WIDGETS) && defined(AG_UNICODE)
 
 #include <agar/core/core.h>
 #include <agar/gui/window.h>
 #include <agar/gui/combo.h>
 #include <agar/gui/treetbl.h>
-#include <agar/dev/dev.h>
 
 static const struct unicode_range {
 #ifdef AG_HAVE_64BIT
@@ -218,7 +217,7 @@ SelectUnicodeRange(AG_Event *_Nonnull event)
 }
 
 AG_Window *
-DEV_UnicodeBrowser(void)
+AG_DEV_UnicodeBrowser(void)
 {
 	AG_Window *win;
 	AG_Combo *comRange;
@@ -252,4 +251,4 @@ DEV_UnicodeBrowser(void)
 	return (win);
 }
 
-#endif /* AG_UNICODE */
+#endif /* AG_WIDGETS and AG_UNICODE */

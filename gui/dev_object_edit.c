@@ -28,6 +28,7 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
 
 #include <agar/gui/window.h>
 #include <agar/gui/box.h>
@@ -38,8 +39,6 @@
 #include <agar/gui/separator.h>
 #include <agar/gui/checkbox.h>
 #include <agar/gui/iconmgr.h>
-
-#include <agar/dev/dev.h>
 
 const AG_FlagDescr devObjectFlags[] = {
 	{ AG_OBJECT_FLOATING_VARS,  N_("Clear Variables pre-load"),   1 },
@@ -127,7 +126,7 @@ RenameObject(AG_Event *_Nonnull event)
 }
 
 void *
-DEV_ObjectEdit(void *p)
+AG_DEV_ObjectEdit(void *p)
 {
 	AG_Object *ob = p;
 	AG_Window *win;
@@ -136,7 +135,9 @@ DEV_ObjectEdit(void *p)
 	AG_NotebookTab *ntab;
 	AG_Tlist *tl;
 
-	win = AG_WindowNew(0);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return (NULL);
+	}
 	AG_WindowSetCaption(win, _("Object %s"), ob->name);
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_RIGHT, 1);
 
@@ -152,10 +153,6 @@ DEV_ObjectEdit(void *p)
 	
 		AG_LabelNew(ntab, 0, _("Class: %s"), ob->cls->hier);
 		AG_CheckboxSetFromFlags(ntab, 0, &ob->flags, devObjectFlags);
-#if 0
-		AG_LabelNewPolledMT(ntab, AG_LABEL_HFILL, &agLinkageLock,
-		    _("Parent: %[obj]"), &ob->parent);
-#endif
 	}
 
 	ntab = AG_NotebookAdd(nb, _("Events"), AG_BOX_VERT);
@@ -171,3 +168,5 @@ DEV_ObjectEdit(void *p)
 	}
 	return (win);
 }
+
+#endif /* AG_WIDGETS */

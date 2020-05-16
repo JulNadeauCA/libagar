@@ -10,6 +10,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Add widget classes to the new Ada bindings in `ada/gui/`.
 - [**AG_Console**](https://libagar.org/man3/AG_Console): Handle ansi cursor and terminal operations. Clipboard integration.
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): Display only those styles that are available for a given font (as opposed to a static list of styles).
+- [**AG_Menu**](https://libagar.org/man3/AG_Menu): Implement focusability and keyboard navigation methods. Handle "font-changed" better under multi-window drivers.
 - [**AG_Notebook**](https://libagar.org/man3/AG_Notebook): Add disposition modes Bottom, Left & Right.
 - [**AG_Pixmap**](https://libagar.org/man3/AG_Pixmap) & [**AG_Fixed**](https://libagar.org/man3/AG_Fixed): Zoom operations.
 - [**AG_StyleEditor**](https://libagar.org/man3/AG_StyleEditor): Edition of stylesheet rules.

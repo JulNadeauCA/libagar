@@ -1327,6 +1327,8 @@ restart:
 			FD_SET(es->ident, &wrFds);
 			if (es->ident > nFds) { nFds = es->ident; }
 			break;
+		default:
+			break;
 		}
 	}
 #  ifdef AG_TIMERS
@@ -1407,6 +1409,8 @@ restart:
 			if (FD_ISSET(es->ident, &wrFds)) {
 				es->fn(es, &es->fnArgs);
 			}
+			break;
+		default:
 			break;
 		}
 	}

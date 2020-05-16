@@ -23,7 +23,6 @@ default_dir(LOCALEDIR, "${DATADIR}/locale")
 
 require(cc)
 require(agar, 1.6.0, ${prefix_agar})
-require(agar-dev, 1.6.0, ${prefix_agar})
 require(cxx)
 require(lldb, 8.0.0, ${prefix_llvm})
 if [ "${enable_lldb_utility}" = "no" ]; then

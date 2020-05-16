@@ -45,7 +45,7 @@ LoadConfig(AG_Event *event)
 static void
 ShowAgarPrefs(AG_Event *event)
 {
-	DEV_ConfigShow();
+	AG_DEV_ConfigShow();
 }
 
 static void

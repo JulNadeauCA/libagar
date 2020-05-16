@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,62 +24,62 @@
  */
 
 /*
- * This displays various parameters related to the display.
+ * Display registered AG_Object classes.
  */
 
 #include <agar/core/core.h>
+#if defined(AG_WIDGETS) && defined(AG_TIMERS)
+
 #include <agar/gui/window.h>
-#include <agar/gui/button.h>
-#include <agar/gui/tlist.h>
-#include <agar/gui/label.h>
-#include <agar/gui/textbox.h>
-#include <agar/dev/dev.h>
+#include <agar/gui/table.h>
+
+static void
+GenClassTable(AG_Table *_Nonnull tbl, AG_ObjectClass *_Nonnull C)
+{
+	AG_ObjectClass *Csub;
+	
+	AG_TableAddRow(tbl, "%s:%d:%s:%s",
+	    C->name, C->size,
+	    C->pvt.libs[0] != '\0' ? C->pvt.libs : "",
+	    C->hier);
+
+	TAILQ_FOREACH(Csub, &C->pvt.sub, pvt.subclasses)
+		GenClassTable(tbl, Csub);
+}
+
+static void
+PollClasses(AG_Event *_Nonnull event)
+{
+	AG_Table *tbl = AG_TABLE_SELF();
+
+	/* XXX tree */
+	AG_TableBegin(tbl);
+	GenClassTable(tbl, &agObjectClass);
+	AG_TableEnd(tbl);
+}
 
 AG_Window *
-DEV_DisplaySettings(void)
+AG_DEV_ClassInfo(void)
 {
 	AG_Window *win;
-	AG_Box *vb;
-/*	AG_Label *lbl; */
+	AG_Table *tbl;
 
-	if ((win = AG_WindowNewNamedS(0, "DEV_DisplaySettings")) == NULL) {
+	if ((win = AG_WindowNew(0)) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaptionS(win, _("Display Settings"));
-	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
+	AG_WindowSetCaptionS(win, _("Registered classes"));
+	AG_WindowSetPosition(win, AG_WINDOW_TL, 0);
+	AG_SetStyle(win, "font-size", "90%");
 
-	if (agDriverOps == NULL) {
-		AG_LabelNew(win, 0, "Graphics not initialized?");
-		return (win);
-	}
+	tbl = AG_TableNewPolled(win, AG_TABLE_EXPAND, PollClasses, NULL);
+	AG_TableAddCol(tbl, _("Name"), "<XXXXXXXXXXXXXXX>", NULL);
+	AG_TableAddCol(tbl, _("Size"), "<XXXX>", NULL);
+	AG_TableAddCol(tbl, _("Modules"), "<XXXXXXX>", NULL);
+	AG_TableAddCol(tbl, _("Hierarchy"), NULL, NULL);
+	AG_TableSizeHint(tbl, 600, 20);
 
-	vb = AG_BoxNewVert(win, 0);
-	{
-		AG_LabelNew(vb, 0, _("Driver: %s"), agDriverOps->name);
-		AG_LabelNew(vb, 0, _("OpenGL support: %s"),
-		    agDriverOps->flags & AG_DRIVER_OPENGL ?
-		    _("yes") : _("no"));
-		AG_LabelNew(vb, 0, _("SDL support: %s"),
-		    agDriverOps->flags & AG_DRIVER_SDL ?
-		    _("yes") : _("no"));
-
-#if 0
-		AG_LabelNewPolled(vb, AG_LABEL_HFILL,
-		    _("Display: %dx%d"),
-		    &drv->w, &drv->h);
-		AG_LabelNewPolled(vb, AG_LABEL_HFILL,
-		    _("Depth: %dbpp"),
-		    &drv->depth);
-		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL,
-		    _("Refresh rate (effective): %d"), &agView->rCur);
-		AG_LabelSizeHint(lbl, 1,
-		    _("Refresh rate (effective): 000"));
-
-		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL,
-		    _("Refresh rate (nominal): %d"), &agView->rNom);
-		AG_LabelSizeHint(lbl, 1,
-		    _("Refresh rate (nominal): 000"));
-#endif
-	}
+	AG_WindowShow(win);
 	return (win);
 }
+
+#endif /* AG_WIDGETS and AG_TIMERS */

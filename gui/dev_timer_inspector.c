@@ -29,12 +29,11 @@
  */
 
 #include <agar/core/core.h>
-#if defined(AG_TIMERS) && defined(AG_ENABLE_STRING)
+#if defined(AG_WIDGETS) && defined(AG_TIMERS) && defined(AG_ENABLE_STRING)
 
 #include <agar/gui/window.h>
 #include <agar/gui/treetbl.h>
 #include <agar/gui/button.h>
-#include <agar/dev/dev.h>
 
 static Uint32 
 RefreshTableTimeout(AG_Timer *_Nonnull refreshTo, AG_Event *_Nonnull event)
@@ -87,7 +86,7 @@ CloseWindow(AG_Event *_Nonnull event)
 }
 
 AG_Window *
-DEV_TimerInspector(void)
+AG_DEV_TimerInspector(void)
 {
 	static int pauseFlag = 0;
 	AG_Window *win;
@@ -118,4 +117,4 @@ DEV_TimerInspector(void)
 	return (win);
 }
 
-#endif /* AG_TIMERS and AG_ENABLE_STRING */
+#endif /* AG_WIDGETS and AG_TIMERS and AG_ENABLE_STRING */

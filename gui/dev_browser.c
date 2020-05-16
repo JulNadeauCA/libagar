@@ -28,7 +28,7 @@
  */
 
 #include <agar/core/core.h>
-#ifdef AG_TIMERS
+#if defined(AG_WIDGETS) && defined(AG_TIMERS)
 
 #include <agar/gui/gui.h>
 #include <agar/gui/window.h>
@@ -47,8 +47,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <agar/dev/dev.h>
-
 /* Active object entry */
 struct objent {
 	AG_Object *_Nonnull obj;	/* Object being edited */
@@ -58,6 +56,46 @@ struct objent {
 static TAILQ_HEAD_(objent) dobjs;
 static TAILQ_HEAD_(objent) gobjs;
 static int editNowFlag = 1;
+
+static const struct dev_tool_ent {
+	char *_Nonnull name;
+	AG_Window *_Nullable (*_Nonnull fn)(void);
+} devTools[] = {
+#ifdef AG_TIMERS
+	{ N_("Registered classes"),	AG_DEV_ClassInfo },
+	{ N_("Loaded fonts"),		AG_DEV_FontInfo },
+#endif
+#if defined(AG_TIMERS) && defined(AG_ENABLE_STRING)
+	{ N_("Timer Inspector"),	AG_DEV_TimerInspector },
+#endif
+#ifdef AG_UNICODE
+	{ N_("Unicode Browser"),	AG_DEV_UnicodeBrowser },
+#endif
+	{ N_("CPU Information"),	AG_DEV_CPUInfo },
+};
+
+static void AG_DEV_BrowserOpenData(void *_Nonnull);
+
+static void
+SelectTool(AG_Event *_Nonnull event)
+{
+	const struct dev_tool_ent *ent = AG_PTR(1);
+	AG_Window *win;
+
+	if ((win = (ent->fn)()) != NULL)
+		AG_WindowShow(win);
+}
+
+static void
+ToolMenu(AG_MenuItem *mi)
+{
+	const int devToolCount = sizeof(devTools) / sizeof(devTools[0]);
+	int i;
+
+	for (i = 0; i < devToolCount; i++)
+		AG_MenuAction(mi, _(devTools[i].name), NULL,
+		    SelectTool, "%p", &devTools[i]);
+}
 
 static void
 CreateObject(AG_Event *_Nonnull event)
@@ -92,7 +130,7 @@ CreateObject(AG_Event *_Nonnull event)
 	AG_PostEvent(nobj, "edit-create", NULL);
 	
 	if (editNowFlag && cl->edit != NULL)
-		DEV_BrowserOpenData(nobj);
+		AG_DEV_BrowserOpenData(nobj);
 }
 
 enum {
@@ -120,10 +158,11 @@ CloseGenericDlg(AG_Event *_Nonnull event)
 	Free(oent);
 }
 
-void
-DEV_BrowserOpenGeneric(AG_Object *ob)
+static void
+BrowserOpenGeneric(AG_Object *ob)
 {
 	struct objent *oent;
+	AG_Window *win;
 
 	TAILQ_FOREACH(oent, &gobjs, objs) {
 		if (oent->obj == ob)
@@ -134,14 +173,16 @@ DEV_BrowserOpenGeneric(AG_Object *ob)
 		AG_WindowFocus(oent->win);
 		return;
 	}
-	
+
+	if ((win = AG_DEV_ObjectEdit(ob)) == NULL)
+		return;
+
 	oent = Malloc(sizeof(struct objent));
 	oent->obj = ob;
-	oent->win = DEV_ObjectEdit(ob);
+	oent->win = win;
 	TAILQ_INSERT_HEAD(&gobjs, oent, objs);
-	AG_WindowShow(oent->win);
-
-	AG_SetEvent(oent->win, "window-close", CloseGenericDlg, "%p", oent);
+	AG_SetEvent(win, "window-close", CloseGenericDlg, "%p", oent);
+	AG_WindowShow(win);
 }
 
 static void
@@ -198,8 +239,8 @@ SaveChangesDlg(AG_Event *_Nonnull event)
 	}
 }
 
-void
-DEV_BrowserOpenData(void *p)
+static void
+AG_DEV_BrowserOpenData(void *p)
 {
 	AG_Object *ob = p;
 	struct objent *oent;
@@ -329,8 +370,8 @@ fail:
 	AG_TextMsgFromError();
 }
 
-AG_Window *
-DEV_BrowserSaveToDlg(void *p, const char *name)
+static AG_Window *
+BrowserSaveToDlg(void *p, const char *name)
 {
 	char ext[AG_OBJECT_HIER_MAX+3];
 	AG_Object *ob = p;
@@ -354,8 +395,8 @@ DEV_BrowserSaveToDlg(void *p, const char *name)
 	return (win);
 }
 
-AG_Window *
-DEV_BrowserLoadFromDlg(void *p, const char *name)
+static AG_Window *
+BrowserLoadFromDlg(void *p, const char *name)
 {
 	char ext[AG_OBJECT_HIER_MAX+3];
 	AG_Object *ob = p;
@@ -399,7 +440,7 @@ ObjectOp(AG_Event *_Nonnull event)
 				Verbose("Invoking <%s> %s -> edit",
 				    OBJECT_CLASS(ob)->name,
 				    OBJECT(ob)->name);
-				DEV_BrowserOpenData(ob);
+				AG_DEV_BrowserOpenData(ob);
 			} else {
 				AG_TextTmsg(AG_MSG_ERROR, 750,
 				    _("Object `%s' has no edit operation."),
@@ -407,7 +448,7 @@ ObjectOp(AG_Event *_Nonnull event)
 			}
 			break;
 		case OBJEDIT_EDIT_GENERIC:
-			DEV_BrowserOpenGeneric(ob);
+			BrowserOpenGeneric(ob);
 			break;
 		case OBJEDIT_LOAD:
 			Verbose("Invoking <%s> %s -> load",
@@ -435,7 +476,7 @@ ObjectOp(AG_Event *_Nonnull event)
 				    _("The `%s' object is non-persistent."),
 				    ob->name);
 			} else {
-				win = DEV_BrowserSaveToDlg(ob, _("Agar object file"));
+				win = BrowserSaveToDlg(ob, _("Agar object file"));
 				if (win != NULL)
 					AG_WindowAttach(winParent, win);
 			}
@@ -481,7 +522,7 @@ ObjectOp(AG_Event *_Nonnull event)
 }
 
 static void
-DEV_BrowserGenericSave(AG_Event *_Nonnull event)
+GenericSave(AG_Event *_Nonnull event)
 {
 	AG_Object *ob = AG_OBJECT_PTR(1);
 
@@ -495,7 +536,7 @@ DEV_BrowserGenericSave(AG_Event *_Nonnull event)
 }
 
 static void
-DEV_BrowserGenericLoad(AG_Event *_Nonnull event)
+GenericLoad(AG_Event *_Nonnull event)
 {
 	AG_Object *ob = AG_OBJECT_PTR(1);
 
@@ -509,49 +550,25 @@ DEV_BrowserGenericLoad(AG_Event *_Nonnull event)
 }
 
 static void
-DEV_BrowserGenericSaveTo(AG_Event *_Nonnull event)
+GenericExportTo(AG_Event *_Nonnull event)
 {
 	AG_Object *obj = AG_OBJECT_PTR(1);
 	AG_Window *winParent = AG_WINDOW_PTR(2), *win;
 
-	win = DEV_BrowserSaveToDlg(obj, _("Agar object file"));
+	win = BrowserSaveToDlg(obj, _("Agar object file"));
 	if (win != NULL)
 		AG_WindowAttach(winParent, win);
 }
 
 static void
-DEV_BrowserGenericLoadFrom(AG_Event *_Nonnull event)
+GenericLoadFrom(AG_Event *_Nonnull event)
 {
 	AG_Object *obj = AG_OBJECT_PTR(1);
 	AG_Window *winParent = AG_WINDOW_PTR(2), *win;
 
-	win = DEV_BrowserLoadFromDlg(obj, _("Agar object file"));
+	win = BrowserLoadFromDlg(obj, _("Agar object file"));
 	if (win != NULL)
 		AG_WindowAttach(winParent, win);
-}
-
-void
-DEV_BrowserGenericMenu(void *menup, void *obj, AG_Window *winParent)
-{
-	AG_MenuItem *pitem = menup;
-
-	AG_MenuAction(pitem, _("Save"), agIconSave.s,
-	    DEV_BrowserGenericSave, "%p", obj);
-	AG_MenuAction(pitem, _("Load"), agIconLoad.s,
-	    DEV_BrowserGenericLoad, "%p", obj);
-	AG_MenuAction(pitem, _("Export to..."), agIconSave.s,
-	    DEV_BrowserGenericSaveTo, "%p,%p", obj, winParent);
-	AG_MenuAction(pitem, _("Import from..."), agIconLoad.s,
-	    DEV_BrowserGenericLoadFrom, "%p,%p", obj, winParent);
-
-	AG_MenuSeparator(pitem);
-
-	AG_MenuUintFlags(pitem, _("Persistence"), agIconLoad.s,
-	    &OBJECT(obj)->flags, AG_OBJECT_NON_PERSISTENT, 1);
-	AG_MenuUintFlags(pitem, _("Destructible"), agIconTrash.s,
-	    &OBJECT(obj)->flags, AG_OBJECT_INDESTRUCTIBLE, 1);
-	AG_MenuUintFlags(pitem, _("Editable"), NULL,
-	    &OBJECT(obj)->flags, AG_OBJECT_READONLY, 1);
 }
 
 static AG_TlistItem *_Nonnull
@@ -628,7 +645,7 @@ ExitProgram(AG_Event *_Nonnull event)
 static void
 ShowPreferences(AG_Event *_Nonnull event)
 {
-	DEV_ConfigShow();
+	AG_DEV_ConfigShow();
 }
 
 static void
@@ -709,7 +726,7 @@ GenNewObjectMenu(AG_MenuItem *_Nonnull mParent, AG_ObjectClass *_Nonnull cls,
 
 /* Create the object browser window. */
 AG_Window *
-DEV_Browser(void *vfsRoot)
+AG_DEV_Browser(void *vfsRoot)
 {
 	AG_Window *win;
 	AG_Tlist *tlObjs;
@@ -776,7 +793,7 @@ DEV_Browser(void *vfsRoot)
 
 #ifdef AG_DEBUG
 	mi = AG_MenuNode(me->root, _("Debug"), NULL);
-	DEV_ToolMenu(mi);
+	ToolMenu(mi);
 #endif /* AG_DEBUG */
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
@@ -839,7 +856,7 @@ DEV_Browser(void *vfsRoot)
  * associated with the object after the load.
  */
 static void
-DEV_PostLoadCallback(AG_Event *_Nonnull event)
+PostLoadCallback(AG_Event *_Nonnull event)
 {
 	AG_Object *obj = AG_PTR(1);
 	const char *path = AG_STRING(2);
@@ -870,7 +887,7 @@ DEV_PostLoadCallback(AG_Event *_Nonnull event)
  * unless the application is terminating.
  */
 static void
-DEV_PageOutCallback(AG_Event *_Nonnull event)
+PageOutCallback(AG_Event *_Nonnull event)
 {
 	AG_Object *obj = AG_OBJECT_PTR(1);
 	
@@ -899,7 +916,7 @@ AbortQuit(AG_Event *_Nonnull event)
  * saved and prompt the user if that's the case.
  */
 static void
-DEV_QuitCallback(AG_Event *_Nonnull event)
+QuitCallback(AG_Event *_Nonnull event)
 {
 	AG_Object *vfsRoot = AG_OBJECT_PTR(1);
 	AG_Window *win;
@@ -910,8 +927,8 @@ DEV_QuitCallback(AG_Event *_Nonnull event)
 		return;
 	}
 	
-	if ((win = AG_WindowNewNamedS(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
-	    AG_WINDOW_NORESIZE, "DEV_QuitCallback")) == NULL) {
+	if ((win = AG_WindowNewNamedS(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
+	                              AG_WINDOW_NORESIZE, "DEV_QuitCallback")) == NULL) {
 		return;
 	}
 	AG_WindowSetCaptionS(win, _("Exit application?"));
@@ -936,19 +953,20 @@ DEV_QuitCallback(AG_Event *_Nonnull event)
 	AG_WindowShow(win);
 }
 
+#if 0
 void
-DEV_BrowserInit(void *vfsRoot)
+AG_DEV_BrowserInit(void *vfsRoot)
 {
 	TAILQ_INIT(&dobjs);
 	TAILQ_INIT(&gobjs);
 
-	AG_AddEvent(vfsRoot, "object-post-load", DEV_PostLoadCallback, NULL);
-	AG_AddEvent(vfsRoot, "object-page-out", DEV_PageOutCallback, NULL);
-	AG_AddEvent(vfsRoot, "quit", DEV_QuitCallback, "%p", vfsRoot);
+	AG_AddEvent(vfsRoot, "object-post-load", PostLoadCallback, NULL);
+	AG_AddEvent(vfsRoot, "object-page-out", PageOutCallback, NULL);
+	AG_AddEvent(vfsRoot, "quit", QuitCallback, "%p", vfsRoot);
 }
 
 void
-DEV_BrowserDestroy(void)
+AG_DEV_BrowserDestroy(void)
 {
 	struct objent *oent, *noent;
 
@@ -967,7 +985,7 @@ DEV_BrowserDestroy(void)
 }
 
 void
-DEV_BrowserCloseData(void *p)
+AG_DEV_BrowserCloseData(void *p)
 {
 	AG_Object *obj = p;
 	struct objent *oent;
@@ -979,5 +997,6 @@ DEV_BrowserCloseData(void *p)
 		AG_PostEvent(oent->win, "window-close", NULL);
 	}
 }
+#endif
 
-#endif /* AG_TIMERS */
+#endif /* AG_WIDGETS and AG_TIMERS */
