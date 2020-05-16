@@ -74,6 +74,8 @@ static const struct dev_tool_ent {
 	{ N_("CPU Information"),	AG_DEV_CPUInfo },
 };
 
+static int agDevBrowserInited = 0;
+
 static void AG_DEV_BrowserOpenData(void *_Nonnull);
 
 static void
@@ -336,6 +338,7 @@ fail:
 	AG_TextMsgFromError();
 }
 
+#if 0
 static void
 ImportObject(AG_Event *_Nonnull event)
 {
@@ -369,6 +372,7 @@ ImportObject(AG_Event *_Nonnull event)
 fail:
 	AG_TextMsgFromError();
 }
+#endif
 
 static AG_Window *
 BrowserSaveToDlg(void *p, const char *name)
@@ -395,6 +399,7 @@ BrowserSaveToDlg(void *p, const char *name)
 	return (win);
 }
 
+#if 0
 static AG_Window *
 BrowserLoadFromDlg(void *p, const char *name)
 {
@@ -418,6 +423,7 @@ BrowserLoadFromDlg(void *p, const char *name)
 	AG_WindowShow(win);
 	return (win);
 }
+#endif
 
 static void
 ObjectOp(AG_Event *_Nonnull event)
@@ -519,56 +525,6 @@ ObjectOp(AG_Event *_Nonnull event)
 			break;
 		}
 	}
-}
-
-static void
-GenericSave(AG_Event *_Nonnull event)
-{
-	AG_Object *ob = AG_OBJECT_PTR(1);
-
-	if (AG_ObjectSaveAll(ob) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, _("Save failed: %s: %s"), ob->name,
-		    AG_GetError());
-	} else {
-		AG_TextTmsg(AG_MSG_INFO, 1000, _("`%s' saved successfully."),
-		    ob->name);
-	}
-}
-
-static void
-GenericLoad(AG_Event *_Nonnull event)
-{
-	AG_Object *ob = AG_OBJECT_PTR(1);
-
-	if (AG_ObjectLoad(ob) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, _("Load failed: %s: %s"), ob->name,
-		    AG_GetError());
-	} else {
-		AG_TextTmsg(AG_MSG_INFO, 1000, _("`%s' loaded successfully."),
-		    ob->name);
-	}
-}
-
-static void
-GenericExportTo(AG_Event *_Nonnull event)
-{
-	AG_Object *obj = AG_OBJECT_PTR(1);
-	AG_Window *winParent = AG_WINDOW_PTR(2), *win;
-
-	win = BrowserSaveToDlg(obj, _("Agar object file"));
-	if (win != NULL)
-		AG_WindowAttach(winParent, win);
-}
-
-static void
-GenericLoadFrom(AG_Event *_Nonnull event)
-{
-	AG_Object *obj = AG_OBJECT_PTR(1);
-	AG_Window *winParent = AG_WINDOW_PTR(2), *win;
-
-	win = BrowserLoadFromDlg(obj, _("Agar object file"));
-	if (win != NULL)
-		AG_WindowAttach(winParent, win);
 }
 
 static AG_TlistItem *_Nonnull
@@ -724,6 +680,64 @@ GenNewObjectMenu(AG_MenuItem *_Nonnull mParent, AG_ObjectClass *_Nonnull cls,
 	}
 }
 
+static void
+AG_DEV_ConfirmQuit(AG_Event *_Nonnull event)
+{
+	AG_QuitGUI();
+}
+
+static void
+AG_DEV_AbortQuit(AG_Event *_Nonnull event)
+{
+	AG_Window *win = AG_WINDOW_PTR(1);
+
+	AG_ObjectDetach(win);
+}
+
+/*
+ * Callback invoked when the user has requested termination of the
+ * application. We check whether objects have been modified and not
+ * saved and prompt the user if that's the case.
+ */
+static void
+AG_DEV_QuitCallback(AG_Event *_Nonnull event)
+{
+	AG_Object *vfsRoot = AG_OBJECT_PTR(1);
+	AG_Window *win;
+	AG_Box *box;
+	
+	if (!AG_ObjectChangedAll(vfsRoot)) {
+		AG_QuitGUI();
+		return;
+	}
+	
+	if ((win = AG_WindowNewNamedS(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
+	                              AG_WINDOW_NORESIZE, "DEV_quitCallback")) == NULL) {
+		return;
+	}
+	AG_WindowSetCaptionS(win, _("Exit application?"));
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
+	AG_SetStyle(win, "spacing", "8");
+
+	AG_LabelNewS(win, 0, _("Unsaved objects have been modified. "
+	                       "Exit application?"));
+
+	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
+	{
+		AG_SetStyle(box, "padding", "0");
+		AG_SetStyle(box, "spacing", "0");
+		AG_ButtonNewFn(box, 0, _("Quit"), AG_DEV_ConfirmQuit, NULL);
+
+		AG_WidgetFocus(
+		    AG_ButtonNewFn(box, 0, _("Cancel"),
+		        AG_DEV_AbortQuit,"%p",win)
+		);
+	}
+
+	AG_WindowShow(win);
+}
+
+
 /* Create the object browser window. */
 AG_Window *
 AG_DEV_Browser(void *vfsRoot)
@@ -734,6 +748,14 @@ AG_DEV_Browser(void *vfsRoot)
 	AG_MenuItem *mi, *mi_objs;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
+
+	if (!agDevBrowserInited) {
+		TAILQ_INIT(&dobjs);
+		TAILQ_INIT(&gobjs);
+		agDevBrowserInited = 1;
+	}
+
+	AG_AddEvent(vfsRoot, "quit", AG_DEV_QuitCallback, "%p", vfsRoot);
 
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return (NULL);
@@ -849,154 +871,5 @@ AG_DEV_Browser(void *vfsRoot)
 	AG_WindowShow(win);
 	return (win);
 }
-
-/*
- * Post AG_ObjectLoad() callback for all objects. If the REOPEN_ONLOAD
- * flag is set, we automatically close and re-open all edition windows
- * associated with the object after the load.
- */
-static void
-PostLoadCallback(AG_Event *_Nonnull event)
-{
-	AG_Object *obj = AG_PTR(1);
-	const char *path = AG_STRING(2);
-	struct objent *oent;
-
-	if ((obj->flags & AG_OBJECT_REOPEN_ONLOAD) == 0)
-		return;
-
-	AG_Verbose("%s: Loaded from %s\n", obj->name, path);
-
-	TAILQ_FOREACH(oent, &dobjs, objs) {
-		if (oent->obj != obj) {
-			continue;
-		}
-		AG_WindowHide(oent->win);
-		AG_PostEvent(oent->obj, "edit-close", NULL);
-		AG_ObjectDetach(oent->win);
-
-		AG_PostEvent(oent->obj, "edit-open", NULL);
-		oent->win = obj->cls->edit(obj);
-		AG_WindowShow(oent->win);
-		AG_SetEvent(oent->win, "window-close", SaveChangesDlg, "%p", oent);
-	}
-}
-
-/*
- * Callback invoked whenever an object is paged out. We save the object
- * unless the application is terminating.
- */
-static void
-PageOutCallback(AG_Event *_Nonnull event)
-{
-	AG_Object *obj = AG_OBJECT_PTR(1);
-	
-	if (AG_ObjectSaveAll(obj) == -1)
-		AG_TextMsgFromError();
-}
-
-static void
-ConfirmQuit(AG_Event *_Nonnull event)
-{
-	AG_QuitGUI();
-}
-
-static void
-AbortQuit(AG_Event *_Nonnull event)
-{
-	AG_Window *win = AG_WINDOW_PTR(1);
-
-	AG_ObjectDetach(win);
-}
-
-
-/*
- * Callback invoked when the user has requested termination of the
- * application. We check whether objects have been modified and not
- * saved and prompt the user if that's the case.
- */
-static void
-QuitCallback(AG_Event *_Nonnull event)
-{
-	AG_Object *vfsRoot = AG_OBJECT_PTR(1);
-	AG_Window *win;
-	AG_Box *box;
-	
-	if (!AG_ObjectChangedAll(vfsRoot)) {
-		AG_QuitGUI();
-		return;
-	}
-	
-	if ((win = AG_WindowNewNamedS(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
-	                              AG_WINDOW_NORESIZE, "DEV_QuitCallback")) == NULL) {
-		return;
-	}
-	AG_WindowSetCaptionS(win, _("Exit application?"));
-	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_SetStyle(win, "spacing", "8");
-
-	AG_LabelNewS(win, 0, _("Unsaved objects have been modified. "
-	                       "Exit application?"));
-
-	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
-	{
-		AG_SetStyle(box, "padding", "0");
-		AG_SetStyle(box, "spacing", "0");
-		AG_ButtonNewFn(box, 0, _("Quit"), ConfirmQuit, NULL);
-
-		AG_WidgetFocus(
-		    AG_ButtonNewFn(box, 0, _("Cancel"),
-		        AbortQuit, "%p", win)
-		);
-	}
-
-	AG_WindowShow(win);
-}
-
-#if 0
-void
-AG_DEV_BrowserInit(void *vfsRoot)
-{
-	TAILQ_INIT(&dobjs);
-	TAILQ_INIT(&gobjs);
-
-	AG_AddEvent(vfsRoot, "object-post-load", PostLoadCallback, NULL);
-	AG_AddEvent(vfsRoot, "object-page-out", PageOutCallback, NULL);
-	AG_AddEvent(vfsRoot, "quit", QuitCallback, "%p", vfsRoot);
-}
-
-void
-AG_DEV_BrowserDestroy(void)
-{
-	struct objent *oent, *noent;
-
-	for (oent = TAILQ_FIRST(&dobjs);
-	     oent != TAILQ_END(&dobjs);
-	     oent = noent) {
-		noent = TAILQ_NEXT(oent, objs);
-		Free(oent);
-	}
-	for (oent = TAILQ_FIRST(&gobjs);
-	     oent != TAILQ_END(&gobjs);
-	     oent = noent) {
-		noent = TAILQ_NEXT(oent, objs);
-		Free(oent);
-	}
-}
-
-void
-AG_DEV_BrowserCloseData(void *p)
-{
-	AG_Object *obj = p;
-	struct objent *oent;
-
-	TAILQ_FOREACH(oent, &dobjs, objs) {
-		if (oent->obj != obj) {
-			continue;
-		}
-		AG_PostEvent(oent->win, "window-close", NULL);
-	}
-}
-#endif
 
 #endif /* AG_WIDGETS and AG_TIMERS */

@@ -15,7 +15,7 @@ For graphics systems without multi-window capabilities (or cases where a MDI-sty
 
 Agar's cascading [**Style Engine**](https://libagar.org/man3/AG_StyleSheet) separates presentation details from underlying code. Style attributes including typography, colors, paddings and spacings of widgets can be assigned from a [style sheet](https://dev.csoft.net/agar/trunk/gui/style.css) using a common language. **Style Editor** tool allows style changes to be viewed in real-time.
 
-Agar includes a standard standard library of general-purpose widgets, and is also designed to be extended externally. New Agar widgets can be implemented as part of an application or an external library. Complex user interface elements can be realized often using very few lines of code. The [class registration interface](https://libagar.org/man3/AG_Object#CLASSES) simplifies the process.
+While Agar includes a standard library of [general-purpose widgets](https://libagar.org/man3/AG_Intro#AGAR-GUI:_STANDARD_WIDGETS), it is also designed to be extended externally. New Agar widgets can be implemented as part of an application or of an external library. Complex user interface elements can be realized often in few lines of code. The [class registration interface](https://libagar.org/man3/AG_Object#CLASSES) simplifies the process.
 
 To aid debugging, the Debug version performs type checking, object-validity and class-membership tests against object pointers passed to API calls at run-time. Agar is [thread-safe](https://libagar.org/man3/AG_Threads) when built with threads support. Public API calls are reentrant unless documented otherwise, although Agar does not rely on threads for its own operation.
 
@@ -51,7 +51,6 @@ See the provided [**INSTALL.md**](INSTALL.md) or an online installation guide:
 #### Latest Stable Release
 
 * [Download Source](https://libagar.org/download.html#stable)
-* On FreeBSD: ***pkg install agar***
 
 #### Latest Development Sources
 

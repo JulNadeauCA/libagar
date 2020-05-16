@@ -42,10 +42,6 @@
 
 	`$ ./configure --enable-{au,map,web}`
 
-	- Enable [_Deep color_](https://en.wikipedia.org/wiki/Deep_color) (is the default on 64-bit platforms):
-
-	`$ ./configure --with-memory-model=L`
-
 3. Build and install the library:
 
 	`$ make depend all`
@@ -99,10 +95,6 @@
 
 	`$ ./configure --enable-{au,map,web}`
 
-	- Enable [_Deep color_](https://en.wikipedia.org/wiki/Deep_color) (is the default on 64-bit platforms):
-
-	`$ ./configure --with-memory-model=L`
-
 3. Build and install the library:
 
 	`$ make depend all`
@@ -155,10 +147,6 @@
 
 	`$ ./configure --enable-{au,map,web}`
 
-	- Enable [_Deep color_](https://en.wikipedia.org/wiki/Deep_color) (is the default on 64-bit platforms):
-
-	`$ ./configure --with-memory-model=L`
-
 3. Build and install the library:
 
 	`$ make depend all`
@@ -208,10 +196,6 @@
 	- Enable beta extension libraries such as [**AU**](https://libagar.org/man3/AU), [**MAP**](https://libagar.org/man3/MAP) & [**AG_Web**](https://libagar.org/man3/AG_Web).
 
 	`$ ./configure --enable-{au,map,web}`
-
-	- Enable [_Deep color_](https://en.wikipedia.org/wiki/Deep_color) (is the default on 64-bit platforms):
-
-	`$ ./configure --with-memory-model=L`
 
 3. Build and install the library:
 
