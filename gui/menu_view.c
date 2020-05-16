@@ -232,10 +232,24 @@ OnFontChange(AG_Event *_Nonnull event)
 	AG_MenuView *mv = AG_MENUVIEW_SELF();
 	AG_MenuItem *mi = mv->pitem, *miSub;
 	AG_Menu *m = mv->pmenu;
+	AG_Window *win;
 	int j;
-	
+
+	if ((win = WIDGET(mv)->window) != NULL) {
+		if (AGDRIVER_SINGLE(WIDGET(win)->drv)) {     /* Live resize */
+			AG_WindowSetGeometry(win,
+			    WIDGET(win)->x,
+			    WIDGET(win)->y,
+			    -1, -1);
+		} else {
+			/* XXX TODO */
+		}
+	}
+
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
+
+	m->itemh = WFONT(mv)->lineskip + m->tPadLbl + m->bPadLbl;
 
 	TAILQ_FOREACH(miSub, &mi->subItems, items) {
 		for (j = 0; j < 2; j++) {
