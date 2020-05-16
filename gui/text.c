@@ -2496,6 +2496,7 @@ AG_InitTextSubsystem(void)
 			    windir);
 		}
 		AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, ".");
+		AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, "..\\share\\agar\\fonts");
 	}
 #else /* !WIN32 & !APPLE */
 	if (sysUser != NULL && sysUser->home != NULL) {
