@@ -800,6 +800,7 @@ main(int argc, char *argv[])
 	}
 #ifdef _WIN32
 	AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, "..\\gui\\fonts");
+	AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, "..\\..\\fonts");
 #endif
 	if (fontSpec != NULL) {
 		AG_TextParseFontSpec(fontSpec);

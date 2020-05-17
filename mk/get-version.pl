@@ -7,7 +7,7 @@ my $found = 0;
 open(CONFIG, "configure.in") || die "configure.in: $!";
 foreach $_ (<CONFIG>) {
 	chop;
-	if (/^\s*VERSION\(\s*\"([\w+\.\-]+)\"\s*\)\s*$/) {
+	if (/^\s*VERSION\(\s*\"([\w+\.\-]+)\"\s*\)\s*$/i) {
 		print $1;
 		if (@ARGV == 0 || $ARGV[0] != '-n') {
 			print "\n";

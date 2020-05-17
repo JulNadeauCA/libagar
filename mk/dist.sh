@@ -40,7 +40,7 @@ rm -fR `find ${DISTNAME} \( -name .svn -or -name \*~ -or -name .\*.swp \)`
 
 # TAR: Compress archive
 tar -f ${DISTNAME}.tar -c ${DISTNAME}
-gzip -f ${DISTNAME}.tar
+gzip -9 -f ${DISTNAME}.tar
 
 #
 # Prepare Source ZIP.
@@ -61,11 +61,11 @@ echo "* Building zip: make proj (in tests)"
 (cd ${DISTNAME}/tests && ${MAKE} proj)
 echo "* Building zip: make pre-package"
 (cd ${DISTNAME} && env PKG_OS="windows" ${MAKE} pre-package)
-(cd ${DISTNAME} && rm -f README RELEASE-${VER})
+(cd ${DISTNAME} && rm -f README)
 
 # ZIP: Compress archive
 echo "* Building zip: Compressing: ${DISTNAME}.zip"
-zip -8 -q -r ${DISTNAME}.zip ${DISTNAME}
+zip -q -r ${DISTNAME}.zip ${DISTNAME}
 
 echo "* Updating checksums"
 openssl md5 ${DISTNAME}.tar.gz > ${DISTNAME}.tar.gz.md5

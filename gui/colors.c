@@ -487,7 +487,7 @@ AG_ColorFromString(AG_Color *cOut, const char *s, const AG_Color *pColor)
 				cOut->a = AG_8toH((h)       & 0xff);
 			}
 			return;
-#if AG_MODEL == AG_LARGE
+#if (AG_MODEL == AG_LARGE) && !defined(_WIN32)
 		case 12: 			/* #rrrrggggbbbb */
 			{
 				Uint64 h;
