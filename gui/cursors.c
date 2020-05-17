@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,18 +38,17 @@
 #include "cursors/text.xpm"
 
 static struct {
-	char **data;
-	int x, y;
+	char *_Nullable *_Nonnull data;	/* Start of XPM */
+	int x, y;			/* Hotspot */
 } builtins[] = {
-	{ NULL,		0,0 },
-	{ fill_xpm,	23,25 },
-	{ erase_xpm,	10,20 },
-	{ pick_xpm,	8,22 },
-	{ hresize_xpm,	16,17 },
-	{ vresize_xpm,	15,16 },
-	{ lldiag_xpm,	16,15 },
-	{ lrdiag_xpm,	16,15 },
-	{ text_xpm,	15,15 }
+	{ fill_xpm,	23,25 },	/* FILL */
+	{ erase_xpm,	10,20 },	/* ERASE */
+	{ pick_xpm,	8,22 },		/* PICK */
+	{ hresize_xpm,	16,17 },	/* HRESIZE */
+	{ vresize_xpm,	15,16 },	/* VRESIZE */
+	{ lldiag_xpm,	16,15 },	/* LLDIAG */
+	{ lrdiag_xpm,	16,15 },	/* LRDIAG */
+	{ text_xpm,	15,15 }		/* TEXT */
 };
 
 /* Create a new cursor from raw bitmap data and a transparency mask. */
@@ -60,8 +59,7 @@ AG_CursorNew(void *obj, Uint w, Uint h, const Uint8 *data, const Uint8 *mask,
 	AG_Driver *drv = obj;
 	AG_Cursor *ac;
 
-	ac = AGDRIVER_CLASS(drv)->createCursor(drv, w, h, data, mask,
-	    xHot, yHot);
+	ac = AGDRIVER_CLASS(drv)->createCursor(drv, w,h, data,mask, xHot,yHot);
 	if (ac == NULL) {
 		return (NULL);
 	}
@@ -81,14 +79,18 @@ AG_CursorFree(void *obj, AG_Cursor *ac)
 	AGDRIVER_CLASS(drv)->freeCursor(drv, ac);
 }
 
-/* Create a cursor from the contents of an XPM file. */
+/* Create a cursor from XPM data. */
 AG_Cursor *
 AG_CursorFromXPM(void *drv, char *xpm[], int xHot, int yHot)
 {
-	int i = -1, x, y;
-	Uint8 data[4*AG_CURSOR_MAX_W*AG_CURSOR_MAX_H];
-	Uint8 mask[4*AG_CURSOR_MAX_W*AG_CURSOR_MAX_H];
-	int w, h;
+	int i = -1, x,y, size;
+	Uint8 *data, *mask;
+	AG_Cursor *curs;
+	int w,h;
+
+	size = (AG_CURSOR_MAX_W * AG_CURSOR_MAX_H * 4);
+	data = Malloc(size);
+	mask = Malloc(size);
 
 	sscanf(xpm[0], "%d %d", &w, &h);
 
@@ -115,26 +117,24 @@ AG_CursorFromXPM(void *drv, char *xpm[], int xHot, int yHot)
 			}
 		}
 	}
-	return AG_CursorNew(drv, w,h, data, mask, xHot,yHot);
+	curs = AG_CursorNew(drv, w,h, data, mask, xHot,yHot);
+	free(data);
+	free(mask);
+	return (curs);
 }
 
 /* Initialize Agar's set of built-in cursors. */
-int
+void
 AG_InitStockCursors(AG_Driver *drv)
 {
-	AG_Cursor *ac;
 	int i;
 
-	for (i = 1; i < AG_LAST_CURSOR; i++) {
-		ac = AG_CursorFromXPM(drv, builtins[i].data,
-		    builtins[i].x, builtins[i].y);
-		if (ac == NULL)
-			goto fail;
+	for (i = 0; i < AG_LAST_CURSOR-1; i++) {
+		(void)AG_CursorFromXPM(drv,
+		    builtins[i].data,
+		    builtins[i].x,
+		    builtins[i].y);
 	}
-	return (0);
-fail:
-	AG_FreeCursors(drv);
-	return (-1);
 }
 
 /* Free all cursors allocated by a driver. */
@@ -151,4 +151,63 @@ AG_FreeCursors(AG_Driver *drv)
 	}
 	TAILQ_INIT(&drv->cursors);
 	drv->nCursors = 0;
+}
+
+/* Initialize an AG_Cursor structure. */
+void
+AG_CursorInit(AG_Cursor *ac)
+{
+	ac->data = NULL;
+	ac->mask = NULL;
+	ac->w = 0;
+	ac->h = 0;
+	ac->xHot = 0;
+	ac->yHot = 0;
+	ac->p = NULL;
+}
+
+/* Return a pointer to a built-in cursor. */
+AG_Cursor *
+AG_GetStockCursor(void *obj, int name)
+{
+	AG_Driver *drv = AGDRIVER(obj);
+	AG_Cursor *ac;
+	int i = 0;
+
+	AG_TAILQ_FOREACH(ac, &drv->cursors, cursors) {
+		if (i++ == name)
+			break;
+	}
+	if (ac == NULL) {
+		AG_FatalError("AG_GetStockCursor");
+	}
+	return (ac);
+}
+
+/* Return a pointer to the active cursor. */
+AG_Cursor *
+AG_GetActiveCursor(void *drv)
+{
+	return (AGDRIVER(drv)->activeCursor);
+}
+
+/* Test if cursor is visible */
+int
+AG_CursorIsVisible(void *drv)
+{
+	return AGDRIVER_CLASS(drv)->getCursorVisibility(drv);
+}
+
+/* Display the cursor */
+void
+AG_ShowCursor(void *drv)
+{
+	AGDRIVER_CLASS(drv)->setCursorVisibility(drv, 1);
+}
+
+/* Hide the cursor */
+void
+AG_HideCursor(void *drv)
+{
+	AGDRIVER_CLASS(drv)->setCursorVisibility(drv, 0);
 }

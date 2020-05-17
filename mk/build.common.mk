@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,9 @@ SH?=		sh
 FIND?=		find
 AWK?=		awk
 LN?=		ln
+ECHO_N?=	echo -n
+
+INSTALL_DESTDIR=mkdir -p
 
 INSTALL_PROG=	install -c -m 755
 INSTALL_LIB=	install -c -m 644

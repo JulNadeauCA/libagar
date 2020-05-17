@@ -1,0 +1,5 @@
+# ex:syn=make
+SG_LIBS=	${CG_LIBS} ${GLU_LIBS}
+SG_CFLAGS=	${CG_CFLAGS} ${GLU_CFLAGS}
+SG_LINKS=	ag_sg ${SG_LIBS}
+SG_LINKS_STATIC=ag_sg_static ${SG_LIBS}

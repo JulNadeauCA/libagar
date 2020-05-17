@@ -3,7 +3,7 @@
 --                           A G A R . E V E N T                            --
 --                                 B o d y                                  --
 --                                                                          --
--- Copyright (c) 2018, Julien Nadeau Carriere (vedge@hypertriton.com)       --
+-- Copyright (c) 2018-2019, Julien Nadeau Carriere (vedge@csoft.net)        --
 -- Copyright (c) 2010, coreland (mark@coreland.ath.cx)                      --
 --                                                                          --
 -- Permission to use, copy, modify, and/or distribute this software for any --
@@ -21,7 +21,7 @@
 package body Agar.Event is
 
   ----------------------------------
-  -- Push Event Argument with tag --
+  -- Push a tagged Event Argument --
   ----------------------------------
   procedure Push_Address
     (Event : in Event_Not_Null_Access;
@@ -30,7 +30,7 @@ package body Agar.Event is
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);
   begin
-    ag_event_push_ptr
+    ag_event_push_pointer
       (Event => Event,
        Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access),
        Value => Value);
@@ -100,6 +100,7 @@ package body Agar.Event is
        Value => C.long (Value));
   end Push_Long_Integer;
 
+#if HAVE_FLOAT
   procedure Push_Float
     (Event : in Event_Not_Null_Access;
      Name  : in String;
@@ -125,28 +126,16 @@ package body Agar.Event is
        Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access),
        Value => C.double(Value));
   end Push_Long_Float;
-  
-  procedure Push_Long_Long_Float
-    (Event : in Event_Not_Null_Access;
-     Name  : in String;
-     Value : in Long_Long_Float)
-  is
-    Ch_Name : aliased C.char_array := C.To_C(Name);
-  begin
-    ag_event_push_long_double
-      (Event => Event,
-       Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access),
-       Value => C.long_double(Value));
-  end Push_Long_Long_Float;
+#end if;
  
-  ----------------------------------
-  -- Push untagged Event argument --
-  ----------------------------------
+  -------------------------------------
+  -- Push an untagged Event argument --
+  -------------------------------------
   procedure Push_Address
     (Event : in Event_Not_Null_Access;
      Value : in System.Address)
   is begin
-    ag_event_push_ptr
+    ag_event_push_pointer
       (Event => Event,
        Name  => CS.Null_Ptr,
        Value => Value);
@@ -194,6 +183,7 @@ package body Agar.Event is
        Value => C.long (Value));
   end Push_Long_Integer;
 
+#if HAVE_FLOAT
   procedure Push_Float
     (Event : in Event_Not_Null_Access;
      Value : in Float)
@@ -213,16 +203,17 @@ package body Agar.Event is
        Name  => CS.Null_Ptr,
        Value => C.double(Value));
   end Push_Long_Float;
+#end if;
+ 
+  ------------------------------------
+  -- Pop an untagged Event Argument --
+  ------------------------------------
   
-  procedure Push_Long_Long_Float
-    (Event : in Event_Not_Null_Access;
-     Value : in Long_Long_Float)
+  function Pop_Address
+    (Event : in Event_Not_Null_Access) return System.Address
   is begin
-    ag_event_push_long_double
-      (Event => Event,
-       Name  => CS.Null_Ptr,
-       Value => C.long_double(Value));
-  end Push_Long_Long_Float;
+    return ag_event_pop_pointer (Event => Event);
+  end Pop_Address;
  
   ----------------------------
   -- Extract Event Argument --
@@ -338,7 +329,8 @@ package body Agar.Event is
         (Event => Event,
          Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access)));
   end Get_Long_Integer;
-  
+
+#if HAVE_FLOAT 
   function Get_Float
     (Event : in Event_Not_Null_Access;
      Index : in Natural) return Float
@@ -382,27 +374,6 @@ package body Agar.Event is
         (Event => Event,
 	 Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access)));
   end Get_Long_Float;
-  
-  function Get_Long_Long_Float
-    (Event : in Event_Not_Null_Access;
-     Index : in Natural) return Long_Long_Float
-  is begin
-    return Long_Long_Float
-      (ag_event_get_long_double
-        (Event => Event,
-	 Index => C.unsigned(Index)));
-  end Get_Long_Long_Float;
-
-  function Get_Long_Long_Float
-    (Event : in Event_Not_Null_Access;
-     Name  : in String) return Long_Long_Float
-  is
-    Ch_Name : aliased C.char_array := C.To_C(Name);
-  begin
-    return Long_Long_Float
-      (ag_event_get_long_double_named
-        (Event => Event,
-	 Name  => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access)));
-  end Get_Long_Long_Float;
+#end if;
 
 end Agar.Event;

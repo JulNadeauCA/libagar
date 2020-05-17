@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,29 +32,14 @@
 #include <agar/gui/window.h>
 
 AG_DriverMw *agDriverMw = NULL;		/* Root driver instance */
-AG_List     *agModalWindows = NULL;	/* Modal window stack */
-int          agModalWindowsRefs = 0;
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_DriverMw *dmw = obj;
 
-	dmw->flags = 0;
 	dmw->win = NULL;
-
-	if (agModalWindowsRefs++ == 0 &&
-	    (agModalWindows = AG_ListNew()) == NULL)
-		AG_FatalError(NULL);
-}
-
-static void
-Destroy(void *obj)
-{
-	if (--agModalWindowsRefs == 0) {
-		AG_ListDestroy(agModalWindows);
-		agModalWindows = NULL;
-	}
+	dmw->flags = 0;
 }
 
 AG_ObjectClass agDriverMwClass = {
@@ -63,7 +48,7 @@ AG_ObjectClass agDriverMwClass = {
 	{ 1,4 },
 	Init,
 	NULL,		/* reset */
-	Destroy,
+	NULL,		/* destroy */
 	NULL,		/* load */
 	NULL,		/* save */
 	NULL		/* edit */

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+.\" Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -313,32 +313,17 @@ specified for the data source.
 .Ft Uint8
 .Fn AG_ReadUint8 "AG_DataSource *ds"
 .Pp
-.Ft int
-.Fn AG_ReadUint8v "AG_DataSource *ds" "Uint8 *v"
-.Pp
 .Ft Sint8
 .Fn AG_ReadSint8 "AG_DataSource *ds"
-.Pp
-.Ft int
-.Fn AG_ReadSint8v "AG_DataSource *ds" "Sint8 *v"
 .Pp
 .Ft Uint16
 .Fn AG_ReadUint16 "AG_DataSource *ds"
 .Pp
-.Ft int
-.Fn AG_ReadUint16v "AG_DataSource *ds" "Uint16 *v"
-.Pp
 .Ft Sint16
 .Fn AG_ReadSint16 "AG_DataSource *ds"
 .Pp
-.Ft int
-.Fn AG_ReadSint16v "AG_DataSource *ds" "Sint16 *v"
-.Pp
 .Ft Uint32
 .Fn AG_ReadUint32 "AG_DataSource *ds"
-.Pp
-.Ft int
-.Fn AG_ReadUint32v "AG_DataSource *ds" "Uint32 *v"
 .Pp
 .Ft Sint32
 .Fn AG_ReadSint32 "AG_DataSource *ds"
@@ -349,62 +334,32 @@ specified for the data source.
 .Ft Uint64
 .Fn AG_ReadUint64 "AG_DataSource *ds"
 .Pp
-.Ft int
-.Fn AG_ReadUint64v "AG_DataSource *ds" "Uint64 *v"
-.Pp
 .Ft Sint64
 .Fn AG_ReadSint64 "AG_DataSource *ds"
-.Pp
-.Ft int
-.Fn AG_ReadSint64v "AG_DataSource *ds" "Sint64 *v"
 .Pp
 .Ft void
 .Fn AG_WriteUint8 "AG_DataSource *ds" "Uint8 value"
 .Pp
-.Ft int
-.Fn AG_WriteUint8v "AG_DataSource *ds" "const Uint8 *value"
-.Pp
 .Ft void
 .Fn AG_WriteSint8 "AG_DataSource *ds" "Sint8 value"
-.Pp
-.Ft int
-.Fn AG_WriteSint8v "AG_DataSource *ds" "const Sint8 *value"
 .Pp
 .Ft void
 .Fn AG_WriteUint16 "AG_DataSource *ds" "Uint16 value"
 .Pp
-.Ft int
-.Fn AG_WriteUint16v "AG_DataSource *ds" "const Uint16 *value"
-.Pp
 .Ft void
 .Fn AG_WriteSint16 "AG_DataSource *ds" "Sint16 value"
-.Pp
-.Ft int
-.Fn AG_WriteSint16v "AG_DataSource *ds" "const Sint16 *value"
 .Pp
 .Ft void
 .Fn AG_WriteUint32 "AG_DataSource *ds" "Uint32 value"
 .Pp
-.Ft int
-.Fn AG_WriteUint32v "AG_DataSource *ds" "const Uint32 *value"
-.Pp
 .Ft void
 .Fn AG_WriteSint32 "AG_DataSource *ds" "Sint32 value"
-.Pp
-.Ft int
-.Fn AG_WriteSint32v "AG_DataSource *ds" "const Sint32 *value"
 .Pp
 .Ft void
 .Fn AG_WriteUint64 "AG_DataSource *ds" "Uint64 value"
 .Pp
-.Ft int
-.Fn AG_WriteUint64v "AG_DataSource *ds" "const Uint64 *value"
-.Pp
 .Ft void
 .Fn AG_WriteSint64 "AG_DataSource *ds" "Sint64 value"
-.Pp
-.Ft int
-.Fn AG_WriteSint64v "AG_DataSource *ds" "const Sint64 *value"
 .Pp
 .Ft void
 .Fn AG_WriteUint8At "AG_DataSource *ds" "Uint8 value" "AG_Offset offs"
@@ -433,27 +388,27 @@ specified for the data source.
 .Pp
 The
 .Fn AG_Read[SU]intN
-functions read and return an integer value of N bits from the data source.
-The
-.Fn AG_Read[SU]intNv
-variants write the value to the specified pointer.
+functions read a N-bit integer from
+.Fa ds .
+They swap the byte order if the host byte order differs from that of the
+data source.
 .Pp
 The
 .Fn AG_Write[SU]intN
-functions write an integer value of N bits to the data source.
-The
-.Fn AG_Write[SU]intNv
-variants accept a pointer argument.
+functions write a N-byte integer to
+.Fa ds .
+.Pp
+Both
+.Fn AG_Read[SU]inN
+and
+.Fn AG_Write[SU]intN
+swap the byte order if the host byte order differs from that of the
+data source.
 .Pp
 The
 .Fn AG_Write[SU]intNAt
-variants write the integer to the specified position in the data source.
-.Pp
-The error-checking forms
-.Fn AG_Read*v
-all return 0 on success and -1 on failure (without raising any exceptions).
-With the procedural forms, I/O errors will cause data source exceptions to
-be raised.
+functions write an integer to the specified position in the data source,
+swapping the byte order as needed.
 .Sh FLOATING POINT OPERATIONS
 The following routines read and write floating-point numbers in IEEE.754
 representation.
@@ -462,26 +417,11 @@ representation.
 .Ft "float"
 .Fn AG_ReadFloat "AG_DataSource *ds"
 .Pp
-.Ft "int"
-.Fn AG_ReadFloatv "AG_DataSource *ds" "float *f"
-.Pp
 .Ft "double"
 .Fn AG_ReadDouble "AG_DataSource *ds"
 .Pp
-.Ft "int"
-.Fn AG_ReadDoublev "AG_DataSource *ds" "double *f"
-.Pp
-.Ft "long double"
-.Fn AG_ReadLongDouble "AG_DataSource *ds"
-.Pp
-.Ft "int"
-.Fn AG_ReadLongDouble "AG_DataSource *ds" "long double *f"
-.Pp
 .Ft "void"
 .Fn AG_WriteFloat "AG_DataSource *ds" "float f"
-.Pp
-.Ft "int"
-.Fn AG_WriteFloatv "AG_DataSource *ds" "float *f"
 .Pp
 .Ft "void"
 .Fn AG_WriteFloatAt "AG_DataSource *ds" "float f" "AG_Offset pos"
@@ -489,32 +429,18 @@ representation.
 .Ft "void"
 .Fn AG_WriteDouble "AG_DataSource *ds" "double f"
 .Pp
-.Ft "int"
-.Fn AG_WriteDoublev "AG_DataSource *ds" "double *f"
-.Pp
 .Ft "void"
 .Fn AG_WriteDoubleAt "AG_DataSource *ds" "double f" "AG_Offset pos"
 .Pp
-.Ft "void"
-.Fn AG_WriteLongDouble "AG_DataSource *ds" "long double f"
-.Pp
-.Ft "int"
-.Fn AG_WriteLongDoublev "AG_DataSource *ds" "long double *f"
-.Pp
-.Ft "void"
-.Fn AG_WriteLongDoubleAt "AG_DataSource *ds" "long double f" "AG_Offset pos"
-.Pp
 .nr nS 0
-.Fn AG_ReadFloat ,
-.Fn AG_ReadDouble
+.Fn AG_ReadFloat
 and
-.Fn AG_ReadLongDouble
+.Fn AG_ReadDouble
 read a floating-point value from the data source.
 .Pp
-.Fn AG_WriteFloat ,
-.Fn AG_WriteDouble
+.Fn AG_WriteFloat
 and
-.Fn AG_WriteLongDouble
+.Fn AG_WriteDouble
 write a floating-point value to the data source.
 The
 .Fn AG_Write*At
@@ -525,13 +451,7 @@ All
 functions return 0 on success and -1 on failure, without raising any
 exceptions.
 The other functions will raise a data source exception if an failuer (e.g.,
-an I/O error) occured.
-.Pp
-The
-.Fa "long double"
-functions are available only if
-.Dv HAVE_LONG_DOUBLE
-is defined.
+an I/O error) occurred.
 .Sh STRING OPERATIONS
 The following functions read and write C strings.
 The serialized representation includes an unsigned 32-bit count followed
@@ -638,40 +558,37 @@ bytes + 4 in size.
 On failure, the
 .Fn AG_WriteString
 routines raise a data source exception.
-.Sh INTERNAL DATA SOURCE API
-New sources can be implementing by defining a new structure inheriting from
-.Va AG_DataSource .
-.Pp
-Public members of the
+.Sh DERIVING NEW SOURCES
+New sources can be implemented by deriving the
 .Nm
-structure include:
+structure:
 .Bd -literal
-typedef struct ag_data_source {
-	AG_Mutex lock;			/* Lock on all operations */
-	enum ag_byte_order byte_order;	/* Byte order of source */
-	AG_Size wrLast;			/* Last write count (bytes) */
-	AG_Size rdLast;			/* Last read count (bytes) */
-	AG_Size wrTotal;			/* Total write count (bytes) */
-	AG_Size rdTotal;			/* Total read count (bytes) */
+typedef AG_DataSource {
+  AG_Mutex lock;                    /* Lock on all operations */
+  enum ag_byte_order byte_order;    /* Byte order of source */
 
-	AG_IOStatus (*read)(struct ag_data_source *, void *buf,
-	                    AG_Size size, AG_Size *rv);
-	AG_IOStatus (*read_at)(struct ag_data_source *, void *buf,
-	                       AG_Size size, AG_Offset pos, AG_Size *rv);
-	AG_IOStatus (*write)(struct ag_data_source *, const void *buf,
-	                     AG_Size size, AG_Size *rv);
-	AG_IOStatus (*write_at)(struct ag_data_source *, const void *buf,
-	                        AG_Size size, AG_Offset pos, AG_Size *rv);
-	AG_Offset   (*tell)(struct ag_data_source *);
-	int         (*seek)(struct ag_data_source *, AG_Offset offs,
-	                    enum ag_seek_mode mode);
-	void        (*close)(struct ag_data_source *);
+  AG_Size wrLast;                   /* Last write count (bytes) */
+  AG_Size rdLast;                   /* Last read count (bytes) */
+  AG_Size wrTotal;                  /* Total write count (bytes) */
+  AG_Size rdTotal;                  /* Total read count (bytes) */
+
+  int (*read)(AG_DataSource *, void *, AG_Size, AG_Size *);
+  int (*read_at)(AG_DataSource *, void *, AG_Size, AG_Offset, AG_Size *);
+  int (*write)(AG_DataSource *, const void *, AG_Size, AG_Size *);
+  int (*write_at)(AG_DataSource *, const void *, AG_Size, AG_Offset,
+                  AG_Size *);
+  AG_Offset (*tell)(AG_DataSource *);
+  int (*seek)(AG_DataSource *, AG_Offset offs, enum ag_seek_mode mode);
+  void (*close)(AG_DataSource *);
 } AG_DataSource;
 .Ed
 .Pp
 The
 .Va byte_order
-setting affects integer read operations.
+field is set by
+.Fn AG_SetByteOrder
+and controls the endianness of integer serialization operations such as
+.Fn AG_ReadUint32 .
 .Pp
 The
 .Va wrLast ,
@@ -680,9 +597,8 @@ The
 and
 .Va rdTotal
 fields keep count of the read/written bytes, and are automatically
-incremented by the generic
-.Nm
-calls.
+incremented by serialization operations such as
+.Fn AG_ReadUint32 .
 .Pp
 The
 .Fn read
@@ -730,3 +646,7 @@ interface appeared in Agar 1.3.
 Exception handling and error-checking variants of the primitive I/O routines
 appeared in Agar 1.3.3.
 The interface to network sockets appeared in Agar 1.5.0.
+.Fn AG_ReadStringPadded 
+and
+.Fn AG_CopyStringPadded
+appeared in Agar 1.6.0.

@@ -1,0 +1,249 @@
+.\"
+.\" Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd May 24, 2010
+.Dt SK_VIEW 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm SK_View
+.Nd Editor/display widget for Agar dimensioned 2D sketches
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/sk.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget displays a
+.Xr SK 3
+sketch, and allows edition facilities to be implemented using a tool
+registration interface.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "SK_View *"
+.Fn SK_ViewNew "AG_Widget *parent" "SK *sk" "Uint flags"
+.Pp
+.Ft void
+.Fn SK_ViewZoom "SK_View *skv" "M_Real factor"
+.Pp
+.nr nS 0
+The
+.Fn SK_ViewNew
+function allocates, initializes, and attaches a
+.Nm
+widget.
+Acceptable
+.Fa flags
+options include:
+.Bl -tag -width "SK_VIEW_EXPAND "
+.It SK_VIEW_HFILL
+Expand horizontally in parent container.
+.It SK_VIEW_VFILL
+Expand vertically in parent container.
+.It SK_VIEW_EXPAND
+Shorthand for
+.Dv SK_VIEW_HFILL | SK_VIEW_VFILL .
+.El
+.Pp
+The
+.Fn SK_ViewZoom
+function sets the display scaling factor (1.0 = 100%).
+.Sh TOOL SYSTEM
+.nr nS 1
+.Ft "SK_Tool *"
+.Fn SK_ViewRegTool "SK_View *skv" "const SK_ToolOps *ops" "void *arg"
+.Pp
+.Ft "void"
+.Fn SK_ViewSelectTool "SK_View *skv" "SK_Tool *tool" "void *arg"
+.Pp
+.Ft "SK_Tool *"
+.Fn SK_ViewFindTool "SK_View *skv" "const char *name"
+.Pp
+.Ft "SK_Tool *"
+.Fn SK_ViewFindToolByOps "SK_View *skv" "const SK_ToolOps *ops"
+.Pp
+.Ft void
+.Fn SK_ViewSetDefaultTool "SK_View *skv" "SK_Tool *tool"
+.Pp
+.nr nS 0
+The
+.Fn SK_ViewRegTool
+function registers a new tool class described by the
+.Fa ops
+structure, which is defined as:
+.Bd -literal
+typedef struct sk_tool_ops {
+	const char *name;
+	const char *desc;
+	struct ag_static_icon *icon;
+	AG_Size len;
+	Uint flags;
+#define SK_MOUSEMOTION_NOSNAP 0x01 /* Ignore snapping in mousemotion */
+#define SK_BUTTONUP_NOSNAP    0x02 /* Ignore snapping in buttonup */
+#define SK_BUTTONDOWN_NOSNAP  0x04 /* Ignore snapping in buttondown */
+#define SK_BUTTON_NOSNAP      (SK_BUTTONUP_NOSNAP|SK_BUTTONDOWN_NOSNAP)
+#define SK_NOSNAP             (SK_BUTTON_NOSNAP|SK_MOUSEMOTION_NOSNAP)
+
+	void (*init)(void *tool);
+	void (*destroy)(void *tool);
+	void (*edit)(void *tool, void *editBox);
+        
+	int (*mousemotion)(void *tool, M_Vector3 pos, M_Vector3 vel,
+	                   int btn);
+	int (*mousebuttondown)(void *tool, M_Vector3 pos, int btn);
+	int (*mousebuttonup)(void *tool, M_Vector3 pos, int btn);
+	int (*keydown)(void *tool, int ksym, int kmod);
+	int (*keyup)(void *tool, int ksym, int kmod);
+} SK_ToolOps;
+.Ed
+.Pp
+The
+.Fa name
+field is a unique name identifier for the tool.
+.Fa desc
+is a short description string.
+.Fa icon
+is an optional icon or NULL.
+.Fa len
+is the size of the structure describing an instance of this tool class.
+.Pp
+The
+.Fn init
+operation initializes a new instance of a tool.
+.Fn destroy
+should release all resources allocated by a tool instance.
+The optional
+.Fn edit
+operation is expected to attach arbitrary widgets to
+.Fa editBox ,
+for purposes of editing tool parameters.
+.Pp
+The low-level input device events processed by the
+.Nm
+widget are forwarded to the handler functions
+.Fn mousemotion ,
+.Fn mousebuttondown ,
+.Fn mousebuttonup ,
+.Fn keydown
+and
+.Fn keyup .
+They should return 1 if some action has resulted from the event, or 0
+otherwise.
+The coordinates passed to the
+.Fn mouse*
+handlers are translated to actual
+.Xr SK 3
+coordinates.
+.Pp
+The
+.Fn SK_ViewSelectTool
+function selects
+.Fa tool
+as the active tool instance.
+The
+.Fa arg
+argument is an optional user pointer passed to the tool instance.
+.Pp
+The
+.Fn SK_ViewFindTool
+function looks up a tool instance by name.
+.Fn SK_ViewFindToolByOps
+looks up a tool instance by class.
+Both functions return NULL if no match was found.
+.Pp
+.Fn SK_ViewSetDefaultTool
+configures a tool to be active by default when the
+.Nm
+is initially created.
+This is often a "select" type tool.
+.Sh MISCELLANEOUS
+.nr nS 1
+.Ft "SK_Point *"
+.Fn SK_ViewOverPoint "SK_View *skv" "M_Vector3 *pos" "M_Vector3 *vC" "void *ignoreNode"
+.Pp
+.Ft "void"
+.Fn SK_ViewSetNodeData "SK_View *skv" "SK_Node *node" "void *pData"
+.Pp
+.Ft "void *"
+.Fn SK_ViewGetNodeData "SK_View *skv" "SK_Node *node"
+.Pp
+.nr nS 0
+The
+.Fn SK_ViewOverPoint
+function performs a proximity query for the given position
+.Fa pos ,
+with respect to all point entities in the sketch.
+This function is a convenient wrapper around
+.Xr SK_ProximitySearch 3 .
+The closest point is returned into the
+.Fa vC
+argument.
+The optional
+.Fa ignore
+argument specifies a pointer to a node that should be ignored in the search.
+.Pp
+The
+.Fn SK_ViewSetNodeData
+function registers a pointer to an arbitrary data structure (previously
+allocated with
+.Xr malloc 3
+or
+.Xr AG_Malloc 3 )
+to be associated with a given
+.Fa node ,
+using a table in the
+.Nm
+structure.
+This is useful for nodes that need to cache resources such as texture handles,
+that are specific to an
+.Nm
+instance.
+.Pp
+.Fn SK_ViewGetNodeData
+returns a pointer to the arbitrary data structure previously associated with
+.Fa node ,
+or NULL if no match was found.
+.Sh EXAMPLES
+See the
+.Xr skedit 1
+application (the
+.Pa tools
+directory in the Agar source distribution).
+.Sh SEE ALSO
+.Xr M_Matrix 3 ,
+.Xr M_Real 3 ,
+.Xr M_Vector 3 ,
+.Xr SG_Intro 3 ,
+.Xr SK 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.6.0.

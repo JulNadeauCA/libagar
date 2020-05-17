@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2008-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -43,8 +43,7 @@ widget implements low-level text edition.
 .Nm
 may be bound to a fixed-size buffer containing a "C" string (i.e., a
 NUL-terminated string), or a dynamically-sized
-.Xr AG_Text 3
-buffer.
+.Xr AG_TextElement 3 .
 .Pp
 The string bound to
 .Nm
@@ -53,22 +52,25 @@ conversion to/from other encodings requires that Agar be built with
 .Xr iconv 3
 support).
 .Pp
-Most applications will not use
+The
 .Nm
-directly, and instead use
+widget is a "low-level" editor which implements an editable field (single
+or multi-line), but with no decorations or scrolling ability.
+The more commonly used
 .Xr AG_Textbox 3
-(which adds scrollbars and cosmetics such as text labels).
-The bare-bones
+widget itself embeds an
 .Nm
-widget is designed to be easily embeddable into other widgets.
+and also adds decorations, scrollbars and a text label.
 .Pp
-The API also includes methods for accessing the working buffer directly
+The
+.Nm
+API also includes methods for accessing the working buffer directly
 (see
 .Sx BUFFER ACCESS ROUTINES
 section below).
 This provides developers with a consistent interface for extending the
-low-level functionality of the widget (for example, the Copy/Paste/Delete
-or "Select All" functions could be implemented externally in this way).
+low-level functionality of the widget (for example, "Copy", "Paste", "Delete"
+and "Select All" functions can be implemented externally in this way).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -79,16 +81,16 @@ or "Select All" functions could be implemented externally in this way).
 .Fn AG_EditableNew "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_EditableBindUTF8 "AG_Editable *ed" "char *buffer" "size_t bufferSize"
+.Fn AG_EditableBindUTF8 "AG_Editable *ed" "char *buffer" "AG_Size bufferSize"
 .Pp
 .Ft "void"
-.Fn AG_EditableBindASCII "AG_Editable *ed" "char *buffer" "size_t bufferSize"
+.Fn AG_EditableBindASCII "AG_Editable *ed" "char *buffer" "AG_Size bufferSize"
 .Pp
 .Ft "void"
-.Fn AG_EditableBindEncoded "AG_Editable *ed" "const char *encoding" "char *buffer" "size_t bufferSize"
+.Fn AG_EditableBindEncoded "AG_Editable *ed" "const char *encoding" "char *buffer" "AG_Size bufferSize"
 .Pp
 .Ft "void"
-.Fn AG_EditableBindText "AG_Editable *ed" "AG_Text *txt"
+.Fn AG_EditableBindText "AG_Editable *ed" "AG_TextElement *txt"
 .Pp
 .Ft void
 .Fn AG_EditableSetLang "AG_Editable *ed" "enum ag_language lang"
@@ -117,6 +119,12 @@ or "Select All" functions could be implemented externally in this way).
 .Ft void
 .Fn AG_EditableSizeHintLines "AG_Editable *ed" "Uint nLines"
 .Pp
+.Ft "void"
+.Fn AG_EditableAutocomplete "AG_Editable *ed" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
+.Pp
+.Ft "void"
+.Fn AG_EditableCloseAutocomplete "AG_Editable *ed"
+.Pp
 .nr nS 0
 The
 .Fn AG_EditableNew
@@ -131,11 +139,12 @@ include:
 Causes newlines to be entered literally into the string, and arranges for
 horizontal and vertical scrollbars to appear if the text is larger than the
 display area.
+.It AG_EDITABLE_WORDWRAP
+Enable word wrapping in multiline mode.
 .It AG_EDITABLE_MULTILINGUAL
 Allow the user to select different languages from the right-click popup
 menu (provided the widget is bound to an
-.Xr AG_Text 3
-element).
+.Xr AG_TextElement 3 ) .
 .It AG_EDITABLE_EXCL
 By default, external changes to the contents of the buffer are allowed and
 handled in a safe manner (at the cost of frequent character set conversions
@@ -147,6 +156,10 @@ is set,
 will assume exclusive access to the buffer, permitting some important
 optimizations (i.e., periodic redrawing and character set conversions
 are avoided).
+.It AG_EDITABLE_UPPERCASE
+Display all characters in upper-case.
+.It AG_EDITABLE_LOWERCASE
+Display all characters in lower-case.
 .It AG_EDITABLE_PASSWORD
 Password-style entry where characters are hidden.
 Use
@@ -176,10 +189,10 @@ This flag disables this behavior.
 Prevents automatic scrolling like
 .Dv AG_EDITABLE_NOSCROLL ,
 but only for the next rendering cycle.
-.It AG_EDITABLE_NOEMACS
-Disable emacs-style function keys.
-.It AG_EDITABLE_NOLATIN1
-Disable traditional LATIN-1 key combinations.
+.It AG_EDITABLE_NO_KILL_YANK
+Disable Kill (ctrl-K) and Yank (ctrl-Y).
+.It AG_EDITABLE_NO_ALT_LATIN1
+Disable alt-key mappings to extended Latin-1 characters.
 .It AG_EDITABLE_NOPOPUP
 Disable the standard right-click popup menu.
 .It AG_EDITABLE_READONLY
@@ -188,20 +201,12 @@ This has the same effect as using
 .Xr AG_WidgetDisable 3 ,
 except that the textbox is not grayed out.
 .It AG_EDITABLE_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
-This flag renders the use of
-.Fn AG_EditableSizeHint
-unnecessary.
+Expand horizontally in parent container.
 .It AG_EDITABLE_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
-This flag renders the use of
-.Fn AG_EditableSizeHint
-unnecessary.
+Expand vertically in parent container.
 .It AG_EDITABLE_EXPAND
 Shorthand for
-.Dv AG_EDITABLE_HFILL|AG_EDITABLE_VFILL .
+.Dv AG_EDITABLE_HFILL | AG_EDITABLE_VFILL .
 .El
 .Pp
 The
@@ -226,19 +231,16 @@ support (see
 .Xr iconv_open 3
 for the complete list of supported encodings).
 .Pp
-The
 .Fn AG_EditableBindText
-function binds the
+connects the
 .Nm
-to a multilingual, variable-length
-.Xr AG_Text 3
-element.
+to an
+.Xr AG_TextElement 3 .
 .Pp
 The
 .Fn AG_EditableSetLang
 function selects the specified language for the current
-.Xr AG_Text 3
-binding.
+.Xr AG_TextElement 3 .
 .Pp
 The
 .Fn AG_EditableSetExcl
@@ -273,6 +275,30 @@ The
 variant accepts arguments in pixels.
 .Fn AG_EditableSizeHintLines
 accepts a line count.
+.Pp
+.Fn AG_EditableAutocomplete
+sets up an autocomplete routine
+.Fa fn ,
+which will be passed a pointer to an
+.Xr AG_Tlist 3
+as first argument.
+This routine is expected to populate the tlist with suggestions based on the
+current buffer contents.
+If the
+.Fa fn
+argument is NULL, disable autocomplete (closing any active windows).
+If an autocomplete context has already been configured, only its function
+and arguments are updated (and any active timers are cancelled).
+If non-NULL,
+.Fa fnArgs
+indicates additional
+.Xr AG_Event 3
+style arguments to be passed to the autocomplete routine.
+.Pp
+.Fn AG_EditableCloseAutocomplete
+closes any active autocomplete windows.
+If there are no autocomplete windows open or an autocomplete context has
+not been defined then this routine is a no-op.
 .Sh STRING UTILITY ROUTINES
 .nr nS 1
 .Ft void
@@ -282,13 +308,19 @@ accepts a line count.
 .Fn AG_EditableSetString "AG_Editable *ed" "const char *s"
 .Pp
 .Ft void
+.Fn AG_EditableCatString "AG_Editable *ed" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_EditableCatStringS "AG_Editable *ed" "const char *s"
+.Pp
+.Ft void
 .Fn AG_EditableClearString "AG_Editable *ed"
 .Pp
 .Ft "char *"
 .Fn AG_EditableDupString "AG_Editable *ed"
 .Pp
-.Ft "size_t"
-.Fn AG_EditableCopyString "AG_Editable *ed" "char *dst" "size_t dst_size"
+.Ft "AG_Size"
+.Fn AG_EditableCopyString "AG_Editable *ed" "char *dst" "AG_Size dst_size"
 .Pp
 .Ft int
 .Fn AG_EditableInt "AG_Editable *ed"
@@ -313,6 +345,10 @@ argument is NULL, a NUL string is assigned instead.
 overwrites the contents of the buffer with the given string.
 The argument may be NULL to clear the string.
 .Pp
+.Fn AG_EditableCatString
+appends the given string at the end of the buffer contents.
+Return 0 on success or -1 if buffer is too small or truncation occurred.
+.Pp
 .Fn AG_EditableClearString
 clears the contents of the buffer.
 .Pp
@@ -329,7 +365,7 @@ Returns the number of bytes that would have been copied were
 .Fa dst_size
 unlimited (i.e., if the return value is >=
 .Fa dst_size ,
-truncation occured).
+truncation has occurred).
 Both
 .Fn AG_EditableDupString
 and
@@ -352,6 +388,7 @@ Note that the
 widget is usually a better option than
 .Nm
 for editing numbers.
+.\" MANLINK(AG_EditableBuffer)
 .Sh BUFFER ACCESS ROUTINES
 .nr nS 1
 .Ft "AG_EditableBuffer *"
@@ -364,13 +401,13 @@ for editing numbers.
 .Fn AG_EditableClearBuffer "AG_Editable *ed" "AG_EditableBuffer *buf"
 .Pp
 .Ft "int"
-.Fn AG_EditableGrowBuffer "AG_Editable *ed" "AG_EditableBuffer *buf" "Uint32 *ins" "size_t nIns"
+.Fn AG_EditableGrowBuffer "AG_Editable *ed" "AG_EditableBuffer *buf" "AG_Char *ins" "AG_Size nIns"
 .Pp
 .Ft "int"
 .Fn AG_EditableCut "AG_Editable *ed" "AG_EditableBuffer *buf" "AG_EditableClipboard *cb"
 .Pp
 .Ft "void"
-.Fn AG_EditableCopyChunk "AG_Editable *ed" "AG_EditableClipboard *cb"
+.Fn AG_EditableCopyChunk "AG_Editable *ed" "AG_EditableClipboard *cb" "AG_Char *s" "AG_Size len"
 .Pp
 .Ft "int"
 .Fn AG_EditableCopy "AG_Editable *ed" "AG_EditableBuffer *buf" "AG_EditableClipboard *cb"
@@ -395,9 +432,9 @@ The buffer structure is defined as follows:
 .Bd -literal
 typedef struct ag_editable_buffer {
 	AG_Variable *var;            /* Variable binding (if any) */
-	Uint32 *s;                   /* String buffer (UCS-4 encoding) */
-	size_t len;                  /* String length (chars) */
-	size_t maxLen;               /* Available buffer size (bytes) */
+	AG_Char *s;                  /* Buffer contents */
+	AG_Size len;                 /* Length of string (chars) */
+	AG_Size maxLen;              /* Available buffer size (bytes) */
 	int reallocable;             /* Buffer can be realloc'd */
 } AG_EditableBuffer;
 .Ed
@@ -497,15 +534,15 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "char *string "
+.Bl -tag -compact -width "AG_TextElement *text "
 .It Va char *string
 Bound fixed-size buffer containing a "C" string (i.e., a NUL-terminated string)
 in the specified encoding (UTF-8 by default).
-.It Va AG_Text *text
+.It Va AG_TextElement *text
 Bound
-.Xr AG_Text 3
-element containing an table of variable-length C strings (entries in
-this table map to different languages).
+.Xr AG_TextElement 3 .
+.It Va char *placeholder
+An optional string of text to display whenever the text buffer is empty.
 .El
 .Sh EVENTS
 The
@@ -536,8 +573,8 @@ Current selection, expressed as an offset from the cursor
 (0 = there is no selection).
 .It Ft AG_Text *text
 An initially empty
-.Xr AG_Text 3
-object used as the default binding (where
+.Xr AG_TextElement 3
+used as the default binding (where
 .Fn AG_EditableBind*
 is not used).
 .It Ft char *encoding
@@ -548,8 +585,8 @@ Other character sets are supported if Agar was compiled with
 support.
 .It Ft enum ag_language lang
 Currently selected language (for
-.Xr AG_Text 3
-bindings only).
+.Xr AG_TextElement 3
+bindings).
 Read-only; use
 .Fn AG_EditableSetLang
 to change.
@@ -567,22 +604,42 @@ AG_EditableBindUTF8(ed, name, sizeof(name));
 .Ed
 .Pp
 See
-.Pa tests/textbox.c
-and
-.Pa tests/charsets.c
-in the Agar source distribution.
+.Xr AG_Textbox 3
+for an example autocomplete routine (note that the
+.Fn AG_TextboxAutocomplete
+call is an alias for
+.Fn AG_EditableAutocomplete ) .
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Text 3 ,
+.Xr AG_Textbox 3 ,
 .Xr AG_TextElement 3 ,
 .Xr AG_Tlist 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3
 .Sh HISTORY
-The
-.Nm
-widget first appeared in Agar 1.0.
-It was mostly rewritten as
+An
+.Ft AG_Textbox
+first appeared in Agar 1.0.
+It was rewritten as a front-end to
 .Xr AG_Editable 3
-was added in Agar 1.3.2.
+in Agar 1.3.2.
 The clipboard and direct buffer access routines were added in Agar 1.4.2.
+.Dv AG_EDITABLE_UPPERCASE
+and
+.Dv AG_EDITABLE_LOWERCASE
+appeared in Agar 1.6.0.
+The former
+.Dv AG_EDITABLE_NOEMACS
+flag was renamed
+.Dv AG_EDITABLE_NO_KILL_YANK
+and
+.Dv AG_EDITABLE_NOLATIN1
+was renamed
+.Dv AG_EDITABLE_NO_ALT_LATIN1
+in Agar 1.6.0.
+Clipboard integration,
+.Fn AG_EditableAutocomplete
+and
+.Fn AG_EditableCatString
+appeared in Agar 1.6.0.

@@ -68,3 +68,10 @@ AG_TryVasprintf(char **ret, const char *fmt, va_list ap)
 	return (0);
 #endif /* HAVE_VASPRINTF */
 }
+
+void
+AG_Vasprintf(char **s, const char *fmt, va_list args)
+{
+	if (AG_TryVasprintf(s, fmt, args) == -1) 
+		AG_FatalError(NULL);
+}

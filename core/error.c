@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,22 +28,27 @@
  */
 
 #include <agar/core/core.h>
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-#if defined(_WIN32) && !defined(_XBOX)
-#undef SLIST_ENTRY
-#include <windows.h>
+#ifdef __CC65__
+# include <conio.h>
 #endif
 
-char         *_Nullable agErrorMsg = NULL;	/* Error message */
-AG_ErrorCode  agErrorCode = AG_EUNDEFINED; 	/* Error code */
-#ifdef AG_THREADS
-AG_ThreadKey agErrorMsgKey;
-AG_ThreadKey agErrorCodeKey;
+#if defined(_WIN32) && !defined(_XBOX)
+# undef SLIST_ENTRY
+# include <windows.h>
 #endif
+
+char *_Nullable agErrorMsg  = NULL;		/* Last error message (UTF-8) */
+AG_ErrorCode    agErrorCode = AG_EUNDEFINED; 	/* Last error code */
+#ifdef AG_THREADS
+AG_ThreadKey    agErrorMsgKey;    /* Last error message (UTF-8; thread-local) */
+AG_ThreadKey    agErrorCodeKey;   /* Last error code (thread-local) */
+#endif
+
+int agDebugLvl = 1;				/* Default debug level */
 
 /* Redirect Verbose() output to "foo-out.txt" file */
 /* #define VERBOSE_TO_FILE */
@@ -54,11 +59,17 @@ AG_ThreadKey agErrorCodeKey;
 /* Use AttachConsole() on Windows */
 /* #define USE_WIN32_CONSOLE */
 
-int agDebugLvl = 1;			/* Default debug level */
-
 static void (*_Nullable agErrorCallback)(const char *_Nonnull) = NULL;
 static int  (*_Nullable agVerboseCallback)(const char *_Nonnull) = NULL;
 static int  (*_Nullable agDebugCallback)(const char *_Nonnull) = NULL;
+
+#ifdef __CC65__
+int ag65consoleX = 0, ag65consoleY = 0;
+#endif
+
+/* Import inlinables */
+#undef AG_INLINE_HEADER
+#include <agar/core/inline_error.h>
 
 #ifdef AG_THREADS
 static void
@@ -71,7 +82,7 @@ DestroyErrorMsg(void *_Nullable msg)
 int
 AG_InitErrorSubsystem(void)
 {
-	agErrorMsg = NULL;
+	agErrorMsg = Strdup("No error");
 	agErrorCode = AG_EUNDEFINED;
 
 #ifdef AG_THREADS
@@ -79,7 +90,7 @@ AG_InitErrorSubsystem(void)
 	    AG_ThreadKeyTryCreate(&agErrorCodeKey, NULL) == -1) {
 		return (-1);
 	}
-	AG_ThreadKeySet(agErrorMsgKey, NULL);
+	AG_ThreadKeySet(agErrorMsgKey, Strdup("No error"));
 	AG_ThreadKeySet(agErrorCodeKey, NULL);
 #endif
 
@@ -149,7 +160,6 @@ AG_SetError(const char *fmt, ...)
 /* Retrieve the error message string. */
 const char *
 AG_GetError(void)
-    _Pure_Attribute_If_Unthreaded
 {
 #ifdef AG_THREADS
 	return ((const char *)AG_ThreadKeyGet(agErrorMsgKey));
@@ -204,7 +214,6 @@ AG_SetErrorCode(AG_ErrorCode code)
 /* Retrieve the symbolic error code. */
 AG_ErrorCode
 AG_GetErrorCode(void)
-    _Pure_Attribute_If_Unthreaded
 {
 #ifdef AG_THREADS
 	return (AG_ErrorCode)AG_ThreadKeyGet(agErrorCodeKey);
@@ -213,22 +222,59 @@ AG_GetErrorCode(void)
 #endif
 }
 
-/* Issue a debug message. */
+/*
+ * Print a debug message on the error console. Optionally, prefix the
+ * message with a label containing the name/address of an object.
+ */
 void
-AG_Debug(void *p, const char *fmt, ...)
+AG_Debug(void *pObj, const char *fmt, ...)
 {
-#ifdef AG_DEBUG
-	AG_Object *obj = p;
+#if defined(AG_DEBUG) || defined(__CC65__)
+	AG_Object *obj = pObj;
 	va_list args;
+# ifdef __CC65__
+	Uint8 colorSave, wScr,hScr;
+
+	if (agDebugLvl < 1)
+		return;
 	
+	va_start(args, fmt);
+	colorSave = textcolor(COLOR_CYAN);
+	gotoxy(ag65consoleX, ag65consoleY);
+	if (obj != NULL) {
+		fputs(obj->name, stdout);
+		fputc(':', stdout);
+	}
+	vcprintf(fmt, args);
+	textcolor(colorSave);
+	va_end(args);
+
+	screensize(&wScr, &hScr);
+	if (++ag65consoleY > hScr) {
+		clrscr();
+		ag65consoleY = 0;
+	}
+# else /* !__CC65__ */
+
+	if (agDebugLvl < 1) {
+		return;
+	}
 	if (agDebugCallback != NULL) {
 		char *buf;
 
 		if (obj != NULL) {
+			size_t bufLen;
+
 			if (obj->name[0] != '\0') {
-				Asprintf(&buf, "%s: ", obj->name);
+				bufLen = 5+strlen(obj->name)+6+1;
+				buf = Malloc(bufLen);
+				Strlcpy(buf, AGSI_ITALIC, bufLen);
+				Strlcat(buf, obj->name, bufLen);
+				Strlcat(buf, AGSI_RST ": ", bufLen);
 			} else {
-				Asprintf(&buf, "<%p>: ", obj);
+				bufLen = 6+2+(AG_MODEL >> 2)+7+1;
+				buf = Malloc(bufLen);
+				Snprintf(buf, bufLen, "<%p>: ", obj);
 			}
 			agDebugCallback(buf);
 			free(buf);
@@ -242,60 +288,59 @@ AG_Debug(void *p, const char *fmt, ...)
 		}
 		free(buf);
 	}
-	if (agDebugLvl >= 1) {
-		va_start(args, fmt);
-# if defined(DEBUG_TO_FILE)
-		/* Redirect output to foo-debug.txt */
-		{
-			char path[AG_FILENAME_MAX];
-			FILE *f;
+	va_start(args, fmt);
+#  if defined(DEBUG_TO_FILE)
+	/* Redirect output to foo-debug.txt */
+	{
+		char path[AG_FILENAME_MAX];
+		FILE *f;
 
-			if (agProgName != NULL) {
-				Strlcpy(path, agProgName, sizeof(path));
-				Strlcat(path, "-debug.txt", sizeof(path));
-			} else {
-				Strlcpy(path, "debug.txt", sizeof(path));
-			}
-			if ((f = fopen(path, "a")) != NULL) {
-				if (obj != NULL) {
-					if (obj->name[0] != '\0') {
-						fprintf(f, "%s: ", obj->name);
-					} else {
-						fprintf(f, "<%p>: ", obj);
-					}
+		if (agProgName != NULL) {
+			Strlcpy(path, agProgName, sizeof(path));
+			Strlcat(path, "-debug.txt", sizeof(path));
+		} else {
+			Strlcpy(path, "debug.txt", sizeof(path));
+		}
+		if ((f = fopen(path, "a")) != NULL) {
+			if (obj != NULL) {
+				if (obj->name[0] != '\0') {
+					fprintf(f, "%s: ", obj->name);
+				} else {
+					fprintf(f, "<%p>: ", obj);
 				}
-				vfprintf(f, fmt, args);
-				fclose(f);
 			}
+			vfprintf(f, fmt, args);
+			fclose(f);
 		}
-# elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
-		{
-			HANDLE cons;
-			char *buf;
-		
-			cons = GetStdHandle(STD_ERROR_HANDLE);
-			if (cons != NULL && cons != INVALID_HANDLE_VALUE) {
-				if (obj != NULL && obj->name[0] != '\0') {
-					WriteConsole(cons, obj->name, strlen(obj->name), NULL, NULL);
-					WriteConsole(cons, ": ", 2, NULL, NULL);
-				}
-				Vasprintf(&buf, fmt, args);
-				WriteConsole(cons, buf, strlen(buf), NULL, NULL);
-				free(buf);
-			}
-		}
-# else /* _WIN32 */
-		if (obj != NULL) {
-			if (obj->name[0] != '\0') {
-				printf("%s: ", obj->name);
-			} else {
-				printf("<%p>: ", obj);
-			}
-		}
-		vprintf(fmt, args);
-#endif
-		va_end(args);
 	}
+#  elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
+	{
+		HANDLE cons;
+		char *buf;
+		
+		cons = GetStdHandle(STD_ERROR_HANDLE);
+		if (cons != NULL && cons != INVALID_HANDLE_VALUE) {
+			if (obj != NULL && obj->name[0] != '\0') {
+				WriteConsole(cons, obj->name, strlen(obj->name), NULL, NULL);
+				WriteConsole(cons, ": ", 2, NULL, NULL);
+			}
+			Vasprintf(&buf, fmt, args);
+			WriteConsole(cons, buf, strlen(buf), NULL, NULL);
+			free(buf);
+		}
+	}
+#  else /* !_WIN32 */
+	if (obj != NULL) {
+		if (obj->name[0] != '\0') {
+			printf(AGSI_ITALIC "%s" AGSI_RST ": ", obj->name);
+		} else {
+			printf("<" AGSI_ITALIC "%p" AGSI_RST ">: ", obj);
+		}
+	}
+	vprintf(fmt, args);
+#  endif
+	va_end(args);
+# endif /* !__CC65__ */
 #endif /* AG_DEBUG */
 }
 
@@ -303,6 +348,25 @@ AG_Debug(void *p, const char *fmt, ...)
 void
 AG_Verbose(const char *fmt, ...)
 {
+#if defined(AG_VERBOSITY) || defined(__CC65__)
+# ifdef __CC65__
+	va_list args;
+	Uint8 colorSave, wScr,hScr;
+	
+	va_start(args, fmt);
+	colorSave = textcolor(COLOR_WHITE);
+	gotoxy(ag65consoleX, ag65consoleY);
+	vcprintf(fmt, args);
+	textcolor(colorSave);
+	va_end(args);
+
+	screensize(&wScr, &hScr);
+	if (++ag65consoleY > hScr) {
+		clrscr();
+		ag65consoleY = 0;
+	}
+# else /* !__CC65__ */
+
 	va_list args;
 
 	if (!agVerbose)
@@ -321,7 +385,7 @@ AG_Verbose(const char *fmt, ...)
 	}
 
 	va_start(args, fmt);
-#if defined(VERBOSE_TO_FILE)
+#  if defined(VERBOSE_TO_FILE)
 	/* Redirect output to foo-out.txt */
 	{
 		char path[AG_FILENAME_MAX];
@@ -338,7 +402,7 @@ AG_Verbose(const char *fmt, ...)
 			fclose(f);
 		}
 	}
-#elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
+#  elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
 	{
 		HANDLE cons;
 		char *buf;
@@ -350,17 +414,37 @@ AG_Verbose(const char *fmt, ...)
 			free(buf);
 		}
 	}
-#else
+#  else
 	vprintf(fmt, args);
-#endif
+#  endif
 	va_end(args);
+# endif /* !__CC65__ */
+#endif /* AG_VERBOSITY */
+}
+
+/* Raise a fatal error condition (format string). */
+void
+AG_FatalErrorF(const char *fmt, ...)
+{
+	va_list args;
+	char *s;
+
+	if (fmt == NULL) {
+		AG_FatalError(NULL);
+	}
+	va_start(args, fmt);
+	Vasprintf(&s, fmt, args);
+	va_end(args);
+	AG_FatalError(s);
 }
 
 /* Raise a fatal error condition. */
 void
 AG_FatalError(const char *msg)
 {
-	/* Use callback if defined. The callback must gracefully exit. */
+#ifdef __CC65__
+	textcolor(COLOR_LIGHTRED);
+#endif
 	if (agErrorCallback != NULL) {
 		agErrorCallback(msg ? msg : AG_GetError());
 		abort(); /* not reached */
@@ -394,17 +478,21 @@ AG_SetDebugCallback(int (*fn)(const char *))
 	agDebugCallback = fn;
 }
 
+#ifdef AG_TYPE_SAFETY
 /*
  * Raise fatal error condition due to a runtime type checking error
  * (if compiled with either --enable-debug or --enable-type-safety).
  */
-void  *AG_PtrMismatch(void)    { AG_FatalError("Illegal AG_PTR() access"); }
-char  *AG_StringMismatch(void) { AG_FatalError("Illegal AG_STRING() access"); }
-int    AG_IntMismatch(void)    { AG_FatalError("Illegal AG_[U]INT() access"); }
-long   AG_LongMismatch(void)   { AG_FatalError("Illegal AG_[U]LONG() access"); }
-float  AG_FloatMismatch(void)  { AG_FatalError("Illegal AG_FLOAT() access"); }
-double AG_DoubleMismatch(void) { AG_FatalError("Illegal AG_DOUBLE() access"); }
-#ifdef AG_HAVE_LONG_DOUBLE
-long double AG_LongDoubleMismatch(void) { AG_FatalError("Illegal AG_LONG_DOUBLE() access"); }
-#endif
-void  *AG_ObjectMismatch(void) { AG_FatalError("Illegal AG_OBJECT() access"); }
+# ifdef AG_VERBOSITY
+void  *AG_GenericMismatch(const char *s) { AG_FatalErrorF("Illegal access: %s", s); }
+# else
+void  *AG_GenericMismatch(const char *s) { AG_FatalErrorV("E29", s); }
+# endif
+void  *AG_PtrMismatch(void) { AG_FatalErrorV("E290", "Illegal AG_PTR() / AG_CONST_PTR() access"); }
+char  *AG_StringMismatch(void) { AG_FatalErrorV("E291", "Illegal AG_STRING() access"); }
+int    AG_IntMismatch(void) { AG_FatalErrorV("E292", "Illegal AG_INT() / AG_UINT() access"); }
+long   AG_LongMismatch(void) { AG_FatalErrorV("E293", "Illegal AG_LONG() / AG_ULONG() access"); }
+float  AG_FloatMismatch(void) { AG_FatalErrorV("E294", "Illegal AG_FLOAT() access"); }
+double AG_DoubleMismatch(void) { AG_FatalErrorV("E295", "Illegal AG_DOUBLE() access"); }
+void  *AG_ObjectMismatch(void) { AG_FatalErrorV("E296", "Illegal AG_OBJECT() / AG_CONST_OBJECT() access"); }
+#endif /* AG_TYPE_SAFETY */

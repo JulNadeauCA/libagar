@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -52,18 +52,20 @@ simplifies this task by providing a per-object lock (which is implicitely
 acquired in some contexts, such as event handler execution).
 For instance, the following code accesses a VFS in an unsafe manner:
 .Bd -literal -offset indent
-AG_Object *myObject;
-myObject = AG_ObjectFind(myRoot, "/Foo");
-if (myObject != NULL) { ... }			/* UNSAFE */
+AG_Object *o;
+
+o = AG_ObjectFind(root, "/Foo");
+if (o != NULL) { ... }			/* UNSAFE */
 .Ed
 .Pp
 The following code should be used instead:
 .Bd -literal -offset indent
-AG_Object *myObject;
-AG_ObjectLock(myRoot);
-myObject = AG_ObjectFind(myRoot, "/Foo");
-if (myObject != NULL) { ... }
-AG_ObjectUnlock(myRoot);
+AG_Object *o;
+
+AG_ObjectLock(root);
+o = AG_ObjectFind(root, "/Foo");
+if (o != NULL) { ... }			/* Safe access */
+AG_ObjectUnlock(root);
 .Ed
 .Sh THREADS INTERFACE
 When compiled with threads support, Agar provides a portable, minimal interface

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,10 +39,44 @@
 
 #include <stdarg.h>
 
-static void
-Init(void *p)
+VG_Line *
+VG_LineNew(void *pNode, VG_Point *p1, VG_Point *p2)
 {
-	VG_Line *vl = p;
+	VG_Line *vl = Malloc(sizeof(VG_Line));
+
+	VG_NodeInit(vl, &vgLineOps);
+	vl->p1 = p1;
+	vl->p2 = p2;
+	VG_AddRef(vl, p1);
+	VG_AddRef(vl, p2);
+	VG_NodeAttach(pNode, vl);
+	return (vl);
+}
+
+void
+VG_LineThickness(VG_Line *vl, Uint8 t)
+{
+	VG *vg = VGNODE(vl)->vg;
+
+	AG_ObjectLock(vg);
+	vl->thickness = t;
+	AG_ObjectUnlock(vg);
+}
+
+void
+VG_LineStipple(VG_Line *vl, Uint16 s)
+{
+	VG *vg = VGNODE(vl)->vg;
+
+	AG_ObjectLock(vg);
+	vl->stipple = s;
+	AG_ObjectUnlock(vg);
+}
+
+static void
+Init(void *_Nonnull obj)
+{
+	VG_Line *vl = obj;
 
 	vl->p1 = NULL;
 	vl->p2 = NULL;
@@ -55,9 +89,10 @@ Init(void *p)
 void
 VG_LineEndpointStyle(VG_Line *vl, enum vg_line_endpoint style, ...)
 {
+	VG *vg = VGNODE(vl)->vg;
 	va_list ap;
 
-	VG_Lock(VGNODE(vl)->vg);
+	AG_ObjectLock(vg);
 	
 	vl->endPt = style;
 
@@ -67,13 +102,13 @@ VG_LineEndpointStyle(VG_Line *vl, enum vg_line_endpoint style, ...)
 		va_end(ap);
 	}
 
-	VG_Unlock(VGNODE(vl)->vg);
+	AG_ObjectUnlock(vg);
 }
 
 static int
-Load(void *p, AG_DataSource *ds, const AG_Version *ver)
+Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull ver)
 {
-	VG_Line *vl = p;
+	VG_Line *vl = obj;
 
 	if ((vl->p1 = VG_ReadRef(ds, vl, "Point")) == NULL) {
 		return (-1);
@@ -89,9 +124,9 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 }
 
 static void
-Save(void *p, AG_DataSource *ds)
+Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 {
-	VG_Line *vl = p;
+	VG_Line *vl = obj;
 
 	VG_WriteRef(ds, vl->p1);
 	VG_WriteRef(ds, vl->p2);
@@ -102,23 +137,24 @@ Save(void *p, AG_DataSource *ds)
 }
 
 static void
-Draw(void *p, VG_View *vv)
+Draw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_Line *vl = p;
+	VG_Line *vl = obj;
 	AG_Color c = VG_MapColorRGB(VGNODE(vl)->color);
-	int x1, y1, x2, y2;
+	int x1,y1, x2,y2;
 
 	VG_GetViewCoords(vv, VG_Pos(vl->p1), &x1, &y1);
 	VG_GetViewCoords(vv, VG_Pos(vl->p2), &x2, &y2);
 
 	/* XXX TODO: endpoint style */
-	AG_DrawLine(vv, x1,y1, x2,y2, c);
+	AG_DrawLine(vv, x1,y1, x2,y2, &c);
 }
 
 static void
-Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
+Extent(void *_Nonnull obj, VG_View *_Nonnull vv, VG_Vector *_Nonnull a,
+    VG_Vector *_Nonnull b)
 {
-	VG_Line *vl = p;
+	VG_Line *vl = obj;
 	VG_Vector p1, p2;
 
 	p1 = VG_Pos(vl->p1);
@@ -130,9 +166,9 @@ Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 }
 
 static float
-PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
+PointProximity(void *_Nonnull obj, VG_View *_Nonnull vv, VG_Vector *_Nonnull vPt)
 {
-	VG_Line *vl = p;
+	VG_Line *vl = obj;
 	VG_Vector v1 = VG_Pos(vl->p1);
 	VG_Vector v2 = VG_Pos(vl->p2);
 
@@ -140,24 +176,24 @@ PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
 }
 
 static void
-Delete(void *p)
+Delete(void *_Nonnull obj)
 {
-	VG_Line *vl = p;
+	VG_Line *vl = obj;
 
 	if (VG_DelRef(vl, vl->p1) == 0) { VG_Delete(vl->p1); }
 	if (VG_DelRef(vl, vl->p2) == 0) { VG_Delete(vl->p2); }
 }
 
 static void
-Move(void *p, VG_Vector vCurs, VG_Vector vRel)
+Move(void *_Nonnull obj, VG_Vector vCurs, VG_Vector vRel)
 {
 	/* TODO */
 }
 
-static void *
-Edit(void *p, VG_View *vv)
+static void *_Nonnull
+Edit(void *_Nonnull obj, VG_View *vv)
 {
-	VG_Line *vl = p;
+	VG_Line *vl = obj;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 	const char *endPtStyles[] = {
 		N_("Square"),

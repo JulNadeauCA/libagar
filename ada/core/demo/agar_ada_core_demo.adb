@@ -7,6 +7,7 @@ with Agar.Error;
 with Agar.Object; use Agar.Object;
 with Agar.Event;
 with Agar.DSO;
+with Agar.Types; use Agar.Types;
 with Ada.Text_IO;
 with System;
 with myatexit;
@@ -52,6 +53,8 @@ begin
      Integer'Image(Major) & " ." &
      Integer'Image(Minor) & " ." &
      Integer'Image(Patch));
+  
+  T_IO.Put_Line ("Memory model: " & Natural'Image(AG_MODEL));
 
   -- Register the Agar object class "Animal" specified in animal.ads.
   T_IO.Put_Line("Registering Animal class (" &
@@ -105,8 +108,7 @@ begin
  
   -- Objects can send events to each other.
   Post_Event
-    (Source => My_Child_1,
-     Target => My_Child_2,
+    (Object => My_Child_2,
      Event  => "Ping");
 
   -- Propagate makes events broadcast to the object's descendants.
@@ -117,7 +119,7 @@ begin
      Async     => False,
      Propagate => True);
   Post_Event
-    (Target => My_Parent,
+    (Object => My_Parent,
      Event  => "Ping");
 
   T_IO.Put_Line("My_Parent path = " & Get_Name(My_Parent));

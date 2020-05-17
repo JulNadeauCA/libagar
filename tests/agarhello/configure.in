@@ -1,0 +1,59 @@
+#
+# Typical configure script source for an Agar application using the
+# BSDBuild build system.
+#
+# ex:syn=bsdbuild
+#
+# To generate the configure script from this file, install BSDBuild
+# on your system (download it from http://hypertriton.com/bsdbuild),
+# and execute:
+#
+#     $ cat configure.in |mkconfigure > configure
+#
+
+# Specify an alternate location for config.guess.
+config_guess("../../mk/config.guess")
+
+# Name and version of the application.
+package("AgarHello")
+version("1.0-beta")
+# release("codename")
+
+# Register our configure options.
+# register_section("My subsection header:")
+register("--enable-warnings",	 "Enable compiler warnings [default: no]")
+register("--with-agar[=PREFIX]", "Agar installation path [default: auto]")
+
+# Require a C compiler.
+require(cc)
+
+# Require Agar GUI (which implies ag_core).
+require(agar, 1.6.0, ${prefix_agar})
+
+# For a non-graphical application, link against ag_core only:
+#require(agar-core, 1.6.0, ${prefix_agar})
+
+# Require Agar extension libraries.
+#require(agar-au, 1.6.0, ${prefix_agar})
+#require(agar-dev, 1.6.0, ${prefix_agar})
+#require(agar-map, 1.6.0, ${prefix_agar})
+#require(agar-math, 1.6.0, ${prefix_agar})
+#require(agar-net, 1.6.0, ${prefix_agar})
+#require(agar-rg, 1.6.0, ${prefix_agar})
+#require(agar-sg, 1.6.0, ${prefix_agar})
+#require(agar-sk, 1.6.0, ${prefix_agar})
+#require(agar-vg, 1.6.0, ${prefix_agar})
+
+# Import standard routines provided by Agar (without "AG"_ prefix).
+#c_define(_USE_AGAR_STD)
+#c_define(_USE_AGAR_CORE)
+#c_define(_USE_AGAR_QUEUE)
+#c_define(_USE_AGAR_GUI)
+#c_define(_USE_AGAR_TYPES)
+#c_define(_USE_AGAR_MATH)
+
+# Set some warning switches you like you use.
+if [ "${enable_warnings}" = "yes" ]; then
+        mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes")
+        mdefine(CFLAGS, "$CFLAGS -Wno-unused -Wno-nullability-completeness")
+fi

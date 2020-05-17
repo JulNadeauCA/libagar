@@ -1,0 +1,231 @@
+.\"
+.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd October 21, 2007
+.Dt RG_PIXMAP 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm RG_Pixmap
+.Nd Agar-RG surface element
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/map/rg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+element defines a two-dimensional array of pixels.
+A
+.Nm
+may be referenced by one or more
+.Xr RG_Tile 3 ,
+.Xr RG_Texture 3
+and
+.Xr RG_Feature 3
+elements.
+When a
+.Nm
+is modified, the change is automatically applied to every resource that
+references it.
+Pixmaps can also be resized on the fly, so resources that make use of
+.Nm
+need to take that possibility into account.
+.Pp
+The following members of the
+.Nm
+structure are public:
+.Bd -literal
+typedef struct rg_pixmap {
+	char name[RG_PIXMAP_NAME_MAX];  /* Name of pixmap (unique) */
+	int xorig, yorig;               /* Origin point */
+	AG_Surface *su;                 /* Pixmap surface */
+	Uint nrefs;                     /* Number of tile references */
+} RG_Pixmap;
+.Ed
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "RG_Pixmap *"
+.Fn RG_PixmapNew "RG_Tileset *set" "const char *name" "int flags"
+.Pp
+.Ft "void"
+.Fn RG_PixmapScale "RG_Pixmap *pixmap" "int width" "int height"
+.Pp
+.nr nS 0
+The
+.Fn RG_PixmapNew
+function allocates, initializes and attaches a
+.Nm
+structure.
+.Fa name
+is a string identifier for the pixmap
+(if a pixmap of the same name exists, a unique name will be
+generated automatically).
+There are currently no
+.Fa flags
+defined.
+The
+.Fn RG_PixmapScale
+function resizes the pixmap canvas size to
+.Fa width
+by
+.Fa height
+pixels.
+Existing pixmap data is preserved.
+.Sh UNDO OPERATIONS
+A structure of undo levels is defined for each
+.Nm .
+When implementing new tools, it is important to use
+.Fn RG_PixmapBeginUndoBlk
+prior to making modifications to the pixmap surface.
+.Pp
+.nr nS 1
+.Ft void
+.Fn RG_PixmapBeginUndoBlk "RG_Pixmap *pixmap"
+.Pp
+.Ft void
+.Fn RG_PixmapUndo "RG_Tileview *view" "RG_TileElement *pixmapElement"
+.Pp
+.Ft void
+.Fn RG_PixmapRedo "RG_Tileview *view" "RG_TileElement *pixmapElement"
+.Pp
+.nr nS 0
+.Fn RG_PixmapBeginUndoBlk
+marks the beginning of one or more modifications that will be undone/redone
+together.
+.Fn RG_PixmapUndo
+executes an undo command.
+.Fn RG_PixmapRedo
+executes a redo command.
+.Sh PIXEL OPERATIONS
+.nr nS 1
+.Ft void
+.Fn RG_PixmapSetBlendingMode "RG_Pixmap *pixmap" "enum rg_pixel_blend_mode bmode"
+.Pp
+.Ft int
+.Fn RG_PixmapPutPixel "RG_Tileview *view" "RG_TileElement *pixmapElement" "int x" "int y" "Uint32 pixel" "int onceFlag"
+.Pp
+.Ft void
+.Fn RG_PixmapApplyBrush "RG_Tileview *view" "RG_TileElement *pixmapElement "int x" "int y" "Uint32 color"
+.Pp
+.Ft Uint32
+.Fn RG_PixmapSourcePixel "RG_Tileview *view" "RG_TileElement *pixmapElement" "int x" "int y"
+.Pp
+.Ft void
+.Fn RG_PixmapSourceRGBA "RG_Tileview *view" "RG_TileElement *pixmapElement" "int x" "int y" "Uint8 *r"  "Uint8 *g"  "Uint8 *b"  "Uint8 *a"
+.Pp
+.nr nS 0
+.Fn RG_PixmapSetBlendingMode
+selects the alpha blending function to use for subsequent pixel operations.
+Currently implemented are:
+.Bd -literal
+enum rg_pixmap_blend_mode {
+	RG_PIXMAP_OVERLAY_ALPHA,        /* dA = sA+dA */
+	RG_PIXMAP_AVERAGE_ALPHA,        /* dA = (sA+dA)/2 */
+	RG_PIXMAP_DEST_ALPHA,           /* dA = dA */
+	RG_PIXMAP_NO_BLENDING           /* No blending done */
+};
+.Ed
+.Pp
+The
+.Fn RG_PixmapPutPixel
+function writes the pixel value
+.Fa pixel
+(specified in
+.Va agSurfaceFmt
+format)
+at coordinates
+.Fa x ,
+.Fa y .
+If
+.Fa onceFlag
+is 1, the function will check if any other modifications were made to this
+pixel in the current undo block.
+If the pixel was modified since the last
+.Nm RG_PixmapBeginUndoBlk
+call, the function is a no-op.
+.Pp
+.Fn RG_PixmapApplyBrush
+operates in a similar way, except that instead of a single pixel, a group
+of pixel are modified according to the current brush (as set by
+.Fn RG_PixmapSetBrush ) .
+See
+.Dq BRUSHES
+section below for more information.
+.Pp
+.Fn RG_PixmapSourcePixel
+and
+.Fn RG_PixmapSourceRGBA
+return the pixel at given coordinates
+.Fa x ,
+.Fa y
+in 32-bit
+.Va agSurfaceFmt
+format and component (RGBA) format, respectively.
+.Sh BRUSHES
+.nr nS 1
+.Ft "RG_Brush *"
+.Fn RG_PixmapAddBrush "RG_Pixmap *pixmap "enum rg_brush_type type" "RG_Pixmap *pixmap"
+.Pp
+.Ft void
+.Fn RG_PixmapDelBrush "RG_Pixmap *pixmap" "RG_Brush *brush"
+.Pp
+.Ft void
+.Fn RG_PixmapSetBrush "RG_Pixmap *pixmap" "RG_Brush *brush"
+.Pp
+.nr nS 0
+The
+.Fn RG_PixmapAddBrush
+function creates and attaches a new brush to the pixmap.
+The
+.Fa type
+argument is one of:
+.Bd -literal
+enum rg_brush_type {
+	RG_PIXMAP_BRUSH_MONO,  /* Monochromatic (use current color) */
+	RG_PIXMAP_BRUSH_RGB    /* Replace by brush color */
+};
+.Ed
+.Pp
+The
+.Fn RG_PixmapDelBrush
+function destroys the given brush.
+.Pp
+.Fn RG_PixmapSetBrush
+selects the current brush, to be used by
+.Fn RG_PixmapApplyBrush ,
+as described in the
+.Dq PIXEL OPERATIONS
+section.
+.Sh SEE ALSO
+.Xr RG 3 ,
+.Xr RG_Feature 3 ,
+.Xr RG_Sketch 3 ,
+.Xr RG_Texture 3 ,
+.Xr RG_Tile 3 ,
+.Xr RG_Tileview 3

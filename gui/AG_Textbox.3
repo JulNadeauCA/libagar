@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -41,10 +41,9 @@ The
 .Nm
 widget implements text edition.
 .Nm
-may be bound to a fixed-size buffer containing a "C" string (i.e., a
-NUL-terminated string), or a dynamically-sized
-.Xr AG_Text 3
-buffer.
+may be bound to a fixed-size buffer containing a "C" string (a NUL-terminated string)
+or a dynamically-sized
+.Xr AG_TextElement 3 .
 .Pp
 .\" IMAGE(http://libagar.org/widgets/AG_TextboxMulti.png, "A multi-line AG_Textbox(3) widget")
 The string bound to
@@ -56,17 +55,15 @@ support).
 .Pp
 Most of the functionality of
 .Nm
-is actually implemented by the
-.Xr AG_Editable 3
-class (the
-.Nm
-widget itself simply embeds an
-.Ft AG_Editable
-along with scrollbars and cosmetics such as text labels).
+is actually implemented in
+.Xr AG_Editable 3 .
 The
-.Xr AG_Editable 3
-API also provides direct buffer-access routines for more advanced text
-processing.
+.Nm
+widget itself only acts as a container for an
+.Ft AG_Editable
+(adding an optional text label, scrollbars and buttons).
+Direct buffer-access routines are available in
+.Xr AG_Editable 3 .
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -80,13 +77,13 @@ processing.
 .Fn AG_TextboxNewS "AG_Widget *parent" "Uint flags" "const char *label"
 .Pp
 .Ft "void"
-.Fn AG_TextboxBindUTF8 "AG_Textbox *textbox" "char *buffer" "size_t bufferSize"
+.Fn AG_TextboxBindUTF8 "AG_Textbox *textbox" "char *buffer" "AG_Size size"
 .Pp
 .Ft "void"
-.Fn AG_TextboxBindASCII "AG_Textbox *textbox" "char *buffer" "size_t bufferSize"
+.Fn AG_TextboxBindASCII "AG_Textbox *textbox" "char *buffer" "AG_Size size"
 .Pp
 .Ft "void"
-.Fn AG_TextboxBindEncoded "AG_Textbox *textbox" "const char *encoding" "char *buffer" "size_t bufferSize"
+.Fn AG_TextboxBindEncoded "AG_Textbox *textbox" "const char *encoding" "char *buffer" "AG_Size size"
 .Pp
 .Ft "void"
 .Fn AG_TextboxBindText "AG_Textbox *textbox" "AG_Text *txt"
@@ -116,6 +113,12 @@ processing.
 .Fn AG_TextboxSetLabelS "AG_Textbox *textbox" "const char *label"
 .Pp
 .Ft void
+.Fn AG_TextboxSetPlaceholder "AG_Textbox *textbox" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_TextboxSetPlaceholderS "AG_Textbox *textbox" "const char *s"
+.Pp
+.Ft void
 .Fn AG_TextboxSizeHint "AG_Textbox *textbox" "const char *text"
 .Pp
 .Ft void
@@ -123,6 +126,9 @@ processing.
 .Pp
 .Ft void
 .Fn AG_TextboxSizeHintLines "AG_Textbox *textbox" "Uint nLines"
+.Pp
+.Ft void
+.Fn AG_TextboxAutocomplete "AG_Textbox *tb" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
 .nr nS 0
 The
@@ -140,11 +146,14 @@ include:
 Causes newlines to be entered literally into the string, and arranges for
 horizontal and vertical scrollbars to appear if the text is larger than the
 display area.
+.It AG_TEXTBOX_WORDWRAP
+Enable word wrapping in multiline mode.
 .It AG_TEXTBOX_MULTILINGUAL
 Allow the user to select different languages from the right-click popup
 menu (provided the widget is bound to an
-.Xr AG_Text 3
-element).
+.Xr AG_TextElement 3 ) .
+.It AG_TEXTBOX_RETURN_BUTTON
+Display a RETURN button which generates "textbox-return" when clicked.
 .It AG_TEXTBOX_EXCL
 By default, external changes to the contents of the buffer are allowed and
 handled in a safe manner (at the cost of frequent character set conversions
@@ -156,6 +165,10 @@ is set,
 will assume exclusive access to the buffer, permitting some important
 optimizations (i.e., periodic redrawing and character set conversions
 are avoided).
+.It AG_TEXTBOX_UPPERCASE
+Display all characters in upper-case.
+.It AG_TEXTBOX_LOWERCASE
+Display all characters in lower-case.
 .It AG_TEXTBOX_PASSWORD
 Password-style entry where characters are hidden.
 .Fn AG_TextboxSetPassword
@@ -176,10 +189,10 @@ to change at runtime.
 .It AG_TEXTBOX_CATCH_TAB
 Cause tabs to be entered literally into the string (by default, the tab
 key moves focus to the next widget).
-.It AG_TEXTBOX_NOEMACS
-Disable emacs-style function keys.
-.It AG_TEXTBOX_NOLATIN1
-Disable traditional LATIN-1 key combinations.
+.It AG_TEXTBOX_NO_KILL_YANK
+Disable Kill (ctrl-K) and Yank (ctrl-Y) functions.
+.It AG_TEXTBOX_NO_ALT_LATIN1
+Disable alt-key mappings to extended Latin1 characters.
 .It AG_TEXTBOX_NOPOPUP
 Disable the standard right-click popup menu.
 .It AG_TEXTBOX_READONLY
@@ -187,31 +200,24 @@ Make the string read-only.
 This has the same effect as using
 .Xr AG_WidgetDisable 3 ,
 except that the textbox is not grayed out.
+.It AG_TEXTBOX_NO_SHADING
+Disable 3D-style shading around the field.
 .It AG_TEXTBOX_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
-This flag renders the use of
-.Fn AG_TextboxSizeHint
-unnecessary.
+Expand horizontally in parent container.
 .It AG_TEXTBOX_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
-This flag is recommended for multi-line text as an alternative to calling
-.Fn AG_TextboxSizeHintLines .
+Expand vertically in parent container.
 .It AG_TEXTBOX_EXPAND
 Shorthand for
-.Dv AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL .
+.Dv AG_TEXTBOX_HFILL | AG_TEXTBOX_VFILL .
 .El
 .Pp
-The
 .Fn AG_TextboxBindUTF8
 and
 .Fn AG_TextboxBindASCII
-functions bind the textbox to a text buffer in UTF-8 or plain ASCII encoding,
-respectively.
-The
-.Fa bufferSize
-argument indicates the complete size of the buffer in bytes.
+connect a textbox to a buffer containing Unicode or US-ASCII, respectively.
+.Fa size
+is the size of the buffer in bytes (which must include space for
+the terminating NUL).
 .Pp
 .Fn AG_TextboxBindEncoded
 binds to a fixed-size buffer containing a C string in the specified
@@ -223,19 +229,17 @@ support (see
 .Xr iconv_open 3
 for the complete list of supported encodings).
 .Pp
-The
 .Fn AG_EditableBindText
-function binds the
+connects the
 .Nm
-to a multilingual, variable-length
-.Xr AG_Text 3
-element.
+to a
+.Xr AG_TextElement 3
+object, which can represent text in different languages.
 .Pp
 The
 .Fn AG_EditableSetLang
 function selects the specified language for the current
-.Xr AG_Text 3
-binding.
+.Xr AG_TextElement 3 .
 .Pp
 The
 .Fn AG_TextboxSetExcl
@@ -262,6 +266,10 @@ restricts input to real numbers (see flags).
 .Fn AG_TextboxSetLabel
 changes the current label text to the specified string.
 .Pp
+.Fn AG_TextboxSetPlaceholder
+sets the "place holder" text to display when the buffer is empty.
+An argument of NULL disables placeholder text.
+.Pp
 .Fn AG_TextboxSizeHint
 requests that the initial geometry of
 .Fa textbox
@@ -273,6 +281,27 @@ The
 variant accepts arguments in pixels.
 .Fn AG_TextboxSizeHintLines
 accepts a number of lines.
+.Pp
+.Fn AG_TextboxAutocomplete
+sets up an autocomplete routine
+.Fa fn ,
+which will be passed a pointer to an
+.Xr AG_Tlist 3
+as first argument (and a pointer to the
+.Xr AG_Editable 3
+instance as SELF).
+The autocomplete routine is expected to populate the tlist with
+suggestions based on the current buffer contents.
+If the
+.Fa fn
+argument is NULL, disable autocomplete (closing any active windows).
+If an autocomplete context has already been configured, only its function
+and arguments are updated (and any active timers are cancelled).
+If non-NULL,
+.Fa fnArgs
+indicates additional
+.Xr AG_Event 3
+style arguments to be passed to the autocomplete routine.
 .Sh CURSOR MANIPULATION
 .nr nS 1
 .Ft int
@@ -331,8 +360,8 @@ returns the new position of the cursor.
 .Ft "char *"
 .Fn AG_TextboxDupString "AG_Textbox *textbox"
 .Pp
-.Ft "size_t"
-.Fn AG_TextboxCopyString "AG_Textbox *textbox" "char *dst" "size_t dst_size"
+.Ft "AG_Size"
+.Fn AG_TextboxCopyString "AG_Textbox *textbox" "char *dst" "AG_Size dst_size"
 .Pp
 .Ft "void"
 .Fn AG_TextboxBufferChanged "AG_Textbox *textbox"
@@ -375,7 +404,7 @@ Returns the number of bytes that would have been copied were
 .Fa dst_size
 unlimited (i.e., if the return value is >=
 .Fa dst_size ,
-truncation occured).
+truncation has occurred).
 Both
 .Fn AG_TextboxDupString
 and
@@ -410,13 +439,12 @@ widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "char *string "
 .It Va char *string
-Bound fixed-size buffer containing a "C" string (i.e., a NUL-terminated string)
-in the specified encoding (UTF-8 by default).
+Fixed-size buffer containing a "C" string (a NUL-terminated string) in the
+specified encoding (UTF-8 by default).
 .It Va AG_Text *text
 Bound
-.Xr AG_Text 3
-element containing an table of variable-length C strings (entries in
-this table map to different languages).
+.Xr AG_TextElement 3 ,
+which can represent text in different languages.
 .El
 .Sh EVENTS
 The
@@ -451,8 +479,8 @@ A call to
 will create a new label object.
 .It Ft AG_Text *text
 An initially empty
-.Xr AG_Text 3
-object used as the default binding (where
+.Xr AG_TextElement 3
+used as the default binding (where
 .Fn AG_TextboxBind*
 is not used).
 .El
@@ -482,38 +510,89 @@ AG_TextboxPrintf(tb, "Foo");
 s = AG_TextboxDupString(tb);
 .Ed
 .Pp
-Exclusive access to an
-.Xr AG_Text 3
-element is an efficient option for editing potentially large,
-dynamically-allocated strings:
+An
+.Xr AG_TextElement 3
+can accomodate a potentially large, dynamically-allocated string:
 .Bd -literal -offset indent
-AG_Text *myLargeText;
+AG_TextElement *txt;
 AG_Textbox *tb;
 
-myLargeText = AG_TextNew(0);
-tb = AG_TextboxNew(parent,
-    AG_TEXTBOX_EXCL|AG_TEXTBOX_MULTILINE,
-    NULL);
-AG_TextboxBindText(tb, myLargeText);
+txt = AG_TextNew(0);
+tb = AG_TextboxNew(parent, AG_TEXTBOX_EXCL |
+                           AG_TEXTBOX_MULTILINE, NULL);
+AG_TextboxBindText(tb, txt);
 .Ed
 .Pp
-Also see
-.Pa tests/textbox.c
-and
-.Pa tests/charsets.c
-in the Agar source distribution.
+The following code fragment sets up a simple autocomplete routine:
+.Pp
+.Bd -literal
+static void
+MyAutocomplete(AG_Event *event)
+{
+	const char *dict[] = { "Apple", "Orange", "Banana", NULL }, **dp;
+	AG_Editable *ed = AG_EDITABLE_SELF();
+	AG_Tlist *tl = AG_TLIST_PTR(1);
+	char *s, *sp;
+
+	if ((sp = s = AG_EditableDupString(ed)) == NULL) {
+		return;
+	}
+	while (*sp == ' ')                /* Strip leading whitespace */
+		sp++;
+
+	AG_TlistBegin(tl);
+	for (dp = dictFirst; *dp != NULL; dp++) {
+		if (sp[0] == '\0' ||
+		    AG_Strncasecmp(*dp, sp, strlen(sp)) == 0) {
+			AG_TlistAddPtr(tl, NULL, *dp, (void *)*dp);
+		}
+	}
+	AG_TlistEnd(tl);
+	free(s);
+}
+
+...
+
+AG_Textbox *tb;
+
+tb = AG_TextboxNew(NULL, 0, "Fruit: ");
+AG_TextboxAutocomplete(tb, MyAutocomplete, NULL);
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_Editable 3 ,
 .Xr AG_Text 3 ,
 .Xr AG_TextElement 3 ,
 .Xr AG_Tlist 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3
 .Sh HISTORY
-The
+An
 .Nm
 widget first appeared in Agar 1.0.
-It was mostly rewritten as
+It was rewritten as a front-end to
 .Xr AG_Editable 3
-was added in Agar 1.3.2.
+in Agar 1.3.2.
 Support for dynamically-resized text buffers was added in Agar 1.4.0.
+.Fn AG_TextboxAutocomplete
+and
+.Dv AG_TEXTBOX_RETURN_BUTTON
+appeared in Agar 1.6.0.
+.Dv AG_TEXTBOX_UPPERCASE
+and
+.Dv AG_TEXTBOX_LOWERCASE
+appeared in Agar 1.6.0.
+The former
+.Dv AG_TEXTBOX_NOEMACS
+flag was renamed
+.Dv AG_TEXTBOX_NO_KILL_YANK
+and
+.Dv AG_TEXTBOX_NOLATIN1
+was renamed
+.Dv AG_TEXTBOX_NO_ALT_LATIN1
+in Agar 1.6.0.
+Clipboard integration,
+.Fn AG_EditableAutocomplete
+and
+.Fn AG_EditableCatString
+appeared in Agar 1.6.0.

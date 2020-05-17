@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -83,24 +83,17 @@ List contents are dynamic (pass the
 .Dv AG_TLIST_POLL
 flag to the
 .Va tlist ) .
-.It AG_COMBO_TREE
-List is a tree display (pass the
-.Dv AG_TLIST_TREE
-flag to the
-.Va tlist ) .
 .It AG_COMBO_ANY_TEXT
 Allow user to enter text that does not match any item in the list.
 .It AG_COMBO_SCROLLTOSEL
 Scroll to initial selection if it is not visible.
 .It AG_COMBO_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
+Expand horizontally in parent container.
 .It AG_COMBO_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
+Expand vertically in parent container.
 .It AG_COMBO_EXPAND
 Shorthand for
-.Dv AG_COMBO_HFILL|AG_COMBO_VFILL .
+.Dv AG_COMBO_HFILL | AG_COMBO_VFILL .
 .El
 .Pp
 The
@@ -199,13 +192,12 @@ selection event by displaying a text dialog:
 void
 Selected(AG_Event *event)
 {
-	AG_TlistItem *item = AG_PTR(1);
+	AG_TlistItem *item = AG_TLIST_ITEM_PTR(1);
+	
 	AG_TextMsg(AG_MSG_INFO, "Selected item: %s", item->text);
 }
 
-AG_Combo *com;
-
-com = AG_ComboNew(NULL, 0, "Item: ");
+AG_Combo *com = AG_ComboNew(NULL, 0, "Item: ");
 AG_TlistAdd(com->list, NULL, "Foo");
 AG_TlistAdd(com->list, NULL, "Bar");
 AG_SetEvent(com, "combo-selected", Selected, NULL);
@@ -221,3 +213,6 @@ AG_SetEvent(com, "combo-selected", Selected, NULL);
 The
 .Nm
 widget first appeared in Agar 1.0.
+As of Agar 1.6.0,
+.Dv AG_COMBO_TREE
+is a deprecated no-op.

@@ -23,38 +23,76 @@ AnimalNew(void *parent)
 	return (animal);
 }
 
-/*
- * Example of an event handler function. Event handlers use a stack of
- * arguments. Both AG_SetEvent() and AG_PostEvent() can push arguments
- * onto this stack.
- */
-static void
-Die(AG_Event *event)
-{
-	Animal *animal = AG_SELF();
-	AG_Object *killer = AG_SENDER();
-
-	printf("%s: killed by %s!\n", AGOBJECT(animal)->name, killer->name);
-}
+#ifdef AG_TIMERS
 
 /* Example of a timer callback routine. */
 static Uint32
 Tick(AG_Timer *to, AG_Event *event)
 {
-	Animal *animal = AG_SELF();
+	Animal *animal = ANIMAL_SELF();
 
 	animal->age += 1.0;
-	animal->cellCount *= 2;
+	animal->cellCount <<= 1;
+
+	if (animal->cellCount < 1) {
+		return (0);
+	}
 	return (to->ival);
 }
 
-/* Handle the "attached" event by starting our timer. */
-static void
-Attached(AG_Event *event)
-{
-	Animal *animal = AG_SELF();
+#endif /* AG_TIMERS */
 
+/* Handler for "attached" event (raised by AG_ObjectAttach() call). */
+static void
+OnAttach(AG_Event *event)
+{
+	Animal *animal = ANIMAL_SELF();
+	const AG_Object *parent = AG_PTR(1);
+
+	Verbose("%s: attached to %s\n", AGOBJECT(animal)->name,
+	                                AGOBJECT(parent)->name);
+#ifdef AG_TIMERS
 	AG_AddTimer(animal, &animal->time, 1000, Tick, NULL);
+#endif
+}
+
+/* An example method: "find-primes"(int nPrimes) */
+static void
+FindPrimes(AG_Event *event)
+{
+	Animal *animal = ANIMAL_PTR(1);
+	const int nPrimes = AG_NumericalGetInt(AG_NUMERICAL_PTR(2));
+	int n, i, nFound=1;
+
+	for (n=0; nFound <= nPrimes; n++) {
+		int flag = 0;
+
+		for (i = 2; i <= (n >> 1); ++i) {
+			if ((n % i) == 0) {
+				flag = 1;
+				break;
+			}
+		}
+		if (n != 1) {
+			if (!flag) {
+				Verbose("%s: %d is prime #%d\n",
+				    AGOBJECT(animal)->name, n, nFound);
+				nFound++;
+			}
+		}
+	}
+
+	/* Count total */
+	AG_SetInt(animal,"found-primes",
+	    AG_GetInt(animal,"found-primes") + nFound);
+}
+
+static void
+OnDetach(AG_Event *event)
+{
+	const Animal *animal = ANIMAL_SELF();
+
+	Verbose("%s: detached from parent\n", AGOBJECT(animal)->name);
 }
 
 /*
@@ -66,14 +104,18 @@ Init(void *obj)
 {
 	Animal *animal = obj;
 
+	/* Instance variables */
 	animal->age = 0.0;
 	animal->cellCount = 1;
-
+#ifdef AG_TIMERS
 	AG_InitTimer(&animal->time, "tick", 0);
+#endif
+	/* Dynamic AG_Object variables */
+	AG_SetInt(animal, "found-primes", 0);
 
-	/* Event handler functions and timers are usually configured here. */
-	AG_SetEvent(animal, "die", Die, NULL);
-	AG_SetEvent(animal, "attached", Attached, NULL);
+	/* Event handlers and methods */
+	AG_SetEvent(animal, "attached", OnAttach, NULL);
+	AG_SetEvent(animal, "detached", OnDetach, NULL);
 }
 
 /*
@@ -103,7 +145,7 @@ Load(void *obj, AG_DataSource *ds, const AG_Version *ver)
 static int
 Save(void *obj, AG_DataSource *ds)
 {
-	Animal *animal = obj;
+	const Animal *animal = obj;
 
 	AG_WriteFloat(ds, animal->age);
 	AG_WriteUint32(ds, (int)animal->cellCount);
@@ -121,26 +163,47 @@ Edit(void *obj)
 {
 	Animal *animal = obj;
 	AG_Window *win;
+	AG_Box *box;
+	AG_Numerical *numPrimes;
+	AG_Label *lbl;
 
-	win = AG_WindowNew(0);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		AG_FatalError(NULL);
+	}
 	AG_WindowSetCaption(win, "Animal: %s", AGOBJECT(animal)->name);
 
-	AG_NumericalNewFlt(win, 0, "sec", "Age: ", &animal->age);
-	AG_NumericalNewInt(win, 0, NULL, "Cell count: ", &animal->cellCount);
+	lbl = AG_LabelNewS(win, AG_LABEL_HFILL, AGOBJECT(animal)->name);
+	AG_SetStyle(lbl, "font-size", "200%");
+
+	AG_NumericalNewFlt(win, AG_NUMERICAL_HFILL, "sec", "Age: ", &animal->age);
+	AG_NumericalNewInt(win, AG_NUMERICAL_HFILL, NULL, "Cell count: ", &animal->cellCount);
+
+	AG_SeparatorNewHoriz(win);
+
+	box = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
+	numPrimes = AG_NumericalNewS(box, AG_NUMERICAL_INT | AG_NUMERICAL_HFILL,
+	                             NULL, _("Find "));
+	AG_NumericalSizeHint(numPrimes, "<88>");
+	AG_LabelNewS(box, 0, _("primes"));
+	AG_ButtonNewFn(box, 0, _("Start"), FindPrimes,"%p,%p", animal, numPrimes);
 
 	return (win);
 }
 
 /*
- * This structure describes our class. Any of the function members may be
- * NULL.
+ * The AG_ObjectClass structure describes an Agar object class.
+ *
+ * Although we are using the base AG_ObjectClass in this case, deriving
+ * this structure provides a good way for adding new methods and other
+ * class-specific data members that can be shared between all instances
+ * of a class.
  */
 AG_ObjectClass AnimalClass = {
-	"Animal",		/* Name of class */
-	sizeof(Animal),		/* Size of structure */
-	{ 0,0 },		/* Dataset version */
+	"Animal",		/* Inheritance hierarchy (implies AG_Object) */
+	sizeof(Animal),		/* Size of instance structures */
+	{ 0,0 },		/* Version (Major, Minor) */
 	Init,
-	NULL,			/* reinit */
+	NULL,			/* reset */
 	NULL,			/* destroy */
 	Load,
 	Save,

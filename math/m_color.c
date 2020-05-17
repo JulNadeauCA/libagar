@@ -59,6 +59,8 @@ M_ColorHSVA(M_Real h, M_Real s, M_Real v, M_Real a)
 	case 4:		C.r = var[2];	C.g = var[0];	C.b = v;	break;
 	default:	C.r = v;	C.g = var[0];	C.b = var[1];	break;
 	}
+
+	C.a = a;
 	return (C);
 }
 

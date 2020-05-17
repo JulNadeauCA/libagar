@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,9 +64,9 @@ M_PlotterNew(void *parent, Uint flags)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
-	M_Plotter *ptr = AG_SELF();
+	M_Plotter *ptr = M_PLOTTER_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
@@ -88,7 +88,7 @@ KeyDown(AG_Event *event)
 }
 
 static __inline__ int
-MouseOverPlotItem(M_Plotter *ptr, M_Plot *pl, int x, int y)
+MouseOverPlotItem(M_Plotter *_Nonnull ptr, M_Plot *_Nonnull pl, int x, int y)
 {
 	AG_Surface *lbl;
 	
@@ -99,9 +99,9 @@ MouseOverPlotItem(M_Plotter *ptr, M_Plot *pl, int x, int y)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
-	M_Plotter *ptr = AG_SELF();
+	M_Plotter *ptr = M_PLOTTER_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	int dy = AG_INT(4);
@@ -133,9 +133,9 @@ MouseMotion(AG_Event *event)
 
 #if 0
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
-	M_Plotter *ptr = AG_SELF();
+	M_Plotter *ptr = M_PLOTTER_SELF();
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -156,26 +156,30 @@ M_PlotUpdateLabel(M_Plot *pl)
 {
 	M_Plotter *ptr = pl->plotter;
 
-	if (pl->label >= 0) {
+	if (pl->label >= 0)
 		AG_WidgetUnmapSurface(ptr, pl->label);
-	}
+
+	AG_PushTextState();
 	AG_TextFont(ptr->font);
-	AG_TextColor(pl->color);
+	AG_TextColor(&pl->color);
 	pl->label = (pl->label_txt[0] != '\0') ? -1 :
 	    AG_WidgetMapSurface(ptr, AG_TextRender(pl->label_txt));
+	AG_PopTextState();
+
 	AG_Redraw(ptr);
 }
 
 static void
-UpdateLabel(AG_Event *event)
+UpdateLabel(AG_Event *_Nonnull event)
 {
 	M_PlotUpdateLabel(AG_PTR(1));
 }
 
+#ifdef AG_TIMERS
 static void
-UpdatePlotTbl(AG_Event *event)
+UpdatePlotTbl(AG_Event *_Nonnull event)
 {
-	AG_Table *tbl = AG_SELF();
+	AG_Table *tbl = AG_TABLE_SELF();
 	M_Plot *pl = AG_PTR(1);
 	Uint i, j;
 
@@ -193,6 +197,7 @@ UpdatePlotTbl(AG_Event *event)
 	}
 	AG_TableEnd(tbl);
 }
+#endif /* AG_TIMERS */
 
 AG_Window *
 M_PlotSettings(M_Plot *pl)
@@ -232,31 +237,31 @@ M_PlotSettings(M_Plot *pl)
 		AG_SetEvent(pal, "h-changed", UpdateLabel, "%p", pl);
 		AG_SetEvent(pal, "sv-changed", UpdateLabel, "%p", pl);
 	}
+#ifdef AG_TIMERS
 	ntab = AG_NotebookAdd(nb, _("Table"), AG_BOX_VERT);
 	{
 		AG_Table *tbl;
 
-		tbl = AG_TableNewPolled(ntab, AG_TABLE_MULTI|AG_TABLE_EXPAND,
+		tbl = AG_TableNewPolled(ntab, AG_TABLE_MULTI | AG_TABLE_EXPAND,
 		    UpdatePlotTbl, "%p", pl);
 		AG_TableAddCol(tbl, _("#"), "<88888>", NULL);
 		AG_TableAddCol(tbl, _("Value"), NULL, NULL);
 	}
+#endif
 	AG_WindowShow(win);
 	return (win);
 }
 
 static void
-ShowPlotSettings(AG_Event *event)
+ShowPlotSettings(AG_Event *_Nonnull event)
 {
-	M_Plot *pl = AG_PTR(1);
-
-	M_PlotSettings(pl);
+	M_PlotSettings(AG_PTR(1));
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
-	M_Plotter *ptr = AG_SELF();
+	M_Plotter *ptr = M_PLOTTER_SELF();
 	M_Plot *pl, *opl;
 	int button = AG_INT(1);
 	int x = AG_INT(2);
@@ -323,9 +328,9 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-UpdateXBar(AG_Event *event)
+UpdateXBar(AG_Event *_Nonnull event)
 {
-	M_Plotter *ptr = AG_PTR(1);
+	M_Plotter *ptr = M_PLOTTER_PTR(1);
 	int value = AG_GetInt(ptr->hbar, "value");
 
 	if (value >= ptr->xMax - WIDTH(ptr)) {
@@ -336,11 +341,12 @@ UpdateXBar(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	M_Plotter *ptr = obj;
+	AG_Scrollbar *sb;
 
-	WIDGET(ptr)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
+	WIDGET(ptr)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_TEXT;
 
 	ptr->type = M_PLOT_2D;
 	ptr->flags = 0;
@@ -353,8 +359,11 @@ Init(void *obj)
 	ptr->hPre = 64;
 	ptr->xScale = 1.0;
 	ptr->yScale = 1.0;
-	ptr->font = AG_FetchFont(NULL, -1, -1);
-	ptr->r = AG_RECT(0,0,0,0);
+	ptr->font = agDefaultFont;
+	ptr->r.x = 0;
+	ptr->r.y = 0;
+	ptr->r.w = 0;
+	ptr->r.h = 0;
 	TAILQ_INIT(&ptr->plots);
 	
 	ptr->vMin = M_New(3,1);
@@ -363,34 +372,36 @@ Init(void *obj)
 	M_SetZero(ptr->vMax);
 
 	ptr->curColor = 0;
-	ptr->colors[0] = AG_ColorRGB(255, 255, 255);
-	ptr->colors[1] = AG_ColorRGB(0, 250, 0); 
-	ptr->colors[2] = AG_ColorRGB(250, 250, 0);
-	ptr->colors[3] = AG_ColorRGB(0, 118, 163);
-	ptr->colors[4] = AG_ColorRGB(175, 143, 44);
-	ptr->colors[5] = AG_ColorRGB(169, 172, 182);
-	ptr->colors[6] = AG_ColorRGB(255, 255, 255);
-	ptr->colors[7] = AG_ColorRGB(59, 122, 87);
-	ptr->colors[8] = AG_ColorRGB(163, 151, 180);
-	ptr->colors[9] = AG_ColorRGB(249, 234, 243);
-	ptr->colors[10] = AG_ColorRGB(157, 229, 255);
-	ptr->colors[11] = AG_ColorRGB(223, 190, 111);
-	ptr->colors[12] = AG_ColorRGB(79, 168, 61);
-	ptr->colors[13] = AG_ColorRGB(234, 147, 115);
-	ptr->colors[14] = AG_ColorRGB(127, 255, 212);
-	ptr->colors[15] = AG_ColorRGB(218, 99, 4);
-	
-	ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
-	ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
-	AG_BindInt(ptr->hbar, "value", &ptr->xOffs);
-	AG_BindInt(ptr->hbar, "visible", &ptr->r.w);
-	AG_BindInt(ptr->hbar, "max", &ptr->xMax);
-	AG_SetEvent(ptr->hbar, "scrollbar-changed", UpdateXBar, "%p", ptr);
 
-	AG_BindInt(ptr->vbar, "value", &ptr->yOffs);
-/*	AG_BindInt(ptr->vbar, "max", &ptr->yMax); */
-	AG_SetInt(ptr->hbar, "min", 0);
-	AG_SetInt(ptr->vbar, "min", 0);
+	AG_ColorRGB_8(&ptr->colors[0],  230, 230, 230);
+	AG_ColorRGB_8(&ptr->colors[1],  0,   250, 0); 
+	AG_ColorRGB_8(&ptr->colors[2],  250, 250, 0);
+	AG_ColorRGB_8(&ptr->colors[3],  0,   118, 163);
+	AG_ColorRGB_8(&ptr->colors[4],  175, 143, 44);
+	AG_ColorRGB_8(&ptr->colors[5],  169, 172, 182);
+	AG_ColorRGB_8(&ptr->colors[6],  255, 255, 255);
+	AG_ColorRGB_8(&ptr->colors[7],  59,  122, 87);
+	AG_ColorRGB_8(&ptr->colors[8],  163, 151, 180);
+	AG_ColorRGB_8(&ptr->colors[9],  249, 234, 243);
+	AG_ColorRGB_8(&ptr->colors[10], 157, 229, 255);
+	AG_ColorRGB_8(&ptr->colors[11], 223, 190, 111);
+	AG_ColorRGB_8(&ptr->colors[12], 79,  168, 61);
+	AG_ColorRGB_8(&ptr->colors[13], 234, 147, 115);
+	AG_ColorRGB_8(&ptr->colors[14], 127, 255, 212);
+	AG_ColorRGB_8(&ptr->colors[15], 218, 99,  4);
+	
+	sb = ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
+	AG_BindInt(sb, "value",   &ptr->xOffs);
+	AG_BindInt(sb, "visible", &WIDGET(ptr)->w);
+	AG_SetInt(sb,  "min",     0);
+	AG_BindInt(sb, "max",     &ptr->xMax);
+	AG_SetEvent(sb, "scrollbar-changed", UpdateXBar, "%p", ptr);
+
+	sb = ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
+	AG_BindInt(sb, "value",   &ptr->yOffs);
+	AG_BindInt(sb, "visible", &WIDGET(ptr)->h);
+	AG_SetInt(sb,  "min",     0);
+	AG_SetInt(sb,  "max",     200);
 
 	AG_SetEvent(ptr, "key-down", KeyDown, NULL);
 	AG_SetEvent(ptr, "mouse-button-down", MouseButtonDown, NULL);
@@ -399,7 +410,7 @@ Init(void *obj)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	M_Plotter *ptr = obj;
 	M_Plot *plot, *plotNext;
@@ -439,7 +450,7 @@ M_PlotterSizeHint(M_Plotter *ptr, Uint w, Uint h)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	M_Plotter *ptr = obj;
 
@@ -450,9 +461,11 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	M_Plotter *ptr = obj;
+	const AG_Font *font = WIDGET(ptr)->font;
+	const int sbThick = font->lineskip;
 	AG_SizeAlloc aBar;
 
 	if (a->w < 2 || a->h < 2)
@@ -462,16 +475,16 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	ptr->r.h = a->h;
 
 	aBar.x = 0;
-	aBar.y = a->h - ptr->hbar->width;
+	aBar.y = a->h - sbThick;
 	aBar.w = a->w;
-	aBar.h = ptr->hbar->width;
+	aBar.h = sbThick;;
 	AG_WidgetSizeAlloc(ptr->hbar, &aBar);
 	ptr->r.h -= HEIGHT(ptr->hbar);
 
-	aBar.x = a->w - ptr->vbar->width;
+	aBar.x = a->w - sbThick;
 	aBar.y = 0;
-	aBar.w = ptr->vbar->width;
-	aBar.h = a->h - ptr->hbar->width;
+	aBar.w = sbThick;
+	aBar.h = a->h - sbThick;
 	AG_WidgetSizeAlloc(ptr->vbar, &aBar);
 	ptr->r.w -= WIDTH(ptr->vbar);
 	
@@ -479,79 +492,83 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static __inline__ M_Real
-ScaleReal(M_Plotter *ptr, M_Plot *pl, M_Real r)
+ScaleReal(M_Plotter *_Nonnull ptr, M_Plot *_Nonnull pl, M_Real r)
 {
-	return (r*(ptr->yScale*pl->yScale));
+	return (r*(ptr->yScale * pl->yScale));
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	M_Plotter *ptr = obj;
-	AG_Driver *drv = WIDGET(ptr)->drv;
-	AG_Rect rw = AG_RECT(1, 1, WIDTH(ptr)-2, HEIGHT(ptr)-2);
+	const AG_Color *cBg = &WCOLOR(ptr, BG_COLOR);
+	const AG_Color *cText = &WCOLOR(ptr, TEXT_COLOR);
 	M_Plot *pl;
 	M_PlotLabel *plbl;
+	AG_Rect r;
 	Uint i;
-	int y0 = ptr->r.h/2;
+	int h = ptr->r.h, h_2 = (h >> 1);
+	int w = ptr->r.w;
+	int y0 = h_2;
 
-	AG_DrawBox(ptr, rw, -1, WCOLOR(ptr,0));
+	r.x = 1;
+	r.y = 1;
+	r.w = WIDTH(ptr)-2;
+	r.h = HEIGHT(ptr)-2;
+
+	AG_DrawBoxSunk(ptr, &r, cBg);
+
+	AG_PushClipRect(ptr, &r);
 	
-	AG_PushClipRect(ptr, rw);
-	
-	AG_DrawLineH(ptr, 1, ptr->r.w-2, y0, ptr->colors[0]);
-	AG_DrawLineV(ptr, ptr->xMax-1, 30, ptr->r.h-30, ptr->colors[0]);
+	AG_DrawLineH(ptr, 1, w-2, y0 - ptr->yOffs, &ptr->colors[0]);
+	AG_DrawLineV(ptr, ptr->xMax-1, r.y, r.h,   &ptr->colors[0]);
+
+	AG_PushBlendingMode(ptr, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
 	/* First pass */
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
-		int x = pl->xOffs - ptr->xOffs;
-		int y, py = y0+pl->yOffs+ptr->yOffs;
+		AG_Color color = pl->color;
+		int yOffs = pl->yOffs - ptr->yOffs;
+		int x = pl->xOffs - ptr->xOffs, y;
+		int py = y0 + yOffs;
 
 		if (pl->label >= 0) {
 			AG_Surface *su = WSURFACE(ptr,pl->label);
+			int xLabel = pl->xLabel;
+			int yLabel = pl->yLabel;
+
+			r.x = xLabel - 2;
+			r.y = yLabel - 2;
+			r.w = su->w + 4;
+			r.h = su->h + 4;
 
 			if (pl->flags & M_PLOT_SELECTED) {
-				AG_DrawRectOutline(ptr,
-				    AG_RECT(pl->xLabel-2, pl->yLabel-2,
-				            su->w+4, su->h+4),
-				    pl->color);
+				AG_DrawRectOutline(ptr, &r, &color);
 			} else if (pl->flags & M_PLOT_MOUSEOVER) {
-				AG_DrawRectOutline(ptr,
-				    AG_RECT(pl->xLabel-2, pl->yLabel-2,
-				            su->w+4, su->h+4),
-				    WCOLOR(ptr,TEXT_COLOR));
+				AG_DrawRectOutline(ptr, &r, cText);
 			}
-			AG_WidgetBlitSurface(ptr, pl->label, pl->xLabel,
-			    pl->yLabel);
+			AG_WidgetBlitSurface(ptr, pl->label, xLabel, yLabel);
 		}
 		if (pl->flags & M_PLOT_HIDDEN) {
 			continue;
 		}
 		switch (pl->type) {
-		case M_PLOT_POINTS:
+		case M_PLOT_POINTS: {
 			for (i = 0; i < pl->n; i++, x++) {
 				if (x < 0) { continue; }
 				y = ScaleReal(ptr, pl, pl->data.r[i]);
-				if ((AGDRIVER_CLASS(drv)->flags &
-				    AG_DRIVER_OPENGL)) {
-					/* TODO */
-				} else {
-					AG_PutPixel(ptr, x,
-					    y0 - y + pl->yOffs + ptr->yOffs,
-					    pl->color);
-				}
-				if (x > ptr->r.w) { break; }
+				AG_PutPixel(ptr, x, y0-y+yOffs, &color);
+				if (x > w) { break; }
 			}
 			break;
+		}
 		case M_PLOT_LINEAR:
 			for (i = 0; i < pl->n; i++, x++) {
 				if (x < 0) { continue; }
 				y = ScaleReal(ptr, pl, pl->data.r[i]);
-				AG_DrawLine(ptr, x-1, py, x,
-				    y0 - y + pl->yOffs + ptr->yOffs,
-				    pl->color);
-				py = y0 - y + pl->yOffs + ptr->yOffs;
-				if (x > ptr->r.w) { break; }
+				AG_DrawLine(ptr, x-1, py, x, y0-y+yOffs, &color);
+				py = y0-y+yOffs;
+				if (x > w) { break; }
 			}
 			break;
 		default:
@@ -560,34 +577,32 @@ Draw(void *obj)
 	}
 	/* Second pass */
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
+		int xOffs;
+
 		if (pl->flags & M_PLOT_HIDDEN) {
 			continue;
 		}
+		xOffs = ptr->xOffs - pl->xOffs;
+
 		TAILQ_FOREACH(plbl, &pl->labels, labels) {
 			AG_Surface *su = WSURFACE(ptr,plbl->text_surface);
+			AG_Color cLblBg, cLine;
 			int xLbl, yLbl;
-			AG_Color colBG, colLine;
-
-			colBG = WCOLOR(ptr,0);
-			colBG.a = 200;
-			colLine = pl->color;
-			colLine.a /= 2;
 
 			switch (plbl->type) {
 			case M_LABEL_X:
-				xLbl = plbl->x - ptr->xOffs - pl->xOffs;
-				yLbl = ptr->r.h - su->h - 4 - plbl->y;
-				AG_DrawLineBlended(ptr,
-				    xLbl, 1,
-				    xLbl, ptr->r.h-2,
-				    colLine, AG_ALPHA_SRC);
+				xLbl = plbl->x - xOffs;
+				yLbl = h - su->h - 4 - plbl->y;
+				cLine = pl->color;
+				cLine.a >>= 1;
+				AG_DrawLineV(ptr, xLbl, 1, h-2, &cLine);
 				break;
 			case M_LABEL_Y:
-				xLbl = plbl->x - ptr->xOffs - pl->xOffs;
-				yLbl = ptr->r.h - su->h - 4 - plbl->y;
+				xLbl = plbl->x - xOffs;
+				yLbl = h - su->h - 4 - plbl->y;
 				break;
 			case M_LABEL_FREE:
-				xLbl = 4 + plbl->x - ptr->xOffs - pl->xOffs;
+				xLbl = 4 + plbl->x - xOffs;
 				yLbl = 4 + plbl->y;
 				break;
 			default:
@@ -595,14 +610,19 @@ Draw(void *obj)
 				yLbl = 4 + plbl->y;
 				break;
 			}
-			AG_DrawRect(ptr,
-			    AG_RECT(xLbl+2, yLbl, su->w, su->h),
-			    colBG);
-			AG_WidgetBlitSurface(ptr, plbl->text_surface,
-			    xLbl+2, yLbl);
+			cLblBg = *cBg;
+			cLblBg.a = AG_8toH(200);
+
+			r.x = xLbl + 2;
+			r.y = yLbl;
+			r.w = su->w;
+			r.h = su->h;
+			AG_DrawRect(ptr, &r, &cLblBg);
+			AG_WidgetBlitSurface(ptr, plbl->text_surface, r.x, r.y);
 		}
 	}
 
+	AG_PopBlendingMode(ptr);
 	AG_PopClipRect(ptr);
 	
 	AG_WidgetDraw(ptr->hbar);
@@ -647,7 +667,8 @@ M_PlotRealv(M_Plot *pl, Uint n, const M_Real *vp)
 }
 
 static void
-VectorMinimum(M_Vector *c, const M_Vector *a, const M_Vector *b)
+VectorMinimum(M_Vector *_Nonnull c, const M_Vector *_Nonnull a,
+    const M_Vector *b)
 {
 	Uint i;
 	
@@ -661,7 +682,8 @@ VectorMinimum(M_Vector *c, const M_Vector *a, const M_Vector *b)
 }
 
 static void
-VectorMaximum(M_Vector *c, const M_Vector * a, const M_Vector *b)
+VectorMaximum(M_Vector *_Nonnull c, const M_Vector *_Nonnull a,
+    const M_Vector *_Nonnull b)
 {
 	Uint i;
 
@@ -675,7 +697,7 @@ VectorMaximum(M_Vector *c, const M_Vector * a, const M_Vector *b)
 }
 
 void
-M_PlotVector(M_Plot *pl, const M_Vector *v)
+M_PlotVector(M_Plot *_Nonnull pl, const M_Vector *_Nonnull v)
 {
 	M_Plotter *ptr = pl->plotter;
 	int i;
@@ -693,7 +715,7 @@ M_PlotVector(M_Plot *pl, const M_Vector *v)
 }
 
 void
-M_PlotVectorv(M_Plot *pl, Uint n, const M_Vector **vp)
+M_PlotVectorv(M_Plot *_Nonnull pl, Uint n, const M_Vector *_Nonnull *_Nonnull vp)
 {
 	M_Plotter *ptr = pl->plotter;
 	Uint i;
@@ -710,7 +732,7 @@ M_PlotVectorv(M_Plot *pl, Uint n, const M_Vector **vp)
 }
 
 static __inline__ void
-M_PlotDerivative(M_Plotter *ptr, M_Plot *dp)
+M_PlotDerivative(M_Plotter *_Nonnull ptr, M_Plot *_Nonnull dp)
 {
 	M_Plot *p = dp->src.plot;
 
@@ -722,14 +744,28 @@ M_PlotDerivative(M_Plotter *ptr, M_Plot *dp)
 }
 
 static __inline__ M_Real
-PlotVariableVFS(M_Plotter *ptr, M_Plot *pl)
+PlotVariableVFS(M_Plotter *_Nonnull ptr, M_Plot *_Nonnull pl)
 {
+	char key[AG_OBJECT_PATH_MAX + 65];
+	char *s, *objName, *varName;
 	AG_Variable *V;
 	M_Real rv;
+	void *obj;
 
-	if ((V = AG_GetVariableVFS(pl->src.varVFS.vfs, pl->src.varVFS.key))
-	    == NULL) {
-		AG_Verbose("Plot \"%s\": %s\n", pl->src.varVFS.key,
+	Strlcpy(key, pl->src.varVFS.key, sizeof(key));
+	s = &key[0];
+	objName = Strsep(&s, ":");
+	varName = Strsep(&s, ":");
+	if (objName == NULL || varName == NULL ||
+	    objName[0] == '\0' || varName[0] == '\0') {
+		AG_Verbose("M_Plotter: Bad key \"%s\"\n", pl->src.varVFS.key);
+		return (0.0);
+	}
+	if ((obj = AG_ObjectFindS(pl->src.varVFS.vfs, objName)) == NULL) {
+		return (0.0);
+	}
+	if ((V = AG_AccessVariable(obj, varName)) == NULL) {
+		AG_Verbose("M_Plotter (\"%s\"): %s\n", pl->src.varVFS.key,
 		    AG_GetError());
 		return (0.0);
 	}
@@ -745,7 +781,8 @@ PlotVariableVFS(M_Plotter *ptr, M_Plot *pl)
 	case AG_VARIABLE_UINT32:	rv = (M_Real)V->data.u32;	break;
 	case AG_VARIABLE_SINT32:	rv = (M_Real)V->data.s32;	break;
 	default:
-		AG_Verbose("Plot \"%s\": Invalid type\n", pl->src.varVFS.key);
+		AG_Verbose("M_Plotter(\"%s\"): Unimplemented type\n",
+		    pl->src.varVFS.key);
 		rv = 0.0;
 		break;
 	}
@@ -811,7 +848,7 @@ M_PlotLabelNew(M_Plot *pl, enum m_plot_label_type type, Uint x, Uint y,
 
 	AG_PushTextState();
 	AG_TextFont(ptr->font);
-	AG_TextColor(pl->color);
+	AG_TextColor(&pl->color);
 	plbl->text_surface = AG_WidgetMapSurface(ptr, AG_TextRender(plbl->text));
 	AG_PopTextState();
 
@@ -832,9 +869,13 @@ M_PlotLabelSetText(M_Plot *pl, M_PlotLabel *plbl, const char *fmt, ...)
 	va_end(args);
 
 	AG_WidgetUnmapSurface(ptr, plbl->text_surface);
+
+	AG_PushTextState();
 	AG_TextFont(ptr->font);
-	AG_TextColor(pl->color);
+	AG_TextColor(&pl->color);
 	plbl->text_surface = AG_WidgetMapSurface(ptr, AG_TextRender(plbl->text));
+	AG_PopTextState();
+
 	AG_Redraw(ptr);
 }
 
@@ -996,7 +1037,7 @@ M_PlotFromInt(M_Plotter *ptr, enum m_plot_type type, const char *label,
 void
 M_PlotSetColor(M_Plot *pl, Uint8 r, Uint8 g, Uint8 b)
 {
-	pl->color = AG_ColorRGB(r,g,b);
+	AG_ColorRGB_8(&pl->color, r,g,b);
 	AG_Redraw(pl->plotter);
 }
 
@@ -1035,16 +1076,19 @@ M_PlotSetYoffs(M_Plot *pl, int yOffs)
 }
 
 void
-M_PlotterSetDefaultFont(M_Plotter *ptr, const char *face, int size)
+M_PlotterSetDefaultFont(M_Plotter *ptr, const char *face, float sizePts)
 {
-	ptr->font = AG_FetchFont(face, size, 0);
+	if (ptr->font != agDefaultFont) {
+		AG_UnusedFont(ptr->font);
+	}
+	ptr->font = AG_FetchFont(face, sizePts, 0);
 	AG_Redraw(ptr);
 }
 
 void
 M_PlotterSetDefaultColor(M_Plotter *ptr, int i, Uint8 r, Uint8 g, Uint8 b)
 {
-	ptr->colors[i] = AG_ColorRGB(r,g,b);
+	AG_ColorRGB_8(&ptr->colors[i], r,g,b);
 	AG_Redraw(ptr);
 }
 
@@ -1062,7 +1106,7 @@ AG_WidgetClass mPlotterClass = {
 		sizeof(M_Plotter),
 		{ 0,0 },
 		Init,
-		NULL,			/* free */
+		NULL,			/* reset */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */

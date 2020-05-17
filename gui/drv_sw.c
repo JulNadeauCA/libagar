@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,12 +35,15 @@
 #include <agar/gui/menu.h>
 #include <agar/gui/icons.h>
 
+#include <string.h>
+#include <ctype.h>
+
 AG_DriverSw *agDriverSw = NULL;		/* Root driver instance */
 
-static void (*agVideoResizeCallback)(Uint w, Uint h) = NULL;
+static void (*_Nullable agVideoResizeCallback)(Uint w, Uint h) = NULL;
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_DriverSw *dsw = obj;
 
@@ -54,24 +57,11 @@ Init(void *obj)
 	dsw->rNom = 1000/60;
 	dsw->rCur = 0;
 	dsw->rLast = 0;
-	dsw->windowXOutLimit = 32;
-	dsw->windowBotOutLimit = 32;
 	dsw->windowIconWidth = 32;
 	dsw->windowIconHeight = 32;
-
-	if ((dsw->Lmodal = AG_ListNew()) == NULL)
-		AG_FatalError(NULL);
+	dsw->bgPopup = NULL;
 
 	AG_SetString(dsw, "bgColor", "rgb(0,0,0)");
-}
-
-static void
-Destroy(void *obj)
-{
-	AG_DriverSw *dsw = obj;
-	
-	if (dsw->Lmodal != NULL)
-		AG_ListDestroy(dsw->Lmodal);
 }
 
 /*
@@ -79,25 +69,35 @@ Destroy(void *obj)
  */
 
 static void
-UnminimizeWindow(AG_Event *event)
+UnminimizeWindow(AG_Event *_Nonnull event)
 {
-	AG_Window *win = AG_PTR(1);
+	AG_Window *win = AG_WINDOW_PTR(1);
+
 	AG_WindowUnminimize(win);
 }
 
-#ifdef AG_DEBUG
+#if defined(AG_DEBUG)
 static void
-OpenGuiDebugger(AG_Event *event)
+OpenDebugger(AG_Event *_Nonnull event)
 {
 	AG_Window *win;
 
-	if ((win = AG_GuiDebugger(NULL)) != NULL)
+	if ((win = AG_GuiDebugger(agWindowFocused)) != NULL)
 		AG_WindowShow(win);
 }
 #endif /* AG_DEBUG */
 
 static void
-ExitApplication(AG_Event *event)
+OpenStyleEditor(AG_Event *_Nonnull event)
+{
+	AG_Window *win;
+
+	if ((win = AG_StyleEditor(agWindowFocused)) != NULL)
+		AG_WindowShow(win);
+}
+
+static void
+ExitApplication(AG_Event *_Nonnull event)
 {
 	AG_Quit();
 }
@@ -111,15 +111,25 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	AG_Window *win;
 	int nWindows = 0;
 
-	me = AG_MenuNew(NULL, 0);
+	if (dsw->bgPopup) {
+		AG_MenuCollapseAll(dsw->bgPopup);
+	}
+	me = dsw->bgPopup = AG_MenuNew(NULL, 0);
 	mi = me->itemSel = AG_MenuNode(me->root, NULL, NULL);
 
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
-		if (strcmp(win->caption, "win-popup") == 0) {
+		switch (win->wmType) {
+		case AG_WINDOW_WM_DND:
+		case AG_WINDOW_WM_DOCK:
+		case AG_WINDOW_WM_COMBO:
+		case AG_WINDOW_WM_POPUP_MENU:
+		case AG_WINDOW_WM_DROPDOWN_MENU:
 			continue;
+		default:
+			break;
 		}
 		AG_MenuAction(mi,
-		    win->caption[0] != '\0' ? win->caption : _("Untitled"),
+		    (win->caption[0] != '\0') ? win->caption : _("Untitled"),
 		    agIconWinMaximize.s,
 		    UnminimizeWindow, "%p", win);
 		nWindows++;
@@ -127,16 +137,24 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	if (nWindows > 0) {
 		AG_MenuSeparator(mi);
 	}
+	AG_MenuAction(mi, _("Style editor"), agIconGear.s, OpenStyleEditor, NULL);
 #ifdef AG_DEBUG
-	AG_MenuAction(mi, _("GUI debugger"), agIconMagnifier.s,
-	    OpenGuiDebugger, NULL);
+	AG_MenuAction(mi, _("GUI debugger"), agIconMagnifier.s, OpenDebugger, NULL);
+#else
+	AG_MenuDisable(AG_MenuNode(mi, _("GUI debugger"), agIconMagnifier.s));
 #endif
+	AG_MenuSeparator(mi);
 	AG_MenuAction(mi, _("Exit application"), agIconWinClose.s,
 	    ExitApplication, NULL);
 				
-	AG_MenuExpand(NULL, mi,
+	win = AG_MenuExpand(NULL, mi,
 	    AGDRIVER(dsw)->mouse->x + 4,
 	    AGDRIVER(dsw)->mouse->y + 4);
+	if (win == NULL) {
+		Verbose("%s; ignoring\n", AG_GetError());
+		AG_ObjectDestroy(dsw->bgPopup);		/* Undo */
+		dsw->bgPopup = NULL;
+	}
 }
 
 /*
@@ -219,14 +237,14 @@ AG_SetVideoResizeCallback(void (*fn)(Uint w, Uint h))
 	agVideoResizeCallback = fn;
 }
 
-/* Process a window move initiated by the WM. */
+/* Handle a window displacement initiated by the WM. */
 static void
-WM_Move(AG_Window *win, int xRel, int yRel)
+WM_Move(AG_Window *_Nonnull win, int xRel, int yRel)
 {
 	AG_DriverSw *dsw = (AG_DriverSw *)WIDGET(win)->drv;
 	AG_DriverClass *dc = AGDRIVER_CLASS(dsw);
 	AG_Rect rPrev, rNew;
-	AG_Rect rFill1, rFill2;
+	AG_Rect a, b;
 
 	rPrev.x = WIDGET(win)->x;
 	rPrev.y = WIDGET(win)->y;
@@ -235,60 +253,59 @@ WM_Move(AG_Window *win, int xRel, int yRel)
 
 	WIDGET(win)->x += xRel;
 	WIDGET(win)->y += yRel;
-	AG_WM_LimitWindowToView(win);
 
 	AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 
-	if (dc->type == AG_FRAMEBUFFER) {
-		/* Update the background. */
+	if (dc->type == AG_FRAMEBUFFER) {          /* Update the background. */
 		rNew.x = WIDGET(win)->x;
 		rNew.y = WIDGET(win)->y;
 		rNew.w = WIDTH(win);
 		rNew.h = HEIGHT(win);
-		rFill1.w = 0;
-		rFill2.w = 0;
-		if (rNew.x > rPrev.x) {		/* Right */
-			rFill1.x = rPrev.x;
-			rFill1.y = rPrev.y;
-			rFill1.w = rNew.x - rPrev.x;
-			rFill1.h = rNew.h;
-		} else if (rNew.x < rPrev.x) {	/* Left */
-			rFill1.x = rNew.x + rNew.w;
-			rFill1.y = rNew.y;
-			rFill1.w = rPrev.x - rNew.x;
-			rFill1.h = rPrev.h;
+		a.w = 0;
+		b.w = 0;
+		if (rNew.x > rPrev.x) {				/* Right */
+			a.x = rPrev.x - 2;
+			a.y = rPrev.y;
+			a.w = rNew.x - rPrev.x + 1;
+			a.h = rNew.h + 1;
+		} else if (rNew.x < rPrev.x) {			/* Left */
+			a.x = rNew.x + rNew.w - 1;
+			a.y = rNew.y - 1;
+			a.w = rPrev.x - rNew.x + 2;
+			a.h = rPrev.h + 2;
 		}
-		if (rNew.y > rPrev.y) {		/* Downward */
-			rFill2.x = rPrev.x;
-			rFill2.y = rPrev.y;
-			rFill2.w = rNew.w;
-			rFill2.h = rNew.y - rPrev.y;
-		} else if (rNew.y < rPrev.y) {	/* Upward */
-			rFill2.x = rPrev.x;
-			rFill2.y = rNew.y + rNew.h;
-			rFill2.w = rPrev.w;
-			rFill2.h = rPrev.y - rNew.y;
+		if (rNew.y > rPrev.y) {				/* Down */
+			b.x = rPrev.x - 1;
+			b.y = rPrev.y;
+			b.w = rNew.w + 2;
+			b.h = rNew.y - rPrev.y;
+		} else if (rNew.y < rPrev.y) {			/* Up */
+			b.x = rPrev.x - 1;
+			b.y = rNew.y + rNew.h;
+			b.w = rPrev.w + 2;
+			b.h = rPrev.y - rNew.y + 1;
 		}
-		if (rFill1.w > 0) {
-			AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill1, dsw->bgColor);
+		if (a.w > 0) {
+			AGDRIVER_CLASS(dsw)->fillRect(dsw, &a, &dsw->bgColor);
 			if (AGDRIVER_CLASS(dsw)->updateRegion != NULL)
-				AGDRIVER_CLASS(dsw)->updateRegion(dsw, rFill1);
+				AGDRIVER_CLASS(dsw)->updateRegion(dsw, &a);
 		}
-		if (rFill2.w > 0) {
-			AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill2, dsw->bgColor);
+		if (b.w > 0) {
+			AGDRIVER_CLASS(dsw)->fillRect(dsw, &b, &dsw->bgColor);
 			if (AGDRIVER_CLASS(dsw)->updateRegion != NULL)
-				AGDRIVER_CLASS(dsw)->updateRegion(dsw, rFill2);
+				AGDRIVER_CLASS(dsw)->updateRegion(dsw, &b);
 		}
 	}
 
 	win->dirty = 1;
 
-	AG_WindowMovePinned(win, xRel, yRel);
+	if (agWindowPinnedCount > 0)
+		AG_WindowMovePinned(win, xRel, yRel);
 }
 
-/* Process a window resize operation initiated by the WM. */
+/* Handle a window resize operation initiated by the WM. */
 static void
-WM_Resize(int op, AG_Window *win, int xRel, int yRel)
+WM_Resize(int op, AG_Window *_Nonnull win, int xRel, int yRel)
 {
 	int x = WIDGET(win)->x;
 	int y = WIDGET(win)->y;
@@ -392,20 +409,20 @@ AG_WM_CommitWindowFocus(AG_Window *win)
 	if (win->flags & AG_WINDOW_DENYFOCUS)
 		AG_FatalError("Window is not focusable");
 #endif
-	if (agWindowFocused != NULL) {
-		if (win != NULL &&
+	if (agWindowFocused) {
+		if (win &&
 		    win == agWindowFocused) {		/* Nothing to do */
 			return;
 		}
-		AG_PostEvent(NULL, agWindowFocused, "window-lostfocus", NULL);
+		AG_PostEvent(agWindowFocused, "window-lostfocus", NULL);
 	}
-	if (win != NULL) {
+	if (win) {
 		AG_ObjectLock(win);
 		if (!(win->flags & AG_WINDOW_KEEPBELOW)) {
 			AG_ObjectMoveToTail(win);
 		}
 		agWindowFocused = win;
-		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+		AG_PostEvent(win, "window-gainfocus", NULL);
 		win->dirty = 1;
 		AG_ObjectUnlock(win);
 	} else {
@@ -438,71 +455,40 @@ AG_WM_LimitWindowToDisplaySize(AG_Driver *drv, AG_SizeAlloc *a)
 }
 
 
-/*
- * Limit the window geometry/coordinates to the view area.
- * The window must be locked.
- */
-void
-AG_WM_LimitWindowToView(AG_Window *win)
-{
-	AG_DriverSw *dsw = OBJECT(win)->parent;
-	AG_Widget *w = WIDGET(win);
-
-	if (w->x < 0) {
-		w->x = 0;
-	}
-	if (w->y < 0) {
-		w->y = 0;
-	} else if (w->y > dsw->h - dsw->windowBotOutLimit) {
-		w->y = dsw->h - dsw->windowBotOutLimit;
-	}
-	
-#if 0
-	if (w->x + w->w > dsw->w) { w->x = dsw->w - w->w; }
-	if (w->y + w->h > dsw->h) { w->y = dsw->h - w->h; }
-	if (w->x < 0) { w->x = 0; }
-	if (w->y < 0) { w->y = 0; }
-
-	if (w->x+w->w > dsw->w) {
-		w->x = 0;
-		w->w = dsw->w - 1;
-	}
-	if (w->y+w->h > dsw->h) {
-		w->y = 0;
-		w->h = dsw->h - 1;
-	}
-#endif
-}
-
 /* Compute default positions for AG_WINDOW_TILING windows */
+/* TODO optimize this */
 static void
-GetTilingPosition(AG_Window *win, int *xDst, int *yDst, int w, int h)
+GetTilingPosition(AG_Window *_Nonnull win, int *_Nonnull xDst,
+    int *_Nonnull yDst, int w, int h)
 {
 	AG_DriverSw *dsw = AGDRIVER_SW(WIDGET(win)->drv);
 	AG_Window *wOther;
 	const int maxTests = 10000, dx = 16;
 	int nTest = 0;
-	int x = 0, y = 0, xo, yo, wo, ho;
-	int xd = 0, yd = 0;
+	int dw = dsw->w;
+	int dh = dsw->h;
+	int x,y, xd, yd;
 
 	switch (win->alignment) {
-	case AG_WINDOW_TL:	xd = 0;			yd = 0;			break;
-	case AG_WINDOW_TC:	xd = dsw->w/2 - w/2;	yd = 0;			break;
-	case AG_WINDOW_TR:	xd = dsw->w - w;	yd = 0;			break;
-	case AG_WINDOW_ML:	xd = 0;			yd = dsw->h/2 - h/2;	break;
-	case AG_WINDOW_MR:	xd = dsw->w - w;	yd = dsw->h/2 - h/2;	break;
-	case AG_WINDOW_BL:	xd = 0;			yd = dsw->h - h;	break;
-	case AG_WINDOW_BC:	xd = dsw->w/2 - w/2;	yd = dsw->h - h;	break;
-	case AG_WINDOW_BR:	xd = dsw->w - w;	yd = dsw->h - h;	break;
+	case AG_WINDOW_TL: xd = 0;		yd = 0;			break;
+	case AG_WINDOW_TC: xd = (dw>>1)-(w>>1);	yd = 0;			break;
+	case AG_WINDOW_TR: xd = dw-w;		yd = 0;			break;
+	case AG_WINDOW_ML: xd = 0;		yd = (dh>>1)-(h>>1);	break;
+	case AG_WINDOW_MR: xd = dw-w;		yd = (dh>>1)-(h>>1);	break;
+	case AG_WINDOW_BL: xd = 0;		yd = dh - h;		break;
+	case AG_WINDOW_BC: xd = (dw>>1)-(w>>1);	yd = dh - h;		break;
+	case AG_WINDOW_BR: xd = dw-w;		yd = dh - h;		break;
 	default:
 	case AG_WINDOW_ALIGNMENT_NONE:
-	case AG_WINDOW_MC:	xd = dsw->w/2 - w/2;	yd = dsw->h/2 - h/2;	break;
+	case AG_WINDOW_MC: xd = (dw>>1)-(w>>1);	yd = (dh>>1)-(h>>1);	break;
 	}
 	x = xd;
 	y = yd;
 
 	for (;;) {
 		OBJECT_FOREACH_CHILD(wOther, dsw, ag_window) {
+			int xo,yo, wo,ho;
+
 			if (wOther == win ||
 			    (wOther->flags & AG_WINDOW_TILING) == 0) {
 				continue;
@@ -520,10 +506,10 @@ GetTilingPosition(AG_Window *win, int *xDst, int *yDst, int w, int h)
 				case AG_WINDOW_MC:
 				default:
 					x += dx;
-					if (x+w > dsw->w) {
+					if (x+w > dw) {
 						x = 0;
 						y += dx;
-						if (y > dsw->h)
+						if (y > dh)
 							goto fail;
 					}
 					break;
@@ -531,16 +517,16 @@ GetTilingPosition(AG_Window *win, int *xDst, int *yDst, int w, int h)
 				case AG_WINDOW_MR:
 					x -= dx;
 					if (x < 0) {
-						x = dsw->w - w;
+						x = dw - w;
 						y += dx;
-						if (y > dsw->h)
+						if (y > dh)
 							goto fail;
 					}
 					break;
 				case AG_WINDOW_BL:
 				case AG_WINDOW_BC:
 					x += dx;
-					if (x+w > dsw->w) {
+					if (x+w > dw) {
 						x = 0;
 						y -= dx;
 						if (y < 0)
@@ -550,7 +536,7 @@ GetTilingPosition(AG_Window *win, int *xDst, int *yDst, int w, int h)
 				case AG_WINDOW_BR:
 					x -= dx;
 					if (x < 0) {
-						x = dsw->w - w;
+						x = dw - w;
 						y -= dx;
 						if (y < 0)
 							goto fail;
@@ -593,7 +579,7 @@ AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y, int w, int h)
 		*y = yOffs;
 		break;
 	case AG_WINDOW_TC:
-		*x = dsw->w/2 - w/2 + xOffs;
+		*x = (dsw->w >> 1) - (w >> 1) + xOffs;
 		*y = 0;
 		break;
 	case AG_WINDOW_TR:
@@ -602,24 +588,24 @@ AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y, int w, int h)
 		break;
 	case AG_WINDOW_ML:
 		*x = xOffs;
-		*y = dsw->h/2 - h/2 + yOffs;
+		*y = (dsw->h >> 1) - (h >> 1) + yOffs;
 		break;
 	default:
 	case AG_WINDOW_ALIGNMENT_NONE:
 	case AG_WINDOW_MC:
-		*x = dsw->w/2 - w/2 + xOffs;
-		*y = dsw->h/2 - h/2 + yOffs;
+		*x = (dsw->w >> 1) - (w >> 1) + xOffs;
+		*y = (dsw->h >> 1) - (h >> 1) + yOffs;
 		break;
 	case AG_WINDOW_MR:
 		*x = dsw->w - w - xOffs;
-		*y = dsw->h/2 - h/2 + yOffs;
+		*y = (dsw->h >> 1) - (h >> 1) + yOffs;
 		break;
 	case AG_WINDOW_BL:
 		*x = xOffs;
 		*y = dsw->h - h - yOffs;
 		break;
 	case AG_WINDOW_BC:
-		*x = dsw->w/2 - w/2 + xOffs;
+		*x = (dsw->w >> 1) - (w >> 1) + xOffs;
 		*y = dsw->h - h;
 		break;
 	case AG_WINDOW_BR:
@@ -629,13 +615,69 @@ AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y, int w, int h)
 	}
 }
 
+/* Blank the display background. */
+void
+AG_ClearBackground(void)
+{
+	AG_DriverSw *dsw;
+
+	if ((dsw = agDriverSw) == NULL) {
+		return;
+	}
+	AGDRIVER_SW_CLASS(dsw)->videoClear(dsw, &dsw->bgColor);
+}
+
+/* Configure the display refresh rate (driver-dependent). */
+int
+AG_SetRefreshRate(int fps)
+{
+	if (agDriverOps->setRefreshRate == NULL) {
+		AG_SetError("Refresh rate not applicable to graphics driver");
+		return (-1);
+	}
+	return agDriverOps->setRefreshRate(agDriverSw, fps);
+}
+
+/* Evaluate whether there are pending events to be processed. */
+int
+AG_PendingEvents(AG_Driver *drv)
+{
+	if (drv) {
+		return AGDRIVER_CLASS(drv)->pendingEvents(drv);
+	} else {
+		return agDriverOps->pendingEvents(agDriverSw);
+	}
+}
+
+/* Retrieve the next pending event, translated to generic AG_DriverEvent form. */
+int
+AG_GetNextEvent(AG_Driver *drv, AG_DriverEvent *dev)
+{
+	if (drv) {
+		return AGDRIVER_CLASS(drv)->getNextEvent(drv, dev);
+	} else {
+		return agDriverOps->getNextEvent(agDriverSw, dev);
+	}
+}
+
+/* Process the next pending event in generic manner. */
+int
+AG_ProcessEvent(AG_Driver *drv, AG_DriverEvent *dev)
+{
+	if (drv) {
+		return AGDRIVER_CLASS(drv)->processEvent(drv, dev);
+	} else {
+		return agDriverOps->processEvent(agDriverSw, dev);
+	}
+}
+
 AG_ObjectClass agDriverSwClass = {
 	"AG_Driver:AG_DriverSw",
 	sizeof(AG_DriverSw),
 	{ 1,4 },
 	Init,
 	NULL,		/* reset */
-	Destroy,
+	NULL,		/* destroy */
 	NULL,		/* load */
 	NULL,		/* save */
 	NULL		/* edit */

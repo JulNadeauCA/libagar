@@ -8,8 +8,7 @@
 
 int pressedKey = 0;			/* Last pressed key */
 int xClick = 0, yClick = 0;		/* Last clicked x,y */
-int curFPS = 0;				/* Measured frame rate */
-const int nominalFPS = 1000/30;		/* Nominal frame rate */
+int fpsNominal=30, fpsCur=0;		/* Nominal refresh rate */
 
 /*
  * Our custom event loop routine. 
@@ -17,115 +16,67 @@ const int nominalFPS = 1000/30;		/* Nominal frame rate */
 static void
 MyEventLoop(void)
 {
-	AG_Driver *drv;
 	AG_Window *win;
 	Uint32 t1, t2;
-	AG_DriverEvent dev;
 
 	t1 = AG_GetTicks();
+	printf("[%d] Entering event loop\n", t1);
 	for (;;) {
 		t2 = AG_GetTicks();
-
-		if (t2-t1 >= nominalFPS) {
-			/*
-			 * Case 1: Update the video display.
-			 */
-			AG_LockVFS(&agDrivers);
-
-			/* Render the Agar windows */
-			if (agDriverSw) {
-				/*
-				 * We are using a single-window driver
-				 * (e.g., sdlfb). If one of the windows is
-				 * marked dirty, all windows must be redrawn.
-				 */
-				AG_FOREACH_WINDOW(win, agDriverSw) {
-					if (win->dirty)
-						break;
-				}
-				if (win != NULL) {
-					AG_BeginRendering(agDriverSw);
-					AG_FOREACH_WINDOW(win, agDriverSw) {
-						if (!win->visible) {
-							continue;
-						}
-						AG_ObjectLock(win);
-						AG_WindowDraw(win);
-						AG_ObjectUnlock(win);
-					}
-					AG_EndRendering(agDriverSw);
-				}
-			} else {
-				/*
-				 * We are using a multiple-window driver
-				 * (e.g., glx). Windows marked dirty are
-				 * redrawn.
-				 */
-				AGOBJECT_FOREACH_CHILD(drv, &agDrivers,
-				    ag_driver) {
-					if (!AGDRIVER_MULTIPLE(drv)) {
-						continue;
-					}
-					win = AGDRIVER_MW(drv)->win;
-					if (!win->visible || !win->dirty) {
-						continue;
-					}
-					AG_BeginRendering(drv);
-					AG_ObjectLock(win);
-					AG_WindowDraw(win);
-					AG_ObjectUnlock(win);
-					AG_EndRendering(drv);
-				}
-			}
-			AG_UnlockVFS(&agDrivers);
+		if (t2 - t1 >= fpsNominal) {
+			AG_WindowDrawQueued();
 
 			t1 = AG_GetTicks();
-			curFPS = nominalFPS - (t1-t2);
-			if (curFPS < 1) { curFPS = 1; }
+			fpsCur = fpsNominal - (t1-t2);
+			if (fpsCur < 1) { fpsCur = 1; }
+		} else if (AG_PendingEvents(NULL)) {
+			AG_DriverEvent dev;            /* A low-level event */
 
-		} else if (AG_PendingEvents(NULL) > 0) {
-			/*
-			 * Case 2: There are events waiting to be processed.
-			 */
 			do {
+				printf("Event %d at t2=%d\n", dev.type, t2);
 				/* Retrieve the next queued event. */
 				if (AG_GetNextEvent(NULL, &dev) == 1) {
 					switch (dev.type) {
+					case AG_DRIVER_MOUSE_MOTION:
+						break;
 					case AG_DRIVER_MOUSE_BUTTON_DOWN:
 						xClick = dev.data.button.x;
 						yClick = dev.data.button.y;
-						printf("Click at %d,%d!\n",
+						printf("[%d] Click at %d,%d!\n", t2,
 						    dev.data.button.x,
 						    dev.data.button.y);
 						break;
 					case AG_DRIVER_KEY_DOWN:
+						if (dev.data.key.ks == AG_KEY_ESCAPE) {
+							goto out;
+						}
 						pressedKey = (int)dev.data.key.ks;
-						printf("Key down: %d (0x%x)\n",
+						printf("[%d] Key down: %d (0x%x)\n", t2,
 						    (int)dev.data.key.ks,
 						    (Uint)dev.data.key.ucs);
 						break;
 					default:
 						break;
 					}
-
+	
 					/* Forward the event to Agar. */
 					if (AG_ProcessEvent(NULL, &dev) == -1)
 						return;
 				}
 			} while (AG_PendingEvents(NULL) > 0);
-
-		} else if (AG_TIMEOUTS_QUEUED()) {
-			/*
-			 * Case 3: There are AG_Timeout(3) callbacks to run.
-			 */
-			AG_ProcessTimeouts(t2);
 		} else {
-			/*
-			 * Case 4: Nothing to do, idle.
-			 */
-			AG_Delay(1);
+			AG_LockTiming();
+			if (!AG_TAILQ_EMPTY(&agTimerObjQ)) {
+				printf("[%d] Timer expiration\n", t2);
+				AG_ProcessTimeouts(t2);   /* Execute timer callbacks */
+			}
+			AG_UnlockTiming();
+			AG_Delay(1);                                 /* Idle */
 		}
+		AG_WindowProcessQueued();
 	}
+out:
+	printf("[%d] Exiting event loop\n", AG_GetTicks());
 }
 
 int
@@ -148,25 +99,22 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (AG_InitCore(NULL, 0) == -1 ||
+	if (AG_InitCore(NULL, AG_SOFT_TIMERS) == -1 ||
 	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-#ifdef __APPLE__
-	AG_BindGlobalKey(AG_KEY_Q, AG_KEYMOD_META, AG_QuitGUI);
-#else
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-#endif
+	AG_BindStdGlobalKeys();
 
-	win = AG_WindowNew(0);
+	win = AG_WindowNew(AG_WINDOW_MAIN);
 	AG_WindowSetCaption(win, "Agar custom event loop demo");
 	AG_LabelNewPolled(win, AG_LABEL_EXPAND,
 	    "Testing custom event loop\n"
-	    "Frame rate = %d\n"
+	    "Press ESC to exit\n"
+	    "fpsNominal = " AGSI_BOLD "%d" AGSI_RST " , fpsCur = " AGSI_BOLD "%d" AGSI_RST "\n"
 	    "Pressed key = %d\n"
 	    "Clicked at %d,%d\n",
-	    &curFPS, &pressedKey, &xClick, &yClick);
+	    &fpsNominal, &fpsCur, &pressedKey, &xClick, &yClick);
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Quit", AGWINDETACH(win));
 	AG_WindowSetGeometry(win, -1, -1, 300, 128);
 	AG_WindowShow(win);

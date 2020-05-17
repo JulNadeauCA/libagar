@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,9 @@
 /*
  * Cross-platform interface to dynamic linking loader.
  */
+
+#include <agar/config/ag_enable_dso.h>
+#ifdef AG_ENABLE_DSO
  
 #include <agar/config/have_dlopen.h>
 #include <agar/config/have_dyld.h>
@@ -344,45 +347,48 @@ AG_LoadDSO(const char *name, Uint flags)
 
 #if !defined(__AMIGAOS4__) && !defined(HPUX) && \
     !defined(_WIN32) && !defined(OS2)
-		/* Look for a versioned library file. */
-		AG_Dir *dir;
-		if ((dir = AG_OpenDir(agModuleDirs[i])) != NULL) {
-			char latestFile[AG_FILENAME_MAX];
-			int latestVer, j;
+		/*
+		 * Look for a versioned library file.
+		 */
+    		{
+			AG_Dir *dir;
 
-			latestFile[0] = '\0';
-			latestVer = 0;
+			if ((dir = AG_OpenDir(agModuleDirs[i])) != NULL) {
+				char latestFile[AG_FILENAME_MAX];
+				int latestVer, j;
+	
+				latestFile[0] = '\0';
+				latestVer = 0;
+	
+				for (j = 0; j < dir->nents; j++) {
+					char *file = dir->ents[j];
+					char pat[AG_FILENAME_MAX];
+					int noffs;
+					int verMin, verMaj;
 
-			for (j = 0; j < dir->nents; j++) {
-				char *file = dir->ents[j];
-				char pat[AG_FILENAME_MAX];
-				int noffs;
-				int verMin, verMaj;
-
-				Strlcpy(pat, "lib", sizeof(pat));
-				Strlcat(pat, name, sizeof(pat));
-				Strlcat(pat, ".so.", sizeof(pat));
-				noffs = (int)strlen(pat);
-				if (strncmp(file, pat, noffs) != 0) {
-					continue;
+					Strlcpy(pat, "lib", sizeof(pat));
+					Strlcat(pat, name, sizeof(pat));
+					Strlcat(pat, ".so.", sizeof(pat));
+					noffs = (int)strlen(pat);
+					if (strncmp(file, pat, noffs) != 0) {
+						continue;
+					}
+					if (sscanf(&file[noffs], "%d.%d",
+					    &verMin, &verMaj) != 2) {
+						continue;
+					}
+					if ((verMaj*10000 + verMin) > latestVer) {
+						latestVer = verMaj*10000 + verMin;
+						Strlcpy(latestFile, file, sizeof(latestFile));
+					}
 				}
-				if (sscanf(&file[noffs], "%d.%d",
-				    &verMin, &verMaj) != 2) {
-					continue;
+				AG_CloseDir(dir);
+				if (latestFile[0] != '\0') {
+					Strlcpy(path, agModuleDirs[i], sizeof(path));
+					Strlcat(path, AG_PATHSEP, sizeof(path));
+					Strlcat(path, latestFile, sizeof(path));
+					break;
 				}
-				if ((verMaj*10000 + verMin) > latestVer) {
-					latestVer = verMaj*10000 + verMin;
-					Strlcpy(latestFile, file,
-					    sizeof(latestFile));
-				}
-			}
-			AG_CloseDir(dir);
-
-			if (latestFile[0] != '\0') {
-				Strlcpy(path, agModuleDirs[i], sizeof(path));
-				Strlcat(path, AG_PATHSEP, sizeof(path));
-				Strlcat(path, latestFile, sizeof(path));
-				break;
 			}
 		}
 #endif /* UNIX */
@@ -405,10 +411,10 @@ AG_LoadDSO(const char *name, Uint flags)
 	dso = LoadDSO_WIN32(path);
 #elif defined(HAVE_SHL_LOAD)
 	dso = LoadDSO_SHL(path);
-#elif defined(HAVE_DYLD)
-	dso = LoadDSO_DYLD(path);
 #elif defined(HAVE_DLOPEN)
 	dso = LoadDSO_DLOPEN(path);
+#elif defined(HAVE_DYLD)
+	dso = LoadDSO_DYLD(path);
 #else
 	AG_SetError("Dynamic linking is not supported on this platform");
 	dso = NULL;
@@ -620,7 +626,6 @@ static int
 SymDSO_DYLD(AG_DSO_Generic *_Nonnull d, const char *_Nonnull sym,
     void *_Nonnull *_Nullable p)
 {
-	int rv;
 	NSSymbol symbol;
 	size_t symLen = strlen(sym);
 	char *symUnder = Malloc(symLen+2);
@@ -793,3 +798,5 @@ AG_FreeDSOList(char **list, Uint count)
 	}
 	free(list);
 }
+
+#endif /* AG_ENABLE_DSO */

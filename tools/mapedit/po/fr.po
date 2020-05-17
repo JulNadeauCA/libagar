@@ -1,0 +1,109 @@
+#
+# Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+# USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Agar 1.6\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-12-15 11:19-0400\n"
+"PO-Revision-Date: 2008-02-25 12:30-0400\n"
+"Last-Translator: Julien Nadeau Carriere <vedge@csoft.net>\n"
+"Language-Team: French <vedge@csoft.net>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#, c-format
+msgid "Save changes to %s?"
+msgstr "Sauvegarder les changements apportés à %s?"
+
+msgid "Save"
+msgstr "Sauvegarder"
+
+msgid "Discard"
+msgstr "Perdre les changements"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Load map from..."
+msgstr "Charger une map de..."
+
+msgid "Agar-Map Level"
+msgstr "Niveau Agar-Map"
+
+msgid "Save map as..."
+msgstr "Sauvegarder la map sous..."
+
+#, c-format
+msgid "Error saving map: %s"
+msgstr "Erreur lors de la sauvegarde de la map: %s"
+
+#, c-format
+msgid "Saved map %s successfully"
+msgstr "Sauvegarde de la map %s terminée"
+
+msgid "New"
+msgstr "Nouveau"
+
+msgid "Open..."
+msgstr "Ouvrir..."
+
+msgid "Save as..."
+msgstr "Sauvegarder sous..."
+
+msgid "File"
+msgstr "Fichier"
+
+msgid "Edit"
+msgstr "Édition"
+
+#, c-format
+#~ msgid "Successfully imported XCF image into %s"
+#~ msgstr "Importation d'image XCF dans %s complète"
+
+#~ msgid "Import images..."
+#~ msgstr "Importer des images..."
+
+#~ msgid "Windows bitmap"
+#~ msgstr "Bitmap Windows"
+
+#~ msgid "JPEG image"
+#~ msgstr "Image JPEG"
+
+#~ msgid "PNG image"
+#~ msgstr "Image PNG"
+
+#~ msgid "Gimp 1 XCF image"
+#~ msgstr "Image XCF (Gimp 1.x)"
+
+#~ msgid "Exit application?"
+#~ msgstr "Quitter l'application?"
+
+#~ msgid "Discard changes"
+#~ msgstr "Perdre les changements"
+
+#~ msgid "Debug"
+#~ msgstr "Déboguage"

@@ -37,6 +37,7 @@ M_PlaneFromPts(M_Vector3 p1, M_Vector3 p2, M_Vector3 p3)
 
 	P.n = M_VecNormCross3(M_VecSub3(p1,p2), M_VecSub3(p3,p2));
 	P.d = -(P.n.x*p1.x + P.n.y*p1.y + P.n.z*p1.z);
+	memset(&P._pad, 0, sizeof(P._pad));
 	return (P);
 }
 

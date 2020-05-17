@@ -92,7 +92,7 @@ __BEGIN_DECLS
 #define   M_ComplexReal(z) ((z).r)
 #define   M_ComplexImag(z) ((z).i)
 M_Real    M_ComplexAbs(M_Complex);
-M_Complex M_ComplexDiv(M_Complex, M_Complex);
+M_Complex M_ComplexDiv(M_Complex, M_Complex) _Pure_Attribute;
 M_Complex M_ComplexSqrt(M_Complex);
 M_Complex M_ComplexLog(M_Complex);
 M_Complex M_ComplexExp(M_Complex);

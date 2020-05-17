@@ -1,0 +1,290 @@
+.\"
+.\" Copyright (c) 2006-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd June 27, 2006
+.Dt SG_CAMERA 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm SG_Camera
+.Nd Agar-SG camera node
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/sg.h>
+.Ed
+.Sh DESCRIPTION
+A
+.Nm
+node defines a point of view inside a
+.Xr SG 3
+scene-graph.
+When rendering a scene, the
+.Xr SG_View 3
+widget is associated with a
+.Nm
+node, which defines both the projection matrix and the initial OpenGL
+modelview matrix.
+.Pp
+The
+.Nm
+class implements perspective, orthographic and user-specified projection modes.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr SG_Node 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "SG_Camera *"
+.Fn SG_CameraNew "SG_Node *parent" "const char *name"
+.Pp
+.Ft "SG_Camera *"
+.Fn SG_CameraNewDuplicate "SG_Node *parent" "const char *name" "const SG_Camera *origCam"
+.Pp
+.nr nS 0
+The
+.Fn SG_CameraNew
+function allocates, initializes, and attaches a new
+.Nm
+object.
+The
+.Fn SG_CameraNewDuplicate
+variant initializes the new camera with the same parameters as
+.Fa camOrig .
+.Sh PROJECTION TRANSFORMATIONS
+Projection transformations are used to map object coordinates to window
+coordinates for two-dimensional display devices.
+Each
+.Nm
+instance is associated with a projection transformation.
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn SG_CameraGetProjection "SG_Camera *cam" "M_Matrix44 *P"
+.Pp
+.Ft "void"
+.Fn SG_CameraSetOrthographic "SG_Camera *cam"
+.Pp
+.Ft "void"
+.Fn SG_CameraSetPerspective "SG_Camera *cam" "M_Real fov" "M_Real aspect"
+.Pp
+.Ft "void"
+.Fn SG_CameraSetUser "SG_Camera *cam" "const M_Matrix44 *Pleft" "const M_Matrix44 *Pright"
+.Pp
+.Ft "void"
+.Fn SG_CameraSetClipPlanes "SG_Camera *cam" "M_Real near" "M_Real far"
+.Pp
+.Ft void
+.Fn SG_CameraSetBackPolyMode "SG_Camera *cam" "const SG_CameraPolyMode *polymode"
+.Pp
+.Ft void
+.Fn SG_CameraSetFacePolyMode "SG_Camera *cam" "const SG_CameraPolyMode *polymode"
+.Pp
+.nr nS 0
+The
+.Fn SG_CameraGetProjection
+function returns the current projection matrix of
+.Fa cam
+into
+.Fa P .
+.Pp
+The
+.Fn SG_CameraSetOrthographic
+function sets the projection matrix of
+.Fa cam
+to an orthographic projection matrix.
+.Fn SG_CameraSetPerspective
+selects a perspective matrix.
+For perspective projections,
+.Fa aspect
+defines the aspect ratio (ratio of width to height) and
+.Fa fov
+defines the field-of-view angle in degrees in the y direction.
+.Pp
+The
+.Fn SG_CameraSetUser
+function sets the projection matrix of
+.Fa cam
+to user-specified matrices
+.Fa Pleft
+(left eye) and
+.Fa Pright
+(right eye).
+Unless stereo rendering is activated, only
+.Fa Pleft
+is used.
+.Pp
+The near and far clipping planes are defined by
+.Fn SG_CameraSetClipPlanes .
+.Fa near
+and
+.Fa far
+represent the distance from the standard XY plane to the near and far clipping
+planes.
+.\" MANLINK(SG_CameraPolyMode)
+.Pp
+.Fn SG_CameraSetBackPolyMode
+and
+.Fn SG_CameraSetFacePolyMode
+configure the way back-facing or front-facing polygons are rendered by
+views using this camera.
+The structure is defined as:
+.Bd -literal
+typedef struct sg_camera_polymode {
+	enum {
+		SG_CAMERA_POINTS,		/* Render as points */
+		SG_CAMERA_WIREFRAME,		/* Render in wireframe */
+		SG_CAMERA_FLAT_SHADED,		/* Flat-shaded */
+		SG_CAMERA_SMOOTH_SHADED		/* Smooth-shaded */
+	} mode;
+	int cull;				/* Cull entirely */
+} SG_CameraPolyMode;
+.Ed
+.Sh CONTROLLING CAMERA ORIENTATION
+.nr nS 1
+.Ft "void"
+.Fn SG_CameraRotMouse "SG_Camera *cam" "SG_View *sv" "int xRel" "int yRel"
+.Pp
+.Ft "void"
+.Fn SG_CameraSetRotCtrlCircular "SG_Camera *cam" "SG_Node *n"
+.Pp
+.Ft "void"
+.Fn SG_CameraSetRotCtrlElliptic "SG_Camera *cam" "SG_Node *n1" "SG_Node *n2"
+.Pp
+.nr nS 0
+.Fn SG_CameraRotMouse
+is typically invoked by
+.Xr SG_View 3
+(or a derived widget) to rotate the camera by mouse action.
+.Fa xRel
+and
+.Fa yRel
+are the relative mouse coordinates since the last mouse motion event.
+.Pp
+.Fn SG_CameraSetRotCtrlCircular
+configures the camera such that mouse motion will translate to a circular
+orbit around a specified node
+.Fa n .
+Similarly,
+.Fn SG_CameraSetRotCtrlElliptic
+arranges for an elliptic orbit around two specified nodes
+.Fa n1
+and
+.Fa n2 .
+.Sh INTERNAL WIDGET API
+.nr nS 1
+.Ft "void"
+.Fn SG_CameraProject "SG_Camera *cam"
+.Pp
+.Ft "void"
+.Fn SG_CameraProjectLeft "SG_Camera *cam"
+.Pp
+.Ft "void"
+.Fn SG_CameraProjectRight "SG_Camera *cam"
+.Pp
+.Ft "void"
+.Fn SG_CameraSetup "SG_Camera *cam"
+.Pp
+.nr nS 0
+The
+.Fn SG_CameraProject
+function multiplies the current projection matrix by the projection
+matrix associated with a camera
+.Fa cam .
+If quad-buffer stereo project is needed,
+.Fn SG_CameraProjectLeft
+and
+.Fn SG_CameraProjectRight
+may be called instead.
+Functions are used internally by
+.Xr SG_View 3 ,
+or derivatives of it.
+The camera object must be locked by the caller.
+.Pp
+The
+.Fn SG_CameraSetup
+function applies the viewing transformation associated with a camera.
+As opposed to
+.Fn SG_CameraProject
+which is only called on rescale,
+.Fn SG_CameraSetup
+is normally called from the "draw" function of
+.Xr SG_View 3
+(or derived widget),
+prior to rendering the scene.
+The camera object must be locked by the caller.
+.Sh STRUCTURE DATA
+For the
+.Nm
+object:
+.Bl -tag -width "enum sg_camera_pmode pmode"
+.It Ft enum sg_camera_pmode pmode
+Effective projection mode, one of
+.Dv SG_CAMERA_PERSPECTIVE ,
+.Dv SG_CAMERA_ORTHOGRAPHIC
+or
+.Dv SG_CAMERA_USER_PROJ
+(read-only, use
+.Fn SG_CameraSetPerspective ,
+.Fn SG_CameraSetOrthographic
+or
+.Fn SG_CameraSetUser
+to set the projection mode).
+.It Ft SG_CameraPolyMode polyFace
+Method of rendering for front-facing polygons
+(read-only, use
+.Fn SG_CameraSetFacePolyMode
+to set).
+.It Ft SG_CameraPolyMode polyBack
+Method of rendering for back-facing polygons
+(read-only, use
+.Fn SG_CameraSetBackPolyMode
+to set).
+.It Ft M_Real fov
+Field of view (in radians).
+.It Ft M_Real aspect
+Aspect ratio.
+.It Ft M_Real near
+Near clipping plane.
+.It Ft M_Real far
+Far clipping plane.
+.It Ft M_Matrix44 userProj
+User-specified projection matrix, usually given by
+.Fn SG_CameraSetUser .
+The matrix is in column-major format.
+.El
+.Sh SEE ALSO
+.Xr M_Matrix 3 ,
+.Xr M_Real 3 ,
+.Xr M_Vector 3 ,
+.Xr SG 3 ,
+.Xr SG_Intro 3 ,
+.Xr SG_Light 3 ,
+.Xr SG_Node 3 ,
+.Xr SG_View 3
+.Sh HISTORY
+The
+.Nm
+node class first appeared in Agar 1.6.0.

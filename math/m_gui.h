@@ -4,18 +4,7 @@
 #define _AGAR_MATH_M_GUI_H_
 #include <agar/math/begin.h>
 
-#if defined(QUAD_PRECISION)
-# define M_BindReal				AG_BindLongDbl
-# define M_BindRealMp				AG_BindLongDblMp
-# define M_BindRealFn				AG_BindLongDblFn
-# define M_NumericalNewReal			AG_NumericalNewLongDbl
-# define M_NumericalNewRealR			AG_NumericalNewLongDblR
-# define M_NumericalGetReal			AG_NumericalGetLongDbl
-# define M_NumericalNewRealPNZ(p,f,u,l,v)	AG_NumericalNewLongDblR((p),(f),(u),(l),(v),M_TINYVAL,M_INFINITY)
-# define M_NumericalNewRealPNZF(p,f,u,l,v)	AG_NumericalNewLongDblR((p),(f),(u),(l),(v),M_TINYVAL,M_HUGEVAL)
-# define M_NumericalNewRealP(p,f,u,l,v)		AG_NumericalNewLongDblR((p),(f),(u),(l),(v),0.0,M_INFINITY)
-# define M_NumericalNewRealPF(p,f,u,l,v)	AG_NumericalNewLongDblR((p),(f),(u),(l),(v),0.0,M_HUGEVAL)
-#elif defined(DOUBLE_PRECISION)
+#if defined(DOUBLE_PRECISION)
 # define M_BindReal				AG_BindDouble
 # define M_BindRealMp				AG_BindDoubleMp
 # define M_BindRealFn				AG_BindDoubleFn
@@ -48,13 +37,19 @@
 #define M_NumericalGetTime	 	 AG_NumericalGetSint32
 
 __BEGIN_DECLS
-void	*M_EditTranslate3(void *, const char *, M_Matrix44 *);
-void	*M_EditTranslate3Mp(void *, const char *, M_Matrix44 *, AG_Mutex *);
+void *_Nonnull M_EditTranslate3(void *_Nullable, const char *_Nullable,
+                                M_Matrix44 *_Nonnull);
+#ifdef AG_THREADS
+void *_Nonnull M_EditTranslate3Mp(void *_Nullable, const char *_Nullable,
+                                  M_Matrix44 *_Nonnull,
+				  _Nonnull_Mutex AG_Mutex *_Nonnull);
+#endif
 __END_DECLS
 
 #include <agar/math/close.h>
 
 #include <agar/math/m_plotter.h>
 #include <agar/math/m_matview.h>
+#include <agar/math/m_bezier_primitives.h>
 
 #endif /* _AGAR_MATH_M_GUI_H_ */

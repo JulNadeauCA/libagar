@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Drag-and-Drop icon widget. Used with AG_Socket(3).
+ */
+
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/socket.h>
 #include <agar/gui/icon.h>
 #include <agar/gui/window.h>
@@ -70,11 +76,11 @@ AG_IconFromBMP(const char *bmpfile)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Icon *icon = obj;
 
-	WIDGET(icon)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
+	WIDGET(icon)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_TEXT;
 
 	icon->flags = 0;
 	icon->surface = -1;
@@ -82,60 +88,59 @@ Init(void *obj)
 	icon->sock = NULL;
 	icon->labelTxt[0] = '\0';
 	icon->labelSurface = -1;
-	icon->labelPad = 4;
 	icon->xSaved = -1;
 	icon->ySaved = -1;
 	icon->wSaved = -1;
 	icon->hSaved = -1;
-	icon->cBackground = AG_ColorRGBA(0,0,0,0);
+	AG_ColorNone(&icon->cBackground);
 	AG_InitTimer(&icon->toDblClick, "dblClick", 0);
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Icon *icon = obj;
-	int wLbl, hLbl;
+	const int paddingHoriz = WIDGET(icon)->paddingLeft +
+	                         WIDGET(icon)->paddingRight;
+	int wLbl, hLbl, su;
 
-	if (icon->surface == -1) {
-		r->w = 0;
-		r->h = 0;
+	r->w = paddingHoriz;
+	r->h = WIDGET(icon)->paddingTop + WIDGET(icon)->paddingBottom;
+
+	if ((su = icon->surface) != -1) {
+		r->w += WSURFACE(icon,su)->w;
+		r->h += WSURFACE(icon,su)->h;
 	}
-	r->w = WSURFACE(icon,icon->surface)->w;
-	r->h = WSURFACE(icon,icon->surface)->h;
 	if (icon->labelTxt[0] != '\0') {
-		if (icon->labelSurface != -1) {
+		if (icon->labelSurface == -1) {
+			AG_TextSize(icon->labelTxt, &wLbl, &hLbl);
+		} else {
 			wLbl = WSURFACE(icon,icon->labelSurface)->w;
 			hLbl = WSURFACE(icon,icon->labelSurface)->h;
-		} else {
-			AG_TextSize(icon->labelTxt, &wLbl, &hLbl);
 		}
-		r->h += icon->labelPad + hLbl;
-		r->w = MAX(r->w, wLbl);
+		r->h += WIDGET(icon)->spacingVert + hLbl;
+		r->w = MAX(r->w, wLbl + paddingHoriz);
 	}
-}
-
-static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
-{
-	if (a->w < 1 || a->h < 1) {
-		return (-1);
-	}
-	return (0);
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Icon *icon = obj;
-	int hIcon;
+	AG_Surface *S;
+	AG_Rect r;
+	int w_2;
 
 	if (icon->surface == -1) {
 		return;
 	}
-	AG_WidgetBlitSurface(icon, icon->surface,
-	    WIDGET(icon)->w/2 - WSURFACE(icon,icon->surface)->w/2,
-	    0);
+	S = WSURFACE(icon, icon->surface);
+	r.w = WIDTH(icon);
+	w_2 = r.w >> 1;
+
+	AG_PushBlendingMode(icon, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	AG_WidgetBlitSurface(icon, icon->surface, w_2 - (S->w >> 1), 0);
+
 	if (icon->labelTxt[0] != '\0') {
 		if (icon->labelSurface != -1 &&
 		    icon->flags & AG_ICON_REGEN_LABEL) {
@@ -146,52 +151,65 @@ Draw(void *obj)
 			icon->labelSurface = AG_WidgetMapSurface(icon,
 			    AG_TextRender(icon->labelTxt));
 		}
-		hIcon = WSURFACE(icon,icon->surface)->h;
 		if (icon->flags & AG_ICON_BGFILL) {
-			AG_DrawRect(icon,
-			    AG_RECT(0, hIcon, WIDTH(icon), HEIGHT(icon)-hIcon),
-			    icon->cBackground);
+			r.x = 0;
+			r.y = S->h;
+			r.h = HEIGHT(icon) - r.y;
+			AG_DrawRect(icon, &r, &icon->cBackground);
 		}
 		AG_WidgetBlitSurface(icon, icon->labelSurface,
-		    WIDTH(icon)/2 - WSURFACE(icon,icon->labelSurface)->w/2,
-		    WSURFACE(icon,icon->surface)->h + icon->labelPad);
+		    w_2 - (WSURFACE(icon,icon->labelSurface)->w >> 1),
+		    S->h + WIDGET(icon)->spacingVert);
 	}
+
+	AG_PopBlendingMode(icon);
 }
 
 void
-AG_IconSetBackgroundFill(AG_Icon *icon, int enable, AG_Color C)
+AG_IconSetBackgroundFill(AG_Icon *icon, int enable, const AG_Color *c)
 {
-	AG_SETFLAGS(icon->flags, AG_ICON_BGFILL, enable);
-	icon->cBackground = C;
-	AG_Redraw(icon);
-}
-
-void
-AG_IconSetSurface(AG_Icon *icon, AG_Surface *su)
-{
-	AG_Surface *suDup = (su != NULL) ? AG_SurfaceDup(su) : NULL;
-
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
 	AG_ObjectLock(icon);
-	if (icon->surface != -1) {
-		AG_WidgetReplaceSurface(icon, icon->surface, suDup);
-	} else {
-		icon->surface = AG_WidgetMapSurface(icon, suDup);
-	}
-	AG_ObjectUnlock(icon);
+
+	AG_SETFLAGS(icon->flags, AG_ICON_BGFILL, enable);
+	memcpy(&icon->cBackground, c, sizeof(AG_Color));
 	AG_Redraw(icon);
+
+	AG_ObjectUnlock(icon);
+}
+
+void
+AG_IconSetSurface(AG_Icon *icon, const AG_Surface *S)
+{
+	AG_Surface *Sdup = (S != NULL) ? AG_SurfaceDup(S) : NULL;
+
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
+	AG_ObjectLock(icon);
+
+	if (icon->surface != -1) {
+		AG_WidgetReplaceSurface(icon, icon->surface, Sdup);
+	} else {
+		icon->surface = AG_WidgetMapSurface(icon, Sdup);
+	}
+
+	AG_Redraw(icon);
+	AG_ObjectUnlock(icon);
 }
 
 void
 AG_IconSetSurfaceNODUP(AG_Icon *icon, AG_Surface *su)
 {
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
 	AG_ObjectLock(icon);
+
 	if (icon->surface != -1) {
 		AG_WidgetReplaceSurfaceNODUP(icon, icon->surface, su);
 	} else {
 		icon->surface = AG_WidgetMapSurfaceNODUP(icon, su);
 	}
-	AG_ObjectUnlock(icon);
+
 	AG_Redraw(icon);
+	AG_ObjectUnlock(icon);
 }
 
 void
@@ -199,10 +217,14 @@ AG_IconSetText(AG_Icon *icon, const char *fmt, ...)
 {
 	va_list ap;
 
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
 	AG_ObjectLock(icon);
+
 	if (fmt[0] == '\0') {
-		AG_WidgetUnmapSurface(icon, icon->labelSurface);
-		icon->labelSurface = -1;
+		if (icon->labelSurface != -1) {
+			AG_WidgetUnmapSurface(icon, icon->labelSurface);
+			icon->labelSurface = -1;
+		}
 		icon->labelTxt[0] = '\0';
 	} else {
 		va_start(ap, fmt);
@@ -210,24 +232,30 @@ AG_IconSetText(AG_Icon *icon, const char *fmt, ...)
 		va_end(ap);
 		icon->flags |= AG_ICON_REGEN_LABEL;
 	}
-	AG_ObjectUnlock(icon);
+
 	AG_Redraw(icon);
+	AG_ObjectUnlock(icon);
 }
 
 void
 AG_IconSetTextS(AG_Icon *icon, const char *s)
 {
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
 	AG_ObjectLock(icon);
+
 	if (s == NULL || s[0] == '\0') {
-		AG_WidgetUnmapSurface(icon, icon->labelSurface);
-		icon->labelSurface = -1;
+		if (icon->labelSurface != -1) {
+			AG_WidgetUnmapSurface(icon, icon->labelSurface);
+			icon->labelSurface = -1;
+		}
 		icon->labelTxt[0] = '\0';
 	} else {
 		Strlcpy(icon->labelTxt, s, sizeof(icon->labelTxt));
 		icon->flags |= AG_ICON_REGEN_LABEL;
 	}
-	AG_ObjectUnlock(icon);
+
 	AG_Redraw(icon);
+	AG_ObjectUnlock(icon);
 }
 
 AG_WidgetClass agIconClass = {
@@ -236,7 +264,7 @@ AG_WidgetClass agIconClass = {
 		sizeof(AG_Icon),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
@@ -244,5 +272,7 @@ AG_WidgetClass agIconClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	NULL			/* size_allocate */
 };
+
+#endif /* AG_WIDGETS */

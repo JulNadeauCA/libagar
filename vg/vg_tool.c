@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@ void
 VG_ToolInit(VG_Tool *t)
 {
 	t->selected = 0;
+	t->tag = 0;
 	t->editWin = NULL;
 	t->editArea = NULL;
 	TAILQ_INIT(&t->cmds);
@@ -71,7 +72,7 @@ VG_ToolDestroy(VG_Tool *tool)
 }
 
 static void
-ToolWindowClosed(AG_Event *event)
+ToolWindowClosed(AG_Event *_Nonnull event)
 {
 	VG_Tool *tool = AG_PTR(1);
 
@@ -79,9 +80,9 @@ ToolWindowClosed(AG_Event *event)
 }
 
 AG_Window *
-VG_ToolWindow(void *p, const char *name)
+VG_ToolWindow(void *obj)
 {
-	VG_Tool *tool = p;
+	VG_Tool *tool = obj;
 	AG_Window *win;
 
 	win = tool->editWin = AG_WindowNew(0);
@@ -156,8 +157,14 @@ VG_ToolCommandExec(void *obj, const char *name, const char *fmt, ...)
 	}
 	Debug(tool->vgv, "%s: CMD: <%s>\n", tool->ops->name, name);
 	AG_EventInit(&evPost);
-	AG_EVENT_GET_ARGS(&evPost, fmt);
-	cmd->fn->fn.fnVoid(&evPost);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(&evPost, fmt, ap);
+		va_end(ap);
+	}
+	cmd->fn->fn(&evPost);
 
 	AG_ObjectUnlock(tool->vgv);
 	return (0);

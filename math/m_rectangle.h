@@ -1,10 +1,10 @@
 /*	Public domain	*/
 
 __BEGIN_DECLS
-M_Rectangle2 M_RectangleRead2(AG_DataSource *);
-M_Rectangle3 M_RectangleRead3(AG_DataSource *);
-void         M_RectangleWrite2(AG_DataSource *, M_Rectangle2 *);
-void         M_RectangleWrite3(AG_DataSource *, M_Rectangle3 *);
+M_Rectangle2 M_RectangleRead2(AG_DataSource *_Nonnull);
+M_Rectangle3 M_RectangleRead3(AG_DataSource *_Nonnull);
+void         M_RectangleWrite2(AG_DataSource *_Nonnull, M_Rectangle2 *_Nonnull);
+void         M_RectangleWrite3(AG_DataSource *_Nonnull, M_Rectangle3 *_Nonnull);
 int          M_PointInRectangle2(M_Rectangle2, M_Vector2);
 
 static __inline__ M_Rectangle2
@@ -35,7 +35,7 @@ M_RectangleWidth3(M_Rectangle3 R)
 	return M_VecDistance3(R.b, R.c);
 }
 static __inline__ M_Real
-M_RectangleWidth3v(const M_Rectangle3 *R)
+M_RectangleWidth3v(const M_Rectangle3 *_Nonnull R)
 {
 	return M_VecDistance3(R->b, R->c);
 }
@@ -46,7 +46,7 @@ M_RectangleHeight3(M_Rectangle3 R)
 	return M_VecDistance3(R.a, R.b);
 }
 static __inline__ M_Real
-M_RectangleHeight3v(const M_Rectangle3 *R)
+M_RectangleHeight3v(const M_Rectangle3 *_Nonnull R)
 {
 	return M_VecDistance3(R->a, R->b);
 }

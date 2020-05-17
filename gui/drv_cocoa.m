@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -175,19 +175,19 @@ AG_DriverMwClass agDriverCocoa;
 	(AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverCocoa)
 
 
-static int  COCOA_PendingEvents(void *);
-static int  COCOA_GetNextEvent(void *, AG_DriverEvent *);
-static int  COCOA_ProcessEvent(void *, AG_DriverEvent *);
-static void COCOA_PostResizeCallback(AG_Window *, AG_SizeAlloc *);
-static void COCOA_PostMoveCallback(AG_Window *, AG_SizeAlloc *);
-static int  COCOA_RaiseWindow(AG_Window *);
-static int  COCOA_SetInputFocus(AG_Window *);
+static int  COCOA_PendingEvents(void *_Nonnull);
+static int  COCOA_GetNextEvent(void *_Nonnull, AG_DriverEvent *_Nonnull);
+static int  COCOA_ProcessEvent(void *_Nonnull, AG_DriverEvent *_Nonnull);
+static void COCOA_PostResizeCallback(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
+static void COCOA_PostMoveCallback(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
+static int  COCOA_RaiseWindow(AG_Window *_Nonnull);
+static int  COCOA_SetInputFocus(AG_Window *_Nonnull);
 #if 0
-static void COCOA_FreeWidgetResources(AG_Widget *);
+static void COCOA_FreeWidgetResources(AG_Widget *_Nonnull);
 #endif
 
 static __inline__ void
-ConvertNSRect(NSRect *r)
+ConvertNSRect(NSRect *_Nonnull r)
 {
 	r->origin.y = CGDisplayPixelsHigh(kCGDirectMainDisplay) - 
 	              r->origin.y - r->size.height;
@@ -379,7 +379,7 @@ ConvertNSRect(NSRect *r)
 @end
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_DriverCocoa *co = obj;
 
@@ -393,7 +393,7 @@ Init(void *obj)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	AG_DriverCocoa *co = obj;
 
@@ -404,7 +404,7 @@ Destroy(void *obj)
  * Standard AG_EventLoop() event sink.
  */
 static int
-COCOA_EventSink(AG_EventSink *es, AG_Event *event)
+COCOA_EventSink(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 {
 	AG_DriverEvent dev;
 
@@ -414,7 +414,7 @@ COCOA_EventSink(AG_EventSink *es, AG_Event *event)
 	return (0);
 }
 static int
-COCOA_EventEpilogue(AG_EventSink *es, AG_Event *event)
+COCOA_EventEpilogue(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 {
 	AG_WindowDrawQueued();
 	AG_WindowProcessQueued();
@@ -422,7 +422,7 @@ COCOA_EventEpilogue(AG_EventSink *es, AG_Event *event)
 }
 
 static int
-COCOA_Open(void *obj, const char *spec)
+COCOA_Open(void *_Nonnull obj, const char *_Nullable spec)
 {
 	AG_Driver *drv = obj;
 	AG_DriverCocoa *co = obj;
@@ -467,7 +467,7 @@ fail:
 }
 
 static void
-COCOA_Close(void *obj)
+COCOA_Close(void *_Nonnull obj)
 {
 	AG_Driver *drv = obj;
 
@@ -494,7 +494,7 @@ COCOA_Close(void *obj)
 }
 
 static int
-COCOA_GetDisplaySize(Uint *w, Uint *h)
+COCOA_GetDisplaySize(Uint *_Nonnull w, Uint *_Nonnull h)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	NSScreen *screen;
@@ -510,7 +510,7 @@ COCOA_GetDisplaySize(Uint *w, Uint *h)
 }
 
 static int
-COCOA_PendingEvents(void *drvCaller)
+COCOA_PendingEvents(void *_Nonnull drvCaller)
 {
 	NSAutoreleasePool *pool;
 	NSEvent *ev;
@@ -531,7 +531,7 @@ COCOA_PendingEvents(void *drvCaller)
 }
 
 /* Convert a NSEvent mouse button number to AG_MouseButton. */
-static AG_MouseButton
+static AG_MouseButton _Const_Attribute
 GetMouseButton(int which)
 {
 	switch (which) {
@@ -542,7 +542,7 @@ GetMouseButton(int which)
 	}
 }
 
-static AG_MouseButton
+static AG_MouseButton _Const_Attribute
 GetScrollWheelButton(float x, float y)
 {
 	if (x > 0) {
@@ -560,7 +560,7 @@ GetScrollWheelButton(float x, float y)
 
 /* Add a keyboard event to the queue. */
 static void
-QueueKeyEvent(AG_DriverCocoa *co, enum ag_driver_event_type type,
+QueueKeyEvent(AG_DriverCocoa *_Nonnull co, enum ag_driver_event_type type,
     AG_KeySym ks, Uint32 ucs)
 {
 	AG_DriverEvent *dev;
@@ -577,7 +577,7 @@ QueueKeyEvent(AG_DriverCocoa *co, enum ag_driver_event_type type,
 }
 
 static int
-COCOA_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
+COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 {
 	NSAutoreleasePool *pool;
 	AG_CocoaWindow *coWin;
@@ -734,7 +734,7 @@ COCOA_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 				}
 			}
 			if (ks != AG_KEY_NONE) {
-				AG_KeyboardUpdate(drv->kbd, kbdAction, ks, 0);
+				AG_KeyboardUpdate(drv->kbd, kbdAction, ks);
 				dev->type = evType;
 				dev->win = win;
 				dev->data.key.ks = ks;
@@ -754,8 +754,7 @@ COCOA_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 				c = [characters characterAtIndex: i];
 				ks = (c <= AG_KEY_ASCII_END) ?
 				    (AG_KeySym)c : AG_KEY_NONE;
-				AG_KeyboardUpdate(drv->kbd, kbdAction, ks,
-				    (Uint32)c);
+				AG_KeyboardUpdate(drv->kbd, kbdAction, ks);
 
 				if (i == 0) {
 					dev->type = evType;
@@ -782,12 +781,12 @@ COCOA_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 			
 				if ((modFlags & kmEnt->keyMask) &&
 				     !(co->modFlags & kmEnt->keyMask)) {
-					AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED, kmEnt->keySym, 0);
+					AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED, kmEnt->keySym);
 					QueueKeyEvent(co, AG_DRIVER_KEY_DOWN, kmEnt->keySym, 0);
 					nChanged++;
 				} else if (!(modFlags & kmEnt->keyMask) &&
 				    (co->modFlags & kmEnt->keyMask)) {
-					AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED, kmEnt->keySym, 0);
+					AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED, kmEnt->keySym);
 					QueueKeyEvent(co, AG_DRIVER_KEY_UP, kmEnt->keySym, 0);
 					nChanged++;
 				}
@@ -815,67 +814,77 @@ out_dequeue:
 }
 
 static int
-COCOA_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
+COCOA_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 {
 	AG_Driver *drv;
-	int rv = 1;
+	AG_Window *win;
+	int rv=1, useText;
 
-	if (dev->win == NULL ||
-	    dev->win->flags & AG_WINDOW_DETACHING)
+	if ((win = dev->win) == NULL ||
+	    win->flags & AG_WINDOW_DETACHING)
 		return (0);
 	
 	AG_LockVFS(&agDrivers);
-	drv = WIDGET(dev->win)->drv;
+	drv = WIDGET(win)->drv;
 
+	if ((useText = (win->flags & AG_WINDOW_USE_TEXT))) {
+		AG_PushTextState();
+		AG_TextFont(WIDGET(win)->font);
+		AG_TextColor(&WIDGET(win)->pal.c[WIDGET(win)->state]
+		                                [AG_TEXT_COLOR]);
+	}
 	switch (dev->type) {
 	case AG_DRIVER_MOUSE_MOTION:
-		AG_ProcessMouseMotion(dev->win,
+		AG_ProcessMouseMotion(win,
 		    dev->data.motion.x, dev->data.motion.y,
 		    drv->mouse->xRel, drv->mouse->yRel,
 		    drv->mouse->btnState);
-		AG_MouseCursorUpdate(dev->win,
+		AG_MouseCursorUpdate(win,
 		     dev->data.motion.x, dev->data.motion.y);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_DOWN:
-		AG_ProcessMouseButtonDown(dev->win,
+		AG_ProcessMouseButtonDown(win,
 		    dev->data.button.x, dev->data.button.y,
 		    dev->data.button.which);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_UP:
-		AG_ProcessMouseButtonUp(dev->win,
+		AG_ProcessMouseButtonUp(win,
 		    dev->data.button.x, dev->data.button.y,
 		    dev->data.button.which);
 		break;
 	case AG_DRIVER_KEY_UP:
-		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_RELEASED,
+		AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED,
 		    dev->data.key.ks, dev->data.key.ucs);
 		break;
 	case AG_DRIVER_KEY_DOWN:
-		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_PRESSED,
+		AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
 		    dev->data.key.ks, dev->data.key.ucs);
 		break;
 	case AG_DRIVER_MOUSE_ENTER:
-		AG_PostEvent(NULL, dev->win, "window-enter", NULL);
+		AG_PostEvent(win, "window-enter", NULL);
 		break;
 	case AG_DRIVER_MOUSE_LEAVE:
-		AG_PostEvent(NULL, dev->win, "window-leave", NULL);
+		AG_PostEvent(win, "window-leave", NULL);
 		break;
 	case AG_DRIVER_FOCUS_IN:
-		agWindowFocused = dev->win;
-		AG_PostEvent(NULL, dev->win, "window-gainfocus", NULL);
+		agWindowFocused = win;
+		AG_PostEvent(win, "window-gainfocus", NULL);
 		break;
 	case AG_DRIVER_FOCUS_OUT:
-		AG_PostEvent(NULL, dev->win, "window-lostfocus", NULL);
+		AG_PostEvent(win, "window-lostfocus", NULL);
 		break;
 	case AG_DRIVER_CLOSE:
-		AG_PostEvent(NULL, dev->win, "window-close", NULL);
+		AG_PostEvent(win, "window-close", NULL);
 		break;
 	case AG_DRIVER_EXPOSE:
-		dev->win->dirty = 1;
+		win->dirty = 1;
 		break;
 	default:
 		rv = 0;
 		break;
+	}
+	if (useText) {
+		AG_PopTextState();
 	}
 	AG_UnlockVFS(&agDrivers);
 	return (rv);
@@ -883,7 +892,7 @@ COCOA_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 
 /* Select the window's OpenGL context. */
 static __inline__ void
-COCOA_GL_MakeCurrent(AG_DriverCocoa *co, AG_Window *win)
+COCOA_GL_MakeCurrent(AG_DriverCocoa *_Nonnull co)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
@@ -895,36 +904,34 @@ COCOA_GL_MakeCurrent(AG_DriverCocoa *co, AG_Window *win)
 }
 
 static void
-COCOA_BeginRendering(void *obj)
+COCOA_BeginRendering(void *_Nonnull obj)
 {
 	AG_DriverCocoa *co = obj;
 
 	AG_MutexLock(&co->lock);
-	COCOA_GL_MakeCurrent(co, AGDRIVER_MW(co)->win);
+	COCOA_GL_MakeCurrent(co);
 }
 
 static void
-COCOA_RenderWindow(AG_Window *win)
+COCOA_RenderWindow(AG_Window *_Nonnull win)
 {
-	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
-	AG_GL_Context *gl = &co->gl;
-	AG_Color c = WCOLOR(win,0);
-	
-	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
-	gl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1); glEnable(GL_CLIP_PLANE1);
-	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
-	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
+	const AG_Color *cBg = &WCOLOR(win, BG_COLOR);
 
-	glClearColor(c.r/255.0,
-	             c.g/255.0,
-		     c.b/255.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	AG_PushClipRect(win, &WIDGET(win)->r);
+	
+	glClearColor((float)cBg->r / AG_COLOR_LASTF,
+	             (float)cBg->g / AG_COLOR_LASTF,
+		     (float)cBg->b / AG_COLOR_LASTF, 1.0);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);
+
+	AG_PopClipRect(win);
 }
 
 static void
-COCOA_EndRendering(void *obj)
+COCOA_EndRendering(void *_Nonnull obj)
 {
 	AG_DriverCocoa *co = obj;
 	AG_GL_Context *gl = &co->gl;
@@ -947,16 +954,15 @@ COCOA_EndRendering(void *obj)
  */
 
 static void
-SetBackgroundColor(AG_DriverCocoa *co, AG_Color C)
+SetBackgroundColor(AG_DriverCocoa *_Nonnull co, const AG_Color *_Nonnull c)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	CGFloat r = (CGFloat)(c->r / AG_COLOR_LASTF);
+	CGFloat g = (CGFloat)(c->g / AG_COLOR_LASTF);
+	CGFloat b = (CGFloat)(c->b / AG_COLOR_LASTF);
+	CGFloat a = (CGFloat)(c->a / AG_COLOR_LASTF);
 	NSColor *bgColor;
-	CGFloat r, g, b, a;
 
-	r = (CGFloat)(C.r / 255.0);
-	g = (CGFloat)(C.g / 255.0);
-	b = (CGFloat)(C.b / 255.0);
-	a = (CGFloat)(C.a / 255.0);
 	bgColor = [NSColor colorWithCalibratedRed:r green:g blue:b alpha:a];
 	[co->win setBackgroundColor:bgColor];
 
@@ -964,7 +970,8 @@ SetBackgroundColor(AG_DriverCocoa *co, AG_Color C)
 }
 
 static int
-COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
+COCOA_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r,
+    int depthReq, Uint mwFlags)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -979,6 +986,9 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	int i, count;
 	AG_SizeAlloc a;
 
+	if (depthReq == 0)
+		depthReq = 24;
+
 	AG_MutexLock(&co->lock);
 
 	/* Set the window style. */
@@ -992,10 +1002,10 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	}
 
 	/* Set the window coordinates. */
-	winRect.origin.x = r.x;
-	winRect.origin.y = r.y;
-	winRect.size.width = r.w;
-	winRect.size.height = r.h;
+	winRect.origin.x    = r->x;
+	winRect.origin.y    = r->y;
+	winRect.size.width  = r->w;
+	winRect.size.height = r->h;
 	ConvertNSRect(&winRect);
 
 	/* Select a screen. */
@@ -1030,7 +1040,7 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 					          screen:selScreen];
 	}
 	co->win->_agarWindow = win;
-	SetBackgroundColor(co, WCOLOR(win,0));
+	SetBackgroundColor(co, &WCOLOR(win, BG_COLOR));
 
 	if (win->flags & AG_WINDOW_MAIN)
 		[co->win makeMainWindow];
@@ -1075,10 +1085,8 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 
 	/* Create an OpenGL rendering context. */
 	i = 0;
-	if (depthReq != 0) {
-		pfAttr[i++] = NSOpenGLPFADepthSize;
-		pfAttr[i++] = depthReq;
-	}
+	pfAttr[i++] = NSOpenGLPFADepthSize;
+	pfAttr[i++] = depthReq;
 	pfAttr[i++] = NSOpenGLPFADoubleBuffer;
 	if (agStereo) { pfAttr[i++] = NSOpenGLPFAStereo; }
 	pfAttr[i] = 0;
@@ -1095,20 +1103,42 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	}
 	[co->glCtx update];
 	[co->glCtx makeCurrentContext];
-	if (AG_GL_InitContext(co, &co->gl) == -1)
-		goto fail;
+	AG_GL_InitContext(co, &co->gl);
 
-	/* Set the preferred Agar pixel formats. */
-	/* XXX XXX XXX: retrieve effective depth */
-	drv->videoFmt = AG_PixelFormatRGB(depthReq != 0 ? depthReq : 16,
-#if AG_BYTEORDER == AG_BIG_ENDIAN
-		0xff000000, 0x00ff0000, 0x0000ff00
-#else
-		0x000000ff, 0x0000ff00, 0x00ff0000
-#endif
-	);
-	if (drv->videoFmt == NULL)
+	/* XXX TODO: how to check effective depth? */
+
+	/* Set the pixel formats. */
+	if ((drv->videoFmt = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
 		goto fail_ctx;
+	}
+#if AG_MODEL == AG_LARGE
+	if (depthReq == 48) {				/* Deep color */
+# if AG_BYTEORDER == AG_BIG_ENDIAN
+		AG_PixelFormatRGB(drv->videoFmt, depthReq,
+			0xffff000000000000,
+			0x0000ffff00000000,
+			0x00000000ffff0000);
+# else
+		AG_PixelFormatRGB(drv->videoFmt, depthReq,
+			0x000000000000ffff,
+			0x00000000ffff0000,
+			0x0000ffff00000000);
+# endif
+	} else
+#endif /* AG_LARGE */
+	{						/* True Color */
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+		AG_PixelFormatRGB(drv->videoFmt, depthReq,
+			0xff000000,
+			0x00ff0000,
+			0x0000ff00);
+#else
+		AG_PixelFormatRGB(drv->videoFmt, depthReq,
+			0x000000ff,
+			0x0000ff00,
+			0x00ff0000);
+#endif
+	}
 
 	/*
 	 * Set the effective window geometry, initialize the viewport
@@ -1133,6 +1163,7 @@ fail:
 	[co->win close];
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
+		free(drv->videoFmt);
 		drv->videoFmt = NULL;
 	}
 	AG_MutexUnlock(&co->lock);
@@ -1141,7 +1172,7 @@ fail:
 }
 
 static void
-COCOA_CloseWindow(AG_Window *win)
+COCOA_CloseWindow(AG_Window *_Nonnull win)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverCocoa *co = (AG_DriverCocoa *)drv;
@@ -1157,7 +1188,7 @@ COCOA_CloseWindow(AG_Window *win)
 	}
 #endif
 	/* Destroy our OpenGL rendering context. */
-	COCOA_GL_MakeCurrent(co, win);
+	COCOA_GL_MakeCurrent(co);
 	AG_GL_DestroyContext(drv);
 	[co->glCtx clearDrawable];
 	[co->glCtx release];
@@ -1168,6 +1199,7 @@ COCOA_CloseWindow(AG_Window *win)
 	[co->win close];
 
 	AG_PixelFormatFree(drv->videoFmt);
+	free(drv->videoFmt);
 	drv->videoFmt = NULL;
 
 	AG_MutexUnlock(&co->lock);
@@ -1175,7 +1207,7 @@ COCOA_CloseWindow(AG_Window *win)
 }
 
 static int
-COCOA_MapWindow(AG_Window *win)
+COCOA_MapWindow(AG_Window *_Nonnull win)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -1191,7 +1223,7 @@ COCOA_MapWindow(AG_Window *win)
 }
 
 static int
-COCOA_UnmapWindow(AG_Window *win)
+COCOA_UnmapWindow(AG_Window *_Nonnull win)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -1205,7 +1237,7 @@ COCOA_UnmapWindow(AG_Window *win)
 }
 
 static int
-COCOA_RaiseWindow(AG_Window *win)
+COCOA_RaiseWindow(AG_Window *_Nonnull win)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -1219,7 +1251,7 @@ COCOA_RaiseWindow(AG_Window *win)
 }
 
 static int
-COCOA_LowerWindow(AG_Window *win)
+COCOA_LowerWindow(AG_Window *_Nonnull win)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -1235,7 +1267,8 @@ COCOA_LowerWindow(AG_Window *win)
 }
 
 static int
-COCOA_ReparentWindow(AG_Window *win, AG_Window *winParent, int x, int y)
+COCOA_ReparentWindow(AG_Window *_Nonnull win, AG_Window *_Nonnull winParent,
+    int x, int y)
 {
 	/* TODO */
 	AG_SetError("Reparent window not implemented");
@@ -1243,7 +1276,7 @@ COCOA_ReparentWindow(AG_Window *win, AG_Window *winParent, int x, int y)
 }
 
 static int
-COCOA_GetInputFocus(AG_Window **rv)
+COCOA_GetInputFocus(AG_Window *_Nonnull *_Nonnull rv)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = NULL;
@@ -1272,7 +1305,7 @@ fail:
 }
 
 static int
-COCOA_SetInputFocus(AG_Window *win)
+COCOA_SetInputFocus(AG_Window *_Nonnull win)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -1287,7 +1320,7 @@ COCOA_SetInputFocus(AG_Window *win)
 }
 
 static void
-COCOA_PreResizeCallback(AG_Window *win)
+COCOA_PreResizeCallback(AG_Window *_Nonnull win)
 {
 #if 0
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -1298,33 +1331,37 @@ COCOA_PreResizeCallback(AG_Window *win)
 	 * (XXX TODO test for platforms where this is unnecessary)
 	 * (XXX is this correctly done?)
 	 */
-	COCOA_GL_MakeCurrent(co, win);
+	COCOA_GL_MakeCurrent(co);
 	COCOA_FreeWidgetResources(WIDGET(win));
 	AG_TextClearGlyphCache(co);
 #endif
 }
 
 static void
-COCOA_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
+COCOA_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverCocoa *co = (AG_DriverCocoa *)drv;
+	AG_Rect r;
+	NSRect trackRect;
 	int x = a->x;
 	int y = a->y;
-	NSRect trackRect;
 	
 	AG_MutexLock(&co->lock);
 
-	/* Update per-widget coordinate information. */
 	a->x = 0;
 	a->y = 0;
-	(void)AG_WidgetSizeAlloc(win, a);
-	AG_WidgetUpdateCoords(win, 0, 0);
+	AG_WidgetSizeAlloc(win, a);
+	AG_WidgetUpdateCoords(win, 0,0);
 
 	/* The viewport coordinates have changed. */
 	[co->glCtx makeCurrentContext];
-	AG_GL_SetViewport(&co->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	r.x = 0;
+	r.y = 0;
+	r.w = WIDTH(win);
+	r.h = HEIGHT(win);
+	AG_GL_SetViewport(&co->gl, &r);
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
 	/* Update the tracking rectangle. */
@@ -1355,7 +1392,7 @@ COCOA_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 }
 
 static void
-COCOA_PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
+COCOA_PostMoveCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverCocoa *co = (AG_DriverCocoa *)drv;
@@ -1373,19 +1410,19 @@ COCOA_PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
 	aNew.w = a->w;
 	aNew.h = a->h;
 	AG_WidgetSizeAlloc(win, &aNew);
-	AG_WidgetUpdateCoords(win, 0, 0);
+	AG_WidgetUpdateCoords(win, 0,0);
 	WIDGET(win)->x = a->x;
 	WIDGET(win)->y = a->y;
 	win->dirty = 1;
-	
-	/* Move other windows pinned to this one. */
-	AG_WindowMovePinned(win, xRel, yRel);
+
+	if (agWindowPinnedCount > 0)
+		AG_WindowMovePinned(win, xRel, yRel);
 
 	AG_MutexUnlock(&co->lock);
 }
 
 static int
-COCOA_MoveWindow(AG_Window *win, int x, int y)
+COCOA_MoveWindow(AG_Window *_Nonnull win, int x, int y)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -1407,7 +1444,7 @@ COCOA_MoveWindow(AG_Window *win, int x, int y)
 #if 0
 /* Save/restore associated widget GL resources (for GL context changes). */
 static void
-COCOA_FreeWidgetResources(AG_Widget *wid)
+COCOA_FreeWidgetResources(AG_Widget *_Nonnull wid)
 {
 	AG_Widget *chld;
 
@@ -1419,7 +1456,7 @@ COCOA_FreeWidgetResources(AG_Widget *wid)
 #endif
 
 static int
-COCOA_ResizeWindow(AG_Window *win, Uint w, Uint h)
+COCOA_ResizeWindow(AG_Window *_Nonnull win, Uint w, Uint h)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -1437,7 +1474,7 @@ COCOA_ResizeWindow(AG_Window *win, Uint w, Uint h)
 }
 
 static int
-COCOA_MoveResizeWindow(AG_Window *win, AG_SizeAlloc *a)
+COCOA_MoveResizeWindow(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -1461,7 +1498,7 @@ COCOA_MoveResizeWindow(AG_Window *win, AG_SizeAlloc *a)
 }
 
 static int
-COCOA_SetBorderWidth(AG_Window *win, Uint width)
+COCOA_SetBorderWidth(AG_Window *_Nonnull win, Uint width)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -1478,7 +1515,7 @@ COCOA_SetBorderWidth(AG_Window *win, Uint width)
 }
 
 static int
-COCOA_SetWindowCaption(AG_Window *win, const char *s)
+COCOA_SetWindowCaption(AG_Window *_Nonnull win, const char *_Nonnull s)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -1500,7 +1537,7 @@ COCOA_SetWindowCaption(AG_Window *win, const char *s)
 }
 
 static int
-COCOA_SetOpacity(AG_Window *win, float f)
+COCOA_SetOpacity(AG_Window *_Nonnull win, float f)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
@@ -1520,7 +1557,8 @@ COCOA_SetOpacity(AG_Window *win, float f)
 }
 
 static void
-COCOA_TweakAlignment(AG_Window *win, AG_SizeAlloc *a, Uint wMax, Uint hMax)
+COCOA_TweakAlignment(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a,
+    Uint wMax, Uint hMax)
 {
 	/* XXX TODO */
 	switch (win->alignment) {
@@ -1541,23 +1579,101 @@ COCOA_TweakAlignment(AG_Window *win, AG_SizeAlloc *a, Uint wMax, Uint hMax)
 	}
 }
 
+static AG_Cursor *
+COCOA_CreateCursor(void *_Nonnull obj, Uint w, Uint h, const Uint8 *_Nonnull data,
+    const Uint8 *_Nonnull mask, int xHot, int yHot)
+{
+	AG_Cursor *ac;
+	Uint size = w*h;
+
+	if ((ac = TryMalloc(sizeof(AG_Cursor))) == NULL)
+		return (NULL);
+	if ((ac->data = TryMalloc(size)) == NULL)
+		goto fail;
+	if ((ac->mask = TryMalloc(size)) == NULL) {
+		free(ac->data);
+		goto fail;
+	}
+	memcpy(ac->data, data, size);
+	memcpy(ac->mask, mask, size);
+	ac->w = w;
+	ac->h = h;
+	ac->xHot = xHot;
+	ac->yHot = yHot;
+
+	/* TODO COCOA stuff here */
+	return (NULL);
+fail:
+	free(ac);
+	return (NULL);
+}
+
+static void
+COCOA_FreeCursor(void *_Nonnull obj, AG_Cursor *_Nonnull ac)
+{
+	AG_Driver *drv = obj;
+
+	if (ac == drv->activeCursor) {
+		drv->activeCursor = NULL;
+		/* TODO COCOA stuff here */
+	}
+	free(ac->data);
+	free(ac->mask);
+	free(ac);
+}
+
+static int
+COCOA_SetCursor(void *_Nonnull obj, AG_Cursor *_Nonnull ac)
+{
+	AG_Driver *drv = obj;
+
+	drv->activeCursor = ac;
+	/* TODO COCOA stuff here */
+	return (0);
+}
+
+static void
+COCOA_UnsetCursor(void *_Nonnull obj)
+{
+	AG_Driver *drv = obj;
+
+	if (drv->activeCursor == TAILQ_FIRST(&drv->cursors))
+		return;
+	
+	/* TODO COCOA stuff here */
+	drv->activeCursor = TAILQ_FIRST(&drv->cursors);		/* Default */
+}
+
+static int
+COCOA_GetCursorVisibility(void *_Nonnull obj)
+{
+	/* TODO */
+	return (1);
+}
+
+static void
+COCOA_SetCursorVisibility(void *_Nonnull obj, int flag)
+{
+	/* TODO */
+}
+
 AG_DriverMwClass agDriverCocoa = {
 	{
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverCocoa",
 			sizeof(AG_DriverCocoa),
-			{ 1,5 },
+			{ 1,6 },
 			Init,
-			NULL,	/* reset */
+			NULL,		/* reset */
 			Destroy,
-			NULL,	/* load */
-			NULL,	/* save */
-			NULL,	/* edit */
+			NULL,		/* load */
+			NULL,		/* save */
+			NULL,		/* edit */
 		},
 		"cocoa",
 		AG_VECTOR,
 		AG_WM_MULTIPLE,
-		AG_DRIVER_OPENGL|AG_DRIVER_TEXTURES,
+		AG_DRIVER_OPENGL | AG_DRIVER_TEXTURES,
 		COCOA_Open,
 		COCOA_Close,
 		COCOA_GetDisplaySize,
@@ -1581,32 +1697,43 @@ AG_DriverMwClass agDriverCocoa = {
 		AG_GL_StdPopClipRect,
 		AG_GL_StdPushBlendingMode,
 		AG_GL_StdPopBlendingMode,
-		NULL,			/* createCursor */
-		NULL,			/* freeCursor */
-		NULL,			/* setCursor */
-		NULL,			/* unsetCursor */
-		NULL,			/* getCursorVisibility */
-		NULL,			/* setCursorVisibility */
+		COCOA_CreateCursor,
+		COCOA_FreeCursor,
+		COCOA_SetCursor,
+		COCOA_UnsetCursor,
+		COCOA_GetCursorVisibility,
+		COCOA_SetCursorVisibility,
 		AG_GL_BlitSurface,
 		AG_GL_BlitSurfaceFrom,
+#ifdef HAVE_OPENGL
 		AG_GL_BlitSurfaceGL,
 		AG_GL_BlitSurfaceFromGL,
 		AG_GL_BlitSurfaceFlippedGL,
 		AG_GL_BackupSurfaces,
 		AG_GL_RestoreSurfaces,
+#else
+		NULL,                           /* backupSurfaces */
+		NULL,                           /* restoreSurfaces */
+#endif
 		AG_GL_RenderToSurface,
 		AG_GL_PutPixel,
 		AG_GL_PutPixel32,
-		AG_GL_PutPixelRGB,
+		AG_GL_PutPixelRGB8,
+#if AG_MODEL == AG_LARGE
+		AG_GL_PutPixel64,
+		AG_GL_PutPixelRGB16,
+#endif
 		AG_GL_BlendPixel,
 		AG_GL_DrawLine,
 		AG_GL_DrawLineH,
 		AG_GL_DrawLineV,
 		AG_GL_DrawLineBlended,
-		AG_GL_DrawArrowUp,
-		AG_GL_DrawArrowDown,
-		AG_GL_DrawArrowLeft,
-		AG_GL_DrawArrowRight,
+		AG_GL_DrawLineW,
+		AG_GL_DrawLineW_Sti16,
+		AG_GL_DrawTriangle,
+		AG_GL_DrawPolygon,
+		AG_GL_DrawPolygon_Sti32,
+		AG_GL_DrawArrow,
 		AG_GL_DrawBoxRounded,
 		AG_GL_DrawBoxRoundedTop,
 		AG_GL_DrawCircle,
@@ -1616,7 +1743,9 @@ AG_DriverMwClass agDriverCocoa = {
 		AG_GL_DrawRectDithered,
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph,
-		AG_GL_StdDeleteList
+		AG_GL_StdDeleteList,
+		NULL,				/* getClipboardText */
+		NULL				/* setClipboardText */
 	},
 	COCOA_OpenWindow,
 	COCOA_CloseWindow,
@@ -1632,7 +1761,6 @@ AG_DriverMwClass agDriverCocoa = {
 	COCOA_MoveResizeWindow,
 	COCOA_PreResizeCallback,
 	COCOA_PostResizeCallback,
-	NULL,				/* captureWindow */
 	COCOA_SetBorderWidth,
 	COCOA_SetWindowCaption,
 	NULL,				/* setTransientFor */

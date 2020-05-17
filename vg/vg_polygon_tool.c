@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,21 +39,22 @@ typedef struct vg_polygon_tool {
 	VG_Tool _inherit;
 	VG_Polygon *vpCur;
 	int vtxCur;
+	Uint32 _pad;
 } VG_PolygonTool;
 
 static void
-Init(void *p)
+Init(void *_Nonnull obj)
 {
-	VG_PolygonTool *t = p;
+	VG_PolygonTool *t = obj;
 
 	t->vpCur = NULL;
 	t->vtxCur = 0;
 }
 
 static int
-MouseButtonDown(void *p, VG_Vector vPos, int button)
+MouseButtonDown(void *_Nonnull obj, VG_Vector vPos, int button)
 {
-	VG_PolygonTool *t = p;
+	VG_PolygonTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
 	VG *vg = vv->vg;
 	VG_Point *pt;
@@ -95,31 +96,34 @@ MouseButtonDown(void *p, VG_Vector vPos, int button)
 }
 
 static void
-PostDraw(void *p, VG_View *vv)
+PostDraw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_PolygonTool *t = p;
+	VG_PolygonTool *t = obj;
+	AG_Color c;
 	int x, y;
 
 	VG_GetViewCoords(vv, VGTOOL(t)->vCursor, &x,&y);
-	AG_DrawCircle(vv, x,y, 3, VG_MapColorRGB(vv->vg->selectionColor));
+	c = VG_MapColorRGB(vv->vg->selectionColor);
+	AG_DrawCircle(vv, x,y, 3, &c);
 }
 
 static int
-MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
+MouseMotion(void *_Nonnull obj, VG_Vector vPos, VG_Vector vRel, int b)
 {
-	VG_PolygonTool *t = p;
+	VG_PolygonTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
+	VG_Polygon *vp;
 	VG_Point *pt;
 	
-	if (t->vpCur != NULL) {
-		if ((pt = VG_NearestPoint(vv, vPos, t->vpCur->pts[t->vtxCur]))) {
+	if ((vp = t->vpCur) != NULL) {
+		if ((pt = VG_NearestPoint(vv, vPos, vp->pts[t->vtxCur]))) {
 			VG_Status(vv, _("Use Point%u"),
 			    (Uint)VGNODE(pt)->handle);
 		} else {
 			VG_Status(vv, _("Create vertex at %.2f,%.2f"),
 			    vPos.x, vPos.y);
 		}
-		VG_SetPosition(t->vpCur->pts[t->vtxCur], vPos);
+		VG_SetPosition(vp->pts[t->vtxCur], vPos);
 	} else {
 		if ((pt = VG_NearestPoint(vv, vPos, NULL))) {
 			VG_Status(vv, _("Start Polygon at Point%u"),

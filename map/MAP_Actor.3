@@ -1,0 +1,114 @@
+.\"
+.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd November 17, 2007
+.Dt MAP_ACTOR 3
+.Os
+.ds vT Agar-MAP API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm MAP_Actor
+.Nd agar map actor class
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+class describes all dynamic objects that can assume some position inside
+of a
+.Xr MAP 3 .
+This class also provides an interface for handling user input.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "MAP_Actor *"
+.Fn MAP_ActorNew "AG_Object *parent" "const char *name"
+.Pp
+.Ft int
+.Fn MAP_ActorMapTile "MAP_Actor *actor" "int x" "int y" "int layer0" "RG_Tileset *ts" "const char *tileName"
+.Pp
+.Ft void
+.Fn MAP_ActorUnmapTile "MAP_Actor *actor"
+.Pp
+.Ft int
+.Fn MAP_ActorSetTile "MAP_Actor *actor" "int x" "int y" "int layer0" "RG_Tileset *ts" "const char *tileName"
+.Pp
+.Ft void
+.Fn MAP_ActorMoveTile "MAP_Actor *actor" "int dx" "int dy"
+.Pp
+.nr nS 0
+The
+.Fn MAP_ActorNew
+function allocates, initializes, and attaches a new
+.Nm
+object.
+.Pp
+The
+.Fn MAP_ActorMapTile
+function looks up the given
+.Xr RG_Tileset 3
+for a
+.Xr RG_Tile 3
+called
+.Fa tileName .
+If the tile is found, it is divided into square fragments (of
+dimensions
+.Dv MAPTILESZ )
+and inserted onto the actor's parent map at position
+.Fa x ,
+.Fa y
+relative to the current position of the actor.
+.Pp
+The
+.Fn MAP_ActorUnmapTile
+function removes all tile fragments related to this actor from its parent
+map.
+.Pp
+.Fn MAP_ActorSetTile
+is a shorthand for
+.Fn MAP_ActorUnmapTile
+followed by
+.Fn MAP_ActorMapTile .
+.Pp
+The
+.Fn MAP_ActorMoveTile
+function displaces all tile fragments related to this actor on the map by
+.Fa dx
+and
+.Fa dy
+pixels.
+.Sh SEE ALSO
+.Xr AG_Object 3 ,
+.Xr MAP 3 ,
+.Xr MAP_View 3 ,
+.Xr SG_Intro 3
+.Sh HISTORY
+The
+.Nm
+object first appeared in Agar 1.0.

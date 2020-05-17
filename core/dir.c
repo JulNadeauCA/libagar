@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,22 +52,45 @@
  * SUCH DAMAGE.
  */
 
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <sys/types.h>
 
 #ifdef _WIN32
+
 # include <agar/core/queue_close.h>			/* Conflicts */
-#ifdef _XBOX
-# include <xtl.h>
-#else
-# include <windows.h>
-#endif
+# ifdef _XBOX
+#  include <xtl.h>
+# else
+#  include <windows.h>
+# endif
 # include <agar/core/queue_close.h>
 # include <agar/core/queue.h>
-#else
-# include <sys/stat.h>
+
+#else /* !_WIN32 */
+
+# include <agar/config/_mk_have_sys_stat_h.h>
+# ifdef _MK_HAVE_SYS_STAT_H
+#  include <sys/stat.h>
+# endif
+
+# ifdef __APPLE__
+#  ifndef _DARWIN_C_SOURCE
+#   define _DARWIN_C_SOURCE /* for dirfd() */
+#   define _AGAR_DEFINED_DARWIN_C_SOURCE
+#  endif
+# endif
+
 # include <dirent.h>
+
+# ifdef _AGAR_DEFINED_DARWIN_C_SOURCE
+#  undef _DARWIN_C_SOURCE
+# endif
+
 # include <unistd.h>
-#endif
+#endif /* !_WIN32 */
+
 #include <string.h>
 #include <errno.h>
 
@@ -153,6 +176,7 @@ AG_OpenDir(const char *path)
 	dir = Malloc(sizeof(AG_Dir));
 	dir->ents = NULL;
 	dir->nents = 0;
+	dir->fd = -1;
 
 #ifdef _WIN32
 	{
@@ -161,13 +185,13 @@ AG_OpenDir(const char *path)
 		WIN32_FIND_DATA fdata;
 		DWORD rv;
 
-#ifdef _XBOX
+# ifdef _XBOX
 		if(!AG_XBOX_PathIsValid(path)) {
 			AG_SetError(_("Invalid file handle (%d)"),
 			    (int)GetLastError());
 			goto fail;
 		}
-#endif
+# endif
 
 		Strlcpy(dpath, path, sizeof(dpath));
 		if(dpath[strlen(dpath) - 1] != '\\') {
@@ -177,14 +201,14 @@ AG_OpenDir(const char *path)
 		}
 
 		if ((h = FindFirstFileA(dpath, &fdata))==INVALID_HANDLE_VALUE) {
-#ifndef _XBOX
+# ifndef _XBOX
 			AG_SetError(_("Invalid file handle (%d)"),
 			    (int)GetLastError());
 			goto fail;
-#endif
+# endif
 		}
 
-#ifdef _XBOX
+# ifdef _XBOX
 		/* On Xbox we need to manually include "." and ".." */
 		dir->ents = Realloc(dir->ents,
 		    (dir->nents+2)*sizeof(char *));
@@ -195,7 +219,7 @@ AG_OpenDir(const char *path)
 		if(h == INVALID_HANDLE_VALUE) {
 			return dir;
 		}
-#endif
+# endif
 		do {
 			dir->ents = Realloc(dir->ents,
 			    (dir->nents+1)*sizeof(char *));
@@ -210,22 +234,21 @@ AG_OpenDir(const char *path)
 	}
 #else /* !_WIN32 */
 	{
-		DIR *dp;
 		struct dirent *dent;
 		
-		if ((dp = opendir(path)) == NULL) {
+		if ((dir->dirp = (void *)opendir(path)) == NULL) {
 			AG_SetError(_("%s: Failed to open directory (%s)"),
 			    path, strerror(errno));
 			goto fail;
 		}
-		while ((dent = readdir(dp)) != NULL) {
+		while ((dent = readdir((DIR *)dir->dirp)) != NULL) {
 			dir->ents = Realloc(dir->ents,
 			    (dir->nents+1)*sizeof(char *));
 			dir->ents[dir->nents++] = Strdup(dent->d_name);
 		}
-		closedir(dp);
+		dir->fd = dirfd((DIR *)dir->dirp);
 	}
-#endif /* _WIN32 */
+#endif /* !_WIN32 */
 
 	return (dir);
 fail:
@@ -238,11 +261,16 @@ AG_CloseDir(AG_Dir *dir)
 {
 	int i;
 
+#ifndef _WIN32
+	if (dir->dirp)
+		closedir(dir->dirp);
+#endif
+
 	for (i = 0; i < dir->nents; i++) {
-		Free(dir->ents[i]);
+		free(dir->ents[i]);
 	}
 	Free(dir->ents);
-	Free(dir);
+	free(dir);
 }
 
 int
@@ -321,3 +349,5 @@ AG_GetCWD(char *buf, AG_Size len)
 	return (0);
 #endif
 }
+
+#endif /* AG_SERIALIZATION */

@@ -4,7 +4,6 @@
 #define _AGAR_WIDGET_SLIDER_H_
 
 #include <agar/gui/widget.h>
-
 #include <agar/gui/begin.h>
 
 enum ag_slider_type {
@@ -20,7 +19,7 @@ enum ag_slider_button {
 };
 
 typedef struct ag_slider {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Slider */
 	Uint flags;
 #define AG_SLIDER_HFILL		0x01
 #define AG_SLIDER_VFILL		0x02
@@ -34,44 +33,44 @@ typedef struct ag_slider {
 	int ctlPressed;			/* Control is pressed */
 	int wControlPref;		/* Control size (preferred) */
 	int wControl;			/* Control size (effective) */
-	AG_Timer moveTo;		/* Timer for keyboard motion */
 	int xOffs;			/* Cursor offset for scrolling */
 	int extent;			/* Available area for scrolling */
+	AG_Timer moveTo;		/* Timer for keyboard motion */
 } AG_Slider;
 
-#define AGSLIDER(p) ((AG_Slider *)p)
+#define AGSLIDER(obj)            ((AG_Slider *)(obj))
+#define AGCSLIDER(obj)           ((const AG_Slider *)(obj))
+#define AG_SLIDER_SELF()          AGSLIDER( AG_OBJECT(0,"AG_Widget:AG_Slider:*") )
+#define AG_SLIDER_PTR(n)          AGSLIDER( AG_OBJECT((n),"AG_Widget:AG_Slider:*") )
+#define AG_SLIDER_NAMED(n)        AGSLIDER( AG_OBJECT_NAMED((n),"AG_Widget:AG_Slider:*") )
+#define AG_CONST_SLIDER_SELF()   AGCSLIDER( AG_CONST_OBJECT(0,"AG_Widget:AG_Slider:*") )
+#define AG_CONST_SLIDER_PTR(n)   AGCSLIDER( AG_CONST_OBJECT((n),"AG_Widget:AG_Slider:*") )
+#define AG_CONST_SLIDER_NAMED(n) AGCSLIDER( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Slider:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agSliderClass;
 
-AG_Slider *AG_SliderNew(void *, enum ag_slider_type, Uint);
-AG_Slider *AG_SliderNewInt(void *, enum ag_slider_type, Uint, int *, int *, int *);
-AG_Slider *AG_SliderNewIntR(void *, enum ag_slider_type, Uint, int *, int, int);
-AG_Slider *AG_SliderNewUint(void *, enum ag_slider_type, Uint, Uint *, Uint *, Uint *);
-AG_Slider *AG_SliderNewUintR(void *, enum ag_slider_type, Uint, Uint *, Uint, Uint);
-AG_Slider *AG_SliderNewFlt(void *, enum ag_slider_type, Uint, float *, float *, float *);
-AG_Slider *AG_SliderNewFltR(void *, enum ag_slider_type, Uint, float *, float, float);
-AG_Slider *AG_SliderNewDbl(void *, enum ag_slider_type, Uint, double *, double *, double *);
-AG_Slider *AG_SliderNewDblR(void *, enum ag_slider_type, Uint, double *, double, double);
-void       AG_SliderSetControlSize(AG_Slider *, int);
+AG_Slider *_Nonnull AG_SliderNew(void *_Nullable, enum ag_slider_type, Uint);
+AG_Slider *_Nonnull AG_SliderNewInt(void *_Nullable, enum ag_slider_type, Uint,
+                                    int *_Nullable, int *_Nullable, int *_Nullable);
+AG_Slider *_Nonnull AG_SliderNewIntR(void *_Nullable, enum ag_slider_type, Uint,
+                                     int *_Nullable, int, int);
+AG_Slider *_Nonnull AG_SliderNewUint(void *_Nullable, enum ag_slider_type, Uint,
+                                     Uint *_Nullable, Uint *_Nullable, Uint *_Nullable);
+AG_Slider *_Nonnull AG_SliderNewUintR(void *_Nullable, enum ag_slider_type, Uint,
+                                      Uint *_Nullable, Uint, Uint);
+AG_Slider *_Nonnull AG_SliderNewFlt(void *_Nullable, enum ag_slider_type, Uint,
+                                    float *_Nullable, float *_Nullable,
+				    float *_Nullable);
+AG_Slider *_Nonnull AG_SliderNewFltR(void *_Nullable, enum ag_slider_type, Uint,
+                                     float *_Nullable, float, float);
+AG_Slider *_Nonnull AG_SliderNewDbl(void *_Nullable, enum ag_slider_type, Uint,
+                                    double *_Nullable, double *_Nullable,
+				    double *_Nullable);
+AG_Slider *_Nonnull AG_SliderNewDblR(void *_Nullable, enum ag_slider_type, Uint,
+                                     double *_Nullable, double, double);
 
-#ifdef AG_LEGACY
-void       AG_SliderSetIntIncrement(AG_Slider *, int) DEPRECATED_ATTRIBUTE;
-void       AG_SliderSetRealIncrement(AG_Slider *, double) DEPRECATED_ATTRIBUTE;
-AG_Slider *AG_SliderNewUint8(void *, enum ag_slider_type, Uint, Uint8 *, Uint8 *, Uint8 *) DEPRECATED_ATTRIBUTE;
-AG_Slider *AG_SliderNewUint8R(void *, enum ag_slider_type, Uint, Uint8 *, Uint8, Uint8) DEPRECATED_ATTRIBUTE;
-AG_Slider *AG_SliderNewSint8(void *, enum ag_slider_type, Uint, Sint8 *, Sint8 *, Sint8 *) DEPRECATED_ATTRIBUTE;
-AG_Slider *AG_SliderNewSint8R(void *, enum ag_slider_type, Uint, Sint8 *, Sint8, Sint8) DEPRECATED_ATTRIBUTE;
-AG_Slider *AG_SliderNewUint16(void *, enum ag_slider_type, Uint, Uint16 *, Uint16 *, Uint16 *) DEPRECATED_ATTRIBUTE;
-AG_Slider *AG_SliderNewUint16R(void *, enum ag_slider_type, Uint, Uint16 *, Uint16, Uint16) DEPRECATED_ATTRIBUTE;
-AG_Slider *AG_SliderNewSint16(void *, enum ag_slider_type, Uint, Sint16 *, Sint16 *, Sint16 *) DEPRECATED_ATTRIBUTE;
-AG_Slider *AG_SliderNewSint16R(void *, enum ag_slider_type, Uint, Sint16 *, Sint16, Sint16) DEPRECATED_ATTRIBUTE;
-AG_Slider *AG_SliderNewUint32(void *, enum ag_slider_type, Uint, Uint32 *, Uint32 *, Uint32 *) DEPRECATED_ATTRIBUTE;
-AG_Slider *AG_SliderNewUint32R(void *, enum ag_slider_type, Uint, Uint32 *, Uint32, Uint32) DEPRECATED_ATTRIBUTE;
-AG_Slider *AG_SliderNewSint32(void *, enum ag_slider_type, Uint, Sint32 *, Sint32 *, Sint32 *) DEPRECATED_ATTRIBUTE;
-AG_Slider *AG_SliderNewSint32R(void *, enum ag_slider_type, Uint, Sint32 *, Sint32, Sint32) DEPRECATED_ATTRIBUTE;
-#endif /* AG_LEGACY */
-
+void AG_SliderSetControlSize(AG_Slider *_Nonnull, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

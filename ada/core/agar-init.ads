@@ -11,9 +11,11 @@ package Agar.Init is
   package CS renames Interfaces.C.Strings;
 
   type Agar_Version is limited record
-    Major : C.int;
-    Minor : C.int;
-    Patch : C.int;
+    Major    : C.int;                  -- Major version number
+    Minor    : C.int;                  -- Minor version number
+    Patch    : C.int;                  -- Patchlevel
+    Revision : C.int;                  -- SVN revision number (or 0)
+    Release  : CS.chars_ptr;           -- Release name (or NULL)
   end record
     with Convention => C;
   type Agar_Version_Access is access all Agar_Version with Convention => C;

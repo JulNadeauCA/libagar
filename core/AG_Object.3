@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2018 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>.
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -56,29 +56,6 @@ While an object's metadata (including the
 .Va name
 field) must always remain in memory, class-specific data can be serialized
 to storage and deserialized on demand.
-Examples include:
-.Bl -bullet
-.It
-Agar GUI's
-.Xr AG_Window 3
-is a VFS of
-.Xr AG_Widget 3
-instances.
-.It
-FreeSG (http://freesg.org/)'s scene graph
-.Xr SG 3
-is a VFS of
-.Xr SG_Node 3 .
-Non-visible nodes can be paged out, saving memory.
-.It
-Edacious (http://edacious.org/) represents circuits, components and simulation
-data using an in-memory VFS.
-Circuits are saved to a flat binary file which embeds the circuit's serialized
-data with that of its sub-components (which may include third-party components,
-in which case
-.Nm
-will autoload any required DSOs).
-.El
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Object *"
@@ -88,19 +65,10 @@ will autoload any required DSOs).
 .Fn AG_ObjectInit "AG_Object *obj" "AG_ObjectClass *classInfo"
 .Pp
 .Ft "void"
-.Fn AG_ObjectInitStatic "AG_Object *obj" "AG_ObjectClass *classInfo"
+.Fn AG_ObjectAttach "AG_Object *newParent" "AG_Object *child"
 .Pp
 .Ft "void"
-.Fn AG_ObjectInitNamed "AG_Object *obj" "AG_ObjectClass *classInfo" "const char *name"
-.Pp
-.Ft "void"
-.Fn AG_ObjectAttach "AG_Object *new_parent" "AG_Object *obj"
-.Pp
-.Ft "void"
-.Fn AG_ObjectAttachToNamed "AG_Object *vfsRoot" "const char *path" "AG_Object *child"
-.Pp
-.Ft "void"
-.Fn AG_ObjectDetach "AG_Object *obj"
+.Fn AG_ObjectDetach "AG_Object *child"
 .Pp
 .Ft "void"
 .Fn AG_ObjectMoveToHead "AG_Object *obj"
@@ -139,7 +107,7 @@ will autoload any required DSOs).
 .Fn AG_ObjectGetName "AG_Object *obj"
 .Pp
 .Ft "int"
-.Fn AG_ObjectCopyName "AG_Object *obj" "char *pathbuf" "AG_Size pathbuf_len"
+.Fn AG_ObjectCopyName "AG_Object *obj" "char *buf" "AG_Size bufSize"
 .Pp
 .Ft "void"
 .Fn AG_ObjectLock "AG_Object *obj"
@@ -160,16 +128,10 @@ will autoload any required DSOs).
 .Fn AG_ObjectSetNameS "AG_Object *obj" "const char *name"
 .Pp
 .Ft "void"
-.Fn AG_ObjectGenName "AG_Object *obj" "AG_ObjectClass *classInfo" "char *name" "AG_Size len"
+.Fn AG_ObjectGenName "AG_Object *obj" "AG_ObjectClass *classInfo" "char *name" "AG_Size nameSize"
 .Pp
 .Ft "void"
-.Fn AG_ObjectGenNamePfx "AG_Object *obj" "const char *prefix" "char *name" "AG_Size len"
-.Pp
-.Ft "void"
-.Fn AG_ObjectSetAttachFn "AG_Object *obj" "void (*fn)(struct ag_event *)" "const char *fmt" "..."
-.Pp
-.Ft "void"
-.Fn AG_ObjectSetDetachFn "AG_Object *obj" "void (*fn)(struct ag_event *)" "const char *fmt" "..."
+.Fn AG_ObjectGenNamePfx "AG_Object *obj" "const char *prefix" "char *name" "AG_Size nameSize"
 .Pp
 .Fn AGOBJECT_FOREACH_CHILD "AG_Object *child" "AG_Object *parent" "TYPE type"
 .Pp
@@ -182,9 +144,7 @@ The object is attached to
 unless the argument is NULL.
 If
 .Fa name
-is NULL, a unique name of the form
-.Dq <class-name> #<number>
-is automatically generated.
+is NULL then a unique name (e.g., "object0") will be generated.
 If both
 .Fa parent
 and
@@ -195,120 +155,98 @@ fails and returns NULL.
 .Pp
 The
 .Fn AG_ObjectInit
-function initializes an object of the specified class.
-This involves invoking the
+function initializes an object of a given class.
+It invokes
 .Fn init
-operation associated with every class in the inheritance hierarchy
-The
+for every class in the inheritance hierarchy.
 .Fa name
-argument specifies a name for the object instance relative to its parent
-(maximum
+is an optional name for the object instance relative to its parent (maximum
 .Dv AG_OBJECT_NAME_MAX
-bytes and must not contain
-.Sq /
-characters).
+characters and no
+.Sq / ) .
 .Fa classInfo
 should point to an initialized
 .Ft AG_ObjectClass
 structure (see
-.Sx CLASSES
-section).
+.Sx CLASSES ) .
 The
 .Fa flags
 argument specifies a default set of flags (see
-.Sx FLAGS
-section).
+.Sx FLAGS ) .
 .Pp
-The
-.Fn AG_ObjectInitStatic
-variant of
-.Fn AG_ObjectInit
-implicitely sets the
-.Dv AG_OBJECT_STATIC
-flag, indicating that the object's structure statically allocated (or allocated
-through a facility other than
-.Xr malloc 3 ) .
-The
-.Fn AG_ObjectInitNamed
-variant either sets the object name with
-.Fn AG_ObjectSetNameS
-if the
-.Fa name
-argument is non-NULL, or it implicitely sets the
-.Dv AG_OBJECT_NAME_ONATTACH
-flag if the name is NULL.
-.Pp
-The function
 .Fn AG_ObjectAttach
-attaches an object to a new parent object and
-.Fn AG_ObjectDetach
-detaches an object from its current parent object.
-These operations raise
+attaches an object
+.Fa child
+to another object
+.Fa newParent ,
+raising an
 .Sq attached
-and
-.Sq detached
-events.
-Prior to detaching the object,
-.Fn AG_ObjectDetach
-cancels any scheduled
-.Xr AG_Timer 3
-callback execution.
-If
-.Fa parent
-is NULL,
-.Fn AG_ObjectAttach
-is a no-op.
+event.
+It is a no-op if
+.Fa newParent
+is NULL.
 .Pp
-The
+.Fn AG_ObjectDetach
+removes an object
+.Fa child
+from its parent (if any), cancelling scheduled
+.Xr AG_Timer 3
+expirations before raising
+.Sq detached .
+.Pp
 .Fn AG_ObjectMoveUp ,
 .Fn AG_ObjectMoveDown ,
 .Fn AG_ObjectMoveToHead
 and
 .Fn AG_ObjectMoveToTail
-functions move the object in the parent object's list of child objects.
-These functions are useful when the ordering is important - when the child
-objects represent a stack, for instance.
+move the object in the parent object's list of child objects.
+This is useful when the ordering of objects is important.
 .Pp
-The
 .Fn AG_ObjectDelete
-routine invokes
+is a shorthand for
 .Fn AG_ObjectDetach
-if the object is attached to a parent, followed by
+followed by
 .Fn AG_ObjectDestroy .
-.Pp
-.Fn AG_ObjectAttachToNamed
-is a variant of
-.Fn AG_ObjectAttach
-which looks up the parent inside the specified VFS using the pathname
-.Fa path .
 .Pp
 .Fn AG_ObjectRoot
 returns a pointer to the root of the VFS which the given object is attached to.
 .Fn AG_ObjectParent
-returns the immediate parent of the given object.
+returns the object's parent.
 .Pp
 The
 .Fn AG_ObjectFind
 function returns the object corresponding to the specified path name.
-If there is no such object, NULL is returned.
+If there is no such object it returns NULL.
 .Pp
 .Fn AG_ObjectFindParent
-returns the first ancestor of the object matching either the
+returns the first ancestor of the object matching either the name of the
+object (if
 .Fa name
-or
+is non-NULL), or the inheritance hierarchy string of the parent (if
 .Fa type
-string (whichever is non-NULL).
+is non-NULL).
 .Pp
 .Fn AG_ObjectFindChild
-performs a name lookup on the immediate children of the specified object.
-The function returns the matching object if it was found, otherwise NULL.
+searches the child objects directly under
+.Fa obj
+for an object called
+.Fa name .
+It returns a pointer to the object if found or NULL.
 .Pp
 .Fn AG_ObjectGetName
-returns a newly-allocated string containing the full pathname of an object.
-The function returns NULL if insufficient memory is available.
-The
+returns an autoallocated string containing the full pathname of an object
+(relative to the root of its VFS).
+If insufficient memory is available to construct the path, it fails and
+returns NULL.
+.Pp
 .Fn AG_ObjectCopyName
-function copies the object's pathname to a fixed-size buffer.
+copies the object's full pathname (relative to its VFS root) to a
+fixed-size buffer
+.Fa buf
+of size
+.Fa bufSize
+in bytes.
+It returns 0 on success or -1 if the buffer is too small for the full path.
 .Pp
 .Fn AG_ObjectLock
 and
@@ -324,56 +262,50 @@ and the list of child objects
 which are all considered part of the virtual filesystem and are instead
 protected by
 .Fn AG_LockVFS .
+.Pp
 The
 .Fn AG_ObjectLock
-mutex can be used as a general-purpose locking device for the object.
-This mutex is guaranteed to be held during processing of all events posted to
-the object, as well as during object operations such as
+mutex can be used as a general-purpose locking device which is guaranteed to
+be held during processing of all events posted to the object as well as
+during object operations such as
 .Fn load
 and
 .Fn save .
 .Pp
-The
 .Fn AG_LockVFS
 and
 .Fn AG_UnlockVFS
-functions acquire or release the lock protecting the layout of the entire
-virtual system which the given object is part of.
+acquire or release the lock which protect the layout of the entire VFS
+which
+.Fa obj
+is a part of.
 .Pp
-Note that all lock/unlock routines above become no-ops if Agar is compiled
-with --disable-threads.
+Note: If Agar is compiled with
+.Sq --disable-threads
+then
+.Fn AG_ObjectLock ,
+.Fn AG_ObjectUnlock ,
+.Fn AG_LockVFS
+and
+.Fn AG_UnlockVFS
+become no-ops.
 .Pp
 .Fn AG_ObjectSetName
 updates the name of the given object.
-If the object is attached to a VFS, the VFS must locked.
+If the object is attached to a VFS then the VFS must be locked.
 .Pp
 .Fn AG_ObjectGenName
-generates an object name string unique to the specified parent object
+generates a unique name for a child object of
 .Fa obj .
-The class name is used as prefix, followed by a number.
-The name is written to the fixed-size buffer
+The class name in lowercase is used as prefix, followed by a number.
+The generatedstring is copied to the fixed-size buffer
 .Fa name
-of the given size
-.Fa len .
-In a multithreaded context, the name is only guaranteed to remain unique as
-long as the parent object's VFS is locked.
+of size
+.Fa nameSize
+in bytes.
 The
 .Fn AG_ObjectGenNamePfx
 variant generates a name using the specified prefix instead of the class name.
-.Pp
-.Fn AG_ObjectSetAttachFn
-and
-.Fn AG_ObjectSetDetachFn
-allow custom "attach" and "detach" hooks to be registered.
-This is useful where it is necessary to control the order of the child objects
-(for example, in the
-.Xr AG_Window 3
-system of Agar-GUI, the ordering of window objects is important as it
-determines the order of rendering).
-The hook function must insert/remove the child object directly from the
-parent's
-.Va children
-list.
 .Pp
 The
 .Fn AGOBJECT_FOREACH_CHILD
@@ -402,6 +334,30 @@ AGOBJECT_FOREACH_CHILD(chld, parent, my_class) {
 .Ft "void"
 .Fn AG_UnregisterClass "AG_ObjectClass *classInfo"
 .Pp
+.Ft "AG_ObjectClass *"
+.Fn AG_CreateClass "const char *classSpec" "AG_Size objectSize" "AG_Size classSize" "Uint major" "Uint minor"
+.Pp
+.Ft AG_ObjectInitFn
+.Fn AG_ClassSetInit "AG_ObjectClass *cl" "AG_ObjectInitFn fn"
+.Pp
+.Ft AG_ObjectResetFn
+.Fn AG_ClassSetReset "AG_ObjectClass *cl" "AG_ObjectResetFn fn"
+.Pp
+.Ft AG_ObjectDestroyFn
+.Fn AG_ClassSetDestroy "AG_ObjectClass *cl" "AG_ObjectDestroyFn fn"
+.Pp
+.Ft AG_ObjectLoadFn
+.Fn AG_ClassSetLoad "AG_ObjectClass *cl" "AG_ObjectLoadFn fn"
+.Pp
+.Ft AG_ObjectSaveFn
+.Fn AG_ClassSetSave "AG_ObjectClass *cl" "AG_ObjectSaveFn fn"
+.Pp
+.Ft AG_ObjectEditFn
+.Fn AG_ClassSetEdit "AG_ObjectClass *cl" "AG_ObjectEditFn fn"
+.Pp
+.Ft "void"
+.Fn AG_DestroyClass "AG_ObjectClass *cl"
+.Pp
 .Ft "void"
 .Fn AG_RegisterNamespace "const char *name" "const char *prefix" "const char *url"
 .Pp
@@ -423,8 +379,11 @@ AGOBJECT_FOREACH_CHILD(chld, parent, my_class) {
 .Ft "int"
 .Fn AG_OfClass "AG_Object *obj" "const char *pattern"
 .Pp
+.Ft "char *"
+.Fn AG_ObjectGetClassName "const AG_Object *obj" "int full"
+.Pp
 .Ft "AG_ObjectClass *"
-.Fn AG_ObjectSuperclass "AG_Object *obj"
+.Fn AG_ObjectSuperclass "const AG_Object *obj"
 .Pp
 .Ft "int"
 .Fn AG_ObjectGetInheritHier "AG_Object *obj" "AG_ObjectClass **pHier" "int *nHier"
@@ -435,6 +394,8 @@ AGOBJECT_FOREACH_CHILD(chld, parent, my_class) {
 The
 .Fn AG_RegisterClass
 function registers a new object class.
+.\" MANLINK(AG_Class)
+.\" MANLINK(AG_Classes)
 .\" MANLINK(AG_ObjectClass)
 .Fa classInfo
 should be an initialized
@@ -490,7 +451,7 @@ For example:
 .Bd -literal
 AG_WidgetClass agButtonClass = {
 	{
-		"Agar(Widget:Button)",
+		"AG_Widget:AG_Button",  /* or "Agar(Widget:Button)" */
 		sizeof(AG_Button),
 		{ 0,0 },
 		Init,
@@ -506,29 +467,38 @@ AG_WidgetClass agButtonClass = {
 };
 .Ed
 .Pp
-The
+The first field
 .Va hier
-field of
-.Ft AG_ObjectClass
-specifies a inheritance hierarchy, in the form "MY_Superclass:MY_Subclass",
-or "MyNamespace(Superclass:Subclass)" .
+is the inheritance hierarchy string.
+For example, "AG_Widget:AG_Button" says that
+.Ft AG_Button
+is a direct subclass of
+.Ft AG_Widget
+(and
+.Ft AG_Widget
+is implicitely a subclass of
+.Nm ) .
+.Pp
+Alternatively, if a namespace called "Agar" exists and is mapped to the
+"AG_" prefix then the inheritance hierarchy can be also written as
+"Agar(Widget:Button)".
 If implementing the class requires specific libraries available as dynamically
 loaded modules via
 .Xr AG_DSO 3 ,
-they may be appended to
+this can be indicated in the
 .Va hier
-as a comma-separated list of library names preceded by "@".
+string by a terminating "@" followed by one or more library names, separated
+by commas.
 For example:
 .Bd -literal
-MyNamespace(Superclass:Subclass)@module1,module2
+    "AG_Widget:MY_Widget@myLib,myOtherLib"
 .Ed
 .Pp
 The
 .Va size
 member specifies the size in bytes of the object instance structure.
-The
 .Va ver
-member specifies an optional datafile version number (see
+is an optional datafile version number (see
 .Xr AG_Version 3 ) .
 .Pp
 .Fn init
@@ -540,23 +510,19 @@ or
 .Pp
 .Fn reset
 restores the state of the object to an initial state.
+It is invoked by
 .Fn AG_ObjectLoad
-invokes
-.Fn reset
-implicitely prior to the
-.Fn load
-operation.
+prior to
+.Fn load ,
+and also by
 .Fn AG_ObjectDestroy
-also invokes
-.Fn reset
-implicitely prior to the
-.Fn destroy
-operation.
+prior to
+.Fn destroy .
 .Pp
 .Fn destroy
 frees all resources allocated by
 .Fn init
-(excluding any resources already freed by
+(excluding any which were freed previously by
 .Fn reset ) .
 .Pp
 .Fn load
@@ -564,30 +530,26 @@ reads the serialized state of object
 .Fa obj
 from data source
 .Fa ds .
-It must return 0 on success or -1 if an error has occurred.
-See:
-.Xr AG_DataSource 3
-and
-.Sx SERIALIZATION
-section.
-.Pp
 .Fn save
 saves the state of
 .Fa obj
 to data source
 .Fa ds .
-It must return 0 on success or -1 if an error has occurred.
-See:
-.Xr AG_DataSource 3
+.Fn load
 and
+.Fn save
+must both return 0 on success or -1 on failure.
+See
+.Xr AG_DataSource 3
+and the
 .Sx SERIALIZATION
 section.
 .Pp
 .Fn edit
-is a user-defined / application-specific callback.
-In a typical GUI application, for example,
+is an application-specific method.
+In a typical Agar GUI application
 .Fn edit
-may be expected to create and return an
+may generate and return an
 .Xr AG_Window 3
 or an
 .Xr AG_Box 3 .
@@ -595,25 +557,48 @@ or an
 .Fn AG_UnregisterClass
 removes the specified object class.
 .Pp
+.Fn AG_CreateClass
+offers an alternative to passing a statically-initialized
+.Ft AG_ObjectClass
+to
+.Fn AG_RegisterClass .
+The
+.Fn AG_CreateClass
+function allocates and initializes an
+.Ft AG_ObjectClass
+structure (or derivative thereof).
+.Fn AG_ClassSetInit ,
+.Fn AG_ClassSetReset ,
+.Fn AG_ClassSetDestroy ,
+.Fn AG_ClassSetLoad ,
+.Fn AG_ClassSetSave
+and
+.Fn AG_ClassSetEdit
+can be used to subsequently set the function pointers for the individual
+operations.
+They return a pointer to the previous operation.
+.Fn AG_DestroyClass
+unregisters and frees an auto-allocated
+.Ft AG_ObjectClass
+(or derivative thereof).
+.Pp
 .Fn AG_RegisterNamespace
 registers a new namespace with the specified name, prefix and informational
 URL.
-For example, Agar registers its own namespace using:
+For example, Agar registers its own using:
 .Bd -literal -offset indent
 AG_RegisterNamespace("Agar", "AG_", "http://libagar.org/");
 .Ed
 .Pp
 Once the namespace is registered, it is possible to specify inheritance
-hierarchies using the
+hierarchies using the partitioned
 .Em namespace
 format:
 .Bd -literal -offset indent
 Agar(Widget:Button):MyLib(MyButton)
 .Ed
 .Pp
-or the equivalent
-.Em expanded
-format:
+which is equivalent to the conventional format:
 .Bd -literal -offset indent
 AG_Widget:AG_Button:MY_Button
 .Ed
@@ -671,26 +656,49 @@ function adds the specified directory to the module search path.
 .Fn AG_UnregisterModuleDirectory
 removes the specified directory from the search path.
 .Pp
-The
+Given an inheritance hierarchy string (with wildcards),
 .Fn AG_OfClass
-function evaluates whether the given object is an instance of the
-specified class.
-The
-.Fa pattern
-string may contain wildcards such as
-.Dq MyClass:*
-or
-.Dq MyClass:*:MySubclass:* .
-.Fn AG_OfClass
-returns 1 if the object's class matches the given pattern.
+evaluates whether
+.Fa obj
+is an instance of the
+specified class and returns a boolean (0 = False, 1 = True) indicating
+whether the object is an instance of a matching class.
+For example:
+.Bd -literal
+AG_Button *btn = AG_ButtonNew( ... );
+
+if (AG_OfClass(btn, "AG_Widget:AG_Button")) {
+	/*
+	 * btn is an instance of AG_Button, and *not* a subclass of it.
+	 */
+}
+if (AG_OfClass(btn, "AG_Widget:AG_Button:*")) {
+	/*
+	 * btn is an instance of AG_Button, or a subclass of AG_Button.
+	 */
+}
+.Ed
 .Pp
-The
+Fast paths are provided for patterns such as "Super:Sub:*" and "Super:Sub",
+but patterns such as "Super:*:Sub:*" are also supported.
+.Pp
+.Fn AG_ObjectGetClassName
+returns a newly-allocated string containing the name of the class of an
+object
+.Fa obj .
+If
+.Fa full
+is 1, return the complete inheritance hierarchy (e.g., "AG_Widget:AG_Button").
+Otherwise, return only the subclass (e.g., "AG_Button").
+.Pp
 .Fn AG_ObjectSuperclass
-function returns a pointer to the
+returns a pointer to the
 .Fa AG_ObjectClass
-structure for the superclass of an object.
-Exceptionally, if the object is an instance of the base class (AG_Object),
-a pointer to the
+structure describing the superclass of
+.Fa obj .
+If
+.Fa obj
+is an instance of the base class (AG_Object), then a pointer to the
 .Nm
 class is returned.
 .Pp
@@ -728,60 +736,6 @@ AGOBJECT_FOREACH_CLASS(chld, parent, my_class, "MyClass") {
 	    AGOBJECT(chld)->name);
 }
 .Ed
-.Sh DEPENDENCIES
-.nr nS 1
-.Ft "int"
-.Fn AG_ObjectInUse "AG_Object *obj"
-.Pp
-.Ft "AG_ObjectDep *"
-.Fn AG_ObjectAddDep "AG_Object *obj" "AG_Object *depobj" "int persistent"
-.Pp
-.Ft "void"
-.Fn AG_ObjectDelDep "AG_Object *obj" "AG_Object *depobj"
-.Pp
-.Ft "Uint32"
-.Fn AG_ObjectEncodeName "AG_Object *obj" "AG_Object *depobj"
-.Pp
-.Ft "int"
-.Fn AG_ObjectFindDep "AG_Object *obj" "Uint32 ind" "AG_Object **pObject"
-.Pp
-.nr nS 0
-.Fn AG_ObjectInUse
-returns 1 if the given object is being referenced by another object instance
-or 0 if it isn't.
-.Pp
-.Fn AG_ObjectAddDep
-either creates a new dependency upon
-.Fa depobj
-or increments the reference count if one exists.
-If the
-.Fa persistent
-flag is set, the reference is preserved in object archives.
-.Fn AG_ObjectDelDep
-decrements the reference count upon
-.Fa depobj
-and removes the dependency if the count reaches zero (unless the object has the
-.Dv AG_OBJECT_PRESERVE_DEPS
-flag set).
-.Pp
-.Fn AG_ObjectEncodeName
-returns a serializable 32-bit handle representing the dependency between
-.Fa obj
-and
-.Fa depobj .
-It reserves the special values 0 (NULL reference) and 1 (self reference).
-The value of the handle corresponds to the index of
-.Fa depobj
-in the dependency table of
-.Fa obj
-plus 2.
-.Pp
-.Fn AG_ObjectFindDep
-resolves a dependency handle (previously generated by
-.Fn AG_ObjectEncodeName ) .
-On success, a pointer to the object is returned in
-.Fa pObject
-and the function returns 0.
 .Sh RELEASING RESOURCES
 .nr nS 1
 .Ft "void"
@@ -797,82 +751,57 @@ and the function returns 0.
 .Fn AG_ObjectFreeVariables "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn AG_ObjectFreeDeps "AG_Object *obj"
-.Pp
-.Ft "void"
-.Fn AG_ObjectFreeDummyDeps "AG_Object *obj"
-.Pp
-.Ft "void"
 .Fn AG_ObjectFreeChildren "AG_Object *obj"
 .Pp
-.Ft void
-.Fn AG_ObjectRemain "AG_Object *obj" "Uint policy"
-.Pp
 .nr nS 0
-The
 .Fn AG_ObjectReset
-function restores the state of an object to some initial state.
+restores the state of an object to some initial state.
 It invokes the object's
-.Fn reset
-method.
-.Fn reset
-is expected to bring the object to a consistent state prior to deserialization
-(before the
-.Fn load
-method is invoked).
+.Fn reset ,
+which is expected to bring the object to a consistent state prior to
+deserialization (before
+.Fn load ) .
 .Pp
-The
 .Fn AG_ObjectDestroy
-function frees all resources reserved by the given object (and any of its
-children that is not being referenced).
-It invokes
+frees all resources allocated by an object.
+It invokes the
 .Fn reset
 and
 .Fn destroy
-for each class in the inheritance hierarchy.
-Note that
+methods over each class in the inheritance hierarchy.
 .Fn AG_ObjectDestroy
-also cancels any
-.Xr AG_Timeout 3
-event scheduled for future execution.
-Unless the
-.Dv AG_OBJECT_STATIC
-flag is set,
+also cancels any scheduled
+.Xr AG_Timer 3
+expiration.
 .Fn AG_ObjectDestroy
-frees the structure with
-.Xr free 3 .
-.Pp
-Internally,
-.Fn AG_ObjectDestroy
-invokes
+implies
 .Fn AG_ObjectFreeEvents ,
-.Fn AG_ObjectFreeVariables ,
-.Fn AG_ObjectFreeDeps
+.Fn AG_ObjectFreeVariables
 and
 .Fn AG_ObjectFreeChildren .
-These functions may be used to explicitely reinitialize the event
-handler table (cancelling any scheduled timed event), clear the
-.Xr AG_Variable 3
-table, or destroy all attached child objects.
+Unless
+.Dv AG_OBJECT_STATIC
+is set,
+.Fn AG_ObjectDestroy
+also implies
+.Xr free 3 .
+.Pp
+.Fn AG_ObjectFreeEvents
+clears all configured event handlers (also cancelling any scheduled timer
+expirations).
+.Pp
+.Fn AG_ObjectFreeVariables
+clears the property table (i.e., the table of
+.Xr AG_Variable 3 )
+associated with the object.
 .Pp
 .Fn AG_ObjectFreeChildren
-releases all resources allocated by the child objects of a given parent.
-The assumes that none of the child objects are currently in use.
-.Pp
-.Fn AG_ObjectFreeDummyDeps
-cleans up the dependency table, removing any entry with a reference count
-of zero (which occurs in objects with
-.Dv AG_OBJECT_PRESERVE_DEPS
-set).
-.Pp
-.Fn AG_ObjectRemain
-specifies the behavior of
-.Fn AG_ObjectPageOut
-once the object's data is no longer in use.
-The default behavior is to free the data.
-If an argument of
-.Dv AG_OBJECT_REMAIN_DATA
-is passed, the data will be kept in memory.
+invokes
+.Fn AG_ObjectDetach
+and
+.Fn AG_ObjectDestroy
+on all child objects of
+.Fa parent .
 .Sh SERIALIZATION
 .nr nS 1
 .Ft "int"
@@ -922,12 +851,6 @@ is passed, the data will be kept in memory.
 .Pp
 .Ft "int"
 .Fn AG_ObjectPageOut "AG_Object *obj"
-.Pp
-.Ft "void"
-.Fn AG_ObjectSetArchivePath "AG_Object *obj" "const char *path"
-.Pp
-.Ft "void"
-.Fn AG_ObjectGetArchivePath "AG_Object *obj" "char *buf" "AG_Size buf_len"
 .Pp
 .nr nS 0
 These functions implement serialization, or archiving of the state of an
@@ -998,6 +921,7 @@ function writes an archive of the given object to the specified
 and
 .Fn AG_ObjectUnserialize
 reads an archive of the given object.
+.\" MANLINK(AG_ObjectHeader)
 .Pp
 The
 .Fn AG_ObjectReadHeader
@@ -1030,16 +954,6 @@ memory and
 .Dv AG_OBJECT_RESIDENT
 is cleared.
 Both functions return 0 on success or -1 if an error has occurred.
-.Pp
-.Fn AG_ObjectSetArchivePath
-sets the application-specific Archive Path attribute.
-For example, the "Save" feature of an editor application might use the
-Archive Path to remember an object's last successful Save or Export location,
-and
-.Fn AG_ObjectGetArchivePath
-to later retrieve it.
-The Archive Path is a run-time attribute ignored by
-.Fn AG_ObjectSave .
 .Sh FLAGS
 The following public
 .Nm
@@ -1067,9 +981,6 @@ Set by
 .Fn AG_ObjectPageIn
 and
 .Fn AG_ObjectPageOut .
-.It AG_OBJECT_PRESERVE_DEPS
-Don't remove entries in the dependency table when their reference count
-reaches 0.
 .It AG_OBJECT_STATIC
 Object is statically allocated (or allocated via a facility other than
 .Xr malloc 3 ) .
@@ -1093,8 +1004,6 @@ Prevent the object's data from being freed by
 when a
 .Fn AG_ObjectPageOut
 call is made and the reference count reaches zero.
-This is set by
-.Fn AG_ObjectRemain .
 .It AG_OBJECT_DEBUG
 Application-specific debugging flag.
 .It AG_OBJECT_NAME_ONATTACH
@@ -1110,25 +1019,13 @@ The
 .Nm
 mechanism generates the following events:
 .Bl -tag -width 2n
-.It Fn attached "void"
-The object has been attached to another.
-This event originates from the parent object.
-The linkage lock is held during the execution of the event handler.
-.It Fn detached "void"
+.It Fn attached "AG_Object *parent"
+The object has been attached to a new parent.
+.It Fn detached "AG_Object *parent"
 The object has been detached from its parent.
-The linkage lock is held during the execution of the event handler.
-This event originates from the parent.
-.It Fn child-attached "void"
-Same as
-.Fn attached ,
-except that the event is sent from the child to the parent.
-.It Fn child-detached "void"
-Same as
-.Fn detached ,
-except that the event is sent from the child to the parent.
 .It Fn renamed "void"
 The object's name has changed.
-.It Fn object-post-load-data "const char *path"
+.It Fn object-post-load "const char *path"
 Invoked by
 .Fn AG_ObjectLoadData ,
 on success.
@@ -1192,15 +1089,6 @@ structure:
 Unique (in parent) identifier for this object instance.
 May not contain
 .Sq / .
-.It Ft char *archivePath
-Application-specific path accessed by
-.Fn AG_Object{Get,Set}ArchivePath .
-Typical application: Remember the last successful location for an editor's
-"Save" function.
-.It Ft char *save_pfx
-Path name prefix when saving to disk (after
-.Pa dir/
-and before filename).
 .It Ft AG_ObjectClass *cls
 A pointer to the
 .Ft AG_ObjectClass
@@ -1223,9 +1111,6 @@ List of active timers (see
 .It Ft TAILQ(AG_Variable) vars
 Named variables (see
 .Xr AG_Variable 3 ) .
-.It Ft TAILQ(AG_ObjectDep) deps
-Dependency table (see
-.Sx DEPENDENCIES ) .
 .It Ft TAILQ(AG_Object) children
 List of child objects.
 The
@@ -1238,15 +1123,55 @@ and
 macros can be used to iterate over this list.
 .El
 .Sh EXAMPLES
+The Agar GUI system represents user interfaces using a tree of
+.Xr AG_Widget 3
+objects attached to a parent
+.Xr AG_Window 3
+which is itself attached to a parent
+.Xr AG_Driver 3 .
+.Pp
+The
+.Xr SG 3
+scene-graph structure of Agar-SG is a VFS of
+.Xr SG_Node 3
+objects.
+Non-visible nodes can be paged out to storage, saving memory.
+.Pp
+Edacious (https://edacious.org/) represents circuits, components and simulation
+data using an in-memory VFS.
+Circuits are saved to a flat binary file which embeds the circuit's serialized
+data with that of its sub-components (which may include third-party components,
+in which case
+.Nm
+will autoload any required DSOs).
+.Pp
 See
-.Pa tests/objsystem.c
-in the Agar source distribution.
+.Pa core/dummy_object.[ch]
+and
+.Pa tests/objsystem*.c
+in Agar sources.
 .Sh SEE ALSO
 .Xr AG_Event 3 ,
 .Xr AG_Intro 3 ,
-.Xr AG_Timeout 3 ,
+.Xr AG_Timer 3 ,
 .Xr AG_Variable 3
 .Sh HISTORY
 The
 .Nm
-interface appeared in Agar 1.0
+interface appeared in Agar 1.0.
+.Fn AG_ObjectFreeDataset
+was renamed
+.Fn AG_ObjectReset
+in Agar 1.6.0.
+The functions
+.Fn AG_CreateClass ,
+.Fn AG_ClassSetInit ,
+.Fn AG_ClassSetReset ,
+.Fn AG_ClassSetDestroy ,
+.Fn AG_ClassSetLoad ,
+.Fn AG_ClassSetSave ,
+.Fn AG_ClassSetEdit ,
+.Fn AG_DestroyClass
+and
+.Fn AG_ObjectGetClassName
+appeared in Agar 1.6.0.

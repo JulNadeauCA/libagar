@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * OpenGL context widget. No longer needed as of Agar 1.5 (replaced by
+ * the USE_OPENGL feature of the base AG_Widget(3) class), but kept for
+ * backward compatibility.
+ */
+
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
 #include <agar/config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
@@ -34,6 +41,8 @@
 
 #include <stdarg.h>
 
+static void Reshape(AG_GLView *);
+
 AG_GLView *
 AG_GLViewNew(void *parent, Uint flags)
 {
@@ -41,10 +50,10 @@ AG_GLViewNew(void *parent, Uint flags)
 
 	glv = Malloc(sizeof(AG_GLView));
 	AG_ObjectInit(glv, &agGLViewClass);
-	glv->flags |= flags;
 
-	if (flags & AG_GLVIEW_HFILL) { AG_ExpandHoriz(glv); }
-	if (flags & AG_GLVIEW_VFILL) { AG_ExpandVert(glv); }
+	if (flags & AG_GLVIEW_HFILL) { WIDGET(glv)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_GLVIEW_VFILL) { WIDGET(glv)->flags |= AG_WIDGET_VFILL; }
+	glv->flags |= flags;
 
 	AG_ObjectAttach(parent, glv);
 	return (glv);
@@ -52,7 +61,7 @@ AG_GLViewNew(void *parent, Uint flags)
 
 /* Initialize an OpenGL matrix to identity. GL must be locked. */
 static void
-SetIdentity(GLfloat *M, GLenum which)
+SetIdentity(GLfloat *_Nonnull M, GLenum which)
 {
 	glMatrixMode(which);
 	glPushMatrix();
@@ -62,26 +71,21 @@ SetIdentity(GLfloat *M, GLenum which)
 }
 
 static void
-WidgetMoved(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_GLView *glv = AG_SELF();
+	AG_GLView *glv = AG_GLVIEW_SELF();
 
-	glv->flags |= AG_GLVIEW_RESHAPE;
-}
-
-static void
-MouseButtonDown(AG_Event *event)
-{
-	AG_GLView *glv = AG_SELF();
-
-	if (!AG_WidgetIsFocused(glv))
+	if ((WIDGET(glv)->flags & AG_WIDGET_FOCUSABLE) &&
+	    !AG_WidgetIsFocused(glv))
 		AG_WidgetFocus(glv);
 }
 
 static void
-OnAttach(AG_Event *event)
+OnAttach(AG_Event *_Nonnull event)
 {
-	AG_Widget *parent = AG_SENDER();
+	AG_Widget *parent = AG_PTR(1);
+
+	AG_OBJECT_ISA(parent, "AG_Widget:*");
 
 	if (parent->drv != NULL &&
 	    !(AGDRIVER_CLASS(parent->drv)->flags & AG_DRIVER_OPENGL))
@@ -89,174 +93,231 @@ OnAttach(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_GLView *glv = obj;
 
 	WIDGET(glv)->flags |= AG_WIDGET_FOCUSABLE;
-
+	
+	glv->flags = AG_GLVIEW_INIT_MATRICES;
 	glv->wPre = 100;
 	glv->hPre = 100;
-	glv->bgColor = AG_ColorRGB(0,0,0);
+	memset(&glv->draw_ev, 0, sizeof(AG_Event *) + /* draw_ev */
+	                         sizeof(AG_Event *) + /* overlay_ev */
+	                         sizeof(AG_Event *) + /* underlay_ev */
+	                         sizeof(AG_Event *) + /* scale_ev */
+	                         sizeof(AG_Event *) + /* keydown_ev */
+	                         sizeof(AG_Event *) + /* keyup_ev */
+	                         sizeof(AG_Event *) + /* btndown_ev */
+	                         sizeof(AG_Event *) + /* btnup_ev */
+	                         sizeof(AG_Event *)); /* motion_ev */
+	
+	AG_ColorBlack(&glv->bgColor);
 
-	glv->flags = AG_GLVIEW_INIT_MATRICES;
-	glv->draw_ev = NULL;
-	glv->underlay_ev = NULL;
-	glv->overlay_ev = NULL;
-	glv->scale_ev = NULL;
-	glv->keydown_ev = NULL;
-	glv->btndown_ev = NULL;
-	glv->keyup_ev = NULL;
-	glv->btnup_ev = NULL;
-	glv->motion_ev = NULL;
-
-	AG_SetEvent(glv, "widget-moved", WidgetMoved, NULL);
 	AG_SetEvent(glv, "mouse-button-down", MouseButtonDown, NULL);
 	AG_AddEvent(glv, "attached", OnAttach, NULL);
 }
 
+/* Set an initial size requisition in pixels. */
 void
 AG_GLViewSizeHint(AG_GLView *glv, int w, int h)
 {
-	AG_ObjectLock(glv);
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	glv->wPre = w;
 	glv->hPre = h;
-	AG_ObjectUnlock(glv);
 }
 
+/* Register a rendering routine. */
 void
 AG_GLViewDrawFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->draw_ev = AG_SetEvent(glv, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(glv->draw_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->draw_ev, fmt, ap);
+		va_end(ap);
+	}
+
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a rendering callback routine (before draw). */
 void
 AG_GLViewUnderlayFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->underlay_ev = AG_SetEvent(glv, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(glv->underlay_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->underlay_ev, fmt, ap);
+		va_end(ap);
+	}
+
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a rendering callback routine (post-draw). */
 void
 AG_GLViewOverlayFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->overlay_ev = AG_SetEvent(glv, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(glv->overlay_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->overlay_ev, fmt, ap);
+		va_end(ap);
+	}
+
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a callback routine to run whenever the widget is resized. */
 void
 AG_GLViewScaleFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->scale_ev = AG_SetEvent(glv, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(glv->scale_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->scale_ev, fmt, ap);
+		va_end(ap);
+	}
+
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a "key-down" (key pressed) callback routine. */
 void
 AG_GLViewKeydownFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->keydown_ev = AG_SetEvent(glv, "key-down", fn, NULL);
-	AG_EVENT_GET_ARGS(glv->keydown_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->keydown_ev, fmt, ap);
+		va_end(ap);
+	}
+
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a "key-up" (key released) callback routine. */
 void
 AG_GLViewKeyupFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->keyup_ev = AG_SetEvent(glv, "key-up", fn, NULL);
-	AG_EVENT_GET_ARGS(glv->keyup_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->keyup_ev, fmt, ap);
+		va_end(ap);
+	}
+
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a "mouse-button-down" callback routine. */
 void
 AG_GLViewButtondownFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->btndown_ev = AG_SetEvent(glv, "mouse-button-down", fn, NULL);
-	AG_EVENT_GET_ARGS(glv->btndown_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->btndown_ev, fmt, ap);
+		va_end(ap);
+	}
+
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a "mouse-button-up" callback routine. */
 void
 AG_GLViewButtonupFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->btnup_ev = AG_SetEvent(glv, "mouse-button-up", fn, NULL);
-	AG_EVENT_GET_ARGS(glv->btnup_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->btnup_ev, fmt, ap);
+		va_end(ap);
+	}
+
 	AG_ObjectUnlock(glv);
 }
 
+/* Register a "mouse-motion" callback routine. */
 void
 AG_GLViewMotionFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_GLView *glv = obj;
 
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
+
 	glv->motion_ev = AG_SetEvent(glv, "mouse-motion", fn, NULL);
-	AG_EVENT_GET_ARGS(glv->motion_ev, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(glv->motion_ev, fmt, ap);
+		va_end(ap);
+	}
+
 	AG_ObjectUnlock(glv);
 }
 
-/*
- * Compute the projection matrix for the context and save it for later.
- * Called automatically when the widget is scaled or moved.
- */
-void
-AG_GLViewReshape(AG_GLView *glv)
-{
-	glMatrixMode(GL_TEXTURE);	glPushMatrix();	glLoadIdentity();
-	glMatrixMode(GL_MODELVIEW);	glPushMatrix();	glLoadIdentity();
-	glMatrixMode(GL_PROJECTION);	glPushMatrix(); glLoadIdentity();
-
-	if (glv->scale_ev != NULL) {
-		glv->scale_ev->fn.fnVoid(glv->scale_ev);
-	}
-	glGetFloatv(GL_PROJECTION_MATRIX, glv->mProjection);
-	glGetFloatv(GL_MODELVIEW_MATRIX, glv->mModelview);
-	glGetFloatv(GL_TEXTURE_MATRIX, glv->mTexture);
-	
-	glMatrixMode(GL_PROJECTION);	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
-	glMatrixMode(GL_TEXTURE);	glPopMatrix();
-}
-
-void
-AG_GLViewSizeRequest(void *obj, AG_SizeReq *r)
-{
-	AG_GLView *glv = obj;
-
-	r->w = glv->wPre;
-	r->h = glv->hPre;
-}
-
-int
-AG_GLViewSizeAllocate(void *obj, const AG_SizeAlloc *a)
+static int
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_GLView *glv = obj;
 
@@ -268,27 +329,28 @@ AG_GLViewSizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 void
-AG_GLViewSetBgColor(AG_GLView *glv, AG_Color c)
+AG_GLViewSetBgColor(AG_GLView *glv, const AG_Color *c)
 {
+	AG_OBJECT_ISA(glv, "AG_Widget:AG_GLView:*");
 	AG_ObjectLock(glv);
-	glv->bgColor = c;
+
+	memcpy(&glv->bgColor, c, sizeof(AG_Color));
+
 	AG_ObjectUnlock(glv);
 }
 
-void
-AG_GLViewDraw(void *obj)
+static void
+Draw(void *_Nonnull obj)
 {
 	AG_GLView *glv = obj;
 	AG_Driver *drv = WIDGET(glv)->drv;
 	Uint hView;
 	
 	if (glv->flags & AG_GLVIEW_BGFILL) {
-		AG_DrawRect(glv,
-		    AG_RECT(0,0, WIDTH(glv), HEIGHT(glv)),
-		    glv->bgColor);
+		AG_DrawRect(glv, &WIDGET(glv)->r, &glv->bgColor);
 	}
 	if (glv->underlay_ev != NULL)
-		glv->underlay_ev->fn.fnVoid(glv->underlay_ev);
+		glv->underlay_ev->fn(glv->underlay_ev);
 
 	glPushAttrib(GL_TRANSFORM_BIT | GL_VIEWPORT_BIT);
 
@@ -298,9 +360,11 @@ AG_GLViewDraw(void *obj)
 		SetIdentity(glv->mModelview, GL_MODELVIEW);
 		SetIdentity(glv->mTexture, GL_TEXTURE);
 	}
-	if (glv->flags & AG_GLVIEW_RESHAPE) {
+	if ((glv->flags & AG_GLVIEW_RESHAPE) ||
+	    (WIDGET(glv)->flags & AG_WIDGET_GL_RESHAPE)) {
 		glv->flags &= ~(AG_GLVIEW_RESHAPE);
-		AG_GLViewReshape(glv);
+		WIDGET(glv)->flags &= ~(AG_WIDGET_GL_RESHAPE);
+		Reshape(glv);
 	}
 
 	if (AGDRIVER_SINGLE(drv)) {
@@ -330,7 +394,7 @@ AG_GLViewDraw(void *obj)
 	glDisable(GL_CLIP_PLANE3);
 	
 	if (glv->draw_ev != NULL)
-		glv->draw_ev->fn.fnVoid(glv->draw_ev);
+		glv->draw_ev->fn(glv->draw_ev);
 	
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
@@ -344,9 +408,41 @@ AG_GLViewDraw(void *obj)
 
 	if (glv->overlay_ev != NULL) {
 		glPushAttrib(GL_TRANSFORM_BIT);
-		glv->overlay_ev->fn.fnVoid(glv->overlay_ev);
+		glv->overlay_ev->fn(glv->overlay_ev);
 		glPopAttrib();
 	}
+}
+
+/*
+ * Compute the projection matrix for the context and save it for later.
+ * Called automatically when the widget is scaled or moved.
+ */
+static void
+Reshape(AG_GLView *glv)
+{
+	glMatrixMode(GL_TEXTURE);	glPushMatrix();	glLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);	glPushMatrix();	glLoadIdentity();
+	glMatrixMode(GL_PROJECTION);	glPushMatrix(); glLoadIdentity();
+
+	if (glv->scale_ev != NULL) {
+		glv->scale_ev->fn(glv->scale_ev);
+	}
+	glGetFloatv(GL_PROJECTION_MATRIX, glv->mProjection);
+	glGetFloatv(GL_MODELVIEW_MATRIX, glv->mModelview);
+	glGetFloatv(GL_TEXTURE_MATRIX, glv->mTexture);
+	
+	glMatrixMode(GL_PROJECTION);	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
+	glMatrixMode(GL_TEXTURE);	glPopMatrix();
+}
+
+static void
+SizeRequest(void *obj, AG_SizeReq *r)
+{
+	AG_GLView *glv = obj;
+
+	r->w = glv->wPre;
+	r->h = glv->hPre;
 }
 
 AG_WidgetClass agGLViewClass = {
@@ -355,15 +451,16 @@ AG_WidgetClass agGLViewClass = {
 		sizeof(AG_GLView),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	AG_GLViewDraw,
-	AG_GLViewSizeRequest,
-	AG_GLViewSizeAllocate
+	Draw,
+	SizeRequest,
+	SizeAllocate
 };
 
 #endif /* HAVE_OPENGL */
+#endif /* AG_WIDGETS */

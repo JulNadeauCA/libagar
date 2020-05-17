@@ -1,0 +1,501 @@
+.\"
+.\" Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd April 27, 2010
+.Dt SG_OBJECT 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm SG_Object
+.Nd Agar-SG polyhedral object node
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/sg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+describes a geometrical object bounded by a polyhedral approximation.
+The data format used by
+.Nm
+is based on Baumgart's
+.Em winged-edge
+data structure.
+The structure describes a set of facets (triangles or quads).
+Each facet references 3 or 4 halfedges, and each halfedge references the
+incident vertex (and incident facet).
+Facets and halfedges also contain pointers to their opposites.
+A mesh of two triangles:
+.Bd -literal
+      1       4
+      ________
+    /  \\    /
+  /______\\/
+
+ 2        3
+
+.Ed
+Would be described as follows:
+.Bd -literal
+                     o---[ HalfEdge1 ]---[ Vertex1 ]---o
+                     |                                 |
+        [ Facet1 ]---+---[ HalfEdge2 ]---[ Vertex2 ]   |
+            |        |                                 |
+            |        o---[ HalfEdge3 ]---[ Vertex3 ]   |
+            |                 |                        |
+        [ Facet2 ]---+--------o                        |
+                     |                                 |
+                     |---[ HalfEdge4 ]---[ Vertex4 ]   |
+                     |                                 |
+                     +---[ HalfEdge5 ]-----------------o
+
+.Ed
+Surfaces as well as solid objects may be represented.
+The link between facets and halfedges expresses handedness (for
+surfaces this is the notion of "side", for closed solids this is the notion of
+being "inside" or "outside").
+When
+.Nm
+is used to describe closed solids, the convention is: if one looks at an
+object from the outside and an edge is pointing up, its HEAD halfedge
+references the facet at the LEFT.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr SG_Node 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "SG_Object *"
+.Fn SG_ObjectNew "SG_Node *parent" "const char *name"
+.Pp
+.Ft int
+.Fn SG_ObjectLoadPLY "SG_Object *so" "const char *name" "Uint flags"
+.Pp
+.Ft void
+.Fn SG_ObjectFreeGeometry "SG_Object *so"
+.Pp
+.nr nS 0
+The
+.Fn SG_ObjectNew
+function allocates, initializes, and attaches a
+.Nm
+object.
+.Pp
+.Fn SG_ObjectLoadPLY
+loads a mesh from a Stanford PLY file in either ASCII or binary format.
+Returns 0 on success or -1 if an error occurred.
+Acceptable
+.Fa flags
+options include:
+.Pp
+.Bl -tag -compact -width "SG_PLY_LOAD_VTX_NORMALS "
+.It SG_PLY_LOAD_VTX_NORMALS
+Read vertex normals.
+.It SG_PLY_LOAD_VTX_COLORS
+Read vertex colors.
+.It SG_PLY_LOAD_TEXCOORDS
+Read texture coordinates.
+.It SG_PLY_DUP_VERTICES
+Check for, and eliminate duplicate vertices.
+.El
+.Pp
+The
+.Fn SG_ObjectFreeGeometry
+function clears all vertices, edges and facets associated with an object.
+.\" MANLINK(SG_Vertex)
+.Sh SPECIFYING VERTICES
+.nr nS 1
+.Ft void
+.Fn SG_VertexInit "SG_Vertex *vtx"
+.Pp
+.Ft int
+.Fn SG_VertexNew "SG_Object *so" "const M_Vector3 pos"
+.Pp
+.Ft int
+.Fn SG_VertexNewv "SG_Object *so" "const M_Vector3 *pos"
+.Pp
+.Ft int
+.Fn SG_VertexNewvn "SG_Object *so" "const M_Vector3 *pos" "const M_Vector3 *normal"
+.Pp
+.Ft int
+.Fn SG_VertexNew2 "SG_Object *so" "M_Real x" "M_Real y"
+.Pp
+.Ft int
+.Fn SG_VertexNew3 "SG_Object *so" "M_Real x" "M_Real y" "M_Real z"
+.Pp
+.Ft int
+.Fn SG_VertexNewCopy "SG_Object *so" "const SG_Vertex *vtx"
+.Pp
+.nr nS 0
+The
+.Fn SG_VertexInit
+function initializes a vertex
+.Fa vtx
+that has already been allocated.
+.Pp
+The
+.Fn SG_VertexNew
+function allocates, initializes and attaches a new vertex specified as a
+.Xr M_Vector 3 ,
+and returns an index to the new vertex (or to an existing vertex, if there
+is currently a vertex with the same coordinates, as compared up to machine
+precision).
+.Pp
+.Fn SG_VertexNewv
+is a variant of
+.Fn SG_VertexNew
+which accepts a pointer to a
+.Ft M_Vector3 .
+.Pp
+.Fn M_VertexNewvn
+is also a variant of
+.Fn SG_VertexNew ,
+which allows a normal vector
+.Fa norm
+to be specified.
+This normal vector will be used subsequently for lighting and physics
+calculations.
+.Pp
+The
+.Fn SG_VertexNew2
+and
+.Fn SG_VertexNew3
+variants of
+.Fn SG_VertexNew
+accept coordinates as individual
+.Xr M_Real 3
+arguments.
+.Pp
+.Fn SG_VertexNewCopy
+creates a vertex using the coordinates from an existing vertex
+.Fa vtx .
+.\" MANLINK(SG_Edge)
+.Sh SPECIFYING EDGES
+.nr nS 1
+.Ft "SG_Edge *"
+.Fn SG_Edge2 "SG_Object *so" "int vTail" "int vHead"
+.Pp
+.Ft "SG_Edge *"
+.Fn SG_EdgeFindByVtx "SG_Object *so" "int v1" "int v2"
+.Pp
+.Ft Uint
+.Fn SG_HashEdge "SG_Object *so" "int v1" "int v2"
+.Pp
+.Ft int
+.Fn SG_EdgeRehash "SG_Object *so" "Uint nBuckets"
+.Pp
+.nr nS 0
+The
+.Fn SG_Edge2
+function creates an edge (i.e., two halfedges) incident to the given vertices
+.Fa vTail
+and
+.Fa vHead .
+The function returns a pointer to the
+.Ft SG_Edge
+structure describing the HEAD halfedge.
+By convention, the HEAD halfedge points to the facet at the left of the edge.
+If the edge already exists,
+.Fn SG_Edge2
+returns a pointer to (the HEAD halfedge of) the existing edge.
+.Pp
+The
+.Fn SG_EdgeFindByVtx
+function searches for an (half)edge between vertices
+.Fa v1
+and
+.Fa v2 ,
+returning a pointer to the
+.Fa SG_Edge
+structure on success, or NULL if no match was found.
+.Fn SG_EdgeFindByVtx
+is an O(1) operation.
+.Pp
+The
+.Fn SG_HashEdge
+function returns the index of the
+.Va edgeTbl
+bucket corresponding to the edge between vertices
+.Fa v1
+and
+.Fa v2 .
+.Pp
+.Fn SG_EdgeRehash
+resizes an object's hash table of (half)edges to contain
+.Fa nBuckets
+buckets in total.
+If insufficient memory is available, the existing table is preserved and the
+function returns -1.
+.\" MANLINK(SG_Facet)
+.Sh SPECIFYING FACETS
+.nr nS 1
+.Ft "SG_Facet *"
+.Fn SG_FacetNew "SG_Object *so" "int n"
+.Pp
+.Ft "SG_Facet *"
+.Fn SG_Facet3 "SG_Object *so"
+.Pp
+.Ft "SG_Facet *"
+.Fn SG_Facet4 "SG_Object *so"
+.Pp
+.Ft "SG_Facet *"
+.Fn SG_FacetFromTri3 "SG_Object *so" "int v1" "int v2" "int v3"
+.Pp
+.Ft "SG_Facet *"
+.Fn SG_FacetFromQuad4 "SG_Object *so" "int v1" "int v2" "int v3" "int v4"
+.Pp
+.Ft void
+.Fn SG_FacetDelete "SG_Facet *f"
+.Pp
+.nr nS 0
+The
+.Fn SG_FacetNew
+function allocates, initializes and attaches a new facet.
+The
+.Fa n
+must be either 3 for a triangle, or 4 for a quad facet.
+New facets don't have any associated edges / vertices.
+The
+.Fn SG_Facet3
+and
+.Fn SG_Facet4
+variants create triangle and quad facets, respectively.
+.Pp
+The
+.Fn SG_FacetFromTri3
+and
+.Fn SG_FacetFromQuad4
+functions create a triangular or quad facet from a contour of specified
+vertices, creating edges as necessary.
+Note that if the contour includes one or more existing edges, the
+orientation of the facet may be reversed in order to remain consistent
+with the existing facets sharing those edges.
+.Pp
+The
+.Fn SG_FacetDelete
+function deletes a facet, and removes any reference to it.
+.Pp
+.Fn SG_FacetExtrude
+creates, from an existing facet
+.Fa f ,
+an extrusion along direction
+.Fa d .
+The function returns 0 on success or -1 if the feature could not be
+created.
+The
+.Fa mode
+argument may be one of:
+.Pp
+.Bl -tag -compact -width "SG_EXTRUDE_VERTICES "
+.It SG_EXTRUDE_REGION
+Create 2n edges and n+1 faces.
+.It SG_EXTRUDE_EDGES
+Create 2n edges and n faces.
+.It SG_EXTRUDE_VERTICES
+Create n edges and no faces.
+.El
+.Sh GEOMETRICAL QUERIES ON FACETS
+.nr nS 1
+.Ft M_Vector3
+.Fn SG_FacetNormal "SG_Object *so" "SG_Facet *f"
+.Pp
+.Ft M_Real
+.Fn SG_FacetArea "SG_Object *so" "SG_Facet *f"
+.Pp
+.Ft M_Real
+.Fn SG_FacetAreaSigned "SG_Object *so" "SG_Facet *f"
+.Pp
+.Ft M_Vector3
+.Fn SG_FacetCentroid "SG_Object *so" "SG_Facet *f"
+.Pp
+.nr nS 0
+The
+.Fn SG_FacetNormal
+function computes the normal vector for a given facet
+.Fa f .
+Mathematically, this is the vector cross-product of three vertices of
+the facet (for quad facets, the 4th vertex is ignored), normalized.
+.Pp
+.Fn SG_FacetArea
+computes the (unsigned) area covered by a facet
+.Fn SG_FacetAreaSigned
+computes the signed area of a facet.
+.Pp
+.Fn SG_FacetCentroid
+computes the center of mass (centroid) of a facet.
+.Sh MISCELLANEOUS OPERATIONS
+.nr nS 1
+.Ft int
+.Fn SG_ObjectCheckConnectivity "SG_Object *so" "AG_Console *console"
+.Pp
+.Ft int
+.Fn SG_ObjectNormalize "SG_Object *so"
+.Pp
+.Ft Uint
+.Fn SG_ObjectConvQuadsToTriangles "SG_Object *so"
+.Pp
+.Ft "Uint8 *"
+.Fn SG_ObjectEdgeMatrix "SG_Object *so" "Uint *n"
+.Pp
+.Ft "Uint8 *"
+.Fn SG_ObjectFacetMatrix "SG_Object *so" "Uint *n"
+.Pp
+.nr nS 0
+The
+.Fn SG_ObjectCheckConnectivity
+function performs (potentially very expensive) checks for inconsistencies
+in the edge/facet/vertex connectivity of an object.
+If any error is found, the function immediately returns -1 and sets the
+error message accordingly.
+If
+.Fa cons
+argument is non-NULL, errors are reported as
+.Xr AG_Console 3
+messages, otherwise messages are printed using
+.Xr AG_Verbose 3 .
+.Pp
+.Fn SG_ObjectNormalize
+calculates the normal vector for every facet of the object, using
+.Fn SG_FacetNormal
+on the individual facets.
+.Pp
+The
+.Fn SG_ObjectConvQuadsToTriangles
+converts all quad facets to triangular facets, returning the total number
+of facets that have been converted.
+.Pp
+The
+.Fn SG_ObjectEdgeMatrix
+function generates a vertex/edge adjacency matrix for the object.
+.Fn SG_ObjectFacetMatrix
+generates a vertex/facet adjacency matrix.
+Both functions will allocate the matrix and return the size into
+.Fa n .
+The functions may fail and return NULL.
+.Sh FLAGS
+The following public
+.Nm
+flags are defined:
+.Bl -tag -width "SG_OBJECT_NODUPVERTEX "
+.It SG_OBJECT_STATIC
+Advise to the scene-partitioning algorithms that the geometry of the object
+will not change once it is attached to the scene.
+This allows some important optimizations to be performed.
+.It SG_OBJECT_NODUPVERTEX
+In
+.Fn SG_VertexNew ,
+test for an existing vertex at the new vertex coordinates.
+If a match is found, return the existing vertex instead of
+creating a new one.
+.El
+.Pp
+The following public
+.Ft SG_Vertex
+flags are defined:
+.Pp
+.Bl -tag -compact -width "SG_VERTEX_HIGHLIGHTED "
+.It SG_VERTEX_SELECTED
+Vertex is currently selected for edition.
+.It SG_VERTEX_HIGHLIGHTED
+Vertex is currently highlighted.
+.El
+.Sh STRUCTURE DATA
+For the
+.Nm
+object:
+.Pp
+.Bl -tag -compact -width "SG_EdgeEnt *edgeTbl "
+.It Ft Uint flags
+Option flags, see
+.Dq FLAGS
+section for details.
+.It Ft SG_Vertex *vtx
+Array of vertices; see below.
+.It Ft Uint nvtx
+Vertex count.
+.It Ft SG_EdgeEnt *edgeTbl
+Hash table of halfedges; see below.
+.It Ft Uint nEdgeTbl
+Number of buckets in halfedge table.
+.It Ft SLIST facets
+Facets (quads or triangles); see below.
+.It Ft SG_Material *mat
+Associated material, see
+.Xr SG_Material 3 .
+.El
+.Pp
+For the
+.Ft SG_EdgeEnt
+(halfedge bucket) structure:
+.Pp
+.Bl -tag -compact -width "SLIST edges "
+.It SLIST edges
+List of halfedges in bucket
+.El
+.Pp
+For the
+.Ft SG_Edge
+(halfedge) structure:
+.Pp
+.Bl -tag -compact -width "SG_Facet *f "
+.It int v
+Index of incident vertex
+.It SG_Facet *f
+Pointer to incident facet
+.It SG_Edge *oe
+Pointer to opposite halfedge
+.El
+.Pp
+For the
+.Ft SG_Vertex
+structure:
+.Pp
+.Bl -tag -compact -width "M_Vector3 v "
+.It M_Real s,t
+Texture coordinates (T2F)
+.It M_Color c
+Vertex color (C4F)
+.It M_Vector3 n
+Normal vector (N3F)
+.It M_Vector3 v
+Vertex position (V3F)
+.It Uint flags
+Vertex option flags (see
+.Dq FLAGS
+section for details).
+.El
+.Sh SEE ALSO
+.Xr AG_Queue 3 ,
+.Xr M_Real 3 ,
+.Xr M_Vector 3 ,
+.Xr SG 3 ,
+.Xr SG_Intro 3 ,
+.Xr SG_Material 3 ,
+.Xr SG_Node 3
+.Sh HISTORY
+The
+.Nm
+node class first appeared in Agar 1.6.0.

@@ -29,6 +29,10 @@
 
 #include <agar/core/core.h>
 
+/* Import inlinables */
+#undef AG_INLINE_HEADER
+#include <agar/core/inline_tbl.h>
+
 /* Allocate and initialize a table. */
 AG_Tbl *
 AG_TblNew(Uint nBuckets, Uint flags)
@@ -46,8 +50,8 @@ AG_TblInit(AG_Tbl *tbl, Uint nBuckets, Uint flags)
 {
 	Uint i;
 
-	tbl->nBuckets = nBuckets;
 	tbl->flags = flags;
+	tbl->nBuckets = nBuckets;
 	tbl->buckets = Malloc(nBuckets*sizeof(AG_TblBucket));
 
 	for (i = 0; i < nBuckets; i++) {
@@ -125,7 +129,7 @@ AG_TblInsertHash(AG_Tbl *tbl, Uint h, const char *key, const AG_Variable *V)
 			break;
 	}
 	if (!(tbl->flags & AG_TBL_DUPLICATES) && i < buck->nEnts) {
-		AG_SetError("Existing entry: %s", key);
+		AG_SetErrorV("E27", "Table entry exists");
 		return (-1);
 	}
 
@@ -158,7 +162,7 @@ AG_TblDeleteHash(AG_Tbl *tbl, Uint h, const char *key)
 			break;
 	}
 	if (i == buck->nEnts) {
-		AG_SetError("No such entry: %s", key);
+		AG_SetErrorV("E28", "No such table entry");
 		return (-1);
 	}
 

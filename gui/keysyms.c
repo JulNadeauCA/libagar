@@ -1,5 +1,9 @@
 /*	Public domain	*/
 
+/*
+ * Map AG_KeySym to short strings describing the corresponding key.
+ */
+
 #include <agar/core/core.h>
 
 const char *agKeySyms[] = {
@@ -329,5 +333,5 @@ const char *agKeySyms[] = {
 	NULL
 };
 
-const int agnKeySyms = sizeof(agKeySyms)/sizeof(agKeySyms[0]);
+const int agKeySymCount = sizeof(agKeySyms)/sizeof(agKeySyms[0]);
 

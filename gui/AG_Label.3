@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -40,10 +40,10 @@
 The
 .Nm
 widget displays single-line or multi-line text.
-In the case of
-.Sq polled
-labels, the text can contain elements which are going to be dereferenced
-on rendering.
+It supports static labels as well as
+.Em polled
+labels (labels containing dynamically-updated data which will be dereferenced
+on rendering).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -187,13 +187,6 @@ accepts an Agar-style format string (see
 for details).
 Subsequent arguments must be pointers (as opposed to literal data),
 and the formatting engine also provides Agar-specific extensions.
-.Pp
-Note that the length of polled labels is difficult to determine automatically,
-so
-.Fn AG_LabelSizeHint
-and
-.Xr AG_ExpandHoriz 3
-are typically used with polled labels.
 .Sh EVENTS
 The
 .Nm
@@ -203,33 +196,24 @@ The following
 .Nm
 .Fa flags
 are defined:
-.Bl -tag -width "AG_LABEL_NOMINSIZE "
+.Bl -tag -width "AG_LABEL_PARTIAL "
 .It AG_LABEL_FRAME
 Draw a visible frame around the label.
-.It AG_LABEL_NOMINSIZE
-Don't enforce a minimum size on the label.
-If the label becomes partially hidden, the text will be truncated with a
-.Sq ...
-string.
 .It AG_LABEL_PARTIAL
 The label is partially hidden (read-only).
 .It AG_LABEL_REGEN
 Force re-rendering of the text at next draw (used internally by
 .Fn AG_LabelString ,
 etc.)
+.It AG_LABEL_SLOW
+Update polled labels every 2s (as opposed to 500ms).
 .It AG_LABEL_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
-Polled labels, whenever possible, should use this option (otherwise a
-.Fn AG_LabelSizeHint
-call is needed).
+Expand horizontally in parent container.
 .It AG_LABEL_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
-This option is useful with dynamically changing multi-line labels.
+Expand vertically in parent container.
 .It AG_LABEL_EXPAND
 Shorthand for
-.Dv AG_LABEL_HFILL|AG_LABEL_VFILL .
+.Dv AG_LABEL_HFILL | AG_LABEL_VFILL .
 .El
 .Sh EXAMPLES
 The following code snippet creates a window containing both a static label
@@ -260,8 +244,8 @@ can be used in polled labels (and is also recognized by
 For more details on custom format specifiers, refer to
 .Xr AG_String 3 .
 .Bd -literal -offset indent
-size_t
-PrintMyVector(AG_FmtString *fs, char *dst, size_t dstSize)
+AG_Size
+PrintMyVector(AG_FmtString *fs, char *dst, AG_Size dstSize)
 {
 	struct my_vector *my = AG_LABEL_ARG(fs);
 	return AG_Snprintf(dst, dstSize, "[%f,%f]", my->x, my->y);

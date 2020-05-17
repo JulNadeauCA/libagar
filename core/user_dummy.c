@@ -1,6 +1,7 @@
 /*	Public domain	*/
 
 #include <agar/core/core.h>
+#ifdef AG_USER
 
 /* Lookup a user account by numerical UID */
 static int
@@ -40,3 +41,4 @@ const AG_UserOps agUserOps_dummy = {
 	GetRealUser,
 	GetEffectiveUser
 };
+#endif /* AG_USER */

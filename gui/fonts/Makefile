@@ -2,20 +2,59 @@ TOP=	../..
 include ${TOP}/Makefile.config
 
 DATADIR=	${TTFDIR}
-DATAFILES_SRC=	minimal.xcf \
-		serif.xcf \
+DATAFILES_SRC=	OFL-FAQ.txt \
+		Charter-LICENSE.txt \
+		DejaVu-LICENSE.txt \
+		Source-Han-LICENSE.txt \
 		Vera-Copyright.txt \
-		Vera-README.txt \
-		Vera-ReleaseNotes.txt \
-		Vera.ttf \
-		VeraBI.ttf \
-		VeraBd.ttf \
-		VeraIt.ttf \
-		VeraMoBI.ttf \
-		VeraMoBd.ttf \
-		VeraMoIt.ttf \
-		VeraMono.ttf \
-		VeraSe.ttf \
-		VeraSeBd.ttf
+		League-Gothic-LICENSE.md \
+		League-Spartan-LICENSE.md \
+		Mukta-OFL.txt \
+		algue.ttf \
+		algue-bold.ttf \
+		algue-italic.ttf \
+		algue-bold-italic.ttf \
+		charter-bold-italic.otf \
+		charter-bold.otf \
+		charter-italic.otf \
+		charter.otf \
+		cm-LICENSE.txt \
+		cm-sans-bold.ttf \
+		cm-sans-condensed.ttf \
+		cm-sans.ttf \
+		cm-serif-bold-italic.ttf \
+		cm-serif-bold.ttf \
+		cm-serif-italic.ttf \
+		cm-serif-upright-italic.ttf \
+		cm-serif.ttf \
+		cm-typewriter-bold-italic.ttf \
+		cm-typewriter-bold.ttf \
+		cm-typewriter-italic.ttf \
+		cm-typewriter.ttf \
+		courier-prime-bold.ttf \
+		courier-prime-bold-italic.ttf \
+		courier-prime-italic.ttf \
+		courier-prime.ttf \
+		cp437-16.bmp \
+		fraktur-LICENSE.txt \
+		fraktur.ttf \
+		league-gothic.otf \
+		league-gothic-italic.otf \
+		league-gothic-condensed.otf \
+		league-gothic-condensed-italic.otf \
+		league-spartan.otf \
+		minimal.xcf \
+		source-han-sans.otf \
+		unialgue.ttf \
+		vera.ttf \
+		vera-bold-italic.ttf \
+		vera-bold.ttf \
+		vera-italic.ttf \
+		vera-mono-bold-italic.ttf \
+		vera-mono-bold.ttf \
+		vera-mono-italic.ttf \
+		vera-mono.ttf \
+		vera-serif-bold.ttf \
+		vera-serif.ttf
 
 include ${TOP}/mk/build.prog.mk

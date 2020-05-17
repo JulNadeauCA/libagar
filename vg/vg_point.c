@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,22 +36,44 @@
 #include <agar/vg/vg_view.h>
 #include <agar/vg/icons.h>
 
-static void
-Init(void *p)
+VG_Point *
+VG_PointNew(void *pNode, VG_Vector pos)
 {
-	VG_Point *pt = p;
+	VG_Point *vp;
 
-	pt->size = 0.0f;
+	vp = (VG_Point *)AG_Malloc(sizeof(VG_Point));
+	VG_NodeInit(vp, &vgPointOps);
+	VG_Translate(vp, pos);
+	VG_NodeAttach(pNode, vp);
+	return (vp);
+}
+
+void
+VG_PointSize(VG_Point *vp, double r)
+{
+	VG *vg = VGNODE(vp)->vg;
+
+	AG_ObjectLock(vg);
+	vp->size = r;
+	AG_ObjectUnlock(vg);
 }
 
 static void
-Draw(void *p, VG_View *vv)
+Init(void *_Nonnull obj)
 {
-	VG_Point *pt = p;
-	float size, i;
+	VG_Point *pt = obj;
+
+	pt->size = 0.0;
+}
+
+static void
+Draw(void *_Nonnull obj, VG_View *_Nonnull vv)
+{
+	VG_Point *pt = obj;
+	double size, i;
 
 	if (vv->flags & VG_VIEW_CONSTRUCTION) {
-		size = 3.0f;
+		size = 3.0;
 	} else {
 		size = pt->size;
 	}
@@ -60,20 +82,21 @@ Draw(void *p, VG_View *vv)
 		int x, y;
 
 		VG_GetViewCoords(vv, VG_Pos(pt), &x, &y);
-		AG_PutPixel(vv, x, y, c);
+		AG_PutPixel(vv, x, y, &c);
 		for (i = 0; i < size; i += 1.0f) {
-			AG_PutPixel(vv, x-i, y, c);
-			AG_PutPixel(vv, x+i, y, c);
-			AG_PutPixel(vv, x, y-i, c);
-			AG_PutPixel(vv, x, y+i, c);
+			AG_PutPixel(vv, x-i, y, &c);
+			AG_PutPixel(vv, x+i, y, &c);
+			AG_PutPixel(vv, x, y-i, &c);
+			AG_PutPixel(vv, x, y+i, &c);
 		}
 	}
 }
 
 static void
-Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
+Extent(void *_Nonnull obj, VG_View *_Nonnull vv, VG_Vector *_Nonnull a,
+    VG_Vector *_Nonnull b)
 {
-	VG_Point *pt = p;
+	VG_Point *pt = obj;
 	VG_Vector pos = VG_Pos(pt);
 
 	*a = pos;
@@ -81,9 +104,9 @@ Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 }
 
 static float
-PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
+PointProximity(void *_Nonnull obj, VG_View *_Nonnull vv, VG_Vector *_Nonnull vPt)
 {
-	VG_Point *pt = p;
+	VG_Point *pt = obj;
 	VG_Vector pos = VG_Pos(pt);
 	float d;
 
@@ -93,18 +116,18 @@ PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
 }
 
 static void
-Move(void *p, VG_Vector vPos, VG_Vector vRel)
+Move(void *_Nonnull obj, VG_Vector vPos, VG_Vector vRel)
 {
-	VG_SetPosition(p, vPos);
+	VG_SetPosition(obj, vPos);
 }
 
-static void *
-Edit(void *p, VG_View *vv)
+static void *_Nonnull
+Edit(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_Point *vp = p;
+	VG_Point *vp = obj;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
-	AG_NumericalNewFlt(box, 0, NULL, _("Render size: "), &vp->size);
+	AG_NumericalNewDbl(box, 0, NULL, _("Render size: "), &vp->size);
 	return (box);
 }
 

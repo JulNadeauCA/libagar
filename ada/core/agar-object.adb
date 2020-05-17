@@ -3,7 +3,7 @@
 --                          A G A R . O B J E C T                           --
 --                                 B o d y                                  --
 --                                                                          --
--- Copyright (c) 2018, Julien Nadeau Carriere (vedge@hypertriton.com)       --
+-- Copyright (c) 2018-2019, Julien Nadeau Carriere (vedge@csoft.net)        --
 -- Copyright (c) 2010, coreland (mark@coreland.ath.cx)                      --
 --                                                                          --
 -- Permission to use, copy, modify, and/or distribute this software for any --
@@ -57,28 +57,32 @@ package body Agar.Object is
   end;
 
   procedure Init_Object
-    (Object : in Object_Not_Null_Access;
-     Class  : in Class_Not_Null_Access;
-     Static : in Boolean := False) is
+    (Object         : in Object_Not_Null_Access;
+     Class          : in Class_Not_Null_Access;
+     Static         : in Boolean := False;
+     Name_On_Attach : in Boolean := False)
+  is
+    C_Flags : C.unsigned := 0;
   begin
+    AG_ObjectInit (Object, Class);
+    C_Flags := Object.Flags;
     if Static then
-    	AG_ObjectInitStatic (Object, Class);
-    else
-    	AG_ObjectInit (Object, Class);
+      C_Flags := C_Flags or OBJECT_STATIC;
     end if;
+    if Name_On_Attach then
+      C_Flags := C_Flags or OBJECT_NAME_ON_ATTACH;
+    end if;
+    Object.Flags := C_Flags;
   end;
   
   procedure Attach
-    (Root   : in Object_Not_Null_Access;
-     Parent : in String;
-     Object : in Object_Access)
+    (Parent : in Object_Access;
+     Child  : in Object_not_null_Access)
   is
-    Ch_Parent : aliased C.char_array := C.To_C(Parent);
   begin
-    AG_ObjectAttachToNamed
-      (Root   => Root,
-       Parent => CS.To_Chars_Ptr(Ch_Parent'Unchecked_Access),
-       Object => Object);
+    AG_ObjectAttach
+      (Parent => Parent,
+       Child  => Child);
   end;
 
   function Find
@@ -213,8 +217,8 @@ package body Agar.Object is
   begin
     Class := AG_CreateClass
       (Hierarchy   => CS.To_Chars_Ptr(Ch_Hierarchy'Unchecked_Access),
-       Object_Size => C.size_t(Object_Size / System.Storage_Unit),
-       Class_Size  => C.size_t(Class_Size / System.Storage_Unit),
+       Object_Size => AG_Size(Object_Size / System.Storage_Unit),
+       Class_Size  => AG_Size(Class_Size / System.Storage_Unit),
        Major       => C.unsigned(Major),
        Minor       => C.unsigned(Minor));
     if Class = null then
@@ -357,32 +361,21 @@ package body Agar.Object is
       (Object  => Object,
        Pattern => CS.To_Chars_Ptr(Ch_Pattern'Unchecked_Access)) = 1;
   end;
+  
+  function Is_A
+    (Object  : in Object_Not_Null_Access;
+     Pattern : in String) return Boolean
+  is
+    Ch_Pattern : aliased C.char_array := C.To_C(Pattern);
+  begin
+    return AG_OfClass
+      (Object  => Object,
+       Pattern => CS.To_Chars_Ptr(Ch_Pattern'Unchecked_Access)) = 1;
+  end;
 
   function In_Use (Object : in Object_Not_Null_Access) return Boolean is
   begin
     return AG_ObjectInUse(Object) = 1;
-  end;
-
-  function Add_Dependency
-    (Object     : in Object_Not_Null_Access;
-     Dependency : in Object_Not_Null_Access;
-     Persistent : in Boolean := False) return Dependency_Access is
-  begin
-    return AG_ObjectAddDep
-      (Object     => Object,
-       Dependency => Dependency,
-       Persistent => Boolean'Pos(Persistent));
-  end;
-
-  function Find_Dependency
-    (Object  : in Object_Not_Null_Access;
-     Index   : in Interfaces.Unsigned_32;
-     Pointer : access Object_Not_Null_Access) return Boolean is
-  begin
-    return AG_ObjectFindDep
-      (Object  => Object,
-       Index   => Index,
-       Pointer => Pointer) = 0;
   end;
 
   -------------------
@@ -563,51 +556,23 @@ package body Agar.Object is
   end;
   
   procedure Post_Event
-    (Source : in Object_Access;
-     Target : in Object_Not_Null_Access;
+    (Object : in Object_Not_Null_Access;
      Event  : in String)
   is
     Ch_Event  : aliased C.char_array := C.To_C(Event);
   begin
     AG_PostEvent
-      (Source => Source,
-       Target => Target,
+      (Object => Object,
        Event  => CS.To_Chars_Ptr(Ch_Event'Unchecked_Access),
        Format => CS.Null_Ptr);
   end;
   
   procedure Post_Event
-    (Source : in Object_Access;
-     Target : in Object_Not_Null_Access;
+    (Object : in Object_Not_Null_Access;
      Event  : in Event_Not_Null_Access) is
   begin
     AG_PostEventByPtr
-      (Source => Source,
-       Target => Target,
-       Event  => Event,
-       Format => CS.Null_Ptr);
-  end;
-  
-  procedure Post_Event
-    (Target : in Object_Not_Null_Access;
-     Event  : in String)
-  is
-    Ch_Event  : aliased C.char_array := C.To_C(Event);
-  begin
-    AG_PostEvent
-      (Source => Null,
-       Target => Target,
-       Event  => CS.To_Chars_Ptr(Ch_Event'Unchecked_Access),
-       Format => CS.Null_Ptr);
-  end;
-
-  procedure Post_Event
-    (Target : in Object_Not_Null_Access;
-     Event  : in Event_Not_Null_Access) is
-  begin
-    AG_PostEventByPtr
-      (Source => Null,
-       Target => Target,
+      (Object => Object,
        Event  => Event,
        Format => CS.Null_Ptr);
   end;

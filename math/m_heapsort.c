@@ -130,7 +130,7 @@
 }
 
 int
-M_HeapSort(void *vbase, size_t nmemb, size_t size,
+M_HeapSort(void *vbase, AG_Size nmemb, AG_Size size,
     int (*compar)(const void *, const void *))
 {
 	int cnt, i, j, l;

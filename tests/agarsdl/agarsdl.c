@@ -71,6 +71,8 @@ MyEventLoop_Overlay(int myFPS)
 					case AG_KEY_DOWN:
 						color += 0.1;
 						break;
+					default:
+						break;
 					}
 				}
 			}
@@ -169,6 +171,7 @@ main(int argc, char *argv[])
 		goto fail;
 	}
 	AG_BindStdGlobalKeys();
+	AG_BindGlobalKey(AG_KEY_ESCAPE, 0, AG_QuitGUI);
 	
 	/* Display some test widgets. */
 	win = AG_WindowNew(0);

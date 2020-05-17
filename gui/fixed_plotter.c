@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Integer-only plotter widget. Used originally to implement a FPS meter.
+ */
+
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/fixed_plotter.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -45,11 +51,12 @@ AG_FixedPlotterNew(void *parent, enum ag_fixed_plotter_type type, Uint flags)
 
 	fpl = Malloc(sizeof(AG_FixedPlotter));
 	AG_ObjectInit(fpl, &agFixedPlotterClass);
-	fpl->type = type;
-	fpl->flags |= flags;
 
-	if (flags & AG_FIXED_PLOTTER_HFILL) { AG_ExpandHoriz(fpl); }
-	if (flags & AG_FIXED_PLOTTER_VFILL) { AG_ExpandVert(fpl); }
+	fpl->type = type;
+
+	if (flags & AG_FIXED_PLOTTER_HFILL) { WIDGET(fpl)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_FIXED_PLOTTER_VFILL) { WIDGET(fpl)->flags |= AG_WIDGET_VFILL; }
+	fpl->flags |= flags;
 
 	AG_ObjectAttach(parent, fpl);
 	return (fpl);
@@ -78,17 +85,16 @@ Init(void *obj)
 void
 AG_FixedPlotterSetRange(AG_FixedPlotter *fpl, AG_FixedPlotterValue range)
 {
-	AG_ObjectLock(fpl);
+	AG_OBJECT_ISA(fpl, "AG_Widget:AG_FixedPlotter:*");
 	fpl->yrange = range;
-	AG_ObjectUnlock(fpl);
 	AG_Redraw(fpl);
 }
 
 static void
 KeyDown(AG_Event *event)
 {
-	AG_FixedPlotter *fpl = AG_SELF();
-	int key = AG_INT(1);
+	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
+	const int key = AG_INT(1);
 
 	switch (key) {
 	case AG_KEY_0:
@@ -111,10 +117,10 @@ KeyDown(AG_Event *event)
 static void
 MouseMotion(AG_Event *event)
 {
-	AG_FixedPlotter *fpl = AG_SELF();
-	int xrel = AG_INT(3);
-	int yrel = AG_INT(4);
-	int state = AG_INT(5);
+	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
+	const int xrel = AG_INT(3);
+	const int yrel = AG_INT(4);
+	const int state = AG_INT(5);
 
 	if ((state & AG_MOUSE_LMASK) == 0)
 		return;
@@ -135,7 +141,7 @@ MouseMotion(AG_Event *event)
 static void
 MouseButtonUp(AG_Event *event)
 {
-	AG_FixedPlotter *fpl = AG_SELF();
+	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
 
 	fpl->flags |= AG_FIXED_PLOTTER_SCROLL;
 }
@@ -143,8 +149,8 @@ MouseButtonUp(AG_Event *event)
 static void
 MouseButtonDown(AG_Event *event)
 {
-	AG_FixedPlotter *fpl = AG_SELF();
-	int button = AG_INT(1);
+	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
+	const int button = AG_INT(1);
 	
 	if (button != AG_MOUSE_LEFT)
 		return;
@@ -173,48 +179,48 @@ Draw(void *obj)
 {
 	AG_FixedPlotter *fpl = obj;
 	AG_FixedPlotterItem *gi;
-	int x, y, ox = 0, oy;
-	Uint32 i, yOrigin;
 	AG_FixedPlotterValue oval;
+	int x, y, ox = 0, oy;
+	const int w = WIDTH(fpl);
+	const int h = HEIGHT(fpl);
+	Uint32 i, yOrigin;
 
 	yOrigin = WIDGET(fpl)->h * fpl->yOrigin / 100;
-	
-	AG_DrawBox(fpl,
-	    AG_RECT(0, 0, WIDTH(fpl), HEIGHT(fpl)), 0,
-	    WCOLOR(fpl,0));
-	if (fpl->flags & AG_FIXED_PLOTTER_XAXIS) {
-		AG_DrawLineH(fpl, 0, WIDTH(fpl)-1, yOrigin+1, WCOLOR(fpl,LINE_COLOR));
-	}
+
+	AG_DrawBoxRaised(fpl, &WIDGET(fpl)->r, &WCOLOR(fpl,BG_COLOR));
+
+	if (fpl->flags & AG_FIXED_PLOTTER_XAXIS)
+		AG_DrawLineH(fpl, 0, w-1, yOrigin+1,
+		    &WCOLOR(fpl,LINE_COLOR));
 
 	TAILQ_FOREACH(gi, &fpl->items, items) {
 		if (fpl->xoffs > gi->nvals || fpl->xoffs < 0)
 			continue;
 
 		for (x = 2, ox = 0, i = fpl->xoffs;
-		     ++i < gi->nvals && x < WIDGET(fpl)->w;
+		     ++i < gi->nvals && x < w;
 		     ox = x, x += 2) {
 
-			oval = gi->vals[i] * WIDGET(fpl)->h / fpl->yrange;
+			oval = gi->vals[i] * h / fpl->yrange;
 			y = yOrigin - oval;
 			if (i > 1) {
-				oval = gi->vals[i-1] * WIDGET(fpl)->h /
-				       fpl->yrange;
+				oval = gi->vals[i-1] * h / fpl->yrange;
 				oy = yOrigin - oval;
 			} else {
 				oy = yOrigin;
 			}
 
-			if (y < 0) { y = 0; }
+			if (y < 0)  { y = 0; }
 			if (oy < 0) { oy = 0; }
-			if (y > WIDGET(fpl)->h) { y = WIDGET(fpl)->h; }
-			if (oy > WIDGET(fpl)->h) { oy = WIDGET(fpl)->h; }
+			if (y > HEIGHT(fpl))  { y = HEIGHT(fpl); }
+			if (oy > HEIGHT(fpl)) { oy = HEIGHT(fpl); }
 
 			switch (fpl->type) {
 			case AG_FIXED_PLOTTER_POINTS:
-				AG_PutPixel(fpl, x, y, gi->color);
+				AG_PutPixel(fpl, x,y, &gi->color);
 				break;
 			case AG_FIXED_PLOTTER_LINES:
-				AG_DrawLine(fpl, ox, oy, x, y, gi->color);
+				AG_DrawLine(fpl, ox,oy, x,y, &gi->color);
 				break;
 			}
 		}
@@ -227,34 +233,39 @@ AG_FixedPlotterCurve(AG_FixedPlotter *fpl, const char *name,
 {
 	AG_FixedPlotterItem *gi;
 
+	AG_OBJECT_ISA(fpl, "AG_Widget:AG_FixedPlotter:*");
+
  	gi = Malloc(sizeof(AG_FixedPlotterItem));
 	Strlcpy(gi->name, name, sizeof(gi->name));
-	gi->color = AG_ColorRGB(r,g,b);
+	AG_ColorRGB_8(&gi->color, r,g,b);
+	gi->nvals = 0;
 	gi->vals = Malloc(NITEMS_INIT*sizeof(AG_FixedPlotterValue));
 	gi->maxvals = NITEMS_INIT;
-	gi->nvals = 0;
 	gi->fpl = fpl;
 	gi->limit = limit>0 ? limit : (0xffffffff-1);
 
 	AG_ObjectLock(fpl);
 	TAILQ_INSERT_HEAD(&fpl->items, gi, items);
-	AG_ObjectUnlock(fpl);
-	
 	AG_Redraw(fpl);
+	AG_ObjectUnlock(fpl);
+
 	return (gi);
 }
 
 void
 AG_FixedPlotterDatum(AG_FixedPlotterItem *gi, AG_FixedPlotterValue val)
 {
-	AG_ObjectLock(gi->fpl);
+	AG_FixedPlotter *fpl = gi->fpl;
+
+	AG_OBJECT_ISA(fpl, "AG_Widget:AG_FixedPlotter:*");
+	AG_ObjectLock(fpl);
 	
 	gi->vals[gi->nvals] = val;
 
 	if (gi->nvals+1 >= gi->limit) {
 		memmove(gi->vals, gi->vals+1,
 		        gi->nvals*sizeof(AG_FixedPlotterValue));
-		gi->fpl->flags &= ~(AG_FIXED_PLOTTER_SCROLL);
+		fpl->flags &= ~(AG_FIXED_PLOTTER_SCROLL);
 	} else {
 		if (gi->nvals+1 >= gi->maxvals) {
 			gi->vals = Realloc(gi->vals,
@@ -265,8 +276,8 @@ AG_FixedPlotterDatum(AG_FixedPlotterItem *gi, AG_FixedPlotterValue val)
 		gi->nvals++;
 	}
 	
-	AG_ObjectUnlock(gi->fpl);
-	AG_Redraw(gi->fpl);
+	AG_Redraw(fpl);
+	AG_ObjectUnlock(fpl);
 }
 
 void
@@ -274,7 +285,9 @@ AG_FixedPlotterFreeItems(AG_FixedPlotter *fpl)
 {
 	AG_FixedPlotterItem *git, *nextgit;
 	
+	AG_OBJECT_ISA(fpl, "AG_Widget:AG_FixedPlotter:*");
 	AG_ObjectLock(fpl);
+
 	for (git = TAILQ_FIRST(&fpl->items);
 	     git != TAILQ_END(&fpl->items);
 	     git = nextgit) {
@@ -283,8 +296,9 @@ AG_FixedPlotterFreeItems(AG_FixedPlotter *fpl)
 		Free(git);
 	}
 	TAILQ_INIT(&fpl->items);
-	AG_ObjectUnlock(fpl);
+
 	AG_Redraw(fpl);
+	AG_ObjectUnlock(fpl);
 }
 
 static void
@@ -302,13 +316,25 @@ Destroy(void *obj)
 	}
 }
 
+void
+AG_FixedPlotterScroll(AG_FixedPlotter *_Nonnull fpl, int i)
+{
+	AG_OBJECT_ISA(fpl, "AG_Widget:AG_FixedPlotter:*");
+	AG_ObjectLock(fpl);
+
+	if (fpl->flags & AG_FIXED_PLOTTER_SCROLL)
+		fpl->xoffs += i;
+
+	AG_ObjectUnlock(fpl);
+}
+
 AG_WidgetClass agFixedPlotterClass = {
 	{
 		"Agar(Widget:FixedPlotter)",
 		sizeof(AG_FixedPlotter),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
@@ -318,3 +344,5 @@ AG_WidgetClass agFixedPlotterClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGET */

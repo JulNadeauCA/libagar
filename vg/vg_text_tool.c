@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,24 +37,25 @@
 #include <agar/vg/icons.h>
 
 typedef struct vg_text_tool {
-	VG_Tool _inherit;
-	VG_Text *vtIns;			/* Text being inserted */
-	char text[VG_TEXT_MAX];
+	VG_Tool _inherit;			/* VG_Tool(3) -> VG_TextTool */
+	VG_Text *_Nullable vtIns;		/* Text being edited */
+	char text[VG_TEXT_MAX];			/* Initial input text */
+	Uint32 _pad;
 } VG_TextTool;
 
 static void
-Init(void *p)
+Init(void *_Nonnull obj)
 {
-	VG_TextTool *t = p;
+	VG_TextTool *t = obj;
 
 	t->vtIns = NULL;
 	Strlcpy(t->text, "<text>", sizeof(t->text));
 }
 
 static int
-MouseButtonDown(void *p, VG_Vector vPos, int button)
+MouseButtonDown(void *_Nonnull obj, VG_Vector vPos, int button)
 {
-	VG_TextTool *t = p;
+	VG_TextTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
 	VG *vg = vv->vg;
 	VG_Point *p1, *p2;
@@ -95,19 +96,21 @@ MouseButtonDown(void *p, VG_Vector vPos, int button)
 }
 
 static void
-PostDraw(void *p, VG_View *vv)
+PostDraw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_TextTool *t = p;
+	VG_TextTool *t = obj;
+	AG_Color c;
 	int x, y;
 
 	VG_GetViewCoords(vv, VGTOOL(t)->vCursor, &x,&y);
-	AG_DrawCircle(vv, x,y, 3, VG_MapColorRGB(vv->vg->selectionColor));
+	c = VG_MapColorRGB(vv->vg->selectionColor);
+	AG_DrawCircle(vv, x,y, 3, &c);
 }
 
 static int
-MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
+MouseMotion(void *_Nonnull obj, VG_Vector vPos, VG_Vector vRel, int b)
 {
-	VG_TextTool *t = p;
+	VG_TextTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
 	VG_Point *pEx;
 	VG_Vector pos;
@@ -142,16 +145,20 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 	return (0);
 }
 
-static void *
-Edit(void *p, VG_View *vv)
+static void *_Nonnull
+Edit(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_TextTool *t = p;
+	VG_TextTool *t = obj;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 	AG_Textbox *tb;
 
 	AG_LabelNew(box, 0, _("Text: "));
-	tb = AG_TextboxNewS(box, AG_TEXTBOX_MULTILINE|AG_TEXTBOX_HFILL, NULL);
+	tb = AG_TextboxNewS(box, AG_TEXTBOX_MULTILINE | AG_TEXTBOX_HFILL, NULL);
+#ifdef AG_UNICODE
 	AG_TextboxBindUTF8(tb, t->text, sizeof(t->text));
+#else
+	AG_TextboxBindASCII(tb, t->text, sizeof(t->text));
+#endif
 	return (box);
 }
 

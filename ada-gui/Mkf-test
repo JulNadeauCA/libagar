@@ -1,4 +1,0 @@
-tests:
-	(cd UNIT_TESTS && make)
-tests_clean:
-	(cd UNIT_TESTS && make clean)

@@ -1,0 +1,233 @@
+.\"
+.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd June 15, 2007
+.Dt SG_VIEW 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm SG_View
+.Nd Agar-SG scene rendering widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/sg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget renders a
+.Xr SG 3
+scene graph from the point of view of a specified
+.Xr SG_Camera 3
+node.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "SG_View *"
+.Fn SG_ViewNew "AG_Widget *parent" "SG *sg" "Uint flags"
+.Pp
+.Ft "void"
+.Fn SG_ViewSetBgColor "SG_View *view" "const AG_Color *c"
+.Pp
+.Ft "void"
+.Fn SG_ViewKeydownFn "SG_View *view" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn SG_ViewKeyupFn "SG_View *view" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn SG_ViewButtondownFn "SG_View *view" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn SG_ViewButtonupFn "SG_View *view" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn SG_ViewMotionFn "SG_View *view" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.nr nS 0
+The
+.Fn SG_ViewNew
+function allocates, initializes, and attaches a
+.Nm
+object.
+Acceptable
+.Fa flags
+options include:
+.Bl -tag -width "SG_VIEW_NO_DEPTH_TEST "
+.It SG_VIEW_HFILL
+Expand horizontally in parent container.
+.It SG_VIEW_VFILL
+Expand vertically in parent container.
+Shorthand for
+.Dv SG_VIEW_HFILL | SG_VIEW_VFILL .
+.It SG_VIEW_NO_LIGHTING
+Disable lighting calculations.
+.It SG_VIEW_NO_DEPTH_TESTS
+Disable Z-buffering.
+.It SG_VIEW_CAMERA_STATUS
+Display active camera status as overlay.
+.It SG_VIEW_EDIT
+Allow edition commands.
+.It SG_VIEW_BGFILL
+Fill background with the specified color (see
+.Fn SG_ViewSetBgColor ) .
+.El
+.Pp
+.Fn SG_ViewNew
+may fail returning NULL if there is no default camera (e.g.,
+.Sq Camera0
+node) in the scene.
+.Pp
+.Fn SG_ViewSetBgFill
+specifies a background color
+.Fa c
+(effective only if
+.Dv SG_VIEW_BGFILL
+is set).
+.Pp
+The
+.Fn SG_View*Fn
+functions are used to set up optional callback functions to invoke upon
+specific GUI events.
+.Fn SG_ViewKeydownFn
+and
+.Fn SG_ViewKeyupFn
+set callbacks for
+.Sq key-down
+and
+.Sq key-up
+events.
+.Fn SG_ViewButtondownFn ,
+.Fn SG_ViewButtonupFn
+and
+.Fn SG_ViewMotionFn
+set callbacks for
+.Sq mouse-button-down ,
+.Sq mouse-button-up
+and
+.Sq mouse-motion
+events, respectively.
+.Sh SCENE TRANSITIONS
+.nr nS 1
+.Ft "int"
+.Fn SG_ViewTransition "SG_View *view" "SG *sg" "SG_Camera *cam" "Uint flags"
+.Pp
+.Ft "void"
+.Fn SG_ViewSetFadeColor "SG_View *view" "const AG_Color *c"
+.Pp
+.Ft "void"
+.Fn SG_ViewSetFadeDuration "SG_View *view" "Uint ms"
+.Pp
+.nr nS 0
+The
+.Fn SG_ViewTransition
+function arranges for a transition to a new scene
+.Fa sg
+and camera
+.Fa cam .
+If the
+.Fa cam
+argument is NULL, the default camera is used.
+By default, the transition is immediate.
+The following
+.Fa flags
+are accepted:
+.Bl -tag -width "SG_VIEW_TRANSFADE "
+.It SG_VIEW_TRANSFADE
+Fade-out and fade-in to the new scene.
+The function will return immediately (caller can poll
+.Va transProgress
+to determine completeness; see
+.Dq STRUCTURE DATA ) .
+.El
+.Pp
+.Fn SG_ViewTransition
+may fail and return NULL if a camera could not be found or
+a transition is already in progress.
+.Pp
+.Fn SG_ViewSetFadeColor
+sets a fill color for the
+.Dv SG_VIEW_TRANSFADE
+effect.
+.Pp
+.Fn SG_ViewSetFadeDuration
+configures the duration of the fade effect in milliseconds.
+.Sh CAMERAS AND PROJECTIONS
+.nr nS 1
+.Ft "void"
+.Fn SG_ViewSetCamera "SG_View *view" "SG_Camera *cam"
+.Pp
+.Ft "void"
+.Fn SG_ViewUnProject "SG_View *view" "int x" "int y" "M_Vector3 *vOut"
+.Pp
+.nr nS 0
+The
+.Fn SG_ViewSetCamera
+function changes the current camera of the view.
+.Pp
+The
+.Fn SG_ViewUnProject
+function translates the given two-dimensional view (widget) coordinates
+.Fa x ,
+.Fa y
+to 3D world coordinates in
+.Fa vOut ,
+according to the active camera's position, orientation and projection.
+The returned point is coincident with the camera's near plane.
+.Sh STRUCTURE DATA
+For the
+.Ft AG_SG_View
+object:
+.Bl -tag -width "float transProgress "
+.It Ft SG *sg
+Pointer to the active
+.Xr SG 3
+object (read-only; use
+.Fn SG_ViewTransition ) .
+.It Ft SG *sgTrans
+Transition in progress to this scene (read-only).
+.It Ft float transProgress
+Progress of the scene transition (-1.0 = start, 0.0 = midway, +1.0 = done).
+.It Ft SG_Camera *cam
+Active camera (read-only; use
+.Fn SG_ViewSetCamera ) .
+.It Ft SG_Camera *camTrans
+Transition in progress to this camera (read-only).
+.El
+.Sh SEE ALSO
+.Xr M_Matrix 3 ,
+.Xr M_Real 3 ,
+.Xr M_Vector 3 ,
+.Xr SG 3 ,
+.Xr SG_Camera 3 ,
+.Xr SG_Intro 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.6.0.

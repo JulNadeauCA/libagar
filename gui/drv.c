@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  */
 
 /*
- * Implementation of base AG_Driver object.
+ * Base low-level AG_Driver(3) object instance.
  */
 
 #include <agar/config/have_sdl.h>
@@ -38,26 +38,30 @@
 #include <agar/gui/window.h>
 #include <agar/gui/text.h>
 
+/* Extra debugging output (rendering times in ms) */
+/* #define DEBUG_RENDER */
+
 #if defined(HAVE_GLX)
-extern AG_Driver agDriverGLX;
+extern AG_DriverClass agDriverGLX;
 #endif
 #if defined(HAVE_SDL)
-extern AG_Driver agDriverSDLFB;
+extern AG_DriverClass agDriverSDLFB;
 #endif
 #if defined(HAVE_SDL) && defined(HAVE_OPENGL)
-extern AG_Driver agDriverSDLGL;
+extern AG_DriverClass agDriverSDLGL;
 #endif
 #if defined(HAVE_WGL)
-extern AG_Driver agDriverWGL;
+extern AG_DriverClass agDriverWGL;
 #endif
 #if defined(HAVE_COCOA)
-extern AG_Driver agDriverCocoa;
+extern AG_DriverClass agDriverCocoa;
 #endif
+extern AG_DriverClass agDriverDUMMY;
 
-AG_Object         agDrivers;			/* Drivers VFS */
-AG_DriverClass   *agDriverOps = NULL;		/* Current driver class */
+AG_Object       agDrivers;			/* Drivers VFS */
+AG_DriverClass *agDriverOps = NULL;		/* Current driver class */
 
-void *agDriverList[] = {
+AG_DriverClass *agDriverList[] = {
 #if defined(HAVE_GLX)
 	&agDriverGLX,
 #endif
@@ -73,27 +77,35 @@ void *agDriverList[] = {
 #if defined(HAVE_SDL)
 	&agDriverSDLFB,
 #endif
+	&agDriverDUMMY,
+	NULL
 };
-Uint agDriverListSize = sizeof(agDriverList) / sizeof(agDriverList[0]);
+
+const char *agDriverTypeNames[] = {
+	N_("Framebuffer"),
+	N_("Vector")
+};
+const char *agDriverWmTypeNames[] = {
+	N_("Single-window"),
+	N_("Multi-window")
+};
 
 /* Return a string with the available drivers. */
 void
-AG_ListDriverNames(char *buf, size_t buf_len)
+AG_ListDriverNames(char *buf, AG_Size buf_len)
 {
-	Uint i;
+	AG_DriverClass **pd;
 
 	if (buf_len == 0) {
 		return;
 	}
-	buf[0] = '\0';
-
-	for (i = 0; i < agDriverListSize; i++) {
-		AG_DriverClass *drvClass = agDriverList[i];
-
-		Strlcat(buf, drvClass->name, buf_len);
-		if (i < agDriverListSize-1)
-			Strlcat(buf, " ", buf_len);
+	for (pd = &agDriverList[0], buf[0] = '\0';
+	    *pd != NULL;
+	     pd++) {
+		Strlcat(buf, (*pd)->name, buf_len);
+		Strlcat(buf, " ", buf_len);
 	}
+	buf[strlen(buf)-1] = '\0';
 }
 
 /* Create a new driver instance. */
@@ -128,62 +140,162 @@ AG_DriverClose(AG_Driver *drv)
 }
 
 /*
+ * Lookup a driver instance by ID.
+ * The agDrivers VFS must be locked.
+ */
+AG_Driver *
+AG_GetDriverByID(Uint id)
+{
+	AG_Driver *drv;
+
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		if (drv->id == id)
+			return (drv);
+	}
+	return (NULL);
+}
+
+/*
+ * Enter GUI rendering context. In a standard event loop, single-window drivers
+ * will invoke this function once per frame (rendering all windows in batch).
+ * Multi-window drivers will invoke it several times (once per window).
+ */
+void
+AG_BeginRendering(void *drv)
+{
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
+	if (agTimeOps == &agTimeOps_renderer)		/* Renderer-aware ops */
+		AG_CondBroadcast(&agCondBeginRender);
+#endif
+
+	agRenderingContext = 1;
+
+#ifdef DEBUG_RENDER
+	AGDRIVER(drv)->tRender = AG_GetTicks();
+#endif
+	AGDRIVER_CLASS(drv)->beginRendering(drv);
+}
+
+/* Leave GUI rendering context. */
+void
+AG_EndRendering(void *drv)
+{
+	AGDRIVER_CLASS(drv)->endRendering(drv);
+
+	agRenderingContext = 0;
+
+#ifdef DEBUG_RENDER
+	Debug(drv, "Rendered in %u ms\n", AG_GetTicks() - AGDRIVER(drv)->tRender);
+#endif
+
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
+	if (agTimeOps == &agTimeOps_renderer)		/* Renderer-aware ops */
+		AG_CondBroadcast(&agCondEndRender);
+#endif
+}
+
+/*
  * Dump the display surface(s) to a jpeg in ~/.appname/screenshot/.
  * It is customary to assign a AG_GlobalKeys(3) shortcut for this function.
  */
 void
 AG_ViewCapture(void)
 {
-	AG_Surface *s;
-	AG_Config *cfg;
-	char *pname;
 	char dir[AG_PATHNAME_MAX];
-	char file[AG_PATHNAME_MAX];
+	char file[AG_FILENAME_MAX+7];
+	AG_Surface *S;
+	char *pname;
 	Uint seq;
 
 	if (agDriverSw == NULL) {
-		Verbose("AG_ViewCapture() is not implemented under "
-		        "multiple-window drivers\n");
+		AG_TextError(_("Screenshot is currently only available "
+		               "with single-window drivers\n"));
 		return;
 	}
 
 	AG_LockVFS(&agDrivers);
 
-	if (AGDRIVER_SW_CLASS(agDriverSw)->videoCapture(agDriverSw, &s) == -1) {
-		Verbose("Capture failed: %s\n", AG_GetError());
+	if ((S = AGDRIVER_SW_CLASS(agDriverSw)->videoCapture(agDriverSw)) == NULL) {
+		AG_TextError(_("%s: Screenshot failed (%s)"),
+		    OBJECT(agDriverSw)->name, AG_GetError());
 		goto out;
 	}
 
 	/* Save to a new file. */
-	cfg = AG_ConfigObject();
-	AG_GetString(cfg, "save-path", dir, sizeof(dir));
+	if (AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, dir, sizeof(dir)) >= sizeof(dir)) {
+		AG_TextError(_("Path overflow"));
+		goto out;
+	}
 	Strlcat(dir, AG_PATHSEP, sizeof(dir));
 	Strlcat(dir, "screenshot", sizeof(dir));
 	if (!AG_FileExists(dir) && AG_MkPath(dir) == -1) {
-		Verbose("Capture failed: %s\n", AG_GetError());
+		AG_TextError(_("Screenshot failed: %s"), AG_GetError());
 		goto out;
 	}
-	pname = (agProgName != NULL) ? agProgName : "agarapp";
+	pname = (agProgName != NULL) ? agProgName : "agar";
 	for (seq = 0; ; seq++) {
 		Snprintf(file, sizeof(file), "%s%c%s%u.jpg",
-		    dir, AG_PATHSEPCHAR, pname, seq++);
+		    dir, AG_PATHSEPCHAR, pname, seq);
+
 		if (!AG_FileExists(file))
 			break;			/* XXX race condition */
 	}
-	if (AG_SurfaceExportJPEG(s, file, 100, 0) == 0) {
-		Verbose("Saved capture to: %s\n", file);
+	if (AG_SurfaceExportJPEG(S, file, 100, 0) == 0) {
+		Verbose(_("%s: Saved %u x %u x %ubpp screenshot to %s\n"),
+		    OBJECT(agDriverSw)->name,
+		    S->w, S->h, S->format.BitsPerPixel, AG_ShortFilename(file));
 	} else {
-		Verbose("Capture failed: %s\n", AG_GetError());
+		AG_TextError(_("Screenshot failed (%s)"), AG_GetError());
 	}
-	AG_SurfaceFree(s);
+	AG_SurfaceFree(S);
 out:
 	AG_UnlockVFS(&agDrivers);
 }
 
+/* Return whether Agar is using OpenGL. */
+int
+AG_UsingGL(void *drv)
+{
+	if (drv != NULL) {
+		return (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL);
+	} else {
+		return (agDriverOps->flags & AG_DRIVER_OPENGL);
+	}
+}
+
+/* Return whether Agar is using SDL. */
+int
+AG_UsingSDL(void *drv)
+{
+	AG_DriverClass *dc = (drv != NULL) ? AGDRIVER_CLASS(drv) :
+	                                     agDriverOps;
+
+	return (dc->flags & AG_DRIVER_SDL);
+}
+
+/* Return the resolution (px) of the parent display device, if applicable. */
+int
+AG_GetDisplaySize(void *drv, Uint *w, Uint *h)
+{
+	AG_DriverClass *dc = (drv != NULL) ? AGDRIVER_CLASS(drv) : agDriverOps;
+	AG_DriverSw *dsw = (drv != NULL) ? (AG_DriverSw *)drv : agDriverSw;
+
+	switch (dc->wm) {
+	case AG_WM_SINGLE:
+		*w = dsw->w;
+		*h = dsw->h;
+		return (0);
+	case AG_WM_MULTIPLE:
+		return dc->getDisplaySize(w, h);
+	}
+	return (-1);
+}
+
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Driver *drv = obj;
+	Uint i;
 
 	drv->id = 0;
 	drv->flags = 0;
@@ -200,31 +312,37 @@ Init(void *obj)
 	drv->videoFmt = NULL;
 	drv->kbd = NULL;
 	drv->mouse = NULL;
-	drv->activeCursor = NULL;
+	drv->glyphCache = Malloc(AG_GLYPH_NBUCKETS*sizeof(AG_GlyphCache));
+	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
+		SLIST_INIT(&drv->glyphCache[i].glyphs);
+	}
 	drv->gl = NULL;
-	AG_TextInitGlyphCache(drv);
-
+	drv->activeCursor = NULL;
 	TAILQ_INIT(&drv->cursors);
 	drv->nCursors = 0;
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	AG_Driver *drv = obj;
 
-	if (drv->sRef != NULL)
+	if (drv->sRef != NULL) {
 		AG_SurfaceFree(drv->sRef);
-	if (drv->videoFmt != NULL)
+	}
+	if (drv->videoFmt != NULL) {
 		AG_PixelFormatFree(drv->videoFmt);
-
-	AG_TextDestroyGlyphCache(drv);
+		free(drv->videoFmt);
+	}
+	AG_TextClearGlyphCache(drv);
+	free(drv->glyphCache);
+	drv->glyphCache = NULL;
 }
 
 AG_ObjectClass agDriverClass = {
 	"AG_Driver",
 	sizeof(AG_Driver),
-	{ 1,4 },
+	{ 1,6 },
 	Init,
 	NULL,		/* reset */
 	Destroy,

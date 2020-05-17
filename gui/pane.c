@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Paned container widget. It divides space into two partitions (which are
+ * AG_Box(3) containers) with a user-movable separator between them.
+ */
+
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/pane.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -36,11 +43,12 @@ AG_PaneNew(void *parent, enum ag_pane_type type, Uint flags)
 
 	pa = Malloc(sizeof(AG_Pane));
 	AG_ObjectInit(pa, &agPaneClass);
-	pa->type = type;
-	pa->flags |= flags;
 
-	if (flags & AG_PANE_HFILL) { AG_ExpandHoriz(pa); }
-	if (flags & AG_PANE_VFILL) { AG_ExpandVert(pa); }
+	pa->type = type;
+
+	if (flags & AG_PANE_HFILL) { WIDGET(pa)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_PANE_VFILL) { WIDGET(pa)->flags |= AG_WIDGET_VFILL; }
+	pa->flags |= flags;
 
 #ifdef AG_LEGACY
 	if (flags & AG_PANE_DIV)
@@ -57,23 +65,39 @@ AG_PaneNew(void *parent, enum ag_pane_type type, Uint flags)
 	return (pa);
 }
 
+AG_Pane	*
+AG_PaneNewHoriz(void *parent, Uint flags)
+{
+	return AG_PaneNew(parent, AG_PANE_HORIZ, flags);
+}
+
+AG_Pane	*
+AG_PaneNewVert(void *parent, Uint flags)
+{
+	return AG_PaneNew(parent, AG_PANE_VERT, flags);
+}
+
 static __inline__ int
-OverDivControl(AG_Pane *pa, int pos)
+OverDiv(AG_Pane *_Nonnull pa, int pos)
 {
 	return (pos >= pa->dx &&
-	        pos < (pa->dx+MAX(pa->wDiv,4)));
+	        pos < (pa->dx + pa->wDiv));
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Pane *pa = AG_SELF();
-	int button = AG_INT(1);
+	AG_Pane *pa = AG_PANE_SELF();
+	AG_Window *wParent = AG_ParentWindow(pa);
+	const int button = AG_INT(1);
 
+	if (!AG_WindowIsFocused(wParent))
+		AG_WindowFocus(wParent);
+	
 	if (button == AG_MOUSE_LEFT &&
 	    !(pa->flags & AG_PANE_UNMOVABLE)) {
-		pa->dmoving = OverDivControl(pa,
-		    pa->type == AG_PANE_HORIZ ? AG_INT(2) : AG_INT(3));
+		pa->dmoving = OverDiv(pa, (pa->type == AG_PANE_HORIZ) ? AG_INT(2) :
+		                                                        AG_INT(3));
 		if (pa->dmoving && WIDGET(pa)->window != NULL) {
 			/* Set up for receiving motion events exclusively. */
 			WIDGET(pa)->window->widExclMotion = WIDGET(pa);
@@ -89,7 +113,9 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 	AG_SizeAlloc a;
 	int rv;
 
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	AG_ObjectLock(pa);
+
 	if (pa->rx == -1) {		/* Geometry not yet allocated */
 		pa->rx = dx;
 		pa->dx = dx;
@@ -102,11 +128,12 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 		a.h = HEIGHT(pa);
 		AG_WidgetSizeAlloc(pa, &a);
 		rv = pa->dx;
-		AG_WidgetUpdate(pa);
+		WIDGET(pa)->flags |= AG_WIDGET_UPDATE_WINDOW;
 		pa->rx = rv;
 	}
-	AG_ObjectUnlock(pa);
+
 	AG_Redraw(pa);
+	AG_ObjectUnlock(pa);
 	return (rv);
 }
 
@@ -116,7 +143,9 @@ AG_PaneMoveDividerPct(AG_Pane *pa, int pct)
 {
 	int rv;
 
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	AG_ObjectLock(pa);
+
 	if (pa->rx == -1) {		/* Geometry not yet allocated */
 		pa->rxPct = pct;
 		rv = 0;
@@ -124,49 +153,76 @@ AG_PaneMoveDividerPct(AG_Pane *pa, int pct)
 		int size = (pa->type == AG_PANE_HORIZ) ? WIDTH(pa) : HEIGHT(pa);
 		rv = AG_PaneMoveDivider(pa, pct*size/100);
 	}
+
 	AG_ObjectUnlock(pa);
 	return (rv);
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_Pane *pa = AG_SELF();
-	int x = AG_INT(1);
-	int y = AG_INT(2);
-	int dx = AG_INT(3);
-	int dy = AG_INT(4);
+	AG_Pane *pa = AG_PANE_SELF();
+	const int x = AG_INT(1);
+	const int y = AG_INT(2);
+	const int dx = AG_INT(3);
+	const int dy = AG_INT(4);
 
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
-		if (y < 0 || y > HEIGHT(pa)) {
-			return;
-		}
 		if (pa->dmoving) {
 			pa->rx = pa->dx;
 			pa->rx += dx;
 			if (pa->rx < 2) { pa->rx = 2; }
 			AG_PaneMoveDivider(pa, pa->rx);
+		} else if (OverDiv(pa, x)) {
+			/*
+			 * Synthesize the behavior of USE_MOUSEOVER since we want
+			 * to set MOUSEOVER state only when the cursor is over
+			 * the divider bar (and not the rest of the container).
+			 */
+			if ((WIDGET(pa)->flags & AG_WIDGET_MOUSEOVER) == 0) {
+				WIDGET(pa)->flags |= AG_WIDGET_MOUSEOVER;
+				AG_Redraw(pa);
+			}
+		} else {
+			if (WIDGET(pa)->flags & AG_WIDGET_MOUSEOVER) {
+				WIDGET(pa)->flags &= ~(AG_WIDGET_MOUSEOVER);
+				AG_Redraw(pa);
+			}
 		}
 		break;
 	case AG_PANE_VERT:
-		if (x < 0 || x > WIDTH(pa)) {
-			return;
-		}
 		if (pa->dmoving) {
 			pa->rx = pa->dx;
 			pa->rx += dy;
 			AG_PaneMoveDivider(pa, pa->rx);
 			if (pa->rx < 2) { pa->rx = 2; }
+		} else if (OverDiv(pa, y)) {
+			/*
+			 * Synthesize the behavior of USE_MOUSEOVER since we want
+			 * to set MOUSEOVER state only when the cursor is over
+			 * the divider bar (and not the rest of the container).
+			 */
+			if ((WIDGET(pa)->flags & AG_WIDGET_MOUSEOVER) == 0) {
+				WIDGET(pa)->flags |= AG_WIDGET_MOUSEOVER;
+				AG_Redraw(pa);
+			}
+		} else {
+			if (WIDGET(pa)->flags & AG_WIDGET_MOUSEOVER) {
+				WIDGET(pa)->flags &= ~(AG_WIDGET_MOUSEOVER);
+				AG_Redraw(pa);
+			}
 		}
+		break;
+	default:
 		break;
 	}
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Pane *pa = AG_SELF();
+	AG_Pane *pa = AG_PANE_SELF();
 
 	if (pa->dmoving) {
 		if (WIDGET(pa)->window != NULL) {
@@ -179,18 +235,18 @@ MouseButtonUp(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Pane *pa = obj;
 	int i;
 
-	WIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
+	WIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP |
 			     AG_WIDGET_UNFOCUSED_MOTION;
 
 	pa->type = AG_PANE_VERT;
 	pa->flags = 0;
-	pa->div[0] = AG_BoxNew(pa, AG_BOX_VERT, AG_BOX_FRAME);
-	pa->div[1] = AG_BoxNew(pa, AG_BOX_VERT, AG_BOX_FRAME);
+	pa->div[0] = AG_BoxNew(pa, AG_BOX_VERT, 0);
+	pa->div[1] = AG_BoxNew(pa, AG_BOX_VERT, 0);
 	pa->dx = 0;
 	pa->rx = -1;
 	pa->rxPct = -1;
@@ -209,43 +265,56 @@ Init(void *obj)
 	AG_SetEvent(pa, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(pa, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(pa, "mouse-motion", MouseMotion, NULL);
-#if 0
-	AG_BindInt(pa, "dmoving", &pa->dmoving);
-	AG_BindInt(pa, "dx", &pa->dx);
-	AG_BindInt(pa, "rx", &pa->rx);
-#endif
 }
 
+/*
+ * Set the width of the divider in pixels.
+ * If 0, the divider will not be visible or selectable.
+ * If -1, reset to the default which is zoom-dependent.
+ */
 void
 AG_PaneSetDividerWidth(AG_Pane *pa, int wDiv)
 {
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	AG_ObjectLock(pa);
-	pa->wDiv = wDiv;
-	AG_ObjectUnlock(pa);
+
+	if (wDiv == -1) {
+		pa->flags &= ~(AG_PANE_OVERRIDE_WDIV);
+		pa->wDiv = 0;
+	} else {
+		pa->flags |= AG_PANE_OVERRIDE_WDIV;
+		pa->wDiv = wDiv;
+	}
 	AG_Redraw(pa);
+
+	AG_ObjectUnlock(pa);
 }
 
 void
 AG_PaneSetDivisionPacking(AG_Pane *pa, int which, enum ag_box_type packing)
 {
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	AG_ObjectLock(pa);
+
 	AG_BoxSetType(pa->div[which], packing);
+
 	AG_ObjectUnlock(pa);
 }
 
 void
 AG_PaneSetDivisionMin(AG_Pane *pa, int which, int wMin, int hMin)
 {
-	AG_ObjectLock(pa);
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	pa->wMin[which] = wMin;
 	pa->hMin[which] = hMin;
-	AG_ObjectUnlock(pa);
 }
 
 void
 AG_PaneAttachBox(AG_Pane *pa, int which, AG_Box *box)
 {
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	AG_ObjectLock(pa);
+	AG_OBJECT_ISA(box, "AG_Widget:AG_Box:*");
 	AG_ObjectLock(box);
 
 	/* XXX */
@@ -260,60 +329,84 @@ AG_PaneAttachBox(AG_Pane *pa, int which, AG_Box *box)
 	WIDGET(box)->flags |= AG_WIDGET_EXPAND;
 	
 	AG_ObjectUnlock(box);
-	AG_ObjectUnlock(pa);
 	AG_Redraw(pa);
+	AG_ObjectUnlock(pa);
 }
 
 void
 AG_PaneAttachBoxes(AG_Pane *pa, AG_Box *box1, AG_Box *box2)
 {
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	AG_ObjectLock(pa);
+
 	AG_PaneAttachBox(pa, 0, box1);
 	AG_PaneAttachBox(pa, 1, box2);
-	AG_ObjectUnlock(pa);
+
 	AG_Redraw(pa);
+	AG_ObjectUnlock(pa);
 }
 
 void
 AG_PaneResizeAction(AG_Pane *pa, enum ag_pane_resize_action ra)
 {
-	AG_ObjectLock(pa);
+	AG_OBJECT_ISA(pa, "AG_Widget:AG_Pane:*");
 	pa->resizeAction = ra;
-	AG_ObjectUnlock(pa);
 }
 
 static void
-DrawHorizDivider(AG_Pane *pa, int x, int y)
+DrawHorizDivider(AG_Pane *_Nonnull pa, int x, int y)
 {
-	int xMid = x + pa->wDiv/2;
+	const AG_Color *cLine = &WCOLOR(pa, LINE_COLOR);
+	AG_Rect r;
+	const int wDiv = pa->wDiv;
+	int xMid = x + (wDiv >> 1) - 1;
 
-	AG_DrawBox(pa,
-	    AG_RECT(x+1, 0, pa->wDiv-2, HEIGHT(pa)),
-	    pa->dmoving ? -1 : 1,
-	    WCOLOR(pa,0));
+	r.x = x+1;
+	r.y = 0;
+	r.w = wDiv-2;
+	r.h = HEIGHT(pa);
+
+	if (pa->dmoving) {
+		AG_DrawBoxSunk(pa, &r, &WCOLOR(pa, FG_COLOR));
+		xMid++;
+		y++;
+	} else {
+		AG_DrawBoxRaised(pa, &r, &WCOLOR(pa, FG_COLOR));
+	}
+
+	AG_PutPixel(pa, xMid, y,   cLine);
+	if (y-5 > 0)   { AG_PutPixel(pa, xMid, y-5, cLine); }
+	if (y+5 < r.h) { AG_PutPixel(pa, xMid, y+5, cLine); }
+}
+
+static void
+DrawVertDivider(AG_Pane *_Nonnull pa, int x, int y)
+{
+	const AG_Color *cLine = &WCOLOR(pa, LINE_COLOR);
+	AG_Rect r;
+	const int wDiv = pa->wDiv;
+	int yMid = y + (wDiv >> 1);
+
+	r.x = 0;
+	r.y = y+1;
+	r.w = WIDTH(pa);
+	r.h = wDiv-2;
 	
-	AG_PutPixel(pa, xMid, y, WCOLOR(pa,SHAPE_COLOR));
-	AG_PutPixel(pa, xMid, y-5, WCOLOR(pa,SHAPE_COLOR));
-	AG_PutPixel(pa, xMid, y+5, WCOLOR(pa,SHAPE_COLOR));
+	if (pa->dmoving) {
+		AG_DrawBoxSunk(pa, &r, &WCOLOR(pa, FG_COLOR));
+		x++;
+		yMid++;
+	} else {
+		AG_DrawBoxRaised(pa, &r, &WCOLOR(pa, FG_COLOR));
+	}
+
+	AG_PutPixel(pa, x,   yMid, cLine);
+	if (x-5 > 0)   { AG_PutPixel(pa, x-5, yMid, cLine); }
+	if (x+5 < r.w) { AG_PutPixel(pa, x+5, yMid, cLine); }
 }
 
 static void
-DrawVertDivider(AG_Pane *pa, int x, int y)
-{
-	int yMid = y + pa->wDiv/2;
-
-	AG_DrawBox(pa,
-	    AG_RECT(0, y+1, WIDTH(pa), pa->wDiv-2),
-	    pa->dmoving ? -1 : 1,
-	    WCOLOR(pa,0));
-
-	AG_PutPixel(pa, x, yMid, WCOLOR(pa,SHAPE_COLOR));
-	AG_PutPixel(pa, x-5, yMid, WCOLOR(pa,SHAPE_COLOR));
-	AG_PutPixel(pa, x+5, yMid, WCOLOR(pa,SHAPE_COLOR));
-}
-
-static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Pane *pa = obj;
 	
@@ -323,17 +416,19 @@ Draw(void *obj)
 	if (pa->wDiv > 0) {
 		switch (pa->type) {
 		case AG_PANE_HORIZ:
-			DrawHorizDivider(pa, pa->dx, HEIGHT(pa)/2);
+			DrawHorizDivider(pa, pa->dx, HEIGHT(pa) >> 1);
 			break;
 		case AG_PANE_VERT:
-			DrawVertDivider(pa, WIDTH(pa)/2, pa->dx);
+			DrawVertDivider(pa, WIDTH(pa) >> 1, pa->dx);
+			break;
+		default:
 			break;
 		}
 	}
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Pane *pa = obj;
 	AG_SizeReq rDiv;
@@ -362,6 +457,8 @@ SizeRequest(void *obj, AG_SizeReq *r)
 			r->w = MAX(r->w, wMax);
 			r->h += rDiv.h;
 			break;
+		default:
+			break;
 		}
 	}
 	switch (pa->type) {
@@ -371,22 +468,35 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	case AG_PANE_VERT:
 		r->h += (pa->wDiv > 0) ? (pa->wDiv + 2) : 0;
 		break;
+	default:
+		break;
 	}
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
+	static const int zoomSizes[] = {
+	     6,  6,  7,  7,  7,  7,  7,  8,  /* 12.5% - 90% */
+	     8,  9, 10, 11, 12, 12,          /* 100% - 170% */
+	    13, 13, 14, 14, 15, 16           /* 200% - 650% */
+	};
 	AG_Pane *pa = obj;
 	AG_SizeReq r1, r2;
 	AG_SizeAlloc a1, a2;
 	AG_Rect r;
-
+	const int zoomLvl = WIDGET(pa)->window->zoom;
+#ifdef AG_DEBUG
+	if (zoomLvl < 0 || zoomLvl >= sizeof(zoomSizes)/sizeof(int))
+		AG_FatalError("zoomLvl");
+#endif
 	a1.x = 0;
 	a1.y = 0;
 
 	AG_WidgetSizeReq(pa->div[0], &r1);
 	AG_WidgetSizeReq(pa->div[1], &r2);
+
+	pa->wDiv = zoomSizes[zoomLvl];
 
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
@@ -439,7 +549,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		r.y = 0;
 		r.w = pa->wDiv;
 		r.h = a->h;
-		AG_SetStockCursor(pa, &pa->ca, r, AG_HRESIZE_CURSOR);
+		AG_SetStockCursor(pa, &pa->ca, &r, AG_HRESIZE_CURSOR);
 		break;
 	case AG_PANE_VERT:
 		if (pa->dx == 0 && pa->rx == -1) {
@@ -491,7 +601,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		r.y = pa->dx;
 		r.w = a->w;
 		r.h = pa->wDiv;
-		AG_SetStockCursor(pa, &pa->ca, r, AG_VRESIZE_CURSOR);
+		AG_SetStockCursor(pa, &pa->ca, &r, AG_VRESIZE_CURSOR);
+		break;
+	default:
 		break;
 	}
 	AG_WidgetSizeAlloc(pa->div[0], &a1);
@@ -505,7 +617,7 @@ AG_WidgetClass agPaneClass = {
 		sizeof(AG_Pane),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
@@ -515,3 +627,5 @@ AG_WidgetClass agPaneClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

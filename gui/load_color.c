@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,34 +26,80 @@
 /*
  * Serialization of colors in RGBA format.
  */
-
 #include <agar/core/core.h>
 #include <agar/gui/surface.h>
-#include <agar/gui/load_color.h>
 
 void
-AG_WriteColor(AG_DataSource *ds, AG_Color C)
+AG_WriteColor(AG_DataSource *ds, const AG_Color *_Nonnull c)
 {
-	if (ds->debug) {
+#ifdef AG_DEBUG
+	if (ds->debug)
 		AG_WriteTypeCode(ds, AG_SOURCE_COLOR_RGBA);
-	}
-	AG_WriteUint8(ds, C.r);
-	AG_WriteUint8(ds, C.g);
-	AG_WriteUint8(ds, C.b);
-	AG_WriteUint8(ds, C.a);
+#endif
+#if AG_MODEL == AG_LARGE
+	AG_WriteUint8(ds, 16);
+	AG_WriteUint16(ds, c->r);
+	AG_WriteUint16(ds, c->g);
+	AG_WriteUint16(ds, c->b);
+	AG_WriteUint16(ds, c->a);
+#else
+	AG_WriteUint8(ds, 8);
+	AG_WriteUint8(ds, c->r);
+	AG_WriteUint8(ds, c->g);
+	AG_WriteUint8(ds, c->b);
+	AG_WriteUint8(ds, c->a);
+#endif
 }
 
-AG_Color
-AG_ReadColor(AG_DataSource *ds)
+void
+AG_ReadColor(AG_Color *c, AG_DataSource *ds)
 {
-	AG_Color C;
+	Uint8 depth;
 
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_COLOR_RGBA) == -1) {
-		return AG_ColorRGB(255,0,0);
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_COLOR_RGBA) == -1)
+		AG_FatalError("Not COLOR_RGBA");
+#endif
+	depth = AG_ReadUint8(ds);
+	if (depth == 16) {
+#if AG_MODEL == AG_LARGE
+		c->r = AG_ReadUint16(ds);
+		c->g = AG_ReadUint16(ds);
+		c->b = AG_ReadUint16(ds);
+		c->a = AG_ReadUint16(ds);
+#else
+		c->r = AG_16to8(AG_ReadUint16(ds));
+		c->g = AG_16to8(AG_ReadUint16(ds));
+		c->b = AG_16to8(AG_ReadUint16(ds));
+		c->a = AG_16to8(AG_ReadUint16(ds));
+#endif
+	} else if (depth == 8) {
+#if AG_MODEL == AG_LARGE
+		c->r = AG_8to16(AG_ReadUint8(ds));
+		c->g = AG_8to16(AG_ReadUint8(ds));
+		c->b = AG_8to16(AG_ReadUint8(ds));
+		c->a = AG_8to16(AG_ReadUint8(ds));
+#else
+		c->r = AG_ReadUint8(ds);
+		c->g = AG_ReadUint8(ds);
+		c->b = AG_ReadUint8(ds);
+		c->a = AG_ReadUint8(ds);
+#endif
+	} else if (depth == 4) {
+		Uint8 rg = AG_ReadUint8(ds);
+		Uint8 ba = AG_ReadUint8(ds);
+#if AG_MODEL == AG_LARGE
+		c->r = AG_4to16((rg & 0xf0) >> 4);
+		c->g = AG_4to16((rg & 0x0f));
+		c->b = AG_4to16((ba & 0xf0) >> 4);
+		c->a = AG_4to16((ba & 0x0f));
+#else
+		c->r = AG_4to8((rg & 0xf0) >> 4);
+		c->g = AG_4to8((rg & 0x0f));
+		c->b = AG_4to8((ba & 0xf0) >> 4);
+		c->a = AG_4to8((ba & 0x0f));
+#endif
+	} else {
+		AG_FatalError("Bad depth");
 	}
-	C.r = AG_ReadUint8(ds);
-	C.g = AG_ReadUint8(ds);
-	C.b = AG_ReadUint8(ds);
-	C.a = AG_ReadUint8(ds);
-	return (C);
 }

@@ -1,0 +1,282 @@
+.\"
+.\" Copyright (c) 2010-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd April 29, 2010
+.Dt SG_NODE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm SG_Node
+.Nd Agar-SG base node class
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/sg.h>
+.Ed
+.Sh DESCRIPTION
+.Nm
+is the base class for any element of a
+.Xr SG 3
+scene.
+This includes geometrical elements (e.g.,
+.Xr SG_Object 3 )
+as well as non-geometrical elements (e.g.,
+.Xr SG_Light 3 ,
+.Xr SG_Camera 3 ) .
+.Pp
+Nodes are organized in a tree structure, and the position of a
+.Nm
+in relation to its parent is determined by a 4x4 transformation matrix
+(see
+.Xr M_Matrix 3 ) .
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Nm .
+.Sh INTERFACE
+.nr nS 1
+.Ft "void"
+.Fn SG_RegisterClass "SG_NodeOps *ops"
+.Pp
+.Ft "void"
+.Fn SG_NodeInit "void *node" "const char *name" "const SG_NodeOps *ops" "Uint flags"
+.Pp
+.Ft "void *"
+.Fn SG_NodeAdd "void *pnode" "const char *name" "const SG_NodeOps *ops" "Uint flags"
+.Pp
+.Ft "void"
+.Fn SG_NodeAttach "void *pnode" "void *node"
+.Pp
+.Ft "void"
+.Fn SG_NodeDetach "void *pnode" "void *node"
+.Pp
+.Ft "void"
+.Fn SG_NodeDraw "SG *sg" "SG_Node *node" "SG_View *view"
+.Pp
+.nr nS 0
+The
+.Fn SG_RegisterClass
+function registers a new node class, described by the given
+.Ft SG_NodeOps
+structure.
+.Pp
+The
+.Fn SG_NodeInit
+function initializes the given
+.Ft SG_Node
+structure.
+It is usually invoked from node constructor functions.
+The
+.Fa name
+argument is a string identifier for the node.
+.Fa ops
+points to the
+.Ft SG_NodeOps
+structure which contains class information.
+The
+.Fa flags
+argument should be 0.
+The
+.Fn SG_NodeAdd
+variant also allocates, initializes and attaches the node to a parent node.
+.Pp
+The
+.Fn SG_NodeAttach
+and
+.Fn SG_NodeDetach
+functions attach/detach a node to/from a given parent.
+.Pp
+The
+.Fn SG_NodeDraw
+function is used to render a node to the display.
+It is normally only invoked from the draw operation of
+.Xr SG_View 3
+(or another visualization widget derived from
+.Ft SG_View ) .
+.Fn SG_NodeDraw
+assumes that the node's transformation matrix has already been applied
+to the current viewing matrix.
+.Sh NODE TRANSFORMATIONS
+The following calls multiply a node's transformation matrix
+.Va T
+with a translation, scaling or rotation matrix.
+Note that the
+.Va T
+matrix may also be manipulated directly with the
+.Xr M_Matrix 3
+interface.
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn SG_Identity "SG_Node *node"
+.Pp
+.Ft "void"
+.Fn SG_Translate "SG_Node *node" "M_Real x" "M_Real y" "M_Real z"
+.Pp
+.Ft "void"
+.Fn SG_Translatev "SG_Node *node" "M_Vector3 v"
+.Pp
+.Ft "void"
+.Fn SG_TranslateX "SG_Node *node" "M_Real x"
+.Pp
+.Ft "void"
+.Fn SG_TranslateY "SG_Node *node" "M_Real y"
+.Pp
+.Ft "void"
+.Fn SG_TranslateZ "SG_Node *node" "M_Real z"
+.Pp
+.Ft "void"
+.Fn SG_Scale "SG_Node *node" "M_Real s"
+.Pp
+.Ft "void"
+.Fn SG_Rotatev "SG_Node *node" "M_Real theta" "M_Vector3 axis"
+.Pp
+.Ft "void"
+.Fn SG_RotateI "SG_Node *node" "M_Real theta"
+.Pp
+.Ft "void"
+.Fn SG_RotateJ "SG_Node *node" "M_Real theta"
+.Pp
+.Ft "void"
+.Fn SG_RotateK "SG_Node *node" "M_Real theta"
+.Pp
+.Ft "void"
+.Fn SG_Rotatevd "SG_Node *node" "M_Real degrees" "M_Vector3 axis"
+.Pp
+.Ft "void"
+.Fn SG_RotateId "SG_Node *node" "M_Real degrees"
+.Pp
+.Ft "void"
+.Fn SG_RotateJd "SG_Node *node" "M_Real degrees"
+.Pp
+.Ft "void"
+.Fn SG_RotateKd "SG_Node *node" "M_Real degrees"
+.Pp
+.Ft "void"
+.Fn SG_GetNodeTransform "void *node" "M_Matrix44 *T"
+.Pp
+.Ft "void"
+.Fn SG_GetNodeTransformInverse "void *node" "M_Matrix44 *T"
+.Pp
+.Ft "M_Vector3"
+.Fn SG_NodePos "SG_Node *node"
+.Pp
+.Ft "M_Vector3"
+.Fn SG_NodeDir "SG_Node *node"
+.Pp
+.Ft "M_Real"
+.Fn SG_NodeSize "SG_Node *node"
+.Pp
+.nr nS 1
+.Fn SG_Identity
+sets the transformation matrix of the node to the identity matrix.
+.Pp
+The
+.Fn SG_Translate*
+functions multiply
+.Va T
+by a translation matrix.
+.Pp
+The
+.Fn SG_Scale
+function multiplies
+.Va T
+by a uniform scaling matrix.
+.Pp
+.Fn SG_Rotate*
+multiply
+.Va T
+by a rotation matrix.
+Angles are given in radians, except for
+.Fn SG_Rotate*d
+variants which accept angular arguments in degrees.
+.Pp
+.Fn SG_Rotatev
+generates a rotation of
+.Fa theta
+radians around
+.Fa axis .
+.Pp
+Note that most of the preceding functions are trivial wrappers around
+.Xr M_Matrix 3
+functions (applied to the transformation matrix
+.Va T
+of the node).
+.Pp
+The
+.Fn SG_GetNodeTransform
+function returns a transformation matrix mapping the node back to world
+coordinates (i.e., by computing the product of the transformation matrices
+of the node and its parents).
+.Fn SG_GetNodeTransformInverse
+returns the inverse of this matrix.
+.Pp
+The
+.Fn SG_NodePos
+function returns a vector representing the absolute world coordinates of
+a node.
+.Fn SG_NodeDir
+returns a normalized vector representing the direction of a node with respect
+to the world Z axis (i.e., the Z axis of the origin node).
+.Fn SG_NodeSize
+returns the absolute scaling factor of an object.
+.Sh STRUCTURE DATA
+For the
+.Nm
+object:
+.Pp
+.Bl -tag -compact -width "M_Matrix44 T "
+.It Ft Uint flags
+Option flags (see
+.Dq FLAGS
+section).
+.It Ft SG *sg
+Back pointer to parent
+.Xr SG 3
+object.
+.It Ft M_Matrix44 T
+Transformation matrix (relative to parent node).
+.El
+.Sh FLAGS
+For the
+.Nm
+object:
+.Bl -tag -width "SG_NODE_SELECTED "
+.It SG_NODE_SELECTED
+Node is selected (e.g., for edition).
+.El
+.Sh EXAMPLES
+See
+.Pa sg/sg_dummy.c
+in the Agar source distribution for an example node class implementation.
+.Sh SEE ALSO
+.Xr M_Matrix 3 ,
+.Xr M_Real 3 ,
+.Xr M_Vector 3 ,
+.Xr SG 3 ,
+.Xr SG_Intro 3
+.Sh HISTORY
+The
+.Nm
+node class first appeared in Agar 1.6.0.

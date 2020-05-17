@@ -1,0 +1,148 @@
+.\"
+.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd October 21, 2007
+.Dt RG 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm RG
+.Nd Agar feature-based pixel graphics
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/map/rg.h>
+.Ed
+.Sh DESCRIPTION
+The Agar-RG library implements a feature-based pixel graphic format.
+The central class of the library is
+.Ft RG_Tileset ,
+which acts as a container for graphics resources:
+.Bl -tag -width "Textures "
+.It Tiles
+Graphic surfaces (static or possibly animated) generated from a set of
+instructions (or
+.Sq features ) .
+See
+.Xr RG_Tile 3 .
+.It Textures
+References to tiles with additional information related to texturing.
+See
+.Xr RG_Texture 3 .
+.It Pixmaps
+Transparent graphic surfaces used internally.
+Pixmaps can be shared by multiple tiles.
+See
+.Xr RG_Pixmap 3 .
+.It Sketches
+Vector drawings used internally.
+See
+.Xr RG_Sketch 3 .
+.El
+.Pp
+.Nm
+provides tiles and textures with unique integer IDs such that items can be
+added or removed on the fly without invalidating existing external references.
+To take advantage of this feature, code should reference tiles using the
+.Va tiletbl
+member of the
+.Nm
+structure.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Ft RG_Tileset
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "RG_Tileset *"
+.Fn RG_TilesetNew "void *parent" "const char *name" "Uint flags"
+.Pp
+.nr nS 0
+The
+.Fn RG_TilesetNew
+function allocates and initializes a new
+.Nm
+object and attaches it to
+.Fa parent
+if not NULL.
+There are currently no
+.Fa flags
+defined.
+.Sh ACCESSING RESOURCES
+.nr nS 1
+.Ft RG_Tile *
+.Fn RGTILE "RG_Tileset *tileset" "Uint32 tileID"
+.Pp
+.Ft int
+.Fn RG_LookupTile "RG_Tileset *tileset" "Uint32 tileID" "RG_Tile **rTile"
+.Pp
+.Ft "RG_Tile *"
+.Fn RG_TilesetFindTile "RG_Tileset *tileset" "const char *name"
+.Pp
+.Ft "RG_Sketch *"
+.Fn RG_TilesetFindSketch "RG_Tileset *tileset" "const char *name"
+.Pp
+.Ft "RG_Pixmap *"
+.Fn RG_TilesetFindPixmap "RG_Tileset *tileset" "const char *name"
+.Pp
+.Ft "RG_Tile *"
+.Fn RG_TilesetResvTile "RG_Tileset *tileset" "const char *tileset_name" "const char *name"
+.Pp
+.Ft "RG_Pixmap *"
+.Fn RG_TilesetResvPixmap "RG_Tileset *tileset" "const char *tileset_name" "const char *name"
+.Pp
+.nr nS 0
+The
+.Fn RGTILE
+macro returns a tile by name.
+.Pp
+.Fn RG_LookupTile
+searches for a tile by name.
+If one is found, it is returned into
+.Fa rTile .
+.Pp
+.Fn RG_TilesetFindTile ,
+.Fn RG_TilesetFindSketch
+and
+.Fn RG_TilesetFindPixmap
+search for the given resource using the user-provided name string,
+returning a pointer to the element on success and NULL on failure.
+The
+.Fn RG_TilesetResv*
+variants use the VFS path name for the
+.Nm
+object itself.
+.Sh SEE ALSO
+.Xr RG_Feature 3 ,
+.Xr RG_Pixmap 3 ,
+.Xr RG_Sketch 3 ,
+.Xr RG_Texture 3 ,
+.Xr RG_Tile 3 ,
+.Xr RG_Tileview 3
+.Sh HISTORY
+The
+.Nm
+library first appeared in Agar 1.3.0.

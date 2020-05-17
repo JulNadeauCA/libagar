@@ -8,7 +8,7 @@
 static void
 mousemotion(AG_Event *event)
 {
-	AG_Widget *w = AG_SELF();
+	AG_Widget *w = AG_WIDGET_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 
@@ -25,7 +25,7 @@ mousemotion(AG_Event *event)
 			 */
 			AG_WindowFocus(AG_ParentWindow(w));
 			AG_WidgetFocus(w);
-			printf("%s: focused\n", AGOBJECT(w)->name);
+			Debug(w, "Focused\n");
 		}
 	} else {
 		if (w->flags & AG_WIDGET_FOCUSED) {
@@ -37,7 +37,7 @@ mousemotion(AG_Event *event)
 			 * of the window list holds focus).
 			 */
 			AG_WidgetUnfocus(w);
-			printf("%s: unfocused\n", AGOBJECT(w)->name);
+			Debug(w, "Unfocused\n");
 		}
 	}
 }
@@ -45,16 +45,18 @@ mousemotion(AG_Event *event)
 static void
 keydown(AG_Event *event)
 {
-	AG_Widget *w = AG_SELF();
+#ifdef AG_DEBUG
+	AG_Widget *w = AG_WIDGET_SELF();
 	int kb = AG_INT(1);
 
-	printf("%s: key %d\n", AGOBJECT(w)->name, kb);
+	Debug(w, "key %d\n", kb);
+#endif
 }
 
 static void
 buttondown(AG_Event *event)
 {
-	AG_Widget *w = AG_SELF();
+	AG_Widget *w = AG_WIDGET_SELF();
 
 	AG_WidgetFocus(w);
 }
@@ -62,7 +64,7 @@ buttondown(AG_Event *event)
 static void
 TestUnfocusedMotion(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1), *win;
+	AG_Window *winParent = AG_WINDOW_PTR(1), *win;
 	AG_Button *btn;
 	AG_Fixed *fx1, *fx2;
 
@@ -85,8 +87,10 @@ TestUnfocusedMotion(AG_Event *event)
 	AG_FixedMove(fx1, btn, 0, 64);
 	AG_FixedSize(fx1, btn, 32, 32);
 
-	fx2 = AG_FixedNew(fx1, AG_FIXED_BOX);
-	AGWIDGET(fx2)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
+	fx2 = AG_FixedNew(fx1, 0);
+	fx2->style = AG_FIXED_STYLE_BOX;
+	AGWIDGET(fx2)->flags |= AG_WIDGET_FOCUSABLE |
+		                AG_WIDGET_UNFOCUSED_MOTION;
 	AG_FixedMove(fx1, fx2, 64, 16);
 	AG_FixedSize(fx1, fx2, 200, 140);
 	AG_SetEvent(fx2, "mouse-motion", mousemotion, NULL);
@@ -101,7 +105,7 @@ TestUnfocusedMotion(AG_Event *event)
 static void
 TestTabCycle(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1), *win;
+	AG_Window *winParent = AG_WINDOW_PTR(1), *win;
 	AG_Box *b, *b1, *b2;
 	int i;
 

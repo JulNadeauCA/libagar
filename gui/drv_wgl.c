@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,12 +46,12 @@ static int  nDrivers = 0;			/* Drivers open */
 static int  wndClassCount = 1;			/* Window class counter */
 static AG_DriverEventQ wglEventQ;		/* Event queue */
 #ifdef AG_THREADS
-static AG_Mutex wglClassLock;			/* Lock on wndClassCount */
-static AG_Mutex wglEventLock;			/* Lock on wglEventQ */
+static _Nonnull_Mutex AG_Mutex wglClassLock;		/* Lock on wndClassCount */
+static _Nonnull_Mutex AG_Mutex wglEventLock;		/* Lock on wglEventQ */
 #endif
-static HKL wglKbdLayout = NULL;			/* Keyboard layout */
-static AG_EventSink *wglEventSpinner = NULL;	/* Standard event sink */
-static AG_EventSink *wglEventEpilogue = NULL;	/* Standard event epilogue */
+static _Nullable HKL wglKbdLayout = NULL;		/* Keyboard layout */
+static AG_EventSink *_Nullable wglEventSpinner = NULL;	/* Standard event sink */
+static AG_EventSink *_Nullable wglEventEpilogue = NULL;	/* Standard event epilogue */
 
 /* Driver instance data */
 typedef struct ag_driver_wgl {
@@ -84,19 +84,19 @@ struct ag_windows_key_mapping {
 #include <agar/gui/drv_wgl_keymaps.h>
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-static int       InitDefaultCursors(AG_DriverWGL *);
-static void      WGL_PostResizeCallback(AG_Window *, AG_SizeAlloc *);
-static int       WGL_RaiseWindow(AG_Window *);
-static int       WGL_SetInputFocus(AG_Window *);
-static void      WGL_PostMoveCallback(AG_Window *, AG_SizeAlloc *);
-static int       WGL_GetNextEvent(void *, AG_DriverEvent *);
-static int       WGL_ProcessEvent(void *, AG_DriverEvent *);
-static int       WGL_GetDisplaySize(Uint *, Uint *);
-static int       WGL_PendingEvents(void *drvCaller);
-static int       WGL_SetCursor(void *, AG_Cursor *);
+static void      WGL_InitDefaultCursor(AG_DriverWGL *_Nonnull);
+static void      WGL_PostResizeCallback(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
+static int       WGL_RaiseWindow(AG_Window *_Nonnull);
+static int       WGL_SetInputFocus(AG_Window *_Nonnull);
+static void      WGL_PostMoveCallback(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
+static int       WGL_GetNextEvent(void *_Nullable, AG_DriverEvent *_Nonnull);
+static int       WGL_ProcessEvent(void *_Nullable, AG_DriverEvent *_Nonnull);
+static int       WGL_GetDisplaySize(Uint *_Nonnull, Uint *_Nonnull);
+static int       WGL_PendingEvents(void *_Nonnull drvCaller);
+static int       WGL_SetCursor(void *_Nonnull, AG_Cursor *_Nonnull);
 
 static void
-WGL_SetWindowsError(char* errorMessage, DWORD errorCode)
+WGL_SetWindowsError(char *_Nonnull errorMessage, DWORD errorCode)
 {
 	char lpBuffer[65536];
 
@@ -114,7 +114,7 @@ WGL_SetWindowsError(char* errorMessage, DWORD errorCode)
 }
 
 /* Return the Agar window corresponding to a Windows window handle */
-static AG_Window *
+static AG_Window *_Nullable
 LookupWindowByID(HWND hwnd)
 {
 	AG_Window *win;
@@ -141,7 +141,7 @@ LookupWindowByID(HWND hwnd)
  * Standard AG_EventLoop() event sink.
  */
 static int
-WGL_EventSink(AG_EventSink *es, AG_Event *event)
+WGL_EventSink(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 {
 	AG_DriverEvent dev;
 
@@ -156,7 +156,7 @@ WGL_EventSink(AG_EventSink *es, AG_Event *event)
 	return (0);
 }
 static int
-WGL_EventEpilogue(AG_EventSink *es, AG_Event *event)
+WGL_EventEpilogue(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 {
 	AG_WindowDrawQueued();
 	AG_WindowProcessQueued();
@@ -164,7 +164,7 @@ WGL_EventEpilogue(AG_EventSink *es, AG_Event *event)
 }
 
 static int
-WGL_Open(void *obj, const char *spec)
+WGL_Open(void *_Nonnull obj, const char *_Nullable spec)
 {
 	AG_Driver *drv = obj;
 	AG_DriverWGL *wgl = obj;
@@ -202,18 +202,18 @@ WGL_Open(void *obj, const char *spec)
 	nDrivers++;
 	return (0);
 fail:
-	if (wglEventSpinner != NULL) { AG_DelEventSpinner(wglEventSpinner); wglEventSpinner = NULL; }
-	if (wglEventEpilogue != NULL) { AG_DelEventEpilogue(wglEventEpilogue); wglEventEpilogue = NULL; }
-	if (drv->kbd != NULL) { AG_ObjectDelete(drv->kbd); drv->kbd = NULL; }
-	if (drv->mouse != NULL) { AG_ObjectDelete(drv->mouse); drv->mouse = NULL; }
+	if (wglEventSpinner)  { AG_DelEventSpinner(wglEventSpinner);   wglEventSpinner = NULL; }
+	if (wglEventEpilogue) { AG_DelEventEpilogue(wglEventEpilogue); wglEventEpilogue = NULL; }
+	if (drv->kbd)   { AG_ObjectDelete(drv->kbd);   drv->kbd = NULL; }
+	if (drv->mouse) { AG_ObjectDelete(drv->mouse); drv->mouse = NULL; }
 	return (-1);
 }
 
 static void
-WGL_Close(void *obj)
+WGL_Close(void *_Nonnull obj)
 {
 	AG_Driver *drv = obj;
-	AG_DriverEvent *dev, *devNext;
+/*	AG_DriverEvent *dev, *devNext; */
 
 #ifdef AG_DEBUG
 	if (nDrivers == 0) { AG_FatalError("Driver close without open"); }
@@ -221,13 +221,14 @@ WGL_Close(void *obj)
 	if (--nDrivers == 0) {
 		AG_DelEventSink(wglEventSpinner); wglEventSpinner = NULL;
 		AG_DelEventEpilogue(wglEventEpilogue); wglEventEpilogue = NULL;
-
+#if 0
 		for (dev = TAILQ_FIRST(&wglEventQ);
 		     dev != TAILQ_LAST(&wglEventQ, ag_driver_eventq);
 		     dev = devNext) {
 			devNext = TAILQ_NEXT(dev, events);
 			free(dev);
 		}
+#endif
 		TAILQ_INIT(&wglEventQ);
 
 		AG_MutexDestroy(&wglClassLock);
@@ -240,7 +241,8 @@ WGL_Close(void *obj)
 
 /* Return suitable window style from Agar window flags. */
 static void
-WGL_GetWndStyle(AG_Window *win, DWORD *wndStyle, DWORD *wndStyleEx)
+WGL_GetWndStyle(AG_Window *_Nonnull win, DWORD *_Nonnull wndStyle,
+    DWORD *_Nonnull wndStyleEx)
 {
 	if (win->wmType == AG_WINDOW_WM_NORMAL) {
 		*wndStyle = WS_OVERLAPPEDWINDOW;
@@ -276,7 +278,7 @@ WGL_GetWndStyle(AG_Window *win, DWORD *wndStyle, DWORD *wndStyleEx)
 
 /* Return window rectangle adjusted for titlebar/border style. */
 static void
-WGL_GetWndRect(AG_Window *win, AG_Rect *r)
+WGL_GetWndRect(AG_Window *_Nonnull win, AG_Rect *_Nonnull r)
 {
 	DWORD wndStyle, wndStyleEx;
 	RECT wndRect = {
@@ -296,11 +298,12 @@ WGL_GetWndRect(AG_Window *win, AG_Rect *r)
 }
 
 static int
-WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
+WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
+    Uint mwFlags)
 {
+	char wndClassName[32]; 
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 	AG_Driver *drv = WIDGET(win)->drv;
-	char wndClassName[64]; 
 	GLuint pixelFormat;	
 	WNDCLASSEX wndClass;
 	DWORD wndStyle, wndStyleEx;
@@ -317,7 +320,8 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		0, 0, 0, 0, 0            /* All other attributes are not used */
 	};
 	RECT wndRect;
-	AG_SizeAlloc a;
+	AG_Rect rVP;
+	int x,y;
 
 	if (agStereo)
 		pixelFormatDescriptor.dwFlags |= PFD_STEREO;
@@ -345,7 +349,10 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 
 	/* Translate Agar window flags to window style. */
 	WGL_GetWndStyle(win, &wndStyle, &wndStyleEx);
-	
+
+	x = r->x;
+	y = r->y;
+
 	/*
 	 * XXX TODO it would be best to pass CW_USEDEFAULT here, but
 	 * I could not find a way to retrieve the final allocated
@@ -356,16 +363,16 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		Uint wDisp, hDisp;
 
 		if (WGL_GetDisplaySize(&wDisp, &hDisp) == 0) {
-			r.x = wDisp/2 - r.w/2;
-			r.y = hDisp/2 - r.h/2;
+			x = wDisp/2 - r->w/2;
+			y = hDisp/2 - r->h/2;
 		}
 	}
 	
 	/* Adjust window with account for window borders, if any */
-	wndRect.left = r.x;
-	wndRect.top = r.y;
-	wndRect.right = r.x + r.w;
-	wndRect.bottom = r.y + r.h;
+	wndRect.left   = x;
+	wndRect.top    = y;
+	wndRect.right  = x + r->w;
+	wndRect.bottom = y + r->h;
 	AdjustWindowRectEx(&wndRect, wndStyle, 0, wndStyleEx);
 
 	/* Create OpenGL Window */
@@ -421,10 +428,13 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		WGL_SetWindowsError("wglMakeCurrent failed", GetLastError());
 		return (-1);
 	}
-	if (AG_GL_InitContext(wgl, &wgl->gl) == -1) {
-		return (-1);
-	}
-	AG_GL_SetViewport(&wgl->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	AG_GL_InitContext(wgl, &wgl->gl);
+
+	rVP.x = 0;
+	rVP.y = 0;
+	rVP.w = WIDTH(win);
+	rVP.h = HEIGHT(win);
+	AG_GL_SetViewport(&wgl->gl, &rVP);
 	
 	/* Show the window */
 	ShowWindow(wgl->hwnd, SW_SHOW);
@@ -434,42 +444,62 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	}
 	
 	/* Set the pixel format */
-	drv->videoFmt = AG_PixelFormatRGB(16, 0x000000ff, 0x0000ff00, 0x00ff0000);
-	if (drv->videoFmt == NULL)
+	if ((drv->videoFmt = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
 		goto fail;
+	}
+#if AG_MODEL == AG_LARGE
+	if (depthReq == 48) {				/* Deep color */
+# if AG_BYTEORDER == AG_BIG_ENDIAN
+		AG_PixelFormatRGB(drv->videoFmt, 48,
+			0xffff000000000000,
+			0x0000ffff00000000,
+			0x00000000ffff0000);
+# else
+		AG_PixelFormatRGB(drv->videoFmt, 48,
+			0x000000000000ffff,
+			0x00000000ffff0000,
+			0x0000ffff00000000);
+# endif
+	} else
+#endif /* AG_LARGE */
+	{						/* True Color */
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+		AG_PixelFormatRGB(drv->videoFmt, 32,
+			0xff000000,
+			0x00ff0000,
+			0x0000ff00);
+#else
+		AG_PixelFormatRGB(drv->videoFmt, 32,
+			0x000000ff,
+			0x0000ff00,
+			0x00ff0000);
+#endif
+	}
 
 	/* Create the built-in cursors */
-	if (InitDefaultCursors(wgl) == -1 || AG_InitStockCursors(drv) == -1)
-		goto fail;
-
-	/* Update agar's idea of the actual window coordinates. */
-	a.x = r.x;
-	a.y = r.y;
-	a.w = r.w;
-	a.h = r.h;
-	AG_WidgetSizeAlloc(win, &a);
-	AG_WidgetUpdateCoords(win, a.x, a.y);
+	WGL_InitDefaultCursor(wgl);
+	AG_InitStockCursors(drv);
 
 	/* Focus the window. */
 	if (!(win->flags & AG_WINDOW_DENYFOCUS)) {
 		SetFocus(wgl->hwnd);
 		agWindowFocused = win;
-		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+		AG_PostEvent(win, "window-gainfocus", NULL);
 	}
-	
 	return (0);
 fail:
 	wglDeleteContext(wgl->hglrc);
 	DestroyWindow(wgl->hwnd);
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
+		free(drv->videoFmt);
 		drv->videoFmt = NULL;
 	}
 	return (-1);
 }
 
 static void
-WGL_CloseWindow(AG_Window *win)
+WGL_CloseWindow(AG_Window *_Nonnull win)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverWGL *wgl = (AG_DriverWGL *)drv;
@@ -486,12 +516,13 @@ WGL_CloseWindow(AG_Window *win)
 	DestroyWindow(wgl->hwnd);
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
+		free(drv->videoFmt);
 		drv->videoFmt = NULL;
 	}
 }
 
 static int
-WGL_GetDisplaySize(Uint *w, Uint *h)
+WGL_GetDisplaySize(Uint *_Nonnull w, Uint *_Nonnull h)
 {
 	RECT r;
 	HWND desktop = GetDesktopWindow();
@@ -551,8 +582,8 @@ ScanToVirtualKey(int scan, Uint vKey)
 	return (vk != 0) ? vk : vKey;
 }
 	
-static __inline__ AG_DriverEvent *
-NewEvent(AG_Window *win, enum ag_driver_event_type type)
+static __inline__ AG_DriverEvent *_Nullable /* _Malloc_Like_Attribute */
+NewEvent(AG_Window *_Nonnull win, enum ag_driver_event_type type)
 {
 	AG_DriverEvent *dev;
 
@@ -680,7 +711,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			case VK_RETURN:
 				if (IN_KEYPAD(scan)) {
 					AG_KeyboardUpdate(drv->kbd, ka,
-					    AG_KEY_KP_ENTER, 0);
+					    AG_KEY_KP_ENTER);
 					dev->data.key.ks = AG_KEY_KP_ENTER;
 					goto out;
 				}
@@ -697,8 +728,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			} else if (ToUnicode((UINT)vKey, scan, keyState, wc,2, 0) > 0) {
 				dev->data.key.ucs = wc[0];
 			}
-			AG_KeyboardUpdate(drv->kbd, ka, dev->data.key.ks,
-			    dev->data.key.ucs);
+			AG_KeyboardUpdate(drv->kbd, ka, dev->data.key.ks);
 		}
 		break;
 	case WM_SETFOCUS:
@@ -723,7 +753,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (dev->type == AG_DRIVER_VIDEORESIZE)
 					break;
 			}
-			if (dev != NULL) {
+			if (dev) {
 				dev->data.videoresize.w = LOWORD(lParam);
 				dev->data.videoresize.h = HIWORD(lParam);
 				dev = NULL;
@@ -778,7 +808,9 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		goto fallback;
 	}
 out:
-	if (dev != NULL) { TAILQ_INSERT_TAIL(&wglEventQ, dev, events); }
+	if (dev) {
+		TAILQ_INSERT_TAIL(&wglEventQ, dev, events);
+	}
 	AG_UnlockVFS(&agDrivers);
 	return (rv);
 fallback:
@@ -787,14 +819,14 @@ fallback:
 }
 
 static int
-WGL_PendingEvents(void *drvCaller)
+WGL_PendingEvents(void *_Nonnull drvCaller)
 {
 	return (!TAILQ_EMPTY(&wglEventQ) ||
 	        GetQueueStatus(QS_ALLINPUT) != 0);
 }
 
 static int
-WGL_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
+WGL_GetNextEvent(void *_Nonnull drvCaller, AG_DriverEvent *_Nonnull dev)
 {
 	AG_DriverEvent *devFirst;
 	MSG msg;
@@ -811,66 +843,73 @@ WGL_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 	return (0);
 get_event:
 	devFirst = TAILQ_FIRST(&wglEventQ);
-	TAILQ_REMOVE(&wglEventQ, devFirst, events);
 	memcpy(dev, devFirst, sizeof(AG_DriverEvent));
+	TAILQ_REMOVE(&wglEventQ, devFirst, events);
 	free(devFirst);
 	return (1);
 }
 
 static int
-WGL_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
+WGL_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 {
-	AG_Driver *drv;
 	AG_SizeAlloc a;
-	int rv = 1;
+	AG_Driver *drv;
+	AG_Window *win;
+	int rv=1, useText;
 
-	if (dev->win == NULL ||
-	    dev->win->flags & AG_WINDOW_DETACHING)
+	if ((win = dev->win) == NULL ||
+	    win->flags & AG_WINDOW_DETACHING)
 		return (0);
 
 	AG_LockVFS(&agDrivers);
-	drv = WIDGET(dev->win)->drv;
+	drv = WIDGET(win)->drv;
 
+	if ((useText = (win->flags & AG_WINDOW_USE_TEXT))) {
+		AG_PushTextState();
+		AG_TextFont(WIDGET(win)->font);
+		AG_TextColor(&WIDGET(win)->pal.c[WIDGET(win)->state]
+		                                [AG_TEXT_COLOR]);
+	}
 	switch (dev->type) {
 	case AG_DRIVER_MOUSE_MOTION:
-		AG_ProcessMouseMotion(dev->win,
+		AG_ProcessMouseMotion(win,
 		    dev->data.motion.x, dev->data.motion.y,
 		    drv->mouse->xRel, drv->mouse->yRel,
 		    drv->mouse->btnState);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_DOWN:
-		AG_ProcessMouseButtonDown(dev->win,
+		AG_ProcessMouseButtonDown(win,
 		    dev->data.button.x, dev->data.button.y,
 		    dev->data.button.which);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_UP:
-		AG_ProcessMouseButtonUp(dev->win,
+		AG_ProcessMouseButtonUp(win,
 		    dev->data.button.x, dev->data.button.y,
 		    dev->data.button.which);
 		break;
 	case AG_DRIVER_KEY_UP:
-		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_RELEASED,
+		AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED,
 		    dev->data.key.ks, dev->data.key.ucs);
 		break;
 	case AG_DRIVER_KEY_DOWN:
-		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_PRESSED,
+		AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
 		    dev->data.key.ks, dev->data.key.ucs);
 		break;
 	case AG_DRIVER_MOUSE_ENTER:
-		AG_PostEvent(NULL, dev->win, "window-enter", NULL);
+		AG_PostEvent(win, "window-enter", NULL);
 		break;
 	case AG_DRIVER_MOUSE_LEAVE:
-		AG_PostEvent(NULL, dev->win, "window-leave", NULL);
+		AG_PostEvent(win, "window-leave", NULL);
 		break;
 	case AG_DRIVER_FOCUS_IN:
-		if (dev->win != agWindowFocused) {
-			agWindowFocused = dev->win;
-			AG_PostEvent(NULL, dev->win, "window-gainfocus", NULL);
+		if (win != agWindowFocused) {
+			agWindowFocused = win;
+			AG_PostEvent(win, "window-gainfocus", NULL);
 		}
 		break;
 	case AG_DRIVER_FOCUS_OUT:
-		if (dev->win == agWindowFocused) {
-			AG_PostEvent(NULL, dev->win, "window-lostfocus", NULL);
+		if (win == agWindowFocused) {
+			AG_PostEvent(win, "window-lostfocus", NULL);
 			agWindowFocused = NULL;
 		}
 		break;
@@ -879,28 +918,31 @@ WGL_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		a.y = dev->data.videoresize.y;
 		a.w = dev->data.videoresize.w;
 		a.h = dev->data.videoresize.h;
-		if (a.w != WIDTH(dev->win) || a.h != HEIGHT(dev->win)) {
-			WGL_PostResizeCallback(dev->win, &a);
+		if (a.w != WIDTH(win) || a.h != HEIGHT(win)) {
+			WGL_PostResizeCallback(win, &a);
 		} else {
-			WGL_PostMoveCallback(dev->win, &a);
+			WGL_PostMoveCallback(win, &a);
 		}
 		break;
 	case AG_DRIVER_CLOSE:
-		AG_PostEvent(NULL, dev->win, "window-close", NULL);
+		AG_PostEvent(win, "window-close", NULL);
 		break;
 	case AG_DRIVER_EXPOSE:
-		dev->win->dirty = 1;
+		win->dirty = 1;
 		break;
 	default:
 		rv = 0;
 		break;
+	}
+	if (useText) {
+		AG_PopTextState();
 	}
 	AG_UnlockVFS(&agDrivers);
 	return (rv);
 }
 
 static void
-WGL_BeginRendering(void *obj)
+WGL_BeginRendering(void *_Nonnull obj)
 {
 	AG_DriverWGL *wgl = obj;
 
@@ -908,28 +950,27 @@ WGL_BeginRendering(void *obj)
 }
 
 static void
-WGL_RenderWindow(AG_Window *win)
+WGL_RenderWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 	AG_GL_Context *gl = &wgl->gl;
-	AG_Color c;
+	const AG_Color *cBg = &WCOLOR(win, BG_COLOR);
 
-	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
-	gl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1); glEnable(GL_CLIP_PLANE1);
-	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
-	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
+	AG_PushClipRect(win, &WIDGET(win)->r);
 	
-	c = WCOLOR(win,0);
-	glClearColor(c.r/255.0,
-	             c.g/255.0,
-		     c.b/255.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	glClearColor((float)cBg->r / AG_COLOR_LASTF,
+	             (float)cBg->g / AG_COLOR_LASTF,
+		     (float)cBg->b / AG_COLOR_LASTF, 1.0f);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);
+
+	AG_PopClipRect(win);
 }
 
 static void
-WGL_EndRendering(void *obj)
+WGL_EndRendering(void *_Nonnull obj)
 {
 	AG_DriverWGL *wgl = obj;
 	AG_GL_Context *gl = &wgl->gl;
@@ -947,42 +988,48 @@ WGL_EndRendering(void *obj)
 }
 
 static int
-WGL_MapWindow(AG_Window *win)
+WGL_MapWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+
 	ShowWindow(wgl->hwnd, SW_SHOW);
 	return (0);
 }
 
 static int
-WGL_UnmapWindow(AG_Window *win)
+WGL_UnmapWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+
 	ShowWindow(wgl->hwnd, SW_HIDE);
 	return (0);
 }
 
 static int
-WGL_RaiseWindow(AG_Window *win)
+WGL_RaiseWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
-	SetWindowPos(wgl->hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+
+	SetWindowPos(wgl->hwnd, HWND_TOP, 0,0, 0,0, SWP_NOMOVE | SWP_NOSIZE);
 	return (0);
 }
 
 static int
-WGL_LowerWindow(AG_Window *win)
+WGL_LowerWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
-	SetWindowPos(wgl->hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+
+	SetWindowPos(wgl->hwnd, HWND_BOTTOM, 0,0, 0,0, SWP_NOMOVE | SWP_NOSIZE);
 	return (0);
 }
 
 static int
-WGL_ReparentWindow(AG_Window *win, AG_Window *winParent, int x, int y)
+WGL_ReparentWindow(AG_Window *_Nonnull win, AG_Window *_Nonnull winParent,
+    int x, int y)
 {
 	AG_DriverWGL *wglWin = (AG_DriverWGL *)WIDGET(win)->drv;
 	AG_DriverWGL *wglParentWin = (AG_DriverWGL *)WIDGET(winParent)->drv;
+
 	SetParent(wglWin->hwnd, wglParentWin->hwnd);
 	return (0);
 }
@@ -1014,6 +1061,7 @@ static int
 WGL_SetInputFocus(AG_Window *win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+
 	SetFocus(wgl->hwnd);
 	return (0);
 }
@@ -1024,7 +1072,7 @@ WGL_MoveWindow(AG_Window *win, int x, int y)
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 	AG_SizeAlloc a;
 
-	SetWindowPos(wgl->hwnd, NULL, x, y, 0, 0, SWP_NOZORDER|SWP_NOSIZE);
+	SetWindowPos(wgl->hwnd, NULL, x,y, 0,0, SWP_NOZORDER | SWP_NOSIZE);
 	a.x = x;
 	a.y = y;
 	a.w = WIDTH(win);
@@ -1045,8 +1093,7 @@ WGL_ResizeWindow(AG_Window *win, Uint w, Uint h)
 	r.w = w;
 	r.h = h;
 	WGL_GetWndRect(win, &r);
-	SetWindowPos(wgl->hwnd, NULL, 0, 0, r.w, r.h,
-	    SWP_NOZORDER|SWP_NOMOVE);	
+	SetWindowPos(wgl->hwnd, NULL, 0,0, r.w,r.h, SWP_NOZORDER | SWP_NOMOVE);	
 
 	a.x = WIDGET(win)->x;
 	a.y = WIDGET(win)->y;
@@ -1071,13 +1118,6 @@ WGL_MoveResizeWindow(AG_Window *win, AG_SizeAlloc *a)
 	    SWP_NOZORDER);
 
 	WGL_PostResizeCallback(win, a);
-	return (0);
-}
-
-static int
-WGL_SetBorderWidth(AG_Window *win, Uint width)
-{
-	/* There is no border width in win32! */
 	return (0);
 }
 
@@ -1120,33 +1160,28 @@ WGL_TweakAlignment(AG_Window *win, AG_SizeAlloc *a, Uint wMax, Uint hMax)
  */
 
 /* Initialize the default cursor. */
-static int
-InitDefaultCursors(AG_DriverWGL *wgl)
+static void
+WGL_InitDefaultCursor(AG_DriverWGL *wgl)
 {
 	AG_Driver *drv = AGDRIVER(wgl);
 	const int nStockCursors = 1; /* TODO map */
 	int i;
 
 	for (i = 0; i < nStockCursors; i++) {
-		AG_Cursor *ac;
 		AG_CursorWGL *acWGL;
 	
-		if ((acWGL = TryMalloc(sizeof(AG_CursorWGL))) == NULL) {
-			return (-1);
-		}
-		ac = (AG_Cursor *)acWGL;
+		acWGL = Malloc(sizeof(AG_CursorWGL));
 		acWGL->shared = 1;
 		acWGL->cursor = LoadCursor(NULL, IDC_ARROW);
-		AG_CursorInit(ac);
-		TAILQ_INSERT_HEAD(&drv->cursors, ac, cursors);
+		AG_CursorInit(AGCURSOR(acWGL));
+		TAILQ_INSERT_HEAD(&drv->cursors, AGCURSOR(acWGL), cursors);
 		drv->nCursors++;
 	}
-	return (0);
 }
 
 static AG_Cursor *
-WGL_CreateCursor(void *obj, Uint w, Uint h, const Uint8 *data, const Uint8 *mask,
-    int xHot, int yHot)
+WGL_CreateCursor(void *_Nonnull obj, Uint w, Uint h, const Uint8 *_Nonnull data,
+    const Uint8 *_Nonnull mask, int xHot, int yHot)
 {
 	AG_Cursor *ac;
 	AG_CursorWGL *acWGL;
@@ -1211,7 +1246,7 @@ fail:
 }
 
 static void
-WGL_FreeCursor(void *obj, AG_Cursor *ac)
+WGL_FreeCursor(void *_Nonnull obj, AG_Cursor *_Nonnull ac)
 {
 	AG_Driver *drv = obj;
 	AG_CursorWGL *acWGL = (AG_CursorWGL *)ac;
@@ -1228,7 +1263,7 @@ WGL_FreeCursor(void *obj, AG_Cursor *ac)
 }
 
 static int
-WGL_SetCursor(void *obj, AG_Cursor *ac)
+WGL_SetCursor(void *_Nonnull obj, AG_Cursor *_Nonnull ac)
 {
 	AG_Driver *drv = obj;
 	AG_CursorWGL *acWGL = (AG_CursorWGL *)ac;
@@ -1242,7 +1277,7 @@ WGL_SetCursor(void *obj, AG_Cursor *ac)
 }
 
 static void
-WGL_UnsetCursor(void *obj)
+WGL_UnsetCursor(void *_Nonnull obj)
 {
 	AG_Driver *drv = obj;
 	AG_DriverWGL *wgl = (AG_DriverWGL *)drv;
@@ -1259,20 +1294,20 @@ WGL_UnsetCursor(void *obj)
 }
 
 static int
-WGL_GetCursorVisibility(void *obj)
+WGL_GetCursorVisibility(void *_Nonnull obj)
 {
 	/* XXX TODO */
 	return (1);
 }
 
 static void
-WGL_SetCursorVisibility(void *obj, int flag)
+WGL_SetCursorVisibility(void *_Nonnull obj, int flag)
 {
 	/* XXX TODO */
 }
 
 static void
-WGL_PreResizeCallback(AG_Window *win)
+WGL_PreResizeCallback(AG_Window *_Nonnull win)
 {
 #if 0
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
@@ -1289,50 +1324,53 @@ WGL_PreResizeCallback(AG_Window *win)
 }
 
 static void
-WGL_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
+WGL_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverWGL *wgl = (AG_DriverWGL *)drv;
-	int x = (a->x == -1) ? WIDGET(win)->x : a->x;
-	int y = (a->y == -1) ? WIDGET(win)->y : a->y;
-	
-	/* Update per-widget coordinate information */
-	a->x = 0;
-	a->y = 0;
-	AG_WidgetSizeAlloc(win, a);
-	AG_WidgetUpdateCoords(win, 0, 0);
+	AG_SizeAlloc wa;
+	AG_Rect rVP;
+	const int x = (a->x == -1) ? WIDGET(win)->x : a->x;
+	const int y = (a->y == -1) ? WIDGET(win)->y : a->y;
 
-	/* Viewport dimensions have changed */
+	wa.x = 0;
+	wa.y = 0;
+	wa.w = a->w;
+	wa.h = a->h;
+	AG_WidgetSizeAlloc(win, &wa);
+	AG_WidgetUpdateCoords(win, 0,0);
+	WIDGET(win)->x = x;
+	WIDGET(win)->y = y;
+
+	win->dirty = 1;
+
 	wglMakeCurrent(wgl->hdc, wgl->hglrc);
-	AG_GL_SetViewport(&wgl->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
-	
-	/* Save the new effective window position. */
-	WIDGET(win)->x = a->x = x;
-	WIDGET(win)->y = a->y = y;
+	rVP.x = 0;
+	rVP.y = 0;
+	rVP.w = WIDTH(win);
+	rVP.h = HEIGHT(win);
+	AG_GL_SetViewport(&wgl->gl, &rVP);
 }
 
 static void
-WGL_PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
+WGL_PostMoveCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 {
-	AG_SizeAlloc aNew;
-	int xRel, yRel;
+	AG_SizeAlloc wa;
 	
-	xRel = a->x - WIDGET(win)->x;
-	yRel = a->y - WIDGET(win)->y;
-
-	/* Update the window coordinates. */
-	aNew.x = 0;
-	aNew.y = 0;
-	aNew.w = a->w;
-	aNew.h = a->h;
-	AG_WidgetSizeAlloc(win, &aNew);
-	AG_WidgetUpdateCoords(win, 0, 0);
+	wa.x = 0;
+	wa.y = 0;
+	wa.w = a->w;
+	wa.h = a->h;
+	AG_WidgetSizeAlloc(win, &wa);
+	AG_WidgetUpdateCoords(win, 0,0);
 	WIDGET(win)->x = a->x;
 	WIDGET(win)->y = a->y;
+
 	win->dirty = 1;
 
-	/* Move other windows pinned to this one. */
-	AG_WindowMovePinned(win, xRel, yRel);
+	if (agWindowPinnedCount > 0)
+		AG_WindowMovePinned(win, a->x - WIDGET(win)->x,
+		                         a->y - WIDGET(win)->y);
 }
 
 AG_DriverMwClass agDriverWGL = {
@@ -1340,13 +1378,13 @@ AG_DriverMwClass agDriverWGL = {
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverWGL",
 			sizeof(AG_DriverWGL),
-			{ 1,5 },
-			NULL,	/* init */
-			NULL,	/* reset */
-			NULL,	/* destroy */
-			NULL,	/* load */
-			NULL,	/* save */
-			NULL,	/* edit */
+			{ 1,6 },
+			NULL,		/* init */
+			NULL,		/* reset */
+			NULL,		/* destroy */
+			NULL,		/* load */
+			NULL,		/* save */
+			NULL,		/* edit */
 		},
 		"wgl",
 		AG_VECTOR,
@@ -1383,20 +1421,31 @@ AG_DriverMwClass agDriverWGL = {
 		WGL_SetCursorVisibility,
 		AG_GL_BlitSurface,
 		AG_GL_BlitSurfaceFrom,
+#ifdef HAVE_OPENGL
 		AG_GL_BlitSurfaceGL,
 		AG_GL_BlitSurfaceFromGL,
 		AG_GL_BlitSurfaceFlippedGL,
+#endif
 		AG_GL_BackupSurfaces,
 		AG_GL_RestoreSurfaces,
 		AG_GL_RenderToSurface,
 		AG_GL_PutPixel,
 		AG_GL_PutPixel32,
-		AG_GL_PutPixelRGB,
+		AG_GL_PutPixelRGB8,
+#if AG_MODEL == AG_LARGE
+		AG_GL_PutPixel64,
+		AG_GL_PutPixelRGB16,
+#endif
 		AG_GL_BlendPixel,
 		AG_GL_DrawLine,
 		AG_GL_DrawLineH,
 		AG_GL_DrawLineV,
 		AG_GL_DrawLineBlended,
+		AG_GL_DrawLineW,
+		AG_GL_DrawLineW_Sti16,
+		AG_GL_DrawTriangle,
+		AG_GL_DrawPolygon,
+		AG_GL_DrawPolygon_Sti32,
 		AG_GL_DrawArrow,
 		AG_GL_DrawBoxRounded,
 		AG_GL_DrawBoxRoundedTop,
@@ -1407,7 +1456,9 @@ AG_DriverMwClass agDriverWGL = {
 		AG_GL_DrawRectDithered,
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph,
-		AG_GL_StdDeleteList
+		AG_GL_StdDeleteList,
+		NULL,				/* getClipboardText */
+		NULL				/* setClipboardText */
 	},
 	WGL_OpenWindow,
 	WGL_CloseWindow,
@@ -1423,8 +1474,7 @@ AG_DriverMwClass agDriverWGL = {
 	WGL_MoveResizeWindow,
 	WGL_PreResizeCallback,
 	WGL_PostResizeCallback,
-	NULL,				/* captureWindow */
-	WGL_SetBorderWidth,
+	NULL,				/* setBorderWidth */
 	WGL_SetWindowCaption,
 	WGL_SetTransientFor,
 	NULL,				/* setOpacity (TODO) */

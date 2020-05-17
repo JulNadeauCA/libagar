@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -81,7 +81,7 @@ binding.
 .Fn AG_SocketBgCircle "AG_Socket *socket" "Uint radius"
 .Pp
 .Ft void
-.Fn AG_SocketBgPixmap "AG_Socket *socket" "AG_Surface *s"
+.Fn AG_SocketBgPixmap "AG_Socket *socket" "const AG_Surface *s"
 .Pp
 .Ft void
 .Fn AG_SocketBgPixmapNODUP "AG_Socket *socket" "AG_Surface *s"
@@ -105,14 +105,12 @@ include:
 .It AG_SOCKET_STICKY_STATE
 Mouse click should toggle the boolean state.
 .It AG_SOCKET_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
+Expand horizontally in parent container.
 .It AG_SOCKET_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
+Expand vertically in parent container.
 .It AG_SOCKET_EXPAND
 Shorthand for
-.Dv AG_SOCKET_HFILL|AG_SOCKET_VFILL .
+.Dv AG_SOCKET_HFILL | AG_SOCKET_VFILL .
 .El
 .Pp
 The
@@ -152,10 +150,10 @@ dimensions in pixels.
 arranges for the socket to use a circular shape of the given radius in pixels.
 .Pp
 .Fn AG_SocketBgPixmap
-uses the given surface as background image.
+uses (a duplicate of) the given surface as background image.
 The
 .Fn AG_SocketBgPixmapNODUP
-variant prevents the surface from being copied.
+variant uses the surface without copy (potentially unsafe).
 .Sh EVENTS
 The
 .Nm

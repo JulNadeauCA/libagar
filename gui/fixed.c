@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Fixed-position container widget. It allows widgets to be sized and
+ * placed at specific positions in pixels.
+ */
+
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/fixed.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -35,36 +42,62 @@ AG_FixedNew(void *parent, Uint flags)
 
 	fx = Malloc(sizeof(AG_Fixed));
 	AG_ObjectInit(fx, &agFixedClass);
+
+	if (flags & AG_FIXED_HFILL) { WIDGET(fx)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_FIXED_VFILL) { WIDGET(fx)->flags |= AG_WIDGET_VFILL; }
 	fx->flags |= flags;
 
-	if (flags & AG_FIXED_HFILL) { AG_ExpandHoriz(fx); }
-	if (flags & AG_FIXED_VFILL) { AG_ExpandVert(fx); }
+#ifdef AG_LEGACY
+	if (flags & AG_FIXED_BOX) { fx->style = AG_FIXED_STYLE_BOX; }
+	else if (flags & (AG_FIXED_INVBOX | AG_FIXED_FRAME)) { fx->style = AG_FIXED_STYLE_WELL; }
+	else if (flags & AG_FIXED_FILLBG) { fx->style = AG_FIXED_STYLE_PLAIN; }
+#endif
 
 	AG_ObjectAttach(parent, fx);
 	return (fx);
 }
 
 static void
-Init(void *obj)
+MouseButtonDown(AG_Event *_Nonnull event)
+{
+	AG_Fixed *fx = AG_FIXED_SELF();
+	AG_Window *wParent = AG_ParentWindow(fx);
+
+	if (!AG_WindowIsFocused(wParent))
+		AG_WindowFocus(wParent);
+}
+
+static void
+Init(void *_Nonnull obj)
 {
 	AG_Fixed *fx = obj;
 
 	fx->flags = 0;
+	fx->style = AG_FIXED_STYLE_WELL;		/* 3D well */
 	fx->wPre = 0;
 	fx->hPre = 0;
+
+	AG_SetEvent(fx, "mouse-button-down", MouseButtonDown, NULL);
+}
+
+void
+AG_FixedSetStyle(AG_Fixed *fx, enum ag_fixed_style style)
+{
+	AG_OBJECT_ISA(fx, "AG_Widget:AG_Fixed:*");
+	fx->style = style;
+	AG_Redraw(fx);
 }
 
 void
 AG_FixedSizeHint(AG_Fixed *fx, int w, int h)
 {
-	AG_ObjectLock(fx);
+	AG_OBJECT_ISA(fx, "AG_Widget:AG_Fixed:*");
 	fx->wPre = w;
 	fx->hPre = h;
-	AG_ObjectUnlock(fx);
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Fixed *fx = obj;
 
@@ -73,54 +106,59 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Fixed *fx = obj;
 	AG_Widget *chld;
 	AG_SizeAlloc aChld;
 
+	/*
+	 * Trivially run sizeAllocate() over existing coordinates.
+	 * Ignore HFILL and VFILL.
+	 */
 	OBJECT_FOREACH_CHILD(chld, fx, ag_widget) {
 		aChld.x = chld->x;
 		aChld.y = chld->y;
 		aChld.w = chld->w;
 		aChld.h = chld->h;
-#if 0
-		if (chld->flags & AG_WIDGET_HFILL) { aChld.w = a->w; }
-		if (chld->flags & AG_WIDGET_VFILL) { aChld.h = a->h; }
-#endif		
 		AG_WidgetSizeAlloc(chld, &aChld);
 	}
 	return (0);
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
+	static void (*pfBox[])(void *, const AG_Rect *, const AG_Color *) = {
+		ag_draw_rect_noop,  /* NONE */
+		ag_draw_box_raised, /* BOX */
+		ag_draw_box_sunk,   /* WELL */
+		ag_draw_rect        /* PLAIN */
+	};
 	AG_Fixed *fx = obj;
 	AG_Widget *chld;
-	AG_Rect r = AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx));
 
-	if (fx->flags & AG_FIXED_BOX) {
-		AG_DrawBox(fx, r, -1, WCOLOR(fx,0));
-	} else if (fx->flags & AG_FIXED_INVBOX) {
-		AG_DrawBox(fx, r, -1, WCOLOR(fx,0));
-	} else if (fx->flags & AG_FIXED_FRAME) {
-		AG_DrawFrame(fx, r, -1, WCOLOR(fx,0));
-	} else if (fx->flags & AG_FIXED_FILLBG) {
-		AG_DrawRect(fx, r, WCOLOR(fx,0));
-	}
+#ifdef AG_DEBUG
+	if (fx->style >= AG_FIXED_STYLE_LAST)
+		AG_FatalError("style");
+#endif
+	pfBox[fx->style](fx, &WIDGET(fx)->r, &WCOLOR(fx,BG_COLOR));
 
 	OBJECT_FOREACH_CHILD(chld, fx, ag_widget)
 		AG_WidgetDraw(chld);
 }
 
 static __inline__ void
-UpdateWindow(AG_Fixed *fx)
+UpdateWindow(AG_Fixed *_Nonnull fx)
 {
 	if (!(fx->flags & AG_FIXED_NO_UPDATE))
-		AG_WidgetUpdate(fx);
+		WIDGET(fx)->flags |= AG_WIDGET_UPDATE_WINDOW;
 }
 
+/*
+ * Attach a new widget to the container and set initial coordinates to x,y
+ * in pixels. Auto-size according to sizeRequest().
+ */
 void
 AG_FixedPut(AG_Fixed *fx, void *p, int x, int y)
 {
@@ -128,7 +166,9 @@ AG_FixedPut(AG_Fixed *fx, void *p, int x, int y)
 	AG_SizeReq r;
 	AG_SizeAlloc a;
 
+	AG_OBJECT_ISA(fx, "AG_Widget:AG_Fixed:*");
 	AG_ObjectLock(fx);
+	AG_OBJECT_ISA(chld, "AG_Widget:*");
 	AG_ObjectLock(chld);
 	
 	AG_ObjectAttach(fx, chld);
@@ -141,10 +181,11 @@ AG_FixedPut(AG_Fixed *fx, void *p, int x, int y)
 	UpdateWindow(fx);
 	
 	AG_ObjectUnlock(chld);
-	AG_ObjectUnlock(fx);
 	AG_Redraw(fx);
+	AG_ObjectUnlock(fx);
 }
 
+/* Move an existing widget to coordinates x,y. */
 void
 AG_FixedMove(AG_Fixed *fx, void *p, int x, int y)
 {
@@ -152,7 +193,9 @@ AG_FixedMove(AG_Fixed *fx, void *p, int x, int y)
 	AG_SizeReq r;
 	AG_SizeAlloc a;
 	
+	AG_OBJECT_ISA(fx, "AG_Widget:AG_Fixed:*");
 	AG_ObjectLock(fx);
+	AG_OBJECT_ISA(chld, "AG_Widget:*");
 	AG_ObjectLock(chld);
 
 	AG_WidgetSizeReq(chld, &r);
@@ -164,17 +207,20 @@ AG_FixedMove(AG_Fixed *fx, void *p, int x, int y)
 	UpdateWindow(fx);
 	
 	AG_ObjectUnlock(chld);
-	AG_ObjectUnlock(fx);
 	AG_Redraw(fx);
+	AG_ObjectUnlock(fx);
 }
 
+/* Resize a widget to w x h pixels. */
 void
 AG_FixedSize(AG_Fixed *fx, void *p, int w, int h)
 {
 	AG_Widget *chld = p;
 	AG_SizeAlloc a;
 	
+	AG_OBJECT_ISA(fx, "AG_Widget:AG_Fixed:*");
 	AG_ObjectLock(fx);
+	AG_OBJECT_ISA(chld, "AG_Widget:*");
 	AG_ObjectLock(chld);
 
 	a.w = (w == -1) ? chld->w : w;
@@ -186,22 +232,25 @@ AG_FixedSize(AG_Fixed *fx, void *p, int w, int h)
 	UpdateWindow(fx);
 
 	AG_ObjectUnlock(chld);
-	AG_ObjectUnlock(fx);
 	AG_Redraw(fx);
+	AG_ObjectUnlock(fx);
 }
 
+/* Detach a widget from the container. */
 void
 AG_FixedDel(AG_Fixed *fx, void *chld)
 {
+	AG_OBJECT_ISA(fx, "AG_Widget:AG_Fixed:*");
 	AG_ObjectLock(fx);
+	AG_OBJECT_ISA(chld, "AG_Widget:*");
 	AG_ObjectLock(chld);
 	
 	AG_ObjectDetach(chld);
 	UpdateWindow(fx);
 	
 	AG_ObjectUnlock(chld);
-	AG_ObjectUnlock(fx);
 	AG_Redraw(fx);
+	AG_ObjectUnlock(fx);
 }
 
 AG_WidgetClass agFixedClass = {
@@ -210,7 +259,7 @@ AG_WidgetClass agFixedClass = {
 		sizeof(AG_Fixed),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
@@ -220,3 +269,5 @@ AG_WidgetClass agFixedClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

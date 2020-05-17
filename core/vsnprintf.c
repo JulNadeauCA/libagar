@@ -69,7 +69,7 @@ static void dopr(char *_Nonnull, AG_Size, const char *_Nonnull, va_list);
 static void fmtstr(char *_Nonnull, AG_Size *_Nonnull, AG_Size, char *_Nonnull, int, int, int);
 static void fmtint(char *_Nonnull, AG_Size *_Nonnull, AG_Size, long, int, int, int, int);
 static void fmtfp(char *_Nonnull, AG_Size *_Nonnull, AG_Size, long double, int, int, int);
-static voiddopr_outch(char *_Nonnull, AG_Size *_Nonnull, AG_Size, char);
+static void dopr_outch(char *_Nonnull, AG_Size *_Nonnull, AG_Size, char);
 
 /*
  * dopr(): poor man's version of doprintf
@@ -681,10 +681,17 @@ AG_TryVsnprintf(char *str, AG_Size count, const char *fmt, va_list ap)
 	rv = vsnprintf(str, count, fmt, ap);
 #endif
 	if (rv == -1) {
-		AG_SetError("vsnprintf: Out of memory");
+		AG_SetErrorV("E0", "Out of memory");
 		return (-1);
 	}
 	return (0);
 }
 
 #endif /* HAVE_VSNPRINTF */
+
+void
+AG_Vsnprintf(char *s, AG_Size len, const char *fmt, va_list args)
+{
+	if (AG_TryVsnprintf(s, len, fmt, args) == -1)
+		AG_FatalError(NULL);
+}

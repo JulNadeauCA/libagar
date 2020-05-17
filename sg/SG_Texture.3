@@ -1,0 +1,146 @@
+.\"
+.\" Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd June 27, 2006
+.Dt SG_VIEW_MATERIAL 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm SG_Texture
+.Nd Agar-SG texture object
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/sg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+object describes texture information which may be attached to
+.Xr SG_Object 3
+nodes in a
+.Xr SG 3
+scene.
+Materials have the following properties:
+.Bl -bullet -compact -offset indent
+.It
+Texture image (one surface, or multiple blended surfaces).
+.It
+Emissive, ambient, diffuse and specular color components.
+.It
+Shininess (specular exponent).
+.It
+Ties to fragment shader programs (see
+.Xr SG_Program 3 ) .
+.El
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Nm .
+.Sh INTERFACE
+.nr nS 1
+.Ft "SG_Texture *"
+.Fn SG_TextureNew "SG_Node *parent" "const char *name"
+.Pp
+.Ft "SG_TextureSurface *"
+.Fn SG_TextureAddSurface "SG_Texture *tex" "const AG_Surface *s"
+.Pp
+.Ft "SG_TextureSurface *"
+.Fn SG_TextureAddSurfaceNODUP "SG_Texture *tex" "AG_Surface *s"
+.Pp
+.Ft "void"
+.Fn SG_TextureDelSurface "SG_Texture *tex" "SG_TextureSurface *ts"
+.Pp
+.Ft "SG_TextureProgram *"
+.Fn SG_TextureAddProgram "SG_Texture *tex" "SG_Program *prog"
+.Pp
+.Ft "void"
+.Fn SG_TextureDelProgram "SG_Texture *tex" "SG_TextureProgram *tp"
+.Pp
+.Ft int
+.Fn SG_TextureCompile "SG_Texture *tex"
+.Pp
+.nr nS 0
+The
+.Fn SG_TextureNew
+function allocates, initializes, and attaches a
+.Nm
+object.
+.Pp
+The
+.Fn SG_TextureAddSurface
+function inserts a copy of the given
+.Xr AG_Surface 3 .
+The
+.Fn SG_TextureAddSurfaceNODUP
+variant inserts a pointer to a surface which must remain valid as long as the
+.Nm
+exists.
+.Fn SG_TextureDelSurface
+deletes the specified surface.
+.Pp
+.Fn SG_TextureAddProgram
+inserts the specified fragment program (see
+.Xr SG_Program 3 ) ,
+which will be used when rendering the texture.
+.Fn SG_TextureDelProgram
+removes the specified fragment program.
+.Pp
+The
+.Fn SG_TextureCompile
+function blends the input surfaces and generates the
+final texture surface.
+.Sh STRUCTURE DATA
+For the
+.Nm
+object:
+.Pp
+.Bl -tag -width "AG_Surface *surfaces " -compact
+.It Ft M_Color emissive
+Light emitted by surface (Ke)
+.It Ft M_Color ambient
+Ambient reflectance (Ka)
+.It Ft M_Color diffuse
+Diffuse reflectance (Kd)
+.It Ft M_Color specular
+Specular reflectance (Ks)
+.It Ft M_Real shininess
+Specular exponent
+.It Ft AG_Surface *surfaces
+Input surface(s)
+.It Ft Uint nSurfaces
+Input surface count
+.El
+.Sh SEE ALSO
+.Xr M_Color 3 ,
+.Xr M_Real 3 ,
+.Xr SG 3 ,
+.Xr SG_Intro 3 ,
+.Xr SG_Light 3 ,
+.Xr SG_Program 3 ,
+.Xr SG_View 3
+.Sh HISTORY
+The
+.Nm
+object first appeared in Agar 1.6.0.

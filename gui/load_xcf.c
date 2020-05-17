@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2007 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,11 +24,8 @@
  */
 
 /*
- * Loader for Gimp XCF image format.
- *
- * TODO Add support for Gimp 2.x XCF images.
+ * Loader for Gimp 1.x XCF image format.
  */
-
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
 #include <agar/gui/surface.h>
@@ -62,11 +59,13 @@ struct xcf_prop {
 		enum xcf_compression compression;	/* Tile compression */
 		struct {
 			Uint32 size;		/* Number of RGB triplets */
+			Uint32 _pad;
 			char *data;		/* RGB triplet array */
 		} colormap;
 		struct {
 			Sint32 position;	/* Guide coordinates */
 			Sint8 orientation;	/* Guide orientation */
+			Uint8 _pad[3];
 		} guide;
 		struct {
 			char *name;
@@ -94,11 +93,14 @@ struct xcf_prop {
 struct xcf_header {
 	Uint32 w, h;				/* Geometry in pixels */
 	enum xcf_base_type base_type;		/* Type of image */
+	Uint32 _pad1;
 	Uint32 *layer_offstable;
 	Uint32 *channel_offstable;
 	Uint8 compression;
+	char _pad2[7];
 	struct {
 		Uint32 size;
+		Uint32 _pad;
 		Uint8 *data;
 	} colormap;
 };
@@ -112,11 +114,13 @@ struct xcf_layer {
 	Uint32 mode;			/* Application mode */
 	Uint32 hierarchy_offset;	/* Offset of xcf_hierarchy */
 	Uint32 mask_offset;		/* Offset of mask xcf_layer */
+	Uint32 _pad;
 };
 
 struct xcf_hierarchy {
 	Uint32 w, h;
 	Uint32 bpp;
+	Uint32 _pad;
 	Uint32 *level_offsets;
 	int    nlevel_offsets;
 	int  maxlevel_offsets;
@@ -360,26 +364,25 @@ ConvertLevel(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_hierarchy *hier,
 	
 		p = tile;
 		for (y = ty; y < ty+oy; y++) {
-			Uint8 *dst = (Uint8 *)su->pixels +
-			    y*su->pitch +
-			    tx*su->format->BytesPerPixel;
-			Uint32 color;
+			Uint8 *dst = su->pixels + (y * su->pitch) +
+			                         (tx * su->format.BytesPerPixel);
+			Uint32 px;
 			Uint8 r, g, b, a;
 			int x;
 
-			for (x = tx; x < tx+ox; x++) {
+			for (x = tx; x < tx + ox; x++) {
 				switch (hier->bpp) {
 				case 4:
 #if AG_BYTEORDER == AG_BIG_ENDIAN
-					r = (*(Uint32 *)p & 0xff000000)>>24;
-					g = (*(Uint32 *)p & 0x00ff0000)>>16;
-					b = (*(Uint32 *)p & 0x0000ff00)>>8;
+					r = (*(Uint32 *)p & 0xff000000) >> 24;
+					g = (*(Uint32 *)p & 0x00ff0000) >> 16;
+					b = (*(Uint32 *)p & 0x0000ff00) >> 8;
 					a = (*(Uint32 *)p & 0x000000ff);
 #else
 					r = (*(Uint32 *)p & 0x000000ff);
-					g = (*(Uint32 *)p & 0x0000ff00)>>8;
-					b = (*(Uint32 *)p & 0x00ff0000)>>16;
-					a = (*(Uint32 *)p & 0xff000000)>>24;
+					g = (*(Uint32 *)p & 0x0000ff00) >> 8;
+					b = (*(Uint32 *)p & 0x00ff0000) >> 16;
+					a = (*(Uint32 *)p & 0xff000000) >> 24;
 #endif
 					break;
 				case 3:
@@ -396,30 +399,30 @@ ConvertLevel(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_hierarchy *hier,
 					break;
 				}
 
-				color = AG_MapPixelRGBA(su->format, r,g,b,a);
-				switch (su->format->BytesPerPixel) {
+				px = AG_MapPixel32_RGBA8(&su->format, r,g,b,a);
+				switch (su->format.BytesPerPixel) {
 				case 4:
-					*(Uint32 *)dst = color;
+					*(Uint32 *)dst = px;
 					break;
 				case 3:
 #if AG_BYTEORDER == AG_BIG_ENDIAN
-					dst[0] = (color>>16) & 0xff;
-					dst[1] = (color>>8) & 0xff;
-					dst[2] = color & 0xff;
+					dst[0] = (px >> 16) & 0xff;
+					dst[1] = (px >> 8)  & 0xff;
+					dst[2] =  px        & 0xff;
 #else
-					dst[2] = (color>>16) & 0xff;
-					dst[1] = (color>>8) & 0xff;
-					dst[0] = color & 0xff;
+					dst[2] = (px >> 16) & 0xff;
+					dst[1] = (px >> 8)  & 0xff;
+					dst[0] =  px        & 0xff;
 #endif
 					break;
 				case 2:
-					*(Uint16 *)dst = color;
+					*(Uint16 *)dst = px;
 					break;
 				case 1:
-					*dst = color;
+					*dst = px;
 					break;
 				}
-				dst += su->format->BytesPerPixel;
+				dst += su->format.BytesPerPixel;
 				p += hier->bpp;
 
 				switch (a) {
@@ -549,11 +552,12 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
 
 	/* Adjust the alpha/colorkey properties of the surface. */
 	{	
-		Uint8 oldalpha = su->format->alpha;
+		Uint8 oldalpha = su->alpha;
+
 		AG_SurfaceSetAlpha(su, 0, 0);
 		AG_SurfaceSetColorKey(su, 0, 0);
 		if (aflags & (XCF_ALPHA_ALPHA|XCF_ALPHA_TRANSPARENT))
-			AG_SurfaceSetAlpha(su, AG_SRCALPHA, oldalpha);
+			AG_SurfaceSetAlpha(su, AG_SURFACE_ALPHA, oldalpha);
 	}
 	return (su);
 }
@@ -563,7 +567,7 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
  * is passed the converted surface for each layer in the file.
  */
 int
-AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
+AG_XCFLoad(AG_DataSource *buf, AG_Offset xcf_offs,
     void (*add_layer_fn)(AG_Surface *, const char *, void *), void *arg)
 {
 	char magic[14];
@@ -626,6 +630,11 @@ AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
 			break;
 		}
 	} while (prop.id != PROP_END);
+	
+	Debug(NULL, "XCF image (%ux%u; type %d; compression %d; colormap %d)\n",
+	    head->w, head->h, head->base_type, head->compression,
+	    head->colormap.size);
+	Debug(NULL, "XCF layers: ");
 
 	/* Reader the layer offsets. */
 	head->layer_offstable = NULL;
@@ -649,6 +658,8 @@ AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
 		layer->h = AG_ReadUint32(buf);
 		layer->layer_type = AG_ReadUint32(buf);
 		layer->name = AG_ReadNulString(buf);
+
+		Debug(NULL, "\"%s\" ", layer->name);
 
 		/* Read the layer properties. */
 		do {
@@ -684,6 +695,7 @@ AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
 		Free(layer->name);
 		Free(layer);
 	}
+	Debug(NULL, "\n");
 
 	Free(head->colormap.data);
 	Free(head->layer_offstable);

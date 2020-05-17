@@ -28,74 +28,35 @@ struct ag_driver;
 
 typedef struct ag_cursor {
 	Uint w, h;			/* Cursor dimensions */
-	Uint8 *data, *mask;		/* Bitmap data */
+	Uint8 *_Nonnull data;		/* Raw bitmap data */
+	Uint8 *_Nonnull mask;		/* Transparency mask */
 	int  xHot, yHot;		/* Hotspot */
-	void *p;			/* Driver data */
+	void *_Nullable p;		/* Driver data */
 	AG_TAILQ_ENTRY(ag_cursor) cursors;
 } AG_Cursor;
 
+#define AGCURSOR(p) ((AG_Cursor *)(p))
+
 __BEGIN_DECLS
-int  AG_InitStockCursors(struct ag_driver *);
-void AG_FreeCursors(struct ag_driver *);
+void AG_InitStockCursors(struct ag_driver *_Nonnull);
+void AG_FreeCursors(struct ag_driver *_Nonnull);
 
-AG_Cursor *AG_CursorNew(void *, Uint, Uint, const Uint8 *, const Uint8 *, int, int);
-AG_Cursor *AG_CursorFromXPM(void *, char *[], int, int);
-void       AG_CursorFree(void *, AG_Cursor *);
+AG_Cursor *_Nullable AG_CursorNew(void *_Nonnull, Uint,Uint,
+                                  const Uint8 *_Nonnull,
+				  const Uint8 *_Nonnull, int,int);
 
-/* Initialize an AG_Cursor structure. */
-static __inline__ void
-AG_CursorInit(AG_Cursor *ac)
-{
-	ac->data = NULL;
-	ac->mask = NULL;
-	ac->w = 0;
-	ac->h = 0;
-	ac->xHot = 0;
-	ac->yHot = 0;
-	ac->p = NULL;
-}
+AG_Cursor *_Nullable AG_CursorFromXPM(void *_Nonnull, char *_Nonnull [_Nonnull],
+                                      int,int);
 
-/* Return a pointer to a built-in cursor. */
-static __inline__ AG_Cursor *
-AG_GetStockCursor(void *obj, int name)
-{
-	AG_Driver *drv = AGDRIVER(obj);
-	AG_Cursor *ac;
-	int i = 0;
+void AG_CursorInit(AG_Cursor *_Nonnull);
+void AG_CursorFree(void *_Nonnull, AG_Cursor *_Nonnull);
 
-	AG_TAILQ_FOREACH(ac, &drv->cursors, cursors) {
-		if (i++ == name)
-			break;
-	}
-	if (ac == NULL) {
-		AG_FatalError("AG_GetStockCursor");
-	}
-	return (ac);
-}
+AG_Cursor *_Nonnull  AG_GetStockCursor(void *_Nonnull, int);
+AG_Cursor *_Nullable AG_GetActiveCursor(void *_Nonnull);
 
-/* Return a pointer to the active cursor. */
-static __inline__ AG_Cursor *
-AG_GetActiveCursor(void *drv)
-{
-	return (AGDRIVER(drv)->activeCursor);
-}
-
-/* Show/hide the active cursor. */
-static __inline__ int
-AG_CursorIsVisible(void *drv)
-{
-	return AGDRIVER_CLASS(drv)->getCursorVisibility(drv);
-}
-static __inline__ void
-AG_ShowCursor(void *drv)
-{
-	AGDRIVER_CLASS(drv)->setCursorVisibility(drv, 1);
-}
-static __inline__ void
-AG_HideCursor(void *drv)
-{
-	AGDRIVER_CLASS(drv)->setCursorVisibility(drv, 0);
-}
+int  AG_CursorIsVisible(void *_Nonnull);
+void AG_ShowCursor(void *_Nonnull);
+void AG_HideCursor(void *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/close.h>

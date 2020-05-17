@@ -1,507 +1,166 @@
 /*	Public domain	*/
 
-/*
- * Primitive GUI rendering routines.
- */
-
 #ifndef _AGAR_GUI_PRIMITIVE_H_
 #define _AGAR_GUI_PRIMITIVE_H_
 
 #include <agar/gui/widget.h>
-
 #include <agar/gui/begin.h>
 
+typedef enum ag_arrowline_type {
+	AG_ARROWLINE_NONE,
+	AG_ARROWLINE_FORWARD,
+	AG_ARROWLINE_REVERSE,
+	AG_ARROWLINE_BOTH
+} AG_ArrowLineType;
+
+typedef enum ag_vector_element_type {
+	AG_VE_POINT,		/* Marker (crosshairs) on vertex A */
+	AG_VE_LINE,		/* Line from vertex A to vertex B */
+	AG_VE_POLYGON,		/* Polygon from vertex array C (indices A..B) */
+	AG_VE_CIRCLE,		/* Circle of radius B centered at vertex A */
+	AG_VE_ARC1,		/* Arc (0-90 deg) of radius B centered at A */
+	AG_VE_ARC2,		/* Arc (90-180 deg) "" */
+	AG_VE_ARC3,		/* Arc (180-270 deg) "" */
+	AG_VE_ARC4,		/* Arc (270-360 deg) "" */
+	AG_VE_LAST
+} AG_VectorElementType;
+
+typedef struct ag_vector_element {
+	AG_VectorElementType type;		/* Element type (or terminator) */
+	int a,b;				/* Immediate values A and B */
+	int thick;				/* Line thickness */
+	int color;				/* Color index into palette */
+	Uint flags;
+#define AG_VE_BEVELED	0x0001			/* Beveled endpoints (LINE) */
+#define AG_VE_ROUNDED	0x0002			/* Rounded endpoints (LINE) */
+#define AG_VE_FILLED	0x0004			/* Filled (CIRCLE) */
+#define AG_VE_TAG_MASK	0xff00			/* Mask to decode tag */
+	const void *_Nullable p;		/* Array or object parameter */
+} AG_VectorElement;
+
 __BEGIN_DECLS
-/* Increment individual RGB components of a pixel. */
-/* XXX TODO use SIMD where available */
-static __inline__ AG_Color
-AG_ColorShift(AG_Color C, Sint8 *shift)
-{
-	int r = C.r + shift[0];
-	int g = C.g + shift[1];
-	int b = C.b + shift[2];
+#ifdef AG_INLINE_WIDGET
+# define AG_INLINE_HEADER
+# include <agar/gui/inline_primitive.h>
+#else /* !AG_INLINE_WIDGET */
+void ag_put_pixel(void *_Nonnull, int,int, const AG_Color *_Nonnull);
+void ag_put_pixel_32(void *_Nonnull, int,int, Uint32);
+void ag_put_pixel_rgb_8(void *_Nonnull, int,int, Uint8,Uint8,Uint8);
+void ag_put_pixel_rgb(void *_Nonnull, int,int, AG_Component, AG_Component,
+                      AG_Component);
+void ag_blend_pixel(void *_Nonnull, int,int, const AG_Color *_Nonnull,  AG_AlphaFn);
+void ag_blend_pixel_32(void *_Nonnull, int,int, Uint32, AG_AlphaFn);
+void ag_blend_pixel_rgba(void *_Nonnull, int,int, Uint8 [_Nonnull 4], AG_AlphaFn);
+# if AG_MODEL == AG_LARGE
+void ag_put_pixel_64(void *_Nonnull, int,int, Uint64);
+void ag_put_pixel_rgb_16(void *_Nonnull, int,int, Uint16,Uint16,Uint16);
+void ag_blend_pixel_64(void *_Nonnull, int,int, Uint64, AG_AlphaFn);
+# endif
+void ag_draw_line(void *_Nonnull, int,int, int,int, const AG_Color *_Nonnull);
+void ag_draw_line_h(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_line_v(void *_Nonnull, int, int,int, const AG_Color *_Nonnull);
+void ag_draw_line_blended(void *_Nonnull, int,int, int,int,
+                          const AG_Color *_Nonnull, AG_AlphaFn, AG_AlphaFn);
+void ag_draw_line_w(void *_Nonnull, int,int, int,int, const AG_Color *_Nonnull,
+                    float);
+void ag_draw_line_w_sti16(void *_Nonnull, int,int, int,int,
+                          const AG_Color *_Nonnull, float, Uint16);
 
-	if (r > 255) { r = 255; } else if (r < 0) { r = 0; }
-	if (g > 255) { g = 255; } else if (g < 0) { g = 0; }
-	if (b > 255) { b = 255; } else if (b < 0) { b = 0; }
+void ag_draw_triangle(void *_Nonnull, const AG_Pt *, const AG_Pt *, const AG_Pt *,
+                      const AG_Color *_Nonnull);
+void ag_draw_polygon(void *_Nonnull, const AG_Pt *_Nonnull, Uint, const AG_Color *);
+void ag_draw_polygon_sti32(void *_Nonnull, const AG_Pt *_Nonnull, Uint,
+                           const AG_Color *_Nonnull, const Uint8 *_Nonnull);
+void ag_draw_arrow_up(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_arrow_right(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_arrow_down(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_arrow_left(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_box_rounded(void *_Nonnull, const AG_Rect *_Nonnull, int, int,
+                         const AG_Color *_Nonnull);
+void ag_draw_box_rounded_top(void *_Nonnull, const AG_Rect *_Nonnull, int, int,
+                             const AG_Color *_Nonnull);
+void ag_draw_circle(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_circle_filled(void *_Nonnull, int,int, int, const AG_Color *_Nonnull);
+void ag_draw_rect(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull);
+void ag_draw_rect_filled(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull);
+void ag_draw_rect_blended(void *_Nonnull, const AG_Rect *_Nonnull,
+                          const AG_Color *_Nonnull,
+			  AG_AlphaFn, AG_AlphaFn);
+void ag_draw_rect_dithered(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull);
+void ag_draw_frame(void *_Nonnull, const AG_Rect *_Nonnull, int, const AG_Color *_Nonnull);
+void ag_draw_frame_raised(void *_Nonnull, const AG_Rect *_Nonnull);
+void ag_draw_frame_sunk(void *_Nonnull, const AG_Rect *_Nonnull);
+void ag_draw_box(void *_Nonnull, const AG_Rect *_Nonnull, int, const AG_Color *_Nonnull);
+void ag_draw_box_raised(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull);
+void ag_draw_box_sunk(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull);
+void ag_draw_box_disabled(void *_Nonnull, const AG_Rect *_Nonnull, int,
+                          const AG_Color *_Nonnull, const AG_Color *_Nonnull);
+void ag_draw_rect_outline(void *_Nonnull, const AG_Rect *_Nonnull,
+                          const AG_Color *_Nonnull);
+void ag_draw_arrow_line(void *obj, int x1, int y1, int x2, int y2,
+    AG_ArrowLineType t, int length, double theta, const AG_Color *C);
 
-	C.r = (Uint8)r;
-	C.g = (Uint8)g;
-	C.b = (Uint8)b;
-	return (C);
-}
+# define AG_PutPixel(o,x,y,c)			  ag_put_pixel((o),(x),(y),(c))
+# define AG_PutPixel32(o,x,y,c)			  ag_put_pixel_32((o),(x),(y),(c))
+# define AG_PutPixel64(o,x,y,px)		  ag_put_pixel_64((o),(x),(y),(px))
+# define AG_PutPixelRGB_8(o,x,y,r,g,b)		  ag_put_pixel_rgb_8((o),(x),(y),(r),(g),(b))
+# define AG_PutPixelRGB_16(o,x,y,r,g,b)		  ag_put_pixel_rgb_16((o),(x),(y),(r),(g),(b))
+# define AG_BlendPixel(o,x,y,c,fn)		  ag_blend_pixel((o),(x),(y),(c),(fn))
+# define AG_BlendPixel32(o,x,y,px,fn)		  ag_blend_pixel_32((o),(x),(y),(px),(fn))
+# define AG_BlendPixel64(o,x,y,px,fn)		  ag_blend_pixel_64((o),(x),(y),(px),(fn))
+# define AG_BlendPixelRGBA(o,x,y,c,fn)		  ag_blend_pixel_rgba((o),(x),(y),(c),(fn))
+# define AG_DrawLine(o,x1,y1,x2,y2,c)		  ag_draw_line((o),(x1),(y1),(x2),(y2),(c))
+# define AG_DrawLineH(o,x1,x2,y,c)		  ag_draw_line_h((o),(x1),(x2),(y),(c))
+# define AG_DrawLineV(o,x,y1,y2,c)		  ag_draw_line_v((o),(x),(y1),(y2),(c))
+# define AG_DrawLineBlended(o,x,y,x2,y2,c,fs,fd)  ag_draw_line_blended((o),(x),(y),(x2),(y2),(c),(fs),(fd))
+# define AG_DrawLineW(o,x1,y1,x2,y2,c,w)	  ag_draw_line_w((o),(x1),(y1),(x2),(y2),(c),(w))
+# define AG_DrawLineW_Sti16(o,x1,y1,x2,y2,c,w,m)  ag_draw_line_w_sti16((o),(x1),(y1),(x2),(y2),(c),(w),(m))
+# define AG_DrawTriangle(o,v1,v2,v3,c)		  ag_draw_triangle((o),(v1),(v2),(v3),(c))
+# define AG_DrawPolygon(o,pts,n,c)		  ag_draw_polygon((o),(pts),(n),(c))
+# define AG_DrawPolygon_Sti32(o,pts,n,c,sti)	  ag_draw_polygon_sti32((o),(pts),(n),(c),(sti))
+# define AG_DrawArrowUp(o,x,y,h,c)		  ag_draw_arrow_up((o),(x),(y),(h),(c))
+# define AG_DrawArrowRight(o,x,y,h,c)		  ag_draw_arrow_right((o),(x),(y),(h),(c))
+# define AG_DrawArrowDown(o,x,y,h,c)		  ag_draw_arrow_down((o),(x),(y),(h),(c))
+# define AG_DrawArrowLeft(o,x,y,h,c)		  ag_draw_arrow_left((o),(x),(y),(h),(c))
+# define AG_DrawBoxRounded(o,r,z,rad,c)		  ag_draw_box_rounded((o),(r),(z),(rad),(c))
+# define AG_DrawBoxRoundedTop(o,r,z,rad,c)	  ag_draw_box_rounded_top((o),(r),(z),(rad),(c))
+# define AG_DrawCircle(o,x,y,rad,c)		  ag_draw_circle((o),(x),(y),(rad),(c))
+# define AG_DrawCircleFilled(o,x,y,rad,c)	  ag_draw_circle_filled((o),(x),(y),(rad),(c))
+# define AG_DrawRect(o,r,c)			  ag_draw_rect((o),(r),(c))
+# define AG_DrawRectFilled(o,r,c)		  ag_draw_rect_filled((o),(r),(c))
+# define AG_DrawRectBlended(o,r,c,sf,df)	  ag_draw_rect_blended((o),(r),(c),(sf),(df))
+# define AG_DrawRectDithered(o,r,c)		  ag_draw_rect_dithered((o),(r),(c))
+# define AG_DrawFrame(o,r,z,c)			  ag_draw_frame((o),(r),(z),(c))
+# define AG_DrawFrameRaised(o,r)		  ag_draw_frame_raised((o),(r))
+# define AG_DrawFrameSunk(o,r)			  ag_draw_frame_sunk((o),(r))
+# define AG_DrawBox(o,r,z,c)			  ag_draw_box((o),(r),(z),(c))
+# define AG_DrawBoxRaised(o,r,c)		  ag_draw_box_raised((o),(r),(c))
+# define AG_DrawBoxSunk(o,r,c)		  	  ag_draw_box_sunk((o),(r),(c))
+# define AG_DrawBoxDisabled(o,r,z,c1,c2)	  ag_draw_box_disabled((o),(r),(z),(c1),(c2))
+# define AG_DrawRectOutline(o,r,c)		  ag_draw_rect_outline((o),(r),(c))
+# define AG_DrawArrowLine(o,x1,y1,x2,y2,t,l,th,c) ag_draw_arrow_line((o),(x1),(y1),(x2),(y2),(t),(l),(th),(c))
+#endif /* !AG_INLINE_WIDGET */
 
-/*
- * Calls to rendering routines implemented by the underlying driver.
- */
+void ag_draw_rect_noop(void *_Nonnull, const AG_Rect *_Nonnull, const AG_Color *_Nonnull);
 
-/* Write a pixel (AG_Color argument) */
-static __inline__ void
-AG_PutPixel(void *obj, int x, int y, AG_Color C)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
+int AG_GetLineIntersection(int,int, int,int, int,int, int,int,
+                           int *_Nonnull, int *_Nonnull);
 
-	wid->drvOps->putPixel(wid->drv,
-	    wid->rView.x1 + x,
-	    wid->rView.y1 + y,
-	    C);
-}
+void AG_ClipLine(int,int, int,int, int,int, int *_Nonnull,int *_Nonnull);
 
-/* Write a pixel (32-bit videoFmt argument) */
-static __inline__ void
-AG_PutPixel32(void *obj, int x, int y, Uint32 c)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
+void AG_ClipLineCircle(int,int, int, int,int, int,int,
+                       int *_Nonnull,int *_Nonnull);
 
-	wid->drvOps->putPixel32(wid->drv,
-	    wid->rView.x1 + x,
-	    wid->rView.y1 + y,
-	    c);
-}
+void AG_DrawArrowhead(void *_Nonnull, int, int, int,int, int, double,
+                      const AG_Color *_Nonnull);
 
-/* Write a pixel (RGB arguments) */
-static __inline__ void
-AG_PutPixelRGB(void *obj, int x, int y, Uint8 r, Uint8 g, Uint8 b)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	
-	wid->drvOps->putPixelRGB(wid->drv,
-	    wid->rView.x1 + x,
-	    wid->rView.y1 + y,
-	    r,g,b);
-}
+void AG_DrawVector(void *_Nonnull, int,int, const AG_Rect *_Nonnull,
+                   const AG_Color *_Nonnull, const AG_VectorElement *_Nonnull,
+                   int,int);
 
-/* Blend a pixel (AG_Color argument) */
-static __inline__ void
-AG_BlendPixel(void *obj, int x, int y, AG_Color C, AG_BlendFn fnSrc)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	wid->drvOps->blendPixel(wid->drv,
-	    wid->rView.x1 + x,
-	    wid->rView.y1 + y,
-	    C, fnSrc, AG_ALPHA_ZERO);
-}
-
-/* Blend a pixel (32-bit agSurfaceFmt argument) */
-static __inline__ void
-AG_BlendPixel32(void *obj, int x, int y, Uint32 px, AG_BlendFn fnSrc)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color C = AG_GetColorRGBA(px, agSurfaceFmt);
-
-	wid->drvOps->blendPixel(wid->drv,
-	    wid->rView.x1 + x,
-	    wid->rView.y1 + y,
-	    C, fnSrc, AG_ALPHA_ZERO);
-}
-
-/* Blend a pixel (RGBA arguments) */
-static __inline__ void
-AG_BlendPixelRGBA(void *obj, int x, int y, Uint8 c[4], AG_BlendFn fnSrc)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	wid->drvOps->blendPixel(wid->drv,
-	    wid->rView.x1 + x,
-	    wid->rView.y1 + y,
-	    AG_ColorRGBA(c[0],c[1],c[2],c[3]),
-	    fnSrc, AG_ALPHA_ZERO);
-}
-
-/* Render a line from two endpoints. */
-static __inline__ void
-AG_DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color C)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	wid->drvOps->drawLine(wid->drv,
-	    wid->rView.x1 + x1,
-	    wid->rView.y1 + y1,
-	    wid->rView.x1 + x2,
-	    wid->rView.y1 + y2,
-	    C);
-}
-
-/* Render a horizontal line. */
-static __inline__ void
-AG_DrawLineH(void *obj, int x1, int x2, int y, AG_Color C)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	wid->drvOps->drawLineH(wid->drv,
-	    wid->rView.x1 + x1,
-	    wid->rView.x1 + x2,
-	    wid->rView.y1 + y,
-	    C);
-}
-
-/* Render a vertical line. */
-static __inline__ void
-AG_DrawLineV(void *obj, int x, int y1, int y2, AG_Color C)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	wid->drvOps->drawLineV(wid->drv,
-	    wid->rView.x1 + x,
-	    wid->rView.y1 + y1,
-	    wid->rView.y1 + y2,
-	    C);
-}
-
-/* Render a line with blending. */
-static __inline__ void
-AG_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
-    AG_BlendFn fnSrc)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	wid->drvOps->drawLineBlended(wid->drv,
-	    wid->rView.x1 + x1,
-	    wid->rView.y1 + y1,
-	    wid->rView.x1 + x2,
-	    wid->rView.y1 + y2,
-	    C, fnSrc, AG_ALPHA_ZERO);
-}
-
-/*
- * Render an arrow.
- */
-static __inline__ void
-AG_DrawArrowUp(void *obj, int x0, int y0, int h, AG_Color c1, AG_Color c2)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	wid->drvOps->drawArrow(wid->drv,
-	    0.0f,
-	    wid->rView.x1 + x0,
-	    wid->rView.y1 + y0,
-	    h, c1,c2);
-}
-static __inline__ void
-AG_DrawArrowDown(void *obj, int x0, int y0, int h, AG_Color c1, AG_Color c2)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	wid->drvOps->drawArrow(wid->drv,
-	    180.0f,
-	    wid->rView.x1 + x0,
-	    wid->rView.y1 + y0,
-	    h, c1,c2);
-}
-static __inline__ void
-AG_DrawArrowLeft(void *obj, int x0, int y0, int h, AG_Color c1, AG_Color c2)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	wid->drvOps->drawArrow(wid->drv, 270.0f,
-	    wid->rView.x1 + x0,
-	    wid->rView.y1 + y0,
-	    h, c1,c2);
-}
-static __inline__ void
-AG_DrawArrowRight(void *obj, int x0, int y0, int h, AG_Color c1, AG_Color c2)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	wid->drvOps->drawArrow(wid->drv, 90.0f,
-	    wid->rView.x1 + x0,
-	    wid->rView.y1 + y0,
-	    h, c1,c2);
-}
-
-/* Render a 3D-style box with rounded edges. */
-static __inline__ void
-AG_DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color cBg)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color c[3];
-	
-	AG_WidgetOffsetRect(wid, &r);
-	
-	c[0] = AG_ColorShift(cBg, (z<0) ? agSunkColorShift : agRaisedColorShift);
-	c[1] = AG_ColorShift(c[0], (z<0) ? agLowColorShift : agHighColorShift);
-	c[2] = AG_ColorShift(c[0], (z<0) ? agHighColorShift : agLowColorShift);
-	wid->drvOps->drawBoxRounded(wid->drv, r, z, rad, c[0], c[1], c[2]);
-}
-
-/* Render a 3D-style box with rounded top edges. */
-static __inline__ void
-AG_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int rad, AG_Color cBg)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color c[3];
-
-	AG_WidgetOffsetRect(wid, &r);
-	c[0] = cBg;
-	c[1] = AG_ColorShift(c[0], (z<0)?agLowColorShift:agHighColorShift);
-	c[2] = AG_ColorShift(c[0], (z<0)?agHighColorShift:agLowColorShift);
-	wid->drvOps->drawBoxRoundedTop(wid->drv, r, z, rad, c[0], c[1], c[2]);
-}
-
-/* Render a circle of specified radius. */
-static __inline__ void
-AG_DrawCircle(void *obj, int x, int y, int r, AG_Color c)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	
-	wid->drvOps->drawCircle(wid->drv,
-	    wid->rView.x1 + x,
-	    wid->rView.y1 + y,
-	    r, c);
-}
-
-/* Render a circle of specified radius. */
-static __inline__ void
-AG_DrawCircleFilled(void *obj, int x, int y, int r, AG_Color c)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	
-	wid->drvOps->drawCircleFilled(wid->drv,
-	    wid->rView.x1 + x,
-	    wid->rView.y1 + y,
-	    r, c);
-}
-
-/* Render a filled rectangle (opaque or transparent). */
-static __inline__ void
-AG_DrawRect(void *obj, AG_Rect r, AG_Color c)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	
-	AG_WidgetOffsetRect(wid, &r);
-	if (c.a < AG_ALPHA_OPAQUE) {
-		wid->drvOps->drawRectBlended(wid->drv, r, c,
-		    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
-	} else {
-		wid->drvOps->drawRectFilled(wid->drv, r, c);
-	}
-}
-
-/* Render a filled rectangle (opaque). */
-static __inline__ void
-AG_DrawRectFilled(void *obj, AG_Rect r, AG_Color c)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	AG_WidgetOffsetRect(wid, &r);
-	wid->drvOps->drawRectFilled(wid->drv, r, c);
-}
-
-/* Render a filled rectangle (transparent). */
-static __inline__ void
-AG_DrawRectBlended(void *obj, AG_Rect r, AG_Color c, AG_BlendFn fnSrc)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	
-	AG_WidgetOffsetRect(wid, &r);
-	wid->drvOps->drawRectBlended(wid->drv, r, c,
-	    fnSrc, AG_ALPHA_ONE_MINUS_SRC);
-}
-
-/* Render a filled rectangle with dithering. */
-static __inline__ void
-AG_DrawRectDithered(void *obj, AG_Rect r, AG_Color c)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	
-	AG_WidgetOffsetRect(wid, &r);
-	wid->drvOps->drawRectDithered(wid->drv, r, c);
-}
-
-
-/* Render a 3D-style frame. */
-static __inline__ void
-AG_DrawFrame(void *obj, AG_Rect r, int z, AG_Color cBase)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Driver *drv = wid->drv;
-	AG_DriverClass *drvOps = wid->drvOps;
-	AG_Color c[2];
-	int y2, x2;
-
-	AG_WidgetOffsetRect(wid, &r);
-	c[0] = AG_ColorShift(cBase, (z<0)?agLowColorShift:agHighColorShift);
-	c[1] = AG_ColorShift(cBase, (z<0)?agHighColorShift:agLowColorShift);
-	x2 = r.x+r.w - 1;
-	y2 = r.y+r.h - 1;
-
-	if (c[0].a < AG_ALPHA_OPAQUE) {
-		drvOps->drawLineBlended(drv, r.x, r.y, x2,  r.y, c[0], AG_ALPHA_SRC, AG_ALPHA_ZERO);
-		drvOps->drawLineBlended(drv, r.x, r.y, r.x, y2,  c[0], AG_ALPHA_SRC, AG_ALPHA_ZERO);
-	} else {
-		drvOps->drawLineH(drv, r.x, x2,  r.y, c[0]);
-		drvOps->drawLineV(drv, r.x, r.y, y2,  c[0]);
-	}
-	if (c[1].a < AG_ALPHA_OPAQUE) {
-		drvOps->drawLineBlended(drv, r.x, y2,  x2, y2, c[1], AG_ALPHA_SRC, AG_ALPHA_ZERO);
-		drvOps->drawLineBlended(drv, x2,  r.y, x2, y2, c[1], AG_ALPHA_SRC, AG_ALPHA_ZERO);
-	} else {
-		drvOps->drawLineH(drv, r.x, x2,  y2, c[1]);
-		drvOps->drawLineV(drv, x2,  r.y, y2, c[1]);
-	}
-}
-
-/*
- * Miscellaneous, utility rendering routines.
- */
-
-/* Render a 3D-style box. */
-static __inline__ void
-AG_DrawBox(void *obj, AG_Rect r, int z, AG_Color c)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Driver *drv = wid->drv;
-	AG_Rect rOffs;
-
-	c = AG_ColorShift(c, (z < 0) ? agSunkColorShift : agRaisedColorShift);
-	rOffs = r;
-	AG_WidgetOffsetRect(wid, &rOffs);
-	if (c.a < AG_ALPHA_OPAQUE) {
-		wid->drvOps->drawRectBlended(drv, rOffs, c,
-		    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
-	} else {
-		wid->drvOps->drawRectFilled(drv, rOffs, c);
-	}
-	AG_DrawFrame(wid, r, z, c);
-}
-
-/* Render a 3D-style box with disabled control-style dithering. */
-static __inline__ void
-AG_DrawBoxDisabled(void *obj, AG_Rect r, int z, AG_Color cBox, AG_Color cDither)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Rect rOffs;
-
-	cDither = AG_ColorShift(cDither, (z < 0) ? agSunkColorShift : agRaisedColorShift);
-	rOffs = r;
-	AG_WidgetOffsetRect(wid, &rOffs);
-	wid->drvOps->drawRectFilled(wid->drv, rOffs, cBox);
-	AG_DrawFrame(wid, r, z, cBox);
-	wid->drvOps->drawRectDithered(wid->drv, rOffs, cDither);
-}
-
-/* Render 3D-style frame using a specific blending mode. */
-static __inline__ void
-AG_DrawFrameBlended(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Driver *drv = wid->drv;
-	AG_DriverClass *drvOps = wid->drvOps;
-	int x2, y2;
-
-	AG_WidgetOffsetRect(wid, &r);
-	x2 = r.x+r.w - 1;
-	y2 = r.y+r.h - 1;
-	drvOps->drawLineBlended(drv, r.x, r.y, x2,  r.y, C, fnSrc, AG_ALPHA_ZERO);
-	drvOps->drawLineBlended(drv, r.x, r.y, r.x, y2,  C, fnSrc, AG_ALPHA_ZERO);
-	drvOps->drawLineBlended(drv, r.x, y2,  x2,  y2,  C, fnSrc, AG_ALPHA_ZERO);
-	drvOps->drawLineBlended(drv, x2,  r.y, x2,  y2,  C, fnSrc, AG_ALPHA_ZERO);
-}
-
-/* Render a rectangle outline. */
-static __inline__ void
-AG_DrawRectOutline(void *obj, AG_Rect r, AG_Color c)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Driver *drv = wid->drv;
-	AG_DriverClass *drvOps = wid->drvOps;
-	int x2, y2;
-
-	AG_WidgetOffsetRect(wid, &r);
-	x2 = r.x+r.w - 1;
-	y2 = r.y+r.h - 1;
-	if (c.a < AG_ALPHA_OPAQUE) {
-		drvOps->drawLineBlended(drv, r.x, r.y, x2,  r.y, c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
-		drvOps->drawLineBlended(drv, r.x, r.y, x2,  y2,  c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
-		drvOps->drawLineBlended(drv, r.x, r.y, r.x, y2,  c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
-		drvOps->drawLineBlended(drv, x2,  r.y, r.x, y2,  c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
-	} else {
-		drvOps->drawLineH(drv, r.x, x2,  r.y, c);
-		drvOps->drawLineH(drv, r.x, x2,  y2,  c);
-		drvOps->drawLineV(drv, r.x, r.y, y2,  c);
-		drvOps->drawLineV(drv, x2,  r.y, y2,  c);
-	}
-}
-
-/* Render a [+] sign. */
-static __inline__ void
-AG_DrawPlus(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Driver *drv = wid->drv;
-	int x1, y1;
-
-	AG_WidgetOffsetRect(wid, &r);
-	x1 = r.x + r.w/2;
-	y1 = r.y + r.h/2;
-	wid->drvOps->drawLineBlended(drv, x1,  r.y, x1,      r.y+r.h, C, fnSrc, AG_ALPHA_ZERO);
-	wid->drvOps->drawLineBlended(drv, r.x, y1,  r.x+r.w, y1,      C, fnSrc, AG_ALPHA_ZERO);
-}
-
-/* Render a [-] sign. */
-static __inline__ void
-AG_DrawMinus(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	int x, y;
-
-	AG_WidgetOffsetRect(wid, &r);
-	x = r.x + r.w/2;
-	y = r.y + r.h/2;
-	wid->drvOps->drawLineBlended(wid->drv, x,y, r.x+r.w, y, C, fnSrc, AG_ALPHA_ZERO);
-}
-
-/* Render a 3D-style line. */
-static __inline__ void
-AG_DrawLine2(void *obj, int x1, int y1, int x2, int y2, AG_Color color)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	x1 += wid->rView.x1;
-	y1 += wid->rView.y1;
-	x2 += wid->rView.x1;
-	y2 += wid->rView.y1;
-	wid->drvOps->drawLine(wid->drv, x1, y1, x2, y2,
-	    AG_ColorShift(color, agHighColorShift));
-	wid->drvOps->drawLine(wid->drv, x1+1, y1+1, x2+1, y2+1,
-	    AG_ColorShift(color, agLowColorShift));
-}
-
-/* Render a gimp-style background tiling. */
-static __inline__ void
-AG_DrawTiling(void *obj, AG_Rect r, int tsz, int offs, AG_Color c1, AG_Color c2)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Driver *drv = wid->drv;
-	int alt1 = 0, alt2 = 0;
-	AG_Rect rt;
-
-	AG_WidgetOffsetRect(wid, &r);
-
-	rt.w = tsz;
-	rt.h = tsz;
-
-	/* XXX inelegant */
-	for (rt.y = r.y-tsz+offs;
-	     rt.y < r.y+r.h;
-	     rt.y += tsz) {
-		for (rt.x = r.x-tsz+offs;
-		     rt.x < r.x+r.w;
-		     rt.x += tsz) {
-			if (alt1++ == 1) {
-				wid->drvOps->drawRectFilled(drv, rt, c1);
-				alt1 = 0;
-			} else {
-				wid->drvOps->drawRectFilled(drv, rt, c2);
-			}
-		}
-		if (alt2++ == 1) {
-			alt2 = 0;
-		}
-		alt1 = alt2;
-	}
-}
+void AG_DrawFrame_Blended(AG_Widget *_Nonnull, const AG_Rect *_Nonnull,
+                          const AG_Color *_Nonnull, const AG_Color *_Nonnull,
+                          int, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

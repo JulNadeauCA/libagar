@@ -1,0 +1,72 @@
+.\"
+.\" Copyright (c) 2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd DECEMBER 15, 2019
+.Dt MAPEDIT 1
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm mapedit
+.Nd Agar-MAP level editor
+.Sh SYNOPSIS
+.Nm mapedit
+.Op Fl vD
+.Op Fl d Ar agar-driver
+.Op Fl t Ar font
+.Op Ar file ...
+.Sh DESCRIPTION
+The
+.Nm
+utility is a graphical editor for Agar
+.Xr MAP 3
+based tile maps.
+The command-line options are as follows:
+.Bl -tag -width Ds
+.It Fl v
+Print version number and exit.
+.It Fl d
+Specify an alternate Agar driver / backend (see
+.Dq AVAILABLE DRIVERS
+in
+.Xr AG_InitGraphics 3
+for details; some drivers accept optional arguments).
+.It Fl t
+Specify the default font (e.g.,
+.Sq Luxi Sans:10 ,
+.Sq Courier:10.5:b ,
+.Sq my.otf:16 ) .
+.It Fl D
+Enable debugging mode.
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width "LANG "
+.It Dv LANG
+ISO language code determining which translation should be used.
+.El
+.\" .Sh FILES
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr MAP 3 ,
+.Xr RG 3

@@ -1,0 +1,450 @@
+.\" Copyright (c) 2014-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd April 12, 2014
+.Dt AG_NET 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.5
+.Sh NAME
+.Nm AG_Net
+.Nd agar network interface
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+.Nm
+provides a cross-platform interface to network sockets, DNS and other
+network-related functions.
+Available backends include "bsd", "dummy", "winsock1" and "winsock2".
+The default backend is selected based on present platform capabilities.
+.Sh NETWORK ADDRESSES
+.nr nS 1
+.Ft "AG_NetAddrList *"
+.Fn AG_NetResolve "const char *hostname" "const char *port" "Uint flags"
+.Pp
+.Ft "AG_NetAddrList *"
+.Fn AG_NetGetIfConfig "void"
+.Pp
+.Ft "AG_NetAddrList *"
+.Fn AG_NetAddrListNew "void"
+.Pp
+.Ft void
+.Fn AG_NetAddrListClear "AG_NetAddrList *list"
+.Pp
+.Ft void
+.Fn AG_NetAddrListFree "AG_NetAddrList *list"
+.Pp
+.Ft "AG_NetAddr *"
+.Fn AG_NetAddrNew "void"
+.Pp
+.Ft "AG_NetAddr *"
+.Fn AG_NetAddrDup "const AG_NetAddr *a"
+.Pp
+.Ft "int"
+.Fn AG_NetAddrCompare "const AG_NetAddr *a" "const AG_NetAddr *b"
+.Pp
+.Ft "int"
+.Fn AG_NetAddrIsAny "const AG_NetAddr *a"
+.Pp
+.Ft "const char *"
+.Fn AG_NetAddrNumerical "AG_NetAddr *a"
+.Pp
+.Ft "void"
+.Fn AG_NetAddrFree "AG_NetAddr *a"
+.Pp
+.nr nS 0
+The
+.Fn AG_NetResolve
+function looks up a specified host
+.Fa hostname
+and port number (or service name)
+.Fa port .
+If the lookup is successful, the results are returned as a list of
+addresses.
+Optional
+.Fa flags
+include:
+.Pp
+.Bl -tag -width "AG_NET_NUMERIC_HOST " -compact
+.It Dv AG_NET_ADDRCONFIG
+Use IPv6 based on host interface status.
+.It Dv AG_NET_NUMERIC_HOST
+Require a hostname in numerical notation.
+.It Dv AG_NET_NUMERIC_PORT
+Require a numerical port number.
+.El
+.Pp
+The
+.Fn AG_NetGetIfConfig
+function returns the list of addresses associated with local network interfaces
+(i.e., the list of addresses that would be displayed by
+.Xr ifconfig 8
+under Unix).
+If the call is unsupported on the present platform, the function returns NULL.
+.Pp
+The
+.Ft AG_NetAddrList
+structure stores a list of network addresses.
+The
+.Fn AG_NetAddrListNew
+function returns an empty, newly allocated list,
+.Fn AG_NetAddrListClear
+removes all addresses from the given list and
+.Fn AG_NetAddrListFree
+releases all resources allocated by the list.
+.Pp
+The
+.Ft AG_NetAddr
+structure stores a single network address and a port number.
+The
+.Fn AG_NetAddrNew
+function returns a newly-allocated address.
+.Fn AG_NetAddrDup
+returns a newly-allocated duplicate of
+.Fa a .
+.Pp
+.Fn AG_NetAddrCompare
+evaluates to 0 if
+.Fa a
+and
+.Fa b
+represent the same address and port, otherwise a non-zero value
+(suitable for sorting) is returned.
+.Fn AG_NetAddrIsAny
+returns 1 if the address represents "*" (any address).
+.Pp
+The
+.Fn AG_NetAddrNumerical
+function returns a pointer to an (internally-managed) string buffer
+containing a numerical representation of the address.
+The buffer will remains valid until the
+.Ft AG_NetAddr
+is freed.
+.Pp
+The
+.Fn AG_NetAddrFree
+routine destroys all resources allocated by
+.Fa a .
+.Sh SOCKETS
+.nr nS 1
+.Ft "AG_NetSocket *"
+.Fn AG_NetSocketNew "enum ag_net_addr_family af" "enum ag_net_socket_type type" "int proto"
+.Pp
+.Ft void
+.Fn AG_NetSocketFree "AG_NetSocket *sock"
+.Pp
+.Ft int
+.Fn AG_NetConnect "AG_NetSocket *sock" "const AG_NetAddrList *host"
+.Pp
+.Ft int
+.Fn AG_NetBind "AG_NetSocket *sock" "const AG_NetAddr *addr"
+.Pp
+.Ft "AG_NetSocket *"
+.Fn AG_NetAccept "AG_NetSocket *sock"
+.Pp
+.Ft "void"
+.Fn AG_NetClose "AG_NetSocket *sock"
+.Pp
+.Ft "int"
+.Fn AG_NetRead "AG_NetSocket *sock" "void *data" "AG_Size size" "AG_Size *nRead"
+.Pp
+.Ft "int"
+.Fn AG_NetWrite "AG_NetSocket *sock" "const void *data" "AG_Size size" "AG_Size *nWrote"
+.Pp
+.Ft int
+.Fn AG_NetGetOption "AG_NetSocket *sock" "enum ag_net_socket_option opt" "void *data"
+.Pp
+.Ft int
+.Fn AG_NetGetOptionInt "AG_NetSocket *sock" "enum ag_net_socket_option opt" "int *data"
+.Pp
+.Ft int
+.Fn AG_NetSetOption "AG_NetSocket *sock" "enum ag_net_socket_option opt" "const void *data"
+.Pp
+.Ft int
+.Fn AG_NetSetOptionInt "AG_NetSocket *sock" "enum ag_net_socket_option opt" "int data"
+.Pp
+.nr nS 0
+The
+.Fn AG_NetSocketNew
+function creates an endpoint for communication, returning a socket descriptor
+on success.
+The
+.Fa af
+argument indicates the address family of the socket:
+.Pp
+.Bl -tag -compact -width "AG_NET_AF_NONE "
+.It AG_NET_AF_NONE
+Undefined address family.
+.It AG_NET_LOCAL
+Host-local protocols (e.g., Unix sockets)
+.It AG_NET_INET4
+Internet version 4 address.
+.It AG_NET_INET6
+Internet version 6 address.
+.El
+.Pp
+The
+.Fa proto
+argument is an optional protocol number (see
+.Xr protocols 5 ) .
+The
+.Fa type
+argument may be set to:
+.Pp
+.Bl -tag -compact -width "AG_NET_SOCKET_NONE "
+.It AG_NET_SOCKET_NONE
+Undefined
+.It AG_NET_STREAM
+Stream socket
+.It AG_NET_DGRAM
+Datagram socket
+.It AG_NET_RAW
+Raw-protocol interface
+.It AG_NET_RDM
+Reliably-delivered packet
+.It AG_NET_SEQPACKET
+Sequenced packet stream
+.El
+.Pp
+The
+.Fn AG_NetSocketFree
+function closes a socket, releasing all associated resources.
+.Pp
+The
+.Fn AG_NetConnect
+call establishes a connection between
+.Fa sock
+and a remote
+.Fa host
+(specified as a list containing one or more addresses to try).
+.Pp
+The
+.Fn AG_NetBind
+call assigns a local protocol address
+.Fa addr ,
+to the socket
+.Fa sock .
+The
+.Fn AG_NetAccept
+function should be called on a socket that was previously assigned a
+local address.
+From the queue of pending connections,
+.Fn AG_NetAccept
+extracts the first connection request and returns a newly-created socket
+for the connection.
+.Pp
+The
+.Fn AG_NetClose
+routine closes the connection on
+.Fa sock
+(without destroying the socket).
+.Pp
+The
+.Fn AG_NetRead
+and
+.Fn AG_NetWrite
+routines move data between the socket and a specified buffer
+.Fa data
+of
+.Fa size
+bytes.
+On success, 0 is returned, and the number of bytes successfully read/written
+is returned in the
+.Fa nRead
+and
+.Fa nWrite
+argument (which can be NULL).
+.Pp
+The
+.Fn AG_NetGetOption
+function returns the current value of the socket option
+.Fa opt
+into
+.Fa data .
+.Fn AG_NetSetOption
+sets the specified socket option to the contents of
+.Fa data .
+The
+.Fn AG_NetGetOptionInt
+and
+.Fn AG_NetSetOptionInt
+shorthands accept integer arguments for
+.Ft int
+socket options.
+Available socket options are as follows (unless indicated otherwise,
+.Ft int
+is the data type).
+.Pp
+.Bl -tag -width "AG_NET_ACCEPTFILTER " -compact
+.It Dv AG_NET_DEBUG
+Enable debugging on the socket
+.It Dv AG_NET_REUSEADDR
+Reuse local addresses
+.It Dv AG_NET_KEEPALIVE
+Keep connections alive
+.It Dv AG_NET_DONTROUTE
+Routing bypass for outgoing messages
+.It Dv AG_NET_BROADCAST
+Transmit broadcast messages
+.It Dv AG_NET_BINDANY
+Allow binding to any address
+.It Dv AG_NET_SNDBUF
+Set buffer size for sending
+.It Dv AG_NET_RCVBUF
+Set buffer size for receiving
+.It Dv AG_NET_SNDLOWAT
+Set low watermark for sending
+.It Dv AG_NET_RCVLOWAT
+Set low watermark for receiving
+.It Dv AG_NET_BACKLOG
+Limit on incoming connection backlog
+.It Dv AG_NET_OOBINLINE
+Receive out-of-band data inline (non-portable)
+.It Dv AG_NET_REUSEPORT
+Allow address/port reuse (non-portable)
+.It Dv AG_NET_TIMESTAMP
+Receive datagram timestamps (non-portable)
+.It Dv AG_NET_NOSIGPIPE
+Disable generation of
+.Dv SIGPIPE
+(non-portable)
+.It Dv AG_NET_LINGER
+Linger on
+.Fn AG_NetClose
+up to
+.Fa n
+seconds if data present (non-portable)
+.It Dv AG_NET_ACCEPTFILTER
+Kernel-based accept filter.
+The argument is a
+.Fa AG_NetAcceptFilter
+structure (non-portable)
+.El
+.\" MANLINK(AG_NetAcceptFilter)
+.Pp
+The argument to
+.Dv AG_NET_ACCEPTFILTER
+is defined as follows:
+.Bd -literal
+typedef struct ag_net_accept_filter {
+	char name[16];			/* Filter module name */
+	char arg[240];			/* Argument */
+} AG_NetAcceptFilter;
+.Ed
+.Sh POLLING AND SOCKET SETS
+.nr nS 1
+.Ft void
+.Fn AG_NetSocketSetInit "AG_NetSocketSet *set"
+.Pp
+.Ft void
+.Fn AG_NetSocketSetClear "AG_NetSocketSet *set"
+.Pp
+.Ft void
+.Fn AG_NetSocketSetFree "AG_NetSocketSet *set"
+.Pp
+.Ft int
+.Fn AG_NetPoll "AG_NetSocketSet *nsInput" "AG_NetSocketSet *nsRead" "AG_NetSocketSet *nsWrite" "AG_NetSocketSet *nsException" "Uint32 timeout"
+.Pp
+.nr ns 0
+The
+.Fn AG_NetSocketSetInit
+function initializes a new socket set.
+.Fn AG_NetSocketSetClear
+resets a socket set to the empty set.
+.Fn AG_NetSocketSetFree
+releases all resources allocated by a socket set.
+.Pp
+The
+.Fn AG_NetPoll
+function blocks the execution of the current thread until an event is
+reported on one or more of the sockets in the
+.Fa nsInput
+set.
+Sockets with data available for reading/writing are returned into the
+.Fa nsRead
+and
+.Fa nsWrite
+sets.
+Sockets with other exceptions (such as availability of out-of-band data) are
+returned into the
+.Fa nsExcept
+set.
+If the
+.Fa timeout
+argument is non-zero, the call will time out in the specified amount
+of time (given in milliseconds).
+.\" MANLINK(AG_NetAddr)
+.Sh STRUCTURE DATA
+For the
+.Fa AG_NetAddr
+structure:
+.Bd -literal
+typedef struct ag_net_addr {
+	enum ag_net_addr_family family;		/* Address family */
+	int port;				/* Port number (if any) */
+	union {
+		struct {
+			char  *path;		/* Unix socket path */
+		} local;
+		struct {
+			Uint32 addr;		/* IPv4 address */
+		} inet4;
+		struct {
+			Uint8  addr[16];	/* IPv6 address */
+		} inet6;
+	} data;
+} AG_NetAddr;
+.Ed
+.Pp
+For the
+.Fa AG_NetSocket
+structure:
+.Pp
+.Bl -tag -compact -width "enum ag_net_addr_family family "
+.It enum ag_net_addr_family family
+Address family
+.It enum ag_net_socket_type type
+Socket type
+.It int proto
+Socket protocol number
+.It AG_Mutex lock
+Exclusive access lock
+.It AG_NetAddr *addrLocal
+Bound local address
+.It AG_NetAddr *addrRemote
+Connected remote address
+.It int fd
+Socket file descriptor (non-portable)
+.It void *p
+Optional user-defined pointer
+.El
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_OpenNetSocket 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.5.0.

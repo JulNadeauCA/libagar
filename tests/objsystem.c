@@ -1,13 +1,11 @@
 /*	Public domain	*/
 /*
  * This application demonstrates the basic functionality of the Agar
- * object system. It uses the "Object Browser" which is part of the
- * Agar-DEV library.
+ * object system. It uses the "Object Browser" from gui/dev_browser.c.
  */
 
 #include "agartest.h"
-
-#include <agar/dev.h>
+#ifdef AG_TIMERS
 
 #include "objsystem_animal.h"
 #include "objsystem_mammal.h"
@@ -25,8 +23,6 @@ Init(void *obj)
 	MyTestInstance *ti = obj;
 
 	if (inited++ == 0) {
-		DEV_InitSubsystem(0);
-
 		/* Register the Agar object classes which we implement. */
 		AG_RegisterClass(&AnimalClass);
 		AG_RegisterClass(&MammalClass);
@@ -36,7 +32,8 @@ Init(void *obj)
 	 * Initialize our virtual filesystem root. Since vfsRoot was not
 	 * malloc'ed, we must use the AG_ObjectInitStatic() variant.
 	 */
-	AG_ObjectInitStatic(&ti->vfsRoot, NULL);
+	AG_ObjectInit(&ti->vfsRoot, NULL);
+	ti->vfsRoot.flags |= AG_OBJECT_STATIC;
 	AG_ObjectSetName(&ti->vfsRoot, "My VFS");
 	return (0);
 }
@@ -56,33 +53,32 @@ Destroy(void *obj)
 	}
 }
 
-static void
-StartBrowser(AG_Event *event)
-{
-	MyTestInstance *ti = AG_PTR(1);
-	AG_Window *winParent = AG_PTR(2), *win;
-
-	if ((win = DEV_Browser(&ti->vfsRoot)) != NULL)
-		AG_WindowAttach(winParent, win);
-}
-
 static int
 TestGUI(void *obj, AG_Window *win)
 {
 	MyTestInstance *ti = obj;
+	AG_Window *winBrowser;
+	AG_Box *box = AG_BoxNewVert(win, AG_BOX_EXPAND);
+	AG_Object *chld;
 
 	if (AG_ObjectLoad(&ti->vfsRoot) == 0) {
-		AG_LabelNewS(win, 0, "Test VFS loaded");
+		AG_LabelNewS(box, 0, "Test VFS loaded OK.");
+		AGOBJECT_FOREACH_CHILD(chld, &ti->vfsRoot, ag_object) {
+			AG_LabelNew(box, 0, "Loaded %s (a %s)\n", chld->name,
+			            AGOBJECT_CLASS(chld)->name);
+		}
 	} else {
-		AG_LabelNewS(win, 0, "New test VFS");
+		AG_LabelNewS(box, 0, "Test VFS could not be loaded. "
+		                     "Creating new one.");
 	}
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Start VFS browser",
-	    StartBrowser, "%p,%p", ti, win);
+	if ((winBrowser = AG_DEV_Browser(&ti->vfsRoot)) != NULL) {
+		AG_WindowAttach(win, winBrowser);
+	}
 	return (0);
 }
 
-const AG_TestCase objSystemTest = {
-	"objSystem",
+const AG_TestCase objsystemTest = {
+	"objsystem",
 	N_("Test basic AG_Object(3) VFS functions"),
 	"1.4.2",
 	0,
@@ -93,3 +89,4 @@ const AG_TestCase objSystemTest = {
 	TestGUI,
 	NULL		/* bench */
 };
+#endif /* AG_TIMERS */

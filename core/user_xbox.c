@@ -5,6 +5,7 @@
  */
 
 #include <agar/core/core.h>
+#ifdef AG_USER
 
 static int
 GetUserByUID(AG_User *_Nonnull u, Uint32 uid)
@@ -49,3 +50,5 @@ const AG_UserOps agUserOps_xbox = {
 	GetRealUser,
 	GetEffectiveUser
 };
+
+#endif /* AG_USER */

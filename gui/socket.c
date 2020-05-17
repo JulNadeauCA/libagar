@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Socket widget. Holds a drag-and-droppable AG_Icon(3).
+ */
+
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/socket.h>
 #include <agar/gui/icon.h>
 #include <agar/gui/window.h>
@@ -33,11 +39,6 @@
 
 #include <stdarg.h>
 
-static void SetState(AG_Socket *, AG_Variable *, void *, int);
-static void MouseMotion(AG_Event *);
-static void MouseButtonUp(AG_Event *);
-static void MouseButtonDown(AG_Event *);
-
 AG_Socket *
 AG_SocketNew(void *parent, Uint flags)
 {
@@ -45,22 +46,22 @@ AG_SocketNew(void *parent, Uint flags)
 
 	sock = Malloc(sizeof(AG_Socket));
 	AG_ObjectInit(sock, &agSocketClass);
-	sock->flags |= flags;
 	
-	if (flags & AG_SOCKET_HFILL) { AG_ExpandHoriz(sock); }
-	if (flags & AG_SOCKET_VFILL) { AG_ExpandVert(sock); }
+	if (flags & AG_SOCKET_HFILL) { WIDGET(sock)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_SOCKET_VFILL) { WIDGET(sock)->flags |= AG_WIDGET_VFILL; }
+	sock->flags |= flags;
 
 	AG_ObjectAttach(parent, sock);
 	return (sock);
 }
 
 AG_Socket *
-AG_SocketFromSurface(void *parent, Uint flags, AG_Surface *su)
+AG_SocketFromSurface(void *parent, Uint flags, AG_Surface *S)
 {
 	AG_Socket *sock;
 	
 	sock = AG_SocketNew(parent, flags);
-	AG_SocketBgPixmap(sock, su);
+	AG_SocketBgPixmap(sock, S);
 	return (sock);
 }
 
@@ -71,111 +72,85 @@ AG_SocketFromBMP(void *parent, Uint flags, const char *bmpfile)
 	AG_Surface *bmp;
 	
 	if ((bmp = AG_SurfaceFromBMP(bmpfile)) == NULL) {
-		return (NULL);
+		AG_FatalError(NULL);
 	}
 	sock = AG_SocketNew(parent, flags);
 	AG_SocketBgPixmapNODUP(sock, bmp);
 	return (sock);
 }
 
-static void
-Init(void *obj)
-{
-	AG_Socket *sock = obj;
-
-	WIDGET(sock)->flags |= AG_WIDGET_FOCUSABLE|
-	                       AG_WIDGET_UNFOCUSED_MOTION|
-	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
-
-	sock->flags = 0;
-	sock->state = 0;
-	sock->count = 0;
-	sock->bgType = AG_SOCKET_RECT;
-	sock->bgData.rect.w = 32;
-	sock->bgData.rect.h = 32;
-	sock->lblJustify = AG_TEXT_LEFT;
-	sock->lPad = 2;
-	sock->rPad = 2;
-	sock->tPad = 2;
-	sock->bPad = 2;
-	sock->icon = NULL;
-	sock->insertFn = NULL;
-	sock->removeFn = NULL;
-	sock->overlayFn = NULL;
-
-	AG_SetEvent(sock, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(sock, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(sock, "mouse-motion", MouseMotion, NULL);
-	
-	AG_BindInt(sock, "state", &sock->state);
-	AG_BindInt(sock, "count", &sock->count);
-
-	AG_RedrawOnChange(sock, 100, "state");
-	AG_RedrawOnChange(sock, 500, "count");
-}
-
 void
 AG_SocketInsertFn(AG_Socket *sock, int (*fn)(AG_Socket *, AG_Icon *))
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
+
 	sock->insertFn = fn;
+
 	AG_ObjectUnlock(sock);
 }
 
 void
 AG_SocketRemoveFn(AG_Socket *sock, void (*fn)(AG_Socket *, AG_Icon *))
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
+
 	sock->removeFn = fn;
+
 	AG_ObjectUnlock(sock);
 }
 
 void
 AG_SocketOverlayFn(AG_Socket *sock, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
-	sock->overlayFn = AG_SetVoidFn(sock, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(sock->overlayFn, fmt);
+
+	if (fn) {
+		sock->overlayFn = AG_SetEvent(sock, NULL, fn, NULL);
+		if (fmt) {
+			va_list ap;
+
+			va_start(ap, fmt);
+			AG_EventGetArgs(sock->overlayFn, fmt, ap);
+			va_end(ap);
+		}
+	} else {
+		sock->overlayFn = NULL;
+	}
+
 	AG_ObjectUnlock(sock);
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Socket *sock = obj;
+	AG_Surface *S;
+
+	r->w = WIDGET(sock)->paddingLeft + WIDGET(sock)->paddingRight;
+	r->h = WIDGET(sock)->paddingTop + WIDGET(sock)->paddingBottom;
 
 	switch (sock->bgType) {
 	case AG_SOCKET_PIXMAP:
-		r->w = WSURFACE(sock,sock->bgData.pixmap.s)->w;
-		r->h = WSURFACE(sock,sock->bgData.pixmap.s)->h;
+		S = WSURFACE(sock, sock->bgData.pixmap.s);
+		r->w += S->w;
+		r->h += S->h;
 		break;
 	case AG_SOCKET_RECT:
-		r->w = sock->bgData.rect.w;
-		r->h = sock->bgData.rect.h;
+		r->w += sock->bgData.rect.w;
+		r->h += sock->bgData.rect.h;
 		break;
 	case AG_SOCKET_CIRCLE:
-		r->w = sock->bgData.circle.r*2;
-		r->h = sock->bgData.circle.r*2;
+		r->w += (sock->bgData.circle.r << 1);
+		r->h += (sock->bgData.circle.r << 1);
 		break;
 	}
-	r->w += sock->lPad + sock->rPad;
-	r->h += sock->tPad + sock->bPad;
-}
-
-static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
-{
-	AG_Socket *sock = obj;
-
-	if (a->w < (sock->lPad + sock->rPad) ||
-	    a->h < (sock->tPad + sock->bPad)) {
-		return (-1);
-	}
-	return (0);
 }
 
 static __inline__ int
-GetState(AG_Variable *binding, void *p)
+GetState(AG_Variable *_Nonnull binding, void *_Nonnull p)
 {
 	switch (AG_VARIABLE_TYPE(binding)) {
 	case AG_VARIABLE_INT:
@@ -187,13 +162,13 @@ GetState(AG_Variable *binding, void *p)
 	case AG_VARIABLE_UINT32:
 		return (int)(*(Uint32 *)p);
 	case AG_VARIABLE_P_FLAG:
-		return (*(int *)p & (int)binding->info.bitmask);
+		return (int)(*(Uint *)p & binding->info.bitmask.u);
 	case AG_VARIABLE_P_FLAG8:
-		return (int)(*(Uint8 *)p & (Uint8)binding->info.bitmask);
+		return (int)(*(Uint8 *)p & binding->info.bitmask.u8);
 	case AG_VARIABLE_P_FLAG16:
-		return (int)(*(Uint16 *)p & (Uint16)binding->info.bitmask);
+		return (int)(*(Uint16 *)p & binding->info.bitmask.u16);
 	case AG_VARIABLE_P_FLAG32:
-		return (int)(*(Uint32 *)p & (Uint32)binding->info.bitmask);
+		return (int)(*(Uint32 *)p & binding->info.bitmask.u32);
 	default:
 		return (0);
 	}
@@ -202,7 +177,7 @@ GetState(AG_Variable *binding, void *p)
 
 #if 0
 static __inline__ int
-GetCount(AG_Variable *binding, void *p)
+GetCount(AG_Variable *_Nonnull binding, void *_Nonnull p)
 {
 	switch (AG_VARIABLE_TYPE(binding)) {
 	case AG_VARIABLE_UINT:		return (Uint)(*(int *)p);
@@ -220,7 +195,7 @@ GetCount(AG_Variable *binding, void *p)
 #endif
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Socket *sock = obj;
 	AG_Variable *binding;
@@ -238,48 +213,64 @@ Draw(void *obj)
 	/* Draw background */
 	switch (sock->bgType) {
 	case AG_SOCKET_PIXMAP:
-		AG_WidgetBlitSurface(sock, sock->bgData.pixmap.s, 0, 0);
-		break;
-	case AG_SOCKET_RECT:
-		if (AG_WidgetEnabled(sock)) {
-			AG_DrawBox(sock,
-			    AG_RECT(0, 0, WIDTH(sock), HEIGHT(sock)), -1,
-			    WCOLOR(sock,0));
-		} else {
-			AG_DrawBoxDisabled(sock,
-			    AG_RECT(0, 0, WIDTH(sock), HEIGHT(sock)), -1,
-			    WCOLOR(sock,0), WCOLOR_DIS(sock,0));
+		{
+			const AG_Surface *S = WSURFACE(sock, sock->bgData.pixmap.s);
+			Uint32 Amask;
+
+			if ((Amask = S->format.Amask) != 0)
+				AG_PushBlendingMode(sock, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
+			AG_WidgetBlitSurface(sock,
+			    sock->bgData.pixmap.s,
+			    WIDGET(sock)->paddingLeft,
+			    WIDGET(sock)->paddingTop);
+
+			if (Amask != 0)
+				AG_PopBlendingMode(sock);
 		}
 		break;
+	case AG_SOCKET_RECT:
+		AG_DrawBoxSunk(sock, &WIDGET(sock)->r, &WCOLOR(sock,FG_COLOR));
+		break;
 	case AG_SOCKET_CIRCLE:
-		AG_DrawCircle(sock, WIDTH(sock)/2, HEIGHT(sock)/2,
-		    sock->bgData.circle.r, WCOLOR(sock,0));
+		AG_DrawCircle(sock, WIDTH(sock) >> 1, HEIGHT(sock) >> 1,
+		    sock->bgData.circle.r, &WCOLOR(sock,FG_COLOR));
 		break;
 	}
 
-	if (sock->icon != NULL) {
+	if (sock->icon) {
 		AGWIDGET_OPS(sock->icon)->draw(sock->icon);
 	}
-	if (sock->overlayFn != NULL) {
-		AG_PostEventByPtr(NULL, sock, sock->overlayFn, NULL);
+	if (sock->overlayFn) {
+		AG_PostEventByPtr(sock, sock->overlayFn, NULL);
 	} else {
 		switch (sock->bgType) {
 		case AG_SOCKET_PIXMAP:
 			/* TODO */
 		case AG_SOCKET_RECT:
 			if (state) {
-				AG_DrawRectOutline(sock,
-				    AG_RECT(sock->lPad, sock->tPad,
-				            WIDTH(sock) - sock->lPad - sock->rPad,
-					    HEIGHT(sock) - sock->tPad - sock->bPad),
-				    WCOLOR_SEL(sock,LINE_COLOR));
+				AG_Rect r;
+
+				r.x = WIDGET(sock)->paddingLeft;
+				r.y = WIDGET(sock)->paddingTop;
+				r.w = WIDTH(sock) - r.x -
+				      WIDGET(sock)->paddingRight;
+				r.h = HEIGHT(sock) - r.y -
+				      WIDGET(sock)->paddingBottom;
+
+				AG_DrawRectOutline(sock, &r,
+				    &WCOLOR(sock, LINE_COLOR));
 			}
 			break;
 		case AG_SOCKET_CIRCLE:
 			if (state) {
-				AG_DrawCircle(sock, WIDTH(sock)/2, HEIGHT(sock)/2,
-				    sock->bgData.circle.r - sock->lPad,
-				    WCOLOR_SEL(sock,LINE_COLOR));
+				AG_DrawCircle(sock,
+				    WIDTH(sock) >> 1,
+				    HEIGHT(sock) >> 1,
+				    (sock->bgData.circle.r -
+				     WIDGET(sock)->paddingLeft -
+				     WIDGET(sock)->paddingRight),
+				    &WCOLOR(sock, LINE_COLOR));
 			}
 			break;
 		}
@@ -287,7 +278,8 @@ Draw(void *obj)
 }
 
 static void
-SetState(AG_Socket *sock, AG_Variable *binding, void *p, int v)
+SetState(AG_Socket *_Nonnull sock, AG_Variable *_Nonnull binding,
+    void *_Nonnull p, int v)
 {
 	switch (AG_VARIABLE_TYPE(binding)) {
 	case AG_VARIABLE_INT:
@@ -303,16 +295,16 @@ SetState(AG_Socket *sock, AG_Variable *binding, void *p, int v)
 		*(Uint32 *)p = v;
 		break;
 	case AG_VARIABLE_P_FLAG:
-		AG_SETFLAGS(*(int *)p, (int)binding->info.bitmask, v);
+		AG_SETFLAGS(*(int *)p, binding->info.bitmask.u, v);
 		break;
 	case AG_VARIABLE_P_FLAG8:
-		AG_SETFLAGS(*(Uint8 *)p, (Uint8)binding->info.bitmask, v);
+		AG_SETFLAGS(*(Uint8 *)p, binding->info.bitmask.u8, v);
 		break;
 	case AG_VARIABLE_P_FLAG16:
-		AG_SETFLAGS(*(Uint16 *)p, (Uint16)binding->info.bitmask, v);
+		AG_SETFLAGS(*(Uint16 *)p, binding->info.bitmask.u16, v);
 		break;
 	case AG_VARIABLE_P_FLAG32:
-		AG_SETFLAGS(*(Uint32 *)p, (Uint32)binding->info.bitmask, v);
+		AG_SETFLAGS(*(Uint32 *)p, binding->info.bitmask.u32, v);
 		break;
 	default:
 		break;
@@ -322,28 +314,28 @@ SetState(AG_Socket *sock, AG_Variable *binding, void *p, int v)
 
 #if 0
 static void
-SetCount(AG_Variable *binding, void *p, int v)
+SetCount(AG_Variable *_Nonnull binding, void *_Nonnull p, int v)
 {
 	switch (AG_VARIABLE_TYPE(binding)) {
-	case AG_VARIABLE_UINT:	*(Uint *)p = v;		break;
-	case AG_VARIABLE_INT:	*(int *)p = v;		break;
-	case AG_VARIABLE_UINT8:	*(Uint8 *)p = v;	break;
-	case AG_VARIABLE_SINT8:	*(Sint8 *)p = v;	break;
-	case AG_VARIABLE_UINT16:	*(Uint16 *)p = v;	break;
-	case AG_VARIABLE_SINT16:	*(Sint16 *)p = v;	break;
-	case AG_VARIABLE_UINT32:	*(Uint32 *)p = v;	break;
-	case AG_VARIABLE_SINT32:	*(Sint32 *)p = v;	break;
+	case AG_VARIABLE_UINT:	 *(Uint *)p = v;	break;
+	case AG_VARIABLE_INT:	 *(int *)p = v;		break;
+	case AG_VARIABLE_UINT8:	 *(Uint8 *)p = v;	break;
+	case AG_VARIABLE_SINT8:	 *(Sint8 *)p = v;	break;
+	case AG_VARIABLE_UINT16: *(Uint16 *)p = v;	break;
+	case AG_VARIABLE_SINT16: *(Sint16 *)p = v;	break;
+	case AG_VARIABLE_UINT32: *(Uint32 *)p = v;	break;
+	case AG_VARIABLE_SINT32: *(Sint32 *)p = v;	break;
 	}
 }
 #endif
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
-	AG_Socket *sock = AG_SELF();
+	AG_Socket *sock = AG_SOCKET_SELF();
 	AG_Variable *binding;
-	int x = AG_INT(1);
-	int y = AG_INT(2);
+	const int x = AG_INT(1);
+	const int y = AG_INT(2);
 	void *pState;
 
 	if (AG_WidgetDisabled(sock))
@@ -357,52 +349,46 @@ MouseMotion(AG_Event *event)
 		}
 		if (sock->flags & AG_SOCKET_MOUSEOVER) {
 			sock->flags &= ~(AG_SOCKET_MOUSEOVER);
-			AG_PostEvent(NULL, sock, "socket-mouseoverlap",
-			    "%i", 0);
+			AG_PostEvent(sock, "socket-mouseoverlap", "%i", 0);
 			AG_Redraw(sock);
 		}
 	} else {
 		sock->flags |= AG_SOCKET_MOUSEOVER;
-		AG_PostEvent(NULL, sock, "socket-mouseoverlap", "%i", 1);
+		AG_PostEvent(sock, "socket-mouseoverlap", "%i", 1);
 		AG_Redraw(sock);
 	}
 	AG_UnlockVariable(binding);
 }
 
 static void
-IconMotion(AG_Event *event)
+IconMotion(AG_Event *_Nonnull event)
 {
-	AG_Icon *icon = AG_PTR(1);
-	int xRel = AG_INT(4);
-	int yRel = AG_INT(5);
+	AG_Icon *icon = AG_ICON_PTR(1);
+	const int xRel = AG_INT(4);
+	const int yRel = AG_INT(5);
 	AG_Window *wDND = icon->wDND;
 
-	AG_WindowSetGeometryRect(wDND,
-	    AG_RECT(WIDGET(wDND)->x + xRel,
-	            WIDGET(wDND)->y + yRel,
-	            WIDTH(wDND),
-	            HEIGHT(wDND)), 1);
+	AG_WindowMove(wDND, xRel, yRel);
 }
 
 static void
-IconButtonUp(AG_Event *event)
+IconButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Icon *icon = AG_PTR(1);
+	AG_Icon *icon = AG_ICON_PTR(1);
 	AG_Window *wDND = icon->wDND;
-	int x = WIDGET(wDND)->rView.x1;
-	int y = WIDGET(wDND)->rView.y1;
+	const int x = WIDGET(wDND)->rView.x1;
+	const int y = WIDGET(wDND)->rView.y1;
 	AG_Socket *sock;
 	int detach = 1;
 
-	sock = AG_WidgetFindRect("AG_Widget:AG_Socket:*", x, y,
-	    WIDGET(wDND)->w,
-	    WIDGET(wDND)->h);
-	if (sock != NULL) {
+	sock = AG_WidgetFindRect("AG_Widget:AG_Socket:*", x,y, WIDTH(wDND),
+	                                                       HEIGHT(wDND));
+	if (sock) {
 		AG_ObjectLock(sock);
-		if (sock->insertFn != NULL) {
+		if (sock->insertFn) {
 			detach = sock->insertFn(sock, icon);
 		} else {
-			if (icon->sock != NULL) {
+			if (icon->sock) {
 				AG_SocketRemoveIcon(icon->sock);
 			}
 			AG_SocketInsertIcon(sock, icon);
@@ -414,10 +400,11 @@ IconButtonUp(AG_Event *event)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
-	AG_Socket *sock = AG_SELF();
-	int button = AG_INT(1);
+	AG_Socket *sock = AG_SOCKET_SELF();
+	AG_Window *winParent = WIDGET(sock)->window;
+	const int button = AG_INT(1);
 	AG_Variable *binding;
 	void *pState;
 	int newState;
@@ -436,47 +423,58 @@ MouseButtonDown(AG_Event *event)
 	} else {
 		newState = !GetState(binding, pState);
 		SetState(sock, binding, pState, newState);
-		AG_PostEvent(NULL, sock, "socket-click", "%i", newState);
+		AG_PostEvent(sock, "socket-click", "%i", newState);
 	}
 	AG_UnlockVariable(binding);
 
 	if ((icon = sock->icon) != NULL) {
 		AG_Pixmap *px;
+		AG_Window *wDND;
 		
-		icon->wDND = AG_WindowNew(AG_WINDOW_PLAIN|
-		                          AG_WINDOW_NOBACKGROUND);
-		px = AG_PixmapFromSurface(icon->wDND, 0,
-		    WSURFACE(icon,icon->surface));
+		wDND = icon->wDND = AG_WindowNew(AG_WINDOW_MODAL |
+		                                 AG_WINDOW_PLAIN |
+		                                 AG_WINDOW_NOBACKGROUND |
+						 AG_WINDOW_KEEPABOVE);
+		wDND->wmType = AG_WINDOW_WM_DND;
+
+		px = AG_PixmapFromSurface(wDND, 0, WSURFACE(icon,icon->surface));
+/*		winParent->widExclMotion = WIDGET(px); */
 
 		AG_ObjectLock(px);
-		WIDGET(px)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
+		WIDGET(px)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
 		                     AG_WIDGET_UNFOCUSED_BUTTONUP;
-		AG_SetEvent(px, "mouse-motion", IconMotion,"%p",icon);
-		AG_SetEvent(px, "mouse-button-up", IconButtonUp,"%p",icon);
+		AG_AddEvent(px, "mouse-motion", IconMotion,"%p",icon);
+		AG_AddEvent(px, "mouse-button-up", IconButtonUp,"%p",icon);
 		AG_ObjectUnlock(px);
 
-		AG_WindowSetGeometry(icon->wDND,
-		    WIDGET(icon)->rView.x1,
-		    WIDGET(icon)->rView.y1,
-		    WIDTH(icon),
-		    HEIGHT(icon));
-		AG_WindowShow(icon->wDND);
+		if (AGDRIVER_SINGLE(WIDGET(sock)->drv)) {
+			AG_WindowSetGeometry(wDND,
+			    WIDGET(icon)->rView.x1,
+			    WIDGET(icon)->rView.y1,
+			    WIDTH(icon), HEIGHT(icon));
+		} else {
+			AG_WindowSetGeometry(wDND,
+			    WIDGET(winParent)->x + WIDGET(icon)->rView.x1,
+			    WIDGET(winParent)->y + WIDGET(icon)->rView.y1,
+			    WIDTH(icon), HEIGHT(icon));
+		}
+		AG_WindowShow(wDND);
 	}
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
-	AG_Socket *sock = AG_SELF();
-	int button = AG_INT(1);
+	AG_Socket *sock = AG_SOCKET_SELF();
+	const int button = AG_INT(1);
 	AG_Variable *binding;
 	void *pState;
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 		
 	if (AG_WidgetDisabled(sock) ||
 	    x < 0 || y < 0 ||
-	    x > WIDGET(sock)->w || y > WIDGET(sock)->h) {
+	    x > WIDTH(sock) || y > HEIGHT(sock)) {
 		return;
 	}
 	
@@ -484,111 +482,169 @@ MouseButtonUp(AG_Event *event)
 	if (GetState(binding, pState) && button == AG_MOUSE_LEFT &&
 	    !(sock->flags & AG_SOCKET_STICKY_STATE)) {
 	    	SetState(sock, binding, pState, 0);
-		AG_PostEvent(NULL, sock, "socket-click", "%i", 0);
+		AG_PostEvent(sock, "socket-click", "%i", 0);
 	}
 	AG_UnlockVariable(binding);
 }
 
-void
-AG_SocketSetPadding(AG_Socket *sock, int lPad, int rPad, int tPad, int bPad)
-{
-	AG_ObjectLock(sock);
-	if (lPad != -1) { sock->lPad = lPad; }
-	if (rPad != -1) { sock->rPad = rPad; }
-	if (tPad != -1) { sock->tPad = tPad; }
-	if (bPad != -1) { sock->bPad = bPad; }
-	AG_ObjectUnlock(sock);
-	AG_Redraw(sock);
-}
-
+/* Render as a rectangle of w x h pixels. */
 void
 AG_SocketBgRect(AG_Socket *sock, Uint w, Uint h)
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
+
 	sock->bgType = AG_SOCKET_RECT;
 	sock->bgData.rect.w = w;
 	sock->bgData.rect.h = h;
-	AG_ObjectUnlock(sock);
+
 	AG_Redraw(sock);
+	AG_ObjectUnlock(sock);
 }
 
+/* Render as a circle of radius r in pixels. */
 void
 AG_SocketBgCircle(AG_Socket *sock, Uint r)
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
-	sock->bgType = AG_SOCKET_RECT;
+
+	sock->bgType = AG_SOCKET_CIRCLE;
 	sock->bgData.circle.r = r;
-	AG_ObjectUnlock(sock);
+
 	AG_Redraw(sock);
+	AG_ObjectUnlock(sock);
 }
 
+/* Render as a given surface (duplicated). */
 void
-AG_SocketBgPixmap(AG_Socket *sock, AG_Surface *su)
+AG_SocketBgPixmap(AG_Socket *sock, const AG_Surface *S)
 {
-	AG_Surface *suDup = (su != NULL) ? AG_SurfaceDup(su) : NULL;
+	AG_Surface *Sdup = S ? AG_SurfaceDup(S) : NULL;
 
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
+
 	sock->bgType = AG_SOCKET_PIXMAP;
-	sock->bgData.pixmap.s = AG_WidgetMapSurface(sock, suDup);
-	AG_ObjectUnlock(sock);
+	sock->bgData.pixmap.s = AG_WidgetMapSurface(sock, Sdup);
+
 	AG_Redraw(sock);
+	AG_ObjectUnlock(sock);
 }
 
+/* Render as a given surface without duplicating (potentially unsafe). */
 void
-AG_SocketBgPixmapNODUP(AG_Socket *sock, AG_Surface *su)
+AG_SocketBgPixmapNODUP(AG_Socket *sock, AG_Surface *S)
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
 	AG_ObjectLock(sock);
+
 	sock->bgType = AG_SOCKET_PIXMAP;
-	sock->bgData.pixmap.s = AG_WidgetMapSurface(sock, su);
-	AG_ObjectUnlock(sock);
+	sock->bgData.pixmap.s = AG_WidgetMapSurface(sock, S);
+
 	AG_Redraw(sock);
+	AG_ObjectUnlock(sock);
 }
 
+/* Insert an icon in the socket (reparenting it). */
 void
 AG_SocketInsertIcon(AG_Socket *sock, AG_Icon *icon)
 {
 	AG_SizeAlloc a;
-	
+
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
+	AG_LockVFS(sock);
 	AG_ObjectLock(sock);
+	AG_OBJECT_ISA(icon, "AG_Widget:AG_Icon:*");
 	AG_ObjectLock(icon);
 
-	AG_ObjectAttach(sock, icon);
+	AG_ObjectAttach(sock, icon);                            /* Reparent */
 	sock->icon = icon;
 	icon->sock = sock;
 
-	a.w = WIDGET(sock)->w;
-	a.h = WIDGET(sock)->h;
-	a.x = WIDGET(sock)->rView.x1;
-	a.y = WIDGET(sock)->rView.y1;
+	a.x = 0;
+	a.y = 0;
+	a.w = WIDTH(sock);
+	a.h = HEIGHT(sock);
 	AG_WidgetSizeAlloc(icon, &a);
 	AG_WidgetUpdateCoords(icon, a.x, a.y);
-	
+	AG_WidgetCompileStyle(sock);
+
+	AG_Redraw(sock);
+	AG_WindowUpdate(AG_ParentWindow(sock));
+
 	AG_ObjectUnlock(icon);
 	AG_ObjectUnlock(sock);
-	AG_Redraw(sock);
+	AG_UnlockVFS(sock);
 }
 
+/* Remove an icon from the socket (detaching it). */
 void
 AG_SocketRemoveIcon(AG_Socket *sock)
 {
+	AG_OBJECT_ISA(sock, "AG_Widget:AG_Socket:*");
+	AG_LockVFS(sock);
 	AG_ObjectLock(sock);
 
 	if (sock->icon != NULL) {
 		AG_ObjectLock(sock->icon);
 		if (sock->removeFn != NULL) {
 			sock->removeFn(sock, sock->icon);
+		} else {
+			sock->icon->sock = NULL;
+			AG_ObjectDetach(sock->icon);
 			AG_ObjectUnlock(sock->icon);
-			goto out;
 		}
-		sock->icon->sock = NULL;
-		AG_ObjectDetach(sock->icon);
-		AG_ObjectUnlock(sock->icon);
 	}
 	sock->icon = NULL;
-out:
-	AG_ObjectUnlock(sock);
+
 	AG_Redraw(sock);
+	AG_ObjectUnlock(sock);
+	AG_UnlockVFS(sock);
 }
+
+static void
+Init(void *_Nonnull obj)
+{
+	AG_Socket *sock = obj;
+
+	WIDGET(sock)->flags |= AG_WIDGET_FOCUSABLE |
+	                       AG_WIDGET_UNFOCUSED_MOTION |
+	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
+	sock->flags = 0;
+	sock->state = 0;
+	sock->count = 0;
+	sock->bgType = AG_SOCKET_RECT;
+	sock->bgData.rect.w = 32;
+	sock->bgData.rect.h = 32;
+	sock->lblJustify = AG_TEXT_LEFT;
+	sock->icon = NULL;
+	sock->insertFn = NULL;
+	sock->removeFn = NULL;
+	sock->overlayFn = NULL;
+
+	AG_SetEvent(sock, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(sock, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(sock, "mouse-motion", MouseMotion, NULL);
+	
+	AG_BindInt(sock, "state", &sock->state);
+	AG_BindInt(sock, "count", &sock->count);
+
+	AG_RedrawOnChange(sock, 100, "state");
+	AG_RedrawOnChange(sock, 500, "count");
+}
+
+#ifdef AG_LEGACY
+void
+AG_SocketSetPadding(AG_Socket *sock, int lPad, int rPad, int tPad, int bPad)
+{
+	AG_SetStyleF(sock, "padding", "%d %d %d %d",
+	    (tPad != -1) ? tPad : 0,
+	    (rPad != -1) ? rPad : 0,
+	    (bPad != -1) ? bPad : 0,
+	    (lPad != -1) ? lPad : 0);
+}
+#endif /* AG_LEGACY */
 
 AG_WidgetClass agSocketClass = {
 	{
@@ -596,13 +652,15 @@ AG_WidgetClass agSocketClass = {
 		sizeof(AG_Socket),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
-		NULL,		/* destroy */
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
+		NULL,    /* reset */
+		NULL,    /* destroy */
+		NULL,    /* load */
+		NULL,    /* save */
+		NULL     /* edit */
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	NULL             /* size_allocate */  
 };
+
+#endif /* AG_WIDGETS */

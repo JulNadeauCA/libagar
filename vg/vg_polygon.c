@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,10 +38,58 @@
 #include <agar/vg/vg_view.h>
 #include <agar/vg/icons.h>
 
-static void
-Init(void *p)
+VG_Polygon *
+VG_PolygonNew(void *pNode)
 {
-	VG_Polygon *vp = p;
+	VG_Polygon *ply = Malloc(sizeof(VG_Polygon));
+
+	VG_NodeInit(ply, &vgPolygonOps);
+	VG_NodeAttach(pNode, ply);
+	return (ply);
+}
+
+void
+VG_PolygonSetOutline(VG_Polygon *ply, int flag)
+{
+	ply->outline = flag;
+}
+
+Uint
+VG_PolygonVertex(VG_Polygon *ply, VG_Point *pt)
+{
+	VG *vg = VGNODE(ply)->vg;
+
+	AG_ObjectLock(vg);
+
+	ply->pts = Realloc(ply->pts, (ply->nPts + 1)*sizeof(VG_Point *));
+	ply->pts[ply->nPts] = pt;
+	VG_AddRef(ply, pt);
+
+	AG_ObjectUnlock(vg);
+	return (ply->nPts++);
+}
+
+void
+VG_PolygonDelVertex(VG_Polygon *ply, Uint vtx)
+{
+	VG *vg = VGNODE(ply)->vg;
+
+	AG_ObjectLock(vg);
+	if (vtx < ply->nPts) {
+		VG_DelRef(ply, ply->pts[vtx]);
+		if (vtx < ply->nPts-1) {
+			memmove(&ply->pts[vtx], &ply->pts[vtx+1],
+			    (ply->nPts - vtx - 1)*sizeof(VG_Point *));
+		}
+		ply->nPts--;
+	}
+	AG_ObjectUnlock(vg);
+}
+
+static void
+Init(void *_Nonnull obj)
+{
+	VG_Polygon *vp = obj;
 
 	vp->outline = 0;
 	vp->pts = NULL;
@@ -51,9 +99,9 @@ Init(void *p)
 }
 
 static int
-Load(void *p, AG_DataSource *ds, const AG_Version *ver)
+Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull ver)
 {
-	VG_Polygon *vp = p;
+	VG_Polygon *vp = obj;
 	Uint i;
 
 	vp->outline = (int)AG_ReadUint8(ds);
@@ -67,9 +115,9 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 }
 
 static void
-Save(void *p, AG_DataSource *ds)
+Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 {
-	VG_Polygon *vp = p;
+	VG_Polygon *vp = obj;
 	Uint i;
 
 	AG_WriteUint8(ds, (Uint8)vp->outline);
@@ -79,22 +127,22 @@ Save(void *p, AG_DataSource *ds)
 }
 
 static void
-Destroy(void *p)
+Destroy(void *_Nonnull obj)
 {
-	VG_Polygon *vp = p;
+	VG_Polygon *vp = obj;
 
 	Free(vp->pts);
 	Free(vp->ints);
 }
 
 static int
-CompareInts(const void *p1, const void *p2)
+CompareInts(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	return (*(const int *)p1 - *(const int *)p2);
 }
 
 static void
-DrawOutline(VG_Polygon *vp, VG_View *vv)
+DrawOutline(VG_Polygon *_Nonnull vp, VG_View *_Nonnull vv)
 {
 	AG_Color c = VG_MapColorRGB(VGNODE(vp)->color);
 	int Ax, Ay, Bx, By, Cx, Cy;
@@ -108,36 +156,37 @@ DrawOutline(VG_Polygon *vp, VG_View *vv)
 	Cy = Ay;
 	for (i = 1; i < vp->nPts; i++) {
 		VG_GetViewCoords(vv, VG_Pos(vp->pts[i]), &Bx,&By);
-		AG_DrawLine(vv, Ax,Ay, Bx,By, c);
+		AG_DrawLine(vv, Ax,Ay, Bx,By, &c);
 		Ax = Bx;
 		Ay = By;
 	}
-	AG_DrawLine(vv, Cx,Cy, Ax,Ay, c);
+	AG_DrawLine(vv, Cx,Cy, Ax,Ay, &c);
 }
 
 static void
-DrawFB(VG_Polygon *vp, VG_View *vv)
+DrawFB(VG_Polygon *_Nonnull vp, VG_View *_Nonnull vv)
 {
 	AG_Color c = VG_MapColorRGB(VGNODE(vp)->color);
 	int y, x1, y1, x2, y2;
 	int ign, miny, maxy;
 	int i, i1, i2;
+	Uint nPts = vp->nPts;
 	int nInts;
 
 	if (vp->ints == NULL) {
-		vp->ints = Malloc(vp->nPts*sizeof(int));
-		vp->nInts = vp->nPts;
+		vp->ints = Malloc(nPts*sizeof(int));
+		vp->nInts = nPts;
 	} else {
-		if (vp->nPts > vp->nInts) {
-			vp->ints = Realloc(vp->ints, vp->nPts*sizeof(int));
-			vp->nInts = vp->nPts;
+		if (nPts > vp->nInts) {
+			vp->ints = Realloc(vp->ints, nPts*sizeof(int));
+			vp->nInts = nPts;
 		}
 	}
 
 	/* Find Y maxima */
 	VG_GetViewCoords(vv, VG_Pos(vp->pts[0]), &ign, &miny);
 	maxy = miny;
-	for (i = 1; i < vp->nPts; i++) {
+	for (i = 1; i < nPts; i++) {
 		int vy;
 	
 		VG_GetViewCoords(vv, VG_Pos(vp->pts[i]), &ign, &vy);
@@ -151,9 +200,9 @@ DrawFB(VG_Polygon *vp, VG_View *vv)
 	/* Find the intersections. */
 	for (y = miny; y <= maxy; y++) {
 		nInts = 0;
-		for (i = 0; i < vp->nPts; i++) {
+		for (i = 0; i < nPts; i++) {
 			if (i == 0) {
-				i1 = vp->nPts - 1;
+				i1 = nPts - 1;
 				i2 = 0;
 			} else {
 				i1 = i - 1;
@@ -177,28 +226,30 @@ DrawFB(VG_Polygon *vp, VG_View *vv)
 			if (((y >= y1) && (y < y2)) ||
 			    ((y == maxy) && (y > y1) && (y <= y2))) {
 				vp->ints[nInts++] =
-				    (((y-y1)<<16) / (y2-y1)) *
-				    (x2-x1) + (x1<<16);
+				    (((y - y1) << 16) / (y2 - y1)) *
+				     (x2 - x1) + (x1 << 16);
 			} 
 		}
+
+		/* TODO use a less general integer sort */
 		qsort(vp->ints, nInts, sizeof(int), CompareInts);
 
 		for (i = 0; i < nInts; i += 2) {
 			int xa, xb;
 
 			xa = vp->ints[i] + 1;
-			xa = (xa>>16) + ((xa&0x8000) >> 15);
+			xa = (xa >> 16) + ((xa & 0x8000) >> 15);
 			xb = vp->ints[i+1] - 1;
-			xb = (xb>>16) + ((xb&0x8000) >> 15);
-			AG_DrawLineH(vv, xa, xb, y, c);
+			xb = (xb >> 16) + ((xb & 0x8000) >> 15);
+			AG_DrawLineH(vv, xa, xb, y, &c);
 		}
 	}
 }
 
 static void
-Draw(void *p, VG_View *vv)
+Draw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_Polygon *vp = p;
+	VG_Polygon *vp = obj;
 
 	if (vp->nPts < 3 || vp->outline) {
 		DrawOutline(vp, vv);
@@ -207,15 +258,16 @@ Draw(void *p, VG_View *vv)
 #ifdef HAVE_OPENGL
 	if (AGDRIVER_CLASS(WIDGET(vv)->drv)->flags & AG_DRIVER_OPENGL) {
 		VG_Color *c = &VGNODE(vp)->color;
-		int x, y, i;
+		int x1 = WIDGET(vv)->rView.x1;
+		int y1 = WIDGET(vv)->rView.y1;
+		Uint i;
 
 		glBegin(GL_POLYGON);
 		glColor3ub(c->r, c->g, c->b);
 		for (i = 0; i < vp->nPts; i++) {
-			VG_GetViewCoords(vv, VG_Pos(vp->pts[i]), &x, &y);
-			x += WIDGET(vv)->rView.x1;
-			y += WIDGET(vv)->rView.y1;
-			glVertex2i(x, y);
+			int x,y;
+			VG_GetViewCoords(vv, VG_Pos(vp->pts[i]), &x,&y);
+			glVertex2i(x1+x, y1+y);
 		}
 		glEnd();
 	} else
@@ -226,9 +278,10 @@ Draw(void *p, VG_View *vv)
 }
 
 static void
-Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
+Extent(void *_Nonnull obj, VG_View *_Nonnull vv, VG_Vector *_Nonnull a,
+    VG_Vector *_Nonnull b)
 {
-	VG_Polygon *vp = p;
+	VG_Polygon *vp = obj;
 	VG_Vector v;
 	int i;
 
@@ -250,9 +303,9 @@ Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 }
 
 static float
-PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
+PointProximity(void *_Nonnull obj, VG_View *_Nonnull vv, VG_Vector *_Nonnull vPt)
 {
-	VG_Polygon *vp = p;
+	VG_Polygon *vp = obj;
 	float d, dMin;
 	VG_Vector vInt, A, B, C, m;
 	int i;
@@ -288,9 +341,9 @@ PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
 }
 
 static void
-Delete(void *p)
+Delete(void *_Nonnull obj)
 {
-	VG_Polygon *vp = p;
+	VG_Polygon *vp = obj;
 	Uint i;
 
 	for (i = 0; i < vp->nPts; i++) {
@@ -299,13 +352,15 @@ Delete(void *p)
 	}
 }
 
-static void *
-Edit(void *p, VG_View *vv)
+static void *_Nonnull
+Edit(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_Polygon *vp = p;
+	VG_Polygon *vp = obj;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
+#ifdef AG_ENABLE_STRING
 	AG_LabelNewPolled(box, AG_LABEL_HFILL, _("Points: %d"), &vp->nPts);
+#endif
 	AG_SeparatorNewHoriz(box);
 	AG_CheckboxNewInt(box, 0, _("Render outline"), &vp->outline);
 	return (box);

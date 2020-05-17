@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -77,6 +77,10 @@ M_MatrixInvert44_SSE(M_Matrix44 A)
 	__m128 minor0, minor1, minor2, minor3;
 	__m128 row0, row1, row2, row3;
 	__m128 det, tmp1;
+
+	memset(&tmp1, 0, sizeof(tmp1));
+	memset(&row1, 0, sizeof(row1));
+	memset(&row3, 0, sizeof(row3));
 
 	tmp1	= _mm_loadh_pi(_mm_loadl_pi(tmp1, (__m64 *)(src)),
 	                                          (__m64 *)(src+4));

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -161,7 +161,9 @@ AG_GetCPUInfo(AG_CPUInfo *_Nonnull cpu)
 	cpu->vendorID[0] = '\0';
 	cpu->ext = 0;
 
-#if defined(__alpha__)
+#if defined(__CC65__)
+	cpu->arch = "6502";		/* Use getcpu() in <6502.h> */
+#elif defined(__alpha__)
 	cpu->arch = "alpha";
 #elif defined(__x86_64__) || defined(__amd64__) || defined(_M_X64)
 	cpu->arch = "amd64";

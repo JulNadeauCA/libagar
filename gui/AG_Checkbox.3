@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -62,16 +62,19 @@ If a text label is specified, it is displayed next to the control.
 .Fn AG_CheckboxNewInt "AG_Widget *parent" "Uint flags" "const char *label" "int *pBool"
 .Pp
 .Ft "AG_Checkbox *"
-.Fn AG_CheckboxNewFlag "AG_Widget *parent" "Uint flags" "const char *label" "Uint *pFlags" "Uint bitmask"
+.Fn AG_CheckboxNewUint "AG_Widget *parent" "Uint flags" "const char *label" "Uint *pBool"
 .Pp
 .Ft "AG_Checkbox *"
-.Fn AG_CheckboxNewFlag32 "AG_Widget *parent" "Uint flags" "const char *label" "Uint32 *pFlags" "Uint32 bitmask"
+.Fn AG_CheckboxNewFlag "AG_Widget *parent" "Uint flags" "const char *label" "Uint *pFlags" "Uint bitmask"
 .Pp
 .Fn "AG_Checkbox *"
 .Fn AG_CheckboxSetFromFlags "AG_Widget *parent" "Uint flags" "Uint *pFlags" "const AG_FlagDescr *flagsDescr"
 .Pp
-.Fn "AG_Checkbox *"
-.Fn AG_CheckboxSetFromFlags32 "AG_Widget *parent" "Uint flags" "Uint32 *pFlags" "const AG_FlagDescr *flagsDescr"
+.Ft "int"
+.Fn AG_CheckboxGetState "AG_Checkbox *checkbox"
+.Pp
+.Ft "void"
+.Fn AG_CheckboxSetState "AG_Checkbox *checkbox" "int enable"
 .Pp
 .Ft "void"
 .Fn AG_CheckboxToggle "AG_Checkbox *checkbox"
@@ -94,28 +97,36 @@ Acceptable values for the
 .Fa flags
 argument include:
 .Bl -tag -width "AG_CHECKBOX_EXPAND "
+.It AG_CHECKBOX_INVERT
+Invert the logical interpretation of "state".
 .It AG_CHECKBOX_SET
-Set the state to 1 on initialization.
+Set default "state" to 1 (default = 0).
+.It AG_CHECKBOX_EXCL
+Advise that this checkbox is the only widget accessing "state"
+(so periodic updates are not needed).
 .It AG_CHECKBOX_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
+Expand horizontally in parent container.
 .It AG_CHECKBOX_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
+Expand vertically in parent container.
 .It AG_CHECKBOX_EXPAND
 Shorthand for
-.Dv AG_CHECKBOX_HFILL|AG_CHECKBOX_VFILL .
+.Dv AG_CHECKBOX_HFILL | AG_CHECKBOX_VFILL .
 .El
 .Pp
 The
 .Fn AG_CheckboxNewInt
-variant binds the state to a boolean integer.
-.Pp
+constructor binds "state" to a natural integer.
 .Fn AG_CheckboxNewFlag
-binds the state to a specified set of bits
-.Fa bitmask
-in
-.Fa pFlags .
+binds "state" to one or more bits in the natural integer at
+.Fa pFlags ,
+according to
+.Fa bitmask a.
+.Pp
+Note: While convenience constructors are only provided for natural integers,
+.Nm
+can also bind to fixed-size integers (see
+.Sx BINDINGS ) .
+.\" MANLINK(AG_FlagDescr)
 .Pp
 The utility function
 .Fn AG_CheckboxSetFromFlags
@@ -131,10 +142,12 @@ typedef struct ag_flag_descr {
 } AG_FlagDescr;
 .Ed
 .Pp
-The
+.Fn AG_CheckboxGetState
+returns the current state of the checkbox.
+.Fn AG_CheckboxSetState
+sets the of the checkbox, where 0=inactive and 0=active.
 .Fn AG_CheckboxToggle
-function inverts the current state of
-.Fa checkbox .
+inverts the state atomically.
 .Sh BINDINGS
 The
 .Nm
@@ -176,6 +189,10 @@ For the
 .Ft AG_Checkbox
 object:
 .Bl -tag -width "AG_Label *lbl "
+.It Ft int invert
+Invert the logical interpretation of the
+.Sq state
+binding.
 .It Ft AG_Label *lbl
 Pointer to the
 .Xr AG_Label 3
@@ -240,3 +257,8 @@ AG_WindowShow(win);
 The
 .Nm
 widget first appeared in Agar 1.0.
+.Fn AG_CheckboxToggle ,
+.Fn AG_CheckboxGetState
+and
+.Fn AG_CheckboxSetState
+appeared in Agar 1.6.0.

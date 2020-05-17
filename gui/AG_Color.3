@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+.\" Copyright (c) 2006-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -36,52 +36,106 @@
 #include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
-Many functions in Agar accept
-.Fa AG_Color
-parameters.
-This structure describes a color in terms of its red, green and blue and
-alpha components:
+The
+.Nm
+structure describes a color in terms of
+.Em Red ,
+.Em Green ,
+.Em Blue ,
+and
+.Em Alpha
+components.
+The
+.Nm
+structure is declared as:
 .Bd -literal
 typedef struct ag_color {
-	Uint8 r, g, b, a;
+#if AG_MODEL == AG_LARGE
+	Uint16 r,g,b,a;			/* LG (16-bit color) */
+#else
+	Uint8  r,g,b,a;			/* MD (8-bit color) */
+#endif
 } AG_Color;
 .Ed
 .Pp
-The alpha component may or may not be used in a particular context; a value
-of 0 is fully transparent and 255 is fully opaque.
+The alpha component may or may not be used in a given context.
+A value of 0 (or
+.Dv AG_TRANSPARENT
+or
+.Dv AG_COLOR_FIRST )
+is fully transparent, while
+.Dv AG_OPAQUE
+(or
+.Dv AG_COLOR_LAST )
+is fully opaque.
 .Sh INTERFACE
 .nr nS 1
-.Ft AG_Color
-.Fn AG_ColorRGB "Uint8 r" "Uint8 g" "Uint8 b"
-.Pp
-.Ft AG_Color
-.Fn AG_ColorRGBA "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Ft void
+.Fn AG_ColorRGB_8 "AG_Color *c" "Uint8 r" "Uint8 g" "Uint8 b"
 .Pp
 .Ft void
-.Fn AG_HSV2Color "float hue" "float sat" "float val" "AG_Color *C"
+.Fn AG_ColorRGBA_8 "AG_Color *c" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
 .Ft void
-.Fn AG_Color2HSV "const AG_Color *C" "float *hue" "float *sat" "float *val"
+.Fn AG_ColorRGB_16 "AG_Color *c" "Uint16 r" "Uint16 g" "Uint16 b"
 .Pp
-.Ft AG_Color
-.Fn AG_ColorHex "Uint32 hex"
+.Ft void
+.Fn AG_ColorRGBA_16 "AG_Color *c" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
 .Pp
-.Ft AG_Color
-.Fn AG_ColorFromString "const char *spec" "const AG_Color *parentColor"
+.Ft void
+.Fn AG_HSV2Color "float hue" "float sat" "float val" "AG_Color *c"
+.Pp
+.Ft void
+.Fn AG_Color2HSV "AG_Color *c" "float *hue" "float *sat" "float *val"
+.Pp
+.Ft void
+.Fn AG_ColorHex16 "AG_Color *c" "Uint16 hex"
+.Pp
+.Ft void
+.Fn AG_ColorHex32 "AG_Color *c" "Uint32 hex"
+.Pp
+.Ft void
+.Fn AG_ColorHex64 "AG_Color *c" "Uint64 hex"
+.Pp
+.Ft void
+.Fn AG_ColorFromString "AG_Color *c" "const char *spec" "const AG_Color *parentColor"
+.Pp
+.Ft void
+.Fn AG_ColorNone "AG_Color *c"
+.Pp
+.Ft void
+.Fn AG_ColorBlack "AG_Color *c"
+.Pp
+.Ft void
+.Fn AG_ColorWhite "AG_Color *c"
+.Pp
+.Ft void
+.Fn AG_ColorLighten "AG_Color *c" "int shade"
+.Pp
+.Ft void
+.Fn AG_ColorDarken "AG_Color *c" "int shade"
+.Pp
+.Ft void
+.Fn AG_ColorInterpolate "AG_Color *cx" "const AG_Color *c1" "const AG_Color *c2"
 .Pp
 .Ft int
-.Fn AG_ColorCompare "AG_Color a" "AG_Color b"
+.Fn AG_ColorCompare "const AG_Color *a" "const AG_Color *b"
 .Pp
 .nr nS 0
-The
-.Fn AG_ColorRGB
-routine returns an
+.Fn AG_ColorRGB_8
+and
+.Fn AG_ColorRGB_16
+return an
 .Ft AG_Color
-from the given red, green and blue components.
-The alpha component is initialized to 255 (opaque).
+from 8- or 16-bit red, green and blue components
+(with alpha set to fully opaque).
 .Pp
-.Fn AG_ColorRGBA
-accepts an explicit alpha component.
+.Fn AG_ColorRGBA_8
+and
+.Fn AG_ColorRGBA_16
+return an
+.Ft AG_Color
+from 8- or 16-bit RGB and alpha components.
 .Pp
 .Fn AG_HSV2Color
 maps a color in HSV space to the closest approximation in RGB space, and
@@ -90,41 +144,97 @@ The inverse operation is performed by
 .Fn AG_Color2HSV .
 Note: H and V become increasingly lossy as S->0.
 .Pp
-.Fn AG_ColorHex
-returns an
-.Nm
-structure from an argument of the form 0xRRGGBBAA.
-.Pp
 The
+.Fn AG_ColorHex16 ,
+.Fn AG_ColorHex32
+and
+.Fn AG_ColorHex64
+routines convert a color packed into
+.Em 0xRGBA
+(4-bit components),
+.Em 0xRRGGBBAA
+(8-bit components), or
+.Em 0xRRRRGGGGBBBBAAAA
+(16-bit components) into an
+.Nm .
+.Pp
 .Fn AG_ColorFromString
-function converts a text-based color representation to an
+converts a text-based color representation to an
 .Nm .
 The following formats are allowed:
 .Bd -literal
-	"#RRGGBB"
-	"r:g:b[:a]"
+	"#RGB[A]"
+	"#RRGGBB[AA]"
+	"#RRRRGGGGBBBB[AAAA]"
 	"r,g,b[,a]"
 	"rgb(r,g,b[,a])"
 	"hsv(h,s,v[,a])"
+	"AliceBlue"
 .Ed
 .Pp
-If components are given with a terminating "%" character, they are
-interpreted as a percentage of the corresponding component in
-.Fa parentColor
-(assuming the argument is non-NULL).
+Components can be separated by `/', ':' or ',' characters.
 .Pp
-The
+A component terminating with a `%' character is interpreted as a ratio in %
+of the corresponding component of
+.Fa pColor
+(or White if
+.Fa pColor
+is NULL).
+.Pp
+.Fn AG_ColorNone
+initializes the color to fully transparent black (0,0,0,0).
+.Fn AG_ColorBlack
+and
+.Fn AG_ColorWhite
+initialize the respective fully opaque color.
+.Pp
+.Fn AG_ColorLighten
+and
+.Fa AG_ColorDarken
+increase and decrease the overall value of
+.Fa c
+by some small increment multiplied by
+.Fa shade .
+A
+.Fa shade
+argument of 0 leaves the color value unchanged.
+.Pp
+.Fn AG_ColorInterpolate
+traces an imaginary line in RGB color space between
+.Fa c1
+and
+.Fa c2
+and returns into
+.Fa cx
+the color closest to the point described by the fraction
+.Fa num
+over
+.Fa denom .
+.Pp
 .Fn AG_ColorCompare
-function returns non-zero if the two given colors differ.
+returns non-zero if the two colors differ.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_MapColorRGB 3 ,
 .Xr AG_MapColorRGBA 3 ,
 .Xr AG_MapPixelRGB 3 ,
 .Xr AG_MapPixelRGBA 3 ,
+.Xr AG_Surface 3 ,
 .Xr AG_Widget 3
 .Sh HISTORY
-Colors in Agar were originally described as 32-bit packed pixel values.
-This was replaced by the
+Agar 1.0 through 1.3 described colors using packed pixels in a 32-bit reference
+format.
+The
 .Nm
-structure in Agar 1.4.
+structure first appeared in Agar 1.4.
+Agar 1.6.0 introduced the
+.Dv AG_LARGE
+memory model and 48-bit "Deep Color".
+.Fn AG_Color2HSV ,
+.Fn AG_HSV2Color ,
+.Fn AG_ColorNone ,
+.Fn AG_ColorDarken ,
+.Fn AG_ColorLighten
+and the
+.Fn AG_ColorInterpolate
+functions appeared in 1.6.0.

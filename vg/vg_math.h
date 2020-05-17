@@ -3,6 +3,8 @@
 #ifndef _AGAR_VG_MATH_H_
 #define _AGAR_VG_MATH_H_
 
+#include <string.h>
+
 #include <agar/config/have_math.h>
 #include <agar/config/have_math_c99.h>
 #ifdef HAVE_MATH
@@ -115,7 +117,7 @@ VG_Distance(VG_Vector v1, VG_Vector v2)
 
 /* Compute minimal point-line distance. */
 static __inline__ float
-VG_PointLineDistance(VG_Vector A, VG_Vector B, VG_Vector *pt)
+VG_PointLineDistance(VG_Vector A, VG_Vector B, VG_Vector *_Nonnull pt)
 {
 	float mag, u;
 	VG_Vector vInt;
@@ -189,7 +191,7 @@ VG_MatrixIdentity(void)
 	return (T);
 }
 static __inline__ void
-VG_MultMatrix(VG_Matrix *T, const VG_Matrix *A)
+VG_MultMatrix(VG_Matrix *_Nonnull T, const VG_Matrix *_Nonnull A)
 {
 	VG_Matrix R;
 	int m, n;
@@ -203,7 +205,8 @@ VG_MultMatrix(VG_Matrix *T, const VG_Matrix *A)
 	memcpy(T, &R, sizeof(VG_Matrix));
 }
 static __inline__ void
-VG_MultMatrixByVector(VG_Vector *c, const VG_Vector *a, const VG_Matrix *T)
+VG_MultMatrixByVector(VG_Vector *_Nonnull c, const VG_Vector *_Nonnull a,
+    const VG_Matrix *_Nonnull T)
 {
 	float ax = a->x;
 	float ay = a->y;

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2015 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -47,13 +47,13 @@ to display interface decorations.
 Multiple images may be associated with an
 .Nm
 instance.
-This allows animations to be displayed (i.e., by mapping the frames using
+Animation can be done by mapping frames with
 .Fn AG_PixmapAddSurface
 and calling
 .Fn AG_PixmapSetSurface
 from an
 .Xr AG_Timer 3
-callback or a separate thread).
+callback or a separate thread.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -96,14 +96,12 @@ include:
 .It AG_PIXMAP_RESCALE
 Rescale image to fit widget size.
 .It AG_PIXMAP_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
+Expand horizontally in parent container.
 .It AG_PIXMAP_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
+Expand vertically in parent container.
 .It AG_PIXMAP_EXPAND
 Shorthand for
-.Dv AG_PIXMAP_HFILL|AG_PIXMAP_VFILL .
+.Dv AG_PIXMAP_HFILL | AG_PIXMAP_VFILL .
 .El
 .Pp
 The
@@ -152,11 +150,17 @@ If OpenGL support is not available, an error is returned.
 .Ft "void"
 .Fn AG_PixmapSetSurface "AG_Pixmap *pixmap" "int surface_name"
 .Pp
+.Ft "AG_Surface *"
+.Fn AG_PixmapGetSurface "AG_Pixmap *pixmap" "int surface_name"
+.Pp
 .Ft "void"
 .Fn AG_PixmapReplaceSurface "AG_Pixmap *pixmap" "int surface_name" "AG_Surface *surfaceNew"
 .Pp
 .Ft "void"
 .Fn AG_PixmapUpdateSurface "AG_Pixmap *pixmap" "int surface_name"
+.Pp
+.Ft "void"
+.Fn AG_PixmapSizeHint "AG_Pixmap *pixmap" "int w" "int h"
 .Pp
 .Ft "void"
 .Fn AG_PixmapSetCoords "AG_Pixmap *pixmap" "int s" "int t"
@@ -184,6 +188,11 @@ mapped with
 .Fn AG_PixmapAddSurface .
 .Pp
 The
+.Fn AG_PixmapGetSurface
+returns a copy of the surface at given index (if the index is invalid then
+a fatal condition is raised).
+.Pp
+The
 .Fn AG_PixmapReplaceSurface
 routine replaces the contents of the specified surface mapping.
 .Pp
@@ -191,6 +200,10 @@ If the contents of a currently mapped surface are directly modified,
 .Fn AG_PixmapUpdateSurface
 should be called.
 This routine may or may not be a no-op depending on the graphics mode.
+.Pp
+.Fn AG_PixmapSizeHint
+requests a specific geometry in pixels.
+The default geometry is that of the source surface passed to the constructor.
 .Pp
 The
 .Fn AG_PixmapSetCoords
@@ -224,8 +237,9 @@ widget, allowing the user to pan the view:
 AG_Scrollview *sv;
 AG_Pixmap *px;
 
-sv = AG_ScrollviewNew(window, AG_SCROLLVIEW_BY_MOUSE);
-AG_Expand(sv);
+sv = AG_ScrollviewNew(window, AG_SCROLLVIEW_BY_MOUSE |
+                              AG_SCROLLVIEW_EXPAND);
+
 px = AG_PixmapFromSurface(sv, 0, mySurface);
 .Ed
 .Pp
@@ -273,3 +287,5 @@ in the Agar source distribution.
 The
 .Nm
 widget first appeared in Agar 1.0.
+.Fn AG_PixmapGetSurface
+appeared in Agar 1.6.0.

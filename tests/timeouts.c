@@ -1,8 +1,9 @@
 /*	Public domain	*/
 /*
- * This application tests the AG_Timer(3) interface.
+ * Test the AG_Timer(3) interface.
  */
 #include "agartest.h"
+#ifdef AG_TIMERS
 
 typedef struct {
 	AG_TestInstance _inherit;
@@ -101,7 +102,7 @@ StartTimerInspector(AG_Event *event)
 	MyTestInstance *ti = AG_PTR(1);
 	AG_Window *win;
 
-	if ((win = DEV_TimerInspector()) != NULL) {
+	if ((win = AG_DEV_TimerInspector()) != NULL) {
 		AG_WindowAttach(ti->win, win);
 		AG_WindowShow(win);
 	}
@@ -119,6 +120,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_LabelNew(win, 0, "timeOps: %s", agTimeOps->name);
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Open Timer Inspector",
 	    StartTimerInspector, "%p", ti);
+
 	AG_SeparatorNewHoriz(win);
 
 	hBox = AG_BoxNewHoriz(win, 0);
@@ -144,3 +146,5 @@ const AG_TestCase timeoutsTest = {
 	TestGUI,
 	NULL		/* bench */
 };
+
+#endif /* AG_TIMERS */

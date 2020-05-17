@@ -1,0 +1,83 @@
+.\"
+.\" Copyright (c) 2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd JUNE 5, 2019
+.Dt AGAR_ADA_CORE_DEMO 1
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm agar_ada_core_demo
+.Nd Demonstrate Ada bindings to Agar-Core
+.Sh SYNOPSIS
+.Nm agar_ada_core_demo
+.Sh DESCRIPTION
+The
+.Nm
+program demonstrates the use of Ada bindings to the Agar-Core library.
+.Pp
+It performs various tests to exercise the
+.Em Agar.Init ,
+.Em Agar.Error ,
+.Em Agar.Object ,
+.Em Agar.Event ,
+and
+.Em Agar.DSO
+units.
+To demonstrate how object overloading works with Agar objects in Ada,
+.Nm
+registers a new Agar object class written in pure Ada called "Animal"
+(see
+.Pa animal.adb ) .
+It then creates an instance of the "Animal" class and names it "Cow".
+It registers an event handler for an event called
+.Sq some-event
+and triggers it.
+This illustrates how message passing works in Agar (i.e., Agar event handlers
+are passed multiple typed arguments which can be accessed by index, by name,
+or by popping off the stack).
+.Pp
+The program then demonstrates the use of
+.Fn Agar.Object.Get_Name ,
+which converts the name of an
+.Xr AG_Object 3
+to an Ada string.
+.Pp
+Serialization is demonstrated by
+.Nm
+when it saves the test "Cow" object to a file called
+.Pa Cow.obj .
+.Sh ENVIRONMENT
+.Bl -tag -width "LANG "
+.It Dv LANG
+ISO language code determining which translation should be used.
+.El
+.\" .Sh FILES
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Error 3 ,
+.Xr AG_Event 3 ,
+.Xr AG_DataSource 3 ,
+.Xr AG_Object 3 ,
+.Xr agar_ada_demo 1

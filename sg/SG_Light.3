@@ -1,0 +1,148 @@
+.\"
+.\" Copyright (c) 2006-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 22, 2006
+.Dt SG_LIGHT 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm SG_Light
+.Nd Agar-SG light source node
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/sg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+node defines a light source in a
+.Xr SG 3
+scene-graph.
+Each light source is associated with a priority number, which determines
+which lights are used in the rendering.
+The number of lights supported for rendering is dependent on the renderer
+implementation.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr SG_Node 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "SG_Light *"
+.Fn SG_LightNew "SG_Node *parent" "const char *name"
+.Pp
+.Ft void
+.Fn SG_LightAmbient "SG_Light *lt" "M_Color c"
+.Pp
+.Ft void
+.Fn SG_LightDiffuse "SG_Light *lt" "M_Color c"
+.Pp
+.Ft void
+.Fn SG_LightSpecular "SG_Light *lt" "M_Color c"
+.Pp
+.Ft void
+.Fn SG_LightSpot "SG_Light *lt" "M_Real cutoff" "M_Real exponent" "M_Vector3 dir"
+.Pp
+.nr nS 0
+The
+.Fn SG_LightNew
+function allocates, initializes, and attaches a
+.Nm
+object.
+.Pp
+The functions
+.Fn SG_LightAmbient ,
+.Fn SG_LightDiffuse
+and
+.Fn SG_LightSpecular
+configure the colors associated with the ambient, diffuse and specular
+components of the light source.
+.Pp
+.Fn SG_LightSpot
+sets the spot parameters of the light source.
+.Fa cutoff
+specifies the cutoff angle in degrees,
+.Fa exponent
+specifies the light intensity (the higher the exponent, the more focused
+the light source; a value of 0 provides uniform distribution), and
+.Fa dir
+is the direction vector.
+If the cutoff angle is < 180 degrees, the light source is directional,
+otherwise it is treated as a point source and the direction vector
+is ignored.
+.Sh INTERNAL WIDGET API
+.nr nS 1
+.Ft void
+.Fn SG_LightSetup "SG_Light *lt" "SG_View *sv"
+.Pp
+.nr nS 0
+The
+.Fn SG_LightSetup
+function sets up the renderer states associated with a light, prior
+to rendering.
+This function is usually invoked from the
+.Fn draw
+operation of an
+.Xr SG_View 3
+(or derived) widget, prior to rendering a scene.
+.Sh STRUCTURE DATA
+For the
+.Nm
+object:
+.Bl -tag -width "M_Real spot_exponent "
+.It Ft int pri
+Priority of light source when number of sources is limited (0 = highest
+priority).
+.It Ft M_Color ambient
+Ambient color component of source.
+.It Ft M_Color diffuse
+Diffuse color component of source.
+.It Ft M_Color specular
+Specular color component of source.
+.It Ft M_Real spot_cutoff
+Spotlight cutoff angle (or 180 for point source).
+.It Ft M_Real spot_exponent
+Spotlight intensity distribution.
+.It Ft M_Vector3 spot_dir
+Spotlight direction.
+.It Ft M_Real Kc
+Constant light attenuation factor.
+.It Ft M_Real Kl
+Linear light attenuation factor.
+.It Ft M_Real Kq
+Quadratic light attenuation factor.
+.El
+.Sh SEE ALSO
+.Xr M_Real 3 ,
+.Xr M_Vector 3 ,
+.Xr SG 3 ,
+.Xr SG_Intro 3 ,
+.Xr SG_Node 3 ,
+.Xr SG_View 3
+.Sh HISTORY
+The
+.Nm
+node class first appeared in Agar 1.6.0.

@@ -31,6 +31,7 @@
 
 #define SLERP_TO_LERP_THRESH 0.001
 
+/* Multiplicative Identity */
 M_Quaternion
 M_QuaternionMultIdentity(void)
 {
@@ -43,6 +44,7 @@ M_QuaternionMultIdentity(void)
 	return (q);
 }
 
+/* Additive Identity */
 M_Quaternion
 M_QuaternionAddIdentity(void)
 {

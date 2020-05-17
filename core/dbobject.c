@@ -134,7 +134,7 @@ AG_ObjectClass agDbObjectClass = {
 	sizeof(AG_DbObject),
 	{ 0, 0 },
 	Init,
-	NULL,		/* reinit */
+	NULL,		/* reset */
 	NULL,		/* destroy */
 	NULL,		/* load */
 	NULL,		/* save */

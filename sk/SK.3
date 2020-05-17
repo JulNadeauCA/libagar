@@ -1,0 +1,209 @@
+.\"
+.\" Copyright (c) 2006-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd October 18, 2006
+.Dt SK 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm SK
+.Nd Agar dimensioned 2D sketch
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/sk.h>
+.Ed
+.Sh DESCRIPTION
+The Agar
+.Nm
+class implements a general-purpose 2D "sketching" engine with dimensioning
+and geometrical constraint solving.
+Sketches define a set of elements and a set of relations between those
+elements.
+.Pp
+Elements are organized in a tree (the same structure is used to described
+group and leaf nodes).
+Each element in the graph is associated with a transformation matrix.
+The major sketch elements are points, lines and arcs, but other types can
+be added through a class registration interface.
+.Pp
+Relations represent geometric constraints affecting points, lines, circles,
+segments and arcs.
+The following constraints are implemented:
+.Pp
+.Bl -bullet -compact
+.It
+Parallelism
+.It
+Incidence
+.It
+Perpendicularity
+.It
+Tangency
+.It
+Concentricity
+.It
+Colinearity
+.It
+Explicit distance
+.It
+Explicit angle
+.El
+.Pp
+The
+.Xr SK_View 3
+widget is commonly used to display and edit
+.Nm
+objects.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "SK *"
+.Fn SK_New "void *parent" "const char *name"
+.Pp
+.nr nS 0
+The
+.Fn SK_New
+function allocates, initializes, and attaches a
+.Nm
+object.
+.Sh NODE MANIPULATION
+.nr nS 1
+.Ft "void"
+.Fn SK_RegisterClass "SK_NodeOps *ops"
+.Pp
+.Ft "void"
+.Fn SK_NodeInit "void *node" "const SK_NodeOps *ops" "Uint flags"
+.Pp
+.Ft "void *"
+.Fn SK_NodeAdd "void *pnode" "const SK_NodeOps *ops" "Uint flags"
+.Pp
+.Ft "void"
+.Fn SK_NodeAttach "void *pnode" "void *node"
+.Pp
+.Ft "void"
+.Fn SK_NodeDetach "void *pnode" "void *node"
+.Pp
+.nr nS 0
+The
+.Fn SK_RegisterClass
+function registers a new node class, described by the given
+.Ft SK_NodeOps
+structure.
+.Pp
+The
+.Fn SK_NodeInit
+function initializes the given
+.Ft SK_Node
+structure.
+It is usually invoked from node constructor functions.
+.Fa ops
+points to the
+.Ft SK_NodeOps
+structure which contains class information.
+The
+.Fa flags
+argument should be 0.
+The
+.Fn SK_NodeAdd
+variant also allocates, initializes and attaches the node to a parent node.
+.Pp
+The
+.Fn SK_NodeAttach
+and
+.Fn SK_NodeDetach
+functions attach/detach a node to/from a given parent.
+.Sh NODE TRANSFORMATIONS
+These functions multiply a node's transformation matrix
+.Va T
+with a translation, scaling or rotation matrix.
+They are only aliases for
+.Ft M_Matrix *
+functions, except that they accept a pointer to a node instead of a matrix.
+.Pp
+.nr nS 0
+.Ft "void"
+.Fn SK_Translatev "SK_Node *node" "M_Vector3 v"
+.Pp
+.Ft "void"
+.Fn SK_Translate2 "SK_Node *node" "M_Real x" "M_Real y"
+.Pp
+.Ft "void"
+.Fn SK_Scalev "SK_Node *node" "M_Vector3 v"
+.Pp
+.Ft "void"
+.Fn SK_Rotatev "SK_Node *node" "M_Real theta" "M_Vector3 axis"
+.Pp
+.Ft "void"
+.Fn SK_Rotatevd "SK_Node *node" "M_Real degrees" "M_Vector3 axis"
+.Pp
+.Ft "void"
+.Fn SK_GetNodeTransform "void *node" "M_Matrix44 *T"
+.nr nS 1
+.Pp
+The
+.Fn SK_Translate*
+functions multiply
+.Va T
+by a 2D translation matrix.
+.Pp
+The
+.Fn SK_Scalev
+function multiplies
+.Va T
+by a 2D scaling matrix.
+.Pp
+.Fn SK_Rotate*
+multiply
+.Va T
+by a 2D rotation matrix.
+Angles are given in radians, except for
+.Fn SK_Rotate*d
+variants which accept angular arguments in degrees.
+.Pp
+.Fn SK_Rotatev
+generates a rotation of
+.Fa theta
+radians around
+.Fa axis .
+The
+.Fn SK_Rotate*
+variants with the "d" suffix accept angles in degrees instead of radians.
+.Pp
+The
+.Fn SK_GetNodeTransform
+function returns a matrix which is the product of the transformation
+matrices of the given node and all of its parents.
+.Sh SEE ALSO
+.Xr M_Matrix 3 ,
+.Xr M_Vector 3 ,
+.Xr SG_Intro 3 ,
+.Xr SK_View 3
+.Sh HISTORY
+The
+.Nm
+engine first appeared in Agar 1.6.0.

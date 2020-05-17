@@ -68,7 +68,7 @@ static void dopr(char *_Nonnull, AG_Size, const char *_Nonnull, va_list);
 static void fmtstr(char *_Nonnull, AG_Size *_Nonnull, AG_Size, char *_Nonnull, int, int, int);
 static void fmtint(char *_Nonnull, AG_Size *_Nonnull, AG_Size, long, int, int, int, int);
 static void fmtfp(char *_Nonnull, AG_Size *_Nonnull, AG_Size, long double, int, int, int);
-static void opr_outch(char *_Nonnull, AG_Size *_Nonnull, AG_Size, char);
+static void dopr_outch(char *_Nonnull, AG_Size *_Nonnull, AG_Size, char);
 
 /*
  * dopr(): poor man's version of doprintf

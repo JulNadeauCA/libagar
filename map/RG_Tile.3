@@ -1,0 +1,213 @@
+.\"
+.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd October 21, 2007
+.Dt RG_TILE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm RG_Tile
+.Nd Agar-RG image element
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/map/rg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+structure describes a graphical surface generated from a set of instructions
+or
+.Sq elements .
+.Pp
+Note: Unless you need to generate or manipulate tiles programmatically, you
+do not need to use this interface.
+Libraries such as
+.Xr MAP 3
+use this interface to display graphics.
+.Pp
+The following types of elements are implemented:
+.Bl -tag -width "RG_TILE_PIXMAP "
+.It RG_TILE_PIXMAP
+Blit the given surface (a
+.Xr RG_Pixmap 3
+reference) at target coordinates
+.Va x ,
+.Va y
+with alpha blending factor
+.Va alpha .
+.It RG_TILE_SKETCH
+Blit a rendering of the given vector drawing at
+.Va x ,
+.Va y ,
+using scale factor
+.Va scale
+and alpha blending factor
+.Va alpha .
+.It RG_TILE_FEATURE
+Generic graphical operation.
+Features may or may not have associated target coordinates.
+Filters such as
+.Sq Blur
+are implemented as features.
+New features are easily implemented.
+See
+.Xr RG_Feature 3
+for more information on the feature framework.
+.El
+.Pp
+The public members of the
+.Nm
+structure are as follows:
+.Bd -literal
+typedef struct rg_tile {
+	char name[RG_TILE_NAME_MAX];    /* User description */
+	char clname[RG_TILE_CLASS_MAX]; /* Category (app-specific) */
+	AG_Surface *su;                 /* Generated surface */
+	int xOrig, yOrig;               /* Origin coordinates */
+	enum rg_snap_mode {
+		RG_SNAP_NONE,           /* No snapping */
+		RG_SNAP_TO_GRID         /* Snap to grid */
+	} snap_mode;
+};
+.Ed
+.Sh INTERFACE
+.nr nS 1
+.Ft "RG_Tile *"
+.Fn RG_TileNew "RG_Tileset *tileset" "const char *name" "Uint16 width" "Uint16 height" "Uint flags"
+.Pp
+.Ft void
+.Fn RG_TileScale "RG_Tileset *tileset" "RG_Tile *tile" "Uint16 width" "Uint16 height"
+.Pp
+.Ft void
+.Fn RG_TileGenerate "RG_Tile *tile"
+.Pp
+.Ft "RG_TileElement *"
+.Fn RG_TileAddPixmap "RG_Tile *tile" "const char *name" "RG_Pixmap *pixmap" "int x" "int y"
+.Pp
+.Ft "RG_TileElement *"
+.Fn RG_TileAddSketch "RG_Tile *tile" "const char *name" "RG_Sketch *sketch" "int x" "int y"
+.Pp
+.Ft "RG_TileElement *"
+.Fn RG_TileAddFeature "RG_Tile *tile" "const char *name" "RG_FeatureOps *featureOps" "int x" "int y"
+.Pp
+.Ft "void"
+.Fn RG_TileDelPixmap "RG_Tile *tile" "RG_Pixmap *pixmap" "int destroyFlag"
+.Pp
+.Ft "void"
+.Fn RG_TileDelSketch "RG_Tile *tile" "RG_Sketch *sketch" "int destroyFlag"
+.Pp
+.Ft "void"
+.Fn RG_TileDelFeature "RG_Tile *tile" "RG_Feature *feature" "int destroyFlag"
+.Pp
+.nr nS 0
+The
+.Fn RG_TileNew
+function allocates, initializes, and attaches a new
+.Nm
+of
+.Fa width
+by
+.Fa height
+pixels.
+.Fa name
+is a string identifier for the tile
+(if a tile of the same name exists, a unique name will be
+generated automatically).
+Accepted
+.Fa flags
+include:
+.Pp
+.Bl -tag -compact -width "RG_TILE_SRCCOLORKEY "
+.It RG_TILE_SRCCOLORKEY
+Use colorkeying with the tile surface.
+.It RG_TILE_SRCALPHA
+Use alpha blending with the tile surface.
+.El
+.Pp
+.Fn RG_TileScale
+resizes the canvas of the tile to
+.Fa width
+by
+.Fa height
+pixels.
+Note that this only resizes the canvas used for rendering the tile,
+and has no effect on the pixmaps and other features.
+.Pp
+The
+.Fn RG_TileGenerate
+function updates the surface
+(the
+.Va su
+member of the
+.Nm
+structure) using the tile instructions.
+.Pp
+.Fn RG_TileFindElement
+searches for a tile element by type and name.
+.Pp
+.Fn RG_TileAddPixmap
+inserts a reference to
+.Fa pixmap
+at coordinates
+.Fa x ,
+.Fa y .
+.Fn RG_TileAddSketch
+inserts a reference to
+.Fa sketch
+at coordinates
+.Fa x ,
+.Fa y .
+.Fn RG_TileAddFeature
+inserts the feature described by
+.Fa featureOps .
+For features, the
+.Fa x
+and
+.Fa y
+parameters may or may not have any meaning.
+See
+.Xr RG_Feature 3
+for more information on the feature framework.
+.Pp
+.Fn RG_TileDelFeature ,
+.Fn RG_TileDelPixmap
+and
+.Fn RG_TileDelSketch
+remove any element that refers to the given pixmap, sketch or feature,
+respectively.
+This causes the reference count of the referenced element to be decremented.
+If
+.Fa destroyFlag
+is 1, the element is automatically freed is that reference count reaches 0.
+.Sh SEE ALSO
+.Xr RG 3 ,
+.Xr RG_Feature 3 ,
+.Xr RG_Pixmap 3 ,
+.Xr RG_Sketch 3 ,
+.Xr RG_Texture 3 ,
+.Xr RG_Tileview 3

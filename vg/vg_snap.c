@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,11 +39,11 @@
 #include <agar/vg/icons.h>
 
 static void
-SnapTo(AG_Event *event)
+SnapTo(AG_Event *_Nonnull event)
 {
-	AG_Button *bu = AG_SELF();
-	AG_Toolbar *tbar = AG_PTR(1);
-	VG_View *vv = AG_PTR(2);
+	AG_Button *bu = AG_BUTTON_SELF();
+	AG_Toolbar *tbar = AG_TOOLBAR_PTR(1);
+	VG_View *vv = VG_VIEW_PTR(2);
 	int snap_mode = AG_INT(3);
 
 	AG_ToolbarSelectOnly(tbar, bu);
@@ -51,9 +51,9 @@ SnapTo(AG_Event *event)
 }
 
 static void
-SnapToMenu(AG_Event *event)
+SnapToMenu(AG_Event *_Nonnull event)
 {
-	VG_View *vv = AG_PTR(1);
+	VG_View *vv = VG_VIEW_PTR(1);
 	int snap_mode = AG_INT(2);
 
 	VG_ViewSetSnapMode(vv, snap_mode);

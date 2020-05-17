@@ -8,7 +8,7 @@
 #include <agar/core/types.h>
 #include <agar/core/attributes.h>
 
-/* Define internationalization macros if NLS is enabled. */
+/* NLS */
 #if !defined(_)
 # include <agar/config/enable_nls.h>
 # ifdef ENABLE_NLS
@@ -31,7 +31,7 @@
 # endif
 #endif /* defined(_) */
 
-/* Define __BEGIN_DECLS and __END_DECLS if needed. */
+/* Declarations */
 #if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
 # define _AGAR_VG_DEFINED_CDECLS
 # if defined(__cplusplus)
@@ -42,12 +42,6 @@
 #  define __END_DECLS
 # endif
 #endif
-
-/*
- * Expand "DECLSPEC" to any compiler-specific keywords, as required for proper
- * visibility of symbols in shared libraries.
- * See: http://gcc.gnu.org/wiki/Visibility
- */
 #ifndef DECLSPEC
 # if defined(__WIN32__) || defined(__WINRT__)
 #  ifdef __BORLANDC__
@@ -98,25 +92,23 @@
 # pragma enumsalwaysint on
 #endif
 
-/*
- * Expand "__inline__" to any compiler-specific keyword needed for defining
- * an inline function, if supported.
- */
+/* Inlining */
 #ifdef __GNUC__
 # define _AGAR_VG_USE_INLINE
 #else
 # if defined(_MSC_VER) || defined(__BORLANDC__) || \
      defined(__DMC__) || defined(__SC__) || \
      defined(__WATCOMC__) || defined(__LCC__) || \
-     defined(__DECC) || defined(__EABI__)
+     defined(__DECC) || defined(__CC_ARM)
+#  define AG_INLINE  __inline
 #  ifndef __inline__
-#   define __inline__	__inline
+#  define __inline__ __inline
 #  endif
 #  define _AGAR_VG_USE_INLINE
 # else
-#  if !defined(__MRC__) && !defined(_SGI_SOURCE)
+#  if !defined(__MRC__) && !defined(_SGI_SOURCE) && !defined(HAVE_CC65)
 #   ifndef __inline__
-#    define __inline__ inline
+#   define __inline__ inline
 #   endif
 #   define _AGAR_VG_USE_INLINE
 #  endif
@@ -126,7 +118,7 @@
 # define __inline__
 #endif
 
-/* Define NULL if needed. */
+/* Nullability */
 #if !defined(NULL) && !defined(__MACH__)
 # ifdef __cplusplus
 #  define NULL 0
@@ -134,5 +126,25 @@
 # else
 #  define NULL ((void *)0)
 #  define _AGAR_VG_DEFINED_NULL
+# endif
+#endif
+#if defined(__GNUC__) || defined(__CC65__)
+# define _Nonnull
+# define _Nullable
+# define _Null_unspecified
+# define _AGAR_VG_DEFINED_NULLABILITY
+#else
+# include <agar/vg/nullability.h>
+#endif
+
+/* Restrict */
+#if !defined(_Restrict)
+# if !(__GNUC__ == 2 && __GNUC_MINOR__ == 95)
+#  if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901 || defined(lint)
+#   define _Restrict
+#  else
+#   define _Restrict restrict
+#  endif
+#  define _AGAR_VG_DEFINED_RESTRICT
 # endif
 #endif

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>.
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -70,12 +70,6 @@ Value representible by
 .It Dv AG_DBL_{MIN,MAX}
 Value representible by
 .Ft double .
-.It Dv AG_LDBL_{MIN,MAX}
-Value representible by
-.Ft long double
-(defined only where
-.Dv HAVE_LONG_DOUBLE
-is set)
 .It Dv AG_FLT_EPSILON
 Smallest
 .Fa x
@@ -88,15 +82,6 @@ Smallest
 of type
 .Ft double
 such that 1.0 + x != 1.0.
-.It Dv AG_LDBL_EPSILON
-Smallest
-.Fa x
-of type
-.Ft long double
-such that 1.0 + x != 1.0
-(defined only where
-.Dv HAVE_LONG_DOUBLE
-is set)
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3

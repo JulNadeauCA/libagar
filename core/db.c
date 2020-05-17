@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2012-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/config/have_db4.h>
+#include <agar/config/have_db5.h>
 #include <agar/core/core.h>
 
 /* Create a new database handle for the given database backend. */
@@ -33,8 +37,7 @@ AG_DbNew(const char *_Nonnull backend)
 	AG_Db *db;
 	AG_DbClass *dbc = NULL;
 
-#ifdef HAVE_DB4
-	/* XXX */
+#if defined(HAVE_DB4) || defined(HAVE_DB5)
 	if (strcmp(backend, "hash")) {
 		dbc = &agDbHashClass;
 	} else if (strcmp(backend, "btree")) {
@@ -105,6 +108,71 @@ AG_DbSync(AG_Db *db)
 	return (rv);
 }
 
+/* Test for existence of a key. */
+int
+AG_DbExists(AG_Db *db, AG_Dbt *key)
+{
+	AG_DbClass *dbc = AGDB_CLASS(db);
+	int rv;
+
+	AG_ObjectLock(db);
+	rv = dbc->exists(db, key);
+	AG_ObjectUnlock(db);
+	return (rv);
+}
+
+/* Retrieve a database entry. */
+int
+AG_DbGet(AG_Db *_Nonnull db, const AG_Dbt *_Nonnull key, AG_Dbt *_Nonnull val)
+{
+	AG_DbClass *dbc = AGDB_CLASS(db);
+	int rv;
+
+	AG_ObjectLock(db);
+	rv = dbc->get(db, key, val);
+	AG_ObjectUnlock(db);
+	return (rv);
+}
+
+/* Write a database entry. */
+int
+AG_DbPut(AG_Db *db, const AG_Dbt *key, const AG_Dbt *val)
+{
+	AG_DbClass *dbc = AGDB_CLASS(db);
+	int rv;
+
+	AG_ObjectLock(db);
+	rv = dbc->put(db, key, val);
+	AG_ObjectUnlock(db);
+	return (rv);
+}
+
+/* Delete a database entry. */
+int
+AG_DbDel(AG_Db *_Nonnull db, const AG_Dbt *_Nonnull key)
+{
+	AG_DbClass *dbc = AGDB_CLASS(db);
+	int rv;
+
+	AG_ObjectLock(db);
+	rv = dbc->del(db, key);
+	AG_ObjectUnlock(db);
+	return (rv);
+}
+
+/* Iterate over all entries. */
+int
+AG_DbIterate(AG_Db *db, AG_DbIterateFn fn, void *arg)
+{
+	AG_DbClass *dbc = AGDB_CLASS(db);
+	int rv;
+
+	AG_ObjectLock(db);
+	rv = dbc->iterate(db, fn, arg);
+	AG_ObjectUnlock(db);
+	return (rv);
+}
+
 static void
 Init(void *_Nonnull obj)
 {
@@ -115,7 +183,7 @@ Init(void *_Nonnull obj)
 
 AG_DbClass agDbClass = {
 	{
-		"Agar(Db)",
+		"AG_Db",
 		sizeof(AG_Db),
 		{ 0,0 },
 		Init,
@@ -138,3 +206,5 @@ AG_DbClass agDbClass = {
 	NULL,			/* del */
 	NULL			/* iterate */
 };
+
+#endif /* AG_SERIALIZATION */

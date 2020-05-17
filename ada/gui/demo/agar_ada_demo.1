@@ -1,0 +1,82 @@
+.\"
+.\" Copyright (c) 2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd JUNE 5, 2019
+.Dt AGAR_ADA_DEMO 1
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm agar_ada_demo
+.Nd Demonstrate Ada bindings to Agar GUI
+.Sh SYNOPSIS
+.Nm agar_ada_demo
+.Op Fl v
+.Op Fl d Ar agar-driver
+.Op Fl t Ar font-spec
+.Sh DESCRIPTION
+The
+.Nm
+program demonstrates the use of Ada bindings to the Agar GUI toolkit.
+.Pp
+After initializing the library and printing the Agar version number,
+it then proceeds to load and generate some
+.Xr AG_Surface 3
+in different formats, using the
+.Em Agar.Surface
+API in Ada.
+This tests various features including copies, rectangle fills, palette
+operations, blitting, clipping and transparency.
+Finally the test should output two files:
+.Pa output.png
+(a 8- or 16-bit PNG)
+and
+.Pa output-index.png
+(a 2-bit PNG).
+Options are as follows:
+.Bl -tag -width Ds
+.It Fl v
+Display the Agar version number and exit.
+.It Fl d
+Specify an alternate Agar driver / backend (see
+.Dq AVAILABLE DRIVERS
+in
+.Xr AG_InitGraphics 3
+for details; some drivers accept optional arguments).
+.It Fl t
+Specify the default font (e.g.,
+.Sq Luxi Sans:10 ,
+.Sq Courier:10.5:b ,
+.Sq my.otf:16 ) .
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width "LANG "
+.It Dv LANG
+ISO language code determining which translation should be used.
+.El
+.\" .Sh FILES
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Surface 3 ,
+.Xr agar_ada_core_demo 1

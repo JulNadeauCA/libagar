@@ -1,5 +1,5 @@
 
-The agar-disasm utility outputs information on Agar AG_Object(3) datafiles.
-For data files containing debugging information, agar-paint will output the
-data elements as well.
+The agar-disasm utility prints the metadata from an AG_Object(3) archive file.
+For objects which include debugging information, it also prints disassembled
+data (see AG_DataSource(3), AG_SourceSetDebug(3)).
 

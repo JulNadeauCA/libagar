@@ -1,0 +1,154 @@
+.\"
+.\" Copyright (c) 2006-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd June 23, 2006
+.Dt SG 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm SG
+.Nd Agar-SG 3D scene graph
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/sg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+object is a general-purpose scene-graph, or a collection of nodes (i.e.,
+.Xr SG_Node 3
+objects) organized in a tree structure.
+The
+.Ft SG_Node
+object is used to describe both "group" nodes and "leaf" nodes.
+.Pp
+Scene-graphs are usually rendered using the
+.Xr SG_View 3
+widget (or a subclass of it).
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "SG *"
+.Fn SG_New "void *parent" "const char *name" "Uint flags"
+.Pp
+.Ft "void"
+.Fn SG_Clear "SG *sg"
+.Pp
+.nr nS 0
+The
+.Fn SG_New
+function allocates, initializes, and attaches a
+.Nm
+object.
+Acceptable
+.Fa flags
+options include:
+.Bl -tag -width "SG_SKIP_UNKNOWN_NODES "
+.It SG_OVERLAY_WIREFRAME
+Overlay wireframe onto geometric objects when rendering scene.
+.It SG_OVERLAY_VERTICES
+Overlay vertices onto geometric objects when rendering scene.
+.It SG_OVERLAY_VNORMALS
+Overlay vertex normals when rendering scene.
+.It SG_OVERLAY_FNORMALS
+Overlay facet normals when rendering scene.
+.It SG_SKIP_UNKNOWN_NODES
+When loading the contents of a scene, ignore unknown/unimplemented
+elements (otherwise, encountering an unknown node will make the load
+operation fail).
+.It SG_NO_DEFAULT_NODES
+Don't create the default nodes (e.g.,
+.Sq Camera0 ,
+.Sq Light0 ) .
+.El
+.Pp
+The
+.Fn SG_Clear
+routine reinitializes
+.Fa sg
+to an empty scene.
+If default nodes (e.g.,
+.Sq Camera0 )
+are used, they are preserved but their state is reinitialized.
+.Sh NODE QUERIES
+.nr nS 1
+.Ft "SG_Node *"
+.Fn SG_SearchNodes "SG_Node *parent" "const char *name"
+.Pp
+.Ft "void *"
+.Fn SG_FindNode "SG *sg" "const char *name"
+.Pp
+.Ft "int"
+.Fn SG_Intersect "SG_Node *node" "M_Geom3 g" "M_GeomSet3 *S"
+.Pp
+.nr nS 0
+The
+.Fn SG_SearchNodes
+function scans all descendants of
+.Fa parent
+for a node of the specified name.
+The
+.Fn SG_FindNode
+function searches the entire scene graph
+.Fa sg
+for a node of the specified name.
+On success,
+.Fn SG_SearchNodes
+and
+.Fn SG_FindNode
+return a pointer to the matching node.
+.Pp
+The
+.Fn SG_Intersect
+function performs an intersection test between the given node and an
+arbitrary geometrical object
+.Fa g
+(see
+.Xr M_Geom3 3 ) .
+The function returns 1 if the objects intersect, 0 if they don't
+intersect, or -1 if the test is not implemented.
+If the
+.Fa S
+argument is non-NULL, the intersections are computed and returned as one
+or more geometrical objects, into
+.Fa S .
+The structure pointed to by
+.Fa S
+should have been previously initialized with
+.Xr M_GEOM_SET_EMPTY 3 .
+.Sh SEE ALSO
+.Xr sgedit 1 ,
+.Xr M_Matrix 3 ,
+.Xr M_Plane 3 ,
+.Xr M_Real 3 ,
+.Xr M_Vector 3 ,
+.Xr SG_Intro 3
+.Sh HISTORY
+The
+.Nm
+library first appeared in Agar 1.6.0.

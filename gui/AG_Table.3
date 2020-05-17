@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2018 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -86,9 +86,6 @@ interface from
 .Fn AG_TableSetSelectionMode "AG_Table *tbl" "enum ag_table_selmode mode"
 .Pp
 .Ft "void"
-.Fn AG_TableSetSelectionColor "AG_Table *tbl" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
-.Pp
-.Ft "void"
 .Fn AG_TableSetSeparator "AG_Table *tbl" "const char *sep"
 .Pp
 .Ft "AG_MenuItem *"
@@ -165,14 +162,12 @@ This flag is writeable, but is automatically set or cleared by keyboard events.
 .It AG_TABLE_HIGHLIGHT_COLS
 Highlight the currently selected column(s) using transparency.
 .It AG_TABLE_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
+Expand horizontally in parent container.
 .It AG_TABLE_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
+Expand vertically in parent container.
 .It AG_TABLE_EXPAND
 Shorthand for
-.Dv AG_TABLE_HFILL|AG_TABLE_VFILL .
+.Dv AG_TABLE_HFILL | AG_TABLE_VFILL .
 This is recommended as an alternative to calling
 .Fn AG_TableSizeHint .
 .It AG_TABLE_NOAUTOSORT
@@ -226,10 +221,6 @@ enum ag_table_selmode {
 	AG_TABLE_SEL_COLS	/* Select entire columns */
 };
 .Ed
-.Pp
-.Fn AG_TableSetSelectionColor
-sets the color of the rectangle that will be blended onto selected cells, rows
-or columns in order to indicate selection.
 .Pp
 .Fn AG_TableSetSeparator
 changes the set of accepted field-separator characters in
@@ -310,6 +301,9 @@ Change the sort direction of the column.
 .Ft "void"
 .Fn AG_TableSort "AG_Table *tbl"
 .Pp
+.Ft "void"
+.Fn AG_TableClear "AG_Table *tbl"
+.Pp
 .nr nS 0
 Tables created with
 .Fn AG_TableNewPolled
@@ -339,6 +333,12 @@ function sorts the rows of the table.
 This function is useful in combination with the
 .Dv AG_TABLE_NOAUTOSORT
 option.
+.Pp
+The
+.Fn AG_TableClear
+routine clears the rows of the table.
+It is equivalent to calling
+.Fn AG_TableBegin .
 .Sh COLUMN FUNCTIONS
 .nr nS 1
 .Ft "int"
@@ -363,7 +363,7 @@ option.
 The
 .Fn AG_TableAddCol
 function inserts a new column into the table, returning the number of the
-new column if successful, or -1 if an error occured.
+new column if successful, or -1 if an error has occurred.
 .Fa name
 specifies the text to display in the column header.
 .Fa size_spec
@@ -414,7 +414,7 @@ selection flag of individual cells; their meaning is application-specific.
 The
 .Fn AG_TableAddRow
 function inserts a new row into the table and returns the new row number,
-or -1 if a failure occured.
+or -1 if a failure has occurred.
 The
 .Fa fmt
 argument describes the individual fields (or cells) of this row.
@@ -434,11 +434,11 @@ Signed integer
 Long integer
 .It %lli, %lld
 Long long integer
-.It %u
+.It %u, %x
 Unsigned integer
-.It %lu
+.It %lu, %lx
 Unsigned long integer
-.It %llu
+.It %llu, %llx
 Unsigned long long integer
 .It %[s8], %[s16], %[s32]
 Signed 8-bit, 16-bit or 32-bit value
@@ -452,7 +452,7 @@ User pointer (usually stored in hidden columns)
 User-specified function of the form:
 .Pp
 .Ft "void"
-.Fn MyTextFn "void *tbl" "char *buf" "size_t len"
+.Fn MyTextFn "void *tbl" "char *buf" "AG_Size len"
 .Pp
 The text copied into
 .Fa buf
@@ -482,18 +482,7 @@ Same as "%[Fs]", except that Agar will never try to free
 the returned surface (similarly to
 .Xr AG_WidgetMapSurfaceNODUP 3 ) .
 .It %[W]
-A widget to insert into the table.
-The widget must have the
-.Dv AG_WIDGET_TABLE_EMBEDDABLE
-flag set or the operation will fail.
-Note that for efficiency reasons,
-.Nm
-is not treated like a standard widget container, so widgets that are
-inserted into the table in this way should not be attached to any parent
-(e.g., the
-.Fa parent
-argument of standard constructor routines should be NULL).
-Embedded widgets are automatically freed when cells are deleted.
+A widget instance to insert into the table.
 .El
 .Pp
 The functions
@@ -525,7 +514,7 @@ returns 1 if the given row is selected, 0 otherwise.
 .Fn AG_TableCompareCells "const AG_TableCell *c1" "const AG_TableCell *c2"
 .Pp
 .Ft "void"
-.Fn AG_TablePrintCell "AG_Table *tbl" "const AG_TableCell *c" "char *dst" "size_t dstLen"
+.Fn AG_TablePrintCell "AG_Table *tbl" "const AG_TableCell *c" "char *dst" "AG_Size dstLen"
 .Pp
 .nr nS 0
 The
@@ -605,17 +594,11 @@ For the
 .Ft AG_TableCell
 structure:
 .Pp
-.Bl -tag -compact -width "AG_Widget *widget "
+.Bl -tag -compact -width "enum ag_table_cell_type type "
 .It enum ag_table_cell_type type
-Cell data type (see below).
+Data type (see below).
 .It Uint id
-Optional user-specified ID or 0.
-.It Uint flags
-Option flags.
-If
-.Dv AG_TABLE_CELL_NOCOMPARE
-is set, this cell will be ignored when comparing cells of a polled table
-against the backing store in order to restore selection state.
+Optional user-specified ID (or 0).
 .It char fmt[]
 Format string (read-only; see
 .Fn AG_TableAddRow ) .
@@ -638,12 +621,21 @@ structure:
 .Bl -tag -compact -width "char name[] "
 .It char name[]
 Column header text string (read-only).
-.It int selected
-Column is selected (assuming column selection mode).
+.It Uint flags
+Flags including
+.Dv AG_TABLE_COL_FILL
+(expand to fill remaining space),
+.Dv AG_TABLE_COL_ASCENDING
+(sort ascending),
+.Dv AG_TABLE_COL_DESCENDING
+(sort descending)
+and
+.Dv AG_TABLE_COL_SELECTED
+(column selection flag).
 .It int w
 Column width in pixels (read-only).
-.It int x
-Current column position (local widget coordinates).
+.It int wPct
+Column width in % (or -1).
 .El
 .Sh CELL DATA TYPES
 The cell data type is determined by
@@ -732,7 +724,7 @@ function:
 void
 UpdateMyTable(AG_Event *event)
 {
-	AG_Table *tbl = AG_SELF();
+	AG_Table *tbl = AG_TABLE_SELF();
 
 	AG_TableBegin(tbl);
 	AG_TableAddRow(tbl, "%s:%d", "foo", 1234);

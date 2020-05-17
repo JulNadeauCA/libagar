@@ -6,42 +6,6 @@
 #include <agar/core/core.h>
 #include <agar/math/m.h>
 
-const M_MatrixOps44 mMatOps44_FPU = {
-	"scalar",
-	M_MatrixZero44_FPU,
-	M_MatrixZero44v_FPU,
-	M_MatrixIdentity44_FPU,
-	M_MatrixIdentity44v_FPU,
-	M_MatrixTranspose44_FPU,
-	M_MatrixTranspose44p_FPU,
-	M_MatrixTranspose44v_FPU,
-	M_MatrixInvert44_FPU,
-	M_MatrixInvertElim44_FPU,
-	M_MatrixMult44_FPU,
-	M_MatrixMult44v_FPU,
-	M_MatrixMultVector44_FPU,
-	M_MatrixMultVector44p_FPU,
-	M_MatrixMultVector44v_FPU,
-	M_MatrixCopy44_FPU,
-	M_MatrixToFloats44_FPU,
-	M_MatrixToDoubles44_FPU,
-	M_MatrixFromFloats44_FPU,
-	M_MatrixFromDoubles44_FPU,
-	M_MatrixRotateAxis44_FPU,
-	M_MatrixOrbitAxis44_FPU,
-	M_MatrixRotateEul44_FPU,
-	M_MatrixRotate44I_FPU,
-	M_MatrixRotate44J_FPU,
-	M_MatrixRotate44K_FPU,
-	M_MatrixTranslatev44_FPU,
-	M_MatrixTranslate44_FPU,
-	M_MatrixTranslateX44_FPU,
-	M_MatrixTranslateY44_FPU,
-	M_MatrixTranslateZ44_FPU,
-	M_MatrixScale44_FPU,
-	M_MatrixUniScale44_FPU,
-};
-
 /* Invert a 4x4 matrix using cofactors and Cramer's rule. */
 M_Matrix44
 M_MatrixInvert44_FPU(M_Matrix44 A)
@@ -185,6 +149,16 @@ M_MatrixInvertElim44_FPU(M_Matrix44 Ain, M_Matrix44 *Ainv)
 		}
 	}
 	return (0);
+}
+
+void
+M_MatrixCopy44_FPU(M_Matrix44 *_Nonnull mDst, const M_Matrix44 *_Nonnull mSrc)
+{
+#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
+	memcpy(mDst->m, mSrc->m, 16*sizeof(float));
+#else
+	memcpy(mDst->m, mSrc->m, 16*sizeof(M_Real));
+#endif
 }
 
 void
@@ -392,3 +366,39 @@ M_MatrixUniScale44_FPU(M_Matrix44 *M, M_Real r)
 	S.m[3][0] = 0.0; S.m[3][1] = 0.0; S.m[3][2] = 0.0; S.m[3][3] = 1.0;
 	M_MatrixMult44v_FPU(M, &S);
 }
+
+const M_MatrixOps44 mMatOps44_FPU = {
+	"scalar",
+	M_MatrixZero44_FPU,
+	M_MatrixZero44v_FPU,
+	M_MatrixIdentity44_FPU,
+	M_MatrixIdentity44v_FPU,
+	M_MatrixTranspose44_FPU,
+	M_MatrixTranspose44p_FPU,
+	M_MatrixTranspose44v_FPU,
+	M_MatrixInvert44_FPU,
+	M_MatrixInvertElim44_FPU,
+	M_MatrixMult44_FPU,
+	M_MatrixMult44v_FPU,
+	M_MatrixMultVector44_FPU,
+	M_MatrixMultVector44p_FPU,
+	M_MatrixMultVector44v_FPU,
+	M_MatrixCopy44_FPU,
+	M_MatrixToFloats44_FPU,
+	M_MatrixToDoubles44_FPU,
+	M_MatrixFromFloats44_FPU,
+	M_MatrixFromDoubles44_FPU,
+	M_MatrixRotateAxis44_FPU,
+	M_MatrixOrbitAxis44_FPU,
+	M_MatrixRotateEul44_FPU,
+	M_MatrixRotate44I_FPU,
+	M_MatrixRotate44J_FPU,
+	M_MatrixRotate44K_FPU,
+	M_MatrixTranslatev44_FPU,
+	M_MatrixTranslate44_FPU,
+	M_MatrixTranslateX44_FPU,
+	M_MatrixTranslateY44_FPU,
+	M_MatrixTranslateZ44_FPU,
+	M_MatrixScale44_FPU,
+	M_MatrixUniScale44_FPU,
+};

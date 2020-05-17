@@ -36,14 +36,12 @@
 .Sh DESCRIPTION
 The
 .Nm
-utility outputs information on
+utility prints the metadata from an
 .Xr AG_Object 3
-datafiles.
-.Pp
-It is possible for Agar datafiles to contain debugging information (markers).
-If this is the case,
-.Nm
-scans for primitive data elements and outputs them as well.
+archive file.
+If the object includes debugging data (see
+.Xr AG_SourceSetDebug 3 ) ,
+then it also dumps disassembled data.
 .\" .Sh ENVIRONMENT
 .\" .Sh FILES
 .Sh SEE ALSO

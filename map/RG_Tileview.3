@@ -1,0 +1,335 @@
+.\"
+.\" Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd May 16, 2005
+.Dt RG_TILEVIEW 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm RG_Tileview
+.Nd Agar-RG graphics editor
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/map/rg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget displays the contents of a
+.Xr RG_Tile 3
+and provides an interface for implementing different types of graphical editors
+and tools.
+Built-in graphical editors for tile pixmaps, sketches and features are provided.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "RG_Tileview *"
+.Fn RG_TileviewNew "void *parent" "RG_Tileset *ts" "Uint flags"
+.Pp
+.Ft "void"
+.Fn RG_TileviewSetTile "RG_Tileview *tv" "RG_Tile *tile"
+.Pp
+.Ft "void"
+.Fn RG_TileviewSetZoom "RG_Tileview *tv" "int new_zoom" "int adj_offset"
+.Pp
+.Ft "void"
+.Fn RG_TileviewSetAutoRefresh "RG_Tileview *tv" "int flag" "int rate"
+.Pp
+.nr nS 0
+The
+.Fn RG_TileviewNew
+function allocates, initializes, and attaches a
+.Nm
+widget, initially displaying the given
+.Fa tile .
+Acceptable
+.Fa flags
+include:
+.Bl -tag -width "RG_TILEVIEW_HIDE_CONTROLS "
+.It RG_TILEVIEW_NO_SCROLLING
+Disable panning on right click.
+.It RG_TILEVIEW_HIDE_CONTROLS
+Hide the control overlays.
+.It RG_TILEVIEW_NO_TILING
+Disable background tiling.
+.It RG_TILEVIEW_NO_EXTENT
+Don't display the boundary rectangle.
+.It RG_TILEVIEW_NO_GRID
+Disable the standard tile grid.
+.It RG_TILEVIEW_HFILL
+Expand horizontally in parent container.
+.It RG_TILEVIEW_VFILL
+Expand vertically in parent container.
+.It RG_TILEVIEW_EXPAND
+Shorthand for
+.Dv RG_TILEVIEW_HFILL | RG_TILEVIEW_VFILL .
+.El
+.Pp
+The
+.Fn RG_TileviewSetTile
+function changes the tile associated with the given
+.Nm .
+.Pp
+The
+.Fn RG_TileviewSetZoom
+function changes the display scaling factor to
+.Fa new_zoom
+(given in percents).
+If the
+.Fa adj_offset
+argument is non-zero, the display is offset to preserve centering.
+.Pp
+The
+.Fn RG_TileviewSetAutoRefresh
+function controls the auto-refresh setting.
+If
+.Fa flag
+is non-zero, the tile is automatically regenerated every
+.Fa rate
+milliseconds.
+.Sh PRIMITIVES
+.nr nS 1
+.Ft "void"
+.Fn RG_TileviewColor3i "RG_Tileview *tv" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft "void"
+.Fn RG_TileviewColor4i "RG_Tileview *tv" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft "void"
+.Fn RG_TileviewColor "RG_Tileview *tv" "AG_Color *color" "Uint8 alpha"
+.Pp
+.Ft "void"
+.Fn RG_TileviewAlpha "RG_Tileview *tv "Uint8 alpha"
+.Pp
+.Ft "void"
+.Fn RG_TileviewPixel "RG_Tileview *tv" "int x" "int y"
+.Pp
+.Ft "void"
+.Fn RG_TileviewPixelCached "RG_Tileview *tv" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft "void"
+.Fn RG_TileviewRect "RG_Tileview *tv" "int x" "int y" "int w" "int h"
+.Pp
+.Ft "void"
+.Fn RG_TileviewRectOut "RG_Tileview *tv" "int x" "int y" "int w" "int h"
+.Pp
+.Ft "void"
+.Fn RG_TileviewCircle "RG_Tileview *tv" "int x" "int y" "int r"
+.Pp
+.nr nS 0
+The
+.Fn RG_TileviewColor3i ,
+.Fn RG_TileviewColor4i ,
+.Fn RG_TileviewColor
+and
+.Fn RG_TileviewAlpha
+functions modify the current RGBA value describing the color to use for
+subsequent primitive calls.
+.Pp
+The
+.Fn RG_TileviewPixel
+function plots a pixel at the specified tile coordinates.
+The pixel will not be visible until the tile is regenerated.
+.Pp
+The
+.Fn RG_TileviewPixelCached
+function overwrites the pixel on the cached, generated tile used by
+.Nm ,
+as opposed to the source tile.
+The pixel will be visible immediately, but the source tile will be unchanged.
+.Pp
+The
+.Fn RG_TileviewRect
+function draws a filled rectangle of dimensions
+.Fa w ,
+.Fa h
+at tile coordinates
+.Fa x ,
+.Fa y .
+The
+.Fn RG_TileviewRectOut
+variant draws a rectangle outline.
+.Pp
+The
+.Fn RG_TileviewCircle
+function draws a circle outline of radius
+.Fa r
+with the origin at
+.Fa x ,
+.Fa y .
+.Sh GRAPHICAL CONTROLS
+.nr nS 1
+.Ft "RG_TileviewCtrl *"
+.Fn RG_TileviewAddCtrl "RG_Tileview *tv" "enum rg_tileview_ctrl_type type" "const char *fmt"
+.Pp
+.Ft "void"
+.Fn RG_TileviewDelCtrl "RG_Tileview *tv" "RG_TileviewCtrl *ctrl"
+.Pp
+.Ft "int"
+.Fn RG_TileviewInt "RG_Tileview *tv" "int nval"
+.Pp
+.Ft "Uint"
+.Fn RG_TileviewUint "RG_Tileview *tv" "int nval"
+.Pp
+.Ft "float"
+.Fn RG_TileviewFloat "RG_Tileview *tv" "int nval"
+.Pp
+.Ft "double"
+.Fn RG_TileviewDouble "RG_Tileview *tv" "int nval"
+.Pp
+.Ft "void"
+.Fn RG_TileviewSetInt "RG_Tileview *tv" "int nval" "int v"
+.Pp
+.Ft "void"
+.Fn RG_TileviewSetUint "RG_Tileview *tv" "int nval" "Uint v"
+.Pp
+.Ft "void"
+.Fn RG_TileviewSetFloat "RG_Tileview *tv" "int nval" "float v"
+.Pp
+.Ft "void"
+.Fn RG_TileviewSetDouble "RG_Tileview *tv" "int nval" "double v"
+.Pp
+.nr nS 0
+The
+.Nm
+widget implements generic graphical controls.
+It is used for moving and resizing pixmaps/sketches inside tiles and
+controlling particular features.
+A control may manipulate multiple integral and floating-point variables.
+.Pp
+The
+.Fn RG_TileviewAddCtrl
+function creates a new graphical control of the given type:
+.Bd -literal
+enum rg_tileview_ctrl_type {
+	RG_TILEVIEW_POINT,         /* Point (x,y) */
+	RG_TILEVIEW_RECTANGLE,     /* Rectangle (x,y,w,h) */
+	RG_TILEVIEW_RDIMENSIONS,   /* Rectangle (w,h) */
+	RG_TILEVIEW_CIRCLE         /* Circle (x,y,r) */
+};
+.Ed
+.Pp
+.Dv RG_TILEVIEW_POINT
+controls a single point value.
+It is used for setting the position of the origin of a tile, for instance.
+.Dv RG_TILEVIEW_RECTANGLE
+controls both the coordinates and geometry of a rectangle.
+It is used for things like pixmaps and sketches.
+.Dv RG_TILEVIEW_RDIMENSIONS
+controls the dimensions of a non-movable rectangle.
+It is used for changing the geometry of the tile itself when no sketches,
+pixmaps or features are selected.
+.Dv RG_TILEVIEW_CIRCLE
+controls the position and radius of a circle.
+.Pp
+The special format string
+.Fa fmt
+and subsequent arguments specify the variables to edit.
+Acceptable sequences include %i (int), %u (Uint), %f (float) and %d (double).
+Sequences such as %*i specify that the argument is a pointer to the given type.
+.Pp
+The
+.Fn RG_TileviewDelCtrl
+function destroys the given control.
+.Pp
+The remaining
+.Fn tileview_*
+and
+.Fn tileview_set_*
+functions respectively retrieve and modify the given value associated with the
+given control.
+.\" MANLINK(RG_TileviewTool)
+.\" MANLINK(RG_TileviewToolOps)
+.\" MANLINK(RG_TileviewBitmapToolOps)
+.\" MANLINK(RG_TileviewSketchToolOps)
+.Sh TOOLS
+.nr nS 1
+.Ft "void"
+.Fn RG_TileviewSelectTool "RG_Tileview *tv" "RG_TileviewTool *tool"
+.Pp
+.Ft "void"
+.Fn RG_TileviewUnselectTool "RG_Tileview *tv"
+.Pp
+.nr nS 0
+The
+.Fn RG_TileviewSelectTool
+and
+.Fn RG_TileviewUnselectTool
+functions select or deselect the current edition tool.
+.Pp
+The generic features of all edition tools are defined by the structure:
+.Bd -literal
+typedef struct rg_tileview_tool_ops {
+	const char *name;     /* Name of tool */
+	const char *desc;     /* Tool description */
+	AG_Size len;          /* Size of structure */
+	Uint flags;
+
+	int icon;             /* Specific icon (or -1) */
+	int cursor;           /* Specific cursor (or -1) */
+
+	void       (*init)(void *);
+	void       (*destroy)(void *);
+	AG_Window *(*edit)(void *);
+	void       (*selected)(void *);
+	void       (*unselected)(void *);
+} RG_TileviewToolOps;
+.Ed
+.Pp
+Two specialized derivates are available, one for bitmap-specific tools and
+another for vector-specific tools:
+.Bd -literal
+typedef struct rg_tileview_bitmap_tool_ops {
+	struct rg_tileview_tool_ops ops;
+	void (*mousebuttondown)(void *, int, int, int);
+	void (*mousebuttonup)(void *, int, int, int);
+	void (*mousemotion)(void *, int, int, int, int);
+} RG_TileviewBitmapToolOps;
+
+typedef struct rg_tileview_sketch_tool_ops {
+	struct rg_tileview_tool_ops ops;
+	void (*mousebuttondown)(void *, RG_Sketch *, float, float, int);
+	void (*mousebuttonup)(void *, RG_Sketch *, float, float, int);
+	void (*mousemotion)(void *, RG_Sketch *, float, float, float,
+	                    float);
+	int (*mousewheel)(void *, RG_Sketch *, int);
+	void (*keydown)(void *, RG_Sketch *, int, int);
+	void (*keyup)(void *, RG_Sketch *, int, int);
+} RG_TileviewSketchToolOps;
+.Ed
+.Sh EVENTS
+The
+.Nm
+widget does not generate any event.
+.Sh SEE ALSO
+.Xr RG 3 ,
+.Xr RG_Anim 3 ,
+.Xr RG_Feature 3 ,
+.Xr RG_Pixmap 3 ,
+.Xr RG_Sketch 3 ,
+.Xr RG_Texture 3 ,
+.Xr RG_Tile 3

@@ -6,10 +6,10 @@
 
 typedef struct ag_input_device {
 	struct ag_object _inherit;
+	void *_Nullable drv;	/* Associated graphics driver */
+	char *_Nullable desc;	/* User description */
 	Uint flags;
-	void *drv;		/* Associated graphics driver */
-	char *desc;		/* User description */
-	AG_EventQ events;	/* Queue of input events */
+	Uint32 _pad;
 } AG_InputDevice;
 
 #define AGINPUTDEV(obj) ((AG_InputDevice *)(obj))
@@ -17,8 +17,6 @@ typedef struct ag_input_device {
 __BEGIN_DECLS
 extern AG_ObjectClass agInputDeviceClass;
 extern AG_Object      agInputDevices;	/* Input devices VFS */
-
-AG_InputDevice *AG_InputDeviceNew(void *);
 __END_DECLS
 
 #include <agar/gui/close.h>

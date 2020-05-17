@@ -30,7 +30,6 @@ Agar::Console		T_PTROBJ
 Agar::Editable		T_PTROBJ
 Agar::FileDlg		T_PTROBJ
 Agar::Fixed		T_PTROBJ
-Agar::GLView		T_PTROBJ
 Agar::Graph		T_PTROBJ
 Agar::FixedPlotter	T_PTROBJ
 Agar::HSVPal		T_PTROBJ

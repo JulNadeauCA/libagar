@@ -1,0 +1,1436 @@
+.\" Copyright (c) 2018-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd May 26, 2018
+.Dt AG_WEB 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.5.1
+.Sh NAME
+.Nm AG_Web
+.Nd agar HTTP/1.1 application server
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/net/web.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+interface provides the components needed to create a multiprocess,
+privilege-separated HTTP/1.1 application server in C.
+.Nm
+is included in the Agar-Core library if compiled with
+.Sq --enable-web .
+.Pp
+An HTTP application server using
+.Nm
+might be deployed as a set of instances running behind an external facing
+HTTP server (such as Apache httpd with mod_proxy_balancer).
+.Nm
+may also be integrated into an existing application in need of an HTTP
+interface.
+.Pp
+.Nm
+spawns (and expires) one worker process per authenticated session.
+Queries can be processed (and responses compressed) in parallel.
+.Pp
+.Nm
+handles:
+.Bl -bullet -compact
+.It
+Authentication and session management
+.It
+Content and language negotiation
+.It
+Parsing of HTTP requests
+.It
+Forwarding of requests to the appropriate worker
+.It
+Chunking and
+.Xr zlib 3
+compression of worker responses
+.It
+Multiplexing Push events into text/event-stream
+.El
+.Pp
+The
+.Nm
+API also facilitates web development with a basic template engine and methods
+for input parsing and validation of URLs / query strings, JSON and FORMDATA.
+Forms encoded as multipart/form-data may include binary BLOBs.
+.Pp
+The GET argument "op" specifies the method that a client wishes to invoke.
+Methods execute in worker processes, and are organized in modules (see
+.Fn WEB_RegisterModule
+below).
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "void"
+.Fn WEB_Init "WEB_Application *appData" "int clusterID" "int eventSource"
+.Pp
+.Ft "void"
+.Fn WEB_RegisterModule "WEB_Module *mod"
+.Pp
+.Ft "void"
+.Fn WEB_CheckSignals "void"
+.Pp
+.Ft "void"
+.Fn WEB_Exit "int exitCode" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn WEB_SetLanguageFn "int (*fn)(const char *langCode, void *arg)" "void *arg"
+.Pp
+.Ft "void"
+.Fn WEB_SetMenuFn "void (*WEB_MenuFn)(WEB_Query *q, WEB_Variable *V, void *arg)" "void *arg"
+.Pp
+.Ft "void"
+.Fn WEB_SetProcTitle "const char *title" "..."
+.Pp
+.Ft "void"
+.Fn WEB_QueryLoop "const char *hostname" "const char *port" "const WEB_SessionOps *sessOps"
+.Pp
+.nr nS 0
+The
+.Fn WEB_Init
+routine initializes the
+.Nm
+library.
+.Fa clusterID
+is a number which should identify this instance uniquely in the cluster of
+servers.
+If the
+.Fa eventSource
+flag is non-zero, this instance will be able to serve requests for
+text/event-stream, multiplexing Push events to the client until the connection
+is closed.
+.\" MANLINK(WEB_Application)
+The
+.Fa app
+structure should be partially initialized:
+.Bd -literal
+typedef struct web_application {
+	const char *name;			/* Description */
+	const char *copyright;			/* Copyright notice */
+	const char *availLangs[WEB_LANGS_MAX];	/* Available languages */
+	const char *homeOp;			/* Default operation */
+	Uint flags;				/* Option flags */
+	void (*destroyFn)(void);
+	void (*logFn)(enum web_loglvl, const char *s);
+	/* ... */
+} WEB_Application;
+.Ed
+.Pp
+.Va name
+is an arbitrary string identifier for the application.
+.Va copyright
+is an optional copyright notice.
+.Va availLangs
+is a NULL-terminated array of ISO-639 language codes which are valid for
+this application.
+.Va homeOp
+specifies the default
+.Nm
+operation to invoke after a successful login.
+.Va flags
+should be set to zero (none are currently defined).
+.Va destroyFn
+is an optional cleanup function to be run when the server terminates.
+.Va logFn
+is an optional callback to receive log messages produced by
+.Fn WEB_Log*
+(see
+.Sq LOGGING
+section).
+.Pp
+For example:
+.Bd -literal
+WEB_Application myExampleApp = {
+	"ExampleApp",
+	"Copyright (c) my name",
+	{ "en", "es", "fr", NULL },  /* English, Spanish, French */
+	"main_welcome",
+	0,		/* flags */
+	NULL,		/* destroy */
+	NULL		/* log */
+};
+.Ed
+.Pp
+The
+.Fn WEB_RegisterModule
+function registers a new module (and invokes the module's
+.Fn init
+method).
+.\" MANLINK(WEB_Module)
+The
+.Fa mod
+argument must point to an initialized
+.Ft WEB_Module
+structure:
+.Bd -literal
+typedef struct web_module {
+	char *name;                     /* Short name */
+	char *icon;                     /* Icon (HTML) */
+	char *lname;                    /* Long name (HTML) */
+	char *desc;                     /* Description (HTML) */
+	int  (*init)(void *sess);       /* App initialization */
+	void (*destroy)(void);          /* App cleanup */
+	int  (*sessOpen)(void *sess);   /* Session opened */
+	void (*sessClose)(void *sess);  /* Session closed */
+	int (*indexFn)(WEB_Query *q);   /* Default op */
+	void (*menu)(WEB_Query *q,      /* Menu override */
+	             WEB_Variable *V);
+	WEB_MenuSection *menuSections;  /* Menu sections or NULL */
+	WEB_Command *commands;          /* Command map */
+} WEB_Module;
+.Ed
+.Pp
+The
+.Va name
+string is a short identifier and operation prefix for this module.
+It should not exceed
+.Dv WEB_OPNAME_MAX
+bytes in length.
+.Va icon
+is an optional icon for the module.
+.Va lname
+is the full title of the module to display to the user.
+.Va desc
+is a description of the module's operation.
+.Va icon ,
+.Va lname
+and
+.Va desc
+may contain HTML code.
+.Pp
+All function pointers below are optional and may be set to NULL.
+.Pp
+The
+.Fn init
+function is invoked after the module has been registered (typically when the
+application server is first started).
+.Fn destroy
+is invoked to clean up the module's resources (typically when the
+application server is shutting down).
+.Pp
+.Fn sessOpen
+is called when a new user session is created, where
+.Fa sess
+is a pointer to newly created
+.Ft WEB_Session .
+It is a good place for a module to initialize its session variables (see
+.Fn WEB_SetSV ) .
+On success, this function should return 0.
+If it returns -1, session creation is aborted (and the user will be unable
+to log in).
+.Pp
+The
+.Fn sessClose
+routine is called when a user closes a session.
+.Pp
+.Fn indexFn
+points to the default method to invoke when the "op" argument contains the
+module name but does not map onto a specific method.
+.Pp
+If set,
+.Fn menu
+will be called to render the menu entry for this module, allowing dynamically
+generated contents.
+This method is expected to write HTML code into
+.Fa V .
+.Pp
+.\" MANLINK(WEB_Command)
+The
+.Va commands
+table maps method names to a module's functions:
+.Bd -literal
+typedef struct web_command {
+	char *name;                         /* Method name */
+	int (*fn)(void *mod, WEB_Query *q); /* Function */
+	const char *type;                   /* MIME type (or NULL) */
+} WEB_Command;
+.Ed
+.Pp
+.Va name
+is the full method name (the matching "op" argument).
+.Va fn
+is a pointer to the function implementing the method.
+If
+.Va type
+is not NULL, it indicates the Content-Type of the data returned by the method.
+For example:
+.Bd -literal
+static WEB_Command mymodCommands[] = {
+	{ "mymod_hello",	mymod_hello,	"text/html",     "Pi" },
+	{ "mymod_image",	mymod_image,	"image/png",     "" },
+	{ "mymod_json",		mymod_json,	"[json]",        "" },
+	{ "mymod_status",	mymod_status,	"[json-status]", "" },
+	{ "mymod_customtype",	mymod_custtype,	NULL,            "" },
+	{ NULL,			NULL,		NULL,            "" }
+};
+.Ed
+.Pp
+For a method that does not output anything other than a return value and
+error code, the special type "[json-status]" can be used.
+On success, the JSON code {"code":0} will be emitted.
+If the function fails and return -1, the following will be emitted:
+.Bd -literal
+{ "code": -1,
+  "error": "<text from AG_GetError()>",
+  "backend_version": "<agar version>" }
+.Ed
+.Pp
+The special type "[json]" may be used if the function emits JSON content
+of its own.
+Then the following will be emitted:
+.Bd -literal
+{ "lang": <language code>,
+  <extra JSON emitted by function>,
+  "code": <return code from function>,
+  "error": "<text from AG_GetError() on failure>",
+  "backend_version": "<agar version on failure>" }
+.Ed
+.Pp
+If the
+.Va type
+field of a method is NULL, the function is invoked without any
+additional processing, and will be expected to set at least "Content-Type"
+using
+.Fn WEB_SetHeader
+or
+.Fn WEB_SetHeaderS .
+.Pp
+The
+.Va flags
+string defines per-method options.
+It may contain characters:
+.Bl -tag -width "`P' "
+.It Sq P
+Public method.
+Make accessible to both authenticated and non-authenticated clients
+(in the latter case,
+.Va q->sess
+will be NULL).
+.It Sq i
+Index method.
+Invoke by default when no specific "op" given.
+.El
+.Pp
+.Fn WEB_CheckSignals
+handles a previous SIGTERM, SIGPIPE and SIGCHLD.
+The SIGCHLD handler issues a control command to notify server processes
+that a particular worker process has terminated.
+Internally,
+.Nm
+invokes
+.Fn WEB_CheckSignals
+whenever system calls in the main server process are interrupted.
+Ideally, the same should be done at the application level when an interruptible
+system call fails with EINTR.
+This important for code executing under the main server process (e.g.,
+authentication module methods).
+This is not needed for code running inside worker processes (e.g., module
+methods).
+.Pp
+The
+.Fn WEB_Exit
+routine immediately cleans up resources and terminates the running process
+returning the specified exit code and optional message string.
+.Pp
+.Fn WEB_SetLanguageFn
+sets a callback routine (and optional user pointer) for switching between
+different locales based on language preferences.
+The
+.Fa langCode
+argument is an ISO-639 language code.
+.Pp
+.Fn WEB_SetMenuFn
+sets a callback routine (and optional user pointer) for constructing the menu.
+It is expected to return the dynamically-generated menu HTML into
+.Fa V .
+.Pp
+.Fn WEB_SetProcTitle
+set the process title (as shown by
+.Xr ps 1 )
+of the current worker process.
+If
+.Xr setproctitle 3
+is not available, the function is a no-op.
+.Pp
+.Fn WEB_QueryLoop
+is the standard event loop for the application server.
+It listens on one or more sockets under
+.Fa hostname
+and
+.Fa port
+as well as the control socket.
+.Fn WEB_QueryLoop
+loops reading HTTP queries and forwarding requests to worker processes,
+spawning new workers when needed.
+.Fa sessOps
+defines the authentication module to use (see
+.Sq AUTHENTICATION
+section for details).
+.Sh HTTP RESPONSE HEADERS
+.nr nS 1
+.Ft "void"
+.Fn WEB_SetCode "WEB_Query *q" "const char *code"
+.Pp
+.Ft "void"
+.Fn WEB_SetCompression "WEB_Query *q" "int enable" "int level"
+.Pp
+.Ft "void"
+.Fn WEB_SetHeader "WEB_Query *q" "const char *name" "const char *value" "..."
+.Pp
+.Ft "void"
+.Fn WEB_SetHeaderS "WEB_Query *q" "const char *name" "const char *value"
+.Pp
+.Ft "void"
+.Fn WEB_AppendHeader "WEB_Query *q" "const char *name" "const char *value" "..."
+.Pp
+.Ft "void"
+.Fn WEB_AppendHeaderS "WEB_Query *q" "const char *name" "const char *value"
+.Pp
+.Ft "WEB_Cookie *"
+.Fn WEB_SetCookie "WEB_Query *q" "const char *name" "const char *value" "..."
+.Pp
+.Ft "WEB_Cookie *"
+.Fn WEB_SetCookieS "WEB_Query *q" "const char *name" "const char *value"
+.Pp
+.Ft "WEB_Cookie *"
+.Fn WEB_GetCookie "WEB_Query *q" "const char *name"
+.Pp
+.Ft "void"
+.Fn WEB_DelCookie "WEB_Query *q" "const char *name"
+.Pp
+.nr nS 0
+.Fn WEB_SetCode
+sets the HTTP response code of the output.
+For example, "404 Not Found" or "500 Internal Server Error".
+When a method is successful, the default is "200 OK".
+.Pp
+.Fn WEB_SetCompression
+sets compression parameters for the response.
+The
+.Fa enable
+flag enables or disables compression, and
+.Fa level
+sets the
+.Xr zlib 3
+compression level from 1 to 9 (1 = Best speed, 9 = Best compression).
+.Pp
+.Fn WEB_SetHeader
+sets the value of the HTTP output header
+.Fa name
+to a new
+.Fa value .
+If the header already exists, its value is updated.
+Otherwise, a new header is created.
+.Fn WEB_AppendHeader
+appends the given header unconditionally (without checking for duplicates).
+.\" MANLINK(WEB_Cookie)
+.Pp
+.Fn WEB_SetCookie
+sets the HTTP cookie identified by
+.Fa name
+to the given
+.Fa value .
+If an error (such as overflow) occurs, it returns NULL.
+If the operation is successful, it returns a pointer to the following
+structure which can be used to change cookie attributes:
+.Bd -literal
+typedef struct web_cookie {
+	char name[WEB_COOKIE_NAME_MAX];      /* Name (RO) */
+	char value[WEB_COOKIE_VALUE_MAX];    /* Value */
+	char expires[WEB_COOKIE_EXPIRE_MAX]; /* Expiration date */
+	char domain[WEB_COOKIE_DOMAIN_MAX];  /* Domain match */
+	char path[WEB_COOKIE_PATH_MAX];      /* Path attribute */
+	Uint flags;
+#define WEB_COOKIE_SECURE 0x01               /* Set Secure attribute */
+} WEB_Cookie;
+.Ed
+.Pp
+The caller can modify any member except
+.Va name .
+.Pp
+.Fn WEB_GetCookie
+returns a pointer to the value of cookie
+.Fa name
+or NULL if no such cookie exists.
+.Pp
+.Fn WEB_DelCookie
+deletes the cookie identified by
+.Fa name .
+.P
+.Sh HTTP ARGUMENT PARSING
+.nr nS 1
+.Ft "const char *"
+.Fn WEB_Get "WEB_Query *q" "const char *key" "AG_Size maxLength"
+.Pp
+.Ft "const char *"
+.Fn WEB_GetTrim "WEB_Query *q" "const char *key" "AG_Size maxLength"
+.Pp
+.Ft "void"
+.Fn WEB_Set "WEB_Query *q" "const char *key" "const char *value" "..."
+.Pp
+.Ft "void"
+.Fn WEB_SetS "WEB_Query *q" "const char *key" "const char *value"
+.Pp
+.Ft "const char *"
+.Fn WEB_GetSV "WEB_Session *sess" "const char *key"
+.Pp
+.Ft "void"
+.Fn WEB_SetSV "WEB_Query *q" "const char *key" "const char *value" "..."
+.Pp
+.Ft "void"
+.Fn WEB_SetSV_S "WEB_Query *q" "const char *key" "const char *value"
+.Pp
+.Ft "void"
+.Fn WEB_SetSV_ALL "const WEB_SessionOps *sessOps" "const char *user" "const char *key" "const char *value"
+.Pp
+.Ft "void"
+.Fn WEB_Unset "WEB_Query *q" "const char *key"
+.Pp
+.Ft "int"
+.Fn WEB_GetBool "WEB_Query *q" "const char *key"
+.Pp
+.Ft "int"
+.Fn WEB_GetInt "WEB_Query *q" "const char *key" "int *dest"
+.Pp
+.Ft "int"
+.Fn WEB_GetIntR "WEB_Query *q" "const char *key" "int *dest" "int min" "int max"
+.Pp
+.Ft "int"
+.Fn WEB_GetIntRange "WEB_Query *q" "const char *key" "int *minValue" "const char *separator" "int *maxValue"
+.Pp
+.Ft "int"
+.Fn WEB_GetUint "WEB_Query *q" "const char *key" "Uint *dest"
+.Pp
+.Ft "int"
+.Fn WEB_GetUintR "WEB_Query *q" "const char *key" "Uint *dest" "Uint min" "Uint max"
+.Pp
+.Ft "int"
+.Fn WEB_GetUint64 "WEB_Query *q" "const char *key" "Uint64 *dest"
+.Pp
+.Ft "int"
+.Fn WEB_GetSint64 "WEB_Query *q" "const char *key" "Sint64 *dest"
+.Pp
+.Ft "int"
+.Fn WEB_GetEnum "WEB_Query *q" "const char *key" "Uint *dest" "Uint last"
+.Pp
+.Ft "int"
+.Fn WEB_GetFloat "WEB_Query *q" "const char *key" "float *dest"
+.Pp
+.Ft "int"
+.Fn WEB_GetDouble "WEB_Query *q" "const char *key" "double *dest"
+.Pp
+.Ft "char *"
+.Fn WEB_EscapeURL "WEB_Query *q" "const char *url"
+.Pp
+.Ft "char *"
+.Fn WEB_UnescapeURL "WEB_Query *q" "const char *url"
+.Pp
+.nr nS 0
+.Fn WEB_Get
+looks up the HTTP argument named
+.Fa key
+and returns a pointer to the value as a NUL-terminated string.
+If no such argument exists, it returns NULL (with a "Missing argument" error).
+.Pp
+The
+.Fn WEB_GetTrim
+variant of
+.Fn WEB_Get
+implicitely removes leading and trailing spaces (characters matching
+.Xr isspace 3 )
+from the argument value.
+.Pp
+.Fn WEB_Set
+modifies the in-memory value associated with argument
+.Fa key .
+If no such argument exists then one is created.
+.Fn WEB_Unset
+deletes the specified argument from memory.
+.Pp
+Session variables are key-value pairs associated with an authenticated user
+session.
+They are saved to disk and preserved across processes handling a same session.
+.Fn WEB_GetSV
+returns the value of the given session variable or NULL if no such variable
+exists.
+.Fn WEB_SetSV
+sets the session variable
+.Fa key
+to
+.Fa value .
+The
+.Fn WEB_SetSV_ALL
+variant updates all session variables named
+.Fa key
+to
+.Fa value
+for every session opened by
+.Fa user .
+.Pp
+.Fn WEB_GetBool
+returns 1 if argument
+.Fa key
+exists and its value is not the empty string (""), otherwise it returns 0.
+.Pp
+The following
+.Fn WEB_Get*
+functions convert arguments to numerical values, returning 0 on success.
+If no such argument exists, if the input is invalid or the number is out
+of range, these functions return -1 with an error message.
+.Pp
+.Fn WEB_GetInt
+converts argument
+.Fa key
+to a signed integer, returning the result in
+.Fa dest .
+The number must lie within the range
+.Dv INT_MIN
+to
+.Dv INT_MAX .
+The
+.Fn WEB_GetIntR
+variant fails if the number is lower than
+.Fa min
+or greater than
+.Fa max .
+.Pp
+The
+.Fn WEB_GetIntRange
+function parses a range, specified as a string of the form
+"<min><separator><max>", for example "1-10" (where
+.Fa separator
+would be "-").
+The first number is returned into
+.Fa minValue
+and second number into
+.Fa maxValue .
+The function returns 0 on success or -1 if the argument is missing or does not
+describe a valid range.
+.Pp
+.Fn WEB_GetUint
+converts argument
+.Fa key
+to an unsigned integer, returning the result in
+.Fa dest .
+The number must lie within the range 0 to
+.Dv UINT_MAX .
+The
+.Fn WEB_GetUintR
+variant fails if the number is lower than
+.Fa min
+or greater than
+.Fa max .
+.Pp
+.Fn WEB_Get[SU]int64
+converts argument
+.Fa key
+to a signed or unsigned 64-bit integer, returning the result in
+.Fa dest .
+The number must lie within the range
+.Dv [SU]INT64_MIN
+to
+.Dv [SU]INT64_MAX .
+.Pp
+The
+.Fn WEB_GetEnum
+function converts argument
+.Fa key
+to an unsigned integer greater than 0 and less than or equal to
+.Fa last .
+.Pp
+.Fn WEB_GetFloat
+and
+.Fn WEB_GetDouble
+convert the argument to a single or double-precision floating point number
+and return the value in
+.Fa dest .
+.Pp
+The
+.Fn WEB_EscapeURL
+function turns URL-unsafe characters (per RFC1738) from
+.Fa url
+into "%02x" format and returns a newly allocated string
+with the result.
+.Fn WEB_UnescapeURL
+transforms all instances of "%02x" escaped characters in
+.Fa url
+back to the original character (except NUL which would be returned as '_')
+and returns a newly allocated string with the result.
+.Sh LOGGING
+.nr nS 1
+.Ft "void"
+.Fn WEB_SetLogFile "const char *path"
+.Pp
+.Ft "void"
+.Fn WEB_Log "enum web_loglvl logLevel" "const char *msg" "..."
+.Pp
+.Ft "void"
+.Fn WEB_LogS "enum web_loglvl logLevel" "const char *msg" 
+.Pp
+.Ft "void"
+.Fn WEB_LogErr "const char *msg" "..."
+.Pp
+.Ft "void"
+.Fn WEB_LogWarn "const char *msg" "..."
+.Pp
+.Ft "void"
+.Fn WEB_LogInfo "const char *msg" "..."
+.Pp
+.Ft "void"
+.Fn WEB_LogNotice "const char *msg" "..."
+.Pp
+.Ft "void"
+.Fn WEB_LogDebug "const char *msg" "..."
+.Pp
+.Ft "void"
+.Fn WEB_LogWorker "const char *msg" "..."
+.Pp
+.Ft "void"
+.Fn WEB_LogEvent "const char *msg" "..."
+.Pp
+.nr nS 0
+The
+.Fn WEB_SetLogFile
+function sets an alternate destination log file (by default the application
+name + ".log" in the working directory).
+.Pp
+The
+.Fn WEB_Log
+and
+.Fn WEB_LogS
+functions generate a log entry with the given
+.Fa logLevel .
+That the log file is unbuffered.
+Log levels include:
+.Bd -literal
+enum web_loglvl {
+	WEB_LOG_EMERG,   /* General panic condition */
+	WEB_LOG_ALERT,   /* Immediate attention required */
+	WEB_LOG_CRIT,    /* Critical conditions, I/O errors */
+	WEB_LOG_ERR,     /* General errors */
+	WEB_LOG_WARNING, /* Warning messages */
+	WEB_LOG_NOTICE,  /* Condition should be handled specially */
+	WEB_LOG_INFO,    /* Informational messages */
+	WEB_LOG_DEBUG,   /* Debugging information */
+	WEB_LOG_QUERY,   /* HTTP query (e.g., GET, POST) parsing */
+	WEB_LOG_WORKER,  /* Errors specific to worker processes */
+	WEB_LOG_EVENT    /* Errors related to Push events */
+};
+.Ed
+.Pp
+Alternatively, the
+.Fn WEB_Log<Level>
+shorthand routines can be used to generate a log message under the implied
+log level.
+.Sh HTTP RESPONSE OUTPUT
+.nr nS 1
+.Ft "void"
+.Fn WEB_Write "WEB_Query *q" "const char *data" "AG_Size len"
+.Pp
+.Ft "void"
+.Fn WEB_PutC "WEB_Query *q" "char c"
+.Pp
+.Ft "void"
+.Fn WEB_PutS "WEB_Query *q" "const char *s"
+.Pp
+.Ft "void"
+.Fn WEB_Printf "WEB_Query *q" "const char *format" "..."
+.Pp
+.Ft "void"
+.Fn WEB_PutJSON "WEB_Query *q" "const char *key" "const char *data" "..."
+.Pp
+.Ft "void"
+.Fn WEB_PutJSON_S "WEB_Query *q" "const char *key" "const char *data"
+.Pp
+.Ft "void"
+.Fn WEB_PutJSON_NoHTML_S "WEB_Query *q" "const char *key" "const char *data"
+.Pp
+.Ft "void"
+.Fn WEB_OutputHTML "WEB_Query *q" "const char *template"
+.Pp
+.Ft "void"
+.Fn WEB_PutJSON_HTML "WEB_Query *q" "const char *key" "const char *document"
+.Pp
+.Ft "void"
+.Fn WEB_OutputError "WEB_Query *q" "const char *msg"
+.Pp
+.Ft "void"
+.Fn WEB_SetError "const char *msg" "..."
+.Pp
+.Ft "void"
+.Fn WEB_SetErrorS "const char *msg"
+.Pp
+.Ft "void"
+.Fn WEB_SetSuccess "const char *msg" "..."
+.Pp
+.Ft "WEB_Variable *"
+.Fn WEB_VAR_New "const char *key"
+.Pp
+.Ft "void"
+.Fn WEB_VAR_Grow "WEB_Variable *v" "AG_Size newLen"
+.Pp
+.Ft "WEB_Variable *"
+.Fn WEB_VAR_Set "const char *key" "const char *value" "..."
+.Pp
+.Ft "WEB_Variable *"
+.Fn WEB_VAR_SetS "const char *key" "const char *value"
+.Pp
+.Ft "WEB_Variable *"
+.Fn WEB_VAR_SetS_NODUP "const char *key" "char *value"
+.Pp
+.Ft "WEB_Variable *"
+.Fn WEB_VAR_SetGlobal "const char *key" "const char *value" "..."
+.Pp
+.Ft "WEB_Variable *"
+.Fn WEB_VAR_SetGlobalS "const char *key" "const char *value"
+.Pp
+.Ft void
+.Fn WEB_VAR_Cat "WEB_Variable *v" "const char *value" "..."
+.Pp
+.Ft void
+.Fn WEB_VAR_CatS "WEB_Variable *v" "const char *value"
+.Pp
+.Ft void
+.Fn WEB_VAR_CatS_NODUP "WEB_Variable *v" "char *value"
+.Pp
+.Ft void
+.Fn WEB_VAR_CatS_NoHTML "WEB_Variable *v" "const char *value"
+.Pp
+.Ft void
+.Fn WEB_VAR_CatC "WEB_Variable *v" "const char c"
+.Pp
+.Ft void
+.Fn WEB_VAR_CatN "WEB_Variable *v" "const void *src" "AG_Size len"
+.Pp
+.Ft void
+.Fn WEB_VAR_CatN_NoNUL "WEB_Variable *v" "const void *src" "AG_Size len"
+.Pp
+.Ft void
+.Fn WEB_VAR_CatJS "WEB_Variable *v" "const char *value"
+.Pp
+.Ft void
+.Fn WEB_VAR_CatJS_NODUP "WEB_Variable *v" "char *value"
+.Pp
+.Ft void
+.Fn WEB_VAR_CatJS_NoHTML "WEB_Variable *v" "const char *value"
+.Pp
+.Ft void
+.Fn WEB_VAR_CatJS_NoHTML_NODUP "WEB_Variable *v" "char *value"
+.Pp
+.Ft "char *"
+.Fn WEB_VAR_Get "const char *key"
+.Pp
+.Ft void
+.Fn WEB_VAR_Wipe "const char *key"
+.Pp
+.Ft void
+.Fn WEB_VAR_Unset "const char *key"
+.Pp
+.Ft int
+.Fn WEB_VAR_Defined "const char *key"
+.Pp
+.Ft void
+.Fn WEB_VAR_Free "WEB_Variable *v"
+.Pp
+.nr nS 0
+The following routines produce HTTP response data.
+Upon query completion, this data will be compressed, chunked and written
+back to the HTTP client.
+.Pp
+.Fn WEB_Write
+appends
+.Fa len
+bytes from
+.Fa data
+to the HTTP response buffer.
+.Fn WEB_PutC
+writes a single character
+.Fa c .
+.Fn WEB_PutS
+writes a NUL-terminated string
+.Fa s .
+.Fn WEB_Printf
+produces
+.Xr printf 3
+formatted text.
+.Pp
+.Fn WEB_PutJSON
+produces a JSON data pair from
+.Fa key
+and
+.Fa data .
+.Fn WEB_PutJSON
+escapes
+.Fa data
+for double quotes, backslashes, "\\r", "\\n" and "\\t".
+The
+.Fn WEB_PutJSON_NoHTML_S
+variant additionally escapes "<" to "&lt;" and ">" to "&gt;".
+.Pp
+The
+.Fn WEB_OutputHTML
+function invokes the template engine to produce text/html output from
+the contents of a
+.Ft template
+file with "$variable" references substituted with the current set of
+.Ft WEB_Variable .
+The template file should be located under
+.Pa "WEB_PATH_HTML/<template>.html.<lang>",
+where lang is the ISO-639 language code for the current session.
+If no such template file exists, it fails and returns -1.
+.Pp
+The
+.Fn WEB_PutJSON_HTML
+function invokes the template engine to produce JSON-encapsulated text/html
+output from
+.Ft template
+and the current set of
+.Ft WEB_Variable .
+If no such template file exists, it fails and returns -1.
+.Pp
+.Fn WEB_OutputError
+outputs a complete text/html document with a body displaying error message
+.Fa msg .
+.Fn WEB_SetError
+sets the $_error variable to contain a dismissible HTML error message.
+.Fn WEB_SetSuccess
+sets the $_error variable to contain a dismissible HTML "success" message.
+.\" MANLINK(WEB_Variable)
+.Pp
+The
+.Ft WEB_Variable
+structure represents a variable holding a C string.
+In template files, variables are referenced as "$variable".
+Variable values are typically set by a method handler prior to invoking
+.Fn WEB_OutputHTML .
+Variables are linked to the current
+.Ft WEB_Query ,
+except for globals which remain persistent across queries.
+.Bd -literal
+typedef struct web_variable {
+	char	 key[WEB_VAR_NAME_MAX]; /* Name ("\\0" = anonymous) */
+	char	*value;                 /* Value (C string) */
+	AG_Size	 len;                   /* Content length (characters) */
+	AG_Size	 bufSize;               /* Buffer size */
+	int	 global;                /* Persistent across queries */
+	AG_TAILQ_ENTRY(web_variable) vars;
+} WEB_Variable;
+.Ed
+.Pp
+.Fn WEB_VAR_New
+returns a pointer to a newly allocated
+.Ft WEB_Variable
+of an undefined value.
+If the
+.Fa key
+argument is NULL, it returns an anonymous variable which must be freed
+explicitely by the caller after use.
+.Pp
+.Fn WEB_VAR_Grow
+pre-allocates up to
+.Fa newLen
+bytes for the value of
+.Fa v .
+.Pp
+.Fn WEB_VAR_Set
+sets the value of variable
+.Fa key
+to
+.Fa value .
+If no such variable exists then a new one is created.
+.Pp
+The
+.Fn WEB_VAR_SetS_NODUP
+variant accepts a pointer to user memory which must remain accessible
+and valid for as long as the variable is in use.
+.Pp
+The scope of
+.Ft WEB_Variable
+variables is limited to the current
+.Ft WEB_Query .
+However, global variables which will remain persistent across queries can
+be declared using
+.Fn WEB_VAR_SetGlobal .
+Since globals are allocated once in the parent process, globals can be shared
+between processes without extra memory usage.
+.Pp
+The
+.Fn WEB_VAR_Cat
+and
+.Fn WEB_VAR_CatS
+routines append a string to an existing variable.
+The
+.Fn WEB_VAR_CatS_NODUP
+variant frees
+.Fa value
+after appending its contents.
+The
+.Fn WEB_VAR_CatS_NoHTML
+variant escapes "<" to "&lt;" and ">" to "&gt;".
+.Pp
+.Fn WEB_VAR_CatC
+appends a single character
+.Fa c
+to the value of variable
+.Fa v .
+.Pp
+.Fn WEB_VAR_CatN
+grows the value of
+.Fa v
+by
+.Fa len
+bytes, performs
+.Xr memcpy 3
+and NUL-terminates the result (the
+.Fn WEB_VAR_CatN_NoNUL
+variant doesn't).
+.Pp
+.Fn WEB_VAR_CatJS
+appends
+.Fa value
+to JSON data in
+.Fa v ,
+escaping any backslash and double quote characters.
+The
+.Fn WEB_VAR_CatJS_NoHTML
+variant also escapes "<" to "&lt;" and ">" to "&gt;".
+The
+.Fn WEB_VAR_CatJS_NODUP
+and
+.Fn WEB_VAR_CatJS_NoHTML_NODUP
+variants both free
+.Fa s
+after concatenation.
+.Pp
+.Fn WEB_VAR_Get
+looks for a variable
+.Fa key
+and returns a pointer to its value.
+If no such variable is defined, it returns NULL.
+.Pp
+.Fn WEB_VAR_Wipe
+trivially overwrites the in-memory value of the variable.
+.Pp
+.Fn WEB_VAR_Unset
+deletes and frees the variable named
+.Fa key ,
+if it exists.
+.Pp
+.Fn WEB_VAR_Defined
+returns 1 if the given variable exists, otherwise 0.
+.Pp
+.Fn WEB_VAR_Free
+frees all resources allocated by an anonymous variable
+.Fa v .
+It is used internally by
+.Fn WEB_VAR_Unset
+and called automatically on all variables after the
+.Ft WEB_Query
+has been processed.
+.Pp
+This example sets variables "username" and "password" and generates
+HTML using the "login_form" template.
+Instances of "$username" and "$password" in login_form will be substituted
+for "nobody" and "test1234".
+.Bd -literal
+	WEB_VAR_SetS("username", "nobody");
+	WEB_VAR_SetS("password", "test1234");
+	WEB_OutputHTML("login_form");
+	WEB_VAR_Wipe("password");
+.Ed
+.Pp
+Anonymous variables must be freed explicitely by the caller:
+.Bd -literal
+	WEB_VAR *v;
+	v = WEB_VAR_SetS(NULL, "Hello, ");      /* Anonymous variable */
+	WEB_VAR_CatS(v, "world!");
+	WEB_VAR_Free(v);
+.Ed
+.\" MANLINK(WEB_SessionOps)
+.Sh AUTHENTICATION
+The
+.Ft sessOps
+argument passed to
+.Fn WEB_QueryLoop
+sets the effective authentication module.
+The argument must point to an initialized
+.Ft WEB_SessionOps
+structure:
+.Bd -literal
+typedef struct web_session_ops {
+	const char *name;             /* Session class name */
+	AG_Size size;                 /* Structure size */
+	Uint flags;
+#define WEB_SESSION_PREFORK_AUTH 0x01 /* Call auth() before fork() */
+	time_t sessTimeout;           /* Session inactivity (s) */
+	time_t workerTimeout;         /* Worker inactivity (s) */
+
+	void (*init)(void *sess);
+	void (*destroy)(void *sess);
+	int  (*load)(void *sess, AG_DataSource *);
+	void (*save)(void *sess, AG_DataSource *);
+	int  (*auth)(void *sess, const char *user, const char *pass);
+	WEB_CommandPreAuth preAuthCmds[10];
+	int  (*sessOpen)(void *sess, const char *user);
+	void (*sessRestored)(void *sess, const char *user);
+	void (*sessClose)(void *sess);
+	void (*sessExpired)(void *sess);
+	void (*beginFrontQuery)(WEB_Query *q, const char *op);
+	void (*loginPage)(WEB_Query *q);
+	void (*logout)(WEB_Query *q);
+	void (*addSelectFDs)(void *sess, fd_set *rd, fd_set *wr, int *max);
+	void (*procSelectFDs)(void *sess, fd_set *rd, fd_set *wr);
+} WEB_SessionOps;
+.Ed
+.Pp
+The
+.Va name
+field is a string identifier for the authentication module.
+.Va size
+is the size in bytes of the structure describing a session instance
+(which may be a
+.Ft WEB_Session
+structure or a user-defined structure derived from it).
+Currently the only
+.Va flags
+option is
+.Dv WEB_SESSION_PREFORK_AUTH .
+If this is set, the
+.Fn auth
+method will run in the parent process.
+Otherwise, a worker process will be spawned first with
+.Xr fork 2 ,
+and the
+.Fn auth
+code will execute in the worker process.
+Pre-fork auth is best for fast, local file-based authentication methods,
+and auth() running in the worker process is best for network-based auth methods.
+.Pp
+.Va sessTimeout
+sets the session inactivity timeout in seconds.
+.Va workerTimeout
+sess the worker process inactivity timeout in seconds.
+.Pp
+.Fn init
+initializes a the session instance structure.
+.Fn destroy
+releases resources allocated by a session instance.
+.Fn load
+and
+.Fn save
+serialize the session instance structure to machine-independent format.
+.Pp
+The
+.Fn auth
+operation verifies the given username and password.
+On failure it should return -1 and set an error message with
+.Xr AG_SetError 3 .
+It is expected to return 0 on success.
+If the
+.Dv WEB_SESSION_PREFORK_AUTH
+option is set, the operation will run in the parent server process
+(best for fast, local auth methods).
+Otherwise, it will run in a worker process which will terminate should
+authentication fail (best for network-bound auth methods).
+.Pp
+The following
+.Va preAuthCmds[]
+array maps the URL-provided "op" onto a method which will execute in the
+parent server process (as opposed to running inside a worker process).
+This is useful for pre-auth operations such as generating CAPTCHAs,
+processing POSTDATA from a user-submitted registration form, e-mail or
+mobile verification routines, and handling of password recovery requests.
+.Pp
+The
+.Fn sessOpen
+method is invoked after successful authentication (the
+.Fa s
+argument will point to the newly allocated session instance structure).
+.Fn sessRestored
+is invoked whenever a previously expired worker process restarts, after
+the saved session state has been successfully recovered from disk.
+.Fn sessClose
+is called when a session terminates and is about to be deleted from disk.
+.Fn sessExpired
+is called whenever a session expires due to its inactivity timeout.
+.Pp
+The
+.Fn beginFrontQuery
+routine is invoked as a prologue to any of the
+.Va preAuthCmds[]
+methods.
+It is useful for initializing common
+.Ft WEB_Variable
+elements such as $_user and $_theme
+(see
+.Sq HTTP RESPONSE OUTPUT
+section).
+.Pp
+.Fn loginPage
+returns text/html content to show unauthenticated users (typically a login
+form).
+The
+.Fn logout
+operation is invoked when a user logs out.
+It is expected to clear the session ID from the "sess" cookie.
+.Pp
+Authentication modules which use a polling mechanism such as
+.Xr select 2
+should implement
+.Fn addSelectFDs .
+This method registers extra file descriptors to be watched for read/write
+conditions.
+.Fn procSelectFDs
+is invoked to process a read or write condition on a watched file descriptor.
+.Pp
+The code below illustrates a basic authentication module.
+It declares a session structure derived from
+.Ft WEB_Session .
+It also provides a backend for a registration form (regChallenge, regFinish
+and regConfirm).
+.Bd -literal
+/* Per session data */
+typedef struct mySiteSession {
+	struct web_session _inherit;  /* WEB_Session->MySiteSession */
+	char username[32];            /* Authenticated username */
+	time_t lastLogin;             /* Last login */
+	/* ... */
+} MySiteSession;
+
+static void
+Init(void *pSess)
+{
+	MySiteSession *S = pSess;
+	S->username[0] = '\\0';
+	S->lastLogin = 0;
+}
+static void
+Load(void *pSess, AG_DataSource *ds)
+{
+	MySiteSession *S = pSess;
+	S->lastLogin = (time_t)AG_ReadUint64(ds);
+}
+static void
+Save(void *pSess, AG_DataSource *ds)
+{
+	MySiteSession *S = pSess;
+	AG_WriteUint64(ds, S->lastLogin);
+}
+static int
+Auth(void *pSess, const char *user, const char *password)
+{
+	return AuthSuccessful(user, password) ? 0 : -1;
+}
+static void
+AuthRegChallenge(WEB_Query *q)
+{
+	GenerateCaptchaGif();
+	WEB_Write(q, captchaGif, captchaGifSize);
+}
+static void
+AuthRegFinish(WEB_Query *q)
+{
+	/* Process POSTDATA from registration form and create account */
+}
+static void
+AuthRegConfirm(WEB_Query *q)
+{
+	/* Complete e-mail or mobile verification */
+}
+static int
+SessOpen(void *pSess, const char *username)
+{
+	MySiteSession *S = pSess;
+	time_t t;
+
+	Strlcpy(S->username, username, sizeof(S->username));
+	time(&t);
+	S->lastLogin = t;
+	WEB_LogInfo("User %s logged in", username);
+	return (0);
+}
+static void
+SessRestored(void *pSess, const char *username)
+{
+	MySiteSession *S = pSess;
+	WEB_Session *WS = pSess;
+
+	Strlcpy(S->username, username, sizeof(S->username));
+	WEB_LogInfo("User %s recovered session %s", username, WS->id);
+}
+static void
+SessClose(void *pSess)
+{
+	MySiteSession *S = pSess;
+	WEB_LogInfo("User %s logged out", S->username);
+}
+static void
+BeginPreAuthCmd(WEB_Query *q, const char *op)
+{
+	/* Set common variables for all preAuthCmds[] methods */
+	WEB_VAR_SetS("_admin", "webmaster@example.com");
+	WEB_VAR_SetS("_user", "");
+	WEB_VAR_SetS("_theme", "Default");
+	WEB_VAR_SetS("_modules",
+	    "<li><a href='/'>Sign in</a></li>"
+	    "<li><a href='/register.html'>Create account</a></li>");
+}
+static void
+LoginPage(WEB_Query *q)
+{
+	const char *user = WEB_Get(q, "username", 32);
+	const char *pass = WEB_Get(q, "password", 32);
+	const char *op = WEB_Get(q, "op", WEB_OPNAME_MAX);
+
+	WEB_VAR_SetS("login_username", (user) ? user : "");
+	WEB_VAR_SetS("op", (op) ? op : "main_index");
+
+	WEB_SetCode(q, "200 OK");
+	WEB_SetHeaderS(q, "Vary", "accept-language,Accept-Encoding,"
+	                          "User-Agent");
+	WEB_SetHeaderS(q, "Last-Modified", q->date);
+	WEB_SetHeaderS(q, "Content-Type", "text/html; charset=utf8");
+	WEB_SetHeaderS(q, "Content-Language", q->lang);
+	WEB_SetHeaderS(q, "Cache-Control", "no-cache, no-store, "
+	                                   "must-revalidate");
+	WEB_SetHeaderS(q, "Expires", "0");
+	WEB_OutputHTML(q, "loginPage");
+}
+static void
+Logout(WEB_Query *q)
+{
+	WEB_Cookie *ck;
+
+	/* Clear the session ID cookie */
+	ck = WEB_SetCookieS(q, "sess", "");
+	ck->path[0] = '/';
+	ck->path[1] = '\\0';
+
+	WEB_OutputHTML(q, "logoutPage");
+}
+
+WEB_SessionOps mySiteSessionOps = {
+	"My Site's Auth Module",
+	sizeof(MySiteSession),
+	WEB_SESSION_PREFORK_AUTH, /* Invoke auth() before fork */
+	7*24*60*60,               /* Session inactivity timeout (s) */
+	1*60,                     /* Worker inactivity timeout (s) */
+	Init,
+	NULL,                     /* destroy */
+	Load,
+	Save,
+	Auth,
+	{
+		{ "regChallenge", AuthRegChallenge, "image/gif" },
+		{ "regFinish",    AuthRegFinish,    "text/html" },
+		{ "regConfirm",   AuthRegConfirm,   "text/html" },
+		/*
+		 * Declare more methods to handle password recovery
+		 * and other administrative functions.
+		 */
+		{ NULL,           NULL,             NULL        }
+	},
+	SessOpen,
+	SessRestored,
+	SessClose,
+	NULL,             /* sessExpired */
+	BeginPreAuthCmd,
+	LoginPage,
+	Logout,
+	NULL,             /* addSelectFDs */
+	NULL              /* procSelectFDs */
+};
+.Ed
+.Sh PUSH EVENTS
+.nr nS 1
+.Ft "int"
+.Fn WEB_PostEvent "const char *match" "WEB_EventFilterFn filterFn" "const void *filterFnArg" "const char *type" "const char *data" "..."
+.Pp
+.Ft "int"
+.Fn WEB_PostEventS "const char *match" "WEB_EventFilterFn filterFn" "const void *filterFnArg" "const char *type" "const char *data"
+.Pp
+.nr nS 0
+.Fn WEB_PostEvent
+generates a Server-Sent (Push) Event.
+The
+.Fa match
+argument indicates which of the running event listeners should receive
+the event:
+.Pp
+.Bl -tag -width " username " -compact
+.It "*"
+All active event sources.
+.It "username"
+All sessions by the given user.
+.It "L=lang"
+All sessions in specified language.
+.It "S=id"
+The session with the given session ID.
+.It Dv NULL
+Based on return value of
+.Fa filterFn .
+.El
+.\" MANLINK(WEB_EventFilterFn)
+.Pp
+A custom event filter can be used by passing NULL to
+.Fa match
+and having
+.Fa filterFn
+point to a compare function of the form:
+.Bd -literal
+typedef int (*WEB_EventFilterFn)(char *sessID, char *user,
+                                 char *langCode, const void *arg);
+.Ed
+.Pp
+The compare function will be invoked for each running session.
+If its returns 0, the event will be forwarded to the associated event listener.
+.Fa filterFnArg
+is an optional user pointer (passed to
+.Fa arg
+of the compare function).
+.Fa type
+and
+.Fa data
+specify the contents of the Push event.
+.Nm
+automatically adds and increments the "id" field.
+It also generates "ping" events at regular intervals.
+.Sh SEE ALSO
+.Xr AG_Intro 3
+.Sh HISTORY
+The
+.Nm
+interface is based on libpercgi, which was developed over at Csoft.net
+Hosting (https://csoft.net/) in 2003 and originally used CGI/FastCGI.
+It was rewritten to become a standalone framework and finally integrated
+in Agar 1.5.1 as a component of
+.Em ag_core .
+It was moved to a separate library
+.Em ag_net
+in Agar 1.6.0.

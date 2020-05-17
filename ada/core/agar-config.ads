@@ -3,7 +3,7 @@
 --                          A G A R . C O N F I G                           --
 --                                 S p e c                                  --
 --                                                                          --
--- Copyright (c) 2018, Julien Nadeau Carriere (vedge@hypertriton.com)       --
+-- Copyright (c) 2018-2020, Julien Nadeau Carriere (vedge@csoft.net)        --
 -- Copyright (c) 2010, coreland (mark@coreland.ath.cx)                      --
 --                                                                          --
 -- Permission to use, copy, modify, and/or distribute this software for any --
@@ -39,13 +39,11 @@ package Agar.Config is
   package C renames Interfaces.C;
   package CS renames Interfaces.C.Strings;
 
-  function AG_ConfigFile
-    (Path_Key  : in CS.chars_ptr;
-     Name      : in CS.chars_ptr;
-     Extension : in CS.chars_ptr;
+  function AG_ConfigFind
+    (Name      : in CS.chars_ptr;
      Dest_Path : in CS.chars_ptr;
      Dest_Len  : in C.size_t) return C.int
-    with Import, Convention => C, Link_Name => "AG_ConfigFile";
+    with Import, Convention => C, Link_Name => "AG_ConfigFind";
 
   function AG_ConfigLoad return C.int
     with Import, Convention => C, Link_Name => "AG_ConfigLoad";

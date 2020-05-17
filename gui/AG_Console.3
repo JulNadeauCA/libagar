@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -37,14 +37,10 @@
 .Ed
 .Sh DESCRIPTION
 .\" IMAGE(http://libagar.org/widgets/AG_Console.png, "The AG_Console widget")
-The
 .Nm
-widget displays a scrollable list of messages in log format.
-Messages may be copied to the clipboard or exported to a file.
-After a message has been appended to the log, its text (and other
-attributes) can be changed.
-By default, the display automatically scrolls down to make new messages
-visible.
+displays a scrollable list of messages in a log format.
+Log entries can be copied to the clipboard or exported to a file.
+The contents and attributes of existing log entries can be updated dynamically.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -53,12 +49,6 @@ visible.
 .nr nS 1
 .Ft "AG_Console *"
 .Fn AG_ConsoleNew "AG_Widget *parent" "Uint flags"
-.Pp
-.Ft "void"
-.Fn AG_ConsoleSetPadding "AG_Console *cons" "int padding"
-.Pp
-.Ft "void"
-.Fn AG_ConsoleSetFont "AG_Console *cons" "AG_Font *font"
 .Pp
 .nr nS 0
 The
@@ -73,43 +63,34 @@ include:
 .It AG_CONSOLE_NOAUTOSCROLL
 Don't scroll automatically to make newly inserted lines visible.
 .It AG_CONSOLE_NOPOPUP
-Disable contextual popup menus.
+Disable the right-click contextual popup menu (with Copy, Select All and Export functions).
 .It AG_CONSOLE_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
+Expand horizontally in parent container.
 .It AG_CONSOLE_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
+Expand vertically in parent container.
 .It AG_CONSOLE_EXPAND
 Shorthand for
-.Dv AG_CONSOLE_HFILL|AG_CONSOLE_VFILL .
+.Dv AG_CONSOLE_HFILL | AG_CONSOLE_VFILL .
 .El
-.Pp
-The
-.Fn AG_ConsoleSetPadding
-function sets the padding around messages in pixels.
-.Pp
-.Fn AG_ConsoleSetFont
-configures an alternate font for the
-.Nm
-messages (see
-.Xr AG_FetchFont 3 ) .
 .Sh MESSAGES
 .nr nS 1
 .Ft "AG_ConsoleLine *"
 .Fn AG_ConsoleMsg "AG_Console *cons" "const char *format" "..."
 .Pp
 .Ft "AG_ConsoleLine *"
-.Fn AG_ConsoleMsgS "AG_Console *cons" "const char *text"
+.Fn AG_ConsoleMsgS "AG_Console *cons" "const char *s"
+.Pp
+.Ft "AG_ConsoleLine *"
+.Fn AG_ConsoleBinary "AG_Console *cons" "const void *data" "AG_Size data_size" "const char *label" "const char *format"
 .Pp
 .Ft "void"
-.Fn AG_ConsoleMsgEdit "AG_ConsoleLine *line" "const char *newText"
+.Fn AG_ConsoleMsgEdit "AG_ConsoleLine *line" "const char *s"
+.Pp
+.Ft "void"
+.Fn AG_ConsoleMsgCatS "AG_ConsoleLine *line" "const char *s"
 .Pp
 .Ft "void"
 .Fn AG_ConsoleMsgPtr "AG_ConsoleLine *line" "void *ptr"
-.Pp
-.Ft "void"
-.Fn AG_ConsoleMsgIcon "AG_ConsoleLine *line" "int surface"
 .Pp
 .Ft "void"
 .Fn AG_ConsoleMsgColor "AG_ConsoleLine *line" "const AG_Color *c"
@@ -118,51 +99,138 @@ messages (see
 .Fn AG_ConsoleClear "AG_Console *cons"
 .Pp
 .Ft "char *"
-.Fn AG_ConsoleExportText "AG_Console *cons" "int nativeNewlines"
+.Fn AG_ConsoleExportText "AG_Console *cons" "enum ag_newline_type newline"
+.Pp
+.Ft "char *"
+.Fn AG_ConsoleExportBuffer "AG_Console *cons" "enum ag_newline_type newline"
 .Pp
 .nr nS 0
 The
 .Fn AG_ConsoleMsg
 function appends a new message to the console log.
-Unless an error occurs, the function returns a
+Unless an error occurs, the function returns a pointer to the created
+.Ft AG_ConsoleLine .
+If the message contains newlines, create a group of lines (which will
+be displayed in an indented style) and return a pointer to the first
+line
+(which will be the
+.Va parent
+of the subsequent lines).
+The returned
 .Ft AG_ConsoleLine
-handle.
-This handle remains valid until the widget is destroyed, or
+remains valid until deleted (or
 .Fn AG_ConsoleClear
-is used.
+is used).
 .Pp
 As a special case, if a
 .Fa cons
 argument of NULL is passed to
 .Fn AG_ConsoleMsg
-or
-.Fn AG_ConsoleMsgS ,
-the function prints the message with
+then the message is passed to
 .Xr AG_Verbose 3
-before returning NULL.
+(and the function returns NULL).
 .Pp
-The
+.Fn AG_ConsoleBinary
+displays binary data in canonical hex+ASCII format.
+If non-NULL,
+.Fa label
+is prepended to every line.
+If non-NULL,
+.Fa format
+specifies an alternate format string (such as "%02d " for decimal).
+The default format is "%02x ".
+The format string must generate 3 characters.
+.Pp
 .Fn AG_ConsoleMsgEdit
-routine replaces the text of an existing message.
+replaces an existing log entry's text with the given string.
+.Pp
+.Fn AG_ConsoleMsgCatS
+appends the given string to an existing log entry's text.
+.Pp
 .Fn AG_ConsoleMsgPtr
-associates an arbitrary user pointer with the given message.
-.Fn AG_ConsoleMsgIcon
-sets an icon to display next to the message
-(see
-.Xr AG_IconMgr 3 ) .
+sets an optional user pointer for this log entry.
+.Pp
 .Fn AG_ConsoleMsgColor
-an alternate, line-specific text color.
+sets an alternate, line-specific color for this log entry.
 .Pp
 .Fn AG_ConsoleClear
 clears all messages from the console.
 .Pp
-The
 .Fn AG_ConsoleExportText
-routine returns a C string containing the currently selected lines.
-The lines are joined with newlines.
+returns a C string containing all currently selected lines, joined by newlines
+of the given variety.
+Similarly,
+.Fn AG_ConsoleExportBuffer
+joins all lines in the buffer with the specified type of newline.
+.Sh FILE MONITORING
+.nr nS 1
+.Ft "AG_ConsoleFile *"
+.Fn AG_ConsoleOpenFile "AG_Console *cons" "const char *label" "const char *file" "enum ag_newline_type newline" "Uint flags"
+.Pp
+.Ft "AG_ConsoleFile *"
+.Fn AG_ConsoleOpenFD "AG_Console *cons" "const char *label" "int fd" "enum ag_newline_type newline" "Uint flags"
+.Pp
+.Ft "AG_ConsoleFile *"
+.Fn AG_ConsoleOpenStream "AG_Console *cons" "const char *label" "FILE *f" "enum ag_newline_type newline" "Uint flags"
+.Pp
+.Ft void
+.Fn AG_ConsoleClose "AG_Console *cons" "AG_ConsoleFile *cf"
+.Pp
+.nr nS 0
+.Fn AG_ConsoleOpenFile
+opens a file for reading, displays its contents on the console and then
+arranges for
+.Nm
+to follow changes made to the file (similar to "tail -f" in Unix).
+Internally the function uses
+.Xr AG_AddEventSink 3
+to set up an event sink of type
+.Dv AG_SINK_READ
+on the open file descriptor.
+.Pp
+The
+.Fa newline
+argument indicates the style of newline to use:
+.Bd -literal
+enum ag_newline_type {
+	AG_NEWLINE_LF,    /* Unix, Amiga, BeOS, Multics, RISC OS */
+	AG_NEWLINE_CR_LF, /* DOS/Windows, early non-Unix */
+	AG_NEWLINE_CR,    /* Commodore 8-bit machines (C64/128) */
+};
+.Ed
+.Pp
+Possible
+.Fa flags
+include:
+.Bd -literal
+#define AG_CONSOLE_FILE_BINARY     0x01  /* Binary hex dump */
+#define AG_CONSOLE_FILE_LEAVE_OPEN 0x02  /* Don't close fd on detach */
+.Ed
+.Pp
 If
-.Fa nativeNewlines
-is non-zero, platform-specific newlines are used.
+.Dv AG_CONSOLE_FILE_BINARY
+is used then
+.Nm
+produces a canonical hex+ASCII dump of the file (and any changes to it).
+.Pp
+The
+.Dv AG_CONSOLE_FILE_LEAVE_OPEN
+option causes
+.Fn AG_ConsoleClose
+to leave the file descriptor (or
+.Ft "FILE *"
+handle) open.
+.Pp
+The
+.Fn AG_ConsoleOpenFD
+variant accepts an integer file descriptor, and
+.Fn AG_ConsoleOpenFILE
+accepts the
+.Ft "FILE *"
+handle of an open stream.
+.Pp
+.Fn AG_ConsoleClose
+closes a file being followed.
 .Sh EVENTS
 The
 .Nm
@@ -192,16 +260,12 @@ structure:
 .Bl -tag -compact -width "int selected "
 .It Ft char *text
 Text string.
-.It Ft size_t len
+.It Ft AG_Size len
 Length of string in characters.
 .It Ft int selected
 Line selection flag.
 .It Ft int icon
 Icon surface to display.
-.It Ft AG_Font *font
-Alternate font (if NULL, the default font is used).
-Usually set with
-.Fn AG_ConsoleSetFont .
 .It Ft AG_Color cFg
 Foreground color.
 .It Ft AG_Color cBg
@@ -220,3 +284,15 @@ User pointer
 The
 .Nm
 widget first appeared in Agar 1.3.
+In Agar 1.6.0,
+.Fn AG_ConsoleSetPadding
+was deprecated by the generic "padding" style attribute.
+Agar 1.6.0 added support for multi-line entries and introduced
+.Fn AG_ConsoleOpenFile ,
+.Fn AG_ConsoleOpenFD ,
+.Fn AG_ConsoleOpenStream ,
+.Fn AG_ConsoleClose ,
+.Fn AG_ConsoleMsgCatS ,
+.Fn AG_ConsoleBinary
+and
+.Fn AG_ConsoleExportBuffer .

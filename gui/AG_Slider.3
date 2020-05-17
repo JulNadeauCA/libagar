@@ -1,4 +1,4 @@
-.\" Copyright (c) 2011-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2011-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -86,14 +86,12 @@ redrawn if a change is detected.
 Note that this setting only influences redraw -- external changes to the
 binding values are handled safely regardless.
 .It AG_SLIDER_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
+Expand horizontally in parent container.
 .It AG_SLIDER_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
+Expand vertically in parent container.
 .It AG_SLIDER_EXPAND
 Shorthand for
-.Dv AG_SLIDER_HFILL|AG_SLIDER_VFILL .
+.Dv AG_SLIDER_HFILL | AG_SLIDER_VFILL .
 .El
 .Pp
 The
@@ -104,13 +102,11 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "long double *{value,min,max,inc} "
+.Bl -tag -compact -width "double *{value,min,max,inc} "
 .It Va float *{value,min,max,inc}
 Single precision number
 .It Va double *{value,min,max,inc}
 Double precision number
-.It Va long double *{value,min,max,inc}
-Quad precision number
 .It Va int *{value,min,max,inc}
 Natural integer
 .It Va Uint *{value,min,max,inc}
@@ -147,10 +143,6 @@ bindings must share the same type as
 .Va value .
 The 64-bit types are only available if
 .Dv AG_HAVE_64BIT
-is set, and
-.Ft long double
-is only available if
-.Dv AG_HAVE_LONG_DOUBLE
 is set.
 .Sh EVENTS
 The

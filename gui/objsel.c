@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * A subclass of AG_Combo(3) for selecting an element in a VFS of AG_Objects.
+ */
+
 #include <agar/core/core.h>
+#if defined(AG_WIDGETS)
+
 #include <agar/gui/objsel.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -37,7 +43,7 @@ AG_ObjectSelector *
 AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
     const char *fmt, ...)
 {
-	char label[AG_LABEL_MAX];
+	char *label;
 	AG_ObjectSelector *os;
 	va_list ap;
 
@@ -46,12 +52,12 @@ AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
 	os->flags |= flags;
 	os->pobj = pobj;
 	os->root = root;
-	
 
 	va_start(ap, fmt);
-	Vsnprintf(label, sizeof(label), fmt, ap);
+	Vasprintf(&label, fmt, ap);
 	va_end(ap);
 	AG_TextboxSetLabelS(os->com.tbox, label);
+	free(label);
 
 	AG_ObjectAttach(parent, os);
 	return (os);
@@ -89,7 +95,7 @@ FindObjects(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 	if (!TAILQ_EMPTY(&pob->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 		if (pob->parent == NULL)
-			it->flags |= AG_TLIST_VISIBLE_CHILDREN;
+			it->flags |= AG_TLIST_ITEM_EXPANDED;
 	}
 	if ((it->flags & AG_TLIST_HAS_CHILDREN)) {
 		TAILQ_FOREACH(cob, &pob->children, cobjs)
@@ -100,53 +106,52 @@ FindObjects(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 static void
 PollObjects(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
-	AG_ObjectSelector *os = AG_PTR(1);
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_ObjectSelector *os = AG_OBJECTSELECTOR_PTR(1);
 
 	AG_TlistClear(tl);
+
 	AG_ObjectLock(os);
 	AG_LockVFS(os->root);
+
 	FindObjects(os, tl, os->root, 0);
+
 	AG_UnlockVFS(os->root);
 	AG_ObjectUnlock(os);
+
 	AG_TlistRestore(tl);
 }
 
 static void
 SelectObject(AG_Event *event)
 {
-	AG_ObjectSelector *os = AG_PTR(1);
-	AG_TlistItem *it = AG_PTR(2);
-	AG_Variable *objectb;
+	AG_ObjectSelector *os = AG_OBJECTSELECTOR_PTR(1);
+	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	AG_Variable *V;
 	void **object;
 	
-	objectb = AG_GetVariable(os, "object", &object);
+	V = AG_GetVariable(os, "object", (void *)&object);
 
 	if (*object != NULL) {
-		if (os->flags & AG_OBJSEL_PAGE_DATA) {
+		if (os->flags & AG_OBJSEL_PAGE_DATA)
 			AG_ObjectPageOut(*object);
-		}
-		AG_ObjectDelDep(os->pobj, *object);
 	}
-
 	*object = it->p1;
-
-	AG_ObjectAddDep(os->pobj, *object, 1);
 
 	if (os->flags & AG_OBJSEL_PAGE_DATA) {
 		AG_ObjectPageIn(*object);
 	}
-	AG_UnlockVariable(objectb);
+	AG_UnlockVariable(V);
 }
 
 static void
 Bound(AG_Event *event)
 {
-	AG_ObjectSelector *os = AG_SELF();
-	AG_Variable *b = AG_PTR(1);
+	AG_ObjectSelector *os = AG_OBJECTSELECTOR_SELF();
+	const AG_Variable *V = AG_PTR(1);
 
-	if (strcmp(b->name, "object") == 0) {
-		void **object = b->data.p;
+	if (strcmp(V->name, "object") == 0) {
+		void **object = V->data.p;
 	
 		if (*object != NULL)
 			AG_ComboSelectPointer(&os->com, *object);
@@ -159,10 +164,10 @@ Init(void *obj)
 	AG_Combo *com = obj;
 	AG_ObjectSelector *os = obj;
 
-	AG_ExpandHoriz(os);
+	WIDGET(os)->flags |= AG_WIDGET_HFILL;
 
 	com->flags |= AG_COMBO_POLL;
-	com->list->flags |= AG_TLIST_POLL|AG_TLIST_TREE;
+	com->list->flags |= AG_TLIST_POLL;
 	
 	os->object = NULL;
 	os->flags = 0;
@@ -183,8 +188,11 @@ Init(void *obj)
 void
 AG_ObjectSelectorMaskType(AG_ObjectSelector *os, const char *type)
 {
+	AG_OBJECT_ISA(os, "AG_Widget:AG_Combo:AG_ObjectSelector:*");
 	AG_ObjectLock(os);
+
 	Strlcpy(os->type_mask, type, sizeof(os->type_mask));
+
 	AG_ObjectUnlock(os);
 }
 
@@ -194,13 +202,15 @@ AG_WidgetClass agObjectSelectorClass = {
 		sizeof(AG_ObjectSelector),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	AG_WidgetInheritDraw,
-	AG_WidgetInheritSizeRequest,
-	AG_WidgetInheritSizeAllocate
+	NULL,			/* draw */
+	NULL,			/* size_request */
+	NULL			/* size_allocate */
 };
+
+#endif /* AG_WIDGETS */

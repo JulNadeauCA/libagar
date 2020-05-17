@@ -8,7 +8,8 @@
 
 #include "agartest.h"
 
-#include <agar/math.h>
+#include <agar/math/m.h>
+#include <agar/math/m_gui.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -148,7 +149,7 @@ SquaredSineStep(M_Real t)
 static void
 GeneratePlot(AG_Event *event)
 {
-	M_Plotter *plt = AG_PTR(1);
+	M_Plotter *plt = M_PLOTTER_PTR(1);
 	M_Real t;
 
 	/* Clear the current plot data. */
@@ -247,11 +248,10 @@ TestGUI(void *obj, AG_Window *win)
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "Ts: %lf", &Ts);
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "Ta: %lf", &Ta);
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "To: %lf", &To);
-
 		AG_ButtonNewFn(box, AG_BUTTON_HFILL, "Generate",
 		    GeneratePlot, "%p", plt);
 	}
-	AG_SetEvent(win, "window-shown", GeneratePlot, "%p", plt);
+	AG_AddEvent(win, "window-shown", GeneratePlot, "%p", plt);
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 50, 30);
 	return (0);
 }

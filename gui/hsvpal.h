@@ -10,9 +10,9 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_hsvpal {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_HSVPal */
 	Uint flags;
-#define AG_HSVPAL_PIXEL		0x01	/* Edit the pixel binding */ 
+#define AG_HSVPAL_PIXEL		0x01	/* Bound to a pixel/pixel format */
 #define AG_HSVPAL_DIRTY		0x02	/* Redraw the palette */
 #define AG_HSVPAL_HFILL 	0x04
 #define AG_HSVPAL_VFILL 	0x08
@@ -21,42 +21,62 @@ typedef struct ag_hsvpal {
 #define AG_HSVPAL_NOPREVIEW	0x20	/* Disable color preview */
 #define AG_HSVPAL_SHOW_RGB	0x40	/* Print RGB value */
 #define AG_HSVPAL_SHOW_HSV	0x80	/* Print HSV value */
+#define AG_HSVPAL_SHOW_RGB_HSV	0xc0	/* Print both RGB and HSV values */
 #define AG_HSVPAL_EXPAND (AG_HSVPAL_HFILL|AG_HSVPAL_VFILL)
 
 	float h, s, v, a;		/* Default bindings */
-	Uint32 pixel;			/* Calculated pixel */
-	AG_Color color;			/* Calculated color */
-	AG_Rect rAlpha;			/* Alpha selector rectangle */
-	AG_Surface *surface;		/* Cached surface */
+	Uint32 pixel;			/* Packed 32-bit pixel */
+#if AG_MODEL == AG_LARGE
+	Uint64 pixel64;			/* Packed 64-bit pixel */
+#endif
+	AG_Color color;			/* Native Agar color */
+	AG_Rect rPrev;			/* Filled color preview area */
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad1;
+#endif
+	AG_Surface *_Nullable surface;	/* Cached surface */
 	int surfaceId;
 	int selcircle_r;		/* Radius of selection circles */
 	struct {
 		int x, y;		/* Origin for circle of hues */
-		int rout, rin;		/* Radii of the circle of hues */
+		int rOut, rIn;		/* Radii of the circle of hues */
 		int spacing;		/* Spacing between circle and rect */
 		int width;		/* Width of circular band (rout-rin) */
 		float dh;		/* Calculated optimal hue increment */
 	} circle;
 	struct {
 		int x, y;		/* Coordinates of triangle */
-		int w, h;		/* Dimensions of triangle */
+		int _pad2, h;		/* Dimensions of triangle */
 	} triangle;
 	enum {
 		AG_HSVPAL_SEL_NONE,
-		AG_HSVPAL_SEL_H,	/* Selecting hue */
-		AG_HSVPAL_SEL_SV,	/* Selecting saturation/value */
-		AG_HSVPAL_SEL_A		/* Selecting transparency value */
+		AG_HSVPAL_SEL_H,  /* Selecting hue */
+		AG_HSVPAL_SEL_SV, /* Selecting saturation/value */
+		AG_HSVPAL_SEL_A	  /* Selecting transparency value */
 	} state;
 
-	AG_Menu *menu;
-	AG_MenuItem *menu_item;
-	AG_Window *menu_win;
-	AG_Color cTile;
+	AG_Menu *_Nullable menu;        /* Popup menu (TODO use AG_PopupMenu) */
+	AG_MenuItem *_Nullable menu_item;
+	AG_Window *_Nullable menu_win;
+	AG_Color cTile[2];		/* Tiling fill color (TODO use style) */
+	AG_Timer toMove[4];             /* For 4-way keyboard navigation */
 } AG_HSVPal;
+
+#define AGHSVPAL(obj)            ((AG_HSVPal *)(obj))
+#define AGCHSVPAL(obj)           ((const AG_HSVPal *)(obj))
+#define AG_HSVPAL_SELF()          AGHSVPAL( AG_OBJECT(0,"AG_Widget:AG_HSVPal:*") )
+#define AG_HSVPAL_PTR(n)          AGHSVPAL( AG_OBJECT((n),"AG_Widget:AG_HSVPal:*") )
+#define AG_HSVPAL_NAMED(n)        AGHSVPAL( AG_OBJECT_NAMED((n),"AG_Widget:AG_HSVPal:*") )
+#define AG_CONST_HSVPAL_SELF()   AGCHSVPAL( AG_CONST_OBJECT(0,"AG_Widget:AG_HSVPal:*") )
+#define AG_CONST_HSVPAL_PTR(n)   AGCHSVPAL( AG_CONST_OBJECT((n),"AG_Widget:AG_HSVPal:*") )
+#define AG_CONST_HSVPAL_NAMED(n) AGCHSVPAL( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_HSVPal:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agHSVPalClass;
-AG_HSVPal *AG_HSVPalNew(void *, Uint);
+
+AG_HSVPal *_Nonnull AG_HSVPalNew(void *_Nullable, Uint);
+void                AG_HSVPal_UpdateHue(AG_HSVPal *_Nonnull, int, int);
+void                AG_HSVPal_UpdateSV(AG_HSVPal *_Nonnull, int, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

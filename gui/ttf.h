@@ -25,41 +25,42 @@ typedef struct ag_ttf_glyph {
 	int miny, maxy;
 	int yoffset;
 	int advance;
-	Uint32 cached;
+	AG_Char cached;
+#ifdef AG_UNICODE
+	Uint8 _pad[4];
+#else
+	Uint8 _pad[7];
+#endif
 } AG_TTFGlyph;
 
 typedef struct ag_ttf_font {
-	FT_Face	face;
+	_Nonnull FT_Face face;
 	int height;
 	int ascent;
 	int descent;
 	int lineskip;
-	int style;
+	Uint style;			/* Font flags (AG_FONT_BOLD, ...) */
 	int glyph_overhang;
-	float glyph_italics;
+	double glyph_italics;
 	int underline_offset;
 	int underline_height;
 
-	AG_TTFGlyph *current;
-	AG_TTFGlyph cache[256];	/* Transform cache */
+	AG_TTFGlyph *_Nonnull current;
+	AG_TTFGlyph cache[256];		/* Transform cache */
 	AG_TTFGlyph scratch;
 	
 	int font_size_family;		/* For non-scalable formats */
+	Uint32 _pad;
 } AG_TTFFont;
-
-#define AG_TTF_STYLE_NORMAL	0x00
-#define AG_TTF_STYLE_BOLD	0x01
-#define AG_TTF_STYLE_ITALIC	0x02
-#define AG_TTF_STYLE_UNDERLINE	0x04
 
 __BEGIN_DECLS
 struct ag_font;
 
 int  AG_TTFInit(void);
 void AG_TTFDestroy(void);
-int  AG_TTFOpenFont(struct ag_font *);
-void AG_TTFCloseFont(struct ag_font *);
-int  AG_TTFFindGlyph(AG_TTFFont *, Uint32, int);
+int  AG_TTFOpenFont(struct ag_font *_Nonnull, const char *_Nonnull);
+void AG_TTFCloseFont(struct ag_font *_Nonnull);
+int  AG_TTFFindGlyph(AG_TTFFont *_Nonnull, AG_Char, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

@@ -1,0 +1,157 @@
+.\"
+.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd October 21, 2007
+.Dt RG_FEATURE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm RG_Feature
+.Nd Agar-RG feature framework
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/map/rg.h>
+.Ed
+.\" MANLINK(RG_FeatureOps)
+.Sh DESCRIPTION
+The
+.Nm
+element performs some operation on the surface of a
+.Xr RG_Tile 3 .
+For example, a
+.Sq Blur
+filter may be implemented as a
+.Nm .
+The interface is defined by the
+.Fa RG_FeatureOps
+structure:
+.Bd -literal
+typedef struct rg_feature_ops {
+	const char *type;       /* Feature name */
+	AG_Size len;            /* Size of structure */
+	const char *desc;       /* Feature description */
+	int flags;
+#define FEATURE_AUTOREDRAW 0x01 /* Automatic redraw on edit */
+
+	void (*init)(void *self, RG_Tileset *set, int flags);
+	int  (*load)(void *self, AG_DataSource *ds);
+	void (*save)(void *self, AG_DataSource *ds);
+	void (*destroy)(void *self);
+	void (*apply)(void *self, RG_Tile *tile, int x, int y);
+	void (*menu)(void *self, AG_MenuItem *menu);
+	AG_Toolbar *(*toolbar)(void *self, RG_Tileview *view);
+	AG_Window  *(*edit)(void *self, RG_Tileview *view);
+}
+.Ed
+.Pp
+The
+.Fn init ,
+.Fn load ,
+.Fn save ,
+.Fn destroy
+and
+.Fn edit
+operations are analogous to the
+.Xr AG_Object 3
+operations of the same name.
+.Fn init
+must invoke
+.Fn RG_FeatureInit .
+.Pp
+The
+.Fn menu
+and
+.Fn toolbar
+operations, where not NULL, generate and return
+.Xr AG_Menu 3
+items and an
+.Xr AG_Toolbar 3 ,
+respectively, for the GUI.
+.Pp
+The
+.Fn apply
+operation performs the actual modification on the tile.
+The
+.Fa x
+and
+.Fa y
+arguments are specific to the instance of this feature and may be ignored.
+.Sh INTERFACE
+.nr nS 1
+.Ft "void"
+.Fn RG_FeatureInit "void *feature" "RG_Tileset *ts" "int flags" "const RG_FeatureOps *featureOps"
+.Pp
+.Ft "void"
+.Fn RG_FeatureAddPixmap "RG_Feature *feature" "RG_Pixmap *pixmap"
+.Pp
+.Ft "void"
+.Fn RG_FeatureAddSketch "RG_Feature *feature" "RG_Sketch *sketch"
+.Pp
+.Ft "void"
+.Fn RG_FeatureDelPixmap "RG_Feature *feature" "RG_Pixmap *pixmap"
+.Pp
+.Ft "void"
+.Fn RG_FeatureDelSketch "RG_Feature *feature" "RG_Sketch *sketch"
+.Pp
+.nr nS 0
+The
+.Fn RG_FeatureInit
+function initializes a derivate of the
+.Nm
+structure, described by the
+.Fa ops
+structure (see
+.Dq DESCRIPTION
+section).
+The following
+.Fa flags
+are defined:
+.Bl -tag -width "FEATURE_AUTOREDRAW "
+.It FEATURE_AUTOREDRAW
+Periodically redraw target tile when feature is undergoing edition.
+.El
+.Pp
+Features occasionally need to reference other resources in the current
+.Ft RG_Tileset .
+The
+.Fn RG_FeatureAddPixmap
+and
+.Fn RG_FeatureAddSketch
+functions add a reference to a pixmap or sketch, respectively.
+.Fn RG_FeatureDelPixmap
+and
+.Fn RG_FeatureDelSketch
+remove the given reference.
+.Sh SEE ALSO
+.Xr RG 3 ,
+.Xr RG_Anim 3 ,
+.Xr RG_Pixmap 3 ,
+.Xr RG_Sketch 3 ,
+.Xr RG_Texture 3 ,
+.Xr RG_Tile 3 ,
+.Xr RG_Tileview 3

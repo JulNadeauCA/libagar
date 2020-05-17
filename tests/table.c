@@ -32,7 +32,7 @@ MyCustomSortFn(const void *p1, const void *p2)
 
 /* This is a custom cell function which returns text into s (Ex.1) */
 static void
-MyCustomDynamicTextFn(void *p, char *s, size_t len)
+MyCustomDynamicTextFn(void *p, char *s, AG_Size len)
 {
 /*	AG_TableCell *cell = p; */
 	
@@ -63,7 +63,7 @@ MyCustomSurfaceFn(void *p, int x, int y)
 static void
 CreateStaticTable(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(1);
 	AG_Window *win;
 	AG_Table *table;
 	int i;
@@ -140,11 +140,13 @@ CreateStaticTable(AG_Event *event)
 	AG_WindowShow(win);
 }
 
+#ifdef AG_TIMERS
+
 /* This is our callback function for updating our dynamic table (Ex.2) */
 static void
 UpdateTable(AG_Event *event)
 {
-	AG_Table *t = AG_SELF();
+	AG_Table *t = AG_TABLE_SELF();
 	static int prev = 0;
 	static int dir = +1;
 	int i;
@@ -170,8 +172,7 @@ UpdateTable(AG_Event *event)
 static void
 PausePolling(AG_Event *event)
 {
-/*	AG_Button *btn = AG_SELF(); */
-	AG_Table *tbl = AG_PTR(1);
+	AG_Table *tbl = AG_TABLE_PTR(1);
 	int state = AG_INT(2);
 
 	if (!state) {
@@ -183,7 +184,7 @@ PausePolling(AG_Event *event)
 static void
 CreatePolledTable(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(1);
 	AG_Window *win;
 	AG_Table *table;
 
@@ -207,6 +208,7 @@ CreatePolledTable(AG_Event *event)
 	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
+#endif /* AG_TIMERS */
 
 /* Report on the status of our test array (Ex.3) */
 static void
@@ -238,7 +240,7 @@ ClearAllRows(AG_Event *event)
 static void
 CreateTableWithControls(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1);
+	AG_Window *winParent = AG_WINDOW_PTR(1);
 	static int MyTable[20];
 	AG_Window *win;
 	AG_Table *table;
@@ -300,7 +302,11 @@ static int
 TestGUI(void *obj, AG_Window *win)
 {
 	AG_ButtonNewFn(win, 0, "Create static table", CreateStaticTable, "%p", win);
+#ifdef AG_TIMERS
 	AG_ButtonNewFn(win, 0, "Create polled table", CreatePolledTable, "%p", win);
+#else
+	AG_WidgetDisable(AG_ButtonNewS(win, 0, "Create polled table"));
+#endif
 	AG_ButtonNewFn(win, 0, "Create table with controls", CreateTableWithControls, "%p", win);
 	return (0);
 }

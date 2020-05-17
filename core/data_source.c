@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,11 @@
  * Basic I/O abstraction routines.
  */
 
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/core/core.h>
+
 #include <agar/config/have_fdclose.h>
 
 #include <stdio.h>
@@ -39,7 +43,8 @@ static AG_Object errorMgr;
 void
 AG_DataSourceInitSubsystem(void)
 {
-	AG_ObjectInitStatic(&errorMgr, NULL);
+	AG_ObjectInit(&errorMgr, NULL);
+	errorMgr.flags |= AG_OBJECT_STATIC;
 }
 
 void
@@ -55,7 +60,13 @@ AG_DataSourceSetErrorFn(AG_DataSource *ds, AG_EventFn fn,
 {
 	AG_ObjectLock(&errorMgr);
 	ds->errorFn = AG_SetEvent(&errorMgr, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(ds->errorFn, fmt);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ds->errorFn, fmt, ap);
+		va_end(ap);
+	}
 	AG_ObjectUnlock(&errorMgr);
 }
 
@@ -63,7 +74,7 @@ AG_DataSourceSetErrorFn(AG_DataSource *ds, AG_EventFn fn,
 void
 AG_DataSourceError(AG_DataSource *ds, const char *fmt, ...)
 {
-	static char msg[256];
+	static char msg[64];
 	va_list args;
 
 	if (fmt != NULL) {
@@ -74,9 +85,7 @@ AG_DataSourceError(AG_DataSource *ds, const char *fmt, ...)
 		Strlcpy(msg, AG_GetError(), sizeof(msg));
 	}
 	
-	AG_ObjectLock(&errorMgr);
-	AG_PostEventByPtr(NULL, &errorMgr, ds->errorFn, "%s", msg);
-	AG_ObjectUnlock(&errorMgr);
+	AG_PostEventByPtr(&errorMgr, ds->errorFn, "%s", msg);
 }
 
 /* Enable checking of debugging information. */
@@ -133,6 +142,60 @@ AG_CheckTypeCode(AG_DataSource *ds, Uint32 type)
 	i = ((ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(i) :
 	                                           AG_SwapLE32(i));
 	return (i == type) ? 0 : -1;
+}
+
+/* Reallocate the buffer of a dynamically-allocated memory source. */
+int
+AG_DataSourceRealloc(void *obj, AG_Size size)
+{
+	AG_CoreSource *cs = (AG_CoreSource *)obj;
+	Uint8 *dataNew;
+		
+	if ((dataNew = (Uint8 *)AG_TryRealloc(cs->data, size)) == NULL) {
+		return (-1);
+	}
+	cs->data = dataNew;
+	cs->size = size;
+	return (0);
+}
+
+/* Return current position in the data stream. */
+AG_Offset
+AG_Tell(AG_DataSource *ds)
+{
+	AG_Offset pos;
+
+	AG_MutexLock(&ds->lock);
+	pos = (ds->tell != NULL) ? ds->tell(ds) : 0;
+	AG_MutexUnlock(&ds->lock);
+	return (pos);
+}
+
+/* Seek to position. */
+int
+AG_Seek(AG_DataSource *ds, AG_Offset pos, enum ag_seek_mode mode)
+{
+	int rv;
+
+	AG_MutexLock(&ds->lock);
+	rv = ds->seek(ds, pos, mode);
+	AG_MutexUnlock(&ds->lock);
+	return (rv);
+}
+
+/* Close a datasource of any type. */
+void
+AG_CloseDataSource(AG_DataSource *ds)
+{
+	ds->close(ds);
+}
+
+/* Free all resources allocated by a data source. */
+void
+AG_DataSourceDestroy(AG_DataSource *ds)
+{
+	AG_MutexDestroy(&ds->lock);
+	AG_Free(ds);
 }
 
 /*
@@ -425,6 +488,7 @@ NetSocketRead(AG_DataSource *_Nonnull ds, void *_Nonnull buf, AG_Size size,
     AG_Size *_Nonnull rv)
 {
 	AG_NetSocketSource *nss = AG_NET_SOCKET_SOURCE(ds);
+
 	return AG_NetRead(nss->sock, buf, size, rv);
 }
 static int
@@ -432,6 +496,7 @@ NetSocketWrite(AG_DataSource *_Nonnull ds, const void *_Nonnull buf, AG_Size siz
     AG_Size *_Nonnull rv)
 {
 	AG_NetSocketSource *nss = AG_NET_SOCKET_SOURCE(ds);
+
 	return AG_NetWrite(nss->sock, buf, size, rv);
 }
 void
@@ -454,8 +519,8 @@ void
 AG_DataSourceInit(AG_DataSource *_Nonnull ds)
 {
 	AG_MutexInitRecursive(&ds->lock);
-	ds->debug = 0;
 	ds->errorFn = NULL;
+	ds->debug = 0;
 	ds->byte_order = AG_BYTEORDER_BE;
 	ds->rdLast = 0;
 	ds->wrLast = 0;
@@ -472,8 +537,9 @@ AG_DataSourceInit(AG_DataSource *_Nonnull ds)
 }
 
 AG_DataSource *
-AG_OpenFileHandle(FILE *_Nonnull f)
+AG_OpenFileHandle(void *_Nonnull pf)
 {
+	FILE *f = pf;
 	AG_FileSource *fs;
 
 	fs = Malloc(sizeof(AG_FileSource));
@@ -644,11 +710,8 @@ AG_SetByteOrder(AG_DataSource *_Nonnull ds, AG_ByteOrder order)
 {
 	AG_ByteOrder orderPrev;
 
-	AG_MutexLock(&ds->lock);
 	orderPrev = ds->byte_order;
 	ds->byte_order = order;
-	AG_MutexUnlock(&ds->lock);
-
 	return (orderPrev);
 }
 
@@ -658,10 +721,8 @@ AG_SetSourceDebug(AG_DataSource *_Nonnull ds, int enable)
 {
 	int debugPrev;
 
-	AG_MutexLock(&ds->lock);
 	debugPrev = ds->debug;
 	ds->debug = enable;
-	AG_MutexUnlock(&ds->lock);
 	return (debugPrev);
 }
 
@@ -670,6 +731,7 @@ int
 AG_Read(AG_DataSource *_Nonnull ds, void *_Nonnull ptr, AG_Size size)
 {
 	int rv;
+
 	AG_MutexLock(&ds->lock);
 	rv = ds->read(ds, ptr, size, &ds->rdLast);
 	ds->rdTotal += ds->rdLast;
@@ -687,6 +749,7 @@ AG_ReadP(AG_DataSource *_Nonnull ds, void *_Nonnull ptr, AG_Size size,
     AG_Size *nRead)
 {
 	int rv;
+
 	AG_MutexLock(&ds->lock);
 	rv = ds->read(ds, ptr, size, &ds->rdLast);
 	ds->rdTotal += ds->rdLast;
@@ -700,6 +763,7 @@ int
 AG_ReadAt(AG_DataSource *_Nonnull ds, void *_Nonnull ptr, AG_Size size, AG_Offset pos)
 {
 	int rv;
+
 	AG_MutexLock(&ds->lock);
 	rv = ds->read_at(ds, ptr, size, pos, &ds->rdLast);
 	ds->rdTotal += ds->rdLast;
@@ -717,6 +781,7 @@ AG_ReadAtP(AG_DataSource *_Nonnull ds, void *_Nonnull ptr, AG_Size size, AG_Offs
     AG_Size *nRead)
 {
 	int rv;
+
 	AG_MutexLock(&ds->lock);
 	rv = ds->read_at(ds, ptr, size, pos, &ds->rdLast);
 	ds->rdTotal += ds->rdLast;
@@ -730,6 +795,7 @@ int
 AG_Write(AG_DataSource *_Nonnull ds, const void *_Nonnull ptr, AG_Size size)
 {
 	int rv;
+
 	AG_MutexLock(&ds->lock);
 	rv = ds->write(ds, ptr, size, &ds->wrLast);
 	ds->wrTotal += ds->wrLast;
@@ -747,6 +813,7 @@ AG_WriteP(AG_DataSource *_Nonnull ds, const void *_Nonnull ptr, AG_Size size,
     AG_Size *nWrote)
 {
 	int rv;
+
 	AG_MutexLock(&ds->lock);
 	rv = ds->write(ds, ptr, size, &ds->wrLast);
 	ds->wrTotal += ds->wrLast;
@@ -761,6 +828,7 @@ AG_WriteAt(AG_DataSource *_Nonnull ds, const void *_Nonnull ptr,
     AG_Size size, AG_Offset pos)
 {
 	int rv;
+
 	AG_MutexLock(&ds->lock);
 	rv = ds->write_at(ds, ptr, size, pos, &ds->wrLast);
 	ds->wrTotal += ds->wrLast;
@@ -778,6 +846,7 @@ AG_WriteAtP(AG_DataSource *_Nonnull ds, const void *_Nonnull ptr, AG_Size size,
     AG_Offset pos, AG_Size *nWrote)
 {
 	int rv;
+
 	AG_MutexLock(&ds->lock);
 	rv = ds->write_at(ds, ptr, size, pos, &ds->wrLast);
 	ds->wrTotal += ds->wrLast;
@@ -786,3 +855,4 @@ AG_WriteAtP(AG_DataSource *_Nonnull ds, const void *_Nonnull ptr, AG_Size size,
 	return (rv);
 }
 
+#endif /* AG_SERIALIZATION */

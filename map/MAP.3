@@ -1,0 +1,344 @@
+.\"
+.\" Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd JANUARY 30, 2002
+.Dt MAP 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm MAP
+.Nd agar feature-based tile map
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/map.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+interface implements a two-dimensional map of fixed-size tiles, which are
+stacks of elements 
+Element types include:
+.Pp
+.Bl -tag -width "MAP_ITEM_TILE " -compact
+.It MAP_ITEM_TILE
+Pointer to a
+.Xr RG_Tile 3 .
+.It MAP_ITEM_WARP
+Pointer to some other node, possibly on another map.
+This is commonly used by
+.Xr MAP_Actor 3
+objects.
+.El
+.Pp
+Graphical elements define two displacements in pixels of the image from
+the tile's origin, the
+.Em centering offset
+and the
+.Em motion offset.
+.Pp
+The centering offset is typically assigned by a level designer, and the
+motion offset is for animation purposes.
+If the map is drawn scaled, the centering offset is scaled to the
+tile size, but the motion offset is not.
+.Pp
+Graphical elements provide the renderer with a list of graphical transformations
+that should be applied before the tile is drawn (the resulting tile is cached).
+A per-element layer attribute also defines the attributed layer.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "MAP *"
+.Fn MAP_New "void *parent" "const char *name"
+.Pp
+.Ft int
+.Fn MAP_AllocNodes "MAP *map" "Uint w" "Uint h"
+.Pp
+.Ft void
+.Fn MAP_FreeNodes "MAP *map"
+.Pp
+.Ft void
+.Fn MAP_SetZoom "MAP *map" "int camera" "Uint factor"
+.Pp
+.nr nS 0
+.Fn MAP_New
+allocates, initializes and attaches a new map.
+.Pp
+The
+.Fn MAP_AllocNodes
+function allocates
+.Fa w
+x
+.Fa h
+nodes, assuming that no node is currently allocated.
+.Fn MAP_AllocNodes
+returns 0 on success or -1 on failure.
+The maximum allowable geometry is defined by
+.Dv MAP_WIDTH_MAX
+and
+.Dv MAP_HEIGHT_MAX .
+The
+.Fn MAP_FreeNodes
+function releases the nodes allocated by
+.Fa map .
+.Pp
+The
+.Fn MAP_Resize
+function reallocates the nodes arrays, initializing the new nodes and
+freeing the excess ones.
+.Fn MAP_Resize
+returns 0 on sucess or -1 on failure.
+.Pp
+The
+.Fn MAP_SetZoom
+function sets the zoom factor for a given map view.
+Actors are displayed to this scale.
+.Sh NODE INITIALIZATION
+.nr nS 1
+.Ft void
+.Fn MAP_NodeInit "MAP_Node *node"
+.Pp
+.Ft int
+.Fn MAP_NodeLoad "MAP *map" "AG_DataSource *ds" "MAP_Node *node"
+.Pp
+.Ft void
+.Fn MAP_NodeSave "const MAP *map" "AG_DataSource *ds" "const MAP_Node *node"
+.Pp
+.Ft void
+.Fn MAP_NodeDestroy "MAP *map" "MAP_Node *node"
+.Pp
+.nr nS 0
+The
+.Fn MAP_NodeInit
+function initializes a node.
+The
+.Fn MAP_NodeDestroy
+function frees resources allocated by a node (such as the item stack).
+To reinitialize a node, this function must be followed by
+.Fn MAP_NodeInit .
+.Pp
+The
+.Fn MAP_NodeLoad
+function loads a node from
+.Fa ds ,
+returning 0 on success or -1 on failure.
+.Fn MAP_NodeSave
+saves a node to
+.Fa ds .
+.Sh MAP ITEMS
+.nr nS 1
+.Ft void
+.Fn MAP_ItemInit "MAP_Item *r"
+.Pp
+.Ft void
+.Fn MAP_ItemSetCenter "MAP_Item *r" "int xcenter" "int ycenter"
+.Pp
+.Ft void
+.Fn MAP_ItemSetMotion "MAP_Item *r" "int xmotion" "int ymotion"
+.Pp
+.Ft void
+.Fn MAP_ItemSetTile "MAP_Item *r" "MAP *m" "RG_Tileset *ts" "Uint32 tileID"
+.Pp
+.Ft void
+.Fn MAP_ItemSetAnim "MAP_Item *r" "MAP *m" "RG_Tileset *ts" "Uint32 animID"
+.Pp
+.Ft void
+.Fn MAP_ItemSetLayer "MAP_Item *r" "int layer"
+.Pp
+.Ft void
+.Fn MAP_ItemDestroy "MAP *map" "MAP_Item *r"
+.Pp
+.nr nS 0
+The
+.Fn MAP_ItemInit
+function initializes a node element structure.
+.Pp
+The
+.Fn MAP_ItemSetCenter
+function sets the centering offset of a graphical element.
+.Fn MAP_ItemSetMotion
+sets the motion offset of a graphical element.
+.Pp
+The functions
+.Fn MAP_ItemSetTile
+and
+.Fn MAP_ItemSetAnim
+associate a new tile or animation to the element
+.Fa r
+(of type
+.Dv MAP_ITEM_TILE ) .
+.Pp
+The
+.Fn MAP_ItemSetLayer
+function associates the graphical element
+.Fa r
+with the given layer.
+The layer does not need to exist; the element will not be visible if that
+is the case.
+.Pp
+The
+.Fn MAP_ItemDestroy
+function frees the resources reserved by a node element.
+It must be followed by
+.Fa MAP_ItemInit
+to reinitialize the node element structure.
+.Sh NODE MANIPULATIONS
+.nr nS 1
+.Ft void
+.Fo MAP_NodeMoveItem
+.Fa "MAP *src_map"
+.Fa "MAP_Node *src_node"
+.Fa "MAP_Item *src_r"
+.Fa "MAP *dst_map"
+.Fa "MAP_Node *dst_node"
+.Fa "int dst_layer"
+.Fc
+.Pp
+.Ft "MAP_Item *"
+.Fo MAP_NodeCopyItem
+.Fa "const MAP_Item *src_r"
+.Fa "MAP *dst_map"
+.Fa "MAP_Node *dst_node"
+.Fa "int dst_layer"
+.Fc
+.Pp
+.Ft void
+.Fn MAP_NodeDelItem "MAP *map" "MAP_Node *node" "MAP_Item *r"
+.Pp
+.Ft "MAP_Item *"
+.Fn MAP_NodeAddTile "MAP *map" "MAP_Node *node" "RG_Tileset *ts" "Uint32 tileID"
+.Pp
+.Ft "MAP_Item *"
+.Fn MAP_NodeAddAnim "MAP *map" "MAP_Node *node" "RG_Tileset *ts" "Uint32 animID"
+.Pp
+.Ft "MAP_Item *"
+.Fo MAP_NodeAddWarpPoint
+.Fa "MAP *map"
+.Fa "MAP_Node *dst_node"
+.Fa "const char *targetMap"
+.Fa "int x"
+.Fa "int y"
+.Fa "Uint8 dir"
+.Fc
+.Pp
+.nr nS 0
+The
+.Fn MAP_NodeMoveItem
+function moves
+.Fa src_r
+from
+.Fa src_node
+to the node at specific map coordinates and returns 0, or -1 if
+the coordinates are outside of
+.Fa dst_map .
+The element is associated with the layer
+.Fa dlayer ,
+unless it is -1.
+.Pp
+The
+.Fn MAP_NodeCopyItem
+function inserts a copy of
+.Fa src_r
+on top of
+.Fa dst_node ,
+and associate with
+.Fa dst_layer
+(unless it is -1).
+.Pp
+The
+.Fn MAP_NodeDelItem
+function detaches and destroys the given node element.
+.Pp
+The
+.Fn MAP_NodeAddTile
+function creates a graphical element (a reference to a
+.Xr RG_Tile 3 ) ,
+where
+.Fa tileID
+is a tile name (an index into the
+.Va tiletbl
+of a
+.Xr RG_Tileset 3 ) .
+.Pp
+The
+.Fn MAP_NodeAddAnim
+function creates an animation element (a reference to a
+.Xr RG_Anim 3 ) ,
+where
+.Fa animID
+is an animation name (an index into the
+.Va animtbl
+of a
+.Xr RG_Tileset 3 ) .
+.Pp
+.Fn MAP_NodeAddWarpPoint
+Creates a warp point, where
+.Fa targetMap
+is the pathname of the destination map (as returned by
+.Fn AG_ObjectCopyName ) ,
+and the
+.Fa x ,
+.Fa y
+and
+.Fa dir
+arguments describe the initial position and direction of the object
+(whatever it may be) in the destination map.
+.Sh ACTORS
+.nr nS 1
+.Ft void
+.Fn MAP_AttachActor "MAP *map" "MAP_Actor *actor"
+.Pp
+.Ft void
+.Fn MAP_DetachActor "MAP *map" "MAP_Actor *actor"
+.Pp
+.nr nS 0
+.Fn MAP_AttachActor
+attaches the given actor
+to the map.
+An object dependency is automatically created, and the
+.Va map
+operation of the actor is invoked.
+This operation is usually responsible for inserting tiles onto the map.
+.Pp
+.Fn MAP_DetachActor
+detaches the given actor from the map.
+Any pending timer events related to the actor are cancelled, tiles
+related to the actor are removed and the object dependency is removed.
+.Pp
+See
+.Xr MAP_Actor 3
+for more information.
+.Sh SEE ALSO
+.Xr AG_Object 3 ,
+.Xr MAP_Actor 3 ,
+.Xr MAP_View 3 ,
+.Xr SG_Intro 3
+.Sh HISTORY
+The
+.Nm
+class first appeared in Agar 1.0.

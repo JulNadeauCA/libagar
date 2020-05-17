@@ -2,6 +2,10 @@
 
 #ifndef _AGAR_CORE_DB_H_
 #define _AGAR_CORE_DB_H_
+
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/core/begin.h>
 
 struct ag_db;
@@ -10,6 +14,9 @@ struct ag_db;
 typedef struct ag_dbt {
 	void *_Nonnull data;
 	AG_Size        size;
+#if AG_MODEL == AG_MEDIUM
+	Uint32 _pad;
+#endif
 } AG_Dbt;
 
 typedef int (*AG_DbIterateFn)(const AG_Dbt *_Nonnull,
@@ -42,16 +49,23 @@ typedef struct ag_db_class {
 	                          void *_Nullable);
 } AG_DbClass;
 
-#define AGDB_CLASS(db) ((AG_DbClass *)AGOBJECT(db)->cls)
-
 typedef struct ag_db {
 	struct ag_object _inherit;
 	Uint flags;
 #define AG_DB_OPEN	0x01		/* Database is open */
 #define AG_DB_READONLY	0x02		/* Open in read-only mode */
+	Uint32 _pad;
 } AG_Db;
 
-#define AGDB(p) ((AG_Db *)(p))
+#define AGDB(p)              ((AG_Db *)(p))
+#define AGCDB(p)             ((const AG_Db *)(p))
+#define AGDB_CLASS(db)       ((AG_DbClass *)AGOBJECT(db)->cls)
+#define AG_DB_SELF()          AGDB( AG_OBJECT(0,"AG_Db:*") )
+#define AG_DB_PTR(n)          AGDB( AG_OBJECT((n),"AG_Db:*") )
+#define AG_DB_NAMED(n)        AGDB( AG_OBJECT_NAMED((n),"AG_Db:*") )
+#define AG_CONST_DB_SELF()   AGCDB( AG_CONST_OBJECT(0,"AG_Db:*") )
+#define AG_CONST_DB_PTR(n)   AGCDB( AG_CONST_OBJECT((n),"AG_Db:*") )
+#define AG_CONST_DB_NAMED(n) AGCDB( AG_CONST_OBJECT_NAMED((n),"AG_Db:*") )
 
 __BEGIN_DECLS
 extern AG_DbClass agDbClass;
@@ -64,73 +78,13 @@ int              AG_DbOpen(AG_Db *_Nonnull, const char *_Nonnull, Uint);
 void             AG_DbClose(AG_Db *_Nonnull);
 int              AG_DbSync(AG_Db *_Nonnull);
 
-/* Test for existence of a key. */
-static __inline__ int
-AG_DbExists(AG_Db *_Nonnull db, AG_Dbt *_Nonnull key)
-{
-	AG_DbClass *dbc = AGDB_CLASS(db);
-	int rv;
-
-	AG_ObjectLock(db);
-	rv = dbc->exists(db, key);
-	AG_ObjectUnlock(db);
-	return (rv);
-}
-
-/* Retrieve a database entry. */
-static __inline__ int
-AG_DbGet(AG_Db *_Nonnull db, const AG_Dbt *_Nonnull key, AG_Dbt *_Nonnull val)
-{
-	AG_DbClass *dbc = AGDB_CLASS(db);
-	int rv;
-
-	AG_ObjectLock(db);
-	rv = dbc->get(db, key, val);
-	AG_ObjectUnlock(db);
-	return (rv);
-}
-
-/* Write a database entry. */
-static __inline__ int
-AG_DbPut(AG_Db *_Nonnull db, const AG_Dbt *_Nonnull key,
-    const AG_Dbt *_Nonnull val)
-{
-	AG_DbClass *dbc = AGDB_CLASS(db);
-	int rv;
-
-	AG_ObjectLock(db);
-	rv = dbc->put(db, key, val);
-	AG_ObjectUnlock(db);
-	return (rv);
-}
-
-/* Delete a database entry. */
-static __inline__ int
-AG_DbDel(AG_Db *_Nonnull db, const AG_Dbt *_Nonnull key)
-{
-	AG_DbClass *dbc = AGDB_CLASS(db);
-	int rv;
-
-	AG_ObjectLock(db);
-	rv = dbc->del(db, key);
-	AG_ObjectUnlock(db);
-	return (rv);
-}
-
-/* Iterate over all entries. */
-static __inline__ int
-AG_DbIterate(AG_Db *_Nonnull db, _Nonnull AG_DbIterateFn fn,
-    void *_Nullable arg)
-{
-	AG_DbClass *dbc = AGDB_CLASS(db);
-	int rv;
-
-	AG_ObjectLock(db);
-	rv = dbc->iterate(db, fn, arg);
-	AG_ObjectUnlock(db);
-	return (rv);
-}
+int AG_DbExists(AG_Db *_Nonnull, AG_Dbt *_Nonnull);
+int AG_DbGet(AG_Db *_Nonnull, const AG_Dbt *_Nonnull, AG_Dbt *_Nonnull);
+int AG_DbPut(AG_Db *_Nonnull, const AG_Dbt *_Nonnull, const AG_Dbt *_Nonnull);
+int AG_DbDel(AG_Db *_Nonnull, const AG_Dbt *_Nonnull);
+int AG_DbIterate(AG_Db *_Nonnull, _Nonnull AG_DbIterateFn, void *_Nullable);
 __END_DECLS
 
 #include <agar/core/close.h>
+#endif /* AG_SERIALIZATION */
 #endif /* _AGAR_CORE_DB_H_ */

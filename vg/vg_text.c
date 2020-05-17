@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,27 +43,82 @@
 #include <stdarg.h>
 #include <string.h>
 
-static void
-Init(void *p)
+VG_Text *
+VG_TextNew(void *pNode, VG_Point *p1, VG_Point *p2)
 {
-	VG_Text *vt = p;
+	VG_Text *vt;
+
+	vt = (VG_Text *)AG_Malloc(sizeof(VG_Text));
+	VG_NodeInit(vt, &vgTextOps);
+	vt->p1 = p1;
+	vt->p2 = p2;
+	VG_AddRef(vt, p1);
+	VG_AddRef(vt, p2);
+	VG_NodeAttach(pNode, vt);
+	return (vt);
+}
+
+void
+VG_TextAlignment(VG_Text *vt, enum vg_alignment align)
+{
+	vt->align = align;
+}
+
+void
+VG_TextFontFace(VG_Text *vt, const char *face)
+{
+	VG *vg = VGNODE(vt)->vg;
+
+	AG_ObjectLock(vg);
+	AG_Strlcpy(vt->fontFace, face, sizeof(vt->fontFace));
+	AG_ObjectUnlock(vg);
+}
+
+void
+VG_TextFontSize(VG_Text *vt, float sizePts)
+{
+	vt->fontSize = sizePts;
+}
+
+void
+VG_TextFontFlags(VG_Text *vt, Uint flags)
+{
+	vt->fontFlags = flags;
+}
+
+void
+VG_TextSubstObject(VG_Text *vt, void *obj)
+{
+	VG *vg = VGNODE(vt)->vg;
+
+	AG_ObjectLock(vg);
+	vt->vsObj = obj;
+	AG_ObjectUnlock(vg);
+}
+
+static void
+Init(void *_Nonnull obj)
+{
+	VG_Text *vt = obj;
 
 	vt->text[0] = '\0';
 	vt->p1 = NULL;
 	vt->p2 = NULL;
 	vt->align = VG_ALIGN_MC;
-	vt->fontSize = vgGUI ? (int)agDefaultFont->spec.size : 12;
 	vt->fontFlags = vgGUI ? agDefaultFont->flags : 0;
+	vt->fontSize = vgGUI ? agDefaultFont->spec.size : 12.0f;
 	vt->fontFace[0] = '\0';
+	vt->argsCount = 0;
 	vt->args = NULL;
 	vt->argSizes = NULL;
 	vt->vsObj = NULL;
 }
 
 static int
-Load(void *p, AG_DataSource *ds, const AG_Version *ver)
+Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
+    const AG_Version *_Nonnull ver)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 
 	if ((vt->p1 = VG_ReadRef(ds, vt, "Point")) == NULL ||
 	    (vt->p2 = VG_ReadRef(ds, vt, "Point")) == NULL)
@@ -71,22 +126,22 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 
 	vt->align = (enum vg_alignment)AG_ReadUint8(ds);
 	AG_CopyString(vt->fontFace, ds, sizeof(vt->fontFace));
-	vt->fontSize = (int)AG_ReadUint8(ds);
+	vt->fontSize = AG_ReadFloat(ds);
 	vt->fontFlags = (Uint)AG_ReadUint16(ds);
 	AG_CopyString(vt->text, ds, sizeof(vt->text));
 	return (0);
 }
 
 static void
-Save(void *p, AG_DataSource *ds)
+Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 
 	VG_WriteRef(ds, vt->p1);
 	VG_WriteRef(ds, vt->p2);
 	AG_WriteUint8(ds, (Uint8)vt->align);
 	AG_WriteString(ds, vt->fontFace);
-	AG_WriteUint8(ds, (Uint8)vt->fontSize);
+	AG_WriteFloat(ds, vt->fontSize);
 	AG_WriteUint16(ds, (Uint16)vt->fontFlags);
 	AG_WriteString(ds, vt->text);
 }
@@ -95,22 +150,28 @@ Save(void *p, AG_DataSource *ds)
 void
 VG_TextString(VG_Text *vt, const char *s)
 {
-	VG_Lock(VGNODE(vt)->vg);
+	VG *vg = VGNODE(vt)->vg;
+
+	AG_ObjectLock(vg);
+
 	if (s != NULL) {
 		Strlcpy(vt->text, s, sizeof(vt->text));
 	} else {
 		vt->text[0] = '\0';
 	}
-	VG_Unlock(VGNODE(vt)->vg);
+
+	AG_ObjectUnlock(vg);
 }
 
 /* Specify static text (format string). */
 void
 VG_TextPrintf(VG_Text *vt, const char *fmt, ...)
 {
+	VG *vg = VGNODE(vt)->vg;
 	va_list ap;
 
-	VG_Lock(VGNODE(vt)->vg);
+	AG_ObjectLock(vg);
+
 	if (fmt != NULL) {
 		va_start(ap, fmt);
 		Vsnprintf(vt->text, sizeof(vt->text), fmt, ap);
@@ -118,14 +179,16 @@ VG_TextPrintf(VG_Text *vt, const char *fmt, ...)
 	} else {
 		vt->text[0] = '\0';
 	}
-	VG_Unlock(VGNODE(vt)->vg);
+
+	AG_ObjectUnlock(vg);
 }
 
 static void
-RenderText(VG_Text *vt, char *sIn, VG_View *vv)
+RenderText(VG_Text *_Nonnull vt, char *_Nonnull sIn, VG_View *_Nonnull vv)
 {
 	char sSubst[VG_TEXT_MAX], *s;
 	VG_Vector v1, v2, vMid;
+	AG_Color c;
 	int x, y;
 	int su;
 
@@ -139,11 +202,12 @@ RenderText(VG_Text *vt, char *sIn, VG_View *vv)
 	AG_PushTextState();
 
 	if (vt->fontFace[0] != '\0' &&
-	   ((vgGUI && vt->fontSize != (int)agDefaultFont->spec.size) ||
+	   ((vgGUI && VG_Fabs(vt->fontSize - agDefaultFont->spec.size) < AG_FONT_PTS_EPSILON) ||
 	    (vgGUI && vt->fontFlags != agDefaultFont->flags))) {
 		AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags);
 	}
-	AG_TextColor(VG_MapColorRGB(VGNODE(vt)->color));
+	c = VG_MapColorRGB(VGNODE(vt)->color);
+	AG_TextColor(&c);
 
 	v1 = VG_Pos(vt->p1);
 	v2 = VG_Pos(vt->p2);
@@ -159,8 +223,9 @@ RenderText(VG_Text *vt, char *sIn, VG_View *vv)
 	AG_PopTextState();
 }
 
+#if 0
 static void
-RenderTextPolled(VG_Text *vt, VG_View *vv)
+RenderTextPolled(VG_Text *_Nonnull vt, VG_View *_Nonnull vv)
 {
 	char val[64], s[VG_TEXT_MAX], *c;
 	int argIdx = 0;
@@ -181,32 +246,37 @@ RenderTextPolled(VG_Text *vt, VG_View *vv)
 			c+=2;
 			continue;
 		}
-		if ((argIdx+1) >= vt->args->n) {
+		if ((argIdx+1) >= vt->argsCount) {
 			AG_FatalError("Argument inconsistency");
 		}
-		AG_PrintVariable(val, sizeof(val), &vt->args->v[argIdx]);
+		AG_PrintVariable(val, sizeof(val), &vt->args[argIdx]);
 		Strlcat(s, val, sizeof(s));
 		c += vt->argSizes[argIdx++];
 	}
 	RenderText(vt, s, vv);
 }
+#endif
 
 static void
-Draw(void *p, VG_View *vv)
+Draw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 
+#if 0
 	if (vt->args != NULL) {
 		RenderTextPolled(vt, vv);
-	} else {
+	} else
+#endif
+	{
 		RenderText(vt, vt->text, vv);
 	}
 }
 
 static void
-Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
+Extent(void *_Nonnull obj, VG_View *_Nonnull vv, VG_Vector *_Nonnull a,
+    VG_Vector *_Nonnull b)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 	float wText, hText;
 	VG_Vector v1, v2;
 	int su;
@@ -227,9 +297,9 @@ Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 }
 
 static float
-PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
+PointProximity(void *_Nonnull obj, VG_View *_Nonnull vv, VG_Vector *_Nonnull vPt)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 	VG_Vector v1 = VG_Pos(vt->p1);
 	VG_Vector v2 = VG_Pos(vt->p2);
 
@@ -238,9 +308,9 @@ PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
 }
 
 static void
-Delete(void *p)
+Delete(void *_Nonnull obj)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 
 	if (VG_DelRef(vt, vt->p1) == 0)
 		VG_Delete(vt->p1);
@@ -249,7 +319,7 @@ Delete(void *p)
 }
 
 static void
-SetAlign(AG_Event *event)
+SetAlign(AG_Event *_Nonnull event)
 {
 	VG_Text *vt = AG_PTR(1);
 	enum vg_alignment align = (enum vg_alignment)AG_INT(2);
@@ -258,11 +328,11 @@ SetAlign(AG_Event *event)
 }
 
 static void
-SelectFont(AG_Event *event)
+SelectFont(AG_Event *_Nonnull event)
 {
 	VG_Text *vt = AG_PTR(1);
-	AG_Window *win = AG_PTR(2);
-	AG_FontSelector *fs = AG_PTR(3);
+	AG_Window *win = AG_WINDOW_PTR(2);
+	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(3);
 
 	Strlcpy(vt->fontFace, fs->curFace, sizeof(vt->fontFace));
 	vt->fontSize = fs->curSize;
@@ -274,10 +344,10 @@ SelectFont(AG_Event *event)
 }
 
 static void
-SelectFontDlg(AG_Event *event)
+SelectFontDlg(AG_Event *_Nonnull event)
 {
 	VG_Text *vt = AG_PTR(1);
-	VG_View *vv = AG_PTR(2);
+	VG_View *vv = VG_VIEW_PTR(2);
 	AG_Window *win, *winParent;
 	AG_FontSelector *fs;
 	AG_Box *hBox;
@@ -289,7 +359,7 @@ SelectFontDlg(AG_Event *event)
 
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	AG_ButtonNewFn(hBox, 0, _("OK"), SelectFont, "%p,%p,%p", vt, win, fs);
-	AG_ButtonNewFn(hBox, 0, _("Close"), AG_WindowCloseGenEv, "%p", win);
+	AG_ButtonNewFn(hBox, 0, _("Close"), AGWINCLOSE(win));
 
 	AG_WindowShow(win);
 	if ((winParent = AG_ParentWindow(vv)) != NULL)
@@ -297,9 +367,9 @@ SelectFontDlg(AG_Event *event)
 }
 
 static void *
-Edit(void *p, VG_View *vv)
+Edit(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 	AG_Pane *vPane;
 	AG_Textbox *tb;
@@ -309,21 +379,30 @@ Edit(void *p, VG_View *vv)
 
 	AG_LabelNew(vPane->div[0], 0, _("Text: "));
 	tb = AG_TextboxNewS(vPane->div[0],
-	    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND,
+	    AG_TEXTBOX_MULTILINE | AG_TEXTBOX_EXPAND,
 	    NULL);
+#ifdef AG_UNICODE
 	AG_TextboxBindUTF8(tb, vt->text, sizeof(vt->text));
+#else
+	AG_TextboxBindASCII(tb, vt->text, sizeof(vt->text));
+#endif
 
-	bAlv = AG_BoxNewVertNS(vPane->div[1], AG_BOX_HFILL|AG_BOX_FRAME);
+	bAlv = AG_BoxNewVert(vPane->div[1], AG_BOX_HFILL | AG_BOX_NO_SPACING);
 	AG_LabelNew(bAlv, 0, _("Alignment: "));
-	bAl = AG_BoxNewHorizNS(bAlv, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	bAl = AG_BoxNewHoriz(bAlv, AG_BOX_HFILL | AG_BOX_HOMOGENOUS |
+	                           AG_BOX_NO_SPACING);
 	AG_ButtonNewFn(bAl, 0, _("TL"), SetAlign, "%p,%i", vt, VG_ALIGN_TL);
 	AG_ButtonNewFn(bAl, 0, _("TC"), SetAlign, "%p,%i", vt, VG_ALIGN_TC);
 	AG_ButtonNewFn(bAl, 0, _("TR"), SetAlign, "%p,%i", vt, VG_ALIGN_TR);
-	bAl = AG_BoxNewHorizNS(bAlv, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+
+	bAl = AG_BoxNewHoriz(bAlv, AG_BOX_HFILL | AG_BOX_HOMOGENOUS |
+	                           AG_BOX_NO_SPACING);
 	AG_ButtonNewFn(bAl, 0, _("ML"), SetAlign, "%p,%i", vt, VG_ALIGN_ML);
 	AG_ButtonNewFn(bAl, 0, _("MC"), SetAlign, "%p,%i", vt, VG_ALIGN_MC);
 	AG_ButtonNewFn(bAl, 0, _("MR"), SetAlign, "%p,%i", vt, VG_ALIGN_MR);
-	bAl = AG_BoxNewHorizNS(bAlv, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+
+	bAl = AG_BoxNewHoriz(bAlv, AG_BOX_HFILL | AG_BOX_HOMOGENOUS |
+	                           AG_BOX_NO_SPACING);
 	AG_ButtonNewFn(bAl, 0, _("BL"), SetAlign, "%p,%i", vt, VG_ALIGN_BL);
 	AG_ButtonNewFn(bAl, 0, _("BC"), SetAlign, "%p,%i", vt, VG_ALIGN_BC);
 	AG_ButtonNewFn(bAl, 0, _("BR"), SetAlign, "%p,%i", vt, VG_ALIGN_BR);

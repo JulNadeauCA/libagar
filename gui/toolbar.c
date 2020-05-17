@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Toolbar widget. This is a simple subclass of AG_Box(3) which packs a set
+ * of AG_Button(3) in one or more rows. It can connect to an AG_Menu(3).
+ */
+
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/toolbar.h>
 #include <agar/gui/window.h>
 #include <agar/gui/primitive.h>
@@ -41,38 +48,38 @@ AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nRows, Uint flags)
 	bar->type = type;
 
 	for (i = 0; i < nRows && i < AG_TOOLBAR_MAX_ROWS; i++) {
-		int bflags = 0;
+		AG_Box *row;
+		Uint bflags = 0;
 
 		if (flags & AG_TOOLBAR_HOMOGENOUS) {
 			bflags = AG_BOX_HOMOGENOUS;
 		}
 		switch (type) {
 		case AG_TOOLBAR_HORIZ:
-			bar->rows[i] = AG_BoxNew(bar, AG_BOX_HORIZ, bflags);
+			row = bar->rows[i] = AG_BoxNew(bar, AG_BOX_HORIZ, bflags);
 			break;
 		case AG_TOOLBAR_VERT:
-			bar->rows[i] = AG_BoxNew(bar, AG_BOX_VERT, bflags);
+			row = bar->rows[i] = AG_BoxNew(bar, AG_BOX_VERT, bflags);
 			break;
+		default:
+			AG_FatalError("Bad type");
 		}
-		if (flags & AG_TOOLBAR_HFILL) { AG_ExpandHoriz(bar->rows[i]); }
-		if (flags & AG_TOOLBAR_VFILL) { AG_ExpandVert(bar->rows[i]); }
-		AG_BoxSetPadding(bar->rows[i], 1);
-		AG_BoxSetSpacing(bar->rows[i], 1);
+		if (flags & AG_TOOLBAR_HFILL) { WIDGET(row)->flags |= AG_WIDGET_HFILL; }
+		if (flags & AG_TOOLBAR_VFILL) { WIDGET(row)->flags |= AG_WIDGET_VFILL; }
+		AG_SetStyle(row, "padding", "1");
+		AG_SetStyle(row, "spacing", "1");
 		bar->nRows++;
 	}
-	AG_BoxSetPadding(AGBOX(bar), 0);
-	AG_BoxSetSpacing(AGBOX(bar), 1);
+
 	AG_ObjectAttach(parent, bar);
 	return (bar);
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Toolbar *bar = obj;
 	
-	WIDGET(bar)->flags |= AG_WIDGET_NOSPACING;
-
 	bar->flags = 0;
 	bar->type = AG_TOOLBAR_HORIZ;
 	bar->nRows = 0;
@@ -81,10 +88,10 @@ Init(void *obj)
 }
 
 static void
-StickyUpdate(AG_Event *event)
+StickyUpdate(AG_Event *_Nonnull event)
 {
-	AG_Button *selBtn = AG_SELF();
-	AG_Toolbar *bar = AG_PTR(1);
+	const AG_Button *selBtn = AG_BUTTON_SELF();
+	AG_Toolbar *bar = AG_TOOLBAR_PTR(1);
 	AG_Variable *stateb;
 	AG_Button *oBtn;
 	int i;
@@ -94,7 +101,7 @@ StickyUpdate(AG_Event *event)
 		OBJECT_FOREACH_CHILD(oBtn, bar->rows[i], ag_button) {
 			int *state;
 
-			stateb = AG_GetVariable(oBtn, "state", &state);
+			stateb = AG_GetVariable(oBtn, "state", (void *)&state);
 			if (bar->flags & AG_TOOLBAR_MULTI_STICKY) {
 				*state = !(*state);
 			} else {
@@ -106,46 +113,59 @@ StickyUpdate(AG_Event *event)
 	AG_ObjectUnlock(bar);
 }
 
+/*
+ * Select the active row for subsequent AG_ToolbarButton*() calls
+ * and AG_ToolbarSeparator() calls.
+ */
 void
 AG_ToolbarRow(AG_Toolbar *bar, int row)
 {
+	AG_OBJECT_ISA(bar, "AG_Widget:AG_Box:AG_Toolbar:*");
 	AG_ObjectLock(bar);
+
 #ifdef AG_DEBUG
 	if (row < 0 || row >= bar->nRows)
 		AG_FatalError("Bad row");
 #endif
 	bar->curRow = row;
+
 	AG_ObjectUnlock(bar);
 }
 
+/* Create a new Button (with icon) and attach to the Toolbar. */
 AG_Button *
-AG_ToolbarButtonIcon(AG_Toolbar *bar, AG_Surface *icon, int def,
+AG_ToolbarButtonIcon(AG_Toolbar *bar, const AG_Surface *icon, int def,
     void (*handler)(AG_Event *), const char *fmt, ...)
 {
 	AG_Button *bu;
 	AG_Event *ev;
 
+	AG_OBJECT_ISA(bar, "AG_Widget:AG_Box:AG_Toolbar:*");
 	AG_ObjectLock(bar);
 
-	bu = AG_ButtonNewS(bar->rows[bar->curRow], 0, NULL);
+	bu = AG_ButtonNewS(bar->rows[bar->curRow], AG_BUTTON_NO_FOCUS, NULL);
 	AG_ButtonSurface(bu, icon);
-	AG_ButtonSetFocusable(bu, 0);
 	AG_ButtonSetSticky(bu, bar->flags & AG_TOOLBAR_STICKY);
 	AG_SetInt(bu, "state", def);
 	bar->nButtons++;
 	
 	ev = AG_SetEvent(bu, "button-pushed", handler, NULL);
-	AG_EVENT_GET_ARGS(ev, fmt);
-	
-	if (bar->flags & (AG_TOOLBAR_STICKY|AG_TOOLBAR_MULTI_STICKY)) {
-		AG_AddEvent(bu, "button-pushed", StickyUpdate, "%p", bar);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
 	}
-	
-	AG_ObjectUnlock(bar);
+	if (bar->flags & (AG_TOOLBAR_STICKY | AG_TOOLBAR_MULTI_STICKY))
+		AG_AddEvent(bu, "button-pushed", StickyUpdate, "%p", bar);
+
 	AG_Redraw(bar);
+	AG_ObjectUnlock(bar);
 	return (bu);
 }
 
+/* Create a new Button (no icon) and attach to the Toolbar. */
 AG_Button *
 AG_ToolbarButton(AG_Toolbar *bar, const char *text, int def,
     void (*handler)(AG_Event *), const char *fmt, ...)
@@ -153,37 +173,46 @@ AG_ToolbarButton(AG_Toolbar *bar, const char *text, int def,
 	AG_Button *bu;
 	AG_Event *ev;
 	
+	AG_OBJECT_ISA(bar, "AG_Widget:AG_Box:AG_Toolbar:*");
 	AG_ObjectLock(bar);
 
-	bu = AG_ButtonNewS(bar->rows[bar->curRow], 0, text);
-	AG_ButtonSetFocusable(bu, 0);
+	bu = AG_ButtonNewS(bar->rows[bar->curRow], AG_BUTTON_NO_FOCUS, text);
 	AG_ButtonSetSticky(bu, bar->flags & AG_TOOLBAR_STICKY);
 	AG_SetInt(bu, "state", def);
 	bar->nButtons++;
 	
 	ev = AG_SetEvent(bu, "button-pushed", handler, NULL);
-	AG_EVENT_GET_ARGS(ev, fmt);
+	if (fmt) {
+		va_list ap;
 
-	if (bar->flags & (AG_TOOLBAR_STICKY|AG_TOOLBAR_MULTI_STICKY)) {
-		AG_AddEvent(bu, "button-pushed", StickyUpdate, "%p", bar);
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
 	}
-	
-	AG_ObjectUnlock(bar);
+	if (bar->flags & (AG_TOOLBAR_STICKY | AG_TOOLBAR_MULTI_STICKY))
+		AG_AddEvent(bu, "button-pushed", StickyUpdate, "%p", bar);
+
 	AG_Redraw(bar);
+	AG_ObjectUnlock(bar);
 	return (bu);
 }
 
+/* Create a new separator. */
 void
 AG_ToolbarSeparator(AG_Toolbar *bar)
 {
+	AG_OBJECT_ISA(bar, "AG_Widget:AG_Box:AG_Toolbar:*");
 	AG_ObjectLock(bar);
+
 	AG_SeparatorNew(bar->rows[bar->curRow],
 	    (bar->type == AG_TOOLBAR_HORIZ) ?
 	    AG_SEPARATOR_VERT : AG_SEPARATOR_HORIZ);
-	AG_ObjectUnlock(bar);
+
 	AG_Redraw(bar);
+	AG_ObjectUnlock(bar);
 }
 
+/* Set the boolean state of a Button to 1. */
 void
 AG_ToolbarSelect(AG_Toolbar *bar, AG_Button *bSel)
 {
@@ -191,6 +220,7 @@ AG_ToolbarSelect(AG_Toolbar *bar, AG_Button *bSel)
 	AG_Redraw(bar);
 }
 
+/* Set the boolean state of a Button to 0. */
 void
 AG_ToolbarDeselect(AG_Toolbar *bar, AG_Button *bSel)
 {
@@ -198,6 +228,7 @@ AG_ToolbarDeselect(AG_Toolbar *bar, AG_Button *bSel)
 	AG_Redraw(bar);
 }
 
+/* Set the boolean state of a Button to 1 and reset all others to 0. */
 void
 AG_ToolbarSelectOnly(AG_Toolbar *bar, AG_Button *bSel)
 {
@@ -205,18 +236,22 @@ AG_ToolbarSelectOnly(AG_Toolbar *bar, AG_Button *bSel)
 	AG_Button *b;
 	int i, *state;
 
+	AG_OBJECT_ISA(bar, "AG_Widget:AG_Box:AG_Toolbar:*");
 	AG_ObjectLock(bar);
+
 	for (i = 0; i < bar->nRows; i++) {
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
-			stateb = AG_GetVariable(b, "state", &state);
+			stateb = AG_GetVariable(b, "state", (void *)&state);
 			*state = (b == bSel);
 			AG_UnlockVariable(stateb);
 		}
 	}
-	AG_ObjectUnlock(bar);
+
 	AG_Redraw(bar);
+	AG_ObjectUnlock(bar);
 }
 
+/* Set the boolean state of all buttons to 1. */
 void
 AG_ToolbarSelectAll(AG_Toolbar *bar)
 {
@@ -224,18 +259,22 @@ AG_ToolbarSelectAll(AG_Toolbar *bar)
 	AG_Button *b;
 	int i, *state;
 
+	AG_OBJECT_ISA(bar, "AG_Widget:AG_Box:AG_Toolbar:*");
 	AG_ObjectLock(bar);
+
 	for (i = 0; i < bar->nRows; i++) {
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
-			stateb = AG_GetVariable(b, "state", &state);
+			stateb = AG_GetVariable(b, "state", (void *)&state);
 			*state = 1;
 			AG_UnlockVariable(stateb);
 		}
 	}
-	AG_ObjectUnlock(bar);
+
 	AG_Redraw(bar);
+	AG_ObjectUnlock(bar);
 }
 
+/* Set the boolean state of all buttons to 0. */
 void
 AG_ToolbarDeselectAll(AG_Toolbar *bar)
 {
@@ -243,20 +282,23 @@ AG_ToolbarDeselectAll(AG_Toolbar *bar)
 	AG_Button *b;
 	int i, *state;
 
+	AG_OBJECT_ISA(bar, "AG_Widget:AG_Box:AG_Toolbar:*");
 	AG_ObjectLock(bar);
+
 	for (i = 0; i < bar->nRows; i++) {
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
-			stateb = AG_GetVariable(b, "state", &state);
+			stateb = AG_GetVariable(b, "state", (void *)&state);
 			*state = 0;
 			AG_UnlockVariable(stateb);
 		}
 	}
-	AG_ObjectUnlock(bar);
+
 	AG_Redraw(bar);
+	AG_ObjectUnlock(bar);
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
 	AG_Toolbar *tbar = p;
 	AG_SizeReq rBar;
@@ -277,13 +319,15 @@ AG_WidgetClass agToolbarClass = {
 		sizeof(AG_Toolbar),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	AG_WidgetInheritDraw,
+	NULL,			/* draw */
 	SizeRequest,
-	AG_WidgetInheritSizeAllocate
+	NULL			/* size_allocate */
 };
+
+#endif /* AG_WIDGETS */

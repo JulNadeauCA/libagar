@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,9 +36,10 @@
 #include <agar/vg/icons.h>
 
 static int
-MouseButtonDown(void *t, VG_Vector v, int button)
+MouseButtonDown(void *_Nonnull obj, VG_Vector v, int button)
 {
-	VG_View *vv = VGTOOL(t)->vgv;
+	VG_Tool *t = obj;
+	VG_View *vv = t->vgv;
 	VG_Node *vn;
 
 	if (button == AG_MOUSE_LEFT) {
@@ -57,20 +58,20 @@ MouseButtonDown(void *t, VG_Vector v, int button)
 }
 
 static void
-PostDraw(void *t, VG_View *vv)
+PostDraw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	const int rSize = 5;
-	AG_Rect r;
-	VG_Color c;
 	VG_Node *vn;
+	AG_Rect r;
 	VG_Vector v;
-	float prox;
-	float vRange = 80.0f;
+	VG_Color c;
+	float prox, vRange = 80.0f;
+	Uint w = WIDGET(vv)->w;
+	Uint h = WIDGET(vv)->h;
 
-	r.w = rSize;
-	r.h = rSize;
-	for (r.y = 0; r.y < AGWIDGET(vv)->h; r.y+=r.h-1) {
-		for (r.x = 0; r.x < AGWIDGET(vv)->w; r.x+=r.w-1) {
+	r.w = 5;
+	r.h = 5;
+	for (r.y = 0; r.y < h; r.y += r.h-1) {
+		for (r.x = 0; r.x < w; r.x+=r.w-1) {
 			prox = AG_FLT_MAX;
 			TAILQ_FOREACH(vn, &vv->vg->nodes, list) {
 				if ((vn->flags & VG_NODE_SELECTED) == 0 ||
@@ -78,11 +79,14 @@ PostDraw(void *t, VG_View *vv)
 					continue;
 				}
 				VG_GetVGCoordsFlt(vv,
-				    VGVECTOR(r.x+(r.w/2), r.y+(r.h/2)), &v);
+				    VGVECTOR(r.x + (r.w >> 1),
+				             r.y + (r.h >> 1)), &v);
 				prox = vn->ops->pointProximity(vn, vv, &v);
 				break;
 			}
 			if (prox < vRange) {
+				AG_Color ac;
+
 				if (prox == 0.0f) {
 					c.r = 200;
 					c.g = 200;
@@ -93,7 +97,8 @@ PostDraw(void *t, VG_View *vv)
 					c.b = 0;
 				}
 				c.a = 255;
-				AG_DrawRectFilled(vv, r, VG_MapColorRGB(c));
+				ac = VG_MapColorRGB(c);
+				AG_DrawRectFilled(vv, &r, &ac);
 			}
 		}
 	}

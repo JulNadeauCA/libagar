@@ -7,18 +7,22 @@ PROJCONFIGDIR=	include/agar/config
 
 include ${TOP}/Makefile.proj
 
-INCDIR=		core gui vg math dev au
+INCDIR=		au core gui micro map net sg sk vg
 SUBDIR=		core \
 		${SUBDIR_gui} \
-		${SUBDIR_vg} \
+		${SUBDIR_micro} \
+		${SUBDIR_au} \
+		${SUBDIR_map} \
 		${SUBDIR_math} \
-		${SUBDIR_dev} \
-		${SUBDIR_au}
+		${SUBDIR_net} \
+		${SUBDIR_sk} \
+		${SUBDIR_sg} \
+		${SUBDIR_vg}
 
 all: all-subdir
 clean: clean-subdir
 cleandir: cleandir-config cleandir-subdir
-install: all install-subdir install-includes install-config
+install: install-subdir install-includes install-config
 deinstall: deinstall-subdir deinstall-includes deinstall-config
 depend: depend-subdir
 regress: regress-subdir
@@ -32,10 +36,6 @@ includes:
 	else \
 		perl mk/gen-includes.pl include/agar; \
 	fi
-
-configure:
-	cat configure.in | mkconfigure > configure
-	chmod 755 configure
 
 cleandir-config:
 	rm -fR include config 
@@ -54,7 +54,7 @@ install-includes:
 	@${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}
 	@echo ${INSTALL_INCL_DIR} ${INCLDIR}/agar
 	@${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}/agar
-	@(cd include/agar && for DIR in ${INCDIR} config; do \
+	@(cd include/agar && for DIR in ${INCDIR} config math; do \
 	    echo "${SH} mk/install-includes.sh $$DIR ${INCLDIR}/agar"; \
 	    ${SUDO} env \
 	      DESTDIR="${DESTDIR}" \
@@ -66,28 +66,12 @@ install-includes:
 		echo "${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h ${INCLDIR}/agar/$${INC}.h"; \
 		${SUDO} ${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h ${DESTDIR}${INCLDIR}/agar/$${INC}.h; \
 	done
-	@echo "${INSTALL_INCL} include/agar/core/web.h ${INCLDIR}/agar/web.h"
-	@${SUDO} ${INSTALL_INCL} include/agar/core/web.h ${DESTDIR}${INCLDIR}/agar/web.h
 
 deinstall-includes:
-	@-(cd include/agar && for DIR in ${INCDIR} config; do \
-	    echo "${SH} mk/deinstall-includes.sh $$DIR ${INCLDIR}/agar"; \
-	    ${SUDO} env \
-	      DESTDIR="${DESTDIR}" \
-	      DEINSTALL_INCL_DIR="${DEINSTALL_INCL_DIR}" \
-	      DEINSTALL_INCL="${DEINSTALL_INCL}" \
-	      ${SH} ${SRCDIR}/mk/deinstall-includes.sh $$DIR ${INCLDIR}/agar; \
-	done)
-	@for INC in ${INCDIR}; do \
-		echo "${DEINSTALL_INCL} ${INCLDIR}/agar/$${INC}.h"; \
-		${SUDO} ${DEINSTALL_INCL} ${DESTDIR}${INCLDIR}/agar/$${INC}.h; \
-	done
-	@echo "${DEINSTALL_INCL} ${INCLDIR}/agar/web.h"
-	@${SUDO} ${DEINSTALL_INCL} ${DESTDIR}${INCLDIR}/agar/web.h
-	@echo "${DEINSTALL_INCL_DIR} ${INCLDIR}/agar"
-	@-${SUDO} ${DEINSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}/agar
-	@echo "${DEINSTALL_INCL_DIR} ${INCLDIR}"
-	@-${SUDO} ${DEINSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}
+	@if [ -e "${INCLDIR}" -a -e "${INCLDIR}/agar" ]; then \
+		echo "rm -rf ${INCLDIR}/agar"; \
+		${SUDO} rm -rf ${INCLDIR}/agar; \
+	fi
 
 install-config:
 	@for F in ${AVAIL_CONFIGSCRIPTS}; do \
@@ -128,42 +112,31 @@ deinstall-config:
 pre-package:
 	@if [ "${PKG_OS}" = "windows" ]; then \
 		cp -f ${TOP}/mk/install-sdk/install-sdk.exe .; \
+		cat CHANGELOG.md    |sed "s/$$/`echo -e \\\r`/" >CHANGELOG.txt; \
+		cat INSTALL.md      |sed "s/$$/`echo -e \\\r`/" >INSTALL.txt; \
+		cat gui/license.txt |sed "s/$$/`echo -e \\\r`/" >LICENSE.txt; \
+		cat README.md       |sed "s/$$/`echo -e \\\r`/" >README.txt; \
+		cp -f mk/agar-logo.png Logo.png; \
 		echo '<meta http-equiv="refresh" content="1;url=http://libagar.org/docs/compile-msvc.html" />' > VisualC.html; \
 		echo "install-sdk.exe" >> ${PROJFILELIST}; \
-		echo "VisualC.html" >> ${PROJFILELIST}; \
-		V=`perl mk/get-version.pl`; \
-		cat README                       |sed "s/$$/`echo -e \\\r`/" >README.txt; \
-		cat INSTALL.txt                  |sed "s/$$/`echo -e \\\r`/" >INSTALL-Windows.txt; \
-		cat ChangeLogs/Release-$$V.txt   |sed "s/$$/`echo -e \\\r`/" >RELEASE-$$V.txt; \
-		cat LICENSE                      |sed "s/$$/`echo -e \\\r`/" >LICENSE.txt; \
-		cat gui/fonts/Vera-Copyright.txt |sed "s/$$/`echo -e \\\r`/" >LICENSE-Vera.txt; \
-		cp -f mk/agar-logo.png Logo.png; \
-		echo "README.txt"          >> ${PROJFILELIST}; \
-		echo "INSTALL-Windows.txt" >> ${PROJFILELIST}; \
-		echo "RELEASE-$$V.txt"     >> ${PROJFILELIST}; \
-		echo "LICENSE.txt"         >> ${PROJFILELIST}; \
-		echo "LICENSE-Vera.txt"    >> ${PROJFILELIST}; \
-		echo "Logo.png" >> ${PROJFILELIST}; \
-	else \
-		V=`perl mk/get-version.pl`; \
-		cp ChangeLogs/Release-$$V.txt RELEASE-$$V; \
-		cp gui/fonts/Vera-Copyright.txt LICENSE-Vera; \
-		cp mk/agar-logo.png Logo.png; \
+		echo "CHANGELOG.txt"   >> ${PROJFILELIST}; \
+		echo "INSTALL.txt"     >> ${PROJFILELIST}; \
+		echo "LICENSE.txt"     >> ${PROJFILELIST}; \
+		echo "README.txt"      >> ${PROJFILELIST}; \
+		echo "Logo.png"        >> ${PROJFILELIST}; \
+		echo "VisualC.html"    >> ${PROJFILELIST}; \
 	fi
 
 post-package:
 	@if [ "${PKG_OS}" = "windows" ]; then \
-		rm -f install-sdk.exe README.txt INSTALL-Windows.txt VisualC.html; \
-		rm -f RELEASE-*.txt LICENSE.txt LICENSE-*.txt Logo.png; \
-	else \
-		rm -f Release-* ChangeLog-* LICENSE-* Logo.png; \
+		rm -f install-sdk.exe CHANGELOG.txt INSTALL.txt LICENSE.txt README.txt Logo.png VisualC.html; \
 	fi
 
 function-list:
 	find . -name \*.3 -exec grep ^\.Fn {} \; |awk '{print $$2}' |uniq
 
 .PHONY: clean cleandir install deinstall depend regress includes
-.PHONY: configure cleandir-config release
+.PHONY: cleandir-config release
 .PHONY: install-includes deinstall-includes install-config deinstall-config
 .PHONY: pre-package post-package function-list
 

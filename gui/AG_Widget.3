@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 .ds oS Agar 1.5
 .Sh NAME
 .Nm AG_Widget
-.Nd agar GUI base widget
+.Nd agar user interface element
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -37,59 +37,90 @@
 .Ed
 .Sh DESCRIPTION
 .Nm
-is the base class for GUI widgets (and windows) in Agar GUI.
-Instances of
-.Nm
-can be attached (using
-.Xr AG_ObjectAttach 3 )
-to any other
-.Nm
-(known as the
-.Em container
-widget).
-General-purpose container widgets include
-.Xr AG_Window 3
-and
-.Xr AG_Box 3 .
-.Pp
-The class registration interface of
+is the base class for user interface elements in Agar.
+Widgets are organized in an ordered virtual filesystem of
 .Xr AG_Object 3
-allows new widgets to be implemented (or derived from existing classes).
-Widgets use the object system's
-.Xr AG_Event 3
-to handle (and deliver) events.
+elements.
+The parent of a widget is referred to as its
+.Em Container .
+Container widgets include:
+.Xr AG_Box 3 ,
+.Xr AG_Fixed 3 ,
+.Xr AG_Pane 3 ,
+.Xr AG_Scrollview 3 ,
+.Xr AG_Titlebar 3
+and
+.Xr AG_Window 3
+itself.
+.Pp
+Widgets are attached to their containers with
+.Xr AG_ObjectAttach 3
+and detached with
+.Xr AG_ObjectDetach 3 .
+Unattached widgets can be freed using
+.Xr AG_ObjectDestroy 3 .
+Agar handles garbage collection of windows (and attached widgets) internally.
+Destroying an active
+.Xr AG_Window 3
+or a widget which is still attached to a parent is an error which would
+trigger a fatal assertion in debug mode.
+.Pp
+Unless renamed with
+.Xr AG_ObjectSetName 3 ,
+widget instances are given a generic name (e.g., "button0").
+.Xr AG_ObjectFind 3
+can be used to get a pointer to a widget by pathname (e.g., "box0/button0").
+.Pp
+Parentless widgets form the root of their own virtual filesystem.
+It is customary for high-level constructor routines (such as
+.Xr AG_ButtonNew 3 )
+to accept a NULL
+.Fa parent
+argument, allowing the caller to make an explicit
+.Xr AG_ObjectAttach 3
+call at a later time.
+.Pp
+The
 .Xr AG_Variable 3
-provides the basis for memory bindings (see
-.Sx BINDINGS
-section).
+table of
+.Ft AG_Object
+is used to store bindings data, style properties and general user data.
+The
+.Xr AG_Event 3
+framework is used to handle both low-level (e.g., "mouse-button-down") as well
+as high-level (e.g., "button-pushed") events.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
+.\" MANLINK(AG_WidgetClass)
 .Sh CLASS OPERATIONS
 Object operations specific to the
 .Nm
 class are defined as follows:
 .Bd -literal
 typedef struct ag_widget_class {
-	struct ag_object_class _inherit;
-	void (*draw)(AG_Widget *w);
-	void (*size_request)(AG_Widget *w, AG_SizeReq *req);
-	int  (*size_allocate)(AG_Widget *w, const AG_SizeAlloc *alloc);
+	struct ag_object_class _inherit;  /* [AG_Object] -> [AG_Widget] */
+	
+	void (*draw)(void *obj);
+	void (*size_request)(void *obj, AG_SizeReq *req);
+	int  (*size_allocate)(void *obj, const AG_SizeAlloc *alloc);
 } AG_WidgetClass;
 .Ed
 .Pp
 .Fn draw
-renders the widget to the graphics display.
+renders the widget to the graphics display (e.g., using OpenGL,
+.Xr AG_WidgetPrimitives 3
+or other methods).
 The code under
 .Fn draw
-is referred to as the
-.Dq Rendering Context .
-Some functions (such as
-.Fn AG_WidgetBlitSurface )
-are unsafe to call outside Rendering Context.
+is referred to as
+.Em Rendering Context .
+Widget primitives and operations such as
+.Fn AG_WidgetBlitSurface
+must be called from rendering context.
 .Pp
 .Fn size_request
-should return an initial, preferred geometry in px (without any guarantee
+should return an initial, preferred geometry in pixels (without any guarantee
 that the request will be satisfied).
 For example, an
 .Xr AG_Label 3 ,
@@ -117,54 +148,53 @@ to work at all (in which case the
 flag will be set and
 .Fn draw
 will not run).
+.\" MANLINK(AG_SizeReq)
+.\" MANLINK(AG_SizeAlloc)
 .Sh SIZING
 .nr nS 1
 .Ft "void"
-.Fn AG_Expand "AG_Widget *widget"
+.Fn AG_Expand "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_ExpandHoriz "AG_Widget *widget"
+.Fn AG_ExpandHoriz "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_ExpandVert "AG_Widget *widget"
+.Fn AG_ExpandVert "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetSizeReq "AG_Widget *widget" "AG_SizeReq *req"
+.Fn AG_WidgetSizeReq "AG_Widget *obj" "AG_SizeReq *req"
 .Pp
 .Ft "void"
-.Fn AG_WidgetSizeAlloc "AG_Widget *widget" "AG_SizeAlloc *alloc"
+.Fn AG_WidgetSizeAlloc "AG_Widget *obj" "AG_SizeAlloc *alloc"
 .Pp
 .Ft void
-.Fn AG_WidgetSetPosition "AG_Widget *widget" "int x" "int y"
+.Fn AG_WidgetSetPosition "AG_Widget *obj" "int x" "int y"
 .Pp
 .Ft void
-.Fn AG_WidgetSetSize "AG_Widget *widget" "int w" "int h"
+.Fn AG_WidgetSetSize "AG_Widget *obj" "int w" "int h"
 .Pp
 .Ft void
-.Fn AG_WidgetSetGeometry "AG_Widget *widget" "AG_Rect rect"
+.Fn AG_WidgetSetGeometry "AG_Widget *obj" "AG_Rect rect"
 .Pp
 .Ft void
-.Fn AG_WidgetUpdate "AG_Widget *widget"
+.Fn AG_WidgetUpdate "AG_Widget *obj"
+.Pp
+.Ft void
+.Fn AG_WidgetUpdateCoords "AG_Widget *obj" "int x" "int y"
 .Pp
 .nr nS 0
 .Fn AG_Expand
-makes the widget fill all available space in the parent.
+makes the widget fill all available space in its parent.
 .Fn AG_ExpandHoriz
 and
 .Fn AG_ExpandVert
-makes the widget fill the available space horizontally or vertically.
-.Pp
-Note: Most widget constructors accept
+expands only in the given direction.
+Most widget constructors also accept
 .Dv EXPAND ,
 .Dv HFILL
 and
 .Dv VFILL
-as option flags.
-Setting them is equivalent to calling
-.Fn AG_Expand ,
-.Fn AG_ExpandHoriz
-and
-.Fn AG_ExpandVert .
+options.
 .Pp
 .Fn AG_WidgetSizeReq
 invokes the
@@ -242,119 +272,138 @@ calls made in event context, or manual modifications of the
 fields of the
 .Nm
 structure.
+.Pp
+.Fn AG_WidgetUpdateCoords
+is called internally to update the cached absolute display coordinates (the
+.Va rView
+rectangle) of
+.Fa wid
+and its descendents based on their current relative coordinates (the
+.Va x ,
+.Va y ,
+.Va w ,
+.Va h
+members).
+The widget and its parent VFS must be locked.
+.Sh STYLE ATTRIBUTES
+.nr nS 1
+.Ft "void"
+.Fn AG_SetStyle "AG_Widget *obj" "const char *attr" "const char *value"
+.Pp
+.Ft "void"
+.Fn AG_SetStyleF "AG_Widget *obj" "const char *attr" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_SetFont "AG_Widget *obj" "const AG_Font *font"
+.Pp
+.nr nS 0
+The
+.Fn AG_SetStyle
+function sets the specified style attribute to the given value.
+Refer to
+.Xr AG_StyleSheet 3
+for the list of available attributes.
+.Pp
+The
+.Fn AG_SetFont
+routine inherits "font-family", "font-size", "font-weight" and
+"font-style" from an existing
+.Xr AG_Font 3
+object.
 .Sh INPUT STATE
 .nr nS 1
 .Ft "void"
-.Fn AG_WidgetEnable "AG_Widget *widget"
+.Fn AG_WidgetEnable "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetDisable "AG_Widget *widget"
+.Fn AG_WidgetDisable "AG_Widget *obj"
 .Pp
 .Ft "int"
-.Fn AG_WidgetEnabled "AG_Widget *widget"
+.Fn AG_WidgetEnabled "AG_Widget *obj"
 .Pp
 .Ft "int"
-.Fn AG_WidgetDisabled "AG_Widget *widget"
+.Fn AG_WidgetDisabled "AG_Widget *obj"
 .Pp
 .nr nS 0
-The "enabled" flag of a widget determines whether the user is allowed to modify
-whatever data the widget is accessing.
-The interpretation of this flag is widget-specific.
+A widget in DISABLED state will not accept user input other than that
+required for navigation (i.e., scrolling).
 .Fn AG_WidgetEnable
-sets the flag,
+clears the DISABLED flag and
 .Fn AG_WidgetDisable
-clears it.
+sets it.
 These functions will raise the
 .Sq widget-enabled
 and
 .Sq widget-disabled
 events accordingly.
 .Pp
-The functions
 .Fn AG_WidgetEnabled
 and
 .Fn AG_WidgetDisabled
-return the current "enabled" state of the widget.
-The
-.Nm
-object must be locked when the call is made.
+return the current state.
 .Sh FOCUS STATE
-The focus state of widgets enables the reception of specific types of
-events which are filtered by default.
-The focus state also affects the behavior and appearance of some widgets.
-A widget holding focus (in a currently focused window) will receive mouse
-events
+Focus enables reception of input events that would be filtered out by default.
+A focused widget (in an actively focused window) will receive
 .Fn mouse-motion ,
 .Fn mouse-button-up ,
 as well as keyboard events
 .Fn key-up
 and
-.Fn key-down
-(note that unfocused widgets can be configured to receive those events
-unfiltered as well using the
-.Dv AG_WIDGET_UNFOCUSED_*
-options).
+.Fn key-down .
 .Pp
 .nr nS 1
 .Ft "int"
-.Fn AG_WidgetSetFocusable "AG_Widget *widget" "int enable"
+.Fn AG_WidgetSetFocusable "AG_Widget *obj" "int enable"
 .Pp
 .Ft "int"
-.Fn AG_WidgetFocus "AG_Widget *widget"
+.Fn AG_WidgetFocus "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetUnfocus "AG_Widget *widget"
+.Fn AG_WidgetUnfocus "AG_Widget *obj"
 .Pp
 .Ft "int"
-.Fn AG_WidgetIsFocused "AG_Widget *widget"
+.Fn AG_WidgetIsFocused "const AG_Widget *obj"
 .Pp
 .Ft "int"
-.Fn AG_WidgetIsFocusedInWindow "AG_Widget *widget"
+.Fn AG_WidgetIsFocusedInWindow "const AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetForwardFocus "AG_Widget *widget" "AG_Widget *widgetToFocus"
+.Fn AG_WidgetForwardFocus "AG_Widget *obj" "AG_Widget *widgetToFocus"
 .Pp
 .nr nS 0
 .Fn AG_WidgetSetFocusable
-sets the
+clears or sets the
 .Dv AG_WIDGET_FOCUSABLE
-flag which allows the widget to receive focus (0 = ignore, 1 = accept focus).
-Returns the previous setting.
+flag and returns the previous setting (0 = Not focusable, 1 = Focusable).
 .Pp
 .Fn AG_WidgetFocus
-gives focus to the specified widget and all of its parent widgets including
+focuses the specified widget and all of its parent widgets including
 the parent
 .Xr AG_Window 3 .
 Returns 1 on success and 0 if the widget is not accepting focus.
 .Pp
 .Fn AG_WidgetUnfocus
-removes the focus state from the given widget (including its child widgets,
-if any).
+removes the focus state from the given widget and its children, recursively.
 .Pp
 .Fn AG_WidgetIsFocused
-returns 1 if the widget is currently holding focus (i.e., the widget
-has the focus flag set, and its parent window, if any, is focused as
-well).
+returns 1 if the widget is both focused in relation to its parent window, and
+the parent window itself is focused.
 .Fn AG_WidgetIsFocusedInWindow
-returns 1 if the widget has the focus flag set (without evaluating the
-focus state of any parent windows).
+returns 1 if the widget is focused regardless of the focus state of its parent.
 .Pp
 .Fn AG_WidgetForwardFocus
 arranges automatic forwarding of the focus to a specified widget.
 Whenever
-.Fa AG_WidgetFocus
-will be invoked on
-.Fa widget ,
-the focus will be given to
-.Fa widgetToFocus
-instead.
+.Fa obj
+gains focus, Agar will arrange for the focus to be transferred automatically to
+.Fa widgetToFocus .
 .Sh COORDINATES
 .nr nS 1
 .Ft int
-.Fn AG_WidgetArea "AG_Widget *widget" "int x" "int y"
+.Fn AG_WidgetArea "AG_Widget *obj" "int x" "int y"
 .Pp
 .Ft int
-.Fn AG_WidgetRelativeArea "AG_Widget *widget" "int x" "int y"
+.Fn AG_WidgetRelativeArea "AG_Widget *obj" "int x" "int y"
 .Pp
 .nr nS 0
 The
@@ -370,7 +419,7 @@ variant accepts widget coordinates.
 .Sh BLITTING SURFACES
 These routines allow graphical surfaces to be managed (mapped in hardware or
 software) and efficiently copied.
-They must be called from Rendering Context (i.e., the
+They must be called from rendering context (i.e., the
 .Fn draw
 operation of
 .Nm )
@@ -378,31 +427,31 @@ only.
 .Pp
 .nr nS 1
 .Ft void
-.Fn AG_WidgetBlit "AG_Widget *widget" "AG_Surface *src" "int x" "int y"
+.Fn AG_WidgetBlit "AG_Widget *obj" "AG_Surface *src" "int x" "int y"
 .Pp
 .Ft int
-.Fn AG_WidgetMapSurface "AG_Widget *widget" "AG_Surface *su"
+.Fn AG_WidgetMapSurface "AG_Widget *obj" "AG_Surface *su"
 .Pp
 .Ft int
-.Fn AG_WidgetMapSurfaceNODUP "AG_Widget *widget" "AG_Surface *su"
+.Fn AG_WidgetMapSurfaceNODUP "AG_Widget *obj" "AG_Surface *su"
 .Pp
 .Ft void
-.Fn AG_WidgetReplaceSurface "AG_Widget *widget" "int surface_id" "AG_Surface *newSurface"
+.Fn AG_WidgetReplaceSurface "AG_Widget *obj" "int surface_id" "AG_Surface *newSurface"
 .Pp
 .Ft void
-.Fn AG_WidgetReplaceSurfaceNODUP "AG_Widget *widget" "int surface_id" "AG_Surface *newSurface"
+.Fn AG_WidgetReplaceSurfaceNODUP "AG_Widget *obj" "int surface_id" "AG_Surface *newSurface"
 .Pp
 .Ft void
-.Fn AG_WidgetUnmapSurface "AG_Widget *widget" "int surface_id"
+.Fn AG_WidgetUnmapSurface "AG_Widget *obj" "int surface_id"
 .Pp
 .Ft void
-.Fn AG_WidgetUpdateSurface "AG_Widget *widget" "int surface_id"
+.Fn AG_WidgetUpdateSurface "AG_Widget *obj" "int surface_id"
 .Pp
 .Ft void
-.Fn AG_WidgetBlitFrom "AG_Widget *dstWidget" "AG_Widget *srcWidget" "int surface_id" "AG_Rect *rs" "int x" "int y"
+.Fn AG_WidgetBlitFrom "AG_Widget *obj" "AG_Widget *srcWidget" "int surface_id" "AG_Rect *rs" "int x" "int y"
 .Pp
 .Ft void
-.Fn AG_WidgetBlitSurface "AG_Widget *widget" "int surface_id" "int x" "int y"
+.Fn AG_WidgetBlitSurface "AG_Widget *obj" "int surface_id" "int x" "int y"
 .Pp
 .nr nS 0
 The
@@ -411,7 +460,7 @@ function performs a software->hardware blit from the surface
 .Fa src
 to the video display at the given widget coordinates.
 .Fn AG_WidgetBlit
-must invoked in Rendering Context.
+must invoked in rendering context.
 See
 .Xr AG_Surface 3
 for more information on the Agar surface structure.
@@ -450,12 +499,9 @@ structure.
 The surface pointer must remain valid for the lifetime of the widget (if in
 doubt, use
 .Xr AG_SurfaceDup 3 ) .
-.Pp
-Under multithreading,
 .Fn AG_WidgetMapSurface
-may be invoked from any context, but the returned name is only valid as
-long as the widget is locked (see
-.Xr AG_ObjectLock 3 ) .
+may be invoked from any context, but in a multithreaded context the returned
+name is only valid as long as the widget remains locked.
 .Pp
 .Fn AG_WidgetReplaceSurface
 replaces the contents of a previously-mapped surface with the contents of
@@ -478,7 +524,7 @@ and
 will not immediately delete any previous texture associated with the previous
 surface.
 Instead, it will queue the delete operation for future execution from
-Rendering Context, as required by thread safety.
+rendering context, as required by thread safety.
 .Pp
 The
 .Fn AG_WidgetUpdateSurface
@@ -494,11 +540,11 @@ source widget
 (using source rectangle
 .Fa rs )
 onto the destination widget
-.Fa dstWidget ,
+.Fa obj ,
 at coordinates
 .Fa x ,
 .Fa y .
-This function must be invoked in Rendering Context.
+This function must be invoked in rendering context.
 .Pp
 The
 .Fn AG_WidgetBlitSurface
@@ -507,11 +553,11 @@ variant invokes
 with the same argument for both
 .Fa srcWidget
 and
-.Fa dstWidget
+.Fa obj
 (and
 .Fa rs
 set to NULL).
-.Sh BINDINGS
+.Sh USING BINDINGS
 Widget states can be bound to memory locations containing data in a
 supported format.
 For example, the "state" binding of
@@ -519,7 +565,7 @@ For example, the "state" binding of
 can be tied to an integer (or bits in an integer), such that the user pressing
 the button directly manipulates the integer value in memory.
 .Pp
-Bindings are documented under the
+Bindings are documented under the heading
 .Dq BINDINGS
 section of the widget's manual page.
 For instance,
@@ -551,17 +597,6 @@ The
 .Fn AG_Bind<Type>Mp
 variants accept a pointer to a mutex which will be acquired prior to accessing
 the data.
-The
-.Fn AG_Bind<Type>Fn
-variants accept a pointer to a function instead of a memory location
-(the widget state will then be obtained by evaluating that function).
-.Pp
-Note: The
-.Xr AG_Variable 3
-API is actually part of
-.Xr AG_Object 3 ,
-and is not GUI-specific.
-It can be useful in non-GUI applications as well.
 .Pp
 Since the state of a widget can influence its appearance
 (e.g.,
@@ -573,13 +608,13 @@ arranges for this to occur automatically (see below).
 .Sh CONTROLLING REDRAW
 .nr nS 1
 .Ft "void"
-.Fn AG_Redraw "AG_Widget *widget"
+.Fn AG_Redraw "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_RedrawOnChange "AG_Widget *widget" "int refresh_ms" "const char *binding_name"
+.Fn AG_RedrawOnChange "AG_Widget *obj" "int refresh_ms" "const char *binding_name"
 .Pp
 .Ft "void"
-.Fn AG_RedrawOnTick "AG_Widget *widget" "int refresh_ms"
+.Fn AG_RedrawOnTick "AG_Widget *obj" "int refresh_ms"
 .Pp
 .nr nS 0
 The
@@ -588,7 +623,7 @@ function signals that the widget must be redrawn to the video display.
 It is equivalent to setting the
 .Va dirty
 variable of the widget's parent window to 1.
-If called from Rendering Context,
+If called from rendering context,
 .Fn AG_Redraw
 is a no-op.
 .Pp
@@ -622,9 +657,6 @@ call is disabled.
 .Fn AG_ParentWindow "AG_Widget *widget"
 .Pp
 .Ft "AG_Widget *"
-.Fn AG_WidgetFind "AG_Driver *drv" "const char *path"
-.Pp
-.Ft "AG_Widget *"
 .Fn AG_WidgetFindFocused "AG_Window *win"
 .Pp
 .Ft "AG_Widget *"
@@ -640,19 +672,6 @@ returns a pointer to the parent
 for the given widget instance.
 The pointer is valid only as long as the parent VFS remains locked.
 If the widget is not attached, NULL is returned.
-.Pp
-.Fn AG_WidgetFind
-locates a widget instance by name, where
-.Fa path
-is a
-.Sq /
-separated path name relative to the
-.Xr AG_Driver 3
-VFS root, for example: "My Window/Box #1/My button".
-If the widget exists, the function returns a pointer to the
-.Nm
-instance.
-The returned pointer is valid only as long as the parent VFS remains locked.
 .Pp
 .Fn AG_WidgetFindFocused
 returns the top-most focused widget under
@@ -671,26 +690,31 @@ The
 .Fn AG_WidgetFindRect
 variant requires that the widget enclose the whole given rectangle.
 .Pp
-Similarly to
-.Fn AG_WidgetFind ,
-the
-.Nm
-pointer returned by
+The pointer returned by
 .Fn AG_WidgetFindFocused ,
 .Fn AG_WidgetFindPoint
 and
 .Fn AG_WidgetFindRect
-should be considered valid only for as long as the parent VFS is locked.
+is valid only for as long as the parent VFS is locked.
+.Pp
+See also:
+.Xr AG_ObjectFind 3 .
 .Sh RENDERING CONTROL
 .nr nS 1
 .Ft void
-.Fn AG_PushClipRect "AG_Widget *widget" "AG_Rect r"
+.Fn AG_PushClipRect "AG_Widget *obj" "const AG_Rect *r"
 .Pp
 .Ft void
-.Fn AG_PopClipRect "AG_Widget *widget"
+.Fn AG_PopClipRect "AG_Widget *obj"
+.Pp
+.Ft void
+.Fn AG_PushBlendingMode "AG_Widget *obj" "AG_AlphaFn src" "AG_AlphaFn dst"
+.Pp
+.Ft void
+.Fn AG_PopBlendingMode "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetDraw "AG_Widget *widget"
+.Fn AG_WidgetDraw "AG_Widget *obj"
 .Pp
 .Ft "void"
 .Fn AG_BeginRendering "AG_Driver *drv"
@@ -699,36 +723,62 @@ should be considered valid only for as long as the parent VFS is locked.
 .Fn AG_EndRendering "AG_Driver *drv"
 .Pp
 .Ft "void"
-.Fn AG_WidgetHide "AG_Widget *widget"
+.Fn AG_WidgetHide "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetShow "AG_Widget *widget"
+.Fn AG_WidgetShow "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetHideAll "AG_Widget *widget"
+.Fn AG_WidgetHideAll "AG_Widget *obj"
 .Pp
 .Ft "void"
-.Fn AG_WidgetShowAll "AG_Widget *widget"
+.Fn AG_WidgetShowAll "AG_Widget *obj"
 .Pp
 .Ft "int"
-.Fn AG_WidgetVisible "AG_Widget *widget"
+.Fn AG_WidgetVisible "AG_Widget *obj"
 .Pp
 .Ft "AG_Surface *"
-.Fn AG_WidgetSurface "AG_Widget *widget"
+.Fn AG_WidgetSurface "AG_Widget *obj"
 .Pp
 .nr nS 0
 The
 .Fn AG_PushClipRect
-function pushes a rectangle (in widget coordinates) onto the stack of
+function pushes a rectangle (in widget-relative coordinates) onto the stack of
 clipping rectangles, and
 .Fn AG_PopClipRect
 pops the last entry from the clipping rectangle stack.
 The effective clipping rectangle will be the intersection of all rectangles
 on this stack.
-.Fn AG_PushClipRect
+Both functions must be invoked in rendering context.
+.Pp
+.Fn AG_PushBlendingMode
+selects the source and destination functions for further pixel blending
+operations.
+It also pushes the current state onto the stack of alpha blending modes.
+Setting
+.Fa src
+to
+.Dv AG_ALPHA_ZERO
 and
-.Fn AG_PopClipRect
-must be invoked in Rendering Context.
+.Fa dst
+to
+.Dv AG_ALPHA_ONE
+(the default) effectively disables blending.
+Setting
+.Fa src 
+to
+.Dv AG_ALPHA_SRC
+and
+.Fa dst
+to
+.Dv AG_ALPHA_ONE_MINUS_SRC
+is the most common case.
+See
+.Xr AG_AlphaFn 3
+for the list of possible alpha blending modes.
+.Fn AG_PopBlendingMode
+pops the the last entry off of the stack of alpha blending modes.
+Both functions must be invoked from rendering context.
 .Pp
 The
 .Fn AG_WidgetDraw
@@ -775,68 +825,12 @@ The
 routine renders the widget to a newly-allocated
 .Xr AG_Surface 3 .
 This surface should be freed after use.
-.Sh STYLE PROPERTIES
-Presentation settings such as fonts and colors are stored as named
-.Xr AG_Variable 3
-properties (e.g., "font-size", "color", "color#hover", etc.)
-Those properties should be set using the following functions:
-.Pp
-.nr nS 1
-.Ft "void"
-.Fn AG_SetFont "AG_Widget *widget" "const AG_Font *font"
-.Pp
-.Ft "void"
-.Fn AG_SetStyle "AG_Widget *widget" "const char *which" "const char *value"
-.Pp
-.nr nS 0
-The
-.Fn AG_SetFont
-function sets the widget's default font attributes to match those of the
-specified font object.
-.Pp
-The
-.Fn AG_SetStyle
-function sets the specified style attribute to the given value.
-.\"
-.\" SYNC WITH AG_Widget(3)
-.\"
-Accepted attributes are as follows:
-.Pp
-.Bl -tag -compact -width "font-family "
-.It font-family
-Font face specification ("Courier", "Terminal").
-.It font-size
-Font size in points ("10pts") or ratio ("50%").
-.It font-weight
-Font weight, either "bold" or "normal".
-.It font-style
-Font style, either "italic" or "normal".
-.It color
-Main color of the widget.
-Colors may be specified as unsigned 8-bit components with "rgb(r,g,b[,a])",
-or floating-point HSV parameters with "hsv(h,s,v[,a])".
-In either mode, components may be expressed as a ratio to the parent widget's
-color components by appending a "%".
-.It text-color
-Color for rendered text.
-.It line-color
-Color for line drawings.
-.It shape-color
-Color for polygons and other filled shapes.
-.It border-color
-Color for cosmetic borders.
-.El
-.Pp
-An optional selector may be appended to the attribute names.
-Accepted selectors include "#disabled", "#hover" and "#selected".
-Selectors may be interpreted differently on a per-widget basis.
-.Sh STANDARD WIDGET ACTIONS
+.Sh WIDGET ACTIONS
 User-generated events such as key presses or mouse button events can be
-tied to
+connected to high-level Widget
 .Em actions ,
-such as executing a specified routine or controlling
-a boolean variable.
-Registered actions are described by the
+such as executing a specified routine or controlling a boolean.
+Widget actions are described by the
 .Fa AG_Action
 structure.
 .Pp
@@ -852,43 +846,43 @@ also provides interfaces for working with widget actions.
 .\" MANLINK(AG_Action)
 .nr nS 1
 .Ft "AG_Action *"
-.Fn AG_ActionFn "AG_Widget *widget" "const char *action" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
+.Fn AG_ActionFn "AG_Widget *obj" "const char *action" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
 .Ft "AG_Action *"
-.Fn AG_ActionSetInt "AG_Widget *widget" "const char *action" "int *variable" "int value"
+.Fn AG_ActionSetInt "AG_Widget *obj" "const char *action" "int *variable" "int value"
 .Pp
 .Ft "AG_Action *"
-.Fn AG_ActionSetFlag "AG_Widget *widget" "const char *action" "Uint *variable" "Uint bitmask" "int value"
+.Fn AG_ActionSetFlag "AG_Widget *obj" "const char *action" "Uint *variable" "Uint bitmask" "int value"
 .Pp
 .Ft "AG_Action *"
-.Fn AG_ActionToggleInt "AG_Widget *widget" "const char *action" "int *variable"
+.Fn AG_ActionToggleInt "AG_Widget *obj" "const char *action" "int *variable"
 .Pp
 .Ft "AG_Action *"
-.Fn AG_ActionToggleFlag "AG_Widget *widget" "const char *action" "Uint *variable" "Uint bitmask"
+.Fn AG_ActionToggleFlag "AG_Widget *obj" "const char *action" "Uint *variable" "Uint bitmask"
 .Pp
 .Ft void
-.Fn AG_ActionOnButtonDown "AG_Widget *widget" "int button" "const char *action"
+.Fn AG_ActionOnButtonDown "AG_Widget *obj" "int button" "const char *action"
 .Pp
 .Ft void
-.Fn AG_ActionOnButtonUp "AG_Widget *widget" "int button" "const char *action"
+.Fn AG_ActionOnButtonUp "AG_Widget *obj" "int button" "const char *action"
 .Pp
 .Ft void
-.Fn AG_ActionOnKeyDown "AG_Widget *widget" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
+.Fn AG_ActionOnKeyDown "AG_Widget *obj" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
 .Pp
 .Ft void
-.Fn AG_ActionOnKeyUp "AG_Widget *widget" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
+.Fn AG_ActionOnKeyUp "AG_Widget *obj" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
 .Pp
 .Ft void
-.Fn AG_ActionOnKey "AG_Widget *widget" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
+.Fn AG_ActionOnKey "AG_Widget *obj" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
 .Pp
 .Ft int
-.Fn AG_ExecMouseAction "AG_Widget *widget" "AG_ActionEventType type" "int button" "int x" "int y"
+.Fn AG_ExecMouseAction "AG_Widget *obj" "AG_ActionEventType type" "int button" "int x" "int y"
 .Pp
 .Ft int
-.Fn AG_ExecKeyAction "AG_Widget *widget" "AG_ActionEventType type" "AG_KeySym sym" "AG_KeyMod mod"
+.Fn AG_ExecKeyAction "AG_Widget *obj" "AG_ActionEventType type" "AG_KeySym sym" "AG_KeyMod mod"
 .Pp
 .Ft int
-.Fn AG_ExecAction "AG_Widget *widget" "AG_Action *a"
+.Fn AG_ExecAction "AG_Widget *obj" "AG_Action *a"
 .Pp
 .nr nS 0
 .Fn AG_ActionFn
@@ -1034,8 +1028,6 @@ Input state has been enabled with
 .It Fn widget-disabled "void"
 Input state has been disabled with
 .Xr AG_WidgetDisable 3 .
-.It Fn widget-moved "void"
-The widget (or one of its parents) has been moved.
 .It Fn widget-gainfocus "void"
 The widget now holds focus inside its parent container.
 .It Fn widget-lostfocus "void"
@@ -1058,11 +1050,15 @@ Invoked prior to the
 .Fn draw
 operation; requires
 .Dv USE_OPENGL .
+.It Fn palette-changed "void"
+At least one entry in the color palette of the widget has changed.
 .It Fn font-changed "void"
-The default font associated with the widget has changed.
-The new font may be accessed via the
+The active font family or font attributes have changed.
+The new font may be accessed either via the
 .Va font
-structure member.
+structure member, or using the
+.Dv AGWIDGET_FONT
+macro.
 .El
 .Pp
 The following events are usually generated by input devices:
@@ -1104,53 +1100,83 @@ are the cursor coordinates in the widget's local coordinate system.
 The cursor has entered or is leaving the widget's allocated area and the
 .Dv AG_WIDGET_USE_MOUSEOVER
 option is set.
-.It Fn key-down "int key" "int mod" "Ulong unicode"
+.It Fn key-down "int key" "int mod" "Ulong ch"
 The widget is receiving keyboard events and
 .Fa key
 has been pressed.
-The
 .Fa mod
-argument is a bitmask representing the state of the current key modifiers and
-.Fa unicode
-is the corresponding Unicode character in UCS-4 format (or 0 if there are none).
-See
-.Xr AG_KeySym 3
-for details.
-.It Fn key-up "int key" "int mod" "Ulong unicode"
+is a bitmask representing the state of the current key modifiers.
+If non-zero,
+.Fa ch
+is the matching UCS-4 (or ASCII) character.
+.It Fn key-up "int key" "int mod" "Ulong ch"
 The widget is receiving keyboard events and
 .Fa key
 has been released.
-The
 .Fa mod
-argument is a bitmask representing the state of the current key modifiers and
-.Fa unicode
-is the corresponding Unicode character in UCS-4 format (or 0 if there are none).
-See
-.Xr AG_KeySym 3
-for details.
+is a bitmask representing the state of the current key modifiers.
+If non-zero,
+.Fa ch
+is the matching UCS-4 (or ASCII) character.
 .El
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Widget
 object:
-.Bl -tag -width "AG_Rect2 rView "
+.Bl -tag -width "AG_ActionVec *actions "
 .It Ft Uint flags
 Option flags (see
 .Sx FLAGS
 section below).
 .It Ft int x, y
-Pixel coordinates of the widget relative to its parent.
+Location of the upper-left pixel (relative to the parent widget).
+Read-only (set by container).
 .It Ft int w, h
-Dimensions of the widget in pixels.
+Size in pixels.
+Read-only (set by container).
+.It Ft AG_Rect r
+Cached rectangle at 0,0.
+Read-only.
 .It Ft AG_Rect2 rView
-Absolute view coordinates of the widget (relative to the parent
-driver device).
+Cached position & size in display coordinates.
+Read-only with one exception: before calling
+.Xr AG_WidgetDraw 3
+to render a child widget, a container widget may temporarily override its
+.Va rView
+in order to render it at a given offset.
+.It Ft AG_Rect2 rSens
+Rectangle of sensitivity to mouse events (in display coordinates).
+Scrolling containers such as
+.Xr AG_Scrollview 3
+may adjust this rectangle for partially-visible widgets along its edges.
+.It Ft AG_WidgetPalette pal
+Color palette: a 4 x 8 (or
+.Dv AG_WIDGET_NSTATES
+by
+.Dv AG_WIDGET_NCOLORS )
+array of
+.Xr AG_Color 3 .
+Entries are set by the current
+.Xr AG_StyleSheet 3 .
+Read-only (use
+.Fn AG_SetStyle
+to change) with one exception: before calling
+.Xr AG_WidgetDraw 3
+to render a child widget, a container widget may temporarily override and
+restore its palette entries.
 .It Ft AG_Font *font
-Pointer to the effective font associated with the widget (see
+Current font associated with the widget (see
 .Xr AG_Font 3 ) .
-This setting is read-only (use
+Read-only (use
+.Fn AG_SetStyle
+or
 .Fn AG_SetFont
 to change).
+.It Ft AG_ActionVec *actions
+Dynamic array of
+.Ft AG_Widget
+structures describing high-level widget actions (see
+.Sx WIDGET ACTIONS ) .
 .El
 .Sh FLAGS
 The
@@ -1186,10 +1212,9 @@ internally if the
 flag is set).
 This flag may affect the way the widget is rendered.
 .It AG_WIDGET_FOCUSABLE
-The widget is allowed to grab the focus; normally set by
+The widget is allowed to grab the focus.
+Set by
 .Fn AG_WidgetSetFocusable .
-Note that the widget may still become "focused" if child widgets are attached
-to it and one of them happens to grab focus.
 .It AG_WIDGET_UNFOCUSED_MOTION
 Receive
 .Sq mouse-motion
@@ -1274,8 +1299,19 @@ The
 interface first appeared in Agar 1.0.
 Widget-level variable bindings have been replaced by generic
 .Xr AG_Variable 3
-pointers in Agar 1.3.4.
-The Actions interface first appeared in Agar 1.4.
-The
+pointers in Agar 1.3.
+Actions were introduced in Agar 1.4.
 .Dv AG_WIDGET_USE_OPENGL
-feature first appeared in Agar 1.5.
+first appeared in Agar 1.5, replacing
+.Xr AG_GLView 3 .
+The
+.Va actions ,
+.Va pal
+and
+.Va rSens
+structure members were made public in Agar 1.6.0.
+Agar 1.6.0 also added
+.Fn AG_SetStyleF ,
+.Fn AG_PushBlendingMode ,
+.Fn AG_PopBlendingMode ,
+and introduced the "font-changed" and "palette-changed" events.

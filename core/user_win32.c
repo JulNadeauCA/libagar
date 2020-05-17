@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2014-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,9 +27,10 @@
  * User information on Windows platforms.
  */
 
-#include <agar/config/have_cygwin.h>
-
 #include <agar/core/core.h>
+#ifdef AG_USER
+
+#include <agar/config/have_cygwin.h>
 #include <agar/core/win32.h>
 #include <agar/core/queue_close.h>
 #ifndef HAVE_CYGWIN
@@ -92,3 +93,4 @@ const AG_UserOps agUserOps_win32 = {
 	GetRealUser,
 	GetEffectiveUser
 };
+#endif /* AG_USER */

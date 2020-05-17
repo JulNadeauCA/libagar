@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+# Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@ ADABIND?=	gnatbind
 ADALINK?=	gnatlink
 ASM?=		nasm
 CC?=		cc
+CC_COMPILE?=	-c
 CXX?=		c++
 LEX?=		lex
 LN?=		ln
@@ -51,9 +52,9 @@ WINDRES?=
 YACC?=		yacc
 
 ADAFLAGS?=
-ADABFLAGS?=
+ADABFLAGS?=	-x
 ASMFLAGS?=	-g -w-orphan-labels
-CFLAGS?=	-O2 -g
+CFLAGS?=	-O -g
 CPPFLAGS?=
 CXXFLAGS?=
 LFLAGS?=
@@ -68,6 +69,7 @@ CONF?=
 CONF_OVERWRITE?=No
 CONFIGSCRIPTS?=
 CLEANFILES?=
+CLEANDIRFILES?=
 CTAGS?=
 CTAGSFLAGS?=
 DATAFILES?=
@@ -105,11 +107,12 @@ PROG_REQUIRED_CAPABILITIES?=
 # opengles-3 peer-peer sms still-camera telephony video-camera wifi
 
 all: all-subdir ${PROG}
-install: all install-prog install-subdir
+install: install-prog install-subdir
 deinstall: deinstall-prog deinstall-subdir
 clean: clean-prog clean-subdir
 cleandir: clean-prog clean-subdir cleandir-prog cleandir-subdir
 regress: regress-subdir
+configure: configure-prog
 
 .SUFFIXES: .adb .ads .asm .c .cc .cpp .l .m .o .y
 
@@ -123,10 +126,21 @@ regress: regress-subdir
 
 # Compile C code into an object file
 .c.o:
-	@_cflags=""; \
+	@_cflags=""; _out="$@"; \
 	if [ "${PROG_PROFILE}" = "Yes" ]; then _cflags="-pg -DPROF"; fi; \
-	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $<"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $<
+	if [ "${HAVE_CC65}" = "yes" ]; then _out=`echo "$@" | sed 's/.o$$/.s/'`; fi; \
+	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $$_out ${CC_COMPILE} $<"; \
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $$_out ${CC_COMPILE} $<; \
+	if [ $$? != 0 ]; then \
+		echo "*"; \
+		echo "* $$_out compilation failed."; \
+		echo "*"; \
+		exit 1; \
+	fi; \
+	if [ "${HAVE_CC65}" = "yes" ]; then \
+		echo "ca65 -o $@ $$_out"; \
+		ca65 -o $@ $$_out; \
+	fi
 
 # Compile C++ code into an object file
 .cc.o .cpp.o:
@@ -154,8 +168,8 @@ regress: regress-subdir
 	${LEX} ${LFLAGS} -o$@.yy.c $<
 	@_cflags=""; \
 	if [ "${PROG_PROFILE}" = "Yes" ]; then _cflags="-pg -DPROF"; fi; \
-	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $@.yy.c"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $@.yy.c
+	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.yy.c"; \
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.yy.c
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 
@@ -171,8 +185,8 @@ regress: regress-subdir
 	${YACC} ${YFLAGS} -b $@ $<
 	@_cflags=""; \
 	if [ "${PROG_PROFILE}" = "Yes" ]; then _cflags="-pg -DPROF"; fi; \
-	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $@.tab.c"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $@.tab.c
+	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.tab.c"; \
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.tab.c
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 
@@ -204,7 +218,6 @@ depend:	prog-tags depend-subdir
 	    else \
 	        export _mkdep_cflags="${CFLAGS}"; \
 	    fi; \
-	    echo "srcs_c=$$_srcs_c"; \
 	    if [ "$$_srcs_c" != "" ]; then \
 	        echo "${MKDEP} $$_mkdep_cflags $$_srcs_c"; \
 	        env CC=${CC} ${MKDEP} $$_mkdep_cflags $$_srcs_c; \
@@ -213,7 +226,6 @@ depend:	prog-tags depend-subdir
 	            env CC=${CC} ${MKDEP} -a -l $$_mkdep_cflags $$_srcs_c; \
 	        fi; \
 	    fi; \
-	    echo "srcs_ada=$$_srcs_ada"; \
 	    if [ "$$_srcs_ada" != "" ]; then \
 	        echo "${MKDEP_ADA} ${MKDEP_ADAFLAGS} ${CFLAGS} $$_srcs_ada >>.depend"; \
 	        env ADA=${ADA} ${MKDEP_ADA} ${MKDEP_ADAFLAGS} ${CFLAGS} $$_srcs_ada 1>.ada_depend 2>.ada_errors; \
@@ -245,8 +257,11 @@ _prog_objs:
 		FLIST="$$FLIST $$F"; \
 	    done; \
 	    ${MAKE} $$FLIST; \
-	    if [ $$? != 0 ]; then \
-	        echo "${MAKE}: failure"; \
+	    _make_result="$$?"; \
+	    if [ $$_make_result != "0" ]; then \
+	        echo "*"; \
+	        echo "* Failed to make ${PROG} (${MAKE} returned $$_make_result)"; \
+	        echo "*"; \
 		exit 1; \
 	    fi; \
 	fi
@@ -257,7 +272,7 @@ _prog_objs:
 
 # Compile and link the program
 ${PROG}: ${SRCS_GENERATED} _prog_objs ${OBJS}
-	@if [ "${PROG}" != "" -a "${SRCS}" != "" ]; then \
+	@if [ "${PROG}" != "" -a "${SRCS}" != "" -a "${.TARGETS}" != "install" ]; then \
 	    if [ "${PROG_TYPE}" = "GUI" ]; then \
 	    	_prog_ldflags="${PROG_GUI_FLAGS}"; \
 	    else \
@@ -265,12 +280,16 @@ ${PROG}: ${SRCS_GENERATED} _prog_objs ${OBJS}
 	    fi; \
 	    _linker_type="${LINKER_TYPE}"; \
 	    if [ "$$_linker_type" = "" ]; then \
-                for F in ${SRCS}; do \
-	            if echo "$$F" | grep -q '.ad[bs]$$'; then \
-		        _linker_type="ADA"; \
-			break; \
-		    fi; \
-	        done; \
+	    	if [ "${HAVE_CC65}" = "yes" ]; then \
+		    _linker_type="CL65"; \
+		else \
+                    for F in ${SRCS}; do \
+	                if echo "$$F" | grep -q '.ad[bs]$$'; then \
+		            _linker_type="ADA"; \
+	                    break; \
+			fi; \
+	            done; \
+	        fi; \
 	    fi; \
 	    _objs="${OBJS}"; \
 	    if [ "${OBJS}" = "" ]; then \
@@ -308,6 +327,10 @@ ${PROG}: ${SRCS_GENERATED} _prog_objs ${OBJS}
 	        echo "${ADALINK} ${LDFLAGS} ${ADALFLAGS} $$_ada_cflags $$_prog_ldflags ${PROG} ${LIBS}"; \
 	        ${ADALINK} ${LDFLAGS} ${ADALFLAGS} $$_ada_cflags $$_prog_ldflags ${PROG} ${LIBS}; \
 		;; \
+	    CL65) \
+	        echo "cl65 ${LDFLAGS} $$_prog_ldflags -Ln ${PROG}.lbl -m ${PROG}.map -o ${PROG} $$_objs ${LIBS}"; \
+	        cl65 ${LDFLAGS} $$_prog_ldflags -Ln ${PROG}.lbl -m ${PROG}.map -o ${PROG} $$_objs ${LIBS}; \
+	        ;; \
 	    *) \
 	        echo "${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}"; \
 	        ${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}; \
@@ -385,13 +408,24 @@ cleandir-prog:
 	    echo "rm -f ${PCMODULES}"; \
 	    rm -f ${PCMODULES}; \
 	fi
+	@if [ "${CLEANDIRFILES}" != "" ]; then \
+	    echo "rm -f ${CLEANDIRFILES}"; \
+	    rm -f ${CLEANDIRFILES}; \
+	fi
 	@if [ -e ".depend" ]; then \
 		echo "echo >.depend"; \
 		echo >.depend; \
 	fi
 
 install-prog:
-	@if [ ! -e "${DESTDIR}${BINDIR}" ]; then \
+	@if [ "${DESTDIR}" != "" ]; then \
+	    echo "# Installing under DESTDIR=${DESTDIR}:"; \
+	    if [ ! -e "${DESTDIR}" ]; then \
+	        echo "${INSTALL_DESTDIR} ${DESTDIR}"; \
+	        ${SUDO} ${INSTALL_DESTDIR} ${DESTDIR}; \
+	    fi; \
+	fi; \
+	if [ ! -e "${DESTDIR}${BINDIR}" ]; then \
 	    echo "${INSTALL_PROG_DIR} ${BINDIR}"; \
 	    ${SUDO} ${INSTALL_PROG_DIR} ${DESTDIR}${BINDIR}; \
 	fi
@@ -547,9 +581,25 @@ prog-tags:
 check-prog:
 	@echo check-prog
 
-.PHONY: install deinstall clean cleandir regress depend
+configure-prog:
+	@if [ "${PROG}" != "" ]; then \
+		if [ -e "configure.in" ]; then \
+			echo "cat configure.in | mkconfigure > configure"; \
+			cat configure.in | mkconfigure > configure; \
+			if [ ! -e configure ]; then \
+				echo "mkconfigure (BSDBuild) failed."; \
+				exit 1; \
+			fi; \
+			if [ ! -x configure ]; then \
+				echo "chmod 755 configure"; \
+				chmod 755 configure; \
+			fi; \
+		fi; \
+	fi
+
+.PHONY: install deinstall clean cleandir regress depend configure
 .PHONY: install-prog deinstall-prog clean-prog cleandir-prog check-prog
-.PHONY: _prog_objs prog-tags none
+.PHONY: configure-prog _prog_objs prog-tags none
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.proj.mk

@@ -4,9 +4,12 @@
  * This program tests the Agar math library (ag_math).
  */
 
+#include <agar/config/ag_enable_string.h>
+
 #include "agartest.h"
 
-#include <agar/math.h>
+#include <agar/math/m.h>
+#include <agar/math/m_gui.h>
 
 #include <agar/config/have_altivec.h>
 #include <agar/config/have_altivec_h.h>
@@ -363,7 +366,7 @@ Bench(void *obj)
 const AG_TestCase mathTest = {
 	"math",
 	N_("Test the ag_math library"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(MyTestInstance),
 	Init,

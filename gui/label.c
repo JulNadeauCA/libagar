@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,20 +23,32 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Text label widget. Displays single- or multi-line text. Implements
+ * static as well as dynamically-updated labels.
+ */
+
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/gui.h>
 #include <agar/gui/window.h>
 #include <agar/gui/label.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/text_cache.h>
+#include <agar/gui/box.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/radio.h>
+#include <agar/gui/numerical.h>
+#include <agar/gui/separator.h>
 
 #include <string.h>
 #include <stdarg.h>
 
-/*
- * Create a new polled label (AG_LEGACY: API predates the generalization of
- * the formatting engine, in 2.0 this will take an AG_FmtString argument).
- */
+static void DrawStatic(AG_Label *_Nonnull);
+static void DrawPolled(AG_Label *_Nonnull);
+
+/* Create a new polled (dynamically updated) label. */
 AG_Label *
 AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 {
@@ -53,11 +65,10 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	lbl->pollBufSize = AG_FMTSTRING_BUFFER_INIT;
 	lbl->pollBuf = Malloc(lbl->pollBufSize);
 
+	if (flags & AG_LABEL_HFILL) { WIDGET(lbl)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_LABEL_VFILL) { WIDGET(lbl)->flags |= AG_WIDGET_VFILL; }
 	lbl->flags |= flags;
-	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(lbl); }
-	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
 
-	/* AG_LEGACY */
 	/* Build the format string */
 	fs = lbl->fmt = Malloc(sizeof(AG_FmtString));
 	fs->s = Strdup(fmt);
@@ -85,17 +96,13 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 		}
 	}
 	va_end(ap);
-	/* AG_LEGACY */
 
-	AG_RedrawOnTick(lbl, 500);
+	AG_RedrawOnTick(lbl, (flags & AG_LABEL_SLOW) ? 2000 : 500);
 	AG_ObjectAttach(parent, lbl);
 	return (lbl);
 }
 
-/*
- * Create a new polled label (AG_LEGACY: API predates the generalization of
- * the formatting engine, in 2.0 this will take an AG_FmtString argument).
- */
+/* Create a new polled label which requires acquiring a given mutex. */
 AG_Label *
 AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mu, const char *fmt, ...)
 {
@@ -112,9 +119,9 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mu, const char *fmt, ...
 	lbl->pollBufSize = AG_FMTSTRING_BUFFER_INIT;
 	lbl->pollBuf = Malloc(lbl->pollBufSize);
 
+	if (flags & AG_LABEL_HFILL) { WIDGET(lbl)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_LABEL_VFILL) { WIDGET(lbl)->flags |= AG_WIDGET_VFILL; }
 	lbl->flags |= flags;
-	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(lbl); }
-	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
 
 	/* Build the format string (legacy style) */
 	if ((fs = lbl->fmt = TryMalloc(sizeof(AG_FmtString))) == NULL) {
@@ -146,7 +153,7 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mu, const char *fmt, ...
 	}
 	va_end(ap);
 
-	AG_RedrawOnTick(lbl, 500);
+	AG_RedrawOnTick(lbl, (flags & AG_LABEL_SLOW) ? 2000 : 500);
 	AG_ObjectAttach(parent, lbl);
 	return (lbl);
 }
@@ -162,9 +169,11 @@ AG_LabelNew(void *parent, Uint flags, const char *fmt, ...)
 	AG_ObjectInit(lbl, &agLabelClass);
 
 	lbl->type = AG_LABEL_STATIC;
+
+	if (flags & AG_LABEL_HFILL) { WIDGET(lbl)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_LABEL_VFILL) { WIDGET(lbl)->flags |= AG_WIDGET_VFILL; }
 	lbl->flags |= flags;
-	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(lbl); }
-	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
+
 	if (fmt != NULL) {
 		va_start(ap, fmt);
 		Vasprintf(&lbl->text, fmt, ap);
@@ -187,9 +196,11 @@ AG_LabelNewS(void *parent, Uint flags, const char *text)
 	AG_ObjectInit(lbl, &agLabelClass);
 
 	lbl->type = AG_LABEL_STATIC;
+
+	if (flags & AG_LABEL_HFILL) { WIDGET(lbl)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_LABEL_VFILL) { WIDGET(lbl)->flags |= AG_WIDGET_VFILL; }
 	lbl->flags |= flags;
-	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(lbl); }
-	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
+
 	lbl->text = (text != NULL) ? Strdup(text) : NULL;
 
 	AG_ObjectAttach(parent, lbl);
@@ -197,139 +208,174 @@ AG_LabelNewS(void *parent, Uint flags, const char *text)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Label *lbl = obj;
-	AG_Font *font = WIDGET(lbl)->font;
 	
-	if (lbl->flags & AG_LABEL_NOMINSIZE) {
-		r->w = lbl->lPad + lbl->rPad;
-		r->h = font->height + lbl->tPad + lbl->bPad;
-		return;
-	}
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
 		AG_TextSize(lbl->text, &r->w, &r->h);
-		r->w += lbl->lPad + lbl->rPad;
-		r->h += lbl->tPad + lbl->bPad;
 		break;
 	case AG_LABEL_POLLED:
-		r->w = lbl->wPre + lbl->lPad + lbl->rPad;
-		r->h = lbl->hPre*font->lineskip + lbl->tPad + lbl->bPad;
+		if (lbl->fmt->s && lbl->fmt->s[0] != '\0') {     /* Auto-size */
+			int sCached;
+
+			for (;;) {
+				AG_Size rv;
+
+				rv = AG_ProcessFmtString(lbl->fmt, lbl->pollBuf,
+				    lbl->pollBufSize);
+				if (rv >= lbl->pollBufSize) {
+					char *pbNew;
+					const AG_Size sizeNew = (rv +
+					    AG_FMTSTRING_BUFFER_GROW);
+
+					if ((pbNew = TryRealloc(lbl->pollBuf,
+					    sizeNew)) == NULL) {
+						break;
+					}
+					lbl->pollBuf = pbNew;
+					lbl->pollBufSize = sizeNew;
+				} else {
+					break;
+				}
+			}
+			if ((sCached = AG_TextCacheGet(lbl->tCache, lbl->pollBuf)) != -1) {
+				const AG_Surface *S = WSURFACE(lbl,sCached);
+
+				r->w = S->w;
+				r->h = S->h;
+			}
+		} else {                                /* Explicit size hint */
+			r->w =  lbl->wPre;
+			r->h = (lbl->hPre * WFONT(lbl)->lineskip);
+		}
+		break;
+	default:
 		break;
 	}
+	r->w += WIDGET(lbl)->paddingLeft + WIDGET(lbl)->paddingRight;
+	r->h += WIDGET(lbl)->paddingTop + WIDGET(lbl)->paddingBottom;
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Label *lbl = obj;
-	int wLbl, hLbl;
-	AG_Surface *s;
+	int wLbl, hLbl, sCached;
 	
-	if (a->w < 1 || a->h < 1) {
+	if (a->w < 1 || a->h < 1)
 		return (-1);
-	}
-	lbl->rClip.x = lbl->lPad;
-	lbl->rClip.y = lbl->tPad;
-	lbl->rClip.w = a->w - lbl->rPad;
-	lbl->rClip.h = a->h - lbl->bPad;
 
-	if (lbl->text == NULL)
-		return (0);
-
-	/*
-	 * If the widget area is too small to display the complete
-	 * string, render the label partially.
-	 */
-	AG_TextSize(lbl->text, &wLbl, &hLbl);
-
-	if ((wLbl + lbl->lPad + lbl->rPad) > a->w) {
-		lbl->flags |= AG_LABEL_PARTIAL;
-		if (lbl->surfaceCont == -1 &&
-		    (s = AG_TextRender("... ")) != NULL) {
-			lbl->surfaceCont = AG_WidgetMapSurface(lbl, s);
+	switch (lbl->type) {
+	case AG_LABEL_STATIC:
+		if (lbl->text == NULL) {
+			lbl->flags &= ~(AG_LABEL_PARTIAL);
+			break;
 		}
-	} else {
-		lbl->flags &= ~AG_LABEL_PARTIAL;
+		AG_TextSize(lbl->text, &wLbl, &hLbl);
+		if (wLbl > a->w || hLbl > a->h) {
+			lbl->flags |=   AG_LABEL_PARTIAL;
+		} else {
+			lbl->flags &= ~(AG_LABEL_PARTIAL);
+		}
+		break;
+	case AG_LABEL_POLLED:
+		if (lbl->fmt == NULL || lbl->fmt->s[0] == '\0') {
+			lbl->flags &= ~(AG_LABEL_PARTIAL);
+			break;
+		}
+		for (;;) {
+			AG_Size rv;
+
+			rv = AG_ProcessFmtString(lbl->fmt, lbl->pollBuf,
+			    lbl->pollBufSize);
+			if (rv >= lbl->pollBufSize) {
+				char *pbNew;
+				const AG_Size sizeNew = (rv + AG_FMTSTRING_BUFFER_GROW);
+
+				if ((pbNew = TryRealloc(lbl->pollBuf, sizeNew)) == NULL) {
+					return (0);
+				}
+				lbl->pollBuf = pbNew;
+				lbl->pollBufSize = sizeNew;
+			} else {
+				break;
+			}
+		}
+		if ((sCached = AG_TextCacheGet(lbl->tCache, lbl->pollBuf)) != -1) {
+			const AG_Surface *S = WSURFACE(lbl,sCached);
+
+			if (S->w > a->w || S->h > a->h) {
+				lbl->flags |=   AG_LABEL_PARTIAL;
+			} else {
+				lbl->flags &= ~(AG_LABEL_PARTIAL);
+			}
+		} else {
+			lbl->flags &= ~(AG_LABEL_PARTIAL);
+		}
+		break;
+	default:
+		break;
 	}
 	return (0);
 }
 
 static void
-OnFontChange(AG_Event *event)
+StyleChanged(AG_Event *_Nonnull event)
 {
-	AG_Label *lbl = AG_SELF();
+	AG_Label *lbl = AG_LABEL_SELF();
 
-	if (lbl->tCache != NULL) {
+	if (lbl->tCache) {
 		AG_TextCacheClear(lbl->tCache);
 	}
-	if (lbl->surfaceCont != -1) {
-		AG_WidgetUnmapSurface(lbl, lbl->surfaceCont);
-		lbl->surfaceCont = -1;
+	if (lbl->surfaceCtd != -1) {
+		AG_WidgetUnmapSurface(lbl, lbl->surfaceCtd);
+		lbl->surfaceCtd = -1;
 	}
 	lbl->flags |= AG_LABEL_REGEN;
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Label *lbl = obj;
 
-	WIDGET(lbl)->flags |= AG_WIDGET_USE_TEXT|AG_WIDGET_TABLE_EMBEDDABLE;
+	WIDGET(lbl)->flags |= AG_WIDGET_USE_TEXT;
 
 	lbl->type = AG_LABEL_STATIC;
 	lbl->flags = 0;
-	lbl->fmt = NULL;
 	lbl->text = NULL;
 	lbl->surface = -1;
-	lbl->surfaceCont = -1;
-	lbl->lPad = 2;
-	lbl->rPad = 2;
-	lbl->tPad = 0;
-	lbl->bPad = 1;
+	lbl->surfaceCtd = -1;
 	lbl->wPre = -1;
 	lbl->hPre = 1;
 	lbl->justify = AG_TEXT_LEFT;
 	lbl->valign = AG_TEXT_TOP;
 	lbl->tCache = NULL;
-	lbl->rClip = AG_RECT(0,0,0,0);		/* Initialized in SizeAlloc() */
+	lbl->fmt = NULL;
 	lbl->pollBuf = NULL;
 	lbl->pollBufSize = 0;
 
-	AG_SetEvent(lbl, "font-changed", OnFontChange, NULL);
+	AG_SetEvent(lbl, "font-changed",    StyleChanged, NULL);
+	AG_SetEvent(lbl, "palette-changed", StyleChanged, NULL);
 }
 
 /* Size the widget to accomodate the given text (with the current font). */
 void
-AG_LabelSizeHint(AG_Label *lbl, Uint nlines, const char *text)
+AG_LabelSizeHint(AG_Label *lbl, Uint nLines, const char *text)
 {
-	AG_ObjectLock(lbl);
+	AG_OBJECT_ISA(lbl, "AG_Widget:AG_Label:*");
 	AG_TextSize(text, &lbl->wPre, NULL);
-	lbl->hPre = (nlines > 0) ? nlines : 1;
-	AG_ObjectUnlock(lbl);
-}
-
-/* Set the padding around the label in pixels. */
-void
-AG_LabelSetPadding(AG_Label *lbl, int lPad, int rPad, int tPad, int bPad)
-{
-	AG_ObjectLock(lbl);
-	if (lPad != -1) { lbl->lPad = lPad; }
-	if (rPad != -1) { lbl->rPad = rPad; }
-	if (tPad != -1) { lbl->tPad = tPad; }
-	if (bPad != -1) { lbl->bPad = bPad; }
-	AG_ObjectUnlock(lbl);
-	AG_Redraw(lbl);
+	lbl->hPre = (nLines > 0) ? nLines : 1;
 }
 
 /* Justify the text in the specified way. */
 void
 AG_LabelJustify(AG_Label *lbl, enum ag_text_justify justify)
 {
-	AG_ObjectLock(lbl);
+	AG_OBJECT_ISA(lbl, "AG_Widget:AG_Label:*");
 	lbl->justify = justify;
-	AG_ObjectUnlock(lbl);
 	AG_Redraw(lbl);
 }
 
@@ -337,9 +383,8 @@ AG_LabelJustify(AG_Label *lbl, enum ag_text_justify justify)
 void
 AG_LabelValign(AG_Label *lbl, enum ag_text_valign valign)
 {
-	AG_ObjectLock(lbl);
+	AG_OBJECT_ISA(lbl, "AG_Widget:AG_Label:*");
 	lbl->valign = valign;
-	AG_ObjectUnlock(lbl);
 	AG_Redraw(lbl);
 }
 
@@ -349,45 +394,164 @@ AG_LabelText(AG_Label *lbl, const char *fmt, ...)
 {
 	va_list ap;
 
+	AG_OBJECT_ISA(lbl, "AG_Widget:AG_Label:*");
 	AG_ObjectLock(lbl);
+
 	Free(lbl->text);
+
 	va_start(ap, fmt);
 	Vasprintf(&lbl->text, fmt, ap);
 	va_end(ap);
+
 	lbl->flags |= AG_LABEL_REGEN;
-	AG_ObjectUnlock(lbl);
+
 	AG_Redraw(lbl);
+	AG_ObjectUnlock(lbl);
 }
 
 /* Change the text displayed by the label (C string). */
 void
 AG_LabelTextS(AG_Label *lbl, const char *s)
 {
+	AG_OBJECT_ISA(lbl, "AG_Widget:AG_Label:*");
 	AG_ObjectLock(lbl);
+
 	Free(lbl->text);
+
 	lbl->text = Strdup(s);
 	lbl->flags |= AG_LABEL_REGEN;
-	AG_ObjectUnlock(lbl);
+
 	AG_Redraw(lbl);
+	AG_ObjectUnlock(lbl);
 }
 
-static __inline__ void
-GetPosition(AG_Label *lbl, AG_Surface *su, int *x, int *y)
+/* Calculate offset for horizontal justify */
+static __inline__ int
+JustifyOffset(const AG_Label *_Nonnull lbl, int w, int wLine)
 {
-	*x = lbl->lPad +
-	     AG_TextJustifyOffset(WIDTH(lbl) - (lbl->lPad+lbl->rPad), su->w);
-	*y = lbl->tPad +
-	     AG_TextValignOffset(HEIGHT(lbl) - (lbl->tPad+lbl->bPad), su->h);
+	switch (lbl->justify) {
+	case AG_TEXT_LEFT:
+	default:
+		return (0);
+	case AG_TEXT_CENTER:
+		return ((w >> 1) - (wLine >> 1));
+	case AG_TEXT_RIGHT:
+		return (w - wLine);
+	}
 }
 
-/* Render a polled label. */
+/* Calculate offset for vertical alignment */
+static __inline__ int
+ValignOffset(const AG_Label *_Nonnull lbl, int h, int hLine)
+{
+	switch (lbl->valign) {
+	case AG_TEXT_TOP:	return (0);
+	case AG_TEXT_MIDDLE:	return ((h >> 1) - (hLine >> 1));
+	case AG_TEXT_BOTTOM:	return (h - hLine);
+	}
+	return (0);
+}
+
 static void
-DrawPolled(AG_Label *lbl)
+Draw(void *_Nonnull obj)
 {
-	size_t rv;
+	static void (*pfDraw[])(AG_Label *) = {
+		DrawStatic,        /* STATIC */
+		DrawPolled         /* POLLED */
+	};
+	AG_Label *lbl = obj;
+	AG_Surface *Sctd;
+	const AG_Color *cBg = &WCOLOR(lbl, BG_COLOR);
+	AG_Rect r;
+
+	if (lbl->flags & AG_LABEL_FRAME)
+		AG_DrawFrameSunk(lbl, &WIDGET(lbl)->r);
+
+	if (cBg->a < AG_OPAQUE)
+		AG_PushBlendingMode(lbl, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
+	if (lbl->flags & AG_LABEL_PARTIAL) {                   /* Truncated */
+		if (lbl->surfaceCtd == -1) {
+#ifdef AG_UNICODE
+			Sctd = AG_TextRender("\xE2\x80\xA6 "); /* U+2026 */
+#else
+			Sctd = AG_TextRender("... ");
+#endif
+			lbl->surfaceCtd = AG_WidgetMapSurface(lbl, Sctd);
+		} else {
+			Sctd = WSURFACE(lbl,lbl->surfaceCtd);
+		}
+		r.x = 0;
+		r.y = 0;
+		r.w = WIDTH(lbl) - Sctd->w;
+		r.h = HEIGHT(lbl);
+		AG_PushClipRect(lbl, &r);
+	} else {
+		Sctd = NULL;
+	}
+	
+	AG_TextColor(&WCOLOR(lbl, TEXT_COLOR));
+	AG_TextBGColor(cBg);
+
+#ifdef AG_DEBUG
+	if (lbl->type >= AG_LABEL_TYPE_LAST)
+		AG_FatalError("type");
+#endif
+	pfDraw[lbl->type](lbl);
+	
+	if (Sctd != NULL) {
+		AG_PopClipRect(lbl);
+
+		if (WIDTH(lbl)  > Sctd->w &&
+		    HEIGHT(lbl) > Sctd->h) {
+			AG_WidgetBlitSurface(lbl, lbl->surfaceCtd,
+			    WIDTH(lbl) - Sctd->w,
+			    ValignOffset(lbl, HEIGHT(lbl), Sctd->h));
+		}
+	}
+
+	if (cBg->a < AG_OPAQUE)
+		AG_PopBlendingMode(lbl);
+}
+
+/* Render a static label. */
+static void
+DrawStatic(AG_Label *_Nonnull lbl)
+{
+	AG_Surface *S;
+
+	if (lbl->surface == -1 && lbl->text != NULL) {
+		if ((S = AG_TextRender(lbl->text)) != NULL) {
+			lbl->surface = AG_WidgetMapSurface(lbl, S);
+		}
+	} else if (lbl->flags & AG_LABEL_REGEN) {
+		if (lbl->text != NULL) {
+			if ((S = AG_TextRender(lbl->text)) != NULL)
+				AG_WidgetReplaceSurface(lbl, 0, S);
+		} else {
+			lbl->surface = -1;
+		}
+	}
+	lbl->flags &= ~(AG_LABEL_REGEN);
+
+	if (lbl->surface != -1) {
+		const AG_Surface *S = WSURFACE(lbl,lbl->surface);
+		const int x = JustifyOffset(lbl, WIDTH(lbl), S->w);
+		const int y = ValignOffset(lbl, HEIGHT(lbl), S->h);
+
+		AG_WidgetBlitSurface(lbl, lbl->surface,
+		    WIDGET(lbl)->paddingLeft + x,
+		    WIDGET(lbl)->paddingTop + y);
+	}
+}
+
+/* Render a dynamically updated label. */
+static void
+DrawPolled(AG_Label *_Nonnull lbl)
+{
 	char *pollBufNew;
-	int x, y;
-	int su;
+	AG_Size rv;
+	int sCached;
 
 	if (lbl->fmt == NULL || lbl->fmt->s[0] == '\0') {
 		return;
@@ -395,102 +559,73 @@ DrawPolled(AG_Label *lbl)
 	for (;;) {
 		rv = AG_ProcessFmtString(lbl->fmt, lbl->pollBuf, lbl->pollBufSize);
 		if (rv >= lbl->pollBufSize) {
-			if ((pollBufNew = TryRealloc(lbl->pollBuf,
-			    (rv+AG_FMTSTRING_BUFFER_GROW))) == NULL) {
+			const AG_Size sizeNew = (rv + AG_FMTSTRING_BUFFER_GROW);
+
+			if ((pollBufNew = TryRealloc(lbl->pollBuf, sizeNew)) == NULL) {
 				return;
 			}
 			lbl->pollBuf = pollBufNew;
-			lbl->pollBufSize = (rv+AG_FMTSTRING_BUFFER_GROW);
+			lbl->pollBufSize = sizeNew;
 		} else {
 			break;
 		}
 	}
 
-	if ((su = AG_TextCacheGet(lbl->tCache,lbl->pollBuf)) != -1) {
-		GetPosition(lbl, WSURFACE(lbl,su), &x, &y);
-		AG_WidgetBlitSurface(lbl, su, x, y);
+	if ((sCached = AG_TextCacheGet(lbl->tCache,lbl->pollBuf)) != -1) {
+		const AG_Surface *S = WSURFACE(lbl,sCached);
+		const int x = JustifyOffset(lbl, WIDTH(lbl), S->w);
+		const int y = ValignOffset(lbl, HEIGHT(lbl), S->h);
+
+		AG_WidgetBlitSurface(lbl, sCached, x,y);
 	}
 }
 
 static void
-Draw(void *obj)
-{
-	AG_Label *lbl = obj;
-	int x, y, cw = 0;			/* make compiler happy */
-	AG_Surface *suNew;
-
-	if (lbl->flags & AG_LABEL_FRAME) {
-		AG_DrawFrame(lbl,
-		    AG_RECT(0, 0, WIDTH(lbl), HEIGHT(lbl)), -1,
-		    WCOLOR(lbl,0));
-	}
-	if ((lbl->flags & AG_LABEL_PARTIAL) && lbl->surfaceCont != -1) {
-		cw = WSURFACE(lbl,lbl->surfaceCont)->w;
-		if (WIDTH(lbl) <= cw) {
-			AG_PushClipRect(lbl,
-			    AG_RECT(0, 0, WIDTH(lbl), HEIGHT(lbl)));
-			AG_WidgetBlitSurface(lbl, lbl->surfaceCont,
-			    0, lbl->tPad);
-			AG_PopClipRect(lbl);
-			return;
-		}
-		AG_PushClipRect(lbl,
-		    AG_RECT(0, 0, WIDTH(lbl)-cw, HEIGHT(lbl)));
-	} else {
-		AG_PushClipRect(lbl, lbl->rClip);
-	}
-	
-	AG_TextJustify(lbl->justify);
-	AG_TextValign(lbl->valign);
-
-	switch (lbl->type) {
-	case AG_LABEL_STATIC:
-		if (lbl->surface == -1 && lbl->text != NULL) {
-			if ((suNew = AG_TextRender(lbl->text)) != NULL) {
-				lbl->surface = AG_WidgetMapSurface(lbl, suNew);
-			}
-		} else if (lbl->flags & AG_LABEL_REGEN) {
-			if (lbl->text != NULL) {
-				if ((suNew = AG_TextRender(lbl->text)) != NULL)
-					AG_WidgetReplaceSurface(lbl, 0, suNew);
-			} else {
-				lbl->surface = -1;
-			}
-		}
-		lbl->flags &= ~(AG_LABEL_REGEN);
-		if (lbl->surface != -1) {
-			GetPosition(lbl, WSURFACE(lbl,lbl->surface), &x, &y);
-			AG_WidgetBlitSurface(lbl, lbl->surface, x, y);
-		}
-		break;
-	case AG_LABEL_POLLED:
-		DrawPolled(lbl);
-		break;
-	}
-	
-	AG_PopClipRect(lbl);
-	
-	if ((lbl->flags & AG_LABEL_PARTIAL) && lbl->surfaceCont != -1) {
-		GetPosition(lbl, WSURFACE(lbl,lbl->surfaceCont), &x, &y);
-		AG_WidgetBlitSurface(lbl, lbl->surfaceCont,
-		    WIDTH(lbl) - cw,
-		    y);
-	}
-}
-
-static void
-Destroy(void *p)
+Destroy(void *_Nonnull p)
 {
 	AG_Label *lbl = p;
+
+	Free(lbl->text);
 
 	if (lbl->fmt != NULL) {
 		AG_FreeFmtString(lbl->fmt);
 	}
-	Free(lbl->text);
 	Free(lbl->pollBuf);
 
-	if (lbl->tCache != NULL)
+	if (lbl->tCache)
 		AG_TextCacheDestroy(lbl->tCache);
+}
+
+static void *_Nullable
+Edit(void *_Nonnull p)
+{
+	static const AG_FlagDescr flagDescr[] = {
+	    { AG_LABEL_PARTIAL, _("Partially visible"), 0 },
+	    { AG_LABEL_REGEN,   _("Regenerate"),        0 },
+	    { AG_LABEL_FRAME,   _("Display a border"),  1 },
+	    { 0,                NULL,                   0 }
+	};
+	AG_Label *lbl = p;
+	AG_Box *box;
+
+	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+	
+	AG_LabelNew(box, 0, _("Label Type: %s"),
+	    (lbl->type == AG_LABEL_STATIC) ? _("Static") :
+	                                     _("Polled"));
+
+	AG_CheckboxSetFromFlags(box, 0, &lbl->flags, flagDescr);
+
+	AG_SeparatorNewHoriz(box);
+
+	AG_LabelNewS(box, 0, _("Justify:"));
+	AG_RadioNewUint(box, 0, agTextJustifyNames, (Uint *)&lbl->justify);
+
+	AG_SeparatorNewHoriz(box);
+	AG_LabelNewS(box, 0, _("Vertical Alignment:"));
+	AG_RadioNewUint(box, 0, agTextValignNames, (Uint *)&lbl->valign);
+
+	return (box);
 }
 
 AG_WidgetClass agLabelClass = {
@@ -499,13 +634,15 @@ AG_WidgetClass agLabelClass = {
 		sizeof(AG_Label),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-		NULL		/* edit */
+		Edit
 	},
 	Draw,
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

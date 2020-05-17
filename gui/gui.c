@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
 #include <agar/core/config.h>
 
 #include <agar/config/have_opengl.h>
-#include <agar/config/ag_debug_gui.h>
 
 #include <agar/gui/gui.h>
 #include <agar/gui/box.h>
@@ -42,9 +41,7 @@
 #include <agar/gui/dir_dlg.h>
 #include <agar/gui/editable.h>
 #include <agar/gui/file_dlg.h>
-#include <agar/gui/file_selector.h>
 #include <agar/gui/fixed.h>
-#include <agar/gui/fspinbutton.h>
 #include <agar/gui/fixed_plotter.h>
 #include <agar/gui/font_selector.h>
 #include <agar/gui/glview.h>
@@ -68,7 +65,6 @@
 #include <agar/gui/separator.h>
 #include <agar/gui/slider.h>
 #include <agar/gui/socket.h>
-#include <agar/gui/spinbutton.h>
 #include <agar/gui/statusbar.h>
 #include <agar/gui/table.h>
 #include <agar/gui/treetbl.h>
@@ -82,28 +78,32 @@
 #include <agar/gui/cursors.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/icons.h>
-#include <agar/gui/icons_data.h>
 #include <agar/gui/text.h>
 
+/* Import icon bitmap data */
+#include <agar/gui/icons_data.h>
+
 static struct {
-	const char *key;
-	int *p;
+	const char *_Nonnull key;
+	int        *_Nonnull p;
 } agGUIOptions[] = {
-	{ "ag_kbd_delay",		&agKbdDelay		},
-	{ "ag_kbd_repeat",		&agKbdRepeat		},
-	{ "ag_mouse_dblclick_delay",	&agMouseDblclickDelay	},
-	{ "ag_mouse_spin_delay",	&agMouseSpinDelay	},
-	{ "ag_mouse_spin_interval",	&agMouseSpinIval	},
-	{ "ag_text_composition",	&agTextComposition	},
-	{ "ag_text_bidi",		&agTextBidi		},
-	{ "ag_text_cache",		&agTextCache		},
-	{ "ag_text_tab_width",		&agTextTabWidth		},
-	{ "ag_text_blink_rate",		&agTextBlinkRate	},
-	{ "ag_text_symbols",		&agTextSymbols		},
-	{ "ag_page_increment",		&agPageIncrement	},
-	{ "ag_idle_threshold",		&agIdleThresh		},
-	{ "ag_screenshot_quality",	&agScreenshotQuality	},
-	{ "ag_msg_delay",		&agMsgDelay		}
+	{ "ClipboardIntegration", &agClipboardIntegration },
+	{ "KbdDelay",             &agKbdDelay             },
+	{ "KbdRepeat",            &agKbdRepeat            },
+	{ "MouseDblclickDelay",   &agMouseDblclickDelay   },
+	{ "MouseSpinDelay",       &agMouseSpinDelay       },
+	{ "MouseSpinIval",        &agMouseSpinIval        },
+	{ "MouseScrollIval",      &agMouseScrollIval      },
+	{ "ScrollButtonIval",     &agScrollButtonIval     },
+	{ "PageIncrement",        &agPageIncrement        },
+	{ "AutocompleteDelay",    &agAutocompleteDelay    },
+	{ "AutocompleteRate",     &agAutocompleteRate     },
+	{ "TextComposition",      &agTextComposition      },
+	{ "ScreenshotQuality",    &agScreenshotQuality    },
+	{ "TextTabWidth",         &agTextTabWidth         },
+	{ "TextBlinkRate",        &agTextBlinkRate        },
+	{ "GLdebugOutput",        &agGLdebugOutput        },
+	{ "GLuseNPOT",            &agGLuseNPOT            },
 };
 const Uint agGUIOptionCount = sizeof(agGUIOptions) / sizeof(agGUIOptions[0]);
 
@@ -114,29 +114,28 @@ void *agStdClasses[] = {
 	&agInputDeviceClass,
 	&agMouseClass,
 	&agKeyboardClass,
+	&agFontClass,
 	NULL
 };
 void *agStdWidgets[] = {
 	&agWidgetClass,
 	&agWindowClass,
-	&agFontClass,
+#ifdef AG_WIDGETS
 	&agBoxClass,
 	&agButtonClass,
 	&agCheckboxClass,
 	&agComboClass,
 	&agConsoleClass,
-	&agDirDlgClass,
 	&agEditableClass,
+	&agDirDlgClass,
 	&agFontSelectorClass,
 	&agFileDlgClass,
-	&agFileSelectorClass,
 	&agFixedClass,
-	&agFSpinbuttonClass,
 	&agFixedPlotterClass,
 	&agGraphClass,
-#ifdef HAVE_OPENGL
+# ifdef HAVE_OPENGL
 	&agGLViewClass,
-#endif
+# endif
 	&agHSVPalClass,
 	&agIconClass,
 	&agLabelClass,
@@ -158,7 +157,6 @@ void *agStdWidgets[] = {
 	&agSeparatorClass,
 	&agSliderClass,
 	&agSocketClass,
-	&agSpinbuttonClass,
 	&agStatusbarClass,
 	&agTitlebarClass,
 	&agTableClass,
@@ -167,6 +165,7 @@ void *agStdWidgets[] = {
 	&agTlistClass,
 	&agToolbarClass,
 	&agUComboClass,
+#endif /* AG_WIDGETS */
 	NULL
 };
 
@@ -175,27 +174,29 @@ static int initedGlobals = 0;		/* GUI globals are initialized */
 int agGUI = 0;				/* GUI is initialized */
 int agRenderingContext = 0;		/* In rendering context */
 int agStereo = 0;			/* Stereoscopic display */
+int agXsync = 0;			/* Synchronous X events */
+int agClipboardIntegration = 1;		/* Native clipboard integration */
 int agKbdDelay = 250;			/* Key repeat delay */
-int agKbdRepeat = 35;			/* Key repeat interval */
+int agKbdRepeat = 30;			/* Key repeat interval */
 int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
-int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
-int agMouseSpinIval = 50;		/* Spinbutton repeat interval */
-int agMouseScrollDelay = 100;		/* Scrollbar increment delay */
-int agMouseScrollIval = 50;		/* Scrollbar increment interval */
-int agTextComposition = 1;		/* Built-in input composition */
-int agTextBidi = 0;			/* Bidirectionnal text display */
-int agTextCache = 1;			/* Dynamic text caching */
+int agMouseSpinDelay = 350;		/* Spinbutton repeat delay */
+int agMouseSpinIval = 30;		/* Spinbutton repeat interval */
+int agMouseScrollIval = 1;		/* Scrollbar increment interval */
+int agScrollButtonIval = 100;		/* Scrollbar button interval */
+int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
+int agAutocompleteDelay = 1;		/* Delay before autocomplete (ms) */
+int agAutocompleteRate = 80;		/* Autocomplete refresh rate (ms) */
+int agScreenshotQuality = 100;		/* JPEG quality in % */
+int agTextComposition = 1;		/* Input character composition */
 int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
-int agTextSymbols = 1;			/* Process special symbols in text */
-int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
-int agIdleThresh = 20;			/* Idling threshold */
-int agScreenshotQuality = 100;		/* JPEG quality in % */
-int agMsgDelay = 500;			/* Display duration of infoboxes (ms) */
-double agZoomValues[AG_ZOOM_RANGE] = {	/* Scale values for zoom */
-	30.00, 50.00, 67.00, 80.00, 90.00,
-	100.00,
-	110.00, 120.00, 133.00, 150.00, 170.00, 200.00, 240.00, 300.00
+int agGLdebugOutput = 0;		/* Enable GL_DEBUG_OUTPUT */
+int agGLuseNPOT = 0;			/* Use non-power-of-two textures */
+
+double agZoomValues[AG_ZOOM_MAX] = {
+	55.0, 60.0, 65.00, 70.00, 75.00, 80.00, 90.00, 95.00,
+	100.00, 110.00, 120.00, 133.00, 150.00, 170.00,
+	200.00, 210.00, 220.00, 240.00, 250.00, 300.00
 };
 
 /*
@@ -207,40 +208,64 @@ AG_InitGUIGlobals(void)
 {
 	AG_Config *cfg;
 	void **cl;
+	AG_DriverClass **pd;
 	Uint i;
 
 	if (initedGlobals++ > 0) {
 		return (0);
 	}
-	agGUI = 1;
-	
 	for (cl = &agStdClasses[0]; *cl != NULL; cl++)
 		AG_RegisterClass(*cl);
-	for (i = 0; i < agDriverListSize; i++)
-		AG_RegisterClass(agDriverList[i]);
+	for (pd = &agDriverList[0]; *pd != NULL; pd++)
+		AG_RegisterClass(*pd);
 
 	AG_InitGlobalKeys();
 	AG_EditableInitClipboards();
 
-	agSurfaceFmt = AG_PixelFormatRGBA(32,
+	if ((agSurfaceFmt = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
+		return (-1);
+	}
+	AG_PixelFormatRGBA(agSurfaceFmt, 32,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
-	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
+	    0xff000000,
+	    0x00ff0000,
+	    0x0000ff00,
+	    0x000000ff
 #else
-	    0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
+	    0x000000ff,
+	    0x0000ff00,
+	    0x00ff0000,
+	    0xff000000
 #endif
 	);
 	
+	agGUI = 1;
 	agRenderingContext = 0;
-	AG_ObjectInitStatic(&agDrivers, &agObjectClass);
+
+	AG_ObjectInit(&agDrivers, &agObjectClass);
 	AG_ObjectSetName(&agDrivers, "agDrivers");
-	AG_ObjectInitStatic(&agInputDevices, &agObjectClass);
+	agDrivers.flags |= AG_OBJECT_STATIC;
+
+	AG_ObjectInit(&agInputDevices, &agObjectClass);
 	AG_ObjectSetName(&agInputDevices, "agInputDevices");
+	agInputDevices.flags |= AG_OBJECT_STATIC;
 
-	cfg = AG_ConfigObject();
-	for (i = 0; i < agGUIOptionCount; i++)
-		AG_BindInt(cfg, agGUIOptions[i].key, agGUIOptions[i].p);
+	{
+#ifdef AG_DEBUG
+		const int dbgLvlSave = agDebugLvl;
 
-	AG_LoadStyleSheet(NULL, "_agStyleDefault");
+		agDebugLvl = 0;
+#endif
+		cfg = AG_ConfigObject();
+		for (i = 0; i < agGUIOptionCount; i++) {
+			AG_BindInt(cfg, agGUIOptions[i].key, agGUIOptions[i].p);
+		}
+#ifdef AG_DEBUG
+		agDebugLvl = dbgLvlSave;
+#endif
+		if (AG_LoadStyleSheet(NULL, "_agStyleDefault") == NULL)
+			AG_Verbose("Error loading stylesheet: %s\n", AG_GetError());
+	}
 	return (0);
 }
 
@@ -251,32 +276,42 @@ AG_InitGUIGlobals(void)
 void
 AG_DestroyGUIGlobals(void)
 {
-	AG_Config *cfg;
-	void **cl;
+	AG_DriverClass **pd;
+	void **pcl;
 	Uint i;
-	
+
 	if (--initedGlobals > 0)
 		return;
 
 	AG_DestroyStyleSheet(&agDefaultCSS);
-	
-	cfg = AG_ConfigObject();
-	for (i = 0; i < agGUIOptionCount; i++)
-		AG_Unset(cfg, agGUIOptions[i].key);
-
+	{
+		AG_Config *cfg = AG_ConfigObject();
+#ifdef AG_DEBUG
+		int debugLvlSave;
+#endif
+		Debug_Mute(debugLvlSave);
+		for (i = 0; i < agGUIOptionCount; i++) {
+			AG_Unset(cfg, agGUIOptions[i].key);
+		}
+		Debug_Unmute(debugLvlSave);
+	}
 	AG_ObjectDestroy(&agInputDevices);
 #ifndef __APPLE__ /* XXX mutex issue */
 	AG_ObjectDestroy(&agDrivers);
 #endif
 
-	AG_PixelFormatFree(agSurfaceFmt); agSurfaceFmt = NULL;
+	AG_PixelFormatFree(agSurfaceFmt);
+	free(agSurfaceFmt);
+	agSurfaceFmt = NULL;
+
 	AG_EditableDestroyClipboards();
 	AG_DestroyGlobalKeys();
 	
-	for (i = 0; i < agDriverListSize; i++)
-		AG_UnregisterClass(agDriverList[i]);
-	for (cl = &agStdClasses[0]; *cl != NULL; cl++)
-		AG_UnregisterClass(*cl);
+	for (pd = &agDriverList[0]; *pd != NULL; pd++)
+		AG_UnregisterClass(*pd);
+
+	for (pcl = &agStdClasses[0]; *pcl != NULL; pcl++)
+		AG_UnregisterClass(*pcl);
 
 	agRenderingContext = 0;
 	agGUI = 0;
@@ -294,16 +329,24 @@ AG_InitGUI(Uint flags)
 {
 	void **ops;
 
-	for (ops = &agStdWidgets[0]; *ops != NULL; ops++) {
+	/* Register standard GUI widget classes. */
+	for (ops = &agStdWidgets[0]; *ops != NULL; ops++)
 		AG_RegisterClass(*ops);
-	}
-	agIcon_Init();
 	
-	if (AG_InitTextSubsystem() == -1) {
+	/* Initialize the statically-compiled icon data. */
+	agIcon_Init();
+
+	/* Start the font engine. */
+	if (AG_InitTextSubsystem() == -1)
 		return (-1);
-	}
-	AG_InitWindowSystem();
-	AG_InitAppMenu();
+
+	/* Initialize global Window lists and pointers. */
+	TAILQ_INIT(&agWindowDetachQ);
+	TAILQ_INIT(&agWindowShowQ);
+	TAILQ_INIT(&agWindowHideQ);
+	agWindowToFocus = NULL;
+	agWindowFocused = NULL;
+
 	return (0);
 }
 
@@ -321,14 +364,8 @@ AG_DestroyGUI(void)
 	AG_LockVFS(&agDrivers);
 
 	/* Destroy all windows */
-#ifdef AG_DEBUG_GUI
-	Debug(NULL, "AG_DestroyGUI()\n");
-#endif
 	OBJECT_FOREACH_CHILD(drv, &agDrivers, ag_object) {
 		OBJECT_FOREACH_CHILD(win, drv, ag_window) {
-#ifdef AG_DEBUG_GUI
-			Debug(drv, "Freeing Window %s (\"%s\")\n", OBJECT(win)->name, win->caption);
-#endif
 			AG_ObjectDetach(win);
 		}
 	}
@@ -340,9 +377,6 @@ AG_DestroyGUI(void)
 	     drv != TAILQ_END(&agDrivers.children);
 	     drv = drvNext) {
 		drvNext = TAILQ_NEXT(drv, cobjs);
-#ifdef AG_DEBUG_GUI
-		Debug(drv, "Freeing Driver %s\n", OBJECT(drv)->name);
-#endif
 		TAILQ_INIT(&drv->children);
 		AG_DriverClose((AG_Driver *)drv);
 	}
@@ -352,9 +386,8 @@ AG_DestroyGUI(void)
 	agDriverOps = NULL;
 	AG_UnlockVFS(&agDrivers);
 
-	AG_DestroyAppMenu();
-	AG_DestroyWindowSystem();
 	AG_DestroyTextSubsystem();
+
 	agIcon_Destroy();
 
 	for (ops = &agStdWidgets[0]; *ops != NULL; ops++)
@@ -363,12 +396,16 @@ AG_DestroyGUI(void)
 	AG_DestroyGUIGlobals();
 }
 
-/* Break out of the event loop. */
+#ifdef AG_EVENT_LOOP
+/*
+ * Break out of the event loop.
+ */
 void
 AG_QuitGUI(void)
 {
 	AG_Terminate(0);
 }
+#endif
 
 /*
  * Initialize the Agar-GUI library. If spec is non-NULL, select the driver
@@ -384,49 +421,56 @@ AG_InitGraphics(const char *spec)
 {
 	char specBuf[128], *s, *sOpts = "", *tok;
 	AG_Driver *drv = NULL;
-	AG_DriverClass *dc = NULL;
-	int i;
-	size_t len;
+	AG_DriverClass *dc = NULL, **pd;
 	
 	if (AG_InitGUIGlobals() == -1)
 		return (-1);
 
 	if (agDriverMw != NULL || agDriverSw != NULL) {
-		AG_SetError(_("Root driver already initialized"));
+		AG_SetErrorS("agDriver is already set");
 		goto fail;
 	}
 	if (spec != NULL && spec[0] != '\0') {
 		Strlcpy(specBuf, spec, sizeof(specBuf));
 		s = &specBuf[0];
 
-		if (strncmp(s, "<OpenGL>", 8) == 0) {
-			/*
-			 * Select preferred OpenGL-compatible driver.
-			 */
+		if (Strncasecmp(s, "<OpenGL>", 8) == 0) {    /* Any GL driver */
 			sOpts = &s[8];
-			for (i = 0; i < agDriverListSize; i++) {
-				dc = agDriverList[i];
-				if (dc->flags & AG_DRIVER_OPENGL &&
-				   (drv = AG_DriverOpen(dc)) != NULL)
+			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+				if ((*pd)->flags & AG_DRIVER_OPENGL &&
+				   (drv = AG_DriverOpen(*pd)) != NULL) {
+				   	dc = *pd;
 					break;
+				}
 			}
-			if (i == agDriverListSize) {
-				AG_SetError(_("No OpenGL drivers are available"));
+			if (dc == NULL) {
+				AG_SetErrorS(_("No OpenGL drivers are available"));
 				goto fail;
 			}
-		} else if (strncmp(s, "<SDL>", 5) == 0) {
-			/*
-			 * Select preferred SDL-compatible driver.
-			 */
+		} else if (Strncasecmp(s, "<SDL>", 5) == 0) { /* Any SDL driver */
 			sOpts = &s[5];
-			for (i = 0; i < agDriverListSize; i++) {
-				dc = agDriverList[i];
-				if (dc->flags & AG_DRIVER_SDL &&
-				   (drv = AG_DriverOpen(dc)) != NULL)
+			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+				if ((*pd)->flags & AG_DRIVER_SDL &&
+				   (drv = AG_DriverOpen(*pd)) != NULL) {
+					dc = *pd;
 					break;
+				}
 			}
-			if (i == agDriverListSize) {
-				AG_SetError(_("No SDL drivers are available"));
+			if (dc == NULL) {
+				AG_SetErrorS(_("No SDL drivers are available"));
+				goto fail;
+			}
+		} else if (Strncasecmp(s, "<FB>", 4) == 0) { /* Any framebuffer driver */
+			sOpts = &s[5];
+			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+				if ((*pd)->type == AG_FRAMEBUFFER &&
+				   (drv = AG_DriverOpen(*pd)) != NULL) {
+					dc = *pd;
+					break;
+				}
+			}
+			if (dc == NULL) {
+				AG_SetErrorS(_("No framebuffer drivers are available"));
 				goto fail;
 			}
 		} else {
@@ -434,31 +478,23 @@ AG_InitGraphics(const char *spec)
 			 * Try explicit list of preferred drivers.
 			 */
 			while ((tok = AG_Strsep(&s, ",;")) != NULL) {
-				for (i = 0; i < agDriverListSize; i++) {
-					dc = agDriverList[i];
-					len = strlen(dc->name);
-					if (strncmp(dc->name, tok, len) == 0 &&
+				for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+					size_t len = strlen((*pd)->name);
+
+					if (strncmp((*pd)->name, tok, len) == 0 &&
 					    (tok[len] == '\0' || tok[len] == '(') &&
-					    (drv = AG_DriverOpen(dc)) != NULL) {
+					    (drv = AG_DriverOpen(*pd)) != NULL) {
 						sOpts = &tok[len];
+						dc = *pd;
 						break;
 					}
 				}
-				if (i < agDriverListSize)
+				if (dc != NULL)
 					break;
 			}
 			if (tok == NULL) {
-				char availDrvs[256];
-
-				for (availDrvs[0] = '\0', i = 0;
-				     i < agDriverListSize; i++) {
-					dc = agDriverList[i];
-					Strlcat(availDrvs, " ", sizeof(availDrvs));
-					Strlcat(availDrvs, dc->name, sizeof(availDrvs));
-				}
-				AG_SetError(_("Agar driver is not available: \"%s\"\n"
-				              "(compiled-in drivers: <%s >)"),
-					      specBuf, availDrvs);
+				AG_SetError(_("No such Agar driver: \"%s\""), specBuf);
+				AG_SetErrorCode(AG_ENOENT);
 				goto fail;
 			}
 		}
@@ -466,13 +502,14 @@ AG_InitGraphics(const char *spec)
 		/*
 		 * Auto-select best available driver.
 		 */
-		for (i = 0; i < agDriverListSize; i++) {
-			dc = agDriverList[i];
-			if ((drv = AG_DriverOpen(dc)) != NULL)
+		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+			if ((drv = AG_DriverOpen(*pd)) != NULL) {
+				dc = *pd;
 				break;
+			}
 		}
-		if (i == agDriverListSize) {
-			AG_SetError(_("No graphics drivers are available"));
+		if (dc == NULL) {
+			AG_SetError(_("No Agar drivers are available"));
 			goto fail;
 		}
 	}
@@ -491,6 +528,12 @@ AG_InitGraphics(const char *spec)
 			if ((key = AG_Strsep(&tok, "=")) != NULL) {
 				if (Strcasecmp(key, "stereo") == 0) {
 					agStereo = 1;
+					continue;
+				} else if (Strcasecmp(key, "xsync") == 0) {
+					agXsync = 1;
+					continue;
+				} else if (Strcasecmp(key, "debug") == 0) {
+					agGLdebugOutput = 1;
 					continue;
 				}
 				if ((val = AG_Strsep(&tok, "=")) != NULL) {
@@ -588,47 +631,113 @@ AG_ZoomReset(void)
 	AG_UnlockVFS(&agDrivers);
 }
 
+/* Generate "About Agar" dialog window. */
+void
+AG_About(AG_Event *event)
+{
+	char path[AG_PATHNAME_MAX];
+	AG_Window *win;
+	AG_Label *lbl;
+	AG_Box *box;
+	AG_Textbox *tb;
+	FILE *f;
+
+	if ((win = AG_WindowNewNamedS(0, "_agAbout")) == NULL) {
+		return;
+	}
+	AG_WindowSetCaption(win, _("About Agar GUI"));
+	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
+
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
+	AG_BoxSetHorizAlign(box, AG_BOX_CENTER);
+	AG_SetStyle(box, "spacing", "50");
+	{
+		AG_AgarVersion av;
+
+		AG_GetVersion(&av);
+
+		lbl = AG_LabelNew(box, 0,
+		    "Agar %d.%d.%d (" AGSI_FRAK "%s" AGSI_RST ")",
+		    av.major, av.minor, av.patch,
+		    (av.release) ? av.release : "beta");
+
+		AG_SetStyle(lbl, "font-family", "cm-sans");
+		AG_SetStyle(lbl, "font-size", "220%");
+
+		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "sq-agar.bmp",
+		    path, sizeof(path)) == 0)
+			AG_PixmapFromFile(box, 0, path);
+	}
+
+	tb = AG_TextboxNewS(win, AG_TEXTBOX_MULTILINE | AG_TEXTBOX_EXPAND |
+	                         AG_TEXTBOX_READONLY | AG_TEXTBOX_WORDWRAP, NULL);
+	AG_SetStyle(tb, "font-family", "vera-mono");
+	AG_TextboxSizeHintLines(tb, 20);
+
+	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "license.txt", path, sizeof(path)) == 0 &&
+	   (f = fopen(path, "r")) != NULL) {
+		char *s;
+		AG_Size size;
+
+		fseek(f, 0, SEEK_END);
+		size = (AG_Size)ftell(f);
+		fseek(f, 0, SEEK_SET);
+		s = Malloc(size + 1);
+		fread(s, size, 1, f);
+		fclose(f);
+		s[size] = '\0';
+
+		AG_TextboxBindASCII(tb, s, size);
+	} else {
+		AG_TextboxPrintf(tb, _("Failed to open license.txt"));
+	}
+
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close"), AGWINCLOSE(win));
+	AG_WindowShow(win);
+}
+
 #ifdef AG_LEGACY
 /*
  * Initialize Agar with a single-window driver of specified resolution.
- * As of Agar-1.4, this interface obsolete but kept for backward compat.
+ * Kept for backward compatibility with Agar < 1.4.
  */
 int
 AG_InitVideo(int w, int h, int depth, Uint flags)
 {
 	AG_Driver *drv = NULL;
-	AG_DriverClass *dc = NULL;
-	int i;
+	AG_DriverClass *dc = NULL, **pd;
 	
 	if (AG_InitGUIGlobals() == -1) {
 		return (-1);
 	}
 	if (agDriverMw != NULL || agDriverSw != NULL) {
-		AG_SetError("Root driver already initialized");
+		AG_SetErrorS("agDriver is already set");
 		goto fail;
 	}
 	if (depth < 1 || w < 16 || h < 16) {
 		AG_SetError("Resolution too small");
 		goto fail;
 	}
-	if (flags & (AG_VIDEO_OPENGL|AG_VIDEO_OPENGL_OR_SDL)) {
-		for (i = 0; i < agDriverListSize; i++) {
-			dc = agDriverList[i];
-			if (dc->wm == AG_WM_SINGLE &&
-			    (dc->flags & AG_DRIVER_OPENGL) &&
-			    (drv = AG_DriverOpen(dc)) != NULL)
+	if (flags & (AG_VIDEO_OPENGL | AG_VIDEO_OPENGL_OR_SDL)) {
+		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+			if ((*pd)->wm == AG_WM_SINGLE &&
+			   ((*pd)->flags & AG_DRIVER_OPENGL) &&
+			    (drv = AG_DriverOpen(*pd)) != NULL) {
+				dc = *pd;
 				break;
+			}
 		}
-		if (i == agDriverListSize) {
+		if (dc == NULL) {
 			if (flags & AG_VIDEO_OPENGL_OR_SDL) {
-				for (i = 0; i < agDriverListSize; i++) {
-					dc = agDriverList[i];
-					if (dc->wm == AG_WM_SINGLE &&
-					    (dc->flags & AG_DRIVER_SDL) &&
-					    (drv = AG_DriverOpen(dc)) != NULL)
+				for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+					if ((*pd)->wm == AG_WM_SINGLE &&
+					    ((*pd)->flags & AG_DRIVER_SDL) &&
+					    (drv = AG_DriverOpen(*pd)) != NULL) {
+						dc = *pd;
 						break;
+					}
 				}
-				if (i == agDriverListSize) {
+				if (dc == NULL) {
 					AG_SetError("SDL/GL not available");
 					goto fail;
 				}
@@ -638,25 +747,27 @@ AG_InitVideo(int w, int h, int depth, Uint flags)
 			}
 		}
 	} else if (flags & AG_VIDEO_SDL) {
-		for (i = 0; i < agDriverListSize; i++) {
-			dc = agDriverList[i];
-			if (dc->wm == AG_WM_SINGLE &&
-			    (dc->flags & AG_DRIVER_SDL) &&
-			    (drv = AG_DriverOpen(dc)) != NULL)
+		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+			if ((*pd)->wm == AG_WM_SINGLE &&
+			   ((*pd)->flags & AG_DRIVER_SDL) &&
+			    (drv = AG_DriverOpen(*pd)) != NULL) {
+				dc = *pd;
 				break;
+			}
 		}
-		if (i == agDriverListSize) {
+		if (dc == NULL) {
 			AG_SetError("SDL not available");
 			goto fail;
 		}
 	} else {
-		for (i = 0; i < agDriverListSize; i++) {
-			dc = agDriverList[i];
-			if (dc->wm == AG_WM_SINGLE &&
-			    (drv = AG_DriverOpen(dc)) != NULL)
+		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+			if ((*pd)->wm == AG_WM_SINGLE &&
+			    (drv = AG_DriverOpen(*pd)) != NULL) {
+				dc = *pd;
 				break;
+			}
 		}
-		if (i == agDriverListSize) {
+		if (dc == NULL) {
 			AG_SetError("No graphics drivers are available");
 			goto fail;
 		}

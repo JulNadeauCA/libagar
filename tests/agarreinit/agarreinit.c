@@ -6,6 +6,8 @@
 #include <agar/core.h>
 #include <agar/gui.h>
 
+#include <stdlib.h>
+
 int
 main(int argc, char *argv[])
 {

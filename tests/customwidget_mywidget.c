@@ -8,6 +8,8 @@
  * inheritance, see demos/objsystem.
  */
 
+#include <stdlib.h>
+
 #include "agartest.h"
 #include "customwidget_mywidget.h"
 
@@ -44,11 +46,11 @@ MyWidgetNew(void *parent, const char *foo)
  * used here.
  */
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
 	MyWidget *my = p;
 	
-	if (my->mySurface == -1) {
+	if (my->label == -1) {
 		/*
 		 * We can use AG_TextSize() to return the dimensions of rendered
 		 * text, without rendering it.
@@ -60,8 +62,8 @@ SizeRequest(void *p, AG_SizeReq *r)
 		 * AGWIDGET_SURFACE() macro returns the AG_Surface given a
 		 * Widget surface handle.
 		 */
-		r->w = AGWIDGET_SURFACE(my,my->mySurface)->w;
-		r->h = AGWIDGET_SURFACE(my,my->mySurface)->h;
+		r->w = AGWIDGET_SURFACE(my,my->label)->w;
+		r->h = AGWIDGET_SURFACE(my,my->label)->h;
 	}
 }
 
@@ -72,7 +74,7 @@ SizeRequest(void *p, AG_SizeReq *r)
  * geometry can be handled by Draw().
  */
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 {
 	MyWidget *my = p;
 
@@ -90,46 +92,66 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
  * on widget coordinates.
  */
 static void
-Draw(void *p)
+Draw(void *_Nonnull p)
 {
 	MyWidget *my = p;
+	const int x = my->x;
+	const int y = my->y;
+	const AG_Surface *S;
 	AG_Color c;
+	AG_Rect r;
 	
 	/*
-	 * Draw a box spanning the widget area. Use the widget's
-	 * default color (the "color" style property).
+	 * Draw a box over the widget area; use "background-color".
 	 */
-	AG_DrawBox(my,
-	    AG_RECT(0, 0, AGWIDGET(my)->w, AGWIDGET(my)->h), 1,
-	    AG_WCOLOR(my,0));
+	r.x = 0;
+	r.y = 0;
+	r.w = AGWIDGET(my)->w;
+	r.h = AGWIDGET(my)->h;
+	AG_DrawBox(my, &r, 1, &AG_WCOLOR(my, AG_BG_COLOR));
 
-	/*
-	 * Render some text onto a surface. The default text color
-	 * (the "text-color" style property) will be used.
-	 */
-	if (my->mySurface == -1) {
-		my->mySurface = AG_WidgetMapSurface(my,
-		    AG_TextRender("Custom widget!"));
+	/* Establish a clipping rectangle over the entire widget area. */
+	AG_PushClipRect(my, &r);
+
+	/* Render the last pressed key as a text surface. */
+	if (my->label == -1) {
+		AG_TextFontPts(36.0f);
+		my->label = AG_WidgetMapSurface(my,
+		    AG_TextRenderF("%c", my->lastKey));
 	}
 
-	c = AG_ColorRGB(250, 250, 0);
-	AG_DrawLine(my, 0, 0,					my->x, my->y, c);
-	AG_DrawLine(my, AGWIDGET(my)->w, 0,			my->x, my->y, c);
-	AG_DrawLine(my, 0, AGWIDGET(my)->h,			my->x, my->y, c);
-	AG_DrawLine(my, AGWIDGET(my)->w, AGWIDGET(my)->h,	my->x, my->y, c);
-	AG_DrawCircle(my, my->x, my->y, 50, c);
+	/*
+	 * Draw some lines and circles.
+	 */
+	AG_ColorRGB_8(&c, 250,250,0);
+	AG_DrawLine(my, 0,   0,   x, y, &c);
+	AG_DrawLine(my, r.w, 0,   x, y, &c);
+	AG_DrawLine(my, 0,   r.h, x, y, &c);
+	AG_DrawLine(my, r.w, r.h, x, y, &c);
+	AG_DrawCircle(my, x,y, my->radius, &c);
+	AG_DrawCircle(my, x + (my->radius >> 1),
+	                  y - (my->radius >> 1),
+			  my->radius/10, &c);
 
-	/* Draw the mapped surface centered around the cursor. */
-	AG_WidgetBlitSurface(my, my->mySurface,
-	    my->x - AGWIDGET_SURFACE(my,my->mySurface)->w/2,
-	    my->y - AGWIDGET_SURFACE(my,my->mySurface)->h/2);
+	/*
+	 * Draw a mapped label surface centered at the cursor.
+	 */
+	AG_PushBlendingMode(my, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
+	S = AGWIDGET_SURFACE(my, my->label);
+	AG_WidgetBlitSurface(my, my->label, x - (S->w >> 1),
+	                                    y - (S->h >> 1) - (S->h >> 1));
+
+	AG_PopBlendingMode(my);
+
+	AG_PopClipRect(my);
 }
 
 /* Mouse motion event handler */
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
-	MyWidget *my = AG_SELF();
+	MyWidget *my = MYWIDGET_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 
@@ -140,11 +162,27 @@ MouseMotion(AG_Event *event)
 	my->y = y;
 }
 
+static Uint32
+ClickTimeout(AG_Timer *to, AG_Event *_Nonnull event)
+{
+	MyWidget *my = MYWIDGET_SELF();
+	const int maxDia = AG_MAX(AGWIDGET(my)->w,
+	                          AGWIDGET(my)->h);
+
+	AG_Redraw(my);
+
+	if ((my->radius += 5) > maxDia) {
+		my->radius = 1;
+		return (0);			/* Cancel timer */
+	}
+	return (1);				/* Reschedule in 1ms */
+}
+
 /* Mouse click event handler */
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
-	MyWidget *my = AG_SELF();
+	MyWidget *my = MYWIDGET_SELF();
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -154,37 +192,49 @@ MouseButtonDown(AG_Event *event)
 	}
 	TestMsg(my->ti, "Click at %d,%d", x, y);
 	AG_WidgetFocus(my);
+
+	/* Set the timer to expire in 1ms and call ClickTimeout() */
+	AG_AddTimer(my, &my->clickTimer, 1, ClickTimeout, NULL);
 }
 
 /* Mouse click event handler */
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
-/*	MyWidget *my = AG_SELF(); */
+	MyWidget *my = MYWIDGET_SELF();
 /*	int button = AG_INT(1); */
 /*	int x = AG_INT(2); */
 /*	int y = AG_INT(3); */
 
-	/* ... */
+	/* Deactivate the running timer. */
+	AG_DelTimer(my, &my->clickTimer);
 }
 
 /* Keystroke event handler */
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
-	MyWidget *my = AG_SELF();
+	MyWidget *my = MYWIDGET_SELF();
 	int keysym = AG_INT(1);
 /*	int keymod = AG_INT(2); */
-	Uint32 unicode = AG_INT(3);
+	AG_Char unicode = AG_CHAR(3);
 
 	TestMsg(my->ti, "Keystroke: 0x%x (Uni=%x)", keysym, unicode);
+	my->lastKey = keysym;
+	my->lastUnicode = unicode;
+
+	if (my->label != -1) {				/* Invalidate cached */
+		AG_WidgetUnmapSurface(my, my->label);
+		my->label = -1;
+		AG_Redraw(my);
+	}
 }
 
 /* Keystroke event handler */
 static void
-KeyUp(AG_Event *event)
+KeyUp(AG_Event *_Nonnull event)
 {
-/*	MyWidget *my = AG_SELF(); */
+/*	MyWidget *my = MYWIDGET_SELF(); */
 /*	int keysym = AG_INT(1); */
 
 	/* ... */
@@ -195,33 +245,33 @@ KeyUp(AG_Event *event)
  * invoke the initialization routines of the parent classes first.
  */
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	MyWidget *my = obj;
 
-	/* Allow this widget to grab focus. */
-	AGWIDGET(my)->flags |= AG_WIDGET_FOCUSABLE;
-
-	/* Receive mouse motion events unconditionally. */
-	AGWIDGET(my)->flags |= AG_WIDGET_UNFOCUSED_MOTION;
-
-	/* The widget will be using the font engine. */
-	AGWIDGET(my)->flags |= AG_WIDGET_USE_TEXT;
-	
-	/* The widget will react to mouse hover events. */
-	AGWIDGET(my)->flags |= AG_WIDGET_USE_MOUSEOVER;
+	/*
+	 * May grab focus. Receive mousemotion events even if unfocused.
+	 * Use the font engine (AG_TextRender() will be needed).
+	 * Generate mouseover events.
+	 */
+	AGWIDGET(my)->flags |= (AG_WIDGET_FOCUSABLE | AG_WIDGET_UNFOCUSED_MOTION |
+	                        AG_WIDGET_USE_TEXT | AG_WIDGET_USE_MOUSEOVER);
 
 	/* Initialize instance variables. */
 	my->foo = "";
 	my->x = 0;
 	my->y = 0;
+	my->radius = 5;
+	my->lastKey = 'X';
 
 	/*
 	 * We'll eventually need to create and map a surface, but we cannot
 	 * do this from Init(), because it involves texture operations in
 	 * GL mode which are thread-unsafe. We wait until Draw() to do that.
 	 */
-	my->mySurface = -1;
+	my->label = -1;
+
+	AG_InitTimer(&my->clickTimer, "clickTimer", 0);
 
 	/*
 	 * Map our event handlers. For a list of all meaningful events

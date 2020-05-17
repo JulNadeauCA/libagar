@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,7 +29,6 @@
 #include <agar/core/core.h>
 
 #include <agar/config/enable_gui.h>
-#include <agar/config/have_long_double.h>
 
 #include <agar/math/m.h>
 
@@ -43,22 +42,19 @@
 
 int mInitedSubsystem = 0;
 
+#ifdef AG_ENABLE_STRING
 /*
  * Math library extensions to AG_Printf(3) and AG_PrintfP(3).
  */
-static size_t
-PrintReal(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintReal(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Real *r = AG_FMTSTRING_ARG(fs);
 
-#if defined(QUAD_PRECISION)
-	return Snprintf(dst, dstSize, "%.03llf", *r);
-#else
 	return Snprintf(dst, dstSize, "%.03f", *r);
-#endif
 }
-static size_t
-PrintTime(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintTime(AG_FmtString *_Nonnull fs, char *dst, AG_Size dstSize)
 {
 	M_Time *t = AG_FMTSTRING_ARG(fs);
 #ifdef ENABLE_GUI
@@ -70,39 +66,39 @@ PrintTime(AG_FmtString *fs, char *dst, size_t dstSize)
 		return Snprintf(dst, dstSize, "%f", (double)(*t));
 	}
 }
-static size_t
-PrintComplex(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintComplex(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Complex *c = AG_FMTSTRING_ARG(fs);
 	return Snprintf(dst, dstSize, "[%.03f%+.03fi]", c->r, c->i);
 }
-static size_t
-PrintVector2(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintVector2(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Vector2 *v = AG_FMTSTRING_ARG(fs);
 	return Snprintf(dst, dstSize, "[%.03f, %.03f]",
 	    v->x, v->y);
 }
-static size_t
-PrintVector3(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintVector3(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Vector3 *v = AG_FMTSTRING_ARG(fs);
 	return Snprintf(dst, dstSize, "[%.03f, %.03f, %.03f]",
 	    v->x, v->y, v->z);
 }
-static size_t
-PrintVector4(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintVector4(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Vector4 *v = AG_FMTSTRING_ARG(fs);
 	return Snprintf(dst, dstSize, "[%.03f, %.03f, %.03f, %.03f]",
 	    v->x, v->y, v->z, v->w);
 }
-static size_t
-PrintVector(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintVector(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Vector *v = AG_FMTSTRING_ARG(fs);
 	char *pDst, *pEnd = &dst[dstSize-1];
-	size_t rv;
+	AG_Size rv;
 	Uint i;
 
 	if (dstSize < 3) {	/* "[]" + NUL */
@@ -131,12 +127,12 @@ PrintVector(AG_FmtString *fs, char *dst, size_t dstSize)
 out:
 	return (pDst - dst);
 }
-static size_t
-PrintMatrix(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintMatrix(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Matrix *M = AG_FMTSTRING_ARG(fs);
 	char *pDst, *pEnd = &dst[dstSize-1];
-	size_t rv;
+	AG_Size rv;
 	Uint i, j;
 
 	if (dstSize < 3) {	/* "[]" + NUL */
@@ -175,8 +171,8 @@ PrintMatrix(AG_FmtString *fs, char *dst, size_t dstSize)
 out:
 	return (pDst - dst);
 }
-static size_t
-PrintMatrix44(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintMatrix44(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Matrix44 *M = AG_FMTSTRING_ARG(fs);
 	return Snprintf(dst, dstSize,
@@ -189,6 +185,7 @@ PrintMatrix44(AG_FmtString *fs, char *dst, size_t dstSize)
 	    M->m[2][0], M->m[2][1], M->m[2][2], M->m[2][3],
 	    M->m[3][0], M->m[3][1], M->m[3][2], M->m[3][3]);
 }
+#endif /* AG_ENABLE_STRING */
 
 /* Initialize the math library. */
 void
@@ -211,6 +208,7 @@ M_InitSubsystem(void)
 		AG_RegisterClass(&mMatviewClass);
 	}
 #endif
+#ifdef AG_ENABLE_STRING
 	AG_RegisterFmtStringExt("R", PrintReal);
 	AG_RegisterFmtStringExt("T", PrintTime);
 	AG_RegisterFmtStringExt("C", PrintComplex);
@@ -220,6 +218,7 @@ M_InitSubsystem(void)
 	AG_RegisterFmtStringExt("V", PrintVector);
 	AG_RegisterFmtStringExt("M44", PrintMatrix44);
 	AG_RegisterFmtStringExt("M", PrintMatrix);
+#endif
 }
 
 /* Release resources allocated by the math library. */
@@ -235,6 +234,7 @@ M_DestroySubsystem(void)
 		AG_UnregisterClass(&mMatviewClass);
 	}
 #endif
+#ifdef AG_ENABLE_STRING
 	AG_UnregisterFmtStringExt("R");
 	AG_UnregisterFmtStringExt("T");
 	AG_UnregisterFmtStringExt("C");
@@ -244,6 +244,7 @@ M_DestroySubsystem(void)
 	AG_UnregisterFmtStringExt("V");
 	AG_UnregisterFmtStringExt("M44");
 	AG_UnregisterFmtStringExt("M");
+#endif
 }
 
 /* Unserialize a real number. */
@@ -258,10 +259,6 @@ M_ReadReal(AG_DataSource *ds)
 		return (M_Real)AG_ReadFloat(ds);
 	case 2:
 		return (M_Real)AG_ReadDouble(ds);
-#ifdef HAVE_LONG_DOUBLE
-	case 4:
-		return (M_Real)AG_ReadLongDouble(ds);
-#endif
 	default:
 		AG_FatalError("Bad real prec");
 	}
@@ -282,11 +279,6 @@ M_CopyReal(AG_DataSource *ds, M_Real *rv)
 	case 2:
 		*rv = (M_Real)AG_ReadDouble(ds);
 		break;
-#ifdef HAVE_LONG_DOUBLE
-	case 4:
-		*rv = (M_Real)AG_ReadLongDouble(ds);
-		break;
-#endif
 	default:
 		AG_FatalError("Bad real prec");
 	}
@@ -302,9 +294,6 @@ M_WriteReal(AG_DataSource *ds, M_Real v)
 #elif defined(DOUBLE_PRECISION)
 	AG_WriteUint8(ds, 2);
 	AG_WriteDouble(ds, v);
-#elif defined(QUAD_PRECISION)
-	AG_WriteUint8(ds, 4);
-	AG_WriteLongDouble(ds, v);
 #endif
 }
 
@@ -339,8 +328,9 @@ M_Range
 M_ReadRange(AG_DataSource *ds)
 {
 	M_Range r;
+
 	r.min = M_ReadReal(ds);
-	r.typ = M_ReadReal(ds);
+	r.v = r.typ = M_ReadReal(ds);
 	r.max = M_ReadReal(ds);
 	return (r);
 }
@@ -368,8 +358,9 @@ M_TimeRange
 M_ReadTimeRange(AG_DataSource *ds)
 {
 	M_TimeRange r;
+
 	r.min = M_ReadTime(ds);
-	r.typ = M_ReadTime(ds);
+	r.v = r.typ = M_ReadTime(ds);
 	r.max = M_ReadTime(ds);
 	return (r);
 }

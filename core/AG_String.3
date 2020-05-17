@@ -1,4 +1,4 @@
-.\" Copyright (c) 2012-2016 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2012-2020 Julien Nadeau Carriere <vedge@csoft.net>.
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -150,6 +150,7 @@ argument specifies the buffer index to use (any integer up to
 is valid).
 .Pp
 .\" MANLINK(AG_FmtString)
+.\" MANLINK(AG_FmtStringExtFn)
 The
 .Fn AG_PrintfP
 function allocates and initializes a new
@@ -210,9 +211,6 @@ or
 .Ft "float *"
 .It %lf, %lg
 .Ft "double *"
-.It %llf, %llg
-.Ft "long double *"
-(needs AG_HAVE_LONG_DOUBLE)
 .It %[u8]
 .Ft "Uint8 *"
 .It %[s8]
@@ -418,55 +416,52 @@ The resulting string is copied to (or concatenated against) the destination
 buffer.
 .Sh UNICODE OPERATIONS
 .nr nS 1
-.Ft "Uint32 *"
+.Ft "AG_Char *"
 .Fn AG_ImportUnicode "const char *encoding" "const char *src" "AG_Size *pOutLen" "AG_Size *pOutSize"
 .Pp
 .Ft "int"
-.Fn AG_ExportUnicode "const char *encoding" "char *dst" "const Uint32 *src" "AG_Size dstSize"
+.Fn AG_ExportUnicode "const char *encoding" "char *dst" "const AG_Char *src" "AG_Size dstSize"
 .Pp
-.Ft "int"
-.Fn AG_LengthUTF8 "const char *s" "AG_Size *rv"
+.Ft "inline AG_Size"
+.Fn AG_LengthUTF8 "const char *s"
 .Pp
-.Ft "int"
+.Ft "inline int"
 .Fn AG_CharLengthUTF8 "unsigned char byte"
 .Pp
-.Ft "AG_Size"
-.Fn AG_LengthUCS4 "const Uint32 *ucs"
+.Ft "inline AG_Size"
+.Fn AG_LengthUCS4 "const AG_Char *ucs"
 .Pp
-.Ft "int"
-.Fn AG_LengthUTF8FromUCS4 "const Uint32 *ucs" "AG_Size *rv"
+.Ft "inline int"
+.Fn AG_LengthUTF8FromUCS4 "const AG_Char *ucs" "AG_Size *rv"
 .Pp
-.Ft "AG_Size"
-.Fn AG_CharLengthUTF8FromUCS4 "Uint32 ch"
+.Ft "inline AG_Size"
+.Fn AG_CharLengthUTF8FromUCS4 "AG_Char ch"
 .Pp
 .nr nS 0
-The
 .Fn AG_ImportUnicode
-function converts the given string
+converts the string
 .Fa src
-(assumed to be in the specified
+(in specified
 .Fa encoding )
-to UCS-4 format.
-On success, the function returns a newly-allocated UCS-4 text buffer.
-If
+to internal (UCS-4) format.
+On success, it returns a newly-allocated UCS-4 buffer.
+The number of characters in the string is returned in
 .Fa pOutLen
-is non-NULL, the total number of characters is returned in it.
-Acceptable values for
+(if not NULL).
+Recognized values for
 .Fa encoding
 include "US-ASCII" and "UTF-8".
-If Agar was compiled with support for the
+If Agar was compiled with
 .Xr iconv 3
-library, any character set supported by iconv may be specified.
-Agar always handles the US-ASCII and UTF-8 encodings internally, even if
-iconv is unavailable.
+support then any character set supported by iconv may be specified.
 .Pp
 The
 .Fn AG_ExportUnicode
 function converts the contents of the given UCS-4 text buffer to the
 specified
 .Fa encoding
-(again, "US-ASCII and "UTF-8" are handled internally by Agar, other
-encodings may be specified if iconv is available).
+("US-ASCII and "UTF-8" are handled internally by Agar, other encodings are
+handled through iconv where available).
 The resulting text is written to the specified buffer
 .Fa dst ,
 which should be of the specified size
@@ -474,45 +469,39 @@ which should be of the specified size
 in bytes.
 The written string is always NUL-terminated.
 .Pp
-The
 .Fn AG_LengthUTF8
-function counts the number of characters in the given UTF-8 string.
-On success, the function returns 0 the character count is written to
+counts the number of characters in the given UTF-8 string.
+On success, it returns 0 the character count is written to
 .Fa rv .
 If the string is not a valid UTF-8 string, the function returns -1.
 .Pp
 .Fn AG_CharLengthUTF8
 evaluates whether the given byte is the start of an UTF-8 character
-sequence.
-Returns the sequence length in bytes (or 1 if there is none).
+sequence and returns the sequence length in bytes (or 1 if there is none).
 .Pp
-The
 .Fn AG_LengthUCS4
-function returns the number of characters in the given UCS-4 text buffer
-(similarly to
+returns the number of characters in the given UCS-4 text buffer (analogous to
 .Xr strlen 3 ) .
-The terminating NUL is not included in the count.
+The terminating NUL is not included in the returned count.
 .Pp
-The
 .Fn AG_LengthUTF8FromUCS4
-function returns the number of bytes that would be needed to encode
-the given UCS-4 string in UTF-8 encoding.
-On success, the function returns 0 and writes the count to
+returns the number of bytes that would be needed to encode the given
+UCS-4 string in UTF-8 encoding.
+On success, it returns 0 and writes the count to
 .Fa rv .
 If
 .Fa ucs
-contains an invalid Unicode character, the function fails and returns -1.
+contains an invalid Unicode character, it fails and returns -1.
 .Pp
-The
 .Fn AG_CharLengthUTF8FromUCS4
-function returns the number of bytes that would be needed to encode the
-given UCS-4 character as an UTF-8 character sequence.
+returns the number of bytes that would be needed to encode the given
+UCS-4 character as an UTF-8 character sequence.
 .Sh STRING OPERATIONS
 .nr nS 1
-.Ft "int"
+.Ft "inline int"
 .Fn AG_Strcasecmp "const char *s1" "const char *s2"
 .Pp
-.Ft "int"
+.Ft "inline int"
 .Fn AG_Strncasecmp "const char *s1" "const char *s2" "AG_Size n"
 .Pp
 .Ft "const char *"
@@ -600,7 +589,7 @@ encoding to Unicode, counts the number of characters, and exports
 the string to UTF-8 encoding:
 .Bd -literal -offset indent
 char *dst;
-Uint32 *unicode, *s;
+AG_Char *unicode, *s;
 int count = 0;
 AG_Size dstLen;
 

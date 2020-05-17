@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,13 +36,50 @@
 #include <agar/vg/vg_view.h>
 #include <agar/vg/icons.h>
 
+VG_Arc *
+VG_ArcNew(void *pNode, VG_Point *pCenter, float r, float a1, float a2)
+{
+	VG_Arc *va = Malloc(sizeof(VG_Arc));
+
+	VG_NodeInit(va, &vgArcOps);
+	va->p = pCenter;
+	va->r = r;
+	va->a1 = a1;
+	va->a2 = a2;
+	VG_AddRef(va, pCenter);
+	VG_NodeAttach(pNode, va);
+	return (va);
+}
+
+void
+VG_ArcCenter(VG_Arc *va, VG_Point *pCenter)
+{
+	VG *vg = VGNODE(va)->vg;
+
+	AG_ObjectLock(vg);
+	VG_DelRef(va, va->p);
+	VG_AddRef(va, pCenter);
+	va->p = pCenter;
+	AG_ObjectUnlock(vg);
+}
+
+void
+VG_ArcRadius(VG_Arc *va, double r)
+{
+	VG *vg = VGNODE(va)->vg;
+
+	AG_ObjectLock(vg);
+	va->r = r;
+	AG_ObjectUnlock(vg);
+}
+
 static void
 Init(void *p)
 {
 	VG_Arc *va = p;
 
 	va->p = NULL;
-	va->r = 0.5f;
+	va->r = 0.5;
 	va->a1 = 0.0f;
 	va->a2 = 360.0f;
 }
@@ -55,7 +92,7 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 	if ((va->p = VG_ReadRef(ds, va, "Point")) == NULL) {
 		return (-1);
 	}
-	va->r = AG_ReadFloat(ds);
+	va->r = AG_ReadDouble(ds);
 	va->a1 = AG_ReadFloat(ds);
 	va->a2 = AG_ReadFloat(ds);
 	return (0);
@@ -67,7 +104,7 @@ Save(void *p, AG_DataSource *ds)
 	VG_Arc *va = p;
 
 	VG_WriteRef(ds, va->p);
-	AG_WriteFloat(ds, va->r);
+	AG_WriteDouble(ds, va->r);
 	AG_WriteFloat(ds, va->a1);
 	AG_WriteFloat(ds, va->a2);
 }
@@ -94,7 +131,7 @@ Draw(void *p, VG_View *vv)
 		x = ((long)vg_cos_tbl[a % 360]*(long)r/1024) + xPos;
 		y = ((long)vg_sin_tbl[a % 360]*(long)r/1024) + yPos;
 		if (a != a1) {
-			AG_DrawLine(vv, xPrev, yPrev, x, y, c);
+			AG_DrawLine(vv, xPrev, yPrev, x, y, &c);
 		}
 		xPrev = x;
 		yPrev = y;
@@ -158,7 +195,7 @@ Edit(void *p, VG_View *vv)
 	VG_Arc *va = p;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
-	AG_NumericalNewFlt(box, 0, NULL, _("Radius: "), &va->r);
+	AG_NumericalNewDbl(box, 0, NULL, _("Radius: "), &va->r);
 	AG_NumericalNewFlt(box, 0, NULL, _("Start angle: "), &va->a1);
 	AG_NumericalNewFlt(box, 0, NULL, _("End angle: "), &va->a2);
 

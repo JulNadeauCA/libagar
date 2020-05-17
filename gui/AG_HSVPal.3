@@ -1,4 +1,4 @@
-.\" Copyright (c) 2005-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm AG_HSVPal
-.Nd agar HSV color wheel widget
+.Nd agar HSV color picker
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -45,17 +45,16 @@ The widget can bind directly to different color representations:
 .Pp
 .Bl -bullet -compact
 .It
-Individual Hue / Saturation / Value / Alpha floats.
+A native Agar
+.Xr AG_Color 3 .
 .It
-Individual R/G/B/A component integers or floats.
+Single-precision Hue, Saturation, Value and Alpha.
 .It
-An
-.Xr AG_Color 3
-structure.
+8- or 16-bit integer RGBA components.
 .It
-A pixel element in packed-pixel format (e.g., an
-.Ft Uint32
-and a corresponding
+Floating-point RGBA components.
+.It
+A 32- or 64-bit packed pixel (with corresponding
 .Xr AG_PixelFormat 3 ) .
 .El
 .Sh INHERITANCE HIERARCHY
@@ -76,62 +75,88 @@ widget.
 Acceptable
 .Fa flags
 include:
-.Bl -tag -width "AG_HSVPAL_NOPREVIEW "
+.Bl -tag -width "AG_HSVPAL_FORCE_NOALPHA "
+.It AG_HSVPAL_SHOW_RGB
+Show the RGB value in text form.
+.It AG_HSVPAL_SHOW_HSV
+Show the HSV value in text form.
 .It AG_HSVPAL_NOALPHA
-Disable the alpha component editor.
-This flag is automatically set or cleared whenever
+(Read-only)
+Transparency control is disabled.
+Set (or cleared) when
 .Va pixel-format
-is bound to a pixel format with or without alpha channel.
+is bound to a pixel format with (or without) alpha.
 .It AG_HSVPAL_FORCE_NOALPHA
-Disable the alpha component editor, regardless of whether the
-pixel format includes alpha support.
+Disable the transparency control.
 .It AG_HSVPAL_NOPREVIEW
 Disable the color preview band.
 .It AG_HSVPAL_HFILL
-Expand horizontally in parent (equivalent to invoking
-.Xr AG_ExpandHoriz 3 ) .
+Expand horizontally in parent container.
 .It AG_HSVPAL_VFILL
-Expand vertically in parent (equivalent to invoking
-.Xr AG_ExpandVert 3 ) .
+Expand vertically in parent container.
 .It AG_HSVPAL_EXPAND
 Shorthand for
-.Dv AG_HSVPAL_HFILL|AG_HSVPAL_VFILL .
+.Dv AG_HSVPAL_HFILL | AG_HSVPAL_VFILL .
 .El
+.Sh UPDATING VALUES
+.nr nS 1
+.Ft "void"
+.Fn AG_HSVPalUpdateHue "AG_HSVPal *pal" "int x" "int y"
+.Pp
+.Ft "void"
+.Fn AG_HSVPalUpdateSV "AG_HSVPal *pal" "int x" "int y"
+.Pp
+.nr nS 0
+.Fn AG_HSVPalUpdateHue
+sets the hue to that closest to cursor coordinates
+.Fa x ,
+.Fa y
+and triggers a refresh.
+.Fn AG_HSVPalUpdateSV
+sets the saturation and value to that at cursor coordinates
+.Fa x ,
+.Fa y
+and triggers a refresh.
 .Sh BINDINGS
 The
 .Nm
 widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "AG_PixelFormat **pixel-format "
+.It Va AG_Color *agcolor
+A native
+.Xr AG_Color 3
+structure.
 .It Va float *hue
-Color hue (0..1).
+Hue (0..1).
 .It Va float *saturation
-Color saturation (0..1).
+Saturation (0..1).
 .It Va float *value
-Color brightness (0..1).
+Value (0..1).
 .It Va float *alpha
-Alpha component value (0..1).
+Single-precision component value (0..1).
 .It Va AG_PixelFormat **pixel-format
-Pointer to the
+Pointer to
 .Xr AG_PixelFormat 3
-to use for generating the
+describing the packed-pixel format of
 .Va pixel
-value.
-The
-.Dv AG_HSVPAL_NOALPHA
-flag will be set automatically depending on the presence of an
-alpha component in the newly bound format (use
-.Dv AG_HSVPAL_FORCE_NOALPHA
-to disable this test).
-.It Va Uint32 *pixel
-Resulting pixel value.
-The pixel's components are extracted immediately when this binding is made
-(using the current
-.Va pixel-format )
-so make sure to always bind
+and
+.Va pixel64 .
+Note that
 .Va pixel-format
-prior to
-.Va pixel .
+should be set first.
+If the format has an alpha component,
+.Dv AG_HSVPAL_NOALPHA will be set accordingly
+(use
+.Dv AG_HSVPAL_FORCE_NOALPHA
+to disable).
+.It Va Uint32 *pixel
+32-bit packed pixel value.
+.It Va Uint64 *pixel64
+64-bit packed pixel value.
+Available in
+.Dv AG_LARGE
+build.
 .It Va void *RGBv
 A three-element array containing the RGB components.
 Acceptable binding types include FLOAT and DOUBLE, INT and UINT8.
@@ -164,10 +189,17 @@ saturation, the color should be stored in HSV format.
 .Pp
 .Lk http://www.easyrgb.com/ EasyRGB
 .Pp
-.Lk https://en.wikipedia.org/wiki/HSV_color_space The HSV color model
+.Lk https://en.wikipedia.org/wiki/HSV_color_space HSV_Color_Space
 .Pp
-.Lk https://en.wikipedia.org/wiki/RGB_color_model The RGB color model
+.Lk https://en.wikipedia.org/wiki/RGB_color_model RGB_Color_Model
 .Sh HISTORY
 The
 .Nm
 widget first appeared in Agar 1.0.
+The
+.Va pixel64
+binding,
+.Fn AG_HSVPalUpdateHue
+and
+.Fn AG_HSVPalUpdateSV
+appeared in Agar 1.6.0.

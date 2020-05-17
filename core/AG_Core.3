@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2013 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,13 +22,11 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\"	$OpenBSD: mdoc.template,v 1.6 2001/02/03 08:22:44 niklas Exp $
-.\"
 .Dd NOVEMBER 26, 2001
 .Dt AG_CORE 3
 .Os
 .ds vT Agar API Reference
-.ds oS Agar 1.0
+.ds oS Agar 1.6
 .Sh NAME
 .Nm AG_Core
 .Nd agar core library initialization
@@ -37,17 +35,14 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The
-.Nm
-library implements the Agar
+The Agar-Core library implements the
 .Xr AG_Object 3
 system and provides interfaces to common operating system services
-(filesystems, network APIs, threads).
-The Agar-GUI library is based on
+(filesystems, network APIs, threads, etc).
+Agar-GUI is built on top of
 .Nm ,
-but
-.Nm
-itself contains no GUI-related code and can be installed independently.
+but Agar-Core itself contains no GUI-related code and may be installed
+independently.
 .Pp
 .\" XXX list subsystems here as well
 For a complete listing of available subsystems and interfaces, see the
@@ -91,22 +86,29 @@ options include:
 .It AG_VERBOSE
 Allow errors/warnings on the standard error output.
 .It AG_CREATE_DATADIR
-Check that the application's run-time data directory exists,
-create it if necessary, and fail if it cannot be created.
-This directory contains the state of objects saved with
+Check that the application data directory exists, create it if necessary
+(or fail if it cannot be created).
+It contains the state of objects saved by
 .Xr AG_ObjectSave 3 .
 The default is
-.Fa $HOME/.<progname>
-on Unix, and platform-dependent on other platforms.
+.Fa $HOME/.progname/
+on Unix and platform-dependent elsewhere.
 .It AG_SOFT_TIMERS
-Don't use operating-system provided timer mechanisms such as BSD
+Don't use OS-provided timer mechanisms (such as BSD
 .Xr kqueue 2 ,
-Linux timerfd or POSIX
-.Xr select 2 .
-The processing of timers will be handled either by explicit updating
-of software-based timing wheel (e.g., by calling
+Linux timerfd or
+.Xr select 2 ) .
+Timers will be handled either by explicitely updating a software-based timing
+wheel (see
 .Xr AG_ProcessTimeouts 3 ) ,
 or some other mechanism.
+.It AG_POSIX_USERS
+If both
+.Xr AG_User 3
+modules "getenv" and "posix" are available, prefer "posix".
+This is not the default because "posix" incurs potential startup overhead
+while initially accessing the password database (and $HOME is all Agar
+needs for its own purposes).
 .El
 .Pp
 The
@@ -125,6 +127,7 @@ The
 function releases all resources allocated by the
 .Nm
 library.
+.\" MANLINK(AG_AgarVersion)
 .Sh AGAR VERSION INFORMATION
 .nr nS 1
 .Ft void
@@ -183,3 +186,10 @@ the given version number.
 The
 .Fn AG_InitCore
 function first appeared in Agar 1.0.
+The
+.Dv AG_CREATE_DATADIR
+option appeared in Agar 1.3.3.
+.Dv AG_SOFT_TIMERS
+in Agar 1.5.0 and
+.Dv AG_POSIX_USERS
+in Agar 1.6.0.

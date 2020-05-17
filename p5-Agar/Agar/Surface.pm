@@ -3,7 +3,7 @@ package Agar::Surface;
 use strict;
 use Agar;
 
-;1
+1;
 
 __END__
 
@@ -95,13 +95,7 @@ Create a new surface from the given JPEG file. Returns undef on failure.
 
 =head1 AUTHOR
 
-Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
-
-=head1 COPYRIGHT
-
-Copyright (c) 2008-2016 Hypertriton, Inc. All rights reserved.
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+Julien Nadeau Carriere E<lt>F<vedge@csoft.net>E<gt>
 
 =head1 SEE ALSO
 

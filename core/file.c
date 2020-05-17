@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #ifdef _WIN32
 # include <agar/core/queue_close.h>			/* Conflicts */
 # ifdef _XBOX
@@ -34,7 +37,10 @@
 # include <agar/core/queue.h>
 #else
 # include <sys/types.h>
-# include <sys/stat.h>
+# include <agar/config/_mk_have_sys_stat_h.h>
+# ifdef _MK_HAVE_SYS_STAT_H
+#  include <sys/stat.h>
+# endif
 # include <unistd.h>
 # include <string.h>
 # include <errno.h>
@@ -112,6 +118,7 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 int
 AG_GetFileInfo(const char *path, AG_FileInfo *i)
 {
+# ifdef _MK_HAVE_SYS_STAT_H
 	struct stat sb;
 	uid_t uid = geteuid();
 	gid_t gid = getegid();
@@ -140,21 +147,31 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	}
 	if ((sb.st_mode & S_ISUID) == S_ISUID) i->flags |= AG_FILE_SUID;
 	if ((sb.st_mode & S_ISGID) == S_ISGID) i->flags |= AG_FILE_SGID;
-
+	
 	if (sb.st_uid == uid) {
-		i->perms |= (sb.st_mode & S_IRUSR) ? AG_FILE_READABLE : 0;
-		i->perms |= (sb.st_mode & S_IWUSR) ? AG_FILE_WRITEABLE : 0;
-		i->perms |= (sb.st_mode & S_IXUSR) ? AG_FILE_EXECUTABLE : 0;
+		if ((sb.st_mode & S_IRUSR) == S_IRUSR) { i->perms |= AG_FILE_READABLE; }
+		if ((sb.st_mode & S_IWUSR) == S_IWUSR) { i->perms |= AG_FILE_WRITEABLE; }
+		if ((sb.st_mode & S_IXUSR) == S_IXUSR) { i->perms |= AG_FILE_EXECUTABLE; }
 	} else if (sb.st_gid == gid) {
-		i->perms |= (sb.st_mode & S_IRGRP) ? AG_FILE_READABLE : 0;
-		i->perms |= (sb.st_mode & S_IWGRP) ? AG_FILE_WRITEABLE : 0;
-		i->perms |= (sb.st_mode & S_IXGRP) ? AG_FILE_EXECUTABLE : 0;
+		if ((sb.st_mode & S_IRGRP) == S_IRGRP) { i->perms |= AG_FILE_READABLE; }
+		if ((sb.st_mode & S_IWGRP) == S_IWGRP) { i->perms |= AG_FILE_WRITEABLE; }
+		if ((sb.st_mode & S_IXGRP) == S_IXGRP) { i->perms |= AG_FILE_EXECUTABLE; }
 	} else {
-		i->perms |= (sb.st_mode & S_IROTH) ? AG_FILE_READABLE : 0;
-		i->perms |= (sb.st_mode & S_IWOTH) ? AG_FILE_WRITEABLE : 0;
-		i->perms |= (sb.st_mode & S_IXOTH) ? AG_FILE_EXECUTABLE : 0;
+		if ((sb.st_mode & S_IROTH) == S_IROTH) { i->perms |= AG_FILE_READABLE; }
+		if ((sb.st_mode & S_IWOTH) == S_IWOTH) { i->perms |= AG_FILE_WRITEABLE; }
+		if ((sb.st_mode & S_IXOTH) == S_IXOTH) { i->perms |= AG_FILE_EXECUTABLE; }
 	}
+#if 0	
+	Verbose("stat[%s]: mode=%x(%s) perms=%x(%s) uid=%d:%d\n", path,
+	    sb.st_mode, (sb.st_mode & S_IXUSR) ? "exec" : "",
+	    i->perms, (i->perms & AG_FILE_EXECUTABLE) ? "exec" : "",
+	    uid, gid);
+#endif
 	return (0);
+# else
+	AG_SetErrorS("No stat()");
+	return (-1);
+# endif
 }
 
 #endif /* _WIN32 */
@@ -210,7 +227,7 @@ AG_FileExists(const char *path)
 	} else {
 		return (1);
 	}
-#else
+#elif defined(_MK_HAVE_SYS_STAT_H)
 	struct stat sb;
 
 	if (stat(path, &sb) == -1) {
@@ -223,7 +240,10 @@ AG_FileExists(const char *path)
 	} else {
 		return (1);
 	}
-#endif /* _WIN32 */
+#else
+	AG_SetErrorS("No stat()");
+	return (-1);
+#endif
 }
 
 int
@@ -273,3 +293,5 @@ AG_RegisterFileExtMappings(const AG_FileExtMapping *femNew, Uint count)
 	agFileExtMap = fem;
 	agFileExtCount += count;
 }
+
+#endif /* AG_SERIALIZATION */

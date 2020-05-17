@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+# Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,9 +39,13 @@ LIB_BUNDLE?=
 
 ADA?=		ada
 ADABIND?=	gnatbind
+ADAPREP?=	gnatprep
+ADAPREPFLAGS?=
+ADAPREPFILE?=
 AR?=		ar
 ASM?=		nasm
 CC?=		cc
+CC_COMPILE?=	-c
 CXX?=		c++
 LEX?=		lex
 LN?=		ln
@@ -52,7 +56,7 @@ WINDRES?=
 YACC?=		yacc
 
 ADAFLAGS?=
-ADABFLAGS?=
+ADABFLAGS?=	-x
 ASMFLAGS?=	-g -w-orphan-labels
 CFLAGS?=
 CPPFLAGS?=
@@ -66,7 +70,7 @@ OBJCFLAGS?=
 PICFLAGS?=	-fPIC
 YFLAGS?=	-d
 
-USE_LIBTOOL?=	Yes
+USE_LIBTOOL?=	No
 LTBASE?=	${TOP}/mk/libtool
 LIBTOOL_COOKIE?=${TOP}/mk/libtool.ok
 LIBTOOL?=	${LTBASE}/libtool
@@ -87,6 +91,7 @@ CONFIGSCRIPTS?=
 CTAGS?=
 CTAGSFLAGS?=
 CLEANFILES?=
+CLEANDIRFILES?=
 DATAFILES?=
 DATAFILES_SRC?=
 INCL?=
@@ -99,11 +104,12 @@ SHOBJS?=
 WINRES?=
 
 all: all-subdir lib${LIB}.a lib${LIB}.so lib${LIB}.la
-install: all install-lib install-subdir
+install: install-lib install-subdir
 deinstall: deinstall-lib deinstall-subdir
 clean: clean-lib clean-subdir
 cleandir: clean-lib clean-subdir cleandir-lib cleandir-subdir
 regress: regress-subdir
+configure: configure-lib
 
 .SUFFIXES: .ads .adb .asm .c .cc .cpp .l .lo .m .o .y
 
@@ -131,14 +137,26 @@ regress: regress-subdir
 
 # Compile C code into an object file
 .c.o:
-	@_cflags=""; \
+	@_cflags=""; _out="$@"; \
 	if [ "${LIB_SHARED}" = "Yes" ]; then _cflags="${PICFLAGS}"; fi; \
 	if [ "${LIB_PROFILE}" = "Yes" ]; then _cflags="$$_cflags -pg -DPROF"; fi; \
-	echo "${CC} ${CFLAGS} ${CPPFLAGS} $$_cflags -o $@ -c $<"; \
-	${CC} ${CFLAGS} ${CPPFLAGS} $$_cflags -o $@ -c $<
+	if [ "${HAVE_CC65}" = "yes" ]; then _out=`echo "$@" | sed 's/.o$$/.s/'`; fi; \
+	echo "${CC} ${CFLAGS} ${CPPFLAGS} $$_cflags -o $$_out ${CC_COMPILE} $<"; \
+	${CC} ${CFLAGS} ${CPPFLAGS} $$_cflags -o $$_out ${CC_COMPILE} $<; \
+	if [ $$? != 0 ]; then \
+		echo "*"; \
+		echo "* $$_out compilation failed."; \
+		echo "*"; \
+		exit 1; \
+	fi; \
+	if [ "${HAVE_CC65}" = "yes" ]; then \
+		echo "ca65 -o $@ $$_out"; \
+		ca65 -o $@ $$_out; \
+	fi
+
 .c.lo:
 	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
-	    ${CC} ${LIBTOOLFLAGS} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+	    ${CC} ${LIBTOOLFLAGS} ${CFLAGS} ${CPPFLAGS} -o $@ ${CC_COMPILE} $<
 
 # Compile Objective-C code into an object file
 .m.o:
@@ -176,8 +194,8 @@ regress: regress-subdir
 	@_cflags=""; \
 	if [ "${LIB_SHARED}" = "Yes" ]; then _cflags="${PICFLAGS}"; fi; \
 	if [ "${LIB_PROFILE}" = "Yes" ]; then _cflags="$$_cflags -pg -DPROF"; fi; \
-	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $@.yy.c"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $@.yy.c
+	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.yy.c"; \
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.yy.c
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 
@@ -195,8 +213,8 @@ regress: regress-subdir
 	@_cflags=""; \
 	if [ "${LIB_SHARED}" = "Yes" ]; then _cflags="${PICFLAGS}"; fi; \
 	if [ "${LIB_PROFILE}" = "Yes" ]; then _cflags="$$_cflags -pg -DPROF"; fi; \
-	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $@.tab.c"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $@.tab.c
+	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.tab.c"; \
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.tab.c
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 
@@ -228,7 +246,6 @@ depend:	${SRCS_GENERATED} check-libtool lib-tags depend-subdir
 	    else \
 	        export _mkdep_cflags="${CFLAGS}"; \
 	    fi; \
-	    echo "srcs_c=$$_srcs_c"; \
 	    if [ "$$_srcs_c" != "" ]; then \
 	        echo "${MKDEP} $$_mkdep_cflags $$_srcs_c"; \
 	        env CC=${CC} ${MKDEP} $$_mkdep_cflags $$_srcs_c; \
@@ -237,7 +254,6 @@ depend:	${SRCS_GENERATED} check-libtool lib-tags depend-subdir
 	            env CC=${CC} ${MKDEP} -a -l $$_mkdep_cflags $$_srcs_c; \
 	        fi; \
 	    fi; \
-	    echo "srcs_ada=$$_srcs_ada"; \
 	    if [ "$$_srcs_ada" != "" ]; then \
 	        echo "${MKDEP_ADA} ${MKDEP_ADAFLAGS} ${CFLAGS} $$_srcs_ada >>.depend"; \
 	        env ADA=${ADA} ${MKDEP_ADA} ${MKDEP_ADAFLAGS} ${CFLAGS} $$_srcs_ada 1>.ada_depend 2>.ada_errors; \
@@ -303,7 +319,8 @@ _lib_ltobjs:
 
 # Build a static library.
 lib${LIB}.a: ${SRCS_GENERATED} _lib_objs ${OBJS}
-	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "No" -a "${SRCS}" != "" ]; then \
+	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "No" -a \
+	      "${SRCS}" != "" -a "${.TARGETS}" != "install" ]; then \
 	    _objs="${OBJS}"; \
 	    if [ "$$_objs" = "" ]; then \
 	        for F in ${SRCS}; do \
@@ -315,28 +332,37 @@ lib${LIB}.a: ${SRCS_GENERATED} _lib_objs ${OBJS}
 	    	    _objs="$$_objs $$F"; \
                 done; \
 	    fi; \
-	    echo "${AR} -cru lib${LIB}.a $$_objs"; \
-	    ${AR} -cru lib${LIB}.a $$_objs; \
-	    echo "${RANLIB} lib${LIB}.a"; \
-	    (${RANLIB} lib${LIB}.a || exit 0); \
+	    if [ "${HAVE_CC65}" = "yes" ]; then \
+	        echo "ar65 a ${LIB}.lib $$_objs"; \
+	        ar65 a ${LIB}.lib $$_objs; \
+		echo "cp ${LIB}.lib lib${LIB}.a"; \
+		cp ${LIB}.lib lib${LIB}.a; \
+	    else \
+	        echo "${AR} -cru lib${LIB}.a $$_objs"; \
+	        ${AR} -cru lib${LIB}.a $$_objs; \
+	        echo "${RANLIB} lib${LIB}.a"; \
+	        (${RANLIB} lib${LIB}.a || exit 0); \
+	    fi; \
 	fi
 
 # Build a shared library (without Libtool)
 lib${LIB}.so: ${SRCS_GENERATED} _lib_objs ${OBJS}
-	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" \
-	      -a "${USE_LIBTOOL}" = "No" -a "${SRCS}" != "" ]; then \
+	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" -a \
+	      "${USE_LIBTOOL}" = "No" -a "${SRCS}" != "" -a \
+	      "${.TARGETS}" != "install" ]; then \
+	    \
 	    case "${HOST}" in \
 	    *-darwin*) \
-	        _libout="lib${LIB}.dylib.${LIB_CURRENT}"; \
-	        _libnames="$$_libout lib${LIB}.dylib"; \
+	        _libout="lib${LIB}.${LIB_CURRENT}.dylib"; \
+	        _libnames="lib${LIB}.dylib"; \
 		;; \
 	    *-mingw*) \
 	        _libout="${LIB}.dll"; \
-	        _libnames="$$_libout"; \
+	        _libnames=""; \
 		;; \
 	    *) \
 	        _libout="lib${LIB}.so.${LIB_CURRENT}.${LIB_REVISION}.${LIB_AGE}"; \
-	        _libnames="$$_libout lib${LIB}.so.${LIB_CURRENT} lib${LIB}.so"; \
+	        _libnames="lib${LIB}.so.${LIB_CURRENT} lib${LIB}.so"; \
 	        ;; \
 	    esac; \
 	    \
@@ -353,29 +379,34 @@ lib${LIB}.so: ${SRCS_GENERATED} _lib_objs ${OBJS}
 	    fi; \
 	    \
 	    case "${HOST}" in \
+	    *-darwin*) \
+	        echo "${CC} -shared -o $$_libout -Wl,-rpath,${PREFIX}/lib ${LDFLAGS} -dynamiclib -install_name lib${LIB}.dylib $$_objs ${LIBS}"; \
+	        ${CC} -shared -o $$_libout -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} -dynamiclib -install_name lib${LIB}.dylib $$_objs ${LIBS}; \
+	        ;; \
 	    *-mingw*) \
 	        echo "${CC} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} $$_objs ${LIBS}"; \
 	        ${CC} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} $$_objs ${LIBS}; \
 	        ;; \
 	    *) \
-	        echo "${CC} -shared -o $$_libout -Wl,-rpath,${PREFIX}/lib ${LDFLAGS} $$_objs ${LIBS}"; \
-	        ${CC} -shared -o $$_libout -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} $$_objs ${LIBS}; \
-	        echo "${LN} -fs $$_libout lib${LIB}.so.${LIB_CURRENT}"; \
-	        ${LN} -fs $$_libout lib${LIB}.so.${LIB_CURRENT}; \
-	        echo "${LN} -fs $$_libout lib${LIB}.so"; \
-	        ${LN} -fs $$_libout lib${LIB}.so; \
+	        echo "${CC} -shared -o $$_libout -Wl,-rpath,${PREFIX}/lib ${LDFLAGS} $$_objs"; \
+	        ${CC} -shared -o $$_libout -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} $$_objs; \
 	        ;; \
 	    esac; \
 	    \
+	    for LIBNAME in $$_libnames; do \
+	        echo "${LN} -fs $$_libout $$LIBNAME"; \
+	        ${LN} -fs $$_libout $$LIBNAME; \
+	    done; \
+	    \
 	    echo "# lib${LIB}.la - a libtool library file" > lib${LIB}.la; \
 	    echo "# Generated by build.lib.mk(5) from BSDBuild ${BSDBUILD_VERSION}" >> lib${LIB}.la; \
-	    echo '# <http://bsdbuild.hypertriton.com/>' >> lib${LIB}.la; \
+	    echo '# <https://bsdbuild.hypertriton.com/>' >> lib${LIB}.la; \
 	    echo >> lib${LIB}.la; \
 	    echo '# The name that we can dlopen(3).' >> lib${LIB}.la; \
 	    echo "dlname='$$_libout'" >> lib${LIB}.la; \
 	    echo >> lib${LIB}.la; \
 	    echo '# Names of this library.' >> lib${LIB}.la; \
-	    echo "library_names='$$_libnames'" >> lib${LIB}.la; \
+	    echo "library_names='$$_libout $$_libnames'" >> lib${LIB}.la; \
 	    echo >> lib${LIB}.la; \
 	    echo '# The name of the static archive.' >> lib${LIB}.la; \
 	    echo "old_library='lib${LIB}.a'" >> lib${LIB}.la; \
@@ -423,7 +454,8 @@ lib${LIB}.so: ${SRCS_GENERATED} _lib_objs ${OBJS}
 
 # Build a shared library using libtool
 lib${LIB}.la: check-libtool ${SRCS_GENERATED} _lib_ltobjs ${SHOBJS}
-	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" -a "${SRCS}" != "" ]; then \
+	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" -a \
+	      "${SRCS}" != "" -a "${.TARGETS}" != "install" ]; then \
 	    _ltobjs="${SHOBJS}"; \
 	    _moduleopts=""; \
 	    if [ "$$_ltobjs" = "" ]; then \
@@ -544,6 +576,10 @@ clean-lib:
 	    echo "rm -f ${SRCS_GENERATED}"; \
 	    rm -f ${SRCS_GENERATED}; \
 	fi
+	@if [ "${HAVE_CC65}" = "yes" ]; then \
+	    echo "rm -f ${LIB}.lib *.s"; \
+	    rm -f ${LIB}.lib *.s; \
+	fi
 
 cleandir-lib:
 	rm -f ${LIBTOOL} ${LIBTOOL_COOKIE} ${LTCONFIG_LOG} config.log config.status tags
@@ -563,34 +599,41 @@ cleandir-lib:
 	    echo "rm -f ${PCMODULES}"; \
 	    rm -f ${PCMODULES}; \
 	fi
+	@if [ "${CLEANDIRFILES}" != "" ]; then \
+	    echo "rm -f ${CLEANDIRFILES}"; \
+	    rm -f ${CLEANDIRFILES}; \
+	fi
 	@if [ -e ".depend" ]; then \
 	    echo "echo >.depend"; \
 	    echo >.depend; \
 	fi
 
 install-lib: check-libtool
+	@if [ "${DESTDIR}" != "" ]; then \
+	    echo "# Installing under DESTDIR=${DESTDIR}:"; \
+	    if [ ! -e "${DESTDIR}" ]; then \
+	        echo "${INSTALL_DESTDIR} ${DESTDIR}"; \
+	        ${SUDO} ${INSTALL_DESTDIR} ${DESTDIR}; \
+	    fi; \
+	fi
 	@if [ "${INCL}" != "" ]; then \
 	    if [ ! -d "${DESTDIR}${INCLDIR}" ]; then \
-                echo "${INSTALL_DATA_DIR} ${INCLDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${INCLDIR}; \
+                echo "${INSTALL_INCL_DIR} ${INCLDIR}"; \
+                ${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}; \
 	    fi; \
 	    for F in ${INCL}; do \
-	        echo "${INSTALL_DATA} $$F ${INCLDIR}"; \
-	        ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${INCLDIR}; \
+	        echo "${INSTALL_INCL} $$F ${INCLDIR}"; \
+	        ${SUDO} ${INSTALL_INCL} $$F ${DESTDIR}${INCLDIR}; \
 	    done; \
 	fi
 	@if [ "${LIB}" != "" -a "${LIB_INSTALL}" = "Yes" ]; then \
 	    if [ ! -d "${DESTDIR}${LIBDIR}" ]; then \
-                echo "${INSTALL_DATA_DIR} ${LIBDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LIBDIR}; \
+                echo "${INSTALL_LIB_DIR} ${LIBDIR}"; \
+                ${SUDO} ${INSTALL_LIB_DIR} ${DESTDIR}${LIBDIR}; \
 	    fi; \
-            if [ ! -d "${DESTDIR}${DATADIR}" ]; then \
-                echo "${INSTALL_DATA_DIR} ${DATADIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${DATADIR}; \
-            fi; \
 	    if [ ! -d "${DESTDIR}${INCLDIR}" ]; then \
-                echo "${INSTALL_DATA_DIR} ${INCLDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${INCLDIR}; \
+                echo "${INSTALL_INCL_DIR} ${INCLDIR}"; \
+                ${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}; \
 	    fi; \
 	    if [ "${USE_LIBTOOL}" = "Yes" ]; then \
 	        echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=install ${INSTALL_LIB} lib${LIB}.la ${LIBDIR}"; \
@@ -613,7 +656,7 @@ install-lib: check-libtool
 	    	        echo "${INSTALL_PROG} $$_libout ${BINDIR}"; \
 	                ${SUDO} ${INSTALL_PROG} $$_libout ${DESTDIR}${BINDIR}; \
 	    	        echo "${INSTALL_LIB} lib${LIB}_dll.lib ${LIBDIR}"; \
-	                ${SUDO} ${INSTALL_LIB} lib${LIB}.dll.lib ${DESTDIR}${LIBDIR}; \
+	                ${SUDO} ${INSTALL_LIB} lib${LIB}_dll.lib ${DESTDIR}${LIBDIR}; \
 			echo "(cd ${LIBDIR} && ${LN} -fs $$_libout lib${LIB}.so.${LIB_CURRENT})"; \
 			(cd ${DESTDIR}${LIBDIR} && ${SUDO} ${LN} -fs $$_libout lib${LIB}.so.${LIB_CURRENT}); \
 			echo "(cd ${LIBDIR} && ${LN} -fs $$_libout lib${LIB}.so)"; \
@@ -633,15 +676,25 @@ install-lib: check-libtool
 	            ${SUDO} ${INSTALL_LIB} lib${LIB}.la.$$$$ ${DESTDIR}${LIBDIR}/lib${LIB}.la; \
 		    rm -f lib${LIB}.la.$$$$; \
 		fi; \
-	        echo "${INSTALL_LIB} lib${LIB}.a ${LIBDIR}"; \
-	        ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${DESTDIR}${LIBDIR}; \
+	        if [ "${HAVE_CC65}" = "yes" ]; then \
+	            echo "${INSTALL_LIB} ${LIB}.lib ${LIBDIR}"; \
+	            ${SUDO} ${INSTALL_LIB} ${LIB}.lib ${DESTDIR}${LIBDIR}; \
+	        else \
+	            echo "${INSTALL_LIB} lib${LIB}.a ${LIBDIR}"; \
+	            ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${DESTDIR}${LIBDIR}; \
+	        fi; \
 	    fi; \
 	    for F in ${SRCS}; do \
 	        if echo $$F | grep -q '.ad[bs]$$'; then \
 		    FB=`echo "$$F" | sed 's/.ad[bs]$$//'`; \
 	            if [ -e "$$FB.ads" ]; then \
-	                echo "${INSTALL_INCL} $$FB.ads ${INCLDIR}"; \
-	                ${SUDO} ${INSTALL_INCL} $$FB.ads ${DESTDIR}${INCLDIR}; \
+			if [ "${ADAPREPFILE}" != "" ]; then \
+				echo "${ADAPREP} ${ADAPREPFLAGS} $$FB.ads ${INCLDIR}/$$FB.ads ${ADAPREPFILE}"; \
+				${SUDO} ${ADAPREP} ${ADAPREPFLAGS} $$FB.ads ${INCLDIR}/$$FB.ads ${ADAPREPFILE}; \
+			else \
+	                	echo "${INSTALL_INCL} $$FB.ads ${INCLDIR}"; \
+	                	${SUDO} ${INSTALL_INCL} $$FB.ads ${DESTDIR}${INCLDIR}; \
+			fi; \
 		    fi; \
 	            echo "${INSTALL_DATA} $$FB.ali ${INCLDIR}"; \
 	            ${SUDO} ${INSTALL_DATA} $$FB.ali ${DESTDIR}${INCLDIR}; \
@@ -743,13 +796,32 @@ deinstall-lib: check-libtool
 	        ${SUDO} ${LIBTOOL} ${LIBTOOLOPTS} --mode=uninstall rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la; \
 	    else \
 	    	if [ "${LIB_SHARED}" = "Yes" ]; then \
-		    for F in lib${LIB}.so lib${LIB}.so.${LIB_CURRENT} lib${LIB}.so.${LIB_CURRENT}.${LIB_REVISION}.${LIB_AGE}; do \
+	            case "${HOST}" in \
+	            *-darwin*) \
+	                _libout="lib${LIB}.${LIB_CURRENT}.dylib"; \
+	                _libnames="$$_libout lib${LIB}.dylib"; \
+		        ;; \
+	            *-mingw*) \
+	                _libout="${LIB}.dll"; \
+	                _libnames="$$_libout"; \
+		        ;; \
+	            *) \
+	                _libout="lib${LIB}.so.${LIB_CURRENT}.${LIB_REVISION}.${LIB_AGE}"; \
+	                _libnames="$$_libout lib${LIB}.so.${LIB_CURRENT} lib${LIB}.so"; \
+	                ;; \
+	            esac; \
+		    for F in $$_libnames; do \
 	                echo "${DEINSTALL_LIB} ${LIBDIR}/$$F"; \
 	                ${SUDO} ${DEINSTALL_LIB} ${DESTDIR}${LIBDIR}/$$F; \
 		    done; \
 		fi; \
-	        echo "${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a"; \
-	        ${SUDO} ${DEINSTALL_LIB} ${DESTDIR}${LIBDIR}/lib${LIB}.a; \
+	        if [ "${HAVE_CC65}" = "yes" ]; then \
+	            echo "${DEINSTALL_LIB} ${LIBDIR}/${LIB}.lib"; \
+	            ${SUDO} ${DEINSTALL_LIB} ${DESTDIR}${LIBDIR}/${LIB}.lib; \
+	        else \
+	            echo "${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a"; \
+	            ${SUDO} ${DEINSTALL_LIB} ${DESTDIR}${LIBDIR}/lib${LIB}.a; \
+	        fi; \
 	        echo "${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.la"; \
 	        ${SUDO} ${DEINSTALL_LIB} ${DESTDIR}${LIBDIR}/lib${LIB}.la; \
 	    fi; \
@@ -810,14 +882,13 @@ includes:
 
 check-libtool:
 	@if [ "${USE_LIBTOOL}" = "Yes" -a "${LIBTOOL_BUNDLED}" = "yes" ]; then \
-	    echo "libtool check: ${LIBTOOL_COOKIE}"; \
 	    if [ ! -e "${LIBTOOL_COOKIE}" ]; then \
 	        echo "(cd ${LTBASE} && \
 	            ${SH} ./configure --build=${BUILD} --host=${HOST})"; \
 	        (cd ${LTBASE} && env CC="${CC}" OBJC="${OBJC}" CXX="${CXX}" \
 	            CFLAGS="${CFLAGS}" OBJCFLAGS="${OBJCFLAGS}" CXXFLAGS="${CXXFLAGS}" \
 		    ${SH} ./configure --build=${BUILD} --host=${HOST}); \
-	        if [ $? != 0 ]; then \
+	        if [ $$? != 0 ]; then \
 	    	    echo "USE_LIBTOOL=Yes and ${LTCONFIG} failed"; \
 	    	    exit 1; \
 	        fi; \
@@ -846,8 +917,24 @@ lib-tags:
 
 ${LTCONFIG} ${LTCONFIG_DEPS}:
 
-.PHONY: install deinstall includes clean cleandir regress depend
-.PHONY: install-lib deinstall-lib clean-lib cleandir-lib
+configure-lib:
+	@if [ "${LIB}" != "" ]; then \
+		if [ -e "configure.in" ]; then \
+			echo "cat configure.in | mkconfigure > configure"; \
+			cat configure.in | mkconfigure > configure; \
+			if [ ! -e configure ]; then \
+				echo "mkconfigure (BSDBuild) failed."; \
+				exit 1; \
+			fi; \
+			if [ ! -x configure ]; then \
+				echo "chmod 755 configure"; \
+				chmod 755 configure; \
+			fi; \
+		fi; \
+	fi
+
+.PHONY: install deinstall includes clean cleandir regress depend configure
+.PHONY: install-lib deinstall-lib clean-lib cleandir-lib configure-lib
 .PHONY: _lib_objs _lib_ltobjs lib-tags check-libtool none
 
 include ${TOP}/mk/build.common.mk

@@ -4,7 +4,6 @@
 #define _AGAR_WIDGET_SEPARATOR_H_
 
 #include <agar/gui/widget.h>
-
 #include <agar/gui/begin.h>
 
 enum ag_separator_type {
@@ -13,23 +12,28 @@ enum ag_separator_type {
 };
 
 typedef struct ag_separator {
-	struct ag_widget wid;
+	struct ag_widget wid;			/* AG_Widget -> AG_Separator */
 	enum ag_separator_type type;
-	Uint padding;				/* Padding in pixels */
-	int visible;				/* Visible flag */
+	Uint minLen;				/* Minimum length in pixels */
 } AG_Separator;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agSeparatorClass;
 
-AG_Separator *AG_SeparatorNew(void *, enum ag_separator_type);
-AG_Separator *AG_SpacerNew(void *, enum ag_separator_type);
-void          AG_SeparatorSetPadding(AG_Separator *, Uint);
+AG_Separator *_Nonnull AG_SeparatorNewHoriz(void *_Nullable);
+AG_Separator *_Nonnull AG_SeparatorNewVert(void *_Nullable);
+AG_Separator *_Nonnull AG_SeparatorNew(void *_Nullable, enum ag_separator_type);
 
-#define AG_SeparatorNewHoriz(p) AG_SeparatorNew((p),AG_SEPARATOR_HORIZ)
-#define AG_SeparatorNewVert(p) AG_SeparatorNew((p),AG_SEPARATOR_VERT)
-#define AG_SpacerNewHoriz(p) AG_SpacerNew((p),AG_SEPARATOR_HORIZ)
-#define AG_SpacerNewVert(p) AG_SpacerNew((p),AG_SEPARATOR_VERT)
+AG_Separator *_Nonnull AG_SpacerNewHoriz(void *_Nullable);
+AG_Separator *_Nonnull AG_SpacerNewVert(void *_Nullable);
+AG_Separator *_Nonnull AG_SpacerNew(void *_Nullable, enum ag_separator_type);
+
+void AG_SeparatorSetLength(AG_Separator *_Nonnull, Uint);
+
+#ifdef AG_LEGACY
+void AG_SeparatorSetPadding(AG_Separator *_Nonnull, Uint)
+                           DEPRECATED_ATTRIBUTE;                
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

@@ -1,9 +1,14 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 # Public domain
 #
 # Demonstrates many of the Agar-GUI widgets available through the Perl
 # bindings.
+# 
+# Usage: perl agardemo.pl [--driver=DRIVER]
+# 
+# The "dummy" driver can be used to test from command-line.
+#
 
 use strict;
 use warnings;
@@ -14,13 +19,32 @@ my $driver = "";
 
 GetOptions("driver=s" => \$driver);
 
-Agar::InitCore('Agar Perl demo', { verbose=>1 }) || die Agar::GetError();
+#
+# Initialize the Agar library.
+#
+Agar::InitCore('agarperldemo', { verbose => 1,
+                                 createDataDir => 1 }) || die Agar::GetError();
+
 Agar::InitGraphics($driver) || die Agar::GetError();
 
-my $win = Agar::Window->new();
-$win->caption("perl $0");
-$win->setGeometry(80, 60, 640, 480);
+# Bind ESCAPE and other standard keys.
+Agar::BindStdGlobalKeys();
+
+# Create a new Agar window.
+my $win = Agar::Window->newNamed("main");
+$win->caption("$0 (perl $^V)");
+
+#
+# Arrange for Agar::Quit() to be called when the window is closed.
+#
+# Note: An alternate way to accomplish the same thing would be to
+# pass { main => 1 } to Agar::Window->new().
+#
 $win->setEvent('window-close', sub { Agar::Quit() });
+
+# Set an explicit window geometry (default = auto-size).
+# $win->setGeometry(80,60, 640,480);
+
 
 ################################
 # Load/save dialogs
@@ -44,7 +68,10 @@ $saveWin->setEvent('window-close', sub { $saveWin->hide() });
 
 my $menuroot = Agar::Menu->new($win);
 my $menu = $menuroot->rootItem()->nodeItem('Menu');
-$menu->actionItem('Click me!', sub { Agar::InfoMsg("Don't do that! ;)") });
+$menu->actionItem('Click me!', sub {
+	Agar::InfoMsg("Don't do that! " .
+                      "\xF0\x9F\x98\x89");              # U+1f609 WINKING FACE
+ });
 $menu->separator();
 my $submenu = $menu->nodeItem('Hover over me');
 $submenu->actionItem('Click me, too!', sub { Agar::InfoMsg("Oi!") });
@@ -140,9 +167,6 @@ $toolbar->setActiveRow(2);
 $toolbar->addTextButton("InfoTimed")->setEvent('button-pushed', sub {
 	Agar::InfoMsgTimed(2000, "Do you know the Mushroom Man?");
 });
-$toolbar->addTextButton("WarningTimed")->setEvent('button-pushed', sub {
-	Agar::WarningMsgTimed(2000, "Look, a three-headed monkey!");
-});
 $toolbar->addTextButton("ErrorTimed")->setEvent('button-pushed', sub {
 	Agar::ErrorMsgTimed(2000, "Look, a three-headed monkey!");
 });
@@ -150,16 +174,13 @@ $toolbar->setActiveRow(3);
 $toolbar->addTextButton("InfoIgnorable")->setEvent('button-pushed', sub {
 	Agar::InfoMsgIgnorable('demo.ignore-info', "Do you know the Mushroom Man?");
 });
-$toolbar->addTextButton("WarningIgnorable")->setEvent('button-pushed', sub {
-	Agar::WarningMsgIgnorable('demo.ignore-warn', "Look, a three-headed monkey!");
-});
-$toolbar->setActiveRow(4);
-$toolbar->addTextButton("Ask me")->setEvent('button-pushed', sub {
-	Agar::PromptMsg("What are you?", sub {
-		my $what = $_[0]->string(1);
-		$con->msg("you are '$what'");
-	});
-});
+#$toolbar->setActiveRow(4);
+#$toolbar->addTextButton("Ask me")->setEvent('button-pushed', sub {
+#	Agar::PromptMsg("What are you?", sub {
+#		my $what = $_[0]->string(1);
+#		$con->msg("you are '$what'");
+#	});
+#});
 
 ################################
 # List (under 2nd tab)
@@ -199,11 +220,11 @@ $radio->setEvent('radio-changed', sub {
 	$con->msg("radio button changed to $index");
 });
 $textbox->setEvent('textbox-return', sub {
-	my $text = $_[0]->receiver()->downcast()->getString('string');
-	$con->msg("entered text '$text' pressed return");
+	my $text = $_[0]->receiver()->cast('Agar::Textbox')->getString();
+	$con->msg("entered text '$text' (return)");
 });
 $textbox->setEvent('textbox-postchg', sub {
-	my $text = $_[0]->receiver()->downcast()->getString('string');
+	my $text = $_[0]->receiver()->cast('Agar::Textbox')->getString();
 	$con->msg("entered text '$text'");
 });
 $spin->setEvent('numerical-changed', sub {
@@ -233,13 +254,16 @@ $saveDlg->setEvent('file-chosen', sub {
 	$con->msg("chose to save '$path'");
 });
 
+#
+# Move the divider to X = (45% of the total width).
+#
+$pane->moveDividerPct(45);
+
 ################################
 # Finished creating widgets,
 # now run the program!
 ################################
-
 $win->show();
-$pane->moveDividerPct(50);
 
 Agar::EventLoop();
 

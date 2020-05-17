@@ -1,0 +1,79 @@
+.\"
+.\" Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd April 28, 2010
+.Dt SG_PLANE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm SG_Plane
+.Nd Agar-SG plane node
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/sg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+node represents a reference geometrical plane.
+This is useful in feature-based modeling, or as construction geometry.
+The
+.Nm
+structure itself has no parameters.
+The intrinsic node orientation is the normal vector (the
+.Va a ,
+.Va b ,
+.Va c
+coefficients) of the plane, and the
+.Va d
+coefficient is obtained from the node's world coordinates.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr SG_Node 3 ->
+.Xr SG_Geom 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "SG_Plane *"
+.Fn SG_PlaneNew "SG_Node *parent" "const char *name"
+.Pp
+.nr nS 0
+The
+.Fn SG_PlaneNew
+function creates a new reference plane.
+.Sh SEE ALSO
+.Xr M_Plane 3 ,
+.Xr M_Point 3 ,
+.Xr M_Real 3 ,
+.Xr M_Vector 3 ,
+.Xr SG 3 ,
+.Xr SG_Geom 3 ,
+.Xr SG_Intro 3 ,
+.Xr SG_Node 3
+.Sh HISTORY
+The
+.Nm
+node class first appeared in Agar 1.6.0.

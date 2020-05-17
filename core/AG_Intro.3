@@ -1,4 +1,5 @@
-.\" Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+.\"
+.\" Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -31,99 +32,24 @@
 .Nm AG_Intro
 .Nd agar introduction
 .Sh DESCRIPTION
-Agar is a graphical application toolkit.
-It provides all types of graphical applications, written in different languages,
-with consistent interfaces across a wide array of platforms.
+Agar is a general-purpose graphical application toolkit.
+It provides all types of applications (possibly written in different languages)
+with consistent interfaces across a multiple platforms.
 .Pp
-This document summarizes the various interfaces provided by the standard
-libraries included in the official Agar source distribution (such as
-.Em ag_core ,
-.Em ag_gui ,
-etc.)
-These libraries share the same version number and release cycle, but they are
-separate and can be packaged and distributed independently.
-.Sh USING THE AGAR API REFERENCE
-The Agar API Reference is intended as a detailed specification explaining
-Agar's functions and structures in sufficient detail.
-To avoid the content becoming repetitive, the API Reference uses a number
-of important conventions regarding error handling and thread-safety:
-.Bl -bullet
-.It
-The return value for functions returning
-.Ft int ,
-unless otherwise documented, represents an error code, where 0 indicates
-success and -1 indicates failure.
-On failure, an error message string can be retrieved using
-.Xr AG_GetError 3 .
-.It
-Some functions have variants differing only in argument format.
-For example,
-.Xr AG_LabelNew 3
-accepts a format string, and
-.Xr AG_LabelNewS 3
-accepts a plain C string.
-Since the difference is shown in function prototype, it is customary to omit
-mentioning those variants in the following paragraph describing the function.
-.It
-Some functions have variants differing only in error-handling style.
-Those may also be omitted from the description paragraph.
-For example,
-.Xr AG_MutexInit 3
-has no return value.
-If the function fails, an
-.Xr AG_FatalError 3
-is raised.
-The
-.Xr AG_MutexTryInit
-variant, however, returns 0 on success or -1 on failure.
-.It
-When Agar is compiled with threads support, Agar functions are thread-safe
-(free-threaded), unless documented otherwise (see
-.Dq CONVENTIONS
-section of
-.Xr AG_Threads 3
-for important details related to thread safety).
-.El
-.Pp
-There is generally one manual page per Agar object class.
-A number of manual page sections are standard throughout the documentation,
-this includes:
-.Bl -tag -width "INHERITANCE HIERARCHY "
-.It INHERITANCE HIERARCHY
-List of parent (inherited) classes.
-See
-.Xr AG_Object 3
-for details on inheritance with the Agar object system.
-.It EVENTS
-List of events defined by this object (and optionally, a list
-of events potentially raised by this object).
-See
-.Xr AG_Event 3
-for details on Agar events.
-.It STRUCTURE DATA
-List of public structure members which are safe to access directly (in the
-specified way).
-Multithreaded applications must use
-.Xr AG_ObjectLock 3
-prior to accessing this data (although in some contexts, such as inside event
-handler routines, objects can be presumed locked; see
-.Xr AG_Threads 3
-for details).
-.El
 .Sh AGAR-CORE
-Agar's general utility library is named
+Agar's non-graphical core and utility library is
 .Em ag_core .
-It implements the
+It implements the base
 .Xr AG_Object 3
-object system which is used extensively by all other Agar libraries.
+system,
+.Xr AG_Event 3
+mechanism and
+.Xr AG_Timers 3 .
 It also provides cross-platform interfaces to operating system services
-(e.g., filesystems, network services, threads).
+such as kernel-based events, timers, threads and filesystems.
 .Pp
-To use this library, link against
-.Sq agar-config --libs
-(non-graphical applications can also link against
+To use this library (without GUI) link against
 .Sq agar-core-config --libs
-to avoid the GUI library).
 .Pp
 .\" SYNC WITH AG_Core(3) "SEE ALSO"
 .Bl -tag -width "AG_DataSource(3) " -compact
@@ -150,8 +76,6 @@ Cross-platform interface to program execution.
 Portable interface to filesystems.
 .It Xr AG_Limits 3
 Interface to platform-dependent limits.
-.It Xr AG_Net 3
-Interface to network I/O facilities.
 .It Xr AG_Object 3
 The Agar object system.
 .It Xr AG_String 3
@@ -170,25 +94,18 @@ Cross-platform interface to user accounts.
 Primitive data variables and bindings.
 .It Xr AG_Version 3
 Datafile versioning.
-.It Xr AG_Web 3
-HTTP/1.1 application server (needs
-.Sq --enable-web ) .
 .El
-.Sh AGAR-GUI
+.Sh AGAR-GUI: BASE SYSTEM
 The
 .Em ag_gui
-library implements the Agar GUI system.
-It also includes a set of standard, built-in widgets.
-The Agar GUI is implemented in a fashion independent of the underlying graphics API
-(i.e., direct-video, OpenGL), and is designed to provide the highest
-performance and efficiency achievable with any given graphics system.
+library is the Agar GUI system and standard widget library.
 .Pp
-To use this library, link against
-.Sq agar-config --libs .
+To use this library (and
+.Em ag_core ) ,
+link against
+.Sq agar-config --libs
 .Pp
 .Bl -tag -width "AG_WidgetPrimitives(3) " -compact
-.It Xr AG_Anim 3
-Animated graphics surfaces.
 .It Xr AG_AlphaFn 3
 Alpha blending functions.
 .It Xr AG_Color 3
@@ -214,23 +131,20 @@ Agar's version of cascading style sheets.
 .It Xr AG_Surface 3
 Graphics surfaces.
 .It Xr AG_Text 3
-Interface to font engine / text rendering facilities.
+Typography; interface to the font engine.
 .It Xr AG_Units 3
 Conversion between different unit systems.
 .It Xr AG_Widget 3
-Generic widget interface.
+The base class for Agar widgets (and windows).
 .It Xr AG_WidgetPrimitives 3
-Widget rendering primitives.
+Rendering primitives for GUI elements.
 .It Xr AG_Window 3
-Basic window / window manager interface.
+The base container for Agar widgets.
 .El
 .Sh AGAR-GUI: STANDARD WIDGETS
-The standard Agar widget set provides the basic GUI functionality useful to
-the widest range of applications.
-Developers are encouraged to implement more specialized and
-application-specific widgets (this is made simple by use of the
-.Xr AG_Object 3
-system).
+Standard widgets included in
+.Em ag_gui
+(unless "--disable-widgets" is used).
 .Pp
 .Bl -tag -width "AG_ObjectSelector(3) " -compact
 .It Xr AG_Box 3
@@ -246,7 +160,7 @@ Scrollable text console widget.
 .It Xr AG_DirDlg 3
 Directory selection widget.
 .It Xr AG_Editable 3
-Low-level text edition widget (string bindings, UTF-8 supported).
+The Agar text editor (plain editable field).
 .It Xr AG_FileDlg 3
 File selection widget.
 .It Xr AG_Fixed 3
@@ -259,9 +173,6 @@ Low-level OpenGL context widget.
 Graph display widget.
 .It Xr AG_FixedPlotter 3
 Plotter for integral values.
-.It Xr AG_HBox 3
-Alternate interface to
-.Xr AG_Box 3 .
 .It Xr AG_HSVPal 3
 Hue/saturation/value color picker widget.
 .It Xr AG_Icon 3
@@ -277,8 +188,7 @@ Menu widget.
 .It Xr AG_Notebook 3
 Notebook widget.
 .It Xr AG_Numerical 3
-Numerical input / spinbutton widget for floating-point and integer
-values.
+Spinbutton widget (for integers or floats).
 .\" .It Xr AG_ObjectSelector 3
 .\" Selector for
 .\" .Xr AG_Object 3
@@ -290,19 +200,18 @@ Displays arbitrary surfaces.
 .It Xr AG_ProgressBar 3
 Progress bar widget.
 .It Xr AG_Radio 3
-Simple radio group widget (integer bindings).
+Simple radio group widget (integer).
 .It Xr AG_Scrollbar 3
-Scrollbar (integer or floating-point bindings).
+Scrollbar (integer or floating-point).
 .It Xr AG_Scrollview 3
 Scrollable view.
 .It Xr AG_Separator 3
 Cosmetic separator widget.
 .It Xr AG_Slider 3
-Slider control (integer or floating-point bindings).
+Slider control (integer or floating-point).
 .It Xr AG_Socket 3
 Placeholder for drag-and-droppable
-.Xr AG_Icon 3
-objects.
+.Xr AG_Icon 3 .
 .It Xr AG_Statusbar 3
 Specialized statusbar widget.
 .It Xr AG_Table 3
@@ -310,37 +219,224 @@ Table display widget.
 .It Xr AG_Treetbl 3
 Tree-based table display widget.
 .It Xr AG_Textbox 3
-Text edition widget (string bindings, UTF-8 supported).
+The Agar text editor (an
+.Ft AG_Editable
+in a box).
 .It Xr AG_Tlist 3
-Tree/list widget (either static or polled).
+Linearized tree / list box widget.
 .It Xr AG_Toolbar 3
 Specialized button container for toolbars.
 .It Xr AG_UCombo 3
-Variant of
-.Xr AG_Combo 3
-which displays a button instead of a text input.
-.It Xr AG_VBox 3
-Alternate interface to
-.Xr AG_Box 3 .
+Single-button variant of
+.Xr AG_Combo 3 .
+.El
+.Sh AGAR-MATH
+.Em ag_math
+is a general-purpose, performance-oriented math library which extends
+.Em ag_gui
+with new widgets and support for linear-algebra types.
+.Pp
+To use this library, link against
+.Sq agar-math-config --libs .
+.Pp
+.Bl -tag -width "M_Quaternion(3) " -compact
+.It Xr M_Matrix 3
+Matrix operations.
+Provides optimized methods for sparse matrices
+(common in scientific applications)
+as well as 4x4 matrices
+(common in computer graphics).
+.It Xr M_Circle 3
+Circles in R^2 and R^3.
+.It Xr M_Color 3
+Mapping between different color spaces.
+.It Xr M_Complex 3
+Complex-number arithmetic (w/o compiler extensions).
+.It Xr M_Coordinates 3
+Mapping between different coordinate systems.
+.It Xr M_Sort 3
+Sort algorithms (qsort, heapsort, mergesort, radixsort)
+.It Xr M_IntVector 3
+Vector operations for vectors with integer elements.
+.It Xr M_String 3
+Math-specific extensions to the
+.Xr AG_Printf 3
+engine.
+.It Xr M_Line 3
+Lines, half-lines and line segments.
+.It Xr M_Matview 3
+Visualization widget for
+.Xr M_Matrix 3 .
+.It Xr M_Plane 3
+Routines related to planes in R^3.
+.It Xr M_Plotter 3
+General-purpose plotting widget (displays sets of
+.Ft M_Real ,
+.Ft M_Vector
+and
+.Ft M_Complex
+elements).
+.It Xr M_PointSet 3
+Operations on sets of points (e.g., convex hulls).
+.It Xr M_Polygon 3
+Operations related to polygons in R^2 and R^3.
+.It Xr M_Quaternion 3
+Basic quaternion arithmetic.
+.It Xr M_Rectangle 3
+Routines specific to rectangles in R^2 and R^3.
+.It Xr M_Triangle 3
+Routines specific to triangles in R^2 and R^3.
+.It Xr M_Vector 3
+Vectors (optimized R^2, R^3 and R^4 or general R^n).
+.El
+.Sh AGAR-NET
+.Em ag_net
+provides network access and HTTP application server functionality.
+.Pp
+To use this library, link against
+.Sq agar-net-config --libs .
+.Pp
+.Bl -tag -width "AG_Net (3) " -compact
+.It Xr AG_Net 3
+Interface to network services.
+.It Xr AG_Web 3
+HTTP/1.1 application server.
+.El
+.Sh AGAR-SG
+(Beta)
+.Em ag_sg
+implements 3D scene-graph, rendering and geometry methods.
+.Pp
+To use this library, link against
+.Sq agar-sg-config --libs
+.Pp
+.Bl -tag -width "SG_CgProgram(3) " -compact
+.It Xr SG 3
+Base scene graph object.
+.It Xr SG_Image 3
+Textured polygon generated from an image surface.
+.It Xr SG_Camera 3
+Viewpoint in scene (tied to the
+.Xr SG_View 3
+widget).
+.It Xr SG_CgProgram 3
+Vertex/fragment program in the Cg language.
+.It Xr SG_Circle 3
+Circle (reference geometry).
+.It Xr SG_Geom 3
+Base class for reference geometry objects.
+.It Xr SG_Light 3
+Light source.
+.It Xr SG_Node 3
+Base class for all elements of a
+.Xr SG 3
+scene.
+.It Xr SG_Object 3
+Base class for polyhedral objects (as brep).
+.It Xr SG_Plane 3
+Plane (reference geometry).
+.It Xr SG_Point 3
+Single point (reference geometry).
+.It Xr SG_Polygon 3
+Polygon (reference geometry).
+.It Xr SG_PolyBall 3
+Sphere (as polyhedral approximation).
+.It Xr SG_PolyBox 3
+Rectangular box (as polyhedron).
+.It Xr SG_Program 3
+Base class for vertex or fragment programs.
+.It Xr SG_Rectangle 3
+Rectangle (reference geometry).
+.It Xr SG_Sphere 3
+Sphere (reference geometry).
+.It Xr SG_Texture 3
+Texture compiled from a set of surfaces.
+.It Xr SG_Triangle 3
+Triangle (reference geometry).
+.It Xr SG_View 3
+Agar visualization and editor widget for
+.Xr SG 3
+scenes.
+.It Xr SG_Voxel 3
+Voxel object.
+.El
+.Sh AGAR-SK
+(Beta)
+.Em ag_sk
+implements dimensioned 2D sketches with constraint solving.
+Sketches can contain sets of metric relations (i.e., distances, angles)
+and logical relations (i.e., coincidence, parallelism, tangency), and SK's
+attempts to find a solution using degree-of-freedom analysis.
+.Pp
+To use this library, link against
+.Sq agar-sk-config --libs .
+.Pp
+.Bl -tag -width "SK_View(3) " -compact
+.It Xr SK 3
+Base sketch object.
+.It Xr SK_View 3
+Agar visualization widget for sketch objects.
+.El
+.Sh AGAR-AU
+(Beta)
+The
+.Em ag_au
+library is intended to provide a cross-platform sound interface and to
+extend
+.Em ag_gui
+with widgets useful in audio applications.
+.Pp
+To use this library, link against
+.Sq agar-au-config --libs .
+.Pp
+.Bl -tag -width "AU_DevOut(3) " -compact
+.It Xr AU 3
+Audio library initialization.
+.It Xr AU_Wave 3
+Structure containing an audio stream.
+.It Xr AU_DevOut 3
+Interface to audio output device.
+.El
+.Sh AGAR-MAP
+(Beta) The
+.Em ag_map
+library implements a simple 2D tile engine.
+.Pp
+To use this library, link against
+.Sq agar-map-config --libs .
+.Pp
+.Bl -tag -width "RG_Tileview(3) " -compact
+.It Xr MAP 3
+Base map object.
+.It Xr MAP_Actor 3
+Map object rendered dynamically.
+.It Xr MAP_View 3
+Visualization and edition widget.
+.It Xr RG 3
+Feature-based 2D pixel graphics.
+.It Xr RG_Feature 3
+Base feature framework.
+.It Xr RG_Pixmap 3
+A pixmap image element.
+.It Xr RG_Sketch 3
+A vector sketch element.
+.It Xr RG_Texture 3
+A texture element.
+.It Xr RG_Tile 3
+Base tile element.
+.It Xr RG_Tileview 3
+Edition and visualization widget.
 .El
 .Sh AGAR-VG
-The
 .Em ag_vg
-library is a simple 2D vector graphics library which allows users to view and
-edit hierarchical sketches consisting of elements with attributes
-such as lines, curves and text.
-It uses linear transformations to define the placement of geometrical entities.
-.Pp
-Following the Agar design philosophy, the
-.Em ag_vg
-library only includes the most basic, generic entity classes (e.g., lines,
-arcs, text) as built-in types, but allows user and application-specific vector
-graphics entities through its class-registration interface.
-.Pp
-Recommendation: For vector graphics applications such as CAD systems,
-where placement of entities is best described using geometrical constraints
-(e.g., distances and angles), check out the Agar-based FreeSG library
-(http://freesg.org/).
+handles visualization and edition of 2D vector drawings.
+.Xr VG 3
+vector drawings are composed of elements such as lines, polygons, curves,
+images or text.
+The format is meant to be extended with application-specific elements and
+edition tools.
+Geometrical placement of elements is determined by linear transformations
+using floating-point methods.
 .Pp
 To use this library, link against
 .Sq agar-vg-config --libs .
@@ -361,84 +457,31 @@ Polygon entity.
 .It Xr VG_Text 3
 Text entity.
 .El
-.Sh AGAR-MATH
-.Em ag_math
-is a general-purpose math library focused on providing consistent
-structures and highly optimized routines.
-In addition to linear algebra, ag_math also provides useful computational
-geometry structures and methods (e.g., intersections, tesselations), portable
-complex-number/quaternion routines and some useful Agar-GUI widgets and
-extensions.
-.Pp
-To use this library, link against
-.Sq agar-math-config --libs .
-.Pp
-.Bl -tag -width "M_Quaternion(3) " -compact
-.It Xr M_Matrix 3
-Routines specific to matrices.
-This includes general m-by-n matrices (frequently encountered in scientific
-applications and usually solved with sparse-matrix optimizations),
-as well as a specialized interface for 4x4 matrices (usually countered in
-computer graphics).
-.It Xr M_Circle 3
-Circles in R^2 and R^3.
-.It Xr M_Color 3
-Mapping between different color spaces.
-.It Xr M_Complex 3
-Complex-number arithmetic not reliant on compiler extensions.
-.It Xr M_Coordinates 3
-Mapping between different coordinate systems.
-.It Xr M_Sort 3
-Sorting algorithms (qsort, heapsort, mergesort, radixsort)
-.It Xr M_IntVector 3
-Vector operations for vectors with integer elements.
-.It Xr M_String 3
-Math-specific extensions to the
-.Xr AG_Printf 3
-formatting engine.
-.It Xr M_Line 3
-Routines related to lines, half-lines and line segments.
-.It Xr M_Matview 3
-Agar-GUI widget for viewing the contents of
-.Xr M_Matrix 3
-objects numerically or graphically.
-.It Xr M_Plane 3
-Routines related to planes in R^3.
-.It Xr M_Plotter 3
-General-purpose plotting widget for Agar-GUI, with support for
-.Ft M_Real ,
-.Ft M_Vector
-and
-.Ft M_Complex
-types.
-.It Xr M_PointSet 3
-Set of points and related operations (e.g., convex hull).
-.It Xr M_Polygon 3
-Operations related to polygons in R^2 and R^3.
-.It Xr M_Quaternion 3
-Basic quaternion arithmetic.
-.It Xr M_Rectangle 3
-Routines specific to rectangles in R^2 and R^3.
-.It Xr M_Triangle 3
-Routines specific to triangles in R^2 and R^3.
-.It Xr M_Vector 3
-Basic linear algebra routines specific to vectors.
-In addition to vectors in R^n, specialized operations are provided for
-vectors in R^2, R^3 and R^4.
+.Sh COMMON MANUAL SECTIONS
+Manual pages are provided for most Agar object classes.
+Some sections are standard throughout the documentation:
+.Bl -tag -width "INHERITANCE HIERARCHY "
+.It INHERITANCE HIERARCHY
+List of inherited parent classes (see
+.Xr AG_Object 3
+for details on inheritance).
+.It EVENTS
+The list of events defined (or raised) by this object (see
+.Xr AG_Event 3
+for details on events).
+.It STRUCTURE DATA
+List of public structure members which are safe to access directly.
+Multithreaded applications must use
+.Xr AG_ObjectLock 3
+prior to accessing this data (although in some contexts, such as inside event
+handler routines, objects can be presumed locked; see
+.Xr AG_Threads 3
+for details).
 .El
-.Sh AGAR-AU
-The
-.Em ag_au
-library provides a basic cross-platform interface to audio hardware.
+.Sh SEE ALSO
 .Pp
-To use this library, link against
-.Sq agar-au-config --libs .
+.Lk https://libAgar.org/
 .Pp
-.Bl -tag -width "AU_DevOut(3) " -compact
-.It Xr AU 3
-Audio library initialization.
-.It Xr AU_Wave 3
-Structure containing an audio stream.
-.It Xr AU_DevOut 3
-Interface to audio output device.
-.El
+.Lk https://github.com/JulNadeauCA/libagar
+.Pp
+.Lk https://powerfulAgar.com/

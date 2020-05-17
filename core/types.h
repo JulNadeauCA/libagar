@@ -1,15 +1,12 @@
 /*	Public domain	*/
 
 /*
- * Primitive integer data types used by Agar.
- *
- * Defines public AG_HAVE_64BIT, AG_HAVE_FLOAT and AG_HAVE_LONG_DOUBLE.
+ * Agar memory model
  */
+#define AG_SMALL  16   /*  8-/16-bit CPU with KBs of RAM, 12-bit color */
+#define AG_MEDIUM 32   /* 32-/64-bit CPU with MBs of RAM, 24-bit color */
+#define AG_LARGE  64   /* 32-/64-bit CPU with GBs of RAM, 48-bit color */
 
-/* Agar memory model */
-#define AG_SMALL  16  /* 8- and 16-bit CPU with KBs of RAM, 4- or 8-bit color */
-#define AG_MEDIUM 32  /* 32- or 64-bit CPU with MBs of RAM, 8-bit color */
-#define AG_LARGE  64  /* 32- or 64-bit CPU with GBs of RAM, 16-bit color */
 #include <agar/config/ag_model.h>
 
 #include <agar/config/have_cygwin.h>
@@ -34,6 +31,9 @@
 # include <agar/config/have___int64.h>
 # define AG_HAVE_64BIT "yes"
 #endif
+#ifndef _AGAR_INTERNAL
+# undef HAVE_64BIT
+#endif
 
 /*
  * Floating Point Types
@@ -42,9 +42,8 @@
 #ifdef HAVE_FLOAT
 # define AG_HAVE_FLOAT "yes"
 #endif
-#include <agar/config/have_long_double.h>
-#ifdef HAVE_LONG_DOUBLE
-# define AG_HAVE_LONG_DOUBLE "yes"
+#ifndef _AGAR_INTERNAL
+# undef HAVE_FLOAT
 #endif
 
 /*
@@ -127,8 +126,6 @@
 #   define Uint64 unsigned __int64
 #   define _AGAR_CORE_DEFINED_UINT64
 #  endif
-#  define HAVE_64BIT "yes"
-#  define AG_HAVE_64BIT "yes"
 
 # else /* !_WIN32 */
 
@@ -188,6 +185,18 @@
 #endif /* MEDIUM or LARGE */
 
 /*
+ * Native Character Type
+ */
+#include <agar/config/ag_unicode.h>
+#ifdef AG_UNICODE
+# define AG_Char Uint32
+# define AG_CHAR_MAX 0x7fffffff
+#else
+# define AG_Char Uint8
+# define AG_CHAR_MAX 0x7f
+#endif
+
+/*
  * Size and Offset Types
  */
 #if AG_MODEL == AG_SMALL
@@ -208,4 +217,3 @@
 #else
 # error "Invalid AG_MODEL"
 #endif
-

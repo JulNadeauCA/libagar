@@ -1,13 +1,16 @@
 /*	Public domain	*/
 /*
- * This program demonstrates the use of the AG_GLView widget.
+ * This program demonstrates the use of the (now deprecated) AG_GLView(3)
+ * widget, which provides a low-level OpenGL context.
+ * 
+ * Under OpenGL-based Agar display drivers, all the AG_GLView(3) widget
+ * does is to save and restore the relevant GL matrices and states around
+ * calls to Draw().
  *
- * AG_GLView provides a low-level GL context. Under OpenGL-based Agar
- * display drivers, all AG_GLView does is to save and restore the relevant
- * GL matrices and states around calls to Draw().
- *
- * For high-level scene graph functionality, check out the Agar-based
- * FreeSG library at http://freesg.org/.
+ * Since Agar 1.5, this functionality is now implemented in base AG_Widget(3)
+ * class, so any widget (which sets AG_WIDGET_USE_OPENGL) may use OpenGL
+ * commands in draw() and the relevant GL states will be saved and restored
+ * implicitely.
  */
 
 #include "agartest.h"
@@ -34,6 +37,8 @@ typedef struct {
 	GLfloat diffuse[4];
 	GLfloat specular[4];
 	int wireframe;
+	int subdiv;
+	int overlay;
 } MyTestInstance;
 
 static GLdouble isoVtx[12][3] = {    
@@ -107,18 +112,19 @@ static void
 MyDrawFunction(AG_Event *event)
 {
 	MyTestInstance *ti = AG_PTR(1);
+	const int subdiv = ti->subdiv;
 	GLfloat pos[4];
 	int i;
 
 	glLoadIdentity();
-	glPushAttrib(GL_POLYGON_BIT|GL_LIGHTING_BIT|GL_DEPTH_BUFFER_BIT);
+	glPushAttrib(GL_POLYGON_BIT | GL_LIGHTING_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHT1);
 	glEnable(GL_DEPTH_TEST);
 
-	glPolygonMode(GL_FRONT_AND_BACK, ti->wireframe ? GL_LINE : GL_POLYGON);
+	glPolygonMode(GL_FRONT_AND_BACK, ti->wireframe ? GL_LINE : GL_FILL);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ti->ambient);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, ti->diffuse);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, ti->specular);
@@ -181,7 +187,7 @@ MyDrawFunction(AG_Event *event)
 			DrawTriangle(isoVtx[isoInd[i][0]],
 			             isoVtx[isoInd[i][1]],
 				     isoVtx[isoInd[i][2]],
-				     2, 1.0f);
+				     subdiv, 1.0f);
 		}
     		glEnd();
 	}
@@ -190,6 +196,7 @@ MyDrawFunction(AG_Event *event)
 	glPopAttrib();
 }
 
+#ifdef AG_TIMERS
 static Uint32
 UpdateRotation(AG_Timer *to, AG_Event *event)
 {
@@ -198,6 +205,7 @@ UpdateRotation(AG_Timer *to, AG_Event *event)
 	if (++ti->spin > 360.0f) { ti->spin -= 360.0f; }
 	return (to->ival);
 }
+#endif /* AG_TIMERS */
 
 /*
  * Overlay callback function. This type of callback is useful for rendering
@@ -206,16 +214,21 @@ UpdateRotation(AG_Timer *to, AG_Event *event)
 static void
 MyOverlayFunction(AG_Event *event)
 {
-	AG_GLView *glv = AG_SELF();
+	AG_GLView *glv = AG_GLVIEW_SELF();
 	MyTestInstance *ti = AG_PTR(1);
 	AG_Surface *myText;
+
+	if (!ti->overlay)
+		return;
 
 	/* Render a text string using the font engine. */
 	AG_PushTextState();
 	AG_TextColorRGB(255, 255, 125);
-	myText = AG_TextRenderf("Zoom using mouse wheel\n"
-	                        "Spin = %.0f degrees, z = %.02f",
+	AG_TextFontLookup("league-gothic",
+			  agZoomValues[AG_ParentWindow(glv)->zoom]*20.0f/100.0f, 0);
+	myText = AG_TextRenderF("Rotation: %.0f degrees.\nZ = %.02f",
 				ti->spin, ti->vz);
+
 	AG_PopTextState();
 
 	/*
@@ -224,9 +237,14 @@ MyOverlayFunction(AG_Event *event)
 	 * (hardware->hardware copy), unless the text changes frequently.
 	 */
 	if (myText != NULL) {
+		AG_PushBlendingMode(glv, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 		AG_WidgetBlit(glv, myText,
 		    0,
-		    AGWIDGET(glv)->h - agTextFontHeight*2 - 5);
+		    AGWIDGET(glv)->h - AGWIDGET_FONT(glv)->height*2.66f);
+
+		AG_PopBlendingMode(glv);
+
 		AG_SurfaceFree(myText);
 	}
 }
@@ -235,15 +253,18 @@ MyOverlayFunction(AG_Event *event)
 static void
 ButtonDown(AG_Event *event)
 {
+	AG_GLView *glv = AG_GLVIEW_SELF();
 	MyTestInstance *ti = AG_PTR(1);
 	int button = AG_INT(2);
 
+	AG_WidgetFocus(glv);
+
 	switch (button) {
-	case AG_MOUSE_WHEELUP:
-		ti->vz -= 0.1;
-		break;
 	case AG_MOUSE_WHEELDOWN:
-		ti->vz += 0.1;
+		ti->vz -= 0.2;
+		break;
+	case AG_MOUSE_WHEELUP:
+		ti->vz += 0.2;
 		break;
 	}
 }
@@ -267,6 +288,8 @@ Init(void *obj)
 		ti->specular[i] = spe[i];
 	}
 	ti->wireframe = 0;
+	ti->overlay = 0;
+	ti->subdiv = 4;
 	return (0);
 }
 
@@ -283,59 +306,94 @@ TestGUI(void *obj, AG_Window *win)
 		AG_Pane *pa;
 		AG_Notebook *nb, *nbColor;
 		AG_NotebookTab *ntab;
-		int i;
 		
 		pa = AG_PaneNewHoriz(hb, AG_PANE_EXPAND|AG_PANE_DIV1FILL);
 		AG_PaneResizeAction(pa, AG_PANE_EXPAND_DIV1);
 		nb = AG_NotebookNew(pa->div[0], AG_NOTEBOOK_EXPAND);
 
-		for (i = 0; i < 2; i++) {
-			ntab = AG_NotebookAdd(nb, "Test tab", AG_BOX_VERT);
-		
-			/* Create the AG_GLView widget. */
+		/* Test at 30 fps */
+		ntab = AG_NotebookAdd(nb, "GLView", AG_BOX_VERT);
+		{
+			/*
+			 * Create a GLView and size it 320x320. Use USE_TEXT
+			 * because our overlay function needs to render text.
+			 */
 			glv = AG_GLViewNew(ntab, AG_GLVIEW_EXPAND);
-
-			/* Set a periodic redraw at 60fps. */
-			AG_RedrawOnTick(glv, 1000/60);
+			AGWIDGET(glv)->flags |= AG_WIDGET_USE_TEXT;
+			AG_GLViewSizeHint(glv, 320,320);
 			
-			/* Set up our callback functions. */ 
 			AG_GLViewScaleFn(glv, MyScaleFunction, NULL);
 			AG_GLViewDrawFn(glv, MyDrawFunction, "%p", ti);
 			AG_GLViewOverlayFn(glv, MyOverlayFunction, "%p", ti);
 			AG_GLViewButtondownFn(glv, ButtonDown, "%p", ti);
-
-			/* Update the rotation 30 times per second. */
-			AG_AddTimerAuto(win, 1000/30, 
-			    UpdateRotation, "%p", ti);
+#ifdef AG_TIMERS
+			AG_AddTimerAuto(win, 1000/30,  UpdateRotation, "%p", ti);
+#endif
+			AG_RedrawOnTick(glv, 1000/30);             /* 30fps */
 		}
 
-		/* Edit ambient and diffuse color components. */
+		/*
+		 * Edit Ambient, Diffuse and Specular color components.
+		 */
 		nbColor = AG_NotebookNew(pa->div[1], AG_NOTEBOOK_EXPAND);
 		{
-			ntab = AG_NotebookAdd(nbColor, "Amb", AG_BOX_VERT);
-			pal = AG_HSVPalNew(ntab,
-			    AG_HSVPAL_NOALPHA|AG_HSVPAL_EXPAND);
+			const Uint flags = AG_HSVPAL_NOALPHA | AG_HSVPAL_EXPAND;
+			AG_Label *lbl;
+
+			/* Ambient */
+			ntab = AG_NotebookAdd(nbColor,
+			    "\xE2\x98\x80", /* U+2600 BLACK SUN WITH RAYS */
+			    AG_BOX_VERT);
+			AG_BoxSetHorizAlign(AGBOX(ntab), AG_BOX_CENTER); 
+			lbl = AG_LabelNewS(ntab, 0, "Ambient");
+			AG_SetStyle(lbl, "font-family", "league-spartan");
+
+			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->ambient);
 
-			ntab = AG_NotebookAdd(nbColor, "Dif", AG_BOX_VERT);
-			pal = AG_HSVPalNew(ntab,
-			    AG_HSVPAL_NOALPHA|AG_HSVPAL_EXPAND);
+			/* Diffuse */
+			ntab = AG_NotebookAdd(nbColor,
+			    "\xE2\x9A\x9E", /* U+269E THREE LINES CONVERGING RIGHT */
+			    AG_BOX_VERT);
+			AG_BoxSetHorizAlign(AGBOX(ntab), AG_BOX_CENTER); 
+			lbl = AG_LabelNewS(ntab, 0, "Diffuse");
+			AG_SetStyle(lbl, "font-family", "league-spartan");
+
+			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->diffuse);
 
-			ntab = AG_NotebookAdd(nbColor, "Spe", AG_BOX_VERT);
-			pal = AG_HSVPalNew(ntab,
-			    AG_HSVPAL_NOALPHA|AG_HSVPAL_EXPAND);
+			/* Specular */
+			ntab = AG_NotebookAdd(nbColor,
+			    "\xE2\x98\x87", /* U+2607 LIGHTNING */
+			    AG_BOX_VERT);
+			AG_BoxSetHorizAlign(AGBOX(ntab), AG_BOX_CENTER); 
+			lbl = AG_LabelNewS(ntab, 0, "Specular");
+			AG_SetStyle(lbl, "font-family", "league-spartan");
+
+			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->specular);
 		}
 	}
-	hb = AG_BoxNewHoriz(win, AG_BOX_FRAME|AG_BOX_HFILL);
+	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
+		AG_Box *vb;
+		AG_Numerical *num;
+
 		AG_RadioNewInt(hb, 0, primitiveNames, (void *)&ti->primitive);
+
 		AG_SeparatorNewVert(hb);
+
+		num = AG_NumericalNewIntR(hb, 0, NULL,
+		                          "Sphere\nsubdiv: ", &ti->subdiv, 0, 8);
+		AG_SetStyle(num->input->ed, "font-size", "140%");
+
 		AG_RadioNewInt(hb, 0, shadingNames, (void *)&ti->shading);
 		AG_SeparatorNewVert(hb);
-		AG_ButtonNewInt(hb, AG_BUTTON_STICKY, "Wireframe Mode",
-		    &ti->wireframe);
+		vb = AG_BoxNewVert(hb, AG_BOX_EXPAND);
+		{
+			AG_CheckboxNewInt(vb, 0, "Wireframe", &ti->wireframe);
+			AG_CheckboxNewInt(vb, 0, "Text Overlay", &ti->overlay);
+		}
 	}
 	return (0);
 }
@@ -343,7 +401,7 @@ TestGUI(void *obj, AG_Window *win)
 #endif /* HAVE_OPENGL */
 
 const AG_TestCase glviewTest = {
-	"glView",
+	"glview",
 	"Test the AG_GLView(3) widget (OpenGL required)",
 	"1.4.2",
 	AG_TEST_OPENGL,

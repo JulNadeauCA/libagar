@@ -140,7 +140,7 @@ TestServer(AG_Event *event)
 					goto fail;
 				}
 			} else {
-				size_t nRead;
+				AG_Size nRead;
 
 				if (AG_NetRead(ns, buf, sizeof(buf), &nRead) == -1) {
 					goto fail;

@@ -8,33 +8,42 @@ struct ag_editable;
 struct ag_editable_buffer;
 
 struct ag_keycode {
-	AG_KeySym key;
-	const char *modFlags;
-	int (*func)(struct ag_editable *, struct ag_editable_buffer *buf,
-	            AG_KeySym ks, Uint mod, Uint32 ch);
-	const char *flags;
+	AG_KeySym key;			/* Match keysym */
+	Uint      modKeys;		/* Match set of modifier keys */
+	int (*_Nonnull func)(struct ag_editable *_Nonnull,
+	                     struct ag_editable_buffer *_Nonnull,
+	                     AG_KeySym, Uint, AG_Char);
+	const char *_Nonnull flags;
 };
 
 struct ag_key_composition {
-	Uint32 comp;		/* First key */
-	Uint32 key;		/* Second key */
-	Uint32 res;		/* Resulting character */
+	AG_Char comp;		/* This first key */
+	AG_Char key;		/* And this second key */
+	AG_Char res;		/* Combines into this native char */
 };
 
 struct ag_key_mapping {
-	AG_KeySym key;		/* Key */
-	Uint modmask;		/* Modifier mask */
-	Uint32 unicode;		/* UCS-4 mapping */
+	AG_KeySym key;		/* This key */
+	Uint modmask;		/* With this modifier mask */
+	AG_Char ch;		/* Maps to this native char */ 
 };
 
 __BEGIN_DECLS
-extern const struct ag_keycode		agKeymap[];
-extern const struct ag_key_mapping	agKeymapLATIN1[];
-extern const struct ag_key_composition  agCompositionMap[];
-extern const int                        agCompositionMapSize;
+/* Map AG_Keysym to AG_Editable(3) ops */
+extern const struct ag_keycode agKeymap[];
 
-Uint32 AG_ApplyModifiersASCII(Uint32, int);
-int    AG_KeyInputCompose(struct ag_editable *, Uint32, Uint32 *);
+#ifdef AG_UNICODE
+
+/* Alternate (ALT+SHIFT) entry method for LATIN1 chars. */
+extern const struct ag_key_mapping agKeymapLATIN1[];
+
+/* Alternate key composition map. */
+extern const struct ag_key_composition agCompositionMap[];
+extern const int                       agCompositionMapSize;
+
+int AG_KeyInputCompose(struct ag_editable *_Nonnull, AG_Char, AG_Char *_Nonnull);
+
+#endif /* AG_UNICODE */
 __END_DECLS
 
 #include <agar/gui/close.h>

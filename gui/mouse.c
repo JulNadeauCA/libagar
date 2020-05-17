@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,12 +32,19 @@
 #include <agar/gui/window.h>
 #include <agar/gui/cursors.h>
 
+static void PostMouseMotion(AG_Window *_Nonnull _Restrict,
+    AG_Widget *_Nonnull _Restrict, int,int, int,int, Uint);
+static void PostMouseButtonUp(AG_Window *_Nonnull _Restrict,
+    AG_Widget *_Nonnull _Restrict, int,int, AG_MouseButton);
+static int PostMouseButtonDown(AG_Window *_Nonnull _Restrict,
+    AG_Widget *_Nonnull _Restrict, int,int, AG_MouseButton);
+
 AG_Mouse *
 AG_MouseNew(void *drv, const char *desc)
 {
 	AG_Mouse *ms;
 	
-	AG_ASSERT_CLASS(drv, "AG_Driver:*");
+	AG_OBJECT_ISA(drv, "AG_Driver:*");
 	
 	if ((ms = TryMalloc(sizeof(AG_Mouse))) == NULL) {
 		return (NULL);
@@ -55,8 +62,16 @@ fail:
 	return (NULL);
 }
 
+Uint8
+AG_MouseGetState(AG_Mouse *ms, int *x, int *y)
+{
+	if (x != NULL) { *x = ms->x; }
+	if (y != NULL) { *y = ms->y; }
+	return (ms->btnState);
+}
+
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Mouse *ms = obj;
 
@@ -93,7 +108,7 @@ AG_MouseCursorUpdate(AG_Window *win, int x, int y)
 	AG_CursorArea *ca;
 	AG_Rect r;
 
-	TAILQ_FOREACH(ca, &win->cursorAreas, cursorAreas) {
+	TAILQ_FOREACH(ca, &win->pvt.cursorAreas, cursorAreas) {
 		if (!(ca->wid->flags & AG_WIDGET_VISIBLE)) {
 			continue;
 		}
@@ -125,6 +140,31 @@ AG_MouseButtonUpdate(AG_Mouse *ms, AG_MouseButtonAction a, int which)
 }
 
 /*
+ * Process a `mouse-motion' event relative to the given window.
+ * 
+ * This is generally called from the event-handling section of low-level
+ * driver code. The agDrivers VFS must be locked.
+ */
+void
+AG_ProcessMouseMotion(AG_Window *win, int x, int y, int xRel, int yRel,
+    Uint state)
+{
+	AG_Widget *wid;
+	
+	/*
+	 * If needed, we give a particular widget exclusivity over all
+	 * `mouse-motion' events. This is used notably by AG_Pane(3).
+	 */
+	if ((wid = win->widExclMotion) != NULL) {
+		PostMouseMotion(win, wid, x,y, xRel,yRel, state);
+		return;
+	}
+
+	OBJECT_FOREACH_CHILD(wid, win, ag_widget)
+		PostMouseMotion(win, wid, x,y, xRel,yRel, state);
+}
+
+/*
  * Deliver a `mouse-motion' event to all active widgets which are
  * either focused or have UNFOCUSED_MOTION set.
  *
@@ -132,34 +172,34 @@ AG_MouseButtonUpdate(AG_Mouse *ms, AG_MouseButtonAction a, int which)
  * all widgets with USE_MOUSEOVER enabled.
  */
 static void
-PostMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y, int xRel,
-    int yRel, Uint state)
+PostMouseMotion(AG_Window *_Nonnull _Restrict win,
+    AG_Widget *_Nonnull _Restrict wid, int x, int y, int xRel, int yRel,
+    Uint state)
 {
 	AG_Widget *chld;
+	Uint flags;
 
 	AG_ObjectLock(wid);
-	if ((wid->flags & AG_WIDGET_VISIBLE) &&
-	   !(wid->flags & AG_WIDGET_DISABLED)) {
-		if (wid->flags & AG_WIDGET_USE_MOUSEOVER) {
+	flags = wid->flags;
+	if (flags & AG_WIDGET_VISIBLE) {
+		if (flags & AG_WIDGET_USE_MOUSEOVER) {
 			if (AG_WidgetArea(wid, x,y)) {
-				if ((wid->flags & AG_WIDGET_MOUSEOVER) == 0) {
+				if ((flags & AG_WIDGET_MOUSEOVER) == 0) {
 					wid->flags |= AG_WIDGET_MOUSEOVER;
-					AG_PostEvent(NULL, wid, "mouse-over",
-					    NULL);
+					AG_PostEvent(wid, "mouse-over", NULL);
 					AG_Redraw(wid);
 				}
 			} else {
-				if (wid->flags & AG_WIDGET_MOUSEOVER) {
+				if (flags & AG_WIDGET_MOUSEOVER) {
 					wid->flags &= ~(AG_WIDGET_MOUSEOVER);
-					AG_PostEvent(NULL, wid, "mouse-over",
-					    NULL);
+					AG_PostEvent(wid, "mouse-over", NULL);
 					AG_Redraw(wid);
 				}
 			}
 		}
-		if ((wid->flags & AG_WIDGET_FOCUSED) ||
-		    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
-			AG_PostEvent(NULL, wid, "mouse-motion",
+		if ((flags & AG_WIDGET_FOCUSED) ||
+		    (flags & AG_WIDGET_UNFOCUSED_MOTION)) {
+			AG_PostEvent(wid, "mouse-motion",
 			    "%i(x),%i(y),%i(xRel),%i(yRel),%i(buttons)",
 			    x - wid->rView.x1,
 			    y - wid->rView.y1,
@@ -178,102 +218,6 @@ out:
 }
 
 /*
- * Deliver a `mouse-button-up' event to all active widgets which are
- * either focused or have UNFOCUSED_BUTTONUP set. 
- */
-static void
-PostMouseButtonUp(AG_Window *win, AG_Widget *wid, int x, int y,
-    AG_MouseButton button)
-{
-	AG_Widget *chld;
-
-	AG_ObjectLock(wid);
-	if ((wid->flags & AG_WIDGET_VISIBLE) &&
-	   !(wid->flags & AG_WIDGET_DISABLED)) {
-		if ((wid->flags & AG_WIDGET_FOCUSED) ||
-		    (wid->flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
-			AG_PostEvent(NULL, wid, "mouse-button-up",
-			    "%i(button),%i(x),%i(y)",
-			    (int)button,
-			    x - wid->rView.x1,
-			    y - wid->rView.y1);
-		}
-	}
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
-		PostMouseButtonUp(win, chld, x, y, button);
-	}
-	AG_ObjectUnlock(wid);
-}
-
-/*
- * Deliver a `mouse-button-down' event to the active widget at specified
- * window coordinates (if multiple widgets overlap, deliver to the topmost
- * widget which has a `mouse-button-down' handler defined).
- */
-static int
-PostMouseButtonDown(AG_Window *win, AG_Widget *wid, int x, int y,
-    AG_MouseButton button)
-{
-	AG_Widget *chld;
-	AG_Event *ev;
-	
-	AG_ObjectLock(wid);
-
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
-		if (PostMouseButtonDown(win, chld, x, y, button))
-			goto match;
-	}
-	if ((wid->flags & AG_WIDGET_VISIBLE) &&
-	   !(wid->flags & AG_WIDGET_DISABLED) && 
-	    AG_WidgetSensitive(wid, x, y)) {
-		TAILQ_FOREACH(ev, &OBJECT(wid)->events, events) {
-			if (strcmp(ev->name, "mouse-button-down") == 0)
-				break;
-		}
-		if (ev != NULL) {
-			AG_PostEvent(NULL, wid, "mouse-button-down",
-			    "%i(button),%i(x),%i(y)",
-			    (int)button,
-			    x - wid->rView.x1,
-			    y - wid->rView.y1);
-			goto match;
-		}
-	}
-	AG_ObjectUnlock(wid);
-	return (0);
-match:
-	AG_ObjectUnlock(wid);
-	return (1);
-}
-
-/*
- * Process a `mouse-motion' event relative to the given window.
- * 
- * This is generally called from the event-handling section of low-level
- * driver code. The agDrivers VFS must be locked.
- */
-void
-AG_ProcessMouseMotion(AG_Window *win, int x, int y, int xRel, int yRel,
-    Uint state)
-{
-	AG_Widget *wid;
-	
-	/*
-	 * If needed, we give a particular widget exclusivity over all
-	 * `mouse-motion' events. This is used notably by AG_Pane(3).
-	 */
-	if ((wid = win->widExclMotion) != NULL) {
-		AG_ObjectLock(wid);
-		PostMouseMotion(win, wid, x, y, xRel, yRel, state);
-		AG_ObjectUnlock(wid);
-		return;
-	}
-
-	OBJECT_FOREACH_CHILD(wid, win, ag_widget)
-		PostMouseMotion(win, wid, x, y, xRel, yRel, state);
-}
-
-/*
  * Process a mouse-button event relative to the given window.
  * 
  * This is generally called from the event-handling section of low-level
@@ -289,6 +233,35 @@ AG_ProcessMouseButtonUp(AG_Window *win, int x, int y, AG_MouseButton button)
 }
 
 /*
+ * Deliver a `mouse-button-up' event to all active widgets which are
+ * either focused or have UNFOCUSED_BUTTONUP set. 
+ */
+static void
+PostMouseButtonUp(AG_Window *_Nonnull _Restrict win,
+    AG_Widget *_Nonnull _Restrict wid, int x, int y, AG_MouseButton button)
+{
+	AG_Widget *chld;
+	Uint flags;
+
+	AG_ObjectLock(wid);
+	flags = wid->flags;
+	if (flags & AG_WIDGET_VISIBLE) {
+		if ((flags & AG_WIDGET_FOCUSED) ||
+		    (flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
+			AG_PostEvent(wid, "mouse-button-up",
+			    "%i(button),%i(x),%i(y)",
+			    (int)button,
+			    x - wid->rView.x1,
+			    y - wid->rView.y1);
+		}
+	}
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		PostMouseButtonUp(win, chld, x, y, button);
+	}
+	AG_ObjectUnlock(wid);
+}
+
+/*
  * Process a mouse-button event relative to the given window.
  * 
  * This is generally called from the event-handling section of low-level
@@ -297,27 +270,73 @@ AG_ProcessMouseButtonUp(AG_Window *win, int x, int y, AG_MouseButton button)
 void
 AG_ProcessMouseButtonDown(AG_Window *win, int x, int y, AG_MouseButton button)
 {
-	AG_Widget *wid;
 	AG_Driver *drv;
-	AG_Window *winOther;
+	AG_Window *winModal;
+	AG_Widget *wid;
+	
+	if ((win->flags & AG_WINDOW_MODAL) == 0) {
+		OBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+			AG_OBJECT_ISA(drv, "AG_Driver:*");
 
-	/* Handle modal windows. */
-	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		AG_FOREACH_WINDOW(winOther, drv) {
-			if (winOther == win) {
-				continue;
-			}
-			if ((winOther->flags & AG_WINDOW_MODAL) &&
-			    (winOther->transientFor == NULL ||	/* App modal */
-			     winOther->transientFor == win)) {	/* Parent modal */
-				AG_PostEvent(NULL, winOther,
-				    "window-modal-close", "%i,%i", x, y);
+			OBJECT_FOREACH_CHILD(winModal, drv, ag_window) {
+				if (winModal == win || !winModal->visible ||
+				   (winModal->flags & AG_WINDOW_MODAL) == 0) {
+					continue;
+				}
+				AG_OBJECT_ISA(winModal, "AG_Widget:AG_Window:*");
+				AG_PostEvent(winModal, "window-close", NULL);
 			}
 		}
 	}
 
 	OBJECT_FOREACH_CHILD(wid, win, ag_widget)
 		PostMouseButtonDown(win, wid, x, y, button);
+}
+
+/*
+ * Deliver a `mouse-button-down' event to the active widget at specified
+ * window coordinates (if multiple widgets overlap, deliver to the topmost
+ * widget which has a `mouse-button-down' handler defined).
+ */
+static int
+PostMouseButtonDown(AG_Window *_Nonnull _Restrict win,
+    AG_Widget *_Nonnull _Restrict wid, int x, int y, AG_MouseButton button)
+{
+	AG_Widget *chld;
+	AG_Event *ev;
+	
+	AG_ObjectLock(wid);
+
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		if (PostMouseButtonDown(win, chld, x, y, button))
+			goto match;
+	}
+	if ((wid->flags & AG_WIDGET_VISIBLE) == 0) {
+		goto no_match;
+	}
+	if ((wid->flags & AG_WIDGET_UNFOCUSED_BUTTONDOWN) == 0) {
+		if (!AG_WidgetSensitive(wid, x,y)) {
+			goto no_match;
+		}
+	}
+	TAILQ_FOREACH(ev, &OBJECT(wid)->events, events) {
+		if (strcmp(ev->name, "mouse-button-down") == 0)
+			break;
+	}
+	if (ev != NULL) {
+		AG_PostEvent(wid, "mouse-button-down",
+		    "%i(button),%i(x),%i(y)",
+		    (int)button,
+		    x - wid->rView.x1,
+		    y - wid->rView.y1);
+		goto match;
+	}
+no_match:
+	AG_ObjectUnlock(wid);
+	return (0);
+match:
+	AG_ObjectUnlock(wid);
+	return (1);
 }
 
 AG_ObjectClass agMouseClass = {

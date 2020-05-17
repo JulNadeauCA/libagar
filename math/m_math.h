@@ -11,13 +11,8 @@
 # include <math.h>
 #endif
 
-/* AltiVec extensions */
+/* AltiVec extensions. No need to include <altivec.h> since we use -faltivec. */
 #include <agar/config/have_altivec.h>
-#include <agar/config/have_altivec_h.h>
-#include <agar/config/inline_altivec.h>
-#if defined(HAVE_ALTIVEC) && defined(HAVE_ALTIVEC_H)
-# include <altivec.h>
-#endif
 
 /* SSE extensions */
 #include <agar/config/have_sse.h>
@@ -38,16 +33,7 @@
  * Real numbers, complex numbers and linear algebra structures.
  */
 
-#if defined(QUAD_PRECISION)
-typedef long double M_Real;
-# define M_REAL(n)		AG_LONG_DOUBLE(n)
-# define M_VARIABLE_REAL	AG_VARIABLE_LONG_DOUBLE
-# define M_VARIABLE_P_REAL	AG_VARIABLE_P_LONG_DOUBLE
-# define M_SetReal		AG_SetLongDouble
-# define M_GetReal		AG_GetLongDouble
-# define M_BindReal		AG_BindLongDouble
-# define M_BindRealFn		AG_BindLongDoubleFn
-#elif defined(DOUBLE_PRECISION)
+#if defined(DOUBLE_PRECISION)
 typedef double M_Real;
 # define M_REAL(n)		AG_DOUBLE(n)
 # define M_VARIABLE_REAL	AG_VARIABLE_DOUBLE
@@ -119,16 +105,17 @@ typedef struct m_color { M_Real r, g, b, a; } M_Color;
 /* Vector in R^n. */
 typedef struct m_vector {
 	Uint m;			/* Size */
-	M_Real *v;		/* Elements */
+	Uint32 _pad;
+	M_Real *_Nullable v;	/* Elements */
 } M_Vector;
 
 struct m_matrix_ops;
 
 /* Base class for m-by-n matrices. */
 typedef struct m_matrix {
-	const struct m_matrix_ops *ops;
-	Uint m;			/* Rows */
-	Uint n;			/* Columns */
+	const struct m_matrix_ops *_Nonnull ops;
+	Uint m; /* Rows */
+	Uint n; /* Columns */
 } M_Matrix;
 
 #define MVECTOR(v) ((M_Vector *)(v))
@@ -158,35 +145,20 @@ typedef struct m_matrix {
 #undef M_2_SQRTPI
 #undef M_SQRT2
 #undef M_SQRT1_2
-#if defined(QUAD_PRECISION)
-# define M_E		2.7182818284590452353602874713526625L  /* e */
-# define M_LOG2E	1.4426950408889634073599246810018921L  /* log_2 e */
-# define M_LOG10E	0.4342944819032518276511289189166051L  /* log_10 e */
-# define M_LN2		0.6931471805599453094172321214581766L  /* log_e 2 */
-# define M_LN10		2.3025850929940456840179914546843642L  /* log_e 10 */
-# define M_PI		3.1415926535897932384626433832795029L  /* pi */
-# define M_PI_2		1.5707963267948966192313216916397514L  /* pi/2 */
-# define M_PI_4		0.7853981633974483096156608458198757L  /* pi/4 */
-# define M_1_PI		0.3183098861837906715377675267450287L  /* 1/pi */
-# define M_2_PI		0.6366197723675813430755350534900574L  /* 2/pi */
-# define M_2_SQRTPI	1.1283791670955125738961589031215452L  /* 2/sqrt(pi) */
-# define M_SQRT2	1.4142135623730950488016887242096981L  /* sqrt(2) */
-# define M_SQRT1_2	0.7071067811865475244008443621048490L  /* 1/sqrt(2) */
-#else
-# define M_E		2.7182818284590452354	/* e */
-# define M_LOG2E	1.4426950408889634074	/* log 2e */
-# define M_LOG10E	0.43429448190325182765	/* log 10e */
-# define M_LN2		0.69314718055994530942	/* log e2 */
-# define M_LN10		2.30258509299404568402	/* log e10 */
-# define M_PI		3.14159265358979323846	/* pi */
-# define M_PI_2		1.57079632679489661923	/* pi/2 */
-# define M_PI_4		0.78539816339744830962	/* pi/4 */
-# define M_1_PI		0.31830988618379067154	/* 1/pi */
-# define M_2_PI		0.63661977236758134308	/* 2/pi */
-# define M_2_SQRTPI	1.12837916709551257390	/* 2/sqrt(pi) */
-# define M_SQRT2	1.41421356237309504880	/* sqrt(2) */
-# define M_SQRT1_2	0.70710678118654752440	/* 1/sqrt(2) */
-#endif
+
+#define M_E		2.7182818284590452354	/* e */
+#define M_LOG2E		1.4426950408889634074	/* log 2e */
+#define M_LOG10E	0.43429448190325182765	/* log 10e */
+#define M_LN2		0.69314718055994530942	/* log e2 */
+#define M_LN10		2.30258509299404568402	/* log e10 */
+#define M_PI		3.14159265358979323846	/* pi */
+#define M_PI_2		1.57079632679489661923	/* pi/2 */
+#define M_PI_4		0.78539816339744830962	/* pi/4 */
+#define M_1_PI		0.31830988618379067154	/* 1/pi */
+#define M_2_PI		0.63661977236758134308	/* 2/pi */
+#define M_2_SQRTPI	1.12837916709551257390	/* 2/sqrt(pi) */
+#define M_SQRT2		1.41421356237309504880	/* sqrt(2) */
+#define M_SQRT1_2	0.70710678118654752440	/* 1/sqrt(2) */
 
 /*
  * Floating point memory format parameters.
@@ -198,16 +170,8 @@ typedef struct m_matrix {
 #undef M_NUMMAX
 #undef M_MACHEP
 #undef M_INFINITY
-#if defined(QUAD_PRECISION)
-# define M_EXPMIN	-16382
-# define M_EXPMAX	 16383
-# define M_PRECISION	 113
-# define M_PRECISION_2	 57
-# define M_NUMMAX	 AG_LDBL_MAX
-# define M_MACHEP	 5.42101086242752217003726400434970855712890625E-20l
-# define M_TINYVAL	 5.42101086242752217003726400434970855712890625E-19l
-# define M_HUGEVAL	 1.1e+4931l
-#elif defined(DOUBLE_PRECISION)
+
+#if defined(DOUBLE_PRECISION)
 # define M_EXPMIN	-1022
 # define M_EXPMAX	 1023
 # define M_PRECISION	 53
@@ -226,47 +190,13 @@ typedef struct m_matrix {
 # define M_TINYVAL	 3.0e-7f
 # define M_HUGEVAL	 3.4e+37f
 #endif
-#define M_INFINITY HUGE_VAL
+#define M_INFINITY M_HUGEVAL
 #define M_MACHZERO(n) ((n) >= -M_MACHEP && (n) <= +M_MACHEP)
 
 /*
  * Standard math library routines
  */
-#if defined(QUAD_PRECISION)
-
-# define M_Log(x) logl(x)
-# define M_Exp(x) expl(x)
-# define M_ExpM1(x) expm1l(x)
-# define M_Sqrt(x) sqrtl(x)
-# define M_Cbrt(x) cbrtl(x)
-# define M_Sin(x) sinl(x)
-# define M_Cos(x) cosl(x)
-# define M_Tan(x) tanl(x)
-# define M_Sinh(x) sinhl(x)
-# define M_Cosh(x) coshl(x)
-# define M_Tanh(x) tanhl(x)
-# define M_Cot(x) (1.0l/tanl(x))
-# define M_Sec(x) (1.0l/cosl(x))
-# define M_Csc(x) (1.0l/sinl(x))
-# define M_Asin(x) asinl(x)
-# define M_Acos(x) acosl(x)
-# define M_Atan(x) atanl(x)
-# define M_Asinh(x) asinhl(x)
-# define M_Acosh(x) acoshl(x)
-# define M_Atanh(x) atanhl(x)
-# define M_Atan2(y,x) atan2l((y),(x))
-# define M_Hypot2(x,y) hypotl((x),(y))
-# define M_Fabs(x) fabsl(x)
-# define M_Sgn(x) ((x)>0.0l ? 1.0l : ((x)<0.0l ? -1.0l : 0.0l))
-# define M_Pow(x,y) powl((x),(y))
-# define M_Frexp(x,exp) frexpl((x),(exp))
-# define M_Ldexp(x,exp) ldexpl((x),(exp))
-# define M_Ceil(x) ceill(x)
-# define M_Floor(x) floorl(x)
-# define M_IsNaN(x) isnanl(x)
-# define M_IsInf(x) isinfl(x)
-
-#elif defined(DOUBLE_PRECISION)
+#if defined(DOUBLE_PRECISION)
 
 # define M_Log(x) log(x)
 # define M_Exp(x) exp(x)
@@ -376,27 +306,32 @@ typedef struct m_matrix {
 #endif
 
 __BEGIN_DECLS
-void   M_InitSubsystem(void);
-void   M_DestroySubsystem(void);
+void M_InitSubsystem(void);
+void M_DestroySubsystem(void);
 
-M_Real      M_ReadReal(AG_DataSource *);
-void        M_CopyReal(AG_DataSource *, M_Real *);
-void        M_WriteReal(AG_DataSource *, M_Real);
-M_Complex   M_ReadComplex(AG_DataSource *);
-void        M_CopyComplex(AG_DataSource *, M_Complex *);
-void        M_WriteComplex(AG_DataSource *, M_Complex);
-M_Range     M_ReadRange(AG_DataSource *);
-void        M_CopyRange(AG_DataSource *, M_Range *);
-void        M_WriteRange(AG_DataSource *, M_Range);
+M_Real      M_ReadReal(AG_DataSource *_Nonnull);
+void        M_CopyReal(AG_DataSource *_Nonnull, M_Real *_Nonnull);
+void        M_WriteReal(AG_DataSource *_Nonnull, M_Real);
+M_Complex   M_ReadComplex(AG_DataSource *_Nonnull);
+void        M_CopyComplex(AG_DataSource *_Nonnull, M_Complex *_Nonnull);
+void        M_WriteComplex(AG_DataSource *_Nonnull, M_Complex);
+M_Range     M_ReadRange(AG_DataSource *_Nonnull);
+void        M_CopyRange(AG_DataSource *_Nonnull, M_Range *_Nonnull);
+void        M_WriteRange(AG_DataSource *_Nonnull, M_Range);
 #define     M_ReadTime(ds) (M_Time)M_ReadReal(ds)
 #define     M_WriteTime(ds,t) M_WriteReal((ds),(M_Real)(t))
-M_TimeRange M_ReadTimeRange(AG_DataSource *);
-void        M_CopyTimeRange(AG_DataSource *, M_TimeRange *);
-void        M_WriteTimeRange(AG_DataSource *, M_TimeRange);
+M_TimeRange M_ReadTimeRange(AG_DataSource *_Nonnull);
+void        M_CopyTimeRange(AG_DataSource *_Nonnull, M_TimeRange *_Nonnull);
+void        M_WriteTimeRange(AG_DataSource *_Nonnull, M_TimeRange);
 
-int    M_HeapSort(void *, size_t, size_t, int (*)(const void *, const void *));
-void   M_QSort(void *, size_t, size_t, M_Real (*)(const void *, const void *));
-int    M_MergeSort(void *, size_t, size_t, int (*)(const void *, const void *));
-int    M_RadixSort(const Uint8 **, int, const Uint8 *, Uint);
-int    M_RadixSortStable(const Uint8 **, int, const Uint8 *, Uint);
+int    M_HeapSort(void *_Nonnull, AG_Size, AG_Size,
+                  int (*_Nonnull)(const void *_Nonnull, const void *_Nonnull));
+void   M_QSort(void *_Nonnull, AG_Size, AG_Size,
+               M_Real (*_Nonnull)(const void *_Nonnull, const void *_Nonnull));
+int    M_MergeSort(void *_Nonnull, AG_Size, AG_Size,
+                   int (*_Nonnull)(const void *_Nonnull, const void *_Nonnull));
+int    M_RadixSort(const Uint8 *_Nonnull *_Nonnull, int,
+                   const Uint8 *_Nullable, Uint);
+int    M_RadixSortStable(const Uint8 *_Nonnull *_Nonnull, int,
+                         const Uint8 *_Nullable, Uint);
 __END_DECLS

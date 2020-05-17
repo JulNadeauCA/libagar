@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,22 +36,22 @@
 #include <agar/vg/icons.h>
 
 typedef struct vg_line_tool {
-	VG_Tool _inherit;
-	VG_Line *vlCur;
+	VG_Tool _inherit;		/* VG_Tool(3) -> VG_LineTool */
+	VG_Line *vlCur;			/* Line being edited */
 } VG_LineTool;
 
 static void
-Init(void *p)
+Init(void *_Nonnull obj)
 {
-	VG_LineTool *t = p;
+	VG_LineTool *t = obj;
 
 	t->vlCur = NULL;
 }
 
 static int
-MouseButtonDown(void *p, VG_Vector vPos, int button)
+MouseButtonDown(void *_Nonnull obj, VG_Vector vPos, int button)
 {
-	VG_LineTool *t = p;
+	VG_LineTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
 	VG *vg = vv->vg;
 	VG_Point *p1, *p2;
@@ -89,19 +89,21 @@ MouseButtonDown(void *p, VG_Vector vPos, int button)
 }
 
 static void
-PostDraw(void *p, VG_View *vv)
+PostDraw(void *_Nonnull obj, VG_View *vv)
 {
-	VG_LineTool *t = p;
+	VG_LineTool *t = obj;
+	AG_Color c;
 	int x, y;
 
 	VG_GetViewCoords(vv, VGTOOL(t)->vCursor, &x,&y);
-	AG_DrawCircle(vv, x,y, 3, VG_MapColorRGB(vv->vg->selectionColor));
+	c = VG_MapColorRGB(vv->vg->selectionColor);
+	AG_DrawCircle(vv, x,y, 3, &c);
 }
 
 static int
-MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
+MouseMotion(void *_Nonnull obj, VG_Vector vPos, VG_Vector vRel, int b)
 {
-	VG_LineTool *t = p;
+	VG_LineTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
 	VG_Point *pEx;
 	VG_Vector pos;

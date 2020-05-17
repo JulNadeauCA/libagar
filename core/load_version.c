@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,9 @@
  * from archive data.
  */
 
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/core/core.h>
 
 #include <string.h>
@@ -46,14 +49,12 @@ AG_ReadVersion(AG_DataSource *ds, const char *name, const AG_Version *ver,
 
 	if (AG_Read(ds, nbuf, sizeof(nbuf)) != 0 ||
 	    strncmp(nbuf, name, nlen) != 0) {
-		AG_SetError("Bad magic (\"%s\" != \"%s\")", name, nbuf);
+		AG_SetErrorS("Bad magic");
+		/* AG_SetError("Bad magic (\"%s\" != \"%s\")", name, nbuf); */
 		return (-1);
 	}
-	if (AG_ReadUint32v(ds, &major) == -1 ||
-	    AG_ReadUint32v(ds, &minor) == -1) {
-		AG_SetError("Reading version number: %s", AG_GetError());
-		return (-1);
-	}
+	major = AG_ReadUint32(ds);
+	minor = AG_ReadUint32(ds);
 	if (rver != NULL) {
 		rver->major = major;
 		rver->minor = minor;
@@ -78,7 +79,7 @@ AG_WriteVersion(AG_DataSource *ds, const char *name, const AG_Version *ver)
 {
 	char nbuf[AG_VERSION_NAME_MAX];
 	int i;
-
+	
 	for (i = 0; i < sizeof(nbuf); i += 4) {
 		nbuf[i  ] = 'a';
 		nbuf[i+1] = 'g';
@@ -86,15 +87,12 @@ AG_WriteVersion(AG_DataSource *ds, const char *name, const AG_Version *ver)
 		nbuf[i+3] = 'r';
 	}
 	Strlcpy(nbuf, name, sizeof(nbuf));
+	
 	if (AG_Write(ds, nbuf, sizeof(nbuf)) != 0) {
-		AG_SetError("Writing magic: %s", AG_GetError());
 		return (-1);
 	}
-	if (AG_WriteUint32v(ds, &ver->major) == -1 ||
-	    AG_WriteUint32v(ds, &ver->minor) == -1) {
-		AG_SetError("Writing version numbers: %s", AG_GetError());
-		return (-1);
-	}
+	AG_WriteUint32(ds, ver->major);
+	AG_WriteUint32(ds, ver->minor);
 	return (0);
 }
 
@@ -103,6 +101,7 @@ AG_ReadObjectVersion(AG_DataSource *_Nonnull ds, void *_Nonnull p,
     AG_Version *_Nullable pver)
 {
 	AG_ObjectClass *C = OBJECT(p)->cls;
+
 	return AG_ReadVersion(ds, C->name, &C->ver, pver);
 }
 
@@ -110,5 +109,8 @@ void
 AG_WriteObjectVersion(AG_DataSource *_Nonnull ds, void *_Nonnull p)
 {
 	AG_ObjectClass *C = OBJECT(p)->cls;
+
 	AG_WriteVersion(ds, C->name, &C->ver);
 }
+
+#endif /* AG_SERIALIZATION */

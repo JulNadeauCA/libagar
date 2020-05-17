@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Integer-only spinbutton group with two directions.
+ */
+
 #include <agar/core/core.h>
+#ifdef AG_WIDGETS
+
 #include <agar/gui/mspinbutton.h>
 #include <agar/gui/window.h>
 
@@ -33,273 +39,256 @@
 AG_MSpinbutton *
 AG_MSpinbuttonNew(void *parent, Uint flags, const char *sep, const char *label)
 {
-	AG_MSpinbutton *sbu;
+	AG_MSpinbutton *msb;
 
-	sbu = Malloc(sizeof(AG_MSpinbutton));
-	AG_ObjectInit(sbu, &agMSpinbuttonClass);
-	sbu->sep = sep;
+	msb = Malloc(sizeof(AG_MSpinbutton));
+	AG_ObjectInit(msb, &agMSpinbuttonClass);
 
-	if (!(flags & AG_MSPINBUTTON_NOHFILL))	{ AG_ExpandHoriz(sbu); }
-	if (  flags & AG_MSPINBUTTON_VFILL)	{ AG_ExpandVert(sbu); }
+	if (flags & AG_MSPINBUTTON_HFILL) { WIDGET(msb)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_MSPINBUTTON_VFILL) { WIDGET(msb)->flags |= AG_WIDGET_VFILL; }
+
+	msb->sep = sep;
 
 	if (label != NULL) {
-		AG_TextboxSetLabelS(sbu->input, label);
+		AG_TextboxSetLabelS(msb->input, label);
 	}
-	AG_ObjectAttach(parent, sbu);
-	return (sbu);
+	AG_ObjectAttach(parent, msb);
+	return (msb);
 }
 
 static void
 Bound(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = AG_SELF();
-	AG_Variable *binding = AG_PTR(1);
+	AG_MSpinbutton *msb = AG_MSPINBUTTON_SELF();
+	const AG_Variable *V = AG_PTR(1);
 
-	if (strcmp(binding->name, "xvalue") == 0 ||
-	    strcmp(binding->name, "yvalue") == 0) {
-		switch (AG_VARIABLE_TYPE(binding)) {
-		case AG_VARIABLE_INT:
-			sbu->min = AG_INT_MIN+1;
-			sbu->max = AG_INT_MAX-1;
-			break;
-		case AG_VARIABLE_UINT:
-			sbu->min = 0;
-			sbu->max = AG_UINT_MAX-1;
-			break;
-		case AG_VARIABLE_UINT8:
-			sbu->min = 0;
-			sbu->max = 0xffU;
-			break;
-		case AG_VARIABLE_SINT8:
-			sbu->min = -0x7f+1;
-			sbu->max =  0x7f-1;
-			break;
-		case AG_VARIABLE_UINT16:
-			sbu->min = 0;
-			sbu->max = 0xffffU;
-			break;
-		case AG_VARIABLE_SINT16:
-			sbu->min = -0x7fff+1;
-			sbu->max =  0x7fff-1;
-			break;
-		case AG_VARIABLE_UINT32:
-			sbu->min = 0;
-			sbu->max = 0xffffffffU;
-			break;
-		case AG_VARIABLE_SINT32:
-			sbu->min = -0x7fffffff+1;
-			sbu->max =  0x7fffffff-1;
-			break;
-		default:
-			break;
-		}
+	if (strcmp(V->name, "xvalue") != 0 &&
+	    strcmp(V->name, "yvalue") != 0)
+		return;
+
+	switch (AG_VARIABLE_TYPE(V)) {
+	case AG_VARIABLE_INT:
+		msb->min = AG_INT_MIN+1;
+		msb->max = AG_INT_MAX-1;
+		break;
+	case AG_VARIABLE_UINT:
+		msb->min = 0;
+		msb->max = AG_UINT_MAX-1;
+		break;
+	case AG_VARIABLE_UINT8:
+		msb->min = 0;
+		msb->max = 0xffU;
+		break;
+	case AG_VARIABLE_SINT8:
+		msb->min = -0x7f+1;
+		msb->max =  0x7f-1;
+		break;
+	case AG_VARIABLE_UINT16:
+		msb->min = 0;
+		msb->max = 0xffffU;
+		break;
+	case AG_VARIABLE_SINT16:
+		msb->min = -0x7fff+1;
+		msb->max =  0x7fff-1;
+		break;
+	case AG_VARIABLE_UINT32:
+		msb->min = 0;
+		msb->max = 0xffffffffU;
+		break;
+	case AG_VARIABLE_SINT32:
+		msb->min = -0x7fffffff+1;
+		msb->max =  0x7fffffff-1;
+		break;
+	default:
+		break;
 	}
-	AG_Redraw(sbu);
+	AG_Redraw(msb);
 }
 
+#if 0
 static void
 KeyDown(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = AG_SELF();
-	int keysym = AG_INT(1);
+	AG_MSpinbutton *msb = AG_MSPINBUTTON_PTR(1);
+	int keysym = AG_INT(2);
 
 	switch (keysym) {
 	case AG_KEY_LEFT:
-		AG_MSpinbuttonAddValue(sbu, "xvalue", -sbu->inc);
+		AG_MSpinbuttonAddValue(msb, "xvalue", -msb->inc);
 		break;
 	case AG_KEY_RIGHT:
-		AG_MSpinbuttonAddValue(sbu, "xvalue", sbu->inc);
+		AG_MSpinbuttonAddValue(msb, "xvalue", msb->inc);
 		break;
 	case AG_KEY_UP:
-		AG_MSpinbuttonAddValue(sbu, "yvalue", -sbu->inc);
+		AG_MSpinbuttonAddValue(msb, "yvalue", -msb->inc);
 		break;
 	case AG_KEY_DOWN:
-		AG_MSpinbuttonAddValue(sbu, "yvalue", sbu->inc);
+		AG_MSpinbuttonAddValue(msb, "yvalue", msb->inc);
 		break;
 	default:
 		break;
 	}
 }
+#endif
 
 static void
 TextReturn(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = AG_PTR(1);
+	AG_MSpinbutton *msb = AG_MSPINBUTTON_PTR(1);
 	char inTxt[64];
 	char *tp = &inTxt[0], *s;
 
-	AG_ObjectLock(sbu);
-	Strlcpy(inTxt, sbu->inTxt, sizeof(inTxt));
-	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
-		AG_MSpinbuttonSetValue(sbu, "xvalue", atoi(s));
+	AG_ObjectLock(msb);
+
+	Strlcpy(inTxt, msb->inTxt, sizeof(inTxt));
+	if ((s = AG_Strsep(&tp, msb->sep)) != NULL) {
+		AG_MSpinbuttonSetValue(msb, "xvalue", atoi(s));
 	}
-	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
-		AG_MSpinbuttonSetValue(sbu, "yvalue", atoi(s));
+	if ((s = AG_Strsep(&tp, msb->sep)) != NULL) {
+		AG_MSpinbuttonSetValue(msb, "yvalue", atoi(s));
 	}
-	AG_PostEvent(NULL, sbu, "mspinbutton-return", NULL);
-	AG_WidgetUnfocus(sbu->input);
-	AG_ObjectUnlock(sbu);
-	AG_Redraw(sbu);
+	AG_PostEvent(msb, "mspinbutton-return", NULL);
+	AG_WidgetUnfocus(msb->input);
+
+	AG_Redraw(msb);
+	AG_ObjectUnlock(msb);
 }
 
 static void
 TextChanged(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = AG_PTR(1);
+	AG_MSpinbutton *msb = AG_MSPINBUTTON_PTR(1);
 	char inTxt[64];
 	char *tp = &inTxt[0], *s;
 	
-	AG_ObjectLock(sbu);
-	Strlcpy(inTxt, sbu->inTxt, sizeof(inTxt));
-	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
-		AG_MSpinbuttonSetValue(sbu, "xvalue", atoi(s));
+	AG_ObjectLock(msb);
+
+	Strlcpy(inTxt, msb->inTxt, sizeof(inTxt));
+	if ((s = AG_Strsep(&tp, msb->sep)) != NULL) {
+		AG_MSpinbuttonSetValue(msb, "xvalue", atoi(s));
 	}
-	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
-		AG_MSpinbuttonSetValue(sbu, "yvalue", atoi(s));
+	if ((s = AG_Strsep(&tp, msb->sep)) != NULL) {
+		AG_MSpinbuttonSetValue(msb, "yvalue", atoi(s));
 	}
-	AG_PostEvent(NULL, sbu, "mspinbutton-changed", NULL);
-	AG_ObjectUnlock(sbu);
-	AG_Redraw(sbu);
+	AG_PostEvent(msb, "mspinbutton-changed", NULL);
+
+	AG_Redraw(msb);
+	AG_ObjectUnlock(msb);
 }
 
 static void
-DecrementY(AG_Event *event)
+Increment(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = AG_PTR(1);
+	AG_MSpinbutton *msb = AG_MSPINBUTTON_PTR(1);
+	const char *which = AG_STRING(2);
+	const int sign = AG_INT(3);
 
-	AG_ObjectLock(sbu);
-	AG_MSpinbuttonAddValue(sbu, "yvalue", -sbu->inc);
-	AG_ObjectUnlock(sbu);
-}
-
-static void
-IncrementY(AG_Event *event)
-{
-	AG_MSpinbutton *sbu = AG_PTR(1);
-	
-	AG_ObjectLock(sbu);
-	AG_MSpinbuttonAddValue(sbu, "yvalue", sbu->inc);
-	AG_ObjectUnlock(sbu);
-}
-
-static void
-DecrementX(AG_Event *event)
-{
-	AG_MSpinbutton *sbu = AG_PTR(1);
-	
-	AG_ObjectLock(sbu);
-	AG_MSpinbuttonAddValue(sbu, "xvalue", -sbu->inc);
-	AG_ObjectUnlock(sbu);
-}
-
-static void
-IncrementX(AG_Event *event)
-{
-	AG_MSpinbutton *sbu = AG_PTR(1);
-	
-	AG_ObjectLock(sbu);
-	AG_MSpinbuttonAddValue(sbu, "xvalue", sbu->inc);
-	AG_ObjectUnlock(sbu);
+	AG_MSpinbuttonAddValue(msb, which, sign*msb->inc);
 }
 
 static void
 Init(void *obj)
 {
-	AG_MSpinbutton *sbu = obj;
-	AG_Button *b[4];
+	AG_MSpinbutton *msb = obj;
+	AG_Textbox *tb;
+	const Uint btnFlags = AG_BUTTON_NO_FOCUS | AG_BUTTON_REPEAT;
 	int i;
 
-	sbu->xvalue = 0;
-	sbu->yvalue = 0;
-	sbu->min = 0;
-	sbu->max = 0;
-	sbu->inc = 1;
-	sbu->writeable = 0;
-	sbu->sep = ",";
-	sbu->inTxt[0] = '\0';
+	msb->xvalue = 0;
+	msb->yvalue = 0;
+	msb->min = 0;
+	msb->max = 0;
+	msb->inc = 1;
+	msb->writeable = 0;
+	msb->sep = ",";
+	msb->inTxt[0] = '\0';
 	
-	AG_BindInt(sbu, "xvalue", &sbu->xvalue);
-	AG_BindInt(sbu, "yvalue", &sbu->yvalue);
-	AG_BindInt(sbu, "min", &sbu->min);
-	AG_BindInt(sbu, "max", &sbu->max);
+	AG_BindInt(msb, "xvalue", &msb->xvalue);
+	AG_BindInt(msb, "yvalue", &msb->yvalue);
+	AG_BindInt(msb, "min", &msb->min);
+	AG_BindInt(msb, "max", &msb->max);
 	
-	sbu->input = AG_TextboxNewS(sbu, 0, NULL);
-	AG_TextboxBindASCII(sbu->input, sbu->inTxt, sizeof(sbu->inTxt));
-	AG_SetEvent(sbu->input, "textbox-return", TextReturn, "%p", sbu);
-	AG_SetEvent(sbu->input, "textbox-postchg", TextChanged, "%p", sbu);
-	AG_TextboxSizeHint(sbu->input, "88888");
+	tb = msb->input = AG_TextboxNewS(msb, 0, NULL);
+	AG_TextboxBindASCII(tb, msb->inTxt, sizeof(msb->inTxt));
+	AG_TextboxSizeHint(tb, "8888,8888");
+	AG_SetEvent(tb, "textbox-return", TextReturn, "%p", msb);
+	AG_SetEvent(tb, "textbox-postchg", TextChanged, "%p", msb);
+/*	AG_AddEvent(tb->ed, "key-down", KeyDown, "%p", msb); */
 
-	sbu->xdecbu = b[0] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
-	sbu->xincbu = b[1] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
-	sbu->ydecbu = b[2] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
-	sbu->yincbu = b[3] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
-	AG_SetEvent(sbu->xdecbu, "button-pushed", DecrementX, "%p", sbu);
-	AG_SetEvent(sbu->xincbu, "button-pushed", IncrementX, "%p", sbu);
-	AG_SetEvent(sbu->ydecbu, "button-pushed", DecrementY, "%p", sbu);
-	AG_SetEvent(sbu->yincbu, "button-pushed", IncrementY, "%p", sbu);
+	msb->btn[0] = AG_ButtonNewS(msb, btnFlags, "\xE2\x96\xB4"); /* UP (U+25B4) */
+	msb->btn[1] = AG_ButtonNewS(msb, btnFlags, "\xE2\x97\x82"); /* LEFT (U+25C2) */
+	msb->btn[2] = AG_ButtonNewS(msb, btnFlags, "\xE2\x96\xBE"); /* DOWN (U+25BE) */
+	msb->btn[3] = AG_ButtonNewS(msb, btnFlags, "\xE2\x96\xB8"); /* RIGHT (U+25B8) */
+
+	AG_SetEvent(msb->btn[0], "button-pushed", Increment, "%p,%s,%i", msb, "yvalue", -1); /* UP */
+	AG_SetEvent(msb->btn[1], "button-pushed", Increment, "%p,%s,%i", msb, "xvalue", -1); /* LEFT */
+	AG_SetEvent(msb->btn[2], "button-pushed", Increment, "%p,%s,%i", msb, "yvalue", +1); /* DOWN */
+	AG_SetEvent(msb->btn[3], "button-pushed", Increment, "%p,%s,%i", msb, "xvalue", +1); /* RIGHT */
+
 	for (i = 0; i < 4; i++) {
-		AG_ButtonSetPadding(b[i], 0,0,0,0);
-		AG_LabelSetPadding(b[i]->lbl, 0,0,0,0);
-		AG_WidgetSetFocusable(b[i], 0);
+		AG_SetStyle(msb->btn[i], "padding", "0");
+		AG_SetStyle(msb->btn[i], "font-size", "70%");
 	}
 
-	AG_SetEvent(sbu, "bound", Bound, NULL);
-	OBJECT(sbu)->flags |= AG_OBJECT_BOUND_EVENTS;
-	AG_SetEvent(sbu, "key-down", KeyDown, NULL);
+	AG_SetEvent(msb, "bound", Bound, NULL);
+	OBJECT(msb)->flags |= AG_OBJECT_BOUND_EVENTS;
 }
 
 static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_MSpinbutton *fsu = obj;
-	AG_SizeReq rChld, rYinc, rYdec;
+	AG_MSpinbutton *msb = obj;
+	AG_SizeReq rc, rYinc, rYdec;
 
-	AG_WidgetSizeReq(fsu->input, &rChld);
-	r->w = rChld.w;
-	r->h = rChld.h;
-	AG_WidgetSizeReq(fsu->xdecbu, &rChld);
-	r->w += rChld.w;
-	AG_WidgetSizeReq(fsu->xincbu, &rChld);
-	r->w += rChld.w;
-	AG_WidgetSizeReq(fsu->yincbu, &rYinc);
-	AG_WidgetSizeReq(fsu->ydecbu, &rYdec);
-	r->w += MAX(rYinc.w,rYdec.w);
+	r->w = WIDGET(msb)->paddingLeft + WIDGET(msb)->paddingRight;
+	r->h = WIDGET(msb)->paddingTop + WIDGET(msb)->paddingBottom;
+
+	AG_WidgetSizeReq(msb->input, &rc);
+	r->w += rc.w;
+	r->h += rc.h;
+	AG_WidgetSizeReq(msb->btn[AG_MSPINBUTTON_LEFT], &rc);
+	r->w += rc.w;
+	AG_WidgetSizeReq(msb->btn[AG_MSPINBUTTON_RIGHT], &rc);
+	r->w += rc.w;
+	AG_WidgetSizeReq(msb->btn[AG_MSPINBUTTON_DOWN], &rYinc);
+	AG_WidgetSizeReq(msb->btn[AG_MSPINBUTTON_UP], &rYdec);
+	r->w += MAX(rYinc.w, rYdec.w);
 }
 
 static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_MSpinbutton *fsu = obj;
-	int szBtn = a->h/2;
+	AG_MSpinbutton *msb = obj;
+	const int wBtn = (a->h >> 1);
+	const int wBtn_2 = (wBtn >> 1);
+	const int wBtn3 = (wBtn * 3);
 	int x = 0, y = 0;
-	AG_SizeAlloc aChld;
+	AG_SizeAlloc ac;
 
-	if (a->w < szBtn*3 + 4)
+	if (a->w < wBtn3 + 4)
 		return (-1);
 
-	/* Input textbox */
-	aChld.x = x;
-	aChld.y = y;
-	aChld.w = a->w - 4 - szBtn*3;
-	aChld.h = a->h;
-	AG_WidgetSizeAlloc(fsu->input, &aChld);
-	x += aChld.w + 2;
+	ac.x = x;                                          /* Input textbox */
+	ac.y = y;
+	ac.w = a->w - 4 - wBtn3;
+	ac.h = a->h;
+	AG_WidgetSizeAlloc(msb->input, &ac);
+	x += ac.w + 2;
 
-	/* Buttons */
-	aChld.w = szBtn;
-	aChld.h = szBtn;
-	aChld.x = x;
-	aChld.y = y + szBtn/2;
-	AG_WidgetSizeAlloc(fsu->xdecbu, &aChld);
-	aChld.x = x + szBtn*2;
-	aChld.y = y + szBtn/2;
-	AG_WidgetSizeAlloc(fsu->xincbu, &aChld);
-	aChld.x = x + szBtn;
-	aChld.y = y;
-	AG_WidgetSizeAlloc(fsu->ydecbu, &aChld);
-	aChld.x = x + szBtn;
-	aChld.y = y + szBtn;
-	AG_WidgetSizeAlloc(fsu->yincbu, &aChld);
+	ac.w = wBtn;                                  /* Button arrangement */
+	ac.h = wBtn;
+	ac.x = x;
+	ac.y = y + wBtn_2;
+	AG_WidgetSizeAlloc(msb->btn[AG_MSPINBUTTON_LEFT], &ac);
+	ac.x = x + (wBtn << 1);
+	ac.y = y + wBtn_2;
+	AG_WidgetSizeAlloc(msb->btn[AG_MSPINBUTTON_RIGHT], &ac);
+	ac.x = x + wBtn;
+	ac.y = y;
+	AG_WidgetSizeAlloc(msb->btn[AG_MSPINBUTTON_UP], &ac);
+	ac.x = x + wBtn;
+	ac.y = y + wBtn;
+	AG_WidgetSizeAlloc(msb->btn[AG_MSPINBUTTON_DOWN], &ac);
 
 	return (0);
 }
@@ -307,53 +296,53 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 static void
 Draw(void *obj)
 {
-	AG_MSpinbutton *sbu = obj;
+	AG_MSpinbutton *msb = obj;
 	AG_Variable *xvalueb, *yvalueb;
 	void *xvalue, *yvalue;
 
-	AG_WidgetDraw(sbu->input);
-	AG_WidgetDraw(sbu->xdecbu);
-	AG_WidgetDraw(sbu->ydecbu);
-	AG_WidgetDraw(sbu->xincbu);
-	AG_WidgetDraw(sbu->yincbu);
+	AG_WidgetDraw(msb->input);
+	AG_WidgetDraw(msb->btn[AG_MSPINBUTTON_LEFT]);
+	AG_WidgetDraw(msb->btn[AG_MSPINBUTTON_UP]);
+	AG_WidgetDraw(msb->btn[AG_MSPINBUTTON_RIGHT]);
+	AG_WidgetDraw(msb->btn[AG_MSPINBUTTON_DOWN]);
 
-	if (AG_WidgetIsFocused(sbu->input))
+	if (AG_WidgetIsFocused(msb->input))
 		return;
 
-	xvalueb = AG_GetVariable(sbu, "xvalue", &xvalue);
-	yvalueb = AG_GetVariable(sbu, "yvalue", &yvalue);
+	xvalueb = AG_GetVariable(msb, "xvalue", &xvalue);
+	yvalueb = AG_GetVariable(msb, "yvalue", &yvalue);
 	switch (AG_VARIABLE_TYPE(xvalueb)) {
 	case AG_VARIABLE_INT:
-		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%d%s%d",
-		    *(int *)xvalue, sbu->sep, *(int *)yvalue);
+		Snprintf(msb->inTxt, sizeof(msb->inTxt), "%d%s%d",
+		    *(int *)xvalue, msb->sep, *(int *)yvalue);
 		break;
 	case AG_VARIABLE_UINT:
-		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%u%s%u",
-		    *(Uint *)xvalue, sbu->sep, *(Uint *)yvalue);
+		Snprintf(msb->inTxt, sizeof(msb->inTxt), "%u%s%u",
+		    *(Uint *)xvalue, msb->sep, *(Uint *)yvalue);
 		break;
 	case AG_VARIABLE_UINT8:
-		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%u%s%u",
-		    *(Uint8 *)xvalue, sbu->sep, *(Uint8 *)yvalue);
+		Snprintf(msb->inTxt, sizeof(msb->inTxt), "%u%s%u",
+		    *(Uint8 *)xvalue, msb->sep, *(Uint8 *)yvalue);
 		break;
 	case AG_VARIABLE_SINT8:
-		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%d%s%d",
-		    *(Sint8 *)xvalue, sbu->sep, *(Sint8 *)yvalue);
+		Snprintf(msb->inTxt, sizeof(msb->inTxt), "%d%s%d",
+		    *(Sint8 *)xvalue, msb->sep, *(Sint8 *)yvalue);
 		break;
 	case AG_VARIABLE_UINT16:
-		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%u%s%u",
-		    *(Uint16 *)xvalue, sbu->sep, *(Uint16 *)yvalue);
+		Snprintf(msb->inTxt, sizeof(msb->inTxt), "%u%s%u",
+		    *(Uint16 *)xvalue, msb->sep, *(Uint16 *)yvalue);
 		break;
 	case AG_VARIABLE_SINT16:
-		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%d%s%d",
-		    *(Sint16 *)xvalue, sbu->sep, *(Sint16 *)yvalue);
+		Snprintf(msb->inTxt, sizeof(msb->inTxt), "%d%s%d",
+		    *(Sint16 *)xvalue, msb->sep, *(Sint16 *)yvalue);
 		break;
 	case AG_VARIABLE_UINT32:
-		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%u%s%u",
-		    (Uint)*(Uint32 *)xvalue, sbu->sep, (Uint)*(Uint32 *)yvalue);
+		Snprintf(msb->inTxt, sizeof(msb->inTxt), "%u%s%u",
+		    (Uint)*(Uint32 *)xvalue, msb->sep, (Uint)*(Uint32 *)yvalue);
 		break;
 	case AG_VARIABLE_SINT32:
-		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%d%s%d",
-		    (int)*(Sint32 *)xvalue, sbu->sep, (int)*(Sint32 *)yvalue);
+		Snprintf(msb->inTxt, sizeof(msb->inTxt), "%d%s%d",
+		    (int)*(Sint32 *)xvalue, msb->sep, (int)*(Sint32 *)yvalue);
 		break;
 	default:
 		break;
@@ -363,16 +352,18 @@ Draw(void *obj)
 }
 
 void
-AG_MSpinbuttonAddValue(AG_MSpinbutton *sbu, const char *which, int inc)
+AG_MSpinbuttonAddValue(AG_MSpinbutton *msb, const char *which, int inc)
 {
 	AG_Variable *valueb, *minb, *maxb;
 	void *value;
 	int *min, *max;
 
-	AG_ObjectLock(sbu);
-	valueb = AG_GetVariable(sbu, which, &value);
-	minb = AG_GetVariable(sbu, "min", &min);
-	maxb = AG_GetVariable(sbu, "max", &max);
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
+	AG_ObjectLock(msb);
+
+	valueb = AG_GetVariable(msb, which, &value);
+	minb = AG_GetVariable(msb, "min", (void *)&min);
+	maxb = AG_GetVariable(msb, "max", (void *)&max);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
 	case AG_VARIABLE_INT:
@@ -419,27 +410,30 @@ AG_MSpinbuttonAddValue(AG_MSpinbutton *sbu, const char *which, int inc)
 		break;
 	}
 
-	AG_PostEvent(NULL, sbu, "mspinbutton-changed", "%s", which);
+	AG_PostEvent(msb, "mspinbutton-changed", "%s", which);
 
 	AG_UnlockVariable(maxb);
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(valueb);
-	AG_ObjectUnlock(sbu);
-	AG_Redraw(sbu);
+
+	AG_Redraw(msb);
+	AG_ObjectUnlock(msb);
 }
 
 void
-AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
+AG_MSpinbuttonSetValue(AG_MSpinbutton *msb, const char *which, ...)
 {
 	AG_Variable *valueb, *minb, *maxb;
 	void *value;
 	int *min, *max;
 	va_list ap;
 
-	AG_ObjectLock(sbu);
-	valueb = AG_GetVariable(sbu, which, &value);
-	minb = AG_GetVariable(sbu, "min", &min);
-	maxb = AG_GetVariable(sbu, "max", &max);
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
+	AG_ObjectLock(msb);
+
+	valueb = AG_GetVariable(msb, which, &value);
+	minb = AG_GetVariable(msb, "min", (void *)&min);
+	maxb = AG_GetVariable(msb, "max", (void *)&max);
 
 	va_start(ap, which);
 	switch (AG_VARIABLE_TYPE(valueb)) {
@@ -552,85 +546,98 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 	}
 	va_end(ap);
 
-	AG_PostEvent(NULL, sbu, "mspinbutton-changed", "%s", which);
+	AG_PostEvent(msb, "mspinbutton-changed", "%s", which);
 
 	AG_UnlockVariable(valueb);
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(maxb);
-	AG_ObjectUnlock(sbu);
-	AG_Redraw(sbu);
+
+	AG_Redraw(msb);
+	AG_ObjectUnlock(msb);
 }
 
 void
-AG_MSpinbuttonSetMin(AG_MSpinbutton *sbu, int nmin)
+AG_MSpinbuttonSetMin(AG_MSpinbutton *msb, int nmin)
 {
 	AG_Variable *minb;
 	int *min;
 
-	AG_ObjectLock(sbu);
-	minb = AG_GetVariable(sbu, "min", &min);
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
+	AG_ObjectLock(msb);
+
+	minb = AG_GetVariable(msb, "min", (void *)&min);
 	*min = nmin;
 	AG_UnlockVariable(minb);
-	AG_ObjectUnlock(sbu);
+
+	AG_ObjectUnlock(msb);
 }
 
 void
-AG_MSpinbuttonSetMax(AG_MSpinbutton *sbu, int nmax)
+AG_MSpinbuttonSetMax(AG_MSpinbutton *msb, int nmax)
 {
 	AG_Variable *maxb;
 	int *max;
 
-	AG_ObjectLock(sbu);
-	maxb = AG_GetVariable(sbu, "max", &max);
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
+	AG_ObjectLock(msb);
+
+	maxb = AG_GetVariable(msb, "max", (void *)&max);
 	*max = nmax;
 	AG_UnlockVariable(maxb);
-	AG_ObjectUnlock(sbu);
+
+	AG_ObjectUnlock(msb);
 }
 
 void
-AG_MSpinbuttonSetRange(AG_MSpinbutton *sbu, int nmin, int nmax)
+AG_MSpinbuttonSetRange(AG_MSpinbutton *msb, int nmin, int nmax)
 {
 	AG_Variable *minb, *maxb;
 	int *min, *max;
 
-	AG_ObjectLock(sbu);
-	minb = AG_GetVariable(sbu, "min", &min);
-	maxb = AG_GetVariable(sbu, "max", &max);
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
+	AG_ObjectLock(msb);
+
+	minb = AG_GetVariable(msb, "min", (void *)&min);
+	maxb = AG_GetVariable(msb, "max", (void *)&max);
 	*min = nmin;
 	*max = nmax;
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(maxb);
-	AG_ObjectUnlock(sbu);
+
+	AG_ObjectUnlock(msb);
 }
 
 void
-AG_MSpinbuttonSetIncrement(AG_MSpinbutton *sbu, int inc)
+AG_MSpinbuttonSetIncrement(AG_MSpinbutton *msb, int inc)
 {
-	AG_ObjectLock(sbu);
-	sbu->inc = inc;
-	AG_ObjectUnlock(sbu);
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
+	msb->inc = inc;
 }
 
 void
-AG_MSpinbuttonSetWriteable(AG_MSpinbutton *sbu, int writeable)
+AG_MSpinbuttonSetWriteable(AG_MSpinbutton *msb, int writeable)
 {
-	AG_ObjectLock(sbu);
-	sbu->writeable = writeable;
+	AG_OBJECT_ISA(msb, "AG_Widget:AG_MSpinbutton:*");
+	AG_ObjectLock(msb);
+
+	msb->writeable = writeable;
+
 	if (writeable) {
-		AG_WidgetEnable(sbu->xincbu);
-		AG_WidgetEnable(sbu->xdecbu);
-		AG_WidgetEnable(sbu->yincbu);
-		AG_WidgetEnable(sbu->ydecbu);
-		AG_WidgetEnable(sbu->input);
+		AG_WidgetEnable(msb->btn[AG_MSPINBUTTON_RIGHT]);
+		AG_WidgetEnable(msb->btn[AG_MSPINBUTTON_LEFT]);
+		AG_WidgetEnable(msb->btn[AG_MSPINBUTTON_DOWN]);
+		AG_WidgetEnable(msb->btn[AG_MSPINBUTTON_UP]);
+		AG_WidgetEnable(msb->input);
 	} else {
-		AG_WidgetDisable(sbu->xincbu);
-		AG_WidgetDisable(sbu->xdecbu);
-		AG_WidgetDisable(sbu->yincbu);
-		AG_WidgetDisable(sbu->ydecbu);
-		AG_WidgetDisable(sbu->input);
+		AG_WidgetDisable(msb->btn[AG_MSPINBUTTON_RIGHT]);
+		AG_WidgetDisable(msb->btn[AG_MSPINBUTTON_LEFT]);
+		AG_WidgetDisable(msb->btn[AG_MSPINBUTTON_DOWN]);
+		AG_WidgetDisable(msb->btn[AG_MSPINBUTTON_UP]);
+		AG_WidgetDisable(msb->input);
 	}
-	AG_ObjectUnlock(sbu);
-	AG_Redraw(sbu);
+
+	AG_Redraw(msb);
+	AG_ObjectUnlock(msb);
 }
 
 AG_WidgetClass agMSpinbuttonClass = {
@@ -639,7 +646,7 @@ AG_WidgetClass agMSpinbuttonClass = {
 		sizeof(AG_MSpinbutton),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
@@ -649,3 +656,5 @@ AG_WidgetClass agMSpinbuttonClass = {
 	SizeRequest,
 	SizeAllocate
 };
+
+#endif /* AG_WIDGETS */

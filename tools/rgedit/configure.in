@@ -1,0 +1,31 @@
+# Public domain
+# ex:syn=bsdbuild
+
+config_guess("../../mk/config.guess")
+
+register_section("rgedit options:")
+register("--with-agar[=PREFIX]",	"Location of Agar library [check]")
+register("--with-agar-map[=PREFIX]",	"Location of Agar-MAP library [check]")
+
+package("rgedit")
+version("1.0")
+default_dir(DATADIR, "${PREFIX}/share/agar")
+default_dir(LOCALEDIR, "${DATADIR}/locale")
+
+require(cc)
+require(agar, 1.6.0, ${prefix_agar})
+require(agar-map, 1.6.0, ${prefix_agar_map})
+
+if [ "${enable_nls}" = "yes" ]; then
+	require(gettext)
+fi
+
+c_define(_USE_AGAR_STD)
+c_define(_USE_AGAR_QUEUE)
+c_define(_USE_AGAR_TYPES)
+c_define(_USE_AGAR_ATTRIBUTES)
+c_define(_USE_AGAR_NULLABILITY)
+c_no_secure_warnings()
+
+c_incdir($BLD)
+c_incdir_config($BLD/config)

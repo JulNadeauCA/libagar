@@ -1,0 +1,411 @@
+/*	Public domain	*/
+
+#ifndef _AGAR_SK_SK_H_
+#define _AGAR_SK_SK_H_
+
+#include <agar/gui/gui.h>			/* For AG_Surface */
+#include <agar/gui/window.h>
+#include <agar/gui/surface.h>
+
+#include <agar/math/m.h>
+#include <agar/math/m_gui.h>
+
+/* Macros around precision-specific GL calls */
+#if defined(_AGAR_INTERNAL) || defined(_USE_SK_GL)
+# include <agar/gui/opengl.h>
+#endif
+
+/* Definitions internal to the SK implementation */
+#include <agar/sk/begin.h>
+
+#if defined(_AGAR_INTERNAL) || defined(_USE_SK_GL)
+# include <agar/math/gl_macros.h>
+#endif
+
+#ifdef _AGAR_INTERNAL
+# define NODE SGNODE
+# define NODE_OPS SGNODE_OPS
+# undef MAX
+# define MAX(h,i) ((h) > (i) ? (h) : (i))
+# undef MIN
+# define MIN(l,o) ((l) < (o) ? (l) : (o))
+#endif /* _AGAR_INTERNAL */
+
+#define SK_TYPE_NAME_MAX 64
+#define SK_NODE_NAME_MAX (SK_TYPE_NAME_MAX+12)
+#define SK_NAME_MAX	 (0xffffffff-1)
+#define SK_STATUS_MAX	 508
+#define SK_GROUP_NAME_MAX 64
+
+struct sk;
+struct sk_node;
+struct sk_point;
+struct sk_constraint;
+struct sk_group;
+struct sk_view;
+struct ag_widget;
+struct ag_unit;
+
+/* Solver status */
+typedef enum sk_status {
+	SK_INVALID,			/* No solutions */
+	SK_WELL_CONSTRAINED,		/* Finite number of solution */
+	SK_UNDER_CONSTRAINED,		/* Infinite number of solutions */
+	SK_OVER_CONSTRAINED		/* Redundant constraints */
+} SK_Status;
+
+/* Operations for sketch node classes. */
+typedef struct sk_node_ops {
+	const char *_Nonnull name;
+	AG_Size size;
+#if AG_MODEL == AG_LARGE
+	Uint64 flags;
+#else
+	Uint flags;
+#endif
+	void (*_Nonnull  init)(void *_Nonnull, Uint);
+	void (*_Nullable destroy)(void *_Nonnull);
+	int  (*_Nullable load)(struct sk *_Nonnull, void *_Nonnull, AG_DataSource *_Nonnull);
+	int  (*_Nullable save)(struct sk *_Nonnull, void *_Nonnull, AG_DataSource *_Nonnull);
+	void (*_Nullable draw)(void *_Nonnull, struct sk_view *_Nonnull);
+	void (*_Nullable redraw)(void *_Nonnull, struct sk_view *_Nonnull);
+	void (*_Nullable edit)(void *_Nonnull, struct ag_widget *_Nonnull,
+	                       struct sk_view *_Nonnull);
+	M_Real (*_Nonnull proximity)(void *_Nonnull, const M_Vector3 *_Nonnull,
+	                             M_Vector3 *_Nonnull);
+	int (*_Nullable del)(void *_Nonnull);
+	int (*_Nullable move)(void *_Nonnull, const M_Vector3 *_Nonnull,
+	                      const M_Vector3 *_Nonnull);
+	SK_Status (*_Nullable constrained)(void *_Nonnull);
+} SK_NodeOps;
+
+AG_TAILQ_HEAD(sk_nodeq,sk_node);
+
+/* Sketch node instance */
+typedef struct sk_node {
+	char name[SK_NODE_NAME_MAX];
+	Uint handle;			/* Unique handle for this node class */
+	const SK_NodeOps *_Nonnull ops;
+	Uint flags;
+#define SK_NODE_SELECTED	0x01	/* For editor */
+#define SK_NODE_MOUSEOVER	0x02	/* For editor */
+#define SK_NODE_MOVED		0x04	/* For editor */
+#define SK_NODE_SUPCONSTRAINTS	0x08	/* Suppress constraints */
+#define SK_NODE_FIXED		0x10	/* Treat position as known */
+#define SK_NODE_KNOWN		0x20	/* Position found by solver */
+#define SK_NODE_CHECKED		0x40	/* For constrainedness check */
+
+	Uint nRefs;			 /* Reference count */
+	struct sk *_Nullable sk;	 /* Back pointer to sk */
+	struct sk_node *_Nullable pNode; /* Back pointer to parent node */
+	M_Matrix44 T;			 /* Transformation from parent */
+	struct sk_nodeq cnodes;		 /* Siblings */
+
+	struct sk_node *_Nonnull *_Nonnull refNodes; /* Referenced nodes */
+	Uint                              nRefNodes;
+
+	Uint                                    nCons;
+	struct sk_constraint *_Nonnull *_Nonnull cons;	/* Constraint edges */
+
+	Uint nEdges;			/* For solver */
+	Uint32 _pad1;
+	void *userData;			/* Optional user pointer */
+
+	AG_TAILQ_ENTRY(sk_node) sknodes; /* Entry in transformation tree */
+	AG_TAILQ_ENTRY(sk_node) nodes;	 /* Entry in flat node list */
+	AG_TAILQ_ENTRY(sk_node) rnodes;	 /* Reverse entry (optimization) */
+	Uint32 _pad2;
+	Uint32 _pad3;
+} SK_Node;
+
+/* Pair of nodes */
+typedef struct sk_node_pair {
+	SK_Node *_Nonnull n1;
+	SK_Node *_Nonnull n2;
+} SK_NodePair;
+
+/* Type of constraint between nodes */
+enum sk_constraint_type {
+	SK_DISTANCE,
+	SK_INCIDENT,		/* Translated to DISTANCE(0) */
+	SK_ANGLE,
+	SK_PERPENDICULAR,	/* Translated to ANGLE(90deg) */
+	SK_PARALLEL,		/* Translated to ANGLE(0deg) */
+	SK_TANGENT,
+	SK_CONSTRAINT_LAST
+#define	SK_CONSTRAINT_ANY SK_CONSTRAINT_LAST
+};
+
+/* Constraint between two nodes */
+typedef struct sk_constraint {
+	enum sk_constraint_type uType;	/* Constraint type (user-provided) */
+	enum sk_constraint_type type;	/* Constraint type (translated) */
+	union {
+		M_Real dist;		/* DISTANCE value */
+		M_Real angle;		/* ANGLE value (radians) */
+	} data;
+#ifdef _AGAR_INTERNAL
+#define ct_distance data.dist
+#define ct_angle data.angle
+#endif
+	SK_Node *_Nonnull n1;
+	SK_Node *_Nonnull n2;
+	AG_TAILQ_ENTRY(sk_constraint) constraints;
+} SK_Constraint;
+
+/* Rigid cluster of constrained nodes */
+typedef struct sk_cluster {
+	Uint name;
+	Uint32 _pad;
+	AG_TAILQ_HEAD_(sk_constraint) edges;
+	AG_TAILQ_ENTRY(sk_cluster) clusters;
+} SK_Cluster;
+
+/* Placement instruction generated by graph analysis */
+typedef struct sk_insn {
+	enum sk_insn_type { 
+		SK_COMPOSE_PAIR,	/* Find n2 from n1 */
+		SK_COMPOSE_RING		/* Find n3 from n1 and n2, assuming
+					   (n1,n2,n3) is a constrained ring */
+	} type;
+	Uint32 _pad;
+	SK_Node *_Nullable n[3];	/* Nodes (n0 = unknown) */
+	SK_Constraint *_Nonnull ct01;	/* Constraint #1 */
+	SK_Constraint *_Nonnull ct02;	/* Constraint #2 */
+	AG_TAILQ_ENTRY(sk_insn) insns;
+} SK_Insn;
+
+/* Intersection computation routine between two nodes */
+typedef struct sk_intersect_fn {
+	const char *_Nonnull type1;			/* Class of node #1 */
+	const char *_Nonnull type2;			/* Class of node #2 */
+	void (*_Nonnull fn)(struct sk_group *_Nonnull, void *_Nonnull, void *_Nonnull);
+} SK_IntersectFn;
+
+/* Generic geometrical operation on a set of nodes */
+typedef struct sk_geometry_fn {
+	const char *_Nonnull name;
+	const char *_Nonnull mask;
+	void (*_Nonnull fn)(struct sk *_Nonnull, int,
+	                    struct sk_node *_Nonnull *_Nonnull);
+} SK_GeometryFn;
+
+/* Sketch class */
+typedef struct sk {
+	struct ag_object obj;
+	Uint flags;
+#define SK_SKIP_UNKNOWN_NODES	0x01		/* Ignore unimplemented nodes
+						   in load (otherwise fail) */
+	Uint nSolutions;			/* Total number of solutions
+						   (if well-constrained) */
+	_Nonnull_Mutex AG_Mutex lock;
+	const struct ag_unit *_Nonnull uLen;	/* Length unit */
+	SK_Node *_Nullable root;		/* Root node */
+	struct sk_nodeq nodes;			/* Flat node list */
+	SK_Status status;			/* Constrainedness status */
+	char statusText[SK_STATUS_MAX];		/* Status text */
+
+	/* For internal use by constraint solver */
+	SK_Cluster ctGraph;			/* Original constraint graph */
+	AG_TAILQ_HEAD_(sk_cluster) clusters;	/* Rigid clusters */
+	AG_TAILQ_HEAD_(sk_insn) insns;		/* Construction steps */
+	AG_TAILQ_HEAD_(sk_group) group;		/* Item groups */
+} SK;
+
+#define SK_SELF()   (SK *)( AG_OBJECT(0,"SK:*") )
+#define SK_PTR(n)   (SK *)( AG_OBJECT((n),"SK:*") )
+#define SK_NAMED(n) (SK *)( AG_OBJECT_NAMED((n),"SK:*") )
+
+#define SKNODE(node) ((SK_Node *)(node))
+#define SKNODE_SELECTED(node) (((SK_Node *)(node))->flags & SK_NODE_SELECTED)
+#define SK_MOVED(node) (((SK_Node *)(node))->flags & SK_NODE_MOVED)
+#define SK_FIXED(node) (((SK_Node *)(node))->flags & SK_NODE_FIXED)
+#define SK_FOREACH_NODE(node, sk, ntype)				\
+	for((node) = (struct ntype *)AG_TAILQ_FIRST(&(sk)->nodes);	\
+	    (node) != (struct ntype *)AG_TAILQ_END(&(sk)->nodes);	\
+	    (node) = (struct ntype *)AG_TAILQ_NEXT(SKNODE(node),nodes))
+#define SK_FOREACH_NODE_CLASS(node, sk, ntype, cn)			\
+	SK_FOREACH_NODE(node,sk,ntype)					\
+		if (!SK_NodeOfClass(SKNODE(node),(cn))) {		\
+			continue;					\
+		} else
+#define SK_FOREACH_SUBNODE(node, pnode, ntype)				\
+	for((node) = (struct ntype *)AG_TAILQ_FIRST(&(pnode)->nodes);	\
+	    (node) != (struct ntype *)AG_TAILQ_END(&(pnode)->cnodes);	\
+	    (node) = (struct ntype *)AG_TAILQ_NEXT(SKNODE(node),sknodes))
+#define SK_FOREACH_SUBNODE_CLASS(node, pnode, ntype, cn)		\
+	SK_FOREACH_SUBNODE(node,pnode,ntype)				\
+		if (!SK_NodeOfClass(SKNODE(node),(cn))) {		\
+			continue;					\
+		} else
+
+/* Standard node classes */
+#include <agar/sk/sk_group.h>
+#include <agar/sk/sk_dummy.h>
+#include <agar/sk/sk_point.h>
+#include <agar/sk/sk_line.h>
+#include <agar/sk/sk_circle.h>
+#include <agar/sk/sk_arc.h>
+#include <agar/sk/sk_annot.h>
+#include <agar/sk/sk_dimension.h>
+#include <agar/sk/sk_pixmap.h>
+#include <agar/sk/sk_polygon.h>
+
+__BEGIN_DECLS
+extern AG_ObjectClass skClass;
+
+extern SK_NodeOps *_Nullable *_Nonnull skElements;
+extern Uint                            skElementsCnt;
+
+extern const char *_Nonnull skConstraintNames[];
+extern const SK_IntersectFn skIntersectFns[];
+extern const Uint           skIntersectFnCount;
+extern const SK_GeometryFn  skGeometryFns[];
+extern const Uint           skGeometryFnCount;
+extern SK_NodeOps           skNodeOps;
+
+void SK_InitSubsystem(void);
+void SK_DestroySubsystem(void);
+
+SK *_Nullable  SK_New(void *_Nullable, const char *_Nullable);
+void *_Nonnull SK_Edit(void *_Nonnull);
+
+void SK_RegisterClass(SK_NodeOps *_Nonnull);
+int  SK_NodeOfClass(void *_Nonnull, const char *_Nonnull);
+
+SK_Node	*_Nonnull SK_NodeNew(void *_Nonnull);
+
+void SK_NodeInit(void *_Nonnull, const void *_Nonnull, Uint, Uint);
+void SK_NodeSetName(void *_Nonnull, const char *_Nonnull, ...);
+int  SK_NodeDel(void *_Nonnull);
+void SK_NodeAttach(void *_Nonnull, void *_Nonnull);
+void SK_NodeDetach(void *_Nonnull, void *_Nonnull);
+void SK_NodeMoveUp(void *_Nonnull);
+void SK_NodeMoveDown(void *_Nonnull);
+void SK_NodeMoveHead(void *_Nonnull);
+void SK_NodeMoveTail(void *_Nonnull);
+void SK_NodeMoveToParent(void *_Nonnull, void *_Nonnull);
+void SK_GetNodeTransform(void *_Nonnull, M_Matrix44 *_Nonnull);
+void SK_GetNodeTransformInverse(void *_Nonnull, M_Matrix44 *_Nonnull);
+void SK_NodeAddReference(void *_Nonnull, void *_Nonnull);
+void SK_NodeDelReference(void *_Nonnull, void *_Nonnull);
+void SK_NodeAddConstraint(void *_Nonnull, SK_Constraint *_Nonnull);
+void SK_NodeDelConstraint(void *_Nonnull, SK_Constraint *_Nonnull);
+Uint SK_GenNodeName(SK *_Nonnull, const char *_Nonnull);
+Uint SK_GenClusterName(SK *_Nonnull);
+void SK_NodeRedraw(void *_Nonnull, struct sk_view *_Nonnull);
+
+M_Color	SK_NodeColor(void *_Nonnull, const M_Color *_Nonnull);
+
+void *_Nonnull SK_ReadRef(AG_DataSource *_Nonnull, SK *_Nonnull, const char *_Nullable);
+void           SK_WriteRef(AG_DataSource *_Nonnull, void *_Nonnull);
+
+void SK_SetLengthUnit(SK *_Nonnull, const struct ag_unit *_Nonnull);
+
+void *_Nullable SK_ProximitySearch(SK *_Nonnull, const char *_Nullable,
+                                   const M_Vector3 *_Nonnull,
+		                   M_Vector3 *_Nonnull, void *_Nullable);
+
+int  SK_Solve(SK *_Nonnull);
+void SK_FreeClusters(SK *_Nonnull);
+void SK_FreeInsns(SK *_Nonnull);
+void SK_InitCluster(SK_Cluster *_Nonnull, Uint);
+void SK_FreeCluster(SK_Cluster *_Nonnull);
+void SK_CopyCluster(const SK_Cluster *_Nonnull, SK_Cluster *_Nonnull);
+int  SK_NodeInCluster(const SK_Node *_Nonnull, const SK_Cluster *_Nonnull);
+
+SK_Constraint *_Nullable SK_AddConstraint(SK_Cluster *_Nonnull, void *_Nonnull,
+                                          void *_Nonnull,
+					  enum sk_constraint_type, ...);
+SK_Constraint *_Nullable SK_AddConstraintCopy(SK_Cluster *_Nonnull,
+	                                      const SK_Constraint *_Nonnull);
+SK_Constraint *_Nonnull  SK_DupConstraint(const SK_Constraint *_Nonnull);
+
+void SK_DelConstraint(SK_Cluster *_Nonnull, SK_Constraint *_Nonnull);
+int  SK_DelSimilarConstraint(SK_Cluster *_Nonnull, const SK_Constraint *_Nonnull);
+int  SK_CompareConstraints(const SK_Constraint *_Nonnull,
+                           const SK_Constraint *_Nonnull);
+Uint SK_ConstraintsToSubgraph(const SK_Cluster *_Nonnull, const SK_Node *_Nonnull,
+                              const SK_Cluster *_Nonnull,
+                              SK_Constraint *_Nonnull [_Nonnull 2]);
+
+SK_Insn	*_Nonnull SK_AddInsn(SK *_Nonnull, enum sk_insn_type, ...);
+int               SK_ExecInsn(SK *_Nonnull, const SK_Insn *_Nonnull);
+int               SK_ExecProgram(SK *_Nonnull);
+
+void SK_SetStatus(SK *_Nonnull, SK_Status, const char *_Nonnull, ...);
+void SK_ClearProgramState(SK *_Nonnull);
+
+M_Vector3 SK_NodeDir(void *_Nonnull);
+
+void *_Nullable SK_FindNode(SK *_Nonnull, Uint, const char *_Nonnull);
+void *_Nullable SK_FindNodeByName(SK *_Nonnull, const char *_Nonnull);
+
+M_Vector3 SK_Pos(void *_Nonnull);
+M_Vector2 SK_Pos2(void *_Nonnull);
+
+SK_Cluster *_Nullable SK_FindCluster(SK *_Nonnull, Uint);
+
+SK_Constraint *_Nullable SK_FindConstraint(const SK_Cluster *_Nonnull,
+                                           enum sk_constraint_type,
+                                           void *_Nonnull, void *_Nonnull);
+
+SK_Constraint *_Nullable SK_FindSimilarConstraint(const SK_Cluster *_Nonnull,
+                                                  const SK_Constraint *_Nonnull);
+
+SK_Constraint *_Nullable SK_ConstrainedNodes(const SK_Cluster *_Nonnull,
+                                             const SK_Node *_Nonnull,
+                                             const SK_Node *_Nonnull);
+
+Uint SK_NodeConstraintCount(const SK_Cluster *_Nonnull, void *_Nonnull);
+void SK_ComputeIntersections(SK_Group *_Nonnull, SK_Node *_Nonnull, SK_Node *_Nonnull);
+void SK_GeometryMenu(struct sk_view *_Nonnull, void *_Nonnull);
+
+#define	SK_Identity(n)       M_MatIdentity44v(&SKNODE(n)->T)
+#define	SK_Translate(n,x,y)  M_MatTranslate44(&SKNODE(n)->T,(v).x,(v).y,0.0)
+#define	SK_Translatev(n,v)   M_MatTranslate44(&SKNODE(n)->T,(v)->x,(v)->y,0.0)
+#define	SK_TranslateVec(n,v) M_MatTranslate44(&SKNODE(n)->T,(v).x,(v).y,0.0)
+#define	SK_Translate2(n,x,y) M_MatTranslate44(&SKNODE(n)->T,(x),(y),0.0)
+#define	SK_Rotatev(n,theta)  M_MatRotate44K(&SKNODE(n)->T,(theta))
+#define	SK_MatrixCopy(nDst,nSrc) M_MatCopy44(&SKNODE(nDst)->T,&SKNODE(nSrc)->T)
+
+#define SK_LockNode(n) AG_ObjectLock(SKNODE(n)->sk)
+#define SK_UnlockNode(n) AG_ObjectUnlock(SKNODE(n)->sk)
+
+/* Update the sketch. */
+static __inline__ void
+SK_Update(SK *_Nonnull sk)
+{
+#if 1
+	if (SK_Solve(sk) != 0)
+		AG_Verbose("%s: Sketch is not solvable\n", AGOBJECT(sk)->name);
+#else
+	if (SK_Solve(sk) == 0)
+		SK_ExecProgram(sk);
+#endif
+}
+
+static __inline__ int
+SK_CompareNodePair(SK_NodePair *_Nonnull pair, void *_Nonnull n1,
+    void *_Nonnull n2)
+{
+	return ((pair->n1 == n1 && pair->n2 == n2) ||
+	        (pair->n1 == n2 && pair->n2 == n1));
+}
+
+static __inline__ void
+SK_SuppressConstraints(void *_Nonnull p)
+{
+	SKNODE(p)->flags |= SK_NODE_SUPCONSTRAINTS;
+}
+
+static __inline__ void
+SK_UnsuppressConstraints(void *_Nonnull p)
+{
+	SKNODE(p)->flags &= ~(SK_NODE_SUPCONSTRAINTS);
+}
+
+__END_DECLS
+
+#include <agar/sk/close.h>
+#endif /* _AGAR_SK_SK_H_ */

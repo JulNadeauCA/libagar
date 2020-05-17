@@ -2,6 +2,10 @@
 
 #ifndef _AGAR_CORE_FILE_H_
 #define _AGAR_CORE_FILE_H_
+
+#include <agar/config/ag_serialization.h>
+#ifdef AG_SERIALIZATION
+
 #include <agar/core/begin.h>
 
 enum ag_file_info_type {
@@ -26,6 +30,7 @@ typedef struct ag_file_info {
 #define AG_FILE_HIDDEN		0x020
 #define AG_FILE_TEMPORARY	0x100
 #define AG_FILE_SYSTEM		0x200
+	Uint32 _pad;
 } AG_FileInfo;
 
 typedef struct ag_file_ext_mapping {
@@ -33,6 +38,7 @@ typedef struct ag_file_ext_mapping {
 	const char *_Nonnull descr;		/* Type description */
 	void *_Nullable cls;			/* Related Agar class */
 	int editDirect;				/* Directly editable */
+	Uint32 _pad;
 } AG_FileExtMapping;
 
 __BEGIN_DECLS
@@ -50,4 +56,5 @@ void AG_RegisterFileExtMappings(const AG_FileExtMapping *_Nonnull, Uint);
 __END_DECLS
 
 #include <agar/core/close.h>
+#endif /* AG_SERIALIZATION */
 #endif /* _AGAR_CORE_FILE_H_ */

@@ -1,30 +1,31 @@
 /*	Public domain	*/
 
 __BEGIN_DECLS
-M_Line2		M_LineRead2(AG_DataSource *);
-M_Line3		M_LineRead3(AG_DataSource *);
-void		M_LineWrite2(AG_DataSource *, M_Line2 *);
-void		M_LineWrite3(AG_DataSource *, M_Line3 *);
+M_Line2	M_LineRead2(AG_DataSource *_Nonnull);
+M_Line3	M_LineRead3(AG_DataSource *_Nonnull);
+void	M_LineWrite2(AG_DataSource *_Nonnull, M_Line2 *_Nonnull);
+void	M_LineWrite3(AG_DataSource *_Nonnull, M_Line3 *_Nonnull);
 
-M_Line2		M_LineFromPtDir2(M_Vector2, M_Vector2, M_Real);
-M_Line3		M_LineFromPtDir3(M_Vector3, M_Vector3, M_Real);
-M_Line2		M_LineFromPts2(M_Vector2, M_Vector2);
-M_Line3		M_LineFromPts3(M_Vector3, M_Vector3);
-M_Line2		M_LineProject2(M_Line3);
-M_Line3		M_LineProject3(M_Line2);
-M_Line2		M_LineParallel2(M_Line2, M_Real);
-M_Line3		M_LineParallel3(M_Line3, M_Real);
+M_Line2 M_LineFromPtDir2(M_Vector2, M_Vector2, M_Real);
+M_Line3	M_LineFromPtDir3(M_Vector3, M_Vector3, M_Real);
+M_Line2	M_LineFromPts2(M_Vector2, M_Vector2);
+M_Line3	M_LineFromPts3(M_Vector3, M_Vector3);
+M_Line2	M_LineProject2(M_Line3);
+M_Line3	M_LineProject3(M_Line2);
+M_Line2	M_LineParallel2(M_Line2, M_Real);
+M_Line3	M_LineParallel3(M_Line3, M_Real);
 
-M_Real		M_LinePointDistance2(M_Line2, M_Vector2);
-M_Real		M_LinePointDistance3(M_Line3, M_Vector3);
-M_Real		M_LineLineAngle2(M_Line2, M_Line2);
-M_Real		M_LineLineAngle3(M_Line3, M_Line3);
-int             M_LineLineShortest3(M_Line3, M_Line3, M_Line3 *);
-M_GeomSet2	M_IntersectLineLine2(M_Line2, M_Line2);
+M_Real	M_LinePointDistance2(M_Line2, M_Vector2);
+M_Real	M_LinePointDistance3(M_Line3, M_Vector3);
+M_Real	M_LineLineAngle2(M_Line2, M_Line2);
+M_Real	M_LineLineAngle3(M_Line3, M_Line3);
+int     M_LineLineShortest3(M_Line3, M_Line3, M_Line3 *_Nullable);
+
+M_GeomSet2 M_IntersectLineLine2(M_Line2, M_Line2);
 
 /* Return the two-point representation of the given line in R2. */
 static __inline__ void
-M_LineToPts2(M_Line2 L, M_Vector2 *p1, M_Vector2 *p2)
+M_LineToPts2(M_Line2 L, M_Vector2 *_Nonnull p1, M_Vector2 *_Nonnull p2)
 {
 	*p1 = L.p;
 	*p2 = M_VecAdd2(L.p, M_VecScale2p(&L.d, L.t));
@@ -32,7 +33,7 @@ M_LineToPts2(M_Line2 L, M_Vector2 *p1, M_Vector2 *p2)
 
 /* Return the two-point representation of the given line in R3. */
 static __inline__ void
-M_LineToPts3(M_Line3 L, M_Vector3 *p1, M_Vector3 *p2)
+M_LineToPts3(M_Line3 L, M_Vector3 *_Nonnull p1, M_Vector3 *_Nonnull p2)
 {
 	*p1 = L.p;
 	*p2 = M_VecAdd3(L.p, M_VecScale3p(&L.d, L.t));

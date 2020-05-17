@@ -1,0 +1,211 @@
+.\"
+.\" Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 13, 2010
+.Dt SG_IMAGE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.6
+.Sh NAME
+.Nm SG_Image
+.Nd Agar-SG polygonal 2D image object
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/sg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+node maps an input image onto a polygonal mesh.
+If transparency information is available,
+.Nm
+generates a complex polygon contour for the image.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr SG_Node 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "SG_Image *"
+.Fn SG_ImageNew "SG_Node *parent" "const char *name"
+.Pp
+.Ft "SG_Image *"
+.Fn SG_ImageFromSurface "SG_Node *parent" "const char *name" "AG_Surface *s"
+.Pp
+.Ft "SG_Image *"
+.Fn SG_ImageFromSurfaceNODUP "SG_Node *parent" "const char *name" "AG_Surface *s"
+.Pp
+.Ft "SG_Image *"
+.Fn SG_ImageFromAnim "SG_Node *parent" "const char *name" "const AG_Anim *anim"
+.Pp
+.Ft "SG_Image *"
+.Fn SG_ImageFromAnimNODUP "SG_Node *parent" "const char *name" "AG_Anim *anim"
+.Pp
+.Ft "void"
+.Fn SG_ImageSetSurface "SG_Image *bb" "const AG_Surface *s" "M_Real scale"
+.Pp
+.Ft "void"
+.Fn SG_ImageSetSurfaceNODUP "SG_Image *bb" "AG_Surface *s"
+.Pp
+.Ft "int"
+.Fn SG_ImageSetAnim "SG_Image *bb" "AG_Anim *anim"
+.Pp
+.Ft "int"
+.Fn SG_ImageSetAnimNODUP "SG_Image *bb" "AG_Anim *anim"
+.Pp
+.Ft "void"
+.Fn SG_ImageAnimPlay "SG_Image *bb"
+.Pp
+.Ft "void"
+.Fn SG_ImageAnimStop "SG_Image *bb"
+.Pp
+.Ft "void"
+.Fn SG_ImageSetShape "SG_Image *bb" "enum sg_image_shape shape"
+.Pp
+.Ft "void"
+.Fn SG_ImageSetShapeAuto "SG_Image *bb"
+.Pp
+.Ft "void"
+.Fn SG_ImageSetProj "SG_Image *bb" "int enable"
+.Pp
+.Ft "void"
+.Fn SG_ImageSetTolContour "SG_Image *bb" "float tol"
+.Pp
+.Ft "void"
+.Fn SG_ImageSetSize "SG_Image *bb" "M_Real w" "M_Real h"
+.Pp
+.Ft "void"
+.Fn SG_ImageSetColor "SG_Image *bb" "const AG_Color *c"
+.Pp
+.nr nS 0
+The
+.Fn SG_ImageNew
+function creates a new image node at the origin of the parent node.
+The
+.Fn SG_ImageFromSurface
+and
+.Fn SG_ImageFromAnim
+variants set an initial surface or animation.
+.Pp
+The
+.Fn SG_ImageSetSurface
+function loads the specified surface.
+Image pixels are related to
+.Xr SG 3
+node coordinates by the scaling factor
+.Fa scale .
+.Pp
+The
+.Fn SG_ImageSetAnim
+function loads the specified animation (see
+.Xr AG_Anim 3 ) .
+Playback can be initiated or stopped with
+.Fn SG_ImageAnimPlay
+and
+.Fn SG_ImageAnimStop .
+.Pp
+.Fn SG_ImageSetShape
+selects the contour shape for the image object.
+Possible values for
+.Fa shape
+include:
+.Bl -tag -width "SG_IMAGE_POLYGON "
+.It SG_IMAGE_RECT
+Render as solid rectangle.
+.It SG_IMAGE_POLYGON
+Render as a complex polygon calculated from the contours of the image.
+The contour of the polygon is reduced to a manageable set of vertices
+using Douglas-Peucker polygon simplification.
+.El
+.Pp
+The
+.Fn SG_ImageSetShapeAuto
+function scans the image and selects
+.Dv SG_IMAGE_POLYGON
+if a usable shape exists over a transparent background,
+otherwise the
+.Dv SG_IMAGE_RECT
+shape is selected.
+.Pp
+.Fn SG_ImageSetProj
+configures the image projection mode.
+If an argument of 1 is given, the image object will be rendered
+as to always face the camera.
+Otherwise, the object is rendered as a textured plane in its original
+orientation (the default).
+.Pp
+.Fn SG_ImageSetTolContour
+sets the tolerance for Douglas-Peucker simplification (default is 10.0).
+.Pp
+.Fn SG_ImageSetSize
+sets the relative size of the image (default is 1.0 x 1.0).
+.Pp
+.Fn SG_ImageSetColor
+sets the background color (RGBA) of the image object (default is
+transparent black).
+.Sh FLAGS
+The following public
+.Nm
+flags are defined:
+.Bl -tag -width "SG_IMAGE_WIREFRAME "
+.It SG_IMAGE_BILLBOARD
+Enable billboard projection (image will be rendered as facing the camera).
+.It SG_IMAGE_WIREFRAME
+Overlay the wireframe structure ontop of the image surface.
+This can be useful when adjusting the contour tolerance.
+.El
+.Sh STRUCTURE DATA
+For the
+.Nm
+object:
+.Bl -tag -width "float tolContour "
+.It Ft Uint flags
+Option flags (see
+.Dq FLAGS
+section).
+.It Ft M_Color color
+Background color.
+.It Ft AG_Surface *su
+Current source surface (read-only; use
+.It Ft M_Real w
+Width (default is 1.0).
+.It Ft M_Real h
+Height (default is 1.0).
+.It Ft float tolContour
+Tolerance for polygon simplification (default is 10.0).
+.El
+.Sh SEE ALSO
+.Xr AG_Surface 3 ,
+.Xr M_Color 3 ,
+.Xr M_Real 3 ,
+.Xr M_Vector 3 ,
+.Xr SG 3 ,
+.Xr SG_Intro 3 ,
+.Xr SG_Node 3 ,
+.Xr SG_Plane 3
+.Sh HISTORY
+The
+.Nm
+node class first appeared in Agar 1.6.0.

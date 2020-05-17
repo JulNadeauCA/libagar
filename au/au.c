@@ -36,7 +36,9 @@ AU_InitSubsystem(void)
 	if (auInitedSubsystem++ > 0) {
 		return (0);
 	}
+#ifdef AG_NAMESPACES
 	AG_RegisterNamespace("AU", "AU_", "http://libagar.org/");
+#endif
 	return (0);
 }
 
@@ -46,5 +48,7 @@ AU_DestroySubsystem(void)
 	if (--auInitedSubsystem > 0) {
 		return;
 	}
+#ifdef AG_NAMESPACES
 	AG_UnregisterNamespace("AU");
+#endif
 }

@@ -4,9 +4,12 @@
  * This program tests the string routines in ag_core.
  */
 
+#include <agar/config/ag_enable_string.h>
+
 #include "agartest.h"
 
-#include <agar/math.h>
+#include <agar/math/m.h>
+#include <agar/math/m_gui.h>
 
 #include <string.h>
 

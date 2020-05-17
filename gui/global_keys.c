@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,8 @@
 struct ag_global_key {
 	AG_KeySym keysym;
 	AG_KeyMod keymod;
-	void (*fn)(void);
-	void (*fn_ev)(AG_Event *);
+	void (*_Nullable fn)(void);
+	void (*_Nullable fn_ev)(AG_Event *_Nonnull);
 	SLIST_ENTRY(ag_global_key) gkeys;
 };
 static SLIST_HEAD_(ag_global_key) agGlobalKeys;
@@ -83,23 +83,30 @@ void
 AG_BindStdGlobalKeys(void)
 {
 #ifdef __APPLE__
-	AG_BindGlobalKey(AG_KEY_EQUALS,	AG_KEYMOD_META,	AG_ZoomIn);
-	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_META,	AG_ZoomOut);
-	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_META,	AG_ZoomReset);
-	AG_BindGlobalKey(AG_KEY_Q,	AG_KEYMOD_META, AG_QuitGUI);
+	AG_KeyMod mod = AG_KEYMOD_META;
 #else
-	AG_BindGlobalKey(AG_KEY_EQUALS,	AG_KEYMOD_CTRL,	AG_ZoomIn);
-	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_CTRL,	AG_ZoomOut);
-	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_CTRL,	AG_ZoomReset);
-	AG_BindGlobalKey(AG_KEY_Q,	AG_KEYMOD_CTRL,	AG_QuitGUI);
+	AG_KeyMod mod = AG_KEYMOD_CTRL;
 #endif
+	/* Zoom in, zoom out and reset to 1:1 */
+	AG_BindGlobalKey(AG_KEY_EQUALS,	mod,			AG_ZoomIn);
+	AG_BindGlobalKey(AG_KEY_PLUS,   mod|AG_KEYMOD_SHIFT,	AG_ZoomIn);
+	AG_BindGlobalKey(AG_KEY_MINUS,	mod,			AG_ZoomOut);
+	AG_BindGlobalKey(AG_KEY_0,      mod,			AG_ZoomReset);
+#ifdef AG_EVENT_LOOP
+	/* Terminate the application immediately. */
+	AG_BindGlobalKey(AG_KEY_Q,      mod,			AG_QuitGUI);
+#endif
+
+	/*
+	 * Close the active window and gracefully terminate the application
+	 * when there are no more windows.
+	 */
 	AG_BindGlobalKey(AG_KEY_ESCAPE,	AG_KEYMOD_ANY, AG_CloseFocusedWindow);
 }
 
 /* Tie a global hotkey to a callback function (AG_Event style). */
 void
-AG_BindGlobalKeyEv(AG_KeySym keysym, AG_KeyMod keymod,
-    void (*fn_ev)(AG_Event *))
+AG_BindGlobalKeyEv(AG_KeySym keysym, AG_KeyMod keymod, void (*fn_ev)(AG_Event *))
 {
 	struct ag_global_key *gk;
 
@@ -121,16 +128,19 @@ AG_UnbindGlobalKey(AG_KeySym keysym, AG_KeyMod keymod)
 	struct ag_global_key *gk;
 
 	AG_MutexLock(&agGlobalKeysLock);
+
 	SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
 		if (gk->keysym == keysym && gk->keymod == keymod) {
 			SLIST_REMOVE(&agGlobalKeys, gk, ag_global_key, gkeys);
-			free(gk);
 			AG_MutexUnlock(&agGlobalKeysLock);
+			free(gk);
 			return (0);
 		}
 	}
+
 	AG_MutexUnlock(&agGlobalKeysLock);
-	AG_SetError("No such key binding");
+
+	AG_SetErrorS("No such key binding");
 	return (-1);
 }
 
@@ -141,6 +151,7 @@ AG_ClearGlobalKeys(void)
 	struct ag_global_key *gk, *gkNext;
 
 	AG_MutexLock(&agGlobalKeysLock);
+
 	for (gk = SLIST_FIRST(&agGlobalKeys);
 	     gk != SLIST_END(&agGlobalKeys);
 	     gk = gkNext) {
@@ -148,7 +159,25 @@ AG_ClearGlobalKeys(void)
 		free(gk);
 	}
 	SLIST_INIT(&agGlobalKeys);
+
 	AG_MutexUnlock(&agGlobalKeysLock);
+}
+
+static __inline__ _Const_Attribute int
+TestKeyMod(AG_KeyMod mod, AG_KeyMod mask)
+{
+	if (mod == 0) {
+		return (1);
+	}
+	if ((mod & AG_KEYMOD_CTRL_SHIFT) &&
+	    (mask & AG_KEYMOD_CTRL) && (mask & AG_KEYMOD_SHIFT)) {
+		return (1);
+	}
+	if ((mod & AG_KEYMOD_CTRL_ALT) &&
+	    (mask & AG_KEYMOD_CTRL) && (mask & AG_KEYMOD_ALT)) {
+		return (1);
+	}
+	return (mod & mask);
 }
 
 /* Execute any action tied to a hotkey. */
@@ -159,17 +188,22 @@ AG_ExecGlobalKeys(AG_KeySym sym, AG_KeyMod mod)
 	int rv = 0;
 
 	AG_MutexLock(&agGlobalKeysLock);
+
 	SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
-		if ((gk->keysym == AG_KEY_ANY || gk->keysym == sym) &&
-		    (gk->keymod == AG_KEYMOD_ANY || gk->keymod & mod)) {
+		if ((gk->keysym == AG_KEY_ANY    || gk->keysym == sym) &&
+		    (gk->keymod == AG_KEYMOD_ANY || TestKeyMod(gk->keymod, mod))) {
 			if (gk->fn != NULL) {
 				gk->fn();
 			} else if (gk->fn_ev != NULL) {
-				gk->fn_ev(NULL);
+				AG_Event dummy;
+
+				AG_EventInit(&dummy);
+				gk->fn_ev(&dummy);
 			}
 			rv = 1;
 		}
 	}
+
 	AG_MutexUnlock(&agGlobalKeysLock);
 	return (rv);
 }

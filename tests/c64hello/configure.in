@@ -1,0 +1,34 @@
+# Public domain
+# ex:syn=bsdbuild
+#
+# A sample Agar program on the C64.
+#
+
+config_guess("../../mk/config.guess")
+
+register_section("Options for this test program:")
+register("--with-agar[=PREFIX]",	"Location of Agar GUI library [check]")
+
+if [ "${host}" != "c64" ]; then
+	echo "*"
+	echo "* The only available target for this test program is: c64"
+	echo "* Please use ./configure --host=c64 --with-agar=/path/to/c64agar"
+	echo "*"
+	exit 1
+fi
+
+package("c64hello")
+version("1.6.0")
+
+require(cc)
+require(agar-core, 1.6, ${prefix_agar})
+require(agar-micro, 1.6, ${prefix_agar})
+
+mdefine(CFLAGS, "-Ors --codesize 500 -T -g -t c64")
+
+c_define(_USE_AGAR_STD)
+c_define(_USE_AGAR_QUEUE)
+c_define(_USE_AGAR_TYPES)
+
+c_incdir($BLD)
+c_incdir_config($BLD/config)

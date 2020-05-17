@@ -10,6 +10,20 @@ typedef enum ag_keyboard_action {
 	AG_KEY_RELEASED = 0
 } AG_KeyboardAction;
 
+typedef enum ag_key_category {
+	AG_KCAT_NONE,			/* No category */
+	AG_KCAT_CONTROL,		/* Control character */
+	AG_KCAT_SPACING,		/* Whitespace */
+	AG_KCAT_RETURN,			/* Return / Line feed */
+	AG_KCAT_PRINT,			/* Printable character (not alphanumerici) */
+	AG_KCAT_ALPHA,			/* Alphabetic character */
+	AG_KCAT_NUMBER,			/* Numerical character */
+	AG_KCAT_DIR,			/* Directional keys */
+	AG_KCAT_FUNCTION,		/* Function keys */
+	AG_KCAT_LOCK,			/* Num/caps/scroll lock */
+	AG_KCAT_MODIFIER,		/* Shift/ctrl/alt/meta/super/compose */
+} AG_KeyCategory;
+
 typedef enum ag_key_sym {
 	AG_KEY_NONE		= 0x0000,	/* Start of ASCII range */
 	AG_KEY_ASCII_START	= 0x0000,
@@ -256,96 +270,67 @@ typedef enum ag_key_sym {
 typedef unsigned int AG_KeyMod;
 
 #define AG_KEYMOD_NONE		0x0000
-#define AG_KEYMOD_LSHIFT	0x0001
-#define AG_KEYMOD_RSHIFT	0x0002
-#define AG_KEYMOD_LCTRL		0x0040
-#define AG_KEYMOD_RCTRL		0x0080
-#define AG_KEYMOD_LALT		0x0100
-#define AG_KEYMOD_RALT		0x0200
-#define AG_KEYMOD_LMETA		0x0400
-#define AG_KEYMOD_RMETA		0x0800
-#define AG_KEYMOD_NUMLOCK	0x1000
-#define AG_KEYMOD_CAPSLOCK	0x2000
-#define AG_KEYMOD_MODE		0x4000
-#define AG_KEYMOD_ANY		0xffff		/* As argument for matching */
-#define AG_KEYMOD_CTRL		(AG_KEYMOD_LCTRL|AG_KEYMOD_RCTRL)
-#define AG_KEYMOD_SHIFT		(AG_KEYMOD_LSHIFT|AG_KEYMOD_RSHIFT)
-#define AG_KEYMOD_ALT		(AG_KEYMOD_LALT|AG_KEYMOD_RALT)
-#define AG_KEYMOD_META		(AG_KEYMOD_LMETA|AG_KEYMOD_RMETA)
+#define AG_KEYMOD_LSHIFT	0x0001		/* Left Shift */
+#define AG_KEYMOD_RSHIFT	0x0002		/* Right Shift */
+#define AG_KEYMOD_CTRL_SHIFT	0x0004		/* Ctrl+Shift combined */
+#define AG_KEYMOD_CTRL_ALT	0x0008		/* Ctrl+Alt combined */
+			/*      0x0010 Reserved */
+			/*      0x0020 Reserved */
+#define AG_KEYMOD_LCTRL		0x0040		/* Left Ctrl */
+#define AG_KEYMOD_RCTRL		0x0080		/* Right Ctrl */
+#define AG_KEYMOD_LALT		0x0100		/* Left Alt */
+#define AG_KEYMOD_RALT		0x0200		/* Right Alt */
+#define AG_KEYMOD_LMETA		0x0400		/* Left Meta */
+#define AG_KEYMOD_RMETA		0x0800		/* Right Meta */
+#define AG_KEYMOD_NUMLOCK	0x1000		/* Num lock */
+#define AG_KEYMOD_CAPSLOCK	0x2000		/* Caps lock */
+#define AG_KEYMOD_MODE		0x4000		/* Mode key */
+			/*      0x8000 Reserved */
+#define AG_KEYMOD_CTRL		(AG_KEYMOD_LCTRL  | AG_KEYMOD_RCTRL)
+#define AG_KEYMOD_SHIFT		(AG_KEYMOD_LSHIFT | AG_KEYMOD_RSHIFT)
+#define AG_KEYMOD_ALT		(AG_KEYMOD_LALT   | AG_KEYMOD_RALT)
+#define AG_KEYMOD_META		(AG_KEYMOD_LMETA  | AG_KEYMOD_RMETA)
+#define AG_KEYMOD_ANY		0xffff		/* Any modifier */
 
 struct ag_window;
 
 typedef struct ag_key {
 	enum ag_key_sym sym;	/* Translated key */
 	int mod;		/* Key modifier */
-	Uint32 uch;		/* Corresponding Unicode character */
+	AG_Char uch;		/* Corresponding Unicode character */
 } AG_Key;
 
 typedef struct ag_keyboard {
 	struct ag_input_device _inherit;
-	Uint flags;
-	int *keyState;		/* Key state */
+	int *_Nonnull keyState;		/* Key state */
 	Uint keyCount;
-	Uint modState;		/* Modifiers state */
+	Uint modState;			/* Modifiers state */
 } AG_Keyboard;
 
 __BEGIN_DECLS
 extern AG_ObjectClass agKeyboardClass;
 
-AG_Keyboard *AG_KeyboardNew(void *, const char *);
+extern const char *agKeySyms[];    /* Map AG_KeySym to a string (or NULL) */
+extern const int agKeySymCount;
 
-int AG_KeyboardUpdate(AG_Keyboard *, AG_KeyboardAction, AG_KeySym, Uint32);
-int AG_ProcessKey(AG_Keyboard *, struct ag_window *, AG_KeyboardAction,
-                  AG_KeySym, Uint32);
+AG_Keyboard *_Nullable AG_KeyboardNew(void *_Nonnull, const char *_Nonnull);
 
-const char *AG_LookupKeyName(AG_KeySym);
-AG_KeySym   AG_LookupKeySym(const char *);
+int AG_KeyboardUpdate(AG_Keyboard *_Nonnull, AG_KeyboardAction, AG_KeySym);
+int AG_ProcessKey(AG_Keyboard *_Nonnull, struct ag_window *_Nonnull,
+                  AG_KeyboardAction, AG_KeySym, AG_Char);
+
+const char *_Nullable AG_LookupKeyName(AG_KeySym) _Pure_Attribute;
+AG_KeySym             AG_LookupKeySym(const char *_Nonnull) _Pure_Attribute;
 
 void AG_InitGlobalKeys(void);
 void AG_DestroyGlobalKeys(void);
 void AG_BindStdGlobalKeys(void);
-void AG_BindGlobalKey(AG_KeySym, AG_KeyMod, void (*)(void));
-void AG_BindGlobalKeyEv(AG_KeySym, AG_KeyMod, void (*)(AG_Event *));
+void AG_BindGlobalKey(AG_KeySym, AG_KeyMod, void (*_Nonnull)(void));
+void AG_BindGlobalKeyEv(AG_KeySym, AG_KeyMod, void (*_Nonnull)(AG_Event *_Nonnull));
 int  AG_UnbindGlobalKey(AG_KeySym, AG_KeyMod);
 void AG_ClearGlobalKeys(void);
 int  AG_ExecGlobalKeys(AG_KeySym, AG_KeyMod);
-
-/* Compare unsided modifier state against a string of flags. */
-static __inline__ int
-AG_CompareKeyMods(Uint modState, const char *flags)
-{
-	const char *c;
-
-	for (c = &flags[0]; *c != '\0'; c++) {
-		switch (*c) {
-		case 'C':
-			if (modState & AG_KEYMOD_LCTRL ||
-			    modState & AG_KEYMOD_RCTRL) {
-				return (1);
-			}
-			break;
-		case 'A':
-			if (modState & AG_KEYMOD_LALT ||
-			    modState & AG_KEYMOD_RALT) {
-				return (1);
-			}
-			break;
-		case 'S':
-			if (modState & AG_KEYMOD_LSHIFT ||
-			    modState & AG_KEYMOD_RSHIFT) {
-				return (1);
-			}
-			break;
-		case 'M':
-			if (modState & AG_KEYMOD_LMETA ||
-			    modState & AG_KEYMOD_RMETA) {
-				return (1);
-			}
-			break;
-		}
-	}
-	return (0);
-}
+int  AG_CompareKeyMods(Uint, const char *_Nonnull) _Pure_Attribute;
 __END_DECLS
 
 #include <agar/gui/close.h>

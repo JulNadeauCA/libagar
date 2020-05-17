@@ -127,7 +127,7 @@ M_FactorizeLU_SP(void *pA)
 	int err;
 	err = spFactor(A->d);
 	if(err >= spFATAL) {
-		spErrorMessage( A->d, stderr, "edacious");
+		spErrorMessage( A->d, stderr, "agar");
 		return -1;
 	}
 	return 0;
@@ -160,7 +160,7 @@ void *
 M_MatrixRead_SP(AG_DataSource *buf)
 {
 	AG_FatalError("Unimplemented function");
-	return (NULL);
+	return (buf);
 }
 
 void
