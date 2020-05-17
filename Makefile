@@ -125,6 +125,7 @@ pre-package:
 		echo "README.txt"      >> ${PROJFILELIST}; \
 		echo "Logo.png"        >> ${PROJFILELIST}; \
 		echo "VisualC.html"    >> ${PROJFILELIST}; \
+		rm -f Makefile.config agar-*-config *.pc premake.lua */premake.lua; \
 	fi
 
 post-package:
