@@ -962,7 +962,7 @@ echo '#ifndef PACKAGE' >$bb_o
 echo "#define PACKAGE \"$PACKAGE\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
-VERSION="1.6.0"
+VERSION="1.6.1"
 bb_o=$bb_incdir/version.h
 echo '#ifndef VERSION' >$bb_o
 echo "#define VERSION \"$VERSION\"" >>$bb_o
@@ -1497,6 +1497,87 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+case "${host}" in
+*-*-cygwin* | *-*-mingw32*)
+PICFLAGS=""
+$ECHO_N 'cc: checking for linker -no-undefined option...'
+$ECHO_N '# cc: checking for linker -no-undefined option...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return(0); }';
+EOT
+echo >>config.log
+echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LD_NO_UNDEFINED=yes
+bb_o=$bb_incdir/have_ld_no_undefined.h
+echo '#ifndef HAVE_LD_NO_UNDEFINED' >$bb_o
+echo "#define HAVE_LD_NO_UNDEFINED \"$HAVE_LD_NO_UNDEFINED\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LD_NO_UNDEFINED=no
+echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
+echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LD_NO_UNDEFINED}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -no-undefined -Wl,--no-undefined"
+fi
+$ECHO_N 'cc: checking for linker -static-libgcc option...'
+$ECHO_N '# cc: checking for linker -static-libgcc option...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return(0); }';
+EOT
+echo >>config.log
+echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LD_STATIC_LIBGCC=yes
+bb_o=$bb_incdir/have_ld_static_libgcc.h
+echo '#ifndef HAVE_LD_STATIC_LIBGCC' >$bb_o
+echo "#define HAVE_LD_STATIC_LIBGCC \"$HAVE_LD_STATIC_LIBGCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LD_STATIC_LIBGCC=no
+echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
+echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LD_STATIC_LIBGCC}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -XCClinker -static-libgcc"
+fi
 $ECHO_N 'cc: checking for cygwin environment...'
 $ECHO_N '# cc: checking for cygwin environment...' >>config.log
 MK_COMPILE_STATUS=OK
@@ -1504,14 +1585,12 @@ cat << EOT >conftest$$.c
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <windows.h>
-
-int
-main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 	struct stat sb;
 	DWORD rv;
 	rv = GetFileAttributes("foo");
 	stat("foo", &sb);
-	return (0);
+	return(0);
 }
 EOT
 echo >>config.log
@@ -1634,86 +1713,14 @@ PROG_CLI_FLAGS="-mconsole"
 else
 PROG_CLI_FLAGS=""
 fi
-case "${host}" in
-*-*-cygwin* | *-*-mingw32*)
-$ECHO_N 'cc: checking for linker -no-undefined option...'
-$ECHO_N '# cc: checking for linker -no-undefined option...' >>config.log
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-int main(int argc, char *argv[]) { return (0); }
-EOT
-echo >>config.log
-echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_LD_NO_UNDEFINED=yes
-bb_o=$bb_incdir/have_ld_no_undefined.h
-echo '#ifndef HAVE_LD_NO_UNDEFINED' >$bb_o
-echo "#define HAVE_LD_NO_UNDEFINED \"$HAVE_LD_NO_UNDEFINED\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_LD_NO_UNDEFINED=no
-echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
-echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_LD_NO_UNDEFINED}" = "yes" ]; then
-LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -no-undefined -Wl,--no-undefined"
-fi
-$ECHO_N 'cc: checking for linker -static-libgcc option...'
-$ECHO_N '# cc: checking for linker -static-libgcc option...' >>config.log
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-int main(int argc, char *argv[]) { return (0); }
-EOT
-echo >>config.log
-echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_LD_STATIC_LIBGCC=yes
-bb_o=$bb_incdir/have_ld_static_libgcc.h
-echo '#ifndef HAVE_LD_STATIC_LIBGCC' >$bb_o
-echo "#define HAVE_LD_STATIC_LIBGCC \"$HAVE_LD_STATIC_LIBGCC\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_LD_STATIC_LIBGCC=no
-echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
-echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_LD_STATIC_LIBGCC}" = "yes" ]; then
-LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -XCClinker -static-libgcc"
-fi
+;;
+*)
+PICFLAGS="-fPIC"
+HAVE_CYGWIN="no"
+echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+PROG_GUI_FLAGS=""
+PROG_CLI_FLAGS=""
 ;;
 esac
 bb_o=$bb_incdir/have_cc.h
@@ -1739,7 +1746,6 @@ HAVE_CC65="no"
 HAVE_CC_WARNINGS="no"
 PROG_GUI_FLAGS=""
 PROG_CLI_FLAGS=""
-LIBTOOLOPTS_SHARED=""
 TEST_CFLAGS=""
 echo '#undef HAVE_CC' >$bb_incdir/have_cc.h
 echo 'hdefs["HAVE_CC"] = nil' >>configure.lua
@@ -14385,6 +14391,8 @@ echo "PACKAGE=$PACKAGE" >>Makefile.config
 echo "mdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
 echo "PATH_SEPARATOR=$PATH_SEPARATOR" >>Makefile.config
 echo "mdefs[\"PATH_SEPARATOR\"] = \"$PATH_SEPARATOR\"" >>configure.lua
+echo "PICFLAGS=$PICFLAGS" >>Makefile.config
+echo "mdefs[\"PICFLAGS\"] = \"$PICFLAGS\"" >>configure.lua
 echo "PKGCONFIG=$PKGCONFIG" >>Makefile.config
 echo "mdefs[\"PKGCONFIG\"] = \"$PKGCONFIG\"" >>configure.lua
 echo "PKGCONFIG_LIBDIR=$PKGCONFIG_LIBDIR" >>Makefile.config
