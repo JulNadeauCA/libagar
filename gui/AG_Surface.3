@@ -369,7 +369,7 @@ function releases all resources allocated by the given surface.
 .Fn AG_SurfaceConvert "const AG_Surface *src" "const AG_PixelFormat *newFmt"
 .Pp
 .Ft "AG_Surface *"
-.Fn AG_SurfaceScale "const AG_Surface *src" "Uint w" "Uint h"
+.Fn AG_SurfaceScale "const AG_Surface *src" "Uint w" "Uint h" "Uint flags"
 .Pp
 .Ft "int"
 .Fn AG_SurfaceExportFile "const AG_Surface *su" "char *path"
@@ -467,6 +467,9 @@ scaled to
 by
 .Fa h
 pixels (or NULL if an error occurred).
+The
+.Fa flags
+argument is for future expansion and should be set to 0.
 .Pp
 The
 .Fn AG_SurfaceExportFile
