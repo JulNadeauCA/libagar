@@ -115,6 +115,7 @@ pre-package:
 		cat CHANGELOG.md    |sed "s/$$/`echo -e \\\r`/" >CHANGELOG.txt; \
 		cat INSTALL.md      |sed "s/$$/`echo -e \\\r`/" >INSTALL.txt; \
 		cat gui/license.txt |sed "s/$$/`echo -e \\\r`/" >LICENSE.txt; \
+		cat LICENSE.ofl     |sed "s/$$/`echo -e \\\r`/" >LICENSE-ofl.txt; \
 		cat README.md       |sed "s/$$/`echo -e \\\r`/" >README.txt; \
 		cp -f mk/agar-logo.png Logo.png; \
 		echo '<meta http-equiv="refresh" content="1;url=http://libagar.org/docs/compile-msvc.html" />' > VisualC.html; \
@@ -122,6 +123,7 @@ pre-package:
 		echo "CHANGELOG.txt"   >> ${PROJFILELIST}; \
 		echo "INSTALL.txt"     >> ${PROJFILELIST}; \
 		echo "LICENSE.txt"     >> ${PROJFILELIST}; \
+		echo "LICENSE-ofl.txt" >> ${PROJFILELIST}; \
 		echo "README.txt"      >> ${PROJFILELIST}; \
 		echo "Logo.png"        >> ${PROJFILELIST}; \
 		echo "VisualC.html"    >> ${PROJFILELIST}; \
@@ -130,7 +132,7 @@ pre-package:
 
 post-package:
 	@if [ "${PKG_OS}" = "windows" ]; then \
-		rm -f install-sdk.exe CHANGELOG.txt INSTALL.txt LICENSE.txt README.txt Logo.png VisualC.html; \
+		rm -f install-sdk.exe CHANGELOG.txt INSTALL.txt LICENSE.txt LICENSE-ofl.txt README.txt Logo.png VisualC.html; \
 	fi
 
 function-list:

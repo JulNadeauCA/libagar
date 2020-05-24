@@ -2,12 +2,13 @@
 All notable changes to Agar will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Build system: [**CMake**](https://cmake.org) support.
+- Build system: Add [**CMake**](https://cmake.org) support.
 - A driver for the [**SDL 2.0**](https://libsdl.org) series.
 - A software framebuffer driver for X Windows.
 - Remote debugger [**agardb**](https://libagar.org/man1/agardb).
 - Interface builder to help the process of constructing static or fixed-resolution interfaces.
 - Add widget classes to the new Ada bindings in `ada/gui/`.
+- New COBOL bindings: [GnuCOBOL](https://sourceforge.net/projects/open-cobol/) and [GuiCOBOL](http://www.opencobol.altervista.org).
 - [**AG_Console**](https://libagar.org/man3/AG_Console): Handle ansi cursor and terminal operations. Clipboard integration.
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): Display only those styles that are available for a given font (as opposed to a static list of styles).
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Implement focusability and keyboard navigation methods. Handle "font-changed" better under multi-window drivers.
@@ -16,6 +17,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_StyleEditor**](https://libagar.org/man3/AG_StyleEditor): Edition of stylesheet rules.
 - [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): Gradients and border styles. New selector `"E > F"` (an `F` element child of an `E` element).
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Filters. Stencil operations.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): Provide a way to map core font names to known system fonts so porters have the option of adding dependencies to existing font packages in order to reduce the size of agar packages.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) & [**AG_Editable**](https://libagar.org/man3/AG_Editable): Extend SGR support. Syntax highlighting & rich-text editing methods.
 - [**AG_WidgetPrimitives**](https://libagar.org/man3/AG_WidgetPrimitives): Dithering. Shadow effects.
 - [**AG_Window**](https://libagar.org/man3/AG_Window): MRU API to simplify the process of remembering geometries. New gravity methods for autoplacing.
@@ -28,10 +30,10 @@ All notable changes to Agar will be documented in this file. The format is based
 - Integrated [**Style Editor**](https://libagar.org/man3/AG_StyleEditor) tool. It allows a developer to inspect a live VFS of widgets, to pick elements, to add/edit style attributes and look at the results in real time.
 - Integrated [**GUI Debugger**](https://libagar.org/man3/AG_GuiDebugger) utility. Inspect a live VFS of widgets in real time. Available in Debug builds only.
 - [**AG_Button**](https://libagar.org/man3/AG_Button): New functions [AG_ButtonGetState()](https://libagar.org/man3/AG_ButtonGetState), [AG_ButtonSetState](https://libagar.org/man3/AG_ButtonSetState) and atomic [AG_ButtonToggle()](https://libagar.org/man3/AG_ButtonToggle). New option flag `SET` to force initial _"state"_ to **1**). New option flag `RETURN_BUTTON` to embed a "Return" button which raises _"textbox-return"_ when pressed.
-- [**AG_Checkbox**](https://libagar.org/man3/AG_Checkbox): Display a check mark (U+2713). Thanks Federico!
+- [**AG_Checkbox**](https://libagar.org/man3/AG_Checkbox): Display a check mark (U+2713). Thanks [Federico](http://www.opencobol.altervista.org)!
 - [**AG_Checkbox**](https://libagar.org/man3/AG_Checkbox): New option flag `INVERT`.
 - [**AG_Config**](https://libagar.org/man3/AG_Config): New settings: "Tab Width", "Cursor Blink Rate", "Mouse Scroll Interval", "Enable `GL_DEBUG_OUTPUT`" and "NPOT (non power of two) textures".
-- [**AG_Console**](https://libagar.org/man3/AG_Console): Handle multiline entries. [AG_ConsoleMsg()](https://libagar.org/man3/AG_ConsoleMsg) will now split multiline strings into multiple, grouped lines that are displayed in an indented style. Thanks Chuck!
+- [**AG_Console**](https://libagar.org/man3/AG_Console): Handle multiline entries. [AG_ConsoleMsg()](https://libagar.org/man3/AG_ConsoleMsg) will now split multiline strings into multiple, grouped lines that are displayed in an indented style. Thanks [Charles](http://cdaniels.net)!
 - [**AG_Console**](https://libagar.org/man3/AG_Console): Introduce [event sink](https://libagar.org/man3/AG_EventSink)-based file monitoring features. New functions [AG_ConsoleOpenFile](https://libagar.org/man3/AG_ConsoleOpenFile), [AG_ConsoleOpenFD](https://libagar.org/man3/AG_ConsoleOpenFD), [AG_ConsoleOpenStream()](https://libagar.org/man3/AG_ConsoleOpenStream) and [AG_ConsoleClose()](https://libagar.org/man3/AG_ConsoleClose).
 - [**AG_Console**](https://libagar.org/man3/AG_Console): New function [AG_ConsoleBinary()](https://libagar.org/man3/AG_ConsoleBinary) to produce data in canonical (hex + ASCII) format. New function [AG_ConsoleMsgCatS()](https://libagar.org/man3/AG_ConsoleMsgCatS) for appending to an existing entry.
 - [**AG_Console**](https://libagar.org/man3/AG_Console): New function [AG_ConsoleExportBuffer()](https://libagar.org/man3/AG_ConsoleExportBuffer) for exporting entire buffer contents. Added "Selected Lines Only" option in "Export to file". Added menu function "Clear All". Added image types under "Export to file" for exporting screenshots.
@@ -39,13 +41,13 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Driver**](https://libagar.org/man3/AG_Driver): New operations: `putPixel64()`, `putPixelRGB16()`, `drawTriangle()`, `drawPolygon()`, `drawPolygonSti32()`, `drawLineW`(), `drawLineW_Sti16()`, `getClipboardText()` and `setClipboardText()`.
 - [**AG_Editable**](https://libagar.org/man3/AG_Editable) & [**AG_Textbox**](https://libagar.org/man3/AG_Textbox): Implement basic support for ANSI SGR attributes.
 - [**AG_Editable**](https://libagar.org/man3/AG_Editable) & [**AG_Textbox**](https://libagar.org/man3/AG_Textbox): Added autocomplete feature. New functions [AG_EditableAutocomplete()](https://libagar.org/man3/AG_EditableAutocomplete) and [AG_EditableCloseAutocomplete()](https://libagar.org/man3/AG_EditableCloseAutocomplete).
-- [**AG_Editable**](https://libagar.org/man3/AG_Editable) & [**AG_Textbox**](https://libagar.org/man3/AG_Textbox): New property _"placeholder"_ to specify a text label to show whenever the buffer is empty. Thanks Federico for the suggestion!
+- [**AG_Editable**](https://libagar.org/man3/AG_Editable) & [**AG_Textbox**](https://libagar.org/man3/AG_Textbox): New property _"placeholder"_ to specify a text label to show whenever the buffer is empty. Thanks [Federico](http://www.opencobol.altervista.org) for the suggestion!
 - [**AG_Editable**](https://libagar.org/man3/AG_Editable) & [**AG_Textbox**](https://libagar.org/man3/AG_Textbox): New options `UPPERCASE` and `LOWERCASE`.
 - [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): Added [AG_FileDlgAddImageTypes()](https://libagar.org/man3/AG_FileDlgAddImageTypes).
 - [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): New `COMPACT` option. In this mode, the widget becomes a single-line ( Textbox & Button ). The Button triggers the FileDlg to instantiate a clone of itself in a new window. New constructors [AG_FileDlgNewCompact()](https://libagar.org/man3/AG_FileDlgNewCompact) and [AG_FileDlgNewCompactMRU()](https://libagar.org/man3/AG_FileDlgNewCompactMRU).
 - [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): Added special syntaxes to `AG_FileType` item. `"<-x>"` tests whether a file is executable by the effective user. `"<=FILENAME>"` matches filenames exactly. `"<=FILENAME/i>"` performs case-insensitive matching.
 - [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): New functions [AG_FileDlgGetDirectory()](https://libagar.org/man3/AG_FileDlgGetDirectory), [AG_FileDlgGetFilename()](https://libagar.org/man3/AG_FileDlgGetFilename), [AG_FileDlgCopyDirectory()](https://libagar.org/man3/AG_FileDlgCopyDirectory), [AG_FileDlgCopyFilename()](https://libagar.org/man3/AG_FileDlgCopyFilename) and [AG_FileDlgCopyTypes()](https://libagar.org/man3/AG_FileDlgCopyTypes).
-- [**AG_Graph**](https://libagar.org/man3/AG_Graph): Add support for directed graphs. Edges now include distinct types `UNDIRECTED` and `DIRECTED`. Thanks Chuck!
+- [**AG_Graph**](https://libagar.org/man3/AG_Graph): Add support for directed graphs. Edges now include distinct types `UNDIRECTED` and `DIRECTED`. Thanks [Charles](http://cdaniels.net)!
 - [**AG_HSVPal**](https://libagar.org/man3/AG_HSVPal): New functions [AG_HSVPalUpdateHue()](https://libagar.org/man3/AG_HSVPalUpdateHue) and [AG_HSVPalUpdateSV()](https://libagar.org/man3/AG_HSVPalUpdateSV).
 - [**AG_Notebook**](https://libagar.org/man3/AG_Notebook): New functions [AG_NotebookGetByID()](https://libagar.org/man3/AG_NotebookGetByID) and [AG_NotebookSelectByID()](https://libagar.org/man3/AG_NotebookSelectByID) for referencing tabs by integer ID.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): New run-time object validity and class-membership tests. In Debug builds, passing an invalid object pointer to any Agar API call should now trigger "Illegal access" assertions. Additional tests are done when traversing linked lists in order to detect memory errors.
@@ -53,7 +55,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Object**](https://libagar.org/man3/AG_Object): New property _"archive-path"_. Deprecate `AG_ObjectGetArchivePath()` and `AG_ObjectSetArchivePath()`.
 - [**AG_Pixmap**](https://libagar.org/man3/AG_Pixmap): New function [AG_PixmapGetSurface()](https://libagar.org/man3/AG_PixmapGetSurface) to return a copy of surface at a given index.
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): Handle multiline items. Implement key repeat.
-- [**AG_Radio**](https://libagar.org/man3/AG_Radio): Implement horizontal layout. New function [AG_RadioSetDisposition()](https://libagar.org/man3/AG_RadioSetDisposition). Thanks Federico!
+- [**AG_Radio**](https://libagar.org/man3/AG_Radio): Implement horizontal layout. New function [AG_RadioSetDisposition()](https://libagar.org/man3/AG_RadioSetDisposition). Thanks [Federico](http://www.opencobol.altervista.org)!
 - [**AG_Separator**](https://libagar.org/man3/AG_Separator): New function [AG_SeparatorSetLength()](https://libagar.org/man3/AG_SeparatorSetLength) to set a requisition when placing separators in containers of indeterminate size.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add support for 48- and 64-bit surfaces (under `LARGE` memory model).
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add support for 1-bit (monochrome), 2-bit (4-color), and 4-bit (16 color) palettized modes. Cache `PixelsPerByte` in `format` field.
@@ -68,8 +70,8 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Window**](https://libagar.org/man3/AG_Window): New function [AG_WindowMove()](https://libagar.org/man3/AG_WindowMove) for moving windows more efficiently when no resize is required.
 - New color manipulation routines [AG_ColorDarken()](https://libagar.org/man3/AG_ColorDarken), [AG_ColorLighten()](https://libagar.org/man3/AG_ColorLighten) and [AG_ColorInterpolate()](https://libagar.org/man3/AG_ColorInterpolate).
 - New size hinting functions [AG_PixmapSizeHint()](https://libagar.org/man3/AG_PixmapSizeHint), [AG_BoxSizeHint()](https://libagar.org/man3/AG_BoxSizeHint), [AG_RadioSizeHint()](https://libagar.org/man3/AG_RadioSizeHint) and [AG_FixedSizeHint()](https://libagar.org/man3/AG_FixedSizeHint), for specifying explicit size requisitions in pixels.
-- New functions [AG_ClipLine()](https://libagar.org/man3/AG_ClipLine) for clipping lines to rectangular bounding boxes, [AG_ClipLineCircle()](https://libagar.org/man3/AG_ClipLineCircle) for clipping lines to circular regions. New function [AG_GetLineIntersection()](https://libagar.org/man3/AG_GetLineIntersection) for computing the intersection of two line segments. Thanks Chuck!
-- New function [AG_DrawArrowhead()](https://libagar.org/man3/AG_DrawArrowhead) for drawing arrowheads of arbitrary size and angle aligned to arbitrary vectors. New function [AG_DrawArrowLine()](https://libagar.org/man3/AG_DrawArrowLine) for drawing lines with arrowheads. Thanks Chuck!
+- New functions [AG_ClipLine()](https://libagar.org/man3/AG_ClipLine) for clipping lines to rectangular bounding boxes, [AG_ClipLineCircle()](https://libagar.org/man3/AG_ClipLineCircle) for clipping lines to circular regions. New function [AG_GetLineIntersection()](https://libagar.org/man3/AG_GetLineIntersection) for computing the intersection of two line segments. Thanks [Charles](http://cdaniels.net)!
+- New function [AG_DrawArrowhead()](https://libagar.org/man3/AG_DrawArrowhead) for drawing arrowheads of arbitrary size and angle aligned to arbitrary vectors. New function [AG_DrawArrowLine()](https://libagar.org/man3/AG_DrawArrowLine) for drawing lines with arrowheads. Thanks [Charles](http://cdaniels.net)!
 - New function [AG_About()](https://libagar.org/man3/AG_About) to generate a simple "About Agar" dialog with license text.
 - [**dummy**](https://libagar.org/man3/AG_DriverDUMMY): A new **no-op** driver which prints out calls and arguments to the console. In [agartest](https://libagar.org/man1/agartest), use the "-C" option to see the output (e.g., "agartest -C -d dummy").
 - [**glx**](https://libagar.org/man3/AG_DriverGLX): New driver option _"xsync"_ to enable synchronous X events (e.g., `"-d glx(xsync)"`). This is useful when debugging issues involving any call into the X Window system.
@@ -91,18 +93,18 @@ All notable changes to Agar will be documented in this file. The format is based
 	- #10: [_League Gothic_](https://www.theleagueofmoveabletype.com/league-gothic) (Latin).
 	- #11: [_Unifraktur Maguntia_](http://unifraktur.sourceforge.net/maguntia.html) (Latin).
 - Clipboard integration (currently implemented in [**glx**](https://libagar.org/man3/AG_DriverGLX)). Added new [AG_Driver](https://libagar.org/man3/AG_Driver) operations `getClipboardText()` and `setClipboardText()`.
-- Provide `dlsym()`mable copies of inline functions in lowercase form. For example, the symbol `AG_LengthUTF8()` is now guaranteed to have a dlsymmable copy called `ag_length_utf8()`. This helps avoid the need for glue code in language bindings. Thanks Brian and Federico!
+- Provide `dlsym()`mable copies of inline functions in lowercase form. For example, the symbol `AG_LengthUTF8()` is now guaranteed to have a dlsymmable copy called `ag_length_utf8()`. This helps avoid the need for glue code in language bindings. Thanks [Brian](https://sourceforge.net/projects/open-cobol/) and [Federico](http://www.opencobol.altervista.org)!
 - **Nullability**: Introduce `_Nullable` and `_Nonnull` pointer annotations to help prevent programming mistakes and make prototypes more expressive.
 - Define special nullability annotations for thread types which require special handling since they may or may not be pointer types depending on the platform. Define `_{Nullable,Nonnull,Null_unspecified}_{Mutex,Cond,Thread}`.
 - New pointer-type-safe accessor macros for event handlers. Instead of using the generic pointer accessors `AG_SELF()`, `AG_PTR()` or `AG_PTR_NAMED()` to retrieve an object pointer from an event handler, one can now use the more specific `AG_OBJECT_SELF()`, `AG_OBJECT_PTR()` and `AG_OBJECT_PTR_NAMED()` macros. In a _Debug_ build, such macros will perform a run-time validity and class-membership test. In a _Release_ build, no tests are done. Class-specific accessor macros are also provided, for example [AG_Button](https://libagar.org/man3/AG_Button) defines `AG_BUTTON_SELF()`, `AG_BUTTON_PTR()` and `AG_BUTTON_PTR_NAMED()`.
 - New build option `--enable-type-safety` (implied by `--enable-debug`).
 - New build option `--with-memory-model`. `SMALL` targets 8-bit machines (for _ag_micro_ only). `MEDIUM` has a smaller memory footprint and can handle up to 24-bit "True Color" surfaces (the default on non 64-bit hosts). The `LARGE` model adds support for 48-bit "Deep Color" surfaces (the default on 64-bit hosts). Either `MEDIUM` or `LARGE` will work on both 32-bit and 64-bit hosts (the choice comes down to performance tuning). Introduce `AG_Size` and `AG_Offset` types.
 - New build option `--disable-widgets` build with base framework, but without the standard widget library.
-- _ag_core_: Import [rxi](https://github.com/rxi)'s type-safe dynamic arrays [vec](https://github.com/rxi/vec). Thanks Chuck for the suggestion!
+- _ag_core_: Import [rxi](https://github.com/rxi)'s type-safe dynamic arrays [vec](https://github.com/rxi/vec). Thanks [Charles](http://cdaniels.net) for the suggestion!
 - _ag_core_: Colorize debugging output. Added `--disable-ansi-color` build option.
 - _ag_core_: New [AG_SetErrorS()](https://libagar.org/man3/AG_SetErrorS) function variant.
-- _ag_math_: New functions [AG_Square()](https://libagar.org/man3/AG_Square), [AG_HaveQuadraticSolution()](https://libagar.org/man3/AG_HaveQuadraticSolution), [AG_QuadraticPositive()](https://libagar.org/man3/AG_QuadraticPositive), [AG_QuadraticNegative()](https://libagar.org/man3/AG_QuadraticNegative) & [AG_Distance()](https://libagar.org/man3/AG_Distance). Thanks Chuck!
-- _ag_math_: New [**M_Bezier**](https://libagar.org/man3/M_Bezier) module for computing Bézier curves. Thanks Chuck!
+- _ag_math_: New functions [AG_Square()](https://libagar.org/man3/AG_Square), [AG_HaveQuadraticSolution()](https://libagar.org/man3/AG_HaveQuadraticSolution), [AG_QuadraticPositive()](https://libagar.org/man3/AG_QuadraticPositive), [AG_QuadraticNegative()](https://libagar.org/man3/AG_QuadraticNegative) & [AG_Distance()](https://libagar.org/man3/AG_Distance). Thanks [Charles](http://cdaniels.net)!
+- _ag_math_: New [**M_Bezier**](https://libagar.org/man3/M_Bezier) module for computing Bézier curves. Thanks [Charles](http://cdaniels.net)!
 - _ag_net_: Introduce [**AG_Web**](https://libagar.org/man3/AG_Web), a multiprocess HTTP/1.1 application server. It handles authentication, session/process management, push events and templates (not in default build, must use `--enable-web`).
 - _ag_vg_: Make [**VG**](https://libagar.org/man3/VG) an [AG_Object](https://libagar.org/man3/AG_Object) class since we may wish to subclass it or set variables and events on it.
 - _ag_vg_: Introduce [**vgedit**](https://libagar.org/man1/vgedit), a basic editor for [**VG**](https://libagar.org/man3/VG) object files. It is also a good demonstration of [**VG_View**](https://libagar.org/man3/VG_View) widget usage.
@@ -167,13 +169,13 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Make [AG_TlistSort()](https://libagar.org/man3/AG_TlistSort) thread-safe.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): When right-clicking, select the target item before triggering popup menus.
 - [**glx**](https://libagar.org/man3/AG_DriverGLX): If the initial `glXChooseVisual()` attempt fails, fallback to an 8-bit depth.
-- [**glx**](https://libagar.org/man3/AG_DriverGLX): Use XGrabPointer() to handle windows with `MODAL` flag. Thanks Chuck!
+- [**glx**](https://libagar.org/man3/AG_DriverGLX): Use XGrabPointer() to handle windows with `MODAL` flag. Thanks [Charles](http://cdaniels.net)!
 - Fixed some pixel off-by-one errors in [widget primitives](https://libagar.org/man3/AG_WidgetPrimitives).
 - Fixed an unwanted side effect when passing an argument of `NULL` or `agWindowFocused` to [AG_WindowFocus()](https://libagar.org/man3/AG_WindowFocus). It would cause any previous focus request to be cancelled. It is now a proper no-op.
 - Thread-safety and efficiency improvements. Removed many unnecessary lock operations.
 - Fixed 32-bit MSYS build (include missing header file). Thanks Varialus!
 - _ag_core_: It is now safe for [Event Sink](https://libagar.org/man3/AG_AddEventSink) routines to call [AG_DelEventSink()](https://libagar.org/man3/AD_DelEventSink) on themselves.
-- _ag_core_: It is now safe for an [Event Epilogue](https://libagar.org/man3/AG_AddEventEpilogue) routine to call [AG_DelEventEpilogue()](https://libagar.org/man3/AD_DelEventEpilogue) on itself. Thanks Walter Zambotti!
+- _ag_core_: It is now safe for an [Event Epilogue](https://libagar.org/man3/AG_AddEventEpilogue) routine to call [AG_DelEventEpilogue()](https://libagar.org/man3/AD_DelEventEpilogue) on itself. Thanks [Walter](https://github.com/WallyZambotti)!
 
 ## [1.5.0] - 2016-03-25
 ### Added

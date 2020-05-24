@@ -60,6 +60,7 @@ See the provided [**INSTALL.md**](INSTALL.md) or an online installation guide:
 #### License
 
 * [BSD 2-Clause License](https://libagar.org/license.html)
+* [OFL 1.1](https://libagar.org/license-ofl.html) (core fonts)
 
 ### Contributing
 

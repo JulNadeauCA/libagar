@@ -2,7 +2,7 @@ TOP=	../..
 include ${TOP}/Makefile.config
 
 DATADIR=	${TTFDIR}
-DATAFILES_SRC=	OFL-FAQ.txt \
+DATAFILES_SRC=	OFL11.txt OFL-FAQ.txt \
 		Charter-LICENSE.txt \
 		DejaVu-LICENSE.txt \
 		Source-Han-LICENSE.txt \
