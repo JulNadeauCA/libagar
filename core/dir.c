@@ -75,15 +75,24 @@
 #  include <sys/stat.h>
 # endif
 
-# ifdef __APPLE__
+/* for dirfd() */
+# if defined(__NetBSD__)
+#  ifndef _NETBSD_SOURCE
+#   define _NETBSD_SOURCE
+#   define _AGAR_DEFINED_NETBSD_SOURCE
+#  endif
+# elif defined(__APPLE__)
 #  ifndef _DARWIN_C_SOURCE
-#   define _DARWIN_C_SOURCE /* for dirfd() */
+#   define _DARWIN_C_SOURCE
 #   define _AGAR_DEFINED_DARWIN_C_SOURCE
 #  endif
 # endif
 
 # include <dirent.h>
 
+# ifdef _AGAR_DEFINED_NETBSD_SOURCE
+#  undef _NETBSD_SOURCE
+# endif
 # ifdef _AGAR_DEFINED_DARWIN_C_SOURCE
 #  undef _DARWIN_C_SOURCE
 # endif
