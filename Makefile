@@ -94,6 +94,10 @@ install-config:
 	fi
 	@echo "${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${PREFIX}/share/aclocal"
 	@${SUDO} ${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${DESTDIR}${PREFIX}/share/aclocal
+	@for F in Makefile.config configure.lua; do \
+		echo "${INSTALL_DATA} $$F ${DATADIR}"; \
+		${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${DATADIR}; \
+	done
 
 deinstall-config:
 	@for F in ${AVAIL_CONFIGSCRIPTS}; do \
@@ -108,6 +112,10 @@ deinstall-config:
 	fi
 	@echo "${DEINSTALL_DATA} ${PREFIX}/share/aclocal/agar.m4"
 	@${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${PREFIX}/share/aclocal/agar.m4
+	for F in Makefile.config configure.lua; do \
+		echo "${DEINSTALL_DATA} ${DATADIR}/$$F"; \
+		${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${DATADIR}/$$F; \
+	done
 
 pre-package:
 	@if [ "${PKG_OS}" = "windows" ]; then \
