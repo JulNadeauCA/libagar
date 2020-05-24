@@ -27,10 +27,6 @@
  * Obtain information about architecture extensions.
  */
 
-#include <agar/config/have_altivec.h>
-#include <agar/config/_mk_have_signal.h>
-#include <agar/config/_mk_have_setjmp.h>
-
 #include <agar/core/core.h>
 
 #if defined(__APPLE__) || defined(__MACOSX__)
@@ -42,13 +38,6 @@
 # include <exec/exec.h>
 # include <interfaces/exec.h>
 # include <proto/exec.h>
-#endif
-
-#if !defined(__APPLE__) && !defined(__MACOSX__) && !defined(__ppc__) && \
-     defined(HAVE_ALTIVEC) && defined(_MK_HAVE_SIGNAL) && defined(_MK_HAVE_SETJMP)
-# include <signal.h>
-# include <setjmp.h>
-static jmp_buf jmpbuf;
 #endif
 
 struct cpuid_regs {
@@ -139,15 +128,6 @@ Conv32_x86(char *_Nonnull d, unsigned int v)
 	d[3] = (v >> 24) & 0xff;
 }
 #endif /* x86 */
-
-#if !defined(__APPLE__) && !defined(__MACOSX__) && !defined(__ppc__) && \
-     defined(HAVE_ALTIVEC) && defined(_MK_HAVE_SIGNAL) && defined(_MK_HAVE_SETJMP)
-static void
-IllegalInsn_Altivec(int sig)
-{
-    longjmp(jmpbuf, 1);
-}
-#endif /* Altivec */
 
 /* Initialize the CPUInfo structure. */
 void
@@ -289,23 +269,5 @@ AG_GetCPUInfo(AG_CPUInfo *_Nonnull cpu)
     		if (rv == VECTORTYPE_ALTIVEC)
 			cpu->ext |= AG_EXT_ALTIVEC;
 	}
-#elif defined(HAVE_ALTIVEC) && defined(_MK_HAVE_SIGNAL) && defined(_MK_HAVE_SETJMP)
-	{
-		volatile int hasAltiVec = 0;
-		void (*fn)(int);
-
-		fn = signal(SIGILL, IllegalInsn_Altivec);
-		if (setjmp(jmpbuf) == 0) {
-			__asm volatile (
-				"mtspr 256, %0	\n"
-				"vand %%v0, %%v0, %%v0\n"
-				:
-				: "r" (-1));
-			hasAltiVec = 1;
-		}
-		signal(SIGILL, fn);
-		if (hasAltiVec)
-			cpu->ext |= AG_EXT_ALTIVEC;
-	}
-#endif /* HAVE_ALTIVEC and _MK_HAVE_SIGNAL and _MK_HAVE_SETJMP */
+#endif
 }

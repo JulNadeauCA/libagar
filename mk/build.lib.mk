@@ -387,6 +387,10 @@ lib${LIB}.so: ${SRCS_GENERATED} _lib_objs ${OBJS}
 	        echo "${CC} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} $$_objs ${LIBS}"; \
 	        ${CC} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} $$_objs ${LIBS}; \
 	        ;; \
+	    *-freebsd*) \
+	        echo "${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} -Wl,-rpath,${PREFIX}/lib ${LDFLAGS} $$_objs"; \
+	        ${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} $$_objs; \
+	        ;; \
 	    *) \
 	        echo "${CC} -shared -o $$_libout -Wl,-rpath,${PREFIX}/lib ${LDFLAGS} $$_objs"; \
 	        ${CC} -shared -o $$_libout -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} $$_objs; \

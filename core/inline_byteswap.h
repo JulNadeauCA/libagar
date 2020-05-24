@@ -36,7 +36,9 @@ ag_swap16(Uint16 x)
 		"0" (x));
 	return (x);
 }
-#elif (defined(__GNUC__) || defined(__clang__)) && (defined(__powerpc__) || defined(__ppc__))
+#elif (defined(__GNUC__) || defined(__clang__)) && \
+      (defined(__powerpc__) || defined(__ppc__)) && \
+     (!defined(__powerpc64__) && !defined(__ppc64__))
 # ifdef AG_INLINE_HEADER
 static __inline__ Uint16
 AG_Swap16(Uint16 x)
@@ -95,7 +97,9 @@ ag_swap32(Uint32 x)
 		"0" (x));
 	return (x);
 }
-#elif (defined(__GNUC__) || defined(__clang__)) && (defined(__powerpc__) || defined(__ppc__))
+#elif (defined(__GNUC__) || defined(__clang__)) && \
+      (defined(__powerpc__) || defined(__ppc__)) && \
+     (!defined(__powerpc64__) && !defined(__ppc64__))
 # ifdef AG_INLINE_HEADER
 static __inline__ Uint32
 AG_Swap32(Uint32 x)
