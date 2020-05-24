@@ -2196,7 +2196,7 @@ GLX_SetOpacity(AG_Window *_Nonnull win, float f)
 {
 #ifdef AG_WM_HINTS
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
-	Ulong opacity = (f > 0.99) ? (Ulong) 0xffffffff : (Ulong)(f*0xffffffff);
+	Ulong opacity = (f > 0.99) ? (Ulong) 0xffffffff : (Ulong)(f*(float)0xffffffff);
 
 	if (wmNetWmWindowOpacity != None) {
 		XChangeProperty(agDisplay, glx->w,
