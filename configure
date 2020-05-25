@@ -3416,8 +3416,6 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_MATH}" = "yes" ]; then
-fi
 # END math
 $ECHO_N 'checking for the C math library (C99)...'
 $ECHO_N '# checking for the C math library (C99)...' >>config.log
@@ -3485,8 +3483,6 @@ rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 ;;
 esac
-if [ "${HAVE_MATH_C99}" = "yes" ]; then
-fi
 # END math_c99
 $ECHO_N 'checking for a fdclose() function...'
 $ECHO_N '# checking for a fdclose() function...' >>config.log
@@ -6021,8 +6017,6 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_SDL}" = "yes" ]; then
-fi
 fi
 else
 HAVE_SDL="no"
@@ -6329,8 +6323,6 @@ echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_OPENGL}" = "yes" ]; then
 fi
 fi
 $ECHO_N 'checking whether OpenGL has glext...'
@@ -6772,8 +6764,6 @@ if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_X11}" = "yes" ]; then
-fi
-if [ "${HAVE_X11}" = "yes" ]; then
 X11_PC="x11"
 $ECHO_N 'checking for the XKB extension...'
 $ECHO_N '# checking for the XKB extension...' >>config.log
@@ -7103,8 +7093,6 @@ if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_XINERAMA}" = "yes" ]; then
-fi
-if [ "${HAVE_XINERAMA}" = "yes" ]; then
 XINERAMA_PC="xinerama"
 else
 XINERAMA_PC=""
@@ -7207,8 +7195,6 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.m $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_COCOA}" = "yes" ]; then
-fi
 # END cocoa
 		if [ "${HAVE_COCOA}" != 'yes' ]
  then
@@ -7301,8 +7287,6 @@ echo 'hdefs["HAVE_GLX"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_GLX}" = "yes" ]; then
 fi
 # END glx
 			if [ "${HAVE_GLX}" != 'yes' ]
@@ -7686,8 +7670,6 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_FREETYPE}" = "yes" ]; then
-fi
 else
 HAVE_FREETYPE="no"
 FREETYPE_CFLAGS=""
@@ -7911,8 +7893,6 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_FONTCONFIG}" = "yes" ]; then
-fi
 else
 HAVE_FONTCONFIG="no"
 FONTCONFIG_CFLAGS=""
@@ -8028,8 +8008,6 @@ echo 'hdefs["HAVE_JPEG"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_JPEG}" = "yes" ]; then
 fi
 else
 echo 'no'
@@ -8279,8 +8257,6 @@ echo 'hdefs["HAVE_PNG"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_PNG}" = "yes" ]; then
 fi
 MK_VERSION_MAJOR=`echo "$PNG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
 MK_VERSION_MINOR=`echo "$PNG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
@@ -9119,8 +9095,6 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_ZLIB}" = "yes" ]; then
-fi
 else
 echo 'no'
 echo '# no' >>config.log
@@ -9329,8 +9303,6 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_DB4}" = "yes" ]; then
-fi
 else
 HAVE_DB4="no"
 DB4_CFLAGS=""
@@ -9461,8 +9433,6 @@ echo 'hdefs["HAVE_DB5"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_DB5}" = "yes" ]; then
 fi
 else
 echo "no"
@@ -9668,8 +9638,6 @@ echo 'hdefs["HAVE_MYSQL"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_MYSQL}" = "yes" ]; then
 fi
 else
 HAVE_MYSQL="no"
@@ -10542,8 +10510,6 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_ICONV}" = "yes" ]; then
-fi
 # END iconv
 $ECHO_N 'checking for a gettext library in libc...'
 $ECHO_N '# checking for a gettext library in libc...' >>config.log
@@ -10747,8 +10713,6 @@ echo 'hdefs["HAVE_GETTEXT"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_GETTEXT}" = "yes" ]; then
 fi
 fi
 fi
@@ -11042,8 +11006,6 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_SSE}" = "yes" ]; then
-fi
 $ECHO_N 'checking for SSE2 extensions...'
 $ECHO_N '# checking for SSE2 extensions...' >>config.log
 SSE2_CFLAGS="-msse2"
@@ -11108,8 +11070,6 @@ echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_SSE2}" = "yes" ]; then
 fi
 $ECHO_N 'checking for SSE3 extensions...'
 $ECHO_N '# checking for SSE3 extensions...' >>config.log
@@ -11177,8 +11137,6 @@ echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_SSE3}" = "yes" ]; then
 fi
 # END sse
 	if [ "${HAVE_SSE}" != 'yes' ]
@@ -11499,8 +11457,6 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_SNDFILE}" = "yes" ]; then
-fi
 else
 echo '#undef HAVE_SNDFILE' >$bb_incdir/have_sndfile.h
 echo 'hdefs["HAVE_SNDFILE"] = nil' >>configure.lua
@@ -11735,8 +11691,6 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_PORTAUDIO}" = "yes" ]; then
-fi
 else
 echo '#undef HAVE_PORTAUDIO' >$bb_incdir/have_portaudio.h
 echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
@@ -11907,8 +11861,6 @@ echo 'hdefs["HAVE_GLU"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_GLU}" = "yes" ]; then
 fi
 # END glu
 		if [ "${HAVE_GLU}" = 'yes' ]

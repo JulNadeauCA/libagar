@@ -7,7 +7,6 @@ PROJCONFIGDIR=	include/agar/config
 
 include ${TOP}/Makefile.proj
 
-INCDIR=		au core gui micro map net sg sk vg
 SUBDIR=		core \
 		${SUBDIR_gui} \
 		${SUBDIR_micro} \
@@ -54,7 +53,7 @@ install-includes:
 	@${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}
 	@echo ${INSTALL_INCL_DIR} ${INCLDIR}/agar
 	@${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}/agar
-	@(cd include/agar && for DIR in ${INCDIR} config math; do \
+	@(cd include/agar && for DIR in config ${SUBDIR}; do \
 	    echo "${SH} mk/install-includes.sh $$DIR ${INCLDIR}/agar"; \
 	    ${SUDO} env \
 	      DESTDIR="${DESTDIR}" \
@@ -62,9 +61,11 @@ install-includes:
 	      INSTALL_INCL="${INSTALL_INCL}" \
 	      ${SH} ${SRCDIR}/mk/install-includes.sh $$DIR ${INCLDIR}/agar; \
 	done)
-	@for INC in ${INCDIR}; do \
-		echo "${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h ${INCLDIR}/agar/$${INC}.h"; \
-		${SUDO} ${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h ${DESTDIR}${INCLDIR}/agar/$${INC}.h; \
+	@for INC in ${SUBDIR}; do \
+		if [ "$$INC" != "math" ]; then \
+			echo "${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h ${INCLDIR}/agar/$${INC}.h"; \
+			${SUDO} ${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h ${DESTDIR}${INCLDIR}/agar/$${INC}.h; \
+		fi; \
 	done
 
 deinstall-includes:
@@ -94,10 +95,10 @@ install-config:
 	fi
 	@echo "${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${PREFIX}/share/aclocal"
 	@${SUDO} ${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${DESTDIR}${PREFIX}/share/aclocal
-	@for F in Makefile.config configure.lua; do \
-		echo "${INSTALL_DATA} $$F ${DATADIR}"; \
-		${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${DATADIR}; \
-	done
+	@echo "${INSTALL_DATA} Makefile.config ${DATADIR}/agar.mk"
+	@${SUDO} ${INSTALL_DATA} Makefile.config ${DESTDIR}${DATADIR}/agar.mk
+	@echo "${INSTALL_DATA} configure.lua ${DATADIR}/agar.lua"
+	@${SUDO} ${INSTALL_DATA} configure.lua ${DESTDIR}${DATADIR}/agar.lua
 
 deinstall-config:
 	@for F in ${AVAIL_CONFIGSCRIPTS}; do \
@@ -112,7 +113,7 @@ deinstall-config:
 	fi
 	@echo "${DEINSTALL_DATA} ${PREFIX}/share/aclocal/agar.m4"
 	@${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${PREFIX}/share/aclocal/agar.m4
-	for F in Makefile.config configure.lua; do \
+	@for F in agar.mk agar.lua; do \
 		echo "${DEINSTALL_DATA} ${DATADIR}/$$F"; \
 		${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${DATADIR}/$$F; \
 	done
