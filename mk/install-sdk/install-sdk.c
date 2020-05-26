@@ -273,8 +273,13 @@ main(int argc, char *argv[])
 	}
 
 	printf("Installing Agar SDK into %s\n", dir);
+
 	CreateDirectory(dir, NULL);
+
 	sprintf_s(incldir, sizeof(incldir), "%s\\include", dir);
+	CreateDirectory(incldir, NULL);
+
+	sprintf_s(incldir, sizeof(incldir), "%s\\include\\%s", dir, dstArch);
 	CreateDirectory(incldir, NULL);
 
 	sprintf_s(libdir, sizeof(libdir), "%s\\lib", dir);
