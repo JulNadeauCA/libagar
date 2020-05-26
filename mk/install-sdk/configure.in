@@ -1,0 +1,14 @@
+# Public domain
+# ex:syn=bsdbuild
+
+package("install-sdk")
+version("1.0")
+
+config_guess("../config.guess")
+
+require(cc)
+
+if [ "${enable_warnings}" = "yes" ]; then
+	c_option(-Wall)
+	c_option(-Werror)
+fi
