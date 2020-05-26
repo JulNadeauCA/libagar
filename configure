@@ -1623,96 +1623,6 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-$ECHO_N 'cc: checking for -mwindows option...'
-$ECHO_N '# cc: checking for -mwindows option...' >>config.log
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-#include <windows.h>
-int
-main(int argc, char *argv[]) {
-	return GetFileAttributes("foo") ? 0 : 1;
-}
-EOT
-echo >>config.log
-echo '# C: HAVE_CC_MWINDOWS' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mwindows -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mwindows -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_CC_MWINDOWS=yes
-bb_o=$bb_incdir/have_cc_mwindows.h
-echo '#ifndef HAVE_CC_MWINDOWS' >$bb_o
-echo "#define HAVE_CC_MWINDOWS \"$HAVE_CC_MWINDOWS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC_MWINDOWS\"] = \"$HAVE_CC_MWINDOWS\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_CC_MWINDOWS=no
-echo '#undef HAVE_CC_MWINDOWS' >$bb_incdir/have_cc_mwindows.h
-echo 'hdefs["HAVE_CC_MWINDOWS"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_CC_MWINDOWS}" = "yes" ]; then
-PROG_GUI_FLAGS="-mwindows"
-else
-PROG_GUI_FLAGS=""
-fi
-$ECHO_N 'cc: checking for -mconsole option...'
-$ECHO_N '# cc: checking for -mconsole option...' >>config.log
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-#include <windows.h>
-int
-main(int argc, char *argv[]) {
-	return GetFileAttributes("foo") ? 0 : 1;
-}
-EOT
-echo >>config.log
-echo '# C: HAVE_CC_MCONSOLE' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mconsole -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mconsole -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_CC_MCONSOLE=yes
-bb_o=$bb_incdir/have_cc_mconsole.h
-echo '#ifndef HAVE_CC_MCONSOLE' >$bb_o
-echo "#define HAVE_CC_MCONSOLE \"$HAVE_CC_MCONSOLE\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_CC_MCONSOLE=no
-echo '#undef HAVE_CC_MCONSOLE' >$bb_incdir/have_cc_mconsole.h
-echo 'hdefs["HAVE_CC_MCONSOLE"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_CC_MCONSOLE}" = "yes" ]; then
-PROG_CLI_FLAGS="-mconsole"
-else
-PROG_CLI_FLAGS=""
-fi
 ;;
 *)
 PICFLAGS="-fPIC"
@@ -1741,7 +1651,6 @@ echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
 echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
 fi
 else
-HAVE_CC="no"
 HAVE_CC65="no"
 HAVE_CC_WARNINGS="no"
 PROG_GUI_FLAGS=""
@@ -1749,14 +1658,14 @@ PROG_CLI_FLAGS=""
 TEST_CFLAGS=""
 echo '#undef HAVE_CC' >$bb_incdir/have_cc.h
 echo 'hdefs["HAVE_CC"] = nil' >>configure.lua
+echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
+echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
 echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
 echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
 echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
 echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
 echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
 echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
-echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
-echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
 echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
 echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
 echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
@@ -1765,10 +1674,6 @@ echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
 echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
 echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
 echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
-echo '#undef HAVE_CC_MWINDOWS' >$bb_incdir/have_cc_mwindows.h
-echo 'hdefs["HAVE_CC_MWINDOWS"] = nil' >>configure.lua
-echo '#undef HAVE_CC_MCONSOLE' >$bb_incdir/have_cc_mconsole.h
-echo 'hdefs["HAVE_CC_MCONSOLE"] = nil' >>configure.lua
 echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
 echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
 echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
@@ -1790,8 +1695,6 @@ exit 1
 fi
 case "${host}" in
 bbc | c64 | c128 | geos | nes)
-echo 'not enabling Objective-C compiler'
-echo '# not enabling Objective-C compiler' >>config.log
 HAVE_OBJC="no"
 HAVE_OBJC_WARNINGS="no"
 TEST_OBJCFLAGS=""
@@ -1892,9 +1795,9 @@ echo "* Cannot find one of clang, clang70, clang60, gcc, gcc-6, gcc7, gcc8, gcc5
 		echo "* under the current PATH, which is:"
 		echo "* $PATH"
 		echo "*"
-	    echo "* You may need to set the OBJC environment variable."
-	    echo "*"
-	    echo "Cannot find Objective C compiler in PATH." >>config.log
+		echo "* You may need to set the OBJC environment variable."
+		echo "*"
+		echo "Cannot find Objective C compiler in PATH." >>config.log
 		HAVE_OBJC="no"
 		echo "no"
 	else
@@ -1916,8 +1819,8 @@ int main(int argc, char *argv[]) { return (0); }
 EOT
 	$OBJC -x objective-c -o conftest conftest.m 2>>config.log
 	if [ $? != 0 ]; then
-	    echo "no"
-	    echo "no, compilation failed" >>config.log
+		echo "no"
+		echo "no, compilation failed" >>config.log
 		HAVE_OBJC="no"
 	else
 		HAVE_OBJC="yes"
@@ -2008,7 +1911,6 @@ echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_OBJC\"] = \"$HAVE_OBJC\"" >>configure.lua
 rm -f conftest.m $testdir/conftest$EXECSUFFIX
 else
-HAVE_OBJC="no"
 HAVE_OBJC_WARNINGS="no"
 TEST_OBJCFLAGS=""
 echo '#undef HAVE_OBJC' >$bb_incdir/have_objc.h
@@ -2666,8 +2568,6 @@ echo '# !warn_unused_result ' >>config.log
 fi
 # END cc_attributes
 else
-echo 'not enabling C compiler attributes'
-echo '# not enabling C compiler attributes' >>config.log
 echo '#undef HAVE_ALIGNED_ATTRIBUTE' >$bb_incdir/have_aligned_attribute.h
 echo 'hdefs["HAVE_ALIGNED_ATTRIBUTE"] = nil' >>configure.lua
 echo '#undef HAVE_BOUNDED_ATTRIBUTE' >$bb_incdir/have_bounded_attribute.h
@@ -3432,6 +3332,8 @@ case "${host}" in
 echo 'skipping (libmingwex linker errors)'
 echo '# skipping (libmingwex linker errors)' >>config.log
 HAVE_MATH_C99="no"
+MATH_C99_CFLAGS=""
+MATH_C99_LIBS=""
 echo '#undef HAVE_MATH_C99' >$bb_incdir/have_math_c99.h
 echo 'hdefs["HAVE_MATH_C99"] = nil' >>configure.lua
 ;;
@@ -3480,6 +3382,12 @@ echo 'hdefs["HAVE_MATH_C99"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_MATH_C99}" = "no" ]; then
+MATH_C99_CFLAGS=""
+MATH_C99_LIBS=""
+echo '#undef HAVE_MATH_C99' >$bb_incdir/have_math_c99.h
+echo 'hdefs["HAVE_MATH_C99"] = nil' >>configure.lua
 fi
 ;;
 esac
@@ -4284,6 +4192,14 @@ fi
 if [ "${HAVE_DLOPEN}" = "yes" ]; then
 DSO_CFLAGS=""
 DSO_LIBS="-ldl"
+else
+HAVE_DLFCN_H="no"
+DSO_CFLAGS=""
+DSO_LIBS=""
+echo '#undef HAVE_DLOPEN' >$bb_incdir/have_dlopen.h
+echo 'hdefs["HAVE_DLOPEN"] = nil' >>configure.lua
+echo '#undef HAVE_DLFCN_H' >$bb_incdir/have_dlfcn_h.h
+echo 'hdefs["HAVE_DLFCN_H"] = nil' >>configure.lua
 fi
 fi
 TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
@@ -4435,7 +4351,12 @@ if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 else
+HAVE_MACH_O_DYLD_H="no"
 HAVE_DYLD_RETURN_ON_ERROR="no"
+echo '#undef HAVE_DYLD' >$bb_incdir/have_dyld.h
+echo 'hdefs["HAVE_DYLD"] = nil' >>configure.lua
+echo '#undef HAVE_MACH_O_DYLD_H' >$bb_incdir/have_mach_o_dyld_h.h
+echo 'hdefs["HAVE_MACH_O_DYLD_H"] = nil' >>configure.lua
 echo '#undef HAVE_DYLD_RETURN_ON_ERROR' >$bb_incdir/have_dyld_return_on_error.h
 echo 'hdefs["HAVE_DYLD_RETURN_ON_ERROR"] = nil' >>configure.lua
 fi
@@ -4537,8 +4458,12 @@ echo "#define HAVE_SHL_LOAD \"$HAVE_SHL_LOAD\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_SHL_LOAD\"] = \"$HAVE_SHL_LOAD\"" >>configure.lua
 else
+HAVE_DL_H="no"
+SHL_LOAD_LIBS=""
 echo '#undef HAVE_SHL_LOAD' >$bb_incdir/have_shl_load.h
 echo 'hdefs["HAVE_SHL_LOAD"] = nil' >>configure.lua
+echo '#undef HAVE_DL_H' >$bb_incdir/have_dl_h.h
+echo 'hdefs["HAVE_DL_H"] = nil' >>configure.lua
 fi
 TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
 TEST_HEADERS=
@@ -4902,6 +4827,8 @@ echo "#define HAVE_CLOCK_GETTIME \"$HAVE_CLOCK_GETTIME\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
 else
+CLOCK_CFLAGS=""
+CLOCK_LIBS=""
 echo '#undef HAVE_CLOCK_GETTIME' >$bb_incdir/have_clock_gettime.h
 echo 'hdefs["HAVE_CLOCK_GETTIME"] = nil' >>configure.lua
 fi
@@ -4970,6 +4897,8 @@ echo "#define HAVE_CLOCK_WIN32 \"$HAVE_CLOCK_WIN32\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_CLOCK_WIN32\"] = \"$HAVE_CLOCK_WIN32\"" >>configure.lua
 else
+CLOCK_CFLAGS=""
+CLOCK_LIBS=""
 echo '#undef HAVE_CLOCK_WIN32' >$bb_incdir/have_clock_win32.h
 echo 'hdefs["HAVE_CLOCK_WIN32"] = nil' >>configure.lua
 fi
@@ -6017,19 +5946,22 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_SDL}" = "no" ]; then
+SDL_CFLAGS=""
+SDL_LIBS=""
+echo '#undef HAVE_SDL' >$bb_incdir/have_sdl.h
+echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
+fi
 fi
 else
 HAVE_SDL="no"
 SDL_CFLAGS=""
 SDL_LIBS=""
-SDL_PC=""
 echo '#undef HAVE_SDL' >$bb_incdir/have_sdl.h
 echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
 fi
 if [ "${HAVE_SDL}" = "yes" ]; then
 SDL_PC="sdl"
-else
-SDL_PC=""
 fi
 # END sdl
 		if [ "${HAVE_SDL}" != 'yes' ]
@@ -6042,22 +5974,16 @@ fi
 				echo "*"
 				exit 1
 			fi
-echo 'not enabling SDL 1.2'
-echo '# not enabling SDL 1.2' >>config.log
 HAVE_SDL="no"
 SDL_CFLAGS=""
 SDL_LIBS=""
-SDL_PC=""
 echo '#undef HAVE_SDL' >$bb_incdir/have_sdl.h
 echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
 		fi
 	else
-echo 'not enabling SDL 1.2'
-echo '# not enabling SDL 1.2' >>config.log
 HAVE_SDL="no"
 SDL_CFLAGS=""
 SDL_LIBS=""
-SDL_PC=""
 echo '#undef HAVE_SDL' >$bb_incdir/have_sdl.h
 echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
 	fi
@@ -6276,8 +6202,7 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_OPENGL}" = "yes" ]; then
-else
+if [ "${HAVE_OPENGL}" = "no" ]; then
 $ECHO_N 'checking whether -lGL requires -lm...'
 $ECHO_N '# checking whether -lGL requires -lm...' >>config.log
 OPENGL_LIBS="${OPENGL_LIBS} -lm"
@@ -6323,6 +6248,15 @@ echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_OPENGL}" = "no" ]; then
+HAVE_GLEXT="no"
+OPENGL_CFLAGS=""
+OPENGL_LIBS=""
+echo '#undef HAVE_OPENGL' >$bb_incdir/have_opengl.h
+echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
+echo '#undef HAVE_GLEXT' >$bb_incdir/have_glext.h
+echo 'hdefs["HAVE_GLEXT"] = nil' >>configure.lua
 fi
 fi
 $ECHO_N 'checking whether OpenGL has glext...'
@@ -6382,14 +6316,17 @@ fi
 else
 echo 'no'
 echo '# no' >>config.log
+HAVE_OPENGL="no"
 HAVE_GLEXT="no"
+OPENGL_CFLAGS=""
+OPENGL_LIBS=""
+echo '#undef HAVE_OPENGL' >$bb_incdir/have_opengl.h
+echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
 echo '#undef HAVE_GLEXT' >$bb_incdir/have_glext.h
 echo 'hdefs["HAVE_GLEXT"] = nil' >>configure.lua
 fi
 if [ "${HAVE_OPENGL}" = "yes" ]; then
 OPENGL_PC="gl"
-else
-OPENGL_PC=""
 fi
 # END opengl
 		if [ "${HAVE_OPENGL}" = 'yes' ]
@@ -6404,26 +6341,20 @@ SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
 				echo "*"
 				exit 1
 			fi
-echo 'not enabling OpenGL'
-echo '# not enabling OpenGL' >>config.log
 HAVE_OPENGL="no"
 HAVE_GLEXT="no"
 OPENGL_CFLAGS=""
 OPENGL_LIBS=""
-OPENGL_PC=""
 echo '#undef HAVE_OPENGL' >$bb_incdir/have_opengl.h
 echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
 echo '#undef HAVE_GLEXT' >$bb_incdir/have_glext.h
 echo 'hdefs["HAVE_GLEXT"] = nil' >>configure.lua
 		fi
 	else
-echo 'not enabling OpenGL'
-echo '# not enabling OpenGL' >>config.log
 HAVE_OPENGL="no"
 HAVE_GLEXT="no"
 OPENGL_CFLAGS=""
 OPENGL_LIBS=""
-OPENGL_PC=""
 echo '#undef HAVE_OPENGL' >$bb_incdir/have_opengl.h
 echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
 echo '#undef HAVE_GLEXT' >$bb_incdir/have_glext.h
@@ -6878,12 +6809,10 @@ echo 'hdefs["HAVE_XF86MISC"] = nil' >>configure.lua
 fi
 fi
 else
-HAVE_X11="no"
-HAVE_XKB="no"
-HAVE_XF86MISC="no"
 X11_CFLAGS=""
 X11_LIBS=""
-X11_PC=""
+HAVE_XKB="no"
+HAVE_XF86MISC="no"
 echo '#undef HAVE_X11' >$bb_incdir/have_x11.h
 echo 'hdefs["HAVE_X11"] = nil' >>configure.lua
 echo '#undef HAVE_XKB' >$bb_incdir/have_xkb.h
@@ -6902,14 +6831,11 @@ fi
 				echo "*"
 				exit 1
 			else
-echo 'not enabling the X window system'
-echo '# not enabling the X window system' >>config.log
 HAVE_X11="no"
-HAVE_XKB="no"
-HAVE_XF86MISC="no"
 X11_CFLAGS=""
 X11_LIBS=""
-X11_PC=""
+HAVE_XKB="no"
+HAVE_XF86MISC="no"
 echo '#undef HAVE_X11' >$bb_incdir/have_x11.h
 echo 'hdefs["HAVE_X11"] = nil' >>configure.lua
 echo '#undef HAVE_XKB' >$bb_incdir/have_xkb.h
@@ -7095,7 +7021,10 @@ fi
 if [ "${HAVE_XINERAMA}" = "yes" ]; then
 XINERAMA_PC="xinerama"
 else
-XINERAMA_PC=""
+XINERAMA_CFLAGS=""
+XINERAMA_LIBS=""
+echo '#undef HAVE_XINERAMA' >$bb_incdir/have_xinerama.h
+echo 'hdefs["HAVE_XINERAMA"] = nil' >>configure.lua
 fi
 # END xinerama
 			if [ "${HAVE_XINERAMA}" != 'yes' ]
@@ -7108,46 +7037,34 @@ fi
 					echo "*"
 					exit 1
 				fi
-echo 'not enabling the Xinerama extension'
-echo '# not enabling the Xinerama extension' >>config.log
 HAVE_XINERAMA="no"
 XINERAMA_CFLAGS=""
 XINERAMA_LIBS=""
-XINERAMA_PC=""
 echo '#undef HAVE_XINERAMA' >$bb_incdir/have_xinerama.h
 echo 'hdefs["HAVE_XINERAMA"] = nil' >>configure.lua
 			fi
 		else
-echo 'not enabling the Xinerama extension'
-echo '# not enabling the Xinerama extension' >>config.log
 HAVE_XINERAMA="no"
 XINERAMA_CFLAGS=""
 XINERAMA_LIBS=""
-XINERAMA_PC=""
 echo '#undef HAVE_XINERAMA' >$bb_incdir/have_xinerama.h
 echo 'hdefs["HAVE_XINERAMA"] = nil' >>configure.lua
 		fi
 	else
-echo 'not enabling the X window system'
-echo '# not enabling the X window system' >>config.log
 HAVE_X11="no"
-HAVE_XKB="no"
-HAVE_XF86MISC="no"
 X11_CFLAGS=""
 X11_LIBS=""
-X11_PC=""
+HAVE_XKB="no"
+HAVE_XF86MISC="no"
 echo '#undef HAVE_X11' >$bb_incdir/have_x11.h
 echo 'hdefs["HAVE_X11"] = nil' >>configure.lua
 echo '#undef HAVE_XKB' >$bb_incdir/have_xkb.h
 echo 'hdefs["HAVE_XKB"] = nil' >>configure.lua
 echo '#undef HAVE_XF86MISC' >$bb_incdir/have_xf86misc.h
 echo 'hdefs["HAVE_XF86MISC"] = nil' >>configure.lua
-echo 'not enabling the Xinerama extension'
-echo '# not enabling the Xinerama extension' >>config.log
 HAVE_XINERAMA="no"
 XINERAMA_CFLAGS=""
 XINERAMA_LIBS=""
-XINERAMA_PC=""
 echo '#undef HAVE_XINERAMA' >$bb_incdir/have_xinerama.h
 echo 'hdefs["HAVE_XINERAMA"] = nil' >>configure.lua
 	fi
@@ -7195,6 +7112,12 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.m $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_COCOA}" = "no" ]; then
+COCOA_CFLAGS=""
+COCOA_LIBS=""
+echo '#undef HAVE_COCOA' >$bb_incdir/have_cocoa.h
+echo 'hdefs["HAVE_COCOA"] = nil' >>configure.lua
+fi
 # END cocoa
 		if [ "${HAVE_COCOA}" != 'yes' ]
  then
@@ -7206,8 +7129,6 @@ fi
 				echo "*"
 				exit 1
 			fi
-echo 'not enabling the Cocoa framework'
-echo '# not enabling the Cocoa framework' >>config.log
 HAVE_COCOA="no"
 COCOA_CFLAGS=""
 COCOA_LIBS=""
@@ -7215,8 +7136,6 @@ echo '#undef HAVE_COCOA' >$bb_incdir/have_cocoa.h
 echo 'hdefs["HAVE_COCOA"] = nil' >>configure.lua
 		fi
 	else
-echo 'not enabling the Cocoa framework'
-echo '# not enabling the Cocoa framework' >>config.log
 HAVE_COCOA="no"
 COCOA_CFLAGS=""
 COCOA_LIBS=""
@@ -7237,11 +7156,11 @@ cat << EOT >conftest$$.c
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #ifdef __APPLE__
-#include <OpenGL/gl.h>
-#include <OpenGL/glx.h>
+# include <OpenGL/gl.h>
+# include <OpenGL/glx.h>
 #else
-#include <GL/gl.h>
-#include <GL/glx.h>
+# include <GL/gl.h>
+# include <GL/glx.h>
 #endif
 int main(int argc, char *argv[]) {
 	Display *d;
@@ -7288,6 +7207,12 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_GLX}" = "no" ]; then
+GLX_CFLAGS=""
+GLX_LIBS=""
+echo '#undef HAVE_GLX' >$bb_incdir/have_glx.h
+echo 'hdefs["HAVE_GLX"] = nil' >>configure.lua
+fi
 # END glx
 			if [ "${HAVE_GLX}" != 'yes' ]
  then
@@ -7299,8 +7224,6 @@ fi
 					echo "*"
 					exit 1
 				fi
-echo 'not enabling the GLX interface'
-echo '# not enabling the GLX interface' >>config.log
 HAVE_GLX="no"
 GLX_CFLAGS=""
 GLX_LIBS=""
@@ -7308,8 +7231,6 @@ echo '#undef HAVE_GLX' >$bb_incdir/have_glx.h
 echo 'hdefs["HAVE_GLX"] = nil' >>configure.lua
 			fi
 		else
-echo 'not enabling the GLX interface'
-echo '# not enabling the GLX interface' >>config.log
 HAVE_GLX="no"
 GLX_CFLAGS=""
 GLX_LIBS=""
@@ -7374,6 +7295,9 @@ rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_WGL}" = "yes" ]; then
 OPENGL_LIBS="${OPENGL_LIBS} -lgdi32"
+else
+echo '#undef HAVE_WGL' >$bb_incdir/have_wgl.h
+echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
 fi
 # END wgl
 			if [ "${HAVE_WGL}" != 'yes' ]
@@ -7386,29 +7310,21 @@ fi
 					echo "*"
 					exit 1
 				fi
-echo 'not enabling the WGL interface'
-echo '# not enabling the WGL interface' >>config.log
 HAVE_WGL="no"
 echo '#undef HAVE_WGL' >$bb_incdir/have_wgl.h
 echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
 			fi
 		else
-echo 'not enabling the WGL interface'
-echo '# not enabling the WGL interface' >>config.log
 HAVE_WGL="no"
 echo '#undef HAVE_WGL' >$bb_incdir/have_wgl.h
 echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
 		fi
 	else
-echo 'not enabling the GLX interface'
-echo '# not enabling the GLX interface' >>config.log
 HAVE_GLX="no"
 GLX_CFLAGS=""
 GLX_LIBS=""
 echo '#undef HAVE_GLX' >$bb_incdir/have_glx.h
 echo 'hdefs["HAVE_GLX"] = nil' >>configure.lua
-echo 'not enabling the WGL interface'
-echo '# not enabling the WGL interface' >>config.log
 HAVE_WGL="no"
 echo '#undef HAVE_WGL' >$bb_incdir/have_wgl.h
 echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
@@ -7670,18 +7586,21 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_FREETYPE}" = "no" ]; then
+FREETYPE_CFLAGS=""
+FREETYPE_LIBS=""
+echo '#undef HAVE_FREETYPE' >$bb_incdir/have_freetype.h
+echo 'hdefs["HAVE_FREETYPE"] = nil' >>configure.lua
+fi
 else
 HAVE_FREETYPE="no"
 FREETYPE_CFLAGS=""
 FREETYPE_LIBS=""
-FREETYPE_PC=""
 echo '#undef HAVE_FREETYPE' >$bb_incdir/have_freetype.h
 echo 'hdefs["HAVE_FREETYPE"] = nil' >>configure.lua
 fi
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 FREETYPE_PC="freetype2"
-else
-FREETYPE_PC=""
 fi
 # END freetype
 		if [ "${HAVE_FREETYPE}" != 'yes' ]
@@ -7699,12 +7618,9 @@ fi
 			exit 1
 		fi
 	else
-echo 'not enabling FreeType'
-echo '# not enabling FreeType' >>config.log
 HAVE_FREETYPE="no"
 FREETYPE_CFLAGS=""
 FREETYPE_LIBS=""
-FREETYPE_PC=""
 echo '#undef HAVE_FREETYPE' >$bb_incdir/have_freetype.h
 echo 'hdefs["HAVE_FREETYPE"] = nil' >>configure.lua
 	fi
@@ -7845,22 +7761,23 @@ int
 main(int argc, char *argv[])
 {
 	FcPattern *pattern, *fpat;
-    FcResult result = FcResultMatch;
+	FcResult result = FcResultMatch;
 	const FcChar8 name[1] = { '\0' };
-    FcChar8 *file;
-    FcMatrix *mat = NULL;
-    double size;
-    int idx;
-    if (!FcInit()) { return (1); }
-    if ((pattern = FcNameParse(name)) == NULL) { return (1); }
-    if (!FcConfigSubstitute(NULL, pattern, FcMatchPattern)) { return (1); }
-    FcDefaultSubstitute(pattern);
-    if ((fpat = FcFontMatch(NULL, pattern, &result)) == NULL) { return (1); }
-    if (FcPatternGetString(fpat, FC_FILE, 0, &file) != FcResultMatch) { return (1); }
-    if (FcPatternGetInteger(fpat, FC_INDEX, 0, &idx) != FcResultMatch) { return (1); }
-    if (FcPatternGetDouble(fpat, FC_SIZE, 0, &size) != FcResultMatch) { return (1); }
-    if (FcPatternGetMatrix(fpat, FC_MATRIX, 0, &mat) != FcResultMatch) { return (1); }
-    return (0);
+	FcChar8 *file;
+	FcMatrix *mat = NULL;
+	double size;
+	int idx;
+
+	if (!FcInit()) { return (1); }
+	if ((pattern = FcNameParse(name)) == NULL) { return (1); }
+	if (!FcConfigSubstitute(NULL, pattern, FcMatchPattern)) { return (1); }
+	FcDefaultSubstitute(pattern);
+	if ((fpat = FcFontMatch(NULL, pattern, &result)) == NULL) { return (1); }
+	if (FcPatternGetString(fpat, FC_FILE, 0, &file) != FcResultMatch) { return (1); }
+	if (FcPatternGetInteger(fpat, FC_INDEX, 0, &idx) != FcResultMatch) { return (1); }
+	if (FcPatternGetDouble(fpat, FC_SIZE, 0, &size) != FcResultMatch) { return (1); }
+	if (FcPatternGetMatrix(fpat, FC_MATRIX, 0, &mat) != FcResultMatch) { return (1); }
+	return (0);
 }
 EOT
 echo >>config.log
@@ -7893,6 +7810,12 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_FONTCONFIG}" = "no" ]; then
+FONTCONFIG_CFLAGS=""
+FONTCONFIG_LIBS=""
+echo '#undef HAVE_FONTCONFIG' >$bb_incdir/have_fontconfig.h
+echo 'hdefs["HAVE_FONTCONFIG"] = nil' >>configure.lua
+fi
 else
 HAVE_FONTCONFIG="no"
 FONTCONFIG_CFLAGS=""
@@ -7902,8 +7825,6 @@ echo 'hdefs["HAVE_FONTCONFIG"] = nil' >>configure.lua
 fi
 # END fontconfig
 	else
-echo 'not enabling fontconfig'
-echo '# not enabling fontconfig' >>config.log
 HAVE_FONTCONFIG="no"
 FONTCONFIG_CFLAGS=""
 FONTCONFIG_LIBS=""
@@ -8009,20 +7930,23 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_JPEG}" = "no" ]; then
+JPEG_CFLAGS=""
+JPEG_LIBS=""
+echo '#undef HAVE_JPEG' >$bb_incdir/have_jpeg.h
+echo 'hdefs["HAVE_JPEG"] = nil' >>configure.lua
+fi
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_JPEG="no"
 JPEG_CFLAGS=""
 JPEG_LIBS=""
-JPEG_PC=""
 echo '#undef HAVE_JPEG' >$bb_incdir/have_jpeg.h
 echo 'hdefs["HAVE_JPEG"] = nil' >>configure.lua
 fi
 if [ "${HAVE_JPEG}" = "yes" ]; then
 JPEG_PC="libjpeg"
-else
-JPEG_PC=""
 fi
 # END jpeg
 		if [ "${HAVE_JPEG}" != 'yes' ]
@@ -8035,22 +7959,16 @@ fi
 				echo "*"
 				exit 1
 			fi
-echo 'not enabling libjpeg'
-echo '# not enabling libjpeg' >>config.log
 HAVE_JPEG="no"
 JPEG_CFLAGS=""
 JPEG_LIBS=""
-JPEG_PC=""
 echo '#undef HAVE_JPEG' >$bb_incdir/have_jpeg.h
 echo 'hdefs["HAVE_JPEG"] = nil' >>configure.lua
 		fi
 	else
-echo 'not enabling libjpeg'
-echo '# not enabling libjpeg' >>config.log
 HAVE_JPEG="no"
 JPEG_CFLAGS=""
 JPEG_LIBS=""
-JPEG_PC=""
 echo '#undef HAVE_JPEG' >$bb_incdir/have_jpeg.h
 echo 'hdefs["HAVE_JPEG"] = nil' >>configure.lua
 	fi
@@ -8258,6 +8176,14 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_PNG}" = "no" ]; then
+PNG_CFLAGS=""
+PNG_LIBS=""
+echo '#undef HAVE_PNG' >$bb_incdir/have_png.h
+echo 'hdefs["HAVE_PNG"] = nil' >>configure.lua
+echo '#undef HAVE_LIBPNG14' >$bb_incdir/have_libpng14.h
+echo 'hdefs["HAVE_LIBPNG14"] = nil' >>configure.lua
+else
 MK_VERSION_MAJOR=`echo "$PNG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
 MK_VERSION_MINOR=`echo "$PNG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
 MK_VERSION_MICRO=`echo "$PNG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
@@ -8289,15 +8215,15 @@ echo "#define HAVE_LIBPNG14 \"$HAVE_LIBPNG14\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_LIBPNG14\"] = \"$HAVE_LIBPNG14\"" >>configure.lua
 else
+HAVE_LIBPNG14="no"
 echo '#undef HAVE_LIBPNG14' >$bb_incdir/have_libpng14.h
 echo 'hdefs["HAVE_LIBPNG14"] = nil' >>configure.lua
 fi
+fi
 else
 HAVE_PNG="no"
-HAVE_LIBPNG14="no"
 PNG_CFLAGS=""
 PNG_LIBS=""
-PNG_PC=""
 echo '#undef HAVE_PNG' >$bb_incdir/have_png.h
 echo 'hdefs["HAVE_PNG"] = nil' >>configure.lua
 echo '#undef HAVE_LIBPNG14' >$bb_incdir/have_libpng14.h
@@ -8305,8 +8231,6 @@ echo 'hdefs["HAVE_LIBPNG14"] = nil' >>configure.lua
 fi
 if [ "${HAVE_PNG}" = "yes" ]; then
 PNG_PC="libpng"
-else
-PNG_PC=""
 fi
 # END png
 		if [ "${HAVE_PNG}" != 'yes' ]
@@ -8319,26 +8243,18 @@ fi
 				echo "*"
 				exit 1
 			fi
-echo 'not enabling libpng'
-echo '# not enabling libpng' >>config.log
 HAVE_PNG="no"
-HAVE_LIBPNG14="no"
 PNG_CFLAGS=""
 PNG_LIBS=""
-PNG_PC=""
 echo '#undef HAVE_PNG' >$bb_incdir/have_png.h
 echo 'hdefs["HAVE_PNG"] = nil' >>configure.lua
 echo '#undef HAVE_LIBPNG14' >$bb_incdir/have_libpng14.h
 echo 'hdefs["HAVE_LIBPNG14"] = nil' >>configure.lua
 		fi
 	else
-echo 'not enabling libpng'
-echo '# not enabling libpng' >>config.log
 HAVE_PNG="no"
-HAVE_LIBPNG14="no"
 PNG_CFLAGS=""
 PNG_LIBS=""
-PNG_PC=""
 echo '#undef HAVE_PNG' >$bb_incdir/have_png.h
 echo 'hdefs["HAVE_PNG"] = nil' >>configure.lua
 echo '#undef HAVE_LIBPNG14' >$bb_incdir/have_libpng14.h
@@ -8349,56 +8265,40 @@ echo '#undef ENABLE_GUI' >$bb_incdir/enable_gui.h
 echo 'hdefs["ENABLE_GUI"] = nil' >>configure.lua
 ENABLE_GUI_LIBS=""
 SUBDIR_gui=""
-echo 'not enabling SDL 1.2'
-echo '# not enabling SDL 1.2' >>config.log
 HAVE_SDL="no"
 SDL_CFLAGS=""
 SDL_LIBS=""
-SDL_PC=""
 echo '#undef HAVE_SDL' >$bb_incdir/have_sdl.h
 echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
-echo 'not enabling the X window system'
-echo '# not enabling the X window system' >>config.log
 HAVE_X11="no"
-HAVE_XKB="no"
-HAVE_XF86MISC="no"
 X11_CFLAGS=""
 X11_LIBS=""
-X11_PC=""
+HAVE_XKB="no"
+HAVE_XF86MISC="no"
 echo '#undef HAVE_X11' >$bb_incdir/have_x11.h
 echo 'hdefs["HAVE_X11"] = nil' >>configure.lua
 echo '#undef HAVE_XKB' >$bb_incdir/have_xkb.h
 echo 'hdefs["HAVE_XKB"] = nil' >>configure.lua
 echo '#undef HAVE_XF86MISC' >$bb_incdir/have_xf86misc.h
 echo 'hdefs["HAVE_XF86MISC"] = nil' >>configure.lua
-echo 'not enabling the Xinerama extension'
-echo '# not enabling the Xinerama extension' >>config.log
 HAVE_XINERAMA="no"
 XINERAMA_CFLAGS=""
 XINERAMA_LIBS=""
-XINERAMA_PC=""
 echo '#undef HAVE_XINERAMA' >$bb_incdir/have_xinerama.h
 echo 'hdefs["HAVE_XINERAMA"] = nil' >>configure.lua
-echo 'not enabling the Cocoa framework'
-echo '# not enabling the Cocoa framework' >>config.log
 HAVE_COCOA="no"
 COCOA_CFLAGS=""
 COCOA_LIBS=""
 echo '#undef HAVE_COCOA' >$bb_incdir/have_cocoa.h
 echo 'hdefs["HAVE_COCOA"] = nil' >>configure.lua
-echo 'not enabling OpenGL'
-echo '# not enabling OpenGL' >>config.log
 HAVE_OPENGL="no"
 HAVE_GLEXT="no"
 OPENGL_CFLAGS=""
 OPENGL_LIBS=""
-OPENGL_PC=""
 echo '#undef HAVE_OPENGL' >$bb_incdir/have_opengl.h
 echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
 echo '#undef HAVE_GLEXT' >$bb_incdir/have_glext.h
 echo 'hdefs["HAVE_GLEXT"] = nil' >>configure.lua
-echo 'not enabling GLU'
-echo '# not enabling GLU' >>config.log
 HAVE_GLU="no"
 GLU_CFLAGS=""
 GLU_LIBS=""
@@ -8408,48 +8308,32 @@ echo '#undef GLU_CFLAGS' >$bb_incdir/glu_cflags.h
 echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
 echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
 echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
-echo 'not enabling the GLX interface'
-echo '# not enabling the GLX interface' >>config.log
 HAVE_GLX="no"
 GLX_CFLAGS=""
 GLX_LIBS=""
 echo '#undef HAVE_GLX' >$bb_incdir/have_glx.h
 echo 'hdefs["HAVE_GLX"] = nil' >>configure.lua
-echo 'not enabling the WGL interface'
-echo '# not enabling the WGL interface' >>config.log
 HAVE_WGL="no"
 echo '#undef HAVE_WGL' >$bb_incdir/have_wgl.h
 echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
-echo 'not enabling FreeType'
-echo '# not enabling FreeType' >>config.log
 HAVE_FREETYPE="no"
 FREETYPE_CFLAGS=""
 FREETYPE_LIBS=""
-FREETYPE_PC=""
 echo '#undef HAVE_FREETYPE' >$bb_incdir/have_freetype.h
 echo 'hdefs["HAVE_FREETYPE"] = nil' >>configure.lua
-echo 'not enabling fontconfig'
-echo '# not enabling fontconfig' >>config.log
 HAVE_FONTCONFIG="no"
 FONTCONFIG_CFLAGS=""
 FONTCONFIG_LIBS=""
 echo '#undef HAVE_FONTCONFIG' >$bb_incdir/have_fontconfig.h
 echo 'hdefs["HAVE_FONTCONFIG"] = nil' >>configure.lua
-echo 'not enabling libjpeg'
-echo '# not enabling libjpeg' >>config.log
 HAVE_JPEG="no"
 JPEG_CFLAGS=""
 JPEG_LIBS=""
-JPEG_PC=""
 echo '#undef HAVE_JPEG' >$bb_incdir/have_jpeg.h
 echo 'hdefs["HAVE_JPEG"] = nil' >>configure.lua
-echo 'not enabling libpng'
-echo '# not enabling libpng' >>config.log
 HAVE_PNG="no"
-HAVE_LIBPNG14="no"
 PNG_CFLAGS=""
 PNG_LIBS=""
-PNG_PC=""
 echo '#undef HAVE_PNG' >$bb_incdir/have_png.h
 echo 'hdefs["HAVE_PNG"] = nil' >>configure.lua
 echo '#undef HAVE_LIBPNG14' >$bb_incdir/have_libpng14.h
@@ -8981,18 +8865,12 @@ echo '#endif' >>$bb_o
 echo "hdefs[\"AG_NETWORK\"] = \"$AG_NETWORK\"" >>configure.lua
 else
 SUBDIR_net=""
-echo 'not enabling getaddrinfo()'
-echo '# not enabling getaddrinfo()' >>config.log
 HAVE_GETADDRINFO="no"
 echo '#undef HAVE_GETADDRINFO' >$bb_incdir/have_getaddrinfo.h
 echo 'hdefs["HAVE_GETADDRINFO"] = nil' >>configure.lua
-echo 'not enabling the SIOCGIFCONF interface'
-echo '# not enabling the SIOCGIFCONF interface' >>config.log
 HAVE_SIOCGIFCONF="no"
 echo '#undef HAVE_SIOCGIFCONF' >$bb_incdir/have_siocgifconf.h
 echo 'hdefs["HAVE_SIOCGIFCONF"] = nil' >>configure.lua
-echo 'not enabling setsockopt()'
-echo '# not enabling setsockopt()' >>config.log
 HAVE_SETSOCKOPT="no"
 HAVE_SO_OOBINLINE="no"
 HAVE_SO_REUSEPORT="no"
@@ -9014,8 +8892,6 @@ echo '#undef HAVE_SO_LINGER' >$bb_incdir/have_so_linger.h
 echo 'hdefs["HAVE_SO_LINGER"] = nil' >>configure.lua
 echo '#undef HAVE_SO_ACCEPTFILTER' >$bb_incdir/have_so_acceptfilter.h
 echo 'hdefs["HAVE_SO_ACCEPTFILTER"] = nil' >>configure.lua
-echo 'not enabling WinSock'
-echo '# not enabling WinSock' >>config.log
 HAVE_WINSOCK1="no"
 HAVE_WINSOCK2="no"
 echo '#undef HAVE_WINSOCK1' >$bb_incdir/have_winsock1.h
@@ -9094,6 +8970,12 @@ echo 'hdefs["HAVE_ZLIB"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_ZLIB}" = "no" ]; then
+ZLIB_CFLAGS=""
+ZLIB_LIBS=""
+echo '#undef HAVE_ZLIB' >$bb_incdir/have_zlib.h
+echo 'hdefs["HAVE_ZLIB"] = nil' >>configure.lua
 fi
 else
 echo 'no'
@@ -9187,8 +9069,6 @@ echo "#define AG_WEB \"$AG_WEB\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"AG_WEB\"] = \"$AG_WEB\"" >>configure.lua
 else
-echo 'not enabling zlib'
-echo '# not enabling zlib' >>config.log
 HAVE_ZLIB="no"
 ZLIB_CFLAGS=""
 ZLIB_LIBS=""
@@ -9303,6 +9183,12 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_DB4}" = "no" ]; then
+DB4_CFLAGS=""
+DB4_LIBS=""
+echo '#undef HAVE_DB4' >$bb_incdir/have_db4.h
+echo 'hdefs["HAVE_DB4"] = nil' >>configure.lua
+fi
 else
 HAVE_DB4="no"
 DB4_CFLAGS=""
@@ -9321,8 +9207,6 @@ fi
 			echo "*"
 			exit 1
 		else
-echo 'not enabling Berkeley DB 4.x'
-echo '# not enabling Berkeley DB 4.x' >>config.log
 HAVE_DB4="no"
 DB4_CFLAGS=""
 DB4_LIBS=""
@@ -9331,8 +9215,6 @@ echo 'hdefs["HAVE_DB4"] = nil' >>configure.lua
 		fi
 	fi
 else
-echo 'not enabling Berkeley DB 4.x'
-echo '# not enabling Berkeley DB 4.x' >>config.log
 HAVE_DB4="no"
 DB4_CFLAGS=""
 DB4_LIBS=""
@@ -9434,6 +9316,12 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_DB5}" = "no" ]; then
+DB5_CFLAGS=""
+DB5_LIBS=""
+echo '#undef HAVE_DB5' >$bb_incdir/have_db5.h
+echo 'hdefs["HAVE_DB5"] = nil' >>configure.lua
+fi
 else
 echo "no"
 echo "# no" >>config.log
@@ -9454,8 +9342,6 @@ fi
 			echo "*"
 			exit 1
 		else
-echo 'not enabling Berkeley DB 5.x'
-echo '# not enabling Berkeley DB 5.x' >>config.log
 HAVE_DB5="no"
 DB5_CFLAGS=""
 DB5_LIBS=""
@@ -9464,8 +9350,6 @@ echo 'hdefs["HAVE_DB5"] = nil' >>configure.lua
 		fi
 	fi
 else
-echo 'not enabling Berkeley DB 5.x'
-echo '# not enabling Berkeley DB 5.x' >>config.log
 HAVE_DB5="no"
 DB5_CFLAGS=""
 DB5_LIBS=""
@@ -9639,6 +9523,12 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_MYSQL}" = "no" ]; then
+MYSQL_CFLAGS=""
+MYSQL_LIBS=""
+echo '#undef HAVE_MYSQL' >$bb_incdir/have_mysql.h
+echo 'hdefs["HAVE_MYSQL"] = nil' >>configure.lua
+fi
 else
 HAVE_MYSQL="no"
 MYSQL_CFLAGS=""
@@ -9657,8 +9547,6 @@ fi
 			echo "*"
 			exit 1
 		fi
-echo 'not enabling MySQL'
-echo '# not enabling MySQL' >>config.log
 HAVE_MYSQL="no"
 MYSQL_CFLAGS=""
 MYSQL_LIBS=""
@@ -9666,8 +9554,6 @@ echo '#undef HAVE_MYSQL' >$bb_incdir/have_mysql.h
 echo 'hdefs["HAVE_MYSQL"] = nil' >>configure.lua
 	fi
 else
-echo 'not enabling MySQL'
-echo '# not enabling MySQL' >>config.log
 HAVE_MYSQL="no"
 MYSQL_CFLAGS=""
 MYSQL_LIBS=""
@@ -9920,6 +9806,31 @@ rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
+else
+HAVE_PTHREADS_XOPEN="no"
+HAVE_PTHREAD_MUTEX_RECURSIVE="no"
+HAVE_PTHREAD_MUTEX_RECURSIVE_NP="no"
+HAVE_PTHREAD_MUTEX_T_POINTER="no"
+HAVE_PTHREAD_COND_T_POINTER="no"
+HAVE_PTHREAD_T_POINTER="no"
+PTHREADS_CFLAGS=""
+PTHREADS_LIBS=""
+PTHREADS_XOPEN_CFLAGS=""
+PTHREADS_XOPEN_LIBS=""
+echo '#undef HAVE_PTHREADS' >$bb_incdir/have_pthreads.h
+echo 'hdefs["HAVE_PTHREADS"] = nil' >>configure.lua
+echo '#undef HAVE_PTHREADS_XOPEN' >$bb_incdir/have_pthreads_xopen.h
+echo 'hdefs["HAVE_PTHREADS_XOPEN"] = nil' >>configure.lua
+echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE' >$bb_incdir/have_pthread_mutex_recursive.h
+echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE"] = nil' >>configure.lua
+echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP' >$bb_incdir/have_pthread_mutex_recursive_np.h
+echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE_NP"] = nil' >>configure.lua
+echo '#undef HAVE_PTHREAD_MUTEX_T_POINTER' >$bb_incdir/have_pthread_mutex_t_pointer.h
+echo 'hdefs["HAVE_PTHREAD_MUTEX_T_POINTER"] = nil' >>configure.lua
+echo '#undef HAVE_PTHREAD_COND_T_POINTER' >$bb_incdir/have_pthread_cond_t_pointer.h
+echo 'hdefs["HAVE_PTHREAD_COND_T_POINTER"] = nil' >>configure.lua
+echo '#undef HAVE_PTHREAD_T_POINTER' >$bb_incdir/have_pthread_t_pointer.h
+echo 'hdefs["HAVE_PTHREAD_T_POINTER"] = nil' >>configure.lua
 fi
 fi
 fi
@@ -10393,24 +10304,25 @@ echo '#undef AG_THREADS' >$bb_incdir/ag_threads.h
 echo 'hdefs["AG_THREADS"] = nil' >>configure.lua
 	fi
 else
-echo 'not enabling POSIX threads'
-echo '# not enabling POSIX threads' >>config.log
 HAVE_PTHREADS="no"
+HAVE_PTHREADS_XOPEN="no"
 HAVE_PTHREAD_MUTEX_RECURSIVE="no"
 HAVE_PTHREAD_MUTEX_RECURSIVE_NP="no"
-HAVE_PTHREADS_XOPEN="no"
+HAVE_PTHREAD_MUTEX_T_POINTER="no"
+HAVE_PTHREAD_COND_T_POINTER="no"
+HAVE_PTHREAD_T_POINTER="no"
 PTHREADS_CFLAGS=""
 PTHREADS_LIBS=""
 PTHREADS_XOPEN_CFLAGS=""
 PTHREADS_XOPEN_LIBS=""
 echo '#undef HAVE_PTHREADS' >$bb_incdir/have_pthreads.h
 echo 'hdefs["HAVE_PTHREADS"] = nil' >>configure.lua
+echo '#undef HAVE_PTHREADS_XOPEN' >$bb_incdir/have_pthreads_xopen.h
+echo 'hdefs["HAVE_PTHREADS_XOPEN"] = nil' >>configure.lua
 echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE' >$bb_incdir/have_pthread_mutex_recursive.h
 echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE"] = nil' >>configure.lua
 echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP' >$bb_incdir/have_pthread_mutex_recursive_np.h
 echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE_NP"] = nil' >>configure.lua
-echo '#undef HAVE_PTHREADS_XOPEN' >$bb_incdir/have_pthreads_xopen.h
-echo 'hdefs["HAVE_PTHREADS_XOPEN"] = nil' >>configure.lua
 echo '#undef HAVE_PTHREAD_MUTEX_T_POINTER' >$bb_incdir/have_pthread_mutex_t_pointer.h
 echo 'hdefs["HAVE_PTHREAD_MUTEX_T_POINTER"] = nil' >>configure.lua
 echo '#undef HAVE_PTHREAD_COND_T_POINTER' >$bb_incdir/have_pthread_cond_t_pointer.h
@@ -10509,6 +10421,12 @@ echo 'hdefs["HAVE_ICONV"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_ICONV}" = "no" ]; then
+ICONV_CFLAGS=""
+ICONV_LIBS=""
+echo '#undef HAVE_ICONV' >$bb_incdir/have_iconv.h
+echo 'hdefs["HAVE_ICONV"] = nil' >>configure.lua
 fi
 # END iconv
 $ECHO_N 'checking for a gettext library in libc...'
@@ -10636,8 +10554,7 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_GETTEXT}" = "yes" ]; then
-else
+if [ "${HAVE_GETTEXT}" = "no" ]; then
 $ECHO_N 'checking whether -lintl requires -liconv...'
 $ECHO_N '# checking whether -lintl requires -liconv...' >>config.log
 if [ "${prefix_gettext}" != "" ]; then
@@ -10714,6 +10631,12 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_GETTEXT}" = "no" ]; then
+GETTEXT_CFLAGS=""
+GETTEXT_LIBS=""
+echo '#undef HAVE_GETTEXT' >$bb_incdir/have_gettext.h
+echo 'hdefs["HAVE_GETTEXT"] = nil' >>configure.lua
+fi
 fi
 fi
 # END gettext
@@ -10725,15 +10648,11 @@ fi
 		exit 1
 	fi
 else
-echo 'not enabling iconv()'
-echo '# not enabling iconv()' >>config.log
 HAVE_ICONV="no"
 ICONV_CFLAGS=""
 ICONV_LIBS=""
 echo '#undef HAVE_ICONV' >$bb_incdir/have_iconv.h
 echo 'hdefs["HAVE_ICONV"] = nil' >>configure.lua
-echo 'not enabling a gettext library in libc'
-echo '# not enabling a gettext library in libc' >>config.log
 HAVE_GETTEXT="no"
 GETTEXT_CFLAGS=""
 GETTEXT_LIBS=""
@@ -10877,7 +10796,12 @@ if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_ALTIVEC}" = "no" ]; then
+HAVE_ALTIVEC_H="no"
 ALTIVEC_CFLAGS=""
+echo '#undef HAVE_ALTIVEC' >$bb_incdir/have_altivec.h
+echo 'hdefs["HAVE_ALTIVEC"] = nil' >>configure.lua
+echo '#undef HAVE_ALTIVEC_H' >$bb_incdir/have_altivec_h.h
+echo 'hdefs["HAVE_ALTIVEC_H"] = nil' >>configure.lua
 fi
 echo '#undef HAVE_ALTIVEC_H' >$bb_incdir/have_altivec_h.h
 echo 'hdefs["HAVE_ALTIVEC_H"] = nil' >>configure.lua
@@ -10893,8 +10817,6 @@ fi
 			echo "*"
 			exit 1
 		else
-echo 'not enabling AltiVec (with <altivec.h>)'
-echo '# not enabling AltiVec (with <altivec.h>)' >>config.log
 HAVE_ALTIVEC="no"
 HAVE_ALTIVEC_H="no"
 ALTIVEC_CFLAGS=""
@@ -10919,8 +10841,6 @@ echo 'hdefs["INLINE_ALTIVEC"] = nil' >>configure.lua
 fi
 	fi
 else
-echo 'not enabling AltiVec (with <altivec.h>)'
-echo '# not enabling AltiVec (with <altivec.h>)' >>config.log
 HAVE_ALTIVEC="no"
 HAVE_ALTIVEC_H="no"
 ALTIVEC_CFLAGS=""
@@ -11149,8 +11069,6 @@ fi
 			echo "*"
 			exit 1
 		fi
-echo 'not enabling SSE extensions'
-echo '# not enabling SSE extensions' >>config.log
 HAVE_SSE="no"
 HAVE_SSE2="no"
 HAVE_SSE3="no"
@@ -11188,8 +11106,6 @@ echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
 fi
 	fi
 else
-echo 'not enabling SSE extensions'
-echo '# not enabling SSE extensions' >>config.log
 HAVE_SSE="no"
 HAVE_SSE2="no"
 HAVE_SSE3="no"
@@ -11457,14 +11373,21 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_SNDFILE}" = "no" ]; then
+SNDFILE_CFLAGS=""
+SNDFILE_LIBS=""
+echo '#undef HAVE_SNDFILE' >$bb_incdir/have_sndfile.h
+echo 'hdefs["HAVE_SNDFILE"] = nil' >>configure.lua
+fi
 else
+HAVE_SNDFILE="no"
+SNDFILE_CFLAGS=""
+SNDFILE_LIBS=""
 echo '#undef HAVE_SNDFILE' >$bb_incdir/have_sndfile.h
 echo 'hdefs["HAVE_SNDFILE"] = nil' >>configure.lua
 fi
 if [ "${HAVE_SNDFILE}" = "yes" ]; then
 SNDFILE_PC="sndfile"
-else
-SNDFILE_PC=""
 fi
 # END sndfile
 $ECHO_N 'checking for PortAudio2...'
@@ -11691,34 +11614,35 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_PORTAUDIO}" = "no" ]; then
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
+echo '#undef HAVE_PORTAUDIO' >$bb_incdir/have_portaudio.h
+echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
+fi
 else
+HAVE_PORTAUDIO="no"
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
 echo '#undef HAVE_PORTAUDIO' >$bb_incdir/have_portaudio.h
 echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
 fi
 if [ "${HAVE_PORTAUDIO}" = "yes" ]; then
 PORTAUDIO_PC="portaudio-2.0"
-else
-PORTAUDIO_PC=""
 fi
 # END portaudio
 else
 echo '#undef ENABLE_AU' >$bb_incdir/enable_au.h
 echo 'hdefs["ENABLE_AU"] = nil' >>configure.lua
 SUBDIR_au=""
-echo 'not enabling libsndfile'
-echo '# not enabling libsndfile' >>config.log
 HAVE_SNDFILE="no"
 SNDFILE_CFLAGS=""
 SNDFILE_LIBS=""
-SNDFILE_PC=""
 echo '#undef HAVE_SNDFILE' >$bb_incdir/have_sndfile.h
 echo 'hdefs["HAVE_SNDFILE"] = nil' >>configure.lua
-echo 'not enabling PortAudio2'
-echo '# not enabling PortAudio2' >>config.log
 HAVE_PORTAUDIO="no"
 PORTAUDIO_CFLAGS=""
 PORTAUDIO_LIBS=""
-PORTAUDIO_PC=""
 echo '#undef HAVE_PORTAUDIO' >$bb_incdir/have_portaudio.h
 echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
 fi
@@ -11862,6 +11786,16 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_GLU}" = "no" ]; then
+GLU_CFLAGS=""
+GLU_LIBS=""
+echo '#undef HAVE_GLU' >$bb_incdir/have_glu.h
+echo 'hdefs["HAVE_GLU"] = nil' >>configure.lua
+echo '#undef GLU_CFLAGS' >$bb_incdir/glu_cflags.h
+echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
+echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
+echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
+fi
 # END glu
 		if [ "${HAVE_GLU}" = 'yes' ]
  then
@@ -11875,8 +11809,6 @@ SDL_CFLAGS="$SDL_CFLAGS $GLU_CFLAGS"
 				echo "*"
 				exit 1
 			fi
-echo 'not enabling GLU'
-echo '# not enabling GLU' >>config.log
 HAVE_GLU="no"
 GLU_CFLAGS=""
 GLU_LIBS=""
@@ -11888,8 +11820,6 @@ echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
 echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
 		fi
 	else
-echo 'not enabling GLU'
-echo '# not enabling GLU' >>config.log
 HAVE_GLU="no"
 GLU_CFLAGS=""
 GLU_LIBS=""
@@ -11904,8 +11834,6 @@ else
 echo '#undef ENABLE_SG' >$bb_incdir/enable_sg.h
 echo 'hdefs["ENABLE_SG"] = nil' >>configure.lua
 SUBDIR_sg=""
-echo 'not enabling GLU'
-echo '# not enabling GLU' >>config.log
 HAVE_GLU="no"
 GLU_CFLAGS=""
 GLU_LIBS=""
@@ -13321,6 +13249,8 @@ echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
 echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
 echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
 echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
+echo "FREETYPE_PC=$FREETYPE_PC" >>Makefile.config
+echo "mdefs[\"FREETYPE_PC\"] = \"$FREETYPE_PC\"" >>configure.lua
 echo "GETTEXT_CFLAGS=$GETTEXT_CFLAGS" >>Makefile.config
 echo "mdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
 echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
@@ -13349,10 +13279,6 @@ echo "HAVE_CC_CLANG=$HAVE_CC_CLANG" >>Makefile.config
 echo "mdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
 echo "HAVE_CC_GCC=$HAVE_CC_GCC" >>Makefile.config
 echo "mdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
-echo "HAVE_CC_MCONSOLE=$HAVE_CC_MCONSOLE" >>Makefile.config
-echo "mdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
-echo "HAVE_CC_MWINDOWS=$HAVE_CC_MWINDOWS" >>Makefile.config
-echo "mdefs[\"HAVE_CC_MWINDOWS\"] = \"$HAVE_CC_MWINDOWS\"" >>configure.lua
 echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
 echo "HAVE_CLOCK_GETTIME=$HAVE_CLOCK_GETTIME" >>Makefile.config
@@ -13403,8 +13329,6 @@ echo "HAVE_LD_STATIC_LIBGCC=$HAVE_LD_STATIC_LIBGCC" >>Makefile.config
 echo "mdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
 echo "HAVE_LIBOPENGL32=$HAVE_LIBOPENGL32" >>Makefile.config
 echo "mdefs[\"HAVE_LIBOPENGL32\"] = \"$HAVE_LIBOPENGL32\"" >>configure.lua
-echo "HAVE_LIBPNG14=$HAVE_LIBPNG14" >>Makefile.config
-echo "mdefs[\"HAVE_LIBPNG14\"] = \"$HAVE_LIBPNG14\"" >>configure.lua
 echo "HAVE_LONG_DOUBLE=$HAVE_LONG_DOUBLE" >>Makefile.config
 echo "mdefs[\"HAVE_LONG_DOUBLE\"] = \"$HAVE_LONG_DOUBLE\"" >>configure.lua
 echo "HAVE_MALLOC_ATTRIBUTE=$HAVE_MALLOC_ATTRIBUTE" >>Makefile.config
@@ -13495,6 +13419,8 @@ echo "JPEG_CFLAGS=$JPEG_CFLAGS" >>Makefile.config
 echo "mdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
 echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
 echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
+echo "JPEG_PC=$JPEG_PC" >>Makefile.config
+echo "mdefs[\"JPEG_PC\"] = \"$JPEG_PC\"" >>configure.lua
 echo "LIBDIR=$LIBDIR" >>Makefile.config
 echo "mdefs[\"LIBDIR\"] = \"$LIBDIR\"" >>configure.lua
 echo "LIBEXECDIR=$LIBEXECDIR" >>Makefile.config
@@ -13527,6 +13453,8 @@ echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
 echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
 echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
 echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
+echo "OPENGL_PC=$OPENGL_PC" >>Makefile.config
+echo "mdefs[\"OPENGL_PC\"] = \"$OPENGL_PC\"" >>configure.lua
 echo "PACKAGE=$PACKAGE" >>Makefile.config
 echo "mdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
 echo "PATH_SEPARATOR=$PATH_SEPARATOR" >>Makefile.config
@@ -13541,18 +13469,18 @@ echo "PNG_CFLAGS=$PNG_CFLAGS" >>Makefile.config
 echo "mdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua
 echo "PNG_LIBS=$PNG_LIBS" >>Makefile.config
 echo "mdefs[\"PNG_LIBS\"] = \"$PNG_LIBS\"" >>configure.lua
+echo "PNG_PC=$PNG_PC" >>Makefile.config
+echo "mdefs[\"PNG_PC\"] = \"$PNG_PC\"" >>configure.lua
 echo "PORTAUDIO_CFLAGS=$PORTAUDIO_CFLAGS" >>Makefile.config
 echo "mdefs[\"PORTAUDIO_CFLAGS\"] = \"$PORTAUDIO_CFLAGS\"" >>configure.lua
 echo "PORTAUDIO_LIBS=$PORTAUDIO_LIBS" >>Makefile.config
 echo "mdefs[\"PORTAUDIO_LIBS\"] = \"$PORTAUDIO_LIBS\"" >>configure.lua
+echo "PORTAUDIO_PC=$PORTAUDIO_PC" >>Makefile.config
+echo "mdefs[\"PORTAUDIO_PC\"] = \"$PORTAUDIO_PC\"" >>configure.lua
 echo "PROG_BUNDLE=$PROG_BUNDLE" >>Makefile.config
 echo "mdefs[\"PROG_BUNDLE\"] = \"$PROG_BUNDLE\"" >>configure.lua
-echo "PROG_CLI_CFLAGS=$PROG_CLI_CFLAGS" >>Makefile.config
-echo "mdefs[\"PROG_CLI_CFLAGS\"] = \"$PROG_CLI_CFLAGS\"" >>configure.lua
 echo "PROG_CLI_FLAGS=$PROG_CLI_FLAGS" >>Makefile.config
 echo "mdefs[\"PROG_CLI_FLAGS\"] = \"$PROG_CLI_FLAGS\"" >>configure.lua
-echo "PROG_GUI_CFLAGS=$PROG_GUI_CFLAGS" >>Makefile.config
-echo "mdefs[\"PROG_GUI_CFLAGS\"] = \"$PROG_GUI_CFLAGS\"" >>configure.lua
 echo "PROG_GUI_FLAGS=$PROG_GUI_FLAGS" >>Makefile.config
 echo "mdefs[\"PROG_GUI_FLAGS\"] = \"$PROG_GUI_FLAGS\"" >>configure.lua
 echo "PROG_PREFIX=$PROG_PREFIX" >>Makefile.config
@@ -13575,10 +13503,16 @@ echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
 echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
 echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
 echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
+echo "SDL_PC=$SDL_PC" >>Makefile.config
+echo "mdefs[\"SDL_PC\"] = \"$SDL_PC\"" >>configure.lua
+echo "SHL_LOAD_LIBS=$SHL_LOAD_LIBS" >>Makefile.config
+echo "mdefs[\"SHL_LOAD_LIBS\"] = \"$SHL_LOAD_LIBS\"" >>configure.lua
 echo "SNDFILE_CFLAGS=$SNDFILE_CFLAGS" >>Makefile.config
 echo "mdefs[\"SNDFILE_CFLAGS\"] = \"$SNDFILE_CFLAGS\"" >>configure.lua
 echo "SNDFILE_LIBS=$SNDFILE_LIBS" >>Makefile.config
 echo "mdefs[\"SNDFILE_LIBS\"] = \"$SNDFILE_LIBS\"" >>configure.lua
+echo "SNDFILE_PC=$SNDFILE_PC" >>Makefile.config
+echo "mdefs[\"SNDFILE_PC\"] = \"$SNDFILE_PC\"" >>configure.lua
 echo "SRCS_AU=$SRCS_AU" >>Makefile.config
 echo "mdefs[\"SRCS_AU\"] = \"$SRCS_AU\"" >>configure.lua
 echo "SRCS_CORE=$SRCS_CORE" >>Makefile.config
@@ -13623,10 +13557,14 @@ echo "X11_CFLAGS=$X11_CFLAGS" >>Makefile.config
 echo "mdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
 echo "X11_LIBS=$X11_LIBS" >>Makefile.config
 echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
+echo "X11_PC=$X11_PC" >>Makefile.config
+echo "mdefs[\"X11_PC\"] = \"$X11_PC\"" >>configure.lua
 echo "XINERAMA_CFLAGS=$XINERAMA_CFLAGS" >>Makefile.config
 echo "mdefs[\"XINERAMA_CFLAGS\"] = \"$XINERAMA_CFLAGS\"" >>configure.lua
 echo "XINERAMA_LIBS=$XINERAMA_LIBS" >>Makefile.config
 echo "mdefs[\"XINERAMA_LIBS\"] = \"$XINERAMA_LIBS\"" >>configure.lua
+echo "XINERAMA_PC=$XINERAMA_PC" >>Makefile.config
+echo "mdefs[\"XINERAMA_PC\"] = \"$XINERAMA_PC\"" >>configure.lua
 echo "ZLIB_CFLAGS=$ZLIB_CFLAGS" >>Makefile.config
 echo "mdefs[\"ZLIB_CFLAGS\"] = \"$ZLIB_CFLAGS\"" >>configure.lua
 echo "ZLIB_LIBS=$ZLIB_LIBS" >>Makefile.config
