@@ -1,15 +1,14 @@
 #!/bin/sh
 #
 # Do not edit!
-# This file was generated from configure.in by BSDBuild 3.2.
+# 
+# This file was generated from configure.in. To regenerate it properly, get
+# BSDBuild 3.2 or later from https://bsdbuild.hypertriton.com/ and use:
 #
-# To regenerate this file, get the latest BSDBuild release from
-# http://bsdbuild.hypertriton.com/, and use the command:
+#     $ mkconfigure < configure.in > configure
 #
-#     $ cat configure.in | mkconfigure > configure
-#
-echo 'BSDBuild 3.2 <http://bsdbuild.hypertriton.com/>'
-echo '# BSDBuild 3.2 <http://bsdbuild.hypertriton.com/>' > config.log
+echo 'BSDBuild 3.2 <https://bsdbuild.hypertriton.com/>'
+echo '# BSDBuild 3.2 <https://bsdbuild.hypertriton.com/>' > config.log
 echo '# ex:syn=sh' >> config.log
 echo '#!/bin/sh' >config.status
 echo >>config.status
@@ -438,13 +437,12 @@ echo '    --statedir=DIR|NONE        Modifiable single-machine data [PREFIX/var]
 echo '    --sysconfdir=DIR|NONE      System configuration files [PREFIX/etc]'
 echo '    --testdir=DIR              Execute all tests in this directory [.]'
 echo '    --with-bundles             Generate application/library bundles [yes]'
-echo '    --with-catman              Install cat files for manual pages [auto-detect]'
 echo '    --with-ctags               Generate ctags tag files [no]'
 echo '    --with-docs                Generate printable documentation [no]'
 echo '    --with-gettext             Use gettext for multi-language [auto-detect]'
 echo '    --with-libtool=STRING      Use GNU libtool [path or "bundled"]'
-echo '    --with-manlinks            Add manual entries for every function [no]'
-echo '    --with-manpages            Generate Unix manual pages [yes]'
+echo '    --with-manlinks            Manual page entries for all functions [no]'
+echo '    --with-manpages            Generate manual pages [yes]'
 
 echo ''
 echo 'Some influential environment variables:'
@@ -505,6 +503,7 @@ echo "HOST=${host}" >> Makefile.config
 echo "CROSS_COMPILING=${CROSS_COMPILING}" >> Makefile.config
 echo "SRCDIR=${SRC}" >> Makefile.config
 echo "BLDDIR=${BLD}" >> Makefile.config
+echo "ECHO_N=${ECHO_N}" >> Makefile.config
 
 if [ "${SUDO}" != "" ]; then
 	if [ -e "${PREFIX}" ]; then
@@ -582,15 +581,6 @@ do
 done
 echo '' >>config.log
 echo '' >>config.status
-if [ -e "config" ]; then
-	echo '* Overwriting config directory'
-	rm -fR "config"
-fi
-mkdir -p "config"
-if [ $? != 0 ]; then
-	echo 'Could not create config directory.'
-	exit 1
-fi
 cat << EOT > conftest.1
 .\" COMMENT
 .Dd 
@@ -659,22 +649,6 @@ if [ "${HAVE_MANDOC}" = 'no' ]; then
 else
 	echo 'HAVE_MANDOC=yes' >> Makefile.config
 	echo "MANDOC=${MANDOC}" >> Makefile.config
-	if [ "${with_catman}" = "no" ]; then
-		echo 'NOCATMAN=yes' >> Makefile.config
-	else
-		if [ "${with_catman}" = "yes" ]; then
-			echo 'NOCATMAN=no' >> Makefile.config
-		else
-			case "${host}" in
-			*-*-freebsd*)
-				echo 'NOCATMAN=yes' >> Makefile.config
-				;;
-			*)
-				echo 'NOCATMAN=no' >> Makefile.config
-				;;
-			esac
-		fi
-	fi
 	if [ "${with_manpages}" = 'no' ]; then
 		echo 'NOMAN=yes' >> Makefile.config
 		echo 'NOMANLINKS=yes' >> Makefile.config
@@ -689,10 +663,6 @@ if [ "${with_docs}" = 'no' ]; then
 fi
 if [ "${enable_nls}" = "yes" ]; then
 ENABLE_NLS="yes"
-bb_o=$bb_incdir/enable_nls.h
-echo '#ifndef ENABLE_NLS' >$bb_o
-echo "#define ENABLE_NLS \"$ENABLE_NLS\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"ENABLE_NLS\"] = \"$ENABLE_NLS\"" >>configure.lua
 msgfmt=''
 bb_save_IFS=$IFS
@@ -713,15 +683,10 @@ if [ "${msgfmt}" != '' ]; then
 else
 	HAVE_GETTEXT='no'
 fi
-bb_o=$bb_incdir/enable_nls.h
-echo '#ifndef ENABLE_NLS' >$bb_o
-echo "#define ENABLE_NLS \"$ENABLE_NLS\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"ENABLE_NLS\"] = \"$ENABLE_NLS\"" >>configure.lua
 else
 ENABLE_NLS="no"
 HAVE_GETTEXT="no"
-echo '#undef ENABLE_NLS' >$bb_incdir/enable_nls.h
 echo 'hdefs["ENABLE_NLS"] = nil' >>configure.lua
 fi
 CTAGS=''
@@ -778,10 +743,6 @@ if [ "${PKGCONFIG}" != "" ]; then
 		;;
 	esac
 fi
-bb_o=$bb_incdir/prefix.h
-echo '#ifndef PREFIX' >$bb_o
-echo "#define PREFIX \"$PREFIX\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"PREFIX\"] = \"$PREFIX\"" >>configure.lua
 if [ "${bindir}" != '' ]; then
 	BINDIR="${bindir}"
@@ -789,10 +750,6 @@ if [ "${bindir}" != '' ]; then
 else
 	BINDIR="${PREFIX}/bin"
 fi
-bb_o=$bb_incdir/bindir.h
-echo '#ifndef BINDIR' >$bb_o
-echo "#define BINDIR \"$BINDIR\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"BINDIR\"] = \"$BINDIR\"" >>configure.lua
 if [ "${libdir}" != '' ]; then
 	LIBDIR="${libdir}"
@@ -800,10 +757,6 @@ if [ "${libdir}" != '' ]; then
 else
 	LIBDIR="${PREFIX}/lib"
 fi
-bb_o=$bb_incdir/libdir.h
-echo '#ifndef LIBDIR' >$bb_o
-echo "#define LIBDIR \"$LIBDIR\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"LIBDIR\"] = \"$LIBDIR\"" >>configure.lua
 if [ "${moduledir}" != '' ]; then
 	MODULEDIR="${moduledir}"
@@ -811,10 +764,6 @@ if [ "${moduledir}" != '' ]; then
 else
 	MODULEDIR="${PREFIX}/lib"
 fi
-bb_o=$bb_incdir/moduledir.h
-echo '#ifndef MODULEDIR' >$bb_o
-echo "#define MODULEDIR \"$MODULEDIR\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"MODULEDIR\"] = \"$MODULEDIR\"" >>configure.lua
 if [ "${libexecdir}" != '' ]; then
 	LIBEXECDIR="${libexecdir}"
@@ -822,10 +771,6 @@ if [ "${libexecdir}" != '' ]; then
 else
 	LIBEXECDIR="${PREFIX}/libexec"
 fi
-bb_o=$bb_incdir/libexecdir.h
-echo '#ifndef LIBEXECDIR' >$bb_o
-echo "#define LIBEXECDIR \"$LIBEXECDIR\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"LIBEXECDIR\"] = \"$LIBEXECDIR\"" >>configure.lua
 if [ "${datadir}" != '' ]; then
 	DATADIR="${datadir}"
@@ -833,10 +778,6 @@ if [ "${datadir}" != '' ]; then
 else
 	DATADIR="${PREFIX}/share"
 fi
-bb_o=$bb_incdir/datadir.h
-echo '#ifndef DATADIR' >$bb_o
-echo "#define DATADIR \"$DATADIR\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"DATADIR\"] = \"$DATADIR\"" >>configure.lua
 if [ "${statedir}" != '' ]; then
 	STATEDIR="${statedir}"
@@ -844,10 +785,6 @@ if [ "${statedir}" != '' ]; then
 else
 	STATEDIR="${PREFIX}/var"
 fi
-bb_o=$bb_incdir/statedir.h
-echo '#ifndef STATEDIR' >$bb_o
-echo "#define STATEDIR \"$STATEDIR\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"STATEDIR\"] = \"$STATEDIR\"" >>configure.lua
 if [ "${sysconfdir}" != '' ]; then
 	SYSCONFDIR="${sysconfdir}"
@@ -855,10 +792,6 @@ if [ "${sysconfdir}" != '' ]; then
 else
 	SYSCONFDIR="${PREFIX}/etc"
 fi
-bb_o=$bb_incdir/sysconfdir.h
-echo '#ifndef SYSCONFDIR' >$bb_o
-echo "#define SYSCONFDIR \"$SYSCONFDIR\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"SYSCONFDIR\"] = \"$SYSCONFDIR\"" >>configure.lua
 if [ "${localedir}" != '' ]; then
 	LOCALEDIR="${localedir}"
@@ -866,21 +799,20 @@ if [ "${localedir}" != '' ]; then
 else
 	LOCALEDIR="${DATADIR}/locale"
 fi
-bb_o=$bb_incdir/localedir.h
-echo '#ifndef LOCALEDIR' >$bb_o
-echo "#define LOCALEDIR \"$LOCALEDIR\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
 if [ "${mandir}" != '' ]; then
 	MANDIR="${mandir}"
 	MANDIR_SPECIFIED='yes'
 else
-	MANDIR="${PREFIX}/man"
+	case "${host}" in
+	*-*-darwin*)
+		MANDIR="${PREFIX}/share/man"
+		;;
+	*)
+		MANDIR="${PREFIX}/man"
+		;;
+	esac
 fi
-bb_o=$bb_incdir/mandir.h
-echo '#ifndef MANDIR' >$bb_o
-echo "#define MANDIR \"$MANDIR\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"MANDIR\"] = \"$MANDIR\"" >>configure.lua
 $ECHO_N 'checking for a C compiler...'
 $ECHO_N '# checking for a C compiler...' >>config.log
@@ -1038,10 +970,6 @@ EOT
 				echo "yes"
 				echo "yes" >>config.log
 			fi
-bb_o=$bb_incdir/execsuffix.h
-echo '#ifndef EXECSUFFIX' >$bb_o
-echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 		else
 			echo "yes"
@@ -1054,6 +982,74 @@ echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 	TEST_CFLAGS=''
 fi
 if [ "${HAVE_CC}" = "yes" ]; then
+$ECHO_N 'cc: checking whether compiler is Clang...'
+$ECHO_N '# cc: checking whether compiler is Clang...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__clang__)
+# error "is not clang"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_CLANG' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_CLANG=yes
+echo "hdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_CLANG=no
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking whether compiler is GCC...'
+$ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__GNUC__) || defined(__clang__)
+# error "is not gcc"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_GCC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_GCC=yes
+echo "hdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_GCC=no
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
 $ECHO_N 'cc: checking for compiler warning options...'
 $ECHO_N '# cc: checking for compiler warning options...' >>config.log
 MK_COMPILE_STATUS=OK
@@ -1065,8 +1061,8 @@ echo '# C: HAVE_CC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1075,23 +1071,18 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_CC_WARNINGS=yes
-bb_o=$bb_incdir/have_cc_warnings.h
-echo '#ifndef HAVE_CC_WARNINGS' >$bb_o
-echo "#define HAVE_CC_WARNINGS \"$HAVE_CC_WARNINGS\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_CC_WARNINGS=no
-echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
 echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
-TEST_CFLAGS="-Wall -Werror"
+TEST_CFLAGS="-Wall"
 fi
 $ECHO_N 'cc: checking for float and double...'
 $ECHO_N '# cc: checking for float and double...' >>config.log
@@ -1123,16 +1114,11 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_FLOAT=yes
-bb_o=$bb_incdir/have_float.h
-echo '#ifndef HAVE_FLOAT' >$bb_o
-echo "#define HAVE_FLOAT \"$HAVE_FLOAT\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_FLOAT\"] = \"$HAVE_FLOAT\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_FLOAT=no
-echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
 echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
@@ -1167,16 +1153,11 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_LONG_DOUBLE=yes
-bb_o=$bb_incdir/have_long_double.h
-echo '#ifndef HAVE_LONG_DOUBLE' >$bb_o
-echo "#define HAVE_LONG_DOUBLE \"$HAVE_LONG_DOUBLE\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_LONG_DOUBLE\"] = \"$HAVE_LONG_DOUBLE\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_LONG_DOUBLE=no
-echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
 echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
@@ -1210,20 +1191,86 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_LONG_LONG=yes
-bb_o=$bb_incdir/have_long_long.h
-echo '#ifndef HAVE_LONG_LONG' >$bb_o
-echo "#define HAVE_LONG_LONG \"$HAVE_LONG_LONG\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_LONG_LONG\"] = \"$HAVE_LONG_LONG\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_LONG_LONG=no
-echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
 echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+case "${host}" in
+*-*-cygwin* | *-*-mingw32*)
+PICFLAGS=""
+$ECHO_N 'cc: checking for linker -no-undefined option...'
+$ECHO_N '# cc: checking for linker -no-undefined option...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return(0); }';
+EOT
+echo >>config.log
+echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LD_NO_UNDEFINED=yes
+echo "hdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LD_NO_UNDEFINED=no
+echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LD_NO_UNDEFINED}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -no-undefined -Wl,--no-undefined"
+fi
+$ECHO_N 'cc: checking for linker -static-libgcc option...'
+$ECHO_N '# cc: checking for linker -static-libgcc option...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return(0); }';
+EOT
+echo >>config.log
+echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LD_STATIC_LIBGCC=yes
+echo "hdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LD_STATIC_LIBGCC=no
+echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LD_STATIC_LIBGCC}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -XCClinker -static-libgcc"
 fi
 $ECHO_N 'cc: checking for cygwin environment...'
 $ECHO_N '# cc: checking for cygwin environment...' >>config.log
@@ -1232,14 +1279,12 @@ cat << EOT >conftest$$.c
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <windows.h>
-
-int
-main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 	struct stat sb;
 	DWORD rv;
 	rv = GetFileAttributes("foo");
 	stat("foo", &sb);
-	return (0);
+	return(0);
 }
 EOT
 echo >>config.log
@@ -1257,239 +1302,49 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_CYGWIN=yes
-bb_o=$bb_incdir/have_cygwin.h
-echo '#ifndef HAVE_CYGWIN' >$bb_o
-echo "#define HAVE_CYGWIN \"$HAVE_CYGWIN\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_CYGWIN=no
-echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
 echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-$ECHO_N 'cc: checking for -mwindows option...'
-$ECHO_N '# cc: checking for -mwindows option...' >>config.log
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-#include <windows.h>
-int
-main(int argc, char *argv[]) {
-	return GetFileAttributes("foo") ? 0 : 1;
-}
-EOT
-echo >>config.log
-echo '# C: HAVE_CC_MWINDOWS' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mwindows -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mwindows -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_CC_MWINDOWS=yes
-bb_o=$bb_incdir/have_cc_mwindows.h
-echo '#ifndef HAVE_CC_MWINDOWS' >$bb_o
-echo "#define HAVE_CC_MWINDOWS \"$HAVE_CC_MWINDOWS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC_MWINDOWS\"] = \"$HAVE_CC_MWINDOWS\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_CC_MWINDOWS=no
-echo '#undef HAVE_CC_MWINDOWS' >$bb_incdir/have_cc_mwindows.h
-echo 'hdefs["HAVE_CC_MWINDOWS"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_CC_MWINDOWS}" = "yes" ]; then
-PROG_GUI_FLAGS="-mwindows"
-else
+;;
+*)
+PICFLAGS="-fPIC"
+HAVE_CYGWIN="no"
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
 PROG_GUI_FLAGS=""
-fi
-$ECHO_N 'cc: checking for -mconsole option...'
-$ECHO_N '# cc: checking for -mconsole option...' >>config.log
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-#include <windows.h>
-int
-main(int argc, char *argv[]) {
-	return GetFileAttributes("foo") ? 0 : 1;
-}
-EOT
-echo >>config.log
-echo '# C: HAVE_CC_MCONSOLE' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mconsole -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mconsole -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_CC_MCONSOLE=yes
-bb_o=$bb_incdir/have_cc_mconsole.h
-echo '#ifndef HAVE_CC_MCONSOLE' >$bb_o
-echo "#define HAVE_CC_MCONSOLE \"$HAVE_CC_MCONSOLE\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_CC_MCONSOLE=no
-echo '#undef HAVE_CC_MCONSOLE' >$bb_incdir/have_cc_mconsole.h
-echo 'hdefs["HAVE_CC_MCONSOLE"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_CC_MCONSOLE}" = "yes" ]; then
-PROG_CLI_FLAGS="-mconsole"
-else
 PROG_CLI_FLAGS=""
-fi
-case "${host}" in
-*-*-cygwin* | *-*-mingw32*)
-$ECHO_N 'cc: checking for linker -no-undefined option...'
-$ECHO_N '# cc: checking for linker -no-undefined option...' >>config.log
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-int main(int argc, char *argv[]) { return (0); }
-EOT
-echo >>config.log
-echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_LD_NO_UNDEFINED=yes
-bb_o=$bb_incdir/have_ld_no_undefined.h
-echo '#ifndef HAVE_LD_NO_UNDEFINED' >$bb_o
-echo "#define HAVE_LD_NO_UNDEFINED \"$HAVE_LD_NO_UNDEFINED\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_LD_NO_UNDEFINED=no
-echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
-echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_LD_NO_UNDEFINED}" = "yes" ]; then
-LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -no-undefined -Wl,--no-undefined"
-fi
-$ECHO_N 'cc: checking for linker -static-libgcc option...'
-$ECHO_N '# cc: checking for linker -static-libgcc option...' >>config.log
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-int main(int argc, char *argv[]) { return (0); }
-EOT
-echo >>config.log
-echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_LD_STATIC_LIBGCC=yes
-bb_o=$bb_incdir/have_ld_static_libgcc.h
-echo '#ifndef HAVE_LD_STATIC_LIBGCC' >$bb_o
-echo "#define HAVE_LD_STATIC_LIBGCC \"$HAVE_LD_STATIC_LIBGCC\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_LD_STATIC_LIBGCC=no
-echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
-echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_LD_STATIC_LIBGCC}" = "yes" ]; then
-LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -XCClinker -static-libgcc"
-fi
 ;;
 esac
-bb_o=$bb_incdir/have_cc.h
-echo '#ifndef HAVE_CC' >$bb_o
-echo "#define HAVE_CC \"$HAVE_CC\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
 if [ "${HAVE_CC65}" = "yes" ]; then
 CC_COMPILE=""
-bb_o=$bb_incdir/have_cc65.h
-echo '#ifndef HAVE_CC65' >$bb_o
-echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
 else
 CC_COMPILE="-c"
-echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
 echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
 fi
 else
-HAVE_CC="no"
 HAVE_CC65="no"
 HAVE_CC_WARNINGS="no"
 PROG_GUI_FLAGS=""
 PROG_CLI_FLAGS=""
-LIBTOOLOPTS_SHARED=""
 TEST_CFLAGS=""
-echo '#undef HAVE_CC' >$bb_incdir/have_cc.h
 echo 'hdefs["HAVE_CC"] = nil' >>configure.lua
-echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
-echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
-echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
 echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
-echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
 echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
-echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
 echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
-echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
 echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
-echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
 echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
-echo '#undef HAVE_CC_MWINDOWS' >$bb_incdir/have_cc_mwindows.h
-echo 'hdefs["HAVE_CC_MWINDOWS"] = nil' >>configure.lua
-echo '#undef HAVE_CC_MCONSOLE' >$bb_incdir/have_cc_mconsole.h
-echo 'hdefs["HAVE_CC_MCONSOLE"] = nil' >>configure.lua
-echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
 echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
-echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
 echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
 fi
 # END cc
@@ -1500,7 +1355,10 @@ echo '* This software requires a C compiler'
 echo '# * This software requires a C compiler' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency cc not found"
+echo "***"
+echo "*** ERROR: Required dependency cc not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 $ECHO_N 'checking for the getopt() function...'
@@ -1541,16 +1399,11 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_GETOPT=yes
-bb_o=$bb_incdir/have_getopt.h
-echo '#ifndef HAVE_GETOPT' >$bb_o
-echo "#define HAVE_GETOPT \"$HAVE_GETOPT\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_GETOPT\"] = \"$HAVE_GETOPT\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_GETOPT=no
-echo '#undef HAVE_GETOPT' >$bb_incdir/have_getopt.h
 echo 'hdefs["HAVE_GETOPT"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
@@ -1603,16 +1456,11 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_PTHREADS=yes
-bb_o=$bb_incdir/have_pthreads.h
-echo '#ifndef HAVE_PTHREADS' >$bb_o
-echo "#define HAVE_PTHREADS \"$HAVE_PTHREADS\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_PTHREADS=no
-echo '#undef HAVE_PTHREADS' >$bb_incdir/have_pthreads.h
 echo 'hdefs["HAVE_PTHREADS"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
@@ -1620,16 +1468,6 @@ rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
-bb_o=$bb_incdir/pthreads_cflags.h
-echo '#ifndef PTHREADS_CFLAGS' >$bb_o
-echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/pthreads_libs.h
-echo '#ifndef PTHREADS_LIBS' >$bb_o
-echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 else
 $ECHO_N 'checking for -pthread...'
 $ECHO_N '# checking for -pthread...' >>config.log
@@ -1670,16 +1508,11 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_PTHREADS=yes
-bb_o=$bb_incdir/have_pthreads.h
-echo '#ifndef HAVE_PTHREADS' >$bb_o
-echo "#define HAVE_PTHREADS \"$HAVE_PTHREADS\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_PTHREADS=no
-echo '#undef HAVE_PTHREADS' >$bb_incdir/have_pthreads.h
 echo 'hdefs["HAVE_PTHREADS"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
@@ -1687,16 +1520,6 @@ rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
-bb_o=$bb_incdir/pthreads_cflags.h
-echo '#ifndef PTHREADS_CFLAGS' >$bb_o
-echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/pthreads_libs.h
-echo '#ifndef PTHREADS_LIBS' >$bb_o
-echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 else
 PTHREADS_CFLAGS=""
 PTHREADS_LIBS=""
@@ -1804,16 +1627,11 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_PTHREADS=yes
-bb_o=$bb_incdir/have_pthreads.h
-echo '#ifndef HAVE_PTHREADS' >$bb_o
-echo "#define HAVE_PTHREADS \"$HAVE_PTHREADS\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_PTHREADS=no
-echo '#undef HAVE_PTHREADS' >$bb_incdir/have_pthreads.h
 echo 'hdefs["HAVE_PTHREADS"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
@@ -1821,16 +1639,24 @@ rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
-bb_o=$bb_incdir/pthreads_cflags.h
-echo '#ifndef PTHREADS_CFLAGS' >$bb_o
-echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/pthreads_libs.h
-echo '#ifndef PTHREADS_LIBS' >$bb_o
-echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
+else
+HAVE_PTHREADS_XOPEN="no"
+HAVE_PTHREAD_MUTEX_RECURSIVE="no"
+HAVE_PTHREAD_MUTEX_RECURSIVE_NP="no"
+HAVE_PTHREAD_MUTEX_T_POINTER="no"
+HAVE_PTHREAD_COND_T_POINTER="no"
+HAVE_PTHREAD_T_POINTER="no"
+PTHREADS_CFLAGS=""
+PTHREADS_LIBS=""
+PTHREADS_XOPEN_CFLAGS=""
+PTHREADS_XOPEN_LIBS=""
+echo 'hdefs["HAVE_PTHREADS"] = nil' >>configure.lua
+echo 'hdefs["HAVE_PTHREADS_XOPEN"] = nil' >>configure.lua
+echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE"] = nil' >>configure.lua
+echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE_NP"] = nil' >>configure.lua
+echo 'hdefs["HAVE_PTHREAD_MUTEX_T_POINTER"] = nil' >>configure.lua
+echo 'hdefs["HAVE_PTHREAD_COND_T_POINTER"] = nil' >>configure.lua
+echo 'hdefs["HAVE_PTHREAD_T_POINTER"] = nil' >>configure.lua
 fi
 fi
 fi
@@ -1878,37 +1704,18 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_PTHREADS_XOPEN=yes
-bb_o=$bb_incdir/have_pthreads_xopen.h
-echo '#ifndef HAVE_PTHREADS_XOPEN' >$bb_o
-echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_PTHREADS_XOPEN=no
-echo '#undef HAVE_PTHREADS_XOPEN' >$bb_incdir/have_pthreads_xopen.h
 echo 'hdefs["HAVE_PTHREADS_XOPEN"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
-bb_o=$bb_incdir/have_pthreads_xopen.h
-echo '#ifndef HAVE_PTHREADS_XOPEN' >$bb_o
-echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
-bb_o=$bb_incdir/pthreads_xopen_cflags.h
-echo '#ifndef PTHREADS_XOPEN_CFLAGS' >$bb_o
-echo "#define PTHREADS_XOPEN_CFLAGS \"$PTHREADS_XOPEN_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"PTHREADS_XOPEN_CFLAGS\"] = \"$PTHREADS_XOPEN_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/pthreads_xopen_libs.h
-echo '#ifndef PTHREADS_XOPEN_LIBS' >$bb_o
-echo "#define PTHREADS_XOPEN_LIBS \"$PTHREADS_XOPEN_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
 else
 PTHREADS_XOPEN_LIBS=""
 $ECHO_N 'checking for the X/Open Threads Extension (common paths)...'
@@ -2008,39 +1815,19 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_PTHREADS_XOPEN=yes
-bb_o=$bb_incdir/have_pthreads_xopen.h
-echo '#ifndef HAVE_PTHREADS_XOPEN' >$bb_o
-echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_PTHREADS_XOPEN=no
-echo '#undef HAVE_PTHREADS_XOPEN' >$bb_incdir/have_pthreads_xopen.h
 echo 'hdefs["HAVE_PTHREADS_XOPEN"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
-bb_o=$bb_incdir/have_pthreads_xopen.h
-echo '#ifndef HAVE_PTHREADS_XOPEN' >$bb_o
-echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
-bb_o=$bb_incdir/pthreads_xopen_cflags.h
-echo '#ifndef PTHREADS_XOPEN_CFLAGS' >$bb_o
-echo "#define PTHREADS_XOPEN_CFLAGS \"$PTHREADS_XOPEN_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"PTHREADS_XOPEN_CFLAGS\"] = \"$PTHREADS_XOPEN_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/pthreads_xopen_libs.h
-echo '#ifndef PTHREADS_XOPEN_LIBS' >$bb_o
-echo "#define PTHREADS_XOPEN_LIBS \"$PTHREADS_XOPEN_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
 else
-echo '#undef HAVE_PTHREADS_XOPEN' >$bb_incdir/have_pthreads_xopen.h
 echo 'hdefs["HAVE_PTHREADS_XOPEN"] = nil' >>configure.lua
 fi
 fi
@@ -2074,29 +1861,19 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_PTHREAD_MUTEX_RECURSIVE=yes
-bb_o=$bb_incdir/have_pthread_mutex_recursive.h
-echo '#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE' >$bb_o
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_PTHREAD_MUTEX_RECURSIVE=no
-echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE' >$bb_incdir/have_pthread_mutex_recursive.h
 echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "yes" ]; then
-bb_o=$bb_incdir/have_pthread_mutex_recursive.h
-echo '#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE' >$bb_o
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >>configure.lua
 else
-echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE' >$bb_incdir/have_pthread_mutex_recursive.h
 echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE"] = nil' >>configure.lua
 fi
 $ECHO_N 'checking for PTHREAD_MUTEX_RECURSIVE_NP...'
@@ -2129,29 +1906,19 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_PTHREAD_MUTEX_RECURSIVE_NP=yes
-bb_o=$bb_incdir/have_pthread_mutex_recursive_np.h
-echo '#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP' >$bb_o
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_PTHREAD_MUTEX_RECURSIVE_NP=no
-echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP' >$bb_incdir/have_pthread_mutex_recursive_np.h
 echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE_NP"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "yes" ]; then
-bb_o=$bb_incdir/have_pthread_mutex_recursive_np.h
-echo '#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP' >$bb_o
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>configure.lua
 else
-echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP' >$bb_incdir/have_pthread_mutex_recursive_np.h
 echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE_NP"] = nil' >>configure.lua
 fi
 $ECHO_N 'checking whether pthread_mutex_t is a pointer...'
@@ -2182,16 +1949,11 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_PTHREAD_MUTEX_T_POINTER=yes
-bb_o=$bb_incdir/have_pthread_mutex_t_pointer.h
-echo '#ifndef HAVE_PTHREAD_MUTEX_T_POINTER' >$bb_o
-echo "#define HAVE_PTHREAD_MUTEX_T_POINTER \"$HAVE_PTHREAD_MUTEX_T_POINTER\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREAD_MUTEX_T_POINTER\"] = \"$HAVE_PTHREAD_MUTEX_T_POINTER\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_PTHREAD_MUTEX_T_POINTER=no
-echo '#undef HAVE_PTHREAD_MUTEX_T_POINTER' >$bb_incdir/have_pthread_mutex_t_pointer.h
 echo 'hdefs["HAVE_PTHREAD_MUTEX_T_POINTER"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
@@ -2225,16 +1987,11 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_PTHREAD_COND_T_POINTER=yes
-bb_o=$bb_incdir/have_pthread_cond_t_pointer.h
-echo '#ifndef HAVE_PTHREAD_COND_T_POINTER' >$bb_o
-echo "#define HAVE_PTHREAD_COND_T_POINTER \"$HAVE_PTHREAD_COND_T_POINTER\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREAD_COND_T_POINTER\"] = \"$HAVE_PTHREAD_COND_T_POINTER\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_PTHREAD_COND_T_POINTER=no
-echo '#undef HAVE_PTHREAD_COND_T_POINTER' >$bb_incdir/have_pthread_cond_t_pointer.h
 echo 'hdefs["HAVE_PTHREAD_COND_T_POINTER"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
@@ -2267,16 +2024,11 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_PTHREAD_T_POINTER=yes
-bb_o=$bb_incdir/have_pthread_t_pointer.h
-echo '#ifndef HAVE_PTHREAD_T_POINTER' >$bb_o
-echo "#define HAVE_PTHREAD_T_POINTER \"$HAVE_PTHREAD_T_POINTER\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_PTHREAD_T_POINTER\"] = \"$HAVE_PTHREAD_T_POINTER\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_PTHREAD_T_POINTER=no
-echo '#undef HAVE_PTHREAD_T_POINTER' >$bb_incdir/have_pthread_t_pointer.h
 echo 'hdefs["HAVE_PTHREAD_T_POINTER"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
@@ -2707,16 +2459,11 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_SDL=yes
-bb_o=$bb_incdir/have_sdl.h
-echo '#ifndef HAVE_SDL' >$bb_o
-echo "#define HAVE_SDL \"$HAVE_SDL\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_SDL=no
-echo '#undef HAVE_SDL' >$bb_incdir/have_sdl.h
 echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
@@ -2733,16 +2480,23 @@ SDL_LIBS="-L${SDL_PREFIX}/lib -lSDL.dll"
 fi
 ;;
 esac
-bb_o=$bb_incdir/sdl_cflags.h
-echo '#ifndef SDL_CFLAGS' >$bb_o
-echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/sdl_libs.h
-echo '#ifndef SDL_LIBS' >$bb_o
-echo "#define SDL_LIBS \"$SDL_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
+bb_save_IFS=$IFS
+IFS=" "
+SDL_LIBS_FIXED=""
+for sdl_lib in $SDL_LIBS; do
+case "${sdl_lib}" in
+-Wl*)
+;;
+-pthread)
+SDL_LIBS_FIXED="$SDL_LIBS_FIXED -lpthread"
+;;
+*)
+SDL_LIBS_FIXED="$SDL_LIBS_FIXED ${sdl_lib}"
+;;
+esac
+done
+IFS=$bb_save_IFS
+SDL_LIBS="${SDL_LIBS_FIXED}"
 else
 $ECHO_N 'checking whether SDL works (with X11 libs)...'
 $ECHO_N '# checking whether SDL works (with X11 libs)...' >>config.log
@@ -2784,57 +2538,30 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_SDL=yes
-bb_o=$bb_incdir/have_sdl.h
-echo '#ifndef HAVE_SDL' >$bb_o
-echo "#define HAVE_SDL \"$HAVE_SDL\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_SDL=no
-echo '#undef HAVE_SDL' >$bb_incdir/have_sdl.h
 echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_SDL}" = "yes" ]; then
-bb_o=$bb_incdir/sdl_cflags.h
-echo '#ifndef SDL_CFLAGS' >$bb_o
-echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/sdl_libs.h
-echo '#ifndef SDL_LIBS' >$bb_o
-echo "#define SDL_LIBS \"$SDL_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
-else
-echo '#undef SDL_CFLAGS' >$bb_incdir/sdl_cflags.h
-echo 'hdefs["SDL_CFLAGS"] = nil' >>configure.lua
+if [ "${HAVE_SDL}" = "no" ]; then
 SDL_CFLAGS=""
-echo '#undef SDL_LIBS' >$bb_incdir/sdl_libs.h
-echo 'hdefs["SDL_LIBS"] = nil' >>configure.lua
 SDL_LIBS=""
+echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
 fi
 fi
 else
 HAVE_SDL="no"
 SDL_CFLAGS=""
 SDL_LIBS=""
-SDL_PC=""
-echo '#undef HAVE_SDL' >$bb_incdir/have_sdl.h
 echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
-echo '#undef SDL_CFLAGS' >$bb_incdir/sdl_cflags.h
-echo 'hdefs["SDL_CFLAGS"] = nil' >>configure.lua
-echo '#undef SDL_LIBS' >$bb_incdir/sdl_libs.h
-echo 'hdefs["SDL_LIBS"] = nil' >>configure.lua
 fi
 if [ "${HAVE_SDL}" = "yes" ]; then
 SDL_PC="sdl"
-else
-SDL_PC=""
 fi
 # END sdl
 $ECHO_N 'checking for OpenGL...'
@@ -2979,16 +2706,11 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_LIBOPENGL32=yes
-bb_o=$bb_incdir/have_libopengl32.h
-echo '#ifndef HAVE_LIBOPENGL32' >$bb_o
-echo "#define HAVE_LIBOPENGL32 \"$HAVE_LIBOPENGL32\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_LIBOPENGL32\"] = \"$HAVE_LIBOPENGL32\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_LIBOPENGL32=no
-echo '#undef HAVE_LIBOPENGL32' >$bb_incdir/have_libopengl32.h
 echo 'hdefs["HAVE_LIBOPENGL32"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
@@ -3035,33 +2757,17 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_OPENGL=yes
-bb_o=$bb_incdir/have_opengl.h
-echo '#ifndef HAVE_OPENGL' >$bb_o
-echo "#define HAVE_OPENGL \"$HAVE_OPENGL\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_OPENGL=no
-echo '#undef HAVE_OPENGL' >$bb_incdir/have_opengl.h
 echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_OPENGL}" = "yes" ]; then
-bb_o=$bb_incdir/opengl_cflags.h
-echo '#ifndef OPENGL_CFLAGS' >$bb_o
-echo "#define OPENGL_CFLAGS \"$OPENGL_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/opengl_libs.h
-echo '#ifndef OPENGL_LIBS' >$bb_o
-echo "#define OPENGL_LIBS \"$OPENGL_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
-else
+if [ "${HAVE_OPENGL}" = "no" ]; then
 $ECHO_N 'checking whether -lGL requires -lm...'
 $ECHO_N '# checking whether -lGL requires -lm...' >>config.log
 OPENGL_LIBS="${OPENGL_LIBS} -lm"
@@ -3093,49 +2799,85 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_OPENGL=yes
-bb_o=$bb_incdir/have_opengl.h
-echo '#ifndef HAVE_OPENGL' >$bb_o
-echo "#define HAVE_OPENGL \"$HAVE_OPENGL\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_OPENGL=no
-echo '#undef HAVE_OPENGL' >$bb_incdir/have_opengl.h
 echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_OPENGL}" = "yes" ]; then
-bb_o=$bb_incdir/opengl_cflags.h
-echo '#ifndef OPENGL_CFLAGS' >$bb_o
-echo "#define OPENGL_CFLAGS \"$OPENGL_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/opengl_libs.h
-echo '#ifndef OPENGL_LIBS' >$bb_o
-echo "#define OPENGL_LIBS \"$OPENGL_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
-else
-echo '#undef OPENGL_CFLAGS' >$bb_incdir/opengl_cflags.h
-echo 'hdefs["OPENGL_CFLAGS"] = nil' >>configure.lua
+if [ "${HAVE_OPENGL}" = "no" ]; then
+HAVE_GLEXT="no"
 OPENGL_CFLAGS=""
-echo '#undef OPENGL_LIBS' >$bb_incdir/opengl_libs.h
-echo 'hdefs["OPENGL_LIBS"] = nil' >>configure.lua
 OPENGL_LIBS=""
+echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
+echo 'hdefs["HAVE_GLEXT"] = nil' >>configure.lua
 fi
+fi
+$ECHO_N 'checking whether OpenGL has glext...'
+$ECHO_N '# checking whether OpenGL has glext...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#define GL_GLEXT_PROTOTYPES
+#ifdef _USE_OPENGL_FRAMEWORK
+# include <OpenGL/gl.h>
+# include <OpenGL/glext.h>
+#else
+# include <GL/gl.h>
+# include <GL/glext.h>
+#endif
+
+static void
+DebugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+    GLsizei length, const GLchar *message, const void *userParam)
+{ }
+
+int main(int argc, char *argv[]) {
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(DebugMessageCallback, 0);
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_GLEXT' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_GLEXT=yes
+echo "hdefs[\"HAVE_GLEXT\"] = \"$HAVE_GLEXT\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_GLEXT=no
+echo 'hdefs["HAVE_GLEXT"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 else
 echo 'no'
 echo '# no' >>config.log
+HAVE_OPENGL="no"
+HAVE_GLEXT="no"
+OPENGL_CFLAGS=""
+OPENGL_LIBS=""
+echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
+echo 'hdefs["HAVE_GLEXT"] = nil' >>configure.lua
 fi
 if [ "${HAVE_OPENGL}" = "yes" ]; then
 OPENGL_PC="gl"
-else
-OPENGL_PC=""
 fi
 # END opengl
 $ECHO_N 'checking for FreeType...'
@@ -3157,7 +2899,10 @@ echo "* Please indicate correct freetype2 prefix (or omit for autodetect)."
 echo "# * Please indicate correct freetype2 prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -3177,7 +2922,10 @@ echo "* Please indicate correct freetype2 prefix (or omit for autodetect)."
 echo "# * Please indicate correct freetype2 prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -3197,7 +2945,10 @@ echo "* Please indicate correct freetype2 prefix (or omit for autodetect)."
 echo "# * Please indicate correct freetype2 prefix (or omit for autodetect)." >>config.log
 echo "* "
 echo "# * " >>config.log
-echo "Package prefix mismatch"
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 fi
@@ -3338,56 +3089,29 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_FREETYPE=yes
-bb_o=$bb_incdir/have_freetype.h
-echo '#ifndef HAVE_FREETYPE' >$bb_o
-echo "#define HAVE_FREETYPE \"$HAVE_FREETYPE\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_FREETYPE=no
-echo '#undef HAVE_FREETYPE' >$bb_incdir/have_freetype.h
 echo 'hdefs["HAVE_FREETYPE"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_FREETYPE}" = "yes" ]; then
-bb_o=$bb_incdir/freetype_cflags.h
-echo '#ifndef FREETYPE_CFLAGS' >$bb_o
-echo "#define FREETYPE_CFLAGS \"$FREETYPE_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/freetype_libs.h
-echo '#ifndef FREETYPE_LIBS' >$bb_o
-echo "#define FREETYPE_LIBS \"$FREETYPE_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
-else
-echo '#undef FREETYPE_CFLAGS' >$bb_incdir/freetype_cflags.h
-echo 'hdefs["FREETYPE_CFLAGS"] = nil' >>configure.lua
+if [ "${HAVE_FREETYPE}" = "no" ]; then
 FREETYPE_CFLAGS=""
-echo '#undef FREETYPE_LIBS' >$bb_incdir/freetype_libs.h
-echo 'hdefs["FREETYPE_LIBS"] = nil' >>configure.lua
 FREETYPE_LIBS=""
+echo 'hdefs["HAVE_FREETYPE"] = nil' >>configure.lua
 fi
 else
 HAVE_FREETYPE="no"
 FREETYPE_CFLAGS=""
 FREETYPE_LIBS=""
-FREETYPE_PC=""
-echo '#undef HAVE_FREETYPE' >$bb_incdir/have_freetype.h
 echo 'hdefs["HAVE_FREETYPE"] = nil' >>configure.lua
-echo '#undef FREETYPE_CFFLAGS' >$bb_incdir/freetype_cfflags.h
-echo 'hdefs["FREETYPE_CFFLAGS"] = nil' >>configure.lua
-echo '#undef FREETYPE_LIBS' >$bb_incdir/freetype_libs.h
-echo 'hdefs["FREETYPE_LIBS"] = nil' >>configure.lua
 fi
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 FREETYPE_PC="freetype2"
-else
-FREETYPE_PC=""
 fi
 # END freetype
 $ECHO_N 'checking for Agar...'
@@ -3530,7 +3254,9 @@ main(int argc, char *argv[])
 {
 	AG_InitCore("conf-test", 0);
 	AG_InitGraphics(AG_NULL);
+#ifdef AG_EVENT_LOOP
 	AG_EventLoop();
+#endif
 	AG_Quit();
 	return (0);
 }
@@ -3550,50 +3276,26 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo 'yes'
 echo '# yes' >>config.log
 HAVE_AGAR=yes
-bb_o=$bb_incdir/have_agar.h
-echo '#ifndef HAVE_AGAR' >$bb_o
-echo "#define HAVE_AGAR \"$HAVE_AGAR\"" >>$bb_o
-echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_AGAR\"] = \"$HAVE_AGAR\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_AGAR=no
-echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
 echo 'hdefs["HAVE_AGAR"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-if [ "${HAVE_AGAR}" = "yes" ]; then
-bb_o=$bb_incdir/agar_cflags.h
-echo '#ifndef AGAR_CFLAGS' >$bb_o
-echo "#define AGAR_CFLAGS \"$AGAR_CFLAGS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"AGAR_CFLAGS\"] = \"$AGAR_CFLAGS\"" >>configure.lua
-bb_o=$bb_incdir/agar_libs.h
-echo '#ifndef AGAR_LIBS' >$bb_o
-echo "#define AGAR_LIBS \"$AGAR_LIBS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"AGAR_LIBS\"] = \"$AGAR_LIBS\"" >>configure.lua
-else
-echo '#undef AGAR_CFLAGS' >$bb_incdir/agar_cflags.h
-echo 'hdefs["AGAR_CFLAGS"] = nil' >>configure.lua
+if [ "${HAVE_AGAR}" = "no" ]; then
 AGAR_CFLAGS=""
-echo '#undef AGAR_LIBS' >$bb_incdir/agar_libs.h
-echo 'hdefs["AGAR_LIBS"] = nil' >>configure.lua
 AGAR_LIBS=""
+echo 'hdefs["HAVE_AGAR"] = nil' >>configure.lua
 fi
 else
 HAVE_AGAR="no"
 AGAR_CFLAGS=""
 AGAR_LIBS=""
-echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
 echo 'hdefs["HAVE_AGAR"] = nil' >>configure.lua
-echo '#undef AGAR_CFLAGS' >$bb_incdir/agar_cflags.h
-echo 'hdefs["AGAR_CFLAGS"] = nil' >>configure.lua
-echo '#undef AGAR_LIBS' >$bb_incdir/agar_libs.h
-echo 'hdefs["AGAR_LIBS"] = nil' >>configure.lua
 fi
 # END agar
 if [ "${HAVE_AGAR}" != "yes" ]; then
@@ -3605,7 +3307,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar not found"
+echo "***"
+echo "*** ERROR: Required dependency agar not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
@@ -3619,7 +3324,10 @@ echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
 echo '# * ' >>config.log
-echo "Required dependency agar version mismatch"
+echo "***"
+echo "*** ERROR: Required dependency agar version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
 exit 1
 fi
 CFLAGS="$CFLAGS -D_USE_AGAR_QUEUE"
@@ -3652,16 +3360,18 @@ echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
 echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
 echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
 echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
+echo "FREETYPE_PC=$FREETYPE_PC" >>Makefile.config
+echo "mdefs[\"FREETYPE_PC\"] = \"$FREETYPE_PC\"" >>configure.lua
 echo "HAVE_AGAR=$HAVE_AGAR" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR\"] = \"$HAVE_AGAR\"" >>configure.lua
 echo "HAVE_CC=$HAVE_CC" >>Makefile.config
 echo "mdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
 echo "HAVE_CC65=$HAVE_CC65" >>Makefile.config
 echo "mdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
-echo "HAVE_CC_MCONSOLE=$HAVE_CC_MCONSOLE" >>Makefile.config
-echo "mdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
-echo "HAVE_CC_MWINDOWS=$HAVE_CC_MWINDOWS" >>Makefile.config
-echo "mdefs[\"HAVE_CC_MWINDOWS\"] = \"$HAVE_CC_MWINDOWS\"" >>configure.lua
+echo "HAVE_CC_CLANG=$HAVE_CC_CLANG" >>Makefile.config
+echo "mdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
+echo "HAVE_CC_GCC=$HAVE_CC_GCC" >>Makefile.config
+echo "mdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
 echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
 echo "HAVE_CYGWIN=$HAVE_CYGWIN" >>Makefile.config
@@ -3670,6 +3380,8 @@ echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
 echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
 echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
 echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
+echo "HAVE_GLEXT=$HAVE_GLEXT" >>Makefile.config
+echo "mdefs[\"HAVE_GLEXT\"] = \"$HAVE_GLEXT\"" >>configure.lua
 echo "HAVE_LD_NO_UNDEFINED=$HAVE_LD_NO_UNDEFINED" >>Makefile.config
 echo "mdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
 echo "HAVE_LD_STATIC_LIBGCC=$HAVE_LD_STATIC_LIBGCC" >>Makefile.config
@@ -3710,20 +3422,20 @@ echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
 echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
 echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
 echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
+echo "OPENGL_PC=$OPENGL_PC" >>Makefile.config
+echo "mdefs[\"OPENGL_PC\"] = \"$OPENGL_PC\"" >>configure.lua
 echo "PATH_SEPARATOR=$PATH_SEPARATOR" >>Makefile.config
 echo "mdefs[\"PATH_SEPARATOR\"] = \"$PATH_SEPARATOR\"" >>configure.lua
+echo "PICFLAGS=$PICFLAGS" >>Makefile.config
+echo "mdefs[\"PICFLAGS\"] = \"$PICFLAGS\"" >>configure.lua
 echo "PKGCONFIG=$PKGCONFIG" >>Makefile.config
 echo "mdefs[\"PKGCONFIG\"] = \"$PKGCONFIG\"" >>configure.lua
 echo "PKGCONFIG_LIBDIR=$PKGCONFIG_LIBDIR" >>Makefile.config
 echo "mdefs[\"PKGCONFIG_LIBDIR\"] = \"$PKGCONFIG_LIBDIR\"" >>configure.lua
 echo "PROG_BUNDLE=$PROG_BUNDLE" >>Makefile.config
 echo "mdefs[\"PROG_BUNDLE\"] = \"$PROG_BUNDLE\"" >>configure.lua
-echo "PROG_CLI_CFLAGS=$PROG_CLI_CFLAGS" >>Makefile.config
-echo "mdefs[\"PROG_CLI_CFLAGS\"] = \"$PROG_CLI_CFLAGS\"" >>configure.lua
 echo "PROG_CLI_FLAGS=$PROG_CLI_FLAGS" >>Makefile.config
 echo "mdefs[\"PROG_CLI_FLAGS\"] = \"$PROG_CLI_FLAGS\"" >>configure.lua
-echo "PROG_GUI_CFLAGS=$PROG_GUI_CFLAGS" >>Makefile.config
-echo "mdefs[\"PROG_GUI_CFLAGS\"] = \"$PROG_GUI_CFLAGS\"" >>configure.lua
 echo "PROG_GUI_FLAGS=$PROG_GUI_FLAGS" >>Makefile.config
 echo "mdefs[\"PROG_GUI_FLAGS\"] = \"$PROG_GUI_FLAGS\"" >>configure.lua
 echo "PROG_PREFIX=$PROG_PREFIX" >>Makefile.config
@@ -3744,6 +3456,8 @@ echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
 echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
 echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
 echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
+echo "SDL_PC=$SDL_PC" >>Makefile.config
+echo "mdefs[\"SDL_PC\"] = \"$SDL_PC\"" >>configure.lua
 echo "STATEDIR=$STATEDIR" >>Makefile.config
 echo "mdefs[\"STATEDIR\"] = \"$STATEDIR\"" >>configure.lua
 echo "SYSCONFDIR=$SYSCONFDIR" >>Makefile.config
@@ -3756,7 +3470,10 @@ if [ "${srcdir}" != '' ]; then
 	fi
 	echo 'ok'
 fi
-echo '*'
-echo '* Configuration successful. Use the "make" command to compile,'
-echo '* and complete the installation using "make install".'
-echo '*'
+echo '**'
+echo '** Configuration successful!'
+echo '**'
+echo '** Use "make depend all" to compile. When finished,'
+$ECHO_N '** run "make install" to install under '
+echo "${PREFIX}."
+echo '**'

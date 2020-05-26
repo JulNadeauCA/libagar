@@ -1452,96 +1452,6 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-$ECHO_N 'cc: checking for -mwindows option...'
-$ECHO_N '# cc: checking for -mwindows option...' >>config.log
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-#include <windows.h>
-int
-main(int argc, char *argv[]) {
-	return GetFileAttributes("foo") ? 0 : 1;
-}
-EOT
-echo >>config.log
-echo '# C: HAVE_CC_MWINDOWS' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mwindows -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mwindows -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_CC_MWINDOWS=yes
-bb_o=$bb_incdir/have_cc_mwindows.h
-echo '#ifndef HAVE_CC_MWINDOWS' >$bb_o
-echo "#define HAVE_CC_MWINDOWS \"$HAVE_CC_MWINDOWS\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC_MWINDOWS\"] = \"$HAVE_CC_MWINDOWS\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_CC_MWINDOWS=no
-echo '#undef HAVE_CC_MWINDOWS' >$bb_incdir/have_cc_mwindows.h
-echo 'hdefs["HAVE_CC_MWINDOWS"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_CC_MWINDOWS}" = "yes" ]; then
-PROG_GUI_FLAGS="-mwindows"
-else
-PROG_GUI_FLAGS=""
-fi
-$ECHO_N 'cc: checking for -mconsole option...'
-$ECHO_N '# cc: checking for -mconsole option...' >>config.log
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-#include <windows.h>
-int
-main(int argc, char *argv[]) {
-	return GetFileAttributes("foo") ? 0 : 1;
-}
-EOT
-echo >>config.log
-echo '# C: HAVE_CC_MCONSOLE' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mconsole -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mconsole -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_CC_MCONSOLE=yes
-bb_o=$bb_incdir/have_cc_mconsole.h
-echo '#ifndef HAVE_CC_MCONSOLE' >$bb_o
-echo "#define HAVE_CC_MCONSOLE \"$HAVE_CC_MCONSOLE\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_CC_MCONSOLE=no
-echo '#undef HAVE_CC_MCONSOLE' >$bb_incdir/have_cc_mconsole.h
-echo 'hdefs["HAVE_CC_MCONSOLE"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_CC_MCONSOLE}" = "yes" ]; then
-PROG_CLI_FLAGS="-mconsole"
-else
-PROG_CLI_FLAGS=""
-fi
 ;;
 *)
 PICFLAGS="-fPIC"
@@ -1570,7 +1480,6 @@ echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
 echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
 fi
 else
-HAVE_CC="no"
 HAVE_CC65="no"
 HAVE_CC_WARNINGS="no"
 PROG_GUI_FLAGS=""
@@ -1594,10 +1503,6 @@ echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
 echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
 echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
 echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
-echo '#undef HAVE_CC_MWINDOWS' >$bb_incdir/have_cc_mwindows.h
-echo 'hdefs["HAVE_CC_MWINDOWS"] = nil' >>configure.lua
-echo '#undef HAVE_CC_MCONSOLE' >$bb_incdir/have_cc_mconsole.h
-echo 'hdefs["HAVE_CC_MCONSOLE"] = nil' >>configure.lua
 echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
 echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
 echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
@@ -1794,8 +1699,16 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_AGAR}" = "no" ]; then
+AGAR_CFLAGS=""
+AGAR_LIBS=""
+echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
+echo 'hdefs["HAVE_AGAR"] = nil' >>configure.lua
+fi
 else
 HAVE_AGAR="no"
+AGAR_CFLAGS=""
+AGAR_LIBS=""
 echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
 echo 'hdefs["HAVE_AGAR"] = nil' >>configure.lua
 fi
@@ -2057,8 +1970,16 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_AGAR_MATH}" = "no" ]; then
+AGAR_MATH_CFLAGS=""
+AGAR_MATH_LIBS=""
+echo '#undef HAVE_AGAR_MATH' >$bb_incdir/have_agar_math.h
+echo 'hdefs["HAVE_AGAR_MATH"] = nil' >>configure.lua
+fi
 else
 HAVE_AGAR_MATH="no"
+AGAR_MATH_CFLAGS=""
+AGAR_MATH_LIBS=""
 echo '#undef HAVE_AGAR_MATH' >$bb_incdir/have_agar_math.h
 echo 'hdefs["HAVE_AGAR_MATH"] = nil' >>configure.lua
 fi
@@ -2290,8 +2211,16 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_AGAR_VG}" = "no" ]; then
+AGAR_VG_CFLAGS=""
+AGAR_VG_LIBS=""
+echo '#undef HAVE_AGAR_VG' >$bb_incdir/have_agar_vg.h
+echo 'hdefs["HAVE_AGAR_VG"] = nil' >>configure.lua
+fi
 else
 HAVE_AGAR_VG="no"
+AGAR_VG_CFLAGS=""
+AGAR_VG_LIBS=""
 echo '#undef HAVE_AGAR_VG' >$bb_incdir/have_agar_vg.h
 echo 'hdefs["HAVE_AGAR_VG"] = nil' >>configure.lua
 fi
@@ -2517,8 +2446,16 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+if [ "${HAVE_AGAR_AU}" = "no" ]; then
+AGAR_AU_CFLAGS=""
+AGAR_AU_LIBS=""
+echo '#undef HAVE_AGAR_AU' >$bb_incdir/have_agar_au.h
+echo 'hdefs["HAVE_AGAR_AU"] = nil' >>configure.lua
+fi
 else
 HAVE_AGAR_AU="no"
+AGAR_AU_CFLAGS=""
+AGAR_AU_LIBS=""
 echo '#undef HAVE_AGAR_AU' >$bb_incdir/have_agar_au.h
 echo 'hdefs["HAVE_AGAR_AU"] = nil' >>configure.lua
 fi
@@ -2662,10 +2599,6 @@ echo "HAVE_CC_CLANG=$HAVE_CC_CLANG" >>Makefile.config
 echo "mdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
 echo "HAVE_CC_GCC=$HAVE_CC_GCC" >>Makefile.config
 echo "mdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
-echo "HAVE_CC_MCONSOLE=$HAVE_CC_MCONSOLE" >>Makefile.config
-echo "mdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
-echo "HAVE_CC_MWINDOWS=$HAVE_CC_MWINDOWS" >>Makefile.config
-echo "mdefs[\"HAVE_CC_MWINDOWS\"] = \"$HAVE_CC_MWINDOWS\"" >>configure.lua
 echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
 echo "HAVE_CYGWIN=$HAVE_CYGWIN" >>Makefile.config
