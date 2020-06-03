@@ -39,6 +39,7 @@ const char *miscFiles[] = {
 	"CHANGELOG.txt",
 	"INSTALL.txt",
 	"LICENSE.txt",
+	"LICENSE-ofl.txt",
 	"README.txt",
 	"Logo.png",
 	"VisualC.html"

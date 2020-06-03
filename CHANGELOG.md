@@ -23,7 +23,11 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Window**](https://libagar.org/man3/AG_Window): MRU API to simplify the process of remembering geometries. New gravity methods for autoplacing.
 - [**cocoa**](https://libagar.org/man2/AG_DriverCocoa): Cursor operations. Clipboard integration.
 - [**glx**](https://libagar.org/man3/AG_DriverGLX): Make drag-and-drop (`sockets` test) work correctly (possibly using `AG_WindowMove()`).
-- [**wgl**](https://libagar.org/man2/AG_DriverWGL): Clipboard integration. Live resize. Fix cursor bugs.
+- [**wgl**](https://libagar.org/man2/AG_DriverWGL): Clipboard integration. Live resize.
+
+## [1.6.1] - 2020-06-
+### Fixed
+- [**wgl**](https://libagar.org/man2/AG_DriverWGL): Fixed a bug in cursor handling. When showing a window initially, perform size allocation after having initialized the cursors so that the initial cursor-change areas are correctly established.
 
 ## [1.6.0] - 2020-05-16
 ### Added

@@ -430,12 +430,31 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	}
 	AG_GL_InitContext(wgl, &wgl->gl);
 
+	/* Create the built-in cursors */
+	WGL_InitDefaultCursor(wgl);
+	AG_InitStockCursors(drv);
+
 	rVP.x = 0;
 	rVP.y = 0;
 	rVP.w = WIDTH(win);
 	rVP.h = HEIGHT(win);
 	AG_GL_SetViewport(&wgl->gl, &rVP);
-	
+
+	/* Perform initial size allocation */
+	{
+		AG_SizeAlloc wa;
+
+		wa.x = 0;
+		wa.y = 0;
+		wa.w = WIDTH(win);
+		wa.h = HEIGHT(win);
+		AG_WidgetSizeAlloc(win, &wa);
+		AG_WidgetUpdateCoords(win, 0,0);
+		WIDGET(win)->x = x;
+		WIDGET(win)->y = y;
+	}
+
+
 	/* Show the window */
 	ShowWindow(wgl->hwnd, SW_SHOW);
 	if (!(win->flags & AG_WINDOW_KEEPBELOW)) {
@@ -475,10 +494,6 @@ WGL_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 			0x00ff0000);
 #endif
 	}
-
-	/* Create the built-in cursors */
-	WGL_InitDefaultCursor(wgl);
-	AG_InitStockCursors(drv);
 
 	/* Focus the window. */
 	if (!(win->flags & AG_WINDOW_DENYFOCUS)) {
