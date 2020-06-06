@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -215,23 +215,19 @@ MyEventHandler(AG_Event *event)
 }
 .Ed
 .Pp
-Agar object classes may define their own accessor macros.
-This includes
+It is customary for Agar object classes to define accessor macros
 .Fn AG_<T>_PTR
-/
-.Fn AG_CONST_<T>_PTR
-for accessing arguments by index, and
+(for accessing arguments by index),
 .Fn AG_<T>_NAMED
-/
-.Fn AG_CONST_<T>_NAMED
-for accessing by name.
-.Pp
-Since the first argument (argument 0) is always a pointer to the object
-receiving the event, the
+(for accessing arguments by name), and
 .Fn AG_<T>_SELF
+(for accessing argument 0, equivalent to "AG_<T>_PTR(0)").
+Arguments marked
+.Em constant
+must be accessed with
+.Fn AG_CONST_<T>_PTR
 and
-.Fn AG_CONST_<T>_SELF
-macros may be used instead of "AG_<T>_PTR(0)" and "AG_CONST_<T>_PTR(0)".
+.Fn AG_CONST_<T>_SELF .
 .Pp
 Here is an example using Agar-GUI widget classes:
 .Bd -literal -offset indent
@@ -258,7 +254,9 @@ AG_SetEvent(button, "button-pushed",
     PushedOK, "%p,%Cp", radio, checkbox);
 .Ed
 .Pp
-Arguments can be named and retrieved with
+Arguments are optionally
+.Em named
+(tagged with a string) and retrieved with
 .Fn AG_<TYPE>_NAMED :
 .Bd -literal -offset indent
 static void
@@ -505,6 +503,9 @@ The following functions allow such manipulations.
 .Fn AG_EventDup "const AG_Event *src"
 .Pp
 .Ft void
+.Fn AG_EVENT_DUMP "const AG_Event *ev"
+.Pp
+.Ft void
 .Fn AG_EventPushPointer "AG_Event *ev" "const char *key" "void *val"
 .Pp
 .Ft void
@@ -579,6 +580,13 @@ copies the function pointer and arguments from one
 to another.
 .Fn AG_EventDup
 returns a newly-allocated duplicate.
+.Pp
+The
+.Fn AG_EVENT_DUMP
+macro produces a listing of the arguments of
+.Fa ev
+on the console via
+.Xr AG_Debug 3 .
 .Pp
 The
 .Fn AG_EventPush*

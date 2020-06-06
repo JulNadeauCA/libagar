@@ -26,8 +26,23 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**wgl**](https://libagar.org/man2/AG_DriverWGL): Clipboard integration. Live resize.
 
 ## [1.6.1] - 2020-06-
+### Added
+- [**AG_Event**](https://libagar.org/man3/AG_Event): New macro [AG_EVENT_DUMP](https://libagar.org/man3/AG_EVENT_DUMP) to produce a listing of `argv[]` arguments on the console.
+- `install-agartest.exe` installer for agartest on Windows.
+- Provide copies of the OFL as separate files (OFL11.txt and LICENSE.ofl).
+- Install a copy of the generated Makefile.config as ${DATADIR}/agar.mk.
+- Install a copy of the generated configure.lua as ${DATADIR}/agar.lua.
+
+### Changed
+- Build system updates so configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Those definitions are always available from `${DATADIR}/agar.mk`.
+- Don't install headers from disabled libraries.
+
 ### Fixed
+- Fixed compilation problem with `core/dir.c` under [NetBSD](https://NetBSD.org).
+- Fixed compilation problem with `core/inline_byteswap.h` and `core/cpuinfo.c` on powerpc64. Thanks Mark Linimon!
+- Fixed `double` <-> `long` conversion warnings in `math/m_sparse*`.
 - [**wgl**](https://libagar.org/man2/AG_DriverWGL): Fixed a bug in cursor handling. When showing a window initially, perform size allocation after having initialized the cursors so that the initial cursor-change areas are correctly established.
+- `install-sdk.exe` now installs include files in `include\x86` or `include\x64`.
 
 ## [1.6.0] - 2020-05-16
 ### Added

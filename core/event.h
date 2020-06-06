@@ -342,6 +342,34 @@ typedef void (*AG_EventFn)(AG_Event *_Nonnull);
 		va_end(ap);						\
 	}
 
+/*
+ * Dump AG_Event arguments to the console.
+ */
+#define AG_EVENT_DUMP(ev) \
+	{ \
+		char buf[128]; \
+		int i; \
+		AG_Debug(NULL, "Event \"" AGSI_YEL "%s" AGSI_RST "\" {\n", (ev)->name); \
+		for (i = 0; i < (ev)->argc; i++) { \
+			AG_Variable *V = &(ev)->argv[i]; \
+			AG_PrintVariable(buf, sizeof(buf), V); \
+			if (V->name[0] != '\0') { \
+				AG_Debug(NULL, "\t#%02d. " \
+				    AGSI_CYAN "%s" AGSI_RST " \"%s\" = " \
+				    AGSI_BOLD "%s" AGSI_RST "\n", i, \
+				    agVariableTypes[V->type].name, V->name, buf); \
+			} else { \
+				AG_Debug(NULL, "\t#%02d. " \
+				    AGSI_CYAN "%s" AGSI_RST " = " \
+				    AGSI_BOLD "%s" AGSI_RST "\n", i, \
+				   agVariableTypes[V->type].name, buf); \
+			} \
+			if (i == (ev)->argc0-1) \
+				AG_Debug(NULL, "\t---------------------------------\n"); \
+		} \
+		AG_Debug(NULL, "}\n"); \
+	}
+
 __BEGIN_DECLS
 void               AG_EventInit(AG_Event *_Nonnull);
 void               AG_EventArgs(AG_Event *_Nonnull, const char *_Nullable , ...);
