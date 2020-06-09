@@ -61,11 +61,9 @@ static const struct dev_tool_ent {
 	char *_Nonnull name;
 	AG_Window *_Nullable (*_Nonnull fn)(void);
 } devTools[] = {
-#ifdef AG_TIMERS
 	{ N_("Registered classes"),	AG_DEV_ClassInfo },
 	{ N_("Loaded fonts"),		AG_DEV_FontInfo },
-#endif
-#if defined(AG_TIMERS) && defined(AG_ENABLE_STRING)
+#ifdef AG_ENABLE_STRING
 	{ N_("Timer Inspector"),	AG_DEV_TimerInspector },
 #endif
 #ifdef AG_UNICODE
@@ -813,10 +811,8 @@ AG_DEV_Browser(void *vfsRoot)
 		    ShowPreferences, NULL);
 	}
 
-#ifdef AG_DEBUG
-	mi = AG_MenuNode(me->root, _("Debug"), NULL);
+	mi = AG_MenuNode(me->root, _("Tools"), NULL);
 	ToolMenu(mi);
-#endif /* AG_DEBUG */
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAdd(nb, _("Working copy"), AG_BOX_VERT);
