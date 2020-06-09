@@ -1076,6 +1076,10 @@ MEMORY_MODEL="LARGE"
 esac
 echo "                 v$VERSION for $host_machine ($MEMORY_MODEL)"
 echo ""
+case "${host}" in
+gba | gp32 | nds | 3ds)
+	host="arm-none-eabi"
+	PATH="${DEVKITARM}/bin:${PATH}"
 $ECHO_N 'checking for a C compiler...'
 $ECHO_N '# checking for a C compiler...' >>config.log
 # BEGIN cc
@@ -1693,8 +1697,2532 @@ echo "*** Failed! See ./config.log for more details."
 echo "***"
 exit 1
 fi
+$ECHO_N 'checking for devkitPro...'
+$ECHO_N '# checking for devkitPro...' >>config.log
+# BEGIN devkitpro(0 ${with_devkitpro})
+HAVE_DEVKITPRO="no"
+if [ "${with_devkitpro}" != "" ]; then
+if [ -e "${with_devkitpro}/devkitA64" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITA64="${with_devkitpro}/devkitA64"
+fi
+if [ -e "${with_devkitpro}/devkitARM" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITARM="${with_devkitpro}/devkitARM"
+fi
+if [ -e "${with_devkitpro}/devkitPPC" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITPPC="${with_devkitpro}/devkitPPC"
+fi
+else
+if [ -e "${DEVKITPRO}/devkitA64" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITA64="${DEVKITPRO}/devkitA64"
+fi
+if [ -e "${DEVKITPRO}/devkitARM" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITARM="${DEVKITPRO}/devkitARM"
+fi
+if [ -e "${DEVKITPRO}/devkitPPC" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITPPC="${DEVKITPRO}/devkitPPC"
+fi
+fi
+if [ "${HAVE_DEVKITPRO}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+$ECHO_N "checking whether gamecube works..."
+$ECHO_N "# checking whether gamecube works..." >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <gccore.h>
+#include <ogcsys.h>
+
+int main(int argc, char *argv[]) {
+	GXRModeObj *rmode;
+	VIDEO_Init();
+	PAD_Init();
+	rmode = VIDEO_GetPreferredMode(NULL);
+	VIDEO_Flush();
+	return (rmode != NULL);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_GAMECUBE' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_GAMECUBE=yes
+bb_o=$bb_incdir/have_gamecube.h
+echo '#ifndef HAVE_GAMECUBE' >$bb_o
+echo "#define HAVE_GAMECUBE \"$HAVE_GAMECUBE\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_GAMECUBE\"] = \"$HAVE_GAMECUBE\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_GAMECUBE=no
+echo '#undef HAVE_GAMECUBE' >$bb_incdir/have_gamecube.h
+echo 'hdefs["HAVE_GAMECUBE"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N "checking whether gba works..."
+$ECHO_N "# checking whether gba works..." >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <gba_console.h>
+#include <gba_video.h>
+#include <gba_interrupt.h>
+#include <gba_systemcalls.h>
+#include <stdio.h>
+
+int main(int argc, char *argv[]) {
+	irqInit();
+	irqEnable(IRQ_VBLANK);
+	iprintf("\x1b[2J");
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_GBA' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_GBA=yes
+bb_o=$bb_incdir/have_gba.h
+echo '#ifndef HAVE_GBA' >$bb_o
+echo "#define HAVE_GBA \"$HAVE_GBA\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_GBA\"] = \"$HAVE_GBA\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_GBA=no
+echo '#undef HAVE_GBA' >$bb_incdir/have_gba.h
+echo 'hdefs["HAVE_GBA"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N "checking whether switch works..."
+$ECHO_N "# checking whether switch works..." >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <string.h>
+#include <stdio.h>
+#include <switch.h>
+
+int main(int argc, char *argv[]) {
+	consoleInit(NULL);
+	printf("\x1b[16;20H" "Hello World!");
+	while (appletMainLoop()) {
+		u64 kd;
+		hidScanInput();
+		kd = hidKeysDown(CONTROLLER_P1_AUTO);
+		if (kd & KEY_PLUS) { break; }
+		consoleUpdate(NULL);
+	}
+	consoleExit(NULL);
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_SWITCH' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_SWITCH=yes
+bb_o=$bb_incdir/have_switch.h
+echo '#ifndef HAVE_SWITCH' >$bb_o
+echo "#define HAVE_SWITCH \"$HAVE_SWITCH\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_SWITCH\"] = \"$HAVE_SWITCH\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_SWITCH=no
+echo '#undef HAVE_SWITCH' >$bb_incdir/have_switch.h
+echo 'hdefs["HAVE_SWITCH"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+else
+HAVE_DEVKITPRO="no"
+HAVE_GAMECUBE="no"
+HAVE_GBA="no"
+HAVE_SWITCH="no"
+DEVKITPRO=""
+echo '#undef HAVE_GAMECUBE' >$bb_incdir/have_gamecube.h
+echo 'hdefs["HAVE_GAMECUBE"] = nil' >>configure.lua
+echo '#undef HAVE_GBA' >$bb_incdir/have_gba.h
+echo 'hdefs["HAVE_GBA"] = nil' >>configure.lua
+echo '#undef HAVE_SWITCH' >$bb_incdir/have_switch.h
+echo 'hdefs["HAVE_SWITCH"] = nil' >>configure.lua
+echo "no"
+echo "# no" >>config.log
+fi
+# END devkitpro
+if [ "${HAVE_DEVKITPRO}" != "yes" ]; then
+echo '* '
+echo '# * ' >>config.log
+echo '* This software requires devkitPro'
+echo '# * This software requires devkitPro' >>config.log
+echo '* WWW: https://devkitpro.org'
+echo '# * WWW: https://devkitpro.org' >>config.log
+echo '* '
+echo '# * ' >>config.log
+echo "***"
+echo "*** ERROR: Required dependency devkitpro not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
+	echo "checking for byte order...little-endian (${host})"
+_MK_BYTE_ORDER="LE"
+_MK_LITTLE_ENDIAN="yes"
+bb_o=$bb_incdir/_mk_little_endian.h
+echo '#ifndef _MK_LITTLE_ENDIAN' >$bb_o
+echo "#define _MK_LITTLE_ENDIAN \"$_MK_LITTLE_ENDIAN\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
+echo '#undef _MK_BIG_ENDIAN' >$bb_incdir/_mk_big_endian.h
+echo 'hdefs["_MK_BIG_ENDIAN"] = nil' >>configure.lua
+	;;
+gamecube | wii | wiiu)
+	host="powerpc-eabi"
+	PATH="${DEVKITPPC}/bin:${PATH}"
+$ECHO_N 'checking for a C compiler...'
+$ECHO_N '# checking for a C compiler...' >>config.log
+# BEGIN cc
+if [ "$CROSS_COMPILING" = "yes" ]; then
+CROSSPFX="${host}-"
+else
+CROSSPFX=""
+fi
+HAVE_CC65="no"
+if [ "$CC" = "" ]; then
 case "${host}" in
+apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/cc65" ]; then
+CC="${i}/cc65"
+HAVE_CC65="yes"
+CROSS_COMPILING="yes"
+break
+elif [ -x "${i}/cc65.exe" ]; then
+CC="${i}/cc65.exe"
+HAVE_CC65="yes"
+CROSS_COMPILING="yes"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
+*)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/${CROSSPFX}clang" ]; then
+CC="${i}/${CROSSPFX}clang"
+break
+elif [ -x "${i}/${CROSSPFX}clang70" ]; then
+CC="${i}/${CROSSPFX}clang70"
+break
+elif [ -x "${i}/${CROSSPFX}clang60" ]; then
+CC="${i}/${CROSSPFX}clang60"
+break
+elif [ -x "${i}/${CROSSPFX}cc" ]; then
+CC="${i}/${CROSSPFX}cc"
+break
+elif [ -x "${i}/${CROSSPFX}gcc" ]; then
+CC="${i}/${CROSSPFX}gcc"
+break
+elif [ -x "${i}/${CROSSPFX}gcc-6" ]; then
+CC="${i}/${CROSSPFX}gcc-6"
+break
+elif [ -x "${i}/${CROSSPFX}gcc7" ]; then
+CC="${i}/${CROSSPFX}gcc7"
+break
+elif [ -x "${i}/${CROSSPFX}gcc8" ]; then
+CC="${i}/${CROSSPFX}gcc8"
+break
+elif [ -x "${i}/${CROSSPFX}gcc5" ]; then
+CC="${i}/${CROSSPFX}gcc5"
+break
+elif [ -x "${i}/${CROSSPFX}gcc49" ]; then
+CC="${i}/${CROSSPFX}gcc49"
+break
+elif [ -x "${i}/${CROSSPFX}gcc48" ]; then
+CC="${i}/${CROSSPFX}gcc48"
+break
+elif [ -x "${i}/${CROSSPFX}clang.exe" ]; then
+CC="${i}/${CROSSPFX}clang.exe"
+break
+elif [ -x "${i}/${CROSSPFX}cc.exe" ]; then
+CC="${i}/${CROSSPFX}cc.exe"
+break
+elif [ -x "${i}/${CROSSPFX}gcc.exe" ]; then
+CC="${i}/${CROSSPFX}gcc.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
+esac
+	if [ "$CC" = '' ]; then
+		if [ "$HAVE_CC65" = "yes" ]; then
+			echo "*"
+			echo "* Cannot find cc65 in PATH. You may need to set CC."
+			echo "* You can download cc65 from: https://www.cc65.org/."
+			echo "*"
+			echo "Cannot find cc65 in PATH." >>config.log
+		else
+			echo "*"
+echo "* Cannot find one of clang, clang70, clang60, cc, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
+			echo "* under the current PATH, which is:"
+			echo "* $PATH"
+			echo "*"
+			echo "* You may need to set the CC environment variable."
+			echo "*"
+			echo "Cannot find C compiler in PATH." >>config.log
+		fi
+		HAVE_CC="no"
+		echo "no"
+		echo "no" >>config.log
+	else
+		HAVE_CC="yes"
+		echo "yes, ${CC}"
+		echo "yes, ${CC}" >>config.log
+	fi
+else
+	HAVE_CC="yes"
+	if ${CC} -V 2>&1 |grep -q ^cc65; then
+		echo "using cc65 (${CC})"
+		echo "using cc65 (${CC})" >>config.log
+		HAVE_CC65="yes"
+		CROSS_COMPILING="yes"
+	else
+		echo "using ${CC}"
+		echo "using ${CC}" >>config.log
+	fi
+fi
+
+if [ "${HAVE_CC}" = "yes" ]; then
+	$ECHO_N 'checking whether the C compiler works...'
+	$ECHO_N '# checking whether the C compiler works...' >>config.log
+	cat << 'EOT' > conftest.c
+int main(int argc, char *argv[]) { return (0); }
+EOT
+	$CC -o conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+	    echo "no"
+	    echo "no, compilation failed" >>config.log
+		HAVE_CC="no"
+	else
+		HAVE_CC="yes"
+	fi
+
+	if [ "${HAVE_CC}" = "yes" ]; then
+		if [ "${EXECSUFFIX}" = '' ]; then
+			EXECSUFFIX=''
+			for OUTFILE in conftest.exe conftest conftest.*; do
+				if [ -f $OUTFILE ]; then
+					case $OUTFILE in
+					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+						;;
+					*.* )
+						EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
+						break ;;
+					* )
+						break ;;
+					esac;
+			    fi
+			done
+			if [ "$EXECSUFFIX" != '' ]; then
+				echo "yes, it outputs $EXECSUFFIX files"
+				echo "yes, it outputs $EXECSUFFIX files" >>config.log
+			else
+				echo "yes"
+				echo "yes" >>config.log
+			fi
+bb_o=$bb_incdir/execsuffix.h
+echo '#ifndef EXECSUFFIX' >$bb_o
+echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
+		else
+			echo "yes"
+			echo "yes" >>config.log
+		fi
+	fi
+	if [ "${keep_conftest}" != "yes" ]; then
+		rm -f conftest.c conftest$EXECSUFFIX
+	fi
+	TEST_CFLAGS=''
+fi
+if [ "${HAVE_CC}" = "yes" ]; then
+$ECHO_N 'cc: checking whether compiler is Clang...'
+$ECHO_N '# cc: checking whether compiler is Clang...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__clang__)
+# error "is not clang"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_CLANG' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_CLANG=yes
+bb_o=$bb_incdir/have_cc_clang.h
+echo '#ifndef HAVE_CC_CLANG' >$bb_o
+echo "#define HAVE_CC_CLANG \"$HAVE_CC_CLANG\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_CLANG=no
+echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking whether compiler is GCC...'
+$ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__GNUC__) || defined(__clang__)
+# error "is not gcc"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_GCC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_GCC=yes
+bb_o=$bb_incdir/have_cc_gcc.h
+echo '#ifndef HAVE_CC_GCC' >$bb_o
+echo "#define HAVE_CC_GCC \"$HAVE_CC_GCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_GCC=no
+echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking for compiler warning options...'
+$ECHO_N '# cc: checking for compiler warning options...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_WARNINGS' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_WARNINGS=yes
+bb_o=$bb_incdir/have_cc_warnings.h
+echo '#ifndef HAVE_CC_WARNINGS' >$bb_o
+echo "#define HAVE_CC_WARNINGS \"$HAVE_CC_WARNINGS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_WARNINGS=no
+echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
+echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
+TEST_CFLAGS="-Wall"
+fi
+$ECHO_N 'cc: checking for float and double...'
+$ECHO_N '# cc: checking for float and double...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <stdio.h>
+int
+main(int argc, char *argv[])
+{
+	float f = 0.1f;
+	double d = 0.2;
+
+	printf("%f", f);
+	return ((double)f + d) > 0.2 ? 1 : 0;
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_FLOAT' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_FLOAT=yes
+bb_o=$bb_incdir/have_float.h
+echo '#ifndef HAVE_FLOAT' >$bb_o
+echo "#define HAVE_FLOAT \"$HAVE_FLOAT\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_FLOAT\"] = \"$HAVE_FLOAT\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_FLOAT=no
+echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
+echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking for long double...'
+$ECHO_N '# cc: checking for long double...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <stdio.h>
+int
+main(int argc, char *argv[])
+{
+	long double ld = 0.1;
+
+	printf("%Lf", ld);
+	return (ld + 0.1) > 0.2 ? 1 : 0;
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_LONG_DOUBLE' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LONG_DOUBLE=yes
+bb_o=$bb_incdir/have_long_double.h
+echo '#ifndef HAVE_LONG_DOUBLE' >$bb_o
+echo "#define HAVE_LONG_DOUBLE \"$HAVE_LONG_DOUBLE\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LONG_DOUBLE\"] = \"$HAVE_LONG_DOUBLE\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LONG_DOUBLE=no
+echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
+echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking for long long...'
+$ECHO_N '# cc: checking for long long...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int
+main(int argc, char *argv[])
+{
+	long long ll = -1;
+	unsigned long long ull = 1;
+
+	return (ll != -1 || ull != 1);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_LONG_LONG' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LONG_LONG=yes
+bb_o=$bb_incdir/have_long_long.h
+echo '#ifndef HAVE_LONG_LONG' >$bb_o
+echo "#define HAVE_LONG_LONG \"$HAVE_LONG_LONG\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LONG_LONG\"] = \"$HAVE_LONG_LONG\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LONG_LONG=no
+echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
+echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+case "${host}" in
+*-*-cygwin* | *-*-mingw32*)
+PICFLAGS=""
+$ECHO_N 'cc: checking for linker -no-undefined option...'
+$ECHO_N '# cc: checking for linker -no-undefined option...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return(0); }';
+EOT
+echo >>config.log
+echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LD_NO_UNDEFINED=yes
+bb_o=$bb_incdir/have_ld_no_undefined.h
+echo '#ifndef HAVE_LD_NO_UNDEFINED' >$bb_o
+echo "#define HAVE_LD_NO_UNDEFINED \"$HAVE_LD_NO_UNDEFINED\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LD_NO_UNDEFINED=no
+echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
+echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LD_NO_UNDEFINED}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -no-undefined -Wl,--no-undefined"
+fi
+$ECHO_N 'cc: checking for linker -static-libgcc option...'
+$ECHO_N '# cc: checking for linker -static-libgcc option...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return(0); }';
+EOT
+echo >>config.log
+echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LD_STATIC_LIBGCC=yes
+bb_o=$bb_incdir/have_ld_static_libgcc.h
+echo '#ifndef HAVE_LD_STATIC_LIBGCC' >$bb_o
+echo "#define HAVE_LD_STATIC_LIBGCC \"$HAVE_LD_STATIC_LIBGCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LD_STATIC_LIBGCC=no
+echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
+echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LD_STATIC_LIBGCC}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -XCClinker -static-libgcc"
+fi
+$ECHO_N 'cc: checking for cygwin environment...'
+$ECHO_N '# cc: checking for cygwin environment...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <windows.h>
+int main(int argc, char *argv[]) {
+	struct stat sb;
+	DWORD rv;
+	rv = GetFileAttributes("foo");
+	stat("foo", &sb);
+	return(0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_CYGWIN' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CYGWIN=yes
+bb_o=$bb_incdir/have_cygwin.h
+echo '#ifndef HAVE_CYGWIN' >$bb_o
+echo "#define HAVE_CYGWIN \"$HAVE_CYGWIN\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CYGWIN=no
+echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+;;
+*)
+PICFLAGS="-fPIC"
+HAVE_CYGWIN="no"
+echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+PROG_GUI_FLAGS=""
+PROG_CLI_FLAGS=""
+;;
+esac
+bb_o=$bb_incdir/have_cc.h
+echo '#ifndef HAVE_CC' >$bb_o
+echo "#define HAVE_CC \"$HAVE_CC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
+if [ "${HAVE_CC65}" = "yes" ]; then
+CC_COMPILE=""
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+else
+CC_COMPILE="-c"
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+fi
+else
+HAVE_CC65="no"
+HAVE_CC_WARNINGS="no"
+PROG_GUI_FLAGS=""
+PROG_CLI_FLAGS=""
+TEST_CFLAGS=""
+echo '#undef HAVE_CC' >$bb_incdir/have_cc.h
+echo 'hdefs["HAVE_CC"] = nil' >>configure.lua
+echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
+echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
+echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
+echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
+echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
+echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
+echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
+echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
+echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
+echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
+echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
+echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
+fi
+# END cc
+if [ "${HAVE_CC}" != "yes" ]; then
+echo '* '
+echo '# * ' >>config.log
+echo '* This software requires a C compiler'
+echo '# * This software requires a C compiler' >>config.log
+echo '* '
+echo '# * ' >>config.log
+echo "***"
+echo "*** ERROR: Required dependency cc not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
+$ECHO_N 'checking for devkitPro...'
+$ECHO_N '# checking for devkitPro...' >>config.log
+# BEGIN devkitpro(0 ${with_devkitpro})
+HAVE_DEVKITPRO="no"
+if [ "${with_devkitpro}" != "" ]; then
+if [ -e "${with_devkitpro}/devkitA64" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITA64="${with_devkitpro}/devkitA64"
+fi
+if [ -e "${with_devkitpro}/devkitARM" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITARM="${with_devkitpro}/devkitARM"
+fi
+if [ -e "${with_devkitpro}/devkitPPC" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITPPC="${with_devkitpro}/devkitPPC"
+fi
+else
+if [ -e "${DEVKITPRO}/devkitA64" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITA64="${DEVKITPRO}/devkitA64"
+fi
+if [ -e "${DEVKITPRO}/devkitARM" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITARM="${DEVKITPRO}/devkitARM"
+fi
+if [ -e "${DEVKITPRO}/devkitPPC" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITPPC="${DEVKITPRO}/devkitPPC"
+fi
+fi
+if [ "${HAVE_DEVKITPRO}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+$ECHO_N "checking whether gamecube works..."
+$ECHO_N "# checking whether gamecube works..." >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <gccore.h>
+#include <ogcsys.h>
+
+int main(int argc, char *argv[]) {
+	GXRModeObj *rmode;
+	VIDEO_Init();
+	PAD_Init();
+	rmode = VIDEO_GetPreferredMode(NULL);
+	VIDEO_Flush();
+	return (rmode != NULL);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_GAMECUBE' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_GAMECUBE=yes
+bb_o=$bb_incdir/have_gamecube.h
+echo '#ifndef HAVE_GAMECUBE' >$bb_o
+echo "#define HAVE_GAMECUBE \"$HAVE_GAMECUBE\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_GAMECUBE\"] = \"$HAVE_GAMECUBE\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_GAMECUBE=no
+echo '#undef HAVE_GAMECUBE' >$bb_incdir/have_gamecube.h
+echo 'hdefs["HAVE_GAMECUBE"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N "checking whether gba works..."
+$ECHO_N "# checking whether gba works..." >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <gba_console.h>
+#include <gba_video.h>
+#include <gba_interrupt.h>
+#include <gba_systemcalls.h>
+#include <stdio.h>
+
+int main(int argc, char *argv[]) {
+	irqInit();
+	irqEnable(IRQ_VBLANK);
+	iprintf("\x1b[2J");
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_GBA' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_GBA=yes
+bb_o=$bb_incdir/have_gba.h
+echo '#ifndef HAVE_GBA' >$bb_o
+echo "#define HAVE_GBA \"$HAVE_GBA\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_GBA\"] = \"$HAVE_GBA\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_GBA=no
+echo '#undef HAVE_GBA' >$bb_incdir/have_gba.h
+echo 'hdefs["HAVE_GBA"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N "checking whether switch works..."
+$ECHO_N "# checking whether switch works..." >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <string.h>
+#include <stdio.h>
+#include <switch.h>
+
+int main(int argc, char *argv[]) {
+	consoleInit(NULL);
+	printf("\x1b[16;20H" "Hello World!");
+	while (appletMainLoop()) {
+		u64 kd;
+		hidScanInput();
+		kd = hidKeysDown(CONTROLLER_P1_AUTO);
+		if (kd & KEY_PLUS) { break; }
+		consoleUpdate(NULL);
+	}
+	consoleExit(NULL);
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_SWITCH' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_SWITCH=yes
+bb_o=$bb_incdir/have_switch.h
+echo '#ifndef HAVE_SWITCH' >$bb_o
+echo "#define HAVE_SWITCH \"$HAVE_SWITCH\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_SWITCH\"] = \"$HAVE_SWITCH\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_SWITCH=no
+echo '#undef HAVE_SWITCH' >$bb_incdir/have_switch.h
+echo 'hdefs["HAVE_SWITCH"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+else
+HAVE_DEVKITPRO="no"
+HAVE_GAMECUBE="no"
+HAVE_GBA="no"
+HAVE_SWITCH="no"
+DEVKITPRO=""
+echo '#undef HAVE_GAMECUBE' >$bb_incdir/have_gamecube.h
+echo 'hdefs["HAVE_GAMECUBE"] = nil' >>configure.lua
+echo '#undef HAVE_GBA' >$bb_incdir/have_gba.h
+echo 'hdefs["HAVE_GBA"] = nil' >>configure.lua
+echo '#undef HAVE_SWITCH' >$bb_incdir/have_switch.h
+echo 'hdefs["HAVE_SWITCH"] = nil' >>configure.lua
+echo "no"
+echo "# no" >>config.log
+fi
+# END devkitpro
+if [ "${HAVE_DEVKITPRO}" != "yes" ]; then
+echo '* '
+echo '# * ' >>config.log
+echo '* This software requires devkitPro'
+echo '# * This software requires devkitPro' >>config.log
+echo '* WWW: https://devkitpro.org'
+echo '# * WWW: https://devkitpro.org' >>config.log
+echo '* '
+echo '# * ' >>config.log
+echo "***"
+echo "*** ERROR: Required dependency devkitpro not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
+_MK_BYTE_ORDER="BE"
+_MK_BIG_ENDIAN="yes"
+bb_o=$bb_incdir/_mk_big_endian.h
+echo '#ifndef _MK_BIG_ENDIAN' >$bb_o
+echo "#define _MK_BIG_ENDIAN \"$_MK_BIG_ENDIAN\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
+echo '#undef _MK_LITTLE_ENDIAN' >$bb_incdir/_mk_little_endian.h
+echo 'hdefs["_MK_LITTLE_ENDIAN"] = nil' >>configure.lua
+	;;
+switch)
+	host="aarch64-none-elf"
+	PATH="${DEVKITA64}/bin:${PATH}"
+$ECHO_N 'checking for a C compiler...'
+$ECHO_N '# checking for a C compiler...' >>config.log
+# BEGIN cc
+if [ "$CROSS_COMPILING" = "yes" ]; then
+CROSSPFX="${host}-"
+else
+CROSSPFX=""
+fi
+HAVE_CC65="no"
+if [ "$CC" = "" ]; then
+case "${host}" in
+apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/cc65" ]; then
+CC="${i}/cc65"
+HAVE_CC65="yes"
+CROSS_COMPILING="yes"
+break
+elif [ -x "${i}/cc65.exe" ]; then
+CC="${i}/cc65.exe"
+HAVE_CC65="yes"
+CROSS_COMPILING="yes"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
+*)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/${CROSSPFX}clang" ]; then
+CC="${i}/${CROSSPFX}clang"
+break
+elif [ -x "${i}/${CROSSPFX}clang70" ]; then
+CC="${i}/${CROSSPFX}clang70"
+break
+elif [ -x "${i}/${CROSSPFX}clang60" ]; then
+CC="${i}/${CROSSPFX}clang60"
+break
+elif [ -x "${i}/${CROSSPFX}cc" ]; then
+CC="${i}/${CROSSPFX}cc"
+break
+elif [ -x "${i}/${CROSSPFX}gcc" ]; then
+CC="${i}/${CROSSPFX}gcc"
+break
+elif [ -x "${i}/${CROSSPFX}gcc-6" ]; then
+CC="${i}/${CROSSPFX}gcc-6"
+break
+elif [ -x "${i}/${CROSSPFX}gcc7" ]; then
+CC="${i}/${CROSSPFX}gcc7"
+break
+elif [ -x "${i}/${CROSSPFX}gcc8" ]; then
+CC="${i}/${CROSSPFX}gcc8"
+break
+elif [ -x "${i}/${CROSSPFX}gcc5" ]; then
+CC="${i}/${CROSSPFX}gcc5"
+break
+elif [ -x "${i}/${CROSSPFX}gcc49" ]; then
+CC="${i}/${CROSSPFX}gcc49"
+break
+elif [ -x "${i}/${CROSSPFX}gcc48" ]; then
+CC="${i}/${CROSSPFX}gcc48"
+break
+elif [ -x "${i}/${CROSSPFX}clang.exe" ]; then
+CC="${i}/${CROSSPFX}clang.exe"
+break
+elif [ -x "${i}/${CROSSPFX}cc.exe" ]; then
+CC="${i}/${CROSSPFX}cc.exe"
+break
+elif [ -x "${i}/${CROSSPFX}gcc.exe" ]; then
+CC="${i}/${CROSSPFX}gcc.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
+esac
+	if [ "$CC" = '' ]; then
+		if [ "$HAVE_CC65" = "yes" ]; then
+			echo "*"
+			echo "* Cannot find cc65 in PATH. You may need to set CC."
+			echo "* You can download cc65 from: https://www.cc65.org/."
+			echo "*"
+			echo "Cannot find cc65 in PATH." >>config.log
+		else
+			echo "*"
+echo "* Cannot find one of clang, clang70, clang60, cc, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
+			echo "* under the current PATH, which is:"
+			echo "* $PATH"
+			echo "*"
+			echo "* You may need to set the CC environment variable."
+			echo "*"
+			echo "Cannot find C compiler in PATH." >>config.log
+		fi
+		HAVE_CC="no"
+		echo "no"
+		echo "no" >>config.log
+	else
+		HAVE_CC="yes"
+		echo "yes, ${CC}"
+		echo "yes, ${CC}" >>config.log
+	fi
+else
+	HAVE_CC="yes"
+	if ${CC} -V 2>&1 |grep -q ^cc65; then
+		echo "using cc65 (${CC})"
+		echo "using cc65 (${CC})" >>config.log
+		HAVE_CC65="yes"
+		CROSS_COMPILING="yes"
+	else
+		echo "using ${CC}"
+		echo "using ${CC}" >>config.log
+	fi
+fi
+
+if [ "${HAVE_CC}" = "yes" ]; then
+	$ECHO_N 'checking whether the C compiler works...'
+	$ECHO_N '# checking whether the C compiler works...' >>config.log
+	cat << 'EOT' > conftest.c
+int main(int argc, char *argv[]) { return (0); }
+EOT
+	$CC -o conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+	    echo "no"
+	    echo "no, compilation failed" >>config.log
+		HAVE_CC="no"
+	else
+		HAVE_CC="yes"
+	fi
+
+	if [ "${HAVE_CC}" = "yes" ]; then
+		if [ "${EXECSUFFIX}" = '' ]; then
+			EXECSUFFIX=''
+			for OUTFILE in conftest.exe conftest conftest.*; do
+				if [ -f $OUTFILE ]; then
+					case $OUTFILE in
+					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+						;;
+					*.* )
+						EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
+						break ;;
+					* )
+						break ;;
+					esac;
+			    fi
+			done
+			if [ "$EXECSUFFIX" != '' ]; then
+				echo "yes, it outputs $EXECSUFFIX files"
+				echo "yes, it outputs $EXECSUFFIX files" >>config.log
+			else
+				echo "yes"
+				echo "yes" >>config.log
+			fi
+bb_o=$bb_incdir/execsuffix.h
+echo '#ifndef EXECSUFFIX' >$bb_o
+echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
+		else
+			echo "yes"
+			echo "yes" >>config.log
+		fi
+	fi
+	if [ "${keep_conftest}" != "yes" ]; then
+		rm -f conftest.c conftest$EXECSUFFIX
+	fi
+	TEST_CFLAGS=''
+fi
+if [ "${HAVE_CC}" = "yes" ]; then
+$ECHO_N 'cc: checking whether compiler is Clang...'
+$ECHO_N '# cc: checking whether compiler is Clang...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__clang__)
+# error "is not clang"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_CLANG' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_CLANG=yes
+bb_o=$bb_incdir/have_cc_clang.h
+echo '#ifndef HAVE_CC_CLANG' >$bb_o
+echo "#define HAVE_CC_CLANG \"$HAVE_CC_CLANG\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_CLANG=no
+echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking whether compiler is GCC...'
+$ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__GNUC__) || defined(__clang__)
+# error "is not gcc"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_GCC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_GCC=yes
+bb_o=$bb_incdir/have_cc_gcc.h
+echo '#ifndef HAVE_CC_GCC' >$bb_o
+echo "#define HAVE_CC_GCC \"$HAVE_CC_GCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_GCC=no
+echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking for compiler warning options...'
+$ECHO_N '# cc: checking for compiler warning options...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_WARNINGS' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_WARNINGS=yes
+bb_o=$bb_incdir/have_cc_warnings.h
+echo '#ifndef HAVE_CC_WARNINGS' >$bb_o
+echo "#define HAVE_CC_WARNINGS \"$HAVE_CC_WARNINGS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_WARNINGS=no
+echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
+echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
+TEST_CFLAGS="-Wall"
+fi
+$ECHO_N 'cc: checking for float and double...'
+$ECHO_N '# cc: checking for float and double...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <stdio.h>
+int
+main(int argc, char *argv[])
+{
+	float f = 0.1f;
+	double d = 0.2;
+
+	printf("%f", f);
+	return ((double)f + d) > 0.2 ? 1 : 0;
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_FLOAT' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_FLOAT=yes
+bb_o=$bb_incdir/have_float.h
+echo '#ifndef HAVE_FLOAT' >$bb_o
+echo "#define HAVE_FLOAT \"$HAVE_FLOAT\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_FLOAT\"] = \"$HAVE_FLOAT\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_FLOAT=no
+echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
+echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking for long double...'
+$ECHO_N '# cc: checking for long double...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <stdio.h>
+int
+main(int argc, char *argv[])
+{
+	long double ld = 0.1;
+
+	printf("%Lf", ld);
+	return (ld + 0.1) > 0.2 ? 1 : 0;
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_LONG_DOUBLE' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LONG_DOUBLE=yes
+bb_o=$bb_incdir/have_long_double.h
+echo '#ifndef HAVE_LONG_DOUBLE' >$bb_o
+echo "#define HAVE_LONG_DOUBLE \"$HAVE_LONG_DOUBLE\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LONG_DOUBLE\"] = \"$HAVE_LONG_DOUBLE\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LONG_DOUBLE=no
+echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
+echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking for long long...'
+$ECHO_N '# cc: checking for long long...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int
+main(int argc, char *argv[])
+{
+	long long ll = -1;
+	unsigned long long ull = 1;
+
+	return (ll != -1 || ull != 1);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_LONG_LONG' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LONG_LONG=yes
+bb_o=$bb_incdir/have_long_long.h
+echo '#ifndef HAVE_LONG_LONG' >$bb_o
+echo "#define HAVE_LONG_LONG \"$HAVE_LONG_LONG\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LONG_LONG\"] = \"$HAVE_LONG_LONG\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LONG_LONG=no
+echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
+echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+case "${host}" in
+*-*-cygwin* | *-*-mingw32*)
+PICFLAGS=""
+$ECHO_N 'cc: checking for linker -no-undefined option...'
+$ECHO_N '# cc: checking for linker -no-undefined option...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return(0); }';
+EOT
+echo >>config.log
+echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LD_NO_UNDEFINED=yes
+bb_o=$bb_incdir/have_ld_no_undefined.h
+echo '#ifndef HAVE_LD_NO_UNDEFINED' >$bb_o
+echo "#define HAVE_LD_NO_UNDEFINED \"$HAVE_LD_NO_UNDEFINED\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LD_NO_UNDEFINED=no
+echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
+echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LD_NO_UNDEFINED}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -no-undefined -Wl,--no-undefined"
+fi
+$ECHO_N 'cc: checking for linker -static-libgcc option...'
+$ECHO_N '# cc: checking for linker -static-libgcc option...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return(0); }';
+EOT
+echo >>config.log
+echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LD_STATIC_LIBGCC=yes
+bb_o=$bb_incdir/have_ld_static_libgcc.h
+echo '#ifndef HAVE_LD_STATIC_LIBGCC' >$bb_o
+echo "#define HAVE_LD_STATIC_LIBGCC \"$HAVE_LD_STATIC_LIBGCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LD_STATIC_LIBGCC=no
+echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
+echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LD_STATIC_LIBGCC}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -XCClinker -static-libgcc"
+fi
+$ECHO_N 'cc: checking for cygwin environment...'
+$ECHO_N '# cc: checking for cygwin environment...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <windows.h>
+int main(int argc, char *argv[]) {
+	struct stat sb;
+	DWORD rv;
+	rv = GetFileAttributes("foo");
+	stat("foo", &sb);
+	return(0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_CYGWIN' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CYGWIN=yes
+bb_o=$bb_incdir/have_cygwin.h
+echo '#ifndef HAVE_CYGWIN' >$bb_o
+echo "#define HAVE_CYGWIN \"$HAVE_CYGWIN\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CYGWIN=no
+echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+;;
+*)
+PICFLAGS="-fPIC"
+HAVE_CYGWIN="no"
+echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+PROG_GUI_FLAGS=""
+PROG_CLI_FLAGS=""
+;;
+esac
+bb_o=$bb_incdir/have_cc.h
+echo '#ifndef HAVE_CC' >$bb_o
+echo "#define HAVE_CC \"$HAVE_CC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
+if [ "${HAVE_CC65}" = "yes" ]; then
+CC_COMPILE=""
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+else
+CC_COMPILE="-c"
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+fi
+else
+HAVE_CC65="no"
+HAVE_CC_WARNINGS="no"
+PROG_GUI_FLAGS=""
+PROG_CLI_FLAGS=""
+TEST_CFLAGS=""
+echo '#undef HAVE_CC' >$bb_incdir/have_cc.h
+echo 'hdefs["HAVE_CC"] = nil' >>configure.lua
+echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
+echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
+echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
+echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
+echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
+echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
+echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
+echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
+echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
+echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
+echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
+echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
+fi
+# END cc
+if [ "${HAVE_CC}" != "yes" ]; then
+echo '* '
+echo '# * ' >>config.log
+echo '* This software requires a C compiler'
+echo '# * This software requires a C compiler' >>config.log
+echo '* '
+echo '# * ' >>config.log
+echo "***"
+echo "*** ERROR: Required dependency cc not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
+$ECHO_N 'checking for devkitPro...'
+$ECHO_N '# checking for devkitPro...' >>config.log
+# BEGIN devkitpro(0 ${with_devkitpro})
+HAVE_DEVKITPRO="no"
+if [ "${with_devkitpro}" != "" ]; then
+if [ -e "${with_devkitpro}/devkitA64" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITA64="${with_devkitpro}/devkitA64"
+fi
+if [ -e "${with_devkitpro}/devkitARM" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITARM="${with_devkitpro}/devkitARM"
+fi
+if [ -e "${with_devkitpro}/devkitPPC" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITPPC="${with_devkitpro}/devkitPPC"
+fi
+else
+if [ -e "${DEVKITPRO}/devkitA64" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITA64="${DEVKITPRO}/devkitA64"
+fi
+if [ -e "${DEVKITPRO}/devkitARM" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITARM="${DEVKITPRO}/devkitARM"
+fi
+if [ -e "${DEVKITPRO}/devkitPPC" ]; then
+HAVE_DEVKITPRO="yes"
+DEVKITPPC="${DEVKITPRO}/devkitPPC"
+fi
+fi
+if [ "${HAVE_DEVKITPRO}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+$ECHO_N "checking whether gamecube works..."
+$ECHO_N "# checking whether gamecube works..." >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <gccore.h>
+#include <ogcsys.h>
+
+int main(int argc, char *argv[]) {
+	GXRModeObj *rmode;
+	VIDEO_Init();
+	PAD_Init();
+	rmode = VIDEO_GetPreferredMode(NULL);
+	VIDEO_Flush();
+	return (rmode != NULL);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_GAMECUBE' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_GAMECUBE=yes
+bb_o=$bb_incdir/have_gamecube.h
+echo '#ifndef HAVE_GAMECUBE' >$bb_o
+echo "#define HAVE_GAMECUBE \"$HAVE_GAMECUBE\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_GAMECUBE\"] = \"$HAVE_GAMECUBE\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_GAMECUBE=no
+echo '#undef HAVE_GAMECUBE' >$bb_incdir/have_gamecube.h
+echo 'hdefs["HAVE_GAMECUBE"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N "checking whether gba works..."
+$ECHO_N "# checking whether gba works..." >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <gba_console.h>
+#include <gba_video.h>
+#include <gba_interrupt.h>
+#include <gba_systemcalls.h>
+#include <stdio.h>
+
+int main(int argc, char *argv[]) {
+	irqInit();
+	irqEnable(IRQ_VBLANK);
+	iprintf("\x1b[2J");
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_GBA' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_GBA=yes
+bb_o=$bb_incdir/have_gba.h
+echo '#ifndef HAVE_GBA' >$bb_o
+echo "#define HAVE_GBA \"$HAVE_GBA\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_GBA\"] = \"$HAVE_GBA\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_GBA=no
+echo '#undef HAVE_GBA' >$bb_incdir/have_gba.h
+echo 'hdefs["HAVE_GBA"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N "checking whether switch works..."
+$ECHO_N "# checking whether switch works..." >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <string.h>
+#include <stdio.h>
+#include <switch.h>
+
+int main(int argc, char *argv[]) {
+	consoleInit(NULL);
+	printf("\x1b[16;20H" "Hello World!");
+	while (appletMainLoop()) {
+		u64 kd;
+		hidScanInput();
+		kd = hidKeysDown(CONTROLLER_P1_AUTO);
+		if (kd & KEY_PLUS) { break; }
+		consoleUpdate(NULL);
+	}
+	consoleExit(NULL);
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_SWITCH' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_SWITCH=yes
+bb_o=$bb_incdir/have_switch.h
+echo '#ifndef HAVE_SWITCH' >$bb_o
+echo "#define HAVE_SWITCH \"$HAVE_SWITCH\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_SWITCH\"] = \"$HAVE_SWITCH\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_SWITCH=no
+echo '#undef HAVE_SWITCH' >$bb_incdir/have_switch.h
+echo 'hdefs["HAVE_SWITCH"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+else
+HAVE_DEVKITPRO="no"
+HAVE_GAMECUBE="no"
+HAVE_GBA="no"
+HAVE_SWITCH="no"
+DEVKITPRO=""
+echo '#undef HAVE_GAMECUBE' >$bb_incdir/have_gamecube.h
+echo 'hdefs["HAVE_GAMECUBE"] = nil' >>configure.lua
+echo '#undef HAVE_GBA' >$bb_incdir/have_gba.h
+echo 'hdefs["HAVE_GBA"] = nil' >>configure.lua
+echo '#undef HAVE_SWITCH' >$bb_incdir/have_switch.h
+echo 'hdefs["HAVE_SWITCH"] = nil' >>configure.lua
+echo "no"
+echo "# no" >>config.log
+fi
+# END devkitpro
+if [ "${HAVE_DEVKITPRO}" != "yes" ]; then
+echo '* '
+echo '# * ' >>config.log
+echo '* This software requires devkitPro'
+echo '# * This software requires devkitPro' >>config.log
+echo '* WWW: https://devkitpro.org'
+echo '# * WWW: https://devkitpro.org' >>config.log
+echo '* '
+echo '# * ' >>config.log
+echo "***"
+echo "*** ERROR: Required dependency devkitpro not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
+	CFLAGS="${CFLAGS} -mlittle-endian"
+_MK_BYTE_ORDER="LE"
+_MK_LITTLE_ENDIAN="yes"
+bb_o=$bb_incdir/_mk_little_endian.h
+echo '#ifndef _MK_LITTLE_ENDIAN' >$bb_o
+echo "#define _MK_LITTLE_ENDIAN \"$_MK_LITTLE_ENDIAN\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
+echo '#undef _MK_BIG_ENDIAN' >$bb_incdir/_mk_big_endian.h
+echo 'hdefs["_MK_BIG_ENDIAN"] = nil' >>configure.lua
+	;;
 bbc | c64 | c128 | geos | nes)
+$ECHO_N 'checking for a C compiler...'
+$ECHO_N '# checking for a C compiler...' >>config.log
+# BEGIN cc
+if [ "$CROSS_COMPILING" = "yes" ]; then
+CROSSPFX="${host}-"
+else
+CROSSPFX=""
+fi
+HAVE_CC65="no"
+if [ "$CC" = "" ]; then
+case "${host}" in
+apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/cc65" ]; then
+CC="${i}/cc65"
+HAVE_CC65="yes"
+CROSS_COMPILING="yes"
+break
+elif [ -x "${i}/cc65.exe" ]; then
+CC="${i}/cc65.exe"
+HAVE_CC65="yes"
+CROSS_COMPILING="yes"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
+*)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/${CROSSPFX}clang" ]; then
+CC="${i}/${CROSSPFX}clang"
+break
+elif [ -x "${i}/${CROSSPFX}clang70" ]; then
+CC="${i}/${CROSSPFX}clang70"
+break
+elif [ -x "${i}/${CROSSPFX}clang60" ]; then
+CC="${i}/${CROSSPFX}clang60"
+break
+elif [ -x "${i}/${CROSSPFX}cc" ]; then
+CC="${i}/${CROSSPFX}cc"
+break
+elif [ -x "${i}/${CROSSPFX}gcc" ]; then
+CC="${i}/${CROSSPFX}gcc"
+break
+elif [ -x "${i}/${CROSSPFX}gcc-6" ]; then
+CC="${i}/${CROSSPFX}gcc-6"
+break
+elif [ -x "${i}/${CROSSPFX}gcc7" ]; then
+CC="${i}/${CROSSPFX}gcc7"
+break
+elif [ -x "${i}/${CROSSPFX}gcc8" ]; then
+CC="${i}/${CROSSPFX}gcc8"
+break
+elif [ -x "${i}/${CROSSPFX}gcc5" ]; then
+CC="${i}/${CROSSPFX}gcc5"
+break
+elif [ -x "${i}/${CROSSPFX}gcc49" ]; then
+CC="${i}/${CROSSPFX}gcc49"
+break
+elif [ -x "${i}/${CROSSPFX}gcc48" ]; then
+CC="${i}/${CROSSPFX}gcc48"
+break
+elif [ -x "${i}/${CROSSPFX}clang.exe" ]; then
+CC="${i}/${CROSSPFX}clang.exe"
+break
+elif [ -x "${i}/${CROSSPFX}cc.exe" ]; then
+CC="${i}/${CROSSPFX}cc.exe"
+break
+elif [ -x "${i}/${CROSSPFX}gcc.exe" ]; then
+CC="${i}/${CROSSPFX}gcc.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
+esac
+	if [ "$CC" = '' ]; then
+		if [ "$HAVE_CC65" = "yes" ]; then
+			echo "*"
+			echo "* Cannot find cc65 in PATH. You may need to set CC."
+			echo "* You can download cc65 from: https://www.cc65.org/."
+			echo "*"
+			echo "Cannot find cc65 in PATH." >>config.log
+		else
+			echo "*"
+echo "* Cannot find one of clang, clang70, clang60, cc, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
+			echo "* under the current PATH, which is:"
+			echo "* $PATH"
+			echo "*"
+			echo "* You may need to set the CC environment variable."
+			echo "*"
+			echo "Cannot find C compiler in PATH." >>config.log
+		fi
+		HAVE_CC="no"
+		echo "no"
+		echo "no" >>config.log
+	else
+		HAVE_CC="yes"
+		echo "yes, ${CC}"
+		echo "yes, ${CC}" >>config.log
+	fi
+else
+	HAVE_CC="yes"
+	if ${CC} -V 2>&1 |grep -q ^cc65; then
+		echo "using cc65 (${CC})"
+		echo "using cc65 (${CC})" >>config.log
+		HAVE_CC65="yes"
+		CROSS_COMPILING="yes"
+	else
+		echo "using ${CC}"
+		echo "using ${CC}" >>config.log
+	fi
+fi
+
+if [ "${HAVE_CC}" = "yes" ]; then
+	$ECHO_N 'checking whether the C compiler works...'
+	$ECHO_N '# checking whether the C compiler works...' >>config.log
+	cat << 'EOT' > conftest.c
+int main(int argc, char *argv[]) { return (0); }
+EOT
+	$CC -o conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+	    echo "no"
+	    echo "no, compilation failed" >>config.log
+		HAVE_CC="no"
+	else
+		HAVE_CC="yes"
+	fi
+
+	if [ "${HAVE_CC}" = "yes" ]; then
+		if [ "${EXECSUFFIX}" = '' ]; then
+			EXECSUFFIX=''
+			for OUTFILE in conftest.exe conftest conftest.*; do
+				if [ -f $OUTFILE ]; then
+					case $OUTFILE in
+					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+						;;
+					*.* )
+						EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
+						break ;;
+					* )
+						break ;;
+					esac;
+			    fi
+			done
+			if [ "$EXECSUFFIX" != '' ]; then
+				echo "yes, it outputs $EXECSUFFIX files"
+				echo "yes, it outputs $EXECSUFFIX files" >>config.log
+			else
+				echo "yes"
+				echo "yes" >>config.log
+			fi
+bb_o=$bb_incdir/execsuffix.h
+echo '#ifndef EXECSUFFIX' >$bb_o
+echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
+		else
+			echo "yes"
+			echo "yes" >>config.log
+		fi
+	fi
+	if [ "${keep_conftest}" != "yes" ]; then
+		rm -f conftest.c conftest$EXECSUFFIX
+	fi
+	TEST_CFLAGS=''
+fi
+if [ "${HAVE_CC}" = "yes" ]; then
+$ECHO_N 'cc: checking whether compiler is Clang...'
+$ECHO_N '# cc: checking whether compiler is Clang...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__clang__)
+# error "is not clang"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_CLANG' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_CLANG=yes
+bb_o=$bb_incdir/have_cc_clang.h
+echo '#ifndef HAVE_CC_CLANG' >$bb_o
+echo "#define HAVE_CC_CLANG \"$HAVE_CC_CLANG\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_CLANG=no
+echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking whether compiler is GCC...'
+$ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__GNUC__) || defined(__clang__)
+# error "is not gcc"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_GCC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_GCC=yes
+bb_o=$bb_incdir/have_cc_gcc.h
+echo '#ifndef HAVE_CC_GCC' >$bb_o
+echo "#define HAVE_CC_GCC \"$HAVE_CC_GCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_GCC=no
+echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking for compiler warning options...'
+$ECHO_N '# cc: checking for compiler warning options...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_WARNINGS' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_WARNINGS=yes
+bb_o=$bb_incdir/have_cc_warnings.h
+echo '#ifndef HAVE_CC_WARNINGS' >$bb_o
+echo "#define HAVE_CC_WARNINGS \"$HAVE_CC_WARNINGS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_WARNINGS=no
+echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
+echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
+TEST_CFLAGS="-Wall"
+fi
+$ECHO_N 'cc: checking for float and double...'
+$ECHO_N '# cc: checking for float and double...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <stdio.h>
+int
+main(int argc, char *argv[])
+{
+	float f = 0.1f;
+	double d = 0.2;
+
+	printf("%f", f);
+	return ((double)f + d) > 0.2 ? 1 : 0;
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_FLOAT' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_FLOAT=yes
+bb_o=$bb_incdir/have_float.h
+echo '#ifndef HAVE_FLOAT' >$bb_o
+echo "#define HAVE_FLOAT \"$HAVE_FLOAT\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_FLOAT\"] = \"$HAVE_FLOAT\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_FLOAT=no
+echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
+echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking for long double...'
+$ECHO_N '# cc: checking for long double...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <stdio.h>
+int
+main(int argc, char *argv[])
+{
+	long double ld = 0.1;
+
+	printf("%Lf", ld);
+	return (ld + 0.1) > 0.2 ? 1 : 0;
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_LONG_DOUBLE' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LONG_DOUBLE=yes
+bb_o=$bb_incdir/have_long_double.h
+echo '#ifndef HAVE_LONG_DOUBLE' >$bb_o
+echo "#define HAVE_LONG_DOUBLE \"$HAVE_LONG_DOUBLE\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LONG_DOUBLE\"] = \"$HAVE_LONG_DOUBLE\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LONG_DOUBLE=no
+echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
+echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking for long long...'
+$ECHO_N '# cc: checking for long long...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int
+main(int argc, char *argv[])
+{
+	long long ll = -1;
+	unsigned long long ull = 1;
+
+	return (ll != -1 || ull != 1);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_LONG_LONG' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LONG_LONG=yes
+bb_o=$bb_incdir/have_long_long.h
+echo '#ifndef HAVE_LONG_LONG' >$bb_o
+echo "#define HAVE_LONG_LONG \"$HAVE_LONG_LONG\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LONG_LONG\"] = \"$HAVE_LONG_LONG\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LONG_LONG=no
+echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
+echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+case "${host}" in
+*-*-cygwin* | *-*-mingw32*)
+PICFLAGS=""
+$ECHO_N 'cc: checking for linker -no-undefined option...'
+$ECHO_N '# cc: checking for linker -no-undefined option...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return(0); }';
+EOT
+echo >>config.log
+echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LD_NO_UNDEFINED=yes
+bb_o=$bb_incdir/have_ld_no_undefined.h
+echo '#ifndef HAVE_LD_NO_UNDEFINED' >$bb_o
+echo "#define HAVE_LD_NO_UNDEFINED \"$HAVE_LD_NO_UNDEFINED\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LD_NO_UNDEFINED=no
+echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
+echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LD_NO_UNDEFINED}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -no-undefined -Wl,--no-undefined"
+fi
+$ECHO_N 'cc: checking for linker -static-libgcc option...'
+$ECHO_N '# cc: checking for linker -static-libgcc option...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return(0); }';
+EOT
+echo >>config.log
+echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LD_STATIC_LIBGCC=yes
+bb_o=$bb_incdir/have_ld_static_libgcc.h
+echo '#ifndef HAVE_LD_STATIC_LIBGCC' >$bb_o
+echo "#define HAVE_LD_STATIC_LIBGCC \"$HAVE_LD_STATIC_LIBGCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LD_STATIC_LIBGCC=no
+echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
+echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LD_STATIC_LIBGCC}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -XCClinker -static-libgcc"
+fi
+$ECHO_N 'cc: checking for cygwin environment...'
+$ECHO_N '# cc: checking for cygwin environment...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <windows.h>
+int main(int argc, char *argv[]) {
+	struct stat sb;
+	DWORD rv;
+	rv = GetFileAttributes("foo");
+	stat("foo", &sb);
+	return(0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_CYGWIN' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CYGWIN=yes
+bb_o=$bb_incdir/have_cygwin.h
+echo '#ifndef HAVE_CYGWIN' >$bb_o
+echo "#define HAVE_CYGWIN \"$HAVE_CYGWIN\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CYGWIN=no
+echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+;;
+*)
+PICFLAGS="-fPIC"
+HAVE_CYGWIN="no"
+echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+PROG_GUI_FLAGS=""
+PROG_CLI_FLAGS=""
+;;
+esac
+bb_o=$bb_incdir/have_cc.h
+echo '#ifndef HAVE_CC' >$bb_o
+echo "#define HAVE_CC \"$HAVE_CC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
+if [ "${HAVE_CC65}" = "yes" ]; then
+CC_COMPILE=""
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+else
+CC_COMPILE="-c"
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+fi
+else
+HAVE_CC65="no"
+HAVE_CC_WARNINGS="no"
+PROG_GUI_FLAGS=""
+PROG_CLI_FLAGS=""
+TEST_CFLAGS=""
+echo '#undef HAVE_CC' >$bb_incdir/have_cc.h
+echo 'hdefs["HAVE_CC"] = nil' >>configure.lua
+echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
+echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
+echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
+echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
+echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
+echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
+echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
+echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
+echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
+echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
+echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
+echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
+fi
+# END cc
+if [ "${HAVE_CC}" != "yes" ]; then
+echo '* '
+echo '# * ' >>config.log
+echo '* This software requires a C compiler'
+echo '# * This software requires a C compiler' >>config.log
+echo '* '
+echo '# * ' >>config.log
+echo "***"
+echo "*** ERROR: Required dependency cc not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
 HAVE_OBJC="no"
 HAVE_OBJC_WARNINGS="no"
 TEST_OBJCFLAGS=""
@@ -1735,6 +4263,623 @@ echo '#undef _MK_BIG_ENDIAN' >$bb_incdir/_mk_big_endian.h
 echo 'hdefs["_MK_BIG_ENDIAN"] = nil' >>configure.lua
 	;;
 *)
+$ECHO_N 'checking for a C compiler...'
+$ECHO_N '# checking for a C compiler...' >>config.log
+# BEGIN cc
+if [ "$CROSS_COMPILING" = "yes" ]; then
+CROSSPFX="${host}-"
+else
+CROSSPFX=""
+fi
+HAVE_CC65="no"
+if [ "$CC" = "" ]; then
+case "${host}" in
+apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/cc65" ]; then
+CC="${i}/cc65"
+HAVE_CC65="yes"
+CROSS_COMPILING="yes"
+break
+elif [ -x "${i}/cc65.exe" ]; then
+CC="${i}/cc65.exe"
+HAVE_CC65="yes"
+CROSS_COMPILING="yes"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
+*)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/${CROSSPFX}clang" ]; then
+CC="${i}/${CROSSPFX}clang"
+break
+elif [ -x "${i}/${CROSSPFX}clang70" ]; then
+CC="${i}/${CROSSPFX}clang70"
+break
+elif [ -x "${i}/${CROSSPFX}clang60" ]; then
+CC="${i}/${CROSSPFX}clang60"
+break
+elif [ -x "${i}/${CROSSPFX}cc" ]; then
+CC="${i}/${CROSSPFX}cc"
+break
+elif [ -x "${i}/${CROSSPFX}gcc" ]; then
+CC="${i}/${CROSSPFX}gcc"
+break
+elif [ -x "${i}/${CROSSPFX}gcc-6" ]; then
+CC="${i}/${CROSSPFX}gcc-6"
+break
+elif [ -x "${i}/${CROSSPFX}gcc7" ]; then
+CC="${i}/${CROSSPFX}gcc7"
+break
+elif [ -x "${i}/${CROSSPFX}gcc8" ]; then
+CC="${i}/${CROSSPFX}gcc8"
+break
+elif [ -x "${i}/${CROSSPFX}gcc5" ]; then
+CC="${i}/${CROSSPFX}gcc5"
+break
+elif [ -x "${i}/${CROSSPFX}gcc49" ]; then
+CC="${i}/${CROSSPFX}gcc49"
+break
+elif [ -x "${i}/${CROSSPFX}gcc48" ]; then
+CC="${i}/${CROSSPFX}gcc48"
+break
+elif [ -x "${i}/${CROSSPFX}clang.exe" ]; then
+CC="${i}/${CROSSPFX}clang.exe"
+break
+elif [ -x "${i}/${CROSSPFX}cc.exe" ]; then
+CC="${i}/${CROSSPFX}cc.exe"
+break
+elif [ -x "${i}/${CROSSPFX}gcc.exe" ]; then
+CC="${i}/${CROSSPFX}gcc.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
+esac
+	if [ "$CC" = '' ]; then
+		if [ "$HAVE_CC65" = "yes" ]; then
+			echo "*"
+			echo "* Cannot find cc65 in PATH. You may need to set CC."
+			echo "* You can download cc65 from: https://www.cc65.org/."
+			echo "*"
+			echo "Cannot find cc65 in PATH." >>config.log
+		else
+			echo "*"
+echo "* Cannot find one of clang, clang70, clang60, cc, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
+			echo "* under the current PATH, which is:"
+			echo "* $PATH"
+			echo "*"
+			echo "* You may need to set the CC environment variable."
+			echo "*"
+			echo "Cannot find C compiler in PATH." >>config.log
+		fi
+		HAVE_CC="no"
+		echo "no"
+		echo "no" >>config.log
+	else
+		HAVE_CC="yes"
+		echo "yes, ${CC}"
+		echo "yes, ${CC}" >>config.log
+	fi
+else
+	HAVE_CC="yes"
+	if ${CC} -V 2>&1 |grep -q ^cc65; then
+		echo "using cc65 (${CC})"
+		echo "using cc65 (${CC})" >>config.log
+		HAVE_CC65="yes"
+		CROSS_COMPILING="yes"
+	else
+		echo "using ${CC}"
+		echo "using ${CC}" >>config.log
+	fi
+fi
+
+if [ "${HAVE_CC}" = "yes" ]; then
+	$ECHO_N 'checking whether the C compiler works...'
+	$ECHO_N '# checking whether the C compiler works...' >>config.log
+	cat << 'EOT' > conftest.c
+int main(int argc, char *argv[]) { return (0); }
+EOT
+	$CC -o conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+	    echo "no"
+	    echo "no, compilation failed" >>config.log
+		HAVE_CC="no"
+	else
+		HAVE_CC="yes"
+	fi
+
+	if [ "${HAVE_CC}" = "yes" ]; then
+		if [ "${EXECSUFFIX}" = '' ]; then
+			EXECSUFFIX=''
+			for OUTFILE in conftest.exe conftest conftest.*; do
+				if [ -f $OUTFILE ]; then
+					case $OUTFILE in
+					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+						;;
+					*.* )
+						EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
+						break ;;
+					* )
+						break ;;
+					esac;
+			    fi
+			done
+			if [ "$EXECSUFFIX" != '' ]; then
+				echo "yes, it outputs $EXECSUFFIX files"
+				echo "yes, it outputs $EXECSUFFIX files" >>config.log
+			else
+				echo "yes"
+				echo "yes" >>config.log
+			fi
+bb_o=$bb_incdir/execsuffix.h
+echo '#ifndef EXECSUFFIX' >$bb_o
+echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
+		else
+			echo "yes"
+			echo "yes" >>config.log
+		fi
+	fi
+	if [ "${keep_conftest}" != "yes" ]; then
+		rm -f conftest.c conftest$EXECSUFFIX
+	fi
+	TEST_CFLAGS=''
+fi
+if [ "${HAVE_CC}" = "yes" ]; then
+$ECHO_N 'cc: checking whether compiler is Clang...'
+$ECHO_N '# cc: checking whether compiler is Clang...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__clang__)
+# error "is not clang"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_CLANG' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_CLANG=yes
+bb_o=$bb_incdir/have_cc_clang.h
+echo '#ifndef HAVE_CC_CLANG' >$bb_o
+echo "#define HAVE_CC_CLANG \"$HAVE_CC_CLANG\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_CLANG=no
+echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking whether compiler is GCC...'
+$ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#if !defined(__GNUC__) || defined(__clang__)
+# error "is not gcc"
+#endif
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_GCC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_GCC=yes
+bb_o=$bb_incdir/have_cc_gcc.h
+echo '#ifndef HAVE_CC_GCC' >$bb_o
+echo "#define HAVE_CC_GCC \"$HAVE_CC_GCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_GCC=no
+echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking for compiler warning options...'
+$ECHO_N '# cc: checking for compiler warning options...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return (0); }
+EOT
+echo >>config.log
+echo '# C: HAVE_CC_WARNINGS' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CC_WARNINGS=yes
+bb_o=$bb_incdir/have_cc_warnings.h
+echo '#ifndef HAVE_CC_WARNINGS' >$bb_o
+echo "#define HAVE_CC_WARNINGS \"$HAVE_CC_WARNINGS\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CC_WARNINGS=no
+echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
+echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
+TEST_CFLAGS="-Wall"
+fi
+$ECHO_N 'cc: checking for float and double...'
+$ECHO_N '# cc: checking for float and double...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <stdio.h>
+int
+main(int argc, char *argv[])
+{
+	float f = 0.1f;
+	double d = 0.2;
+
+	printf("%f", f);
+	return ((double)f + d) > 0.2 ? 1 : 0;
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_FLOAT' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_FLOAT=yes
+bb_o=$bb_incdir/have_float.h
+echo '#ifndef HAVE_FLOAT' >$bb_o
+echo "#define HAVE_FLOAT \"$HAVE_FLOAT\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_FLOAT\"] = \"$HAVE_FLOAT\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_FLOAT=no
+echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
+echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking for long double...'
+$ECHO_N '# cc: checking for long double...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <stdio.h>
+int
+main(int argc, char *argv[])
+{
+	long double ld = 0.1;
+
+	printf("%Lf", ld);
+	return (ld + 0.1) > 0.2 ? 1 : 0;
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_LONG_DOUBLE' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LONG_DOUBLE=yes
+bb_o=$bb_incdir/have_long_double.h
+echo '#ifndef HAVE_LONG_DOUBLE' >$bb_o
+echo "#define HAVE_LONG_DOUBLE \"$HAVE_LONG_DOUBLE\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LONG_DOUBLE\"] = \"$HAVE_LONG_DOUBLE\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LONG_DOUBLE=no
+echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
+echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'cc: checking for long long...'
+$ECHO_N '# cc: checking for long long...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int
+main(int argc, char *argv[])
+{
+	long long ll = -1;
+	unsigned long long ull = 1;
+
+	return (ll != -1 || ull != 1);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_LONG_LONG' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LONG_LONG=yes
+bb_o=$bb_incdir/have_long_long.h
+echo '#ifndef HAVE_LONG_LONG' >$bb_o
+echo "#define HAVE_LONG_LONG \"$HAVE_LONG_LONG\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LONG_LONG\"] = \"$HAVE_LONG_LONG\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LONG_LONG=no
+echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
+echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+case "${host}" in
+*-*-cygwin* | *-*-mingw32*)
+PICFLAGS=""
+$ECHO_N 'cc: checking for linker -no-undefined option...'
+$ECHO_N '# cc: checking for linker -no-undefined option...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return(0); }';
+EOT
+echo >>config.log
+echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LD_NO_UNDEFINED=yes
+bb_o=$bb_incdir/have_ld_no_undefined.h
+echo '#ifndef HAVE_LD_NO_UNDEFINED' >$bb_o
+echo "#define HAVE_LD_NO_UNDEFINED \"$HAVE_LD_NO_UNDEFINED\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LD_NO_UNDEFINED=no
+echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
+echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LD_NO_UNDEFINED}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -no-undefined -Wl,--no-undefined"
+fi
+$ECHO_N 'cc: checking for linker -static-libgcc option...'
+$ECHO_N '# cc: checking for linker -static-libgcc option...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+int main(int argc, char *argv[]) { return(0); }';
+EOT
+echo >>config.log
+echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_LD_STATIC_LIBGCC=yes
+bb_o=$bb_incdir/have_ld_static_libgcc.h
+echo '#ifndef HAVE_LD_STATIC_LIBGCC' >$bb_o
+echo "#define HAVE_LD_STATIC_LIBGCC \"$HAVE_LD_STATIC_LIBGCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_LD_STATIC_LIBGCC=no
+echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
+echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LD_STATIC_LIBGCC}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -XCClinker -static-libgcc"
+fi
+$ECHO_N 'cc: checking for cygwin environment...'
+$ECHO_N '# cc: checking for cygwin environment...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <windows.h>
+int main(int argc, char *argv[]) {
+	struct stat sb;
+	DWORD rv;
+	rv = GetFileAttributes("foo");
+	stat("foo", &sb);
+	return(0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_CYGWIN' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_CYGWIN=yes
+bb_o=$bb_incdir/have_cygwin.h
+echo '#ifndef HAVE_CYGWIN' >$bb_o
+echo "#define HAVE_CYGWIN \"$HAVE_CYGWIN\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_CYGWIN=no
+echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+;;
+*)
+PICFLAGS="-fPIC"
+HAVE_CYGWIN="no"
+echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+PROG_GUI_FLAGS=""
+PROG_CLI_FLAGS=""
+;;
+esac
+bb_o=$bb_incdir/have_cc.h
+echo '#ifndef HAVE_CC' >$bb_o
+echo "#define HAVE_CC \"$HAVE_CC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
+if [ "${HAVE_CC65}" = "yes" ]; then
+CC_COMPILE=""
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+else
+CC_COMPILE="-c"
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+fi
+else
+HAVE_CC65="no"
+HAVE_CC_WARNINGS="no"
+PROG_GUI_FLAGS=""
+PROG_CLI_FLAGS=""
+TEST_CFLAGS=""
+echo '#undef HAVE_CC' >$bb_incdir/have_cc.h
+echo 'hdefs["HAVE_CC"] = nil' >>configure.lua
+echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
+echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
+echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
+echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
+echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
+echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
+echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
+echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
+echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
+echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
+echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
+echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
+echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
+echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
+echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
+fi
+# END cc
+if [ "${HAVE_CC}" != "yes" ]; then
+echo '* '
+echo '# * ' >>config.log
+echo '* This software requires a C compiler'
+echo '# * This software requires a C compiler' >>config.log
+echo '* '
+echo '# * ' >>config.log
+echo "***"
+echo "*** ERROR: Required dependency cc not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
 $ECHO_N 'checking for Objective-C compiler...'
 $ECHO_N '# checking for Objective-C compiler...' >>config.log
 # BEGIN objc
@@ -13229,6 +16374,8 @@ echo "DB5_CFLAGS=$DB5_CFLAGS" >>Makefile.config
 echo "mdefs[\"DB5_CFLAGS\"] = \"$DB5_CFLAGS\"" >>configure.lua
 echo "DB5_LIBS=$DB5_LIBS" >>Makefile.config
 echo "mdefs[\"DB5_LIBS\"] = \"$DB5_LIBS\"" >>configure.lua
+echo "DEVKITPRO=$DEVKITPRO" >>Makefile.config
+echo "mdefs[\"DEVKITPRO\"] = \"$DEVKITPRO\"" >>configure.lua
 echo "DSO_CFLAGS=$DSO_CFLAGS" >>Makefile.config
 echo "mdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
 echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config
@@ -13309,6 +16456,10 @@ echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
 echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
 echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
+echo "HAVE_GAMECUBE=$HAVE_GAMECUBE" >>Makefile.config
+echo "mdefs[\"HAVE_GAMECUBE\"] = \"$HAVE_GAMECUBE\"" >>configure.lua
+echo "HAVE_GBA=$HAVE_GBA" >>Makefile.config
+echo "mdefs[\"HAVE_GBA\"] = \"$HAVE_GBA\"" >>configure.lua
 echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
 echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
 echo "HAVE_GLEXT=$HAVE_GLEXT" >>Makefile.config
@@ -13383,6 +16534,8 @@ echo "HAVE_SSE2=$HAVE_SSE2" >>Makefile.config
 echo "mdefs[\"HAVE_SSE2\"] = \"$HAVE_SSE2\"" >>configure.lua
 echo "HAVE_SSE3=$HAVE_SSE3" >>Makefile.config
 echo "mdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
+echo "HAVE_SWITCH=$HAVE_SWITCH" >>Makefile.config
+echo "mdefs[\"HAVE_SWITCH\"] = \"$HAVE_SWITCH\"" >>configure.lua
 echo "HAVE_SYS_PARAM_H=$HAVE_SYS_PARAM_H" >>Makefile.config
 echo "mdefs[\"HAVE_SYS_PARAM_H\"] = \"$HAVE_SYS_PARAM_H\"" >>configure.lua
 echo "HAVE_SYS_UIO_H=$HAVE_SYS_UIO_H" >>Makefile.config

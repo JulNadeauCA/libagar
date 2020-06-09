@@ -146,10 +146,38 @@ esac
 echo "                 v$VERSION for $host_machine ($MEMORY_MODEL)"
 echo ""
 
-require(cc)
-
 case "${host}" in
+gba | gp32 | nds | 3ds)
+	host="arm-none-eabi"
+	PATH="${DEVKITARM}/bin:${PATH}"
+	require(cc)
+	require(devkitpro, 0, ${with_devkitpro})
+	echo "checking for byte order...little-endian (${host})"
+	mdefine(_MK_BYTE_ORDER, "LE")
+	hdefine(_MK_LITTLE_ENDIAN, "yes")
+	hundef(_MK_BIG_ENDIAN)
+	;;
+gamecube | wii | wiiu)
+	host="powerpc-eabi"
+	PATH="${DEVKITPPC}/bin:${PATH}"
+	require(cc)
+	require(devkitpro, 0, ${with_devkitpro})
+	mdefine(_MK_BYTE_ORDER, "BE")
+	hdefine(_MK_BIG_ENDIAN, "yes")
+	hundef(_MK_LITTLE_ENDIAN)
+	;;
+switch)
+	host="aarch64-none-elf"
+	PATH="${DEVKITA64}/bin:${PATH}"
+	require(cc)
+	require(devkitpro, 0, ${with_devkitpro})
+	CFLAGS="${CFLAGS} -mlittle-endian"
+	mdefine(_MK_BYTE_ORDER, "LE")
+	hdefine(_MK_LITTLE_ENDIAN, "yes")
+	hundef(_MK_BIG_ENDIAN)
+	;;
 bbc | c64 | c128 | geos | nes)
+	require(cc)
 	disable(objc)
 	enable_micro="yes"
 	enable_gui="no"
@@ -178,6 +206,7 @@ bbc | c64 | c128 | geos | nes)
 	hundef(_MK_BIG_ENDIAN)
 	;;
 *)
+	require(cc)
 	check(objc)
 	if [ "${HAVE_FLOAT}" = "yes" -a "${with_float}" = "no" ]; then
 		echo "disabling floating-point support"
