@@ -94,7 +94,10 @@ is not NULL, it should point to a NULL-terminated array of strings.
 Acceptable
 .Fa flags
 include:
-.Bl -tag -width "AG_RADIO_EXPAND "
+.Pp
+.Bl -tag -width "AG_RADIO_HOMOGENOUS " -compact
+.It AG_RADIO_HOMOGENOUS
+Divide space equally between radio items.
 .It AG_RADIO_HFILL
 Expand horizontally in parent container.
 .It AG_RADIO_VFILL
@@ -225,3 +228,6 @@ widget first appeared in Agar 1.0.
 and
 .Fn AG_RadioSizeHint
 appeared in Agar 1.6.0.
+The
+.Dv AG_RADIO_HOMOGENOUS
+option appeared in Agar 1.6.1.

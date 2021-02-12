@@ -324,7 +324,13 @@ DrawVert(AG_Radio *_Nonnull rad)
 	const int radius = (WFONT(rad)->lineskip >> 1);
 	const int x = WIDGET(rad)->paddingLeft + WFONT(rad)->lineskip;
 	const int value = AG_GetInt(rad, "value");
-	int i, y;
+	int i, y, wDiv;
+
+	if ((rad->flags & AG_RADIO_HOMOGENOUS) && rad->nItems > 0) {
+		wDiv = HEIGHT(rad) / rad->nItems;
+	} else {
+		wDiv = 0;
+	}
 
 	for (i = 0, y = WIDGET(rad)->paddingTop;
 	     i < rad->nItems;
@@ -339,16 +345,16 @@ DrawVert(AG_Radio *_Nonnull rad)
 			    AG_TextRender(radi->text));
 		}
 		S = WSURFACE(rad, radi->surface);
+		r.h = (wDiv > 0) ? wDiv : S->h;
 		if (i == rad->hoverItem) {
 			r.x = WIDGET(rad)->paddingLeft;
 			r.y = y;
 			r.w = WIDTH(rad) - (WIDGET(rad)->paddingLeft +
 			                    WIDGET(rad)->paddingRight);
-			r.h = S->h;
 			AG_DrawRect(rad, &r, &WCOLOR_HOVER(rad,BG_COLOR));
 		}
 		xc = WIDGET(rad)->paddingLeft + radius;
-		yc = y + (S->h >> 1);
+		yc = y + (r.h >> 1);
 		AG_DrawCircleFilled(rad, xc,yc, radius, cFg);
 		AG_DrawCircle(rad, xc,yc, radius, cLine);
 		if (i == value) {
@@ -358,8 +364,11 @@ DrawVert(AG_Radio *_Nonnull rad)
 			AG_DrawCircle(rad, xc,yc, radius-2,
 			    &WCOLOR_HOVER(rad, LINE_COLOR));
 		}
-		AG_WidgetBlitSurface(rad, radi->surface, x + WIDGET(rad)->spacingHoriz, y);
-		y += S->h + WIDGET(rad)->spacingVert;
+		AG_WidgetBlitSurface(rad, radi->surface,
+		    x + WIDGET(rad)->spacingHoriz,
+		    y + ((wDiv > 0) ? ((wDiv >> 1) - (S->h >> 1)) : 0));
+
+		y += r.h + WIDGET(rad)->spacingVert;
 	}
 }
 
@@ -372,7 +381,13 @@ DrawHoriz(AG_Radio *_Nonnull rad)
 	const int radius = (WFONT(rad)->lineskip >> 1);
 	const int y = WIDGET(rad)->paddingTop + WFONT(rad)->lineskip;
 	const int value = AG_GetInt(rad, "value");
-	int i, x;
+	int i, x, wDiv;
+
+	if ((rad->flags & AG_RADIO_HOMOGENOUS) && rad->nItems > 0) {
+		wDiv = WIDTH(rad) / rad->nItems;
+	} else {
+		wDiv = 0;
+	}
 
 	for (i = 0, x = WIDGET(rad)->paddingLeft;
 	     i < rad->nItems;
@@ -387,15 +402,15 @@ DrawHoriz(AG_Radio *_Nonnull rad)
 			    AG_TextRender(radi->text));
 		}
 		S = WSURFACE(rad, radi->surface);
+		r.w = (wDiv > 0) ? wDiv : S->w;
 		if (i == rad->hoverItem) {
 			r.x = x;
 			r.y = WIDGET(rad)->paddingTop;
-			r.w = S->w;
 			r.h = HEIGHT(rad) - (WIDGET(rad)->paddingTop +
 			                     WIDGET(rad)->paddingBottom);
 			AG_DrawRect(rad, &r, &WCOLOR_HOVER(rad,BG_COLOR));
 		}
-		xc = x + (S->w >> 1);
+		xc = x + (r.w >> 1);
 		yc = WIDGET(rad)->paddingTop + radius;
 		AG_DrawCircleFilled(rad, xc,yc, radius, cFg);
 		AG_DrawCircle(rad, xc,yc, radius, cLine);
@@ -406,9 +421,11 @@ DrawHoriz(AG_Radio *_Nonnull rad)
 			AG_DrawCircle(rad, xc,yc, radius-2,
 			    &WCOLOR_HOVER(rad, LINE_COLOR));
 		}
-		AG_WidgetBlitSurface(rad, radi->surface, x,
+		AG_WidgetBlitSurface(rad, radi->surface,
+		    x + ((wDiv > 0) ? ((wDiv >> 1) - (S->w >> 1)) : 0),
 		    y + WIDGET(rad)->spacingVert);
-		x += S->w + WIDGET(rad)->spacingHoriz;
+
+		x += r.w + WIDGET(rad)->spacingHoriz;
 	}
 }
 
@@ -485,7 +502,7 @@ MouseMotion(AG_Event *_Nonnull event)
 	AG_Radio *rad = AG_RADIO_SELF();
 	const int x = AG_INT(1);
 	const int y = AG_INT(2);
-	int i, cur, itemNew = -1;
+	int i, cur, itemNew = -1, wDiv;
 
 	if (x < 0 || x > WIDTH(rad) ||
 	    y < 0 || y > HEIGHT(rad))
@@ -493,16 +510,25 @@ MouseMotion(AG_Event *_Nonnull event)
 
 	switch (rad->type) {
 	case AG_RADIO_VERT:
+		if ((rad->flags & AG_RADIO_HOMOGENOUS) && rad->nItems > 0) {
+			wDiv = HEIGHT(rad) / rad->nItems;
+		} else {
+			wDiv = 0;
+		}
 		for (i=0, cur=WIDGET(rad)->paddingTop;
 		     i < rad->nItems;
 		     i++) {
 			const AG_RadioItem *radi = &rad->items[i];
 			int h;
 
-			if (radi->surface != -1) {
-				h = WSURFACE(rad,radi->surface)->h;
+			if (wDiv > 0) {
+				h = wDiv;
 			} else {
-				AG_TextSize(radi->text, NULL, &h);
+				if (radi->surface != -1) {
+					h = WSURFACE(rad,radi->surface)->h;
+				} else {
+					AG_TextSize(radi->text, NULL, &h);
+				}
 			}
 			if (y >= cur && y <= cur+h) {
 				itemNew = i;
@@ -512,16 +538,25 @@ MouseMotion(AG_Event *_Nonnull event)
 		}
 		break;
 	case AG_RADIO_HORIZ:
+		if ((rad->flags & AG_RADIO_HOMOGENOUS) && rad->nItems > 0) {
+			wDiv = WIDTH(rad) / rad->nItems;
+		} else {
+			wDiv = 0;
+		}
 		for (i=0, cur=WIDGET(rad)->paddingLeft;
 		     i < rad->nItems;
 		     i++) {
 			const AG_RadioItem *radi = &rad->items[i];
 			int w;
 
-			if (radi->surface != -1) {
-				w = WSURFACE(rad,radi->surface)->w;
+			if (wDiv > 0) {
+				w = wDiv;
 			} else {
-				AG_TextSize(radi->text, &w, NULL);
+				if (radi->surface != -1) {
+					w = WSURFACE(rad,radi->surface)->w;
+				} else {
+					AG_TextSize(radi->text, &w, NULL);
+				}
 			}
 			if (x >= cur && x <= cur+w) {
 				itemNew = i;
@@ -548,7 +583,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	const int button = AG_INT(1);
 	const int x = AG_INT(2);
 	const int y = AG_INT(3);
-	int i, cur, *sel, selNew = -1;
+	int i, cur, *sel, selNew = -1, wDiv;
 	AG_Variable *value;
 
 	if (!AG_WidgetIsFocused(rad))
@@ -561,16 +596,25 @@ MouseButtonDown(AG_Event *_Nonnull event)
 
 	switch (rad->type) {
 	case AG_RADIO_VERT:
+		if ((rad->flags & AG_RADIO_HOMOGENOUS) && rad->nItems > 0) {
+			wDiv = HEIGHT(rad) / rad->nItems;
+		} else {
+			wDiv = 0;
+		}
 		for (i=0, cur=WIDGET(rad)->paddingTop;
 		     i < rad->nItems;
 		     i++) {
 			const AG_RadioItem *radi = &rad->items[i];
 			int h;
 
-			if (radi->surface != -1) {
-				h = WSURFACE(rad,radi->surface)->h;
+			if (wDiv > 0) {
+				h = wDiv;
 			} else {
-				AG_TextSize(radi->text, NULL, &h);
+				if (radi->surface != -1) {
+					h = WSURFACE(rad,radi->surface)->h;
+				} else {
+					AG_TextSize(radi->text, NULL, &h);
+				}
 			}
 			if (y >= cur && y <= cur+h) {
 				selNew = i;
@@ -580,16 +624,25 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		}
 		break;
 	case AG_RADIO_HORIZ:
+		if ((rad->flags & AG_RADIO_HOMOGENOUS) && rad->nItems > 0) {
+			wDiv = WIDTH(rad) / rad->nItems;
+		} else {
+			wDiv = 0;
+		}
 		for (i=0, cur = WIDGET(rad)->paddingLeft;
 		     i < rad->nItems;
 		     i++) {
 			const AG_RadioItem *radi = &rad->items[i];
 			int w;
 
-			if (radi->surface != -1) {
-				w = WSURFACE(rad,radi->surface)->w;
+			if (wDiv > 0) {
+				w = wDiv;
 			} else {
-				AG_TextSize(radi->text, &w, NULL);
+				if (radi->surface != -1) {
+					w = WSURFACE(rad,radi->surface)->w;
+				} else {
+					AG_TextSize(radi->text, &w, NULL);
+				}
 			}
 			if (x >= cur && x <= cur+w) {
 				selNew = i;

@@ -12,7 +12,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Console**](https://libagar.org/man3/AG_Console): Handle ansi cursor and terminal operations. Clipboard integration.
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): Display only those styles that are available for a given font (as opposed to a static list of styles).
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Implement focusability and keyboard navigation methods. Handle "font-changed" better under multi-window drivers.
-- [**AG_Notebook**](https://libagar.org/man3/AG_Notebook): Add disposition modes Bottom, Left & Right.
+- [**AG_Notebook**](https://libagar.org/man3/AG_Notebook): Fix padding issues. Add disposition modes Bottom, Left & Right.
 - [**AG_Pixmap**](https://libagar.org/man3/AG_Pixmap) & [**AG_Fixed**](https://libagar.org/man3/AG_Fixed): Zoom operations.
 - [**AG_StyleEditor**](https://libagar.org/man3/AG_StyleEditor): Edition of stylesheet rules.
 - [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): Gradients and border styles. New selector `"E > F"` (an `F` element child of an `E` element).
@@ -20,13 +20,16 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Text**](https://libagar.org/man3/AG_Text): Provide a way to map core font names to known system fonts so porters have the option of adding dependencies to existing font packages in order to reduce the size of agar packages.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) & [**AG_Editable**](https://libagar.org/man3/AG_Editable): Extend SGR support. Syntax highlighting & rich-text editing methods.
 - [**AG_WidgetPrimitives**](https://libagar.org/man3/AG_WidgetPrimitives): Dithering. Shadow effects.
+- [**AG_Widget**](https://libagar.org/man3/AG_Widget): Provide a variation of the "zoom" feature to resize widgets individually.
 - [**AG_Window**](https://libagar.org/man3/AG_Window): MRU API to simplify the process of remembering geometries. New gravity methods for autoplacing.
 - [**cocoa**](https://libagar.org/man2/AG_DriverCocoa): Cursor operations. Clipboard integration.
 - [**glx**](https://libagar.org/man3/AG_DriverGLX): Make drag-and-drop (`sockets` test) work correctly (possibly using `AG_WindowMove()`).
 - [**wgl**](https://libagar.org/man2/AG_DriverWGL): Clipboard integration. Live resize.
+- Fix [**Style Editor**](https://libagar.org/man3/AG_StyleEditor) and [**GUI Debugger**](https://libagar.org/man3/AG_GuiDebugger) crashes which would occur when attempting to iterate over widgets (in keyrepeat mode).
 
 ## [1.6.1] - 2020-06-
 ### Added
+- [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
 - [**AG_Event**](https://libagar.org/man3/AG_Event): New macro [AG_EVENT_DUMP](https://libagar.org/man3/AG_EVENT_DUMP) to produce a listing of `argv[]` arguments on the console.
 - `install-agartest.exe` installer for agartest on Windows.
 - Provide copies of the OFL as separate files (OFL11.txt and LICENSE.ofl).

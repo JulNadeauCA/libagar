@@ -44,14 +44,16 @@ TestGUI(void *obj, AG_Window *win)
 		const char *items[] = {
 			"Bart", "Homer", "Lisa", "Maggie", "Marge", NULL
 		};
-		lbl = AG_LabelNewPolled(nt, AG_LABEL_HFILL| AG_LABEL_FRAME,
+		lbl = AG_LabelNewPolled(nt, AG_LABEL_HFILL | AG_LABEL_FRAME,
 		    "Radio Group Test\n"
 		    "Value: " AGSI_BOLD "%i" AGSI_RST,
 		    &ti->myValue);
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 		AG_LabelValign(lbl, AG_TEXT_TOP);
 
-		rad = AG_RadioNewUint(nt, 0, items, &ti->myValue);
+		rad = AG_RadioNewUint(nt, AG_RADIO_EXPAND | AG_RADIO_HOMOGENOUS,
+		    items, &ti->myValue);
+
 		AG_RadioSetDisposition(rad, AG_RADIO_HORIZ);
 	}
 

@@ -27,9 +27,10 @@ typedef struct ag_radio {
 	struct ag_widget wid;           /* AG_Widget -> AG_Radio */
 	AG_RadioType type;              /* Disposition */
 	Uint flags;
-#define AG_RADIO_HFILL	0x01
-#define AG_RADIO_VFILL	0x02
-#define AG_RADIO_EXPAND (AG_RADIO_HFILL | AG_RADIO_VFILL)
+#define AG_RADIO_HFILL      0x01
+#define AG_RADIO_VFILL      0x02
+#define AG_RADIO_HOMOGENOUS 0x04	/* Divide space equally between items */
+#define AG_RADIO_EXPAND     (AG_RADIO_HFILL | AG_RADIO_VFILL)
 
 	AG_RadioItem *_Nullable items;  /* Array of radio items */
 	int                    nItems;
