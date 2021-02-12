@@ -499,9 +499,6 @@ structure.
 The surface pointer must remain valid for the lifetime of the widget (if in
 doubt, use
 .Xr AG_SurfaceDup 3 ) .
-.Fn AG_WidgetMapSurface
-may be invoked from any context, but in a multithreaded context the returned
-name is only valid as long as the widget remains locked.
 .Pp
 .Fn AG_WidgetReplaceSurface
 replaces the contents of a previously-mapped surface with the contents of
@@ -515,7 +512,6 @@ destroys the given surface mapping.
 It is equivalent to invoking
 .Fn AG_WidgetReplaceSurface
 with a NULL surface.
-The function is safe to use from any context.
 .Pp
 It is important to note that in OpenGL mode,
 .Fn AG_WidgetReplaceSurface
