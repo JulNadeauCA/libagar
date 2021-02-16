@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2021 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -365,6 +365,9 @@ OnDetach(AG_Event *_Nonnull event)
 	if (AG_OfClass(parent, "AG_Widget:*") &&
 	    AG_OfClass(wid, "AG_Widget:*")) {
 		if (wid->window) {
+			if (wid->window->visible) {
+				AG_PostEvent(wid, "widget-hidden", NULL);
+			}
 			AG_UnmapAllCursors(wid->window, wid);
 		}
 		SetParentWindow(wid, NULL);
@@ -422,10 +425,12 @@ OnShow(AG_Event *_Nonnull event)
 	AG_Widget *wid = AG_WIDGET_SELF();
 	AG_Widget *chld;
 	AG_RedrawTie *rt;
+
 #ifdef AG_DEBUG
-	if (!wid->font) { AG_FatalError("!font"); }
+	if (wid->font == NULL) { AG_FatalError("!font"); }
 	AG_OBJECT_ISA(wid->font, "AG_Font:*");
 #endif
+
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
 		AG_ForwardEvent(chld, event);
 	}
@@ -1493,7 +1498,11 @@ AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 
 		while ((Csup = AGWIDGET_SUPER_OPS(wid)) != (void *)&agObjectClass) {
 			if (Csup->size_allocate != NULL) {
-				Csup->size_allocate(wid, a);
+				if (Csup->size_allocate(wid, a) == -1) {
+					wid->flags |= AG_WIDGET_UNDERSIZE;
+				} else {
+					wid->flags &= ~(AG_WIDGET_UNDERSIZE);
+				}
 				break;
 			}
 		}
@@ -1516,20 +1525,16 @@ int
 AG_WidgetSensitive(void *obj, int x, int y)
 {
 	AG_Widget *wid = WIDGET(obj);
-	AG_Widget *widParent = wid;
+	AG_Window *winParent;
 	AG_Rect2 rx;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
-	memcpy(&rx, &wid->rSens, sizeof(AG_Rect2));
+	if ((winParent = wid->window) == NULL)
+		return (0);
 
-	/* XXX why not use widget's window pointer? */
-	while ((widParent = OBJECT(widParent)->parent) != NULL) {
-		if (AG_OfClass(widParent, "AG_Widget:AG_Window:*")) {
-			break;
-		}
-		AG_RectIntersect2(&rx, &rx, &widParent->rSens);
-	}
+	AG_RectIntersect2(&rx, &wid->rSens, &WIDGET(winParent)->rSens);
+
 	return AG_RectInside2(&rx, x,y);
 }
 
@@ -1655,11 +1660,12 @@ AG_WidgetShow(void *obj)
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 
-	wid->flags &= ~(AG_WIDGET_HIDE);
-	AG_PostEvent(wid, "widget-shown", NULL);
+	if (wid->flags & AG_WIDGET_HIDE) {
+		wid->flags &= ~(AG_WIDGET_HIDE);
+		AG_PostEvent(wid, "widget-shown", NULL);
 
-	if (wid->window) {
-		AG_WindowUpdate(wid->window);
+		if (wid->window)
+			AG_WindowUpdate(wid->window);
 	}
 	AG_ObjectUnlock(wid);
 }
@@ -1673,11 +1679,12 @@ AG_WidgetHide(void *obj)
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
 
-	wid->flags |= AG_WIDGET_HIDE;
-	AG_PostEvent(wid, "widget-hidden", NULL);
+	if ((wid->flags & AG_WIDGET_HIDE) == 0) {
+		wid->flags |= AG_WIDGET_HIDE;
+		AG_PostEvent(wid, "widget-hidden", NULL);
 
-	if (wid->window) {
-		AG_WindowUpdate(wid->window);
+		if (wid->window)
+			AG_WindowUpdate(wid->window);
 	}
 	AG_ObjectUnlock(wid);
 }

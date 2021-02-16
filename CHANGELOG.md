@@ -41,6 +41,8 @@ All notable changes to Agar will be documented in this file. The format is based
 ### Changed
 - Build system updates so configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Those definitions are always available from `${DATADIR}/agar.mk`.
 - Don't install headers from disabled libraries.
+- [**AG_Widget**](https://libagar.org/man3/AG_Widget): In `AG_WidgetSensitive()`, use the `window` pointer to avoid an unnecessary traversal of parent objects.
+- [**AG_Widget**](https://libagar.org/man3/AG_Widget): Prevent delivery of redundant "widget-shown" or "widget-hidden" events if `AG_WidgetShow()` and `AG_WidgetHide()` are called multiple times.
 
 ### Fixed
 - Fixed compilation problem with `core/dir.c` under [NetBSD](https://NetBSD.org).
@@ -48,7 +50,9 @@ All notable changes to Agar will be documented in this file. The format is based
 - Fixed `double` <-> `long` conversion warnings in `math/m_sparse*`.
 - [**wgl**](https://libagar.org/man2/AG_DriverWGL): Fixed a bug in cursor handling. When showing a window initially, perform size allocation after having initialized the cursors so that the initial cursor-change areas are correctly established.
 - `install-sdk.exe` now installs include files in `include\x86` or `include\x64`.
-- Fixed non-delivery of `mouse-button-down` events to hidden and subsequently re-shown widgets (e.g., widgets under a Notebook). Thanks [Walter](https://github.com/WallyZambotti)!
+- [**AG_Widget**](https://libagar.org/man3/AG_Widget): Fixed non-delivery of `mouse-button-down` events to hidden and subsequently re-shown widgets (e.g., widgets under a Notebook). Thanks [Walter](https://github.com/WallyZambotti)!
+- [**AG_Widget**](https://libagar.org/man3/AG_Widget): Deliver `widget-hidden` when detaching a widget from a visible window.
+- [**AG_Widget**](https://libagar.org/man3/AG_Widget): In `AG_WidgetSizeAlloc()`, set the `UNDERSIZE` flag correctly on return in the case where `size_allocate()` is inherited from a parent class.
 
 ## [1.6.0] - 2020-05-16
 ### Added
