@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2021 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,12 +32,11 @@
 #include <agar/gui/window.h>
 #include <agar/gui/cursors.h>
 
-static void PostMouseMotion(AG_Window *_Nonnull _Restrict,
-    AG_Widget *_Nonnull _Restrict, int,int, int,int, Uint);
-static void PostMouseButtonUp(AG_Window *_Nonnull _Restrict,
-    AG_Widget *_Nonnull _Restrict, int,int, AG_MouseButton);
-static int PostMouseButtonDown(AG_Window *_Nonnull _Restrict,
-    AG_Widget *_Nonnull _Restrict, int,int, AG_MouseButton);
+/* #define DEBUG_MOUSE */
+
+static void PostMouseMotion(AG_Window *_Nonnull, AG_Widget *_Nonnull, int,int, int,int, Uint);
+static void PostMouseButtonUp(AG_Window *_Nonnull, AG_Widget *_Nonnull, int,int, AG_MouseButton);
+static void PostMouseButtonDown(AG_Window *_Nonnull, AG_Widget *_Nonnull, int,int, AG_MouseButton);
 
 AG_Mouse *
 AG_MouseNew(void *drv, const char *desc)
@@ -172,9 +171,8 @@ AG_ProcessMouseMotion(AG_Window *win, int x, int y, int xRel, int yRel,
  * all widgets with USE_MOUSEOVER enabled.
  */
 static void
-PostMouseMotion(AG_Window *_Nonnull _Restrict win,
-    AG_Widget *_Nonnull _Restrict wid, int x, int y, int xRel, int yRel,
-    Uint state)
+PostMouseMotion(AG_Window *_Nonnull win, AG_Widget *_Nonnull wid,
+    int x, int y, int xRel, int yRel, Uint state)
 {
 	AG_Widget *chld;
 	Uint flags;
@@ -237,8 +235,8 @@ AG_ProcessMouseButtonUp(AG_Window *win, int x, int y, AG_MouseButton button)
  * either focused or have UNFOCUSED_BUTTONUP set. 
  */
 static void
-PostMouseButtonUp(AG_Window *_Nonnull _Restrict win,
-    AG_Widget *_Nonnull _Restrict wid, int x, int y, AG_MouseButton button)
+PostMouseButtonUp(AG_Window *_Nonnull win, AG_Widget *_Nonnull wid,
+    int x, int y, AG_MouseButton button)
 {
 	AG_Widget *chld;
 	Uint flags;
@@ -248,6 +246,12 @@ PostMouseButtonUp(AG_Window *_Nonnull _Restrict win,
 	if (flags & AG_WIDGET_VISIBLE) {
 		if ((flags & AG_WIDGET_FOCUSED) ||
 		    (flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
+#ifdef DEBUG_MOUSE
+			Debug(win, "MouseUp " AGSI_RED "%d,%d" AGSI_RST " button %d: "
+			    AGSI_BOLD "Pass %s" AGSI_RST
+			    " \"mouse-button-up\"\n",
+			    x,y, button, OBJECT(wid)->name);
+#endif
 			AG_PostEvent(wid, "mouse-button-up",
 			    "%i(button),%i(x),%i(y)",
 			    (int)button,
@@ -255,6 +259,13 @@ PostMouseButtonUp(AG_Window *_Nonnull _Restrict win,
 			    y - wid->rView.y1);
 		}
 	}
+#ifdef DEBUG_MOUSE
+	else {
+		Debug(win, "MouseUp " AGSI_RED "%d,%d" AGSI_RST " button %d up: "
+		    "Skip %s (invisible)\n",
+		    x,y, button, OBJECT(wid)->name);
+	}
+#endif
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
 		PostMouseButtonUp(win, chld, x, y, button);
 	}
@@ -284,6 +295,11 @@ AG_ProcessMouseButtonDown(AG_Window *win, int x, int y, AG_MouseButton button)
 					continue;
 				}
 				AG_OBJECT_ISA(winModal, "AG_Widget:AG_Window:*");
+#ifdef DEBUG_MOUSE
+				Debug(win, "MouseDn " AGSI_RED "%d,%d" AGSI_RST " button %d: "
+				    "Closing modal window %s\n",
+				    x,y, button, OBJECT(winModal)->name);
+#endif
 				AG_PostEvent(winModal, "window-close", NULL);
 			}
 		}
@@ -298,25 +314,33 @@ AG_ProcessMouseButtonDown(AG_Window *win, int x, int y, AG_MouseButton button)
  * window coordinates (if multiple widgets overlap, deliver to the topmost
  * widget which has a `mouse-button-down' handler defined).
  */
-static int
-PostMouseButtonDown(AG_Window *_Nonnull _Restrict win,
-    AG_Widget *_Nonnull _Restrict wid, int x, int y, AG_MouseButton button)
+static void
+PostMouseButtonDown(AG_Window *_Nonnull win, AG_Widget *_Nonnull wid,
+    int x, int y, AG_MouseButton button)
 {
 	AG_Widget *chld;
 	AG_Event *ev;
 	
 	AG_ObjectLock(wid);
-
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
-		if (PostMouseButtonDown(win, chld, x, y, button))
-			goto match;
+		PostMouseButtonDown(win, chld, x, y, button);
 	}
 	if ((wid->flags & AG_WIDGET_VISIBLE) == 0) {
-		goto no_match;
+#ifdef DEBUG_MOUSE
+		Debug(win, "MouseDn " AGSI_RED "%d,%d" AGSI_RST " button %d: "
+		    "Skip %s (invisible)\n",
+		    x,y, button, OBJECT(wid)->name);
+#endif
+		goto out;
 	}
 	if ((wid->flags & AG_WIDGET_UNFOCUSED_BUTTONDOWN) == 0) {
 		if (!AG_WidgetSensitive(wid, x,y)) {
-			goto no_match;
+#ifdef DEBUG_MOUSE
+			Debug(win, "MouseDn " AGSI_RED "%d,%d" AGSI_RST " button %d: "
+			    "Skip %s (insensitive)\n",
+			    x,y, button, OBJECT(wid)->name);
+#endif
+			goto out;
 		}
 	}
 	TAILQ_FOREACH(ev, &OBJECT(wid)->events, events) {
@@ -324,19 +348,27 @@ PostMouseButtonDown(AG_Window *_Nonnull _Restrict win,
 			break;
 	}
 	if (ev != NULL) {
+#ifdef DEBUG_MOUSE
+		Debug(win, "MouseDn " AGSI_RED "%d,%d" AGSI_RST " button %d: "
+		    AGSI_BOLD "Pass %s" AGSI_RST " \"%s\"\n",
+		    x,y, button, OBJECT(wid)->name, ev->name);
+#endif
 		AG_PostEvent(wid, "mouse-button-down",
 		    "%i(button),%i(x),%i(y)",
 		    (int)button,
 		    x - wid->rView.x1,
 		    y - wid->rView.y1);
-		goto match;
+		goto out;
 	}
-no_match:
+#ifdef DEBUG_MOUSE
+	else {
+		Debug(win, "MouseDn " AGSI_RED "%d,%d" AGSI_RST " button %d: "
+		    "Skip %s (no handler)\n",
+		    x,y, button, OBJECT(wid)->name);
+	}
+#endif
+out:
 	AG_ObjectUnlock(wid);
-	return (0);
-match:
-	AG_ObjectUnlock(wid);
-	return (1);
 }
 
 AG_ObjectClass agMouseClass = {

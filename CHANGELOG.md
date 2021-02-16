@@ -21,13 +21,14 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) & [**AG_Editable**](https://libagar.org/man3/AG_Editable): Extend SGR support. Syntax highlighting & rich-text editing methods.
 - [**AG_WidgetPrimitives**](https://libagar.org/man3/AG_WidgetPrimitives): Dithering. Shadow effects.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Provide a variation of the "zoom" feature to resize widgets individually.
+- [**AG_Widget**](https://libagar.org/man3/AG_Widget): Threading optimizations. Cache the `VISIBLE` flag into an `int` so that culling / rendering and mouse-intersection tests can skip over invisible widgets without locking them.
 - [**AG_Window**](https://libagar.org/man3/AG_Window): MRU API to simplify the process of remembering geometries. New gravity methods for autoplacing.
 - [**cocoa**](https://libagar.org/man2/AG_DriverCocoa): Cursor operations. Clipboard integration.
 - [**glx**](https://libagar.org/man3/AG_DriverGLX): Make drag-and-drop (`sockets` test) work correctly (possibly using `AG_WindowMove()`).
 - [**wgl**](https://libagar.org/man2/AG_DriverWGL): Clipboard integration. Live resize.
 - Fix [**Style Editor**](https://libagar.org/man3/AG_StyleEditor) and [**GUI Debugger**](https://libagar.org/man3/AG_GuiDebugger) crashes which would occur when attempting to iterate over widgets (in keyrepeat mode).
 
-## [1.6.1] - 2020-06-
+## [1.6.1] - 2021-
 ### Added
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
 - [**AG_Event**](https://libagar.org/man3/AG_Event): New macro [AG_EVENT_DUMP](https://libagar.org/man3/AG_EVENT_DUMP) to produce a listing of `argv[]` arguments on the console.
@@ -35,6 +36,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Provide copies of the OFL as separate files (OFL11.txt and LICENSE.ofl).
 - Install a copy of the generated Makefile.config as ${DATADIR}/agar.mk.
 - Install a copy of the generated configure.lua as ${DATADIR}/agar.lua.
+- Added `DEBUG_MOUSE` build option (debug delivery of mouse events to widgets).
 
 ### Changed
 - Build system updates so configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Those definitions are always available from `${DATADIR}/agar.mk`.
@@ -46,6 +48,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Fixed `double` <-> `long` conversion warnings in `math/m_sparse*`.
 - [**wgl**](https://libagar.org/man2/AG_DriverWGL): Fixed a bug in cursor handling. When showing a window initially, perform size allocation after having initialized the cursors so that the initial cursor-change areas are correctly established.
 - `install-sdk.exe` now installs include files in `include\x86` or `include\x64`.
+- Fixed non-delivery of `mouse-button-down` events to hidden and subsequently re-shown widgets (e.g., widgets under a Notebook). Thanks [Walter](https://github.com/WallyZambotti)!
 
 ## [1.6.0] - 2020-05-16
 ### Added
