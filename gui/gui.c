@@ -677,17 +677,25 @@ AG_About(AG_Event *event)
 	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "license.txt", path, sizeof(path)) == 0 &&
 	   (f = fopen(path, "r")) != NULL) {
 		char *s;
-		AG_Size size;
+		long size;
+		size_t ret;
 
 		fseek(f, 0, SEEK_END);
-		size = (AG_Size)ftell(f);
+		size = ftell(f);
 		fseek(f, 0, SEEK_SET);
-		s = Malloc(size + 1);
-		fread(s, size, 1, f);
+		if (size > 0) {
+			s = Malloc((AG_Size)size + 1);
+			ret = fread(s, (size_t)size, 1, f);
+		} else {
+			ret = 0;
+		}
 		fclose(f);
-		s[size] = '\0';
-
-		AG_TextboxBindASCII(tb, s, size);
+		if (size > 0 && ret == 1) {
+			s[size] = '\0';
+			AG_TextboxBindASCII(tb, s, size);
+		} else {
+			AG_TextboxPrintf(tb, _("Failed to read license.txt"));
+		}
 	} else {
 		AG_TextboxPrintf(tb, _("Failed to open license.txt"));
 	}
