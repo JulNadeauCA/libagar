@@ -818,7 +818,7 @@ if [ "${with_ctags}" = 'yes' ]; then
 fi
 IFS=$bb_save_IFS
 echo "CTAGS=${CTAGS}" >> Makefile.config
-if [ "${with_libtool}" = "yes" ]; then
+if [ "${with_libtool}" != '' -a "${with_libtool}" != "no" ]; then
 	if [ "${prefix_libtool}" != '' -a "${prefix_libtool}" != 'bundled' ]; then
 		LIBTOOL_BUNDLED='no'
 		LIBTOOL="${prefix_libtool}"

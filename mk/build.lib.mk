@@ -380,20 +380,24 @@ lib${LIB}.so: ${SRCS_GENERATED} _lib_objs ${OBJS}
 	    \
 	    case "${HOST}" in \
 	    *-darwin*) \
-	        echo "${CC} -shared -o $$_libout -Wl,-rpath,${PREFIX}/lib ${LDFLAGS} -dynamiclib -install_name lib${LIB}.dylib $$_objs ${LIBS}"; \
-	        ${CC} -shared -o $$_libout -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} -dynamiclib -install_name lib${LIB}.dylib $$_objs ${LIBS}; \
+	        echo "${CC} -shared -o $$_libout -Wl,-rpath,${LIBDIR} ${LDFLAGS} -dynamiclib -install_name lib${LIB}.dylib $$_objs ${LIBS}"; \
+	        ${CC} -shared -o $$_libout -Wl,-rpath ${LIBDIR} ${LDFLAGS} -dynamiclib -install_name lib${LIB}.dylib $$_objs ${LIBS}; \
 	        ;; \
 	    *-mingw*) \
-	        echo "${CC} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} $$_objs ${LIBS}"; \
-	        ${CC} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} $$_objs ${LIBS}; \
+	        echo "${CC} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs ${LIBS}"; \
+	        ${CC} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs ${LIBS}; \
 	        ;; \
 	    *-freebsd*) \
-	        echo "${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} -Wl,-rpath,${PREFIX}/lib ${LDFLAGS} $$_objs"; \
-	        ${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} $$_objs; \
+	        echo "${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} -Wl,-rpath,${LIBDIR} ${LDFLAGS} $$_objs"; \
+	        ${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs; \
+	        ;; \
+	    *-linux*) \
+	        echo "${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} ${LDFLAGS} $$_objs ${LIBS}"; \
+	        ${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} ${LDFLAGS} $$_objs ${LIBS}; \
 	        ;; \
 	    *) \
-	        echo "${CC} -shared -o $$_libout -Wl,-rpath,${PREFIX}/lib ${LDFLAGS} $$_objs"; \
-	        ${CC} -shared -o $$_libout -Wl,-rpath ${PREFIX}/lib ${LDFLAGS} $$_objs; \
+	        echo "${CC} -shared -o $$_libout -Wl,-rpath,${LIBDIR} ${LDFLAGS} $$_objs"; \
+	        ${CC} -shared -o $$_libout -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs; \
 	        ;; \
 	    esac; \
 	    \
@@ -449,7 +453,7 @@ lib${LIB}.so: ${SRCS_GENERATED} _lib_objs ${OBJS}
 	    echo "dlpreopen=''" >> lib${LIB}.la; \
 	    echo >> lib${LIB}.la; \
 	    echo '# Directory that this library needs to be installed in:' >> lib${LIB}.la; \
-	    echo "libdir='${PREFIX}/lib'" >> lib${LIB}.la; \
+	    echo "libdir='${LIBDIR}'" >> lib${LIB}.la; \
 	    if [ "${LIB_BUNDLE}" != "" ]; then \
 	        echo "perl ${TOP}/mk/gen-bundle.pl lib ${LIB_BUNDLE}"; \
 	        perl ${TOP}/mk/gen-bundle.pl lib ${LIB_BUNDLE}; \
@@ -476,10 +480,10 @@ lib${LIB}.la: check-libtool ${SRCS_GENERATED} _lib_ltobjs ${SHOBJS}
 	        _moduleopts="-module";  \
 	    fi; \
 	    if [ "${LIB_SHARED}" = "Yes" ]; then \
-	        echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link ${CC} -o lib${LIB}.la ${LIBTOOLOPTS_SHARED} -rpath ${PREFIX}/lib $$_moduleopts -version-info ${LIB_CURRENT}:${LIB_REVISION}:${LIB_AGE} ${LDFLAGS} $$_ltobjs ${LIBS}"; \
+	        echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link ${CC} -o lib${LIB}.la ${LIBTOOLOPTS_SHARED} -rpath ${LIBDIR} $$_moduleopts -version-info ${LIB_CURRENT}:${LIB_REVISION}:${LIB_AGE} ${LDFLAGS} $$_ltobjs ${LIBS}"; \
 	        ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
 		    ${CC} -o lib${LIB}.la ${LIBTOOLOPTS_SHARED} \
-		    -rpath ${PREFIX}/lib $$_moduleopts \
+		    -rpath ${LIBDIR} $$_moduleopts \
 		    -version-info ${LIB_CURRENT}:${LIB_REVISION}:${LIB_AGE} \
 		    ${LDFLAGS} $$_ltobjs ${LIBS}; \
 	    else \
