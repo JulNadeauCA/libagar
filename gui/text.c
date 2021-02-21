@@ -1994,8 +1994,8 @@ AG_TextParseANSI(const AG_TextState *ts, AG_TextANSI *_Nonnull ansi,
 			} else if (sgr >= 100 && sgr <= 107) {  /* Bright BG */
 				ansi->sgr = AG_SGR_BG;
 				memcpy(&ansi->color, (ts->colorANSI) ?
-				                     &ts->colorANSI[8+sgr-90] :
-				                   &agTextColorANSI[8+sgr-90],
+				                     &ts->colorANSI[8+sgr-100] :
+				                   &agTextColorANSI[8+sgr-100],
 				       sizeof(AG_Color));
 				break;
 			}
