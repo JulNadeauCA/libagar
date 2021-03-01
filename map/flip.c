@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2021 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,17 +36,16 @@
 static int mapFlipSelection = 0;	/* XXX instance */
 
 static void
-Init(void *_Nonnull p)
+Init(void *_Nonnull obj)
 {
-	MAP_ToolPushStatus(p,
+	MAP_ToolPushStatus(obj,
 	    _("Select element and use $(L)=Mirror, $(R)=Flip"));
 }
 
 static void
-EditPane(void *_Nonnull p, void *_Nonnull con)
+EditPane(void *_Nonnull obj, void *_Nonnull box)
 {
-	AG_CheckboxNewInt(con, 0, _("Flip entire selection"),
-	    &mapFlipSelection);
+	AG_CheckboxNewInt(box, 0, _("Flip entire selection"), &mapFlipSelection);
 }
 
 static void
@@ -68,60 +67,56 @@ ToggleXform(MAP_Item *_Nonnull mi, int type)
 }
 
 static int
-MouseButtonDown(void *_Nonnull p, int xmap, int ymap, int b)
+MouseButtonDown(void *_Nonnull obj, int xMap, int yMap, int b)
 {
-	MAP_Tool *t = p;
-	MAP_View *mv = t->mv;
-	MAP *m = mv->map;
-	int selx = mv->mx + mv->mouse.x;
-	int sely = mv->my + mv->mouse.y;
-	int w = 1;
-	int h = 1;
-	int x, y;
+	MAP_Tool *tool = obj;
+	MAP_View *mv = tool->mv;
+	MAP *map = mv->map;
+	int xSel = mv->mx + mv->mouse.x;
+	int ySel = mv->my + mv->mouse.y;
+	int w=1, h=1, x,y;
 
 	if (!mapFlipSelection ||
-	    MAP_ViewGetSelection(mv, &selx, &sely, &w, &h) == -1) {
-		if (selx < 0 || selx >= (int)m->mapw ||
-		    sely < 0 || sely >= (int)m->maph)
+	    MAP_ViewGetSelection(mv, &xSel, &ySel, &w, &h) == -1) {
+		if (xSel < 0 || xSel >= (int)map->w ||
+		    ySel < 0 || ySel >= (int)map->h)
 			return (0);
 	}
 
-	MAP_ModBegin(m);
+	MAP_ModBegin(map);
 
-	for (y = sely; y < sely+h; y++) {
-		for (x = selx; x < selx+w; x++) {
-			MAP_Node *node = &m->map[y][x];
-			MAP_Item *nref;
+	for (y = ySel; y < ySel+h; y++) {
+		for (x = xSel ; x < xSel+w; x++) {
+			MAP_Node *node = &map->map[y][x];
+			MAP_Item *mi;
 
-			MAP_ModNodeChg(m, x, y);
+			MAP_ModNodeChg(map, x,y);
 			
-			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				if (nref->layer != m->cur_layer)
+			TAILQ_FOREACH(mi, &node->items, items) {
+				if (mi->layer != map->layerCur)
 					continue;
 
 				if (b == AG_MOUSE_LEFT) {
-					ToggleXform(nref, RG_TRANSFORM_MIRROR);
+					ToggleXform(mi, RG_TRANSFORM_MIRROR);
 				} else if (b == AG_MOUSE_RIGHT) {
-					ToggleXform(nref, RG_TRANSFORM_FLIP);
+					ToggleXform(mi, RG_TRANSFORM_FLIP);
 				}
 			}
 		}
 	}
 
-	MAP_ModEnd(m);
+	MAP_ModEnd(map);
 	return (1);
 }
 
 static int
-Cursor(void *_Nonnull p, AG_Rect *_Nonnull rd)
+Cursor(void *_Nonnull obj, AG_Rect *_Nonnull rd)
 {
 	AG_Color c;
 
 	AG_ColorRGBA_8(&c, 255,255,0,64);
-	AG_DrawRectBlended(TOOL(p)->mv, rd, &c,
-	    AG_ALPHA_SRC,
-	    AG_ALPHA_ONE_MINUS_SRC);
-
+	AG_DrawRectBlended(TOOL(obj)->mv, rd, &c, AG_ALPHA_SRC,
+	                                          AG_ALPHA_ONE_MINUS_SRC);
 	return (1);
 }
 

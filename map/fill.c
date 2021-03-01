@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2021 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,31 +37,31 @@
 
 #include <string.h>
 
-struct rg_fill_tool {
-	MAP_Tool tool;
+typedef struct fill_tool {
+	MAP_Tool tool;                             /* MAP_Tool -> FILL_Tool */
 	enum fill_mode {
 		FILL_FROM_CLIPBRD,
 		FILL_FROM_ART,
 		FILL_CLEAR
 	} mode;
 	int randomize_angle;
-};
+} FILL_Tool;
 
 static void
-Init(void *_Nonnull p)
+Init(void *_Nonnull obj)
 {
-	struct rg_fill_tool *fi = p;
+	FILL_Tool *ft = obj;
 
-	fi->mode = FILL_FROM_ART;
-	fi->randomize_angle = 0;
+	ft->mode = FILL_FROM_ART;
+	ft->randomize_angle = 0;
 	
-	MAP_ToolPushStatus(fi, _("Select a node and fill with $(L)."));
+	MAP_ToolPushStatus(ft, _("Select a node and fill with $(L)."));
 }
 
 static void
-EditPane(void *_Nonnull p, void *_Nonnull con)
+EditPane(void *_Nonnull obj, void *_Nonnull box)
 {
-	struct rg_fill_tool *fi = p;
+	FILL_Tool *ft = obj;
 	static const char *mode_items[] = {
 		N_("Clipboard pattern"),
 		N_("Source artwork"),
@@ -69,20 +69,20 @@ EditPane(void *_Nonnull p, void *_Nonnull con)
 		NULL
 	};
 
-	AG_RadioNewUint(con, AG_RADIO_HFILL, mode_items, &fi->mode);
-	AG_CheckboxNewInt(con, 0, _("Randomize angle"), &fi->randomize_angle);
+	AG_RadioNewUint(box, AG_RADIO_HFILL, mode_items, &ft->mode);
+	AG_CheckboxNewInt(box, 0, _("Randomize angle"), &ft->randomize_angle);
 }
 
 static int
-Effect(void *_Nonnull p, MAP_Node *_Nonnull n)
+Effect(void *_Nonnull obj, MAP_Node *_Nonnull node)
 {
-	struct rg_fill_tool *fi = p;
-	MAP_View *mv = TOOL(fi)->mv;
-	MAP *m = mv->map;
-	MAP *copybuf = &mapEditor.copybuf;
+	FILL_Tool *ft = obj;
+	MAP_View *mv = TOOL(ft)->mv;
+	MAP *map = mv->map;
+	MAP *mapCopy = &mapEditor.copybuf;
 	int sx = 0, sy = 0, dx = 0, dy = 0;
-	int dw = m->mapw, dh = m->maph;
-	int x, y;
+	int dw = map->w, dh = map->h;
+	int x,y;
 	AG_TlistItem *it;
 	RG_Tile *tile;
 #if 0
@@ -90,31 +90,32 @@ Effect(void *_Nonnull p, MAP_Node *_Nonnull n)
 #endif
 
 	MAP_ViewGetSelection(mv, &dx, &dy, &dw, &dh);
-	MAP_ModBegin(m);
+	MAP_ModBegin(map);
 
-	switch (fi->mode) {
+	switch (ft->mode) {
 	case FILL_FROM_CLIPBRD:
-		if (copybuf->mapw == 0 || copybuf->maph == 0) {
+		if (mapCopy->w == 0 || mapCopy->h == 0) {
 			AG_TextMsg(AG_MSG_ERROR, _("The clipboard is empty."));
 			return (1);
 		}
 		for (y = dy; y < dy+dh; y++) {
 			for (x = dx; x < dx+dw; x++) {
-				MAP_Node *sn = &copybuf->map[sy][sx];
-				MAP_Node *dn = &m->map[y][x];
-				MAP_Item *r;
+				MAP_Node *nodeSrc = &mapCopy->map[sy][sx];
+				MAP_Node *nodeDst = &map->map[y][x];
+				MAP_Item *mi;
 
-				MAP_ModNodeChg(m, x, y);
-				MAP_NodeRemoveAll(m, dn, m->cur_layer);
-				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
-					MAP_NodeCopyItem(r, m, dn,
-					    m->cur_layer);
+				MAP_ModNodeChg(map, x, y);
+				MAP_NodeRemoveAll(map, nodeDst, map->layerCur);
+
+				TAILQ_FOREACH(mi, &nodeSrc->items, items) {
+					MAP_NodeDuplicate(mi, map, nodeDst,
+					                  map->layerCur);
 				}
-				if (++sx >= (int)copybuf->mapw)
+				if (++sx >= (int)mapCopy->w)
 					sx = 0;
 			}
 		}
-		if (++sy >= (int)copybuf->maph) {
+		if (++sy >= (int)mapCopy->h) {
 			sy = 0;
 		}
 		break;
@@ -127,22 +128,22 @@ Effect(void *_Nonnull p, MAP_Node *_Nonnull n)
 		tile = it->p1;
 		for (y = dy; y < dy+dh; y++) {
 			for (x = dx; x < dx+dw; x++) {
-				MAP_Node *n = &m->map[y][x];
-				MAP_Item *r;
+				MAP_Node *node = &map->map[y][x];
+				MAP_Tile *mt;
 
-				MAP_ModNodeChg(m, x, y);
-				MAP_NodeRemoveAll(m, n, m->cur_layer);
-				r = Malloc(sizeof(MAP_Item));
-				MAP_ItemInit(r, MAP_ITEM_TILE);
-				MAP_ItemSetTile(r, m, tile->ts, tile->main_id);
-				MAP_ItemSetLayer(r, m->cur_layer);
-				r->r_gfx.xorigin = tile->xOrig;
-				r->r_gfx.yorigin = tile->yOrig;
-				r->r_gfx.xcenter = MAPTILESZ/2;
-				r->r_gfx.ycenter = MAPTILESZ/2;
-				TAILQ_INSERT_TAIL(&n->nrefs, r, nrefs);
+				MAP_ModNodeChg(map, x,y);
+				MAP_NodeRemoveAll(map, node, map->layerCur);
+
+				mt = MAP_TileNew(map, node, tile->ts,
+				                 tile->main_id);
+				MAPITEM(mt)->layer = map->layerCur;
+
+				mt->xCenter = MAPTILESZ / 2;
+				mt->yCenter = MAPTILESZ / 2;
+/*				mt->xOrigin = tile->xOrig; */
+/*				mt->yOrigin = tile->yOrig; */
 #if 0
-				if (fi->randomize_angle) {
+				if (ft->randomize_angle) {
 					Uint32 rand = 0;
 					Uint8 byte = 0;
 
@@ -163,13 +164,13 @@ Effect(void *_Nonnull p, MAP_Node *_Nonnull n)
 						break;
 					}
 					if (byte < 60) {
-						RG_TransformRotate(r, 0);
+						RG_TransformRotate(mt, 0);
 					} else if (byte < 120) {
-						RG_TransformRotate(r, 90);
+						RG_TransformRotate(mt, 90);
 					} else if (byte < 180) {
-						RG_TransformRotate(r, 180);
+						RG_TransformRotate(mt, 180);
 					} else if (byte < 240) {
-						RG_TransformRotate(r, 270);
+						RG_TransformRotate(mt, 270);
 					}
 				}
 #endif
@@ -179,21 +180,21 @@ Effect(void *_Nonnull p, MAP_Node *_Nonnull n)
 	case FILL_CLEAR:
 		for (y = dy; y < dy+dh; y++) {
 			for (x = dx; x < dx+dw; x++) {
-				MAP_ModNodeChg(m, x, y);
-				MAP_NodeRemoveAll(m, &m->map[y][x],
-				    m->cur_layer);
+				MAP_ModNodeChg(map, x,y);
+				MAP_NodeRemoveAll(map, &map->map[y][x],
+				                  map->layerCur);
 			}
 		}
 		break;
 	}
-	MAP_ModEnd(m);
+	MAP_ModEnd(map);
 	return (1);
 }
 
 const MAP_ToolOps mapFillOps = {
 	"Fill", N_("Clear/fill layer"),
 	&mapIconFill,
-	sizeof(struct rg_fill_tool),
+	sizeof(FILL_Tool),
 	0,
 	1,
 	Init,

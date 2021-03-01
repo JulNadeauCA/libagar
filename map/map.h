@@ -5,7 +5,7 @@
 
 #include <agar/map/rg_tileset.h>
 
-#define MAPTILESZ 16		/* Default tile size in pixels */
+#define MAPTILESZ 64		/* Default tile size in pixels */
 
 #define MAP_TILESZ_MAX		16384
 #define MAP_WIDTH_MAX		32767
@@ -15,25 +15,69 @@
 #define MAP_LAYER_NAME_MAX	128
 #define MAP_CAMERA_NAME_MAX	128
 #define MAP_NODE_ITEMS_MAX	32767
-#define MAP_ITEM_MAXMASKS	16384
-
-#include <agar/map/nodemask.h>
 
 #include <agar/map/begin.h>
 
-/* Type of item contained in a MAP_Node stack. */
+struct map;
+struct map_node;
+struct map_view;
+struct map_item;
+
+/* Map item type */
 enum map_item_type {
-	MAP_ITEM_TILE,		/* Reference to a tile */
-	MAP_ITEM_WARP		/* Reference to another location */
+	MAP_ITEM_TILE        = 0,	/* RG_Tile(3) element */
+	MAP_ITEM_IMG         = 1,	/* Image file fragment */
+	MAP_ITEM_LINK        = 2,	/* Link to a map location */
+	MAP_ITEM_PRIVATE     = 3,	/* Start of private range */
+/*	MAP_ITEM_MY_TYPE1    = 4, */
+/*	MAP_ITEM_MY_TYPE2    = 5, */
+	MAP_ITEM_LAST        = 20
 };
 
-/*
- * TODO: ag_objectify map items. make it possible to create
- * custom classes of items on the fly.
- */
+/* Map item class description */
+typedef struct map_item_class {
+	const char *name;                    /* Display name */
+	const char *url;                     /* Project URL */
+	const char *descr;                   /* Display description */
+	enum map_item_type type;
+	Uint flags;
+	AG_Size size;                        /* Instance structure size (B) */
+
+	/* Initialization and finalization */
+	void  (*_Nullable init)(void *_Nonnull);
+	void  (*_Nullable destroy)(void *_Nonnull);
+
+	/* Duplicate item onto a target node */
+	void *_Nonnull (*_Nonnull  duplicate)(struct map *_Nonnull,
+	                                      struct map_node *_Nonnull,
+	                                      const void *_Nonnull);
+
+	/* Serialization */
+	int   (*_Nullable load)(struct map *_Nonnull, void *_Nonnull,
+	                        AG_DataSource *_Nonnull);
+	void  (*_Nullable save)(struct map *_Nonnull, void *_Nonnull,
+	                        AG_DataSource *_Nonnull);
+
+	/* Rendering routine (rendering context) */
+	void  (*_Nullable draw)(struct map_view *_Nonnull,
+	                        struct map_item *_Nonnull,
+	                        int,int, int);
+	
+	/* Oriented bounding box (relative to camera) */
+	int   (*_Nullable extent)(struct map *_Nonnull, void *_Nonnull,
+	                          AG_Rect *_Nonnull, int);
+
+	/* Pixel collision test (relative to camera) */
+	int   (*_Nonnull collide)(void *_Nonnull, int,int);
+
+	/* Edition */
+	void *_Nullable (*_Nullable edit)(void *_Nonnull,
+	                                  struct map_view *_Nonnull);
+} MAP_ItemClass;
+
+/* Map item (node element) */
 typedef struct map_item {
 	enum map_item_type type;	/* Type of element */
-	
 	Uint flags;
 #define MAP_ITEM_BLOCK		0x001	/* Tile block */
 #define MAP_ITEM_CLIMBABLE	0x002	/* Surface is climbable */
@@ -43,47 +87,23 @@ typedef struct map_item {
 #define MAP_ITEM_MOUSEOVER	0x200	/* Mouse overlap (for editor) */
 #define MAP_ITEM_SELECTED	0x400	/* Selection (for editor) */
 
-	Sint8 friction;			/* Coefficient of friction */
-	Uint8 layer;			/* Associated layer */
-	Uint8 _pad1[6];
+	Uint layer;			/* Associated layer */
+	Uint32 _pad1;
 	void *_Nullable p;		/* User pointer (non-persistent) */
-	struct {
-		Sint16 xcenter, ycenter;	/* Centering offsets */
-		Sint16 xmotion, ymotion;	/* Motion offsets */
-		Sint16 xorigin, yorigin;	/* Origin point */
-		AG_Rect rs;			/* Source rectangle */
-	} r_gfx;
-	Uint32 _pad2;
-	union {
-		struct {
-			RG_Tileset *_Nonnull obj;	/* Tileset object */
-			Uint id;			/* Tile ID */
-			Uint32 _pad;
-		} tile;
-		struct {
-			char *_Nullable map;		/* Target map name */
-			int x, y;			/* At coordinates */
-			Uint dir;			/* Towards direction */
-			Uint32 _pad;
-		} warp;
-	} nref;
-	RG_TransformChain transforms;		/* Graphical transformations */
-	MAP_NodeMaskQ masks;			/* Collision detection masks */
-	AG_TAILQ_ENTRY(map_item) nrefs;		/* Node's reference stack */
-#define r_tile		nref.tile
-#define r_warp		nref.warp
+	RG_TransformChain transforms;	/* Graphical transformations */
+	AG_TAILQ_ENTRY(map_item) items;	/* Node's reference stack */
 } MAP_Item;
 
 AG_TAILQ_HEAD(map_itemq, map_item);
 
 typedef struct map_node {
-	struct map_itemq nrefs;		/* Items on this node */
+	struct map_itemq items;			/* Items on this node */
 } MAP_Node;
 
 typedef struct map_layer {
 	char name[MAP_LAYER_NAME_MAX];
 	int visible;				/* Show/hide flag */
-	Sint16 xinc, yinc;			/* Rendering direction */
+	int xinc, yinc;				/* Rendering direction */
 	Uint alpha;				/* 8-bit transparency value */
 } MAP_Layer;
 
@@ -100,8 +120,8 @@ enum map_camera_alignment {
 };
 
 typedef struct map_camera {
-	char name[MAP_CAMERA_NAME_MAX];
-	int flags;
+	char name[MAP_CAMERA_NAME_MAX];		/* Name identifier */
+	Uint flags;
 	int x, y;				/* Position of camera */
 	enum map_camera_alignment alignment;	/* View alignment */
 	Uint zoom;				/* Zoom (%) */
@@ -141,29 +161,28 @@ typedef struct map_mod_blk {
 struct map_actor;
 
 typedef struct map {
-	struct ag_object obj;		/* AG_Object -> MAP */
-	Uint flags;
-#define AG_MAP_SAVE_CAM0POS	0x01	/* Save the camera 0 position */
-#define AG_MAP_SAVE_CAM0ZOOM	0x02	/* Save the camera 0 zoom factor */
-#define AG_MAP_SAVED_FLAGS	(AG_MAP_SAVE_CAM0POS|AG_MAP_SAVE_CAM0ZOOM)
+	struct ag_object obj;			/* AG_Object -> MAP */
 
-	Uint mapw, maph;		/* Map geometry */
-	int cur_layer;			/* Layer being edited */
-	struct {
-		int x, y;		/* Origin coordinates */
-		int layer;		/* Default tile layer */
-	} origin;
-	int redraw;				/* Redraw (for tile-based mode) */
+	Uint flags;
+#define AG_MAP_SAVE_CAM0POS	0x01		/* Save cam0 position */
+#define AG_MAP_SAVE_CAM0ZOOM	0x02		/* Save cam0 zoom factor */
+#define AG_MAP_SAVED_FLAGS	(AG_MAP_SAVE_CAM0POS | AG_MAP_SAVE_CAM0ZOOM)
+
+	Uint w, h;				/* Map size (in nodes) */
+	int layerCur;				/* Layer being edited */
+	int xOrigin, yOrigin;			/* Origin node */
+	int layerOrigin;			/* Origin node layer# */
+	Uint32 _pad1;
 	MAP_Node *_Nullable *_Nonnull map;	/* Arrays of nodes */
-	MAP_Layer *_Nonnull layers;		/* List of layers */
-	Uint               nLayers;
-	Uint                nCameras;
-	MAP_Camera *_Nonnull cameras;		/* List of cameras */
-	MAP_ModBlk *_Nonnull blks;		/* Saved modifications */
-	Uint                nBlks;
-	Uint              curBlk;
-	Uint                nMods;	
-	Uint32 _pad;
+	MAP_Layer *_Nonnull layers;		/* Layer information */
+	Uint               nLayers;		/* Layer count */
+	Uint                nCameras;		/* Camera count */
+	MAP_Camera *_Nonnull cameras;		/* Cameras (viewports) */
+	MAP_ModBlk *_Nonnull blks;		/* Undo levels */
+	Uint                nBlks;		/* Undo level count */
+	Uint              curBlk;		/* Current undo level index */      
+	Uint                nMods;		/* Modifications in this block */
+	Uint32 _pad2;
 	AG_TAILQ_HEAD_(map_actor) actors;	/* Active objects */
 } MAP;
 
@@ -176,8 +195,11 @@ typedef struct map {
 #define MAP_CONST_PTR(n)   MAPCMAP( AG_CONST_OBJECT((n),"MAP:*") )
 #define MAP_CONST_NAMED(n) MAPCMAP( AG_CONST_OBJECT_NAMED((n),"MAP:*") )
 
+#define MAPITEM(mi)       ((MAP_Item *)(mi))
+
 __BEGIN_DECLS
 extern AG_ObjectClass mapClass;
+extern MAP_ItemClass *mapItemClasses[MAP_ITEM_LAST];
 
 void MAP_InitSubsystem(void);
 void MAP_DestroySubsystem(void);
@@ -203,24 +225,17 @@ void MAP_ModLayerAdd(MAP *_Nonnull, int);
 void MAP_Undo(MAP *_Nonnull);
 void MAP_Redo(MAP *_Nonnull);
 
-void MAP_ItemInit(MAP_Item *_Nonnull, enum map_item_type);
-void MAP_ItemSetCenter(MAP_Item *_Nonnull, int,int);
-void MAP_ItemSetMotion(MAP_Item *_Nonnull, int,int);
-void MAP_ItemSetFriction(MAP_Item *_Nonnull, int);
-void MAP_ItemSetLayer(MAP_Item *_Nonnull, int);
+void MAP_ItemInit(void *_Nonnull, enum map_item_type);
 
 void MAP_ItemDestroy(MAP *_Nonnull, MAP_Item *_Nonnull);
-int  MAP_ItemLoad(MAP *_Nonnull, AG_DataSource *_Nonnull, MAP_Node *_Nonnull,
-                  MAP_Item *_Nonnull *_Nonnull);
-void MAP_ItemSave(MAP *_Nonnull, AG_DataSource *_Nonnull, MAP_Item *_Nonnull);
-int  MAP_ItemExtent(MAP *_Nonnull, MAP_Item *_Nonnull, AG_Rect *_Nonnull, int);
+int  MAP_ItemLoad(MAP *_Nonnull, MAP_Node *_Nonnull, AG_DataSource *_Nonnull);
+void MAP_ItemSave(MAP *_Nonnull, MAP_Item *_Nonnull, AG_DataSource *_Nonnull);
+int  MAP_ItemExtent(MAP *_Nonnull, const MAP_Item *_Nonnull, AG_Rect *_Nonnull, int);
 void MAP_ItemDraw(MAP *_Nonnull, MAP_Item *_Nonnull, int,int, int);
 
 void MAP_PageIn(MAP *_Nonnull, const char *_Nonnull, void *_Nonnull);
 void MAP_PageOut(MAP *_Nonnull, const char *_Nonnull, void *_Nonnull);
 
-void MAP_ItemSetTile(MAP_Item *_Nonnull, MAP *_Nonnull,
-                     RG_Tileset *_Nonnull, Uint);
 void MAP_ItemAttrColor(Uint, int, AG_Color *_Nonnull);
 
 MAP_Item *_Nullable MAP_ItemLocate(MAP *_Nonnull, int,int, int);
@@ -233,11 +248,9 @@ void MAP_NodeRemoveAll(MAP *_Nonnull, MAP_Node *_Nonnull, int);
 
 void MAP_NodeCopy(MAP *_Nonnull, MAP_Node *_Nonnull, int,
                   MAP *_Nonnull, MAP_Node *_Nonnull, int);
-void MAP_NodeMoveItem(MAP *_Nonnull, MAP_Node *_Nonnull, MAP_Item *_Nonnull,
-                      MAP *_Nonnull, MAP_Node *_Nonnull, int);
 
-MAP_Item *_Nonnull MAP_NodeCopyItem(const MAP_Item *_Nonnull, MAP *_Nonnull,
-                                    MAP_Node *_Nonnull, int);
+MAP_Item *_Nonnull MAP_NodeDuplicate(const MAP_Item *_Nonnull, MAP *_Nonnull,
+                                     MAP_Node *_Nonnull, int);
 
 void MAP_NodeMoveItemUp(MAP_Node *_Nonnull, MAP_Item *_Nonnull);
 void MAP_NodeMoveItemDown(MAP_Node *_Nonnull, MAP_Item *_Nonnull);
@@ -246,14 +259,13 @@ void MAP_NodeMoveItemToHead(MAP_Node *_Nonnull, MAP_Item *_Nonnull);
 void MAP_NodeDelItem(MAP *_Nonnull, MAP_Node *_Nonnull, MAP_Item *_Nonnull);
 void MAP_NodeSwapLayers(MAP *_Nonnull, MAP_Node *_Nonnull, int,int);
 
-MAP_Item *_Nonnull MAP_NodeAddTile(MAP *_Nonnull, MAP_Node *_Nonnull,
-                                   RG_Tileset *_Nonnull, Uint32);
-MAP_Item *_Nonnull MAP_NodeAddWarpPoint(MAP *_Nonnull, MAP_Node *_Nonnull,
-                                        const char *_Nonnull, int,int, Uint);
-
 void MAP_AttachActor(MAP *_Nonnull, struct map_actor *_Nonnull);
 void MAP_DetachActor(MAP *_Nonnull, struct map_actor *_Nonnull);
 __END_DECLS
+
+#include <agar/map/map_tile.h>
+#include <agar/map/map_img.h>
+#include <agar/map/map_link.h>
 
 #include <agar/map/close.h>
 

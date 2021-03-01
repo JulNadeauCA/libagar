@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,26 +61,25 @@ MouseButtonUp(void *_Nonnull p, int x, int y, int btn)
 }
 
 static int
-Effect(void *_Nonnull p, MAP_Node *_Nonnull n)
+Effect(void *_Nonnull p, MAP_Node *_Nonnull node)
 {
 	MAP_View *mv = TOOL(p)->mv;
-	MAP *m = mv->map;
-	MAP_Item *nref;
+	MAP *map = mv->map;
+	MAP_Item *mi;
 	RG_Transform *xf;
-	int nmods = 0;
+	int nChanges = 0;
 
-	MAP_ModNodeChg(m, mv->cx, mv->cy);
+	MAP_ModNodeChg(map, mv->cx, mv->cy);
 
-	TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
-		if (nref->layer != m->cur_layer)
+	TAILQ_FOREACH(mi, &node->items, items) {
+		if (mi->layer != map->layerCur)
 			continue;
 		
-		nmods++;
+		nChanges++;
 
-		TAILQ_FOREACH(xf, &nref->transforms, transforms) {
+		TAILQ_FOREACH(xf, &mi->transforms, transforms) {
 			if (xf->type == RG_TRANSFORM_RGB_INVERT) {
-				TAILQ_REMOVE(&nref->transforms, xf,
-				    transforms);
+				TAILQ_REMOVE(&mi->transforms, xf, transforms);
 				break;
 			}
 		}
@@ -92,10 +91,10 @@ Effect(void *_Nonnull p, MAP_Node *_Nonnull n)
 			AG_TextMsgFromError();
 			continue;
 		}
-		TAILQ_INSERT_TAIL(&nref->transforms, xf, transforms);
+		TAILQ_INSERT_TAIL(&mi->transforms, xf, transforms);
 		break;
 	}
-	return (nmods);
+	return (nChanges);
 }
 
 static int

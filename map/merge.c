@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2021 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,14 +29,18 @@
 
 #include <string.h>
 
-const AG_Version merge_ver = {
-	"agar merge tool",
+#if 0
+static const AG_Version brushSetVersion = {
+	"agar-map brush set",
 	6, 0
 };
+#endif
 
-/* XXX */
-static TAILQ_HEAD_(ag_object) brushes = TAILQ_HEAD_INITIALIZER(brushes);
-static AG_Tlist *brushes_tl;
+typedef struct merge_tool {
+	MAP_Tool tool;                            /* MAP_Tool -> MERGE_Tool */
+	TAILQ_HEAD_(ag_object) brushes;           /* Brush maps */
+	AG_Tlist *tlBrushes;                      /* Brush selection */
+} MERGE_Tool;
 
 enum {
 	NODE, FILL,
@@ -62,63 +66,64 @@ MergeTable[9][9] = {
 #endif
 
 static void
-FreeBrushes(void)
+FreeBrushes(MAP_Tool *_Nonnull t)
 {
-	AG_Object *ob, *nob;
+	MERGE_Tool *mt = t;
+	AG_Object *ob, *obNext;
 
-	for (ob = TAILQ_FIRST(&brushes);
-	     ob != TAILQ_END(&brushes);
-	     ob = nob) {
-		nob = TAILQ_NEXT(ob, cobjs);
+	for (ob = TAILQ_FIRST(&mt->brushes);
+	     ob != TAILQ_END(&mt->brushes);
+	     ob = obNext) {
+		obNext = TAILQ_NEXT(ob, cobjs);
 		AG_ObjectDestroy(ob);
 	}
-	TAILQ_INIT(&brushes);
+	TAILQ_INIT(&mt->brushes);
 }
 
 static void
 Destroy(MAP_Tool *_Nonnull t)
 {
-	FreeBrushes();
+	FreeBrushes(t);
 }
 
 static void
 CreateBrush(AG_Event *_Nonnull event)
 {
-	char brush_name[AG_OBJECT_NAME_MAX];
-	char m_name[AG_OBJECT_NAME_MAX];
-	AG_Textbox *name_tbox = AG_TEXTBOX_PTR(1);
+	char name[AG_OBJECT_NAME_MAX];
+	char mapName[AG_OBJECT_NAME_MAX];
+	MERGE_Tool *mt = AG_PTR(1);
+	AG_Textbox *tbName = AG_TEXTBOX_PTR(2);
 	MAP *m;
 
-	AG_TextboxCopyString(name_tbox, brush_name,
-	    sizeof(brush_name) - sizeof("brush()"));
-	if (brush_name[0] == '\0') {
+	AG_TextboxCopyString(tbName, name, sizeof(name) - sizeof("brush()"));
+	if (name[0] == '\0') {
 		AG_TextMsg(AG_MSG_ERROR, _("No brush name was given."));
 		return;
 	}
 	
-	Snprintf(m_name, sizeof(m_name), "brush(%s)", brush_name);
-	if (AG_TlistFindText(brushes_tl, m_name) != NULL) {
-		AG_TextMsg(AG_MSG_ERROR, _("A `%s' brush exists."), m_name);
+	Snprintf(mapName, sizeof(mapName), "brush(%s)", name);
+	if (AG_TlistFindText(mt->tlBrushes, mapName) != NULL) {
+		AG_TextMsg(AG_MSG_ERROR, _("A `%s' brush exists."), mapName);
 		return;
 	}
 
-	m = MAP_New(NULL, m_name);
+	m = MAP_New(NULL, mapName);
 	if (AG_ObjectLoad(m) == -1) {
 		extern int mapDefaultBrushWidth, mapDefaultBrushHeight;
 
-		if (MAP_AllocNodes(m, mapDefaultBrushWidth,
-		    mapDefaultBrushHeight) == -1) {
-			AG_TextMsg(AG_MSG_ERROR, "MAP_AllocNodes: %s",
-			    AG_GetError());
+		if (MAP_AllocNodes(map, mapDefaultBrushWidth, mapDefaultBrushHeight) == -1) {
+			AG_TextMsg(AG_MSG_ERROR, "MAP_AllocNodes: %s", AG_GetError());
 			goto fail;
 		}
 	}
 
-	TAILQ_INSERT_HEAD(&brushes, OBJECT(m), cobjs);
-	AG_TlistDeselectAll(brushes_tl);
-	AG_TlistSelect(brushes_tl, AG_TlistAddPtrHead(brushes_tl, NULL,
-	    m_name, m));
-	AG_TextboxPrintf(name_tbox, NULL);
+	TAILQ_INSERT_HEAD(&mt->brushes, OBJECT(m), cobjs);
+
+	AG_TlistDeselectAll(mt->tlBrushes);
+	AG_TlistSelect(mt->tlBrushes,
+	    AG_TlistAddPtrHead(mt->tlBrushes, NULL, mapName, m));
+
+	AG_TextboxPrintf(tbName, NULL);
 	return;
 fail:
 	AG_ObjectDestroy(m);
@@ -128,9 +133,10 @@ static void
 EditBrush(AG_Event *_Nonnull event)
 {
 	AG_TlistItem *it;
-	AG_Window *pwin = AG_WINDOW_PTR(1);
+	MERGE_Tool *mt = AG_PTR(1);
+	AG_Window *pwin = AG_WINDOW_PTR(2);
 
-	TAILQ_FOREACH(it, &brushes_tl->items, items) {
+	TAILQ_FOREACH(it, &mt->tlBrushes->items, items) {
 		MAP *brush = it->p1;
 		AG_Window *win;
 		AG_Toolbar *tbar;
@@ -143,8 +149,11 @@ EditBrush(AG_Event *_Nonnull event)
 			continue;
 
 		tbar = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 1, 0);
-		MAP_ViewNew(win, brush, MAP_VIEW_EDIT|MAP_VIEW_GRID|
-		                        MAPVIEW_PROPS, tbar, NULL);
+
+		MAP_ViewNew(win, brush,
+		    MAP_VIEW_EDIT | MAP_VIEW_GRID | MAPVIEW_PROPS,
+		    tbar, NULL);
+
 		AG_WindowAttach(pwin, win);
 		AG_WindowShow(win);
 	}
@@ -153,10 +162,11 @@ EditBrush(AG_Event *_Nonnull event)
 static void
 RemoveBrush(AG_Event *_Nonnull event)
 {
+	MERGE_Tool *mt = AG_PTR(1);
 	AG_TlistItem *it, *nit;
 
-	for (it = TAILQ_FIRST(&brushes_tl->items);
-	     it != TAILQ_END(&brushes_tl->items);
+	for (it = TAILQ_FIRST(&mt->tlBrushes->items);
+	     it != TAILQ_END(&mt->tlBrushes->items);
 	     it = nit) {
 		nit = TAILQ_NEXT(it, items);
 		if (it->selected) {
@@ -173,15 +183,15 @@ RemoveBrush(AG_Event *_Nonnull event)
 			}
 
 			TAILQ_REMOVE(&brushes, brush, cobjs);
-			AG_TlistDel(brushes_tl, it);
+			AG_TlistDel(mt->tlBrushes, it);
 			AG_ObjectDestroy(brush);
 		}
 	}
 }
 
 static void
-Interpolate(MAP *_Nonnull sm, MAP_Node *_Nonnull sn, MAP_Item *_Nonnull sr,
-    MAP *_Nonnull dm, MAP_Node *_Nonnull dn, MAP_Item *_Nonnull dr)
+Interpolate(MAP *_Nonnull mapSrc, MAP_Node *_Nonnull nodeSrc, MAP_Item *_Nonnull miSrc,
+    MAP *_Nonnull mapDst, MAP_Node *_Nonnull nodeDest, MAP_Item *_Nonnull miDst)
 {
 	/* TODO */
 }
@@ -189,35 +199,38 @@ Interpolate(MAP *_Nonnull sm, MAP_Node *_Nonnull sn, MAP_Item *_Nonnull sr,
 static int
 Effect(MAP_Tool *_Nonnull t, MAP_Node *_Nonnull n)
 {
+	MERGE_Tool *mt = t;
 	MAP_View *mv = t->mv;
-	MAP *m = mv->map;
+	MAP *map = mv->map;
 	AG_TlistItem *it;
 	
 	/* Avoid circular references. XXX ugly */
 	if (strncmp(OBJECT(m)->name, "brush(", 6) == 0)
 		return (1);
 	
-	TAILQ_FOREACH(it, &brushes_tl->items, items) {
-		MAP *sm;
+	TAILQ_FOREACH(it, &mt->tlBrushes->items, items) {
+		MAP *mapSrc;
 		int sx, sy, dx, dy;
 
 		if (!it->selected)
 			continue;
 
-		sm = it->p1;
+		mapSrc = it->p1;
 		for (sy = 0, dy = mv->cy;
-		     sy < sm->maph && dy < m->maph;
+		     sy < mapSrc->h && dy < map->h;
 		     sy++, dy++) {
 			for (sx = 0, dx = mv->cx;
-			     sx < sm->mapw && dx < m->mapw;
+			     sx < mapSrc->w && dx < map->w;
 			     sx++, dx++) {
-				MAP_Node *sn = &sm->map[sy][sx];
-				MAP_Node *dn = &m->map[dy][dx];
-				MAP_Item *sr, *dr;
+				MAP_Node *nodeSrc = &mapSrc->map[sy][sx];
+				MAP_Node *nodeDst = &map->map[dy][dx];
+				MAP_Item *miSrc, *miDst;
 
-				TAILQ_FOREACH(sr, &sn->nrefs, nrefs) {
-					TAILQ_FOREACH(dr, &dn->nrefs, nrefs) {
-						Interpolate(sm,sn,sr, m,dn,dr);
+				TAILQ_FOREACH(miSrc, &nodeSrc->items, items) {
+					TAILQ_FOREACH(miDst, &nodeDst->items, items) {
+						Interpolate(
+						    mapSrc, nodeSrc, miSrc,
+						    m,      nodeDst, miDst);
 					}
 				}
 			}
@@ -230,25 +243,27 @@ Effect(MAP_Tool *_Nonnull t, MAP_Node *_Nonnull n)
 static int
 Load(MAP_Tool *_Nonnull t, AG_DataSource *_Nonnull buf)
 {
-	Uint32 i, nbrushes;
+	MERGE_Tool *mt = t;
+	Uint32 i, nBrushes;
 	
-	if (AG_ReadVersion(buf, &merge_ver, NULL) != 0)
+	if (AG_ReadVersion(buf, &brushSetVersion, NULL) != 0)
 		return (-1);
-	FreeBrushes();
-	AG_TlistClear(brushes_tl);
 
-	nbrushes = AG_ReadUint32(buf);
-	for (i = 0; i < nbrushes; i++) {
-		char m_name[AG_OBJECT_NAME_MAX];
-		MAP *nbrush;
+	FreeBrushes(t);
+	AG_TlistClear(mt->tlBrushes);
 
-		AG_CopyString(m_name, buf, sizeof(m_name));
-		nbrush = Malloc(sizeof(MAP));
-		MAP_Init(nbrush, m_name);
-		map_load(nbrush, buf);
+	nBrushes = AG_ReadUint32(buf);
+	for (i = 0; i < nBrushes; i++) {
+		char mapName[AG_OBJECT_NAME_MAX];
+		MAP *map;
 
-		TAILQ_INSERT_HEAD(&brushes, OBJECT(nbrush), cobjs);
-		AG_TlistAddPtrHead(brushes_tl, NULL, m_name, nbrush);
+		AG_CopyString(mapName, buf, sizeof(mapName));
+		m = Malloc(sizeof(MAP));
+		MAP_Init(map, mapName);
+		map_load(map, buf);
+
+		TAILQ_INSERT_HEAD(&mt->brushes, OBJECT(nbrush), cobjs);
+		AG_TlistAddPtrHead(mt->tlBrushes, NULL, mapName, nbrush);
 	}
 	return (0);
 }
@@ -256,21 +271,22 @@ Load(MAP_Tool *_Nonnull t, AG_DataSource *_Nonnull buf)
 static int
 Save(MAP_Tool *_Nonnull t, AG_DataSource *_Nonnull buf)
 {
+	MERGE_Tool *mt = t;
 	AG_Object *ob;
-	Uint32 nbrushes = 0;
+	Uint32 nBrushes = 0;
 	off_t count_offs;
 
-	AG_WriteVersion(buf, &merge_ver);
+	AG_WriteVersion(buf, &brushSetVersion);
 	count_offs = AG_Tell(buf);			/* Skip count */
 	AG_WriteUint32(buf, 0);	
-	TAILQ_FOREACH(ob, &brushes, cobjs) {
+	TAILQ_FOREACH(ob, &mt->brushes, cobjs) {
 		struct brush *brush = (struct brush *)ob;
 
 		AG_WriteString(buf, ob->name);
 		map_save(brush, buf);
-		nbrushes++;
+		nBrushes++;
 	}
-	AG_WriteUint32At(buf, nbrushes, count_offs);	/* Write count */
+	AG_WriteUint32At(buf, nBrushes, count_offs);	/* Write count */
 	return (0);
 }
 #endif
@@ -278,41 +294,42 @@ Save(MAP_Tool *_Nonnull t, AG_DataSource *_Nonnull buf)
 static int
 Cursor(MAP_Tool *_Nonnull t, AG_Rect *_Nonnull rd)
 {
+	MERGE_Tool *mt = t;
 	MAP_View *mv = t->mv;
-	MAP_Item *r;
-	MAP *sm;
-	int sx, sy, dx, dy;
+	MAP *map = mv->map, *mapSrc;
 	AG_TlistItem *it;
+	int sx,sy, dx,dy;
 	int rv = -1;
+	const int tileSz = AGMTILESZ(mv);
 	
 	/* XXX ugly work around circular ref */
-	if (strncmp(OBJECT(mv->map)->name, "brush(", 6) == 0)
+	if (strncmp(OBJECT(map)->name, "brush(", 6) == 0)
 		return (-1);
 
-	TAILQ_FOREACH(it, &brushes_tl->items, items) {
+	TAILQ_FOREACH(it, &mt->tlBrushes->items, items) {
 		if (!it->selected) {
 			continue;
 		}
-		sm = it->p1;
+		mapSrc = it->p1;
 		for (sy = 0, dy = rd->y;
-		     sy < sm->maph;
-		     sy++, dy += AGMTILESZ(mv)) {
+		     sy < mapSrc->h;
+		     sy++, dy += tileSz) {
 			for (sx = 0, dx = rd->x;
-			     sx < sm->mapw;
-			     sx++, dx += AGMTILESZ(mv)) {
-				MAP_Node *sn = &sm->map[sy][sx];
+			     sx < mapSrc->w;
+			     sx++, dx += tileSz) {
+				MAP_Node *nodeSrc = &mapSrc->map[sy][sx];
+				MAP_Item *mi;
 
-				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
-					MAP_ItemDraw(mv->map, r,
+				TAILQ_FOREACH(mi, &nodeSrc->items, items) {
+					MAP_ItemDraw(map, mi,
 					    WIDGET(mv)->rView.x1 + dx,
 					    WIDGET(mv)->rView.y1 + dy,
 					    mv->cam);
 					rv = 0;
 				}
-				if (mv->flags & MAPVIEW_PROPS) {
-					MAP_ViewDraw_props(mv, sn, dx, dy,
+				if (mv->flags & MAPVIEW_PROPS)
+					MAP_ViewDraw_props(mv, nodeSrc, dx,dy,
 					    -1, -1);
-				}
 			}
 		}
 	}
@@ -322,6 +339,7 @@ Cursor(MAP_Tool *_Nonnull t, AG_Rect *_Nonnull rd)
 static void
 Init(MAP_Tool *_Nonnull t)
 {
+	MERGE_Tool *mt = t;
 	AG_Window *win;
 	AG_Box *hb;
 	AG_Button *bu;
@@ -333,30 +351,31 @@ Init(MAP_Tool *_Nonnull t)
 	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
 		tb = AG_TextboxNewS(hb, AG_TEXTBOX_FOCUS, _("Name: "));
-		AG_SetEvent(tb, "textbox-return", CreateBrush, "%p", tb);
+		AG_SetEvent(tb, "textbox-return", CreateBrush, "%p,%p", t, tb);
 
 		bu = AG_ButtonNew(hb, 0, _("Create"));
 		AG_ButtonSetPadding(bu, 6);			/* Align */
 		AG_ButtonSetFocusable(bu, 0);
-		AG_SetEvent(bu, "button-pushed", CreateBrush, "%p", tb);
+		AG_SetEvent(bu, "button-pushed", CreateBrush, "%p,%p", t, tb);
 	}
 
 	hb = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 	{
 #if 0
 		bu = AG_ButtonNew(hb, 0, _("Load set"));
-		AG_SetEvent(bu, "button-pushed", merge_load_brush_set, NULL);
+		AG_SetEvent(bu, "button-pushed", LoadBrushes, NULL);
 		bu = AG_ButtonNew(hb, 0, _("Save set"));
-		AG_SetEvent(bu, "button-pushed", merge_save_brush_set, NULL);
+		AG_SetEvent(bu, "button-pushed", SaveBrushes, NULL);
 #endif
 		bu = AG_ButtonNew(hb, 0, _("Edit"));
-		AG_SetEvent(bu, "button-pushed", EditBrush, "%p", win);
+		AG_SetEvent(bu, "button-pushed", EditBrush, "%p,%p", t, win);
 		bu = AG_ButtonNew(hb, 0, _("Remove"));
-		AG_SetEvent(bu, "button-pushed", RemoveBrush, NULL);
+		AG_SetEvent(bu, "button-pushed", RemoveBrush, "%p", t);
 	}
 
-	/* XXX */
-	brushes_tl = AG_TlistNew(win, AG_TLIST_MULTI | AG_TLIST_EXPAND);
+	TAILQ_INIT(&mt->brushes);
+
+	mt->tlBrushes = AG_TlistNew(win, AG_TLIST_MULTI | AG_TLIST_EXPAND);
 }
 
 
@@ -364,7 +383,7 @@ const MAP_Tool mapMergeOps = {
 	"Merge",
 	N_("Merge Pattern"),
 	&mapIconMerge,
-	sizeof(MAP_Tool),
+	sizeof(MERGE_Tool),
 	0,
 	Init,
 	Destroy,

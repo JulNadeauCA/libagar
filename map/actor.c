@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2021 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -76,7 +76,7 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull 
 	if (a->parent != NULL) {
 		Debug(a, "Reattaching to %s\n", OBJECT(a->parent)->name);
 		m = a->parent;
-		MAP_DetachActor(m, a);
+		MAP_DetachActor(map, a);
 	} else {
 		m = NULL;
 	}
@@ -108,7 +108,7 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull 
 	}
 #if 0
 	if (m != NULL) {
-		MAP_DetachActor(m, a);
+		MAP_DetachActor(map, a);
 		Debug(a, "Reattached to %s\n", OBJECT(m)->name);
 	}
 #endif
@@ -147,26 +147,29 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 static void
 MoveNodes(MAP_Actor *a, int xo, int yo)
 {
-	MAP *m = a->parent;
+	MAP *map = a->parent;
 	int x, y;
 
 	for (y = a->g_map.y0; y <= a->g_map.y1; y++) {
 		for (x = a->g_map.x0; x <= a->g_map.x1; x++) {
-			MAP_Node *n1 = &m->map[y][x];
-			MAP_Node *n2 = &m->map[y+yo][x+xo];
-			MAP_Item *r, *nr;
+			MAP_Node *node1 = &map->map[y][x];
+			MAP_Node *node2 = &map->map[y+yo][x+xo];
+			MAP_Item *mi, *miNext;
 
-			for (r = TAILQ_FIRST(&n1->nrefs);
-			     r != TAILQ_END(&n1->nrefs);
-			     r = nr) {
-				nr = TAILQ_NEXT(r, nrefs);
-				if (r->p == a &&
-				    r->layer >= a->g_map.l0 &&
-				    r->layer <= a->g_map.l1) {
-					TAILQ_REMOVE(&n1->nrefs, r, nrefs);
-					TAILQ_INSERT_TAIL(&n2->nrefs, r, nrefs);
-					r->r_gfx.xmotion = a->g_map.xmot;
-					r->r_gfx.ymotion = a->g_map.ymot;
+			for (mi = TAILQ_FIRST(&node1->items);
+			     mi != TAILQ_END(&node1->items);
+			     mi = miNext) {
+				miNext = TAILQ_NEXT(mi, items);
+				if (mi->p == a &&
+				    mi->layer >= a->g_map.l0 &&
+				    mi->layer <= a->g_map.l1) {
+					TAILQ_REMOVE(&node1->items, mi, items);
+					TAILQ_INSERT_TAIL(&node2->items, mi, items);
+
+					if (mi->type == MAP_ITEM_TILE) {
+						MAPTILE(mi)->xMotion = a->g_map.xmot;
+						MAPTILE(mi)->yMotion = a->g_map.ymot;
+					}
 					break;
 				}
 			}
@@ -184,7 +187,7 @@ void
 MAP_ActorMoveTile(void *obj, int xo, int yo)
 {
 	MAP_Actor *a = obj;
-	MAP *m = a->parent;
+	MAP *map = a->parent;
 	int x, y;
 
 	AG_ObjectLock(a);
@@ -194,19 +197,20 @@ MAP_ActorMoveTile(void *obj, int xo, int yo)
 
 	for (y = a->g_map.y0; y <= a->g_map.y1; y++) {
 		for (x = a->g_map.x0; x <= a->g_map.x1; x++) {
-			MAP_Node *node = &m->map[y][x];
-			MAP_Item *r;
+			MAP_Node *node = &map->map[y][x];
+			MAP_Item *mi;
 		
-			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-				if (r->p != a ||
-				    r->layer < a->g_map.l0 ||
-				    r->layer > a->g_map.l1) {
+			TAILQ_FOREACH(mi, &node->items, items) {
+				if (mi->p != a ||
+				    mi->layer < a->g_map.l0 ||
+				    mi->layer > a->g_map.l1) {
 					continue;
 				}
 
-				r->r_gfx.xmotion = a->g_map.xmot;
-				r->r_gfx.ymotion = a->g_map.ymot;
-					
+				if (mi->type == MAP_ITEM_TILE) {
+					MAPTILE(mi)->xMotion = a->g_map.xmot;
+					MAPTILE(mi)->yMotion = a->g_map.ymot;
+				}
 				switch (a->g_map.da) {
 				case 0:
 					if (a->g_map.xmot < -MAPTILESZ/2) {
@@ -252,37 +256,39 @@ MAP_ActorSetTile(void *obj, int x, int y, int l0, RG_Tileset *ts,
 	int rv;
 
 	AG_ObjectLock(a);
+
 	MAP_ActorUnmapTile(a);
 	rv = MAP_ActorMapTile(a, x, y, l0, ts, name);
+
 	AG_ObjectUnlock(a);
 
 	return (rv);
 }
 
 int
-MAP_ActorMapTile(void *obj, int X0, int Y0, int L0, RG_Tileset *ts,
+MAP_ActorMapTile(void *obj, int X0, int Y0, int L0, RG_Tileset *tileset,
     const char *name)
 {
 	MAP_Actor *a = obj;
-	MAP *m = a->parent;
+	MAP *map = a->parent;
 	RG_Tile *tile;
 	int x = a->g_map.x + X0;
 	int y = a->g_map.y + Y0;
 	int l0 = a->g_map.l0 + L0, l;
 	int sx, sy, dx, dy;
-	int dx0, dy0, xorig, yorig;
+	int dx0, dy0; //, xorig, yorig;
 	int n = 0;
 
 	AG_ObjectLock(a);
 
-	if ((tile = RG_TilesetFindTile(ts, name)) == NULL) {
+	if ((tile = RG_TilesetFindTile(tileset, name)) == NULL) {
 		AG_ObjectUnlock(a);
 		return (-1);
 	}
-	dx0 = x - tile->xOrig/MAPTILESZ;
-	dy0 = y - tile->yOrig/MAPTILESZ;
-	xorig = tile->xOrig%MAPTILESZ;
-	yorig = tile->yOrig%MAPTILESZ;
+	dx0 = x - tile->xOrig / MAPTILESZ;
+	dy0 = y - tile->yOrig / MAPTILESZ;
+/*	xorig = tile->xOrig % MAPTILESZ; */
+/*	yorig = tile->yOrig % MAPTILESZ; */
 
 	for (sy = 0, dy = dy0;
 	     sy < tile->su->h;
@@ -290,44 +296,46 @@ MAP_ActorMapTile(void *obj, int X0, int Y0, int L0, RG_Tileset *ts,
 		for (sx = 0, dx = dx0;
 		     sx < tile->su->w;
 		     sx += MAPTILESZ, dx++) {
-			MAP_Node *dn;
-			MAP_Item *r;
+			MAP_Node *node;
+			MAP_Tile *mt;
 
-			if (dx < 0 || dx >= (int)m->mapw ||
-			    dy < 0 || dy >= (int)m->maph) {
+			if (dx < 0 || dx >= (int)map->w ||
+			    dy < 0 || dy >= (int)map->h) {
 				goto out;
 			}
-			dn = &m->map[dy][dx];
+			node = &map->map[dy][dx];
 
-			r = MAP_NodeAddTile(m, dn, ts, tile->main_id);
-			r->p = obj;
-			r->r_gfx.rs.x = sx;
-			r->r_gfx.rs.y = sy;
-			r->r_gfx.rs.w = MAPTILESZ;
-			r->r_gfx.rs.h = MAPTILESZ;
-			r->r_gfx.xorigin = xorig;
-			r->r_gfx.yorigin = yorig;
-			r->r_gfx.xcenter = MAPTILESZ/2;
-			r->r_gfx.ycenter = MAPTILESZ/2;
-			r->r_gfx.xmotion = a->g_map.xmot;
-			r->r_gfx.ymotion = a->g_map.ymot;
-			r->flags |= tile->attrs[n];
-			r->flags |= MAP_ITEM_NOSAVE;
+			mt = MAP_TileNew(map, node, tileset, tile->main_id);
+
+			MAPITEM(mt)->p = obj;
+
+			mt->xCenter = MAPTILESZ / 2;
+			mt->yCenter = MAPTILESZ / 2;
+			mt->xMotion = a->g_map.xmot;
+			mt->yMotion = a->g_map.ymot;
+
+			mt->rs.x = sx;
+			mt->rs.y = sy;
+			mt->rs.w = MAPTILESZ;
+			mt->rs.h = MAPTILESZ;
+
+			MAPITEM(mt)->flags |= tile->attrs[n];
+			MAPITEM(mt)->flags |= MAP_ITEM_NOSAVE;
 
 			l = l0 + tile->layers[n];
 			if (l < 0) {
 				l = 0;
 			} else {
-				while ((int)m->nLayers <= l)
-					MAP_PushLayer(m, "");
+				while ((int)map->nLayers <= l)
+					MAP_PushLayer(map, "");
 			}
-			r->layer = l;
+			MAPITEM(mt)->layer = l;
 	
-			if (dx < a->g_map.x0) { a->g_map.x0 = dx; }
+			if      (dx < a->g_map.x0) { a->g_map.x0 = dx; }
 			else if (dx > a->g_map.x1) { a->g_map.x1 = dx; }
-			if (dy < a->g_map.y0) { a->g_map.y0 = dy; }
+			if      (dy < a->g_map.y0) { a->g_map.y0 = dy; }
 			else if (dy > a->g_map.y1) { a->g_map.y1 = dy; }
-			if (l < a->g_map.l0) { a->g_map.l0 = l; }
+			if      (l < a->g_map.l0) { a->g_map.l0 = l; }
 			else if (l > a->g_map.l1) { a->g_map.l1 = l; }
 out:
 			n++;
@@ -341,26 +349,26 @@ void
 MAP_ActorUnmapTile(void *obj)
 {
 	MAP_Actor *a = obj;
-	MAP *m;
+	MAP *map;
 	int x, y;
 	
 	AG_ObjectLock(a);
-	if ((m = a->parent) == NULL) {
+	if ((map = a->parent) == NULL) {
 		goto out;
 	}
 	for (y = a->g_map.y0; y <= a->g_map.y1; y++) {
 		for (x = a->g_map.x0; x <= a->g_map.x1; x++) {
-			MAP_Node *node = &m->map[y][x];
-			MAP_Item *r, *nr;
+			MAP_Node *node = &map->map[y][x];
+			MAP_Item *mi, *miNext;
 		
-			for (r = TAILQ_FIRST(&node->nrefs);
-			     r != TAILQ_END(&node->nrefs);
-			     r = nr) {
-				nr = TAILQ_NEXT(r, nrefs);
-				if (r->p == a &&
-				    r->layer >= a->g_map.l0 &&
-				    r->layer <= a->g_map.l1)
-					MAP_NodeDelItem(m, node, r);
+			for (mi = TAILQ_FIRST(&node->items);
+			     mi != TAILQ_END(&node->items);
+			     mi = miNext) {
+				miNext = TAILQ_NEXT(mi, items);
+				if (mi->p == a &&
+				    mi->layer >= a->g_map.l0 &&
+				    mi->layer <= a->g_map.l1)
+					MAP_NodeDelItem(map, node, mi);
 			}
 		}
 	}

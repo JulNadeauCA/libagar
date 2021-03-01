@@ -108,13 +108,10 @@ typedef struct rg_tile {
 /* Cached, transformed tile variant */
 typedef struct rg_tile_variant {
 	RG_TransformChain transforms;	/* Applied transforms */
-	AG_Surface *_Nonnull su;	/* Cached resulting surface */
-
-	/* For OpenGL */
-	Uint texture;			/* Cached texture */
-	float texcoords[4];
-
-	Uint32 last_drawn;		/* Time last draw occurred */
+	AG_Surface *_Nonnull surface;	/* Cached resulting surface */
+	struct map_view *_Nonnull view;	/* Associated MAP_View(3) widget */
+	int texture;			/* Cached texture (surface id) */
+	Uint32 last_drawn;		/* Time of most recent rendering */
 	AG_SLIST_ENTRY(rg_tile_variant) vars;
 } RG_TileVariant;
 

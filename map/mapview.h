@@ -4,6 +4,7 @@
 #define _AGAR_MAP_MAPVIEW_H_
 
 #include <agar/gui/widget.h>
+#include <agar/gui/menu.h>
 
 #include <agar/map/begin.h>
 
@@ -22,17 +23,17 @@ typedef struct map_view_draw_cb {
 typedef struct map_view {
 	AG_Widget wid;			/* AG_Widget -> MAP_View */
 
-	int flags;
-#define MAP_VIEW_EDIT         0x001	/* Mouse/keyboard edition */
-#define MAP_VIEW_GRID         0x002	/* Display the grid */
-#define MAP_VIEW_CENTER       0x004	/* Request initial centering */
-#define MAP_VIEW_NO_CURSOR    0x008	/* Disable the cursor */
-#define MAP_VIEW_NO_BMPSCALE  0x010	/* Disable bitmap scaling */
-#define MAP_VIEW_NO_BG        0x020	/* Disable background tiles */ 
-#define MAP_VIEW_NO_NODESEL   0x040	/* Disable node selections */
-#define MAP_VIEW_SET_ATTRS    0x080	/* Setting node attributes */
-#define MAP_VIEW_SHOW_OFFSETS 0x100	/* Show element tile offsets */
-#define MAP_VIEW_SHOW_ORIGIN  0x200	/* Show map origin node */
+	Uint flags;
+#define MAP_VIEW_EDIT          0x001	/* Mouse/keyboard edition */
+#define MAP_VIEW_GRID          0x002	/* Display the grid */
+#define MAP_VIEW_CENTER        0x004	/* Request initial centering */
+#define MAP_VIEW_NO_CURSOR     0x008	/* Disable the cursor */
+#define MAP_VIEW_NO_BMPSCALE   0x010	/* Disable bitmap scaling */
+#define MAP_VIEW_NO_BG         0x020	/* Disable background tiles */ 
+#define MAP_VIEW_NO_NODESEL    0x040	/* Disable node selections */
+#define MAP_VIEW_SET_ATTRS     0x080	/* Setting node attributes */
+#define MAP_VIEW_SHOW_ORIGIN   0x200	/* Show map origin node */
+#define MAP_VIEW_NO_SCROLLBARS 0x400	/* Disable scrollbars */
 
 	enum map_view_mode {
 		MAP_VIEW_EDITION,	/* Default edition mode */
@@ -41,10 +42,10 @@ typedef struct map_view {
 		MAP_VIEW_PLAY		/* Playing mode */
 	} mode;
 
-	int edit_attr;			/* Attribute being edited */
+	Uint edit_attr;			/* Attribute being edited */
 	int attr_x, attr_y;
 
-	int prew, preh;			/* Prescaling (nodes) */
+	int wPre, hPre;			/* Prescaling (nodes) */
 
 	AG_Color color;
 	struct {			/* Mouse scrolling state */
@@ -56,7 +57,7 @@ typedef struct map_view {
 	struct {			/* Temporary mouse selection */
 		int set;		/* Selection is set */
 		int x, y;		/* Origin of rectangle */
-		int xoffs, yoffs;	/* Displacement from origin */
+		int xOffs, yOffs;	/* Displacement from origin */
 	} msel;
 #if AG_MODEL == AG_LARGE
 	Uint32 _pad1;
@@ -68,8 +69,8 @@ typedef struct map_view {
 		int x, y;		/* Origin of the rectangle */
 		int w, h;		/* Dimensions of the rectangle */
 	} esel;
-	struct {			/* Noderef selection */
-		int moving;		/* Noderefs are being displaced */
+	struct {			/* Node item selection */
+		int moving;		/* Node item(s) are in motion */
 	} rsel;
 	Uint32 _pad2;
 	MAP       *_Nullable map;	/* Active map */
@@ -77,8 +78,9 @@ typedef struct map_view {
 
 	int cam;			/* Name of map camera to use */
 	int mx, my;			/* Display offset (nodes) */
-	int xoffs, yoffs;		/* Display offset (pixels) */
+	int xOffs, yOffs;		/* Display offset (pixels) */
 	Uint mw, mh;			/* Display size (nodes) */
+	Uint wVis, hVis;		/* Visible area (pixels) */
 	AG_Rect r;			/* View area */
 
 	int cx, cy;			/* Cursor position (nodes) */
@@ -86,14 +88,15 @@ typedef struct map_view {
 	int cxrel, cyrel;		/* Relative displacement (nodes) */
 	int dblclicked;			/* Double click flag */
 
-	struct ag_toolbar   *_Nullable toolbar;		/* Edit tools */
+	struct ag_toolbar *_Nullable toolbar;		/* Edit tools */
 	struct ag_statusbar *_Nullable statusbar;	/* Status display */
-	struct ag_label     *_Nonnull  status;		/* Status label */
-	struct ag_tlist     *_Nonnull  lib_tl;		/* List of Libraries */
-	struct ag_tlist     *_Nonnull  objs_tl;		/* List of Objects */
-	struct ag_tlist     *_Nonnull  layers_tl;	/* List of layers */
+	struct ag_label *_Nonnull status;		/* Status label */
+	struct ag_tlist *_Nonnull lib_tl;		/* Libraries */
+	struct ag_tlist *_Nonnull objs_tl;		/* Objects */
+	struct ag_tlist *_Nonnull layers_tl;		/* Layers */
 	struct ag_scrollbar *_Nullable hbar;		/* Horizontal scrollbar */
 	struct ag_scrollbar *_Nullable vbar;		/* Vertical scrollbar */
+	AG_PopupMenu *_Nullable popup;			/* Right-click menu */
 
 	MAP_Tool *_Nullable curtool;			/* Selected tool */
 	MAP_Tool *_Nullable deftool;			/* Default tool if any */
@@ -137,9 +140,6 @@ void MAP_ViewRegDrawCb(MAP_View *_Nonnull,
                        void *_Nullable);
 
 void MAP_ViewUpdateCamera(MAP_View *_Nonnull);
-void MAP_ViewUseScrollbars(MAP_View *_Nonnull,
-                           struct ag_scrollbar *_Nullable,
-                           struct ag_scrollbar *_Nullable);
 
 void MAP_ViewStatus(MAP_View *_Nonnull, const char *_Nonnull, ...);
 void MAP_ViewSetMode(MAP_View *_Nonnull, enum map_view_mode);

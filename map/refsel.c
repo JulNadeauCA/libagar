@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2021 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,35 +37,39 @@
 void
 MAP_UpdateRefSel(MAP_View *mv, int xRel, int yRel)
 {
-	MAP *m = mv->map;
-	MAP_Item *r;
+	MAP *map = mv->map;
 	int nx, ny;
 
 	for (ny = mv->my;
-	     (ny - mv->my) <= (int)mv->mh && ny < (int)m->maph;
+	     (ny - mv->my) <= (int)mv->mh && ny < (int)map->h;
 	     ny++) {
 		for (nx = mv->mx;
-		     (nx - mv->mx) <= (int)mv->mw && nx < (int)m->mapw;
+		     (nx - mv->mx) <= (int)mv->mw && nx < (int)map->w;
 		     nx++) {
-			MAP_Node *node = &m->map[ny][nx];
+			MAP_Node *node = &map->map[ny][nx];
+			MAP_Item *mi;
 
-			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-				if ((r->flags & MAP_ITEM_SELECTED) == 0) {
+			TAILQ_FOREACH(mi, &node->items, items) {
+				MAP_Tile *mt;
+
+				if (mi->type != MAP_ITEM_TILE ||
+				    (mi->flags & MAP_ITEM_SELECTED) == 0) {
 					continue;
 				}
-				r->r_gfx.xcenter += xRel;
-				r->r_gfx.ycenter += yRel;
+				mt = MAPTILE(mi);
+				mt->xCenter += xRel;
+				mt->yCenter += yRel;
 
-				if (xRel > 0 && r->r_gfx.xcenter > MAPTILESZ) {
-					r->r_gfx.xcenter = MAPTILESZ;
-				} else if (xRel<0 && r->r_gfx.xcenter < 0) {
-					r->r_gfx.xcenter = 0;
+				if (xRel > 0 && mt->xCenter > MAPTILESZ) {
+					mt->xCenter = MAPTILESZ;
+				} else if (xRel<0 && mt->xCenter < 0) {
+					mt->xCenter = 0;
 				}
 				
-				if (yRel > 0 && r->r_gfx.ycenter > MAPTILESZ) {
-					r->r_gfx.ycenter = MAPTILESZ;
-				} else if (yRel < 0 && r->r_gfx.ycenter < 0) {
-					r->r_gfx.ycenter = 0;
+				if (yRel > 0 && mt->yCenter > MAPTILESZ) {
+					mt->yCenter = MAPTILESZ;
+				} else if (yRel < 0 && mt->yCenter < 0) {
+					mt->yCenter = 0;
 				}
 			}
 		}
@@ -73,9 +77,9 @@ MAP_UpdateRefSel(MAP_View *mv, int xRel, int yRel)
 }
 
 static void
-Init(void *_Nonnull p)
+Init(void *_Nonnull tool)
 {
-	MAP_ToolPushStatus(p,
+	MAP_ToolPushStatus(tool,
 	    _("Select an element with $(L). Hold $(C) to select "
 	      "multiple elements."));
 }

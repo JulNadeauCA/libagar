@@ -17,10 +17,11 @@ LIB_LINKS=	${AGMATH_LINKS_STATIC} ${GUI_LINKS_STATIC} \
 MAN3=	MAP.3 MAP_Actor.3 MAP_View.3 \
 	RG.3 RG_Feature.3 RG_Pixmap.3 RG_Tile.3 RG_Tileview.3
 
-SRCS=	fill.c flip.c invert.c map.c mapedit.c mapview.c nodemask.c \
+SRCS=	fill.c flip.c invert.c map.c mapedit.c mapview.c \
 	nodesel.c refsel.c tool.c insert.c ginsert.c eraser.c actor.c \
 	rg_tileset.c rg_tileview.c rg_tile.c rg_feature.c rg_fill.c \
-	rg_pixmap.c rg_prim.c rg_texture.c rg_texsel.c rg_transform.c
+	rg_pixmap.c rg_prim.c rg_texture.c rg_texsel.c rg_transform.c \
+	map_tile.c map_img.c map_link.c
 
 # SRCS+= rg_sketch.c rg_sketch_line.c rg_sketch_circle.c rg_sketch_polygon.c
 #        rg_sketchproj.c

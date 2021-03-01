@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,36 +43,39 @@ const int rgTransformsCount;
  * any existing rotation is removed.
  */
 RG_Transform *
-TransformRotate(struct map_item *r, int angle)
+TransformRotate(MAP_Item *mi, int angle)
 {
 	Uint32 angles = (Uint32)angle;
 	RG_Transform *tr;
-	AG_Surface *su;
+	AG_Surface *S;
 	float rad, theta;
 
-	switch (r->type) {
+	switch (mi->type) {
 	case MAP_ITEM_TILE:
-		su = AG_SPRITE(r->r_sprite.obj,r->r_sprite.offs).su;
+		S = AG_SPRITE(mi->data.tile.obj, mi->data.tile.id).su;
 		break;
 	default:
 		return (NULL);
 	}
 
+	if (S == NULL)
+		return (NULL);
+
 	rad = Hypot(
-	    r->r_gfx.xorigin - su->w/2,
-	    r->r_gfx.yorigin - su->h/2);
+	    mi->data.tile.xCenter - S->w/2,
+	    mi->data.tile.yCenter - S->h/2);
 	theta = Atan2(
-	    r->r_gfx.yorigin - su->w/2,
-	    r->r_gfx.xorigin - su->h/2);
+	    mi->data.tile.yCenter - S->w/2,
+	    mi->data.tile.xCenter - S->h/2);
 
 	theta += ((float)angle/360.0)*(2.0*RG_PI);
-	r->r_gfx.xorigin = rad*Cos(theta) + su->w/2;
-	r->r_gfx.yorigin = rad*Sin(theta) + su->h/2;
+	mi->data.tile.xCenter = rad*Cos(theta) + S->w/2;
+	mi->data.tile.yCenter = rad*Sin(theta) + S->h/2;
 
-	TAILQ_FOREACH(tr, &r->transforms, transforms) {
+	TAILQ_FOREACH(tr, &mi->transforms, transforms) {
 		if (tr->type == RG_TRANSFORM_ROTATE) {
 			if (angle == 0) {
-				TAILQ_REMOVE(&r->transforms, tr, transforms);
+				TAILQ_REMOVE(&mi->transforms, tr, transforms);
 				Free(tr);
 				return (NULL);
 			}
@@ -84,7 +87,7 @@ TransformRotate(struct map_item *r, int angle)
 	}
 	if (tr == NULL) {
 		tr = RG_TransformNew(RG_TRANSFORM_ROTATE, 1, &angles);
-		TAILQ_INSERT_TAIL(&r->transforms, tr, transforms);
+		TAILQ_INSERT_TAIL(&mi->transforms, tr, transforms);
 	} else {
 		tr->args[0] = angles;
 	}

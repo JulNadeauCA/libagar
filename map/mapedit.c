@@ -36,14 +36,14 @@
 
 #include <agar/map/map.h>
 
-extern int mapViewAnimatedBg, mapViewBgTileSize;
+extern int mapViewBgTileSize;
 extern int mapViewEditSelOnly;
 
 int mapEditorInited = 0;
 MAP_Editor mapEditor;
 
-int mapDefaultWidth = 9;		/* Default map geometry */
-int mapDefaultHeight = 9;
+int mapDefaultWidth = 32;		/* Default map geometry */
+int mapDefaultHeight = 32;
 int mapDefaultBrushWidth = 9;		/* Default brush geometry */
 int mapDefaultBrushHeight = 9;
 
@@ -71,7 +71,7 @@ void
 MAP_EditorSave(AG_DataSource *buf)
 {
 	AG_WriteUint8(buf, 0);				/* Pad: mapViewBg */
-	AG_WriteUint8(buf, (Uint8)mapViewAnimatedBg);
+	AG_WriteUint8(buf, 0);				/* Pad: mapViewAnimatedBg */
 	AG_WriteUint16(buf, (Uint16)mapViewBgTileSize);
 	AG_WriteUint8(buf, (Uint8)mapViewEditSelOnly);
 
@@ -84,8 +84,8 @@ MAP_EditorSave(AG_DataSource *buf)
 void
 MAP_EditorLoad(AG_DataSource *buf)
 {
-	AG_ReadUint8(buf);				/* Pad: mapViewBg */
-	mapViewAnimatedBg = (int)AG_ReadUint8(buf);
+	(void)AG_ReadUint8(buf);			/* Pad: mapViewBg */
+	(void)AG_ReadUint8(buf);			/* Pad: mapViewAnimatedBg */
 	mapViewBgTileSize = (int)AG_ReadUint16(buf);
 	mapViewEditSelOnly = (int)AG_ReadUint8(buf);
 
@@ -109,8 +109,6 @@ ConfigEditor(void *_Nonnull p)
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	AG_SetStyle(bo, "spacing", "5");
-
-	AG_CheckboxNewInt(bo, 0, _("Moving tiles"), &mapViewAnimatedBg);
 
 	AG_NumericalNewIntR(bo, 0, "px", _("Tile size: "),
 	    &mapViewBgTileSize, 2, 16384);

@@ -129,8 +129,8 @@ Effect(void *_Nonnull p, MAP_Node *_Nonnull n)
 	}
 	go->g_map.x = mv->cx;
 	go->g_map.y = mv->cy;
-	go->g_map.l0 = m->cur_layer;
-	go->g_map.l1 = m->cur_layer;
+	go->g_map.l0 = m->layerCur;
+	go->g_map.l1 = m->layerCur;
 	
 	MAP_AttachActor(m, go);
 	TAILQ_INSERT_TAIL(&go->parent->actors, go, actors);

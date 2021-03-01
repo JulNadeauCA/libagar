@@ -11,6 +11,9 @@ __BEGIN_DECLS
 extern AG_ObjectClass mapEditorClass;
 extern AG_ObjectClass mapEditorPseudoClass;
 extern MAP_Editor mapEditor;
+extern int mapEditorInited;
+extern int mapDefaultWidth;
+extern int mapDefaultHeight;
 
 void MAP_EditorInit(void);
 void MAP_EditorLoad(AG_DataSource *_Nonnull);
