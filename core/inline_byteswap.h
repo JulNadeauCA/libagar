@@ -47,11 +47,11 @@ Uint16
 ag_swap16(Uint16 x)
 # endif
 {
-	Uint16 rv;
+	Uint32 rv;
 	__asm__("rlwimi %0,%2,8,16,23" :
 	        "=&r" (rv) :
 		"0" (x >> 8), "r" (x));
-	return (rv);
+	return (Uint16) (rv);
 }
 #else
 # ifdef AG_INLINE_HEADER
