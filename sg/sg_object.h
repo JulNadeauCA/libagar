@@ -57,7 +57,7 @@ typedef struct sg_bsp_node {
 } SG_BSPNode;
 
 typedef struct sg_object {
-	struct sg_node _inherit;	/* SG_Object -> SG_Node */
+	struct sg_node _inherit;	/* SG_Node -> SG_Object */
 
 	Uint flags;
 #define SG_OBJECT_STATIC	0x01	/* Geometry is unchanging */

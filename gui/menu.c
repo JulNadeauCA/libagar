@@ -1390,11 +1390,10 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	const int bPad = WIDGET(m)->paddingBottom;
 	AG_Driver *drv = WIDGET(m)->drv;
 	AG_MenuItem *mi;
-	int x, y, wLbl, hLbl;
+	int x, wLbl, hLbl;
 	Uint wView, hView;
 
 	x = lPad;
-	y = tPad;
 	r->h = 0;
 	r->w = x;
 
@@ -1407,7 +1406,6 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		}
 		if (x+wLbl > wView) {			/* Wrap */
 			x = lPad;
-			y += hLbl;
 			r->h += hLbl + bPad;
 		}
 		if (r->w < MIN(x+wLbl,wView)) {

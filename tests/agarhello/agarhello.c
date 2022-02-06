@@ -37,9 +37,9 @@ main(int argc, char *argv[])
 
 	/* Create a new window with a label and close button. */
 	win = AG_WindowNew(AG_WINDOW_MAIN);
-	AG_SetStyle(win, "font-size", "250%");
+//	AG_SetStyle(win, "font-size", "250%");
 	AG_LabelNew(win, 0, "Hello, world!");
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Bye", AGWINDETACH(win));
+//	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Bye", AGWINDETACH(win));
 	AG_WindowShow(win);
 
 	/* Loop processing events. */

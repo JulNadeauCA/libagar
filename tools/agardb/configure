@@ -2181,27 +2181,52 @@ fi
 done
 IFS=$bb_save_IFS
 fi
-if [ "LLDB_PREFIX" != "" ]; then
-LLDB_VERSION=
-if [ "" != "" ]; then
-if [ -e "/bin/llvm-config60" ]; then
-LLDB_VERSION=`/bin/llvm-config60 --version`
+if [ "LLDB_PREFIX" = "" ]; then
+LLDB_PREFIX=
+if [ "${prefix_llvm}" != "" ]; then
+if [ -e "${prefix_llvm}/bin/llvm-config10" ]; then
+LLDB_PREFIX=`${prefix_llvm}/bin/llvm-config10 --prefix`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config60"
+MK_EXEC_PATH="${prefix_llvm}/bin/llvm-config10"
 fi
 else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config60" ]; then
-LLDB_VERSION=`${path}/llvm-config60 --version`
+if [ -e "${path}/llvm-config10" ]; then
+LLDB_PREFIX=`${path}/llvm-config10 --prefix`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config60"
+MK_EXEC_PATH="${path}/llvm-config10"
 break
-elif [ -e "${path}/llvm-config60.exe" ]; then
-LLDB_VERSION=`${path}/llvm-config60.exe --version`
+elif [ -e "${path}/llvm-config10.exe" ]; then
+LLDB_PREFIX=`${path}/llvm-config10.exe --prefix`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config60.exe"
+MK_EXEC_PATH="${path}/llvm-config10.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+LLDB_VERSION=
+if [ "" != "" ]; then
+if [ -e "/bin/llvm-config10" ]; then
+LLDB_VERSION=`/bin/llvm-config10 --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="/bin/llvm-config10"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/llvm-config10" ]; then
+LLDB_VERSION=`${path}/llvm-config10 --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/llvm-config10"
+break
+elif [ -e "${path}/llvm-config10.exe" ]; then
+LLDB_VERSION=`${path}/llvm-config10.exe --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/llvm-config10.exe"
 break
 fi
 done
@@ -2209,24 +2234,24 @@ IFS=$bb_save_IFS
 fi
 LLDB_CFLAGS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config60" ]; then
-LLDB_CFLAGS=`/bin/llvm-config60 --cflags`
+if [ -e "/bin/llvm-config10" ]; then
+LLDB_CFLAGS=`/bin/llvm-config10 --cflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config60"
+MK_EXEC_PATH="/bin/llvm-config10"
 fi
 else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config60" ]; then
-LLDB_CFLAGS=`${path}/llvm-config60 --cflags`
+if [ -e "${path}/llvm-config10" ]; then
+LLDB_CFLAGS=`${path}/llvm-config10 --cflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config60"
+MK_EXEC_PATH="${path}/llvm-config10"
 break
-elif [ -e "${path}/llvm-config60.exe" ]; then
-LLDB_CFLAGS=`${path}/llvm-config60.exe --cflags`
+elif [ -e "${path}/llvm-config10.exe" ]; then
+LLDB_CFLAGS=`${path}/llvm-config10.exe --cflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config60.exe"
+MK_EXEC_PATH="${path}/llvm-config10.exe"
 break
 fi
 done
@@ -2234,24 +2259,24 @@ IFS=$bb_save_IFS
 fi
 LLDB_LDFLAGS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config60" ]; then
-LLDB_LDFLAGS=`/bin/llvm-config60 --ldflags`
+if [ -e "/bin/llvm-config10" ]; then
+LLDB_LDFLAGS=`/bin/llvm-config10 --ldflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config60"
+MK_EXEC_PATH="/bin/llvm-config10"
 fi
 else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config60" ]; then
-LLDB_LDFLAGS=`${path}/llvm-config60 --ldflags`
+if [ -e "${path}/llvm-config10" ]; then
+LLDB_LDFLAGS=`${path}/llvm-config10 --ldflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config60"
+MK_EXEC_PATH="${path}/llvm-config10"
 break
-elif [ -e "${path}/llvm-config60.exe" ]; then
-LLDB_LDFLAGS=`${path}/llvm-config60.exe --ldflags`
+elif [ -e "${path}/llvm-config10.exe" ]; then
+LLDB_LDFLAGS=`${path}/llvm-config10.exe --ldflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config60.exe"
+MK_EXEC_PATH="${path}/llvm-config10.exe"
 break
 fi
 done
@@ -2259,24 +2284,24 @@ IFS=$bb_save_IFS
 fi
 LLDB_LIBS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config60" ]; then
-LLDB_LIBS=`/bin/llvm-config60 --libs`
+if [ -e "/bin/llvm-config10" ]; then
+LLDB_LIBS=`/bin/llvm-config10 --libs`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config60"
+MK_EXEC_PATH="/bin/llvm-config10"
 fi
 else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config60" ]; then
-LLDB_LIBS=`${path}/llvm-config60 --libs`
+if [ -e "${path}/llvm-config10" ]; then
+LLDB_LIBS=`${path}/llvm-config10 --libs`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config60"
+MK_EXEC_PATH="${path}/llvm-config10"
 break
-elif [ -e "${path}/llvm-config60.exe" ]; then
-LLDB_LIBS=`${path}/llvm-config60.exe --libs`
+elif [ -e "${path}/llvm-config10.exe" ]; then
+LLDB_LIBS=`${path}/llvm-config10.exe --libs`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config60.exe"
+MK_EXEC_PATH="${path}/llvm-config10.exe"
 break
 fi
 done

@@ -259,7 +259,7 @@ ReadTileFlat(AG_DataSource *buf, Uint32 len, int bpp, int x, int y)
 static Uint8 *
 ReadTileRLE(AG_DataSource *buf, Uint32 len, int Bpp, int x, int y)
 {
-	int i, size, count, j;
+	int i, size, j;
 	Uint8 *tilep, *tile, *data;
 
 	tilep = tile = Malloc(len);
@@ -274,7 +274,6 @@ ReadTileRLE(AG_DataSource *buf, Uint32 len, int Bpp, int x, int y)
 		Uint8 *d = &data[i];
 	
 		size = x*y;
-		count = 0;
 
 		while (size > 0) {
 			Uint8 val = *tile++;
@@ -286,7 +285,6 @@ ReadTileRLE(AG_DataSource *buf, Uint32 len, int Bpp, int x, int y)
 					length = (*tile << 8) + tile[1];
 					tile += 2;
 				}
-				count += length;
 				size -= length;
 
 				while (length-- > 0) {
@@ -299,7 +297,6 @@ ReadTileRLE(AG_DataSource *buf, Uint32 len, int Bpp, int x, int y)
 					length = (*tile << 8) + tile[1];
 					tile += 2;
 				}
-				count += length;
 				size -= length;
 
 				val = *tile++;

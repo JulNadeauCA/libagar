@@ -100,9 +100,7 @@ Subdivide(SG_Polyball *_Nonnull ball, const M_Vector3 *_Nonnull v1,
     const M_Vector3 *_Nonnull v2, const M_Vector3 *_Nonnull v3, int depth)
 {
 	M_Vector3 v12, v23, v31;
-	static double st = 0.0;
 
-	st += 0.01;
 	if (depth == 0) {
 		int vtx0, vtx1, vtx2;
 
