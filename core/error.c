@@ -216,7 +216,10 @@ AG_ErrorCode
 AG_GetErrorCode(void)
 {
 #ifdef AG_THREADS
-	return (AG_ErrorCode)AG_ThreadKeyGet(agErrorCodeKey);
+	{
+		AG_ErrorCode *code = (AG_ErrorCode *)AG_ThreadKeyGet(agErrorCodeKey);
+		return *code;
+	}
 #else
 	return (agErrorCode);
 #endif
