@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -447,7 +447,7 @@ AG_InitGraphics(const char *spec)
 				AG_SetErrorS(_("No OpenGL drivers are available"));
 				goto fail;
 			}
-		} else if (Strncasecmp(s, "<SDL>", 5) == 0) { /* Any SDL driver */
+		} else if (Strncasecmp(s, "<SDL>", 5) == 0) { /* SDL 1 or 2 */
 			sOpts = &s[5];
 			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 				if ((*pd)->flags & AG_DRIVER_SDL &&
@@ -458,6 +458,32 @@ AG_InitGraphics(const char *spec)
 			}
 			if (dc == NULL) {
 				AG_SetErrorS(_("No SDL drivers are available"));
+				goto fail;
+			}
+		} else if (Strncasecmp(s, "<SDL1>", 5) == 0) { /* SDL 1.2 */
+			sOpts = &s[5];
+			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+				if ((*pd)->flags & AG_DRIVER_SDL1 &&
+				   (drv = AG_DriverOpen(*pd)) != NULL) {
+					dc = *pd;
+					break;
+				}
+			}
+			if (dc == NULL) {
+				AG_SetErrorS(_("No SDL1 drivers are available"));
+				goto fail;
+			}
+		} else if (Strncasecmp(s, "<SDL2>", 5) == 0) { /* SDL 2.0 */
+			sOpts = &s[5];
+			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+				if ((*pd)->flags & AG_DRIVER_SDL2 &&
+				   (drv = AG_DriverOpen(*pd)) != NULL) {
+					dc = *pd;
+					break;
+				}
+			}
+			if (dc == NULL) {
+				AG_SetErrorS(_("No SDL2 drivers are available"));
 				goto fail;
 			}
 		} else if (Strncasecmp(s, "<FB>", 4) == 0) { /* Any framebuffer driver */

@@ -8,7 +8,7 @@
 #
 
 package("Agar")
-version("1.6.1")
+version("1.7.0")
 release("Nullability Complete")
 
 register_section("Libraries to build:")
@@ -83,6 +83,7 @@ register("--with-x[=PREFIX]",		"Build with X windows support [check]")
 register("--with-xinerama[=PREFIX]",	"Build with Xinerama support [check]")
 register("--with-glx[=PREFIX]",		"Enable accelerated X driver [check]")
 register("--with-sdl[=PREFIX]",		"Enable SDL 1.2 driver [check]")
+register("--with-sdl2[=PREFIX]",	"Enable SDL 2.0 driver [no]")
 register("--with-wgl",			"Enable MS Windows driver [check]")
 register("--with-cocoa",		"Enable MacOS X Cocoa driver [check]")
 register("--with-inline-surface",	"Inline pixel access routines [yes]")
@@ -372,13 +373,13 @@ if [ "${enable_gui}" != 'no' ]; then
 	mdefine(ENABLE_GUI_LIBS, "-L../gui -lag_gui")
 	mdefine(SUBDIR_gui, "gui")
 
-	# Enable SDL support if the SDL library is found.
+	# Enable SDL support if the SDL 1.2 library is found.
 	if [ "${with_sdl}" != 'no' ]; then
 		check(sdl, 1.2.0, ${prefix_sdl})
 		if [ "${HAVE_SDL}" != 'yes' ]; then
 			if [ "${with_sdl}" = 'yes' ]; then
 				echo "*"
-				echo "* --with-sdl was requested, but the SDL "
+				echo "* --with-sdl was requested, but SDL 1.2 "
 				echo "* library was not found."
 				echo "*"
 				exit 1
@@ -387,6 +388,30 @@ if [ "${enable_gui}" != 'no' ]; then
 		fi
 	else
 		disable(sdl)
+	fi
+
+	# Enable SDL2 support if requested (still experimental)
+	if [ "${with_sdl2}" = 'yes' ]; then
+		check(sdl2, 2.0.0, ${prefix_sdl2})
+		if [ "${HAVE_SDL}" = 'yes' ]; then
+			echo "*"
+			echo "* Option --with-sdl conflicts with --with-sdl2."
+			echo "* Currently SDL1 must be disabled for SDL2 to work."
+			echo "*"
+			exit 1
+		fi
+		if [ "${HAVE_SDL2}" != 'yes' ]; then
+			if [ "${with_sdl2}" = 'yes' ]; then
+				echo "*"
+				echo "* --with-sdl2 was requested, but SDL 2.0 "
+				echo "* library was not found."
+				echo "*"
+				exit 1
+			fi
+			disable(sdl2)
+		fi
+	else
+		disable(sdl2)
 	fi
 
 	# Enable OpenGL support if an OpenGL library is found.
@@ -569,6 +594,7 @@ else
 	mdefine(SUBDIR_gui, "")
 
 	disable(sdl)
+	disable(sdl2)
 	disable(x11)
 	disable(xinerama)
 	disable(cocoa)
@@ -986,6 +1012,12 @@ if [ "${HAVE_SDL}" = 'yes' ]; then
 		mappend(SRCS_GUI, "drv_sdlgl.c")
 	fi
 fi
+if [ "${HAVE_SDL2}" = 'yes' ]; then
+	mappend(SRCS_GUI, "drv_sdl2_common.c drv_sdl2fb.c")
+	if [ "${HAVE_OPENGL}" = 'yes' ]; then
+		mappend(SRCS_GUI, "drv_sdl2gl.c")
+	fi
+fi
 if [ "${HAVE_OPENGL}" = 'yes' ]; then
 	mappend(SRCS_GUI, "drv_gl_common.c")
 	if [ "${HAVE_GLX}" = 'yes' ]; then
@@ -1039,20 +1071,22 @@ pkgconfig_mod(agar-core, "Agar object system and utility library", "", "", \
 
 if [ "${enable_gui}" != 'no' ]; then
 	config_script(agar-config,\
-		"-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} \
-		 ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} \
-		 ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} \
-		 ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} \
-		 ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}",\
-		"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} \
-		 ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} \
-		 ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} \
-		 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
-		 ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}")
+		"-I${INCLDIR} ${SDL_CFLAGS} ${SDL2_CFLAGS} ${FREETYPE_CFLAGS} \
+		 ${FONTCONFIG_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} \
+		 ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} \
+		 ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} \
+		 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} \
+		 ${UIM_CFLAGS} ${ICONV_CFLAGS}",\
+		"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} \
+		 ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} \
+		 ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} \
+		 ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} \
+		 ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} \
+		 ${UIM_LIBS} ${ICONV_LIBS}")
 	
 	pkgconfig_mod(agar, "Agar cross-platform GUI toolkit", \
-		"${X11_PC} ${SDL_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} \
-		 ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}", \
+		"${X11_PC} ${SDL_PC} ${SDL2_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} \
+		 ${OPENGL_PC} ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}", \
 		"", \
 		"-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} \
 		 ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} \

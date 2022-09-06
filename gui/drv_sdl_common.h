@@ -28,7 +28,7 @@
 #  undef main
 # endif
 #else
-# include <SDL.h>
+# include <SDL/SDL.h>
 #endif
 
 #include <agar/gui/begin.h>

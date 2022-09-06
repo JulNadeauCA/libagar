@@ -293,8 +293,12 @@ void AG_SurfaceFree(AG_Surface *_Nonnull);
 
 AG_Surface *_Nonnull AG_SurfaceFromSDL(void *_Nonnull)
                                       _Warn_Unused_Result;
+AG_Surface *_Nonnull AG_SurfaceFromSDL2(void *_Nonnull)
+                                       _Warn_Unused_Result;
 void *_Nullable      AG_SurfaceExportSDL(const AG_Surface *_Nonnull)
                                         _Warn_Unused_Result;
+void *_Nullable      AG_SurfaceExportSDL2(const AG_Surface *_Nonnull)
+                                         _Warn_Unused_Result;
 
 AG_Surface *_Nullable AG_SurfaceFromFile(const char *_Nonnull)
                                         _Warn_Unused_Result;

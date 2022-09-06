@@ -41,9 +41,11 @@ typedef struct ag_driver_class {
 #else
 	Uint flags;
 #endif
-#define AG_DRIVER_OPENGL	0x01		/* Supports OpenGL calls */
-#define AG_DRIVER_SDL		0x02		/* Supports SDL calls */
-#define AG_DRIVER_TEXTURES	0x04		/* Support texture ops */
+#define AG_DRIVER_OPENGL   0x01		/* Supports OpenGL calls */
+#define AG_DRIVER_SDL1     0x02		/* Supports SDL 1.2 calls */
+#define AG_DRIVER_TEXTURES 0x04		/* Support texture ops */
+#define AG_DRIVER_SDL2     0x08		/* Supports SDL 2.0 calls */
+#define AG_DRIVER_SDL     (AG_DRIVER_SDL1 | AG_DRIVER_SDL2)
 
 	/* Initialization */
 	int  (*_Nonnull open)(void *_Nonnull, const char *_Nullable);

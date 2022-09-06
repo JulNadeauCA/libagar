@@ -14,20 +14,22 @@
 #endif
 
 /* Flags for AG_InitVideoSDL() */
-#define AG_VIDEO_HWSURFACE     0x0001
-#define AG_VIDEO_ASYNCBLIT     0x0002
-#define AG_VIDEO_ANYFORMAT     0x0004
-#define AG_VIDEO_HWPALETTE     0x0008
-#define AG_VIDEO_DOUBLEBUF     0x0010
-#define AG_VIDEO_FULLSCREEN    0x0020
-#define AG_VIDEO_RESIZABLE     0x0040
-#define AG_VIDEO_NOFRAME       0x0080
-#define AG_VIDEO_BGPOPUPMENU   0x0100
-#define AG_VIDEO_OPENGL	       0x0200
-#define AG_VIDEO_OPENGL_OR_SDL 0x0400
-#define AG_VIDEO_NOBGCLEAR     0x0800
-#define AG_VIDEO_OVERLAY       0x1000
-#define AG_VIDEO_SDL           0x2000
+#define AG_VIDEO_HWSURFACE     0x0001	/* For SDL1 */
+#define AG_VIDEO_ASYNCBLIT     0x0002	/* For SDL1 */
+#define AG_VIDEO_ANYFORMAT     0x0004	/* For SDL1 */
+#define AG_VIDEO_HWPALETTE     0x0008	/* For SDL1 */
+#define AG_VIDEO_DOUBLEBUF     0x0010	/* For SDL1 */
+#define AG_VIDEO_FULLSCREEN    0x0020	/* Start in fullscreen mode */
+#define AG_VIDEO_RESIZABLE     0x0040	/* For SDL1 (is default in SDL2) */
+#define AG_VIDEO_NOFRAME       0x0080	/* For SDL1 or SDL2 */
+#define AG_VIDEO_BORDERLESS    AG_VIDEO_NOFRAME
+#define AG_VIDEO_BGPOPUPMENU   0x0100	/* Enable popup menu on background */
+#define AG_VIDEO_OPENGL	       0x0200	/* Require OpenGL context (or fail) */
+#define AG_VIDEO_OPENGL_OR_SDL 0x0400	/* Prefer OpenGL if available */
+#define AG_VIDEO_NOBGCLEAR     0x0800	/* Don't clear pixels in background */
+#define AG_VIDEO_OVERLAY       0x1000	/* Render GUI atop existing surface */
+#define AG_VIDEO_SDL           0x2000	/* Require SDL1 (ignored with SDL2) */
+#define AG_VIDEO_FIXED         0x4000	/* Non-resizable (default with SDL1) */
 
 __BEGIN_DECLS
 extern int agGUI, agRenderingContext, agStereo, agXsync, agClipboardIntegration;

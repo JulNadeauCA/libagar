@@ -29,7 +29,7 @@
 .ds oS Agar 1.5.0
 .Sh NAME
 .Nm AG_InitVideoSDL
-.Nd agar SDL 1.x interface
+.Nd agar SDL video initialization
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -40,11 +40,13 @@
 If Agar has been compiled with SDL 1.x support (--with-sdl), the "sdlfb"
 and "sdlgl" driver modules become available, and the GUI system can be
 attached to an existing SDL display context.
+If Agar has been compiled with SDL 2.x support (--with-sdl2), the "sdl2fb"
+and "sdl2gl" drivers become available.
 .Pp
 Note: If Agar is to create a new SDL display context, one should use a normal
 .Xr AG_InitGraphics 3
-call instead (using "<SDL>" as argument if a SDL-capable driver module is
-required).
+call instead (using "<SDL>" or "<SDL2>" as argument if a SDL-capable
+driver module is required).
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "int"
@@ -78,26 +80,33 @@ function accepts the following
 options:
 .Bl -tag -width "AG_VIDEO_OPENGL_OR_SDL "
 .It AG_VIDEO_HWSURFACE
-Request a hardware frame buffer (pass
+Request a hardware frame buffer (SDL1 only, sets
 .Dv SDL_HWSURFACE ) .
 .It AG_VIDEO_ASYNCBLIT
-Enable asynchronous blitting updates (pass
+Enable asynchronous blitting updates (SDL1 only, sets
 .Dv SDL_ASYNCBLIT ) .
 .It AG_VIDEO_ANYFORMAT
-Disable emulation of surface depth (pass
+Disable emulation of surface depth (SDL1 only, sets
 .Dv SDL_ANYFORMAT ) .
 .It AG_VIDEO_HWPALETTE
-Exclusive palette access (pass
+Exclusive palette access (SDL1 only, sets
 .Dv SDL_HWPALETTE ) .
 .It AG_VIDEO_DOUBLEBUF
-Enable double-buffering in frame buffer mode.
+Enable double-buffering in frame buffer mode (SDL1 only).
 .It AG_VIDEO_FULLSCREEN
 Start up application in full-screen mode
 .It AG_VIDEO_RESIZABLE
 If a window manager is available, request that the application be
 resizable.
-.It AG_VIDEO_NOFRAME
+This is the default with SDL2.
+.It AG_VIDEO_FIXED
+If a window manager is available, request that the window be non-resizable.
+This is the default with SDL1.
+.It AG_VIDEO_BORDERLESS
 If a window manager is available, disable window decorations.
+.It AG_VIDEO_NOFRAME
+Alias for
+.Dv AG_VIDEO_BORDERLESS .
 .It AG_VIDEO_BGPOPUPMENU
 Whenever the user right-clicks on an area not covered by an Agar window,
 display a standard pop-up menu with the list of active windows.
@@ -147,5 +156,6 @@ Both of these functions are only applicable to single-window drivers.
 .Pp
 .Lk https://libsdl.org/ Simple_DirectMedia_Layer
 .Sh HISTORY
-SDL support first appeared in Agar 1.0.
+SDL 1.x support first appeared in Agar 1.0.
 The "sdlfb" and "sdlgl" driver modules first appeared in Agar 1.4.0.
+The "sdl2fb" and "sdl2gl" driver modules appeared in Agar 1.7.0.

@@ -517,6 +517,7 @@ echo '    --with-x[=PREFIX]           Build with X windows support [check]'
 echo '    --with-xinerama[=PREFIX]    Build with Xinerama support [check]'
 echo '    --with-glx[=PREFIX]         Enable accelerated X driver [check]'
 echo '    --with-sdl[=PREFIX]         Enable SDL 1.2 driver [check]'
+echo '    --with-sdl2[=PREFIX]        Enable SDL 2.0 driver [no]'
 echo '    --with-wgl                  Enable MS Windows driver [check]'
 echo '    --with-cocoa                Enable MacOS X Cocoa driver [check]'
 echo '    --with-inline-surface       Inline pixel access routines [yes]'
@@ -962,7 +963,7 @@ echo '#ifndef PACKAGE' >$bb_o
 echo "#define PACKAGE \"$PACKAGE\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
-VERSION="1.6.1"
+VERSION="1.7.0"
 bb_o=$bb_incdir/version.h
 echo '#ifndef VERSION' >$bb_o
 echo "#define VERSION \"$VERSION\"" >>$bb_o
@@ -9114,7 +9115,7 @@ fi
 			if [ "${with_sdl}" = 'yes' ]
  then
 				echo "*"
-				echo "* --with-sdl was requested, but the SDL "
+				echo "* --with-sdl was requested, but SDL 1.2 "
 				echo "* library was not found."
 				echo "*"
 				exit 1
@@ -9131,6 +9132,485 @@ SDL_CFLAGS=""
 SDL_LIBS=""
 echo '#undef HAVE_SDL' >$bb_incdir/have_sdl.h
 echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
+	fi
+	if [ "${with_sdl2}" = 'yes' ]
+ then
+$ECHO_N 'checking for SDL 2.0...'
+$ECHO_N '# checking for SDL 2.0...' >>config.log
+# BEGIN sdl2(2.0.0 ${prefix_sdl2})
+if [ "${prefix_sdl2}" != "" ]; then
+SDL2_PREFIX=
+if [ "${prefix_sdl2}" != "" ]; then
+if [ -e "${prefix_sdl2}/bin/sdl2-config" ]; then
+SDL2_PREFIX=`${prefix_sdl2}/bin/sdl2-config --prefix`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_sdl2}/bin/sdl2-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/sdl2-config" ]; then
+SDL2_PREFIX=`${path}/sdl2-config --prefix`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/sdl2-config"
+break
+elif [ -e "${path}/sdl2-config.exe" ]; then
+SDL2_PREFIX=`${path}/sdl2-config.exe --prefix`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/sdl2-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+SDL2_VERSION=
+if [ "${prefix_sdl2}" != "" ]; then
+if [ -e "${prefix_sdl2}/bin/sdl2-config" ]; then
+SDL2_VERSION=`${prefix_sdl2}/bin/sdl2-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_sdl2}/bin/sdl2-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/sdl2-config" ]; then
+SDL2_VERSION=`${path}/sdl2-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/sdl2-config"
+break
+elif [ -e "${path}/sdl2-config.exe" ]; then
+SDL2_VERSION=`${path}/sdl2-config.exe --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/sdl2-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+SDL2_CFLAGS=
+if [ "${prefix_sdl2}" != "" ]; then
+if [ -e "${prefix_sdl2}/bin/sdl2-config" ]; then
+SDL2_CFLAGS=`${prefix_sdl2}/bin/sdl2-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_sdl2}/bin/sdl2-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/sdl2-config" ]; then
+SDL2_CFLAGS=`${path}/sdl2-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/sdl2-config"
+break
+elif [ -e "${path}/sdl2-config.exe" ]; then
+SDL2_CFLAGS=`${path}/sdl2-config.exe --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/sdl2-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+SDL2_LIBS=
+if [ "${prefix_sdl2}" != "" ]; then
+if [ -e "${prefix_sdl2}/bin/sdl2-config" ]; then
+SDL2_LIBS=`${prefix_sdl2}/bin/sdl2-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_sdl2}/bin/sdl2-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/sdl2-config" ]; then
+SDL2_LIBS=`${path}/sdl2-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/sdl2-config"
+break
+elif [ -e "${path}/sdl2-config.exe" ]; then
+SDL2_LIBS=`${path}/sdl2-config.exe --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/sdl2-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+else
+case "${host}" in
+*-*-darwin*)
+SDL2_VERSION=
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/sdl2-config" ]; then
+SDL2_VERSION=`${path}/sdl2-config --version`
+MK_EXEC_FOUND=Yes
+break
+elif [ -e "${path}/sdl2-config.exe" ]; then
+SDL2_VERSION=`${path}/sdl2-config.exe --version`
+MK_EXEC_FOUND=Yes
+break
+fi
+done
+IFS=$bb_save_IFS
+if [ "${SDL2_VERSION}" != "" ]; then
+SDL2_PREFIX=
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/sdl2-config" ]; then
+SDL2_PREFIX=`${path}/sdl2-config --prefix`
+MK_EXEC_FOUND=Yes
+break
+elif [ -e "${path}/sdl2-config.exe" ]; then
+SDL2_PREFIX=`${path}/sdl2-config.exe --prefix`
+MK_EXEC_FOUND=Yes
+break
+fi
+done
+IFS=$bb_save_IFS
+SDL2_CFLAGS=
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/sdl2-config" ]; then
+SDL2_CFLAGS=`${path}/sdl2-config --cflags`
+MK_EXEC_FOUND=Yes
+break
+elif [ -e "${path}/sdl2-config.exe" ]; then
+SDL2_CFLAGS=`${path}/sdl2-config.exe --cflags`
+MK_EXEC_FOUND=Yes
+break
+fi
+done
+IFS=$bb_save_IFS
+SDL2_LIBS=
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/sdl2-config" ]; then
+SDL2_LIBS=`${path}/sdl2-config --libs`
+MK_EXEC_FOUND=Yes
+break
+elif [ -e "${path}/sdl2-config.exe" ]; then
+SDL2_LIBS=`${path}/sdl2-config.exe --libs`
+MK_EXEC_FOUND=Yes
+break
+fi
+done
+IFS=$bb_save_IFS
+else
+$ECHO_N 'framework...'
+$ECHO_N '# framework...' >>config.log
+SDL2_VERSION="2.0.0"
+SDL2_CFLAGS="-D_USE_SDL_FRAMEWORK"
+SDL2_LIBS="-framework SDL2"
+fi
+;;
+*)
+SDL2_PREFIX=
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/sdl2-config" ]; then
+SDL2_PREFIX=`${path}/sdl2-config --prefix`
+MK_EXEC_FOUND=Yes
+break
+elif [ -e "${path}/sdl2-config.exe" ]; then
+SDL2_PREFIX=`${path}/sdl2-config.exe --prefix`
+MK_EXEC_FOUND=Yes
+break
+fi
+done
+IFS=$bb_save_IFS
+SDL2_VERSION=
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/sdl2-config" ]; then
+SDL2_VERSION=`${path}/sdl2-config --version`
+MK_EXEC_FOUND=Yes
+break
+elif [ -e "${path}/sdl2-config.exe" ]; then
+SDL2_VERSION=`${path}/sdl2-config.exe --version`
+MK_EXEC_FOUND=Yes
+break
+fi
+done
+IFS=$bb_save_IFS
+SDL2_CFLAGS=
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/sdl2-config" ]; then
+SDL2_CFLAGS=`${path}/sdl2-config --cflags`
+MK_EXEC_FOUND=Yes
+break
+elif [ -e "${path}/sdl2-config.exe" ]; then
+SDL2_CFLAGS=`${path}/sdl2-config.exe --cflags`
+MK_EXEC_FOUND=Yes
+break
+fi
+done
+IFS=$bb_save_IFS
+SDL2_LIBS=
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -e "${path}/sdl2-config" ]; then
+SDL2_LIBS=`${path}/sdl2-config --libs`
+MK_EXEC_FOUND=Yes
+break
+elif [ -e "${path}/sdl2-config.exe" ]; then
+SDL2_LIBS=`${path}/sdl2-config.exe --libs`
+MK_EXEC_FOUND=Yes
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
+esac
+fi
+if [ "${SDL2_VERSION}" != "" ]; then
+if [ "${prefix_sdl2}" != "" ]; then
+echo "yes ($SDL2_VERSION in ${prefix_sdl2})"
+echo "# yes ($SDL2_VERSION in ${prefix_sdl2})" >>config.log
+else
+echo "yes ($SDL2_VERSION)"
+echo "# yes ($SDL2_VERSION)" >>config.log
+fi
+MK_VERSION_MAJOR=`echo "$SDL2_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$SDL2_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$SDL2_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK=no
+if [ $MK_VERSION_MAJOR -gt 2 ]; then
+MK_VERSION_OK=yes
+elif [ $MK_VERSION_MAJOR -eq 2 ]; then
+if [ "$MK_VERSION_MINOR" = '' ]; then
+MK_VERSION_OK=yes
+else
+if [ $MK_VERSION_MINOR -gt 0 ]; then
+MK_VERSION_OK=yes
+elif [ $MK_VERSION_MINOR -eq 0 ]; then
+if [ "$MK_VERSION_MICRO" = '' ]; then
+MK_VERSION_OK=yes
+else
+if [ $MK_VERSION_MICRO -ge 0 ]; then
+MK_VERSION_OK=yes
+fi
+fi
+fi
+fi
+fi
+if [ "${MK_VERSION_OK}" = "no" ]; then
+echo '*'
+echo '# *' >>config.log
+echo "* Minimum required version is 2.0.0 (found $SDL2_VERSION)"
+echo "# * Minimum required version is 2.0.0 (found $SDL2_VERSION)" >>config.log
+echo '*'
+echo '# *' >>config.log
+fi
+else
+if [ "${prefix_sdl2}" != "" ]; then
+echo "no (not in ${prefix_sdl2})"
+echo "# no (not in ${prefix_sdl2})" >>config.log
+else
+echo 'no'
+echo '# no' >>config.log
+fi
+MK_VERSION_OK="no"
+fi
+if [ "${MK_VERSION_OK}" = "yes" ]; then
+$ECHO_N 'checking whether SDL2 works...'
+$ECHO_N '# checking whether SDL2 works...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#ifdef _USE_SDL_FRAMEWORK
+# include <SDL2/SDL.h>
+# ifdef main
+#  undef main
+# endif
+#else
+# include <SDL2/SDL.h>
+#endif
+int main(int argc, char *argv[]) {
+	SDL_Surface *su;
+
+	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
+		return (1);
+	}
+	su = SDL_CreateRGBSurface(0, 16, 16, 32, 0, 0, 0, 0);
+	SDL_FreeSurface(su);
+	SDL_Quit();
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_SDL2' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL2_LIBS} 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL2_LIBS} 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_SDL2=yes
+bb_o=$bb_incdir/have_sdl2.h
+echo '#ifndef HAVE_SDL2' >$bb_o
+echo "#define HAVE_SDL2 \"$HAVE_SDL2\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_SDL2\"] = \"$HAVE_SDL2\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_SDL2=no
+echo '#undef HAVE_SDL2' >$bb_incdir/have_sdl2.h
+echo 'hdefs["HAVE_SDL2"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_SDL2}" = "yes" ]; then
+case "${host}" in
+*-*-cygwin* | *-*-mingw32*)
+if [ -e "${SDL2_PREFIX}/include/SDL2" ]; then
+SDL2_CFLAGS="-I${SDL2_PREFIX}/include/SDL2 -D_GNU_SOURCE=1"
+fi
+if [ -e "${SDL2_PREFIX}/lib/libSDL2.dll.a" ]; then
+SDL2_LIBS="-L${SDL2_PREFIX}/lib -lSDL2.dll"
+fi
+;;
+esac
+bb_save_IFS=$IFS
+IFS=" "
+SDL2_LIBS_FIXED=""
+for sdl2_lib in $SDL2_LIBS; do
+case "${sdl2_lib}" in
+-Wl*)
+;;
+-pthread)
+SDL2_LIBS_FIXED="$SDL2_LIBS_FIXED -lpthread"
+;;
+*)
+SDL2_LIBS_FIXED="$SDL2_LIBS_FIXED ${sdl2_lib}"
+;;
+esac
+done
+IFS=$bb_save_IFS
+SDL2_LIBS="${SDL2_LIBS_FIXED}"
+else
+$ECHO_N 'checking whether SDL2 works (with X11 libs)...'
+$ECHO_N '# checking whether SDL2 works (with X11 libs)...' >>config.log
+SDL2_LIBS="${SDL2_LIBS} -L/usr/X11R6/lib -lX11 -lXext -lXrandr -lXrender"
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#ifdef _USE_SDL_FRAMEWORK
+# include <SDL2/SDL.h>
+# ifdef main
+#  undef main
+# endif
+#else
+# include <SDL2/SDL.h>
+#endif
+int main(int argc, char *argv[]) {
+	SDL_Surface *su;
+
+	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
+		return (1);
+	}
+	su = SDL_CreateRGBSurface(0, 16, 16, 32, 0, 0, 0, 0);
+	SDL_FreeSurface(su);
+	SDL_Quit();
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_SDL2' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL2_LIBS} 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL2_LIBS} 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_SDL2=yes
+bb_o=$bb_incdir/have_sdl2.h
+echo '#ifndef HAVE_SDL2' >$bb_o
+echo "#define HAVE_SDL2 \"$HAVE_SDL2\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_SDL2\"] = \"$HAVE_SDL2\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_SDL2=no
+echo '#undef HAVE_SDL2' >$bb_incdir/have_sdl2.h
+echo 'hdefs["HAVE_SDL2"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_SDL2}" = "no" ]; then
+SDL2_CFLAGS=""
+SDL2_LIBS=""
+echo '#undef HAVE_SDL2' >$bb_incdir/have_sdl2.h
+echo 'hdefs["HAVE_SDL2"] = nil' >>configure.lua
+fi
+fi
+else
+HAVE_SDL2="no"
+SDL2_CFLAGS=""
+SDL2_LIBS=""
+echo '#undef HAVE_SDL2' >$bb_incdir/have_sdl2.h
+echo 'hdefs["HAVE_SDL2"] = nil' >>configure.lua
+fi
+if [ "${HAVE_SDL2}" = "yes" ]; then
+SDL2_PC="sdl2"
+fi
+# END sdl2
+		if [ "${HAVE_SDL}" = 'yes' ]
+ then
+			echo "*"
+			echo "* Option --with-sdl conflicts with --with-sdl2."
+			echo "* Currently SDL1 must be disabled for SDL2 to work."
+			echo "*"
+			exit 1
+		fi
+		if [ "${HAVE_SDL2}" != 'yes' ]
+ then
+			if [ "${with_sdl2}" = 'yes' ]
+ then
+				echo "*"
+				echo "* --with-sdl2 was requested, but SDL 2.0 "
+				echo "* library was not found."
+				echo "*"
+				exit 1
+			fi
+HAVE_SDL2="no"
+SDL2_CFLAGS=""
+SDL2_LIBS=""
+echo '#undef HAVE_SDL2' >$bb_incdir/have_sdl2.h
+echo 'hdefs["HAVE_SDL2"] = nil' >>configure.lua
+		fi
+	else
+HAVE_SDL2="no"
+SDL2_CFLAGS=""
+SDL2_LIBS=""
+echo '#undef HAVE_SDL2' >$bb_incdir/have_sdl2.h
+echo 'hdefs["HAVE_SDL2"] = nil' >>configure.lua
 	fi
 	if [ "${with_gl}" != 'no' ]
  then
@@ -11415,6 +11895,11 @@ SDL_CFLAGS=""
 SDL_LIBS=""
 echo '#undef HAVE_SDL' >$bb_incdir/have_sdl.h
 echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
+HAVE_SDL2="no"
+SDL2_CFLAGS=""
+SDL2_LIBS=""
+echo '#undef HAVE_SDL2' >$bb_incdir/have_sdl2.h
+echo 'hdefs["HAVE_SDL2"] = nil' >>configure.lua
 HAVE_X11="no"
 X11_CFLAGS=""
 X11_LIBS=""
@@ -15078,6 +15563,14 @@ SRCS_GUI="${SRCS_GUI} drv_sdl_common.c drv_sdlfb.c"
 SRCS_GUI="${SRCS_GUI} drv_sdlgl.c"
 	fi
 fi
+if [ "${HAVE_SDL2}" = 'yes' ]
+ then
+SRCS_GUI="${SRCS_GUI} drv_sdl2_common.c drv_sdl2fb.c"
+	if [ "${HAVE_OPENGL}" = 'yes' ]
+ then
+SRCS_GUI="${SRCS_GUI} drv_sdl2gl.c"
+	fi
+fi
 if [ "${HAVE_OPENGL}" = 'yes' ]
  then
 SRCS_GUI="${SRCS_GUI} drv_gl_common.c"
@@ -15266,9 +15759,9 @@ AVAIL_PCMODULES="$AVAIL_PCMODULES agar-core.pc"
 if [ "${enable_gui}" != 'no' ]
  then
 config_script_out="agar-config"
-config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${SDL2_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}"
 if [ "${HAVE_CC65}" = "yes" ]; then
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
 config_libs_cc65=""
 bb_save_IFS=$IFS
 IFS=" "
@@ -15283,7 +15776,7 @@ done
 IFS=$bb_save_IFS
 config_script_libs="$config_libs_cc65"
 else
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
 fi
 cat << EOT > $config_script_out
 #!/bin/sh
@@ -15359,7 +15852,7 @@ AVAIL_CONFIGSCRIPTS="$AVAIL_CONFIGSCRIPTS agar-config"
 	
 pkgconfig_module_out="agar"
 pkgconfig_module_desc="Agar cross-platform GUI toolkit"
-pkgconfig_module_requires="${X11_PC} ${SDL_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}"
+pkgconfig_module_requires="${X11_PC} ${SDL_PC} ${SDL2_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}"
 pkgconfig_module_conflicts=""
 pkgconfig_module_cflags="-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
 pkgconfig_module_libs="-L\${libdir} -lag_gui -lag_core"
@@ -16524,6 +17017,8 @@ echo "HAVE_PURE_ATTRIBUTE=$HAVE_PURE_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_PURE_ATTRIBUTE\"] = \"$HAVE_PURE_ATTRIBUTE\"" >>configure.lua
 echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
 echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
+echo "HAVE_SDL2=$HAVE_SDL2" >>Makefile.config
+echo "mdefs[\"HAVE_SDL2\"] = \"$HAVE_SDL2\"" >>configure.lua
 echo "HAVE_SHL_LOAD=$HAVE_SHL_LOAD" >>Makefile.config
 echo "mdefs[\"HAVE_SHL_LOAD\"] = \"$HAVE_SHL_LOAD\"" >>configure.lua
 echo "HAVE_SNDFILE=$HAVE_SNDFILE" >>Makefile.config
@@ -16652,6 +17147,12 @@ echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >>Makefile.config
 echo "mdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
 echo "RELEASE=$RELEASE" >>Makefile.config
 echo "mdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
+echo "SDL2_CFLAGS=$SDL2_CFLAGS" >>Makefile.config
+echo "mdefs[\"SDL2_CFLAGS\"] = \"$SDL2_CFLAGS\"" >>configure.lua
+echo "SDL2_LIBS=$SDL2_LIBS" >>Makefile.config
+echo "mdefs[\"SDL2_LIBS\"] = \"$SDL2_LIBS\"" >>configure.lua
+echo "SDL2_PC=$SDL2_PC" >>Makefile.config
+echo "mdefs[\"SDL2_PC\"] = \"$SDL2_PC\"" >>configure.lua
 echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
 echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
 echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config

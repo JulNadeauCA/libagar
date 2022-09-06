@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
  */
 
 #include <agar/config/have_sdl.h>
+#include <agar/config/have_sdl2.h>
 #include <agar/config/have_opengl.h>
 #include <agar/config/have_glx.h>
 #include <agar/config/have_wgl.h>
@@ -44,11 +45,17 @@
 #if defined(HAVE_GLX)
 extern AG_DriverClass agDriverGLX;
 #endif
-#if defined(HAVE_SDL)
-extern AG_DriverClass agDriverSDLFB;
+#if defined(HAVE_SDL2)
+# if defined(HAVE_OPENGL)
+extern AG_DriverClass agDriverSDL2GL;
+# endif
+extern AG_DriverClass agDriverSDL2FB;
 #endif
-#if defined(HAVE_SDL) && defined(HAVE_OPENGL)
+#if defined(HAVE_SDL)
+# if defined(HAVE_OPENGL)
 extern AG_DriverClass agDriverSDLGL;
+# endif
+extern AG_DriverClass agDriverSDLFB;
 #endif
 #if defined(HAVE_WGL)
 extern AG_DriverClass agDriverWGL;
@@ -70,6 +77,12 @@ AG_DriverClass *agDriverList[] = {
 #endif
 #if defined(HAVE_COCOA)
 	&agDriverCocoa,
+#endif
+#if defined(HAVE_SDL2) && defined(HAVE_OPENGL)
+	&agDriverSDL2GL,
+#endif
+#if defined(HAVE_SDL2)
+	&agDriverSDL2FB,
 #endif
 #if defined(HAVE_SDL) && defined(HAVE_OPENGL)
 	&agDriverSDLGL,
@@ -263,7 +276,7 @@ AG_UsingGL(void *drv)
 	}
 }
 
-/* Return whether Agar is using SDL. */
+/* Return whether Agar is using SDL (1 or 2). */
 int
 AG_UsingSDL(void *drv)
 {
