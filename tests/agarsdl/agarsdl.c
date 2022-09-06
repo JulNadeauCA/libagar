@@ -6,7 +6,7 @@
 
 #include <agar/config/have_opengl.h>
 
-#include <SDL.h>
+#include <SDL/SDL.h>
 #include <math.h>
 
 #include <agar/core.h>
