@@ -127,8 +127,8 @@ SDL2FB_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_InitEventSubsystem(AG_SOFT_TIMERS);
 #endif
 	/* Initialize the main mouse and keyboard devices. */
-	if ((drv->mouse = AG_MouseNew(sfb, "SDL mouse")) == NULL ||
-	    (drv->kbd = AG_KeyboardNew(sfb, "SDL keyboard")) == NULL)
+	if ((drv->mouse = AG_MouseNew(sfb, "SDL2 mouse")) == NULL ||
+	    (drv->kbd = AG_KeyboardNew(sfb, "SDL2 keyboard")) == NULL)
 		goto fail;
 
 #if 0
@@ -1639,7 +1639,8 @@ SDL2FB_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 
 	Swin = SDL_GetWindowSurface(sfb->window);
 	pf = drv->videoFmt = Malloc(sizeof(AG_PixelFormat));
-	AG_PixelFormatRGBA(pf, Swin->format->BitsPerPixel,
+	AG_PixelFormatRGBA(pf,
+	    Swin->format->BitsPerPixel,
 	    Swin->format->Rmask,
 	    Swin->format->Gmask,
 	    Swin->format->Bmask,
@@ -1649,19 +1650,8 @@ SDL2FB_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 	dsw->h = Swin->h;
 	dsw->depth = Swin->format->BitsPerPixel;
 
-#if AG_MODEL == AG_LARGE
-	Verbose(_("SDL2FB: New display (%d-bpp; %08llx,%08llx,%08llx)\n"),
-	     pf->BitsPerPixel, 
-	     (unsigned long long)pf->Rmask,
-	     (unsigned long long)pf->Gmask,
-	     (unsigned long long)pf->Bmask);
-#else
-	Verbose(_("SDL2FB: New display (%d-bpp; %04x,%04x,%04x)\n"),
-	     pf->BitsPerPixel, 
-	     pf->Rmask,
-	     pf->Gmask,
-	     pf->Bmask);
-#endif
+	Verbose(_("SDL2FB: New display (%d x %d x %d bpp)\n"),
+	    Swin->w, Swin->h, Swin->format->BitsPerPixel);
 
 	/* Initialize clipping rectangles. */
 	if (InitClipRects(sfb, dsw->w, dsw->h) == -1)

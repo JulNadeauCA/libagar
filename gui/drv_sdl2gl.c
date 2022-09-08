@@ -110,8 +110,8 @@ SDL2GL_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_InitEventSubsystem(AG_SOFT_TIMERS);
 #endif
 	/* Initialize this driver instance. */
-	if ((drv->mouse = AG_MouseNew(sgl, "SDL mouse")) == NULL ||
-	    (drv->kbd = AG_KeyboardNew(sgl, "SDL keyboard")) == NULL) {
+	if ((drv->mouse = AG_MouseNew(sgl, "SDL2 mouse")) == NULL ||
+	    (drv->kbd = AG_KeyboardNew(sgl, "SDL2 keyboard")) == NULL) {
 		goto fail;
 	}
 	sgl->outBuf = NULL;
@@ -271,8 +271,7 @@ SDL2GL_EndRendering(void *_Nonnull drv)
 		glPopAttrib();
 		AG_GL_DestroyContext(&sgl->gl);     /* Restore former state */
 	} else {
-/*		SDL_GL_SwapBuffers(); */
-		/* XXX test SDL2 */
+		SDL_GL_SwapWindow(sgl->window);
 	}
 }
 
@@ -298,7 +297,6 @@ SDL2GL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDL2GL *sgl = obj;
-	AG_PixelFormat *pf;
 	SDL_Surface *Swin;
 	Uint32 swFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 
@@ -388,20 +386,20 @@ SDL2GL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 	}
 
 	Swin = SDL_GetWindowSurface(sgl->window);
-	pf = drv->videoFmt = Malloc(sizeof(AG_PixelFormat));
-	AG_PixelFormatRGBA(pf,
-	    pf->BitsPerPixel,
-	    pf->Rmask,
-	    pf->Gmask,
-	    pf->Bmask,
-	    pf->Amask);
+	drv->videoFmt = Malloc(sizeof(AG_PixelFormat));
+	AG_PixelFormatRGBA(drv->videoFmt,
+	    Swin->format->BitsPerPixel,
+	    Swin->format->Rmask,
+	    Swin->format->Gmask,
+	    Swin->format->Bmask,
+	    Swin->format->Amask);
 
 	dsw->w = Swin->w;
 	dsw->h = Swin->h;
-	dsw->depth = pf->BitsPerPixel;
+	dsw->depth = Swin->format->BitsPerPixel;
 
 	Verbose(_("SDL2GL: New display (%d x %d x %d bpp)\n"),
-	    Swin->w, Swin->h, pf->BitsPerPixel);
+	    Swin->w, Swin->h, Swin->format->BitsPerPixel);
 	
 	/* Create the cursors. */
 	AG_SDL2_InitDefaultCursor(sgl);

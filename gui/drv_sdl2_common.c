@@ -792,32 +792,30 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		dev->data.button.y = ev->button.y;
 		break;
 	case SDL_KEYDOWN:
+		Debug(drv, "%s: KEYDOWN (" AGSI_RED "0x%x" AGSI_RST ")\n",
+		    OBJECT(drv->kbd)->name,
+		    (Uint)ev->key.keysym.sym);
+
 		AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED,
 		    (AG_KeySym)ev->key.keysym.sym);
 	
 		dev->type = AG_DRIVER_KEY_DOWN;
 		dev->win = NULL;
 		dev->data.key.ks = (AG_KeySym)ev->key.keysym.sym;
-#if 0
-		/* XXX SDL2 */
-		dev->data.key.ucs = (AG_Char)ev->key.keysym.unicode;
-#else
-		dev->data.key.ucs = (AG_Char)ev->key.keysym.sym;
-#endif
+		dev->data.key.ucs = AG_SDL_KeySymToUcs4(ev->key.keysym.sym);
 		break;
 	case SDL_KEYUP:
+		Debug(drv, "%s: KEYUP (" AGSI_RED "0x%x" AGSI_RST ")\n",
+		    OBJECT(drv->kbd)->name,
+		    (Uint)ev->key.keysym.sym);
+
 		AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED,
 		    (AG_KeySym)ev->key.keysym.sym);
 
 		dev->type = AG_DRIVER_KEY_UP;
 		dev->win = NULL;
 		dev->data.key.ks = (AG_KeySym)ev->key.keysym.sym;
-#if 0
-		/* XXX SDL2 */
-		dev->data.key.ucs = (AG_Char)ev->key.keysym.unicode;
-#else
-		dev->data.key.ucs = (AG_Char)ev->key.keysym.sym;
-#endif
+		dev->data.key.ucs = AG_SDL_KeySymToUcs4(ev->key.keysym.sym);
 		break;
 #if 0
 	/* SDL2 */

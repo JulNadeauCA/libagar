@@ -280,6 +280,13 @@ AG_KeyboardUpdate(AG_Keyboard *kbd, AG_KeyboardAction action, AG_KeySym ks)
 {
 	Uint ms = kbd->modState;
 
+	if (ks >= kbd->keyCount) {		/* Ignore bad keysym */
+#ifdef AG_DEBUG
+		Debug(kbd, "Bad keysym 0x%x\n", ks);
+#endif
+		return (0);
+	}
+
 	/* Update the keyboard state. */
 	switch (action) {
 	case AG_KEY_PRESSED:

@@ -64,6 +64,8 @@ int  AG_SDL2_ProcessEvent(void *_Nullable, AG_DriverEvent *_Nonnull);
 int  AG_SDL2_EventSink(AG_EventSink *_Nonnull, AG_Event *_Nonnull);
 int  AG_SDL2_EventEpilogue(AG_EventSink *_Nonnull, AG_Event *_Nonnull);
 void AG_SDL2_EndEventProcessing(void *_Nonnull);
+
+Uint AG_SDL_KeySymToUcs4(Uint32);
 __END_DECLS
 
 #include <agar/gui/close.h>

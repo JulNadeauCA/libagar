@@ -15565,7 +15565,7 @@ SRCS_GUI="${SRCS_GUI} drv_sdlgl.c"
 fi
 if [ "${HAVE_SDL2}" = 'yes' ]
  then
-SRCS_GUI="${SRCS_GUI} drv_sdl2_common.c drv_sdl2fb.c"
+SRCS_GUI="${SRCS_GUI} drv_sdl2_common.c drv_sdl_keysyms.c drv_sdl2fb.c"
 	if [ "${HAVE_OPENGL}" = 'yes' ]
  then
 SRCS_GUI="${SRCS_GUI} drv_sdl2gl.c"

@@ -1013,7 +1013,7 @@ if [ "${HAVE_SDL}" = 'yes' ]; then
 	fi
 fi
 if [ "${HAVE_SDL2}" = 'yes' ]; then
-	mappend(SRCS_GUI, "drv_sdl2_common.c drv_sdl2fb.c")
+	mappend(SRCS_GUI, "drv_sdl2_common.c drv_sdl_keysyms.c drv_sdl2fb.c")
 	if [ "${HAVE_OPENGL}" = 'yes' ]; then
 		mappend(SRCS_GUI, "drv_sdl2gl.c")
 	fi

@@ -37,16 +37,17 @@
 .Ed
 .Sh DESCRIPTION
 .\" IMAGE(http://libagar.org/widgets/AG_DriverSDLFB.png, "The sdlfb driver")
-If Agar has been compiled with SDL 1.x support (--with-sdl), the "sdlfb"
+If Agar has been compiled with SDL1 support (--with-sdl), the "sdlfb"
 and "sdlgl" driver modules become available, and the GUI system can be
 attached to an existing SDL display context.
-If Agar has been compiled with SDL 2.x support (--with-sdl2), the "sdl2fb"
+If Agar has been compiled with SDL2 support (--with-sdl2), the "sdl2fb"
 and "sdl2gl" drivers become available.
 .Pp
-Note: If Agar is to create a new SDL display context, one should use a normal
+Note: When creating a new SDL display (as opposed to attaching to an existing
+one), you can call
 .Xr AG_InitGraphics 3
-call instead (using "<SDL>" or "<SDL2>" as argument if a SDL-capable
-driver module is required).
+with the "<SDL>" or "<SDL2>" argument instead of using
+.Fn AG_InitVideoSDL .
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "int"
@@ -67,12 +68,8 @@ The
 function initializes the GUI to attach to an existing SDL display surface.
 If the specified surface has the
 .Dv SDL_OPENGL
-flag, the GL-capable "sdlgl" driver module (see
-.Xr AG_DriverSDLGL 3 )
-is selected.
-Otherwise, the direct frame-buffer "sdlfb" driver (see
-.Xr AG_DriverSDLFB 3 )
-is used.
+flag then the GL-capable driver "sdlgl" (or "sdl2gl") is used.
+Otherwise, the direct frame-buffer driver "sdlfb" (or "sdl2fb") is used instead.
 The
 .Fn AG_InitVideoSDL
 function accepts the following
@@ -135,7 +132,7 @@ Note: The
 .Fn AG_InitVideoSDL
 and
 .Fn AG_SetVideoSurfaceSDL
-functions are only available if Agar has been compiled with SDL 1.x support
+functions are only available if Agar has been compiled with SDL1 support
 (to find out, include "<agar/config/have_sdl.h>" and test
 for
 .Dv HAVE_SDL ) .
@@ -151,11 +148,13 @@ Both of these functions are only applicable to single-window drivers.
 .Xr AG_Core 3 ,
 .Xr AG_DriverSDLFB 3 ,
 .Xr AG_DriverSDLGL 3 ,
+.Xr AG_DriverSDL2FB 3 ,
+.Xr AG_DriverSDL2GL 3 ,
 .Xr AG_InitGraphics 3 ,
 .Xr AG_Intro 3
 .Pp
 .Lk https://libsdl.org/ Simple_DirectMedia_Layer
 .Sh HISTORY
-SDL 1.x support first appeared in Agar 1.0.
+SDL1 support first appeared in Agar 1.0.
 The "sdlfb" and "sdlgl" driver modules first appeared in Agar 1.4.0.
 The "sdl2fb" and "sdl2gl" driver modules appeared in Agar 1.7.0.
