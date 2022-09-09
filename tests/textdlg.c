@@ -5,9 +5,6 @@
 
 #include "agartest.h"
 
-char someString[256];
-double v = 10.0;
-
 static void
 TestCanned(AG_Event *event)
 {
