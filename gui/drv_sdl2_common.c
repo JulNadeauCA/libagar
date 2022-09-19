@@ -791,6 +791,27 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		dev->data.button.x = ev->button.x;
 		dev->data.button.y = ev->button.y;
 		break;
+	case SDL_MOUSEWHEEL:
+		dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
+		dev->win = NULL;
+
+		if (ev->wheel.y == 1) {
+			AG_MouseButtonUpdate(drv->mouse,
+			    AG_BUTTON_PRESSED,
+			    AG_MOUSE_WHEELUP);
+			dev->data.button.which = AG_MOUSE_WHEELUP;
+		} else {
+			AG_MouseButtonUpdate(drv->mouse,
+			    AG_BUTTON_PRESSED,
+			    AG_MOUSE_WHEELDOWN);
+			dev->data.button.which = AG_MOUSE_WHEELDOWN;
+		}
+
+		AG_MouseGetState(drv->mouse,
+		    &dev->data.button.x,
+		    &dev->data.button.y);
+
+		break;
 	case SDL_KEYDOWN:
 		Debug(drv, "%s: KEYDOWN (" AGSI_RED "0x%x" AGSI_RST ")\n",
 		    OBJECT(drv->kbd)->name,
