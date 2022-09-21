@@ -838,6 +838,24 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		dev->data.key.ks = (AG_KeySym)ev->key.keysym.sym;
 		dev->data.key.ucs = AG_SDL_KeySymToUcs4(ev->key.keysym.sym);
 		break;
+	case SDL_WINDOWEVENT:
+		Debug(drv, "WINDOWEVENT (" AGSI_RED "0x%x, 0x%x,0x%x" AGSI_RST ")\n",
+		    (Uint)ev->window.event,
+		    (Uint)ev->window.data1,
+		    (Uint)ev->window.data2);
+		
+		switch (ev->window.event) {
+		case SDL_WINDOWEVENT_RESIZED:
+			dev->type = AG_DRIVER_VIDEORESIZE;
+			dev->win = NULL;
+			dev->data.videoresize.x = 0;
+			dev->data.videoresize.y = 0;
+			dev->data.videoresize.w = (int)ev->window.data1;
+			dev->data.videoresize.h = (int)ev->window.data2;
+			break;
+		}
+
+		break;
 #if 0
 	/* SDL2 */
 	case SDL_VIDEORESIZE:
