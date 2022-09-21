@@ -28,8 +28,10 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**wgl**](https://libagar.org/man2/AG_DriverWGL): Clipboard integration. Live resize.
 - Fix [**Style Editor**](https://libagar.org/man3/AG_StyleEditor) and [**GUI Debugger**](https://libagar.org/man3/AG_GuiDebugger) crashes which would occur when attempting to iterate over widgets (in keyrepeat mode).
 
-## [1.6.1] - 2021-
+## [1.7.0] - 2021-
 ### Added
+- [**sdl2fb**](https://libagar.org/man2/AG_DriverSDL2FB): New driver for SDL 2.0 (single-window; frame-buffer mode).
+- [**sdl2gl**](https://libagar.org/man2/AG_DriverSDL2GL): New driver for SDL 2.0 (single-window; OpenGL mode).
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
 - [**AG_Event**](https://libagar.org/man3/AG_Event): New macro [AG_EVENT_DUMP](https://libagar.org/man3/AG_EVENT_DUMP) to produce a listing of `argv[]` arguments on the console.
 - `install-agartest.exe` installer for agartest on Windows.

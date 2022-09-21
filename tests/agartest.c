@@ -971,7 +971,7 @@ main(int argc, char *argv[])
 #endif
 
 		AG_ConsoleMsgS(console, "");
-		ln = AG_ConsoleMsgS(console, "https://libAgar.org/ | https://PowerfulAgar.com/");
+		ln = AG_ConsoleMsgS(console, "https://libAgar.org/ | https://patreon.com/libagar");
 		AG_ColorRGB(&ln->c, 200,240,240);
 		AG_ConsoleMsgS(console, "");
 

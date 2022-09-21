@@ -1,7 +1,7 @@
 
 Agar GUI Library
 ----------------
-Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
+Copyright (c) 2001-2022 Julien Nadeau Carriere <vedge@csoft.net>
 Copyright (c) 2019-2020 Charles A. Daniels <cdaniels.net>
 Copyright (c) 1997-2017 Sam Lantinga <slouken@libsdl.org>
 Copyright (c) 2010 Michael J. Wood
