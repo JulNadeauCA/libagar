@@ -756,6 +756,175 @@ AG_SDL2_PendingEvents(void *obj)
 	return (SDL_PollEvent(NULL) != 0);
 }
 
+/* Convert an SDL2 SDL_Scancode to an AG_KeySym */
+static __inline__ const AG_KeySym
+AG_SDL2_KeySymFromScancode(const SDL_Scancode scancode)
+{
+	switch (scancode) {
+	case SDL_SCANCODE_CAPSLOCK:		return AG_KEY_CAPSLOCK;
+	case SDL_SCANCODE_F1:			return AG_KEY_F1;
+	case SDL_SCANCODE_F2:			return AG_KEY_F2;
+	case SDL_SCANCODE_F3:			return AG_KEY_F3;
+	case SDL_SCANCODE_F4:			return AG_KEY_F4;
+	case SDL_SCANCODE_F5:			return AG_KEY_F5;
+	case SDL_SCANCODE_F6:			return AG_KEY_F6;
+	case SDL_SCANCODE_F7:			return AG_KEY_F7;
+	case SDL_SCANCODE_F8:			return AG_KEY_F8;
+	case SDL_SCANCODE_F9:			return AG_KEY_F9;
+	case SDL_SCANCODE_F10:			return AG_KEY_F10;
+	case SDL_SCANCODE_F11:			return AG_KEY_F11;
+	case SDL_SCANCODE_F12:			return AG_KEY_F12;
+	case SDL_SCANCODE_PRINTSCREEN:		return AG_KEY_PRINT_SCREEN;
+	case SDL_SCANCODE_SCROLLLOCK:		return AG_KEY_SCROLLOCK;
+	case SDL_SCANCODE_PAUSE:		return AG_KEY_PAUSE;
+	case SDL_SCANCODE_INSERT:		return AG_KEY_INSERT;
+	case SDL_SCANCODE_HOME:			return AG_KEY_HOME;
+	case SDL_SCANCODE_PAGEUP:		return AG_KEY_PAGEUP;
+	case SDL_SCANCODE_DELETE:		return AG_KEY_DELETE;
+	case SDL_SCANCODE_END:			return AG_KEY_END;
+	case SDL_SCANCODE_PAGEDOWN:		return AG_KEY_PAGEDOWN;
+	case SDL_SCANCODE_RIGHT:		return AG_KEY_RIGHT;
+	case SDL_SCANCODE_LEFT:			return AG_KEY_LEFT;
+	case SDL_SCANCODE_DOWN:			return AG_KEY_DOWN;
+	case SDL_SCANCODE_UP:			return AG_KEY_UP;
+	case SDL_SCANCODE_NUMLOCKCLEAR:		return AG_KEY_NUMLOCK;
+	case SDL_SCANCODE_KP_DIVIDE:		return AG_KEY_KP_DIVIDE;
+	case SDL_SCANCODE_KP_MULTIPLY:		return AG_KEY_KP_MULTIPLY;
+	case SDL_SCANCODE_KP_MINUS:		return AG_KEY_KP_MINUS;
+	case SDL_SCANCODE_KP_PLUS:		return AG_KEY_KP_PLUS;
+	case SDL_SCANCODE_KP_ENTER:		return AG_KEY_KP_ENTER;
+	case SDL_SCANCODE_KP_1:			return AG_KEY_KP1;
+	case SDL_SCANCODE_KP_2:			return AG_KEY_KP2;
+	case SDL_SCANCODE_KP_3:			return AG_KEY_KP3;
+	case SDL_SCANCODE_KP_4:			return AG_KEY_KP4;
+	case SDL_SCANCODE_KP_5:			return AG_KEY_KP5;
+	case SDL_SCANCODE_KP_6:			return AG_KEY_KP6;
+	case SDL_SCANCODE_KP_7:			return AG_KEY_KP7;
+	case SDL_SCANCODE_KP_8:			return AG_KEY_KP8;
+	case SDL_SCANCODE_KP_9:			return AG_KEY_KP9;
+	case SDL_SCANCODE_KP_0:			return AG_KEY_KP0;
+	case SDL_SCANCODE_KP_PERIOD:		return AG_KEY_KP_PERIOD;
+	case SDL_SCANCODE_NONUSBACKSLASH:	return AG_KEY_NON_US_BACKSLASH;
+	case SDL_SCANCODE_APPLICATION:		return AG_KEY_APPLICATION;
+	case SDL_SCANCODE_POWER:		return AG_KEY_POWER;
+	case SDL_SCANCODE_KP_EQUALS:		return AG_KEY_KP_EQUALS;
+	case SDL_SCANCODE_F13:			return AG_KEY_F13;
+	case SDL_SCANCODE_F14:			return AG_KEY_F14;
+	case SDL_SCANCODE_F15:			return AG_KEY_F15;
+	case SDL_SCANCODE_F16:			return AG_KEY_F16;
+	case SDL_SCANCODE_F17:			return AG_KEY_F17;
+	case SDL_SCANCODE_F18:			return AG_KEY_F18;
+	case SDL_SCANCODE_F19:			return AG_KEY_F19;
+	case SDL_SCANCODE_F20:			return AG_KEY_F20;
+	case SDL_SCANCODE_F21:			return AG_KEY_F21;
+	case SDL_SCANCODE_F22:			return AG_KEY_F22;
+	case SDL_SCANCODE_F23:			return AG_KEY_F23;
+	case SDL_SCANCODE_F24:			return AG_KEY_F24;
+	case SDL_SCANCODE_EXECUTE:		return AG_KEY_EXECUTE;
+	case SDL_SCANCODE_HELP:			return AG_KEY_HELP;
+	case SDL_SCANCODE_MENU:			return AG_KEY_MENU;
+	case SDL_SCANCODE_SELECT:		return AG_KEY_SELECT;
+	case SDL_SCANCODE_STOP:			return AG_KEY_STOP;
+	case SDL_SCANCODE_AGAIN:		return AG_KEY_AGAIN;
+	case SDL_SCANCODE_UNDO:			return AG_KEY_UNDO;
+	case SDL_SCANCODE_CUT:			return AG_KEY_CUT;
+	case SDL_SCANCODE_PASTE:		return AG_KEY_PASTE;
+	case SDL_SCANCODE_FIND:			return AG_KEY_FIND;
+	case SDL_SCANCODE_MUTE:			return AG_KEY_VOLUME_MUTE;
+	case SDL_SCANCODE_VOLUMEUP:		return AG_KEY_VOLUME_UP;
+	case SDL_SCANCODE_VOLUMEDOWN:		return AG_KEY_VOLUME_DOWN;
+	case SDL_SCANCODE_KP_COMMA:		return AG_KEY_KP_COMMA;
+	case SDL_SCANCODE_KP_EQUALSAS400:	return AG_KEY_KP_EQUALS_AS_400;
+	case SDL_SCANCODE_INTERNATIONAL1:	return AG_KEY_INTERNATIONAL_1;
+	case SDL_SCANCODE_INTERNATIONAL2:	return AG_KEY_INTERNATIONAL_2;
+	case SDL_SCANCODE_INTERNATIONAL3:	return AG_KEY_INTERNATIONAL_3;
+	case SDL_SCANCODE_INTERNATIONAL4:	return AG_KEY_INTERNATIONAL_4;
+	case SDL_SCANCODE_INTERNATIONAL5:	return AG_KEY_INTERNATIONAL_5;
+	case SDL_SCANCODE_INTERNATIONAL6:	return AG_KEY_INTERNATIONAL_6;
+	case SDL_SCANCODE_INTERNATIONAL7:	return AG_KEY_INTERNATIONAL_7;
+	case SDL_SCANCODE_INTERNATIONAL8:	return AG_KEY_INTERNATIONAL_8;
+	case SDL_SCANCODE_INTERNATIONAL9:	return AG_KEY_INTERNATIONAL_9;
+	case SDL_SCANCODE_LANG1:		return AG_KEY_LANGUAGE_1;
+	case SDL_SCANCODE_LANG2:		return AG_KEY_LANGUAGE_2;
+	case SDL_SCANCODE_LANG3:		return AG_KEY_LANGUAGE_3;
+	case SDL_SCANCODE_LANG4:		return AG_KEY_LANGUAGE_4;
+	case SDL_SCANCODE_LANG5:		return AG_KEY_LANGUAGE_5;
+	case SDL_SCANCODE_LANG6:		return AG_KEY_LANGUAGE_6;
+	case SDL_SCANCODE_LANG7:		return AG_KEY_LANGUAGE_7;
+	case SDL_SCANCODE_LANG8:		return AG_KEY_LANGUAGE_8;
+	case SDL_SCANCODE_LANG9:		return AG_KEY_LANGUAGE_9;
+	case SDL_SCANCODE_ALTERASE:		return AG_KEY_ALT_ERASE;
+	case SDL_SCANCODE_SYSREQ:		return AG_KEY_SYSREQ;
+	case SDL_SCANCODE_CANCEL:		return AG_KEY_CANCEL;
+	case SDL_SCANCODE_CLEAR:		return AG_KEY_CLEAR;
+	case SDL_SCANCODE_PRIOR:		return AG_KEY_PRIOR;
+	case SDL_SCANCODE_RETURN2:		return AG_KEY_RETURN2;
+	case SDL_SCANCODE_SEPARATOR:		return AG_KEY_SEPARATOR;
+	case SDL_SCANCODE_OUT:			return AG_KEY_OUT;
+	case SDL_SCANCODE_OPER:			return AG_KEY_OPER;
+	case SDL_SCANCODE_CLEARAGAIN:		return AG_KEY_CLEAR_AGAIN;
+	case SDL_SCANCODE_CRSEL:		return AG_KEY_CRSEL;
+	case SDL_SCANCODE_EXSEL:		return AG_KEY_EXSEL;
+	case SDL_SCANCODE_KP_00:		return AG_KEY_KP_00;
+	case SDL_SCANCODE_KP_000:		return AG_KEY_KP_000;
+	case SDL_SCANCODE_THOUSANDSSEPARATOR:	return AG_KEY_THOUSANDS_SEPARATOR;
+	case SDL_SCANCODE_DECIMALSEPARATOR:	return AG_KEY_DECIMALS_SEPARATOR;
+	case SDL_SCANCODE_CURRENCYUNIT:		return AG_KEY_CURRENCY_UNIT;
+	case SDL_SCANCODE_CURRENCYSUBUNIT:	return AG_KEY_CURRENCY_SUBUNIT;
+	case SDL_SCANCODE_KP_LEFTPAREN:		return AG_KEY_KP_LEFT_PAREN;
+	case SDL_SCANCODE_KP_RIGHTPAREN:	return AG_KEY_KP_RIGHT_PAREN;
+	case SDL_SCANCODE_KP_LEFTBRACE:		return AG_KEY_KP_LEFT_BRACE;
+	case SDL_SCANCODE_KP_RIGHTBRACE:	return AG_KEY_KP_RIGHT_BRACE;
+	case SDL_SCANCODE_KP_TAB:		return AG_KEY_KP_TAB;
+	case SDL_SCANCODE_KP_BACKSPACE:		return AG_KEY_KP_BACKSPACE;
+	case SDL_SCANCODE_KP_A:			return AG_KEY_KP_A;
+	case SDL_SCANCODE_KP_B:			return AG_KEY_KP_B;
+	case SDL_SCANCODE_KP_C:			return AG_KEY_KP_C;
+	case SDL_SCANCODE_KP_D:			return AG_KEY_KP_D;
+	case SDL_SCANCODE_KP_E:			return AG_KEY_KP_E;
+	case SDL_SCANCODE_KP_F:			return AG_KEY_KP_F;
+	case SDL_SCANCODE_KP_XOR:		return AG_KEY_KP_XOR;
+	case SDL_SCANCODE_KP_POWER:		return AG_KEY_KP_POWER;
+	case SDL_SCANCODE_KP_PERCENT:		return AG_KEY_KP_PERCENT;
+	case SDL_SCANCODE_KP_LESS:		return AG_KEY_KP_LESS;
+	case SDL_SCANCODE_KP_GREATER:		return AG_KEY_KP_GREATER;
+	case SDL_SCANCODE_KP_AMPERSAND:		return AG_KEY_KP_AMPERSAND;
+	case SDL_SCANCODE_KP_DBLAMPERSAND:	return AG_KEY_KP_DBL_AMPERSAND;
+	case SDL_SCANCODE_KP_VERTICALBAR:	return AG_KEY_KP_VERTICAL_BAR;
+	case SDL_SCANCODE_KP_DBLVERTICALBAR:	return AG_KEY_KP_DBL_VERTICAL_BAR;
+	case SDL_SCANCODE_KP_COLON:		return AG_KEY_KP_COLON;
+	case SDL_SCANCODE_KP_HASH:		return AG_KEY_KP_HASH;
+	case SDL_SCANCODE_KP_SPACE:		return AG_KEY_KP_SPACE;
+	case SDL_SCANCODE_KP_AT:		return AG_KEY_KP_AT;
+	case SDL_SCANCODE_KP_EXCLAM:		return AG_KEY_KP_EXCLAM;
+	case SDL_SCANCODE_KP_MEMSTORE:		return AG_KEY_KP_MEM_STORE;
+	case SDL_SCANCODE_KP_MEMRECALL:		return AG_KEY_KP_MEM_RECALL;
+	case SDL_SCANCODE_KP_MEMCLEAR:		return AG_KEY_KP_MEM_CLEAR;
+	case SDL_SCANCODE_KP_MEMADD:		return AG_KEY_KP_MEM_ADD;
+	case SDL_SCANCODE_KP_MEMSUBTRACT:	return AG_KEY_KP_MEM_SUBTRACT;
+	case SDL_SCANCODE_KP_MEMMULTIPLY:	return AG_KEY_KP_MEM_MULTIPLY;
+	case SDL_SCANCODE_KP_MEMDIVIDE:		return AG_KEY_KP_MEM_DIVIDE;
+	case SDL_SCANCODE_KP_PLUSMINUS:		return AG_KEY_KP_PLUS_MINUS;
+	case SDL_SCANCODE_KP_CLEAR:		return AG_KEY_KP_CLEAR;
+	case SDL_SCANCODE_KP_CLEARENTRY:	return AG_KEY_KP_CLEAR_ENTRY;
+	case SDL_SCANCODE_KP_BINARY:		return AG_KEY_KP_BINARY;
+	case SDL_SCANCODE_KP_OCTAL:		return AG_KEY_KP_OCTAL;
+	case SDL_SCANCODE_KP_DECIMAL:		return AG_KEY_KP_DECIMAL;
+	case SDL_SCANCODE_KP_HEXADECIMAL:	return AG_KEY_KP_HEXADECIMAL;
+
+	case SDL_SCANCODE_LCTRL:		return AG_KEY_LCTRL;
+	case SDL_SCANCODE_LSHIFT:		return AG_KEY_LSHIFT;
+	case SDL_SCANCODE_LALT:			return AG_KEY_LALT;
+	case SDL_SCANCODE_LGUI:			return AG_KEY_LGUI;
+	case SDL_SCANCODE_RCTRL:		return AG_KEY_RCTRL;
+	case SDL_SCANCODE_RSHIFT:		return AG_KEY_RSHIFT;
+	case SDL_SCANCODE_RALT:			return AG_KEY_RALT;
+	case SDL_SCANCODE_RGUI:			return AG_KEY_RGUI;
+	case SDL_SCANCODE_MODE:			return AG_KEY_MODE;
+	}
+	return (AG_KEY_LAST);
+}
+
 /* Translate an SDL_Event to an AG_DriverEvent. */
 void
 AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
@@ -813,33 +982,47 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 
 		break;
 	case SDL_KEYDOWN:
-		Debug(drv, "%s: KEYDOWN (" AGSI_RED "0x%x" AGSI_RST ")\n",
+		Debug(drv, "%s: KEYDOWN "
+		    "(Sym=" AGSI_YEL "0x%x" AGSI_RST
+		    " Scan=" AGSI_YEL "0x%x" AGSI_RST ")\n",
 		    OBJECT(drv->kbd)->name,
-		    (Uint)ev->key.keysym.sym);
+		    (Uint)ev->key.keysym.sym,
+		    (Uint)ev->key.keysym.scancode);
 
-		AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED,
-		    (AG_KeySym)ev->key.keysym.sym);
-	
+		if ((ev->key.keysym.sym & SDLK_SCANCODE_MASK) != 0) {
+			dev->data.key.ks = AG_SDL2_KeySymFromScancode(
+			    ev->key.keysym.scancode);
+		} else {
+			dev->data.key.ks = (AG_KeySym)ev->key.keysym.sym;
+		}
+		AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED, dev->data.key.ks);
+
 		dev->type = AG_DRIVER_KEY_DOWN;
 		dev->win = NULL;
-		dev->data.key.ks = (AG_KeySym)ev->key.keysym.sym;
 		dev->data.key.ucs = AG_SDL_KeySymToUcs4(ev->key.keysym.sym);
 		break;
 	case SDL_KEYUP:
-		Debug(drv, "%s: KEYUP (" AGSI_RED "0x%x" AGSI_RST ")\n",
+		Debug(drv, "%s: KEYUP "
+		    "(Sym=" AGSI_YEL "0x%x" AGSI_RST
+		    " Scan=" AGSI_YEL "0x%x" AGSI_RST ")\n",
 		    OBJECT(drv->kbd)->name,
-		    (Uint)ev->key.keysym.sym);
+		    (Uint)ev->key.keysym.sym,
+		    (Uint)ev->key.keysym.scancode);
 
-		AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED,
-		    (AG_KeySym)ev->key.keysym.sym);
+		if ((ev->key.keysym.sym & SDLK_SCANCODE_MASK) != 0) {
+			dev->data.key.ks = AG_SDL2_KeySymFromScancode(
+			    ev->key.keysym.scancode);
+		} else {
+			dev->data.key.ks = (AG_KeySym)ev->key.keysym.sym;
+		}
+		AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED, dev->data.key.ks);
 
 		dev->type = AG_DRIVER_KEY_UP;
 		dev->win = NULL;
-		dev->data.key.ks = (AG_KeySym)ev->key.keysym.sym;
 		dev->data.key.ucs = AG_SDL_KeySymToUcs4(ev->key.keysym.sym);
 		break;
 	case SDL_WINDOWEVENT:
-		Debug(drv, "WINDOWEVENT (" AGSI_RED "0x%x, 0x%x,0x%x" AGSI_RST ")\n",
+		Debug(drv, "WINDOWEVENT (" AGSI_YEL "0x%x, 0x%x,0x%x" AGSI_RST ")\n",
 		    (Uint)ev->window.event,
 		    (Uint)ev->window.data1,
 		    (Uint)ev->window.data2);
