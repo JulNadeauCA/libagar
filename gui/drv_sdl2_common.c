@@ -1022,13 +1022,30 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		dev->data.key.ucs = AG_SDL_KeySymToUcs4(ev->key.keysym.sym);
 		break;
 	case SDL_WINDOWEVENT:
-		Debug(drv, "WINDOWEVENT (" AGSI_YEL "0x%x, 0x%x,0x%x" AGSI_RST ")\n",
-		    (Uint)ev->window.event,
-		    (Uint)ev->window.data1,
-		    (Uint)ev->window.data2);
-		
 		switch (ev->window.event) {
+		case SDL_WINDOWEVENT_ENTER:
+			Debug(drv, "WINDOW ENTER\n");
+			dev->type = AG_DRIVER_MOUSE_ENTER;
+			dev->win = NULL;
+			break;
+		case SDL_WINDOWEVENT_LEAVE:
+			Debug(drv, "WINDOW LEAVE\n");
+			dev->type = AG_DRIVER_MOUSE_LEAVE;
+			dev->win = NULL;
+			break;
+		case SDL_WINDOWEVENT_MOVED:
+			Debug(drv, "WINDOW MOVED (" AGSI_YEL "%d, %d" AGSI_RST ")\n",
+			    (int)ev->window.data1,
+			    (int)ev->window.data2);
+			dev->type = AG_DRIVER_MOVED;
+			dev->win = NULL;
+			dev->data.moved.x = (int)ev->window.data1;
+			dev->data.moved.y = (int)ev->window.data2;
+			break;
 		case SDL_WINDOWEVENT_RESIZED:
+			Debug(drv, "WINDOW RESIZED (" AGSI_YEL "%d x %d" AGSI_RST ")\n",
+			    (int)ev->window.data1,
+			    (int)ev->window.data2);
 			dev->type = AG_DRIVER_VIDEORESIZE;
 			dev->win = NULL;
 			dev->data.videoresize.x = 0;
@@ -1036,24 +1053,35 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 			dev->data.videoresize.w = (int)ev->window.data1;
 			dev->data.videoresize.h = (int)ev->window.data2;
 			break;
+		case SDL_WINDOWEVENT_MINIMIZED:
+			Debug(drv, "WINDOW MINIMIZED\n");
+			dev->type = AG_DRIVER_MINIMIZED;
+			dev->win = NULL;
+			break;
+		case SDL_WINDOWEVENT_MAXIMIZED:
+			Debug(drv, "WINDOW MAXIMIZED\n");
+			dev->type = AG_DRIVER_MAXIMIZED;
+			dev->win = NULL;
+			break;
+		case SDL_WINDOWEVENT_RESTORED:
+			Debug(drv, "WINDOW RESTORED\n");
+			dev->type = AG_DRIVER_RESTORED;
+			dev->win = NULL;
+			break;
+		case SDL_WINDOWEVENT_EXPOSED:
+			Debug(drv, "WINDOW EXPOSED\n");
+			dev->type = AG_DRIVER_EXPOSE;
+			dev->win = NULL;
+			break;
+		default:
+			Debug(drv, "WINDOW EVENT (" AGSI_YEL "0x%x, 0x%x,0x%x" AGSI_RST ")\n",
+			    (Uint)ev->window.event,
+			    (Uint)ev->window.data1,
+			    (Uint)ev->window.data2);
+			break;
 		}
 
 		break;
-#if 0
-	/* SDL2 */
-	case SDL_VIDEORESIZE:
-		dev->type = AG_DRIVER_VIDEORESIZE;
-		dev->win = NULL;
-		dev->data.videoresize.x = 0;
-		dev->data.videoresize.y = 0;
-		dev->data.videoresize.w = (int)ev->resize.w;
-		dev->data.videoresize.h = (int)ev->resize.h;
-		break;
-	case SDL_VIDEOEXPOSE:
-		dev->type = AG_DRIVER_EXPOSE;
-		dev->win = NULL;
-		break;
-#endif
 	case SDL_QUIT:
 	case SDL_USEREVENT:
 		dev->type = AG_DRIVER_CLOSE;
@@ -1259,6 +1287,9 @@ AG_SDL2_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		rv = ProcessInputEvent(drv, dev);
 		break;
 	case AG_DRIVER_EXPOSE:
+		if (!(dsw->flags & AG_DRIVER_SW_OVERLAY)) {
+			AG_ClearBackground();
+		}
 		break;
 	case AG_DRIVER_VIDEORESIZE:
 		if (AG_ResizeDisplay(dev->data.videoresize.w,

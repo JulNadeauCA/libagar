@@ -222,8 +222,13 @@ enum ag_driver_event_type {
 	AG_DRIVER_KEY_UP,		/* Key released */
 	AG_DRIVER_EXPOSE,		/* Video update needed */
 	AG_DRIVER_VIDEORESIZE,		/* Video resize request */
-	AG_DRIVER_CLOSE			/* Window close request */
+	AG_DRIVER_CLOSE,		/* Window close request */
+	AG_DRIVER_MOVED,		/* Window has been moved */
+	AG_DRIVER_MINIMIZED,		/* Window has been minimized */
+	AG_DRIVER_MAXIMIZED,		/* Window has been maximized */
+	AG_DRIVER_RESTORED,		/* Window has been restored to normal size */
 };
+
 typedef struct ag_driver_event {
 	enum ag_driver_event_type type;	 /* Type of event */
 	Uint32 _pad;
@@ -242,8 +247,11 @@ typedef struct ag_driver_event {
 			Uint32 ucs;		/* Corresponding Unicode */
 		} key;
 		struct {
-			int x,y, w,h;		/* Display offset, resolution */
+			int x,y, w,h;		/* Window coordinates and size */
 		} videoresize;
+		struct {
+			int x,y;		/* Window coordinates */
+		} moved;
 	} data;
 } AG_DriverEvent;
 

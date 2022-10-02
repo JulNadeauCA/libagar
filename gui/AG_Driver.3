@@ -321,8 +321,12 @@ field include:
 .Bl -tag -compact -width "AG_DRIVER_TEXTURES "
 .It AG_DRIVER_OPENGL
 OpenGL calls are supported.
-.It AG_DRIVER_SDL
+.It AG_DRIVER_SDL1
 SDL 1.x calls are supported.
+.It AG_DRIVER_SDL2
+SDL 2.x calls are supported.
+.It AG_DRIVER_SDL
+SDL (1.x or 2.x) calls are supported.
 .It AG_DRIVER_TEXTURES
 Texture management operations are supported.
 .El
@@ -673,7 +677,7 @@ The optional
 .Fn setClipboardText
 operation sets the clipboard contents to a copy of the given UTF-8 string
 and returns 0 on success or -1 on failure.
-.Sh EVENT PROCESSING
+.Sh EVENTS
 .nr nS 1
 .Ft int
 .Fn AG_PendingEvents "AG_Driver *d"
@@ -712,44 +716,50 @@ field is an enum that can take on the values:
 .Pp
 .Bl -tag -compact -width "AG_DRIVER_MOUSE_BUTTON_DOWN "
 .It AG_DRIVER_MOUSE_MOTION
-Mouse cursor has moved to coordinates
+Cursor has moved to
 .Va data.motion.{x,y} .
 .It AG_DRIVER_MOUSE_BUTTON_DOWN
-.It AG_DRIVER_MOUSE_BUTTON_UP
-Mouse button has been pressed or released at coordinates
+Mouse button
+.Va data.button.which
+has been pressed at coordinates
 .Va data.button.{x,y} .
-The button index is passed as
-.Va data.button.which .
+.It AG_DRIVER_MOUSE_BUTTON_UP
+Mouse button has been released.
 .It AG_DRIVER_MOUSE_ENTER
+Cursor has entered the window area.
 .It AG_DRIVER_MOUSE_LEAVE
-The mouse cursor has entered or left the window area.
-These events are specific to multiple-window drivers.
+Cursor has left the window area.
 .It AG_DRIVER_FOCUS_IN
+Application focus has been gained.
 .It AG_DRIVER_FOCUS_OUT
-Application focus has been gained or lost.
-These events are specific to multiple-window drivers.
+Application focus has been lost.
 .It AG_DRIVER_KEY_DOWN
+A key with keysym
+.Va data.key.ks
+has been pressed.
+See:
+.Xr AG_KeySym 3 .
+.Va data.key.ucs
+is the matching Unicode character (if any).
 .It AG_DRIVER_KEY_UP
-A key has been pressed or released.
-The keysym (see
-.Xr AG_KeySym 3 )
-is passed as
-.Va data.key.ks .
-A 32-bit Unicode (UCS-4) representation of the corresponding character, if
-any, is passed as
-.Va data.key.ucs .
+A key has been released.
 .It AG_DRIVER_EXPOSE
-The underlying graphics system is requesting a refresh of the video display.
+The WM requests the window to be redrawn.
+.It AG_DRIVER_MOVED
+The window has moved to desktop coordinates
+.Va data.moved.x
+and
+.Va data.moved.y .
 .It AG_DRIVER_VIDEORESIZE
-The application window has been resized to
-.Va data.videoresize.{w,h} .
-Some drivers may also raise this event when the window is moved.
+The user has resized the window to
+.Va data.videoresize.w
+x
+.Va data.videoresize.h .
 .It AG_DRIVER_CLOSE
-The user has requested that a window be closed.
-For multiple-window drivers, the default behavior is to post a
+The user is closing the window.
+The default action is to post a
 .Sq window-close
 event to the corresponding Agar window.
-For single-window drivers, the application is usually terminated as a result.
 .El
 .Pp
 The

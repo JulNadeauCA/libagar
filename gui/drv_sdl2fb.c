@@ -1735,12 +1735,19 @@ SDL2FB_VideoClear(void *_Nonnull obj, const AG_Color *c)
 {
 	AG_DriverSDL2FB *sfb = obj;
 	SDL_Surface *Swin = SDL_GetWindowSurface(sfb->window);
+	AG_Rect rd;
 
 	SDL_FillRect(Swin, NULL,
 	    SDL_MapRGB(Swin->format,
 	        AG_Hto8(c->r),
 		AG_Hto8(c->g),
 		AG_Hto8(c->b)));
+
+	rd.x = 0;
+	rd.y = 0;
+	rd.w = Swin->w;
+	rd.h = Swin->h;
+	SDL2FB_UpdateRegion(sfb, &rd);
 }
 
 static int
