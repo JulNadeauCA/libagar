@@ -1598,20 +1598,6 @@ SDL2FB_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 		Debug(sfb, "SDL Display %d: %s\n", i, SDL_GetDisplayName(i));
 	}
 
-	if (w == 0 || h == 0) {
-		SDL_DisplayMode dm;
-
-		if (SDL_GetDesktopDisplayMode(0, &dm) == 0) {
-			w = dm.w;
-			h = dm.h;
-		} else {
-			Debug(sfb, "SDL_GetDesktopDisplayMode(0): %s\n",
-			    SDL_GetError());
-			w = 640;
-			h = 480;
-		}
-	}
-
 	if (flags & AG_VIDEO_FULLSCREEN) {
 		swFlags |= SDL_WINDOW_FULLSCREEN;
 		dsw->flags |= AG_DRIVER_SW_FULLSCREEN;

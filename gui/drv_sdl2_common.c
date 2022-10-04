@@ -655,6 +655,8 @@ AG_SDL2_GetDisplaySize(Uint *w, Uint *h)
 			    SDL_GetError());
 			return (-1);
 		}
+		*w = mode.w;
+		*h = mode.h;
 		return (0);
 	}
 	AG_SetErrorS("SDL: No video displays");
@@ -672,8 +674,8 @@ AG_SDL2_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 
 	if (*w == 0 || *h == 0) {
 		if (AG_SDL2_GetDisplaySize(&wDisp, &hDisp) == -1) {
-			wDisp = 320;
-			hDisp = 240;
+			wDisp = 640;
+			hDisp = 480;
 		}
 	}
 	if (*w == 0) {

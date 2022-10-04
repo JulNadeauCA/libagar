@@ -300,20 +300,6 @@ SDL2GL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 	SDL_Surface *Swin;
 	Uint32 swFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 
-	if (w == 0 || h == 0) {
-		SDL_DisplayMode dm;
-
-		if (SDL_GetDesktopDisplayMode(0, &dm) == 0) {
-			w = dm.w;
-			h = dm.h;
-		} else {
-			Debug(sgl, "SDL_GetDesktopDisplayMode(0): %s\n",
-			    SDL_GetError());
-			w = 640;
-			h = 480;
-		}
-	}
-
 	/* Set the requested display options. */
 	if (flags & AG_VIDEO_FULLSCREEN) {
 		swFlags |= SDL_WINDOW_FULLSCREEN;

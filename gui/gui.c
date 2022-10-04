@@ -576,9 +576,9 @@ AG_InitGraphics(const char *spec)
 		agDriverMw = AGDRIVER_MW(drv);
 		break;
 	case AG_WM_SINGLE:
-		if (AGDRIVER_SW_CLASS(drv)->openVideo(drv, 0,0,0,
+		if (AGDRIVER_SW_CLASS(drv)->openVideo(drv, 0,0, 0,
 		    AG_VIDEO_RESIZABLE) == -1) {
-			AG_SetError("%s: %s", OBJECT(drv)->name,
+			AG_SetError("%s: openVideo: %s", OBJECT(drv)->name,
 			    AG_GetError());
 			goto fail_close;
 		}
