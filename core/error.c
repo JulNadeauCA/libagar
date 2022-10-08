@@ -77,6 +77,11 @@ DestroyErrorMsg(void *_Nullable msg)
 {
 	Free(msg);
 }
+static void
+DestroyErrorCode(void *_Nullable code)
+{
+	Free(code);
+}
 #endif
 
 int
@@ -87,11 +92,11 @@ AG_InitErrorSubsystem(void)
 
 #ifdef AG_THREADS
 	if (AG_ThreadKeyTryCreate(&agErrorMsgKey, DestroyErrorMsg) == -1 ||
-	    AG_ThreadKeyTryCreate(&agErrorCodeKey, NULL) == -1) {
+	    AG_ThreadKeyTryCreate(&agErrorCodeKey, DestroyErrorCode) == -1) {
 		return (-1);
 	}
 	AG_ThreadKeySet(agErrorMsgKey, Strdup("No error"));
-	AG_ThreadKeySet(agErrorCodeKey, NULL);
+	AG_ThreadKeySet(agErrorCodeKey, Malloc(sizeof(AG_ErrorCode)));
 #endif
 
 #if defined(_WIN32) && defined(USE_WIN32_CONSOLE)
@@ -205,7 +210,12 @@ void
 AG_SetErrorCode(AG_ErrorCode code)
 {
 #ifdef AG_THREADS
-	AG_ThreadKeySet(agErrorCodeKey, (void *)code);
+	AG_ErrorCode *codeLast, *codeNew = Malloc(sizeof(AG_ErrorCode));
+
+	codeLast = (AG_ErrorCode *)AG_ThreadKeyGet(agErrorCodeKey);
+	Free(codeLast);
+	*codeNew = code;
+	AG_ThreadKeySet(agErrorCodeKey, (void *)codeNew);
 #else
 	agErrorCode = code;
 #endif
