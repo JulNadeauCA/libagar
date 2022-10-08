@@ -37,7 +37,7 @@
 #include <agar/gui/sdl2.h>
 
 typedef struct ag_sdl2fb_driver {
-	struct ag_driver_sw _inherit;
+	struct ag_driver_sw _inherit;	/* AG_Driver -> AG_DriverSw */
 
 	SDL_Window *_Nullable window;	/* SDL window */
 
@@ -126,7 +126,6 @@ SDL2FB_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_DestroyEventSubsystem();
 	AG_InitEventSubsystem(AG_SOFT_TIMERS);
 #endif
-	/* Initialize the main mouse and keyboard devices. */
 	if ((drv->mouse = AG_MouseNew(sfb, "SDL2 mouse")) == NULL ||
 	    (drv->kbd = AG_KeyboardNew(sfb, "SDL2 keyboard")) == NULL)
 		goto fail;
@@ -1759,7 +1758,7 @@ AG_DriverSwClass agDriverSDL2FB = {
 		"sdl2fb",
 		AG_FRAMEBUFFER,
 		AG_WM_SINGLE,
-		AG_DRIVER_SDL,
+		AG_DRIVER_SDL2,
 		SDL2FB_Open,
 		SDL2FB_Close,
 		AG_SDL2_GetDisplaySize,

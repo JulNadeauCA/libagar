@@ -44,7 +44,7 @@ enum ag_sdl2gl_out {
 };
 
 typedef struct ag_sdl2gl_driver {
-	struct ag_driver_sw _inherit;
+	struct ag_driver_sw _inherit;	/* AG_Driver -> AG_DriverSw */
 
 	SDL_Window *_Nullable window;	 /* SDL window */
 	AG_GL_Context gl;		 /* Common OpenGL context data */
@@ -109,7 +109,6 @@ SDL2GL_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_DestroyEventSubsystem();
 	AG_InitEventSubsystem(AG_SOFT_TIMERS);
 #endif
-	/* Initialize this driver instance. */
 	if ((drv->mouse = AG_MouseNew(sgl, "SDL2 mouse")) == NULL ||
 	    (drv->kbd = AG_KeyboardNew(sgl, "SDL2 keyboard")) == NULL) {
 		goto fail;
@@ -545,7 +544,7 @@ AG_DriverSwClass agDriverSDL2GL = {
 		"sdl2gl",
 		AG_VECTOR,
 		AG_WM_SINGLE,
-		AG_DRIVER_SDL | AG_DRIVER_OPENGL | AG_DRIVER_TEXTURES,
+		AG_DRIVER_OPENGL | AG_DRIVER_TEXTURES | AG_DRIVER_SDL2,
 		SDL2GL_Open,
 		SDL2GL_Close,
 		AG_SDL2_GetDisplaySize,
