@@ -100,14 +100,14 @@ AG_EventSink *_Nullable glxEventSpinner = NULL;  /* For agTimeOps_renderer */
 
 /* Driver instance data */
 typedef struct ag_driver_glx {
-	struct ag_driver_mw _inherit;
-	Window w;                    /* X window */
-	GLXContext glxCtx;           /* GLX context */
-	AG_GL_Context gl;            /* Common OpenGL context data */
-	AG_Mutex lock;               /* Protect Xlib calls */
-	int wmHintsSet;              /* WM hints have been set */
-	int ptrIsGrabbed;            /* Active grab successful */
-	AG_Timer toInitExpose;       /* Initial Expose */
+	struct ag_driver_mw _inherit;	/* AG_Driver -> AG_DriverMw */
+	Window w;			/* X window */
+	GLXContext glxCtx;		/* GLX context */
+	AG_GL_Context gl;		/* Common OpenGL context data */
+	AG_Mutex lock;			/* Protect Xlib calls */
+	int wmHintsSet;			/* WM hints have been set */
+	int ptrIsGrabbed;		/* Active grab successful */
+	AG_Timer toInitExpose;		/* Initial Expose */
 } AG_DriverGLX;
 
 static int modMasksInited = 0;		/* For modifier key translation */
@@ -533,7 +533,7 @@ UpdateKeyboardAll(void)
 	AG_UnlockVFS(&agDrivers);
 }
 
-static __inline__ int
+static int
 GLX_PendingEvents(void *_Nonnull drvCaller)
 {
 	struct timeval tv;
