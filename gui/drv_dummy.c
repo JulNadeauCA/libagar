@@ -47,7 +47,7 @@ static int nDrivers = 0;		/* Number of drivers open */
 
 /* Driver instance data */
 typedef struct ag_driver_dummy {
-	struct ag_driver_mw _inherit;	/* AG_DriverMW -> AG_DriverDUMMY */
+	struct ag_driver_mw _inherit;	/* AG_Driver -> AG_DriverMW */
 	Uint flags;			/* Some flags */
 	Uint32 _pad;
 	AG_Mutex lock;			/* Some locking device */
