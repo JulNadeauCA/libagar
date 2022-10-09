@@ -994,7 +994,7 @@ main(int argc, char *argv[])
 			AG_DriverClass *dc = *pd;
 
 			ln = AG_ConsoleMsg(console,
-			    _(" -d %5s  # %s/%s, see %s(3)"),
+			    _(" -d %7s  # %s/%s, see %s(3)"),
 			    dc->name,
 			    agDriverTypeNames[dc->type],
 			    agDriverWmTypeNames[dc->wm],
@@ -1076,7 +1076,7 @@ fail:
 		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 			AG_DriverClass *dc = *pd;
 
-			printf(_("    -d %5s          # %s, %s (see %s(3))\n"),
+			printf(_("    -d %7s          # %s, %s (see %s(3))\n"),
 			    dc->name,
 			    agDriverTypeNames[dc->type],
 			    agDriverWmTypeNames[dc->wm],

@@ -969,7 +969,7 @@ echo '#ifndef VERSION' >$bb_o
 echo "#define VERSION \"$VERSION\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
-RELEASE="Nullability Complete"
+RELEASE="Ancient Egypt"
 bb_o=$bb_incdir/release.h
 echo '#ifndef RELEASE' >$bb_o
 echo "#define RELEASE \"$RELEASE\"" >>$bb_o
@@ -1090,8 +1090,27 @@ else
 CROSSPFX=""
 fi
 HAVE_CC65="no"
+HAVE_EMCC="no"
 if [ "$CC" = "" ]; then
 case "${host}" in
+emscripten)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/emcc" ]; then
+CC="${i}/emcc"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+elif [ -x "${i}/emcc.exe" ]; then
+CC="${i}/emcc.exe"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
 apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -1162,33 +1181,32 @@ IFS=$bb_save_IFS
 ;;
 esac
 	if [ "$CC" = '' ]; then
-		if [ "$HAVE_CC65" = "yes" ]; then
-			echo "*"
-			echo "* Cannot find cc65 in PATH. You may need to set CC."
-			echo "* You can download cc65 from: https://www.cc65.org/."
-			echo "*"
-			echo "Cannot find cc65 in PATH." >>config.log
-		else
-			echo "*"
+		echo "*"
 echo "* Cannot find one of clang, clang70, clang60, cc, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
-			echo "* under the current PATH, which is:"
-			echo "* $PATH"
-			echo "*"
-			echo "* You may need to set the CC environment variable."
-			echo "*"
-			echo "Cannot find C compiler in PATH." >>config.log
-		fi
-		HAVE_CC="no"
+		echo "* under the current PATH, which is:"
+		echo "* $PATH"
+		echo "*"
+		echo "* You may need to set the CC environment variable."
+		echo "*"
+		echo "Cannot find C compiler in PATH." >>config.log
 		echo "no"
 		echo "no" >>config.log
+
+		HAVE_CC="no"
 	else
-		HAVE_CC="yes"
 		echo "yes, ${CC}"
 		echo "yes, ${CC}" >>config.log
+
+		HAVE_CC="yes"
 	fi
 else
 	HAVE_CC="yes"
-	if ${CC} -V 2>&1 |grep -q ^cc65; then
+	if emcc --version 2>&1 |grep -q ^emcc; then
+		echo "using emcc (${CC})"
+		echo "using emcc (${CC})" >>config.log
+		HAVE_EMCC="yes"
+		CROSS_COMPILING="yes"
+	elif cc65 -V 2>&1 |grep -q ^cc65; then
 		echo "using cc65 (${CC})"
 		echo "using cc65 (${CC})" >>config.log
 		HAVE_CC65="yes"
@@ -1205,7 +1223,7 @@ if [ "${HAVE_CC}" = "yes" ]; then
 	cat << 'EOT' > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 EOT
-	$CC -o conftest conftest.c 2>>config.log
+	$CC -o conftest conftest.c 1>/dev/null 2>>config.log
 	if [ $? != 0 ]; then
 	    echo "no"
 	    echo "no, compilation failed" >>config.log
@@ -1220,7 +1238,7 @@ EOT
 			for OUTFILE in conftest.exe conftest conftest.*; do
 				if [ -f $OUTFILE ]; then
 					case $OUTFILE in
-					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM | *.wasm | *.html | *.js )
 						;;
 					*.* )
 						EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
@@ -1237,6 +1255,16 @@ EOT
 				echo "yes"
 				echo "yes" >>config.log
 			fi
+bb_o=$bb_incdir/have_emcc.h
+echo '#ifndef HAVE_EMCC' >$bb_o
+echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
 bb_o=$bb_incdir/execsuffix.h
 echo '#ifndef EXECSUFFIX' >$bb_o
 echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >>$bb_o
@@ -1248,7 +1276,7 @@ echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 		fi
 	fi
 	if [ "${keep_conftest}" != "yes" ]; then
-		rm -f conftest.c conftest$EXECSUFFIX
+		rm -f conftest.c conftest conftest$EXECSUFFIX
 	fi
 	TEST_CFLAGS=''
 fi
@@ -1267,8 +1295,8 @@ echo '# C: HAVE_CC_CLANG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1292,6 +1320,40 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+$ECHO_N 'cc: checking whether compiler is cc65...'
+$ECHO_N '# cc: checking whether compiler is cc65...' >>config.log
+if [ "${HAVE_CC65}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+CC_COMPILE=""
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+CC_COMPILE="-c"
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+fi
+$ECHO_N 'cc: checking whether compiler is emcc...'
+$ECHO_N '# cc: checking whether compiler is emcc...' >>config.log
+if [ "${HAVE_EMCC}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+bb_o=$bb_incdir/have_emcc.h
+echo '#ifndef HAVE_EMCC' >$bb_o
+echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
+fi
 $ECHO_N 'cc: checking whether compiler is GCC...'
 $ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
 MK_COMPILE_STATUS=OK
@@ -1306,8 +1368,8 @@ echo '# C: HAVE_CC_GCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1342,8 +1404,8 @@ echo '# C: HAVE_CC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1390,8 +1452,8 @@ echo '# C: HAVE_FLOAT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1434,8 +1496,8 @@ echo '# C: HAVE_LONG_DOUBLE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1477,8 +1539,8 @@ echo '# C: HAVE_LONG_LONG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1516,8 +1578,8 @@ echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1555,8 +1617,8 @@ echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1603,8 +1665,8 @@ echo '# C: HAVE_CYGWIN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1643,20 +1705,9 @@ echo '#ifndef HAVE_CC' >$bb_o
 echo "#define HAVE_CC \"$HAVE_CC\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
-if [ "${HAVE_CC65}" = "yes" ]; then
-CC_COMPILE=""
-bb_o=$bb_incdir/have_cc65.h
-echo '#ifndef HAVE_CC65' >$bb_o
-echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
-else
-CC_COMPILE="-c"
-echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
-echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
-fi
 else
 HAVE_CC65="no"
+HAVE_EMCC="no"
 HAVE_CC_WARNINGS="no"
 PROG_GUI_FLAGS=""
 PROG_CLI_FLAGS=""
@@ -1671,6 +1722,8 @@ echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
 echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
 echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
 echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
 echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
 echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
 echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
@@ -1755,8 +1808,8 @@ echo '# C: HAVE_GAMECUBE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1802,8 +1855,8 @@ echo '# C: HAVE_GBA' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1854,8 +1907,8 @@ echo '# C: HAVE_SWITCH' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1933,8 +1986,27 @@ else
 CROSSPFX=""
 fi
 HAVE_CC65="no"
+HAVE_EMCC="no"
 if [ "$CC" = "" ]; then
 case "${host}" in
+emscripten)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/emcc" ]; then
+CC="${i}/emcc"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+elif [ -x "${i}/emcc.exe" ]; then
+CC="${i}/emcc.exe"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
 apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2005,33 +2077,32 @@ IFS=$bb_save_IFS
 ;;
 esac
 	if [ "$CC" = '' ]; then
-		if [ "$HAVE_CC65" = "yes" ]; then
-			echo "*"
-			echo "* Cannot find cc65 in PATH. You may need to set CC."
-			echo "* You can download cc65 from: https://www.cc65.org/."
-			echo "*"
-			echo "Cannot find cc65 in PATH." >>config.log
-		else
-			echo "*"
+		echo "*"
 echo "* Cannot find one of clang, clang70, clang60, cc, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
-			echo "* under the current PATH, which is:"
-			echo "* $PATH"
-			echo "*"
-			echo "* You may need to set the CC environment variable."
-			echo "*"
-			echo "Cannot find C compiler in PATH." >>config.log
-		fi
-		HAVE_CC="no"
+		echo "* under the current PATH, which is:"
+		echo "* $PATH"
+		echo "*"
+		echo "* You may need to set the CC environment variable."
+		echo "*"
+		echo "Cannot find C compiler in PATH." >>config.log
 		echo "no"
 		echo "no" >>config.log
+
+		HAVE_CC="no"
 	else
-		HAVE_CC="yes"
 		echo "yes, ${CC}"
 		echo "yes, ${CC}" >>config.log
+
+		HAVE_CC="yes"
 	fi
 else
 	HAVE_CC="yes"
-	if ${CC} -V 2>&1 |grep -q ^cc65; then
+	if emcc --version 2>&1 |grep -q ^emcc; then
+		echo "using emcc (${CC})"
+		echo "using emcc (${CC})" >>config.log
+		HAVE_EMCC="yes"
+		CROSS_COMPILING="yes"
+	elif cc65 -V 2>&1 |grep -q ^cc65; then
 		echo "using cc65 (${CC})"
 		echo "using cc65 (${CC})" >>config.log
 		HAVE_CC65="yes"
@@ -2048,7 +2119,7 @@ if [ "${HAVE_CC}" = "yes" ]; then
 	cat << 'EOT' > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 EOT
-	$CC -o conftest conftest.c 2>>config.log
+	$CC -o conftest conftest.c 1>/dev/null 2>>config.log
 	if [ $? != 0 ]; then
 	    echo "no"
 	    echo "no, compilation failed" >>config.log
@@ -2063,7 +2134,7 @@ EOT
 			for OUTFILE in conftest.exe conftest conftest.*; do
 				if [ -f $OUTFILE ]; then
 					case $OUTFILE in
-					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM | *.wasm | *.html | *.js )
 						;;
 					*.* )
 						EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
@@ -2080,6 +2151,16 @@ EOT
 				echo "yes"
 				echo "yes" >>config.log
 			fi
+bb_o=$bb_incdir/have_emcc.h
+echo '#ifndef HAVE_EMCC' >$bb_o
+echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
 bb_o=$bb_incdir/execsuffix.h
 echo '#ifndef EXECSUFFIX' >$bb_o
 echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >>$bb_o
@@ -2091,7 +2172,7 @@ echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 		fi
 	fi
 	if [ "${keep_conftest}" != "yes" ]; then
-		rm -f conftest.c conftest$EXECSUFFIX
+		rm -f conftest.c conftest conftest$EXECSUFFIX
 	fi
 	TEST_CFLAGS=''
 fi
@@ -2110,8 +2191,8 @@ echo '# C: HAVE_CC_CLANG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2135,6 +2216,40 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+$ECHO_N 'cc: checking whether compiler is cc65...'
+$ECHO_N '# cc: checking whether compiler is cc65...' >>config.log
+if [ "${HAVE_CC65}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+CC_COMPILE=""
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+CC_COMPILE="-c"
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+fi
+$ECHO_N 'cc: checking whether compiler is emcc...'
+$ECHO_N '# cc: checking whether compiler is emcc...' >>config.log
+if [ "${HAVE_EMCC}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+bb_o=$bb_incdir/have_emcc.h
+echo '#ifndef HAVE_EMCC' >$bb_o
+echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
+fi
 $ECHO_N 'cc: checking whether compiler is GCC...'
 $ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
 MK_COMPILE_STATUS=OK
@@ -2149,8 +2264,8 @@ echo '# C: HAVE_CC_GCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2185,8 +2300,8 @@ echo '# C: HAVE_CC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2233,8 +2348,8 @@ echo '# C: HAVE_FLOAT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2277,8 +2392,8 @@ echo '# C: HAVE_LONG_DOUBLE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2320,8 +2435,8 @@ echo '# C: HAVE_LONG_LONG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2359,8 +2474,8 @@ echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2398,8 +2513,8 @@ echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2446,8 +2561,8 @@ echo '# C: HAVE_CYGWIN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2486,20 +2601,9 @@ echo '#ifndef HAVE_CC' >$bb_o
 echo "#define HAVE_CC \"$HAVE_CC\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
-if [ "${HAVE_CC65}" = "yes" ]; then
-CC_COMPILE=""
-bb_o=$bb_incdir/have_cc65.h
-echo '#ifndef HAVE_CC65' >$bb_o
-echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
-else
-CC_COMPILE="-c"
-echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
-echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
-fi
 else
 HAVE_CC65="no"
+HAVE_EMCC="no"
 HAVE_CC_WARNINGS="no"
 PROG_GUI_FLAGS=""
 PROG_CLI_FLAGS=""
@@ -2514,6 +2618,8 @@ echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
 echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
 echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
 echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
 echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
 echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
 echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
@@ -2598,8 +2704,8 @@ echo '# C: HAVE_GAMECUBE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2645,8 +2751,8 @@ echo '# C: HAVE_GBA' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2697,8 +2803,8 @@ echo '# C: HAVE_SWITCH' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2775,8 +2881,27 @@ else
 CROSSPFX=""
 fi
 HAVE_CC65="no"
+HAVE_EMCC="no"
 if [ "$CC" = "" ]; then
 case "${host}" in
+emscripten)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/emcc" ]; then
+CC="${i}/emcc"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+elif [ -x "${i}/emcc.exe" ]; then
+CC="${i}/emcc.exe"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
 apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2847,33 +2972,32 @@ IFS=$bb_save_IFS
 ;;
 esac
 	if [ "$CC" = '' ]; then
-		if [ "$HAVE_CC65" = "yes" ]; then
-			echo "*"
-			echo "* Cannot find cc65 in PATH. You may need to set CC."
-			echo "* You can download cc65 from: https://www.cc65.org/."
-			echo "*"
-			echo "Cannot find cc65 in PATH." >>config.log
-		else
-			echo "*"
+		echo "*"
 echo "* Cannot find one of clang, clang70, clang60, cc, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
-			echo "* under the current PATH, which is:"
-			echo "* $PATH"
-			echo "*"
-			echo "* You may need to set the CC environment variable."
-			echo "*"
-			echo "Cannot find C compiler in PATH." >>config.log
-		fi
-		HAVE_CC="no"
+		echo "* under the current PATH, which is:"
+		echo "* $PATH"
+		echo "*"
+		echo "* You may need to set the CC environment variable."
+		echo "*"
+		echo "Cannot find C compiler in PATH." >>config.log
 		echo "no"
 		echo "no" >>config.log
+
+		HAVE_CC="no"
 	else
-		HAVE_CC="yes"
 		echo "yes, ${CC}"
 		echo "yes, ${CC}" >>config.log
+
+		HAVE_CC="yes"
 	fi
 else
 	HAVE_CC="yes"
-	if ${CC} -V 2>&1 |grep -q ^cc65; then
+	if emcc --version 2>&1 |grep -q ^emcc; then
+		echo "using emcc (${CC})"
+		echo "using emcc (${CC})" >>config.log
+		HAVE_EMCC="yes"
+		CROSS_COMPILING="yes"
+	elif cc65 -V 2>&1 |grep -q ^cc65; then
 		echo "using cc65 (${CC})"
 		echo "using cc65 (${CC})" >>config.log
 		HAVE_CC65="yes"
@@ -2890,7 +3014,7 @@ if [ "${HAVE_CC}" = "yes" ]; then
 	cat << 'EOT' > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 EOT
-	$CC -o conftest conftest.c 2>>config.log
+	$CC -o conftest conftest.c 1>/dev/null 2>>config.log
 	if [ $? != 0 ]; then
 	    echo "no"
 	    echo "no, compilation failed" >>config.log
@@ -2905,7 +3029,7 @@ EOT
 			for OUTFILE in conftest.exe conftest conftest.*; do
 				if [ -f $OUTFILE ]; then
 					case $OUTFILE in
-					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM | *.wasm | *.html | *.js )
 						;;
 					*.* )
 						EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
@@ -2922,6 +3046,16 @@ EOT
 				echo "yes"
 				echo "yes" >>config.log
 			fi
+bb_o=$bb_incdir/have_emcc.h
+echo '#ifndef HAVE_EMCC' >$bb_o
+echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
 bb_o=$bb_incdir/execsuffix.h
 echo '#ifndef EXECSUFFIX' >$bb_o
 echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >>$bb_o
@@ -2933,7 +3067,7 @@ echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 		fi
 	fi
 	if [ "${keep_conftest}" != "yes" ]; then
-		rm -f conftest.c conftest$EXECSUFFIX
+		rm -f conftest.c conftest conftest$EXECSUFFIX
 	fi
 	TEST_CFLAGS=''
 fi
@@ -2952,8 +3086,8 @@ echo '# C: HAVE_CC_CLANG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2977,6 +3111,40 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+$ECHO_N 'cc: checking whether compiler is cc65...'
+$ECHO_N '# cc: checking whether compiler is cc65...' >>config.log
+if [ "${HAVE_CC65}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+CC_COMPILE=""
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+CC_COMPILE="-c"
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+fi
+$ECHO_N 'cc: checking whether compiler is emcc...'
+$ECHO_N '# cc: checking whether compiler is emcc...' >>config.log
+if [ "${HAVE_EMCC}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+bb_o=$bb_incdir/have_emcc.h
+echo '#ifndef HAVE_EMCC' >$bb_o
+echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
+fi
 $ECHO_N 'cc: checking whether compiler is GCC...'
 $ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
 MK_COMPILE_STATUS=OK
@@ -2991,8 +3159,8 @@ echo '# C: HAVE_CC_GCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3027,8 +3195,8 @@ echo '# C: HAVE_CC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3075,8 +3243,8 @@ echo '# C: HAVE_FLOAT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3119,8 +3287,8 @@ echo '# C: HAVE_LONG_DOUBLE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3162,8 +3330,8 @@ echo '# C: HAVE_LONG_LONG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3201,8 +3369,8 @@ echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3240,8 +3408,8 @@ echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3288,8 +3456,8 @@ echo '# C: HAVE_CYGWIN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3328,20 +3496,9 @@ echo '#ifndef HAVE_CC' >$bb_o
 echo "#define HAVE_CC \"$HAVE_CC\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
-if [ "${HAVE_CC65}" = "yes" ]; then
-CC_COMPILE=""
-bb_o=$bb_incdir/have_cc65.h
-echo '#ifndef HAVE_CC65' >$bb_o
-echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
-else
-CC_COMPILE="-c"
-echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
-echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
-fi
 else
 HAVE_CC65="no"
+HAVE_EMCC="no"
 HAVE_CC_WARNINGS="no"
 PROG_GUI_FLAGS=""
 PROG_CLI_FLAGS=""
@@ -3356,6 +3513,8 @@ echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
 echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
 echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
 echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
 echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
 echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
 echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
@@ -3440,8 +3599,8 @@ echo '# C: HAVE_GAMECUBE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -ffunction-sections -fdata-sections -fmodulo-sched -I${DEVKITPRO}/libogc/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libogc/lib/cube -logc -lm -lgcc 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3487,8 +3646,8 @@ echo '# C: HAVE_GBA' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -I${DEVKITPRO}/libgba/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libgba/lib -lgba 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3539,8 +3698,8 @@ echo '# C: HAVE_SWITCH' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -D__SWITCH__ -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ffunction-sections -I${DEVKITPRO}/libnx/include -o $testdir/conftest$$ conftest$$.c -L${DEVKITPRO}/libnx/lib -lnx -specs=${DEVKITPRO}/libnx/switch.specs 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3616,8 +3775,27 @@ else
 CROSSPFX=""
 fi
 HAVE_CC65="no"
+HAVE_EMCC="no"
 if [ "$CC" = "" ]; then
 case "${host}" in
+emscripten)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/emcc" ]; then
+CC="${i}/emcc"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+elif [ -x "${i}/emcc.exe" ]; then
+CC="${i}/emcc.exe"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
 apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -3688,33 +3866,32 @@ IFS=$bb_save_IFS
 ;;
 esac
 	if [ "$CC" = '' ]; then
-		if [ "$HAVE_CC65" = "yes" ]; then
-			echo "*"
-			echo "* Cannot find cc65 in PATH. You may need to set CC."
-			echo "* You can download cc65 from: https://www.cc65.org/."
-			echo "*"
-			echo "Cannot find cc65 in PATH." >>config.log
-		else
-			echo "*"
+		echo "*"
 echo "* Cannot find one of clang, clang70, clang60, cc, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
-			echo "* under the current PATH, which is:"
-			echo "* $PATH"
-			echo "*"
-			echo "* You may need to set the CC environment variable."
-			echo "*"
-			echo "Cannot find C compiler in PATH." >>config.log
-		fi
-		HAVE_CC="no"
+		echo "* under the current PATH, which is:"
+		echo "* $PATH"
+		echo "*"
+		echo "* You may need to set the CC environment variable."
+		echo "*"
+		echo "Cannot find C compiler in PATH." >>config.log
 		echo "no"
 		echo "no" >>config.log
+
+		HAVE_CC="no"
 	else
-		HAVE_CC="yes"
 		echo "yes, ${CC}"
 		echo "yes, ${CC}" >>config.log
+
+		HAVE_CC="yes"
 	fi
 else
 	HAVE_CC="yes"
-	if ${CC} -V 2>&1 |grep -q ^cc65; then
+	if emcc --version 2>&1 |grep -q ^emcc; then
+		echo "using emcc (${CC})"
+		echo "using emcc (${CC})" >>config.log
+		HAVE_EMCC="yes"
+		CROSS_COMPILING="yes"
+	elif cc65 -V 2>&1 |grep -q ^cc65; then
 		echo "using cc65 (${CC})"
 		echo "using cc65 (${CC})" >>config.log
 		HAVE_CC65="yes"
@@ -3731,7 +3908,7 @@ if [ "${HAVE_CC}" = "yes" ]; then
 	cat << 'EOT' > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 EOT
-	$CC -o conftest conftest.c 2>>config.log
+	$CC -o conftest conftest.c 1>/dev/null 2>>config.log
 	if [ $? != 0 ]; then
 	    echo "no"
 	    echo "no, compilation failed" >>config.log
@@ -3746,7 +3923,7 @@ EOT
 			for OUTFILE in conftest.exe conftest conftest.*; do
 				if [ -f $OUTFILE ]; then
 					case $OUTFILE in
-					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM | *.wasm | *.html | *.js )
 						;;
 					*.* )
 						EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
@@ -3763,6 +3940,16 @@ EOT
 				echo "yes"
 				echo "yes" >>config.log
 			fi
+bb_o=$bb_incdir/have_emcc.h
+echo '#ifndef HAVE_EMCC' >$bb_o
+echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
 bb_o=$bb_incdir/execsuffix.h
 echo '#ifndef EXECSUFFIX' >$bb_o
 echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >>$bb_o
@@ -3774,7 +3961,7 @@ echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 		fi
 	fi
 	if [ "${keep_conftest}" != "yes" ]; then
-		rm -f conftest.c conftest$EXECSUFFIX
+		rm -f conftest.c conftest conftest$EXECSUFFIX
 	fi
 	TEST_CFLAGS=''
 fi
@@ -3793,8 +3980,8 @@ echo '# C: HAVE_CC_CLANG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3818,6 +4005,40 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+$ECHO_N 'cc: checking whether compiler is cc65...'
+$ECHO_N '# cc: checking whether compiler is cc65...' >>config.log
+if [ "${HAVE_CC65}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+CC_COMPILE=""
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+CC_COMPILE="-c"
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+fi
+$ECHO_N 'cc: checking whether compiler is emcc...'
+$ECHO_N '# cc: checking whether compiler is emcc...' >>config.log
+if [ "${HAVE_EMCC}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+bb_o=$bb_incdir/have_emcc.h
+echo '#ifndef HAVE_EMCC' >$bb_o
+echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
+fi
 $ECHO_N 'cc: checking whether compiler is GCC...'
 $ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
 MK_COMPILE_STATUS=OK
@@ -3832,8 +4053,8 @@ echo '# C: HAVE_CC_GCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3868,8 +4089,8 @@ echo '# C: HAVE_CC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3916,8 +4137,8 @@ echo '# C: HAVE_FLOAT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3960,8 +4181,8 @@ echo '# C: HAVE_LONG_DOUBLE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4003,8 +4224,8 @@ echo '# C: HAVE_LONG_LONG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4042,8 +4263,8 @@ echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4081,8 +4302,8 @@ echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4129,8 +4350,8 @@ echo '# C: HAVE_CYGWIN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4169,20 +4390,9 @@ echo '#ifndef HAVE_CC' >$bb_o
 echo "#define HAVE_CC \"$HAVE_CC\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
-if [ "${HAVE_CC65}" = "yes" ]; then
-CC_COMPILE=""
-bb_o=$bb_incdir/have_cc65.h
-echo '#ifndef HAVE_CC65' >$bb_o
-echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
-else
-CC_COMPILE="-c"
-echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
-echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
-fi
 else
 HAVE_CC65="no"
+HAVE_EMCC="no"
 HAVE_CC_WARNINGS="no"
 PROG_GUI_FLAGS=""
 PROG_CLI_FLAGS=""
@@ -4197,6 +4407,8 @@ echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
 echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
 echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
 echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
 echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
 echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
 echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
@@ -4273,8 +4485,27 @@ else
 CROSSPFX=""
 fi
 HAVE_CC65="no"
+HAVE_EMCC="no"
 if [ "$CC" = "" ]; then
 case "${host}" in
+emscripten)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/emcc" ]; then
+CC="${i}/emcc"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+elif [ -x "${i}/emcc.exe" ]; then
+CC="${i}/emcc.exe"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
 apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -4345,33 +4576,32 @@ IFS=$bb_save_IFS
 ;;
 esac
 	if [ "$CC" = '' ]; then
-		if [ "$HAVE_CC65" = "yes" ]; then
-			echo "*"
-			echo "* Cannot find cc65 in PATH. You may need to set CC."
-			echo "* You can download cc65 from: https://www.cc65.org/."
-			echo "*"
-			echo "Cannot find cc65 in PATH." >>config.log
-		else
-			echo "*"
+		echo "*"
 echo "* Cannot find one of clang, clang70, clang60, cc, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
-			echo "* under the current PATH, which is:"
-			echo "* $PATH"
-			echo "*"
-			echo "* You may need to set the CC environment variable."
-			echo "*"
-			echo "Cannot find C compiler in PATH." >>config.log
-		fi
-		HAVE_CC="no"
+		echo "* under the current PATH, which is:"
+		echo "* $PATH"
+		echo "*"
+		echo "* You may need to set the CC environment variable."
+		echo "*"
+		echo "Cannot find C compiler in PATH." >>config.log
 		echo "no"
 		echo "no" >>config.log
+
+		HAVE_CC="no"
 	else
-		HAVE_CC="yes"
 		echo "yes, ${CC}"
 		echo "yes, ${CC}" >>config.log
+
+		HAVE_CC="yes"
 	fi
 else
 	HAVE_CC="yes"
-	if ${CC} -V 2>&1 |grep -q ^cc65; then
+	if emcc --version 2>&1 |grep -q ^emcc; then
+		echo "using emcc (${CC})"
+		echo "using emcc (${CC})" >>config.log
+		HAVE_EMCC="yes"
+		CROSS_COMPILING="yes"
+	elif cc65 -V 2>&1 |grep -q ^cc65; then
 		echo "using cc65 (${CC})"
 		echo "using cc65 (${CC})" >>config.log
 		HAVE_CC65="yes"
@@ -4388,7 +4618,7 @@ if [ "${HAVE_CC}" = "yes" ]; then
 	cat << 'EOT' > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 EOT
-	$CC -o conftest conftest.c 2>>config.log
+	$CC -o conftest conftest.c 1>/dev/null 2>>config.log
 	if [ $? != 0 ]; then
 	    echo "no"
 	    echo "no, compilation failed" >>config.log
@@ -4403,7 +4633,7 @@ EOT
 			for OUTFILE in conftest.exe conftest conftest.*; do
 				if [ -f $OUTFILE ]; then
 					case $OUTFILE in
-					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM | *.wasm | *.html | *.js )
 						;;
 					*.* )
 						EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
@@ -4420,6 +4650,16 @@ EOT
 				echo "yes"
 				echo "yes" >>config.log
 			fi
+bb_o=$bb_incdir/have_emcc.h
+echo '#ifndef HAVE_EMCC' >$bb_o
+echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
 bb_o=$bb_incdir/execsuffix.h
 echo '#ifndef EXECSUFFIX' >$bb_o
 echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >>$bb_o
@@ -4431,7 +4671,7 @@ echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 		fi
 	fi
 	if [ "${keep_conftest}" != "yes" ]; then
-		rm -f conftest.c conftest$EXECSUFFIX
+		rm -f conftest.c conftest conftest$EXECSUFFIX
 	fi
 	TEST_CFLAGS=''
 fi
@@ -4450,8 +4690,8 @@ echo '# C: HAVE_CC_CLANG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4475,6 +4715,40 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+$ECHO_N 'cc: checking whether compiler is cc65...'
+$ECHO_N '# cc: checking whether compiler is cc65...' >>config.log
+if [ "${HAVE_CC65}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+CC_COMPILE=""
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+CC_COMPILE="-c"
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+fi
+$ECHO_N 'cc: checking whether compiler is emcc...'
+$ECHO_N '# cc: checking whether compiler is emcc...' >>config.log
+if [ "${HAVE_EMCC}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+bb_o=$bb_incdir/have_emcc.h
+echo '#ifndef HAVE_EMCC' >$bb_o
+echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
+fi
 $ECHO_N 'cc: checking whether compiler is GCC...'
 $ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
 MK_COMPILE_STATUS=OK
@@ -4489,8 +4763,8 @@ echo '# C: HAVE_CC_GCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4525,8 +4799,8 @@ echo '# C: HAVE_CC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4573,8 +4847,8 @@ echo '# C: HAVE_FLOAT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4617,8 +4891,8 @@ echo '# C: HAVE_LONG_DOUBLE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4660,8 +4934,8 @@ echo '# C: HAVE_LONG_LONG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4699,8 +4973,8 @@ echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4738,8 +5012,8 @@ echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4786,8 +5060,8 @@ echo '# C: HAVE_CYGWIN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -4826,20 +5100,9 @@ echo '#ifndef HAVE_CC' >$bb_o
 echo "#define HAVE_CC \"$HAVE_CC\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
-if [ "${HAVE_CC65}" = "yes" ]; then
-CC_COMPILE=""
-bb_o=$bb_incdir/have_cc65.h
-echo '#ifndef HAVE_CC65' >$bb_o
-echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
-else
-CC_COMPILE="-c"
-echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
-echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
-fi
 else
 HAVE_CC65="no"
+HAVE_EMCC="no"
 HAVE_CC_WARNINGS="no"
 PROG_GUI_FLAGS=""
 PROG_CLI_FLAGS=""
@@ -4854,6 +5117,8 @@ echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
 echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
 echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
 echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
 echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
 echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
 echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
@@ -5022,8 +5287,8 @@ echo '# ObjC: HAVE_OBJC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.m" >>config.log
 cat conftest$$.m>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -x objective-c -o $testdir/conftest$$ conftest$$.m  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -x objective-c -o $testdir/conftest$$ conftest$$.m  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -x objective-c -o $testdir/conftest$$ conftest$$.m  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -x objective-c -o $testdir/conftest$$ conftest$$.m  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5236,8 +5501,8 @@ echo '# C: HAVE_ALIGNED_ATTRIBUTE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5283,8 +5548,8 @@ echo '# C: HAVE_BOUNDED_ATTRIBUTE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5326,8 +5591,8 @@ echo '# C: HAVE_CONST_ATTRIBUTE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5370,8 +5635,8 @@ echo '# C: HAVE_DEPRECATED_ATTRIBUTE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5419,8 +5684,8 @@ echo '# C: HAVE_FORMAT_ATTRIBUTE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5467,8 +5732,8 @@ echo '# C: HAVE_MALLOC_ATTRIBUTE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5511,8 +5776,8 @@ echo '# C: HAVE_NORETURN_ATTRIBUTE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5552,8 +5817,8 @@ echo '# C: HAVE_PACKED_ATTRIBUTE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5598,8 +5863,8 @@ echo '# C: HAVE_PURE_ATTRIBUTE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5639,8 +5904,8 @@ echo '# C: HAVE_UNUSED_VARIABLE_ATTRIBUTE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5684,8 +5949,8 @@ echo '# C: HAVE_WARN_UNUSED_RESULT_ATTRIBUTE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5890,8 +6155,8 @@ echo '# C: _MK_HAVE_SYS_TYPES_H' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5933,8 +6198,8 @@ echo '# C: _MK_HAVE_STDINT_H' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -5977,8 +6242,8 @@ echo '# C: HAVE_INT64_T' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6019,8 +6284,8 @@ echo '# C: HAVE___INT64' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6084,8 +6349,8 @@ echo '# C: HAVE_INT64_T' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6126,8 +6391,8 @@ echo '# C: HAVE___INT64' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6196,8 +6461,8 @@ echo '# C: _MK_HAVE_SYS_STAT_H' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6239,8 +6504,8 @@ echo '# C: _MK_HAVE_STDLIB_H' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6287,8 +6552,8 @@ echo '# C: _MK_HAVE_UNISTD_H' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6337,8 +6602,8 @@ echo '# C: _MK_HAVE_LIMITS_H' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6384,8 +6649,8 @@ echo '# C: _MK_HAVE_FLOAT_H' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6437,8 +6702,8 @@ echo '# C: HAVE_MATH' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${MATH_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${MATH_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${MATH_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${MATH_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6504,8 +6769,8 @@ echo '# C: HAVE_MATH_C99' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_C99_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${MATH_C99_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_C99_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${MATH_C99_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_C99_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${MATH_C99_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_C99_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${MATH_C99_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6557,8 +6822,8 @@ echo '# C: HAVE_FDCLOSE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6607,8 +6872,8 @@ echo '# C: HAVE_GETPWUID' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6669,8 +6934,8 @@ echo '# C: HAVE_GETPWNAM_R' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6713,8 +6978,8 @@ echo '# C: HAVE_GETENV' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6759,8 +7024,8 @@ echo '# C: HAVE_GETUID' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6807,8 +7072,8 @@ echo '# C: HAVE_STRSEP' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6855,8 +7120,8 @@ echo '# C: HAVE_ASPRINTF' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -D_GNU_SOURCE -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -D_GNU_SOURCE -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -D_GNU_SOURCE -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -D_GNU_SOURCE -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6901,8 +7166,8 @@ echo '# C: HAVE_SNPRINTF' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -6956,8 +7221,8 @@ echo '# C: HAVE_VSNPRINTF' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7014,8 +7279,8 @@ echo '# C: HAVE_VASPRINTF' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -D_GNU_SOURCE -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -D_GNU_SOURCE -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -D_GNU_SOURCE -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -D_GNU_SOURCE -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7060,8 +7325,8 @@ echo '# C: _MK_HAVE_SIGNAL' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7109,8 +7374,8 @@ echo '# C: _MK_HAVE_STRTOLL' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7162,8 +7427,8 @@ echo '# C: _MK_HAVE_STRTOLD' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7213,7 +7478,7 @@ echo >conftest$$.c
 echo '#include <dlfcn.h>' >>conftest$$.c
 echo 'int main (int argc, char *argv[]) { return (0); }' >>conftest$$.c
 MK_COMPILE_STATUS=OK
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7259,8 +7524,8 @@ echo '# C: HAVE_DLOPEN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7310,8 +7575,8 @@ echo '# C: HAVE_DLOPEN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -ldl -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -ldl -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -ldl -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -ldl -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7360,7 +7625,7 @@ echo >conftest$$.c
 echo '#include <mach-o/dyld.h>' >>conftest$$.c
 echo 'int main (int argc, char *argv[]) { return (0); }' >>conftest$$.c
 MK_COMPILE_STATUS=OK
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7413,8 +7678,8 @@ echo '# C: HAVE_DYLD' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7471,8 +7736,8 @@ echo '# C: HAVE_DYLD_RETURN_ON_ERROR' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7518,7 +7783,7 @@ echo >conftest$$.c
 echo '#include <dl.h>' >>conftest$$.c
 echo 'int main (int argc, char *argv[]) { return (0); }' >>conftest$$.c
 MK_COMPILE_STATUS=OK
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7571,8 +7836,8 @@ echo '# C: HAVE_SHL_LOAD' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${SHL_LOAD_LIBS} -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SHL_LOAD_LIBS} -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${SHL_LOAD_LIBS} -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SHL_LOAD_LIBS} -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7635,8 +7900,8 @@ echo '# C: HAVE_GETTIMEOFDAY' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7689,8 +7954,8 @@ echo '# C: HAVE_SELECT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7741,8 +8006,8 @@ echo '# C: HAVE_GLOB' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7795,8 +8060,8 @@ echo '# C: HAVE_GETOPT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7843,8 +8108,8 @@ echo '# C: HAVE_EXECVP' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7890,8 +8155,8 @@ echo '# C: HAVE_CLOCK_GETTIME' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${CLOCK_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${CLOCK_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${CLOCK_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${CLOCK_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -7940,8 +8205,8 @@ echo '# C: HAVE_CLOCK_GETTIME' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest$$ conftest$$.c -lrt 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest$$ conftest$$.c -lrt 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest$$ conftest$$.c -lrt 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest$$ conftest$$.c -lrt 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -8009,8 +8274,8 @@ echo '# C: HAVE_CLOCK_WIN32' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c -lwinmm 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c -lwinmm 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c -lwinmm 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c -lwinmm 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -8073,8 +8338,8 @@ echo '# C: HAVE_NANOSLEEP' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -8133,8 +8398,8 @@ echo '# C: HAVE_KQUEUE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -8187,8 +8452,8 @@ echo '# C: HAVE_TIMERFD' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -8237,8 +8502,8 @@ echo '# C: HAVE_CSIDL' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -8283,8 +8548,8 @@ echo '# C: HAVE_XBOX' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -8983,8 +9248,8 @@ echo '# C: HAVE_SDL' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -9067,8 +9332,8 @@ echo '# C: HAVE_SDL' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -9454,8 +9719,8 @@ echo '# C: HAVE_SDL2' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL2_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL2_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL2_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL2_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -9538,8 +9803,8 @@ echo '# C: HAVE_SDL2' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL2_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL2_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL2_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL2_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -9746,8 +10011,8 @@ echo '# C: HAVE_LIBOPENGL32' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c -lopengl32 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c -lopengl32 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c -lopengl32 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c -lopengl32 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -9802,8 +10067,8 @@ echo '# C: HAVE_OPENGL' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -9849,8 +10114,8 @@ echo '# C: HAVE_OPENGL' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -9913,8 +10178,8 @@ echo '# C: HAVE_GLEXT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -10294,8 +10559,8 @@ echo '# C: HAVE_X11' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -10341,8 +10606,8 @@ echo '# C: HAVE_XKB' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} -lX11 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} -lX11 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} -lX11 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} -lX11 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -10391,8 +10656,8 @@ echo '# C: HAVE_XF86MISC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} -lX11 -lXxf86misc 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} -lX11 -lXxf86misc 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} -lX11 -lXxf86misc 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} -lX11 -lXxf86misc 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -10618,8 +10883,8 @@ echo '# C: HAVE_XINERAMA' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} ${XINERAMA_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} ${XINERAMA_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} ${XINERAMA_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} ${XINERAMA_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} ${XINERAMA_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} ${XINERAMA_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} ${XINERAMA_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${X11_LIBS} ${XINERAMA_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -10712,8 +10977,8 @@ echo '# ObjC: HAVE_COCOA' >>config.log
 echo "cat << EOT >conftest$$.m" >>config.log
 cat conftest$$.m>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${COCOA_CFLAGS} -x objective-c -o $testdir/conftest$$ conftest$$.m ${COCOA_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${COCOA_CFLAGS} -x objective-c -o $testdir/conftest$$ conftest$$.m ${COCOA_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${COCOA_CFLAGS} -x objective-c -o $testdir/conftest$$ conftest$$.m ${COCOA_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${COCOA_CFLAGS} -x objective-c -o $testdir/conftest$$ conftest$$.m ${COCOA_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -10807,8 +11072,8 @@ echo '# C: HAVE_GLX' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${GLX_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GLX_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${GLX_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GLX_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${GLX_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GLX_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${GLX_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GLX_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -10893,8 +11158,8 @@ echo '# C: HAVE_WGL' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} -lgdi32 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} -lgdi32 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} -lgdi32 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} -lgdi32 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -11186,8 +11451,8 @@ echo '# C: HAVE_FREETYPE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${FREETYPE_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${FREETYPE_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${FREETYPE_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${FREETYPE_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -11410,8 +11675,8 @@ echo '# C: HAVE_FONTCONFIG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${FONTCONFIG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${FONTCONFIG_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${FONTCONFIG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${FONTCONFIG_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${FONTCONFIG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${FONTCONFIG_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${FONTCONFIG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${FONTCONFIG_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -11530,8 +11795,8 @@ echo '# C: HAVE_JPEG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${JPEG_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${JPEG_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${JPEG_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${JPEG_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -11776,8 +12041,8 @@ echo '# C: HAVE_PNG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PNG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PNG_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PNG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PNG_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PNG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PNG_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PNG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PNG_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12019,8 +12284,8 @@ echo '# C: HAVE_GETADDRINFO' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12092,8 +12357,8 @@ echo '# C: HAVE_SIOCGIFCONF' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12143,8 +12408,8 @@ echo '# C: HAVE_SETSOCKOPT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12190,8 +12455,8 @@ echo '# C: HAVE_SO_OOBINLINE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12236,8 +12501,8 @@ echo '# C: HAVE_SO_REUSEPORT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12282,8 +12547,8 @@ echo '# C: HAVE_SO_TIMESTAMP' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12328,8 +12593,8 @@ echo '# C: HAVE_SO_NOSIGPIPE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12376,8 +12641,8 @@ echo '# C: HAVE_SO_LINGER' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12425,8 +12690,8 @@ echo '# C: HAVE_SO_ACCEPTFILTER' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12576,8 +12841,8 @@ echo '# C: HAVE_ZLIB' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${ZLIB_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${ZLIB_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${ZLIB_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${ZLIB_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${ZLIB_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${ZLIB_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${ZLIB_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${ZLIB_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12629,8 +12894,8 @@ echo '# C: HAVE_SYS_UIO_H' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12666,8 +12931,8 @@ echo '# C: HAVE_SYS_PARAM_H' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12788,8 +13053,8 @@ echo '# C: HAVE_DB4' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${DB4_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${DB4_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${DB4_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${DB4_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${DB4_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${DB4_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${DB4_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${DB4_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -12921,8 +13186,8 @@ echo '# C: HAVE_DB5' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${DB5_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${DB5_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${DB5_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${DB5_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${DB5_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${DB5_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${DB5_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${DB5_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -13128,8 +13393,8 @@ echo '# C: HAVE_MYSQL' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${MYSQL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${MYSQL_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${MYSQL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${MYSQL_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${MYSQL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${MYSQL_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${MYSQL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${MYSQL_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -13228,8 +13493,8 @@ echo '# C: HAVE_PTHREADS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -13285,8 +13550,8 @@ echo '# C: HAVE_PTHREADS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -13409,8 +13674,8 @@ echo '# C: HAVE_PTHREADS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -13498,8 +13763,8 @@ echo '# C: HAVE_PTHREADS_XOPEN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -13618,8 +13883,8 @@ echo '# C: HAVE_PTHREADS_XOPEN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -13674,8 +13939,8 @@ echo '# C: HAVE_PTHREAD_MUTEX_RECURSIVE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -13729,8 +13994,8 @@ echo '# C: HAVE_PTHREAD_MUTEX_RECURSIVE_NP' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -13782,8 +14047,8 @@ echo '# C: HAVE_PTHREAD_MUTEX_T_POINTER' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -13825,8 +14090,8 @@ echo '# C: HAVE_PTHREAD_COND_T_POINTER' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -13867,8 +14132,8 @@ echo '# C: HAVE_PTHREAD_T_POINTER' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -14027,8 +14292,8 @@ echo '# C: HAVE_ICONV' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${ICONV_CFLAGS} -Wno-cast-qual -o $testdir/conftest$$ conftest$$.c ${ICONV_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${ICONV_CFLAGS} -Wno-cast-qual -o $testdir/conftest$$ conftest$$.c ${ICONV_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${ICONV_CFLAGS} -Wno-cast-qual -o $testdir/conftest$$ conftest$$.c ${ICONV_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${ICONV_CFLAGS} -Wno-cast-qual -o $testdir/conftest$$ conftest$$.c ${ICONV_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -14082,8 +14347,8 @@ echo '# C: HAVE_GETTEXT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -14159,8 +14424,8 @@ echo '# C: HAVE_GETTEXT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -14236,8 +14501,8 @@ echo '# C: HAVE_GETTEXT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -14343,8 +14608,8 @@ echo '# C: HAVE_ALTIVEC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -14400,8 +14665,8 @@ echo '# C: HAVE_ALTIVEC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -14520,8 +14785,8 @@ echo '# C: HAVE_SSE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -14585,8 +14850,8 @@ echo '# C: HAVE_SSE2' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -14652,8 +14917,8 @@ echo '# C: HAVE_SSE3' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -14978,8 +15243,8 @@ echo '# C: HAVE_SNDFILE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${SNDFILE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SNDFILE_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SNDFILE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SNDFILE_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${SNDFILE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SNDFILE_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SNDFILE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SNDFILE_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -15219,8 +15484,8 @@ echo '# C: HAVE_PORTAUDIO' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PORTAUDIO_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PORTAUDIO_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PORTAUDIO_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PORTAUDIO_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PORTAUDIO_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PORTAUDIO_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PORTAUDIO_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PORTAUDIO_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -15391,8 +15656,8 @@ echo '# C: HAVE_GLU' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} ${GLU_LIBS} ${MATH_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} ${GLU_LIBS} ${MATH_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} ${GLU_LIBS} ${MATH_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} ${GLU_LIBS} ${MATH_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -15568,7 +15833,7 @@ if [ "${HAVE_SDL2}" = 'yes' ]
 SRCS_GUI="${SRCS_GUI} drv_sdl2_common.c drv_sdl_keysyms.c drv_sdl2fb.c"
 	if [ "${HAVE_OPENGL}" = 'yes' ]
  then
-SRCS_GUI="${SRCS_GUI} drv_sdl2gl.c"
+SRCS_GUI="${SRCS_GUI} drv_sdl2gl.c drv_sdl2mw.c"
 	fi
 fi
 if [ "${HAVE_OPENGL}" = 'yes' ]
@@ -16941,6 +17206,8 @@ echo "HAVE_DEPRECATED_ATTRIBUTE=$HAVE_DEPRECATED_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
 echo "HAVE_DLOPEN=$HAVE_DLOPEN" >>Makefile.config
 echo "mdefs[\"HAVE_DLOPEN\"] = \"$HAVE_DLOPEN\"" >>configure.lua
+echo "HAVE_EMCC=$HAVE_EMCC" >>Makefile.config
+echo "mdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
 echo "HAVE_FLOAT=$HAVE_FLOAT" >>Makefile.config
 echo "mdefs[\"HAVE_FLOAT\"] = \"$HAVE_FLOAT\"" >>configure.lua
 echo "HAVE_FONTCONFIG=$HAVE_FONTCONFIG" >>Makefile.config
