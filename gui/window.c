@@ -227,6 +227,7 @@ AG_WindowNew(Uint flags)
 		break;
 	case AG_WM_MULTIPLE:
 		if ((drv = AG_DriverOpen(agDriverOps)) == NULL) {
+			Verbose("%s: Failed (%s)\n", agDriverOps->name, AG_GetError());
 			return (NULL);
 		}
 		AG_ObjectAttach(drv, win);
