@@ -39,8 +39,6 @@
 #include <agar/gui/opengl.h>
 #include <agar/gui/sdl2.h>
 
-/* #define DEBUG_MOTION_XEVENTS */
-
 static int nDrivers = 0;                        /* Drivers open */
 static int initedSDL = 0;			/* Inited TIMERS and EVENTS */
 static int initedSDLVideo = 0;			/* Inited VIDEO */
@@ -82,11 +80,24 @@ AG_DriverMwClass agDriverSDL2MW;
 static void
 Init(void *_Nonnull obj)
 {
-	AG_DriverSDL2MW *smw = obj;
 	AG_DriverMw *dmw = obj;
+	AG_DriverSDL2MW *smw = obj;
 
+	/*
+	 * Advertise this driver's capability of creating windows at
+	 * undefined positions.
+	 */
 	dmw->flags |= AG_DRIVER_MW_ANYPOS_AVAIL;
-	smw->window = NULL;
+
+	smw->window = NULL;     /* Remains NULL for the root driver instance */
+
+	smw->outBuf = NULL;
+	smw->outPath = NULL;
+	smw->outMode = AG_SDL2MW_OUT_NONE;
+	smw->outFrame = 0;
+	smw->outLast = 0;
+	smw->outJpegQual = 100;
+	smw->outJpegFlags = 0;
 }
 
 static int
@@ -95,7 +106,7 @@ SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_Driver *drv = obj;
 	AG_DriverSDL2MW *smw = obj;
 
-	Debug(drv, "Open\n");
+	Debug(drv, "Open (nDrivers=%u)\n", nDrivers);
 
 	if (!initedSDL) {
 		if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_EVENTS) == -1) {
@@ -120,86 +131,82 @@ SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_InitEventSubsystem(AG_SOFT_TIMERS);
 #endif
 	if ((drv->mouse = AG_MouseNew(drv, "SDL2 mouse")) == NULL ||
-	    (drv->kbd = AG_KeyboardNew(drv, "SDL2 keyboard")) == NULL) {
+	    (drv->kbd = AG_KeyboardNew(drv, "SDL2 keyboard")) == NULL)
 		goto fail;
-	}
-	smw->outBuf = NULL;
-	smw->outPath = NULL;
-	smw->outMode = AG_SDL2MW_OUT_NONE;
-	smw->outFrame = 0;
-	smw->outLast = 0;
-	smw->outJpegQual = 100;
-	smw->outJpegFlags = 0;
-
-	/* TODO: inherit attributes from parent driver! */
-
-#if 0
-	if (AG_Defined(drv, "out")) {
-		char buf[256];
-		char *ext;
-
-		AG_GetString(drv, "out", buf, sizeof(buf));
-		if ((ext = strrchr(buf, '.')) != NULL &&
-		    ext[1] != '\0') {
-			if (Strcasecmp(&ext[1], "jpeg") == 0 ||
-			    Strcasecmp(&ext[1], "jpg") == 0) {
-				smw->outMode = AG_SDL2MW_OUT_JPEG;
-				if ((smw->outPath = TryStrdup(buf)) == NULL)
-					return (-1);
-			} else if (Strcasecmp(&ext[1], "png") == 0) {
-				smw->outMode = AG_SDL2MW_OUT_PNG;
-				if ((smw->outPath = TryStrdup(buf)) == NULL)
-					return (-1);
-			} else {
-				AG_SetError("Invalid out= argument: `%s'", buf);
-				return (-1);
-			}
-			if (AG_Defined(drv, "outFirst")) {
-				AG_GetString(drv, "outFirst", buf, sizeof(buf));
-				smw->outFrame = atoi(buf);
-			} else {
-				smw->outFrame = 0;
-			}
-			if (AG_Defined(drv, "outLast")) {
-				AG_GetString(drv, "outLast", buf, sizeof(buf));
-				smw->outLast = atoi(buf);
-			}
-		}
-		if (AG_Defined(drv, "jpegQual")) {
-			AG_GetString(drv, "jpegQual", buf, sizeof(buf));
-			smw->outJpegQual = atoi(buf);
-		}
-		if (AG_Defined(drv, "jpegDCT")) {
-			AG_GetString(drv, "jpegDCT", buf, sizeof(buf));
-			if (Strcasecmp(buf, "islow")) {
-				smw->outJpegFlags = AG_EXPORT_JPEG_JDCT_ISLOW;
-			} else if (Strcasecmp(buf, "ifast")) {
-				smw->outJpegFlags = AG_EXPORT_JPEG_JDCT_IFAST;
-			} else if (Strcasecmp(buf, "float")) {
-				smw->outJpegFlags = AG_EXPORT_JPEG_JDCT_FLOAT;
-			}
-		}
-	}
-#endif
 
 	/* Driver manages rendering of window background. */
 	drv->flags |= AG_DRIVER_WINDOW_BG;
 
-	/*
-	 * TODO where AG_SINK_READ capability and pipes are available,
-	 * could we create a separate thread running SDL_WaitEvent() and
-	 * sending notifications over a pipe, instead of using a spinner?
-	 */
-	if ((sdl2mwEventSpinner = AG_AddEventSpinner(AG_SDL2_EventSink_MW, "%p", drv)) == NULL) {
-		goto fail;
-	}
-	if ((sdl2mwEventEpilogue = AG_AddEventEpilogue(AG_SDL2_EventEpilogue, NULL)) == NULL) {
-		AG_DelEventSink(sdl2mwEventSpinner);
-		sdl2mwEventSpinner = NULL;
-		goto fail;
+	if (nDrivers == 0) {			/* Root driver instance */
+		/*
+		 * Parse global attributes for capturing to image files
+		 * ("out", "outFirst", "outLast", "jpegQual" and "jpegDCT").
+		 */
+		if (AG_Defined(drv, "out")) {
+			char buf[256];
+			char *ext;
+
+			AG_GetString(drv, "out", buf, sizeof(buf));
+			if ((ext = strrchr(buf, '.')) != NULL &&
+			    ext[1] != '\0') {
+				if (Strcasecmp(&ext[1], "jpeg") == 0 ||
+				    Strcasecmp(&ext[1], "jpg") == 0) {
+					smw->outMode = AG_SDL2MW_OUT_JPEG;
+					if ((smw->outPath = TryStrdup(buf)) == NULL)
+						return (-1);
+				} else if (Strcasecmp(&ext[1], "png") == 0) {
+					smw->outMode = AG_SDL2MW_OUT_PNG;
+					if ((smw->outPath = TryStrdup(buf)) == NULL)
+						return (-1);
+				} else {
+					AG_SetError("Invalid out= argument: `%s'", buf);
+					return (-1);
+				}
+				if (AG_Defined(drv, "outFirst")) {
+					AG_GetString(drv, "outFirst", buf, sizeof(buf));
+					smw->outFrame = atoi(buf);
+				} else {
+					smw->outFrame = 0;
+				}
+				if (AG_Defined(drv, "outLast")) {
+					AG_GetString(drv, "outLast", buf, sizeof(buf));
+					smw->outLast = atoi(buf);
+				}
+			}
+			if (AG_Defined(drv, "jpegQual")) {
+				AG_GetString(drv, "jpegQual", buf, sizeof(buf));
+				smw->outJpegQual = atoi(buf);
+			}
+			if (AG_Defined(drv, "jpegDCT")) {
+				AG_GetString(drv, "jpegDCT", buf, sizeof(buf));
+				if (Strcasecmp(buf, "islow")) {
+					smw->outJpegFlags = AG_EXPORT_JPEG_JDCT_ISLOW;
+				} else if (Strcasecmp(buf, "ifast")) {
+					smw->outJpegFlags = AG_EXPORT_JPEG_JDCT_IFAST;
+				} else if (Strcasecmp(buf, "float")) {
+					smw->outJpegFlags = AG_EXPORT_JPEG_JDCT_FLOAT;
+				}
+			}
+		}
+
+		/*
+		 * Register event sink and epilogue routines for use by the
+		 * standard AG_EventLoop() routine. Custom event loops may
+		 * use alternate routines.
+		 */
+		if ((sdl2mwEventSpinner = AG_AddEventSpinner(AG_SDL2_EventSink_MW, "%p", drv)) == NULL) {
+			goto fail;
+		}
+		if ((sdl2mwEventEpilogue = AG_AddEventEpilogue(AG_SDL2_EventEpilogue, NULL)) == NULL) {
+			AG_DelEventSink(sdl2mwEventSpinner);
+			sdl2mwEventSpinner = NULL;
+			goto fail;
+		}
+		Debug(drv, "Opened root\n");
+	} else {
+		Debug(drv, "Opened driver instance #%u\n", nDrivers);
 	}
 
-	Debug(drv, "Opened\n");
 	nDrivers++;
 	return (0);
 fail:

@@ -968,54 +968,79 @@ void
 AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 {
 	AG_Driver *drv = obj;
+	const int isMW = AGDRIVER_MULTIPLE(drv);
+
+	if (!isMW)
+		dev->win = NULL;
 
 	switch (ev->type) {
 	case SDL_MOUSEMOTION:
-#if 0
-		Debug(drv, "%s: MOUSEMOTION "
-		    "(Pos=" AGSI_YEL "%d,%d" AGSI_RST ")\n",
-		    OBJECT(drv->mouse)->name,
-		    ev->button.x, ev->button.y);
-#endif
+		if (isMW) {
+			dev->win = AG_SDL_GetWindowFromID(drv, ev->motion.windowID);
+			drv = WIDGET(dev->win)->drv;
+		}
 		AG_MouseMotionUpdate(drv->mouse, ev->motion.x, ev->motion.y);
 		dev->type = AG_DRIVER_MOUSE_MOTION;
-		dev->win = AG_SDL_GetWindowFromID(drv, ev->motion.windowID);
 		dev->data.motion.x = ev->motion.x;
 		dev->data.motion.y = ev->motion.y;
 		break;
 	case SDL_MOUSEBUTTONUP:
-		Debug(drv, "%s: MOUSEBUTTONUP "
-		    "(Which=" AGSI_YEL "%d" AGSI_RST
-		    " Pos=" AGSI_YEL "%d,%d" AGSI_RST ")\n",
-		    OBJECT(drv->mouse)->name,
-		    ev->button.which,
-		    ev->button.x, ev->button.y);
+		if (isMW) {
+			dev->win = AG_SDL_GetWindowFromID(drv, ev->button.windowID);
+			Debug(drv, "MOUSEBUTTONUP "
+			    "(%s, Which=" AGSI_YEL "%d" AGSI_RST
+			    " Pos=" AGSI_YEL "%d,%d" AGSI_RST ")\n",
+			    OBJECT(dev->win)->name,
+			    ev->button.which,
+			    ev->button.x, ev->button.y);
+			drv = WIDGET(dev->win)->drv;
+		} else {
+			Debug(drv, "MOUSEBUTTONUP "
+			    "(Which=" AGSI_YEL "%d" AGSI_RST
+			    " Pos=" AGSI_YEL "%d,%d" AGSI_RST ")\n",
+			    ev->button.which,
+			    ev->button.x, ev->button.y);
+		}
+
 		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_RELEASED,
 		    ev->button.button);
 		dev->type = AG_DRIVER_MOUSE_BUTTON_UP;
-		dev->win = AG_SDL_GetWindowFromID(drv, ev->button.windowID);
 		dev->data.button.which = (AG_MouseButton)ev->button.button;
 		dev->data.button.x = ev->button.x;
 		dev->data.button.y = ev->button.y;
 		break;
 	case SDL_MOUSEBUTTONDOWN:
-		Debug(drv, "%s: MOUSEBUTTONDOWN "
-		    "(Which=" AGSI_YEL "%d" AGSI_RST
-		    " Pos=" AGSI_YEL "%d,%d" AGSI_RST ")\n",
-		    OBJECT(drv->mouse)->name,
-		    ev->button.which,
-		    ev->button.x, ev->button.y);
+		if (isMW) {
+			dev->win = AG_SDL_GetWindowFromID(drv, ev->button.windowID);
+			Debug(drv, "MOUSEBUTTONDOWN "
+			    "(%s, Which=" AGSI_YEL "%d" AGSI_RST
+			    " Pos=" AGSI_YEL "%d,%d" AGSI_RST ")\n",
+			    OBJECT(dev->win)->name,
+			    ev->button.which,
+			    ev->button.x, ev->button.y);
+			drv = WIDGET(dev->win)->drv;
+		} else {
+			Debug(drv, "MOUSEBUTTONDOWN "
+			    "(Which=" AGSI_YEL "%d" AGSI_RST
+			    " Pos=" AGSI_YEL "%d,%d" AGSI_RST ")\n",
+			    ev->button.which,
+			    ev->button.x, ev->button.y);
+		}
 		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED,
 		    ev->button.button);
 		dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
-		dev->win = AG_SDL_GetWindowFromID(drv, ev->button.windowID);
 		dev->data.button.which = (AG_MouseButton)ev->button.button;
 		dev->data.button.x = ev->button.x;
 		dev->data.button.y = ev->button.y;
 		break;
 	case SDL_MOUSEWHEEL:
+		Debug(drv, "MOUSEWHEEL (Y=" AGSI_YEL "%d" AGSI_RST ")\n",
+		    ev->wheel.y);
 		dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
-		dev->win = AG_SDL_GetWindowFromID(drv, ev->button.windowID);
+		if (isMW) {
+			dev->win = AG_SDL_GetWindowFromID(drv, ev->button.windowID);
+			drv = WIDGET(dev->win)->drv;
+		}
 		if (ev->wheel.y == 1) {
 			AG_MouseButtonUpdate(drv->mouse,
 			    AG_BUTTON_PRESSED,
@@ -1032,10 +1057,9 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		    &dev->data.button.y);
 		break;
 	case SDL_KEYDOWN:
-		Debug(drv, "%s: KEYDOWN "
+		Debug(drv, "KEYDOWN "
 		    "(Sym=" AGSI_YEL "0x%x" AGSI_RST
 		    " Scan=" AGSI_YEL "0x%x" AGSI_RST ")\n",
-		    OBJECT(drv->kbd)->name,
 		    (Uint)ev->key.keysym.sym,
 		    (Uint)ev->key.keysym.scancode);
 
@@ -1045,26 +1069,34 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		} else {
 			dev->data.key.ks = (AG_KeySym)ev->key.keysym.sym;
 		}
+		if (isMW) {
+			dev->win = AG_SDL_GetWindowFromID(drv, ev->key.windowID);
+			drv = WIDGET(dev->win)->drv;
+		}
+
 		AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED, dev->data.key.ks);
 
 		dev->type = AG_DRIVER_KEY_DOWN;
-		dev->win = AG_SDL_GetWindowFromID(drv, ev->key.windowID);
 		dev->data.key.ucs = AG_SDL_KeySymToUcs4(ev->key.keysym.sym);
 		break;
 	case SDL_KEYUP:
-		Debug(drv, "%s: KEYUP "
+		Debug(drv, "KEYUP "
 		    "(Sym=" AGSI_YEL "0x%x" AGSI_RST
 		    " Scan=" AGSI_YEL "0x%x" AGSI_RST ")\n",
-		    OBJECT(drv->kbd)->name,
 		    (Uint)ev->key.keysym.sym,
 		    (Uint)ev->key.keysym.scancode);
 
+		if (isMW) {
+			dev->win = AG_SDL_GetWindowFromID(drv, ev->key.windowID);
+			drv = WIDGET(dev->win)->drv;
+		}
 		if ((ev->key.keysym.sym & SDLK_SCANCODE_MASK) != 0) {
 			dev->data.key.ks = AG_SDL2_KeySymFromScancode(
 			    ev->key.keysym.scancode);
 		} else {
 			dev->data.key.ks = (AG_KeySym)ev->key.keysym.sym;
 		}
+
 		AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED, dev->data.key.ks);
 
 		dev->type = AG_DRIVER_KEY_UP;
@@ -1072,27 +1104,54 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		dev->data.key.ucs = AG_SDL_KeySymToUcs4(ev->key.keysym.sym);
 		break;
 	case SDL_WINDOWEVENT:
+		if (isMW) {
+			dev->win = AG_SDL_GetWindowFromID(drv, ev->window.windowID);
+			if (dev->win == NULL)
+				break;
+		}
 		switch (ev->window.event) {
 		case SDL_WINDOWEVENT_ENTER:
-			Debug(drv, "WINDOW ENTER\n");
+			if (isMW) {
+				Debug(drv, "WINDOW ENTER (%s)\n", OBJECT(dev->win)->name);
+			} else {
+				Debug(drv, "WINDOW ENTER\n");
+			}
 			dev->type = AG_DRIVER_MOUSE_ENTER;
 			break;
 		case SDL_WINDOWEVENT_LEAVE:
-			Debug(drv, "WINDOW LEAVE\n");
+			if (isMW) {
+				Debug(drv, "WINDOW LEAVE (%s)\n", OBJECT(dev->win)->name);
+			} else {
+				Debug(drv, "WINDOW LEAVE\n");
+			}
 			dev->type = AG_DRIVER_MOUSE_LEAVE;
 			break;
 		case SDL_WINDOWEVENT_MOVED:
-			Debug(drv, "WINDOW MOVED (" AGSI_YEL "%d, %d" AGSI_RST ")\n",
-			    (int)ev->window.data1,
-			    (int)ev->window.data2);
+			if (isMW) {
+				Debug(drv, "WINDOW MOVED (%s, " AGSI_YEL "%d, %d" AGSI_RST ")\n",
+				    OBJECT(dev->win)->name,
+				    (int)ev->window.data1,
+				    (int)ev->window.data2);
+			} else {
+				Debug(drv, "WINDOW MOVED (" AGSI_YEL "%d, %d" AGSI_RST ")\n",
+				    (int)ev->window.data1,
+				    (int)ev->window.data2);
+			}
 			dev->type = AG_DRIVER_MOVED;
 			dev->data.moved.x = (int)ev->window.data1;
 			dev->data.moved.y = (int)ev->window.data2;
 			break;
 		case SDL_WINDOWEVENT_RESIZED:
-			Debug(drv, "WINDOW RESIZED (" AGSI_YEL "%d x %d" AGSI_RST ")\n",
-			    (int)ev->window.data1,
-			    (int)ev->window.data2);
+			if (isMW) {
+				Debug(drv, "WINDOW RESIZED (%s, " AGSI_YEL "%d x %d" AGSI_RST ")\n",
+				    OBJECT(dev->win)->name,
+				    (int)ev->window.data1,
+				    (int)ev->window.data2);
+			} else {
+				Debug(drv, "WINDOW RESIZED (" AGSI_YEL "%d x %d" AGSI_RST ")\n",
+				    (int)ev->window.data1,
+				    (int)ev->window.data2);
+			}
 			dev->type = AG_DRIVER_VIDEORESIZE;
 			dev->data.videoresize.x = 0;
 			dev->data.videoresize.y = 0;
@@ -1100,29 +1159,52 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 			dev->data.videoresize.h = (int)ev->window.data2;
 			break;
 		case SDL_WINDOWEVENT_MINIMIZED:
-			Debug(drv, "WINDOW MINIMIZED\n");
+			if (isMW) {
+				Debug(drv, "WINDOW MINIMIZED (%s)\n", OBJECT(dev->win)->name);
+			} else {
+				Debug(drv, "WINDOW MINIMIZED\n");
+			}
 			dev->type = AG_DRIVER_MINIMIZED;
 			break;
 		case SDL_WINDOWEVENT_MAXIMIZED:
-			Debug(drv, "WINDOW MAXIMIZED\n");
+			if (isMW) {
+				Debug(drv, "WINDOW MAXIMIZED (%s)\n", OBJECT(dev->win)->name);
+			} else {
+				Debug(drv, "WINDOW MAXIMIZED\n");
+			}
 			dev->type = AG_DRIVER_MAXIMIZED;
 			break;
 		case SDL_WINDOWEVENT_RESTORED:
-			Debug(drv, "WINDOW RESTORED\n");
+			if (isMW) {
+				Debug(drv, "WINDOW RESTORED (%s)\n", OBJECT(dev->win)->name);
+			} else {
+				Debug(drv, "WINDOW RESTORED \n");
+			}
 			dev->type = AG_DRIVER_RESTORED;
 			break;
 		case SDL_WINDOWEVENT_EXPOSED:
-			Debug(drv, "WINDOW EXPOSED\n");
+			if (isMW) {
+				Debug(drv, "WINDOW EXPOSED (%s)\n", OBJECT(dev->win)->name);
+			} else {
+				Debug(drv, "WINDOW EXPOSED\n");
+			}
 			dev->type = AG_DRIVER_EXPOSE;
 			break;
 		default:
-			Debug(drv, "WINDOW EVENT (" AGSI_YEL "0x%x, 0x%x,0x%x" AGSI_RST ")\n",
-			    (Uint)ev->window.event,
-			    (Uint)ev->window.data1,
-			    (Uint)ev->window.data2);
+			if (isMW) {
+				Debug(drv, "WINDOW EVENT (%s, " AGSI_YEL "0x%x, 0x%x,0x%x" AGSI_RST ")\n",
+				    OBJECT(dev->win)->name,
+				    (Uint)ev->window.event,
+				    (Uint)ev->window.data1,
+				    (Uint)ev->window.data2);
+			} else {
+				Debug(drv, "WINDOW EVENT (" AGSI_YEL "0x%x, 0x%x,0x%x" AGSI_RST ")\n",
+				    (Uint)ev->window.event,
+				    (Uint)ev->window.data1,
+				    (Uint)ev->window.data2);
+			}
 			break;
 		}
-		dev->win = AG_SDL_GetWindowFromID(drv, ev->window.windowID);
 		break;
 	case SDL_QUIT:
 	case SDL_USEREVENT:
