@@ -153,6 +153,7 @@ typedef struct web_cookie {
 	char path[WEB_COOKIE_PATH_MAX];		/* Path attribute or \0 */
 	Uint flags;
 #define WEB_COOKIE_SECURE	0x01		/* Secure attribute */
+#define WEB_COOKIE_HTTPONLY	0x02		/* Http-Only attribute */
 	AG_TAILQ_ENTRY(web_cookie) cookies;
 } WEB_Cookie;
 

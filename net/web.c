@@ -194,6 +194,8 @@ ParseURL(WEB_Query *_Nonnull q, const char *_Nonnull s)
 			return (-1);
 		}
 	}
+	/* XXX TODO validate op */
+
 	WEB_SetS(q, "op", (path[0] != '\0') ? path : webHomeOp);
 
 	if (pathArgs[0] != '\0') {
@@ -1047,7 +1049,7 @@ WEB_BeginFrontQuery(WEB_Query *q, const char *op, const WEB_SessionOps *Sops)
 		      "<a style='font-weight:bold' href='/'>"
 		      "%s&nbsp;%s</a>"
 		    "</li>"
-		    "<li role='separator' class='divider'></li>",
+		    "<li> | </li>",
 		    WEB_GLYPHICON(log-in), _("Log in"));
 	}
 }
@@ -1088,6 +1090,9 @@ WEB_BeginWorkerQuery(WEB_Query *q)
 		if (ck->flags & WEB_COOKIE_SECURE) {
 			Strlcat(sc, "; Secure", sizeof(sc));
 		}
+		if (ck->flags & WEB_COOKIE_HTTPONLY) {
+			Strlcat(sc, "; HttpOnly", sizeof(sc));
+		}
 		WEB_AppendHeaderS(q, "Set-Cookie", sc);
 	}
 
@@ -1112,19 +1117,20 @@ WEB_BeginWorkerQuery(WEB_Query *q)
 			Cmod->menu(mod, q, v);
 		} else if (Cmod->menuSections == NULL) {
 #ifdef ENABLE_NLS
-			Cat(v, "<li><a href='/%s'>%s%s</a></li>",
+			Cat(v, "<li><a class='nav-link' href='/%s'>%s%s</a></li>",
 			    Cmod->name, Cmod->icon, gettext(Cmod->lname));
 #else
-			Cat(v, "<li><a href='/%s'>%s%s</a></li>",
+			Cat(v, "<li><a class='nav-link' href='/%s'>%s%s</a></li>",
 			    Cmod->name, Cmod->icon, Cmod->lname);
 #endif
 		} else {
 			if (Cmod->menuSections[0].name != NULL) {
 				CatS(v,
-				    "<li class='dropdown'>"
-				      "<a href='#' class='dropdown-toggle' "
-				       "data-toggle='dropdown' role='button' "
-				       "aria-haspopup='true' aria-expanded='false'>");
+				    "<li class='nav-item dropdown'>"
+				      "<a class='nav-link dropdown-toggle' "
+				       "href='#' role='button' "
+				       "data-bs-toggle='dropdown' "
+				       "aria-expanded='false'>");
 				CatS(v, Cmod->icon);
 #ifdef ENABLE_NLS
 				CatS(v, gettext(Cmod->lname));
@@ -1138,7 +1144,7 @@ WEB_BeginWorkerQuery(WEB_Query *q)
 				     sec->name != NULL;
 				     sec++) {
 					Cat(v,
-					    "<li><a href='/%s'>%s</a></li>",
+					    "<li><a class='dropdown-item' href='/%s'>%s</a></li>",
 					    sec->cmd, sec->name);
 				}
 				CatS(v, "</ul>"
@@ -1148,8 +1154,8 @@ WEB_BeginWorkerQuery(WEB_Query *q)
 	}
 
 	Cat(v,
-	    "<li><a href='/logout'>%s&nbsp;%s</a></li>"
-	    "<li role='separator' class='divider'></li>",
+	    "<li class='nav-item'><a class='nav-link' href='/logout'>%s&nbsp;%s</a></li>"
+	    "<li> | </li>",
 	    WEB_GLYPHICON(log-out),
 	    _("Logout"));
 }
@@ -2136,19 +2142,16 @@ WEB_QueryLoad(WEB_Query *q, const void *data, AG_Size dataLen)
 	}
 	for (i = 0; i < count; i++) {
 		WEB_Cookie *ck;
-		Uint32 ckfl;
 		
 		if ((ck = TryMalloc(sizeof(WEB_Cookie))) == NULL) {
 			goto fail;
 		}
 		if (AG_CopyString(ck->name, ds, sizeof(ck->name)) == -1 ||
-		    AG_CopyString(ck->value, ds, sizeof(ck->value)) == -1 ||
-		    AG_Read(ds, &ckfl, sizeof(ckfl)) == -1) {
+		    AG_CopyString(ck->value, ds, sizeof(ck->value)) == -1) {
 			free(ck);
 			goto fail;
 		}
-		ck->flags = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(ckfl) :
-	                                                          AG_SwapLE32(ckfl);
+		ck->flags = AG_ReadUint32(ds);
 		ck->expires[0] = '\0';
 		ck->domain[0] = '\0';
 		ck->path[0] = '\0';
@@ -2683,7 +2686,8 @@ WEB_OutputError(WEB_Query *q, const char *msg)
 	MessageToHTML(htmlMsg, sizeof(htmlMsg), msg);
 	Set("_error",
 	    "<div class='alert alert-danger' role='alert'>"
-	    "%s: <strong>%s</strong></div>",
+	    "<big>%s %s: <strong>%s</strong></big></div>",
+	    WEB_GLYPHICON(triangle-alert),
 	    _("Error"), htmlMsg);
 	WEB_OutputHTML(q, "error");
 }
@@ -2702,7 +2706,7 @@ WEB_SetError(const char *fmt, ...)
 	Set("_error",
 	    "<center><div class='alert alert-danger alert-dismissible' "
 	     "role='alert'>"
-	      "%s: <strong>%s</strong>"
+	      "<big>%s: <strong>%s</strong></big>"
 	      " <a class='close' data-dismiss='alert' title='%s'>&times;</a>"
 	    "</div></center>",
 	    _("Error"), htmlMsg, _("Dismiss"));
@@ -2716,7 +2720,7 @@ WEB_SetErrorS(const char *msg)
 	Set("_error",
 	    "<center><div class='alert alert-danger alert-dismissible' "
 	     "role='alert'>"
-	      "%s: <strong>%s</strong>"
+	      "<big>%s: <strong>%s</strong></big>"
 	      " <a class='close' data-dismiss='alert' title='%s'>&times;</a>"
 	    "</div></center>",
 	    _("Error"), htmlMsg, _("Dismiss"));
@@ -3560,7 +3564,7 @@ WEB_ProcessQuery(WEB_Query *q, const WEB_SessionOps *Sops, void *rdBuf,
 			cp->fn(q);
 			WEB_FlushQuery(q);
 			return WEB_KeepAlive(q);
-		} else {                                /* Public module cmd */
+		} else {                                /* Public module cmd? */
 			WEB_Module *mod = NULL;
 			WEB_ModuleClass *Cmod = NULL;
 			WEB_Command *cmd;
@@ -3585,21 +3589,12 @@ WEB_ProcessQuery(WEB_Query *q, const WEB_SessionOps *Sops, void *rdBuf,
 						WEB_FlushQuery(q);
 						return WEB_KeepAlive(q);
 					}
-#if 1
-					else {
-						WEB_SetCode(q, "403 Forbidden");
-						WEB_SetHeaderS(q, "Content-Language", "en");
-						WEB_SetHeaderS(q, "Cache-Control", "no-cache");
-						WEB_SetHeaderS(q, "Expires", "0");
-						WEB_OutputError(q, "Access denied");
-						WEB_FlushQuery(q);
-						return WEB_KeepAlive(q);
-					}
-#endif
 				}
 			}
 		}
 	}
+
+	/* Authentication is needed from this point forward. */
 
 	if ((sessArg = WEB_GetCookie(q, "sess")) != NULL &&
 	     ValidSessionID(sessArg)) {
@@ -4362,7 +4357,8 @@ regen_id:
 			ck->path[1] = '\0';
 			strftime(ck->expires, sizeof(ck->expires),
 			    "%a, %d %b %Y %H:%M:%S GMT", tmExpire);
-			/* ck->flags |= WEB_COOKIE_SECURE; */
+			ck->flags |= WEB_COOKIE_SECURE;
+			ck->flags |= WEB_COOKIE_HTTPONLY;
 			
 			/* Handle multipart/form-data POSTs generically. */
 			if (q.method == WEB_METHOD_POST &&
