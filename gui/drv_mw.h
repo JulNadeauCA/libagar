@@ -57,7 +57,7 @@ typedef struct ag_driver_mw {
 	struct ag_window *_Nullable win;	/* Back pointer to window */
 	Uint flags;
 #define AG_DRIVER_MW_OPEN	0x01		/* Rendering is operational */
-	Uint32 _pad;
+	Uint32 windowID;			/* Optional window ID */
 } AG_DriverMw;
 
 #define AGDRIVER_MW(obj) ((AG_DriverMw *)(obj))

@@ -23,15 +23,16 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Provide a variation of the "zoom" feature to resize widgets individually.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Threading optimizations. Cache the `VISIBLE` flag into an `int` so that culling / rendering and mouse-intersection tests can skip over invisible widgets without locking them.
 - [**AG_Window**](https://libagar.org/man3/AG_Window): MRU API to simplify the process of remembering geometries. New gravity methods for autoplacing.
-- [**cocoa**](https://libagar.org/man2/AG_DriverCocoa): Cursor operations. Clipboard integration.
+- [**cocoa**](https://libagar.org/man3/AG_DriverCocoa): Cursor operations. Clipboard integration.
 - [**glx**](https://libagar.org/man3/AG_DriverGLX): Make drag-and-drop (`sockets` test) work correctly (possibly using `AG_WindowMove()`).
-- [**wgl**](https://libagar.org/man2/AG_DriverWGL): Clipboard integration. Live resize.
+- [**wgl**](https://libagar.org/man3/AG_DriverWGL): Clipboard integration. Live resize.
 - Fix [**Style Editor**](https://libagar.org/man3/AG_StyleEditor) and [**GUI Debugger**](https://libagar.org/man3/AG_GuiDebugger) crashes which would occur when attempting to iterate over widgets (in keyrepeat mode).
 
-## [1.7.0] - 2021-
+## [1.7.0] - 2022-10-
 ### Added
-- [**sdl2fb**](https://libagar.org/man2/AG_DriverSDL2FB): New driver for SDL 2.0 (single-window; frame-buffer mode).
-- [**sdl2gl**](https://libagar.org/man2/AG_DriverSDL2GL): New driver for SDL 2.0 (single-window; OpenGL mode).
+- [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB): New driver for SDL 2.0 (single-window; frame-buffer mode).
+- [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL): New driver for SDL 2.0 (single-window; OpenGL mode).
+- [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW): New driver for SDL 2.0 (multi-window; OpenGL mode).
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
 - [**AG_Event**](https://libagar.org/man3/AG_Event): New macro [AG_EVENT_DUMP](https://libagar.org/man3/AG_EVENT_DUMP) to produce a listing of `argv[]` arguments on the console.
 - `install-agartest.exe` installer for agartest on Windows.
@@ -50,7 +51,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Fixed compilation problem with `core/dir.c` under [NetBSD](https://NetBSD.org).
 - Fixed compilation problem with `core/inline_byteswap.h` and `core/cpuinfo.c` on powerpc64. Thanks Mark Linimon!
 - Fixed `double` <-> `long` conversion warnings in `math/m_sparse*`.
-- [**wgl**](https://libagar.org/man2/AG_DriverWGL): Fixed a bug in cursor handling. When showing a window initially, perform size allocation after having initialized the cursors so that the initial cursor-change areas are correctly established.
+- [**wgl**](https://libagar.org/man3/AG_DriverWGL): Fixed a bug in cursor handling. When showing a window initially, perform size allocation after having initialized the cursors so that the initial cursor-change areas are correctly established.
 - `install-sdk.exe` now installs include files in `include\x86` or `include\x64`.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Fixed non-delivery of `mouse-button-down` events to hidden and subsequently re-shown widgets (e.g., widgets under a Notebook). Thanks [Walter](https://github.com/WallyZambotti)!
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Deliver `widget-hidden` when detaching a widget from a visible window.

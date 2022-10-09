@@ -43,9 +43,9 @@ Agar-GUI applications must initialize the GUI system.
 .Sh AVAILABLE DRIVERS
 As of Agar-1.6.0, the drivers included in the distribution are:
 .Pp
-.Bl -tag -width "sdlfb " -compact
+.Bl -tag -width "sdl2fb " -compact
 .It cocoa
-Integrated MacOS X Cocoa interface.
+MacOS X Cocoa (GL, multi-window).
 See
 .Xr AG_DriverCocoa 3 .
 .It dummy
@@ -53,19 +53,31 @@ A "no-op" driver which prints all low-level requests and arguments on the consol
 See
 .Xr AG_DriverDUMMY 3 .
 .It glx
-Integrated X Windows interface.
+X Windows (GL, multi-window).
 See
 .Xr AG_DriverGLX 3 .
 .It sdlfb
-SDL 1.x interface (using Framebuffer).
+SDL1 (framebuffer, single-window).
 See
 .Xr AG_DriverSDLFB 3 .
 .It sdlgl
-SDL 1.x interface (using OpenGL).
+SDL1 (GL, single-window).
 See
 .Xr AG_DriverSDLGL 3 .
+.It sdl2fb
+SDL2 (framebuffer, single-window).
+See
+.Xr AG_DriverSDL2FB 3 .
+.It sdl2gl
+SDL2 (GL, single-window).
+See
+.Xr AG_DriverSDL2GL 3 .
+.It sdl2mw
+SDL2 (GL, multi-window).
+See
+.Xr AG_DriverSDL2MW 3 .
 .It wgl
-Integrated MS Windows interface; see
+Microsoft Windows (GL, multi-window); see
 .Xr AG_DriverWGL 3 .
 .El
 .Sh INITIALIZATION
@@ -96,17 +108,19 @@ is non-NULL, it should be a comma-separated list of drivers in order of
 preference.
 Special selectors are available to include drivers based on capabilities.
 "<OpenGL>" selects any driver with support for OpenGL 1.1 or later.
-"<SDL>" any driver based on SDL 1.x and "<FB>" any driver based on a
-software framebuffer.
+"<SDL>" any driver based on SDL1, "<SDL2>" any driver based on SDL2
+and "<FB>" any driver based on a software framebuffer.
 .Pp
 The full list of compiled-in drivers may be obtained by calling
 .Xr AG_ListDriverNames 3 .
 Driver-specific parameters may be specified as a colon-separated list
 enclosed in parentheses.
-The available options are documented on the driver's respective manual page:
+The available options are documented on the driver's respective manual page.
+Some examples:
 .Bd -literal
-	sdlfb,sdlgl
+	sdlgl,sdlfb
 	<SDL>(width=640:height=480:depth=32)
+	<SDL2>(width=640:height=480)
 	<openGL>(stereo=1)
 .Ed
 .Pp

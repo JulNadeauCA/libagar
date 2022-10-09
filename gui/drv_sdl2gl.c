@@ -126,7 +126,7 @@ SDL2GL_Open(void *_Nonnull obj, const char *_Nullable spec)
 	 * could we create a separate thread running SDL_WaitEvent() and
 	 * sending notifications over a pipe, instead of using a spinner?
 	 */
-	if ((sglEventSpinner = AG_AddEventSpinner(AG_SDL2_EventSink, "%p", drv)) == NULL ||
+	if ((sglEventSpinner = AG_AddEventSpinner(AG_SDL2_EventSink_SW, "%p", drv)) == NULL ||
 	    (sglEventEpilogue = AG_AddEventEpilogue(AG_SDL2_EventEpilogue, NULL)) == NULL)
 		goto fail;
 
@@ -551,7 +551,7 @@ AG_DriverSwClass agDriverSDL2GL = {
 		AG_SDL2_BeginEventProcessing,
 		AG_SDL2_PendingEvents,
 		AG_SDL2_GetNextEvent,
-		AG_SDL2_ProcessEvent,
+		AG_SDL2_ProcessEvent_SW,
 		NULL,				/* genericEventLoop */
 		NULL,				/* endEventProcessing */
 		NULL,				/* terminate */

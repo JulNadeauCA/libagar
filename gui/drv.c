@@ -47,6 +47,7 @@ extern AG_DriverClass agDriverGLX;
 #endif
 #if defined(HAVE_SDL2)
 # if defined(HAVE_OPENGL)
+extern AG_DriverClass agDriverSDL2MW;
 extern AG_DriverClass agDriverSDL2GL;
 # endif
 extern AG_DriverClass agDriverSDL2FB;
@@ -79,6 +80,7 @@ AG_DriverClass *agDriverList[] = {
 	&agDriverCocoa,
 #endif
 #if defined(HAVE_SDL2) && defined(HAVE_OPENGL)
+	&agDriverSDL2MW,
 	&agDriverSDL2GL,
 #endif
 #if defined(HAVE_SDL2)

@@ -28,38 +28,24 @@
 .ds vT Agar API Reference
 .ds oS Agar 1.7.0
 .Sh NAME
-.Nm AG_DriverSDL2GL
-.Nd agar SDL2 OpenGL driver
+.Nm AG_DriverSDL2MW
+.Nd agar SDL2 multi-window OpenGL driver
 .Sh DESCRIPTION
-.\" IMAGE(http://libagar.org/widgets/AG_DriverSDL2GL.png, "The sdl2gl driver")
+.\" IMAGE(http://libagar.org/widgets/AG_DriverSDL2MW.png, "The sdl2mw driver")
 The Agar
-.Va sdl2gl
+.Va sdl2mw
 driver provides an interface to the Simple DirectMedia Layer (SDL) library
-version 2, and renders GUI elements as OpenGL primitives and managed textures.
-.Pp
-Using
-.Xr AG_InitVideoSDL 3
-as opposed to
-.Xr AG_InitGraphics 3 ,
-it is possible to attach Agar to an existing SDL display surface.
-If the SDL surface has the
-.Dv SDL_OPENGL
-flag set then
-.Va sdl2gl
-will be auto-selected by default.
+version 2, and renders GUI elements as OpenGL primitives and managed textures
+in separate windows.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Driver 3 ->
-.Xr AG_DriverSw 3 ->
+.Xr AG_DriverMw 3 ->
 .Nm .
 .Sh EXAMPLES
 .Bd -literal -offset indent
-AG_InitGraphics("sdl2gl(width=640:height=480)");
-AG_InitGraphics("sdl2gl(width=60%:height=80%)");
-AG_InitGraphics("sdl2gl(bgColor=0/120/120)");
-AG_InitGraphics("sdl2gl(out=%08d.jpg:outFirst=10)");
-AG_InitGraphics("sdl2gl(depth=64:stereo)");
-
-AG_InitVideoSDL(an_existing_SDL_screen, 0);
+AG_InitGraphics("sdl2mw");
+AG_InitGraphics("sdl2mw(stereo)");
+AG_InitGraphics("sdl2mw(out=%08d.jpg)");
 .Ed
 .Sh OPTIONS
 .Bl -tag -compact -width "outFirst "
@@ -69,14 +55,6 @@ Capture
 errors.
 .It stereo
 Request a stereoscopic visual.
-.It width
-Width in pixels, in % of available desktop space, or "auto".
-.It height
-Height in pixels, in % of available desktop space, or "auto".
-.It depth
-Depth in bits per pixel, or "auto".
-.It fpsMax
-Limit GUI refresh rate in frames/second (default = 60fps).
 .It out
 Dump video frames to JPEG or PNG image files.
 The filename path may include a printf-style (with frame number as argument).
@@ -87,12 +65,6 @@ will output frames to 00000001.jpg, 00000002.jpg, etc.
 Override first frame number (default = 0).
 .It outLast
 Terminate application after # frames have been rendered.
-.It bgColor
-Solid background color specified as "R/G/B", from "0/0/0" (black) to
-"255/255/255" (white).
-.It !bgPopup
-Disable the right-click background popup menu
-(which includes, notably the list of active windows).
 .It jpegQual
 If exporting to JPEG, set quality factor (100% = best).
 .It jpegDCT
@@ -102,11 +74,11 @@ integer method, "ifast" for fast but less accurate integer method, or
 .El
 .Sh SEE ALSO
 .Xr AG_DriverSDL2FB 3 ,
-.Xr AG_DriverSDL2MW 3 ,
+.Xr AG_DriverSDL2GL 3 ,
 .Xr AG_DriverSDLFB 3 ,
 .Xr AG_DriverSDLGL 3 ,
 .Xr AG_Driver 3 ,
-.Xr AG_DriverSw 3 ,
+.Xr AG_DriverMw 3 ,
 .Xr AG_GL 3 ,
 .Xr AG_InitGraphics 3 ,
 .Xr AG_Intro 3
@@ -116,5 +88,5 @@ integer method, "ifast" for fast but less accurate integer method, or
 .Lk https://www.opengl.org/ OpenGL
 .Sh HISTORY
 The
-.Va sdl2gl
+.Va sdl2mw
 driver first appeared in Agar 1.7.0.

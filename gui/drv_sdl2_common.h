@@ -35,6 +35,8 @@
 #include <agar/gui/begin.h>
 
 __BEGIN_DECLS
+struct ag_window *_Nullable AG_SDL_GetWindowFromID(AG_Driver *, Uint32);
+
 AG_PixelFormat *_Nonnull AG_SDL2_GetPixelFormat(const SDL_Surface *_Nonnull);
 void                     AG_SDL2_BlitSurface(const AG_Surface *_Nonnull,
                                              const AG_Rect *_Nullable,
@@ -60,8 +62,10 @@ int  AG_SDL2_PendingEvents(void *_Nonnull);
 void AG_SDL2_TranslateEvent(void *_Nonnull, const SDL_Event *_Nonnull,
                             AG_DriverEvent *_Nonnull);
 int  AG_SDL2_GetNextEvent(void *_Nonnull, AG_DriverEvent *_Nonnull);
-int  AG_SDL2_ProcessEvent(void *_Nullable, AG_DriverEvent *_Nonnull);
-int  AG_SDL2_EventSink(AG_EventSink *_Nonnull, AG_Event *_Nonnull);
+int  AG_SDL2_ProcessEvent_SW(void *_Nullable, AG_DriverEvent *_Nonnull);
+int  AG_SDL2_ProcessEvent_MW(void *_Nullable, AG_DriverEvent *_Nonnull);
+int  AG_SDL2_EventSink_SW(AG_EventSink *_Nonnull, AG_Event *_Nonnull);
+int  AG_SDL2_EventSink_MW(AG_EventSink *_Nonnull, AG_Event *_Nonnull);
 int  AG_SDL2_EventEpilogue(AG_EventSink *_Nonnull, AG_Event *_Nonnull);
 void AG_SDL2_EndEventProcessing(void *_Nonnull);
 

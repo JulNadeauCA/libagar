@@ -10,7 +10,7 @@
 ##### Optional
 - [Xorg](https://www.x.org) (`pkg install xorg`). Enables [**glx**](https://libagar.org/man3/AG_DriverGLX).
 - [SDL 1.2](https://libsdl.org) (`pkg install sdl`). Enables [**sdlfb**](https://libagar.org/man3/AG_DriverSDLFB) & [**sdlgl**](https://libagar.org/man3/AG_DriverSDLGL).
-- [SDL 2.0](https://libsdl.org) (`pkg install sdl2`). Enables [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB) & [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL).
+- [SDL 2.0](https://libsdl.org) (`pkg install sdl2`). Enables [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB), [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL) and [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW).
 - [png](http://libpng.org) (`pkg install png`). Enables [**PNG loading**](https://libagar.org/man3/AG_SurfaceFromPNG).
 - [jpeg-turbo](https://libjpeg-turbo.org) (`pkg install jpeg-turbo`). Enables [**JPEG loading**](https://libagar.org/man3/AG_SurfaceFromJPEG).
 - [libiconv](https://gnu.org/software/libiconv) (`pkg install libiconv`). Support encodings other than ASCII & UTF-8 in [**Textbox**](https://libagar.org/man3/AG_Textbox)/[**Editable**](https://libagar.org/man3/AG_Editable).
@@ -64,7 +64,7 @@
 - [Xorg](https://www.x.org) with OpenGL (`apt-get libgl1-mesa-dev libxinerama-dev`). Enables [**glx**](https://libagar.org/man3/AG_DriverGLX).
 - [Fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) (`apt-get install libfontconfig-dev`). Allows system fonts to be used.
 - [SDL 1.2](https://libsdl.org) (`apt-get install libsdl-dev`). Enables [**sdlfb**](https://libagar.org/man3/AG_DriverSDLFB) & [**sdlgl**](https://libagar.org/man3/AG_DriverSDLGL).
-- [SDL 2.0](https://libsdl.org) (`apt-get install libsdl2-dev`). Enables [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB) & [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL).
+- [SDL 2.0](https://libsdl.org) (`apt-get install libsdl2-dev`). Enables [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB), [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL) and [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW).
 - [png](http://libpng.org) (`apt-get install libpng-dev`). Enables [**PNG loading**](https://libagar.org/man3/AG_SurfaceFromPNG).
 - [jpeg-turbo](https://libjpeg-turbo.org) (`apt-get install libjpeg-dev`). Enables [**JPEG loading**](https://libagar.org/man3/AG_SurfaceFromJPEG).
 - [gettext](https://gnu.org/software/gettext) (`pkg install gettext`). Enables native language support.
@@ -117,7 +117,7 @@
 - [Xorg](https://www.x.org) with OpenGL (`yum install mesa-libGL-devel`). Enables [**glx**](https://libagar.org/man3/AG_DriverGLX).
 - [Fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) (`yum install fontconfig-devel`). Allows system fonts to be used.
 - [SDL 1.2](https://libsdl.org) (`yum install SDL-devel`). Enables [**sdlfb**](https://libagar.org/man3/AG_DriverSDLFB) & [**sdlgl**](https://libagar.org/man3/AG_DriverSDLGL).
-- [SDL 2.0](https://libsdl.org) (`yum install SDL2-devel`). Enables [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB) & [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL).
+- [SDL 2.0](https://libsdl.org) (`yum install SDL2-devel`). Enables [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB), [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL) and [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW).
 - [png](http://libpng.org) (`yum install libpng-devel`). Enables [**PNG loading**](https://libagar.org/man3/AG_SurfaceFromPNG).
 - [jpeg-turbo](https://libjpeg-turbo.org) (`yum install libjpeg-turbo-devel`). Enables [**JPEG loading**](https://libagar.org/man3/AG_SurfaceFromJPEG).
 - [gettext](https://gnu.org/software/gettext) (`yum install gettext`). Enables native language support.
@@ -170,7 +170,7 @@
 
 ##### Optional
 - [SDL 1.2](https://libsdl.org) ([Download 1.2.x source](https://libsdl.org/download-1.2.php), `./configure && make install`). Enables [**sdlfb**](https://libagar.org/man3/AG_DriverSDLFB) & [**sdlgl**](https://libagar.org/man3/AG_DriverSDLGL).
-- [SDL 2.0](https://libsdl.org) ([Download 2.0.x source](https://libsdl.org/), `./configure && make install`). Enables [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB) & [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL).
+- [SDL 2.0](https://libsdl.org) ([Download 2.0.x source](https://libsdl.org/), `./configure && make install`). Enables [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB), [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL) and [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW).
 - [gettext](https://gnu.org/software/gettext) ([Download source](https://ftp.gnu.org/pub/gnu/gettext/), `./configure && make install`). Enables native language support.
 
 ##### Installing from source

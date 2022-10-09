@@ -927,7 +927,43 @@ AG_SDL2_KeySymFromScancode(const SDL_Scancode scancode)
 	return (AG_KEY_LAST);
 }
 
-/* Translate an SDL_Event to an AG_DriverEvent. */
+/*
+ * Return the AG_Window corresponding to the given SDL Window ID.
+ * The agDrivers VFS must be locked.
+ */
+AG_Window *
+AG_SDL_GetWindowFromID(AG_Driver *drv, Uint32 windowID)
+{
+	AG_DriverMw *dmw;
+
+	if (AGDRIVER_SINGLE(drv)) {
+		return (NULL);		/* Not needed (single-window driver) */
+	}
+	AGOBJECT_FOREACH_CHILD(dmw, &agDrivers, ag_driver_mw) {
+		AG_Window *win;
+
+		if (!AGDRIVER_MULTIPLE(dmw) ||
+		    dmw->windowID != windowID) {
+			continue;
+		}
+		win = AGDRIVER_MW(dmw)->win;
+
+		if (!(AGDRIVER_MW(dmw)->flags & AG_DRIVER_MW_OPEN) ||
+		    (win->flags & AG_WINDOW_DETACHING) ||
+		    WIDGET(win)->drv == NULL) {
+			return (NULL);
+		}
+		return (win);
+	}
+	return (NULL);
+}
+
+/*
+ * Translate an SDL_Event to an AG_DriverEvent.
+ * 
+ * Compatible with both single-window and multi-window drivers.
+ * For single-window drivers, the win pointer is set to NULL.
+ */
 void
 AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 {
@@ -935,37 +971,51 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 
 	switch (ev->type) {
 	case SDL_MOUSEMOTION:
+#if 0
+		Debug(drv, "%s: MOUSEMOTION "
+		    "(Pos=" AGSI_YEL "%d,%d" AGSI_RST ")\n",
+		    OBJECT(drv->mouse)->name,
+		    ev->button.x, ev->button.y);
+#endif
 		AG_MouseMotionUpdate(drv->mouse, ev->motion.x, ev->motion.y);
-
 		dev->type = AG_DRIVER_MOUSE_MOTION;
-		dev->win = NULL;
+		dev->win = AG_SDL_GetWindowFromID(drv, ev->motion.windowID);
 		dev->data.motion.x = ev->motion.x;
 		dev->data.motion.y = ev->motion.y;
 		break;
 	case SDL_MOUSEBUTTONUP:
+		Debug(drv, "%s: MOUSEBUTTONUP "
+		    "(Which=" AGSI_YEL "%d" AGSI_RST
+		    " Pos=" AGSI_YEL "%d,%d" AGSI_RST ")\n",
+		    OBJECT(drv->mouse)->name,
+		    ev->button.which,
+		    ev->button.x, ev->button.y);
 		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_RELEASED,
 		    ev->button.button);
-
 		dev->type = AG_DRIVER_MOUSE_BUTTON_UP;
-		dev->win = NULL;
+		dev->win = AG_SDL_GetWindowFromID(drv, ev->button.windowID);
 		dev->data.button.which = (AG_MouseButton)ev->button.button;
 		dev->data.button.x = ev->button.x;
 		dev->data.button.y = ev->button.y;
 		break;
 	case SDL_MOUSEBUTTONDOWN:
+		Debug(drv, "%s: MOUSEBUTTONDOWN "
+		    "(Which=" AGSI_YEL "%d" AGSI_RST
+		    " Pos=" AGSI_YEL "%d,%d" AGSI_RST ")\n",
+		    OBJECT(drv->mouse)->name,
+		    ev->button.which,
+		    ev->button.x, ev->button.y);
 		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED,
 		    ev->button.button);
-
 		dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
-		dev->win = NULL;
+		dev->win = AG_SDL_GetWindowFromID(drv, ev->button.windowID);
 		dev->data.button.which = (AG_MouseButton)ev->button.button;
 		dev->data.button.x = ev->button.x;
 		dev->data.button.y = ev->button.y;
 		break;
 	case SDL_MOUSEWHEEL:
 		dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
-		dev->win = NULL;
-
+		dev->win = AG_SDL_GetWindowFromID(drv, ev->button.windowID);
 		if (ev->wheel.y == 1) {
 			AG_MouseButtonUpdate(drv->mouse,
 			    AG_BUTTON_PRESSED,
@@ -977,11 +1027,9 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 			    AG_MOUSE_WHEELDOWN);
 			dev->data.button.which = AG_MOUSE_WHEELDOWN;
 		}
-
 		AG_MouseGetState(drv->mouse,
 		    &dev->data.button.x,
 		    &dev->data.button.y);
-
 		break;
 	case SDL_KEYDOWN:
 		Debug(drv, "%s: KEYDOWN "
@@ -1000,7 +1048,7 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED, dev->data.key.ks);
 
 		dev->type = AG_DRIVER_KEY_DOWN;
-		dev->win = NULL;
+		dev->win = AG_SDL_GetWindowFromID(drv, ev->key.windowID);
 		dev->data.key.ucs = AG_SDL_KeySymToUcs4(ev->key.keysym.sym);
 		break;
 	case SDL_KEYUP:
@@ -1020,7 +1068,7 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED, dev->data.key.ks);
 
 		dev->type = AG_DRIVER_KEY_UP;
-		dev->win = NULL;
+		dev->win = AG_SDL_GetWindowFromID(drv, ev->key.windowID);
 		dev->data.key.ucs = AG_SDL_KeySymToUcs4(ev->key.keysym.sym);
 		break;
 	case SDL_WINDOWEVENT:
@@ -1028,19 +1076,16 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		case SDL_WINDOWEVENT_ENTER:
 			Debug(drv, "WINDOW ENTER\n");
 			dev->type = AG_DRIVER_MOUSE_ENTER;
-			dev->win = NULL;
 			break;
 		case SDL_WINDOWEVENT_LEAVE:
 			Debug(drv, "WINDOW LEAVE\n");
 			dev->type = AG_DRIVER_MOUSE_LEAVE;
-			dev->win = NULL;
 			break;
 		case SDL_WINDOWEVENT_MOVED:
 			Debug(drv, "WINDOW MOVED (" AGSI_YEL "%d, %d" AGSI_RST ")\n",
 			    (int)ev->window.data1,
 			    (int)ev->window.data2);
 			dev->type = AG_DRIVER_MOVED;
-			dev->win = NULL;
 			dev->data.moved.x = (int)ev->window.data1;
 			dev->data.moved.y = (int)ev->window.data2;
 			break;
@@ -1049,7 +1094,6 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 			    (int)ev->window.data1,
 			    (int)ev->window.data2);
 			dev->type = AG_DRIVER_VIDEORESIZE;
-			dev->win = NULL;
 			dev->data.videoresize.x = 0;
 			dev->data.videoresize.y = 0;
 			dev->data.videoresize.w = (int)ev->window.data1;
@@ -1058,22 +1102,18 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		case SDL_WINDOWEVENT_MINIMIZED:
 			Debug(drv, "WINDOW MINIMIZED\n");
 			dev->type = AG_DRIVER_MINIMIZED;
-			dev->win = NULL;
 			break;
 		case SDL_WINDOWEVENT_MAXIMIZED:
 			Debug(drv, "WINDOW MAXIMIZED\n");
 			dev->type = AG_DRIVER_MAXIMIZED;
-			dev->win = NULL;
 			break;
 		case SDL_WINDOWEVENT_RESTORED:
 			Debug(drv, "WINDOW RESTORED\n");
 			dev->type = AG_DRIVER_RESTORED;
-			dev->win = NULL;
 			break;
 		case SDL_WINDOWEVENT_EXPOSED:
 			Debug(drv, "WINDOW EXPOSED\n");
 			dev->type = AG_DRIVER_EXPOSE;
-			dev->win = NULL;
 			break;
 		default:
 			Debug(drv, "WINDOW EVENT (" AGSI_YEL "0x%x, 0x%x,0x%x" AGSI_RST ")\n",
@@ -1082,21 +1122,22 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 			    (Uint)ev->window.data2);
 			break;
 		}
-
+		dev->win = AG_SDL_GetWindowFromID(drv, ev->window.windowID);
 		break;
 	case SDL_QUIT:
 	case SDL_USEREVENT:
 		dev->type = AG_DRIVER_CLOSE;
-		dev->win = NULL;
 		break;
 	default:
 		dev->type = AG_DRIVER_UNKNOWN;
-		dev->win = NULL;
 		break;
 	}
 }
 
-/* Standard getNextEvent() method for SDL drivers. */
+/*
+ * Standard getNextEvent() method.
+ * For both single-window and multi-window drivers.
+ */
 int
 AG_SDL2_GetNextEvent(void *obj, AG_DriverEvent *dev)
 {
@@ -1131,14 +1172,11 @@ GenericMouseOverCtrl(AG_Window *_Nonnull win, int x, int y)
 }
 
 /*
- * Process an input device event.
- *
+ * Process an input device event (single-window drivers).
  * The agDrivers VFS must be locked.
- *
- * TODO: generalize this code for single-window drivers in general.
  */
 static int
-ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
+ProcessInputEvent_SW(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 {
 	AG_DriverSw *dsw = (AG_DriverSw *)drv;
 	AG_Window *win, *winTop = NULL;
@@ -1251,9 +1289,12 @@ event_processed:
 	return (1);
 }
 
-/* Standard processEvent() method for SDL2 drivers. */
+/*
+ * Standard processEvent() event processing method for SDL2 drivers.
+ * For single-window drivers (sdl2fb and sdl2gl).
+ */
 int
-AG_SDL2_ProcessEvent(void *obj, AG_DriverEvent *dev)
+AG_SDL2_ProcessEvent_SW(void *obj, AG_DriverEvent *dev)
 {
 	AG_Driver *drv = (AG_Driver *)obj;
 	AG_DriverSw *dsw = (AG_DriverSw *)obj;
@@ -1263,13 +1304,13 @@ AG_SDL2_ProcessEvent(void *obj, AG_DriverEvent *dev)
 
 	switch (dev->type) {
 	case AG_DRIVER_MOUSE_MOTION:
-		rv = ProcessInputEvent(drv, dev);
+		rv = ProcessInputEvent_SW(drv, dev);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_UP:
-		rv = ProcessInputEvent(drv, dev);
+		rv = ProcessInputEvent_SW(drv, dev);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_DOWN:
-		rv = ProcessInputEvent(drv, dev);
+		rv = ProcessInputEvent_SW(drv, dev);
 		if (rv == 0 &&
 		    (dsw->flags & AG_DRIVER_SW_BGPOPUP) &&
 		    (dev->data.button.which == AG_MOUSE_MIDDLE ||
@@ -1280,13 +1321,13 @@ AG_SDL2_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		break;
 	case AG_DRIVER_KEY_DOWN:
 		if (AG_ExecGlobalKeys(dev->data.key.ks, drv->kbd->modState) == 0) {
-			rv = ProcessInputEvent(drv, dev);
+			rv = ProcessInputEvent_SW(drv, dev);
 		} else {
 			rv = 1;
 		}
 		break;
 	case AG_DRIVER_KEY_UP:
-		rv = ProcessInputEvent(drv, dev);
+		rv = ProcessInputEvent_SW(drv, dev);
 		break;
 	case AG_DRIVER_EXPOSE:
 		if (!(dsw->flags & AG_DRIVER_SW_OVERLAY)) {
@@ -1314,26 +1355,129 @@ AG_SDL2_ProcessEvent(void *obj, AG_DriverEvent *dev)
 }
 
 /*
- * Standard event sink for AG_EventLoop().
- *
- * TODO where AG_SINK_READ capability and pipes are available,
- * could we create a separate thread running SDL_WaitEvent() and
- * sending notifications over a pipe, instead of using a spinner?
+ * Standard processEvent() event processing method for SDL2 drivers.
+ * For multi-window drivers (sdl2mw).
  */
 int
-AG_SDL2_EventSink(AG_EventSink *es, AG_Event *event)
+AG_SDL2_ProcessEvent_MW(void *obj, AG_DriverEvent *dev)
+{
+	AG_Driver *drv = AGDRIVER(obj);
+	AG_Window *win;
+	int useText;
+	int rv = 1;
+
+	if ((win = dev->win) == NULL || win->flags & AG_WINDOW_DETACHING)
+		return (0);
+
+	AG_LockVFS(&agDrivers);
+	drv = WIDGET(win)->drv;
+
+	if ((useText = (win->flags & AG_WINDOW_USE_TEXT))) {
+		AG_PushTextState();
+		AG_TextFont(WIDGET(win)->font);
+		AG_TextColor(&WIDGET(win)->pal.c[WIDGET(win)->state]
+		                                [AG_TEXT_COLOR]);
+	}
+	switch (dev->type) {
+	case AG_DRIVER_MOUSE_MOTION:
+		AG_ProcessMouseMotion(win,
+		    dev->data.motion.x, dev->data.motion.y,
+		    drv->mouse->xRel, drv->mouse->yRel, drv->mouse->btnState);
+		AG_MouseCursorUpdate(win,
+		     dev->data.motion.x, dev->data.motion.y);
+		break;
+	case AG_DRIVER_MOUSE_BUTTON_DOWN:
+		AG_ProcessMouseButtonDown(win,
+		    dev->data.button.x, dev->data.button.y,
+		    dev->data.button.which);
+		break;
+	case AG_DRIVER_MOUSE_BUTTON_UP:
+		AG_ProcessMouseButtonUp(win,
+		    dev->data.button.x, dev->data.button.y,
+		    dev->data.button.which);
+		break;
+	case AG_DRIVER_KEY_UP:
+		AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED,
+		    dev->data.key.ks, dev->data.key.ucs);
+		break;
+	case AG_DRIVER_KEY_DOWN:
+		AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
+		    dev->data.key.ks, dev->data.key.ucs);
+		break;
+	case AG_DRIVER_MOUSE_ENTER:
+		AG_PostEvent(win, "window-enter", NULL);
+		break;
+	case AG_DRIVER_MOUSE_LEAVE:
+		AG_PostEvent(win, "window-leave", NULL);
+		break;
+	case AG_DRIVER_FOCUS_IN:
+		if (agWindowFocused != win) {
+			agWindowFocused = win;
+			AG_PostEvent(win, "window-gainfocus", NULL);
+		}
+		break;
+	case AG_DRIVER_FOCUS_OUT:
+		if (agWindowFocused == win) {
+			AG_PostEvent(win, "window-lostfocus", NULL);
+			agWindowFocused = NULL;
+		}
+		break;
+	case AG_DRIVER_CLOSE:
+		AG_PostEvent(win, "window-close", NULL);
+		break;
+	case AG_DRIVER_EXPOSE:
+		win->dirty = 1;
+		break;
+	default:
+		rv = 0;
+		break;
+	}
+
+	if (useText) {
+		AG_PopTextState();
+	}
+	AG_UnlockVFS(&agDrivers);
+	return (rv);
+}
+
+/*
+ * Standard event sink for AG_EventLoop() for single-window
+ * SDL2 drivers (sdl2fb, sdl2gl).
+ */
+int
+AG_SDL2_EventSink_SW(AG_EventSink *es, AG_Event *event)
 {
 	AG_DriverEvent dev;
 	AG_Driver *drv = AG_DRIVER_PTR(1);
 
 	if (SDL_PollEvent(NULL) != 0) {
 		while (AG_SDL2_GetNextEvent(drv, &dev) == 1)
-			(void)AG_SDL2_ProcessEvent(drv, &dev);
+			(void)AG_SDL2_ProcessEvent_SW(drv, &dev);
 	} else {
 		AG_Delay(1);
 	}
 	return (0);
 }
+
+/*
+ * Standard event sink for AG_EventLoop() for multi-window
+ * SDL2 drivers (sdl2fb, sdl2gl).
+ */
+int
+AG_SDL2_EventSink_MW(AG_EventSink *es, AG_Event *event)
+{
+	AG_DriverEvent dev;
+	AG_Driver *drv = AG_DRIVER_PTR(1);
+
+	if (SDL_PollEvent(NULL) != 0) {
+		while (AG_SDL2_GetNextEvent(drv, &dev) == 1)
+			(void)AG_SDL2_ProcessEvent_MW(drv, &dev);
+	} else {
+		AG_Delay(1);
+	}
+	return (0);
+}
+
 int
 AG_SDL2_EventEpilogue(AG_EventSink *es, AG_Event *event)
 {
