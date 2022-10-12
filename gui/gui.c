@@ -683,7 +683,7 @@ AG_About(AG_Event *event)
 		AG_GetVersion(&av);
 
 		lbl = AG_LabelNew(box, 0,
-		    "Agar %d.%d.%d (" AGSI_FRAK "%s" AGSI_RST ")",
+		    "Agar %d.%d.%d (" AGSI_LEAGUE_SPARTAN "%s" AGSI_RST ")",
 		    av.major, av.minor, av.patch,
 		    (av.release) ? av.release : "beta");
 

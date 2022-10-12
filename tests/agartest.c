@@ -945,12 +945,12 @@ main(int argc, char *argv[])
 		if (av.release) {
 			if (av.rev > 0) {
 				ln = AG_ConsoleMsg(console,
-				    _("Agar %d.%d.%d for %s (r%d, " AGSI_FRAK "%s" AGSI_RST ")"),
+				    _("Agar %d.%d.%d for %s (r%d, " AGSI_LEAGUE_SPARTAN "%s" AGSI_RST ")"),
 				    av.major, av.minor, av.patch, agCPU.arch,
 				    av.rev, av.release);
 			} else {
 				ln = AG_ConsoleMsg(console,
-				    _("Agar %d.%d.%d for %s (" AGSI_FRAK "%s" AGSI_RST ")"),
+				    _("Agar %d.%d.%d for %s (" AGSI_LEAGUE_SPARTAN "%s" AGSI_RST ")"),
 				    av.major, av.minor, av.patch, agCPU.arch,
 				    av.release);
 			}

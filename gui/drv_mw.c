@@ -40,6 +40,7 @@ Init(void *_Nonnull obj)
 
 	dmw->win = NULL;
 	dmw->flags = 0;
+	dmw->windowID = 0;
 }
 
 AG_ObjectClass agDriverMwClass = {

@@ -976,7 +976,9 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 	switch (ev->type) {
 	case SDL_MOUSEMOTION:
 		if (isMW) {
-			dev->win = AG_SDL_GetWindowFromID(drv, ev->motion.windowID);
+			if ((dev->win = AG_SDL_GetWindowFromID(drv, ev->motion.windowID)) == NULL) {
+				goto fail;
+			}
 			drv = WIDGET(dev->win)->drv;
 		}
 		AG_MouseMotionUpdate(drv->mouse, ev->motion.x, ev->motion.y);
@@ -987,6 +989,9 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 	case SDL_MOUSEBUTTONUP:
 		if (isMW) {
 			dev->win = AG_SDL_GetWindowFromID(drv, ev->button.windowID);
+			if (dev->win == NULL) {
+				goto fail;
+			}
 			Debug(drv, "MOUSEBUTTONUP "
 			    "(%s, Which=" AGSI_YEL "%d" AGSI_RST
 			    " Pos=" AGSI_YEL "%d,%d" AGSI_RST ")\n",
@@ -1012,6 +1017,9 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 	case SDL_MOUSEBUTTONDOWN:
 		if (isMW) {
 			dev->win = AG_SDL_GetWindowFromID(drv, ev->button.windowID);
+			if (dev->win == NULL) {
+				goto fail;
+			}
 			Debug(drv, "MOUSEBUTTONDOWN "
 			    "(%s, Which=" AGSI_YEL "%d" AGSI_RST
 			    " Pos=" AGSI_YEL "%d,%d" AGSI_RST ")\n",
@@ -1039,6 +1047,9 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
 		if (isMW) {
 			dev->win = AG_SDL_GetWindowFromID(drv, ev->button.windowID);
+			if (dev->win == NULL) {
+				goto fail;
+			}
 			drv = WIDGET(dev->win)->drv;
 		}
 		if (ev->wheel.y == 1) {
@@ -1071,6 +1082,9 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		}
 		if (isMW) {
 			dev->win = AG_SDL_GetWindowFromID(drv, ev->key.windowID);
+			if (dev->win == NULL) {
+				goto fail;
+			}
 			drv = WIDGET(dev->win)->drv;
 		}
 
@@ -1088,6 +1102,9 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 
 		if (isMW) {
 			dev->win = AG_SDL_GetWindowFromID(drv, ev->key.windowID);
+			if (dev->win == NULL) {
+				goto fail;
+			}
 			drv = WIDGET(dev->win)->drv;
 		}
 		if ((ev->key.keysym.sym & SDLK_SCANCODE_MASK) != 0) {
@@ -1100,14 +1117,13 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED, dev->data.key.ks);
 
 		dev->type = AG_DRIVER_KEY_UP;
-		dev->win = AG_SDL_GetWindowFromID(drv, ev->key.windowID);
 		dev->data.key.ucs = AG_SDL_KeySymToUcs4(ev->key.keysym.sym);
 		break;
 	case SDL_WINDOWEVENT:
 		if (isMW) {
 			dev->win = AG_SDL_GetWindowFromID(drv, ev->window.windowID);
 			if (dev->win == NULL)
-				break;
+				goto fail;
 		}
 		switch (ev->window.event) {
 		case SDL_WINDOWEVENT_ENTER:
@@ -1203,7 +1219,7 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 				    (Uint)ev->window.data1,
 				    (Uint)ev->window.data2);
 			}
-			break;
+			goto fail;
 		}
 		break;
 	case SDL_QUIT:
@@ -1214,6 +1230,11 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		dev->type = AG_DRIVER_UNKNOWN;
 		break;
 	}
+	return;
+fail:
+	Debug(drv, "SDL2: Event translation failed\n");
+	dev->type = AG_DRIVER_UNKNOWN;
+	dev->win = NULL;
 }
 
 /*
