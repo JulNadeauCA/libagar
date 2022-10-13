@@ -1556,6 +1556,7 @@ AG_SDL2_ProcessEvent_MW(void *obj, AG_DriverEvent *dev)
 		win->dirty = 1;
 		break;
 	default:
+		Debug(win, "ProcessEvent_MW: unhandled event %x\n", dev->type);
 		rv = 0;
 		break;
 	}
@@ -1580,25 +1581,6 @@ AG_SDL2_EventSink_SW(AG_EventSink *es, AG_Event *event)
 	if (SDL_PollEvent(NULL) != 0) {
 		while (AG_SDL2_GetNextEvent(drv, &dev) == 1)
 			(void)AG_SDL2_ProcessEvent_SW(drv, &dev);
-	} else {
-		AG_Delay(1);
-	}
-	return (0);
-}
-
-/*
- * Standard event sink for AG_EventLoop() for multi-window
- * SDL2 drivers (sdl2fb, sdl2gl).
- */
-int
-AG_SDL2_EventSink_MW(AG_EventSink *es, AG_Event *event)
-{
-	AG_DriverEvent dev;
-	AG_Driver *drv = AG_DRIVER_PTR(1);
-
-	if (SDL_PollEvent(NULL) != 0) {
-		while (AG_SDL2_GetNextEvent(drv, &dev) == 1)
-			(void)AG_SDL2_ProcessEvent_MW(drv, &dev);
 	} else {
 		AG_Delay(1);
 	}

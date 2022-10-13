@@ -65,7 +65,6 @@ int  AG_SDL2_GetNextEvent(void *_Nonnull, AG_DriverEvent *_Nonnull);
 int  AG_SDL2_ProcessEvent_SW(void *_Nullable, AG_DriverEvent *_Nonnull);
 int  AG_SDL2_ProcessEvent_MW(void *_Nullable, AG_DriverEvent *_Nonnull);
 int  AG_SDL2_EventSink_SW(AG_EventSink *_Nonnull, AG_Event *_Nonnull);
-int  AG_SDL2_EventSink_MW(AG_EventSink *_Nonnull, AG_Event *_Nonnull);
 int  AG_SDL2_EventEpilogue(AG_EventSink *_Nonnull, AG_Event *_Nonnull);
 void AG_SDL2_EndEventProcessing(void *_Nonnull);
 

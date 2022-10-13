@@ -77,6 +77,8 @@ AG_DriverMwClass agDriverSDL2MW;
 #define AGDRIVER_IS_SDL2MW(drv) (AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverSDL2MW)
 #endif
 
+static int SDL2MW_ProcessEvent(void *, AG_DriverEvent *);
+
 static void
 Init(void *_Nonnull obj)
 {
@@ -101,12 +103,25 @@ Init(void *_Nonnull obj)
 }
 
 static int
+SDL2MW_EventSink(AG_EventSink *es, AG_Event *event)
+{
+	AG_DriverEvent dev;
+	AG_Driver *drv = AG_DRIVER_PTR(1);
+
+	if (SDL_PollEvent(NULL) != 0) {
+		while (AG_SDL2_GetNextEvent(drv, &dev) == 1)
+			(void)SDL2MW_ProcessEvent(drv, &dev);
+	} else {
+		AG_Delay(1);
+	}
+	return (0);
+}
+
+static int
 SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 {
 	AG_Driver *drv = obj;
 	AG_DriverSDL2MW *smw = obj;
-
-	Debug(drv, "Open (nDrivers=%u)\n", nDrivers);
 
 	if (!initedSDL) {
 		if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_EVENTS) == -1) {
@@ -194,10 +209,12 @@ SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 		 * standard AG_EventLoop() routine. Custom event loops may
 		 * use alternate routines.
 		 */
-		if ((sdl2mwEventSpinner = AG_AddEventSpinner(AG_SDL2_EventSink_MW, "%p", drv)) == NULL) {
+		if ((sdl2mwEventSpinner = AG_AddEventSpinner(
+		    SDL2MW_EventSink, "%p", drv)) == NULL) {
 			goto fail;
 		}
-		if ((sdl2mwEventEpilogue = AG_AddEventEpilogue(AG_SDL2_EventEpilogue, NULL)) == NULL) {
+		if ((sdl2mwEventEpilogue = AG_AddEventEpilogue(
+		    AG_SDL2_EventEpilogue, NULL)) == NULL) {
 			AG_DelEventSink(sdl2mwEventSpinner);
 			sdl2mwEventSpinner = NULL;
 			goto fail;
@@ -300,8 +317,15 @@ SDL2MW_ProcessEvent(void *obj, AG_DriverEvent *dev)
 	if (AG_SDL2_ProcessEvent_MW(obj, dev) == 0) {
 		AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)obj;
 		AG_SizeAlloc a;
-		AG_Window *win = dev->win;
-		const int useText = (win->flags & AG_WINDOW_USE_TEXT);
+		AG_Window *win;
+		int useText;
+
+		if ((win = dev->win) == NULL) {
+			rv = 0;
+			goto out;
+		}
+
+		useText = (win->flags & AG_WINDOW_USE_TEXT);
 
 		if (useText) {
 			AG_PushTextState();
@@ -335,7 +359,7 @@ SDL2MW_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		if (useText)
 			AG_PopTextState();
 	}
-
+out:
 	AG_UnlockVFS(&agDrivers);
 	return (rv);
 }
@@ -401,8 +425,6 @@ SDL2MW_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r,
 	Uint32 swFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 	SDL_Surface *Swin;
 	AG_Rect rVP;
-
-	Debug(drv, "OpenWindow(%s)\n", win->caption);
 
 	if (win->flags & AG_WINDOW_NOBORDERS) { swFlags |= SDL_WINDOW_BORDERLESS; }
 	if (win->flags & AG_WINDOW_NORESIZE)  { swFlags &= ~(SDL_WINDOW_RESIZABLE); }
