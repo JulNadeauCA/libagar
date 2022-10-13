@@ -2404,6 +2404,9 @@ Inherit_Padding(AG_Widget *wid, char *buf, AG_Size bufSize)
 
 		if (Strcasecmp(buf, "inherit") == 0)
 			Inherit_Padding(OBJECT(wid)->parent, buf, sizeof(buf));
+	} else {
+		if (bufSize > 0)
+			buf[0] = '\0';
 	}
 }
 
@@ -2447,6 +2450,9 @@ Inherit_Margin(AG_Widget *wid, char *buf, AG_Size bufSize)
 
 		if (Strcasecmp(buf, "inherit") == 0)
 			Inherit_Margin(OBJECT(wid)->parent, buf, sizeof(buf));
+	} else {
+		if (bufSize > 0)
+			buf[0] = '\0';
 	}
 }
 

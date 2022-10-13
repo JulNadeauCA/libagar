@@ -376,6 +376,8 @@ Init(void *_Nonnull obj)
 	bu->justify = AG_TEXT_CENTER;
 	bu->valign = AG_TEXT_MIDDLE;
 	bu->repeat = NULL;
+	bu->wReq = 0;
+	bu->hReq = 0;
 
 	AG_AddEvent(bu, "widget-shown", OnShow, NULL);
 	AG_AddEvent(bu, "font-changed", StyleChanged, NULL);
