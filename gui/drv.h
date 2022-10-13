@@ -227,6 +227,8 @@ enum ag_driver_event_type {
 	AG_DRIVER_MINIMIZED,		/* Window has been minimized */
 	AG_DRIVER_MAXIMIZED,		/* Window has been maximized */
 	AG_DRIVER_RESTORED,		/* Window has been restored to normal size */
+	AG_DRIVER_SHOWN,		/* Window has been shown */
+	AG_DRIVER_HIDDEN,		/* Window has been hidden */
 };
 
 typedef struct ag_driver_event {

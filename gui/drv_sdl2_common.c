@@ -1126,21 +1126,13 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 				goto fail;
 		}
 		switch (ev->window.event) {
-		case SDL_WINDOWEVENT_ENTER:
+		case SDL_WINDOWEVENT_EXPOSED:
 			if (isMW) {
-				Debug(drv, "WINDOW ENTER (%s)\n", OBJECT(dev->win)->name);
+				Debug(drv, "WINDOW EXPOSED (%s)\n", OBJECT(dev->win)->name);
 			} else {
-				Debug(drv, "WINDOW ENTER\n");
+				Debug(drv, "WINDOW EXPOSED\n");
 			}
-			dev->type = AG_DRIVER_MOUSE_ENTER;
-			break;
-		case SDL_WINDOWEVENT_LEAVE:
-			if (isMW) {
-				Debug(drv, "WINDOW LEAVE (%s)\n", OBJECT(dev->win)->name);
-			} else {
-				Debug(drv, "WINDOW LEAVE\n");
-			}
-			dev->type = AG_DRIVER_MOUSE_LEAVE;
+			dev->type = AG_DRIVER_EXPOSE;
 			break;
 		case SDL_WINDOWEVENT_MOVED:
 			if (isMW) {
@@ -1174,6 +1166,38 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 			dev->data.videoresize.w = (int)ev->window.data1;
 			dev->data.videoresize.h = (int)ev->window.data2;
 			break;
+		case SDL_WINDOWEVENT_SHOWN:
+			if (isMW) {
+				Debug(drv, "WINDOW SHOWN (%s)\n", OBJECT(dev->win)->name);
+			} else {
+				Debug(drv, "WINDOW SHOWN\n");
+			}
+			dev->type = AG_DRIVER_SHOWN;
+			break;
+		case SDL_WINDOWEVENT_HIDDEN:
+			if (isMW) {
+				Debug(drv, "WINDOW HIDDEN (%s)\n", OBJECT(dev->win)->name);
+			} else {
+				Debug(drv, "WINDOW HIDDEN\n");
+			}
+			dev->type = AG_DRIVER_HIDDEN;
+			break;
+		case SDL_WINDOWEVENT_ENTER:
+			if (isMW) {
+				Debug(drv, "WINDOW ENTER (%s)\n", OBJECT(dev->win)->name);
+			} else {
+				Debug(drv, "WINDOW ENTER\n");
+			}
+			dev->type = AG_DRIVER_MOUSE_ENTER;
+			break;
+		case SDL_WINDOWEVENT_LEAVE:
+			if (isMW) {
+				Debug(drv, "WINDOW LEAVE (%s)\n", OBJECT(dev->win)->name);
+			} else {
+				Debug(drv, "WINDOW LEAVE\n");
+			}
+			dev->type = AG_DRIVER_MOUSE_LEAVE;
+			break;
 		case SDL_WINDOWEVENT_MINIMIZED:
 			if (isMW) {
 				Debug(drv, "WINDOW MINIMIZED (%s)\n", OBJECT(dev->win)->name);
@@ -1198,13 +1222,13 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 			}
 			dev->type = AG_DRIVER_RESTORED;
 			break;
-		case SDL_WINDOWEVENT_EXPOSED:
+		case SDL_WINDOWEVENT_CLOSE:
 			if (isMW) {
-				Debug(drv, "WINDOW EXPOSED (%s)\n", OBJECT(dev->win)->name);
+				Debug(drv, "WINDOW CLOSE (%s)\n", OBJECT(dev->win)->name);
 			} else {
-				Debug(drv, "WINDOW EXPOSED\n");
+				Debug(drv, "WINDOW CLOSE\n");
 			}
-			dev->type = AG_DRIVER_EXPOSE;
+			dev->type = AG_DRIVER_CLOSE;
 			break;
 		default:
 			if (isMW) {
@@ -1232,7 +1256,7 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 	}
 	return;
 fail:
-	Debug(drv, "SDL2: Event translation failed\n");
+	Debug(drv, "SDL2: Event translation failed (type=0x%x)\n", ev->type);
 	dev->type = AG_DRIVER_UNKNOWN;
 	dev->win = NULL;
 }

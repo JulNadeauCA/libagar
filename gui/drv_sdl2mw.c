@@ -298,9 +298,17 @@ SDL2MW_ProcessEvent(void *obj, AG_DriverEvent *dev)
 	AG_LockVFS(&agDrivers);
 
 	if (AG_SDL2_ProcessEvent_MW(obj, dev) == 0) {
+		AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)obj;
 		AG_SizeAlloc a;
 		AG_Window *win = dev->win;
+		const int useText = (win->flags & AG_WINDOW_USE_TEXT);
 
+		if (useText) {
+			AG_PushTextState();
+			AG_TextFont(WIDGET(win)->font);
+			AG_TextColor(&WIDGET(win)->pal.c[WIDGET(win)->state]
+			                                [AG_TEXT_COLOR]);
+		}
 		switch (dev->type) {
 		case AG_DRIVER_MOVED:
 			a.x = dev->data.moved.x;
@@ -313,8 +321,7 @@ SDL2MW_ProcessEvent(void *obj, AG_DriverEvent *dev)
 			rv = 1;
 			break;
 		case AG_DRIVER_VIDEORESIZE:
-			a.x = 0;
-			a.y = 0;
+			SDL_GetWindowPosition(smw->window, &a.x, &a.y);
 			a.w = dev->data.videoresize.w;
 			a.h = dev->data.videoresize.h;
 			if (a.w != WIDTH(win) || a.h != HEIGHT(win)) {
@@ -325,6 +332,8 @@ SDL2MW_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		default:
 			break;
 		}
+		if (useText)
+			AG_PopTextState();
 	}
 
 	AG_UnlockVFS(&agDrivers);
