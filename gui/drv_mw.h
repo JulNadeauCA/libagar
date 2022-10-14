@@ -50,6 +50,9 @@ typedef struct ag_driver_mw_class {
 	void (*_Nullable tweakAlignment)(struct ag_window *_Nonnull,
 	                                 struct ag_size_alloc *_Nonnull,
 	                                 Uint,Uint);
+	/* Set window size bounds */
+	void (*_Nullable setWindowMinSize)(struct ag_window *_Nonnull, int,int);
+	void (*_Nullable setWindowMaxSize)(struct ag_window *_Nonnull, int,int);
 } AG_DriverMwClass;
 
 typedef struct ag_driver_mw {

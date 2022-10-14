@@ -845,6 +845,7 @@ main(int argc, char *argv[])
 		return (1);
 	}
 	AG_WindowSetCaptionS(win, "agartest");
+	AG_WindowSetMinSize(win, 250, 100);
 	
 	menu = (agDriverSw) ? AG_MenuNewGlobal(0) :
                               AG_MenuNew(win, AG_MENU_HFILL);

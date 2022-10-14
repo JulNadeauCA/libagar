@@ -1493,5 +1493,7 @@ AG_DriverMwClass agDriverWGL = {
 	WGL_SetWindowCaption,
 	WGL_SetTransientFor,
 	NULL,				/* setOpacity (TODO) */
-	WGL_TweakAlignment
+	WGL_TweakAlignment,
+	NULL,				/* setWindowMinSize */
+	NULL				/* setWindowMaxSize */
 };

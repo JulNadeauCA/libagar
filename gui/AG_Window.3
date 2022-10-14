@@ -355,7 +355,6 @@ sets the minimum window size in percentage of the requested (computed) size.
 .Fn AG_WindowSetOpacity
 configures an overall per-window opacity (for compositing WMs).
 The argument can range from 0.0 (transparent) to 1.0 (opaque).
-This function is not available in integer-only builds.
 .Pp
 For windows with the
 .Dv AG_WINDOW_FADEIN
@@ -371,7 +370,6 @@ During fade-in, the window opacity will be repeatedly incremented by
 over a total period of
 .Fa fadeTime
 (in seconds).
-This feature is not available in integer-only builds.
 .Pp
 The
 .Fn AG_WindowSetZoom

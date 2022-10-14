@@ -57,7 +57,8 @@ typedef struct ag_sdl2mw_driver {
 
 	SDL_Window *_Nullable window;	/* SDL window */
 
-	AG_GL_Context gl;		/* Common OpenGL context data */
+	AG_GL_Context gl;		/* Agar OpenGL context data */
+	SDL_GLContext glCtx;		/* SDL per-window OpenGL context */
 
 	Uint8 *_Nullable   outBuf;	/* Output capture buffer */
 	char *_Nullable    outPath;	/* Output capture path (%N = window name) */
@@ -263,8 +264,20 @@ SDL2MW_Close(void *_Nonnull obj)
 static void
 SDL2MW_PostMoveCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 {
+	AG_Driver *drv = WIDGET(win)->drv;
+	AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)drv;
 	AG_SizeAlloc wa;
-	
+	const int useText = (win->flags & AG_WINDOW_USE_TEXT);
+
+	SDL_GL_MakeCurrent(smw->window, smw->glCtx);
+
+	if (useText) {
+		AG_PushTextState();
+		AG_TextFont(WIDGET(win)->font);
+		AG_TextColor(&WIDGET(win)->pal.c[WIDGET(win)->state]
+		                                [AG_TEXT_COLOR]);
+	}
+
 	wa.x = 0;
 	wa.y = 0;
 	wa.w = a->w;
@@ -273,6 +286,9 @@ SDL2MW_PostMoveCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 	AG_WidgetUpdateCoords(win, 0,0);
 	WIDGET(win)->x = a->x;
 	WIDGET(win)->y = a->y;
+
+	if (useText)
+		AG_PopTextState();
 
 	win->dirty = 1;
 
@@ -288,17 +304,28 @@ SDL2MW_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 	AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)drv;
 	AG_SizeAlloc wa;
 	AG_Rect rVP;
+	const int useText = (win->flags & AG_WINDOW_USE_TEXT);
 
+	SDL_GL_MakeCurrent(smw->window, smw->glCtx);
+
+	if (useText) {
+		AG_PushTextState();
+		AG_TextFont(WIDGET(win)->font);
+		AG_TextColor(&WIDGET(win)->pal.c[WIDGET(win)->state]
+		                                [AG_TEXT_COLOR]);
+	}
+	
 	wa.x = 0;
 	wa.y = 0;
 	wa.w = a->w;
 	wa.h = a->h;
 	AG_WidgetSizeAlloc(win, &wa);
 	AG_WidgetUpdateCoords(win, 0,0);
-	WIDGET(win)->x = a->x;
-	WIDGET(win)->y = a->y;
-
+	SDL_GetWindowPosition(smw->window, &WIDGET(win)->x, &WIDGET(win)->y);
 	win->dirty = 1;
+
+	if (useText)
+		AG_PopTextState();
 
 	rVP.x = 0;
 	rVP.y = 0;
@@ -315,25 +342,18 @@ SDL2MW_ProcessEvent(void *obj, AG_DriverEvent *dev)
 	AG_LockVFS(&agDrivers);
 
 	if (AG_SDL2_ProcessEvent_MW(obj, dev) == 0) {
-		AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)obj;
 		AG_SizeAlloc a;
 		AG_Window *win;
-		int useText;
 
 		if ((win = dev->win) == NULL) {
 			rv = 0;
 			goto out;
 		}
 
-		useText = (win->flags & AG_WINDOW_USE_TEXT);
-
-		if (useText) {
-			AG_PushTextState();
-			AG_TextFont(WIDGET(win)->font);
-			AG_TextColor(&WIDGET(win)->pal.c[WIDGET(win)->state]
-			                                [AG_TEXT_COLOR]);
-		}
 		switch (dev->type) {
+		case AG_DRIVER_EXPOSE:
+			win->dirty = 1;
+			break;
 		case AG_DRIVER_MOVED:
 			a.x = dev->data.moved.x;
 			a.y = dev->data.moved.y;
@@ -345,7 +365,8 @@ SDL2MW_ProcessEvent(void *obj, AG_DriverEvent *dev)
 			rv = 1;
 			break;
 		case AG_DRIVER_VIDEORESIZE:
-			SDL_GetWindowPosition(smw->window, &a.x, &a.y);
+			a.x = dev->data.videoresize.x;
+			a.y = dev->data.videoresize.y;
 			a.w = dev->data.videoresize.w;
 			a.h = dev->data.videoresize.h;
 			if (a.w != WIDTH(win) || a.h != HEIGHT(win)) {
@@ -356,8 +377,6 @@ SDL2MW_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		default:
 			break;
 		}
-		if (useText)
-			AG_PopTextState();
 	}
 out:
 	AG_UnlockVFS(&agDrivers);
@@ -367,7 +386,9 @@ out:
 static void
 SDL2MW_BeginRendering(void *_Nonnull obj)
 {
-/*	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); */
+	AG_DriverSDL2MW *smw = obj;
+
+	SDL_GL_MakeCurrent(smw->window, smw->glCtx);
 }
 
 static void
@@ -392,16 +413,16 @@ static void
 SDL2MW_EndRendering(void *_Nonnull obj)
 {
 	AG_DriverSDL2MW *smw = obj;
+	AG_GL_Context *gl = &smw->gl;
+	Uint i;
 
 #if 0
 	if (smw->outMode != AG_SDL2GL_OUT_NONE)            /* Capture output */
 		SDL2MW_CaptureOutput(smw);
 #endif
-
 	SDL_GL_SwapWindow(smw->window);
 
-#if 0
-	Uint i;
+#if 1
 	/* Remove textures and display lists queued for deletion. */
 	glDeleteTextures(gl->nTextureGC, (const GLuint *)gl->textureGC);
 	for (i = 0; i < gl->nListGC; i++) {
@@ -478,6 +499,7 @@ SDL2MW_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r,
 	/* For AG_SDL_GetWindowFromID(). */
 	AGDRIVER_MW(drv)->windowID = SDL_GetWindowID(smw->window);
 
+	/* Get the preferred pixel format for the window. */
 	Swin = SDL_GetWindowSurface(smw->window);
 	drv->videoFmt = Malloc(sizeof(AG_PixelFormat));
 	AG_PixelFormatRGBA(drv->videoFmt,
@@ -486,6 +508,15 @@ SDL2MW_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r,
 	    Swin->format->Gmask,
 	    Swin->format->Bmask,
 	    Swin->format->Amask);
+
+#if 1
+	if ((smw->glCtx = SDL_GL_CreateContext(smw->window)) == NULL) {
+		AG_SetError("SDL_GL_CreateContext: %s", SDL_GetError());
+		SDL_DestroyWindow(smw->window);
+		smw->window = NULL;
+		return (-1);
+	}
+#endif
 
 	Verbose(_("SDL2MW: New display (%d x %d x %d bpp)\n"),
 	    Swin->w, Swin->h, Swin->format->BitsPerPixel);
@@ -510,15 +541,11 @@ static int
 SDL2MW_MapWindow(AG_Window *_Nonnull win)
 {
 	AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)WIDGET(win)->drv;
-	AG_Rect rVP;
 
+	if (win->wMin > 0 && win->hMin > 0) {
+		SDL_SetWindowMinimumSize(smw->window, win->wMin, win->hMin);
+	}
 	SDL_ShowWindow(smw->window);
-
-	rVP.x = 0;
-	rVP.y = 0;
-	rVP.w = WIDTH(win);
-	rVP.h = HEIGHT(win);
-	AG_GL_SetViewport(&smw->gl, &rVP);
 	return (0);
 }
 
@@ -529,6 +556,8 @@ SDL2MW_CloseWindow(AG_Window *_Nonnull win)
 	AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)drv;
 
 	AG_FreeCursors(drv);
+
+	SDL_GL_DeleteContext(smw->glCtx);
 	AG_GL_DestroyContext(smw);
 
 	SDL_DestroyWindow(smw->window);
@@ -593,31 +622,6 @@ SDL2MW_SetInputFocus(AG_Window *_Nonnull win)
 	return (0);
 }
 
-static void
-SDL2MW_PreResizeCallback(AG_Window *_Nonnull win)
-{
-#if 0
-	AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)WIDGET(win)->drv;
-
-	/*
-	 * Backup GL resources since it is not portable to assume that a
-	 * display resize will not cause a change in GL contexts
-	 */
-	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
-	SDL2MW_FreeWidgetResources(WIDGET(win));
-	AG_TextClearGlyphCache(glx);
-#endif
-}
-
-static int
-SDL2MW_MoveWindow(AG_Window *_Nonnull win, int dx, int dy)
-{
-	AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)WIDGET(win)->drv;
-	
-	SDL_SetWindowPosition(smw->window, dx, dy);
-	return (0);
-}
-
 #if 0
 static void
 SDL2MW_FreeWidgetResources(AG_Widget *_Nonnull wid)
@@ -641,6 +645,23 @@ RegenWidgetResources(AG_Widget *_Nonnull wid)
 	AG_WidgetRegenResourcesGL(wid);
 }
 #endif
+
+static void
+SDL2MW_PreResizeCallback(AG_Window *_Nonnull win)
+{
+	AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)WIDGET(win)->drv;
+
+	SDL_GL_MakeCurrent(smw->window, smw->glCtx);
+}
+
+static int
+SDL2MW_MoveWindow(AG_Window *_Nonnull win, int dx, int dy)
+{
+	AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)WIDGET(win)->drv;
+	
+	SDL_SetWindowPosition(smw->window, dx, dy);
+	return (0);
+}
 
 static int
 SDL2MW_ResizeWindow(AG_Window *_Nonnull win, Uint w, Uint h)
@@ -685,6 +706,22 @@ SDL2MW_SetWindowCaption(AG_Window *_Nonnull win, const char *_Nonnull s)
 
 	SDL_SetWindowTitle(smw->window, s);
 	return (0);
+}
+
+static void
+SDL2MW_SetWindowMinSize(AG_Window *_Nonnull win, int w, int h)
+{
+	AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)WIDGET(win)->drv;
+	
+	SDL_SetWindowMinimumSize(smw->window, w,h);
+}
+
+static void
+SDL2MW_SetWindowMaxSize(AG_Window *_Nonnull win, int w, int h)
+{
+	AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)WIDGET(win)->drv;
+	
+	SDL_SetWindowMaximumSize(smw->window, w,h);
 }
 
 AG_DriverMwClass agDriverSDL2MW = {
@@ -792,5 +829,7 @@ AG_DriverMwClass agDriverSDL2MW = {
 	SDL2MW_SetWindowCaption,
 	NULL,				/* setTransientFor */
 	NULL,				/* setOpacity */
-	NULL				/* tweakAlignment */
+	NULL,				/* tweakAlignment */
+	SDL2MW_SetWindowMinSize,
+	SDL2MW_SetWindowMaxSize
 };

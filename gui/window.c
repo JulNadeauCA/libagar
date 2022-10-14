@@ -1663,6 +1663,8 @@ AG_WindowSetMinSizePct(AG_Window *win, int pct)
 void
 AG_WindowSetMinSize(AG_Window *win, int w, int h)
 {
+	AG_Driver *drv;
+
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
 
@@ -1671,6 +1673,12 @@ AG_WindowSetMinSize(AG_Window *win, int w, int h)
 	win->hMin = h;
 	win->dirty = 1;
 
+	drv = WIDGET(win)->drv;
+	if (AGDRIVER_MULTIPLE(drv) &&
+	    AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN &&
+	    AGDRIVER_MW_CLASS(drv)->setWindowMinSize != NULL) {
+		AGDRIVER_MW_CLASS(drv)->setWindowMinSize(win, w,h);
+	}
 	AG_ObjectUnlock(win);
 }
 

@@ -1190,6 +1190,22 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 			}
 			dev->type = AG_DRIVER_MOUSE_ENTER;
 			break;
+		case SDL_WINDOWEVENT_FOCUS_GAINED:
+			if (isMW) {
+				Debug(drv, "WINDOW FOCUS GAINED (%s)\n", OBJECT(dev->win)->name);
+			} else {
+				Debug(drv, "WINDOW FOCUS GAINED\n");
+			}
+			dev->type = AG_DRIVER_FOCUS_IN;
+			break;
+		case SDL_WINDOWEVENT_FOCUS_LOST:
+			if (isMW) {
+				Debug(drv, "WINDOW FOCUS LOST (%s)\n", OBJECT(dev->win)->name);
+			} else {
+				Debug(drv, "WINDOW FOCUS LOST\n");
+			}
+			dev->type = AG_DRIVER_FOCUS_OUT;
+			break;
 		case SDL_WINDOWEVENT_LEAVE:
 			if (isMW) {
 				Debug(drv, "WINDOW LEAVE (%s)\n", OBJECT(dev->win)->name);
@@ -1551,9 +1567,6 @@ AG_SDL2_ProcessEvent_MW(void *obj, AG_DriverEvent *dev)
 		break;
 	case AG_DRIVER_CLOSE:
 		AG_PostEvent(win, "window-close", NULL);
-		break;
-	case AG_DRIVER_EXPOSE:
-		win->dirty = 1;
 		break;
 	default:
 		Debug(win, "ProcessEvent_MW: unhandled event %x\n", dev->type);

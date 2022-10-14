@@ -1171,5 +1171,7 @@ AG_DriverMwClass agDriverDUMMY = {
 	DUMMY_SetWindowCaption,
 	DUMMY_SetTransientFor,
 	DUMMY_SetOpacity,
-	DUMMY_TweakAlignment
+	DUMMY_TweakAlignment,
+	NULL,					/* setWindowMinSize */
+	NULL					/* setWindowMaxSize */
 };

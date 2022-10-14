@@ -2469,5 +2469,7 @@ AG_DriverMwClass agDriverGLX = {
 	GLX_SetWindowCaption,
 	GLX_SetTransientFor,
 	GLX_SetOpacity,
-	GLX_TweakAlignment
+	GLX_TweakAlignment,
+	NULL,					/* setWindowMinSize */
+	NULL					/* setWindowMaxSize */
 };

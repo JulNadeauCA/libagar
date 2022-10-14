@@ -1765,5 +1765,7 @@ AG_DriverMwClass agDriverCocoa = {
 	COCOA_SetWindowCaption,
 	NULL,				/* setTransientFor */
 	COCOA_SetOpacity,
-	COCOA_TweakAlignment
+	COCOA_TweakAlignment,
+	NULL,				/* setWindowMinSize */
+	NULL				/* setWindowMaxSize */
 };
