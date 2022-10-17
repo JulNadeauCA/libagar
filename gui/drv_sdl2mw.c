@@ -557,8 +557,8 @@ SDL2MW_CloseWindow(AG_Window *_Nonnull win)
 
 	AG_FreeCursors(drv);
 
-	SDL_GL_DeleteContext(smw->glCtx);
 	AG_GL_DestroyContext(smw);
+	SDL_GL_DeleteContext(smw->glCtx);
 
 	SDL_DestroyWindow(smw->window);
 	smw->window = NULL;
