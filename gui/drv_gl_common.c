@@ -180,6 +180,7 @@ AG_GL_DestroyContext(void *obj)
 #ifdef DEBUG_GL
 	Debug(drv, "GL Context Destroy\n");
 #endif
+
 	/* Invalidate any cached glyph renderings. */
 	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
 		SLIST_FOREACH(glyph, &drv->glyphCache[i].glyphs, glyphs) {
@@ -302,7 +303,7 @@ AG_GL_StdPushBlendingMode(void *obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 	if (gl->nBlendStates+1 > gl->maxBlendStates) {
 		gl->maxBlendStates += 16;
 #ifdef DEBUG_GL
-		Debug(NULL, "maxBlendStates-> %d\n", gl->maxBlendStates);
+		Debug(drv, "GL maxBlendStates-> %d\n", gl->maxBlendStates);
 #endif
 		gl->blendStates = Realloc(gl->blendStates, gl->maxBlendStates *
 		                                           sizeof(AG_GL_BlendState));

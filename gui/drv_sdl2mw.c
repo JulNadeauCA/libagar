@@ -422,7 +422,6 @@ SDL2MW_EndRendering(void *_Nonnull obj)
 #endif
 	SDL_GL_SwapWindow(smw->window);
 
-#if 1
 	/* Remove textures and display lists queued for deletion. */
 	glDeleteTextures(gl->nTextureGC, (const GLuint *)gl->textureGC);
 	for (i = 0; i < gl->nListGC; i++) {
@@ -430,7 +429,6 @@ SDL2MW_EndRendering(void *_Nonnull obj)
 	}
 	gl->nTextureGC = 0;
 	gl->nListGC = 0;
-#endif
 }
 
 /*
@@ -554,6 +552,8 @@ SDL2MW_CloseWindow(AG_Window *_Nonnull win)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)drv;
+
+	SDL_GL_MakeCurrent(smw->window, smw->glCtx);
 
 	AG_FreeCursors(drv);
 
