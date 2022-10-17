@@ -182,6 +182,9 @@ bbc | c64 | c128 | geos | nes)
 	disable(objc)
 	enable_micro="yes"
 	enable_gui="no"
+	enable_sg="no"
+	enable_sk="no"
+	enable_vg="no"
 	enable_shared="no"
 	with_attributes="no"
 	with_float="no"
