@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -432,6 +432,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 
 	if (tb->label != NULL && tb->label[0] != '\0') {
 		RenderLabel(tb);
+
 		r->w += WIDGET(tb)->spacingHoriz;
 		r->w += WSURFACE(tb,tb->surfaceLbl)->w;
 		r->h = MAX(r->h, WSURFACE(tb,tb->surfaceLbl)->h);
@@ -646,17 +647,9 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_TEXTBOX_SELF();
 	const int btn = AG_INT(1);
-	const int mx = AG_INT(2);
-	const int my = AG_INT(3);
 
 	if (btn == AG_MOUSE_LEFT)
 		AG_WidgetFocus(tb);
-
-	if (mx >= tb->r.x &&
-	    mx <= WIDTH(tb) - WIDGET(tb)->paddingRight &&
-	    my >= WIDGET(tb)->paddingTop &&
-	    my < HEIGHT(tb) - WIDGET(tb)->paddingBottom)
-		AG_ForwardEvent(tb->ed, event);
 }
 
 static void
