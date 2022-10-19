@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1577,8 +1577,9 @@ fail_ctx:
 fail_unlock:
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
-	if (xvi)
+	if (xvi) {
 		XFree(xvi);
+	}
 	return (-1);
 }
 

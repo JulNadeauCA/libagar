@@ -456,6 +456,8 @@ AG_Glyph *_Nonnull AG_TextRenderGlyph(AG_Driver *_Nonnull, AG_Font *_Nonnull,
 int  AG_TextParseANSI(const AG_TextState *_Nonnull, AG_TextANSI *_Nonnull,
                       const AG_Char *_Nonnull);
 
+int  AG_TextExportUnicode_StripANSI(const char *, char *, const AG_Char *, AG_Size);
+
 void AG_TextColor(const AG_Color *_Nonnull);
 void AG_TextColorRGB(Uint8, Uint8, Uint8);
 void AG_TextColorRGBA(Uint8, Uint8, Uint8, Uint8);

@@ -2106,6 +2106,101 @@ fail_param:
 	return (-1);
 }
 
+/*
+ * Convert an internal UCS-4 string to a fixed-size buffer using the specified
+ * encoding. Strip ANSI sequences. At most dstSize-1 bytes will be copied.
+ * The string is always NUL-terminated.
+ */
+int
+AG_TextExportUnicode_StripANSI(const char *encoding, char *dst, const AG_Char *ucs,
+    AG_Size dstSize)
+{
+	AG_TextANSI ansi;
+	AG_Size len;
+
+	if (strcmp(encoding, "UTF-8") == 0) {
+		for (len = 0; *ucs != '\0' && len < dstSize; ucs++) {
+			AG_Char uch = *ucs;
+			int chlen, ch1, i;
+			
+			if (ucs[0] == 0x1b &&
+			    ucs[1] >= 0x40 &&
+			    ucs[1] <= 0x5f &&
+			    ucs[2] != '\0') {
+				if (AG_TextParseANSI(AG_TEXT_STATE_CUR(),
+				                     &ansi, &ucs[1]) == 0) {
+					ucs += ansi.len;
+					continue;
+				}
+			}
+			if (uch < 0x80) {
+				chlen = 1;
+				ch1 = 0;
+			} else if (uch < 0x800) {	
+				chlen = 2;
+				ch1 = 0xc0;
+			} else if (uch < 0x10000) {
+				chlen = 3;
+				ch1 = 0xe0;
+			} else if (uch < 0x200000) {
+				chlen = 4;
+				ch1 = 0xf0;
+			} else if (uch < 0x4000000) {
+				chlen = 5;
+				ch1 = 0xf8;
+			} else if (uch <= 0x7fffffff) {
+				chlen = 6;
+				ch1 = 0xfc;
+			} else {
+				AG_SetErrorS("Bad UTF-8 sequence");
+				return (-1);
+			}
+			if (len+chlen+1 > dstSize) {
+				AG_SetErrorS("Out of space");
+				return (-1);
+			}
+			for (i = chlen - 1; i > 0; i--) {
+				dst[i] = (uch & 0x3f) | 0x80;
+				uch >>= 6;
+			}
+			dst[0] = uch | ch1;
+			dst += chlen;
+			len += chlen;
+		}
+		*dst = '\0';
+		return (0);
+	} else if (strcmp(encoding, "US-ASCII") == 0) {
+		for (len = 0; *ucs != '\0' && len < dstSize; ucs++) {
+			if (ucs[0] == 0x1b &&
+			    ucs[1] >= 0x40 &&
+			    ucs[1] <= 0x5f &&
+			    ucs[2] != '\0') {
+				if (AG_TextParseANSI(AG_TEXT_STATE_CUR(),
+				                     &ansi, &ucs[1]) == 0) {
+					ucs += ansi.len;
+					continue;
+				}
+			}
+			if ((*ucs) & ~0x7f) {
+				AG_SetErrorS("Non-ASCII character");
+				return (-1);
+			}
+			*dst = (char)*ucs;
+			dst++;
+			len++;
+		}
+		*dst = '\0';
+		return (0);
+	} else {
+# ifdef HAVE_ICONV
+		return ExportUnicodeICONV(encoding, dst, ucs, dstSize);
+# else
+		AG_SetError("No such encoding: \"%s\"", encoding);
+		return (-1);
+# endif
+	}
+}
+
 #ifdef HAVE_FREETYPE
 /*
  * Render underline style.

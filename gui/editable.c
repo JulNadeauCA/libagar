@@ -1777,8 +1777,8 @@ AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf,
 			buf->s[selEnd] = cEndSave;
 			goto no_change;
 		}
-		if (AG_ExportUnicode("UTF-8", s, &buf->s[selStart], utf8len)
-		    == -1) {
+		if (AG_TextExportUnicode_StripANSI("UTF-8", s,
+		    &buf->s[selStart], utf8len) == -1) {
 			buf->s[selEnd] = cEndSave;
 			Verbose(_("Copy failed (%s)\n"), AG_GetError());
 			goto no_change;

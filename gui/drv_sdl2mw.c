@@ -507,14 +507,12 @@ SDL2MW_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r,
 	    Swin->format->Bmask,
 	    Swin->format->Amask);
 
-#if 1
 	if ((smw->glCtx = SDL_GL_CreateContext(smw->window)) == NULL) {
 		AG_SetError("SDL_GL_CreateContext: %s", SDL_GetError());
 		SDL_DestroyWindow(smw->window);
 		smw->window = NULL;
 		return (-1);
 	}
-#endif
 
 	Verbose(_("SDL2MW: New display (%d x %d x %d bpp)\n"),
 	    Swin->w, Swin->h, Swin->format->BitsPerPixel);
