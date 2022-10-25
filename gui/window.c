@@ -2444,9 +2444,9 @@ AG_WindowProcessDetachQueue(void)
 	}
 	if (nHidden > 0) {
 		/*
-		 * Windows were hidden - defer detach operation until the next
-		 * event cycle, just in case the underlying WM cannot hide and
-		 * unmap a window in the same event cycle.
+		 * Windows were hidden. Defer detach operation until the next
+		 * event cycle in case the underlying window system is unable
+		 * to hide and unmap a window in the same event cycle.
 		 */
 		return;
 	}
@@ -2495,6 +2495,7 @@ AG_WindowProcessDetachQueue(void)
 	}
 	TAILQ_INIT(&agWindowDetachQ);
 	
+#ifdef AG_EVENT_LOOP
 	/* Terminate if the last AG_WINDOW_MAIN window was closed. */
 	if (closedMain > 0) {
 		AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
@@ -2508,11 +2509,10 @@ AG_WindowProcessDetachQueue(void)
 				break;
 		}
 		if (drv == NULL) {
-#ifdef AG_EVENT_LOOP
 			AG_Terminate(0);
-#endif
 		}
 	}
+#endif /* AG_EVENT_LOOP */
 }
 
 /*
