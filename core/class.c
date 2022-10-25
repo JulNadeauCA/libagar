@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -87,7 +87,7 @@ AG_InitClassTbl(void)
 #ifdef AG_NAMESPACES
 	agNamespaceTbl = Malloc(sizeof(AG_Namespace));
 	agNamespaceCount = 0;
-	AG_RegisterNamespace("Agar", "AG_", "http://libagar.org/");
+	AG_RegisterNamespace("Agar", "AG_", "https://libagar.org/");
 #endif
 #ifdef AG_ENABLE_DSO
 	agModuleDirs = Malloc(sizeof(char *));

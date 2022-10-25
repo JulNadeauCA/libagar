@@ -2043,7 +2043,7 @@ AG_ObjectGenName(void *p, AG_ObjectClass *C, char *name, AG_Size len)
 	for (cc = &ccBase[1], dBase = &name[1];
 	    *cc != '\0' && len > 0;
 	     cc++, dBase++) {
-		*dBase = *cc;
+		*dBase = tolower(*cc);
 		len--;
 	}
 	*dBase = '\0';

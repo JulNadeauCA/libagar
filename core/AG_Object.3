@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>.
+.\" Copyright (c) 2001-2022 Julien Nadeau Carriere <vedge@csoft.net>.
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -297,8 +297,9 @@ If the object is attached to a VFS then the VFS must be locked.
 .Fn AG_ObjectGenName
 generates a unique name for a child object of
 .Fa obj .
-The class name in lowercase is used as prefix, followed by a number.
-The generatedstring is copied to the fixed-size buffer
+The class name (converted to lowercase) is used as prefix followed by
+an integer (starting from 0 and counting up).
+The generated string is copied to the fixed-size buffer
 .Fa name
 of size
 .Fa nameSize
@@ -587,7 +588,7 @@ registers a new namespace with the specified name, prefix and informational
 URL.
 For example, Agar registers its own using:
 .Bd -literal -offset indent
-AG_RegisterNamespace("Agar", "AG_", "http://libagar.org/");
+AG_RegisterNamespace("Agar", "AG_", "https://libagar.org/");
 .Ed
 .Pp
 Once the namespace is registered, it is possible to specify inheritance

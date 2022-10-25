@@ -142,6 +142,7 @@ MANLINKS+=AG_Event.3:AG_EventInit.3
 MANLINKS+=AG_Event.3:AG_EventArgs.3
 MANLINKS+=AG_Event.3:AG_EventCopy.3
 MANLINKS+=AG_Event.3:AG_EventDup.3
+MANLINKS+=AG_Event.3:AG_EVENT_DUMP.3
 MANLINKS+=AG_Event.3:AG_EventPushPointer.3
 MANLINKS+=AG_Event.3:AG_EventPushConstPointer.3
 MANLINKS+=AG_Event.3:AG_EventPushString.3
