@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -121,7 +121,7 @@ CreateMapEditor(MAP *m)
 	AG_AddEvent(win, "window-lostfocus", WindowLostFocus, "%p", m);
 	AG_AddEvent(win, "window-hidden", WindowLostFocus, "%p", m);
 
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_ML, 300, 500);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 50, 50);
 	AG_WindowShow(win);
 
 	nEditorWindows++;
@@ -357,8 +357,8 @@ main(int argc, char *argv[])
 
 	AG_ConfigSave();
 
-	MAP_DestroySubsystem();
 	AG_DestroyGraphics();
+	MAP_DestroySubsystem();
 	AG_Destroy();
 	return (0);
 }
