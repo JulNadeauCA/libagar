@@ -709,7 +709,6 @@ MA_WindowProcessDetachQueue(void)
 		AG_SetFn(win, "detach-fn", NULL, NULL);
 		AG_ObjectDetach(win);
 
-		AG_PostEvent(win, "window-detached", NULL);
 		AG_ObjectDestroy(win);
 	}
 	TAILQ_INIT(&maWindowDetachQ);
