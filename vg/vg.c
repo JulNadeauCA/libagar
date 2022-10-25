@@ -91,7 +91,7 @@ VG_InitSubsystem(void)
 	vgNodeClasses = NULL;
 	vgNodeClassCount = 0;
 #ifdef AG_NAMESPACES
-	AG_RegisterNamespace("VG", "VG_", "http://libagar.org/");
+	AG_RegisterNamespace("VG", "VG_", "https://libagar.org/");
 #endif
 	AG_RegisterClass(&vgClass);
 /*	AG_RegisterClass(&vgClassSVG); */
