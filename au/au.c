@@ -37,7 +37,7 @@ AU_InitSubsystem(void)
 		return (0);
 	}
 #ifdef AG_NAMESPACES
-	AG_RegisterNamespace("AU", "AU_", "http://libagar.org/");
+	AG_RegisterNamespace("AU", "AU_", "https://libagar.org/");
 #endif
 	return (0);
 }

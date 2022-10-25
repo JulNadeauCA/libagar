@@ -148,7 +148,7 @@ Collide(void *_Nonnull mi, int x, int y)
 
 MAP_ItemClass mapImgClass = {
 	N_("Image"),
-	"http://libagar.org/",
+	"https://libagar.org/",
 	N_("Image file fragment"),
 	MAP_ITEM_IMG,
 	0,

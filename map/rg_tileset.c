@@ -71,7 +71,7 @@ RG_InitSubsystem(void)
 	if (rgInitedSubsystem++ > 0)
 		return;
 
-	AG_RegisterNamespace("RG", "RG_", "http://libagar.org/");
+	AG_RegisterNamespace("RG", "RG_", "https://libagar.org/");
 	AG_RegisterClass(&rgTileviewClass);
 	AG_RegisterClass(&rgTextureSelectorClass);
 	AG_RegisterClass(&rgTilesetClass);

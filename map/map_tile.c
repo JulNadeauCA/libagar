@@ -276,7 +276,7 @@ Collide(void *_Nonnull mi, int x, int y)
 
 MAP_ItemClass mapTileClass = {
 	N_("Tile"),
-	"http://libagar.org/",
+	"https://libagar.org/",
 	N_("Graphical tile"),
 	MAP_ITEM_TILE,
 	0,

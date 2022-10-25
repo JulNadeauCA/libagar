@@ -112,7 +112,7 @@ Save(MAP *map, void *mi, AG_DataSource *ds)
 
 MAP_ItemClass mapLinkClass = {
 	N_("Link"),
-	"http://libagar.org/",
+	"https://libagar.org/",
 	N_("Reference to a map location"),
 	MAP_ITEM_LINK,
 	0,

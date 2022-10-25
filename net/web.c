@@ -2242,7 +2242,7 @@ WEB_Init(Uint clusterID, int eventSource)
 	struct sigaction sa;
 
 #ifdef AG_NAMESPACES
-	AG_RegisterNamespace("Web", "WEB_", "http://libagar.org/");
+	AG_RegisterNamespace("Web", "WEB_", "https://libagar.org/");
 #endif
 	AG_RegisterClass(&webModuleClass);
 

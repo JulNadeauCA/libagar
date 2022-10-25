@@ -91,7 +91,7 @@ SG_InitSubsystem(void)
 
 	M_InitSubsystem();
 	
-	AG_RegisterNamespace("Agar-SG", "SG_", "http://libagar.org/");
+	AG_RegisterNamespace("Agar-SG", "SG_", "https://libagar.org/");
 	AG_RegisterFileExtMappings(sgFileExtMap, sgFileExtCount);
 
 	for (cls = &sgStdClasses[0]; *cls != NULL; cls++)
