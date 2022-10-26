@@ -38,7 +38,7 @@ SRCS=	${SRCS_GUI} drv.c drv_sw.c drv_mw.c drv_dummy.c primitive.c \
 	keymap_compose.c keysyms.c editable.c \
 	box.c label.c button.c checkbox.c textbox.c radio.c \
 	fixed_plotter.c tlist.c scrollbar.c titlebar.c toolbar.c \
-	combo.c ucombo.c units.c nlunits.c hsvpal.c \
+	combo.c ucombo.c units.c hsvpal.c \
 	mspinbutton.c mfspinbutton.c statusbar.c menu.c menu_view.c \
 	treetbl.c separator.c notebook.c pixmap.c file_dlg.c objsel.c \
 	fixed.c numerical.c table.c glview.c mpane.c pane.c console.c graph.c \

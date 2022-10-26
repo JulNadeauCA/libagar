@@ -6,28 +6,18 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_unit {
-	char *_Nullable key;		/* Key (or list terminator) */
-	char *_Nonnull abbr;		/* Abbreviated symbol */
-	char *_Nonnull name;		/* Long name */
-	double divider;			/* Conversion factor (linear) */
+	char *_Nullable key;                /* Key (or list terminator) */
+	char *_Nonnull abbr;                /* Abbreviated symbol */
+	char *_Nonnull name;                /* Long name */
+	double divider;                     /* Conversion factor (linear units) */
+	double (*_Nonnull fn)(double, int); /* Function (non-linear units) */
 } AG_Unit;
 
-typedef struct ag_unit_nl {
-	AG_Unit unit;						/* Inherit */
-	double (*_Nonnull func)(double, int);
-} AG_UnitNL;
-
 #define AG_UNIT(unit)    ((AG_Unit *)(unit))
-#define AG_UNIT_NL(unit) ((AG_UnitNL *)(unit))
 
 __BEGIN_DECLS
-
-/* Nonlinear units */
-double AG_UnitFahrenheit(double, int);
-double AG_UnitCelsius(double, int);
-
-extern const AG_Unit *_Nonnull  agUnitGroups[];
 extern const char    *_Nullable agUnitGroupNames[];
+extern const AG_Unit *_Nonnull  agUnitGroups[];
 extern const int     agnUnitGroups;
 
 extern const AG_Unit agIdentityUnit[];
@@ -41,7 +31,7 @@ extern const AG_Unit agSpeedUnits[];
 extern const AG_Unit agMassUnits[];
 extern const AG_Unit agTimeUnits[];
 extern const AG_Unit agCurrentUnits[];
-extern const AG_UnitNL agTemperatureUnits[];
+extern const AG_Unit agTemperatureUnits[];
 extern const AG_Unit agSubstanceAmountUnits[];
 extern const AG_Unit agEnergyPerSubstanceAmountUnits[];
 extern const AG_Unit agMolarHeatCapacityUnits[];
@@ -61,7 +51,9 @@ extern const AG_Unit agThermalConductivityUnits[];
 extern const AG_Unit agThermalExpansionUnits[];
 extern const AG_Unit agDensityUnits[];
 
-int AG_UnitIsNonlinear(const char *_Nonnull) _Const_Attribute;
+double AG_UnitFahrenheit(double, int) _Const_Attribute;
+double AG_UnitCelsius(double, int) _Const_Attribute;
+
 double AG_Unit2Base(double, const AG_Unit *_Nonnull) _Pure_Attribute;
 double AG_Base2Unit(double, const AG_Unit *_Nonnull) _Pure_Attribute;
 
