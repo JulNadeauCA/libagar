@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -39,10 +39,21 @@
 .\" IMAGE(http://libagar.org/widgets/AG_Tlist.png, "An AG_Tlist displaying a tree")
 The
 .Nm
-widget shows a scrollable tree (or list) of clickable and selectable text items.
+widget shows a scrollable tree (or list) of clickable and selectable items.
+Items may contain text, an optional icon, a user pointer and a category
+string.
+Alternate font faces and colors can be set on a per-item basis.
 .Pp
-It provides a polling mode which optimizes for cases where contents are
-cleared and regenerated frequently (by recycling assets).
+.Nm
+provides a polling (see
+.Dv AG_TLIST_POLL )
+mode, where a user-defined routine clears and repopulates the list entirely.
+This routine runs periodically at a given interval, and is also called prior
+to processing user-interaction events such as mouse and keyboard events.
+Polling is made more efficient by
+.Nm
+being able to reuse assets such as item structures and rendered text
+surfaces.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -71,13 +82,13 @@ cleared and regenerated frequently (by recycling assets).
 .Fn AG_TlistSetIconWidth "AG_Tlist *tl" "int icon_width"
 .Pp
 .Ft void
-.Fn AG_TlistSizeHint "AG_Tlist *tl" "const char *text" "int nitems"
+.Fn AG_TlistSizeHint "AG_Tlist *tl" "const char *text" "int nItems"
 .Pp
 .Ft void
-.Fn AG_TlistSizeHintPixels "AG_Tlist *tl" "int w" "int nitems"
+.Fn AG_TlistSizeHintPixels "AG_Tlist *tl" "int w" "int nItems"
 .Pp
 .Ft void
-.Fn AG_TlistSizeHintLargest "AG_Tlist *tl" "int nitems"
+.Fn AG_TlistSizeHintLargest "AG_Tlist *tl" "int nItems"
 .Pp
 .Ft void
 .Fn AG_TlistSetDblClickFn "AG_Tlist *tl" "AG_EventFn fn" "const char *fn_args" "..."
@@ -89,24 +100,25 @@ cleared and regenerated frequently (by recycling assets).
 .Fn AG_TlistSetCompareFn "AG_Tlist *tl" "int (*fn)(const AG_TlistItem *a)(const AG_TlistItem *b)"
 .Pp
 .nr nS 0
-The
 .Fn AG_TlistNew
-function allocates, initializes, and attaches a
+allocates, initializes, and attaches a
 .Nm
 widget.
 .Pp
 The
 .Fn AG_TlistNewPolled
-variant enables
+variant also enables polling (see
 .Dv AG_TLIST_POLL
-and configures the specified routine
+flag) and sets the specified polling routine
 .Fa eventFn
-to run every 1 second.
-.Pp
+to run periodically.
+The polling routine is expected to clear and populate the
+.Nm .
 The
 .Fn AG_TlistNewPolledMs
-variant accepts a specified update rate in milliseconds
-.Fa ms .
+variant sets the update rate to
+.Fa ms
+milliseconds.
 .Pp
 Acceptable
 .Fa flags
@@ -145,15 +157,13 @@ Shorthand for
 .Dv AG_TLIST_HFILL | AG_TLIST_VFILL .
 .El
 .Pp
+Under polling mode,
 .Fn AG_TlistSetRefresh
-configures the rate at which the polling routine will be invoked, in
-milliseconds.
-It is only useful with
-.Fn AG_TlistNewPolled .
-The default is 125 milliseconds.
-A value of -1 disables automatic updates, assuming
-.Fn AG_TlistRefresh
-will be used to explicitely force updates.
+configures the rate at which the polling routine will be invoked in
+milliseconds (default = 1s).
+A value of -1 disables automatic updates.
+When automatic updates are disabled, updates can be performed by calling
+.Fn AG_TlistRefresh .
 .Pp
 .Fn AG_TlistSetItemHeight
 sets the given, uniform height of all items.
@@ -162,7 +172,7 @@ sets the width of item icons in pixels.
 .Pp
 .Fn AG_TlistSizeHint
 requests sufficient height to display
-.Fa nitems
+.Fa nItems
 items at once, and sufficient width to display an item containing
 .Fa text .
 The
@@ -530,9 +540,7 @@ object:
 .Pp
 .Bl -tag -compact -width "Uint pollDelay "
 .It Ft TAILQ items
-List of all
-.Ft AG_TlistItem
-objects (read-only, items are writeable).
+The list of items (linkage is read-only).
 .It Ft int nItems
 Number of items in total (read-only).
 .It Ft int nVisible
@@ -551,15 +559,15 @@ structure:
 .It Ft int selected
 Selection flag.
 .It Ft void *p1
-User pointer.
+User pointer (application-specific usage).
 .It Ft const char *cat
-User "category" string (application-specific usage).
+Category string (application-specific usage).
 .It Ft char text[]
-Text to display (limit of
+Text label (up to
 .Dv AG_TLIST_LABEL_MAX
-bytes).
+characters).
 .It Ft int depth
-Depth in tree display.
+Depth in tree (0 = root).
 .It Ft Uint flags
 Item flags (see
 .Sx ITEM FLAGS
@@ -570,25 +578,28 @@ Font style (see
 for available flags).
 .El
 .Sh ITEM FLAGS
-.Bl -tag -width "AG_TLIST_ITEM_UPPERCASE "
+.Bl -tag -compact -width "AG_TLIST_ITEM_UPPERCASE "
 .It AG_TLIST_ITEM_EXPANDED
-The node is expanded and child items are visible.
+Child items are visible.
 .It AG_TLIST_HAS_CHILDREN
-There is at least one child item.
+At least one child item exists.
 .It AG_TLIST_NO_SELECT
 Disallow user selection of this item.
 .It AG_TLIST_NO_POPUP
 Disable popup menus (if any have been created).
 .El
 .Sh EXAMPLES
-The following code fragment displays an existing tree structure.
-A callback function is used such that updates in the tree are
-reflected instantly by the widget.
+The following code fragment displays an external tree structure using
+a polling routine.
+The polling routine recursively traverses the tree, generating
+.Ft AG_TlistItem
+corresponding to each node / leaf of the tree.
 .Bd -literal -offset indent
 MyTreeItem *myTreeRoot;
+AG_Window *win;
 
 void
-UpdateItems(AG_Event *event)
+PollTree(AG_Event *event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	MyTreeItem *item = AG_PTR(1);
@@ -600,11 +611,14 @@ UpdateItems(AG_Event *event)
 
 	ti = AG_TlistAddPtr(tl, NULL, item->text, item);
 	ti->flags |= AG_TLIST_HAS_CHILDREN;
+
 	if (ti->flags & AG_TLIST_ITEM_EXPANDED) {
 		LIST_FOREACH(child, &item->children, children) {
 			AG_Event ev;
+
+			/* Recurse */
 			AG_EventArgs(&ev, "%p,%p", tl, child);
-			UpdateItems(&ev);
+			PollTree(&ev);
 		}
 	}
 
@@ -612,7 +626,10 @@ UpdateItems(AG_Event *event)
 		AG_TlistEnd(tl);
 }
 
-AG_TlistNewPolled(NULL, 0, UpdateItems, "%p", myTreeRoot);
+myTreeRoot = InitMyTree();
+
+win = AG_WindowNew(0);
+AG_TlistNewPolled(win, 0, PollTree, "%p", myTreeRoot);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
