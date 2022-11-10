@@ -246,7 +246,14 @@ fixed-size buffer
 of size
 .Fa bufSize
 in bytes.
-It returns 0 on success or -1 if the buffer is too small for the full path.
+Components of the path are separated by the path separator
+.Dv AG_PATHSEP
+(i.e., "/" or "\\").
+The returned pathname is guaranteed to begin and to end with the path separator.
+.Fn AG_ObjectCopyName
+returns 0 on success or -1 if
+.Fa buf
+is too small to contain the full pathname.
 .Pp
 .Fn AG_ObjectLock
 and
