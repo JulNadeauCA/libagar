@@ -71,6 +71,9 @@ to storage and deserialized on demand.
 .Fn AG_ObjectDetach "AG_Object *child"
 .Pp
 .Ft "void"
+.Fn AG_ObjectDetachLockless "AG_Object *child"
+.Pp
+.Ft "void"
 .Fn AG_ObjectMoveToHead "AG_Object *obj"
 .Pp
 .Ft "void"
@@ -193,6 +196,9 @@ from its parent (if any), cancelling scheduled
 .Xr AG_Timer 3
 expirations before raising
 .Sq detached .
+The
+.Fn AG_ObjectDetachLockless
+variant assumes that the parent and child objects are locked.
 .Pp
 .Fn AG_ObjectMoveUp ,
 .Fn AG_ObjectMoveDown ,

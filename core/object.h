@@ -346,6 +346,7 @@ void AG_ObjectAttach(void *_Nullable _Restrict, void *_Nonnull _Restrict);
 void AG_ObjectInit(void *_Nonnull _Restrict, void *_Nullable _Restrict);
 void AG_ObjectInitStatic(void *_Nonnull, void *_Nullable);
 void AG_ObjectDetach(void *_Nonnull);
+void AG_ObjectDetachLockless(void *_Nonnull);
 void AG_ObjectReset(void *_Nonnull);
 
 #if AG_MODEL != AG_SMALL

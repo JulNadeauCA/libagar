@@ -675,6 +675,8 @@ AG_ClassIsNamedGeneral(const AG_ObjectClass *C, const char *cn)
  *   "AG_Widget:AG_Box:AG_Titlebar" -> { &agWidgetClass,
  *                                       &agBoxClass,
  *                                       &agTitlebarClass }
+ *
+ * The caller should release the returned array using free() after use.
  */
 int
 AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)

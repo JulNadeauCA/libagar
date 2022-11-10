@@ -474,10 +474,9 @@ AG_ObjectDetach(void *pChld)
 #endif
 #ifdef AG_THREADS
 	AG_LockVFS(root);
-#endif
 	AG_ObjectLock(parent);
 	AG_ObjectLock(chld);
-	
+#endif
 	/* Call the detach function if one is defined. */
 	if (AG_Defined(chld, "detach-fn")) {
 		AG_Event *ev;
@@ -500,7 +499,7 @@ AG_ObjectDetach(void *pChld)
 #endif
 	AG_PostEvent(chld, "detached", "%p", parent);
 	
-	/* Detach the object. */
+	/* Remove the object from the parent's children list. */
 	TAILQ_REMOVE(&parent->children, chld, cobjs);
 	chld->parent = NULL;
 	chld->root = chld;
@@ -517,11 +516,65 @@ AG_ObjectDetach(void *pChld)
 #endif /* DEBUG_OBJECT */
 
 out:
+#ifdef AG_THREADS
 	AG_ObjectUnlock(chld);
 	AG_ObjectUnlock(parent);
-#ifdef AG_THREADS
 	AG_UnlockVFS(root);
 #endif
+}
+
+/*
+ * Detach a child object from its parent (Lockless variant).
+ * Both parent and child objects must be locked.
+ */
+void
+AG_ObjectDetachLockless(void *pChld)
+{
+	AG_Object *chld = pChld;
+	AG_Object *parent = chld->parent;
+#ifdef AG_TIMERS
+	AG_Timer *to, *toNext;
+#endif
+#ifdef AG_TYPE_SAFETY
+	if (!AG_OBJECT_VALID(chld))   { AG_FatalErrorV("E36a", "Child object is invalid"); }
+	if (!AG_OBJECT_VALID(parent)) { AG_FatalErrorV("E36b", "Parent object is invalid"); }
+#endif
+	if (AG_Defined(chld, "detach-fn")) {
+		AG_Event *ev;
+		if ((ev = AG_GetPointer(chld,"detach-fn")) != NULL &&
+		     ev->fn != NULL) {
+			ev->fn(ev);
+		}
+		return;
+	}
+#ifdef AG_TIMERS
+	/* Cancel any running timer associated with the object. */
+	AG_LockTiming();
+	for (to = TAILQ_FIRST(&chld->timers);
+	     to != TAILQ_END(&chld->timers);
+	     to = toNext) {
+		toNext = TAILQ_NEXT(to, pvt.timers);
+		AG_DelTimer(chld, to);
+	}
+	AG_UnlockTiming();
+#endif
+	AG_PostEvent(chld, "detached", "%p", parent);
+	
+	/* Remove the object from the parent's children list. */
+	TAILQ_REMOVE(&parent->children, chld, cobjs);
+	chld->parent = NULL;
+	chld->root = chld;
+
+#ifdef DEBUG_OBJECT
+	if (chld->name[0] != '\0') {
+		Debug(parent, "Detached child: %s\n", chld->name);
+	} else {
+		Debug(parent, "Detached child: <%p>\n", chld);
+	}
+	if (parent->name[0] != '\0') {
+		Debug(chld, "New parent: NULL\n");
+	}
+#endif /* DEBUG_OBJECT */
 }
 
 /* Traverse the object tree using a pathname. */
@@ -700,14 +753,19 @@ AG_ObjectFreeEvents(AG_Object *ob)
 }
 
 /*
- * Release the resources allocated by an object and its children, assuming
- * that none of them are currently in use.
+ * Release all resources allocated by an object and its children.
+ * Invokes the object reset() and destroy() operations.
+ * 
+ * None of the objects must be in use.
  */
 void
 AG_ObjectDestroy(void *p)
 {
 	AG_Object *ob = p;
 	AG_ObjectClass **hier;
+	AG_Object *child, *childNext;
+	AG_Variable *V, *Vnext;
+	AG_Event *ev, *evNext;
 	int i, nHier;
 
 #ifdef AG_TYPE_SAFETY
@@ -720,27 +778,68 @@ AG_ObjectDestroy(void *p)
 		AG_FatalErrorV("E33", "Object is still attached");
 	}
 #endif
-	AG_ObjectFreeChildren(ob);
-	AG_ObjectReset(ob);
+	/*
+	 * Release the child objects.
+	 */
+	for (child = TAILQ_FIRST(&ob->children);
+	     child != TAILQ_END(&ob->children);
+	     child = childNext) {
+		childNext = TAILQ_NEXT(child, cobjs);
+#ifdef DEBUG_OBJECT
+		if (child->name[0] != '\0') {
+			Debug(ob, "Freeing child: %s\n", child->name);
+		} else {
+			Debug(ob, "Freeing child: <%p>\n", child);
+		}
+#endif
+		AG_ObjectDetachLockless(child);
+		AG_ObjectDestroy(child);
+	}
+
+	/*
+	 * Invoke reset() and destroy() for every class in the object's
+	 * inheritance hierarchy.
+	 */
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) != 0) {
 		AG_FatalError(NULL);
 	}
 	for (i = nHier-1; i >= 0; i--) {
+		if (hier[i]->reset != NULL)
+			hier[i]->reset(ob);
 		if (hier[i]->destroy != NULL)
 			hier[i]->destroy(ob);
 	}
 	free(hier);
-	
-	AG_ObjectFreeVariables(ob);
-	AG_ObjectFreeEvents(ob);
+
+	/*
+	 * Release defined variables and event handler structures.
+	 */
+	for (V = TAILQ_FIRST(&ob->vars);
+	     V != TAILQ_END(&ob->vars);
+	     V = Vnext) {
+		Vnext = TAILQ_NEXT(V, vars);
+		AG_FreeVariable(V);
+		free(V);
+	}
+	for (ev = TAILQ_FIRST(&ob->events);
+	     ev != TAILQ_END(&ob->events);
+	     ev = evNext) {
+		evNext = TAILQ_NEXT(ev, events);
+		free(ev);
+	}
+
+	/* Release the object's locking device. */
 	AG_MutexDestroy(&ob->lock);
+
 #ifdef AG_TYPE_SAFETY
+	/* Invalidate the structure's signature tag. */
 	memcpy(ob->tag, "FreeMem", 7);
 # ifdef AG_DEBUG
 	memcpy(ob->name, "invalid", 7);
 	ob->cls = NULL;
 # endif
 #endif
+	/* Release the object structure (if dynamically allocated). */
 	if ((ob->flags & AG_OBJECT_STATIC) == 0)
 		free(ob);
 }
@@ -778,7 +877,6 @@ AG_ObjectCopyFilename(void *p, char *path, AG_Size pathSize)
 	TAILQ_FOREACH(loadPath, pathGroup, paths) {
 	     	Strlcpy(path, loadPath->s, pathSize);
 		Strlcat(path, name, pathSize);
-		Strlcat(path, AG_PATHSEP, pathSize);
 		Strlcat(path, ob->name, pathSize);
 		Strlcat(path, ".", pathSize);
 		Strlcat(path, ob->cls->name, pathSize);
