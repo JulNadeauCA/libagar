@@ -86,6 +86,37 @@ AG_CheckboxSetFromFlags(void *parent, Uint flags, Uint *pFlags,
 	}
 }
 
+/*
+ * Create a set of checkboxes for the given set of flags.
+ * Set a common "checkbox-changed" event handler.
+ */
+void
+AG_CheckboxSetFromFlagsFn(void *parent, Uint flags, Uint *pFlags,
+    const AG_FlagDescr *fdSet, AG_EventFn fn, const char *fmt, ...)
+{
+	int i;
+
+	for (i = 0; fdSet[i].bitmask != 0; i++) {
+		const AG_FlagDescr *fd = &fdSet[i];
+		AG_Checkbox *cb;
+		AG_Event *ev;
+
+		cb = AG_CheckboxNewFlag(parent, flags, fd->descr, pFlags,
+		    fd->bitmask);
+		if (!fd->writeable)
+			AG_WidgetDisable(cb);
+	
+		ev = AG_SetEvent(cb, "checkbox-changed", fn, NULL);
+		if (fmt) {
+			va_list ap;
+
+			va_start(ap, fmt);
+			AG_EventGetArgs(ev, fmt, ap);
+			va_end(ap);
+		}
+	}
+}
+
 AG_Checkbox *
 AG_CheckboxNewFlag(void *parent, Uint flags, const char *label, Uint *pFlags,
     Uint bitmask)

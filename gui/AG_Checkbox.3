@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -67,8 +67,11 @@ If a text label is specified, it is displayed next to the control.
 .Ft "AG_Checkbox *"
 .Fn AG_CheckboxNewFlag "AG_Widget *parent" "Uint flags" "const char *label" "Uint *pFlags" "Uint bitmask"
 .Pp
-.Fn "AG_Checkbox *"
+.Ft "void"
 .Fn AG_CheckboxSetFromFlags "AG_Widget *parent" "Uint flags" "Uint *pFlags" "const AG_FlagDescr *flagsDescr"
+.Pp
+.Ft "void"
+.Fn AG_CheckboxSetFromFlagsFn "AG_Widget *parent" "Uint flags" "Uint *pFlags" "const AG_FlagDescr *flagsDescr" "AG_EventFn fn" "const char *fmt" "..."
 .Pp
 .Ft "int"
 .Fn AG_CheckboxGetState "AG_Checkbox *checkbox"
@@ -122,13 +125,7 @@ binds "state" to one or more bits in the natural integer at
 according to
 .Fa bitmask a.
 .Pp
-Note: While convenience constructors are only provided for natural integers,
-.Nm
-can also bind to fixed-size integers (see
-.Sx BINDINGS ) .
 .\" MANLINK(AG_FlagDescr)
-.Pp
-The utility function
 .Fn AG_CheckboxSetFromFlags
 creates a set of checkboxes for the given set of flags, described
 by an array of
@@ -141,6 +138,15 @@ typedef struct ag_flag_descr {
 	int writeable;			/* User-editable */
 } AG_FlagDescr;
 .Ed
+.Pp
+The
+.Fn AG_CheckboxSetFromFlagsFn
+variant sets the event handler for
+.Sq checkbox-changed
+to the given function
+.Fa fn
+and optional arguments
+.Fa fmt .
 .Pp
 .Fn AG_CheckboxGetState
 returns the current state of the checkbox.

@@ -85,8 +85,7 @@ FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth,
 	} else {
 		(*nLeaves)++;
 	}
-	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
-	    AG_TlistVisibleChildren(tl, it)) {
+	if (AG_TlistVisibleChildren(tl, it)) {
 		OBJECT_FOREACH_CHILD(widChld, wid, ag_widget)
 			FindWidgets(widChld, tl, depth+1, nContainers, nLeaves);
 	}
@@ -122,8 +121,7 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth,
 	    !TAILQ_EMPTY(&win->pvt.subwins)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 	}
-	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
-	    AG_TlistVisibleChildren(tl, it)) {
+	if (AG_TlistVisibleChildren(tl, it)) {
 //		TAILQ_FOREACH(wSub, &win->pvt.subwins, pvt.swins)
 //			FindWindows(tl, wSub, depth+1, nWindows, nContainers, nLeaves);
 		OBJECT_FOREACH_CHILD(wChild, win, ag_widget)
@@ -342,6 +340,17 @@ PollVariables(AG_Event *_Nonnull event)
 	AG_ObjectUnlock(obj);
 }
 
+static void
+FlagChanged(AG_Event *_Nonnull event)
+{
+	AG_Widget *tgt = AG_WIDGET_PTR(1);
+
+	Debug(tgt, "Flags changed in debugger (0x%x)\n",
+	    WIDGET(tgt)->flags);
+
+	AG_Redraw(tgt);
+}
+
 /* Select a widget for inspection in Debugger. */
 static void
 TargetWidget(AG_Event *_Nonnull event)
@@ -368,39 +377,44 @@ TargetWidget(AG_Event *_Nonnull event)
 	nt->id = 1;
 	{
 		static const AG_FlagDescr flagDescr[] = {
-		    { AG_WIDGET_FOCUSABLE,		"FOCUSABLE",		1 },
-		    { AG_WIDGET_FOCUSED,		"FOCUSED",		0 },
-		    { AG_WIDGET_DISABLED,		"DISABLED",		1 },
 		    { AG_WIDGET_HIDE,			"HIDE",			1 },
+		    { AG_WIDGET_DISABLED,		"DISABLED",		1 },
+		    { AG_WIDGET_FOCUSABLE,		"FOCUSABLE",		1 },
 		    { AG_WIDGET_VISIBLE,		"VISIBLE",		0 },
+		    { AG_WIDGET_FOCUSED,		"FOCUSED",		0 },
 		    { AG_WIDGET_UNDERSIZE,		"UNDERSIZE",		0 },
-		    { AG_WIDGET_HFILL,			"HFILL",		1 },
-		    { AG_WIDGET_VFILL,			"VFILL",		1 },
+		    { AG_WIDGET_HFILL,			"HFILL",		0 },
+		    { AG_WIDGET_VFILL,			"VFILL",		0 },
 		    { AG_WIDGET_USE_MOUSEOVER,		"USE_MOUSEOVER",	1 },
 		    { AG_WIDGET_MOUSEOVER,		"MOUSEOVER",		0 },
 #if 0
 		    { AG_WIDGET_UPDATE_WINDOW,		"UPDATE_WINDOW",	1 },
-		    { AG_WIDGET_USE_TEXT,		"USE_TEXT",		0 },
-		    { AG_WIDGET_CATCH_TAB,		"CATCH_TAB",		1 },
-		    { AG_WIDGET_USE_OPENGL,		"USE_OPENGL",		0 },
-		    { AG_WIDGET_NOSPACING,		"NOSPACING",		1 },
+		    { AG_WIDGET_QUEUE_SURFACE_BACKUP,	"QUEUE_SURFACE_BACKUP",	1 },
 #endif
+		    { AG_WIDGET_USE_TEXT,		"USE_TEXT",		0 },
+		    { AG_WIDGET_USE_OPENGL,		"USE_OPENGL",		0 },
+#if 0
+		    { AG_WIDGET_CATCH_TAB,		"CATCH_TAB",		1 },
+		    { AG_WIDGET_NOSPACING,		"NOSPACING",		1 },
 		    { AG_WIDGET_UNFOCUSED_MOTION,	"UNFOCUSED_MOTION",	1 },
 		    { AG_WIDGET_UNFOCUSED_BUTTONUP,	"UNFOCUSED_BUTTONUP",	1 },
 		    { AG_WIDGET_UNFOCUSED_BUTTONDOWN,	"UNFOCUSED_BUTTONDOWN",	1 },
 		    { AG_WIDGET_UNFOCUSED_KEYDOWN,	"UNFOCUSED_KEYDOWN",	1 },
 		    { AG_WIDGET_UNFOCUSED_KEYUP,	"UNFOCUSED_KEYUP",	1 },
+#endif
 		    { 0,				NULL,0 }
 		};
 		AG_MSpinbutton *msb;
 		AG_Box *vbox;
+		AG_Label *lbl;
 
-		AG_LabelNew(nt, AG_LABEL_HFILL,
-		    _("Class: " AGSI_BOLD AGSI_GRN "%s" AGSI_RST),
-		    OBJECT(tgt)->cls->name);
+		lbl = AG_LabelNew(nt, AG_LABEL_HFILL,
+		    _("Class: <" AGSI_BOLD AGSI_CYAN "%s" AGSI_RST ">"),
+		    OBJECT(tgt)->cls->hier);
+		AG_SetStyle(lbl, "font-size", "120%");
 
-		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL | AG_TEXTBOX_NO_SHADING,
-		    _("Name: "));
+		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL, _("Name: "));
+		AG_SetStyle(tb, "padding", "2");
 #ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
 #else
@@ -449,7 +463,8 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_SeparatorNewHoriz(nt);
 
 		vbox = AG_BoxNewVert(nt, AG_BOX_VFILL);
-		AG_CheckboxSetFromFlags(vbox, 0, &tgt->flags, flagDescr);
+		AG_CheckboxSetFromFlagsFn(vbox, 0, &tgt->flags, flagDescr,
+		    FlagChanged, "%p", tgt);
 	}
 
 	if (OBJECT_CLASS(tgt)->edit != NULL) {

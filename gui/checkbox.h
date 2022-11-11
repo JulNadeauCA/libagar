@@ -46,8 +46,11 @@ AG_Checkbox *_Nonnull AG_CheckboxNewInt(void *_Nullable, Uint, const char *_Null
 #define               AG_CheckboxNewUint(o,f,l,p) \
                       AG_CheckboxNewInt((o),(f),(l),(int *)(p))
 
-void                  AG_CheckboxSetFromFlags(void *_Nullable, Uint, Uint *_Nonnull,
-                                              const AG_FlagDescr *_Nonnull);
+void AG_CheckboxSetFromFlags(void *_Nullable, Uint, Uint *_Nonnull,
+                             const AG_FlagDescr *_Nonnull);
+void AG_CheckboxSetFromFlagsFn(void *_Nullable, Uint, Uint *_Nonnull,
+                               const AG_FlagDescr *_Nonnull,
+			       _Nonnull AG_EventFn, const char *_Nullable, ...);
 
 AG_Checkbox *_Nonnull AG_CheckboxNewFlag(void *_Nullable, Uint, const char *_Nullable,
                                          Uint *_Nonnull, Uint);
