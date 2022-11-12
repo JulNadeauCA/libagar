@@ -200,16 +200,13 @@ AG_GL_DestroyContext(void *obj)
 			Debug(drv, "GL delete texture #%d\n", gl->textureGC[i]);
 #endif
 		glDeleteTextures(gl->nTextureGC, gl->textureGC);
-		gl->nTextureGC = 0;
 		free(gl->textureGC);
 	}
-
-	if (gl->nListGC > 0) {
-		gl->nListGC = 0;
+	if (gl->nListGC > 0)
 		free(gl->listGC);
-	}
 
 	free(gl->clipRects);
+	free(gl->blendStates);
 
 	drv->gl = NULL;
 }
