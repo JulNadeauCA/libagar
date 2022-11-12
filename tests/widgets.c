@@ -279,7 +279,8 @@ TestGUI(void *obj, AG_Window *win)
 
 		/* A static label */
 		lbl = AG_LabelNew(div, 0,
-		    "Agar v%d.%d.%d (" AGSI_LEAGUE_SPARTAN "%s" AGSI_RST ")",
+		    "Agar v%d.%d.%d ("
+		    AGSI_LEAGUE_SPARTAN AGSI_CYAN "%s" AGSI_RST ")",
 		    av.major, av.minor, av.patch,
 		    av.release ? av.release : "dev");
 		AG_SetStyle(lbl, "font-size", "120%");

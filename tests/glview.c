@@ -288,7 +288,7 @@ Init(void *obj)
 		ti->specular[i] = spe[i];
 	}
 	ti->wireframe = 0;
-	ti->overlay = 0;
+	ti->overlay = 1;
 	ti->subdiv = 4;
 	return (0);
 }

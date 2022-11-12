@@ -17,6 +17,25 @@ TestGUI(void *obj, AG_Window *win)
 	AG_Radio *rad;
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
+	nt = AG_NotebookAdd(nb, "Horizontal", AG_BOX_VERT);
+	{
+		const char *items[] = {
+			"Bart", "Homer", "Lisa", "Maggie", "Marge", NULL
+		};
+		lbl = AG_LabelNewPolled(nt, AG_LABEL_HFILL | AG_LABEL_FRAME,
+		    "Radio Group Test.  Current Value:" AGSI_BOLD "%i" AGSI_RST ".",
+		    &ti->myValue);
+		AG_LabelSizeHint(lbl, 1, "<Radio Group Test.  Current Value: XXXX.>");
+		AG_LabelJustify(lbl, AG_TEXT_CENTER);
+		AG_LabelValign(lbl, AG_TEXT_TOP);
+
+		rad = AG_RadioNewUint(nt, AG_RADIO_HFILL | AG_RADIO_HOMOGENOUS,
+		    items, &ti->myValue);
+		AG_SetStyle(rad, "font-family", "league-gothic");
+
+		AG_RadioSetDisposition(rad, AG_RADIO_HORIZ);
+	}
+
 	nt = AG_NotebookAdd(nb, "Vertical", AG_BOX_VERT);
 	{
 		const char *items[] = {
@@ -36,25 +55,8 @@ TestGUI(void *obj, AG_Window *win)
 		    &ti->myValue);
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 		AG_LabelValign(lbl, AG_TEXT_TOP);
-		AG_RadioNewUint(nt, 0, items, &ti->myValue);
-	}
-
-	nt = AG_NotebookAdd(nb, "Horizontal", AG_BOX_VERT);
-	{
-		const char *items[] = {
-			"Bart", "Homer", "Lisa", "Maggie", "Marge", NULL
-		};
-		lbl = AG_LabelNewPolled(nt, AG_LABEL_HFILL | AG_LABEL_FRAME,
-		    "Radio Group Test\n"
-		    "Value: " AGSI_BOLD "%i" AGSI_RST,
-		    &ti->myValue);
-		AG_LabelJustify(lbl, AG_TEXT_CENTER);
-		AG_LabelValign(lbl, AG_TEXT_TOP);
-
-		rad = AG_RadioNewUint(nt, AG_RADIO_EXPAND | AG_RADIO_HOMOGENOUS,
-		    items, &ti->myValue);
-
-		AG_RadioSetDisposition(rad, AG_RADIO_HORIZ);
+		rad = AG_RadioNewUint(nt, 0, items, &ti->myValue);
+		AG_SetStyle(rad, "font-size", "80%");
 	}
 
 	return (0);
