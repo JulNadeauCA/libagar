@@ -340,6 +340,15 @@ OnDetach(AG_Event *_Nonnull event)
 {
 	AG_Widget *wid = AG_WIDGET_SELF();
 	const void *parent = AG_PTR(1);
+	AG_Widget *chld;
+
+	/*
+	 * Forward the "detached" event to child widgets.
+	 */
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		event->argv[1].data.p = chld;                      /* SENDER */
+		AG_ForwardEvent(chld, event);
+	}
 
 #if defined(AG_DEBUG) && defined(AG_WIDGETS)
 	if (wid == agDebuggerTgt)

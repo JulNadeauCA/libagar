@@ -46,6 +46,7 @@
 #include <agar/gui/radio.h>
 #include <agar/gui/numerical.h>
 #include <agar/gui/separator.h>
+#include <agar/gui/notebook.h>
 #endif
 
 #include <string.h>
@@ -405,7 +406,9 @@ Detach(AG_Event *_Nonnull event)
 	 */
 	TAILQ_INSERT_TAIL(&agWindowDetachQ, win, pvt.detach);
 
-	/* Queued Show/Hide operations would be redundant. */
+	/*
+	 * Cull any redundant visibility ops against the newly detached window.
+	 */
 	TAILQ_FOREACH(other, &agWindowHideQ, pvt.visibility) {
 		if (other == win) {
 			TAILQ_REMOVE(&agWindowHideQ, win, pvt.visibility);
@@ -938,6 +941,11 @@ OnDetach(AG_Event *_Nonnull event)
 	if (win == agDebuggerTgtWindow)
 		AG_GuiDebuggerDetachWindow();
 #endif
+	/*
+	 * Forward the "detached" event to child objects. The "detached"
+	 * handler of the AG_Widget class is expected to forward the event
+	 * to child widgets.
+	 */
 	OBJECT_FOREACH_CHILD(chld, win, ag_object) {
 		event->argv[1].data.p = win;                      /* SENDER */
 		AG_ForwardEvent(chld, event);
@@ -2459,12 +2467,13 @@ AG_WindowProcessDetachQueue(void)
 		drv = WIDGET(win)->drv;
 		AG_OBJECT_ISA(drv, "AG_Driver:*");
 
-		/* Notify all widgets of the window detach. */
+		/*
+		 * Raise the window's "detached" event. The "detached" handlers
+		 * of AG_Window and AG_Widget are both expected to recursively
+		 * forward the "detached" event to their children.
+		 */
 		AG_PostEvent(win, "detached", "%p", drv);
 
-		/* Release the cursor areas and associated cursors. */
-		AG_UnmapAllCursors(win, NULL);
-	
 		if (AGDRIVER_MULTIPLE(drv)) {
 			if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
 				AGDRIVER_MW_CLASS(drv)->closeWindow(win);
@@ -2475,11 +2484,11 @@ AG_WindowProcessDetachQueue(void)
 			AGDRIVER_SW(drv)->flags |= AG_DRIVER_SW_REDRAW;
 		}
 
-		/* Unset detach-fn and do a standard AG_ObjectDetach(). */
+		/* Unset detach-fn and perform a generic Object detach. */
 		Debug_Mute(debugLvlSave);
 		AG_SetFn(win, "detach-fn", NULL, NULL);
 		Debug_Unmute(debugLvlSave);
-		AG_ObjectDetach(win);
+		AG_ObjectDetachLockless(win);
 
 		if (AGDRIVER_MULTIPLE(drv)) {
 			/* Destroy the AG_Driver object. */
@@ -2527,7 +2536,7 @@ AG_MapCursor(void *obj, const AG_Rect *r, AG_Cursor *c)
 	AG_CursorArea *ca;
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
-	
+
 	if ((ca = TryMalloc(sizeof(AG_CursorArea))) == NULL) {
 		return (NULL);
 	}
@@ -3088,95 +3097,154 @@ WindowCaptionChanged(AG_Event *event)
 	AG_WindowSetCaptionS(win, caption);
 }
 
+static void
+PollCursorAreas(AG_Event *event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Window *tgt = (AG_Window *)AG_PTR(1);
+	AG_CursorArea *ca;
+	
+	AG_TlistBegin(tl);
+	
+	if (tgt == NULL || !AG_OBJECT_VALID(tgt) ||
+	    !AG_OfClass(tgt, "AG_Widget:AG_Window:*")) {
+		AG_TlistAdd(tl, NULL, _("(Object %p is invalid)"), tgt);
+		goto out;
+	}
+
+	TAILQ_FOREACH(ca, &tgt->pvt.cursorAreas, cursorAreas) {
+		AG_TlistItem *it;
+
+		it = AG_TlistAdd(tl, NULL,
+		    _(AGSI_BOLD "%dx%d" AGSI_RST " rectangle at "
+		      "[" AGSI_BOLD "%d,%d" AGSI_RST "] "
+		      "-> Cursor " AGSI_YEL "%p%s" AGSI_RST
+		      " (Widget " AGSI_YEL "%p" AGSI_RST ")"),
+		    ca->r.w,
+		    ca->r.h,
+		    ca->r.x,
+		    ca->r.y,
+		    ca->c,
+		    (!ca->stock) ? "[*]" : "",
+		    ca->wid);
+		it->p1 = ca;
+	}
+out:
+	AG_TlistEnd(tl);
+}
+
 static void *_Nullable
 Edit(void *_Nonnull obj)
 {
 	static const AG_FlagDescr flagDescr[] = {
-	    { AG_WINDOW_MODAL,		N_("Application-modal"),	0 },
-	    { AG_WINDOW_MAXIMIZED,	N_("Maximized"),		0 },
-	    { AG_WINDOW_MINIMIZED,	N_("Minimized"),		0 },
-	    { AG_WINDOW_KEEPABOVE,	N_("Keep above others"),	1 },
-	    { AG_WINDOW_KEEPBELOW,	N_("Keep below others"),	1 },
-	    { AG_WINDOW_DENYFOCUS,	N_("Deny focus"),		1 },
-	    { AG_WINDOW_NOHRESIZE,	N_("No horizontal resize"),	1 },
-	    { AG_WINDOW_NOVRESIZE,	N_("No vertical resize"),	1 },
-	    { AG_WINDOW_NOBACKGROUND,	N_("Disable background"),	1 },
-	    { AG_WINDOW_MAIN,		N_("Main window"),		1 },
-	    { AG_WINDOW_NOMOVE,		N_("Unmoveable"),		1 },
-	    { AG_WINDOW_NOCURSORCHG,	N_("Inhibit cursor changes"),	1 },
-	    { AG_WINDOW_USE_TEXT,	N_("Using the font engine"),	0 },
-	    { 0,			NULL,				0 }
+	    { AG_WINDOW_MODAL,        N_("Application-modal (" AGSI_CODE "MODAL" AGSI_RST ")"), 0 },
+	    { AG_WINDOW_MAXIMIZED,    N_("Maximized (" AGSI_CODE "MAXIMIZED" AGSI_RST ")"), 0 },
+	    { AG_WINDOW_MINIMIZED,    N_("Minimized (" AGSI_CODE "MINIMIZED" AGSI_RST ")"), 0 },
+	    { AG_WINDOW_KEEPABOVE,    N_("Keep above others (" AGSI_CODE "KEEPABOVE" AGSI_RST ")"), 0 },
+	    { AG_WINDOW_KEEPBELOW,    N_("Keep below others (" AGSI_CODE "KEEPBELOW" AGSI_RST ")"), 0 },
+	    { AG_WINDOW_DENYFOCUS,    N_("Deny focus (" AGSI_CODE "DENYFOCUS" AGSI_RST ")"), 1 },
+	    { AG_WINDOW_NOHRESIZE,    N_("No horizontal resize (" AGSI_CODE "NOHRESIZE" AGSI_RST ")"), 1 },
+	    { AG_WINDOW_NOVRESIZE,    N_("No vertical resize (" AGSI_CODE "NOVRESIZE" AGSI_RST ")"), 1 },
+	    { AG_WINDOW_NOBACKGROUND, N_("Disable background (" AGSI_CODE "NOBACKGROUND" AGSI_RST ")"), 1 },
+	    { AG_WINDOW_MAIN,         N_("Main window (" AGSI_CODE "MAIN" AGSI_RST ")"), 1 },
+	    { AG_WINDOW_NOMOVE,       N_("Unmoveable (" AGSI_CODE "NOMOVE" AGSI_RST ")"), 1 },
+	    { AG_WINDOW_NOCURSORCHG,  N_("Inhibit cursor changes (" AGSI_CODE "NOCURSORCHG" AGSI_RST ")"), 1 },
+	    { AG_WINDOW_USE_TEXT,     N_("Using the font engine (" AGSI_CODE "USE_TEXT" AGSI_RST ")"), 0 },
+	    { 0, NULL, 0 }
 	};
 	AG_Window *tgt = obj;
-	AG_Box *box, *hBox, *lBox, *rBox;
+	AG_Box *box;
 	AG_Textbox *tb;
-	const Uint nuFl = AG_NUMERICAL_SLOW;
+	AG_Label *lbl;
+	AG_Notebook *nb;
+	AG_NotebookTab *nt;
 
 	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+	AG_SetStyle(box, "padding", "2 3 2 3");
 
-	tb = AG_TextboxNewS(box, AG_TEXTBOX_HFILL, _("Caption: "));
-	AG_TextboxSizeHint(tb, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXX>");
-	AG_TextboxBindUTF8(tb, tgt->caption, sizeof(tgt->caption));
-	AG_SetEvent(tb, "textbox-postchg", WindowCaptionChanged, "%p", tgt);
-	AG_SetStyle(tb, "font-size", "140%");
+	lbl = AG_LabelNew(box, 0, _("Window Structure " AGSI_YEL "%s" AGSI_RST),
+	    OBJECT(tgt)->name);
+	AG_SetStyle(lbl, "font-size", "130%");
 
-	hBox = AG_BoxNewHoriz(box, AG_BOX_EXPAND);
-	lBox = AG_BoxNewVert(hBox, 0);
+	AG_LabelNewPolled(box, AG_LABEL_SLOW | AG_LABEL_HFILL,
+	    _("Visible=" AGSI_BOLD "%i" AGSI_RST ", "
+	      "Zoom=" AGSI_BOLD "%i" AGSI_RST ", "
+	      "Position=[" AGSI_BOLD "%i,%i" AGSI_RST "], "
+	      "Size=(" AGSI_BOLD "%i,%i" AGSI_RST "), "
+	      "Min=(" AGSI_BOLD "%i,%i" AGSI_RST ")."),
+	    &tgt->visible, &tgt->zoom,
+	    &WIDGET(tgt)->x,
+	    &WIDGET(tgt)->y,
+	    &tgt->r.w,
+	    &tgt->r.h,
+	    &tgt->wMin,
+	    &tgt->hMin);
 
-	AG_WidgetDisable(AG_CheckboxNewInt(lBox, 0, _("Is visible"), &tgt->visible));
-	AG_WidgetDisable(AG_CheckboxNewInt(lBox, 0, _("Is dirty"), &tgt->dirty));
+	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
 
-	AG_CheckboxSetFromFlags(lBox, 0, &tgt->flags, flagDescr);
+	nt = AG_NotebookAdd(nb, _("Flags"), AG_BOX_VERT);
+	{
+		AG_CheckboxSetFromFlags(nt, 0, &tgt->flags, flagDescr);
+	}
 
-	rBox = AG_BoxNewVert(hBox, AG_BOX_EXPAND);
+	nt = AG_NotebookAdd(nb, _("Properties"), AG_BOX_VERT);
+	AG_SetStyle(nt, "padding", "3 3 3 3");
+	{
+		AG_SpacerNewHoriz(nt);
 
-	AG_LabelNewPolled(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
-	                  "X=%i Y=%i W=%i H=%i Zoom=%i",
-			  &WIDGET(tgt)->x,
-			  &WIDGET(tgt)->y,
-			  &tgt->r.w,
-			  &tgt->r.h,
-			  &tgt->zoom);
+		tb = AG_TextboxNewS(nt, 0, _("Caption: "));
+		AG_TextboxSizeHint(tb, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXX>");
+		AG_TextboxBindUTF8(tb, tgt->caption, sizeof(tgt->caption));
+		AG_SetEvent(tb, "textbox-postchg", WindowCaptionChanged, "%p", tgt);
 
-	AG_LabelNewPolledMT(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
-	                    &OBJECT(tgt)->lock,
-	                    _("Parent: %[objName] @ (AG_Window *)%p"),
-	                    &tgt->parent, &tgt->parent);
+		AG_SpacerNewHoriz(nt);
 
-	AG_SeparatorNewHoriz(rBox);
-
+		if (tgt->flags & AG_WINDOW_MINSIZEPCT) {
+			AG_NumericalNewInt(nt, 0, "%", _("Minimum Size: "),
+			    &tgt->minPct);
+		} else {
+			AG_NumericalNewInt(nt, 0, "px", _("Minimum Width: "), &tgt->wMin);
+			AG_NumericalNewInt(nt, 0, "px", _("Minimum Height: "), &tgt->hMin);
+		}
+		AG_NumericalNewInt(nt, 0, "px", _("Bottom Border Width: "), &tgt->wBorderBot);
+		AG_NumericalNewInt(nt, 0, "px", _("Side Border Width: "), &tgt->wBorderSide);
+		AG_NumericalNewInt(nt, 0, "px", _("Resize Control Width: "), &tgt->wResizeCtrl);
 #if 0
-	AG_LabelNewPolledMT(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
-	                    &OBJECT(tgt)->lock,
-	                    _("Transient for: %[objName] @ (AG_Window *)%p"),
-	                    &tgt->transientFor, &tgt->transientFor);
-	AG_LabelNewPolledMT(rBox, AG_LABEL_SLOW | AG_LABEL_HFILL,
-	                    &OBJECT(tgt)->lock,
-	                   _("Pinned to: %[objName] @ (AG_Window *)%p"),
-	                   &tgt->pinnedTo, &tgt->pinnedTo);
-#endif
-
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("Minimum W: "), &tgt->wMin);
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("Minimum H: "), &tgt->hMin);
-#if 0
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("Bottom Border W: "), &tgt->wBorderBot);
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("Side Border W: "), &tgt->wBorderSide);
-	AG_NumericalNewInt(rBox, nuFl, NULL, _("Resize Ctrl W: "), &tgt->wResizeCtrl);
-#endif
-
-	if (tgt->flags & AG_WINDOW_MINSIZEPCT)
-		AG_NumericalNewInt(rBox, nuFl, "%", _("Minimum Pct: "), &tgt->minPct);
-#if 0	
-	AG_SpacerNewHoriz(rBox);
-
-	AG_LabelNewS(rBox, 0, _("Initial window position:"));
-	AG_RadioNewUint(rBox, 0, agWindowAlignmentNames, &tgt->alignment);
+		AG_SpacerNewHoriz(nt);
+		AG_LabelNewS(nt, 0, _("Initial window position:"));
+		AG_RadioNewUint(nt, 0, agWindowAlignmentNames, &tgt->alignment);
 # ifdef AG_WM_HINTS
-	AG_LabelNewS(rBox, 0, _("EWMH Window Type:"));
-	AG_RadioNewUint(rBox, 0, agWindowWmTypeNames, &tgt->wmType);
+		AG_LabelNewS(nt, 0, _("EWMH Window Type:"));
+		AG_RadioNewUint(nt, 0, agWindowWmTypeNames, &tgt->wmType);
 # endif
 #endif
-	AG_SetStyle(box, "font-size", "80%");
+		AG_SpacerNewHoriz(nt);
+
+		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
+		    &OBJECT(tgt)->lock,
+		    _("Parent: " AGSI_YEL "%[objName]" AGSI_RST
+		      " @ (" AGSI_CYAN "AG_Window" AGSI_RST " *)%p"),
+		    &tgt->parent, &tgt->parent);
+
+		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
+		    &OBJECT(tgt)->lock,
+		    _("Transient for: " AGSI_YEL "%[objName]" AGSI_RST
+		      " @ (" AGSI_CYAN "AG_Window" AGSI_RST " *)%p"),
+		    &tgt->transientFor, &tgt->transientFor);
+
+		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
+	            &OBJECT(tgt)->lock,
+	            _("Pinned to: " AGSI_YEL "%[objName]" AGSI_RST
+		      " @ (" AGSI_CYAN "AG_Window" AGSI_RST " *)%p"),
+	            &tgt->pinnedTo, &tgt->pinnedTo);
+	}
+
+	nt = AG_NotebookAdd(nb, _("Cursor Areas"), AG_BOX_VERT);
+	{
+		AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 125,
+		    PollCursorAreas, "%p", tgt);
+	}
+
 	return (box);
 }
 #endif /* AG_WIDGETS and AG_DEBUG */
