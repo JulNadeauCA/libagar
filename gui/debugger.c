@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -175,7 +175,8 @@ PollWidgets(AG_Event *_Nonnull event)
 
 	AG_TlistEnd(tl);
 
-	AG_LabelText(lblStats, _("%u windows, %u containers & %u leaves (t = %ums)"),
+	AG_LabelText(lblStats,
+	    _("%u windows, %u containers & %u leaves (t = %ums)"),
 	    nWindows, nContainers, nLeaves, (Uint)AG_GetTicks());
 }
 
@@ -313,6 +314,8 @@ PollVariables(AG_Event *_Nonnull event)
 	AG_ObjectLock(obj);
 	AG_TlistBegin(tl);
 	TAILQ_FOREACH(V, &obj->vars, vars) {
+		AG_TlistItem *it;
+
 		if ((V->type == AG_VARIABLE_P_UINT ||
 		     V->type == AG_VARIABLE_P_INT) &&
 		     strcmp(V->name, "flags") == 0) {
@@ -325,14 +328,16 @@ PollVariables(AG_Event *_Nonnull event)
 		case AG_VARIABLE_P_FLAG8:
 		case AG_VARIABLE_P_FLAG16:
 		case AG_VARIABLE_P_FLAG32:
-			AG_TlistAdd(tl, NULL, "%s %s [mask 0x%x] = %s",
+			it = AG_TlistAdd(tl, NULL, "%s %s [mask 0x%x] = %s",
 			    agVariableTypes[V->type].name, V->name,
 			        V->info.bitmask.u,
 			        val);
+			it->p1 = V;
 			break;
 		default:
-			AG_TlistAdd(tl, NULL, "%s %s = %s",
+			it = AG_TlistAdd(tl, NULL, "%s %s = %s",
 			    agVariableTypes[V->type].name, V->name, val);
+			it->p1 = V;
 			break;
 		}
 	}
@@ -349,6 +354,67 @@ FlagChanged(AG_Event *_Nonnull event)
 	    WIDGET(tgt)->flags);
 
 	AG_Redraw(tgt);
+}
+
+static void
+InputVariable(AG_Event *_Nonnull event)
+{
+	AG_Textbox *tb = AG_TEXTBOX_PTR(1);
+	AG_Widget *tgt = (AG_Widget *)AG_PTR(2);
+	char *s = AG_TextboxDupString(tb), *ps = s;
+	const char *key = Strsep(&ps, ":=");
+	const char *val = Strsep(&ps, ":=");
+	const char *c;
+	int floatChars;
+
+	if (!AG_OBJECT_VALID(tgt) || !AG_OfClass(tgt, "AG_Widget:*")) {
+		Debug(NULL, "Invalid target %p\n", tgt);
+		return;
+	}
+	if (key == NULL || val == NULL)
+		return;
+
+	while (isspace(*key)) { key++; }
+	while (isspace(*val)) { val++; }
+
+	/*
+	 * Try to infer type from the value.
+	 */
+	for (c=val, floatChars=0;
+	     *c != '\0';
+	     c++) {
+		if (*c == '.' || *c == 'e') {
+			floatChars++;
+			continue;
+		}
+		if (!isdigit(*c) && *c != '-')
+			break;
+	}
+	if (*c == '\0') {
+		if (floatChars) {
+			AG_SetFloat(tgt, key, atof(val));
+		} else {
+			AG_SetInt(tgt, key, atoi(val));
+		}
+	} else {
+		if (val[0] == '0' && (val[1] == 'x' || val[1] == 'X') &&
+		    val[2] != '\0') {
+			AG_SetUint(tgt, key, (Uint)strtol(val,NULL,16));
+		} else {
+			if (Strcasecmp(val, "TRUE") == 0) {
+				AG_SetBool(tgt, key, 1);
+			} else if (Strcasecmp(val, "FALSE") == 0) {
+				AG_SetBool(tgt, key, 0);
+			} else {
+				AG_SetString(tgt, key, val);
+			}
+		}
+	}
+
+	AG_WindowUpdate(AG_ParentWindow(tgt));
+	AG_TextboxClearString(tb);
+
+	free(s);
 }
 
 /* Select a widget for inspection in Debugger. */
@@ -374,6 +440,7 @@ TargetWidget(AG_Event *_Nonnull event)
 
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
 	nt = AG_NotebookAdd(nb, "AG_Widget", AG_BOX_VERT);
+	AG_SetStyle(nt, "padding", "3 4 3 4");
 	nt->id = 1;
 	{
 		static const AG_FlagDescr flagDescr[] = {
@@ -408,21 +475,17 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_Box *vbox;
 		AG_Label *lbl;
 
-		lbl = AG_LabelNew(nt, AG_LABEL_HFILL,
-		    _("Class: <" AGSI_BOLD AGSI_CYAN "%s" AGSI_RST ">"),
-		    OBJECT(tgt)->cls->hier);
-		AG_SetStyle(lbl, "font-size", "120%");
+		lbl = AG_LabelNew(nt, 0, _("Widget Structure " AGSI_YEL "%s" AGSI_RST),
+		    OBJECT(tgt)->name);
+		AG_SetStyle(lbl, "font-size", "130%");
 
-		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL, _("Name: "));
-		AG_SetStyle(tb, "padding", "2");
-#ifdef AG_UNICODE
-		AG_TextboxBindUTF8(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
-#else
-		AG_TextboxBindASCII(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
-#endif
+		AG_LabelNew(nt, AG_LABEL_HFILL,
+		    _("Class: <" AGSI_CYAN "%s" AGSI_RST ">"),
+		    OBJECT(tgt)->cls->hier);
+
 		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
 		    &OBJECT(tgt)->lock,
-		    _("Parent window: " AGSI_YEL "%[objName]" AGSI_RST
+		    _("Parent: " AGSI_YEL "%[objName]" AGSI_RST
 		      " @ (" AGSI_CYAN AGSI_COURIER "AG_Window" AGSI_RST AGSI_COURIER " *)%p"),
 		    &tgt->window, &tgt->window);
 
@@ -432,35 +495,40 @@ TargetWidget(AG_Event *_Nonnull event)
 		      " @ (" AGSI_CYAN AGSI_COURIER "AG_Driver" AGSI_RST AGSI_COURIER " *)%p"),
 		    &tgt->drv, &tgt->drv);
 
-		AG_SeparatorNewHoriz(nt);
+		AG_SpacerNewHoriz(nt);
+
+		tb = AG_TextboxNewS(nt, 0, _("Name: "));
+#ifdef AG_UNICODE
+		AG_TextboxBindUTF8(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
+#else
+		AG_TextboxBindASCII(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
+#endif
+		AG_TextboxSizeHint(tb, "<XXXXXXXXXXXXXXXXX>");
+
+		AG_SpacerNewHoriz(nt);
 
 		vbox = AG_BoxNewVert(nt, AG_BOX_HFILL);
 		AG_SetStyle(vbox, "padding", "4");
+		AG_SetStyle(vbox, "font-size", "110%");
 		{
-			const Uint fl = AG_MSPINBUTTON_HFILL;
-
-			msb = AG_MSpinbuttonNew(vbox, fl, "x", _("Size: "));
+			msb = AG_MSpinbuttonNew(vbox, 0, "x", _("Size: "));
 			AG_BindInt(msb, "xvalue", &tgt->w);
 			AG_BindInt(msb, "yvalue", &tgt->h);
-			AG_SetStyle(msb, "font-size", "120%");
 
-			msb = AG_MSpinbuttonNew(vbox, fl, ",", _("Position: "));
+			msb = AG_MSpinbuttonNew(vbox, 0, ",", _("Position: "));
 			AG_BindInt(msb, "xvalue", &tgt->x);
 			AG_BindInt(msb, "yvalue", &tgt->y);
-			AG_SetStyle(msb, "font-size", "120%");
 
-			msb = AG_MSpinbuttonNew(vbox, fl, ",", _("View UL: "));
+			msb = AG_MSpinbuttonNew(vbox, 0, ",", _("View UL: "));
 			AG_BindInt(msb, "xvalue", &tgt->rView.x1);
 			AG_BindInt(msb, "yvalue", &tgt->rView.y1);
-			AG_SetStyle(msb, "font-size", "120%");
 
-			msb = AG_MSpinbuttonNew(vbox, fl, ",", _("View LR: "));
+			msb = AG_MSpinbuttonNew(vbox, 0, ",", _("View LR: "));
 			AG_BindInt(msb, "xvalue", &tgt->rView.x2);
 			AG_BindInt(msb, "yvalue", &tgt->rView.y2);
-			AG_SetStyle(msb, "font-size", "120%");
 		}
 
-		AG_SeparatorNewHoriz(nt);
+		AG_SpacerNewHoriz(nt);
 
 		vbox = AG_BoxNewVert(nt, AG_BOX_VFILL);
 		AG_CheckboxSetFromFlagsFn(vbox, 0, &tgt->flags, flagDescr,
@@ -472,15 +540,24 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		nt = AG_NotebookAdd(nb, OBJECT(tgt)->cls->name, AG_BOX_VERT);
 		nt->id = 2;
+		AG_SetStyle(nt, "padding", "3 3 3 3");
 
 		editRv = OBJECT_CLASS(tgt)->edit(tgt);
 		AG_ObjectAttach(nt, editRv);
 		AG_WidgetCompileStyle(editRv);
 		AG_Redraw(editRv);
 	}
+
 	nt = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
 	nt->id = 3;
 	{
+		AG_Textbox *tb;
+
+		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL |
+		                        AG_TEXTBOX_RETURN_BUTTON, "+ ");
+		AG_SetEvent(tb, "textbox-return",
+		    InputVariable, "%p,%p", tb,tgt);
+
 		AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333, PollVariables, NULL);
 	}
 
