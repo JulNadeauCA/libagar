@@ -73,30 +73,35 @@ int ag65consoleX = 0, ag65consoleY = 0;
 
 #ifdef AG_THREADS
 static void
-DestroyErrorMsg(void *_Nullable msg)
+DestroyErrorMsg(void *_Nonnull msg)
 {
-	Free(msg);
+	free(msg);
 }
 static void
-DestroyErrorCode(void *_Nullable code)
+DestroyErrorCode(void *_Nonnull code)
 {
-	Free(code);
+	free(code);
 }
 #endif
 
 int
 AG_InitErrorSubsystem(void)
 {
+#ifdef AG_THREADS
+	AG_ErrorCode *errCode;
+
+	if (AG_ThreadKeyTryCreate(&agErrorMsgKey, DestroyErrorMsg) == -1 ||
+	    AG_ThreadKeyTryCreate(&agErrorCodeKey, DestroyErrorCode) == -1)
+		return (-1);
+
+	AG_ThreadKeySet(agErrorMsgKey, Strdup("No error"));
+
+	errCode = Malloc(sizeof(AG_ErrorCode));
+	*errCode = AG_EUNDEFINED;
+	AG_ThreadKeySet(agErrorCodeKey, errCode);
+#else
 	agErrorMsg = Strdup("No error");
 	agErrorCode = AG_EUNDEFINED;
-
-#ifdef AG_THREADS
-	if (AG_ThreadKeyTryCreate(&agErrorMsgKey, DestroyErrorMsg) == -1 ||
-	    AG_ThreadKeyTryCreate(&agErrorCodeKey, DestroyErrorCode) == -1) {
-		return (-1);
-	}
-	AG_ThreadKeySet(agErrorMsgKey, Strdup("No error"));
-	AG_ThreadKeySet(agErrorCodeKey, Malloc(sizeof(AG_ErrorCode)));
 #endif
 
 #if defined(_WIN32) && defined(USE_WIN32_CONSOLE)
@@ -134,7 +139,7 @@ AG_SetErrorS(const char *msg)
 	}
 	AG_ThreadKeySet(agErrorMsgKey, newMsg);
 #else
-	Free(agErrorMsg);
+	free(agErrorMsg);
 #endif
 	agErrorMsg = newMsg;
 }
@@ -146,6 +151,7 @@ AG_SetError(const char *fmt, ...)
 	va_list args;
 #ifdef AG_THREADS
 	char *newMsg;
+
 	va_start(args, fmt);
 	Vasprintf(&newMsg, fmt, args);
 	va_end(args);
@@ -155,7 +161,8 @@ AG_SetError(const char *fmt, ...)
 	AG_ThreadKeySet(agErrorMsgKey, newMsg);
 	agErrorMsg = newMsg;
 #else
-	Free(agErrorMsg);
+	free(agErrorMsg);
+
 	va_start(args, fmt);
 	Vasprintf(&agErrorMsg, fmt, args);
 	va_end(args);
@@ -210,10 +217,11 @@ void
 AG_SetErrorCode(AG_ErrorCode code)
 {
 #ifdef AG_THREADS
-	AG_ErrorCode *codeLast, *codeNew = Malloc(sizeof(AG_ErrorCode));
+	AG_ErrorCode *codeLast, *codeNew;
 
+	codeNew = Malloc(sizeof(AG_ErrorCode));
 	codeLast = (AG_ErrorCode *)AG_ThreadKeyGet(agErrorCodeKey);
-	Free(codeLast);
+	free(codeLast);
 	*codeNew = code;
 	AG_ThreadKeySet(agErrorCodeKey, (void *)codeNew);
 #else
