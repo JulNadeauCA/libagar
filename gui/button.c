@@ -391,6 +391,14 @@ Init(void *_Nonnull obj)
 	AG_BindInt(bu, "state", &bu->state);
 }
 
+static void
+Destroy(void *_Nonnull obj)
+{
+	AG_Button *bu = obj;
+
+	Free(bu->repeat);
+}
+
 static __inline__ void
 RenderLabel(AG_Button *_Nonnull bu)
 {
@@ -781,7 +789,7 @@ AG_WidgetClass agButtonClass = {
 		{ 0,0 },
 		Init,
 		NULL,		/* reset */
-		NULL,		/* destroy */
+		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
