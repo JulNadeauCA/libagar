@@ -46,8 +46,6 @@ int AG_CreateDataDir(void);
 int AG_ConfigSave(void);
 int AG_ConfigLoad(void);
 
-void AG_ConfigClearPaths(AG_Config *_Nonnull);
-
 AG_Config *_Nullable AG_ConfigObject(void);
 
 AG_Size AG_ConfigGetPath(AG_ConfigPathGroup, int, char *_Nonnull, AG_Size);

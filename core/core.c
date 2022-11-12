@@ -88,11 +88,10 @@ int
 AG_InitCore(const char *progname, Uint flags)
 {
 #ifdef AG_SERIALIZATION
-	if (agConfig != NULL) {
-		AG_SetError("AG_Core already initialized");
-		return (-1);
-	}
+	if (agConfig != NULL)		/* AG_InitCore() was already called */
+		return (0);
 #endif
+	/* Process option flags. */
 #ifdef AG_VERBOSITY
 	if (flags & AG_VERBOSE)
 		agVerbose = 1;
@@ -101,24 +100,26 @@ AG_InitCore(const char *progname, Uint flags)
 	if (flags & AG_SOFT_TIMERS)
 		agSoftTimers = 1;
 #endif
-	/* Copy in any specified program name. */
+	/* Set the program name (if not NULL). */
 	if (progname != NULL) {
 		if ((agProgName = TryStrdup(progname)) == NULL)
 			return (-1);
 	} else {
 		agProgName = NULL;
 	}
+
+	/* Set up the language translation. */
 #ifdef ENABLE_NLS
-	/* Bind to the proper translation */
 	bindtextdomain("agar", LOCALEDIR);
 	bind_textdomain_codeset("agar", "UTF-8");
 	textdomain("agar");
 #endif
-	/* Initialize AG_Error(3), AG_String(3) and AG_Event(3) interfaces. */
+	/* Initialize the AG_Error(3) and AG_String(3) interfaces. */
 	if (AG_InitErrorSubsystem() == -1 ||
-	    AG_InitStringSubsystem() == -1) {
+	    AG_InitStringSubsystem() == -1)
 		return (-1);
-	}
+
+	/* Initialize the AG_Event(3) subsystem. */
 #ifdef AG_EVENT_LOOP
 	if (AG_InitEventSubsystem(flags) == -1)
 		return (-1);
@@ -126,26 +127,24 @@ AG_InitCore(const char *progname, Uint flags)
 	/* Fetch CPU information. */
 	AG_GetCPUInfo(&agCPU);
 
+	/* Initialize POSIX threads. */
 #ifdef AG_THREADS
-	/* Initialize threads. */
 	agEventThread = AG_ThreadSelf();		/* Main thread */
 # ifdef _XBOX
 	ptw32_processInitialize();
 # endif
 	pthread_mutexattr_init(&agRecursiveMutexAttr);
 # ifdef HAVE_PTHREAD_MUTEX_RECURSIVE_NP
-	pthread_mutexattr_settype(&agRecursiveMutexAttr,
-	    PTHREAD_MUTEX_RECURSIVE_NP);
+	pthread_mutexattr_settype(&agRecursiveMutexAttr, PTHREAD_MUTEX_RECURSIVE_NP);
 # else
-	pthread_mutexattr_settype(&agRecursiveMutexAttr,
-	    PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutexattr_settype(&agRecursiveMutexAttr, PTHREAD_MUTEX_RECURSIVE);
 # endif
 # ifdef AG_ENABLE_DSO
 	AG_MutexInitRecursive(&agDSOLock);
 # endif
 #endif /* AG_THREADS */
 
-	/* Initialize object classes and register Agar-Core classes */
+	/* Initialize core Agar object classes. */
 	AG_InitClassTbl();
 #ifdef AG_SERIALIZATION
 	AG_RegisterClass(&agConfigClass);
@@ -167,8 +166,12 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_SetTimeOps(&agTimeOps_dummy);
 #endif
 
+	/*
+	 * Set the user info access method. Select the fastest method that can
+	 * provide us with a path to some writeable home directory (for example,
+	 * on Unix we prefer getenv(3) to getpwent(3) for best efficiency).
+	 */
 #ifdef AG_USER
-	/* Select the user account interface routines. */
 # if defined(_XBOX)
 	AG_SetUserOps(&agUserOps_xbox);
 # elif defined(_WIN32) && defined(HAVE_CSIDL)
@@ -192,12 +195,13 @@ AG_InitCore(const char *progname, Uint flags)
 # endif
 #endif /* AG_USER */
 
+	/* Initialize the AG_Timer(3) subsystem. */
 #ifdef AG_TIMERS
-	/* Initialize the timer system */
 	AG_InitTimers();
 #endif
+
 #ifdef AG_SERIALIZATION
-	/* Initialize the AG_DataSource(3) interface */
+	/* Initialize the AG_DataSource(3) interface. */
 	AG_DataSourceInitSubsystem();
 
 	/* Initialize the global AG_Config(3) object. */

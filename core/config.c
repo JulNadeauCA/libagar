@@ -158,63 +158,14 @@ Init(void *_Nonnull obj)
 #endif
 }
 
-static int
-Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull ver)
+static void
+Destroy(void *_Nonnull obj)
 {
-#ifdef AG_DEBUG
-	agDebugLvl = AG_ReadUint8(ds);
-#else
-	(void)AG_ReadUint8(ds);
-#endif
-#ifdef AG_LEGACY
-	if (ver->minor < 2) { AG_ReadUint8(ds); } /* r<9.5 (pre-1.4.2) compat */
-#endif
-	(void)AG_ReadUint8(ds);
-#ifdef AG_LEGACY
-	if (ver->minor >= 3) { AG_ReadUint8(ds); }
-	if (ver->minor >= 4) { AG_ReadUint32(ds); }
-#endif
-	AG_Seek(ds, 22, AG_SEEK_CUR);
-#ifdef AG_LEGACY
-	if (ver->minor >= 1) { AG_ReadUint8(ds); }
-#endif
-	(void)AG_ReadUint8(ds);				/* agRcsMode */
-	AG_SkipString(ds);				/* agRcsHostname */
-	(void)AG_ReadUint16(ds);			/* agRcsPort */
-	AG_SkipString(ds);				/* agRcsUsername */
-	AG_SkipString(ds);				/* agRcsPassword */
-	return (0);
-}
-
-static int
-Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
-{
-	AG_Config *cfg = obj;
-	char buf[30];
-
-	AG_SetInt(cfg, "initial-run", 0);
-#ifdef AG_DEBUG
-	AG_WriteUint8(ds, (Uint8)agDebugLvl);
-#else
-	AG_WriteUint8(ds, 0);
-#endif
-	/* For backward compatibility with <9.5 (pre-1.4.2) saves. */
-	memset(buf, 0, sizeof(buf));
-	AG_Write(ds, buf, sizeof(buf));
-	AG_WriteString(ds, "");			/* agRcsHostname */
-	AG_WriteUint16(ds, 0);			/* agRcsPort */
-	AG_WriteString(ds, "");			/* agRcsUsername */
-	AG_WriteString(ds, "");			/* agRcsPassword */
-	return (0);
-}
-
-void
-AG_ConfigClearPaths(AG_Config *cfg)
-{
-	AG_ConfigPath *cp, *cpNext;
+	AG_Config *cfg = AGCONFIG(obj);
 	int i;
 
 	for (i = 0; i < AG_CONFIG_PATH_LAST; i++) {
+		AG_ConfigPath *cp, *cpNext;
 		AG_ConfigPathQ *pathq = &cfg->paths[i];
 
 		for (cp = TAILQ_FIRST(pathq);
@@ -224,8 +175,16 @@ AG_ConfigClearPaths(AG_Config *cfg)
 			Free(cp->s);
 			free(cp);
 		}
-		TAILQ_INIT(pathq);
 	}
+}
+
+static int
+Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
+{
+	AG_Config *cfg = obj;
+
+	AG_SetInt(cfg, "initial-run", 0);
+	return (0);
 }
 
 /* Return a pointer to the global agConfig object. */
@@ -447,11 +406,11 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 AG_ObjectClass agConfigClass = {
 	"AG_Config",
 	sizeof(AG_Config),
-	{ 10, 0 },
+	{ 11, 0 },
 	Init,
 	NULL,		/* reset */
-	NULL,		/* destroy */
-	Load,
+	Destroy,
+	NULL,		/* load */
 	Save,
 	NULL		/* edit */
 };
