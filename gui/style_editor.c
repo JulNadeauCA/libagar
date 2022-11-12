@@ -83,8 +83,7 @@ FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
 	if (!TAILQ_EMPTY(&OBJECT(wid)->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 	}
-	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
-	    AG_TlistVisibleChildren(tl, it)) {
+	if (AG_TlistVisibleChildren(tl, it)) {
 		OBJECT_FOREACH_CHILD(widChld, wid, ag_widget)
 			FindWidgets(widChld, tl, depth+1);
 	}
@@ -118,8 +117,7 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 	    !TAILQ_EMPTY(&win->pvt.subwins)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 	}
-	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
-	    AG_TlistVisibleChildren(tl, it)) {
+	if (AG_TlistVisibleChildren(tl, it)) {
 		TAILQ_FOREACH(wSub, &win->pvt.subwins, pvt.swins)
 			FindWindows(tl, wSub, depth+1);
 
@@ -241,8 +239,8 @@ InputAttribute(AG_Event *_Nonnull event)
 	AG_Textbox *tb = AG_TEXTBOX_PTR(1);
 	AG_Widget *tgt = AG_WIDGET_PTR(2);
 	char *s = AG_TextboxDupString(tb), *ps = s;
-	const char *key = Strsep(&ps, ":");
-	const char *val = Strsep(&ps, ":");
+	const char *key = Strsep(&ps, ":=");
+	const char *val = Strsep(&ps, ":=");
 	
 	AG_OBJECT_ISA(tgt, "AG_Widget:*");
 
@@ -506,8 +504,8 @@ CompleteAttribute(AG_Event *_Nonnull event)
 	while (*sp == ' ' || *sp == '\t') {        /* Skip leading whitespace */
 		sp++;
 	}
-	key = AG_Strsep(&sp, ":");
-	val = AG_Strsep(&sp, ":");
+	key = AG_Strsep(&sp, ":=");
+	val = AG_Strsep(&sp, ":=");
 
 	AG_TlistBegin(tl);
 
