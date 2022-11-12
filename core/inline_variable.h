@@ -79,6 +79,9 @@ ag_free_variable(AG_Variable *V)
 			AG_Free(V->data.s);
 		}
 		break;
+	case AG_VARIABLE_FUNCTION:
+		AG_Free(V->data.p);
+		break;
 	case AG_VARIABLE_P_VARIABLE:
 		AG_Free(V->info.varName);
 		break;

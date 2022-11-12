@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -363,28 +363,38 @@ used:
 }
 #endif /* AG_SERIALIZATION */
 
-/* Set a variable which is a pointer to a function (with optional arguments). */
-void
-AG_SetFn(void *p, const char *key, AG_EventFn fn, const char *fmt, ...)
+/*
+ * Set a variable which is a pointer to a function (with optional arguments).
+ * The object must be locked.
+ */
+AG_Variable *
+AG_SetFn(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Object *obj = p;
 	AG_Event *ev;
+	AG_Variable *V;
 
-	AG_ObjectLock(obj);
-	if (fn != NULL) {
-		ev = AG_EventNew(fn, obj, NULL);
-		if (fmt) {
-			va_list ap;
-
-			va_start(ap, fmt);
-			AG_EventGetArgs(ev, fmt, ap);
-			va_end(ap);
-		}
-		AG_SetPointer(obj, key, ev);
-	} else {
-		AG_Unset(obj, key);
+	if (fn == NULL) {
+		AG_Unset(obj, name);
+		return (NULL);
 	}
-	AG_ObjectUnlock(obj);
+
+	ev = AG_EventNew(fn, obj, NULL);
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		AG_EventGetArgs(ev, fmt, ap);
+		va_end(ap);
+	}
+#ifdef AG_DEBUG
+	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+	           AGSI_CYAN "Function" AGSI_RST " *)%p\n", name, fn);
+#endif
+	V = AG_FetchVariable(obj, name, AG_VARIABLE_FUNCTION);
+	V->data.p = ev;
+	V->info.pFlags = 0;
+	return (V);
 }
 
 /* Attach an object to another object. */
@@ -402,7 +412,7 @@ AG_ObjectAttach(void *parentp, void *pChld)
 #endif
 #ifdef AG_TYPE_SAFETY
 	if (!AG_OBJECT_VALID(parent)) { AG_FatalErrorV("E38a", "Parent object is invalid"); }
-	if (!AG_OBJECT_VALID(chld))   { AG_FatalErrorV("E38b", "Child object is invalid"); }
+	if (!AG_OBJECT_VALID(chld)) { AG_FatalErrorV("E38b", "Child object is invalid"); }
 #endif
 	AG_LockVFS(parent);
 	AG_ObjectLock(parent);
@@ -469,7 +479,7 @@ AG_ObjectDetach(void *pChld)
 	AG_Timer *to, *toNext;
 #endif
 #ifdef AG_TYPE_SAFETY
-	if (!AG_OBJECT_VALID(chld))   { AG_FatalErrorV("E36a", "Child object is invalid"); }
+	if (!AG_OBJECT_VALID(chld)) { AG_FatalErrorV("E36a", "Child object is invalid"); }
 	if (!AG_OBJECT_VALID(parent)) { AG_FatalErrorV("E36b", "Parent object is invalid"); }
 #endif
 #ifdef AG_THREADS
@@ -510,9 +520,6 @@ AG_ObjectDetach(void *pChld)
 	} else {
 		Debug(parent, "Detached child: <%p>\n", chld);
 	}
-	if (parent->name[0] != '\0') {
-		Debug(chld, "New parent: NULL\n");
-	}
 #endif /* DEBUG_OBJECT */
 
 out:
@@ -536,7 +543,7 @@ AG_ObjectDetachLockless(void *pChld)
 	AG_Timer *to, *toNext;
 #endif
 #ifdef AG_TYPE_SAFETY
-	if (!AG_OBJECT_VALID(chld))   { AG_FatalErrorV("E36a", "Child object is invalid"); }
+	if (!AG_OBJECT_VALID(chld)) { AG_FatalErrorV("E36a", "Child object is invalid"); }
 	if (!AG_OBJECT_VALID(parent)) { AG_FatalErrorV("E36b", "Parent object is invalid"); }
 #endif
 	if (AG_Defined(chld, "detach-fn")) {
@@ -570,9 +577,6 @@ AG_ObjectDetachLockless(void *pChld)
 		Debug(parent, "Detached child: %s\n", chld->name);
 	} else {
 		Debug(parent, "Detached child: <%p>\n", chld);
-	}
-	if (parent->name[0] != '\0') {
-		Debug(chld, "New parent: NULL\n");
 	}
 #endif /* DEBUG_OBJECT */
 }
@@ -690,30 +694,54 @@ fail:
 	return (NULL);
 }
 
-/* Detach and destroy all child objects of a given parent object. */
 void
-AG_ObjectFreeChildren(void *obj)
+AG_ObjectFreeChildrenLockless(AG_Object *obj)
 {
-	AG_Object *parent = obj;
 	AG_Object *child, *childNext;
+	struct ag_objectq detached;
 
-	AG_ObjectLock(parent);
-	for (child = TAILQ_FIRST(&parent->children);
-	     child != TAILQ_END(&parent->children);
+#ifdef AG_TYPE_SAFETY
+	if (!AG_OBJECT_VALID(obj)) { AG_FatalErrorV("E37", "Parent object is invalid"); }
+#endif
+	TAILQ_INIT(&detached);
+
+	for (child = TAILQ_FIRST(&obj->children);
+	     child != TAILQ_END(&obj->children);
 	     child = childNext) {
 		childNext = TAILQ_NEXT(child, cobjs);
 #ifdef DEBUG_OBJECT
 		if (child->name[0] != '\0') {
-			Debug(parent, "Freeing child: %s\n", child->name);
+			Debug(obj, "Detaching child: %s\n", child->name);
 		} else {
-			Debug(parent, "Freeing child: <%p>\n", child);
+			Debug(obj, "Detaching child: <%p>\n", child);
 		}
 #endif
-		AG_ObjectDetach(child);
+		AG_ObjectDetachLockless(child);
+		TAILQ_INSERT_TAIL(&detached, child, cobjs);
+	}
+	TAILQ_INIT(&obj->children);
+
+	for (child = TAILQ_FIRST(&detached);
+	     child != TAILQ_END(&detached);
+	     child = childNext) {
+		childNext = TAILQ_NEXT(child, cobjs);
 		AG_ObjectDestroy(child);
 	}
-	TAILQ_INIT(&parent->children);
-	AG_ObjectUnlock(parent);
+}
+
+/* Detach and destroy all child objects under a given parent. */
+void
+AG_ObjectFreeChildren(void *pObj)
+{
+	AG_Object *obj = pObj;
+
+#ifdef AG_TYPE_SAFETY
+	if (!AG_OBJECT_VALID(obj))
+		AG_FatalError("Parent object invalid");
+#endif
+	AG_ObjectLock(obj);
+	AG_ObjectFreeChildrenLockless(obj);
+	AG_ObjectUnlock(obj);
 }
 
 /* Destroy the object variables. */

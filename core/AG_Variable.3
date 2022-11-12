@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -48,16 +48,18 @@ Integers (e.g.,
 .Ft Uint ,
 .Ft long ,
 .Ft Sint16 ,
-.Ft Uint64 )
+.Ft Uint64 ) .
 .It
-Floating-point numbers (e.g.,
+Real numbers (e.g.,
 .Ft float ,
 .Ft double ,
-.Ft long double )
+.Ft long double ) .
 .It
-Unbounded C strings (auto-allocated)
+C strings (unbounded; auto-allocated).
 .It
-Generic pointers
+Generic pointers.
+.It
+Functions.
 .El
 .Pp
 Typed references (or "pointer variables") are also supported.
@@ -70,19 +72,19 @@ Reference types include:
 .It
 Integers (e.g.,
 .Ft int * ,
-.Ft long * ,
 .Ft Uint * ,
+.Ft long * ,
 .Ft Sint16 * ,
-.Ft Uint64 * )
+.Ft Uint64 * ) .
 .It
-Floating-point numbers (e.g.,
+Real numbers (e.g.,
 .Ft float * ,
 .Ft double * ,
-.Ft long double * )
+.Ft long double * ) .
 .It
-Bits in a fixed-size word (per given bitmask)
+Bits in a fixed-size word (per given bitmask).
 .It
-Bounded C strings (in fixed-size buffer)
+Bounded C strings (in fixed-size buffer).
 .It
 Agar objects (pointer to
 .Xr AG_Object 3 ) .
@@ -90,7 +92,7 @@ Agar objects (pointer to
 Proxy for a named
 .Nm
 in an external
-.Xr AG_Object 3
+.Xr AG_Object 3 .
 .El
 .Pp
 Besides representing
@@ -651,9 +653,22 @@ of size
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_BindPointerMp "AG_Object *obj" "const char *name" "void **pVal" "AG_Mutex *lock"
-.Pp
 .nr nS 0
 These functions provide an interface to generic pointer types.
+.Sh FUNCTIONS
+.nr nS 1
+.Ft "AG_Variable *"
+.Fn AG_SetFn "AG_Object *obj" "const char *name" "AG_EventFn fn" "const char *fmt" "..."
+.nr nS 0
+.Pp
+.Fn AG_SetFn
+sets the value of a function pointer variable to the specified function
+.Fa fn
+and optional function arguments
+.Fa fmt .
+See
+.Xr AG_Event 3
+for more information.
 .Sh BITS
 .nr nS 1
 .Ft "AG_Variable *"
@@ -762,12 +777,11 @@ Stored data (see <core/variable.h>).
 The
 .Nm
 interface first appeared in Agar 1.3.4.
-It replaced the older
-.Xr AG_Prop 3
-interface, and widget bindings which were previously stored in
+It replaced the older "AG_Prop" interface and
 .Xr AG_Widget 3
-itself.
+specific bindings.
+In Agar 1.6.0, Object->Object references appeared and
 .Fn AG_GetVariableLocked
 was renamed
-.Fn AG_AccessVariable
-in Agar 1.6.0.
+.Fn AG_AccessVariable .
+Functions appeared in Agar 1.7.0.

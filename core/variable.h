@@ -61,6 +61,7 @@ typedef enum ag_variable_type {
 					   (and hard dependency) */
 	AG_VARIABLE_P_VARIABLE,		/* Serializable reference to specific
 					   Object Variable (by name) */
+	AG_VARIABLE_FUNCTION,		/* A function with optional arguments */
 	AG_VARIABLE_TYPE_LAST
 } AG_VariableType;
 #if AG_MODEL == AG_SMALL

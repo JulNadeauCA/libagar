@@ -374,8 +374,8 @@ void AG_ObjectSetNameS(void *_Nonnull, const char *_Nullable);
 void AG_ObjectSetName(void *_Nonnull, const char *_Nullable, ...)
                      FORMAT_ATTRIBUTE(printf,2,3);
 
-void AG_SetFn(void *_Nonnull, const char *_Nonnull,
-              _Nullable AG_EventFn, const char *_Nullable, ...);
+AG_Variable *AG_SetFn(void *_Nonnull, const char *_Nonnull,
+                      _Nullable AG_EventFn, const char *_Nullable, ...);
 
 #if AG_MODEL != AG_SMALL
 void AG_ObjectMoveUp(void *_Nonnull);
@@ -387,6 +387,7 @@ void AG_ObjectMoveToTail(void *_Nonnull);
 void AG_ObjectDestroy(void *_Nonnull);
 void AG_ObjectFreeVariables(void *_Nonnull);
 void AG_ObjectFreeChildren(void *_Nonnull);
+void AG_ObjectFreeChildrenLockless(AG_Object *_Nonnull);
 void AG_ObjectFreeEvents(AG_Object *_Nonnull);
 
 #ifdef AG_SERIALIZATION

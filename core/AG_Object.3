@@ -767,6 +767,9 @@ AGOBJECT_FOREACH_CLASS(chld, parent, my_class, "MyClass") {
 .Ft "void"
 .Fn AG_ObjectFreeChildren "AG_Object *obj"
 .Pp
+.Ft "void"
+.Fn AG_ObjectFreeChildrenLockless "AG_Object *obj"
+.Pp
 .nr nS 0
 .Fn AG_ObjectReset
 restores the state of an object to some initial state.
@@ -814,8 +817,13 @@ invokes
 .Fn AG_ObjectDetach
 and
 .Fn AG_ObjectDestroy
-on all child objects of
+on all child objects under
 .Fa parent .
+The
+.Fn AG_ObjectFreeChildrenLockless
+variant presumes that
+.Fa parent
+is locked.
 .Sh SERIALIZATION
 .nr nS 1
 .Ft "int"

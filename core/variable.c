@@ -98,6 +98,10 @@ const AG_VariableTypeInfo agVariableTypes[] = {
 	 */
 	{ AG_VARIABLE_P_OBJECT,   1, "Object *",   AG_VARIABLE_P_OBJECT,   16, sizeof(void *) },
 	{ AG_VARIABLE_P_VARIABLE, 1, "Variable *", AG_VARIABLE_P_VARIABLE, 17, sizeof(void *) },
+	/*
+	 * A function with optional arguments set by AG_SetFn().
+	 */
+	{ AG_VARIABLE_FUNCTION,   0, "Function",   AG_VARIABLE_FUNCTION,   18, sizeof(AG_Event *) },
 };
 
 /* Import inlinables */
