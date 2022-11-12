@@ -6,11 +6,11 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_unit {
-	char *_Nullable key;                /* Key (or list terminator) */
-	char *_Nonnull abbr;                /* Abbreviated symbol */
-	char *_Nonnull name;                /* Long name */
-	double divider;                     /* Conversion factor (linear units) */
-	double (*_Nonnull fn)(double, int); /* Function (non-linear units) */
+	char *_Nullable key;                 /* Key (or list terminator) */
+	char *_Nonnull abbr;                 /* Abbreviated symbol */
+	char *_Nonnull name;                 /* Long name */
+	double divider;                      /* Conversion factor (linear units) */
+	double (*_Nullable fn)(double, int); /* Function (non-linear units) */
 } AG_Unit;
 
 #define AG_UNIT(unit)    ((AG_Unit *)(unit))
