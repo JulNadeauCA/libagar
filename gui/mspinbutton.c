@@ -210,7 +210,7 @@ Init(void *obj)
 	
 	tb = msb->input = AG_TextboxNewS(msb, 0, NULL);
 	AG_TextboxBindASCII(tb, msb->inTxt, sizeof(msb->inTxt));
-	AG_TextboxSizeHint(tb, "8888,8888");
+	AG_TextboxSizeHint(tb, "88888,88888");
 	AG_SetEvent(tb, "textbox-return", TextReturn, "%p", msb);
 	AG_SetEvent(tb, "textbox-postchg", TextChanged, "%p", msb);
 /*	AG_AddEvent(tb->ed, "key-down", KeyDown, "%p", msb); */
