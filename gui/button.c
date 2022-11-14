@@ -396,6 +396,7 @@ Destroy(void *_Nonnull obj)
 {
 	AG_Button *bu = obj;
 
+	Free(bu->label);
 	Free(bu->repeat);
 }
 

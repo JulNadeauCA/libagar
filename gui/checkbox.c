@@ -244,6 +244,14 @@ Init(void *_Nonnull obj)
 }
 
 static void
+Destroy(void *_Nonnull obj)
+{
+	AG_Checkbox *cb = obj;
+
+	Free(cb->label);
+}
+
+static void
 Draw(void *_Nonnull obj)
 {
 	AG_Checkbox *cb = obj;
@@ -322,9 +330,8 @@ Draw(void *_Nonnull obj)
 		AG_Surface *S;
 
 		if (cb->suCheckmark == -1) {
-			/* U+2713 (CHECK MARK) */
 			cb->suCheckmark = AG_WidgetMapSurface(cb,
-			    AG_TextRender("\xe2\x9c\x93"));
+			    AG_TextRender(AGSI_CHECK_MARK));
 		}
 		S = WSURFACE(cb, cb->suCheckmark);
 		AG_WidgetBlitFrom(cb, cb->suCheckmark, NULL,
@@ -618,7 +625,7 @@ AG_WidgetClass agCheckboxClass = {
 		{ 0,0 },
 		Init,
 		NULL,		/* reset */
-		NULL,		/* destroy */
+		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
