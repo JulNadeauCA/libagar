@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -667,8 +667,8 @@ OnFocusLoss(AG_Event *_Nonnull event)
 	}
 	AG_DelTimer(ed, &ed->toCursorBlink);
 	AG_DelTimer(ed, &ed->toDblClick);
-	ed->flags &= ~(AG_EDITABLE_BLINK_ON | AG_EDITABLE_CURSOR_MOVING);
-	ed->returnHeld = 0;
+	ed->flags &= ~(AG_EDITABLE_BLINK_ON | AG_EDITABLE_CURSOR_MOVING |
+	               AG_EDITABLE_RETURN_HELD);
 	AG_UnlockTimers(ed);
 
 	AG_Redraw(ed);
@@ -1265,7 +1265,7 @@ KeyDown(AG_Event *_Nonnull event)
 	case AG_KEY_RETURN:
 	case AG_KEY_KP_ENTER:
 		if ((ed->flags & AG_EDITABLE_MULTILINE) == 0) {
-			ed->returnHeld = 1;
+			ed->flags |= AG_EDITABLE_RETURN_HELD;
 		}
 		break;
 	case AG_KEY_LSHIFT:
@@ -1437,7 +1437,7 @@ KeyUp(AG_Event *_Nonnull event)
 				AG_WidgetUnfocus(ed);
 			}
 			AG_PostEvent(ed, "editable-return", NULL);
-			ed->returnHeld = 0;
+			ed->flags &= ~(AG_EDITABLE_RETURN_HELD);
 			AG_Redraw(ed);
 		}
 		break;
@@ -1698,6 +1698,20 @@ AG_EditableCopyChunk(AG_Editable *ed, AG_EditableClipboard *cb, AG_Char *s,
 
 	AG_MutexUnlock(&cb->lock);
 	AG_ObjectUnlock(ed);
+}
+
+/* Undo last action or keyboard input. */
+int
+AG_EditableUndo(AG_Editable *ed, AG_EditableBuffer *buffer)
+{
+	return (0);
+}
+
+/* Redo last undone action or keyboard input. */
+int
+AG_EditableRedo(AG_Editable *ed, AG_EditableBuffer *buffer)
+{
+	return (0);
 }
 
 /*
@@ -1990,9 +2004,53 @@ AG_EditableSelectAll(AG_Editable *ed, AG_EditableBuffer *buf)
 	AG_ObjectUnlock(ed);
 }
 
-/*
- * Right-click popup menu actions.
- */
+/* Undo via contextual menu. */
+static void
+MenuUndo(AG_Event *_Nonnull event)
+{
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
+	AG_EditableBuffer *buf;
+	
+	if ((buf = GetBuffer(ed)) != NULL) {
+		if (AG_EditableUndo(ed, buf)) {
+			CommitBuffer(ed, buf);
+		}
+		ReleaseBuffer(ed, buf);
+	}
+}
+static void
+MenuUndoActive(AG_Event *_Nonnull event)
+{
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
+	int *enable = AG_PTR(2);
+
+	*enable = (!AG_EditableReadOnly(ed) && (ed->nRevs > 0));
+}
+
+/* Redo via contextual menu. */
+static void
+MenuRedo(AG_Event *_Nonnull event)
+{
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
+	AG_EditableBuffer *buf;
+	
+	if ((buf = GetBuffer(ed)) != NULL) {
+		if (AG_EditableRedo(ed, buf)) {
+			CommitBuffer(ed, buf);
+		}
+		ReleaseBuffer(ed, buf);
+	}
+}
+static void
+MenuRedoActive(AG_Event *_Nonnull event)
+{
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
+	int *enable = AG_PTR(2);
+
+	*enable = (!AG_EditableReadOnly(ed) && (ed->nRevsUndone > 0));
+}
+
+/* Undo via contextual menu */
 static void
 MenuCut(AG_Event *_Nonnull event)
 {
@@ -2140,6 +2198,12 @@ PopupMenu(AG_Editable *_Nonnull ed)
 	if ((pm = AG_PopupNew(ed)) == NULL) {
 		return (NULL);
 	}
+
+	mi = AG_MenuAction(pm->root, _("Undo"), NULL, MenuUndo, "%p", ed);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuUndoActive, "%p", ed);
+
+	mi = AG_MenuAction(pm->root, _("Redo"), NULL, MenuRedo, "%p", ed);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuRedoActive, "%p", ed);
 
 	AG_MenuSeparator(pm->root);
 
@@ -2694,7 +2758,9 @@ Init(void *_Nonnull obj)
 			     sizeof(int) +               /* yMax */
 			     sizeof(int) +               /* yVis */
 			     sizeof(int) +               /* posKbdSel */
-			     sizeof(int) +               /* returnHeld */
+			     sizeof(Uint) +              /* nRevs */
+			     sizeof(Uint) +              /* nRevsUndone */
+			     sizeof(Uint32) +            /* _pad */
 			     sizeof(AG_EditableBuffer) + /* sBuf */
 			     sizeof(AG_Rect) +           /* r */
 			     sizeof(AG_CursorArea) +     /* ca */
@@ -2705,10 +2771,10 @@ Init(void *_Nonnull obj)
 			     sizeof(int *) +
 			     sizeof(AG_Autocomplete *)); /* complete */
 	
-	ed->selDblClick = -1;
 	ed->fontMaxHeight = agTextFontHeight;
 	ed->lineSkip = agTextFontLineSkip;
 	ed->suPlaceholder = -1;
+	ed->selDblClick = -1;
 
 	AG_InitTimer(&ed->toRepeat, "repeat", 0);
 	AG_InitTimer(&ed->toRepeatDirs[0], "repeatU", 0);

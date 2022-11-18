@@ -67,6 +67,8 @@ typedef struct ag_editable {
 #define AG_EDITABLE_MARKPREF      0x002000 /* Mark current cursor position */
 #define AG_EDITABLE_EXCL          0x004000 /* Exclusive access to buffer */
 #define AG_EDITABLE_NO_KILL_YANK  0x008000 /* Disable [K]ill and [Y]ank functions */
+
+#define AG_EDITABLE_RETURN_HELD   0x010000 /* KEY_RETURN or KP_ENTER is held */
 #define AG_EDITABLE_NO_ALT_LATIN1 0x020000 /* Disable alt-key LATIN-1 mappings */
 #define AG_EDITABLE_WORDWRAP      0x040000 /* Word wrapping */
 #define AG_EDITABLE_NOPOPUP	  0x080000 /* Disable popup menu */
@@ -97,7 +99,9 @@ typedef struct ag_editable {
 	int yMax;			/* Lowest y (lines) */
 	int yVis;			/* Maximum visible area (lines) */
 	int posKbdSel;			/* Start of keyboard selection */
-	int returnHeld;			/* RETURN key is held */
+	Uint nRevs;			/* History buffer */
+	Uint nRevsUndone;		/* Undone changes */
+	Uint32 _pad;
 	AG_EditableBuffer sBuf;		/* Working buffer (for EXCL) */
 	AG_Rect r;			/* Clipping rectangle */
 	AG_CursorArea *_Nullable ca;	/* Text cursor-change area */
@@ -157,6 +161,8 @@ void AG_EditableClearBuffer(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
 int  AG_EditableGrowBuffer(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                            AG_Char *_Nonnull, AG_Size);
 
+int  AG_EditableUndo(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
+int  AG_EditableRedo(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
 int  AG_EditableCut(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                     AG_EditableClipboard *_Nonnull, int);
 int  AG_EditableCopy(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,

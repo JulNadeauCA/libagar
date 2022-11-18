@@ -113,9 +113,9 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		}
 	}
 	if (flags & AG_TEXTBOX_RETURN_BUTTON) {
-		tb->btnRet = AG_ButtonNewInt(tb, 0,
+		tb->btnRet = AG_ButtonNewFlag(tb, 0,
 		    " \xe2\x8f\x8e  ",                             /* U+23CE */
-		    &tb->ed->returnHeld);
+		    &tb->ed->flags, AG_EDITABLE_RETURN_HELD);
 
 		AG_SetEvent(tb->btnRet, "button-pushed", EditableReturn, "%p", tb);
 	}
@@ -556,6 +556,7 @@ AG_TextboxSetLabel(AG_Textbox *tb, const char *fmt, ...)
 		tb->surfaceLbl = -1;
 	}
 	Free(tb->label);
+
 	va_start(ap, fmt);
 	Vasprintf(&tb->label, fmt, ap);
 	va_end(ap);
@@ -730,6 +731,14 @@ Init(void *_Nonnull obj)
 	AG_WidgetForwardFocus(tb, tb->ed);
 }
 
+static void
+Destroy(void *_Nonnull obj)
+{
+	AG_Textbox *tb = obj;
+
+	Free(tb->label);
+}
+
 AG_WidgetClass agTextboxClass = {
 	{
 		"Agar(Widget:Textbox)",
@@ -737,7 +746,7 @@ AG_WidgetClass agTextboxClass = {
 		{ 0,0 },
 		Init,
 		NULL,		/* reset */
-		NULL,		/* destroy */
+		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
