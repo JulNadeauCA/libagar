@@ -1,4 +1,4 @@
-.\" Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2012-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -55,6 +55,9 @@ interface.
 .Ft "const char *"
 .Fn AG_LookupKeyName "AG_KeySym sym"
 .Pp
+.Ft "char *"
+.Fn AG_LookupKeyMod "AG_KeyMod mod"
+.Pp
 .Ft "AG_KeySym"
 .Fn AG_LookupKeySym "const char *name"
 .Pp
@@ -79,9 +82,17 @@ interface.
 .nr nS 0
 The
 .Fn AG_LookupKeyName
-function returns a short string describing the given
+function returns a pointer to a statically-allocated, user-readable string
+describing the given
 .Xr AG_KeySym 3
-value (or NULL if the argument is out of range).
+(or NULL if the argument is out of range).
+.Pp
+The
+.Fn AG_LookupKeyMod
+function returns a dynamically-allocated, user-readable string describing
+the given
+.Xr AG_KeyMod 3 .
+.Pp
 .Fn AG_LookupKeySym
 returns a keysym value for the specified name (or
 .Dv AG_KEY_NONE

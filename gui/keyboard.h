@@ -426,6 +426,7 @@ int AG_ProcessKey(AG_Keyboard *_Nonnull, struct ag_window *_Nonnull,
                   AG_KeyboardAction, AG_KeySym, AG_Char);
 
 const char *_Nullable AG_LookupKeyName(AG_KeySym) _Pure_Attribute;
+char *_Nonnull        AG_LookupKeyMod(AG_KeyMod) _Pure_Attribute;
 AG_KeySym             AG_LookupKeySym(const char *_Nonnull) _Pure_Attribute;
 
 void AG_InitGlobalKeys(void);
