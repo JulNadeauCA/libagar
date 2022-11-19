@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -107,85 +107,134 @@ PanelMouseButtonDown(AG_Event *_Nonnull event)
 	}
 }
 
+/* An item has been selected from the drop-down menu. */
+static void
+SelectedItem(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Combo *com = AG_COMBO_PTR(1);
+	AG_TlistItem *ti;
+	AG_Window *panel;
+
+	AG_ObjectLock(com);
+
+	AG_ObjectLock(tl);
+	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
+		AG_TextboxSetString(com->tbox, ti->text);
+		AG_PostEvent(com, "combo-selected", "%p", ti);
+	}
+	AG_ObjectUnlock(tl);
+
+	if ((panel = com->panel) != NULL) {
+		com->wSaved = WIDTH(panel);
+		com->hSaved = HEIGHT(panel);
+		AG_WindowHide(panel);
+		AG_SetInt(com->button, "state", 0);
+	}
+
+	AG_ObjectUnlock(com);
+}
+
 /* User pressed or released the expand ("...") button. */
 static void
 ExpandButtonPushed(AG_Event *_Nonnull event)
 {
 	AG_Combo *com = AG_COMBO_PTR(1);
-	AG_Driver *drv = WIDGET(com)->drv;
-	AG_Window *panel, *winParent = WIDGET(com)->window;
-	AG_SizeReq rList;
 	const int button_state = AG_INT(2);
-	int x, y, w, h;
+	AG_Driver *drv = WIDGET(com)->drv;
+	AG_Window *win, *winParent = WIDGET(com)->window;
+	AG_Tlist *tl;
 	Uint wView, hView;
+	int x,y, w,h;
 
-	if (button_state) {                                       /* Expand */
-		if (com->panel) {
-			panel = com->panel;
-		} else {
-			if ((panel = AG_WindowNew(AG_WINDOW_MODAL |
-			                          AG_WINDOW_NOTITLE)) == NULL) {
-				return;
-			}
-			panel->wmType = AG_WINDOW_WM_COMBO;
-			AG_SetStyle(panel, "padding", "0");
-			AG_ObjectSetName(panel, "_combo%u", agComboCounter++);
-			com->panel = panel;
-			AG_ObjectAttach(panel, com->list);
+	AG_ObjectLock(com);
 
-			if (winParent) {
-				AG_WindowAttach(winParent, panel);
-				AG_WindowMakeTransient(winParent, panel);
-/*				AG_WindowPin(winParent, panel); */
-			}
-
-			WIDGET(panel)->flags |= AG_WIDGET_UNFOCUSED_BUTTONDOWN;
-
-			AG_SetEvent(panel, "window-close", PanelWindowClose, "%p", com);
-			AG_AddEvent(panel, "mouse-button-down", PanelMouseButtonDown, "%p", com);
+	if (button_state == 0) {                                /* Collapse */
+		if ((win = com->panel) != NULL) {
+			com->wSaved = WIDTH(win);
+			com->hSaved = HEIGHT(win);
+			AG_WindowHide(win);
+			AG_SetInt(com->button, "state", 0);
+			AG_PostEvent(com, "combo-collapsed", NULL);
 		}
+		goto out;
+	}
 
-		if (com->wSaved > 0) {
-			w = com->wSaved;
-			h = com->hSaved;
-		} else {
-			if (com->wPreList != -1 && com->hPreList != -1) {
-				AG_TlistSizeHintPixels(com->list,
-				    com->wPreList, com->hPreList);
-			}
-			AG_WidgetSizeReq(com->list, &rList);
-			w = rList.w + (panel->wBorderSide << 1);
-			h = rList.h + panel->wBorderBot;
- 		}
-		x = WIDGET(com)->rView.x2 - w;
-		y = WIDGET(com)->rView.y1;
-		AG_GetDisplaySize(WIDGET(com)->drv, &wView, &hView);
-		if (x+w > wView) { w = wView - x; }
-		if (y+h > hView) { h = hView - y; }
-		if (winParent && AGDRIVER_CLASS(drv)->wm == AG_WM_MULTIPLE) {
-			x += WIDGET(winParent)->x;
-			y += WIDGET(winParent)->y;
-		}
-		if (x < 0) { x = 0; }
-		if (y < 0) { y = 0; }
-		if (w < 4 || h < 4) {
-			Debug(com, "Too small size panel; detaching\n");
-			AG_ObjectDetach(panel);
-			com->panel = NULL;
+	if (com->panel != NULL) {                          /* Cached window */
+		win = com->panel;
+		AG_TlistClear(com->list);
+		AG_PostEvent(com, "combo-expanded", NULL);
+	} else {                                              /* New window */
+		if ((win = AG_WindowNew(AG_WINDOW_MODAL |
+			                AG_WINDOW_NOTITLE)) == NULL) {
 			return;
 		}
-		com->wSaved = w;
-		com->hSaved = h;
-		AG_WindowSetGeometry(panel, x,y, w,h);
-		AG_WindowShow(panel);
-	} else {                                                /* Collapse */
-		if ((panel = com->panel) != NULL) {
-			com->wSaved = WIDTH(panel);
-			com->hSaved = HEIGHT(panel);
-			AG_WindowHide(panel);
-			AG_SetInt(com->button, "state", 0);
+		win->wmType = AG_WINDOW_WM_COMBO;
+
+		AG_ObjectSetName(win, "_combo%u", agComboCounter++);
+
+		/* TODO specific style attribute. */
+		AG_SetStyle(win, "padding", "0");
+
+		com->panel = win;
+		com->list = tl = AG_TlistNew(win, AG_TLIST_EXPAND); 
+
+		if (com->flags & AG_COMBO_POLL) { tl->flags |= AG_TLIST_POLL; }
+		if (com->flags & AG_COMBO_SCROLLTOSEL) { tl->flags |= AG_TLIST_SCROLLTOSEL; }
+
+		AG_SetEvent(tl, "tlist-changed", SelectedItem,"%p",com);
+		AG_PostEvent(com, "combo-expanded", NULL);
+
+		if (winParent) {
+			AG_WindowAttach(winParent, win);
+			AG_WindowMakeTransient(winParent, win);
+/*			AG_WindowPin(winParent, win); */
 		}
+
+		WIDGET(win)->flags |= AG_WIDGET_UNFOCUSED_BUTTONDOWN;
+
+		AG_SetEvent(win, "window-close", PanelWindowClose, "%p", com);
+		AG_AddEvent(win, "mouse-button-down", PanelMouseButtonDown, "%p", com);
 	}
+
+	if (com->wSaved > 0) {
+		w = com->wSaved;
+		h = com->hSaved;
+	} else {
+		AG_SizeReq rList;
+
+		if (com->wPreList != -1 && com->hPreList != -1) {
+			AG_TlistSizeHintPixels(tl, com->wPreList, com->hPreList);
+		}
+		AG_WidgetSizeReq(tl, &rList);
+		w = rList.w + (win->wBorderSide << 1);
+		h = rList.h +  win->wBorderBot;
+ 	}
+	x = WIDGET(com)->rView.x2 - w;
+	y = WIDGET(com)->rView.y1;
+	AG_GetDisplaySize(WIDGET(com)->drv, &wView, &hView);
+	if (x+w > wView) { w = wView - x; }
+	if (y+h > hView) { h = hView - y; }
+
+	if (winParent && AGDRIVER_CLASS(drv)->wm == AG_WM_MULTIPLE) {
+		x += WIDGET(winParent)->x;
+		y += WIDGET(winParent)->y;
+	}
+	if (x < 0) { x = 0; }
+	if (y < 0) { y = 0; }
+	if (w < 4 || h < 4) {                                    /* Minimum */
+		AG_PostEvent(com, "combo-collapsed", NULL);
+		AG_ObjectDetach(win);
+		com->list = NULL;
+		com->panel = NULL;
+		goto out;
+	}
+	com->wSaved = w;
+	com->hSaved = h;
+	AG_WindowSetGeometry(win, x,y, w,h);
+	AG_WindowShow(win);
+out:
+	AG_ObjectUnlock(com);
 }
 
 /* Select a combo item based on its pointer. */
@@ -240,33 +289,6 @@ AG_ComboSelect(AG_Combo *com, AG_TlistItem *it)
 }
 
 static void
-SelectedItem(AG_Event *_Nonnull event)
-{
-	AG_Tlist *tl = AG_TLIST_SELF();
-	AG_Combo *com = AG_COMBO_PTR(1);
-	AG_TlistItem *ti;
-	AG_Window *panel;
-
-	AG_ObjectLock(com);
-
-	AG_ObjectLock(tl);
-	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
-		AG_TextboxSetString(com->tbox, ti->text);
-		AG_PostEvent(com, "combo-selected", "%p", ti);
-	}
-	AG_ObjectUnlock(tl);
-
-	if ((panel = com->panel) != NULL) {
-		com->wSaved = WIDTH(panel);
-		com->hSaved = HEIGHT(panel);
-		AG_WindowHide(panel);
-		AG_SetInt(com->button, "state", 0);
-	}
-
-	AG_ObjectUnlock(com);
-}
-
-static void
 Return(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tbox = AG_TEXTBOX_SELF();
@@ -301,31 +323,25 @@ Init(void *_Nonnull obj)
 {
 	AG_Combo *com = obj;
 	AG_Textbox *tb;
-	AG_Button *btn;
-	AG_Tlist *tl;
 
 	com->flags = 0;
+	com->wSaved = 0;
+	com->hSaved = 0;
+	com->wPreList = -1;
+	com->hPreList = -1;
 	
 	tb = com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO | AG_TEXTBOX_EXCL, NULL);
 	AG_SetEvent(tb, "textbox-return", Return, "%p", com);
 	AG_SetString(tb, "padding", "inherit");
 	AG_WidgetForwardFocus(com, tb);
 
-	btn = com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY |
-	                                       AG_BUTTON_NO_FOCUS, _(" ... "));
-	AG_SetStyle(btn, "padding", "2");
-	AG_SetEvent(btn, "button-pushed", ExpandButtonPushed, "%p", com);
+	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY |
+	                                 AG_BUTTON_NO_FOCUS, _(" ... "));
+	AG_SetStyle(com->button, "padding", "2");
+	AG_SetEvent(com->button, "button-pushed", ExpandButtonPushed, "%p", com);
 
-	tl = com->list = Malloc(sizeof(AG_Tlist));
-	AG_ObjectInit(tl, &agTlistClass);
-	WIDGET(tl)->flags |= AG_WIDGET_EXPAND;
-	AG_SetEvent(tl, "tlist-changed", SelectedItem, "%p", com);
-	
+	com->list = NULL;
 	com->panel = NULL;
-	com->wSaved = 0;
-	com->hSaved = 0;
-	com->wPreList = -1;
-	com->hPreList = -1;
 }
 
 void
