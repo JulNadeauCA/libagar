@@ -78,9 +78,12 @@
 #include <agar/gui/cursors.h>
 #include <agar/gui/opengl.h>
 
-/* #define DEBUG_XEVENTS */
+/* #define DEBUG_CLIPBOARD */
 /* #define DEBUG_MOTION_XEVENTS */
-#define DEBUG_CLIPBOARD
+/* #define DEBUG_XEVENTS */
+
+/* Save and restore GL resources across window resize operations. */
+/* #define GLX_RECOVER_CONTEXT */
 
 static int nDrivers = 0;                         /* Drivers open */
 static int agScreen = 0;                         /* X screen (shared) */
@@ -1971,10 +1974,23 @@ GLX_SetInputFocus(AG_Window *_Nonnull win)
 	return (0);
 }
 
+#ifdef GLX_RECOVER_CONTEXT
+static void
+GLX_FreeWidgetResources(AG_Widget *_Nonnull wid)
+{
+	AG_Widget *chld;
+
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		GLX_FreeWidgetResources(chld);
+	}
+	AG_WidgetFreeResourcesGL(wid);
+}
+#endif /* GLX_RECOVER_CONTEXT */
+
 static void
 GLX_PreResizeCallback(AG_Window *_Nonnull win)
 {
-#if 0
+#ifdef GLX_RECOVER_CONTEXT
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 
 	/*
@@ -1983,9 +1999,22 @@ GLX_PreResizeCallback(AG_Window *_Nonnull win)
 	 */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
 	GLX_FreeWidgetResources(WIDGET(win));
-	AG_TextClearGlyphCache(glx);
+	AG_TextClearGlyphCache(AGDRIVER(glx));
 #endif
 }
+
+#ifdef GLX_RECOVER_CONTEXT
+static void
+RegenWidgetResources(AG_Widget *_Nonnull wid)
+{
+	AG_Widget *chld;
+
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		RegenWidgetResources(chld);
+	}
+	AG_WidgetRegenResourcesGL(wid);
+}
+#endif
 
 static void
 GLX_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
@@ -2012,6 +2041,10 @@ GLX_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 	rVP.w = WIDTH(win);
 	rVP.h = HEIGHT(win);
 	AG_GL_SetViewport(&glx->gl, &rVP);
+
+#ifdef GLX_RECOVER_CONTEXT
+	RegenWidgetResources(WIDGET(win));
+#endif
 }
 
 static void
@@ -2051,30 +2084,6 @@ GLX_MoveWindow(AG_Window *_Nonnull win, int dx, int dy)
 	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 }
-
-#if 0
-static void
-GLX_FreeWidgetResources(AG_Widget *_Nonnull wid)
-{
-	AG_Widget *chld;
-
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
-		GLX_FreeWidgetResources(chld);
-	}
-	AG_WidgetFreeResourcesGL(wid);
-}
-
-static void
-RegenWidgetResources(AG_Widget *_Nonnull wid)
-{
-	AG_Widget *chld;
-
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
-		RegenWidgetResources(chld);
-	}
-	AG_WidgetRegenResourcesGL(wid);
-}
-#endif
 
 static int
 GLX_ResizeWindow(AG_Window *_Nonnull win, Uint w, Uint h)
