@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -68,16 +68,13 @@ Agar widgets are expected to set a proper default size whenever
 it can be determined automatically, or otherwise provide a suitable
 application-level API for "size hints".
 .Pp
-Newly created windows (as returned by
-.Fn AG_WindowNew )
-must be made visible using
+Newly created windows must be made visible by calling
 .Fn AG_WindowShow .
 .Pp
 Windows are destroyed by a single call to
 .Xr AG_ObjectDetach 3 .
-This effectively puts the window in a garbage-collection queue (the actual
-freeing of resources will occur only after the end of the current event
-processing cycle).
+This effectively puts the window in a garbage-collection queue (to be
+freed later at the end of the current event-processing cycle).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -196,29 +193,33 @@ processing cycle).
 The
 .Fn AG_WindowNew
 function creates a new Agar window using the default
-.Xr AG_Driver 3 ,
-returning a pointer to the newly created
+.Xr AG_Driver 3 .
+It returns a pointer to the newly created
 .Nm
-or NULL on failure.
-If the default driver is a single-window driver, the new Agar window is
-attached to the
-.Ft AG_Driver
-object.
-If the default driver is a multiple-window driver, a new
-.Ft AG_Driver
-object instance is created for the new window.
+on success, or NULL on failure.
 See the
 .Sx FLAGS
 section below for a description of the available
 .Fa flags
 options.
 .Pp
+If the default driver is a single-window driver then
+.Fn AG_WindowNew
+attaches the newly created
+.Nm
+to its
+.Ft AG_Driver
+instance.
+If the default driver is a multiple-window driver, one unique
+.Ft AG_Driver
+instance is created and assigned to each window.
+.Pp
 The
 .Fn AG_WindowNewNamed
 variant creates an Agar window with a unique name identifier.
-If a window of the same name exists,
+If a window of the same name exists then
 .Fn AG_WindowNewNamed
-only moves the focus to that window, and returns NULL.
+moves the focus to the existing window and returns NULL.
 The name may contain any printable character, except
 .Sq / .
 .Pp
@@ -229,31 +230,23 @@ variant creates a new window and attaches it to an alternate
 instance
 .Fa drv .
 .Pp
-The
 .Fn AG_WindowSetCaption
-function sets the text displayed by the titlebar (if there is one).
-If the string exceeds
-.Dv AG_LABEL_MAX
-bytes in length, it is truncated.
+sets the title text (shown on the titlebar).
 .Pp
-The
 .Fn AG_WindowSetIcon
-function configures an alternate icon for the window.
-This icon will be used by Agar's internal window manager whenever the window
-is minimized.
-The given surface will be duplicated and rescaled if necessary.
+sets a custom icon for the window when iconified.
+It will be used by Agar's internal WM in single-window mode.
+It may be used by some multi-window drivers that support the feature.
 .Pp
 .Fn AG_WindowSetCloseAction
 sets the action to perform on "window-close":
-.Bl -tag -width "AG_WINDOW_IGNORE "
-.It AG_WINDOW_HIDE
-Hide the window.
-This is the default for named windows created with
-.Fn AG_WindowNewNamed .
+.Bl -tag -compact -width "AG_WINDOW_IGNORE "
 .It AG_WINDOW_DETACH
-Detach and destroy the window.
-This is the default for anonymous windows created with
-.Fn AG_WindowNew .
+Destroy the window.
+Default for anonymous windows.
+.It AG_WINDOW_HIDE
+Just hide the window.
+Default for named windows.
 .It AG_WINDOW_IGNORE
 Ignore the close request.
 .El
@@ -267,38 +260,35 @@ section).
 sets the thickness of the left and right window borders in pixels.
 .Fn AG_WindowSetBottomBorder
 sets the thickness of the bottom border.
-The exact interpretation of this setting is theme-specific.
 The default for side borders is 0 (no side borders).
 If the
 .Fa win
-argument is NULL, the defaults are set.
+argument is NULL then set global defaults to the given values.
 .Pp
-The
 .Fn AG_WindowSetPosition
-function moves a window to a standard position, per the specified
-alignment.
-Possible values for the
+defines an initial alignment for the window with respect to the desktop.
+Allowed values for
 .Fa alignment
-argument are:
+include:
 .Bd -literal
  AG_WINDOW_TL  AG_WINDOW_TC  AG_WINDOW_TR
  AG_WINDOW_ML  AG_WINDOW_MC  AG_WINDOW_MR
  AG_WINDOW_BL  AG_WINDOW_BC  AG_WINDOW_BR
 .Ed
 .Pp
-The special value
-.Dv AG_WINDOW_ALIGNMENT_NONE
-leaves the choice of the initial window position up to the underlying
-window manager (possibly Agar itself, or an external WM).
-.Pp
-If the
+or the special value
+.Dv AG_WINDOW_ALIGNMENT_NONE ,
+which lets the window manager choose a default position (the default).
+If
 .Fa tiling
-argument is 1, the
+is 1 then
+.Fn AG_WindowSetPosition
+sets the
 .Dv AG_WINDOW_TILING
-flag is set (see
+flag such that the WM will attempt to avoid overlap between windows
+(see
 .Sx FLAGS
 section).
-With tiling enabled, the WM will try to avoid overlap between existing windows.
 .Pp
 .Fn AG_WindowMove
 moves the window to a new position
@@ -333,12 +323,11 @@ variant assigns the window a specific size in pixels and positions it
 according to the specified window alignment (see description of
 .Fn AG_WindowSetPosition
 for the possible values).
-The parameters of
+.Pp
+The
 .Fn AG_WindowSetGeometryAlignedPct
-are given in percentage of current view area instead of pixels.
-Calling these functions with an argument of
-.Dv AG_WINDOW_ALIGNMENT_NONE
-is a no-op.
+variant accepts an argument given in percent of current view area
+(as opposed to absolute pixel coordinates).
 .Pp
 The
 .Fn AG_WindowSetGeometryMax
@@ -353,7 +342,7 @@ routine sets the minimum window size in pixels.
 sets the minimum window size in percentage of the requested (computed) size.
 .Pp
 .Fn AG_WindowSetOpacity
-configures an overall per-window opacity (for compositing WMs).
+sets the overall per-window opacity (for compositing WMs).
 The argument can range from 0.0 (transparent) to 1.0 (opaque).
 .Pp
 For windows with the
@@ -364,25 +353,31 @@ flags,
 .Fn AG_WindowSetFadeIn
 and
 .Fn AG_WindowSetFadeOut
-can be used to configure the fade timing parameters.
-During fade-in, the window opacity will be repeatedly incremented by
-.Fa fadeIncr ,
+can be used to configure the fade timing.
+During fade-in, the opacity will be repeatedly incremented by
+.Fa fadeIncr
 over a total period of
 .Fa fadeTime
-(in seconds).
+seconds.
 .Pp
-The
 .Fn AG_WindowSetZoom
-function sets the zoom level of the window.
+sets the zoom level of the window
+(and any
+of its child windows with the
+.Dv AG_WINDOW_INHERIT_ZOOM
+option set).
+.Pp
 The
 .Fn AG_ZoomIn ,
 .Fn AG_ZoomOut
 and
 .Fn AG_ZoomReset
-functions set the zoom level for the currently focused window.
+routines call
+.Fn AG_WindowSetZoom
+to increase, decrease or reset the zoom level of the currently focused window.
 It is customary to assign
 .Xr AG_GlobalKeys 3
-shortcuts to these functions.
+shortcuts to these routines.
 .Pp
 .Fn AG_WindowMaximize
 and
@@ -395,17 +390,17 @@ does the opposite.
 .Pp
 The
 .Fn AG_WindowAttach
-function registers
+call makes
 .Fa winChld
-as a child window dependent of
+a child window dependent of
 .Fa winParent .
-Detaching the parent window (using
-.Xr AG_ObjectDetach 3 )
-will cause dependent child windows to be detached implicitely.
+Detaching the parent window will cause the child window to be detached implicitely.
 Child windows also inherit the style properties from their parent.
-The
 .Fn AG_WindowDetach
-function detaches the window from its parent window.
+removes
+.Fa winChld
+from
+.Fa winParent .
 .Pp
 .Fn AG_WindowMakeTransient
 registers
@@ -419,8 +414,6 @@ Under TWM, transient windows are created without requesting that the user
 select an initial geometry.
 Detaching
 .Fa winParent
-(using
-.Xr AG_ObjectDetach 3 )
 will cause
 .Fa winTrans
 to be detached implicitely.
@@ -438,9 +431,9 @@ unpins the given window.
 .Pp
 The
 .Fn AG_WindowUpdate
-function updates the coordinates and geometries of all widgets attached to
+routine updates the coordinates and geometries of all widgets attached to
 .Fa win .
-.Fn AG_WindowUpdate
+This routine
 should be called following
 .Xr AG_ObjectAttach 3
 or
@@ -453,11 +446,11 @@ calls made in event context, or manual modifications of the
 fields of the
 .Nm
 structure.
-Also see:
+See also:
 .Xr AG_WidgetUpdate 3 .
 .Sh DRIVER / EVENT LOOP INTERFACE
-The following functions should be called only from application-specific
-event loops, or low-level driver code.
+The following calls are intended only for use by driver code and
+custom event loops.
 The standard
 .Xr AG_EventLoop 3
 invokes them internally.
@@ -473,27 +466,24 @@ invokes them internally.
 .Fn AG_WindowProcessQueued "void"
 .Pp
 .nr nS 0
-The
 .Fn AG_WindowDraw
-function renders the specified window (by calling the
+renders window
+.Fa win
+(calling the
 .Fn renderWindow
-operation of the associated
+method of its
 .Xr AG_Driver 3 ) .
-Calls to
-.Fn AG_WindowDraw
-must be made in GUI rendering context, between
+This should be called only from GUI rendering context (between calls to
 .Xr AG_BeginRendering 3
 and
-.Xr AG_EndRendering 3 .
+.Xr AG_EndRendering 3 ) .
 .Pp
 .Fn AG_WindowDrawQueued
-redraws any window marked as
-.Va dirty
-since the last redraw.
+redraws any window previously marked as
+.Va dirty .
 .Pp
-The
 .Fn AG_WindowProcessQueued
-routine processes any queued
+processes any queued
 .Xr AG_ObjectDetach 3 ,
 .Xr AG_WindowShow 3
 or
@@ -578,20 +568,17 @@ for details.
 .Fn AG_CloseFocusedWindow "void"
 .Pp
 .nr nS 0
-The
 .Fn AG_WindowFocus
-function sets the focus on the given window.
-If the currently focused window has the
-.Dv AG_WINDOW_KEEPABOVE
-flag set, this function becomes a no-op.
-The focus change may not be immediate depending on the underlying graphics
-system.
+focuses on window
+.Fa win .
 A
 .Sq window-gainfocus
 event is posted to the window object after the focus change has occurred.
-If an argument of NULL is passed to
-.Fn AG_WindowFocus ,
-any planned change in focus is cancelled.
+If the currently focused window has the
+.Dv AG_WINDOW_KEEPABOVE
+flag set then this is a no-op.
+If an argument of NULL is given, then the previous request for focus
+change (if any) will be cancelled.
 .Pp
 .Fn AG_WindowFocusNamed
 calls
@@ -740,46 +727,40 @@ For the
 .Ft AG_Window
 object:
 .Bl -tag -width "AG_WINDOW_NOUPDATERECT "
-.It AG_WINDOW_TILING
-If no explicit window position is specified, choose a default position
-using a tiling WM algorithm.
-This method honors the preferred window alignment, and also attempts to
-avoid overlap with other tiling windows.
-Non-tiling windows are ignored in the calculation.
-.It AG_WINDOW_FADEIN
-Enable smooth fade-in for compositing WM.
-.It AG_WINDOW_FADEOUT
-Enable smooth fade-out for compositing WM
-(only applies to hide operation, not detach).
-.It AG_WINDOW_MAXIMIZED
-Window is currently maximized (read-only).
-.It AG_WINDOW_MINIMIZED
-Window is currently minimized (read-only).
-.It AG_WINDOW_KEEPABOVE
-Stay on top of other windows.
-.It AG_WINDOW_KEEPBELOW
-Stay below other windows.
-.It AG_WINDOW_DENYFOCUS
-Don't automatically grab focus in response to a
-.Sq mouse-button-down
-event in the window area.
 .It AG_WINDOW_MODAL
 Place window in foreground and prevent other windows from receiving input
 events until the modal window is closed.
 If the modal window is transient (see
 .Fn AG_WindowMakeTransient ) ,
 then it is modal for its parent window, otherwise it is application-modal.
-.It AG_WINDOW_NOBACKGROUND
-Don't fill the window background prior to rendering its contents.
+.It AG_WINDOW_KEEPABOVE
+Stay on top of other windows.
+.It AG_WINDOW_KEEPBELOW
+Stay below other windows.
 .It AG_WINDOW_MAIN
 Break from
 .Xr AG_EventLoop 3
 if this window gets destroyed.
 Multiple windows may set this flag, in which case the break will occur
 whenever the last window is closed.
-.It AG_WINDOW_NOUPDATERECT
-Disable automatic updating of the video region corresponding to the
-window area (applicable to framebuffer-based graphics drivers only)
+.It AG_WINDOW_INHERIT_ZOOM
+Inherit the zoom level from the parent window.
+See
+.Fn AG_WindowSetZoom .
+.It AG_WINDOW_DENYFOCUS
+Don't automatically grab focus in response to a
+.Sq mouse-button-down
+event in the window area.
+.It AG_WINDOW_TILING
+If no explicit window position is specified, choose a default position
+using a tiling WM algorithm which honors the preferred window alignment and
+attempts to avoid overlap with other tiling windows.
+Non-tiling windows are ignored.
+.It AG_WINDOW_FADEIN
+Enable smooth fade-in for compositing WM.
+.It AG_WINDOW_FADEOUT
+Enable smooth fade-out for compositing WM
+(only applies to hide operation, not detach).
 .It AG_WINDOW_NOTITLE
 Create a window without a titlebar.
 Under some WMs, this may imply
@@ -818,10 +799,19 @@ Keep window scaled to the display width.
 Keep window scaled to the display height.
 .It AG_WINDOW_NOMOVE
 User is not allowed to move the window.
+.It AG_WINDOW_NOBACKGROUND
+Don't fill the window background prior to rendering its contents.
+.It AG_WINDOW_NOUPDATERECT
+Disable automatic updates of the video region covering the window area
+(for single-window, framebuffer-based graphics drivers only).
 .It AG_WINDOW_NOCURSORCHG
 Deny any cursor change requested by widgets attached to this window.
 This flag is automatically set whenever a window hidden, and cleared a
 window is made visible.
+.It AG_WINDOW_MAXIMIZED
+Window is currently maximized (read-only).
+.It AG_WINDOW_MINIMIZED
+Window is currently minimized (read-only).
 .El
 .Sh EVENTS
 The GUI system may send
@@ -830,26 +820,28 @@ objects the following events:
 .Bl -tag -width 2n
 .It Fn window-close "void"
 Request to close the window.
-Set by
+For anonymous windows created by
+.Fn AG_WindowNew ,
+the default is to Detach (and destroy).
+For named windows, the default is to Hide.
+The request can also be ignored.
+It is safe to create new windows in from a "window-close" handler.
+See:
 .Fn AG_WindowSetCloseAction .
-The default is to
-.Em hide
-the window (for anonymous windows created by
-.Fn AG_WindowNew )
-or to
-.Em detach
-the window (for those created by
-.Fn AG_WindowNewNamed ) .
-It is safe for a handler to ignore the request or to create new
-windows (e.g., confirmation dialogs) in response.
 .It Fn window-detached "void"
 The window has been successfully detached (as per a previous
 .Xr AG_ObjectDetach 3
-request).
+request), and is about to be freed.
+This handler can be used (and should only be used) to release any additional
+resources associated with the window.
 .It Fn window-shown "void"
 The window is now visible.
+See:
+.Fn AG_WindowShow .
 .It Fn window-hidden "void"
 The window is no longer visible.
+See:
+.Fn AG_WindowHide .
 .It Fn window-enter "void"
 The cursor has entered the window area.
 .It Fn window-leave "void"
@@ -885,10 +877,21 @@ AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
 AG_WindowShow(win);
 .Ed
 .Sh SEE ALSO
+.Xr AG_Color 3 ,
 .Xr AG_Cursor 3 ,
+.Xr AG_Driver 3 ,
+.Xr AG_DriverMw 3 ,
+.Xr AG_DriverSw 3 ,
 .Xr AG_Icon 3 ,
+.Xr AG_InitGraphics 3 ,
 .Xr AG_Intro 3 ,
-.Xr AG_View 3 ,
+.Xr AG_KeySym 3 ,
+.Xr AG_KeyMod 3 ,
+.Xr AG_MouseButton 3 ,
+.Xr AG_Rect 3 ,
+.Xr AG_StyleSheet 3 ,
+.Xr AG_Surface 3 ,
+.Xr AG_Text 3 ,
 .Xr AG_Widget 3
 .Sh HISTORY
 The

@@ -1532,8 +1532,8 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 	}
 
 	if (win->flags & AG_WINDOW_MINSIZEPCT) {        /* [wh]Min are in % */
-		wMin = win->minPct * win->wReq / 100;
-		hMin = win->minPct * win->hReq / 100;
+		wMin = win->minPct * r->w / 100;
+		hMin = win->minPct * r->h / 100;
 	} else {
 		wMin = win->wMin;
 		hMin = win->hMin;
@@ -1581,9 +1581,9 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 		}
 		break;
 	case AG_WM_MULTIPLE:
-		if ((AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
-		    AGDRIVER_MW_CLASS(drv)->moveResizeWindow(win, &a) == -1) {
-			goto fail;
+		if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
+			if (AGDRIVER_MW_CLASS(drv)->moveResizeWindow(win, &a) == -1)
+				goto fail;
 		}
 		break;
 	}
@@ -1798,7 +1798,7 @@ AG_WindowSetGeometryAlignedPct(AG_Window *win, enum ag_window_alignment align,
 	                                               hPct * hMax / 100);
 }
 
-/* Backup the current window geometry (i.e., before a minimize) */
+/* Save the current window geometry prior to Maximize or Minimize. */
 void
 AG_WindowSaveGeometry(AG_Window *win)
 {
@@ -2113,9 +2113,6 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	}
 	if (nWidgets > 0 && r->h >= spacingVert)
 		r->h -= spacingVert;
-
-	win->wReq = r->w;
-	win->hReq = r->h;
 }
 
 static int
@@ -2741,7 +2738,7 @@ AG_WindowSetFadeOut(AG_Window *win, float fadeTime, float fadeIncr)
 void
 AG_WindowSetZoom(AG_Window *win, int zoom)
 {
-	AG_Window *winChld;
+	AG_Window *winSub;
 
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	AG_ObjectLock(win);
@@ -2750,7 +2747,6 @@ AG_WindowSetZoom(AG_Window *win, int zoom)
 		AG_ObjectUnlock(win);
 		return;
 	}
-
 	AG_SetStyleF(win, "font-size", "%.02f%%", agZoomValues[zoom]);
 
 	win->zoom = zoom;
@@ -2760,9 +2756,11 @@ AG_WindowSetZoom(AG_Window *win, int zoom)
 	if (WIDGET(win)->drv) {
 		AG_TextClearGlyphCache(WIDGET(win)->drv);
 	}
-	TAILQ_FOREACH(winChld, &win->pvt.subwins, pvt.swins) {
-		AG_WindowSetZoom(winChld, zoom);
+	TAILQ_FOREACH(winSub, &win->pvt.subwins, pvt.swins) {
+		if (winSub->flags & AG_WINDOW_INHERIT_ZOOM)
+			AG_WindowSetZoom(winSub, zoom);
 	}
+
 	AG_ObjectUnlock(win);
 }
 
@@ -3025,8 +3023,6 @@ Init(void *_Nonnull obj)
 	win->alignment = AG_WINDOW_ALIGNMENT_NONE;
 	win->tbar = NULL;
 	win->icon = NULL;
-	win->wReq = 0;
-	win->hReq = 0;
 	win->wMin = 0;
 	win->hMin = 0;
 	win->wBorderBot = agWindowBotBorderDefault;

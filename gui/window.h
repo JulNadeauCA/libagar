@@ -103,9 +103,9 @@ typedef struct ag_window {
 #define AG_WINDOW_VMAXIMIZE     0x00080000 /* Keep maximized vertically */
 #define AG_WINDOW_NOMOVE        0x00100000 /* Disallow movement of window */
 #define AG_WINDOW_UPDATECAPTION 0x00200000 /* Caption text was updated */
-#define AG_WINDOW_MODKEYEVENTS  0x00400000 /* Mod key events (LEGACY, unused) */
 #define AG_WINDOW_DETACHING     0x00800000 /* Being detached (read-only) */
-#define AG_WINDOW_NOCURSORCHG   0x04000000 /* Inhibit any cursor change */
+#define AG_WINDOW_INHERIT_ZOOM  0x01000000 /* Inherit zoom level from parent */
+#define AG_WINDOW_NOCURSORCHG   0x04000000 /* Inhibit cursor changes */
 #define AG_WINDOW_FADEIN        0x08000000 /* Fade-in (compositing WMs) */
 #define AG_WINDOW_FADEOUT       0x10000000 /* Fade-out (compositing WMs) */
 #define AG_WINDOW_USE_TEXT      0x20000000 /* At least one widget has USE_TEXT */
@@ -124,7 +124,6 @@ typedef struct ag_window {
 	struct ag_icon *_Nullable     icon;	/* Window icon (internal WM) */
 
 	Uint32 _pad;
-	int wReq, hReq;				/* Requested geometry (px) */
 	int wMin, hMin;				/* Minimum geometry (px) */
 	int wBorderBot;				/* Bottom border size (px) */
 	int wBorderSide;			/* Side border size (px) */
