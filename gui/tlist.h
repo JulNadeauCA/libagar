@@ -61,16 +61,17 @@ typedef AG_TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item) AG_TlistItemQ;
 typedef struct ag_tlist {
 	struct ag_widget wid;           /* AG_Widget -> AG_Tlist */
 	Uint flags;
-#define AG_TLIST_MULTI       0x001      /* Multiple selections (ctrl/shift) */
-#define AG_TLIST_MULTITOGGLE 0x002      /* Multiple toggle-style selections */
-#define AG_TLIST_POLL        0x004      /* Generate tlist-poll events */
-#define AG_TLIST_NOSELEVENT  0x008      /* Inhibit "tlist-selected" event */
-#define AG_TLIST_HFILL       0x020
-#define AG_TLIST_VFILL       0x040
-#define AG_TLIST_NOSELSTATE  0x100      /* Lose selection state in polled mode */
-#define AG_TLIST_SCROLLTOSEL 0x200      /* Scroll to initial selection */
-#define AG_TLIST_REFRESH     0x400      /* Repopulate now (polled mode) */
-#define AG_TLIST_EXPAND     (AG_TLIST_HFILL | AG_TLIST_VFILL)
+#define AG_TLIST_MULTI        0x001      /* Multiple selections (ctrl/shift) */
+#define AG_TLIST_MULTITOGGLE  0x002      /* Multiple toggle-style selections */
+#define AG_TLIST_POLL         0x004      /* Generate tlist-poll events */
+#define AG_TLIST_NOSELEVENT   0x008      /* Inhibit "tlist-selected" event */
+#define AG_TLIST_HFILL        0x020
+#define AG_TLIST_VFILL        0x040
+#define AG_TLIST_NOSELSTATE   0x100      /* Lose selection state in polled mode */
+#define AG_TLIST_SCROLLTOSEL  0x200      /* Scroll to initial selection */
+#define AG_TLIST_REFRESH      0x400      /* Repopulate now (polled mode) */
+#define AG_TLIST_EXP_NODES    0x800      /* Expand node items by default */
+#define AG_TLIST_EXPAND       (AG_TLIST_HFILL | AG_TLIST_VFILL)
 
 	int item_h;                     /* Item height */
 	void *_Nullable selected;       /* Default `selected' binding */
@@ -153,6 +154,7 @@ void AG_TlistClear(AG_Tlist *_Nonnull);
 void AG_TlistRestore(AG_Tlist *_Nonnull);
 void AG_TlistBegin(AG_Tlist *_Nonnull);
 void AG_TlistEnd(AG_Tlist *_Nonnull);
+int  AG_TlistVisibleChildren(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
 
 #define AG_TlistClear(tl)   AG_TlistBegin(tl)
 #define AG_TlistRestore(tl) AG_TlistEnd(tl)
@@ -239,7 +241,6 @@ int  AG_TlistComparePtrsAndClasses(const AG_TlistItem *_Nonnull,
                                   _Pure_Attribute;
 
 void AG_TlistSort(AG_Tlist *_Nonnull);
-int  AG_TlistVisibleChildren(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
 void AG_TlistRefresh(AG_Tlist *_Nonnull);
 
 #ifdef AG_TYPE_SAFETY
@@ -252,6 +253,7 @@ AG_TlistItem *_Nullable AG_TlistGetItemPtr(const AG_Event *_Nonnull, int, int);
 #define AG_TLIST_VISIBLE_CHILDREN AG_TLIST_ITEM_EXPANDED
 #define AG_TlistPrescale(tl,text,n) AG_TlistSizeHint((tl),(text),(n))
 #endif
+
 __END_DECLS
 
 #include <agar/gui/close.h>

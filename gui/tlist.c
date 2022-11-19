@@ -45,7 +45,6 @@
 static void SelectRange(AG_Tlist *_Nonnull, int);
 static void DrawExpandCollapseSign(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull,
                                    int, int);
-static void StylizeFont(AG_Tlist *_Nonnull, Uint);
 static Uint32 PollRefreshTimeout(AG_Timer *_Nonnull, AG_Event *_Nonnull);
 
 AG_Tlist *
@@ -611,8 +610,12 @@ Draw(void *_Nonnull obj)
 				AG_TextFont(it->font);
 				altFont = 1;
 			} else if (it->fontFlags != 0) {
+				const AG_Font *defFont = WFONT(tl);
+
 				AG_PushTextState();
-				StylizeFont(tl, it->fontFlags);
+				AG_TextFontLookup(OBJECT(defFont)->name,
+				                  defFont->spec.size,
+						  it->fontFlags);
 				altFont = 1;
 			}
 			it->label = AG_WidgetMapSurface(tl,
@@ -654,33 +657,25 @@ DrawExpandCollapseSign(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it,
 		{ AG_VE_LINE,    3,5,  1,0, 0, NULL },            /* - */
 		{ AG_VE_LINE,    1,7,  1,0, 0, NULL },            /* | */
 	};
-	int h = tl->item_h >> 1;
-	int h_2 = (h >> 1);
+	const int h = tl->item_h >> 1;
+	const int h_2 = (h >> 1);
 
 	r.x = x + h_2;
 	r.y = y + h_2;
-	r.w = h;
-	r.h = h;
+	r.w = h + 1;
+	r.h = h + 2;
 	if ((h & 1) == 0) {
 		r.w++;
 		r.h++;
 	}
 
-	AG_DrawRectFilled(tl, &r, &WCOLOR(tl, BG_COLOR));
+	AG_DrawRectFilled(tl, &r, &WCOLOR(tl, FG_COLOR));
 
 	if (it->flags & AG_TLIST_ITEM_EXPANDED) {
 		AG_DrawVector(tl, 3,3, &r, cLine, expdSign, 0,1);    /* - */
 	} else {
 		AG_DrawVector(tl, 3,3, &r, cLine, expdSign, 0,2);    /* + */
 	}
-}
-
-static void
-StylizeFont(AG_Tlist *_Nonnull tl, Uint fontFlags)
-{
-	const AG_Font *defFont = WFONT(tl);
-
-	AG_TextFontLookup(OBJECT(defFont)->name, defFont->spec.size, fontFlags);
 }
 
 /* Remove a tlist item. */
@@ -820,19 +815,29 @@ AG_TlistEnd(AG_Tlist *tl)
 	AG_ObjectUnlock(tl);
 }
 
+/*
+ * In the context of a polling routine, evaluate whether a newly-created
+ * item should make its own child items visible based on the previously
+ * saved state. If there are no items in the saved state which match the
+ * newly-created item (according to the Compare function), then return TRUE
+ * if the Tlist option EXP_NODES is set, otherwise return FALSE.
+ */
 int
-AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *cit)
+AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *it)
 {
-	AG_TlistItem *sit;
+	AG_TlistItem *itSaved;
 
-	AG_TAILQ_FOREACH(sit, &tl->selitems, selitems) {
-		if (tl->compare_fn(sit, cit))
+	if ((it->flags & AG_TLIST_HAS_CHILDREN) == 0) {
+		return (0);
+	}
+	AG_TAILQ_FOREACH(itSaved, &tl->selitems, selitems) {
+		if (tl->compare_fn(itSaved, it))
 			break;
 	}
-	if (sit == NULL) { 
-		return (0);			/* TODO default setting */
+	if (itSaved == NULL) { 
+		return (tl->flags & AG_TLIST_EXP_NODES);     /* Default state */
 	}
-	return (sit->flags & AG_TLIST_ITEM_EXPANDED);
+	return (itSaved->flags & AG_TLIST_ITEM_EXPANDED);      /* Saved state */
 }
 
 void
@@ -842,8 +847,8 @@ AG_TlistRefresh(AG_Tlist *_Nonnull tl)
 	AG_ObjectLock(tl);
 
 	tl->flags |= AG_TLIST_REFRESH;
-
 	AG_Redraw(tl);
+
 	AG_ObjectUnlock(tl);
 }
 

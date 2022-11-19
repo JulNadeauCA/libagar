@@ -39,21 +39,21 @@
 .\" IMAGE(http://libagar.org/widgets/AG_Tlist.png, "An AG_Tlist displaying a tree")
 The
 .Nm
-widget shows a scrollable tree (or list) of clickable and selectable items.
+widget shows a scrollable tree / list of clickable and selectable items.
 Items may contain text, an optional icon, a user pointer and a category
 string.
 Alternate font faces and colors can be set on a per-item basis.
 .Pp
+For cases where the contents of the tree or list may change externally,
+a Polling Routine may be defined.
+The Polling Routine is expected to clear and repopulate the list entirely.
+It may be run periodically at a specified interval, whenever user interaction
+events occur, or by explicit call to
+.Fn AG_TlistRefresh .
+To make Polling more efficient,
 .Nm
-provides a polling (see
-.Dv AG_TLIST_POLL )
-mode, where a user-defined routine clears and repopulates the list entirely.
-This routine runs periodically at a given interval, and is also called prior
-to processing user-interaction events such as mouse and keyboard events.
-Polling is made more efficient by
-.Nm
-being able to reuse assets such as item structures and rendered text
-surfaces.
+relies on the Compare function to re-use assets across polling cycles.
+These assets include allocated structures and rendered text surfaces.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -107,12 +107,12 @@ widget.
 .Pp
 The
 .Fn AG_TlistNewPolled
-variant also enables polling (see
+variant enables
 .Dv AG_TLIST_POLL
-flag) and sets the specified polling routine
+and sets the specified Polling Routine
 .Fa eventFn
-to run periodically.
-The polling routine is expected to clear and populate the
+to run periodically (or -1 = never).
+The Polling Routine is expected to clear and populate the
 .Nm .
 The
 .Fn AG_TlistNewPolledMs
@@ -124,6 +124,8 @@ Acceptable
 .Fa flags
 include:
 .Bl -tag -width "AG_TLIST_MULTITOGGLE "
+.It AG_TLIST_EXP_NODES
+Expand nodes with child items by default.
 .It AG_TLIST_MULTI
 Allow multiple selections (with ctrl/shift).
 .It AG_TLIST_MULTITOGGLE
@@ -157,13 +159,15 @@ Shorthand for
 .Dv AG_TLIST_HFILL | AG_TLIST_VFILL .
 .El
 .Pp
-Under polling mode,
 .Fn AG_TlistSetRefresh
-configures the rate at which the polling routine will be invoked in
-milliseconds (default = 1s).
+sets the rate at which the Polling Routine will be invoked in milliseconds
+(default = 1s).
 A value of -1 disables automatic updates.
 When automatic updates are disabled, updates can be performed by calling
 .Fn AG_TlistRefresh .
+See the
+.Dv AG_TLIST_POLL
+option for details.
 .Pp
 .Fn AG_TlistSetItemHeight
 sets the given, uniform height of all items.
@@ -257,6 +261,9 @@ are provided.
 .Pp
 .Ft "void"
 .Fn AG_TlistEnd "AG_Tlist *tlist"
+.Pp
+.Ft "int"
+.Fn AG_TlistVisibleChildren "AG_Tlist *tlist" "AG_TlistItem *item"
 .Pp
 .Ft "void"
 .Fn AG_TlistSelect "AG_Tlist *tlist" "AG_TlistItem *item"
@@ -376,11 +383,21 @@ The
 .Fn AG_TlistBegin
 function removes all items attached to
 .Fa tlist ,
-but remembers the selected items.
+but remembers their selection and child item expansion states.
 .Fn AG_TlistEnd
-compares each item against the previous selections and restores the
-.Va selected
-flag accordingly.
+compares each item against the saved state and restores the selection and
+child item expansion states accordingly.
+.Pp
+The
+.Fn AG_TlistVisibleChildren
+function is meant to be called from a Polling Routine.
+It tests whether a newly-created
+.Fa item
+should make its own child items visible based on the previously saved state.
+If there are no matching items in the saved state (according to the Compare
+function), then it returns the default visibility setting (which is 1 if the
+.Dv AG_TLIST_EXP_NODES
+option is set, otherwise 0).
 .Pp
 .Fn AG_TlistSelect
 sets the selection flag on
@@ -590,46 +607,43 @@ Disable popup menus (if any have been created).
 .El
 .Sh EXAMPLES
 The following code fragment displays an external tree structure using
-a polling routine.
-The polling routine recursively traverses the tree, generating
-.Ft AG_TlistItem
-corresponding to each node / leaf of the tree.
+a recursive Polling Routine.
 .Bd -literal -offset indent
-MyTreeItem *myTreeRoot;
+MyTreeNode *myTreeRoot;
 AG_Window *win;
 
-void
-PollTree(AG_Event *event)
+static void
+PollMyTreeNode(AG_Tlist *tl, MyTreeNode *node, int depth)
 {
-	AG_Tlist *tl = AG_TLIST_SELF();
-	MyTreeItem *item = AG_PTR(1);
-	MyTreeItem *child;
 	AG_TlistItem *ti;
 
-	if (item == myTreeRoot)
-		AG_TlistBegin(tl);
-
-	ti = AG_TlistAddPtr(tl, NULL, item->text, item);
+	ti = AG_TlistAdd(tl, NULL, "Node %s", node->name);
 	ti->flags |= AG_TLIST_HAS_CHILDREN;
+	ti->p1 = node;
+	ti->depth = depth;
 
-	if (ti->flags & AG_TLIST_ITEM_EXPANDED) {
-		LIST_FOREACH(child, &item->children, children) {
-			AG_Event ev;
+	if (AG_TlistVisibleChildren(tl, ti)) {
+		MyTreeNode *child;
 
-			/* Recurse */
-			AG_EventArgs(&ev, "%p,%p", tl, child);
-			PollTree(&ev);
-		}
+		LIST_FOREACH(child, &node->children, children)
+			PollMyTreeNode(tl, child, depth+1);
 	}
+}
 
-	if (item == myTreeRoot)
-		AG_TlistEnd(tl);
+static void
+PollMyTree(AG_Event *event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+	MyTreeNode *root = AG_PTR(1);
+
+	AG_TlistBegin(tl);
+	PollMyTreeNode(tl, root, 0);
+	AG_TlistEnd(tl);
 }
 
 myTreeRoot = InitMyTree();
-
 win = AG_WindowNew(0);
-AG_TlistNewPolled(win, 0, PollTree, "%p", myTreeRoot);
+AG_TlistNewPolled(win, 0, PollMyTree, "%p", myTreeRoot);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
