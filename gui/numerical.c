@@ -47,8 +47,6 @@
 # include <stdlib.h>
 #endif
 
-static void UnitSelected(AG_Event *_Nonnull);
-
 AG_Numerical *
 AG_NumericalNew(void *parent, Uint flags, const char *unit, const char *fmt,
     ...)
@@ -69,6 +67,74 @@ AG_NumericalNew(void *parent, Uint flags, const char *unit, const char *fmt,
 	return (num);
 }
 
+static void
+ComboExpanded(AG_Event *_Nonnull event)
+{
+	AG_Numerical *num = AG_NUMERICAL_PTR(1);
+	AG_Tlist *tl = num->units->list;
+	const AG_Unit *unit;
+	const int wPadding = 8;				/* TODO style */
+	const int hPadding = 2;
+
+#ifdef AG_TYPE_SAFETY
+	if (!AG_OBJECT_VALID(tl) || !AG_OfClass(tl, "AG_Widget:AG_Tlist:*"))
+		AG_FatalError("Invalid tlist");
+#endif
+
+/*	AG_TlistDeselectAll(tl); */
+/*	AG_TlistBegin(tl); */
+
+	num->wUnitSel = 0;
+	num->hUnitSel = 0;
+	num->wPreUnit = 0;
+
+	for (unit = &num->unitGroup[0]; unit->key != NULL; unit++) {
+		AG_TlistItem *it;
+		int w,h;
+	
+		AG_TextSize(AG_UnitAbbr(unit), &w, &h);
+		w += wPadding;
+		h += hPadding;
+		if (w > num->wUnitSel) { num->wUnitSel = w; }
+		if (h > num->hUnitSel) { num->hUnitSel = h; }
+		
+		AG_TextSize(unit->name, &w, NULL);
+		if (w > num->wPreUnit) { num->wPreUnit = w; }
+
+		it = AG_TlistAddPtr(tl, NULL, _(unit->name), (void *)unit);
+
+		if (unit == num->unit)
+			it->selected++;
+	}
+	AG_TlistSizeHintLargest(tl, 5);
+}
+
+static __inline__ void
+UpdateUnitSelector(AG_Numerical *_Nonnull num)
+{
+	AG_ButtonTextS(num->units->button,
+	    AG_UnitAbbr(num->unit));
+
+	if (WIDGET(num)->window != NULL &&
+	    WIDGET(num)->window->visible)
+		AG_NumericalUpdate(num);
+}
+
+static void
+ComboSelected(AG_Event *_Nonnull event)
+{
+	AG_Numerical *num = AG_NUMERICAL_PTR(1);
+	const AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
+
+	AG_ObjectLock(num);
+
+	num->unit = (const AG_Unit *)ti->p1;
+
+	UpdateUnitSelector(num);
+
+	AG_ObjectUnlock(num);
+}
+
 AG_Numerical *
 AG_NumericalNewS(void *parent, Uint flags, const char *unit, const char *label)
 {
@@ -85,11 +151,14 @@ AG_NumericalNewS(void *parent, Uint flags, const char *unit, const char *label)
 		AG_TextboxSetLabelS(num->input, label);
 	}
 	if (unit != NULL) {
-		num->units = AG_UComboNew(num, 0);
-		AG_SetEvent(num->units, "ucombo-selected",
-		    UnitSelected, "%p", num);
+		AG_UCombo *com;
+
+		com = num->units = AG_UComboNew(num, 0);
+		AG_SetEvent(com, "ucombo-expanded", ComboExpanded,"%p",num);
+		AG_SetEvent(com, "ucombo-selected", ComboSelected,"%p",num);
+		
 		AG_NumericalSetUnitSystem(num, unit);
-		AG_WidgetSetFocusable(num->units, 0);
+		AG_WidgetSetFocusable(com, 0);
 	}
 
 	AG_ObjectAttach(parent, num);
@@ -395,103 +464,58 @@ ButtonIncrement(AG_Event *_Nonnull event)
 	pf[dir](num);
 }
 
-static void
-UpdateUnitSelector(AG_Numerical *_Nonnull num)
-{
-	AG_ButtonTextS(num->units->button, AG_UnitAbbr(num->unit));
-
-	if (WIDGET(num)->window != NULL &&
-	    WIDGET(num)->window->visible)
-		AG_NumericalUpdate(num);
-}
-
-static void
-UnitSelected(AG_Event *_Nonnull event)
-{
-	AG_Numerical *num = AG_NUMERICAL_PTR(1);
-	const AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
-
-	AG_ObjectLock(num);
-
-	num->unit = (const AG_Unit *)ti->p1;
-	UpdateUnitSelector(num);
-
-	AG_ObjectUnlock(num);
-}
-
+/* Select the unit system. See AG_Units(3). */
 int
-AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
+AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unitKey)
 {
-	const AG_Unit *unit = NULL;
-	const AG_Unit *ugroup = NULL;
-	AG_Tlist *tl;
-	int found = 0, i;
-	int w, h, nUnits = 0;
+	const AG_Unit *unit, *unitGroup;
+	const int wPadding = 8;				/* TODO style */
+	const int hPadding = 2;
+	int i;
 
 	AG_OBJECT_ISA(num, "AG_Widget:AG_Numerical:*");
-	AG_ObjectLock(num);
 
-	for (i = 0; i < agnUnitGroups; i++) {
-		ugroup = agUnitGroups[i];
-		for (unit = &ugroup[0]; unit->key != NULL; unit++) {
-			if (strcmp(unit->key, unit_key) == 0) {
-				found++;
+	for (i = 0; i < agnUnitGroups; i++) {             /* TODO hash table */
+		unitGroup = agUnitGroups[i];
+		for (unit = &unitGroup[0]; unit->key != NULL; unit++) {
+			if (strcmp(unit->key, unitKey) == 0)
 				break;
-			}
 		}
-		if (found)
+		if (unit->key != NULL)
 			break;
 	}
-	if (!found) {
-		AG_SetError(_("No such unit: %s"), unit_key);
-		goto fail;
+	if (i == agnUnitGroups) {
+		AG_SetError(_("No such unit: %s"), unitKey);
+		return (-1);
 	}
-	num->unit = unit;
-	UpdateUnitSelector(num);
 
+	AG_ObjectLock(num);
+
+	num->unit = unit;
+	num->unitGroup = unitGroup;
 	num->wUnitSel = 0;
 	num->hUnitSel = 0;
 	num->wPreUnit = 0;
 
-	tl = num->units->list;
-	AG_ObjectLock(tl);
-
-	AG_TlistDeselectAll(tl);
-	AG_TlistBegin(tl);
-
-	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
-		AG_TlistItem *it;
+	for (unit = &unitGroup[0]; unit->key != NULL; unit++) {
+		int w,h;
 	
 		AG_TextSize(AG_UnitAbbr(unit), &w, &h);
+		w += wPadding;
+		h += hPadding;
 		if (w > num->wUnitSel) { num->wUnitSel = w; }
 		if (h > num->hUnitSel) { num->hUnitSel = h; }
 		
 		AG_TextSize(unit->name, &w, NULL);
 		if (w > num->wPreUnit) { num->wPreUnit = w; }
-
-		it = AG_TlistAddPtr(tl, NULL, _(unit->name), (void *)unit);
-		if (unit == num->unit)
-			it->selected++;
-
-		nUnits++;
 	}
-	AG_TlistEnd(tl);
-	AG_TlistSizeHintLargest(tl, 5);
 
-	AG_ObjectUnlock(tl);
+	UpdateUnitSelector(num);
 
-	if (num->wPreUnit > 0) { num->wPreUnit += 8; }       /* XXX */
-
-	AG_UComboSizeHintPixels(num->units, num->wPreUnit,
-	    nUnits<6 ? (nUnits + 1) : 6);
-	
 	WIDGET(num)->flags |= AG_WIDGET_UPDATE_WINDOW;
+	AG_ObjectUnlock(num);
 
-	AG_ObjectUnlock(num);
 	return (0);
-fail:
-	AG_ObjectUnlock(num);
-	return (-1);
 }
 
 /*
@@ -550,7 +574,7 @@ Init(void *_Nonnull obj)
 
 	num->flags = 0;
 	Strlcpy(num->format, "%.02f", sizeof(num->format));
-	num->unit = AG_FindUnit("identity");
+	num->unit = num->unitGroup = AG_FindUnit("identity");
 	num->units = NULL;
 	num->inTxt[0] = '\0';
 
@@ -826,23 +850,24 @@ AG_NumericalSelectUnit(AG_Numerical *num, const char *uname)
 
 	AG_OBJECT_ISA(num, "AG_Widget:AG_Numerical:*");
 	AG_ObjectLock(num);
-	tl = num->units->list;
-	AG_ObjectLock(tl);
 
-	AG_TlistDeselectAll(tl);
+	if ((tl = num->units->list) != NULL) {     /* Update the selection. */
+		AG_ObjectLock(tl);
+		AG_TlistDeselectAll(tl);
+		TAILQ_FOREACH(it, &tl->items, items) {
+			const AG_Unit *unit = it->p1;
 
-	TAILQ_FOREACH(it, &tl->items, items) {
-		const AG_Unit *unit = it->p1;
-
-		if (strcmp(unit->key, uname) == 0) {
-			it->selected++;
-			num->unit = unit;
-			UpdateUnitSelector(num);
-			break;
+			if (strcmp(unit->key, uname) == 0) {
+				it->selected++;
+				num->unit = unit;
+				break;
+			}
 		}
+		AG_ObjectUnlock(tl);
 	}
 
-	AG_ObjectUnlock(tl);
+	UpdateUnitSelector(num);
+
 	AG_ObjectUnlock(num);
 }
 

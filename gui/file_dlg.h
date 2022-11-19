@@ -15,6 +15,7 @@
 
 #include <agar/gui/begin.h>
 
+struct ag_dir;
 struct ag_file_dlg;
 
 enum ag_file_type_option_type {
@@ -46,7 +47,9 @@ typedef struct ag_file_type {
 	char *_Nonnull allExts;            /* Filename extensions/patterns */
 	char *_Nonnull *_Nonnull exts;     /* Extensions/patterns as an array */
 	Uint                    nExts;
-	Uint32 _pad;
+	Uint flags;
+#define AG_FILE_TYPE_SELECTED 0x01         /* Type is selected */
+
 	AG_Event *_Nullable action;                /* Load/save callback */
 	AG_TAILQ_HEAD_(ag_file_type_option) opts;  /* Type-specific options */
 	AG_TAILQ_ENTRY(ag_file_type) types;
@@ -80,6 +83,7 @@ typedef struct ag_file_dlg {
 	char cfile[AG_PATHNAME_MAX];		/* Current file path */
 	int fdDir;				/* Open directory FD */
 
+	AG_Dir *_Nullable openDir;		/* Open AG_Dir(3) */
 	AG_EventSink *_Nullable esFollow;	/* Open directory event sink */
 	AG_Pane *_Nonnull hPane;		/* Horizontal split container */
 	AG_Tlist *_Nonnull tlDirs;		/* List of directories */
@@ -157,6 +161,7 @@ void AG_FileDlgRefresh(AG_FileDlg *_Nonnull);
 
 void AG_FileDlgAddImageTypes(AG_FileDlg *, AG_EventFn, const char *, ...);
 
+void AG_FileDlgSelectType(AG_FileDlg *_Nonnull, AG_FileType *_Nullable);
 void AG_FileDlgCopyTypes(AG_FileDlg *_Nonnull _Restrict,
                          const AG_FileDlg *_Nonnull _Restrict);
 

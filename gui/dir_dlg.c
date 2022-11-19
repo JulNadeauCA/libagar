@@ -158,13 +158,55 @@ RefreshListing(AG_DirDlg *_Nonnull dd)
 	AG_CloseDir(dir);
 }
 
-/* Update the shortcuts. */
 static void
-RefreshShortcuts(AG_DirDlg *_Nonnull dd, int init)
+DirSelected(AG_Event *_Nonnull event)
 {
-	AG_Tlist *tl = dd->comLoc->list;
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_DirDlg *dd = AG_DIRDLG_PTR(1);
+	AG_TlistItem *ti;
 
-	AG_TlistClear(tl);
+	AG_ObjectLock(dd);
+	AG_ObjectLock(tl);
+
+	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
+		if (AG_DirDlgSetDirectoryS(dd, ti->text) == -1) {
+			/* AG_TextMsgFromError() */
+		} else {
+			AG_PostEvent(dd, "dir-selected", "%s", dd->cwd);
+			RefreshListing(dd);
+		}
+	}
+
+	AG_ObjectUnlock(tl);
+	AG_ObjectUnlock(dd);
+}
+
+static void
+LocSelected(AG_Event *_Nonnull event)
+{
+	AG_DirDlg *dd = AG_DIRDLG_PTR(1);
+	const AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
+
+	if (ti == NULL) {
+		return;
+	}
+	if (AG_DirDlgSetDirectoryS(dd, ti->text) == -1) {
+		/* AG_TextMsgFromError() */
+	} else {
+		AG_PostEvent(dd, "dir-selected", "%s", dd->cwd);
+		RefreshListing(dd);
+	}
+}
+
+static void
+LocExpanded(AG_Event *_Nonnull event)
+{
+	AG_DirDlg *dd = AG_DIRDLG_PTR(1);
+	AG_Combo *comLoc = dd->comLoc;
+	AG_Tlist *tl = comLoc->list;
+
+	AG_TlistSetCompareFn(tl, AG_TlistCompareStrings);
+
 #ifdef _WIN32
 	{
 		char path[4];
@@ -237,48 +279,6 @@ RefreshShortcuts(AG_DirDlg *_Nonnull dd, int init)
 	}
 	AG_TlistUniq(tl);
 #endif /* _WIN32 */
-
-	AG_TlistRestore(tl);
-}
-
-static void
-DirSelected(AG_Event *_Nonnull event)
-{
-	AG_Tlist *tl = AG_TLIST_SELF();
-	AG_DirDlg *dd = AG_DIRDLG_PTR(1);
-	AG_TlistItem *ti;
-
-	AG_ObjectLock(dd);
-	AG_ObjectLock(tl);
-
-	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
-		if (AG_DirDlgSetDirectoryS(dd, ti->text) == -1) {
-			/* AG_TextMsgFromError() */
-		} else {
-			AG_PostEvent(dd, "dir-selected", "%s", dd->cwd);
-			RefreshListing(dd);
-		}
-	}
-
-	AG_ObjectUnlock(tl);
-	AG_ObjectUnlock(dd);
-}
-
-static void
-LocSelected(AG_Event *_Nonnull event)
-{
-	AG_DirDlg *dd = AG_DIRDLG_PTR(1);
-	const AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
-
-	if (ti == NULL) {
-		return;
-	}
-	if (AG_DirDlgSetDirectoryS(dd, ti->text) == -1) {
-		/* AG_TextMsgFromError() */
-	} else {
-		AG_PostEvent(dd, "dir-selected", "%s", dd->cwd);
-		RefreshListing(dd);
-	}
 }
 
 int
@@ -616,7 +616,6 @@ OnShow(AG_Event *_Nonnull event)
 	AG_WidgetFocus(dd->tbInput);
 
 	RefreshListing(dd);
-	RefreshShortcuts(dd, 1);
 }
 
 /* Move to the specified directory (format string). */
@@ -743,7 +742,6 @@ Init(void *_Nonnull obj)
 
 	dd->comLoc = AG_ComboNewS(dd, AG_COMBO_HFILL, NULL);
 	AG_ComboSizeHint(dd->comLoc, "XXXXXXXXXXXXXXXXXXXXXXXXXXXX", 5);
-	AG_TlistSetCompareFn(dd->comLoc->list, AG_TlistCompareStrings);
 
 	dd->tlDirs = AG_TlistNew(dd, AG_TLIST_EXPAND);
 
@@ -756,12 +754,17 @@ Init(void *_Nonnull obj)
 	dd->cancelAction = NULL;
 
 	AG_AddEvent(dd, "widget-shown", OnShow, NULL);
-	AG_SetEvent(dd->tlDirs, "tlist-dblclick", DirSelected, "%p", dd);
-	AG_SetEvent(dd->comLoc, "combo-selected", LocSelected, "%p", dd);
-	AG_SetEvent(dd->tbInput, "textbox-postchg", TextboxChanged, "%p", dd);
-	AG_SetEvent(dd->tbInput, "textbox-return", TextboxReturn, "%p", dd);
-	AG_SetEvent(dd->btnOk, "button-pushed", PressedOK, "%p", dd);
-	AG_SetEvent(dd->btnCancel, "button-pushed", PressedCancel, "%p", dd);
+
+	AG_SetEvent(dd->tlDirs, "tlist-dblclick", DirSelected,"%p",dd);
+
+	AG_SetEvent(dd->comLoc, "combo-selected", LocSelected,"%p",dd);
+	AG_SetEvent(dd->comLoc, "combo-expanded", LocExpanded,"%p",dd);
+
+	AG_SetEvent(dd->tbInput, "textbox-postchg", TextboxChanged,"%p",dd);
+	AG_SetEvent(dd->tbInput, "textbox-return",  TextboxReturn,"%p",dd);
+
+	AG_SetEvent(dd->btnOk,     "button-pushed", PressedOK,"%p",dd);
+	AG_SetEvent(dd->btnCancel, "button-pushed", PressedCancel,"%p",dd);
 }
 
 /*

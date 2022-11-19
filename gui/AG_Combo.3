@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -42,12 +42,20 @@ The
 .Nm
 widget packs a
 .Xr AG_Textbox 3
-widget left to a
-.Xr AG_Button 3 ,
-which causes a
-.Xr AG_Tlist 3
-to popup when pressed.
-The tlist disappears when an option is selected.
+widget next to a
+.Xr AG_Button 3
+which triggers the expansion of a drop-down menu (a window containing an
+.Xr AG_Tlist 3 )
+when pressed.
+The drop-down menu collapses if the user selects an item, or clicks outside
+of the
+.Nm
+area.
+.Pp
+.Nm
+provides the same functionality as
+.Xr AG_UCombo 3 ,
+but also adds support for text search and arbitrary text input.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -148,6 +156,10 @@ widget generates the following events:
 .Bl -tag -compact -width 2n
 .It Fn combo-selected "AG_TlistItem *item"
 An item was selected.
+.It Fn combo-expanded "void"
+The drop-down menu is now visible.
+.It Fn combo-collapsed "void"
+The drop-down menu is now hidden.
 .It Fn combo-text-entry "const char *text"
 The
 .Dv AG_COMBO_ANY_TEXT
@@ -168,45 +180,53 @@ object:
 .Pp
 .Bl -tag -compact -width "AG_Textbox *tbox "
 .It Ft AG_Tlist *list
-Pointer to the
+The
 .Xr AG_Tlist 3
 displayed by
 .Nm
-when expanded (read-only).
+when expanded, or NULL if collapsed (RO).
 .It Ft AG_Textbox *tbox
-Pointer to the
+The input
 .Xr AG_Textbox 3
-contained in the
-.Nm
-(read-only).
+(RO).
 .It Ft AG_Button *button
-Pointer to the
+The
 .Xr AG_Button 3
-next to the textbox (read-only).
+which triggers expansion (RO).
 .El
 .Sh EXAMPLES
-The following code fragment reacts to a
-.Nm
-selection event by displaying a text dialog:
+The following code fragment generates a drop-down menu and reacts to
+a selection event by displaying a text dialog:
 .Bd -literal -offset indent
-void
-Selected(AG_Event *event)
+static void
+ComboExpanded(AG_Event *event)
+{
+	AG_Combo *com = AG_COMBO_SELF();
+
+	AG_TlistAdd(com, NULL, "Foo");
+	AG_TlistAdd(com, NULL, "Bar");
+}
+
+static void
+ComboSelected(AG_Event *event)
 {
 	AG_TlistItem *item = AG_TLIST_ITEM_PTR(1);
-	
+
 	AG_TextMsg(AG_MSG_INFO, "Selected item: %s", item->text);
 }
 
-AG_Combo *com = AG_ComboNew(NULL, 0, "Item: ");
-AG_TlistAdd(com->list, NULL, "Foo");
-AG_TlistAdd(com->list, NULL, "Bar");
-AG_SetEvent(com, "combo-selected", Selected, NULL);
+AG_Combo *com;
+
+com = AG_ComboNew(NULL, 0);
+AG_SetEvent(com, "combo-expanded", ComboExpanded, NULL);
+AG_SetEvent(com, "combo-selected", ComboSelected, NULL);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Button 3 ,
 .Xr AG_Intro 3 ,
 .Xr AG_Textbox 3 ,
 .Xr AG_Tlist 3 ,
+.Xr AG_UCombo 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3
 .Sh HISTORY
@@ -216,3 +236,11 @@ widget first appeared in Agar 1.0.
 As of Agar 1.6.0,
 .Dv AG_COMBO_TREE
 is a deprecated no-op.
+"combo-expanded" and "combo-selected" appeared in Agar 1.7.0.
+The
+.Xr AG_Tlist 3
+was formerly pre-generated and attached to the window on expand, but for
+safety reasons as of Agar 1.7.0 the
+.Va list
+member is now initialized to NULL and the list must be generated on demand
+(typically from "combo-expanded").

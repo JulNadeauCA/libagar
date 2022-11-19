@@ -1,4 +1,4 @@
-.\" Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2003-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm AG_UCombo
-.Nd agar canned button + drop-down menu widget
+.Nd agar button-triggered drop-down menu widget
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -40,11 +40,14 @@
 The
 .Nm
 widget displays an
-.Xr AG_Button 3 ,
-which causes a popup
-.Xr AG_Tlist 3
-to be displayed when pressed.
-The list disappears when an option is selected.
+.Xr AG_Button 3
+which triggers the expansion of drop-down menu (a window containing an
+.Xr AG_Tlist 3 )
+when pressed.
+The drop-down menu collapses if the user selects an item, or clicks outside
+of the
+.Nm
+area.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -53,9 +56,6 @@ The list disappears when an option is selected.
 .nr nS 1
 .Ft "AG_UCombo *"
 .Fn AG_UComboNew "AG_Widget *parent" "Uint flags"
-.Pp
-.Ft "AG_UCombo *"
-.Fn AG_UComboNewPolled "AG_Widget *parent" "Uint flags" "AG_EventFn fn" "const char *fmt" "..."
 .Pp
 .Ft "void"
 .Fn AG_UComboSizeHint "AG_UCombo *com" "const char *text" "int nitems"
@@ -84,15 +84,8 @@ Shorthand for
 .Dv AG_UCOMBO_HFILL | AG_UCOMBO_VFILL .
 .El
 .Pp
-The
-.Fn AG_UComboNewPolled
-constructor configures a polled
-.Xr AG_Tlist 3
-and assigns the polling function.
-.Pp
-The
 .Fn AG_UComboSizeHint
-function arranges for the
+arranges for the
 .Xr AG_Tlist 3
 widget displayed on popup to request a size large enough to display the given
 number of items.
@@ -107,6 +100,10 @@ widget generates the following events:
 .Bl -tag -compact -width 2n
 .It Fn ucombo-selected "AG_TlistItem *item"
 An item was selected.
+.It Fn ucombo-expanded "void"
+The drop-down menu is now visible.
+.It Fn ucombo-collapsed "void"
+The drop-down menu is now hidden.
 .El
 .Sh STRUCTURE DATA
 For the
@@ -115,36 +112,42 @@ object:
 .Pp
 .Bl -tag -compact -width "AG_Button *button "
 .It Ft AG_Tlist *list
-Pointer to the
+The
 .Xr AG_Tlist 3
 displayed by
 .Nm
-when expanded (read-only).
+when expanded, or NULL if collapsed (RO).
 .It Ft AG_Button *button
-Pointer to the underlying
+The
 .Xr AG_Button 3
-widget (read-only).
+which triggers expansion (RO).
 .El
 .Sh EXAMPLES
-The following code fragment reacts to a
-.Nm
-selection event by displaying a text dialog:
+The following code fragment generates a drop-down menu and reacts to
+a selection event by displaying a text dialog:
 .Bd -literal -offset indent
-void
-Selected(AG_Event *event)
+static void
+ComboExpanded(AG_Event *event)
 {
-	AG_TlistItem *item = AG_TLIST_ITEM_PTR(1);
-	AG_TextMsg(AG_MSG_INFO, "Selected item: %s", item->text);
+	AG_UCombo *com = AG_UCOMBO_SELF();
+
+	AG_TlistAdd(com, NULL, "Foo");
+	AG_TlistAdd(com, NULL, "Bar");
 }
 
-.Li ...
+static void
+ComboSelected(AG_Event *event)
+{
+	AG_TlistItem *item = AG_TLIST_ITEM_PTR(1);
+
+	AG_TextMsg(AG_MSG_INFO, "Selected item: %s", item->text);
+}
 
 AG_UCombo *com;
 
 com = AG_UComboNew(NULL, 0);
-AG_TlistAdd(com->list, NULL, "Foo");
-AG_TlistAdd(com->list, NULL, "Bar");
-AG_SetEvent(com, "ucombo-selected", Selected, NULL);
+AG_SetEvent(com, "ucombo-expanded", ComboExpanded, NULL);
+AG_SetEvent(com, "ucombo-selected", ComboSelected, NULL);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Button 3 ,
@@ -157,3 +160,11 @@ AG_SetEvent(com, "ucombo-selected", Selected, NULL);
 The
 .Nm
 widget first appeared in Agar 1.0.
+"ucombo-expanded" and "ucombo-selected" appeared in Agar 1.7.0.
+The
+.Xr AG_Tlist 3
+was formerly pre-generated and attached to the window on expand, but for
+safety reasons as of Agar 1.7.0 the
+.Va list
+member is now initialized to NULL and the list must be generated on demand
+(typically from "ucombo-expanded").

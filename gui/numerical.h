@@ -28,7 +28,8 @@ typedef struct ag_numerical {
 #define AG_NUMERICAL_EXPAND   (AG_NUMERICAL_HFILL | AG_NUMERICAL_VFILL)
 
 	char format[28];                     /* Print format (for reals) */
-	const AG_Unit *_Nonnull unit;        /* Conversion unit in use */
+	const AG_Unit *_Nonnull unit;        /* Selected conversion unit */
+	const AG_Unit *_Nonnull unitGroup;   /* Group of conversion unit */
 	AG_UCombo *_Nullable units;          /* Unit selector */
 	char inTxt[AG_NUMERICAL_INPUT_MAX];  /* Input text buffer */
 	AG_Textbox *_Nonnull input;          /* Input textbox */

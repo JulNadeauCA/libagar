@@ -545,8 +545,7 @@ PollObjectsFind(AG_Tlist *_Nonnull tl, AG_Object *_Nonnull pob, int depth)
 		if (AG_ObjectRoot(pob) == pob)
 			it->flags |= AG_TLIST_ITEM_EXPANDED;
 	}
-	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
-	    AG_TlistVisibleChildren(tl, it)) {
+	if (AG_TlistVisibleChildren(tl, it)) {
 		TAILQ_FOREACH(cob, &pob->children, cobjs)
 			PollObjectsFind(tl, cob, depth+1);
 	}
@@ -560,9 +559,11 @@ PollObjects(AG_Event *_Nonnull event)
 	AG_Object *pob = AG_OBJECT_PTR(1);
 
 	AG_LockVFS(pob);
-	AG_TlistClear(tl);
+	AG_TlistBegin(tl);
+
 	PollObjectsFind(tl, pob, 0);
-	AG_TlistRestore(tl);
+
+	AG_TlistEnd(tl);
 	AG_UnlockVFS(pob);
 }
 

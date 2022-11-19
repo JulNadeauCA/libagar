@@ -68,14 +68,18 @@
 static int  FileIsExecutable(AG_FileDlg *_Nonnull, char *_Nonnull);
 static void RefreshListing(AG_FileDlg *_Nonnull);
 
+/*
+ * Set the container widget in which to display filetype-specific options.
+ */
 void
 AG_FileDlgSetOptionContainer(AG_FileDlg *fd, void *ctr)
 {
+#ifdef AG_DEBUG
 	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
+	if (ctr) { AG_OBJECT_ISA(ctr, "AG_Widget:*"); }
+#endif
 	AG_ObjectLock(fd);
-
 	fd->optsCtr = ctr;
-
 	AG_ObjectUnlock(fd);
 }
 
@@ -157,8 +161,9 @@ FileIsExecutable(AG_FileDlg *_Nonnull fd, char *_Nonnull file)
 	return (inf.perms & AG_FILE_EXECUTABLE);
 }
 
+/* File has been selected through COMPACT mode de-expansion. */
 static void
-ExpandedFileSelect(AG_Event *_Nonnull event)
+CompactFileSelect(AG_Event *_Nonnull event)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_FileDlg *fdExpand = AG_FILEDLG_SELF();
@@ -174,8 +179,9 @@ ExpandedFileSelect(AG_Event *_Nonnull event)
 	fd->fdExpand = NULL;
 }
 
+/* Collapse from COMPACT mode expansion. */
 static void
-CollapseFromExpanded(AG_Event *_Nonnull event)
+CompactCollapse(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_WINDOW_SELF();
 	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
@@ -188,7 +194,7 @@ CollapseFromExpanded(AG_Event *_Nonnull event)
 
 /* Expand a FileDlg in COMPACT mode */
 static void
-ExpandFromCompact(AG_Event *_Nonnull event)
+CompactExpand(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 	AG_Window *win = fd->winExpand;
@@ -209,16 +215,18 @@ ExpandFromCompact(AG_Event *_Nonnull event)
 
 	AG_FileDlgCopyTypes(fd->fdExpand, fd);
 
-	AG_SetEvent(fd->fdExpand, "file-chosen", ExpandedFileSelect, "%p", fd);
-	AG_SetEvent(win, "window-close", CollapseFromExpanded, "%p", fd);
+	AG_SetEvent(fd->fdExpand, "file-chosen", CompactFileSelect, "%p", fd);
+	AG_SetEvent(win, "window-close", CompactCollapse, "%p", fd);
 	AG_WindowShow(win);
 }
 
+/*
+ * Filesystem event callback. We simply re-open the directory and refresh.
+ */
 static int
 OnDirectoryEvent(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
-	AG_Dir *dir = AG_PTR(2);
 
 	if (fd->fdDir != -1) {
 		AG_Debug(fd, "Directory event (dir = %d)\n", fd->fdDir);
@@ -227,7 +235,9 @@ OnDirectoryEvent(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 			fd->esFollow = NULL;
 		}
 		fd->fdDir = -1;
-		AG_CloseDir(dir);
+
+		AG_CloseDir(fd->openDir);
+		fd->openDir = NULL;
 	}
 	RefreshListing(fd);
 	return (0);
@@ -246,19 +256,26 @@ RefreshListing(AG_FileDlg *_Nonnull fd)
 	if (fd->tlDirs == NULL /* || fd->tlFiles == NULL */) {
 		return;
 	}
-	if ((dir = AG_OpenDir(fd->cwd)) == NULL) {
+	if (fd->openDir != NULL) {
+		AG_CloseDir(fd->openDir);
+	}
+	if ((dir = fd->openDir = AG_OpenDir(fd->cwd)) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", fd->cwd, AG_GetError());
 		return;
 	}
 	if (dir->fd != -1) {
 		fd->fdDir = dir->fd;
+		/*
+		 * Follow filesystem events related to the directory.
+		 */
 		if (fd->esFollow) {
 			AG_DelEventSink(fd->esFollow);
 		}
 		fd->esFollow = AG_AddEventSink(AG_SINK_FSEVENT, dir->fd,
 		    (AG_FSEVENT_WRITE | AG_FSEVENT_DELETE | AG_FSEVENT_LINK |
 		     AG_FSEVENT_RENAME | AG_FSEVENT_REVOKE),
-		    OnDirectoryEvent, "%p,%p", fd, dir);
+		    OnDirectoryEvent, "%p", fd);
+
 		AG_Debug(fd, "Following %s (es=%p)\n", fd->cwd, fd->esFollow);
 	}
 	
@@ -349,6 +366,7 @@ RefreshListing(AG_FileDlg *_Nonnull fd)
 		}
 		free(s);
 	}
+
 	free(dirs);
 	free(files);
 	AG_TlistRestore(fd->tlDirs);
@@ -360,18 +378,64 @@ RefreshListing(AG_FileDlg *_Nonnull fd)
 	AG_ObjectUnlock(fd->tlDirs);
 }
 
-/* Update the shortcuts. */
-static void
-RefreshShortcuts(AG_FileDlg *_Nonnull fd, int init)
+void
+AG_FileDlgRefresh(AG_FileDlg *fd)
 {
-	AG_Tlist *tl;
+	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
+	RefreshListing(fd);
+}
 
-	if (fd->comLoc == NULL)
+static void
+DirSelected(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
+	AG_TlistItem *ti;
+
+	AG_ObjectLock(fd);
+	AG_ObjectLock(tl);
+
+	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
+		if (AG_FileDlgSetDirectoryS(fd, ti->text) == -1) {
+			/* AG_TextMsgFromError() */
+		} else {
+			AG_PostEvent(fd, "dir-selected", "%s", fd->cwd);
+			RefreshListing(fd);
+		}
+	}
+
+	AG_ObjectUnlock(tl);
+	AG_ObjectUnlock(fd);
+}
+
+/* Select a directory shortcut. */
+static void
+LocSelected(AG_Event *_Nonnull event)
+{
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
+	const AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
+
+	if (ti == NULL) {
 		return;
+	}
+	if (AG_FileDlgSetDirectoryS(fd, ti->text) == -1) {
+		/* AG_TextMsgFromError() */
+	} else {
+		AG_PostEvent(fd, "dir-selected", "%s", fd->cwd);
+		RefreshListing(fd);
+	}
+}
 
-	tl = fd->comLoc->list;
+/* Expand directory shortcuts. */
+static void
+LocExpanded(AG_Event *_Nonnull event)
+{
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
+	AG_Combo *comLoc = fd->comLoc;
+	AG_Tlist *tl = comLoc->list;
 
-	AG_TlistClear(tl);
+	AG_TlistSetCompareFn(tl, AG_TlistCompareStrings);
+
 #ifdef _WIN32
 	{
 		char path[4];
@@ -397,7 +461,7 @@ RefreshShortcuts(AG_FileDlg *_Nonnull fd, int init)
 			if (init &&
 			    toupper(fd->cwd[0]) == path[0] &&
 			    fd->cwd[1] == ':') {
-				AG_ComboSelect(fd->comLoc, ti);
+				AG_ComboSelect(comLoc, ti);
 			}
 #if 0
 			/* TODO icons, etc */
@@ -440,77 +504,25 @@ RefreshShortcuts(AG_FileDlg *_Nonnull fd, int init)
 			TAILQ_FOREACH(loadPath, pathGroup, paths)
 				AG_TlistAddS(tl, agIconDirectory.s, loadPath->s);
 		}
-		AG_ComboSelectText(fd->comLoc, fd->cwd);
+		AG_ComboSelectText(comLoc, fd->cwd);
 	}
 	AG_TlistUniq(tl);
 #endif /* _WIN32 */
-
-	AG_TlistRestore(tl);
-}
-
-void
-AG_FileDlgRefresh(AG_FileDlg *fd)
-{
-	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
-	RefreshListing(fd);
-	RefreshShortcuts(fd, 0);
 }
 
 static void
-DirSelected(AG_Event *_Nonnull event)
+ChooseFile(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull winParent)
 {
-	AG_Tlist *tl = AG_TLIST_SELF();
-	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
-	AG_TlistItem *ti;
-
-	AG_ObjectLock(fd);
-	AG_ObjectLock(tl);
-
-	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
-		if (AG_FileDlgSetDirectoryS(fd, ti->text) == -1) {
-			/* AG_TextMsgFromError() */
-		} else {
-			AG_PostEvent(fd, "dir-selected", "%s", fd->cwd);
-			RefreshListing(fd);
-		}
-	}
-
-	AG_ObjectUnlock(tl);
-	AG_ObjectUnlock(fd);
-}
-
-static void
-LocSelected(AG_Event *_Nonnull event)
-{
-	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
-	const AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
-
-	if (ti == NULL) {
-		return;
-	}
-	if (AG_FileDlgSetDirectoryS(fd, ti->text) == -1) {
-		/* AG_TextMsgFromError() */
-	} else {
-		AG_PostEvent(fd, "dir-selected", "%s", fd->cwd);
-		RefreshListing(fd);
-	}
-}
-
-static void
-ChooseFile(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull pwin)
-{
-	AG_TlistItem *it;
-	AG_FileType *ft = NULL;
+	AG_FileType *ft;
 	char *ext;
 	int i;
 
 	AG_ObjectLock(fd);
 
-	if (fd->comTypes &&
-	    (it = AG_TlistSelectedItem(fd->comTypes->list)) != NULL) {
-		ft = it->p1;
+	if (fd->curType != NULL) {                         /* Selected type */
+		ft = fd->curType;
 	} else if ((ext = strrchr(fd->cfile, '.')) != NULL) {
-		TAILQ_FOREACH(ft, &fd->types, types) {
+		TAILQ_FOREACH(ft, &fd->types, types) {        /* Infer type */
 			for (i = 0; i < ft->nExts; i++) {
 				char *s;
 				if ((s = strrchr(ft->exts[i], '.')) != NULL &&
@@ -520,15 +532,17 @@ ChooseFile(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull pwin)
 			if (i < ft->nExts)
 				break;
 		}
+	} else {
+		ft = NULL;
 	}
-	if (ft && ft->action) {
+	if (ft != NULL && ft->action) {
 		AG_PostEventByPtr(fd, ft->action, "%s,%p", fd->cfile, ft);
 	}
 	AG_PostEvent(fd, "file-chosen", "%s,%p", fd->cfile, ft);
 
 	if (fd->flags & AG_FILEDLG_CLOSEWIN) {
-/*		AG_PostEvent(pwin, "window-close", NULL); */
-		AG_ObjectDetach(pwin);
+/*		AG_PostEvent(winParent, "window-close", NULL); */
+		AG_ObjectDetach(winParent);
 	}
 	AG_ObjectUnlock(fd);
 }
@@ -538,14 +552,14 @@ ReplaceFileConfirm(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 	AG_Window *qwin = AG_WINDOW_PTR(2);
-	AG_Window *pwin = AG_WINDOW_PTR(3);
+	AG_Window *winParent = AG_WINDOW_PTR(3);
 
-	ChooseFile(fd, pwin);
+	ChooseFile(fd, winParent);
 	AG_ObjectDetach(qwin);
 }
 
 static void
-ReplaceFileDlg(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull pwin)
+ReplaceFileDlg(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull winParent)
 {
 	AG_Window *win;
 	AG_Button *btn;
@@ -559,11 +573,11 @@ ReplaceFileDlg(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull pwin)
 	hb = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 	{
 		AG_ButtonNewFn(hb, 0, _("Yes"),
-		    ReplaceFileConfirm, "%p,%p,%p", fd, win, pwin);
+		    ReplaceFileConfirm, "%p,%p,%p", fd, win, winParent);
 		btn = AG_ButtonNewFn(hb, 0, _("Cancel"), AGWINDETACH(win));
 		AG_WidgetFocus(btn);
 	}
-//	AG_WindowAttach(pwin, win);
+//	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
 
@@ -616,7 +630,7 @@ fail:
 static void
 CheckAccessAndChoose(AG_FileDlg *_Nonnull fd)
 {
-	AG_Window *pwin = AG_ParentWindow(fd);
+	AG_Window *winParent = AG_ParentWindow(fd);
 	char *s;
 
 	for (s = &fd->cfile[0]; *s != '\0'; s++) {
@@ -640,7 +654,7 @@ CheckAccessAndChoose(AG_FileDlg *_Nonnull fd)
 		 */
 		if (AG_GetFileInfo(fd->cfile, &info) == 0) {
 			if (info.perms & AG_FILE_WRITEABLE) {
-				ReplaceFileDlg(fd, pwin);
+				ReplaceFileDlg(fd, winParent);
 			} else {
 				AG_TextMsg(AG_MSG_ERROR,
 				    _("%s: File exists and is non-writeable"),
@@ -649,7 +663,7 @@ CheckAccessAndChoose(AG_FileDlg *_Nonnull fd)
 			return;
 		}
 	}
-	ChooseFile(fd, pwin);
+	ChooseFile(fd, winParent);
 }
 
 static void
@@ -657,43 +671,42 @@ FileSelected(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
+	AG_FileType *ft;
 	AG_TlistItem *ti;
 	char *ext;
 
 	AG_ObjectLock(fd);
 
-	AG_ObjectLock(tl);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
 		AG_FileDlgSetFilenameS(fd, ti->text);
 		AG_PostEvent(fd, "file-selected", "%s", fd->cfile);
 	}
-	AG_ObjectUnlock(tl);
 
-	if (fd->comTypes && (ext = strrchr(fd->cfile, '.')) != NULL) {
-		AG_ObjectLock(fd->comTypes->list);
-		TAILQ_FOREACH(ti, &fd->comTypes->list->items, items) {
-			AG_FileType *ft = ti->p1;
-			char *ftext;
-			Uint i;
+	Debug(fd, "Selected file \"%s\"\n", fd->cfile);
 
-			for (i = 0; i < ft->nExts; i++) {
-				if ((ftext = strrchr(ft->exts[i], '.'))
-				    == NULL) {
-					continue;
-				}
-				if (Strcasecmp(ftext, ext) == 0)
-					break;
-			}
-			if (i < ft->nExts) {
-				AG_ComboSelect(fd->comTypes, ti);
-				AG_PostEvent(fd->comTypes, "combo-selected",
-				    "%p", ti);
-				break;
-			}
-		}
-		AG_ObjectUnlock(fd->comTypes->list);
+	if ((ext = strrchr(fd->cfile, '.')) == NULL) {
+		/* TODO */
+		goto out;
 	}
+	TAILQ_FOREACH(ft, &fd->types, types) {
+		Uint i;
 
+		for (i = 0; i < ft->nExts; i++) {
+			char *ftExt;
+
+			if ((ftExt = strrchr(ft->exts[i], '.')) == NULL) {
+				continue;
+			}
+			if (Strcasecmp(ftExt, ext) == 0)
+				break;
+		}
+		if (i < ft->nExts) {
+			Debug(fd, "File matches <%s>\n", ft->descr);
+			AG_FileDlgSelectType(fd, ft);
+			break;
+		}
+	}
+out:
 	AG_ObjectUnlock(fd);
 }
 
@@ -711,8 +724,7 @@ FileDblClicked(AG_Event *_Nonnull event)
 		AG_FileDlgSetFilenameS(fd, itFile->text);
 
 		if (fd->okAction) {
-			AG_PostEventByPtr(fd, fd->okAction, "%s,%p", fd->cfile,
-			    fd->comTypes ? AG_TlistSelectedItemPtr(fd->comTypes->list) : NULL);
+			AG_PostEventByPtr(fd, fd->okAction, "%s", fd->cfile);
 		} else {
 			CheckAccessAndChoose(fd);
 		}
@@ -959,46 +971,43 @@ static void
 PressedCancel(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
-	AG_Window *pwin;
+	AG_Window *winParent;
 
 	AG_ObjectLock(fd);
 
 	if (fd->cancelAction) {
 		AG_PostEventByPtr(fd, fd->cancelAction, NULL);
 	} else if (fd->flags & AG_FILEDLG_CLOSEWIN) {
-		if ((pwin = AG_ParentWindow(fd)) != NULL) {
-			AG_PostEvent(pwin, "window-close", NULL);
-/*			AG_ObjectDetach(pwin); */
+		if ((winParent = AG_ParentWindow(fd)) != NULL) {
+			AG_PostEvent(winParent, "window-close", NULL);
+/*			AG_ObjectDetach(winParent); */
 		}
 	}
 
 	AG_ObjectUnlock(fd);
 }
 
-static void
-SelectedType(AG_Event *_Nonnull event)
+/*
+ * Select the active file type. If there are file-type specific options,
+ * create any necessary widgets to edit them.
+ */
+void
+AG_FileDlgSelectType(AG_FileDlg *fd, AG_FileType *ft)
 {
-	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
-	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
-	AG_FileType *ft;
 	AG_FileOption *fo;
 	AG_Numerical *num;
 	AG_Textbox *tbox;
 
-	AG_ObjectLock(fd);
-
-	if (it) {
-		ft = it->p1;
-	} else {
-		ft = TAILQ_FIRST(&fd->types);
-	}
 	fd->curType = ft;
 
-	if (fd->optsCtr == NULL)
-		goto no_change;
-
+	if (fd->optsCtr == NULL) {
+		return;
+	}
 	AG_ObjectFreeChildren(fd->optsCtr);
-	
+
+	if (ft == NULL)
+		return;
+
 	TAILQ_FOREACH(fo, &ft->opts, opts) {
 		switch (fo->type) {
 		case AG_FILEDLG_BOOL:
@@ -1040,19 +1049,72 @@ SelectedType(AG_Event *_Nonnull event)
 		}
 	}
 	AG_SetStyle(fd->optsCtr, "font-size", "90%");
+
 	WIDGET(fd)->flags |= AG_WIDGET_UPDATE_WINDOW;
 	AG_Redraw(fd);
-no_change:
+}
+
+/* A file type has been selected by the user. */
+static void
+FileTypeSelected(AG_Event *_Nonnull event)
+{
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
+	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+
+	AG_ObjectLock(fd);
+
+	AG_FileDlgSelectType(fd, (it != NULL) ? it->p1 :
+	                                        TAILQ_FIRST(&fd->types));
 	AG_ObjectUnlock(fd);
+}
+
+/* The file types have been expanded by the user. */
+static void
+FileTypesExpanded(AG_Event *_Nonnull event)
+{
+	AG_Combo *com = AG_COMBO_SELF();
+	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
+	AG_Tlist *tl = com->list;
+	AG_FileType *ft;
+
+	TAILQ_FOREACH(ft, &fd->types, types) {
+		char extsLbl[64];
+		AG_TlistItem *ti;
+		Uint i;
+	
+		extsLbl[0] = '\0';
+		for (i = 0; i < ft->nExts; i++) {
+			const char *ext = ft->exts[i];
+
+			if (strcmp("<-x>", ext) == 0) {
+				Strlcat(extsLbl, "* ", sizeof(extsLbl));
+			} else if (ext[0] == '<' && ext[1] == '=') {
+				char *extDup = Strdup(ext);
+
+				extDup[strlen(ext) - 1] = '\0';
+				Strlcat(extsLbl, &extDup[2], sizeof(extsLbl));
+				Strlcat(extsLbl, " ", sizeof(extsLbl));
+				free(extDup);
+			} else {
+				Strlcat(extsLbl, "*", sizeof(extsLbl));
+				Strlcat(extsLbl, ext, sizeof(extsLbl));
+				Strlcat(extsLbl, " ", sizeof(extsLbl));
+			}
+		}
+		if (extsLbl[0] != '\0') {
+			ti = AG_TlistAdd(tl, NULL, "%s ( %s)", ft->descr, extsLbl);
+		} else {
+			ti = AG_TlistAddS(tl, NULL, ft->descr);
+		}
+		ti->p1 = ft;
+	}
+	AG_TlistSizeHintLargest(tl, 5);
 }
 
 static void
 OnShow(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_FILEDLG_SELF();
-	AG_TlistItem *it;
-	AG_Combo *comTypes;
-	int w, wMax = 0, nItems = 0;
 
 	if (!(fd->flags & AG_FILEDLG_RESET_ONSHOW)) {
 		return;
@@ -1063,17 +1125,6 @@ OnShow(AG_Event *_Nonnull event)
 		AG_WidgetFocus(fd->tbFile);
 	}
 	RefreshListing(fd);
-	RefreshShortcuts(fd, 1);
-
-	if ((comTypes = fd->comTypes) != NULL) {
-		AG_PostEvent(fd->comTypes, "combo-selected", "%p", NULL);
-		AG_COMBO_FOREACH(it, fd->comTypes) {
-			AG_TextSize(it->text, &w, NULL);
-			if (w > wMax) { wMax = w; }
-			nItems++;
-		}
-		AG_ComboSizeHintPixels(fd->comTypes, wMax, nItems);
-	}
 }
 
 static void
@@ -1355,7 +1406,7 @@ AG_FileDlgNew(void *parent, Uint flags)
 		AG_SetStyle(fd->btnExpand, "padding", "1");
 
 		AG_SetEvent(fd->btnExpand, "button-pushed",
-		    ExpandFromCompact, "%p", fd);
+		    CompactExpand, "%p", fd);
 
 		AG_ObjectAttach(parent, fd);
 		return (fd);
@@ -1369,8 +1420,8 @@ AG_FileDlgNew(void *parent, Uint flags)
 	/* Shortcuts combo. */
 	fd->comLoc = AG_ComboNewS(fd->hPane->div[0], AG_COMBO_HFILL, NULL);
 	AG_ComboSizeHint(fd->comLoc, "XXXXXXXXXXXXXXXXXXXXXXXXXXXX", 5);
-	AG_TlistSetCompareFn(fd->comLoc->list, AG_TlistCompareStrings);
-	AG_SetEvent(fd->comLoc, "combo-selected", LocSelected, "%p", fd);
+	AG_SetEvent(fd->comLoc, "combo-selected", LocSelected,"%p",fd);
+	AG_SetEvent(fd->comLoc, "combo-expanded", LocExpanded,"%p",fd);
 
 	/* Directories list. */
 	fd->tlDirs = AG_TlistNew(fd->hPane->div[0], AG_TLIST_EXPAND);
@@ -1396,7 +1447,8 @@ AG_FileDlgNew(void *parent, Uint flags)
 	/* File type selector */
 	if (!(flags & AG_FILEDLG_NOTYPESELECT)) {
 		fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
-		AG_SetEvent(fd->comTypes, "combo-selected", SelectedType,"%p",fd);
+		AG_SetEvent(fd->comTypes, "combo-selected", FileTypeSelected,"%p",fd);
+		AG_SetEvent(fd->comTypes, "combo-expanded", FileTypesExpanded,"%p",fd);
 	}
 	/* "Mask files" checkboxes. */
 	if (!(flags & AG_FILEDLG_NOMASKOPTS)) {
@@ -1426,6 +1478,17 @@ AG_FileDlgNew(void *parent, Uint flags)
 }
 
 static void
+OnDetach(AG_Event *_Nonnull event)
+{
+	AG_FileDlg *fd = AG_FILEDLG_SELF();
+
+	if (fd->openDir) {
+		AG_CloseDir(fd->openDir);
+		fd->openDir = NULL;
+	}
+}
+
+static void
 Init(void *_Nonnull obj)
 {
 	AG_FileDlg *fd = obj;
@@ -1435,32 +1498,34 @@ Init(void *_Nonnull obj)
 	fd->cfile[0] = '\0';
 	fd->fdDir = -1;
 
-	memset(&fd->esFollow, 0, sizeof(AG_EventSink *) + /* esFollow */
-	                         sizeof(AG_Pane *) +      /* hPane */
-	                         sizeof(AG_Tlist *) +     /* tlDirs */
-	                         sizeof(AG_Tlist *) +     /* tlFiles */
-	                         sizeof(AG_Label *) +     /* lbCwd */
-	                         sizeof(AG_Textbox *) +   /* tbFile */
-	                         sizeof(AG_Combo *) +     /* comTypes */
-	                         sizeof(AG_Checkbox *) +  /* cbMaskExt */
-	                         sizeof(AG_Checkbox *) +  /* cbMaskHidden */
-	                         sizeof(AG_Button *) +    /* btnOk */
-	                         sizeof(AG_Button *) +    /* btnCancel */
-	                         sizeof(AG_Event *) +     /* okAction */
-	                         sizeof(AG_Event *) +     /* cancelAction */
-	                         sizeof(char *) +         /* dirMRU */
-	                         sizeof(void *) +         /* optsCts */
-	                         sizeof(AG_FileType *) +  /* curType */
-	                         sizeof(AG_Combo *) +     /* comLoc */
-	                         sizeof(AG_Textbox *) +   /* textbox */
-	                         sizeof(AG_Button *) +    /* btnExpand */
-	                         sizeof(AG_Window *) +    /* winExpand */
-	                         sizeof(AG_FileDlg *));   /* fdExpand */
+	memset(&fd->openDir, 0, sizeof(AG_Dir *) +       /* openDir */
+	                        sizeof(AG_EventSink *) + /* esFollow */
+	                        sizeof(AG_Pane *) +      /* hPane */
+	                        sizeof(AG_Tlist *) +     /* tlDirs */
+	                        sizeof(AG_Tlist *) +     /* tlFiles */
+	                        sizeof(AG_Label *) +     /* lbCwd */
+	                        sizeof(AG_Textbox *) +   /* tbFile */
+	                        sizeof(AG_Combo *) +     /* comTypes */
+	                        sizeof(AG_Checkbox *) +  /* cbMaskExt */
+	                        sizeof(AG_Checkbox *) +  /* cbMaskHidden */
+	                        sizeof(AG_Button *) +    /* btnOk */
+	                        sizeof(AG_Button *) +    /* btnCancel */
+	                        sizeof(AG_Event *) +     /* okAction */
+	                        sizeof(AG_Event *) +     /* cancelAction */
+	                        sizeof(char *) +         /* dirMRU */
+	                        sizeof(void *) +         /* optsCtr */
+	                        sizeof(AG_FileType *) +  /* curType */
+	                        sizeof(AG_Combo *) +     /* comLoc */
+	                        sizeof(AG_Textbox *) +   /* textbox */
+	                        sizeof(AG_Button *) +    /* btnExpand */
+	                        sizeof(AG_Window *) +    /* winExpand */
+	                        sizeof(AG_FileDlg *));   /* fdExpand */
 
 	TAILQ_INIT(&fd->types);
 
 	AG_AddEvent(fd, "widget-shown", OnShow, NULL);
 	AG_AddEvent(fd, "widget-hidden", OnHide, NULL);
+	AG_AddEvent(fd, "detached", OnDetach, NULL);
 }
 
 /*
@@ -1798,10 +1863,8 @@ AG_FileType *
 AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
     AG_EventFn fn, const char *fmt, ...)
 {
-	char extsLbl[64];
 	AG_FileType *ft;
 	char *dexts, *ds, *ext;
-	AG_TlistItem *it;
 
 	AG_OBJECT_ISA(fd, "AG_Widget:AG_FileDlg:*");
 
@@ -1810,33 +1873,26 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 	ft->descr = Strdup(descr);
 	ft->exts = Malloc(sizeof(char *));
 	ft->nExts = 0;
+	ft->flags = 0;
 	TAILQ_INIT(&ft->opts);
-	
+
+	/* Duplicate the full list of extensions into allExts. */
 	ft->allExts = Strdup(exts);
+
+	/* Also generate an array of extensions exts[]. */
 	ds = dexts = Strdup(exts);
-	extsLbl[0] = '\0';
 	while ((ext = AG_Strsep(&ds, ",;")) != NULL) {
 		if (ext[0] == '*' && ext[1] == '.') {
 			ext++;
 		}
-		ft->exts = Realloc(ft->exts, (ft->nExts+1)*sizeof(char *));
+		ft->exts = Realloc(ft->exts, (ft->nExts + 1) * sizeof(char *));
 		ft->exts[ft->nExts++] = Strdup(ext);
-		if (strcmp("<-x>", ext) == 0) {
-			Strlcat(extsLbl, "* ", sizeof(extsLbl));
-		} else if (ext[0] == '<' && ext[1] == '=') {
-			ext[strlen(ext)-1] = '\0';
-			Strlcat(extsLbl, &ext[2], sizeof(extsLbl));
-			Strlcat(extsLbl, " ", sizeof(extsLbl));
-		} else {
-			Strlcat(extsLbl, "*", sizeof(extsLbl));
-			Strlcat(extsLbl, ext, sizeof(extsLbl));
-			Strlcat(extsLbl, " ", sizeof(extsLbl));
-		}
 	}
 	free(dexts);
 	
 	AG_ObjectLock(fd);
 
+	/* Set the type-specific callback function. */
 	if (fn) {
 		ft->action = AG_SetEvent(fd, NULL, fn, NULL);
 		if (fmt) {
@@ -1853,17 +1909,7 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 	} else {
 		ft->action = NULL;
 	}
-	if (fd->comTypes) {
-		if (extsLbl[0] != '\0') {
-			it = AG_TlistAdd(fd->comTypes->list, NULL, "%s ( %s)",
-			    descr, extsLbl);
-		} else {
-			it = AG_TlistAddS(fd->comTypes->list, NULL, descr);
-		}
-		it->p1 = ft;
-		if (TAILQ_EMPTY(&fd->types))
-			AG_ComboSelectPointer(fd->comTypes, ft);
-	}
+
 	TAILQ_INSERT_TAIL(&fd->types, ft, types);
 	
 	AG_ObjectUnlock(fd);
