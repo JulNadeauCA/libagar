@@ -268,6 +268,7 @@ Kill(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	return (1);
 }
 
+#if 0
 /*
  * Paste the contents of a previous Kill at the current cursor position.
  * The contents are copied from a kill ring independent of the clipboard.
@@ -277,6 +278,23 @@ Yank(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
 	return AG_EditablePaste(ed, buf, &agEditableKillring, 1);
+}
+#endif
+
+/* Undo last compound action */
+static int
+Undo(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
+{
+	return AG_EditableUndo(ed, buf);
+}
+
+/* Redo last undone action */
+static int
+Redo(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
+    AG_KeySym keysym, Uint keymod, AG_Char ch)
+{
+	return AG_EditableRedo(ed, buf);
 }
 
 /* Seek one word backwards. */
@@ -720,37 +738,42 @@ PageDown(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
  */
 const struct ag_keycode agKeymap[] = {
 #ifdef __APPLE__
-	{ AG_KEY_LEFT,      AG_KEYMOD_CTRL|AG_KEYMOD_META, CursorHome,  "" },
-	{ AG_KEY_RIGHT,     AG_KEYMOD_CTRL|AG_KEYMOD_META, CursorEnd,   "" },
-	{ AG_KEY_LEFT,      AG_KEYMOD_ALT,                 WordBack,    "" },
-	{ AG_KEY_RIGHT,     AG_KEYMOD_ALT,                 WordForw,    "" },
-	{ AG_KEY_A,         AG_KEYMOD_META,                SelectAll,   "" },
-	{ AG_KEY_C,         AG_KEYMOD_META,                Copy,        "" },
-	{ AG_KEY_X,         AG_KEYMOD_META,                Cut,         "w" },
-	{ AG_KEY_V,         AG_KEYMOD_META,                Paste,       "w" },
-	{ AG_KEY_K,         AG_KEYMOD_META,                Kill,        "kw" },
-	{ AG_KEY_Y,         AG_KEYMOD_META,                Yank,        "kw" },
+	{ AG_KEY_LEFT,      AG_KEYMOD_CTRL|AG_KEYMOD_META,  CursorHome,  "" },
+	{ AG_KEY_RIGHT,     AG_KEYMOD_CTRL|AG_KEYMOD_META,  CursorEnd,   "" },
+	{ AG_KEY_LEFT,      AG_KEYMOD_ALT,                  WordBack,    "" },
+	{ AG_KEY_RIGHT,     AG_KEYMOD_ALT,                  WordForw,    "" },
+	{ AG_KEY_A,         AG_KEYMOD_META,                 SelectAll,   "" },
+	{ AG_KEY_C,         AG_KEYMOD_META,                 Copy,        "" },
+	{ AG_KEY_X,         AG_KEYMOD_META,                 Cut,         "w" },
+	{ AG_KEY_V,         AG_KEYMOD_META,                 Paste,       "w" },
+	{ AG_KEY_K,         AG_KEYMOD_META,                 Kill,        "kw" },
+/*	{ AG_KEY_Y,         AG_KEYMOD_META,                 Yank,        "kw" }, */
+	{ AG_KEY_Z,         AG_KEYMOD_SHIFT|AG_KEYMOD_META, Redo,        "w" },
+	{ AG_KEY_Z,         AG_KEYMOD_META,                 Undo,        "w" },
+	{ AG_KEY_Y,         AG_KEYMOD_META,                 Redo,        "w" },
 #else /* __APPLE__ */
-	{ AG_KEY_LEFT,      AG_KEYMOD_CTRL,                WordBack,    "" },
-	{ AG_KEY_LEFT,      AG_KEYMOD_ALT,                 WordBack,    "" },
-	{ AG_KEY_RIGHT,     AG_KEYMOD_CTRL,                WordForw,    "" },
-	{ AG_KEY_RIGHT,     AG_KEYMOD_ALT,                 WordForw,    "" },
-	{ AG_KEY_A,         AG_KEYMOD_CTRL,                SelectAll,   "" },
-	{ AG_KEY_C,         AG_KEYMOD_CTRL,                Copy,        "" },
-	{ AG_KEY_X,         AG_KEYMOD_CTRL,                Cut,         "w" },
-	{ AG_KEY_V,         AG_KEYMOD_CTRL,                Paste,       "w" },
-	{ AG_KEY_K,         AG_KEYMOD_CTRL,                Kill,        "kw" },
-	{ AG_KEY_Y,         AG_KEYMOD_CTRL,                Yank,        "kw" },
+	{ AG_KEY_LEFT,      AG_KEYMOD_CTRL,                 WordBack,    "" },
+	{ AG_KEY_LEFT,      AG_KEYMOD_ALT,                  WordBack,    "" },
+	{ AG_KEY_RIGHT,     AG_KEYMOD_CTRL,                 WordForw,    "" },
+	{ AG_KEY_RIGHT,     AG_KEYMOD_ALT,                  WordForw,    "" },
+	{ AG_KEY_A,         AG_KEYMOD_CTRL,                 SelectAll,   "" },
+	{ AG_KEY_C,         AG_KEYMOD_CTRL,                 Copy,        "" },
+	{ AG_KEY_X,         AG_KEYMOD_CTRL,                 Cut,         "w" },
+	{ AG_KEY_V,         AG_KEYMOD_CTRL,                 Paste,       "w" },
+	{ AG_KEY_K,         AG_KEYMOD_CTRL,                 Kill,        "kw" },
+/*	{ AG_KEY_Y,         AG_KEYMOD_CTRL,                 Yank,        "kw" }, */
+	{ AG_KEY_Z,         AG_KEYMOD_CTRL,                 Undo,        "w" },
+	{ AG_KEY_Y,         AG_KEYMOD_CTRL,                 Redo,        "w" },
 #endif /* !__APPLE__ */
-	{ AG_KEY_HOME,      0,                             CursorHome,  "" },
-	{ AG_KEY_END,       0,                             CursorEnd,   "" },
-	{ AG_KEY_LEFT,      0,                             CursorLeft,  "" },
-	{ AG_KEY_RIGHT,     0,                             CursorRight, "" },
-	{ AG_KEY_UP,        0,                             CursorUp,    "" },
-	{ AG_KEY_DOWN,      0,                             CursorDown,  "" },
-	{ AG_KEY_PAGEUP,    0,                             PageUp,      "" },
-	{ AG_KEY_PAGEDOWN,  0,                             PageDown,    "" },
-	{ AG_KEY_BACKSPACE, 0,                             Delete,      "w" },
-	{ AG_KEY_DELETE,    0,                             Delete,      "w" },
-	{ AG_KEY_LAST,      0,                             Insert,      "w" },
+	{ AG_KEY_HOME,      0,                              CursorHome,  "" },
+	{ AG_KEY_END,       0,                              CursorEnd,   "" },
+	{ AG_KEY_LEFT,      0,                              CursorLeft,  "" },
+	{ AG_KEY_RIGHT,     0,                              CursorRight, "" },
+	{ AG_KEY_UP,        0,                              CursorUp,    "" },
+	{ AG_KEY_DOWN,      0,                              CursorDown,  "" },
+	{ AG_KEY_PAGEUP,    0,                              PageUp,      "" },
+	{ AG_KEY_PAGEDOWN,  0,                              PageDown,    "" },
+	{ AG_KEY_BACKSPACE, 0,                              Delete,      "w" },
+	{ AG_KEY_DELETE,    0,                              Delete,      "w" },
+	{ AG_KEY_LAST,      0,                              Insert,      "w" },
 };
