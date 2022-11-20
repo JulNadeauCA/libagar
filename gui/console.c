@@ -451,7 +451,7 @@ MenuExportDlg(AG_Event *_Nonnull event)
 	AG_FileOptionNewBool(ft, _("Selected Lines Only"), "selected-lines", 0);
 	AG_FileOptionNewBool(ft, _("Strip ANSI"), "strip-ansi", 1);
 
-	AG_FileDlgAddType(fd, _("Screenshot image"), "*.png,*.bmp,*.jpg",
+	AG_FileDlgAddType(fd, _("Screenshot image"), "*.png,*.jpg",
 	    MenuExportToFileImage, "%p", cons);
 
 	AG_WindowShow(win);
