@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@
 #include <agar/gui/window.h>
 #include <agar/gui/combo.h>
 #include <agar/gui/treetbl.h>
+#include <agar/gui/separator.h>
 
 static const struct unicode_range {
 #ifdef AG_HAVE_64BIT
@@ -216,13 +217,31 @@ SelectUnicodeRange(AG_Event *_Nonnull event)
 	}
 }
 
+static void
+ExpandUnicodeRanges(AG_Event *event)
+{
+	AG_Combo *com = AG_COMBO_SELF();
+	AG_Tlist *tl = com->list;
+	int i;
+
+	for (i = 0; i < unicodeRangeCount; i++) {
+		AG_TlistItem *ti;
+
+		ti = AG_TlistAdd(tl, NULL,
+		    "(" AGSI_COURIER "0x%04lx" AGSI_RST ") %s",
+		    unicodeRanges[i].start,
+		    unicodeRanges[i].name);
+		ti->p1 = (void *)&unicodeRanges[i];
+	}
+	AG_TlistSizeHintLargest(tl, 10);
+}
+
 AG_Window *
 AG_DEV_UnicodeBrowser(void)
 {
 	AG_Window *win;
 	AG_Combo *comRange;
 	AG_Treetbl *tt;
-	int i, w, wMax = 0;
 
 	if ((win = AG_WindowNewNamedS(0, "DEV_UnicodeBrowser")) == NULL) {
 		return (NULL);
@@ -230,21 +249,17 @@ AG_DEV_UnicodeBrowser(void)
 	AG_WindowSetCaptionS(win, _("Unicode Browser"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	comRange = AG_ComboNew(win, AG_COMBO_HFILL, _("Range: "));
-	for (i = 0; i < unicodeRangeCount; i++) {
-		AG_TextSize(unicodeRanges[i].name, &w, NULL);
-		if (w > wMax) { wMax = w; }
-		AG_TlistAddPtr(comRange->list, NULL, unicodeRanges[i].name,
-		    (void *)&unicodeRanges[i]);
-	}
-	AG_ComboSizeHintPixels(comRange, wMax, 10);
-	
 	tt = AG_TreetblNew(win, AG_TREETBL_EXPAND, NULL, NULL);
 	AG_TreetblSizeHint(tt, 100, 30);
 	AG_TreetblAddCol(tt, 0, "<XXXXXXX>", "Char");
 	AG_TreetblAddCol(tt, 1, "<XXXXXXX>", "Unicode");
 	AG_TreetblAddCol(tt, 2, "<XXXXXXX>", "UTF-8");
+	AG_SetStyle(tt, "color", "black");
 
+	AG_SpacerNewHoriz(win);
+
+	comRange = AG_ComboNew(win, AG_COMBO_HFILL, _("Unicode Range: "));
+	AG_SetEvent(comRange, "combo-expanded", ExpandUnicodeRanges, NULL);
 	AG_SetEvent(comRange, "combo-selected", SelectUnicodeRange, "%p", tt);
 
 	AG_WidgetFocus(comRange);
