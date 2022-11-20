@@ -368,8 +368,7 @@ FindNodes(AG_Tlist *_Nonnull tl, SK_Node *_Nonnull node, int depth)
 	if (!TAILQ_EMPTY(&node->cnodes)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 	}
-	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
-	    AG_TlistVisibleChildren(tl, it)) {
+	if (AG_TlistVisibleChildren(tl, it)) {
 		TAILQ_FOREACH(cnode, &node->cnodes, sknodes)
 			FindNodes(tl, cnode, depth+1);
 	}

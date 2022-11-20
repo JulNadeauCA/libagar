@@ -50,8 +50,7 @@ FindSGNodes(AG_Tlist *_Nonnull tl, SG_Node *_Nonnull node, int depth)
 	    AG_OfClass(node, "SG_Node:SG_Object:*")) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 	}
-	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
-	    AG_TlistVisibleChildren(tl, it)) {
+	if (AG_TlistVisibleChildren(tl, it)) {
 		OBJECT_FOREACH_CLASS(chld, node, sg_node, "SG_Node:*") {
 			FindSGNodes(tl, chld, depth+1);
 		}

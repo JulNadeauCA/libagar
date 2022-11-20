@@ -134,7 +134,7 @@ SK_NodeOfClass(void *pNode, const char *cname)
 void
 SK_InitSubsystem(void)
 {
-	AG_RegisterNamespace("Agar-SK", "SK_", "http://libagar.org/");
+	AG_RegisterNamespace("Agar-SK", "SK_", "https://libagar.org/");
 
 	/* Register our base Agar object classes. */
 	AG_RegisterClass(&skClass);
