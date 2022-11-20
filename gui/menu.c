@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -193,6 +193,31 @@ MouseMotion(AG_Event *_Nonnull event)
 }
 
 /*
+ * Update a dynamic menu item's contents.
+ * The parent menu must be locked.
+ */
+static void
+UpdatePolledItem(AG_MenuItem *mi)
+{
+	AG_Menu *m = mi->pmenu;
+
+	AG_MENU_ITEM_IS_VALID(mi);
+	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
+
+	AG_MenuInvalidateLabels(mi);
+	AG_MenuFreeSubitems(mi);
+
+	AG_PostEventByPtr(m, mi->poll, "%p", mi);
+#if 0
+	if (mi->view && (win = WIDGET(mi->view)->window)) {
+		AG_ObjectDetach(win);
+		mi->view = NULL;
+	}
+#endif
+}
+
+
+/*
  * Expand an AG_MenuItem. Create a window containing the AG_MenuView
  * at coordinates x1,y1 (relative to widget parent).
  *
@@ -205,9 +230,9 @@ AG_Window *
 AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 {
 	AG_Window *win, *winParent;
+	AG_MenuView *mv;
 	AG_Menu *m;
-	int x = x1;
-	int y = y1;
+	int x=x1, y=y1;
 	Uint winFlags;
 
 	AG_MENU_ITEM_IS_VALID(mi);
@@ -238,23 +263,37 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 		winParent = NULL;
 	}
 
-	AG_MenuUpdateItem(mi);
+	AG_ObjectLock(m);
+
+	if (mi->poll)                              /* Dynamically-generated */
+		UpdatePolledItem(mi);
 	
 	if (mi->nSubItems == 0)
-		return (NULL);
+		goto out;
 
-	if (mi->view != NULL) {                                   /* Cached */
-		win = WIDGET(mi->view)->window;
+	if ((mv = mi->view) != NULL) {                            /* Cached */
+		win = WIDGET(mv)->window;
 		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 #ifdef DEBUG_EXPAND
 		Debug(m, "Expand [%s] -> " AGSI_RED "%s" AGSI_RST " (cached)\n",
 		    mi->text, OBJECT(win)->name);
 #endif
-/*		AG_WidgetCompileStyle(win); */
+#if 1
+		/*
+		 * Temporary workaround for sizing problem with recovered
+		 * cached windows.
+		 */
+		AG_MenuInvalidateLabels(mi);
+		AG_ObjectDetach(win);
+		mi->view = NULL;
+#else
+		AG_MenuInvalidateLabels(mi);
 		AG_WindowSetGeometry(win, x,y, -1,-1);
 		AG_WindowRaise(win);
 		AG_WindowShow(win);
+		AG_ObjectUnlock(m);
 		return (win);
+#endif
 	}
 
 	winFlags = AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
@@ -265,7 +304,7 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 		winFlags |= AG_WINDOW_NOBACKGROUND;
 
 	if ((win = AG_WindowNew(winFlags)) == NULL) {
-		return (NULL);
+		goto out;
 	}
 	win->wmType = (m->style == AG_MENU_DROPDOWN) ?
 	              AG_WINDOW_WM_DROPDOWN_MENU :
@@ -282,21 +321,24 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	AG_SetEvent(win, "mouse-button-down", OnMouseButtonDown, "%p", m);
 	AG_SetEvent(win, "window-close", OnWindowClose, "%p", m);
 	
-	mi->view = Malloc(sizeof(AG_MenuView));
-	AG_ObjectInit(mi->view, &agMenuViewClass);
-	mi->view->pmenu = m;
-	mi->view->pitem = mi;
-	AG_ObjectAttach(win, mi->view);
-	AG_WidgetCompileStyle(win);
+	mi->view = mv = Malloc(sizeof(AG_MenuView));
+	AG_ObjectInit(mv, &agMenuViewClass);
+	mv->pmenu = m;
+	mv->pitem = mi;
+	AG_ObjectAttach(win, mv);
 
 	if (winParent) {
 		AG_WindowAttach(winParent, win);
 		AG_WindowMakeTransient(winParent, win);
-		AG_WindowPin(winParent, win);
 	}
-	AG_WindowSetGeometry(win, x,y, -1,-1);
+	AG_WindowSetGeometry(win, x,y, WIDGET(win)->w, WIDGET(win)->h);
 	AG_WindowShow(win);
+
+	AG_ObjectUnlock(m);
 	return (win);
+out:
+	AG_ObjectUnlock(m);
+	return (NULL);
 }
 
 /*
@@ -319,8 +361,11 @@ AG_MenuCollapse(AG_MenuItem *mi)
 	TAILQ_FOREACH(miSub, &mi->subItems, items)
 		AG_MenuCollapse(miSub);
 
-	if (mi->view) {
-		AG_WindowHide(WIDGET(mi->view)->window);
+	if (mi->view != NULL) {
+		AG_Window *win = WIDGET(mi->view)->window;
+
+		if (win != NULL)
+			AG_WindowHide(win); 
 	}
 	mi->sel_subitem = NULL;
 	
@@ -337,8 +382,10 @@ CollapseAll(AG_MenuItem *_Nonnull mi)
 	TAILQ_FOREACH(miSub, &mi->subItems, items) {
 		CollapseAll(miSub);
 	}
-	if (mi->view)
+	if (mi->view) {
 		AG_MenuCollapse(mi);
+	}
+	AG_MenuInvalidateLabels(mi);
 }
 
 /*
@@ -430,7 +477,7 @@ CreateItem(AG_MenuItem *_Nullable miParent, const char *_Nullable text,
 #endif
 	mi->text = (text) ? Strdup(text) : Strdup("");
 	mi->lblMenu[1] = mi->lblMenu[0] = -1;
-	mi->lblView[1] = mi->lblView[0] = -1;
+	mi->lblView[2] = mi->lblView[1] = mi->lblView[0] = -1;
 	mi->iconSrc = (icon) ? AG_SurfaceDup(icon) : NULL;  /* TODO shared */
 	mi->icon = -1;
 	mi->value = -1;
@@ -483,18 +530,46 @@ StyleChanged(AG_Event *_Nonnull event)
 {
 	AG_Menu *m = AG_MENU_SELF();
 	const AG_Font *font = WFONT(m);
-	AG_MenuItem *mi;
-	int j;
 
-	TAILQ_FOREACH(mi, &m->root->subItems, items) {
-		for (j = 0; j < 2; j++) {
-			if (mi->lblMenu[j] != -1) {
-				AG_WidgetUnmapSurface(m, mi->lblMenu[j]);
-				mi->lblMenu[j] = -1;
+	AG_MenuInvalidateLabels(m->root);
+	m->itemh = font->lineskip + m->tPadLbl + m->bPadLbl;
+}
+
+static int
+KeyDown_Item(AG_MenuItem *mi, AG_KeySym ksym, AG_KeyMod kmod)
+{
+	AG_Menu *m = mi->pmenu;
+	AG_MenuItem *miSub;
+
+	TAILQ_FOREACH(miSub, &mi->subItems, items) {
+		if (KeyDown_Item(miSub, ksym, kmod))             /* Recurse */
+			return (1);
+	}
+	if (mi->key_equiv != 0) {
+		if (mi->key_equiv == ksym &&
+		    (mi->key_mod == 0 || (mi->key_mod & kmod) ||
+		     ((mi->key_mod & AG_KEYMOD_CTRL_SHIFT) && (kmod & AG_KEYMOD_CTRL) &&
+		                                              (kmod & AG_KEYMOD_SHIFT))) &&
+		    mi->clickFn != NULL) {
+			AG_MenuCollapseAll(m);
+			if (mi->clickFn->fn != NULL) {
+				Debug(m, "Keyboard call (\"%s\")\n", mi->text);
+				mi->clickFn->fn(mi->clickFn);
+				return (1);
 			}
 		}
 	}
-	m->itemh = font->lineskip + m->tPadLbl + m->bPadLbl;
+	return (0);
+}
+
+static void
+KeyDown(AG_Event *_Nonnull event)
+{
+	AG_Menu *m = AG_MENU_SELF();
+	AG_KeySym ks = (AG_KeySym)AG_INT(1);
+	AG_KeyMod kmod = (AG_KeyMod)AG_INT(2);
+
+	KeyDown_Item(m->root, ks, kmod);
 }
 
 static void
@@ -504,6 +579,8 @@ Init(void *_Nonnull obj)
 
 	WIDGET(m)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
 	                    AG_WIDGET_UNFOCUSED_BUTTONUP |
+	                    AG_WIDGET_UNFOCUSED_KEYDOWN |
+	                    AG_WIDGET_UNFOCUSED_KEYUP |
 			    AG_WIDGET_USE_TEXT;
 	m->flags = 0;
 	m->style = AG_MENU_DROPDOWN;
@@ -529,6 +606,7 @@ Init(void *_Nonnull obj)
 /*	AG_AddEvent(m, "attached", OnAttach, NULL); */
 	AG_AddEvent(m, "font-changed", StyleChanged, NULL);
 	AG_AddEvent(m, "palette-changed", StyleChanged, NULL);
+	AG_SetEvent(m, "key-down", KeyDown, NULL);
 }
 
 /* Change the icon associated with a menu item. */
@@ -1217,8 +1295,14 @@ AG_MenuFreeSubitems(AG_MenuItem *_Nonnull mi)
 void
 AG_MenuItemFree(AG_MenuItem *mi)
 {
-	AG_MenuFreeSubitems(mi);
+	AG_MenuItem *miSub, *miSubNext;
 
+	for (miSub = TAILQ_FIRST(&mi->subItems);
+	     miSub != TAILQ_END(&mi->subItems);
+	     miSub = miSubNext) {
+		miSubNext = TAILQ_NEXT(miSub, items);
+		AG_MenuItemFree(miSub);                          /* Recurse */
+	}
 	if (mi->iconSrc) {
 		AG_SurfaceFree(mi->iconSrc);
 	}
@@ -1239,6 +1323,7 @@ AG_MenuDel(AG_MenuItem *mi)
 
 	TAILQ_REMOVE(&miParent->subItems, mi, items);
 	miParent->nSubItems--;
+
 	AG_MenuItemFree(mi);
 
 	AG_ObjectUnlock(m);
@@ -1252,37 +1337,10 @@ Destroy(void *_Nonnull p)
 	AG_MenuItemFree(m->root);
 }
 
-void
-AG_MenuUpdateItem(AG_MenuItem *mi)
+static void
+InvalidateLabels(AG_MenuItem *_Nonnull mi)
 {
-	AG_Menu *m = mi->pmenu;
-	AG_Window *win;
-
-	AG_MENU_ITEM_IS_VALID(mi);
-	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
-	AG_ObjectLock(m);
-
-	if (mi->poll) {
-		AG_MenuInvalidateLabels(mi);
-		AG_MenuFreeSubitems(mi);
-		AG_PostEventByPtr(m, mi->poll, "%p", mi);
-
-		if (mi->view && (win = WIDGET(mi->view)->window)) {
-			AG_ObjectDetach(win);
-			mi->view = NULL;
-		}
-	}
-
-	AG_ObjectUnlock(m);
-}
-
-/*
- * Invalidate all cached Menu/MenuView label surfaces.
- * The parent Menu must be locked.
- */
-void
-AG_MenuInvalidateLabels(AG_MenuItem *_Nonnull mi)
-{
+	AG_MenuItem *miSub;
 	int i;
 
 	AG_MENU_ITEM_IS_VALID(mi);
@@ -1293,14 +1351,40 @@ AG_MenuInvalidateLabels(AG_MenuItem *_Nonnull mi)
 			AG_WidgetUnmapSurface(mi->pmenu, mi->lblMenu[i]);
 			mi->lblMenu[i] = -1;
 		}
-		if (mi->lblView[i] != -1 &&
-		    mi->parent &&
-		    mi->parent->view) {
-			AG_OBJECT_ISA(mi->parent->view, "AG_Widget:AG_MenuView:*");
-			AG_WidgetUnmapSurface(mi->parent->view, mi->lblView[i]);
-			mi->lblView[i] = -1;
+	}
+	for (i = 0; i < 3; i++) {
+		if (mi->lblView[i] != -1) {
+			AG_MenuView *mv;
+
+			if (mi->parent && (mv = mi->parent->view)) {
+				AG_OBJECT_ISA(mv, "AG_Widget:AG_MenuView:*");
+				AG_WidgetUnmapSurface(mv, mi->lblView[i]);
+				mi->lblView[i] = -1;
+			} else {
+				Debug(NULL,
+				    "MenuInvalidateLabels: \"%s\" has no parent MenuView\n",
+				    mi->text);
+			}
 		}
 	}
+	
+	TAILQ_FOREACH(miSub, &mi->subItems, items)
+		InvalidateLabels(miSub);			/* Recurse */
+}
+
+/*
+ * Invalidate rendered surfaces generated by mi and its children (if any).
+ * The parent Menu must be locked.
+ */
+void
+AG_MenuInvalidateLabels(AG_MenuItem *_Nonnull mi)
+{
+	AG_MenuItem *miSub;
+
+	AG_MENU_ITEM_IS_VALID(mi);
+
+	TAILQ_FOREACH(miSub, &mi->subItems, items)
+		InvalidateLabels(mi);
 }
 
 void

@@ -21,8 +21,11 @@ typedef struct ag_menu_item {
 	char tag[AG_MENU_ITEM_TAG_LEN];	/* Tagged Non-object */
 #endif
 	char *_Nonnull text;		/* Label text */
-	int lblMenu[2];			/* Cached surfaces (for AG_Menu) */
-	int lblView[2];			/* Cached surfaces (for AG_MenuView) */
+
+	int lblMenu[2];			/* Cached surfaces of AG_Menu(3) */
+	int lblView[3];			/* Cached surfaces of AG_MenuView(3) */
+					/* 0=Disabled, 1=Enabled, 2=Selected */
+	Uint32 _pad1;
 	AG_Surface *_Nullable iconSrc;	/* Icon surface source */
 	int                   icon;	/* Icon surface mapping */
 	int value;			/* Default bool value binding */
@@ -62,7 +65,7 @@ typedef struct ag_menu_item {
 
 	AG_TAILQ_HEAD_(ag_menu_item) subItems;      /* Child items */
 	Uint                        nSubItems;
-	Uint32 _pad;
+	Uint32 _pad2;
 	AG_TAILQ_ENTRY(ag_menu_item) items;         /* In parent */
 } AG_MenuItem;
 
@@ -183,7 +186,6 @@ void AG_MenuSetLabel(AG_MenuItem *_Nonnull, const char *_Nonnull, ...)
 void AG_MenuSetLabelS(AG_MenuItem *_Nonnull, const char *_Nonnull);
 void AG_MenuSetPollFn(AG_MenuItem *_Nonnull, _Nonnull AG_EventFn,
                       const char *_Nullable, ...);
-void AG_MenuUpdateItem(AG_MenuItem *_Nonnull);
 void AG_MenuInvalidateLabels(AG_MenuItem *_Nonnull);
 void AG_MenuFreeSubitems(AG_MenuItem *_Nonnull);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,17 +48,17 @@ UpdateItem(AG_Menu *_Nonnull m, AG_MenuItem *_Nonnull mi)
 
 /* Selection has moved over the specified item. */
 static void
-SelectItem(AG_MenuItem *_Nonnull mi, AG_MenuItem *_Nullable subitem)
+SelectItem(AG_MenuItem *_Nonnull mi, AG_MenuItem *_Nullable miSub)
 {
 	if (mi->sel_subitem != NULL &&
 	    mi->sel_subitem->view != NULL) {
 		AG_MenuCollapse(mi->sel_subitem);
 	}
-	mi->sel_subitem = subitem;
+	mi->sel_subitem = miSub;
 
-	if (subitem != NULL)
-		AG_MenuExpand(mi->view, subitem, WIDTH(mi->view),
-		              subitem->y + subitem->pmenu->itemh);
+	if (miSub != NULL && mi->view != NULL)
+		AG_MenuExpand(mi->view, miSub, WIDTH(mi->view),
+		    miSub->y + miSub->pmenu->itemh);
 }
 
 static void
@@ -230,37 +230,22 @@ static void
 OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mv = AG_MENUVIEW_SELF();
-	AG_MenuItem *mi = mv->pitem, *miSub;
 	AG_Menu *m = mv->pmenu;
-	AG_Window *win;
-	int j;
-
-	if ((win = WIDGET(mv)->window) != NULL) {
-		if (AGDRIVER_SINGLE(WIDGET(win)->drv)) {     /* Live resize */
-			AG_WindowSetGeometry(win,
-			    WIDGET(win)->x,
-			    WIDGET(win)->y,
-			    -1, -1);
-		} else {
-			/* XXX TODO */
-		}
-	}
 
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
 	m->itemh = WFONT(mv)->lineskip + m->tPadLbl + m->bPadLbl;
-
-	TAILQ_FOREACH(miSub, &mi->subItems, items) {
-		for (j = 0; j < 2; j++) {
-			if (miSub->lblView[j] != -1) {
-				AG_WidgetUnmapSurface(mv, miSub->lblView[j]);
-				miSub->lblView[j] = -1;
-			}
-		}
-	}
+	AG_MenuInvalidateLabels(mv->pitem);
 
 	AG_ObjectUnlock(m);
+#if 0
+	if ((win = WIDGET(mv)->window) != NULL) {        /* Resize */
+		AG_WindowSetGeometry(win,
+		    WIDGET(win)->x,
+		    WIDGET(win)->y, -1,-1);
+	}
+#endif
 }
 
 static void
@@ -290,13 +275,14 @@ Draw(void *_Nonnull obj)
 	AG_MenuView *mv = obj;
 	AG_MenuItem *miRoot = mv->pitem, *mi;
 	AG_Menu *m = mv->pmenu;
-	const AG_Color *cSel = &WCOLOR(mv, SELECTION_COLOR);
 	const AG_Font *font = WFONT(mv);
 	AG_Rect r;
-	const int itemh = m->itemh;
-	const int itemh_2 = (itemh >> 1);
+	const int hItem = m->itemh;
+	const int hItem_2 = (hItem >> 1);
 	const int fonth_2 = (font->lineskip >> 1);
 	const int paddingLeft = WIDGET(mv)->paddingLeft;
+	const int menuHasIcons = (miRoot->flags & AG_MENU_ITEM_ICONS);
+	const int spacingHoriz = WIDGET(mv)->spacingHoriz;
 
 	if (agDriverSw) {
 		r = WIDGET(mv)->r;
@@ -313,63 +299,50 @@ Draw(void *_Nonnull obj)
 		AG_DrawRectOutline(mv, &r, &WCOLOR(mv,LINE_COLOR));
 	}
 
-	r.x = 0;
+	r.x = 1;
 	r.y = WIDGET(mv)->paddingTop;
-	r.w = WIDTH(mv);
-	r.h = itemh;
+	r.w = WIDTH(mv) - r.x - 1;
+	r.h = hItem;
 	
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
-	AG_PushBlendingMode(mv, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+/*	AG_PushBlendingMode(mv, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC); */
 
 	TAILQ_FOREACH(mi, &miRoot->subItems, items) {
-		const AG_Surface *Sicon = mi->iconSrc;
-		const int mi_state = mi->state;
-		int x = paddingLeft;
+		const int isEnabled = (mi->state);
+		const int isSelected = (mi == miRoot->sel_subitem);
+		const int yTextOffset = hItem_2 - fonth_2 + 1;
+		int x = paddingLeft, boolVal, *lbl;
 
+		/* Call the boolean state evaluation function if one is set. */
 		if (mi->stateFn != NULL)
-			AG_PostEventByPtr(m, mi->stateFn, "%p", &mi_state);
+			AG_PostEventByPtr(m, mi->stateFn, "%p", &isEnabled);
 
+		/* Call the update routine if this is a dynamic item. */
 		if (mi->poll)
 			UpdateItem(m, mi);
 
-		if (mi == miRoot->sel_subitem && mi_state)    /* Is selected */
-			AG_DrawRect(mv, &r, cSel);
+		boolVal = (mi->value != -1) ? mi->value : GetItemBoolValue(mi);
+		if (boolVal) {
+			AG_Rect rFrame;
+			AG_Color c;
 
-		if (mi->icon == -1 && Sicon) {
-			mi->icon = AG_WidgetMapSurface(mv, AG_SurfaceDup(Sicon));
-		}
-		if (mi->icon != -1) {
-			int bv;
+			/* TODO style */
 
-			AG_WidgetBlitSurface(mv, mi->icon,
-			    x   + ((r.h >> 1) - (Sicon->w >> 1)),
-			    r.y + ((r.h >> 1) - (Sicon->h >> 1)) + 1);
-
-			bv = (mi->value != -1) ? mi->value : GetItemBoolValue(mi);
-			if (bv) {
-				AG_Rect rFrame;
-				AG_Color c;
-
-				rFrame.x = x;
-				rFrame.y = r.y + 2;
-				rFrame.w = r.h;
-				rFrame.h = r.h - 2;
-				AG_DrawFrameRaised(mv, &rFrame);
-				c = *cSel;
-				c.a = AG_OPAQUE/4;
-				AG_DrawRectBlended(mv, &rFrame, &c,
-				    AG_ALPHA_SRC,
-				    AG_ALPHA_ONE_MINUS_SRC);
-			}
+			rFrame.x = x;
+			rFrame.y = r.y + 2;
+			rFrame.w = r.h - 4;
+			rFrame.h = r.h - 4;
+			AG_DrawFrameRaised(mv, &rFrame);
+			c = WCOLOR(mv, SELECTION_COLOR);
+			c.a = AG_OPAQUE/4;
+			AG_DrawRectBlended(mv, &rFrame, &c,
+			    AG_ALPHA_SRC,
+			    AG_ALPHA_ONE_MINUS_SRC);
 		}
 
-		/* Keep columns aligned if there are icons. */
-		if (miRoot->flags & AG_MENU_ITEM_ICONS)
-			x += itemh + WIDGET(mv)->spacingHoriz;
-
-		if (mi->flags & AG_MENU_ITEM_SEPARATOR) {
+		if (mi->flags & AG_MENU_ITEM_SEPARATOR) {      /* Separator */
 			AG_Color c1 = WCOLOR(mv, FG_COLOR);
 			AG_Color c2 = c1;
 			const int x1 = paddingLeft;
@@ -377,51 +350,93 @@ Draw(void *_Nonnull obj)
 	
 			AG_ColorDarken(&c1, 2);
 			AG_ColorLighten(&c2, 2);
-			AG_DrawLineH(mv, x1,x2, (r.y + itemh_2 - 1), &c1);
-			AG_DrawLineH(mv, x1,x2, (r.y + itemh_2),     &c2);
-		} else {
-			int lbl;
+			AG_DrawLineH(mv, x1,x2, (r.y + hItem_2 - 1), &c1);
+			AG_DrawLineH(mv, x1,x2, (r.y + hItem_2),     &c2);
 
-			/* Render the menu item's text string */
-			if (mi_state) {
-				if (mi->lblView[1] == -1) {
-					AG_TextColor(&WCOLOR(mv, TEXT_COLOR));
-					mi->lblView[1] = (mi->text==NULL) ? -1 :
-					    AG_WidgetMapSurface(mv,
-					    AG_TextRender(mi->text));
-				}
-				lbl = mi->lblView[1];
+			r.y += hItem;
+			continue;
+		}
+
+		if (isEnabled) {
+			if (isSelected) {
+				lbl = &mi->lblView[2];
 			} else {
-				if (mi->lblView[0] == -1) {
-					AG_TextColor(&WCOLOR_DISABLED(mv, TEXT_COLOR));
-					mi->lblView[0] =
-					    (mi->text == NULL) ? -1 :
-					    AG_WidgetMapSurface(mv,
-					    AG_TextRender(mi->text));
+				lbl = &mi->lblView[1];
+			}
+		} else {
+			lbl = &mi->lblView[0];
+		}
+
+		if (*lbl == -1) {
+			AG_Surface *S, *Stext;
+
+			S = AG_SurfaceStdRGBA(r.w, r.h);
+			AG_FillRect(S, NULL, isSelected ?
+			    &WCOLOR(mv, SELECTION_COLOR) :
+			    &WCOLOR(mv, BG_COLOR));
+
+			/* TODO style */
+
+			if (mi->iconSrc) {
+				AG_SurfaceBlit(mi->iconSrc, NULL, S, 
+				    ((r.h >> 1) - (mi->iconSrc->w >> 1)),
+				    ((r.h >> 1) - (mi->iconSrc->h >> 1)));
+			}
+			if (menuHasIcons)
+				x += hItem + spacingHoriz;
+
+			AG_TextColor(isEnabled ?
+			    &WCOLOR(mv, TEXT_COLOR) :
+			    &WCOLOR_DISABLED(mv, TEXT_COLOR));
+
+			Stext = AG_TextRender(mi->text);
+			AG_SurfaceBlit(Stext, NULL, S, x, yTextOffset);
+			AG_SurfaceFree(Stext);
+
+			if (mi->key_equiv != 0) {
+				char buf[32];
+				AG_Surface *Sbuf;
+
+				Strlcpy(buf, " " AGSI_COURIER, sizeof(buf));
+
+				if (mi->key_mod != 0) {
+					char *kms;
+
+					kms = AG_LookupKeyMod(mi->key_mod);
+					Strlcat(buf, kms, sizeof(buf));
+					Strlcat(buf, "-", sizeof(buf));
+					free(kms);
 				}
-				lbl = mi->lblView[0];
-			}
-			AG_WidgetBlitSurface(mv, lbl, x, r.y+itemh_2-fonth_2+1);
-			x += WSURFACE(mv,lbl)->w;
-		}
 
-		/* Render the submenu arrow. */
-		/* TODO use a vector icon */
-		if (mi->nSubItems > 0) {
-			x += mv->spLblArrow;
-			if (mv->arrowRight == -1) {
-				mv->arrowRight = AG_WidgetMapSurface(mv,
-				    AG_SurfaceDup(agIconSmallArrowRight.s));
-			}
-			AG_WidgetBlitSurface(mv, mv->arrowRight,
-			    x,
-			    r.y + itemh_2-(agIconSmallArrowRight.s->h >> 1)-1);
-		}
+				Strlcat(buf, AG_LookupKeyName(mi->key_equiv),
+				    sizeof(buf));
 
-		r.y += itemh;
+				Sbuf = AG_TextRender(buf);
+				if (Sbuf->w - r.w > 0) {
+					AG_SurfaceBlit(Sbuf, NULL, S,
+					    (r.w - Sbuf->w - spacingHoriz),
+					    yTextOffset);
+				}
+				AG_SurfaceFree(Sbuf);
+			}
+
+			if (mi->nSubItems > 0) {
+				AG_Surface *Sarrow = agIconSmallArrowRight.s;
+
+				if (Sarrow->w < r.w) {
+					AG_SurfaceBlit(Sarrow, NULL,
+					    S, (r.w - Sarrow->w),
+					    r.y + hItem_2 - (Sarrow->h >> 1) - 1);
+				}
+			}
+
+			*lbl = AG_WidgetMapSurface(mv, S);
+		}
+		AG_WidgetBlitSurface(mv, *lbl, r.x, r.y);
+		r.y += hItem;
 	}
 
-	AG_PopBlendingMode(mv);
+/*	AG_PopBlendingMode(mv); */
 
 	AG_ObjectUnlock(m);
 }
@@ -460,9 +475,9 @@ static void
 SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_MenuView *mv = obj;
-	AG_MenuItem *mi = mv->pitem, *item;
+	AG_MenuItem *mi = mv->pitem, *miSub;
 	AG_Menu *m = mv->pmenu;
-	const int itemh = m->itemh;
+	const int hItem = m->itemh;
 	const int paddingHoriz = WIDGET(mv)->paddingLeft +
 	                         WIDGET(mv)->paddingRight;
 
@@ -472,32 +487,53 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 	
-	TAILQ_FOREACH(item, &mi->subItems, items) {
-		int wReq = 0, wLbl;
+	TAILQ_FOREACH(miSub, &mi->subItems, items) {
+		int wReq = paddingHoriz, wLbl;
 
-		if (item->poll)
-			UpdateItem(m, item);
+		if (miSub->poll)
+			UpdateItem(m, miSub);
 		
-		if (item->icon != -1) {
-			wReq += item->iconSrc->w;
+		if (mi->flags & AG_MENU_ITEM_ICONS) {
+			if (miSub->icon != -1) {
+				wReq += MAX(hItem, miSub->iconSrc->w);
+			} else {
+				wReq += hItem;
+			}
+			wReq += WIDGET(mv)->spacingHoriz;
 		}
-		if (mi->flags & AG_MENU_ITEM_ICONS)
-			wReq += itemh + WIDGET(mv)->spacingHoriz;
 	
-		AG_TextSize(item->text, &wLbl, NULL);
+		AG_TextSize(miSub->text, &wLbl, NULL);
 		wReq += wLbl;
 
-		if (item->nSubItems > 0) {
-			wReq += mv->spLblArrow + agIconSmallArrowRight.s->w;
+		if (miSub->key_equiv != 0) {
+			char buf[32];
+			int wKey;
+
+			Strlcpy(buf, " " AGSI_COURIER, sizeof(buf));
+			if (miSub->key_mod != 0) {
+				char *kms;
+
+				kms = AG_LookupKeyMod(miSub->key_mod);
+				Strlcat(buf, kms, sizeof(buf));
+				Strlcat(buf, "-", sizeof(buf));
+				free(kms);
+			}
+			Strlcat(buf, AG_LookupKeyName(miSub->key_equiv), sizeof(buf));
+
+			AG_TextSize(buf, &wKey, NULL);
+			wReq += WIDGET(mv)->spacingHoriz + wKey;
 		}
-		if (paddingHoriz + wReq > r->w) {
-			r->w = paddingHoriz + wReq;
+
+		if (miSub->nSubItems > 0) {
+			wReq += WIDGET(mv)->spacingHoriz + mv->spLblArrow +
+			        agIconSmallArrowRight.s->w;
 		}
-		r->h += itemh;
+		if (wReq > r->w) {
+			r->w = wReq;
+		}
+		r->h += hItem;
 	}
 
-	r->w += paddingHoriz;
-	
 	AG_ObjectUnlock(m);
 }
 
