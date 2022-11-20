@@ -718,6 +718,12 @@ ZoomOut(AG_Event *event)
 }
 
 static void
+ZoomReset(AG_Event *event)
+{
+	AG_ZoomReset();
+}
+
+static void
 EditGuiPrefs(AG_Event *event)
 {
 	AG_DEV_ConfigShow();
@@ -844,52 +850,79 @@ main(int argc, char *argv[])
 
 	mi = AG_MenuNode(menu->root, ("File"), NULL);
 	{
-		AG_MenuActionKb(mi, _("Quit"), agIconClose.s,
+		AG_MenuActionKb(mi,
+		    _(AGSI_YEL AGSI_CLOSE_X AGSI_RST " Quit"), NULL,
 		    AG_KEY_W, AG_KEYMOD_CTRL, AGWINCLOSE(win));
 	}
 	mi = AG_MenuNode(menu->root, ("Edit"), NULL);
 	{
-		AG_MenuAction(mi, _("GUI Preferences"), agIconGear.s,
+		AG_MenuAction(mi,
+		    _(AGSI_YEL AGSI_GEAR AGSI_RST " GUI Preferences"), NULL,
 		    EditGuiPrefs, NULL);
 	}
 	mi = AG_MenuNode(menu->root, ("Tools"), NULL);
 	{
-		AG_MenuAction(mi, _("Style Editor"), NULL, RunStyleEditor, NULL);
+		AG_MenuActionKb(mi,
+		    _(AGSI_YEL AGSI_BLACK_NIB AGSI_RST " Style Editor"), NULL,
+		    AG_KEY_F8, 0,
+		    RunStyleEditor, NULL);
 #if defined(AG_DEBUG) && defined(AG_TIMERS)
-		AG_MenuAction(mi, _("GUI Debugger"), NULL, RunDebugger, NULL);
+		AG_MenuActionKb(mi,
+		    _(AGSI_YEL AGSI_DIAMOND_OPERATOR AGSI_RST " GUI Debugger"), NULL,
+		    AG_KEY_F7, 0,
+		    RunDebugger, NULL);
 #endif
 		AG_MenuSeparator(mi);
 #if defined(AG_TIMERS)
-		AG_MenuAction(mi, _("Drivers"), NULL, RunDriversBrowser, NULL);
-		AG_MenuAction(mi, _("Classes"), NULL, RunClassInfo, NULL);
-		AG_MenuAction(mi, _("Fonts"),   NULL, RunFontsInfo, NULL);
-		AG_MenuAction(mi, _("Timers"), NULL,  RunTimerInspector, NULL);
+		AG_MenuAction(mi,
+		    _(AGSI_YEL AGSI_WHEEL_OF_DHARMA AGSI_RST " Drivers"), NULL,
+		    RunDriversBrowser, NULL);
+		AG_MenuActionKb(mi,
+		    _(AGSI_YEL AGSI_BENZENE_RING AGSI_RST " Classes"), NULL,
+		    AG_KEY_S, AG_KEYMOD_CTRL_SHIFT,
+		    RunClassInfo, NULL);
+		AG_MenuActionKb(mi,
+		    _(AGSI_YEL "\xCE\xB1" AGSI_RST " Fonts"), NULL,
+		    AG_KEY_F, AG_KEYMOD_CTRL_SHIFT,
+		    RunFontsInfo, NULL);
+		AG_MenuActionKb(mi,
+		    _(AGSI_YEL AGSI_STOPWATCH AGSI_RST " Timers"), NULL,
+		    AG_KEY_T, AG_KEYMOD_CTRL_SHIFT,
+		    RunTimerInspector, NULL);
 #endif
 #if defined(AG_UNICODE)
-		AG_MenuAction(mi, _("Unicode"), NULL, RunUnicodeBrowser, NULL);
+		AG_MenuActionKb(mi,
+		    _(AGSI_YEL AGSI_ITALIC "U" AGSI_RST " Unicode"), NULL,
+		    AG_KEY_U, AG_KEYMOD_CTRL_SHIFT,
+		    RunUnicodeBrowser, NULL);
 #endif
 	}
 	mi = AG_MenuNode(menu->root, ("View"), NULL);
 	{
-		AG_MenuActionKb(mi, _("Zoom In"),
-		    AG_TextRender("\xE2\x8A\x9E"), /* U+229E SQUARED PLUS */
-		    AG_KEY_PLUS, AG_KEYMOD_CTRL,
-		    ZoomIn, NULL);
+		AG_MenuActionKb(mi,
+		    _(AGSI_YEL AGSI_SQUARED_PLUS AGSI_RST " Zoom In"), NULL,
+		    AG_KEY_PLUS, AG_KEYMOD_CTRL, ZoomIn, NULL);
 
-		AG_MenuActionKb(mi, _("Zoom Out"),
-		    AG_TextRender("\xE2\x8A\x9F"), /* U+229F SQUARED MINUS */
-		    AG_KEY_MINUS, AG_KEYMOD_CTRL,
-		    ZoomOut, NULL);
+		AG_MenuActionKb(mi,
+		    _(AGSI_YEL AGSI_SQUARED_MINUS AGSI_RST " Zoom Out"), NULL,
+		    AG_KEY_MINUS, AG_KEYMOD_CTRL, ZoomOut, NULL);
+
+		AG_MenuActionKb(mi,
+		    _(AGSI_YEL AGSI_SQUARED_DOT AGSI_RST " Zoom 1:1"), NULL,
+		    AG_KEY_0, AG_KEYMOD_CTRL, ZoomReset, NULL);
 #ifdef AG_DEBUG
 		AG_MenuSeparator(mi);
-		AG_MenuBool(mi, _("Debug Messages"),
-		    AG_TextRender("\xE2\x8B\x84"), /* U+22C4 DIAMOND OPERATOR */
+
+		AG_MenuBool(mi,
+		    _(AGSI_YEL AGSI_ANT AGSI_RST " Debug Messages"), NULL,
 		    &agDebugLvl, 0);
 #endif
 	}
 	mi = AG_MenuNode(menu->root, ("Help"), NULL);
 	{
-		AG_MenuAction(mi, _("About Agar GUI"), NULL, AG_About, NULL);
+		AG_MenuAction(mi,
+		    _(AGSI_YEL AGSI_BLK_4_POINTED_STAR AGSI_RST " About Agar GUI"), NULL,
+		    AG_About, NULL);
 	}
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);

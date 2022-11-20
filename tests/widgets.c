@@ -205,6 +205,38 @@ CreateMoreCheckboxes(AG_Event *_Nonnull event)
 	AG_SetStyle(box, "font-size", "80%");
 }
 
+static void
+ComboExpanded(AG_Event *_Nonnull event)
+{
+	AG_Combo *com = AG_COMBO_SELF();
+	AG_Tlist *tl = com->list;
+	int i;
+
+	for (i = 0; i < 50; i++) {
+		char text[32];
+
+		AG_Strlcpy(text, "Item #", sizeof(text));
+		AG_StrlcatInt(text, i, sizeof(text));
+
+		AG_TlistAddS(tl, NULL, text);
+	}
+
+}
+
+static void
+UComboExpanded(AG_Event *_Nonnull event)
+{
+	AG_UCombo *com = AG_UCOMBO_SELF();
+	AG_Tlist *tl = com->list;
+
+	AG_TlistAddS(tl, agIconUp.s,   "George Liquor");
+	AG_TlistAddS(tl, agIconDown.s, "Haggis McHaggis");
+	AG_TlistAddS(tl, agIconUp.s,   "Kowalski (Lummox)");
+	AG_TlistAddS(tl, agIconDown.s, "Bubba (Lummox)");
+	AG_TlistAddS(tl, agIconUp.s,   "Jiminy (Lummox)");
+	AG_TlistAddS(tl, agIconDown.s, "Wilbern Cobb");
+}
+
 static int
 TestGUI(void *obj, AG_Window *win)
 {
@@ -379,23 +411,14 @@ TestGUI(void *obj, AG_Window *win)
 	 */
 	com = AG_ComboNew(div, AG_COMBO_ANY_TEXT | AG_COMBO_HFILL, "Combo: ");
 	AG_ComboSizeHint(com, "<Item #000>", 10);
+	AG_SetEvent(com, "combo-expanded", ComboExpanded, NULL);
 	AG_SetEvent(com, "combo-selected", ComboSelectedItem, NULL);
 	AG_SetEvent(com, "combo-text-entry", ComboEnteredText, NULL);
 
 	/* UCombo is a variant of Combo which looks like a single button. */
 	ucom = AG_UComboNew(div, AG_UCOMBO_HFILL);
 	AG_UComboSizeHint(ucom, "<Item #1234>", 5);
-
-	/* Populate the Tlist displayed by the combo widgets we just created. */
-	for (i = 0; i < 50; i++) {
-		char text[32];
-
-		AG_Strlcpy(text, "Item #", sizeof(text));
-		AG_StrlcatInt(text, i, sizeof(text));
-
-		AG_TlistAddS(com->list, NULL, text);
-		AG_TlistAddS(ucom->list, NULL, text);
-	}
+	AG_SetEvent(ucom, "ucombo-expanded", UComboExpanded, NULL);
 
 	/* Create a horizontal separator */
 	AG_SeparatorNewHoriz(div);
