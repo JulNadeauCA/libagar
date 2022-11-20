@@ -58,9 +58,9 @@ static const struct {
 	{ AG_KEY_LEFTPAREN,		AG_KCAT_PRINT,    "("		},
 	{ AG_KEY_RIGHTPAREN,		AG_KCAT_PRINT,    ")"		},
 	{ AG_KEY_ASTERISK,		AG_KCAT_PRINT,    "*"		},
-	{ AG_KEY_PLUS,			AG_KCAT_PRINT,    "[+]"		},
+	{ AG_KEY_PLUS,			AG_KCAT_PRINT,    "+"		},
 	{ AG_KEY_COMMA,			AG_KCAT_PRINT,    ","		},
-	{ AG_KEY_MINUS,			AG_KCAT_PRINT,    "[-]"		},
+	{ AG_KEY_MINUS,			AG_KCAT_PRINT,    "-"		},
 	{ AG_KEY_PERIOD,		AG_KCAT_PRINT,    "."		},
 	{ AG_KEY_SLASH,			AG_KCAT_PRINT,    "/"		},
 	{ AG_KEY_0,			AG_KCAT_PRINT,    "0"		},
@@ -587,57 +587,66 @@ AG_LookupKeyMod(AG_KeyMod kmod)
 	char buf[32];
 	int nMods=0;
 
-	if (kmod & AG_KEYMOD_CTRL) {
-		if ((kmod & AG_KEYMOD_LCTRL) && (kmod & AG_KEYMOD_RCTRL)==0) {
-			Strlcpy(buf, "LCtrl", sizeof(buf));
-		} else if ((kmod & AG_KEYMOD_LCTRL)==0 && (kmod & AG_KEYMOD_RCTRL)) {
-			Strlcpy(buf, "RCtrl", sizeof(buf));
-		} else {
-			Strlcpy(buf, "Ctrl", sizeof(buf));
-		}
+	if (kmod & AG_KEYMOD_CTRL_SHIFT) {
+		Strlcpy(buf, "Ctrl-Shift", sizeof(buf));
 		nMods++;
-	} else if (kmod & AG_KEYMOD_META) {
-		if ((kmod & AG_KEYMOD_LMETA) && (kmod & AG_KEYMOD_RMETA)==0) {
-			Strlcpy(buf, "LMeta", sizeof(buf));
-		} else if ((kmod & AG_KEYMOD_LMETA)==0 && (kmod & AG_KEYMOD_RMETA)) {
-			Strlcpy(buf, "RMeta", sizeof(buf));
-		} else {
-			Strlcpy(buf, "Meta", sizeof(buf));
-		}
+	} else if (kmod & AG_KEYMOD_CTRL_ALT) {
+		Strlcpy(buf, "Ctrl-Alt", sizeof(buf));
 		nMods++;
 	} else {
-		buf[0] = '\0';
-	}
-
-	if (kmod & AG_KEYMOD_ALT) {
-		if (nMods > 0) {
-			Strlcat(buf, "-", sizeof(buf));
-			nMods = 0;
-		}
-		if ((kmod & AG_KEYMOD_LALT) && (kmod & AG_KEYMOD_RALT)==0) {
-			Strlcat(buf, "LAlt", sizeof(buf));
-		} else if ((kmod & AG_KEYMOD_LALT)==0 && (kmod & AG_KEYMOD_RALT)) {
-			Strlcat(buf, "RAlt", sizeof(buf));
+		if (kmod & AG_KEYMOD_CTRL) {
+			if ((kmod & AG_KEYMOD_LCTRL) && (kmod & AG_KEYMOD_RCTRL)==0) {
+				Strlcpy(buf, "LCtrl", sizeof(buf));
+			} else if ((kmod & AG_KEYMOD_LCTRL)==0 && (kmod & AG_KEYMOD_RCTRL)) {
+				Strlcpy(buf, "RCtrl", sizeof(buf));
+			} else {
+				Strlcpy(buf, "Ctrl", sizeof(buf));
+			}
+			nMods++;
+		} else if (kmod & AG_KEYMOD_META) {
+			if ((kmod & AG_KEYMOD_LMETA) && (kmod & AG_KEYMOD_RMETA)==0) {
+				Strlcpy(buf, "LMeta", sizeof(buf));
+			} else if ((kmod & AG_KEYMOD_LMETA)==0 && (kmod & AG_KEYMOD_RMETA)) {
+				Strlcpy(buf, "RMeta", sizeof(buf));
+			} else {
+				Strlcpy(buf, "Meta", sizeof(buf));
+			}
+			nMods++;
 		} else {
-			Strlcat(buf, "Alt", sizeof(buf));
+			buf[0] = '\0';
 		}
-		nMods++;
-	}
-	if (kmod & AG_KEYMOD_SHIFT) {
-		if (nMods > 0) {
-			Strlcat(buf, "-", sizeof(buf));
-			nMods--;
-		}
-		if ((kmod & AG_KEYMOD_LSHIFT) && (kmod & AG_KEYMOD_RSHIFT)==0) {
-			Strlcat(buf, "LShift", sizeof(buf));
-		} else if ((kmod & AG_KEYMOD_LSHIFT)==0 && (kmod & AG_KEYMOD_RSHIFT)) {
-			Strlcat(buf, "RShift", sizeof(buf));
-		} else {
-			Strlcat(buf, "Shift", sizeof(buf));
-		}
-		nMods++;
-	}
 
+		if ((kmod & AG_KEYMOD_ALT) && ((kmod & AG_KEYMOD_CTRL_ALT) == 0)) {
+			if (nMods > 0) {
+				Strlcat(buf, "-", sizeof(buf));
+				nMods = 0;
+			}
+			if ((kmod & AG_KEYMOD_LALT) && (kmod & AG_KEYMOD_RALT)==0) {
+				Strlcat(buf, "LAlt", sizeof(buf));
+			} else if ((kmod & AG_KEYMOD_LALT)==0 && (kmod & AG_KEYMOD_RALT)) {
+				Strlcat(buf, "RAlt", sizeof(buf));
+			} else {
+				Strlcat(buf, "Alt", sizeof(buf));
+			}
+			nMods++;
+		}
+	
+		if (kmod & AG_KEYMOD_SHIFT) {
+			if (nMods > 0) {
+				Strlcat(buf, "-", sizeof(buf));
+				nMods--;
+			}
+			if ((kmod & AG_KEYMOD_LSHIFT) && (kmod & AG_KEYMOD_RSHIFT)==0) {
+				Strlcat(buf, "LShift", sizeof(buf));
+			} else if ((kmod & AG_KEYMOD_LSHIFT)==0 && (kmod & AG_KEYMOD_RSHIFT)) {
+				Strlcat(buf, "RShift", sizeof(buf));
+			} else {
+				Strlcat(buf, "Shift", sizeof(buf));
+			}
+			nMods++;
+		}
+	}
+#if 0
 	if (kmod & AG_KEYMOD_MODE) {
 		if (nMods > 0) {
 			Strlcat(buf, "-", sizeof(buf));
@@ -654,6 +663,7 @@ AG_LookupKeyMod(AG_KeyMod kmod)
 		}
 		Strlcat(buf, "CapsLock", sizeof(buf));
 	}
+#endif
 	return AG_Strdup(buf);
 }
 
