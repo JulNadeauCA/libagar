@@ -286,51 +286,56 @@ OnAttach(AG_Event *_Nonnull event)
 	const void *parent = AG_PTR(1);
 
 	if (AG_OfClass(parent, "AG_Widget:AG_Window:*") &&
-	    AG_OfClass(wid, "AG_Widget:*")) {
+	    AG_OfClass(wid, "AG_Widget:*")) {        /* Widget->Window attach */
 		AG_Widget *wParent = WIDGET(parent);
-		Uint i;
-		/*
-		 * This is a widget attaching to a window.
-		 */
+
 		SetParentWindow(wid, AGWINDOW(wParent));
+
 		if (AGWINDOW(wParent)->visible) {
 			wid->flags |= AG_WIDGET_UPDATE_WINDOW;
 			AG_PostEvent(wid, "widget-shown", NULL);
 		}
-		/*
-		 * Widget may have previously been detached from another
-		 * driver; textures may need regenerating.
-		 */
-		for (i = 0; i < wid->nSurfaces; i++) {
-			wid->textures[i] = 0;
+		if (wParent->flags & AG_WIDGET_DISABLE_ON_ATTACH) {
+			wid->flags |= AG_WIDGET_DISABLED;
+		}
+		if (wid->nSurfaces > 0) {
+			/*
+			 * The widget may have been detached from a different
+			 * driver and re-attached to this one, so invalidate
+			 * all texture handles just to be safe.
+			 */
+			memset(wid->textures, 0, wid->nSurfaces * sizeof(Uint));
 		}
 	} else if (AG_OfClass(parent, "AG_Widget:*") &&
-	           AG_OfClass(wid, "AG_Widget:*")) {
+	           AG_OfClass(wid, "AG_Widget:*")) { /* Widget->Widget attach */
 		AG_Widget *wParent = WIDGET(parent);
 		AG_Window *window = wParent->window;
-		/*
-		 * This is a widget attaching to another widget (not a window).
-		 */
 #ifdef AG_DEBUG
 		if (window) { AG_OBJECT_ISA(window, "AG_Widget:AG_Window:*"); }
 #endif
 		SetParentWindow(wid, window);
+
 		if (window && window->visible) {
+			/*
+			 * Notify the widget that it is now visible.
+			 * XXX redundant events when shown initially?
+			 */
 			AG_PostEvent(wid, "widget-shown", NULL);
 		}
-	} else if (AG_OfClass(parent, "AG_Driver:*") &&
+
+		if (wParent->flags & AG_WIDGET_DISABLE_ON_ATTACH) {
+			wid->flags |= AG_WIDGET_DISABLED;
+		}
+	} else if (AG_OfClass(parent, "AG_Driver:*") && /* Window->Driver attach */
 	           AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
-		AG_Driver *drvParent = AGDRIVER(parent);
-		/*
-		 * This is a Window attaching to a low-level Driver.
-		 */
-		SetParentDriver(wid, drvParent);
+		SetParentDriver(wid, AGDRIVER(parent));
 	} else {
 #ifdef AG_VERBOSITY
-		AG_FatalErrorF("Cannot attach %s to %s", OBJECT(wid)->name,
-		    OBJECT(parent)->name);
+		AG_FatalErrorF("Cannot attach <%s> %s to <%s> %s",
+		    OBJECT_CLASS(wid)->name, OBJECT(wid)->name, 
+		    OBJECT_CLASS(wid)->name, OBJECT(parent)->name);
 #else
-		AG_FatalError("Cannot attach to parent");
+		AG_FatalError("Cannot attach to this");
 #endif
 	}
 }
@@ -1107,6 +1112,32 @@ AG_WidgetDisable(void *obj)
 		AG_Redraw(wid);
 	}
 
+	AG_ObjectUnlock(wid);
+}
+
+/*
+ * Arrange for any child widget subsequently attached to the given container
+ * widget to start in the DISABLED state. The flag will be set on attach,
+ * and no "widget-disabled" event will be generated.
+ */
+void
+AG_PushDisabledState(void *obj)
+{
+	AG_Widget *wid = AGWIDGET(obj);
+
+	AG_ObjectLock(wid);
+	wid->flags |= AG_WIDGET_DISABLE_ON_ATTACH;
+	AG_ObjectUnlock(wid);
+}
+
+/* Cancel the effect of a previous AG_PushDisabledState. */
+void
+AG_PopDisabledState(void *obj)
+{
+	AG_Widget *wid = AGWIDGET(obj);
+
+	AG_ObjectLock(wid);
+	wid->flags &= ~(AG_WIDGET_DISABLE_ON_ATTACH);
 	AG_ObjectUnlock(wid);
 }
 
@@ -2222,8 +2253,8 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	/*
 	 * Padding and margin (in pixels) for box model.
 	 *
-	 * The margin is effected by the size_allocate() of a container widget.
-	 * The padding is handled by the widget itself.
+	 * The margin is enforced by the size_allocate() of a container widget.
+	 * The padding is implemented by the widget itself.
 	 */
 	if ((V = AG_AccessVariable(wid, "padding")) != NULL) {
 		Apply_Padding(wid, V->data.s);
@@ -2309,8 +2340,9 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	}
 
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
-		CompileStyleRecursive(chld, fontFace, fontSize, fontFlags,
-		                      &wid->pal);
+		CompileStyleRecursive(chld,
+		    fontFace, fontSize, fontFlags,
+		    &wid->pal);
 	}
 	free(fontFace);
 }

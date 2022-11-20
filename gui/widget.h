@@ -237,7 +237,7 @@ typedef struct ag_widget {
 #define AG_WIDGET_CATCH_TAB             0x00001000 /* Receive focus-cycling key events */
 #define AG_WIDGET_GL_RESHAPE            0x00002000 /* Pending GL view reshape */
 #define AG_WIDGET_UNDERSIZE             0x00004000 /* Allocation could not be met (RO) */
-                                     /* 0x00008000 */
+#define AG_WIDGET_DISABLE_ON_ATTACH     0x00008000 /* Set attached widgets DISABLED */
 #define AG_WIDGET_UNFOCUSED_KEYDOWN     0x00010000 /* Receive keydowns w/o focus */
 #define AG_WIDGET_UNFOCUSED_KEYUP       0x00020000 /* Receive keyups w/o focus */
                                      /* 0x00040000 */
@@ -427,6 +427,8 @@ int AG_ExecAction(void *_Nonnull, const AG_Action *_Nonnull);
 
 void AG_WidgetEnable(void *_Nonnull);
 void AG_WidgetDisable(void *_Nonnull);
+void AG_PushDisabledState(void *_Nonnull);
+void AG_PopDisabledState(void *_Nonnull);
 
 void AG_WidgetCompileStyle(void *_Nonnull);
 void AG_WidgetCopyStyle(void *_Nonnull, void *_Nonnull);

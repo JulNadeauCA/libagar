@@ -35,6 +35,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW): New driver for SDL 2.0 (multi-window; OpenGL mode).
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
 - [**AG_Event**](https://libagar.org/man3/AG_Event): New macro [AG_EVENT_DUMP](https://libagar.org/man3/AG_EVENT_DUMP) to produce a listing of `argv[]` arguments on the console.
+- [**AG_Widget**](https://libagar.org/man3/AG_Widget): New flag `AG_WIDGET_DISABLE_ON_ATTACH` and functions `AG_PushDisabledState()` and `AG_PopDisabledState`. Make attached child widgets start in DISABLED mode (without raising "widget-disabled").
 - `install-agartest.exe` installer for agartest on Windows.
 - Provide copies of the OFL as separate files (OFL11.txt and LICENSE.ofl).
 - Install a copy of the generated Makefile.config as ${DATADIR}/agar.mk.
