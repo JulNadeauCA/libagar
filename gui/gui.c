@@ -608,6 +608,24 @@ AG_DestroyGraphics(void)
 	AG_DestroyGUI();
 }
 
+/* Close any expanded menu window prior to zooming. */
+static void
+CloseMenuWindows(void)
+{
+	AG_Driver *drv;
+
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		AG_Window *win;
+
+		AG_FOREACH_WINDOW(win, drv) {
+			if (win->visible &&
+			    (win->wmType == AG_WINDOW_WM_DROPDOWN_MENU ||
+			     win->wmType == AG_WINDOW_WM_POPUP_MENU))
+				AG_PostEvent(win, "window-close", NULL);
+		}
+	}
+}
+
 /*
  * Zoom in/out the GUI elements of the active window, changing
  * the default font size accordingly. Depending on style settings,
@@ -623,10 +641,9 @@ AG_ZoomIn(void)
 	AG_Window *win;
 
 	AG_LockVFS(&agDrivers);
+	CloseMenuWindows();
 	if ((win = agWindowFocused) != NULL) {
 		AG_WindowSetZoom(win, win->zoom+1);
-	} else {
-		Verbose("No window is focused for zoom\n");
 	}
 	AG_UnlockVFS(&agDrivers);
 }
@@ -636,10 +653,9 @@ AG_ZoomOut(void)
 	AG_Window *win;
 
 	AG_LockVFS(&agDrivers);
+	CloseMenuWindows();
 	if ((win = agWindowFocused) != NULL) {
 		AG_WindowSetZoom(win, win->zoom-1);
-	} else {
-		Verbose("No window is focused for zoom-out\n");
 	}
 	AG_UnlockVFS(&agDrivers);
 }
@@ -649,10 +665,9 @@ AG_ZoomReset(void)
 	AG_Window *win;
 
 	AG_LockVFS(&agDrivers);
+	CloseMenuWindows();
 	if ((win = agWindowFocused) != NULL) {
 		AG_WindowSetZoom(win, AG_ZOOM_DEFAULT);
-	} else {
-		Verbose("No window is focused for zoom-in\n");
 	}
 	AG_UnlockVFS(&agDrivers);
 }
