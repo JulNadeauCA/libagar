@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,8 +38,8 @@ GenClassTable(AG_Table *_Nonnull tbl, AG_ObjectClass *_Nonnull C)
 {
 	AG_ObjectClass *Csub;
 	
-	AG_TableAddRow(tbl, "%s:%d:%s:%s",
-	    C->name, C->size,
+	AG_TableAddRow(tbl, "%s:%s:%d:%s:%s",
+	    C->name, AG_Printf("%d.%d", C->ver.major, C->ver.minor), C->size,
 	    C->pvt.libs[0] != '\0' ? C->pvt.libs : "",
 	    C->hier);
 
@@ -73,6 +73,7 @@ AG_DEV_ClassInfo(void)
 
 	tbl = AG_TableNewPolled(win, AG_TABLE_EXPAND, PollClasses, NULL);
 	AG_TableAddCol(tbl, _("Name"), "<XXXXXXXXXXXXXXX>", NULL);
+	AG_TableAddCol(tbl, _("Version"), "<XXX.XXX>", NULL);
 	AG_TableAddCol(tbl, _("Size"), "<XXXX>", NULL);
 	AG_TableAddCol(tbl, _("Modules"), "<XXXXXXX>", NULL);
 	AG_TableAddCol(tbl, _("Hierarchy"), NULL, NULL);
