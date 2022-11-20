@@ -186,64 +186,11 @@ BrowserOpenGeneric(AG_Object *ob)
 }
 
 static void
-SaveAndCloseObject(struct objent *_Nonnull oent, AG_Window *_Nonnull win,
-    int save)
-{
-	AG_WindowHide(win);
-	AG_PostEvent(oent->obj, "edit-close", NULL);
-	AG_ObjectDetach(win);
-	TAILQ_REMOVE(&dobjs, oent, objs);
-	AG_ObjectPageOut(oent->obj);
-	Free(oent);
-}
-
-static void
-SaveChangesReturn(AG_Event *_Nonnull event)
-{
-	AG_Window *win = AG_WINDOW_PTR(1);
-	struct objent *oent = AG_PTR(2);
-	int save = AG_INT(3);
-
-	SaveAndCloseObject(oent, win, save);
-}
-
-static void
-SaveChangesDlg(AG_Event *_Nonnull event)
-{
-	AG_Window *win = AG_WINDOW_SELF();
-	struct objent *oent = AG_PTR(1);
-
-	if (AG_ObjectChanged(oent->obj)) {
-		AG_Button *bOpts[3];
-		AG_Window *wDlg;
-
-		wDlg = AG_TextPromptOptions(bOpts, 3, _("Save changes to %s?"),
-		    OBJECT(oent->obj)->name);
-		AG_WindowAttach(win, wDlg);
-		{
-			AG_ButtonText(bOpts[0], _("Save"));
-			AG_SetEvent(bOpts[0], "button-pushed",
-			    SaveChangesReturn, "%p,%p,%i", win, oent, 1);
-			AG_WidgetFocus(bOpts[0]);
-
-			AG_ButtonText(bOpts[1], _("Discard"));
-			AG_SetEvent(bOpts[1], "button-pushed",
-			    SaveChangesReturn, "%p,%p,%i", win, oent, 0);
-
-			AG_ButtonText(bOpts[2], _("Cancel"));
-			AG_SetEvent(bOpts[2], "button-pushed",
-			    AGWINDETACH(wDlg));
-		}
-	} else {
-		SaveAndCloseObject(oent, win, 1);
-	}
-}
-
-static void
 AG_DEV_BrowserOpenData(void *p)
 {
 	AG_Object *ob = p;
 	struct objent *oent;
+	AG_Widget *editBox;
 	AG_Window *win;
 	int dataFound = 0;
 
@@ -277,21 +224,27 @@ AG_DEV_BrowserOpenData(void *p)
 		}
 		AG_PostEvent(ob, "edit-post-load", NULL);
 	}
-	if ((win = ob->cls->edit(ob)) == NULL) {
-		goto fail;
+	if ((editBox = ob->cls->edit(ob)) == NULL) {
+		return;
 	}
+	if (AG_OfClass(editBox, "AG_Widget:AG_Window:*")) {
+		win = (AG_Window *)editBox;
+	} else {
+		if ((win = AG_WindowNew(0)) == NULL) {
+			return;
+		}
+		AG_WindowSetCaption(win, _("%s - Editor"), ob->name);
+		AG_ObjectAttach(win, editBox);
+	}
+
 	AG_PostEvent(ob, "edit-open", NULL);
-	
+
 	oent = Malloc(sizeof(struct objent));
 	oent->obj = ob;
 	oent->win = win;
 	TAILQ_INSERT_HEAD(&dobjs, oent, objs);
-	AG_SetEvent(win, "window-close", SaveChangesDlg, "%p", oent);
+/*	AG_SetEvent(win, "window-close", SaveChangesDlg, "%p", oent); */
 	AG_WindowShow(win);
-	return;
-fail:
-	AG_ObjectPageOut(ob);
-	return;
 }
 
 static void
@@ -441,7 +394,7 @@ ObjectOp(AG_Event *_Nonnull event)
 		switch (op) {
 		case OBJEDIT_EDIT_DATA:
 			if (ob->cls->edit != NULL) {
-				Verbose("Invoking <%s> %s -> edit",
+				Verbose("Invoking <%s> %s -> edit\n",
 				    OBJECT_CLASS(ob)->name,
 				    OBJECT(ob)->name);
 				AG_DEV_BrowserOpenData(ob);
@@ -455,7 +408,7 @@ ObjectOp(AG_Event *_Nonnull event)
 			BrowserOpenGeneric(ob);
 			break;
 		case OBJEDIT_LOAD:
-			Verbose("Invoking <%s> %s -> load",
+			Verbose("Invoking <%s> %s -> load\n",
 			    OBJECT_CLASS(ob)->name,
 			    OBJECT(ob)->name);
 			if (AG_ObjectLoad(ob) == -1) {
@@ -743,10 +696,8 @@ AG_DEV_Browser(void *vfsRoot)
 {
 	AG_Window *win;
 	AG_Tlist *tlObjs;
-	AG_Menu *me;
-	AG_MenuItem *mi, *mi_objs;
-	AG_Notebook *nb;
-	AG_NotebookTab *ntab;
+	AG_Menu *menu;
+	AG_MenuItem *mi;
 
 	if (!agDevBrowserInited) {
 		TAILQ_INIT(&dobjs);
@@ -761,20 +712,26 @@ AG_DEV_Browser(void *vfsRoot)
 	}
 	AG_WindowSetCaptionS(win, OBJECT(vfsRoot)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_ML, 0);
-	
+	AG_SetStyle(win, "font-size", "120%");
+	AG_SetStyle(win, "font-family", "cm-sans");
+
+	menu = AG_MenuNew(win, AG_MENU_HFILL);
+
+	AG_LabelNew(win, 0, _("%s VFS"), OBJECT(vfsRoot)->name);
+
 	tlObjs = AG_TlistNew(NULL, AG_TLIST_POLL | AG_TLIST_MULTI |
 	                           AG_TLIST_EXPAND);
-	AG_TlistSizeHint(tlObjs, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
-	AG_SetEvent(tlObjs, "tlist-poll",
-	    PollObjects, "%p", vfsRoot);
-	AG_SetEvent(tlObjs, "tlist-dblclick",
-	    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_EDIT_DATA);
+	AG_TlistSizeHint(tlObjs, "XXXXXXXXXXXXXXXXXXXXXXXX", 10);
+	AG_SetEvent(tlObjs, "tlist-poll", PollObjects, "%p", vfsRoot);
+	AG_SetEvent(tlObjs, "tlist-dblclick", ObjectOp, "%p,%p,%i", vfsRoot,
+	    tlObjs, OBJEDIT_EDIT_DATA);
 
-	me = AG_MenuNew(win, AG_MENU_HFILL);
-	mi = AG_MenuNode(me->root, _("File"), NULL);
+	mi = AG_MenuNode(menu->root, _("File"), NULL);
 	{
-		mi_objs = AG_MenuNode(mi, _("New object"), NULL);
-		GenNewObjectMenu(mi_objs, &agObjectClass, vfsRoot, win);
+		AG_MenuItem *miObjs;
+
+		miObjs = AG_MenuNode(mi, _("New object"), NULL);
+		GenNewObjectMenu(miObjs, &agObjectClass, vfsRoot, win);
 
 		AG_MenuSeparator(mi);
 
@@ -788,7 +745,7 @@ AG_DEV_Browser(void *vfsRoot)
 		AG_MenuAction(mi, _("Exit"), NULL, ExitProgram, NULL);
 	}
 	
-	mi = AG_MenuNode(me->root, _("Edit"), NULL);
+	mi = AG_MenuNode(menu->root, _("Edit"), NULL);
 	{
 		AG_MenuAction(mi, _("Edit object data..."), NULL,
 		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
@@ -812,15 +769,13 @@ AG_DEV_Browser(void *vfsRoot)
 		    ShowPreferences, NULL);
 	}
 
-	mi = AG_MenuNode(me->root, _("Tools"), NULL);
+	mi = AG_MenuNode(menu->root, _("Tools"), NULL);
 	ToolMenu(mi);
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
-	ntab = AG_NotebookAdd(nb, _("Working copy"), AG_BOX_VERT);
 	{
 		AG_MenuItem *mi;
 
-		AG_ObjectAttach(ntab, tlObjs);
+		AG_ObjectAttach(win, tlObjs);
 
 		mi = AG_TlistSetPopup(tlObjs, "object");
 		{

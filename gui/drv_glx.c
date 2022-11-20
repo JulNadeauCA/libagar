@@ -78,6 +78,12 @@
 #include <agar/gui/cursors.h>
 #include <agar/gui/opengl.h>
 
+#ifdef AG_DEBUG
+#include <agar/gui/box.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/tlist.h>
+#endif
+
 /* #define DEBUG_CLIPBOARD */
 /* #define DEBUG_MOTION_XEVENTS */
 /* #define DEBUG_XEVENTS */
@@ -2374,6 +2380,107 @@ fail:
 	return (-1);
 }
 
+#ifdef AG_DEBUG
+
+static void
+PollGLContext(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_DriverGLX *glx = (AG_DriverGLX *)AG_PTR(1);
+	const AG_GL_Context *ctx = &glx->gl;
+	AG_TlistItem *it;
+	Uint i;
+
+	if (!AG_OBJECT_VALID(glx) ||
+	    !AG_OfClass(glx, "AG_Driver:AG_DriverMw:AG_DriverGLX:*")) {
+		if (WIDGET(tl)->window != NULL) {
+			AG_ObjectDetach(WIDGET(tl)->window);
+			return;
+		}
+		return;
+	}
+
+	AG_TlistBegin(tl);
+
+	for (i = 0; i < ctx->nClipRects; i++) {
+		AG_ClipRect *cr = &ctx->clipRects[i];
+
+		it = AG_TlistAdd(tl, NULL,
+		    _("Clipping Rectangle #" AGSI_BOLD "%d" AGSI_RST
+		      " (%dx%d) at [" AGSI_BOLD "%d,%d" AGSI_BOLD "]"),
+		    i, cr->r.x, cr->r.y, cr->r.w, cr->r.h);
+		it->p1 = cr;
+	}
+
+	for (i = 0; i < ctx->nBlendStates; i++) {
+		AG_GL_BlendState *bs = &ctx->blendStates[i];
+
+		it = AG_TlistAdd(tl, NULL,
+		    _("Blending State #" AGSI_BOLD "%d" AGSI_RST
+		      " (" AGSI_BOLD "%s" AGSI_RST ", SrcFac=%d, DstFac=%d)"),
+		    i, bs->enabled ? _("Enabled") : _("Disabled"),
+		    bs->srcFactor, bs->dstFactor);
+		it->p1 = bs;
+	}
+
+	for (i = 0; i < ctx->nTextureGC; i++) {
+		it = AG_TlistAdd(tl, NULL,
+		    _("Texture Delete #" AGSI_BOLD "%d" AGSI_RST " (Texture=%u)"),
+		    i, ctx->textureGC[i]);
+		it->p1 = &ctx->textureGC[i];
+	}
+
+	for (i = 0; i < ctx->nListGC; i++) {
+		it = AG_TlistAdd(tl, NULL,
+		    _("List Delete #" AGSI_BOLD "%d" AGSI_RST " (List=%u)"),
+		    i, ctx->listGC[i]);
+		it->p1 = &ctx->listGC[i];
+	}
+
+	AG_TlistEnd(tl);
+}
+
+static void *_Nullable
+Edit(void *_Nonnull obj)
+{
+	AG_DriverGLX *glx = obj;
+	AG_Window *win;
+	AG_Label *lbl;
+	AG_Tlist *tl;
+
+	if ((win = AG_WindowNew(0)) == NULL)
+		return (NULL);
+
+	lbl = AG_LabelNew(win, 0, _("GLX Driver: %s"), OBJECT(glx)->name);
+	AG_SetStyle(lbl, "font-family", "cm-sans");
+	AG_SetStyle(lbl, "font-size", "200%");
+#if 0
+	AG_LabelNewPolled(win, AG_LABEL_EXPAND | AG_LABEL_SLOW,
+	    _("Total drivers: " AGSI_BOLD "%i" AGSI_RST "\n"
+	      "XKB buffer: \"%s\"\n"
+	      "X Window Handle: 0x%x\n"),
+	    &nDrivers,
+	    xkbBuf,
+	    (Uint *)&glx->w,
+#endif
+
+	AG_PushDisabledState(win);
+	AG_CheckboxNewInt(win, 0, _("Pointer Is Grabbed"), &glx->ptrIsGrabbed);
+	AG_CheckboxNewInt(win, 0, _("WM Hints Are Set"), &glx->wmHintsSet);
+	AG_CheckboxNewInt(win, 0, _("Clipboard Selection Waiting"), &agClipboardSelectionWaiting);
+	AG_PopDisabledState(win);
+
+	lbl = AG_LabelNewS(win, 0, _("Saved GL States:"));
+	AG_SetStyle(lbl, "font-size", "120%");
+	AG_SetStyle(lbl, "padding", "10 2 0 0");
+	tl = AG_TlistNewPolled(win, AG_TLIST_EXPAND, PollGLContext,"%p",glx);
+	AG_SetStyle(tl, "font-size", "80%");
+	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 5);
+
+	return (win);
+}
+#endif /* AG_DEBUG */
+
 AG_DriverMwClass agDriverGLX = {
 	{
 		{
@@ -2385,7 +2492,11 @@ AG_DriverMwClass agDriverGLX = {
 			Destroy,
 			NULL,		/* load */
 			NULL,		/* save */
-			NULL,		/* edit */
+#ifdef AG_DEBUG
+			Edit
+#else
+			NULL		/* edit */
+#endif
 		},
 		"glx",
 		AG_VECTOR,
