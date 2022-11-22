@@ -1212,7 +1212,9 @@ Destroy(void *_Nonnull obj)
 
 		if ((S = wid->surfaces[i]) != NULL &&
 		    !(wid->surfaceFlags[i] & AG_WIDGET_SURFACE_NODUP)) {
+#ifdef AG_DEBUG
 			S->flags &= ~(AG_SURFACE_MAPPED);
+#endif
 			AG_SurfaceFree(S);
 		}
 	}
@@ -2028,27 +2030,29 @@ AG_WidgetMapSurface(void *obj, AG_Surface *S)
 	}
 	if (i == n) {
 		++n;
-		wid->surfaces = Realloc(wid->surfaces, n*sizeof(AG_Surface *));
-		wid->surfaceFlags = Realloc(wid->surfaceFlags, n*sizeof(Uint));
-		wid->textures = Realloc(wid->textures, n*sizeof(Uint));
-		wid->texcoords = Realloc(wid->texcoords, n*sizeof(AG_TexCoord));
+		wid->surfaces = Realloc(wid->surfaces, n * sizeof(AG_Surface *));
+		wid->surfaceFlags = Realloc(wid->surfaceFlags, n * sizeof(Uint));
+		wid->textures = Realloc(wid->textures, n * sizeof(Uint));
+		wid->texcoords = Realloc(wid->texcoords, n * sizeof(AG_TexCoord));
 		id = wid->nSurfaces++;
 	}
 	wid->surfaces[id] = S;
 	wid->surfaceFlags[id] = 0;
 	wid->textures[id] = 0;
 
-	if (S) {
-#ifdef DEBUG_SURFACES
+#ifdef AG_DEBUG
+	if (S != NULL) {
+# ifdef DEBUG_SURFACES
 		Debug(wid, "Map surface %d -> [ S=%dx%d-%d ]\n", id,
 		    S->w, S->h, S->format.BitsPerPixel);
-#endif
+# endif
 		S->flags |= AG_SURFACE_MAPPED;
 	} else {
-#ifdef DEBUG_SURFACES
+# ifdef DEBUG_SURFACES
 		Debug(wid, "Map surface %d -> [ NULL ]\n", id);
-#endif
+# endif
 	}
+#endif /* AG_DEBUG */
 
 	AG_ObjectUnlock(wid);
 	return (id);
@@ -2122,20 +2126,26 @@ AG_WidgetReplaceSurface(void *obj, int id, AG_Surface *S)
 #endif
 	if ((Sprev = wid->surfaces[id]) &&
 	    !(wid->surfaceFlags[id] & AG_WIDGET_SURFACE_NODUP)) {
+#ifdef AG_DEBUG
 		Sprev->flags &= ~(AG_SURFACE_MAPPED);
+#endif
 		AG_SurfaceFree(Sprev);
 	}
-	if (S) {
-#ifdef DEBUG_SURFACES
+
+#ifdef AG_DEBUG
+	if (S != NULL) {
+# ifdef DEBUG_SURFACES
 		Debug(wid, "Replace surface %d -> [ S=%dx%d-%d ]\n",
 		    id, S->w, S->h, S->format.BitsPerPixel);
-#endif
+# endif
 		S->flags |= AG_SURFACE_MAPPED;
 	} else {
-#ifdef DEBUG_SURFACES
+# ifdef DEBUG_SURFACES
 		Debug(wid, "Replace surface %d -> [ NULL ]\n", id);
-#endif
+# endif
 	}
+#endif /* AG_DEBUG */
+
 	wid->surfaces[id] = S;
 	wid->surfaceFlags[id] &= ~(AG_WIDGET_SURFACE_NODUP);
 

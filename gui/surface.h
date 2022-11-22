@@ -133,7 +133,7 @@ typedef struct ag_surface {
 #define AG_SURFACE_COLORKEY	0x01	/* Enable color key for blit as src */
 #define AG_SURFACE_ALPHA	0x02	/* Enable alpha for blit as src */
 #define AG_SURFACE_GL_TEXTURE	0x04	/* Use directly as OpenGL texture */
-#define AG_SURFACE_MAPPED	0x08	/* Disallow AG_SurfaceFree() */
+#define AG_SURFACE_MAPPED	0x08	/* Disallow AG_SurfaceFree() (DEBUG) */
 #define AG_SURFACE_STATIC	0x10	/* Don't free() in AG_SurfaceFree() */
 #define AG_SURFACE_EXT_PIXELS	0x20	/* Pixels are allocated externally */
 #define AG_SURFACE_ANIMATED	0x40	/* Is an animation */

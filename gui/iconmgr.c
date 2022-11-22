@@ -60,7 +60,9 @@ AG_InitStaticIcon(AG_StaticIcon *icon)
 void
 AG_FreeStaticIcon(AG_StaticIcon *icon)
 {
+#ifdef AG_DEBGU
 	icon->s->flags &= ~(AG_SURFACE_MAPPED);
+#endif
 	AG_SurfaceFree(icon->s);
 	icon->s = NULL;
 }
