@@ -114,7 +114,7 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 	}
 	if (flags & AG_TEXTBOX_RETURN_BUTTON) {
 		tb->btnRet = AG_ButtonNewFlag(tb, 0,
-		    " \xe2\x8f\x8e  ",                             /* U+23CE */
+		    " " AGSI_RETURN_SYMBOL "  ",                  /* U+23CE */
 		    &tb->ed->flags, AG_EDITABLE_RETURN_HELD);
 
 		AG_SetEvent(tb->btnRet, "button-pushed", EditableReturn, "%p", tb);
