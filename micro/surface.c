@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2019-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -706,10 +706,6 @@ MA_SurfaceFree(MA_Surface *S)
 {
 	Uint i;
 
-#ifdef AG_DEBUG
-	if (S->flags & MA_SURFACE_MAPPED)
-		AG_FatalError("MA_SurfaceFree: in use");
-#endif
 	if ((S->flags & MA_SURFACE_EXT_PIXELS) == 0) {
 		Free(S->pixels);
 	}

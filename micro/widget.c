@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2019-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -243,10 +243,8 @@ Destroy(void *_Nonnull obj)
 	for (i = 0; i < wid->nSurfaces; i++) {
 		MA_Surface *S;
 
-		if ((S = wid->surfaces[i]) != NULL) {
-			S->flags &= ~(MA_SURFACE_MAPPED);
+		if ((S = wid->surfaces[i]) != NULL)
 			MA_SurfaceFree(S);
-		}
 	}
 	Free(wid->surfaces);
 }
@@ -502,10 +500,6 @@ MA_WidgetMapSurface(void *obj, MA_Surface *S)
 		s = wid->nSurfaces++;
 	}
 	wid->surfaces[s] = S;
-
-	if (S) {
-		S->flags |= MA_SURFACE_MAPPED;
-	}
 	return (s);
 }
 
@@ -525,9 +519,6 @@ MA_WidgetReplaceSurface(void *obj, Uint8 s, MA_Surface *S)
 #endif
 	if ((Sprev = wid->surfaces[s]) != NULL) {
 		MA_SurfaceFree(Sprev);
-	}
-	if (S) {
-		S->flags |= MA_SURFACE_MAPPED;
 	}
 	wid->surfaces[s] = S;
 }

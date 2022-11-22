@@ -37,7 +37,7 @@ typedef struct ma_surface {
 #define MA_SURFACE_COLORKEY	0x01	/* Enable color key for blit as src */
 #define MA_SURFACE_ALPHA	0x02	/* Enable alpha for blit as src */
                              /* 0x04       Unused */
-#define MA_SURFACE_MAPPED	0x08	/* Disallow MA_SurfaceFree() */
+                             /* 0x08       Unused */
 #define MA_SURFACE_STATIC	0x10	/* Don't free() in MA_SurfaceFree() */
 #define MA_SURFACE_EXT_PIXELS	0x20	/* Pixels are allocated externally */
 #define MA_SAVED_SURFACE_FLAGS	(MA_SURFACE_COLORKEY | MA_SURFACE_ALPHA)
