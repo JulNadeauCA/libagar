@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -402,7 +402,8 @@ AG_ColorFromString(AG_Color *cOut, const char *s, const AG_Color *pColor)
 	int isPct[4], i, argc;
 	enum color_format {
 		FORMAT_NAME,		/* "aliceblue" */
-		FORMAT_RGB,		/* "rgb(r,g,b,a)" or "r,g,b,a" */
+		FORMAT_RGB8,		/* "rgb(r,g,b,a)" or "r,g,b,a" */
+		FORMAT_RGB16,		/* "rgb16(r,g,b,a)" */
 		FORMAT_HSV		/* "hsv(h,s,v,a)" */
 	} format = FORMAT_NAME;
 
@@ -418,7 +419,11 @@ AG_ColorFromString(AG_Color *cOut, const char *s, const AG_Color *pColor)
 		;;
 	}
 	if (Strncasecmp(c,"rgb(",4) == 0) {
-		format = FORMAT_RGB;
+		format = FORMAT_RGB8;
+#if (AG_MODEL == AG_LARGE)
+	} else if (Strncasecmp(c,"rgb16(",6) == 0) {
+		format = FORMAT_RGB16;
+#endif
 	} else if (Strncasecmp(c,"hsv(",4) == 0) {
 		format = FORMAT_HSV;
 	} else if (*c == '#') {
@@ -532,7 +537,7 @@ AG_ColorFromString(AG_Color *cOut, const char *s, const AG_Color *pColor)
 		pc = &c[1];
 	} else {
 		if (strpbrk(c, ",:/") != NULL) {      /* Cannot be a keyword */
-			format = FORMAT_RGB;
+			format = FORMAT_RGB8;
 		}
 		pc = &c[0];
 	}
@@ -565,7 +570,7 @@ AG_ColorFromString(AG_Color *cOut, const char *s, const AG_Color *pColor)
 		goto fail_parse;
 	}
 	switch (format) {
-	case FORMAT_RGB:
+	case FORMAT_RGB8:
 		cOut->r = isPct[0] ? PctRGB(cIn.r,v[0]) : AG_8toH(v[0]);
 		cOut->g = isPct[1] ? PctRGB(cIn.g,v[1]) : AG_8toH(v[1]);
 		cOut->b = isPct[2] ? PctRGB(cIn.b,v[2]) : AG_8toH(v[2]);
@@ -573,6 +578,16 @@ AG_ColorFromString(AG_Color *cOut, const char *s, const AG_Color *pColor)
 		         (isPct[3] ? PctRGB(cIn.a,v[3]) : AG_8toH(v[3])) :
 			 AG_OPAQUE;
 		break;
+#if (AG_MODEL == AG_LARGE)
+	case FORMAT_RGB16:
+		cOut->r = isPct[0] ? PctRGB(cIn.r,v[0]) : AG_16toH(v[0]);
+		cOut->g = isPct[1] ? PctRGB(cIn.g,v[1]) : AG_16toH(v[1]);
+		cOut->b = isPct[2] ? PctRGB(cIn.b,v[2]) : AG_16toH(v[2]);
+		cOut->a = (argc >= 4) ?
+		         (isPct[3] ? PctRGB(cIn.a,v[3]) : AG_16toH(v[3])) :
+			 AG_OPAQUE;
+		break;
+#endif
 	case FORMAT_HSV:
 		{
 			float hue, sat, val;
