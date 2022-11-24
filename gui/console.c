@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * Copyright (c) 2019 Charles A Daniels <charles@cdaniels.net>
  * All rights reserved.
  *
@@ -101,41 +101,25 @@ ClampVisible(AG_Console *_Nonnull cons)
 }
 
 static void
-ScrollUp(AG_Event *_Nonnull event)
-{
-	AG_Console *cons = AG_CONSOLE_SELF();
-	const int newOffs = cons->rOffs - AG_GetInt(cons,"line-scroll-amount");
-
-	cons->rOffs = MAX(0,newOffs);
-	AG_Redraw(cons);
-}
-
-static void
-ScrollDown(AG_Event *_Nonnull event)
-{
-	AG_Console *cons = AG_CONSOLE_SELF();
-	const int newOffs = cons->rOffs + AG_GetInt(cons,"line-scroll-amount");
-	const int maxOffs = (cons->nLines - cons->rVisible);
-
-	if (maxOffs < 0) {
-		return;
-	}
-	cons->rOffs = MIN(newOffs,maxOffs);
-	AG_Redraw(cons);
-}
-
-static void
 ScrollLeft(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
 	const int ssa = AG_GetInt(cons->hBar, "inc");
-	const int newOffs = (cons->xOffs - ssa);
+	int newOffs = (cons->xOffs - ssa);
+	int wiggleRoom;
 
-	if (newOffs < 0 || newOffs > cons->wMax - WIDTH(cons)) {
-		return;
+	if (newOffs < 0) {
+		newOffs = 0;
 	}
-	cons->xOffs = newOffs;
-	AG_Redraw(cons);
+	wiggleRoom = cons->wMax - WIDTH(cons) + WIDTH(cons->vBar);
+	if (newOffs > wiggleRoom) {
+		newOffs = wiggleRoom - 1;
+	}
+	if (newOffs != cons->xOffs) {
+		cons->xOffs = newOffs;
+		AdjustXoffs(cons);
+		AG_Redraw(cons);
+	}
 }
 
 static void
@@ -143,12 +127,56 @@ ScrollRight(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_CONSOLE_SELF();
 	const int ssa = AG_GetInt(cons->hBar, "inc");
-	const int newOffs = (cons->xOffs + ssa);
+	int newOffs = (cons->xOffs + ssa);
+	int wiggleRoom;
 
-	if (newOffs < 0 || newOffs > cons->wMax - WIDTH(cons)) {
+	if (newOffs < 0) {
+		newOffs = 0;
+	}
+	wiggleRoom = cons->wMax - WIDTH(cons) + WIDTH(cons->vBar);
+	if (newOffs > wiggleRoom) {
+		newOffs = wiggleRoom - 1;
+	}
+	if (newOffs != cons->xOffs) {
+		cons->xOffs = newOffs;
+		AdjustXoffs(cons);
+		AG_Redraw(cons);
+	}
+}
+
+/* Scroll Up (or Left) */
+static void
+ScrollUp(AG_Event *_Nonnull event)
+{
+	AG_Console *cons = AG_CONSOLE_SELF();
+	int newOffs;
+
+	if (AG_GetModState(cons) & AG_KEYMOD_SHIFT) {		/* Left */
+		ScrollLeft(event);
 		return;
 	}
-	cons->xOffs = newOffs;
+	newOffs = cons->rOffs - AG_GetInt(cons,"line-scroll-amount");
+	cons->rOffs = MAX(0,newOffs);
+	AG_Redraw(cons);
+}
+
+/* Scroll Down (or Right) */
+static void
+ScrollDown(AG_Event *_Nonnull event)
+{
+	AG_Console *cons = AG_CONSOLE_SELF();
+	int newOffs, maxOffs;
+
+	if (AG_GetModState(cons) & AG_KEYMOD_SHIFT) {		/* Right */
+		ScrollRight(event);
+		return;
+	}
+	maxOffs = (cons->nLines - cons->rVisible);
+	if (maxOffs < 0) {
+		return;
+	}
+	newOffs = cons->rOffs + AG_GetInt(cons,"line-scroll-amount");
+	cons->rOffs = MIN(newOffs,maxOffs);
 	AG_Redraw(cons);
 }
 
@@ -762,7 +790,7 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 
 	cons->r.x = 0;
 	cons->r.y = 0;
-	cons->r.w = (a->w - aBar.w);
+	cons->r.w = (a->w - aBar.w) - 1;
 
 	AG_WidgetSizeReq(cons->hBar, &rBar);
 	aBar.x = 0;

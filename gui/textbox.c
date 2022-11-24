@@ -102,6 +102,7 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		AG_BindInt(sb, "max",     &tb->ed->yMax);
 		AG_BindInt(sb, "visible", &tb->ed->yVis);
 		AG_BindInt(sb, "value",   &tb->ed->y);
+		AG_BindInt(sb, "inc",     &tb->ed->lineScrollAmount);
 
 		if ((flags & AG_TEXTBOX_WORDWRAP) == 0) {
 			sb = tb->hBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_HORIZ,
@@ -110,6 +111,7 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 			AG_BindInt(sb, "max",     &tb->ed->xMax);
 			AG_BindInt(sb, "visible", &WIDTH(tb->ed));
 			AG_BindInt(sb, "value",   &tb->ed->x);
+			AG_BindInt(sb, "inc",     &tb->ed->fontMaxHeight);
 		}
 	}
 	if (flags & AG_TEXTBOX_RETURN_BUTTON) {

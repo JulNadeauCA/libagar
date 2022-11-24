@@ -2307,14 +2307,28 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		break;
 	case AG_MOUSE_WHEELUP:
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
-			ed->y -= ed->lineScrollAmount;
-			if (ed->y < 0) { ed->y = 0; }
+			if ((AG_GetModState(ed) & AG_KEYMOD_SHIFT) &&
+			    (ed->flags & AG_EDITABLE_WORDWRAP) == 0) {
+				ed->x -= ed->fontMaxHeight;
+				if (ed->x < 0)
+					ed->x = 0;
+			} else {
+				ed->y -= ed->lineScrollAmount;
+				if (ed->y < 0) { ed->y = 0; }
+			}
 		}
 		break;
 	case AG_MOUSE_WHEELDOWN:
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
-			ed->y += ed->lineScrollAmount;
-			ed->y = MIN(ed->y, ed->yMax - ed->yVis);
+			if ((AG_GetModState(ed) & AG_KEYMOD_SHIFT) &&
+			    (ed->flags & AG_EDITABLE_WORDWRAP) == 0) {
+				ed->x += ed->fontMaxHeight;
+				if (ed->x > ed->xMax - WIDTH(ed))
+					ed->x = ed->xMax - WIDTH(ed);
+			} else {
+				ed->y += ed->lineScrollAmount;
+				ed->y = MIN(ed->y, ed->yMax - ed->yVis);
+			}
 		}
 		break;
 	}

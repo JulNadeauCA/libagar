@@ -56,6 +56,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Fixed `double` <-> `long` conversion warnings in `math/m_sparse*`.
 - [**wgl**](https://libagar.org/man3/AG_DriverWGL): Fixed a bug in cursor handling. When showing a window initially, perform size allocation after having initialized the cursors so that the initial cursor-change areas are correctly established.
 - `install-sdk.exe` now installs include files in `include\x86` or `include\x64`.
+- [**AG_Textbox**](https://libagar.org/man3/AG_Textbox), [**AG_Editable**](https://libagar.org/man3/AG_Editable) and [**AG_Console**](https://libagar.org/man3/AG_Console): Fix horizontal scrolling (Shift + Mouse Wheel) behavior.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Fixed non-delivery of `mouse-button-down` events to hidden and subsequently re-shown widgets (e.g., widgets under a Notebook). Thanks [Walter](https://github.com/WallyZambotti)!
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Deliver `widget-hidden` when detaching a widget from a visible window.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): In `AG_WidgetSizeAlloc()`, set the `UNDERSIZE` flag correctly on return in the case where `size_allocate()` is inherited from a parent class.
