@@ -153,13 +153,13 @@ will not run).
 .Sh SIZING
 .nr nS 1
 .Ft "void"
-.Fn AG_Expand "AG_Widget *obj"
-.Pp
-.Ft "void"
 .Fn AG_ExpandHoriz "AG_Widget *obj"
 .Pp
 .Ft "void"
 .Fn AG_ExpandVert "AG_Widget *obj"
+.Pp
+.Ft "void"
+.Fn AG_Expand "AG_Widget *obj"
 .Pp
 .Ft "void"
 .Fn AG_WidgetSizeReq "AG_Widget *obj" "AG_SizeReq *req"
@@ -183,18 +183,22 @@ will not run).
 .Fn AG_WidgetUpdateCoords "AG_Widget *obj" "int x" "int y"
 .Pp
 .nr nS 0
-.Fn AG_Expand
-makes the widget fill all available space in its parent.
 .Fn AG_ExpandHoriz
 and
 .Fn AG_ExpandVert
-expands only in the given direction.
-Most widget constructors also accept
-.Dv EXPAND ,
-.Dv HFILL
+set the
+.Dv AG_WIDGET_HFILL
 and
-.Dv VFILL
-options.
+.Dv AG_WIDGET_VFILL
+options, respectively.
+.Fn AG_Expand
+is equivalent to calling both
+.Fn AG_ExpandHoriz
+and
+.Fn AG_ExpandVert .
+See
+.Sx FLAGS
+section.
 .Pp
 .Fn AG_WidgetSizeReq
 invokes the
@@ -219,10 +223,13 @@ are meant to be called only from within the
 and
 .Fn size_allocate
 functions of a container widget implementation, in order to
-size and position the child widgets attached to the container
-(if you must set widget geometries explicitely, use either the
+size and position the child widgets attached to the container.
+.Pp
+To set widget geometries explicitely in pixels, it is still possible to use
+the
 .Xr AG_Fixed 3
-container, or create your own container widget).
+container, or preferably, derive or create your own container widget (which
+can be realized in very few lines of code).
 .Pp
 The
 .Ft AG_SizeReq
@@ -334,7 +341,7 @@ object.
 A widget in DISABLED state will not accept user input other than that
 required for navigation (i.e., scrolling).
 .Fn AG_WidgetEnable
-clears the DISABLED flag and
+clears the DISABLED state and
 .Fn AG_WidgetDisable
 sets it.
 These functions will raise the
@@ -357,13 +364,8 @@ The
 flag will be set on attach (without raising "widget-disabled").
 .Sh FOCUS STATE
 Focus enables reception of input events that would be filtered out by default.
-A focused widget (in an actively focused window) will receive
-.Fn mouse-motion ,
-.Fn mouse-button-up ,
-as well as keyboard events
-.Fn key-up
-and
-.Fn key-down .
+The focused widget (in the currently focused window) will receive
+"mouse-motion", "mouse-button-up", "key-up" and "key-down" events.
 .Pp
 .nr nS 1
 .Ft "int"
@@ -430,9 +432,9 @@ lie inside of the widget's allocated space.
 The
 .Fn AG_WidgetRelativeArea
 variant accepts widget coordinates.
-.Sh BLITTING SURFACES
+.Sh GRAPHICAL SURFACES
 These routines allow graphical surfaces to be managed (mapped in hardware or
-software) and efficiently copied.
+software) and transferred efficiently.
 They must be called from rendering context (i.e., the
 .Fn draw
 operation of
@@ -470,7 +472,8 @@ only.
 .nr nS 0
 The
 .Fn AG_WidgetBlit
-function performs a software->hardware blit from the surface
+function performs a software->hardware block image transfer ("blit") from the
+surface
 .Fa src
 to the video display at the given widget coordinates.
 .Fn AG_WidgetBlit
@@ -479,9 +482,11 @@ See
 .Xr AG_Surface 3
 for more information on the Agar surface structure.
 .Pp
-Software to hardware blits are slow, so the widget system provides an
-interface to efficiently take advantage of graphics hardware where it
-is available.
+Software to hardware blits are slow, so the
+.Nm
+system provides a way to manage hardware surfaces (i.e., textures) and take
+advantage the texture capabilities of graphics hardware where it is available.
+.Pp
 .Fn AG_WidgetMapSurface
 registers the specified
 .Xr AG_Surface 3
@@ -493,33 +498,34 @@ or
 using this handle.
 The exact manner in which the surface is rendered depends on the Agar
 driver in use.
-For OpenGL-based drivers, a matching hardware texture will typically be
-generated for the surface on the first call to
-.Fn AG_WidgetBlitSurface ,
-and cached.
+For OpenGL-based drivers, a matching hardware texture is typically
+generated on the initial call to
+.Fn AG_WidgetBlitSurface
+and kept in cache for later use.
 .Pp
-By default, mapped surfaces are automatically freed once the widget
+By default, mapped surfaces are freed when the widget
 is destroyed.
-The
 .Fn AG_WidgetMapSurfaceNODUP
-variant sets the "NODUP" flag on the given surface, so the widget system
+sets the "NODUP" flag on the given surface such that the widget system
 will never attempt to free the surface.
 .Pp
 Note that
 .Fn AG_WidgetMapSurface
-will never duplicate the surface.
-The function merely registers the provided surface pointer with the widget
-structure.
+will not duplicate the surface.
+Instead, it will register the given surface pointer to be managed by the
+.Nm
+system.
 The surface pointer must remain valid for the lifetime of the widget (if in
-doubt, use
-.Xr AG_SurfaceDup 3 ) .
+doubt, you can always use
+.Xr AG_SurfaceDup 3
+to map a duplicate of the surface instead).
 .Pp
 .Fn AG_WidgetReplaceSurface
-replaces the contents of a previously-mapped surface with the contents of
+replaces the contents of a previously-mapped surface with
 .Fa newSurface .
 The
 .Fn AG_WidgetReplaceSurfaceNODUP
-variant avoids duplicating the surface.
+variant avoids duplicating the surface and sets the "NODUP" flag.
 .Pp
 .Fn AG_WidgetUnmapSurface
 destroys the given surface mapping.
@@ -527,14 +533,13 @@ It is equivalent to invoking
 .Fn AG_WidgetReplaceSurface
 with a NULL surface.
 .Pp
-It is important to note that in OpenGL mode,
+In OpenGL mode,
 .Fn AG_WidgetReplaceSurface
 and
 .Fn AG_WidgetUnmapSurface
-will not immediately delete any previous texture associated with the previous
-surface.
-Instead, it will queue the delete operation for future execution from
-rendering context, as required by thread safety.
+do not operate on textures immediately.
+GL texture delete operations are queued to be performed at the end of
+the current event-processing cycle.
 .Pp
 The
 .Fn AG_WidgetUpdateSurface
@@ -559,7 +564,7 @@ This function must be invoked in rendering context.
 The
 .Fn AG_WidgetBlitSurface
 variant invokes
-.Fa AG_WidgetBlitFrom
+.Fn AG_WidgetBlitFrom
 with the same argument for both
 .Fa srcWidget
 and
@@ -1196,45 +1201,39 @@ member of the
 structure accepts the following flags:
 .Bl -tag -width "AG_WIDGET_UNFOCUSED_BUTTONDOWN "
 .It AG_WIDGET_HFILL
-Hint to container widgets that in a vertical packing, this widget can expand
-to fill all remaining space.
+Fill any remaining (horizontal) space (hint to vertically-packing containers).
 .It AG_WIDGET_VFILL
-Hint to container widgets that in a horizontal packing, this widget can expand
-to fill all remaining space.
+Fill any remaining (vertical) space (hint to horizontal-packing containers).
+.It AG_WIDGET_EXPAND
+Shorthand for both
+.Dv AG_WIDGET_HFILL
+and
+.Dv AG_WIDGET_VFILL .
 .It AG_WIDGET_HIDE
 Disable rendering of this widget.
 .It AG_WIDGET_VISIBLE
 This widget and its parent window are both currently visible (read-only).
 .It AG_WIDGET_UNDERSIZE
-Disable rendering of this widget because it was determined to have a
-zero-valued geometry (read-only, set by
-.Fn AG_WidgetSizeAlloc ) .
+Disable rendering of this widget because it is too small to draw (read-only).
 .It AG_WIDGET_DISABLE_ON_ATTACH
-Make attached child widgets start in DISABLED mode (without raising "widget-disabled").
-This flag is set by
-.Fn AG_PushDisabledState
-and cleared by
-.Fn AG_PopDisabledState .
+Make attached widgets start in DISABLED state (without raising
+"widget-disabled").
 .It AG_WIDGET_DISABLED
 Advise that widget is not accepting user input.
+This state influences color and styling.
 The effect of this option is widget-dependent (read-only; see
 .Sx INPUT STATE
 section).
-This flag may affect the way the widget is rendered.
 .It AG_WIDGET_MOUSEOVER
 A mouse cursor currently intersects the widget's area (read-only; updated
 internally if the
 .Dv AG_WIDGET_USE_MOUSEOVER
 flag is set).
-This flag may affect the way the widget is rendered.
+This state influences color and styling.
 .It AG_WIDGET_FOCUSABLE
 The widget is allowed to grab the focus.
-Set by
-.Fn AG_WidgetSetFocusable .
 .It AG_WIDGET_UNFOCUSED_MOTION
-Receive
-.Sq mouse-motion
-events unconditionally (focus is required by default).
+Receive "mouse-motion" events unconditionally (focus is required by default).
 .It AG_WIDGET_UNFOCUSED_BUTTONUP
 Receive all
 .Fn mouse-button-up
