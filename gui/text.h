@@ -234,7 +234,6 @@ typedef struct ag_font_spec {
 		double yx, yy;
 	} matrix;
 	union {
-		/* char *file; */
 		struct {
 			const Uint8 *_Nonnull data;  /* Source memory region */
 			AG_Size size;                /* Size in bytes */

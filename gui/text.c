@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -135,11 +135,10 @@ Uint         agTextStateCur = 0;
 const AG_FontAdjustment agFontAdjustments[] = {
 /*                                                 0.0 10.4 14.0 21.0 23.8 35.0 to- */
 /*                                                10.4 14.0 21.0 23.8 35.0 inf  pts */
-/*	{ "bedstead",        AG_FONT_BOLD, 0.9f, { +1,  +3,  +3,  +4,  +5,  +7 } }, */
 	{ "cm-sans",         0,            1.1f, { -4,  -4,  -6,  -7,  -9, -16 } },
 	{ "cm-serif",        0,            1.1f, { -3,  -4,  -5,  -5,  -6, -10 } },
 	{ "cm-typewriter",   0,            1.1f, { -2,  -4,  -5,  -5,  -7,  -8 } },
-	{ "league-spartan",  AG_FONT_BOLD, 0.9f, { -1,  -1,  -3,  -4,  -5,  -7 } },
+	{ "league-spartan",  AG_FONT_BOLD, 1.0f, { -2,  -2,  -2,  -3,  -5,  -6 } },
 	{ "league-gothic",   AG_FONT_BOLD, 1.1f, { -1,  -1,  -1,  -2,  -1,  -3 } },
 	{ "fraktur",         AG_FONT_BOLD, 1.1f, { +1,  +1,  +1,  +1,  +1,  +1 } },
 	{ "source-han-sans", 0,            1.0f, { -8, -12, -15, -20, -28, -35 } },
@@ -157,7 +156,11 @@ AG_Color agTextColorANSI[] = {
 	{ 0x0000, 0x0000, 0xeeee, 0xffff },	/* Blue */
 	{ 0xcdcd, 0x0000, 0xcdcd, 0xffff },	/* Magenta */
 	{ 0x0000, 0xcdcd, 0xcdcd, 0xffff },	/* Cyan */
+#if 0
 	{ 0xe5e5, 0xe5e5, 0xe5e5, 0xffff },	/* White */
+#else
+	{ 0xfafa, 0xebeb, 0xebeb, 0xffff },	/* White */
+#endif
 	{ 0x7f7f, 0x7f7f, 0x7f7f, 0xffff },	/* Br.Black */
 	{ 0xffff, 0x1717, 0x0000, 0xffff },	/* Br.Red */
 	{ 0x0000, 0xffff, 0x0000, 0xffff },	/* Br.Green */
@@ -174,7 +177,11 @@ AG_Color agTextColorANSI[] = {
 	{ 0,   0,   238, 255 },			/* Blue */
 	{ 205, 0,   205, 255 },			/* Magenta */
 	{ 0,   205, 205, 255 },			/* Cyan */
+#if 0
 	{ 229, 229, 229, 255 },			/* White */
+#else
+	{ 250, 235, 235, 255 },			/* White */
+#endif
 	{ 127, 127, 127, 255 },			/* Br.Black */
 	{ 255, 23,    0, 255 },			/* Br.Red */
 	{ 0,   255,   0, 255 },			/* Br.Green */
@@ -194,8 +201,8 @@ const char *agFontTypeNames[] = {		/* For enum ag_font_type */
 	N_("Dummy")
 };
 const char *agCoreFonts[] = {
+	"_agFontAlgue",				/* Algue (not RFN; built-in) */
 	"unialgue",                             /* Unialgue (not RFN) */
-	"",                                     /* (unused) */
 	"cm-sans",                              /* CMU Sans */
 	"cm-serif",                             /* CMU Serif */
 	"cm-typewriter",                        /* CMU Typewriter */
