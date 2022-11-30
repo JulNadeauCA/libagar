@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -126,50 +126,57 @@ typedef struct ag_anim_frame {
 	};
 } AG_AnimFrame;
 
+typedef enum ag_surface_guide {
+	AG_SURFACE_GUIDE_TOP,      /* Top horizontal guide */
+	AG_SURFACE_GUIDE_RIGHT,    /* Right vertical guide */
+	AG_SURFACE_GUIDE_BOTTOM,   /* Bottom horizontal guide */
+	AG_SURFACE_GUIDE_LEFT,     /* Left vertical guide */
+	AG_SURFACE_NGUIDES
+} AG_SurfaceGuide;
+
 /* Graphics surface (or animation) */
 typedef struct ag_surface {
-	AG_PixelFormat format;		/* Pixel format */
+	AG_PixelFormat format;          /* Pixel format */
 	Uint flags;
-#define AG_SURFACE_COLORKEY	0x01	/* Enable color key for blit as src */
-#define AG_SURFACE_ALPHA	0x02	/* Enable alpha for blit as src */
-#define AG_SURFACE_GL_TEXTURE	0x04	/* Use directly as OpenGL texture */
-#define AG_SURFACE_MAPPED	0x08	/* Disallow AG_SurfaceFree() (DEBUG) */
-#define AG_SURFACE_STATIC	0x10	/* Don't free() in AG_SurfaceFree() */
-#define AG_SURFACE_EXT_PIXELS	0x20	/* Pixels are allocated externally */
-#define AG_SURFACE_ANIMATED	0x40	/* Is an animation */
-#define AG_SURFACE_TRACE	0x80	/* Enable debugging */
-#define AG_SAVED_SURFACE_FLAGS	(AG_SURFACE_COLORKEY | AG_SURFACE_ALPHA | \
-                                 AG_SURFACE_ANIMATED)
-	Uint w, h;			/* Size in pixels */
-	Uint pitch;			/* Scanline byte length */
-	Uint8 *_Nullable pixels;	/* Raw pixel data */
-	AG_Rect clipRect;		/* Clipping rect for blit as dst */
-	AG_AnimFrame *_Nullable frames;	/* Animation frames */
-	Uint n;				/* Animation frame count */
-	Uint padding;			/* Scanline end padding */
-	AG_Pixel colorkey;		/* Color key pixel */
-	AG_Component alpha;		/* Per-surface alpha */
+#define AG_SURFACE_COLORKEY    0x01     /* Enable color key for blit as src */
+#define AG_SURFACE_ALPHA       0x02     /* Enable alpha for blit as src */
+#define AG_SURFACE_GL_TEXTURE  0x04     /* Use directly as OpenGL texture */
+#define AG_SURFACE_MAPPED      0x08     /* Disallow AG_SurfaceFree() (DEBUG) */
+#define AG_SURFACE_STATIC      0x10     /* Don't free() in AG_SurfaceFree() */
+#define AG_SURFACE_EXT_PIXELS  0x20     /* Pixels are allocated externally */
+#define AG_SURFACE_ANIMATED    0x40     /* Is an animation */
+#define AG_SURFACE_TRACE       0x80     /* Enable debugging */
+#define AG_SAVED_SURFACE_FLAGS (AG_SURFACE_COLORKEY | AG_SURFACE_ALPHA | \
+                                AG_SURFACE_ANIMATED)
+	Uint w, h;                         /* Dimensions in pixels */
+	Uint pitch;                        /* Scanline byte length */
+	Uint8 *_Nullable pixels;           /* Raw pixel data */
+	AG_Rect clipRect;                  /* Clipping rectangle */
+	AG_AnimFrame *_Nullable frames;    /* Animation frames */
+	Uint n;                            /* Animation frame count */
+	Uint padding;                      /* Scanline end padding */
+	Uint16 guides[AG_SURFACE_NGUIDES]; /* Guide lines */
+	AG_Pixel colorkey;                 /* Color key pixel */
+	AG_Component alpha;                /* Per-surface alpha */
 #if AG_MODEL == AG_LARGE
 	Uint8 _pad[6];
-#elif AG_MODEL == AG_MEDIUM
-	Uint8 _pad[3];
 #else
-	Uint8 _pad[7];
+	Uint8 _pad[3];
 #endif
 } AG_Surface;
 
 /* Animation playback context */
 typedef struct ag_anim_state {
 	_Nonnull_Mutex AG_Mutex lock;
-	AG_Surface *_Nonnull s;		/* Animated surface */
+	AG_Surface *_Nonnull s;         /* Animated surface */
 	Uint flags;
-#define AG_ANIM_LOOP	 0x01		/* Loop playback */
-#define AG_ANIM_PINGPONG 0x02		/* Loop in ping-pong fashion */
-#define AG_ANIM_REVERSE	 0x04		/* Playback in reverse */
-#define AG_ANIM_PLAYING  0x08		/* Animation is playing */
-	int f;				/* Current frame# */
+#define AG_ANIM_LOOP     0x01           /* Loop playback */
+#define AG_ANIM_PINGPONG 0x02           /* Loop in ping-pong fashion */
+#define AG_ANIM_REVERSE  0x04           /* Playback in reverse */
+#define AG_ANIM_PLAYING  0x08           /* Animation is playing */
+	int f;                          /* Current frame# */
 #ifdef AG_THREADS
-	_Nullable_Thread AG_Thread th;	/* Animation thread */
+	_Nullable_Thread AG_Thread th;  /* Animation thread */
 #endif
 } AG_AnimState;
 
@@ -194,17 +201,17 @@ typedef enum ag_alpha_func {
 } AG_AlphaFn;
 
 /* Flags for AG_SurfaceExportBMP () */
-#define AG_EXPORT_BMP_NO_32BIT 0x01	/* Don't export a 32-bit BMP even when
+#define AG_EXPORT_BMP_NO_32BIT 0x01     /* Don't export a 32-bit BMP even when
                                            surface has an alpha channel */
-#define AG_EXPORT_BMP_LEGACY   0x02	/* Export to legacy BMP format */
+#define AG_EXPORT_BMP_LEGACY   0x02     /* Export to legacy BMP format */
 
 /* Flags for AG_SurfaceExportPNG() */
-#define AG_EXPORT_PNG_ADAM7	0x01		/* Enable Adam7 interlacing */
+#define AG_EXPORT_PNG_ADAM7	0x01    /* Enable Adam7 interlacing */
 
 /* Flags for AG_SurfaceExportJPEG() */
-#define AG_EXPORT_JPEG_JDCT_ISLOW 0x01	/* Slow, accurate integer DCT */
-#define AG_EXPORT_JPEG_JDCT_IFAST 0x02	/* Faster, less accurate integer DCT */
-#define AG_EXPORT_JPEG_JDCT_FLOAT 0x04	/* Floating-point method */
+#define AG_EXPORT_JPEG_JDCT_ISLOW 0x01  /* Slow, accurate integer DCT */
+#define AG_EXPORT_JPEG_JDCT_IFAST 0x02  /* Faster, less accurate integer DCT */
+#define AG_EXPORT_JPEG_JDCT_FLOAT 0x04  /* Floating-point method */
 
 __BEGIN_DECLS
 extern const char *_Nonnull agSurfaceModeNames[]; /* AG_Surface modes */
@@ -222,9 +229,9 @@ void AG_PixelFormatRGBA(AG_PixelFormat *_Nonnull, int,
 AG_PixelFormat *_Nullable AG_PixelFormatDup(const AG_PixelFormat *_Nonnull)
                                            _Warn_Unused_Result;
 
-void                 AG_SurfaceInit(AG_Surface *_Nonnull,
-                                    const AG_PixelFormat *_Nullable,
-				    Uint,Uint, Uint);
+void AG_SurfaceInit(AG_Surface *_Nonnull, const AG_PixelFormat *_Nullable,
+                    Uint,Uint, Uint);
+
 AG_Surface *_Nonnull AG_SurfaceNew(const AG_PixelFormat *_Nonnull,
                                    Uint,Uint, Uint)
 		                  _Warn_Unused_Result;

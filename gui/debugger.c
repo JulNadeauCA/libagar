@@ -141,7 +141,7 @@ TargetRoot(void)
 			AG_TlistDeselectAll(agDebuggerTlist);
 
 		if (agDebuggerLabel)
-			AG_LabelText(agDebuggerLabel, _("Target: " AGSI_YEL "/" AGSI_RST));
+			AG_LabelText(agDebuggerLabel, _("Target: " AGSI_PATH AGSI_YEL "/" AGSI_RST));
 	}
 }
 
@@ -200,13 +200,69 @@ static void
 SelectedSurface(AG_Event *_Nonnull event)
 {
 	AG_Pixmap *px = AG_PIXMAP_PTR(1);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	AG_Label *lblInfo = AG_LABEL_PTR(2);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(3);
 	AG_Surface *S = it->p1;
+	const char *grayscaleModeNames[] = {  /* Sync with AG_GrayscaleMode */
+		"BT.709",
+		"R-Y",
+		"Y"
+	};
 
 	if (S == NULL || strcmp(it->cat, "surface") != 0)
 		return;
-	
+
+	switch (S->format.mode) {
+	case AG_SURFACE_PACKED:
+		AG_LabelText(lblInfo,
+		    _("Surface Mode: Packed.\n"
+		      "Surface Flags: "  AGSI_CODE "0x%04x"  AGSI_RST ".\n"
+		      "Surface Size: %u x %u.\n"
+		      "Pitch: %u, Padding: %u.\n"
+		      "Guides: %u %u %u %u.\n"
+		      "Bits Per Pixel: %d.\n"
+		      "RGBA Masks: " AGSI_CODE AGSI_RED "0x%08lx" AGSI_RST ","
+		                     AGSI_CODE AGSI_GRN "0x%08lx" AGSI_RST ","
+		                     AGSI_CODE AGSI_BLU "0x%08lx" AGSI_RST ","
+		                              AGSI_CODE "0x%08lx" AGSI_RST "\n"),
+		    S->flags, S->w, S->h, S->pitch, S->padding,
+		    S->guides[0], S->guides[1], S->guides[2], S->guides[3],
+		    S->format.BitsPerPixel,
+		    (Ulong)S->format.Rmask,
+		    (Ulong)S->format.Gmask,
+		    (Ulong)S->format.Bmask,
+		    (Ulong)S->format.Amask);
+		break;
+	case AG_SURFACE_INDEXED:
+		AG_LabelText(lblInfo,
+		    _("Surface Mode: Indexed.\n"
+		      "Surface Flags: " AGSI_CODE "0x%x" AGSI_RST ".\n"
+		      "Surface Size: %d x %d.\n"
+		      "Pitch: %u, Padding: %u.\n"
+		      "Bits Per Pixel: %d.\n"
+		      "Palette Entries: " AGSI_BOLD "%d" AGSI_RST ".\n"),
+		    S->flags, S->w, S->h, S->pitch, S->padding,
+		    S->format.BitsPerPixel,
+		    S->format.palette->nColors);
+		break;
+	case AG_SURFACE_GRAYSCALE:
+		AG_LabelText(lblInfo,
+		    _("Surface Mode: Grayscale.\n"
+		      "Surface Flags: " AGSI_CODE "0x%x" AGSI_RST ".\n"
+		      "Surface Size: %d x %d.\n"
+		      "Pitch: %u, Padding: %u.\n"
+		      "Bits Per Pixel: %d.\n"
+		      "Grayscale Mode: " AGSI_BOLD "%s" AGSI_RST ".\n"),
+		    S->flags, S->w, S->h, S->pitch, S->padding,
+		    S->format.BitsPerPixel,
+		    grayscaleModeNames[S->format.graymode]);
+		break;
+	default:
+		break;
+	}
+
 	AG_PixmapSetSurface(px, AG_PixmapAddSurfaceScaled(px, S, S->w, S->h));
+	AG_WindowUpdate(WIDGET(px)->window);
 	AG_Redraw(px);
 }
 
@@ -278,12 +334,16 @@ PollSurfaces(AG_Event *_Nonnull event)
 			it->cat = "null-surface";
 		} else {
 			if (wid->textures[i] != -1) {
-				it = AG_TlistAdd(tl, S, "#%u (%ux%u, %ubpp, texture #%d%s%s)",
+				it = AG_TlistAdd(tl, S,
+				    AGSI_ALGUE AGSI_ARROW_LEFT AGSI_RST
+				    " Surface#%u (%ux%u, %ubpp, texture #%d%s%s)",
 				    i, S->w, S->h, S->format.BitsPerPixel, wid->textures[i],
 				    (wid->surfaceFlags[i] & AG_WIDGET_SURFACE_NODUP) ? ", <NODUP>" : "",
 				    (wid->surfaceFlags[i] & AG_WIDGET_SURFACE_REGEN) ? ", <REGEN>" : "");
 			} else {
-				it = AG_TlistAdd(tl, S, "#%u (%ux%u, %ubpp%s%s)",
+				it = AG_TlistAdd(tl, S,
+				    AGSI_ALGUE AGSI_ARROW_LEFT AGSI_RST
+				    " Surface#%u (%ux%u, %ubpp%s%s)",
 				    i, S->w, S->h, S->format.BitsPerPixel,
 				    (wid->surfaceFlags[i] & AG_WIDGET_SURFACE_NODUP) ? ", <NODUP>" : "",
 				    (wid->surfaceFlags[i] & AG_WIDGET_SURFACE_REGEN) ? ", <REGEN>" : "");
@@ -568,21 +628,33 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_Pixmap *px;
 		AG_Tlist *tl;
 		AG_MenuItem *mi;
+		AG_Label *lblInfo;
+		AG_Box *paneTop, *paneBottom;
 
 		pane = AG_PaneNewVert(nt, AG_PANE_EXPAND);
-		px = AG_PixmapNew(pane->div[0], AG_PIXMAP_EXPAND, 320, 240);
+		AG_PaneResizeAction(pane, AG_PANE_DIVIDE_EVEN); 
+		paneTop = pane->div[0];
+		paneBottom = pane->div[1];
 
-		tl = AG_TlistNewPolled(pane->div[1], AG_TLIST_EXPAND,
+		px = AG_PixmapNew(paneTop, AG_PIXMAP_EXPAND, 320, 240);
+		lblInfo = AG_LabelNew(paneTop, AG_LABEL_HFILL, _("(No data)"));
+		AG_LabelSizeHint(lblInfo, 5, "<XXXXXXXXXXXXXXXXXXXXXXXXX>");
+		AG_SetStyle(lblInfo, "font-size", "90%");
+
+		tl = AG_TlistNewPolled(paneBottom, AG_TLIST_EXPAND,
 		    PollSurfaces, NULL);
 
-		AG_SetEvent(tl, "tlist-selected", SelectedSurface,"%p",px);
+		AG_SetEvent(tl, "tlist-selected", SelectedSurface,"%p,%p",px,lblInfo);
 
 		mi = AG_TlistSetPopup(tl, "surface");
 		AG_MenuAction(mi, _("Export to image file..."), agIconSave.s,
 		    ExportSurfaceDlg, "%Cp", px);
+
+		AG_PaneMoveDividerPct(pane, 50);
 	}
 
 	AG_NotebookSelectByID(nb, savedTabID);		/* Restore active tab */
+	AG_WidgetCompileStyle(box);
 	AG_WidgetShowAll(box);
 	AG_WidgetUpdate(box);
 }
@@ -684,7 +756,7 @@ AG_GuiDebugger(AG_Window *_Nonnull tgt)
 
 			AG_ObjectCopyName(tgt, path, sizeof(path));
 			AG_LabelText(agDebuggerLabel,
-	                    _("Target: " AGSI_YEL "%s" AGSI_RST), path);
+	                    _("Target: " AGSI_PATH AGSI_YEL "%s" AGSI_RST), path);
 		}
 		return (win);
 	}
@@ -720,7 +792,7 @@ AG_GuiDebugger(AG_Window *_Nonnull tgt)
 
 	AG_ObjectCopyName(tgt, path, sizeof(path));
 	agDebuggerLabel = AG_LabelNew(div, AG_LABEL_HFILL,
-	    _("Target: " AGSI_YEL "%s" AGSI_RST), path);
+	    _("Target: " AGSI_PATH AGSI_YEL "%s" AGSI_RST), path);
 
 	lblStats = AG_LabelNewS(div, AG_LABEL_HFILL,
 	    _("XX windows, XX containers & XX leaves (t = XXXXXms)"));

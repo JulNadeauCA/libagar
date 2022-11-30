@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -373,15 +373,16 @@ AG_SurfaceInit(AG_Surface *S, const AG_PixelFormat *pf, Uint w, Uint h,
 			AG_FatalError("Bad PixelFormat mode");
 		}
 	}
-	S->pixels = NULL;
-	S->clipRect.x = 0;
-	S->clipRect.y = 0;
+	memset(&S->pixels, 0, sizeof(Uint *) +                    /* pixels */
+	                      sizeof(AG_Rect) +                   /* clipRect */
+			      sizeof(AG_AnimFrame *) +            /* frames */
+			      sizeof(Uint) +                      /* n */
+			      sizeof(Uint) +                      /* padding */
+			      sizeof(Uint16)*AG_SURFACE_NGUIDES + /* guides */
+			      sizeof(AG_Pixel));
 	S->clipRect.w = w;
 	S->clipRect.h = h;
-	S->colorkey = 0;
 	S->alpha = AG_OPAQUE;
-	S->frames = NULL;
-	S->n = 0;
 }
 
 /*

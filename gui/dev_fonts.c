@@ -36,6 +36,11 @@
 static void
 PollFonts(AG_Event *_Nonnull event)
 {
+	static const char *fontTypeNames[] = {
+		N_("Vector"),
+		N_("Bitmap"),
+		N_("Dummy")
+	};
 	AG_Table *tbl = AG_TABLE_SELF();
 	AG_Font *font;
 
@@ -56,7 +61,7 @@ PollFonts(AG_Event *_Nonnull event)
 
 		AG_TableAddRow(tbl, "%s:%s:%f:%s:%u:%s",
 		    OBJECT(font)->name,
-		    agFontTypeNames[font->spec.type],
+		    fontTypeNames[font->spec.type],
 		    font->spec.size,
 		    fl,
 		    font->nRefs,

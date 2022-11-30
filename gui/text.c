@@ -129,8 +129,8 @@ AG_TextState agTextStateStack[AG_TEXT_STATES_MAX];
 Uint         agTextStateCur = 0;
 
 /*
- * Small adjustments to the sizes and ascents of core fonts.
- * Indicate where Bold is also the Regular style.
+ * Small adjustments to the sizes and ascents of core fonts (relative
+ * to Algue / Unialgue). Indicate where Bold is also the Regular style.
  */
 const AG_FontAdjustment agFontAdjustments[] = {
 /*                                                 0.0 10.4 14.0 21.0 23.8 35.0 to- */
@@ -149,72 +149,59 @@ const AG_FontAdjustment agFontAdjustments[] = {
 /* ANSI color scheme (may be overridden by AG_TextState) */
 AG_Color agTextColorANSI[] = {
 #if AG_MODEL == AG_LARGE
-	{ 0x0000, 0x0000, 0x0000, 0xffff },	/* Black */
-	{ 0xdede, 0x2d2d, 0x2b2b, 0xffff },	/* Red */
-	{ 0x0000, 0xcdcd, 0x0000, 0xffff },	/* Green */
-	{ 0xcdcd, 0xcdcd, 0x0000, 0xffff },	/* Yellow */
-	{ 0x0000, 0x0000, 0xeeee, 0xffff },	/* Blue */
-	{ 0xcdcd, 0x0000, 0xcdcd, 0xffff },	/* Magenta */
-	{ 0x0000, 0xcdcd, 0xcdcd, 0xffff },	/* Cyan */
-#if 0
-	{ 0xe5e5, 0xe5e5, 0xe5e5, 0xffff },	/* White */
+	{ 0x0000, 0x0000, 0x0000, 0xffff },  /* Black      (AGSI_BLK)  */
+	{ 0xffff, 0x6b6b, 0x6b6b, 0xffff },  /* Red        (AGSI_RED)  */
+	{ 0x0000, 0xcdcd, 0x0000, 0xffff },  /* Green      (AGSI_GRN)  */
+	{ 0xcdcd, 0xcdcd, 0x0000, 0xffff },  /* Yellow     (AGSI_YEL)  */
+	{ 0x8a8a, 0x9696, 0xffff, 0xffff },  /* Blue       (AGSI_BLU)  */
+	{ 0xcdcd, 0x0000, 0xcdcd, 0xffff },  /* Magenta    (AGSI_MAG)  */
+	{ 0x0000, 0xcdcd, 0xcdcd, 0xffff },  /* Cyan       (AGSI_CYAN) */
+	{ 0xfafa, 0xebeb, 0xebeb, 0xffff },  /* White      (AGSI_WHT)  */
+
+	{ 0x7f7f, 0x7f7f, 0x7f7f, 0xffff },  /* Gray       (AGSI_BR_BLK | AGSI_GRAY) */
+	{ 0xffff, 0x1717, 0x0000, 0xffff },  /* Br.Red     (AGSI_BR_RED)  */
+	{ 0x0000, 0xffff, 0x0000, 0xffff },  /* Br.Green   (AGSI_BR_GRN)  */
+	{ 0xffff, 0xffff, 0x0000, 0xffff },  /* Br.Yellow  (AGSI_BR_YEL)  */
+	{ 0x5c5c, 0x5c5c, 0xffff, 0xffff },  /* Br.Blue    (AGSI_BR_BLU)  */
+	{ 0xffff, 0x0000, 0xffff, 0xffff },  /* Br.Magenta (AGSI_BR_MAG)  */
+	{ 0x0000, 0xffff, 0xffff, 0xffff },  /* Br.Cyan    (AGSI_BR_CYAN) */
+	{ 0xffff, 0xffff, 0xffff, 0xffff },  /* Br.White   (AGSI_BR_WHT)  */
 #else
-	{ 0xfafa, 0xebeb, 0xebeb, 0xffff },	/* White */
-#endif
-	{ 0x7f7f, 0x7f7f, 0x7f7f, 0xffff },	/* Br.Black */
-	{ 0xffff, 0x1717, 0x0000, 0xffff },	/* Br.Red */
-	{ 0x0000, 0xffff, 0x0000, 0xffff },	/* Br.Green */
-	{ 0xffff, 0xffff, 0x0000, 0xffff },	/* Br.Yellow */
-	{ 0x5c5c, 0x5c5c, 0xffff, 0xffff },	/* Br.Blue */
-	{ 0xffff, 0x0000, 0xffff, 0xffff },	/* Br.Magenta */
-	{ 0x0000, 0xffff, 0xffff, 0xffff },	/* Br.Cyan */
-	{ 0xffff, 0xffff, 0xffff, 0xffff },	/* Br.White */
-#else
-	{ 0,   0,     0, 255 },			/* Black */
-	{ 205, 45,    0, 255 },			/* Red */
-	{ 0,   205,   0, 255 },			/* Green */
-	{ 205, 205,   0, 255 },			/* Yellow */
-	{ 0,   0,   238, 255 },			/* Blue */
-	{ 205, 0,   205, 255 },			/* Magenta */
-	{ 0,   205, 205, 255 },			/* Cyan */
-#if 0
-	{ 229, 229, 229, 255 },			/* White */
-#else
-	{ 250, 235, 235, 255 },			/* White */
-#endif
-	{ 127, 127, 127, 255 },			/* Br.Black */
-	{ 255, 23,    0, 255 },			/* Br.Red */
-	{ 0,   255,   0, 255 },			/* Br.Green */
-	{ 255, 255,   0, 255 },			/* Br.Yellow */
-	{ 92,  92,  255, 255 },			/* Br.Blue */
-	{ 255, 0,   255, 255 },			/* Br.Magenta */
-	{ 0,   255, 255, 255 },			/* Br.Cyan */
-	{ 255, 255, 255, 255 },			/* Br.White */
+	{ 0,   0,     0, 255 },              /* Black      (AGSI_BLK)  */
+	{ 255, 107, 107, 255 },              /* Red        (AGSI_RED)  */
+	{ 0,   205,   0, 255 },              /* Green      (AGSI_GRN)  */
+	{ 205, 205,   0, 255 },              /* Yellow     (AGSI_YEL)  */
+	{ 138, 150, 255, 255 },              /* Blue       (AGSI_BLU)  */
+	{ 205, 0,   205, 255 },              /* Magenta    (AGSI_MAG)  */
+	{ 0,   205, 205, 255 },              /* Cyan       (AGSI_CYAN) */
+	{ 250, 235, 235, 255 },              /* White      (AGSI_WHT)  */
+
+	{ 127, 127, 127, 255 },              /* Gray       (AGSI_BR_BLK | AGSI_GRAY) */
+	{ 255, 23,    0, 255 },              /* Br.Red     (AGSI_BR_RED)  */
+	{ 0,   255,   0, 255 },              /* Br.Green   (AGSI_BR_GRN)  */
+	{ 255, 255,   0, 255 },              /* Br.Yellow  (AGSI_BR_YEL)  */
+	{ 92,  92,  255, 255 },              /* Br.Blue    (AGSI_BR_BLU)  */
+	{ 255, 0,   255, 255 },              /* Br.Magenta (AGSI_BR_MAG)  */
+	{ 0,   255, 255, 255 },              /* Br.Cyan    (AGSI_BR_CYAN) */
+	{ 255, 255, 255, 255 },              /* Br.White   (AGSI_BR_WHT)  */
 #endif
 };	
 
-AG_Font *_Nullable agDefaultFont = NULL;
-
-const char *agFontTypeNames[] = {		/* For enum ag_font_type */
-	N_("Vector"),
-	N_("Bitmap"),
-	N_("Dummy")
-};
 const char *agCoreFonts[] = {
-	"_agFontAlgue",				/* Algue (not RFN; built-in) */
-	"unialgue",                             /* Unialgue (not RFN) */
-	"cm-sans",                              /* CMU Sans */
-	"cm-serif",                             /* CMU Serif */
-	"cm-typewriter",                        /* CMU Typewriter */
-	"charter",                              /* Charter */
-	"courier-prime",                        /* Courier Prime */
-	"source-han-sans",                      /* Source Han Sans */
-	"league-spartan",                       /* League Spartan */
-	"league-gothic",                        /* League Gothic */
-	"fraktur",                              /* Unifraktur Maguntia */
+	"_agFontAlgue",                      /* Algue (built-in) */
+	"unialgue",                          /* Unialgue */
+	"cm-sans",                           /* CMU Sans */
+	"cm-serif",                          /* CMU Serif */
+	"cm-typewriter",                     /* CMU Typewriter */
+	"charter",                           /* Charter */
+	"courier-prime",                     /* Courier Prime */
+	"source-han-sans",                   /* Source Han Sans */
+	"league-spartan",                    /* League Spartan */
+	"league-gothic",                     /* League Gothic */
+	"fraktur",                           /* Unifraktur Maguntia */
 	NULL
 };
-const char *agFontFileExts[] = {                /* Recognized font extensions */
+const char *agFontFileExts[] = {             /* Recognized font extensions */
 	".otf", ".ttf", ".ttc",
 	".woff2", ".woff",
 	".dfont", ".fnt",
@@ -222,25 +209,26 @@ const char *agFontFileExts[] = {                /* Recognized font extensions */
 	NULL
 };
 
-const char *agTextMsgTitles[] = {		/* For enum ag_text_msg_title */
+const char *agTextMsgTitles[] = {            /* For enum ag_text_msg_title */
 	N_("Error"),
 	N_("Warning"),
 	N_("Information"),
 	NULL
 };
-const char *agTextJustifyNames[] = {            /* For enum ag_text_justify */
+const char *agTextJustifyNames[] = {         /* For enum ag_text_justify */
 	N_("Left"),
 	N_("Center"),
 	N_("Right"),
 	NULL
 };
-const char *agTextValignNames[] = {             /* For enum ag_text_valign */
+const char *agTextValignNames[] = {          /* For enum ag_text_valign */
 	N_("Top"),
 	N_("Middle"),
 	N_("Bottom"),
 	NULL
 };
 
+AG_Font *_Nullable agDefaultFont = NULL;
 static int agTextInitedSubsystem = 0;
 
 #ifdef HAVE_FREETYPE
@@ -255,17 +243,8 @@ static AG_Surface *_Nonnull GetBitmapGlyph(const AG_Font *_Nonnull, AG_Char);
 # define TextRenderFT     TextRenderDummy
 #endif
 
-#ifdef DEBUG_FOCUS
-# define Debug_Focus AG_Debug
-#else
-# if defined(__GNUC__)
-#  define Debug_Focus(obj, arg...) ((void)0)
-# elif defined(__CC65__)
-#  define Debug_Focus
-# else
-#  define Debug_Focus AG_Debug
-# endif
-#endif /* DEBUG_FOCUS */
+/* Maximum length of specification string of bitmap fonts. */
+#define AG_FONT_BITMAP_SPEC_MAX 28
 
 /* Load an individual glyph from a bitmap font file. */
 static void
@@ -371,13 +350,18 @@ AG_PushTextState(void)
 		AG_FatalError("PushTextState Overflow");
 #endif
 	}
+
 	ts = &agTextStateStack[++agTextStateCur];
+
 	memcpy(ts, tsPrev, sizeof(AG_TextState));
+
 	if (tsPrev->colorANSI != NULL) {
-		const AG_Size size = AG_ANSI_COLOR_LAST*sizeof(AG_Color);
+		const AG_Size size = AG_ANSI_COLOR_LAST * sizeof(AG_Color);
+
 		ts->colorANSI = Malloc(size);
 		memcpy(ts->colorANSI, tsPrev->colorANSI, size);
 	}
+
 	ts->font = AG_FetchFont(OBJECT(tsPrev->font)->name,
 	                        tsPrev->font->spec.size,
 		                tsPrev->font->flags);
@@ -1084,6 +1068,21 @@ TextSizeBitmap(const AG_Char *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
 	}
 }
 
+/*
+ * Calculate the offset in pixels needed to align text based on the
+ * current justification mode.
+ */
+static __inline__ int
+JustifyOffset(int w, int wLine)
+{
+	switch (AG_TEXT_STATE_CUR()->justify) {
+	case AG_TEXT_LEFT:	return (0);
+	case AG_TEXT_CENTER:	return ((w >> 1) - (wLine >> 1));
+	case AG_TEXT_RIGHT:	return (w - wLine);
+	}
+	return (0);
+}
+
 /* Render UCS-4 text to a new surface using a bitmap font. */
 static void
 TextRenderBitmap(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
@@ -1101,13 +1100,13 @@ TextRenderBitmap(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	(void)cBgOrig;
 	(void)cFgOrig;
 
-	rd.x = (tm->nLines > 1) ? AG_TextJustifyOffset(tm->w, tm->wLines[0]) : 0;
+	rd.x = (tm->nLines > 1) ? JustifyOffset(tm->w, tm->wLines[0]) : 0;
 	rd.y = 0;
 	
 	for (c=&ucs[0], line=0; *c != '\0'; c++) {
 		if (*c == '\n') {
 			rd.y += lineskip;
-			rd.x = AG_TextJustifyOffset(tm->w, tm->wLines[++line]);
+			rd.x = JustifyOffset(tm->w, tm->wLines[++line]);
 			continue;
 		}
 		if (*c == '\t') {
@@ -1574,36 +1573,6 @@ AG_TextAlign(int *x, int *y, int wArea, int hArea, int wText, int hText,
 }
 
 /*
- * Return the offset in pixels needed to align text based on the current
- * justification mode.
- */
-int
-AG_TextJustifyOffset(int w, int wLine)
-{
-	switch (AG_TEXT_STATE_CUR()->justify) {
-	case AG_TEXT_LEFT:	return (0);
-	case AG_TEXT_CENTER:	return ((w >> 1) - (wLine >> 1));
-	case AG_TEXT_RIGHT:	return (w - wLine);
-	}
-	return (0);
-}
-
-/*
- * Return the offset in pixels needed to align text based on the current
- * vertical alignment mode.
- */
-int
-AG_TextValignOffset(int h, int hLine)
-{
-	switch (AG_TEXT_STATE_CUR()->valign) {
-	case AG_TEXT_TOP:	return (0);
-	case AG_TEXT_MIDDLE:	return ((h >> 1) - (hLine >> 1));
-	case AG_TEXT_BOTTOM:	return (h - hLine);
-	}
-	return (0);
-}
-
-/*
  * Render text (UTF-8 encoded) onto a newly-allocated surface.
  * Inherit font, FG and BG colors from current text state.
  */
@@ -1647,8 +1616,8 @@ AG_TextRender(const char *text)
 }
 
 /*
- * Render text in native internal format (AG_Char, which is UCS-4 or ASCII)
- * onto a newly allocated surface.
+ * Render text in native internal (AG_Char; UCS-4) format onto a newly
+ * allocated surface.
  */
 AG_Surface *
 AG_TextRenderInternal(const AG_Char *text, AG_Font *font, const AG_Color *cBg,
@@ -1696,7 +1665,9 @@ AG_TextRenderInternal(const AG_Char *text, AG_Font *font, const AG_Color *cBg,
 }
 
 #ifdef HAVE_FREETYPE
-/* Render text using FreeType. */
+/*
+ * Render text using FreeType.
+ */
 static void
 TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
     const AG_TextMetrics *_Nonnull tm, AG_Font *_Nonnull fontOrig,
@@ -1715,14 +1686,16 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	const int lineSkip = fontOrig->lineskip;
 	int xStart, yStart, line, x,y, w;
 
- 	xStart = (tm->nLines>1) ? AG_TextJustifyOffset(tm->w, tm->wLines[0]) : 0;
+ 	xStart = (tm->nLines>1) ? JustifyOffset(tm->w, tm->wLines[0]) : 0;
  	yStart = 0;
+
+	S->guides[0] = (Uint16)(fontCur->height - fontCur->ascent);
 
 	for (ch=&ucs[0], line=0; *ch != '\0'; ch++) {
 		switch (*ch) {
 		case '\n':
 			yStart += lineSkip;
-			xStart = AG_TextJustifyOffset(tm->w, tm->wLines[++line]);
+			xStart = JustifyOffset(tm->w, tm->wLines[++line]);
 			continue;
 		case '\r':
 			xStart = 0;
@@ -1848,10 +1821,10 @@ TextRenderFT(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 					continue;
 
 				src = (Uint8 *)(G->pixmap.buffer +
-				                G->pixmap.pitch*y);
+				                G->pixmap.pitch * y);
 				dst = S->pixels +
-				    (yStart + y + G->yoffset)*S->pitch +
-				    (xStart + G->minx)*BytesPerPixel;
+				    (yStart + y + G->yoffset) * S->pitch +
+				    (xStart + G->minx) * BytesPerPixel;
 	
 				for (x = 0; x < w; x++) {
 					if ((cFg.a = AG_8toH(*src++)) > 0) {

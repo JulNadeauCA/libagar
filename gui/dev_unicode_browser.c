@@ -201,10 +201,10 @@ SelectUnicodeRange(AG_Event *_Nonnull event)
 		    == -1 || utf8text[0] == '\0') {
 			continue;
 		}
-		Snprintf(numtext, sizeof(numtext), "0x%x", (Uint)uchar[0]);
+		Snprintf(numtext, sizeof(numtext), "U+%x", (Uint)uchar[0]);
         
 		/* prep column 1 */
-		utf8seq[0] = '\0';
+		Strlcpy(utf8seq, AGSI_COURIER, sizeof(utf8seq));
 		for (c = &utf8text[0]; *c != '\0'; c++) {
 			char s[16];
 			Snprintf(s, sizeof(s), "\\x%x", (unsigned char)*c);
@@ -250,11 +250,12 @@ AG_DEV_UnicodeBrowser(void)
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	tt = AG_TreetblNew(win, AG_TREETBL_EXPAND, NULL, NULL);
-	AG_TreetblSizeHint(tt, 100, 30);
-	AG_TreetblAddCol(tt, 0, "<XXXXXXX>", "Char");
-	AG_TreetblAddCol(tt, 1, "<XXXXXXX>", "Unicode");
-	AG_TreetblAddCol(tt, 2, "<XXXXXXX>", "UTF-8");
-	AG_SetStyle(tt, "color", "black");
+	AG_TreetblSizeHint(tt, 100, 40);
+	AG_TreetblAddCol(tt, 0, "<XXXXXXX>", _("Char"));
+	AG_TreetblAddCol(tt, 1, "<XXXXXXXXXXXXX>", _("Unicode"));
+	AG_TreetblAddCol(tt, 2, "<XXXXXXXXXXXXXXXXX>", _("UTF-8"));
+	AG_SetStyle(tt, "color", "rgb(20,20,20)");
+	AG_SetStyle(tt, "font-size", "120%");
 
 	AG_SpacerNewHoriz(win);
 

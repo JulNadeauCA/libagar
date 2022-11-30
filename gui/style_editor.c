@@ -598,12 +598,15 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL |
 		                        AG_TEXTBOX_RETURN_BUTTON, "+ ");
+		AG_SetStyle(tb, "font-family", "courier-prime");
+
 		AG_TextboxAutocomplete(tb, CompleteAttribute, NULL);
 		AG_SetEvent(tb, "textbox-return",
 		    InputAttribute, "%p,%p", tb,tgt);
 
 		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
 		    PollAttributes, "%p", tgt);
+		AG_SetStyle(tlAttrs, "font-family", "courier-prime");
 
 		AG_SetEvent(tlAttrs, "tlist-selected",
 		    SelectedAttribute, "%p", tb);
@@ -657,6 +660,7 @@ TargetWidget(AG_Event *_Nonnull event)
 	}
 	
 	AG_NotebookSelectByID(nb, savedTabID);		/* Restore active tab */
+	AG_WidgetCompileStyle(box);
 	AG_WidgetShowAll(box);
 	AG_WidgetUpdate(box);
 }

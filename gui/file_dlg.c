@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1435,9 +1435,10 @@ AG_FileDlgNew(void *parent, Uint flags)
 	AG_SetEvent(fd->tlFiles, "tlist-dblclick", FileDblClicked, "%p", fd);
 
 	/* Current directory label. */
-	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL, ("Directory: %s"), &fd->cwd[0]);
+	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL,
+	    ("Directory: " AGSI_PATH "%s" AGSI_RST),
+	    &fd->cwd[0]);
 	AG_LabelSizeHint(fd->lbCwd, 1, _("Directory: XXXXXXXXXXXXX"));
-	AG_SetStyle(fd->lbCwd, "font-size", "90%");
 
 	/* Manual file/directory entry textbox. */
 	fd->tbFile = AG_TextboxNewS(fd, AG_TEXTBOX_EXCL, _("File: "));
@@ -1466,6 +1467,7 @@ AG_FileDlgNew(void *parent, Uint flags)
 		AG_SetEvent(cb, "checkbox-changed", MaskOptionSelected,"%p",fd);
 		AG_SetStyle(cb, "font-size", "80%");
 	}
+
 	if (!(flags & AG_FILEDLG_NOBUTTONS)) {
 		fd->btnOk = AG_ButtonNewS(fd, AG_BUTTON_EXCL, _("OK"));
 		AG_SetEvent(fd->btnOk, "button-pushed", PressedOK, "%p", fd);
@@ -1657,6 +1659,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 		AG_WidgetSizeReq(fd->btnOk, &rOk);
 		AG_WidgetSizeReq(fd->btnCancel, &rCancel);
 
+		r->h += spacingVert*2;
 		r->h += MAX(rOk.h, rCancel.h) + 1;
 	}
 }
@@ -1719,6 +1722,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull aFD)
 		a.h -= r.h + spacingVert;
 	}
 	a.h -= spacingVert;
+
 	if (fd->comTypes)
 		a.h -= spacingVert;
 	if ((fd->flags & AG_FILEDLG_NOMASKOPTS) == 0)
@@ -1755,6 +1759,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull aFD)
 	if ((fd->flags & AG_FILEDLG_NOBUTTONS) == 0) {      /* OK and Cancel */
 		const int spacingHoriz = WIDGET(fd)->spacingHoriz;
 
+		a.y += (spacingVert << 1);
 		a.w = ((aFD->w - paddingLeft - paddingRight - spacingHoriz) >> 1);
 		a.h = hBtn;
 		AG_WidgetSizeAlloc(fd->btnOk, &a);
