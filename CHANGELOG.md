@@ -34,6 +34,10 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL): New driver for SDL 2.0 (single-window; OpenGL mode).
 - [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW): New driver for SDL 2.0 (multi-window; OpenGL mode).
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_EXPAND_NODES`. Display nodes (items with children) initially in expanded state.
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_NO_SCALE_ICON`. Disable icon scaling when the icon width exceeds the standard width.
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_FIXED_HEIGHT`. Don't reset the item height on "font-changed".
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New item flag `AG_TLIST_ITEM_DISABLED`. Disable the item individually (prevent selection and display in "disabled" state).
 - [**AG_Event**](https://libagar.org/man3/AG_Event): New macro [AG_EVENT_DUMP](https://libagar.org/man3/AG_EVENT_DUMP) to produce a listing of `argv[]` arguments on the console.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): New flag `AG_WIDGET_DISABLE_ON_ATTACH` and functions `AG_PushDisabledState()` and `AG_PopDisabledState`. Make attached child widgets start in DISABLED mode (without raising "widget-disabled").
 - `install-agartest.exe` installer for agartest on Windows.
@@ -41,10 +45,12 @@ All notable changes to Agar will be documented in this file. The format is based
 - Install a copy of the generated Makefile.config as ${DATADIR}/agar.mk.
 - Install a copy of the generated configure.lua as ${DATADIR}/agar.lua.
 - Added `DEBUG_MOUSE` build option (debug delivery of mouse events to widgets).
+- Added graphical characters in the Miscellaneous Technical and Private Use Area (e.g., `AGSI_BLACK_AGAR` -> `U+E000 Agar Logo Filled`). Core Font slot #1 is now mapped to Algue and slot #2 is mapped to Unialgue.
 
 ### Changed
 - Build system updates so configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Those definitions are always available from `${DATADIR}/agar.mk`.
 - Don't install headers from disabled libraries.
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Performance and cosmetic improvements. The rendering routine now uses on-demand-rendered opaque labels for each widget state (or each specific item state).
 - [**AG_Color**](https://libagar.org/man3/AG_Color): Handle `rgb16()` format in [AG_ColorFromString()](https://libagar.org/man3/AG_ColorFromString).
 - [**AG_Object**](https://libagar.org/man3/AG_Object): In `AG_ObjectGenName()`, convert the prefix (class name) to lowercase in its entirety.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): In `AG_WidgetSensitive()`, use the `window` pointer to avoid an unnecessary traversal of parent objects.
