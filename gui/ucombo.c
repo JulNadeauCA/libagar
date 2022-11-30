@@ -185,8 +185,8 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 			AG_TlistSizeHintPixels(tl, com->wPreList, com->hPreList);
 		}
 		AG_WidgetSizeReq(tl, &rList);
-		w = rList.w + (win->wBorderSide << 1);
-		h = rList.h +  win->wBorderBot;
+		w = rList.w + WIDGET(win)->paddingLeft + WIDGET(win)->paddingRight + (win->wBorderSide << 1);
+		h = rList.h + WIDGET(win)->paddingTop + WIDGET(win)->paddingBottom +  win->wBorderBot;
 	}
 	x = WIDGET(com)->rView.x2 - w;
 	y = WIDGET(com)->rView.y1;
