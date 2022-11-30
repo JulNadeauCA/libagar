@@ -272,28 +272,30 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 		goto out;
 
 	if ((mv = mi->view) != NULL) {                            /* Cached */
+		AG_OBJECT_ISA(mv, "AG_Widget:AG_MenuView:*");
 		win = WIDGET(mv)->window;
-		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+		if (win != NULL) {
+			AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 #ifdef DEBUG_EXPAND
-		Debug(m, "Expand [%s] -> " AGSI_RED "%s" AGSI_RST " (cached)\n",
-		    mi->text, OBJECT(win)->name);
+			Debug(m, "Expand [%s] -> %s (cached)\n", mi->text, OBJECT(win)->name);
 #endif
 #if 1
-		/*
-		 * Temporary workaround for sizing problem with recovered
-		 * cached windows.
-		 */
-		AG_MenuInvalidateLabels(mi);
-		AG_ObjectDetach(win);
-		mi->view = NULL;
+			/*
+			 * Temporary workaround for sizing problem with recovered
+			 * cached windows.
+			 */
+			AG_MenuInvalidateLabels(mi);
+			AG_ObjectDetach(win);
+			mi->view = NULL;
 #else
-		AG_MenuInvalidateLabels(mi);
-		AG_WindowSetGeometry(win, x,y, -1,-1);
-		AG_WindowRaise(win);
-		AG_WindowShow(win);
-		AG_ObjectUnlock(m);
-		return (win);
+			AG_MenuInvalidateLabels(mi);
+			AG_WindowSetGeometry(win, x,y, -1,-1);
+			AG_WindowRaise(win);
+			AG_WindowShow(win);
+			AG_ObjectUnlock(m);
+			return (win);
 #endif
+		}
 	}
 
 	winFlags = AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
@@ -310,6 +312,7 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	              AG_WINDOW_WM_DROPDOWN_MENU :
 		      AG_WINDOW_WM_POPUP_MENU;
 	AG_ObjectSetName(win, "_menu%u", agMenuCounter++);
+
 	AG_SetStyle(win, "padding", "0");
 
 #ifdef DEBUG_EXPAND
@@ -326,6 +329,32 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	mv->pmenu = m;
 	mv->pitem = mi;
 	AG_ObjectAttach(win, mv);
+
+	/*
+	 * Apply the "color" style attribute normally associated with the
+	 * AG_MenuView class to the background of the menu expansion window
+	 * so we can avoid a color fill and handle "padding" properly.
+	 */
+	if ((m->flags & AG_MENU_NO_COLOR_BG) == 0) {
+		AG_StyleSheet *css = (WIDGET(mv)->css) ? WIDGET(m)->css :
+		                     &agDefaultCSS;
+		char *cssData;
+	
+		if (AG_LookupStyleSheet(css, mv, "color", &cssData) &&
+		    cssData[0] != '\0') {
+			AG_Color cMenu;
+
+			AG_ColorFromString(&cMenu, cssData, NULL);
+#if (AG_MODEL == AG_LARGE)
+			AG_SetStyleF(win, "background-color", "rgb16(%d,%d,%d)",
+			    cMenu.r, cMenu.g, cMenu.b);
+#else
+			AG_SetStyleF(win, "background-color", "rgb8(%d,%d,%d)",
+			    cMenu.r, cMenu.g, cMenu.b);
+#endif
+		}
+	}
+
 
 	if (winParent) {
 		AG_WindowAttach(winParent, win);
@@ -449,20 +478,6 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	}
 }
 
-#if 0
-static void
-OnAttach(AG_Event *_Nonnull event)
-{
-	AG_Widget *pwid = AG_PTR(1);
-	AG_Window *win;
-	
-	AG_OBJECT_ISA(pwid, "AG_Widget:*");
-
-	if ((win = AG_ParentWindow(pwid)) != NULL)
-		AG_WindowSetPadding(win, -1, -1, 0, win->bPad);
-}
-#endif
-
 /* Parent Menu (if any) must be locked. */
 static AG_MenuItem *_Nonnull
 CreateItem(AG_MenuItem *_Nullable miParent, const char *_Nullable text,
@@ -478,8 +493,7 @@ CreateItem(AG_MenuItem *_Nullable miParent, const char *_Nullable text,
 	mi->text = (text) ? Strdup(text) : Strdup("");
 	mi->lblMenu[1] = mi->lblMenu[0] = -1;
 	mi->lblView[2] = mi->lblView[1] = mi->lblView[0] = -1;
-	mi->iconSrc = (icon) ? AG_SurfaceDup(icon) : NULL;  /* TODO shared */
-	mi->icon = -1;
+	mi->icon = (icon) ? AG_SurfaceDup(icon) : NULL;  /* TODO NODUP */
 	mi->value = -1;
 	mi->stateFn = NULL;
 	mi->state = (pmenu) ? pmenu->curState : 1;
@@ -526,7 +540,7 @@ CreateItem(AG_MenuItem *_Nullable miParent, const char *_Nullable text,
 }
 
 static void
-StyleChanged(AG_Event *_Nonnull event)
+FontChanged(AG_Event *_Nonnull event)
 {
 	AG_Menu *m = AG_MENU_SELF();
 	const AG_Font *font = WFONT(m);
@@ -535,29 +549,70 @@ StyleChanged(AG_Event *_Nonnull event)
 	m->itemh = font->lineskip + m->tPadLbl + m->bPadLbl;
 }
 
+static __inline__ _Const_Attribute int
+KeyModMatch(AG_KeyMod miMod, AG_KeyMod kmod)
+{
+	if (kmod == 0 || (miMod & kmod)) {
+		return (1);
+	}
+	if ((miMod & AG_KEYMOD_CTRL_SHIFT) &&
+	    (kmod & AG_KEYMOD_CTRL) && (kmod & AG_KEYMOD_SHIFT)) {
+		return (1);
+	}
+	if ((miMod & AG_KEYMOD_CTRL_ALT) &&
+	    (kmod & AG_KEYMOD_CTRL) && (kmod & AG_KEYMOD_ALT)) {
+		return (1);
+	}
+	return (0);
+}
+
 static int
 KeyDown_Item(AG_MenuItem *mi, AG_KeySym ksym, AG_KeyMod kmod)
 {
 	AG_Menu *m = mi->pmenu;
 	AG_MenuItem *miSub;
+	int miState;
 
 	TAILQ_FOREACH(miSub, &mi->subItems, items) {
 		if (KeyDown_Item(miSub, ksym, kmod))             /* Recurse */
 			return (1);
 	}
-	if (mi->key_equiv != 0) {
-		if (mi->key_equiv == ksym &&
-		    (mi->key_mod == 0 || (mi->key_mod & kmod) ||
-		     ((mi->key_mod & AG_KEYMOD_CTRL_SHIFT) && (kmod & AG_KEYMOD_CTRL) &&
-		                                              (kmod & AG_KEYMOD_SHIFT))) &&
-		    mi->clickFn != NULL) {
-			AG_MenuCollapseAll(m);
-			if (mi->clickFn->fn != NULL) {
-				Debug(m, "Keyboard call (\"%s\")\n", mi->text);
-				mi->clickFn->fn(mi->clickFn);
-				return (1);
-			}
+	if (mi->key_equiv == 0 || mi->key_equiv != ksym ||
+	    !KeyModMatch(mi->key_mod, kmod))
+		return (0);
+
+	/* Honor disabled state */
+	miState = mi->state;
+	if (mi->stateFn != NULL) {
+		AG_PostEventByPtr(m, mi->stateFn, "%p", &miState);
+	}
+	if (!miState)
+		return (0);
+
+	if (mi->clickFn != NULL) {
+		AG_MenuCollapseAll(m);
+		if (mi->clickFn->fn != NULL) {
+			Debug(m, "Keyboard call (\"%s\")\n", mi->text);
+			mi->clickFn->fn(mi->clickFn);
+			return (1);
 		}
+	} else if (mi->bind_type != AG_MENU_NO_BINDING) {
+#ifdef AG_THREADS
+		if (mi->bind_lock) { AG_MutexLock(mi->bind_lock); }
+#endif
+		AG_MenuBoolToggle(mi);
+#ifdef AG_THREADS
+		if (mi->bind_lock) { AG_MutexUnlock(mi->bind_lock); }
+#endif
+		Debug(m, "Keyboard toggle (\"%s\") <- %s\n", mi->text,
+		    AG_MenuBoolGet(mi) ? "TRUE" : "FALSE");
+		if ((m->flags & AG_MENU_NO_BOOL_MSG) == 0) {
+			AG_TextTmsg(AG_MSG_INFO,
+			    (m->flags & AG_MENU_FAST_BOOL_MSG) ? 400 : 1000,
+			    "[%s] " AGSI_ARROW_LEFT " %s",
+			    mi->text, AG_MenuBoolGet(mi) ? _("True") : _("False"));
+		}
+		return (1);
 	}
 	return (0);
 }
@@ -568,6 +623,10 @@ KeyDown(AG_Event *_Nonnull event)
 	AG_Menu *m = AG_MENU_SELF();
 	AG_KeySym ks = (AG_KeySym)AG_INT(1);
 	AG_KeyMod kmod = (AG_KeyMod)AG_INT(2);
+
+	if (m->style != AG_MENU_GLOBAL &&
+	    (WIDGET(m)->window == NULL || !AG_WindowIsFocused(WIDGET(m)->window)))
+		return;
 
 	KeyDown_Item(m->root, ks, kmod);
 }
@@ -580,7 +639,6 @@ Init(void *_Nonnull obj)
 	WIDGET(m)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
 	                    AG_WIDGET_UNFOCUSED_BUTTONUP |
 	                    AG_WIDGET_UNFOCUSED_KEYDOWN |
-	                    AG_WIDGET_UNFOCUSED_KEYUP |
 			    AG_WIDGET_USE_TEXT;
 	m->flags = 0;
 	m->style = AG_MENU_DROPDOWN;
@@ -603,15 +661,14 @@ Init(void *_Nonnull obj)
 
 	AG_SetEvent(m, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(m, "mouse-motion", MouseMotion, NULL);
-/*	AG_AddEvent(m, "attached", OnAttach, NULL); */
-	AG_AddEvent(m, "font-changed", StyleChanged, NULL);
-	AG_AddEvent(m, "palette-changed", StyleChanged, NULL);
+	AG_AddEvent(m, "font-changed", FontChanged, NULL);
+	AG_AddEvent(m, "palette-changed", FontChanged, NULL);
 	AG_SetEvent(m, "key-down", KeyDown, NULL);
 }
 
 /* Change the icon associated with a menu item. */
 void
-AG_MenuSetIcon(AG_MenuItem *mi, const AG_Surface *iconSrc)
+AG_MenuSetIcon(AG_MenuItem *mi, const AG_Surface *icon)
 {
 	AG_Menu *m = mi->pmenu;
 
@@ -619,18 +676,12 @@ AG_MenuSetIcon(AG_MenuItem *mi, const AG_Surface *iconSrc)
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
-	if (mi->iconSrc) {
-		AG_SurfaceFree(mi->iconSrc);
+	if (mi->icon) {
+		AG_SurfaceFree(mi->icon);
 	}
-	mi->iconSrc = iconSrc ? AG_SurfaceDup(iconSrc) : NULL;
+	mi->icon = icon ? AG_SurfaceDup(icon) : NULL;
 
-	if (mi->icon != -1 &&
-	    mi->parent &&
-	    mi->parent->view) {
-		AG_WidgetUnmapSurface(mi->parent->view, mi->icon);
-		mi->icon = -1;
-	}
-
+	AG_MenuInvalidateLabels(mi);
 	AG_Redraw(m);
 	AG_ObjectUnlock(m);
 }
@@ -1303,8 +1354,8 @@ AG_MenuItemFree(AG_MenuItem *mi)
 		miSubNext = TAILQ_NEXT(miSub, items);
 		AG_MenuItemFree(miSub);                          /* Recurse */
 	}
-	if (mi->iconSrc) {
-		AG_SurfaceFree(mi->iconSrc);
+	if (mi->icon) {
+		AG_SurfaceFree(mi->icon);
 	}
 	Free(mi->text);
 	free(mi);
@@ -1360,10 +1411,6 @@ InvalidateLabels(AG_MenuItem *_Nonnull mi)
 				AG_OBJECT_ISA(mv, "AG_Widget:AG_MenuView:*");
 				AG_WidgetUnmapSurface(mv, mi->lblView[i]);
 				mi->lblView[i] = -1;
-			} else {
-				Debug(NULL,
-				    "MenuInvalidateLabels: \"%s\" has no parent MenuView\n",
-				    mi->text);
 			}
 		}
 	}
@@ -1396,6 +1443,84 @@ AG_MenuState(AG_MenuItem *mi, int state)
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 
 	m->curState = state;
+}
+
+/*
+ * Return the current boolean value of an item.
+ * The menu must be locked.
+ */
+int
+AG_MenuBoolGet(AG_MenuItem *mi)
+{
+	int val = 0;
+
+	switch (mi->bind_type) {
+	case AG_MENU_INT_BOOL:
+		val = *(int *)mi->bind_p;
+		break;
+	case AG_MENU_INT8_BOOL:
+		val = *(Uint8 *)mi->bind_p;
+		break;
+	case AG_MENU_INT_FLAGS:
+		val = *(int *)mi->bind_p & mi->bind_flags;
+		break;
+	case AG_MENU_INT8_FLAGS:
+		val = *(Uint8 *)mi->bind_p & mi->bind_flags;
+		break;
+	case AG_MENU_INT16_FLAGS:
+		val = *(Uint16 *)mi->bind_p & mi->bind_flags;
+		break;
+	case AG_MENU_INT32_FLAGS:
+		val = *(Uint32 *)mi->bind_p & mi->bind_flags;
+		break;
+	default:
+		break;
+	}
+	return (mi->flags & AG_MENU_ITEM_INVERTED) ? !val : val;
+}
+
+/*
+ * Toggle the boolean value of an item.
+ * The menu must be locked.
+ */
+void
+AG_MenuBoolToggle(AG_MenuItem *mi)
+{
+	switch (mi->bind_type) {
+	case AG_MENU_INT_BOOL: {
+		int *boolp = (int *)mi->bind_p;
+		*boolp = !(*boolp);
+		break;
+	}
+	case AG_MENU_INT8_BOOL: {
+		Uint8 *boolp = (Uint8 *) mi->bind_p;
+		*boolp = !(*boolp);
+		break;
+	}
+	case AG_MENU_INT_FLAGS: {
+		int *flags = (int *)mi->bind_p;
+		AG_INVFLAGS(*flags, mi->bind_flags);
+		break;
+	}
+	case AG_MENU_INT8_FLAGS: {
+		Uint8 *flags = (Uint8 *)mi->bind_p;
+		AG_INVFLAGS(*flags, mi->bind_flags);
+		break;
+	}
+	case AG_MENU_INT16_FLAGS: {
+		Uint16 *flags = (Uint16 *)mi->bind_p;
+		AG_INVFLAGS(*flags, mi->bind_flags);
+		break;
+	}
+	case AG_MENU_INT32_FLAGS: {
+		Uint32 *flags = (Uint32 *)mi->bind_p;
+		AG_INVFLAGS(*flags, mi->bind_flags);
+		break;
+	}
+	case AG_MENU_NO_BINDING:
+	default:
+		break;
+	}
 }
 
 void
@@ -1432,7 +1557,7 @@ Draw(void *_Nonnull obj)
 		}
 		if (activeState) {
 			if (mi->lblMenu[1] == -1) {
-				AG_TextColor(&WCOLOR(m, TEXT_COLOR));
+				AG_TextColor(&WCOLOR_DEFAULT(m, TEXT_COLOR));
 				mi->lblMenu[1] = (mi->text == NULL) ? -1 :
 				    AG_WidgetMapSurface(m, AG_TextRender(mi->text));
 			}

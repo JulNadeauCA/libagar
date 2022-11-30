@@ -1,4 +1,4 @@
-.\" Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2005-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -116,18 +116,11 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-Acceptable
+See the
+.Sx FLAGS
+sections for available
 .Fa flags
-include:
-.Bl -tag -width "AG_MENU_EXPAND "
-.It AG_MENU_HFILL
-Expand horizontally in parent container.
-.It AG_MENU_VFILL
-Expand vertically in parent container.
-.It AG_MENU_EXPAND
-Shorthand for
-.Dv AG_MENU_HFILL | AG_MENU_VFILL .
-.El
+options.
 .Pp
 The
 .Fn AG_MenuNewGlobal
@@ -458,7 +451,7 @@ structure:
 .It Ft char *text
 Displayed text for the menu item (read-only, set by
 .Fn AG_MenuSetLabel ) .
-.It Ft AG_Surface *iconSrc
+.It Ft AG_Surface *icon
 The
 .Xr AG_Surface 3
 of the menu icon, or NULL (read-only, set by
@@ -480,6 +473,39 @@ Back pointer to the parent
 .Ft AG_Menu
 (read-only).
 .El
+.Sh FLAGS
+The
+.Va flags
+member of the
+.Nm
+structure accepts the following flags:
+.Bl -tag -width "AG_MENU_FAST_COLOR_BG "
+.It AG_MENU_HFILL
+Fill any remaining horizontal space (hint to vertically-packing containers).
+.It AG_MENU_VFILL
+Fill any remaining vertical space (hint to horizontal-packing containers).
+.It AG_MENU_EXPAND
+Shorthand for
+.Dv AG_MENU_HFILL | AG_MENU_VFILL .
+.It AG_MENU_NO_COLOR_BG
+By default, the "background-color" of menu expansion windows is inherited
+from the "color" attribute associated with the
+.Ft AG_MenuView
+class (see
+.Xr AG_Style 3 ) .
+This flag disables that behavior, which can be useful for some applications
+(for example, if alternate colors are to be assigned to specific menu
+expansions).
+.It AG_MENU_NO_BOOL_MSG
+By default, a notification message is displayed in order to provide visual
+feedback when the user toggles a Menu-bound boolean value with a keyboard
+shortcut (and the menu is currently hidden).
+This flag disables that behavior.
+.It AG_MENU_FAST_BOOL_MSG
+By default, the notification message displayed when the user toggles a boolean
+is displayed for 1s.
+This flag causes the message to be displayed for 250ms instead.
+.El
 .Sh EXAMPLES
 The following code fragment creates a popup menu with a disabled item:
 .Bd -literal -offset indent
@@ -487,7 +513,9 @@ AG_PopupMenu *pm;
 AG_MenuItem *mi;
 
 pm = AG_PopupNew(myParentWidget);
+
 AG_MenuAction(pm->root, "Copy", NULL, DoCopy, NULL);
+
 mi = AG_MenuAction(pm->root, "Paste", NULL, DoPaste, NULL);
 mi->state = (myClipboard->contents > 0);
 .Ed
@@ -506,9 +534,13 @@ AG_PopupMenu *pm;
 AG_MenuItem *mi;
 
 pm = AG_PopupNew(myParentWidget);
+
 AG_MenuAction(pm->root, "Copy", NULL, DoCopy, NULL);
+
 mi = AG_MenuAction(pm->root, "Paste", NULL, DoPaste, NULL);
-mi->stateFn = AG_SetIntFn(pm->menu, NULL, PasteActive, "%p", myClipboard);
+
+mi->stateFn = AG_SetIntFn(pm->menu, NULL,
+    PasteActive, "%p", myClipboard);
 .Ed
 .Pp
 The following code fragment associates a menu with an
@@ -541,6 +573,7 @@ void
 SayHello(AG_Event *event)
 {
 	char *s = AG_STRING(1);
+	
 	AG_TextMsg(AG_MSG_INFO, "Hello, %s!", s);
 }
 
@@ -568,6 +601,7 @@ AG_MenuItem *item = AG_MenuNode(menu->root, "File", NULL);
 .Xr AG_Event 3 ,
 .Xr AG_Intro 3 ,
 .Xr AG_KeySym 3 ,
+.Xr AG_StyleSheet 3 ,
 .Xr AG_Surface 3 ,
 .Xr AG_Tlist 3 ,
 .Xr AG_Toolbar 3 ,

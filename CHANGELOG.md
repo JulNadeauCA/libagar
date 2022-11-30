@@ -11,7 +11,6 @@ All notable changes to Agar will be documented in this file. The format is based
 - New COBOL bindings: [GnuCOBOL](https://sourceforge.net/projects/open-cobol/) and [GuiCOBOL](http://www.opencobol.altervista.org).
 - [**AG_Console**](https://libagar.org/man3/AG_Console): Handle ansi cursor and terminal operations. Clipboard integration.
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): Display only those styles that are available for a given font (as opposed to a static list of styles).
-- [**AG_Menu**](https://libagar.org/man3/AG_Menu): Implement focusability and keyboard navigation methods. Handle "font-changed" better under multi-window drivers.
 - [**AG_Notebook**](https://libagar.org/man3/AG_Notebook): Fix padding issues. Add disposition modes Bottom, Left & Right.
 - [**AG_Pixmap**](https://libagar.org/man3/AG_Pixmap) & [**AG_Fixed**](https://libagar.org/man3/AG_Fixed): Zoom operations.
 - [**AG_StyleEditor**](https://libagar.org/man3/AG_StyleEditor): Edition of stylesheet rules.
@@ -33,6 +32,9 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB): New driver for SDL 2.0 (single-window; frame-buffer mode).
 - [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL): New driver for SDL 2.0 (single-window; OpenGL mode).
 - [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW): New driver for SDL 2.0 (multi-window; OpenGL mode).
+- [**AG_Menu**](https://libagar.org/man3/AG_Menu): Implemented keyboard shortcuts. Added `AG_MENU_NO_BOOL_MSG` and `AG_MENU_FAST_BOOL_MSG` options.
+- [**AG_Menu**](https://libagar.org/man3/AG_Menu): Improved the performance of the `AG_MenuView` renderer by caching state-dependent opaque labels (embedding any icons), so blending is no longer required. Improved appearance of `AG_MenuView`.
+- [**AG_Menu**](https://libagar.org/man3/AG_Menu): When an `AG_MenuView` is detached, immediately invalidate the `view` pointers of its `AG_MenuItem`.
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_EXPAND_NODES`. Display nodes (items with children) initially in expanded state.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_NO_SCALE_ICON`. Disable icon scaling when the icon width exceeds the standard width.
@@ -50,9 +52,9 @@ All notable changes to Agar will be documented in this file. The format is based
 ### Changed
 - Build system updates so configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Those definitions are always available from `${DATADIR}/agar.mk`.
 - Don't install headers from disabled libraries.
-- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Performance and cosmetic improvements. The rendering routine now uses on-demand-rendered opaque labels for each widget state (or each specific item state).
 - [**AG_Color**](https://libagar.org/man3/AG_Color): Handle `rgb16()` format in [AG_ColorFromString()](https://libagar.org/man3/AG_ColorFromString).
 - [**AG_Object**](https://libagar.org/man3/AG_Object): In `AG_ObjectGenName()`, convert the prefix (class name) to lowercase in its entirety.
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Performance and cosmetic improvements. The rendering routine now uses on-demand-rendered opaque labels for each widget state (or each specific item state).
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): In `AG_WidgetSensitive()`, use the `window` pointer to avoid an unnecessary traversal of parent objects.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Prevent delivery of redundant "widget-shown" or "widget-hidden" events if `AG_WidgetShow()` and `AG_WidgetHide()` are called multiple times.
 
@@ -62,6 +64,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Fixed `double` <-> `long` conversion warnings in `math/m_sparse*`.
 - [**wgl**](https://libagar.org/man3/AG_DriverWGL): Fixed a bug in cursor handling. When showing a window initially, perform size allocation after having initialized the cursors so that the initial cursor-change areas are correctly established.
 - `install-sdk.exe` now installs include files in `include\x86` or `include\x64`.
+- [**AG_Menu**](https://libagar.org/man3/AG_Menu): Fixed styling errors. Honor the `#disabled` state.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox), [**AG_Editable**](https://libagar.org/man3/AG_Editable) and [**AG_Console**](https://libagar.org/man3/AG_Console): Fix horizontal scrolling (Shift + Mouse Wheel) behavior.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Fixed non-delivery of `mouse-button-down` events to hidden and subsequently re-shown widgets (e.g., widgets under a Notebook). Thanks [Walter](https://github.com/WallyZambotti)!
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Deliver `widget-hidden` when detaching a widget from a visible window.

@@ -608,7 +608,7 @@ AG_DestroyGraphics(void)
 	AG_DestroyGUI();
 }
 
-/* Close any expanded menu window prior to zooming. */
+/* Close any expanded Menu or Combo expansion window prior to zooming. */
 static void
 CloseMenuWindows(void)
 {
@@ -620,8 +620,10 @@ CloseMenuWindows(void)
 		AG_FOREACH_WINDOW(win, drv) {
 			if (win->visible &&
 			    (win->wmType == AG_WINDOW_WM_DROPDOWN_MENU ||
-			     win->wmType == AG_WINDOW_WM_POPUP_MENU))
+			     win->wmType == AG_WINDOW_WM_POPUP_MENU ||
+			     win->wmType == AG_WINDOW_WM_COMBO)) {
 				AG_PostEvent(win, "window-close", NULL);
+			}
 		}
 	}
 }

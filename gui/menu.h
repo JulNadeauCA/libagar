@@ -23,12 +23,12 @@ typedef struct ag_menu_item {
 	char *_Nonnull text;		/* Label text */
 
 	int lblMenu[2];			/* Cached surfaces of AG_Menu(3) */
+					/* 0=Disabled, 1=Enabled */
 	int lblView[3];			/* Cached surfaces of AG_MenuView(3) */
 					/* 0=Disabled, 1=Enabled, 2=Selected */
-	Uint32 _pad1;
-	AG_Surface *_Nullable iconSrc;	/* Icon surface source */
-	int                   icon;	/* Icon surface mapping */
+
 	int value;			/* Default bool value binding */
+	AG_Surface *_Nullable icon;	/* Icon surface */
 	AG_Function *_Nullable stateFn;	/* State function (overrides flag) */
 	int                    state;	/* State flag */
 	AG_KeySym key_equiv;		/* Key shortcut */
@@ -65,7 +65,7 @@ typedef struct ag_menu_item {
 
 	AG_TAILQ_HEAD_(ag_menu_item) subItems;      /* Child items */
 	Uint                        nSubItems;
-	Uint32 _pad2;
+	Uint32 _pad;
 	AG_TAILQ_ENTRY(ag_menu_item) items;         /* In parent */
 } AG_MenuItem;
 
@@ -93,18 +93,26 @@ enum ag_menu_style {
 };
 
 typedef struct ag_menu {
-	struct ag_widget wid;             /* AG_Widget -> AG_Menu */
+	struct ag_widget wid;       /* AG_Widget -> AG_Menu */
+
 	Uint flags;
-#define AG_MENU_HFILL  0x01
-#define AG_MENU_VFILL  0x02
-#define AG_MENU_EXPAND (AG_MENU_HFILL | AG_MENU_VFILL)
-	enum ag_menu_style style;         /* Menu style */
-	AG_MenuItem *_Nonnull root;       /* Root menu item */
-	int selecting;                    /* Selection in progress */
-	int lPadLbl, rPadLbl;             /* Item label padding in pixels */
+#define AG_MENU_HFILL         0x01
+#define AG_MENU_VFILL         0x02
+#define AG_MENU_NO_COLOR_BG   0x04  /* Don't use parent MenuView's "color" as the
+                                       "background-color" of menu-expansion windows. */
+#define AG_MENU_NO_BOOL_MSG   0x08  /* Don't notify the user when a boolean has
+                                       been toggled by a keyboard shortcut. */
+#define AG_MENU_FAST_BOOL_MSG 0x10  /* Display the notification message only
+                                       for 400ms (default = 1s). */
+#define AG_MENU_EXPAND             (AG_MENU_HFILL | AG_MENU_VFILL)
+
+	enum ag_menu_style style;   /* Menu style */
+	AG_MenuItem *_Nonnull root; /* Root menu item */
+	int selecting;              /* Selection in progress */
+	int lPadLbl, rPadLbl;       /* Item label padding in pixels */
 	int tPadLbl, bPadLbl;
-	int itemh;                        /* Item height (optimization) */
-	int curState;                     /* For MenuState() */
+	int itemh;                  /* Item height (optimization) */
+	int curState;               /* For MenuState() */
 	Uint32 _pad;
 	AG_MenuItem *_Nullable itemSel;   /* Selected top-level item */
 	AG_Toolbar *_Nullable curToolbar; /* For MenuToolbar() */
@@ -192,6 +200,9 @@ void AG_MenuFreeSubitems(AG_MenuItem *_Nonnull);
 void	AG_MenuState(AG_MenuItem *_Nonnull, int);
 #define AG_MenuDisable(m) AG_MenuState((m),0)
 #define AG_MenuEnable(m) AG_MenuState((m),1)
+int     AG_MenuBoolGet(AG_MenuItem *_Nonnull);
+void    AG_MenuBoolToggle(AG_MenuItem *_Nonnull);
+
 void    AG_MenuToolbar(AG_MenuItem *_Nonnull, AG_Toolbar *_Nullable);
 
 AG_MenuItem *_Nonnull AG_MenuNode(AG_MenuItem *_Nonnull, const char *_Nullable,
