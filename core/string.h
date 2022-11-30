@@ -57,9 +57,7 @@ typedef AG_Size (*AG_FmtStringExtFn)(struct ag_fmt_string *_Nonnull,
 typedef struct ag_fmt_string_ext {
 	char *_Nonnull fmt;		/* Format specifier string */
 	AG_Size        fmtLen;		/* Specifier length */
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad;
-#endif
+	AG_SIZE_PADDING(_pad);
 	_Nonnull AG_FmtStringExtFn fn;	/* Callback function */
 } AG_FmtStringExt;
 

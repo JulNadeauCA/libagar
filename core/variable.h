@@ -85,10 +85,8 @@ typedef struct ag_variable_type_info {
 	AG_VariableType typeTgt;   /* Pointer target type (if indirLvl > 0) */
 	int code;                  /* Numerical code (-1 = not serializable) */
 	AG_Size size;              /* Size in bytes */
+	AG_SIZE_PADDING(_pad);
 #endif /* !AG_SMALL */
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad;
-#endif
 } AG_VariableTypeInfo;
 
 /* Variable-stored data */

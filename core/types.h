@@ -204,16 +204,22 @@
 # define AG_Offset   Sint16
 # define AG_SIZE_MAX 0xffff
 # define AG_OFFS_MAX 0x7fff
+# define AG_SIZE_PADDING(name)   Uint8 name[6]
+# define AG_OFFSET_PADDING(name) Uint8 name[6]
 #elif AG_MODEL == AG_MEDIUM
 # define AG_Size     Uint32
 # define AG_Offset   Sint32
 # define AG_SIZE_MAX 0xffffffff
 # define AG_OFFS_MAX 0x7fffffff
+# define AG_SIZE_PADDING(name)   Uint32 name
+# define AG_OFFSET_PADDING(name) Uint32 name
 #elif AG_MODEL == AG_LARGE
 # define AG_Size     Uint64
 # define AG_Offset   Sint64
 # define AG_SIZE_MAX 0xffffffffffffffff
 # define AG_OFFS_MAX 0x7fffffffffffffff
+# define AG_SIZE_PADDING(name)   /* none */
+# define AG_OFFSET_PADDING(name) /* none */
 #else
 # error "Invalid AG_MODEL"
 #endif

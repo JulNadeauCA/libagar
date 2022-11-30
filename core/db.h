@@ -14,9 +14,7 @@ struct ag_db;
 typedef struct ag_dbt {
 	void *_Nonnull data;
 	AG_Size        size;
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad;
-#endif
+	AG_SIZE_PADDING(_pad);
 } AG_Dbt;
 
 typedef int (*AG_DbIterateFn)(const AG_Dbt *_Nonnull,
