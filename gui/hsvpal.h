@@ -31,9 +31,7 @@ typedef struct ag_hsvpal {
 #endif
 	AG_Color color;			/* Native Agar color */
 	AG_Rect rPrev;			/* Filled color preview area */
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad1;
-#endif
+	AG_COLOR_PADDING(_pad1);
 	AG_Surface *_Nullable surface;	/* Cached surface */
 	int surfaceId;
 	int selcircle_r;		/* Radius of selection circles */

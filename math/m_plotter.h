@@ -76,9 +76,7 @@ typedef struct m_plot {
 	char label_txt[32];			/* Label text */
 	int label;				/* Label surface handle */
 	AG_Color color;				/* Plot color */
-#if AG_MODEL == AG_LARGE
-	Uint32 _pad;
-#endif
+	AG_COLOR_PADDING(_pad);
 	M_Real xScale, yScale;			/* Scaling factors */
 	int xOffs, yOffs;			/* Offset in display */
 	int xLabel, yLabel;			/* Item position */

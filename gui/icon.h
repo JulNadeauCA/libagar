@@ -28,9 +28,7 @@ typedef struct ag_icon {
 	int xSaved, ySaved;		/* Saved coordinates */
 	int wSaved, hSaved;		/* Saved geometry */
 	AG_Color cBackground;		/* Background fill color */
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad2;
-#endif
+	AG_COLOR_PADDING(_pad2);
 	AG_Timer toDblClick;		/* For double click detection */
 } AG_Icon;
 

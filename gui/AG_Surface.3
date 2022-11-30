@@ -209,10 +209,10 @@ See
 .Xr AG_GL_UpdateTexture 3 .
 .It AG_SURFACE_MAPPED
 Surface is attached to an
-.Xr AG_Widget 3
-(so any calls to
+.Xr AG_Widget 3 .
+Calls to
 .Xr AG_SurfaceFree 3
-are disallowed).
+will result in a fatal assertion (Debug mode only).
 .El
 .Pp
 The

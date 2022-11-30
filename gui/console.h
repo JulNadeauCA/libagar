@@ -32,9 +32,7 @@ typedef struct ag_console_file {
 	char *_Nullable label;		 /* Label (e.g., filename or id) */
 	void *pFILE;			 /* FILE * pointer */
 	AG_Offset offs;			 /* Current file offset */
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad;
-#endif
+	AG_OFFSET_PADDING(_pad);
 	AG_Color *_Nullable color;	 /* Alternate color */
 	const AG_NewlineFormat *newline; /* Newline encoding */
 	AG_TAILQ_ENTRY(ag_console_file) files;

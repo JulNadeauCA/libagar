@@ -75,11 +75,12 @@ enum ag_font_spec_source {
 	AG_FONT_SOURCE_MEMORY			/* Read from memory */
 };
 
+/* Epsilon for font point size comparisons. */
 #ifndef AG_FONT_PTS_EPSILON
 #define AG_FONT_PTS_EPSILON 0.01
 #endif
 
-/* ANSI 3- and 4-bit colors */
+/* ANSI 3-bit and 4-bit colors. */
 enum ag_ansi_color {
 	AG_ANSI_BLACK,		/* fg=30 bg=40 */
 	AG_ANSI_RED,
@@ -100,7 +101,7 @@ enum ag_ansi_color {
 	AG_ANSI_COLOR_LAST
 };
 
-/* ANSI escape codes */
+/* Raw ANSI escape codes. */
 enum ag_text_ansi_control {
 	AG_ANSI_SS2,			/* G2 character set (xterm) */
 	AG_ANSI_SS3,			/* G3 character set (xterm) */
@@ -237,9 +238,7 @@ typedef struct ag_font_spec {
 		struct {
 			const Uint8 *_Nonnull data;  /* Source memory region */
 			AG_Size size;                /* Size in bytes */
-#if AG_MODEL == AG_MEDIUM
-			Uint32 _pad;
-#endif
+			AG_SIZE_PADDING(_pad);
 		} mem;
 	} source;
 } AG_FontSpec;
@@ -310,11 +309,9 @@ typedef struct ag_font {
 
 typedef AG_TAILQ_HEAD(ag_fontq, ag_font) AG_FontQ;
 
-#define AG_FONT_BITMAP_SPEC_MAX 28
-
 /*
  * An element of the rendering attribute stack.
- * SYNC with CompareTextStates() in gui/text_cache.c.
+ * Sync with CompareTextStates() in gui/text_cache.c.
  */
 typedef struct ag_text_state {
 	AG_Font *_Nonnull font;		/* Font face */
@@ -380,7 +377,6 @@ extern const AG_FontAdjustment agFontAdjustments[];
 
 extern const char *agCoreFonts[];
 extern const char *agFontFileExts[];
-extern const char *agFontTypeNames[];
 extern const char *agTextMsgTitles[];
 extern const char *agTextJustifyNames[];
 extern const char *agTextValignNames[];
@@ -432,8 +428,6 @@ void AG_TextError(const char *_Nonnull, ...)
 
 void AG_TextAlign(int *_Nonnull, int *_Nonnull, int,int, int,int,
                   int,int,int, int, enum ag_text_justify, enum ag_text_valign);
-int  AG_TextJustifyOffset(int, int) _Pure_Attribute;
-int  AG_TextValignOffset(int, int) _Pure_Attribute;
 
 AG_Surface *_Nonnull AG_TextRenderF(const char *_Nonnull, ...) _Warn_Unused_Result;
 AG_Surface *_Nonnull AG_TextRender(const char *_Nonnull) _Warn_Unused_Result;

@@ -38,10 +38,7 @@ typedef struct ag_glview {
 	float mTexture[16];			/* Texture matrix to load */
 
 	AG_Color bgColor;			/* Background color */
-
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad2;
-#endif
+	AG_COLOR_PADDING(_pad2);
 } AG_GLView;
 
 #define AGGLVIEW(obj)            ((AG_GLView *)(obj))

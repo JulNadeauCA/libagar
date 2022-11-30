@@ -33,9 +33,7 @@ typedef struct ag_editable_clipboard {
 	char encoding[32];		/* Character set encoding */
 	AG_Char *_Nullable s;		/* Clipboard contents */
 	AG_Size len;			/* Length in characters */
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad;
-#endif
+	AG_SIZE_PADDING(_pad);
 } AG_EditableClipboard;
 
 /* Autocomplete context */

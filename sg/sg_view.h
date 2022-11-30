@@ -63,9 +63,9 @@ typedef struct sg_view {
 	float    transProgress;		/* Transition state */
 	AG_Color transFadeColor;	/* Color for fade */
 	Uint     transDuration;		/* Duration for transition (ms) */
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad1;
-#endif
+
+	AG_COLOR_PADDING(_pad1);
+
 	struct sg_camera *_Nullable cam;	/* Current camera */
 	struct sg_camera *_Nullable camTrans;	/* Transitioning to camera */
 #ifdef AG_DEBUG

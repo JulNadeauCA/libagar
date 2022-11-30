@@ -72,10 +72,8 @@ typedef struct ag_driver_sw {
 	Uint rNom;			/* Nominal refresh rate (ms) */
 	int rCur;			/* Effective refresh rate (ms) */
 	AG_Color bgColor;		/* "bgColor" setting */
+	AG_COLOR_PADDING(_pad);
 	Uint rLast;			/* Refresh rate timestamp */
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad;
-#endif
 	struct ag_menu *_Nullable bgPopup;	/* Background popup menu */
 } AG_DriverSw;
 

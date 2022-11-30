@@ -25,9 +25,7 @@ typedef struct sg_image {
 						   or animations */
 
 	AG_Color color;				/* Background color */
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad;
-#endif
+	AG_COLOR_PADDING(_pad);
 	AG_Surface *_Nullable su;		/* Source surface
 						   (Anim: Effective surface) */
 	AG_TexCoord *_Nullable tc;		/* Effective texcoords */

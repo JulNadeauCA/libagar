@@ -52,9 +52,7 @@ typedef struct ag_label {
 	AG_FmtString *_Nullable fmt;           /* Polled label data */
 	char *_Nullable pollBuf;               /* Polled label buffer */
 	AG_Size         pollBufSize;
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad;
-#endif
+	AG_SIZE_PADDING(_pad);
 } AG_Label;
 
 #define AGLABEL(obj)            ((AG_Label *)(obj))
