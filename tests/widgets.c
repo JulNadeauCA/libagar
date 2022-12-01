@@ -229,12 +229,14 @@ UComboExpanded(AG_Event *_Nonnull event)
 	AG_UCombo *com = AG_UCOMBO_SELF();
 	AG_Tlist *tl = com->list;
 
-	AG_TlistAddS(tl, agIconUp.s,   "George Liquor");
-	AG_TlistAddS(tl, agIconDown.s, "Haggis McHaggis");
-	AG_TlistAddS(tl, agIconUp.s,   "Kowalski (Lummox)");
-	AG_TlistAddS(tl, agIconDown.s, "Bubba (Lummox)");
-	AG_TlistAddS(tl, agIconUp.s,   "Jiminy (Lummox)");
-	AG_TlistAddS(tl, agIconDown.s, "Wilbern Cobb");
+	AG_TlistAddS(tl, NULL, "George Liquor");
+	AG_TlistAddS(tl, NULL, "Haggis McHaggis");
+	AG_TlistAddS(tl, NULL, "Kowalski (Lummox)");
+	AG_TlistAddS(tl, NULL, "Bubba (Lummox)");
+	AG_TlistAddS(tl, NULL, "Jiminy (Lummox)");
+	AG_TlistAddS(tl, NULL, "Wilbern Cobb");
+
+	AG_TlistSizeHintLargest(tl, 6);
 }
 
 static int
@@ -256,7 +258,7 @@ TestGUI(void *obj, AG_Window *win)
 	 */
 	hPane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 	AG_PaneSetDivisionMin(hPane, 0, 50, 100);
-	AG_PaneMoveDividerPct(hPane, 45);
+/*	AG_PaneMoveDividerPct(hPane, 45); */
 	div = hPane->div[0];
 
 	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-1.bmp", path, sizeof(path)) == 0) {
@@ -310,26 +312,25 @@ TestGUI(void *obj, AG_Window *win)
 		AG_GetVersion(&av);
 
 		/* A static label */
-		lbl = AG_LabelNew(div, 0,
+		lbl = AG_LabelNew(div, AG_LABEL_HFILL,
 		    "Agar v%d.%d.%d ("
 		    AGSI_LEAGUE_SPARTAN AGSI_CYAN "%s" AGSI_RST ")",
 		    av.major, av.minor, av.patch,
 		    av.release ? av.release : "dev");
 		AG_SetStyle(lbl, "font-size", "120%");
+		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 
 		/* A dynamically-updated label. */
 		lbl = AG_LabelNewPolled(div, AG_LABEL_HFILL,
-		    "Window is at %i,%i (%ux%u)",
+		    "This "
+		    AGSI_ALGUE AGSI_BLACK_AGAR AGSI_RST
+		    " Window is at %i,%i (%u x %u).",
 		    &AGWIDGET(win)->x,
 		    &AGWIDGET(win)->y,
 		    &AGWIDGET(win)->w,
 		    &AGWIDGET(win)->h);
-
-		AG_LabelSizeHint(lbl, 1,
-		    "This is a polled label\n"
-		    "Window is at 000,000 (000x000)");
-
-		AG_LabelJustify(lbl, AG_TEXT_RIGHT);
+		AG_LabelSizeHint(lbl, 1, "<This [XXXX] Window is at 0000,0000 (0000 x 0000). >");
+		AG_SetStyle(lbl, "font-size", "110%");
 	}
 
 	/*
@@ -540,9 +541,16 @@ TestGUI(void *obj, AG_Window *win)
 		menu = AG_MenuNew(hPane->div[1], AG_MENU_HFILL);
 		m = AG_MenuNode(menu->root, "File", NULL);
 		{
-			AG_MenuAction(m, "Agar Preferences...", agIconGear.s,
+			AG_MenuActionKb(m,
+			    AGSI_ALGUE AGSI_YEL AGSI_GEAR AGSI_RST
+			    " Agar Preferences...", NULL,
+			    AG_KEY_P, AG_KEYMOD_CTRL,
 			    Preferences, NULL);
-			AG_MenuAction(m, "Close this test", agIconClose.s,
+
+			AG_MenuActionKb(m,
+			    AGSI_ALGUE AGSI_YEL AGSI_CLOSE_X AGSI_RST
+			    " Close this test", NULL,
+			    AG_KEY_W, AG_KEYMOD_CTRL,
 			    AGWINCLOSE(win));
 		}
 		m = AG_MenuNode(menu->root, "Test Menu", NULL);
@@ -590,7 +598,8 @@ TestGUI(void *obj, AG_Window *win)
 			AG_TableAddCol(table, "sin(x)", "33%", NULL);
 			AG_TableAddCol(table, "cos(x)", "33%", NULL);
 
-			AG_SetStyle(table, "font-size", "80%");
+			AG_SetStyle(table, "font-family", "cm-sans");
+			AG_SetStyle(table, "font-size", "120%");
 
 			for (f = 0.0f; f < 60.0f; f += 0.3f) {
 				/*

@@ -42,7 +42,7 @@ The
 interface allows Agar GUI widgets to render text using a vector or a bitmap engine.
 FreeType is used by default if it is available.
 .Sh RENDERING ATTRIBUTES
-Agar maintains a stack of rendering attributes which influence the operation
+Agar maintains a stack of Rendering Attributes which influence the operation
 of text rendering and sizing routines.
 Attributes are set using functions such as
 .Fn AG_TextFont
@@ -253,11 +253,16 @@ in a copy-on-write fashion.
 renders the C string
 .Fa text
 onto a newly-allocated surface.
-The font, colors and spacings are according to the current
-.Em Rendering Attributes .
+The font, colors and spacings are according to the current Rendering Attributes
+(see
+.Sx RENDERING ATTRIBUTES
+section).
 The input
 .Fa text
 may contain UTF-8 characters and ANSI SGR sequences.
+The first guide (Guide 0) of the surface returned by
+.Fn AG_TextRender
+contains Ascent information.
 .Pp
 .Fn AG_TextRenderInternal
 renders onto a new surface text in native
@@ -539,10 +544,13 @@ The written string is always NUL-terminated.
 The
 .Nm
 interface first appeared in Agar 1.0.
-Rendering attributes were introduced in Agar 1.3.
-Fontconfig support was added in Agar 1.5.
-Upright Italic and width variants were added in Agar 1.6.0.
+Rendering attributes were introduced in 1.3.x.
+Fontconfig support was added in 1.5.x.
+Upright Italic and width variants were added in 1.6.0.
 .Fn AG_CopyTextState
 and
 .Fn AG_TextFontPctFlags
-appeared in Agar 1.6.0.
+appeared in 1.6.0.
+Ascent guides included in
+.Fn AG_TextRender
+generated surfaces appeared in 1.7.0.

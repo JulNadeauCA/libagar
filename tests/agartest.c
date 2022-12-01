@@ -852,7 +852,7 @@ main(int argc, char *argv[])
 	{
 		AG_MenuActionKb(mi,
 		    _(AGSI_YEL AGSI_CLOSE_X AGSI_RST " Quit"), NULL,
-		    AG_KEY_W, AG_KEYMOD_CTRL, AGWINCLOSE(win));
+		    AG_KEY_Q, AG_KEYMOD_CTRL, AGWINCLOSE(win));
 	}
 	mi = AG_MenuNode(menu->root, ("Edit"), NULL);
 	{
@@ -868,7 +868,7 @@ main(int argc, char *argv[])
 		    RunStyleEditor, NULL);
 #if defined(AG_DEBUG) && defined(AG_TIMERS)
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL AGSI_DIAMOND_OPERATOR AGSI_RST " GUI Debugger"), NULL,
+		    _(AGSI_YEL AGSI_ANT AGSI_RST " GUI Debugger"), NULL,
 		    AG_KEY_F7, 0,
 		    RunDebugger, NULL);
 #endif
@@ -900,28 +900,33 @@ main(int argc, char *argv[])
 	mi = AG_MenuNode(menu->root, ("View"), NULL);
 	{
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL AGSI_SQUARED_PLUS AGSI_RST " Zoom In"), NULL,
+		    _(AGSI_YEL AGSI_CIRCLED_PLUS AGSI_RST " Zoom In"), NULL,
 		    AG_KEY_PLUS, AG_KEYMOD_CTRL, ZoomIn, NULL);
 
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL AGSI_SQUARED_MINUS AGSI_RST " Zoom Out"), NULL,
+		    _(AGSI_YEL AGSI_CIRCLED_MINUS AGSI_RST " Zoom Out"), NULL,
 		    AG_KEY_MINUS, AG_KEYMOD_CTRL, ZoomOut, NULL);
 
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL AGSI_SQUARED_DOT AGSI_RST " Zoom 1:1"), NULL,
+		    _(AGSI_YEL AGSI_CIRCLED_DOT AGSI_RST " Zoom 1:1"), NULL,
 		    AG_KEY_0, AG_KEYMOD_CTRL, ZoomReset, NULL);
 #ifdef AG_DEBUG
 		AG_MenuSeparator(mi);
 
-		AG_MenuBool(mi,
-		    _(AGSI_YEL AGSI_ANT AGSI_RST " Debug Messages"), NULL,
-		    &agDebugLvl, 0);
+		{
+			AG_MenuItem *miKb;
+
+			miKb = AG_MenuBool(mi, _("Debug Messages"), NULL,
+			    &agDebugLvl, 0);
+			miKb->key_equiv = AG_KEY_D;
+			miKb->key_mod = AG_KEYMOD_CTRL;
+		}
 #endif
 	}
 	mi = AG_MenuNode(menu->root, ("Help"), NULL);
 	{
 		AG_MenuAction(mi,
-		    _(AGSI_YEL AGSI_BLK_4_POINTED_STAR AGSI_RST " About Agar GUI"), NULL,
+		    _(AGSI_YEL AGSI_BLACK_AGAR AGSI_RST " About Agar GUI"), NULL,
 		    AG_About, NULL);
 	}
 

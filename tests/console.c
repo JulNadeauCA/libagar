@@ -146,9 +146,11 @@ TestGUI(void *obj, AG_Window *win)
 	{
 		const char *msglog = "/var/log/messages";
 
-		btn = AG_ButtonNewFn(box, 0, "Follow /var/log/messages",
+		btn = AG_ButtonNewFn(box, 0,
+		    "Follow " AGSI_PATH "/var/log/messages",
 		    FollowFile, "%p,%s,%u,%s", cons, msglog, 0, "messages");
-		AG_ButtonNewFn(box, 0, "Close messages",
+
+		AG_ButtonNewFn(box, 0, "Close " AGSI_PATH "messages",
 		    CloseFile, "%p,%p,%s", cons, btn, msglog);
 	}
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
@@ -156,10 +158,12 @@ TestGUI(void *obj, AG_Window *win)
 	{
 		const char *utxlog = "/var/log/utx.log";
 
-		btn = AG_ButtonNewFn(box, 0, "Follow /var/log/utx.log",
+		btn = AG_ButtonNewFn(box, 0,
+		    "Follow " AGSI_PATH "/var/log/utx.log",
 		    FollowFile, "%p,%s,%u,%s", cons, utxlog,
 		                               AG_CONSOLE_FILE_BINARY, "utxlog");
-		AG_ButtonNewFn(box, 0, "Close utx.log",
+		AG_ButtonNewFn(box, 0,
+		    "Close " AGSI_PATH "utx.log",
 		    CloseFile, "%p,%p,%s", cons, btn, utxlog);
 	}
 #endif /* !_WIN32 */

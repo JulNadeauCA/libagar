@@ -123,17 +123,15 @@ milliseconds.
 Acceptable
 .Fa flags
 include:
-.Bl -tag -width "AG_TLIST_MULTITOGGLE "
-.It AG_TLIST_EXP_NODES
+.Bl -tag -width "AG_TLIST_FIXED_HEIGHT "
+.It AG_TLIST_EXPAND_NODES
 Expand nodes with child items by default.
 .It AG_TLIST_MULTI
 Allow multiple selections (with ctrl/shift).
 .It AG_TLIST_MULTITOGGLE
 Enforce multiple selections (without ctrl/shift).
 .It AG_TLIST_POLL
-List contents are updated dynamically by the
-.Sq tlist-poll
-event handler.
+List contents are updated dynamically by the "tlist-poll" handler.
 This handler is expected to wrap its
 .Fn AG_TlistAdd
 calls between
@@ -142,14 +140,14 @@ and
 .Fn AG_TlistEnd .
 Implied by
 .Fn AG_TlistNewPolled .
-.It AG_TLIST_NOSELEVENT
-Don't raise the
-.Sq tlist-selected
-event on select.
-.It AG_TLIST_NOSELSTATE
+.It AG_TLIST_FIXED_HEIGHT
+Don't reset the item height on "font-changed".
+.It AG_TLIST_NO_SELECTED
+Don't raise "tlist-selected" on select.
+.It AG_TLIST_STATELESS
 When using
 .Dv AG_TLIST_POLL ,
-don't try to preserve selection information across list updates.
+don't preserve selection information across list updates.
 .It AG_TLIST_HFILL
 Expand horizontally in parent container.
 .It AG_TLIST_VFILL
@@ -396,7 +394,7 @@ It tests whether a newly-created
 should make its own child items visible based on the previously saved state.
 If there are no matching items in the saved state (according to the Compare
 function), then it returns the default visibility setting (which is 1 if the
-.Dv AG_TLIST_EXP_NODES
+.Dv AG_TLIST_EXPAND_NODES
 option is set, otherwise 0).
 .Pp
 .Fn AG_TlistSelect
@@ -429,9 +427,7 @@ Similarly,
 .Fn AG_TlistSelectText
 selects and returns the first item with a text field equal to
 .Fa text .
-Both of these functions invoke
-.Sq tlist-poll
-if the
+Both of these functions invoke "tlist-poll" if the
 .Dv AG_TLIST_POLL
 option is set.
 .Pp
@@ -596,12 +592,14 @@ for available flags).
 .El
 .Sh ITEM FLAGS
 .Bl -tag -compact -width "AG_TLIST_ITEM_UPPERCASE "
+.It AG_TLIST_ITEM_DISABLED
+Disable selection and draw in DISABLED style.
+.It AG_TLIST_NO_SELECT
+Disable selection and draw in DEFAULT style.
 .It AG_TLIST_ITEM_EXPANDED
 Child items are visible.
 .It AG_TLIST_HAS_CHILDREN
 At least one child item exists.
-.It AG_TLIST_NO_SELECT
-Disallow user selection of this item.
 .It AG_TLIST_NO_POPUP
 Disable popup menus (if any have been created).
 .El
@@ -655,9 +653,6 @@ AG_TlistNewPolled(win, 0, PollMyTree, "%p", myTreeRoot);
 The
 .Nm
 widget first appeared in Agar 1.0.
-The option called
-.Dv AG_TLIST_TREE
-was deprecated and has no effect as of Agar 1.6.0.
 .Fn AG_TlistSelectIdx ,
 .Fn AG_TlistDeselectIdx ,
 .Fn AG_TlistSetColor ,
@@ -665,6 +660,10 @@ was deprecated and has no effect as of Agar 1.6.0.
 and per-item
 .Va fontFlags
 appeared in Agar 1.6.0.
-The
-.Dv AG_TLIST_EXP_NODES
-option appeared in Agar 1.7.0.
+The options
+.Dv AG_TLIST_EXPAND_NODES ,
+and
+.Dv AG_TLIST_FIXED_HEIGHT
+and the per-item flag
+.Dv AG_TLIST_ITEM_DISABLED
+appeared in Agar 1.7.0.

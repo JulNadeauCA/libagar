@@ -2,19 +2,16 @@
 All notable changes to Agar will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Build system: Add [**CMake**](https://cmake.org) support.
-- A driver for the [**SDL 2.0**](https://libsdl.org) series.
-- A software framebuffer driver for X Windows.
-- Remote debugger [**agardb**](https://libagar.org/man1/agardb).
-- Interface builder to help the process of constructing static or fixed-resolution interfaces.
-- Add widget classes to the new Ada bindings in `ada/gui/`.
+- The Agar Interface Builder [**agarib**](https://libagar.org/man1/agarib).
+- The Agar Debugger [**agardb**](https://libagar.org/man1/agardb).
+- Ada: Add Widget classes to the new Ada bindings in `ada/gui/`.
 - New COBOL bindings: [GnuCOBOL](https://sourceforge.net/projects/open-cobol/) and [GuiCOBOL](http://www.opencobol.altervista.org).
 - [**AG_Console**](https://libagar.org/man3/AG_Console): Handle ansi cursor and terminal operations. Clipboard integration.
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): Display only those styles that are available for a given font (as opposed to a static list of styles).
 - [**AG_Notebook**](https://libagar.org/man3/AG_Notebook): Fix padding issues. Add disposition modes Bottom, Left & Right.
 - [**AG_Pixmap**](https://libagar.org/man3/AG_Pixmap) & [**AG_Fixed**](https://libagar.org/man3/AG_Fixed): Zoom operations.
 - [**AG_StyleEditor**](https://libagar.org/man3/AG_StyleEditor): Edition of stylesheet rules.
-- [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): Gradients and border styles. New selector `"E > F"` (an `F` element child of an `E` element).
+- [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): Gradients and border styles. New selector "Class > #id" for specific named instances of attached child widgets.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Filters. Stencil operations.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): Provide a way to map core font names to known system fonts so porters have the option of adding dependencies to existing font packages in order to reduce the size of agar packages.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) & [**AG_Editable**](https://libagar.org/man3/AG_Editable): Extend SGR support. Syntax highlighting & rich-text editing methods.
@@ -26,6 +23,8 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**glx**](https://libagar.org/man3/AG_DriverGLX): Make drag-and-drop (`sockets` test) work correctly (possibly using `AG_WindowMove()`).
 - [**wgl**](https://libagar.org/man3/AG_DriverWGL): Clipboard integration. Live resize.
 - Fix [**Style Editor**](https://libagar.org/man3/AG_StyleEditor) and [**GUI Debugger**](https://libagar.org/man3/AG_GuiDebugger) crashes which would occur when attempting to iterate over widgets (in keyrepeat mode).
+- Build system: Add [**CMake**](https://cmake.org) support.
+- A software framebuffer driver for X Windows.
 
 ## [1.7.0] - 2022-10-
 ### Added
@@ -36,6 +35,9 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Improved the performance of the `AG_MenuView` renderer by caching state-dependent opaque labels (embedding any icons), so blending is no longer required. Improved appearance of `AG_MenuView`.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): When an `AG_MenuView` is detached, immediately invalidate the `view` pointers of its `AG_MenuItem`.
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Embed 4 general-purpose 16-bit guides. Guides are useful for typography, graphics and other applications.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): The surface returned by `AG_TextRender()` now includes Ascent information under `Guide 0`.
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Draw lines to express the relationship between tree items.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_EXPAND_NODES`. Display nodes (items with children) initially in expanded state.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_NO_SCALE_ICON`. Disable icon scaling when the icon width exceeds the standard width.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_FIXED_HEIGHT`. Don't reset the item height on "font-changed".
@@ -54,7 +56,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Don't install headers from disabled libraries.
 - [**AG_Color**](https://libagar.org/man3/AG_Color): Handle `rgb16()` format in [AG_ColorFromString()](https://libagar.org/man3/AG_ColorFromString).
 - [**AG_Object**](https://libagar.org/man3/AG_Object): In `AG_ObjectGenName()`, convert the prefix (class name) to lowercase in its entirety.
-- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Performance and cosmetic improvements. The rendering routine now uses on-demand-rendered opaque labels for each widget state (or each specific item state).
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Improved appearance and typography fixes. Improved performance of the rendering routine which now uses state-dependent opaque labels to avoid the need for blending.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): In `AG_WidgetSensitive()`, use the `window` pointer to avoid an unnecessary traversal of parent objects.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Prevent delivery of redundant "widget-shown" or "widget-hidden" events if `AG_WidgetShow()` and `AG_WidgetHide()` are called multiple times.
 

@@ -1,6 +1,6 @@
 
-    "O Breathe not, etc."
-	-- [3mMoore's Melodies[0m
+    [37m"O Breathe not, etc."[0m
+	-- [37mMoore's Melodies[0m
 
 The most notorious ill-fortune must in the end yield to the untiring courage of 
 philosophy-as the most stubborn city to the ceaseless vigilance of an enemy. 
@@ -10,16 +10,16 @@ to no purpose. [34mTroy[0m expired at the close of the second lustrum; and [3
 [36mAristaeus[0m declares upon his honour as a gentleman, opened at last her gates to 
 [93mPsammetichus[0m, after having barred them for the fifth part of a century....
 
-"Thou wretch!-thou vixen!-thou shrew!" said I to my wife on the morning after 
-our wedding; "thou witch!-thou hag!-thou whippersnapper-thou sink of 
-iniquity!-thou fiery-faced quintessence of all that is abominable!-thou-thou-" 
+[37m"Thou wretch!-thou vixen!-thou shrew!"[0m said I to my wife on the morning after 
+our wedding; [37m"thou witch!-thou hag!-thou whippersnapper-thou sink of 
+iniquity!-thou fiery-faced quintessence of all that is abominable!-thou-thou-"[0m 
 here standing upon tiptoe, seizing her by the throat, and placing my mouth 
 close to her ear, I was preparing to launch forth a new and more decided 
 epithet of opprobrium, which should not fail, if ejaculated, to convince her of 
 her insignificance, when to my extreme horror and astonishment I discovered 
 that I had lost my breath.
 
-The phrases "I am out of breath," "I have lost my breath," etc., are often 
+The phrases [37m"I am out of breath," "I have lost my breath,"[0m etc., are often 
 enough repeated in common conversation; but it had never occurred to me that 
 the terrible accident of which I speak could bona fide and actually happen! 
 Imagine-that is if you have a fanciful turn-imagine, I say, my wonder-my 
@@ -27,7 +27,7 @@ consternation-my despair!
 
 There is a good genius, however, which has never entirely deserted me. In my 
 most ungovernable moods I still retain a sense of propriety, et le chemin des 
-passions me conduit-as Lord Edouard in the "Julie" says it did him-à la 
+passions me conduit-as [91mLord Edouard[0m in the [92m"Julie"[0m says it did him-à la 
 philosophie véritable.
 
 Although I could not at first precisely ascertain to what degree the occurence 
@@ -37,7 +37,7 @@ calamity. Altering my countenance, therefore, in a moment, from its bepuffed
 and distorted appearance, to an expression of arch and coquettish benignity, I 
 gave my lady a pat on the one cheek, and a kiss on the other, and without 
 saying one syllable (Furies! I could not), left her astonished at my drollery, 
-as I pirouetted out of the room in a Pas de Zephyr.
+as I pirouetted out of the room in a [40m[37mPas de Zephyr[0m.
 
 Behold me then safely ensconced in my private boudoir, a fearful instance of 
 the ill consequences attending upon irascibility-alive, with the qualifications 

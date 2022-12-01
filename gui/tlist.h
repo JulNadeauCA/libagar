@@ -31,25 +31,27 @@ typedef struct ag_tlist_popup {
 /* A tree/list item */
 typedef struct ag_tlist_item {
 #ifdef AG_TYPE_SAFETY
-	char tag[AG_TLIST_ITEM_TAG_LEN];      /* Tagged non-object */
+	char tag[AG_TLIST_ITEM_TAG_LEN]; /* Tagged non-object */
 #endif
-	int icon;                             /* Cached icon surface */
-	int label;                            /* Cached label surface */
-	const char *_Nullable cat;            /* Category for filter */
-	AG_Surface *_Nullable iconsrc;        /* Icon source image */
-	void *_Nullable p1;                   /* User pointer */
-	AG_Color *_Nullable color;            /* Alternate color */
-	AG_Font *_Nullable font;              /* Alternate font */
-	int selected;                         /* Effective selection flag */
-	Uint depth;                           /* Indent in tree display */
+	int label[3];                    /* Rendered item surface */
+	                                 /* 0=Disabled, 1=Enabled, 2=Selected */
+	Uint32 _pad1;
+	const char *_Nullable cat;       /* Category for filter */
+	AG_Surface *_Nullable iconsrc;   /* Icon source image */
+	void *_Nullable p1;              /* User pointer */
+	AG_Color *_Nullable color;       /* Alternate color */
+	AG_Font *_Nullable font;         /* Alternate font */
+	int selected;                    /* Effective selection flag */
+	Uint depth;                      /* Indent in tree display */
 	Uint flags;
-#define AG_TLIST_ITEM_EXPANDED 0x01           /* Child items visible (tree) */
-#define AG_TLIST_HAS_CHILDREN  0x02           /* Child items exist (tree) */
-#define AG_TLIST_NO_SELECT     0x08           /* Item is not selectable */
-#define AG_TLIST_NO_POPUP      0x10           /* Disable popups for item */
+#define AG_TLIST_ITEM_EXPANDED 0x01      /* Child items visible (tree) */
+#define AG_TLIST_HAS_CHILDREN  0x02      /* Child items exist (tree) */
+#define AG_TLIST_NO_SELECT     0x08      /* Item is not selectable */
+#define AG_TLIST_NO_POPUP      0x10      /* Disable popups for item */
+#define AG_TLIST_ITEM_DISABLED 0x20      /* Disable item (draw as disabled) */
 
-	Uint fontFlags;                       /* Font style; see AG_FetchFont(3) */
-	char text[AG_TLIST_LABEL_MAX];        /* Label text */
+	Uint fontFlags;                  /* Font style; see AG_FetchFont(3) */
+	char text[AG_TLIST_LABEL_MAX];   /* Label text */
 	Uint32 _pad2;
 	AG_TAILQ_ENTRY(ag_tlist_item) items;    /* Items in list */
 	AG_TAILQ_ENTRY(ag_tlist_item) selitems; /* Saved selection state */
@@ -61,23 +63,26 @@ typedef AG_TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item) AG_TlistItemQ;
 typedef struct ag_tlist {
 	struct ag_widget wid;           /* AG_Widget -> AG_Tlist */
 	Uint flags;
-#define AG_TLIST_MULTI        0x001      /* Multiple selections (ctrl/shift) */
-#define AG_TLIST_MULTITOGGLE  0x002      /* Multiple toggle-style selections */
-#define AG_TLIST_POLL         0x004      /* Generate tlist-poll events */
-#define AG_TLIST_NOSELEVENT   0x008      /* Inhibit "tlist-selected" event */
-#define AG_TLIST_HFILL        0x020
-#define AG_TLIST_VFILL        0x040
-#define AG_TLIST_NOSELSTATE   0x100      /* Lose selection state in polled mode */
-#define AG_TLIST_SCROLLTOSEL  0x200      /* Scroll to initial selection */
-#define AG_TLIST_REFRESH      0x400      /* Repopulate now (polled mode) */
-#define AG_TLIST_EXP_NODES    0x800      /* Expand node items by default */
-#define AG_TLIST_EXPAND       (AG_TLIST_HFILL | AG_TLIST_VFILL)
+#define AG_TLIST_MULTI         0x001      /* Multiple selections (ctrl/shift) */
+#define AG_TLIST_MULTITOGGLE   0x002      /* Multiple toggle-style selections */
+#define AG_TLIST_POLL          0x004      /* Generate tlist-poll events */
+#define AG_TLIST_NO_SELECTED   0x008      /* Inhibit "tlist-selected" event */
+#define AG_TLIST_NO_SCALE_ICON 0x010      /* Don't scale oversize icons. */
+#define AG_TLIST_HFILL         0x020
+#define AG_TLIST_VFILL         0x040
+#define AG_TLIST_FIXED_HEIGHT  0x080      /* Don't set icon height on "font-changed" */
+#define AG_TLIST_STATELESS     0x100      /* Don't preserve selection state (polled mode) */
+#define AG_TLIST_SCROLLTOSEL   0x200      /* Scroll to initial selection */
+#define AG_TLIST_REFRESH       0x400      /* Repopulate now (polled mode) */
+#define AG_TLIST_EXPAND_NODES  0x800      /* Expand node items (items with children) by default */
+#define AG_TLIST_EXPAND        (AG_TLIST_HFILL | AG_TLIST_VFILL)
 
 	int item_h;                     /* Item height */
 	void *_Nullable selected;       /* Default `selected' binding */
 	int wHint, hHint;               /* Size hint */
 	AG_Rect r;                      /* Clipping rectangle */
-	Uint32 _pad1;
+	int  *expLevels;                /* Tree expansion state for draw() */
+	Uint nExpLevels;
 	int icon_w;                     /* Item icon width */
 	Uint pollDelay;                 /* Refresh rate for POLL mode */
 	int rOffs;                      /* Row display offset */
@@ -100,6 +105,7 @@ typedef struct ag_tlist {
 	AG_Timer moveTo;                /* Timer for keyboard motion */
 	AG_Timer refreshTo;             /* Timer for polled mode updates */
 	AG_Timer dblClickTo;            /* Timer for detecting double clicks */
+	AG_Color cBgLine[AG_WIDGET_NSTATES];  /* Background line color */
 } AG_Tlist;
 
 #define AGTLIST(obj)            ((AG_Tlist *)(obj))
@@ -251,6 +257,8 @@ AG_TlistItem *_Nullable AG_TlistGetItemPtr(const AG_Event *_Nonnull, int, int);
 #define AG_TLIST_TREE             0
 #define AG_TLIST_EXPANDED         AG_TLIST_ITEM_EXPANDED
 #define AG_TLIST_VISIBLE_CHILDREN AG_TLIST_ITEM_EXPANDED
+#define AG_TLIST_NOSELSTATE       AG_TLIST_STATELESS
+#define AG_TLIST_NOSELEVENT       AG_TLIST_NO_SELECTED
 #define AG_TlistPrescale(tl,text,n) AG_TlistSizeHint((tl),(text),(n))
 #endif
 

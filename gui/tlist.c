@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,12 +39,15 @@
 #include <stdarg.h>
 
 #ifndef AG_TLIST_PADDING
-#define AG_TLIST_PADDING 2	/* Label padding (pixels) */
+#define AG_TLIST_PADDING 2	/* Label padding (pixels). XXX */
+#endif
+
+#ifndef AG_TLIST_EXP_LEVELS_INIT
+#define AG_TLIST_EXP_LEVELS_INIT 8  /* Initial tree-expansion state buffer size */
 #endif
 
 static void SelectRange(AG_Tlist *_Nonnull, int);
-static void DrawExpandCollapseSign(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull,
-                                   int, int);
+static void DrawExpColl(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull, int,int);
 static Uint32 PollRefreshTimeout(AG_Timer *_Nonnull, AG_Event *_Nonnull);
 
 AG_Tlist *
@@ -201,7 +204,7 @@ SelectItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 		}
 		AG_PostEvent(tl, "tlist-changed", "%p,%i", it, 1);
 	}
-	if ((tl->flags & AG_TLIST_NOSELEVENT) == 0) {
+	if ((tl->flags & AG_TLIST_NO_SELECTED) == 0) {
 		AG_PostEvent(tl, "tlist-selected", "%p", it);
 	}
 	AG_UnlockVariable(selectedb);
@@ -334,24 +337,40 @@ PollRefreshTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	return (to->ival);
 }
 
+static __inline__ void
+InvalidateLabels(AG_Tlist *tl, AG_TlistItem *it)
+{
+	int i;
+
+	for (i = 0; i < 3; i++) {
+		if (it->label[i] == -1) {
+			continue;
+		}
+		AG_WidgetUnmapSurface(tl, it->label[i]);
+		it->label[i] = -1;
+	}
+}
+
 static void
-StyleChanged(AG_Event *_Nonnull event)
+FontChanged(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	AG_TlistItem *it;
+	int i;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
-		if (it->icon != -1) {
-			AG_WidgetUnmapSurface(tl, it->icon);
-			it->icon = -1;
-		}
-		if (it->label != -1) {
-			AG_WidgetUnmapSurface(tl, it->label);
-			it->label = -1;
-		}
+		InvalidateLabels(tl, it);
 	}
-	AG_TlistSetItemHeight(tl, WFONT(tl)->lineskip + AG_TLIST_PADDING);
-	AG_TlistSetIconWidth(tl, tl->item_h + 1);
+	if ((tl->flags & AG_TLIST_FIXED_HEIGHT) == 0) {
+		AG_TlistSetItemHeight(tl, WFONT(tl)->lineskip + AG_TLIST_PADDING*2);
+		AG_TlistSetIconWidth(tl, tl->item_h + 1);
+	}
+	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
+		AG_ColorInterpolate(&tl->cBgLine[i],
+		    &WIDGET(tl)->pal.c[i][AG_BG_COLOR],
+		    &WIDGET(tl)->pal.c[i][AG_LINE_COLOR],
+		    1,3);
+	}
 }
 
 static void
@@ -413,19 +432,19 @@ void
 AG_TlistSizeHintLargest(AG_Tlist *tl, int nItems)
 {
 	AG_TlistItem *it;
-	int w;
+	int w, wHint=0;
 
 	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
 
 	UpdatePolled(tl);
-	tl->wHint = 0;
+	wHint = 0;
 	AG_TLIST_FOREACH(it, tl) {
 		AG_TextSize(it->text, &w, NULL);
-		if (w > tl->wHint) { tl->wHint = w; }
+		if (w > wHint) { wHint = w; }
 	}
-	tl->wHint += (tl->icon_w << 2);
-	tl->hHint = (tl->item_h + 2)*nItems;
+	tl->wHint = wHint;
+	tl->hHint = (tl->item_h + 2) * nItems;
 
 	AG_ObjectUnlock(tl);
 }
@@ -433,12 +452,15 @@ AG_TlistSizeHintLargest(AG_Tlist *tl, int nItems)
 static __inline__ void
 FreeItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 {
-	if (it->icon != -1)
-		AG_WidgetUnmapSurface(tl, it->icon);
-	if (it->label != -1)
-		AG_WidgetUnmapSurface(tl, it->label);
-	if (it->iconsrc)
+	int i;
+
+	for (i = 0; i < 3; i++) {
+		if (it->label[i] != -1)
+			AG_WidgetUnmapSurface(tl, it->label[i]);
+	}
+	if (it->iconsrc) {
 		AG_SurfaceFree(it->iconsrc);
+	}
 	if (it->color)
 		free(it->color);
 #if 0
@@ -474,6 +496,7 @@ Destroy(void *_Nonnull p)
 		AG_ObjectDestroy(tp->menu);
 		free(tp);
 	}
+	free(tl->expLevels);
 }
 
 static void
@@ -509,8 +532,10 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	aBar.y = WIDGET(tl)->paddingTop;
 	AG_WidgetSizeAlloc(tl->sbar, &aBar);
 
-	tl->r.w = a->w - aBar.w - 2;
-	tl->r.h = a->h - WIDGET(tl)->paddingBottom;
+	tl->r.x = 0;
+	tl->r.y = 0;
+	tl->r.w = a->w - aBar.w + 1;
+	tl->r.h = a->h - 1;
 
 	tl->nVisible = a->h/tl->item_h;              /* Vertical scrollbar */
 	if (tl->rOffs + tl->nVisible >= tl->nItems) {
@@ -519,121 +544,286 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	return (0);
 }
 
+/*
+ * Tag a tree level as Expanded (y > 0) or Collapsed (y = 0). Recording the
+ * y coordinate of the expansion point is necessary for backtracking.
+ */
+static __inline__ void
+SetExpansionLevel(AG_Tlist *_Nonnull tl, int level, int y)
+{
+	if (level > tl->nExpLevels) {
+		tl->nExpLevels = level;
+		tl->expLevels = Realloc(tl->expLevels, level * sizeof(int));
+		tl->expLevels[tl->nExpLevels++] = y;
+	} else {
+		tl->expLevels[level] = y;
+	}
+}
+
 static void
 Draw(void *_Nonnull obj)
 {
 	AG_Tlist *tl = obj;
 	AG_TlistItem *it;
-	AG_Rect r;
-	AG_Color cSel = WCOLOR(tl, SELECTION_COLOR);
-	AG_Color cLine = WCOLOR(tl, LINE_COLOR);
-	const AG_Color *cText = &WCOLOR(tl, TEXT_COLOR);
-	const int paddingLeft = WIDGET(tl)->paddingLeft;
+	const int h = HEIGHT(tl);
+	const int paddingLeft  = WIDGET(tl)->paddingLeft;
+	const int spacingHoriz = WIDGET(tl)->spacingHoriz;
 	const int hItem = tl->item_h;
-	const int wIcon = tl->icon_w;
-	const int xLabel = wIcon + WIDGET(tl)->spacingHoriz;
-	const int wRow = tl->r.w;
+	const int hItem_2 = (hItem >> 1);
 	const int rOffs = tl->rOffs;
-	int x,y, i=0, selSeen=0, selPos=1, h=HEIGHT(tl), yLast;
+	const int disabled = (WIDGET(tl)->flags & AG_WIDGET_DISABLED);
+	const AG_Color *cLine   = &WCOLOR(tl,LINE_COLOR);
+	const AG_Color *cBg     = &WCOLOR(tl,BG_COLOR);
+	const AG_Color *cBgLine = &tl->cBgLine[WIDGET(tl)->state];
+	AG_Rect r = tl->r;
+	int y, i=0, j, selSeen=0, selPos=1, yLast;
+
+	TAILQ_FOREACH(it, &tl->items, items)
+		InvalidateLabels(tl, it);
 
 	UpdatePolled(tl);
 
-	AG_DrawBoxSunk(tl, &WIDGET(tl)->r, &WCOLOR(tl, BG_COLOR));
+	memset(tl->expLevels, 0, tl->nExpLevels * sizeof(int));
+
+	AG_DrawBoxSunk(tl, &r, cBg);                     /* Background area */
 
 	AG_WidgetDraw(tl->sbar);
 
-	r = WIDGET(tl)->r;
-	r.h -= WIDGET(tl)->paddingBottom;
-	r.w -= WIDTH(tl->sbar);
+	r.w--;
+	r.h--;
 	AG_PushClipRect(tl, &r);
-	AG_PushBlendingMode(tl, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
 	y = WIDGET(tl)->paddingTop;
 	yLast = h;
 	TAILQ_FOREACH(it, &tl->items, items) {
+		const AG_TlistItem *itNext = TAILQ_NEXT(it,items);
+		AG_Color *cSel;
+		int *lbl, disabledItem;
+
 		if (i++ < rOffs) {
-			if (it->selected) {
-				selPos = -1;
-			}
-			continue;
-		}
-		if (y > yLast)
-			break;
+			if (it->selected)
+				selPos = -1;             /* For SCROLLTOSEL */
 
-		x = paddingLeft + wIcon*it->depth;
-
-		if (it->selected) {
-			r.x = x + wIcon;
-			r.y = y;
-			r.w = wRow - x - wIcon - 1;
-			r.h = hItem + 1;
-			AG_DrawRect(tl, &r, &cSel);
-			selSeen = 1;
-		}
-		if (it->iconsrc) {
-			if (it->icon == -1) {
-				AG_Surface *S;
-
-				if ((S = AG_SurfaceScale(it->iconsrc,
-				    wIcon, hItem, 0)) == NULL) {
-					AG_FatalError(NULL);
+			if (itNext != NULL) {
+				if (itNext->depth > it->depth) {
+					SetExpansionLevel(tl, it->depth, 1);
+				} else if (itNext->depth < it->depth) {
+					SetExpansionLevel(tl, it->depth, 0);
 				}
-				it->icon = AG_WidgetMapSurface(tl, S);
 			}
-			AG_WidgetBlitSurface(tl, it->icon, x,y);
+			continue;                                /* Clipped */
+		}
+		if (y >= yLast) {                               /* Overflow */
+			if (itNext == NULL) {
+				break;                       /* End of list */
+			}
+			if (itNext->depth > it->depth) {
+				SetExpansionLevel(tl, it->depth, y);
+			} else if (itNext->depth < it->depth &&
+			          (it->depth - itNext->depth) > 1) {
+				/*
+				 * Backtrack intermediate levels.
+				 */
+				for (j = itNext->depth;
+				     j < (it->depth - 1);
+				     j++) {
+					AG_DrawLineV(tl,
+					    (j * hItem) + hItem_2,     /* x */
+					    y,                        /* y2 */
+					    tl->expLevels[j+1],       /* y1 */
+					    cBg);
+				}
+				SetExpansionLevel(tl, it->depth, 0);
+			}
+			y += hItem;
+			continue;                                /* Clipped */
+		}
 
+		disabledItem = (disabled || (it->flags & AG_TLIST_ITEM_DISABLED));
+		if (disabledItem) {
+			lbl = &it->label[0];
+			cSel = &WCOLOR_DISABLED(tl,SELECTION_COLOR);
+		} else {
 			if (it->selected) {
-				cSel.a >>= 1;
-				r.x = x;
-				r.y = y;
-				r.w = wIcon+1;
-				r.h = hItem+1;
-				AG_DrawRectBlended(tl, &r, &cSel,
-				    AG_ALPHA_SRC,
-				    AG_ALPHA_ONE_MINUS_SRC);
-				cSel.a <<= 1;
+				lbl = &it->label[2];
+				selSeen = 1;
+			} else {
+				lbl = &it->label[1];
 			}
+			cSel = &WCOLOR_DEFAULT(tl,SELECTION_COLOR);
 		}
-		if (it->flags & AG_TLIST_HAS_CHILDREN) {
-			DrawExpandCollapseSign(tl,it, x,y);
-		}
-		if (it->label == -1) {
-			int altFont = 0;
 
-			if (it->color) {
+		if (*lbl == -1) {                      /* Render item label */
+			AG_Surface *S, *Stext;
+			AG_Color *cItemBg = (disabledItem) ?
+			                    &WCOLOR_DISABLED(tl,BG_COLOR) :
+			                    &WCOLOR_DEFAULT(tl,BG_COLOR);
+			int wReq, x = paddingLeft, yAligned;
+		
+			if (it->color != NULL) {               /* Alt color */
 				AG_TextColor(it->color);
 			} else {
-				AG_TextColor(cText);
+				AG_TextColor(disabledItem ?
+				    &WCOLOR_DISABLED(tl,TEXT_COLOR) :
+				    &WCOLOR_DEFAULT(tl,TEXT_COLOR));
 			}
-			if (it->font) {
+			if (it->font != NULL) {                 /* Alt font */
 				AG_PushTextState();
 				AG_TextFont(it->font);
-				altFont = 1;
-			} else if (it->fontFlags != 0) {
-				const AG_Font *defFont = WFONT(tl);
+				Stext = AG_TextRender(it->text);
+				AG_PopTextState();
+			} else if (it->fontFlags != 0) {  /* Alt font style */
+				const AG_Font *fontOrig = WFONT(tl);
 
 				AG_PushTextState();
-				AG_TextFontLookup(OBJECT(defFont)->name,
-				                  defFont->spec.size,
-						  it->fontFlags);
-				altFont = 1;
-			}
-			it->label = AG_WidgetMapSurface(tl,
-			    AG_TextRender(it->text));
-
-			if (altFont)
+				AG_TextFontLookup(OBJECT(fontOrig)->name,
+				    fontOrig->spec.size,
+				    it->fontFlags);
+				Stext = AG_TextRender(it->text);
 				AG_PopTextState();
+			} else {
+				Stext = AG_TextRender(it->text);
+			}
+
+			wReq = Stext->w;
+
+			if (it->iconsrc)
+				wReq += tl->icon_w + spacingHoriz;
+
+			S = AG_SurfaceStdRGB(wReq, hItem);
+#ifdef AG_DEBUG
+			S->guides[0] = Stext->guides[0];
+#endif
+			AG_FillRect(S, NULL, it->selected ? cSel : cItemBg);
+
+			if (it->iconsrc != NULL) {
+				const AG_Surface *Sicon = it->iconsrc;
+
+				if (Sicon->w > hItem || Sicon->h > hItem) {
+					AG_Surface *SiconPr;
+
+					SiconPr = AG_SurfaceScale(Sicon,
+					    tl->icon_w, hItem, 0);
+					if (SiconPr != NULL) {
+						yAligned = hItem_2 -
+						           (SiconPr->h >> 1);
+						if (yAligned < 0)
+							yAligned = 0;
+
+						AG_SurfaceBlit(SiconPr, NULL,
+						    S, x,yAligned);
+						AG_SurfaceFree(SiconPr);
+					}
+					x += hItem + spacingHoriz;
+				} else {
+					yAligned = hItem_2 - (Sicon->h >> 1);
+					if (yAligned < 0)
+						yAligned = 0;
+
+					AG_SurfaceBlit(Sicon, NULL, S,
+					    x,yAligned);
+
+					x += Sicon->w + spacingHoriz;
+				}
+			}
+
+			yAligned = (Stext->guides[0] >> 1) - hItem_2;
+			if (yAligned < 0)
+				yAligned = 0;
+
+			AG_SurfaceBlit(Stext, NULL, S, x,yAligned);
+			AG_SurfaceFree(Stext);
+
+			*lbl = AG_WidgetMapSurface(tl, S);
 		}
 
-		AG_WidgetBlitSurface(tl, it->label,
-		    x + xLabel,
-		    y + AG_TLIST_PADDING);
-		
+		AG_WidgetBlitSurface(tl, *lbl,
+		    paddingLeft + ((it->depth + 1)*hItem),
+		    y + 1);
+
+		if (it->selected) {   /* Fill in remaining BG to match label */
+			AG_Rect rs;
+
+			rs.x = (it->depth + 1)*hItem + WSURFACE(tl,*lbl)->w;
+			rs.y = y + 1;
+			rs.w = WIDTH(tl) - rs.x - WIDTH(tl->sbar);
+			rs.h = hItem + 1;
+			if (rs.w > 0) {
+				AG_DrawRect(tl, &rs, cSel);
+			}
+			rs.x = (it->depth * hItem);
+			rs.w = hItem + 1;
+			AG_DrawRect(tl, &rs, cSel);
+		}
+
+		/*
+		 * Tree lines (forward).
+		 */
+		if (it->depth > 0) {
+			for (j = 0; j < it->depth - 1; j++) {
+				if (!tl->expLevels[j]) {
+					continue;
+				}
+				AG_DrawLineV(tl,
+				    (j * hItem) + hItem_2,             /* x */
+				    y,                                /* y1 */
+				    y+hItem,                          /* y2 */
+				    cLine);
+			}
+			if (itNext == NULL || itNext->depth < it->depth) {
+				AG_DrawLineV(tl,
+				    (it->depth - 1)*hItem + hItem_2,   /* x */
+				    y,                                /* y1 */
+				    y + hItem_2,                      /* y2 */
+				    cLine);
+			} else {
+				AG_DrawLineV(tl,
+				    (it->depth - 1)*hItem + hItem_2,   /* x */
+				    y,                                /* y1 */
+				    y + hItem,                        /* y2 */
+				    cLine);
+			}
+		}
+
+		/*
+		 * Tree lines (backtracking).
+		 */
+		if (itNext != NULL) {
+			if (itNext->depth > it->depth) {
+				SetExpansionLevel(tl, it->depth, y+hItem_2+1);
+			} else if (itNext->depth < it->depth) {
+				if ((it->depth - itNext->depth) > 1) {
+					for (j = itNext->depth;  /* Backtrack */
+					     j < it->depth - 1;
+					     j++) {
+						AG_DrawLineV(tl,
+						    j*hItem + hItem_2,   /* x */
+						    tl->expLevels[j+1], /* y1 */
+						    y + hItem,          /* y2 */
+						    cBg);
+					}
+				}
+				SetExpansionLevel(tl, it->depth, 0);
+			}
+		}
+
+		AG_DrawLineH(tl,
+		    ((it->depth - 1) * hItem) + (hItem >> 1),       /* x1 */
+		    (    (it->depth) * hItem) + (hItem >> 1),       /* x2 */
+		    y + (hItem >> 1),                               /* y */
+		    cLine);
+
+		if (it->flags & AG_TLIST_HAS_CHILDREN) {
+			DrawExpColl(tl,it,
+			    paddingLeft + (it->depth * hItem),
+			    y);
+		}
+
 		y += hItem;
-		
-		if (y < h)
-			AG_DrawLineH(tl, 0, wRow-2, y, &cLine);
+
+		AG_DrawLineH(tl, 0, (tl->r.w - 2), y, cBgLine);
 	}
+
 	if (!selSeen && (tl->flags & AG_TLIST_SCROLLTOSEL)) {
 		if (selPos == -1) {
 			tl->rOffs--;
@@ -643,13 +833,12 @@ Draw(void *_Nonnull obj)
 	} else {
 		tl->flags &= ~(AG_TLIST_SCROLLTOSEL);
 	}
-	AG_PopBlendingMode(tl);
 	AG_PopClipRect(tl);
 }
 
+/* Draw Expand / Collapse control area. */
 static void
-DrawExpandCollapseSign(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it,
-    int x, int y)
+DrawExpColl(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it, int x, int y)
 {
 	AG_Rect r;
 	const AG_Color *cLine = &WCOLOR(tl, LINE_COLOR);
@@ -820,7 +1009,7 @@ AG_TlistEnd(AG_Tlist *tl)
  * item should make its own child items visible based on the previously
  * saved state. If there are no items in the saved state which match the
  * newly-created item (according to the Compare function), then return TRUE
- * if the Tlist option EXP_NODES is set, otherwise return FALSE.
+ * if the Tlist option EXPAND_NODES is set, otherwise return FALSE.
  */
 int
 AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *it)
@@ -834,8 +1023,8 @@ AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *it)
 		if (tl->compare_fn(itSaved, it))
 			break;
 	}
-	if (itSaved == NULL) { 
-		return (tl->flags & AG_TLIST_EXP_NODES);     /* Default state */
+	if (itSaved == NULL) {
+		return (tl->flags & AG_TLIST_EXPAND_NODES);  /* Default state */
 	}
 	return (itSaved->flags & AG_TLIST_ITEM_EXPANDED);      /* Saved state */
 }
@@ -990,8 +1179,7 @@ AG_TlistItemNew(const AG_Surface *icon)
 #ifdef AG_TYPE_SAFETY
 	Strlcpy(it->tag, AG_TLIST_ITEM_TAG, sizeof(it->tag));
 #endif
-	it->icon = -1;
-	it->label = -1;
+	it->label[2] = it->label[1] = it->label[0] = -1;
 	it->cat = "";
 	it->iconsrc = (icon) ? AG_SurfaceDup(icon) : NULL;
 
@@ -1016,12 +1204,9 @@ AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, const AG_Surface *S)
 	if (it->iconsrc) {
 		AG_SurfaceFree(it->iconsrc);
 	}
-	it->iconsrc = S ? AG_SurfaceDup(S) : NULL;
-	if (it->icon != -1) {
-		AG_WidgetUnmapSurface(tl, it->icon);
-		it->icon = -1;
-	}
+	it->iconsrc = (S) ? AG_SurfaceDup(S) : NULL;
 
+	InvalidateLabels(tl, it);
 	AG_Redraw(tl);
 	AG_ObjectUnlock(tl);
 }
@@ -1043,6 +1228,8 @@ AG_TlistSetColor(AG_Tlist *tl, AG_TlistItem *it, const AG_Color *c)
 		it->color = NULL;
 	}
 
+	InvalidateLabels(tl, it);
+	AG_Redraw(tl);
 	AG_ObjectUnlock(tl);
 }
 
@@ -1063,6 +1250,8 @@ AG_TlistSetFont(AG_Tlist *tl, AG_TlistItem *it, AG_Font *font)
 		it->font = NULL;
 	}
 
+	InvalidateLabels(tl, it);
+	AG_Redraw(tl);
 	AG_ObjectUnlock(tl);
 }
 
@@ -1254,11 +1443,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	
 	if (!AG_WidgetIsFocused(tl))
 		AG_WidgetFocus(tl);
-	
-	/* XXX use array */
-	if ((ti = AG_TlistFindByIndex(tl, idx)) == NULL)
-		return;
-	
+
 	switch (button) {
 	case AG_MOUSE_WHEELUP:
 		tl->rOffs -= AG_GetInt(tl,"line-scroll-amount");
@@ -1274,6 +1459,15 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		}
 		AG_Redraw(tl);
 		break;
+	}
+
+	if (x > WIDTH(tl) - WIDTH(tl->sbar))
+		return;
+
+	if ((ti = AG_TlistFindByIndex(tl, idx)) == NULL)
+		return;
+
+	switch (button) {
 	case AG_MOUSE_LEFT:
 	case AG_MOUSE_RIGHT:
 		if (ti->flags & AG_TLIST_HAS_CHILDREN) {       /* [+] control */
@@ -1472,6 +1666,10 @@ Init(void *_Nonnull obj)
 	tl->r.y = 0;
 	tl->r.w = 0;
 	tl->r.h = 0;
+
+	tl->nExpLevels = AG_TLIST_EXP_LEVELS_INIT;
+	tl->expLevels = Malloc(tl->nExpLevels * sizeof(int));
+
 	tl->icon_w = tl->item_h + 1;
 	tl->pollDelay = 1000;
 	tl->rOffs = 0;
@@ -1500,8 +1698,8 @@ Init(void *_Nonnull obj)
 	
 	AG_SetInt(tl, "line-scroll-amount", 5);
 
-	AG_AddEvent(tl, "font-changed", StyleChanged, NULL);
-	AG_AddEvent(tl, "palette-changed", StyleChanged, NULL);
+	AG_AddEvent(tl, "font-changed", FontChanged, NULL);
+	AG_AddEvent(tl, "palette-changed", FontChanged, NULL);
 	AG_SetEvent(tl, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tl, "key-down", KeyDown, NULL);
 	AG_AddEvent(tl, "widget-shown", OnShow, NULL);
@@ -1673,24 +1871,15 @@ void
 AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 {
 	AG_TlistItem *it;
-	AG_Surface *sScaled;
 
 	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
 
 	tl->item_h = ih;
 
-	TAILQ_FOREACH(it, &tl->items, items) {		/* Rescale icons */
-		if (it->icon == -1) {
-			continue;
-		}
-		if ((sScaled = AG_SurfaceScale(it->iconsrc,
-		    tl->item_h, tl->item_h, 0)) == NULL) {
-			AG_FatalError(NULL);
-		}
-		AG_WidgetReplaceSurface(tl, it->icon, sScaled);
+	TAILQ_FOREACH(it, &tl->items, items) {
+		InvalidateLabels(tl, it);
 	}
-
 	AG_Redraw(tl);
 	AG_ObjectUnlock(tl);
 }
@@ -1700,24 +1889,15 @@ void
 AG_TlistSetIconWidth(AG_Tlist *tl, int iw)
 {
 	AG_TlistItem *it;
-	AG_Surface *sScaled;
 
 	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
 
 	tl->icon_w = iw;
 
-	TAILQ_FOREACH(it, &tl->items, items) {		/* Rescale icons */
-		if (it->icon == -1) {
-			continue;
-		}
-		if ((sScaled = AG_SurfaceScale(it->iconsrc,
-		    tl->item_h, tl->item_h, 0)) == NULL) {
-			AG_FatalError(NULL);
-		}
-		AG_WidgetReplaceSurface(tl, it->icon, sScaled);
+	TAILQ_FOREACH(it, &tl->items, items) {
+		InvalidateLabels(tl, it);
 	}
-
 	AG_Redraw(tl);
 	AG_ObjectUnlock(tl);
 }

@@ -31,6 +31,8 @@ TestGUI(void *obj, AG_Window *win)
 
 	myFont = agDefaultFont;
 
+	TestMsg(obj, "");
+
 	TestMsg(obj,
 	    "Al-arabiyyah: "
 	    AGSI_UNI
@@ -176,6 +178,7 @@ TestGUI(void *obj, AG_Window *win)
 		    "Core Font #%d (AGSI_FONT%d): \x1b[%dm%s\x1b[0m",
 		    i+1, i+1, 10+i, agCoreFonts[i]);
 	}
+	TestMsg(obj, "");
 
 	fs = AG_FontSelectorNew(win, AG_FONTSELECTOR_EXPAND);
 	AG_BindPointer(fs, "font", (void *)&myFont);
