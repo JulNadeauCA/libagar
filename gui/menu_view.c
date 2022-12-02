@@ -204,17 +204,17 @@ static void
 OnDetach(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mv = AG_MENUVIEW_SELF();
-	AG_Menu *pmenu = mv->pmenu;
+/*	AG_Menu *pmenu = mv->pmenu; */
 	AG_MenuItem *mi;
 
-	AG_ObjectLock(pmenu);
+/*	AG_ObjectLock(pmenu); */
 
 	mi = mv->pitem;
 
 	if (mi->view == mv)
 		mi->view = NULL;
 
-	AG_ObjectUnlock(pmenu);
+/*	AG_ObjectUnlock(pmenu); */
 }
 
 static void
