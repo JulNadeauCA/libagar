@@ -38,10 +38,6 @@
 #include <string.h>
 #include <stdarg.h>
 
-#ifndef AG_TLIST_PADDING
-#define AG_TLIST_PADDING 2	/* Label padding (pixels). XXX */
-#endif
-
 #ifndef AG_TLIST_EXP_LEVELS_INIT
 #define AG_TLIST_EXP_LEVELS_INIT 8  /* Initial tree-expansion state buffer size */
 #endif
@@ -352,18 +348,31 @@ InvalidateLabels(AG_Tlist *tl, AG_TlistItem *it)
 }
 
 static void
-FontChanged(AG_Event *_Nonnull event)
+StyleChanged(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	AG_TlistItem *it;
 	int i;
 
+	if (WIDGET(tl)->paddingTop    < -3) {
+		WIDGET(tl)->paddingTop = -3;
+	} else if (WIDGET(tl)->paddingTop > 50) {
+		WIDGET(tl)->paddingTop = 50;
+	}
+	if (WIDGET(tl)->paddingBottom < -3) {
+		WIDGET(tl)->paddingBottom = -3;
+	} else if (WIDGET(tl)->paddingBottom > 50) {
+		WIDGET(tl)->paddingBottom = 50;
+	}
+
 	TAILQ_FOREACH(it, &tl->items, items) {
 		InvalidateLabels(tl, it);
 	}
 	if ((tl->flags & AG_TLIST_FIXED_HEIGHT) == 0) {
-		AG_TlistSetItemHeight(tl, WFONT(tl)->lineskip + AG_TLIST_PADDING*2);
-		AG_TlistSetIconWidth(tl, tl->item_h + 1);
+		tl->item_h = WFONT(tl)->lineskip +
+		             WIDGET(tl)->paddingTop +
+		             WIDGET(tl)->paddingBottom;
+		tl->icon_w = tl->item_h + 1;
 	}
 	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
 		AG_ColorInterpolate(&tl->cBgLine[i],
@@ -507,12 +516,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 
 	AG_WidgetSizeReq(tl->sbar, &rBar);
 
-	r->w = WIDGET(tl)->paddingLeft +
-	       tl->icon_w + WIDGET(tl)->spacingHoriz + tl->wHint + rBar.w +
-	       WIDGET(tl)->paddingRight;
-
-	r->h = WIDGET(tl)->paddingTop + tl->hHint +
-	       WIDGET(tl)->paddingBottom;
+	r->w = tl->icon_w + WIDGET(tl)->spacingHoriz + tl->wHint+4 + rBar.w;
+	r->h = tl->hHint+4;
 }
 
 static int
@@ -529,7 +534,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	aBar.w = rBar.w;
 	aBar.h = a->h;
 	aBar.x = a->w - rBar.w;
-	aBar.y = WIDGET(tl)->paddingTop;
+	aBar.y = 0;
 	AG_WidgetSizeAlloc(tl->sbar, &aBar);
 
 	tl->r.x = 0;
@@ -566,6 +571,7 @@ Draw(void *_Nonnull obj)
 	AG_Tlist *tl = obj;
 	AG_TlistItem *it;
 	const int h = HEIGHT(tl);
+	const int paddingTop   = WIDGET(tl)->paddingTop;
 	const int paddingLeft  = WIDGET(tl)->paddingLeft;
 	const int spacingHoriz = WIDGET(tl)->spacingHoriz;
 	const int hItem = tl->item_h;
@@ -593,7 +599,7 @@ Draw(void *_Nonnull obj)
 	r.h--;
 	AG_PushClipRect(tl, &r);
 
-	y = WIDGET(tl)->paddingTop;
+	y = 0;
 	yLast = h;
 	TAILQ_FOREACH(it, &tl->items, items) {
 		const AG_TlistItem *itNext = TAILQ_NEXT(it,items);
@@ -658,7 +664,7 @@ Draw(void *_Nonnull obj)
 			AG_Color *cItemBg = (disabledItem) ?
 			                    &WCOLOR_DISABLED(tl,BG_COLOR) :
 			                    &WCOLOR_DEFAULT(tl,BG_COLOR);
-			int wReq, x = paddingLeft, yAligned;
+			int x = 0, wReq, yAligned;
 		
 			if (it->color != NULL) {               /* Alt color */
 				AG_TextColor(it->color);
@@ -728,10 +734,14 @@ Draw(void *_Nonnull obj)
 			}
 
 			yAligned = (Stext->guides[0] >> 1) - hItem_2;
+			if (yAligned < 0) {
+				yAligned = 0;
+			}
+			yAligned += paddingTop;
 			if (yAligned < 0)
 				yAligned = 0;
 
-			AG_SurfaceBlit(Stext, NULL, S, x,yAligned);
+			AG_SurfaceBlit(Stext, NULL, S, x, yAligned);
 			AG_SurfaceFree(Stext);
 
 			*lbl = AG_WidgetMapSurface(tl, S);
@@ -739,20 +749,21 @@ Draw(void *_Nonnull obj)
 
 		AG_WidgetBlitSurface(tl, *lbl,
 		    paddingLeft + ((it->depth + 1)*hItem),
-		    y + 1);
+		    y);
 
 		if (it->selected) {   /* Fill in remaining BG to match label */
 			AG_Rect rs;
 
-			rs.x = (it->depth + 1)*hItem + WSURFACE(tl,*lbl)->w;
-			rs.y = y + 1;
+			rs.x = paddingLeft + (it->depth + 1)*hItem +
+			       WSURFACE(tl,*lbl)->w;
+			rs.y = y;
 			rs.w = WIDTH(tl) - rs.x - WIDTH(tl->sbar);
 			rs.h = hItem + 1;
 			if (rs.w > 0) {
 				AG_DrawRect(tl, &rs, cSel);
 			}
-			rs.x = (it->depth * hItem);
-			rs.w = hItem + 1;
+			rs.x = 0;
+			rs.w = paddingLeft + (it->depth + 1)*hItem + 1;
 			AG_DrawRect(tl, &rs, cSel);
 		}
 
@@ -815,7 +826,7 @@ Draw(void *_Nonnull obj)
 
 		if (it->flags & AG_TLIST_HAS_CHILDREN) {
 			DrawExpColl(tl,it,
-			    paddingLeft + (it->depth * hItem),
+			    (it->depth * hItem),
 			    y);
 		}
 
@@ -1436,8 +1447,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	const int button = AG_INT(1);
-	const int x = AG_INT(2) - WIDGET(tl)->paddingLeft;
-	const int y = AG_INT(3) - WIDGET(tl)->paddingTop;
+	const int x = AG_INT(2);
+	const int y = AG_INT(3);
 	AG_TlistItem *ti;
 	const int idx = tl->rOffs + y/tl->item_h + 1;
 	
@@ -1655,10 +1666,7 @@ Init(void *_Nonnull obj)
 	WIDGET(tl)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_TEXT;
 
 	tl->flags = 0;
-	tl->item_h = agTextFontHeight + AG_TLIST_PADDING;
-	if (!(tl->item_h & 1)) {
-		tl->item_h++;
-	}
+	tl->item_h = agTextFontHeight;
 	tl->selected = NULL;
 	tl->wHint = 0;
 	tl->hHint = tl->item_h + 2;
@@ -1698,8 +1706,9 @@ Init(void *_Nonnull obj)
 	
 	AG_SetInt(tl, "line-scroll-amount", 5);
 
-	AG_AddEvent(tl, "font-changed", FontChanged, NULL);
-	AG_AddEvent(tl, "palette-changed", FontChanged, NULL);
+	AG_AddEvent(tl, "padding-changed", StyleChanged, NULL);
+	AG_AddEvent(tl, "palette-changed", StyleChanged, NULL);
+	AG_AddEvent(tl, "font-changed",  StyleChanged, NULL);
 	AG_SetEvent(tl, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tl, "key-down", KeyDown, NULL);
 	AG_AddEvent(tl, "widget-shown", OnShow, NULL);

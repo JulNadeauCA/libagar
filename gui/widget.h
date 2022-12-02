@@ -276,8 +276,8 @@ typedef struct ag_widget {
 	enum ag_widget_state state;         /* Style-effecting state */
 	Uint8 marginTop, marginRight;       /* Margin (px outside of border) */
 	Uint8 marginBottom, marginLeft;
-	Uint paddingTop, paddingRight;      /* Padding (px around contents) */
-	Uint paddingBottom, paddingLeft;
+	int paddingTop, paddingRight;      /* Padding (px around contents) */
+	int paddingBottom, paddingLeft;
 	Uint spacingHoriz, spacingVert;     /* Spacing (px between items) */
 
 	struct ag_font *_Nullable font;    /* Active font (style-generated) */

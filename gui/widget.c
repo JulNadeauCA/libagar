@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2021 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -528,7 +528,7 @@ Init(void *_Nonnull obj)
 	                           sizeof(AG_StyleSheet *) +      /* css */
 	                           sizeof(enum ag_widget_state) + /* state */
 	                           sizeof(Uint8)*4 +              /* margin */
-	                           sizeof(Uint)*4 +               /* padding */
+	                           sizeof(int)*4 +                /* padding */
 	                           sizeof(Uint)*2);               /* spacing */
 
 	wid->font = agDefaultFont;
@@ -2419,6 +2419,7 @@ static void
 Apply_Padding(AG_Widget *wid, const char *spec)
 {
 	char buf[16], *s=&buf[0], *sTop, *sRight;
+	int nChanges=0;
 
 	if (Strcasecmp(spec, "inherit") == 0) {
 		Inherit_Padding(OBJECT(wid)->parent, buf, sizeof(buf));
@@ -2432,19 +2433,34 @@ Apply_Padding(AG_Widget *wid, const char *spec)
 	if ((sRight = Strsep(&s, " ")) == NULL) {           /* "padding: X" */
 		const int val = atoi(sTop);
 
-		wid->paddingTop    = val;
-		wid->paddingRight  = val;
-		wid->paddingBottom = val;
-		wid->paddingLeft   = val;
+		if (wid->paddingTop != val)    { wid->paddingTop = val;    nChanges++; }
+		if (wid->paddingRight != val)  { wid->paddingRight = val;  nChanges++; }
+		if (wid->paddingBottom != val) { wid->paddingBottom = val; nChanges++; }
+		if (wid->paddingLeft != val)   { wid->paddingLeft = val;   nChanges++; }
+
 	} else {                                     /* "padding: T R [B L]" */
 		const char *sBottom = Strsep(&s, " ");
 		const char *sLeft   = Strsep(&s, " ");
+		int padTop = atoi(sTop);
+		int padRight = atoi(sRight);
+		int padBottom = (sBottom) ? atoi(sBottom) : 0;
+		int padLeft = (sLeft) ? atoi(sLeft)   : 0;
 
-		wid->paddingTop    = atoi(sTop);
-		wid->paddingRight  = atoi(sRight);
-		wid->paddingBottom = (sBottom) ? atoi(sBottom) : 0;
-		wid->paddingLeft   = (sLeft)   ? atoi(sLeft)   : 0;
+		if (wid->paddingTop != padTop) {
+			wid->paddingTop = padTop;       nChanges++;
+		}
+		if (wid->paddingRight != padRight) {
+			wid->paddingRight = padRight;   nChanges++;
+		}
+		if (wid->paddingBottom != padBottom) {
+			wid->paddingBottom = padBottom; nChanges++;
+		}
+		if (wid->paddingLeft != padLeft) {
+			wid->paddingLeft = padLeft;     nChanges++;
+		}
 	}
+	if (nChanges > 0)
+		AG_PostEvent(wid, "padding-changed", NULL);
 }
 
 static void

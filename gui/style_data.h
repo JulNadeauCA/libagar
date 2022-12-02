@@ -10,7 +10,7 @@ const char *agStyleDefault_Data =
 	" * See: AG_StyleSheet(3) and \"STYLE ATTRIBUTES\" section of AG_Widget(3).\n"
 	" */\n"
 	"AG_Box {\n"
-	"padding: 2 3 2 3;\n"
+	"padding: 2 3 2 3;                          /* top right bottom left */\n"
 	"spacing: 3 2;                              /* horiz vert */\n"
 	"}\n"
 	"AG_Button {\n"
@@ -106,18 +106,18 @@ const char *agStyleDefault_Data =
 	"spacing: 1;\n"
 	"}\n"
 	"AG_Tlist {\n"
-	"padding: 2;\n"
+	"padding: 1 0 2 0;\n"
 	"spacing: 4 0;\n"
 	"}\n"
 	"AG_Window {\n"
-	"padding: 0 3 4 3;                          /* top right bottom left */\n"
-	"background-color: #575757;                 /* #RRGGBB */\n"
+	"padding: 0 3 4 3;\n"
+	"background-color: #575757;\n"
 	"}\n"
 	"";
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2120,
+	2096,
 	&agStyleDefault_Data,
 	NULL
 };

@@ -9,7 +9,7 @@
  */
 
 AG_Box {
-	padding: 2 3 2 3;
+	padding: 2 3 2 3;                          /* top right bottom left */
 	spacing: 3 2;                              /* horiz vert */
 }
 AG_Button {
@@ -105,10 +105,10 @@ AG_Statusbar {
 	spacing: 1;
 }
 AG_Tlist {
-	padding: 2;
+	padding: 1 0 2 0;
 	spacing: 4 0;
 }
 AG_Window {
-	padding: 0 3 4 3;                          /* top right bottom left */
-	background-color: #575757;                 /* #RRGGBB */
+	padding: 0 3 4 3;
+	background-color: #575757;
 }
