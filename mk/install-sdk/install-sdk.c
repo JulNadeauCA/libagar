@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2022 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,7 @@ const char *miscFiles[] = {
 	"CHANGELOG.txt",
 	"INSTALL.txt",
 	"LICENSE.txt",
-	"LICENSE-ofl.txt",
+	"OFL.txt",
 	"README.txt",
 	"Logo.png",
 	"VisualC.html"
