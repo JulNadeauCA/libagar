@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,6 @@
 
 #include <agar/map/map.h>
 #include <agar/map/nodesel.h>
-#include <agar/map/refsel.h>
 
 #include "rg_icons.h"
 
@@ -50,6 +49,14 @@ enum {
 	ZOOM_MAX =	 500,	/* Max zoom factor (%) */
 	ZOOM_PROPS_MIN = 60,	/* Min zoom factor for showing properties (%) */
 	ZOOM_GRID_MIN =	 20	/* Min zoom factor for showing the grid (%) */
+};
+
+/* Names for map_view_mode edition modes. */
+static const char *mapViewModeNames[] = {
+	N_("Editing"),
+	N_("Editing node attributes"),
+	N_("Editing origin"),
+	N_("Playing")
 };
 
 int mapViewBg = 1;		/* Background tiles enable */
@@ -90,17 +97,17 @@ MAP_ViewNew(void *parent, MAP *map, Uint flags, struct ag_toolbar *toolbar,
 		sb = mv->hbar = AG_ScrollbarNewHoriz(mv, 0);
 		WIDGET(sb)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		WIDGET(sb)->flags |= AG_WIDGET_UNFOCUSED_MOTION;
-		AG_BindInt(sb, "value", &AGMCAM(mv).x);
+		AG_BindInt(sb, "value", &MAP_CAM(mv).x);
 		AG_BindUint(sb, "visible", &mv->wVis);
-		AG_SetInt(sb, "inc", MAPTILESZ);
+		AG_SetInt(sb, "inc", MAP_TILESZ_DEF);
 		AG_SetEvent(sb, "scrollbar-changed", UpdateCamera, "%p", mv);
 
 		sb = mv->vbar = AG_ScrollbarNewVert(mv, 0);
 		WIDGET(sb)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		WIDGET(sb)->flags |= AG_WIDGET_UNFOCUSED_MOTION;
-		AG_BindInt(sb, "value", &AGMCAM(mv).y);
+		AG_BindInt(sb, "value", &MAP_CAM(mv).y);
 		AG_BindUint(sb, "visible", &mv->hVis);
-		AG_SetInt(sb, "inc", MAPTILESZ);
+		AG_SetInt(sb, "inc", MAP_TILESZ_DEF);
 		AG_SetEvent(sb, "scrollbar-changed", UpdateCamera, "%p", mv);
 		
 		/* "min" and "max" are set by MAP_ViewUpdateCamera() */
@@ -110,62 +117,63 @@ MAP_ViewNew(void *parent, MAP *map, Uint flags, struct ag_toolbar *toolbar,
 	return (mv);
 }
 
+/*
+ * Select the active tool (MAP_Tool instance), or NULL to disable.
+ * The MAP_View must be locked.
+ */
 void
-MAP_ViewControl(MAP_View *mv, const char *slot, void *obj)
+MAP_ViewSelectTool(MAP_View *mv, MAP_Tool *tool, void *p)
 {
-#ifdef AG_DEBUG
-	if (!AG_OfClass(obj, "MAP_Actor:*"))
-		AG_FatalError(NULL);
-#endif
-	mv->actor = (MAP_Actor *)obj;
-}
-
-void
-MAP_ViewSelectTool(MAP_View *mv, MAP_Tool *ntool, void *p)
-{
-	AG_Window *pwin;
+	AG_Window *winParent;
 
 	if (mv->curtool != NULL) {
-		if (mv->curtool->trigger != NULL) {
-			AG_SetBool(mv->curtool->trigger, "state", 0);
+		MAP_Tool *toolCur = mv->curtool;
+
+		if (toolCur->trigger != NULL) {
+			AG_SetBool(toolCur->trigger, "state", 0);
 		}
-		if (mv->curtool->win != NULL) {
-			AG_WindowHide(mv->curtool->win);
+		if (toolCur->win != NULL) {
+			AG_WindowHide(toolCur->win);
 		}
-		if (mv->curtool->pane != NULL) {
-			AG_ObjectFreeChildren(mv->curtool->pane);
-			AG_WidgetUpdate(mv->curtool->pane);
+		if (toolCur->pane != NULL) {
+			AG_ObjectFreeChildren(toolCur->pane);
+			AG_WidgetUpdate(toolCur->pane);
 		}
-		mv->curtool->mv = NULL;
+		toolCur->mv = NULL;
 
 		AG_LabelTextS(mv->status,
-		    _("Select a tool or double-click on an element to insert."));
+		    _("Select a tool, a library element to insert, or an "
+		      "object on the map."));
 	}
-	mv->curtool = ntool;
+	mv->curtool = tool;
 
-	if (ntool != NULL) {
-		ntool->p = p;
-		ntool->mv = mv;
+	if (tool != NULL) {
+		tool->p = p;
+		tool->mv = mv;
 
-		if (ntool->trigger != NULL) {
-			AG_SetBool(ntool->trigger, "state", 1);
+		if (tool->trigger != NULL) {
+			AG_SetBool(tool->trigger, "state", 1);
 		}
-		if (ntool->win != NULL) {
-			AG_WindowShow(ntool->win);
+		if (tool->win != NULL) {
+			AG_WindowShow(tool->win);
 		}
-		if (ntool->pane != NULL && ntool->ops->edit_pane != NULL) {
-			ntool->ops->edit_pane(ntool, ntool->pane);
+		if (tool->pane != NULL && tool->ops->edit_pane != NULL) {
+			tool->ops->edit_pane(tool, tool->pane);
 			AG_WidgetUpdate(mv->curtool->pane);
 		}
-		MAP_ToolUpdateStatus(ntool);
+		MAP_ToolUpdateStatus(tool);
 	}
 
-	if ((pwin = AG_ParentWindow(mv)) != NULL) {
-		AG_WindowFocus(pwin);
+	if ((winParent = AG_ParentWindow(mv)) != NULL) {
+		AG_WindowFocus(winParent);
 		AG_WidgetFocus(mv);
 	}
 }
 
+/*
+ * Look up a MAP_Tool instance by name.
+ * The MAP_View must be locked.
+ */
 MAP_Tool *
 MAP_ViewFindTool(MAP_View *mv, const char *name)
 {
@@ -192,6 +200,10 @@ SelectTool(AG_Event *_Nonnull event)
 	}
 }
 
+/*
+ * Register a new MAP_Tool class.
+ * The MAP_View must be locked.
+ */
 MAP_Tool *
 MAP_ViewRegTool(MAP_View *mv, const MAP_ToolOps *ops, void *p)
 {
@@ -207,18 +219,28 @@ MAP_ViewRegTool(MAP_View *mv, const MAP_ToolOps *ops, void *p)
 		t->trigger = AG_ToolbarButtonIcon(mv->toolbar,
 		    (ops->icon != NULL) ? ops->icon->s : NULL,
 		    0, SelectTool, "%p,%p,%p", mv, t, p);
+	} else {
+		t->trigger = NULL;
 	}
 
 	TAILQ_INSERT_TAIL(&mv->tools, t, tools);
 	return (t);
 }
 
+/*
+ * Define the default tool (MAP_Tool instance).
+ * The MAP_View must be locked.
+ */
 void
 MAP_ViewSetDefaultTool(MAP_View *mv, MAP_Tool *tool)
 {
 	mv->deftool = tool;
 }
 
+/*
+ * Register a draw routine callback.
+ * The MAP_View must be locked.
+ */
 void
 MAP_ViewRegDrawCb(MAP_View *mv,
     void (*draw_func)(MAP_View *, void *), void *p)
@@ -241,7 +263,7 @@ Destroy(void *_Nonnull p)
 	     dcb != SLIST_END(&mv->draw_cbs);
 	     dcb = ndcb) {
 		ndcb = SLIST_NEXT(dcb, draw_cbs);
-		Free(dcb);
+		free(dcb);
 	}
 }
 
@@ -255,8 +277,11 @@ OnDetach(AG_Event *_Nonnull event)
 	     tool != TAILQ_END(&mv->tools);
 	     tool = ntool) {
 		ntool = TAILQ_NEXT(tool, tools);
+/*		Debug(mv, "Freeing tool instance %p\n", tool); */
+		tool->win = NULL;
+		tool->pane = NULL;
 		MAP_ToolDestroy(tool);
-		Free(tool);
+		free(tool);
 	}
 	TAILQ_INIT(&mv->tools);
 	mv->curtool = NULL;
@@ -271,25 +296,39 @@ ExpireDblClick(AG_Event *_Nonnull event)
 }
 
 /*
- * Translate widget coordinates to node coordinates.
+ * Translate a mouse position (x,y) to node (MAP_Node) coordinates based
+ * on the MAP_View's current zoom level and display offset.
+ *
+ * Return the node position back in (x,y) *without* bounds checking. The
+ * returned (x,y) may lie outside of the allocated map.
+ *
+ * Return the node position *with* bounds checking in MAP_View's "cursor"
+ * field (cx,cy). If the position is out of bounds then (-1,-1) is returned.
+ *
+ * Return the position relative to the node's own local coordinate system
+ * (the displacement from its upper-left pixel) under (cxoffs,cyoffs).
+ *
  * The map must be locked.
  */
 static void
-GetNodeCoords(MAP_View *_Nonnull mv, int *_Nonnull x, int *_Nonnull y)
+MouseToNodeCoords(MAP_View *_Nonnull mv, int *_Nonnull x, int *_Nonnull y)
 {
-	const int tileSz = AGMCAM(mv).tilesz;
+	const int tileSz = MAP_CAM(mv).tilesz;
 
 	*x -= mv->xOffs;
 	*y -= mv->yOffs;
+	
+	/* Return pixel coordinates in the node's local coordinate system. */
 	mv->cxoffs = *x % tileSz;
 	mv->cyoffs = *y % tileSz;
 
+	/* Return unbounded node coordinates */
 	*x = ((*x) - mv->cxoffs) / tileSz;
 	*y = ((*y) - mv->cyoffs) / tileSz;
 
+	/* Set MAP_View's cursor to bounded node coordinates or (-1). */
 	mv->cx = mv->mx + *x;
 	mv->cy = mv->my + *y;
-
 	if (mv->cx < 0 || mv->cx >= (int)mv->map->w || mv->cxoffs < 0)
 		mv->cx = -1;
 	if (mv->cy < 0 || mv->cy >= (int)mv->map->h || mv->cyoffs < 0)
@@ -302,8 +341,8 @@ DrawMapCursor(MAP_View *_Nonnull mv)
 	AG_Rect rd;
 	AG_Color c;
 
-	rd.w = AGMTILESZ(mv);
-	rd.h = AGMTILESZ(mv);
+	rd.w = MAP_TILESZ(mv);
+	rd.h = MAP_TILESZ(mv);
 
 	if (mv->msel.set) {
 #if 0
@@ -316,8 +355,8 @@ DrawMapCursor(MAP_View *_Nonnull mv)
 		return;
 	}
 
-	rd.x = mv->mouse.x*AGMTILESZ(mv) + mv->xOffs;
-	rd.y = mv->mouse.y*AGMTILESZ(mv) + mv->yOffs;
+	rd.x = mv->mouse.x*MAP_TILESZ(mv) + mv->xOffs;
+	rd.y = mv->mouse.y*MAP_TILESZ(mv) + mv->yOffs;
 
 	if (mv->curtool == NULL)
 		return;
@@ -331,34 +370,20 @@ defcurs:
 	AG_ColorRGB_8(&c, 100,100,100);
 	rd.x++;
 	rd.y++;
-	rd.w = rd.h = AGMTILESZ(mv)-1;
+	rd.w = rd.h = MAP_TILESZ(mv)-1;
 	AG_DrawRectOutline(mv, &rd, &c);
 	rd.x++;
 	rd.y++;
-	rd.w = rd.h = AGMTILESZ(mv)-3;
+	rd.w = rd.h = MAP_TILESZ(mv)-3;
 	AG_DrawRectOutline(mv, &rd, &c);
 }
 
 static void
 CenterToOrigin(MAP_View *_Nonnull mv)
 {
-	AGMCAM(mv).x = mv->map->xOrigin*AGMTILESZ(mv) - AGMTILESZ(mv)/2;
-	AGMCAM(mv).y = mv->map->yOrigin*AGMTILESZ(mv) - AGMTILESZ(mv)/2;
+	MAP_CAM(mv).x = mv->map->xOrigin*MAP_TILESZ(mv) - MAP_TILESZ(mv)/2;
+	MAP_CAM(mv).y = mv->map->yOrigin*MAP_TILESZ(mv) - MAP_TILESZ(mv)/2;
 	MAP_ViewUpdateCamera(mv);
-}
-
-/*
- * Render a graphical map item to absolute view coordinates rx,ry.
- * The map must be locked. Must be called from widget draw context only.
- */
-static void
-DrawItem(MAP_View *_Nonnull mv, MAP *_Nonnull map, MAP_Item *_Nonnull mi,
-    int rx, int ry, int ncam)
-{
-	const MAP_ItemClass *miClass = mapItemClasses[mi->type];
-
-	if (miClass->draw != NULL)
-		miClass->draw(mv, mi, rx,ry, ncam);
 }
 
 /* Render a gimp-style background tiling. */
@@ -403,9 +428,8 @@ Draw(void *_Nonnull obj)
 	MAP_ViewDrawCb *dcb;
 	MAP *map = mv->map;
 	MAP_Node *node;
-	MAP_Item *mi;
-	int mx, my, rx = 0, ry = 0;
-	int layer = 0, tileSz;
+	int mx, my, rx = 0, ry = 0, tileSz;
+	Uint layer = 0;
 	AG_Rect r, rSel, mSel, rExtent;
 	AG_Color c, c2;
 
@@ -444,7 +468,7 @@ Draw(void *_Nonnull obj)
 	if (map->map == NULL) {
 		goto out;
 	}
-	tileSz = AGMTILESZ(mv);
+	tileSz = MAP_TILESZ(mv);
 draw_layer:
 	if (!map->layers[layer].visible) {
 		goto next_layer;
@@ -456,15 +480,24 @@ draw_layer:
 		for (mx = mv->mx, rx = mv->xOffs;
 	     	     ((mx - mv->mx) <= (int)mv->mw) && (mx < (int)map->w);
 		     mx++, rx += tileSz) {
+			MAP_Item *mi;
+			Uint i;
 
 			node = &map->map[my][mx];
 
+			/*
+			 * Render static MAP_Items.
+			 */
 			TAILQ_FOREACH(mi, &node->items, items) {
+				MAP_ItemClass *miClass;
+
 				if (mi->layer != layer)
 					continue;
 
-				DrawItem(mv, map, mi, rx,ry, mv->cam);
-
+				miClass = mapItemClasses[mi->type];
+				if (miClass->draw != NULL) {
+					miClass->draw(mv, mi, rx,ry, mv->cam);
+				}
 				if ((mi->layer == map->layerCur) &&
 				    (mv->mode == MAP_VIEW_EDIT_ATTRS)) {
 					MAP_ItemAttrColor(mv->edit_attr,
@@ -488,8 +521,30 @@ draw_layer:
 					AG_DrawRectOutline(mv, &r, &c);
 				}
 			}
+
+			/*
+			 * Render dynamic MAP_Objects.
+			 */
+			for (i = 0; i < node->nLocs; i++) {
+				MAP_Location *loc = &node->locs[i];
+				MAP_Object *mo = loc->obj;
+				AG_Rect rd;
+
+				if (loc->layer != layer) {
+					continue;
+				}
+				rd.x = rx;
+				rd.y = ry;
+				rd.w = MAP_TILESZ(mv);
+				rd.h = MAP_TILESZ(mv);
+				MAPOBJECTCLASS_OF(mo)->draw(mo, mv, &rd,
+				    MAP_OBJECT_TOP);
+			}
+
 			if ((mv->flags & MAP_VIEW_EDIT) == 0)
 				continue;
+
+			/* TODO: move to tool draw callback */
 				
 			if ((mv->flags & MAP_VIEW_SHOW_ORIGIN) &&
 			    (mx == map->xOrigin && my == map->yOrigin)) {
@@ -521,7 +576,7 @@ draw_layer:
 		}
 	}
 next_layer:
-	if (++layer < (int)map->nLayers)
+	if (++layer < map->nLayers)
 		goto draw_layer;			/* Draw next layer */
 
 	if (mv->flags & MAP_VIEW_GRID) {
@@ -581,10 +636,12 @@ MAP_ViewUpdateCamera(MAP_View *mv)
 	MAP *map = mv->map;
 	MAP_Camera *cam;
 	int xCam, yCam, xMax, yMax, tileSz;
-
+#ifdef AG_DEBUG
+	int debugLvlSave;
+#endif
 	AG_ObjectLock(map);
-	cam = &AGMCAM(mv);
-	tileSz = AGMTILESZ(mv);
+	cam = &MAP_CAM(mv);
+	tileSz = MAP_TILESZ(mv);
 	
 	if (cam->x < 0) {
 		cam->x = 0;
@@ -649,6 +706,8 @@ MAP_ViewUpdateCamera(MAP_View *mv)
 		mv->yOffs = -(yCam % tileSz) - tileSz;
 	}
 
+	Debug_Mute(debugLvlSave);
+
 	if (mv->hbar != NULL) {
 		AG_SetInt(mv->hbar, "min", 0);
 		AG_SetInt(mv->hbar, "max", (map->w + mv->mw) * tileSz);
@@ -657,6 +716,8 @@ MAP_ViewUpdateCamera(MAP_View *mv)
 		AG_SetInt(mv->vbar, "min", 0);
 		AG_SetInt(mv->vbar, "max", (map->h + mv->mh) * tileSz);
 	}
+
+	Debug_Unmute(debugLvlSave);
 	
 	AG_ObjectUnlock(map);
 	AG_Redraw(mv);
@@ -671,18 +732,18 @@ MAP_ViewSetScale(MAP_View *mv, Uint zoom, int adj_offs)
 	AG_ObjectLock(mv);
 	map = mv->map;
 	AG_ObjectLock(map);
-	tileSz = AGMTILESZ(mv);
+	tileSz = MAP_TILESZ(mv);
 	wPxPrev = map->w * tileSz;
 	hPxPrev = map->h * tileSz;
 
 	if (zoom < ZOOM_MIN) { zoom = ZOOM_MIN; }
 	else if (zoom > ZOOM_MAX) { zoom = ZOOM_MAX; }
 	
-	AGMZOOM(mv) = zoom;
-	tileSz = AGMTILESZ(mv) = zoom*MAPTILESZ/100;
-	AGMPIXSZ(mv) = tileSz/MAPTILESZ;
+	MAP_ZOOM(mv) = zoom;
+	tileSz = MAP_TILESZ(mv) = zoom*MAP_TILESZ_DEF/100;
+	MAP_PIXELSZ(mv) = (float)(tileSz / MAP_TILESZ_DEF);
 	if (tileSz > MAP_TILESZ_MAX)
-		tileSz = AGMTILESZ(mv) = MAP_TILESZ_MAX;
+		tileSz = MAP_TILESZ(mv) = MAP_TILESZ_MAX;
 
 	mv->mw = WIDTH(mv) / tileSz + 2;
 	mv->mh = HEIGHT(mv) / tileSz + 2;
@@ -692,8 +753,8 @@ MAP_ViewSetScale(MAP_View *mv, Uint zoom, int adj_offs)
 	hPx = map->h * tileSz;
 
 	if (adj_offs) {
-		AGMCAM(mv).x = AGMCAM(mv).x * wPx / wPxPrev;
-		AGMCAM(mv).y = AGMCAM(mv).y * hPx / hPxPrev;
+		MAP_CAM(mv).x = MAP_CAM(mv).x * wPx / wPxPrev;
+		MAP_CAM(mv).y = MAP_CAM(mv).y * hPx / hPxPrev;
 	}
 	AG_ObjectUnlock(map);
 	
@@ -723,8 +784,8 @@ ToggleAttribute(MAP_View *_Nonnull mv)
 	if (mv->attr_x == mv->cx && mv->attr_y == mv->cy)
 		return;
 
-	MAP_ModBegin(map);
-	MAP_ModNodeChg(map, mv->cx, mv->cy);
+	MAP_BeginRevision(map);
+	MAP_NodeRevision(map, mv->cx, mv->cy, map->undo, map->nUndo);
 
 	node = &map->map[mv->cy][mv->cx];
 	TAILQ_FOREACH(mi, &node->items, items) {
@@ -743,7 +804,7 @@ ToggleAttribute(MAP_View *_Nonnull mv)
 		nToggled++;
 	}
 
-	MAP_ModEnd(map);
+	MAP_CommitRevision(map);
 
 	if (!nToggled) {
 		MAP_ViewStatus(mv, "No item at [%d,%d] layer %d",
@@ -769,13 +830,17 @@ MouseMotion(AG_Event *_Nonnull event)
 
 	AG_ObjectLock(map);
 
-	GetNodeCoords(mv, &x,&y);
+	MouseToNodeCoords(mv, &x,&y);
+
 	mv->cxrel = x - mv->mouse.x;
 	mv->cyrel = y - mv->mouse.y;
-	xmap = mv->cx * AGMTILESZ(mv) + mv->cxoffs;
-	ymap = mv->cy * AGMTILESZ(mv) + mv->cyoffs;
+
+	xmap = mv->cx * MAP_TILESZ(mv) + mv->cxoffs;
+	ymap = mv->cy * MAP_TILESZ(mv) + mv->cyoffs;
+
 	mv->mouse.xmap_rel += xmap - mv->mouse.xmap;
 	mv->mouse.ymap_rel += ymap - mv->mouse.ymap;
+
 	mv->mouse.xmap = xmap;
 	mv->mouse.ymap = ymap;
 
@@ -798,7 +863,7 @@ MouseMotion(AG_Event *_Nonnull event)
 			    mv->curtool->ops->effect != NULL &&
 			    (rv = mv->curtool->ops->effect(mv->curtool,
 			     &map->map[mv->cy][mv->cx])) != -1) {
-				map->nMods += rv;
+				map->nChanges += rv;
 				goto out;
 			}
 		}
@@ -819,23 +884,14 @@ MouseMotion(AG_Event *_Nonnull event)
 	}
 	
 	if (mv->mouse.scrolling) {
-		AGMCAM(mv).x -= xrel;
-		AGMCAM(mv).y -= yrel;
+		MAP_CAM(mv).x -= xrel;
+		MAP_CAM(mv).y -= yrel;
 		MAP_ViewUpdateCamera(mv);
 	} else if (mv->msel.set) {
 		mv->msel.xOffs += mv->cxrel;
 		mv->msel.yOffs += mv->cyrel;
-	} else if (mv->esel.set && mv->esel.moving) {
-		MAP_NodeselUpdateMove(mv, mv->cxrel, mv->cyrel);
-	} else if (mv->rsel.moving) {
-//		if (abs(mv->mouse.xmap_rel) > AGMPIXSZ(mv)) {
-			MAP_UpdateRefSel(mv, mv->mouse.xmap_rel < 0 ? -1 : 1, 0);
-			mv->mouse.xmap_rel = 0;
-//		}
-//		if (abs(mv->mouse.ymap_rel) > AGMPIXSZ(mv)) {
-			MAP_UpdateRefSel(mv, 0, mv->mouse.ymap_rel < 0 ? -1 : 1);
-			mv->mouse.ymap_rel = 0;
-//		}
+	} else if (mv->esel.set && (mv->esel.flags & MAP_VIEW_SELECTION_MOVING)) {
+		MAP_NodeselMoveUpdate(mv, mv->cxrel, mv->cyrel);
 	}
 out:
 	AG_ObjectUnlock(map);
@@ -848,6 +904,11 @@ out:
 void
 MAP_ViewSetMode(MAP_View *mv, enum map_view_mode mode)
 {
+	if (mode >= MAP_VIEW_MODE_LAST)
+		return;
+
+	MAP_ViewStatus(mv, "%s", _(mapViewModeNames[mode]));
+
 	mv->mode = mode;
 }
 
@@ -865,28 +926,24 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	MAP_View *mv = MAP_VIEW_SELF();
 	MAP *map = mv->map;
-	MAP_Tool *tool;
+//	MAP_Tool *tool;
 	const int button = AG_INT(1);
-/*	const int mx = AG_INT(2); */
-/*	const int my = AG_INT(3); */
-	int x,y, rv;
+	int x = AG_INT(2);
+	int y = AG_INT(3);
+	int rv;
 	
 	AG_WidgetFocus(mv);
 	
 	AG_ObjectLock(map);
-	GetNodeCoords(mv, &x,&y);
+
+	MouseToNodeCoords(mv, &x,&y);
+
 	mv->mouse.x = x;
 	mv->mouse.y = y;
-	mv->mouse.xmap = mv->cx*AGMTILESZ(mv) + mv->cxoffs;
-	mv->mouse.ymap = mv->cy*AGMTILESZ(mv) + mv->cyoffs;
+	mv->mouse.xmap = mv->cx*MAP_TILESZ(mv) + mv->cxoffs;
+	mv->mouse.ymap = mv->cy*MAP_TILESZ(mv) + mv->cyoffs;
 	mv->mouse.xmap_rel = 0;
 	mv->mouse.ymap_rel = 0;
-	
-	if (mv->actor != NULL &&
-	    MAP_ACTOR_OPS(mv->actor)->mousebuttondown != NULL &&
-	    MAP_ACTOR_OPS(mv->actor)->mousebuttondown(mv->actor,
-	      mv->mouse.xmap, mv->mouse.ymap, button) == -1)
-		goto out;
 
 	if ((mv->flags & MAP_VIEW_EDIT) &&
 	    (mv->cx >= 0 && mv->cy >= 0)) {
@@ -916,12 +973,12 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			    InsideNodeSelection(mv, mv->cx, mv->cy)) {
 				if ((rv = mv->curtool->ops->effect(mv->curtool,
 				     &map->map[mv->cy][mv->cx])) != -1) {
-					mv->map->nMods = rv;
+					mv->map->nChanges = rv;
 					goto out;
 				}
 			}
 		}
-
+#if 0
 		/* Mouse bindings allow inactive tools to bind mouse events. */
 		TAILQ_FOREACH(tool, &mv->tools, tools) {
 			MAP_ToolMouseBinding *mbinding;
@@ -942,7 +999,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 					goto out;
 			}
 		}
-
+#endif
 		if (mv->deftool != NULL &&
 		    mv->deftool->ops->mousebuttondown != NULL &&
 		    mv->deftool->ops->mousebuttondown(mv->deftool,
@@ -960,9 +1017,12 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			    mv->cy >= mv->esel.y &&
 			    mv->cx < mv->esel.x+mv->esel.w &&
 			    mv->cy < mv->esel.y+mv->esel.h) {
-				MAP_NodeselBeginMove(mv);
+				MAP_NodeselMoveBegin(mv);
+				MAP_ViewStatus(mv, _("Moving (%dx%d) nodes."),
+				    mv->esel.w, mv->esel.h);
 			} else {
 				mv->esel.set = 0;
+				MAP_ViewStatus(mv, _("Selection cleared."));
 			}
 			goto out;
 		} else {
@@ -986,19 +1046,6 @@ MouseButtonDown(AG_Event *_Nonnull event)
 							   ~(MAP_ITEM_SELECTED);
 						}
 					}
-				}
-			}
-			if (mv->curtool != NULL &&
-			    mv->curtool->ops == &mapRefselOps &&
-			    (mi = MAP_ItemLocate(map,
-			                         mv->mouse.xmap,
-			                         mv->mouse.ymap,
-						 mv->cam)) != NULL) {
-				if (mi->flags & MAP_ITEM_SELECTED) {
-					mi->flags &= ~(MAP_ITEM_SELECTED);
-				} else {
-					mi->flags |= MAP_ITEM_SELECTED;
-					mv->rsel.moving = 1;
 				}
 			}
 		}
@@ -1028,14 +1075,14 @@ MouseButtonDown(AG_Event *_Nonnull event)
 #endif
 	case AG_MOUSE_WHEELDOWN:
 		if ((mv->flags & MAP_VIEW_NO_BMPSCALE) == 0) {
-			MAP_ViewSetScale(mv, AGMZOOM(mv) - mapViewZoomInc, 1);
-			MAP_ViewStatus(mv, _("%d%% zoom"), AGMZOOM(mv));
+			MAP_ViewSetScale(mv, MAP_ZOOM(mv) - mapViewZoomInc, 1);
+			MAP_ViewStatus(mv, _("%d%% zoom"), MAP_ZOOM(mv));
 		}
 		break;
 	case AG_MOUSE_WHEELUP:
 		if ((mv->flags & MAP_VIEW_NO_BMPSCALE) == 0) {
-			MAP_ViewSetScale(mv, AGMZOOM(mv) + mapViewZoomInc, 1);
-			MAP_ViewStatus(mv, _("%d%% zoom"), AGMZOOM(mv));
+			MAP_ViewSetScale(mv, MAP_ZOOM(mv) + mapViewZoomInc, 1);
+			MAP_ViewStatus(mv, _("%d%% zoom"), MAP_ZOOM(mv));
 		}
 		break;
 	}
@@ -1055,23 +1102,17 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	int y = AG_INT(3);
 	
 	AG_ObjectLock(map);
-	GetNodeCoords(mv, &x,&y);
+
+	MouseToNodeCoords(mv, &x,&y);
 
 	mv->flags &= ~(MAP_VIEW_SET_ATTRS);
-	
-	if (mv->actor != NULL &&
-	    MAP_ACTOR_OPS(mv->actor)->mousebuttonup != NULL) {
-		x = mv->cx*AGMTILESZ(mv) + mv->cxoffs;
-		y = mv->cy*AGMTILESZ(mv) + mv->cyoffs;
-		if (MAP_ACTOR_OPS(mv->actor)->mousebuttonup(mv->actor, x, y,
-		    button) == -1)
-			goto out;
-	}
 
 	if ((mv->flags & MAP_VIEW_EDIT) &&
 	    (mv->cx >= 0 && mv->cy >= 0)) {
 	    	if (mv->mode == MAP_VIEW_EDIT_ORIGIN) {
 			MAP_ViewSetMode(mv, MAP_VIEW_EDITION);
+			MAP_ViewStatus(mv, _("Moved origin to [%d,%d]."),
+			    mv->cx, mv->cy);
 		}
 		if (mv->curtool != NULL) {
 			if (mv->curtool->ops->mousebuttonup != NULL &&
@@ -1107,10 +1148,9 @@ MouseButtonUp(AG_Event *_Nonnull event)
 		}
 	} else {
 		mv->mouse.scrolling = 0;
-		if (mv->esel.set && mv->esel.moving) {
-			MAP_NodeselEndMove(mv);
+		if (mv->esel.set && mv->esel.flags & MAP_VIEW_SELECTION_MOVING) {
+			MAP_NodeselMoveEnd(mv);
 		}
-		mv->rsel.moving = 0;
 		goto out;
 	}
 
@@ -1124,11 +1164,11 @@ MouseButtonUp(AG_Event *_Nonnull event)
 			if (mv->msel.set) {
 				MAP_NodeselEnd(mv);
 				mv->msel.set = 0;
-			} else if (mv->esel.set && mv->esel.moving) {
-				MAP_NodeselEndMove(mv);
+			} else if (mv->esel.set &&
+			           mv->esel.flags & MAP_VIEW_SELECTION_MOVING) {
+				MAP_NodeselMoveEnd(mv);
 			}
 		}
-		mv->rsel.moving = 0;
 		break;
 	case AG_MOUSE_MIDDLE:
 	case AG_MOUSE_RIGHT:
@@ -1151,13 +1191,6 @@ KeyUp(AG_Event *_Nonnull event)
 	
 	AG_ObjectLock(map);
 
-	if (mv->actor != NULL &&
-	    MAP_ACTOR_OPS(mv->actor)->keyup != NULL) {
-		if (MAP_ACTOR_OPS(mv->actor)->keyup(mv->actor, keysym, keymod)
-		    == -1)
-			goto out;
-	}
-	
 	if (mv->flags & MAP_VIEW_EDIT &&
 	    mv->curtool != NULL &&
 	    mv->curtool->ops->keyup != NULL &&
@@ -1165,20 +1198,18 @@ KeyUp(AG_Event *_Nonnull event)
 		goto out;
 	
 	TAILQ_FOREACH(tool, &mv->tools, tools) {
-		MAP_ToolKeyBinding *kbinding;
+		MAP_ToolKeyBinding *kb;
 
-		SLIST_FOREACH(kbinding, &tool->kbindings, kbindings) {
-			if (kbinding->key == keysym &&
-			    (kbinding->mod == AG_KEYMOD_NONE ||
-			     keymod & kbinding->mod)) {
-				if (kbinding->edit &&
+		SLIST_FOREACH(kb, &tool->kbindings, kbindings) {
+			if (kb->key == keysym &&
+			    (kb->mod == AG_KEYMOD_NONE || keymod & kb->mod)) {
+				if (kb->edit &&
 				   (((mv->flags & MAP_VIEW_EDIT) == 0) ||
 				    ((OBJECT(map)->flags & AG_OBJECT_READONLY)))) {
 					continue;
 				}
 				tool->mv = mv;
-				if (kbinding->func(tool, keysym, 0,
-				    kbinding->arg) == 1)
+				if (kb->func(tool, keysym, 0, kb->arg) == 1)
 					goto out;
 			}
 		}
@@ -1199,13 +1230,6 @@ KeyDown(AG_Event *_Nonnull event)
 	
 	AG_ObjectLock(map);
 
-	if (mv->actor != NULL &&
-	    MAP_ACTOR_OPS(mv->actor)->keydown != NULL) {
-		if (MAP_ACTOR_OPS(mv->actor)->keydown(mv->actor, keysym, keymod)
-		    == -1)
-			goto out;
-	}
-	
 	if (mv->flags & MAP_VIEW_EDIT &&
 	    mv->curtool != NULL &&
 	    mv->curtool->ops->keydown != NULL &&
@@ -1213,21 +1237,19 @@ KeyDown(AG_Event *_Nonnull event)
 		goto out;
 
 	TAILQ_FOREACH(tool, &mv->tools, tools) {
-		MAP_ToolKeyBinding *kbinding;
+		MAP_ToolKeyBinding *kb;
 
-		SLIST_FOREACH(kbinding, &tool->kbindings, kbindings) {
-			if (kbinding->key == keysym &&
-			    (kbinding->mod == AG_KEYMOD_NONE ||
-			     keymod & kbinding->mod)) {
-				if (kbinding->edit &&
+		SLIST_FOREACH(kb, &tool->kbindings, kbindings) {
+			if (kb->key == keysym &&
+			    (kb->mod == AG_KEYMOD_NONE || keymod & kb->mod)) {
+				if (kb->edit &&
 				   (((mv->flags & MAP_VIEW_EDIT) == 0) ||
 				    ((OBJECT(map)->flags &
 				      AG_OBJECT_READONLY)))) {
 					continue;
 				}
 				tool->mv = mv;
-				if (kbinding->func(tool, keysym, 1,
-				    kbinding->arg) == 1)
+				if (kb->func(tool, keysym, 1, kb->arg) == 1)
 					goto out;
 			}
 		}
@@ -1236,10 +1258,14 @@ KeyDown(AG_Event *_Nonnull event)
 	switch (keysym) {
 	case AG_KEY_Z:
 		if (keymod & AG_KEYMOD_CTRL) {
-			MAP_Undo(map);
+			if (keymod & AG_KEYMOD_SHIFT) {
+				MAP_Redo(map);
+			} else {
+				MAP_Undo(map);
+			}
 		}
 		break;
-	case AG_KEY_R:
+	case AG_KEY_Y:
 		if (keymod & AG_KEYMOD_CTRL) {
 			MAP_Redo(map);
 		}
@@ -1248,7 +1274,7 @@ KeyDown(AG_Event *_Nonnull event)
 	case AG_KEY_0:
 		if ((mv->flags & MAP_VIEW_NO_BMPSCALE) == 0) {
 			MAP_ViewSetScale(mv, 100, 1);
-			MAP_ViewStatus(mv, _("%d%% zoom"), AGMZOOM(mv));
+			MAP_ViewStatus(mv, _("%d%% zoom"), MAP_ZOOM(mv));
 		}
 		break;
 	case AG_KEY_O:
@@ -1312,8 +1338,8 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	MAP_View *mv = obj;
 	const int sbLen = WFONT(mv)->lineskip;
 
-	r->w = mv->wPre*MAPTILESZ + sbLen;
-	r->h = mv->hPre*MAPTILESZ + sbLen;
+	r->w = mv->wPre*MAP_TILESZ_DEF + sbLen;
+	r->h = mv->hPre*MAP_TILESZ_DEF + sbLen;
 }
 
 static int
@@ -1342,21 +1368,12 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		AG_WidgetSizeAlloc(mv->vbar, &aBar);
 		mv->r.w -= WIDTH(mv->vbar);
 	}
-	MAP_ViewSetScale(mv, AGMZOOM(mv), 0);
+	MAP_ViewSetScale(mv, MAP_ZOOM(mv), 0);
 
-	if (a->w < MAPTILESZ || a->h < MAPTILESZ) {
+	if (a->w < MAP_TILESZ_DEF || a->h < MAP_TILESZ_DEF) {
 		return (-1);
 	}
 	return (0);
-}
-
-static void
-LostFocus(AG_Event *_Nonnull event)
-{
-//	MAP_View *mv = MAP_VIEW_SELF();
-
-//	if (mv->actor != NULL)
-//		AG_ObjectCancelTimeouts(mv->actor, 0);
 }
 
 /* Set the coordinates and geometry of the selection rectangle. */
@@ -1432,7 +1449,6 @@ Init(void *_Nonnull obj)
 	mv->mode = MAP_VIEW_EDITION;
 	mv->edit_attr = 0;
 	mv->map = NULL;
-	mv->actor = NULL;
 	mv->cam = 0;
 	mv->mw = 0;					/* Set on scale */
 	mv->mh = 0;
@@ -1483,17 +1499,14 @@ Init(void *_Nonnull obj)
 	mv->msel.xOffs = 0;
 	mv->msel.yOffs = 0;
 	mv->esel.set = 0;
-	mv->esel.moving = 0;
+	mv->esel.flags = 0;
 	mv->esel.x = 0;
 	mv->esel.y = 0;
 	mv->esel.w = 0;
 	mv->esel.h = 0;
-	mv->rsel.moving = 0;
 
 	AG_ColorRGBA_8(&mv->color, 255,255,255,32);
 
-	AG_SetEvent(mv, "widget-lostfocus",	LostFocus, NULL);
-	AG_SetEvent(mv, "widget-hidden",	LostFocus, NULL);
 	AG_SetEvent(mv, "key-up",		KeyUp, NULL);
 	AG_SetEvent(mv, "key-down",		KeyDown, NULL);
 	AG_SetEvent(mv, "mouse-motion",		MouseMotion, NULL);

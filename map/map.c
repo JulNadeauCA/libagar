@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2021 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@
 #include <agar/gui/window.h>
 #include <agar/gui/icons.h>
 #include <agar/gui/primitive.h>
+
 #include <agar/gui/checkbox.h>
 #include <agar/gui/label.h>
 #include <agar/gui/mspinbutton.h>
@@ -38,8 +39,10 @@
 #include <agar/gui/separator.h>
 #include <agar/gui/statusbar.h>
 #include <agar/gui/tlist.h>
+#include <agar/gui/file_dlg.h>
 
 #include <agar/map/rg_tileset.h>
+#include <agar/map/rg_icons.h>
 #include <agar/map/map.h>
 #include <agar/map/icons_data.h>
 #include <agar/map/insert.h>
@@ -49,12 +52,22 @@
 
 int mapSmoothScaling = 0;
 
-extern AG_ObjectClass mapActorClass;
-
 MAP_ItemClass *mapItemClasses[MAP_ITEM_LAST] = {
-	&mapTileClass,     /* MAP_ITEM_TILE */
-	&mapImgClass,      /* MAP_ITEM_IMG */
-	&mapLinkClass      /* MAP_ITEM_LINK */
+	&mapTileClass,				/* MAP_ITEM_TILE */
+	&mapImgClass,				/* MAP_ITEM_IMG */
+	&mapLinkClass,				/* MAP_ITEM_LINK */
+	NULL					/* MAP_ITEM_PRIVATE */
+};
+
+static const MAP_ToolOps *mapToolOps[] = {
+	&mapInsertObjOps,
+	&mapInsertOps,
+	&mapNodeselOps,
+	&mapFillOps,
+	&mapEraserOps,
+	&mapFlipOps,
+	&mapInvertOps,
+	NULL
 };
 
 void
@@ -62,11 +75,9 @@ MAP_InitSubsystem(void)
 {
 	Uint i;
 
-	AG_RegisterNamespace("MAP", "MAP_", "http://libagar.org/");
+	AG_RegisterNamespace("MAP", "MAP_", "https://libagar.org/");
 	AG_RegisterClass(&mapClass);
-	AG_RegisterClass(&mapActorClass);
-	AG_RegisterClass(&mapEditorClass);
-	AG_RegisterClass(&mapEditorPseudoClass);
+	AG_RegisterClass(&mapObjectClass);
 	AG_RegisterClass(&mapViewClass);
 
 	mapIcon_Init();
@@ -79,15 +90,16 @@ void
 MAP_DestroySubsystem(void)
 {
 	AG_UnregisterClass(&mapClass);
-	AG_UnregisterClass(&mapActorClass);
-	AG_UnregisterClass(&mapEditorClass);
-	AG_UnregisterClass(&mapEditorPseudoClass);
+	AG_UnregisterClass(&mapObjectClass);
 	AG_UnregisterClass(&mapViewClass);
 }
 
 void
 MAP_NodeInit(MAP_Node *node)
 {
+	node->flags = MAP_NODE_VALID;
+	node->nLocs = 0;
+	node->locs = NULL;
 	TAILQ_INIT(&node->items);
 }
 
@@ -95,6 +107,7 @@ void
 MAP_NodeDestroy(MAP *map, MAP_Node *node)
 {
 	MAP_Item *mi, *miNext;
+	Uint i;
 
 	for (mi = TAILQ_FIRST(&node->items);
 	     mi != TAILQ_END(&node->items);
@@ -103,6 +116,12 @@ MAP_NodeDestroy(MAP *map, MAP_Node *node)
 		MAP_ItemDestroy(map, mi);
 		free(mi);
 	}
+	for (i = 0; i < node->nLocs; i++) {
+		Free(node->locs[i].neigh);
+	}
+	Free(node->locs);
+
+	node->flags &= ~(MAP_NODE_VALID);
 }
 
 void
@@ -111,7 +130,7 @@ MAP_ItemInit(void *obj, enum map_item_type type)
 	MAP_Item *mi = MAPITEM(obj);
 
 	mi->type = type;
-	mi->flags = 0;
+	mi->flags = MAP_ITEM_VALID;
 	mi->layer = 0;
 	mi->p = NULL;
 	RG_TransformChainInit(&mi->transforms);
@@ -128,6 +147,11 @@ void
 MAP_ItemDestroy(MAP *map, MAP_Item *mi)
 {
 	MAP_ItemClass *miClass = mapItemClasses[mi->type];
+
+	if ((mi->flags & MAP_ITEM_VALID) == 0) {
+		AG_FatalError("MAP_ItemDestroy: Invalid item");
+	}
+	mi->flags &= ~(MAP_ITEM_VALID);
 
 	if (miClass->destroy != NULL)
 		miClass->destroy(mi);
@@ -170,28 +194,45 @@ MAP_ItemAttrColor(Uint flag, int state, AG_Color *c)
 	}
 }
 
-/* Allocate and initialize the node map. */
+/*
+ * Allocate and initialize the two-dimensional array of MAP_Node's
+ * to (w x h) nodes.
+ */
 int
 MAP_AllocNodes(MAP *map, Uint w, Uint h)
 {
 	Uint x, y;
+	MAP_Node **mapNew;
 	
 	if (w > MAP_WIDTH_MAX || h > MAP_HEIGHT_MAX) {
-		AG_SetError(_("%ux%u nodes exceed %ux%u."), w, h,
-		    MAP_WIDTH_MAX, MAP_HEIGHT_MAX);
+		AG_SetError(_("%ux%u nodes exceed the limit of %ux%u."),
+		    w,h, MAP_WIDTH_MAX, MAP_HEIGHT_MAX);
 		return (-1);
 	}
 
+	if ((mapNew = TryMalloc(h * sizeof(MAP_Node *))) == NULL) {
+		return (-1);
+	}
+	for (y = 0; y < h; y++) {
+		if ((mapNew[y] = TryMalloc(w * sizeof(MAP_Node))) == NULL) {
+			for (--y; y >= 0; y--) {
+				free(mapNew[y]);
+			}
+			free(mapNew);
+			return (-1);
+		}
+	}
+	for (y = 0; y < h; y++) {
+		for (x = 0; x < w; x++)
+			MAP_NodeInit(&mapNew[y][x]);
+	}
+
 	AG_ObjectLock(map);
+	map->map = mapNew;
 	map->w = w;
 	map->h = h;
-	map->map = Malloc(h * sizeof(MAP_Node *));
-	for (y = 0; y < h; y++) {
-		map->map[y] = Malloc(w * sizeof(MAP_Node));
-		for (x = 0; x < w; x++)
-			MAP_NodeInit(&map->map[y][x]);
-	}
 	AG_ObjectUnlock(map);
+
 	return (0);
 }
 
@@ -202,7 +243,6 @@ MAP_FreeNodes(MAP *map)
 	Uint x,y;
 	MAP_Node *node;
 
-	AG_ObjectLock(map);
 	if (map->map != NULL) {
 		for (y = 0; y < map->h; y++) {
 			for (x = 0; x < map->w; x++) {
@@ -214,7 +254,6 @@ MAP_FreeNodes(MAP *map)
 		free(map->map);
 		map->map = NULL;
 	}
-	AG_ObjectUnlock(map);
 }
 
 static void
@@ -228,7 +267,7 @@ FreeLayers(MAP *_Nonnull map)
 static void
 FreeCameras(MAP *_Nonnull map)
 {
-	map->cameras = Realloc(map->cameras , sizeof(MAP_Camera));
+	map->cameras = Realloc(map->cameras, sizeof(MAP_Camera));
 	map->nCameras = 1;
 	MAP_InitCamera(&map->cameras[0], _("Camera 0"));
 }
@@ -241,38 +280,38 @@ MAP_Resize(MAP *map, Uint w, Uint h)
 	Uint x, y;
 
 	if (w > MAP_WIDTH_MAX || h > MAP_HEIGHT_MAX) {
-		AG_SetError(_("%ux%u nodes exceed %ux%u."), w, h,
-		    MAP_WIDTH_MAX, MAP_HEIGHT_MAX);
+		AG_SetError(_("%ux%u nodes exceed the limit of %ux%u."),
+		    w,h, MAP_WIDTH_MAX, MAP_HEIGHT_MAX);
 		return (-1);
 	}
 
-	AG_ObjectLock(map);
-
-	/* Save the nodes to a temporary map, to preserve dependencies. */
 	AG_ObjectInitStatic(&mapTmp, &mapClass);
+
+	AG_ObjectLock(map);
 
 	if (MAP_AllocNodes(&mapTmp, map->w, map->h) == -1) {
 		goto fail;
 	}
 	for (y = 0; y < map->h && y < h; y++) {
 		for (x = 0; x < map->w && x < w; x++)
-			MAP_NodeCopy(map,      &map->map[y][x], -1,
-			            &mapTmp, &mapTmp.map[y][x], -1);
+			MAP_NodeCopy(&mapTmp, &mapTmp.map[y][x], -1,
+			             &map->map[y][x], -1);
 	}
 
-	/* Resize the map, restore the original nodes. */
+	/* Resize the map and restore the original nodes. */
 	MAP_FreeNodes(map);
 	if (MAP_AllocNodes(map, w,h) == -1) {
 		goto fail;
 	}
 	for (y = 0; y < mapTmp.h && y < map->h; y++) {
 		for (x = 0; x < mapTmp.w && x < map->w; x++)
-			MAP_NodeCopy(&mapTmp, &mapTmp.map[y][x], -1,
-			              map,      &map->map[y][x], -1);
+			MAP_NodeCopy(map, &map->map[y][x], -1,
+			             &mapTmp.map[y][x], -1);
 	}
 
-	if (map->xOrigin >= (int)w) { map->xOrigin = (int)w-1; }
-	if (map->yOrigin >= (int)h) { map->yOrigin = (int)h-1; }
+	/* Clamp the origin point. */
+	if (map->xOrigin >= (int)w) { map->xOrigin = (int)w - 1; }
+	if (map->yOrigin >= (int)h) { map->yOrigin = (int)h - 1; }
 
 	AG_ObjectUnlock(map);
 	AG_ObjectDestroy(&mapTmp);
@@ -290,13 +329,16 @@ MAP_SetZoom(MAP *map, int ncam, Uint zoom)
 	MAP_Camera *cam = &map->cameras[ncam];
 
 	AG_ObjectLock(map);
+
 	cam->zoom = zoom;
-	if ((cam->tilesz = cam->zoom*MAPTILESZ/100) > MAP_TILESZ_MAX) {
+
+	if ((cam->tilesz = cam->zoom*MAP_TILESZ_DEF/100) > MAP_TILESZ_MAX)
 		cam->tilesz = MAP_TILESZ_MAX;
-	}
+
 	AG_ObjectUnlock(map);
 }
 
+/* Create a new map. */
 MAP *
 MAP_New(void *parent, const char *name)
 {
@@ -309,6 +351,7 @@ MAP_New(void *parent, const char *name)
 	return (map);
 }
 
+/* Initialize a new layer. */
 void
 MAP_InitLayer(MAP_Layer *lay, const char *name)
 {
@@ -319,6 +362,7 @@ MAP_InitLayer(MAP_Layer *lay, const char *name)
 	lay->alpha = 255;
 }
 
+/* Initialize a new camera. */
 void
 MAP_InitCamera(MAP_Camera *cam, const char *name)
 {
@@ -328,57 +372,65 @@ MAP_InitCamera(MAP_Camera *cam, const char *name)
 	cam->flags = 0;
 	cam->alignment = AG_MAP_CENTER;
 	cam->zoom = 100;
-	cam->tilesz = MAPTILESZ;
+	cam->tilesz = MAP_TILESZ_DEF;
 	cam->pixsz = 1;
 }
 
+/* Create a new camera. */
 int
 MAP_AddCamera(MAP *map, const char *name)
 {
-	map->cameras = Realloc(map->cameras,
-	    (map->nCameras + 1) * sizeof(MAP_Camera));
+	int rv;
+
+	AG_ObjectLock(map);
+
+	map->cameras = Realloc(map->cameras, (map->nCameras + 1) *
+	                                     sizeof(MAP_Camera));
 	MAP_InitCamera(&map->cameras[map->nCameras], name);
-	return (map->nCameras++);
+	rv = map->nCameras++;
+
+	AG_ObjectUnlock(map);
+
+	return (rv);
 }
 
-/* Initialize undo block. */
 static void
-InitModBlk(MAP_ModBlk *_Nonnull blk)
+InitRevision(MAP_Revision *_Nonnull rev)
 {
-	blk->mods = Malloc(sizeof(MAP_Mod));
-	blk->nMods = 0;
-	blk->cancel = 0;
+	rev->changes = Malloc(sizeof(MAP_Change));
+	rev->nChanges = 0;
+	rev->cancel = 0;
 }
 
-/* Destroy undo block. */
 static void
-FreeModBlk(MAP *_Nonnull map, MAP_ModBlk *_Nonnull blk)
+FreeRevision(MAP *_Nonnull map, MAP_Revision *_Nonnull rev)
 {
 	Uint i;
 
-	for (i = 0; i < blk->nMods; i++) {
-		MAP_Mod *mm = &blk->mods[i];
+	for (i = 0; i < rev->nChanges; i++) {
+		MAP_Change *mm = &rev->changes[i];
 	
 		switch (mm->type) {
-		case AG_MAPMOD_NODECHG:
+		case MAP_CHANGE_NODECHG:
 			MAP_NodeDestroy(map, &mm->mm_nodechg.node);
 			break;
 		default:
 			break;
 		}
 	}
-	free(blk->mods);
+	free(rev->changes);
 }
 
+/* Initialize undo levels. */
 void
-MAP_InitModBlks(MAP *map)
+MAP_InitHistory(MAP *map)
 {
-	map->blks = Malloc(sizeof(MAP_ModBlk));
-	map->nBlks = 1;
-	map->curBlk = 0;
-	map->nMods = 0;
+	map->nChanges = 0;
 
-	InitModBlk(&map->blks[0]);
+	map->undo = Malloc(sizeof(MAP_Revision));
+	map->redo = Malloc(sizeof(MAP_Revision));
+	map->nUndo = 0;
+	map->nRedo = 0;
 }
 
 static void
@@ -398,19 +450,34 @@ Init(void *_Nonnull obj)
 	map->nLayers = 1;
 	map->cameras = Malloc(sizeof(MAP_Camera));
 	map->nCameras = 1;
-	TAILQ_INIT(&map->actors);
-	
+	map->nObjs = 0;
+	map->objs = Malloc(sizeof(MAP_Object *));
+	map->pLibs = NULL;
+	map->pMaps = NULL;
+
 	MAP_InitLayer(&map->layers[0], _("Layer 0"));
 	MAP_InitCamera(&map->cameras[0], _("Camera 0"));
-	MAP_InitModBlks(map);
+	MAP_InitHistory(map);
 
-	if (!mapEditorInited) {
-		mapEditorInited = 1;
-		MAP_EditorInit();
+	MAP_AllocNodes(map, 32,32);
+	map->xOrigin = 16;
+	map->yOrigin = 16;
+}
+
+static void
+Destroy(void *_Nonnull obj)
+{
+	MAP *map = obj;
+	Uint i;
+
+	for (i = 0; i < map->nUndo; i++) {
+		FreeRevision(map, &map->undo[i]);
 	}
-	MAP_AllocNodes(map, mapDefaultWidth, mapDefaultHeight);
-	map->xOrigin = mapDefaultWidth >> 1;
-	map->yOrigin = mapDefaultHeight >> 1;
+	free(map->undo);
+
+	free(map->layers);
+	free(map->cameras);
+	free(map->objs);
 }
 
 /* Create a new layer. */
@@ -425,22 +492,34 @@ MAP_PushLayer(MAP *map, const char *name)
 		Strlcpy(layname, name, sizeof(layname));
 	}
 
+	AG_ObjectLock(map);
+
 	if (map->nLayers+1 > MAP_LAYERS_MAX) {
-		AG_SetErrorS(_("Too many layers."));
-		return (-1);
+		AG_SetError(_("%d layers exceed the limit of %d."),
+		    map->nLayers+1, MAP_LAYERS_MAX);
+		goto fail;
 	}
 	map->layers = Realloc(map->layers, (map->nLayers+1)*sizeof(MAP_Layer));
 	MAP_InitLayer(&map->layers[map->nLayers], layname);
 	map->nLayers++;
+
+	AG_ObjectUnlock(map);
 	return (0);
+fail:
+	AG_ObjectUnlock(map);
+	return (-1);
 }
 
 /* Remove the last layer. */
 void
 MAP_PopLayer(MAP *map)
 {
+	AG_ObjectLock(map);
+
 	if (--map->nLayers < 1)
 		map->nLayers = 1;
+	
+	AG_ObjectUnlock(map);
 }
 
 /*
@@ -502,54 +581,57 @@ MAP_PageOut(MAP *map, const char *resPrefix, void *resObj)
 }
 
 /*
- * Copy node items from mapSrc:nodeSrc to mapDst:nodeDst.
+ * Copy map items and objects from mapSrc:nodeSrc to map:node.
  *
- * Copy only those items on layerSrc (or -1 = all layers).
+ * Copy only those items/objects on layerSrc (or -1 = all layers).
  * Set destination layer to layerDst (or -1 = original layer in mapSrc).
+ *
+ * Both source and destination maps must be locked.
  */
 void
-MAP_NodeCopy(MAP *mapSrc, MAP_Node *nodeSrc, int layerSrc, MAP *mapDst,
-    MAP_Node *nodeDst, int layerDst)
+MAP_NodeCopy(MAP *map, MAP_Node *node, int layerDst,
+    const MAP_Node *nodeSrc, int layerSrc)
 {
 	MAP_Item *miSrc;
-
-	AG_ObjectLock(mapSrc);
-	if (mapDst != mapSrc)
-		AG_ObjectLock(mapDst);
+	Uint i;
 
 	TAILQ_FOREACH(miSrc, &nodeSrc->items, items) {
 		if (layerSrc != -1 &&
-		    miSrc->layer != layerSrc) {
+		    layerSrc != miSrc->layer) {
 			continue;
 		}
-		MAP_NodeDuplicate(miSrc, mapDst, nodeDst, layerDst);
+		MAP_DuplicateItem(map,node,layerDst, miSrc);
 	}
-	
-	if (mapDst != mapSrc) {
-		AG_ObjectUnlock(mapDst);
+	for (i = 0; i < nodeSrc->nLocs; i++) {
+		const MAP_Location *locSrc = &nodeSrc->locs[i];
+
+		if (layerSrc != -1 &&
+		    layerSrc != locSrc->layer) {
+			continue;
+		}
+		MAP_DuplicateLocation(map,node,layerDst, locSrc);
 	}
-	AG_ObjectUnlock(mapSrc);
 }
 
 /*
- * Duplicate a given map item onto mapDst:nodeDst.
+ * Duplicate the map item mi onto map:node.
  * Both source and destination maps must be locked.
  */
 MAP_Item *
-MAP_NodeDuplicate(const MAP_Item *miSrc, MAP *mapDst, MAP_Node *nodeDst,
-    int layerDst)
+MAP_DuplicateItem(MAP *map, MAP_Node *node, int layer, const MAP_Item *mi)
 {
 	MAP_Item *miDup;
 	RG_Transform *xf, *xfDup;
 
 	/* Allocate a new node item with the same data. */
-	miDup = (MAP_Item *)mapItemClasses[miSrc->type]->duplicate(mapDst,
-	                                               nodeDst,
-	                                               (const void *)miSrc);
-	miDup->flags = miSrc->flags;
-	miDup->layer = (layerDst == -1) ? miSrc->layer : layerDst;
+	miDup = (MAP_Item *)mapItemClasses[mi->type]->duplicate(map, node,
+	    (const void *)mi);
+	miDup->flags = mi->flags;
+	miDup->layer = (layer == -1) ? mi->layer : layer;
+	miDup->z = mi->z;
+	miDup->h = mi->h;
 
-	TAILQ_FOREACH(xf, &miSrc->transforms, transforms) {
+	TAILQ_FOREACH(xf, &mi->transforms, transforms) {
 		xfDup = Malloc(sizeof(RG_Transform));
 		RG_TransformInit(xfDup, xf->type, xf->nArgs, xf->args);
 		TAILQ_INSERT_TAIL(&miDup->transforms, xfDup, transforms);
@@ -557,27 +639,98 @@ MAP_NodeDuplicate(const MAP_Item *miSrc, MAP *mapDst, MAP_Node *nodeDst,
 	return (miDup);
 }
 
-/* Unlink a node item and free it. */
+/*
+ * Duplicate the MAP_Object location loc onto map:node.
+ * Both source and destination maps must be locked.
+ */
+MAP_Location *
+MAP_DuplicateLocation(MAP *map, MAP_Node *node, int layer, const MAP_Location *loc)
+{
+	MAP_Location *locDup;
+
+	node->locs = Realloc(node->locs, (node->nLocs + 1)*sizeof(MAP_Location));
+	locDup = &node->locs[node->nLocs++];
+	memcpy(locDup, loc, sizeof(MAP_Location));
+	locDup->neigh = NULL;
+	locDup->nNeigh = 0;
+
+	if (layer != -1)
+		locDup->layer = layer;
+
+	return (locDup);
+}
+
+/*
+ * Unlink a MAP_Item and release its allocated memory.
+ * The map must be locked.
+ */
 void
 MAP_NodeDelItem(MAP *map, MAP_Node *node, MAP_Item *mi)
 {
-	AG_ObjectLock(map);
-
 	TAILQ_REMOVE(&node->items, mi, items);
 	MAP_ItemDestroy(map, mi);
-
-	AG_ObjectUnlock(map);
-	
 	free(mi);
 }
 
-/* Remove all references associated with the given layer. */
+/*
+ * Remove a MAP_Object location from a node by pointer reference.
+ * Return 1 on success or 0 if the location does not exist on node.
+ * The map must be locked.
+ */
+int
+MAP_NodeDelLocation(MAP *map, MAP_Node *node, MAP_Location *loc)
+{
+	Uint i;
+
+	for (i = 0; i < node->nLocs; i++) {
+		if (&node->locs[i] == loc)
+			break;
+	}
+	if (i == node->nLocs) {
+		return (0);
+	}
+	if (i < node->nLocs - 1) {
+		Free(loc->neigh);
+	
+		memmove(loc, &node->locs[i+1],
+		        (node->nLocs - i - 1) * sizeof(MAP_Location));
+	}
+	node->nLocs--;
+	return (1);
+}
+
+/*
+ * Remove a MAP_Object location from a node by index.
+ * Return 1 on success or 0 if the location index is invalid.
+ * The map must be locked.
+ */
+int
+MAP_NodeDelLocationAtIndex(MAP *map, MAP_Node *node, int idx)
+{
+	if (idx < 0 || idx >= node->nLocs) {
+		return (0);
+	}
+	if (idx < node->nLocs - 1) {
+		MAP_Location *loc = &node->locs[idx];
+
+		Free(loc->neigh);
+
+		memmove(&node->locs[idx], &node->locs[idx+1],
+			(node->nLocs - idx - 1) * sizeof(MAP_Location));
+	}
+	node->nLocs--;
+	return (1);
+}
+
+/*
+ * Remove all MAP_Items on the given layer (or -1 = on any layer).
+ * The map must be locked.
+ */
 void
-MAP_NodeRemoveAll(MAP *map, MAP_Node *node, int layer)
+MAP_NodeClear(MAP *map, MAP_Node *node, int layer)
 {
 	MAP_Item *mi, *miNext;
-
-	AG_ObjectLock(map);
+	Uint i;
 
 	for (mi = TAILQ_FIRST(&node->items);
 	     mi != TAILQ_END(&node->items);
@@ -592,28 +745,48 @@ MAP_NodeRemoveAll(MAP *map, MAP_Node *node, int layer)
 		free(mi);
 	}
 
-	AG_ObjectUnlock(map);
+	if (layer == -1) {				/* Fast path */
+		for (i = 0; i < node->nLocs; i++) {
+			Free(node->locs[i].neigh);
+		}
+		Free(node->locs);
+		node->locs = NULL;
+		node->nLocs = 0;
+	} else {					/* Selective */
+clear_locs:
+		for (i = 0; i < node->nLocs; i++) {
+			if (node->locs[i].layer == layer &&
+			    MAP_NodeDelLocationAtIndex(map, node, i))
+				goto clear_locs;
+		}
+	}
 }
 
-/* Move all references from a layer to another. */
+/*
+ * Move node items from layer1 to layer2.
+ * The map must be locked.
+ */
 void
 MAP_NodeSwapLayers(MAP *map, MAP_Node *node, int layer1, int layer2)
 {
 	MAP_Item *mi;
-
-	AG_ObjectLock(map);
+	Uint i;
 
 	TAILQ_FOREACH(mi, &node->items, items) {
 		if (mi->layer == layer1)
 			mi->layer = layer2;
 	}
+	for (i = 0; i < node->nLocs; i++) {
+		MAP_Location *loc = &node->locs[i];
 
-	AG_ObjectUnlock(map);
+		if (loc->layer == layer1)
+			loc->layer = layer2;
+	}
 }
 
 /*
  * Move a node item to the upper layer.
- * The parent map must be locked.
+ * The map must be locked.
  */
 void
 MAP_NodeMoveItemUp(MAP_Node *node, MAP_Item *mi)
@@ -628,7 +801,7 @@ MAP_NodeMoveItemUp(MAP_Node *node, MAP_Item *mi)
 
 /*
  * Move a node item to the lower layer.
- * The parent map must be locked.
+ * The map must be locked.
  */
 void
 MAP_NodeMoveItemDown(MAP_Node *node, MAP_Item *mi)
@@ -643,7 +816,7 @@ MAP_NodeMoveItemDown(MAP_Node *node, MAP_Item *mi)
 
 /*
  * Move a node item to the tail of the queue.
- * The parent map must be locked.
+ * The map must be locked.
  */
 void
 MAP_NodeMoveItemToTail(MAP_Node *node, MAP_Item *mi)
@@ -656,7 +829,7 @@ MAP_NodeMoveItemToTail(MAP_Node *node, MAP_Item *mi)
 
 /*
  * Move a node item to the head of the queue.
- * The parent map must be locked.
+ * The map must be locked.
  */
 void
 MAP_NodeMoveItemToHead(MAP_Node *node, MAP_Item *mi)
@@ -667,11 +840,29 @@ MAP_NodeMoveItemToHead(MAP_Node *node, MAP_Item *mi)
 	}
 }
 
+/* Clear the map's history buffer. */
+void
+MAP_ClearHistory(MAP *map)
+{
+	Uint i;
+
+	for (i = 0; i < map->nUndo; i++) {
+		FreeRevision(map, &map->undo[i]);
+	}
+	free(map->undo);
+
+	for (i = 0; i < map->nRedo; i++) {
+		FreeRevision(map, &map->redo[i]);
+	}
+	free(map->redo);
+
+	MAP_InitHistory(map);
+}
+
 static void
 Reset(void *_Nonnull obj)
 {
 	MAP *map = obj;
-	Uint i;
 
 	if (map->map != NULL)
 		MAP_FreeNodes(map);
@@ -679,21 +870,8 @@ Reset(void *_Nonnull obj)
 		FreeLayers(map);
 	if (map->cameras != NULL)
 		FreeCameras(map);
-	
-	for (i = 0; i < map->nBlks; i++) {
-		FreeModBlk(map, &map->blks[i]);
-	}
-	free(map->blks);
-	MAP_InitModBlks(map);
-}
 
-static void
-Destroy(void *_Nonnull obj)
-{
-	MAP *map = obj;
-
-	free(map->layers);
-	free(map->cameras);
+	MAP_ClearHistory(map);
 }
 
 /*
@@ -706,18 +884,30 @@ MAP_ItemLoad(MAP *map, MAP_Node *node, AG_DataSource *ds)
 	MAP_Item *mi;
 	MAP_ItemClass *miClass;
 	enum map_item_type type;
-	Uint flags;
-	int layer;
+	Uint flags, layer;
+	float z, h;
 
-	if ((type = (enum map_item_type)AG_ReadUint32(ds)) >= MAP_ITEM_LAST) {
+	if ((type = (enum map_item_type)AG_ReadUint8(ds)) >= MAP_ITEM_LAST) {
 		AG_SetError("Bad item type: %d", type);
 		return (-1);
 	}
 	miClass = mapItemClasses[type];
 
-	flags = (Uint)AG_ReadUint32(ds);
 	if ((layer = (int)AG_ReadUint8(ds)) >= MAP_LAYERS_MAX) {
-		AG_SetError("Bad layer#: %d", layer);
+		AG_SetError("Item%d invalid layer %d", (int)type, layer);
+		return (-1);
+	}
+
+	flags = (Uint)AG_ReadUint16(ds);
+	if ((flags & MAP_ITEM_VALID) == 0) {
+		AG_SetError("Item%d invalid flags 0x%x", (int)type, flags);
+		return (-1);
+	}
+
+	z = AG_ReadFloat(ds);
+	h = AG_ReadFloat(ds);
+	if (h < 0.0f) {
+		AG_SetError("Item%d invalid height %f", (int)type, h);
 		return (-1);
 	}
 
@@ -729,12 +919,13 @@ MAP_ItemLoad(MAP *map, MAP_Node *node, AG_DataSource *ds)
 	}
 	mi->flags = flags;
 	mi->layer = layer;
+	mi->z = z;
+	mi->h = h;
 
-	if (miClass->load != NULL)
+	if (miClass->load != NULL) {
 		if (miClass->load(map, mi, ds) == -1)
 			return (-1);
-	
-	/* Transform chain */
+	}
 	if (RG_TransformChainLoad(ds, &mi->transforms) == -1)
 		goto fail;
 
@@ -747,15 +938,72 @@ fail:
 	return (-1);
 }
 
+/*
+ * Load a map node.
+ * The map must be locked.
+ */
 int
 MAP_NodeLoad(MAP *map, AG_DataSource *ds, MAP_Node *node)
 {
-	Uint i, nItems;
-	
-	if ((nItems = (Uint)AG_ReadUint16(ds)) > MAP_NODE_ITEMS_MAX) {
-		AG_SetErrorS("nItems > max");
+	Uint flags, nLocs, nItems, i;
+	MAP_Location *locsNew;
+
+	flags = (Uint)AG_ReadUint32(ds);
+	if ((flags & MAP_NODE_VALID) == 0) {
+		AG_SetError("Node flags invalid (0x%x)", flags);
 		return (-1);
 	}
+	if ((nLocs = (Uint)AG_ReadUint16(ds)) > MAP_NODE_ITEMS_MAX) {
+		AG_SetError("Node nLocs invalid (%u)", nLocs);
+		return (-1);
+	}
+	if ((nItems = (Uint)AG_ReadUint16(ds)) > MAP_NODE_ITEMS_MAX) {
+		AG_SetError("Node nItems invalid (%u)", nItems);
+		return (-1);
+	}
+
+	if ((locsNew = TryMalloc(nLocs * sizeof(MAP_Location))) == NULL) {
+		return (-1);
+	}
+	for (i = 0; i < nLocs; i++) {
+		MAP_Location *loc = &locsNew[i];
+		MAP_Object *mo;
+		Uint id;
+
+		id = (Uint)AG_ReadUint32(ds);
+		if (id > MAP_OBJECT_ID_MAX) {
+			AG_SetError("Node Loc#%u ID invalid (%u)", i, id);
+			free(locsNew);
+			return (-1);
+		}
+		AGOBJECT_FOREACH_CLASS(mo, map, map_object, "MAP_Object:*") {
+			if (mo->id == id)
+				break;
+		}
+		if (mo == NULL) {
+			AG_SetError("Node Loc#%u no such Object #%u", i, id);
+			free(locsNew);
+			return (-1);
+		}
+		Debug(map, "Node Loc#%u resolved ID%u => %s\n", i, id, AGOBJECT(mo)->name);
+		loc->obj = mo;
+		loc->flags = (Uint)AG_ReadUint16(ds);
+		loc->x = (int)AG_ReadSint32(ds);
+		loc->y = (int)AG_ReadSint32(ds);
+		loc->layer = (Uint)AG_ReadUint8(ds);
+		loc->z = AG_ReadFloat(ds);
+		loc->h = AG_ReadFloat(ds);
+		loc->neigh = NULL;		/* Will compute later */
+		loc->nNeigh = 0;
+
+		mo->locs = Realloc(mo->locs, (mo->nLocs + 1) * sizeof(MAP_Location *));
+		mo->locs[mo->nLocs++] = loc;
+	}
+
+	node->flags = flags;
+	node->locs = locsNew;
+	node->nLocs = nLocs;
+
 	for (i = 0; i < nItems; i++) {
 		if (MAP_ItemLoad(map, node, ds) == -1) {
 			MAP_NodeDestroy(map, node);
@@ -766,46 +1014,6 @@ MAP_NodeLoad(MAP *map, AG_DataSource *ds, MAP_Node *node)
 	return (0);
 }
 
-void
-MAP_AttachActor(MAP *map, MAP_Actor *a)
-{
-	if (a->g_map.x < 0 || a->g_map.x >= (int)map->w ||
-	    a->g_map.y < 0 || a->g_map.y >= (int)map->h)  {
-		Debug(map, "Bad coordinates %d,%d (not attaching %s)\n",
-		    a->g_map.x, a->g_map.y, OBJECT(a)->name);
-		return;
-	}
-
-	AG_ObjectLock(a);
-
-	MAP_PageIn(map, "ACTOR-", a);
-
-	a->type = AG_ACTOR_MAP;
-	a->parent = map;
-	a->g_map.x0 = a->g_map.x;
-	a->g_map.y0 = a->g_map.y;
-	a->g_map.x1 = a->g_map.x;
-	a->g_map.y1 = a->g_map.y;
-	
-	if (MAP_ACTOR_OPS(a)->map != NULL) {
-		MAP_ACTOR_OPS(a)->map(a, map);
-	}
-	AG_ObjectUnlock(a);
-}
-
-void
-MAP_DetachActor(MAP *map, MAP_Actor *a)
-{
-	AG_ObjectLock(a);
-
-	if (AG_OfClass(map, "MAP:*")) {
-		MAP_ActorUnmapTile(a);
-		MAP_PageOut(map, "ACTOR-", a);
-	}
-	a->parent = NULL;
-
-	AG_ObjectUnlock(a);
-}
 
 static int
 Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
@@ -814,33 +1022,35 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
 	MAP *map = obj;
 	Uint32 w, h, origin_x, origin_y;
 	Uint i, x, y;
-	MAP_Actor *a;
 	
 	map->flags = (Uint)AG_ReadUint32(ds) & AG_MAP_SAVED_FLAGS;
 	w = AG_ReadUint32(ds);
 	h = AG_ReadUint32(ds);
+	if (w > MAP_WIDTH_MAX || h > MAP_HEIGHT_MAX) {
+		AG_SetError("Invalid map size (%u x %u)", w,h);
+		return (-1);
+	}
 	origin_x = AG_ReadUint32(ds);
 	origin_y = AG_ReadUint32(ds);
-	if (w > MAP_WIDTH_MAX || h > MAP_HEIGHT_MAX ||
-	    origin_x > MAP_WIDTH_MAX || origin_y > MAP_HEIGHT_MAX) {
-		AG_SetErrorS("Invalid map geometry");
-		goto fail;
+	if (origin_x > MAP_WIDTH_MAX || origin_y > MAP_HEIGHT_MAX) {
+		AG_SetError("Invalid origin point (%u,%u)", origin_x, origin_y);
+		return (-1);
 	}
 	map->w = (Uint)w;
 	map->h = (Uint)h;
 	map->xOrigin = (int)origin_x;
 	map->yOrigin = (int)origin_y;
-	
-	/* Read the layer information. */
-	if ((map->nLayers = (Uint)AG_ReadUint32(ds)) > MAP_LAYERS_MAX) {
-		AG_SetErrorS("Too many layers");
-		goto fail;
+
+	/* Layers */
+	if ((map->nLayers = (Uint)AG_ReadUint32(ds)) > MAP_LAYERS_MAX ||
+	     map->nLayers < 1) {
+		AG_SetError("Invalid layer count (%u)", map->nLayers);
+		return (-1);
 	}
-	if (map->nLayers < 1) {
-		AG_SetErrorS("Missing layer0");
-		goto fail;
+	if ((map->layers = TryRealloc(map->layers, map->nLayers *
+	                              sizeof(MAP_Layer))) == NULL) {
+		return (-1);
 	}
-	map->layers = Realloc(map->layers, map->nLayers * sizeof(MAP_Layer));
 	for (i = 0; i < map->nLayers; i++) {
 		MAP_Layer *lay = &map->layers[i];
 
@@ -853,16 +1063,16 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
 	map->layerCur = (int)AG_ReadUint8(ds);
 	map->layerOrigin = (int)AG_ReadUint8(ds);
 	
-	/* Read the camera information. */
-	if ((map->nCameras = (Uint)AG_ReadUint32(ds)) > MAP_CAMERAS_MAX) {
-		AG_SetErrorS("Too many cameras");
-		goto fail;
+	/* Cameras */
+	if ((map->nCameras = (Uint)AG_ReadUint32(ds)) > MAP_CAMERAS_MAX ||
+	     map->nCameras < 1) {
+		AG_SetError("Invalid camera count (%u)", map->nLayers);
+		return (-1);
 	}
-	if (map->nCameras < 1) {
-		AG_SetErrorS("Missing camera0");
-		goto fail;
+	if ((map->cameras = TryRealloc(map->cameras, map->nCameras *
+	                               sizeof(MAP_Camera))) == NULL) {
+		return (-1);
 	}
-	map->cameras = Realloc(map->cameras, map->nCameras * sizeof(MAP_Camera));
 	for (i = 0; i < map->nCameras; i++) {
 		MAP_Camera *cam = &map->cameras[i];
 
@@ -877,10 +1087,10 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
 		if (i > 0 || map->flags & AG_MAP_SAVE_CAM0ZOOM) {
 			cam->zoom = (Uint)AG_ReadUint16(ds);
 			cam->tilesz = (Uint)AG_ReadUint16(ds);
-			cam->pixsz = cam->tilesz / MAPTILESZ;
+			cam->pixsz = cam->tilesz / MAP_TILESZ_DEF;
 		} else {
 			cam->zoom = 100;
-			cam->tilesz = MAPTILESZ;
+			cam->tilesz = MAP_TILESZ_DEF;
 			cam->pixsz = 1;
 		}
 
@@ -890,30 +1100,54 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
 		}
 	}
 
-	/* Allocate and load the nodes. */
+	/* Map objects */
+	map->nObjs = (Uint)AG_ReadUint32(ds);
+	if ((map->objs = TryRealloc(map->objs, map->nObjs *
+	                            sizeof(MAP_Object *))) == NULL) {
+		return (-1);
+	}
+	for (i = 0; i < map->nObjs; i++) {
+		char name[AG_OBJECT_NAME_MAX];
+		char hier[AG_OBJECT_HIER_MAX];
+		AG_ObjectClass *C;
+		MAP_Object *mo;
+		Uint32 skipSize;
+
+		AG_CopyString(name, ds, sizeof(name));
+		AG_CopyString(hier, ds, sizeof(hier));
+		skipSize = AG_ReadUint32(ds);
+
+		Debug(map, "Loading object "
+		    AGSI_YEL "%s" AGSI_RST " (<%s>, %u bytes)\n",
+		    name, hier, (Uint)skipSize);
+
+		if ((C = AG_LoadClass(hier)) == NULL)
+			return (-1);
+
+		if ((mo = AG_TryMalloc(C->size)) == NULL) {
+			return (-1);
+		}
+		AG_ObjectInit(mo, C);
+		AG_ObjectSetNameS(mo, name);
+		if (AG_ObjectUnserialize(mo, ds) == -1) {
+			AG_ObjectDestroy(mo);
+			return (-1);
+		}
+		AG_ObjectAttach(map, mo);
+		map->objs[i] = mo;
+	}
+
+	/* Populated nodes */
 	if (MAP_AllocNodes(map, map->w, map->h) == -1) {
-		goto fail;
+		return (-1);
 	}
 	for (y = 0; y < map->h; y++) {
 		for (x = 0; x < map->w; x++) {
 			if (MAP_NodeLoad(map, ds, &map->map[y][x]) == -1)
-				goto fail;
+				return (-1);
 		}
 	}
-
-	/* Attach the actor objects. */
-	TAILQ_FOREACH(a, &map->actors, actors) {
-		Debug(map, "Attaching actor %s at %d,%d layer %d\n",
-		     OBJECT(a)->name, a->g_map.x, a->g_map.y,
-		     a->g_map.l0);
-		Debug(a, "Attached to map %s at %d,%d layer %d\n",
-		     OBJECT(map)->name, a->g_map.x, a->g_map.y,
-		     a->g_map.l0);
-		MAP_AttachActor(map, a);
-	}
 	return (0);
-fail:
-	return (-1);
 }
 
 /* Save a map item. The parent map must be locked. */
@@ -922,9 +1156,11 @@ MAP_ItemSave(MAP *map, MAP_Item *mi, AG_DataSource *ds)
 {
 	const MAP_ItemClass *miClass = mapItemClasses[mi->type];
 
-	AG_WriteUint32(ds, (Uint32)mi->type);
-	AG_WriteUint32(ds, (Uint32)mi->flags);
+	AG_WriteUint8(ds, (Uint8)mi->type);
 	AG_WriteUint8(ds, (Uint8)mi->layer);
+	AG_WriteUint16(ds, (Uint16)mi->flags);
+	AG_WriteFloat(ds, mi->z);
+	AG_WriteFloat(ds, mi->h);
 
 	RG_TransformChainSave(ds, &mi->transforms);
 
@@ -937,14 +1173,28 @@ MAP_NodeSave(MAP *map, AG_DataSource *ds, MAP_Node *node)
 {
 	MAP_Item *mi;
 	AG_Offset nItemsOffs;
-	Uint nItems = 0;
+	Uint i, nItems = 0;
 
+	AG_WriteUint32(ds, node->flags);
+	AG_WriteUint16(ds, (Uint16)node->nLocs);
 	nItemsOffs = AG_Tell(ds);
-	AG_WriteUint32(ds, 0);
+	AG_WriteUint16(ds, 0);
+
+	/* Map object locations */
+	for (i = 0; i < node->nLocs; i++) {
+		const MAP_Location *loc = &node->locs[i];
+
+		AG_WriteUint32(ds, (Uint32)loc->obj->id);
+		AG_WriteUint16(ds, (Uint16)loc->flags);
+		AG_WriteSint32(ds, (Sint32)loc->x);
+		AG_WriteSint32(ds, (Sint32)loc->y);
+		AG_WriteUint8(ds, (Uint8)loc->layer);
+		AG_WriteFloat(ds, loc->z);
+		AG_WriteFloat(ds, loc->h);
+	}
+
+	/* Static map items */
 	TAILQ_FOREACH(mi, &node->items, items) {
-		if (mi->flags & MAP_ITEM_NOSAVE) {
-			continue;
-		}
 		MAP_ItemSave(map, mi, ds);
 		nItems++;
 	}
@@ -958,7 +1208,6 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 	Uint i, x,y;
 	
 	AG_WriteUint32(ds, (Uint32)(map->flags & AG_MAP_SAVED_FLAGS));
-
 	AG_WriteUint32(ds, (Uint32)map->w);
 	AG_WriteUint32(ds, (Uint32)map->h);
 	AG_WriteUint32(ds, (Uint32)map->xOrigin);
@@ -996,65 +1245,48 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 		}
 	}
 
-	/* Nodes */
+	/* Map objects */
+	AG_WriteUint32(ds, map->nObjs);
+	for (i = 0; i < map->nObjs; i++) {
+		MAP_Object *mo = map->objs[i];
+		AG_Offset skipSizeOffs;
+		
+		if (!AG_OBJECT_VALID(mo) || !AG_OfClass(mo, "MAP_Object:*"))
+			continue;
+
+		Debug(map, "Saving Object %u in slot %u: "
+		           AGSI_YEL "%s" AGSI_RST " (<%s>)\n",
+		    mo->id, i, OBJECT(mo)->name, OBJECT_CLASS(mo)->name);
+
+		AG_WriteString(ds, OBJECT(mo)->name);
+
+		if (OBJECT_CLASS(mo)->pvt.libs[0] != '\0') {       /* DSOs? */
+			char s[AG_OBJECT_TYPE_MAX];
+
+			Strlcpy(s, OBJECT_CLASS(mo)->hier, sizeof(s));
+			Strlcat(s, "@", sizeof(s));
+			Strlcat(s, OBJECT_CLASS(mo)->pvt.libs, sizeof(s));
+			AG_WriteString(ds, s);
+		} else {
+			AG_WriteString(ds, OBJECT_CLASS(mo)->hier);
+		}
+
+		skipSizeOffs = AG_Tell(ds);
+		AG_WriteUint32(ds, 0);
+
+		if (AG_ObjectSerialize(mo, ds) == -1) {
+			return (-1);
+		}
+		AG_WriteUint32At(ds, AG_Tell(ds) - skipSizeOffs, skipSizeOffs);
+	}
+
+	/* Populated nodes */
 	for (y = 0; y < map->h; y++) {
 		for (x = 0; x < map->w; x++)
 			MAP_NodeSave(map, ds, &map->map[y][x]);
 	}
 	return (0);
 }
-
-/* XXX 1.4 */
-#if 0
-/* Render surface s, scaled to rx,ry pixels. */
-static void
-BlitSurfaceScaled(MAP *_Nonnull map, AG_Surface *_Nonnull s, AG_Rect *_Nonnull rs,
-    int rx, int ry, int cam)
-{
-	int x, y, sx, sy;
-	Uint8 r1, g1, b1, a1;
-	Uint32 c;
-	int tilesz = map->cameras[cam].tilesz;
-	int xSrc = (int)(rs->x*tilesz/MAPTILESZ);
-	int ySrc = (int)(rs->y*tilesz/MAPTILESZ);
-	int wSrc = (int)(rs->w*tilesz/MAPTILESZ);
-	int hSrc = (int)(rs->h*tilesz/MAPTILESZ);
-
-	AG_SurfaceLock(s);
-	AG_SurfaceLock(agView->v);
-	
-	for (y = 0; y < hSrc; y++) {
-		if ((sy = (y+ySrc)*MAPTILESZ/tilesz) >= s->h)
-			break;
-
-		for (x = 0; x < wSrc; x++) {
-			if ((sx = (x+xSrc)*MAPTILESZ/tilesz) >= s->w)
-				break;
-		
-			c = AG_GET_PIXEL(s, (Uint8 *)s->pixels +
-			    sy*s->pitch +
-			    sx*s->format->BytesPerPixel);
-			
-			if ((s->flags & AG_SRCCOLORKEY) &&
-			    c == s->format->colorkey)
-				continue;
-		
-			if (s->flags & AG_SRCALPHA) {
-				AG_GetRGBA(c, s->format, &r1,&g1,&b1,&a1);
-				AG_BLEND_RGBA2_CLIPPED(agView->v, rx+x, ry+y,
-				    r1, g1, b1, a1, AG_ALPHA_OVERLAY);
-			} else {
-				AG_GetRGB(c, s->format, &r1,&g1,&b1);
-				AG_PutPixel()
-				AG_VIEW_PUT_PIXEL2_CLIPPED(rx+x, ry+y,
-				    AG_MapRGB(agVideoFmt, r1,g1,b1));
-			}
-		}
-	}
-	AG_SurfaceUnlock(s);
-	AG_SurfaceUnlock(agView->v);
-}
-#endif
 
 static MAP_Item *_Nullable
 LocateItem(MAP *_Nonnull map, MAP_Node *_Nonnull node, int xOffs, int yOffs,
@@ -1165,117 +1397,214 @@ MAP_ItemExtent(MAP *map, const MAP_Item *mi, AG_Rect *rd, int ncam)
 	}
 }
 
+/* Create a new revision. */
 void
-MAP_ItemDraw(MAP *map, MAP_Item *mi, int x, int y, int cam)
+MAP_BeginRevision(MAP *map)
 {
-	/* XXX TODO */
+	Debug(map, "New undo level #%d (redo=%d->0)\n", map->nUndo+1, map->nRedo);
+
+	if (map->nRedo > 0) {
+		int i;
+
+		for (i = 0; i < map->nRedo; i++) {
+			FreeRevision(map, &map->redo[i]);
+		}
+		map->nRedo = 0;
+	}
+
+	map->undo = Realloc(map->undo, (map->nUndo + 1)*sizeof(MAP_Revision));
+	InitRevision(&map->undo[map->nUndo++]);
 }
 
-/* Create a new undo block at the current level. */
+/* Abort the current undo level. */
 void
-MAP_ModBegin(MAP *map)
+MAP_AbortRevision(MAP *map)
 {
-	/* Destroy blocks at upper levels. */
-	while (map->nBlks > map->curBlk+1)
-		FreeModBlk(map, &map->blks[--map->nBlks]);
+	MAP_Revision *rev = &map->undo[map->nUndo - 1];
 
-	map->blks = Realloc(map->blks, (++map->nBlks) * sizeof(MAP_Mod));
-	InitModBlk(&map->blks[map->curBlk++]);
+#ifdef AG_DEBUG
+	if (map->nUndo == 0) AG_FatalError("AbortRevision");
+#endif
+	Debug(map, "Aborting undo level #%d\n", map->nUndo - 1);
+	rev->cancel = 1;
 }
 
+/* Commit the current revision and start a new one. */
 void
-MAP_ModCancel(MAP *map)
+MAP_CommitRevision(MAP *map)
 {
-	MAP_ModBlk *blk = &map->blks[map->curBlk];
+	MAP_Revision *rev;
 
-	blk->cancel = 1;
-}
+	if (map->nUndo == 0) {
+		MAP_BeginRevision(map);
+	}
+	rev = &map->undo[map->nUndo - 1];
 
-void
-MAP_ModEnd(MAP *map)
-{
-	MAP_ModBlk *blk = &map->blks[map->curBlk];
-	
-	if (blk->nMods == 0 || blk->cancel == 1) {
-		FreeModBlk(map, blk);
-		map->nBlks--;
-		map->curBlk--;
+	if (rev->nChanges == 0 || rev->cancel) {
+		Debug(map, "Aborting undo level #%d (%d changes)\n",
+		    map->nUndo - 1, rev->nChanges);
+		FreeRevision(map, rev);
+		map->nUndo--;
+	} else {
+		Debug(map, "Committing undo level #%d (%d changes)\n",
+		    map->nUndo - 1, rev->nChanges);
 	}
 }
 
+/*
+ * Revert the changes effected by the given revision.
+ * The map must be locked.
+ */
 void
-MAP_Undo(MAP *map)
+MAP_UndoRevision(MAP *map, MAP_Revision *rev, MAP_Revision *undoRedo,
+    Uint nUndoRedo)
 {
-	MAP_ModBlk *blk = &map->blks[map->curBlk];
 	Uint i;
 
-	if ((map->curBlk - 1) <= 0)
-		return;
+	for (i = 0; i < rev->nChanges; i++) {
+		MAP_Change *chg = &rev->changes[i];
+	
+		switch (chg->type) {
+		case MAP_CHANGE_NODECHG:
+		{
+			MAP_Node *node = &map->map[chg->mm_nodechg.y]
+			                          [chg->mm_nodechg.x];
 
-	for (i = 0; i < blk->nMods; i++) {
-		MAP_Mod *mm = &blk->mods[i];
+			Debug(map, "Undo(#%d): Reverting node at "
+			           "[" AGSI_BOLD "%d,%d" AGSI_RST "]\n",
+			    map->nUndo - 1,
+			    chg->mm_nodechg.x,
+			    chg->mm_nodechg.y);
+			
+			MAP_NodeRevision(map,
+			    chg->mm_nodechg.x,
+			    chg->mm_nodechg.y,
+			    undoRedo, nUndoRedo);
 
-		switch (mm->type) {
-		case AG_MAPMOD_NODECHG:
-			{
-				MAP_Node *node = &map->map[mm->mm_nodechg.y]
-				                          [mm->mm_nodechg.x];
-				MAP_Item *mi;
-				
-				MAP_NodeRemoveAll(map, node, -1);
-
-				TAILQ_FOREACH(mi, &mm->mm_nodechg.node.items,
-				    items) {
-					MAP_NodeDuplicate(mi, map, node, -1);
-				}
-			}
+			MAP_NodeClear(map, node, -1);
+			MAP_NodeCopy(map, node, -1, &chg->mm_nodechg.node, -1);
 			break;
+		}
 		default:
 			break;
 		}
 	}
-	FreeModBlk(map, blk);
-	map->nBlks--;
-	map->curBlk--;
 }
 
+/* Revert map to the state prior to the last revision. */
+void
+MAP_Undo(MAP *map)
+{
+	MAP_Revision *revUndo, *revRedo;
+
+	if (map->nUndo < 1) {
+		return;
+	}
+	Debug(map, "Undo (undo level #%d)\n", map->nUndo - 1);
+
+	revUndo = &map->undo[map->nUndo - 1];
+
+	/* Record changes made by MAP_UndoRevision() onto the Redo stack. */
+	map->redo = Realloc(map->redo, (map->nRedo + 1)*sizeof(MAP_Change));
+	revRedo = &map->redo[map->nRedo++];
+	InitRevision(revRedo);
+
+	MAP_UndoRevision(map, revUndo, map->redo, map->nRedo);
+
+	if (revRedo->nChanges == 0) {                /* No changes recorded */
+		FreeRevision(map, revRedo);
+		map->nRedo--;
+	}
+
+	FreeRevision(map, revUndo);
+	map->nUndo--;
+}
+
+/* Revert the last undone change. */
 void
 MAP_Redo(MAP *map)
 {
-	/* TODO */
+	MAP_Revision *revRedo, *revUndo;
+
+	if (map->nRedo < 1)
+		return;
+
+	Debug(map, "Redo (undo level #%d, redo level #%d)\n",
+	    map->nUndo - 1,
+	    map->nRedo - 1);
+
+	revRedo = &map->redo[map->nRedo - 1];
+
+	/* Record changes made by MAP_UndoRevision() back onto the Undo stack. */
+	map->undo = Realloc(map->undo, (map->nUndo + 1)*sizeof(MAP_Change));
+	revUndo = &map->undo[map->nUndo++];
+	InitRevision(revUndo);
+
+	MAP_UndoRevision(map, revRedo, map->undo, map->nUndo);
+
+	if (revUndo->nChanges == 0) {                /* No changes recorded */
+		FreeRevision(map, revUndo);
+		map->nUndo--;
+	}
+
+	FreeRevision(map, revRedo);
+	map->nRedo--;
 }
 
+/*
+ * Record the state of the node at map:[x,y] on the given Undo (or Redo) stack.
+ *
+ * If a copy of the node already exists at the current undo level then this
+ * is a no-op.
+ */
 void
-MAP_ModNodeChg(MAP *map, int x, int y)
+MAP_NodeRevision(MAP *map, int x, int y, MAP_Revision *undoRedo, Uint nUndoRedo)
 {
-	MAP_Node *node = &map->map[y][x];
-	MAP_ModBlk *blk = &map->blks[map->nBlks - 1];
-	MAP_Mod *mm;
+	MAP_Node *node = &map->map[y][x], *nodeSave;
+	MAP_Revision *rev;
+	MAP_Change *chg;
 	MAP_Item *mi;
 	Uint i;
 
-	for (i = 0; i < blk->nMods; i++) {
-		mm = &blk->mods[i];
-		if (mm->type == AG_MAPMOD_NODECHG &&
-		    mm->mm_nodechg.x == x &&
-		    mm->mm_nodechg.y == y)
-			return;
+	if (nUndoRedo < 1)
+		return;
+
+	Debug(map, "Undo/Redo(#%d): Saving node at [" AGSI_BOLD "%d,%d" AGSI_RST "]\n",
+	    nUndoRedo - 1, x,y);
+
+	rev = &undoRedo[nUndoRedo - 1];
+
+	for (i = 0; i < rev->nChanges; i++) {
+		chg = &rev->changes[i];
+		if (chg->type == MAP_CHANGE_NODECHG &&
+		    chg->mm_nodechg.x == x &&
+		    chg->mm_nodechg.y == y)
+			return;				/* Existing copy */
 	}
 
-	blk->mods = Realloc(blk->mods, (blk->nMods + 1)*sizeof(MAP_Mod));
-	mm = &blk->mods[blk->nMods++];
-	mm->type = AG_MAPMOD_NODECHG;
-	mm->mm_nodechg.x = x;
-	mm->mm_nodechg.y = y;
-	MAP_NodeInit(&mm->mm_nodechg.node);
+	rev->changes = Realloc(rev->changes, (rev->nChanges + 1) *
+	                                     sizeof(MAP_Change));
+	chg = &rev->changes[rev->nChanges++];
+	chg->type = MAP_CHANGE_NODECHG;
+	chg->mm_nodechg.x = x;
+	chg->mm_nodechg.y = y;
+	nodeSave = &chg->mm_nodechg.node;
+	MAP_NodeInit(nodeSave);
 
+	/* Map Items */
 	TAILQ_FOREACH(mi, &node->items, items)
-		MAP_NodeDuplicate(mi, map, &mm->mm_nodechg.node, -1);
-}
+		MAP_DuplicateItem(map,nodeSave,-1, mi);
 
-void
-MAP_ModLayerAdd(MAP *map, int l)
-{
+	/* Object Locations */
+	nodeSave->nLocs = node->nLocs;
+	nodeSave->locs = Malloc(node->nLocs * sizeof(MAP_Location));
+	memcpy(nodeSave->locs, node->locs, node->nLocs * sizeof(MAP_Location));
+	for (i = 0; i < nodeSave->nLocs; i++) {
+		MAP_Location *locSave = &nodeSave->locs[i];
+
+		locSave->neigh = NULL;
+		locSave->nNeigh = 0;
+	}
 }
 
 #if 0
@@ -1289,18 +1618,18 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, AG_Surface *sprite)
 	AG_Rect sd;
 	MAP *fragmap;
 
-	sd.w = MAPTILESZ;
-	sd.h = MAPTILESZ;
-	mw = sprite->w/MAPTILESZ + 1;
-	mh = sprite->h/MAPTILESZ + 1;
+	sd.w = MAP_TILESZ_DEF;
+	sd.h = MAP_TILESZ_DEF;
+	mw = sprite->w/MAP_TILESZ_DEF + 1;
+	mh = sprite->h/MAP_TILESZ_DEF + 1;
 
 	fragmap = Malloc(sizeof(MAP));
 	AG_ObjectInit(fragmap, &mapClass);
 	if (MAP_AllocNodes(fragmap, mw, mh) == -1)
 		AG_FatalError(NULL);
 
-	for (y = 0, my = 0; y < sprite->h; y += MAPTILESZ, my++) {
-		for (x = 0, mx = 0; x < sprite->w; x += MAPTILESZ, mx++) {
+	for (y = 0, my = 0; y < sprite->h; y += MAP_TILESZ_DEF, my++) {
+		for (x = 0, mx = 0; x < sprite->w; x += MAP_TILESZ_DEF, mx++) {
 			AG_Surface *su;
 			Uint32 saflags = sprite->flags & (AG_SRCALPHA);
 			Uint32 sckflags = sprite->flags & (AG_SRCCOLORKEY);
@@ -1308,12 +1637,12 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, AG_Surface *sprite)
 			Uint32 scolorkey = sprite->format->colorkey;
 			MAP_Node *node = &fragmap->map[my][mx];
 			Uint32 nsprite;
-			int fw = MAPTILESZ;
-			int fh = MAPTILESZ;
+			int fw = MAP_TILESZ_DEF;
+			int fh = MAP_TILESZ_DEF;
 
-			if (sprite->w - x < MAPTILESZ)
+			if (sprite->w - x < MAP_TILESZ_DEF)
 				fw = sprite->w - x;
-			if (sprite->h - y < MAPTILESZ)
+			if (sprite->h - y < MAP_TILESZ_DEF)
 				fh = sprite->h - y;
 
 			/* Allocate a surface for the fragment. */
@@ -1360,7 +1689,7 @@ static void
 CreateView(AG_Event *_Nonnull event)
 {
 	MAP_View *omv = MAP_VIEW_PTR(1);
-	AG_Window *pwin = AG_WINDOW_PTR(2);
+	AG_Window *winParent = AG_WINDOW_PTR(2);
 	MAP *map = omv->map;
 	MAP_View *mv;
 	AG_Window *win;
@@ -1375,7 +1704,7 @@ CreateView(AG_Event *_Nonnull event)
 	MAP_ViewSizeHint(mv, 10,10);
 	AG_WidgetFocus(mv);
 	
-	AG_WindowAttach(pwin, win);
+	AG_WindowAttach(winParent, win);
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 50);
 	AG_WindowShow(win);
 }
@@ -1401,50 +1730,102 @@ ResizeMap(AG_Event *_Nonnull event)
 	AG_PostEvent(mv, "map-resized", NULL);
 }
 
+static void
+PollHistoryBuffer_Changes(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it,
+    MAP *_Nonnull map, MAP_Revision *_Nonnull rev)
+{
+	static const char *chgTypeNames[] = {
+		N_("Edit Node"),
+		N_("Add Layer"),
+		N_("Remove Layer"),
+	};
+	Uint j;
+
+	for (j = 0; j < rev->nChanges; j++) {
+		MAP_Change *chg = &rev->changes[j];
+		AG_TlistItem *it;
+			
+		switch (chg->type) {
+		case MAP_CHANGE_NODECHG:
+			it = AG_TlistAdd(tl, NULL,
+			    "%s (" AGSI_BOLD "%d,%d" AGSI_RST ")",
+			    chgTypeNames[MAP_CHANGE_NODECHG],
+			    chg->mm_nodechg.x,
+			    chg->mm_nodechg.y);
+			break;
+		case MAP_CHANGE_LAYERADD:
+		case MAP_CHANGE_LAYERDEL:
+			it = AG_TlistAdd(tl, NULL, "%s (%d)",
+			    chgTypeNames[chg->type],
+			    chg->data.layermod.nlayer);
+			break;
+		default:
+			it = AG_TlistAddS(tl, NULL, chgTypeNames[chg->type]);
+			break;
+		}
+		it->p1 = chg;
+		it->depth = 1;
+	}
+}
+
 /* Display the list of undo blocks. */
 static void
-PollUndoBlks(AG_Event *_Nonnull event)
+PollHistoryBuffer(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	MAP *map = MAP_PTR(1);
-	Uint i, j;
+	AG_TlistItem *it;
+	MAP_Revision *rev;
+	Uint i;
 
 	AG_TlistClear(tl);
-	for (i = 0; i < map->nBlks; i++) {
-		const MAP_ModBlk *blk = &map->blks[i];
-		AG_TlistItem *it;
+	AG_ObjectLock(map);
 
-		it = AG_TlistAdd(tl, NULL, "%sBlock %d (%d mods)",
-		    (i == map->curBlk) ? "*" : "", i, blk->nMods);
+	for (i = 0; i < map->nUndo; i++) {
+		rev = &map->undo[i];
+		it = AG_TlistAdd(tl, agIconDown.s,
+		    _("%s" "Undo Level %d (%d changes)"),
+		    (i == map->nUndo - 1) ? AGSI_BOLD : "",
+		    i, rev->nChanges);
+		it->flags |= AG_TLIST_HAS_CHILDREN;
 		it->depth = 0;
-		for (j = 0; j < blk->nMods; j++) {
-			const MAP_Mod *mod = &blk->mods[j];
-			
-			switch (mod->type) {
-			case AG_MAPMOD_NODECHG:
-				it = AG_TlistAdd(tl, NULL, "NODECHG (%d,%d)",
-				    mod->mm_nodechg.x, mod->mm_nodechg.y);
-				break;
-			case AG_MAPMOD_LAYERADD:
-				it = AG_TlistAdd(tl, NULL, "LAYERADD (%d)",
-				    mod->mm_layeradd.nlayer);
-				break;
-			case AG_MAPMOD_LAYERDEL:
-				it = AG_TlistAdd(tl, NULL, "LAYERDEL (%d)",
-				    mod->mm_layerdel.nlayer);
-				break;
-			}
-			it->depth = 1;
-		}
+		it->p1 = rev;
+
+		if (AG_TlistVisibleChildren(tl, it))
+			PollHistoryBuffer_Changes(tl, it, map, rev);
 	}
+	if (map->nUndo == 0) {
+		it = AG_TlistAddS(tl, NULL, _("(Empty undo buffer)"));
+		it->flags |= AG_TLIST_NO_SELECT;
+	}
+
+	for (i = 0; i < map->nRedo; i++) {
+		rev = &map->redo[i];
+		it = AG_TlistAdd(tl, agIconUp.s,
+		    _("%s" "Redo Level %d (%d changes)"),
+		    (i == map->nRedo - 1) ? AGSI_BOLD : "",
+		    i, rev->nChanges);
+		it->flags |= AG_TLIST_HAS_CHILDREN;
+		it->depth = 0;
+		it->p1 = rev;
+
+		if (AG_TlistVisibleChildren(tl, it))
+			PollHistoryBuffer_Changes(tl, it, map, rev);
+	}
+	if (map->nRedo == 0) {
+		it = AG_TlistAddS(tl, NULL, _("(Empty redo buffer)"));
+		it->flags |= AG_TLIST_NO_SELECT;
+	}
+
 	AG_TlistRestore(tl);
+	AG_ObjectUnlock(map);
 }
 
 static void
 EditMapParameters(AG_Event *_Nonnull event)
 {
 	MAP_View *mv = MAP_VIEW_PTR(1);
-	AG_Window *pwin = AG_WINDOW_PTR(2);
+	AG_Window *winParent = AG_WINDOW_PTR(2);
 	AG_Window *win;
 	AG_MSpinbutton *msb;
 	AG_Notebook *nb;
@@ -1452,8 +1833,7 @@ EditMapParameters(AG_Event *_Nonnull event)
 	MAP *map = mv->map;
 	const Uint msbFlags = AG_MSPINBUTTON_HFILL;
 
-	if ((win = AG_WindowNewNamed(0, "MAP_Edit-Parameters-%s",
-	    OBJECT(map)->name)) == NULL) {
+	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
 	}
 	AG_WindowSetCaption(win, _("Map parameters: <%s>"), OBJECT(map)->name);
@@ -1488,19 +1868,20 @@ EditMapParameters(AG_Event *_Nonnull event)
 	
 		/* XXX unsafe */
 		msb = AG_MSpinbuttonNew(ntab, msbFlags, ",", _("Camera position: "));
-		AG_BindInt(msb, "xvalue", &AGMCAM(mv).x);
-		AG_BindInt(msb, "yvalue", &AGMCAM(mv).y);
+		AG_BindInt(msb, "xvalue", &MAP_CAM(mv).x);
+		AG_BindInt(msb, "yvalue", &MAP_CAM(mv).y);
 		
 		AG_NumericalNewUintR(ntab, AG_NUMERICAL_HFILL, NULL,
-		    _("Zoom factor: "), &AGMCAM(mv).zoom, 1, 100);
+		    _("Zoom factor: "), &MAP_CAM(mv).zoom, 1, 100);
 		
 		AG_NumericalNewInt(ntab, AG_NUMERICAL_HFILL, "px",
-		    _("Tile size: "), &AGMTILESZ(mv));
+		    _("Tile size: "), &MAP_TILESZ(mv));
 	
 		msb = AG_MSpinbuttonNew(ntab, msbFlags, ",", _("Visible offset: "));
 		AG_BindInt(msb, "xvalue", &mv->xOffs);
 		AG_BindInt(msb, "yvalue", &mv->yOffs);
-		AG_MSpinbuttonSetRange(msb, -MAP_TILESZ_MAX, MAP_TILESZ_MAX);
+		AG_MSpinbuttonSetRange(msb, -MAP_TILESZ_MAX,
+		                             MAP_TILESZ_MAX);
 		
 		msb = AG_MSpinbuttonNew(ntab, msbFlags, "x", _("Visible area (nodes): "));
 		AG_BindUint(msb, "xvalue", &mv->mw);
@@ -1539,36 +1920,49 @@ EditMapParameters(AG_Event *_Nonnull event)
 		    &mv->esel.w, &mv->esel.h, &mv->esel.x, &mv->esel.y);
 	}
 
-	ntab = AG_NotebookAdd(nb, _("Undo"), AG_BOX_VERT);
-	{
-		AG_Tlist *tl;
-
-		tl = AG_TlistNew(ntab, AG_TLIST_POLL | AG_TLIST_EXPAND);
-		AG_SetEvent(tl, "tlist-poll", PollUndoBlks, "%p", mv->map);
-	}
-
-	AG_WindowAttach(pwin, win);
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
 
-#if 0
+static void
+EditHistoryBuffer(AG_Event *_Nonnull event)
+{
+	MAP_View *mv = MAP_VIEW_PTR(1);
+	AG_Window *winParent= AG_WINDOW_PTR(2);
+	AG_Window *win;
+	MAP *map = mv->map;
+	AG_Tlist *tl;
+
+	if ((win = AG_WindowNew(0)) == NULL)
+		return;
+
+	tl = AG_TlistNew(win, AG_TLIST_POLL | AG_TLIST_EXPAND);
+	AG_TlistSetRefresh(tl, 125);
+	AG_TlistSizeHint(tl, "<Level XXXXX (XXXX changes)>", 25);
+	AG_SetEvent(tl, "tlist-poll", PollHistoryBuffer, "%p", mv->map);
+
+	AG_WindowSetCaption(win, _("%s - History Buffer"), OBJECT(map)->name);
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_RIGHT, 0);
+
+	AG_WindowAttach(winParent, win);
+	AG_WindowShow(win);
+}
+
 /* Scan VFS for objects we can use as library items. */
 static void
-PollLibsFind(AG_Tlist *_Nonnull tl, AG_Object *_Nonnull pob, int depth)
+PollLibObjectsFind(AG_Tlist *_Nonnull tl, AG_Object *_Nonnull obj, int depth)
 {
-	AG_Object *cob;
+	AG_Object *child;
 	AG_TlistItem *it;
 	
-	it = AG_TlistAdd(tl, NULL, "%s%s", pob->name,
-	    OBJECT_RESIDENT(pob) ? _(" (resident)") : "");
-	it->p1 = pob;
-	it->depth = depth;
-
-	if (AG_OfClass(pob, "RG_Tileset:*")) {
-		RG_Tileset *ts = (RG_Tileset *)pob;
-		AG_TlistItem *sit;
+	if (AG_OfClass(obj, "RG_Tileset:*")) {
+		RG_Tileset *ts = (RG_Tileset *)obj;
+		AG_TlistItem *itTile;
 		RG_Tile *tile;
 
+		it = AG_TlistAddS(tl, rgIconTileset.s, obj->name);
+		it->depth = depth;
+		it->p1 = obj;
 		it->cat = "tileset";
 
 		AG_MutexLock(&ts->lock);
@@ -1576,72 +1970,75 @@ PollLibsFind(AG_Tlist *_Nonnull tl, AG_Object *_Nonnull pob, int depth)
 		if (!TAILQ_EMPTY(&ts->tiles)) {
 			it->flags |= AG_TLIST_HAS_CHILDREN;
 		}
-		if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
-		    AG_TlistVisibleChildren(tl, it)) {
+		if (AG_TlistVisibleChildren(tl, it)) {
 			TAILQ_FOREACH(tile, &ts->tiles, tiles) {
 				if (tile->su == NULL) {
 					continue;
 				}
-				sit = AG_TlistAdd(tl, NULL, "%s (%ux%u)",
+				itTile = AG_TlistAdd(tl, tile->su,
+				    _("Tile %s (%ux%u)"),
 				    tile->name, tile->su->w, tile->su->h);
-				sit->depth = depth+1;
-				sit->cat = "tile";
-				sit->p1 = tile;
-				AG_TlistSetIcon(tl, sit, tile->su);
+				itTile->depth = depth+1;
+				itTile->p1 = tile;
+				itTile->cat = "tile";
 			}
 		}
 		AG_MutexUnlock(&ts->lock);
 	} else {
+		it = AG_TlistAddS(tl, rgIconObject.s, obj->name);
+		it->depth = depth;
+		it->p1 = obj;
 		it->cat = "object";
 	}
 
-	if (!TAILQ_EMPTY(&pob->children)) {
+	if (!TAILQ_EMPTY(&obj->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
-		if (AG_ObjectRoot(pob) == pob)
-			it->flags |= AG_TLIST_ITEM_EXPANDED;
 	}
-	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
-	    AG_TlistVisibleChildren(tl, it)) {
-		TAILQ_FOREACH(cob, &pob->children, cobjs)
-			PollLibsFind(tl, cob, depth+1);
+	if (AG_TlistVisibleChildren(tl, it)) {
+		TAILQ_FOREACH(child, &obj->children, cobjs)
+			PollLibObjectsFind(tl, child, depth+1);   /* Recurse */
 	}
 }
 static void
-PollLibs(AG_Event *_Nonnull event)
+PollLibObjects(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
-	AG_Object *pob = AG_OBJECT_PTR(1);
+	MAP *m = MAP_PTR(1);
 
-	AG_TlistClear(tl);
-	AG_LockLinkage();
-	PollLibsFind(tl, pob, 0);
-	AG_UnlockLinkage();
-	AG_TlistRestore(tl);
+	if (m->pLibs == NULL)
+		return;
+
+	AG_TlistBegin(tl);
+
+	AG_ObjectLock(m->pLibs);
+	PollLibObjectsFind(tl, m->pLibs, 0);
+	AG_ObjectUnlock(m->pLibs);
+
+	AG_TlistEnd(tl);
 }
-#endif
 
-/* Select a library item. */
+/* Select a library object. */
 static void
-SelectLib(AG_Event *_Nonnull event)
+SelectLibObject(AG_Event *_Nonnull event)
 {
 	MAP_View *mv = MAP_VIEW_PTR(1);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
-	const int state = AG_INT(3);
+	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 	MAP_Tool *tool;
+	const int state = AG_INT(3);
 
 	if (state == 0) {
 		if (mv->curtool != NULL &&
 		    (mv->curtool->ops == &mapInsertOps ||
-		     mv->curtool->ops == &mapGInsertOps))
+		     mv->curtool->ops == &mapInsertObjOps))
 		    	MAP_ViewSelectTool(mv, NULL, NULL);
 	} else {
 		if (strcmp(it->cat, "tile") == 0) {
 			RG_Tile *tile = it->p1;
 
-			/* XXX hack */
 			if ((tool = MAP_ViewFindTool(mv, "Insert")) != NULL) {
 				MAP_InsertTool *insTool = (MAP_InsertTool *)tool;
 
+				/* XXX */
 				insTool->snap_mode = tile->snap_mode;
 				insTool->replace_mode = (insTool->snap_mode ==
 				                         RG_SNAP_TO_GRID);
@@ -1653,8 +2050,8 @@ SelectLib(AG_Event *_Nonnull event)
 				AG_WidgetFocus(mv);
 			}
 		} else if (strcmp(it->cat, "object") == 0 &&
-		    AG_OfClass(it->p1, "MAP_Actor:*")) {
-			if ((tool = MAP_ViewFindTool(mv, "Ginsert")) != NULL) {
+		    AG_OfClass(it->p1, "MAP_Object:*")) {
+			if ((tool = MAP_ViewFindTool(mv, "InsertObj")) != NULL) {
 				if (mv->curtool != NULL) {
 					MAP_ViewSelectTool(mv, NULL, NULL);
 				}
@@ -1667,25 +2064,46 @@ SelectLib(AG_Event *_Nonnull event)
 	}
 }
 
-/* Scan VFS for items we can use as actors. */
 static void
-PollActors(AG_Event *_Nonnull event)
+PollObjects(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	MAP_View *mv = MAP_VIEW_PTR(1);
 	MAP *map = mv->map;
 	AG_TlistItem *it;
-	MAP_Actor *a;
+	MAP_Object *mo;
 
 	AG_TlistClear(tl);
-	TAILQ_FOREACH(a, &map->actors, actors) {
-		it = AG_TlistAdd(tl, NULL, "%s [%d,%d %d-%d]",
-		    OBJECT(a)->name, a->g_map.x, a->g_map.y,
-		    a->g_map.l0, a->g_map.l1);
-		it->p1 = a;
-		it->cat = "actor";
+
+	AGOBJECT_FOREACH_CLASS(mo, map, map_object, "MAP_Object:*") {
+		it = AG_TlistAdd(tl, NULL, "%s", OBJECT(mo)->name);
+		it->p1 = mo;
+		it->cat = "object";
 	}
+
 	AG_TlistRestore(tl);
+}
+
+static void
+SelectObject(AG_Event *_Nonnull event)
+{
+	MAP_View *mv = MAP_VIEW_PTR(1);
+	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	const int selected = AG_INT(3);
+	MAP_Object *mo = it->p1;
+
+	if (!AG_OBJECT_VALID(mo) || !AG_OfClass(mo, "MAP_Object:*"))
+		return;
+
+	if (selected) {
+		MAP_ViewStatus(mv, _("Selected %s"), OBJECT(mo)->name);
+		mo->flags |= MAP_OBJECT_SELECTED;
+	} else {
+		MAP_ViewStatus(mv, _("Unselected %s"), OBJECT(mo)->name);
+		mo->flags &= ~(MAP_OBJECT_SELECTED);
+	}
+
+	AG_Redraw(mv);
 }
 
 /* Display the current map layers. */
@@ -1699,12 +2117,12 @@ PollLayers(AG_Event *_Nonnull event)
 
 	AG_TlistClear(tl);
 	for (i = 0; i < map->nLayers; i++) {
-		MAP_Layer *lay = &map->layers[i];
+		MAP_Layer *layer = &map->layers[i];
 
 		it = AG_TlistAdd(tl, mapIconLayerEditor.s, "%s%s%s",
-		    (i == map->layerCur) ? "[*] " : "", lay->name,
-		    lay->visible ? "" : _(" (hidden)"));
-		it->p1 = lay;
+		    (i == map->layerCur) ? AGSI_BOLD : "", layer->name,
+		    layer->visible ? "" : _(" (hidden)"));
+		it->p1 = layer;
 		it->cat = "layer";
 	}
 	AG_TlistRestore(tl);
@@ -1713,16 +2131,19 @@ PollLayers(AG_Event *_Nonnull event)
 static void
 SetLayerVisibility(AG_Event *_Nonnull event)
 {
-	MAP_Layer *lay = AG_PTR(1);
+	MAP_Layer *layer = AG_PTR(1);
 	const int state = AG_INT(2);
+	AG_Tlist *tlLayers = AG_TLIST_PTR(3);
 
-	lay->visible = state;
+	layer->visible = state;
+	AG_TlistRefresh(tlLayers);
 }
 
 /* Select a layer for edition. */
 static void
 SelectLayer(AG_Event *_Nonnull event)
 {
+	AG_Tlist *tl = AG_TLIST_SELF();
 	MAP *map = MAP_PTR(1);
 	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
 	const MAP_Layer *layer = ti->p1;
@@ -1734,55 +2155,60 @@ SelectLayer(AG_Event *_Nonnull event)
 			break;
 		}
 	}
+	AG_TlistRefresh(tl);
 }
 
 /*
- * Delete a layer. Unless this is the top layer, we have to update
- * the layer indices of all relevant items.
+ * Remove a layer and reassign items to the previous layer.
+ * The first layer cannot be deleted.
  */
 static void
 DeleteLayer(AG_Event *_Nonnull event)
 {
 	MAP *map = MAP_PTR(1);
-	MAP_Layer *lay = AG_PTR(2);
-	Uint i, x,y, nlayer;
+	MAP_Layer *pLayer = AG_PTR(2);
+	AG_Tlist *tlLayers = AG_TLIST_PTR(3);
+	Uint i, x,y, layer;
 	
-	for (nlayer = 0; nlayer < map->nLayers; nlayer++) {
-		if (&map->layers[nlayer] == lay)
+	for (layer = 0; layer < map->nLayers; layer++) {
+		if (&map->layers[layer] == pLayer)
 			break;
 	}
-	if (nlayer == map->nLayers) {
+	if (layer == map->nLayers) {		/* No matching layer */
 		return;
 	}
-	if (--map->nLayers < 1) {
-		map->nLayers = 1;
+	if ((map->nLayers - 1) < 1) {		/* Minimum of 1 layer */
 		return;
 	}
-	if (map->layerCur <= (int)map->nLayers) {
+	map->nLayers--;
+
+	if (layer < (map->nLayers - 1))
+		memmove(&map->layers[layer], &map->layers[layer+1],
+		        (map->nLayers - layer - 1)*sizeof(MAP_Layer));
+
+	if (map->layerCur <= (int)map->nLayers)
 		map->layerCur = (int)map->nLayers - 1;
-	}
-	for (i = nlayer; i <= map->nLayers; i++) {
-		memcpy(&map->layers[i], &map->layers[i+1], sizeof(MAP_Layer));
-	}
+
 	for (y = 0; y < map->h; y++) {
 		for (x = 0; x < map->w; x++) {
 			MAP_Node *node = &map->map[y][x];
-			MAP_Item *mi, *miNext;
+			MAP_Item *mi;
 
-			for (mi = TAILQ_FIRST(&node->items);
-			     mi != TAILQ_END(&node->items);
-			     mi = miNext) {
-				miNext = TAILQ_NEXT(mi, items);
-				if (mi->layer == nlayer) {
-					TAILQ_REMOVE(&node->items, mi, items);
-					MAP_ItemDestroy(map, mi);
-					free(mi);
-				} else if (mi->layer > nlayer) {
+			MAP_NodeClear(map, node, layer);
+
+			TAILQ_FOREACH(mi, &node->items, items) {
+				if (mi->layer > layer)
 					mi->layer--;
-				}
+			}
+			for (i = 0; i < node->nLocs; i++) {
+				MAP_Location *loc = &node->locs[i];
+
+				if (loc->layer > layer)
+					loc->layer--;
 			}
 		}
 	}
+	AG_TlistRefresh(tlLayers);
 }
 
 /* Destroy all items on a given layer. */
@@ -1790,30 +2216,16 @@ static void
 ClearLayer(AG_Event *_Nonnull event)
 {
 	MAP *map = MAP_PTR(1);
-	const MAP_Layer *lay = AG_PTR(2);
-	Uint x,y, i;
+	const MAP_Layer *pLayer = AG_PTR(2);
+	Uint x,y, layer;
 	
-	for (i = 0; i < map->nLayers; i++) {
-		if (&map->layers[i] == lay)
+	for (layer = 0; layer < map->nLayers; layer++) {
+		if (&map->layers[layer] == pLayer)
 			break;
 	}
-	for (y = 0; y < map->h; y++) {
-		for (x = 0; x < map->w; x++) {
-			MAP_Node *node = &map->map[y][x];
-			MAP_Item *mi, *miNext;
-
-			for (mi = TAILQ_FIRST(&node->items);
-			     mi != TAILQ_END(&node->items);
-			     mi = miNext) {
-				miNext = TAILQ_NEXT(mi, items);
-				if (mi->layer == i) {
-					TAILQ_REMOVE(&node->items, mi, items);
-					MAP_ItemDestroy(map, mi);
-					free(mi);
-				}
-			}
-		}
-	}
+	for (y = 0; y < map->h; y++)
+		for (x = 0; x < map->w; x++)
+			MAP_NodeClear(map, &map->map[y][x], layer);
 }
 
 /* Move a layer (and its associated items) up or down the stack. */
@@ -1852,12 +2264,22 @@ MoveLayer(AG_Event *_Nonnull event)
 		for (x = 0; x < map->w; x++) {
 			MAP_Node *node = &map->map[y][x];
 			MAP_Item *mi;
+			Uint i;
 
 			TAILQ_FOREACH(mi, &node->items, items) {
 				if (mi->layer == l1) {
 					mi->layer = l2;
 				} else if (mi->layer == l2) {
 					mi->layer = l1;
+				}
+			}
+			for (i = 0; i < node->nLocs; i++) {
+				MAP_Location *loc = &node->locs[i];
+
+				if (loc->layer == l1) {
+					loc->layer = l2;
+				} else if (loc->layer == l2) {
+					loc->layer = l1;
 				}
 			}
 		}
@@ -1867,76 +2289,16 @@ MoveLayer(AG_Event *_Nonnull event)
 
 /* Create a new layer. */
 static void
-PushLayer(AG_Event *_Nonnull event)
+NewLayer(AG_Event *_Nonnull event)
 {
-	char name[MAP_LAYER_NAME_MAX];
-	MAP *map = MAP_PTR(1);
-	AG_Textbox *tb = AG_TEXTBOX_PTR(2);
+	MAP_View *mv = MAP_VIEW_PTR(1);
 	
-	AG_TextboxCopyString(tb, name, sizeof(name));
-
-	if (MAP_PushLayer(map, name) != 0) {
+	if (MAP_PushLayer(mv->map, "") != 0) {
 		AG_TextMsgFromError();
-	} else {
-		AG_TextboxPrintf(tb, NULL);
-	}
-}
-
-#if 0
-static void
-EditItemProps(AG_Event *_Nonnull event)
-{
-	MAP_View *mv = MAP_VIEW_SELF();
-	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
-	int xOffs = AG_INT(4);
-	int yOffs = AG_INT(5);
-	MAP_Item *mi;
-	AG_Window *pwin, *win;
-	AG_MSpinbutton *msb;
-
-	if ((mi = MAP_ItemLocate(mv->map, mv->mouse.xmap, mv->mouse.ymap,
-	    mv->cam)) == NULL) {
 		return;
 	}
-
-	if ((win = AG_WindowNew(0)) == NULL) {
-		return;
-	}
-	AG_WindowSetCaption(win, _("Map item"));
-	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 1);
-
-	AG_LabelNew(win, 0, _("Type: %s"), mapItemClasses[mi->type]->name);
-
-	msb = AG_MSpinbuttonNew(win, 0, ",", _("Centering: "));
-	AG_BindInt(msb, "xvalue", &mi->data.tile.xCenter);
-	AG_BindInt(msb, "yvalue", &mi->data.tile.yCenter);
-
-	msb = AG_MSpinbuttonNew(win, 0, ",", _("Motion: "));
-	AG_BindInt(msb, "xvalue", &mi->data.tile.xMotion);
-	AG_BindInt(msb, "yvalue", &mi->data.tile.yMotion);
-
-	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
-
-	msb = AG_MSpinbuttonNew(win, 0, ",", _("Source X,Y: "));
-	AG_BindInt(msb, "xvalue", &mi->data.tile.rs.x);
-	AG_BindInt(msb, "yvalue", &mi->data.tile.rs.y);
-
-	msb = AG_MSpinbuttonNew(win, 0, "x", _("Source W,H: "));
-	AG_BindInt(msb, "xvalue", &mi->data.tile.rs.w);
-	AG_BindInt(msb, "yvalue", &mi->data.tile.rs.h);
-
-	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
-
-	AG_NumericalNewUint8(win, 0, NULL, _("Layer: "), &mi->layer);
-
-	if ((pwin = AG_WidgetParentWindow(mv)) != NULL) {
-		AG_WindowAttach(pwin, win);
-	}
-	AG_WindowShow(win);
+	AG_TlistRefresh(mv->layers_tl);
 }
-#endif
 
 /* Set the attribute edition mode. */
 static void
@@ -1971,44 +2333,27 @@ static void
 CenterViewToOrigin(AG_Event *_Nonnull event)
 {
 	MAP_View *mv = MAP_VIEW_PTR(1);
-	const int tileSz = AGMTILESZ(mv);
+	const int tileSz = MAP_TILESZ(mv);
 
-	AGMCAM(mv).x = mv->map->xOrigin * tileSz - tileSz/2;
-	AGMCAM(mv).y = mv->map->yOrigin * tileSz - tileSz/2;
+	MAP_CAM(mv).x = mv->map->xOrigin * tileSz - tileSz/2;
+	MAP_CAM(mv).y = mv->map->yOrigin * tileSz - tileSz/2;
 
 	MAP_ViewUpdateCamera(mv);
 }
 
-/* Detach an actor object. */
+/* Detach a map object. */
 static void
-DetachActor(AG_Event *_Nonnull event)
+DetachObject(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_PTR(1);
 	MAP *map = MAP_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl)) != NULL &&
-	     strcmp(it->cat, "actor") == 0) {
-		MAP_Actor *a = it->p1;
+	     strcmp(it->cat, "object") == 0) {
+		MAP_Object *mo = it->p1;
 	
-		TAILQ_REMOVE(&map->actors, a, actors);
-		MAP_DetachActor(map, a);
-	}
-}
-
-/* Control an actor object. */
-static void
-SelectActor(AG_Event *_Nonnull event)
-{
-	AG_Tlist *tl = AG_TLIST_PTR(1);
-	MAP_View *mv = MAP_VIEW_PTR(2);
-	AG_TlistItem *it;
-
-	if ((it = AG_TlistSelectedItem(tl)) != NULL &&
-	     strcmp(it->cat, "actor") == 0) {
-		MAP_Actor *a = it->p1;
-	
-		MAP_ViewControl(mv, _("Player 1"), a);
+		Debug(map, "Detach map object %s...\n", OBJECT(mo)->name);
 	}
 }
 
@@ -2076,7 +2421,7 @@ RemoveAllRefsToTile(AG_Event *_Nonnull event)
 
 /* Generate the menu that pops up when clicking on a layer. */
 static void
-CreateLayerMenu(AG_Event *_Nonnull event)
+LayerPopupMenu(AG_Event *_Nonnull event)
 {
 	MAP *map = MAP_PTR(1);
 	AG_Tlist *tlLayers = AG_TLIST_PTR(2);
@@ -2088,10 +2433,10 @@ CreateLayerMenu(AG_Event *_Nonnull event)
 	}
 	AG_MenuAction(menu,
 	    layer->visible ? _("Hide layer") : _("Show layer"), NULL,
-	    SetLayerVisibility, "%p,%i", layer, !layer->visible);
+	    SetLayerVisibility, "%p,%i,%p", layer, !layer->visible, tlLayers);
 
 	AG_MenuAction(menu, _("Delete layer"), agIconTrash.s,
-	    DeleteLayer, "%p,%p", map, layer);
+	    DeleteLayer, "%p,%p,%p", map, layer, tlLayers);
 
 	AG_MenuAction(menu, _("Clear layer"), agIconTrash.s,
 	    ClearLayer, "%p,%p", map, layer);
@@ -2107,6 +2452,223 @@ CreateLayerMenu(AG_Event *_Nonnull event)
 	    MoveLayer, "%p,%p,%i", map, layer, 1, tlLayers);
 }
 
+/* Create a new MAP_Object under Library. */
+static void
+CreateObject(AG_Event *_Nonnull event)
+{
+	char name[AG_OBJECT_NAME_MAX];
+	AG_Object *pLibsRoot = AG_OBJECT_PTR(1);
+	AG_ObjectClass *cls = AG_PTR(2);
+	AG_Textbox *tbName = AG_TEXTBOX_PTR(3);
+	AG_Window *winDlg = AG_WINDOW_PTR(4);
+	MAP_View *mvParent = MAP_VIEW_PTR(5);
+	MAP_Object *moLib;
+	void *obj;
+
+	AG_TextboxCopyString(tbName, name, sizeof(name));
+	AG_ObjectDetach(winDlg);
+
+	if ((moLib = obj = TryMalloc(cls->size)) == NULL) {
+		AG_TextMsgFromError();
+		return;
+	}
+
+	AG_ObjectInit(obj, cls);
+	if (name[0] == '\0') {
+		AG_ObjectGenName(pLibsRoot, cls, name, sizeof(name));
+	}
+	AG_ObjectSetNameS(obj, name);
+	AG_ObjectAttach(pLibsRoot, obj);
+	AG_ObjectUnlinkDatafiles(obj);
+
+	AG_PostEvent(obj, "edit-create", NULL);
+
+	if (mvParent->lib_tl)
+		AG_TlistRefresh(mvParent->lib_tl);
+	
+	if (AG_ObjectSave(moLib) == -1)
+		AG_TextMsgFromError();
+}
+
+static void
+CreateObjectDlg(AG_Event *_Nonnull event)
+{
+	AG_Window *win;
+	AG_Object *pLibsRoot = AG_OBJECT_PTR(1);
+	AG_ObjectClass *cls = AG_PTR(2);
+	AG_Window *winParent = AG_WINDOW_PTR(3);
+	MAP_View *mv = MAP_VIEW_PTR(4);
+	AG_Box *bo;
+	AG_Textbox *tb;
+
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
+	AG_WindowSetCaption(win, _("New %s object"), cls->name);
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
+
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
+	{
+		AG_LabelNew(bo, 0, _("Class: %s"), cls->hier);
+		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL, _("Name: "));
+		AG_WidgetFocus(tb);
+	}
+
+	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
+
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
+	{
+		AG_ButtonNewFn(bo, 0, _("OK"),
+		    CreateObject, "%p%p%p%p%p", pLibsRoot, cls, tb, win, mv);
+		AG_SetEvent(tb, "textbox-return",
+		    CreateObject, "%p%p%p%p%p", pLibsRoot, cls, tb, win, mv);
+
+		AG_ButtonNewFn(bo, 0, _("Cancel"),
+		    AGWINDETACH(win));
+	}
+
+	AG_WindowAttach(winParent, win);
+	AG_WindowShow(win);
+}
+
+static void
+GenNewObjectMenu(AG_MenuItem *_Nonnull mParent, AG_ObjectClass *_Nonnull cls,
+    AG_Object *_Nonnull pLibsRoot, MAP_View *_Nonnull mv,
+    AG_Window *_Nonnull winParent, int depth)
+{
+	AG_MenuItem *mn;
+
+	mn = AG_MenuNode(mParent, (depth == 0) ? _("New Library Object") :
+	                                         cls->name, NULL);
+
+	AG_MenuAction(mn, AG_Printf(_("New %s..."), cls->name), NULL,
+	    CreateObjectDlg, "%p%p%p%p%p", pLibsRoot, cls, winParent, mv);
+
+	if (!TAILQ_EMPTY(&cls->pvt.sub)) {		/* Subclasses exist? */
+		AG_ObjectClass *clsSub;
+
+		AG_MenuSeparator(mn);
+
+		TAILQ_FOREACH(clsSub, &cls->pvt.sub, pvt.subclasses) {
+			GenNewObjectMenu(mn, clsSub, pLibsRoot, mv, winParent,
+			    depth+1);
+		}
+	}
+
+}
+
+static void
+OpenMapAGM(AG_Event *event)
+{
+	MAP *mapParent = MAP_PTR(1), *map;
+	const char *path = AG_STRING(2);
+	AG_Window *win;
+
+	if (path[0] == '\0')
+		return;
+
+	if ((map = AG_ObjectNew(mapParent->pMaps, NULL, &mapClass)) == NULL) {
+		AG_TextMsgFromError();
+		return;
+	}
+	map->pLibs = mapParent->pLibs;			/* Inherit pLibs */
+
+	if (AG_ObjectLoadFromFile(map, path) == -1) {
+		AG_TextError("%s: %s", path, AG_GetError());
+		return;
+	}
+	if ((win = mapClass.edit(map)) == NULL) {
+		AG_TextMsgFromError();
+		AG_ObjectDestroy(map);
+		return;
+	}
+	AG_WindowShow(win);
+	
+	AG_TextTmsg(AG_MSG_INFO, 4000,
+	    _("Loaded " AGSI_YEL "%s" AGSI_RST " from "
+		       AGSI_LEAGUE_GOTHIC "%s" AGSI_RST "OK."),
+	    OBJECT(map)->name, path);
+}
+
+static void
+OpenDlg(AG_Event *event)
+{
+	MAP *map = MAP_PTR(1);
+	AG_Window *win;
+	AG_FileDlg *fd;
+
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
+	AG_WindowSetCaptionS(win, _("Open Map or Map Object"));
+	fd = AG_FileDlgNewMRU(win, "map-import",
+	                      AG_FILEDLG_CLOSEWIN | AG_FILEDLG_LOAD |
+	                      AG_FILEDLG_EXPAND | AG_FILEDLG_MASK_EXT);
+	AG_FileDlgAddType(fd, _("Agar-Map File"), ".agm", OpenMapAGM, "%p", map);
+	AG_FileDlgAddType(fd, _("Agar-Map File"), ".MAP", OpenMapAGM, "%p", map);
+	AG_WindowShow(win);
+}
+
+static void
+SaveMap(AG_Event *event)
+{
+	MAP *map = MAP_PTR(1);
+
+	if (AG_ObjectSave(map) == -1) {
+		AG_TextMsgFromError();
+	} else {
+		char path[AG_PATHNAME_MAX];
+
+		if (AG_ObjectCopyFilename(map, path, sizeof(path)) == -1) {
+			path[0] = '?';
+			path[1] = '\0';
+		}
+		AG_TextTmsg(AG_MSG_INFO, 4000,
+		    _("Saved " AGSI_YEL "%s" AGSI_RST " to default ("
+			       AGSI_LEAGUE_GOTHIC "%s" AGSI_RST ") OK."),
+		    OBJECT(map)->name, path);
+	}
+}
+
+static void
+SaveMapAGM(AG_Event *event)
+{
+	MAP *map = MAP_PTR(1);
+	const char *path = AG_STRING(2);
+
+	if (path[0] == '\0') {
+		return;
+	}
+	if (AG_ObjectSaveToFile(map, path) == -1) {
+		AG_TextError("%s: %s", path, AG_GetError());
+		return;
+	}
+	AG_TextTmsg(AG_MSG_INFO, 4000,
+	    _("Saved " AGSI_YEL "%s" AGSI_RST " to "
+		       AGSI_LEAGUE_GOTHIC "%s" AGSI_RST " OK."),
+	    OBJECT(map)->name, path);
+}
+
+static void
+SaveMapDlg(AG_Event *event)
+{
+	MAP *map = MAP_PTR(1);
+	AG_Window *win;
+	AG_FileDlg *fd;
+
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
+	AG_WindowSetCaption(win, _("Save %s to..."), OBJECT(map)->name);
+	fd = AG_FileDlgNewMRU(win, "map-import",
+	                      AG_FILEDLG_CLOSEWIN | AG_FILEDLG_SAVE |
+	                      AG_FILEDLG_EXPAND | AG_FILEDLG_MASK_EXT);
+	AG_FileDlgAddType(fd, _("Agar-Map File"), ".agm", SaveMapAGM, "%p", map);
+	AG_FileDlgAddType(fd, _("Agar-Map File"), ".MAP", SaveMapAGM, "%p", map);
+	AG_FileDlgSetFilename(fd, "%s.agm", OBJECT(map)->name);
+	AG_WindowShow(win);
+}
+
 static void *_Nullable
 Edit(void *_Nonnull obj)
 {
@@ -2115,21 +2677,21 @@ Edit(void *_Nonnull obj)
 	AG_Toolbar *toolbar;
 	AG_Statusbar *statbar;
 	MAP_View *mv;
-	AG_Menu *menuWin;
-	AG_MenuItem *menu;
-	AG_Box *hBox, *vBox;
+	AG_Menu *menu;
+	AG_MenuItem *mi;
+	AG_Box *vBox;
 	AG_Pane *hPane, *vPane;
 	Uint flags = MAP_VIEW_GRID;
 
 	if ((win = AG_WindowNew(AG_WINDOW_MAIN)) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaptionS(win, OBJECT(map)->name);
+	AG_WindowSetCaption(win, _("%s - Agar Map Editor"), OBJECT(map)->name);
 
 	if ((OBJECT(map)->flags & AG_OBJECT_READONLY) == 0)
 		flags |= MAP_VIEW_EDIT;
 	
-	toolbar = AG_ToolbarNew(NULL, AG_TOOLBAR_VERT, 2, 0);
+	toolbar = AG_ToolbarNew(NULL, AG_TOOLBAR_VERT, 2, AG_TOOLBAR_STICKY);
 	statbar = AG_StatusbarNew(NULL, 0);
 	
 	mv = MAP_ViewNew(NULL, map, flags, toolbar, statbar);
@@ -2138,53 +2700,70 @@ Edit(void *_Nonnull obj)
 	AG_SetEvent(mv, "mapview-dblclick", EditItemProps, NULL);
 #endif
 
-	menuWin = AG_MenuNew(win, AG_MENU_HFILL);
-	menu = AG_MenuNode(menuWin->root, _("File"), NULL);
+	menu = AG_MenuNew(win, AG_MENU_HFILL);
+	mi = AG_MenuNode(menu->root, _("File"), NULL);
 	{
-		AG_MenuActionKb(menu, _("Close map"), agIconClose.s,
+		GenNewObjectMenu(mi, AGCLASS(&mapObjectClass),
+		    map->pLibs, mv, win, 0);
+
+		AG_MenuActionKb(mi, _("Open..."), agIconLoad.s,
+		    AG_KEY_O, AG_KEYMOD_CTRL,
+		    OpenDlg, "%p", map);
+
+		AG_MenuSeparator(mi);
+
+		AG_MenuActionKb(mi, _("Save..."), agIconSave.s,
+		    AG_KEY_S, AG_KEYMOD_CTRL,
+		    SaveMap, "%p", map);
+		AG_MenuActionKb(mi, _("Save As..."), agIconSave.s,
+		    AG_KEY_S, AG_KEYMOD_SHIFT | AG_KEYMOD_CTRL,
+		    SaveMapDlg, "%p", map);
+
+		AG_MenuSeparator(mi);
+
+		AG_MenuActionKb(mi, _("Close map"), agIconClose.s,
 		    AG_KEY_W, AG_KEYMOD_CTRL, AGWINCLOSE(win));
 	}
-	
-	menu = AG_MenuNode(menuWin->root, _("Edit"), NULL);
+	mi = AG_MenuNode(menu->root, _("Edit"), NULL);
 	{
-		AG_MenuAction(menu, _("Undo"), NULL, Undo, "%p", map);
-		AG_MenuAction(menu, _("Redo"), NULL, Redo, "%p", map);
+		AG_MenuAction(mi, _("Undo"), NULL, Undo, "%p", map);
+		AG_MenuAction(mi, _("Redo"), NULL, Redo, "%p", map);
+		AG_MenuAction(mi, _("History Buffer"), agIconUp.s,
+		    EditHistoryBuffer, "%p,%p", mv, win);
 
-		AG_MenuSeparator(menu);
+		AG_MenuSeparator(mi);
 
-		AG_MenuAction(menu, _("Map parameters..."), mapIconSettings.s,
+		AG_MenuAction(mi, _("Map Parameters..."), mapIconSettings.s,
 		    EditMapParameters, "%p,%p", mv, win);
 	}
-	
-	menu = AG_MenuNode(menuWin->root, _("Attributes"), NULL);
+	mi = AG_MenuNode(menu->root, _("Attributes"), NULL);
 	{
-		AG_MenuAction(menu, _("None"), NULL,
+		AG_MenuAction(mi, _("None"), NULL,
 		    EditPropMode, "%p,%u", mv, 0);
 
-		AG_MenuAction(menu, _("Walkability"), mapIconWalkable.s,
+		AG_MenuAction(mi, _("Walkability"), mapIconWalkable.s,
 		    EditPropMode, "%p,%u", mv, MAP_ITEM_BLOCK);
-		AG_MenuAction(menu, _("Climbability"), mapIconClimbable.s,
+		AG_MenuAction(mi, _("Climbability"), mapIconClimbable.s,
 		    EditPropMode, "%p,%u", mv, MAP_ITEM_CLIMBABLE);
-		AG_MenuAction(menu, _("Jumpability"), mapIconJumpable.s,
+		AG_MenuAction(mi, _("Jumpability"), mapIconJumpable.s,
 		    EditPropMode, "%p,%u", mv, MAP_ITEM_JUMPABLE);
-		AG_MenuAction(menu, _("Slippery"), mapIconSlippery.s,
+		AG_MenuAction(mi, _("Slippery"), mapIconSlippery.s,
 		    EditPropMode, "%p,%u", mv, MAP_ITEM_SLIPPERY);
 	}
-
-	menu = AG_MenuNode(menuWin->root, _("View"), NULL);
+	mi = AG_MenuNode(menu->root, _("View"), NULL);
 	{
-		AG_MenuAction(menu, _("Create view..."), mapIconNewView.s,
+		AG_MenuAction(mi, _("Create View..."), mapIconNewView.s,
 		    CreateView, "%p,%p", mv, win);
-		AG_MenuAction(menu, _("Center around origin"), mapIconOrigin.s,
+		AG_MenuAction(mi, _("Center Around Origin"), mapIconOrigin.s,
 		    CenterViewToOrigin, "%p", mv);
 
-		AG_MenuSeparator(menu);
+		AG_MenuSeparator(mi);
 
-		AG_MenuUintFlags(menu, _("Show grid"), mapIconGrid.s,
+		AG_MenuUintFlags(mi, _("Show Grid"), mapIconGrid.s,
 		    &mv->flags, MAP_VIEW_GRID, 0);
-		AG_MenuUintFlags(menu, _("Show background"), mapIconGrid.s,
+		AG_MenuUintFlags(mi, _("Show Background"), mapIconGrid.s,
 		    &mv->flags, MAP_VIEW_NO_BG, 1);
-		AG_MenuUintFlags(menu, _("Show map origin"), mapIconOrigin.s,
+		AG_MenuUintFlags(mi, _("Show Origin"), mapIconOrigin.s,
 		    &mv->flags, MAP_VIEW_SHOW_ORIGIN, 0);
 	}
 	
@@ -2194,17 +2773,16 @@ Edit(void *_Nonnull obj)
 		AG_Notebook *nb;
 		AG_NotebookTab *ntab;
 		AG_Tlist *tl;
-		AG_MenuItem *mi;
 
 		vPane = AG_PaneNewVert(hPane->div[0], AG_PANE_EXPAND);
 		nb = AG_NotebookNew(vPane->div[0], AG_NOTEBOOK_EXPAND);
 		ntab = AG_NotebookAdd(nb, _("Library"), AG_BOX_VERT);
 		{
-			tl = AG_TlistNew(ntab, AG_TLIST_POLL | AG_TLIST_EXPAND);
-#if 0
-			AG_SetEvent(tl, "tlist-poll", PollLibs, "%p", agWorld);
-#endif
-			AG_SetEvent(tl, "tlist-changed", SelectLib, "%p", mv);
+			tl = AG_TlistNew(ntab, AG_TLIST_POLL | AG_TLIST_EXPAND |
+			                       AG_TLIST_EXPAND_NODES);
+			AG_TlistSetRefresh(tl, -1);
+			AG_SetEvent(tl, "tlist-poll", PollLibObjects, "%p", map);
+			AG_SetEvent(tl, "tlist-changed", SelectLibObject, "%p", mv);
 			mv->lib_tl = tl;
 			WIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 
@@ -2225,45 +2803,36 @@ Edit(void *_Nonnull obj)
 		}
 		ntab = AG_NotebookAdd(nb, _("Objects"), AG_BOX_VERT);
 		{
-			tl = AG_TlistNew(ntab, AG_TLIST_POLL | AG_TLIST_EXPAND);
-			AG_SetEvent(tl, "tlist-poll", PollActors, "%p", mv);
-//			AG_SetEvent(tl, "tlist-changed", select_obj, "%p", mv);
+			tl = AG_TlistNew(ntab, AG_TLIST_POLL | AG_TLIST_EXPAND |
+			                       AG_TLIST_MULTI);
+			AG_SetEvent(tl, "tlist-poll", PollObjects, "%p", mv);
+			AG_SetEvent(tl, "tlist-changed", SelectObject, "%p", mv);
 			mv->objs_tl = tl;
 			WIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 			
-			mi = AG_TlistSetPopup(mv->objs_tl, "actor");
+			mi = AG_TlistSetPopup(mv->objs_tl, "object");
 			{
-				AG_MenuAction(mi, _("Control actor"),
-				    mapIconActor.s,
-				    SelectActor, "%p,%p", mv->objs_tl, mv); 
-
-				AG_MenuAction(mi, _("Detach actor"),
+				AG_MenuAction(mi, _("Detach object"),
 				    agIconTrash.s,
-				    DetachActor, "%p,%p", mv->objs_tl, map); 
+				    DetachObject, "%p,%p", mv->objs_tl, map); 
 			}
 		}
 		ntab = AG_NotebookAdd(nb, _("Layers"), AG_BOX_VERT);
 		{
-			AG_Textbox *tb;
-
 			mv->layers_tl = AG_TlistNew(ntab, AG_TLIST_POLL|
 			                                  AG_TLIST_EXPAND);
-			AG_TlistSetItemHeight(mv->layers_tl, MAPTILESZ);
+			AG_TlistSetItemHeight(mv->layers_tl, MAP_TILESZ_DEF);
 			AG_SetEvent(mv->layers_tl, "tlist-poll",
 			    PollLayers, "%p", map);
 			AG_SetEvent(mv->layers_tl, "tlist-dblclick",
 			    SelectLayer, "%p", map);
 
 			mi = AG_TlistSetPopup(mv->layers_tl, "layer");
-			AG_MenuSetPollFn(mi, CreateLayerMenu, "%p,%p",
+			AG_MenuSetPollFn(mi, LayerPopupMenu, "%p,%p",
 			    map, mv->layers_tl);
 
-			hBox = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_HFILL);
-			tb = AG_TextboxNewS(hBox, 0, _("Name: "));
-			AG_SetEvent(tb, "textbox-return",
-			    PushLayer, "%p, %p", map, tb);
-			AG_ButtonNewFn(ntab, AG_BUTTON_HFILL, _("Push"),
-			    PushLayer, "%p, %p", map, tb);
+			AG_ButtonNewFn(ntab, AG_BUTTON_HFILL, _("New Layer"),
+			    NewLayer, "%p", mv);
 		}
 		
 		AG_SeparatorNew(hPane->div[0], AG_SEPARATOR_HORIZ);
@@ -2274,36 +2843,30 @@ Edit(void *_Nonnull obj)
 		}
 
 		AG_ObjectAttach(hPane->div[1], toolbar);
+		AG_PaneMoveDividerPct(vPane, 30);
 	}
 
-	menu = AG_MenuNode(menuWin->root, _("Tools"), NULL);
+	mi = AG_MenuNode(menu->root, _("Tools"), NULL);
 	{
-		const MAP_ToolOps *ops[] = {
-			&mapNodeselOps,
-			&mapRefselOps,
-			&mapFillOps,
-			&mapEraserOps,
-			&mapFlipOps,
-			&mapInvertOps,
-			&mapInsertOps,
-			&mapGInsertOps
-		};
-		const int nops = sizeof(ops) / sizeof(ops[0]);
-		MAP_Tool *tool;
-		int i;
+		const MAP_ToolOps **pTool;
 
-		for (i = 0; i < nops; i++) {
-			tool = MAP_ViewRegTool(mv, ops[i], map);
+		for (pTool = mapToolOps;
+		    *pTool != NULL;
+		     pTool++) {
+			const MAP_ToolOps *toolOps = *pTool;
+			MAP_Tool *tool;
+
+			tool = MAP_ViewRegTool(mv, toolOps, map);
 			tool->pane = (void *)vPane->div[1];
-			AG_MenuAction(menu, _(ops[i]->desc),
-			    (ops[i]->icon!=NULL) ? ops[i]->icon->s : NULL,
+			AG_MenuAction(mi, _(toolOps->desc),
+			    (toolOps->icon != NULL) ? toolOps->icon->s : NULL,
 			    SelectTool, "%p,%p", mv, tool);
 		}
 	}
 	
 	AG_ObjectAttach(win, statbar);
 
-	AG_PaneMoveDividerPct(hPane, 40);
+	AG_PaneMoveDividerPct(hPane, 20);
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 50, 50);
 
 	AG_LabelTextS(mv->status,
@@ -2316,7 +2879,7 @@ Edit(void *_Nonnull obj)
 AG_ObjectClass mapClass = {
 	"MAP",
 	sizeof(MAP),
-	{ 12, 0 },
+	{ 12, 1 },
 	Init,
 	Reset,
 	Destroy,

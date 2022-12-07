@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2021 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,8 @@ Init(void *_Nonnull obj)
 	ft->mode = FILL_FROM_ART;
 	ft->randomize_angle = 0;
 	
-	MAP_ToolPushStatus(ft, _("Select a node and fill with $(L)."));
+	MAP_ToolPushStatus(ft,
+	    _("Select a node and Left-Click to Fill / Clear similar nodes."));
 }
 
 static void
@@ -78,46 +79,58 @@ Effect(void *_Nonnull obj, MAP_Node *_Nonnull node)
 {
 	FILL_Tool *ft = obj;
 	MAP_View *mv = TOOL(ft)->mv;
-	MAP *map = mv->map;
-	MAP *mapCopy = &mapEditor.copybuf;
+	MAP *map = mv->map, *mapCopy;
 	int sx = 0, sy = 0, dx = 0, dy = 0;
 	int dw = map->w, dh = map->h;
-	int x,y;
+	int x,y, count;
 	AG_TlistItem *it;
 	RG_Tile *tile;
+	MAP_NodeselTool *selTool;
 #if 0
 	int i = 0;
 #endif
 
 	MAP_ViewGetSelection(mv, &dx, &dy, &dw, &dh);
-	MAP_ModBegin(map);
+	MAP_BeginRevision(map);
 
 	switch (ft->mode) {
 	case FILL_FROM_CLIPBRD:
-		if (mapCopy->w == 0 || mapCopy->h == 0) {
-			AG_TextMsg(AG_MSG_ERROR, _("The clipboard is empty."));
-			return (1);
+		if ((selTool = (MAP_NodeselTool *)MAP_ViewFindTool(mv, "Nodesel")) == NULL) {
+			MAP_ViewStatus(mv, _("No clipboard is available."));
+			return (0);
 		}
+		mapCopy = &selTool->mapCopy;
+		if (mapCopy->w == 0 || mapCopy->h == 0) {
+			MAP_ViewStatus(mv, _("The clipboard is empty."));
+			return (0);
+		}
+		count = 0;
 		for (y = dy; y < dy+dh; y++) {
 			for (x = dx; x < dx+dw; x++) {
 				MAP_Node *nodeSrc = &mapCopy->map[sy][sx];
-				MAP_Node *nodeDst = &map->map[y][x];
+				MAP_Node *node = &map->map[y][x];
 				MAP_Item *mi;
 
-				MAP_ModNodeChg(map, x, y);
-				MAP_NodeRemoveAll(map, nodeDst, map->layerCur);
+				MAP_NodeRevision(map, x,y, map->undo, map->nUndo);
+
+				MAP_NodeClear(map, node, map->layerCur);
 
 				TAILQ_FOREACH(mi, &nodeSrc->items, items) {
-					MAP_NodeDuplicate(mi, map, nodeDst,
-					                  map->layerCur);
+					MAP_DuplicateItem(map, node,
+					    map->layerCur, mi);
 				}
-				if (++sx >= (int)mapCopy->w)
+				if (++sx >= (int)mapCopy->w) {
 					sx = 0;
+				}
+				count++;
 			}
 		}
 		if (++sy >= (int)mapCopy->h) {
 			sy = 0;
 		}
+		MAP_ViewStatus(mv, _("Filled %d nodes from clipboard (%dx%d) "
+		                     "at [" AGSI_BOLD "%d,%d" AGSI_RST "]."),
+		    count, dw,dh, dx,dy);
 		break;
 	case FILL_FROM_ART:
 		if (mv->lib_tl == NULL ||
@@ -131,15 +144,16 @@ Effect(void *_Nonnull obj, MAP_Node *_Nonnull node)
 				MAP_Node *node = &map->map[y][x];
 				MAP_Tile *mt;
 
-				MAP_ModNodeChg(map, x,y);
-				MAP_NodeRemoveAll(map, node, map->layerCur);
+				MAP_NodeRevision(map, x,y, map->undo, map->nUndo);
+
+				MAP_NodeClear(map, node, map->layerCur);
 
 				mt = MAP_TileNew(map, node, tile->ts,
 				                 tile->main_id);
 				MAPITEM(mt)->layer = map->layerCur;
 
-				mt->xCenter = MAPTILESZ / 2;
-				mt->yCenter = MAPTILESZ / 2;
+				mt->xCenter = MAP_TILESZ_DEF / 2;
+				mt->yCenter = MAP_TILESZ_DEF / 2;
 /*				mt->xOrigin = tile->xOrig; */
 /*				mt->yOrigin = tile->yOrig; */
 #if 0
@@ -180,14 +194,16 @@ Effect(void *_Nonnull obj, MAP_Node *_Nonnull node)
 	case FILL_CLEAR:
 		for (y = dy; y < dy+dh; y++) {
 			for (x = dx; x < dx+dw; x++) {
-				MAP_ModNodeChg(map, x,y);
-				MAP_NodeRemoveAll(map, &map->map[y][x],
-				                  map->layerCur);
+				MAP_NodeRevision(map, x,y, map->undo, map->nUndo);
+				MAP_NodeClear(map, &map->map[y][x], map->layerCur);
 			}
 		}
+		MAP_ViewStatus(mv, _("Cleared (%dx%d) nodes at "
+		                     "[" AGSI_BOLD "%d,%d" AGSI_RST "]."),
+		    dw,dh, dx,dy);
 		break;
 	}
-	MAP_ModEnd(map);
+	MAP_CommitRevision(map);
 	return (1);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2021 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,10 @@
 
 #include <string.h>
 
+/*
+ * Insert a static map item (MAP_Item).
+ */
+
 static void
 Init(void *_Nonnull obj)
 {
@@ -50,20 +54,20 @@ Init(void *_Nonnull obj)
 	tool->replace_mode = 0;
 	tool->angle = 0;
 
-	AG_ObjectInit(&tool->mTmp, &mapClass);
-	OBJECT(&tool->mTmp)->flags |= AG_OBJECT_STATIC;
+//	AG_ObjectInitStatic(&tool->mTmp, &mapClass);
 	tool->mvTmp = NULL;
 
 	MAP_ToolPushStatus(tool,
-	    _("Select position on map ($(L)=Insert, $(M)=Rotate)"));
+	    _("Select a position and Left-Click to Insert. "
+	      "Use Middle-Click to Rotate."));
 }
 
 static void
 Destroy(void *_Nonnull obj)
 {
-	MAP_InsertTool *tool = obj;
+//	MAP_InsertTool *tool = obj;
 
-	AG_ObjectDestroy(&tool->mTmp);
+//	AG_ObjectDestroy(&tool->mTmp);
 }
 
 #if 0
@@ -75,8 +79,8 @@ SnapTile(MAP_InsertTool *_Nonnull tool, MAP_Item *_Nonnull mi,
 
 	switch (tool->snap_mode) {
 	case RG_SNAP_NONE:
-		mi->data.tile.xCenter += mv->cxoffs * MAPTILESZ / AGMTILESZ(mv);
-		mi->data.tile.yCenter += mv->cyoffs * MAPTILESZ / AGMTILESZ(mv);
+		mi->data.tile.xCenter += mv->cxoffs * MAP_TILESZ_DEF / MAP_TILESZ(mv);
+		mi->data.tile.yCenter += mv->cyoffs * MAP_TILESZ_DEF / MAP_TILESZ(mv);
 		break;
 	default:
 		break;
@@ -84,24 +88,25 @@ SnapTile(MAP_InsertTool *_Nonnull tool, MAP_Item *_Nonnull mi,
 }
 #endif
 
+#if 0
 static void
 GenerateTileMap(MAP_InsertTool *_Nonnull tool, RG_Tile *_Nonnull tile)
 {
 	MAP *mapTmp = &tool->mTmp;
 	int sy,sx, dx,dy;
-	int sw = tile->su->w / MAPTILESZ;
-	int sh = tile->su->h / MAPTILESZ;
+	int sw = tile->su->w / MAP_TILESZ_DEF;
+	int sh = tile->su->h / MAP_TILESZ_DEF;
 
-	if (tile->su->w % MAPTILESZ > 0) sw++;
-	if (tile->su->h % MAPTILESZ > 0) sh++;
+	if (tile->su->w % MAP_TILESZ_DEF > 0) sw++;
+	if (tile->su->h % MAP_TILESZ_DEF > 0) sh++;
 
 	MAP_AllocNodes(mapTmp, sw, sh);
 
-	mapTmp->xOrigin = tile->xOrig / MAPTILESZ;
-	mapTmp->yOrigin = tile->yOrig / MAPTILESZ;
+	mapTmp->xOrigin = tile->xOrig / MAP_TILESZ_DEF;
+	mapTmp->yOrigin = tile->yOrig / MAP_TILESZ_DEF;
 
-	for (sy=0, dy=0; sy < tile->su->h; sy += MAPTILESZ, dy++) {
-		for (sx=0, dx=0; sx < tile->su->w; sx += MAPTILESZ, dx++) {
+	for (sy=0, dy=0; sy < tile->su->h; sy += MAP_TILESZ_DEF, dy++) {
+		for (sx=0, dx=0; sx < tile->su->w; sx += MAP_TILESZ_DEF, dx++) {
 			MAP_Tile *mt;
 			int dw,dh, nlayer;
 
@@ -115,10 +120,10 @@ GenerateTileMap(MAP_InsertTool *_Nonnull tool, RG_Tile *_Nonnull tile)
 			mt = MAP_TileNew(mapTmp, &mapTmp->map[dy][dx],
 			                 tile->ts, tile->main_id);
 
-			mt->rs.x = dx * MAPTILESZ;
-			mt->rs.y = dy * MAPTILESZ;
-			mt->rs.w = (dw >= MAPTILESZ) ? MAPTILESZ : dw;
-			mt->rs.h = (dh >= MAPTILESZ) ? MAPTILESZ : dh;
+			mt->rs.x = dx * MAP_TILESZ_DEF;
+			mt->rs.y = dy * MAP_TILESZ_DEF;
+			mt->rs.w = (dw >= MAP_TILESZ_DEF) ? MAP_TILESZ_DEF : dw;
+			mt->rs.h = (dh >= MAP_TILESZ_DEF) ? MAP_TILESZ_DEF : dh;
 
 			MAPITEM(mt)->flags |= RG_TILE_ATTR2(tile,dx,dy);
 
@@ -136,10 +141,12 @@ GenerateTileMap(MAP_InsertTool *_Nonnull tool, RG_Tile *_Nonnull tile)
 		}
 	}
 }
+#endif
 
 static void
 EditPane(void *_Nonnull obj, void *_Nonnull con)
 {
+#if 0
 	MAP_InsertTool *tool = obj;
 	AG_TlistItem *it;
 	MAP_View *mvMain = TOOL(tool)->mv;
@@ -183,11 +190,13 @@ EditPane(void *_Nonnull obj, void *_Nonnull con)
 		    &tool->angle, 0, 360);
 		AG_SetInt(num, "inc", 90);
 	}
+#endif
 }
 
 static int
 Effect(void *_Nonnull obj, MAP_Node *_Nonnull node)
 {
+#if 0
 	MAP_InsertTool *tool = obj;
 	MAP_View *mv = TOOL(tool)->mv;
 	MAP *mapSrc = &tool->mTmp;
@@ -195,7 +204,7 @@ Effect(void *_Nonnull obj, MAP_Node *_Nonnull node)
 	AG_TlistItem *it;
 	int sx, sy, sx0, sy0, sx1, sy1;
 	int dx, dy, dx0, dy0;
-	const int tileSz = AGMTILESZ(mv);
+	const int tileSz = MAP_TILESZ(mv);
 	
 	if (mv->lib_tl == NULL ||
 	    (it = AG_TlistSelectedItem(mv->lib_tl)) == 0 ||
@@ -220,7 +229,7 @@ Effect(void *_Nonnull obj, MAP_Node *_Nonnull node)
 		dy0 = mv->cy - mapSrc->yOrigin;
 	}
 
-	MAP_ModBegin(mapDst);
+	MAP_BeginRevision(mapDst);
 	for (sy=sy0, dy=dy0;
 	     sy <= sy1 && dy < (int)mapDst->h;
 	     sy++, dy++) {
@@ -237,38 +246,40 @@ Effect(void *_Nonnull obj, MAP_Node *_Nonnull node)
 			sn = &mapSrc->map[sy][sx]; 
 			dn = &mapDst->map[dy][dx];
 			
-			MAP_ModNodeChg(mapDst, dx, dy);
+			MAP_NodeRevision(mapDst, dx,dy, map->undo, map->nUndo);
 
 			if (tool->replace_mode) {
-				MAP_NodeRemoveAll(mapDst, dn, mapDst->layerCur);
+				MAP_NodeClear(mapDst, dn, mapDst->layerCur);
 			}
 			TAILQ_FOREACH(miSrc, &sn->items, items) {
-				mi = MAP_NodeDuplicate(miSrc, mapDst, dn, -1);
+				mi = MAP_DuplicateItem(miSrc, mapDst, dn, -1);
 				mi->layer += mapDst->layerCur;
 				while (mi->layer >= mapDst->nLayers) {
 					if (MAP_PushLayer(mapDst, "") == 0)
-						MAP_ModLayerAdd(mapDst,
+						MAP_ChangeLayerAdd(mapDst,
 						    mapDst->nLayers - 1);
 				}
 				if (mi->type == MAP_ITEM_TILE &&
 				    tool->snap_mode == RG_SNAP_NONE) {
 					MAP_Tile *mt = MAPTILE(mi);
 
-					mt->xCenter += mv->cxoffs * MAPTILESZ
-					               / tileSz;
-					mt->yCenter += mv->cyoffs * MAPTILESZ
-					               / tileSz;
+					mt->xCenter += mv->cxoffs *
+					               MAP_TILESZ_DEF / tileSz;
+					mt->yCenter += mv->cyoffs *
+					               MAP_TILESZ_DEF / tileSz;
 				}
 			}
 		}
 	}
-	MAP_ModEnd(mapDst);
+	MAP_CommitRevision(mapDst);
+#endif
 	return (1);
 }
 
 static int
 Cursor(void *_Nonnull obj, AG_Rect *_Nonnull rd)
 {
+#if 0
 	MAP_InsertTool *tool = obj;
 	MAP_View *mv = TOOL(tool)->mv;
 	MAP *mapSrc = &tool->mTmp;
@@ -276,7 +287,7 @@ Cursor(void *_Nonnull obj, AG_Rect *_Nonnull rd)
 	RG_Tile *tile;
 	AG_Rect r;
 	AG_Color c;
-	const int tileSz = AGMTILESZ(mv);
+	const int tileSz = MAP_TILESZ(mv);
 	int sx0, sy0, sx1, sy1;
 	int dx0, dy0;
 	int dx, dy, sx, sy;
@@ -314,8 +325,8 @@ Cursor(void *_Nonnull obj, AG_Rect *_Nonnull rd)
 		dy0 = WIDGET(mv)->rView.y1 + rd->y - mapSrc->yOrigin * tileSz;
 	}
 	if (tool->snap_mode == RG_SNAP_NONE) {
-		dx0 += mv->cxoffs * MAPTILESZ / tileSz;
-		dy0 += mv->cyoffs * MAPTILESZ / tileSz;
+		dx0 += mv->cxoffs * MAP_TILESZ_DEF / tileSz;
+		dy0 += mv->cyoffs * MAP_TILESZ_DEF / tileSz;
 	}
 	for (sy = sy0, dy = dy0; sy <= sy1; sy++, dy += tileSz) {
 		for (sx = sx0, dx = dx0; sx <= sx1; sx++, dx += tileSz) {
@@ -326,6 +337,7 @@ Cursor(void *_Nonnull obj, AG_Rect *_Nonnull rd)
 				MAP_ItemDraw(mv->map, mi, dx,dy, mv->cam);
 		}
 	}
+#endif
 	return (0);
 }
 
@@ -346,7 +358,7 @@ MouseMotion(void *_Nonnull obj, int x, int y, int xrel, int yrel, int btn)
 {
 	MAP_InsertTool *tool = obj;
 	MAP_View *mv = TOOL(tool)->mv;
-	const int tileSz = AGMTILESZ(mv);
+	const int tileSz = MAP_TILESZ(mv);
 	const int nx = x / tileSz;
 	const int ny = y / tileSz;
 	AG_TlistItem *it;
@@ -360,17 +372,18 @@ MouseMotion(void *_Nonnull obj, int x, int y, int xrel, int yrel, int btn)
 	}
 	if (strcmp(it->cat, "tile") == 0) {
 		MAP_ToolSetStatus(tool,
-		    _("Insert %s tile at [%d,%d] ($(L)=Confirm, $(M)=Rotate)."),
+		    _("Insert %s tile at [%d,%d] (Click Left = Confirm | Middle = Rotate)."),
 		    it->text, mv->cx, mv->cy);
 	}
 	return (0);
 }
 
 const MAP_ToolOps mapInsertOps = {
-	"Insert", N_("Insert node element"),
+	"Insert",
+	N_("Insert static map item"),
 	&mapIconStamp,
 	sizeof(MAP_InsertTool),
-	TOOL_HIDDEN,
+	0,
 	1,
 	Init,
 	Destroy,

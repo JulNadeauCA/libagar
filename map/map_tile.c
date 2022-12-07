@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2021-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -222,12 +222,12 @@ Draw(MAP_View *_Nonnull mv, MAP_Item *_Nonnull mi, int rx, int ry, int ncam)
 	var->last_drawn = AG_GetTicks();
 
 #if 0
-	if (tileSz != MAPTILESZ) {
-		x = rx + mi->data.tile.xCenter * tileSz / MAPTILESZ +
-		         mi->data.tile.xMotion * tileSz / MAPTILESZ;
+	if (tileSz != MAP_TILESZ_DEF) {
+		x = rx + mi->data.tile.xCenter * tileSz / MAP_TILESZ_DEF +
+		         mi->data.tile.xMotion * tileSz / MAP_TILESZ_DEF;
 
-		y = ry + mi->data.tile.yCenter * tileSz / MAPTILESZ +
-		         mi->data.tile.yMotion * tileSz / MAPTILESZ;
+		y = ry + mi->data.tile.yCenter * tileSz / MAP_TILESZ_DEF +
+		         mi->data.tile.yMotion * tileSz / MAP_TILESZ_DEF;
 
 		BlitSurfaceScaled(m, su, &mi->data.tile.rs, x,y, cam);
 	} else {
@@ -251,13 +251,13 @@ Extent(MAP *map, void *mi, AG_Rect *rd, int ncam)
 //	if (RG_LookupTile(mt->obj, mt->id, NULL) == -1) {
 //		return (-1);
 //	}
-	if (tileSz != MAPTILESZ) {
-		rd->x = mt->xCenter * tileSz / MAPTILESZ +
-		        mt->xMotion * tileSz / MAPTILESZ;
-		rd->y = mt->yCenter * tileSz / MAPTILESZ +
-		        mt->yMotion * tileSz / MAPTILESZ;
-		rd->w = mt->rs.w * tileSz / MAPTILESZ;
-		rd->h = mt->rs.h * tileSz / MAPTILESZ;
+	if (tileSz != MAP_TILESZ_DEF) {
+		rd->x = mt->xCenter * tileSz / MAP_TILESZ_DEF +
+		        mt->xMotion * tileSz / MAP_TILESZ_DEF;
+		rd->y = mt->yCenter * tileSz / MAP_TILESZ_DEF +
+		        mt->yMotion * tileSz / MAP_TILESZ_DEF;
+		rd->w = mt->rs.w * tileSz / MAP_TILESZ_DEF;
+		rd->h = mt->rs.h * tileSz / MAP_TILESZ_DEF;
 	} else {
 		rd->x = mt->xCenter + mt->xMotion;
 		rd->y = mt->yCenter + mt->yMotion;

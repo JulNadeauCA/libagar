@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,11 +33,10 @@
 
 #include <agar/map/map.h>
 
-static int erase_all = 0;	/* XXX instance */
 static int all_layers = 0;
 
 static int
-DeleteNodeItems(MAP_Tool *_Nonnull tool, AG_KeySym key, int state, void *_Nullable arg)
+EraseSelection(MAP_Tool *_Nonnull tool, AG_KeySym key, int state, void *_Nullable arg)
 {
 	MAP_View *mv = tool->mv;
 	MAP *map = mv->map;
@@ -47,14 +46,23 @@ DeleteNodeItems(MAP_Tool *_Nonnull tool, AG_KeySym key, int state, void *_Nullab
 		for (x = 0; x < map->w; x++) {
 			MAP_Node *node = &map->map[y][x];
 			MAP_Item *mi;
+			Uint i;
 
 			TAILQ_FOREACH(mi, &node->items, items) {
-				if (mi->layer != map->layerCur ||
-				    mi->flags & MAP_ITEM_NOSAVE) {
+				if (mi->layer != map->layerCur) {
 					continue;
 				}
 				if (mi->flags & MAP_ITEM_SELECTED)
 					MAP_NodeDelItem(map, node, mi);
+			}
+			for (i = 0; i < node->nLocs; i++) {
+				MAP_Location *loc = &node->locs[i];
+				MAP_Object *mo = loc->obj;
+
+				if ((loc->flags & MAP_OBJECT_LOCATION_SELECTED) ||
+				     (mo->flags & MAP_OBJECT_SELECTED)) {
+					MAP_NodeDelLocation(map, node, loc);
+				}
 			}
 		}
 	}
@@ -64,21 +72,23 @@ DeleteNodeItems(MAP_Tool *_Nonnull tool, AG_KeySym key, int state, void *_Nullab
 static void
 Init(void *_Nonnull obj)
 {
-	MAP_ToolBindKey(obj, 0, AG_KEY_DELETE, DeleteNodeItems, NULL);
-	MAP_ToolPushStatus(obj, _("Select a node element and use $(L) to delete."));
+	MAP_ToolBindKey(obj, 0, AG_KEY_DELETE, EraseSelection, NULL);
+	MAP_ToolPushStatus(obj, _("Left-Click to Delete item under cursor. "
+	                          "Press DEL to Delete selection."));
 }
 
 static void
 EditPane(void *_Nonnull tool, void *_Nonnull box)
 {
-	AG_CheckboxNewInt(box, 0, _("Erase all elements"), &erase_all);
-	AG_CheckboxNewInt(box, 0, _("Apply to all layers"), &all_layers);
+	AG_CheckboxNewInt(box, 0, _("All layers"), &all_layers);
 }
 
 static int
 MouseButtonDown(void *_Nonnull obj, int x, int y, int btn)
 {
-	MAP_ModBegin(TOOL(obj)->mv->map);
+	if (btn == AG_MOUSE_LEFT) {
+		MAP_BeginRevision(TOOL(obj)->mv->map);
+	}
 	return (0);
 }
 
@@ -87,10 +97,12 @@ MouseButtonUp(void *_Nonnull obj, int x, int y, int btn)
 {
 	MAP *map = TOOL(obj)->mv->map;
 
-	if (map->nMods == 0) {
-		MAP_ModCancel(map);
+	if (btn == AG_MOUSE_LEFT) {
+		if (map->nChanges == 0) {
+			MAP_AbortRevision(map);
+		}
+		MAP_CommitRevision(map);
 	}
-	MAP_ModEnd(map);
 	return (0);
 }
 
@@ -101,8 +113,9 @@ Effect(void *_Nonnull obj, MAP_Node *_Nonnull node)
 	MAP *map = mv->map;
 	MAP_Item *mi;
 	int nChanges = 0;
+	Uint i;
 
-	MAP_ModNodeChg(map, mv->cx, mv->cy);
+	MAP_NodeRevision(map, mv->cx, mv->cy, map->undo, map->nUndo);
 
 	TAILQ_FOREACH(mi, &node->items, items) {
 		if (!all_layers &&
@@ -114,10 +127,22 @@ Effect(void *_Nonnull obj, MAP_Node *_Nonnull node)
 		free(mi);
 
 		nChanges++;
-
-		if (!erase_all)
-			break;
 	}
+
+del_locations:
+	for (i = 0; i < node->nLocs; i++) {
+		MAP_Location *loc = &node->locs[i];
+
+		if (!all_layers &&
+		    loc->layer != map->layerCur)
+			continue;
+
+		if (MAP_NodeDelLocationAtIndex(map, node, i)) {
+			nChanges++;
+			goto del_locations;	/* Operation changes locs[] */
+		}
+	}
+
 	return (nChanges);
 }
 

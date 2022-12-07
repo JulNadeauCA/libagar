@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2021 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Select tool. Allows the user to select nodes, items and objects.
+ * Implements Move, Copy/Paste and Clear.
+ */
+
 #include <agar/core/core.h>
 
 #include <agar/gui/gui.h>
@@ -34,7 +39,7 @@
 #include <agar/map/map.h>
 #include <agar/map/nodesel.h>
 
-/* Begin a rectangular selection of nodes. */
+/* Define a selection of nodes. */
 void
 MAP_NodeselBegin(MAP_View *mv)
 {
@@ -86,218 +91,239 @@ MAP_NodeselEnd(MAP_View *mv)
 
 	mv->esel.set = 1;
 
-	MAP_ViewStatus(mv, _("Selected area %d,%d (%dx%d)"),
-	    mv->esel.x, mv->esel.y, mv->esel.w, mv->esel.h);
+	MAP_ViewStatus(mv, _("Selected (%dx%d) nodes."),
+	    mv->esel.w, mv->esel.h);
 }
 
 /* Begin displacement of the node selection. */
 void
-MAP_NodeselBeginMove(MAP_View *mv)
+MAP_NodeselMoveBegin(MAP_View *mv)
 {
-	MAP *mapSrc = mv->map;
+	MAP *map = mv->map;
 	MAP *mapTmp = &mv->esel.map;
-	int sx,sy, x,y;
+	int x,y, xTmp,yTmp;
+	Uint layerCur;
+	const int xSel = mv->esel.x;
+	const int ySel = mv->esel.y;
+	const int wSel = mv->esel.w;
+	const int hSel = mv->esel.h;
 
-	AG_ObjectInit(mapTmp, &mapClass);
-	OBJECT(mapTmp)->flags |= AG_OBJECT_STATIC;
+	AG_ObjectInitStatic(mapTmp, &mapClass);
 
-	if (MAP_AllocNodes(mapTmp, mv->esel.w, mv->esel.h) == -1) {
-		goto fail;
+	if (MAP_AllocNodes(mapTmp, wSel,hSel) == -1) {
+		AG_ObjectDestroy(mapTmp);
+		return;
 	}
-	if (MAP_PushLayer(mapSrc, _("(Floating selection)")) == -1) {
-		goto fail;
-	}
-	MAP_ModBegin(mapSrc);
 
-	for (y = 0, sy = mv->esel.y;
-	     y < mv->esel.h;
-	     y++, sy++) {
-		for (x = 0, sx = mv->esel.x;
-		     x < mv->esel.w;
-		     x++, sx++) {
-			MAP_Node *nSrc = &mapSrc->map[sy][sx];
-			MAP_Node *nTmp = &mapTmp->map[y][x];
+	AG_ObjectLock(map);
 
-			MAP_ModNodeChg(mapSrc, sx, sy);
+	layerCur = map->layerCur;
+	
+	MAP_BeginRevision(map);
 
-			MAP_NodeCopy(mapSrc, nSrc, mapSrc->layerCur,
-			             mapTmp, nTmp, 0);
+	for (yTmp = 0, y = ySel;
+	     yTmp < hSel;
+	     yTmp++, y++) {
+		for (xTmp = 0, x = xSel;
+		     xTmp < wSel;
+		     xTmp++, x++) {
+			MAP_Node *nodeSrc = &map->map[y][x];
 
-			MAP_NodeSwapLayers(mapSrc, nSrc, mapSrc->layerCur,
-			                   mapSrc->nLayers - 1);
+			MAP_NodeRevision(map, x,y, map->undo, map->nUndo);
+			MAP_NodeCopy(mapTmp, &mapTmp->map[yTmp][xTmp], layerCur,
+			             nodeSrc, layerCur);
+			MAP_NodeClear(map, nodeSrc, layerCur);
 		}
 	}
 	
-	mv->esel.moving = 1;
-	return;
-fail:
-	AG_ObjectDestroy(mapTmp);
+	mv->esel.flags |= MAP_VIEW_SELECTION_MOVING;
+	mv->esel.xOrig = mv->esel.x;
+	mv->esel.yOrig = mv->esel.y;
+
+	AG_ObjectUnlock(map);
 }
 
 void
-MAP_NodeselUpdateMove(MAP_View *mv, int xRel, int yRel)
+MAP_NodeselMoveUpdate(MAP_View *mv, int xRel, int yRel)
 {
-	MAP *mapDst = mv->map;
-	MAP *mapTmp = &mv->esel.map;
-	int x,y, dx,dy;
-
-	if (mv->esel.x+xRel < 0 || mv->esel.x+mv->esel.w+xRel > (int)mapDst->w)
-		xRel = 0;
-	if (mv->esel.y+yRel < 0 || mv->esel.y+mv->esel.h+yRel > (int)mapDst->h)
-		yRel = 0;
-	
-	for (y = 0, dy = mv->esel.y;
-	     y < mv->esel.h;
-	     y++, dy++) {
-		for (x = 0, dx = mv->esel.x;
-		     x < mv->esel.w;
-		     x++)
-			MAP_NodeRemoveAll(mapDst, &mapDst->map[dy][dx],
-			                  mapDst->nLayers-1);
-	}
-
-	for (y = 0, dy = mv->esel.y+yRel;
-	     y < mv->esel.h;
-	     y++, dy++) {
-		for (x = 0, dx = mv->esel.x+xRel;
-		     x < mv->esel.w;
-		     x++, dx++) {
-			MAP_Node *nTmp = &mapTmp->map[y][x];
-			MAP_Node *nDst = &mapDst->map[dy][dx];
-	
-			MAP_ModNodeChg(mapDst, dx, dy);
-
-			MAP_NodeCopy(mapTmp, nTmp, 0, mapDst, nDst,
-			             mapDst->nLayers - 1);
-		}
-	}
-	
 	mv->esel.x += xRel;
 	mv->esel.y += yRel;
+
+	if (mv->esel.x + mv->esel.w >= mv->map->w)
+		mv->esel.x = mv->map->w - mv->esel.w;
+	if (mv->esel.x < 0)
+		mv->esel.x = 0;
+
+	if (mv->esel.y + mv->esel.h >= mv->map->h)
+		mv->esel.y = mv->map->h - mv->esel.h;
+	if (mv->esel.y < 0)
+		mv->esel.y = 0;
+
+	MAP_ViewStatus(mv, _("Move (%dx%d) nodes to ["
+	                     AGSI_BOLD "%d,%d" AGSI_RST "]."),
+	    mv->esel.w, mv->esel.h,
+	    mv->esel.x, mv->esel.y);
 }
 
 void
-MAP_NodeselEndMove(MAP_View *mv)
+MAP_NodeselMoveEnd(MAP_View *mv)
 {
-	MAP *mapDst = mv->map;
+	MAP *map = mv->map;
 	MAP *mapTmp = &mv->esel.map;
-	int dx,dy, x,y;
+	int x,y, xDst,yDst;
+	const Uint layerCur = map->layerCur;
+	const int hSel = mv->esel.h;
+	const int wSel = mv->esel.w;
+	const int xSel = mv->esel.x;
+	const int ySel = mv->esel.y;
 
-	for (y = 0, dy = mv->esel.y;
-	     y < mv->esel.h;
-	     y++, dy++) {
-		for (x = 0, dx = mv->esel.x;
-		     x < mv->esel.w;
-		     x++, dx++) {
-			MAP_Node *node = &mapDst->map[dy][dx];
-			MAP_Item *mi;
+	for (y=0, yDst=ySel;
+	     y < hSel;
+	     y++, yDst++) {
+		for (x=0, xDst=xSel;
+		     x < wSel;
+		     x++, xDst++) {
+			MAP_Node *nodeDst = &map->map[yDst][xDst];
 
-			TAILQ_FOREACH(mi, &node->items, items)
-				if (mi->layer == mapDst->nLayers-1)
-					mi->layer = mapDst->layerCur;
+			MAP_NodeRevision(map, xDst,yDst, map->undo, map->nUndo);
+			MAP_NodeClear(map, nodeDst, layerCur);
+			MAP_NodeCopy(map, nodeDst, layerCur,
+			    &mapTmp->map[y][x], layerCur);
 		}
 	}
 
-	MAP_PopLayer(mapDst);
-	MAP_ModEnd(mapDst);
-	
-	AG_ObjectReset(mapTmp);
+	MAP_CommitRevision(map);
+
 	AG_ObjectDestroy(mapTmp);
-	mv->esel.moving = 0;
+
+	mv->esel.flags &= ~(MAP_VIEW_SELECTION_MOVING);
+	mv->esel.flags |= MAP_VIEW_SELECTION_MOVED;
+
+	MAP_ViewStatus(mv, _("Moved (%dx%d) nodes to ["
+	                     AGSI_BOLD "%d,%d" AGSI_RST "]."),
+	    wSel,hSel, xSel,ySel);
 }
 
-/* Copy the selection to the copy buffer. */
+/* Copy the selection to the map clipboard. */
 int
 MAP_NodeselCopy(MAP_Tool *tool, AG_KeySym key, int state, void *arg)
 {
+	MAP_NodeselTool *selTool = (MAP_NodeselTool *)tool;
 	MAP_View *mv = tool->mv;
-	MAP *mapBuf = &mapEditor.copybuf;
-	MAP *mapDst = mv->map;
-	int sx,sy, dx,dy;
+	MAP *map = mv->map, *mapCopy = &selTool->mapCopy;
+	int xSrc,ySrc, x,y;
+	const int xSel = mv->esel.x;
+	const int ySel = mv->esel.y;
+	const int wSel = mv->esel.w;
+	const int hSel = mv->esel.h;
 
 	if (!mv->esel.set) {
 		AG_TextMsg(AG_MSG_ERROR, _("There is no selection to copy."));
 		return (0);
 	}
-	if (mapBuf->map != NULL) {
-		MAP_FreeNodes(mapBuf);
+	if (mapCopy->map != NULL) {
+		MAP_FreeNodes(mapCopy);
 	}
-	if (MAP_AllocNodes(mapBuf, mv->esel.w, mv->esel.h) == -1) {
+	if (MAP_AllocNodes(mapCopy, wSel,hSel) == -1) {
 		AG_TextMsgFromError();
 		return (0);
 	}
 
-	for (sy = mv->esel.y, dy = 0;
-	     sy < mv->esel.y + mv->esel.h;
-	     sy++, dy++) {
-		for (sx = mv->esel.x, dx = 0;
-		     sx < mv->esel.x + mv->esel.w;
-		     sx++, dx++)
-			MAP_NodeCopy(mapDst, &mapDst->map[sy][sx], mapDst->layerCur,
-			             mapBuf, &mapBuf->map[dy][dx], 0);
+	for (ySrc=ySel, y=0;
+	     ySrc < ySel+hSel;
+	     ySrc++, y++) {
+		for (xSrc=xSel, x=0;
+		     xSrc < xSel+wSel;
+		     xSrc++, x++)
+			MAP_NodeCopy(map, &map->map[ySrc][xSrc], map->layerCur,
+			    &mapCopy->map[y][x], 0);
 	}
+
+	MAP_ViewStatus(mv, _("Copied (%dx%d) nodes to clipboard."), wSel,hSel);
 	return (1);
 }
 
 int
 MAP_NodeselPaste(MAP_Tool *tool, AG_KeySym key, int state, void *arg)
 {
+	MAP_NodeselTool *selTool = (MAP_NodeselTool *)tool;
 	MAP_View *mv = tool->mv;
-	MAP *mapBuf = &mapEditor.copybuf;
-	MAP *mapDst = mv->map;
-	int sx, sy, dx, dy;
+	MAP *map = mv->map, *mapCopy = &selTool->mapCopy;
+	const int wCopy = (int)mapCopy->w;
+	const int hCopy = (int)mapCopy->h;
+	const int wDst = (int)map->w;
+	const int hDst = (int)map->h;
+	const int xSel = mv->esel.x;
+	const int ySel = mv->esel.y;
+	int xSrc,ySrc, x,y;
 	
-	if (mapBuf->map == NULL) {
+	if (mapCopy->map == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, _("The copy buffer is empty!"));
 		return (0);
 	}
 
 	if (mv->esel.set) {
-		dx = mv->esel.x;
-		dy = mv->esel.y;
+		x = xSel;
+		y = ySel;
 	} else {
 		if (mv->cx != -1 && mv->cy != -1) {
-			dx = mv->cx;
-			dy = mv->cy;
+			x = mv->cx;
+			y = mv->cy;
 		} else {
-			dx = 0;
-			dy = 0;
+			x = 0;
+			y = 0;
 		}
 	}
 
-	Debug(mapDst, "Pasting [%dx%d] map at [%d,%d]\n", mapBuf->w,
-	    mapBuf->h, dx, dy);
+	Debug(map, "Pasting [%dx%d] map at [%d,%d]\n", wCopy,hCopy, x,y);
 
-	for (sy = 0, dy = mv->esel.y;
-	     sy < (int)mapBuf->h && dy < (int)mapDst->h;
-	     sy++, dy++) {
-		for (sx = 0, dx = mv->esel.x;
-		     sx < (int)mapBuf->w && dx < (int)mapDst->w;
-		     sx++, dx++)
-			MAP_NodeCopy(mapBuf, &mapBuf->map[sy][sx], 0,
-			             mapDst, &mapDst->map[dy][dx],
-			             mapDst->layerCur);
+	MAP_BeginRevision(map);
+
+	for (ySrc=0, y=ySel;
+	     ySrc < hCopy && y < hDst;
+	     ySrc++, y++) {
+		for (xSrc=0, x=xSel;
+		     xSrc < wCopy && x < wDst;
+		     xSrc++, x++) {
+			MAP_NodeRevision(map, x,y, map->undo, map->nUndo);
+			MAP_NodeCopy(map, &map->map[y][x], map->layerCur,
+			    &mapCopy->map[ySrc][xSrc], 0);
+		}
 	}
+
+	MAP_CommitRevision(map);
+
+	MAP_ViewStatus(mv, _("Pasted (%dx%d) nodes from clipboard."), wCopy,hCopy);
 	return (1);
 }
 
 int
-MAP_NodeselKill(MAP_Tool *tool, AG_KeySym key, int state, void *arg)
+MAP_NodeselClear(MAP_Tool *tool, AG_KeySym key, int state, void *arg)
 {
 	MAP_View *mv = tool->mv;
 	MAP *map = mv->map;
+	const int xSel = mv->esel.x;
+	const int ySel = mv->esel.y;
+	const int wSel = mv->esel.w;
+	const int hSel = mv->esel.h;
 	int x, y;
 
 	if (!mv->esel.set)
 		return (0);
 	
-	Debug(map, "Deleting region [%d,%d]+[%d,%d]\n", mv->esel.x, mv->esel.y,
-	    mv->esel.w, mv->esel.h);
+	MAP_BeginRevision(map);
 
-	for (y = mv->esel.y; y < mv->esel.y + mv->esel.h; y++) {
-		for (x = mv->esel.x; x < mv->esel.x + mv->esel.w; x++)
-			MAP_NodeRemoveAll(map, &map->map[y][x], map->layerCur);
+	for (y = ySel; y < ySel + hSel; y++) {
+		for (x = xSel; x < xSel + wSel; x++) {
+			MAP_NodeRevision(map, x,y, map->undo, map->nUndo);
+			MAP_NodeClear(map, &map->map[y][x], map->layerCur);
+		}
 	}
+	MAP_ViewStatus(mv, _("Cleared (%dx%d) nodes at "
+	                     "[" AGSI_BOLD "%d,%d" AGSI_RST "]."),
+	    wSel,hSel, xSel,ySel);
+
+	MAP_CommitRevision(map);
 	return (1);
 }
 
@@ -311,32 +337,49 @@ MAP_NodeselCut(MAP_Tool *tool, AG_KeySym key, int state, void *arg)
 		return (0);
 	}
 	MAP_NodeselCopy(tool, 0, 1, NULL);
-	MAP_NodeselKill(tool, 0, 1, NULL);
+	MAP_NodeselClear(tool, 0, 1, NULL);	/* Will create undo level */
+
+	MAP_ViewStatus(mv, _("Cut (%dx%d) nodes at "
+	                     "[" AGSI_BOLD "%d,%d" AGSI_RST "]."),
+	    mv->esel.w, mv->esel.h, mv->esel.x, mv->esel.y);
 	return (1);
 }
 
 static void
 Init(void *_Nonnull tool)
 {
+	MAP_NodeselTool *selTool = (MAP_NodeselTool *)tool;
+
+	/* Initialize the copy buffer (clipboard). */
+	AG_ObjectInitStatic(&selTool->mapCopy, &mapClass);
+
 	MAP_ToolBindKey(tool, AG_KEYMOD_CTRL, AG_KEY_C,      MAP_NodeselCopy,  NULL);
 	MAP_ToolBindKey(tool, AG_KEYMOD_CTRL, AG_KEY_V,      MAP_NodeselPaste, NULL);
 	MAP_ToolBindKey(tool, AG_KEYMOD_CTRL, AG_KEY_X,      MAP_NodeselCut,   NULL);
-	MAP_ToolBindKey(tool, AG_KEYMOD_CTRL, AG_KEY_K,      MAP_NodeselKill,  NULL);
-	MAP_ToolBindKey(tool, 0,              AG_KEY_DELETE, MAP_NodeselKill,  NULL);
+	MAP_ToolBindKey(tool, AG_KEYMOD_CTRL, AG_KEY_K,      MAP_NodeselClear, NULL);
+	MAP_ToolBindKey(tool, 0,              AG_KEY_DELETE, MAP_NodeselClear, NULL);
 	
 	MAP_ToolPushStatus(tool,
-	    _("Select a rectangle of nodes with $(L). Drag to displace node "
-	       "elements."));
+	    _("Select a rectangle of nodes with Left-Click and drag elements "
+	      "to move them."));
+}
+
+static void
+Destroy(void *_Nonnull tool)
+{
+	MAP_NodeselTool *selTool = (MAP_NodeselTool *)tool;
+
+	AG_ObjectDestroy(&selTool->mapCopy);
 }
 
 const MAP_ToolOps mapNodeselOps = {
 	"Nodesel", N_("Select node(s)"),
 	&mapIconSelectNode,
-	sizeof(MAP_Tool),
+	sizeof(MAP_NodeselTool),
 	0,
 	1,
 	Init,
-	NULL,			/* destroy */
+	Destroy,
 	NULL,			/* pane */
 	NULL,			/* edit */
 	NULL,			/* cursor */

@@ -14,6 +14,14 @@ struct ag_label;
 struct ag_tlist;
 struct ag_scrollbar;
 
+enum map_view_mode {
+	MAP_VIEW_EDITION,	/* Read/write edition */
+	MAP_VIEW_EDIT_ATTRS,	/* Editing node attributes */
+	MAP_VIEW_EDIT_ORIGIN,	/* Moving origin node */
+	MAP_VIEW_PLAY,		/* Playing */
+	MAP_VIEW_MODE_LAST
+};
+
 typedef struct map_view_draw_cb {
 	void (*_Nonnull func)(struct map_view *_Nonnull, void *_Nullable);
 	void *_Nullable p;
@@ -35,15 +43,9 @@ typedef struct map_view {
 #define MAP_VIEW_SHOW_ORIGIN   0x200	/* Show map origin node */
 #define MAP_VIEW_NO_SCROLLBARS 0x400	/* Disable scrollbars */
 
-	enum map_view_mode {
-		MAP_VIEW_EDITION,	/* Default edition mode */
-		MAP_VIEW_EDIT_ATTRS,	/* Editing node attributes */
-		MAP_VIEW_EDIT_ORIGIN,	/* Moving origin node */
-		MAP_VIEW_PLAY		/* Playing mode */
-	} mode;
-
-	Uint edit_attr;			/* Attribute being edited */
-	int attr_x, attr_y;
+	enum map_view_mode mode;	/* Edition mode */
+	Uint edit_attr;			/* Attribute being edited (EDIT_ATTRS) */
+	int attr_x, attr_y;		/* Node of last attribute toggle (EDIT_ATTRS */
 
 	int wPre, hPre;			/* Prescaling (nodes) */
 
@@ -62,19 +64,18 @@ typedef struct map_view {
 #if AG_MODEL == AG_LARGE
 	Uint32 _pad1;
 #endif
-	struct {			/* Effective map selection */
-		int set;		/* Selection is set */
-		int moving;		/* Nodes are being displaced */
+	struct {
+		int set;		/* Effective selection is defined */
+		Uint flags;
+#define MAP_VIEW_SELECTION_MOVING 0x01	/* Selection is being moved */
+#define MAP_VIEW_SELECTION_MOVED  0x02	/* Selection has been moved */
 		MAP map;		/* Temporary copy of the nodes */
 		int x, y;		/* Origin of the rectangle */
 		int w, h;		/* Dimensions of the rectangle */
+		int xOrig, yOrig;	/* Original position (if MOVING) */
 	} esel;
-	struct {			/* Node item selection */
-		int moving;		/* Node item(s) are in motion */
-	} rsel;
-	Uint32 _pad2;
-	MAP       *_Nullable map;	/* Active map */
-	MAP_Actor *_Nullable actor;	/* Selected actor */
+
+	MAP *_Nullable map;		/* Agar MAP(3) to display */
 
 	int cam;			/* Name of map camera to use */
 	int mx, my;			/* Display offset (nodes) */
@@ -114,10 +115,10 @@ typedef struct map_view {
 #define MAP_CONST_VIEW_PTR(n)   MAPCVIEW( AG_CONST_OBJECT((n),"AG_Widget:MAP_View:*") )
 #define MAP_CONST_VIEW_NAMED(n) MAPCVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:MAP_View:*") )
 
-#define AGMCAM(mv)	(mv)->map->cameras[(mv)->cam]
-#define AGMZOOM(mv)	AGMCAM(mv).zoom
-#define AGMTILESZ(mv)	AGMCAM(mv).tilesz
-#define AGMPIXSZ(mv)	AGMCAM(mv).pixsz
+#define MAP_CAM(mv)	(mv)->map->cameras[(mv)->cam]
+#define MAP_ZOOM(mv)	MAP_CAM(mv).zoom
+#define MAP_TILESZ(mv)	MAP_CAM(mv).tilesz
+#define MAP_PIXELSZ(mv)	MAP_CAM(mv).pixsz
 
 __BEGIN_DECLS
 extern AG_WidgetClass mapViewClass;
@@ -143,7 +144,6 @@ void MAP_ViewUpdateCamera(MAP_View *_Nonnull);
 
 void MAP_ViewStatus(MAP_View *_Nonnull, const char *_Nonnull, ...);
 void MAP_ViewSetMode(MAP_View *_Nonnull, enum map_view_mode);
-void MAP_ViewControl(MAP_View *_Nonnull, const char *_Nonnull, void *_Nonnull);
 
 MAP_Tool *_Nonnull  MAP_ViewRegTool(MAP_View *_Nonnull,
                                     const MAP_ToolOps *_Nonnull, void *_Nullable);

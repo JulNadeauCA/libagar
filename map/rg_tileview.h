@@ -82,11 +82,8 @@ typedef struct rg_tileview_tool_ops {
 	const char *_Nonnull name;	/* Name of tool */
 	const char *_Nonnull desc;	/* Tool description */
 	AG_Size len;			/* Size of structure */
-#if AG_MODEL == AG_LARGE
-	Uint64 flags;
-#else
+	AG_SIZE_PADDING(_pad);
 	Uint flags;
-#endif
 	AG_StaticIcon *_Nullable icon;	/* Display icon */
 	int cursor;			/* Autoset cursor (or -1) */
 	AG_KeySym hotkey;		/* Keyboard shortcut (or NONE) */

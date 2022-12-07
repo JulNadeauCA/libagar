@@ -37,37 +37,54 @@
 #include <agar/map.h>
 .Ed
 .Sh DESCRIPTION
-The
+The Agar
 .Nm
-interface implements a two-dimensional map of fixed-size tiles, which are
-stacks of elements 
-Element types include:
+library implements a map of fixed-size tiles which allow different
+elements to be stacked.
+Built-in element types include:
 .Pp
 .Bl -tag -width "MAP_ITEM_TILE " -compact
 .It MAP_ITEM_TILE
-Pointer to a
-.Xr RG_Tile 3 .
-.It MAP_ITEM_WARP
-Pointer to some other node, possibly on another map.
-This is commonly used by
-.Xr MAP_Actor 3
-objects.
+Graphical surface (rendered
+.Xr RG_Tile 3
+element).
+.It MAP_ITEM_IMG
+Graphical surface (image file reference).
+.It MAP_ITEM_LINK
+Reference to some other node, possibly on another map.
 .El
 .Pp
-Graphical elements define two displacements in pixels of the image from
-the tile's origin, the
+In addition to the built-in (static) elements, dynamic map objects
+(instances of
+.Xr MAP_Object 3
+or subclasses thereof) may be attached to the
+.Nm
+and in the case of graphical elements, rendered either in 2D or 3D.
+.Sh GRAPHICAL TILES
+For 3D purposes, graphical tiles define a height
+.Va h
+and a
+.Va z
+coordinate (where z = 0 is referred to as the
+.Em standard plane
+of the map).
+.Pp
+Graphical tiles also define two 2D displacements (in pixels) of the image
+from the tile's origin, a
 .Em centering offset
+typically set by the developer as part of the design (although usable
+programmatically to produce effects),
 and the
-.Em motion offset.
+.Em motion offset
+for real-time animation purposes.
+If the map is drawn to a different scale than 1:1, the centering offset will
+be scaled to the new tile size, but the motion offset will not.
 .Pp
-The centering offset is typically assigned by a level designer, and the
-motion offset is for animation purposes.
-If the map is drawn scaled, the centering offset is scaled to the
-tile size, but the motion offset is not.
-.Pp
-Graphical elements provide the renderer with a list of graphical transformations
-that should be applied before the tile is drawn (the resulting tile is cached).
-A per-element layer attribute also defines the attributed layer.
+A chain of graphical transformations can be applied per tile.
+The rendering engine (i.e., the
+.Xr MAP_View 3
+widget) will maintain a cache of transformed tiles in graphics memory
+for best efficiency.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
@@ -101,9 +118,12 @@ The maximum allowable geometry is defined by
 .Dv MAP_WIDTH_MAX
 and
 .Dv MAP_HEIGHT_MAX .
+.Pp
+The
 .Fn MAP_FreeNodes
-releases the nodes allocated by
+routine releases the nodes allocated by
 .Fa map .
+The map must be locked.
 .Pp
 .Fn MAP_Resize
 reallocates the nodes arrays, initializing the new nodes and
@@ -230,34 +250,9 @@ of
 .Fa targetMap .
 This is the pathname of the destination map (as returned by
 .Fn AG_ObjectCopyName ) .
-.Sh ACTORS
-.nr nS 1
-.Ft void
-.Fn MAP_AttachActor "MAP *map" "MAP_Actor *actor"
-.Pp
-.Ft void
-.Fn MAP_DetachActor "MAP *map" "MAP_Actor *actor"
-.Pp
-.nr nS 0
-.Fn MAP_AttachActor
-attaches the given actor
-to the map.
-An object dependency is automatically created, and the
-.Va map
-operation of the actor is invoked.
-This operation is usually responsible for inserting tiles onto the map.
-.Pp
-.Fn MAP_DetachActor
-detaches the given actor from the map.
-Any pending timer events related to the actor are cancelled, tiles
-related to the actor are removed and the object dependency is removed.
-.Pp
-See
-.Xr MAP_Actor 3
-for more information.
 .Sh SEE ALSO
 .Xr AG_Object 3 ,
-.Xr MAP_Actor 3 ,
+.Xr MAP_Object 3 ,
 .Xr MAP_View 3 ,
 .Xr SG_Intro 3
 .Sh HISTORY

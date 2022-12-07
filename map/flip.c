@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2021 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,7 @@ static void
 Init(void *_Nonnull obj)
 {
 	MAP_ToolPushStatus(obj,
-	    _("Select element and use $(L)=Mirror, $(R)=Flip"));
+	    _("Select an element and Left Click to Mirror or Right Click to Flip."));
 }
 
 static void
@@ -83,14 +83,14 @@ MouseButtonDown(void *_Nonnull obj, int xMap, int yMap, int b)
 			return (0);
 	}
 
-	MAP_ModBegin(map);
+	MAP_BeginRevision(map);
 
 	for (y = ySel; y < ySel+h; y++) {
 		for (x = xSel ; x < xSel+w; x++) {
 			MAP_Node *node = &map->map[y][x];
 			MAP_Item *mi;
 
-			MAP_ModNodeChg(map, x,y);
+			MAP_NodeRevision(map, x,y, map->undo, map->nUndo);
 			
 			TAILQ_FOREACH(mi, &node->items, items) {
 				if (mi->layer != map->layerCur)
@@ -105,7 +105,7 @@ MouseButtonDown(void *_Nonnull obj, int xMap, int yMap, int b)
 		}
 	}
 
-	MAP_ModEnd(map);
+	MAP_CommitRevision(map);
 	return (1);
 }
 

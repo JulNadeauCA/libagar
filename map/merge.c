@@ -109,9 +109,7 @@ CreateBrush(AG_Event *_Nonnull event)
 
 	m = MAP_New(NULL, mapName);
 	if (AG_ObjectLoad(m) == -1) {
-		extern int mapDefaultBrushWidth, mapDefaultBrushHeight;
-
-		if (MAP_AllocNodes(map, mapDefaultBrushWidth, mapDefaultBrushHeight) == -1) {
+		if (MAP_AllocNodes(map, 4,4) == -1) {
 			AG_TextMsg(AG_MSG_ERROR, "MAP_AllocNodes: %s", AG_GetError());
 			goto fail;
 		}
@@ -294,13 +292,14 @@ Save(MAP_Tool *_Nonnull t, AG_DataSource *_Nonnull buf)
 static int
 Cursor(MAP_Tool *_Nonnull t, AG_Rect *_Nonnull rd)
 {
+#if 0
 	MERGE_Tool *mt = t;
 	MAP_View *mv = t->mv;
 	MAP *map = mv->map, *mapSrc;
 	AG_TlistItem *it;
 	int sx,sy, dx,dy;
 	int rv = -1;
-	const int tileSz = AGMTILESZ(mv);
+	const int tileSz = MAPTILESZ(mv);
 	
 	/* XXX ugly work around circular ref */
 	if (strncmp(OBJECT(map)->name, "brush(", 6) == 0)
@@ -334,6 +333,9 @@ Cursor(MAP_Tool *_Nonnull t, AG_Rect *_Nonnull rd)
 		}
 	}
 	return (rv);
+#else
+	return (-1);
+#endif
 }
 
 static void

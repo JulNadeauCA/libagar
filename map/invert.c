@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,13 +36,13 @@
 static void
 Init(void *_Nonnull p)
 {
-	MAP_ToolPushStatus(p, _("Specify element and $(L) to invert."));
+	MAP_ToolPushStatus(p, _("Select an element and Left-Click to Invert."));
 }
 
 static int
 MouseButtonDown(void *_Nonnull p, int x, int y, int btn)
 {
-	MAP_ModBegin(TOOL(p)->mv->map);
+	MAP_BeginRevision(TOOL(p)->mv->map);
 	return (0);
 }
 
@@ -53,10 +53,10 @@ MouseButtonUp(void *_Nonnull p, int x, int y, int btn)
 	MAP_View *mv = t->mv;
 	MAP *m = mv->map;
 
-	if (m->nMods == 0) {
-		MAP_ModCancel(m);
+	if (m->nChanges == 0) {
+		MAP_AbortRevision(m);
 	}
-	MAP_ModEnd(m);
+	MAP_CommitRevision(m);
 	return (0);
 }
 
@@ -69,7 +69,7 @@ Effect(void *_Nonnull p, MAP_Node *_Nonnull node)
 	RG_Transform *xf;
 	int nChanges = 0;
 
-	MAP_ModNodeChg(map, mv->cx, mv->cy);
+	MAP_NodeRevision(map, mv->cx, mv->cy, map->undo, map->nUndo);
 
 	TAILQ_FOREACH(mi, &node->items, items) {
 		if (mi->layer != map->layerCur)
