@@ -349,7 +349,7 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 			AG_SetStyleF(win, "background-color", "rgb16(%d,%d,%d)",
 			    cMenu.r, cMenu.g, cMenu.b);
 #else
-			AG_SetStyleF(win, "background-color", "rgb8(%d,%d,%d)",
+			AG_SetStyleF(win, "background-color", "rgb(%d,%d,%d)",
 			    cMenu.r, cMenu.g, cMenu.b);
 #endif
 		}
