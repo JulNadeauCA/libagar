@@ -201,13 +201,14 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 	if (com->wSaved > 0) {
 		w = com->wSaved;
 		h = com->hSaved;
-	} else {
+	} else if (com->list != NULL) {
 		AG_SizeReq rList;
 
 		if (com->wPreList != -1 && com->hPreList != -1) {
-			AG_TlistSizeHintPixels(tl, com->wPreList, com->hPreList);
+			AG_TlistSizeHintPixels(com->list, com->wPreList,
+			    com->hPreList);
 		}
-		AG_WidgetSizeReq(tl, &rList);
+		AG_WidgetSizeReq(com->list, &rList);
 		w = rList.w + WIDGET(win)->paddingLeft + WIDGET(win)->paddingRight + (win->wBorderSide << 1);
 		h = rList.h + WIDGET(win)->paddingTop + WIDGET(win)->paddingBottom +  win->wBorderBot;
  	}
