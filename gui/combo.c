@@ -211,7 +211,9 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 		AG_WidgetSizeReq(com->list, &rList);
 		w = rList.w + WIDGET(win)->paddingLeft + WIDGET(win)->paddingRight + (win->wBorderSide << 1);
 		h = rList.h + WIDGET(win)->paddingTop + WIDGET(win)->paddingBottom +  win->wBorderBot;
- 	}
+ 	} else {
+		goto out;
+	}
 	x = WIDGET(com)->rView.x2 - w;
 	y = WIDGET(com)->rView.y1;
 	AG_GetDisplaySize(WIDGET(com)->drv, &wView, &hView);
