@@ -1457,14 +1457,14 @@ MouseButtonDown(AG_Event *_Nonnull event)
 
 	switch (button) {
 	case AG_MOUSE_WHEELUP:
-		tl->rOffs -= AG_GetInt(tl,"line-scroll-amount");
+		tl->rOffs -= tl->lineScrollAmount;
 		if (tl->rOffs < 0) {
 			tl->rOffs = 0;
 		}
 		AG_Redraw(tl);
 		break;
 	case AG_MOUSE_WHEELDOWN:
-		tl->rOffs += AG_GetInt(tl,"line-scroll-amount");
+		tl->rOffs += tl->lineScrollAmount;
 		if (tl->rOffs > (tl->nItems - tl->nVisible)) {
 			tl->rOffs = MAX(0, tl->nItems - tl->nVisible);
 		}
@@ -1692,6 +1692,7 @@ Init(void *_Nonnull obj)
 	tl->changedEv = NULL;
 	tl->dblClickEv = NULL;
 	tl->lastKeyDown = AG_KEY_NONE;
+	tl->lineScrollAmount = 5;
 
 	AG_InitTimer(&tl->moveTo, "move", 0);
 	AG_InitTimer(&tl->refreshTo, "refresh", 0);
@@ -1704,8 +1705,6 @@ Init(void *_Nonnull obj)
 	AG_BindInt(tl->sbar, "value", &tl->rOffs);
 	AG_WidgetSetFocusable(tl->sbar, 0);
 	
-	AG_SetInt(tl, "line-scroll-amount", 5);
-
 	AG_AddEvent(tl, "padding-changed", StyleChanged, NULL);
 	AG_AddEvent(tl, "palette-changed", StyleChanged, NULL);
 	AG_AddEvent(tl, "font-changed",  StyleChanged, NULL);

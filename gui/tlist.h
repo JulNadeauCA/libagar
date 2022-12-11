@@ -100,7 +100,7 @@ typedef struct ag_tlist {
 	AG_Event *_Nullable popupEv;    /* Popup menu hook */
 	AG_Event *_Nullable changedEv;  /* Selection change hook */
 	AG_Event *_Nullable dblClickEv; /* Double click hook */
-	Uint32 _pad2;
+	int lineScrollAmount;
 	int lastKeyDown;                /* For key repeat */
 	AG_Timer moveTo;                /* Timer for keyboard motion */
 	AG_Timer refreshTo;             /* Timer for polled mode updates */
