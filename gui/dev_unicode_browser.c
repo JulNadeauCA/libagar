@@ -229,7 +229,7 @@ ExpandUnicodeRanges(AG_Event *event)
 
 		ti = AG_TlistAdd(tl, NULL,
 		    "(" AGSI_COURIER "0x%04lx" AGSI_RST ") %s",
-		    unicodeRanges[i].start,
+		    (Ulong)unicodeRanges[i].start,
 		    unicodeRanges[i].name);
 		ti->p1 = (void *)&unicodeRanges[i];
 	}

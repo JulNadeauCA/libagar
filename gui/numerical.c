@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -468,7 +468,7 @@ ButtonIncrement(AG_Event *_Nonnull event)
 int
 AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unitKey)
 {
-	const AG_Unit *unit, *unitGroup;
+	const AG_Unit *unit = NULL, *unitGroup = NULL;
 	const int wPadding = 8;				/* TODO style */
 	const int hPadding = 2;
 	int i;
