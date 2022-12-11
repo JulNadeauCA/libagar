@@ -730,6 +730,7 @@ AG_About(AG_Event *event)
 			s = Malloc((AG_Size)size + 1);
 			ret = fread(s, (size_t)size, 1, f);
 		} else {
+			s = NULL;
 			ret = 0;
 		}
 		fclose(f);
