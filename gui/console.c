@@ -155,7 +155,7 @@ ScrollUp(AG_Event *_Nonnull event)
 		ScrollLeft(event);
 		return;
 	}
-	newOffs = cons->rOffs - AG_GetInt(cons,"line-scroll-amount");
+	newOffs = cons->rOffs - cons->lineScrollAmount;
 	cons->rOffs = MAX(0,newOffs);
 	AG_Redraw(cons);
 }
@@ -175,7 +175,7 @@ ScrollDown(AG_Event *_Nonnull event)
 	if (maxOffs < 0) {
 		return;
 	}
-	newOffs = cons->rOffs + AG_GetInt(cons,"line-scroll-amount");
+	newOffs = cons->rOffs + cons->lineScrollAmount;
 	cons->rOffs = MIN(newOffs,maxOffs);
 	AG_Redraw(cons);
 }
@@ -689,6 +689,7 @@ Init(void *_Nonnull obj)
 	cons->flags = 0;
 	cons->xOffs = 0;
 	cons->lines = NULL;
+	cons->lineScrollAmount = 5;
 	cons->lineskip = 0;
 	cons->nLines = 0;
 	cons->wMax = 0;
@@ -705,8 +706,6 @@ Init(void *_Nonnull obj)
 	TAILQ_INIT(&cons->files);
 
 	AG_InitTimer(&cons->beginSelectTo, "beginSel", 0);
-
-	AG_SetInt(cons, "line-scroll-amount", 5);
 
 	sb = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
 	WIDGET(sb)->flags &= ~(AG_WIDGET_FOCUSABLE);

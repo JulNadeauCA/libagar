@@ -49,7 +49,7 @@ typedef struct ag_console {
 #define AG_CONSOLE_EXPAND	(AG_CONSOLE_HFILL|AG_CONSOLE_VFILL)
 #define AG_CONSOLE_SELECTING	0x10	/* Selection in progress */
 #define AG_CONSOLE_BEGIN_SELECT 0x20	/* Flag for beginSelectTo */
-	Uint32 _pad;
+	int lineScrollAmount;
 	int lineskip;			/* Space between lines */
 	int xOffs;			/* Horizontal display offset (px) */
 
