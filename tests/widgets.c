@@ -262,13 +262,11 @@ TestGUI(void *obj, AG_Window *win)
 	div = hPane->div[0];
 
 	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-1.bmp", path, sizeof(path)) == 0) {
-		if ((S = AG_SurfaceFromBMP(path)) != NULL) {
-			AG_PixmapFromSurface(div, 0, S);
-		} else {
+		if ((S = AG_SurfaceFromBMP(path)) == NULL) {
 			S = AG_TextRender(AG_GetError());
-			AG_PixmapFromSurface(div, 0, S);
-			AG_SurfaceFree(S);
 		}
+		AG_PixmapFromSurface(div, 0, S);
+		AG_SurfaceFree(S);
 	} else {
 		S = AG_TextRender(AG_GetError());
 		AG_PixmapFromSurface(div, 0, S);
@@ -276,8 +274,10 @@ TestGUI(void *obj, AG_Window *win)
 	}
 
 	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "sq-agar.bmp", path, sizeof(path)) == 0) {
-		AG_Surface *S = AG_SurfaceFromFile(path);
+		AG_Surface *S;
 		int i, x,y;
+
+		S = AG_SurfaceFromFile(path);
 
 		hBox = AG_BoxNewHoriz(div, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 		for (i = 0; i < 5; i++) {
@@ -294,6 +294,7 @@ TestGUI(void *obj, AG_Window *win)
 			}
 			AG_PixmapFromSurface(hBox, 0, S);
 		}
+		AG_SurfaceFree(S);
 	} else {
 		S = AG_TextRender(AG_GetError());
 		AG_PixmapFromSurface(div, 0, S);
