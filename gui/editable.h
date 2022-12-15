@@ -27,6 +27,17 @@ typedef struct ag_editable_buffer {
 	Uint32 _pad;
 } AG_EditableBuffer;
 
+/* Recorded modification for Undo/Redo */
+typedef struct ag_editable_revision {
+	Uint lenBuffer;                  /* Length of buffer (for Shared Access) */
+	Uint32 crc32;                    /* CRC32 of buffer (for Shared Access) */
+	int posStart;                    /* Start position (char index) */
+	int posEnd;                      /* End position (char index) */
+	int nCharsAdded;       	         /* Number of characters added */
+	int nCharsRemoved;               /* Number of characters removed */
+	AG_Char *_Nullable s;            /* Original buffer contents */
+} AG_EditableRevision;
+
 /* Internal clipboard for copy/paste and kill/yank */
 typedef struct ag_editable_clipboard {
 	_Nonnull_Mutex AG_Mutex lock;
@@ -45,78 +56,75 @@ typedef struct ag_autocomplete {
 } AG_Autocomplete;
 
 typedef struct ag_editable {
-	struct ag_widget wid;		/* AG_Widget -> AG_Editable */
-	
+	struct ag_widget wid;              /* AG_Widget -> AG_Editable */
 	Uint flags;
 #define AG_EDITABLE_HFILL         0x000001
 #define AG_EDITABLE_VFILL         0x000002
 #define AG_EDITABLE_EXPAND       (AG_EDITABLE_HFILL | AG_EDITABLE_VFILL)
-#define AG_EDITABLE_MULTILINE     0x000004 /* Multiline edition */
-#define AG_EDITABLE_BLINK_ON      0x000008 /* Cursor blink state (internal) */
-#define AG_EDITABLE_PASSWORD      0x000010 /* Password (hidden) input */
-#define AG_EDITABLE_ABANDON_FOCUS 0x000020 /* Abandon focus on return */
-#define AG_EDITABLE_INT_ONLY      0x000040 /* Accepts only int input */
-#define AG_EDITABLE_FLT_ONLY      0x000080 /* Accepts only float input */
-#define AG_EDITABLE_CATCH_TAB     0x000100 /* Process tab key input */
-#define AG_EDITABLE_CURSOR_MOVING 0x000200 /* Cursor is being moved */
-#define AG_EDITABLE_UPPERCASE     0x000400 /* Render as uppercase */
-#define AG_EDITABLE_KEEPVISCURSOR 0x000800 /* Try to keep cursor visible */
-#define AG_EDITABLE_LOWERCASE     0x001000 /* Render as lowercase */
-#define AG_EDITABLE_MARKPREF      0x002000 /* Mark current cursor position */
-#define AG_EDITABLE_EXCL          0x004000 /* Exclusive access to buffer */
-#define AG_EDITABLE_NO_KILL_YANK  0x008000 /* Disable [K]ill and [Y]ank functions */
+#define AG_EDITABLE_MULTILINE     0x000004   /* Multiline edition */
+#define AG_EDITABLE_BLINK_ON      0x000008   /* Cursor blink state (internal) */
+#define AG_EDITABLE_PASSWORD      0x000010   /* Password (hidden) input */
+#define AG_EDITABLE_ABANDON_FOCUS 0x000020   /* Abandon focus on return */
+#define AG_EDITABLE_INT_ONLY      0x000040   /* Accepts only int input */
+#define AG_EDITABLE_FLT_ONLY      0x000080   /* Accepts only float input */
+#define AG_EDITABLE_CATCH_TAB     0x000100   /* Process tab key input */
+#define AG_EDITABLE_CURSOR_MOVING 0x000200   /* Cursor is being moved */
+#define AG_EDITABLE_UPPERCASE     0x000400   /* Render as uppercase */
+#define AG_EDITABLE_KEEPVISCURSOR 0x000800   /* Try to keep cursor visible */
+#define AG_EDITABLE_LOWERCASE     0x001000   /* Render as lowercase */
+#define AG_EDITABLE_MARKPREF      0x002000   /* Mark current cursor position */
+#define AG_EDITABLE_EXCL          0x004000   /* Exclusive Buffer Access */
+#define AG_EDITABLE_NO_KILL_YANK  0x008000   /* Disable [K]ill and [Y]ank functions */
+#define AG_EDITABLE_RETURN_HELD   0x010000   /* KEY_RETURN or KP_ENTER is held */
+#define AG_EDITABLE_NO_ALT_LATIN1 0x020000   /* Disable alt-key LATIN-1 mappings */
+#define AG_EDITABLE_WORDWRAP      0x040000   /* Word wrapping */
+#define AG_EDITABLE_NOPOPUP	  0x080000   /* Disable popup menu */
+#define AG_EDITABLE_WORDSELECT	  0x100000   /* Select whole words */
+#define AG_EDITABLE_READONLY	  0x200000   /* Disable user input */
+#define AG_EDITABLE_MULTILINGUAL  0x400000   /* Multilingual edition */
+#define AG_EDITABLE_SHIFT_SELECT  0x800000   /* Keyboard (shift) selection mode */
 
-#define AG_EDITABLE_RETURN_HELD   0x010000 /* KEY_RETURN or KP_ENTER is held */
-#define AG_EDITABLE_NO_ALT_LATIN1 0x020000 /* Disable alt-key LATIN-1 mappings */
-#define AG_EDITABLE_WORDWRAP      0x040000 /* Word wrapping */
-#define AG_EDITABLE_NOPOPUP	  0x080000 /* Disable popup menu */
-#define AG_EDITABLE_WORDSELECT	  0x100000 /* Select whole words */
-#define AG_EDITABLE_READONLY	  0x200000 /* Disable user input */
-#define AG_EDITABLE_MULTILINGUAL  0x400000 /* Multilingual edition */
-#define AG_EDITABLE_SHIFT_SELECT  0x800000 /* Keyboard (shift) selection mode */
-
-	int lineScrollAmount;		/* Lines to scroll per event */
-
-	const char *_Nonnull encoding;	/* Character set (default "US-ASCII"
-	                                   or "UTF-8" if Unicode supported) */
-	char text[AG_EDITABLE_MAX];      /* Built-in buffer */
-
-	int hPre;			/* Vertical size hint (# of lines) */
-	int wPre;			/* Horizontal size hint (px) */
-	int pos;			/* Cursor position (char index) */
-	int selStart;			/* Start of selection */
-	int selEnd;			/* End of selection */
-	AG_Char compose;		/* For input composition */
-	int xCurs, yCurs;		/* Last cursor position */
-	int xSelStart, ySelStart;	/* Last selection start position */
-	int xSelEnd, ySelEnd;		/* Last selection end position */
-	int xCursPref;			/* Requested cursor position */
-	int x;				/* Horizontal offset (px) */
-	int xMax;			/* Rightmost x of largest line (px) */
-	int y;				/* Vertical offset (lines) */
-	int yMax;			/* Lowest y (lines) */
-	int yVis;			/* Maximum visible area (lines) */
-	int posKbdSel;			/* Start of keyboard selection */
-	Uint nRevs;			/* History buffer */
-	Uint nRevsUndone;		/* Undone changes */
+	int lineScrollAmount;                /* Lines to scroll per event */
+	const char *_Nonnull encoding;       /* Character set (default "UTF-8") */
+	char text[AG_EDITABLE_MAX];          /* Small built-in text buffer */
+	int hPre;                            /* Vertical size hint (# of lines) */
+	int wPre;                            /* Horizontal size hint (px) */
+	int pos;                             /* Cursor position (char index) */
+	int selStart;                        /* Start of selection (char index) */
+	int selEnd;                          /* End of selection (char index) */
+	AG_Char compose;                     /* Last char entered in composition */
+	int xCurs, yCurs;                    /* Last cursor position */
+	int xSelStart, ySelStart;            /* Last selection start position */
+	int xSelEnd, ySelEnd;                /* Last selection end position */
+	int xCursPref;                       /* Requested cursor position */
+	int x;                               /* Horizontal offset (px) */
+	int xMax;                            /* Rightmost x of largest line (px) */
+	int y;                               /* Vertical offset (lines) */
+	int yMax;                            /* Lowest y (lines) */
+	int yVis;                            /* Maximum visible area (lines) */
+	int posKbdSel;                       /* Start of keyboard selection */
 	Uint32 _pad;
-	AG_EditableBuffer sBuf;		/* Working buffer (for EXCL) */
-	AG_Rect r;			/* Clipping rectangle */
-	AG_CursorArea *_Nullable ca;	/* Text cursor-change area */
-	enum ag_language lang;		/* Selected language (for AG_Text) */
-	int xScrollPx;			/* Explicit scroll request in pixels */
-	struct ag_popup_menu *_Nullable pm; /* Right-click popup menu */
-	int *_Nullable xScrollTo;	/* Scroll to that X-position */
-	int *_Nullable yScrollTo;	/* Scroll to that Y-position */
+	AG_EditableBuffer sBuf;              /* Working buffer (for Exclusive Access) */
+	AG_Rect r;                           /* Clipping rectangle */
+	AG_CursorArea *_Nullable ca;         /* Text cursor-change area */
+	enum ag_language lang;               /* Selected language (for AG_Text) */
+	int xScrollPx;                       /* Explicit scroll request in pixels */
+	struct ag_popup_menu *_Nullable pm;  /* Right-click popup menu */
+	int *_Nullable xScrollTo;            /* Scroll to that X-position */
+	int *_Nullable yScrollTo;            /* Scroll to that Y-position */
 	AG_Autocomplete *_Nullable complete; /* Autocomplete context */
-	int fontMaxHeight;		/* Maximum character height */
-	int lineSkip;			/* Y-increment in multiline mode */
-	int suPlaceholder;		/* Rendered "placeholder" text */
-	int selDblClick;                /* Position of last double click */
-	AG_Timer toRepeat;		/* Key repeat timers (not direction keys) */
-	AG_Timer toCursorBlink;		/* Cursor blink timer */
-	AG_Timer toDblClick;		/* Double click timer */
-	AG_Timer toRepeatDirs[4];	/* Key repeat timers (direction keys) */
+	int fontMaxHeight;                   /* Maximum character height */
+	int lineSkip;                        /* Y-increment in multiline mode */
+	int suPlaceholder;                   /* Rendered "placeholder" text label */
+	int selDblClick;                     /* Position of last double click (char index) */
+	AG_Timer toRepeat;                   /* Key repeat timers (not direction keys) */
+	AG_Timer toCursorBlink;              /* Cursor blink timer */
+	AG_Timer toDblClick;                 /* Double click timer */
+	AG_Timer toRepeatDirs[4];            /* Key repeat timers (direction keys) */
+	Uint nUndo;                          /* Undo stack size */
+	Uint nRedo;                          /* Redo stack size */
+	AG_EditableRevision *_Nonnull undo;  /* Undo stack (History Buffer) */
+	AG_EditableRevision *_Nonnull redo;  /* Redo stack */
 } AG_Editable;
 
 #define AGEDITABLE(obj)            ((AG_Editable *)(obj))
@@ -159,8 +167,19 @@ void AG_EditableClearBuffer(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
 int  AG_EditableGrowBuffer(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                            AG_Char *_Nonnull, AG_Size);
 
-int  AG_EditableUndo(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
-int  AG_EditableRedo(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
+void AG_EditableClearHistory(AG_Editable *_Nonnull);
+
+AG_EditableRevision *AG_EditableBeginRevision(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
+
+void AG_EditableAbortRevision(AG_Editable *_Nonnull);
+void AG_EditableCommitRevision(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
+void AG_EditableRevert(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
+                       AG_EditableRevision *_Nonnull,
+                       AG_EditableRevision *_Nonnull, Uint);
+
+void AG_EditableUndo(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
+void AG_EditableRedo(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
+
 int  AG_EditableCut(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                     AG_EditableClipboard *_Nonnull, int);
 int  AG_EditableCopy(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,

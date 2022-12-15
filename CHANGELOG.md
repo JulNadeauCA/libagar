@@ -37,6 +37,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Embed 4 general-purpose 16-bit guides. Guides are useful for typography, graphics and other applications.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): The surface returned by `AG_TextRender()` now includes Ascent information under `Guide 0`.
+- [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) and [**AG_Editable**](https://libagar.org/man3/AG_Editable): Implement Undo/Redo functionality.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Draw lines to express the relationship between tree items.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_EXPAND_NODES`. Display nodes (items with children) initially in expanded state.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_NO_SCALE_ICON`. Disable icon scaling when the icon width exceeds the standard width.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,7 @@ static int
 Insert(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
+	AG_EditableRevision *rev;
 	AG_Char ins[3];
 	AG_Size len;
 	int i, nIns, pos;
@@ -108,6 +109,11 @@ Insert(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 		return (0);
 	}
 
+	rev = AG_EditableBeginRevision(ed, buf);
+	rev->posStart = ed->pos;
+	rev->posEnd = ed->pos + nIns;
+	rev->nCharsAdded = nIns;
+
 	pos = ed->pos;
 	len = buf->len;
 	if (pos == len) {					/* Append */
@@ -122,6 +128,8 @@ Insert(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	buf->len += nIns;
 	buf->s[buf->len] = '\0';
 	ed->pos += nIns;
+
+	AG_EditableCommitRevision(ed, buf);
 
 #ifdef AG_UNICODE
 	if (!(ed->flags & AG_EDITABLE_MULTILINE)) {	/* Optimize case */
@@ -143,6 +151,7 @@ static int
 Delete(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
+	AG_EditableRevision *rev;
 	AG_Char *c;
 	AG_Size len;
 #ifdef AG_UNICODE
@@ -151,13 +160,29 @@ Delete(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 	if ((len = buf->len) == 0)
 		return (0);
 
-	if (ed->selEnd > ed->selStart) {
+	if (ed->selEnd > ed->selStart) {               /* Active selection? */
 		AG_EditableDelete(ed, buf);
 		return (1);
 	}
-	if (keysym == AG_KEY_BACKSPACE && ed->pos == 0) {
+	if (keysym == AG_KEY_BACKSPACE && ed->pos == 0)
 		return (0);
+
+	rev = AG_EditableBeginRevision(ed, buf);
+	rev->nCharsRemoved = 1;
+	rev->s = Malloc(2*sizeof(AG_Char));
+
+	if (keysym == AG_KEY_BACKSPACE) {
+		rev->posStart = ed->pos - 1;
+		rev->posEnd = ed->pos;
+		rev->s[0] = buf->s[ed->pos - 1];
+		rev->s[1] = '\0';
+	} else {
+		rev->posStart = ed->pos;
+		rev->posEnd = ed->pos + 1;
+		rev->s[0] = buf->s[ed->pos];
+		rev->s[1] = '\0';
 	}
+
 	if (ed->pos == len) { 
 		ed->pos--;
 		buf->s[--len] = '\0';
@@ -176,12 +201,10 @@ Delete(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 			/* TODO */
 #endif
 		}
-		return (1);
+		goto commit;
 	}
-	if (keysym == AG_KEY_BACKSPACE) {
-		if (ed->pos > 0)
-			ed->pos--;
-	}
+	if (keysym == AG_KEY_BACKSPACE && ed->pos > 0)
+		ed->pos--;
 
 	if (ed->flags & AG_EDITABLE_MULTILINE) {
 		ed->xScrollTo = &ed->xCurs;
@@ -207,6 +230,8 @@ Delete(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 			break;
 	}
 	buf->len--;
+commit:
+	AG_EditableCommitRevision(ed, buf);
 	return (1);
 }
 
@@ -286,7 +311,8 @@ static int
 Undo(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	return AG_EditableUndo(ed, buf);
+	AG_EditableUndo(ed, buf);
+	return (1);
 }
 
 /* Redo last undone action */
@@ -294,7 +320,8 @@ static int
 Redo(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
     AG_KeySym keysym, Uint keymod, AG_Char ch)
 {
-	return AG_EditableRedo(ed, buf);
+	AG_EditableRedo(ed, buf);
+	return (1);
 }
 
 /* Seek one word backwards. */

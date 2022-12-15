@@ -48,6 +48,8 @@
 #include <agar/gui/icons.h>
 #include <agar/gui/gui_math.h>
 
+#include <agar/core/crc32.h>
+
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
@@ -58,6 +60,9 @@ AG_EditableClipboard agEditableClipbrd;		/* For Copy/Cut/Paste */
 AG_EditableClipboard agEditableKillring;	/* For Emacs-style Kill/Yank */
 
 static Uint32 AutocompleteTimeout(AG_Timer *_Nonnull, AG_Event *_Nonnull);
+
+/* #define DEBUG_CLIPBOARD */
+/* #define DEBUG_UNDO */
 
 /*
  * Return a new working buffer. The variable is returned locked; the caller
@@ -370,14 +375,17 @@ AG_EditableBindText(AG_Editable *ed, AG_TextElement *txt)
 	AG_ObjectUnlock(ed);
 }
 
-/* Set the active language (when bound to an AG_TextElement(3)) */
+/*
+ * Set the active language (when bound to an AG_TextElement(3)).
+ * If the language ID is invalid, set the language to AG_LANG_NONE.
+ */
 void
 AG_EditableSetLang(AG_Editable *ed, enum ag_language lang)
 {
 	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
 
-	ed->lang = lang;
+	ed->lang = (lang < AG_LANG_LAST) ? lang : AG_LANG_NONE;
 	ed->pos = 0;
 	ed->selStart = 0;
 	ed->selEnd = 0;
@@ -418,9 +426,22 @@ AG_EditableSetWordWrap(AG_Editable *ed, int enable)
 }
 
 /*
- * Advise as to whether the buffer contents are accessed exclusively by this
- * particular widget instance. If so, disable periodic redraw (otherwise set
- * a default refresh rate of 1s).
+ * Set Exclusive Access (EXCL) or Shared Access (!EXCL) mode.
+ *
+ * Under Exclusive Access mode, the caller guarantees that the bound text
+ * buffer will never be modified externally (by anything other than this
+ * particular Editable instance). Other Editable instances in Read-Only or
+ * Disabled mode may still access its contents for reading.
+ *
+ * In Shared Access mode (the default), every interaction and operation must
+ * acquire an internal working buffer (which involves allocations and UTF-8
+ * conversions). Checksums must be calculated in order for Undo/Redo to work
+ * safely against potentially-changing buffer, and the Editable must be
+ * redrawn periodically.
+ *
+ * Exclusive Access mode allows Editable to operate more efficiently through
+ * the use of a persistent working buffer, which avoids the need for regular
+ * redrawing, allocations, UTF-8 conversions and checksumming.
  */
 void
 AG_EditableSetExcl(AG_Editable *ed, int enable)
@@ -428,14 +449,20 @@ AG_EditableSetExcl(AG_Editable *ed, int enable)
 	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
 
-	ClearBuffer(&ed->sBuf);
-
 	if (enable) {
-		ed->flags |= AG_EDITABLE_EXCL;
-		AG_RedrawOnTick(ed, -1);
+		if (!(ed->flags & AG_EDITABLE_EXCL)) {
+			ed->flags |= AG_EDITABLE_EXCL;
+			AG_RedrawOnTick(ed, -1);
+			AG_EditableClearHistory(ed);
+			ClearBuffer(&ed->sBuf);
+		}
 	} else {
-		ed->flags &= ~(AG_EDITABLE_EXCL);
-		AG_RedrawOnTick(ed, 1000);
+		if (ed->flags & AG_EDITABLE_EXCL) {
+			ed->flags &= ~(AG_EDITABLE_EXCL);
+			AG_RedrawOnTick(ed, 1000);
+			AG_EditableClearHistory(ed);
+			ClearBuffer(&ed->sBuf);
+		}
 	}
 	AG_ObjectUnlock(ed);
 }
@@ -1392,9 +1419,11 @@ AutocompleteTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	AG_SetStyle(win, "padding", "0");
 
 	tl = AG_TlistNewPolledMs(win, AG_TLIST_EXPAND, agAutocompleteRate,
-	    AutocompletePoll, "%p", ed);
+	    AutocompletePoll,"%p",ed);
+
 	AG_ObjectSetNameS(tl, "suggestions");
-	AG_SetEvent(tl, "tlist-selected", AutocompleteSelected, "%p", ed);
+
+	AG_SetEvent(tl, "tlist-selected", AutocompleteSelected,"%p",ed);
 
 	AG_WindowSetGeometry(win,
 	    xParent + WIDGET(ed)->rView.x1,
@@ -1700,18 +1729,280 @@ AG_EditableCopyChunk(AG_Editable *ed, AG_EditableClipboard *cb, AG_Char *s,
 	AG_ObjectUnlock(ed);
 }
 
-/* Undo last action or keyboard input. */
-int
-AG_EditableUndo(AG_Editable *ed, AG_EditableBuffer *buffer)
+static __inline__ void
+InitRevision(AG_EditableRevision *_Nonnull rev)
 {
-	return (0);
+	rev->lenBuffer = 0;
+	rev->crc32 = 0;
+	rev->posStart = 0;
+	rev->posEnd = 0;
+	rev->nCharsAdded = 0;
+	rev->nCharsRemoved = 0;
+	rev->s = NULL;
 }
 
-/* Redo last undone action or keyboard input. */
-int
-AG_EditableRedo(AG_Editable *ed, AG_EditableBuffer *buffer)
+static __inline__ void
+FreeRevision(AG_EditableRevision *_Nonnull rev)
 {
-	return (0);
+	if (rev->nCharsRemoved > 0)
+		free(rev->s);
+}
+
+/* Destroy the History Buffer. */
+void
+AG_EditableClearHistory(AG_Editable *ed)
+{
+	Uint i;
+
+	for (i = 0; i < ed->nUndo; i++) {
+		FreeRevision(&ed->undo[i]);
+	}
+	ed->undo = Realloc(ed->undo, sizeof(AG_EditableRevision));
+	ed->nUndo = 0;
+
+	for (i = 0; i < ed->nRedo; i++) {
+		FreeRevision(&ed->redo[i]);
+	}
+	ed->redo = Realloc(ed->redo, sizeof(AG_EditableRevision));
+	ed->nRedo = 0;
+}
+
+/*
+ * Create a new revision.
+ * 
+ * This function must be called *before* any modifications are made to
+ * the buffer. Under Shared Access, a checksum of the buffer contents is
+ * generated and recorded in the Undo/Redo stack. If any external changes
+ * are detected then the Undo/Redo stack is invalidated.
+ */
+AG_EditableRevision *
+AG_EditableBeginRevision(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	AG_EditableRevision *rev;
+	int i;
+
+#ifdef DEBUG_UNDO
+	Debug(ed, "BEGIN Undo Rev#%d\n", ed->nUndo + 1);
+#endif
+	if (ed->nRedo > 0) {
+		for (i = 0; i < ed->nRedo; i++) {
+			FreeRevision(&ed->redo[i]);
+		}
+		ed->nRedo = 0;
+	}
+
+	ed->undo = Realloc(ed->undo, (ed->nUndo + 1)*sizeof(AG_EditableRevision));
+	rev = &ed->undo[ed->nUndo++];
+	InitRevision(rev);
+	return (rev);
+}
+
+/* Abort the current undo level. */
+void
+AG_EditableAbortRevision(AG_Editable *ed)
+{
+	AG_EditableRevision *rev = &ed->undo[ed->nUndo - 1];
+
+#ifdef AG_DEBUG
+	if (ed->nUndo == 0) AG_FatalError("AbortRevision");
+#endif
+	if (rev->nCharsRemoved > 0) {
+		free(rev->s);
+	}
+	rev->s = NULL;
+	rev->nCharsAdded = 0;
+	rev->nCharsRemoved = 0;
+}
+
+/*
+ * Commit the current revision and start a new one.
+ */
+void
+AG_EditableCommitRevision(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	AG_EditableRevision *rev;
+
+	if (ed->nUndo == 0) {
+		AG_EditableBeginRevision(ed, buf);
+	}
+	rev = &ed->undo[ed->nUndo - 1];
+
+	if (rev->nCharsAdded == 0 && rev->nCharsRemoved == 0) {
+		ed->nUndo--;                                  /* No changes */
+	} else {
+		if (!(ed->flags & AG_EDITABLE_EXCL)) {
+			rev->crc32 = AG_GetCRC32(buf->s, (buf->len << 2));
+			rev->lenBuffer = buf->len;
+#ifdef DEBUG_UNDO
+			Debug(ed, "COMMIT Undo Rev#%d (crc=%x, lenBuffer=%u)\n",
+			    ed->nUndo - 1, rev->crc32, rev->lenBuffer);
+#endif
+		}
+#ifdef DEBUG_UNDO
+		else {
+			Debug(ed, "COMMIT Undo Rev#%d\n", ed->nUndo - 1);
+		}
+#endif
+
+	}
+}
+
+/*
+ * Revert the changes effected by the given revision.
+ * The Editable must be locked.
+ */
+void
+AG_EditableRevert(AG_Editable *ed, AG_EditableBuffer *buf,
+    AG_EditableRevision *rev, AG_EditableRevision *undoRedo, Uint nUndoRedo)
+{
+	const int nCharsAdded = rev->nCharsAdded;
+	const int nCharsRemoved = rev->nCharsRemoved;
+	const int posStart = rev->posStart, posEnd = rev->posEnd;
+	const int len = buf->len;
+	AG_EditableRevision *revUR;
+
+#ifdef DEBUG_UNDO
+	Debug(ed, "REVERT (%d,%d, +%d,-%d)\n", posStart, posEnd,
+	    nCharsAdded, rev->nCharsRemoved);
+#endif
+	if (nCharsAdded > 0) {
+		revUR = &undoRedo[nUndoRedo - 1];
+		revUR->posStart = posStart;
+		revUR->posEnd = posEnd;
+		revUR->nCharsRemoved = nCharsAdded;
+		revUR->s = Malloc((nCharsAdded + 1)*sizeof(AG_Char));
+		memcpy(revUR->s, &buf->s[posStart], nCharsAdded*sizeof(AG_Char));
+		revUR->s[nCharsAdded] = '\0';
+
+		if (!(ed->flags & AG_EDITABLE_EXCL)) {
+			revUR->lenBuffer = rev->lenBuffer;
+			revUR->crc32 = rev->crc32;
+		}
+
+		if (posStart == (len - 1)) {
+			buf->s[len - nCharsAdded] = '\0';
+		} else if (posStart < posEnd) {
+			memmove(&buf->s[posStart], &buf->s[posEnd],
+			    (len - nCharsAdded - posStart + 1)*sizeof(AG_Char));
+		}
+		buf->len -= nCharsAdded;
+		ed->pos = posStart;
+	} else if (nCharsRemoved > 0) {
+		if (AG_EditableGrowBuffer(ed, buf, rev->s, nCharsRemoved) == -1) {
+			Verbose("AG_EditableGrowBuffer: %s\n", AG_GetError());
+			return;
+		}
+		revUR = &undoRedo[nUndoRedo - 1];
+		revUR->posStart = posStart;
+		revUR->posEnd = posEnd;
+		revUR->nCharsAdded = nCharsRemoved;
+
+		if (!(ed->flags & AG_EDITABLE_EXCL)) {
+			revUR->lenBuffer = rev->lenBuffer;
+			revUR->crc32 = rev->crc32;
+		}
+
+		if (posStart < len) {
+			memmove(&buf->s[posStart + nCharsRemoved],
+			    &buf->s[posStart],
+			    (buf->len - posStart)*sizeof(AG_Char));
+		}
+		memcpy(&buf->s[posStart], rev->s, nCharsRemoved*sizeof(AG_Char));
+		buf->len += nCharsRemoved;
+		buf->s[buf->len] = '\0';
+		ed->pos = posStart + nCharsRemoved;
+	}
+	ed->xScrollTo = &ed->xCurs;
+	ed->yScrollTo = &ed->yCurs;
+}
+
+/* Undo last action. */
+void
+AG_EditableUndo(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	AG_EditableRevision *revUndo, *revRedo;
+
+	if (ed->nUndo < 1) {
+		return;
+	}
+#ifdef DEBUG_UNDO
+	Debug(ed, "UNDO (Rev#%d)\n", ed->nUndo - 1);
+#endif
+	revUndo = &ed->undo[ed->nUndo - 1];
+
+	if (!(ed->flags & AG_EDITABLE_EXCL)) {
+		Uint32 crc;
+
+		crc = AG_GetCRC32(buf->s, (buf->len << 2));
+		if (revUndo->lenBuffer != buf->len || revUndo->crc32 != crc) {
+#ifdef DEBUG_UNDO
+			Debug(ed, "External change detected (len %u->%lu, crc %x->%x)! "
+			          "Clearing History Buffer.\n",
+			    revUndo->lenBuffer, buf->len,
+			    revUndo->crc32, crc);
+#endif
+			AG_EditableClearHistory(ed);
+			return;
+		}
+	}
+
+	/* Record changes made by AG_EditableRevert() onto the Redo stack. */
+	ed->redo = Realloc(ed->redo, (ed->nRedo + 1)*sizeof(AG_EditableRevision));
+	revRedo = &ed->redo[ed->nRedo++];
+	InitRevision(revRedo);
+
+	AG_EditableRevert(ed, buf, revUndo, ed->redo, ed->nRedo);
+
+	if (revRedo->nCharsAdded == 0 && revRedo->nCharsRemoved == 0) {
+		ed->nRedo--;                                  /* No changes */
+	} else {
+		ed->selStart = 0;                        /* Clear selection */
+		ed->selEnd = 0;
+	}
+
+	FreeRevision(revUndo);
+	ed->nUndo--;
+}
+
+/* Redo last undone action. */
+void
+AG_EditableRedo(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	AG_EditableRevision *revRedo, *revUndo;
+
+	if (ed->nRedo < 1)
+		return;
+
+#ifdef DEBUG_UNDO
+	Debug(ed, "REDO (Undo Rev#%d, Redo Rev#%d)\n",
+	    ed->nUndo - 1,
+	    ed->nRedo - 1);
+#endif
+	revRedo = &ed->redo[ed->nRedo - 1];
+
+	/* Record changes made by AG_EditableRevert() back onto the Undo stack. */
+	ed->undo = Realloc(ed->undo, (ed->nUndo + 1)*sizeof(AG_EditableRevision));
+	revUndo = &ed->undo[ed->nUndo++];
+	InitRevision(revUndo);
+
+	AG_EditableRevert(ed, buf, revRedo, ed->undo, ed->nUndo);
+
+	if (revUndo->nCharsAdded == 0 && revUndo->nCharsRemoved == 0) {
+		ed->nUndo--;                                  /* No changes */
+	} else {
+		ed->selStart = 0;                        /* Clear selection */
+		ed->selEnd = 0;
+#if 0
+		if (revUndo->nCharsAdded > 0) {
+			ed->pos += revUndo->nCharsAdded;
+		} else if (revUndo->nCharsRemoved > 0) {
+			ed->pos -= revUndo->nCharsRemoved;
+		}
+#endif
+	}
+
+	FreeRevision(revRedo);
+	ed->nRedo--;
 }
 
 /*
@@ -1728,7 +2019,7 @@ AG_EditableCut(AG_Editable *ed, AG_EditableBuffer *buf, AG_EditableClipboard *cb
 	AG_ObjectLock(ed);
 
 	selLen = (ed->selEnd - ed->selStart);
-	if (AGEDITABLE_IS_READONLY(ed) || selLen == 0) {
+	if (AGEDITABLE_IS_READONLY(ed) || selLen <= 0) {
 		goto no_change;
 	}
 	AG_EditableValidateSelection(ed, buf);
@@ -1745,7 +2036,7 @@ no_change:
 
 /*
  * Perform Copy action against clipboard (internal or external).
- * Return 1 = buffer changed or 0 = copy failed or no change.
+ * Return 1 = copy successful or 0 = copy failed or selection empty.
  */
 int
 AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf,
@@ -1762,7 +2053,7 @@ AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf,
 
 	AG_EditableValidateSelection(ed, buf);
 
-	if ((selLen = (selEnd - selStart)) == 0)
+	if ((selLen = (selEnd - selStart)) <= 0)
 		goto no_change;
 
 	if (internalOnly || !agClipboardIntegration || /* Internal clipboard */
@@ -1782,10 +2073,6 @@ AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf,
 			goto no_change;
 		}
 		utf8len++;
-#if 0
-		Debug(ed, "selLen=%ld, utf8len=%ld, startChar=%c, lastChar=%c\n",
-		    (long)selLen, (long)utf8len, (char)buf->s[selStart], (char)cEndSave);
-#endif
 		if ((s = TryMalloc(utf8len)) == NULL) {
 			Verbose(_("Out of memory for Copy (%lu bytes)\n"), (Ulong)utf8len);
 			buf->s[selEnd] = cEndSave;
@@ -1831,6 +2118,7 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 {
 	AG_Driver *drv = WIDGET(ed)->drv;
 	const AG_DriverClass *drvOps = AGDRIVER_CLASS(drv);
+	AG_EditableRevision *rev;
 
 	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
@@ -1846,6 +2134,7 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 		char *s, *c;
 		AG_Char *ucs;
 		AG_Size ucsLen;
+		const int pos = ed->pos;
 
 		if ((s = drvOps->getClipboardText(drv)) == NULL) {
 			goto out;
@@ -1854,9 +2143,9 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 		    (c = strchr(s, '\n')) != NULL) {
 			*c = '\0';
 		}
-
+#ifdef DEBUG_CLIPBOARD
 		Debug(drv, "GetClipboardText() -> \"%s\"\n", s);
-
+#endif
 		if (ed->flags & AG_EDITABLE_INT_ONLY) {
 			for (c = &s[0]; *c != '\0'; c++) {
 				if (!CharIsIntOnly(*c)) {
@@ -1880,19 +2169,29 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 			free(ucs);
 			goto fail;
 		}
-		if (ed->pos < buf->len) {
-			memmove(&buf->s[ed->pos + ucsLen], &buf->s[ed->pos],
-			    (buf->len - ed->pos)*sizeof(AG_Char));
+	
+		rev = AG_EditableBeginRevision(ed, buf);
+		rev->posStart = pos;
+		rev->posEnd = pos + ucsLen;
+		rev->nCharsAdded = ucsLen;
+
+		if (pos < buf->len) {
+			memmove(&buf->s[pos + ucsLen], &buf->s[pos],
+			    (buf->len - pos)*sizeof(AG_Char));
 		}
-		memcpy(&buf->s[ed->pos], ucs, ucsLen*sizeof(AG_Char));
+		memcpy(&buf->s[pos], ucs, ucsLen*sizeof(AG_Char));
 		buf->len += ucsLen;
 		buf->s[buf->len] = '\0';
+
 		ed->pos += ucsLen;
+
+		AG_EditableCommitRevision(ed, buf);
 
 		free(ucs);
 		free(s);
 	} else {                                      /* Internal clipboard */
 		AG_Char *c;
+		const int pos = ed->pos;
 
 		AG_MutexLock(&cb->lock);
 
@@ -1930,14 +2229,24 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 			AG_MutexUnlock(&cb->lock);
 			goto fail;
 		}
-		if (ed->pos < buf->len) {
-			memmove(&buf->s[ed->pos + cb->len], &buf->s[ed->pos],
-			    (buf->len - ed->pos)*sizeof(AG_Char));
+	
+		rev = AG_EditableBeginRevision(ed, buf);
+		rev->posStart = pos;
+		rev->posEnd = pos + cb->len;
+		rev->nCharsAdded = cb->len;
+
+		if (pos < buf->len) {
+			memmove(&buf->s[rev->posEnd], &buf->s[pos],
+			    (buf->len - pos)*sizeof(AG_Char));
 		}
-		memcpy(&buf->s[ed->pos], cb->s, cb->len*sizeof(AG_Char));
+		memcpy(&buf->s[pos], cb->s, cb->len * sizeof(AG_Char));
 		buf->len += cb->len;
 		buf->s[buf->len] = '\0';
+
 		ed->pos += cb->len;
+
+		AG_EditableCommitRevision(ed, buf);
+
 		AG_MutexUnlock(&cb->lock);
 	}
 out:
@@ -1959,28 +2268,46 @@ no_change:
 int
 AG_EditableDelete(AG_Editable *ed, AG_EditableBuffer *buf)
 {
+	AG_EditableRevision *rev;
 	AG_Size selLen;
+	int selStart, selEnd;
 
 	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
 
-	selLen = (ed->selEnd - ed->selStart);
-	if (AGEDITABLE_IS_READONLY(ed) || selLen == 0)
+	selStart = ed->selStart;
+	selEnd = ed->selEnd;
+	selLen = (selEnd - selStart);
+	if (AGEDITABLE_IS_READONLY(ed) || selLen <= 0)
 		goto no_change;
 
 	AG_EditableValidateSelection(ed, buf);
+	if (selStart == selEnd)
+		goto no_change;
+
+	rev = AG_EditableBeginRevision(ed, buf);
+	rev->posStart = selStart;
+	rev->posEnd = selEnd;
+	rev->nCharsRemoved = selLen;
+	rev->s = Malloc((selLen + 1)*sizeof(AG_Char));
+	memcpy(rev->s, &buf->s[selStart], selLen*sizeof(AG_Char));
+	rev->s[selLen] = '\0';
+
 	if (ed->selEnd == buf->len) {
-		buf->s[ed->selStart] = '\0';
+		buf->s[selStart] = '\0';
 	} else {
-		memmove(&buf->s[ed->selStart], &buf->s[ed->selEnd],
-		    (buf->len - selLen + 1 - ed->selStart)*sizeof(AG_Char));
+		memmove(&buf->s[selStart], &buf->s[ed->selEnd],
+		    (buf->len - selLen + 1 - selStart)*sizeof(AG_Char));
 	}
 	buf->len -= selLen;
-	ed->pos = ed->selStart;
+	ed->pos = selStart;
+
 	ed->selStart = 0;
 	ed->selEnd = 0;
 	ed->xScrollTo = &ed->xCurs;
 	ed->yScrollTo = &ed->yCurs;
+
+	AG_EditableCommitRevision(ed, buf);
 
 	AG_ObjectUnlock(ed);
 	return (1);
@@ -2012,9 +2339,8 @@ MenuUndo(AG_Event *_Nonnull event)
 	AG_EditableBuffer *buf;
 	
 	if ((buf = GetBuffer(ed)) != NULL) {
-		if (AG_EditableUndo(ed, buf)) {
-			CommitBuffer(ed, buf);
-		}
+		AG_EditableUndo(ed, buf);
+		CommitBuffer(ed, buf);
 		ReleaseBuffer(ed, buf);
 	}
 }
@@ -2024,7 +2350,7 @@ MenuUndoActive(AG_Event *_Nonnull event)
 	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	int *enable = AG_PTR(2);
 
-	*enable = (!AG_EditableReadOnly(ed) && (ed->nRevs > 0));
+	*enable = (!AGEDITABLE_IS_READONLY(ed) && (ed->nUndo > 0));
 }
 
 /* Redo via contextual menu. */
@@ -2035,9 +2361,8 @@ MenuRedo(AG_Event *_Nonnull event)
 	AG_EditableBuffer *buf;
 	
 	if ((buf = GetBuffer(ed)) != NULL) {
-		if (AG_EditableRedo(ed, buf)) {
-			CommitBuffer(ed, buf);
-		}
+		AG_EditableRedo(ed, buf);
+		CommitBuffer(ed, buf);
 		ReleaseBuffer(ed, buf);
 	}
 }
@@ -2047,7 +2372,7 @@ MenuRedoActive(AG_Event *_Nonnull event)
 	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	int *enable = AG_PTR(2);
 
-	*enable = (!AG_EditableReadOnly(ed) && (ed->nRevsUndone > 0));
+	*enable = (!AGEDITABLE_IS_READONLY(ed) && (ed->nRedo > 0));
 }
 
 /* Undo via contextual menu */
@@ -2070,7 +2395,7 @@ MenuCutActive(AG_Event *_Nonnull event)
 	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	int *enable = AG_PTR(2);
 
-	*enable = (!AG_EditableReadOnly(ed) && (ed->selEnd > ed->selStart));
+	*enable = (!AGEDITABLE_IS_READONLY(ed) && (ed->selEnd > ed->selStart));
 }
 
 static void
@@ -2112,14 +2437,14 @@ MenuPasteActive(AG_Event *_Nonnull event)
 	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	int *enable = AG_PTR(2);
 #if 1
-	*enable = (!AG_EditableReadOnly(ed) && (agClipboardIntegration ||
-	                                       (agEditableClipbrd.len > 0)));
+	*enable = (!AGEDITABLE_IS_READONLY(ed) && (agClipboardIntegration ||
+	                                          (agEditableClipbrd.len > 0)));
 #else
 	AG_Driver *drv = WIDGET(ed)->drv;
 	const AG_DriverClass *drvOps = AGDRIVER_CLASS(drv);
 	char *s;
 
-	if (AG_EditableReadOnly(ed)) {
+	if (AGEDITABLE_IS_READONLY(ed)) {
 		*enable = 0;
 		return;
 	}
@@ -2160,7 +2485,7 @@ MenuDeleteActive(AG_Event *_Nonnull event)
 	AG_Editable *ed = AG_EDITABLE_PTR(1);
 	int *enable = AG_PTR(2);
 
-	*enable = (!AG_EditableReadOnly(ed) && (ed->selEnd > ed->selStart));
+	*enable = (!AGEDITABLE_IS_READONLY(ed) && (ed->selEnd > ed->selStart));
 }
 
 static void
@@ -2174,6 +2499,83 @@ MenuSelectAll(AG_Event *_Nonnull event)
 		ReleaseBuffer(ed, buf);
 	}
 }
+
+#ifdef AG_DEBUG
+
+static void
+PollHistoryBuffer(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
+	AG_TlistItem *it;
+	AG_EditableRevision *rev;
+	Uint i;
+
+	AG_TlistClear(tl);
+	AG_ObjectLock(ed);
+
+	for (i = 0; i < ed->nUndo; i++) {
+		rev = &ed->undo[i];
+		it = AG_TlistAdd(tl, agIconDown.s,
+		    _("%s" "Undo Level %d ([%d,%d] +%d -%d) crc(%x,%d)"),
+		    (i == ed->nUndo - 1) ? ">" : "",
+		    i,
+		    rev->posStart, rev->posEnd,
+		    rev->nCharsAdded, rev->nCharsRemoved,
+		    rev->crc32, rev->lenBuffer);
+		it->depth = 0;
+		it->p1 = rev;
+	}
+	if (ed->nUndo == 0) {
+		it = AG_TlistAddS(tl, NULL, _("(Empty undo buffer)"));
+		it->flags |= AG_TLIST_NO_SELECT;
+	}
+
+	for (i = 0; i < ed->nRedo; i++) {
+		rev = &ed->redo[i];
+		it = AG_TlistAdd(tl, agIconUp.s,
+		    _("%s" "Redo Level %d ([%d,%d] +%d -%d) crc(%x,%d)"),
+		    (i == ed->nRedo - 1) ? ">" : "",
+		    i,
+		    rev->posStart, rev->posEnd,
+		    rev->nCharsAdded, rev->nCharsRemoved,
+		    rev->crc32, rev->lenBuffer);
+		it->depth = 0;
+		it->p1 = rev;
+	}
+	if (ed->nRedo == 0) {
+		it = AG_TlistAddS(tl, NULL, _("(Empty redo buffer)"));
+		it->flags |= AG_TLIST_NO_SELECT;
+	}
+
+	AG_TlistRestore(tl);
+	AG_ObjectUnlock(ed);
+}
+
+static void
+MenuHistoryBuffer(AG_Event *_Nonnull event)
+{
+	AG_Editable *ed = AG_EDITABLE_PTR(1);
+	AG_Window *win, *winParent;
+	AG_Tlist *tl;
+
+	if ((win = AG_WindowNew(0)) == NULL)
+		return;
+
+	tl = AG_TlistNew(win, AG_TLIST_POLL | AG_TLIST_EXPAND);
+	AG_TlistSetRefresh(tl, 125);
+	AG_TlistSizeHint(tl, "<Undo Level 8888 ([8888,8888] +88 -88) crc(88888888)>", 25);
+	AG_SetEvent(tl, "tlist-poll", PollHistoryBuffer,"%p",ed);
+
+	AG_WindowSetCaption(win, _("%s - History Buffer"), OBJECT(ed)->name);
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_RIGHT, 0);
+
+	if ((winParent = WIDGET(ed)->window) != NULL) {
+		AG_WindowAttach(winParent, win);
+	}
+	AG_WindowShow(win);
+}
+#endif /* AG_DEBUG */
 
 #ifdef AG_UNICODE
 static void
@@ -2195,33 +2597,50 @@ PopupMenu(AG_Editable *_Nonnull ed)
 	AG_Variable *vText;
 	AG_TextElement *txt;
 #endif
-	if ((pm = AG_PopupNew(ed)) == NULL) {
+#ifdef __APPLE__
+	const Uint keymodCmd = AG_KEYMOD_META;
+#else
+	const Uint keymodCmd = AG_KEYMOD_CTRL;
+#endif
+	if ((pm = AG_PopupNew(ed)) == NULL)
 		return (NULL);
-	}
-
-	mi = AG_MenuAction(pm->root, _("Undo"), NULL, MenuUndo, "%p", ed);
-	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuUndoActive, "%p", ed);
-
-	mi = AG_MenuAction(pm->root, _("Redo"), NULL, MenuRedo, "%p", ed);
-	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuRedoActive, "%p", ed);
 
 	AG_MenuSeparator(pm->root);
 
-	mi = AG_MenuAction(pm->root, _("Cut"), NULL, MenuCut, "%p", ed);
-	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCutActive, "%p", ed);
+	mi = AG_MenuActionKb(pm->root, _("Undo"), NULL, AG_KEY_Z, keymodCmd,
+	    MenuUndo,"%p",ed);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuUndoActive,"%p",ed);
 
-	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy, "%p", ed);
-	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCopyActive, "%p", ed);
+	mi = AG_MenuActionKb(pm->root, _("Redo"), NULL, AG_KEY_Y, keymodCmd,
+	    MenuRedo,"%p",ed);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuRedoActive,"%p",ed);
 
-	mi = AG_MenuAction(pm->root, _("Paste"), NULL, MenuPaste, "%p", ed);
-	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuPasteActive, "%p", ed);
+#ifdef AG_DEBUG
+	AG_MenuAction(pm->root, _("History Buffer..."), NULL,
+	    MenuHistoryBuffer,"%p",ed);
+#endif
+	AG_MenuSeparator(pm->root);
 
-	mi = AG_MenuAction(pm->root, _("Delete"), NULL, MenuDelete, "%p", ed);
-	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuDeleteActive, "%p", ed);
+	mi = AG_MenuActionKb(pm->root, _("Cut"), NULL, AG_KEY_X, keymodCmd,
+	    MenuCut,"%p",ed);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCutActive,"%p",ed);
+
+	mi = AG_MenuActionKb(pm->root, _("Copy"), NULL, AG_KEY_C, keymodCmd,
+	    MenuCopy,"%p",ed);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCopyActive,"%p",ed);
+
+	mi = AG_MenuActionKb(pm->root, _("Paste"), NULL, AG_KEY_V, keymodCmd,
+	    MenuPaste,"%p",ed);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuPasteActive,"%p",ed);
+
+	mi = AG_MenuActionKb(pm->root, _("Delete"), NULL, AG_KEY_K, keymodCmd,
+	    MenuDelete,"%p",ed);
+	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuDeleteActive,"%p",ed);
 
 	AG_MenuSeparator(pm->root);
 
-	AG_MenuAction(pm->root, _("Select All"), NULL, MenuSelectAll, "%p", ed);
+	AG_MenuActionKb(pm->root, _("Select All"), NULL, AG_KEY_A, keymodCmd,
+	    MenuSelectAll,"%p",ed);
 
 #ifdef AG_UNICODE
 	if ((ed->flags & AG_EDITABLE_MULTILINGUAL) &&
@@ -2727,6 +3146,11 @@ OnBindingChange(AG_Event *_Nonnull event)
 	AG_Editable *ed = AG_EDITABLE_SELF();
 	const AG_Variable *binding = AG_PTR(1);
 
+	AG_EditableClearHistory(ed);
+
+	/*
+	 * "string" and "text" bindings are mutually exclusive.
+	 */
 	if (strcmp(binding->name, "string") == 0) {
 		AG_Unset(ed, "text");
 	} else if (strcmp(binding->name, "text") == 0) {
@@ -2743,21 +3167,19 @@ Init(void *_Nonnull obj)
 			     AG_WIDGET_USE_TEXT | AG_WIDGET_USE_MOUSEOVER;
 
 	ed->flags = AG_EDITABLE_BLINK_ON | AG_EDITABLE_MARKPREF;
-
 	ed->lineScrollAmount = 5;
-
 #ifdef AG_UNICODE
 	ed->encoding = "UTF-8";
 #else
 	ed->encoding = "US-ASCII";
 #endif
 	ed->text[0] = '\0';
-
 	ed->hPre = 1;
+
 	memset(&ed->wPre, 0, sizeof(int) +               /* wPre */
 			     sizeof(int) +               /* pos */
-			     sizeof(int) +               /* sel */
-			     sizeof(int) +               /* selDblClick */
+			     sizeof(int) +               /* selStart */
+			     sizeof(int) +               /* selEnd */
 			     sizeof(AG_Char) +           /* compose */
 			     sizeof(int) +               /* xCurs */
 			     sizeof(int) +               /* yCurs */
@@ -2772,17 +3194,15 @@ Init(void *_Nonnull obj)
 			     sizeof(int) +               /* yMax */
 			     sizeof(int) +               /* yVis */
 			     sizeof(int) +               /* posKbdSel */
-			     sizeof(Uint) +              /* nRevs */
-			     sizeof(Uint) +              /* nRevsUndone */
 			     sizeof(Uint32) +            /* _pad */
 			     sizeof(AG_EditableBuffer) + /* sBuf */
 			     sizeof(AG_Rect) +           /* r */
-			     sizeof(AG_CursorArea) +     /* ca */
+			     sizeof(AG_CursorArea *) +   /* ca */
 			     sizeof(enum ag_language) +  /* lang */
 			     sizeof(int) +               /* xScrollPx */
 			     sizeof(AG_PopupMenu *) +    /* pm */
 			     sizeof(int *) +             /* xScrollTo */
-			     sizeof(int *) +
+			     sizeof(int *) +             /* yScrollTo */
 			     sizeof(AG_Autocomplete *)); /* complete */
 	
 	ed->fontMaxHeight = agTextFontHeight;
@@ -2798,9 +3218,13 @@ Init(void *_Nonnull obj)
 	AG_InitTimer(&ed->toCursorBlink, "cursorBlink", 0);
 	AG_InitTimer(&ed->toDblClick, "dblClick", 0);
 
+	ed->nUndo = 0;
+	ed->nRedo = 0;
+	ed->undo = Malloc(sizeof(AG_EditableRevision));
+	ed->redo = Malloc(sizeof(AG_EditableRevision));
+
 	AG_AddEvent(ed, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(ed, "widget-hidden", OnHide, NULL);
-
 	AG_SetEvent(ed, "key-down", KeyDown, NULL);
 	AG_SetEvent(ed, "key-up", KeyUp, NULL);
 	AG_SetEvent(ed, "mouse-button-down", MouseButtonDown, NULL);
@@ -2812,7 +3236,6 @@ Init(void *_Nonnull obj)
 	/* Default to a small, built-in text buffer. */
 	AG_BindString(ed, "string", ed->text, sizeof(ed->text));
 
-	/* Make binding "string" and "text" mutually exclusive. */
 	AG_SetEvent(ed, "bound", OnBindingChange, NULL);
 	OBJECT(ed)->flags |= AG_OBJECT_BOUND_EVENTS;
 }
@@ -2821,6 +3244,7 @@ static void
 Destroy(void *_Nonnull obj)
 {
 	AG_Editable *ed = obj;
+	Uint i;
 
 	if (ed->complete != NULL) {
 		free(ed->complete);
@@ -2830,6 +3254,15 @@ Destroy(void *_Nonnull obj)
 	}
 	if (ed->flags & AG_EDITABLE_EXCL)
 		Free(ed->sBuf.s);
+
+	for (i = 0; i < ed->nUndo; i++) {
+		FreeRevision(&ed->undo[i]);
+	}
+	for (i = 0; i < ed->nRedo; i++) {
+		FreeRevision(&ed->redo[i]);
+	}
+	free(ed->undo);
+	free(ed->redo);
 }
 
 /* Initialize/release the global clipboards. */
