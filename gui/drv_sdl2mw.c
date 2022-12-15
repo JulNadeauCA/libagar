@@ -110,8 +110,10 @@ SDL2MW_EventSink(AG_EventSink *es, AG_Event *event)
 	AG_Driver *drv = AG_DRIVER_PTR(1);
 
 	if (SDL_PollEvent(NULL) != 0) {
-		while (AG_SDL2_GetNextEvent(drv, &dev) == 1)
-			(void)SDL2MW_ProcessEvent(drv, &dev);
+		while (AG_SDL2_GetNextEvent(drv, &dev) == 1) {
+			if (dev.type != AG_DRIVER_UNKNOWN)
+				(void)SDL2MW_ProcessEvent(drv, &dev);
+		}
 	} else {
 		AG_Delay(1);
 	}

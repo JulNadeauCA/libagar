@@ -1068,6 +1068,10 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		    &dev->data.button.y);
 		break;
 	case SDL_KEYDOWN:
+		if (ev->key.repeat) {
+			/* Agar implements its own keyrepeat */
+			goto fail;
+		}
 		Debug(drv, "KEYDOWN "
 		    "(Sym=" AGSI_YEL "0x%x" AGSI_RST
 		    " Scan=" AGSI_YEL "0x%x" AGSI_RST ")\n",
@@ -1272,7 +1276,6 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 	}
 	return;
 fail:
-	Debug(drv, "SDL2: Event translation failed (type=0x%x)\n", ev->type);
 	dev->type = AG_DRIVER_UNKNOWN;
 	dev->win = NULL;
 }
@@ -1442,7 +1445,8 @@ AG_SDL2_ProcessEvent_SW(void *obj, AG_DriverEvent *dev)
 	AG_Driver *drv = (AG_Driver *)obj;
 	AG_DriverSw *dsw = (AG_DriverSw *)obj;
 	int rv = 1;
-
+	
+	AG_OBJECT_ISA(drv, "AG_Driver:AG_DriverSw:*");
 	AG_LockVFS(&agDrivers);
 
 	switch (dev->type) {
@@ -1504,8 +1508,8 @@ AG_SDL2_ProcessEvent_SW(void *obj, AG_DriverEvent *dev)
 int
 AG_SDL2_ProcessEvent_MW(void *obj, AG_DriverEvent *dev)
 {
-	AG_Driver *drv = AGDRIVER(obj);
 	AG_Window *win;
+	AG_Driver *drv;
 	int useText;
 	int rv = 1;
 
@@ -1513,7 +1517,9 @@ AG_SDL2_ProcessEvent_MW(void *obj, AG_DriverEvent *dev)
 		return (0);
 
 	AG_LockVFS(&agDrivers);
+	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 	drv = WIDGET(win)->drv;
+	AG_OBJECT_ISA(drv, "AG_Driver:AG_DriverMw:*");
 
 	if ((useText = (win->flags & AG_WINDOW_USE_TEXT))) {
 		AG_PushTextState();
@@ -1569,7 +1575,6 @@ AG_SDL2_ProcessEvent_MW(void *obj, AG_DriverEvent *dev)
 		AG_PostEvent(win, "window-close", NULL);
 		break;
 	default:
-		Debug(win, "ProcessEvent_MW: unhandled event %x\n", dev->type);
 		rv = 0;
 		break;
 	}
@@ -1592,8 +1597,10 @@ AG_SDL2_EventSink_SW(AG_EventSink *es, AG_Event *event)
 	AG_Driver *drv = AG_DRIVER_PTR(1);
 
 	if (SDL_PollEvent(NULL) != 0) {
-		while (AG_SDL2_GetNextEvent(drv, &dev) == 1)
-			(void)AG_SDL2_ProcessEvent_SW(drv, &dev);
+		while (AG_SDL2_GetNextEvent(drv, &dev) == 1) {
+			if (dev.type != AG_DRIVER_UNKNOWN)
+				(void)AG_SDL2_ProcessEvent_SW(drv, &dev);
+		}
 	} else {
 		AG_Delay(1);
 	}
