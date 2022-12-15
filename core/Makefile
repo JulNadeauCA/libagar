@@ -19,7 +19,7 @@ MAN3=	AG_ByteSwap.3 AG_CPUInfo.3 AG_Config.3 AG_Core.3 AG_DSO.3 \
 	AG_Threads.3 AG_Time.3 AG_Timer.3 AG_User.3 AG_Variable.3 \
 	AG_Version.3
 
-SRCS=	byteswap.c class.c config.c core.c cpuinfo.c data_source.c \
+SRCS=	byteswap.c class.c config.c core.c cpuinfo.c crc32.c data_source.c \
 	db.c dir.c dso.c error.c event.c exec.c file.c getopt.c \
 	load_integral.c load_real.c load_string.c load_version.c \
 	object.c string.c tbl.c text.c time.c time_dummy.c timeout.c \
