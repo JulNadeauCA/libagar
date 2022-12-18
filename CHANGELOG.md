@@ -87,6 +87,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Fixed non-delivery of `mouse-button-down` events to hidden and subsequently re-shown widgets (e.g., widgets under a Notebook). Thanks [Walter](https://github.com/WallyZambotti)!
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Deliver `widget-hidden` when detaching a widget from a visible window.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): In `AG_WidgetSizeAlloc()`, set the `UNDERSIZE` flag correctly on return in the case where `size_allocate()` is inherited from a parent class.
+- [**AG_Window**](https://libagar.org/man3/AG_Window): Fix a memory leak in single-window mode (the Resize cursors).
 - [**MAP**](https://libagar.org/man3/MAP): Added missing lock operations in `MAP_AddCamera()`, `MAP_PushLayer()` and `MAP_PopLayer()`. Fixed multiple memory leaks.
 - [**MAP**](https://libagar.org/man3/MAP): Fixed crash when pushing new layers in Editor.
 

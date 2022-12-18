@@ -2477,6 +2477,7 @@ AG_WindowProcessDetachQueue(void)
 				AGDRIVER_MW(drv)->flags &= ~(AG_DRIVER_MW_OPEN);
 			}
 		} else {
+			AG_UnmapAllCursors(win, win);
 			win->tbar = NULL;
 			AGDRIVER_SW(drv)->flags |= AG_DRIVER_SW_REDRAW;
 		}
