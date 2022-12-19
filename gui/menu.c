@@ -552,7 +552,7 @@ FontChanged(AG_Event *_Nonnull event)
 static __inline__ _Const_Attribute int
 KeyModMatch(AG_KeyMod miMod, AG_KeyMod kmod)
 {
-	if (kmod == 0 || (miMod & kmod)) {
+	if (miMod == 0 || (miMod & kmod)) {
 		return (1);
 	}
 	if ((miMod & AG_KEYMOD_CTRL_SHIFT) &&
