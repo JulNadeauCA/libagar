@@ -37,6 +37,13 @@
 #include <agar/gui/opengl.h>
 #include <agar/gui/sdl2.h>
 
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
+#include <agar/gui/box.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/tlist.h>
+#include <agar/gui/notebook.h>
+#endif
+
 enum ag_sdl2gl_out {
 	AG_SDL2GL_OUT_NONE,		/* No capture */
 	AG_SDL2GL_OUT_JPEG,		/* Output JPEG files */
@@ -217,6 +224,7 @@ SDL2GL_CaptureOutput(AG_DriverSDL2GL *_Nonnull sgl)
 	AG_Surface *S;
 
 	Snprintf(path, sizeof(path), sgl->outPath, sgl->outFrame);
+/*	Debug(sgl, "Capture(%s)\n", path); */
 	glReadPixels(0,0, w,h, GL_RGBA, GL_UNSIGNED_BYTE, sgl->outBuf);
 
 	if (AG_PackedPixelFlip(sgl->outBuf, h,w*4) == -1) {
@@ -262,9 +270,19 @@ static void
 SDL2GL_EndRendering(void *_Nonnull drv)
 {
 	AG_DriverSDL2GL *sgl = drv;
+	AG_GL_Context *gl = &sgl->gl;
+	int i;
 	
 	if (sgl->outMode != AG_SDL2GL_OUT_NONE)            /* Capture output */
 		SDL2GL_CaptureOutput(sgl);
+
+	/* Remove textures and display lists queued for deletion. */
+	glDeleteTextures(gl->nTextureGC, (const GLuint *)gl->textureGC);
+	for (i = 0; i < gl->nListGC; i++) {
+		glDeleteLists(gl->listGC[i], 1);
+	}
+	gl->nTextureGC = 0;
+	gl->nListGC = 0;
 
 	if (AGDRIVER_SW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
 		glPopAttrib();
@@ -528,6 +546,108 @@ SDL2GL_SetVideoContext(void *_Nonnull obj, void *_Nonnull pSurface)
 	return (-1);
 }
 
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
+
+static void
+PollGLContext(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_DriverSDL2GL *sgl = (AG_DriverSDL2GL *)AG_PTR(1);
+	const AG_GL_Context *ctx = &sgl->gl;
+	AG_TlistItem *it;
+	Uint i;
+
+	if (!AG_OBJECT_VALID(sgl) ||
+	    !AG_OfClass(sgl, "AG_Driver:AG_DriverSw:AG_DriverSDL2GL:*")) {
+		if (WIDGET(tl)->window != NULL) {
+			AG_ObjectDetach(WIDGET(tl)->window);
+			return;
+		}
+		return;
+	}
+
+	AG_TlistBegin(tl);
+
+	for (i = 0; i < ctx->nClipRects; i++) {
+		AG_ClipRect *cr = &ctx->clipRects[i];
+
+		it = AG_TlistAdd(tl, NULL,
+		    _("Clipping Rectangle #" AGSI_BOLD "%d" AGSI_RST
+		      " (%dx%d) at [" AGSI_BOLD "%d,%d" AGSI_BOLD "]"),
+		    i, cr->r.x, cr->r.y, cr->r.w, cr->r.h);
+		it->p1 = cr;
+	}
+
+	for (i = 0; i < ctx->nBlendStates; i++) {
+		AG_GL_BlendState *bs = &ctx->blendStates[i];
+
+		it = AG_TlistAdd(tl, NULL,
+		    _("Blending State #" AGSI_BOLD "%d" AGSI_RST
+		      " (" AGSI_BOLD "%s" AGSI_RST ", SrcFac=%d, DstFac=%d)"),
+		    i, bs->enabled ? _("Enabled") : _("Disabled"),
+		    bs->srcFactor, bs->dstFactor);
+		it->p1 = bs;
+	}
+
+	for (i = 0; i < ctx->nTextureGC; i++) {
+		it = AG_TlistAdd(tl, NULL,
+		    _("Texture Delete #" AGSI_BOLD "%d" AGSI_RST " (Texture=%u)"),
+		    i, ctx->textureGC[i]);
+		it->p1 = &ctx->textureGC[i];
+	}
+
+	for (i = 0; i < ctx->nListGC; i++) {
+		it = AG_TlistAdd(tl, NULL,
+		    _("List Delete #" AGSI_BOLD "%d" AGSI_RST " (List=%u)"),
+		    i, ctx->listGC[i]);
+		it->p1 = &ctx->listGC[i];
+	}
+
+	AG_TlistEnd(tl);
+}
+
+static void *_Nullable
+Edit(void *_Nonnull obj)
+{
+	AG_DriverSDL2GL *sgl = obj;
+	AG_Window *win;
+	AG_Label *lbl;
+	AG_Tlist *tl;
+	AG_Keyboard *kbd = AGDRIVER(sgl)->kbd;
+	AG_Mouse *mouse = AGDRIVER(sgl)->mouse;
+	AG_Notebook *nb;
+	AG_NotebookTab *nt;
+
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return (NULL);
+	}
+	AG_WindowSetPosition(win, AG_WINDOW_BL, 0);
+
+	lbl = AG_LabelNew(win, 0, _("SDL2GL Driver: %s"), OBJECT(sgl)->name);
+	AG_SetStyle(lbl, "font-family", "cm-sans");
+	AG_SetStyle(lbl, "font-size", "150%");
+
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
+
+	if (OBJECT_CLASS(kbd)->edit != NULL) {
+		nt = AG_NotebookAdd(nb, _("Keyboard"), AG_BOX_VERT);
+		AG_ObjectAttach(nt, OBJECT_CLASS(kbd)->edit(kbd));
+	}
+	if (OBJECT_CLASS(mouse)->edit != NULL) {
+		nt = AG_NotebookAdd(nb, _("Mouse"), AG_BOX_VERT);
+		AG_ObjectAttach(nt, OBJECT_CLASS(mouse)->edit(mouse));
+	}
+	nt = AG_NotebookAdd(nb, _("OpenGL"), AG_BOX_VERT);
+	{
+		AG_LabelNewS(nt, 0, _("Pushed GL States:"));
+		tl = AG_TlistNewPolled(nt, AG_TLIST_EXPAND, PollGLContext,"%p",sgl);
+		AG_SetStyle(tl, "font-size", "80%");
+		AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 4);
+	}
+	return (win);
+}
+#endif /* AG_WIDGETS and AG_DEBUG */
+
 AG_DriverSwClass agDriverSDL2GL = {
 	{
 		{
@@ -539,7 +659,11 @@ AG_DriverSwClass agDriverSDL2GL = {
 			NULL,		/* destroy */
 			NULL,		/* load */
 			NULL,		/* save */
-			NULL,		/* edit */
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
+			Edit
+#else
+			NULL		/* edit */
+#endif
 		},
 		"sdl2gl",
 		AG_VECTOR,

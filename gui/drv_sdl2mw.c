@@ -39,6 +39,13 @@
 #include <agar/gui/opengl.h>
 #include <agar/gui/sdl2.h>
 
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
+#include <agar/gui/box.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/tlist.h>
+#include <agar/gui/notebook.h>
+#endif
+
 static int nDrivers = 0;                        /* Drivers open */
 static int initedSDL = 0;			/* Inited TIMERS and EVENTS */
 static int initedSDLVideo = 0;			/* Inited VIDEO */
@@ -724,6 +731,118 @@ SDL2MW_SetWindowMaxSize(AG_Window *_Nonnull win, int w, int h)
 	SDL_SetWindowMaximumSize(smw->window, w,h);
 }
 
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
+
+static void
+PollGLContext(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_DriverSDL2MW *smw = (AG_DriverSDL2MW *)AG_PTR(1);
+	const AG_GL_Context *ctx = &smw->gl;
+	AG_TlistItem *it;
+	Uint i;
+
+	if (!AG_OBJECT_VALID(smw) ||
+	    !AG_OfClass(smw, "AG_Driver:AG_DriverMw:AG_DriverSDL2MW:*")) {
+		if (WIDGET(tl)->window != NULL) {
+			AG_ObjectDetach(WIDGET(tl)->window);
+			return;
+		}
+		return;
+	}
+
+	AG_TlistBegin(tl);
+
+	for (i = 0; i < ctx->nClipRects; i++) {
+		AG_ClipRect *cr = &ctx->clipRects[i];
+
+		it = AG_TlistAdd(tl, NULL,
+		    _("Clipping Rectangle #" AGSI_BOLD "%d" AGSI_RST
+		      " (%dx%d) at [" AGSI_BOLD "%d,%d" AGSI_BOLD "]"),
+		    i, cr->r.x, cr->r.y, cr->r.w, cr->r.h);
+		it->p1 = cr;
+	}
+
+	for (i = 0; i < ctx->nBlendStates; i++) {
+		AG_GL_BlendState *bs = &ctx->blendStates[i];
+
+		it = AG_TlistAdd(tl, NULL,
+		    _("Blending State #" AGSI_BOLD "%d" AGSI_RST
+		      " (" AGSI_BOLD "%s" AGSI_RST ", SrcFac=%d, DstFac=%d)"),
+		    i, bs->enabled ? _("Enabled") : _("Disabled"),
+		    bs->srcFactor, bs->dstFactor);
+		it->p1 = bs;
+	}
+
+	for (i = 0; i < ctx->nTextureGC; i++) {
+		it = AG_TlistAdd(tl, NULL,
+		    _("Texture Delete #" AGSI_BOLD "%d" AGSI_RST " (Texture=%u)"),
+		    i, ctx->textureGC[i]);
+		it->p1 = &ctx->textureGC[i];
+	}
+
+	for (i = 0; i < ctx->nListGC; i++) {
+		it = AG_TlistAdd(tl, NULL,
+		    _("List Delete #" AGSI_BOLD "%d" AGSI_RST " (List=%u)"),
+		    i, ctx->listGC[i]);
+		it->p1 = &ctx->listGC[i];
+	}
+
+	AG_TlistEnd(tl);
+}
+
+static void *_Nullable
+Edit(void *_Nonnull obj)
+{
+	AG_DriverSDL2MW *smw = obj;
+	AG_Window *win;
+	AG_Label *lbl;
+	AG_Tlist *tl;
+	AG_Keyboard *kbd = AGDRIVER(smw)->kbd;
+	AG_Mouse *mouse = AGDRIVER(smw)->mouse;
+	AG_Notebook *nb;
+	AG_NotebookTab *nt;
+
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return (NULL);
+	}
+	AG_WindowSetPosition(win, AG_WINDOW_BL, 0);
+
+	lbl = AG_LabelNew(win, 0, _("SDL2MW Driver: %s"), OBJECT(smw)->name);
+	AG_SetStyle(lbl, "font-family", "cm-sans");
+	AG_SetStyle(lbl, "font-size", "150%");
+
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
+
+	if (OBJECT_CLASS(kbd)->edit != NULL) {
+		nt = AG_NotebookAdd(nb, _("Keyboard"), AG_BOX_VERT);
+		AG_ObjectAttach(nt, OBJECT_CLASS(kbd)->edit(kbd));
+	}
+	if (OBJECT_CLASS(mouse)->edit != NULL) {
+		nt = AG_NotebookAdd(nb, _("Mouse"), AG_BOX_VERT);
+		AG_ObjectAttach(nt, OBJECT_CLASS(mouse)->edit(mouse));
+	}
+	nt = AG_NotebookAdd(nb, _("OpenGL"), AG_BOX_VERT);
+	{
+		AG_LabelNewS(nt, 0, _("Pushed GL States:"));
+		tl = AG_TlistNewPolled(nt, AG_TLIST_EXPAND, PollGLContext,"%p",smw);
+		AG_SetStyle(tl, "font-size", "80%");
+		AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 4);
+	}
+#if 0
+	nt = AG_NotebookAdd(nb, _("WM States"), AG_BOX_VERT);
+	{
+		AG_PushDisabledState(nt);
+		AG_CheckboxNewInt(nt, 0, _("Pointer Is Grabbed"), &smw->ptrIsGrabbed);
+		AG_CheckboxNewInt(nt, 0, _("WM Hints Are Set"), &smw->wmHintsSet);
+		AG_CheckboxNewInt(nt, 0, _("Clipboard Selection Waiting"), &agClipboardSelectionWaiting);
+		AG_PopDisabledState(nt);
+	}
+#endif
+	return (win);
+}
+#endif /* AG_WIDGETS and AG_DEBUG */
+
 AG_DriverMwClass agDriverSDL2MW = {
 	{
 		{
@@ -735,7 +854,12 @@ AG_DriverMwClass agDriverSDL2MW = {
 			NULL,		/* destroy */
 			NULL,		/* load */
 			NULL,		/* save */
-			NULL,		/* edit */
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
+			Edit,
+#else
+			NULL		/* edit */
+#endif
+
 		},
 		"sdl2mw",
 		AG_VECTOR,
