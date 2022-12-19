@@ -700,12 +700,13 @@ AG_About(AG_Event *event)
 		AG_GetVersion(&av);
 
 		lbl = AG_LabelNew(box, 0,
-		    "Agar %d.%d.%d (" AGSI_LEAGUE_SPARTAN "%s" AGSI_RST ")",
+		    "Agar %d.%d.%d "
+		    "( " AGSI_CYAN AGSI_LEAGUE_SPARTAN "%s" AGSI_RST " )",
 		    av.major, av.minor, av.patch,
 		    (av.release) ? av.release : "beta");
 
 		AG_SetStyle(lbl, "font-family", "cm-sans");
-		AG_SetStyle(lbl, "font-size", "220%");
+		AG_SetStyle(lbl, "font-size", "180%");
 
 		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "sq-agar.bmp",
 		    path, sizeof(path)) == 0)

@@ -168,7 +168,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_WindowSetCaptionS(win, "AG_Textbox(3) Example");
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
-	nt = AG_NotebookAdd(nb, "Single-line", AG_BOX_VERT);
+	nt = AG_NotebookAdd(nb, "Shared", AG_BOX_VERT);
 	{
 		AG_LabelNew(nt, 0, "Bound to the %lu-byte buffer at %p:",
 		    (Ulong)sizeof(bufferShd), bufferShd);

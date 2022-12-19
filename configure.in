@@ -83,7 +83,7 @@ register("--with-x[=PREFIX]",		"Build with X windows support [check]")
 register("--with-xinerama[=PREFIX]",	"Build with Xinerama support [check]")
 register("--with-glx[=PREFIX]",		"Enable accelerated X driver [check]")
 register("--with-sdl[=PREFIX]",		"Enable SDL 1.2 driver [check]")
-register("--with-sdl2[=PREFIX]",	"Enable SDL 2.0 driver [no]")
+register("--with-sdl2[=PREFIX]",	"Enable SDL 2.0 driver [check]")
 register("--with-wgl",			"Enable MS Windows driver [check]")
 register("--with-cocoa",		"Enable MacOS X Cocoa driver [check]")
 register("--with-inline-surface",	"Inline pixel access routines [yes]")
@@ -376,8 +376,25 @@ if [ "${enable_gui}" != 'no' ]; then
 	mdefine(ENABLE_GUI_LIBS, "-L../gui -lag_gui")
 	mdefine(SUBDIR_gui, "gui")
 
-	# Enable SDL support if the SDL 1.2 library is found.
-	if [ "${with_sdl}" != 'no' ]; then
+	# Enable SDL2 support if SDL2 is found.
+	if [ "${with_sdl2}" != 'no' ]; then
+		check(sdl2, 2.0.0, ${prefix_sdl2})
+		if [ "${HAVE_SDL2}" != 'yes' ]; then
+			if [ "${with_sdl2}" = 'yes' ]; then
+				echo "*"
+				echo "* --with-sdl2 was requested, but SDL 2.0 "
+				echo "* library was not found."
+				echo "*"
+				exit 1
+			fi
+			disable(sdl2)
+		fi
+	else
+		disable(sdl2)
+	fi
+
+	# Fallback on SDL 1.2 if found. Mutually exclusive with SDL2.
+	if [ "${HAVE_SDL2}" != "yes" -a "${with_sdl}" != 'no' ]; then
 		check(sdl, 1.2.0, ${prefix_sdl})
 		if [ "${HAVE_SDL}" != 'yes' ]; then
 			if [ "${with_sdl}" = 'yes' ]; then
@@ -391,30 +408,6 @@ if [ "${enable_gui}" != 'no' ]; then
 		fi
 	else
 		disable(sdl)
-	fi
-
-	# Enable SDL2 support if requested (still experimental)
-	if [ "${with_sdl2}" = 'yes' ]; then
-		check(sdl2, 2.0.0, ${prefix_sdl2})
-		if [ "${HAVE_SDL}" = 'yes' ]; then
-			echo "*"
-			echo "* Option --with-sdl conflicts with --with-sdl2."
-			echo "* Currently SDL1 must be disabled for SDL2 to work."
-			echo "*"
-			exit 1
-		fi
-		if [ "${HAVE_SDL2}" != 'yes' ]; then
-			if [ "${with_sdl2}" = 'yes' ]; then
-				echo "*"
-				echo "* --with-sdl2 was requested, but SDL 2.0 "
-				echo "* library was not found."
-				echo "*"
-				exit 1
-			fi
-			disable(sdl2)
-		fi
-	else
-		disable(sdl2)
 	fi
 
 	# Enable OpenGL support if an OpenGL library is found.
