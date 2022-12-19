@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2021 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,11 @@
 #include <agar/core/core.h>
 #include <agar/gui/window.h>
 #include <agar/gui/cursors.h>
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
+#include <agar/gui/box.h>
+#include <agar/gui/label.h>
+#include <agar/gui/separator.h>
+#endif
 
 /* #define DEBUG_MOUSE */
 
@@ -371,6 +376,33 @@ out:
 	AG_ObjectUnlock(wid);
 }
 
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
+static void *
+Edit(void *obj)
+{
+	AG_Mouse *mouse = obj;
+	AG_Box *box;
+	AG_Label *lbl;
+
+	box = AG_BoxNewVert(NULL, AG_BOX_HFILL);
+
+	lbl = AG_LabelNewPolledMT(box,
+	    AG_LABEL_HFILL,
+	    &OBJECT(mouse)->lock,
+	    _("Description: " AGSI_BOLD "%s" AGSI_RST "\n"
+	      "Button Count: %u\n"
+	      "Button State: 0x%x\n"
+	      "Cursor Position: %d,%d [%d %d]"),
+	    AGINPUTDEV(mouse)->desc,
+	    &mouse->nButtons, &mouse->btnState,
+	    &mouse->x, &mouse->y,
+	    &mouse->xRel, &mouse->yRel);
+	AG_RedrawOnTick(lbl, 100);
+
+	return (box);
+}
+#endif /* AG_WIDGETS and AG_DEBUG */
+
 AG_ObjectClass agMouseClass = {
 	"Agar(InputDevice:Mouse)",
 	sizeof(AG_Mouse),
@@ -380,5 +412,9 @@ AG_ObjectClass agMouseClass = {
 	NULL,		/* destroy */
 	NULL,		/* load */
 	NULL,		/* save */
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
+	Edit
+#else
 	NULL		/* edit */
+#endif
 };

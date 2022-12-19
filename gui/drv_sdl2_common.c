@@ -950,7 +950,8 @@ AG_SDL_GetWindowFromID(AG_Driver *drv, Uint32 windowID)
 
 		if (!(AGDRIVER_MW(dmw)->flags & AG_DRIVER_MW_OPEN) ||
 		    (win->flags & AG_WINDOW_DETACHING) ||
-		    WIDGET(win)->drv == NULL) {
+		    WIDGET(win)->drv == NULL ||
+		    ((void *)win == (void *)&agDrivers)) {           /* XXX */
 			return (NULL);
 		}
 		return (win);

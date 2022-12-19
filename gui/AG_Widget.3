@@ -1321,14 +1321,21 @@ Actions were introduced in Agar 1.4.
 .Dv AG_WIDGET_USE_OPENGL
 first appeared in Agar 1.5, replacing
 .Xr AG_GLView 3 .
-The
+Agar 1.6.0 first made the
 .Va actions ,
 .Va pal
 and
 .Va rSens
-structure members were made public in Agar 1.6.0.
-Agar 1.6.0 also added
+structure members public.
+The
 .Fn AG_SetStyleF ,
-.Fn AG_PushBlendingMode ,
-.Fn AG_PopBlendingMode ,
-and introduced the "font-changed" and "palette-changed" events.
+.Fn AG_PushBlendingMode
+and
+.Fn AG_PopBlendingMode
+functions appeared in Agar 1.6.0.
+The "font-changed" and "palette-changed" events appeared in Agar 1.6.0.
+.Fn AG_PushDisabledState ,
+.Fn AG_PopDisabledState ,
+the
+.Dv AG_WIDGET_DISABLE_ON_ATTACH
+flag and the "padding-changed" event appeared in Agar 1.7.0.

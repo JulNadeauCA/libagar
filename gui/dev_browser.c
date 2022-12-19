@@ -155,7 +155,7 @@ CloseGenericDlg(AG_Event *_Nonnull event)
 
 	AG_ObjectDetach(win);
 	TAILQ_REMOVE(&gobjs, oent, objs);
-	Free(oent);
+	free(oent);
 }
 
 static void
@@ -169,9 +169,15 @@ BrowserOpenGeneric(AG_Object *ob)
 			break;
 	}
 	if (oent != NULL) {
-		AG_WindowShow(oent->win);
-		AG_WindowFocus(oent->win);
-		return;
+		if (AG_OBJECT_VALID(oent->win) &&
+		    AG_OfClass(oent->win, "AG_Widget:AG_Window:*")) {
+			AG_WindowShow(oent->win);
+			AG_WindowFocus(oent->win);
+			return;
+		} else {
+			TAILQ_REMOVE(&gobjs, oent, objs);
+			free(oent);
+		}
 	}
 
 	if ((win = AG_DEV_ObjectEdit(ob)) == NULL)
@@ -199,9 +205,15 @@ AG_DEV_BrowserOpenData(void *p)
 			break;
 	}
 	if (oent != NULL) {
-		AG_WindowShow(oent->win);
-		AG_WindowFocus(oent->win);
-		return;
+		if (AG_OBJECT_VALID(oent->win) &&
+		    AG_OfClass(oent->win, "AG_Widget:AG_Window:*")) {
+			AG_WindowShow(oent->win);
+			AG_WindowFocus(oent->win);
+			return;
+		} else {
+			TAILQ_REMOVE(&gobjs, oent, objs);
+			free(oent);
+		}
 	}
 	
 	if (ob->cls->edit == NULL)
@@ -721,6 +733,7 @@ AG_DEV_Browser(void *vfsRoot)
 
 	tlObjs = AG_TlistNew(NULL, AG_TLIST_POLL | AG_TLIST_MULTI |
 	                           AG_TLIST_EXPAND);
+	AG_TlistSetRefresh(tlObjs, 120);
 	AG_TlistSizeHint(tlObjs, "XXXXXXXXXXXXXXXXXXXXXXXX", 10);
 	AG_SetEvent(tlObjs, "tlist-poll", PollObjects, "%p", vfsRoot);
 	AG_SetEvent(tlObjs, "tlist-dblclick", ObjectOp, "%p,%p,%i", vfsRoot,

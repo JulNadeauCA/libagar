@@ -78,10 +78,11 @@
 #include <agar/gui/cursors.h>
 #include <agar/gui/opengl.h>
 
-#ifdef AG_DEBUG
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
 #include <agar/gui/box.h>
 #include <agar/gui/checkbox.h>
 #include <agar/gui/tlist.h>
+#include <agar/gui/notebook.h>
 #endif
 
 /* #define DEBUG_CLIPBOARD */
@@ -2380,7 +2381,7 @@ fail:
 	return (-1);
 }
 
-#ifdef AG_DEBUG
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
 
 static void
 PollGLContext(AG_Event *_Nonnull event)
@@ -2447,39 +2448,48 @@ Edit(void *_Nonnull obj)
 	AG_Window *win;
 	AG_Label *lbl;
 	AG_Tlist *tl;
+	AG_Keyboard *kbd = AGDRIVER(glx)->kbd;
+	AG_Mouse *mouse = AGDRIVER(glx)->mouse;
+	AG_Notebook *nb;
+	AG_NotebookTab *nt;
 
-	if ((win = AG_WindowNew(0)) == NULL)
+	if ((win = AG_WindowNew(0)) == NULL) {
 		return (NULL);
+	}
+	AG_WindowSetPosition(win, AG_WINDOW_BL, 0);
 
 	lbl = AG_LabelNew(win, 0, _("GLX Driver: %s"), OBJECT(glx)->name);
 	AG_SetStyle(lbl, "font-family", "cm-sans");
-	AG_SetStyle(lbl, "font-size", "200%");
-#if 0
-	AG_LabelNewPolled(win, AG_LABEL_EXPAND | AG_LABEL_SLOW,
-	    _("Total drivers: " AGSI_BOLD "%i" AGSI_RST "\n"
-	      "XKB buffer: \"%s\"\n"
-	      "X Window Handle: 0x%x\n"),
-	    &nDrivers,
-	    xkbBuf,
-	    (Uint *)&glx->w,
-#endif
+	AG_SetStyle(lbl, "font-size", "150%");
 
-	AG_PushDisabledState(win);
-	AG_CheckboxNewInt(win, 0, _("Pointer Is Grabbed"), &glx->ptrIsGrabbed);
-	AG_CheckboxNewInt(win, 0, _("WM Hints Are Set"), &glx->wmHintsSet);
-	AG_CheckboxNewInt(win, 0, _("Clipboard Selection Waiting"), &agClipboardSelectionWaiting);
-	AG_PopDisabledState(win);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
 
-	lbl = AG_LabelNewS(win, 0, _("Saved GL States:"));
-	AG_SetStyle(lbl, "font-size", "120%");
-	AG_SetStyle(lbl, "padding", "10 2 0 0");
-	tl = AG_TlistNewPolled(win, AG_TLIST_EXPAND, PollGLContext,"%p",glx);
-	AG_SetStyle(tl, "font-size", "80%");
-	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 5);
-
+	if (OBJECT_CLASS(kbd)->edit != NULL) {
+		nt = AG_NotebookAdd(nb, _("Keyboard"), AG_BOX_VERT);
+		AG_ObjectAttach(nt, OBJECT_CLASS(kbd)->edit(kbd));
+	}
+	if (OBJECT_CLASS(mouse)->edit != NULL) {
+		nt = AG_NotebookAdd(nb, _("Mouse"), AG_BOX_VERT);
+		AG_ObjectAttach(nt, OBJECT_CLASS(mouse)->edit(mouse));
+	}
+	nt = AG_NotebookAdd(nb, _("OpenGL"), AG_BOX_VERT);
+	{
+		AG_LabelNewS(nt, 0, _("Pushed GL States:"));
+		tl = AG_TlistNewPolled(nt, AG_TLIST_EXPAND, PollGLContext,"%p",glx);
+		AG_SetStyle(tl, "font-size", "80%");
+		AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 4);
+	}
+	nt = AG_NotebookAdd(nb, _("WM States"), AG_BOX_VERT);
+	{
+		AG_PushDisabledState(nt);
+		AG_CheckboxNewInt(nt, 0, _("Pointer Is Grabbed"), &glx->ptrIsGrabbed);
+		AG_CheckboxNewInt(nt, 0, _("WM Hints Are Set"), &glx->wmHintsSet);
+		AG_CheckboxNewInt(nt, 0, _("Clipboard Selection Waiting"), &agClipboardSelectionWaiting);
+		AG_PopDisabledState(nt);
+	}
 	return (win);
 }
-#endif /* AG_DEBUG */
+#endif /* AG_WIDGETS and AG_DEBUG */
 
 AG_DriverMwClass agDriverGLX = {
 	{
@@ -2492,7 +2502,7 @@ AG_DriverMwClass agDriverGLX = {
 			Destroy,
 			NULL,		/* load */
 			NULL,		/* save */
-#ifdef AG_DEBUG
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
 			Edit
 #else
 			NULL		/* edit */

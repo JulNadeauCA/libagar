@@ -30,6 +30,12 @@
 #include <agar/core/core.h>
 #include <agar/gui/window.h>
 
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
+#include <agar/gui/box.h>
+#include <agar/gui/label.h>
+#include <agar/gui/tlist.h>
+#endif
+
 /* #define DEBUG_KEYBOARD */
 
 /*
@@ -718,6 +724,66 @@ AG_CompareKeyMods(Uint modState, const char *flags)
 	return (0);
 }
 
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
+static void
+PollKeyboardState(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Keyboard *kbd = AG_PTR(1);
+	AG_TlistItem *it;
+	Uint i;
+
+	if (!AG_OBJECT_VALID(kbd) ||
+	    !AG_OfClass(kbd, "AG_InputDevice:AG_Keyboard:*"))
+		return;
+
+	AG_TlistBegin(tl);
+
+	for (i = 0; i < kbd->keyCount; i++) {
+		const char *keyName;
+
+		if (kbd->keyState[i] == 0) {
+			continue;
+		}
+		if ((keyName = AG_LookupKeyName(i)) != NULL) {
+			it = AG_TlistAddS(tl, NULL, keyName);
+		} else {
+			it = AG_TlistAdd(tl, NULL, _("Unknown Key %d"), i);
+		}
+		it->p1 = &kbd->keyState[i];
+	}
+
+	AG_TlistEnd(tl);
+}
+
+static void *
+Edit(void *obj)
+{
+	AG_Keyboard *kbd = obj;
+	AG_Box *box;
+	AG_Label *lbl;
+	AG_Tlist *tl;
+
+	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+
+	lbl = AG_LabelNewPolledMT(box, AG_LABEL_HFILL, &OBJECT(kbd)->lock,
+	    _("Description: " AGSI_BOLD "%s" AGSI_RST "\n"
+	      "Key Count: %u\n"
+	      "Modifier State: 0x%x"),
+	    AGINPUTDEV(kbd)->desc,
+	    &kbd->keyCount, &kbd->modState);
+	AG_RedrawOnTick(lbl, 120);
+
+	tl = AG_TlistNewPolled(box, AG_TLIST_EXPAND, PollKeyboardState,"%p", kbd);
+	AG_SetStyle(tl, "font-weight", "bold");
+	AG_SetStyle(tl, "font-size", "120%");
+	AG_TlistSizeHint(tl, "<AG_KEY_THOUSANDS_SEPARATOR>", 10);
+	AG_TlistSetRefresh(tl, 120);
+
+	return (box);
+}
+#endif /* AG_WIDGETS and AG_DEBUG */
+
 AG_ObjectClass agKeyboardClass = {
 	"Agar(InputDevice:Keyboard)",
 	sizeof(AG_Keyboard),
@@ -727,5 +793,9 @@ AG_ObjectClass agKeyboardClass = {
 	Destroy,
 	NULL,		/* load */
 	NULL,		/* save */
+#if defined(AG_WIDGETS) && defined(AG_DEBUG)
+	Edit
+#else
 	NULL		/* edit */
+#endif
 };

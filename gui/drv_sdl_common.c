@@ -855,10 +855,7 @@ GenericMouseOverCtrl(AG_Window *_Nonnull win, int x, int y)
 
 /*
  * Process an input device event.
- *
  * The agDrivers VFS must be locked.
- *
- * TODO: generalize this code for single-window drivers in general.
  */
 static int
 ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
