@@ -152,13 +152,10 @@ typedef struct ag_object {
 #define AG_OBJECT_INDETACH	 0x10000  /* In AG_ObjectDetach() */
 #define AG_OBJECT_BOUND_EVENTS	 0x20000  /* Generate "bound" events whenever
 					     AG_Bind*() is invoked */
-#define AG_OBJECT_SAVED_FLAGS	(AG_OBJECT_FLOATING_VARS|\
- 				 AG_OBJECT_INDESTRUCTIBLE|\
-				 AG_OBJECT_READONLY|\
-				 AG_OBJECT_REOPEN_ONLOAD|\
-				 AG_OBJECT_REMAIN_DATA|\
-				 AG_OBJECT_DEBUG|\
-				 AG_OBJECT_BOUND_EVENTS)
+#define AG_OBJECT_SAVED_FLAGS (AG_OBJECT_FLOATING_VARS | AG_OBJECT_INDESTRUCTIBLE | \
+                               AG_OBJECT_READONLY | AG_OBJECT_REOPEN_ONLOAD | \
+                               AG_OBJECT_REMAIN_DATA | AG_OBJECT_DEBUG | \
+                               AG_OBJECT_BOUND_EVENTS)
 
 	AG_ObjectClass *_Nonnull cls;     /* Class description */
 

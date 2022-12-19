@@ -51,10 +51,10 @@ ag_class_is_named(const void *pClass, const char *pat)
 				if (c[0] != ':' || c[1] != '*' || c[2] != '\0')
 					continue;
 			
-				patSize = c - &pat[0];
 				if (c == &pat[0]) {
 					return (1);
 				}
+				patSize = c - &pat[0];
 				if (!strncmp(cls->hier, pat, patSize) &&
 				    (cls->hier[patSize] == ':' ||
 				     cls->hier[patSize] == '\0')) {
