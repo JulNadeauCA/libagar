@@ -18,11 +18,7 @@ enum ag_exec_wait_type {
 	AG_EXEC_WAIT_INFINITE
 };
 
-#if defined(HAVE_EXECVP) && !defined(_WIN32)
-typedef pid_t AG_ProcessID;
-#else
 typedef int AG_ProcessID;
-#endif
 
 __BEGIN_DECLS
 AG_ProcessID AG_Execute(const char *_Nullable, char *_Nullable *_Nullable);

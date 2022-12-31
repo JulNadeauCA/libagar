@@ -1,4 +1,4 @@
-.\" Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2010-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd August 15, 2010
+.Dd December 21, 2022
 .Dt AG_EXECUTE 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.4.1
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Execute
 .Nd agar file execution interface
@@ -37,8 +35,8 @@
 .Sh DESCRIPTION
 The
 .Fn AG_Execute
-function provides a cross-platform interface for executing external
-applications.
+function provides a cross-platform interface for running executable programs
+and monitoring their execution.
 .Sh INTERFACE
 .nr nS 1
 .Ft "AG_ProcessID"
@@ -51,9 +49,8 @@ applications.
 .Fn AG_Kill "AG_ProcessID pid"
 .Pp
 .nr nS 0
-The
 .Fn AG_Execute
-function executes the specified file with the given arguments, returning an
+runs the specified program with the given arguments, returning an
 integer process ID.
 If an error has occurred, the function returns -1 with an error message.
 .Pp
@@ -79,6 +76,53 @@ and the process is still running.
 The
 .Fn AG_Kill
 function immediately terminates the specified process.
+.Sh EXAMPLES
+The following code runs a program on a Unix-like system:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+char *argv[3];
+AG_ProcessID pid;
+
+argv[0] = "ls";
+argv[1] = "-l"
+argv[2] = (char *)NULL;
+
+pid = AG_Execute("/bin/ls", argv);
+
+if (pid == -1)
+	AG_Verbose("Execute failed (%s)\\n", AG_GetError());
+.Ed
+.Pp
+The following code launches a background task on Windows and terminates its
+execution after 10 seconds:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+char *argv[2];
+AG_ProcessID pid;
+int counter = 0;
+
+argv[0] = "MyTask";
+argv[1] = (char *)NULL;
+
+pid = AG_Execute("C:\\Program Files\\"
+                 "Example\\MyTask.exe");
+for (;;) {
+	if (AG_WaitOnProcess(pid, AG_EXEC_WAIT_IMMEDIATE)
+	    == -1) {
+		AG_Verbose("Task exited unexpectedly (%s)\\n",
+		    AG_GetError());
+		break;
+	}
+	if (counter++ == 10) {
+		if (AG_Kill(pid) == -1) {
+			AG_Verbose("Kill failed (%s)\\n",
+			    AG_GetError());
+		}
+		break;
+	}
+	sleep(1);
+}
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3
 .Sh HISTORY

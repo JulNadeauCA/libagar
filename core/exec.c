@@ -250,64 +250,66 @@ AG_Execute(const char *file, char **argv)
 	return (-1);
 }
 
+/*
+ * Obtain status information about an executing process.
+ * If wait_t is AG_EXEC_WAIT_IMMEDIATE, peek at its status and return immediately.
+ * If wait_t is AG_EXEC_WAIT_INFINITE, block until the process completes its
+ * execution or is killed.
+ */
 AG_ProcessID
 AG_WaitOnProcess(AG_ProcessID pid, enum ag_exec_wait_type wait_t)
 {
 #if defined(_WIN32) && !defined(_XBOX)
-	int time = 0;
-	int res;
+	int time = 0, res;
 	DWORD status;
 	HANDLE psHandle;
 
-	if(wait_t == AG_EXEC_WAIT_INFINITE) {
+	if (wait_t == AG_EXEC_WAIT_INFINITE)
 		time = INFINITE;
-	}
 
-	if((psHandle = OpenProcess(SYNCHRONIZE |
-	                           PROCESS_QUERY_INFORMATION,
-	                           FALSE, pid)) == NULL) {
-		AG_SetError(_("Unable to obtain process handle (%s)"), AG_Strerror(GetLastError()));
-		return -1;
+	if ((psHandle = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION,
+	                            FALSE, pid)) == NULL) {
+		AG_SetError(_("Unable to obtain process handle (%s)"),
+		    AG_Strerror(GetLastError()));
+		return (-1);
 	}
 
 	res = WaitForSingleObject(psHandle, time);
-
-	if(res) {
+	if (res) {
 		if(res == WAIT_TIMEOUT) {
-			return 0;
-		} else if(res == WAIT_FAILED) {
-			AG_SetError(_("Wait on process failed (%s)"), AG_Strerror(GetLastError()));
-			return -1;
+			return (0);
+		} else if (res == WAIT_FAILED) {
+			AG_SetError(_("Wait on process failed (%s)"),
+			    AG_Strerror(GetLastError()));
+			return (-1);
 		}
 	}
 
-	if(GetExitCodeProcess(psHandle, &status) == 0) {
-		AG_SetError(_("Failed to obtain process exit code (%s)"), AG_Strerror(GetLastError()));
-		return -1;
-	} else if(status) {
+	if (GetExitCodeProcess(psHandle, &status) == 0) {
+		AG_SetError(_("Failed to obtain process exit code (%s)"),
+		    AG_Strerror(GetLastError()));
+		return (-1);
+	} else if (status) {
 		AG_SetError(_("Process exited with status (%d)"), (int)status);
-		return -1;
+		return (-1);
 	}
 
 	CloseHandle(psHandle);
 
-	return (pid);
+	return (int)(pid);
 
 #elif defined(HAVE_EXECVP) && !defined(_WIN32)
-	int res;
-	int status;
-	int options = 0;
+	int res, status, options = 0;
 
-	if(wait_t == AG_EXEC_WAIT_IMMEDIATE) {
+	if (wait_t == AG_EXEC_WAIT_IMMEDIATE)
 		options = WNOHANG;
-	}
 
 	res = waitpid(pid, &status, options);
 
-	if(res == -1) {
+	if (res == -1) {
 		AG_SetError(_("waitpid() failed with error (%s)"), AG_Strerror(errno));
 		return (-1);
-	} else if(res > 0 && status) {
+	} else if (res > 0 && status) {
 		if(WIFEXITED(status)) {
 			AG_SetError(_("Process exited with status (%d)"), WEXITSTATUS(status));
 		} else if(WIFSIGNALED(status)) {
@@ -324,40 +326,44 @@ AG_WaitOnProcess(AG_ProcessID pid, enum ag_exec_wait_type wait_t)
 	return (-1);
 }
 
+/* Send an immediate termination signal to the given process. */
 int
 AG_Kill(AG_ProcessID pid)
 {
 #if defined(_WIN32) && !defined(_XBOX)
 	HANDLE psHandle;
 #endif
-	if(pid <= 0) {
+	if (pid <= 0) {
 		AG_SetErrorS(_("Invalid process id"));
 		return (-1);
 	}
-
 #if defined(_WIN32) && !defined(_XBOX)
-	if((psHandle = OpenProcess(SYNCHRONIZE |
-	                           PROCESS_TERMINATE |
-	                           PROCESS_QUERY_INFORMATION,
-	                           FALSE, pid)) == NULL) {
-		AG_SetError(_("Unable to obtain process handle (%s)"), AG_Strerror(GetLastError()));
-		return -1;
+	if ((psHandle = OpenProcess(SYNCHRONIZE |
+	                            PROCESS_TERMINATE |
+	                            PROCESS_QUERY_INFORMATION,
+	                            FALSE, pid)) == NULL) {
+		AG_SetError(_("Unable to obtain process handle (%s)"),
+		    AG_Strerror(GetLastError()));
+		return (-1);
 	}
 
-	if(TerminateProcess(psHandle, -1) == 0) {
-		AG_SetError(_("Unable to kill process (%s)"), AG_Strerror(GetLastError()));
-		return -1;
+	if (TerminateProcess(psHandle, -1) == 0) {
+		AG_SetError(_("Unable to kill process (%s)"),
+		    AG_Strerror(GetLastError()));
+		return (-1);
 	}
 
 	CloseHandle(psHandle);
-
 	return (0);
+
 #elif defined(_MK_HAVE_SIGNAL) && !defined(__CC65__)
+
 	if (kill(pid, SIGKILL) == -1) {
 		AG_SetError(_("Failed to kill process (%s)"), AG_Strerror(errno));
 		return (-1);
 	}
 	return (0);
+
 #endif
 	AG_SetErrorS(_("AG_Kill() is not supported on this platform"));
 	return (-1);
