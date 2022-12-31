@@ -164,6 +164,9 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 void
 AG_PostResizeDisplay(AG_DriverSw *dsw)
 {
+	const int clampOnResize = AG_Defined(dsw, "clampOnResize");
+	const int w = dsw->w;
+	const int h = dsw->h;
 	AG_Window *win;
 
 	AG_FOREACH_WINDOW(win, dsw) {
@@ -181,25 +184,25 @@ AG_PostResizeDisplay(AG_DriverSw *dsw)
 		} else {
 			if (win->flags & AG_WINDOW_HMAXIMIZE) {
 				a.x = 0;
-				a.w = dsw->w;
-			} else {
-				if (a.x+a.w > dsw->w) {
-					a.x = dsw->w - a.w;
+				a.w = w;
+			} else if (clampOnResize) {
+				if (a.x+a.w > w) {
+					a.x = w - a.w;
 					if (a.x < 0) {
 						a.x = 0;
-						a.w = dsw->w;
+						a.w = w;
 					}
 				}
 			}
 			if (win->flags & AG_WINDOW_VMAXIMIZE) {
 				a.y = 0;
-				a.h = dsw->h;
-			} else {
-				if (a.y+a.h > dsw->h) {
-					a.y = dsw->h - a.h;
+				a.h = h;
+			} else if (clampOnResize) {
+				if (a.y+a.h > h) {
+					a.y = h - a.h;
 					if (a.y < 0) {
 						a.y = 0;
-						a.h = dsw->w;
+						a.h = h;
 					}
 				}
 			}
@@ -210,7 +213,7 @@ AG_PostResizeDisplay(AG_DriverSw *dsw)
 		AG_ObjectUnlock(win);
 	}
 	if (agVideoResizeCallback != NULL)
-		agVideoResizeCallback(dsw->w, dsw->h);
+		agVideoResizeCallback(w,h);
 }
 
 /* Resize a video display to the specified dimensions. */
