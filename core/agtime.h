@@ -57,8 +57,8 @@ typedef struct ag_time_ops {
 #define AG_Delay(t)		agTimeOps->delay(t)
 
 __BEGIN_DECLS
-/* Time backends for basic GetTicks() and Delay() operations */
 extern const AG_TimeOps *_Nullable agTimeOps;
+
 extern const AG_TimeOps agTimeOps_dummy;
 extern const AG_TimeOps agTimeOps_gettimeofday;
 extern const AG_TimeOps agTimeOps_posix;
@@ -93,7 +93,6 @@ int  AG_ResetTimer(void *_Nullable, AG_Timer *_Nonnull, Uint32);
 int  AG_TimerIsRunning(void *_Nullable, AG_Timer *_Nonnull)
                       _Pure_Attribute;
 Uint32 AG_ExecTimer(AG_Timer *_Nonnull);
-int  AG_TimerWait(void *_Nullable, AG_Timer *_Nonnull, Uint32);
 void AG_ProcessTimeouts(Uint32);
 
 # ifdef AG_LEGACY
