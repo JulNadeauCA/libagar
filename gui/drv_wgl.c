@@ -1473,7 +1473,8 @@ AG_DriverMwClass agDriverWGL = {
 		AG_GL_DrawGlyph,
 		AG_GL_StdDeleteList,
 		NULL,				/* getClipboardText */
-		NULL				/* setClipboardText */
+		NULL,				/* setClipboardText */
+		NULL				/* setMouseAutoCapture */
 	},
 	WGL_OpenWindow,
 	WGL_CloseWindow,

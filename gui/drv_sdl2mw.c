@@ -46,6 +46,8 @@
 #include <agar/gui/notebook.h>
 #endif
 
+/* #define DEBUG_DISPLAY */
+
 static int nDrivers = 0;                        /* Drivers open */
 static int initedSDL = 0;			/* Inited TIMERS and EVENTS */
 static int initedSDLVideo = 0;			/* Inited VIDEO */
@@ -163,6 +165,10 @@ SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 	drv->flags |= AG_DRIVER_WINDOW_BG;
 
 	if (nDrivers == 0) {			/* Root driver instance */
+		if (AG_Defined(drv, "noAutoCapture") &&
+		    AG_GetInt(drv, "noAutoCapture"))
+			SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
+
 		/*
 		 * Parse global attributes for capturing to image files
 		 * ("out", "outFirst", "outLast", "jpegQual" and "jpegDCT").
@@ -229,9 +235,6 @@ SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 			sdl2mwEventSpinner = NULL;
 			goto fail;
 		}
-		Debug(drv, "Opened root\n");
-	} else {
-		Debug(drv, "Opened driver instance #%u\n", nDrivers);
 	}
 
 	nDrivers++;
@@ -267,7 +270,6 @@ SDL2MW_Close(void *_Nonnull obj)
 			sdl2mwEventSpinner = NULL;
 		}
 	}
-	Debug(drv, "Closed\n");
 }
 
 static void
@@ -523,9 +525,10 @@ SDL2MW_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r,
 		return (-1);
 	}
 
-	Verbose(_("SDL2MW: New display (%d x %d x %d bpp)\n"),
+#ifdef DEBUG_DISPLAY
+	Debug(smw, "New display (%d x %d x %d bpp)\n",
 	    Swin->w, Swin->h, Swin->format->BitsPerPixel);
-
+#endif
 	/* Create the cursors. */
 	AG_SDL2_InitDefaultCursor(smw);
 	AG_InitStockCursors(drv);
@@ -731,6 +734,18 @@ SDL2MW_SetWindowMaxSize(AG_Window *_Nonnull win, int w, int h)
 	SDL_SetWindowMaximumSize(smw->window, w,h);
 }
 
+static void
+SDL2MW_SetMouseAutoCapture(void *_Nonnull obj, int state)
+{
+	if (state == 0) {
+		SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
+	} else if (state == -1) {
+		SDL_ResetHint(SDL_HINT_MOUSE_AUTO_CAPTURE);
+	} else {
+		SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "1");
+	}
+}
+
 #if defined(AG_WIDGETS) && defined(AG_DEBUG)
 
 static void
@@ -872,18 +887,18 @@ AG_DriverMwClass agDriverSDL2MW = {
 		AG_SDL2_PendingEvents,
 		AG_SDL2_GetNextEvent,
 		SDL2MW_ProcessEvent,
-		NULL,			/* genericEventLoop */
-		NULL,			/* endEventProcessing */
-		NULL,			/* terminate */
+		NULL,				/* genericEventLoop */
+		NULL,				/* endEventProcessing */
+		NULL,				/* terminate */
 		SDL2MW_BeginRendering,
 		SDL2MW_RenderWindow,
 		SDL2MW_EndRendering,
 		AG_GL_FillRect,
-		NULL,			/* updateRegion */
+		NULL,				/* updateRegion */
 		AG_GL_StdUploadTexture,
 		AG_GL_StdUpdateTexture,
 		AG_GL_StdDeleteTexture,
-		NULL,			/* setRefreshRate */
+		NULL,				/* setRefreshRate */
 		AG_GL_StdPushClipRect,
 		AG_GL_StdPopClipRect,
 		AG_GL_StdPushBlendingMode,
@@ -932,8 +947,9 @@ AG_DriverMwClass agDriverSDL2MW = {
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph,
 		AG_GL_StdDeleteList,
-		NULL,			/* getClipboardText */
-		NULL			/* setClipboardText */
+		NULL,				/* getClipboardText */
+		NULL,				/* setClipboardText */
+		SDL2MW_SetMouseAutoCapture
 	},
 	SDL2MW_OpenWindow,
 	SDL2MW_CloseWindow,

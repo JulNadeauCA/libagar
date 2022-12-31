@@ -1151,7 +1151,8 @@ AG_DriverMwClass agDriverDUMMY = {
 		DUMMY_DrawGlyph,
 		DUMMY_DeleteList,
 		NULL,				/* getClipboardText */
-		NULL				/* setClipboardText */
+		NULL,				/* setClipboardText */
+		NULL				/* setMouseAutoCapture */
 	},
 	DUMMY_OpenWindow,
 	DUMMY_CloseWindow,

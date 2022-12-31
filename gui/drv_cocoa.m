@@ -1745,7 +1745,8 @@ AG_DriverMwClass agDriverCocoa = {
 		AG_GL_DrawGlyph,
 		AG_GL_StdDeleteList,
 		NULL,				/* getClipboardText */
-		NULL				/* setClipboardText */
+		NULL,				/* setClipboardText */
+		NULL				/* setMouseAutoCapture */
 	},
 	COCOA_OpenWindow,
 	COCOA_CloseWindow,

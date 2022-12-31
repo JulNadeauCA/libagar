@@ -709,7 +709,8 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_GL_DrawGlyph,
 		AG_GL_StdDeleteList,
 		NULL,				/* getClipboardText */
-		NULL				/* setClipboardText */
+		NULL,				/* setClipboardText */
+		NULL				/* setMouseAutoCapture */
 	},
 	0,
 	SDLGL_OpenVideo,

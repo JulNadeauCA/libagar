@@ -183,6 +183,8 @@ typedef struct ag_driver_class {
 	char *_Nullable (*_Nullable getClipboardText)(void *_Nonnull);
 	int             (*_Nullable setClipboardText)(void *_Nonnull,
 	                                              const char *_Nonnull);
+	/* Mouse auto-capture control */
+	void (*_Nullable setMouseAutoCapture)(void *_Nonnull, int);
 } AG_DriverClass;
 
 /* Generic driver instance. */

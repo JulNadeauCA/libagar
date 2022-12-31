@@ -85,6 +85,7 @@
 #include <agar/gui/notebook.h>
 #endif
 
+/* #define DEBUG_DISPLAY */
 /* #define DEBUG_CLIPBOARD */
 /* #define DEBUG_MOTION_XEVENTS */
 /* #define DEBUG_XEVENTS */
@@ -1472,9 +1473,10 @@ GLX_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 
 	/* Create a new window. */
 	depth = (depthReq >= 1) ? depthReq : xvi->depth;
-	Debug(glx, "Creating %ux%u %d-bpp window at %d,%d\n",
-	    r->w, r->h, depth,
-	    r->x, r->y);
+#ifdef DEBUG_DISPLAY
+	Debug(glx, "New display (%u x %u x %d-bpp) at %d,%d\n",
+	    r->w, r->h, depth, r->x, r->y);
+#endif
 	glx->w = XCreateWindow(agDisplay,
 	    RootWindow(agDisplay,agScreen),
 	    r->x, r->y,
@@ -2580,7 +2582,8 @@ AG_DriverMwClass agDriverGLX = {
 		AG_GL_DrawGlyph,
 		AG_GL_StdDeleteList,
 		GLX_GetClipboardText,
-		GLX_SetClipboardText
+		GLX_SetClipboardText,
+		NULL			/* setMouseAutoCapture */
 	},
 	GLX_OpenWindow,
 	GLX_CloseWindow,

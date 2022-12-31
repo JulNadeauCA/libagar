@@ -44,6 +44,9 @@
 #include <agar/gui/notebook.h>
 #endif
 
+/* #define DEBUG_DISPLAY */
+/* #define DEBUG_CAPTURE */
+
 enum ag_sdl2gl_out {
 	AG_SDL2GL_OUT_NONE,		/* No capture */
 	AG_SDL2GL_OUT_JPEG,		/* Output JPEG files */
@@ -224,7 +227,9 @@ SDL2GL_CaptureOutput(AG_DriverSDL2GL *_Nonnull sgl)
 	AG_Surface *S;
 
 	Snprintf(path, sizeof(path), sgl->outPath, sgl->outFrame);
-/*	Debug(sgl, "Capture(%s)\n", path); */
+#ifdef DEBUG_CAPTURE
+	Debug(sgl, "Capture(%s)\n", path);
+#endif
 	glReadPixels(0,0, w,h, GL_RGBA, GL_UNSIGNED_BYTE, sgl->outBuf);
 
 	if (AG_PackedPixelFlip(sgl->outBuf, h,w*4) == -1) {
@@ -376,8 +381,9 @@ SDL2GL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 
 	/* Set the video mode. Force hardware palette in 8bpp. */
 	AG_SDL2_GetPrefDisplaySettings(drv, &w, &h, &depth);
-	Verbose(_("SDL2GL: Setting mode %ux%u (%d bpp)\n"), w, h, depth);
-
+#ifdef DEBUG_DISPLAY
+	Debug(sgl, "Opened display (%u x %u x %d bpp)\n", w, h, depth);
+#endif
 	sgl->window = SDL_CreateWindow(agProgName,
 	    SDL_WINDOWPOS_UNDEFINED,
 	    SDL_WINDOWPOS_UNDEFINED,
@@ -400,10 +406,10 @@ SDL2GL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 	dsw->w = Swin->w;
 	dsw->h = Swin->h;
 	dsw->depth = Swin->format->BitsPerPixel;
-
-	Verbose(_("SDL2GL: New display (%d x %d x %d bpp)\n"),
+#ifdef DEBUG_DISPLAY
+	Debug(sgl, "New display (%d x %d x %d bpp)\n",
 	    Swin->w, Swin->h, Swin->format->BitsPerPixel);
-	
+#endif
 	/* Create the cursors. */
 	AG_SDL2_InitDefaultCursor(sgl);
 	AG_InitStockCursors(drv);
@@ -467,8 +473,6 @@ SDL2GL_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 	AG_Window *win;
 	int wRet, hRet;
 
-	Debug(sgl, "VideoResize event (%u x %u)\n", w,h);
-
 	AG_FOREACH_WINDOW(win, sgl)                 /* Save mapped textures */
 		AG_WidgetFreeResourcesGL(win);
 
@@ -478,7 +482,6 @@ SDL2GL_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 	SDL_GetWindowSize(sgl->window, &wRet, &hRet);
 	dsw->w = wRet;
 	dsw->h = hRet;
-	Debug(sgl, "VideoResize returned (%u x %u)\n", wRet, hRet);
 	
 	if (sgl->outBuf != NULL) {          /* Resize output capture buffer */
 		free(sgl->outBuf);
@@ -740,7 +743,8 @@ AG_DriverSwClass agDriverSDL2GL = {
 		AG_GL_DrawGlyph,
 		AG_GL_StdDeleteList,
 		NULL,				/* getClipboardText */
-		NULL				/* setClipboardText */
+		NULL,				/* setClipboardText */
+		NULL				/* setMouseAutoCapture */
 	},
 	0,
 	SDL2GL_OpenVideo,

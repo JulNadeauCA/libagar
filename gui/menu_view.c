@@ -114,8 +114,12 @@ MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mv = AG_MENUVIEW_SELF();
 	AG_Menu *m = mv->pmenu;
+	AG_Driver *drv = WIDGET(mv)->drv;
 	const int mx = AG_INT(2);
 	const int my = AG_INT(3);
+
+	if (AGDRIVER_CLASS(drv)->setMouseAutoCapture != NULL)
+		AGDRIVER_CLASS(drv)->setMouseAutoCapture(drv, 0);  /* Disable */
 
 	if ((mx < 0 || mx >= WIDTH(mv) ||
 	     my < 0 || my >= HEIGHT(mv)) &&
@@ -133,9 +137,13 @@ MouseButtonUp(AG_Event *_Nonnull event)
 	AG_MenuView *mv = AG_MENUVIEW_SELF();
 	AG_MenuItem *miRoot = mv->pitem, *mi;
 	AG_Menu *m = mv->pmenu;
+	AG_Driver *drv = WIDGET(mv)->drv;
 	const int mx = AG_INT(2);
 	const int my = AG_INT(3);
 	int y = WIDGET(mv)->paddingTop, itemh;
+
+	if (AGDRIVER_CLASS(drv)->setMouseAutoCapture != NULL)
+		AGDRIVER_CLASS(drv)->setMouseAutoCapture(drv, -1);   /* Reset */
 
 	if (mx < 0 || mx >= WIDTH(mv) ||
 	    my < 0 || my >= HEIGHT(mv))

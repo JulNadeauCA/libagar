@@ -746,6 +746,8 @@ AG_About(AG_Event *event)
 	}
 
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close"), AGWINCLOSE(win));
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 583, 665);
+	AG_WindowSetMinSize(win, 480, 140);
 	AG_WindowShow(win);
 }
 

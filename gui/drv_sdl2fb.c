@@ -36,6 +36,8 @@
 #include <agar/gui/cursors.h>
 #include <agar/gui/sdl2.h>
 
+/* #define DEBUG_DISPLAY */
+
 typedef struct ag_sdl2fb_driver {
 	struct ag_driver_sw _inherit;	/* AG_Driver -> AG_DriverSw */
 
@@ -1610,8 +1612,10 @@ SDL2FB_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 
 	/* Set the video mode. Force hardware palette in 8bpp. */
 	AG_SDL2_GetPrefDisplaySettings(drv, &w, &h, &depth);
-	Verbose(_("SDL2FB: Setting mode %ux%u (%d bpp)\n"), w, h, depth);
-	
+
+#ifdef DEBUG_DISPLAY
+	Debug(sfb, "Opened display (%u x %u x %d bpp)\n", w, h, depth);
+#endif
 	sfb->window = SDL_CreateWindow(agProgName,
 	    SDL_WINDOWPOS_UNDEFINED,
 	    SDL_WINDOWPOS_UNDEFINED,
@@ -1635,9 +1639,10 @@ SDL2FB_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 	dsw->h = Swin->h;
 	dsw->depth = Swin->format->BitsPerPixel;
 
-	Verbose(_("SDL2FB: New display (%d x %d x %d bpp)\n"),
+#ifdef DEBUG_DISPLAY
+	Debug(sfb, "New display (%d x %d x %d bpp)\n",
 	    Swin->w, Swin->h, Swin->format->BitsPerPixel);
-
+#endif
 	/* Initialize clipping rectangles. */
 	if (InitClipRects(sfb, dsw->w, dsw->h) == -1)
 		goto fail;
@@ -1827,7 +1832,8 @@ AG_DriverSwClass agDriverSDL2FB = {
 		SDL2FB_DrawGlyph,
 		NULL,				/* deleteList */
 		NULL,				/* getClipboardText */
-		NULL				/* setClipboardText */
+		NULL,				/* setClipboardText */
+		NULL				/* setMouseAutoCapture */
 	},
 	0,
 	SDL2FB_OpenVideo,

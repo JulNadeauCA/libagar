@@ -1895,7 +1895,8 @@ AG_DriverSwClass agDriverSDLFB = {
 		SDLFB_DrawGlyph,
 		NULL,				/* deleteList */
 		NULL,				/* getClipboardText */
-		NULL				/* setClipboardText */
+		NULL,				/* setClipboardText */
+		NULL				/* setMouseAutoCapture */
 	},
 	0,
 	SDLFB_OpenVideo,
