@@ -1,4 +1,4 @@
-.\" Copyright (c) 2010-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2010-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd May 2, 2010
+.Dd December 21, 2022
 .Dt AG_DRIVERMW 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.4.1
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_DriverMw
 .Nd agar multiple-window driver class
@@ -55,6 +53,7 @@ inherits from
 .Ft AG_DriverClass
 and is defined as follows:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct ag_driver_mw_class {
 	struct ag_driver_class _inherit;
 
@@ -90,6 +89,8 @@ typedef struct ag_driver_mw_class {
 	void (*setTransientFor)(AG_Window *w, AG_Window *winParent);
 	int  (*setOpacity)(AG_Window *w, float opacity);
 	void (*tweakAlignment)(AG_Window *w, AG_SizeAlloc *a);
+        void (*setWindowMinSize)(struct ag_window *win, int w, int h);
+        void (*setWindowMaxSize)(struct ag_window *win, int w, int h);
 } AG_DriverMwClass;
 .Ed
 .Pp
@@ -199,6 +200,12 @@ in function of
 .Va w
 and
 .Va h .
+.Pp
+The optional
+.Fn setWindowMinSize
+and
+.Fn setWindowMaxSize
+operations set a minimum and a maximum window size in pixels.
 .Sh SEE ALSO
 .Xr AG_Driver 3 ,
 .Xr AG_DriverSw 3 ,

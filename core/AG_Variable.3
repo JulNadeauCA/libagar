@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd June 15, 2009
+.Dd December 21, 2022
 .Dt AG_VARIABLE 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.5.0
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Variable
 .Nd agar object variables
@@ -38,8 +36,11 @@
 In the Agar object system, each
 .Xr AG_Object 3
 instance has a set of typed variables.
-Variables can be named (accessed by a string key), or anonymous (by pointer).
-Basic types include:
+Variables can be named (referenced by a string key) or anonymous (referenced
+by an
+.Ft AG_Variable
+pointer).
+Discrete types include:
 .Pp
 .Bl -bullet -compact -offset indent
 .It
@@ -63,10 +64,10 @@ Functions.
 .El
 .Pp
 Typed references (or "pointer variables") are also supported.
-Optionally, pointer variables can be configured to acquire a
+Optionally, pointer variables can be configured to acquire an
 .Xr AG_Mutex 3
 locking device prior to accessing the data.
-Reference types include:
+Base reference types include:
 .Pp
 .Bl -bullet -compact -offset indent
 .It
@@ -89,32 +90,11 @@ Bounded C strings (in fixed-size buffer).
 Agar objects (pointer to
 .Xr AG_Object 3 ) .
 .It
-Proxy for a named
+Proxy for another
 .Nm
 in an external
 .Xr AG_Object 3 .
 .El
-.Pp
-Besides representing
-.Xr AG_Object 3
-instance variables, there are many other uses for
-.Nm .
-For example, it is also used to represent arguments passed to
-.Xr AG_Event 3
-callback functions.
-In Agar-GUI, widgets use Agar variables to reference data in memory
-(also known as "bindings").
-For example, the "value" of an
-.Xr AG_Numerical 3
-spinbutton can be tied to an
-.Ft int ,
-a
-.Ft float
-a mutex-protected
-.Ft Uint32 ,
-etc.
-See the "BINDINGS" section of a widget's manual page for the list of bindings
-and types supported.
 .Sh GENERIC INTERFACE
 .nr nS 1
 .Ft int
@@ -149,9 +129,6 @@ and types supported.
 .Pp
 .Ft int
 .Fn AG_CompareVariables "const AG_Variable *a" "const AG_Variable *b"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_Set "AG_Object *obj" "const char *name" "const char *fmt" "..."
 .Pp
 .Ft "void"
 .Fn AG_Unset "AG_Object *obj" "const char *name"
@@ -220,7 +197,7 @@ The
 variant works like
 .Fn AG_FetchVariable ,
 except that if the variable exists and is of a different type, then it is
-implicitely mutated into
+mutated into
 .Fa type
 and returned.
 .Pp
@@ -277,11 +254,6 @@ If
 .Fn AG_CompareVariables
 encounters pointer types, they are not dereferenced (rather the value of the
 pointer itself is compared).
-.Pp
-The
-.Fn AG_Set
-sets an object-bound variable value using a format-string interface (see
-.Fn AG_PARSE_VARIABLE_ARGS ) .
 .Pp
 .Fn AG_Unset
 deletes the named object-bound variable.
@@ -572,8 +544,8 @@ These functions provide an interface to floating-point numbers.
 .Pp
 .nr nS 0
 These functions provide an interface to C strings.
-A string variable may contain an unbounded string, or reference an external
-fixed-size buffer.
+A string variable may contain an unbounded (auto-allocated) string or it
+may reference a bounded string (i.e., a string contained in a fixed-size buffer).
 .Pp
 .Fn AG_GetString
 copies the contents of a string variable to a fixed-size buffer
@@ -585,18 +557,20 @@ and returns the number of bytes that would have been copied were
 unlimited.
 .Pp
 .Fn AG_GetStringDup
-returns a newly-allocated copy of the string variable.
-If the string cannot be allocated, NULL is returned.
+returns a newly-allocated copy of the contents of a string variable.
+If the copy cannot be allocated, NULL is returned.
+The returned string should be freed with
+.Xr AG_Free 3
+after use.
 .Pp
 The potentially-unsafe
 .Fn AG_GetStringP
 returns a direct pointer to the buffer containing the string.
 It is not free-threaded (so the object must be locked, and calls protected by
 .Fn AG_LockVariable ) .
-Note that discrete strings set by
+Auto-allocated strings set by
 .Fn AG_SetString
-are safe to access without locking as long as the variable's parent object is
-itself locked.
+may be accessed safely without locking as long as the parent object is locked.
 .Pp
 .Fn AG_InitString
 initializes a
@@ -653,14 +627,15 @@ of size
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_BindPointerMp "AG_Object *obj" "const char *name" "void **pVal" "AG_Mutex *lock"
+.Pp
 .nr nS 0
 These functions provide an interface to generic pointer types.
 .Sh FUNCTIONS
 .nr nS 1
 .Ft "AG_Variable *"
 .Fn AG_SetFn "AG_Object *obj" "const char *name" "AG_EventFn fn" "const char *fmt" "..."
-.nr nS 0
 .Pp
+.nr nS 0
 .Fn AG_SetFn
 sets the value of a function pointer variable to the specified function
 .Fa fn
@@ -743,9 +718,9 @@ will be returned implicitely.
 Note: Circular references must be avoided.
 .Pp
 .Fn AG_BindVariable
-implicitely creates an anonymous Object->Object reference to
+creates an anonymous Object->Object reference to
 .Fa varObj
-(which is also removed implicitely by
+(which is also removed by
 .Fn AG_Unset
 or
 .Xr AG_ObjectFreeVariables 3
@@ -770,6 +745,124 @@ Mutex protecting referenced data.
 .It Ft union ag_variable_data data
 Stored data (see <core/variable.h>).
 .El
+.Sh EXAMPLES
+The following code tests if "delete-me" is defined and if so, deletes it:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+AG_Object *obj;
+
+if (AG_Defined(obj, "delete-me"))
+	AG_Unset(obj, "delete-me");
+.Ed
+.Pp
+The following code atomically increments a variable "value", which may be
+either an
+.Ft int
+or a 
+.Ft float :
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+void
+IncrementValue(AG_Object *obj)
+{
+	AG_Variable *V;
+	void *pValue;
+
+	V = AG_AccessVariable(obj, "value", &pValue);
+
+	switch (AG_VARIABLE_TYPE(V)) {
+	case AG_VARIABLE_INT:
+		(*(int *)pValue)++;
+		break;
+	case AG_VARIABLE_FLOAT:
+		(*(float *)pValue) += 1.0f;
+		break;
+	}
+
+	AG_UnlockVariable(obj);
+}
+.Ed
+.Pp
+The following code prints a string representation of a variable "value"
+to a fixed-size buffer
+.Fa buf :
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+char buf[32];
+AG_Object *obj;
+AG_Variable *V;
+
+if ((V = AG_AccessVariable(obj, "value")) == NULL) {
+	AG_FatalError(NULL);
+}
+AG_PrintVariable(buf, sizeof(buf), V);
+AG_UnlockVariable(V);
+
+AG_Verbose("value = %s\\n", buf);
+.Ed
+.Pp
+The following code atomically duplicates the contents of variable
+"copy-me" from one object
+.Fa objSrc
+to another object
+.Fa objDst :
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+AG_Object *objSrc, *objDst;
+AG_Variable *Vsrc, *Vdst;
+
+Vsrc = AG_AccessVariable(objSrc, "copy-me");
+Vdst = AG_AccessVariable(objDst, "copy-me");
+
+if (Vsrc == NULL || Vdst == NULL)
+	AG_FatalError(NULL);
+
+AG_CopyVariable(Vdst, Vsrc);
+
+if (AG_CompareVariables(Vsrc, Vdst) == 0)
+	AG_Verbose("Copy successful\\n");
+
+AG_UnlockVariable(Vdst);
+AG_UnlockVariable(Vsrc);
+.Ed
+.Pp
+The following code uses object variable substitution to generate the string
+"Hello world!" into a fixed-size buffer:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+char buf[32];
+AG_Object *obj;
+
+AG_SetString(obj, "the-string", "world");
+
+AG_VariableSubst(obj, "Hello $(the-string)!",
+    buf, sizeof(buf));
+
+AG_Verbose("%s\\n", buf);
+.Ed
+.Pp
+.Nm
+is used to represent
+.Xr AG_Object 3
+instance variables and arguments passed to
+.Xr AG_Event 3
+callback routines.
+.Pp
+In Agar-GUI, widgets use
+.Nm
+to reference data in memory
+(also known as "bindings").
+Refer to the "BINDINGS" section of each widget's manual page for details.
+.Pp
+In Agar-GUI, the "value" of an
+.Xr AG_Numerical 3
+spinbutton can be tied to an
+.Ft int ,
+a
+.Ft float
+a mutex-protected
+.Ft Uint32 ,
+etc.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Event 3 ,
@@ -781,8 +874,8 @@ interface first appeared in Agar 1.3.4.
 It replaced the older "AG_Prop" interface and
 .Xr AG_Widget 3
 specific bindings.
-In Agar 1.6.0, Object->Object references appeared and
+In Agar 1.6, Object->Object references appeared and
 .Fn AG_GetVariableLocked
 was renamed
 .Fn AG_AccessVariable .
-Functions appeared in Agar 1.7.0.
+Functions appeared in Agar 1.7.

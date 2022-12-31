@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>.
+.\" Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd July 18, 2009
+.Dd December 21, 2022
 .Dt M_MATVIEW 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.3.4
+.Os Agar 1.7
 .Sh NAME
 .Nm M_Matview
 .Nd Agar-Math matrix viewer widget
@@ -102,6 +100,7 @@ selects the display mode, where
 .Fa mode
 can be:
 .Bd -literal
+.\" SYNTAX(c)
 enum m_matview_mode {
 	M_MATVIEW_GREYSCALE,	/* Graphical rendering (greyscale) */
 	M_MATVIEW_NUMERICAL	/* Numerical display */

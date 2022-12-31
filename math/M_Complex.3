@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd July 14, 2009
+.Dd December 21, 2022
 .Dt M_COMPLEX 3
-.Os
-.ds vT Agar-Math API Reference
-.ds oS Agar 1.3.4
+.Os Agar 1.7
 .Sh NAME
 .Nm M_Complex
 .Nd Agar-Math complex number
@@ -43,6 +41,7 @@ The
 object describes a complex number (without requiring an ISO C90 compiler).
 It is a simple structure defined as:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct m_complex {
 	M_Real r;    /* Real part */
 	M_Real i;    /* "Imaginary" part */

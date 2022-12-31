@@ -1,4 +1,4 @@
-.\" Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2004-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd May 10, 2004
+.Dd December 21, 2022
 .Dt AG_UNITS 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.0
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Units
 .Nd agar unit conversion facility
@@ -45,6 +43,7 @@ The
 .Ft AG_Unit
 structure is defined as follows:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct ag_unit {
 	char *key;
 	char *abbr;
@@ -210,6 +209,7 @@ arguments.
 The following code fragment creates a widget for editing
 a length value given in meters:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 float length = 1.234;
 AG_Numerical *num;
 num = AG_NumericalNewFlt(parent, 0, "m", "Length: ", &length)
@@ -219,6 +219,7 @@ The following code fragment prints the equivalent milliseconds for a given
 .Va n
 number of seconds:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 printf("%f seconds = %f milliseconds", n,
     AG_Base2Unit(n, AG_FindUnit("ms")));
 .Ed
@@ -226,6 +227,7 @@ printf("%f seconds = %f milliseconds", n,
 The following code fragment prints the equivalent of 27 degrees Celsius,
 in kilo Kelvins:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 const AG_Unit *degC = AG_FindUnit("degC");
 const AG_Unit *kk = AG_FindUnit("kk");
 
@@ -236,6 +238,7 @@ This code fragment displays the value of
 .Va r
 using the resistance unit most suitable to its magnitude.
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 printf("Resistance = %s", AG_UnitFormat(r, agResistanceUnits));
 .Ed
 .Pp

@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd April 24, 2003
+.Dd December 21, 2022
 .Dt AG_TEXT 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.0
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Text
 .Nd agar text rendering interface
@@ -174,6 +172,7 @@ argument.
 .Fn AG_TextJustify
 selects the justify mode to use in multi-line rendering:
 .Bd -literal
+.\" SYNTAX(c)
 enum ag_text_justify {
 	AG_TEXT_LEFT,
 	AG_TEXT_CENTER,
@@ -185,6 +184,7 @@ enum ag_text_justify {
 selects the vertical alignment mode to use where text is rendered to an
 area of arbitrary height:
 .Bd -literal
+.\" SYNTAX(c)
 enum ag_text_valign {
 	AG_TEXT_TOP,
 	AG_TEXT_MIDDLE,
@@ -349,6 +349,7 @@ button.
 .Fa title
 is one of the following:
 .Bd -literal
+.\" SYNTAX(c)
 enum ag_text_msg_title {
 	AG_MSG_ERROR,
 	AG_MSG_WARNING,
@@ -426,6 +427,7 @@ Possible
 .Fa flags
 include:
 .Bd -literal
+.\" SYNTAX(c)
 #define AG_FONT_BOLD           0x001    /* Bold style */
 #define AG_FONT_ITALIC         0x002    /* Italic style */
 #define AG_FONT_UNDERLINE      0x004    /* Generate underline */
@@ -495,8 +497,8 @@ flags include "b" = bold, "i" = italic, "I" = upright italic and "U" = uppercase
 .Pp
 .Ft "int"
 .Fn AG_TextExportUnicode_StripANSI "const char *encoding" "char *dst" "const AG_Char *src" "AG_Size dstSize"
-.nr nS 0
 .Pp
+.nr nS 0
 .Fn AG_TextParseANSI
 interprets a possible ANSI sequence attribute in a native (UCS-4) string
 .Fa s
@@ -535,11 +537,11 @@ The written string is always NUL-terminated.
 .Xr AG_TextElement 3 ,
 .Xr AG_Widget 3
 .Pp
-.Lk http://www.freetype.org/ FreeType
-.Pp
-.Lk http://www.unicode.org/ Unicode
-.Pp
-.Lk https://www.freedesktop.org/wiki/Software/fontconfig/ Fontconfig
+.Bl -tag -compact
+.It Lk https://www.freetype.org/ FreeType
+.It Lk https://www.freedesktop.org/wiki/Software/fontconfig/ Fontconfig
+.It Lk https://www.unicode.org/ Unicode
+.El
 .Sh HISTORY
 The
 .Nm

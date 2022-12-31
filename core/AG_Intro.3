@@ -23,33 +23,25 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd NOVEMBER 26, 2001
+.Dd December 21, 2022
 .Dt AG_INTRO 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.3
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Intro
 .Nd agar introduction
 .Sh DESCRIPTION
-Agar is a general-purpose graphical application toolkit.
-It provides all types of applications (possibly written in different languages)
-with consistent interfaces across a multiple platforms.
-.Pp
+Agar is a cross-platform GUI system and framework.
+It provides a programming platform and a standard toolkit of widgets from
+which graphical applications can be built.
 .Sh AGAR-CORE
-Agar's non-graphical core and utility library is
-.Em ag_core .
-It implements the base
-.Xr AG_Object 3
-system,
-.Xr AG_Event 3
-mechanism and
-.Xr AG_Timers 3 .
-It also provides cross-platform interfaces to operating system services
-such as kernel-based events, timers, threads and filesystems.
-.Pp
-To use this library (without GUI) link against
-.Sq agar-core-config --libs
+The
+.Em ag_core
+library (stable) is Agar's non-graphical platform and utility library.
+It implements the base object system, events / virtual functions and timers.
+It provides cross-platform interfaces to OS services such as
+filesystems, kernel-based events, timers and threads.
+To use this library alone (without GUI), link against
+.Sq agar-core-config --libs .
 .Pp
 .\" SYNC WITH AG_Core(3) "SEE ALSO"
 .Bl -tag -width "AG_DataSource(3) " -compact
@@ -58,52 +50,50 @@ Manage Agar configuration settings.
 .It Xr AG_Core 3
 Core Agar library initialization.
 .It Xr AG_DataSource 3
-Generic interface to different data sources.
+Data sources and serialization.
 .It Xr AG_Db 3
-Database access methods.
+Generic database access methods.
 .It Xr AG_DSO 3
-Cross-platform interface to dynamic linkers.
+Dynamic linker interface.
 .It Xr AG_Error 3
-Error handling in Agar.
+Error handling and error-checking memory allocation.
 .It Xr AG_Event 3
-Virtual functions (at the Agar object level).
+Event handlers / virtual functions.
 .It Xr AG_EventLoop 3
-Main application event loop.
-General event sources and sinks.
+Low-level event loop.
+Event sources and sinks.
 .It Xr AG_Execute 3
-Cross-platform interface to program execution.
+File execution interface.
 .It Xr AG_File 3
-Portable interface to filesystems.
+File access routines.
 .It Xr AG_Limits 3
-Interface to platform-dependent limits.
+Limit constants.
 .It Xr AG_Object 3
 The Agar object system.
 .It Xr AG_String 3
-Functions for manipulating C strings.
+C string specific functions.
 .It Xr AG_TextElement 3
 Multilanguage dynamic text buffer.
 .It Xr AG_Threads 3
-Portable threads interface.
+Threads interface.
 .It Xr AG_Timer 3
-Timer facility.
+The Agar timer facility.
 .It Xr AG_Time 3
-Interface to time sources.
+Monotonically-increasing time sources.
 .It Xr AG_User 3
-Cross-platform interface to user accounts.
+User account information access.
 .It Xr AG_Variable 3
-Primitive data variables and bindings.
+Agar object variables.
 .It Xr AG_Version 3
-Datafile versioning.
+Data file versioning.
 .El
 .Sh AGAR-GUI: BASE SYSTEM
 The
 .Em ag_gui
-library is the Agar GUI system and standard widget library.
-.Pp
-To use this library (and
-.Em ag_core ) ,
-link against
-.Sq agar-config --libs
+library (stable) includes the base Agar GUI system and its standard widget
+library.
+To use it, link against
+.Sq agar-config --libs .
 .Pp
 .Bl -tag -width "AG_WidgetPrimitives(3) " -compact
 .It Xr AG_AlphaFn 3
@@ -148,9 +138,9 @@ Rendering primitives for GUI elements.
 The base container for Agar widgets.
 .El
 .Sh AGAR-GUI: STANDARD WIDGETS
-Standard widgets included in
+Standard widgets in in
 .Em ag_gui
-(unless "--disable-widgets" is used).
+(unless built with "--disable-widgets").
 .Pp
 .Bl -tag -width "AG_ObjectSelector(3) " -compact
 .It Xr AG_Box 3
@@ -237,11 +227,10 @@ Single-button variant of
 .Xr AG_Combo 3 .
 .El
 .Sh AGAR-MATH
+The
 .Em ag_math
-is a general-purpose, performance-oriented math library which extends
-.Em ag_gui
-with new widgets and support for linear-algebra types.
-.Pp
+library (stable) is a general-purpose math library which extends Agar
+with new widgets and support for linear algebra / geometry types.
 To use this library, link against
 .Sq agar-math-config --libs .
 .Pp
@@ -257,7 +246,7 @@ Circles in R^2 and R^3.
 .It Xr M_Color 3
 Mapping between different color spaces.
 .It Xr M_Complex 3
-Complex-number arithmetic (w/o compiler extensions).
+Complex-number arithmetic.
 .It Xr M_Coordinates 3
 Mapping between different coordinate systems.
 .It Xr M_Sort 3
@@ -283,7 +272,7 @@ and
 .Ft M_Complex
 elements).
 .It Xr M_PointSet 3
-Operations on sets of points (e.g., convex hulls).
+Operations on sets of points (e.g., convex hull).
 .It Xr M_Polygon 3
 Operations related to polygons in R^2 and R^3.
 .It Xr M_Quaternion 3
@@ -296,9 +285,10 @@ Routines specific to triangles in R^2 and R^3.
 Vectors (optimized R^2, R^3 and R^4 or general R^n).
 .El
 .Sh AGAR-NET
+The
 .Em ag_net
-provides network access and HTTP application server functionality.
-.Pp
+library (stable) provides network access methods and implements a
+modular HTTP/1.1 application server.
 To use this library, link against
 .Sq agar-net-config --libs .
 .Pp
@@ -309,12 +299,12 @@ Interface to network services.
 HTTP/1.1 application server.
 .El
 .Sh AGAR-SG
-(Beta)
+The
 .Em ag_sg
-implements 3D scene-graph, rendering and geometry methods.
-.Pp
+library (beta) provides a basic 3D engine.
+It implements 3D scene-graph, rendering and geometry methods.
 To use this library, link against
-.Sq agar-sg-config --libs
+.Sq agar-sg-config --libs .
 .Pp
 .Bl -tag -width "SG_CgProgram(3) " -compact
 .It Xr SG 3
@@ -367,13 +357,12 @@ scenes.
 Voxel object.
 .El
 .Sh AGAR-SK
-(Beta)
+The
 .Em ag_sk
-implements dimensioned 2D sketches with constraint solving.
-Sketches can contain sets of metric relations (i.e., distances, angles)
-and logical relations (i.e., coincidence, parallelism, tangency), and SK's
-attempts to find a solution using degree-of-freedom analysis.
-.Pp
+library (beta) implements dimensioned 2D sketches with constraint solving
+through degree-of-freedom analysis.
+Sketches contain sets of metric relations (i.e., distances, angles)
+and logical relations (i.e., coincidence, parallelism, tangency).
 To use this library, link against
 .Sq agar-sk-config --libs .
 .Pp
@@ -384,14 +373,11 @@ Base sketch object.
 Agar visualization widget for sketch objects.
 .El
 .Sh AGAR-AU
-(Beta)
 The
 .Em ag_au
-library is intended to provide a cross-platform sound interface and to
-extend
+library (beta) provides a sound interface extends
 .Em ag_gui
-with widgets useful in audio applications.
-.Pp
+with widgets useful in audio applications such as waveform visualizers.
 To use this library, link against
 .Sq agar-au-config --libs .
 .Pp
@@ -404,10 +390,9 @@ Structure containing an audio stream.
 Interface to audio output device.
 .El
 .Sh AGAR-MAP
-(Beta) The
+The
 .Em ag_map
-library implements a simple 2D tile engine.
-.Pp
+library (beta) implements a simple and extensible 2D/3D tile engine.
 To use this library, link against
 .Sq agar-map-config --libs .
 .Pp
@@ -434,16 +419,12 @@ Base tile element.
 Edition and visualization widget.
 .El
 .Sh AGAR-VG
+The
 .Em ag_vg
-handles visualization and edition of 2D vector drawings.
-.Xr VG 3
-vector drawings are composed of elements such as lines, polygons, curves,
-images or text.
-The format is meant to be extended with application-specific elements and
-edition tools.
+library (stable) implements basic 2D vector graphics display.
+It includes an editor tool framework.
 Geometrical placement of elements is determined by linear transformations
 using floating-point methods.
-.Pp
 To use this library, link against
 .Sq agar-vg-config --libs .
 .Pp
@@ -451,7 +432,7 @@ To use this library, link against
 .It Xr VG 3
 Vector drawing object.
 .It Xr VG_View 3
-Agar widget for visualization and edition of drawings.
+Display and edition widget.
 .It Xr VG_Arc 3
 Arc entity.
 .It Xr VG_Circle 3
@@ -485,9 +466,8 @@ handler routines, objects can be presumed locked; see
 for details).
 .El
 .Sh SEE ALSO
-.Pp
-.Lk https://libAgar.org/
-.Pp
-.Lk https://patreon.com/libagar
-.Pp
-.Lk https://github.com/JulNadeauCA/libagar
+.Bl -tag -compact
+.It Lk https://libAgar.org/ Agar Website
+.It Lk https://patreon.com/libagar Agar Patreon
+.It Lk https://github.com/JulNadeauCA/libagar Agar GitHub
+.El

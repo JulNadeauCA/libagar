@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd August 21, 2002
+.Dd December 21, 2022
 .Dt AG_TEXTBOX 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.0
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Textbox
 .Nd agar text editor widget
@@ -489,6 +487,7 @@ The following code fragment binds an
 .Nm
 to a fixed-size buffer (which accepts UTF-8 encoding):
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 char name[32];
 AG_Textbox *tb;
 
@@ -500,6 +499,7 @@ When no specific binding is provided (as in the following case),
 .Nm
 uses an internal, built-in text buffer:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 AG_Textbox *tb;
 char *s;
 
@@ -514,6 +514,7 @@ An
 .Xr AG_TextElement 3
 can accomodate a potentially large, dynamically-allocated string:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 AG_TextElement *txt;
 AG_Textbox *tb;
 
@@ -526,6 +527,7 @@ AG_TextboxBindText(tb, txt);
 The following code fragment sets up a simple autocomplete routine:
 .Pp
 .Bd -literal
+.\" SYNTAX(c)
 static void
 MyAutocomplete(AG_Event *event)
 {
@@ -542,7 +544,7 @@ MyAutocomplete(AG_Event *event)
 
 	AG_TlistBegin(tl);
 	for (dp = dictFirst; *dp != NULL; dp++) {
-		if (sp[0] == '\0' ||
+		if (sp[0] == '\\0' ||
 		    AG_Strncasecmp(*dp, sp, strlen(sp)) == 0) {
 			AG_TlistAddPtr(tl, NULL, *dp, (void *)*dp);
 		}

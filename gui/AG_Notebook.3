@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2006-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd August 29, 2006
+.Dd December 21, 2022
 .Dt AG_NOTEBOOK 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.0
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Notebook
 .Nd agar notebook container widget
@@ -97,6 +95,7 @@ By default, tabs are drawn at the top of the widget.
 .Fn AG_NotebookSetTabAlignment
 changes the location of the tabs, where the argument is one of:
 .Bd -literal
+.\" SYNTAX(c)
 enum ag_notebook_tab_alignment {
 	AG_NOTEBOOK_TABS_TOP,
 	AG_NOTEBOOK_TABS_BOTTOM,
@@ -203,6 +202,7 @@ The numerical ID associated with the tab.
 .Sh EXAMPLES
 The following code fragment creates a notebook with two tabs:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 AG_Notebook *nb;
 AG_Notebook *ntab;
 

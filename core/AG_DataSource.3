@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2007-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd November 16, 2007
+.Dd December 21, 2022
 .Dt AG_DATASOURCE 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.3
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_DataSource
 .Nd agar data source access
@@ -558,28 +556,35 @@ bytes + 4 in size.
 On failure, the
 .Fn AG_WriteString
 routines raise a data source exception.
-.Sh DERIVING NEW SOURCES
-New sources can be implemented by deriving the
+.Sh INTERNAL API
+New types may be implemented by deriving the
 .Nm
 structure:
-.Bd -literal
+.Bd -literal -offset indent
+.\" SYNTAX(c)
 typedef AG_DataSource {
-  AG_Mutex lock;                    /* Lock on all operations */
-  enum ag_byte_order byte_order;    /* Byte order of source */
+	AG_Mutex lock;                  /* Lock on all operations */
+	enum ag_byte_order byte_order;  /* Byte order of source */
+	AG_Size wrLast;                 /* Last bytes written */
+	AG_Size rdLast;                 /* Last bytes read */
+	AG_Size wrTotal;                /* Total bytes written */
+	AG_Size rdTotal;                /* Total bytes read */
 
-  AG_Size wrLast;                   /* Last write count (bytes) */
-  AG_Size rdLast;                   /* Last read count (bytes) */
-  AG_Size wrTotal;                  /* Total write count (bytes) */
-  AG_Size rdTotal;                  /* Total read count (bytes) */
+	int (*read)(AG_DataSource *, void *, AG_Size, AG_Size *);
+	int (*read_at)(AG_DataSource *, void *, AG_Size, AG_Offset,
+	               AG_Size *);
 
-  int (*read)(AG_DataSource *, void *, AG_Size, AG_Size *);
-  int (*read_at)(AG_DataSource *, void *, AG_Size, AG_Offset, AG_Size *);
-  int (*write)(AG_DataSource *, const void *, AG_Size, AG_Size *);
-  int (*write_at)(AG_DataSource *, const void *, AG_Size, AG_Offset,
-                  AG_Size *);
-  AG_Offset (*tell)(AG_DataSource *);
-  int (*seek)(AG_DataSource *, AG_Offset offs, enum ag_seek_mode mode);
-  void (*close)(AG_DataSource *);
+	int (*write)(AG_DataSource *, const void *, AG_Size,
+	             AG_Size *);
+	int (*write_at)(AG_DataSource *, const void *, AG_Size,
+	                AG_Offset, AG_Size *);
+
+	AG_Offset (*tell)(AG_DataSource *);
+
+	int (*seek)(AG_DataSource *, AG_Offset offs,
+	            enum ag_seek_mode mode);
+
+	void (*close)(AG_DataSource *);
 } AG_DataSource;
 .Ed
 .Pp
@@ -631,10 +636,47 @@ moves to the specified offset and returns 0 on success and -1 on failure.
 .Pp
 .Fn close
 closes the data source.
+.Sh EXAMPLES
+The following code writes an integer, float and string to
+.Pa file.out :
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+AG_DataSource *ds;
+
+if ((ds = AG_OpenFile("file.out", "wb")) == NULL) {
+	AG_FatalError(NULL);
+}
+AG_WriteUint16(ds, 0x1234);
+AG_WriteFloat(ds, 1.234f);
+AG_WriteString(ds, "hello");
+AG_CloseFile(ds);
+.Ed
+.Pp
+The following code reads the data back:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+AG_DataSource *ds;
+Uint16 u16;
+float flt;
+char *s;
+
+if ((ds = AG_OpenFile("file.out", "rb")) == NULL) {
+	AG_FatalError(NULL);
+}
+u16 = AG_ReadUint16(ds);
+flt = AG_ReadFloat(ds);
+s = AG_ReadString(ds);
+
+AG_Verbose("Read: Int=%u, Float=%f, String=\\"%s\\"\\n", u16, flt, s);
+
+AG_CloseFile(ds);
+free(s);
+.Ed
 .Sh SEE ALSO
 .Xr AG_ByteSwap 3 ,
 .Xr AG_Intro 3 ,
 .Xr AG_Net 3 ,
+.Xr AG_Object 3 ,
 .Xr AG_Version 3
 .Sh HISTORY
 A similar interface called

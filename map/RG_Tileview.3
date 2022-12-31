@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2005-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -23,11 +23,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd May 16, 2005
+.Dd December 21, 2022
 .Dt RG_TILEVIEW 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.6
+.Os Agar 1.7
 .Sh NAME
 .Nm RG_Tileview
 .Nd Agar-RG graphics editor
@@ -225,6 +223,7 @@ The
 .Fn RG_TileviewAddCtrl
 function creates a new graphical control of the given type:
 .Bd -literal
+.\" SYNTAX(c)
 enum rg_tileview_ctrl_type {
 	RG_TILEVIEW_POINT,         /* Point (x,y) */
 	RG_TILEVIEW_RECTANGLE,     /* Rectangle (x,y,w,h) */
@@ -283,6 +282,7 @@ functions select or deselect the current edition tool.
 .Pp
 The generic features of all edition tools are defined by the structure:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct rg_tileview_tool_ops {
 	const char *name;     /* Name of tool */
 	const char *desc;     /* Tool description */
@@ -303,6 +303,7 @@ typedef struct rg_tileview_tool_ops {
 Two specialized derivates are available, one for bitmap-specific tools and
 another for vector-specific tools:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct rg_tileview_bitmap_tool_ops {
 	struct rg_tileview_tool_ops ops;
 	void (*mousebuttondown)(void *, int, int, int);

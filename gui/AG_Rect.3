@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2008-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd October 12, 2008
+.Dd December 21, 2022
 .Dt AG_RECT 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.3.3
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Rect
 .Nd agar rectangle structure
@@ -41,6 +39,7 @@ Many functions in Agar accept
 parameters.
 This structure describes a two-dimensional integer rectangle:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct ag_rect {
 	int x, y;
 	int w, h;
@@ -61,6 +60,7 @@ variant includes a redundant endpoint (or alternatively, a redundant size
 implied by the two endpoints).
 This uses more space, but allows for faster intersection tests:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct ag_rect2 {
 	int x1, y1;
 	int w, h;

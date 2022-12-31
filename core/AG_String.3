@@ -1,4 +1,4 @@
-.\" Copyright (c) 2012-2020 Julien Nadeau Carriere <vedge@csoft.net>.
+.\" Copyright (c) 2012-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -84,11 +84,9 @@
 .\"	@(#)strsep.3	8.1 (Berkeley) 6/9/93
 .\" $FreeBSD: src/lib/libc/string/strsep.3,v 1.16.4.1 2011/09/23 00:51:37 kensmith Exp $
 .\"
-.Dd July 28, 2012
+.Dd December 21, 2022
 .Dt AG_STRING 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.4
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_String
 .Nd agar C string specific functions
@@ -238,24 +236,20 @@ or
 .El
 .Pp
 Specifiers for user-defined formatting routines can be registered at runtime.
-For example, the ag_math library, upon initialization, registers
-%[V] for its
-.Xr M_Vector 3
-type, %[M] for its
-.Xr M_Matrix 3
-type, etc. (see
-.Xr M_String 3
-for a complete list).
 .Pp
 The
 .Fn AG_RegisterFmtStringExt
-function registers a new "%[foo]" style specifier.
-The
+function registers a new format specifier.
+If the given
+.Fa fmt
+argument is "abc", then occurences of "%[abc]" in the format string will
+be processed by the given callback function.
 .Fa extFn
-calback functions should be of the form:
+is a callback routine of the form:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 typedef AG_Size (*AG_FmtStringExtFn)(AG_FmtString *fs, char *dst,
-                                    AG_Size dstSize);
+                                     AG_Size dstSize);
 .Ed
 .Pp
 The callback is expected to write to fixed-size buffer
@@ -545,6 +539,7 @@ The following Agar-GUI code creates an
 passing a formatted string (in an internally-managed buffer) to the
 label constructor:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 int myInt = 1234;
 
 AG_LabelNewS(win, 0, AG_Printf("myInt=%d", myInt));
@@ -554,6 +549,7 @@ Whenever multiple strings are needed simultaneously,
 .Fn AG_PrintfN
 allows a buffer index to be specified:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 void MyFn(const char *string1, const char *string2);
 
 MyFn(AG_PrintfN(0, "First string"),
@@ -564,6 +560,7 @@ The following code uses
 .Fn AG_Strsep
 to parse a string, and prints each token in separate line:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 char *string = AG_Strdup("abc,def,ghi");
 char *pString = string, *token;
 
@@ -573,8 +570,9 @@ while ((token = AG_Strsep(&string, ",")) != NULL) {
 free(pString);
 .Ed
 .Pp
-The following code constructs a string and appends a formatted number to it:
+The following code constructs a string with a formatted number:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 char myBuffer[30];
 int i = 0;
 
@@ -588,6 +586,7 @@ The following code converts a string from LATIN-1 (iso-8859-1)
 encoding to Unicode, counts the number of characters, and exports
 the string to UTF-8 encoding:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 char *dst;
 AG_Char *unicode, *s;
 int count = 0;
@@ -596,7 +595,7 @@ AG_Size dstLen;
 if ((unicode = AG_ImportUnicode("LATIN1", input, NULL)) == NULL) {
 	AG_FatalError(NULL);
 }
-for (s = &unicode[0]; *s != '\0'; s++) {
+for (s = &unicode[0]; *s != '\\0'; s++) {
 	count++;
 }
 if (AG_LengthUTF8FromUCS4(unicode, &dstLen) == -1) {
@@ -611,6 +610,7 @@ The following GUI code fragment registers an extension to the
 formatting engine, and uses the new format when creating static and polled
 labels:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 AG_Size
 PrintMyVector(AG_FmtString *fs, char *dst, AG_Size dstSize)
 {
@@ -626,6 +626,16 @@ AG_RegisterFmtStringExt("myVec", PrintMyVector);
 AG_LabelNewS(win, 0, AG_Printf("Static label: %[myVec]", &v));
 AG_LabelNewPolled(win, 0, "Polled label: %[myVec]", &v);
 .Ed
+.Pp
+The Agar-Math library (ag_math) upon initialization registers
+%[V] for its
+.Xr M_Vector 3
+type, %[M] for its
+.Xr M_Matrix 3
+type, and others.
+For the complete list see
+.Xr M_String 3 .
+.Pp
 .Sh SEE ALSO
 .Xr AG_Error 3 ,
 .Xr AG_Intro 3 ,

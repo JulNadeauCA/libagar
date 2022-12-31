@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2007-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -23,11 +23,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd October 21, 2007
+.Dd December 21, 2022
 .Dt RG_TILE 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.6
+.Os Agar 1.7
 .Sh NAME
 .Nm RG_Tile
 .Nd Agar-RG image element
@@ -84,6 +82,7 @@ The public members of the
 .Nm
 structure are as follows:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct rg_tile {
 	char name[RG_TILE_NAME_MAX];    /* User description */
 	char clname[RG_TILE_CLASS_MAX]; /* Category (app-specific) */

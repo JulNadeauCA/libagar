@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2008-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd August 21, 2008
+.Dd December 21, 2022
 .Dt AG_FILE 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.3
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_File
 .Nd agar file access routines
@@ -59,6 +57,7 @@ The
 function returns information about the specified filesystem object, into
 the structure:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct ag_file_info {
 	enum ag_file_info_type type;
 	int perms;
@@ -170,6 +169,7 @@ If successful, the function returns a newly allocated
 .Ft AG_Dir
 structure:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct ag_dir {
 	char **ents;		/* Filenames */
 	int nents;
@@ -210,6 +210,7 @@ argument should point to an array containing up to
 .Fa count
 items:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct ag_file_ext_mapping {
 	const char *ext;
 	const char *descr;
@@ -236,6 +237,96 @@ to 1 to advise that objects of this class may be freely created, loaded
 from file and directly edited with the
 .Fa edit
 function of the class.
+.Sh EXAMPLES
+The following code lists the contents of a directory:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+AG_Dir *dir;
+int i;
+
+dir = AG_OpenDir("example-directory");
+if (dir == NULL) {
+	AG_FatalError(NULL);
+}
+for (i = 0; i < dir->nents; i++) {
+	AG_Verbose("%s\\n", dir->ents[i]);
+}
+AG_CloseDir(dir);
+.Ed
+.Pp
+The following code displays information about a file:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+AG_FileInfo info;
+
+if (AG_GetFileInfo("file.txt", &info) != 0) {
+	AG_FatalError(NULL);
+}
+AG_Verbose("File type: %d\\n", info.type);
+AG_Verbose("Permissions: %x\\n", info.perms);
+AG_Verbose("Flags: %x\\n", info.flags);
+.Ed
+.Pp
+The following code checks if a given file exists in the system temporary
+directory and if so, deletes it:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+char path[AG_PATHNAME_MAX];
+
+if (AG_GetSystemTempDir(path, sizeof(path)) != 0) {
+	AG_FatalError(NULL);
+}
+AG_Strlcat(path, "file-to-delete.txt", sizeof(path));
+
+if (AG_FileExists(path) == 1) {
+	if (AG_FileDelete(path) == -1)
+		AG_Verbose("Delete failed (%s)\\n",
+		    AG_GetError());
+}
+.Ed
+.Pp
+The following code creates a new directory, changes the working directory to
+it, prints out its complete path name and finally deletes it:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+if (AG_MkDir("tempdir") != 0) {
+	AG_FatalError(NULL);
+}
+if (AG_ChDir("tempdir") == 0) {
+	char dir[AG_PATHNAME_MAX];
+
+	if (AG_GetCWD(dir, sizeof(dir)) == 0) {
+		AG_Verbose("Created %s (%s)\\n",
+		    AG_ShortFilename(dir), dir);
+	}
+	AG_ChDir("..");
+}
+if (AG_RmDir("tempdir") != 0) {
+	AG_Verbose("Delete failed (%s)\\n",
+	    AG_GetError());
+}
+.Ed
+.Pp
+The following code maps the ".foo", ".bar" and ".baz" extensions to the
+.Xr AG_ObjectClass 3
+at
+.Va fooClass ,
+.Va barClass
+and
+.Va bazClass ,
+respectively.
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+const AG_FileExtMapping myExts[] = {
+	{ ".foo", N_("Foo file"), &fooClass, 1 },
+	{ ".bar", N_("Bar file"), &barClass, 1 },
+	{ ".baz", N_("Baz file"), &bazClass, 1 }
+};
+const Uint myExtsCount = sizeof(myExts) /
+                         sizeof(myExts[0]);
+
+AG_RegisterFileExtMappings(myExts, myExtsCount);
+.Ed
 .Sh SEE ALSO
 .Xr AG_DataSource 3 ,
 .Xr AG_Intro 3 ,

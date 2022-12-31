@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd October 14, 2009
+.Dd December 21, 2022
 .Dt AG_COLOR 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.4
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Color
 .Nd agar color structure
@@ -49,6 +47,7 @@ The
 .Nm
 structure is declared as:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct ag_color {
 #if AG_MODEL == AG_LARGE
 	Uint16 r,g,b,a;			/* LG (16-bit color) */
@@ -163,20 +162,20 @@ converts a text-based color representation to an
 .Nm .
 The following formats are allowed:
 .Bd -literal
-	"#RGB[A]"
-	"#RRGGBB[AA]"
-	"#RRRRGGGGBBBB[AAAA]"
-	"r,g,b[,a]"
-	"rgb(r,g,b[,a])"
-	"rgb16(r,g,b[,a])"
-	"hsv(h,s,v[,a])"
-	"AliceBlue"
+"#RGB[A]"
+"#RRGGBB[AA]"
+"#RRRRGGGGBBBB[AAAA]"
+"r,g,b[,a]"
+"rgb(r,g,b[,a])"
+"rgb16(r,g,b[,a])"
+"hsv(h,s,v[,a])"
+"AliceBlue"
 .Ed
 .Pp
-Components can be separated by `/', ':' or ',' characters.
+Color components may be separated by `/', ':' or ','.
 .Pp
-A component terminating with a `%' character is interpreted as a ratio in %
-of the corresponding component of
+A component terminating with a `%' character is interpreted as a ratio
+(in %) of the corresponding component of
 .Fa pColor
 (or White if
 .Fa pColor

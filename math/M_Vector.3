@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd July 20, 2009
+.Dd December 21, 2022
 .Dt M_VECTOR 3
-.Os
-.ds vT Agar-Math API Reference
-.ds oS Agar 1.5.0
+.Os Agar 1.7
 .Sh NAME
 .Nm M_Vector
 .Nd Agar-Math vector-related functions
@@ -81,6 +79,7 @@ The
 .Ft M_Vector
 structure is defined as:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct m_vector {
 	Uint m;			/* Size */
 	M_Real *v;		/* Elements */
@@ -313,6 +312,7 @@ and returns the resulting vector.
 The following routines operate on vectors in R^2, which are always
 represented by the structure:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct m_vector2 {
 	M_Real x, y;
 } M_Vector2;
@@ -626,6 +626,7 @@ about the origin.
 The following routines operate on vectors in R^3, which are represented
 by the structure:
 .Bd -literal
+.\" SYNTAX(c)
 #ifdef HAVE_SSE
 typedef union m_vector3 {
 	__m128 m128;
@@ -970,6 +971,7 @@ about the origin.
 The following routines operate on vectors in R^4, which are represented
 by the structure:
 .Bd -literal
+.\" SYNTAX(c)
 #ifdef HAVE_SSE
 typedef union m_vector4 {
 	__m128 m128;

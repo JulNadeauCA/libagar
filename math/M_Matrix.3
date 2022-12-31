@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2006-2013 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd July 22, 2006
+.Dd December 21, 2022
 .Dt M_MATRIX 3
-.Os
-.ds vT Agar-Math API Reference
-.ds oS Agar 1.5.0
+.Os Agar 1.7
 .Sh NAME
 .Nm M_Matrix
 .Nd Agar-Math matrix-related functions
@@ -82,8 +80,7 @@ matrices:
 Native scalar floating point methods.
 .It sparse
 Methods optimized for large, sparse matrices.
-Based on the excellent Sparse 1.4 package by Kenneth Kundert at UC Berkeley
-.Pq Lk http://sparse.sourceforge.net/ .
+Based on the excellent Sparse 1.4 package by Kenneth Kundert.
 .El
 .Sh M-BY-N MATRICES: INITIALIZATION
 .nr nS 1
@@ -469,6 +466,7 @@ member of the structure.
 Elements of the matrix are stored in row-major format.
 The structure is defined as:
 .Bd -literal
+.\" SYNTAX(c)
 #ifdef HAVE_SSE
 typedef union m_matrix44 {
 	struct { __m128 m1, m2, m3, m4; };
@@ -715,6 +713,10 @@ performs uniform scaling by
 .Xr M_Quaternion 3 ,
 .Xr M_Real 3 ,
 .Xr M_Vector 3
+.Pp
+.Bl -tag -compact
+.It Lk http://sparse.sourceforge.net/ Sparse 1.4
+.El
 .Sh HISTORY
 The
 .Nm

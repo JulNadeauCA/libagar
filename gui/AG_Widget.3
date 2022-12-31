@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd August 20, 2002
+.Dd December 21, 2022
 .Dt AG_WIDGET 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.5
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Widget
 .Nd agar user interface element
@@ -98,6 +96,7 @@ Object operations specific to the
 .Nm
 class are defined as follows:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct ag_widget_class {
 	struct ag_object_class _inherit;  /* [AG_Object] -> [AG_Widget] */
 	
@@ -237,6 +236,7 @@ and
 .Ft AG_SizeAlloc
 structures are defined as follows:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct ag_size_req {
 	int w, h;			/* Requested geometry in pixels */
 } AG_SizeReq;
@@ -588,15 +588,17 @@ For instance,
 mentions "value" bindings to integers.
 Therefore, to control a byte of memory, one might use:
 .Bd -literal
-	static Uint8 myByte = 0;
+.\" SYNTAX(c)
+static Uint8 myByte = 0;
 
-	AG_Slider *slider = AG_SliderNew(window, AG_SLIDER_HORIZ, 0);
-	AG_BindUint8(slider, "value", &myByte);
+AG_Slider *slider = AG_SliderNew(window, AG_SLIDER_HORIZ, 0);
+AG_BindUint8(slider, "value", &myByte);
 .Ed
 .Pp
 Or alternatively, using a shorthand constructor:
 .Bd -literal
-	AG_SliderNewUint8(window, AG_SLIDER_HORIZ, 0, &myByte, NULL, NULL);
+.\" SYNTAX(c)
+AG_SliderNewUint8(window, AG_SLIDER_HORIZ, 0, &myByte, NULL, NULL);
 .Ed
 .Pp
 This method is not limited to primitive data types.

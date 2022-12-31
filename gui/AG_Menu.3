@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd May 30, 2005
+.Dd December 21, 2022
 .Dt AG_MENU 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.0
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Menu
 .Nd agar menu system
@@ -509,6 +507,7 @@ This flag causes the message to be displayed for 250ms instead.
 .Sh EXAMPLES
 The following code fragment creates a popup menu with a disabled item:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 AG_PopupMenu *pm;
 AG_MenuItem *mi;
 
@@ -523,6 +522,7 @@ mi->state = (myClipboard->contents > 0);
 The following code fragment creates a popup menu with a dynamically
 determined "disabled" state:
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 static int
 PasteActive(AG_Event *event)
 {
@@ -547,6 +547,7 @@ The following code fragment associates a menu with an
 .Xr AG_Toolbar 3 .
 Buttons and menu entries are created for the same actions.
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 AG_Toolbar *toolbar;
 AG_Menu *menu;
 AG_MenuItem *item;
@@ -565,6 +566,7 @@ item = AG_MenuNode(menu->root, "File", NULL);
 The following code fragment creates a menu with an action item, a boolean
 item and two bitmask items.
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 Uint16 flags = 0;
 #define FOO_FLAG 0x01
 #define BAR_FLAG 0x02

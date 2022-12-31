@@ -1,4 +1,4 @@
-.\" Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2012-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd May 2, 2010
+.Dd December 21, 2022
 .Dt AG_DRIVERCOCOA 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.5.0
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_DriverCocoa
 .Nd agar Cocoa / MacOS X driver
@@ -43,6 +41,7 @@ is usually selected as the default driver.
 .Nm .
 .Sh EXAMPLES
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 AG_InitGraphics("cocoa");
 .Ed
 .Sh OPTIONS
@@ -60,9 +59,10 @@ Request a stereoscopic visual.
 .Xr AG_InitGraphics 3 ,
 .Xr AG_Intro 3
 .Pp
-.Lk https://www.opengl.org/ OpenGL
-.Pp
-.Lk https://developer.apple.com/ Apple
+.Bl -tag -compact
+.It Lk https://www.opengl.org/ OpenGL
+.It Lk https://developer.apple.com/ Apple Developer
+.El
 .Sh HISTORY
 The
 .Va cocoa

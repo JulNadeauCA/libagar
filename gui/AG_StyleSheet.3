@@ -1,4 +1,4 @@
-.\" Copyright (c) 2014-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2014-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd April 12, 2014
+.Dd December 21, 2022
 .Dt AG_STYLESHEET 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.5
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_StyleSheet
 .Nd agar cascading style sheets
@@ -194,8 +192,8 @@ Some widgets can handle negative padding and negative spacing values
 .Pp
 .Ft int
 .Fn AG_LookupStyleSheet "AG_StyleSheet *css" "void *widget" "const char *key" "char **rv"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_InitStyleSheet
 function initializes the given
@@ -238,6 +236,7 @@ and sets padding values for the
 .Xr AG_Button 3
 class:
 .Bd -literal
+.\" SYNTAX(agarcss)
 AG_Button {
 	font-family: league-gothic;
 	font-stretch: condensed;
@@ -261,9 +260,10 @@ The syntax allows certain attributes, such as "font-size" and "color" to
 be specified in relation to the parent.
 For example:
 .Bd -literal
-	font-size: 50%;			# Half of parent font size
-	color: hsv(100%,50%,100%);	# Half of parent saturation
-	color: hsv(100%,100%,75%);	# 3/4 of parent value
+.\" SYNTAX(agarcss)
+font-size: 50%;			# Half of parent font size
+color: hsv(100%,50%,100%);	# Half of parent saturation
+color: hsv(100%,100%,75%);	# 3/4 of parent value
 .Ed
 .Pp
 .Sh SEE ALSO

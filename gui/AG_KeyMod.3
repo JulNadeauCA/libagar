@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd October 2, 2009
+.Dd December 21, 2022
 .Dt AG_KEYMOD 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.4
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_KeyMod
 .Nd agar key modifier definitions
@@ -41,6 +39,7 @@ The
 type describes a modifier key (or the state of all modifier keys);
 it is defined as:
 .Bd -literal
+.\" SYNTAX(c)
 typedef unsigned int AG_KeyMod;
 
 #define AG_KEYMOD_NONE		0x0000
@@ -78,5 +77,3 @@ is driver-specific.
 The
 .Nm
 type first appeared in Agar 1.4.
-The bitmasks match those of SDL-1.2
-.Pq Lk https://libsdl.org/ .

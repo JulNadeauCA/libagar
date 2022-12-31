@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2007-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,17 +22,14 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd November 16, 2007
+.Dd December 21, 2022
 .Dt AG_ERROR 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.3
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Error
 .Nd agar error handling
 .Sh SYNOPSIS
 .Bd -literal
-#define _USE_AGAR_STD /* If macros without AG_ prefix are desired */
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
@@ -212,6 +209,78 @@ calls
 If
 .Fa p
 is NULL, it is a no-op.
+.Sh EXAMPLES
+The following code print a message on the debugging console:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+AG_Verbose("This is a global debugging message\\n");
+.Ed
+.Pp
+Debug messages may contain ANSI SGR sequences:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+AG_Verbose("This message contains "
+           AGSI_RED AGSI_ITALIC "ANSI" AGSI_RST "\\n");
+
+AG_Verbose("This message uses an "
+           AGSI_COURIER "alternate font" AGSI_RST "\\n");
+.Ed
+.Pp
+The following code prints a debugging message in relation to an
+.Xr AG_Object 3
+in particular:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+AG_Debug(myObject,
+    "Hello! This is a contextual debugging message. "
+    "My flags = 0x%x\\n", myObject->flags);
+.Ed
+.Pp
+The following code illustrates the use of
+.Fn AG_SetError
+by a function, and the use of
+.Fn AG_GetError
+by its caller:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+int
+SomeOperation(int x)
+{
+	if (x > 10) {
+		AG_SetError("x is too large (%d > 10)", x);
+		return (-1);
+	}
+	return (0);
+}
+
+if (SomeOperation(x) != 0)
+	AG_Verbose("Failed: %s\\n", AG_GetError());
+.Ed
+.Pp
+The following code allocates, reallocates and frees memory:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+void *buffer, *bufferNew;
+
+/* Allocate 4K of memory. Fatal if allocation fails. */
+buffer = AG_Malloc(4096);
+
+/* Allocate 4K of memory. Print a message if allocation fails. */
+if ((buffer = AG_TryMalloc(4096)) == NULL)
+	AG_Verbose("Allocation failed\\n");
+
+/* Grow the buffer to 8K. Fatal if reallocation fails. */
+buffer = AG_Realloc(buffer, 8192);
+
+/* Grow the buffer to 8K. Print a message if reallocation fails. */
+if ((bufferNew = AG_TryRealloc(buffer, 8192)) == NULL) {
+	AG_Verbose("Allocation failed\\n");
+}
+buffer = bufferNew;
+
+/* Release the allocated memory. */
+AG_Free(buffer);
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Object 3 ,

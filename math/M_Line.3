@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd July 16, 2009
+.Dd December 21, 2022
 .Dt M_LINE 3
-.Os
-.ds vT Agar-Math API Reference
-.ds oS Agar 1.3.4
+.Os Agar 1.7
 .Sh NAME
 .Nm M_Line
 .Nd Agar-Math line segment / half-line structure
@@ -56,6 +54,7 @@ and a real length
 in order to express a half-line).
 The structure is defined as:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct m_line2 {
 	M_Vector2 p;
 	M_Vector2 d;
@@ -68,6 +67,7 @@ Similarly,
 .Ft M_Line3
 describes a line segment, an Euclidean vector or a half-line in R^3:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct m_line3 {
 	M_Vector3 p;
 	M_Vector3 d;

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2018-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2018-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,14 +22,12 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd May 26, 2018
+.Dd December 21, 2022
 .Dt AG_WEB 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.5.1
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Web
-.Nd agar HTTP/1.1 application server
+.Nd Agar HTTP/1.1 application server
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -130,6 +128,7 @@ The
 .Fa app
 structure should be partially initialized:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct web_application {
 	const char *name;			/* Description */
 	const char *copyright;			/* Copyright notice */
@@ -166,6 +165,7 @@ section).
 .Pp
 For example:
 .Bd -literal
+.\" SYNTAX(c)
 WEB_Application myExampleApp = {
 	"ExampleApp",
 	"Copyright (c) my name",
@@ -189,6 +189,7 @@ argument must point to an initialized
 .Ft WEB_Module
 structure:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct web_module {
 	char *name;                     /* Short name */
 	char *icon;                     /* Icon (HTML) */
@@ -265,6 +266,7 @@ The
 .Va commands
 table maps method names to a module's functions:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct web_command {
 	char *name;                         /* Method name */
 	int (*fn)(void *mod, WEB_Query *q); /* Function */
@@ -281,6 +283,7 @@ If
 is not NULL, it indicates the Content-Type of the data returned by the method.
 For example:
 .Bd -literal
+.\" SYNTAX(c)
 static WEB_Command mymodCommands[] = {
 	{ "mymod_hello",	mymod_hello,	"text/html",     "Pi" },
 	{ "mymod_image",	mymod_image,	"image/png",     "" },
@@ -296,6 +299,7 @@ error code, the special type "[json-status]" can be used.
 On success, the JSON code {"code":0} will be emitted.
 If the function fails and return -1, the following will be emitted:
 .Bd -literal
+.\" SYNTAX(json)
 { "code": -1,
   "error": "<text from AG_GetError()>",
   "backend_version": "<agar version>" }
@@ -305,6 +309,7 @@ The special type "[json]" may be used if the function emits JSON content
 of its own.
 Then the following will be emitted:
 .Bd -literal
+.\" SYNTAX(json)
 { "lang": <language code>,
   <extra JSON emitted by function>,
   "code": <return code from function>,
@@ -460,6 +465,7 @@ If an error (such as overflow) occurs, it returns NULL.
 If the operation is successful, it returns a pointer to the following
 structure which can be used to change cookie attributes:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct web_cookie {
 	char name[WEB_COOKIE_NAME_MAX];      /* Name (RO) */
 	char value[WEB_COOKIE_VALUE_MAX];    /* Value */
@@ -729,6 +735,7 @@ functions generate a log entry with the given
 That the log file is unbuffered.
 Log levels include:
 .Bd -literal
+.\" SYNTAX(c)
 enum web_loglvl {
 	WEB_LOG_EMERG,   /* General panic condition */
 	WEB_LOG_ALERT,   /* Immediate attention required */
@@ -933,6 +940,7 @@ Variables are linked to the current
 .Ft WEB_Query ,
 except for globals which remain persistent across queries.
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct web_variable {
 	char	 key[WEB_VAR_NAME_MAX]; /* Name ("\\0" = anonymous) */
 	char	*value;                 /* Value (C string) */
@@ -1059,18 +1067,20 @@ HTML using the "login_form" template.
 Instances of "$username" and "$password" in login_form will be substituted
 for "nobody" and "test1234".
 .Bd -literal
-	WEB_VAR_SetS("username", "nobody");
-	WEB_VAR_SetS("password", "test1234");
-	WEB_OutputHTML("login_form");
-	WEB_VAR_Wipe("password");
+.\" SYNTAX(c)
+WEB_VAR_SetS("username", "nobody");
+WEB_VAR_SetS("password", "test1234");
+WEB_OutputHTML("login_form");
+WEB_VAR_Wipe("password");
 .Ed
 .Pp
 Anonymous variables must be freed explicitely by the caller:
 .Bd -literal
-	WEB_VAR *v;
-	v = WEB_VAR_SetS(NULL, "Hello, ");      /* Anonymous variable */
-	WEB_VAR_CatS(v, "world!");
-	WEB_VAR_Free(v);
+.\" SYNTAX(c)
+WEB_VAR *v;
+v = WEB_VAR_SetS(NULL, "Hello, ");      /* Anonymous variable */
+WEB_VAR_CatS(v, "world!");
+WEB_VAR_Free(v);
 .Ed
 .\" MANLINK(WEB_SessionOps)
 .Sh AUTHENTICATION
@@ -1083,6 +1093,7 @@ The argument must point to an initialized
 .Ft WEB_SessionOps
 structure:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct web_session_ops {
 	const char *name;             /* Session class name */
 	AG_Size size;                 /* Structure size */
@@ -1215,6 +1226,7 @@ It declares a session structure derived from
 It also provides a backend for a registration form (regChallenge, regFinish
 and regConfirm).
 .Bd -literal
+.\" SYNTAX(c)
 /* Per session data */
 typedef struct mySiteSession {
 	struct web_session _inherit;  /* WEB_Session->MySiteSession */
@@ -1404,6 +1416,7 @@ and having
 .Fa filterFn
 point to a compare function of the form:
 .Bd -literal
+.\" SYNTAX(c)
 typedef int (*WEB_EventFilterFn)(char *sessID, char *user,
                                  char *langCode, const void *arg);
 .Ed

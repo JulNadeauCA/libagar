@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2007-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd November 16, 2007
+.Dd December 21, 2022
 .Dt AG_THREADS 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.3
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Threads
 .Nd agar threads support
@@ -35,38 +33,27 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-On all platforms with threads support, Agar can be compiled with support for
+On platforms with threads support, Agar can be compiled with support for
 multithreading.
-Agar API calls, unless otherwise documented, then become
+In a threaded build, Agar API calls can be considered
 .Em free-threaded
 (safe to use from different threads without need for application-level
-synchronization).
-.Sh CONVENTIONS
-The Agar API documentation follows the convention that all functions are
-free-threaded, unless mentioned otherwise.
+synchronization) unless documented otherwise.
 .Pp
-Under some circumstances, application-level synchronization is required.
+Even though calls are free-threaded, application-level
+synchronization (calls to
+.Xr AG_ObjectLock 3 )
+may still be needed in some cases.
+See
+.Sx EXAMPLES
+for some examples of thread-unsafe vs. thread-safe usages.
+.Sh CONVENTIONS
+Agar function calls are free-threaded unless mentioned otherwise.
+.Pp
 The
 .Xr AG_Object 3
-simplifies this task by providing a per-object lock (which is implicitely
-acquired in some contexts, such as event handler execution).
-For instance, the following code accesses a VFS in an unsafe manner:
-.Bd -literal -offset indent
-AG_Object *o;
-
-o = AG_ObjectFind(root, "/Foo");
-if (o != NULL) { ... }			/* UNSAFE */
-.Ed
-.Pp
-The following code should be used instead:
-.Bd -literal -offset indent
-AG_Object *o;
-
-AG_ObjectLock(root);
-o = AG_ObjectFind(root, "/Foo");
-if (o != NULL) { ... }			/* Safe access */
-AG_ObjectUnlock(root);
-.Ed
+system provides a per-object recursive mutex which is implicitely acquired
+before invoking object methods or processing events.
 .Sh THREADS INTERFACE
 When compiled with threads support, Agar provides a portable, minimal interface
 to the operating system's native threads interface.
@@ -293,6 +280,36 @@ returns the thread-specific value associated with
 .Fn AG_ThreadKeySet
 sets a thread-specific value with
 .Fa key .
+.Sh EXAMPLES
+The following code uses the return value of a VFS lookup in a manner
+which is
+.Em not
+thread-safe.
+A race condition exists between the
+.Fn AG_ObjectFind
+call and the following access:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+AG_Object *o;
+
+o = AG_ObjectFind(root, "/Foo");
+if (o != NULL) { /* ... */ }     /* UNSAFE access */
+.Ed
+.Pp
+The following code accesses the returned object safely by acquiring the
+mutex of the VFS root object (which protects the entire VFS linkage):
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+AG_Object *o;
+
+AG_ObjectLock(root);
+o = AG_ObjectFind(root, "/Foo");
+if (o != NULL) { /* ... */ }     /* Safe access */
+AG_ObjectUnlock(root);
+.Ed
+.\"
+.\" TODO more examples
+.\"
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Object 3

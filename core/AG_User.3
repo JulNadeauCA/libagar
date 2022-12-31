@@ -1,4 +1,4 @@
-.\" Copyright (c) 2013-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2013-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd March 16, 2013
+.Dd December 21, 2022
 .Dt AG_USER 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.3
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_User
 .Nd agar user account information interface
@@ -62,11 +60,12 @@ On Unix, use
 .Xr getpwent 3
 or
 .Xr getpwnam_r 3 .
-Since accessing the password database incurs startup overhead, "getenv" is
-the actual default unless the
+Since accessing the password database incurs startup overhead, "getenv"
+is the default (unless
+.Xr AG_InitCore 3
+was called with the
 .Dv AG_POSIX_USERS
-flag is passed to
-.Xr AG_InitCore 3 .
+flag option).
 .It agUserOps_win32
 On Windows, use CSIDL to locate a preferred
 .Pa AppData
@@ -111,19 +110,20 @@ function returns a newly-allocated
 .Nm
 structure.
 This structure is defined as:
-.Bd -literal
+.Bd -literal -offset indent
+.\" SYNTAX(c)
 typedef struct ag_user {
-	char	 name[AG_USER_NAME_MAX];  /* User name */
-	Uint     flags;
-#define AG_USER_NO_ACCOUNT 0x01           /* Not a real user account */
-	char    *passwd;                  /* Encrypted password */
-	Uint32   uid;                     /* User ID */
-	Uint32   gid;                     /* Group ID */
-	char    *loginClass;              /* Login class */
-	char    *gecos;                   /* Honeywell login info */
-	char    *home;                    /* Home directory */
-	char    *shell;                   /* Default shell */
-	char    *tmp;                     /* Temp. directory */
+	char   name[AG_USER_NAME_MAX];  /* User name */
+	Uint   flags;
+#define AG_USER_NO_ACCOUNT 0x01 /* Not a real account */
+	char  *passwd;          /* Encrypted password */
+	Uint32 uid;             /* User ID */
+	Uint32 gid;             /* Group ID */
+	char  *loginClass;      /* Login class */
+	char  *gecos;           /* Honeywell login info */
+	char  *home;            /* Home directory */
+	char  *shell;           /* Default shell */
+	char  *tmp;             /* Temp. directory */
 	AG_TAILQ_ENTRY(ag_user) users;
 } AG_User;
 .Ed
@@ -160,29 +160,32 @@ The argument to
 .Fn AG_SetUserOps
 should point to the following structure:
 .Bd -literal
+.\" SYNTAX(c)
 typedef struct ag_user_ops {
-	const char *name;                   /* Name for this backend */
-	void     (*init)(void);
-	void     (*destroy)(void);
-	int      (*getUserByName)(AG_User *, const char *);
-	int      (*getUserByUID)(AG_User *, Uint32);
-	int      (*getRealUser)(AG_User *);
-	int      (*getEffectiveUser)(AG_User *);
+	const char *name;           /* Backend name */
+	void (*init)(void);
+	void (*destroy)(void);
+	int  (*getUserByName)(AG_User *, const char *);
+	int  (*getUserByUID)(AG_User *, Uint32);
+	int  (*getRealUser)(AG_User *);
+	int  (*getEffectiveUser)(AG_User *);
 } AG_UserOps;
 .Ed
 .Pp
+The
 .Fn init
-performs any necessary initialization.
+method performs any necessary initialization.
+The
 .Fn destroy
-cleans up any allocated resources.
+method cleans up any allocated resources.
 .Pp
-On success, the query methods
+On success the
 .Fn getUserByName ,
 .Fn getUserByUID ,
 .Fn getRealUser
 and
 .Fn getEffectiveUser
-should set the fields of the
+methods should set the fields of the
 .Ft AG_User
 argument and return 0.
 On error, they should return -1.

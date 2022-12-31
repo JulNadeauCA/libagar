@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd September 8, 2022
+.Dd December 21, 2022
 .Dt AG_DRIVERSDL2GL 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.7.0
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_DriverSDL2MW
 .Nd agar SDL2 multi-window OpenGL driver
@@ -43,12 +41,22 @@ in separate windows.
 .Nm .
 .Sh EXAMPLES
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 AG_InitGraphics("sdl2mw");
 AG_InitGraphics("sdl2mw(stereo)");
 AG_InitGraphics("sdl2mw(out=%08d.jpg)");
 .Ed
 .Sh OPTIONS
-.Bl -tag -compact -width "outFirst "
+.Bl -tag -compact -width "noAutoCapture "
+.It noAutoCapture
+Disable mouse auto-capture behavior
+(see
+.Dv SDL_HINT_MOUSE_AUTO_CAPTURE ) .
+Enabled by default.
+May be set by widget code with the
+.Fn setMouseAutoCapture
+driver operation (see
+.Xr AG_Driver 3 ) .
 .It debug
 Capture
 .Dv GL_DEBUG_OUTPUT
@@ -83,9 +91,10 @@ integer method, "ifast" for fast but less accurate integer method, or
 .Xr AG_InitGraphics 3 ,
 .Xr AG_Intro 3
 .Pp
-.Lk https://libsdl.org/ Simple_DirectMedia_Layer
-.Pp
-.Lk https://www.opengl.org/ OpenGL
+.Bl -tag -compact
+.It Lk https://libsdl.org/ Simple DirectMedia Layer
+.It Lk https://www.opengl.org/ OpenGL
+.El
 .Sh HISTORY
 The
 .Va sdl2mw

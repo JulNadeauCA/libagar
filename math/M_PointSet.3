@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd July 17, 2009
+.Dd December 21, 2022
 .Dt M_POINT_SET 3
-.Os
-.ds vT Agar-Math API Reference
-.ds oS Agar 1.4.2
+.Os Agar 1.7
 .Sh NAME
 .Nm M_PointSet
 .Nd Agar-Math point set structures
@@ -46,6 +44,7 @@ The
 family of structures describe arbitrary sets of points in space.
 They are defined as follows:
 .Bd -literal
+.\" SYNTAX(c)
 /* Points in R^2 */
 typedef struct m_point_set2 {
 	M_Vector2 *p;
@@ -259,6 +258,7 @@ The
 .Fa mode
 arguments specify the sorting mode:
 .Bd -literal
+.\" SYNTAX(c)
 enum m_point_set_sort_mode2 {
 	M_POINT_SET_SORT_XY,
 	M_POINT_SET_SORT_YX,

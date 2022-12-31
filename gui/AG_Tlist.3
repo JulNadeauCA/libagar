@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd August 20, 2002
+.Dd December 21, 2022
 .Dt AG_TLIST 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.0
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_Tlist
 .Nd agar tree/list widget
@@ -607,6 +605,7 @@ Disable popup menus (if any have been created).
 The following code fragment displays an external tree structure using
 a recursive Polling Routine.
 .Bd -literal -offset indent
+.\" SYNTAX(c)
 MyTreeNode *myTreeRoot;
 AG_Window *win;
 

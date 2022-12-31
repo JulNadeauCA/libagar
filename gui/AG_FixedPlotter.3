@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd August 20, 2002
+.Dd December 21, 2022
 .Dt AG_FIXED_PLOTTER 3
-.Os
-.ds vT Agar API Reference
-.ds oS Agar 1.0
+.Os Agar 1.7
 .Sh NAME
 .Nm AG_FixedPlotter
 .Nd agar integer plot widget
@@ -64,6 +62,7 @@ The
 .Fa type
 argument is one of:
 .Bd -literal
+.\" SYNTAX(c)
 enum ag_fixed_plotter_type {
 	AG_FIXED_PLOTTER_POINTS,   /* Dots */
 	AG_FIXED_PLOTTER_LINES     /* Lines */
