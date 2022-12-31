@@ -212,6 +212,10 @@ SelectedSurface(AG_Event *_Nonnull event)
 	if (S == NULL || strcmp(it->cat, "surface") != 0)
 		return;
 
+	if (S->w < 1 || S->w > 2560 ||
+	    S->h < 1 || S->h > 1440)
+		return;
+
 	switch (S->format.mode) {
 	case AG_SURFACE_PACKED:
 		AG_LabelText(lblInfo,
