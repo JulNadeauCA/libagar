@@ -182,8 +182,13 @@ static int
 Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 {
 	AG_Config *cfg = obj;
+	AG_Variable *V;
+	void *pInitialRun;
 
-	AG_SetInt(cfg, "initial-run", 0);
+	if ((V = AG_GetVariable(cfg, "initial-run", &pInitialRun)) != NULL) {
+		*(int *)pInitialRun = 0;
+		AG_UnlockVariable(V);
+	}
 	return (0);
 }
 
