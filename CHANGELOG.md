@@ -31,7 +31,8 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB): New driver for SDL 2.0 (single-window; frame-buffer mode).
 - [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL): New driver for SDL 2.0 (single-window; OpenGL mode).
 - [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW): New driver for SDL 2.0 (multi-window; OpenGL mode).
-- [**Single-window drivers**](https://libagar.org/man3/AG_DriverSw): New option `clampOnResize` (clamp active Agar windows against new display size).
+- [**AG_Driver**](https://libagar.org/man3/AG_Driver): New operation: `setMouseAutoCapture` (enable, disable or reset mouse auto-capture on button-down).
+- [**AG_DriverSw**](https://libagar.org/man3/AG_DriverSw): New option `clampOnResize` (clamp active Agar windows against new display size).
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Implemented keyboard shortcuts. Added `AG_MENU_NO_BOOL_MSG` and `AG_MENU_FAST_BOOL_MSG` options.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Improved the performance of the `AG_MenuView` renderer by caching state-dependent opaque labels (embedding any icons), so blending is no longer required. Improved appearance of `AG_MenuView`.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): When an `AG_MenuView` is detached, immediately invalidate the `view` pointers of its `AG_MenuItem`.
@@ -60,6 +61,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Install a copy of the generated configure.lua as ${DATADIR}/agar.lua.
 - Added `DEBUG_MOUSE` build option (debug delivery of mouse events to widgets).
 - Added graphical characters in the Miscellaneous Technical and Private Use Area (e.g., `AGSI_BLACK_AGAR` -> `U+E000 Agar Logo Filled`). Core Font slot #1 is now mapped to Algue and slot #2 is mapped to Unialgue.
+- Added Vim syntax files (under the `syntax/` directory) complete with all types and constants.
 
 ### Removed
 - [**MAP**](https://libagar.org/man3/MAP): Removed `MAP_Actor` interface (replaced by [**MAP_Object**](https://libagar.org/man3/MAP_Object) framework).
