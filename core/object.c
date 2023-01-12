@@ -905,6 +905,7 @@ AG_ObjectCopyFilename(void *p, char *path, AG_Size pathSize)
 	TAILQ_FOREACH(loadPath, pathGroup, paths) {
 	     	Strlcpy(path, loadPath->s, pathSize);
 		Strlcat(path, name, pathSize);
+		Strlcat(path, AG_PATHSEP, pathSize);
 		Strlcat(path, ob->name, pathSize);
 		Strlcat(path, ".", pathSize);
 		Strlcat(path, ob->cls->name, pathSize);
