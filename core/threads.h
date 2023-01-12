@@ -134,7 +134,6 @@ __END_DECLS
 # define _Null_unspecified_Cond
 # define _Null_unspecified_Thread
 # define AG_MUTEX_INITIALIZER 0
-# define AG_COND_INITIALIZER 0
 # define AG_Mutex void *
 # define AG_Thread void *
 # define AG_Cond void *
