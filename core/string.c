@@ -303,11 +303,36 @@ AG_ProcessFmtString(AG_FmtString *fs, char *dst, AG_Size dstSize)
 			switch (f[2]) {
 # ifdef HAVE_FLOAT
 			case 'f':
-				rv = Snprintf(pDst, (pEnd-pDst), "%.2f", FSARG(fs,double));
+				{
+					const double val = FSARG(fs,double);
+
+					if (val == AG_DBL_MAX) {
+						rv = Strlcpy(pDst, AGSI_INFINITY,
+						    (pEnd-pDst));
+					} else if (val == AG_DBL_MIN) {
+						rv = Strlcpy(pDst, "-" AGSI_INFINITY,
+						    (pEnd-pDst));
+					} else {
+						rv = Snprintf(pDst, (pEnd-pDst),
+						    "%.2f", val);
+					}
+				}
 				f++;
 				break;
 			case 'g':
-				rv = Snprintf(pDst, (pEnd-pDst), "%g", FSARG(fs,double));
+				{
+					const double val = FSARG(fs,double);
+
+					if (val == AG_DBL_MAX) {
+						rv = Strlcpy(pDst, "-" AGSI_INFINITY,
+						    (pEnd-pDst));
+					} else if (val == AG_DBL_MIN) {
+						rv = Strlcpy(pDst, AGSI_INFINITY,
+						    (pEnd-pDst));
+					} else {
+						rv = Snprintf(pDst, (pEnd-pDst), "%g", val);
+					}
+				}
 				f++;
 				break;
 # endif
@@ -329,10 +354,34 @@ AG_ProcessFmtString(AG_FmtString *fs, char *dst, AG_Size dstSize)
 			break;
 #ifdef HAVE_FLOAT
 		case 'f':
-			rv = Snprintf(pDst, (pEnd-pDst), "%.2f", FSARG(fs,float));
+			{
+				const float val = FSARG(fs,float);
+
+				if (val == AG_FLT_MAX) {
+					rv = Strlcpy(pDst, "-" AGSI_INFINITY,
+					    (pEnd-pDst));
+				} else if (val == AG_FLT_MIN) {
+					rv = Strlcpy(pDst, AGSI_INFINITY,
+					    (pEnd-pDst));
+				} else {
+					rv = Snprintf(pDst, (pEnd-pDst), "%.2f", val);
+				}
+			}
 			break;
 		case 'g':
-			rv = Snprintf(pDst, (pEnd-pDst), "%g", FSARG(fs,float));
+			{
+				const float val = FSARG(fs,float);
+
+				if (val == AG_FLT_MAX) {
+					rv = Strlcpy(pDst, "-" AGSI_INFINITY,
+					    (pEnd-pDst));
+				} else if (val == AG_FLT_MIN) {
+					rv = Strlcpy(pDst, AGSI_INFINITY,
+					    (pEnd-pDst));
+				} else {
+					rv = Snprintf(pDst, (pEnd-pDst), "%g", val);
+				}
+			}
 			break;
 #endif
 		case 's':
