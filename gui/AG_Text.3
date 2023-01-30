@@ -40,7 +40,7 @@ The
 interface allows Agar GUI widgets to render text using a vector or a bitmap engine.
 FreeType is used by default if it is available.
 .Sh RENDERING ATTRIBUTES
-Agar maintains a stack of Rendering Attributes which influence the operation
+Agar maintains a stack of rendering attributes which influence the operation
 of text rendering and sizing routines.
 Attributes are set using functions such as
 .Fn AG_TextFont
@@ -253,7 +253,7 @@ in a copy-on-write fashion.
 renders the C string
 .Fa text
 onto a newly-allocated surface.
-The font, colors and spacings are according to the current Rendering Attributes
+The font, colors and spacings are according to the current rendering attributes
 (see
 .Sx RENDERING ATTRIBUTES
 section).
@@ -428,22 +428,24 @@ Possible
 include:
 .Bd -literal
 .\" SYNTAX(c)
-#define AG_FONT_BOLD           0x001    /* Bold style */
-#define AG_FONT_ITALIC         0x002    /* Italic style */
-#define AG_FONT_UNDERLINE      0x004    /* Generate underline */
-#define AG_FONT_UPPERCASE      0x008    /* Force uppercase */
-#define AG_FONT_OBLIQUE        0x010    /* Oblique style */
-#define AG_FONT_UPRIGHT_ITALIC 0x020    /* Upright italic style */
-#define AG_FONT_SEMICONDENSED  0x040    /* Semi-condensed */
-#define AG_FONT_CONDENSED      0x080    /* Condensed */
-#define AG_FONT_SW_BOLD        0x100    /* Software-generated bold */
-#define AG_FONT_SW_OBLIQUE     0x200    /* Software-generated oblique */
-#define AG_FONT_SW_ITALIC      AG_FONT_SW_OBLIQUE
-
-#define AG_FONT_WEIGHTS     (AG_FONT_BOLD | AG_FONT_SW_BOLD)
-#define AG_FONT_STYLES      (AG_FONT_ITALIC | AG_FONT_SW_ITALIC | \\
-                             AG_FONT_OBLIQUE | AG_FONT_UPRIGHT_ITALIC) 
-#define AG_FONT_WD_VARIANTS (AG_FONT_SEMICONDENSED | AG_FONT_CONDENSED)
+#define AG_FONT_THIN           0x00001  /* Wt#100 - Thin */
+#define AG_FONT_EXTRALIGHT     0x00002  /* Wt#200 - Extra Light */
+#define AG_FONT_LIGHT          0x00004  /* Wt#300 - Light */
+#define AG_FONT_REGULAR        0x00008  /* Wt#400 - Regular */
+#define AG_FONT_SEMIBOLD       0x00010  /* Wt#600 - Semi Bold */
+#define AG_FONT_BOLD           0x00020  /* Wt#700 - Bold */
+#define AG_FONT_EXTRABOLD      0x00040  /* Wt#800 - Extra Bold */
+#define AG_FONT_BLACK          0x00080  /* Wt#900 - Black */
+#define AG_FONT_OBLIQUE        0x00100  /* Style - Oblique */
+#define AG_FONT_ITALIC         0x00200  /* Style - Italic */
+#define AG_FONT_UPRIGHT_ITALIC 0x00400  /* Style - Upright Italic */
+#define AG_FONT_MONOSPACE      0x00800  /* Family - Monospace */
+#define AG_FONT_ULTRACONDENSED 0x01000  /* Wd(50%) - Ultra Condensed */
+#define AG_FONT_CONDENSED      0x04000  /* Wd(75%) - Condensed */
+#define AG_FONT_SEMICONDENSED  0x02000  /* Wd(87.5%) - Semi Condensed */
+#define AG_FONT_SEMIEXPANDED   0x08000  /* Wd(112.5%) - Semi Expanded */
+#define AG_FONT_EXPANDED       0x10000  /* Wd(125%) - Expanded */
+#define AG_FONT_ULTRAEXPANDED  0x20000  /* Wd(200%) - Ultra Expanded */
 .Ed
 .Pp
 The font is loaded from file if not currently resident (unless the fontconfig
@@ -487,9 +489,34 @@ If
 is NULL then it's a no-op.
 .Pp
 Field separators "," and "/" are also recognized in addition to ":".
-Possible
+The
 .Va Style
-flags include "b" = bold, "i" = italic, "I" = upright italic and "U" = uppercase.
+specification may contain the following characters:
+.Pp
+.Bl -tag -compact -offset indent
+.It m
+Monospace (family preference)
+.It c
+Semi Condensed (width variant)
+.It C
+Condensed (width variant)
+.It L
+Extra Light (weight)
+.It l
+Light (weight)
+.It r
+Regular (weight)
+.It b
+Bold (weight)
+.It s
+Semi Bold (weight)
+.It i
+Italic (style)
+.It o
+Oblique (style)
+.It u
+Upright italic (style)
+.El
 .Sh ANSI ATTRIBUTES
 .nr nS 1
 .Ft "int"

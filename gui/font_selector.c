@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,9 @@
 #include <agar/gui/font_selector.h>
 #include <agar/gui/icons.h>
 #include <agar/gui/primitive.h>
+#include <agar/gui/notebook.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/separator.h>
 
 #include <string.h>
 
@@ -89,8 +92,9 @@ Bound(AG_Event *_Nonnull event)
 	fs->curStyle = (*pFont)->flags;
 }
 
-static void
-UpdateFontSelection(AG_FontSelector *_Nonnull fs)
+/* Load the requested font and update the "font" pointer. */
+static AG_Font *_Nullable
+LoadFont(AG_FontSelector *_Nonnull fs)
 {
 	AG_Variable *Vfont;
 	AG_Font *font, **pFont;
@@ -98,21 +102,208 @@ UpdateFontSelection(AG_FontSelector *_Nonnull fs)
 	font = AG_FetchFont(fs->curFace, fs->curSize, fs->curStyle);
 	if (font == NULL) {
 		Verbose(_("Error opening font: %s\n"), AG_GetError());
-		return;
+		return (NULL);
 	}
-
 	Vfont = AG_GetVariable(fs, "font", (void *)&pFont);
 	*pFont = font;
 	AG_UnlockVariable(Vfont);
+	return (font);
 }
 
+/* Update the weights, styles and width variants for a given font family. */
 static void
-UpdatePreview(AG_FontSelector *_Nonnull fs)
+UpdateStyles(AG_FontSelector *_Nonnull fs, AG_Font *_Nonnull font)
 {
+	AG_Tlist *tl = fs->tlStyles;
+	AG_TlistItem *ti;
+
+	AG_TlistClear(tl);
+
+	ti = AG_TlistAdd(tl, NULL, _(AGSI_ITALIC AGSI_UNDERLINE
+	                             "Weights:"));
+	ti->flags |= AG_TLIST_NO_SELECT;
+
+	ti = AG_TlistAdd(tl, NULL, _("Regular"));
+	ti->depth = 1;
+	if (font != NULL && ((font->flags == 0) ||
+	                     (font->flags & AG_FONT_REGULAR))) {
+		ti->selected++;
+	}
+
+	ti = AG_TlistAdd(tl, NULL, _("Bold"));
+	ti->depth = 1;
+	if (font && font->flags == AG_FONT_BOLD) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _(AGSI_ITALIC AGSI_UNDERLINE
+	                             "Styles:"));
+	ti->flags |= AG_TLIST_NO_SELECT;
+
+	ti = AG_TlistAdd(tl, NULL, _("Italic"));
+	ti->depth = 1;
+	if (font && font->flags == AG_FONT_ITALIC) { ti->selected++; }
+#if 0
+	ti = AG_TlistAdd(tl, NULL, _("SemiBold"));
+	ti->depth = 1;
+	if (*pFont && (*pFont)->flags == AG_FONT_SEMIBOLD) { ti->selected++; }
+
+
+	ti = AG_TlistAdd(tl, NULL, _("Bold Italic"));
+	ti->depth = 1;
+	if (*pFont && ((*pFont)->flags & AG_FONT_BOLD &&
+	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _("SemiBold Italic"));
+	ti->depth = 1;
+	if (*pFont && ((*pFont)->flags & AG_FONT_SEMIBOLD &&
+	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _("Upright Italic"));
+	ti->depth = 1;
+	if (*pFont && (*pFont)->flags == AG_FONT_UPRIGHT_ITALIC) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _("Oblique"));
+	ti->depth = 1;
+	if (*pFont && (*pFont)->flags == AG_FONT_OBLIQUE) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _("Bold Oblique"));
+	ti->depth = 1;
+	if (*pFont && ((*pFont)->flags & AG_FONT_BOLD &&
+	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _("SemiBold Oblique"));
+	ti->depth = 1;
+	if (*pFont && ((*pFont)->flags & AG_FONT_SEMIBOLD &&
+	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _(AGSI_ITALIC AGSI_UNDERLINE
+	                                       "Width variants:"));
+	ti->flags |= AG_TLIST_NO_SELECT;
+
+	ti = AG_TlistAdd(tl, NULL, _("Condensed"));
+	ti->depth = 1;
+	if (*pFont && (*pFont)->flags == AG_FONT_CONDENSED) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _("Condensed Bold"));
+	ti->depth = 1;
+	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
+	               (*pFont)->flags & AG_FONT_BOLD)) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _("Condensed SemiBold"));
+	ti->depth = 1;
+	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
+	               (*pFont)->flags & AG_FONT_SEMIBOLD)) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _("Condensed Italic"));
+	ti->depth = 1;
+	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
+	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _("Condensed Bold Italic"));
+	ti->depth = 1;
+	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
+	               (*pFont)->flags & AG_FONT_BOLD &&
+	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _("Condensed SemiBold Italic"));
+	ti->depth = 1;
+	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
+	               (*pFont)->flags & AG_FONT_SEMIBOLD &&
+	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _("Condensed Oblique"));
+	ti->depth = 1;
+	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
+	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _("Condensed Bold Oblique"));
+	ti->depth = 1;
+	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
+	               (*pFont)->flags & AG_FONT_BOLD &&
+	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
+
+	ti = AG_TlistAdd(tl, NULL, _("Condensed SemiBold Oblique"));
+	ti->depth = 1;
+	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
+	               (*pFont)->flags & AG_FONT_SEMIBOLD &&
+	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
+#endif
+}
+
+/* Update the list of standard sizes for a given font family. */
+static void
+UpdateSizes(AG_FontSelector *_Nonnull fs, AG_Font *_Nullable font)
+{
+	const int stdSizes[] = { 4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
+	                         22,24,26,28,32,48,64 };
+	const int nStdSizes = sizeof(stdSizes) / sizeof(stdSizes[0]);
+	int i;
+
+	/* XXX TODO */
+	for (i = 0; i < nStdSizes; i++) {
+		AG_TlistItem *ti;
+
+		ti = AG_TlistAdd(fs->tlSizes, NULL, "%d", stdSizes[i]);
+		if (font != NULL && stdSizes[i] == font->spec.size)
+			ti->selected++;
+	}
+}
+
+/* Update the Preview surface and data displayed under "Metrics" tab. */
+static void
+UpdatePreview(AG_FontSelector *_Nonnull fs, AG_Font *_Nullable fontNew)
+{
+	const AG_FontAdjustment *fa;
+	AG_Variable *Vfont;
+	AG_Font **pFont, *font;
+	float pts;
+	int adjRange;
+
 	if (fs->sPreview != -1) {
 		AG_WidgetUnmapSurface(fs, fs->sPreview);
 		fs->sPreview = -1;
 	}
+
+	if (fontNew != NULL) {
+		font = fontNew;
+	} else {
+		Vfont = AG_GetVariable(fs, "font", (void *)&pFont);
+		font = *pFont;
+	}
+
+	pts = font->spec.size;
+	if      (pts <= 10.4f) { adjRange = 0; }
+	else if (pts <= 14.0f) { adjRange = 1; }
+	else if (pts <= 21.0f) { adjRange = 2; }
+	else if (pts <= 23.8f) { adjRange = 3; }
+	else if (pts <= 35.0f) { adjRange = 4; }
+	else                   { adjRange = 5; }
+
+	for (fa = &agFontAdjustments[0]; fa->face != NULL; fa++) {
+		if (Strcasecmp(OBJECT(font)->name, fa->face) == 0)
+			break;
+	}
+	if (fa->face != NULL) {
+		AG_LabelText(fs->lblMetrics,
+		    "Size: " AGSI_BOLD "%.01f" AGSI_RST " pts\n"
+		    "Ascent: " AGSI_BOLD "%d" AGSI_RST " px\n"
+		    "Descent: " AGSI_BOLD "%d" AGSI_RST " px\n"
+		    "Line Skip: " AGSI_BOLD "%d" AGSI_RST " px\n\n"
+		    "Adjustment: #%d\n"
+		    "Scaling Adj: " AGSI_BOLD "%+.01f" AGSI_RST "\n"
+		    "Ascent Adj: " AGSI_BOLD "%+d" AGSI_RST "\n",
+		    pts, font->ascent, font->descent, font->lineskip, adjRange,
+		    fa->size_factor, fa->ascent_offset[adjRange]);
+	} else {
+		AG_LabelText(fs->lblMetrics,
+		    "Size: " AGSI_BOLD "%.01f" AGSI_RST " pts\n"
+		    "Ascent: " AGSI_BOLD "%d" AGSI_RST " px\n"
+		    "Descent: " AGSI_BOLD "%d" AGSI_RST " px\n"
+		    "Line Skip: " AGSI_BOLD "%d" AGSI_RST " px\n",
+		    pts, font->ascent, font->descent, font->lineskip);
+	}
+
+	if (fontNew == NULL)
+		AG_UnlockVariable(Vfont);
 }
 
 static void
@@ -151,16 +342,15 @@ static void
 OnShow(AG_Event *_Nonnull event)
 {
 	AG_Variable *Vfont;
-	AG_Font **pFont;
+	AG_Font **pFont, *font;
 	AG_FontSelector *fs = AG_FONTSELECTOR_SELF();
 	AG_StaticFont **pbf;
 	AG_TlistItem *ti;
+	AG_ConfigPath *fpath;
 	int i;
-	const int stdSizes[] = { 4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
-	                         22,24,26,28,32,48,64 };
-	const int nStdSizes = sizeof(stdSizes) / sizeof(stdSizes[0]);
 	
 	Vfont = AG_GetVariable(fs, "font", (void *)&pFont);
+	font = *pFont;
 
 	AG_PushTextState();
 
@@ -173,7 +363,7 @@ OnShow(AG_Event *_Nonnull event)
 		ti = AG_TlistAdd(fs->tlFaces, NULL, "%s", (*pbf)->name);
 		ti->p1 = *pbf;
 
-		if (*pFont && strcmp(ti->text, OBJECT(*pFont)->name) == 0)
+		if (font != NULL && strcmp(ti->text, OBJECT(font)->name) == 0)
 			ti->selected++;
 	}
 
@@ -191,11 +381,11 @@ OnShow(AG_Event *_Nonnull event)
 		fset = FcFontList(NULL, pat, os);
 		if (fset != NULL) {
 			for (i = 0; i < fset->nfont; i++) {
-				FcPattern *font = fset->fonts[i];
+				FcPattern *fcfont = fset->fonts[i];
 				FcChar8 *fam;
 				const char **fignore;
 
-				if (FcPatternGetString(font, FC_FAMILY, 0,
+				if (FcPatternGetString(fcfont, FC_FAMILY, 0,
 				    &fam) == FcResultMatch) {
 					for (fignore = &agFontsToIgnore[0];
 					    *fignore != NULL;
@@ -208,8 +398,8 @@ OnShow(AG_Event *_Nonnull event)
 
 					ti = AG_TlistAddS(fs->tlFaces, NULL,
 					    (char *)fam);
-					if (*pFont && strcmp((char *)fam,
-					    OBJECT(*pFont)->name) == 0)
+					if (font != NULL && strcmp((char *)fam,
+					    OBJECT(font)->name) == 0)
 						ti->selected++;
 				}
 			}
@@ -223,128 +413,51 @@ OnShow(AG_Event *_Nonnull event)
 	/*
 	 * Fonts present under CONFIG_PATH_FONTS.
 	 */
-	{
-		AG_ConfigPath *fpath;
+	TAILQ_FOREACH(fpath, &agConfig->paths[AG_CONFIG_PATH_FONTS], paths) {
+		AG_Dir *dir;
+		int i;
 
-		TAILQ_FOREACH(fpath, &agConfig->paths[AG_CONFIG_PATH_FONTS], paths) {
-			AG_Dir *dir;
-			int i;
+		if ((dir = AG_OpenDir(fpath->s)) == NULL) {
+			continue;
+		}
+		for (i = 0; i < dir->nents; i++) {
+			char path[AG_FILENAME_MAX];
+			AG_FileInfo info;
+			char *file = dir->ents[i], *pExt;
+			const char **ffe;
 
-			if ((dir = AG_OpenDir(fpath->s)) == NULL) {
+			if (file[0] == '.' ||
+			    (pExt = strrchr(file, '.')) == NULL) {
 				continue;
 			}
-			for (i = 0; i < dir->nents; i++) {
-				char path[AG_FILENAME_MAX];
-				AG_FileInfo info;
-				char *file = dir->ents[i], *pExt;
-				const char **ffe;
-
-				if (file[0] == '.' ||
-				    (pExt = strrchr(file, '.')) == NULL) {
-					continue;
-				}
-				for (ffe = &agFontFileExts[0]; *ffe != NULL;
-				     ffe++) {
-					if (Strcasecmp(pExt, *ffe) == 0)
-						break;
-				}
-				if (*ffe == NULL)
-					continue;
-
-				Strlcpy(path, fpath->s, sizeof(path));
-				Strlcat(path, AG_PATHSEP, sizeof(path));
-				Strlcat(path, file, sizeof(path));
-
-				if (AG_GetFileInfo(path, &info) == -1 ||
-				    info.type != AG_FILE_REGULAR) {
-					continue;
-				}
-				*pExt = '\0';
-				ti = AG_TlistAddS(fs->tlFaces, NULL, file);
-				if (*pFont && strcmp(file, OBJECT(*pFont)->name) == 0)
-					ti->selected++;
+			for (ffe = &agFontFileExts[0]; *ffe != NULL;
+			     ffe++) {
+				if (Strcasecmp(pExt, *ffe) == 0)
+					break;
 			}
-			AG_CloseDir(dir);
+			if (*ffe == NULL)
+				continue;
+
+			Strlcpy(path, fpath->s, sizeof(path));
+			Strlcat(path, AG_PATHSEP, sizeof(path));
+			Strlcat(path, file, sizeof(path));
+
+			if (AG_GetFileInfo(path, &info) == -1 ||
+			    info.type != AG_FILE_REGULAR) {
+				continue;
+			}
+			*pExt = '\0';
+			ti = AG_TlistAddS(fs->tlFaces, NULL, file);
+			if (font && strcmp(file, OBJECT(font)->name) == 0)
+				ti->selected++;
 		}
+		AG_CloseDir(dir);
 	}
 
 	AG_TlistSort(fs->tlFaces);
 
-	/* XXX */
-	for (i = 0; i < nStdSizes; i++) {
-		ti = AG_TlistAdd(fs->tlSizes, NULL, "%d", stdSizes[i]);
-		if (*pFont && stdSizes[i] == (*pFont)->spec.size)
-			ti->selected++;
-	}
-
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Styles:"));
-	ti->flags |= AG_TLIST_NO_SELECT;
-	AG_TlistSetFont(fs->tlFaces, ti,
-	    AG_TextFontPctFlags(80, AG_FONT_UNDERLINE));
-
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Regular"));
-	if (*pFont && (*pFont)->flags == 0) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Bold"));
-	if (*pFont && (*pFont)->flags == AG_FONT_BOLD) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Italic"));
-	if (*pFont && (*pFont)->flags == AG_FONT_ITALIC) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Bold Italic"));
-	if (*pFont && ((*pFont)->flags & AG_FONT_BOLD &&
-	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Upright Italic"));
-	if (*pFont && (*pFont)->flags == AG_FONT_UPRIGHT_ITALIC) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Monospace"));
-	if (*pFont && (*pFont)->flags == AG_FONT_MONOSPACE) { ti->selected++; }
-
-	if (fs->flags & AG_FONTSELECTOR_OBLIQUE_STYLES) {
-		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Oblique"));
-		if (*pFont && (*pFont)->flags == AG_FONT_OBLIQUE) { ti->selected++; }
-		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Bold Oblique"));
-		if (*pFont && ((*pFont)->flags & AG_FONT_BOLD &&
-		               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
-	}
-
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Width variants:"));
-	ti->flags |= AG_TLIST_NO_SELECT;
-	AG_TlistSetFont(fs->tlFaces, ti,
-	    AG_TextFontPctFlags(80, AG_FONT_UNDERLINE));
-
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Condensed"));
-	if (*pFont && (*pFont)->flags == AG_FONT_CONDENSED) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Condensed Bold"));
-	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-	               (*pFont)->flags & AG_FONT_BOLD)) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Condensed Italic"));
-	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
-	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Condensed Bold Italic"));
-	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-	               (*pFont)->flags & AG_FONT_BOLD &&
-	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
-
-	if (fs->flags & AG_FONTSELECTOR_OBLIQUE_STYLES) {
-		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Condensed Oblique"));
-		if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-		               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
-		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Condensed Bold Oblique"));
-		if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-		               (*pFont)->flags & AG_FONT_BOLD &&
-		               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
-	}
-	if (fs->flags & AG_FONTSELECTOR_SW_STYLES) {
-		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software styles:"));
-		ti->flags |= AG_TLIST_NO_SELECT;
-		AG_TlistSetFont(fs->tlFaces, ti,
-		    AG_TextFontPctFlags(80, AG_FONT_UNDERLINE));
-
-		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software Bold"));
-		if (*pFont && (*pFont)->flags == AG_FONT_SW_BOLD) { ti->selected++; }
-		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software Oblique"));
-		if (*pFont && (*pFont)->flags == AG_FONT_SW_OBLIQUE) { ti->selected++; }
-		ti = AG_TlistAdd(fs->tlStyles, NULL, _("Software Bold Oblique"));
-		if (*pFont && (*pFont)->flags == (AG_FONT_SW_BOLD | AG_FONT_SW_OBLIQUE)) { ti->selected++; }
-	}
-	UpdatePreview(fs);
+	UpdateSizes(fs, font);
+	UpdatePreview(fs, font);
 
 	AG_UnlockVariable(Vfont);
 }
@@ -354,10 +467,14 @@ SelectedFace(AG_Event *_Nonnull event)
 {
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
 	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	AG_Font *font;
 
 	Strlcpy(fs->curFace, it->text, sizeof(fs->curFace));
-	UpdateFontSelection(fs);
-	UpdatePreview(fs);
+
+	if ((font = LoadFont(fs)) != NULL) {
+		UpdateStyles(fs, font);
+		UpdatePreview(fs, font);
+	}
 }
 
 static void
@@ -366,36 +483,37 @@ SelectedStyle(AG_Event *_Nonnull event)
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
 	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
 	const char *s = it->text;
+	AG_Font *font;
 	Uint fl = 0;
 
 	/* XXX */
 
-	if (!strcmp(s, _("Bold")))           { fl |=  AG_FONT_BOLD; }
-	if (!strcmp(s, _("Italic")))         { fl |=  AG_FONT_ITALIC; }
-	if (!strcmp(s, _("Bold Italic")))    { fl |= (AG_FONT_BOLD | AG_FONT_ITALIC); }
-	if (!strcmp(s, _("Upright Italic"))) { fl |=  AG_FONT_UPRIGHT_ITALIC; }
-	if (!strcmp(s, _("Monospace")))      { fl |=  AG_FONT_MONOSPACE; }
-
-	if (!strcmp(s, _("Condensed")))              { fl |=  AG_FONT_CONDENSED; }
-	if (!strcmp(s, _("Condensed Italic")))       { fl |= (AG_FONT_CONDENSED | AG_FONT_ITALIC); }
-	if (!strcmp(s, _("Condensed Bold")))         { fl |= (AG_FONT_CONDENSED | AG_FONT_BOLD); }
-	if (!strcmp(s, _("Condensed Bold Italic")))  { fl |= (AG_FONT_CONDENSED | AG_FONT_BOLD | AG_FONT_ITALIC); }
-
-	if (fs->flags & AG_FONTSELECTOR_OBLIQUE_STYLES) {
-		if (!strcmp(s, _("Oblique")))                { fl |=  AG_FONT_OBLIQUE; }
-		if (!strcmp(s, _("Bold Oblique")))           { fl |= (AG_FONT_BOLD | AG_FONT_OBLIQUE); }
-		if (!strcmp(s, _("Condensed Oblique")))      { fl |= (AG_FONT_CONDENSED | AG_FONT_OBLIQUE); }
-		if (!strcmp(s, _("Condensed Bold Oblique"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_BOLD | AG_FONT_OBLIQUE); }
-	}
-	if (fs->flags & AG_FONTSELECTOR_SW_STYLES) {
-		if (!strcmp(s, _("Software Oblique")))      { fl |=  AG_FONT_SW_ITALIC; }
-		if (!strcmp(s, _("Software Bold")))         { fl |=  AG_FONT_SW_BOLD; }
-		if (!strcmp(s, _("Software Bold Oblique"))) { fl |= (AG_FONT_SW_BOLD | AG_FONT_SW_ITALIC); }
-	}
+	if (!strcmp(s, _("Bold"))) { fl |= AG_FONT_BOLD; }
+	else if (!strcmp(s, _("SemiBold"))) { fl |= AG_FONT_SEMIBOLD; }
+	else if (!strcmp(s, _("Italic"))) { fl |= AG_FONT_ITALIC; }
+	else if (!strcmp(s, _("Bold Italic"))) { fl |= (AG_FONT_BOLD | AG_FONT_ITALIC); }
+	else if (!strcmp(s, _("SemiBold Italic"))) { fl |= (AG_FONT_SEMIBOLD | AG_FONT_ITALIC); }
+	else if (!strcmp(s, _("Upright Italic"))) { fl |= AG_FONT_UPRIGHT_ITALIC; }
+#if 0
+	else if (!strcmp(s, _("Monospace"))) { fl |= AG_FONT_MONOSPACE; }
+#endif
+	else if (!strcmp(s, _("Condensed"))) { fl |= AG_FONT_CONDENSED; }
+	else if (!strcmp(s, _("Condensed Italic"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_ITALIC); }
+	else if (!strcmp(s, _("Condensed Bold"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_BOLD); }
+	else if (!strcmp(s, _("Condensed Bold Italic"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_BOLD | AG_FONT_ITALIC); }
+	else if (!strcmp(s, _("Condensed SemiBold"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_SEMIBOLD); }
+	else if (!strcmp(s, _("Condensed SemiBold Italic"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_SEMIBOLD | AG_FONT_ITALIC); }
+	else if (!strcmp(s, _("Oblique"))) { fl |= AG_FONT_OBLIQUE; }
+	else if (!strcmp(s, _("Bold Oblique"))) { fl |= (AG_FONT_BOLD | AG_FONT_OBLIQUE); }
+	else if (!strcmp(s, _("SemiBold Oblique"))) { fl |= (AG_FONT_SEMIBOLD | AG_FONT_OBLIQUE); }
+	else if (!strcmp(s, _("Condensed Oblique"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_OBLIQUE); }
+	else if (!strcmp(s, _("Condensed Bold Oblique"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_BOLD | AG_FONT_OBLIQUE); }
+	else if (!strcmp(s, _("Condensed SemiBold Oblique"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_SEMIBOLD | AG_FONT_OBLIQUE); }
 
 	fs->curStyle = fl;
-	UpdateFontSelection(fs);
-	UpdatePreview(fs);
+
+	if ((font = LoadFont(fs)) != NULL)
+		UpdatePreview(fs, font);
 }
 
 static void
@@ -403,31 +521,32 @@ SelectedSize(AG_Event *_Nonnull event)
 {
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
 	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	AG_Font *font;
 
 	fs->curSize = (float)strtod(it->text, NULL);
-	UpdateFontSelection(fs);
-	UpdatePreview(fs);
+
+	if ((font = LoadFont(fs)) != NULL)
+		UpdatePreview(fs, font);
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_FontSelector *fs = AG_FONTSELECTOR_SELF();
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
+	AG_FontSelector *fs = obj;
 
-	if (AG_RectInside(&fs->rPreview, x,y)) {
-		if (fs->flags & AG_FONTSELECTOR_ALT_PHRASE) {
-			fs->flags &= ~(AG_FONTSELECTOR_ALT_PHRASE);
-		} else {
-			fs->flags |= AG_FONTSELECTOR_ALT_PHRASE;
-		}
-		if (fs->sPreview != -1) {
-			AG_WidgetUnmapSurface(fs, fs->sPreview);
-		}
-		UpdatePreview(fs);
-		AG_Redraw(fs);
+	if (!AG_RectInside(&fs->rPreview, x,y))
+		return;
+
+	if (fs->flags & AG_FONTSELECTOR_ALT_PHRASE) {
+		fs->flags &= ~(AG_FONTSELECTOR_ALT_PHRASE);
+	} else {
+		fs->flags |= AG_FONTSELECTOR_ALT_PHRASE;
 	}
+	if (fs->sPreview != -1) {
+		AG_WidgetUnmapSurface(fs, fs->sPreview);
+	}
+	UpdatePreview(fs, NULL);
+	AG_Redraw(fs);
 }
 
 static void
@@ -435,15 +554,23 @@ PreviewColorChanged(AG_Event *_Nonnull event)
 {
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
 
-	UpdatePreview(fs);
+	UpdatePreview(fs, NULL);
 }
 
 static void
-EditColor(AG_Event *_Nonnull event)
+EditBgFgColor(AG_Event *_Nonnull event)
 {
+	AG_Button *btn = AG_BUTTON_SELF();
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
+	void *c = AG_PTR(2);
+	AG_Button *btnOther = AG_BUTTON_PTR(3);
 
-	AG_BindPointer(fs->pal, "agcolor", AG_PTR(2));
+	if (AG_GetPointer(fs->pal,"agcolor") == c) {           /* No change */
+		AG_ButtonToggle(btn);
+		return;
+	}
+	AG_BindPointer(fs->pal, "agcolor", c);
+	AG_ButtonToggle(btnOther);
 }
 
 static void
@@ -451,7 +578,7 @@ Init(void *_Nonnull obj)
 {
 	AG_FontSelector *fs = obj;
 	
-	fs->flags = AG_FONTSELECTOR_UPDATE;
+	fs->flags = AG_FONTSELECTOR_UPDATE | AG_FONTSELECTOR_BASELINE;
 	fs->curFace[0] = '\0';
 	fs->curStyle = 0;
 	fs->sPreview = -1;
@@ -460,27 +587,54 @@ Init(void *_Nonnull obj)
 	fs->hPane = AG_PaneNewHoriz(fs, AG_PANE_EXPAND);
 	{
 		AG_Box *box;
+		AG_Notebook *nb;
+		AG_NotebookTab *nt;
 
 		fs->tlFaces = AG_TlistNew(fs->hPane->div[0], AG_TLIST_EXPAND);
 		fs->hPane2 = AG_PaneNewHoriz(fs->hPane->div[1], AG_PANE_EXPAND);
 		fs->tlStyles = AG_TlistNew(fs->hPane2->div[0], AG_TLIST_EXPAND);
+		fs->tlSizes = AG_TlistNew(fs->hPane2->div[1], AG_TLIST_EXPAND);
 
-		box = AG_BoxNewVert(fs->hPane2->div[1], AG_BOX_EXPAND);
+		nb = AG_NotebookNew(fs->hPane2->div[1], AG_NOTEBOOK_HFILL);
+		nt = AG_NotebookAdd(nb, _("Color"), AG_BOX_VERT);
+		AG_SetStyle(nt, "padding", "5");
 		{
-			fs->tlSizes = AG_TlistNew(box, AG_TLIST_EXPAND);
-			fs->pal = AG_HSVPalNew(box, AG_HSVPAL_NOPREVIEW |
-			                            AG_HSVPAL_NOALPHA |
-		                                    AG_HSVPAL_HFILL);
-			AG_BindPointer(fs->pal, "agcolor", (void *)&fs->cPreviewFG);
-			AG_SetEvent(fs->pal, "h-changed", PreviewColorChanged, "%p", fs);
-			AG_SetEvent(fs->pal, "sv-changed", PreviewColorChanged, "%p", fs);
+			AG_HSVPal *pal;
+			AG_Button *btnBG, *btnFG;
+
+			box = AG_BoxNewHoriz(nt, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
+			AG_SetStyle(box, "font-size", "80%");
+
+			btnBG = AG_ButtonNewS(box, AG_BUTTON_STICKY, _("BG"));
+			btnFG = AG_ButtonNewS(box, AG_BUTTON_STICKY, _("FG"));
+			AG_ButtonSetState(btnFG, 1);
+			AG_SetEvent(btnBG, "button-pushed",
+			    EditBgFgColor,"%p,%p,%p", fs, &fs->cPreviewBG, btnFG);
+			AG_SetEvent(btnFG, "button-pushed",
+			    EditBgFgColor,"%p,%p,%p", fs, &fs->cPreviewFG, btnBG);
+
+			pal = fs->pal = AG_HSVPalNew(nt, AG_HSVPAL_NOPREVIEW |
+			                                 AG_HSVPAL_NOALPHA |
+		                                         AG_HSVPAL_HFILL);
+			AG_BindPointer(pal, "agcolor", (void *)&fs->cPreviewFG);
+			AG_SetEvent(pal, "h-changed", PreviewColorChanged,"%p",fs);
+			AG_SetEvent(pal, "sv-changed", PreviewColorChanged,"%p",fs);
 		}
 
-		box = AG_BoxNewHoriz(fs->hPane2->div[1], AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
-		AG_SetStyle(box, "font-size", "80%");
+		nt = AG_NotebookAdd(nb, _("Metrics"), AG_BOX_VERT);
+		AG_SetStyle(nt, "padding", "5");
 		{
-			AG_ButtonNewFn(box, 0, _("BG"), EditColor,"%p,%p", fs, &fs->cPreviewBG);
-			AG_ButtonNewFn(box, 0, _("FG"), EditColor,"%p,%p", fs, &fs->cPreviewFG);
+			AG_CheckboxNewFlag(nt, 0, _("Baseline"),
+			    &fs->flags, AG_FONTSELECTOR_BASELINE);
+			AG_CheckboxNewFlag(nt, 0, _("Corrections"),
+			    &fs->flags, AG_FONTSELECTOR_CORRECTIONS);
+			AG_CheckboxNewFlag(nt, 0, _("Bounding box"),
+			    &fs->flags, AG_FONTSELECTOR_BOUNDING_BOX);
+
+			AG_SeparatorNewHoriz(nt);
+
+			fs->lblMetrics = AG_LabelNewS(nt, AG_LABEL_EXPAND,
+			    _("No data."));
 		}
 	}
 	
@@ -494,7 +648,7 @@ Init(void *_Nonnull obj)
 
 	AG_TlistSizeHint(fs->tlFaces, "<New Century Schoolbook>", 15);
 	AG_TlistSizeHint(fs->tlStyles, "<Condensed Bold Oblique>", 15);
-	AG_TlistSizeHint(fs->tlSizes, "100", 10);
+	AG_TlistSizeHint(fs->tlSizes, "<XXXXXXX>", 10);
 	
 	/* Handle "font" binding programmatically */
 	AG_BindPointer(fs, "font", (void *)&fs->font);
@@ -502,7 +656,6 @@ Init(void *_Nonnull obj)
 	OBJECT(fs)->flags |= AG_OBJECT_BOUND_EVENTS;
 
 	AG_AddEvent(fs, "widget-shown", OnShow, NULL);
-	AG_SetEvent(fs, "mouse-button-down", MouseButtonDown, NULL);
 
 	AG_SetEvent(fs->tlFaces, "tlist-selected", SelectedFace, "%p", fs);
 	AG_SetEvent(fs->tlStyles, "tlist-selected", SelectedStyle, "%p", fs);
@@ -515,6 +668,8 @@ Draw(void *_Nonnull obj)
 	AG_FontSelector *fs = obj;
 	AG_Widget *chld;
 	const AG_Surface *S;
+	const AG_Color *cLine = &WCOLOR(fs,LINE_COLOR);
+	int x,y;
 
 	OBJECT_FOREACH_CHILD(chld, obj, ag_widget)
 		AG_WidgetDraw(chld);
@@ -533,9 +688,53 @@ Draw(void *_Nonnull obj)
 
 	AG_PushClipRect(fs, &fs->rPreview);
 
-	AG_WidgetBlitSurface(fs, fs->sPreview,
-	    fs->rPreview.x + (fs->rPreview.w >> 1) - (S->w >> 1),
-	    fs->rPreview.y + (fs->rPreview.h >> 1) - (S->h >> 1));
+	x = fs->rPreview.x + (fs->rPreview.w >> 1) - (S->w >> 1);
+	y = fs->rPreview.y + (fs->rPreview.h >> 1) - (S->h >> 1);
+
+	AG_WidgetBlitSurface(fs, fs->sPreview, x,y);
+
+	if (fs->flags & AG_FONTSELECTOR_BOUNDING_BOX) {
+		AG_DrawLineH(fs, 1, WIDTH(fs)-2, y, cLine);
+		AG_DrawLineH(fs, 1, WIDTH(fs)-2, y + S->h, cLine);
+	}
+	if (fs->flags & AG_FONTSELECTOR_CORRECTIONS) {
+		const AG_FontAdjustment *fa;
+		AG_Variable *Vfont;
+		AG_Font **pFont;
+		float pts;
+		int adjRange;
+	
+		Vfont = AG_GetVariable(fs, "font", (void *)&pFont);
+		pts = (*pFont)->spec.size;
+
+		if      (pts <= 10.4f) { adjRange = 0; }
+		else if (pts <= 14.0f) { adjRange = 1; }
+		else if (pts <= 21.0f) { adjRange = 2; }
+		else if (pts <= 23.8f) { adjRange = 3; }
+		else if (pts <= 35.0f) { adjRange = 4; }
+		else                   { adjRange = 5; }
+
+		for (fa = &agFontAdjustments[0]; fa->face != NULL; fa++) {
+			if (Strcasecmp(OBJECT(*pFont)->name, fa->face) == 0)
+				break;
+		}
+		if (fa->face != NULL) {
+			AG_Color cOrig, cCorrected;
+			const int yCorrected = y + S->h - S->guides[0];
+			const int adj = fa->ascent_offset[adjRange];
+
+			AG_ColorRGB_8(&cOrig, 200,0,0);
+			AG_ColorRGB_8(&cCorrected, 0,150,0);
+			AG_DrawLineH(fs, 1, WIDTH(fs)-2, yCorrected - adj, &cOrig);
+			AG_DrawLineH(fs, 1, WIDTH(fs)-2, yCorrected, &cCorrected);
+		} else if (fs->flags & AG_FONTSELECTOR_BASELINE) {
+			AG_DrawLineH(fs, 1, WIDTH(fs)-2, y + S->h - S->guides[0], cLine);
+		}
+	
+		AG_UnlockVariable(Vfont);
+	} else if (fs->flags & AG_FONTSELECTOR_BASELINE) {
+		AG_DrawLineH(fs, 1, WIDTH(fs)-2, y + S->h - S->guides[0], cLine);
+	}
 
 	AG_PopClipRect(fs);
 	
@@ -594,5 +793,13 @@ AG_WidgetClass agFontSelectorClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
