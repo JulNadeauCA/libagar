@@ -458,8 +458,7 @@ LocExpanded(AG_Event *_Nonnull event)
 			path[3] = '\0';
 			ti = AG_TlistAddS(tl, agIconDirectory.s, path);
 
-			if (init &&
-			    toupper(fd->cwd[0]) == path[0] &&
+			if (toupper(fd->cwd[0]) == path[0] &&
 			    fd->cwd[1] == ':') {
 				AG_ComboSelect(comLoc, ti);
 			}
@@ -2133,7 +2132,15 @@ AG_WidgetClass agFileDlgClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	NULL,			/* mouse_button_down */
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */
