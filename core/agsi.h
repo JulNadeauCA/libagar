@@ -97,6 +97,7 @@
 # define AGSI_CYA	 ""
 # define AGSI_WHT	 ""
 # define AGSI_BR_BLK	 ""
+# define AGSI_GRAY	 ""
 # define AGSI_BR_RED	 ""
 # define AGSI_BR_GRN	 ""
 # define AGSI_BR_YEL	 ""
@@ -113,6 +114,7 @@
 # define AGSI_CYA_BG	 ""
 # define AGSI_WHT_BG	 ""
 # define AGSI_BR_BLK_BG	 ""
+# define AGSI_GRAY_BG	 ""
 # define AGSI_BR_RED_BG	 ""
 # define AGSI_BR_GRN_BG	 ""
 # define AGSI_BR_YEL_BG	 ""
@@ -130,25 +132,24 @@
 #define AGSI_UNIALGUE            AGSI_FONT2		/* Unialgue */
 #define AGSI_CMU_SANS            AGSI_FONT3		/* CMU Sans Serif */
 #define AGSI_CMU_SERIF           AGSI_FONT4		/* CMU Serif */
-#define AGSI_CMU_TYPEWRITER      AGSI_FONT5		/* CMU Typewriter */
+#define AGSI_MONOALGUE_SANS      AGSI_FONT5		/* Monoalgue Sans */
 #define AGSI_CHARTER             AGSI_FONT6		/* Charter */
-#define AGSI_COURIER_PRIME       AGSI_FONT7		/* Courier Prime */
+#define AGSI_MONOALGUE           AGSI_FONT7		/* Monoalgue */
 #define AGSI_SOURCE_HAN_SANS     AGSI_FONT8		/* Source Han Sans */
 #define AGSI_LEAGUE_SPARTAN      AGSI_FONT9		/* League Spartan */
 #define AGSI_LEAGUE_GOTHIC       AGSI_FONT10		/* League Gothic */
 #define AGSI_UNIFRAKTUR_MAGUNTIA AGSI_FONT11		/* Unifraktur Maguntia */
 
-#define AGSI_UNI           AGSI_UNIALGUE		/* Pan-unicode font */
+#define AGSI_MONOSPACE     AGSI_MONOALGUE_SANS		/* A monospace font */
+#define AGSI_UNI           AGSI_UNIALGUE		/* A pan-unicode font */
 #define AGSI_CM_SANS       AGSI_CMU_SANS 		/* CM Sans Serif */
-#define AGSI_PATH	   AGSI_COURIER_PRIME		/* Path name font */
+#define AGSI_PATH	   AGSI_MONOALGUE               /* A font for pathnames */
 #define AGSI_CM_SERIF      AGSI_CMU_SERIF		/* CM Serif */
-#define AGSI_CM_TYPEWRITER AGSI_CMU_TYPEWRITER		/* CM Typewriter */
-#define AGSI_CODE          AGSI_COURIER_PRIME		/* Programming font */
-#define AGSI_COURIER       AGSI_COURIER_PRIME		/* Courier font */
+#define AGSI_CODE          AGSI_MONOALGUE		/* A programming font */
+#define AGSI_COURIER       AGSI_MONOALGUE		/* A courier font */
 #define AGSI_SOURCE_HAN    AGSI_SOURCE_HAN_SANS		/* Source Han */
-#define AGSI_CJK           AGSI_SOURCE_HAN_SANS		/* Pan-CKJ font */
-#define AGSI_FRAKTUR       AGSI_UNIFRAKTUR_MAGUNTIA	/* Fraktur font */
-#define AGSI_FRAK          AGSI_UNIFRAKTUR_MAGUNTIA	/* Fraktur font */
+#define AGSI_CJK           AGSI_SOURCE_HAN_SANS		/* A pan-CKJ font */
+#define AGSI_FRAKTUR       AGSI_UNIFRAKTUR_MAGUNTIA	/* A fraktur font */
 
 /*
  * Map AGSI_CMD to the preferred modifier key for application-global commands.
@@ -170,7 +171,7 @@
  */
 
 /*
- * General Punctuation.
+ * General Punctuation ("SQ" = "SQUARE").
  */
 #define AGSI_THIN_SPACE              "\xE2\x80\x89"	/* U+2009 */
 #define AGSI_HYPHEN                  "\xE2\x80\x90"	/* U+2010 */
@@ -178,7 +179,7 @@
 #define AGSI_FIGURE_DASH             "\xE2\x80\x92"	/* U+2012 */
 #define AGSI_EN_DASH                 "\xE2\x80\x93"	/* U+2013 */
 #define AGSI_EM_DASH                 "\xE2\x80\x94"	/* U+2014 */
-#define AGSI_HORIZONTAL_BAR          "\xE2\x80\x95"	/* U+2015 */
+#define AGSI_HBAR                    "\xE2\x80\x95"	/* U+2015 Horizontal Bar */
 #define AGSI_DOUBLE_VERTICAL_LINE    "\xE2\x80\x96"	/* U+2016 */
 #define AGSI_DOUBLE_LOW_LINE         "\xE2\x80\x97"	/* U+2017 */
 #define AGSI_QUOTE_LEFT              "\xE2\x80\x98"	/* U+2018 Left Single Quotation Mark */
@@ -343,21 +344,192 @@
 #define AGSI_LATIN_SMALL_REVERSED_C     "\xE2\x85\x84"      /* U+2184 Latin Small Letter Reversed C */
 #define AGSI_ROMAN_NUMERAL_6_LATE_FORM  "\xE2\x85\x85"      /* U+2185 */
 /*
- * Arrows.
+ * Arrows ("L" = "LEFT", "U" = "UP", "R" = "RIGHT", "D" = "DOWN").
  */
-#define AGSI_ARROW_LEFT             "\xE2\x86\x90"	/* U+2190 Leftwards Arrow */
-#define AGSI_ARROW_UP               "\xE2\x86\x91"	/* U+2191 Upwards Arrow */
-#define AGSI_ARROW_RIGHT            "\xE2\x86\x92"	/* U+2192 Rightwards Arrow */
-#define AGSI_ARROW_DOWN             "\xE2\x86\x93"	/* U+2193 Downwards Arrow */
-#define AGSI_ARROW_LEFT_RIGHT       "\xE2\x86\x94"	/* U+2194 Left-Right Arrow */
-#define AGSI_ARROW_UP_DOWN          "\xE2\x86\x95"	/* U+2195 Up-Down Arrow */
-#define AGSI_ARROW_NORTH_WEST       "\xE2\x86\x96"	/* U+2196 North-West Arrow */
-#define AGSI_ARROW_NORTH_EAST       "\xE2\x86\x97"	/* U+2197 North-East Arrow */
-#define AGSI_ARROW_SOUTH_EAST       "\xE2\x86\x98"	/* U+2198 South East Arrow */
-#define AGSI_ARROW_SOUTH_WEST       "\xE2\x86\x99"	/* U+2199 South West Arrow */
+#define AGSI_L_ARROW                  "\xE2\x86\x90" /* U+2190 Leftwards Arrow */
+#define AGSI_UP_ARROW                 "\xE2\x86\x91" /* U+2191 Upwards Arrow */
+#define AGSI_R_ARROW                  "\xE2\x86\x92" /* U+2192 Rightwards Arrow */
+#define AGSI_DN_ARROW                 "\xE2\x86\x93" /* U+2193 Downwards Arrow */
+#define AGSI_LR_ARROW                 "\xE2\x86\x94" /* U+2194 Left-Right Arrow */
+#define AGSI_UPDN_ARROW               "\xE2\x86\x95" /* U+2195 Up-Down Arrow */
+#define AGSI_NW_ARROW                 "\xE2\x86\x96" /* U+2196 North-West Arrow */
+#define AGSI_NE_ARROW                 "\xE2\x86\x97" /* U+2197 North-East Arrow */
+#define AGSI_SE_ARROW                 "\xE2\x86\x98" /* U+2198 South East Arrow */
+#define AGSI_SW_ARROW                 "\xE2\x86\x99" /* U+2199 South West Arrow */
+#define AGSI_L_ARROW_W_STROKE         "\xE2\x86\x9A" /* U+219A Leftwards Arrow With Stroke */
+#define AGSI_R_ARROW_W_STROKE         "\xE2\x86\x9B" /* U+219B Rightwards Arrow With Stroke */
+#define AGSI_L_WAVE_ARROW             "\xE2\x86\x9C" /* U+219C Leftwards Wave Arrow */
+#define AGSI_R_WAVE_ARROW             "\xE2\x86\x9D" /* U+219D Rightwards Wave Arrow */
+#define AGSI_L_TWO_HEADED_ARROW       "\xE2\x86\x9E" /* U+219E Leftwards Two Headed Arrow */
+#define AGSI_UP_TWO_HEADED_ARROW      "\xE2\x86\x9F" /* U+219F Upwards Two Headed Arrow */
+#define AGSI_R_TWO_HEADED_ARROW       "\xE2\x86\xA0" /* U+21A0 Rightwards Two Headed Arrow */
+#define AGSI_DN_TWO_HEADED_ARROW      "\xE2\x86\xA1" /* U+21A1 Downwards Two Headed Arrow */
+#define AGSI_L_ARROW_W_TAIL           "\xE2\x86\xA2" /* U+21A2 Leftwards Arrow With Tail */
+#define AGSI_R_ARROW_W_TAIL           "\xE2\x86\xA3" /* U+21A3 Rightwards Arrow With Tail */
+#define AGSI_L_ARROW_FROM_BAR         "\xE2\x86\xA4" /* U+21A4 Leftwards Arrow From Bar */
+#define AGSI_UP_ARROW_FROM_BAR        "\xE2\x86\xA5" /* U+21A5 Upwards Arrow From Bar */
+#define AGSI_R_ARROW_FROM_BAR         "\xE2\x86\xA6" /* U+21A6 Rightwards Arrow From Bar */
+#define AGSI_DN_ARROW_FROM_BAR        "\xE2\x86\xA7" /* U+21A7 Downwards Arrow From Bar */
+#define AGSI_UPDN_ARROW_W_BASE        "\xE2\x86\xA8" /* U+21A8 Up Down Arrow With Base */
+#define AGSI_L_ARROW_W_HOOK           "\xE2\x86\xA9" /* U+21A9 Leftwards Arrow With Hook */
+#define AGSI_R_ARROW_W_HOOK           "\xE2\x86\xAA" /* U+21AA Rightwards Arrow With Hook */
+#define AGSI_L_ARROW_W_LOOP           "\xE2\x86\xAB" /* U+21AB Leftwards Arrow With Loop */
+#define AGSI_R_ARROW_W_LOOP           "\xE2\x86\xAC" /* U+21AC Rightwards Arrow With Loop */
+#define AGSI_LR_WAVE_ARROW            "\xE2\x86\xAD" /* U+21AD Left Right Wave Arrow */
+#define AGSI_LR_ARROW_W_STROKE        "\xE2\x86\xAE" /* U+21AE Left Right Arrow With Stroke */
+#define AGSI_DN_ZIGZAG_ARROW          "\xE2\x86\xAF" /* U+21AF Downwards Zigzag Arrow */
+#define AGSI_UP_ARROW_W_TIP_L         "\xE2\x86\xB0" /* U+21B0 Upwards Arrow With Tip Leftwards */
+#define AGSI_UP_ARROW_W_TIP_R         "\xE2\x86\xB1" /* U+21B1 Upwards Arrow With Tip Rightwards */
+#define AGSI_DN_ARROW_W_TIP_L         "\xE2\x86\xB2" /* U+21B2 Downwards Arrow With Tip Leftwards */
+#define AGSI_DN_ARROW_W_TIP_R         "\xE2\x86\xB3" /* U+21B3 Downwards Arrow With Tip Rightwards */
+#define AGSI_R_ARROW_W_CORNER_DN      "\xE2\x86\xB4" /* U+21B4 Rightwards Arrow With Corner Downwards */
+#define AGSI_DN_ARROW_W_CORNER_L      "\xE2\x86\xB5" /* U+21B5 Downwards Arrow With Corner Leftwards */
+#define AGSI_CCW_TOP_SEMICIRCLE_ARROW "\xE2\x86\xB6" /* U+21B6 Anticlockwise Top Semicircle Arrow */
+#define AGSI_CW_TOP_SEMICIRCLE_ARROW  "\xE2\x86\xB7" /* U+21B7 Clockwise Top Semicircle Arrow */
+#define AGSI_NW_ARROW_TO_LONG_BAR     "\xE2\x86\xB8" /* U+21B8 North West Arrow To Long Bar */
+#define AGSI_L_ARR2BAR_OVER_R_ARR2BAR "\xE2\x86\xB9" /* U+21B9 Leftwards Arrow To Bar Over Rightwards Arrow To Bar */
+#define AGSI_CCW_OPEN_CIRCLE_ARROW    "\xE2\x86\xBA" /* U+21BA Anticlockwise Open Circle Arrow */
+#define AGSI_CW_OPEN_CIRCLE_ARROW     "\xE2\x86\xBB" /* U+21BB Clockwise Open Circle Arrow */
+#define AGSI_L_HARPOON_W_BARB_UP      "\xE2\x86\xBC" /* U+21BC Leftwards Harpoon With Barb Upwards */
+#define AGSI_L_HARPOON_W_BARB_DN      "\xE2\x86\xBD" /* U+21BD Leftwards Harpoon With Barb Downwards */
+#define AGSI_UP_HARPOON_W_BARB_R      "\xE2\x86\xBE" /* U+21BE Upwards Harpoon With Barb Rightwards */
+#define AGSI_UP_HARPOON_W_BARB_L      "\xE2\x86\xBF" /* U+21BF Upwards Harpoon With Barb Leftwards */
+#define AGSI_R_HARPOON_W_BARB_UP      "\xE2\x86\xC0" /* U+21C0 Rightwards Harpoon With Barb Upwards */
+#define AGSI_R_HARPOON_W_BARB_DN      "\xE2\x86\xC1" /* U+21C1 Rightwards Harpoon With Barb Downwards */
+#define AGSI_DN_HARPOON_W_BARB_R      "\xE2\x86\xC2" /* U+21C2 Downwards Harpoon With Barb Rightwards */
+#define AGSI_DN_HARPOON_W_BARB_L      "\xE2\x86\xC3" /* U+21C3 Downwards Harpoon With Barb Leftwards */
+#define AGSI_R_ARROW_OVER_L_ARROW     "\xE2\x86\xC4" /* U+21C4 Rightwards Arrow Over Leftwards Arrow */
+#define AGSI_UP_ARROW_L_OF_DN_ARROW   "\xE2\x86\xC5" /* U+21C5 Upwards Arrow Leftwards Of Downwards Arrow */
+#define AGSI_L_ARROW_OVER_R_ARROW     "\xE2\x86\xC6" /* U+21C6 Leftwards Arrow Over Rightwards Arrow */
+#define AGSI_L_PAIRED_ARROWS          "\xE2\x86\xC7" /* U+21C7 Leftwards Paired Arrows */
+#define AGSI_UP_PAIRED_ARROWS         "\xE2\x86\xC8" /* U+21C8 Upwards Paired Arrows */
+#define AGSI_R_PAIRED_ARROWS          "\xE2\x86\xC9" /* U+21C9 Rightwards Paired Arrows */
+#define AGSI_DN_PAIRED_ARROWS         "\xE2\x86\xCA" /* U+21CA Downwards Paired Arrows */
+#define AGSI_L_HARPOON_OVER_R_HARPOON "\xE2\x86\xCB" /* U+21CB Leftwards Harpoon Over Rightwards Harpoon */
+#define AGSI_R_HARPOON_OVER_L_HARPOON "\xE2\x86\xCC" /* U+21CC Rightwards Harpoon Over Leftwards Harpoon */
+#define AGSI_L_DOUBLE_ARROW_W_STROKE  "\xE2\x86\xCD" /* U+21CD Leftwards Double Arrow With Stroke */
+#define AGSI_LR_DOUBLE_ARROW_W_STROKE "\xE2\x86\xCE" /* U+21CE Left Right Double Arrow With Stroke */
+#define AGSI_R_DOUBLE_ARROW_W_STROKE  "\xE2\x86\xCF" /* U+21CF Right Double Arrow With Stroke */
+#define AGSI_L_DOUBLE_ARROW           "\xE2\x86\xD0" /* U+21D0 Leftwards Double Arrow */
+#define AGSI_UP_DOUBLE_ARROW          "\xE2\x86\xD1" /* U+21D1 Upwards Double Arrow */
+#define AGSI_R_DOUBLE_ARROW           "\xE2\x86\xD2" /* U+21D2 Rightwards Double Arrow */
+#define AGSI_DN_DOUBLE_ARROW          "\xE2\x86\xD3" /* U+21D3 Downwards Double Arrow */
+#define AGSI_LR_DOUBLE_ARROW          "\xE2\x86\xD4" /* U+21D4 Left Right Double Arrow */
+#define AGSI_UPDN_DOUBLE_ARROW        "\xE2\x86\xD5" /* U+21D5 Up Down Double Arrow */
+#define AGSI_NW_DOUBLE_ARROW          "\xE2\x86\xD6" /* U+21D6 North West Double Arrow */
+#define AGSI_NE_DOUBLE_ARROW          "\xE2\x86\xD7" /* U+21D7 North East Double Arrow */
+#define AGSI_SE_DOUBLE_ARROW          "\xE2\x86\xD8" /* U+21D8 South East Double Arrow */
+#define AGSI_SW_DOUBLE_ARROW          "\xE2\x86\xD9" /* U+21D9 South West Double Arrow */
+#define AGSI_L_TRIPLE_ARROW           "\xE2\x86\xDA" /* U+21DA Leftwards Triple Arrow */
+#define AGSI_R_TRIPLE_ARROW           "\xE2\x86\xDB" /* U+21DB Rightwards Triple Arrow */
+#define AGSI_L_SQUIGGLE_ARROW         "\xE2\x86\xDC" /* U+21DC Leftwards Squiggle Arrow */
+#define AGSI_R_SQUIGGLE_ARROW         "\xE2\x86\xDD" /* U+21DD Rightwards Squiggle Arrow */
+#define AGSI_UP_ARROW_W_DOUBLE_STROKE "\xE2\x86\xDE" /* U+21DE Upwards Arrow With Double Stroke */
+#define AGSI_DN_ARROW_W_DOUBLE_STROKE "\xE2\x86\xDF" /* U+21DF Downwards Arrow With Double Stroke */
+#define AGSI_L_DASHED_ARROW           "\xE2\x86\xE0" /* U+21E0 Leftwards Dashed Arrow */
+#define AGSI_UP_DASHED_ARROW          "\xE2\x86\xE1" /* U+21E1 Upwards Dashed Arrow */
+#define AGSI_R_DASHED_ARROW           "\xE2\x86\xE2" /* U+21E2 Rightwards Dashed Arrow */
+#define AGSI_DN_DASHED_ARROW          "\xE2\x86\xE3" /* U+21E3 Downwards Dashed Arrow */
+#define AGSI_L_ARR2BAR                "\xE2\x86\xE4" /* U+21E4 Leftwards Arrow To Bar */
+#define AGSI_R_ARR2BAR                "\xE2\x86\xE5" /* U+21E5 Rightwards Arrow To Bar */
+#define AGSI_L_WHT_ARROW              "\xE2\x86\xE6" /* U+21E6 Leftwards White Arrow */
+#define AGSI_UP_WHT_ARROW             "\xE2\x86\xE7" /* U+21E7 Upwards White Arrow */
+#define AGSI_R_WHT_ARROW              "\xE2\x86\xE8" /* U+21E8 Rightwards White Arrow */
+#define AGSI_DN_WHT_ARROW             "\xE2\x86\xE9" /* U+21E9 Downwards White Arrow */
+#define AGSI_UP_WHT_ARROW_FROM_BAR    "\xE2\x86\xEA" /* U+21EA Upwards White Arrow From Bar */
+#define AGSI_UP_WHT_ARROW_PED         "\xE2\x86\xEB" /* U+21EB Upwards White Arrow On Pedestal */
+#define AGSI_UP_WHT_ARROW_PED_W_HBAR  "\xE2\x86\xEC" /* U+21EC Upwards White Arrow On Pedestal With Horizontal Bar */
+#define AGSI_UP_WHT_ARROW_PED_W_VBAR  "\xE2\x86\xED" /* U+21ED Upwards White Arrow On Pedestal With Vertical Bar */
+#define AGSI_UP_WHT_DOUBLE_ARROW      "\xE2\x86\xEE" /* U+21EE Upwards White Double Arrow */
+#define AGSI_UP_WHT_DOUBLE_ARROW_PED  "\xE2\x86\xEF" /* U+21EF Upwards White Double Arrow On Pedestal */
+#define AGSI_R_WHT_ARROW_FROM_WALL    "\xE2\x86\xF0" /* U+21F0 Rightwards White Arrow From Wall */
+#define AGSI_NW_ARROW_TO_CORNER       "\xE2\x86\xF1" /* U+21F1 North West Arrow To Corner */
+#define AGSI_SE_ARROW_TO_CORNER       "\xE2\x86\xF2" /* U+21F2 South East Arrow To Corner */
+#define AGSI_UPDN_WHT_ARROW           "\xE2\x86\xF3" /* U+21F3 Up Down White Arrow */
+#define AGSI_R_ARROW_W_SMALL_CIRCLE   "\xE2\x86\xF4" /* U+21F4 Right Arrow With Small Circle */
+#define AGSI_DN_ARROW_L_OF_UP_ARROW   "\xE2\x86\xF5" /* U+21F5 Downwards Arrow Leftwards Of Upwards Arrow */
+#define AGSI_THREE_R_ARROWS           "\xE2\x86\xF6" /* U+21F6 Three Rightwards Arrows */
+#define AGSI_L_ARROW_W_VSTROKE        "\xE2\x86\xF7" /* U+21F7 Leftwards Arrow With Vertical Stroke */
+#define AGSI_R_ARROW_W_VSTROKE        "\xE2\x86\xF8" /* U+21F8 Rightwards Arrow With Vertical Stroke */
+#define AGSI_LR_ARROW_W_VSTROKE       "\xE2\x86\xF9" /* U+21F9 Left Right Arrow With Vertical Stroke */
+#define AGSI_L_ARROW_W_DBL_VSTROKE    "\xE2\x86\xFA" /* U+21FA Leftwards Arrow With Double Vertical Stroke */
+#define AGSI_R_ARROW_W_DBL_VSTROKE    "\xE2\x86\xFB" /* U+21FB Rightwards Arrow With Double Vertical Stroke */
+#define AGSI_LR_ARROW_W_DBL_VSTROKE   "\xE2\x86\xFC" /* U+21FC Left Right Arrow With Double Vertical Stroke */
+#define AGSI_L_OPEN_HEADED_ARROW      "\xE2\x86\xFD" /* U+21FD Leftwards Open-Headed Arrow */
+#define AGSI_R_OPEN_HEADED_ARROW      "\xE2\x86\xFE" /* U+21FE Rightwards Open-Headed Arrow */
+#define AGSI_LR_OPEN_HEADED_ARROW     "\xE2\x86\xFF" /* U+21FF Left Right Open-Headed Arrow */
+
 /*
- * Mathematical Operators.
+ * Mathematical Operators ("GT" = "GREATER_THAN", "LT" = "LESS_THAN",
+ * "SM" = "SMALL", "APPROX" = "APPROXIMATELY", "HSTROKE" = "HORIZONTAL_STROKE").
  */
+#define AGSI_FOR_ALL                                "\xE2\x88\x80" /* U+2200 */
+#define AGSI_COMPLEMENT                             "\xE2\x88\x81" /* U+2201 */
+#define AGSI_PARTIAL_DIFFERENTIAL                   "\xE2\x88\x82" /* U+2202 */
+#define AGSI_THERE_EXISTS                           "\xE2\x88\x83" /* U+2203 */
+#define AGSI_THERE_DOES_NOT_EXIST                   "\xE2\x88\x84" /* U+2204 */
+#define AGSI_EMPTY_SET                              "\xE2\x88\x85" /* U+2205 */
+#define AGSI_INCREMENT                              "\xE2\x88\x86" /* U+2206 */
+#define AGSI_NABLA                                  "\xE2\x88\x87" /* U+2207 */
+#define AGSI_ELEMENT_OF                             "\xE2\x88\x88" /* U+2208 */
+#define AGSI_NOT_AN_ELEMENT_OF                      "\xE2\x88\x89" /* U+2209 */
+#define AGSI_SM_ELEMENT_OF                          "\xE2\x88\x8A" /* U+220A Small Element Of */
+#define AGSI_CONTAINS_AS_MEMBER                     "\xE2\x88\x8B" /* U+220B */
+#define AGSI_DOES_NOT_CONTAIN_AS_MEMBER             "\xE2\x88\x8C" /* U+220C */
+#define AGSI_SM_CONTAINS_AS_MEMBER                  "\xE2\x88\x8D" /* U+220D Small Contains As Member */
+#define AGSI_END_OF_PROOF                           "\xE2\x88\x8E" /* U+220E */
+#define AGSI_N_ARY_PRODUCT                          "\xE2\x88\x8F" /* U+220F */
+#define AGSI_N_ARY_COPRODUCT                        "\xE2\x88\x90" /* U+2210 */
+#define AGSI_N_ARY_SUMMATION                        "\xE2\x88\x91" /* U+2211 */
+#define AGSI_MINUS_SIGN                             "\xE2\x88\x92" /* U+2212 */
+#define AGSI_MINUS_OR_PLUS_SIGN                     "\xE2\x88\x93" /* U+2213 */
+#define AGSI_DOT_PLUS                               "\xE2\x88\x94" /* U+2214 */
+#define AGSI_DIVISION_SLASH                         "\xE2\x88\x95" /* U+2215 */
+#define AGSI_SET_MINUS                              "\xE2\x88\x96" /* U+2216 */
+#define AGSI_ASTERISK_OPERATOR                      "\xE2\x88\x97" /* U+2217 */
+#define AGSI_RING_OPERATOR                          "\xE2\x88\x98" /* U+2218 */
+#define AGSI_BULLET_OPERATOR                        "\xE2\x88\x99" /* U+2219 */
+#define AGSI_SQUARE_ROOT                            "\xE2\x88\x9A" /* U+221A */
+#define AGSI_CUBE_ROOT                              "\xE2\x88\x9B" /* U+221B */
+#define AGSI_FOURTH_ROOT                            "\xE2\x88\x9C" /* U+221C */
+#define AGSI_PROPORTIONAL_TO                        "\xE2\x88\x9D" /* U+221D */
+#define AGSI_INFINITY                               "\xE2\x88\x9E" /* U+221E */
+#define AGSI_RIGHT_ANGLE                            "\xE2\x88\x9F" /* U+221F */
+#define AGSI_ANGLE                                  "\xE2\x88\xA0" /* U+2220 */
+#define AGSI_MEASURED_ANGLE                         "\xE2\x88\xA1" /* U+2221 */
+#define AGSI_SPHERICAL_ANGLE                        "\xE2\x88\xA2" /* U+2222 */
+#define AGSI_DIVIDES                                "\xE2\x88\xA3" /* U+2223 */
+#define AGSI_DOES_NOT_DIVIDE                        "\xE2\x88\xA4" /* U+2224 */
+#define AGSI_PARALLEL_TO                            "\xE2\x88\xA5" /* U+2225 */
+#define AGSI_NOT_PARALLEL_TO                        "\xE2\x88\xA6" /* U+2226 */
+#define AGSI_LOGICAL_AND                            "\xE2\x88\xA7" /* U+2227 */
+#define AGSI_LOGICAL_OR                             "\xE2\x88\xA8" /* U+2228 */
+#define AGSI_INTERSECTION                           "\xE2\x88\xA9" /* U+2229 */
+#define AGSI_UNION                                  "\xE2\x88\xAA" /* U+222A */
+#define AGSI_INTEGRAL                               "\xE2\x88\xAB" /* U+222B */
+#define AGSI_DOUBLE_INTEGRAL                        "\xE2\x88\xAC" /* U+222C */
+#define AGSI_TRIPLE_INTEGRAL                        "\xE2\x88\xAD" /* U+222D */
+#define AGSI_CONTOUR_INTEGRAL                       "\xE2\x88\xAE" /* U+222E */
+#define AGSI_SURFACE_INTEGRAL                       "\xE2\x88\xAF" /* U+222F */
+#define AGSI_VOLUME_INTEGRAL                        "\xE2\x88\xB0" /* U+2230 */
+#define AGSI_CW_INTEGRAL                            "\xE2\x88\xB1" /* U+2231 Clockwise Integral */
+#define AGSI_CW_CONTOUR_INTEGRAL                    "\xE2\x88\xB2" /* U+2232 Clockwise Contour Integral */
+#define AGSI_CCW_CONTOUR_INTEGRAL                   "\xE2\x88\xB3" /* U+2233 Anticlockwise Contour Integral */
+#define AGSI_THEREFORE                              "\xE2\x88\xB4" /* U+2234 */
+#define AGSI_BECAUSE                                "\xE2\x88\xB5" /* U+2235 */
+#define AGSI_RATIO                                  "\xE2\x88\xB6" /* U+2236 */
+#define AGSI_PROPORTION                             "\xE2\x88\xB7" /* U+2237 */
+#define AGSI_DOT_MINUS                              "\xE2\x88\xB8" /* U+2238 */
+#define AGSI_EXCESS                                 "\xE2\x88\xB9" /* U+2239 */
+#define AGSI_GEOMETRIC_PROPORTION                   "\xE2\x88\xBA" /* U+223A */
+#define AGSI_HOMOTHETIC                             "\xE2\x88\xBB" /* U+223B */
+#define AGSI_TILDE_OPERATOR                         "\xE2\x88\xBC" /* U+223C */
+#define AGSI_REVERSED_TILDE                         "\xE2\x88\xBD" /* U+223D */
+#define AGSI_INVERTED_LAZY_S                        "\xE2\x88\xBD" /* U+223D */
+#define AGSI_SINE_WAVE                              "\xE2\x88\xBF" /* U+223F */
+#define AGSI_WREATH_PRODUCT                         "\xE2\x89\x80" /* U+2240 */
+#define AGSI_NOT_TILDE                              "\xE2\x89\x81" /* U+2241 */
+#define AGSI_MINUS_TILDE                            "\xE2\x89\x82" /* U+2242 */
 #define AGSI_ASYMPTOMATICALLY_EQUAL_TO              "\xE2\x89\x83" /* U+2243 */
 #define AGSI_NOT_ASYMPTOMATICALLY_EQUAL_TO          "\xE2\x89\x84" /* U+2244 */
 #define AGSI_APPROX_EQUAL_TO                        "\xE2\x89\x85" /* U+2245 Approximately Equal To */
@@ -391,28 +563,28 @@
 #define AGSI_IDENTICAL_TO                           "\xE2\x89\xA1" /* U+2261 */
 #define AGSI_NOT_IDENTICAL_TO                       "\xE2\x89\xA2" /* U+2262 */
 #define AGSI_STRICTLY_EQUIVALENT_TO                 "\xE2\x89\xA3" /* U+2263 */
-#define AGSI_LESS_THAN_OR_EQUAL_TO                  "\xE2\x89\xA4" /* U+2264 */
-#define AGSI_GREATER_THAN_OR_EQUAL_TO               "\xE2\x89\xA5" /* U+2265 */
-#define AGSI_LESS_THAN_OVER_EQUAL_TO                "\xE2\x89\xA6" /* U+2266 */
-#define AGSI_GREATER_THAN_OVER_EQUAL_TO             "\xE2\x89\xA7" /* U+2267 */
-#define AGSI_LESS_THAN_BUT_NOT_EQUAL_TO             "\xE2\x89\xA8" /* U+2268 */
-#define AGSI_GREATER_THAN_BUT_NOT_EQUAL_TO          "\xE2\x89\xA9" /* U+2269 */
-#define AGSI_MUCH_LESS_THAN                         "\xE2\x89\xAA" /* U+226A */
-#define AGSI_MUCH_GREATER_THAN                      "\xE2\x89\xAB" /* U+226B */
+#define AGSI_LT_OR_EQUAL_TO                         "\xE2\x89\xA4" /* U+2264 Less Than Or Equal To */
+#define AGSI_GT_OR_EQUAL_TO                         "\xE2\x89\xA5" /* U+2265 Greater Than Or Equal To */
+#define AGSI_LT_OVER_EQUAL_TO                       "\xE2\x89\xA6" /* U+2266 Less Than Over Equal To */
+#define AGSI_GT_OVER_EQUAL_TO                       "\xE2\x89\xA7" /* U+2267 Greater Than Over Equal To */
+#define AGSI_LT_BUT_NOT_EQUAL_TO                    "\xE2\x89\xA8" /* U+2268 Less Than But Not Equal To */
+#define AGSI_GT_BUT_NOT_EQUAL_TO                    "\xE2\x89\xA9" /* U+2269 Greater Than But Not Equal To */
+#define AGSI_MUCH_LT                                "\xE2\x89\xAA" /* U+226A Much Less Than */
+#define AGSI_MUCH_GT                                "\xE2\x89\xAB" /* U+226B Much Greater Than */
 #define AGSI_BETWEEN                                "\xE2\x89\xAC" /* U+226C */
 #define AGSI_NOT_EQUIVALENT_TO                      "\xE2\x89\xAD" /* U+226D */
-#define AGSI_NOT_LESS_THAN                          "\xE2\x89\xAE" /* U+226E */
-#define AGSI_NOT_GREATER_THAN                       "\xE2\x89\xAF" /* U+226F */
-#define AGSI_NEITHER_LESS_THAN_NOR_EQUAL_TO         "\xE2\x89\xB0" /* U+2270 */
-#define AGSI_NEITHER_GREATER_THAN_NOR_EQUAL_TO      "\xE2\x89\xB1" /* U+2271 */
-#define AGSI_LESS_THAN_OR_EQUIVALENT_TO             "\xE2\x89\xB2" /* U+2272 */
-#define AGSI_GREATER_THAN_OR_EQUIVALENT_TO          "\xE2\x89\xB3" /* U+2273 */
-#define AGSI_NEITHER_LESS_THAN_NOR_EQUIVALENT_TO    "\xE2\x89\xB4" /* U+2274 */
-#define AGSI_NEITHER_GREATER_THAN_NOR_EQUIVALENT_TO "\xE2\x89\xB5" /* U+2275 */
-#define AGSI_LESS_THAN_OR_GREATER_THAN              "\xE2\x89\xB6" /* U+2276 */
-#define AGSI_GREATER_THAN_OR_LESS_THAN              "\xE2\x89\xB7" /* U+2277 */
-#define AGSI_NEITHER_LESS_THAN_NOR_GREATER_THAN     "\xE2\x89\xB8" /* U+2278 */
-#define AGSI_NEITHER_GREATER_THAN_NOR_LESS_THAN     "\xE2\x89\xB9" /* U+2279 */
+#define AGSI_NOT_LT                                 "\xE2\x89\xAE" /* U+226E Not Less Than */
+#define AGSI_NOT_GT                                 "\xE2\x89\xAF" /* U+226F Not Greater Than */
+#define AGSI_NEITHER_LT_NOR_EQUAL_TO                "\xE2\x89\xB0" /* U+2270 Neither Less Than Nor Equal To */
+#define AGSI_NEITHER_GT_NOR_EQUAL_TO                "\xE2\x89\xB1" /* U+2271 Neither Greater Than Nor Equal To */
+#define AGSI_LT_OR_EQUIVALENT_TO                    "\xE2\x89\xB2" /* U+2272 Less Than Or Equivalent To */
+#define AGSI_GT_OR_EQUIVALENT_TO                    "\xE2\x89\xB3" /* U+2273 Greater Than Or Equivalent To */
+#define AGSI_NEITHER_LT_NOR_EQUIVALENT_TO           "\xE2\x89\xB4" /* U+2274 Neither Less Than Nor Equivalent To */
+#define AGSI_NEITHER_GT_NOR_EQUIVALENT_TO           "\xE2\x89\xB5" /* U+2275 Neither Greater Than Nor Equivalent To */
+#define AGSI_LT_OR_GT                               "\xE2\x89\xB6" /* U+2276 Less Than Or Greater Than */
+#define AGSI_GT_OR_LT                               "\xE2\x89\xB7" /* U+2277 Greater Than Or Less Than */
+#define AGSI_NEITHER_LT_NOR_GT                      "\xE2\x89\xB8" /* U+2278 Neither Less Than Nor Greater Than */
+#define AGSI_NEITHER_GT_NOR_LT                      "\xE2\x89\xB9" /* U+2279 Neither Greater Than Nor Less Than */
 #define AGSI_PRECEDES                               "\xE2\x89\xBA" /* U+227A */
 #define AGSI_SUCCEEDS                               "\xE2\x89\xBB" /* U+227B */
 #define AGSI_PRECEDES_OR_EQUAL_TO                   "\xE2\x89\xBC" /* U+227C */
@@ -422,7 +594,6 @@
 #define AGSI_DOES_NOT_PRECEDE                       "\xE2\x8A\x80" /* U+2280 */
 #define AGSI_DOES_NOT_SUCCEED                       "\xE2\x8A\x81" /* U+2281 */
 #define AGSI_SUBSET_OF                              "\xE2\x8A\x82" /* U+2282 */
-#define AGSI_SUBSET_OF                              "\xE2\x8A\x82" /* U+2282 */
 #define AGSI_SUPERSET_OF                            "\xE2\x8A\x83" /* U+2283 */
 #define AGSI_NOT_A_SUBSET_OF                        "\xE2\x8A\x84" /* U+2284 */
 #define AGSI_NOT_A_SUPERSET_OF                      "\xE2\x8A\x85" /* U+2285 */
@@ -430,8 +601,8 @@
 #define AGSI_SUPERSET_OF_OR_EQUAL_TO                "\xE2\x8A\x87" /* U+2287 */
 #define AGSI_NEITHER_A_SUBSET_OF_NOR_EQUAL_TO       "\xE2\x8A\x88" /* U+2288 */
 #define AGSI_NEITHER_A_SUPERSET_OF_NOR_EQUAL_TO     "\xE2\x8A\x89" /* U+2289 */
-#define AGSI_SUBSET_OF_WITH_NOT_EQUAL_TO            "\xE2\x8A\x8A" /* U+228A */
-#define AGSI_SUPERSET_OF_WITH_NOT_EQUAL_TO          "\xE2\x8A\x8B" /* U+228B */
+#define AGSI_SUBSET_OF_W_NOT_EQUAL_TO               "\xE2\x8A\x8A" /* U+228A Subset Of With Not Equal To */
+#define AGSI_SUPERSET_OF_W_NOT_EQUAL_TO             "\xE2\x8A\x8B" /* U+228B Superset Of With Not Equal To */
 #define AGSI_MULTISET                               "\xE2\x8A\x8C" /* U+228C */
 #define AGSI_MULTISET_MULTIPLICATION                "\xE2\x8A\x8D" /* U+228D */
 #define AGSI_MULTISET_UNION                         "\xE2\x8A\x8E" /* U+228E */
@@ -454,21 +625,21 @@
 #define AGSI_SQUARED_MINUS                          "\xE2\x8A\x9F" /* U+229F */
 #define AGSI_SQUARED_TIMES                          "\xE2\x8A\xA0" /* U+22A0 */
 #define AGSI_SQUARED_DOT                            "\xE2\x8A\xA1" /* U+22A1 Squared Dot Operator */
-#define AGSI_RIGHT_TACK                             "\xE2\x8A\xA2" /* U+22A2 */
-#define AGSI_LEFT_TACK                              "\xE2\x8A\xA3" /* U+22A3 */
-#define AGSI_DOWN_TACK                              "\xE2\x8A\xA4" /* U+22A4 */
+#define AGSI_R_TACK                                 "\xE2\x8A\xA2" /* U+22A2 Right Tack */
+#define AGSI_L_TACK                                 "\xE2\x8A\xA3" /* U+22A3 Left Tack */
+#define AGSI_DN_TACK                                "\xE2\x8A\xA4" /* U+22A4 Down Tack */
 #define AGSI_UP_TACK                                "\xE2\x8A\xA5" /* U+22A5 */
 #define AGSI_PERPENDICULAR AGSI_UP_TACK
 #define AGSI_ASSERTION                              "\xE2\x8A\xA6" /* U+22A6 */
 #define AGSI_MODELS                                 "\xE2\x8A\xA7" /* U+22A7 */
 #define AGSI_TRUE_SYMBOL                            "\xE2\x8A\xA8" /* U+22A8 True */
 #define AGSI_FORCES_SYMBOL                          "\xE2\x8A\xA9" /* U+22A9 Forces */
-#define AGSI_TRIPLE_VERTICAL_BAR_RIGHT_TURNSTILE    "\xE2\x8A\xAA" /* U+22AA */
-#define AGSI_DOUBLE_VERTICAL_BAR_DOUBLE_RIGHT_TURNSTILE "\xE2\x8A\xAB" /* U+22AB */
+#define AGSI_TRIPLE_VBAR_R_TURNSTILE                "\xE2\x8A\xAA" /* U+22AA Triple Vertical Bar Right Turnstile */
+#define AGSI_DOUBLE_VBAR_DOUBLE_R_TURNSTILE         "\xE2\x8A\xAB" /* U+22AB Double Vertical Bar Double Right Turnstile */
 #define AGSI_DOES_NOT_PROVE                         "\xE2\x8A\xAC" /* U+22AC */
 #define AGSI_NOT_TRUE_SYMBOL                        "\xE2\x8A\xAD" /* U+22AD Not True */
 #define AGSI_DOES_NOT_FORCE                         "\xE2\x8A\xAE" /* U+22AE */
-#define AGSI_NEGATED_DOUBLE_VERTICAL_BAR_DOUBLE_RIGHT_TURNSTILE "\xE2\x8A\xAF" /* U+22AF */
+#define AGSI_NEGATED_DOUBLE_VBAR_DOUBLE_R_TURNSTILE "\xE2\x8A\xAF" /* U+22AF Negated Double Vertical Bar Double Right Turnstile */
 #define AGSI_PRECEDES_UNDER_RELATION                "\xE2\x8A\xB0" /* U+22B0 */
 #define AGSI_SUCCEEDS_UNDER_RELATION                "\xE2\x8A\xB1" /* U+22B1 */
 #define AGSI_NORMAL_SUBGROUP_OF                     "\xE2\x8A\xB2" /* U+22B2 */
@@ -483,7 +654,7 @@
 #define AGSI_XOR_SYMBOL                             "\xE2\x8A\xBB" /* U+22BB Xor */
 #define AGSI_NAND_SYMBOL                            "\xE2\x8A\xBC" /* U+22BC Nand */
 #define AGSI_NOR_SYMBOL                             "\xE2\x8A\xBD" /* U+22BD Nor */
-#define AGSI_RIGHT_ANGLE_WITH_ARC                   "\xE2\x8A\xBE" /* U+22BE */
+#define AGSI_RIGHT_ANGLE_W_ARC                      "\xE2\x8A\xBE" /* U+22BE Right Triangle With Arc */
 #define AGSI_RIGHT_TRIANGLE                         "\xE2\x8A\xBF" /* U+22BF */
 #define AGSI_N_ARY_LOGICAL_AND                      "\xE2\x8B\x80" /* U+22C0 */
 #define AGSI_N_ARY_LOGICAL_OR                       "\xE2\x8B\x81" /* U+22C1 */
@@ -494,10 +665,10 @@
 #define AGSI_STAR_OPERATOR                          "\xE2\x8B\x86" /* U+22C6 */
 #define AGSI_DIVISION_TIMES                         "\xE2\x8B\x87" /* U+22C7 */
 #define AGSI_BOWTIE                                 "\xE2\x8B\x88" /* U+22C8 */
-#define AGSI_LEFT_NORMAL_FACTOR_SEMIDIRECT_PRODUCT  "\xE2\x8B\x89" /* U+22C9 */
-#define AGSI_RIGHT_NORMAL_FACTOR_SEMIDIRECT_PRODUCT "\xE2\x8B\x8A" /* U+22CA */
-#define AGSI_LEFT_SEMIDIRECT_PRODUCT                "\xE2\x8B\x8B" /* U+22CB */
-#define AGSI_RIGHT_SEMIDIRECT_PRODUCT               "\xE2\x8B\x8C" /* U+22CC */
+#define AGSI_L_NORMAL_FACTOR_SEMIDIRECT_PRODUCT     "\xE2\x8B\x89" /* U+22C9 Left Normal Factor Semidirect Product */
+#define AGSI_R_NORMAL_FACTOR_SEMIDIRECT_PRODUCT     "\xE2\x8B\x8A" /* U+22CA Right Normal Factor Semidirect Product */
+#define AGSI_L_SEMIDIRECT_PRODUCT                   "\xE2\x8B\x8B" /* U+22CB Left Semidirect Product */
+#define AGSI_R_SEMIDIRECT_PRODUCT                   "\xE2\x8B\x8C" /* U+22CC Right Semidirect Product */
 #define AGSI_REVERSED_TILDE_EQUALS                  "\xE2\x8B\x8D" /* U+22CD */
 #define AGSI_CURLY_LOGICAL_OR                       "\xE2\x8B\x8E" /* U+22CE */
 #define AGSI_CURLY_LOGICAL_AND                      "\xE2\x8B\x8F" /* U+22CF */
@@ -507,14 +678,14 @@
 #define AGSI_DOUBLE_UNION                           "\xE2\x8B\x93" /* U+22D3 */
 #define AGSI_PITCHFORK                              "\xE2\x8B\x94" /* U+22D4 */
 #define AGSI_EQUAL_AND_PARALLEL_TO                  "\xE2\x8B\x95" /* U+22D5 */
-#define AGSI_LESS_THAN_WITH_DOT                     "\xE2\x8B\x96" /* U+22D6 */
-#define AGSI_GREATER_THAN_WITH_DOT                  "\xE2\x8B\x97" /* U+22D7 */
-#define AGSI_VERY_MUCH_LESS_THAN                    "\xE2\x8B\x98" /* U+22D8 */
-#define AGSI_VERY_MUCH_GREATER_THAN                 "\xE2\x8B\x99" /* U+22D9 */
-#define AGSI_LESS_THAN_EQUAL_TO_OR_GREATER_THAN     "\xE2\x8B\x9A" /* U+22DA */
-#define AGSI_GREATER_THAN_EQUAL_TO_OR_LESS_THAN     "\xE2\x8B\x9B" /* U+22DB */
-#define AGSI_EQUAL_TO_OR_LESS_THAN                  "\xE2\x8B\x9C" /* U+22DC */
-#define AGSI_EQUAL_TO_OR_GREATER_THAN               "\xE2\x8B\x9D" /* U+22DD */
+#define AGSI_LT_W_DOT                               "\xE2\x8B\x96" /* U+22D6 Less Than With Dot */
+#define AGSI_GT_W_DOT                               "\xE2\x8B\x97" /* U+22D7 Greater Than With Dot */
+#define AGSI_VERY_MUCH_LT                           "\xE2\x8B\x98" /* U+22D8 Very Much Less Than */
+#define AGSI_VERY_MUCH_GT                           "\xE2\x8B\x99" /* U+22D9 Very Much Greater Than */
+#define AGSI_LT_EQUAL_TO_OR_GT                      "\xE2\x8B\x9A" /* U+22DA Less Than Equal To Or Greater Than */
+#define AGSI_GT_EQUAL_TO_OR_LT                      "\xE2\x8B\x9B" /* U+22DB Greater Than Equal To Or Less Than */
+#define AGSI_EQUAL_TO_OR_LT                         "\xE2\x8B\x9C" /* U+22DC Equal To Or Less Than */
+#define AGSI_EQUAL_TO_OR_GT                         "\xE2\x8B\x9D" /* U+22DD Equal To Or Greater Than */
 #define AGSI_EQUAL_TO_OR_PRECEDES                   "\xE2\x8B\x9E" /* U+22DE */
 #define AGSI_EQUAL_TO_OR_SUCCEEDS                   "\xE2\x8B\x9F" /* U+22DF */
 #define AGSI_DOES_NOT_PRECEDE_OR_EQUAL              "\xE2\x8B\xA0" /* U+22E0 */
@@ -523,8 +694,8 @@
 #define AGSI_NOT_SQUARE_ORIGINAL_OF_OR_EQUAL_TO     "\xE2\x8B\xA3" /* U+22E3 */
 #define AGSI_SQUARE_IMAGE_OF_OR_NOT_EQUAL_TO        "\xE2\x8B\xA4" /* U+22E4 */
 #define AGSI_SQUARE_ORIGINAL_OF_OR_NOT_EQUAL_TO     "\xE2\x8B\xA5" /* U+22E5 */
-#define AGSI_LESS_THAN_BUT_NOT_EQUIVALENT_TO        "\xE2\x8B\xA6" /* U+22E6 */
-#define AGSI_GREATER_THAN_BUT_NOT_EQUIVALENT_TO     "\xE2\x8B\xA7" /* U+22E7 */
+#define AGSI_LT_BUT_NOT_EQUIVALENT_TO               "\xE2\x8B\xA6" /* U+22E6 Less Than But Not Equivalent To */
+#define AGSI_GT_BUT_NOT_EQUIVALENT_TO               "\xE2\x8B\xA7" /* U+22E7 Greater Than But Not Equivalent To */
 #define AGSI_PRECEDES_BUT_NOT_EQUIVALENT_TO         "\xE2\x8B\xA8" /* U+22E8 */
 #define AGSI_SUCCEEDS_BUT_NOT_EQUIVALENT_TO         "\xE2\x8B\xA9" /* U+22E9 */
 #define AGSI_NOT_NORMAL_SUBGROUP_OF                 "\xE2\x8B\xAA" /* U+22EA */
@@ -533,228 +704,223 @@
 #define AGSI_DOES_NOT_CONTAIN_AS_NORMAL_SUBGROUP_OR_EQUAL "\xE2\x8B\xAD" /* U+22ED */
 #define AGSI_VERTICAL_ELLIPSIS                      "\xE2\x8B\xAE" /* U+22EE */
 #define AGSI_MIDLINE_HORIZONTAL_ELLIPSIS            "\xE2\x8B\xAF" /* U+22EF */
-#define AGSI_UP_RIGHT_DIAGONAL_ELLIPSIS             "\xE2\x8B\xB0" /* U+22F0 */
-#define AGSI_DOWN_RIGHT_DIAGONAL_ELLIPSIS           "\xE2\x8B\xB1" /* U+22F1 */
-#define AGSI_ELEMENT_OF_WITH_LONG_HORIZONTAL_STROKE "\xE2\x8B\xB2" /* U+22F2 */
-#define AGSI_ELEMENT_OF_WITH_VERTICAL_BAR_AT_END_OF_HORIZONTAL_STROKE "\xE2\x8B\xB3" /* U+22F3 */
-#define AGSI_SMALL_ELEMENT_OF_WITH_VERTICAL_BAR_AT_END_OF_HORIZONTAL_STROKE "\xE2\x8B\xB4" /* U+22F4 */
-#define AGSI_ELEMENT_OF_WITH_DOT_ABOVE              "\xE2\x8B\xB5" /* U+22F5 */
-#define AGSI_ELEMENT_OF_WITH_OVERBAR                "\xE2\x8B\xB6" /* U+22F6 */
-#define AGSI_SMALL_ELEMENT_OF_WITH_OVERBAR          "\xE2\x8B\xB7" /* U+22F7 */
-#define AGSI_ELEMENT_OF_WITH_UNDERBAR               "\xE2\x8B\xB8" /* U+22F8 */
-#define AGSI_ELEMENT_OF_WITH_TWO_HORIZONTAL_STROKES "\xE2\x8B\xB9" /* U+22F9 */
-#define AGSI_CONTAINS_WITH_LONG_HORIZONTAL_STROKE   "\xE2\x8B\xBA" /* U+22FA */
-#define AGSI_CONTAINS_WITH_VERTICAL_BAR_AT_END_OF_HORIZONTAL_STROKE "\xE2\x8B\xBB" /* U+22FB */
-#define AGSI_SMALL_CONTAINS_WITH_VERTICAL_BAR_AT_END_OF_HORIZONTAL_STROKE "\xE2\x8B\xBC" /* U+22FC */
-#define AGSI_CONTAINS_WITH_OVERBAR                  "\xE2\x8B\xBD" /* U+22FD */
-#define AGSI_SMALL_CONTAINS_WITH_OVERBAR            "\xE2\x8B\xBE" /* U+22FE */
+#define AGSI_UP_R_DIAGONAL_ELLIPSIS                 "\xE2\x8B\xB0" /* U+22F0 Up Right Diagonal Ellipsis */
+#define AGSI_DN_R_DIAGONAL_ELLIPSIS                 "\xE2\x8B\xB1" /* U+22F1 Down Right Diagonal Ellipsis */
+#define AGSI_ELEMENT_OF_W_LONG_HSTROKE              "\xE2\x8B\xB2" /* U+22F2 Element Of With Long Horizontal Stroke */
+#define AGSI_ELEMENT_OF_W_VBAR_AT_END_OF_HSTROKE    "\xE2\x8B\xB3" /* U+22F3 Element Of With Vertical Bar At End Of Horizontal Stroke */
+#define AGSI_SM_ELEMENT_OF_W_VBAR_AT_END_OF_HSTROKE "\xE2\x8B\xB4" /* U+22F4 Small Element Of With Vertical Bar At End Of Horizontal Stroke */
+#define AGSI_ELEMENT_OF_W_DOT_ABOVE                 "\xE2\x8B\xB5" /* U+22F5 Element Of With Dot Above */
+#define AGSI_ELEMENT_OF_W_OVERBAR                   "\xE2\x8B\xB6" /* U+22F6 Element Of With Overbar */
+#define AGSI_SM_ELEMENT_OF_W_OVERBAR                "\xE2\x8B\xB7" /* U+22F7 Small Element Of With Overbar */
+#define AGSI_ELEMENT_OF_W_UNDERBAR                  "\xE2\x8B\xB8" /* U+22F8 Element Of With Underbar */
+#define AGSI_ELEMENT_OF_W_TWO_HSTROKES              "\xE2\x8B\xB9" /* U+22F9 Element Of With Two Horizontal Strokes */
+#define AGSI_CONTAINS_W_LONG_HSTROKE                "\xE2\x8B\xBA" /* U+22FA Contains With Long Horizontal Stroke */
+#define AGSI_CONTAINS_W_VBAR_AT_END_OF_HSTROKE      "\xE2\x8B\xBB" /* U+22FB Contains With Vertical Bar At End Of Horizontal Stroke */
+#define AGSI_SM_CONTAINS_W_VBAR_AT_END_OF_HSTROKE   "\xE2\x8B\xBC" /* U+22FC Small Contains With Vertical Bar At End Of Horizontal Stroke */
+#define AGSI_CONTAINS_W_OVERBAR                     "\xE2\x8B\xBD" /* U+22FD Contains With Overbar */
+#define AGSI_SM_CONTAINS_W_OVERBAR                  "\xE2\x8B\xBE" /* U+22FE Small Contains With Overbar */
 #define AGSI_Z_NOTATION_BAG_MEMBERSHIP              "\xE2\x8B\xBF" /* U+22FF */
 /*
- * Miscellaneous Technical.
+ * Miscellaneous Technical ("PAREN" = "PARENTHESIS", "SQ" = "SQUARE").
  */
-#define AGSI_DIAMETER_SIGN                          "\xE2\x8C\x80" /* U+2300 */
-#define AGSI_ELECTRIC_ARROW                         "\xE2\x8C\x81" /* U+2301 */
-#define AGSI_HOUSE                                  "\xE2\x8C\x82" /* U+2302 */
-#define AGSI_UP_ARROWHEAD                           "\xE2\x8C\x83" /* U+2303 */
-#define AGSI_DOWN_ARROWHEAD                         "\xE2\x8C\x84" /* U+2304 */
-#define AGSI_PROJECTIVE                             "\xE2\x8C\x85" /* U+2305 */
-#define AGSI_PERSPECTIVE                            "\xE2\x8C\x86" /* U+2306 */
-#define AGSI_WAVY_LINE                              "\xE2\x8C\x87" /* U+2307 */
-#define AGSI_LEFT_CEILING                           "\xE2\x8C\x88" /* U+2308 */
-#define AGSI_RIGHT_CEILING                          "\xE2\x8C\x89" /* U+2309 */
-#define AGSI_LEFT_FLOOR                             "\xE2\x8C\x8A" /* U+230A */
-#define AGSI_RIGHT_FLOOR                            "\xE2\x8C\x8B" /* U+230B */
-#define AGSI_BOTTOM_RIGHT_CROP                      "\xE2\x8C\x8C" /* U+230C */
-#define AGSI_BOTTOM_LEFT_CROP                       "\xE2\x8C\x8D" /* U+230D */
-#define AGSI_TOP_RIGHT_CROP                         "\xE2\x8C\x8E" /* U+230E */
-#define AGSI_TOP_LEFT_CROP                          "\xE2\x8C\x8F" /* U+230F */
-#define AGSI_REVERSED_NOT_SIGN                      "\xE2\x8C\x90" /* U+2310 */
-#define AGSI_SQUARE_LOZENGE                         "\xE2\x8C\x91" /* U+2311 */
-#define AGSI_PLACE_OF_INTEREST_SIGN                 "\xE2\x8C\x98" /* U+2318 */
-#define AGSI_TURNED_NOT_SIGN                        "\xE2\x8C\x99" /* U+2319 */
-#define AGSI_TOP_LEFT_CORNER                        "\xE2\x8C\x9C" /* U+231C */
-#define AGSI_TOP_RIGHT_CORNER                       "\xE2\x8C\x9D" /* U+231D */
-#define AGSI_BOTTOM_LEFT_CORNER                     "\xE2\x8C\x9E" /* U+231E */
-#define AGSI_BOTTOM_RIGHT_CORNER                    "\xE2\x8C\x9F" /* U+231F */
-#define AGSI_TOP_HALF_INTEGRAL                      "\xE2\x8C\xA0" /* U+2320 */
-#define AGSI_BOTTOM_HALF_INTEGRAL                   "\xE2\x8C\xA1" /* U+2321 */
-#define AGSI_UP_ARROWHEAD_BETWEEN_TWO_HORIZONTAL_BARS "\xE2\x8C\xA4" /* U+2324 */
-#define AGSI_OPTION_KEY                             "\xE2\x8C\xA5" /* U+2325 */
-#define AGSI_ERASE_TO_THE_RIGHT                     "\xE2\x8C\xA6" /* U+2326 */
-#define AGSI_X_IN_A_RECTANGLE_BOX                   "\xE2\x8C\xA7" /* U+2327 */
-#define AGSI_KEYBOARD                               "\xE2\x8C\xA8" /* U+2328 */
-#define AGSI_ERASE_TO_THE_LEFT                      "\xE2\x8C\xAB" /* U+232B */
-#define AGSI_BENZENE_RING                           "\xE2\x8C\xAC" /* U+232C */
-#define AGSI_APL_FUNCTIONAL_SYMBOL_IOTA             "\xE2\x8D\xB3" /* U+2373 */
-#define AGSI_APL_FUNCTIONAL_SYMBOL_RHO              "\xE2\x8D\xB4" /* U+2374 */
-#define AGSI_APL_FUNCTIONAL_SYMBOL_OMEGA            "\xE2\x8D\xB5" /* U+2375 */
-#define AGSI_APL_FUNCTIONAL_SYMBOL_ALPHA            "\xE2\x8D\xBA" /* U+237A */
-#define AGSI_SHOULDERED_OPEN_BOX                    "\xE2\x8D\xBD" /* U+237D */
-#define AGSI_ALTERNATIVE_KEY_SYMBOL                 "\xE2\x8E\x87" /* U+2387 */
-#define AGSI_SOFTWARE_FUNCTION_SYMBOL               "\xE2\x8E\x94" /* U+2394 */
-#define AGSI_LEFT_PARENTHESIS_UPPER_HOOK            "\xE2\x8E\x9B" /* U+239B */
-#define AGSI_LEFT_PARENTHESIS_EXTENSION             "\xE2\x8E\x9C" /* U+239C */
-#define AGSI_LEFT_PARENTHESIS_LOWER_HOOK            "\xE2\x8E\x9D" /* U+239D */
-#define AGSI_RIGHT_PARENTHESIS_UPPER_HOOK           "\xE2\x8E\x9E" /* U+239E */
-#define AGSI_RIGHT_PARENTHESIS_EXTENSION            "\xE2\x8E\x9F" /* U+239F */
-#define AGSI_RIGHT_PARENTHESIS_LOWER_HOOK           "\xE2\x8E\xA0" /* U+23A0 */
-#define AGSI_LEFT_SQUARE_BRACKET_UPPER_CORNER       "\xE2\x8E\xA1" /* U+23A1 */
-#define AGSI_LEFT_SQUARE_BRACKET_EXTENSION          "\xE2\x8E\xA2" /* U+23A2 */
-#define AGSI_LEFT_SQUARE_BRACKET_LOWER_CORNER       "\xE2\x8E\xA3" /* U+23A3 */
-#define AGSI_RIGHT_SQUARE_BRACKET_UPPER_CORNER      "\xE2\x8E\xA4" /* U+23A4 */
-#define AGSI_RIGHT_SQUARE_BRACKET_EXTENSION         "\xE2\x8E\xA5" /* U+23A5 */
-#define AGSI_RIGHT_SQUARE_BRACKET_LOWER_CORNER      "\xE2\x8E\xA6" /* U+23A6 */
-#define AGSI_LEFT_CURLY_BRACKET_UPPER_HOOK          "\xE2\x8E\xA7" /* U+23A7 */
-#define AGSI_LEFT_CURLY_BRACKET_MIDDLE_PIECE        "\xE2\x8E\xA8" /* U+23A8 */
-#define AGSI_LEFT_CURLY_BRACKET_LOWER_HOOK          "\xE2\x8E\xA9" /* U+23A9 */
-#define AGSI_CURLY_BRACKET_EXTENSION                "\xE2\x8E\xAA" /* U+23AA */
-#define AGSI_RIGHT_CURLY_BRACKET_UPPER_HOOK         "\xE2\x8E\xAB" /* U+23AB */
-#define AGSI_RIGHT_CURLY_BRACKET_MIDDLE_PIECE       "\xE2\x8E\xAC" /* U+23AC */
-#define AGSI_RIGHT_CURLY_BRACKET_LOWER_HOOK         "\xE2\x8E\xAD" /* U+23AD */
-#define AGSI_INTEGRAL_EXTENSION                     "\xE2\x8E\xAE" /* U+23AE */
-#define AGSI_RETURN_SYMBOL                          "\xE2\x8F\x8E" /* U+23CE */
-#define AGSI_EJECT_SYMBOL                           "\xE2\x8F\x8F" /* U+23CF */
-#define AGSI_BENZENE_RING_WITH_CIRCLE               "\xE2\x8F\xA3" /* U+23E3 */
-#define AGSI_FLATNESS                               "\xE2\x8F\xA5" /* U+23E5 */
-#define AGSI_DECIMAL_EXPONENT_SYMBOL                "\xE2\x8F\xA8" /* U+23E8 */
-#define AGSI_STOPWATCH                              "\xE2\x8F\xB1" /* U+23F1 */
+#define AGSI_DIAMETER_SIGN                  "\xE2\x8C\x80" /* U+2300 */
+#define AGSI_ELECTRIC_ARROW                 "\xE2\x8C\x81" /* U+2301 */
+#define AGSI_HOUSE                          "\xE2\x8C\x82" /* U+2302 */
+#define AGSI_UP_ARROWHEAD                   "\xE2\x8C\x83" /* U+2303 */
+#define AGSI_DN_ARROWHEAD                   "\xE2\x8C\x84" /* U+2304 Down Arrowhead */
+#define AGSI_PROJECTIVE                     "\xE2\x8C\x85" /* U+2305 */
+#define AGSI_PERSPECTIVE                    "\xE2\x8C\x86" /* U+2306 */
+#define AGSI_WAVY_LINE                      "\xE2\x8C\x87" /* U+2307 */
+#define AGSI_L_CEILING                      "\xE2\x8C\x88" /* U+2308 Left Ceiling */
+#define AGSI_R_CEILING                      "\xE2\x8C\x89" /* U+2309 Right Ceiling */
+#define AGSI_L_FLOOR                        "\xE2\x8C\x8A" /* U+230A Left Floor */
+#define AGSI_R_FLOOR                        "\xE2\x8C\x8B" /* U+230B Right Floor */
+#define AGSI_BOTTOM_R_CROP                  "\xE2\x8C\x8C" /* U+230C Bottom Right Crop */
+#define AGSI_BOTTOM_L_CROP                  "\xE2\x8C\x8D" /* U+230D Bottom Left Crop */
+#define AGSI_TOP_R_CROP                     "\xE2\x8C\x8E" /* U+230E Top Right Crop */
+#define AGSI_TOP_L_CROP                     "\xE2\x8C\x8F" /* U+230F Top Left Crop */
+#define AGSI_REVERSED_NOT_SIGN              "\xE2\x8C\x90" /* U+2310 */
+#define AGSI_SQ_LOZENGE                     "\xE2\x8C\x91" /* U+2311 Square Lozenge */
+#define AGSI_PLACE_OF_INTEREST_SIGN         "\xE2\x8C\x98" /* U+2318 */
+#define AGSI_TURNED_NOT_SIGN                "\xE2\x8C\x99" /* U+2319 */
+#define AGSI_TOP_L_CORNER                   "\xE2\x8C\x9C" /* U+231C Top Left Corner */
+#define AGSI_TOP_R_CORNER                   "\xE2\x8C\x9D" /* U+231D Top Right Corner */
+#define AGSI_BOTTOM_L_CORNER                "\xE2\x8C\x9E" /* U+231E Bottom Left Corner */
+#define AGSI_BOTTOM_R_CORNER                "\xE2\x8C\x9F" /* U+231F Bottom Right Corner */
+#define AGSI_TOP_HALF_INTEGRAL              "\xE2\x8C\xA0" /* U+2320 */
+#define AGSI_BOTTOM_HALF_INTEGRAL           "\xE2\x8C\xA1" /* U+2321 */
+#define AGSI_UP_ARROWHEAD_BETWEEN_TWO_HBARS "\xE2\x8C\xA4" /* U+2324 Up Arrowhead Between Two Horizontal Bars */
+#define AGSI_OPTION_KEY                     "\xE2\x8C\xA5" /* U+2325 */
+#define AGSI_ERASE_TO_THE_R                 "\xE2\x8C\xA6" /* U+2326 Erase To The Right */
+#define AGSI_X_IN_A_RECTANGLE_BOX           "\xE2\x8C\xA7" /* U+2327 */
+#define AGSI_KEYBOARD                       "\xE2\x8C\xA8" /* U+2328 */
+#define AGSI_ERASE_TO_THE_L                 "\xE2\x8C\xAB" /* U+232B Erase To The Left */
+#define AGSI_BENZENE_RING                   "\xE2\x8C\xAC" /* U+232C */
+#define AGSI_APL_FUNCTIONAL_SYMBOL_IOTA     "\xE2\x8D\xB3" /* U+2373 */
+#define AGSI_APL_FUNCTIONAL_SYMBOL_RHO      "\xE2\x8D\xB4" /* U+2374 */
+#define AGSI_APL_FUNCTIONAL_SYMBOL_OMEGA    "\xE2\x8D\xB5" /* U+2375 */
+#define AGSI_APL_FUNCTIONAL_SYMBOL_ALPHA    "\xE2\x8D\xBA" /* U+237A */
+#define AGSI_SHOULDERED_OPEN_BOX            "\xE2\x8D\xBD" /* U+237D */
+#define AGSI_ALTERNATIVE_KEY_SYMBOL         "\xE2\x8E\x87" /* U+2387 */
+#define AGSI_SOFTWARE_FUNCTION_SYMBOL       "\xE2\x8E\x94" /* U+2394 */
+#define AGSI_L_PAREN_UPPER_HOOK             "\xE2\x8E\x9B" /* U+239B Left Parenthesis Upper Hook */
+#define AGSI_L_PAREN_EXTENSION              "\xE2\x8E\x9C" /* U+239C Left Parenthesis Extension */
+#define AGSI_L_PAREN_LOWER_HOOK             "\xE2\x8E\x9D" /* U+239D Left Parenthesis Lower Hook */
+#define AGSI_R_PAREN_UPPER_HOOK             "\xE2\x8E\x9E" /* U+239E Right Parenthesis Upper Hook */
+#define AGSI_R_PAREN_EXTENSION              "\xE2\x8E\x9F" /* U+239F Right Parenthesis Extension */
+#define AGSI_R_PAREN_LOWER_HOOK             "\xE2\x8E\xA0" /* U+23A0 Right Parenthesis Lower Hook */
+#define AGSI_L_SQ_BRACKET_UPPER_CORNER      "\xE2\x8E\xA1" /* U+23A1 Left Square Bracket Upper Corner */
+#define AGSI_L_SQ_BRACKET_EXTENSION         "\xE2\x8E\xA2" /* U+23A2 Left Square Bracket Extension */
+#define AGSI_L_SQ_BRACKET_LOWER_CORNER      "\xE2\x8E\xA3" /* U+23A3 Left Square Bracket Lower Corner */
+#define AGSI_R_SQ_BRACKET_UPPER_CORNER      "\xE2\x8E\xA4" /* U+23A4 Right Square Bracket Upper Corner */
+#define AGSI_R_SQ_BRACKET_EXTENSION         "\xE2\x8E\xA5" /* U+23A5 Right Square Bracket Extension */
+#define AGSI_R_SQ_BRACKET_LOWER_CORNER      "\xE2\x8E\xA6" /* U+23A6 Right Square Bracket Lower Corner */
+#define AGSI_L_CURLY_BRACKET_UPPER_HOOK     "\xE2\x8E\xA7" /* U+23A7 Left Curly Bracket Upper Hook */
+#define AGSI_L_CURLY_BRACKET_MIDDLE_PIECE   "\xE2\x8E\xA8" /* U+23A8 Left Curly Bracket Middle Piece */
+#define AGSI_L_CURLY_BRACKET_LOWER_HOOK     "\xE2\x8E\xA9" /* U+23A9 Left Curly Bracket Lower Hook */
+#define AGSI_CURLY_BRACKET_EXTENSION        "\xE2\x8E\xAA" /* U+23AA */
+#define AGSI_R_CURLY_BRACKET_UPPER_HOOK     "\xE2\x8E\xAB" /* U+23AB Right Curly Bracket Upper Hook */
+#define AGSI_R_CURLY_BRACKET_MIDDLE_PIECE   "\xE2\x8E\xAC" /* U+23AC Right Curly Bracket Middle Piece */
+#define AGSI_R_CURLY_BRACKET_LOWER_HOOK     "\xE2\x8E\xAD" /* U+23AD Right Curly Bracket Lower Hook */
+#define AGSI_INTEGRAL_EXTENSION             "\xE2\x8E\xAE" /* U+23AE */
+#define AGSI_RETURN_SYMBOL                  "\xE2\x8F\x8E" /* U+23CE */
+#define AGSI_EJECT_SYMBOL                   "\xE2\x8F\x8F" /* U+23CF */
+#define AGSI_BENZENE_RING_W_CIRCLE          "\xE2\x8F\xA3" /* U+23E3 Benzene Ring With Circle */
+#define AGSI_FLATNESS                       "\xE2\x8F\xA5" /* U+23E5 */
+#define AGSI_DECIMAL_EXPONENT_SYMBOL        "\xE2\x8F\xA8" /* U+23E8 */
+#define AGSI_STOPWATCH                      "\xE2\x8F\xB1" /* U+23F1 */
 /*
  * Control Pictures.
  */
-#define AGSI_BLANK_SYMBOL                           "\xE2\x90\xA2" /* U+2422 */
-#define AGSI_OPEN_BOX                               "\xE2\x90\xA3" /* U+2423 */
+#define AGSI_BLANK_SYMBOL     "\xE2\x90\xA2"       /* U+2422 */
+#define AGSI_OPEN_BOX         "\xE2\x90\xA3"       /* U+2423 */
 /*
  * Enclosed Alphanumerics.
  */
-#define AGSI_CIRCLED_DIGIT_1                        "\xE2\x91\xA0" /* U+2460 */
-#define AGSI_CIRCLED_DIGIT_2                        "\xE2\x91\xA1" /* U+2461 */
-#define AGSI_CIRCLED_DIGIT_3                        "\xE2\x91\xA2" /* U+2462 */
-#define AGSI_CIRCLED_DIGIT_4                        "\xE2\x91\xA3" /* U+2463 */
-#define AGSI_CIRCLED_DIGIT_5                        "\xE2\x91\xA4" /* U+2464 */
-#define AGSI_CIRCLED_DIGIT_6                        "\xE2\x91\xA5" /* U+2465 */
-#define AGSI_CIRCLED_DIGIT_7                        "\xE2\x91\xA6" /* U+2466 */
-#define AGSI_CIRCLED_DIGIT_8                        "\xE2\x91\xA7" /* U+2467 */
-#define AGSI_CIRCLED_DIGIT_9                        "\xE2\x91\xA8" /* U+2468 */
-#define AGSI_CIRCLED_DIGIT_10                       "\xE2\x91\xA9" /* U+2469 */
-
-#define AGSI_DOTTED_CIRCLE                          "\xE2\x97\x8C" /* U+25CC */
-
-#define AGSI_WHEEL_OF_DHARMA                        "\xE2\x98\xB8" /* U+2638 */
-#define AGSI_GEAR                                   "\xE2\x9A\x99" /* U+2699 */
-
-#define AGSI_VICTORY_HAND                           "\xE2\x9C\x8C" /* U+270C */
-#define AGSI_WRITING_HAND                           "\xE2\x9C\x8D" /* U+270D */
-#define AGSI_LOWER_RIGHT_PENCIL                     "\xE2\x9C\x8E" /* U+270E */
-#define AGSI_PENCIL                                 "\xE2\x9C\x8F" /* U+270F */
-#define AGSI_UPPER_RIGHT_PENCIL                     "\xE2\x9C\x90" /* U+2710 */
-#define AGSI_WHITE_NIB                              "\xE2\x9C\x91" /* U+2711 */
-#define AGSI_BLACK_NIB                              "\xE2\x9C\x92" /* U+2712 */
-#define AGSI_CHECK_MARK                             "\xE2\x9C\x93" /* U+2713 */
-#define AGSI_HEAVY_CHECK_MARK                       "\xE2\x9C\x94" /* U+2714 */
-#define AGSI_MULTIPLICATION_X                       "\xE2\x9C\x95" /* U+2715 */
-#define AGSI_HEAVY_MULTIPLICATION_X                 "\xE2\x9C\x96" /* U+2716 */
-#define AGSI_BALLOT_X                               "\xE2\x9C\x97" /* U+2717 */
-#define AGSI_HEAVY_BALLOT_X                         "\xE2\x9C\x98" /* U+2718 */
+#define AGSI_CIRCLED_DIGIT_1  "\xE2\x91\xA0"       /* U+2460 */
+#define AGSI_CIRCLED_DIGIT_2  "\xE2\x91\xA1"       /* U+2461 */
+#define AGSI_CIRCLED_DIGIT_3  "\xE2\x91\xA2"       /* U+2462 */
+#define AGSI_CIRCLED_DIGIT_4  "\xE2\x91\xA3"       /* U+2463 */
+#define AGSI_CIRCLED_DIGIT_5  "\xE2\x91\xA4"       /* U+2464 */
+#define AGSI_CIRCLED_DIGIT_6  "\xE2\x91\xA5"       /* U+2465 */
+#define AGSI_CIRCLED_DIGIT_7  "\xE2\x91\xA6"       /* U+2466 */
+#define AGSI_CIRCLED_DIGIT_8  "\xE2\x91\xA7"       /* U+2467 */
+#define AGSI_CIRCLED_DIGIT_9  "\xE2\x91\xA8"       /* U+2468 */
+#define AGSI_CIRCLED_DIGIT_10 "\xE2\x91\xA9"       /* U+2469 */
+/*
+ * Geometric Shapes.
+ */
+#define AGSI_DOTTED_CIRCLE    "\xE2\x97\x8C"       /* U+25CC */
+/*
+ * Miscellaneous Symbols.
+ */
+#define AGSI_WHEEL_OF_DHARMA  "\xE2\x98\xB8"       /* U+2638 */
+#define AGSI_GEAR             "\xE2\x9A\x99"       /* U+2699 */
+/*
+ * Dingbats.
+ */
+#define AGSI_VICTORY_HAND           "\xE2\x9C\x8C" /* U+270C */
+#define AGSI_WRITING_HAND           "\xE2\x9C\x8D" /* U+270D */
+#define AGSI_LOWER_R_PENCIL         "\xE2\x9C\x8E" /* U+270E Lower Right Pencil */
+#define AGSI_PENCIL                 "\xE2\x9C\x8F" /* U+270F */
+#define AGSI_UPPER_R_PENCIL         "\xE2\x9C\x90" /* U+2710 Upper Right Pencil */
+#define AGSI_WHITE_NIB              "\xE2\x9C\x91" /* U+2711 */
+#define AGSI_BLACK_NIB              "\xE2\x9C\x92" /* U+2712 */
+#define AGSI_CHECK_MARK             "\xE2\x9C\x93" /* U+2713 */
+#define AGSI_HEAVY_CHECK_MARK       "\xE2\x9C\x94" /* U+2714 */
+#define AGSI_MULTIPLICATION_X       "\xE2\x9C\x95" /* U+2715 */
+#define AGSI_HEAVY_MULTIPLICATION_X "\xE2\x9C\x96" /* U+2716 */
+#define AGSI_BALLOT_X               "\xE2\x9C\x97" /* U+2717 */
+#define AGSI_HEAVY_BALLOT_X         "\xE2\x9C\x98" /* U+2718 */
 #define AGSI_CLOSE_X AGSI_MULTIPLICATION_X
-#define AGSI_BLK_4_POINTED_STAR                     "\xE2\x9C\xA6" /* U+2726 */
-#define AGSI_WHT_4_POINTED_STAR                     "\xE2\x9C\xA7" /* U+2727 */
-#define AGSI_INVERTED_LAZY_S                        "\xE2\x88\xBE" /* U+223E */
-#define AGSI_SINE_WAVE                              "\xE2\x88\xBF" /* U+223F */
-#define AGSI_WREATH_PRODUCT                         "\xE2\x89\x80" /* U+2240 */
-#define AGSI_NOT_TILDE                              "\xE2\x89\x81" /* U+2241 */
-#define AGSI_MINUS_TILDE                            "\xE2\x89\x82" /* U+2242 */
-
-
-
-
+#define AGSI_BLK_4_POINTED_STAR     "\xE2\x9C\xA6" /* U+2726 Black Four Pointed Star */
+#define AGSI_WHT_4_POINTED_STAR     "\xE2\x9C\xA7" /* U+2727 White Four Pointed Star */
 /*
  * Miscellaneous Symbols and Pictographs.
  */
-#define AGSI_NEW_MOON             "\xF0\x9F\x8C\x91"	/* U+1F311 */
-#define AGSI_WAXING_CRESCENT_MOON "\xF0\x9F\x8C\x92"	/* U+1F312 */
-#define AGSI_FIRST_QUARTER_MOON   "\xF0\x9F\x8C\x93"	/* U+1F313 */
-#define AGSI_WAXING_GIBBOUS_MOON  "\xF0\x9F\x8C\x94"	/* U+1F314 */
-#define AGSI_FULL_MOON            "\xF0\x9F\x8C\x95"	/* U+1F315 */
-#define AGSI_WANING_GIBBOUS_MOON  "\xF0\x9F\x8C\x96"	/* U+1F316 */
-#define AGSI_LAST_QUARTER_MOON    "\xF0\x9F\x8C\x97"	/* U+1F317 */
-#define AGSI_WANING_CRESCENT_MOON "\xF0\x9F\x8C\x98"	/* U+1F318 */
-
-#define AGSI_ANT         "\xF0\x9F\x90\x9C"		/* U+1F41C */
-#define AGSI_MOUSE_FACE  "\xF0\x9F\x90\xAD"		/* U+1F42D */
-#define AGSI_COW_FACE    "\xF0\x9F\x90\xAE"		/* U+1F42E */
-#define AGSI_CAT_FACE    "\xF0\x9F\x90\xB1"		/* U+1F431 */
-#define AGSI_MONKEY_FACE "\xF0\x9F\x90\xB5"		/* U+1F435 */
-#define AGSI_PILE_OF_POO "\xF0\x9F\x92\xA9"		/* U+1F4A9 */
+#define AGSI_NEW_MOON             "\xF0\x9F\x8C\x91" /* U+1F311 */
+#define AGSI_WAXING_CRESCENT_MOON "\xF0\x9F\x8C\x92" /* U+1F312 */
+#define AGSI_FIRST_QUARTER_MOON   "\xF0\x9F\x8C\x93" /* U+1F313 */
+#define AGSI_WAXING_GIBBOUS_MOON  "\xF0\x9F\x8C\x94" /* U+1F314 */
+#define AGSI_FULL_MOON            "\xF0\x9F\x8C\x95" /* U+1F315 */
+#define AGSI_WANING_GIBBOUS_MOON  "\xF0\x9F\x8C\x96" /* U+1F316 */
+#define AGSI_LAST_QUARTER_MOON    "\xF0\x9F\x8C\x97" /* U+1F317 */
+#define AGSI_WANING_CRESCENT_MOON "\xF0\x9F\x8C\x98" /* U+1F318 */
+#define AGSI_ANT                  "\xF0\x9F\x90\x9C" /* U+1F41C */
+#define AGSI_MOUSE_FACE           "\xF0\x9F\x90\xAD" /* U+1F42D */
+#define AGSI_COW_FACE             "\xF0\x9F\x90\xAE" /* U+1F42E */
+#define AGSI_CAT_FACE             "\xF0\x9F\x90\xB1" /* U+1F431 */
+#define AGSI_MONKEY_FACE          "\xF0\x9F\x90\xB5" /* U+1F435 */
+#define AGSI_PILE_OF_POO          "\xF0\x9F\x92\xA9" /* U+1F4A9 */
 /*
- * Emoticons ("F" = "FACE", "SM" = "SMILING").
+ * Emoticons ("SML" = "SMILING", "OM" = "OPEN_MOUTH").
  */
-#define AGSI_GRINNING_F "\xF0\x9F\x98\x80"			/* U+1F600 */
-#define AGSI_GRINNING_F_W_SM_EYES "\xF0\x9F\x98\x81"		/* U+1F601 */
-#define AGSI_F_W_TEARS_OF_JOY "\xF0\x9F\x98\x82"		/* U+1F602 */
-#define AGSI_SM_F_W_OPEN_MOUTH "\xF0\x9F\x98\x83"		/* U+1F603 */
-#define AGSI_SM_F_W_OPEN_MOUTH_AND_SM_EYES "\xF0\x9F\x98\x84"	/* U+1F604 */
-#define AGSI_SM_F_W_OPEN_MOUTH_AND_COLD_SWEAT "\xF0\x9F\x98\x85"/* U+1F605 */
-#define AGSI_SM_F_W_OPEN_MOUTH_AND_TIGHTLY_CLOSED_EYES "\xF0\x9F\x98\x86" /* U+1F606 */
-#define AGSI_SM_F_W_HALO "\xF0\x9F\x98\x87"			/* U+1F607 */
-#define AGSI_SM_F_W_HORNS "\xF0\x9F\x98\x88"			/* U+1F608 */
-#define AGSI_WINKING_F "\xF0\x9F\x98\x89"			/* U+1F609 */
-#define AGSI_SM_F_W_SM_EYES "\xF0\x9F\x98\x8A"			/* U+1F60A */
-#define AGSI_F_SAVORING_DELICIOUS_FOOD "\xF0\x9F\x98\x8B"	/* U+1F60B */
-#define AGSI_RELIEVED_F "\xF0\x9F\x98\x8C"			/* U+1F60C */
-#define AGSI_SM_F_W_HEART_SHAPED_EYES "\xF0\x9F\x98\x8D"	/* U+1F60D */
-#define AGSI_SM_F_W_SUNGLASSES "\xF0\x9F\x98\x8E"		/* U+1F60E */
-#define AGSI_SMIRKING_F "\xF0\x9F\x98\x8F"			/* U+1F60F */
-#define AGSI_NEUTRAL_F "\xF0\x9F\x98\x90"			/* U+1F610 */
-#define AGSI_EXPRESSIONLESS_F "\xF0\x9F\x98\x91"		/* U+1F611 */
-#define AGSI_UNAMUSED_F "\xF0\x9F\x98\x92"			/* U+1F612 */
-#define AGSI_F_W_COLD_SWEAT "\xF0\x9F\x98\x93"			/* U+1F613 */
-#define AGSI_PENSIVE_F "\xF0\x9F\x98\x94"			/* U+1F614 */
-#define AGSI_CONFUSED_F "\xF0\x9F\x98\x95"			/* U+1F615 */
-#define AGSI_CONFOUNDED_F "\xF0\x9F\x98\x96"			/* U+1F616 */
-#define AGSI_KISSING_F "\xF0\x9F\x98\x97"			/* U+1F617 */
-#define AGSI_F_THROWING_A_KISS "\xF0\x9F\x98\x98"		/* U+1F618 */
-#define AGSI_KISSING_F_W_SM_EYES "\xF0\x9F\x98\x99"		/* U+1F619 */
-#define AGSI_KISSING_F_W_CLOSED_EYES "\xF0\x9F\x98\x9A"		/* U+1F61A */
-#define AGSI_F_W_STUCK_OUT_TONGUE "\xF0\x9F\x98\x9B"		/* U+1F61B */
-#define AGSI_F_W_STUCK_OUT_TONGUE_AND_WINKING_EYE "\xF0\x9F\x98\x9C" /* U+1F61C */
-#define AGSI_F_W_STUCK_OUT_TONGUE_AND_TIGHTLY_CLOSED_EYES "\xF0\x9F\x98\x9D" /* U+1F61D */
-#define AGSI_DISAPPOINTED_F "\xF0\x9F\x98\x9E"			/* U+1F61E */
-#define AGSI_WORRIED_F "\xF0\x9F\x98\x9F"			/* U+1F61F */
-#define AGSI_ANGRY_F "\xF0\x9F\x98\xA0"				/* U+1F620 */
-#define AGSI_POUTING_F "\xF0\x9F\x98\xA1"			/* U+1F621 */
-#define AGSI_CRYING_F "\xF0\x9F\x98\xA2"			/* U+1F622 */
-#define AGSI_PERSEVERING_F "\xF0\x9F\x98\xA3"			/* U+1F623 */
-#define AGSI_F_W_LOOK_OF_TRIUMPH "\xF0\x9F\x98\xA4"		/* U+1F624 */
-#define AGSI_DISAPPOINTED_BUT_RELIEVED_F "\xF0\x9F\x98\xA5"	/* U+1F625 */
-#define AGSI_FROWNING_F_W_OPEN_MOUTH "\xF0\x9F\x98\xA6"		/* U+1F626 */
-#define AGSI_ANGUISHED_F "\xF0\x9F\x98\xA7"			/* U+1F627 */
-#define AGSI_FEARFUL_F "\xF0\x9F\x98\xA8"			/* U+1F628 */
-#define AGSI_WEARY_F "\xF0\x9F\x98\xA9"				/* U+1F629 */
-#define AGSI_SLEEPY_F "\xF0\x9F\x98\xAA"			/* U+1F62A */
-#define AGSI_TIRED_F "\xF0\x9F\x98\xAB"				/* U+1F62B */
-#define AGSI_GRIMACING_F "\xF0\x9F\x98\xAC"			/* U+1F62C */
-#define AGSI_LOUDLY_CRYING_F "\xF0\x9F\x98\xAD"			/* U+1F62D */
-#define AGSI_F_W_OPEN_MOUTH "\xF0\x9F\x98\xAE"			/* U+1F62E */
-#define AGSI_HUSHED_F "\xF0\x9F\x98\xAF"			/* U+1F62F */
-#define AGSI_F_W_OPEN_MOUTH_AND_COLD_SWEAT "\xF0\x9F\x98\xB0"	/* U+1F630 */
-#define AGSI_F_SCREAMING_IN_FEAR "\xF0\x9F\x98\xB1"		/* U+1F631 */
-#define AGSI_ASTONISHED_F "\xF0\x9F\x98\xB2"			/* U+1F632 */
-#define AGSI_FLUSHED_F "\xF0\x9F\x98\xB3"			/* U+1F633 */
-#define AGSI_SLEEPING_F "\xF0\x9F\x98\xB4"			/* U+1F634 */
-#define AGSI_DIZZY_F "\xF0\x9F\x98\xB5"				/* U+1F635 */
-#define AGSI_F_WO_MOUTH "\xF0\x9F\x98\xB6"			/* U+1F636 */
-#define AGSI_F_MEDICAL_MASK "\xF0\x9F\x98\xB7"			/* U+1F637 */
-#define AGSI_GRINNING_CAT_F_W_SM_EYES "\xF0\x9F\x98\xB8"	/* U+1F638 */
-#define AGSI_CAT_F_W_TEARS_OF_JOY "\xF0\x9F\x98\xB9"		/* U+1F639 */
-#define AGSI_SM_CAT_F_W_OPEN_MOUTH "\xF0\x9F\x98\xBA"		/* U+1F63A */
-#define AGSI_SM_CAT_F_W_HEART_SHAPED_EYES "\xF0\x9F\x98\xBB"	/* U+1F63B */
-#define AGSI_CAT_F_W_WRY_SMILE "\xF0\x9F\x98\xBC"		/* U+1F63C */
-#define AGSI_KISSING_CAT_F_W_CLOSED_EYES "\xF0\x9F\x98\xBD"	/* U+1F63D */
-#define AGSI_POUTING_CAT_F "\xF0\x9F\x98\xBE"			/* U+1F63E */
-#define AGSI_CRYING_CAT_F "\xF0\x9F\x98\xBF"			/* U+1F63F */
-#define AGSI_WEARY_CAT_F "\xF0\x9F\x99\x80"			/* U+1F640 */
-#define AGSI_UPSIDE_DOWN_F "\xF0\x9F\x99\x83"			/* U+1F643 */
-
+#define AGSI_GRINNING_FACE                    "\xF0\x9F\x98\x80" /* U+1F600 */
+#define AGSI_GRINNING_FACE_W_SML_EYES         "\xF0\x9F\x98\x81" /* U+1F601 Grinning Face With Smiling Eyes */
+#define AGSI_FACE_W_TEARS_OF_JOY              "\xF0\x9F\x98\x82" /* U+1F602 Face With Tears Of Joy */
+#define AGSI_SML_FACE_W_OM                    "\xF0\x9F\x98\x83" /* U+1F603 Smiling Face With Open Mouth */
+#define AGSI_SML_FACE_W_OM_AND_SML_EYES       "\xF0\x9F\x98\x84" /* U+1F604 Smiling Face With Open Mouth And Smiling Eyes */
+#define AGSI_SML_FACE_W_OM_AND_COLD_SWEAT     "\xF0\x9F\x98\x85" /* U+1F605 Smiling Face With Open Mouth And Cold Sweat */
+#define AGSI_SML_FACE_W_OM_AND_CLOSED_EYES    "\xF0\x9F\x98\x86" /* U+1F606 Smiling Face With Open Mouth And Tightly Closed Eyes */
+#define AGSI_SML_FACE_W_HALO                  "\xF0\x9F\x98\x87" /* U+1F607 Smiling Face With Halo */
+#define AGSI_SML_FACE_W_HORNS                 "\xF0\x9F\x98\x88" /* U+1F608 Smiling Face With Horns */
+#define AGSI_WINKING_FACE                     "\xF0\x9F\x98\x89" /* U+1F609 */
+#define AGSI_SML_FACE_W_SML_EYES              "\xF0\x9F\x98\x8A" /* U+1F60A Smiling Face With Smiling Eyes */
+#define AGSI_FACE_SAVORING_DELICIOUS_FOOD     "\xF0\x9F\x98\x8B" /* U+1F60B */
+#define AGSI_RELIEVED_FACE                    "\xF0\x9F\x98\x8C" /* U+1F60C */
+#define AGSI_SML_FACE_W_HEART_SHAPED_EYES     "\xF0\x9F\x98\x8D" /* U+1F60D Smiling Face With Heart-Shaped Eyes */
+#define AGSI_SML_FACE_W_SUNGLASSES            "\xF0\x9F\x98\x8E" /* U+1F60E Smiling Face With Sunglasses */
+#define AGSI_SMIRKING_FACE                    "\xF0\x9F\x98\x8F" /* U+1F60F */
+#define AGSI_NEUTRAL_FACE                     "\xF0\x9F\x98\x90" /* U+1F610 */
+#define AGSI_EXPRESSIONLESS_FACE              "\xF0\x9F\x98\x91" /* U+1F611 */
+#define AGSI_UNAMUSED_FACE                    "\xF0\x9F\x98\x92" /* U+1F612 */
+#define AGSI_FACE_W_COLD_SWEAT                "\xF0\x9F\x98\x93" /* U+1F613 Face With Cold Sweat */
+#define AGSI_PENSIVE_FACE                     "\xF0\x9F\x98\x94" /* U+1F614 */
+#define AGSI_CONFUSED_FACE                    "\xF0\x9F\x98\x95" /* U+1F615 */
+#define AGSI_CONFOUNDED_FACE                  "\xF0\x9F\x98\x96" /* U+1F616 */
+#define AGSI_KISSING_FACE                     "\xF0\x9F\x98\x97" /* U+1F617 */
+#define AGSI_FACE_THROWING_A_KISS             "\xF0\x9F\x98\x98" /* U+1F618 */
+#define AGSI_KISSING_FACE_W_SML_EYES          "\xF0\x9F\x98\x99" /* U+1F619 Kissing Face With Smiling Eyes */
+#define AGSI_KISSING_FACE_W_CLOSED_EYES       "\xF0\x9F\x98\x9A" /* U+1F61A Kissing Face With Closed Eyes */
+#define AGSI_FACE_W_TONGUE                    "\xF0\x9F\x98\x9B" /* U+1F61B Face With Stuck Out Tongue */
+#define AGSI_FACE_W_TONGUE_AND_WINKING_EYE    "\xF0\x9F\x98\x9C" /* U+1F61C Face With Stuck Out Tongue And Winking Eye */
+#define AGSI_FACE_W_TONGUE_AND_CLOSED_EYES    "\xF0\x9F\x98\x9D" /* U+1F61D Face With Stuck Out Tongue And Tightly Closed Eyes */
+#define AGSI_DISAPPOINTED_FACE                "\xF0\x9F\x98\x9E" /* U+1F61E */
+#define AGSI_WORRIED_FACE                     "\xF0\x9F\x98\x9F" /* U+1F61F */
+#define AGSI_ANGRY_FACE                       "\xF0\x9F\x98\xA0" /* U+1F620 */
+#define AGSI_POUTING_FACE                     "\xF0\x9F\x98\xA1" /* U+1F621 */
+#define AGSI_CRYING_FACE                      "\xF0\x9F\x98\xA2" /* U+1F622 */
+#define AGSI_PERSEVERING_FACE                 "\xF0\x9F\x98\xA3" /* U+1F623 */
+#define AGSI_FACE_W_LOOK_OF_TRIUMPH           "\xF0\x9F\x98\xA4" /* U+1F624 */
+#define AGSI_DISAPPOINTED_BUT_RELIEVED_FACE   "\xF0\x9F\x98\xA5" /* U+1F625 */
+#define AGSI_FROWNING_FACE_W_OM               "\xF0\x9F\x98\xA6" /* U+1F626 Frowning Face With Open Mouth */
+#define AGSI_ANGUISHED_FACE                   "\xF0\x9F\x98\xA7" /* U+1F627 */
+#define AGSI_FEARFUL_FACE                     "\xF0\x9F\x98\xA8" /* U+1F628 */
+#define AGSI_WEARY_FACE                       "\xF0\x9F\x98\xA9" /* U+1F629 */
+#define AGSI_SLEEPY_FACE                      "\xF0\x9F\x98\xAA" /* U+1F62A */
+#define AGSI_TIRED_FACE                       "\xF0\x9F\x98\xAB" /* U+1F62B */
+#define AGSI_GRIMACING_FACE                   "\xF0\x9F\x98\xAC" /* U+1F62C */
+#define AGSI_LOUDLY_CRYING_FACE               "\xF0\x9F\x98\xAD" /* U+1F62D */
+#define AGSI_FACE_W_OM                        "\xF0\x9F\x98\xAE" /* U+1F62E Face With Open Mouth */
+#define AGSI_HUSHED_FACE                      "\xF0\x9F\x98\xAF" /* U+1F62F */
+#define AGSI_FACE_W_OM_AND_COLD_SWEAT         "\xF0\x9F\x98\xB0" /* U+1F630 Face With Open Mouth And Cold Sweat */
+#define AGSI_FACE_SCREAMING_IN_FEAR           "\xF0\x9F\x98\xB1" /* U+1F631 */
+#define AGSI_ASTONISHED_FACE                  "\xF0\x9F\x98\xB2" /* U+1F632 */
+#define AGSI_FLUSHED_FACE                     "\xF0\x9F\x98\xB3" /* U+1F633 */
+#define AGSI_SLEEPING_FACE                    "\xF0\x9F\x98\xB4" /* U+1F634 */
+#define AGSI_DIZZY_FACE                       "\xF0\x9F\x98\xB5" /* U+1F635 */
+#define AGSI_FACE_WO_MOUTH                    "\xF0\x9F\x98\xB6" /* U+1F636 */
+#define AGSI_FACE_MEDICAL_MASK                "\xF0\x9F\x98\xB7" /* U+1F637 */
+#define AGSI_GRINNING_CAT_FACE_W_SML_EYES     "\xF0\x9F\x98\xB8" /* U+1F638 */
+#define AGSI_CAT_FACE_W_TEARS_OF_JOY          "\xF0\x9F\x98\xB9" /* U+1F639 */
+#define AGSI_SML_CAT_FACE_W_OPEN_MOUTH        "\xF0\x9F\x98\xBA" /* U+1F63A */
+#define AGSI_SML_CAT_FACE_W_HEART_SHAPED_EYES "\xF0\x9F\x98\xBB" /* U+1F63B */
+#define AGSI_CAT_FACE_W_WRY_SMILE             "\xF0\x9F\x98\xBC" /* U+1F63C */
+#define AGSI_KISSING_CAT_FACE_W_CLOSED_EYES   "\xF0\x9F\x98\xBD" /* U+1F63D */
+#define AGSI_POUTING_CAT_FACE                 "\xF0\x9F\x98\xBE" /* U+1F63E */
+#define AGSI_CRYING_CAT_FACE                  "\xF0\x9F\x98\xBF" /* U+1F63F */
+#define AGSI_WEARY_CAT_FACE                   "\xF0\x9F\x99\x80" /* U+1F640 */
+#define AGSI_UPSIDE_DOWN_FACE                 "\xF0\x9F\x99\x83" /* U+1F643 */
 /*
  * Private Use Area.
  */
@@ -767,4 +933,3 @@
 #define AGSI_BOX_VERT       "\xEE\x80\x90"  /* U+E010 Vertical AG_Box(3) */
 #define AGSI_BOX_HORIZ      "\xEE\x80\x91"  /* U+E011 Horizontal AG_Box(3) */
 #define AGSI_BUTTON         "\xEE\x80\x92"  /* U+E012 AG_Button(3) */
-
