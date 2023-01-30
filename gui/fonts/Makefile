@@ -10,6 +10,8 @@ DATAFILES_SRC=	OFL11.txt OFL-FAQ.txt \
 		League-Gothic-LICENSE.md \
 		League-Spartan-LICENSE.md \
 		Mukta-OFL.txt \
+		agar-minimal.agbf \
+		agar-minimal-12.png \
 		algue.ttf \
 		algue-bold.ttf \
 		algue-italic.ttf \
@@ -27,14 +29,6 @@ DATAFILES_SRC=	OFL11.txt OFL-FAQ.txt \
 		cm-serif-italic.ttf \
 		cm-serif-upright-italic.ttf \
 		cm-serif.ttf \
-		cm-typewriter-bold-italic.ttf \
-		cm-typewriter-bold.ttf \
-		cm-typewriter-italic.ttf \
-		cm-typewriter.ttf \
-		courier-prime-bold.ttf \
-		courier-prime-bold-italic.ttf \
-		courier-prime-italic.ttf \
-		courier-prime.ttf \
 		cp437-16.bmp \
 		fraktur-LICENSE.txt \
 		fraktur.ttf \
@@ -43,7 +37,14 @@ DATAFILES_SRC=	OFL11.txt OFL-FAQ.txt \
 		league-gothic-condensed.otf \
 		league-gothic-condensed-italic.otf \
 		league-spartan.otf \
-		minimal.xcf \
+		monoalgue.ttf \
+		monoalgue-bold.ttf \
+		monoalgue-italic.ttf \
+		monoalgue-bold-italic.ttf \
+		monoalgue-sans.ttf \
+		monoalgue-sans-bold.ttf \
+		monoalgue-sans-italic.ttf \
+		monoalgue-sans-bold-italic.ttf \
 		source-han-sans.otf \
 		unialgue.ttf \
 		vera.ttf \
