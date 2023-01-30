@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -100,7 +100,7 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 		    useGL ? "SDL/OpenGL" : "SDL");
 		goto fail;
 	}
-	if ((drv = AG_DriverOpen(dc)) == NULL)
+	if ((drv = AG_DriverOpen(dc, NULL)) == NULL)
 		goto fail;
 
 	/* Open a video display. */
@@ -759,52 +759,58 @@ void
 AG_SDL_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 {
 	AG_Driver *drv = obj;
+	AG_Mouse *ms;
 
 	dev->win = NULL;
 
 	switch (ev->type) {
 	case SDL_MOUSEMOTION:
-		AG_MouseMotionUpdate(drv->mouse, ev->motion.x, ev->motion.y);
+		ms = drv->mouse;
+		ms->xRel = ev->motion.x - ms->x;            /* Update state */
+		ms->yRel = ev->motion.y - ms->y;
+		ms->x = ev->motion.x;
+		ms->y = ev->motion.y;
+
 		dev->type = AG_DRIVER_MOUSE_MOTION;
-		dev->data.motion.x = ev->motion.x;
-		dev->data.motion.y = ev->motion.y;
+		dev->motion.x = ev->motion.x;
+		dev->motion.y = ev->motion.y;
 		break;
 	case SDL_MOUSEBUTTONUP:
-		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_RELEASED,
-		    ev->button.button);
+		drv->mouse->btnState &= ~(AG_MOUSE_BUTTON(ev->button.button));
+
 		dev->type = AG_DRIVER_MOUSE_BUTTON_UP;
-		dev->data.button.which = (AG_MouseButton)ev->button.button;
-		dev->data.button.x = ev->button.x;
-		dev->data.button.y = ev->button.y;
+		dev->button.which = (AG_MouseButton)ev->button.button;
+		dev->button.x = ev->button.x;
+		dev->button.y = ev->button.y;
 		break;
 	case SDL_MOUSEBUTTONDOWN:
-		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED,
-		    ev->button.button);
+		drv->mouse->btnState |= AG_MOUSE_BUTTON(ev->button.button);
+
 		dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
-		dev->data.button.which = (AG_MouseButton)ev->button.button;
-		dev->data.button.x = ev->button.x;
-		dev->data.button.y = ev->button.y;
+		dev->button.which = (AG_MouseButton)ev->button.button;
+		dev->button.x = ev->button.x;
+		dev->button.y = ev->button.y;
 		break;
 	case SDL_KEYDOWN:
 		AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED,
 		    (AG_KeySym)ev->key.keysym.sym);
 		dev->type = AG_DRIVER_KEY_DOWN;
-		dev->data.key.ks = (AG_KeySym)ev->key.keysym.sym;
-		dev->data.key.ucs = (AG_Char)ev->key.keysym.unicode;
+		dev->key.ks = (AG_KeySym)ev->key.keysym.sym;
+		dev->key.ucs = (AG_Char)ev->key.keysym.unicode;
 		break;
 	case SDL_KEYUP:
 		AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED,
 		    (AG_KeySym)ev->key.keysym.sym);
 		dev->type = AG_DRIVER_KEY_UP;
-		dev->data.key.ks = (AG_KeySym)ev->key.keysym.sym;
-		dev->data.key.ucs = (AG_Char)ev->key.keysym.unicode;
+		dev->key.ks = (AG_KeySym)ev->key.keysym.sym;
+		dev->key.ucs = (AG_Char)ev->key.keysym.unicode;
 		break;
 	case SDL_VIDEORESIZE:
 		dev->type = AG_DRIVER_VIDEORESIZE;
-		dev->data.videoresize.x = 0;
-		dev->data.videoresize.y = 0;
-		dev->data.videoresize.w = (int)ev->resize.w;
-		dev->data.videoresize.h = (int)ev->resize.h;
+		dev->videoresize.x = 0;
+		dev->videoresize.y = 0;
+		dev->videoresize.w = (int)ev->resize.w;
+		dev->videoresize.h = (int)ev->resize.h;
 		break;
 	case SDL_VIDEOEXPOSE:
 		dev->type = AG_DRIVER_EXPOSE;
@@ -889,49 +895,47 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 				    drv->mouse->xRel,
 				    drv->mouse->yRel);
 			}
-			AG_ProcessMouseMotion(win,
-			    dev->data.motion.x, dev->data.motion.y,
-			    drv->mouse->xRel, drv->mouse->yRel,
-			    drv->mouse->btnState);
+			AG_ProcessMouseMotion(win, dev->motion.x, dev->motion.y,
+			    drv->mouse->xRel, drv->mouse->yRel);
+
 			if (winTop == NULL &&
-			    AG_WidgetArea(win, dev->data.motion.x, dev->data.motion.y)) {
+			    AG_WidgetArea(win, dev->motion.x, dev->motion.y)) {
 				winTop = win;
-				AG_MouseCursorUpdate(win,
-				    dev->data.motion.x,
-				    dev->data.motion.y);
+				AG_MouseCursorUpdate(win, dev->motion.x,
+				    dev->motion.y);
 			}
 			break;
 		case AG_DRIVER_MOUSE_BUTTON_UP:
 			AG_ProcessMouseButtonUp(win,
-			    dev->data.button.x, dev->data.button.y,
-			    dev->data.button.which);
+			    dev->button.x, dev->button.y,
+			    dev->button.which);
+
 			if (agWindowToFocus != NULL ||
 			    !TAILQ_EMPTY(&agWindowDetachQ)) {
-				goto event_processed;
+				goto processed;
 			}
 			break;
 		case AG_DRIVER_MOUSE_BUTTON_DOWN:
-			if (!AG_WidgetArea(win, dev->data.button.x,
-			    dev->data.button.y)) {
+			if (!AG_WidgetArea(win, dev->button.x, dev->button.y)) {
 				AG_ProcessMouseButtonDown(win,
-				    dev->data.button.x, dev->data.button.y,
-				    dev->data.button.which);
+				    dev->button.x, dev->button.y,
+				    dev->button.which);
 				goto next_window;
 			}
 			if (win->wBorderBot > 0 &&
 			    !(win->flags & AG_WINDOW_NORESIZE)) {
 				dsw->winop = GenericMouseOverCtrl(win,
-				    dev->data.button.x, dev->data.button.y);
+				    dev->button.x,
+				    dev->button.y);
 				if (dsw->winop != AG_WINOP_NONE) {
 					win->dirty = 1;
 					dsw->winSelected = win;
-					goto event_processed;
+					goto processed;
 				}
 			}
 			AG_ProcessMouseButtonDown(win,
-			    dev->data.button.x, dev->data.button.y,
-			    dev->data.button.which);
-			goto event_processed;
+			    dev->button.x, dev->button.y, dev->button.which);
+			goto processed;
 		case AG_DRIVER_KEY_UP:
 			if (dsw->winLastKeydown != NULL &&
 			    dsw->winLastKeydown != win) {
@@ -943,14 +947,14 @@ ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 				break;
 			}
 			if (AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED,
-			    dev->data.key.ks, dev->data.key.ucs) == 1) {
-				goto event_processed;           /* Break out */
+			    dev->key.ks, dev->key.ucs) == 1) {
+				goto processed;                /* Break out */
 			}
 			break;
 		case AG_DRIVER_KEY_DOWN:
 			if (AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
-			    dev->data.key.ks, dev->data.key.ucs) == 1) {
-				goto event_processed;           /* Break out */
+			    dev->key.ks, dev->key.ucs) == 1) {
+				goto processed;                /* Break out */
 			}
 			break;
 		default:
@@ -965,7 +969,7 @@ next_window:
 		AGDRIVER_CLASS(drv)->unsetCursor(drv);
 	}
 	return (0);
-event_processed:
+processed:
 	if (useText) { AG_PopTextState(); }
 	AG_ObjectUnlock(win);
 	return (1);
@@ -992,14 +996,14 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		rv = ProcessInputEvent(drv, dev);
 		if (rv == 0 &&
 		    (dsw->flags & AG_DRIVER_SW_BGPOPUP) &&
-		    (dev->data.button.which == AG_MOUSE_MIDDLE ||
-		     dev->data.button.which == AG_MOUSE_RIGHT)) {
+		    (dev->button.which == AG_MOUSE_MIDDLE ||
+		     dev->button.which == AG_MOUSE_RIGHT)) {
 			AG_WM_BackgroundPopupMenu(dsw);
 			break;
 		}
 		break;
 	case AG_DRIVER_KEY_DOWN:
-		if (AG_ExecGlobalKeys(dev->data.key.ks, drv->kbd->modState) == 0) {
+		if (AG_ExecGlobalKeys(dev->key.ks, drv->kbd->modState) == 0) {
 			rv = ProcessInputEvent(drv, dev);
 		} else {
 			rv = 1;
@@ -1011,8 +1015,7 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 	case AG_DRIVER_EXPOSE:
 		break;
 	case AG_DRIVER_VIDEORESIZE:
-		if (AG_ResizeDisplay(dev->data.videoresize.w,
-		                     dev->data.videoresize.h) == -1) {
+		if (AG_ResizeDisplay(dev->videoresize.w, dev->videoresize.h) == -1) {
 			Verbose("ResizeDisplay: %s\n", AG_GetError());
 		}
 		break;

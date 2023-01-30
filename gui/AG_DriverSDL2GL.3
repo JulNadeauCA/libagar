@@ -1,4 +1,4 @@
-.\" Copyright (c) 2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2022-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -55,52 +55,55 @@ will be auto-selected by default.
 AG_InitGraphics("sdl2gl(width=640:height=480)");
 AG_InitGraphics("sdl2gl(width=60%:height=80%)");
 AG_InitGraphics("sdl2gl(bgColor=0/120/120)");
-AG_InitGraphics("sdl2gl(out=%08d.jpg:outFirst=10)");
+AG_InitGraphics("sdl2gl(out=%08d.jpg:jpegQual=100)");
 AG_InitGraphics("sdl2gl(depth=64:stereo)");
 
 AG_InitVideoSDL(an_existing_SDL_screen, 0);
 .Ed
 .Sh OPTIONS
 .Bl -tag -compact -width "clampOnResize "
+.It ctrl
+Enable game controller (gamepad) support.
+.It haptic
+Enable haptic (force feedback) subsystem.
+.It joy
+Enable joystick input device support.
+.It width
+Width (in pixels, in % of total desktop or "auto").
+.It height
+Height (in pixels, in % of total desktop or "auto").
+.It bgColor
+Solid background color (in 8-bit "R/G/B" format).
+.It !bgPopup
+Disable the right-click background popup menu
+(which includes, notably the list of active windows).
+.It clampOnResize
+Whenever the display is resized, clamp Agar window positions and sizes
+to fit the new display size.
 .It debug
 Capture
 .Dv GL_DEBUG_OUTPUT
 errors.
-.It stereo
-Request a stereoscopic visual.
-.It width
-Display width in pixels (e.g., "320"), percent of total desktop size (e.g., "50%") or "auto".
-.It height
-Display height in pixels (e.g., "240"), percent of total desktop size (e.g., "50%") or "auto".
 .It depth
-Depth in bits per pixel, or "auto".
+Depth (in bits per pixel or "auto").
 .It fpsMax
 Limit refresh rate in frames/second (e.g., "60").
 .It out
-Dump video frames to JPEG or PNG image files.
-The filename path may include a printf-style (with frame number as argument).
-For example,
-.Sq %08d.jpg
-will output frames to 00000001.jpg, 00000002.jpg, etc.
+Export video frames to JPEG or PNG.
+Specify a format string for output file names.
+Example:
+.Sq %04d.jpg
+will output frames to 0001.jpg, 0002.jpg, and so on.
 .It outFirst
 Override first frame number (default = 0).
 .It outLast
-Terminate application after # frames have been rendered.
-.It bgColor
-Solid background color specified as "R/G/B", from "0/0/0" (black) to
-"255/255/255" (white).
-.It !bgPopup
-Disable the right-click background popup menu
-(which includes, notably the list of active windows).
-.It jpegQual
-If exporting to JPEG, set quality factor (100% = best).
+Terminate after # frames have been rendered.
 .It jpegDCT
-If exporting to JPEG, specify DCT method ("islow" for slow but accurate
-integer method, "ifast" for fast but less accurate integer method, or
-"float" for floating point method).
-.It clampOnResize
-Whenever the display is resized, clamp Agar window positions and sizes
-to fit the new display size.
+(JPEG Export) DCT method ("islow", "ifast" or "float").
+.It jpegQual
+(JPEG Export) Quality factor (100% = best).
+.It stereo
+Request a stereoscopic visual.
 .El
 .Sh SEE ALSO
 .Xr AG_DriverSDL2FB 3 ,

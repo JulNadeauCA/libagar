@@ -31,10 +31,10 @@ struct ag_window;
 
 typedef struct ag_mouse {
 	struct ag_input_device _inherit;
-	Uint nButtons;		/* Button count (0 = unknown) */
-	Uint btnState;		/* Last button state (AG_MouseButton) */
-	int x, y;		/* Last cursor position */
-	int xRel, yRel;		/* Last relative motion */
+	Uint nButtons;                    /* Button count (0 = unknown) */
+	AG_MouseButton btnState;          /* Last button state */
+	int x, y;                         /* Last cursor position */
+	int xRel, yRel;                   /* Last relative motion */
 } AG_Mouse;
 
 __BEGIN_DECLS
@@ -42,15 +42,10 @@ extern AG_ObjectClass agMouseClass;
 
 AG_Mouse *_Nullable AG_MouseNew(void *_Nonnull, const char *_Nonnull);
 
-Uint8 AG_MouseGetState(AG_Mouse *_Nonnull, int *_Nullable, int *_Nullable);
-
-void AG_MouseMotionUpdate(AG_Mouse *_Nonnull, int,int);
 void AG_MouseCursorUpdate(struct ag_window *_Nonnull, int,int);
-void AG_MouseButtonUpdate(AG_Mouse *_Nonnull, AG_MouseButtonAction, int);
-void AG_ProcessMouseMotion(struct ag_window *_Nonnull, int,int, int,int, Uint);
+void AG_ProcessMouseMotion(struct ag_window *_Nonnull, int,int, int,int);
 void AG_ProcessMouseButtonUp(struct ag_window *_Nonnull, int,int, AG_MouseButton);
-void AG_ProcessMouseButtonDown(struct ag_window *_Nonnull, int,int,
-                               AG_MouseButton);
+void AG_ProcessMouseButtonDown(struct ag_window *_Nonnull, int,int, AG_MouseButton);
 __END_DECLS
 
 #include <agar/gui/close.h>

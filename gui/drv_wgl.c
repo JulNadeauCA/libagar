@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -621,6 +621,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	AG_DriverWGL *wgl;
 	AG_Window *win;
 	AG_DriverEvent *dev = NULL;
+	AG_Mouse *ms;
 	int x, y;
 	LRESULT rv = 1;
 	
@@ -641,44 +642,51 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		x = (int)LOWORD(lParam);
 		y = (int)HIWORD(lParam);
-		dev->data.motion.x = x;
-		dev->data.motion.y = y;
-		AG_MouseMotionUpdate(drv->mouse, 
-		    dev->data.motion.x, dev->data.motion.y);
+
+		ms = drv->mouse;
+		ms->xRel = x - ms->x;                       /* Update state */
+		ms->yRel = y - ms->y;
+		ms->x = x;
+		ms->y = y;
+
+		dev->motion.x = x;
+		dev->motion.y = y;
 		break;
 	case WM_LBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_RBUTTONDOWN:
-		if ((dev = NewEvent(win, AG_DRIVER_MOUSE_BUTTON_DOWN)) == NULL) {
+		if ((dev = NewEvent(win, AG_DRIVER_MOUSE_BUTTON_DOWN)) == NULL)
 			goto fallback;
-		}
-		dev->data.button.which =
+
+		drv->mouse->btnState |= AG_MOUSE_BUTTON(dev->button.which);
+
+		dev->button.which =
 		    (wParam & MK_LBUTTON) ? AG_MOUSE_LEFT :
 		    (wParam & MK_MBUTTON) ? AG_MOUSE_MIDDLE :
 		    (wParam & MK_RBUTTON) ? AG_MOUSE_RIGHT : 0;
+
 		x = (int)LOWORD(lParam);
 		y = (int)HIWORD(lParam);
-		dev->data.button.x = AGDRIVER_BOUNDED_WIDTH(win, x);
-		dev->data.button.y = AGDRIVER_BOUNDED_HEIGHT(win, y);
-		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED, 
-		    dev->data.button.which);
+		dev->button.x = AGDRIVER_BOUNDED_WIDTH(win, x);
+		dev->button.y = AGDRIVER_BOUNDED_HEIGHT(win, y);
 		break;
 	case WM_LBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_RBUTTONUP:
-		if ((dev = NewEvent(win, AG_DRIVER_MOUSE_BUTTON_UP)) == NULL) {
+		if ((dev = NewEvent(win, AG_DRIVER_MOUSE_BUTTON_UP)) == NULL)
 			goto fallback;
-		}
-		dev->data.button.which =
+
+		drv->mouse->btnState &= ~(AG_MOUSE_BUTTON(dev->button.which));
+
+		dev->button.which =
 		    (uMsg == WM_LBUTTONUP) ? AG_MOUSE_LEFT :
 		    (uMsg == WM_MBUTTONUP) ? AG_MOUSE_MIDDLE :
 		    (uMsg == WM_RBUTTONUP) ? AG_MOUSE_RIGHT : 0;
+
 		x = (int)LOWORD(lParam);
 		y = (int)HIWORD(lParam);
-		dev->data.button.x = AGDRIVER_BOUNDED_WIDTH(win, x);
-		dev->data.button.y = AGDRIVER_BOUNDED_HEIGHT(win, y);
-		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_RELEASED, 
-		    dev->data.button.which);
+		dev->button.x = AGDRIVER_BOUNDED_WIDTH(win, x);
+		dev->button.y = AGDRIVER_BOUNDED_HEIGHT(win, y);
 		break;
 	case 0x020a:				/* WM_MOUSEWHEEL (missing define) */
 		{
@@ -690,15 +698,14 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if ((dev = NewEvent(win, AG_DRIVER_MOUSE_BUTTON_DOWN)) == NULL) {
 				goto fallback;
 			}
-			dev->data.button.which =
+			dev->button.which =
 			    (move > 0) ? AG_MOUSE_WHEELUP : AG_MOUSE_WHEELDOWN;
 			x = (int)LOWORD(lParam) - WIDGET(win)->x;
 			y = (int)HIWORD(lParam) - WIDGET(win)->y;
-			dev->data.button.x = AGDRIVER_BOUNDED_WIDTH(win, x);
-			dev->data.button.y = AGDRIVER_BOUNDED_HEIGHT(win, y);
+			dev->button.x = AGDRIVER_BOUNDED_WIDTH(win, x);
+			dev->button.y = AGDRIVER_BOUNDED_HEIGHT(win, y);
 			
-			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED,
-			    dev->data.button.which);
+			drv->mouse->btnState |= AG_MOUSE_BUTTON(dev->button.which);
 		}
 		break;
 	case WM_KEYUP:
@@ -714,7 +721,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			    AG_DRIVER_KEY_DOWN : AG_DRIVER_KEY_UP)) == NULL) {
 				goto fallback;
 			}
-			dev->data.key.ucs = 0;
+			dev->key.ucs = 0;
 			ka = (uMsg == WM_KEYDOWN) ? AG_KEY_PRESSED :
 			                            AG_KEY_RELEASED;
 
@@ -727,23 +734,22 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (IN_KEYPAD(scan)) {
 					AG_KeyboardUpdate(drv->kbd, ka,
 					    AG_KEY_KP_ENTER);
-					dev->data.key.ks = AG_KEY_KP_ENTER;
+					dev->key.ks = AG_KEY_KP_ENTER;
 					goto out;
 				}
 				break;
 			}
 
-			dev->data.key.ks =
-			    agWindowsKeymap[ScanToVirtualKey(scan,vKey)];
+			dev->key.ks = agWindowsKeymap[ScanToVirtualKey(scan,vKey)];
 
 			GetKeyboardState(keyState);
 			if ((keyState[VK_NUMLOCK] & 1) &&
 			    vKey >= VK_NUMPAD0 && vKey <= VK_NUMPAD9) {
-				dev->data.key.ucs = vKey - '0'+VK_NUMPAD0;
+				dev->key.ucs = vKey - '0'+VK_NUMPAD0;
 			} else if (ToUnicode((UINT)vKey, scan, keyState, wc,2, 0) > 0) {
-				dev->data.key.ucs = wc[0];
+				dev->key.ucs = wc[0];
 			}
-			AG_KeyboardUpdate(drv->kbd, ka, dev->data.key.ks);
+			AG_KeyboardUpdate(drv->kbd, ka, dev->key.ks);
 		}
 		break;
 	case WM_SETFOCUS:
@@ -769,8 +775,8 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					break;
 			}
 			if (dev) {
-				dev->data.videoresize.w = LOWORD(lParam);
-				dev->data.videoresize.h = HIWORD(lParam);
+				dev->videoresize.w = LOWORD(lParam);
+				dev->videoresize.h = HIWORD(lParam);
 				dev = NULL;
 				rv = 0;
 				goto out;
@@ -778,10 +784,10 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if ((dev = NewEvent(win, AG_DRIVER_VIDEORESIZE)) == NULL) {
 				goto fallback;
 			}
-			dev->data.videoresize.x = -1;
-			dev->data.videoresize.y = -1;
-			dev->data.videoresize.w = LOWORD(lParam);
-			dev->data.videoresize.h = HIWORD(lParam);
+			dev->videoresize.x = -1;
+			dev->videoresize.y = -1;
+			dev->videoresize.w = LOWORD(lParam);
+			dev->videoresize.h = HIWORD(lParam);
 		} else {
 			goto fallback;
 		}
@@ -812,7 +818,8 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		rv = 0;
 		goto out;
 	case WM_SETCURSOR:
-		AG_MouseGetState(drv->mouse, &x, &y);
+		x = drv->mouse->x;
+		y = drv->mouse->y;
 		AG_MouseCursorUpdate(win, x, y);
 		break;
 	case WM_NCHITTEST:
@@ -887,28 +894,24 @@ WGL_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	}
 	switch (dev->type) {
 	case AG_DRIVER_MOUSE_MOTION:
-		AG_ProcessMouseMotion(win,
-		    dev->data.motion.x, dev->data.motion.y,
-		    drv->mouse->xRel, drv->mouse->yRel,
-		    drv->mouse->btnState);
+		AG_ProcessMouseMotion(win, dev->motion.x, dev->motion.y,
+		    drv->mouse->xRel, drv->mouse->yRel);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_DOWN:
-		AG_ProcessMouseButtonDown(win,
-		    dev->data.button.x, dev->data.button.y,
-		    dev->data.button.which);
+		AG_ProcessMouseButtonDown(win, dev->button.x, dev->button.y,
+		    dev->button.which);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_UP:
-		AG_ProcessMouseButtonUp(win,
-		    dev->data.button.x, dev->data.button.y,
-		    dev->data.button.which);
+		AG_ProcessMouseButtonUp(win, dev->button.x, dev->button.y,
+		    dev->button.which);
 		break;
 	case AG_DRIVER_KEY_UP:
-		AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED,
-		    dev->data.key.ks, dev->data.key.ucs);
+		AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED, dev->key.ks,
+		    dev->key.ucs);
 		break;
 	case AG_DRIVER_KEY_DOWN:
-		AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
-		    dev->data.key.ks, dev->data.key.ucs);
+		AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED, dev->key.ks,
+		    dev->key.ucs);
 		break;
 	case AG_DRIVER_MOUSE_ENTER:
 		AG_PostEvent(win, "window-enter", NULL);
@@ -929,10 +932,10 @@ WGL_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		}
 		break;
 	case AG_DRIVER_VIDEORESIZE:
-		a.x = dev->data.videoresize.x;
-		a.y = dev->data.videoresize.y;
-		a.w = dev->data.videoresize.w;
-		a.h = dev->data.videoresize.h;
+		a.x = dev->videoresize.x;
+		a.y = dev->videoresize.y;
+		a.w = dev->videoresize.w;
+		a.h = dev->videoresize.h;
 		if (a.w != WIDTH(win) || a.h != HEIGHT(win)) {
 			WGL_PostResizeCallback(win, &a);
 		} else {

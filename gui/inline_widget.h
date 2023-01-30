@@ -124,8 +124,6 @@ ag_widget_area(const void *obj, int x, int y)
 {
 	const AG_Widget *wid = AGWIDGET(obj);
 
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
-
 	return (x >= wid->rView.x1 && y >= wid->rView.y1 &&
 	        x < wid->rView.x2 && y < wid->rView.y2);
 }
@@ -142,8 +140,6 @@ int
 ag_widget_relative_area(const void *obj, int x, int y)
 #endif
 {
-	AG_OBJECT_ISA(obj, "AG_Widget:*");
-
 	return (x >= 0 &&
 	        y >= 0 &&
 	        x < WIDTH(obj) &&

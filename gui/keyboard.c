@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -453,47 +453,59 @@ AG_KeyboardUpdate(AG_Keyboard *kbd, AG_KeyboardAction action, AG_KeySym ks)
 
 /* Post a key-up event to widgets with the UNFOCUSED_KEYUP flag set. */
 static void
-PostUnfocusedKeyUp(AG_Widget *_Nonnull wid, AG_KeySym ks, Uint kmod,
+PostUnfocusedKeyUp(AG_Widget *_Nonnull wid, AG_KeySym ks, AG_KeyMod kmod,
     AG_Char ch)
 {
 	AG_Widget *cwid;
 
 	AG_ObjectLock(wid);
+
 	if (wid->flags & AG_WIDGET_UNFOCUSED_KEYUP) {
+		if (WIDGET_OPS(wid)->key_up != NULL) {
+			WIDGET_OPS(wid)->key_up(wid, ks, kmod, ch);
+		} else {
 #ifdef AG_UNICODE
-		AG_PostEvent(wid,  "key-up", "%i(key),%i(mod),%lu(ch)",
-		    (int)ks, (int)kmod, (Ulong)ch);
+			AG_PostEvent(wid,  "key-up", "%i(key),%i(mod),%lu(ch)",
+			    (int)ks, (int)kmod, (Ulong)ch);
 #else
-		AG_PostEvent(wid,  "key-up", "%i(key),%i(mod),%u(ch)",
-		    (int)ks, (int)kmod, (Uint)ch);
+			AG_PostEvent(wid,  "key-up", "%i(key),%i(mod),%u(ch)",
+			    (int)ks, (int)kmod, (Uint)ch);
 #endif
+		}
 	}
-	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
+
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		PostUnfocusedKeyUp(cwid, ks, kmod, ch);
-	}
+
 	AG_ObjectUnlock(wid);
 }
 
 /* Post a key-down event to widgets with the UNFOCUSED_KEYDOWN flag set. */
 static void
-PostUnfocusedKeyDown(AG_Widget *_Nonnull wid, AG_KeySym ks, Uint kmod,
+PostUnfocusedKeyDown(AG_Widget *_Nonnull wid, AG_KeySym ks, AG_KeyMod kmod,
     AG_Char ch)
 {
 	AG_Widget *cwid;
 
 	AG_ObjectLock(wid);
+
 	if (wid->flags & AG_WIDGET_UNFOCUSED_KEYDOWN) {
+		if (WIDGET_OPS(wid)->key_down != NULL) {
+			WIDGET_OPS(wid)->key_down(wid, ks, kmod, ch);
+		} else {
 #ifdef AG_UNICODE
-		AG_PostEvent(wid,  "key-down", "%i(key),%i(mod),%lu(ch)",
-		    (int)ks, (int)kmod, (Ulong)ch);
+			AG_PostEvent(wid,  "key-down", "%i(key),%i(mod),%lu(ch)",
+			    (int)ks, (int)kmod, (Ulong)ch);
 #else
-		AG_PostEvent(wid,  "key-down", "%i(key),%i(mod),%u(ch)",
-		    (int)ks, (int)kmod, (Uint)ch);
+			AG_PostEvent(wid,  "key-down", "%i(key),%i(mod),%u(ch)",
+			    (int)ks, (int)kmod, (Uint)ch);
 #endif
+		}
 	}
-	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
+
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		PostUnfocusedKeyDown(cwid, ks, kmod, ch);
-	}
+
 	AG_ObjectUnlock(wid);
 }
 
@@ -504,6 +516,8 @@ PostUnfocusedKeyDown(AG_Widget *_Nonnull wid, AG_KeySym ks, Uint kmod,
  *
  * Unicode characters without related keysym (or vice-versa) are allowed.
  * The ks argument can be AG_KEY_NONE, or the ch argument can be 0.
+ * 
+ * The agDrivers VFS must be locked.
  */
 int
 AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
@@ -511,6 +525,7 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 {
 	AG_Driver *drv = AGINPUTDEV(kbd)->drv;
 	AG_Widget *wFoc;
+	const AG_KeyMod modState = kbd->modState;
 	int tabCycle;
 
 #ifdef DEBUG_KEYBOARD
@@ -520,40 +535,64 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 #endif
 	switch (action) {
 	case AG_KEY_RELEASED:
-		PostUnfocusedKeyUp(WIDGET(win), ks, kbd->modState, ch);
+		PostUnfocusedKeyUp(WIDGET(win), ks, modState, ch);
 		break;
 	case AG_KEY_PRESSED:
-		if (AG_ExecGlobalKeys(ks, kbd->modState)) {
+		if (AG_ExecGlobalKeys(ks, modState)) {
 			return (1);              /* Break out of Window loop */
 		}
-		PostUnfocusedKeyDown(WIDGET(win), ks, kbd->modState, ch);
+		PostUnfocusedKeyDown(WIDGET(win), ks, modState, ch);
 		break;
 	}
-	/* Deliver the event to any focused widget. */
+
 	tabCycle = 1;
-	if (AG_WindowIsFocused(win) &&
+
+	if (AG_WindowIsFocused(win) &&                    /* Focused widget? */
 	   (wFoc = AG_WidgetFindFocused(win)) != NULL) {
 		AG_ObjectLock(wFoc);
-		if (ks != AG_KEY_TAB || wFoc->flags & AG_WIDGET_CATCH_TAB) {
+
+		if (ks != AG_KEY_TAB || (wFoc->flags & AG_WIDGET_CATCH_TAB)) {
 			if (wFoc->flags & AG_WIDGET_CATCH_TAB)
 				tabCycle = 0;
+
+			if (action == AG_KEY_RELEASED) {    /* Key Released */
+				if (WIDGET_OPS(wFoc)->key_up != NULL) {
+					WIDGET_OPS(wFoc)->key_up(wFoc, ks,
+					    modState, ch);
+				} else {
 #ifdef AG_UNICODE
-			AG_PostEvent(wFoc, (action == AG_KEY_RELEASED) ?
-			    "key-up" : "key-down",
-			    "%i(key),%i(mod),%lu(ch)",
-			    (int)ks, (int)kbd->modState, (Ulong)ch);
+					AG_PostEvent(wFoc, "key-up",
+					    "%i(key),%i(mod),%lu(ch)",
+					    (int)ks, (int)modState, (Ulong)ch);
 #else
-			AG_PostEvent(wFoc, (action == AG_KEY_RELEASED) ?
-			    "key-up" : "key-down",
-			    "%i(key),%i(mod),%u(ch)",
-			    (int)ks, (int)kbd->modState, (Uint)ch);
+					AG_PostEvent(wFoc, "key-up",
+					    "%i(key),%i(mod),%u(ch)",
+					    (int)ks, (int)modState, (Uint)ch);
 #endif
+				}
+			} else {                             /* Key Pressed */
+				if (WIDGET_OPS(wFoc)->key_down != NULL) {
+					WIDGET_OPS(wFoc)->key_down(wFoc,
+					    ks, modState, ch);
+				} else {
+#ifdef AG_UNICODE
+					AG_PostEvent(wFoc, "key-down",
+					    "%i(key),%i(mod),%lu(ch)",
+					    (int)ks, (int)modState, (Ulong)ch);
+#else
+					AG_PostEvent(wFoc, "key-down",
+					    "%i(key),%i(mod),%u(ch)",
+					    (int)ks, (int)modState, (Uint)ch);
+#endif
+				}
+			}
 			if (AGDRIVER_SINGLE(drv)) {
 				/*
-				 * Ensure the keyup event is posted to
-				 * this window when the key is released,
-				 * in case a keydown event handler
-				 * changes the window focus.
+				 * Once this key is released, ensure the key-up
+				 * event will be delivered to this window (and
+				 * not the newly focused one). Prevents issues
+				 * where key-down event handlers cause changes
+				 * in window focus.
 				 */
 				AGDRIVER_SW(drv)->winLastKeydown = win;
 			}
@@ -561,13 +600,11 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 		AG_ObjectUnlock(wFoc);
 	}
 
-	if (!AGDRIVER_SINGLE(drv)) {
-		/* Cycle focus */
-		if (tabCycle && (ks == AG_KEY_TAB && action == AG_KEY_RELEASED)) {
-			AG_WindowCycleFocus(win,
-			    (kbd->modState & AG_KEYMOD_SHIFT) ? 1 : 0);
-			return (1);                     /* Break out of Window loop */
-		}
+	if (AGDRIVER_MULTIPLE(drv) && tabCycle &&             /* Focus move */
+	    (ks == AG_KEY_TAB && action == AG_KEY_RELEASED)) {
+		AG_WindowCycleFocus(win, (modState & AG_KEYMOD_SHIFT) ? 1 : 0);
+		/* Break out of Window loop */
+		return (1);
 	}
 	return (0);
 }
@@ -766,11 +803,13 @@ Edit(void *obj)
 
 	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
+	lbl = AG_LabelNewS(box, 0, AGINPUTDEV(kbd)->desc);
+	AG_SetStyle(lbl, "font-family", "cm-sans");
+	AG_SetStyle(lbl, "font-size", "130%");
+
 	lbl = AG_LabelNewPolledMT(box, AG_LABEL_HFILL, &OBJECT(kbd)->lock,
-	    _("Description: " AGSI_BOLD "%s" AGSI_RST "\n"
-	      "Key Count: %u\n"
+	    _("Key Count: %u\n"
 	      "Modifier State: 0x%x"),
-	    AGINPUTDEV(kbd)->desc,
 	    &kbd->keyCount, &kbd->modState);
 	AG_RedrawOnTick(lbl, 120);
 

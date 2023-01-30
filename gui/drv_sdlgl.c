@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,7 +61,6 @@ typedef struct ag_sdlgl_driver {
 
 static int nDrivers = 0;				/* Opened driver instances */
 static int initedSDL = 0;				/* Used SDL_Init() */
-static int initedSDLVideo = 0;				/* Used SDL_INIT_VIDEO */
 static AG_EventSink *_Nullable sglEventSpinner = NULL;	/* Standard event sink */
 static AG_EventSink *_Nullable sglEventEpilogue = NULL;	/* Standard event epilogue */
 
@@ -90,18 +89,15 @@ SDLGL_Open(void *_Nonnull obj, const char *_Nullable spec)
 
 	/* Initialize SDL's video subsystem. */
 	if (!initedSDL) {
-		if (SDL_Init(0) == -1) {
+		Uint32 sdlFlags = SDL_INIT_VIDEO;
+
+		if (AG_Defined(drv, "joy")) { sdlFlags |= SDL_INIT_JOYSTICK; }
+
+		if (SDL_Init(sdlFlags) == -1) {
 			AG_SetError("SDL_Init() failed: %s", SDL_GetError());
 			return (-1);
 		}
 		initedSDL = 1;
-	}
-	if (!SDL_WasInit(SDL_INIT_VIDEO)) {
-		if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-			AG_SetError("SDL_INIT_VIDEO failed: %s", SDL_GetError());
-			return (-1);
-		}
-		initedSDLVideo = 1;
 	}
 #if 0
 	/* Use SDL's time interface. */
@@ -110,8 +106,8 @@ SDLGL_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_InitEventSubsystem(AG_SOFT_TIMERS);
 #endif
 	/* Initialize this driver instance. */
-	if ((drv->mouse = AG_MouseNew(sgl, "SDL mouse")) == NULL ||
-	    (drv->kbd = AG_KeyboardNew(sgl, "SDL keyboard")) == NULL) {
+	if ((drv->mouse = AG_MouseNew(sgl, "SDL Mouse")) == NULL ||
+	    (drv->kbd = AG_KeyboardNew(sgl, "SDL Keyboard")) == NULL) {
 		goto fail;
 	}
 	sgl->outBuf = NULL;
@@ -167,10 +163,6 @@ SDLGL_Close(void *_Nonnull obj)
 	if (dsw->flags & AG_DRIVER_SW_FULLSCREEN) {
 		if (SDL_WM_ToggleFullScreen(sgl->s))
 			dsw->flags &= ~(AG_DRIVER_SW_FULLSCREEN);
-	}
-	if (initedSDLVideo) {
-		SDL_QuitSubSystem(SDL_INIT_VIDEO);
-		initedSDLVideo = 0;
 	}
 	AG_ObjectDelete(drv->mouse); drv->mouse = NULL;
 	AG_ObjectDelete(drv->kbd); drv->kbd = NULL;
@@ -489,10 +481,7 @@ fail:
 static void
 SDLGL_CloseVideo(void *_Nonnull obj)
 {
-	if (initedSDLVideo) {
-		SDL_QuitSubSystem(SDL_INIT_VIDEO);
-		initedSDLVideo = 0;
-	}
+	/* Nothing to do */
 }
 
 static int

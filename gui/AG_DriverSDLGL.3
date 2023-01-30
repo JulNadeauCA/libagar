@@ -52,7 +52,7 @@ driver automatically.
 .Sh EXAMPLES
 .Bd -literal -offset indent
 .\" SYNTAX(c)
-AG_InitGraphics("sdlgl(width=640:height=480)");
+AG_InitGraphics("sdlgl(width=640:height=480:joy)");
 AG_InitGraphics("sdlgl(width=60%:height=80%)");
 AG_InitGraphics("sdlgl(bgColor=0/120/120)");
 AG_InitGraphics("sdlgl(out=%08d.jpg:outFirst=10)");
@@ -61,19 +61,21 @@ AG_InitGraphics("sdlgl(depth=64:stereo)");
 AG_InitVideoSDL(an_existing_SDL_screen, 0);
 .Ed
 .Sh OPTIONS
-.Bl -tag -compact -width "clampOnResize "
+.Bl -tag -compact -width "clampOnResize"
 .It debug
 Capture
 .Dv GL_DEBUG_OUTPUT
 errors.
+.It joy
+Enable joystick input device support.
 .It stereo
 Request a stereoscopic visual.
 .It width
-Display width in pixels (e.g., "320"), percent of total desktop size (e.g., "50%") or "auto".
+Width (in pixels, in % of total desktop or "auto").
 .It height
-Display height in pixels (e.g., "240"), percent of total desktop size (e.g., "50%") or "auto".
+Height (in pixels, in % of total desktop or "auto").
 .It depth
-Depth in bits per pixel, or "auto".
+Depth (in bits per pixel or "auto").
 .It fpsMax
 Limit refresh rate in frames/second (e.g., "60").
 .It out
@@ -95,9 +97,7 @@ Disable the right-click background popup menu
 .It jpegQual
 If exporting to JPEG, set quality factor (100% = best).
 .It jpegDCT
-If exporting to JPEG, specify DCT method ("islow" for slow but accurate
-integer method, "ifast" for fast but less accurate integer method, or
-"float" for floating point method).
+If exporting to JPEG, specify DCT method ("islow", "ifast" or "float").
 .It clampOnResize
 Whenever the display is resized, clamp Agar window positions and sizes
 to fit the new display size.
@@ -122,4 +122,6 @@ driver first appeared in Agar 1.4.
 The "debug" option appeared in Agar 1.6.
 The
 .Va clampOnResize
-option appeared in Agar 1.7.
+and
+.Va joy
+options appeared in Agar 1.7.

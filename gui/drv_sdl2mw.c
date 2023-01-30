@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2022-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,6 @@
 
 static int nDrivers = 0;                        /* Drivers open */
 static int initedSDL = 0;			/* Inited TIMERS and EVENTS */
-static int initedSDLVideo = 0;			/* Inited VIDEO */
 
 AG_EventSink *_Nullable sdl2mwEventEpilogue = NULL; /* Event sink epilogue */
 AG_EventSink *_Nullable sdl2mwEventSpinner = NULL;  /* For agTimeOps_renderer */
@@ -136,20 +135,11 @@ SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_DriverSDL2MW *smw = obj;
 
 	if (!initedSDL) {
-		if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_EVENTS) == -1) {
+		if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) == -1) {
 			AG_SetError("SDL_Init() failed: %s", SDL_GetError());
 			return (-1);
 		}
 		initedSDL = 1;
-	}
-	if (!initedSDLVideo) {
-		if (!SDL_WasInit(SDL_INIT_VIDEO)) {
-			if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-				AG_SetError("SDL_INIT_VIDEO failed: %s", SDL_GetError());
-				return (-1);
-			}
-			initedSDLVideo = 1;
-		}
 	}
 #if 0
 	/* Use SDL's time interface. */
@@ -157,8 +147,8 @@ SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_DestroyEventSubsystem();
 	AG_InitEventSubsystem(AG_SOFT_TIMERS);
 #endif
-	if ((drv->mouse = AG_MouseNew(drv, "SDL2 mouse")) == NULL ||
-	    (drv->kbd = AG_KeyboardNew(drv, "SDL2 keyboard")) == NULL)
+	if ((drv->mouse = AG_MouseNew(drv, "SDL2 Mouse")) == NULL ||
+	    (drv->kbd = AG_KeyboardNew(drv, "SDL2 Keyboard")) == NULL)
 		goto fail;
 
 	/* Driver manages rendering of window background. */
@@ -169,6 +159,25 @@ SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 		    AG_GetInt(drv, "noAutoCapture"))
 			SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
 
+		/* Enable the joystick subsystem if requested. */
+		if (AG_Defined(drv, "ctrl")) {
+			Uint32 sdlFlags = SDL_INIT_GAMECONTROLLER;
+
+			Debug(drv, "Enabling controller subsystem\n");
+
+			if (AG_Defined(drv, "haptic")) { sdlFlags |= SDL_INIT_HAPTIC; }
+			if (SDL_InitSubSystem(sdlFlags) < 0)
+				AG_Verbose("SDL_INIT_GAMECONTROLLER: %s\n", SDL_GetError());
+		} else if (AG_Defined(drv, "joy")) {
+			Uint32 sdlFlags = SDL_INIT_JOYSTICK;
+		
+			Debug(drv, "Enabling joystick subsystem\n");
+
+			if (AG_Defined(drv, "haptic")) { sdlFlags |= SDL_INIT_HAPTIC; }
+			if (SDL_InitSubSystem(sdlFlags) < 0)
+				AG_Verbose("SDL_INIT_JOYSTICK: %s\n", SDL_GetError());
+		}
+
 		/*
 		 * Parse global attributes for capturing to image files
 		 * ("out", "outFirst", "outLast", "jpegQual" and "jpegDCT").
@@ -178,6 +187,7 @@ SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 			char *ext;
 
 			AG_GetString(drv, "out", buf, sizeof(buf));
+			Debug(drv, "Enabled capture (%s)\n", buf);
 			if ((ext = strrchr(buf, '.')) != NULL &&
 			    ext[1] != '\0') {
 				if (Strcasecmp(&ext[1], "jpeg") == 0 ||
@@ -226,7 +236,7 @@ SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 		 * use alternate routines.
 		 */
 		if ((sdl2mwEventSpinner = AG_AddEventSpinner(
-		    SDL2MW_EventSink, "%p", drv)) == NULL) {
+		    SDL2MW_EventSink,"%p",drv)) == NULL) {
 			goto fail;
 		}
 		if ((sdl2mwEventEpilogue = AG_AddEventEpilogue(
@@ -268,6 +278,17 @@ SDL2MW_Close(void *_Nonnull obj)
 		if (sdl2mwEventSpinner != NULL) {
 			AG_DelEventSink(sdl2mwEventSpinner);
 			sdl2mwEventSpinner = NULL;
+		}
+		if (AG_Defined(drv, "ctrl")) {
+			Uint32 sdlFlags = SDL_INIT_GAMECONTROLLER;
+
+			if (AG_Defined(drv, "haptic")) { sdlFlags |= SDL_INIT_HAPTIC; }
+			SDL_QuitSubSystem(sdlFlags);
+		} else if (AG_Defined(drv, "joy")) {
+			Uint32 sdlFlags = SDL_INIT_JOYSTICK;
+
+			if (AG_Defined(drv, "haptic")) { sdlFlags |= SDL_INIT_HAPTIC; }
+			SDL_QuitSubSystem(sdlFlags);
 		}
 	}
 }
@@ -366,8 +387,8 @@ SDL2MW_ProcessEvent(void *obj, AG_DriverEvent *dev)
 			win->dirty = 1;
 			break;
 		case AG_DRIVER_MOVED:
-			a.x = dev->data.moved.x;
-			a.y = dev->data.moved.y;
+			a.x = dev->moved.x;
+			a.y = dev->moved.y;
 			if (a.x != WIDGET(win)->x || a.y != WIDGET(win)->y) {
 				a.w = WIDGET(win)->w;
 				a.h = WIDGET(win)->h;
@@ -376,10 +397,10 @@ SDL2MW_ProcessEvent(void *obj, AG_DriverEvent *dev)
 			rv = 1;
 			break;
 		case AG_DRIVER_VIDEORESIZE:
-			a.x = dev->data.videoresize.x;
-			a.y = dev->data.videoresize.y;
-			a.w = dev->data.videoresize.w;
-			a.h = dev->data.videoresize.h;
+			a.x = dev->videoresize.x;
+			a.y = dev->videoresize.y;
+			a.w = dev->videoresize.w;
+			a.h = dev->videoresize.h;
 			if (a.w != WIDTH(win) || a.h != HEIGHT(win)) {
 				SDL2MW_PostResizeCallback(win, &a);
 			}
@@ -463,7 +484,10 @@ SDL2MW_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r,
 	if (win->flags & AG_WINDOW_KEEPABOVE) { swFlags |= SDL_WINDOW_ALWAYS_ON_TOP; }
 
 	switch (win->wmType) {
+	case AG_WINDOW_WM_MENU:
 	case AG_WINDOW_WM_POPUP_MENU:
+	case AG_WINDOW_WM_DROPDOWN_MENU:
+	case AG_WINDOW_WM_COMBO:
 		swFlags |= SDL_WINDOW_POPUP_MENU;
 		swFlags |= SDL_WINDOW_SKIP_TASKBAR;
 		break;
@@ -473,11 +497,8 @@ SDL2MW_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r,
 		break;
 	case AG_WINDOW_WM_DOCK:
 	case AG_WINDOW_WM_TOOLBAR:
-	case AG_WINDOW_WM_MENU:
-	case AG_WINDOW_WM_DROPDOWN_MENU:
 	case AG_WINDOW_WM_TOOLTIP:
 	case AG_WINDOW_WM_NOTIFICATION:
-	case AG_WINDOW_WM_COMBO:
 	case AG_WINDOW_WM_DND:
 		swFlags |= SDL_WINDOW_SKIP_TASKBAR;
 		break;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,7 @@
 #include <agar/core/core.h>
 #include <agar/core/config.h>
 
+#include <agar/config/have_freetype.h>
 #include <agar/config/have_opengl.h>
 
 #include <agar/gui/gui.h>
@@ -79,6 +80,9 @@
 #include <agar/gui/primitive.h>
 #include <agar/gui/icons.h>
 #include <agar/gui/text.h>
+#include <agar/gui/font.h>
+#include <agar/gui/font_bf.h>
+#include <agar/gui/font_ft.h>
 
 /* Import icon bitmap data */
 #include <agar/gui/icons_data.h>
@@ -114,7 +118,13 @@ void *agStdClasses[] = {
 	&agInputDeviceClass,
 	&agMouseClass,
 	&agKeyboardClass,
+	&agJoystickClass,
+	&agControllerClass,
 	&agFontClass,
+	&agFontBfClass,
+#ifdef HAVE_FREETYPE
+	&agFontFtClass,
+#endif
 	NULL
 };
 void *agStdWidgets[] = {
@@ -419,10 +429,12 @@ AG_QuitGUI(void)
 int
 AG_InitGraphics(const char *spec)
 {
-	char specBuf[128], *s, *sOpts = "", *tok;
+	char specBuf[128], *s, *tok;
 	AG_Driver *drv = NULL;
 	AG_DriverClass *dc = NULL, **pd;
-	
+
+	Debug(NULL, "InitGraphics(spec=%s)\n", spec);
+
 	if (AG_InitGUIGlobals() == -1)
 		return (-1);
 
@@ -435,10 +447,9 @@ AG_InitGraphics(const char *spec)
 		s = &specBuf[0];
 
 		if (Strncasecmp(s, "<OpenGL>", 8) == 0) {    /* Any GL driver */
-			sOpts = &s[8];
 			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 				if ((*pd)->flags & AG_DRIVER_OPENGL &&
-				   (drv = AG_DriverOpen(*pd)) != NULL) {
+				   (drv = AG_DriverOpen(*pd, spec)) != NULL) {
 				   	dc = *pd;
 					break;
 				}
@@ -448,10 +459,9 @@ AG_InitGraphics(const char *spec)
 				goto fail;
 			}
 		} else if (Strncasecmp(s, "<SDL>", 5) == 0) { /* SDL 1 or 2 */
-			sOpts = &s[5];
 			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 				if ((*pd)->flags & AG_DRIVER_SDL &&
-				   (drv = AG_DriverOpen(*pd)) != NULL) {
+				   (drv = AG_DriverOpen(*pd, spec)) != NULL) {
 					dc = *pd;
 					break;
 				}
@@ -461,10 +471,9 @@ AG_InitGraphics(const char *spec)
 				goto fail;
 			}
 		} else if (Strncasecmp(s, "<SDL1>", 5) == 0) { /* SDL 1.2 */
-			sOpts = &s[5];
 			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 				if ((*pd)->flags & AG_DRIVER_SDL1 &&
-				   (drv = AG_DriverOpen(*pd)) != NULL) {
+				   (drv = AG_DriverOpen(*pd, spec)) != NULL) {
 					dc = *pd;
 					break;
 				}
@@ -474,10 +483,9 @@ AG_InitGraphics(const char *spec)
 				goto fail;
 			}
 		} else if (Strncasecmp(s, "<SDL2>", 5) == 0) { /* SDL 2.0 */
-			sOpts = &s[5];
 			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 				if ((*pd)->flags & AG_DRIVER_SDL2 &&
-				   (drv = AG_DriverOpen(*pd)) != NULL) {
+				   (drv = AG_DriverOpen(*pd, spec)) != NULL) {
 					dc = *pd;
 					break;
 				}
@@ -487,10 +495,9 @@ AG_InitGraphics(const char *spec)
 				goto fail;
 			}
 		} else if (Strncasecmp(s, "<FB>", 4) == 0) { /* Any framebuffer driver */
-			sOpts = &s[5];
 			for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 				if ((*pd)->type == AG_FRAMEBUFFER &&
-				   (drv = AG_DriverOpen(*pd)) != NULL) {
+				   (drv = AG_DriverOpen(*pd, spec)) != NULL) {
 					dc = *pd;
 					break;
 				}
@@ -509,8 +516,7 @@ AG_InitGraphics(const char *spec)
 
 					if (strncmp((*pd)->name, tok, len) == 0 &&
 					    (tok[len] == '\0' || tok[len] == '(') &&
-					    (drv = AG_DriverOpen(*pd)) != NULL) {
-						sOpts = &tok[len];
+					    (drv = AG_DriverOpen(*pd, spec)) != NULL) {
 						dc = *pd;
 						break;
 					}
@@ -529,7 +535,7 @@ AG_InitGraphics(const char *spec)
 		 * Auto-select best available driver.
 		 */
 		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
-			if ((drv = AG_DriverOpen(*pd)) != NULL) {
+			if ((drv = AG_DriverOpen(*pd, NULL)) != NULL) {
 				dc = *pd;
 				break;
 			}
@@ -540,36 +546,6 @@ AG_InitGraphics(const char *spec)
 		}
 	}
 	
-	/* Process driver options */
-	if (sOpts[0] == '(' && sOpts[1] != '\0') {
-		char *key, *val, *ep;
-
-		sOpts++;
-		if ((ep = strrchr(sOpts, ')')) != NULL) {
-			*ep = '\0';
-		} else {
-			Verbose(_("Syntax error in driver options: %s\n"), sOpts);
-		}
-		while ((tok = AG_Strsep(&sOpts, ":")) != NULL) {
-			if ((key = AG_Strsep(&tok, "=")) != NULL) {
-				if (Strcasecmp(key, "stereo") == 0) {
-					agStereo = 1;
-					continue;
-				} else if (Strcasecmp(key, "xsync") == 0) {
-					agXsync = 1;
-					continue;
-				} else if (Strcasecmp(key, "debug") == 0) {
-					agGLdebugOutput = 1;
-					continue;
-				}
-				if ((val = AG_Strsep(&tok, "=")) != NULL) {
-					AG_SetString(drv, key, val);
-				} else {
-					AG_SetString(drv, key, "");
-				}
-			}
-		}
-	}
 
 	switch (dc->wm) {
 	case AG_WM_MULTIPLE:
@@ -680,7 +656,6 @@ AG_About(AG_Event *event)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_Window *win;
-	AG_Label *lbl;
 	AG_Box *box;
 	AG_Textbox *tb;
 	FILE *f;
@@ -692,25 +667,50 @@ AG_About(AG_Event *event)
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
-	AG_BoxSetHorizAlign(box, AG_BOX_CENTER);
-	AG_SetStyle(box, "spacing", "50");
 	{
 		AG_AgarVersion av;
+		AG_Box *vbox;
+
+		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "sq-agar.bmp",
+		    path, sizeof(path)) == 0) {
+			AG_Pixmap *px;
+
+			px = AG_PixmapFromFile(box, 0, path);
+			AG_SetStyle(px, "padding", "5");
+		}
 
 		AG_GetVersion(&av);
 
-		lbl = AG_LabelNew(box, 0,
-		    "Agar %d.%d.%d "
-		    "( " AGSI_CYAN AGSI_LEAGUE_SPARTAN "%s" AGSI_RST " )",
-		    av.major, av.minor, av.patch,
-		    (av.release) ? av.release : "beta");
+		vbox = AG_BoxNewVert(box, AG_BOX_HFILL);
+		{
+			AG_CPUInfo cpu;
+			AG_Label *lbl;
+#if AG_MODEL == AG_LARGE
+			const char *memModel = _("Large");
+#else
+			const char *memModel = _("Medium");
+#endif
 
-		AG_SetStyle(lbl, "font-family", "cm-sans");
-		AG_SetStyle(lbl, "font-size", "180%");
+			AG_GetCPUInfo(&cpu);
 
-		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "sq-agar.bmp",
-		    path, sizeof(path)) == 0)
-			AG_PixmapFromFile(box, 0, path);
+			lbl = AG_LabelNew(vbox, 0,
+			    AGSI_BOLD "Agar %d.%d.%d" AGSI_RST
+			    " (\"" AGSI_CYAN "%s" AGSI_RST "\")\n"
+			    "on " AGSI_YEL AGSI_LEAGUE_SPARTAN "%s" AGSI_RST
+			    " (" AGSI_ITALIC "%s" AGSI_RST ")",
+			    av.major, av.minor, av.patch,
+			    (av.release) ? av.release : "beta",
+			    cpu.arch, memModel);
+			AG_SetStyle(lbl, "font-size", "140%");
+
+			lbl = AG_LabelNewS(vbox, AG_LABEL_HFILL,
+			    AGSI_BR_CYAN "https://www.libAgar.org/\n" AGSI_RST
+			    AGSI_BR_YEL "https://patreon.com/libAgar/");
+			AG_SetStyle(lbl, "font-family", "monoalgue-sans");
+			AG_SetStyle(lbl, "color", "darkblue");
+			AG_SetStyle(lbl, "padding", "3 5 3 0");
+			AG_LabelJustify(lbl, AG_TEXT_RIGHT);
+		}
 	}
 
 	tb = AG_TextboxNewS(win, AG_TEXTBOX_MULTILINE | AG_TEXTBOX_EXPAND |
@@ -747,7 +747,7 @@ AG_About(AG_Event *event)
 
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close"), AGWINCLOSE(win));
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 583, 665);
-	AG_WindowSetMinSize(win, 480, 140);
+	AG_WindowSetMinSize(win, 280, 140);
 	AG_WindowShow(win);
 }
 
@@ -777,7 +777,7 @@ AG_InitVideo(int w, int h, int depth, Uint flags)
 		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 			if ((*pd)->wm == AG_WM_SINGLE &&
 			   ((*pd)->flags & AG_DRIVER_OPENGL) &&
-			    (drv = AG_DriverOpen(*pd)) != NULL) {
+			    (drv = AG_DriverOpen(*pd, NULL)) != NULL) {
 				dc = *pd;
 				break;
 			}
@@ -787,7 +787,7 @@ AG_InitVideo(int w, int h, int depth, Uint flags)
 				for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 					if ((*pd)->wm == AG_WM_SINGLE &&
 					    ((*pd)->flags & AG_DRIVER_SDL) &&
-					    (drv = AG_DriverOpen(*pd)) != NULL) {
+					    (drv = AG_DriverOpen(*pd, NULL)) != NULL) {
 						dc = *pd;
 						break;
 					}
@@ -805,7 +805,7 @@ AG_InitVideo(int w, int h, int depth, Uint flags)
 		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 			if ((*pd)->wm == AG_WM_SINGLE &&
 			   ((*pd)->flags & AG_DRIVER_SDL) &&
-			    (drv = AG_DriverOpen(*pd)) != NULL) {
+			    (drv = AG_DriverOpen(*pd, NULL)) != NULL) {
 				dc = *pd;
 				break;
 			}
@@ -817,7 +817,7 @@ AG_InitVideo(int w, int h, int depth, Uint flags)
 	} else {
 		for (pd = &agDriverList[0]; *pd != NULL; pd++) {
 			if ((*pd)->wm == AG_WM_SINGLE &&
-			    (drv = AG_DriverOpen(*pd)) != NULL) {
+			    (drv = AG_DriverOpen(*pd, NULL)) != NULL) {
 				dc = *pd;
 				break;
 			}

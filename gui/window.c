@@ -227,7 +227,7 @@ AG_WindowNew(Uint flags)
 		}
 		break;
 	case AG_WM_MULTIPLE:
-		if ((drv = AG_DriverOpen(agDriverOps)) == NULL) {
+		if ((drv = AG_DriverOpen(agDriverOps, NULL)) == NULL) {
 			Verbose("%s: Failed (%s)\n", agDriverOps->name, AG_GetError());
 			return (NULL);
 		}
@@ -1220,7 +1220,7 @@ FindFocusableWidgets(AG_WidgetVec *W, AG_Widget *_Nonnull wid)
 
 /*
  * Move the widget focus inside a window.
- * The window and agDrivers VFS must be locked.
+ * The agDrivers VFS must be locked.
  */
 void
 AG_WindowCycleFocus(AG_Window *win, int reverse)
@@ -1235,14 +1235,12 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 	AG_VEC_INIT(&W);
 	AG_VEC_INIT(&WU);
 
-	AG_LockVFS(&agDrivers);
 	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
 		if (AG_OfClass(chld, "AG_Widget:AG_Window:*")) {
 			continue;
 		}
 		FindFocusableWidgets(&W, chld);
 	}
-	AG_UnlockVFS(&agDrivers);
 
 	for (i = 0; i < W.length; i++) {
 		for (j = 0; j < WU.length; j++) {
@@ -3072,7 +3070,7 @@ Init(void *_Nonnull obj)
 	
 	/* Set the inheritable style defaults. */
 	AG_SetString(win,  "font-family", OBJECT(agDefaultFont)->name);
-	AG_SetStringF(win, "font-size",   "%.02fpts", agDefaultFont->spec.size);
+	AG_SetStringF(win, "font-size",   "%.02fpt", agDefaultFont->spec.size);
 	AG_SetString(win,  "font-weight", "normal");
 	AG_SetString(win,  "font-style",  "normal");
 	
@@ -3264,5 +3262,13 @@ AG_WidgetClass agWindowClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	NULL,			/* mouse_button_down */
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };

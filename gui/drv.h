@@ -8,6 +8,8 @@
 
 #include <agar/gui/mouse.h>
 #include <agar/gui/keyboard.h>
+#include <agar/gui/joystick.h>
+#include <agar/gui/controller.h>
 #include <agar/gui/keymap.h>
 #include <agar/gui/surface.h>
 
@@ -31,20 +33,20 @@ struct ag_driver_event;
 
 /* Generic graphics driver class */
 typedef struct ag_driver_class {
-	struct ag_object_class _inherit;	/* [AG_Object] -> [AG_Driver] */
+	struct ag_object_class _inherit;  /* [AG_Object] -> [AG_Driver] */
 
-	const char *_Nonnull name;		/* Short name */
-	enum ag_driver_type type;		/* Driver type */
-	enum ag_driver_wm_type wm;		/* Window manager type */
+	const char *_Nonnull name;        /* Short driver name */
+	enum ag_driver_type type;         /* Driver type */
+	enum ag_driver_wm_type wm;        /* Window manager type */
 #ifdef AG_HAVE_64BIT
-	Uint64 flags;				/* Capabilities */
+	Uint64 flags;                     /* Capabilities */
 #else
 	Uint flags;
 #endif
-#define AG_DRIVER_OPENGL   0x01		/* Supports OpenGL calls */
-#define AG_DRIVER_SDL1     0x02		/* Supports SDL 1.2 calls */
-#define AG_DRIVER_TEXTURES 0x04		/* Support texture ops */
-#define AG_DRIVER_SDL2     0x08		/* Supports SDL 2.0 calls */
+#define AG_DRIVER_OPENGL   0x01           /* Supports OpenGL calls */
+#define AG_DRIVER_SDL1     0x02           /* Supports SDL 1.2 calls */
+#define AG_DRIVER_TEXTURES 0x04           /* Support texture ops */
+#define AG_DRIVER_SDL2     0x08           /* Supports SDL 2.0 calls */
 #define AG_DRIVER_SDL     (AG_DRIVER_SDL1 | AG_DRIVER_SDL2)
 
 	/* Initialization */
@@ -189,25 +191,24 @@ typedef struct ag_driver_class {
 
 /* Generic driver instance. */
 typedef struct ag_driver {
-	struct ag_object _inherit;		/* AG_Object -> AG_Driver */
-	Uint id;				/* Numerical instance ID */
+	struct ag_object _inherit;           /* AG_Object -> AG_Driver */
+	Uint id;                             /* Numerical instance ID */
 	Uint flags;
-#define AG_DRIVER_WINDOW_BG 0x02		/* Managed window background */
+#define AG_DRIVER_WINDOW_BG 0x02             /* Managed window background */
+	AG_Surface *_Nonnull sRef;           /* Standard reference surface */
+	AG_PixelFormat *_Nullable videoFmt;  /* Video pixel format (FB modes) */
 
-	AG_Surface *_Nonnull sRef;		/* Standard reference surface */
-	AG_PixelFormat *_Nullable videoFmt;	/* Video pixel format (FB modes) */
+	struct ag_keyboard *_Nullable kbd;   /* Primary keyboard device */
+	struct ag_mouse *_Nullable mouse;    /* Primary mouse device */
+	struct ag_joystick **_Nullable joys; /* Open joystick device(s) */
+        Uint                          nJoys;
 
-	struct ag_keyboard *_Nullable kbd;	/* Primary keyboard device */
-	struct ag_mouse    *_Nullable mouse;	/* Primary mouse device */
-	
-	struct ag_glyph_cache *_Nonnull glyphCache; /* For text rendering */
+	Uint32 tRender;                             /* DEBUG_RENDER timestamp */
+	struct ag_glyph_cache *_Nonnull glyphCache; /* Rendered glyph cache */
 	void *_Nullable gl;                         /* AG_GL_Context (GL modes) */
-
-	struct ag_cursor *_Nullable activeCursor; /* Current cursor */
-	AG_TAILQ_HEAD_(ag_cursor) cursors;	  /* Available cursors */
+	struct ag_cursor *_Nullable activeCursor;   /* Current cursor */
+	AG_TAILQ_HEAD_(ag_cursor) cursors;          /* Available cursors */
 	Uint                     nCursors;
-
-	Uint32 tRender;                           /* Rendering start (ticks) */
 } AG_Driver;
 
 /* Generic driver event (for custom event loops). */
@@ -231,32 +232,99 @@ enum ag_driver_event_type {
 	AG_DRIVER_RESTORED,		/* Window has been restored to normal size */
 	AG_DRIVER_SHOWN,		/* Window has been shown */
 	AG_DRIVER_HIDDEN,		/* Window has been hidden */
+	AG_DRIVER_JOY_DEVICE_ADDED,	/* Joystick device attached */
+	AG_DRIVER_JOY_DEVICE_REMOVED,	/* Joystick device detached */
+	AG_DRIVER_JOY_AXIS_MOTION,	/* Joystick axis motion */
+	AG_DRIVER_JOY_HAT_MOTION,	/* Joystick hat motion */
+	AG_DRIVER_JOY_BALL_MOTION,	/* Joystick ball motion */
+	AG_DRIVER_JOY_BUTTON_DOWN,	/* Joystick button down */
+	AG_DRIVER_JOY_BUTTON_UP,	/* Joystick button up */
+	AG_DRIVER_CTRL_AXIS_MOTION,
+	AG_DRIVER_CTRL_BUTTON_DOWN,
+	AG_DRIVER_CTRL_BUTTON_UP,
+	AG_DRIVER_CTRL_DEVICE_ADDED,
+	AG_DRIVER_CTRL_DEVICE_REMOVED,
+	AG_DRIVER_CTRL_DEVICE_REMAPPED,
+	AG_DRIVER_CTRL_TOUCHPAD_DOWN,
+	AG_DRIVER_CTRL_TOUCHPAD_UP,
+	AG_DRIVER_CTRL_TOUCHPAD_MOTION,
+	AG_DRIVER_CTRL_SENSOR,
+	AG_DRIVER_EVENT_LAST
 };
 
 typedef struct ag_driver_event {
-	enum ag_driver_event_type type;	 /* Type of event */
+	enum ag_driver_event_type type;	           /* Type of event */
 	Uint32 _pad;
-	struct ag_window *_Nullable win; /* Associated window (AG_WM_MULTIPLE) */
+	struct ag_window *_Nullable win;           /* Associated window (MW) */
 	AG_TAILQ_ENTRY(ag_driver_event) events;
 	union {
 		struct {
-			int x,y;		/* Cursor coordinates */
+			int x,y;                   /* Cursor coordinates */
 		} motion;
 		struct {
-			AG_MouseButton which;	/* Mouse button */
-			int x,y;		/* Cursor coordinates */
+			AG_MouseButton which;      /* Mouse button */
+			int x,y;                   /* Cursor coordinates */
 		} button;
 		struct {
-			AG_KeySym ks;		/* Virtual key */
-			Uint32 ucs;		/* Corresponding Unicode */
+			AG_KeySym ks;              /* Virtual key */
+			Uint32 ucs;                /* Corresponding Unicode */
 		} key;
 		struct {
-			int x,y, w,h;		/* Window coordinates and size */
+			int x,y, w,h;              /* Window coords and size */
 		} videoresize;
 		struct {
-			int x,y;		/* Window coordinates */
+			int x,y;                   /* Window coordinates */
 		} moved;
-	} data;
+		struct {
+			int instanceID;            /* Joystick instance ID */
+			int axis;                  /* Joystick axis index */
+			int value;                 /* Joystick axis value */
+		} joyAxis;
+		struct {
+			int instanceID;            /* Joystick instance ID */
+			int ball;                  /* Joystick ball index */
+			int dx, dy;                /* Relative motion */
+		} joyBall;
+		struct {
+			int instanceID;            /* Joystick instance ID */
+			int hat;                   /* Joystick hat index */
+			AG_JoyHatPosition pos;     /* Hat position */
+		} joyHat;
+		struct {
+			int instanceID;            /* Joystick instance ID */
+			int button;                /* Joystick button */
+		} joyButton;
+		struct {
+			int which;                 /* Device index (ADDED), or
+			                              Instance ID (REMOVED) */
+		} joyDevice;
+		struct {
+			int instanceID;            /* Joystick instance ID */
+			AG_ControllerAxis axis;    /* Controller axis (0..0xff) */
+			int value;                 /* Axis value */
+		} ctrlAxis;
+		struct {
+			int instanceID;            /* Joystick instance ID */
+			AG_ControllerButton which; /* Button index (0..0xff) */
+			int state;                 /* 1=Pressed, 0=Released */
+		} ctrlButton;
+		struct {
+			int instanceID;            /* Joystick instance ID */
+		} ctrlDevice;
+		struct {
+			int instanceID;            /* Joystick instance ID */
+			int touchpad;              /* Touchpad index */
+			int finger;                /* Index of finger on pad */
+			float x, y;                /* Coordinates (0..1) */
+			float pressure;            /* Pressure (0..1) */
+		} ctrlTouchpad;
+		struct {
+			int instanceID;            /* Joystick instance ID */
+			int sensor;                /* Sensor type ID */
+			float data[3];             /* Sensor values */
+			Uint64 timestamp_us;       /* Microsecond timestamp */
+		} ctrlSensor;
+	};
 } AG_DriverEvent;
 
 typedef AG_TAILQ_HEAD(ag_driver_eventq, ag_driver_event) AG_DriverEventQ;
@@ -303,7 +371,7 @@ extern _Nonnull_Cond AG_Cond agCondEndRender;
 
 void AG_ListDriverNames(char *_Nonnull, AG_Size);
 
-AG_Driver *_Nullable AG_DriverOpen(AG_DriverClass *_Nonnull);
+AG_Driver *_Nullable AG_DriverOpen(AG_DriverClass *_Nonnull, const char *);
 void                 AG_DriverClose(AG_Driver *_Nonnull);
 AG_Driver *_Nullable AG_GetDriverByID(Uint) _Pure_Attribute;
 
@@ -315,6 +383,48 @@ void AG_ViewCapture(void);
 int AG_UsingGL(void *_Nullable) _Pure_Attribute;
 int AG_UsingSDL(void *_Nullable) _Pure_Attribute;
 int AG_GetDisplaySize(void *_Nullable, Uint *_Nonnull,Uint *_Nonnull);
+
+/*
+ * Return the joystick / controller instance ID from an AG_DriverEvent.
+ * Return the device index in the case of JOY_DEVICE_ADDED.
+ * If the event does not include an instance ID then return -1.
+ */
+static __inline__ int _Pure_Attribute
+AG_GetJoystickInstanceID(const AG_DriverEvent *dev)
+{
+	switch (dev->type) {
+	case AG_DRIVER_JOY_AXIS_MOTION:
+		return (dev->joyAxis.instanceID);
+	case AG_DRIVER_JOY_BALL_MOTION:
+		return (dev->joyBall.instanceID);
+	case AG_DRIVER_JOY_HAT_MOTION:
+		return (dev->joyHat.instanceID);
+	case AG_DRIVER_JOY_BUTTON_DOWN:
+		return (dev->joyButton.instanceID);
+	case AG_DRIVER_JOY_BUTTON_UP:
+		return (dev->joyButton.instanceID);
+	case AG_DRIVER_JOY_DEVICE_ADDED:
+	case AG_DRIVER_JOY_DEVICE_REMOVED:
+		return (dev->joyDevice.which);
+	case AG_DRIVER_CTRL_AXIS_MOTION:
+		return (dev->ctrlAxis.instanceID);
+	case AG_DRIVER_CTRL_BUTTON_DOWN:
+	case AG_DRIVER_CTRL_BUTTON_UP:
+		return (dev->ctrlButton.instanceID);
+	case AG_DRIVER_CTRL_DEVICE_ADDED:
+	case AG_DRIVER_CTRL_DEVICE_REMOVED:
+		return (dev->ctrlDevice.instanceID);
+	case AG_DRIVER_CTRL_TOUCHPAD_DOWN:
+	case AG_DRIVER_CTRL_TOUCHPAD_UP:
+	case AG_DRIVER_CTRL_TOUCHPAD_MOTION:
+		return (dev->ctrlTouchpad.instanceID);
+	case AG_DRIVER_CTRL_SENSOR:
+		return (dev->ctrlSensor.instanceID);
+	default:
+		break;
+	}
+	return (-1);
+}
 __END_DECLS
 
 #include <agar/gui/drv_mw.h>

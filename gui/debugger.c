@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -339,14 +339,14 @@ PollSurfaces(AG_Event *_Nonnull event)
 		} else {
 			if (wid->textures[i] != -1) {
 				it = AG_TlistAdd(tl, S,
-				    AGSI_ALGUE AGSI_ARROW_LEFT AGSI_RST
+				    AGSI_ALGUE AGSI_L_ARROW AGSI_RST
 				    " Surface#%u (%ux%u, %ubpp, texture #%d%s%s)",
 				    i, S->w, S->h, S->format.BitsPerPixel, wid->textures[i],
 				    (wid->surfaceFlags[i] & AG_WIDGET_SURFACE_NODUP) ? ", <NODUP>" : "",
 				    (wid->surfaceFlags[i] & AG_WIDGET_SURFACE_REGEN) ? ", <REGEN>" : "");
 			} else {
 				it = AG_TlistAdd(tl, S,
-				    AGSI_ALGUE AGSI_ARROW_LEFT AGSI_RST
+				    AGSI_ALGUE AGSI_L_ARROW AGSI_RST
 				    " Surface#%u (%ux%u, %ubpp%s%s)",
 				    i, S->w, S->h, S->format.BitsPerPixel,
 				    (wid->surfaceFlags[i] & AG_WIDGET_SURFACE_NODUP) ? ", <NODUP>" : "",
@@ -526,6 +526,7 @@ TargetWidget(AG_Event *_Nonnull event)
 		    { AG_WIDGET_USE_OPENGL,		"USE_OPENGL",		0 },
 #if 0
 		    { AG_WIDGET_CATCH_TAB,		"CATCH_TAB",		1 },
+		    { AG_WIDGET_CATCH_SHOULDER,		"CATCH_SHOULDER",		1 },
 		    { AG_WIDGET_NOSPACING,		"NOSPACING",		1 },
 		    { AG_WIDGET_UNFOCUSED_MOTION,	"UNFOCUSED_MOTION",	1 },
 		    { AG_WIDGET_UNFOCUSED_BUTTONUP,	"UNFOCUSED_BUTTONUP",	1 },

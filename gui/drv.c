@@ -125,13 +125,48 @@ AG_ListDriverNames(char *buf, AG_Size buf_len)
 
 /* Create a new driver instance. */
 AG_Driver *
-AG_DriverOpen(AG_DriverClass *dc)
+AG_DriverOpen(AG_DriverClass *dc, const char *spec)
 {
 	AG_Driver *drv;
+	const char *s;
 
-	if ((drv = AG_ObjectNew(NULL, dc->name, AGCLASS(dc))) == NULL) {
+	if ((drv = AG_ObjectNew(NULL, dc->name, AGCLASS(dc))) == NULL)
 		return (NULL);
+
+	/* Process driver options */
+	if (spec != NULL && spec[0] != '\0' &&
+	    (s = strchr(spec, '(')) != NULL &&
+	    s[1] != '\0') {
+		char *sBuf, *sOpts;
+		char *tok, *key, *val;
+
+		s++;
+ 		sBuf = sOpts = Strdup(s);
+		if ((tok = strrchr(sBuf, ')')) != NULL) {
+			*tok = '\0';
+		}
+		while ((tok = AG_Strsep(&sOpts, ":")) != NULL) {
+			if ((key = AG_Strsep(&tok, "=")) != NULL) {
+				if (Strcasecmp(key, "stereo") == 0) {
+					agStereo = 1;
+					continue;
+				} else if (Strcasecmp(key, "xsync") == 0) {
+					agXsync = 1;
+					continue;
+				} else if (Strcasecmp(key, "debug") == 0) {
+					agGLdebugOutput = 1;
+					continue;
+				}
+				if ((val = AG_Strsep(&tok, "=")) != NULL) {
+					AG_SetString(drv, key, val);
+				} else {
+					AG_SetString(drv, key, "");
+				}
+			}
+		}
+		free(sBuf);
 	}
+
 	if (dc->open(drv, NULL) == -1) {
 		AG_ObjectDestroy(drv);
 		return (NULL);
@@ -327,6 +362,8 @@ Init(void *_Nonnull obj)
 	drv->videoFmt = NULL;
 	drv->kbd = NULL;
 	drv->mouse = NULL;
+	drv->joys = NULL;
+	drv->nJoys = 0;
 	drv->glyphCache = Malloc(AG_GLYPH_NBUCKETS*sizeof(AG_GlyphCache));
 	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
 		SLIST_INIT(&drv->glyphCache[i].glyphs);

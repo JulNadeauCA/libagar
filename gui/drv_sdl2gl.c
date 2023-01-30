@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2022-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -71,7 +71,6 @@ typedef struct ag_sdl2gl_driver {
 
 static int nDrivers = 0;			/* Opened driver instances */
 static int initedSDL = 0;			/* Inited TIMERS and EVENTS */
-static int initedSDLVideo = 0;			/* Inited VIDEO */
 static AG_EventSink *_Nullable sglEventSpinner = NULL;
 static AG_EventSink *_Nullable sglEventEpilogue = NULL;
 
@@ -92,7 +91,7 @@ SDL2GL_Open(void *_Nonnull obj, const char *_Nullable spec)
 {
 	AG_Driver *drv = obj;
 	AG_DriverSDL2GL *sgl = obj;
-	
+
 	if (nDrivers != 0) {
 		AG_SetError("Multiple SDL2 driver instances are not supported");
 		return (-1);
@@ -100,18 +99,11 @@ SDL2GL_Open(void *_Nonnull obj, const char *_Nullable spec)
 
 	/* Initialize SDL's video subsystem. */
 	if (!initedSDL) {
-		if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_EVENTS) == -1) {
+		if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) == -1) {
 			AG_SetError("SDL_Init() failed: %s", SDL_GetError());
 			return (-1);
 		}
 		initedSDL = 1;
-	}
-	if (!SDL_WasInit(SDL_INIT_VIDEO)) {
-		if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-			AG_SetError("SDL_INIT_VIDEO failed: %s", SDL_GetError());
-			return (-1);
-		}
-		initedSDLVideo = 1;
 	}
 #if 0
 	/* Use SDL's time interface. */
@@ -119,8 +111,8 @@ SDL2GL_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_DestroyEventSubsystem();
 	AG_InitEventSubsystem(AG_SOFT_TIMERS);
 #endif
-	if ((drv->mouse = AG_MouseNew(sgl, "SDL2 mouse")) == NULL ||
-	    (drv->kbd = AG_KeyboardNew(sgl, "SDL2 keyboard")) == NULL) {
+	if ((drv->mouse = AG_MouseNew(sgl, "SDL2 Mouse")) == NULL ||
+	    (drv->kbd = AG_KeyboardNew(sgl, "SDL2 Keyboard")) == NULL) {
 		goto fail;
 	}
 	sgl->outBuf = NULL;
@@ -168,10 +160,6 @@ SDL2GL_Close(void *_Nonnull obj)
 #endif
 	AG_FreeCursors(AGDRIVER(sgl));
 
-	if (initedSDLVideo) {
-		SDL_QuitSubSystem(SDL_INIT_VIDEO);
-		initedSDLVideo = 0;
-	}
 	AG_ObjectDelete(drv->mouse); drv->mouse = NULL;
 	AG_ObjectDelete(drv->kbd);   drv->kbd = NULL;
 
@@ -327,12 +315,12 @@ SDL2GL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 		swFlags |= SDL_WINDOW_FULLSCREEN;
 		dsw->flags |= AG_DRIVER_SW_FULLSCREEN;
 	}
-	if (flags & AG_VIDEO_NOFRAME)     { swFlags |= SDL_WINDOW_BORDERLESS; }
- 	if (flags & AG_VIDEO_FIXED)       { swFlags &= ~(SDL_WINDOW_RESIZABLE); }
-
-	if (flags & AG_VIDEO_OVERLAY)     { dsw->flags |= AG_DRIVER_SW_OVERLAY; }
+	if (flags & AG_VIDEO_NOFRAME) { swFlags |= SDL_WINDOW_BORDERLESS; }
+ 	if (flags & AG_VIDEO_FIXED) { swFlags &= ~(SDL_WINDOW_RESIZABLE); }
+	if (flags & AG_VIDEO_OVERLAY) { dsw->flags |= AG_DRIVER_SW_OVERLAY; }
 	if (flags & AG_VIDEO_BGPOPUPMENU) { dsw->flags |= AG_DRIVER_SW_BGPOPUP; }
-	
+
+	/* Set options for video capture to image files. */
 	if (AG_Defined(drv, "out")) {
 		char *ext;
 
@@ -377,6 +365,25 @@ SDL2GL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 				sgl->outJpegFlags = AG_EXPORT_JPEG_JDCT_FLOAT;
 			}
 		}
+	}
+
+	/* Enable the joystick subsystem if requested. */
+	if (AG_Defined(drv, "ctrl")) {
+		Uint32 sdlFlags = SDL_INIT_GAMECONTROLLER;
+
+		Debug(drv, "Enabling controller subsystem\n");
+
+		if (AG_Defined(drv, "haptic")) { sdlFlags |= SDL_INIT_HAPTIC; }
+		if (SDL_InitSubSystem(sdlFlags) < 0)
+			AG_Verbose("SDL_INIT_GAMECONTROLLER: %s\n", SDL_GetError());
+	} else if (AG_Defined(drv, "joy")) {
+		Uint32 sdlFlags = SDL_INIT_JOYSTICK;
+
+		Debug(drv, "Enabling joystick subsystem\n");
+
+		if (AG_Defined(drv, "haptic")) { sdlFlags |= SDL_INIT_HAPTIC; }
+		if (SDL_InitSubSystem(sdlFlags) < 0)
+			AG_Verbose("SDL_INIT_JOYSTICK: %s\n", SDL_GetError());
 	}
 
 	/* Set the video mode. Force hardware palette in 8bpp. */
@@ -457,9 +464,16 @@ SDL2GL_CloseVideo(void *_Nonnull obj)
 
 	SDL_DestroyWindow(sgl->window);
 
-	if (initedSDLVideo) {
-		SDL_QuitSubSystem(SDL_INIT_VIDEO);
-		initedSDLVideo = 0;
+	if (AG_Defined(sgl, "ctrl")) {
+		Uint32 sdlFlags = SDL_INIT_GAMECONTROLLER;
+
+		if (AG_Defined(sgl, "haptic")) { sdlFlags |= SDL_INIT_HAPTIC; }
+		SDL_QuitSubSystem(sdlFlags);
+	} else if (AG_Defined(sgl, "joy")) {
+		Uint32 sdlFlags = SDL_INIT_JOYSTICK;
+
+		if (AG_Defined(sgl, "haptic")) { sdlFlags |= SDL_INIT_HAPTIC; }
+		SDL_QuitSubSystem(sdlFlags);
 	}
 }
 
@@ -613,13 +627,15 @@ static void *_Nullable
 Edit(void *_Nonnull obj)
 {
 	AG_DriverSDL2GL *sgl = obj;
+	AG_Driver *drv = AGDRIVER(sgl);
 	AG_Window *win;
 	AG_Label *lbl;
 	AG_Tlist *tl;
-	AG_Keyboard *kbd = AGDRIVER(sgl)->kbd;
-	AG_Mouse *mouse = AGDRIVER(sgl)->mouse;
+	AG_Keyboard *kbd = drv->kbd;
+	AG_Mouse *mouse = drv->mouse;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;
+	int i;
 
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return (NULL);
@@ -639,6 +655,15 @@ Edit(void *_Nonnull obj)
 	if (OBJECT_CLASS(mouse)->edit != NULL) {
 		nt = AG_NotebookAdd(nb, _("Mouse"), AG_BOX_VERT);
 		AG_ObjectAttach(nt, OBJECT_CLASS(mouse)->edit(mouse));
+	}
+	for (i = 0; i < drv->nJoys; i++) {
+		AG_Joystick *joy = drv->joys[i];
+
+		if (OBJECT_CLASS(joy)->edit != NULL) {
+			nt = AG_NotebookAdd(nb, AG_Printf(_("Joystick %d"), i+1),
+			    AG_BOX_VERT);
+			AG_ObjectAttach(nt, OBJECT_CLASS(joy)->edit(joy));
+		}
 	}
 	nt = AG_NotebookAdd(nb, _("OpenGL"), AG_BOX_VERT);
 	{

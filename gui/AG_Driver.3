@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -35,55 +35,54 @@
 .Ed
 .Sh DESCRIPTION
 .\" IMAGE(http://libagar.org/widgets/AG_DriverGLX.png, "The Xorg/glx driver")
-In Agar, low-level graphics rendering, event processing and window management
-is handled by modular "drivers".
-A simple class registration interface allows Agar to be "ported" to new
-platforms, environments and graphics systems.
-In a manner similar to Agar widgets, new Agar "drivers" may be implemented
-as part of an application, without need for changing the Agar source code
-itself.
+Agar implements low-level access to the graphics hardware, event processing
+and window management using a modular driver interface.
+The class registration interface allows Agar to be "ported" to new platforms,
+environments and graphics systems.
+New drivers can be implemented as part of an application or third-party library,
+without need for changes in the Agar code itself.
 .Pp
 For the list of drivers included in the Agar distribution, see the
 .Xr AG_InitGraphics 3
-manual page, under "AVAILABLE DRIVERS".
+manual page under "AVAILABLE DRIVERS".
 .Pp
 The interface differs based on whether an underlying window system is available.
 All drivers are a subclass of
 .Ft AG_Driver .
 The
 .Ft AG_DriverSw
-subclass (for "single-window") is used by drivers that do not interface with
-an underlying window system.
+subclass (for "single-window") is used by drivers that do not interface
+(at least not directly) with an underlying window system.
 For example, the "sdlfb" and "sdlgl" drivers use the SDL 1.x API, and are
-therefore limited to a single window as far as the native window system is
-concerned).
-A dumb framebuffer used in an embedded device would also use the
-.Ft AG_DriverSw
-subclass.
+therefore limited to a single native window.
+Another example would be a dumb framebuffer in an embedded device, which
+might also use
+.Ft AG_DriverSw .
+When a single-window driver is used, Agar provides an internal window manager.
 .Pp
 The
 .Ft AG_DriverMw
-subclass (for "multiple-window") is used by drivers that do interface with
-an underlying window system.
-In a multiple-window environment, each Agar window (e.g., each window created
-by
-.Xr AG_WindowNew 3 )
-is associated with a "native" window.
-For example, the "glx" driver uses the GLX API to create an accelerated
-rendering context, and also uses the Xlib API to manage windows.
+subclass (for "multiple-window") is used by drivers that talk to some
+underlying window system.
+In a multiple-window environment, each
+.Xr AG_Window 3
+is associated with a "native" window on the system.
+For example, the "glx" driver uses the Xlib API to manage windows and
+the GLX extension to create accelerated rendering contexts.
 .Pp
-The part of the
+The event processing functions of
 .Nm
-API that deals with low-level event processing is of particular importance
-to applications using custom event loops (see
+are important to applications which use custom event loops (see
 .Xr AG_CustomEventLoop 3
 for an example).
-It is possible, in a driver-independent fashion, for an application to catch
-and process low-level events (see below).
+They make it possible for Agar applications to catch and process low-level
+events in a driver-independent way (see
+.Sx EVENTS
+below).
 .Sh DRIVER INTERFACE
 .nr nS 1
 .Ft "AG_Driver *"
-.Fn AG_DriverOpen "AG_DriverClass *dc"
+.Fn AG_DriverOpen "AG_DriverClass *dc" "const char *spec"
 .Pp
 .Ft "void"
 .Fn AG_DriverClose "AG_Driver *d"
@@ -109,12 +108,14 @@ function creates a new instance of a driver class, as described by
 .Fn AG_DriverClose
 destroys a driver instance.
 These two functions are seldom used directly, since they are called
-internally from either
+internally from
 .Xr AG_InitGraphics 3
-or
+(or
 .Xr AG_WindowNew 3
-in the case of multiple-window drivers (which use one driver instance per
-window).
+in the case of multiple-window drivers).
+The optional
+.Fa spec
+argument may include a colon-separated list of driver options.
 .Pp
 The
 .Fn AG_ListDriverNames
@@ -160,16 +161,12 @@ typedef struct ag_driver_class {
     enum ag_driver_wm_type wm; /* Window manager type */
     Uint flags;                /* Driver class options */
 
-    /*
-     * Initialization
-     */
+    /* Initialization */
     int  (*open)(void *d, const char *spec);
     void (*close)(void *d);
     int  (*getDisplaySize)(Uint *w, Uint *h);
 
-    /*
-     * Event processing
-     */
+    /* Event processing */
     void (*beginEventProcessing)(void *d);
     int  (*pendingEvents)(void *d);
     int  (*getNextEvent)(void *d, AG_DriverEvent *dev);
@@ -178,126 +175,157 @@ typedef struct ag_driver_class {
     void (*endEventProcessing)(void *d);
     void (*terminate)(void);
 
-    /*
-     * Rendering and texture management
-     */
+    /* Rendering and texture management */
     void (*beginRendering)(void *d);
     void (*renderWindow)(AG_Window *w);
     void (*endRendering)(void *d);
-    void (*fillRect)(void *d, const AG_Rect *r, const AG_Color *c);
+    void (*fillRect)(void *d, const AG_Rect *r,
+                     const AG_Color *c);
     void (*updateRegion)(void *d, const AG_Rect *r);
-    void (*uploadTexture)(void *d, Uint *id,AG_Surface *s, AG_TexCoord *c);
-    void (*updateTexture)(void *d, Uint id, AG_Surface *s, AG_TexCoord *c);
+    void (*uploadTexture)(void *d, Uint *id,
+                          AG_Surface *s, AG_TexCoord *c);
+    void (*updateTexture)(void *d, Uint id,
+                          AG_Surface *s, AG_TexCoord *c);
     void (*deleteTexture)(void *d, Uint id);
     int (*setRefreshRate)(void *d, int fps);
 
-    /*
-     * Clipping and blending control (rendering context)
-     */
+    /* Clipping and blending controls */
     void (*pushClipRect)(void *d, const AG_Rect *r);
     void (*popClipRect)(void *d);
-    void (*pushBlendingMode)(void *d, AG_AlphaFn s, AG_AlphaFn d);
+    void (*pushBlendingMode)(void *d, AG_AlphaFn s,
+                             AG_AlphaFn d);
     void (*popBlendingMode)(void *d);
 
-    /*
-     * Hardware cursor interface
-     */
+    /* Hardware cursor interface */
     AG_Cursor *(*createCursor)(void *d, Uint w, Uint h,
-                               const Uint8 *data, const Uint8 *mask,
+                               const Uint8 *data,
+                               const Uint8 *mask,
                                int xHot, int yHot);
-
     void (*freeCursor)(void *d, AG_Cursor *curs);
     int  (*setCursor)(void *d, AG_Cursor *curs);
     void (*unsetCursor)(void *d);
     int  (*getCursorVisibility)(void *d);
     void (*setCursorVisibility)(void *d, int flag);
 
-    /*
-     * Widget surface operations (rendering context)
-     */
-    void (*blitSurface)(void *d, AG_Widget *wid, AG_Surface *s,
-                        int x, int y);
+    /* Widget surface operations */
+    void (*blitSurface)(void *d, AG_Widget *wid,
+                        AG_Surface *s, int x, int y);
 
-    void (*blitSurfaceFrom)(void *d, AG_Widget *wid, int s,
-                            const AG_Rect *r, int x, int y);
+    void (*blitSurfaceFrom)(void *d, AG_Widget *wid,
+                            int s, const AG_Rect *r,
+                            int x, int y);
 #ifdef HAVE_OPENGL
-    void (*blitSurfaceGL)(void *d, AG_Widget *wid, AG_Surface *s,
+    void (*blitSurfaceGL)(void *d, AG_Widget *wid,
+                          AG_Surface *s,
                           float w, float h);
-    void (*blitSurfaceFromGL)(void *d, AG_Widget *wid, int s,
+    void (*blitSurfaceFromGL)(void *d, AG_Widget *wid,
+                              int surface,
                               float w, float h);
-    void (*blitSurfaceFlippedGL)(void *d, AG_Widget *wid, int s,
+    void (*blitSurfaceFlippedGL)(void *d, AG_Widget *wid,
+                                 int surface,
                                  float w, float h);
 #endif
     void (*backupSurfaces)(void *d, AG_Widget *wid);
     void (*restoreSurfaces)(void *d, AG_Widget *wid);
-    int  (*renderToSurface)(void *d, AG_Widget *wid, AG_Surface **s);
+    int  (*renderToSurface)(void *d, AG_Widget *wid,
+                            AG_Surface **s);
 
-    /*
-     * Rendering operations (rendering context)
-     */
-    void (*putPixel)(void *d, int x, int y, const AG_Color *c);
-    void (*putPixel32)(void *d, int x, int y, Uint32 px);
-    void (*putPixelRGB8)(void *d, int x, int y, Uint8 r, Uint8 g, Uint8 b);
-#if AG_MODEL == AG_LARGE
-    void (*putPixel64)(void *d, int x, int y, Uint64 px);
-    void (*putPixelRGB16)(void *d, int x, int y,
-                          Uint16 r, Uint16 g, Uint16 b);
-#endif
-    void (*blendPixel)(void *d, int x, int y, const AG_Color *c,
-                       AG_AlphaFn fnSrc, AG_AlphaFn fnDst);
-
-    void (*drawLine)(void *d, int x1, int y1, int x2, int y2,
+    /* Rendering operations */
+    void (*putPixel)(void *d, int x, int y,
                      const AG_Color *c);
-    void (*drawLineH)(void *d, int x1, int x2, int y, const AG_Color *c);
-    void (*drawLineV)(void *d, int x, int y1, int y2, const AG_Color *c);
+    void (*putPixel32)(void *d, int x, int y,
+                       Uint32 px);
+    void (*putPixelRGB8)(void *d, int x, int y,
+                         Uint8 r, Uint8 g,
+                         Uint8 b);
+#if AG_MODEL == AG_LARGE
+    void (*putPixel64)(void *d, int x, int y,
+                       Uint64 px);
+    void (*putPixelRGB16)(void *d, int x, int y,
+                          Uint16 r, Uint16 g,
+                          Uint16 b);
+#endif
+    void (*blendPixel)(void *d, int x, int y,
+                       const AG_Color *c,
+                       AG_AlphaFn fnSrc,
+                       AG_AlphaFn fnDst);
 
-    void (*drawLineBlended)(void *d, int x1, int y1, int x2, int y2,
+    void (*drawLine)(void *d, int x1, int y1,
+                     int x2, int y2,
+                     const AG_Color *c);
+    void (*drawLineH)(void *d, int x1, int x2,
+                      int y, const AG_Color *c);
+    void (*drawLineV)(void *d, int x, int y1,
+                      int y2, const AG_Color *c);
+
+    void (*drawLineBlended)(void *d, int x1, int y1,
+                            int x2, int y2,
                             const AG_Color *c,
-                            AG_AlphaFn fnSrc, AG_AlphaFn fnDst);
+                            AG_AlphaFn fnSrc,
+                            AG_AlphaFn fnDst);
 
-    void (*drawLineW)(void *d, int x1, int y1, int x2, int y2,
-                      const AG_Color *c, float width);
-    void (*drawLineW_Sti16)(void *d, int x1, int y1, int x2, int y2,
-                            const AG_Color *c, float width, Uint16 mask);
+    void (*drawLineW)(void *d, int x1, int y1,
+                      int x2, int y2, const AG_Color *c,
+                      float width);
+    void (*drawLineW_Sti16)(void *d, int x1, int y1,
+                            int x2, int y2,
+                            const AG_Color *c,
+                            float width, Uint16 mask);
 
-    void (*_Nonnull drawTriangle)(void *_Nonnull, const AG_Pt *_Nonnull,
-                                  const AG_Pt *_Nonnull, const AG_Pt *_Nonnull,
-                                  const AG_Color *_Nonnull);
-    void (*_Nonnull drawPolygon)(void *_Nonnull, const AG_Pt *_Nonnull, Uint,
-                                 const AG_Color *_Nonnull);
-    void (*_Nonnull drawPolygonSti32)(void *_Nonnull, const AG_Pt *_Nonnull,
-                                      Uint, const AG_Color *_Nonnull,
-                                      const Uint8 *_Nonnull);
+    void (*drawTriangle)(void *d, const AG_Pt *v1,
+                                  const AG_Pt *v2,
+                                  const AG_Pt *v3,
+                                  const AG_Color *c);
+    void (*drawPolygon)(void *d, const AG_Pt *pts,
+                        Uint nPts, const AG_Color *c);
+    void (*drawPolygonSti32)(void *d, const AG_Pt *pts,
+                             Uint nPts, const AG_Color *c,
+                             const Uint8 *stipple);
 
-    void (*drawArrow)(void *d, float angle, int x, int y, int h,
-                      const AG_Color *c1, const AG_Color *c2);
+    void (*drawArrow)(void *d, float angle, int x, int y,
+                      int h,
+                      const AG_Color *c1,
+                      const AG_Color *c2);
 
-    void (*drawBoxRounded)(void *d, const AG_Rect *r, int z, int rad,
-                           const AG_Color *c1, const AG_Color *c2);
-    void (*drawBoxRoundedTop)(void *d, const AG_Rect *r, int z, int rad,
-                              const AG_Color *c1, const AG_Color *c2,
+    void (*drawBoxRounded)(void *d, const AG_Rect *r,
+                           int z, int radius,
+                           const AG_Color *c1,
+                           const AG_Color *c2);
+    void (*drawBoxRoundedTop)(void *d, const AG_Rect *r,
+                              int z, int radius,
+                              const AG_Color *c1,
+                              const AG_Color *c2,
                               const AG_Color *c3);
 
-    void (*drawCircle)(void *d, int x, int y, int r, const AG_Color *c);
-    void (*drawCircleFilled)(void *d, int x, int y, int r, const AG_Color *c);
-    void (*drawRectFilled)(void *d, const AG_Rect *r, const AG_Color *c);
-    void (*drawRectBlended)(void *d, const AG_Rect *r, const AG_Color *c,
-                            AG_AlphaFn fnSrc, AG_AlphaFn fnDst);
-    void (*drawRectDithered)(void *d, const AG_Rect *r, const AG_Color *c);
+    void (*drawCircle)(void *d, int x, int y,
+                       int radius,
+                       const AG_Color *c);
+    void (*drawCircleFilled)(void *d, int x, int y,
+                             int radius,
+                             const AG_Color *c);
+    void (*drawRectFilled)(void *d, const AG_Rect *r,
+                           const AG_Color *c);
+    void (*drawRectBlended)(void *d, const AG_Rect *r,
+                            const AG_Color *c,
+                            AG_AlphaFn fnSrc,
+                            AG_AlphaFn fnDst);
+    void (*drawRectDithered)(void *d, const AG_Rect *r,
+                             const AG_Color *c);
 
     /* Typography */
     void (*updateGlyph)(void *d, AG_Glyph *gl);
-    void (*drawGlyph)(void *d, const AG_Glyph *gl, int x, int y);
+    void (*drawGlyph)(void *d, const AG_Glyph *gl,
+                      int x, int y);
 
-    /* Display list management (GL driver specific) */
+    /* Display list management */
     void (*deleteList)(void *d, Uint listID);
 
-    /* Clipboard access */
+    /* Clipboard integration */
     char *(*getClipboardText)(void *d);
     int   (*setClipboardText)(void *d, const char *text);
 
     /* Mouse auto-capture control */
-    void (*_Nullable setMouseAutoCapture)(void *d, int state);
+    void (*setMouseAutoCapture)(void *d, int state);
 } AG_DriverClass;
 .Ed
 .Pp
@@ -335,41 +363,37 @@ Texture management operations are supported.
 .Pp
 The
 .Fn open
-method is invoked to initialize a new driver instance.
-.Fn open
-is expected to initialize the
-.Va mouse
-and
+method initializes a new driver instance.
+It is expected to initialize the
+.Va mouse ,
 .Va kbd
-fields of
+and
+.Va joys
+members of
 .Nm
 (see
 .Xr AG_MouseNew 3 ,
-.Xr AG_KeyboardNew 3 ) .
-Return 0 on success and -1 on failure.
+.Xr AG_KeyboardNew 3
+and
+.Xr AG_JoystickNew 3 ) .
+.Fn open
+should return 0 on success or -1 on failure.
 .Pp
 The
 .Fn close
 method is invoked to destroy a driver instance.
-It is expected to destroy the
-.Va mouse
-and
-.Va kbd
-fields of
-.Nm .
+It is expected to destroy all attached input devices.
 .Pp
 The
 .Fn getDisplaySize
-operation should return the total display size available, in pixels, into
+method writes the total available display size in pixels to
 .Fa w
 and
-.Fa h .
-For single-window drivers, this is the size of the display available to
-Agar.
+.Fa h
+and returns 0 on success or -1 on failure.
+For single-window drivers, this is the size of the display available to Agar.
 For multiple-window drivers, this is the total size of the desktop (if
-multiple workspaces are supported, it should be limited to the size of
-a single workspace in pixels).
-This operation should return 0 on success and -1 on failure.
+multiple workspaces are supported, it should be the size of one workspace).
 .Pp
 The
 .Fn beginEventProcessing
@@ -724,12 +748,12 @@ field is an enum that can take on the values:
 .Bl -tag -compact -width "AG_DRIVER_MOUSE_BUTTON_DOWN "
 .It AG_DRIVER_MOUSE_MOTION
 Cursor has moved to
-.Va data.motion.{x,y} .
+.Va motion.{x,y} .
 .It AG_DRIVER_MOUSE_BUTTON_DOWN
 Mouse button
-.Va data.button.which
+.Va button.which
 has been pressed at coordinates
-.Va data.button.{x,y} .
+.Va button.{x,y} .
 .It AG_DRIVER_MOUSE_BUTTON_UP
 Mouse button has been released.
 .It AG_DRIVER_MOUSE_ENTER
@@ -742,31 +766,55 @@ Application focus has been gained.
 Application focus has been lost.
 .It AG_DRIVER_KEY_DOWN
 A key with keysym
-.Va data.key.ks
+.Va key.ks
 has been pressed.
 See:
 .Xr AG_KeySym 3 .
-.Va data.key.ucs
+.Va key.ucs
 is the matching Unicode character (if any).
 .It AG_DRIVER_KEY_UP
 A key has been released.
 .It AG_DRIVER_EXPOSE
 The WM requests the window to be redrawn.
-.It AG_DRIVER_MOVED
-The window has moved to desktop coordinates
-.Va data.moved.x
-and
-.Va data.moved.y .
 .It AG_DRIVER_VIDEORESIZE
-The user has resized the window to
-.Va data.videoresize.w
+The video display has been resized to
+.Va videoresize.w
 x
-.Va data.videoresize.h .
+.Va videoresize.h .
 .It AG_DRIVER_CLOSE
 The user is closing the window.
 The default action is to post a
 .Sq window-close
 event to the corresponding Agar window.
+.It AG_DRIVER_MOVED
+The window has been moved to desktop coordinates
+.Va moved.x
+and
+.Va moved.y .
+.It AG_DRIVER_MINIMIZED
+The window has been minimized.
+.It AG_DRIVER_MAXIMIZED
+The window has been maximized.
+.It AG_DRIVER_RESTORED
+Window has been restored following a previous minimize or maximize operation.
+.It AG_DRIVER_SHOWN
+The window is now visible to the user.
+.It AG_DRIVER_HIDDEN
+The window is now hidden from view.
+.It AG_DRIVER_JOY_DEVICE_ADDED
+Joystick device has been attached.
+.It AG_DRIVER_JOY_DEVICE_REMOVED
+Joystick device has been detached.
+.It AG_DRIVER_JOY_AXIS_MOTION
+Joystick axis has moved (continuous).
+.It AG_DRIVER_JOY_HAT_MOTION
+Joystick hat has moved (discrete).
+.It AG_DRIVER_JOY_BALL_MOTION
+Joystick ball has moved (relative).
+.It AG_DRIVER_JOY_BUTTON_DOWN
+Joystick button has been pressed.
+.It AG_DRIVER_JOY_BUTTON_UP
+Joystick button has been released.
 .El
 .Pp
 The
@@ -823,12 +871,12 @@ while (AG_PendingEvents(NULL) > 0) {
 		switch (ev.type) {
 		case AG_DRIVER_MOUSE_BUTTON_DOWN:
 			printf("Click at %d,%d\\n",
-			    dev.data.button.x,
-			    dev.data.button.y);
+			    dev.button.x,
+			    dev.button.y);
 			break;
 		case AG_DRIVER_KEY_DOWN:
 			printf("Key pressed: %d\\n",
-			    (int)dev.data.key.ks);
+			    (int)dev.key.ks);
 			break;
 		default:
 			break;
@@ -861,3 +909,6 @@ Agar 1.6.0 added the driver operations
 .Fn getClipboardText
 and
 .Fn setClipboardText .
+Joystick and touch events appeared in Agar 1.7.
+.Fn setMouseAutoCapture
+appeared in Agar 1.7.

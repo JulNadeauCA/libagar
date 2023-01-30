@@ -1,4 +1,4 @@
-.\" Copyright (c) 2010-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2010-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -46,20 +46,22 @@ it is possible to attach Agar to an existing SDL display surface.
 .Sh EXAMPLES
 .Bd -literal -offset indent
 .\" SYNTAX(c)
-AG_InitGraphics("sdlfb(width=640:height=480)");
+AG_InitGraphics("sdlfb(width=640:height=480:joy)");
 AG_InitGraphics("sdlfb(width=60%:height=80%)");
 AG_InitGraphics("sdlgl(bgColor=0/120/120)");
 
 AG_InitVideoSDL(an_existing_SDL_screen, 0);
 .Ed
 .Sh OPTIONS
-.Bl -tag -compact -width "clampOnResize "
+.Bl -tag -compact -width "clampOnResize"
+.It joy
+Enable joystick input device support.
 .It width
-Width in pixels, in % of available desktop space, or "auto".
+Width (in pixels, in % of desktop space or "auto").
 .It height
-Height in pixels, in % of available desktop space, or "auto".
+Height (in pixels, in % of desktop space or "auto").
 .It depth
-Depth in bits per pixel, or "auto".
+Depth (in bits per pixel or "auto").
 .It fpsMax
 Limit refresh rate in frames/second (e.g., "60").
 .It bgColor
@@ -90,4 +92,6 @@ The
 driver first appeared in Agar 1.4.0.
 The
 .Va clampOnResize
-option appeared in Agar 1.7.
+and
+.Va joy
+options appeared in Agar 1.7.

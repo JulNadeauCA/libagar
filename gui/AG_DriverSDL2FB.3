@@ -1,4 +1,4 @@
-.\" Copyright (c) 2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2022-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -55,17 +55,18 @@ AG_InitVideoSDL(an_existing_SDL_screen, 0);
 .Ed
 .Sh OPTIONS
 .Bl -tag -compact -width "clampOnResize "
+.It ctrl
+Enable game controller (gamepad) support.
+.It haptic
+Enable haptic (force feedback) subsystem.
+.It joy
+Enable joystick input device support.
 .It width
-Display width in pixels (e.g., "320"), percent of total desktop size (e.g., "50%") or "auto".
+Width (in pixels, in % of total desktop or "auto").
 .It height
-Display height in pixels (e.g., "240"), percent of total desktop size (e.g., "50%") or "auto".
-.It depth
-Depth in bits per pixel, or "auto".
-.It fpsMax
-Limit refresh rate in frames/second (e.g, "60").
+Height (in pixels, in % of total desktop or "auto").
 .It bgColor
-Solid background color specified as "R/G/B", from "0/0/0" (black) to
-"255/255/255" (white).
+Solid background color (in 8-bit "R/G/B" format).
 .It !bgPopup
 Disable the standard contextual popup menu shown on right-click against
 the background.
@@ -73,6 +74,10 @@ The standard popup menu shows the list of active Agar windows.
 .It clampOnResize
 Whenever the display is resized, clamp Agar window positions and sizes
 to fit the new display size.
+.It depth
+Depth (in bits per pixel or "auto").
+.It fpsMax
+Limit refresh rate in frames/second (e.g, "60").
 .El
 .Sh SEE ALSO
 .Xr AG_DriverSDL2GL 3 ,
@@ -92,6 +97,3 @@ to fit the new display size.
 The
 .Va sdl2fb
 driver first appeared in Agar 1.7.0.
-The
-.Va clampOnResize
-option appeared in Agar 1.7.

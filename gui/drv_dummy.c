@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2019-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -201,30 +201,25 @@ DUMMY_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 
 	switch (dev->type) {
 	case AG_DRIVER_MOUSE_MOTION:
-		AG_ProcessMouseMotion(dev->win,
-		    dev->data.motion.x, dev->data.motion.y,
-		    drv->mouse->xRel, drv->mouse->yRel,
-		    drv->mouse->btnState);
-		AG_MouseCursorUpdate(dev->win,
-		     dev->data.motion.x, dev->data.motion.y);
+		AG_ProcessMouseMotion(dev->win, dev->motion.x, dev->motion.y,
+		    drv->mouse->xRel, drv->mouse->yRel);
+		AG_MouseCursorUpdate(dev->win, dev->motion.x, dev->motion.y);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_DOWN:
-		AG_ProcessMouseButtonDown(dev->win,
-		    dev->data.button.x, dev->data.button.y,
-		    dev->data.button.which);
+		AG_ProcessMouseButtonDown(dev->win, dev->button.x, dev->button.y,
+		    dev->button.which);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_UP:
-		AG_ProcessMouseButtonUp(dev->win,
-		    dev->data.button.x, dev->data.button.y,
-		    dev->data.button.which);
+		AG_ProcessMouseButtonUp(dev->win, dev->button.x, dev->button.y,
+		    dev->button.which);
 		break;
 	case AG_DRIVER_KEY_UP:
-		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_RELEASED,
-		    dev->data.key.ks, dev->data.key.ucs);
+		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_RELEASED, dev->key.ks,
+		    dev->key.ucs);
 		break;
 	case AG_DRIVER_KEY_DOWN:
-		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_PRESSED,
-		    dev->data.key.ks, dev->data.key.ucs);
+		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_PRESSED, dev->key.ks,
+		    dev->key.ucs);
 		break;
 	case AG_DRIVER_MOUSE_ENTER:
 		AG_PostEvent(dev->win, "window-enter", NULL);
@@ -245,10 +240,10 @@ DUMMY_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		}
 		break;
 	case AG_DRIVER_VIDEORESIZE:
-		a.x = dev->data.videoresize.x;
-		a.y = dev->data.videoresize.y;
-		a.w = dev->data.videoresize.w;
-		a.h = dev->data.videoresize.h;
+		a.x = dev->videoresize.x;
+		a.y = dev->videoresize.y;
+		a.w = dev->videoresize.w;
+		a.h = dev->videoresize.h;
 		if (a.x != WIDGET(dev->win)->x || a.y != WIDGET(dev->win)->y) {
 			DUMMY_PostMoveCallback(dev->win, &a);
 		}

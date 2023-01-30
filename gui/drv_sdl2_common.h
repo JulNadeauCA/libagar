@@ -68,6 +68,10 @@ int  AG_SDL2_EventSink_SW(AG_EventSink *_Nonnull, AG_Event *_Nonnull);
 int  AG_SDL2_EventEpilogue(AG_EventSink *_Nonnull, AG_Event *_Nonnull);
 void AG_SDL2_EndEventProcessing(void *_Nonnull);
 
+void AG_SDL2_ControllerAdded(void *, int);
+void AG_SDL2_JoystickAdded(void *, int);
+void AG_SDL2_JoystickRemoved(void *, int);
+
 Uint AG_SDL_KeySymToUcs4(Uint32);
 __END_DECLS
 

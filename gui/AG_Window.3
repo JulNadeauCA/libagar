@@ -613,7 +613,10 @@ places the focus over the widget following (or preceeding if
 .Fa reverse
 is 1) the widget currently holding focus inside of
 .Fa win .
-By default, Agar maps the "TAB" key to this function.
+By default, Agar maps the TAB key to this function.
+The
+.Va agDrivers
+VFS must be locked.
 .Pp
 The
 .Fn AG_CloseFocusedWindow

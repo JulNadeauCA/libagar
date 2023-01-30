@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  */
 
 /*
- * Generic configuration settings dialog.
+ * A "GUI Preferences" dialog for application-global Agar settings.
  */
 
 #include <agar/core/core.h>
@@ -47,6 +47,7 @@
 #include <agar/gui/file_dlg.h>
 #include <agar/gui/dir_dlg.h>
 #include <agar/gui/pane.h>
+#include <agar/gui/sdl2.h>
 
 static void
 SaveConfig(AG_Event *_Nonnull event)
@@ -99,6 +100,36 @@ SelectPath(AG_Event *_Nonnull event)
 	AG_WindowShow(win);
 }
 #endif
+
+#ifdef HAVE_SDL2
+static void
+PollJoysticks(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+	const int nJoysticks = SDL_NumJoysticks();
+	int i;
+
+	AG_TlistBegin(tl);
+	for (i = 0; i < nJoysticks; i++) {
+		AG_TlistItem *it;
+
+		if (SDL_IsGameController(i)) {
+			const char *name = SDL_GameControllerNameForIndex(i);
+
+			it = AG_TlistAdd(tl, NULL, "%d. %s (ctrl)", i, name);
+		} else {
+			const char *name = SDL_JoystickNameForIndex(i);
+
+			it = AG_TlistAdd(tl, NULL, "%d. %s (joy)", i, name);
+		}
+		it->p1 = NULL;
+	}
+	if (nJoysticks == 0) {
+		AG_TlistAddS(tl, NULL, _("(no controllers detected)"));
+	}
+	AG_TlistEnd(tl);
+}
+#endif /* HAVE_SDL2 */
 
 static AG_Window *_Nullable
 AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
@@ -198,6 +229,22 @@ AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		AG_NumericalNewIntR(tab, numFl, "ms", _("Mouse scroll interval: "),
 		    &agMouseScrollIval, 1, 10000);
 	}
+
+#ifdef HAVE_SDL2
+	if (AG_OfClass(WIDGET(win)->drv, "AG_Driver:AG_DriverMw:AG_DriverSDL2MW:*") ||
+	    AG_OfClass(WIDGET(win)->drv, "AG_Driver:AG_DriverSw:AG_DriverSDL2GL:*") ||
+	    AG_OfClass(WIDGET(win)->drv, "AG_Driver:AG_DriverSw:AG_DriverSDL2FB:*")) {
+		tab = AG_NotebookAdd(nb, _("Joysticks"), AG_BOX_VERT);
+		{
+			AG_Tlist *tl;
+
+			tl = AG_TlistNewPolled(tab,
+			    AG_TLIST_POLL | AG_TLIST_EXPAND,
+			    PollJoysticks, NULL);
+			AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 8);
+		}
+	}
+#endif
 
 	hb = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 	{

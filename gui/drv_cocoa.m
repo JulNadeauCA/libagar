@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2012-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -571,8 +571,8 @@ QueueKeyEvent(AG_DriverCocoa *_Nonnull co, enum ag_driver_event_type type,
 	}
 	dev->type = type;
 	dev->win = AGDRIVER_MW(co)->win;
-	dev->data.key.ks = ks;
-	dev->data.key.ucs = ucs;
+	dev->key.ks = ks;
+	dev->key.ucs = ucs;
 	TAILQ_INSERT_TAIL(&cocEventQ, dev, events);
 }
 
@@ -618,14 +618,19 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	case NSOtherMouseDragged:
 		{
 			NSPoint point = [event locationInWindow];
-			int x = (int)point.x;
-			int y = (int)(WIDGET(win)->h - point.y);
+			AG_Mouse *ms = drv->mouse;
+			const int x = (int)point.x;
+			const int y = (int)(WIDGET(win)->h - point.y);
 
-			AG_MouseMotionUpdate(drv->mouse, x, y);
+			ms->xRel = x - ms->x;               /* Update state */
+			ms->yRel = y - ms->y;
+			ms->x = x;
+			ms->y = y;
+
 			dev->type = AG_DRIVER_MOUSE_MOTION;
 			dev->win = win;
-			dev->data.motion.x = x;
-			dev->data.motion.y = y;
+			dev->motion.x = x;
+			dev->motion.y = y;
 			rv = 1;
 			break;
 		}
@@ -641,9 +646,9 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED, btn);
 			dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
 			dev->win = win;
-			dev->data.button.which = btn;
-			dev->data.button.x = drv->mouse->x;
-			dev->data.button.y = drv->mouse->y;
+			dev->button.which = btn;
+			dev->button.x = drv->mouse->x;
+			dev->button.y = drv->mouse->y;
 			rv = 1;
 			break;
 		}
@@ -656,9 +661,9 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED, btn);
 			dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
 			dev->win = win;
-			dev->data.button.which = btn;
-			dev->data.button.x = drv->mouse->x;
-			dev->data.button.y = drv->mouse->y;
+			dev->button.which = btn;
+			dev->button.x = drv->mouse->x;
+			dev->button.y = drv->mouse->y;
 			rv = 1;
 			break;
 		}
@@ -671,9 +676,9 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_RELEASED, btn);
 			dev->type = AG_DRIVER_MOUSE_BUTTON_UP;
 			dev->win = win;
-			dev->data.button.which = btn;
-			dev->data.button.x = drv->mouse->x;
-			dev->data.button.y = drv->mouse->y;
+			dev->button.which = btn;
+			dev->button.x = drv->mouse->x;
+			dev->button.y = drv->mouse->y;
 			rv = 1;
 			break;
 		}
@@ -737,11 +742,11 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 				AG_KeyboardUpdate(drv->kbd, kbdAction, ks);
 				dev->type = evType;
 				dev->win = win;
-				dev->data.key.ks = ks;
+				dev->key.ks = ks;
 				if (ks == AG_KEY_RETURN) {
-					dev->data.key.ucs = '\n';
+					dev->key.ucs = '\n';
 				} else {
-					dev->data.key.ucs = 0;
+					dev->key.ucs = 0;
 				}
 				rv = 1;
 				goto out;
@@ -759,8 +764,8 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 				if (i == 0) {
 					dev->type = evType;
 					dev->win = win;
-					dev->data.key.ks = ks;
-					dev->data.key.ucs = (Uint32)c;
+					dev->key.ks = ks;
+					dev->key.ucs = (Uint32)c;
 					rv = 1;
 				} else {
 					QueueKeyEvent(co, evType, ks,
@@ -835,30 +840,25 @@ COCOA_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	}
 	switch (dev->type) {
 	case AG_DRIVER_MOUSE_MOTION:
-		AG_ProcessMouseMotion(win,
-		    dev->data.motion.x, dev->data.motion.y,
-		    drv->mouse->xRel, drv->mouse->yRel,
-		    drv->mouse->btnState);
-		AG_MouseCursorUpdate(win,
-		     dev->data.motion.x, dev->data.motion.y);
+		AG_ProcessMouseMotion(win, dev->motion.x, dev->motion.y,
+		    drv->mouse->xRel, drv->mouse->yRel, drv->mouse->btnState);
+		AG_MouseCursorUpdate(win, dev->motion.x, dev->motion.y);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_DOWN:
-		AG_ProcessMouseButtonDown(win,
-		    dev->data.button.x, dev->data.button.y,
-		    dev->data.button.which);
+		AG_ProcessMouseButtonDown(win, dev->button.x, dev->button.y,
+		    dev->button.which);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_UP:
-		AG_ProcessMouseButtonUp(win,
-		    dev->data.button.x, dev->data.button.y,
-		    dev->data.button.which);
+		AG_ProcessMouseButtonUp(win, dev->button.x, dev->button.y,
+		    dev->button.which);
 		break;
 	case AG_DRIVER_KEY_UP:
-		AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED,
-		    dev->data.key.ks, dev->data.key.ucs);
+		AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED, dev->key.ks,
+		    dev->key.ucs);
 		break;
 	case AG_DRIVER_KEY_DOWN:
-		AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
-		    dev->data.key.ks, dev->data.key.ucs);
+		AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED, dev->key.ks,
+		    dev->key.ucs);
 		break;
 	case AG_DRIVER_MOUSE_ENTER:
 		AG_PostEvent(win, "window-enter", NULL);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2022-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,6 @@ typedef struct ag_sdl2fb_driver {
 
 static int nDrivers = 0;			/* Opened driver instances */
 static int initedSDL = 0;			/* Inited TIMERS and EVENTS */
-static int initedSDLVideo = 0;			/* Inited VIDEO */
 static AG_EventSink *_Nullable sfbEventSpinner = NULL;
 static AG_EventSink *_Nullable sfbEventEpilogue = NULL;
 
@@ -107,20 +106,11 @@ SDL2FB_Open(void *_Nonnull obj, const char *_Nullable spec)
 
 	/* Initialize SDL's video subsystem. */
 	if (!initedSDL) {
-		if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_EVENTS) == -1) {
+		if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) == -1) {
 			AG_SetError("SDL_Init() failed: %s", SDL_GetError());
 			return (-1);
 		}
 		initedSDL = 1;
-	}
-	if (!SDL_WasInit(SDL_INIT_VIDEO)) {
-		if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-			AG_SetError("SDL_INIT_VIDEO failed: %s", SDL_GetError());
-			return (-1);
-		}
-		Debug(sfb, "SDL Video Initialized (%s)\n",
-		    SDL_GetCurrentVideoDriver());
-		initedSDLVideo = 1;
 	}
 #if 0
 	/* Use SDL's time interface. */
@@ -128,8 +118,8 @@ SDL2FB_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_DestroyEventSubsystem();
 	AG_InitEventSubsystem(AG_SOFT_TIMERS);
 #endif
-	if ((drv->mouse = AG_MouseNew(sfb, "SDL2 mouse")) == NULL ||
-	    (drv->kbd = AG_KeyboardNew(sfb, "SDL2 keyboard")) == NULL)
+	if ((drv->mouse = AG_MouseNew(sfb, "SDL2 Mouse")) == NULL ||
+	    (drv->kbd = AG_KeyboardNew(sfb, "SDL2 Keyboard")) == NULL)
 		goto fail;
 
 #if 0
@@ -171,12 +161,6 @@ SDL2FB_Close(void *_Nonnull obj)
 #endif
 	AG_FreeCursors(AGDRIVER(sfb));
 
-	if (initedSDLVideo) {
-		Debug(sfb, "SDL Video Quit (%s)\n",
-		    SDL_GetCurrentVideoDriver());
-		SDL_QuitSubSystem(SDL_INIT_VIDEO);
-		initedSDLVideo = 0;
-	}
 	AG_ObjectDelete(drv->kbd); drv->kbd = NULL;
 	AG_ObjectDelete(drv->mouse); drv->mouse = NULL;
 
@@ -1681,11 +1665,6 @@ SDL2FB_CloseVideo(void *_Nonnull obj)
 
 	SDL_DestroyWindow(sfb->window);
 	sfb->window = NULL;
-
-	if (initedSDLVideo) {
-		SDL_QuitSubSystem(SDL_INIT_VIDEO);
-		initedSDLVideo = 0;
-	}
 }
 
 static int

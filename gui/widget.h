@@ -29,7 +29,7 @@ struct ag_font;
  * container widgets for a preferred initial geometry in pixels.
  */
 typedef struct ag_size_req {
-	int w, h;			/* Requested geometry in pixels */
+	int w, h;                            /* Requested size (px) */
 } AG_SizeReq;
 
 /*
@@ -37,23 +37,26 @@ typedef struct ag_size_req {
  * to their child widgets their final allocated position and size in pixels.
  */
 typedef struct ag_size_alloc {
-	int w, h;			/* Allocated geometry in pixels */
-	int x, y;			/* Allocated position in pixels */
+	int w, h;                            /* Widget size (px) */
+	int x, y;                            /* Position in parent (px) */
 } AG_SizeAlloc;
 
 /* Widget class description */
 typedef struct ag_widget_class {
 	struct ag_object_class _inherit;     /* [AG_Object] -> [AG_Widget] */
 
-	/* Rendering routine (rendering context) */
 	void (*_Nullable draw)(void *_Nonnull);
-	
-	/* Size requisition (indicate preferred initial size to parent) */
 	void (*_Nullable size_request)(void *_Nonnull, AG_SizeReq *_Nonnull);
-
-	/* Size allocation (handle final size returned by parent) */
 	int  (*_Nullable size_allocate)(void *_Nonnull,
 	                                const AG_SizeAlloc *_Nonnull);
+	void (*_Nullable mouse_button_down)(void *_Nonnull, AG_MouseButton, int,int);
+	void (*_Nullable mouse_button_up)(void *_Nonnull, AG_MouseButton, int,int);
+	void (*_Nullable mouse_motion)(void *_Nonnull, int,int, int,int);
+	void (*_Nullable key_down)(void *_Nonnull, AG_KeySym, AG_KeyMod, AG_Char);
+	void (*_Nullable key_up)(void *_Nonnull, AG_KeySym, AG_KeyMod, AG_Char);
+	void (*_Nullable touch)(void *_Nonnull, void *_Nonnull, const AG_DriverEvent *_Nonnull);
+	void (*_Nullable ctrl)(void *_Nonnull, void *_Nonnull, const AG_DriverEvent *_Nonnull);
+	void (*_Nullable joy)(void *_Nonnull, void *_Nonnull, const AG_DriverEvent *_Nonnull);
 } AG_WidgetClass;
 
 /* A constant size for some visual element (possibly a relative to a parent) */
@@ -234,13 +237,13 @@ typedef struct ag_widget {
 #define AG_WIDGET_HIDE                  0x00000200 /* Don't display */
 #define AG_WIDGET_DISABLED              0x00000400 /* Inactive state */
 #define AG_WIDGET_MOUSEOVER             0x00000800 /* Cursor is hovering (RO) */
-#define AG_WIDGET_CATCH_TAB             0x00001000 /* Receive focus-cycling key events */
+#define AG_WIDGET_CATCH_TAB             0x00001000 /* Inhibit TAB key focus-cycling */
 #define AG_WIDGET_GL_RESHAPE            0x00002000 /* Pending GL view reshape */
 #define AG_WIDGET_UNDERSIZE             0x00004000 /* Allocation could not be met (RO) */
 #define AG_WIDGET_DISABLE_ON_ATTACH     0x00008000 /* Set attached widgets DISABLED */
 #define AG_WIDGET_UNFOCUSED_KEYDOWN     0x00010000 /* Receive keydowns w/o focus */
 #define AG_WIDGET_UNFOCUSED_KEYUP       0x00020000 /* Receive keyups w/o focus */
-                                     /* 0x00040000 */
+#define AG_WIDGET_CATCH_SHOULDER        0x00040000 /* Inhibit controller-driven focus-cycling */
                                      /* 0x00080000 */
 #define AG_WIDGET_UPDATE_WINDOW         0x00100000 /* Request WindowUpdate() ASAP */
 #define AG_WIDGET_QUEUE_SURFACE_BACKUP  0x00200000 /* Software-backup surfaces now */

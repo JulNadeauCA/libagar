@@ -1,4 +1,4 @@
-.\" Copyright (c) 2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2022-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,8 @@
 The Agar
 .Va sdl2mw
 driver provides an interface to the Simple DirectMedia Layer (SDL) library
-version 2, and renders GUI elements as OpenGL primitives and managed textures
-in separate windows.
+version 2 (SDL2) and renders GUI elements using OpenGL primitives and
+managed textures under separate windows.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Driver 3 ->
 .Xr AG_DriverMw 3 ->
@@ -48,37 +48,40 @@ AG_InitGraphics("sdl2mw(out=%08d.jpg)");
 .Ed
 .Sh OPTIONS
 .Bl -tag -compact -width "noAutoCapture "
-.It noAutoCapture
-Disable mouse auto-capture behavior
-(see
-.Dv SDL_HINT_MOUSE_AUTO_CAPTURE ) .
-Enabled by default.
-May be set by widget code with the
-.Fn setMouseAutoCapture
-driver operation (see
-.Xr AG_Driver 3 ) .
+.It ctrl
+Enable game controller (gamepad) support.
+.It haptic
+Enable haptic (force feedback) subsystem.
+.It joy
+Enable joystick input device support.
 .It debug
 Capture
 .Dv GL_DEBUG_OUTPUT
 errors.
-.It stereo
-Request a stereoscopic visual.
+.It noAutoCapture
+Disable mouse auto-capture on click
+(see SDL2 docs for
+.Dv SDL_HINT_MOUSE_AUTO_CAPTURE ) .
+May be set by widget code with the
+.Fn setMouseAutoCapture
+.Xr AG_Driver 3
+operation.
 .It out
-Dump video frames to JPEG or PNG image files.
-The filename path may include a printf-style (with frame number as argument).
-For example,
-.Sq %08d.jpg
-will output frames to 00000001.jpg, 00000002.jpg, etc.
+Export video frames to JPEG or PNG.
+Specify a format string for output file names.
+Example:
+.Sq %04d.jpg
+will output frames to 0001.jpg, 0002.jpg, and so on.
 .It outFirst
 Override first frame number (default = 0).
 .It outLast
-Terminate application after # frames have been rendered.
-.It jpegQual
-If exporting to JPEG, set quality factor (100% = best).
+Terminate after # frames have been rendered.
 .It jpegDCT
-If exporting to JPEG, specify DCT method ("islow" for slow but accurate
-integer method, "ifast" for fast but less accurate integer method, or
-"float" for floating point method).
+(JPEG Export) DCT method ("islow", "ifast" or "float").
+.It jpegQual
+(JPEG Export) Quality factor (100% = best).
+.It stereo
+Request a stereoscopic visual.
 .El
 .Sh SEE ALSO
 .Xr AG_DriverSDL2FB 3 ,
