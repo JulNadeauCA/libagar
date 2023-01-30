@@ -191,9 +191,11 @@
 #ifdef AG_UNICODE
 # define AG_Char Uint32
 # define AG_CHAR_MAX 0x7fffffff
+# define AG_CHAR_PADDING(name) Uint8 name[4]
 #else
 # define AG_Char Uint8
 # define AG_CHAR_MAX 0x7f
+# define AG_CHAR_PADDING(name) Uint8 name[7]
 #endif
 
 /*
