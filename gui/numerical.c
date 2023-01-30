@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -273,8 +273,8 @@ OnShow(AG_Event *_Nonnull event)
 
 	if ((num->flags & AG_NUMERICAL_EXCL) == 0)
 		AG_AddTimer(num, &num->toUpdate,
-		            (num->flags & AG_NUMERICAL_SLOW) ? 2000 : 250,
-		            UpdateTimeout, NULL);
+		    (num->flags & AG_NUMERICAL_SLOW) ? 2000 : 250,
+		    UpdateTimeout,NULL);
 
 	if ((V = AG_AccessVariable(num, "value")) == NULL) {
 		if (num->flags & AG_NUMERICAL_INT) {
@@ -335,44 +335,6 @@ KeyRepeat(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
-{
-	AG_Numerical *num = AG_NUMERICAL_PTR(1);
-	const int keysym = AG_INT(2);
-
-	switch (keysym) {
-	case AG_KEY_UP:
-		AG_NumericalIncrement(num);
-		AG_AddTimer(num, &num->toInc, agKbdDelay, KeyRepeat, "%i", AG_KEY_UP);
-		break;
-	case AG_KEY_DOWN:
-		AG_NumericalDecrement(num);
-		AG_AddTimer(num, &num->toDec, agKbdDelay, KeyRepeat, "%i", AG_KEY_DOWN);
-		break;
-	default:
-		break;
-	}
-}
-
-static void
-KeyUp(AG_Event *_Nonnull event)
-{
-	AG_Numerical *num = AG_NUMERICAL_PTR(1);
-	const int keysym = AG_INT(2);
-
-	switch (keysym) {
-	case AG_KEY_UP:
-		AG_DelTimer(num, &num->toInc);
-		break;
-	case AG_KEY_DOWN:
-		AG_DelTimer(num, &num->toDec);
-		break;
-	default:
-		break;
-	}
-}
-
-static void
 LostFocus(AG_Event *_Nonnull event)
 {
 	AG_Numerical *num = AG_NUMERICAL_PTR(1);
@@ -396,6 +358,7 @@ UpdateFromText(AG_Event *_Nonnull event)
 	const int unfocus = AG_INT(2);
 	AG_Variable *valueb, *minb, *maxb;
 	void *value, *min, *max;
+	const char *inTxt = num->inTxt;
 
 	valueb = AG_GetVariable(num, "value", &value);
 	minb = AG_GetVariable(num, "min", &min);
@@ -403,32 +366,52 @@ UpdateFromText(AG_Event *_Nonnull event)
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
 	case AG_VARIABLE_FLOAT:
-		SET_NUM(float, AG_Unit2Base(strtod(num->inTxt,NULL),num->unit));
+		if ((num->flags & AG_NUMERICAL_NO_POS_INF) == 0 &&
+		    (Strcasecmp(inTxt, "inf") == 0 ||
+		     strcmp(inTxt, AGSI_INFINITY) == 0)) {
+			SET_NUM(float, AG_FLT_MAX);
+		} else if ((num->flags & AG_NUMERICAL_NO_NEG_INF) &&
+		           (Strcasecmp(inTxt, "-inf") == 0 ||
+			    strcmp(inTxt, "-" AGSI_INFINITY) == 0)) {
+			SET_NUM(float, AG_FLT_MIN);
+		} else {
+			SET_NUM(float, AG_Unit2Base(strtod(inTxt,NULL),num->unit));
+		}
 		break;
 	case AG_VARIABLE_DOUBLE:
-		SET_NUM(double, AG_Unit2Base(strtod(num->inTxt,NULL),num->unit));
+		if ((num->flags & AG_NUMERICAL_NO_POS_INF) == 0 &&
+		    (Strcasecmp(inTxt, "inf") == 0 ||
+		     strcmp(inTxt, AGSI_INFINITY) == 0)) {
+			SET_NUM(double, AG_DBL_MAX);
+		} else if ((num->flags & AG_NUMERICAL_NO_NEG_INF) &&
+		           (Strcasecmp(inTxt, "-inf") == 0 ||
+			    strcmp(inTxt, "-" AGSI_INFINITY) == 0)) {
+			SET_NUM(double, AG_DBL_MIN);
+		} else {
+			SET_NUM(double, AG_Unit2Base(strtod(inTxt,NULL),num->unit));
+		}
 		break;
-	case AG_VARIABLE_INT:    SET_NUM(int, strtol(num->inTxt,NULL,10));	break;
-	case AG_VARIABLE_UINT:   SET_NUM(Uint, strtoul(num->inTxt,NULL,10));	break;
-	case AG_VARIABLE_UINT8:  SET_NUM(Uint8, strtoul(num->inTxt,NULL,10));	break;
-	case AG_VARIABLE_SINT8:  SET_NUM(Sint8, strtol(num->inTxt,NULL,10));	break;
-	case AG_VARIABLE_UINT16: SET_NUM(Uint16, strtoul(num->inTxt,NULL,10));	break;
-	case AG_VARIABLE_SINT16: SET_NUM(Sint16, strtol(num->inTxt,NULL,10));	break;
-	case AG_VARIABLE_UINT32: SET_NUM(Uint32, strtoul(num->inTxt,NULL,10));	break;
-	case AG_VARIABLE_SINT32: SET_NUM(Sint32, strtol(num->inTxt,NULL,10));	break;
+	case AG_VARIABLE_INT:    SET_NUM(int, strtol(inTxt,NULL,10));     break;
+	case AG_VARIABLE_UINT:   SET_NUM(Uint, strtoul(inTxt,NULL,10));   break;
+	case AG_VARIABLE_UINT8:  SET_NUM(Uint8, strtoul(inTxt,NULL,10));  break;
+	case AG_VARIABLE_SINT8:  SET_NUM(Sint8, strtol(inTxt,NULL,10));   break;
+	case AG_VARIABLE_UINT16: SET_NUM(Uint16, strtoul(inTxt,NULL,10)); break;
+	case AG_VARIABLE_SINT16: SET_NUM(Sint16, strtol(inTxt,NULL,10));  break;
+	case AG_VARIABLE_UINT32: SET_NUM(Uint32, strtoul(inTxt,NULL,10)); break;
+	case AG_VARIABLE_SINT32: SET_NUM(Sint32, strtol(inTxt,NULL,10));  break;
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_UINT64:
 # ifdef _MK_HAVE_STRTOLL
-		SET_NUM(Uint64, strtoull(num->inTxt,NULL,10));
+		SET_NUM(Uint64, strtoull(inTxt,NULL,10));
 # else
-		SET_NUM(Uint64, strtoul(num->inTxt,NULL,10));
+		SET_NUM(Uint64, strtoul(inTxt,NULL,10));
 # endif
 		break;
 	case AG_VARIABLE_SINT64:
 # ifdef _MK_HAVE_STRTOLL
-		SET_NUM(Sint64, strtoll(num->inTxt,NULL,10));
+		SET_NUM(Sint64, strtoll(inTxt,NULL,10));
 # else
-		SET_NUM(Sint64, strtol(num->inTxt,NULL,10));
+		SET_NUM(Sint64, strtol(inTxt,NULL,10));
 # endif
 		break;
 #endif
@@ -446,6 +429,7 @@ UpdateFromText(AG_Event *_Nonnull event)
 		AG_WidgetUnfocus(num->input);
 	}
 	AG_PostEvent(num, "numerical-return", NULL);
+	AG_NumericalUpdate(num);
 }
 #undef SET_NUM
 
@@ -525,7 +509,7 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unitKey)
 void
 AG_NumericalUpdate(AG_Numerical *num)
 {
-	char s[64];
+	char s[AG_NUMERICAL_INPUT_MAX];
 	AG_Variable *valueb;
 	void *value;
 
@@ -537,12 +521,32 @@ AG_NumericalUpdate(AG_Numerical *num)
 	valueb = AG_GetVariable(num, "value", &value);
 	switch (AG_VARIABLE_TYPE(valueb)) {
 	case AG_VARIABLE_DOUBLE:
-		Snprintf(s, sizeof(s), num->format,
-		    AG_Base2Unit(*(double *)value, num->unit));
+		{
+			const double val = *(double *)value;
+
+			if (val == AG_DBL_MAX) {
+				Strlcpy(s, AGSI_INFINITY, sizeof(s));
+			} else if (val == AG_DBL_MIN) {
+				Strlcpy(s, "-" AGSI_INFINITY, sizeof(s));
+			} else {
+				Snprintf(s, sizeof(s), num->format,
+				    AG_Base2Unit(val, num->unit));
+			}
+		}
 		break;
 	case AG_VARIABLE_FLOAT:
-		Snprintf(s, sizeof(s), num->format,
-		    AG_Base2Unit(*(float *)value, num->unit));
+		{
+			const float val = *(float *)value;
+
+			if (val == AG_FLT_MAX) {
+				Strlcpy(s, AGSI_INFINITY, sizeof(s));
+			} else if (val == AG_FLT_MIN) {
+				Strlcpy(s, "-" AGSI_INFINITY, sizeof(s));
+			} else {
+				Snprintf(s, sizeof(s), num->format,
+				    AG_Base2Unit(val, num->unit));
+			}
+		}
 		break;
 	case AG_VARIABLE_INT:	 StrlcpyInt(s, *(int *)value, sizeof(s));	break;
 	case AG_VARIABLE_UINT:	 StrlcpyUint(s, *(Uint *)value, sizeof(s));	break;
@@ -565,10 +569,38 @@ AG_NumericalUpdate(AG_Numerical *num)
 }
 
 static void
+Increment(AG_Event *_Nonnull event)
+{
+	AG_Numerical *num = AG_NUMERICAL_PTR(1);
+
+	AG_NumericalIncrement(num);
+	AG_AddTimer(num, &num->toInc, agKbdDelay, KeyRepeat,"%i",AG_KEY_UP);
+}
+
+static void
+Decrement(AG_Event *_Nonnull event)
+{
+	AG_Numerical *num = AG_NUMERICAL_PTR(1);
+
+	AG_NumericalDecrement(num);
+	AG_AddTimer(num, &num->toDec, agKbdDelay, KeyRepeat,"%i",AG_KEY_DOWN);
+}
+
+static void
+Stop(AG_Event *_Nonnull event)
+{
+	AG_Numerical *num = AG_NUMERICAL_PTR(1);
+
+	AG_DelTimer(num, &num->toInc);
+	AG_DelTimer(num, &num->toDec);
+}
+
+static void
 Init(void *_Nonnull obj)
 {
 	AG_Numerical *num = obj;
-	const Uint btnFlags = AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS;
+	AG_Textbox *tb;
+	AG_Button *btn;
 
 	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE;
 
@@ -577,42 +609,44 @@ Init(void *_Nonnull obj)
 	num->unit = num->unitGroup = AG_FindUnit("identity");
 	num->units = NULL;
 	num->inTxt[0] = '\0';
-
-	/* Input textbox */
-	num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
-	AG_TextboxBindASCII(num->input, num->inTxt, sizeof(num->inTxt));
-	AG_TextboxSizeHint(num->input, "8888.88");
-	AG_SetStyle(num->input, "padding", "inherit");
-
-	num->incbu = AG_ButtonNewS(num, btnFlags, _("+"));     /* Increment */
-	AG_SetStyle(num->incbu, "padding", "0");
-	AG_SetStyle(num->incbu, "font-size", "80%");
-
-	num->decbu = AG_ButtonNewS(num, btnFlags, _("-"));     /* Decrement */
-	AG_SetStyle(num->decbu, "padding", "0");
-	AG_SetStyle(num->decbu, "font-size", "80%");
-
 	num->wUnitSel = 0;
 	num->hUnitSel = 0;
 	num->wPreUnit = 0;
 
-	AG_AddEvent(num, "widget-shown", OnShow, NULL);
+	/* Input textbox */
+	tb = num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
+	AG_TextboxBindUTF8(tb, num->inTxt, sizeof(num->inTxt));
+	AG_TextboxSizeHint(tb, "8888.88");
+	AG_SetStyle(tb, "padding", "inherit");
+	AG_SetEvent(tb, "textbox-return",  UpdateFromText,"%p,%i",num,1);
+	AG_SetEvent(tb, "textbox-changed", UpdateFromText,"%p,%i",num,0);
+	AG_AddEvent(tb->ed, "widget-lostfocus", LostFocus,"%p",num);
+	AG_SetEvent(tb->ed, "editable-increment", Increment,"%p",num);
+	AG_SetEvent(tb->ed, "editable-decrement", Decrement,"%p",num);
+	AG_SetEvent(tb->ed, "editable-stop", Stop,"%p",num);
 
-	AG_SetEvent(num->incbu, "button-pushed", ButtonIncrement, "%p,%i", num, 0);
-	AG_SetEvent(num->decbu, "button-pushed", ButtonIncrement, "%p,%i", num, 1);
+	/* Increment button */
+	btn = num->incbu = AG_ButtonNewS(num,
+	    AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS,
+	    _("+"));
+	AG_SetStyle(btn, "padding", "0");
+	AG_SetStyle(btn, "font-size", "80%");
+	AG_SetEvent(btn, "button-pushed", ButtonIncrement, "%p,%i", num, 0);
 
-	AG_SetEvent(num->input, "textbox-return",  UpdateFromText, "%p,%i", num, 1);
-	AG_SetEvent(num->input, "textbox-changed", UpdateFromText, "%p,%i", num, 0);
-
-	AG_AddEvent(num->input->ed, "key-down", KeyDown, "%p", num);
-	AG_AddEvent(num->input->ed, "key-up", KeyUp, "%p", num);
-	AG_AddEvent(num->input->ed, "widget-lostfocus", LostFocus, "%p", num);
+	/* Decrement button */
+	btn = num->decbu = AG_ButtonNewS(num,
+	    AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS,
+	    _("-"));
+	AG_SetStyle(btn, "padding", "0");
+	AG_SetStyle(btn, "font-size", "80%");
+	AG_SetEvent(btn, "button-pushed", ButtonIncrement, "%p,%i", num, 1);
 
 	AG_InitTimer(&num->toUpdate, "update", 0);
 	AG_InitTimer(&num->toInc, "increment", 0);
 	AG_InitTimer(&num->toDec, "decrement", 0);
 
-	AG_WidgetForwardFocus(num, num->input);
+	AG_AddEvent(num, "widget-shown", OnShow, NULL);
+	AG_WidgetForwardFocus(num, tb);
 }
 
 void
@@ -733,21 +767,21 @@ AG_NumericalIncrement(AG_Numerical *num)
 	incb = AG_GetVariable(num, "inc", &inc);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
-	case AG_VARIABLE_FLOAT:		ADD_REAL(float);	break;
-	case AG_VARIABLE_DOUBLE:	ADD_REAL(double);	break;
-	case AG_VARIABLE_INT:		ADD_INT(int);		break;
-	case AG_VARIABLE_UINT:		ADD_INT(Uint);		break;
-	case AG_VARIABLE_UINT8:		ADD_INT(Uint8);		break;
-	case AG_VARIABLE_SINT8:		ADD_INT(Sint8);		break;
-	case AG_VARIABLE_UINT16:	ADD_INT(Uint16);	break;
-	case AG_VARIABLE_SINT16:	ADD_INT(Sint16);	break;
-	case AG_VARIABLE_UINT32:	ADD_INT(Uint32);	break;
-	case AG_VARIABLE_SINT32:	ADD_INT(Sint32);	break;
+	case AG_VARIABLE_FLOAT:   ADD_REAL(float);   break;
+	case AG_VARIABLE_DOUBLE:  ADD_REAL(double);  break;
+	case AG_VARIABLE_INT:     ADD_INT(int);      break;
+	case AG_VARIABLE_UINT:    ADD_INT(Uint);     break;
+	case AG_VARIABLE_UINT8:   ADD_INT(Uint8);    break;
+	case AG_VARIABLE_SINT8:   ADD_INT(Sint8);    break;
+	case AG_VARIABLE_UINT16:  ADD_INT(Uint16);   break;
+	case AG_VARIABLE_SINT16:  ADD_INT(Sint16);   break;
+	case AG_VARIABLE_UINT32:  ADD_INT(Uint32);   break;
+	case AG_VARIABLE_SINT32:  ADD_INT(Sint32);   break;
 #ifdef HAVE_64BIT
-	case AG_VARIABLE_UINT64:	ADD_INT(Uint64);	break;
-	case AG_VARIABLE_SINT64:	ADD_INT(Sint64);	break;
+	case AG_VARIABLE_UINT64:  ADD_INT(Uint64);   break;
+	case AG_VARIABLE_SINT64:  ADD_INT(Sint64);   break;
 #endif
-	default:						break;
+	default:                                     break;
 	}
 
 	AG_PostEvent(num, "numerical-changed", NULL);
@@ -797,21 +831,21 @@ AG_NumericalDecrement(AG_Numerical *num)
 	incb = AG_GetVariable(num, "inc", &inc);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
-	case AG_VARIABLE_FLOAT:		SUB_REAL(float);	break;
-	case AG_VARIABLE_DOUBLE:	SUB_REAL(double);	break;
-	case AG_VARIABLE_INT:		SUB_INT(int);		break;
-	case AG_VARIABLE_UINT:		SUB_INT(Uint);		break;
-	case AG_VARIABLE_UINT8:		SUB_INT(Uint8);		break;
-	case AG_VARIABLE_SINT8:		SUB_INT(Sint8);		break;
-	case AG_VARIABLE_UINT16:	SUB_INT(Uint16);	break;
-	case AG_VARIABLE_SINT16:	SUB_INT(Sint16);	break;
-	case AG_VARIABLE_UINT32:	SUB_INT(Uint32);	break;
-	case AG_VARIABLE_SINT32:	SUB_INT(Sint32);	break;
+	case AG_VARIABLE_FLOAT:  SUB_REAL(float);  break;
+	case AG_VARIABLE_DOUBLE: SUB_REAL(double); break;
+	case AG_VARIABLE_INT:    SUB_INT(int);     break;
+	case AG_VARIABLE_UINT:   SUB_INT(Uint);    break;
+	case AG_VARIABLE_UINT8:  SUB_INT(Uint8);   break;
+	case AG_VARIABLE_SINT8:  SUB_INT(Sint8);   break;
+	case AG_VARIABLE_UINT16: SUB_INT(Uint16);  break;
+	case AG_VARIABLE_SINT16: SUB_INT(Sint16);  break;
+	case AG_VARIABLE_UINT32: SUB_INT(Uint32);  break;
+	case AG_VARIABLE_SINT32: SUB_INT(Sint32);  break;
 #ifdef HAVE_64BIT
-	case AG_VARIABLE_UINT64:	SUB_INT(Uint64);	break;
-	case AG_VARIABLE_SINT64:	SUB_INT(Sint64);	break;
+	case AG_VARIABLE_UINT64: SUB_INT(Uint64);  break;
+	case AG_VARIABLE_SINT64: SUB_INT(Sint64);  break;
 #endif
-	default:						break;
+	default:                                   break;
 	}
 	AG_PostEvent(num, "numerical-changed", NULL);
 
@@ -900,22 +934,23 @@ AG_NumericalGetFlt(AG_Numerical *num)
 	void *value;
 
 	bValue = AG_GetVariable(num, "value", &value);
+
 	switch (AG_VARIABLE_TYPE(bValue)) {
-	case AG_VARIABLE_FLOAT:		return *(float *)value;
-	case AG_VARIABLE_DOUBLE:	return (float)(*(double *)value);
-	case AG_VARIABLE_INT:		return (float)(*(int *)value);
-	case AG_VARIABLE_UINT:		return (float)(*(Uint *)value);
-	case AG_VARIABLE_UINT8:		return (float)(*(Uint8 *)value);
-	case AG_VARIABLE_SINT8:		return (float)(*(Sint8 *)value);
-	case AG_VARIABLE_UINT16:	return (float)(*(Uint16 *)value);
-	case AG_VARIABLE_SINT16:	return (float)(*(Sint16 *)value);
-	case AG_VARIABLE_UINT32:	return (float)(*(Uint32 *)value);
-	case AG_VARIABLE_SINT32:	return (float)(*(Sint32 *)value);
+	case AG_VARIABLE_FLOAT:   return *(float *)value;
+	case AG_VARIABLE_DOUBLE:  return (float)(*(double *)value);
+	case AG_VARIABLE_INT:     return (float)(*(int *)value);
+	case AG_VARIABLE_UINT:    return (float)(*(Uint *)value);
+	case AG_VARIABLE_UINT8:   return (float)(*(Uint8 *)value);
+	case AG_VARIABLE_SINT8:   return (float)(*(Sint8 *)value);
+	case AG_VARIABLE_UINT16:  return (float)(*(Uint16 *)value);
+	case AG_VARIABLE_SINT16:  return (float)(*(Sint16 *)value);
+	case AG_VARIABLE_UINT32:  return (float)(*(Uint32 *)value);
+	case AG_VARIABLE_SINT32:  return (float)(*(Sint32 *)value);
 #ifdef HAVE_64BIT
-	case AG_VARIABLE_UINT64:	return (float)(*(Uint64 *)value);
-	case AG_VARIABLE_SINT64:	return (float)(*(Sint64 *)value);
+	case AG_VARIABLE_UINT64:  return (float)(*(Uint64 *)value);
+	case AG_VARIABLE_SINT64:  return (float)(*(Sint64 *)value);
 #endif
-	default:			return (0.0f);
+	default:                  return (0.0f);
 	}
 }
 
@@ -927,22 +962,23 @@ AG_NumericalGetDbl(AG_Numerical *num)
 	void *value;
 
 	bValue = AG_GetVariable(num, "value", &value);
+
 	switch (AG_VARIABLE_TYPE(bValue)) {
-	case AG_VARIABLE_FLOAT:		return (double)(*(float *)value);
-	case AG_VARIABLE_DOUBLE:	return *(double *)value;
-	case AG_VARIABLE_INT:		return (double)(*(int *)value);
-	case AG_VARIABLE_UINT:		return (double)(*(Uint *)value);
-	case AG_VARIABLE_UINT8:		return (double)(*(Uint8 *)value);
-	case AG_VARIABLE_SINT8:		return (double)(*(Sint8 *)value);
-	case AG_VARIABLE_UINT16:	return (double)(*(Uint16 *)value);
-	case AG_VARIABLE_SINT16:	return (double)(*(Sint16 *)value);
-	case AG_VARIABLE_UINT32:	return (double)(*(Uint32 *)value);
-	case AG_VARIABLE_SINT32:	return (double)(*(Sint32 *)value);
+	case AG_VARIABLE_FLOAT:   return (double)(*(float *)value);
+	case AG_VARIABLE_DOUBLE:  return *(double *)value;
+	case AG_VARIABLE_INT:     return (double)(*(int *)value);
+	case AG_VARIABLE_UINT:    return (double)(*(Uint *)value);
+	case AG_VARIABLE_UINT8:   return (double)(*(Uint8 *)value);
+	case AG_VARIABLE_SINT8:   return (double)(*(Sint8 *)value);
+	case AG_VARIABLE_UINT16:  return (double)(*(Uint16 *)value);
+	case AG_VARIABLE_SINT16:  return (double)(*(Sint16 *)value);
+	case AG_VARIABLE_UINT32:  return (double)(*(Uint32 *)value);
+	case AG_VARIABLE_SINT32:  return (double)(*(Sint32 *)value);
 #ifdef HAVE_64BIT
-	case AG_VARIABLE_UINT64:	return (double)(*(Uint64 *)value);
-	case AG_VARIABLE_SINT64:	return (double)(*(Sint64 *)value);
+	case AG_VARIABLE_UINT64:  return (double)(*(Uint64 *)value);
+	case AG_VARIABLE_SINT64:  return (double)(*(Sint64 *)value);
 #endif
-	default:			return (0.0);
+	default:                  return (0.0);
 	}
 }
 
@@ -955,21 +991,21 @@ AG_NumericalGetInt(AG_Numerical *num)
 
 	bValue = AG_GetVariable(num, "value", &value);
 	switch (AG_VARIABLE_TYPE(bValue)) {
-	case AG_VARIABLE_FLOAT:		return (int)(*(float *)value);
-	case AG_VARIABLE_DOUBLE:	return (int)(*(double *)value);
-	case AG_VARIABLE_INT:		return *(int *)value;
-	case AG_VARIABLE_UINT:		return (int)(*(Uint *)value);
-	case AG_VARIABLE_UINT8:		return (int)(*(Uint8 *)value);
-	case AG_VARIABLE_SINT8:		return (int)(*(Sint8 *)value);
-	case AG_VARIABLE_UINT16:	return (int)(*(Uint16 *)value);
-	case AG_VARIABLE_SINT16:	return (int)(*(Sint16 *)value);
-	case AG_VARIABLE_UINT32:	return (int)(*(Uint32 *)value);
-	case AG_VARIABLE_SINT32:	return (int)(*(Sint32 *)value);
+	case AG_VARIABLE_FLOAT:   return (int)(*(float *)value);
+	case AG_VARIABLE_DOUBLE:  return (int)(*(double *)value);
+	case AG_VARIABLE_INT:     return *(int *)value;
+	case AG_VARIABLE_UINT:    return (int)(*(Uint *)value);
+	case AG_VARIABLE_UINT8:   return (int)(*(Uint8 *)value);
+	case AG_VARIABLE_SINT8:   return (int)(*(Sint8 *)value);
+	case AG_VARIABLE_UINT16:  return (int)(*(Uint16 *)value);
+	case AG_VARIABLE_SINT16:  return (int)(*(Sint16 *)value);
+	case AG_VARIABLE_UINT32:  return (int)(*(Uint32 *)value);
+	case AG_VARIABLE_SINT32:  return (int)(*(Sint32 *)value);
 #ifdef HAVE_64BIT
-	case AG_VARIABLE_UINT64:	return (int)(*(Uint64 *)value);
-	case AG_VARIABLE_SINT64:	return (int)(*(Sint64 *)value);
+	case AG_VARIABLE_UINT64:  return (int)(*(Uint64 *)value);
+	case AG_VARIABLE_SINT64:  return (int)(*(Sint64 *)value);
 #endif
-	default:			return (0);
+	default:                  return (0);
 	}
 }
 
@@ -981,22 +1017,23 @@ AG_NumericalGetUint32(AG_Numerical *num)
 	void *value;
 
 	bValue = AG_GetVariable(num, "value", &value);
+
 	switch (AG_VARIABLE_TYPE(bValue)) {
-	case AG_VARIABLE_FLOAT:		return (Uint32)(*(float *)value);
-	case AG_VARIABLE_DOUBLE:	return (Uint32)(*(double *)value);
-	case AG_VARIABLE_INT:		return (Uint32)(*(int *)value);
-	case AG_VARIABLE_UINT:		return (Uint32)(*(Uint *)value);
-	case AG_VARIABLE_UINT8:		return (Uint32)(*(Uint8 *)value);
-	case AG_VARIABLE_SINT8:		return (Uint32)(*(Sint8 *)value);
-	case AG_VARIABLE_UINT16:	return (Uint32)(*(Uint16 *)value);
-	case AG_VARIABLE_SINT16:	return (Uint32)(*(Sint16 *)value);
-	case AG_VARIABLE_UINT32:	return *(Uint32 *)value;
-	case AG_VARIABLE_SINT32:	return (Uint32)(*(Sint32 *)value);
+	case AG_VARIABLE_FLOAT:   return (Uint32)(*(float *)value);
+	case AG_VARIABLE_DOUBLE:  return (Uint32)(*(double *)value);
+	case AG_VARIABLE_INT:     return (Uint32)(*(int *)value);
+	case AG_VARIABLE_UINT:    return (Uint32)(*(Uint *)value);
+	case AG_VARIABLE_UINT8:   return (Uint32)(*(Uint8 *)value);
+	case AG_VARIABLE_SINT8:   return (Uint32)(*(Sint8 *)value);
+	case AG_VARIABLE_UINT16:  return (Uint32)(*(Uint16 *)value);
+	case AG_VARIABLE_SINT16:  return (Uint32)(*(Sint16 *)value);
+	case AG_VARIABLE_UINT32:  return *(Uint32 *)value;
+	case AG_VARIABLE_SINT32:  return (Uint32)(*(Sint32 *)value);
 #ifdef HAVE_64BIT
-	case AG_VARIABLE_UINT64:	return (Uint32)(*(Uint64 *)value);
-	case AG_VARIABLE_SINT64:	return (Uint32)(*(Sint64 *)value);
+	case AG_VARIABLE_UINT64:  return (Uint32)(*(Uint64 *)value);
+	case AG_VARIABLE_SINT64:  return (Uint32)(*(Sint64 *)value);
 #endif
-	default:			return (0UL);
+	default:                  return (0UL);
 	}
 }
 
@@ -1009,20 +1046,21 @@ AG_NumericalGetUint64(AG_Numerical *num)
 	void *value;
 
 	bValue = AG_GetVariable(num, "value", &value);
+
 	switch (AG_VARIABLE_TYPE(bValue)) {
-	case AG_VARIABLE_FLOAT:		return (Uint64)(*(float *)value);
-	case AG_VARIABLE_DOUBLE:	return (Uint64)(*(double *)value);
-	case AG_VARIABLE_INT:		return (Uint64)(*(int *)value);
-	case AG_VARIABLE_UINT:		return (Uint64)(*(Uint *)value);
-	case AG_VARIABLE_UINT8:		return (Uint64)(*(Uint8 *)value);
-	case AG_VARIABLE_SINT8:		return (Uint64)(*(Sint8 *)value);
-	case AG_VARIABLE_UINT16:	return (Uint64)(*(Uint16 *)value);
-	case AG_VARIABLE_SINT16:	return (Uint64)(*(Sint16 *)value);
-	case AG_VARIABLE_UINT32:	return (Uint64)(*(Uint32 *)value);
-	case AG_VARIABLE_SINT32:	return (Uint64)(*(Sint32 *)value);
-	case AG_VARIABLE_UINT64:	return *(Uint64 *)value;
-	case AG_VARIABLE_SINT64:	return (Uint64)(*(Sint64 *)value);
-	default:			return (0ULL);
+	case AG_VARIABLE_FLOAT:   return (Uint64)(*(float *)value);
+	case AG_VARIABLE_DOUBLE:  return (Uint64)(*(double *)value);
+	case AG_VARIABLE_INT:     return (Uint64)(*(int *)value);
+	case AG_VARIABLE_UINT:    return (Uint64)(*(Uint *)value);
+	case AG_VARIABLE_UINT8:   return (Uint64)(*(Uint8 *)value);
+	case AG_VARIABLE_SINT8:   return (Uint64)(*(Sint8 *)value);
+	case AG_VARIABLE_UINT16:  return (Uint64)(*(Uint16 *)value);
+	case AG_VARIABLE_SINT16:  return (Uint64)(*(Sint16 *)value);
+	case AG_VARIABLE_UINT32:  return (Uint64)(*(Uint32 *)value);
+	case AG_VARIABLE_SINT32:  return (Uint64)(*(Sint32 *)value);
+	case AG_VARIABLE_UINT64:  return *(Uint64 *)value;
+	case AG_VARIABLE_SINT64:  return (Uint64)(*(Sint64 *)value);
+	default:                  return (0ULL);
 	}
 }
 #endif /* HAVE_64BIT */
@@ -1041,7 +1079,15 @@ AG_WidgetClass agNumericalClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	NULL,			/* mouse_button_down */
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

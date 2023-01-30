@@ -12,20 +12,24 @@
 #include <agar/gui/begin.h>
 
 #ifndef AG_NUMERICAL_INPUT_MAX
-#define AG_NUMERICAL_INPUT_MAX 56
+#define AG_NUMERICAL_INPUT_MAX 128
 #endif
 
 typedef struct ag_numerical {
 	struct ag_widget wid;          /* AG_Widget -> AG_Numerical */
 	Uint flags;
-#define AG_NUMERICAL_HFILL     0x01
-#define AG_NUMERICAL_VFILL     0x02
-#define AG_NUMERICAL_INT       0x04  /* Make the default binding an int */
+#define AG_NUMERICAL_HFILL      0x01
+#define AG_NUMERICAL_VFILL      0x02
+#define AG_NUMERICAL_INT        0x04 /* Make the default binding an int */
                                      /* (default = float) */
-#define AG_NUMERICAL_EXCL      0x08  /* Assume exclusive access to variable */
-#define AG_NUMERICAL_READONLY  0x10  /* Read-only mode */
-#define AG_NUMERICAL_SLOW      0x20  /* Update every 2s (default = 250ms) */
-#define AG_NUMERICAL_EXPAND   (AG_NUMERICAL_HFILL | AG_NUMERICAL_VFILL)
+#define AG_NUMERICAL_EXCL       0x08 /* Assume exclusive access to variable */
+#define AG_NUMERICAL_READONLY   0x10 /* Read-only mode */
+#define AG_NUMERICAL_SLOW       0x20 /* Update every 2s (default = 250ms) */
+#define AG_NUMERICAL_NO_POS_INF 0x40 /* Don't allow "inf" or infinity float */
+#define AG_NUMERICAL_NO_NEG_INF 0x80 /* Don't allow "-inf" or negative infinity float */
+#define AG_NUMERICAL_NO_INF     (AG_NUMERICAL_NO_POS_INF | \
+                                 AG_NUMERICAL_NO_NEG_INF)
+#define AG_NUMERICAL_EXPAND     (AG_NUMERICAL_HFILL | AG_NUMERICAL_VFILL)
 
 	char format[28];                     /* Print format (for reals) */
 	const AG_Unit *_Nonnull unit;        /* Selected conversion unit */
