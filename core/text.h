@@ -151,7 +151,7 @@ typedef enum ag_language {
 
 /* Text entry */
 typedef struct ag_text_ent {
-	char  *_Nullable buf;		/* String buffer */
+	char *_Nullable buf;		/* String buffer */
 	AG_Size maxLen;			/* Length (allocated) */
 	AG_Size len;			/* Length (chars) */
 } AG_TextEnt;
@@ -162,7 +162,7 @@ typedef struct ag_text {
 	AG_TextEnt ent[AG_LANG_LAST];	/* Language entries */
 	AG_Language lang;		/* Selected language */
 	Uint flags;
-#define AG_TEXT_SAVED_FLAGS	0
+#define AG_TEXT_SAVED_FLAGS 0
 	AG_Size maxLen;			/* Maximum string length (bytes) */
 	AG_SIZE_PADDING(_pad);
 } AG_Text, AG_TextElement;

@@ -386,9 +386,6 @@ AG_Event *_Nonnull AG_AddEvent(void *_Nonnull, const char *_Nullable,
 			       _Nullable AG_EventFn, const char *_Nullable, ...);
 void               AG_UnsetEvent(void *_Nonnull, const char *_Nonnull);
 void               AG_UnsetEventByPtr(void *_Nonnull, AG_Event *_Nonnull);
-/*
- * TODO AG_AppendEvent(), AG_ReplaceEvent().
- */
 
 void AG_PostEventByPtr(void *_Nonnull, AG_Event *_Nonnull,
                        const char *_Nullable, ...);

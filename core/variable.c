@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,7 @@
 #include <agar/core/core.h>
 
 #include <string.h>
+#include <math.h>
 
 const AG_VariableTypeInfo agVariableTypes[] = {
 	/* type         indirLvl    name           typeTgt code bytes */
@@ -272,7 +273,7 @@ AG_PrintVariable(char *s, AG_Size len, AG_Variable *V)
 	case AG_VARIABLE_P_SINT32:  return Snprintf(s,len, "%ld", (long)*(Sint32 *)V->data.p);
 #endif
 #ifdef HAVE_FLOAT
-	case AG_VARIABLE_FLOAT:	    return Snprintf(s,len, "%.2f", V->data.flt);
+	case AG_VARIABLE_FLOAT:     return Snprintf(s,len, "%.2f", V->data.flt);
 	case AG_VARIABLE_P_FLOAT:   return Snprintf(s,len, "%.2f", *(float *)V->data.p);
 	case AG_VARIABLE_DOUBLE:    return Snprintf(s,len, "%.2f", V->data.dbl);
 	case AG_VARIABLE_P_DOUBLE:  return Snprintf(s,len, "%.2f", *(double *)V->data.p);
@@ -1043,10 +1044,22 @@ AG_Variable *
 AG_SetFloat(void *obj, const char *name, float v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
-	           AGSI_CYAN "float" AGSI_RST ") "
-		   AGSI_BOLD "%f" AGSI_RST "\n",
-	           name, v);
+	if ((AG_FLT_MAX - v) < AG_FLT_EPSILON) {
+		Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+		           AGSI_CYAN "float" AGSI_RST ") "
+			   AGSI_BOLD AGSI_INFINITY AGSI_RST "\n",
+		           name);
+	} else if ((AG_FLT_MIN + v) < AG_FLT_EPSILON) {
+		Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+		           AGSI_CYAN "float" AGSI_RST ") "
+			   AGSI_BOLD "-" AGSI_INFINITY AGSI_RST "\n",
+		           name);
+	} else {
+		Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+		           AGSI_CYAN "float" AGSI_RST ") "
+			   AGSI_BOLD "%f" AGSI_RST "\n",
+		           name, v);
+	}
 # endif
 	FN_VARIABLE_SET(flt, float, AG_VARIABLE_FLOAT);
 }
@@ -1095,10 +1108,19 @@ AG_Variable *
 AG_SetDouble(void *obj, const char *name, double v)
 {
 # ifdef AG_DEBUG
-	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
-	           AGSI_CYAN "double" AGSI_RST ") "
-	           AGSI_BOLD "%f" AGSI_RST "\n",
-		   name, v);
+	if ((AG_DBL_MAX - v) < AG_DBL_EPSILON) {
+		Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+		           AGSI_CYAN "double" AGSI_RST ") "
+			   AGSI_BOLD AGSI_INFINITY AGSI_RST "\n", name);
+	} else if ((AG_DBL_MIN + v) < AG_DBL_EPSILON) {
+		Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+		           AGSI_CYAN "double" AGSI_RST ") "
+			   AGSI_BOLD "-" AGSI_INFINITY AGSI_RST "\n", name);
+	} else {
+		Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
+		           AGSI_CYAN "double" AGSI_RST ") "
+		           AGSI_BOLD "%f" AGSI_RST "\n", name, v);
+	}
 # endif
 	FN_VARIABLE_SET(dbl, double, AG_VARIABLE_DOUBLE);
 }
@@ -1114,8 +1136,7 @@ AG_BindDouble(void *obj, const char *name, double *v)
 # ifdef AG_DEBUG
 	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 	           AGSI_CYAN "double" AGSI_RST ")%p (= "
-	           AGSI_BOLD "%f" AGSI_RST ")\n",
-		   name, v, *v);
+	           AGSI_BOLD "%f" AGSI_RST ")\n", name, v, *v);
 # endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_DOUBLE);
 }
@@ -1128,8 +1149,7 @@ AG_BindDoubleMp(void *obj, const char *name, double *v, AG_Mutex *mutex)
 	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 	           AGSI_CYAN "double" AGSI_RST ")%p (= "
 	           AGSI_BOLD "%f" AGSI_RST ") mutex "
-	           AGSI_BR_MAG "%p" AGSI_RST "\n",
-	           name, v, *v, mutex);
+	           AGSI_BR_MAG "%p" AGSI_RST "\n", name, v, *v, mutex);
 #  endif
 	return (V);
 }
@@ -1207,8 +1227,7 @@ AG_SetConstPointer(void *obj, const char *name, const void *v)
 	AG_Variable *V;
 # ifdef AG_DEBUG
 	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> ("
-	           AGSI_CYAN "const void" AGSI_RST " *)%p\n",
-		   name, v);
+	           AGSI_CYAN "const void" AGSI_RST " *)%p\n", name, v);
 # endif
 	AG_ObjectLock(obj);
 	V = AG_FetchVariable(obj, name, AG_VARIABLE_POINTER);
@@ -1240,13 +1259,11 @@ AG_BindPointer(void *obj, const char *name, void **v)
 	if (v != NULL) {
 		Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 		           AGSI_CYAN "void" AGSI_RST " *)%p (= "
-			   AGSI_BOLD "%p" AGSI_RST ")\n",
-			   name, v, *v);
+			   AGSI_BOLD "%p" AGSI_RST ")\n", name, v, *v);
 	} else {
 		Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 		           AGSI_CYAN "void" AGSI_RST " *)%p (= "
-			   AGSI_RED "NULL" AGSI_RST ")\n",
-			   name, v);
+			   AGSI_RED "NULL" AGSI_RST ")\n", name, v);
 	}
 #endif
 	FN_VARIABLE_BIND(AG_VARIABLE_P_POINTER);
@@ -1261,15 +1278,13 @@ AG_BindPointerMp(void *obj, const char *name, void **v, AG_Mutex *mutex)
 		Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 		           AGSI_CYAN "void" AGSI_RST " *)%p (= "
 			   AGSI_BOLD "%p" AGSI_RST ") mutex "
-			   AGSI_BR_MAG "%p" AGSI_RST "\n",
-			   name, v, *v, mutex);
+			   AGSI_BR_MAG "%p" AGSI_RST "\n", name, v, *v, mutex);
 
 	} else {
 		Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 		           AGSI_CYAN "void" AGSI_RST " *)%p (= "
 			   AGSI_BOLD "NULL" AGSI_RST ") mutex "
-			   AGSI_BR_MAG "%p" AGSI_RST "\n",
-			   name, v, mutex);
+			   AGSI_BR_MAG "%p" AGSI_RST "\n", name, v, mutex);
 	}
 # endif
 	return (V);
@@ -1375,8 +1390,7 @@ AG_SetString(void *pObj, const char *name, const char *s)
 	AG_ObjectLock(obj);
 #ifdef AG_DEBUG
 	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> \""
-	           AGSI_BOLD "%s" AGSI_RST "\"\n",
-		   name, s);
+	           AGSI_BOLD "%s" AGSI_RST "\"\n", name, s);
 #endif
 	TAILQ_FOREACH(V, &obj->vars, vars) {
 		if (strcmp(V->name, name) == 0)
@@ -1412,8 +1426,8 @@ AG_SetString(void *pObj, const char *name, const char *s)
 		default:
 #ifdef AG_DEBUG
 			Debug(obj, "Mutate \"" AGSI_YEL "%s" AGSI_RST "\" "
-			           "from (" AGSI_BR_GRN "%s" AGSI_RST ") to ("
-				            AGSI_BR_GRN "%s" AGSI_RST ")\n",
+			           "from (" AGSI_CYAN "%s" AGSI_RST ") to ("
+				            AGSI_CYAN "%s" AGSI_RST ")\n",
 					    name,
 					    agVariableTypes[V->type].name,
 			                    agVariableTypes[AG_VARIABLE_STRING].name);
@@ -1467,7 +1481,7 @@ AG_SetStringNODUP(void *obj, const char *name, char *s)
 #ifdef AG_DEBUG
 	Debug(obj, "Set \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 	           AGSI_CYAN "char" AGSI_RST " *)"
-		   AGSI_BR_RED "%p" AGSI_RST "<NODUP> (= \""
+		   AGSI_RED "%p" AGSI_RST "<NODUP> (= \""
 		   AGSI_BOLD "%s" AGSI_RST "\")\n", name, s, s);
 #endif
 	V = AG_FetchVariable(obj, name, AG_VARIABLE_STRING);
@@ -1493,8 +1507,8 @@ AG_SetStringNODUP(void *obj, const char *name, char *s)
 	default:
 #ifdef AG_DEBUG
 		Debug(obj, "Mutate \"" AGSI_YEL "%s" AGSI_RST "\" from ("
-		           AGSI_BR_GRN "%s" AGSI_RST ") to ("
-			   AGSI_BR_GRN "%s" AGSI_RST ")\n",
+		           AGSI_CYAN "%s" AGSI_RST ") to ("
+			   AGSI_CYAN "%s" AGSI_RST ")\n",
 		    name,
 		    agVariableTypes[V->type].name,
 		    agVariableTypes[AG_VARIABLE_STRING].name);
@@ -1519,12 +1533,12 @@ AG_BindString(void *obj, const char *name, char *buf, AG_Size bufSize)
 	if (strlen(buf) > 500) {
 		Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST
 		           "\" -> (" AGSI_CYAN "char" AGSI_RST " *)%p"
-			   "[+" AGSI_BR_RED "%lu" AGSI_RST "]\n",
+			   "[+" AGSI_RED "%lu" AGSI_RST "]\n",
 			   name, buf, (Ulong)bufSize);
 	} else {
 		Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST
 		           "\" -> (" AGSI_CYAN "char" AGSI_RST " *)%p"
-			   "[+" AGSI_BR_RED "%lu" AGSI_RST "] (= \""
+			   "[+" AGSI_RED "%lu" AGSI_RST "] (= \""
 			   AGSI_BOLD "%s" AGSI_RST "\")\n",
 		    name, buf, (Ulong)bufSize, buf);
 	}
@@ -1547,7 +1561,7 @@ AG_BindStringMp(void *obj, const char *name, char *v, AG_Size size,
 # ifdef AG_DEBUG
 	Debug(obj, "Bind \"" AGSI_BOLD "%s" AGSI_RST "\" -> ("
 	           AGSI_CYAN "char" AGSI_RST " *)%p"
-		   "[+" AGSI_BR_RED "%lu" AGSI_RST "] (= \""
+		   "[+" AGSI_RED "%lu" AGSI_RST "] (= \""
 		   AGSI_BOLD "%s" AGSI_RST "\") mutex "
 		   AGSI_BR_MAG "%p" AGSI_RST "\n",
 	    name, v, (Ulong)size, v, mutex);
@@ -1575,7 +1589,7 @@ AG_BindFlag(void *obj, const char *name, Uint *v, Uint bitmask)
 	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 	           AGSI_CYAN "int" AGSI_RST " *)%p (= "
 		   AGSI_BOLD "0x%x" AGSI_RST ") mask "
-		   AGSI_BR_RED "0x%x" AGSI_RST "\n",
+		   AGSI_RED "0x%x" AGSI_RST "\n",
 		   name, v, *v, bitmask);
 #endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG);
@@ -1597,7 +1611,7 @@ AG_BindFlagMp(void *obj, const char *name, Uint *v, Uint bitmask,
 	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 	           AGSI_CYAN "int" AGSI_RST " *)%p (= "
 		   AGSI_BOLD "0x%x" AGSI_RST ") mask "
-		   AGSI_BR_RED "0x%x" AGSI_RST " mutex "
+		   AGSI_RED "0x%x" AGSI_RST " mutex "
 		   AGSI_BR_MAG "%p" AGSI_RST "\n",
 		   name, v, *v, bitmask, mutex);
 # endif
@@ -1621,7 +1635,7 @@ AG_BindFlag8(void *obj, const char *name, Uint8 *v, Uint8 bitmask)
 	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 	           AGSI_CYAN "Uint8" AGSI_RST " *)%p (= "
 		   AGSI_BOLD "0x%02x" AGSI_RST ") mask "
-		   AGSI_BR_RED "0x%02x" AGSI_RST "\n",
+		   AGSI_RED "0x%02x" AGSI_RST "\n",
 		   name, v, *v, bitmask);
 #endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG8);
@@ -1643,7 +1657,7 @@ AG_BindFlag8Mp(void *obj, const char *name, Uint8 *v, Uint8 bitmask,
 	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 	           AGSI_CYAN "Uint8" AGSI_RST " *)%p (= "
 		   AGSI_BOLD "0x%02x" AGSI_RST ") mask "
-		   AGSI_BR_RED "0x%02x" AGSI_RST " mutex "
+		   AGSI_RED "0x%02x" AGSI_RST " mutex "
 		   AGSI_BR_MAG "%p" AGSI_RST "\n",
 		   name, v, *v, bitmask, mutex);
 # endif
@@ -1669,7 +1683,7 @@ AG_BindFlag16(void *obj, const char *name, Uint16 *v, Uint16 bitmask)
 	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 	           AGSI_CYAN "Uint16" AGSI_RST " *)%p (= "
 	           AGSI_BOLD "0x%04x" AGSI_RST ") mask "
-		   AGSI_BR_RED "0x%04x" AGSI_RST "\n",
+		   AGSI_RED "0x%04x" AGSI_RST "\n",
 		   name, v, *v, bitmask);
 # endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG16);
@@ -1692,7 +1706,7 @@ AG_BindFlag16Mp(void *obj, const char *name, Uint16 *v, Uint16 bitmask,
 	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 	           AGSI_CYAN "Uint16" AGSI_RST " *)%p (= "
 		   AGSI_BOLD "0x%04x" AGSI_RST ") mask "
-		   AGSI_BR_RED "0x%04x" AGSI_RST " mutex "
+		   AGSI_RED "0x%04x" AGSI_RST " mutex "
 		   AGSI_BR_MAG "%p" AGSI_RST "\n",
 	           name, v, *v, bitmask, mutex);
 #  endif
@@ -1716,7 +1730,7 @@ AG_BindFlag32(void *obj, const char *name, Uint32 *v, Uint32 bitmask)
 	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 	           AGSI_CYAN "Uint32" AGSI_RST " *)%p (= "
 		   AGSI_BOLD "0x%08x" AGSI_RST ") mask "
-		   AGSI_BR_RED "0x%08x" AGSI_RST "\n",
+		   AGSI_RED "0x%08x" AGSI_RST "\n",
 		   name, v, *v, bitmask);
 # endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_FLAG32);
@@ -1739,7 +1753,7 @@ AG_BindFlag32Mp(void *obj, const char *name, Uint32 *v, Uint32 bitmask,
 	Debug(obj, "Bind \"" AGSI_YEL "%s" AGSI_RST "\" -> *("
 	           AGSI_CYAN "Uint32" AGSI_RST " *)%p ("
 		   AGSI_BOLD "0x%08x" AGSI_RST ") mask "
-		   AGSI_BR_RED "0x%08x" AGSI_RST " mutex "
+		   AGSI_RED "0x%08x" AGSI_RST " mutex "
 		   AGSI_BR_MAG "%p" AGSI_RST "\n",
 		   name, v, *v, bitmask, mutex);
 #  endif

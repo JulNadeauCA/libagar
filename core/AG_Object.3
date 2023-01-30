@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2022 Julien Nadeau Carriere <vedge@csoft.net>.
+.\" Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>.
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -153,8 +153,7 @@ The
 argument must point to an initialized
 .Ft AG_ObjectClass
 structure (see
-.Sx CLASSES
-section).
+.Sx OBJECT CLASSES ) .
 .Pp
 .Fn AG_ObjectAttach
 attaches an object
@@ -364,7 +363,6 @@ adds GUI-specific methods:
 .Bd -literal
 .\" SYNTAX(c)
 typedef struct ag_widget_class {
-	/* AG_ObjectClass -> AG_WidgetClass */
 	struct ag_object_class _inherit;
 
 	void (*draw)(void *);
@@ -997,7 +995,7 @@ for details.
 For the
 .Ft AG_ObjectClass
 structure (see
-.Sx CLASSES
+.Sx OBJECT CLASSES
 section):
 .Pp
 .Bl -tag -compact -width "void (*destroy) "
@@ -1049,8 +1047,7 @@ A pointer to the
 .Ft AG_ObjectClass
 for this object's class
 (see
-.Sx CLASSES
-section).
+.Sx OBJECT CLASSES ) .
 .It Ft Uint flags
 Option flags for this object instance (see
 .Sx FLAGS

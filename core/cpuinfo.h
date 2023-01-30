@@ -37,7 +37,9 @@ typedef struct ag_cpuinfo {
 #define AG_EXT_VMX		0x00800000 /* Virtual Machine extensions */
 #define AG_EXT_SSSE3		0x01000000 /* SSSE3 Extensions */
 #define AG_EXT_SSE41		0x02000000 /* SSE4.1 extensions */
-#define AG_EXT_SSE42		0x04000000 /* SSE4.1 extensions */
+#define AG_EXT_SSE42		0x04000000 /* SSE4.2 extensions */
+
+	/* TODO: AVX */
 
 	Uint32 _pad2;
 } AG_CPUInfo;
