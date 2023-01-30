@@ -215,11 +215,11 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 		}
 	}
 
-	/* Fill in the "hier" field. */
+	/* Fill in the "hier" (full hierarchy) field. */
 	if (i > 0 && cs->hier[i-1] == ':') {
-		cs->hier[i-1] = '\0';		/* Strip last ':' */
+		cs->hier[i-1] = '\0';                     /* Strip last ':' */
 	}
-	if (i == 0) {				/* Flat format */
+	if (i == 0) {                                        /* Flat format */
 #ifdef AG_DEBUG
 		if (Strlcpy(cs->hier, spec, sizeof(cs->hier)) >= sizeof(cs->hier))
 			AG_FatalError("Class hierarchy overflow");
@@ -232,20 +232,23 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 	if ((c = strrchr(cs->hier, '@')) != NULL)
 		*c = '\0';
 
-	/* Fill in the "name" field. */
+	/* Fill in the "name" (short name) field. */
 	if ((c = strrchr(cs->hier, ':')) != NULL && c[1] != '\0') {
 		rv = Strlcpy(cs->name, &c[1], sizeof(cs->name));
 	} else {
 		rv = Strlcpy(cs->name, cs->hier, sizeof(cs->name));
 	}
-	if (rv >= sizeof(cs->name))
+	if (rv >= sizeof(cs->name)) {
 		AG_FatalError("Class name overflow");
-
-	if ((c = strrchr(cs->name, '@')) != NULL)
+	}
+	if ((c = strrchr(cs->name, '@')) != NULL) {
 		*c = '\0';
+	}
 	
-	/* Fill in the "spec" field. */
+	/* Fill in the "spec" (full hierarchy + @libs) field. */
 	Strlcpy(cs->spec, cs->hier, sizeof(cs->spec));
+
+	/* Fill in the "libs" (DSO modules) field. */
 # ifdef AG_ENABLE_DSO
 	if (cs->libs[0] != '\0')
 		if (Strlcat(cs->spec, cs->libs, sizeof(cs->spec)) >=
@@ -430,12 +433,8 @@ AG_LookupClass(const char *inSpec)
 		return ((AG_ObjectClass *)V->data.p);
 	}
 	AG_MutexUnlock(&agClassLock);
-#ifdef AG_VERBOSITY
-	AG_SetError(_("No such class \"%s\". "
-	              "Did you forget AG_RegisterClass()?"), inSpec);
-#else
+
 	AG_SetErrorV("E25", _("No such class"));
-#endif
 	return (NULL);
 }
 
@@ -503,16 +502,14 @@ AG_LoadClass(const char *classSpec)
 
 	if ((C = AG_LookupClass(cs.hier)) != NULL) {
 		AG_MutexUnlock(&agClassLock);
-		return (C);
+		return (C);                     /* Found a registered class */
 	}
 	if (cs.libs[0] == '\0') {
-		AG_SetError(_("Class %s not found (and no modules specified)"),
+		AG_SetError(_("Class " AGSI_BR_CYAN "%s" AGSI_RST " not found."),
 		    cs.hier);
 		goto fail;
 	}
-
-	/* Load all libraries specified in the string. */
-	for (i = 0, s = cs.libs;
+	for (i = 0, s = cs.libs;                 /* Attempt dynamic linking */
 	    (lib = Strsep(&s, ", ")) != NULL;
 	    i++) {
 # ifdef AG_DEBUG_CLASSES
@@ -706,6 +703,10 @@ AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)
 			*c = '\0';
 		}
 		if ((C = AG_LookupClass(cname)) == NULL) {
+			AG_SetError(
+			    _("No such class " AGSI_BR_CYAN "%s" AGSI_RST ". "
+			      "Missing AG_RegisterClass(3) call?"),
+			    AGOBJECT(obj)->cls->hier);
 			free(pHier);
 			return (-1);
 		}
