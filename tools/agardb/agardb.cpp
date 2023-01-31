@@ -536,7 +536,7 @@ CreateTargetDlg(AG_Event *event)
 
 	/* Arguments to the program */
 	tbArgs = AG_TextboxNewS(win, AG_TEXTBOX_HFILL, _("Arguments: "));
-	AG_SetStyle(tbArgs, "font-style", "courier-prime");
+	AG_SetStyle(tbArgs, "font-style", "monoalgue");
 	AG_SetPointer(win, "tbArgs", tbArgs);
 
 	AG_SeparatorNewHoriz(win);

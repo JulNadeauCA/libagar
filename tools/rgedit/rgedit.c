@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,10 +24,7 @@
  */
 
 #include <agar/core.h>
-
 #include <agar/gui.h>
-#include <agar/gui/load_xcf.h>
-
 #include <agar/map/rg.h>
 
 #include "config/datadir.h"
@@ -68,6 +65,38 @@ CloseObject(AG_Event *event)
 		AG_Terminate(0);
 }
 
+static AG_Window *
+PromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
+{
+	char *text;
+	AG_Window *win;
+	AG_Box *bo;
+	va_list ap;
+	Uint i;
+
+	va_start(ap, fmt);
+	Vasprintf(&text, fmt, ap);
+	va_end(ap);
+
+	if ((win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
+	                        AG_WINDOW_NORESIZE)) == NULL) {
+		AG_FatalError(NULL);
+	}
+	win->wmType = AG_WINDOW_WM_DIALOG;
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
+	AG_SetStyle(win, "spacing", "8");
+
+	AG_LabelNewS(win, 0, text);
+	free(text);
+
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
+	for (i = 0; i < nbOpts; i++) {
+		bOpts[i] = AG_ButtonNewS(bo, 0, "XXXXXXXXXXX");
+	}
+	AG_WindowShow(win);
+	return (win);
+}
+
 static void
 WindowClose(AG_Event *event)
 {
@@ -82,7 +111,7 @@ WindowClose(AG_Event *event)
 		CloseObject(&ev);
 		return;
 	}
-	wDlg = AG_TextPromptOptions(bOpts, 3, _("Save changes to %s?"), AGOBJECT(ts)->name);
+	wDlg = PromptOptions(bOpts, 3, _("Save changes to %s?"), AGOBJECT(ts)->name);
 	AG_WindowAttach(win, wDlg);
 	AG_ButtonText(bOpts[0], _("Save"));
 	AG_SetEvent(bOpts[0], "button-pushed", CloseObject, "%p,%p,%i", win, ts, 1);
@@ -337,37 +366,6 @@ ImportImageFrom(AG_Event *event)
 }
 
 static void
-LoadTileFromXCF(AG_Surface *xcf, const char *lbl, void *p)
-{
-	RG_Tileset *ts = p;
-	RG_Pixmap *px;
-	RG_Tile *t;
-
-	px = RG_PixmapNew(ts, lbl, 0);
-	px->su = AG_SurfaceConvert(xcf, ts->fmt);
-	t = RG_TileNew(ts, lbl, xcf->w, xcf->h, RG_TILE_SRCALPHA);
-	RG_TileAddPixmap(t, NULL, px, 0, 0);
-	RG_TileGenerate(t);
-}
-
-/* Load image layers from Gimp 1.x XCF file. */
-static void
-ImportLayersFromXCF(AG_Event *event)
-{
-	RG_Tileset *ts = RG_TILESET_PTR(1);
-	char *path = AG_STRING(2);
-	AG_DataSource *ds;
-	int rv;
-
-	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
-		AG_TextMsgFromError();
-		return;
-	}
-	rv = AG_XCFLoad(ds, 0, LoadTileFromXCF, ts);
-	AG_CloseFile(ds);
-}
-
-static void
 ImportImagesDlg(AG_Event *event)
 {
 	RG_Tileset *ts = RG_TILESET_PTR(1);
@@ -386,8 +384,6 @@ ImportImagesDlg(AG_Event *event)
 	    ImportImageFrom, "%p,%p", ts, AG_SurfaceFromJPEG);
 	AG_FileDlgAddType(fd, _("PNG image"), "*.png",
 	    ImportImageFrom, "%p,%p", ts, AG_SurfaceFromJPEG);
-	AG_FileDlgAddType(fd, _("Gimp 1 XCF image"), "*.xcf",
-	    ImportLayersFromXCF, "%p", ts);
 	AG_WindowShow(win);
 }
 
