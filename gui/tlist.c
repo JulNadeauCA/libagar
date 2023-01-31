@@ -378,7 +378,7 @@ StyleChanged(AG_Event *_Nonnull event)
 		AG_ColorInterpolate(&tl->cBgLine[i],
 		    &WIDGET(tl)->pal.c[i][AG_BG_COLOR],
 		    &WIDGET(tl)->pal.c[i][AG_LINE_COLOR],
-		    1,3);
+		    1,5);
 	}
 }
 
@@ -698,6 +698,7 @@ Draw(void *_Nonnull obj)
 
 			S = AG_SurfaceStdRGB(wReq, hItem);
 #ifdef AG_DEBUG
+			/* Make it easier to inspect guides in Debugger. */
 			S->guides[0] = Stext->guides[0];
 #endif
 			AG_FillRect(S, NULL, it->selected ? cSel : cItemBg);
@@ -1443,12 +1444,9 @@ PopupMenu(AG_Tlist *_Nonnull tl, AG_TlistPopup *_Nonnull tp, int x, int y)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Tlist *tl = AG_TLIST_SELF();
-	const int button = AG_INT(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
+	AG_Tlist *tl = obj;
 	AG_TlistItem *ti;
 	const int idx = tl->rOffs + y/tl->item_h + 1;
 	
@@ -1601,28 +1599,73 @@ SelectRange(AG_Tlist *tl, int idx)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+ExpandSelected(AG_Tlist *tl)
 {
-	AG_Tlist *tl = AG_TLIST_SELF();
-	const int keysym = AG_INT(1);
+	AG_TlistItem *ti;
+
+	if ((ti = AG_TlistSelectedItem(tl)) == NULL ||
+	    (ti->flags & AG_TLIST_HAS_CHILDREN) == 0)
+		return;
+
+	if ((ti->flags & AG_TLIST_ITEM_EXPANDED) == 0) {
+		ti->flags |= AG_TLIST_ITEM_EXPANDED;
+		AG_Redraw(tl);
+	}
+}
+
+static void
+CollapseSelected(AG_Tlist *tl)
+{
+	AG_TlistItem *ti;
+
+	if ((ti = AG_TlistSelectedItem(tl)) == NULL ||
+	    (ti->flags & AG_TLIST_HAS_CHILDREN) == 0)
+		return;
+
+	if (ti->flags & AG_TLIST_ITEM_EXPANDED) {
+		ti->flags &= ~(AG_TLIST_ITEM_EXPANDED);
+		AG_Redraw(tl);
+	}
+}
+
+static void
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
+{
+	AG_Tlist *tl = obj;
 	void *ti;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_UP:
 		DecrementSelection(tl, 1);
-		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", -1);
+		if ((tl->flags & AG_TLIST_NO_KEYREPEAT) == 0) {
+			AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout,"%i",-1);
+		}
 		break;
 	case AG_KEY_DOWN:
 		IncrementSelection(tl, 1);
-		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", +1);
+		if ((tl->flags & AG_TLIST_NO_KEYREPEAT) == 0) {
+			AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout,"%i",+1);
+		}
+		break;
+	case AG_KEY_RIGHT:
+		ExpandSelected(tl);
+		AG_DelTimer(tl, &tl->moveTo);
+		break;
+	case AG_KEY_LEFT:
+		CollapseSelected(tl);
+		AG_DelTimer(tl, &tl->moveTo);
 		break;
 	case AG_KEY_PAGEUP:
 		DecrementSelection(tl, agPageIncrement);
-		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", -agPageIncrement);
+		if ((tl->flags & AG_TLIST_NO_KEYREPEAT) == 0) {
+			AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout,"%i",-agPageIncrement);
+		}
 		break;
 	case AG_KEY_PAGEDOWN:
 		IncrementSelection(tl, agPageIncrement);
-		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", +agPageIncrement);
+		if ((tl->flags & AG_TLIST_NO_KEYREPEAT) == 0) {
+			AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout,"%i",+agPageIncrement);
+		}
 		break;
 	case AG_KEY_HOME:
 		AG_TlistScrollToStart(tl);
@@ -1637,21 +1680,20 @@ KeyDown(AG_Event *_Nonnull event)
 		}
 		break;
 	}
-	tl->lastKeyDown = keysym;
+	tl->lastKeyDown = ks;
 }
 
 static void
-KeyUp(AG_Event *_Nonnull event)
+KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Tlist *tl = AG_TLIST_SELF();
-	const int keysym = AG_INT(1);
+	AG_Tlist *tl = obj;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_UP:
 	case AG_KEY_DOWN:
 	case AG_KEY_PAGEUP:
 	case AG_KEY_PAGEDOWN:
-		if (keysym == tl->lastKeyDown) {
+		if (ks == tl->lastKeyDown) {
 			AG_DelTimer(tl, &tl->moveTo);
 		}
 		break;
@@ -1697,6 +1739,7 @@ Init(void *_Nonnull obj)
 	AG_InitTimer(&tl->moveTo, "move", 0);
 	AG_InitTimer(&tl->refreshTo, "refresh", 0);
 	AG_InitTimer(&tl->dblClickTo, "dblClick", 0);
+	AG_InitTimer(&tl->ctrlMoveTo, "ctrlMove", 0);
 
 	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
 	AG_SetInt(tl->sbar, "min", 0);
@@ -1705,15 +1748,12 @@ Init(void *_Nonnull obj)
 	AG_BindInt(tl->sbar, "value", &tl->rOffs);
 	AG_WidgetSetFocusable(tl->sbar, 0);
 	
-	AG_AddEvent(tl, "padding-changed", StyleChanged, NULL);
-	AG_AddEvent(tl, "palette-changed", StyleChanged, NULL);
-	AG_AddEvent(tl, "font-changed",  StyleChanged, NULL);
-	AG_SetEvent(tl, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(tl, "key-down", KeyDown, NULL);
 	AG_AddEvent(tl, "widget-shown", OnShow, NULL);
 	AG_AddEvent(tl, "widget-hidden", OnHide, NULL);
 	AG_SetEvent(tl, "widget-lostfocus", OnLostFocus, NULL);
-	AG_SetEvent(tl, "key-up", KeyUp, NULL);
+	AG_AddEvent(tl, "padding-changed", StyleChanged, NULL);
+	AG_AddEvent(tl, "palette-changed", StyleChanged, NULL);
+	AG_AddEvent(tl, "font-changed",  StyleChanged, NULL);
 
 	AG_BindPointer(tl, "selected", &tl->selected);
 }
@@ -2078,6 +2118,72 @@ AG_TlistGetItemPtr(const AG_Event *event, int idx, int isConst)
 }
 #endif /* AG_TYPE_SAFETY */
 
+static void
+Ctrl(void *obj, void *inputDevice, const AG_DriverEvent *dev)
+{
+	AG_Tlist *tl = obj;
+	const int isDisabled = AG_WidgetDisabled(tl);
+
+	switch (dev->type) {
+	case AG_DRIVER_CTRL_AXIS_MOTION:
+		if (dev->ctrlAxis.axis == AG_CTRL_AXIS_LEFT_Y && !isDisabled) {
+			if (dev->ctrlAxis.value == -0x8000) {
+				DecrementSelection(tl, 1);
+				if ((tl->flags & AG_TLIST_NO_KEYREPEAT) == 0) {
+					AG_AddTimer(tl, &tl->ctrlMoveTo, agKbdDelay,
+					    MoveTimeout,"%i",-1);
+				}
+			} else if (dev->ctrlAxis.value == 0x7fff) {
+				IncrementSelection(tl, 1);
+				if ((tl->flags & AG_TLIST_NO_KEYREPEAT) == 0) {
+					AG_AddTimer(tl, &tl->ctrlMoveTo, agKbdDelay,
+					    MoveTimeout,"%i",+1);
+				}
+			} else {
+				AG_DelTimer(tl, &tl->ctrlMoveTo);
+			}
+		} else if (dev->ctrlAxis.axis == AG_CTRL_AXIS_LEFT_X && !isDisabled) {
+			if (dev->ctrlAxis.value == -0x8000) {
+				CollapseSelected(tl);
+			} else if (dev->ctrlAxis.value == 0x7fff) {
+				ExpandSelected(tl);
+			}
+		} else if (dev->ctrlAxis.axis == AG_CTRL_AXIS_TRIGGER_LEFT &&
+		           dev->ctrlAxis.value > 0) {
+			tl->rOffs -= tl->lineScrollAmount;
+			if (tl->rOffs < 0) {
+				tl->rOffs = 0;
+			}
+			AG_Redraw(tl);
+		} else if (dev->ctrlAxis.axis == AG_CTRL_AXIS_TRIGGER_RIGHT &&
+		           dev->ctrlAxis.value > 0) {
+			tl->rOffs += tl->lineScrollAmount;
+			if (tl->rOffs > (tl->nItems - tl->nVisible)) {
+				tl->rOffs = MAX(0, tl->nItems - tl->nVisible);
+			}
+			AG_Redraw(tl);
+		}
+		break;
+	case AG_DRIVER_CTRL_BUTTON_DOWN:
+		if (dev->ctrlButton.which == AG_CTRL_BUTTON_A && !isDisabled) {
+			AG_TlistItem *ti;
+
+			AG_DelTimer(tl, &tl->dblClickTo);
+			if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
+				if (tl->dblClickEv) {
+					AG_PostEventByPtr(tl,
+					    tl->dblClickEv, "%p", ti);
+				}
+				AG_PostEvent(tl, "tlist-dblclick", "%p", ti);
+			}
+			tl->dblClicked = NULL;
+		}
+		break;
+	default:
+		break;
+	}
+}
+
 AG_WidgetClass agTlistClass = {
 	{
 		"Agar(Widget:Tlist)",
@@ -2092,7 +2198,15 @@ AG_WidgetClass agTlistClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	KeyDown,
+	KeyUp,
+	NULL,			/* touch */
+	Ctrl,
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

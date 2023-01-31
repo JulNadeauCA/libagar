@@ -63,18 +63,19 @@ typedef AG_TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item) AG_TlistItemQ;
 typedef struct ag_tlist {
 	struct ag_widget wid;           /* AG_Widget -> AG_Tlist */
 	Uint flags;
-#define AG_TLIST_MULTI         0x001      /* Multiple selections (ctrl/shift) */
-#define AG_TLIST_MULTITOGGLE   0x002      /* Multiple toggle-style selections */
-#define AG_TLIST_POLL          0x004      /* Generate tlist-poll events */
-#define AG_TLIST_NO_SELECTED   0x008      /* Inhibit "tlist-selected" event */
-#define AG_TLIST_NO_SCALE_ICON 0x010      /* Don't scale oversize icons. */
-#define AG_TLIST_HFILL         0x020
-#define AG_TLIST_VFILL         0x040
-#define AG_TLIST_FIXED_HEIGHT  0x080      /* Don't set icon height on "font-changed" */
-#define AG_TLIST_STATELESS     0x100      /* Don't preserve selection state (polled mode) */
-#define AG_TLIST_SCROLLTOSEL   0x200      /* Scroll to initial selection */
-#define AG_TLIST_REFRESH       0x400      /* Repopulate now (polled mode) */
-#define AG_TLIST_EXPAND_NODES  0x800      /* Expand node items (items with children) by default */
+#define AG_TLIST_MULTI         0x0001      /* Multiple selections (ctrl/shift) */
+#define AG_TLIST_MULTITOGGLE   0x0002      /* Multiple toggle-style selections */
+#define AG_TLIST_POLL          0x0004      /* Generate tlist-poll events */
+#define AG_TLIST_NO_SELECTED   0x0008      /* Inhibit "tlist-selected" event */
+#define AG_TLIST_NO_SCALE_ICON 0x0010      /* Don't scale oversize icons. */
+#define AG_TLIST_HFILL         0x0020
+#define AG_TLIST_VFILL         0x0040
+#define AG_TLIST_FIXED_HEIGHT  0x0080      /* Don't set icon height on "font-changed" */
+#define AG_TLIST_STATELESS     0x0100      /* Don't preserve selection state (polled mode) */
+#define AG_TLIST_SCROLLTOSEL   0x0200      /* Scroll to initial selection */
+#define AG_TLIST_REFRESH       0x0400      /* Repopulate now (polled mode) */
+#define AG_TLIST_EXPAND_NODES  0x0800      /* Expand node items (items with children) by default */
+#define AG_TLIST_NO_KEYREPEAT  0x1000      /* Disable keyrepeat behavior */
 #define AG_TLIST_EXPAND        (AG_TLIST_HFILL | AG_TLIST_VFILL)
 
 	int item_h;                     /* Item height */
@@ -105,6 +106,7 @@ typedef struct ag_tlist {
 	AG_Timer moveTo;                /* Timer for keyboard motion */
 	AG_Timer refreshTo;             /* Timer for polled mode updates */
 	AG_Timer dblClickTo;            /* Timer for detecting double clicks */
+	AG_Timer ctrlMoveTo;            /* Timer for controller-driven move */
 	AG_Color cBgLine[AG_WIDGET_NSTATES];  /* Background line color */
 } AG_Tlist;
 

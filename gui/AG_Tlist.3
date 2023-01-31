@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -140,6 +140,8 @@ Implied by
 .Fn AG_TlistNewPolled .
 .It AG_TLIST_FIXED_HEIGHT
 Don't reset the item height on "font-changed".
+.It AG_TLIST_NO_KEYREPEAT
+Disable keyrepeat behavior.
 .It AG_TLIST_NO_SELECTED
 Don't raise "tlist-selected" on select.
 .It AG_TLIST_STATELESS
@@ -659,10 +661,11 @@ widget first appeared in Agar 1.0.
 and per-item
 .Va fontFlags
 appeared in Agar 1.6.0.
-The options
+Options
 .Dv AG_TLIST_EXPAND_NODES ,
-and
 .Dv AG_TLIST_FIXED_HEIGHT
+and
+.Dv AG_TLIST_NO_KEYREPEAT
 and the per-item flag
 .Dv AG_TLIST_ITEM_DISABLED
 appeared in Agar 1.7.0.
