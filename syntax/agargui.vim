@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agargui.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 January 09
+" Last Change:  2023 January 22
 
 " Agar-GUI (https://libagar.org/)
 if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
@@ -47,6 +47,33 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_CONSOLE_HFILL AG_CONSOLE_VFILL AG_CONSOLE_NOAUTOSCROLL
   syn keyword cConstant AG_CONSOLE_NOPOPUP AG_CONSOLE_EXPAND AG_CONSOLE_SELECTING
   syn keyword cConstant AG_CONSOLE_BEGIN_SELECT
+  " gui/controller.h
+  syn keyword cType AG_ControllerType AG_ControllerButton AG_ControllerAxis
+  syn keyword cConstant AG_CTRL_TYPE_UNKNOWN AG_CTRL_TYPE_XBOX360
+  syn keyword cConstant AG_CTRL_TYPE_XBOXONE AG_CTRL_TYPE_PS3
+  syn keyword cConstant AG_CTRL_TYPE_PS4 AG_CTRL_TYPE_NINTENDO_SWITCH_PRO
+  syn keyword cConstant AG_CTRL_TYPE_VIRTUAL AG_CTRL_TYPE_PS5
+  syn keyword cConstant AG_CTRL_TYPE_AMAZON_LUNA AG_CTRL_TYPE_GOOGLE_STADIA
+  syn keyword cConstant AG_CTRL_TYPE_NVIDIA_SHIELD AG_CTRL_TYPE_LAST
+  syn keyword cConstant AG_CTRL_TYPE_NINTENDO_SWITCH_JOYCON_LEFT
+  syn keyword cConstant AG_CTRL_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT
+  syn keyword cConstant AG_CTRL_TYPE_NINTENDO_SWITCH_JOYCON_PAIR
+  syn keyword cConstant AG_CTRL_BUTTON_INVALID AG_CTRL_BUTTON_A
+  syn keyword cConstant AG_CTRL_BUTTON_B AG_CTRL_BUTTON_X
+  syn keyword cConstant AG_CTRL_BUTTON_Y AG_CTRL_BUTTON_BACK
+  syn keyword cConstant AG_CTRL_BUTTON_GUIDE AG_CTRL_BUTTON_START
+  syn keyword cConstant AG_CTRL_BUTTON_LEFT_STICK AG_CTRL_BUTTON_RIGHT_STICK
+  syn keyword cConstant AG_CTRL_BUTTON_LEFT_SHOULDER AG_CTRL_BUTTON_RIGHT_SHOULDER
+  syn keyword cConstant AG_CTRL_BUTTON_DPAD_UP AG_CTRL_BUTTON_DPAD_DOWN
+  syn keyword cConstant AG_CTRL_BUTTON_DPAD_LEFT AG_CTRL_BUTTON_DPAD_RIGHT
+  syn keyword cConstant AG_CTRL_BUTTON_MISC1 AG_CTRL_BUTTON_PADDLE1
+  syn keyword cConstant AG_CTRL_BUTTON_PADDLE2 AG_CTRL_BUTTON_PADDLE3
+  syn keyword cConstant AG_CTRL_BUTTON_PADDLE4 AG_CTRL_BUTTON_TOUCHPAD
+  syn keyword cConstant AG_CTRL_BUTTON_MAX AG_CTRL_BUTTON_LAST
+  syn keyword cConstant AG_CTRL_AXIS_INVALID AG_CTRL_AXIS_MAX
+  syn keyword cConstant AG_CTRL_AXIS_LEFT_X AG_CTRL_AXIS_LEFT_Y
+  syn keyword cConstant AG_CTRL_AXIS_RIGHT_X AG_CTRL_AXIS_RIGHT_Y
+  syn keyword cConstant AG_CTRL_AXIS_TRIGGER_LEFT AG_CTRL_AXIS_TRIGGER_RIGHT
   " gui/cursors.h
   syn keyword cType AG_Cursor
   syn keyword cConstant AG_CURSOR_MAX_W AG_CURSOR_MAX_H
@@ -77,7 +104,13 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_DRIVER_JOY_DEVICE_ADDED AG_DRIVER_JOY_DEVICE_REMOVED
   syn keyword cConstant AG_DRIVER_JOY_AXIS_MOTION AG_DRIVER_JOY_HAT_MOTION
   syn keyword cConstant AG_DRIVER_JOY_BALL_MOTION AG_DRIVER_JOY_BUTTON_DOWN
-  syn keyword cConstant AG_DRIVER_JOY_BUTTON_UP AG_DRIVER_EVENT_LAST
+  syn keyword cConstant AG_DRIVER_JOY_BUTTON_UP
+  syn keyword cConstant AG_DRIVER_CTRL_AXIS_MOTION AG_DRIVER_CTRL_BUTTON_DOWN
+  syn keyword cConstant AG_DRIVER_CTRL_BUTTON_UP AG_DRIVER_CTRL_DEVICE_ADDED
+  syn keyword cConstant AG_DRIVER_CTRL_DEVICE_REMOVED AG_DRIVER_CTRL_DEVICE_REMAPPED
+  syn keyword cConstant AG_DRIVER_CTRL_TOUCHPAD_DOWN AG_DRIVER_CTRL_TOUCHPAD_UP
+  syn keyword cConstant AG_DRIVER_CTRL_TOUCHPAD_MOTION AG_DRIVER_CTRL_SENSOR
+  syn keyword cConstant AG_DRIVER_EVENT_LAST
   " gui/drv_dummy.c
   syn keyword cType AG_DriverDUMMY AG_CursorDUMMY
   " gui/drv_cocoa.m
@@ -126,6 +159,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_EDITABLE_WORDWRAP AG_EDITABLE_NOPOPUP
   syn keyword cConstant AG_EDITABLE_WORDSELECT AG_EDITABLE_READONLY
   syn keyword cConstant AG_EDITABLE_MULTILINGUAL AG_EDITABLE_SHIFT_SELECT
+  syn keyword cConstant AG_EDITABLE_NUMERICAL
   " gui/file_dlg.h
   syn keyword cType AG_FileDlg AG_FileType AG_FileOption
   syn keyword cConstant AG_FILEDLG_BOOL AG_FILEDLG_INT AG_FILEDLG_FLOAT
@@ -156,7 +190,18 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_FONTSELECTOR_UPDATE AG_FONTSELECTOR_ALT_PHRASE
   syn keyword cConstant AG_FONTSELECTOR_SW_STYLES AG_FONTSELECTOR_OBLIQUE_STYLES
   syn keyword cConstant AG_FONTSELECTOR_HFILL AG_FONTSELECTOR_VFILL
-  syn keyword cConstant AG_FONTSELECTOR_EXPAND
+  syn keyword cConstant AG_FONTSELECTOR_EXPAND AG_FONTSELECTOR_BASELINE
+  syn keyword cConstant AG_FONTSELECTOR_BOUNDING_BOX AG_FONTSELECTOR_CORRECTIONS
+  " gui/font.h
+  syn keyword cType AG_FontSpec AG_FontAdjustment AG_Glyph AG_GlyphCache
+  syn keyword cType AG_Font AG_FontQ AG_StaticFont AG_FontClass
+  " gui/font_bf.h
+  syn keyword cType AG_GlyphBf AG_FontBf
+  syn keyword cConstant AG_FONT_BF_COLORIZE_NONE AG_FONT_BF_COLORIZE_GRAYS
+  syn keyword cConstant AG_FONT_BF_COLORIZE_ALL
+  " gui/font_ft.h
+  syn keyword cType AG_GlyphFt AG_FontFt
+  syn keyword cConstant AG_GLYPH_FT_BITMAP AG_GLYPH_FT_PIXMAP AG_GLYPH_FT_METRICS
   " gui/geometry.h
   syn keyword cType AG_Pt AG_Rect AG_Rect2 AG_ClipRect AG_TexCoord
   " gui/glview.h
@@ -200,32 +245,14 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   " gui/input_device.h
   syn keyword cType AG_InputDevice
   syn keyword cType AG_Controller AG_ControllerEvent AG_ControllerEventType
-  syn keyword cType AG_ControllerButton AG_TouchEvent AG_TouchEventType
+  syn keyword cType AG_TouchEvent AG_TouchEventType
   syn keyword cConstant AG_TOUCH_FINGER_MOTION AG_TOUCH_FINGER_DOWN
   syn keyword cConstant AG_TOUCH_FINGER_UP AG_TOUCH_MULTIGESTURE
   syn keyword cConstant AG_TOUCH_DOLLAR_GESTURE AG_TOUCH_DOLLAR_RECORD
   syn keyword cConstant AG_TOUCH_EVENT_LAST
-  syn keyword cConstant AG_CONTROLLER_BUTTON_INVALID AG_CONTROLLER_BUTTON_A
-  syn keyword cConstant AG_CONTROLLER_BUTTON_B AG_CONTROLLER_BUTTON_X
-  syn keyword cConstant AG_CONTROLLER_BUTTON_Y AG_CONTROLLER_BUTTON_BACK
-  syn keyword cConstant AG_CONTROLLER_BUTTON_GUIDE AG_CONTROLLER_BUTTON_START
-  syn keyword cConstant AG_CONTROLLER_BUTTON_LEFT_STICK AG_CONTROLLER_BUTTON_RIGHT_STICK
-  syn keyword cConstant AG_CONTROLLER_BUTTON_LEFT_SHOULDER AG_CONTROLLER_BUTTON_RIGHT_SHOULDER
-  syn keyword cConstant AG_CONTROLLER_BUTTON_DPAD_UP AG_CONTROLLER_BUTTON_DPAD_DOWN
-  syn keyword cConstant AG_CONTROLLER_BUTTON_DPAD_LEFT AG_CONTROLLER_BUTTON_DPAD_RIGHT
-  syn keyword cConstant AG_CONTROLLER_BUTTON_MISC1 AG_CONTROLLER_BUTTON_PADDLE1
-  syn keyword cConstant AG_CONTROLLER_BUTTON_PADDLE2 AG_CONTROLLER_BUTTON_PADDLE3
-  syn keyword cConstant AG_CONTROLLER_BUTTON_PADDLE4 AG_CONTROLLER_BUTTON_TOUCHPAD
-  syn keyword cConstant AG_CONTROLLER_BUTTON_MAX AG_CONTROLLER_BUTTON_LAST
-  syn keyword cConstant AG_CONTROLLER_AXIS_MOTION AG_CONTROLLER_BUTTON_DOWN
-  syn keyword cConstant AG_CONTROLLER_BUTTON_UP AG_CONTROLLER_DEVICE_ADDED
-  syn keyword cConstant AG_CONTROLLER_DEVICE_REMOVED AG_CONTROLLER_DEVICE_REMAPPED
-  syn keyword cConstant AG_CONTROLLER_TOUCHPAD AG_CONTROLLER_SENSOR
-  syn keyword cConstant AG_CONTROLLER_EVENT_LAST
   " gui/joystick.h
   syn keyword cType AG_Joystick AG_JoystickType AG_JoyEvent AG_JoyEventType
-  syn keyword cConstant AG_JOY_AXIS_MOTION AG_JOY_BALL_MOTION AG_JOY_HAT_MOTION
-  syn keyword cConstant AG_JOY_BUTTON AG_JOY_DEVICE AG_JOY_BATTERY AG_JOY_EVENT_LAST
+  syn keyword cType AG_JoyHatPosition
   syn keyword cConstant AG_JOYSTICK_TYPE_UNKNOWN AG_JOYSTICK_TYPE_GAMECONTROLLER
   syn keyword cConstant AG_JOYSTICK_TYPE_WHEEL AG_JOYSTICK_TYPE_ARCADE_STICK
   syn keyword cConstant AG_JOYSTICK_TYPE_FLIGHT_STICK AG_JOYSTICK_TYPE_DANCE_PAD
@@ -234,6 +261,10 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_JOYSTICK_TYPE_LAST
   syn keyword cConstant AG_JOYSTICK_HAS_LED AG_JOYSTICK_HAS_RUMBLE
   syn keyword cConstant AG_JOYSTICK_HAS_RUMBLE_TRIGGERS
+  syn keyword cConstant AG_JOY_HAT_CENTERED AG_JOY_HAT_UP AG_JOY_HAT_RIGHT
+  syn keyword cConstant AG_JOY_HAT_DOWN AG_JOY_HAT_LEFT AG_JOY_HAT_RIGHT_UP
+  syn keyword cConstant AG_JOY_HAT_RIGHT_DOWN AG_JOY_HAT_LEFT_UP
+  syn keyword cConstant AG_JOY_HAT_LEFT_DOWN AG_JOY_PRESSED AG_JOY_RELEASED
   " gui/keyboard.h
   syn keyword cType AG_Keyboard AG_KeyCategory AG_Key AG_KeySym AG_KeyMod
   syn keyword cType AG_KeyboardAction
@@ -387,7 +418,8 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_NUMERICAL_INPUT_MAX AG_NUMERICAL_HFILL
   syn keyword cConstant AG_NUMERICAL_VFILL AG_NUMERICAL_INT AG_NUMERICAL_EXCL
   syn keyword cConstant AG_NUMERICAL_READONLY AG_NUMERICAL_SLOW
-  syn keyword cConstant AG_NUMERICAL_EXPAND
+  syn keyword cConstant AG_NUMERICAL_EXPAND AG_NUMERICAL_NO_INF
+  syn keyword cConstant AG_NUMERICAL_NO_NEG_INF AG_NUMERICAL_NO_POS_INF
   " gui/objsel.h
   syn keyword cType AG_ObjectSelector 
   syn keyword cConstant AG_OBJSEL_PAGE_DATA AG_OBJSEL_PAGE_GFX
@@ -400,6 +432,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_PANE_FRAME AG_PANE_UNMOVABLE AG_PANE_OVERRIDE_WDIV
   syn keyword cConstant AG_PANE_EXPAND
   " gui/pixmap.h
+  syn keyword cType AG_Pixmap
   syn keyword cConstant AG_PIXMAP_HFILL AG_PIXMAP_VFILL AG_PIXMAP_FORCE_SIZE
   syn keyword cConstant AG_PIXMAP_RESCALE AG_PIXMAP_UPDATE AG_PIXMAP_EXPAND
   " gui/primitive.h
@@ -515,9 +548,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_TABLE_HIGHLIGHT_COLS AG_TABLE_WIDGETS AG_TABLE_NOAUTOSORT
   syn keyword cConstant AG_TABLE_NEEDSORT AG_TABLE_COL_SELECT AG_TABLE_COL_SORT
   " gui/text.h
-  syn keyword cType AG_TextANSI AG_FontSpec AG_FontAdjustment AG_Glyph AG_Font
-  syn keyword cType AG_FontQ AG_TextState AG_StaticFont AG_TextMetrics
-  syn keyword cType AG_GlyphCache AG_TTFFont AG_TTFGlyph
+  syn keyword cType AG_TextANSI AG_TextState AG_TextMetrics
   syn keyword cConstant AG_TEXT_STATES_MAX AG_TEXT_FONTSPEC_MAX
   syn keyword cConstant AG_GLYPH_NBUCKETS AG_TEXT_ANSI_SEQ_MAX
   syn keyword cConstant AG_TEXT_ANSI_PARAM_MAX
@@ -525,6 +556,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_TEXT_TOP AG_TEXT_MIDDLE AG_TEXT_BOTTOM
   syn keyword cConstant AG_MSG_ERROR AG_MSG_WARNING AG_MSG_INFO
   syn keyword cConstant AG_FONT_VECTOR AG_FONT_BITMAP AG_FONT_DUMMY
+  syn keyword cConstant AG_FONT_FREETYPE
   syn keyword cConstant AG_FONT_TYPE_LAST AG_FONT_SOURCE_FILE
   syn keyword cConstant AG_FONT_SOURCE_MEMORY AG_FONT_PTS_EPSILON
   syn keyword cConstant AG_ANSI_BLACK AG_ANSI_RED AG_ANSI_GREEN
@@ -565,11 +597,15 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_SGR_BRIGHT_BG_1 AG_SGR_BRIGHT_BG_2 AG_SGR_BRIGHT_BG_3
   syn keyword cConstant AG_SGR_BRIGHT_BG_4 AG_SGR_BRIGHT_BG_5 AG_SGR_BRIGHT_BG_6
   syn keyword cConstant AG_SGR_BRIGHT_BG_7 AG_SGR_BRIGHT_BG_8 AG_SGR_LAST
-  syn keyword cConstant AG_FONT_BOLD AG_FONT_ITALIC AG_FONT_UNDERLINE
-  syn keyword cConstant AG_FONT_UPPERCASE AG_FONT_OBLIQUE AG_FONT_UPRIGHT_ITALIC
-  syn keyword cConstant AG_FONT_SEMICONDENSED AG_FONT_CONDENSED AG_FONT_SW_BOLD
-  syn keyword cConstant AG_FONT_SW_OBLIQUE AG_FONT_MONOSPACE AG_FONT_SW_ITALIC
-  syn keyword cConstant AG_FONT_WEIGHTS AG_FONT_STYLES AG_FONT_WD_VARIANTS
+  syn keyword cConstant AG_FONT_THIN AG_FONT_EXTRALIGHT AG_FONT_LIGHT 
+  syn keyword cConstant AG_FONT_REGULAR AG_FONT_SEMIBOLD AG_FONT_BOLD
+  syn keyword cConstant AG_FONT_EXTRABOLD AG_FONT_BLACK
+  syn keyword cConstant AG_FONT_OBLIQUE AG_FONT_ITALIC AG_FONT_UPRIGHT_ITALIC
+  syn keyword cConstant AG_FONT_MONOSPACE
+  syn keyword cConstant AG_FONT_ULTRACONDENSED AG_FONT_CONDENSED AG_FONT_SEMICONDENSED 
+  syn keyword cConstant AG_FONT_SEMIEXPANDED AG_FONT_EXPANDED AG_FONT_ULTRAEXPANDED
+  syn keyword cConstant AG_FONT_WEIGHTS AG_FONT_STYLES AG_FONT_FAMILY_PREFS
+  syn keyword cConstant AG_FONT_WD_VARIANTS
   " gui/text_cache.h
   syn keyword cType AG_TextCache AG_CachedText AG_TextCacheBucket
   " gui/textbox.h
@@ -595,7 +631,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_TLIST_NO_SELECTED AG_TLIST_NO_SCALE_ICON
   syn keyword cConstant AG_TLIST_HFILL AG_TLIST_VFILL AG_TLIST_FIXED_HEIGHT
   syn keyword cConstant AG_TLIST_STATELESS AG_TLIST_SCROLLTOSEL AG_TLIST_REFRESH
-  syn keyword cConstant AG_TLIST_EXPAND_NODES AG_TLIST_EXPAND
+  syn keyword cConstant AG_TLIST_EXPAND_NODES AG_TLIST_EXPAND AG_TLIST_NO_KEYREPEAT
   " gui/tlist.h
   syn keyword cType AG_TlistPopup AG_TlistItem AG_TlistItemQ AG_Tlist 
   " gui/toolbar.h

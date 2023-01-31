@@ -119,8 +119,8 @@ syn match cssColorProp contained "\<\(color\|background-color\|text-color\|line-
 syn match cssFontProp contained "\<\(font-family\|font-size\|font-stretch\|font-style\|font-weight\)\=\>"
 " font-family attributes (Agar core fonts)
 syn keyword cssFontAttr contained _agFontAlgue unialgue cm-sans cm-serif
-syn keyword cssFontAttr contained cm-typewriter charter courier-prime
-syn keyword cssFontAttr contained source-han-sans league-spartan
+syn keyword cssFontAttr contained charter source-han-sans league-spartan
+syn keyword cssFontAttr contained monoalgue monoalgue-sans
 syn keyword cssFontAttr contained league-gothic fraktur
 
 " font-stretch attributes
