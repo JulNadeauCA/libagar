@@ -64,7 +64,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define DEBUG_FONTS
+/* #define DEBUG_FONTS */
 /* #define DEBUG_ANSI */
 
 #ifndef AG_DEFAULT_FT_FONT_FACE

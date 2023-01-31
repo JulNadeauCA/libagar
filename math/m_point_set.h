@@ -6,7 +6,7 @@
  */
 enum m_point_set_sort_mode2 {
 	M_POINT_SET_SORT_XY,
-	M_POINT_SET_SORT_YX,
+	M_POINT_SET_SORT_YX
 };
 enum m_point_set_sort_mode3 {
 	M_POINT_SET_SORT_XYZ,
@@ -14,7 +14,7 @@ enum m_point_set_sort_mode3 {
 	M_POINT_SET_SORT_YXZ,
 	M_POINT_SET_SORT_YZX,
 	M_POINT_SET_SORT_ZXY,
-	M_POINT_SET_SORT_ZYX,
+	M_POINT_SET_SORT_ZYX
 };
 
 __BEGIN_DECLS

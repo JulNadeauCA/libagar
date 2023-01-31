@@ -30,7 +30,7 @@ enum vg_alignment {
 	VG_ALIGN_BL, VG_ALIGN_BC, VG_ALIGN_BR
 };
 
-typedef struct vg_vertex {
+typedef struct vg_vector {
 	float x, y;
 } VG_Vector;
 

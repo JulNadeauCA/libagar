@@ -40,7 +40,7 @@ typedef struct vg_tool_ops {
 	void (*_Nullable selected)(void *_Nonnull, struct vg_view *_Nonnull);
 	void (*_Nullable deselected)(void *_Nonnull, struct vg_view *_Nonnull);
 
-	int (*_Nullable mousemotion)(void *_Nonnull, VG_Vector, VG_Vector, int);
+	int (*_Nullable mousemotion)(void *_Nonnull, VG_Vector, VG_Vector);
 	int (*_Nullable mousebuttondown)(void *_Nonnull, VG_Vector, int);
 	int (*_Nullable mousebuttonup)(void *_Nonnull, VG_Vector, int);
 	int (*_Nullable keydown)(void *_Nonnull, int, int, Uint32);

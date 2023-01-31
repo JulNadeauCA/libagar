@@ -7,11 +7,11 @@ Agar is a type of sugar polymer obtained from seaweed and red algae. It becomes 
 Agar works with a wide variety of platforms and graphics systems, from modern desktops to classic consoles and embedded devices. Its low-level layers are modular, extensible and easily ported to new hardware platforms and graphics systems. Standard [drivers](https://libagar.org/man3/AG_Driver) include:
 * [**cocoa**](https://libagar.org/man3/AG_DriverCocoa) ([_MacOS_](https://en.wikipedia.org/wiki/MacOS), OpenGL, multi-window)
 * [**glx**](https://libagar.org/man3/AG_DriverGLX) ([_X Windows_](https://x.org), OpenGL, multi-window)
-* [**sdlfb**](https://libagar.org/man3/AG_DriverSDLFB) ([_SDL 1.2_](https://libsdl.org), frame-buffer, single-window)
-* [**sdlgl**](https://libagar.org/man3/AG_DriverSDLGL) ([_SDL 1.2_](https://libsdl.org), OpenGL, single-window)
 * [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB) ([_SDL 2.0_](https://libsdl.org), frame-buffer, single-window)
 * [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL) ([_SDL 2.0_](https://libsdl.org), OpenGL, single-window)
 * [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW) ([_SDL 2.0_](https://libsdl.org), OpenGL, multi-window)
+* [**sdlfb**](https://libagar.org/man3/AG_DriverSDLFB) ([_SDL 1.2_](https://libsdl.org), frame-buffer, single-window)
+* [**sdlgl**](https://libagar.org/man3/AG_DriverSDLGL) ([_SDL 1.2_](https://libsdl.org), OpenGL, single-window)
 * [**wgl**](https://libagar.org/man3/AG_DriverWGL) ([_Windows_](https://en.wikipedia.org/wiki/Microsoft_Windows), OpenGL, multi-window)
 
 For graphics systems without multi-window capabilities (or cases where a MDI-style interface is preferred over desktop integration), a [**single-window**](https://libagar.org/man3/AG_DriverSw) mode is provided in which case Agar provides its own internal window manager.

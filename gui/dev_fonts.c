@@ -88,9 +88,9 @@ AG_DEV_FontInfo(void)
 	AG_TableAddCol(tbl, _("Class"),      "<XXXXX>",         NULL);
 	AG_TableAddCol(tbl, _("Size"),       "<XXXXXXXXXX>",    NULL);
 	AG_TableAddCol(tbl, _("Flags"),      "<XXXXXX>",       NULL);
-	AG_TableAddCol(tbl, _("References"), "<XXXX>",           NULL);
+	AG_TableAddCol(tbl, _("References"), "<XXXXXX>",           NULL);
 	AG_TableAddCol(tbl, _("Metrics"),    NULL,                NULL);
-	AG_TableSizeHint(tbl, 600, 20);
+	AG_TableSizeHint(tbl, 700, 30);
 
 	AG_WindowShow(win);
 	return (win);

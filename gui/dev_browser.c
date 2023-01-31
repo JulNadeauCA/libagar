@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -725,7 +725,6 @@ AG_DEV_Browser(void *vfsRoot)
 	AG_WindowSetCaptionS(win, OBJECT(vfsRoot)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_ML, 0);
 	AG_SetStyle(win, "font-size", "120%");
-	AG_SetStyle(win, "font-family", "cm-sans");
 
 	menu = AG_MenuNew(win, AG_MENU_HFILL);
 

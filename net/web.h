@@ -66,7 +66,6 @@
 #define WEB_PASSWORD_MAX	128	/* Password length */
 #define WEB_EMAIL_MAX		128	/* E-mail address length */
 #define WEB_INT_RANGE_MAX	21	/* Maximum integer range length */
-#define WEB_HELP_TOPIC_MAX	80
 
 #define WEB_SESSID_MAX		  11	/* Session ID length */
 #define WEB_SESSION_VAR_KEY_MAX	  32	/* Session variable key */
@@ -215,11 +214,11 @@ typedef struct web_query {
 /* Control command sent to running Frontend process. */
 typedef struct web_control_cmd {
 	Uint flags;
-#define WEB_CONTROL_CMD_SYNC	0x01		/* Block and return status */
+#define WEB_CONTROL_CMD_SYNC 0x01		/* Block and return status */
 	enum {
 		WEB_CONTROL_NOOP,
 		WEB_CONTROL_SHUTDOWN,		/* Perform graceful exit */
-		WEB_CONTROL_WORKER_CHLD,	/* Report Worker process exit */
+		WEB_CONTROL_WORKER_CHLD		/* Report Worker process exit */
 	} type;
 	union {
 		struct {
@@ -307,9 +306,7 @@ typedef struct web_module {
 typedef struct web_session_ops {
 	const char *_Nonnull name;	/* Session class name */
 	AG_Size size;			/* Structure size */
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad;
-#endif
+	AG_SIZE_PADDING(_pad);
 #ifdef AG_HAVE_64BIT
 	Uint64 flags;
 #else

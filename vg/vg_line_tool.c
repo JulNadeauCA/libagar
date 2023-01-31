@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -101,7 +101,7 @@ PostDraw(void *_Nonnull obj, VG_View *vv)
 }
 
 static int
-MouseMotion(void *_Nonnull obj, VG_Vector vPos, VG_Vector vRel, int b)
+MouseMotion(void *_Nonnull obj, VG_Vector vPos, VG_Vector vRel)
 {
 	VG_LineTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;

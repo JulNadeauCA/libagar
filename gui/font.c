@@ -47,7 +47,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define DEBUG_FONTS
+/* #define DEBUG_FONTS */
 
 /*
  * Adjustments to the scaling and baselines of core fonts (relative to Algue).
@@ -466,9 +466,9 @@ AG_UnusedFont(AG_Font *font)
 	if (font->nRefs == 0) {
 #ifdef DEBUG_FONTS
 		Debug(font, "Finalizing font\n");
+#endif
 		AGFONT_OPS(font)->close(font);
 		AG_ObjectDestroy(font);
-#endif
 	}
 
 }

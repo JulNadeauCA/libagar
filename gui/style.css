@@ -1,5 +1,6 @@
 /*
  * Default Agar Stylesheet.
+ * ex:syn=agarcss
  *
  * Colors and font attributes of parents are inherited by default (unless
  * overridden by an instance Variable or matching stylesheet definition).
@@ -27,9 +28,12 @@ AG_Checkbox {
  * AG_Combo > #trigger {
  * 	padding: 1;
  * }
+ * AG_Combo > #list {
+ * 	background-color: #474747;
+ * }
  */
 AG_Console {
-	font-family: courier-prime;
+	font-family: Monoalgue;
 	padding: 4;
 	background-color: rgb(0,0,0);
 	background-color#hover: rgb(0,0,30);
@@ -101,6 +105,8 @@ AG_Separator {
 	padding: 4;
 }
 AG_Statusbar {
+	font-family: cm-serif;
+	font-style: upright-italic;
 	padding: 2;
 	spacing: 1;
 }

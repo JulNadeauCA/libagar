@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2006-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -707,22 +707,40 @@ frees all resources allocated by an
 .Fn AG_MapPixel64 "const AG_PixelFormat *pf" "const AG_Color *c"
 .Pp
 .Ft AG_Pixel
+.Fn AG_MapPixel_RGB8 "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft AG_Pixel
 .Fn AG_MapPixel_RGB8 "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
 .Ft AG_Pixel
-.Fn AG_MapPixel_RGB16 "const AG_PixelFormat *pf" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
+.Fn AG_MapPixel_RGB16 "const AG_PixelFormat *pf" "Uint16 r" "Uint16 g" "Uint16 b"
+.Pp
+.Ft AG_Pixel
+.Fn AG_MapPixel_RGBA16 "const AG_PixelFormat *pf" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
 .Pp
 .Ft Uint32
-.Fn AG_MapPixel32_RGB8 "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Fn AG_MapPixel32_RGB8 "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uint8 b"
 .Pp
 .Ft Uint32
-.Fn AG_MapPixel32_RGB16 "const AG_PixelFormat *pf" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
+.Fn AG_MapPixel32_RGBA8 "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft Uint32
+.Fn AG_MapPixel32_RGB16 "const AG_PixelFormat *pf" "Uint16 r" "Uint16 g" "Uint16 b"
+.Pp
+.Ft Uint32
+.Fn AG_MapPixel32_RGBA16 "const AG_PixelFormat *pf" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
 .Pp
 .Ft Uint64
-.Fn AG_MapPixel64_RGB8 "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Fn AG_MapPixel64_RGB8 "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uint8 b"
 .Pp
 .Ft Uint64
-.Fn AG_MapPixel64_RGB16 "const AG_PixelFormat *pf" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
+.Fn AG_MapPixel64_RGBA8 "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft Uint64
+.Fn AG_MapPixel64_RGB16 "const AG_PixelFormat *pf" "Uint16 r" "Uint16 g" "Uint16 b"
+.Pp
+.Ft Uint64
+.Fn AG_MapPixel64_RGBA16 "const AG_PixelFormat *pf" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
 .Pp
 .nr nS 0
 .Fn AG_SurfaceGet8

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -150,7 +150,7 @@ MouseButtonUp(void *_Nonnull obj, VG_Vector v, int b)
 }
 
 static int
-MouseMotion(void *_Nonnull obj, VG_Vector vPos, VG_Vector vRel, int buttons)
+MouseMotion(void *_Nonnull obj, VG_Vector vPos, VG_Vector vRel)
 {
 	VG_SelectTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;

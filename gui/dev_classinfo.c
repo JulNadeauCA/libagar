@@ -75,9 +75,9 @@ AG_DEV_ClassInfo(void)
 	AG_TableAddCol(tbl, _("Name"), "<XXXXXXXXXXXXXXX>", NULL);
 	AG_TableAddCol(tbl, _("Version"), "<XXX.XXX>", NULL);
 	AG_TableAddCol(tbl, _("Size"), "<XXXX>", NULL);
-	AG_TableAddCol(tbl, _("Modules"), "<XXXXXXX>", NULL);
+	AG_TableAddCol(tbl, _("Modules"), "<XXXXXX>", NULL);
 	AG_TableAddCol(tbl, _("Hierarchy"), NULL, NULL);
-	AG_TableSizeHint(tbl, 600, 20);
+	AG_TableSizeHint(tbl, 680, 30);
 
 	AG_WindowShow(win);
 	return (win);

@@ -68,7 +68,7 @@
 static int agFtInited = 0;                /* FreeType library is initalized */
 static FT_Library agFtLibrary;
 
-#define DEBUG_FONTS
+/* #define DEBUG_FONTS */
 
 /*
  * Create and load a FreeType font.
