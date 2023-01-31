@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2008-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -176,6 +176,11 @@ notation ("inf" and the Unicode symbol for Infinity may also be used).
 Use
 .Fn AG_EditableSetFltOnly
 to change at runtime.
+.It AG_EDITABLE_NUMERICAL
+Shorthand for
+.Dv AG_EDITABLE_INT_ONLY
+and
+.Dv AG_EDITABLE_FLT_ONLY .
 .It AG_EDITABLE_CATCH_TAB
 Cause tabs to be entered literally into the string (by default, the tab
 key moves focus to the next widget).
@@ -556,6 +561,20 @@ is not set.
 The string is about to be modified.
 .It Fn editable-postchg "void"
 The string was just modified.
+.It Fn editable-increment "void"
+Request to increment the number represented by the string
+(requires
+.Dv AG_EDITABLE_NUMERICAL
+and
+.Dv AG_EDITABLE_MULTILINE
+to be unset).
+.It Fn editable-decrement "void"
+Request to decrement the number represented by the string
+(requires
+.Dv AG_EDITABLE_NUMERICAL
+and
+.Dv AG_EDITABLE_MULTILINE
+to be unset).
 .El
 .Sh STRUCTURE DATA
 For the
@@ -643,3 +662,5 @@ Clipboard integration,
 and
 .Fn AG_EditableCatString
 appeared in Agar 1.6.0.
+Controller support and the "editable-increment" and "editable-decrement"
+events appeared in Agar 1.7.0.

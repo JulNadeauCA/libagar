@@ -83,6 +83,7 @@ typedef struct ag_editable {
 #define AG_EDITABLE_READONLY	  0x200000   /* Disable user input */
 #define AG_EDITABLE_MULTILINGUAL  0x400000   /* Multilingual edition */
 #define AG_EDITABLE_SHIFT_SELECT  0x800000   /* Keyboard (shift) selection mode */
+#define AG_EDITABLE_NUMERICAL     (AG_EDITABLE_INT_ONLY | AG_EDITABLE_FLT_ONLY)
 
 	int lineScrollAmount;                /* Lines to scroll per event */
 	const char *_Nonnull encoding;       /* Character set (default "UTF-8") */
@@ -120,7 +121,7 @@ typedef struct ag_editable {
 	AG_Timer toRepeat;                   /* Key repeat timers (not direction keys) */
 	AG_Timer toCursorBlink;              /* Cursor blink timer */
 	AG_Timer toDblClick;                 /* Double click timer */
-	AG_Timer toRepeatDirs[4];            /* Key repeat timers (direction keys) */
+	AG_Timer toRepeatDirs[4];            /* Key repeat timers (UP DN R L) */
 	Uint nUndo;                          /* Undo stack size */
 	Uint nRedo;                          /* Redo stack size */
 	AG_EditableRevision *_Nonnull undo;  /* Undo stack (History Buffer) */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 #include <agar/gui/editable.h>
 #include <agar/gui/text.h>
 #include <agar/gui/window.h>
-#include <agar/gui/ttf.h>
+#include <agar/gui/font_ft.h>
 #include <agar/gui/keymap.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/cursors.h>
@@ -572,7 +572,7 @@ ProcessKey(AG_Editable *_Nonnull ed, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 	   (ed->flags & AG_EDITABLE_MULTILINE) == 0)
 		return (0);
 
-	if (kmod == AG_KEYMOD_NONE &&
+	if (kmod == 0 &&
 	    (ks & ~0x7f) == 0 &&				/* is ascii */
 	    isprint((int)ks)) {
 		if ((ed->flags & AG_EDITABLE_INT_ONLY) &&
@@ -770,8 +770,8 @@ WrapAtChar(AG_Editable *_Nonnull ed, int x, AG_Char *_Nonnull s,
 /*
  * Map mouse coordinates to a character position within the buffer.
  */
-#define ON_LINE(my,y)       ((my) >= (y) && (my) <= (y)+ed->lineSkip)
-#define ON_CHAR(mx,x,glyph) ((mx) >= (x) && (mx) <= (x)+(glyph)->advance)
+#define ON_LINE(my,y)     ((my) >= (y) && (my) <= (y)+ed->lineSkip)
+#define ON_CHAR(mx,x,adv) ((mx) >= (x) && (mx) <= (x)+(adv))
 int
 AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
     int *pos)
@@ -832,20 +832,19 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 		
 		switch (font->spec.type) {
 #ifdef HAVE_FREETYPE
-		case AG_FONT_VECTOR:
+		case AG_FONT_FREETYPE:
 			{
-				AG_TTFFont *ttf = font->data.vec.ttf;
-				AG_TTFGlyph *Gttf;
+				AG_GlyphFt *Gft;
 
-				if (AG_TTFFindGlyph(ttf, ch,
-				    TTF_CACHED_METRICS | TTF_CACHED_BITMAP) != 0) {
+				Gft = AGFONT_OPS(font)->get_glyph(font, ch,
+				    AG_GLYPH_FT_METRICS);
+				if (Gft == NULL) {
+					/* TODO blank box advance */
 					continue;
 				}
-				Gttf = ttf->current;
-
 				if (ON_LINE(yMouse, y) &&
-				    ON_CHAR(mx, x, Gttf)) {
-					*pos = (mx < x + (Gttf->advance >> 1)) ?
+				    ON_CHAR(mx, x, Gft->advance)) {
+					*pos = (mx < x + (Gft->advance >> 1)) ?
 					       i : i+1;
 					if (buf->s[*pos]   == 0x1b &&
 					    buf->s[*pos+1] >= 0x40 &&
@@ -857,7 +856,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 					}
 					goto out;
 				}
-				x += Gttf->advance;
+				x += Gft->advance;
 			}
 			break;
 #endif /* HAVE_FREETYPE */
@@ -1280,15 +1279,12 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Editable *ed = AG_EDITABLE_SELF();
-	const int keysym = AG_INT(1);
-	const int keymod = AG_INT(2);
-	const AG_Char ch = AG_CHAR(3);
+	AG_Editable *ed = obj;
 	int rv;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_RETURN:
 	case AG_KEY_KP_ENTER:
 		if ((ed->flags & AG_EDITABLE_MULTILINE) == 0) {
@@ -1332,29 +1328,45 @@ KeyDown(AG_Event *_Nonnull event)
 
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 
-	rv = ProcessKey(ed, keysym, keymod, ch);
+	if ((ed->flags & AG_EDITABLE_NUMERICAL) &&
+	    (ed->flags & AG_EDITABLE_MULTILINE) == 0 &&
+	    !AG_WidgetDisabled(ed)) {
+		switch (ks) {
+		case AG_KEY_UP:
+			AG_PostEvent(ed, "editable-increment", NULL);
+			goto out;
+		case AG_KEY_DOWN:
+			AG_PostEvent(ed, "editable-decrement", NULL);
+			goto out;
+		default:
+			break;
+		}
+	}
 
-	switch (keysym) {
+	rv = ProcessKey(ed, ks, kmod, ch);
+
+	switch (ks) {
 	case AG_KEY_UP:
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
 	case AG_KEY_LEFT:
 		if (rv == 1) {
-			AG_AddTimer(ed, &ed->toRepeatDirs[keysym - AG_KEY_UP],
+			AG_AddTimer(ed, &ed->toRepeatDirs[ks-AG_KEY_UP],
 			    agKbdDelay,
-			    KeyRepeatTimeout, "%i,%i,%lu", keysym, keymod, ch);
+			    KeyRepeatTimeout, "%i,%i,%lu", ks, kmod, ch);
 		} else {
-			AG_DelTimer(ed, &ed->toRepeatDirs[keysym - AG_KEY_UP]);
+			AG_DelTimer(ed, &ed->toRepeatDirs[ks-AG_KEY_UP]);
 		}
 	default:
 		if (rv == 1) {
 			AG_AddTimer(ed, &ed->toRepeat, agKbdDelay,
-			    KeyRepeatTimeout, "%i,%i,%lu", keysym, keymod, ch);
+			    KeyRepeatTimeout, "%i,%i,%lu", ks, kmod, ch);
 		} else {
 			AG_DelTimer(ed, &ed->toRepeat);
 		}
 		break;
 	}
+out:
 	AG_Redraw(ed);
 }
 
@@ -1440,19 +1452,31 @@ AutocompleteTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 }
 
 static void
-KeyUp(AG_Event *_Nonnull event)
+KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Editable *ed = AG_EDITABLE_SELF();
-	const int keysym = AG_INT(1);
+	AG_Editable *ed = obj;
 	
 	AG_DelTimer(ed, &ed->toRepeat);
 
-	switch (keysym) {
+	if ((ed->flags & AG_EDITABLE_NUMERICAL) &&
+	    (ed->flags & AG_EDITABLE_MULTILINE) == 0 &&
+	    !AG_WidgetDisabled(ed)) {
+		switch (ks) {
+		case AG_KEY_UP:
+		case AG_KEY_DOWN:
+			AG_PostEvent(ed, "editable-stop", NULL);
+			break;
+		default:
+			break;
+		}
+	}
+
+	switch (ks) {
 	case AG_KEY_UP:
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
 	case AG_KEY_LEFT:
-		AG_DelTimer(ed, &ed->toRepeatDirs[keysym - AG_KEY_UP]);
+		AG_DelTimer(ed, &ed->toRepeatDirs[ks-AG_KEY_UP]);
 		break;
 	case AG_KEY_LSHIFT:
 	case AG_KEY_RSHIFT:
@@ -1475,7 +1499,7 @@ KeyUp(AG_Event *_Nonnull event)
 	}
 	
 	if (ed->complete) {
-		switch (keysym) {
+		switch (ks) {
 		case AG_KEY_HOME:
 		case AG_KEY_END:
 		case AG_KEY_LEFT:
@@ -1491,6 +1515,68 @@ KeyUp(AG_Event *_Nonnull event)
 			    AutocompleteTimeout, NULL);
 			break;
 		}
+	}
+}
+
+static void
+Ctrl(void *obj, void *inputDevice, const AG_DriverEvent *dev)
+{
+	AG_Editable *ed = obj;
+	const int isDisabled = AG_WidgetDisabled(ed);
+	
+	ed->flags |= AG_EDITABLE_BLINK_ON;
+
+	switch (dev->type) {
+	case AG_DRIVER_CTRL_AXIS_MOTION:
+		if (dev->ctrlAxis.axis == AG_CTRL_AXIS_LEFT_Y) {
+			if ((ed->flags & AG_EDITABLE_NUMERICAL) &&
+			    (ed->flags & AG_EDITABLE_MULTILINE) == 0 &&
+			    !isDisabled) {
+				if (dev->ctrlAxis.value == -0x8000) {
+					AG_PostEvent(ed, "editable-increment", NULL);
+				} else if (dev->ctrlAxis.value == 0x7fff) {
+					AG_PostEvent(ed, "editable-decrement", NULL);
+				} else {
+					AG_PostEvent(ed, "editable-stop", NULL);
+				}
+			} else {
+				if (dev->ctrlAxis.value == -0x8000 &&
+				    ProcessKey(ed, AG_KEY_UP, 0, 0) != 0) {
+					AG_AddTimer(ed, &ed->toRepeatDirs[0], /* UP */
+					    agKbdDelay,
+					    KeyRepeatTimeout,"%i,%i,%lu",
+					    AG_KEY_UP, 0, 0U);
+				} else if (dev->ctrlAxis.value == 0x7fff &&
+				    ProcessKey(ed, AG_KEY_DOWN, 0, 0) != 0) {
+					AG_AddTimer(ed, &ed->toRepeatDirs[1], /* DN */
+					    agKbdDelay,
+					    KeyRepeatTimeout,"%i,%i,%lu",
+					    AG_KEY_DOWN, 0, 0U);
+				} else {
+					AG_DelTimer(ed, &ed->toRepeatDirs[0]);
+					AG_DelTimer(ed, &ed->toRepeatDirs[1]);
+				}
+			}
+		} else if (dev->ctrlAxis.axis == AG_CTRL_AXIS_LEFT_X) {
+			if (dev->ctrlAxis.value == -0x8000 &&
+			    ProcessKey(ed, AG_KEY_LEFT, 0, 0) != 0) {
+				AG_AddTimer(ed, &ed->toRepeatDirs[3], /* L */
+				    agKbdDelay,
+				    KeyRepeatTimeout,"%i,%i,%lu",
+				    AG_KEY_LEFT, 0, 0U);
+			} else if (dev->ctrlAxis.value == 0x7fff &&
+			    ProcessKey(ed, AG_KEY_RIGHT, 0, 0) != 0) {
+				AG_AddTimer(ed, &ed->toRepeatDirs[2], /* R */
+				    agKbdDelay,
+				    KeyRepeatTimeout,"%i,%i,%lu",
+				    AG_KEY_RIGHT, 0, 0U);
+			} else {
+				AG_DelTimer(ed, &ed->toRepeatDirs[2]);
+				AG_DelTimer(ed, &ed->toRepeatDirs[3]);
+			}
+
+		}
+		break;
 	}
 }
 
@@ -1934,13 +2020,14 @@ AG_EditableUndo(AG_Editable *ed, AG_EditableBuffer *buf)
 		Uint32 crc;
 
 		crc = AG_GetCRC32(buf->s, (buf->len << 2));
-		if (revUndo->lenBuffer != buf->len || revUndo->crc32 != crc) {
-#ifdef DEBUG_UNDO
-			Debug(ed, "External change detected (len %u->%lu, crc %x->%x)! "
-			          "Clearing History Buffer.\n",
+		if (revUndo->lenBuffer != buf->len ||
+		    revUndo->crc32 != crc) {
+			Debug(ed,
+			    "Buffer changed externally (len %u->%lu, crc %x->%x). "
+			    "Clearing history.\n",
 			    revUndo->lenBuffer, buf->len,
 			    revUndo->crc32, crc);
-#endif
+
 			AG_EditableClearHistory(ed);
 			return;
 		}
@@ -1992,13 +2079,6 @@ AG_EditableRedo(AG_Editable *ed, AG_EditableBuffer *buf)
 	} else {
 		ed->selStart = 0;                        /* Clear selection */
 		ed->selEnd = 0;
-#if 0
-		if (revUndo->nCharsAdded > 0) {
-			ed->pos += revUndo->nCharsAdded;
-		} else if (revUndo->nCharsRemoved > 0) {
-			ed->pos -= revUndo->nCharsRemoved;
-		}
-#endif
 	}
 
 	FreeRevision(revRedo);
@@ -2154,10 +2234,13 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 				}
 			}
 		} else if (ed->flags & AG_EDITABLE_FLT_ONLY) {
-			for (c = &s[0]; *c != '\0'; c++) {
-				if (!CharIsFltOnly(*c)) {
-					AG_SetError(_("Non-float input near `%c'"), (char)*c);
-					goto fail;
+			if (strcmp(s, AGSI_INFINITY) != 0 &&
+			    strcmp(s, "-" AGSI_INFINITY) != 0) {
+				for (c = &s[0]; *c != '\0'; c++) {
+					if (!CharIsFltOnly(*c)) {
+						AG_SetError(_("Non-float input near `%c'"), (char)*c);
+						goto fail;
+					}
 				}
 			}
 		}
@@ -2678,27 +2761,24 @@ DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Editable *ed = AG_EDITABLE_SELF();
-	const int btn = AG_INT(1);
-	const int mx = AG_INT(2) - WIDGET(ed)->paddingLeft;
-	const int my = AG_INT(3) - WIDGET(ed)->paddingTop;
+	AG_Editable *ed = obj;
 	AG_EditableBuffer *buf;
 
 	if (!AG_WidgetIsFocused(ed))
 		AG_WidgetFocus(ed);
 
-	switch (btn) {
+	switch (button) {
 	case AG_MOUSE_LEFT:
 		if (ed->pm != NULL) {
 			AG_PopupHide(ed->pm);
 		}
 		ed->flags |= AG_EDITABLE_CURSOR_MOVING | AG_EDITABLE_BLINK_ON;
 		if ((buf = GetBuffer(ed)) == NULL) {
-			return;
+			goto out;
 		}
-		if (AG_EditableMapPosition(ed, buf, (ed->x + mx), my, &ed->pos) == 0) {
+		if (AG_EditableMapPosition(ed, buf, (ed->x + x), y, &ed->pos) == 0) {
 			ed->selStart = 0;
 			ed->selEnd = 0;
 			AG_Redraw(ed);
@@ -2717,10 +2797,10 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	case AG_MOUSE_RIGHT:
 		if ((ed->flags & AG_EDITABLE_NOPOPUP) == 0) {
 			if (ed->pm != NULL) {
-				AG_PopupShowAt(ed->pm, mx, my);
+				AG_PopupShowAt(ed->pm, x,y);
 			} else {
 				if ((ed->pm = PopupMenu(ed)) != NULL)
-					AG_PopupShowAt(ed->pm, mx,my);
+					AG_PopupShowAt(ed->pm, x,y);
 			}
 		}
 		break;
@@ -2751,17 +2831,17 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		}
 		break;
 	}
-	
+out:
 	AG_Redraw(ed);
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Editable *ed = AG_EDITABLE_SELF();
-	const int button = AG_INT(1);
-	const int x = AG_INT(2) - WIDGET(ed)->paddingLeft;
-	const int y = AG_INT(3) - WIDGET(ed)->paddingTop;
+	AG_Editable *ed = obj;
+
+	x -= WIDGET(ed)->paddingLeft;
+	y -= WIDGET(ed)->paddingTop;
 
 	if (button != AG_MOUSE_LEFT)
 		return;
@@ -2780,18 +2860,18 @@ MouseButtonUp(AG_Event *_Nonnull event)
 		ReleaseBuffer(ed, buf);
 		ed->flags |= AG_EDITABLE_MARKPREF;
 	}
-
 	AG_Redraw(ed);
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	AG_Editable *ed = AG_EDITABLE_SELF();
+	AG_Editable *ed = obj;
 	AG_EditableBuffer *buf;
-	const int mx = AG_INT(1) - WIDGET(ed)->paddingLeft;
-	const int my = AG_INT(2) - WIDGET(ed)->paddingTop;
 	int newPos;
+
+	x -= WIDGET(ed)->paddingLeft;
+	y -= WIDGET(ed)->paddingTop;
 
 	if (!AG_WidgetIsFocused(ed) ||
 	    (ed->flags & AG_EDITABLE_CURSOR_MOVING) == 0)
@@ -2800,7 +2880,7 @@ MouseMotion(AG_Event *_Nonnull event)
 	if ((buf = GetBuffer(ed)) == NULL)
 		return;
 
-	if (AG_EditableMapPosition(ed, buf, ed->x + mx, my, &newPos) == -1 ||
+	if (AG_EditableMapPosition(ed, buf, ed->x + x, y, &newPos) == -1 ||
 	    newPos == ed->pos)
 		goto out;
 
@@ -3225,11 +3305,6 @@ Init(void *_Nonnull obj)
 
 	AG_AddEvent(ed, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(ed, "widget-hidden", OnHide, NULL);
-	AG_SetEvent(ed, "key-down", KeyDown, NULL);
-	AG_SetEvent(ed, "key-up", KeyUp, NULL);
-	AG_SetEvent(ed, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(ed, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(ed, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(ed, "widget-gainfocus", OnFocusGain, NULL);
 	AG_SetEvent(ed, "widget-lostfocus", OnFocusLoss, NULL);
 
@@ -3410,7 +3485,15 @@ AG_WidgetClass agEditableClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	KeyDown,
+	KeyUp,
+	NULL,			/* touch */
+	Ctrl,
+	NULL,			/* joy */
 };
 
 #endif /* AG_WIDGETS */
