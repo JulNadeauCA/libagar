@@ -200,7 +200,7 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	case PNG_COLOR_TYPE_RGB_ALPHA:
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 		{
-			int s = (channels == 4) ? 0 : 8;
+			const int s = (channels == 4) ? 0 : 8;
 			Rmask = 0xff000000 >> s;
 			Gmask = 0x00ff0000 >> s;
 			Bmask = 0x0000ff00 >> s;
@@ -225,8 +225,9 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	for (row = 0; row < (int)height; row++)
 		pData[row] = (png_bytep)S->pixels + row*S->pitch;
 
-	Debug(NULL, "PNG image (%ux%u; %d-bpp %s at 0x%lx (->%p) via libpng (%s)\n",
-	    width, height, depth*channels, agSurfaceModeNames[S->format.mode],
+	Debug(NULL, "PNG image (%ux%u; %d-bpp (%d x %d-ch) %s at 0x%lx (->%p) via libpng (%s)\n",
+	    width, height, depth*channels, depth, channels,
+	    agSurfaceModeNames[S->format.mode],
 	    (long)start, S, PNG_LIBPNG_VER_STRING);
 
 	png_read_image(png, pData);

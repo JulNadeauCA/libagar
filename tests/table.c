@@ -40,20 +40,16 @@ MyCustomDynamicTextFn(void *p, char *s, AG_Size len)
 	    (unsigned long)AG_GetTicks());
 }
 
-/* This is a custom cell function which returns a surface to display (Ex.1) */
+/*
+ * This is a cell function (%[Fs]) which returns a newly-allocated surface.
+ *
+ * The alternate %[FS] specifier may also be used to set a function that
+ * returns a surface to be reused without duplication.
+ */
 static AG_Surface *
 MyCustomSurfaceFn(void *p, int x, int y)
 {
-	/*
-	 * Return the surface of a built-in Agar icon.
-	 */
-	return (agIconLoad.s);
-
-	/*
-	 * We are using %[FS], so Agar will never try to free this
-	 * surface. If we were using %[Fs], this would be needed:
-	 */
-	/* return AG_SurfaceDup(agIconLoad.s); */
+	return AG_SurfaceDup(agIconLoad.s);
 }
 
 /*
@@ -121,7 +117,7 @@ CreateStaticTable(AG_Event *event)
 		 * The %[FS] variant sets the "NODUP" flag (so that Agar
 		 * will never free the surface automatically).
 		 */
-		AG_TableAddRow(table, "%s:%d:%[FS]", "Foo", i,
+		AG_TableAddRow(table, "%s:%d:%[Fs]", "Foo", i,
 		    MyCustomSurfaceFn);
 	}
 
@@ -187,24 +183,27 @@ CreatePolledTable(AG_Event *event)
 	AG_Window *winParent = AG_WINDOW_PTR(1);
 	AG_Window *win;
 	AG_Table *table;
+	AG_Box *box;
 
-	/* Create our window. */
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
 	}
 	AG_WindowSetCaption(win, "Example 2: Polled Table");
 
-	/* Create a polled table. */
 	table = AG_TableNewPolled(win, AG_TABLE_EXPAND, UpdateTable, NULL);
+	AG_TableSizeHint(table, 200, 20);
 	AG_TableSetPollInterval(table, 100);
 	AG_TableAddCol(table, "A", "<8888888>", NULL);
 	AG_TableAddCol(table, "B", "<888888888888>", NULL);
 
-	AG_ButtonNewFn(win, AG_BUTTON_STICKY,
-	    "Pause polling", PausePolling, "%p", table);
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
+	{
+		AG_ButtonNewFn(box, AG_BUTTON_STICKY, "Pause polling",
+		    PausePolling,"%p",table);
+		AG_ButtonNewFn(box, 0, "Close", AGWINCLOSE(win));
+	}
 
-	/* Display and resize our window. */
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_ML, 150, 300);
+	AG_WindowSetPosition(win, AG_WINDOW_ML, 1);
 	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
@@ -212,7 +211,7 @@ CreatePolledTable(AG_Event *event)
 
 /* Report on the status of our test array (Ex.3) */
 static void
-ReportSelectedRows(AG_Event *event)
+CountSelected(AG_Event *event)
 {
 	int *MyTable = AG_PTR(1);
 	int i, total = 0;
@@ -238,7 +237,7 @@ ClearAllRows(AG_Event *event)
  * Table with embedded control widgets (%[W] row element).
  */
 static void
-CreateTableWithControls(AG_Event *event)
+CreateTableWithWidgets(AG_Event *event)
 {
 	AG_Window *winParent = AG_WINDOW_PTR(1);
 	static int MyTable[20];
@@ -255,10 +254,11 @@ CreateTableWithControls(AG_Event *event)
 
 	/* Create our table. */
 	table = AG_TableNew(win, AG_TABLE_EXPAND);
+	AG_TableSizeHint(table, 200, 20);
 
 	/* Create our columns. */
-	AG_TableAddCol(table, "Widgets", "<Widgets>", NULL);
-	AG_TableAddCol(table, "Items", NULL, NULL);
+	AG_TableAddCol(table, AGSI_ALGUE AGSI_BLACK_AGAR, "<XX>", NULL);
+	AG_TableAddCol(table, "Items", "<Example row #10>", NULL);
 
 	/* Initialize our test array. */
 	memset(MyTable, 0, 20*sizeof(int));
@@ -277,23 +277,27 @@ CreateTableWithControls(AG_Event *event)
 		 * ButtonNew() since TableAddRow() will attach the Button to
 		 * the Table for us.
 		 */
-		button = AG_ButtonNewInt(NULL, AG_BUTTON_STICKY, "Select",
+		button = AG_ButtonNewInt(NULL, AG_BUTTON_STICKY,
+		    (i % 2) == 0 ? AGSI_ALGUE AGSI_SML_FACE_W_OM :
+		                   AGSI_ALGUE AGSI_CAT_FACE,
 		    &MyTable[i]);
-		AG_TableAddRow(table, "%[W]:Row %d", button, i);
+		AG_TableAddRow(table, "%[W]:Example row #%d", button, i+1);
+		AG_SetStyle(button, "color", (i % 2) == 0 ? "#83b5b5" :
+		                                            "#d9b0de");
+		AG_SetStyle(button, "text-color", "#000");
 	}
 	AG_TableEnd(table);
 
 	/* Provide a function to report on the status of MyTable. */
-	box = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
-		AG_ButtonNewFn(box, 0, "Report selected rows",
-		    ReportSelectedRows, "%p", MyTable);
-		AG_ButtonNewFn(box, 0, "Clear rows",
-		    ClearAllRows, "%p", MyTable);
+		AG_ButtonNewFn(box, 0, "Count Selected", CountSelected,"%p",MyTable);
+		AG_ButtonNewFn(box, 0, "Clear", ClearAllRows,"%p",MyTable);
+		AG_ButtonNewFn(box, 0, "Close", AGWINCLOSE(win));
 	}
 
 	/* Display and resize our window. */
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MR, 200, 300);
+	AG_WindowSetPosition(win, AG_WINDOW_MR, 1);
 	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
@@ -301,13 +305,31 @@ CreateTableWithControls(AG_Event *event)
 static int
 TestGUI(void *obj, AG_Window *win)
 {
-	AG_ButtonNewFn(win, 0, "Create static table", CreateStaticTable, "%p", win);
+	AG_Label *lbl;
+
+	AG_SetStyle(win, "background-color", "#404045");
+
+	lbl = AG_LabelNewS(win, 0, _("Tests for AG_Table(3)"));
+	AG_SetStyle(lbl, "font-family", "cm-serif");
+	AG_SetStyle(lbl, "font-weight", "cm-bold");
+	AG_SetStyle(lbl, "font-size", "150%");
+
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL,
+	    "Create a " AGSI_BOLD "static" AGSI_RST " table",
+	    CreateStaticTable,"%p",win);
 #ifdef AG_TIMERS
-	AG_ButtonNewFn(win, 0, "Create polled table", CreatePolledTable, "%p", win);
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL,
+	    "Create a " AGSI_BOLD "polled" AGSI_RST " table",
+	    CreatePolledTable,"%p",win);
 #else
-	AG_WidgetDisable(AG_ButtonNewS(win, 0, "Create polled table"));
+	AG_PushDisabledState(win);
+	AG_ButtonNewS(win, 0, "Create polled table");
+	AG_PopDisabledState(win);
 #endif
-	AG_ButtonNewFn(win, 0, "Create table with controls", CreateTableWithControls, "%p", win);
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL,
+	    "Create a table with " AGSI_BOLD "widgets",
+	    CreateTableWithWidgets,"%p",win);
+
 	return (0);
 }
 

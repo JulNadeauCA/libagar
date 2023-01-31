@@ -73,6 +73,9 @@ extern const AG_TestCase plottingTest;
 extern const AG_TestCase stringTest;
 #endif
 
+/* Autorun "widgets" when no test specified on the command-line. */
+#define AUTORUN_WIDGETS
+
 const AG_TestCase *testCases[] = {
 	&buttonsTest,
 	&checkboxTest,
@@ -184,7 +187,7 @@ SelectedTest(AG_Event *event)
 	AG_TestCase *tc = it->p1;
 
 	AG_ButtonText(btnTest, _("Run %s"), tc->name);
-	AG_LabelText(status, "%s: %s", tc->name, tc->descr);
+	AG_LabelText(status, _("Run %s (%s)."), tc->name, tc->descr);
 	if (tc->test != NULL || tc->testGUI != NULL) {
 		AG_WidgetEnable(btnTest);
 	} else {
@@ -653,7 +656,7 @@ TestViewSource(AG_Event *event)
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
 	}
-	AG_SetStyle(win, "font-family", "courier-prime");
+	AG_SetStyle(win, "font-family", "monoalgue");
 	tb = AG_TextboxNew(win, AG_TEXTBOX_MULTILINE | AG_TEXTBOX_EXPAND |
 	                        AG_TEXTBOX_READONLY, NULL);
 	fseek(f, 0, SEEK_END);
@@ -963,7 +966,7 @@ main(int argc, char *argv[])
 	}
 
 	console = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
-/*	AG_SetStyle(console, "font-family", "courier-prime"); */
+/*	AG_SetStyle(console, "font-family", "monoalgue"); */
 	AG_SetStyle(console, "text-color", "#ddd");
 	{
 		AG_AgarVersion av;
@@ -1024,8 +1027,8 @@ main(int argc, char *argv[])
 		}
 		AG_ConsoleMsgS(console, "");
 		AG_ConsoleMsg(console,
-		    _("Press " AGSI_BOLD AGSI_CMD "[-]" AGSI_RST
-		       " and " AGSI_BOLD AGSI_CMD "[=]" AGSI_RST " to zoom"));
+		    _("Press " AGSI_BOLD "Ctrl-[-]" AGSI_RST
+		       " and " AGSI_BOLD "Ctrl-[+]" AGSI_RST " to zoom"));
 # if defined(AG_DEBUG) && defined(AG_TIMERS)
 		AG_ConsoleMsg(console,
 		    _("Press " AGSI_BOLD "Ctrl-Shift-D or F7" AGSI_RST " to start Debugger"));
@@ -1042,7 +1045,7 @@ main(int argc, char *argv[])
 	AG_SetEvent(btnTest, "button-pushed", RunTest, "%p", tl);
 
 	statusBar = AG_StatusbarNew(win, AG_STATUSBAR_HFILL);
-	status = AG_StatusbarAddLabel(statusBar, _("Please select a test"));
+	status = AG_StatusbarAddLabel(statusBar, _("Please select a test to run."));
 	
 	AG_SetEvent(win, "window-detached", ConsoleWindowDetached, NULL);
 
@@ -1054,11 +1057,13 @@ main(int argc, char *argv[])
 #endif
 	if (optInd == argc &&
 	    AG_GetBool(agConfig,"initial-run") == 1) {
+#ifdef AUTORUN_WIDGETS
 		AG_Event ev;
 
 		AG_TlistSelectPtr(tl, (void *)&widgetsTest);
 		AG_EventArgs(&ev, "%p,%p", tl, win);
 		RunTest(&ev);
+#endif
 		AG_SetBool(agConfig,"initial-run",0);
 		if (AG_ConfigSave() == -1)
 			AG_Verbose("AG_ConfigSave: %s; ignoring", AG_GetError());

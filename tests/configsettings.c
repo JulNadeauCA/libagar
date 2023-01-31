@@ -18,8 +18,12 @@ LoadConfig(AG_Event *event)
 	AG_Object *cfg = AGOBJECT(agConfig);
 	AG_Variable *V;
 
-	if (AG_ObjectCopyFilename(cfg, path, sizeof(path)) == 0)
-		TestMsg(ti, "Loading from %s", path);
+	if (AG_ObjectCopyFilename(cfg, path, sizeof(path)) != 0) {
+		TestMsg(ti, "%s", AG_GetError());
+		return;
+	}
+
+	TestMsg(ti, "Loading from %s", path);
 
 	if (AG_ConfigLoad() == 0) {
 		const char *s = "Configuration loaded successfully";
@@ -108,11 +112,11 @@ TestGUI(void *obj, AG_Window *win)
 	{
 		AG_TAILQ_FOREACH(cp, &agConfig->paths[AG_CONFIG_PATH_DATA], paths) {
 			lbl = AG_LabelNew(box, 0, "Data: %s", cp->s);
-			AG_SetStyle(lbl, "font-family", "courier-prime");
+			AG_SetStyle(lbl, "font-family", "monoalgue");
 		}
 		AG_TAILQ_FOREACH(cp, &agConfig->paths[AG_CONFIG_PATH_FONTS], paths) {
 			lbl = AG_LabelNew(box, 0, "Fonts: %s", cp->s);
-			AG_SetStyle(lbl, "font-family", "courier-prime");
+			AG_SetStyle(lbl, "font-family", "monoalgue");
 		}
 	}
 

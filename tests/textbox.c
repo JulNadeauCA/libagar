@@ -183,7 +183,7 @@ TestGUI(void *obj, AG_Window *win)
 
 		tb2 = AG_TextboxNew(nt, AG_TEXTBOX_HFILL, "Buffer (again): ");
 		tbBindFn(tb2, bufferShd, sizeof(bufferShd));
-		AG_SetStyle(tb2, "font-family", "cm-typewriter");
+		AG_SetStyle(tb2, "font-family", "Monoalgue");
 		AG_SetStyle(tb2, "font-size", "120%");
 		AG_SetStyle(tb2, "text-color", "AntiqueWhite");
 		AG_SetStyle(tb2, "padding", "0");

@@ -58,10 +58,10 @@ SRCS=	agartest.c ${SRCS_AUDIO} ${SRCS_MATH} \
 
 MAN1=	agartest.1
 
-DATAFILES= agar.png agar-index.png agar.bmp agar-1.bmp agar-2.bmp agar-3.bmp \
-	   agar-4.bmp axe.bmp axe.png helmet.png helmet.bmp helmet-socket.bmp \
-	   loss.txt menubg.bmp pepe.jpg sword.bmp sword-socket.bmp sq-agar.bmp \
-	   sq-agar.png
+DATAFILES= agar.png agar64.png agar-index.png agar.bmp agar-1.bmp agar-2.bmp \
+	   agar-3.bmp agar-4.bmp axe.bmp axe.png helmet.png helmet.bmp \
+	   helmet-socket.bmp loss.txt menubg.bmp pepe.jpg sword.bmp \
+	   sword-socket.bmp sq-agar.bmp sq-agar.png
 
 CLEANFILES+=	agar-index-save.png agar-save.png axe-save.png pepe-save.jpg
 

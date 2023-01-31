@@ -149,11 +149,9 @@ Draw(void *_Nonnull p)
 
 /* Mouse motion event handler */
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	MyWidget *my = MYWIDGET_SELF();
-	int x = AG_INT(1);
-	int y = AG_INT(2);
+	MyWidget *my = obj;
 
 	if (x != my->x || y != my->y) {
 		AG_Redraw(my);
@@ -178,14 +176,10 @@ ClickTimeout(AG_Timer *to, AG_Event *_Nonnull event)
 	return (1);				/* Reschedule in 1ms */
 }
 
-/* Mouse click event handler */
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	MyWidget *my = MYWIDGET_SELF();
-	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	MyWidget *my = obj;
 
 	if (button != AG_MOUSE_LEFT) {
 		return;
@@ -197,31 +191,23 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	AG_AddTimer(my, &my->clickTimer, 1, ClickTimeout, NULL);
 }
 
-/* Mouse click event handler */
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	MyWidget *my = MYWIDGET_SELF();
-/*	int button = AG_INT(1); */
-/*	int x = AG_INT(2); */
-/*	int y = AG_INT(3); */
+	MyWidget *my = obj;
 
 	/* Deactivate the running timer. */
 	AG_DelTimer(my, &my->clickTimer);
 }
 
-/* Keystroke event handler */
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	MyWidget *my = MYWIDGET_SELF();
-	int keysym = AG_INT(1);
-/*	int keymod = AG_INT(2); */
-	AG_Char unicode = AG_CHAR(3);
+	MyWidget *my = obj;
 
-	TestMsg(my->ti, "Keystroke: 0x%x (Uni=%x)", keysym, unicode);
-	my->lastKey = keysym;
-	my->lastUnicode = unicode;
+	TestMsg(my->ti, "KeyDown: 0x%x (mod 0x%x) ch=%x", ks, kmod, ch);
+	my->lastKey = ks;
+	my->lastUnicode = ch;
 
 	if (my->label != -1) {				/* Invalidate cached */
 		AG_WidgetUnmapSurface(my, my->label);
@@ -230,14 +216,12 @@ KeyDown(AG_Event *_Nonnull event)
 	}
 }
 
-/* Keystroke event handler */
 static void
-KeyUp(AG_Event *_Nonnull event)
+KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-/*	MyWidget *my = MYWIDGET_SELF(); */
-/*	int keysym = AG_INT(1); */
+	MyWidget *my = obj;
 
-	/* ... */
+	TestMsg(my->ti, "KeyUp: 0x%x (mod 0x%x) ch=%x", ks, kmod, ch);
 }
 
 /*
@@ -274,16 +258,9 @@ Init(void *_Nonnull obj)
 	AG_InitTimer(&my->clickTimer, "clickTimer", 0);
 
 	/*
-	 * Map our event handlers. For a list of all meaningful events
-	 * we can handle, see AG_Object(3), AG_Widget(3) and AG_Window(3).
-	 *
-	 * Here we register handlers for the common AG_Window(3) events.
+	 * Map any event handlers here. For the list of available events
+	 * see AG_Object(3), AG_Widget(3) and AG_Window(3).
 	 */
-	AG_SetEvent(my, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(my, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(my, "mouse-motion", MouseMotion, NULL);
-	AG_SetEvent(my, "key-up", KeyUp, NULL);
-	AG_SetEvent(my, "key-down", KeyDown, NULL);
 }
 
 /*
@@ -292,17 +269,25 @@ Init(void *_Nonnull obj)
  */
 AG_WidgetClass myWidgetClass = {
 	{
-		"AG_Widget:MyWidget",	/* Name of class */
-		sizeof(MyWidget),	/* Size of structure */
-		{ 0,0 },		/* Version for load/save */
-		Init,			/* Initialize dataset */
-		NULL,			/* Free dataset */
-		NULL,			/* Destroy widget */
-		NULL,			/* Load widget (for GUI builder) */
-		NULL,			/* Save widget (for GUI builder) */
-		NULL			/* Edit (for GUI builder) */
+		"AG_Widget:MyWidget",
+		sizeof(MyWidget),
+		{ 0,0 },
+		Init,
+		NULL,		/* reset */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
-	Draw,				/* Render widget */
-	SizeRequest,			/* Default size requisition */
-	SizeAllocate			/* Size allocation callback */
+	Draw,
+	SizeRequest,
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	KeyDown,
+	KeyUp,
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };

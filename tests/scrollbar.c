@@ -15,6 +15,7 @@ Uint64 v64 = 64;
 #endif
 float vFlt = 1.0;
 double vDbl = 0.0;
+double vDblToInf = 0.0;
 
 static int
 TestGUI(void *obj, AG_Window *win)
@@ -22,18 +23,23 @@ TestGUI(void *obj, AG_Window *win)
 	AG_Scrollbar *sb;
 	Uint flags = AG_SCROLLBAR_HFILL | AG_SCROLLBAR_EXCL;
 	AG_Label *lbl;
-	AG_Box *box;
+	AG_Box *boxHoriz, *box;
 
-	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL, "%d (int)", &vInt);
-	AG_LabelSizeHint(lbl, 0, "XXXXXXXXXXXXXXXXXXXX");
-
-	box = AG_BoxNewVert(win, AG_BOX_EXPAND | AG_BOX_HOMOGENOUS);
-
-	sb = AG_ScrollbarNew(box, AG_SCROLLBAR_HORIZ, flags);
+	boxHoriz = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
+	
+	sb = AG_ScrollbarNew(boxHoriz, AG_SCROLLBAR_VERT, AG_SCROLLBAR_VFILL |
+	                                                  AG_SCROLLBAR_EXCL);
 	AG_BindInt(sb, "value", &vInt);
 	AG_SetInt(sb, "min", -10000);
 	AG_SetInt(sb, "max", 10000);
 	AG_SetInt(sb, "inc", 1000);
+
+	box = AG_BoxNewVert(boxHoriz, AG_BOX_EXPAND | AG_BOX_HOMOGENOUS);
+
+	lbl = AG_LabelNewPolled(box, AG_LABEL_HFILL,
+	    AGSI_ALGUE AGSI_L_ARROW " %d (int)\n", &vInt);
+
+	AG_LabelSizeHint(lbl, 0, "XXXXXXXXXXXXXXXXXXXX");
 
 	AG_LabelNewPolled(box, AG_LABEL_HFILL, "%d (Uint; vis=1000)", &vUint);
 
@@ -84,6 +90,13 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SetDouble(sb, "min", -100.0);
 	AG_SetDouble(sb, "max", +100.0);
 	AG_SetDouble(sb, "inc", 1.0);
+
+	AG_LabelNewPolled(box, AG_LABEL_HFILL, "double (with " AGSI_INFINITY "): %lf", &vDblToInf);
+	sb = AG_ScrollbarNew(box, AG_SCROLLBAR_HORIZ, flags);
+	AG_BindDouble(sb, "value", &vDblToInf);
+	AG_SetDouble(sb, "min", AG_DBL_MIN);
+	AG_SetDouble(sb, "max", AG_DBL_MAX);
+	AG_SetDouble(sb, "inc", AG_DBL_MAX/10.0);
 
 	return (0);
 }

@@ -261,11 +261,12 @@ TestGUI(void *obj, AG_Window *win)
 /*	AG_PaneMoveDividerPct(hPane, 45); */
 	div = hPane->div[0];
 
+	/* Load a Windows bitmap file and display it in an AG_Pixmap(3). */
 	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-1.bmp", path, sizeof(path)) == 0) {
 		if ((S = AG_SurfaceFromBMP(path)) == NULL) {
 			S = AG_TextRender(AG_GetError());
 		}
-		AG_PixmapFromSurface(div, 0, S);
+		AG_PixmapFromSurface(div, AG_PIXMAP_HFILL | AG_PIXMAP_RESCALE, S);
 		AG_SurfaceFree(S);
 	} else {
 		S = AG_TextRender(AG_GetError());
@@ -273,34 +274,23 @@ TestGUI(void *obj, AG_Window *win)
 		AG_SurfaceFree(S);
 	}
 
-	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "sq-agar.bmp", path, sizeof(path)) == 0) {
-		AG_Surface *S;
-		int i, x,y;
-
-		S = AG_SurfaceFromFile(path);
-
-		hBox = AG_BoxNewHoriz(div, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
-		for (i = 0; i < 5; i++) {
-			for (y = 0; y < (int)S->h; y++) {
-				for (x = 0; x < (int)S->w; x++) {
-					AG_Pixel px = AG_SurfaceGet(S, x,y);
-					AG_Color c ;
-						
-					AG_GetColor(&c, px, &S->format);
-					c.a /= (1+i);
-					AG_SurfacePut(S, x,y,
-					    AG_MapPixel(&S->format, &c));
-				}
-			}
-			AG_PixmapFromSurface(hBox, 0, S);
+	/* Load a 16-bit/color PNG file and display it in an AG_Pixmap(3). */
+#if AG_MODEL == AG_LARGE
+	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar64.png", path, sizeof(path)) == 0) {
+		if ((S = AG_SurfaceFromPNG(path)) == NULL) {
+			S = AG_TextRender(AG_GetError());
 		}
+		AG_PixmapFromSurface(div, AG_PIXMAP_HFILL | AG_PIXMAP_RESCALE, S);
 		AG_SurfaceFree(S);
 	} else {
 		S = AG_TextRender(AG_GetError());
 		AG_PixmapFromSurface(div, 0, S);
 		AG_SurfaceFree(S);
 	}
-	
+#endif /* AG_LARGE */
+
+	AG_SeparatorNewHoriz(div);
+
 	/*
 	 * AG_Label(3) displays either a static text label, or a dynamically
 	 * updated one. Polled (dynamic) labels use a special format documented
@@ -495,6 +485,8 @@ TestGUI(void *obj, AG_Window *win)
 		num = AG_NumericalNewS(div, AG_NUMERICAL_HFILL, NULL,
 		    "Bound Integer: ");
 		AG_BindInt(num, "value", &myVal);
+		AG_SetInt(num, "min", -100);
+		AG_SetInt(num, "max", +100);
 
 		AG_LabelNewS(div, 0, "Scrollbar:");
 		sb = AG_ScrollbarNewHoriz(div, AG_SCROLLBAR_EXCL |
@@ -524,6 +516,34 @@ TestGUI(void *obj, AG_Window *win)
 		AG_BindInt(pb, "value", &myVal);
 		AG_BindInt(pb, "min", &myMin);
 		AG_BindInt(pb, "max", &myMax);
+	}
+
+	/*
+	 * Load the square agar logo and perform pixel manipulations on the
+	 * loaded surfaces (divide the alpha component).
+	 */
+	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "sq-agar.bmp", path, sizeof(path)) == 0) {
+		AG_Surface *S;
+		int i, x,y;
+
+		S = AG_SurfaceFromFile(path);
+
+		hBox = AG_BoxNewHoriz(div, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
+		for (i = 0; i < 5; i++) {
+			for (y = 0; y < (int)S->h; y++) {
+				for (x = 0; x < (int)S->w; x++) {
+					AG_Pixel px = AG_SurfaceGet(S, x,y);
+					AG_Color c ;
+						
+					AG_GetColor(&c, px, &S->format);
+					c.a /= (1+i);
+					AG_SurfacePut(S, x,y,
+					    AG_MapPixel(&S->format, &c));
+				}
+			}
+			AG_PixmapFromSurface(hBox, 0, S);
+		}
+		AG_SurfaceFree(S);
 	}
 
 	/*
@@ -583,7 +603,9 @@ TestGUI(void *obj, AG_Window *win)
 
 		nb = AG_NotebookNew(hPane->div[1], AG_NOTEBOOK_EXPAND);
 
-		nt = AG_NotebookAdd(nb, "Some table", AG_BOX_VERT);
+		nt = AG_NotebookAdd(nb,
+		    "Example Table\n" AGSI_ITALIC "sin" AGSI_RST "(x) and " AGSI_ITALIC "cos" AGSI_RST "(x)",
+		    AG_BOX_VERT);
 		{
 			float f;
 
@@ -645,7 +667,10 @@ TestGUI(void *obj, AG_Window *win)
 			AG_AddEvent(table, "key-down", TableKeyDown, NULL);
 		}
 		
-		nt = AG_NotebookAdd(nb, "Some text", AG_BOX_VERT);
+		nt = AG_NotebookAdd(nb,
+		    AGSI_WHT AGSI_ITALIC "\"Loss of Breath\"" AGSI_RST
+		    AGSI_LEAGUE_GOTHIC "\nBy Edgar Allan Poe" AGSI_RST,
+		    AG_BOX_VERT);
 		{
 			char path[AG_PATHNAME_MAX];
 			AG_Size size, bufSize;
@@ -699,8 +724,32 @@ TestGUI(void *obj, AG_Window *win)
 			    SetWordWrap, "%p", tbox);
 		}
 		AG_NotebookSelect(nb, nt);
-		
-		nt = AG_NotebookAdd(nb, "Empty tab", AG_BOX_VERT);
+
+		nt = AG_NotebookAdd(nb,
+		    "Colors\n"
+		    AGSI_RED AGSI_BOLD "R" AGSI_RST
+		    AGSI_GRN AGSI_BOLD "G" AGSI_RST
+		    AGSI_BLU AGSI_BOLD "B" AGSI_RST,
+		    AG_BOX_VERT);
+		AGBOX(nt)->flags |= AG_BOX_HOMOGENOUS;
+		AG_SetStyle(nt, "padding", "10");
+		{
+			AG_HSVPal *pal;
+			const Uint flags = AG_HSVPAL_HFILL | AG_HSVPAL_SHOW_RGB;
+
+			pal = AG_HSVPalNew(nt, flags);
+			pal->h = 0.0f;
+			pal->s = 1.0f;
+			pal->v = 1.0f;
+			pal = AG_HSVPalNew(nt, flags);
+			pal->h = 120.0f;
+			pal->s = 1.0f;
+			pal->v = 1.0f;
+			pal = AG_HSVPalNew(nt, flags);
+			pal->h = 240.0f;
+			pal->s = 1.0f;
+			pal->v = 1.0f;
+		}
 	}
 	return (0);
 }

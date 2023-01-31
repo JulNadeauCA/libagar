@@ -57,13 +57,13 @@ TestGUI(void *obj, AG_Window *win)
 
 	lbl = AG_LabelNew(win, AG_LABEL_HFILL, "Keyboard Events");
 	AG_LabelJustify(lbl, AG_TEXT_CENTER);
-	AG_SetStyle(lbl, "font-family", "cm-typewriter");
+	AG_SetStyle(lbl, "font-family", "monoalgue");
 	AG_SetStyle(lbl, "font-weight", "bold");
 	AG_SetStyle(lbl, "font-size", "200%");
 	AG_SetStyle(lbl, "text-color", "AntiqueWhite");
 
 	cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
-	AG_SetStyle(cons, "font-family", "courier-prime");
+	AG_SetStyle(cons, "font-family", "monoalgue");
 	AG_SetStyle(cons, "background-color", "#333");
 	AG_SetStyle(cons, "text-color", "AntiqueWhite");
 	AG_ConsoleMsg(cons, "Press any key...");

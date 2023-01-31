@@ -148,7 +148,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_LabelNewS(win, 0, "Create test window with flags:");
 	
 	box = AG_BoxNewVert(win, AG_BOX_EXPAND);
-	AG_SetStyle(box, "font-family", "courier-prime");
+	AG_SetStyle(box, "font-family", "monoalgue");
 	{
 		AG_CheckboxSetFromFlags(box, 0, &ti->testFlags, winFlags);
 	}

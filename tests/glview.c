@@ -383,9 +383,11 @@ TestGUI(void *obj, AG_Window *win)
 
 		AG_SeparatorNewVert(hb);
 
-		num = AG_NumericalNewIntR(hb, 0, NULL,
-		                          "Sphere\nsubdiv: ", &ti->subdiv, 0, 8);
-		AG_SetStyle(num->input->ed, "font-size", "140%");
+		num = AG_NumericalNewIntR(hb, 0, NULL, "Sphere\nsubdiv: ",
+		    &ti->subdiv, 0,8);
+		AG_SetStyle(num->input->ed, "font-family", "cm-serif");
+		AG_SetStyle(num->input->ed, "font-size", "160%");
+		AG_SetStyle(num->input->ed, "font-weight", "bold");
 
 		AG_RadioNewInt(hb, 0, shadingNames, (void *)&ti->shading);
 		AG_SeparatorNewVert(hb);
