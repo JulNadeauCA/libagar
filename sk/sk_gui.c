@@ -67,6 +67,39 @@ CloseObject(AG_Event *_Nonnull event)
 	if (--nEditorWindows == 0)
 		AG_Terminate(0);
 }
+
+static AG_Window *
+SK_GUI_PromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
+{
+	char *text;
+	AG_Window *win;
+	AG_Box *bo;
+	va_list ap;
+	Uint i;
+
+	va_start(ap, fmt);
+	Vasprintf(&text, fmt, ap);
+	va_end(ap);
+
+	if ((win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
+	                        AG_WINDOW_NORESIZE)) == NULL) {
+		AG_FatalError(NULL);
+	}
+	win->wmType = AG_WINDOW_WM_DIALOG;
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
+	AG_SetStyle(win, "spacing", "8");
+
+	AG_LabelNewS(win, 0, text);
+	free(text);
+
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
+	for (i = 0; i < nbOpts; i++) {
+		bOpts[i] = AG_ButtonNewS(bo, 0, "XXXXXXXXXXX");
+	}
+	AG_WindowShow(win);
+	return (win);
+}
+
 static void
 WindowClose(AG_Event *_Nonnull event)
 {
@@ -81,7 +114,8 @@ WindowClose(AG_Event *_Nonnull event)
 		CloseObject(&ev);
 		return;
 	}
-	wDlg = AG_TextPromptOptions(bOpts, 3, _("Save changes to %s?"), OBJECT(obj)->name);
+	wDlg = SK_GUI_PromptOptions(bOpts, 3, _("Save changes to %s?"),
+	    OBJECT(obj)->name);
 	AG_WindowAttach(win, wDlg);
 	AG_ButtonText(bOpts[0], _("Save"));
 	AG_SetEvent(bOpts[0], "button-pushed", CloseObject, "%p,%p,%i", win, obj, 1);

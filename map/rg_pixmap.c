@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -982,11 +982,11 @@ RG_PixmapButtondown(RG_Tileview *tv, RG_TileElement *tel,
 		pixmap_pick(tv, tel, x, y);
 	} else {
 		if (kbd[AG_KEY_H]) {
-			tv->tv_pixmap.state = RG_TVPIXMAP_HORIZONTAL;
+			tv->pixmap.state = RG_TVPIXMAP_HORIZONTAL;
 		} else if (kbd[AG_KEY_V]) {
-			tv->tv_pixmap.state = RG_TVPIXMAP_VERTICAL;
+			tv->pixmap.state = RG_TVPIXMAP_VERTICAL;
 		} else {
-			tv->tv_pixmap.state = RG_TVPIXMAP_FREEHAND;
+			tv->pixmap.state = RG_TVPIXMAP_FREEHAND;
 		}
 		RG_PixmapBeginUndoBlk(px);
 		pixmap_apply(tv, tel, x, y);
@@ -998,58 +998,57 @@ RG_PixmapButtonup(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     int xMouse, int yMouse, int button)
 {
 	if (button == AG_MOUSE_LEFT) {
-		tv->tv_pixmap.state = RG_TVPIXMAP_IDLE;
+		tv->pixmap.state = RG_TVPIXMAP_IDLE;
 		tv->tile->flags |= RG_TILE_DIRTY;
 	}
 }
 
 void
 RG_PixmapMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
-    int xrel, int yrel, int state)
+    int xrel, int yrel)
 {
+	AG_MouseButton btnState = WIDGET(tv)->drv->mouse->btnState;
 	int *kbd = AG_GetKeyState(tv);
 
 #if 0
 	TODO: Set AG_FILL_CURSOR, AG_ERASE_CURSOR, AG_PICK_CURSOR
 #endif
-	switch (tv->tv_pixmap.state) {
+	switch (tv->pixmap.state) {
 	case RG_TVPIXMAP_FREEHAND:
 		pixmap_apply(tv, tel, x, y);
 		return;
 	case RG_TVPIXMAP_VERTICAL:
-		pixmap_apply(tv, tel, tv->tv_pixmap.xorig, y);
+		pixmap_apply(tv, tel, tv->pixmap.xorig, y);
 		return;
 	case RG_TVPIXMAP_HORIZONTAL:
-		pixmap_apply(tv, tel, x, tv->tv_pixmap.yorig);
+		pixmap_apply(tv, tel, x, tv->pixmap.yorig);
 		return;
 	default:
 		break;
 	}
 
-	if (state == AG_MOUSE_LEFT) {
-		if (kbd[AG_KEY_C])
-			pixmap_pick(tv, tel, x, y);
-	}
+	if (btnState == AG_MOUSE_LEFT && kbd[AG_KEY_C])
+		pixmap_pick(tv, tel, x, y);
 }
 
 void
 RG_PixmapOpenMenu(RG_Tileview *tv, int x, int y)
 {
-	if (tv->tv_pixmap.menu != NULL) {
-		AG_PopupShowAt(tv->tv_pixmap.menu, x,y);
+	if (tv->pixmap.menu != NULL) {
+		AG_PopupShowAt(tv->pixmap.menu, x,y);
 		return;
 	}
-	tv->tv_pixmap.menu = AG_PopupNew(tv);
-	RG_TileviewGenericMenu(tv, tv->tv_pixmap.menu->root);
-	AG_PopupShowAt(tv->tv_pixmap.menu, x,y);
+	tv->pixmap.menu = AG_PopupNew(tv);
+	RG_TileviewGenericMenu(tv, tv->pixmap.menu->root);
+	AG_PopupShowAt(tv->pixmap.menu, x,y);
 }
 
 void
 RG_PixmapCloseMenu(RG_Tileview *tv)
 {
-	if (tv->tv_pixmap.menu != NULL) {
-		AG_PopupDestroy(tv->tv_pixmap.menu);
-		tv->tv_pixmap.menu = NULL;
+	if (tv->pixmap.menu != NULL) {
+		AG_PopupDestroy(tv->pixmap.menu);
+		tv->pixmap.menu = NULL;
 	}
 }
 

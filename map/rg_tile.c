@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -690,34 +690,34 @@ CloseElement(RG_Tileview *_Nonnull tv)
 
 	switch (tv->state) {
 	case RG_TILEVIEW_TILE_EDIT:
-		tv->tv_tile.geo_ctrl = NULL;
-		tv->tv_tile.orig_ctrl = NULL;
+		tv->tile_ctrl.geo_ctrl = NULL;
+		tv->tile_ctrl.orig_ctrl = NULL;
 		break;
 	case RG_TILEVIEW_FEATURE_EDIT:
-		if (tv->tv_feature.ft->ops->flags & FEATURE_AUTOREDRAW) {
+		if (tv->feature.ft->ops->flags & RG_FEATURE_AUTOREDRAW) {
 			RG_TileviewSetAutoRefresh(tv, 0, 0);
 		}
-		if (tv->tv_feature.menu != NULL) {
+		if (tv->feature.menu != NULL) {
 			RG_FeatureCloseMenu(tv);
 		}
-		if (tv->tv_feature.win != NULL) {
-			AG_ObjectDetach(tv->tv_feature.win);
-			tv->tv_feature.win = NULL;
+		if (tv->feature.win != NULL) {
+			AG_ObjectDetach(tv->feature.win);
+			tv->feature.win = NULL;
 		}
 		break;
 	case RG_TILEVIEW_PIXMAP_EDIT:
-		if (tv->tv_pixmap.win != NULL) {
-			tv->tv_pixmap.ctrl = NULL;
-			AG_ObjectDetach(tv->tv_pixmap.win);
-			tv->tv_pixmap.win = NULL;
+		if (tv->pixmap.win != NULL) {
+			tv->pixmap.ctrl = NULL;
+			AG_ObjectDetach(tv->pixmap.win);
+			tv->pixmap.win = NULL;
 		}
 		break;
 #if 0
 	case RG_TILEVIEW_SKETCH_EDIT:
-		if (tv->tv_sketch.win != NULL) {
-			tv->tv_sketch.ctrl = NULL;
-			AG_ObjectDetach(tv->tv_sketch.win);
-			tv->tv_sketch.win = NULL;
+		if (tv->sketch.win != NULL) {
+			tv->sketch.ctrl = NULL;
+			AG_ObjectDetach(tv->sketch.win);
+			tv->sketch.win = NULL;
 		}
 		break;
 #endif
@@ -731,27 +731,24 @@ CloseElement(RG_Tileview *_Nonnull tv)
 	tv->state = RG_TILEVIEW_TILE_EDIT;
 	tv->edit_mode = 0;
 
-	tv->tv_tile.geo_ctrl = RG_TileviewAddCtrl(tv, RG_TILEVIEW_RDIMENSIONS,
-	    "%i,%i,%u,%u", 0, 0,
-	    (Uint)t->su->w,
-	    (Uint)t->su->h);
-	tv->tv_tile.geo_ctrl->buttonup =
-	    AG_SetEvent(tv, NULL, GeoCtrlButtonUp, "%p",
-	    tv->tv_tile.geo_ctrl);
+	tv->tile_ctrl.geo_ctrl = RG_TileviewAddCtrl(tv, RG_TILEVIEW_RDIMENSIONS,
+	    "%i,%i,%u,%u", 0, 0, (Uint)t->su->w, (Uint)t->su->h);
+	tv->tile_ctrl.geo_ctrl->buttonup = AG_SetEvent(tv, NULL,
+	    GeoCtrlButtonUp,"%p",tv->tile_ctrl.geo_ctrl);
 
-	tv->tv_tile.orig_ctrl = RG_TileviewAddCtrl(tv, RG_TILEVIEW_POINT,
+	tv->tile_ctrl.orig_ctrl = RG_TileviewAddCtrl(tv, RG_TILEVIEW_POINT,
 	    "%*i,%*i", &t->xOrig, &t->yOrig);
 
 	/* XXX use new style system */
 	
-	AG_ColorRGB_8(&tv->tv_tile.orig_ctrl->cIna,	0,  255,0);
-	AG_ColorRGB_8(&tv->tv_tile.orig_ctrl->cHigh,	73, 186,51);
-	AG_ColorRGB_8(&tv->tv_tile.orig_ctrl->cLow,	86, 161,71);
-	AG_ColorRGB_8(&tv->tv_tile.orig_ctrl->cOver,	191,170,47);
+	AG_ColorRGB_8(&tv->tile_ctrl.orig_ctrl->cIna,	0,  255,0);
+	AG_ColorRGB_8(&tv->tile_ctrl.orig_ctrl->cHigh,	73, 186,51);
+	AG_ColorRGB_8(&tv->tile_ctrl.orig_ctrl->cLow,	86, 161,71);
+	AG_ColorRGB_8(&tv->tile_ctrl.orig_ctrl->cOver,	191,170,47);
 
-	tv->tv_tile.orig_ctrl->aEna = 70;
-	tv->tv_tile.orig_ctrl->aIna = 30;
-	tv->tv_tile.orig_ctrl->aOver= 100;
+	tv->tile_ctrl.orig_ctrl->aEna = 70;
+	tv->tile_ctrl.orig_ctrl->aIna = 30;
+	tv->tile_ctrl.orig_ctrl->aOver= 100;
 
 	if (tv->tel_tbar != NULL) {
 		AG_ObjectDetach(tv->tel_tbar);
@@ -817,10 +814,10 @@ OpenElement(RG_Tileview *_Nonnull tv, RG_TileElement *_Nonnull tel)
 	CloseElement(tv);
 
 	if (tv->state == RG_TILEVIEW_TILE_EDIT) {
-		RG_TileviewDelCtrl(tv, tv->tv_tile.geo_ctrl);
-		RG_TileviewDelCtrl(tv, tv->tv_tile.orig_ctrl);
-		tv->tv_tile.geo_ctrl = NULL;
-		tv->tv_tile.orig_ctrl = NULL;
+		RG_TileviewDelCtrl(tv, tv->tile_ctrl.geo_ctrl);
+		RG_TileviewDelCtrl(tv, tv->tile_ctrl.orig_ctrl);
+		tv->tile_ctrl.geo_ctrl = NULL;
+		tv->tile_ctrl.orig_ctrl = NULL;
 	}
 
 	switch (tel->type) {
@@ -830,10 +827,10 @@ OpenElement(RG_Tileview *_Nonnull tv, RG_TileElement *_Nonnull tel)
 			RG_Feature *ft = tel->tel_feature.ft;
 
 			tv->state = RG_TILEVIEW_FEATURE_EDIT;
-			tv->tv_feature.ft = ft;
-			tv->tv_feature.menu = NULL;
+			tv->feature.ft = ft;
+			tv->feature.menu = NULL;
 
-			if (ft->ops->flags & FEATURE_AUTOREDRAW)
+			if (ft->ops->flags & RG_FEATURE_AUTOREDRAW)
 				RG_TileviewSetAutoRefresh(tv, 1, 125);
 			
 			if (ft->ops->edit != NULL) {
@@ -843,14 +840,14 @@ OpenElement(RG_Tileview *_Nonnull tv, RG_TileElement *_Nonnull tel)
 				AG_WindowAttach(pWin, win);
 				AG_WindowShow(win);
 
-				tv->tv_feature.win = win;
+				tv->feature.win = win;
 				AG_SetEvent(win, "window-close",
 				    ElementClosedEv, "%p", tv);
 			
 				AG_WindowFocus(pWin);
 				AG_WidgetFocus(tv);
 			} else {
-				tv->tv_feature.win = NULL;
+				tv->feature.win = NULL;
 			}
 
 			if (ft->ops->toolbar != NULL) {
@@ -864,20 +861,20 @@ OpenElement(RG_Tileview *_Nonnull tv, RG_TileElement *_Nonnull tel)
 			AG_Window *win;
 			
 			tv->state = RG_TILEVIEW_PIXMAP_EDIT;
-			tv->tv_pixmap.px = tel->tel_pixmap.px;
-			tv->tv_pixmap.tel = tel;
-			tv->tv_pixmap.ctrl = RG_TileviewAddCtrl(tv,
+			tv->pixmap.px = tel->tel_pixmap.px;
+			tv->pixmap.tel = tel;
+			tv->pixmap.ctrl = RG_TileviewAddCtrl(tv,
 			    RG_TILEVIEW_RECTANGLE, "%*i,%*i,%u,%u",
 			    &tel->tel_pixmap.x,
 			    &tel->tel_pixmap.y,
 			    (Uint)tel->tel_pixmap.px->su->w,
 			    (Uint)tel->tel_pixmap.px->su->h);
-			tv->tv_pixmap.ctrl->buttonup =
+			tv->pixmap.ctrl->buttonup =
 			    AG_SetEvent(tv, NULL, PixmapCtrlButtonUp, "%p,%p",
-			    tv->tv_pixmap.ctrl, tel->tel_pixmap.px);
-			tv->tv_pixmap.state = RG_TVPIXMAP_IDLE;
-			tv->tv_pixmap.win = win = RG_PixmapEdit(tv, tel);
-			tv->tv_pixmap.menu = NULL;
+			    tv->pixmap.ctrl, tel->tel_pixmap.px);
+			tv->pixmap.state = RG_TVPIXMAP_IDLE;
+			tv->pixmap.win = win = RG_PixmapEdit(tv, tel);
+			tv->pixmap.menu = NULL;
 
 			AG_WindowAttach(pWin, win);
 			AG_WindowShow(win);
@@ -896,19 +893,19 @@ OpenElement(RG_Tileview *_Nonnull tv, RG_TileElement *_Nonnull tel)
 			AG_Window *win;
 			
 			tv->state = RG_TILEVIEW_SKETCH_EDIT;
-			tv->tv_sketch.sk = tel->tel_sketch.sk;
-			tv->tv_sketch.tel = tel;
-			tv->tv_sketch.ctrl = RG_TileviewAddCtrl(tv,
+			tv->sketch.sk = tel->tel_sketch.sk;
+			tv->sketch.tel = tel;
+			tv->sketch.ctrl = RG_TileviewAddCtrl(tv,
 			    RG_TILEVIEW_RECTANGLE, "%*i,%*i,%u,%u",
 			    &tel->tel_sketch.x,
 			    &tel->tel_sketch.y,
 			    tel->tel_sketch.sk->vg->su->w,
 			    tel->tel_sketch.sk->vg->su->h);
-			tv->tv_sketch.ctrl->buttonup =
+			tv->sketch.ctrl->buttonup =
 			    AG_SetEvent(tv, NULL, SketchCtrlButtonUp, "%p,%p",
-			    tv->tv_sketch.ctrl, tel);
-			tv->tv_sketch.win = win = RG_SketchEdit(tv, tel);
-			tv->tv_sketch.menu = NULL;
+			    tv->sketch.ctrl, tel);
+			tv->sketch.win = win = RG_SketchEdit(tv, tel);
+			tv->sketch.menu = NULL;
 
 			AG_WindowAttach(pWin, win);
 			AG_WindowShow(win);
@@ -1300,7 +1297,7 @@ PollFeatures(AG_Event *_Nonnull event)
 	
 			it = AG_TlistAdd(tl, rgIconObject.s, "%s%s%s",
 			    (tv->state==RG_TILEVIEW_FEATURE_EDIT &&
-			     tv->tv_feature.ft == ft) ? "* " : "",
+			     tv->feature.ft == ft) ? "* " : "",
 			    tel->name,
 			    tel->visible ? "" : _(" (invisible)"));
 			it->cat = "feature";
@@ -1318,7 +1315,7 @@ PollFeatures(AG_Event *_Nonnull event)
 				it = AG_TlistAdd(tl, rgIconDrawing.s,
 				    "%s%s%s",
 				    (tv->state==RG_TILEVIEW_SKETCH_EDIT &&
-				     tv->tv_sketch.sk == fsk->sk) ? "* ": "",
+				     tv->sketch.sk == fsk->sk) ? "* ": "",
 				    tel->name,
 				    fsk->visible ? "" : _(" (invisible)"));
 				it->cat = "feature-sketch";
@@ -1329,7 +1326,7 @@ PollFeatures(AG_Event *_Nonnull event)
 				it = AG_TlistAdd(tl, rgIconPixmap.s,
 				    "%s%s (%d,%d)%s",
 				    (tv->state==RG_TILEVIEW_PIXMAP_EDIT &&
-				     tv->tv_pixmap.px == fpx->px) ? "* ": "",
+				     tv->pixmap.px == fpx->px) ? "* ": "",
 				    tel->name, fpx->x, fpx->y,
 				    fpx->visible ? "" : _(" (invisible)"));
 				it->cat = "feature-pixmap";
@@ -1340,7 +1337,7 @@ PollFeatures(AG_Event *_Nonnull event)
 
 			it = AG_TlistAdd(tl, NULL, "%s%s%s",
 			    (tv->state==RG_TILEVIEW_PIXMAP_EDIT &&
-			     tv->tv_pixmap.px == px) ? "* ": "",
+			     tv->pixmap.px == px) ? "* ": "",
 			    tel->name,
 			    tel->visible ? "" : _(" (invisible)"));
 			it->cat = "pixmap";
@@ -1355,7 +1352,7 @@ PollFeatures(AG_Event *_Nonnull event)
 
 			it = AG_TlistAdd(tl, NULL, "%s%s%s",
 			    (tv->state==RG_TILEVIEW_SKETCH_EDIT &&
-			     tv->tv_sketch.sk == sk) ? "* ": "",
+			     tv->sketch.sk == sk) ? "* ": "",
 			    tel->name,
 			    tel->visible ? "" : _(" (invisible)"));
 			it->cat = "sketch";
@@ -1446,10 +1443,10 @@ DeleteElement(AG_Event *_Nonnull event)
 #if 0
 	if (tv->state == RG_TILEVIEW_SKETCH_EDIT &&
 	    strcmp(it->cat, "sketch-element") == 0) {
-	    	VG *vg = tv->tv_sketch.sk->vg;
+	    	VG *vg = tv->sketch.sk->vg;
 		VG_Element *vge = it->p1;
 
-		RG_SketchUnselect(tv, tv->tv_sketch.tel, vge);
+		RG_SketchUnselect(tv, tv->sketch.tel, vge);
 		VG_DestroyElement(vg, vge);
 		return;
 	}
@@ -1504,8 +1501,8 @@ UpdateTileSettings(AG_Event *_Nonnull event)
 	AG_ObjectDetach(win);
 
 	if (tv->state == RG_TILEVIEW_TILE_EDIT) {
-		RG_TileviewSetInt(tv->tv_tile.geo_ctrl, 2, w);
-		RG_TileviewSetInt(tv->tv_tile.geo_ctrl, 3, h);
+		RG_TileviewSetInt(tv->tile_ctrl.geo_ctrl, 2, w);
+		RG_TileviewSetInt(tv->tile_ctrl.geo_ctrl, 3, h);
 	}
 }
 
@@ -1644,7 +1641,7 @@ Undo(AG_Event *_Nonnull event)
 
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
-		RG_PixmapUndo(tv, tv->tv_pixmap.tel);
+		RG_PixmapUndo(tv, tv->pixmap.tel);
 		break;
 	default:
 		break;
@@ -1658,7 +1655,7 @@ Redo(AG_Event *_Nonnull event)
 
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
-		RG_PixmapRedo(tv, tv->tv_pixmap.tel);
+		RG_PixmapRedo(tv, tv->pixmap.tel);
 		break;
 	default:
 		break;

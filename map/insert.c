@@ -354,7 +354,7 @@ MouseButtonDown(void *_Nonnull obj, int x, int y, int btn)
 }
 
 static int
-MouseMotion(void *_Nonnull obj, int x, int y, int xrel, int yrel, int btn)
+MouseMotion(void *_Nonnull obj, int x, int y, int xrel, int yrel)
 {
 	MAP_InsertTool *tool = obj;
 	MAP_View *mv = TOOL(tool)->mv;

@@ -1356,6 +1356,28 @@ PollTileTbl(AG_Event *_Nonnull event)
 	AG_MutexUnlock(&ts->lock);
 }
 
+static void
+ExpandTemplates(AG_Event *event)
+{
+	AG_Combo *com = AG_COMBO_SELF();
+	const char *templates[] = {
+		"Icons (16x16)",
+		"Icons (32x32)",
+		"Icons (64x64)",
+		"Sprite (16x16)",
+		"Sprite (16x32)",
+		"Sprite (32x32)",
+		"Sprite (32x64)",
+		"Sprite (64x64)",
+		"Terrain (64x64)",
+		NULL
+	};
+	const char **t;
+
+	for (t = templates; *t != NULL; t++)
+		AG_TlistAddS(com->list, agIconDoc.s, *t);
+}
+
 static void *_Nonnull
 Edit(void *_Nonnull p)
 {
@@ -1432,16 +1454,8 @@ Edit(void *_Nonnull p)
 		}
 		com = AG_ComboNew(nt, AG_COMBO_HFILL, _("Use Template: "));
 		AG_ComboSizeHint(com, "XXXXXXXXXXXX (64x64) ", 8);
-		AG_TlistAdd(com->list, agIconDoc.s, "Icons (16x16)");
-		AG_TlistAdd(com->list, agIconDoc.s, "Icons (32x32)");
-		AG_TlistAdd(com->list, agIconDoc.s, "Icons (64x64)");
-		AG_TlistAdd(com->list, agIconDoc.s, "Sprite (16x16)");
-		AG_TlistAdd(com->list, agIconDoc.s, "Sprite (16x32)");
-		AG_TlistAdd(com->list, agIconDoc.s, "Sprite (32x32)");
-		AG_TlistAdd(com->list, agIconDoc.s, "Sprite (32x64)");
-		AG_TlistAdd(com->list, agIconDoc.s, "Sprite (64x64)");
-		AG_TlistAdd(com->list, agIconDoc.s, "Terrain (64x64)");
 		AG_TextboxBindUTF8(com->tbox, ts->tmpl, sizeof(ts->tmpl));
+		AG_SetEvent(com, "combo-expanded", ExpandTemplates, NULL);
 		AG_SetEvent(com, "combo-selected", SelectTemplate, "%p", ts);
 	}
 

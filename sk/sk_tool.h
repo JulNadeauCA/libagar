@@ -24,12 +24,11 @@ typedef struct sk_tool_ops {
 	void (*_Nullable init)(void *_Nonnull);
 	void (*_Nullable destroy)(void *_Nonnull);
 	void (*_Nullable edit)(void *_Nonnull, void *_Nonnull);
-	int  (*_Nullable mousemotion)(void *_Nonnull, M_Vector3 pos,
-	                              M_Vector3 vel, int btn);
-	int  (*_Nullable mousebuttondown)(void *_Nonnull, M_Vector3 pos, int btn);
-	int  (*_Nullable mousebuttonup)(void *_Nonnull, M_Vector3 pos, int btn);
-	int  (*_Nullable keydown)(void *_Nonnull, int ksym, int kmod);
-	int  (*_Nullable keyup)(void *_Nonnull, int ksym, int kmod);
+	int  (*_Nullable mousemotion)(void *_Nonnull, M_Vector3, M_Vector3);
+	int  (*_Nullable mousebuttondown)(void *_Nonnull, M_Vector3, int);
+	int  (*_Nullable mousebuttonup)(void *_Nonnull, M_Vector3, int);
+	int  (*_Nullable keydown)(void *_Nonnull, int, int);
+	int  (*_Nullable keyup)(void *_Nonnull, int, int);
 } SK_ToolOps;
 
 typedef struct sk_tool {

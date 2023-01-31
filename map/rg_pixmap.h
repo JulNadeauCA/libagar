@@ -89,7 +89,7 @@ void RG_PixmapButtondown(struct rg_tileview *_Nonnull, RG_TileElement *_Nonnull,
 void RG_PixmapButtonup(struct rg_tileview *_Nonnull, RG_TileElement *_Nonnull,
                        int,int, int,int, int);
 void RG_PixmapMotion(struct rg_tileview *_Nonnull, RG_TileElement *_Nonnull,
-                     int,int, int,int, int);
+                     int,int, int,int);
 int  RG_PixmapWheel(struct rg_tileview *_Nonnull, RG_TileElement *_Nonnull, int);
 void RG_PixmapKeydown(struct rg_tileview *_Nonnull, int);
 void RG_PixmapKeyup(struct rg_tileview *_Nonnull);

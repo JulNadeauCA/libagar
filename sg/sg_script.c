@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2011-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -512,17 +512,14 @@ ExecActionInsn(SG_ScriptEditCtx *_Nonnull e, SG_ScriptRenderCtx *_Nonnull re,
 		switch (a.type) {
 		case SG_ACTION_MOVE:
 		case SG_ACTION_ZMOVE:
-			a.act_move = M_VecScale3(ao->act_move,
-			    1.0/(M_Real)re->nInt);
+			a.move = M_VecScale3(ao->move, 1.0/(M_Real)re->nInt);
 			break;
 		case SG_ACTION_ROTATE:
-			a.act_rotate.theta = ao->act_rotate.theta /
-			    (M_Real)re->nInt;
-			a.act_rotate.axis = ao->act_rotate.axis;
+			a.rotate.theta = ao->rotate.theta / (M_Real)re->nInt;
+			a.rotate.axis = ao->rotate.axis;
 			break;
 		case SG_ACTION_SCALE:
-			a.act_scale = M_VecScale3(ao->act_scale,
-			    1.0/(M_Real)re->nInt);
+			a.scale = M_VecScale3(ao->scale, 1.0/(M_Real)re->nInt);
 			break;
 		default:
 			break;
@@ -1159,15 +1156,15 @@ EndAction(SG_ScriptEditCtx *_Nonnull e)
 	switch (act->type) {
 	case SG_ACTION_MOVE:
 	case SG_ACTION_ZMOVE:
-		if (act->act_move.x == 0 &&
-		    act->act_move.y == 0 &&
-		    act->act_move.z == 0) {
+		if (act->move.x == 0 &&
+		    act->move.y == 0 &&
+		    act->move.z == 0) {
 			SG_ScriptDelInsn(e->scr, e->scr->t, si);
 			SG_ScriptInsnFree(si);
 		}
 		break;
 	case SG_ACTION_ROTATE:
-		if (act->act_rotate.theta == 0) {
+		if (act->rotate.theta == 0) {
 			SG_ScriptDelInsn(e->scr, e->scr->t, si);
 			SG_ScriptInsnFree(si);
 		}
@@ -1226,7 +1223,7 @@ EndCameraMove(SG_ScriptEditCtx *_Nonnull e)
 		}
 		SG_ActionInit(&si->si_action, SG_ACTION_MOVE);
 		SG_ScriptAddInsn(scr, scr->t, si);
-		si->si_action.act_move = e->vCamMoveSum;
+		si->si_action.move = e->vCamMoveSum;
 	}
 	return;
 fail:

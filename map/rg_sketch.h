@@ -60,7 +60,7 @@ void RG_SketchButtondown(struct rg_tileview *, RG_TileElement *, float, float,
 void RG_SketchButtonup(struct rg_tileview *, RG_TileElement *, float, float,
                        int);
 void RG_SketchMotion(struct rg_tileview *, RG_TileElement *, float, float,
-		     float, float, int);
+		     float, float);
 
 void RG_SketchBeginUndoBlk(RG_Sketch *);
 void RG_SketchUndo(struct rg_tileview *, RG_TileElement *);

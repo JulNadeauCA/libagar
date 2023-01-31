@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2022-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -154,7 +154,7 @@ InsertObjectAt(MAP_InsertObjTool *_Nonnull tool, MAP_Node *_Nonnull node,
 }
 
 static int
-MouseMotion(void *_Nonnull p, int x, int y, int xrel, int yrel, int btn)
+MouseMotion(void *_Nonnull p, int x, int y, int xrel, int yrel)
 {
 	MAP_InsertObjTool *tool = p;
 	MAP_View *mv = TOOL(tool)->mv;

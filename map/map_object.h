@@ -27,6 +27,7 @@ typedef struct map_location {
 
 	struct map_location *_Nullable *_Nonnull neigh; /* Adjacent objects */
 	Uint                                    nNeigh;
+	Uint32 _pad;
 } MAP_Location;
 
 typedef struct map_object {
@@ -38,6 +39,7 @@ typedef struct map_object {
 #define MAP_OBJECT_SELECTED	0x04		/* Selected in editor */
 	MAP_Location *_Nullable *_Nonnull locs; /* Locations on the map */
 	Uint                             nLocs;
+	Uint32 _pad;
 } MAP_Object;
 
 /* Selected view for MAP_Object's 2D rendering function. */

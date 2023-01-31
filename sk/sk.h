@@ -144,10 +144,6 @@ typedef struct sk_constraint {
 		M_Real dist;		/* DISTANCE value */
 		M_Real angle;		/* ANGLE value (radians) */
 	} data;
-#ifdef _AGAR_INTERNAL
-#define ct_distance data.dist
-#define ct_angle data.angle
-#endif
 	SK_Node *_Nonnull n1;
 	SK_Node *_Nonnull n2;
 	AG_TAILQ_ENTRY(sk_constraint) constraints;

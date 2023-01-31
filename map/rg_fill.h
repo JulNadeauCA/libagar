@@ -8,11 +8,11 @@ struct ag_window;
 struct ag_toolbar;
 
 enum rg_fill_type {
-	FILL_SOLID,
-	FILL_HGRADIENT,
-	FILL_VGRADIENT,
-	FILL_CGRADIENT,
-	FILL_PATTERN
+	RG_FILL_SOLID,
+	RG_FILL_HGRADIENT,
+	RG_FILL_VGRADIENT,
+	RG_FILL_CGRADIENT,
+	RG_FILL_PATTERN
 };
 
 struct rg_fill_feature {

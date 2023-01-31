@@ -167,26 +167,26 @@ RG_FeatureSave(void *p, AG_DataSource *buf)
 void
 RG_FeatureOpenMenu(RG_Tileview *tv, int x, int y)
 {
-	RG_Feature *ft = tv->tv_feature.ft;
+	RG_Feature *ft = tv->feature.ft;
 	
-	if (tv->tv_feature.menu != NULL) {
-		AG_PopupShowAt(tv->tv_feature.menu, x,y);
+	if (tv->feature.menu != NULL) {
+		AG_PopupShowAt(tv->feature.menu, x,y);
 		return;
 	}
 	if (ft->ops->menu == NULL) {
 		return;
 	}
-	tv->tv_feature.menu = AG_PopupNew(tv);
-	ft->ops->menu(ft, tv->tv_feature.menu->root);
-	AG_PopupShowAt(tv->tv_feature.menu, x,y);
+	tv->feature.menu = AG_PopupNew(tv);
+	ft->ops->menu(ft, tv->feature.menu->root);
+	AG_PopupShowAt(tv->feature.menu, x,y);
 }
 
 void
 RG_FeatureCloseMenu(RG_Tileview *tv)
 {
-	if (tv->tv_feature.menu != NULL) {
-		AG_PopupDestroy(tv->tv_feature.menu);
-		tv->tv_feature.menu = NULL;
+	if (tv->feature.menu != NULL) {
+		AG_PopupDestroy(tv->feature.menu);
+		tv->feature.menu = NULL;
 	}
 }
 

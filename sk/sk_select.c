@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -50,13 +50,14 @@ ToolInit(void *_Nonnull p)
 }
 
 static int
-ToolMouseMotion(void *_Nonnull p, M_Vector3 pos, M_Vector3 vel, int btn)
+ToolMouseMotion(void *_Nonnull p, M_Vector3 pos, M_Vector3 vel)
 {
 	SK_SelectTool *t = p;
 	SK_View *skv = SKTOOL(t)->skv;
 	SK *sk = skv->sk;
 	M_Vector3 vC;
 	SK_Node *node, *oNode;
+	const int btnState = WIDGET(skv)->drv->mouse->btnState;
 	int update = 0;
 	Uint i;
 
@@ -83,7 +84,7 @@ ToolMouseMotion(void *_Nonnull p, M_Vector3 pos, M_Vector3 vel, int btn)
 	}
 
 	/* Move selected elements. */
-	if (btn & AG_MOUSE_LEFT) {
+	if (btnState & AG_MOUSE_LEFT) {
 		TAILQ_FOREACH(node, &sk->nodes, nodes) {
 			if (node->flags & (SK_NODE_MOVED|SK_NODE_FIXED|
 			                   SK_NODE_KNOWN)) {

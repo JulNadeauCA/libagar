@@ -55,7 +55,7 @@ typedef struct rg_feature_ops {
 	AG_Size len;            /* Size of structure */
 	const char *desc;       /* Feature description */
 	int flags;
-#define FEATURE_AUTOREDRAW 0x01 /* Automatic redraw on edit */
+#define RG_FEATURE_AUTOREDRAW 0x01 /* Automatic redraw on edit */
 
 	void (*init)(void *self, RG_Tileset *set, int flags);
 	int  (*load)(void *self, AG_DataSource *ds);
@@ -130,8 +130,8 @@ section).
 The following
 .Fa flags
 are defined:
-.Bl -tag -width "FEATURE_AUTOREDRAW "
-.It FEATURE_AUTOREDRAW
+.Bl -tag -width "RG_FEATURE_AUTOREDRAW "
+.It RG_FEATURE_AUTOREDRAW
 Periodically redraw target tile when feature is undergoing edition.
 .El
 .Pp

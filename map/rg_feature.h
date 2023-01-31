@@ -23,7 +23,7 @@ typedef struct rg_feature_ops {
 #endif
 	const char *_Nonnull desc;	/* Feature description */
 	Uint flags;
-#define FEATURE_AUTOREDRAW 0x01		/* Redraw tile periodically on edit */
+#define RG_FEATURE_AUTOREDRAW 0x01	/* Redraw tile periodically on edit */
 	AG_KeyMod keymod;		/* Keyboard modifier */
 	AG_KeySym keysym;		/* Keyboard shortcut (or NONE) */
 	Uint rev;			/* Revision number */

@@ -35,11 +35,11 @@ struct map_location;
 
 /* Static map item type */
 enum map_item_type {
-	MAP_ITEM_TILE        = 0,	/* RG_Tile(3) element */
-	MAP_ITEM_IMG         = 1,	/* Image file fragment */
-	MAP_ITEM_LINK        = 2,	/* Link to a map location */
-	MAP_ITEM_PRIVATE     = 3,	/* User-defined range */
-	MAP_ITEM_LAST        = 4
+	MAP_ITEM_TILE    = 0,	/* RG_Tile(3) element */
+	MAP_ITEM_IMG     = 1,	/* Image file fragment */
+	MAP_ITEM_LINK    = 2,	/* Link to a map location */
+	MAP_ITEM_PRIVATE = 3,	/* User-defined range */
+	MAP_ITEM_LAST    = 4
 };
 
 /* Static map item class description */
@@ -107,7 +107,7 @@ typedef struct map_item {
 	Uint layer;			/* Layer tag */
 	float z;			/* Vertical coordinate */
 	float h;			/* Height of item */
-
+	Uint32 _pad;
 	void *_Nullable p;		/* User pointer (non-persistent) */
 	RG_TransformChain transforms;	/* Graphical transformations */
 	AG_TAILQ_ENTRY(map_item) items;	/* Node's reference stack */
@@ -133,15 +133,15 @@ typedef struct map_layer {
 } MAP_Layer;
 
 enum map_camera_alignment {
-	AG_MAP_UPPER_LEFT,
-	AG_MAP_MIDDLE_LEFT,
-	AG_MAP_LOWER_LEFT,
-	AG_MAP_UPPER_RIGHT,
-	AG_MAP_MIDDLE_RIGHT,
-	AG_MAP_LOWER_RIGHT,
-	AG_MAP_CENTER,
-	AG_MAP_LOWER_CENTER,
-	AG_MAP_UPPER_CENTER
+	MAP_UPPER_LEFT,
+	MAP_MIDDLE_LEFT,
+	MAP_LOWER_LEFT,
+	MAP_UPPER_RIGHT,
+	MAP_MIDDLE_RIGHT,
+	MAP_LOWER_RIGHT,
+	MAP_CENTER,
+	MAP_LOWER_CENTER,
+	MAP_UPPER_CENTER
 };
 
 typedef struct map_camera {
@@ -188,9 +188,9 @@ typedef struct map {
 	struct ag_object obj;			/* AG_Object -> MAP */
 
 	Uint flags;
-#define AG_MAP_SAVE_CAM0POS	0x01		/* Save cam0 position */
-#define AG_MAP_SAVE_CAM0ZOOM	0x02		/* Save cam0 zoom factor */
-#define AG_MAP_SAVED_FLAGS	(AG_MAP_SAVE_CAM0POS | AG_MAP_SAVE_CAM0ZOOM)
+#define MAP_SAVE_CAM0POS  0x01			/* Save cam0 position */
+#define MAP_SAVE_CAM0ZOOM 0x02			/* Save cam0 zoom factor */
+#define MAP_SAVED_FLAGS	(MAP_SAVE_CAM0POS | MAP_SAVE_CAM0ZOOM)
 
 	Uint w, h;				/* Map size (in nodes) */
 	int layerCur;				/* Layer being edited */
@@ -209,6 +209,7 @@ typedef struct map {
 
 	/* Map objects */
 	Uint                                 nObjs;
+	Uint32 _pad;
 	struct map_object *_Nonnull *_Nonnull objs;
 
 	AG_Object *_Nullable pLibs;		/* Libraries container object */

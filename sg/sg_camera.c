@@ -789,12 +789,12 @@ ScriptAction(void *_Nonnull obj, SG_Action *_Nonnull act, int invert)
 	case SG_ACTION_MOVE:
 	case SG_ACTION_ZMOVE:
 		SG_Translatev(cam,
-		    invert ? M_VecFlip3(act->act_move) : act->act_move);
+		    invert ? M_VecFlip3(act->move) : act->move);
 		break;
 	case SG_ACTION_ROTATE:
 		SG_Rotatev(cam,
-		    invert ? -act->act_rotate.theta : +act->act_rotate.theta,
-		    act->act_rotate.axis);
+		    invert ? -act->rotate.theta : +act->rotate.theta,
+		    act->rotate.axis);
 		break;
 	case SG_ACTION_SCALE:
 		break;

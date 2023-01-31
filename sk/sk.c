@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2006-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -426,10 +426,10 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull buf)
 		SK_WriteRef(buf, ct->n2);
 		switch (ct->type) {
 		case SK_DISTANCE:
-			M_WriteReal(buf, ct->ct_distance);
+			M_WriteReal(buf, ct->data.dist);
 			break;
 		case SK_ANGLE:
-			M_WriteReal(buf, ct->ct_angle);
+			M_WriteReal(buf, ct->data.angle);
 			break;
 		default:
 			break;
@@ -564,10 +564,10 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull buf, const AG_Version *_Nonnull
 		ct->n2 = SK_ReadRef(buf, sk, NULL);
 		switch (ct->type) {
 		case SK_DISTANCE:
-			ct->ct_distance = M_ReadReal(buf);
+			ct->data.dist = M_ReadReal(buf);
 			break;
 		case SK_ANGLE:
-			ct->ct_angle = M_ReadReal(buf);
+			ct->data.angle = M_ReadReal(buf);
 			break;
 		default:
 			break;
@@ -1120,10 +1120,10 @@ SK_AddConstraint(SK_Cluster *cl, void *node1, void *node2,
 	va_start(ap, type);
 	switch (type) {
 	case SK_DISTANCE:
-		ct->ct_distance = (M_Real)va_arg(ap, double);
+		ct->data.dist = (M_Real)va_arg(ap, double);
 		break;
 	case SK_ANGLE:
-		ct->ct_angle = (M_Real)va_arg(ap, double);
+		ct->data.angle = (M_Real)va_arg(ap, double);
 		break;
 	default:
 		break;
@@ -1133,15 +1133,15 @@ SK_AddConstraint(SK_Cluster *cl, void *node1, void *node2,
 	switch (type) {
 	case SK_INCIDENT:
 		ct->type = SK_DISTANCE;
-		ct->ct_distance = 0.0;
+		ct->data.dist = 0.0;
 		break;
 	case SK_PERPENDICULAR:
 		ct->type = SK_ANGLE;
-		ct->ct_angle = M_PI/2.0;
+		ct->data.angle = M_PI/2.0;
 		break;
 	case SK_PARALLEL:
 		ct->type = SK_ANGLE;
-		ct->ct_angle = 0.0;
+		ct->data.angle = 0.0;
 		break;
 	default:
 		ct->type = ct->uType;
@@ -1164,10 +1164,10 @@ SK_DupConstraint(const SK_Constraint *ct1)
 	ct2->n2 = ct1->n2;
 	switch (ct1->type) {
 	case SK_DISTANCE:
-		ct2->ct_distance = ct1->ct_distance;
+		ct2->data.dist = ct1->data.dist;
 		break;
 	case SK_ANGLE:
-		ct2->ct_angle = ct1->ct_angle;
+		ct2->data.angle = ct1->data.angle;
 		break;
 	default:
 		break;
@@ -1182,10 +1182,10 @@ SK_AddConstraintCopy(SK_Cluster *clDst, const SK_Constraint *ct)
 	switch (ct->type) {
 	case SK_DISTANCE:
 		return SK_AddConstraint(clDst, ct->n1, ct->n2, SK_DISTANCE,
-		                        ct->ct_distance);
+		                        ct->data.dist);
 	case SK_ANGLE:
 		return SK_AddConstraint(clDst, ct->n1, ct->n2, SK_ANGLE,
-		                        ct->ct_angle);
+		                        ct->data.angle);
 	default:
 		break;
 	}
@@ -1223,9 +1223,9 @@ SK_CompareConstraints(const SK_Constraint *ct1, const SK_Constraint *ct2)
 #if 1
 		switch (ct1->type) {
 		case SK_DISTANCE:
-			return (int)(ct1->ct_distance - ct2->ct_distance);
+			return (int)(ct1->data.dist - ct2->data.dist);
 		case SK_ANGLE:
-			return (int)(ct1->ct_angle - ct2->ct_angle);
+			return (int)(ct1->data.angle - ct2->data.angle);
 		default:
 			return (0);
 		}
@@ -1303,7 +1303,7 @@ SK_NodeConstraintCount(const SK_Cluster *cl, void *node)
 			continue;
 		}
 		nOther = (ct->n1 == node) ? ct->n2 : ct->n1;
-		if (ct->type == SK_DISTANCE && ct->ct_distance == 0.0) {
+		if (ct->type == SK_DISTANCE && ct->data.dist == 0.0) {
 			if (SK_NodeOfClass(node, "Point:*") &&
 			    SK_NodeOfClass(nOther, "Line:*")) {
 				continue;

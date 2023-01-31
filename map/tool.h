@@ -2,8 +2,8 @@
 
 #include <agar/map/begin.h>
 
-#ifndef AG_MAPTOOL_STATUS_MAX
-#define AG_MAPTOOL_STATUS_MAX 8
+#ifndef MAP_TOOL_STATUS_MAX
+#define MAP_TOOL_STATUS_MAX 8
 #endif
 
 struct ag_widget;
@@ -24,7 +24,7 @@ typedef struct map_tool_ops {
 	Uint len;
 #endif
 	Uint flags;
-#define TOOL_HIDDEN	0x01		/* Don't include in toolbars/menus */
+#define MAP_TOOL_HIDDEN	0x01		/* Don't include in toolbars/menus */
 	int rev;
 
 	void (*_Nullable init)(void *_Nonnull);
@@ -33,7 +33,7 @@ typedef struct map_tool_ops {
 	void (*_Nullable edit)(void *_Nonnull);
 	int  (*_Nullable cursor)(void *_Nonnull, AG_Rect *_Nonnull);
 	int  (*_Nullable effect)(void *_Nonnull, MAP_Node *_Nonnull);
-	int  (*_Nullable mousemotion)(void *_Nonnull, int,int, int,int, int);
+	int  (*_Nullable mousemotion)(void *_Nonnull, int,int, int,int);
 	int  (*_Nullable mousebuttondown)(void *_Nonnull, int,int, int);
 	int  (*_Nullable mousebuttonup)(void *_Nonnull, int,int, int);
 	int  (*_Nullable keydown)(void *_Nonnull, int, int);
@@ -46,7 +46,7 @@ typedef struct map_tool {
 	struct map_view *_Nullable mv;		/* Associated view */
 	void *_Nullable p;			/* User pointer */
 
-	char *_Nullable status[AG_MAPTOOL_STATUS_MAX];  /* Status */
+	char *_Nullable status[MAP_TOOL_STATUS_MAX];  /* Status */
 	int            nstatus;
 	Uint32 _pad;
 	struct ag_window *_Nullable win;	/* Edition window (if any) */
@@ -72,7 +72,7 @@ typedef struct map_tool_keybinding {
 typedef struct map_tool_mousebinding {
 	int button;
 	int edit;
-	int (*_Nonnull func)(MAP_Tool *_Nonnull, int b, int s, int x, int y,
+	int (*_Nonnull func)(MAP_Tool *_Nonnull, int, int, int,int,
 	                     void *_Nullable);
 	void *_Nullable arg;
 	AG_SLIST_ENTRY(map_tool_mousebinding) mbindings;

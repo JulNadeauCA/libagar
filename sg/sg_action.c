@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2012-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -52,20 +52,20 @@ SG_ActionInit(SG_Action *act, enum sg_action_type type)
 	switch (type) {
 	case SG_ACTION_MOVE:
 		act->key = AG_KEY_M;
-		act->args.move = M_VecZero3();
+		act->move = M_VecZero3();
 		break;
 	case SG_ACTION_ZMOVE:
 		act->key = AG_KEY_Z;
-		act->args.move = M_VecZero3();
+		act->move = M_VecZero3();
 		break;
 	case SG_ACTION_ROTATE:
 		act->key = AG_KEY_R;
-		act->args.rotate.axis = M_VecZero3();
-		act->args.rotate.theta = 0.0;
+		act->rotate.axis = M_VecZero3();
+		act->rotate.theta = 0.0;
 		break;
 	case SG_ACTION_SCALE:
 		act->key = AG_KEY_S;
-		act->args.scale = M_VecZero3();
+		act->scale = M_VecZero3();
 		break;
 	default:
 		act->key = AG_KEY_NONE;
@@ -84,13 +84,13 @@ SG_ActionCopy(SG_Action *da, const SG_Action *sa)
 	switch (sa->type) {
 	case SG_ACTION_MOVE:
 	case SG_ACTION_ZMOVE:
-		da->act_move = sa->act_move;
+		da->move = sa->move;
 		break;
 	case SG_ACTION_ROTATE:
-		da->act_rotate = sa->act_rotate;
+		da->rotate = sa->rotate;
 		break;
 	case SG_ACTION_SCALE:
-		da->act_scale = sa->act_scale;
+		da->scale = sa->scale;
 		break;
 	default:
 		break;
@@ -163,28 +163,28 @@ SG_ActionPrint(const SG_Action *a, char *buf, AG_Size len)
 	case SG_ACTION_ZMOVE_END:
 		Snprintf(buf, len, "%s(%.03f,%.03f,%.03f)",
 		    sgActionNames[a->type],
-		    a->act_move.x,
-		    a->act_move.y,
-		    a->act_move.z);
+		    a->move.x,
+		    a->move.y,
+		    a->move.z);
 		break;
 	case SG_ACTION_ROTATE:
 	case SG_ACTION_ROTATE_BEGIN:
 	case SG_ACTION_ROTATE_END:
 		Snprintf(buf, len, "%s(%.01f\xc2\xb0 @ %.01f,%.01f,%.01f)",
 		    sgActionNames[a->type],
-		    M_Degrees(a->act_rotate.theta),
-		    a->act_rotate.axis.x,
-		    a->act_rotate.axis.y,
-		    a->act_rotate.axis.z);
+		    M_Degrees(a->rotate.theta),
+		    a->rotate.axis.x,
+		    a->rotate.axis.y,
+		    a->rotate.axis.z);
 		break;
 	case SG_ACTION_SCALE:
 	case SG_ACTION_SCALE_BEGIN:
 	case SG_ACTION_SCALE_END:
 		Snprintf(buf, len, "%s(%.03f,%.03f,%.03f)",
 		    sgActionNames[a->type],
-		    a->act_scale.x,
-		    a->act_scale.y,
-		    a->act_scale.z);
+		    a->scale.x,
+		    a->scale.y,
+		    a->scale.z);
 		break;
 	default:
 		Snprintf(buf, len, "%s()", sgActionNames[a->type]);
@@ -206,14 +206,14 @@ SG_ActionLoad(SG_Action *a, AG_DataSource *ds)
 	switch (a->type) {
 	case SG_ACTION_MOVE:
 	case SG_ACTION_ZMOVE:
-		a->act_move = M_ReadVector3(ds);
+		a->move = M_ReadVector3(ds);
 		break;
 	case SG_ACTION_ROTATE:
-		a->act_rotate.axis = M_ReadVector3(ds);
-		a->act_rotate.theta = M_ReadReal(ds);
+		a->rotate.axis = M_ReadVector3(ds);
+		a->rotate.theta = M_ReadReal(ds);
 		break;
 	case SG_ACTION_SCALE:
-		a->act_scale = M_ReadVector3(ds);
+		a->scale = M_ReadVector3(ds);
 		break;
 	default:
 		break;
@@ -230,14 +230,14 @@ SG_ActionSave(SG_Action *a, AG_DataSource *ds)
 	switch (a->type) {
 	case SG_ACTION_MOVE:
 	case SG_ACTION_ZMOVE:
-		M_WriteVector3(ds, &a->act_move);
+		M_WriteVector3(ds, &a->move);
 		break;
 	case SG_ACTION_ROTATE:
-		M_WriteVector3(ds, &a->act_rotate.axis);
-		M_WriteReal(ds, a->act_rotate.theta);
+		M_WriteVector3(ds, &a->rotate.axis);
+		M_WriteReal(ds, a->rotate.theta);
 		break;
 	case SG_ACTION_SCALE:
-		M_WriteVector3(ds, &a->act_scale);
+		M_WriteVector3(ds, &a->scale);
 		break;
 	default:
 		break;

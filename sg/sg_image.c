@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2010-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -1637,9 +1637,9 @@ EditorAction(void *_Nonnull obj, enum sg_action_type type,
 	}
 	switch (type) {
 	case SG_ACTION_MOVE:
-		act->act_move = M_VecSub3(X, act->vOrig);
+		act->move = M_VecSub3(X, act->vOrig);
 		SGNODE(si)->T = act->Torig;
-		SG_Translatev(si, act->act_move);
+		SG_Translatev(si, act->move);
 		break;
 	case SG_ACTION_ZMOVE:
 		v[0] = M_VecSub3(X, act->vOrig);
@@ -1648,7 +1648,7 @@ EditorAction(void *_Nonnull obj, enum sg_action_type type,
 		v[1].z = v[0].x;
 		SGNODE(si)->T = act->Torig;
 		SG_Translatev(si, v[1]);
-		act->act_move = v[1];
+		act->move = v[1];
 		break;
 	case SG_ACTION_ROTATE_BEGIN:
 		if ((w = SG_WidgetNew(si, SG_WIDGET_DISC, "rotate")) != NULL) {
@@ -1659,14 +1659,14 @@ EditorAction(void *_Nonnull obj, enum sg_action_type type,
 		v[0] = M_VecZero3();
 		v[1] = M_VecNorm3(act->vOrig);
 		v[2] = M_VecNorm3(X);
-		act->act_rotate.axis =
+		act->rotate.axis =
 		    M_VecNormCross3(M_VecSub3(v[0],v[1]),
 		                    M_VecSub3(v[2],v[1]));
-		act->act_rotate.theta = M_Acos(M_VecDot3(v[1], v[2]));
+		act->rotate.theta = M_Acos(M_VecDot3(v[1], v[2]));
 //		vCross = M_VecCross3(v[1], v[2]);
 		SGNODE(si)->T = act->Torig;
 //		SG_Translatev(si, act->vOrig);
-		SG_Rotatev(si, act->act_rotate.theta, act->act_rotate.axis);
+		SG_Rotatev(si, act->rotate.theta, act->rotate.axis);
 //		SG_Translatev(si, M_VecFlip3(act->vOrig));
 		break;
 	case SG_ACTION_SCALE_BEGIN:
@@ -1692,9 +1692,9 @@ EditorAction(void *_Nonnull obj, enum sg_action_type type,
 	case SG_ACTION_SCALE:
 		si->w = si->wOrig*X.x/act->vOrig.x;
 		si->h = si->hOrig*X.y/act->vOrig.y;
-		act->act_scale.x = (M_Real)si->w - si->wOrig;
-		act->act_scale.y = (M_Real)si->h - si->hOrig;
-		act->act_scale.z = 1.0;
+		act->scale.x = (M_Real)si->w - si->wOrig;
+		act->scale.y = (M_Real)si->h - si->hOrig;
+		act->scale.z = 1.0;
 		SG_ImageFreeCached(si);
 		if ((w = AG_ObjectFindChild(si, "scale0")) != NULL) {
 			SG_Identity(w);
@@ -1740,20 +1740,20 @@ ScriptAction(void *_Nonnull obj, SG_Action *_Nonnull act, int invert)
 	case SG_ACTION_MOVE:
 	case SG_ACTION_ZMOVE:
 		SG_Translatev(si,
-		    invert ? M_VecFlip3(act->act_move) : act->act_move);
+		    invert ? M_VecFlip3(act->move) : act->move);
 		break;
 	case SG_ACTION_ROTATE:
 		SG_Rotatev(si,
-		    invert ? -act->act_rotate.theta : +act->act_rotate.theta,
-		    act->act_rotate.axis);
+		    invert ? -act->rotate.theta : +act->rotate.theta,
+		    act->rotate.axis);
 		break;
 	case SG_ACTION_SCALE:
 		if (invert) {
-			si->w -= act->act_scale.x;
-			si->h -= act->act_scale.y;
+			si->w -= act->scale.x;
+			si->h -= act->scale.y;
 		} else {
-			si->w += act->act_scale.x;
-			si->h += act->act_scale.y;
+			si->w += act->scale.x;
+			si->h += act->scale.y;
 		}
 		SG_ImageFreeCached(si);
 		break;

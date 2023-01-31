@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -45,7 +45,7 @@ ToolInit(void *_Nonnull p)
 }
 
 static int
-ToolMouseMotion(void *_Nonnull p, M_Vector3 pos, M_Vector3 vel, int btn)
+ToolMouseMotion(void *_Nonnull p, M_Vector3 pos, M_Vector3 vel)
 {
 	struct sk_measure_tool *t = p;
 	SK_View *skv = SKTOOL(t)->skv;

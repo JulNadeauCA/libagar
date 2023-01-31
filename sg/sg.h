@@ -91,12 +91,7 @@ typedef struct sg_action {
 		M_Vector3 move;
 		SG_Rotation rotate;
 		M_Vector3 scale;
-#ifdef _AGAR_SG_INTERNAL
-# define act_move   args.move
-# define act_rotate args.rotate
-# define act_scale  args.scale
-#endif
-	} args;
+	};
 	/* For editor */
 	M_Matrix44 Torig;		/* Saved node transformation matrix */
 	M_Vector3 vOrig;		/* Original intersection point */

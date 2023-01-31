@@ -41,7 +41,7 @@ const RG_FeatureOps rgFillOps = {
 	"fill",
 	sizeof(struct rg_fill_feature),
 	N_("Fill tile with solid color/pattern."),
-	FEATURE_AUTOREDRAW,
+	RG_FEATURE_AUTOREDRAW,
 	AG_KEYMOD_SHIFT, AG_KEY_B,
 	1,
 	RG_FillInit,
@@ -60,7 +60,7 @@ RG_FillInit(void *p, RG_Tileset *ts, Uint flags)
 	struct rg_fill_feature *f = p;
 
 	RG_FeatureInit(f, ts, flags, &rgFillOps);
-	f->type = FILL_SOLID;
+	f->type = RG_FILL_SOLID;
 	f->alpha = 255;
 	AG_ColorBlack(&f->f_gradient.c1);
 	AG_ColorBlack(&f->f_gradient.c2);
@@ -76,16 +76,16 @@ RG_FillLoad(void *p, AG_DataSource *buf)
 
 	f->type = (enum rg_fill_type)AG_ReadUint8(buf);
 	switch (f->type) {
-	case FILL_SOLID:
+	case RG_FILL_SOLID:
 		AG_ReadColor(&f->f_solid.c, buf);
 		break;
-	case FILL_HGRADIENT:
-	case FILL_VGRADIENT:
-	case FILL_CGRADIENT:
+	case RG_FILL_HGRADIENT:
+	case RG_FILL_VGRADIENT:
+	case RG_FILL_CGRADIENT:
 		AG_ReadColor(&f->f_gradient.c1, buf);
 		AG_ReadColor(&f->f_gradient.c2, buf);
 		break;
-	case FILL_PATTERN:
+	case RG_FILL_PATTERN:
 		f->f_pattern.texid = (int)AG_ReadUint32(buf);
 		f->f_pattern.tex_xoffs = (int)AG_ReadUint32(buf);
 		f->f_pattern.tex_yoffs = (int)AG_ReadUint32(buf);
@@ -103,16 +103,16 @@ RG_FillSave(void *p, AG_DataSource *buf)
 
 	AG_WriteUint8(buf, (Uint8)f->type);
 	switch (f->type) {
-	case FILL_SOLID:
+	case RG_FILL_SOLID:
 		AG_WriteColor(buf, &f->f_solid.c);
 		break;
-	case FILL_HGRADIENT:
-	case FILL_VGRADIENT:
-	case FILL_CGRADIENT:
+	case RG_FILL_HGRADIENT:
+	case RG_FILL_VGRADIENT:
+	case RG_FILL_CGRADIENT:
 		AG_WriteColor(buf, &f->f_gradient.c1);
 		AG_WriteColor(buf, &f->f_gradient.c2);
 		break;
-	case FILL_PATTERN:
+	case RG_FILL_PATTERN:
 		AG_WriteUint32(buf, (Uint32)f->f_pattern.texid);
 		AG_WriteUint32(buf, (Uint32)f->f_pattern.tex_xoffs);
 		AG_WriteUint32(buf, (Uint32)f->f_pattern.tex_yoffs);
@@ -179,10 +179,10 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 	Uint8 a;
 	
 	switch (fi->type) {
-	case FILL_SOLID:
+	case RG_FILL_SOLID:
 		AG_FillRect(su, NULL, &fi->f_solid.c);
 		break;
-	case FILL_HGRADIENT:
+	case RG_FILL_HGRADIENT:
 		{
 			int x, y;
 			AG_Color c1 = fi->f_gradient.c1;
@@ -211,7 +211,7 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 			}
 		}
 		break;
-	case FILL_VGRADIENT:
+	case RG_FILL_VGRADIENT:
 		{
 			int x, y;
 			AG_Color c1 = fi->f_gradient.c1;
@@ -231,7 +231,7 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 			}
 		}
 		break;
-	case FILL_CGRADIENT:
+	case RG_FILL_CGRADIENT:
 		{
 			int i, r = AG_MAX(su->w,su->h);
 			int x = su->w/2;
@@ -262,15 +262,15 @@ InvertColors(AG_Event *_Nonnull event)
 	AG_Color c;
 
 	switch (fi->type) {
-	case FILL_SOLID:
+	case RG_FILL_SOLID:
 		c = fi->f_solid.c;
 		c.r = 255 - c.r;
 		c.g = 255 - c.g;
 		c.b = 255 - c.b;
 		break;
-	case FILL_HGRADIENT:
-	case FILL_VGRADIENT:
-	case FILL_CGRADIENT:
+	case RG_FILL_HGRADIENT:
+	case RG_FILL_VGRADIENT:
+	case RG_FILL_CGRADIENT:
 		c = fi->f_gradient.c1;
 		c.r = 255 - c.r;
 		c.g = 255 - c.g;
@@ -295,9 +295,9 @@ SwapGradientColors(AG_Event *_Nonnull event)
 	AG_Color cSave;
 
 	switch (fi->type) {
-	case FILL_HGRADIENT:
-	case FILL_VGRADIENT:
-	case FILL_CGRADIENT:
+	case RG_FILL_HGRADIENT:
+	case RG_FILL_VGRADIENT:
+	case RG_FILL_CGRADIENT:
 		cSave = fi->f_gradient.c2;
 		fi->f_gradient.c2 = fi->f_gradient.c1;
 		fi->f_gradient.c1 = cSave;
@@ -325,15 +325,15 @@ RG_FillMenu(void *p, AG_MenuItem *mi)
 	mi_fill = AG_MenuAction(mi, _("Fill type"), rgIconFill.s, NULL, NULL);
 	{
 		AG_MenuAction(mi_fill, _("Solid fill"), rgIconFill.s,
-		    set_type, "%p, %i", fi, FILL_SOLID);
+		    set_type, "%p, %i", fi, RG_FILL_SOLID);
 		AG_MenuAction(mi_fill, _("Horizontal gradient"), rgIconHGrad.s,
-		    set_type, "%p, %i", fi, FILL_HGRADIENT);
+		    set_type, "%p, %i", fi, RG_FILL_HGRADIENT);
 		AG_MenuAction(mi_fill, _("Vertical gradient"), rgIconVGrad.s,
-		    set_type, "%p, %i", fi, FILL_VGRADIENT);
+		    set_type, "%p, %i", fi, RG_FILL_VGRADIENT);
 		AG_MenuAction(mi_fill, _("Circular gradient"), rgIconCGrad.s,
-		    set_type, "%p, %i", fi, FILL_CGRADIENT);
+		    set_type, "%p, %i", fi, RG_FILL_CGRADIENT);
 		AG_MenuAction(mi_fill, _("Pattern"), rgIconTiling.s,
-		    set_type, "%p, %i", fi, FILL_PATTERN);
+		    set_type, "%p, %i", fi, RG_FILL_PATTERN);
 	}
 	
 	AG_MenuSeparator(mi);

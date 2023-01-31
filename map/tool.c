@@ -172,7 +172,7 @@ MAP_ToolPushStatus(void *p, const char *fmt, ...)
 	MAP_Tool *t = p;
 	va_list ap;
 
-	if (t->mv->status == NULL || t->nstatus+1 >= AG_MAPTOOL_STATUS_MAX)
+	if (t->mv->status == NULL || t->nstatus+1 >= MAP_TOOL_STATUS_MAX)
 		return;
 
 	va_start(ap, fmt);

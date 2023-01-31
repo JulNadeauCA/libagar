@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@ const RG_FeatureOps rgSketchProjOps = {
 	"sketchproj",
 	sizeof(struct rg_sketchproj),
 	N_("Sketch projection."),
-	FEATURE_AUTOREDRAW,
+	RG_FEATURE_AUTOREDRAW,
 	AG_KEYMOD_SHIFT, AG_KEY_P,
 	1,
 	RG_SketchProjInit,

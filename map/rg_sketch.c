@@ -483,9 +483,9 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
 	VG *vg = sk->vg;
 
 	if (button == AG_MOUSE_MIDDLE) {
-		int x, y;
+		const int x = WIDGET(tv)->drv->mouse->x;
+		const int y = WIDGET(tv)->drv->mouse->y;
 
-		AG_MouseGetState(WIDGET(tv)->drv->mouse, &x, &y);
 		RG_SketchOpenMenu(tv, x, y);
 		return;
 	} else if (button == AG_MOUSE_RIGHT) {
@@ -567,7 +567,7 @@ RG_SketchButtonup(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
 
 void
 RG_SketchMotion(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
-    float xrel, float yrel, int state)
+    float xrel, float yrel)
 {
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {

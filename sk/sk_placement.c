@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -49,8 +49,8 @@ PtFromPtAtDistance(SK_Constraint *_Nonnull ct, void *_Nonnull self,
 	
 	M_VecVecAngle3(p1, p2, &theta, NULL);
 	SK_Identity(self);
-	p2.x -= ct->ct_distance*Cos(theta);
-	p2.y -= ct->ct_distance*Sin(theta);
+	p2.x -= ct->data.dist * Cos(theta);
+	p2.y -= ct->data.dist * Sin(theta);
 	SK_Translatev(self, &p2);
 	return (0);
 }
@@ -85,17 +85,17 @@ PtFromLineAtDistance(SK_Constraint *_Nonnull ct, void *_Nonnull self,
 	      ((pOrig.y - p1.y)*(p2.y - p1.y)) ) / (mag*mag);
 	
 	v = M_VecAdd3(p1, M_VecScale3p(&vd,u));
-	if (ct->ct_distance == 0.0) {
+	if (ct->data.dist == 0.0) {
 		SK_Identity(self);
 		SK_Translatev(self, &v);
 		return (0);
 	}
 	M_VecVecAngle3(p1, p2, &theta, NULL);
 	theta += M_PI/2.0;
-	s1.x = v.x + ct->ct_distance*Cos(theta);
-	s1.y = v.y + ct->ct_distance*Sin(theta);
-	s2.x = v.x - ct->ct_distance*Cos(theta);
-	s2.y = v.y - ct->ct_distance*Sin(theta);
+	s1.x = v.x + ct->data.dist*Cos(theta);
+	s1.y = v.y + ct->data.dist*Sin(theta);
+	s2.x = v.x - ct->data.dist*Cos(theta);
+	s2.y = v.y - ct->data.dist*Sin(theta);
 	
 	SK_Identity(self);
 	if (M_VecDistance3p(&pOrig,&s1) < M_VecDistance3p(&pOrig,&s2)) {
@@ -117,7 +117,7 @@ PtFromDistantCircle(SK_Constraint *_Nonnull ct, void *_Nonnull self,
 	
 	SK_Identity(p);
 	SK_Translatev(p, &p1);
-	SK_Translate2(p, C1->r + ct->ct_distance, 0.0);
+	SK_Translate2(p, C1->r + ct->data.dist, 0.0);
 	return (0);
 }
 #endif
@@ -135,8 +135,8 @@ LineFromLineAtDistance(SK_Constraint *_Nonnull ct, void *_Nonnull self,
 
 	SK_MatrixCopy(L->p1, L1->p1);
 	SK_MatrixCopy(L->p2, L1->p2);
-	SK_Translate2(L->p1, ct->ct_distance, 0.0);
-	SK_Translate2(L->p2, ct->ct_distance, 0.0);
+	SK_Translate2(L->p1, ct->data.dist, 0.0);
+	SK_Translate2(L->p2, ct->data.dist, 0.0);
 	return (0);
 }
 
@@ -154,7 +154,7 @@ LineFromLineAtAngle(SK_Constraint *_Nonnull ct, void *_Nonnull pSelf,
 	M_Real len, theta;
 	SK_Point *p;
 
-	theta = ct->ct_angle;
+	theta = ct->data.angle;
 
 	if (self->p1 == fixed->p1 || self->p1 == fixed->p2) {
 		vShd = SK_Pos(self->p1);
@@ -162,14 +162,14 @@ LineFromLineAtAngle(SK_Constraint *_Nonnull ct, void *_Nonnull pSelf,
 		vFixed = (self->p1==fixed->p1) ? SK_Pos(fixed->p2) :
 		                                 SK_Pos(fixed->p1);
 		p = self->p2;
-//		theta = -ct->ct_angle;
+//		theta = -ct->data.angle;
 	} else if (self->p2 == fixed->p1 || self->p2 == fixed->p2) {
 		vShd = SK_Pos(self->p2);
 		vSelf = SK_Pos(self->p1);
 		vFixed = (self->p2==fixed->p1) ? SK_Pos(fixed->p2) :
 		                                 SK_Pos(fixed->p1);
 		p = self->p1;
-//		theta = ct->ct_angle;
+//		theta = ct->data.angle;
 	} else {
 		AG_SetError("No shared point between lines");
 		return (-1);
@@ -205,8 +205,8 @@ PtFromPtPt(void *_Nonnull self, SK_Constraint *_Nonnull ct1, void *_Nonnull n1,
 	M_Vector3 pOrig = SK_Pos(self);
 	M_Vector3 p1 = SK_Pos(n1);
 	M_Vector3 p2 = SK_Pos(n2);
-	M_Real d1 = ct1->ct_distance;
-	M_Real d2 = ct2->ct_distance;
+	M_Real d1 = ct1->data.dist;
+	M_Real d2 = ct2->data.dist;
 	M_Real d12 = M_VecDistance3p(&p1,&p2);
 	M_Real a, h, b;
 	M_Vector3 p, s1, s2;
@@ -294,8 +294,7 @@ PtFromPtLine(void *_Nonnull self, SK_Constraint *_Nonnull ct1, void *_Nonnull n1
 	          (p2.y - p1.y)*(p1.y - p.y) );
 	c = p.x*p.x + p.y*p.y +
 	    p1.x*p1.x + p1.y*p1.y -
-	    2.0*(p.x*p1.x + p.y*p1.y) -
-	    (ct1->ct_distance*ct1->ct_distance);
+	    2.0*(p.x*p1.x + p.y*p1.y) - (ct1->data.dist * ct1->data.dist);
 	det = b*b - 4.0*a*c;
 
 	if (det < 0.0) {

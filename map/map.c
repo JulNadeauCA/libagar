@@ -370,7 +370,7 @@ MAP_InitCamera(MAP_Camera *cam, const char *name)
 	cam->x = 0;
 	cam->y = 0;
 	cam->flags = 0;
-	cam->alignment = AG_MAP_CENTER;
+	cam->alignment = MAP_CENTER;
 	cam->zoom = 100;
 	cam->tilesz = MAP_TILESZ_DEF;
 	cam->pixsz = 1;
@@ -1023,7 +1023,7 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
 	Uint32 w, h, origin_x, origin_y;
 	Uint i, x, y;
 	
-	map->flags = (Uint)AG_ReadUint32(ds) & AG_MAP_SAVED_FLAGS;
+	map->flags = (Uint)AG_ReadUint32(ds) & MAP_SAVED_FLAGS;
 	w = AG_ReadUint32(ds);
 	h = AG_ReadUint32(ds);
 	if (w > MAP_WIDTH_MAX || h > MAP_HEIGHT_MAX) {
@@ -1078,13 +1078,13 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
 
 		AG_CopyString(cam->name, ds, sizeof(cam->name));
 		cam->flags = (int)AG_ReadUint32(ds);
-		if (i > 0 || map->flags & AG_MAP_SAVE_CAM0POS) {
+		if (i > 0 || map->flags & MAP_SAVE_CAM0POS) {
 			cam->x = (int)AG_ReadSint32(ds);
 			cam->y = (int)AG_ReadSint32(ds);
 		}
 		cam->alignment = (enum map_camera_alignment)AG_ReadUint8(ds);
 		
-		if (i > 0 || map->flags & AG_MAP_SAVE_CAM0ZOOM) {
+		if (i > 0 || map->flags & MAP_SAVE_CAM0ZOOM) {
 			cam->zoom = (Uint)AG_ReadUint16(ds);
 			cam->tilesz = (Uint)AG_ReadUint16(ds);
 			cam->pixsz = cam->tilesz / MAP_TILESZ_DEF;
@@ -1094,7 +1094,7 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
 			cam->pixsz = 1;
 		}
 
-		if (i == 0 && (map->flags & AG_MAP_SAVE_CAM0POS) == 0) {
+		if (i == 0 && (map->flags & MAP_SAVE_CAM0POS) == 0) {
 			cam->x = map->xOrigin * cam->tilesz - cam->tilesz/2;
 			cam->y = map->yOrigin * cam->tilesz - cam->tilesz/2;
 		}
@@ -1207,7 +1207,7 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 	MAP *map = obj;
 	Uint i, x,y;
 	
-	AG_WriteUint32(ds, (Uint32)(map->flags & AG_MAP_SAVED_FLAGS));
+	AG_WriteUint32(ds, (Uint32)(map->flags & MAP_SAVED_FLAGS));
 	AG_WriteUint32(ds, (Uint32)map->w);
 	AG_WriteUint32(ds, (Uint32)map->h);
 	AG_WriteUint32(ds, (Uint32)map->xOrigin);
@@ -1234,12 +1234,12 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 
 		AG_WriteString(ds, cam->name);
 		AG_WriteUint32(ds, (Uint32)cam->flags);
-		if (i == 0 && (map->flags & AG_MAP_SAVE_CAM0POS)) {
+		if (i == 0 && (map->flags & MAP_SAVE_CAM0POS)) {
 			AG_WriteSint32(ds, (Sint32)cam->x);
 			AG_WriteSint32(ds, (Sint32)cam->y);
 		}
 		AG_WriteUint8(ds, (Uint8)cam->alignment);
-		if (i == 0 && (map->flags & AG_MAP_SAVE_CAM0ZOOM)) {
+		if (i == 0 && (map->flags & MAP_SAVE_CAM0ZOOM)) {
 			AG_WriteUint16(ds, (Uint16)cam->zoom);
 			AG_WriteUint16(ds, (Uint16)cam->tilesz);
 		}
@@ -1768,7 +1768,6 @@ PollHistoryBuffer_Changes(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it,
 	}
 }
 
-/* Display the list of undo blocks. */
 static void
 PollHistoryBuffer(AG_Event *_Nonnull event)
 {
@@ -1928,7 +1927,7 @@ static void
 EditHistoryBuffer(AG_Event *_Nonnull event)
 {
 	MAP_View *mv = MAP_VIEW_PTR(1);
-	AG_Window *winParent= AG_WINDOW_PTR(2);
+	AG_Window *winParent = AG_WINDOW_PTR(2);
 	AG_Window *win;
 	MAP *map = mv->map;
 	AG_Tlist *tl;

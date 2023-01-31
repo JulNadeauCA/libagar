@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -242,7 +242,7 @@ PlotCluster(SK *_Nonnull sk, AG_Graph *_Nonnull gf, SK_Cluster *_Nonnull cl)
 		}
 		edge = AG_GraphEdgeNew(gf, v1, v2, ct);
 		AG_GraphEdgeLabelS(edge,
-		    (ct->type == SK_DISTANCE && ct->ct_distance == 0.0) ?
+		    (ct->type == SK_DISTANCE && ct->data.dist == 0.0) ?
 		    "Incidence" : skConstraintNames[ct->type]);
 	}
 	AG_GraphAutoPlace(gf, 800, 800);
@@ -439,11 +439,11 @@ PollConstraints(AG_Event *_Nonnull event)
 		switch (ct->uType) {
 		case SK_DISTANCE:
 			AG_Snprintf(ctArgs, sizeof(ctArgs), "(%.03f %s)",
-			    ct->ct_distance, sk->uLen->abbr);
+			    ct->data.dist, sk->uLen->abbr);
 			break;
 		case SK_ANGLE:
 			AG_Snprintf(ctArgs, sizeof(ctArgs), "(%.02f\xc2\xb0)",
-			    Degrees(ct->ct_angle));
+			    Degrees(ct->data.angle));
 			break;
 		default:
 			ctArgs[0] = '\0';
@@ -524,7 +524,7 @@ ConstraintEdit(AG_Event *_Nonnull event)
 	case SK_DISTANCE:
 		num = AG_NumericalNew(skv->editBox, AG_NUMERICAL_HFILL, "m",
 		    _("Distance: "));
-		M_BindReal(num, "value", &ct->ct_distance);
+		M_BindReal(num, "value", &ct->data.dist);
 		M_SetReal(num, "min", 0.0);
 		M_SetReal(num, "inc", 0.1);
 		AG_WidgetSetFocusable(num, 0);
@@ -534,7 +534,7 @@ ConstraintEdit(AG_Event *_Nonnull event)
 	case SK_ANGLE:
 		num = AG_NumericalNew(skv->editBox, AG_NUMERICAL_HFILL,
 		    "deg", _("Angle: "));
-		M_BindReal(num, "value", &ct->ct_angle);
+		M_BindReal(num, "value", &ct->data.angle);
 		M_SetReal(num, "inc", 1.0);
 		AG_WidgetSetFocusable(num, 0);
 		AG_SetEvent(num, "numerical-changed",
