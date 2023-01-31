@@ -35,7 +35,7 @@ typedef struct ag_scrollbar {
 	enum ag_scrollbar_button mouseOverBtn;	/* Mouseover button */
 
 	int length;			/* Length of scrolling control area */
-	int wBarLast;			/* Auto-calculated control length */
+	Uint32 _pad;
 	int hArrow;			/* Arrow height */
 	int value;			/* Default `value' binding */
 	AG_Event *_Nullable buttonIncFn; /* Alt. handler for increment btns */

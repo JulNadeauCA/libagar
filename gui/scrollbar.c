@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -146,11 +146,9 @@ AG_ScrollbarSetDecFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int mx, int my, int dx, int dy)
 {
-	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
-	const int mx = AG_INT(1);
-	const int my = AG_INT(2);
+	AG_Scrollbar *sb = obj;
 	const int sbThick = SBTHICK(sb);
 	const int x = SBPOS(sb,mx,my) - sbThick;
 	enum ag_scrollbar_button mouseOverBtn;
@@ -467,9 +465,9 @@ IncrementGeneral(AG_Scrollbar *_Nonnull sb, void *_Nonnull pVal,
 #undef INCREMENT
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
+	AG_Scrollbar *sb = obj;
 
 	AG_DelTimer(sb, &sb->moveTo);
 
@@ -529,12 +527,9 @@ MoveKbdTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int mx, int my)
 {
-	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
-	const int button = AG_INT(1);
-	const int mx = AG_INT(2);
-	const int my = AG_INT(3);
+	AG_Scrollbar *sb = obj;
 	const int sbThick = SBTHICK(sb);
 	const int x = SBPOS(sb,mx,my) - sbThick;
 	int posCur, len = SBLEN(sb);
@@ -563,7 +558,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			if (Increment(sb,-1) != 1) {
 				sb->xSeek = -1;
 				AG_AddTimer(sb, &sb->moveTo, agScrollButtonIval,
-				    MoveButtonsTimeout, "%i", -1);
+				    MoveButtonsTimeout,"%i",-1);
 			}
 		}
 	} else if (x > len - (sbThick << 1)) {			/* Increment */
@@ -574,7 +569,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			if (Increment(sb,+1) != 1) {
 				sb->xSeek = -1;
 				AG_AddTimer(sb, &sb->moveTo, agScrollButtonIval,
-				    MoveButtonsTimeout, "%i", +1);
+				    MoveButtonsTimeout,"%i",+1);
 			}
 		}
 	} else {
@@ -592,7 +587,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 						sb->xSeek = x;
 						AG_AddTimer(sb, &sb->moveTo,
 						    agScrollButtonIval,
-						    MoveButtonsTimeout, "%i,", -1);
+						    MoveButtonsTimeout,"%i,",-1);
 					}
 				} else {
 					SeekToPxCoords(sb, x - (len >> 1));
@@ -606,7 +601,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 						sb->xSeek = x;
 						AG_AddTimer(sb, &sb->moveTo,
 						    agScrollButtonIval,
-						    MoveButtonsTimeout, "%i", +1);
+						    MoveButtonsTimeout,"%i",+1);
 					}
 				} else {
 					SeekToPxCoords(sb, x - (len >> 1));
@@ -621,41 +616,80 @@ MouseButtonDown(AG_Event *_Nonnull event)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
-	const int keysym = AG_INT(1);
+	AG_Scrollbar *sb = obj;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
 		if (Increment(sb,-1) != 1) {
 			AG_AddTimer(sb, &sb->moveTo, agKbdDelay,
-			    MoveKbdTimeout, "%i", -1);
+			    MoveKbdTimeout,"%i",-1);
 		}
 		break;
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
 		if (Increment(sb,+1) != 1) {
 			AG_AddTimer(sb, &sb->moveTo, agKbdDelay,
-			    MoveKbdTimeout, "%i", +1);
+			    MoveKbdTimeout,"%i",+1);
 		}
 		break;
 	}
 }
 
 static void
-KeyUp(AG_Event *_Nonnull event)
+KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
-	const int keysym = AG_INT(1);
+	AG_Scrollbar *sb = obj;
 	
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
 		AG_DelTimer(sb, &sb->moveTo);
+		break;
+	}
+}
+
+
+static void
+Ctrl(void *obj, void *inputDevice, const AG_DriverEvent *dev)
+{
+	AG_Scrollbar *sb = obj;
+	
+	switch (dev->type) {
+	case AG_DRIVER_CTRL_AXIS_MOTION:
+		if (dev->ctrlAxis.axis == AG_CTRL_AXIS_LEFT_Y &&
+		    sb->type == AG_SCROLLBAR_VERT)
+		{
+			if (dev->ctrlAxis.value == -0x8000 &&
+			    Increment(sb,-1) != 1) {
+				AG_AddTimer(sb, &sb->moveTo, agKbdDelay,
+				    MoveKbdTimeout,"%i",-1);
+			} else if (dev->ctrlAxis.value == 0x7fff &&
+			    Increment(sb,+1) != 1) {
+				AG_AddTimer(sb, &sb->moveTo, agKbdDelay,
+				    MoveKbdTimeout,"%i",+1);
+			} else {
+				AG_DelTimer(sb, &sb->moveTo);
+			}
+		} else if (dev->ctrlAxis.axis == AG_CTRL_AXIS_LEFT_X &&
+		           sb->type == AG_SCROLLBAR_HORIZ)
+		{
+			if (dev->ctrlAxis.value == -0x8000 &&
+			    Increment(sb,-1) != 1) {
+				AG_AddTimer(sb, &sb->moveTo, agKbdDelay,
+				    MoveKbdTimeout,"%i",-1);
+			} else if (dev->ctrlAxis.value == 0x7fff &&
+			    Increment(sb,+1) != 1) {
+				AG_AddTimer(sb, &sb->moveTo, agKbdDelay,
+				    MoveKbdTimeout,"%i",+1);
+			} else {
+				AG_DelTimer(sb, &sb->moveTo);
+			}
+		}
 		break;
 	}
 }
@@ -753,20 +787,13 @@ Init(void *_Nonnull obj)
 	sb->buttonDecFn = NULL;
 	sb->xOffs = 0;
 	sb->xSeek = -1;
-	sb->wBarLast = -1;
 	sb->hArrow = 0;
 	
 	AG_AddEvent(sb, "widget-shown", OnShow, NULL);
-	AG_SetEvent(sb, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(sb, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(sb, "mouse-motion", MouseMotion, NULL);
-	AG_SetEvent(sb, "key-down", KeyDown, NULL);
-
-	AG_InitTimer(&sb->moveTo, "move", 0);
-
 	AG_AddEvent(sb, "widget-hidden", OnHide, NULL);
 	AG_SetEvent(sb, "widget-lostfocus", OnFocusLoss, NULL);
-	AG_SetEvent(sb, "key-up", KeyUp, NULL);
+
+	AG_InitTimer(&sb->moveTo, "move", 0);
 }
 
 static void
@@ -884,7 +911,7 @@ DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 	const int h = HEIGHT(sb);
 	const int mid = (w >> 1);
 	const int sbThick = SBTHICK(sb);
-	const int hArrow = MIN(w, sb->hArrow);
+	const int hArrow = MIN(w >> 1, h >> 1);
 	const int x = (sbThick >> 1);
 	const int btn = sb->curBtn;
 
@@ -952,7 +979,7 @@ DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 	const int h = HEIGHT(sb);
 	const int mid = h >> 1;
 	const int sbThick = SBTHICK(sb);
-	const int hArrow = MIN(h, sb->hArrow);
+	const int hArrow = MIN(w >> 1, h >> 1);
 	const int y = (sbThick >> 1);
 	const int btn = sb->curBtn;
 	
@@ -1096,8 +1123,7 @@ Edit(void *_Nonnull obj)
 	    &sb->curBtn, &sb->mouseOverBtn);
 	AG_LabelNewPolled(box, AG_LABEL_HFILL, "xOffs: %d, xSeek: %d",
 	    &sb->xOffs, &sb->xSeek);
-	AG_LabelNewPolled(box, AG_LABEL_HFILL, "wBarLast: %d, hArrow: %d",
-	    &sb->wBarLast, &sb->hArrow);
+	AG_LabelNewPolled(box, AG_LABEL_HFILL, "hArrow: %d", &sb->hArrow);
 
 	return (box);
 }
@@ -1121,7 +1147,15 @@ AG_WidgetClass agScrollbarClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	KeyDown,
+	KeyUp,
+	NULL,			/* touch */
+	Ctrl,
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */
