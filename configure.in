@@ -1002,6 +1002,9 @@ fi
 # GUI: Conditionally compiled sources in Agar-GUI.
 #
 mdefine(SRCS_GUI, "")
+if [ "${HAVE_FREETYPE}" = 'yes' ]; then
+	mappend(SRCS_GUI, "font_ft.c")
+fi
 if [ "${HAVE_SDL}" = 'yes' ]; then
 	mappend(SRCS_GUI, "drv_sdl_common.c drv_sdlfb.c")
 	if [ "${HAVE_OPENGL}" = 'yes' ]; then

@@ -15855,6 +15855,10 @@ if [ "${HAVE_CSIDL}" = 'yes' ]
 SRCS_CORE="${SRCS_CORE} user_win32.c"
 fi
 SRCS_GUI=""
+if [ "${HAVE_FREETYPE}" = 'yes' ]
+ then
+SRCS_GUI="${SRCS_GUI} font_ft.c"
+fi
 if [ "${HAVE_SDL}" = 'yes' ]
  then
 SRCS_GUI="${SRCS_GUI} drv_sdl_common.c drv_sdlfb.c"
