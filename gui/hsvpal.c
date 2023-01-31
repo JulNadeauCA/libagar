@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -623,18 +623,15 @@ OpenMenu(AG_HSVPal *_Nonnull pal, int x, int y)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_HSVPal *pal = AG_HSVPAL_SELF();
-	const int btn = AG_INT(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
+	AG_HSVPal *pal = obj;
 
 	if ((WIDGET(pal)->flags & AG_WIDGET_FOCUSABLE) &&
 	    !AG_WidgetIsFocused(pal))
 		AG_WidgetFocus(pal);
 
-	switch (btn) {
+	switch (button) {
 	case AG_MOUSE_LEFT:
 		if ((pal->flags & AG_HSVPAL_NOALPHA) == 0 &&
 		    y > pal->rPrev.y) {
@@ -663,20 +660,18 @@ MouseButtonDown(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_HSVPal *pal = AG_HSVPAL_SELF();
+	AG_HSVPal *pal = obj;
 
 	pal->state = AG_HSVPAL_SEL_NONE;
 	AG_Redraw(pal);
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	AG_HSVPal *pal = AG_HSVPAL_SELF();
-	const int x = AG_INT(1);
-	const int y = AG_INT(2);
+	AG_HSVPal *pal = obj;
 
 	switch (pal->state) {
 	case AG_HSVPAL_SEL_NONE:
@@ -797,37 +792,35 @@ sv_changed:
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_HSVPal *pal = AG_HSVPAL_SELF();
-	const int keysym = AG_INT(1);
-	const int keymod = AG_INT(2);
+	AG_HSVPal *pal = obj;
+	AG_Timer *toMove;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_UP:
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
 	case AG_KEY_LEFT:
-		AG_AddTimer(pal, &pal->toMove[keysym - AG_KEY_UP], 250,
-		    KeyMoveTimeout, "%i,%i", keysym, keymod);
-		AG_ExecTimer(&pal->toMove[keysym - AG_KEY_UP]);
+		toMove = &pal->toMove[ks - AG_KEY_UP];
+		AG_AddTimer(pal, toMove, 250, KeyMoveTimeout,"%i,%i",ks,kmod);
+		AG_ExecTimer(toMove);
 		break;
 	}
 
 }
 
 static void
-KeyUp(AG_Event *_Nonnull event)
+KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_HSVPal *pal = AG_HSVPAL_SELF();
-	const int keysym = AG_INT(1);
+	AG_HSVPal *pal = obj;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_UP:
 	case AG_KEY_DOWN:
 	case AG_KEY_LEFT:
 	case AG_KEY_RIGHT:
-		AG_DelTimer(pal, &pal->toMove[keysym-AG_KEY_UP]);
+		AG_DelTimer(pal, &pal->toMove[ks - AG_KEY_UP]);
 		break;
 	}
 }
@@ -905,12 +898,6 @@ Init(void *_Nonnull obj)
 	AG_InitTimer(&pal->toMove[2], "moveLeft", 0);
 	AG_InitTimer(&pal->toMove[3], "moveRight", 0);
 
-	AG_SetEvent(pal, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(pal, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(pal, "mouse-motion", MouseMotion, NULL);
-	AG_SetEvent(pal, "key-down", KeyDown, NULL);
-	AG_SetEvent(pal, "key-up", KeyUp, NULL);
-	
 	AG_BindFloat(pal, "hue", &pal->h);
 	AG_BindFloat(pal, "saturation", &pal->s);
 	AG_BindFloat(pal, "value", &pal->v);
@@ -1272,7 +1259,15 @@ AG_WidgetClass agHSVPalClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	KeyDown,
+	KeyUp,
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

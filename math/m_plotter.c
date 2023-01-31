@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,12 +64,11 @@ M_PlotterNew(void *parent, Uint flags)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	M_Plotter *ptr = M_PLOTTER_SELF();
-	int keysym = AG_INT(1);
+	M_Plotter *ptr = obj;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_0:
 	case AG_KEY_1:
 		ptr->yScale = 1.0;
@@ -99,21 +98,18 @@ MouseOverPlotItem(M_Plotter *_Nonnull ptr, M_Plot *_Nonnull pl, int x, int y)
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	M_Plotter *ptr = M_PLOTTER_SELF();
-	int x = AG_INT(1);
-	int y = AG_INT(2);
-	int dy = AG_INT(4);
-	int state = AG_INT(5);
+	M_Plotter *ptr = obj;
 	M_Plot *pl;
+	const AG_MouseButton btnState = WIDGET(ptr)->drv->mouse->btnState;
 
 	if (!AG_WidgetRelativeArea(ptr, x, y))
 		return;
 
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
-		if (pl->flags & M_PLOT_SELECTED &&
-		    state & AG_MOUSE_LEFT) {
+		if ((pl->flags & M_PLOT_SELECTED) &&
+		    (btnState & AG_MOUSE_LEFT)) {
 			pl->yOffs += dy;
 			AG_Redraw(ptr);
 		}
@@ -133,12 +129,9 @@ MouseMotion(AG_Event *_Nonnull event)
 
 #if 0
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	M_Plotter *ptr = M_PLOTTER_SELF();
-	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	M_Plotter *ptr = obj;
 	M_Plot *pl;
 
 	switch (button) {
@@ -259,13 +252,10 @@ ShowPlotSettings(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	M_Plotter *ptr = M_PLOTTER_SELF();
+	M_Plotter *ptr = obj;
 	M_Plot *pl, *opl;
-	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
 
 	switch (button) {
 	case AG_MOUSE_LEFT:
@@ -402,11 +392,6 @@ Init(void *_Nonnull obj)
 	AG_BindInt(sb, "visible", &WIDGET(ptr)->h);
 	AG_SetInt(sb,  "min",     0);
 	AG_SetInt(sb,  "max",     200);
-
-	AG_SetEvent(ptr, "key-down", KeyDown, NULL);
-	AG_SetEvent(ptr, "mouse-button-down", MouseButtonDown, NULL);
-/*	AG_SetEvent(ptr, "mouse-button-up", MouseButtonUp, NULL); */
-	AG_SetEvent(ptr, "mouse-motion", MouseMotion, NULL);
 }
 
 static void
@@ -1114,7 +1099,15 @@ AG_WidgetClass mPlotterClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	NULL,			/* mouse_button_up */
+	MouseMotion,
+	KeyDown,
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* ENABLE_GUI */

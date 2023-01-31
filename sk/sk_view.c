@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2006-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -106,24 +106,19 @@ Draw(void *_Nonnull obj)
 }
 
 static void
-ViewMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	SK_View *skv = SK_VIEW_SELF();
+	SK_View *skv = obj;
 	SK_Tool *tool = skv->curtool;
 	SK *sk = skv->sk;
-	const int x = AG_INT(1);
-	const int y = AG_INT(2);
-	const int xRel = AG_INT(3);
-	const int yRel = AG_INT(4);
-	const int state = AG_INT(5);
 	M_Vector3 vPos, vRel;
 	M_Matrix44 Tinv;
 
 	vPos.x = SK_VIEW_X(skv, x);
 	vPos.y = SK_VIEW_Y(skv, HEIGHT(skv) - y);
 	vPos.z = 0.0;
-	vRel.x =  (M_Real)xRel * skv->wPixel;
-	vRel.y = -(M_Real)yRel * skv->hPixel;
+	vRel.x =  (M_Real)dx * skv->wPixel;
+	vRel.y = -(M_Real)dy * skv->hPixel;
 	vRel.z = 0.0;
 
 	Tinv = M_MatInvert44(skv->mView);
@@ -141,7 +136,7 @@ ViewMotion(AG_Event *_Nonnull event)
 			vPos.x = SK_VIEW_X_SNAP(skv,vPos.x);
 			vPos.y = SK_VIEW_Y_SNAP(skv,vPos.y);
 		}
-		tool->ops->mousemotion(tool, vPos, vRel, state);
+		tool->ops->mousemotion(tool, vPos, vRel);
 		AG_Redraw(skv);
 	}
 out:
@@ -151,14 +146,11 @@ out:
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	SK_View *skv = SK_VIEW_SELF();
+	SK_View *skv = obj;
 	SK_Tool *tool = SK_CURTOOL(skv);
 	SK *sk = skv->sk;
-	const int button = AG_INT(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
 	M_Vector3 vPos;
 	M_Matrix44 Tinv;
 
@@ -227,16 +219,13 @@ out:
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	SK_View *skv = SK_VIEW_SELF();
+	SK_View *skv = obj;
 	SK_Tool *tool = SK_CURTOOL(skv);
 	SK *sk = skv->sk;
 	M_Matrix44 Tinv;
 	M_Vector3 vPos;
-	const int button = AG_INT(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
 
 	vPos.x = SK_VIEW_X(skv, x);
 	vPos.y = SK_VIEW_Y(skv, HEIGHT(skv) - y);
@@ -301,10 +290,6 @@ Init(void *_Nonnull obj)
 	SK_View *skv = obj;
 
 	WIDGET(skv)->flags |= (AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_OPENGL);
-
-	AG_SetEvent(skv, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(skv, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(skv, "mouse-motion", ViewMotion, NULL);
 
 	skv->flags = 0;
 	skv->sk = NULL;
@@ -656,6 +641,14 @@ AG_WidgetClass skViewClass = {
 		NULL		/* edit */
 	},
 	Draw,
-	NULL,		/* sizeReq */
-	NULL		/* sizeAlloc */
+	NULL,			/* sizeReq */
+	NULL,			/* sizeAlloc */
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };

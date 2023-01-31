@@ -9,8 +9,11 @@
 
 #include <agar/math/begin.h>
 
-#define M_PLOTTER_NDEFCOLORS	16
-#define M_PLOTTER_LABEL_MAX	AG_MODEL
+#define M_PLOTTER_NDEFCOLORS 16
+
+#ifndef M_PLOTTER_LABEL_MAX
+#define M_PLOTTER_LABEL_MAX AG_MODEL
+#endif
 
 struct m_plotter;
 
@@ -76,7 +79,8 @@ typedef struct m_plot {
 	char label_txt[32];			/* Label text */
 	int label;				/* Label surface handle */
 	AG_Color color;				/* Plot color */
-	AG_COLOR_PADDING(_pad);
+	AG_COLOR_PADDING(_pad1);
+	Uint32 _pad2;
 	M_Real xScale, yScale;			/* Scaling factors */
 	int xOffs, yOffs;			/* Offset in display */
 	int xLabel, yLabel;			/* Item position */

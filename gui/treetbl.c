@@ -145,11 +145,10 @@ static void
 ResizeColumn(AG_Treetbl *_Nonnull tt, int cid, int left)
 {
 	AG_TreetblCol *col = &tt->column[cid];
-	int x;
+	int x = WIDGET(tt)->drv->mouse->x -
+	        WIDGET(tt)->rView.x1;
 
-	AG_MouseGetState(WIDGET(tt)->drv->mouse, &x, NULL);
-	x -= WIDGET(tt)->rView.x1;
-	col->w = (x-left) > 16 ? (x-left) : 16;
+	col->w = (x - left) > 16 ? (x - left) : 16;
 	AG_Redraw(tt);
 }
 
@@ -198,12 +197,10 @@ MoveColumn(AG_Treetbl *_Nonnull tt, Uint cid, int left)
 	AG_TreetblCol *col = &tt->column[cid];
 	const AG_TreetblCol *colLeft = &tt->column[cid-1];
 	const AG_TreetblCol *colRight = &tt->column[cid+1];
-	int x;
+	int x = WIDGET(tt)->drv->mouse->x -
+	        WIDGET(tt)->rView.x1;
 
 	col->flags |= AG_TREETBL_COL_MOVING;
-
-	AG_MouseGetState(WIDGET(tt)->drv->mouse, &x, NULL);
-	x -= WIDGET(tt)->rView.x1;
 
 	if ((col->w < colLeft->w  && x < left - colLeft->w + col->w) ||
 	    (col->w >= colLeft->w && x < left)) {
@@ -264,12 +261,10 @@ FOREACH_VISIBLE_COLUMN(AG_Treetbl *_Nonnull tt, VisibleForeachFn foreachFn,
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Treetbl *tt = AG_TREETBL_SELF();
+	AG_Treetbl *tt = obj;
 	AG_TreetblCol *col = NULL;
-	const int coord_x = AG_INT(2);
-	const int coord_y = AG_INT(3);
 	int left;
 	Uint i;
 
@@ -296,9 +291,9 @@ MouseButtonUp(AG_Event *_Nonnull event)
 		 */
 		if (tt->flags & AG_TREETBL_SORT &&
 		    !(col->flags & AG_TREETBL_COL_MOVING) &&
-		    coord_y < tt->hCol &&
-		    coord_x >= left &&
-		    coord_x < (left+col->w)) {
+		    y < tt->hCol &&
+		    x >= left &&
+		    x < (left+col->w)) {
 			if (col->flags & AG_TREETBL_COL_SORTING) {
 				if (tt->sortMode == AG_TREETBL_SORT_DSC) {
 					tt->sortMode = AG_TREETBL_SORT_ASC;
@@ -507,29 +502,38 @@ ClickedRow(AG_Treetbl *_Nonnull tt, int x1, int x2, Uint32 idx,
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Treetbl *tt = AG_TREETBL_SELF();
-	const int button  = AG_INT(1);
-	int coord_x = AG_INT(2);
-	int coord_y = AG_INT(3);
+	AG_Treetbl *tt = obj;
 
-	if (!AG_WidgetIsFocused(tt)) {
+	if (!AG_WidgetIsFocused(tt))
 		AG_WidgetFocus(tt);
-	}
+
 	switch (button) {
 	case AG_MOUSE_WHEELUP:
-	case AG_MOUSE_WHEELDOWN:
-		/* TODO */
+		if ((tt->yOffs - 1) >= 0)  {
+			tt->yOffs--;
+			tt->visible.dirty = 1;
+			AG_Redraw(tt);
+		}
 		return;
+	case AG_MOUSE_WHEELDOWN:
+		if ((tt->yOffs < tt->yMax)) {
+			tt->yOffs++;
+			tt->visible.dirty = 1;
+			AG_Redraw(tt);
+		}
+		return;
+	default:
+		break;
 	}
 
-	if (tt->hCol > 0 && coord_y < tt->hCol) {
+	if (tt->hCol > 0 && y < tt->hCol) {
 		/* a mouse down on the column header */
-		FOREACH_VISIBLE_COLUMN(tt, ClickedColumnHeader, &coord_x, NULL);
+		FOREACH_VISIBLE_COLUMN(tt, ClickedColumnHeader, &x, NULL);
 	} else {
 		/* a mouse down in the body */
-		FOREACH_VISIBLE_COLUMN(tt, ClickedRow, &coord_x, &coord_y);
+		FOREACH_VISIBLE_COLUMN(tt, ClickedRow, &x, &y);
 	}
 }
 
@@ -583,8 +587,6 @@ Init(void *_Nonnull obj)
 	
 	AG_InitTimer(&tt->toDblClick, "dblClick", 0);
 
-	AG_SetEvent(tt, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(tt, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tt, "widget-lostfocus", FocusLost, NULL);
 	AG_AddEvent(tt, "widget-hidden", FocusLost, NULL);
 	AG_AddEvent(tt, "font-changed", FontChanged, NULL);
@@ -1722,7 +1724,15 @@ AG_WidgetClass agTreetblClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

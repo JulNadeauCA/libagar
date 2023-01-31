@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,13 +51,11 @@ AG_NotebookNew(void *parent, Uint flags)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	AG_Notebook *nb = AG_NOTEBOOK_SELF();
+	AG_Notebook *nb = obj;
 	AG_NotebookTab *nt;
-	const int x = AG_INT(1);
-	const int y = AG_INT(2);
-	int tx=0, i=0;
+	int tx = 0, i = 0;
 	
 	nb->mouseOver = -1;
 
@@ -84,12 +82,10 @@ MouseMotion(AG_Event *event)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Notebook *nb = AG_NOTEBOOK_SELF();
+	AG_Notebook *nb = obj;
 	AG_NotebookTab *nt;
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
 	
 	AG_WindowFocus(AG_ParentWindow(nb));
 	
@@ -153,8 +149,6 @@ Init(void *obj)
 
 	AG_AddEvent(nb, "widget-shown", OnShow, NULL);
 	AG_AddEvent(nb, "widget-hidden", OnHide, NULL);
-	AG_SetEvent(nb, "mouse-motion", MouseMotion, NULL);
-	AG_SetEvent(nb, "mouse-button-down", MouseButtonDown, NULL);
 }
 
 static void
@@ -548,7 +542,15 @@ AG_WidgetClass agNotebookClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	NULL,			/* mouse_button_up */
+	MouseMotion,
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 AG_WidgetClass agNotebookTabClass = {
@@ -565,7 +567,15 @@ AG_WidgetClass agNotebookTabClass = {
 	},
 	NULL,			/* draw */
 	NULL,			/* size_request */
-	NULL			/* size_allocate */
+	NULL,			/* size_allocate */
+	NULL,			/* mouse_button_down */
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

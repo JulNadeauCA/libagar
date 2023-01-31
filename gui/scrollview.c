@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -136,11 +136,12 @@ ScrollbarChanged(AG_Event *_Nonnull event)
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	AG_Scrollview *sv = AG_SCROLLVIEW_SELF();
-	const int dx = AG_INT(3);
-	const int dy = AG_INT(4);
+	AG_Scrollview *sv = obj;
+
+	if ((sv->flags & AG_SCROLLVIEW_BY_MOUSE) == 0)
+		return;
 
 	if (sv->flags & AG_SCROLLVIEW_PANNING) {
 		sv->xOffs -= dx;
@@ -162,10 +163,12 @@ MouseMotion(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Scrollview *sv = AG_SCROLLVIEW_SELF();
-	const int button = AG_INT(1);
+	AG_Scrollview *sv = obj;
+
+	if ((sv->flags & AG_SCROLLVIEW_BY_MOUSE) == 0)
+		return;
 
 	switch (button) {
 	case AG_MOUSE_MIDDLE:
@@ -185,10 +188,12 @@ MouseButtonUp(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Scrollview *sv = AG_SCROLLVIEW_SELF();
-	const int button = AG_INT(1);
+	AG_Scrollview *sv = obj;
+
+	if ((sv->flags & AG_SCROLLVIEW_BY_MOUSE) == 0)
+		return;
 
 	switch (button) {
 	case AG_MOUSE_MIDDLE:
@@ -274,10 +279,6 @@ AG_ScrollviewNew(void *parent, Uint flags)
 		WIDGET(sv)->flags |= AG_WIDGET_UNFOCUSED_MOTION |
 	                             AG_WIDGET_UNFOCUSED_BUTTONDOWN |
 			             AG_WIDGET_UNFOCUSED_BUTTONUP;
-
-		AG_SetEvent(sv, "mouse-button-down", MouseButtonDown, NULL);
-		AG_SetEvent(sv, "mouse-button-up", MouseButtonUp, NULL);
-		AG_SetEvent(sv, "mouse-motion", MouseMotion, NULL);
 	}
 	AG_ScrollviewSetIncrement(sv, 10);
 	AG_ObjectAttach(parent, sv);
@@ -520,7 +521,15 @@ AG_WidgetClass agScrollviewClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

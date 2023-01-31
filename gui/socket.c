@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -239,7 +239,7 @@ Draw(void *_Nonnull obj)
 	}
 
 	if (sock->icon) {
-		AGWIDGET_OPS(sock->icon)->draw(sock->icon);
+		WIDGET_OPS(sock->icon)->draw(sock->icon);
 	}
 	if (sock->overlayFn) {
 		AG_PostEventByPtr(sock, sock->overlayFn, NULL);
@@ -330,12 +330,10 @@ SetCount(AG_Variable *_Nonnull binding, void *_Nonnull p, int v)
 #endif
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	AG_Socket *sock = AG_SOCKET_SELF();
+	AG_Socket *sock = obj;
 	AG_Variable *binding;
-	const int x = AG_INT(1);
-	const int y = AG_INT(2);
 	void *pState;
 
 	if (AG_WidgetDisabled(sock))
@@ -400,11 +398,10 @@ IconButtonUp(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Socket *sock = AG_SOCKET_SELF();
+	AG_Socket *sock = obj;
 	AG_Window *winParent = WIDGET(sock)->window;
-	const int button = AG_INT(1);
 	AG_Variable *binding;
 	void *pState;
 	int newState;
@@ -463,20 +460,16 @@ MouseButtonDown(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Socket *sock = AG_SOCKET_SELF();
-	const int button = AG_INT(1);
+	AG_Socket *sock = obj;
 	AG_Variable *binding;
 	void *pState;
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
-		
+
 	if (AG_WidgetDisabled(sock) ||
 	    x < 0 || y < 0 ||
-	    x > WIDTH(sock) || y > HEIGHT(sock)) {
+	    x > WIDTH(sock) || y > HEIGHT(sock))
 		return;
-	}
 	
 	binding = AG_GetVariable(sock, "state", &pState);
 	if (GetState(binding, pState) && button == AG_MOUSE_LEFT &&
@@ -623,10 +616,6 @@ Init(void *_Nonnull obj)
 	sock->removeFn = NULL;
 	sock->overlayFn = NULL;
 
-	AG_SetEvent(sock, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(sock, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(sock, "mouse-motion", MouseMotion, NULL);
-	
 	AG_BindInt(sock, "state", &sock->state);
 	AG_BindInt(sock, "count", &sock->count);
 
@@ -652,15 +641,23 @@ AG_WidgetClass agSocketClass = {
 		sizeof(AG_Socket),
 		{ 0,0 },
 		Init,
-		NULL,    /* reset */
-		NULL,    /* destroy */
-		NULL,    /* load */
-		NULL,    /* save */
-		NULL     /* edit */
+		NULL,		/* reset */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	Draw,
 	SizeRequest,
-	NULL             /* size_allocate */  
+	NULL,			/* size_allocate */  
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

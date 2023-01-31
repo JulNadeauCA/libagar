@@ -193,7 +193,15 @@ AG_WidgetClass agMPaneClass = {
 	},
 	Draw,
 	NULL,			/* size_request */
-	NULL			/* size_allocate */
+	NULL,			/* size_allocate */
+	NULL,			/* mouse_button_down */
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

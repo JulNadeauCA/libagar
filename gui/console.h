@@ -39,36 +39,35 @@ typedef struct ag_console_file {
 } AG_ConsoleFile;
 
 typedef struct ag_console {
-	struct ag_widget wid;		/* AG_Widget -> AG_Console */
+	struct ag_widget wid;           /* AG_Widget -> AG_Console */
 
 	Uint flags;
-#define AG_CONSOLE_HFILL	0x01	/* Fill available width */
-#define AG_CONSOLE_VFILL	0x02	/* Fill available height */
-#define AG_CONSOLE_NOAUTOSCROLL	0x04	/* Scroll new lines are added */
-#define AG_CONSOLE_NOPOPUP	0x08	/* Disable popup menus */
-#define AG_CONSOLE_EXPAND	(AG_CONSOLE_HFILL|AG_CONSOLE_VFILL)
-#define AG_CONSOLE_SELECTING	0x10	/* Selection in progress */
-#define AG_CONSOLE_BEGIN_SELECT 0x20	/* Flag for beginSelectTo */
-	int lineScrollAmount;
-	int lineskip;			/* Space between lines */
-	int xOffs;			/* Horizontal display offset (px) */
+#define AG_CONSOLE_HFILL        0x01             /* Fill available width */
+#define AG_CONSOLE_VFILL        0x02             /* Fill available height */
+#define AG_CONSOLE_NOAUTOSCROLL 0x04             /* Disable auto-scrolling */
+#define AG_CONSOLE_NOPOPUP      0x08             /* Disable popup menus */
+#define AG_CONSOLE_SELECTING    0x10             /* Selection is in progress */
+#define AG_CONSOLE_BEGIN_SELECT 0x20             /* Selection initiation flag */
+#define AG_CONSOLE_EXPAND       (AG_CONSOLE_HFILL | AG_CONSOLE_VFILL)
+	int lineScrollAmount;                    /* Line scrolling increment */
+	int lineskip;                            /* Space between lines */
+	int xOffs;                               /* Horiz display offset (px) */
 
-	AG_ConsoleLine *_Nullable *_Nonnull lines; /* Lines in buffer */
-	Uint                               nLines; /* Line count */
+	AG_ConsoleLine *_Nullable *_Nonnull lines;  /* Lines in buffer */
+	Uint                               nLines;  /* Line count */
 
-	int wMax;			/* Width of widest line seen (px) */
+	int wMax;                                /* Width of widest line (px) */
+	Uint rOffs;                              /* Row display offset */
+	Uint rVisible;                           /* Visible line count */
+	AG_Scrollbar *_Nonnull vBar;             /* Vert hideable scrollbar */
+	AG_Scrollbar *_Nonnull hBar;             /* Horiz hideable scrollbar */
+	AG_Rect r;                               /* View area */
+	Uint *_Nullable scrollTo;                /* Scrolling request */
+	int pos, sel;                            /* Position and selection */
 
-	Uint rOffs;			/* Row display offset */
-	Uint rVisible;			/* Visible line count */
-	AG_Scrollbar *_Nonnull vBar;	/* Vertical scrollbar */
-	AG_Scrollbar *_Nonnull hBar;	/* Horizontal scrollbar */
-	AG_Rect r;			/* View area */
-	Uint *_Nullable scrollTo;	/* Scrolling request */
-	int pos, sel;			/* Position and selection */
-
-	struct ag_popup_menu *_Nullable pm;	/* Active popup menu */
-	AG_Timer beginSelectTo;			/* Timer for double-click */
-	AG_TAILQ_HEAD_(ag_console_file) files;	/* Files being monitored */
+	struct ag_popup_menu *_Nullable pm;      /* Active popup menu */
+	AG_Timer beginSelectTo;	                 /* Timer for double-click */
+	AG_TAILQ_HEAD_(ag_console_file) files;   /* Files being monitored */
 } AG_Console;
 
 #define AGCONSOLE(obj)            ((AG_Console *)(obj))

@@ -162,13 +162,11 @@ IntersectItem(AG_MenuItem *_Nonnull mi, int x, int y, int *_Nonnull hLbl)
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	AG_Menu *m = AG_MENU_SELF();
-	const int x = AG_INT(1);
-	const int y = AG_INT(2);
-	const int bPad = WIDGET(m)->paddingBottom - 1;
+	AG_Menu *m = obj;
 	AG_MenuItem *mi;
+	const int bPad = WIDGET(m)->paddingBottom - 1;
 	int hLbl;
 
 	if (!m->selecting || y < 0 || y >= HEIGHT(m)-1)
@@ -234,6 +232,9 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	AG_Menu *m;
 	int x=x1, y=y1;
 	Uint winFlags;
+#ifdef AG_DEBUG
+	int debugLvlSave;
+#endif
 
 	AG_MENU_ITEM_IS_VALID(mi);
 
@@ -312,6 +313,8 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	              AG_WINDOW_WM_DROPDOWN_MENU :
 		      AG_WINDOW_WM_POPUP_MENU;
 	AG_ObjectSetName(win, "_menu%u", agMenuCounter++);
+	
+	Debug_Mute(debugLvlSave);
 
 	AG_SetStyle(win, "padding", "0");
 
@@ -354,6 +357,8 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 #endif
 		}
 	}
+	
+	Debug_Unmute(debugLvlSave);
 
 
 	if (winParent) {
@@ -446,11 +451,9 @@ AG_MenuSetLabelPadding(AG_Menu *m, int lPad, int rPad, int tPad, int bPad)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Menu *m = AG_MENU_SELF();
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
+	AG_Menu *m = obj;
 	const int bPad = WIDGET(m)->paddingBottom;
 	AG_MenuItem *mi;
 	int hLbl;
@@ -609,7 +612,7 @@ KeyDown_Item(AG_MenuItem *mi, AG_KeySym ksym, AG_KeyMod kmod)
 		if ((m->flags & AG_MENU_NO_BOOL_MSG) == 0) {
 			AG_TextTmsg(AG_MSG_INFO,
 			    (m->flags & AG_MENU_FAST_BOOL_MSG) ? 400 : 1000,
-			    "[%s] " AGSI_ARROW_LEFT " %s",
+			    "[%s] " AGSI_L_ARROW " %s",
 			    mi->text, AG_MenuBoolGet(mi) ? _("True") : _("False"));
 		}
 		return (1);
@@ -618,11 +621,9 @@ KeyDown_Item(AG_MenuItem *mi, AG_KeySym ksym, AG_KeyMod kmod)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Menu *m = AG_MENU_SELF();
-	AG_KeySym ks = (AG_KeySym)AG_INT(1);
-	AG_KeyMod kmod = (AG_KeyMod)AG_INT(2);
+	AG_Menu *m = obj;
 
 	if (m->style != AG_MENU_GLOBAL &&
 	    (WIDGET(m)->window == NULL || !AG_WindowIsFocused(WIDGET(m)->window)))
@@ -659,11 +660,8 @@ Init(void *_Nonnull obj)
 	m->r.w = 0;
 	m->r.h = 0;
 
-	AG_SetEvent(m, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(m, "mouse-motion", MouseMotion, NULL);
 	AG_AddEvent(m, "font-changed", FontChanged, NULL);
 	AG_AddEvent(m, "palette-changed", FontChanged, NULL);
-	AG_SetEvent(m, "key-down", KeyDown, NULL);
 }
 
 /* Change the icon associated with a menu item. */
@@ -1819,7 +1817,15 @@ AG_WidgetClass agMenuClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	NULL,			/* mouse_button_up */
+	MouseMotion,
+	KeyDown,
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

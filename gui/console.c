@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * Copyright (c) 2019 Charles A Daniels <charles@cdaniels.net>
  * All rights reserved.
  *
@@ -588,39 +588,14 @@ PopupMenu(AG_Event *_Nonnull event)
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	AG_Console *cons = AG_CONSOLE_SELF();
-	const int x = AG_INT(1);
-	const int y = AG_INT(2);
+	AG_Console *cons = obj;
 	int newPos, newSel;
 
-	if ((cons->flags & AG_CONSOLE_SELECTING) == 0) {
+	if ((cons->flags & AG_CONSOLE_SELECTING) == 0)
 		return;
-	}
-	if (x < cons->r.x) {
-		const int ssa = AG_GetInt(cons->hBar,"inc");
 
-		if (cons->xOffs > 0) {
-			if ((cons->xOffs -= ssa) < 0) {
-				cons->xOffs = 0;
-			}
-			AG_Redraw(cons);
-		}
-		return;
-	} else if (x > cons->r.x + cons->r.w) {
-		const int ssa = AG_GetInt(cons->hBar,"inc");
-		const int wMax = cons->wMax - WIDTH(cons);
-
-		if (cons->xOffs < wMax) {
-			cons->xOffs += ssa;
-			if (cons->xOffs > wMax) {
-				cons->xOffs = wMax;
-			}
-			AG_Redraw(cons);
-		}
-		return;
-	}
 	if (y < 0 && cons->rOffs > 0) {
 		cons->rOffs--;
 		AG_Redraw(cons);
@@ -640,6 +615,28 @@ MouseMotion(AG_Event *_Nonnull event)
 				}
 				AG_Redraw(cons);
 			}
+		}
+	}
+
+	if (x < cons->r.x) {
+		const int ssa = AG_GetInt(cons->hBar,"inc");
+
+		if (cons->xOffs > 0) {
+			if ((cons->xOffs -= ssa) < 0) {
+				cons->xOffs = 0;
+			}
+			AG_Redraw(cons);
+		}
+	} else if (x > cons->r.x + cons->r.w) {
+		const int ssa = AG_GetInt(cons->hBar,"inc");
+		const int wMax = cons->wMax - WIDTH(cons);
+
+		if (cons->xOffs < wMax) {
+			cons->xOffs += ssa;
+			if (cons->xOffs > wMax) {
+				cons->xOffs = wMax;
+			}
+			AG_Redraw(cons);
 		}
 	}
 }
@@ -754,8 +751,6 @@ Init(void *_Nonnull obj)
 	AG_ActionOnKey(cons, AG_KEY_HOME,     AG_KEYMOD_ANY, "GoToTop");
 	AG_ActionOnKey(cons, AG_KEY_END,      AG_KEYMOD_ANY, "GoToBottom");
 
-	AG_SetEvent(cons, "mouse-motion", MouseMotion, NULL);
-
 	AG_AddEvent(cons, "font-changed",     StyleChanged, NULL);
 	AG_AddEvent(cons, "palette-changed",  StyleChanged, NULL);
 	AG_AddEvent(cons, "widget-shown",     StyleChanged, NULL);
@@ -845,31 +840,30 @@ Draw(void *_Nonnull p)
 	     lnIdx < cons->nLines && r.y < WIDGET(cons)->h;
 	     lnIdx++) {
 		AG_ConsoleLine *ln = cons->lines[lnIdx];
-		int isSelected;
+		AG_Surface *S;
+		int isSel;
 
 		if ((pos != -1) &&
 		    ((lnIdx == pos) ||
 		     ((sel > 0 && lnIdx > pos && lnIdx <= pos+sel+1) ||
 		      (sel < 0 && lnIdx < pos && lnIdx >= pos+sel-1)))) {
-			isSelected = 1;
+			isSel = 1;
 		} else {
-			isSelected = 0;
+			isSel = 0;
 		}
 
 		if (ln->text[0] == '\0') {
 			r.y += cons->lineskip;
 			continue;
 		}
-		if (ln->surface[isSelected] == -1) {
-			AG_Surface *S;
-
+		if (ln->surface[isSel] == -1) {
 			if (ln->parent) {	/* Take the parent's color. */
 				AG_TextColor((ln->parent->c.a != 0) ?
 					     &ln->parent->c : cText);
 			} else {
 				AG_TextColor((ln->c.a != 0) ? &ln->c : cText);
 			}
-			AG_TextBGColor(isSelected ? cSel : cBg);
+			AG_TextBGColor(isSel ? cSel : cBg);
 
 			if ((S = AG_TextRender(ln->text)) == NULL) {
 				r.y += cons->lineskip;
@@ -880,15 +874,18 @@ Draw(void *_Nonnull p)
 				r.y += cons->lineskip;
 				continue;
 			}
-			ln->surface[isSelected] = AG_WidgetMapSurface(cons, S);
+			ln->surface[isSel] = AG_WidgetMapSurface(cons, S);
+		} else {
+			S = WSURFACE(cons, ln->surface[isSel]);
 		}
 
 		/*
 		 * Blit rendered label -> display.
 		 * Make extra space for group indicator.
 		 */
-		AG_WidgetBlitSurface(cons, ln->surface[isSelected],
-		    (ln->parent) ? r.x + 9 : r.x, r.y);
+		AG_WidgetBlitSurface(cons, ln->surface[isSel],
+		    (ln->parent != NULL) ? r.x + 9 : r.x,           /* XXX */
+		    r.y);
 
 		if (ln->parent) {			/* Group indicator */
 			AG_DrawLine(cons, r.x + 5, r.y,
@@ -1458,7 +1455,15 @@ AG_WidgetClass agConsoleClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	NULL,			/* mouse_button_down */
+	NULL,			/* mouse_button_up */
+	MouseMotion,
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -73,12 +73,11 @@ M_MatviewSetMatrix(M_Matview *mv, M_Matrix *M)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	M_Matview *mv = M_MATVIEW_SELF();
-	int keysym = AG_INT(1);
+	M_Matview *mv = obj;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_G:
 		M_MatviewSetDisplayMode(mv, M_MATVIEW_GREYSCALE);
 		break;
@@ -99,11 +98,9 @@ KeyDown(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Button *bu = AG_BUTTON_SELF();
-
-	AG_WidgetFocus(bu);
+	AG_WidgetFocus(obj);
 }
 
 static void
@@ -111,7 +108,7 @@ Init(void *_Nonnull obj)
 {
 	M_Matview *mv = obj;
 
-	WIDGET(mv)->flags |= AG_WIDGET_EXPAND|AG_WIDGET_FOCUSABLE;
+	WIDGET(mv)->flags |= AG_WIDGET_EXPAND | AG_WIDGET_FOCUSABLE;
 
 	mv->mode = M_MATVIEW_NUMERICAL;
 	mv->matrix = NULL;
@@ -138,9 +135,6 @@ Init(void *_Nonnull obj)
 	AG_SetInt(mv->vBar, "min", 0);
 
 	AG_TextSize("-00", &mv->wEnt, &mv->hEnt);
-
-	AG_SetEvent(mv, "key-down", KeyDown, NULL);
-	AG_SetEvent(mv, "mouse-button-down", MouseButtonDown, NULL);
 }
 
 static void
@@ -337,15 +331,23 @@ AG_WidgetClass mMatviewClass = {
 		sizeof(M_Matview),
 		{ 0,0 },
 		Init,
-		NULL,			/* reset */
+		NULL,		/* reset */
 		Destroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	KeyDown,
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* ENABLE_GUI */

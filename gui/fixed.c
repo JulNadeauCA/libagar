@@ -58,10 +58,9 @@ AG_FixedNew(void *parent, Uint flags)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Fixed *fx = AG_FIXED_SELF();
-	AG_Window *wParent = AG_ParentWindow(fx);
+	AG_Window *wParent = AG_ParentWindow(obj);
 
 	if (!AG_WindowIsFocused(wParent))
 		AG_WindowFocus(wParent);
@@ -76,8 +75,6 @@ Init(void *_Nonnull obj)
 	fx->style = AG_FIXED_STYLE_WELL;		/* 3D well */
 	fx->wPre = 0;
 	fx->hPre = 0;
-
-	AG_SetEvent(fx, "mouse-button-down", MouseButtonDown, NULL);
 }
 
 void
@@ -267,7 +264,15 @@ AG_WidgetClass agFixedClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

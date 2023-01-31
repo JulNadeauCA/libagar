@@ -93,6 +93,7 @@ Init(void *_Nonnull obj)
 	icon->wSaved = -1;
 	icon->hSaved = -1;
 	AG_ColorNone(&icon->cBackground);
+
 	AG_InitTimer(&icon->toDblClick, "dblClick", 0);
 }
 
@@ -272,7 +273,15 @@ AG_WidgetClass agIconClass = {
 	},
 	Draw,
 	SizeRequest,
-	NULL			/* size_allocate */
+	NULL,			/* size_allocate */
+	NULL,			/* mouse_button_down */
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

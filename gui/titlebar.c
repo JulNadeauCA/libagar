@@ -121,9 +121,12 @@ AG_TitlebarNew(void *parent, Uint flags)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Titlebar *tbar = AG_TITLEBAR_SELF();
+	AG_Titlebar *tbar = obj;
+
+	if (button != AG_MOUSE_LEFT)
+		return;
 
 	tbar->flags |= AG_TITLEBAR_PRESSED;
 
@@ -134,9 +137,12 @@ MouseButtonDown(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Titlebar *tbar = AG_TITLEBAR_SELF();
+	AG_Titlebar *tbar = obj;
+
+	if (button != AG_MOUSE_LEFT)
+		return;
 	
 	tbar->flags &= ~(AG_TITLEBAR_PRESSED);
 	
@@ -157,9 +163,6 @@ Init(void *_Nonnull obj)
 	tbar->flags = 0;
 	tbar->win = NULL;
 	tbar->label = AG_LabelNewS(tbar, AG_LABEL_HFILL, _("Untitled"));
-
-	AG_SetEvent(tbar, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(tbar, "mouse-button-up", MouseButtonUp, NULL);
 }
 
 static void
@@ -199,6 +202,14 @@ AG_WidgetClass agTitlebarClass = {
 	Draw,
 	NULL,			/* size_request */
 	NULL,			/* size_allocate */
+	MouseButtonDown,
+	MouseButtonUp,
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

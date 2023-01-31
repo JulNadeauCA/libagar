@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -410,20 +410,16 @@ OnReshape(AG_Event *_Nonnull event)
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	SG_View *sv = SG_VIEW_SELF();
-/*	const int x = AG_INT(1); */
-/*	const int y = AG_INT(2); */
-	const int xrel = AG_INT(3);
-	const int yrel = AG_INT(4);
-	const int bs = AG_INT(5);
+	SG_View *sv = obj;
+	const AG_MouseButton btnState = WIDGET(sv)->drv->mouse->btnState;
 
-	if (bs & AG_MOUSE_LEFT) {
+	if (btnState & AG_MOUSE_LEFT) {
 		if (AG_GetModState(sv) & AG_KEYMOD_CTRL) {
-			SG_CameraRotMouse(sv->cam, sv, xrel, yrel);
+			SG_CameraRotMouse(sv->cam, sv, dx,dy);
 		} else {
-			SG_CameraMoveMouse(sv->cam, sv, xrel, yrel, 0);
+			SG_CameraMoveMouse(sv->cam, sv, dx,dy, 0);
 		}
 	}
 }
@@ -599,13 +595,11 @@ out:
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	SG_View *sv = SG_VIEW_SELF();
-	const int keysym = AG_INT(1);
-	const int kmod = AG_INT(2);
+	SG_View *sv = obj;
 	
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_LEFT:
 		if (kmod & AG_KEYMOD_CTRL) {
 			AG_AddTimer(sv, &sv->toRot, sv->rot[0].vMin,
@@ -659,16 +653,15 @@ KeyDown(AG_Event *_Nonnull event)
 		    CamRotateTimeout, "%p,%f", &sv->rot[2], +1.0f);
 		break;
 	}
-	sv->lastKeyDown = keysym;
+	sv->lastKeyDown = ks;
 }
 
 static void
-KeyUp(AG_Event *_Nonnull event)
+KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	SG_View *sv = SG_VIEW_SELF();
-	const int keysym = AG_INT(1);
+	SG_View *sv = obj;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_LEFT:
 	case AG_KEY_RIGHT:
 	case AG_KEY_UP:
@@ -677,7 +670,7 @@ KeyUp(AG_Event *_Nonnull event)
 	case AG_KEY_PAGEDOWN:
 	case AG_KEY_DELETE:
 	case AG_KEY_END:
-		if (keysym == sv->lastKeyDown) {
+		if (ks == sv->lastKeyDown) {
 			AG_DelTimer(sv, &sv->toRot);
 			AG_DelTimer(sv, &sv->toMove);
 		}
@@ -686,12 +679,9 @@ KeyUp(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	SG_View *sv = SG_VIEW_SELF();
-	const int button = AG_INT(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
+	SG_View *sv = obj;
 
 	if (!AG_WidgetIsFocused(sv)) {
 		AG_WidgetFocus(sv);
@@ -710,20 +700,6 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		if ((AG_GetModState(sv) & AG_KEYMOD_CTRL) == 0) {
 			SelectByMouse(sv, x,y);
 		}
-		break;
-	}
-}
-
-static void
-MouseButtonUp(AG_Event *_Nonnull event)
-{
-/*	SG_View *sv = SG_VIEW_SELF(); */
-	const int button = AG_INT(1);
-
-	switch (button) {
-	case AG_MOUSE_LEFT:
-		break;
-	default:
 		break;
 	}
 }
@@ -831,11 +807,6 @@ Init(void *_Nonnull obj)
 	AG_AddEvent(sv, "widget-hidden", OnHide, NULL);
 	AG_SetEvent(sv, "widget-reshape", OnReshape, NULL);
 	AG_SetEvent(sv, "widget-overlay", OnOverlay, NULL);
-	AG_SetEvent(sv, "mouse-motion", MouseMotion, NULL);
-	AG_SetEvent(sv, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(sv, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(sv, "key-down", KeyDown, NULL);
-	AG_SetEvent(sv, "key-up", KeyUp, NULL);
 
 /*	AG_RedrawOnTick(sv, 1000); */
 }
@@ -865,5 +836,13 @@ AG_WidgetClass sgViewClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	NULL,			/* button_up */
+	MouseMotion,
+	KeyDown,
+	KeyUp,
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };

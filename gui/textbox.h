@@ -22,7 +22,7 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_HFILL         0x000020
 #define AG_TEXTBOX_VFILL         0x000040
 #define AG_TEXTBOX_LOWERCASE     0x000080 /* Render in lowercase */
-#define AG_TEXTBOX_EXPAND        (AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL)
+#define AG_TEXTBOX_EXPAND        (AG_TEXTBOX_HFILL | AG_TEXTBOX_VFILL)
 #define AG_TEXTBOX_READONLY      0x000100 /* Disable user input */
 #define AG_TEXTBOX_INT_ONLY      0x000200 /* Accepts only valid strtol() input */
 #define AG_TEXTBOX_FLT_ONLY      0x000400 /* Accepts only valid strtof() input */

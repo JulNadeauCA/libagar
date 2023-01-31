@@ -151,9 +151,9 @@ AG_BoxSetLabelS(AG_Box *box, const char *s)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Box *box = AG_BOX_SELF();
+	AG_Box *box = obj;
 	AG_Window *wParent = AG_ParentWindow(box);
 
 	if (!AG_WindowIsFocused(wParent))
@@ -174,8 +174,6 @@ Init(void *_Nonnull obj)
 	box->lbl = NULL;
 	box->hAlign = AG_BOX_LEFT;
 	box->vAlign = AG_BOX_TOP;
-
-	AG_SetEvent(box, "mouse-button-down", MouseButtonDown, NULL);
 }
 
 static void
@@ -694,7 +692,15 @@ AG_WidgetClass agBoxClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

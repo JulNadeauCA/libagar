@@ -71,13 +71,15 @@ SetIdentity(GLfloat *_Nonnull M, GLenum which)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_GLView *glv = AG_GLVIEW_SELF();
+	AG_GLView *glv = obj;
 
 	if ((WIDGET(glv)->flags & AG_WIDGET_FOCUSABLE) &&
 	    !AG_WidgetIsFocused(glv))
 		AG_WidgetFocus(glv);
+
+	AG_PostEvent(glv, "mouse-button-down", "%i,%i,%i", button, x, y);
 }
 
 static void
@@ -114,7 +116,6 @@ Init(void *_Nonnull obj)
 	
 	AG_ColorBlack(&glv->bgColor);
 
-	AG_SetEvent(glv, "mouse-button-down", MouseButtonDown, NULL);
 	AG_AddEvent(glv, "attached", OnAttach, NULL);
 }
 
@@ -459,7 +460,15 @@ AG_WidgetClass agGLViewClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* HAVE_OPENGL */

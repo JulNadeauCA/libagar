@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -200,16 +200,13 @@ VG_ApplyConstraints(VG_View *vv, VG_Vector *pos)
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int mx, int my, int dx, int dy)
 {
-	VG_View *vv = VG_VIEW_SELF();
+	VG_View *vv = obj;
 	VG_Tool *tool = VG_CURTOOL(vv);
 	VG_Vector vCt;
-	const int xCurs = AG_INT(1);
-	const int yCurs = AG_INT(2);
-	const float xRel = (float)AG_INT(3);
-	const float yRel = (float)AG_INT(4);
-	const int state = AG_INT(5);
+	const float xRel = (float)mx;
+	const float yRel = (float)my;
 	float x, y;
 
 	if (vv->mouse.panning) {
@@ -221,7 +218,7 @@ MouseMotion(AG_Event *_Nonnull event)
 	if (vv->vg == NULL)
 		return;
 
-	VG_GetVGCoords(vv, xCurs,yCurs, &vCt);
+	VG_GetVGCoords(vv, mx,my, &vCt);
 	x = vCt.x;
 	y = vCt.y;
 
@@ -232,8 +229,7 @@ MouseMotion(AG_Event *_Nonnull event)
 		tool->vCursor = vCt;
 		AG_Redraw(vv);
 		if (tool->ops->mousemotion(tool, vCt,
-		    VG_ScaleVector(1.0f/vv->scale,VGVECTOR(xRel,yRel)),
-		    state) == 1) {
+		    VG_ScaleVector(1.0f / vv->scale, VGVECTOR(xRel,yRel))) == 1) {
 			vv->mouse.x = x;
 			vv->mouse.y = y;
 			return;
@@ -245,21 +241,18 @@ MouseMotion(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int mx, int my)
 {
-	VG_View *vv = VG_VIEW_SELF();
+	VG_View *vv = obj;
 	VG_Tool *tool = VG_CURTOOL(vv);
-	const int button = AG_INT(1);
-	const int xCurs = AG_INT(2);
-	const int yCurs = AG_INT(3);
 	float x, y;
 	VG_Vector vCt;
 	
 	if (vv->vg == NULL ||
-	    AG_ExecMouseAction(vv, AG_ACTION_ON_BUTTONDOWN, button, xCurs, yCurs) == 1)
+	    AG_ExecMouseAction(vv, AG_ACTION_ON_BUTTONDOWN, button, mx,my) == 1)
 		return;
 	
-	VG_GetVGCoords(vv, xCurs,yCurs, &vCt);
+	VG_GetVGCoords(vv, mx,my, &vCt);
 	x = vCt.x;
 	y = vCt.y;
 
@@ -284,21 +277,18 @@ MouseButtonDown(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int mx, int my)
 {
-	VG_View *vv = VG_VIEW_SELF();
+	VG_View *vv = obj;
 	VG_Tool *tool = VG_CURTOOL(vv);
-	const int button = AG_INT(1);
-	const int xCurs = AG_INT(2);
-	const int yCurs = AG_INT(3);
 	float x, y;
 	VG_Vector vCt;
 	
 	if (vv->vg == NULL ||
-	    AG_ExecMouseAction(vv, AG_ACTION_ON_BUTTONUP, button, xCurs, yCurs) == 1)
+	    AG_ExecMouseAction(vv, AG_ACTION_ON_BUTTONUP, button, mx,my) == 1)
 		return;
 	
-	VG_GetVGCoords(vv, xCurs,yCurs, &vCt);
+	VG_GetVGCoords(vv, mx,my, &vCt);
 	x = vCt.x;
 	y = vCt.y;
 	
@@ -317,18 +307,16 @@ MouseButtonUp(AG_Event *_Nonnull event)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	VG_View *vv = VG_VIEW_SELF();
+	VG_View *vv = obj;
 	VG_Tool *tool = VG_CURTOOL(vv);
-	const int sym = AG_INT(1);
-	const int mod = AG_INT(2);
-	const AG_Char ch = AG_CHAR(3);
 	VG_ToolCommand *cmd;
 	
 	if (vv->vg == NULL)
 		return;
-	if (AG_ExecKeyAction(vv, AG_ACTION_ON_KEYDOWN, sym, mod))
+
+	if (AG_ExecKeyAction(vv, AG_ACTION_ON_KEYDOWN, ks, kmod))
 		return;
 
 	if (tool == NULL) {
@@ -336,12 +324,12 @@ KeyDown(AG_Event *_Nonnull event)
 	}
 	AG_Redraw(vv);
 	if (tool->ops->keydown != NULL &&
-	    tool->ops->keydown(tool, sym, mod, ch) == 1) {
+	    tool->ops->keydown(tool, ks, kmod, ch) == 1) {
 		return;
 	}
 	TAILQ_FOREACH(cmd, &tool->cmds, cmds) {
-		if (cmd->kSym == sym &&
-		    (cmd->kMod == AG_KEYMOD_NONE || mod & cmd->kMod)) {
+		if (cmd->kSym == ks &&
+		    (cmd->kMod == AG_KEYMOD_NONE || (kmod & cmd->kMod))) {
 			AG_PostEventByPtr(tool->vgv, cmd->fn, "%p", tool);
 			AG_Redraw(vv);
 		}
@@ -349,24 +337,21 @@ KeyDown(AG_Event *_Nonnull event)
 }
 
 static void
-KeyUp(AG_Event *_Nonnull event)
+KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	VG_View *vv = VG_VIEW_SELF();
+	VG_View *vv = obj;
 	VG_Tool *tool = VG_CURTOOL(vv);
-	const int sym = AG_INT(1);
-	const int mod = AG_INT(2);
-	const AG_Char ch = AG_CHAR(3);
 	
 	if (vv->vg == NULL)
 		return;
-	if (AG_ExecKeyAction(vv, AG_ACTION_ON_KEYUP, sym, mod))
+	if (AG_ExecKeyAction(vv, AG_ACTION_ON_KEYUP, ks, kmod))
 		return;
 	
 	AG_Redraw(vv);
 
 	if (tool != NULL &&
 	    tool->ops->keyup != NULL)
-		tool->ops->keyup(tool, sym, mod, ch);
+		tool->ops->keyup(tool, ks, kmod, ch);
 }
 
 static void
@@ -481,31 +466,31 @@ Init(void *_Nonnull obj)
 	VG_ViewSetScale(vv, 0);
 	
 	AG_AddEvent(vv, "widget-shown", OnShow, NULL);
-	AG_SetEvent(vv, "mouse-motion", MouseMotion, NULL);
-	AG_SetEvent(vv, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(vv, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(vv, "key-down", KeyDown, NULL);
-	AG_SetEvent(vv, "key-up", KeyUp, NULL);
 
-	AG_ActionSetInt(vv, "Enable panning",	&vv->mouse.panning, 1);
-	AG_ActionSetInt(vv, "Disable panning",	&vv->mouse.panning, 0);
-	AG_ActionFn(vv, "Zoom in",		ZoomInOut, "%i", 1);
-	AG_ActionFn(vv, "Zoom out",		ZoomInOut, "%i", -1);
-	AG_ActionFn(vv, "Zoom in maximum",	ZoomInMax, NULL);
-	AG_ActionFn(vv, "Zoom out maximum",	ZoomOutMax, NULL);
-	AG_ActionFn(vv, "Scale 1:1",		SetScale, "%i", 0);
-	AG_ActionFn(vv, "Scale 1:2",		SetScale, "%i", 1);
-	AG_ActionFn(vv, "Scale 1:3",		SetScale, "%i", 2);
-	AG_ActionFn(vv, "Scale 1:9",		SetScale, "%i", 8);
+	AG_ActionSetInt(vv, "Enable panning",  &vv->mouse.panning, 1);
+	AG_ActionSetInt(vv, "Disable panning", &vv->mouse.panning, 0);
 
-	AG_ActionOnButtonDown(vv, AG_MOUSE_MIDDLE,		"Enable panning");
-	AG_ActionOnButtonUp(vv,	  AG_MOUSE_MIDDLE,		"Disable panning");
-	AG_ActionOnButton(vv,     AG_MOUSE_WHEELUP,		"Zoom in");
-	AG_ActionOnButton(vv,     AG_MOUSE_WHEELDOWN,		"Zoom out");
-	AG_ActionOnKeyDown(vv,    AG_KEY_1, AG_KEYMOD_ANY,	"Scale 1:1");
-	AG_ActionOnKeyDown(vv,    AG_KEY_2, AG_KEYMOD_ANY,	"Scale 1:2");
-	AG_ActionOnKeyDown(vv,    AG_KEY_3, AG_KEYMOD_ANY,	"Scale 1:3");
-	AG_ActionOnKeyDown(vv,    AG_KEY_9, AG_KEYMOD_ANY,	"Scale 1:9");
+	AG_ActionFn(vv, "Zoom in",  ZoomInOut, "%i", 1);
+	AG_ActionFn(vv, "Zoom out", ZoomInOut, "%i", -1);
+
+	AG_ActionFn(vv, "Zoom in max",  ZoomInMax, NULL);
+	AG_ActionFn(vv, "Zoom out max", ZoomOutMax, NULL);
+
+	AG_ActionFn(vv, "Scale 1:1", SetScale, "%i", 0);
+	AG_ActionFn(vv, "Scale 1:2", SetScale, "%i", 1);
+	AG_ActionFn(vv, "Scale 1:3", SetScale, "%i", 2);
+	AG_ActionFn(vv, "Scale 1:9", SetScale, "%i", 8);
+
+	AG_ActionOnButtonDown(vv, AG_MOUSE_MIDDLE, "Enable panning");
+	AG_ActionOnButtonUp(vv,	  AG_MOUSE_MIDDLE, "Disable panning");
+
+	AG_ActionOnButton(vv, AG_MOUSE_WHEELUP,   "Zoom in");
+	AG_ActionOnButton(vv, AG_MOUSE_WHEELDOWN, "Zoom out");
+
+	AG_ActionOnKeyDown(vv, AG_KEY_1, AG_KEYMOD_ANY, "Scale 1:1");
+	AG_ActionOnKeyDown(vv, AG_KEY_2, AG_KEYMOD_ANY, "Scale 1:2");
+	AG_ActionOnKeyDown(vv, AG_KEY_3, AG_KEYMOD_ANY, "Scale 1:3");
+	AG_ActionOnKeyDown(vv, AG_KEY_9, AG_KEYMOD_ANY, "Scale 1:9");
 }
 
 static void
@@ -1131,5 +1116,13 @@ AG_WidgetClass vgViewClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	KeyDown,
+	KeyUp,
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };

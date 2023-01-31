@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,25 +85,26 @@ OverDiv(AG_Pane *_Nonnull pa, int pos)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Pane *pa = AG_PANE_SELF();
+	AG_Pane *pa = obj;
 	AG_Window *wParent = AG_ParentWindow(pa);
-	const int button = AG_INT(1);
+
+	if (button != AG_MOUSE_LEFT || (pa->flags & AG_PANE_UNMOVABLE))
+		return;
 
 	if (!AG_WindowIsFocused(wParent))
 		AG_WindowFocus(wParent);
 	
-	if (button == AG_MOUSE_LEFT &&
-	    !(pa->flags & AG_PANE_UNMOVABLE)) {
-		pa->dmoving = OverDiv(pa, (pa->type == AG_PANE_HORIZ) ? AG_INT(2) :
-		                                                        AG_INT(3));
-		if (pa->dmoving && WIDGET(pa)->window != NULL) {
-			/* Set up for receiving motion events exclusively. */
-			WIDGET(pa)->window->widExclMotion = WIDGET(pa);
-		}
-		AG_Redraw(pa);
+	pa->dmoving = OverDiv(pa, (pa->type == AG_PANE_HORIZ) ? x : y);
+
+	if (pa->dmoving && WIDGET(pa)->window != NULL) {
+		/*
+		 * Set up for receiving mouse-motion events exclusively.
+		 */
+		WIDGET(pa)->window->widExclMotion = WIDGET(pa);
 	}
+	AG_Redraw(pa);
 }
 
 /* Move a divider to the given position. */
@@ -159,13 +160,9 @@ AG_PaneMoveDividerPct(AG_Pane *pa, int pct)
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	AG_Pane *pa = AG_PANE_SELF();
-	const int x = AG_INT(1);
-	const int y = AG_INT(2);
-	const int dx = AG_INT(3);
-	const int dy = AG_INT(4);
+	AG_Pane *pa = obj;
 
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
@@ -220,9 +217,12 @@ MouseMotion(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Pane *pa = AG_PANE_SELF();
+	AG_Pane *pa = obj;
+
+	if (button != AG_MOUSE_LEFT)
+		return;
 
 	if (pa->dmoving) {
 		if (WIDGET(pa)->window != NULL) {
@@ -261,10 +261,6 @@ Init(void *_Nonnull obj)
 		pa->wReq[i] = -1;
 		pa->hReq[i] = -1;
 	}
-
-	AG_SetEvent(pa, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(pa, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(pa, "mouse-motion", MouseMotion, NULL);
 }
 
 /*
@@ -625,7 +621,15 @@ AG_WidgetClass agPaneClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

@@ -101,35 +101,33 @@ CursorOver(RG_TileviewHandle *_Nonnull th, int sx, int sy)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	RG_Tileview *tv = RG_TILEVIEW_SELF();
-	const int keysym = AG_INT(1);
-	const int keymod = AG_INT(2);
+	RG_Tileview *tv = obj;
 
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
-		RG_PixmapKeydown(tv, keysym);
+		RG_PixmapKeydown(tv, ks);
 		break;
 #if 0
 	case RG_TILEVIEW_SKETCH_EDIT:
-		RG_SketchKeyDown(tv, tv->tv_sketch.tel, keysym, keymod);
+		RG_SketchKeyDown(tv, tv->sketch.tel, ks, kmod);
 		break;
 #endif
 	default:
 		break;
 	}
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_Z:
-		if (keymod & AG_KEYMOD_CTRL) {
+		if (kmod & AG_KEYMOD_CTRL) {
 			switch (tv->state) {
 			case RG_TILEVIEW_PIXMAP_EDIT:
-				RG_PixmapUndo(tv, tv->tv_pixmap.tel);
+				RG_PixmapUndo(tv, tv->pixmap.tel);
 				break;
 #if 0
 			case RG_TILEVIEW_SKETCH_EDIT:
-				RG_SketchUndo(tv, tv->tv_sketch.tel);
+				RG_SketchUndo(tv, tv->sketch.tel);
 				break;
 #endif
 			default:
@@ -138,14 +136,14 @@ KeyDown(AG_Event *_Nonnull event)
 		}
 		break;
 	case AG_KEY_R:
-		if (keymod & AG_KEYMOD_CTRL) {
+		if (kmod & AG_KEYMOD_CTRL) {
 			switch (tv->state) {
 			case RG_TILEVIEW_PIXMAP_EDIT:
-				RG_PixmapRedo(tv, tv->tv_pixmap.tel);
+				RG_PixmapRedo(tv, tv->pixmap.tel);
 				break;
 #if 0
 			case RG_TILEVIEW_SKETCH_EDIT:
-				RG_SketchRedo(tv, tv->tv_sketch.tel);
+				RG_SketchRedo(tv, tv->sketch.tel);
 				break;
 #endif
 			default:
@@ -169,11 +167,9 @@ KeyDown(AG_Event *_Nonnull event)
 }
 
 static void
-KeyUp(AG_Event *_Nonnull event)
+KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	RG_Tileview *tv = RG_TILEVIEW_SELF();
-	const int keysym = AG_INT(1);
-/*	const int keymod = AG_INT(2); */
+	RG_Tileview *tv = obj;
 	
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
@@ -181,14 +177,14 @@ KeyUp(AG_Event *_Nonnull event)
 		break;
 #if 0
 	case RG_TILEVIEW_SKETCH_EDIT:
-		RG_SketchKeyUp(tv, tv->tv_sketch.tel, keysym, keymod);
+		RG_SketchKeyUp(tv, tv->sketch.tel, ks, kmod);
 		break;
 #endif
 	default:
 		break;
 	}
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_EQUALS:
 	case AG_KEY_MINUS:
 		AG_DelTimer(tv, &tv->zoomTo);
@@ -226,7 +222,7 @@ ToggleAttrib(RG_Tileview *_Nonnull tv, int sx, int sy)
 	
 	if (nx < 0 || nx >= t->nw ||
 	    ny < 0 || ny >= t->nh ||
-	    (tv->tv_attrs.nx == nx && tv->tv_attrs.ny == ny))
+	    (tv->attrs.nx == nx && tv->attrs.ny == ny))
 		return;
 
 	a = &RG_TILE_ATTR2(t,nx,ny);
@@ -236,8 +232,8 @@ ToggleAttrib(RG_Tileview *_Nonnull tv, int sx, int sy)
 		*a |= tv->edit_attr;
 	}
 
-	tv->tv_attrs.nx = nx;
-	tv->tv_attrs.ny = ny;
+	tv->attrs.nx = nx;
+	tv->attrs.ny = ny;
 
 	t->flags |= RG_TILE_DIRTY;
 	AG_Redraw(tv);
@@ -263,16 +259,13 @@ IncrementLayer(RG_Tileview *_Nonnull tv, int sx, int sy, int inc)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	RG_Tileview *tv = RG_TILEVIEW_SELF();
-	const int button = AG_INT(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
+	RG_Tileview *tv = obj;
 	RG_TileviewCtrl *ctrl;
-	RG_TileElement *tel = tv->tv_pixmap.tel;
-	int sx = (x - tv->xoffs)/tv->pxsz;
-	int sy = (y - tv->yoffs)/tv->pxsz;
+	RG_TileElement *tel = tv->pixmap.tel;
+	const int sx = (x - tv->xoffs) / tv->pxsz;
+	const int sy = (y - tv->yoffs) / tv->pxsz;
 	int i;
 
 	if (!AG_WidgetIsFocused(tv))
@@ -338,11 +331,11 @@ MouseButtonDown(AG_Event *_Nonnull event)
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
 		if (OverPixmap(tel, sx, sy)) {
-			tv->tv_pixmap.xorig = sx - tel->tel_pixmap.x;
-			tv->tv_pixmap.yorig = sy - tel->tel_pixmap.y;
+			tv->pixmap.xorig = sx - tel->tel_pixmap.x;
+			tv->pixmap.yorig = sy - tel->tel_pixmap.y;
 			RG_PixmapButtondown(tv, tel,
-			    tv->tv_pixmap.xorig,
-			    tv->tv_pixmap.yorig,
+			    tv->pixmap.xorig,
+			    tv->pixmap.yorig,
 			    x, y,
 			    button);
 			return;
@@ -361,7 +354,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 		   (button == AG_MOUSE_LEFT &&
 		    OverSketch(tel, sx, sy)))
 		{
-			RG_Sketch *sk = tv->tv_sketch.sk;
+			RG_Sketch *sk = tv->sketch.sk;
 			float vx, vy;
 
 			vx = VG_VECXF(sk->vg, sx - tel->tel_sketch.x);
@@ -373,7 +366,7 @@ MouseButtonDown(AG_Event *_Nonnull event)
 #endif
 	case RG_TILEVIEW_FEATURE_EDIT:
 		if (button == AG_MOUSE_MIDDLE) {
-			if (tv->tv_feature.ft->ops->menu != NULL) {
+			if (tv->feature.ft->ops->menu != NULL) {
 				RG_FeatureOpenMenu(tv, x+5, y+5);
 			}
 		} else if (button == AG_MOUSE_RIGHT) {
@@ -390,8 +383,8 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			tv->scrolling = 1;
 		} else if (button ==  AG_MOUSE_LEFT) {
 			tv->flags |= RG_TILEVIEW_SET_ATTRIBS;
-			tv->tv_attrs.nx = -1;
-			tv->tv_attrs.ny = -1;
+			tv->attrs.nx = -1;
+			tv->attrs.ny = -1;
 			ToggleAttrib(tv, sx, sy);
 		}
 		break;
@@ -412,12 +405,9 @@ MouseButtonDown(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	RG_Tileview *tv = RG_TILEVIEW_SELF();
-	const int button = AG_INT(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
+	RG_Tileview *tv = obj;
 	RG_TileviewCtrl *ctrl;
 	int i;
 
@@ -451,8 +441,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 			switch (tv->state) {
 			case RG_TILEVIEW_PIXMAP_EDIT:
 				{
-					RG_TileElement *tel =
-					    tv->tv_pixmap.tel;
+					RG_TileElement *tel = tv->pixmap.tel;
 
 					RG_PixmapButtonup(tv, tel,
 					    tv->xms - tel->tel_pixmap.x,
@@ -465,7 +454,7 @@ MouseButtonUp(AG_Event *_Nonnull event)
 			case RG_TILEVIEW_SKETCH_EDIT:
 				{
 					RG_TileElement *tel =
-					    tv->tv_sketch.tel;
+					    tv->sketch.tel;
 					float vx, vy;
 				
 					VG_Vcoords2(tel->tel_sketch.sk->vg,
@@ -616,20 +605,15 @@ MoveHandle(RG_Tileview *_Nonnull tv, RG_TileviewCtrl *_Nonnull ctrl, int which,
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	RG_Tileview *tv = RG_TILEVIEW_SELF();
-	const int x = AG_INT(1);
-	const int y = AG_INT(2);
-	const int xrel = AG_INT(3);
-	const int yrel = AG_INT(4);
-	const int state = AG_INT(5);
+	RG_Tileview *tv = obj;
 	RG_TileviewCtrl *ctrl;
 	int sx, sy, i;
 
 	if (tv->scrolling) {
-		tv->xoffs += xrel;
-		tv->yoffs += yrel;
+		tv->xoffs += dx;
+		tv->yoffs += dy;
 		ClampOffsets(tv);
 		MoveCursor(tv, x - tv->xoffs, y - tv->yoffs);
 		return;
@@ -659,22 +643,21 @@ MouseMotion(AG_Event *_Nonnull event)
 		switch (tv->state) {
 		case RG_TILEVIEW_PIXMAP_EDIT:
 			{
-				RG_TileElement *tel = tv->tv_pixmap.tel;
+				RG_TileElement *tel = tv->pixmap.tel;
 
 				if (OverPixmap(tel, sx, sy)) {
 					RG_PixmapMotion(tv, tel,
 					    sx - tel->tel_pixmap.x,
 					    sy - tel->tel_pixmap.y,
 					    sx - tv->xorig,
-					    sy - tv->yorig,
-					    state);
+					    sy - tv->yorig);
 				}
 			}
 			break;
 #if 0
 		case RG_TILEVIEW_SKETCH_EDIT:
 			{
-				RG_TileElement *tel = tv->tv_sketch.tel;
+				RG_TileElement *tel = tv->sketch.tel;
 				float vx, vy, vxrel, vyrel;
 
 				VG_Vcoords2(tel->tel_sketch.sk->vg,
@@ -687,8 +670,7 @@ MouseMotion(AG_Event *_Nonnull event)
 				    &vxrel, &vyrel);
 				RG_SketchMotion(tv, tel,
 				    vx/RG_TILESZ, vy/RG_TILESZ,
-				    vxrel/RG_TILESZ, vyrel/RG_TILESZ,
-				    state);
+				    vxrel/RG_TILESZ, vyrel/RG_TILESZ);
 			}
 			break;
 #endif
@@ -761,8 +743,8 @@ Init(void *_Nonnull obj)
 	tv->yms = 0;
 	tv->scrolling = 0;
 	tv->state = RG_TILEVIEW_TILE_EDIT;
-	tv->tv_tile.geo_ctrl = NULL;
-	tv->tv_tile.orig_ctrl = NULL;
+	tv->tile_ctrl.geo_ctrl = NULL;
+	tv->tile_ctrl.orig_ctrl = NULL;
 	tv->edit_mode = 0;
 	tv->c.r = 255;
 	tv->c.g = 255;
@@ -776,12 +758,6 @@ Init(void *_Nonnull obj)
 	TAILQ_INIT(&tv->tools);
 	TAILQ_INIT(&tv->ctrls);
 	AG_InitTimer(&tv->redrawTo, "redraw", 0);
-
-	AG_SetEvent(tv, "key-down", KeyDown, NULL);
-	AG_SetEvent(tv, "key-up", KeyUp, NULL);
-	AG_SetEvent(tv, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(tv, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(tv, "mouse-motion", MouseMotion, NULL);
 }
 
 #define INSERT_VALUE(vt,memb, type,arg) do {			\
@@ -1537,7 +1513,7 @@ Draw(void *_Nonnull obj)
 	AG_PushClipRect(tv, &rs);
 #if 0
 	if (tv->state == RG_TILEVIEW_SKETCH_EDIT) {
-		VG_Rasterize(rv->tv_sketch.sk->vg);
+		VG_Rasterize(rv->sketch.sk->vg);
 		t->flags |= RG_TILE_DIRTY;
 	}
 #endif
@@ -1703,13 +1679,13 @@ Draw(void *_Nonnull obj)
 		break;
 	case RG_TILEVIEW_FEATURE_EDIT:
 		Strlcpy(status, _("Editing feature: "), sizeof(status));
-		Strlcat(status, tv->tv_feature.ft->name, sizeof(status));
+		Strlcat(status, tv->feature.ft->name, sizeof(status));
 		DrawStatusText(tv, status);
 		break;
 #if 0
 	case RG_TILEVIEW_SKETCH_EDIT:
 		Strlcpy(status, _("Editing sketch: "), sizeof(status));
-		Strlcat(status, tv->tv_sketch.sk->name, sizeof(status));
+		Strlcat(status, tv->sketch.sk->name, sizeof(status));
 		DrawStatusText(tv, status);
 		break;
 #endif
@@ -1718,8 +1694,8 @@ Draw(void *_Nonnull obj)
 			extern const char *pixmap_state_names[];
 
 			Strlcpy(status, _("Editing pixmap: "), sizeof(status));
-			Strlcat(status, tv->tv_pixmap.px->name, sizeof(status));
-			Strlcat(status, pixmap_state_names[tv->tv_pixmap.state],
+			Strlcat(status, tv->pixmap.px->name, sizeof(status));
+			Strlcat(status, pixmap_state_names[tv->pixmap.state],
 			    sizeof(status));
 			DrawStatusText(tv, status);
 		}
@@ -1852,5 +1828,13 @@ AG_WidgetClass rgTileviewClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	KeyDown,
+	KeyUp,
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };

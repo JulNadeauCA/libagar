@@ -58,13 +58,12 @@ AG_GraphNew(void *parent, Uint flags)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Graph *gf = AG_GRAPH_SELF();
-	const int keysym = AG_INT(1);
+	AG_Graph *gf = obj;
 	const int scrollIncr = 10;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_LEFT:
 		gf->xOffs -= scrollIncr;
 		break;
@@ -116,13 +115,9 @@ MouseOverEdge(AG_GraphEdge *edge, int x, int y)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	AG_Graph *gf = AG_GRAPH_SELF();
-	const int x = AG_INT(1);
-	const int y = AG_INT(2);
-	const int dx = AG_INT(3);
-	const int dy = AG_INT(4);
+	AG_Graph *gf = obj;
 	AG_GraphVertex *vtx;
 	AG_GraphEdge *edge;
 
@@ -156,10 +151,9 @@ MouseMotion(AG_Event *event)
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Graph *gf = AG_GRAPH_SELF();
-	const int button = AG_INT(1);
+	AG_Graph *gf = obj;
 
 	switch (button) {
 	case AG_MOUSE_LEFT:
@@ -365,12 +359,9 @@ SelectVertex(AG_Graph *gf, AG_GraphVertex *vtx)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Graph *gf = AG_GRAPH_SELF();
-	const int button = AG_INT(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
+	AG_Graph *gf = obj;
 	const AG_KeyMod kmod = AG_GetModState(gf);
 	AG_GraphVertex *vtx, *vtx2;
 	AG_GraphEdge *edge, *edge2;
@@ -504,11 +495,6 @@ Init(void *obj)
 	gf->r.y = 0;
 	gf->r.w = 0;
 	gf->r.h = 0;
-
-	AG_SetEvent(gf, "key-down", KeyDown, NULL);
-	AG_SetEvent(gf, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(gf, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(gf, "mouse-motion", MouseMotion, NULL);
 }
 
 void
@@ -1106,7 +1092,15 @@ AG_WidgetClass agGraphClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	KeyDown,
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

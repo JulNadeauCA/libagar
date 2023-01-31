@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -362,9 +362,9 @@ Decrement(AG_Slider *_Nonnull sl)
 #undef DECREMENT
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Slider *sl = AG_SLIDER_SELF();
+	AG_Slider *sl = obj;
 
 	if (sl->ctlPressed) {
 		sl->ctlPressed = 0;
@@ -375,11 +375,10 @@ MouseButtonUp(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int mx, int my)
 {
-	AG_Slider *sl = AG_SLIDER_SELF();
-	int button = AG_INT(1);
-	int x = ((sl->type == AG_SLIDER_HORIZ) ? AG_INT(2) : AG_INT(3));
+	AG_Slider *sl = obj;
+	const int x = ((sl->type == AG_SLIDER_HORIZ) ? mx : my);
 	int pos;
 
 	if (button != AG_MOUSE_LEFT) {
@@ -414,15 +413,14 @@ MouseButtonDown(AG_Event *_Nonnull event)
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	AG_Slider *sl = AG_SLIDER_SELF();
+	AG_Slider *sl = obj;
 
 	if (!sl->ctlPressed) {
 		return;
 	}
-	SeekToPosition(sl, ((sl->type == AG_SLIDER_HORIZ) ?
-	                    AG_INT(1):AG_INT(2)) - sl->xOffs);
+	SeekToPosition(sl, ((sl->type == AG_SLIDER_HORIZ) ? x : y) - sl->xOffs);
 }
 
 /* Timer callback for keyboard motion. */
@@ -441,12 +439,11 @@ MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Slider *sl = AG_SLIDER_SELF();
-	int keysym = AG_INT(1);
+	AG_Slider *sl = obj;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
 		Decrement(sl);
@@ -461,12 +458,11 @@ KeyDown(AG_Event *_Nonnull event)
 }
 
 static void
-KeyUp(AG_Event *_Nonnull event)
+KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Slider *sl = AG_SLIDER_SELF();
-	int keysym = AG_INT(1);
+	AG_Slider *sl = obj;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
 	case AG_KEY_DOWN:
@@ -545,11 +541,6 @@ Init(void *_Nonnull obj)
 	sl->xOffs = 0;
 	
 	AG_AddEvent(sl, "widget-shown", OnShow, NULL);
-	AG_SetEvent(sl, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(sl, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(sl, "mouse-motion", MouseMotion, NULL);
-	AG_SetEvent(sl, "key-down", KeyDown, NULL);
-	AG_SetEvent(sl, "key-up", KeyUp, NULL);
 	AG_AddEvent(sl, "widget-hidden", OnFocusLoss, NULL);
 	AG_SetEvent(sl, "widget-lostfocus", OnFocusLoss, NULL);
 
@@ -637,7 +628,15 @@ AG_WidgetClass agSliderClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	KeyDown,
+	KeyUp,
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

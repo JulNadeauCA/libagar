@@ -39,11 +39,6 @@ enum {
 	NITEMS_GROW =	16
 };
 
-static void KeyDown(AG_Event *);
-static void MouseMotion(AG_Event *);
-static void MouseButtonDown(AG_Event *);
-static void MouseButtonUp(AG_Event *);
-
 AG_FixedPlotter *
 AG_FixedPlotterNew(void *parent, enum ag_fixed_plotter_type type, Uint flags)
 {
@@ -75,11 +70,6 @@ Init(void *obj)
 	fpl->yOrigin = 50;
 	fpl->yrange = 100;
 	TAILQ_INIT(&fpl->items);
-
-	AG_SetEvent(fpl, "mouse-motion", MouseMotion, NULL);
-	AG_SetEvent(fpl, "key-down", KeyDown, NULL);
-	AG_SetEvent(fpl, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(fpl, "mouse-button-down", MouseButtonDown, NULL);
 }
 
 void
@@ -91,12 +81,11 @@ AG_FixedPlotterSetRange(AG_FixedPlotter *fpl, AG_FixedPlotterValue range)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
-	const int key = AG_INT(1);
+	AG_FixedPlotter *fpl = obj;
 
-	switch (key) {
+	switch (ks) {
 	case AG_KEY_0:
 		fpl->xoffs = 0;
 		AG_Redraw(fpl);
@@ -115,42 +104,40 @@ KeyDown(AG_Event *event)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
-	const int xrel = AG_INT(3);
-	const int yrel = AG_INT(4);
-	const int state = AG_INT(5);
+	AG_FixedPlotter *fpl = obj;
+	const AG_MouseButton btnState = WIDGET(fpl)->drv->mouse->btnState;
+	const int h = WIDGET(fpl)->h;
 
-	if ((state & AG_MOUSE_LMASK) == 0)
+	if ((btnState & AG_MOUSE_LMASK) == 0)
 		return;
 
-	if ((fpl->xoffs -= xrel) < 0)
+	if ((fpl->xoffs -= dx) < 0)
 		fpl->xoffs = 0;
 
-	fpl->yOrigin += yrel;
+	fpl->yOrigin += dy;
 	if (fpl->yOrigin < 0)
 		fpl->yOrigin = 0;
-	if (fpl->yOrigin > WIDGET(fpl)->h)
-		fpl->yOrigin = WIDGET(fpl)->h;
+	if (fpl->yOrigin > h)
+		fpl->yOrigin = h;
 
-	if (xrel != 0 || yrel != 0)
+	if (dx != 0 || dy != 0)
 		AG_Redraw(fpl);
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
+	AG_FixedPlotter *fpl = obj;
 
 	fpl->flags |= AG_FIXED_PLOTTER_SCROLL;
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_FixedPlotter *fpl = AG_FIXEDPLOTTER_SELF();
-	const int button = AG_INT(1);
+	AG_FixedPlotter *fpl = obj;
 	
 	if (button != AG_MOUSE_LEFT)
 		return;
@@ -183,9 +170,8 @@ Draw(void *obj)
 	int x, y, ox = 0, oy;
 	const int w = WIDTH(fpl);
 	const int h = HEIGHT(fpl);
-	Uint32 i, yOrigin;
-
-	yOrigin = WIDGET(fpl)->h * fpl->yOrigin / 100;
+	const Uint32 yOrigin = h * fpl->yOrigin / 100;
+	Uint32 i;
 
 	AG_DrawBoxRaised(fpl, &WIDGET(fpl)->r, &WCOLOR(fpl,BG_COLOR));
 
@@ -342,7 +328,15 @@ AG_WidgetClass agFixedPlotterClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	KeyDown,
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGET */

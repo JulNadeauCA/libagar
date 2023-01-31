@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,6 @@
 #include <agar/core/core.h>
 #ifdef AG_WIDGETS
 
-#include <agar/gui/ttf.h>
 #include <agar/gui/textbox.h>
 #include <agar/gui/text.h>
 #include <agar/gui/keymap.h>
@@ -119,7 +118,7 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		    " " AGSI_ALGUE AGSI_RETURN_SYMBOL "  ",       /* U+23CE */
 		    &tb->ed->flags, AG_EDITABLE_RETURN_HELD);
 
-		AG_SetEvent(tb->btnRet, "button-pushed", EditableReturn, "%p", tb);
+		AG_SetEvent(tb->btnRet, "button-pushed", EditableReturn,"%p",tb);
 	}
 	if (flags & AG_TEXTBOX_EXCL)
 		AG_EditableSetExcl(tb->ed, 1);
@@ -646,12 +645,11 @@ AG_TextboxSetCursorPos(AG_Textbox *tb, int pos)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Textbox *tb = AG_TEXTBOX_SELF();
-	const int btn = AG_INT(1);
+	AG_Textbox *tb = obj;
 
-	if (btn == AG_MOUSE_LEFT)
+	if (button == AG_MOUSE_LEFT)
 		AG_WidgetFocus(tb);
 }
 
@@ -690,7 +688,7 @@ EditableReturn(AG_Event *_Nonnull event)
 }
 
 static void
-OnFontChange(AG_Event *_Nonnull event)
+FontChanged(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_TEXTBOX_SELF();
 
@@ -721,14 +719,13 @@ Init(void *_Nonnull obj)
 	tb->text = tb->ed->text;
 	tb->btnRet = NULL;
 
-	AG_SetEvent(tb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tb, "widget-disabled", Disabled, NULL);
 	AG_SetEvent(tb, "widget-enabled", Enabled, NULL);
-	AG_AddEvent(tb, "font-changed", OnFontChange, NULL);
+	AG_AddEvent(tb, "font-changed", FontChanged, NULL);
 
-	AG_SetEvent(tb->ed, "editable-prechg", EditablePreChg, "%p", tb);
-	AG_SetEvent(tb->ed, "editable-postchg", EditablePostChg, "%p", tb);
-	AG_SetEvent(tb->ed, "editable-return", EditableReturn, "%p", tb);
+	AG_SetEvent(tb->ed, "editable-prechg", EditablePreChg,"%p",tb);
+	AG_SetEvent(tb->ed, "editable-postchg", EditablePostChg,"%p",tb);
+	AG_SetEvent(tb->ed, "editable-return", EditableReturn,"%p",tb);
 	
 	AG_WidgetForwardFocus(tb, tb->ed);
 }
@@ -755,7 +752,15 @@ AG_WidgetClass agTextboxClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

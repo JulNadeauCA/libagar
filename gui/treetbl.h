@@ -67,28 +67,26 @@ typedef struct ag_treetbl_row {
 typedef struct ag_treetbl {
 	struct ag_widget _inherit;	/* AG_Widget -> AG_Treetbl */
 	Uint flags;
-#define AG_TREETBL_MULTI	0x001	/* Allow multiple selections */
-#define AG_TREETBL_MULTITOGGLE  0x002
-#define AG_TREETBL_REORDERCOLS	0x004	/* Allow column reordering */
-#define AG_TREETBL_NODUPCHECKS	0x008	/* Skip checks for duplicate IDs */
-#define AG_TREETBL_SORT		0x010	/* Enable sorting */
-#define AG_TREETBL_POLLED	0x020	/* Polling mode */
-#define AG_TREETBL_HFILL	0x040
-#define AG_TREETBL_VFILL	0x080
-#define AG_TREETBL_EXPAND	(AG_TREETBL_HFILL|AG_TREETBL_VFILL)
+#define AG_TREETBL_MULTI       0x001	/* Allow multiple selections */
+#define AG_TREETBL_MULTITOGGLE 0x002
+#define AG_TREETBL_REORDERCOLS 0x004	/* Allow column reordering */
+#define AG_TREETBL_NODUPCHECKS 0x008	/* Skip checks for duplicate IDs */
+#define AG_TREETBL_SORT        0x010	/* Enable sorting */
+#define AG_TREETBL_POLLED      0x020	/* Polling mode */
+#define AG_TREETBL_HFILL       0x040
+#define AG_TREETBL_VFILL       0x080
+#define AG_TREETBL_EXPAND      (AG_TREETBL_HFILL | AG_TREETBL_VFILL)
 
 	AG_Rect r;			/* View area */
 	int xOffs;			/* Horizontal display offset */
 	int xMax;
 	int yOffs;
 	int yMax;
-
 	int hCol;			/* Header height */
 	int hRow;			/* Per-row height */
 	int dblClicked;			/* Used by double click */
 	int wHint, hHint;		/* Size hint */
 	AG_Timer toDblClick;
-
 	Uint n;					/* Column count */
 	enum ag_treetbl_sort_mode sortMode;	/* Sorting mode */
 	AG_TreetblCol *_Nullable column;	/* Column array */

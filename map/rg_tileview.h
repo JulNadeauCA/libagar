@@ -82,8 +82,9 @@ typedef struct rg_tileview_tool_ops {
 	const char *_Nonnull name;	/* Name of tool */
 	const char *_Nonnull desc;	/* Tool description */
 	AG_Size len;			/* Size of structure */
-	AG_SIZE_PADDING(_pad);
+	AG_SIZE_PADDING(_pad1);
 	Uint flags;
+	Uint32 _pad2;
 	AG_StaticIcon *_Nullable icon;	/* Display icon */
 	int cursor;			/* Autoset cursor (or -1) */
 	AG_KeySym hotkey;		/* Keyboard shortcut (or NONE) */
@@ -121,10 +122,10 @@ typedef struct rg_tileview_tool {
 	const RG_TileviewToolOps *_Nonnull ops;
 	struct rg_tileview *_Nonnull tv;
 	Uint flags;
-#define TILEVIEW_TILE_TOOL	0x01	/* Call in default edition mode */
-#define TILEVIEW_FEATURE_TOOL	0x02	/* Call in feature edition mode */
-#define TILEVIEW_SKETCH_TOOL	0x04	/* Call in vector edition mode */
-#define TILEVIEW_PIXMAP_TOOL	0x08	/* Call in pixmap edition mode */
+#define RG_TILEVIEW_TILE_TOOL    0x01	/* Call in default edition mode */
+#define RG_TILEVIEW_FEATURE_TOOL 0x02	/* Call in feature edition mode */
+#define RG_TILEVIEW_SKETCH_TOOL  0x04	/* Call in vector edition mode */
+#define RG_TILEVIEW_PIXMAP_TOOL  0x08	/* Call in pixmap edition mode */
 	Uint32 _pad;
 	AG_Window *_Nullable win;	/* Expanded window */
 	AG_TAILQ_ENTRY(rg_tileview_tool) tools;
@@ -158,13 +159,13 @@ typedef struct rg_tileview {
 	AG_Surface *_Nullable scaled;	/* Scaled surface (source) */
 	int scrolling;
 	int flags;
-#define RG_TILEVIEW_NO_SCROLLING 0x01	/* Disable right click scrolling */
+#define RG_TILEVIEW_NO_SCROLLING  0x01	/* Disable right click scrolling */
 #define RG_TILEVIEW_HIDE_CONTROLS 0x02	/* Hide the current controls */
-#define RG_TILEVIEW_NO_TILING	0x04	/* Don't draw background tiling */
-#define RG_TILEVIEW_NO_EXTENT	0x08	/* Hide the extent rectangle */
-#define RG_TILEVIEW_NO_GRID	0x10	/* Hide the tile grid */
-#define RG_TILEVIEW_SET_ATTRIBS	0x20	/* Setting node attributes */
-#define RG_TILEVIEW_READONLY	0x40
+#define RG_TILEVIEW_NO_TILING     0x04	/* Don't draw background tiling */
+#define RG_TILEVIEW_NO_EXTENT     0x08	/* Hide the extent rectangle */
+#define RG_TILEVIEW_NO_GRID       0x10	/* Hide the tile grid */
+#define RG_TILEVIEW_SET_ATTRIBS   0x20	/* Setting node attributes */
+#define RG_TILEVIEW_READONLY      0x40
 
 	AG_Timer zoomTo;		/* Zoom timeout */
 	AG_Timer redrawTo;		/* Auto redraw timeout */
@@ -214,18 +215,11 @@ typedef struct rg_tileview {
 		struct {
 			RG_TileviewCtrl *_Nullable geo_ctrl;	/* Geometry control */
 			RG_TileviewCtrl *_Nullable orig_ctrl;	/* Origin control */
-		} tile;
+		} tile_ctrl;
 		struct {
 			int nx, ny;			/* Current position */
 		} attrs;
-	} sargs;
-#ifndef _AGAR_RG_PUBLIC_H_
-#define tv_feature sargs.feature
-#define tv_sketch  sargs.sketch
-#define tv_pixmap  sargs.pixmap
-#define tv_tile	   sargs.tile
-#define tv_attrs   sargs.attrs
-#endif
+	};
 	struct {
 		Uint8 r, g, b, a;		/* Current color */
 		Uint32 pc;			/* (for binding controls) */

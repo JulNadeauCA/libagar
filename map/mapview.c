@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -215,7 +215,7 @@ MAP_ViewRegTool(MAP_View *mv, const MAP_ToolOps *ops, void *p)
 	t->p = p;
 	MAP_ToolInit(t);
 
-	if (((ops->flags & TOOL_HIDDEN) == 0) && mv->toolbar != NULL) {
+	if (((ops->flags & MAP_TOOL_HIDDEN) == 0) && mv->toolbar != NULL) {
 		t->trigger = AG_ToolbarButtonIcon(mv->toolbar,
 		    (ops->icon != NULL) ? ops->icon->s : NULL,
 		    0, SelectTool, "%p,%p,%p", mv, t, p);
@@ -268,7 +268,7 @@ Destroy(void *_Nonnull p)
 }
 
 static void
-OnDetach(AG_Event *_Nonnull event)
+Detached(AG_Event *_Nonnull event)
 {
 	MAP_View *mv = MAP_VIEW_SELF();
 	MAP_Tool *tool, *ntool;
@@ -343,17 +343,6 @@ DrawMapCursor(MAP_View *_Nonnull mv)
 
 	rd.w = MAP_TILESZ(mv);
 	rd.h = MAP_TILESZ(mv);
-
-	if (mv->msel.set) {
-#if 0
-		/* XXX */
-		AG_MouseGetState(&msx, &msy);
-		if (!agView->opengl)
-			AG_SurfaceBlit(mapIconCursor.s, NULL, agView->v,
-			    msx, msy);
-#endif
-		return;
-	}
 
 	rd.x = mv->mouse.x*MAP_TILESZ(mv) + mv->xOffs;
 	rd.y = mv->mouse.y*MAP_TILESZ(mv) + mv->yOffs;
@@ -658,33 +647,33 @@ MAP_ViewUpdateCamera(MAP_View *mv)
 	yCam = cam->y;
 
 	switch (cam->alignment) {
-	case AG_MAP_CENTER:
+	case MAP_CENTER:
 		xCam -= WIDTH(mv)  >> 1;
 		yCam -= HEIGHT(mv) >> 1;
 		break;
-	case AG_MAP_LOWER_CENTER:
+	case MAP_LOWER_CENTER:
 		xCam -= WIDTH(mv) >> 1;
 		yCam -= HEIGHT(mv);
 		break;
-	case AG_MAP_UPPER_CENTER:
+	case MAP_UPPER_CENTER:
 		xCam -= WIDTH(mv) >> 1;
 		break;
-	case AG_MAP_UPPER_LEFT:
+	case MAP_UPPER_LEFT:
 		break;
-	case AG_MAP_MIDDLE_LEFT:
+	case MAP_MIDDLE_LEFT:
 		yCam -= HEIGHT(mv) >> 1;
 		break;
-	case AG_MAP_LOWER_LEFT:
+	case MAP_LOWER_LEFT:
 		yCam -= HEIGHT(mv);
 		break;
-	case AG_MAP_UPPER_RIGHT:
+	case MAP_UPPER_RIGHT:
 		xCam -= WIDTH(mv);
 		break;
-	case AG_MAP_MIDDLE_RIGHT:
+	case MAP_MIDDLE_RIGHT:
 		xCam -= WIDTH(mv);
 		yCam -= HEIGHT(mv) >> 1;
 		break;
-	case AG_MAP_LOWER_RIGHT:
+	case MAP_LOWER_RIGHT:
 		xCam -= WIDTH(mv);
 		yCam -= HEIGHT(mv);
 		break;
@@ -816,16 +805,11 @@ ToggleAttribute(MAP_View *_Nonnull mv)
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	MAP_View *mv = MAP_VIEW_SELF();
+	MAP_View *mv = obj;
 	MAP *map = mv->map;
-	int x = AG_INT(1);
-	int y = AG_INT(2);
-	const int xrel = AG_INT(3);
-	const int yrel = AG_INT(4);
-	const int state = AG_INT(5);
-	int xmap, ymap;
+	int xMap, yMap;
 	int rv;
 
 	AG_ObjectLock(map);
@@ -835,17 +819,19 @@ MouseMotion(AG_Event *_Nonnull event)
 	mv->cxrel = x - mv->mouse.x;
 	mv->cyrel = y - mv->mouse.y;
 
-	xmap = mv->cx * MAP_TILESZ(mv) + mv->cxoffs;
-	ymap = mv->cy * MAP_TILESZ(mv) + mv->cyoffs;
+	xMap = mv->cx * MAP_TILESZ(mv) + mv->cxoffs;
+	yMap = mv->cy * MAP_TILESZ(mv) + mv->cyoffs;
 
-	mv->mouse.xmap_rel += xmap - mv->mouse.xmap;
-	mv->mouse.ymap_rel += ymap - mv->mouse.ymap;
+	mv->mouse.xmap_rel += xMap - mv->mouse.xmap;
+	mv->mouse.ymap_rel += yMap - mv->mouse.ymap;
 
-	mv->mouse.xmap = xmap;
-	mv->mouse.ymap = ymap;
+	mv->mouse.xmap = xMap;
+	mv->mouse.ymap = yMap;
 
 	if (mv->flags & MAP_VIEW_EDIT) {
-		if ((state & AG_MOUSE_LEFT) &&
+		const AG_MouseButton btnState = WIDGET(mv)->drv->mouse->btnState;
+
+		if ((btnState & AG_MOUSE_LEFT) &&
 		    mv->cx != -1 && mv->cy != -1 &&
 		    (x != mv->mouse.x || y != mv->mouse.y) &&
 		    (InsideNodeSelection(mv, mv->cx, mv->cy))) {
@@ -870,22 +856,20 @@ MouseMotion(AG_Event *_Nonnull event)
 		if (mv->curtool != NULL &&
 		    mv->curtool->ops->mousemotion != NULL &&
 		    mv->curtool->ops->mousemotion(mv->curtool,
-		      mv->mouse.xmap, mv->mouse.ymap,
-		      xrel, yrel, state) == 1) {
+		      mv->mouse.xmap, mv->mouse.ymap, dx,dy) == 1) {
 			goto out;
 		}
 		if (mv->deftool != NULL &&
 		    mv->deftool->ops->mousemotion != NULL &&
 		    mv->deftool->ops->mousemotion(mv->deftool,
-		      mv->mouse.xmap, mv->mouse.ymap,
-		      xrel, yrel, state) == 1) {
+		      mv->mouse.xmap, mv->mouse.ymap, dx,dy) == 1) {
 			goto out;
 		}
 	}
 	
 	if (mv->mouse.scrolling) {
-		MAP_CAM(mv).x -= xrel;
-		MAP_CAM(mv).y -= yrel;
+		MAP_CAM(mv).x -= dx;
+		MAP_CAM(mv).y -= dy;
 		MAP_ViewUpdateCamera(mv);
 	} else if (mv->msel.set) {
 		mv->msel.xOffs += mv->cxrel;
@@ -922,14 +906,11 @@ ViewPopupMenu(AG_MenuItem *menu, MAP_View *mv)
 #endif
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	MAP_View *mv = MAP_VIEW_SELF();
+	MAP_View *mv = obj;
 	MAP *map = mv->map;
 //	MAP_Tool *tool;
-	const int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
 	int rv;
 	
 	AG_WidgetFocus(mv);
@@ -1092,14 +1073,11 @@ out:
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	MAP_View *mv = MAP_VIEW_SELF();
+	MAP_View *mv = obj;
 	MAP *map = mv->map;
 	MAP_Tool *tool;
-	const int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
 	
 	AG_ObjectLock(map);
 
@@ -1181,35 +1159,33 @@ out:
 }
 
 static void
-KeyUp(AG_Event *_Nonnull event)
+KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	MAP_View *mv = MAP_VIEW_SELF();
+	MAP_View *mv = obj;
 	MAP *map = mv->map;
 	MAP_Tool *tool;
-	const int keysym = AG_INT(1);
-	const int keymod = AG_INT(2);
 	
 	AG_ObjectLock(map);
 
 	if (mv->flags & MAP_VIEW_EDIT &&
 	    mv->curtool != NULL &&
 	    mv->curtool->ops->keyup != NULL &&
-	    mv->curtool->ops->keyup(mv->curtool, keysym, keymod) == 1)
+	    mv->curtool->ops->keyup(mv->curtool, ks, kmod) == 1)
 		goto out;
 	
 	TAILQ_FOREACH(tool, &mv->tools, tools) {
 		MAP_ToolKeyBinding *kb;
 
 		SLIST_FOREACH(kb, &tool->kbindings, kbindings) {
-			if (kb->key == keysym &&
-			    (kb->mod == AG_KEYMOD_NONE || keymod & kb->mod)) {
+			if (kb->key == ks &&
+			    (kb->mod == AG_KEYMOD_NONE || (kmod & kb->mod))) {
 				if (kb->edit &&
 				   (((mv->flags & MAP_VIEW_EDIT) == 0) ||
 				    ((OBJECT(map)->flags & AG_OBJECT_READONLY)))) {
 					continue;
 				}
 				tool->mv = mv;
-				if (kb->func(tool, keysym, 0, kb->arg) == 1)
+				if (kb->func(tool, ks, 0, kb->arg) == 1)
 					goto out;
 			}
 		}
@@ -1220,28 +1196,26 @@ out:
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	MAP_View *mv = MAP_VIEW_SELF();
+	MAP_View *mv = obj;
 	MAP *map = mv->map;
 	MAP_Tool *tool;
-	const int keysym = AG_INT(1);
-	const int keymod = AG_INT(2);
 	
 	AG_ObjectLock(map);
 
 	if (mv->flags & MAP_VIEW_EDIT &&
 	    mv->curtool != NULL &&
 	    mv->curtool->ops->keydown != NULL &&
-	    mv->curtool->ops->keydown(mv->curtool, keysym, keymod) == 1)
+	    mv->curtool->ops->keydown(mv->curtool, ks, kmod) == 1)
 		goto out;
 
 	TAILQ_FOREACH(tool, &mv->tools, tools) {
 		MAP_ToolKeyBinding *kb;
 
 		SLIST_FOREACH(kb, &tool->kbindings, kbindings) {
-			if (kb->key == keysym &&
-			    (kb->mod == AG_KEYMOD_NONE || keymod & kb->mod)) {
+			if (kb->key == ks &&
+			    (kb->mod == AG_KEYMOD_NONE || (kmod & kb->mod))) {
 				if (kb->edit &&
 				   (((mv->flags & MAP_VIEW_EDIT) == 0) ||
 				    ((OBJECT(map)->flags &
@@ -1249,16 +1223,16 @@ KeyDown(AG_Event *_Nonnull event)
 					continue;
 				}
 				tool->mv = mv;
-				if (kb->func(tool, keysym, 1, kb->arg) == 1)
+				if (kb->func(tool, ks, 1, kb->arg) == 1)
 					goto out;
 			}
 		}
 	}
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_Z:
-		if (keymod & AG_KEYMOD_CTRL) {
-			if (keymod & AG_KEYMOD_SHIFT) {
+		if (kmod & AG_KEYMOD_CTRL) {
+			if (kmod & AG_KEYMOD_SHIFT) {
 				MAP_Redo(map);
 			} else {
 				MAP_Undo(map);
@@ -1266,7 +1240,7 @@ KeyDown(AG_Event *_Nonnull event)
 		}
 		break;
 	case AG_KEY_Y:
-		if (keymod & AG_KEYMOD_CTRL) {
+		if (kmod & AG_KEYMOD_CTRL) {
 			MAP_Redo(map);
 		}
 		break;
@@ -1507,14 +1481,9 @@ Init(void *_Nonnull obj)
 
 	AG_ColorRGBA_8(&mv->color, 255,255,255,32);
 
-	AG_SetEvent(mv, "key-up",		KeyUp, NULL);
-	AG_SetEvent(mv, "key-down",		KeyDown, NULL);
-	AG_SetEvent(mv, "mouse-motion",		MouseMotion, NULL);
-	AG_SetEvent(mv, "mouse-button-down",	MouseButtonDown, NULL);
-	AG_SetEvent(mv, "mouse-button-up",	MouseButtonUp, NULL);
-	AG_AddEvent(mv, "detached",		OnDetach, NULL);
-	AG_SetEvent(mv, "dblclick-expire",	ExpireDblClick, NULL);
-	AG_SetEvent(mv, "map-resized",		UpdateCamera, "%p", mv);
+	AG_AddEvent(mv, "detached", Detached, NULL);
+	AG_SetEvent(mv, "dblclick-expire", ExpireDblClick, NULL);
+	AG_SetEvent(mv, "map-resized", UpdateCamera,"%p",mv);
 }
 
 AG_WidgetClass mapViewClass = {
@@ -1531,5 +1500,13 @@ AG_WidgetClass mapViewClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	KeyDown,
+	KeyUp,
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };

@@ -61,13 +61,11 @@ SelectItem(AG_MenuItem *_Nonnull mi, AG_MenuItem *_Nullable miSub)
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int mx, int my, int dx, int dy)
 {
-	AG_MenuView *mv = AG_MENUVIEW_SELF();
+	AG_MenuView *mv = obj;
 	AG_MenuItem *mi = mv->pitem, *miSub;
 	AG_Menu *m = mv->pmenu;
-	const int mx = AG_INT(1);
-	const int my = AG_INT(2);
 	const int w = WIDTH(mv);
 	int y = WIDGET(mv)->paddingTop, itemh;
 	
@@ -110,36 +108,32 @@ out:
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_MenuView *mv = AG_MENUVIEW_SELF();
+	AG_MenuView *mv = obj;
 	AG_Menu *m = mv->pmenu;
 	AG_Driver *drv = WIDGET(mv)->drv;
-	const int mx = AG_INT(2);
-	const int my = AG_INT(3);
 
 	if (AGDRIVER_CLASS(drv)->setMouseAutoCapture != NULL)
 		AGDRIVER_CLASS(drv)->setMouseAutoCapture(drv, 0);  /* Disable */
 
-	if ((mx < 0 || mx >= WIDTH(mv) ||
-	     my < 0 || my >= HEIGHT(mv)) &&
-	    !AG_WidgetArea(m, mx,my)) {
+	if ((x < 0 || x >= WIDTH(mv) ||
+	     y < 0 || y >= HEIGHT(mv)) &&
+	    !AG_WidgetArea(m, x,y)) {
 		if (AG_WidgetFindPoint("AG_Widget:AG_MenuView:*",
-		    WIDGET(mv)->rView.x1 + mx,
-		    WIDGET(mv)->rView.y1 + my) == NULL)
+		    WIDGET(mv)->rView.x1 + x,
+		    WIDGET(mv)->rView.y1 + y) == NULL)
 			AG_MenuCollapseAll(m);
 	}
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int mx, int my)
 {
-	AG_MenuView *mv = AG_MENUVIEW_SELF();
+	AG_MenuView *mv = obj;
 	AG_MenuItem *miRoot = mv->pitem, *mi;
 	AG_Menu *m = mv->pmenu;
 	AG_Driver *drv = WIDGET(mv)->drv;
-	const int mx = AG_INT(2);
-	const int my = AG_INT(3);
 	int y = WIDGET(mv)->paddingTop, itemh;
 
 	if (AGDRIVER_CLASS(drv)->setMouseAutoCapture != NULL)
@@ -240,9 +234,6 @@ Init(void *_Nonnull obj)
 	mv->spLblArrow = 16;
 	mv->arrowRight = -1;
 
-	AG_SetEvent(mv, "mouse-motion", MouseMotion, NULL);
-	AG_SetEvent(mv, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(mv, "mouse-button-up", MouseButtonUp, NULL);
 	AG_AddEvent(mv, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(mv, "detached", OnDetach, NULL);
 }
@@ -513,7 +504,15 @@ AG_WidgetClass agMenuViewClass = {
 	},
 	Draw,
 	SizeRequest,
-	NULL			/* size_allocate */
+	NULL,			/* size_allocate */
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */
