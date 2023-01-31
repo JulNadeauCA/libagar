@@ -55,15 +55,21 @@ AG_UComboNew(void *parent, Uint flags)
 }
 
 static void
+ClosePanel(AG_UCombo *com, AG_Window *win)
+{
+	com->wSaved = WIDTH(win);
+	com->hSaved = HEIGHT(win);
+	AG_WindowHide(win);
+	AG_SetInt(com->button, "state", 0);
+}
+
+static void
 PanelWindowClose(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_WINDOW_SELF();
 	AG_UCombo *com = AG_UCOMBO_PTR(1);
 
-	com->wSaved = WIDTH(win);
-	com->hSaved = HEIGHT(win);
-	AG_WindowHide(win);
-	AG_SetInt(com->button, "state", 0);
+	ClosePanel(com, win);
 }
 
 static void
@@ -77,12 +83,8 @@ PanelMouseButtonDown(AG_Event *_Nonnull event)
 	if (com->panel == NULL)
 		return;
 
-	if ((x < 0 || y < 0 || x > WIDTH(win) || y > HEIGHT(win))) {
-		com->wSaved = WIDTH(win);
-		com->hSaved = HEIGHT(win);
-		AG_WindowHide(win);
-		AG_SetInt(com->button, "state", 0);
-	}
+	if ((x < 0 || y < 0 || x > WIDTH(win) || y > HEIGHT(win)))
+		ClosePanel(com, win);
 }
 
 /* An item has been selected from the drop-down menu. */
@@ -104,14 +106,20 @@ SelectedItem(AG_Event *_Nonnull event)
 	}
 	AG_ObjectUnlock(tl);
 
-	if ((win = com->panel) != NULL) {           /* Hide expanded window */
-		com->wSaved = WIDTH(win);
-		com->hSaved = HEIGHT(win);
-		AG_WindowHide(win);
-		AG_SetInt(com->button, "state", 0);
-	}
+	if ((win = com->panel) != NULL)
+		ClosePanel(com, win);
 
 	AG_ObjectUnlock(com);
+}
+
+static void
+PanelCancelPressed(AG_Event *event)
+{
+	AG_UCombo *com = AG_UCOMBO_PTR(1);
+	AG_Window *panel;
+
+	if ((panel = com->panel) != NULL)
+		ClosePanel(com, panel);
 }
 
 static void
@@ -129,10 +137,7 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 
 	if (button_state == 0) {                                /* Collapse */
 		if ((win = com->panel) != NULL) {
-			com->wSaved = WIDTH(win);
-			com->hSaved = HEIGHT(win);
-			AG_WindowHide(win);
-			AG_SetInt(com->button, "state", 0);
+			ClosePanel(com, win);
 			AG_PostEvent(com, "ucombo-collapsed", NULL);
 		}
 		goto out;
@@ -143,8 +148,9 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 		AG_TlistClear(com->list);
 		AG_PostEvent(com, "ucombo-expanded", NULL);
 	} else {                                              /* New window */
-		if ((win = AG_WindowNew(AG_WINDOW_MODAL |
-		                        AG_WINDOW_NOTITLE)) == NULL) {
+		AG_Button *bu;
+
+		if ((win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE)) == NULL) {
 			return;
 		}
 		win->wmType = AG_WINDOW_WM_COMBO;
@@ -156,6 +162,11 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 
 		com->panel = win;
 		com->list = tl = AG_TlistNew(win, AG_TLIST_EXPAND); 
+
+		bu = AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Cancel"),
+		    PanelCancelPressed, "%p", com);
+		AG_SetStyle(bu, "font-size", "80%");
+		AG_SetStyle(bu, "padding", "0 4 3 4");
 
 		if (com->flags & AG_UCOMBO_POLL) { tl->flags |= AG_TLIST_POLL; }
 		if (com->flags & AG_UCOMBO_SCROLLTOSEL) { tl->flags |= AG_TLIST_SCROLLTOSEL; }
@@ -308,7 +319,15 @@ AG_WidgetClass agUComboClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	NULL,			/* mouse_button_down */
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	NULL,			/* key_down */
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */
