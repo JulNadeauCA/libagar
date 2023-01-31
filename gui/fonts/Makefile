@@ -4,7 +4,6 @@ include ${TOP}/Makefile.config
 DATADIR=	${TTFDIR}
 DATAFILES_SRC=	OFL11.txt OFL-FAQ.txt \
 		Charter-LICENSE.txt \
-		DejaVu-LICENSE.txt \
 		Source-Han-LICENSE.txt \
 		Vera-Copyright.txt \
 		League-Gothic-LICENSE.md \
