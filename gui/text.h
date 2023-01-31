@@ -3,8 +3,9 @@
 #ifndef _AGAR_GUI_TEXT_H_
 #define _AGAR_GUI_TEXT_H_
 
-#include <agar/gui/surface.h>
 #include <agar/gui/drv.h>
+#include <agar/gui/font.h>
+
 #include <agar/gui/begin.h>
 
 /* Maximum height of AG_{Push,Pop}TextState() stack. */
@@ -15,11 +16,6 @@
 /* Maximum length of AG_TextParseFontSpec() font specification strings. */
 #ifndef AG_TEXT_FONTSPEC_MAX
 #define AG_TEXT_FONTSPEC_MAX AG_MODEL
-#endif
-
-/* Bucket size of glyph cache table used by AG_TextRenderGlyph(). */
-#ifndef AG_GLYPH_NBUCKETS
-#define AG_GLYPH_NBUCKETS (AG_MODEL * 8)
 #endif
 
 /*
@@ -35,10 +31,6 @@
 #ifndef AG_TEXT_ANSI_PARAM_MAX
 #define AG_TEXT_ANSI_PARAM_MAX 32
 #endif
-
-struct ag_window;
-struct ag_button;
-struct ag_font;
 
 /* Way to justify text horizontally in a space. */
 enum ag_text_justify {
@@ -60,25 +52,6 @@ enum ag_text_msg_title {
 	AG_MSG_WARNING,
 	AG_MSG_INFO
 };
-
-/* Font engine classes. */
-enum ag_font_type {
-	AG_FONT_VECTOR,				/* Vectorial font */
-	AG_FONT_BITMAP,				/* Raw glyph pixmaps */
-	AG_FONT_DUMMY,				/* No font engine */
-	AG_FONT_TYPE_LAST
-};
-
-/* Data source from which to load a font. */
-enum ag_font_spec_source {
-	AG_FONT_SOURCE_FILE,			/* Load from file */
-	AG_FONT_SOURCE_MEMORY			/* Read from memory */
-};
-
-/* Epsilon for font point size comparisons. */
-#ifndef AG_FONT_PTS_EPSILON
-#define AG_FONT_PTS_EPSILON 0.01
-#endif
 
 /* ANSI 3-bit and 4-bit colors. */
 enum ag_ansi_color {
@@ -224,91 +197,6 @@ typedef struct ag_text_ansi {
 	AG_Color color;	                  /* For BG_COLOR / FG_COLOR */
 } AG_TextANSI;
 
-/* Agar font specification. */
-typedef struct ag_font_spec {
-	float size;				/* Font size in points */
-	int index;				/* Font index (FC_INDEX) */
-	enum ag_font_type type;			/* Font engine type */
-	enum ag_font_spec_source sourceType;	/* Source type */
-	struct {				/* Transformation matrix */
-		double xx, xy;
-		double yx, yy;
-	} matrix;
-	union {
-		struct {
-			const Uint8 *_Nonnull data;  /* Source memory region */
-			AG_Size size;                /* Size in bytes */
-			AG_SIZE_PADDING(_pad);
-		} mem;
-	} source;
-} AG_FontSpec;
-
-typedef struct ag_font_adjustment {
-	const char *face;               /* Font family */
-	Uint flags;			/* AG_FONT_BOLD = Regular is bold */
-	float size_factor;              /* Scaling tweak */
-	int ascent_offset[6];           /* Ascent tweak (size range specific) */
-} AG_FontAdjustment;
-
-/* A cached rendering of a glyph of a given font and color. */
-typedef struct ag_glyph {
-	struct ag_font *_Nonnull font;   /* Font face */
-	AG_Color colorBG;                /* Background color */
-	AG_Color color;                  /* Foreground color */
-	AG_Surface *_Nonnull su;         /* Rendered surface */
-	AG_Char ch;                      /* Native character */
-	int advance;                     /* Advance (px) */
-	Uint texture;                    /* Mapped texture (driver-specific) */
-	AG_TexCoord texcoords;           /* Mapped texture coordinates */
-	Uint32 _pad1;
-	AG_SLIST_ENTRY(ag_glyph) glyphs; /* Entry in glyph cache */
-} AG_Glyph;
-
-/* Loaded font */
-typedef struct ag_font {
-	struct ag_object obj;           /* AG_Object -> AG_Font */
-	AG_FontSpec spec;               /* Input specification */
-	Uint flags;
-#define AG_FONT_BOLD           0x001    /* Bold style */
-#define AG_FONT_ITALIC         0x002    /* Italic style */
-#define AG_FONT_UNDERLINE      0x004    /* Generate underline */
-#define AG_FONT_UPPERCASE      0x008    /* Force uppercase */
-#define AG_FONT_OBLIQUE        0x010    /* Oblique style */
-#define AG_FONT_UPRIGHT_ITALIC 0x020    /* Upright italic style */
-#define AG_FONT_SEMICONDENSED  0x040    /* Semi-condensed */
-#define AG_FONT_CONDENSED      0x080    /* Condensed */
-#define AG_FONT_SW_BOLD        0x100    /* Software-generated bold */
-#define AG_FONT_SW_OBLIQUE     0x200    /* Software-generated oblique */
-#define AG_FONT_MONOSPACE      0x400	/* Monospace variant */
-#define AG_FONT_SW_ITALIC      AG_FONT_SW_OBLIQUE
-
-#define AG_FONT_WEIGHTS     (AG_FONT_BOLD | AG_FONT_SW_BOLD)
-#define AG_FONT_STYLES      (AG_FONT_ITALIC | AG_FONT_SW_ITALIC | \
-                             AG_FONT_OBLIQUE | AG_FONT_UPRIGHT_ITALIC) 
-#define AG_FONT_WD_VARIANTS (AG_FONT_SEMICONDENSED | AG_FONT_CONDENSED)
-
-	int height;                        /* Body size in pixels */
-	int ascent;                        /* Ascent (relative to baseline) */
-	int descent;                       /* Descent (relative to baseline) */
-	int lineskip;                      /* Multiline y-increment */
-	Uint nRefs;                        /* Global reference count */
-	AG_TAILQ_ENTRY(ag_font) fonts;     /* Entry in global fonts list */
-	union {
-		struct {
-			void *_Nonnull ttf;      /* TTF object (AG_TTFFont) */
-		} vec;
-		struct {
-			char *spec;                               /* "MAP:x-y" label */
-			AG_Surface *_Nullable *_Nullable glyphs;  /* Glyph surfaces */
-			Uint                            nGlyphs;  /* Glyph count */
-			AG_Char c0, c1;                           /* Character mapping (range) */
-			Uint32 _pad;
-		} bmp;
-	} data;
-} AG_Font;
-
-typedef AG_TAILQ_HEAD(ag_fontq, ag_font) AG_FontQ;
-
 /*
  * An element of the rendering attribute stack.
  * Sync with CompareTextStates() in gui/text_cache.c.
@@ -321,20 +209,8 @@ typedef struct ag_text_state {
 	enum ag_text_justify justify;	/* Justification mode */
 	enum ag_text_valign valign;	/* Vertical alignment mode */
 	int tabWd;			/* Width of \t in pixels */
-#ifdef AG_DEBUG
-	char name[8];			/* Tag for debugging */
-#endif
 	Uint32 _pad;
 } AG_TextState;
-
-/* Description of font stored in data segment. */
-typedef struct ag_static_font {
-	const char *_Nonnull name;	/* Identifier */
-	enum ag_font_type type;		/* Type of font */
-	Uint32 size;			/* Size in bytes */
-	const Uint8 *_Nonnull data;	/* Font data */
-	AG_Font *_Nullable font;	/* Initialized font */
-} AG_StaticFont;
 
 /* Measures of rendered text. */
 typedef struct ag_text_metrics {
@@ -343,11 +219,6 @@ typedef struct ag_text_metrics {
 	Uint            nLines;		/* Total line count */
 	Uint32 _pad;
 } AG_TextMetrics;
-
-/* Cache of pre-rendered glyphs */
-typedef struct ag_glyph_cache {
-	AG_SLIST_HEAD_(ag_glyph) glyphs;
-} AG_GlyphCache;
 
 #ifdef AG_DEBUG
 # define AG_TEXT_STATE_CUR() \
@@ -359,24 +230,22 @@ typedef struct ag_glyph_cache {
 #endif
 
 __BEGIN_DECLS
-extern AG_ObjectClass agFontClass;
-extern AG_StaticFont *_Nonnull agBuiltinFonts[];
-extern int agTextFontHeight;
-extern int agTextFontAscent;
-extern int agTextFontDescent;
-extern int agTextFontLineSkip;
-extern int agFreetypeInited;
+/* text.c */
+extern int agTextFontHeight;    /* Default font height (px) */
+extern int agTextFontAscent;    /* Default font ascent (px) */
+extern int agTextFontDescent;   /* Default font descent (px) */
+extern int agTextFontLineSkip;  /* Default font y-increment (px) */
+extern int agFontconfigInited;  /* Fontconfig library is initialized */
 
 extern _Nonnull_Mutex AG_Mutex agTextLock;
 extern AG_FontQ                agFontCache;
 extern AG_TextState            agTextStateStack[AG_TEXT_STATES_MAX];
-extern Uint                    agTextStateCur;
+extern int                     agTextStateCur;
 extern AG_Font *_Nullable      agDefaultFont;
 
 extern const AG_FontAdjustment agFontAdjustments[];
 
 extern const char *agCoreFonts[];
-extern const char *agFontFileExts[];
 extern const char *agTextMsgTitles[];
 extern const char *agTextJustifyNames[];
 extern const char *agTextValignNames[];
@@ -388,9 +257,6 @@ AG_Font *_Nullable AG_TextFontLookup(const char *_Nullable, float, Uint);
 AG_Font *_Nullable AG_TextFontPts(float);
 AG_Font *_Nullable AG_TextFontPct(int);
 AG_Font *_Nullable AG_TextFontPctFlags(int, Uint);
-AG_Font	*_Nullable AG_FetchFont(const char *_Nullable, float, Uint)
-                               _Warn_Unused_Result;
-void               AG_UnusedFont(AG_Font *_Nonnull);
 void               AG_PopTextState(void);
 void               AG_TextClearGlyphCache(AG_Driver *_Nonnull);
 
@@ -466,9 +332,6 @@ void AG_TextTabWidth(int);
 
 AG_Font *AG_SetDefaultFont(AG_Font *_Nonnull);
 void AG_TextParseFontSpec(const char *_Nullable);
-
-struct ag_window *_Nonnull AG_TextPromptOptions(struct ag_button *_Nonnull *_Nonnull ,
-                                                Uint, const char *_Nonnull, ...);
 
 int  AG_InitTextSubsystem(void);
 void AG_DestroyTextSubsystem(void);
@@ -575,11 +438,6 @@ AG_CharIsPunct(AG_Char c)
 
 #define AG_CharIsSpaceOrPunct(ch) (AG_CharIsSpace(ch) || AG_CharIsPunct(ch))
 #define AG_CharIsSpaceOrLF(ch) (AG_CharIsSpace(ch) || (ch == '\n'))
-
-#ifdef AG_LEGACY
-/* < 1.5 call renamed */
-# define AG_TextRenderf AG_TextRenderF
-#endif
 __END_DECLS
 
 #include <agar/gui/close.h>
