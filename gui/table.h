@@ -139,7 +139,7 @@ typedef struct ag_table {
 #define AG_TABLE_POLL           0x008	/* Table is polled */
 #define AG_TABLE_HFILL          0x010
 #define AG_TABLE_VFILL          0x020
-#define AG_TABLE_EXPAND        (AG_TABLE_HFILL|AG_TABLE_VFILL)
+#define AG_TABLE_EXPAND        (AG_TABLE_HFILL | AG_TABLE_VFILL)
 #define AG_TABLE_HIGHLIGHT_COLS 0x040	/* Highlight column selection */
 #define AG_TABLE_WIDGETS        0x080	/* Embedded widgets are in use */
 #define AG_TABLE_NOAUTOSORT     0x100	/* Disable automatic sorting */

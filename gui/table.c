@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -390,7 +390,7 @@ SizeColumns(AG_Table *_Nonnull t)
 	for (n = 0, x = WIDGET(t)->paddingLeft; n < t->n; n++) {
 		tc = &t->cols[n];
 		
-		r.x = x - COLUMN_RESIZE_RANGE/2 - t->xOffs;
+		r.x = x - COLUMN_RESIZE_RANGE/2 - t->xOffs + tc->w;
 		r.w = COLUMN_RESIZE_RANGE;
 		AG_SetStockCursor(t, &tc->ca, &r, AG_HRESIZE_CURSOR);
 		x += tc->w;
@@ -870,16 +870,18 @@ UpdateEmbeddedWidgets(AG_Table *_Nonnull t)
 }
 
 /*
- * Cleanup a table cell structure.
+ * Free any resources allocated by a table cell.
  * Table must be locked.
  */
 void
 AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 {
+#if 0
 	if (c->widget != NULL) {
 		AG_ObjectDetach(c->widget);
 		AG_ObjectDestroy(c->widget);
 	}
+#endif
 	if (c->surface != -1) {
 		AG_WidgetUnmapSurface(t, c->surface);
 		c->surface = -1;
@@ -1030,10 +1032,8 @@ AG_TableEnd(AG_Table *t)
 	     tc != TAILQ_END(&t->cPrevList);
 	     tc = tcNext) {
 		tcNext = TAILQ_NEXT(tc, cells_list);
-		if (tc->surface != -1) {
-			AG_WidgetUnmapSurface(t, tc->surface);
-		}
-		Free(tc);
+		AG_TableFreeCell(t, tc);
+		free(tc);
 	}
 	TAILQ_INIT(&t->cPrevList);
 
@@ -1680,12 +1680,11 @@ IncrementSelection(AG_Table *_Nonnull t, int inc)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int mx, int my)
 {
-	AG_Table *t = AG_TABLE_SELF();
-	const int button = AG_INT(1);
-	const int x = AG_INT(2) - WIDGET(t)->paddingLeft;
-	const int y = AG_INT(3) - WIDGET(t)->paddingTop;
+	AG_Table *t = obj;
+	const int x = mx - WIDGET(t)->paddingLeft;
+	const int y = my - WIDGET(t)->paddingTop;
 	int m;
 	
 	if (!AG_WidgetIsFocused(t))
@@ -1712,7 +1711,6 @@ MouseButtonDown(AG_Event *_Nonnull event)
 			break;
 		}
 		if (t->m == 0 || t->n == 0) {
-			Debug(t, "Click: empty table\n");
 			return;
 		}
 		m = RowAtY(t, y);
@@ -1734,10 +1732,9 @@ MouseButtonDown(AG_Event *_Nonnull event)
 }
 
 static void
-MouseButtonUp(AG_Event *_Nonnull event)
+MouseButtonUp(void *obj, AG_MouseButton button, int mx, int my)
 {
-	AG_Table *t = AG_TABLE_SELF();
-	const int button = AG_INT(1);
+	AG_Table *t = obj;
 
 	switch (button) {
 	case AG_MOUSE_LEFT:
@@ -1765,27 +1762,27 @@ MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Table *t = AG_TABLE_SELF();
-	const int keysym = AG_INT(1);
+	AG_Table *t = obj;
+	const int ms = agKbdDelay;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_UP:
 		DecrementSelection(t, 1);
-		AG_AddTimer(t, &t->moveTo, agKbdDelay, MoveTimeout, "%i", -1);
+		AG_AddTimer(t, &t->moveTo, ms, MoveTimeout,"%i",-1);
 		break;
 	case AG_KEY_DOWN:
 		IncrementSelection(t, 1);
-		AG_AddTimer(t, &t->moveTo, agKbdDelay, MoveTimeout, "%i", +1);
+		AG_AddTimer(t, &t->moveTo, ms, MoveTimeout,"%i",+1);
 		break;
 	case AG_KEY_PAGEUP:
 		DecrementSelection(t, agPageIncrement);
-		AG_AddTimer(t, &t->moveTo, agKbdDelay, MoveTimeout, "%i", -agPageIncrement);
+		AG_AddTimer(t, &t->moveTo, ms, MoveTimeout,"%i",-agPageIncrement);
 		break;
 	case AG_KEY_PAGEDOWN:
 		IncrementSelection(t, agPageIncrement);
-		AG_AddTimer(t, &t->moveTo, agKbdDelay, MoveTimeout, "%i", +agPageIncrement);
+		AG_AddTimer(t, &t->moveTo, ms, MoveTimeout,"%i",+agPageIncrement);
 		break;
 	case AG_KEY_HOME:
 		t->mOffs = 0;
@@ -1799,11 +1796,10 @@ KeyDown(AG_Event *_Nonnull event)
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int mx, int my, int dx, int dy)
 {
-	AG_Table *t = AG_TABLE_SELF();
-	const int x = AG_INT(1) - WIDGET(t)->paddingLeft;
-	const int xrel = AG_INT(3);
+	AG_Table *t = obj;
+	const int x = mx - WIDGET(t)->paddingLeft;
 
 	if (x < 0 || x >= WIDTH(t))
 		return;
@@ -1811,7 +1807,7 @@ MouseMotion(AG_Event *_Nonnull event)
 	if (t->nResizing >= 0 && t->nResizing < t->n) {
 		AG_TableCol *tc = &t->cols[t->nResizing];
 
-		if ((tc->w += xrel) < t->wColMin) {
+		if ((tc->w += dx) < t->wColMin) {
 			tc->w = t->wColMin;
 		}
 		SizeColumns(t);
@@ -1820,12 +1816,11 @@ MouseMotion(AG_Event *_Nonnull event)
 }
 
 static void
-KeyUp(AG_Event *_Nonnull event)
+KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Table *t = AG_TABLE_SELF();
-	const int keysym = AG_INT(1);
+	AG_Table *t = obj;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_UP:
 	case AG_KEY_PAGEUP:
 	case AG_KEY_DOWN:
@@ -1873,6 +1868,45 @@ LostFocus(AG_Event *_Nonnull event)
 
 	if (t->nResizing >= 0)
 		t->nResizing = -1;
+}
+
+static void
+Hidden(AG_Event *_Nonnull event)
+{
+	AG_Table *t = AG_TABLE_SELF();
+	int i;
+
+	AG_DelTimer(t, &t->moveTo);
+	AG_DelTimer(t, &t->dblClickTo);
+
+	if (t->nResizing >= 0)
+		t->nResizing = -1;
+
+	for (i = 0; i < t->m; i++) {
+		AG_TableCell *tc = t->cells[i];
+
+		if (tc->widget != NULL) {
+			AG_PostEvent(tc->widget, "widget-hidden", NULL);
+		}
+		if (tc->surface != -1) {
+			AG_WidgetUnmapSurface(t, tc->surface);
+			tc->surface = -1;
+		}
+	}
+}
+
+static void
+Shown(AG_Event *_Nonnull event)
+{
+	AG_Table *t = AG_TABLE_SELF();
+	int i;
+
+	for (i = 0; i < t->m; i++) {
+		AG_TableCell *tc = t->cells[i];
+
+		if (tc->widget != NULL)
+			AG_PostEvent(tc->widget, "widget-shown", NULL);
+	}
 }
 
 int
@@ -2303,6 +2337,8 @@ AG_TableDelRow(AG_Table *t, int m)
 		AG_TableCell *c = &t->cells[m][n];
 
 		AG_Debug(t, "cell: %d, sel=%d\n", n, c->selected);
+
+		/* TODO */
 	}
 
 	AG_ObjectUnlock(t);
@@ -2434,14 +2470,9 @@ Init(void *_Nonnull obj)
 	TAILQ_INIT(&t->cPrevList);
 	
 	AG_AddEvent(t, "font-changed", OnFontChange, NULL);
-	AG_AddEvent(t, "widget-hidden", LostFocus, NULL);
-	AG_AddEvent(t, "detached", LostFocus, NULL);
 	AG_SetEvent(t, "widget-lostfocus", LostFocus, NULL);
-	AG_SetEvent(t, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(t, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(t, "mouse-motion", MouseMotion, NULL);
-	AG_SetEvent(t, "key-down", KeyDown, NULL);
-	AG_SetEvent(t, "key-up", KeyUp, NULL);
+	AG_AddEvent(t, "widget-hidden", Hidden, NULL);
+	AG_AddEvent(t, "widget-shown", Shown, NULL);
 }
 
 static void
@@ -2452,31 +2483,27 @@ Destroy(void *_Nonnull obj)
 	AG_TableCell *c, *cNext;
 	int i;
 
-	/* Free the attached popup menus. */
 	for (pop = SLIST_FIRST(&t->popups);
 	     pop != SLIST_END(&t->popups);
 	     pop = nPop) {
 		nPop = SLIST_NEXT(pop, popups);
 		AG_ObjectDestroy(pop->menu);
-		Free(pop);
+		free(pop);
 	}
 
-	/* Free the active cells. */
 	for (i = 0; i < t->m; i++) {
-		Free(t->cells[i]);
+		free(t->cells[i]);
 	}
-	Free(t->cells);
+	free(t->cells);
 
-	/* Free the backing store. */
 	for (c = TAILQ_FIRST(&t->cPrevList);
 	     c != TAILQ_END(&t->cPrevList);
 	     c = cNext) {
 		cNext = TAILQ_NEXT(c, cells_list);
-		Free(c);
+		free(c);
 	}
-	Free(t->cPrev);
+	free(t->cPrev);
 
-	/* Free the columns. */
 	Free(t->cols);
 }
 
@@ -2494,7 +2521,15 @@ AG_WidgetClass agTableClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	MouseButtonUp,
+	MouseMotion,
+	KeyDown,
+	KeyUp,
+	NULL,			/* touch */
+	NULL,			/* ctrl */
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */
