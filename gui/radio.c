@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -497,11 +497,9 @@ out:
 }
 
 static void
-MouseMotion(AG_Event *_Nonnull event)
+MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	AG_Radio *rad = AG_RADIO_SELF();
-	const int x = AG_INT(1);
-	const int y = AG_INT(2);
+	AG_Radio *rad = obj;
 	int i, cur, itemNew = -1, wDiv;
 
 	if (x < 0 || x > WIDTH(rad) ||
@@ -577,19 +575,19 @@ out:
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Radio *rad = AG_RADIO_SELF();
-	const int button = AG_INT(1);
-	const int x = AG_INT(2);
-	const int y = AG_INT(3);
+	AG_Radio *rad = obj;
 	int i, cur, *sel, selNew = -1, wDiv;
 	AG_Variable *value;
+
+	if (button != AG_MOUSE_LEFT)
+		return;
 
 	if (!AG_WidgetIsFocused(rad))
 		AG_WidgetFocus(rad);
 
-	if (button != AG_MOUSE_LEFT)
+	if (AG_WidgetDisabled(rad))
 		return;
 
 	value = AG_GetVariable(rad, "value", (void *)&sel);
@@ -700,22 +698,24 @@ MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Radio *rad = AG_RADIO_SELF();
-	const int keysym = AG_INT(1);
+	AG_Radio *rad = obj;
 	int i;
 
-	switch (keysym) {
+	if (AG_WidgetDisabled(rad))
+		return;
+
+	switch (ks) {
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
 		MoveSelection(rad, +1);
-		AG_AddTimer(rad, &rad->moveTo, agKbdDelay, MoveTimeout, "%i", +1);
+		AG_AddTimer(rad, &rad->moveTo, agKbdDelay, MoveTimeout,"%i",+1);
 		break;
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
 		MoveSelection(rad, -1);
-		AG_AddTimer(rad, &rad->moveTo, agKbdDelay, MoveTimeout, "%i", -1);
+		AG_AddTimer(rad, &rad->moveTo, agKbdDelay, MoveTimeout,"%i",-1);
 		break;
 	default:
 		{
@@ -725,7 +725,7 @@ KeyDown(AG_Event *_Nonnull event)
 			V = AG_GetVariable(rad, "value", (void *)&sel);
 			for (i = 0; i < rad->nItems; i++) {
 				if (rad->items[i].hotkey != 0 &&
-				    rad->items[i].hotkey == keysym) {
+				    rad->items[i].hotkey == ks) {
 					selNew = i;
 					break;
 				}
@@ -739,21 +739,20 @@ KeyDown(AG_Event *_Nonnull event)
 		}
 		break;
 	}
-	rad->lastKeyDown = keysym;
+	rad->lastKeyDown = ks;
 }
 
 static void
-KeyUp(AG_Event *_Nonnull event)
+KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Radio *rad = AG_RADIO_SELF();
-	const int keysym = AG_INT(1);
+	AG_Radio *rad = obj;
 
-	switch (keysym) {
+	switch (ks) {
 	case AG_KEY_UP:
 	case AG_KEY_DOWN:
 	case AG_KEY_LEFT:
 	case AG_KEY_RIGHT:
-		if (keysym == rad->lastKeyDown) {
+		if (ks == rad->lastKeyDown) {
 			AG_DelTimer(rad, &rad->moveTo);
 		}
 		break;
@@ -817,13 +816,67 @@ Init(void *_Nonnull obj)
 	AG_AddEvent(rad, "palette-changed", StyleChanged, NULL);
 	AG_AddEvent(rad, "widget-hidden", OnHide, NULL);
 
-	AG_SetEvent(rad, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(rad, "key-down", KeyDown, NULL);
-	AG_SetEvent(rad, "key-up", KeyUp, NULL);
-	AG_SetEvent(rad, "mouse-motion", MouseMotion, NULL);
-
 	AG_BindInt(rad, "value", &rad->value);
 	AG_RedrawOnChange(rad, 100, "value");
+}
+
+static void
+Ctrl(void *obj, void *inputDevice, const AG_DriverEvent *dev)
+{
+	AG_Radio *rad = obj;
+
+	if (AG_WidgetDisabled(rad))
+		return;
+
+	if (dev->type == AG_DRIVER_CTRL_BUTTON_DOWN) {
+		switch (dev->ctrlButton.which) {
+		case AG_CTRL_BUTTON_DPAD_UP:
+			MoveSelection(rad, -1);
+			AG_AddTimer(rad, &rad->moveTo, agKbdDelay,
+			    MoveTimeout,"%i",-1);
+			return;
+		case AG_CTRL_BUTTON_DPAD_DOWN:
+			MoveSelection(rad, +1);
+			AG_AddTimer(rad, &rad->moveTo, agKbdDelay,
+			    MoveTimeout,"%i",+1);
+			return;
+		default:
+			Debug(rad, "Unknown button %d\n", dev->ctrlButton.which);
+			break;
+		}
+	}
+
+	if (dev->type != AG_DRIVER_CTRL_AXIS_MOTION)
+		return;
+
+	if (rad->type == AG_RADIO_VERT &&
+	    dev->ctrlAxis.axis == AG_CTRL_AXIS_LEFT_Y) {
+		if (dev->ctrlAxis.value == -0x8000) {
+			MoveSelection(rad, -1);
+			AG_AddTimer(rad, &rad->moveTo, agKbdDelay,
+			    MoveTimeout,"%i",-1);
+		} else if (dev->ctrlAxis.value == 0x7fff) {
+			MoveSelection(rad, +1);
+			AG_AddTimer(rad, &rad->moveTo, agKbdDelay,
+			    MoveTimeout,"%i",+1);
+		} else {
+			AG_DelTimer(rad, &rad->moveTo);
+		}
+		Debug(rad, "axis %d\n", dev->ctrlAxis.value);
+	} else if (rad->type == AG_RADIO_HORIZ &&
+	    dev->ctrlAxis.axis == AG_CTRL_AXIS_LEFT_X) {
+		if (dev->ctrlAxis.value == -0x8000) {
+			MoveSelection(rad, -1);
+			AG_AddTimer(rad, &rad->moveTo, agKbdDelay,
+			    MoveTimeout,"%i",-1);
+		} else if (dev->ctrlAxis.value == 0x7fff) {
+			MoveSelection(rad, +1);
+			AG_AddTimer(rad, &rad->moveTo, agKbdDelay,
+			    MoveTimeout,"%i",+1);
+		} else {
+			AG_DelTimer(rad, &rad->moveTo);
+		}
+	}
 }
 
 AG_WidgetClass agRadioClass = {
@@ -841,6 +894,14 @@ AG_WidgetClass agRadioClass = {
 	Draw,
 	SizeRequest,
 	NULL,			/* size_allocate */
+	MouseButtonDown,
+	NULL,			/* mouse_button_up */
+	MouseMotion,
+	KeyDown,
+	KeyUp,
+	NULL,			/* touch */
+	Ctrl,
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */

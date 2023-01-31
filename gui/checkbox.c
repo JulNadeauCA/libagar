@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -170,10 +170,9 @@ AG_CheckboxNewS(void *parent, Uint flags, const char *label)
 }
 
 static void
-MouseButtonDown(AG_Event *_Nonnull event)
+MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	AG_Checkbox *cb = AG_CHECKBOX_SELF();
-	const int button = AG_INT(1);
+	AG_Checkbox *cb = obj;
 
 	if (AG_WidgetDisabled(cb))
 		return;
@@ -187,15 +186,14 @@ MouseButtonDown(AG_Event *_Nonnull event)
 }
 
 static void
-KeyDown(AG_Event *_Nonnull event)
+KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	AG_Checkbox *cb = AG_CHECKBOX_SELF();
-	const int key = AG_INT(1);
+	AG_Checkbox *cb = obj;
 	
 	if (AG_WidgetDisabled(cb))
 		return;
 
-	switch (key) {
+	switch (ks) {
 	case AG_KEY_RETURN:
 	case AG_KEY_KP_ENTER:
 	case AG_KEY_SPACE:
@@ -236,9 +234,6 @@ Init(void *_Nonnull obj)
 	
 	AG_BindInt(cb, "state", &cb->state);
 	
-	AG_SetEvent(cb, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(cb, "key-down", KeyDown, NULL);
-
 	AG_AddEvent(cb, "font-changed",    StyleChanged, NULL);
 	AG_AddEvent(cb, "palette-changed", StyleChanged, NULL);
 }
@@ -618,6 +613,19 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	AG_Redraw(cb);
 }
 
+static void
+Ctrl(void *obj, void *inputDevice, const AG_DriverEvent *dev)
+{
+	AG_Checkbox *cb = obj;
+
+	if (AG_WidgetDisabled(cb))
+		return;
+
+	if (dev->type == AG_DRIVER_CTRL_BUTTON_DOWN &&
+	    dev->ctrlButton.which == AG_CTRL_BUTTON_A)
+		AG_CheckboxToggle(cb);
+}
+
 AG_WidgetClass agCheckboxClass = {
 	{
 		"Agar(Widget:Checkbox)",
@@ -632,7 +640,15 @@ AG_WidgetClass agCheckboxClass = {
 	},
 	Draw,
 	SizeRequest,
-	SizeAllocate
+	SizeAllocate,
+	MouseButtonDown,
+	NULL,			/* mouse_button_up */
+	NULL,			/* mouse_motion */
+	KeyDown,
+	NULL,			/* key_up */
+	NULL,			/* touch */
+	Ctrl,
+	NULL			/* joy */
 };
 
 #endif /* AG_WIDGETS */
