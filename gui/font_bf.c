@@ -32,7 +32,8 @@
 #include <agar/gui/text.h>
 #include <agar/gui/font_bf.h>
 
-#define DEBUG_FONTS
+/* #define DEBUG_FONTS */
+/* #define DEBUG_FONTS_UNICODE */
 
 /*
  * Create and load a bitmap font.
@@ -79,10 +80,174 @@ LoadImage(AG_FontBf *fontBf, const char *file)
 	if ((fontBf->S = AG_SurfaceFromFile(path)) == NULL) {
 		return (-1);
 	}
+#ifdef DEBUG_FONTS
 	Debug(fontBf, "Loaded %dx%d image from %s\n",
 	    fontBf->S->w, fontBf->S->h, file);
-
+#endif
 	return (0);
+}
+
+static void
+MapGlyph(AG_FontBf *fontBf, int x1, int x2, int y, int yRef, Uint nGlyph)
+{
+	AG_GlyphBf *G = &fontBf->glyphs[nGlyph];
+	const int height = fontBf->height;
+
+	G->ch = fontBf->unicode[nGlyph];
+	G->flags = AG_GLYPH_VALID;
+	G->yOffset = y - yRef;
+	G->rs.x = x1 + 1;
+	G->rs.y = y + 1;
+	G->rs.w = (x2 - x1) - 2;
+	G->rs.h = height - 2;
+
+#ifdef DEBUG_FONTS
+	Debug(fontBf,
+	    "New Glyph #%d: Ch=0x%lx ('%c') yOffs=%d (ref=%d) rs=[%d,%d %dx%d]\n",
+	    nGlyph, (Ulong)G->ch, (char)G->ch,
+	    G->yOffset, yRef,
+	    G->rs.x, G->rs.y, G->rs.w, G->rs.h);
+#endif
+}
+
+/* Scan the image for reference and glyph bounding boxes. */
+static int
+ScanImage(AG_FontBf *fontBf)
+{
+	AG_Surface *S = fontBf->S;
+	Uint8 *p, *pScanBegin;
+	Uint32 px, pxBB;
+	Uint nGlyph=0, nRow=0;
+	int x = 0, y, yRef, yBeg, yEnd;
+
+	pxBB = AG_MapPixel32_RGBA8(&S->format, 0,0,0, 255);
+
+	/* Find the first pixel of the reference bounding box of this row. */
+	y = 0;
+	p = S->pixels;
+scan_row:
+	for (; y < S->h; y++) {
+		px = AG_SurfaceGet32_At(S,p);
+		if (px == pxBB) {
+			yBeg = y;
+			break;
+		}
+		p += S->pitch;
+	}
+	if (y == S->h) {
+		AG_SetErrorS("Bounding box not found");
+		return (-1);
+	}
+	yRef = y;
+
+	/* Measure the height of the bounding box. */
+	p += S->pitch;
+	y++;
+	for (; y < S->h; y++) {
+		px = AG_SurfaceGet32_At(S, p);
+
+		if (px != pxBB) {
+			yEnd = y;
+			--y;
+			p -= S->pitch;
+			break;
+		}
+		p += S->pitch;
+	}
+	if (y == S->h)
+		goto bad_bbox;
+
+	/* Measure the width of the bounding box. */
+	p += S->format.BytesPerPixel;
+	for (x = 1; x < S->w; x++) {
+		px = AG_SurfaceGet32_At(S, p);
+		if (px != pxBB) {
+			break;
+		}
+		p += S->format.BytesPerPixel;
+	}
+	if (x == S->w) {
+		goto bad_bbox;
+	}
+	if (nRow == 0) {
+		fontBf->height = (yEnd - yBeg);
+		fontBf->wdRef = x;
+	}
+
+	/*
+	 * Scan the glyphs in this row.
+	 */
+
+	/* Establish the beginnning of the vertical scanning area. */
+	yBeg = yBeg - fontBf->height + 1;
+	if (yBeg < 0) { yBeg = 0; }
+	pScanBegin = S->pixels + (yBeg * S->pitch);
+
+	/*
+	 * Vertical downwards scan the established area left to right until
+	 * a bounding box edge is found. Bounding box edges must be separated
+	 * by at least 1px.
+	 */
+	for (x++; x < S->w - 1; x++) {
+		for (y = yBeg, p = pScanBegin + (x * S->format.BytesPerPixel);
+		     y < yEnd;
+		     y++) {
+			px = AG_SurfaceGet32_At(S, p);
+			if (px == pxBB) {               /* BBox upper left? */
+				break;
+			}
+			p += S->pitch;
+		}
+		if (y < yEnd) {                               /* BBox found */
+			int xBox, diff;
+
+			/* Measure the width of the BBox. */
+			for (xBox = x+1, p += S->format.BytesPerPixel;
+			     xBox < S->w;
+			     xBox++) {
+				px = AG_SurfaceGet32_At(S, p);
+				if (px != pxBB) {
+					break;
+				}
+				p += S->format.BytesPerPixel;
+			}
+			if (xBox == S->w)
+				goto bad_bbox;
+
+			/* Map the glyph at this location. */
+			MapGlyph(fontBf, x, xBox, y, yRef, nGlyph);
+
+			if (++nGlyph >= fontBf->nUnicode) {
+				/* All unicode mappings are satisfied. */
+				goto success;
+			}
+			diff = (xBox - x);
+			x += diff;
+			p += diff * S->format.BytesPerPixel;
+		}
+	}
+	nRow++;
+	if (y + fontBf->height < S->h) {              /* Next row possible? */
+		y = (yEnd + (fontBf->height >> 1));
+		p = S->pixels + (y * S->pitch);
+		goto scan_row;                         /* Scan the next row */
+	}
+	if (fontBf->nGlyphs < fontBf->nUnicode) {
+		AG_SetError("No unicode for glyph #%d", fontBf->nGlyphs+1);
+		return (-1);
+	}
+success:
+	fontBf->nGlyphs = fontBf->nUnicode;
+#ifdef DEBUG_FONTS
+	Debug(fontBf, "Bitmap Font OK (%d glyphs in %d rows, "
+	              "height = %d, ref.wd = %d)\n",
+	    fontBf->nGlyphs, nRow+1,
+	    fontBf->height, fontBf->wdRef);
+#endif
+	return (0);
+bad_bbox:
+	AG_SetError("Unterminated bounding box at [%d,%d]", x, y);
+	return (-1);
 }
 
 static int
@@ -93,16 +258,14 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 	const AG_FontSpec *spec = &font->spec;
 	AG_Size size;
 	char *buf, *sBuf, *line;
-	AG_Surface *S;
-	Uint8 *p;
-	Uint32 pxBlack;
-	int nLine=1, inUnicodeBlock=0, inMatchingSize=0, maxUnicode;
-	int x,y, yBox;
+	int nLine=1, inUnicodeBlock=0, inMatchingSize=0, inMatchingFlags=0;
+	int maxUnicode;
 
 	if (spec->sourceType == AG_FONT_SOURCE_FILE) {
 		AG_DataSource *ds;
-
+#ifdef DEBUG_FONTS
 		Debug(fontBf, "Open(%s)\n", path);
+#endif
 		if ((ds = AG_OpenFile(path, "rb")) == NULL) {
 			return (-1);
 		}
@@ -147,7 +310,9 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 		}
 		if (inUnicodeBlock) {
 			char *lineBuf, *tok, *sToks;
-
+			/*
+			 * Scope: Unicode mappings block.
+			 */
 			if (line[0] == '.') {
 				inUnicodeBlock = 0;
 				goto next_line;
@@ -169,15 +334,21 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 				}
 				fontBf->unicode[fontBf->nUnicode++] =
 				    (AG_Char)strtoul(tok,NULL,16);
-//				Debug(fontBf, "tok '%s' -> 0x%x ('%c')\n",
-//				    tok, 
-//				    (Uint)fontBf->unicode[fontBf->nUnicode-1],
-//				    (char)fontBf->unicode[fontBf->nUnicode-1]);
+#ifdef DEBUG_FONTS_UNICODE
+				Debug(fontBf, "Map #%d: '%s' -> 0x%x ('%c')\n",
+				    fontBf->nUnicode-1,
+				    tok, 
+				    (Uint)fontBf->unicode[fontBf->nUnicode-1],
+				    (char)fontBf->unicode[fontBf->nUnicode-1]);
+#endif
 			}
 			free(lineBuf);
 			goto next_line;
 		}
-		if (inMatchingSize) {
+		if (inMatchingSize && inMatchingFlags) {
+			/*
+			 * Scope: Matching font variant.
+			 */
 			if (strncmp(line,"file \"",6) == 0 && line[6] != '\0') {
 				const char *file = &line[6];
 				char *fileEnd;
@@ -193,15 +364,16 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 						   file, AG_GetError());
 					continue;
 				}
-			} else if (strncmp(line,"flags 0x",8) == 0 && line[8] != '\0') {
-				font->flags = (Uint)strtoul(&line[8],NULL,16);
-				Debug(fontBf, "Font flags: 0x%x\n", font->flags);
 			} else if (strncmp(line,"underline-position ",18) == 0 && line[18] != '\0') {
 				fontBf->underlinePos = (int)strtoul(&line[18],NULL,10);
+#ifdef DEBUG_FONTS
 				Debug(fontBf, "Underline pos: %d\n", fontBf->underlinePos);
+#endif
 			} else if (strncmp(line,"underline-thickness ",19) == 0 && line[19] != '\0') {
 				fontBf->underlineThick = (int)strtoul(&line[19],NULL,10);
+#ifdef DEBUG_FONTS
 				Debug(fontBf, "Underline thickness: %d\n", fontBf->underlineThick);
+#endif
 			} else if (strcmp(line,"unicode") == 0) {
 				inUnicodeBlock = 1;
 				maxUnicode = 32;
@@ -211,6 +383,10 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 					goto fail;
 			}
 		}
+
+		/*
+		 * Scope: Font global.
+		 */
 		if (strncmp(line,"name \"",6) == 0 && line[6] != '\0') {
 			const char *name = &line[6];
 			char *nameEnd;
@@ -222,7 +398,9 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 			if ((fontBf->name = TryStrdup(name)) == NULL) {
 				goto fail;
 			}
+#ifdef DEBUG_FONTS
 			Debug(fontBf, "Name: `%s'\n", name);
+#endif
 		} else if (strncmp(line,"author",6) == 0 ||
 		           strncmp(line,"license",7) == 0) {
 			goto next_line;
@@ -240,6 +418,9 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 				fontBf->colorize = AG_FONT_BF_COLORIZE_NONE;
 				break;
 			}
+#ifdef DEBUG_FONTS
+			Debug(fontBf, "Colorization mode: %d\n", fontBf->colorize);
+#endif
 		} else if (strncmp(line,"size ",5) == 0 && line[5] != '\0') {
 			char *ep;
 			float sizeMin, sizeMax;
@@ -255,6 +436,15 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 			} else {
 				inMatchingSize = 0;
 			}
+		} else if (strncmp(line,"flags 0x",8) == 0 && line[8] != '\0') {
+			Uint fontFlags;
+
+			fontFlags = (Uint)strtoul(&line[8],NULL,16);
+			inMatchingFlags = (font->flags == fontFlags) ? 1 : 0;
+#ifdef DEBUG_FONTS
+			if (inMatchingFlags)
+				Debug(fontBf, "Matching flags: 0x%x\n", font->flags);
+#endif
 		}
 next_line:
 		nLine++;
@@ -264,60 +454,24 @@ syntax_error:
 		           "line %d: Syntax error near: `%s'\n",
 			   OBJECT(fontBf)->name, nLine, line);
 	}
-	if ((S = fontBf->S) == NULL) {
+	if (fontBf->S == NULL) {
 		AG_SetErrorS("No matching bitmap font size");
 		goto fail;
 	}
-	p = S->pixels;
-	(void)x;
-//	pxBlack = AG_MapPixel32_RGBA8(&S->format, 0,0,0, 255);
-#if AG_BYTEORDER == AG_BIG_ENDIAN
-	pxBlack = 0x000000ff;
-#else
-	pxBlack = 0xff000000;
-#endif
-	for (y = 0;
-	     y < S->h;
-	     y++, p += S->pitch) {
-		Uint32 px;
-		Uint8 r,g,b,a;
 
-		if ((px = AG_SurfaceGet32_At(S,p)) != pxBlack) {
-			Debug(fontBf, "px=0x%x c\n", px);
-			continue;
-		}
-		AG_GetColor32_RGBA8(px, &S->format, &r,&g,&b,&a);
-		Debug(fontBf, "px %d,%d,%d,%d\n", r,g,b,a);
-		Debug(fontBf, "px=0x%x b (blk=0x%x)\n", px, pxBlack);
-		Debug(fontBf, "Amask=0x%08lx\n", S->format.Amask);
-		Debug(fontBf, "Ashift=%d\n", S->format.Ashift);
-		Debug(fontBf, "Aloss=%d\n", S->format.Aloss);
-		break;
-	}
-	if (y == S->h) {
-		AG_SetErrorS("Bounding box not found");
+	/* Pre-allocate glyph array. ScanImage() will set nGlyphs on success. */
+	fontBf->glyphs = TryMalloc(fontBf->nUnicode * sizeof(AG_GlyphBf));
+	if (fontBf->glyphs == NULL) {
 		goto fail;
 	}
-	Debug(fontBf, "Bounding box at %d (pxBlack=%x)\n", y, pxBlack);
-	p += S->pitch;
-	y++;
-	for (yBox = y; yBox < S->h; yBox++) {
-		Uint32 pxBox = AG_SurfaceGet32_At(S, p);
-
-		Debug(fontBf, "pxBox (%d) = 0x%x\n", yBox, pxBox);
-		if (pxBox != pxBlack) {
-			Debug(fontBf, "box break = %d\n", yBox);
-			break;
-		}
-		p += S->pitch;
+	if (ScanImage(fontBf) == -1) {
+		goto fail;
 	}
-
-#if 0
-	font->height = fontBf->glyphs[0]->h;
+	font->height = fontBf->height;
 	font->ascent = font->height;
 	font->descent = 0;
-	font->lineskip = font->height;
-#endif
+	font->lineskip = font->height;		/* TODO */
+
 	fontBf->flags |= AG_FONT_BF_VALID;
 	free(buf);
 	return (0);
@@ -350,15 +504,37 @@ Close(void *_Nonnull obj)
 static void *
 GetGlyph(void *_Nonnull obj, AG_Char ch, Uint want)
 {
-//	return (void *)GetGlyphSurface((const AG_FontBf *)obj, ch);
+	AG_FontBf *fontBf = obj;
+	Uint i;
+
+	/* TODO hash table */
+
+	for (i = 0; i < fontBf->nGlyphs; i++) {
+		AG_GlyphBf *Gbf = &fontBf->glyphs[i];
+
+		if (Gbf->ch == ch) {
+#ifdef AG_DEBUG
+			if ((Gbf->flags & AG_GLYPH_VALID) == 0)
+				AG_FatalError("Invalid glyph");
+#endif
+			return (void *)(Gbf);
+		}
+	}
 	return (NULL);
 }
 
 static void
 GetGlyphMetrics(void *_Nonnull obj, AG_Glyph *G)
 {
-//	G->advance = G->su->w;
-	G->advance = 10;
+	AG_FontBf *fontBf = obj;
+	AG_GlyphBf *Gbf;
+
+	Gbf = GetGlyph(fontBf, G->ch, 0);
+	if (Gbf != NULL) {
+		G->advance = Gbf->rs.w + fontBf->advance;
+	} else {
+		G->advance = fontBf->wdRef;
+	}
 }
 
 /*
@@ -377,14 +553,13 @@ JustifyOffset(const AG_TextState *_Nonnull ts, int w, int wLine)
 }
 
 static void
-Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
+RenderColorizeNone(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
     const AG_TextMetrics *_Nonnull Tm, AG_Font *_Nonnull font,
     const AG_Color *_Nonnull cBgOrig, const AG_Color *_Nonnull cFgOrig)
 {
-//	AG_FontBf *fontBf = AGFONTBF(font);
+	AG_FontBf *fontBf = AGFONTBF(font);
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	const int lineskip = font->lineskip;
-//	AG_Surface *Sglyph;
 	const AG_Char *c;
 	AG_Rect rd;
 	int line;
@@ -398,6 +573,8 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	rd.y = 0;
 
 	for (c=&ucs[0], line=0; *c != '\0'; c++) {
+		AG_GlyphBf *Gbf;
+
 		if (*c == '\n') {
 			rd.y += lineskip;
 			rd.x = JustifyOffset(ts, Tm->w, Tm->wLines[++line]);
@@ -416,43 +593,58 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 				continue;
 			}
 		}
-#if 0
-		Sglyph = GetGlyphSurface(fontBf, *c);
-		if (*c != ' ') {
-			Uint8 *pSrc = Sglyph->pixels;
-			int x,y;
-
-			for (y = 0; y < Sglyph->h; y++) {
-				Uint8 *pDst = S->pixels +
-				    (rd.y + y)*S->pitch +
-				     rd.x*S->format.BytesPerPixel;
-
-				for (x = 0; x < Sglyph->w; x++) {
-					const AG_Pixel pxGlyph =
-					    AG_SurfaceGet32_At(Sglyph,pSrc);
-					AG_Color c;
-
-					AG_GetColor(&c, pxGlyph,
-					    &Sglyph->format);
-	
-					if (c.a != 0) {
-						Debug(NULL, "GetColor(%d,%d,%d,%d)\n",
-						    c.r, c.g, c.b, c.a);
-						AG_SurfacePut_At(S, pDst,
-						    AG_MapPixel(&S->format,
-						        cFgOrig));
-					}
-
-					pSrc += Sglyph->format.BytesPerPixel;
-					pDst += S->format.BytesPerPixel;
-				}
-				pSrc += Sglyph->padding;
-				pDst += S->padding;
-			}
-		}
-		rd.x += Sglyph->w;
+		if ((Gbf = GetGlyph(fontBf, *c, 0)) == NULL) {
+#ifdef DEBUG_FONTS
+			Debug(fontBf, "Not found: `%c' (0x%x)\n", (char)*c, *c);
 #endif
+			rd.x += fontBf->wdRef;
+			continue;
+		}
+		if (*c != ' ') {
+			AG_SurfaceBlit(fontBf->S, &Gbf->rs, S,
+			    rd.x,
+			    rd.y + Gbf->yOffset);
+		}
+		rd.x += Gbf->rs.w + fontBf->advance;
 	}
+}
+
+static void
+RenderColorizeGrays(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
+    const AG_TextMetrics *_Nonnull Tm, AG_Font *_Nonnull font,
+    const AG_Color *_Nonnull cBgOrig, const AG_Color *_Nonnull cFgOrig)
+{
+	/* TODO */
+	RenderColorizeNone(ucs, S, Tm, font, cBgOrig, cFgOrig);
+}
+
+static void
+RenderColorizeAll(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
+    const AG_TextMetrics *_Nonnull Tm, AG_Font *_Nonnull font,
+    const AG_Color *_Nonnull cBgOrig, const AG_Color *_Nonnull cFgOrig)
+{
+	/* TODO */
+	RenderColorizeNone(ucs, S, Tm, font, cBgOrig, cFgOrig);
+}
+
+static void
+Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
+    const AG_TextMetrics *_Nonnull Tm, AG_Font *_Nonnull font,
+    const AG_Color *_Nonnull cBgOrig, const AG_Color *_Nonnull cFgOrig)
+{
+	AG_FontBf *fontBf = AGFONTBF(font);
+	static void (*pfRender[])(const AG_Char *, AG_Surface *,
+	    const AG_TextMetrics *, AG_Font *, const AG_Color *,
+	    const AG_Color *) = {
+		RenderColorizeNone,
+		RenderColorizeGrays,
+		RenderColorizeAll
+	};
+#ifdef AG_DEBUG
+	if (fontBf->colorize >= AG_FONT_BF_COLORIZE_LAST)
+		AG_FatalError("Bad colorize mode");
+#endif
+	pfRender[fontBf->colorize](ucs, S, Tm, font, cBgOrig, cFgOrig);
 }
 
 static void
@@ -460,9 +652,9 @@ Size(const AG_Font *_Nonnull font, const AG_Char *_Nonnull ucs,
     AG_TextMetrics *_Nonnull Tm, int extended)
 {
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
-//	AG_FontBf *fontBf = AGFONTBF(font);
+	AG_FontBf *fontBf = AGFONTBF(font);
+	AG_GlyphBf *Gbf;
 	const AG_Char *c;
-//	AG_Surface *Sglyph;
 	const int tabWd = ts->tabWd;
 	const int lineskip = font->lineskip;
 	int wLine=0;
@@ -492,12 +684,18 @@ Size(const AG_Font *_Nonnull font, const AG_Char *_Nonnull ucs,
 				continue;
 			}
 		}
-#if 0
-		Sglyph = GetGlyphSurface(fontBf, *c);
-		wLine += Sglyph->w;
-		Tm->w += Sglyph->w;
-		Tm->h = MAX(Tm->h, Sglyph->h);
-#endif
+
+		if ((Gbf = GetGlyph(fontBf, *c, 0)) != NULL) {
+			const int advance = Gbf->rs.w + fontBf->advance;
+
+			wLine += advance;
+			Tm->w += advance;
+			Tm->h = MAX(Tm->h, Gbf->rs.h);
+		} else {
+			wLine += fontBf->wdRef;
+			Tm->w += fontBf->wdRef;
+			Tm->h = MAX(Tm->h, fontBf->height);
+		}
 	}
 	if (*c != '\n' && extended) {
 		if (Tm->nLines > 0) {
@@ -516,7 +714,7 @@ Init(void *_Nonnull obj)
 
 	memset(&fontBf->flags, 0,
 	    sizeof(Uint) +                           /* flags */
-	    sizeof(enum ag_font_bmp_colorize_mode) + /* colorize */
+	    sizeof(enum ag_font_bf_colorize_mode) +  /* colorize */
 	    sizeof(char *) +                         /* name */
 	    sizeof(int) +                            /* underlinePos */
 	    sizeof(int) +                            /* underlineThick */
@@ -524,7 +722,13 @@ Init(void *_Nonnull obj)
 	    sizeof(Uint) +                           /* nUnicode */
 	    sizeof(Uint) +                           /* nGlyphs */
 	    sizeof(AG_GlyphBf *) +                   /* glyphs */
-	    sizeof(AG_Surface *));                   /* S */
+	    sizeof(AG_Surface *) +                   /* S */
+	    sizeof(int) +                            /* height */
+	    sizeof(int) +                            /* wdRef */
+	    sizeof(AG_Rect *) +                      /* rects */
+	    sizeof(Uint));                           /* nRects */
+
+	fontBf->advance = 1;
 }
 
 AG_FontClass agFontBfClass = {

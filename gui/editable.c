@@ -2025,7 +2025,7 @@ AG_EditableUndo(AG_Editable *ed, AG_EditableBuffer *buf)
 			Debug(ed,
 			    "Buffer changed externally (len %u->%lu, crc %x->%x). "
 			    "Clearing history.\n",
-			    revUndo->lenBuffer, buf->len,
+			    revUndo->lenBuffer, (Ulong)buf->len,
 			    revUndo->crc32, crc);
 
 			AG_EditableClearHistory(ed);
