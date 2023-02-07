@@ -44,7 +44,7 @@ SRCS=	${SRCS_GUI} box.c button.c checkbox.c colors.c combo.c console.c \
 	graph.c gui.c hsvpal.c icon.c iconmgr.c input_device.c joystick.c \
 	keyboard.c keymap.c keymap_compose.c keymap_latin1.c keysyms.c \
 	label.c load_bmp.c load_color.c load_jpg.c load_png.c load_surface.c \
-	load_xcf.c menu.c menu_view.c mfspinbutton.c mouse.c mpane.c \
+	menu.c menu_view.c mfspinbutton.c mouse.c mpane.c \
 	mspinbutton.c notebook.c numerical.c objsel.c packedpixel.c pane.c \
 	pixmap.c primitive.c progress_bar.c radio.c scrollbar.c scrollview.c \
 	separator.c slider.c socket.c statusbar.c style_editor.c stylesheet.c \
