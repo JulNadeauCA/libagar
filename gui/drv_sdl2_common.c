@@ -346,24 +346,16 @@ AG_SDL2_ImportSurface(SDL_Surface *src)
 		    src->format->Bmask,
 		    src->format->Amask);
 	}
+
 	dst = AG_SurfaceNew(&pf, src->w, src->h, 0);
-#if 0
-	/* XXX SDL2 */
-	if (src->flags & SDL_SRCCOLORKEY) {
-		dst->flags |= AG_SURFACE_COLORKEY;
-		dst->colorkey = src->format->colorkey;
-	}
-	if (src->flags & SDL_SRCALPHA)    {
-		dst->flags |= AG_SURFACE_ALPHA;
-		dst->alpha = src->format->alpha;
-	}
-#endif
 	
-	if (SDL_MUSTLOCK(src)) { SDL_LockSurface(src); }
+	if (SDL_MUSTLOCK(src))
+		SDL_LockSurface(src);
 
 	memcpy(dst->pixels, (Uint8 *)src->pixels, src->h * src->pitch);
 
-	if (SDL_MUSTLOCK(src)) { SDL_UnlockSurface(src); }
+	if (SDL_MUSTLOCK(src))
+		SDL_UnlockSurface(src);
 
 	AG_PixelFormatFree(&pf);
 	return (dst);
@@ -382,12 +374,6 @@ AG_SurfaceExportSDL2(const AG_Surface *ss)
 {
 	Uint32 sdlFlags = SDL_SWSURFACE;
 	SDL_Surface *ds;
-
-#if 0
-	/* XXX SDL2 */
-	if (ss->flags & AG_SURFACE_COLORKEY) { sdlFlags |= SDL_SRCCOLORKEY; }
-	if (ss->flags & AG_SURFACE_ALPHA)    { sdlFlags |= SDL_SRCALPHA; }
-#endif
 
 	/* TODO INDEXED->INDEXED & GRAYSCALE->PACKED */
 

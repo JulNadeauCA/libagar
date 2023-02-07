@@ -418,7 +418,7 @@ AG_SDL_SoftBlit_NoColorkey(const AG_Surface *_Nonnull S, AG_Rect sr,
  * pixel format so the pixel data can be block copied).
  * For indexed surfaces, convert the SDL_Palette to an AG_Palette.
  * Inherit SDL_SRCCOLORKEY -> AG_SURFACE_COLORKEY flag and colorkey value.
- * Inherit SDL_SRCALPHA -> AG_SURFACE_ALPHA and per-surface alpha.
+ * Inherit the per-surface alpha if SDL_SRCALPHA is set.
  */
 AG_Surface *
 AG_SDL_ImportSurface(SDL_Surface *src)
@@ -450,15 +450,15 @@ AG_SDL_ImportSurface(SDL_Surface *src)
 		    src->format->Bmask,
 		    src->format->Amask);
 	}
+
 	dst = AG_SurfaceNew(&pf, src->w, src->h, 0);
+
 	if (src->flags & SDL_SRCCOLORKEY) {
 		dst->flags |= AG_SURFACE_COLORKEY;
 		dst->colorkey = src->format->colorkey;
 	}
-	if (src->flags & SDL_SRCALPHA)    {
-		dst->flags |= AG_SURFACE_ALPHA;
+	if (src->flags & SDL_SRCALPHA)
 		dst->alpha = src->format->alpha;
-	}
 	
 	if (SDL_MUSTLOCK(src)) { SDL_LockSurface(src); }
 
@@ -477,19 +477,19 @@ AG_SurfaceFromSDL(void *p)
 	return AG_SDL_ImportSurface((SDL_Surface *)p);
 }
 
-/* Export an AG_Surface to a newly-created SDL_Surface. */
+/*
+ * Export an AG_Surface to a newly-created SDL_Surface.
+ * Inherit AG_SURFACE_COLORKEY -> SDL_SRCCOLORKEY flag and colorkey value.
+ * Inherit per-surface alpha (enable SDL_SRCALPHA if not fully opaque).
+ */
 void *
 AG_SurfaceExportSDL(const AG_Surface *ss)
 {
-	Uint32 sdlFlags = SDL_SWSURFACE;
 	SDL_Surface *ds;
-
-	if (ss->flags & AG_SURFACE_COLORKEY) { sdlFlags |= SDL_SRCCOLORKEY; }
-	if (ss->flags & AG_SURFACE_ALPHA)    { sdlFlags |= SDL_SRCALPHA; }
 
 	/* TODO INDEXED->INDEXED & GRAYSCALE->PACKED */
 
-	ds = SDL_CreateRGBSurface(sdlFlags, ss->w, ss->h,
+	ds = SDL_CreateRGBSurface(SDL_SWSURFACE, ss->w, ss->h,
 	    ss->format.BitsPerPixel,
 	    ss->format.Rmask,
 	    ss->format.Gmask,
@@ -500,6 +500,14 @@ AG_SurfaceExportSDL(const AG_Surface *ss)
 		return (NULL);
 	}
 	AG_SDL_BlitSurface(ss, NULL, ds, 0,0);
+
+	if (ss->alpha != AG_OPAQUE) {
+		SDL_SetAlpha(ds, SDL_SRCALPHA, AG_Hto8(ss->alpha));
+	}
+	if (ss->flags & AG_SURFACE_COLORKEY) {
+		sdlFlags |= SDL_SRCCOLORKEY;
+		SDL_SetColorKey(ss, SDL_SRCCOLORKEY, ss->colorkey);
+	}
 	return (void *)ds;
 }
 
