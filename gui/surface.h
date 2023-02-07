@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -139,15 +139,14 @@ typedef struct ag_surface {
 	AG_PixelFormat format;          /* Pixel format */
 	Uint flags;
 #define AG_SURFACE_COLORKEY    0x01     /* Enable color key for blit as src */
-#define AG_SURFACE_ALPHA       0x02     /* Enable alpha for blit as src */
+#define AG_SURFACE_ALPHA       0x02     /* Deprecated flag (ignored) */
 #define AG_SURFACE_GL_TEXTURE  0x04     /* Use directly as OpenGL texture */
 #define AG_SURFACE_MAPPED      0x08     /* Disallow AG_SurfaceFree() (DEBUG) */
 #define AG_SURFACE_STATIC      0x10     /* Don't free() in AG_SurfaceFree() */
 #define AG_SURFACE_EXT_PIXELS  0x20     /* Pixels are allocated externally */
 #define AG_SURFACE_ANIMATED    0x40     /* Is an animation */
 #define AG_SURFACE_TRACE       0x80     /* Enable debugging */
-#define AG_SAVED_SURFACE_FLAGS (AG_SURFACE_COLORKEY | AG_SURFACE_ALPHA | \
-                                AG_SURFACE_ANIMATED)
+#define AG_SAVED_SURFACE_FLAGS (AG_SURFACE_COLORKEY | AG_SURFACE_ANIMATED)
 	Uint w, h;                         /* Dimensions in pixels */
 	Uint pitch;                        /* Scanline byte length */
 	Uint8 *_Nullable pixels;           /* Raw pixel data */
@@ -158,11 +157,7 @@ typedef struct ag_surface {
 	Uint16 guides[AG_SURFACE_NGUIDES]; /* Guide lines */
 	AG_Pixel colorkey;                 /* Color key pixel */
 	AG_Component alpha;                /* Per-surface alpha */
-#if AG_MODEL == AG_LARGE
-	Uint8 _pad[6];
-#else
-	Uint8 _pad[3];
-#endif
+	AG_COMPONENT_PADDING(_pad);
 } AG_Surface;
 
 /* Animation playback context */
@@ -206,7 +201,7 @@ typedef enum ag_alpha_func {
 #define AG_EXPORT_BMP_LEGACY   0x02     /* Export to legacy BMP format */
 
 /* Flags for AG_SurfaceExportPNG() */
-#define AG_EXPORT_PNG_ADAM7	0x01    /* Enable Adam7 interlacing */
+#define AG_EXPORT_PNG_ADAM7    0x01     /* Enable Adam7 interlacing */
 
 /* Flags for AG_SurfaceExportJPEG() */
 #define AG_EXPORT_JPEG_JDCT_ISLOW 0x01  /* Slow, accurate integer DCT */
@@ -279,6 +274,13 @@ void AG_SurfaceSetColors(AG_Surface *_Nonnull, AG_Color *_Nonnull, Uint, Uint);
 void AG_SurfaceSetPalette(AG_Surface *_Nonnull, const AG_Palette *_Nonnull);
 void AG_SurfaceCopyPixels(AG_Surface *_Nonnull, const Uint8 *_Nonnull);
 void AG_SurfaceSetPixels(AG_Surface *_Nonnull, const AG_Color *_Nonnull);
+
+void AG_LowerBlit_AlCo(const AG_Surface *_Nonnull, const AG_Rect *_Nonnull,
+                       AG_Surface *_Nonnull, const AG_Rect *_Nonnull);
+void AG_LowerBlit_Al(const AG_Surface *_Nonnull, const AG_Rect *_Nonnull,
+                     AG_Surface *_Nonnull, const AG_Rect *_Nonnull);
+void AG_LowerBlit_Co(const AG_Surface *_Nonnull, const AG_Rect *_Nonnull,
+                     AG_Surface *_Nonnull, const AG_Rect *_Nonnull);
 
 void AG_SurfaceBlit(const AG_Surface *_Nonnull, const AG_Rect *_Nullable,
 		    AG_Surface *_Nonnull, int,int);

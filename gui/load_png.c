@@ -79,7 +79,7 @@ AG_SurfaceFromPNGs(const char *pattern, int first, int last,
 	int i;
 
 	for (i = first; ; i++) {
-		AG_Surface *Sframe;
+		AG_Surface *Sf;
 
 		if (last != -1 && i == last)
 			break;
@@ -95,19 +95,19 @@ AG_SurfaceFromPNGs(const char *pattern, int first, int last,
 				break;
 			}
 		}
-		if ((Sframe = AG_SurfaceFromPNG(path)) == NULL) {
+		if ((Sf = AG_SurfaceFromPNG(path)) == NULL) {
 			break;
 		}
 		if (Sanim == NULL) {
-			Sanim = AG_SurfaceNew(&Sframe->format, Sframe->w, Sframe->h,
-			    (Sframe->flags & (AG_SURFACE_COLORKEY|AG_SURFACE_ALPHA))
-			    | AG_SURFACE_ANIMATED);
+			Sanim = AG_SurfaceNew(&Sf->format, Sf->w, Sf->h,
+			    (Sf->flags & AG_SURFACE_COLORKEY) |
+			    AG_SURFACE_ANIMATED);
 		}
-		if (AG_SurfaceAddFrame(Sanim, Sframe, NULL,
+		if (AG_SurfaceAddFrame(Sanim, Sf, NULL,
 		    afDispose, afDelay, afFlags) == -1) {
 			goto fail;
 		}
-		AG_SurfaceFree(Sframe);
+		AG_SurfaceFree(Sf);
 	}
 	return (Sanim);
 fail:
