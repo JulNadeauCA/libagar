@@ -26,7 +26,7 @@ package Agar.Data_Source is
     aliased Interfaces.Unsigned_8 with Convention => C;
   for Data_Source'Size use $SIZEOF_AG_DATASOURCE * System.Storage_Unit;
 
-  type Data_Source_Access             is access all Data_Source with Convention => C;
+  type Data_Source_Access is access all Data_Source with Convention => C;
   subtype Data_Source_Not_Null_Access is not null Data_Source_Access;
 
   type IO_Status is (Success, EOF, Error, Unavailable) with Convention => C;

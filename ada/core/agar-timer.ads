@@ -43,6 +43,11 @@ package Agar.Timer is
      with Convention => C;
   subtype Timer_not_null_Callback is not null Timer_Callback;  
 
+  TIMER_SURVIVE_DETACH : constant C.unsigned := 16#01#;
+  TIMER_AUTO_FREE      : constant C.unsigned := 16#02#;
+  TIMER_EXECD          : constant C.unsigned := 16#04#;
+  TIMER_RESTART        : constant C.unsigned := 16#08#;
+
   type Timer is limited record
     Callback_Args   : EV.Event;			-- Callback arguments
     Callback_Func   : Timer_Callback;		-- Callback function

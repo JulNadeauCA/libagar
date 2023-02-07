@@ -36,17 +36,32 @@ package Agar.Types is
   -- Sizes and offsets --
   -----------------------
 #if AG_MODEL = AG_SMALL
+
  subtype AG_Size is Interfaces.Unsigned_16;
  type AG_Offset is range -(2 **15) .. +(2 **15 - 1) with Convention => C;
  for AG_Offset'Size use 16;
+
+ AG_SIZE_PADDING : constant Natural := 6;
+ AG_OFFSET_PADDING : constant Natural := 6;
+
 #elsif AG_MODEL = AG_MEDIUM
+
  subtype AG_Size is Interfaces.Unsigned_32;
  type AG_Offset is range -(2 **31) .. +(2 **31 - 1) with Convention => C;
  for AG_Offset'Size use 32;
+
+ AG_SIZE_PADDING : constant Natural := 4;
+ AG_OFFSET_PADDING : constant Natural := 4;
+
 #elsif AG_MODEL = AG_LARGE
+
  subtype AG_Size is Interfaces.Unsigned_64;
  type AG_Offset is range -(2 **63) .. +(2 **63 - 1) with Convention => C;
  for AG_Offset'Size use 64;
+
+ AG_SIZE_PADDING : constant Natural := 0;
+ AG_OFFSET_PADDING : constant Natural := 0;
+
 #end if;
 
 end Agar.Types;

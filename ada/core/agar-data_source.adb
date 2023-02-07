@@ -3,7 +3,7 @@
 --                     A G A R . D A T A _ S O U R C E                      --
 --                                 B o d y                                  --
 --                                                                          --
--- Copyright (c) 2018-2019, Julien Nadeau Carriere (vedge@csoft.net)        --
+-- Copyright (c) 2018-2023, Julien Nadeau Carriere (vedge@csoft.net)        --
 -- Copyright (c) 2010, coreland (mark@coreland.ath.cx)                      --
 --                                                                          --
 -- Permission to use, copy, modify, and/or distribute this software for any --

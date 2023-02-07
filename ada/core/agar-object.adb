@@ -3,7 +3,7 @@
 --                          A G A R . O B J E C T                           --
 --                                 B o d y                                  --
 --                                                                          --
--- Copyright (c) 2018-2019, Julien Nadeau Carriere (vedge@csoft.net)        --
+-- Copyright (c) 2018-2023, Julien Nadeau Carriere (vedge@csoft.net)        --
 -- Copyright (c) 2010, coreland (mark@coreland.ath.cx)                      --
 --                                                                          --
 -- Permission to use, copy, modify, and/or distribute this software for any --
@@ -123,7 +123,7 @@ package body Agar.Object is
 
   function Get_Name (Object : in Object_Not_Null_Access) return String
   is
-    Ch_Name : aliased C.char_array (0 .. C.size_t(HIERARCHY_MAX));
+    Ch_Name : aliased C.char_array (0 .. C.size_t(HIER_MAX));
     Result  : C.int;
   begin
     Result := AG_ObjectCopyName

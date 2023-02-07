@@ -32,10 +32,11 @@ package Agar.Object is
   package EV renames Agar.Event;
   package TMR renames Agar.Timer;
   
-  NAME_MAX      : constant Natural := $AG_OBJECT_NAME_MAX;
-  HIERARCHY_MAX : constant Natural := $AG_OBJECT_HIER_MAX;
-  TYPE_MAX      : constant Natural := $AG_OBJECT_TYPE_MAX;
-  LIBRARIES_MAX : constant Natural := $AG_OBJECT_LIBS_MAX;
+  NAME_MAX : constant Natural := $AG_OBJECT_NAME_MAX;
+  TYPE_MAX : constant Natural := $AG_OBJECT_TYPE_MAX;
+  HIER_MAX : constant Natural := $AG_OBJECT_HIER_MAX;
+  PATH_MAX : constant Natural := $AG_OBJECT_PATH_MAX;
+  LIBS_MAX : constant Natural := $AG_OBJECT_LIBS_MAX;
 
   ----------------
   -- Base Types --
@@ -55,8 +56,8 @@ package Agar.Object is
   subtype Unsigned_64 is Interfaces.Unsigned_64;
 
 #if HAVE_FLOAT
-  subtype Float       is Interfaces.C.C_float;
-  subtype Double      is Interfaces.C.double;
+  subtype Float  is Interfaces.C.C_float;
+  subtype Double is Interfaces.C.double;
 #end if;
 
   --------------------------
@@ -167,7 +168,9 @@ package Agar.Object is
     Entry_in_Parent : Entry_in_Parent_t;
     Parent          : Object_Access;
     Root            : Object_Access;
+#if AG_TIMERS
     Entry_in_TimerQ : Entry_in_TimerQ_t;
+#end if;
     Lock            : Object_Mutex;
   end record
     with Convention => C;
@@ -196,7 +199,7 @@ package Agar.Object is
   ------------------------------
   type Class_Name is array (1 .. TYPE_MAX) of aliased c.char
     with Convention => C;
-  type Class_Hierarchy is array (1 .. HIERARCHY_MAX) of aliased c.char
+  type Class_Hierarchy is array (1 .. HIER_MAX) of aliased c.char
     with Convention => C;
   type Class_Private is array (1 .. $SIZEOF_AG_ObjectClassPvt) of
     aliased Interfaces.Unsigned_8 with Convention => C;

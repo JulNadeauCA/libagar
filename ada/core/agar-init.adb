@@ -3,7 +3,7 @@
 --                       A G A R . C O R E . I N I T                        --
 --                                 B o d y                                  --
 --                                                                          --
--- Copyright (c) 2018-2019, Julien Nadeau Carriere (vedge@csoft.net)        --
+-- Copyright (c) 2018-2023, Julien Nadeau Carriere (vedge@csoft.net)        --
 -- Copyright (c) 2010, coreland (mark@coreland.ath.cx)                      --
 --                                                                          --
 -- Permission to use, copy, modify, and/or distribute this software for any --
@@ -38,7 +38,8 @@ package body Agar.Init is
     (Program_Name     : in String;
      Verbose          : in Boolean := False;
      Create_Directory : in Boolean := False;
-     Software_Timers  : in Boolean := False) return Boolean
+     Software_Timers  : in Boolean := False;
+     POSIX_Users      : in Boolean := False) return Boolean
   is
     Ch_Name : aliased C.char_array := C.To_C (Program_Name);
     C_Flags : C.unsigned := 0;
@@ -46,6 +47,7 @@ package body Agar.Init is
     if Verbose          then C_Flags := C_Flags or AG_VERBOSE;        end if;
     if Create_Directory then C_Flags := C_Flags or AG_CREATE_DATADIR; end if;
     if Software_Timers  then C_Flags := C_Flags or AG_SOFT_TIMERS;    end if;
+    if POSIX_Users      then C_Flags := C_Flags or AG_POSIX_USERS;    end if;
 
     return 0 = AG_InitCore
       (Progname => CS.To_Chars_Ptr (Ch_Name'Unchecked_Access),
@@ -55,13 +57,15 @@ package body Agar.Init is
   function Init_Core
     (Verbose          : in Boolean := False;
      Create_Directory : in Boolean := False;
-     Software_Timers  : in Boolean := False) return Boolean
+     Software_Timers  : in Boolean := False;
+     POSIX_Users      : in Boolean := False) return Boolean
   is
     C_Flags : C.unsigned := 0;
   begin
     if Verbose          then C_Flags := C_Flags or AG_VERBOSE;        end if;
     if Create_Directory then C_Flags := C_Flags or AG_CREATE_DATADIR; end if;
     if Software_Timers  then C_Flags := C_Flags or AG_SOFT_TIMERS;    end if;
+    if POSIX_Users      then C_Flags := C_Flags or AG_POSIX_USERS;    end if;
 
     return 0 = AG_InitCore
       (Progname => CS.Null_Ptr,

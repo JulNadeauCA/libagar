@@ -37,12 +37,14 @@ package Agar.Init is
     (Program_Name     : in String;
      Verbose          : in Boolean := False;
      Create_Directory : in Boolean := False;
-     Software_Timers  : in Boolean := False) return Boolean;
+     Software_Timers  : in Boolean := False;
+     POSIX_Users      : in Boolean := False) return Boolean;
   
   function Init_Core
     (Verbose          : in Boolean := False;
      Create_Directory : in Boolean := False;
-     Software_Timers  : in Boolean := False) return Boolean;
+     Software_Timers  : in Boolean := False;
+     POSIX_Users      : in Boolean := False) return Boolean;
 
   --
   -- Set an exit callback routine.
@@ -69,10 +71,11 @@ package Agar.Init is
   procedure AG_GetVersion (Version : Agar_Version_Access)
     with Import, Convention => C, Link_Name => "AG_GetVersion";
 
-  AG_VERBOSE		: constant := 16#01#;    -- Verbose() to console
-  AG_CREATE_DATADIR	: constant := 16#02#;    -- Check and create data dir
-  AG_SOFT_TIMERS	: constant := 16#04#;    -- Force software timing wheel
-
+  AG_VERBOSE		: constant := 16#01#;   -- Verbose() to console
+  AG_CREATE_DATADIR	: constant := 16#02#;   -- Check and create data dir
+  AG_SOFT_TIMERS	: constant := 16#04#;   -- Force software timing wheel
+  AG_POSIX_USERS        : constant := 16#08#;   -- Use the "posix" access method
+                                                -- of AG_User(3) if available.
   function AG_InitCore
     (Progname : in CS.chars_ptr;
      Flags    : in C.unsigned) return C.int
