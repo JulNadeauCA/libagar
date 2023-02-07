@@ -212,7 +212,7 @@ RG_PixmapScale(RG_Pixmap *px, int w, int h)
 	AG_Color c;
 
 	/* Create the new surface. */
-	if ((nsu = RG_SurfaceStd(ts, w, h, AG_SURFACE_ALPHA)) == NULL)
+	if ((nsu = RG_SurfaceStd(ts, w,h, 0)) == NULL)
 		AG_FatalError(NULL);
 	
 	/* Copy the old surface over. */

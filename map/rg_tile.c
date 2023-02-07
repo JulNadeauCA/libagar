@@ -183,7 +183,6 @@ RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h)
 	t->nh = hNew;
 
 	if (t->flags & RG_TILE_SRCCOLORKEY) { sFlags |= AG_SURFACE_COLORKEY; }
-	if (t->flags & RG_TILE_SRCALPHA)    { sFlags |= AG_SURFACE_ALPHA; }
 
 	if ((t->su = RG_SurfaceStd(ts, w, h, sFlags)) == NULL) {
 		AG_FatalError(NULL);
@@ -197,8 +196,8 @@ RG_TileGenerate(RG_Tile *t)
 	RG_TileElement *tel;
 	RG_Tileset *ts = t->ts;
 	AG_Color c;
-	
-	AG_SurfaceSetAlpha(t->su, AG_SURFACE_ALPHA, ts->icon->alpha);
+
+	t->su->alpha = ts->icon->alpha;
 
 	/* TODO check for opaque fill features/pixmaps first */
 	AG_ColorNone(&c);

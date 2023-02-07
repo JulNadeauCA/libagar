@@ -112,6 +112,8 @@ TestGUI(void *obj, AG_Window *win)
 		AG_LabelNewS(vBox, 0, AG_GetError());
 	}
 
+	vBox = AG_BoxNewVert(hBox, 0);
+
 	/*
 	 * Test conversion to different bit resolutions.
 	 */
@@ -119,24 +121,72 @@ TestGUI(void *obj, AG_Window *win)
 		AG_LabelNew(vBox, 0, "Here is %s:", path);
 		if ((S = AG_SurfaceFromPNG(path)) != NULL) {
 			AG_PixmapFromSurface(vBox, 0, S);
+
+			AG_LabelNewS(vBox, 0, "Converted to {16,24,32}bpp (with alpha):");
+			box = AG_BoxNewHoriz(vBox, 0 );
+			{
+				AG_PixelFormatRGBA(&pfTest, 16,
+				    0xf000,
+				    0x0f00,
+				    0x00f0,
+				    0x000f);
+				Test_Format(S, &pfTest, box);
+				
+				AG_PixelFormatRGBA(&pfTest, 24,
+				    0xff000000,
+				    0x00ff0000,
+				    0x0000ff00,
+				    0x000000ff);
+				Test_Format(S, &pfTest, box);
+
+				AG_PixelFormatRGBA(&pfTest, 32,
+				    0xff000000,
+				    0x00ff0000,
+				    0x0000ff00,
+				    0x000000ff);
+				Test_Format(S, &pfTest, box);
+			}
 		
-			AG_LabelNewS(vBox, 0, "Converted to {16,24,32}bpp:");
+			AG_LabelNewS(vBox, 0, "Converted to {16,24,32}bpp (no alpha):");
 			box = AG_BoxNewHoriz(vBox, 0 );
 			{
 				AG_PixelFormatRGB(&pfTest, 16,
-				    0xf000, 0x0f00, 0x00f0);
+				    0xf000,
+				    0x0f00,
+				    0x00f0);
 				Test_Format(S, &pfTest, box);
 				
 				AG_PixelFormatRGB(&pfTest, 24,
-				    0x00ff0000, 0x0000ff00, 0x000000ff);
+				    0xff000000,
+				    0x00ff0000,
+				    0x0000ff00);
 				Test_Format(S, &pfTest, box);
 
 				AG_PixelFormatRGB(&pfTest, 32,
-				    0xff000000, 0x00ff0000, 0x0000ff00);
+				    0xff000000,
+				    0x00ff0000,
+				    0x0000ff00);
 				Test_Format(S, &pfTest, box);
 			}
 #if AG_MODEL == AG_LARGE
-			AG_LabelNewS(vBox, 0, "Converted to {48,64}bpp:");
+			AG_LabelNewS(vBox, 0, "Converted to {48,64}bpp (with alpha):");
+			box = AG_BoxNewHoriz(vBox, 0);
+			{
+				AG_PixelFormatRGBA(&pfTest, 48,
+				    0xffff000000000000,
+				    0x0000ffff00000000,
+				    0x00000000ffff0000,
+				    0x000000000000ffff);
+				Test_Format(S, &pfTest, box);
+				
+				AG_PixelFormatRGBA(&pfTest, 64,
+				    0xffff000000000000,
+				    0x0000ffff00000000,
+				    0x00000000ffff0000,
+				    0x000000000000ffff);
+				Test_Format(S, &pfTest, box);
+			}
+			AG_LabelNewS(vBox, 0, "Converted to {48,64}bpp (no alpha):");
 			box = AG_BoxNewHoriz(vBox, 0);
 			{
 				AG_PixelFormatRGB(&pfTest, 48,
@@ -145,11 +195,10 @@ TestGUI(void *obj, AG_Window *win)
 				    0x00000000ffff0000);
 				Test_Format(S, &pfTest, box);
 				
-				AG_PixelFormatRGBA(&pfTest, 64,
+				AG_PixelFormatRGB(&pfTest, 64,
 				    0xffff000000000000,
 				    0x0000ffff00000000,
-				    0x00000000ffff0000,
-				    0x000000000000ffff);
+				    0x00000000ffff0000);
 				Test_Format(S, &pfTest, box);
 			}
 #endif
@@ -183,15 +232,13 @@ TestGUI(void *obj, AG_Window *win)
 		AG_LabelNewS(vBox, 0, AG_GetError());
 	}
 	
-	vBox = AG_BoxNewVert(hBox, 0);
-
 	/*
 	 * Load/save a PNG file in palettized mode.
 	 */
 	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-index.png", path, sizeof(path))) {
 		AG_LabelNew(vBox, 0, "Here is %s:", path);
 		if ((S = AG_SurfaceFromPNG(path)) != NULL) {
-			S->flags |= AG_SURFACE_TRACE;
+/*			S->flags |= AG_SURFACE_TRACE; */
 			AG_PixmapFromSurface(vBox, 0, S);
 			AG_LabelNew(vBox, 0, "Exported to agar-index-save.png:");
 			if (AG_SurfaceExportPNG(S, "agar-index-save.png", 0) == -1) {
@@ -251,7 +298,6 @@ TestGUI(void *obj, AG_Window *win)
 		AG_LabelNewS(vBox, 0, AG_GetError());
 	}
 	
-	AG_WindowSetGeometry(win, -1, -1, 500, 800);
 	return (0);
 }
 

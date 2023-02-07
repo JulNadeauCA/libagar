@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -360,7 +360,7 @@ TransformRotate(AG_Surface *_Nonnull S, int argc, Uint32 *_Nonnull argv)
 	    swapdims ? S->h : S->w,
 	    swapdims ? S->w : S->h,
 	    S->format.BitsPerPixel,
-	    (S->flags & (AG_SURFACE_ALPHA|AG_SURFACE_COLORKEY)),
+	    (S->flags & AG_SURFACE_COLORKEY),
 	    S->format.Rmask,
 	    S->format.Gmask,
 	    S->format.Bmask,

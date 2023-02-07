@@ -190,7 +190,7 @@ Draw(MAP_View *_Nonnull mv, MAP_Item *_Nonnull mi, int rx, int ry, int ncam)
 		RG_TransformChainDup(&mi->transforms, &var->transforms);
 		var->surface = AG_SurfaceRGBA(
 		    Stile->w, Stile->h, Stile->format.BitsPerPixel,
-		    Stile->flags & (AG_SURFACE_ALPHA | AG_SURFACE_COLORKEY),
+		    Stile->flags & AG_SURFACE_COLORKEY,
 		    Stile->format.Rmask,
 		    Stile->format.Gmask,
 		    Stile->format.Bmask,

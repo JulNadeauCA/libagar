@@ -953,10 +953,10 @@ RG_TileviewSetZoom(RG_Tileview *tv, int z2, int adj_offs)
 	tv->pxsz = pxsz;
 
 	tv->scaled = AG_SurfaceRGBA(
-	    z2>=100 ? S->w*pxsz : S->w*z2/100,
-	    z2>=100 ? S->h*pxsz : S->h*z2/100,
+	    (z2 >= 100) ? S->w * pxsz : S->w * z2 / 100,
+	    (z2 >= 100) ? S->h * pxsz : S->h * z2 / 100,
 	    S->format.BitsPerPixel,
-	    (S->flags & (AG_SURFACE_ALPHA|AG_SURFACE_COLORKEY)),
+	    (S->flags & AG_SURFACE_COLORKEY),
 	    S->format.Rmask, S->format.Gmask,
 	    S->format.Bmask, S->format.Amask);
 	if (tv->scaled == NULL) {

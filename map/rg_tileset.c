@@ -124,7 +124,7 @@ Init(void *_Nonnull obj)
 	TAILQ_INIT(&ts->textures);
 
 	Sicon = AG_SurfaceRGBA(32,32, agSurfaceFmt->BitsPerPixel,
-	    AG_SURFACE_ALPHA|AG_SURFACE_COLORKEY,
+	    AG_SURFACE_COLORKEY,
 	    agSurfaceFmt->Rmask,
 	    agSurfaceFmt->Gmask,
 	    agSurfaceFmt->Bmask,

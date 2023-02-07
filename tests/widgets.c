@@ -279,6 +279,39 @@ TestGUI(void *obj, AG_Window *win)
 	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar64.png", path, sizeof(path)) == 0) {
 		if ((S = AG_SurfaceFromPNG(path)) == NULL) {
 			S = AG_TextRender(AG_GetError());
+		} else {
+#if 0
+			int x,y;
+
+/*			S->flags |= AG_SURFACE_TRACE; */
+
+			/*
+			 * Extract components from surface-encoded pixels
+			 * and re-encode the pixels from the extracted
+			 * components.
+			 * 
+			 * If pixel operations are working as expected on
+			 * 16-bit/color surfaces, the following code should be
+			 * a no-op and the original image appear unchanged.
+			 */
+			for (y = 0; y < S->h; y++) {
+				for (x = 0; x < S->w; x++) {
+					AG_Pixel px = AG_SurfaceGet(S, x,y);
+					AG_Color c;
+
+					AG_GetColor(&c, px, &S->format);
+#if 0
+					if (c.a > 0) {
+						c.r = AG_COLOR_LAST - (AG_Component)(((float)x / (float)S->w) * AG_COLOR_LASTD);
+						c.g = AG_COLOR_LAST - (AG_Component)(((float)x / (float)S->w) * AG_COLOR_LASTD);
+						c.b = AG_COLOR_LAST - (AG_Component)(((float)x / (float)S->w) * AG_COLOR_LASTD);
+					}
+#endif
+					AG_SurfacePut(S, x,y,
+					    AG_MapPixel(&S->format, &c));
+				}
+			}
+#endif
 		}
 		AG_PixmapFromSurface(div, AG_PIXMAP_HFILL | AG_PIXMAP_RESCALE, S);
 		AG_SurfaceFree(S);
@@ -519,8 +552,9 @@ TestGUI(void *obj, AG_Window *win)
 	}
 
 	/*
-	 * Load the square agar logo and perform pixel manipulations on the
-	 * loaded surfaces (divide the alpha component).
+	 * Load the square agar logo, perform pixel manipulation on the loaded
+	 * surface (divide alpha of red-dominant pixels) and display the results
+	 * in AG_Pixmap(3) widgets.
 	 */
 	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "sq-agar.bmp", path, sizeof(path)) == 0) {
 		AG_Surface *S;
@@ -536,7 +570,9 @@ TestGUI(void *obj, AG_Window *win)
 					AG_Color c ;
 						
 					AG_GetColor(&c, px, &S->format);
-					c.a /= (1+i);
+					if (c.r > AG_MAX(c.g, c.b)) {
+						c.a /= (1+i);
+					}
 					AG_SurfacePut(S, x,y,
 					    AG_MapPixel(&S->format, &c));
 				}

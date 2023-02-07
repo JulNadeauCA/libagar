@@ -198,7 +198,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   " gui/font_bf.h
   syn keyword cType AG_GlyphBf AG_FontBf
   syn keyword cConstant AG_FONT_BF_COLORIZE_NONE AG_FONT_BF_COLORIZE_GRAYS
-  syn keyword cConstant AG_FONT_BF_COLORIZE_ALL
+  syn keyword cConstant AG_FONT_BF_COLORIZE_ALL AG_FONT_BF_COLORIZE_LAST
   " gui/font_ft.h
   syn keyword cType AG_GlyphFt AG_FontFt
   syn keyword cConstant AG_GLYPH_FT_BITMAP AG_GLYPH_FT_PIXMAP AG_GLYPH_FT_METRICS
