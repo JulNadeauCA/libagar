@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
+# Copyright (c) 2001-2022 Julien Nadeau Carriere <vedge@csoft.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -130,7 +130,7 @@ configure: configure-prog
 	if [ "${PROG_PROFILE}" = "Yes" ]; then _cflags="-pg -DPROF"; fi; \
 	if [ "${HAVE_CC65}" = "yes" ]; then _out=`echo "$@" | sed 's/.o$$/.s/'`; fi; \
 	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $$_out ${CC_COMPILE} $<"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $$_out ${CC_COMPILE} $<; \
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $$_out ${CC_COMPILE} $< 1>/dev/null; \
 	if [ $$? != 0 ]; then \
 		echo "*"; \
 		echo "* $$_out compilation failed."; \
@@ -162,16 +162,16 @@ configure: configure-prog
 	@_cflags=""; \
 	if [ "${PROG_PROFILE}" = "Yes" ]; then _cflags="-pg -DPROF"; fi; \
 	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ $@.yy.c ${LIBL} ${LIBS}"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ $@.yy.c ${LIBL} ${LIBS}
-	@rm -f $@.yy.c
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ $@.yy.c ${LIBL} ${LIBS} 1>/dev/null; \
+	rm -f $@.yy.c
 .l.o:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
 	@_cflags=""; \
 	if [ "${PROG_PROFILE}" = "Yes" ]; then _cflags="-pg -DPROF"; fi; \
 	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.yy.c"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.yy.c
-	@mv -f $@.yy.o $@
-	@rm -f $@.yy.c
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.yy.c 1>/dev/null; \
+	mv -f $@.yy.o $@; \
+	rm -f $@.yy.c
 
 # Compile a Yacc parser into an object file
 .y:
@@ -179,16 +179,16 @@ configure: configure-prog
 	@_cflags=""; \
 	if [ "${PROG_PROFILE}" = "Yes" ]; then _cflags="-pg -DPROF"; fi; \
 	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ $@.tab.c ${LIBS}"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ $@.tab.c ${LIBS}
-	@rm -f $@.tab.c
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ $@.tab.c ${LIBS} 1>/dev/null; \
+	rm -f $@.tab.c
 .y.o:
 	${YACC} ${YFLAGS} -b $@ $<
 	@_cflags=""; \
 	if [ "${PROG_PROFILE}" = "Yes" ]; then _cflags="-pg -DPROF"; fi; \
 	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.tab.c"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.tab.c
-	@mv -f $@.tab.o $@
-	@rm -f $@.tab.c
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.tab.c 1>/dev/null; \
+	mv -f $@.tab.o $@; \
+	rm -f $@.tab.c
 
 # Generate or update make dependencies
 depend:	prog-tags depend-subdir
@@ -333,7 +333,7 @@ ${PROG}: ${SRCS_GENERATED} _prog_objs ${OBJS}
 	        ;; \
 	    *) \
 	        echo "${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}"; \
-	        ${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}; \
+	        ${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS} 1>/dev/null; \
 		;; \
 	    esac; \
 	    if [ "${PROG_BUNDLE}" != "" ]; then \
@@ -378,8 +378,23 @@ clean-prog:
 	        echo "rm -f ${WINRES}.o"; \
 	        rm -f ${WINRES}.o; \
 	    fi; \
-	    echo "rm -f ${PROG}${EXECSUFFIX}"; \
-	    rm -f ${PROG}${EXECSUFFIX}; \
+	    if [ "${HAVE_EMCC}" = "yes" ]; then \
+	    	if echo "${PROG}" |grep -q '\.js$$'; then \
+	    	    prog_js=`echo "${PROG}" | sed 's/\\.js$$//'`; \
+	    	    echo "rm -f $${prog_js}.wasm"; \
+	    	    rm -f $${prog_js}.wasm; \
+		elif echo "${PROG}" |grep -q '\.mjs$$'; then \
+	    	    prog_mjs=`echo "${PROG}" | sed 's/\\.mjs$$//'`; \
+	    	    echo "rm -f $${prog_mjs}.wasm"; \
+	    	    rm -f $${prog_mjs}.wasm; \
+		elif echo "${PROG}" |grep -q '\.html$$'; then \
+	    	    prog_html=`echo "${PROG}" | sed 's/\\.html$$//'`; \
+	    	    echo "rm -f $${prog_html}.js $${prog_html}.wasm"; \
+	    	    rm -f $${prog_html}.js $${prog_html}.wasm; \
+	        fi; \
+	    fi; \
+	    echo "rm -f ${PROG} ${PROG}${EXECSUFFIX}"; \
+	    rm -f ${PROG} ${PROG}${EXECSUFFIX}; \
 	fi
 	@if [ "${CLEANFILES}" != "" ]; then \
 	    _cleanfiles=""; \
