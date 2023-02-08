@@ -834,6 +834,8 @@ next_pixel:
 			pSrc += S->format.BytesPerPixel;
 			pDst += D->format.BytesPerPixel;
 		}
+		pSrc += S->padding;
+		pDst += D->padding;
 	}
 }
 
@@ -866,6 +868,8 @@ AG_LowerBlit_Al(const AG_Surface *S, const AG_Rect *rSrc, AG_Surface *D,
 			pSrc += S->format.BytesPerPixel;
 			pDst += D->format.BytesPerPixel;
 		}
+		pSrc += S->padding;
+		pDst += D->padding;
 	}
 }
 
@@ -914,6 +918,8 @@ next_pixel:
 			pSrc += S->format.BytesPerPixel;
 			pDst += S->format.BytesPerPixel;
 		}
+		pSrc += S->padding;
+		pDst += D->padding;
 	}
 }
 
@@ -1036,6 +1042,8 @@ AG_SurfaceBlit(const AG_Surface *S, const AG_Rect *srcRect, AG_Surface *D,
 				pSrc += S->format.BytesPerPixel;
 				pDst += D->format.BytesPerPixel;
 			}
+			pSrc += S->padding;
+			pDst += D->padding;
 		}
 	} else {
 		/*
@@ -1059,6 +1067,8 @@ AG_SurfaceBlit(const AG_Surface *S, const AG_Rect *srcRect, AG_Surface *D,
 				pSrc += S->format.BytesPerPixel;
 				pDst += D->format.BytesPerPixel;
 			}
+			pSrc += S->padding;
+			pDst += D->padding;
 		}
 	}
 }

@@ -433,8 +433,6 @@ AG_InitGraphics(const char *spec)
 	AG_Driver *drv = NULL;
 	AG_DriverClass *dc = NULL, **pd;
 
-	Debug(NULL, "InitGraphics(spec=%s)\n", spec);
-
 	if (AG_InitGUIGlobals() == -1)
 		return (-1);
 
