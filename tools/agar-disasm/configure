@@ -220,7 +220,7 @@ IFS=$PATH_SEPARATOR
 
 SH='sh'
 for path in $PATH; do
-	if [ -x "${path}/sh" ]; then
+	if [ -x "${path}/sh" -a ! -d "${path}/sh" ]; then
 		SH="${path}/sh"
 		break
 	elif [ -e "${path}/sh.exe" ]; then
@@ -231,7 +231,7 @@ done
 
 PERL=''
 for path in $PATH; do
-	if [ -x "${path}/perl" ]; then
+	if [ -x "${path}/perl" -a ! -d "${path}/perl" ]; then
 		PERL="${path}/perl"
 		break
 	elif [ -e "${path}/perl.exe" ]; then
@@ -242,7 +242,7 @@ done
 
 PKGCONFIG=''
 for path in $PATH; do
-	if [ -x "${path}/pkg-config" ]; then
+	if [ -x "${path}/pkg-config" -a ! -d "${path}/pkg-config" ]; then
 		PKGCONFIG="${path}/pkg-config"
 		break
 	elif [ -e "${path}/pkg-config.exe" ]; then
@@ -823,8 +823,27 @@ else
 CROSSPFX=""
 fi
 HAVE_CC65="no"
+HAVE_EMCC="no"
 if [ "$CC" = "" ]; then
 case "${host}" in
+emscripten)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/emcc" ]; then
+CC="${i}/emcc"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+elif [ -x "${i}/emcc.exe" ]; then
+CC="${i}/emcc.exe"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
 apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -895,41 +914,48 @@ IFS=$bb_save_IFS
 ;;
 esac
 	if [ "$CC" = '' ]; then
-		if [ "$HAVE_CC65" = "yes" ]; then
-			echo "*"
-			echo "* Cannot find cc65 in PATH. You may need to set CC."
-			echo "* You can download cc65 from: https://www.cc65.org/."
-			echo "*"
-			echo "Cannot find cc65 in PATH." >>config.log
-		else
-			echo "*"
+		echo "*"
 echo "* Cannot find one of clang, clang70, clang60, cc, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
-			echo "* under the current PATH, which is:"
-			echo "* $PATH"
-			echo "*"
-			echo "* You may need to set the CC environment variable."
-			echo "*"
-			echo "Cannot find C compiler in PATH." >>config.log
-		fi
-		HAVE_CC="no"
+		echo "* under the current PATH, which is:"
+		echo "* $PATH"
+		echo "*"
+		echo "* You may need to set the CC environment variable."
+		echo "*"
+		echo "Cannot find C compiler in PATH." >>config.log
 		echo "no"
 		echo "no" >>config.log
+
+		HAVE_CC="no"
 	else
-		HAVE_CC="yes"
 		echo "yes, ${CC}"
 		echo "yes, ${CC}" >>config.log
+
+		HAVE_CC="yes"
 	fi
 else
 	HAVE_CC="yes"
-	if ${CC} -V 2>&1 |grep -q ^cc65; then
-		echo "using cc65 (${CC})"
-		echo "using cc65 (${CC})" >>config.log
-		HAVE_CC65="yes"
-		CROSS_COMPILING="yes"
-	else
+	case "${host}" in
+	c64)
+		if ${CC} -V 2>&1 |grep -q ^cc65; then
+			echo "using cc65 (${CC})"
+			echo "using cc65 (${CC})" >>config.log
+			HAVE_CC65="yes"
+			CROSS_COMPILING="yes"
+		fi
+		;;
+	emscripten) 
+		if ${CC} --version 2>&1 |grep -q ^emcc; then
+			echo "using emcc (${CC})"
+			echo "using emcc (${CC})" >>config.log
+			HAVE_EMCC="yes"
+			CROSS_COMPILING="yes"
+		fi
+		;;
+	*)
 		echo "using ${CC}"
 		echo "using ${CC}" >>config.log
-	fi
+		;;
+	esac
 fi
 
 if [ "${HAVE_CC}" = "yes" ]; then
@@ -938,7 +964,7 @@ if [ "${HAVE_CC}" = "yes" ]; then
 	cat << 'EOT' > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 EOT
-	$CC -o conftest conftest.c 2>>config.log
+	$CC -o conftest conftest.c 1>/dev/null 2>>config.log
 	if [ $? != 0 ]; then
 	    echo "no"
 	    echo "no, compilation failed" >>config.log
@@ -953,7 +979,7 @@ EOT
 			for OUTFILE in conftest.exe conftest conftest.*; do
 				if [ -f $OUTFILE ]; then
 					case $OUTFILE in
-					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM | *.wasm | *.html | *.js )
 						;;
 					*.* )
 						EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
@@ -970,6 +996,8 @@ EOT
 				echo "yes"
 				echo "yes" >>config.log
 			fi
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
 echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 		else
 			echo "yes"
@@ -977,7 +1005,7 @@ echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 		fi
 	fi
 	if [ "${keep_conftest}" != "yes" ]; then
-		rm -f conftest.c conftest$EXECSUFFIX
+		rm -f conftest.c conftest conftest$EXECSUFFIX
 	fi
 	TEST_CFLAGS=''
 fi
@@ -996,8 +1024,8 @@ echo '# C: HAVE_CC_CLANG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1016,6 +1044,30 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+$ECHO_N 'cc: checking whether compiler is cc65...'
+$ECHO_N '# cc: checking whether compiler is cc65...' >>config.log
+if [ "${HAVE_CC65}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+CC_COMPILE=""
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+CC_COMPILE="-c"
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+fi
+$ECHO_N 'cc: checking whether compiler is emcc...'
+$ECHO_N '# cc: checking whether compiler is emcc...' >>config.log
+if [ "${HAVE_EMCC}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
+fi
 $ECHO_N 'cc: checking whether compiler is GCC...'
 $ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
 MK_COMPILE_STATUS=OK
@@ -1030,8 +1082,8 @@ echo '# C: HAVE_CC_GCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1061,8 +1113,8 @@ echo '# C: HAVE_CC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1104,8 +1156,8 @@ echo '# C: HAVE_FLOAT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1143,8 +1195,8 @@ echo '# C: HAVE_LONG_DOUBLE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1181,8 +1233,8 @@ echo '# C: HAVE_LONG_LONG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1215,8 +1267,8 @@ echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1249,8 +1301,8 @@ echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1292,8 +1344,8 @@ echo '# C: HAVE_CYGWIN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1322,15 +1374,9 @@ PROG_CLI_FLAGS=""
 ;;
 esac
 echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
-if [ "${HAVE_CC65}" = "yes" ]; then
-CC_COMPILE=""
-echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
-else
-CC_COMPILE="-c"
-echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
-fi
 else
 HAVE_CC65="no"
+HAVE_EMCC="no"
 HAVE_CC_WARNINGS="no"
 PROG_GUI_FLAGS=""
 PROG_CLI_FLAGS=""
@@ -1340,6 +1386,7 @@ echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
 echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
 echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
 echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
 echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
 echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
 echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
@@ -1389,8 +1436,8 @@ echo '# C: HAVE_GETOPT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1446,8 +1493,8 @@ echo '# C: HAVE_PTHREADS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1498,8 +1545,8 @@ echo '# C: HAVE_PTHREADS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1617,8 +1664,8 @@ echo '# C: HAVE_PTHREADS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1694,8 +1741,8 @@ echo '# C: HAVE_PTHREADS_XOPEN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1805,8 +1852,8 @@ echo '# C: HAVE_PTHREADS_XOPEN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_XOPEN_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1851,8 +1898,8 @@ echo '# C: HAVE_PTHREAD_MUTEX_RECURSIVE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1896,8 +1943,8 @@ echo '# C: HAVE_PTHREAD_MUTEX_RECURSIVE_NP' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1939,8 +1986,8 @@ echo '# C: HAVE_PTHREAD_MUTEX_T_POINTER' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1977,8 +2024,8 @@ echo '# C: HAVE_PTHREAD_COND_T_POINTER' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2014,8 +2061,8 @@ echo '# C: HAVE_PTHREAD_T_POINTER' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2041,7 +2088,7 @@ $ECHO_N '# checking for SDL 1.2...' >>config.log
 if [ "" != "" ]; then
 SDL_PREFIX=
 if [ "" != "" ]; then
-if [ -e "/bin/sdl-config" ]; then
+if [ -x "/bin/sdl-config" -a ! -d "/bin/sdl-config" ]; then
 SDL_PREFIX=`/bin/sdl-config --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/sdl-config"
@@ -2050,7 +2097,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_PREFIX=`${path}/sdl-config --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/sdl-config"
@@ -2066,7 +2113,7 @@ IFS=$bb_save_IFS
 fi
 SDL_VERSION=
 if [ "" != "" ]; then
-if [ -e "/bin/sdl-config" ]; then
+if [ -x "/bin/sdl-config" -a ! -d "/bin/sdl-config" ]; then
 SDL_VERSION=`/bin/sdl-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/sdl-config"
@@ -2075,7 +2122,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_VERSION=`${path}/sdl-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/sdl-config"
@@ -2091,7 +2138,7 @@ IFS=$bb_save_IFS
 fi
 SDL_CFLAGS=
 if [ "" != "" ]; then
-if [ -e "/bin/sdl-config" ]; then
+if [ -x "/bin/sdl-config" -a ! -d "/bin/sdl-config" ]; then
 SDL_CFLAGS=`/bin/sdl-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/sdl-config"
@@ -2100,7 +2147,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_CFLAGS=`${path}/sdl-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/sdl-config"
@@ -2116,7 +2163,7 @@ IFS=$bb_save_IFS
 fi
 SDL_LIBS=
 if [ "" != "" ]; then
-if [ -e "/bin/sdl-config" ]; then
+if [ -x "/bin/sdl-config" -a ! -d "/bin/sdl-config" ]; then
 SDL_LIBS=`/bin/sdl-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/sdl-config"
@@ -2125,7 +2172,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_LIBS=`${path}/sdl-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/sdl-config"
@@ -2146,7 +2193,7 @@ SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_VERSION=`${path}/sdl-config --version`
 MK_EXEC_FOUND=Yes
 break
@@ -2162,7 +2209,7 @@ SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_PREFIX=`${path}/sdl-config --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -2177,7 +2224,7 @@ SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_CFLAGS=`${path}/sdl-config --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -2192,7 +2239,7 @@ SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_LIBS=`${path}/sdl-config --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -2216,7 +2263,7 @@ SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl11-config" ]; then
+if [ -x "${path}/sdl11-config" -a ! -d "${path}/sdl11-config" ]; then
 SDL_VERSION=`${path}/sdl11-config --version`
 MK_EXEC_FOUND=Yes
 break
@@ -2232,7 +2279,7 @@ SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl11-config" ]; then
+if [ -x "${path}/sdl11-config" -a ! -d "${path}/sdl11-config" ]; then
 SDL_PREFIX=`${path}/sdl11-config --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -2247,7 +2294,7 @@ SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl11-config" ]; then
+if [ -x "${path}/sdl11-config" -a ! -d "${path}/sdl11-config" ]; then
 SDL_CFLAGS=`${path}/sdl11-config --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -2262,7 +2309,7 @@ SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl11-config" ]; then
+if [ -x "${path}/sdl11-config" -a ! -d "${path}/sdl11-config" ]; then
 SDL_LIBS=`${path}/sdl11-config --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -2278,7 +2325,7 @@ SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_PREFIX=`${path}/sdl-config --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -2293,7 +2340,7 @@ SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_VERSION=`${path}/sdl-config --version`
 MK_EXEC_FOUND=Yes
 break
@@ -2308,7 +2355,7 @@ SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_CFLAGS=`${path}/sdl-config --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -2323,7 +2370,7 @@ SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_LIBS=`${path}/sdl-config --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -2341,7 +2388,7 @@ SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_PREFIX=`${path}/sdl-config --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -2356,7 +2403,7 @@ SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_VERSION=`${path}/sdl-config --version`
 MK_EXEC_FOUND=Yes
 break
@@ -2371,7 +2418,7 @@ SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_CFLAGS=`${path}/sdl-config --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -2386,7 +2433,7 @@ SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_LIBS=`${path}/sdl-config --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -2449,8 +2496,8 @@ echo '# C: HAVE_SDL' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2528,8 +2575,8 @@ echo '# C: HAVE_SDL' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${SDL_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2696,8 +2743,8 @@ echo '# C: HAVE_LIBOPENGL32' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c -lopengl32 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c -lopengl32 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c -lopengl32 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c -lopengl32 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2747,8 +2794,8 @@ echo '# C: HAVE_OPENGL' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2789,8 +2836,8 @@ echo '# C: HAVE_OPENGL' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2846,8 +2893,8 @@ echo '# C: HAVE_GLEXT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${OPENGL_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2956,7 +3003,7 @@ FREETYPE_LIBS=`$PKGCONFIG freetype2 --libs 2>/dev/null`
 else
 FREETYPE_VERSION=
 if [ "" != "" ]; then
-if [ -e "/bin/freetype-config" ]; then
+if [ -x "/bin/freetype-config" -a ! -d "/bin/freetype-config" ]; then
 FREETYPE_VERSION=`/bin/freetype-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/freetype-config"
@@ -2965,7 +3012,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/freetype-config" ]; then
+if [ -x "${path}/freetype-config" -a ! -d "${path}/freetype-config" ]; then
 FREETYPE_VERSION=`${path}/freetype-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/freetype-config"
@@ -2981,7 +3028,7 @@ IFS=$bb_save_IFS
 fi
 FREETYPE_CFLAGS=
 if [ "" != "" ]; then
-if [ -e "/bin/freetype-config" ]; then
+if [ -x "/bin/freetype-config" -a ! -d "/bin/freetype-config" ]; then
 FREETYPE_CFLAGS=`/bin/freetype-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/freetype-config"
@@ -2990,7 +3037,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/freetype-config" ]; then
+if [ -x "${path}/freetype-config" -a ! -d "${path}/freetype-config" ]; then
 FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/freetype-config"
@@ -3006,7 +3053,7 @@ IFS=$bb_save_IFS
 fi
 FREETYPE_LIBS=
 if [ "" != "" ]; then
-if [ -e "/bin/freetype-config" ]; then
+if [ -x "/bin/freetype-config" -a ! -d "/bin/freetype-config" ]; then
 FREETYPE_LIBS=`/bin/freetype-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/freetype-config"
@@ -3015,7 +3062,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/freetype-config" ]; then
+if [ -x "${path}/freetype-config" -a ! -d "${path}/freetype-config" ]; then
 FREETYPE_LIBS=`${path}/freetype-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/freetype-config"
@@ -3079,8 +3126,8 @@ echo '# C: HAVE_FREETYPE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${FREETYPE_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${FREETYPE_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${FREETYPE_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${FREETYPE_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3119,7 +3166,7 @@ $ECHO_N '# checking for Agar...' >>config.log
 # BEGIN agar(1.4.1)
 AGAR_VERSION=
 if [ "" != "" ]; then
-if [ -e "/bin/agar-config" ]; then
+if [ -x "/bin/agar-config" -a ! -d "/bin/agar-config" ]; then
 AGAR_VERSION=`/bin/agar-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/agar-config"
@@ -3128,7 +3175,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_VERSION=`${path}/agar-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -3196,7 +3243,7 @@ $ECHO_N 'checking whether Agar works...'
 $ECHO_N '# checking whether Agar works...' >>config.log
 AGAR_CFLAGS=
 if [ "" != "" ]; then
-if [ -e "/bin/agar-config" ]; then
+if [ -x "/bin/agar-config" -a ! -d "/bin/agar-config" ]; then
 AGAR_CFLAGS=`/bin/agar-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/agar-config"
@@ -3205,7 +3252,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_CFLAGS=`${path}/agar-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -3221,7 +3268,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
 if [ "" != "" ]; then
-if [ -e "/bin/agar-config" ]; then
+if [ -x "/bin/agar-config" -a ! -d "/bin/agar-config" ]; then
 AGAR_LIBS=`/bin/agar-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/agar-config"
@@ -3230,7 +3277,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_LIBS=`${path}/agar-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -3266,8 +3313,8 @@ echo '# C: HAVE_AGAR' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3376,6 +3423,8 @@ echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
 echo "HAVE_CYGWIN=$HAVE_CYGWIN" >>Makefile.config
 echo "mdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
+echo "HAVE_EMCC=$HAVE_EMCC" >>Makefile.config
+echo "mdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
 echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
 echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
 echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config

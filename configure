@@ -220,7 +220,7 @@ IFS=$PATH_SEPARATOR
 
 SH='sh'
 for path in $PATH; do
-	if [ -x "${path}/sh" ]; then
+	if [ -x "${path}/sh" -a ! -d "${path}/sh" ]; then
 		SH="${path}/sh"
 		break
 	elif [ -e "${path}/sh.exe" ]; then
@@ -231,7 +231,7 @@ done
 
 PERL=''
 for path in $PATH; do
-	if [ -x "${path}/perl" ]; then
+	if [ -x "${path}/perl" -a ! -d "${path}/perl" ]; then
 		PERL="${path}/perl"
 		break
 	elif [ -e "${path}/perl.exe" ]; then
@@ -242,7 +242,7 @@ done
 
 PKGCONFIG=''
 for path in $PATH; do
-	if [ -x "${path}/pkg-config" ]; then
+	if [ -x "${path}/pkg-config" -a ! -d "${path}/pkg-config" ]; then
 		PKGCONFIG="${path}/pkg-config"
 		break
 	elif [ -e "${path}/pkg-config.exe" ]; then
@@ -8853,7 +8853,7 @@ $ECHO_N '# checking for SDL 2.0...' >>config.log
 if [ "${prefix_sdl2}" != "" ]; then
 SDL2_PREFIX=
 if [ "${prefix_sdl2}" != "" ]; then
-if [ -e "${prefix_sdl2}/bin/sdl2-config" ]; then
+if [ -x "${prefix_sdl2}/bin/sdl2-config" -a ! -d "${prefix_sdl2}/bin/sdl2-config" ]; then
 SDL2_PREFIX=`${prefix_sdl2}/bin/sdl2-config --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_sdl2}/bin/sdl2-config"
@@ -8862,7 +8862,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl2-config" ]; then
+if [ -x "${path}/sdl2-config" -a ! -d "${path}/sdl2-config" ]; then
 SDL2_PREFIX=`${path}/sdl2-config --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/sdl2-config"
@@ -8878,7 +8878,7 @@ IFS=$bb_save_IFS
 fi
 SDL2_VERSION=
 if [ "${prefix_sdl2}" != "" ]; then
-if [ -e "${prefix_sdl2}/bin/sdl2-config" ]; then
+if [ -x "${prefix_sdl2}/bin/sdl2-config" -a ! -d "${prefix_sdl2}/bin/sdl2-config" ]; then
 SDL2_VERSION=`${prefix_sdl2}/bin/sdl2-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_sdl2}/bin/sdl2-config"
@@ -8887,7 +8887,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl2-config" ]; then
+if [ -x "${path}/sdl2-config" -a ! -d "${path}/sdl2-config" ]; then
 SDL2_VERSION=`${path}/sdl2-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/sdl2-config"
@@ -8903,7 +8903,7 @@ IFS=$bb_save_IFS
 fi
 SDL2_CFLAGS=
 if [ "${prefix_sdl2}" != "" ]; then
-if [ -e "${prefix_sdl2}/bin/sdl2-config" ]; then
+if [ -x "${prefix_sdl2}/bin/sdl2-config" -a ! -d "${prefix_sdl2}/bin/sdl2-config" ]; then
 SDL2_CFLAGS=`${prefix_sdl2}/bin/sdl2-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_sdl2}/bin/sdl2-config"
@@ -8912,7 +8912,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl2-config" ]; then
+if [ -x "${path}/sdl2-config" -a ! -d "${path}/sdl2-config" ]; then
 SDL2_CFLAGS=`${path}/sdl2-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/sdl2-config"
@@ -8928,7 +8928,7 @@ IFS=$bb_save_IFS
 fi
 SDL2_LIBS=
 if [ "${prefix_sdl2}" != "" ]; then
-if [ -e "${prefix_sdl2}/bin/sdl2-config" ]; then
+if [ -x "${prefix_sdl2}/bin/sdl2-config" -a ! -d "${prefix_sdl2}/bin/sdl2-config" ]; then
 SDL2_LIBS=`${prefix_sdl2}/bin/sdl2-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_sdl2}/bin/sdl2-config"
@@ -8937,7 +8937,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl2-config" ]; then
+if [ -x "${path}/sdl2-config" -a ! -d "${path}/sdl2-config" ]; then
 SDL2_LIBS=`${path}/sdl2-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/sdl2-config"
@@ -8958,7 +8958,7 @@ SDL2_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl2-config" ]; then
+if [ -x "${path}/sdl2-config" -a ! -d "${path}/sdl2-config" ]; then
 SDL2_VERSION=`${path}/sdl2-config --version`
 MK_EXEC_FOUND=Yes
 break
@@ -8974,7 +8974,7 @@ SDL2_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl2-config" ]; then
+if [ -x "${path}/sdl2-config" -a ! -d "${path}/sdl2-config" ]; then
 SDL2_PREFIX=`${path}/sdl2-config --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -8989,7 +8989,7 @@ SDL2_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl2-config" ]; then
+if [ -x "${path}/sdl2-config" -a ! -d "${path}/sdl2-config" ]; then
 SDL2_CFLAGS=`${path}/sdl2-config --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -9004,7 +9004,7 @@ SDL2_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl2-config" ]; then
+if [ -x "${path}/sdl2-config" -a ! -d "${path}/sdl2-config" ]; then
 SDL2_LIBS=`${path}/sdl2-config --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -9028,7 +9028,7 @@ SDL2_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl2-config" ]; then
+if [ -x "${path}/sdl2-config" -a ! -d "${path}/sdl2-config" ]; then
 SDL2_PREFIX=`${path}/sdl2-config --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -9043,7 +9043,7 @@ SDL2_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl2-config" ]; then
+if [ -x "${path}/sdl2-config" -a ! -d "${path}/sdl2-config" ]; then
 SDL2_VERSION=`${path}/sdl2-config --version`
 MK_EXEC_FOUND=Yes
 break
@@ -9058,7 +9058,7 @@ SDL2_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl2-config" ]; then
+if [ -x "${path}/sdl2-config" -a ! -d "${path}/sdl2-config" ]; then
 SDL2_CFLAGS=`${path}/sdl2-config --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -9073,7 +9073,7 @@ SDL2_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl2-config" ]; then
+if [ -x "${path}/sdl2-config" -a ! -d "${path}/sdl2-config" ]; then
 SDL2_LIBS=`${path}/sdl2-config --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -9324,7 +9324,7 @@ $ECHO_N '# checking for SDL 1.2...' >>config.log
 if [ "${prefix_sdl}" != "" ]; then
 SDL_PREFIX=
 if [ "${prefix_sdl}" != "" ]; then
-if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
+if [ -x "${prefix_sdl}/bin/sdl-config" -a ! -d "${prefix_sdl}/bin/sdl-config" ]; then
 SDL_PREFIX=`${prefix_sdl}/bin/sdl-config --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_sdl}/bin/sdl-config"
@@ -9333,7 +9333,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_PREFIX=`${path}/sdl-config --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/sdl-config"
@@ -9349,7 +9349,7 @@ IFS=$bb_save_IFS
 fi
 SDL_VERSION=
 if [ "${prefix_sdl}" != "" ]; then
-if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
+if [ -x "${prefix_sdl}/bin/sdl-config" -a ! -d "${prefix_sdl}/bin/sdl-config" ]; then
 SDL_VERSION=`${prefix_sdl}/bin/sdl-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_sdl}/bin/sdl-config"
@@ -9358,7 +9358,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_VERSION=`${path}/sdl-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/sdl-config"
@@ -9374,7 +9374,7 @@ IFS=$bb_save_IFS
 fi
 SDL_CFLAGS=
 if [ "${prefix_sdl}" != "" ]; then
-if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
+if [ -x "${prefix_sdl}/bin/sdl-config" -a ! -d "${prefix_sdl}/bin/sdl-config" ]; then
 SDL_CFLAGS=`${prefix_sdl}/bin/sdl-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_sdl}/bin/sdl-config"
@@ -9383,7 +9383,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_CFLAGS=`${path}/sdl-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/sdl-config"
@@ -9399,7 +9399,7 @@ IFS=$bb_save_IFS
 fi
 SDL_LIBS=
 if [ "${prefix_sdl}" != "" ]; then
-if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
+if [ -x "${prefix_sdl}/bin/sdl-config" -a ! -d "${prefix_sdl}/bin/sdl-config" ]; then
 SDL_LIBS=`${prefix_sdl}/bin/sdl-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_sdl}/bin/sdl-config"
@@ -9408,7 +9408,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_LIBS=`${path}/sdl-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/sdl-config"
@@ -9429,7 +9429,7 @@ SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_VERSION=`${path}/sdl-config --version`
 MK_EXEC_FOUND=Yes
 break
@@ -9445,7 +9445,7 @@ SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_PREFIX=`${path}/sdl-config --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -9460,7 +9460,7 @@ SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_CFLAGS=`${path}/sdl-config --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -9475,7 +9475,7 @@ SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_LIBS=`${path}/sdl-config --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -9499,7 +9499,7 @@ SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl11-config" ]; then
+if [ -x "${path}/sdl11-config" -a ! -d "${path}/sdl11-config" ]; then
 SDL_VERSION=`${path}/sdl11-config --version`
 MK_EXEC_FOUND=Yes
 break
@@ -9515,7 +9515,7 @@ SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl11-config" ]; then
+if [ -x "${path}/sdl11-config" -a ! -d "${path}/sdl11-config" ]; then
 SDL_PREFIX=`${path}/sdl11-config --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -9530,7 +9530,7 @@ SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl11-config" ]; then
+if [ -x "${path}/sdl11-config" -a ! -d "${path}/sdl11-config" ]; then
 SDL_CFLAGS=`${path}/sdl11-config --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -9545,7 +9545,7 @@ SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl11-config" ]; then
+if [ -x "${path}/sdl11-config" -a ! -d "${path}/sdl11-config" ]; then
 SDL_LIBS=`${path}/sdl11-config --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -9561,7 +9561,7 @@ SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_PREFIX=`${path}/sdl-config --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -9576,7 +9576,7 @@ SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_VERSION=`${path}/sdl-config --version`
 MK_EXEC_FOUND=Yes
 break
@@ -9591,7 +9591,7 @@ SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_CFLAGS=`${path}/sdl-config --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -9606,7 +9606,7 @@ SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_LIBS=`${path}/sdl-config --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -9624,7 +9624,7 @@ SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_PREFIX=`${path}/sdl-config --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -9639,7 +9639,7 @@ SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_VERSION=`${path}/sdl-config --version`
 MK_EXEC_FOUND=Yes
 break
@@ -9654,7 +9654,7 @@ SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_CFLAGS=`${path}/sdl-config --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -9669,7 +9669,7 @@ SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/sdl-config" ]; then
+if [ -x "${path}/sdl-config" -a ! -d "${path}/sdl-config" ]; then
 SDL_LIBS=`${path}/sdl-config --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -11333,7 +11333,7 @@ FREETYPE_LIBS=`$PKGCONFIG freetype2 --libs 2>/dev/null`
 else
 FREETYPE_VERSION=
 if [ "${prefix_freetype}" != "" ]; then
-if [ -e "${prefix_freetype}/bin/freetype-config" ]; then
+if [ -x "${prefix_freetype}/bin/freetype-config" -a ! -d "${prefix_freetype}/bin/freetype-config" ]; then
 FREETYPE_VERSION=`${prefix_freetype}/bin/freetype-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_freetype}/bin/freetype-config"
@@ -11342,7 +11342,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/freetype-config" ]; then
+if [ -x "${path}/freetype-config" -a ! -d "${path}/freetype-config" ]; then
 FREETYPE_VERSION=`${path}/freetype-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/freetype-config"
@@ -11358,7 +11358,7 @@ IFS=$bb_save_IFS
 fi
 FREETYPE_CFLAGS=
 if [ "${prefix_freetype}" != "" ]; then
-if [ -e "${prefix_freetype}/bin/freetype-config" ]; then
+if [ -x "${prefix_freetype}/bin/freetype-config" -a ! -d "${prefix_freetype}/bin/freetype-config" ]; then
 FREETYPE_CFLAGS=`${prefix_freetype}/bin/freetype-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_freetype}/bin/freetype-config"
@@ -11367,7 +11367,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/freetype-config" ]; then
+if [ -x "${path}/freetype-config" -a ! -d "${path}/freetype-config" ]; then
 FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/freetype-config"
@@ -11383,7 +11383,7 @@ IFS=$bb_save_IFS
 fi
 FREETYPE_LIBS=
 if [ "${prefix_freetype}" != "" ]; then
-if [ -e "${prefix_freetype}/bin/freetype-config" ]; then
+if [ -x "${prefix_freetype}/bin/freetype-config" -a ! -d "${prefix_freetype}/bin/freetype-config" ]; then
 FREETYPE_LIBS=`${prefix_freetype}/bin/freetype-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_freetype}/bin/freetype-config"
@@ -11392,7 +11392,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/freetype-config" ]; then
+if [ -x "${path}/freetype-config" -a ! -d "${path}/freetype-config" ]; then
 FREETYPE_LIBS=`${path}/freetype-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/freetype-config"
@@ -11905,7 +11905,7 @@ $ECHO_N '# checking for libpng...' >>config.log
 # BEGIN png(1.2.49 ${prefix_png})
 PNG_VERSION=
 if [ "${prefix_png}" != "" ]; then
-if [ -e "${prefix_png}/bin/libpng-config" ]; then
+if [ -x "${prefix_png}/bin/libpng-config" -a ! -d "${prefix_png}/bin/libpng-config" ]; then
 PNG_VERSION=`${prefix_png}/bin/libpng-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_png}/bin/libpng-config"
@@ -11914,7 +11914,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/libpng-config" ]; then
+if [ -x "${path}/libpng-config" -a ! -d "${path}/libpng-config" ]; then
 PNG_VERSION=`${path}/libpng-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/libpng-config"
@@ -11930,7 +11930,7 @@ IFS=$bb_save_IFS
 fi
 PNG_CFLAGS=
 if [ "${prefix_png}" != "" ]; then
-if [ -e "${prefix_png}/bin/libpng-config" ]; then
+if [ -x "${prefix_png}/bin/libpng-config" -a ! -d "${prefix_png}/bin/libpng-config" ]; then
 PNG_CFLAGS=`${prefix_png}/bin/libpng-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_png}/bin/libpng-config"
@@ -11939,7 +11939,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/libpng-config" ]; then
+if [ -x "${path}/libpng-config" -a ! -d "${path}/libpng-config" ]; then
 PNG_CFLAGS=`${path}/libpng-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/libpng-config"
@@ -11955,7 +11955,7 @@ IFS=$bb_save_IFS
 fi
 PNG_LOPTS=
 if [ "${prefix_png}" != "" ]; then
-if [ -e "${prefix_png}/bin/libpng-config" ]; then
+if [ -x "${prefix_png}/bin/libpng-config" -a ! -d "${prefix_png}/bin/libpng-config" ]; then
 PNG_LOPTS=`${prefix_png}/bin/libpng-config --L_opts`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_png}/bin/libpng-config"
@@ -11964,7 +11964,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/libpng-config" ]; then
+if [ -x "${path}/libpng-config" -a ! -d "${path}/libpng-config" ]; then
 PNG_LOPTS=`${path}/libpng-config --L_opts`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/libpng-config"
@@ -11980,7 +11980,7 @@ IFS=$bb_save_IFS
 fi
 PNG_LIBS=
 if [ "${prefix_png}" != "" ]; then
-if [ -e "${prefix_png}/bin/libpng-config" ]; then
+if [ -x "${prefix_png}/bin/libpng-config" -a ! -d "${prefix_png}/bin/libpng-config" ]; then
 PNG_LIBS=`${prefix_png}/bin/libpng-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_png}/bin/libpng-config"
@@ -11989,7 +11989,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/libpng-config" ]; then
+if [ -x "${path}/libpng-config" -a ! -d "${path}/libpng-config" ]; then
 PNG_LIBS=`${path}/libpng-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/libpng-config"
@@ -13299,7 +13299,7 @@ MYSQL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/mysql_config" ]; then
+if [ -x "${path}/mysql_config" -a ! -d "${path}/mysql_config" ]; then
 if [ "${MK_EXEC_FOUND}" = "Yes" ]; then
 echo "yes."
 echo "# yes." >>config.log
@@ -13384,7 +13384,7 @@ MYSQL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/mysql_config" ]; then
+if [ -x "${path}/mysql_config" -a ! -d "${path}/mysql_config" ]; then
 MYSQL_CFLAGS=`${path}/mysql_config --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -13399,7 +13399,7 @@ MYSQL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/mysql_config" ]; then
+if [ -x "${path}/mysql_config" -a ! -d "${path}/mysql_config" ]; then
 MYSQL_LIBS=`${path}/mysql_config --libs`
 MK_EXEC_FOUND=Yes
 break

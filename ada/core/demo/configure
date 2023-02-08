@@ -220,7 +220,7 @@ IFS=$PATH_SEPARATOR
 
 SH='sh'
 for path in $PATH; do
-	if [ -x "${path}/sh" ]; then
+	if [ -x "${path}/sh" -a ! -d "${path}/sh" ]; then
 		SH="${path}/sh"
 		break
 	elif [ -e "${path}/sh.exe" ]; then
@@ -231,7 +231,7 @@ done
 
 PERL=''
 for path in $PATH; do
-	if [ -x "${path}/perl" ]; then
+	if [ -x "${path}/perl" -a ! -d "${path}/perl" ]; then
 		PERL="${path}/perl"
 		break
 	elif [ -e "${path}/perl.exe" ]; then
@@ -242,7 +242,7 @@ done
 
 PKGCONFIG=''
 for path in $PATH; do
-	if [ -x "${path}/pkg-config" ]; then
+	if [ -x "${path}/pkg-config" -a ! -d "${path}/pkg-config" ]; then
 		PKGCONFIG="${path}/pkg-config"
 		break
 	elif [ -e "${path}/pkg-config.exe" ]; then
@@ -2083,7 +2083,7 @@ $ECHO_N '# checking for Agar-Core...' >>config.log
 # BEGIN agar-core(1.6.0 ${prefix_agar_core})
 AGAR_CORE_VERSION=
 if [ "${prefix_agar_core}" != "" ]; then
-if [ -e "${prefix_agar_core}/bin/agar-core-config" ]; then
+if [ -x "${prefix_agar_core}/bin/agar-core-config" -a ! -d "${prefix_agar_core}/bin/agar-core-config" ]; then
 AGAR_CORE_VERSION=`${prefix_agar_core}/bin/agar-core-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar_core}/bin/agar-core-config"
@@ -2092,7 +2092,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-core-config" ]; then
+if [ -x "${path}/agar-core-config" -a ! -d "${path}/agar-core-config" ]; then
 AGAR_CORE_VERSION=`${path}/agar-core-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-core-config"
@@ -2160,7 +2160,7 @@ $ECHO_N 'checking whether Agar-Core works...'
 $ECHO_N '# checking whether Agar-Core works...' >>config.log
 AGAR_CORE_CFLAGS=
 if [ "${prefix_agar_core}" != "" ]; then
-if [ -e "${prefix_agar_core}/bin/agar-core-config" ]; then
+if [ -x "${prefix_agar_core}/bin/agar-core-config" -a ! -d "${prefix_agar_core}/bin/agar-core-config" ]; then
 AGAR_CORE_CFLAGS=`${prefix_agar_core}/bin/agar-core-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar_core}/bin/agar-core-config"
@@ -2169,7 +2169,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-core-config" ]; then
+if [ -x "${path}/agar-core-config" -a ! -d "${path}/agar-core-config" ]; then
 AGAR_CORE_CFLAGS=`${path}/agar-core-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-core-config"
@@ -2185,7 +2185,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_CORE_LIBS=
 if [ "${prefix_agar_core}" != "" ]; then
-if [ -e "${prefix_agar_core}/bin/agar-core-config" ]; then
+if [ -x "${prefix_agar_core}/bin/agar-core-config" -a ! -d "${prefix_agar_core}/bin/agar-core-config" ]; then
 AGAR_CORE_LIBS=`${prefix_agar_core}/bin/agar-core-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar_core}/bin/agar-core-config"
@@ -2194,7 +2194,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-core-config" ]; then
+if [ -x "${path}/agar-core-config" -a ! -d "${path}/agar-core-config" ]; then
 AGAR_CORE_LIBS=`${path}/agar-core-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-core-config"
@@ -2319,7 +2319,7 @@ $ECHO_N '# checking for Ada bindings to Agar-Core...' >>config.log
 # BEGIN agar-ada-core(1.6.0 ${prefix_agar_ada_core})
 AGAR_ADA_CORE_VERSION=
 if [ "${prefix_agar_ada_core}" != "" ]; then
-if [ -e "${prefix_agar_ada_core}/bin/agar-ada-core-config" ]; then
+if [ -x "${prefix_agar_ada_core}/bin/agar-ada-core-config" -a ! -d "${prefix_agar_ada_core}/bin/agar-ada-core-config" ]; then
 AGAR_ADA_CORE_VERSION=`${prefix_agar_ada_core}/bin/agar-ada-core-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar_ada_core}/bin/agar-ada-core-config"
@@ -2328,7 +2328,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-ada-core-config" ]; then
+if [ -x "${path}/agar-ada-core-config" -a ! -d "${path}/agar-ada-core-config" ]; then
 AGAR_ADA_CORE_VERSION=`${path}/agar-ada-core-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-ada-core-config"
@@ -2396,7 +2396,7 @@ $ECHO_N 'checking whether Agar-Core Ada bindings work...'
 $ECHO_N '# checking whether Agar-Core Ada bindings work...' >>config.log
 AGAR_ADA_CORE_CFLAGS=
 if [ "${prefix_agar_ada_core}" != "" ]; then
-if [ -e "${prefix_agar_ada_core}/bin/agar-ada-core-config" ]; then
+if [ -x "${prefix_agar_ada_core}/bin/agar-ada-core-config" -a ! -d "${prefix_agar_ada_core}/bin/agar-ada-core-config" ]; then
 AGAR_ADA_CORE_CFLAGS=`${prefix_agar_ada_core}/bin/agar-ada-core-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar_ada_core}/bin/agar-ada-core-config"
@@ -2405,7 +2405,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-ada-core-config" ]; then
+if [ -x "${path}/agar-ada-core-config" -a ! -d "${path}/agar-ada-core-config" ]; then
 AGAR_ADA_CORE_CFLAGS=`${path}/agar-ada-core-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-ada-core-config"
@@ -2421,7 +2421,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_ADA_CORE_LIBS=
 if [ "${prefix_agar_ada_core}" != "" ]; then
-if [ -e "${prefix_agar_ada_core}/bin/agar-ada-core-config" ]; then
+if [ -x "${prefix_agar_ada_core}/bin/agar-ada-core-config" -a ! -d "${prefix_agar_ada_core}/bin/agar-ada-core-config" ]; then
 AGAR_ADA_CORE_LIBS=`${prefix_agar_ada_core}/bin/agar-ada-core-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar_ada_core}/bin/agar-ada-core-config"
@@ -2430,7 +2430,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-ada-core-config" ]; then
+if [ -x "${path}/agar-ada-core-config" -a ! -d "${path}/agar-ada-core-config" ]; then
 AGAR_ADA_CORE_LIBS=`${path}/agar-ada-core-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-ada-core-config"

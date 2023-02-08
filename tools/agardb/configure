@@ -220,7 +220,7 @@ IFS=$PATH_SEPARATOR
 
 SH='sh'
 for path in $PATH; do
-	if [ -x "${path}/sh" ]; then
+	if [ -x "${path}/sh" -a ! -d "${path}/sh" ]; then
 		SH="${path}/sh"
 		break
 	elif [ -e "${path}/sh.exe" ]; then
@@ -231,7 +231,7 @@ done
 
 PERL=''
 for path in $PATH; do
-	if [ -x "${path}/perl" ]; then
+	if [ -x "${path}/perl" -a ! -d "${path}/perl" ]; then
 		PERL="${path}/perl"
 		break
 	elif [ -e "${path}/perl.exe" ]; then
@@ -242,7 +242,7 @@ done
 
 PKGCONFIG=''
 for path in $PATH; do
-	if [ -x "${path}/pkg-config" ]; then
+	if [ -x "${path}/pkg-config" -a ! -d "${path}/pkg-config" ]; then
 		PKGCONFIG="${path}/pkg-config"
 		break
 	elif [ -e "${path}/pkg-config.exe" ]; then
@@ -943,8 +943,27 @@ else
 CROSSPFX=""
 fi
 HAVE_CC65="no"
+HAVE_EMCC="no"
 if [ "$CC" = "" ]; then
 case "${host}" in
+emscripten)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/emcc" ]; then
+CC="${i}/emcc"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+elif [ -x "${i}/emcc.exe" ]; then
+CC="${i}/emcc.exe"
+HAVE_EMCC="yes"
+CROSS_COMPILING="yes"
+break
+fi
+done
+IFS=$bb_save_IFS
+;;
 apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -1015,41 +1034,48 @@ IFS=$bb_save_IFS
 ;;
 esac
 	if [ "$CC" = '' ]; then
-		if [ "$HAVE_CC65" = "yes" ]; then
-			echo "*"
-			echo "* Cannot find cc65 in PATH. You may need to set CC."
-			echo "* You can download cc65 from: https://www.cc65.org/."
-			echo "*"
-			echo "Cannot find cc65 in PATH." >>config.log
-		else
-			echo "*"
+		echo "*"
 echo "* Cannot find one of clang, clang70, clang60, cc, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
-			echo "* under the current PATH, which is:"
-			echo "* $PATH"
-			echo "*"
-			echo "* You may need to set the CC environment variable."
-			echo "*"
-			echo "Cannot find C compiler in PATH." >>config.log
-		fi
-		HAVE_CC="no"
+		echo "* under the current PATH, which is:"
+		echo "* $PATH"
+		echo "*"
+		echo "* You may need to set the CC environment variable."
+		echo "*"
+		echo "Cannot find C compiler in PATH." >>config.log
 		echo "no"
 		echo "no" >>config.log
+
+		HAVE_CC="no"
 	else
-		HAVE_CC="yes"
 		echo "yes, ${CC}"
 		echo "yes, ${CC}" >>config.log
+
+		HAVE_CC="yes"
 	fi
 else
 	HAVE_CC="yes"
-	if ${CC} -V 2>&1 |grep -q ^cc65; then
-		echo "using cc65 (${CC})"
-		echo "using cc65 (${CC})" >>config.log
-		HAVE_CC65="yes"
-		CROSS_COMPILING="yes"
-	else
+	case "${host}" in
+	c64)
+		if ${CC} -V 2>&1 |grep -q ^cc65; then
+			echo "using cc65 (${CC})"
+			echo "using cc65 (${CC})" >>config.log
+			HAVE_CC65="yes"
+			CROSS_COMPILING="yes"
+		fi
+		;;
+	emscripten) 
+		if ${CC} --version 2>&1 |grep -q ^emcc; then
+			echo "using emcc (${CC})"
+			echo "using emcc (${CC})" >>config.log
+			HAVE_EMCC="yes"
+			CROSS_COMPILING="yes"
+		fi
+		;;
+	*)
 		echo "using ${CC}"
 		echo "using ${CC}" >>config.log
-	fi
+		;;
+	esac
 fi
 
 if [ "${HAVE_CC}" = "yes" ]; then
@@ -1058,7 +1084,7 @@ if [ "${HAVE_CC}" = "yes" ]; then
 	cat << 'EOT' > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 EOT
-	$CC -o conftest conftest.c 2>>config.log
+	$CC -o conftest conftest.c 1>/dev/null 2>>config.log
 	if [ $? != 0 ]; then
 	    echo "no"
 	    echo "no, compilation failed" >>config.log
@@ -1073,7 +1099,7 @@ EOT
 			for OUTFILE in conftest.exe conftest conftest.*; do
 				if [ -f $OUTFILE ]; then
 					case $OUTFILE in
-					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM | *.wasm | *.html | *.js )
 						;;
 					*.* )
 						EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
@@ -1090,6 +1116,16 @@ EOT
 				echo "yes"
 				echo "yes" >>config.log
 			fi
+bb_o=$bb_incdir/have_emcc.h
+echo '#ifndef HAVE_EMCC' >$bb_o
+echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
 bb_o=$bb_incdir/execsuffix.h
 echo '#ifndef EXECSUFFIX' >$bb_o
 echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >>$bb_o
@@ -1101,7 +1137,7 @@ echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 		fi
 	fi
 	if [ "${keep_conftest}" != "yes" ]; then
-		rm -f conftest.c conftest$EXECSUFFIX
+		rm -f conftest.c conftest conftest$EXECSUFFIX
 	fi
 	TEST_CFLAGS=''
 fi
@@ -1120,8 +1156,8 @@ echo '# C: HAVE_CC_CLANG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1145,6 +1181,40 @@ fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+$ECHO_N 'cc: checking whether compiler is cc65...'
+$ECHO_N '# cc: checking whether compiler is cc65...' >>config.log
+if [ "${HAVE_CC65}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+CC_COMPILE=""
+bb_o=$bb_incdir/have_cc65.h
+echo '#ifndef HAVE_CC65' >$bb_o
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+CC_COMPILE="-c"
+echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+fi
+$ECHO_N 'cc: checking whether compiler is emcc...'
+$ECHO_N '# cc: checking whether compiler is emcc...' >>config.log
+if [ "${HAVE_EMCC}" = "yes" ]; then
+echo "yes"
+echo "# yes" >>config.log
+bb_o=$bb_incdir/have_emcc.h
+echo '#ifndef HAVE_EMCC' >$bb_o
+echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
+else
+echo "no"
+echo "# no" >>config.log
+echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
+fi
 $ECHO_N 'cc: checking whether compiler is GCC...'
 $ECHO_N '# cc: checking whether compiler is GCC...' >>config.log
 MK_COMPILE_STATUS=OK
@@ -1159,8 +1229,8 @@ echo '# C: HAVE_CC_GCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1195,8 +1265,8 @@ echo '# C: HAVE_CC_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -o $testdir/conftest$$ conftest$$.c  1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1243,8 +1313,8 @@ echo '# C: HAVE_FLOAT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1287,8 +1357,8 @@ echo '# C: HAVE_LONG_DOUBLE' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1330,8 +1400,8 @@ echo '# C: HAVE_LONG_LONG' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1369,8 +1439,8 @@ echo '# C: HAVE_LD_NO_UNDEFINED' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1408,8 +1478,8 @@ echo '# C: HAVE_LD_STATIC_LIBGCC' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1456,8 +1526,8 @@ echo '# C: HAVE_CYGWIN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1496,20 +1566,9 @@ echo '#ifndef HAVE_CC' >$bb_o
 echo "#define HAVE_CC \"$HAVE_CC\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
-if [ "${HAVE_CC65}" = "yes" ]; then
-CC_COMPILE=""
-bb_o=$bb_incdir/have_cc65.h
-echo '#ifndef HAVE_CC65' >$bb_o
-echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
-else
-CC_COMPILE="-c"
-echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
-echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
-fi
 else
 HAVE_CC65="no"
+HAVE_EMCC="no"
 HAVE_CC_WARNINGS="no"
 PROG_GUI_FLAGS=""
 PROG_CLI_FLAGS=""
@@ -1524,6 +1583,8 @@ echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
 echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
 echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
 echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
+echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
 echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
 echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
 echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
@@ -1556,7 +1617,7 @@ $ECHO_N '# checking for Agar...' >>config.log
 # BEGIN agar(1.6.0 ${prefix_agar})
 AGAR_VERSION=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_VERSION=`${prefix_agar}/bin/agar-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
@@ -1565,7 +1626,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_VERSION=`${path}/agar-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -1633,7 +1694,7 @@ $ECHO_N 'checking whether Agar works...'
 $ECHO_N '# checking whether Agar works...' >>config.log
 AGAR_CFLAGS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
@@ -1642,7 +1703,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_CFLAGS=`${path}/agar-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -1658,7 +1719,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
@@ -1667,7 +1728,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_LIBS=`${path}/agar-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -1703,8 +1764,8 @@ echo '# C: HAVE_AGAR' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1918,8 +1979,8 @@ echo '# C++: HAVE_CXX_WARNINGS' >>config.log
 echo "cat << EOT >conftest$$.cpp" >>config.log
 cat conftest$$.cpp>>config.log
 echo EOT >>config.log
-echo "$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -o $testdir/conftest$$ conftest$$.cpp -lstdc++ 2>>config.log">>config.log
-$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -o $testdir/conftest$$ conftest$$.cpp -lstdc++ 2>>config.log
+echo "$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -o $testdir/conftest$$ conftest$$.cpp -lstdc++ 1>/dev/null 2>>config.log">>config.log
+$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -o $testdir/conftest$$ conftest$$.cpp -lstdc++ 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -1980,7 +2041,7 @@ $ECHO_N '# checking for the LLDB debugger...' >>config.log
 # BEGIN lldb(8.0.0 ${prefix_llvm})
 LLDB_PREFIX=
 if [ "${prefix_llvm}" != "" ]; then
-if [ -e "${prefix_llvm}/bin/llvm-config80" ]; then
+if [ -x "${prefix_llvm}/bin/llvm-config80" -a ! -d "${prefix_llvm}/bin/llvm-config80" ]; then
 LLDB_PREFIX=`${prefix_llvm}/bin/llvm-config80 --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_llvm}/bin/llvm-config80"
@@ -1989,7 +2050,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config80" ]; then
+if [ -x "${path}/llvm-config80" -a ! -d "${path}/llvm-config80" ]; then
 LLDB_PREFIX=`${path}/llvm-config80 --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config80"
@@ -2005,7 +2066,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_VERSION=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config80" ]; then
+if [ -x "/bin/llvm-config80" -a ! -d "/bin/llvm-config80" ]; then
 LLDB_VERSION=`/bin/llvm-config80 --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config80"
@@ -2014,7 +2075,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config80" ]; then
+if [ -x "${path}/llvm-config80" -a ! -d "${path}/llvm-config80" ]; then
 LLDB_VERSION=`${path}/llvm-config80 --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config80"
@@ -2030,7 +2091,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_CFLAGS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config80" ]; then
+if [ -x "/bin/llvm-config80" -a ! -d "/bin/llvm-config80" ]; then
 LLDB_CFLAGS=`/bin/llvm-config80 --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config80"
@@ -2039,7 +2100,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config80" ]; then
+if [ -x "${path}/llvm-config80" -a ! -d "${path}/llvm-config80" ]; then
 LLDB_CFLAGS=`${path}/llvm-config80 --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config80"
@@ -2055,7 +2116,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_LDFLAGS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config80" ]; then
+if [ -x "/bin/llvm-config80" -a ! -d "/bin/llvm-config80" ]; then
 LLDB_LDFLAGS=`/bin/llvm-config80 --ldflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config80"
@@ -2064,7 +2125,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config80" ]; then
+if [ -x "${path}/llvm-config80" -a ! -d "${path}/llvm-config80" ]; then
 LLDB_LDFLAGS=`${path}/llvm-config80 --ldflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config80"
@@ -2080,7 +2141,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_LIBS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config80" ]; then
+if [ -x "/bin/llvm-config80" -a ! -d "/bin/llvm-config80" ]; then
 LLDB_LIBS=`/bin/llvm-config80 --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config80"
@@ -2089,7 +2150,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config80" ]; then
+if [ -x "${path}/llvm-config80" -a ! -d "${path}/llvm-config80" ]; then
 LLDB_LIBS=`${path}/llvm-config80 --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config80"
@@ -2106,7 +2167,7 @@ fi
 if [ "LLDB_PREFIX" = "" ]; then
 LLDB_PREFIX=
 if [ "${prefix_llvm}" != "" ]; then
-if [ -e "${prefix_llvm}/bin/llvm-config70" ]; then
+if [ -x "${prefix_llvm}/bin/llvm-config70" -a ! -d "${prefix_llvm}/bin/llvm-config70" ]; then
 LLDB_PREFIX=`${prefix_llvm}/bin/llvm-config70 --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_llvm}/bin/llvm-config70"
@@ -2115,7 +2176,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config70" ]; then
+if [ -x "${path}/llvm-config70" -a ! -d "${path}/llvm-config70" ]; then
 LLDB_PREFIX=`${path}/llvm-config70 --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config70"
@@ -2132,7 +2193,7 @@ fi
 if [ "LLDB_PREFIX" = "" ]; then
 LLDB_PREFIX=
 if [ "${prefix_llvm}" != "" ]; then
-if [ -e "${prefix_llvm}/bin/llvm-config" ]; then
+if [ -x "${prefix_llvm}/bin/llvm-config" -a ! -d "${prefix_llvm}/bin/llvm-config" ]; then
 LLDB_PREFIX=`${prefix_llvm}/bin/llvm-config --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_llvm}/bin/llvm-config"
@@ -2141,7 +2202,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config" ]; then
+if [ -x "${path}/llvm-config" -a ! -d "${path}/llvm-config" ]; then
 LLDB_PREFIX=`${path}/llvm-config --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config"
@@ -2158,7 +2219,7 @@ fi
 if [ "LLDB_PREFIX" = "" ]; then
 LLDB_PREFIX=
 if [ "${prefix_llvm}" != "" ]; then
-if [ -e "${prefix_llvm}/bin/llvm-config60" ]; then
+if [ -x "${prefix_llvm}/bin/llvm-config60" -a ! -d "${prefix_llvm}/bin/llvm-config60" ]; then
 LLDB_PREFIX=`${prefix_llvm}/bin/llvm-config60 --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_llvm}/bin/llvm-config60"
@@ -2167,7 +2228,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config60" ]; then
+if [ -x "${path}/llvm-config60" -a ! -d "${path}/llvm-config60" ]; then
 LLDB_PREFIX=`${path}/llvm-config60 --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config60"
@@ -2184,7 +2245,7 @@ fi
 if [ "LLDB_PREFIX" = "" ]; then
 LLDB_PREFIX=
 if [ "${prefix_llvm}" != "" ]; then
-if [ -e "${prefix_llvm}/bin/llvm-config10" ]; then
+if [ -x "${prefix_llvm}/bin/llvm-config10" -a ! -d "${prefix_llvm}/bin/llvm-config10" ]; then
 LLDB_PREFIX=`${prefix_llvm}/bin/llvm-config10 --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_llvm}/bin/llvm-config10"
@@ -2193,7 +2254,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config10" ]; then
+if [ -x "${path}/llvm-config10" -a ! -d "${path}/llvm-config10" ]; then
 LLDB_PREFIX=`${path}/llvm-config10 --prefix`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config10"
@@ -2209,7 +2270,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_VERSION=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config10" ]; then
+if [ -x "/bin/llvm-config10" -a ! -d "/bin/llvm-config10" ]; then
 LLDB_VERSION=`/bin/llvm-config10 --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config10"
@@ -2218,7 +2279,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config10" ]; then
+if [ -x "${path}/llvm-config10" -a ! -d "${path}/llvm-config10" ]; then
 LLDB_VERSION=`${path}/llvm-config10 --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config10"
@@ -2234,7 +2295,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_CFLAGS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config10" ]; then
+if [ -x "/bin/llvm-config10" -a ! -d "/bin/llvm-config10" ]; then
 LLDB_CFLAGS=`/bin/llvm-config10 --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config10"
@@ -2243,7 +2304,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config10" ]; then
+if [ -x "${path}/llvm-config10" -a ! -d "${path}/llvm-config10" ]; then
 LLDB_CFLAGS=`${path}/llvm-config10 --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config10"
@@ -2259,7 +2320,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_LDFLAGS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config10" ]; then
+if [ -x "/bin/llvm-config10" -a ! -d "/bin/llvm-config10" ]; then
 LLDB_LDFLAGS=`/bin/llvm-config10 --ldflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config10"
@@ -2268,7 +2329,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config10" ]; then
+if [ -x "${path}/llvm-config10" -a ! -d "${path}/llvm-config10" ]; then
 LLDB_LDFLAGS=`${path}/llvm-config10 --ldflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config10"
@@ -2284,7 +2345,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_LIBS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config10" ]; then
+if [ -x "/bin/llvm-config10" -a ! -d "/bin/llvm-config10" ]; then
 LLDB_LIBS=`/bin/llvm-config10 --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config10"
@@ -2293,7 +2354,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config10" ]; then
+if [ -x "${path}/llvm-config10" -a ! -d "${path}/llvm-config10" ]; then
 LLDB_LIBS=`${path}/llvm-config10 --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config10"
@@ -2311,7 +2372,7 @@ fi
 else
 LLDB_VERSION=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config" ]; then
+if [ -x "/bin/llvm-config" -a ! -d "/bin/llvm-config" ]; then
 LLDB_VERSION=`/bin/llvm-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config"
@@ -2320,7 +2381,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config" ]; then
+if [ -x "${path}/llvm-config" -a ! -d "${path}/llvm-config" ]; then
 LLDB_VERSION=`${path}/llvm-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config"
@@ -2336,7 +2397,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_CFLAGS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config" ]; then
+if [ -x "/bin/llvm-config" -a ! -d "/bin/llvm-config" ]; then
 LLDB_CFLAGS=`/bin/llvm-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config"
@@ -2345,7 +2406,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config" ]; then
+if [ -x "${path}/llvm-config" -a ! -d "${path}/llvm-config" ]; then
 LLDB_CFLAGS=`${path}/llvm-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config"
@@ -2361,7 +2422,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_LDFLAGS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config" ]; then
+if [ -x "/bin/llvm-config" -a ! -d "/bin/llvm-config" ]; then
 LLDB_LDFLAGS=`/bin/llvm-config --ldflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config"
@@ -2370,7 +2431,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config" ]; then
+if [ -x "${path}/llvm-config" -a ! -d "${path}/llvm-config" ]; then
 LLDB_LDFLAGS=`${path}/llvm-config --ldflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config"
@@ -2386,7 +2447,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_LIBS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config" ]; then
+if [ -x "/bin/llvm-config" -a ! -d "/bin/llvm-config" ]; then
 LLDB_LIBS=`/bin/llvm-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config"
@@ -2395,7 +2456,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config" ]; then
+if [ -x "${path}/llvm-config" -a ! -d "${path}/llvm-config" ]; then
 LLDB_LIBS=`${path}/llvm-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config"
@@ -2413,7 +2474,7 @@ fi
 else
 LLDB_VERSION=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config70" ]; then
+if [ -x "/bin/llvm-config70" -a ! -d "/bin/llvm-config70" ]; then
 LLDB_VERSION=`/bin/llvm-config70 --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config70"
@@ -2422,7 +2483,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config70" ]; then
+if [ -x "${path}/llvm-config70" -a ! -d "${path}/llvm-config70" ]; then
 LLDB_VERSION=`${path}/llvm-config70 --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config70"
@@ -2438,7 +2499,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_CFLAGS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config70" ]; then
+if [ -x "/bin/llvm-config70" -a ! -d "/bin/llvm-config70" ]; then
 LLDB_CFLAGS=`/bin/llvm-config70 --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config70"
@@ -2447,7 +2508,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config70" ]; then
+if [ -x "${path}/llvm-config70" -a ! -d "${path}/llvm-config70" ]; then
 LLDB_CFLAGS=`${path}/llvm-config70 --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config70"
@@ -2463,7 +2524,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_LDFLAGS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config70" ]; then
+if [ -x "/bin/llvm-config70" -a ! -d "/bin/llvm-config70" ]; then
 LLDB_LDFLAGS=`/bin/llvm-config70 --ldflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config70"
@@ -2472,7 +2533,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config70" ]; then
+if [ -x "${path}/llvm-config70" -a ! -d "${path}/llvm-config70" ]; then
 LLDB_LDFLAGS=`${path}/llvm-config70 --ldflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config70"
@@ -2488,7 +2549,7 @@ IFS=$bb_save_IFS
 fi
 LLDB_LIBS=
 if [ "" != "" ]; then
-if [ -e "/bin/llvm-config70" ]; then
+if [ -x "/bin/llvm-config70" -a ! -d "/bin/llvm-config70" ]; then
 LLDB_LIBS=`/bin/llvm-config70 --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="/bin/llvm-config70"
@@ -2497,7 +2558,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/llvm-config70" ]; then
+if [ -x "${path}/llvm-config70" -a ! -d "${path}/llvm-config70" ]; then
 LLDB_LIBS=`${path}/llvm-config70 --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/llvm-config70"
@@ -2625,8 +2686,8 @@ echo '# C++: HAVE_LLDB' >>config.log
 echo "cat << EOT >conftest$$.cpp" >>config.log
 cat conftest$$.cpp>>config.log
 echo EOT >>config.log
-echo "$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} 2>>config.log">>config.log
-$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} 2>>config.log
+echo "$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2725,8 +2786,8 @@ echo '# C++: HAVE_LLDB_UTILITY' >>config.log
 echo "cat << EOT >conftest$$.cpp" >>config.log
 cat conftest$$.cpp>>config.log
 echo EOT >>config.log
-echo "$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} ${LLDB_UTILITY_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} ${LLDB_UTILITY_LIBS} 2>>config.log">>config.log
-$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} ${LLDB_UTILITY_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} ${LLDB_UTILITY_LIBS} 2>>config.log
+echo "$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} ${LLDB_UTILITY_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} ${LLDB_UTILITY_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} ${LLDB_UTILITY_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} ${LLDB_UTILITY_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2841,8 +2902,8 @@ echo '# C: HAVE_GETTEXT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2918,8 +2979,8 @@ echo '# C: HAVE_GETTEXT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2995,8 +3056,8 @@ echo '# C: HAVE_GETTEXT' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${GETTEXT_LIBS} 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -3138,6 +3199,8 @@ echo "HAVE_CXX_WARNINGS=$HAVE_CXX_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_CXX_WARNINGS\"] = \"$HAVE_CXX_WARNINGS\"" >>configure.lua
 echo "HAVE_CYGWIN=$HAVE_CYGWIN" >>Makefile.config
 echo "mdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
+echo "HAVE_EMCC=$HAVE_EMCC" >>Makefile.config
+echo "mdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
 echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
 echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
 echo "HAVE_LD_NO_UNDEFINED=$HAVE_LD_NO_UNDEFINED" >>Makefile.config

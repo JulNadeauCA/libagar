@@ -220,7 +220,7 @@ IFS=$PATH_SEPARATOR
 
 SH='sh'
 for path in $PATH; do
-	if [ -x "${path}/sh" ]; then
+	if [ -x "${path}/sh" -a ! -d "${path}/sh" ]; then
 		SH="${path}/sh"
 		break
 	elif [ -e "${path}/sh.exe" ]; then
@@ -231,7 +231,7 @@ done
 
 PERL=''
 for path in $PATH; do
-	if [ -x "${path}/perl" ]; then
+	if [ -x "${path}/perl" -a ! -d "${path}/perl" ]; then
 		PERL="${path}/perl"
 		break
 	elif [ -e "${path}/perl.exe" ]; then
@@ -242,7 +242,7 @@ done
 
 PKGCONFIG=''
 for path in $PATH; do
-	if [ -x "${path}/pkg-config" ]; then
+	if [ -x "${path}/pkg-config" -a ! -d "${path}/pkg-config" ]; then
 		PKGCONFIG="${path}/pkg-config"
 		break
 	elif [ -e "${path}/pkg-config.exe" ]; then
@@ -1025,20 +1025,28 @@ echo "* Cannot find one of clang, clang70, clang60, cc, gcc, gcc-6, gcc7, gcc8, 
 	fi
 else
 	HAVE_CC="yes"
-	if emcc --version 2>&1 |grep -q ^emcc; then
-		echo "using emcc (${CC})"
-		echo "using emcc (${CC})" >>config.log
-		HAVE_EMCC="yes"
-		CROSS_COMPILING="yes"
-	elif cc65 -V 2>&1 |grep -q ^cc65; then
-		echo "using cc65 (${CC})"
-		echo "using cc65 (${CC})" >>config.log
-		HAVE_CC65="yes"
-		CROSS_COMPILING="yes"
-	else
+	case "${host}" in
+	c64)
+		if ${CC} -V 2>&1 |grep -q ^cc65; then
+			echo "using cc65 (${CC})"
+			echo "using cc65 (${CC})" >>config.log
+			HAVE_CC65="yes"
+			CROSS_COMPILING="yes"
+		fi
+		;;
+	emscripten) 
+		if ${CC} --version 2>&1 |grep -q ^emcc; then
+			echo "using emcc (${CC})"
+			echo "using emcc (${CC})" >>config.log
+			HAVE_EMCC="yes"
+			CROSS_COMPILING="yes"
+		fi
+		;;
+	*)
 		echo "using ${CC}"
 		echo "using ${CC}" >>config.log
-	fi
+		;;
+	esac
 fi
 
 if [ "${HAVE_CC}" = "yes" ]; then
@@ -1580,7 +1588,7 @@ $ECHO_N '# checking for Agar...' >>config.log
 # BEGIN agar(1.6.0 ${prefix_agar})
 AGAR_VERSION=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_VERSION=`${prefix_agar}/bin/agar-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
@@ -1589,7 +1597,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_VERSION=`${path}/agar-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -1657,7 +1665,7 @@ $ECHO_N 'checking whether Agar works...'
 $ECHO_N '# checking whether Agar works...' >>config.log
 AGAR_CFLAGS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
@@ -1666,7 +1674,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_CFLAGS=`${path}/agar-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -1682,7 +1690,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
@@ -1691,7 +1699,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_LIBS=`${path}/agar-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -1803,7 +1811,7 @@ $ECHO_N '# checking for Agar-Math...' >>config.log
 # BEGIN agar-math(1.6.0 ${prefix_agar})
 AGAR_MATH_VERSION=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-math-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-math-config" -a ! -d "${prefix_agar}/bin/agar-math-config" ]; then
 AGAR_MATH_VERSION=`${prefix_agar}/bin/agar-math-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-math-config"
@@ -1812,7 +1820,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-math-config" ]; then
+if [ -x "${path}/agar-math-config" -a ! -d "${path}/agar-math-config" ]; then
 AGAR_MATH_VERSION=`${path}/agar-math-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-math-config"
@@ -1880,7 +1888,7 @@ $ECHO_N 'checking whether Agar-Math works...'
 $ECHO_N '# checking whether Agar-Math works...' >>config.log
 AGAR_CFLAGS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
@@ -1889,7 +1897,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_CFLAGS=`${path}/agar-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -1905,7 +1913,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
@@ -1914,7 +1922,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_LIBS=`${path}/agar-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -1930,7 +1938,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_MATH_CFLAGS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-math-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-math-config" -a ! -d "${prefix_agar}/bin/agar-math-config" ]; then
 AGAR_MATH_CFLAGS=`${prefix_agar}/bin/agar-math-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-math-config"
@@ -1939,7 +1947,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-math-config" ]; then
+if [ -x "${path}/agar-math-config" -a ! -d "${path}/agar-math-config" ]; then
 AGAR_MATH_CFLAGS=`${path}/agar-math-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-math-config"
@@ -1955,7 +1963,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_MATH_LIBS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-math-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-math-config" -a ! -d "${prefix_agar}/bin/agar-math-config" ]; then
 AGAR_MATH_LIBS=`${prefix_agar}/bin/agar-math-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-math-config"
@@ -1964,7 +1972,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-math-config" ]; then
+if [ -x "${path}/agar-math-config" -a ! -d "${path}/agar-math-config" ]; then
 AGAR_MATH_LIBS=`${path}/agar-math-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-math-config"
@@ -2042,7 +2050,7 @@ $ECHO_N '# checking for Agar-VG...' >>config.log
 # BEGIN agar-vg(1.6.0 ${prefix_agar})
 AGAR_VG_VERSION=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-vg-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-vg-config" -a ! -d "${prefix_agar}/bin/agar-vg-config" ]; then
 AGAR_VG_VERSION=`${prefix_agar}/bin/agar-vg-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-vg-config"
@@ -2051,7 +2059,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-vg-config" ]; then
+if [ -x "${path}/agar-vg-config" -a ! -d "${path}/agar-vg-config" ]; then
 AGAR_VG_VERSION=`${path}/agar-vg-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-vg-config"
@@ -2119,7 +2127,7 @@ $ECHO_N 'checking whether agar-vg works...'
 $ECHO_N '# checking whether agar-vg works...' >>config.log
 AGAR_CFLAGS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
@@ -2128,7 +2136,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_CFLAGS=`${path}/agar-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -2144,7 +2152,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
@@ -2153,7 +2161,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_LIBS=`${path}/agar-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -2169,7 +2177,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_VG_CFLAGS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-vg-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-vg-config" -a ! -d "${prefix_agar}/bin/agar-vg-config" ]; then
 AGAR_VG_CFLAGS=`${prefix_agar}/bin/agar-vg-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-vg-config"
@@ -2178,7 +2186,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-vg-config" ]; then
+if [ -x "${path}/agar-vg-config" -a ! -d "${path}/agar-vg-config" ]; then
 AGAR_VG_CFLAGS=`${path}/agar-vg-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-vg-config"
@@ -2194,7 +2202,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_VG_LIBS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-vg-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-vg-config" -a ! -d "${prefix_agar}/bin/agar-vg-config" ]; then
 AGAR_VG_LIBS=`${prefix_agar}/bin/agar-vg-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-vg-config"
@@ -2203,7 +2211,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-vg-config" ]; then
+if [ -x "${path}/agar-vg-config" -a ! -d "${path}/agar-vg-config" ]; then
 AGAR_VG_LIBS=`${path}/agar-vg-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-vg-config"
@@ -2283,7 +2291,7 @@ $ECHO_N '# checking for Agar-AU...' >>config.log
 # BEGIN agar-au(1.6.0 ${prefix_agar})
 AGAR_AU_VERSION=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-au-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-au-config" -a ! -d "${prefix_agar}/bin/agar-au-config" ]; then
 AGAR_AU_VERSION=`${prefix_agar}/bin/agar-au-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-au-config"
@@ -2292,7 +2300,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-au-config" ]; then
+if [ -x "${path}/agar-au-config" -a ! -d "${path}/agar-au-config" ]; then
 AGAR_AU_VERSION=`${path}/agar-au-config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-au-config"
@@ -2360,7 +2368,7 @@ $ECHO_N 'checking whether agar-au works...'
 $ECHO_N '# checking whether agar-au works...' >>config.log
 AGAR_CFLAGS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
@@ -2369,7 +2377,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_CFLAGS=`${path}/agar-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -2385,7 +2393,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
@@ -2394,7 +2402,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-config" ]; then
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
 AGAR_LIBS=`${path}/agar-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-config"
@@ -2410,7 +2418,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_AU_CFLAGS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-au-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-au-config" -a ! -d "${prefix_agar}/bin/agar-au-config" ]; then
 AGAR_AU_CFLAGS=`${prefix_agar}/bin/agar-au-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-au-config"
@@ -2419,7 +2427,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-au-config" ]; then
+if [ -x "${path}/agar-au-config" -a ! -d "${path}/agar-au-config" ]; then
 AGAR_AU_CFLAGS=`${path}/agar-au-config --cflags`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-au-config"
@@ -2435,7 +2443,7 @@ IFS=$bb_save_IFS
 fi
 AGAR_AU_LIBS=
 if [ "${prefix_agar}" != "" ]; then
-if [ -e "${prefix_agar}/bin/agar-au-config" ]; then
+if [ -x "${prefix_agar}/bin/agar-au-config" -a ! -d "${prefix_agar}/bin/agar-au-config" ]; then
 AGAR_AU_LIBS=`${prefix_agar}/bin/agar-au-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${prefix_agar}/bin/agar-au-config"
@@ -2444,7 +2452,7 @@ else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -e "${path}/agar-au-config" ]; then
+if [ -x "${path}/agar-au-config" -a ! -d "${path}/agar-au-config" ]; then
 AGAR_AU_LIBS=`${path}/agar-au-config --libs`
 MK_EXEC_FOUND=Yes
 MK_EXEC_PATH="${path}/agar-au-config"
