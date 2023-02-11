@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,10 +41,6 @@
 #ifndef AG_TLIST_EXP_LEVELS_INIT
 #define AG_TLIST_EXP_LEVELS_INIT 8  /* Initial tree-expansion state buffer size */
 #endif
-
-static void SelectRange(AG_Tlist *_Nonnull, int);
-static void DrawExpColl(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull, int,int);
-static Uint32 PollRefreshTimeout(AG_Timer *_Nonnull, AG_Event *_Nonnull);
 
 AG_Tlist *
 AG_TlistNew(void *parent, Uint flags)
@@ -110,6 +106,17 @@ AG_TlistNewPolledMs(void *parent, Uint flags, int ms, AG_EventFn fn,
 
 	AG_RedrawOnTick(tl, ms);
 	return (tl);
+}
+
+/* Timer for updates in AG_TLIST_POLL mode. */
+static Uint32
+PollRefreshTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+
+	tl->flags |= AG_TLIST_REFRESH;
+	AG_Redraw(tl);
+	return (to->ival);
 }
 
 /* Set the refresh rate for Polled mode in milliseconds (-1 = disable) */
@@ -322,17 +329,6 @@ OnLostFocus(AG_Event *_Nonnull event)
 	AG_DelTimer(tl, &tl->dblClickTo);
 }
 
-/* Timer for updates in AG_TLIST_POLL mode. */
-static Uint32
-PollRefreshTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
-{
-	AG_Tlist *tl = AG_TLIST_SELF();
-
-	tl->flags |= AG_TLIST_REFRESH;
-	AG_Redraw(tl);
-	return (to->ival);
-}
-
 static __inline__ void
 InvalidateLabels(AG_Tlist *tl, AG_TlistItem *it)
 {
@@ -352,6 +348,7 @@ StyleChanged(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	AG_TlistItem *it;
+	const float fontSize = WIDGET(tl)->font->spec.size;
 	int i;
 
 	if (WIDGET(tl)->paddingTop    < -3) {
@@ -366,8 +363,18 @@ StyleChanged(AG_Event *_Nonnull event)
 	}
 
 	TAILQ_FOREACH(it, &tl->items, items) {
+		AG_Font *itFont;
+
+		if ((itFont = it->font) != NULL &&
+		     itFont != WIDGET(tl)->font) {
+			it->font = AG_FetchFont(itFont->name,
+			    (fontSize * it->scale),
+			    itFont->flags);
+		}
 		InvalidateLabels(tl, it);
 	}
+
+
 	if ((tl->flags & AG_TLIST_FIXED_HEIGHT) == 0) {
 		tl->item_h = WFONT(tl)->lineskip +
 		             WIDGET(tl)->paddingTop +
@@ -380,6 +387,7 @@ StyleChanged(AG_Event *_Nonnull event)
 		    &WIDGET(tl)->pal.c[i][AG_LINE_COLOR],
 		    1,5);
 	}
+
 }
 
 static void
@@ -565,6 +573,38 @@ SetExpansionLevel(AG_Tlist *_Nonnull tl, int level, int y)
 	}
 }
 
+/* Draw Expand / Collapse control. */
+static void
+DrawExpandCollapse(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it,
+    int x, int y)
+{
+	AG_Rect r;
+	const AG_Color *cLine = &WCOLOR(tl, LINE_COLOR);
+	static AG_VectorElement expdSign[] = {
+		{ AG_VE_LINE,    3,5,  1,0, 0, NULL },            /* - */
+		{ AG_VE_LINE,    1,7,  1,0, 0, NULL },            /* | */
+	};
+	const int h = tl->item_h >> 1;
+	const int h_2 = (h >> 1);
+
+	r.x = x + h_2;
+	r.y = y + h_2;
+	r.w = h + 1;
+	r.h = h + 2;
+	if ((h & 1) == 0) {
+		r.w++;
+		r.h++;
+	}
+
+	AG_DrawRectFilled(tl, &r, &WCOLOR(tl, FG_COLOR));
+
+	if (it->flags & AG_TLIST_ITEM_EXPANDED) {
+		AG_DrawVector(tl, 3,3, &r, cLine, expdSign, 0,1);    /* - */
+	} else {
+		AG_DrawVector(tl, 3,3, &r, cLine, expdSign, 0,2);    /* + */
+	}
+}
+
 static void
 Draw(void *_Nonnull obj)
 {
@@ -595,7 +635,7 @@ Draw(void *_Nonnull obj)
 
 	AG_WidgetDraw(tl->sbar);
 
-	r.w--;
+	r.w -= 2;
 	r.h--;
 	AG_PushClipRect(tl, &r);
 
@@ -676,15 +716,6 @@ Draw(void *_Nonnull obj)
 			if (it->font != NULL) {                 /* Alt font */
 				AG_PushTextState();
 				AG_TextFont(it->font);
-				Stext = AG_TextRender(it->text);
-				AG_PopTextState();
-			} else if (it->fontFlags != 0) {  /* Alt font style */
-				const AG_Font *fontOrig = WFONT(tl);
-
-				AG_PushTextState();
-				AG_TextFontLookup(OBJECT(fontOrig)->name,
-				    fontOrig->spec.size,
-				    it->fontFlags);
 				Stext = AG_TextRender(it->text);
 				AG_PopTextState();
 			} else {
@@ -826,7 +857,7 @@ Draw(void *_Nonnull obj)
 		    cLine);
 
 		if (it->flags & AG_TLIST_HAS_CHILDREN) {
-			DrawExpColl(tl,it,
+			DrawExpandCollapse(tl,it,
 			    (it->depth * hItem),
 			    y);
 		}
@@ -846,37 +877,6 @@ Draw(void *_Nonnull obj)
 		tl->flags &= ~(AG_TLIST_SCROLLTOSEL);
 	}
 	AG_PopClipRect(tl);
-}
-
-/* Draw Expand / Collapse control area. */
-static void
-DrawExpColl(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it, int x, int y)
-{
-	AG_Rect r;
-	const AG_Color *cLine = &WCOLOR(tl, LINE_COLOR);
-	static AG_VectorElement expdSign[] = {
-		{ AG_VE_LINE,    3,5,  1,0, 0, NULL },            /* - */
-		{ AG_VE_LINE,    1,7,  1,0, 0, NULL },            /* | */
-	};
-	const int h = tl->item_h >> 1;
-	const int h_2 = (h >> 1);
-
-	r.x = x + h_2;
-	r.y = y + h_2;
-	r.w = h + 1;
-	r.h = h + 2;
-	if ((h & 1) == 0) {
-		r.w++;
-		r.h++;
-	}
-
-	AG_DrawRectFilled(tl, &r, &WCOLOR(tl, FG_COLOR));
-
-	if (it->flags & AG_TLIST_ITEM_EXPANDED) {
-		AG_DrawVector(tl, 3,3, &r, cLine, expdSign, 0,1);    /* - */
-	} else {
-		AG_DrawVector(tl, 3,3, &r, cLine, expdSign, 0,2);    /* + */
-	}
 }
 
 /* Remove a tlist item. */
@@ -947,23 +947,44 @@ AG_TlistBegin(AG_Tlist *tl)
 	AG_ObjectUnlock(tl);
 }
 
-/* Generic string compare routine. */
+/* Compare the signed integers v of items a and b (ascending). */
+int
+AG_TlistCompareInts(const AG_TlistItem *a, const AG_TlistItem *b)
+{
+	return (a->v - b->v);
+}
+
+/* Compare the signed integers v of items a and b (descending). */
+int
+AG_TlistCompareIntsDsc(const AG_TlistItem *a, const AG_TlistItem *b)
+{
+	return (b->v - a->v);
+}
+
+/* Compare the unsigned integers u of items a and b. */
+int
+AG_TlistCompareUints(const AG_TlistItem *a, const AG_TlistItem *b)
+{
+	return (a->u - b->u);
+}
+
+/* Compare the text fields of items a and b case-sensitively (no locale). */
 int
 AG_TlistCompareStrings(const AG_TlistItem *a, const AG_TlistItem *b)
 {
 	return (strcmp(a->text, b->text) == 0);
 }
 
-/* Generic pointer compare routine. */
+/* Compare the pointers p1 of items a and b. */
 int
 AG_TlistComparePtrs(const AG_TlistItem *a, const AG_TlistItem *b)
 {
 	return (a->p1 == b->p1);
 }
 
-/* Generic pointer+class compare routine. */
+/* Compare the pointers p1 and categories cat of items a and b. */
 int
-AG_TlistComparePtrsAndClasses(const AG_TlistItem *a,const AG_TlistItem *b)
+AG_TlistComparePtrsAndCats(const AG_TlistItem *a, const AG_TlistItem *b)
 {
 	return ((a->p1 == b->p1) &&
 	        (a->cat != NULL && b->cat != NULL &&
@@ -971,16 +992,21 @@ AG_TlistComparePtrsAndClasses(const AG_TlistItem *a,const AG_TlistItem *b)
 }
 
 /* Set an alternate compare function for items. */
-void
+AG_TlistCompareFn
 AG_TlistSetCompareFn(AG_Tlist *tl,
     int (*fn)(const AG_TlistItem *_Nonnull, const AG_TlistItem *_Nonnull))
 {
+	AG_TlistCompareFn fnOrig;
+
 	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
 
+	fnOrig = tl->compare_fn;
 	tl->compare_fn = fn;
 
 	AG_ObjectUnlock(tl);
+
+	return (fnOrig);
 }
 
 /* Restore previous item selection state. */
@@ -1181,6 +1207,34 @@ AG_TlistAddPtrHead(AG_Tlist *tl, const AG_Surface *icon, const char *text,
 	return (it);
 }
 
+/* Move an item to the head of the list. */
+void
+AG_TlistMoveToHead(AG_Tlist *tl, AG_TlistItem *it)
+{
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
+	AG_ObjectLock(tl);
+
+	TAILQ_REMOVE(&tl->items, it, items);
+	TAILQ_INSERT_HEAD(&tl->items, it, items);
+
+	AG_Redraw(tl);
+	AG_ObjectUnlock(tl);
+}
+
+/* Move an item to the tail of the list. */
+void
+AG_TlistMoveToTail(AG_Tlist *tl, AG_TlistItem *it)
+{
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
+	AG_ObjectLock(tl);
+
+	TAILQ_REMOVE(&tl->items, it, items);
+	TAILQ_INSERT_TAIL(&tl->items, it, items);
+
+	AG_Redraw(tl);
+	AG_ObjectUnlock(tl);
+}
+
 /* Return a newly allocated and initialized AG_TlistItem */
 AG_TlistItem *
 AG_TlistItemNew(const AG_Surface *icon)
@@ -1191,7 +1245,10 @@ AG_TlistItemNew(const AG_Surface *icon)
 #ifdef AG_TYPE_SAFETY
 	Strlcpy(it->tag, AG_TLIST_ITEM_TAG, sizeof(it->tag));
 #endif
-	it->label[2] = it->label[1] = it->label[0] = -1;
+	it->label[0] = -1;
+	it->label[1] = -1;
+	it->label[2] = -1;
+	it->v = -1;
 	it->cat = "";
 	it->iconsrc = (icon) ? AG_SurfaceDup(icon) : NULL;
 
@@ -1200,9 +1257,11 @@ AG_TlistItemNew(const AG_Surface *icon)
 	                   sizeof(AG_Font *) +      /* font */
 	                   sizeof(int) +            /* selected */
 	                   sizeof(Uint) +           /* depth */
-	                   sizeof(Uint) +           /* flags */
-	                   sizeof(Uint) +           /* fontFlags */
-	                   sizeof(char));           /* text[0] */
+	                   sizeof(Uint));           /* flags */
+	it->scale = 1.0f;
+	it->text[0] = '\0';
+	it->u = 0;
+
 	return (it);
 }
 
@@ -1245,22 +1304,34 @@ AG_TlistSetColor(AG_Tlist *tl, AG_TlistItem *it, const AG_Color *c)
 	AG_ObjectUnlock(tl);
 }
 
-/* Set an alternate, per-item font. */
+/*
+ * Set an alternate per-item font. The scale argument is a scaling factor
+ * relative to the size of the tlist's default font. The flags arguments
+ * is the set of AG_Font(3) style flags.
+ *
+ * If face is NULL, use the tlist's font face.
+ * If scale is 1.0f, use the same font size as the tlist.
+ * If flags is 0, use the Regular style.
+ */
 void
-AG_TlistSetFont(AG_Tlist *tl, AG_TlistItem *it, AG_Font *font)
+AG_TlistSetFont(AG_Tlist *tl, AG_TlistItem *it, const char *face, float scale,
+    Uint flags)
 {
+	AG_Font *font;
+
 	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
 #if 0
-	if (it->font)
+	if (it->font != NULL)
 		AG_UnusedFont(it->font);
 #endif
-	if (font) {
-		font->nRefs++;
-		it->font = font;
-	} else {
-		it->font = NULL;
+	font = WIDGET(tl)->font;
+
+	if (face == NULL) {
+		face = font->name;
 	}
+	it->font = AG_FetchFont(face, (font->spec.size * scale), flags);
+	it->scale = scale;
 
 	InvalidateLabels(tl, it);
 	AG_Redraw(tl);
@@ -1443,6 +1514,47 @@ PopupMenu(AG_Tlist *_Nonnull tl, AG_TlistPopup *_Nonnull tp, int x, int y)
 	tp->panel = AG_MenuExpand(tl, tp->item, x+4, y+4);
 }
 
+/* Select a range of items */
+static void
+SelectRange(AG_Tlist *tl, int idx)
+{
+	AG_TlistItem *oitem;
+	int idxOther = -1;
+	int i = 0, nItems = 0;
+
+	TAILQ_FOREACH(oitem, &tl->items, items) {
+		if (oitem->selected) {
+			idxOther = i;
+		}
+		i++;
+		nItems++;
+	}
+	if (idxOther == -1) {
+		return;
+	}
+	if (idxOther < idx) {			  /* Forward */
+		i = 0;
+		TAILQ_FOREACH(oitem, &tl->items, items) {
+			if (i == idx)
+				break;
+			if (i > idxOther) {
+				SelectItem(tl, oitem);
+			}
+			i++;
+		}
+	} else if (idxOther >= idx) {		  /* Backward */
+		i = nItems;
+		TAILQ_FOREACH_REVERSE(oitem, &tl->items,
+		    ag_tlist_itemq, items) {
+			if (i <= idxOther)
+				SelectItem(tl, oitem);
+			if (i == idx)
+				break;
+			i--;
+		}
+	}
+}
+
 static void
 MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
@@ -1553,47 +1665,6 @@ MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 				if (tp)
 					PopupMenu(tl, tp, x,y);
 			}
-		}
-	}
-}
-
-/* Handle multiple selections (shift) */
-static void
-SelectRange(AG_Tlist *tl, int idx)
-{
-	AG_TlistItem *oitem;
-	int idxOther = -1;
-	int i = 0, nItems = 0;
-
-	TAILQ_FOREACH(oitem, &tl->items, items) {
-		if (oitem->selected) {
-			idxOther = i;
-		}
-		i++;
-		nItems++;
-	}
-	if (idxOther == -1) {
-		return;
-	}
-	if (idxOther < idx) {			  /* Forward */
-		i = 0;
-		TAILQ_FOREACH(oitem, &tl->items, items) {
-			if (i == idx)
-				break;
-			if (i > idxOther) {
-				SelectItem(tl, oitem);
-			}
-			i++;
-		}
-	} else if (idxOther >= idx) {		  /* Backward */
-		i = nItems;
-		TAILQ_FOREACH_REVERSE(oitem, &tl->items,
-		    ag_tlist_itemq, items) {
-			if (i <= idxOther)
-				SelectItem(tl, oitem);
-			if (i == idx)
-				break;
-			i--;
 		}
 	}
 }
@@ -2054,10 +2125,10 @@ AG_TlistScrollToEnd(AG_Tlist *tl)
 static int
 CompareText(const void *_Nonnull p1, const void *_Nonnull p2)
 {
-	const AG_TlistItem *it1 = *(const AG_TlistItem **)p1;
-	const AG_TlistItem *it2 = *(const AG_TlistItem **)p2;
+	const AG_TlistItem *a = *(const AG_TlistItem **)p1;
+	const AG_TlistItem *b = *(const AG_TlistItem **)p2;
 
-	return strcoll(it1->text, it2->text);
+	return strcoll(a->text, b->text);
 }
 
 /* Sort list items by text using quicksort. */
@@ -2077,6 +2148,42 @@ AG_TlistSort(AG_Tlist *tl)
 		items[i++] = it;
 	}
 	qsort(items, tl->nItems, sizeof(AG_TlistItem *), CompareText);
+	TAILQ_INIT(&tl->items);
+	for (i = 0; i < tl->nItems; i++)
+		TAILQ_INSERT_TAIL(&tl->items, items[i], items);
+
+	AG_Redraw(tl);
+	AG_ObjectUnlock(tl);
+
+	free(items);
+}
+
+static int
+CompareInts(const void *_Nonnull p1, const void *_Nonnull p2)
+{
+	const AG_TlistItem *a = *(const AG_TlistItem **)p1;
+	const AG_TlistItem *b = *(const AG_TlistItem **)p2;
+
+	return (a->v - b->v);
+}
+
+/* Sort list items by integer value v. */
+void
+AG_TlistSortByInt(AG_Tlist *tl)
+{
+	AG_TlistItem *it, **items;
+	Uint i = 0;
+
+	if ((items = TryMalloc(tl->nItems * sizeof(AG_TlistItem *))) == NULL)
+		return;
+
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
+	AG_ObjectLock(tl);
+
+	TAILQ_FOREACH(it, &tl->items, items) {
+		items[i++] = it;
+	}
+	qsort(items, tl->nItems, sizeof(AG_TlistItem *), CompareInts);
 	TAILQ_INIT(&tl->items);
 	for (i = 0; i < tl->nItems; i++)
 		TAILQ_INSERT_TAIL(&tl->items, items[i], items);

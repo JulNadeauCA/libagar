@@ -22,7 +22,7 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd December 21, 2022
+.Dd February 10, 2023
 .Dt AG_TLIST 3
 .Os Agar 1.7
 .Sh NAME
@@ -38,20 +38,31 @@
 The
 .Nm
 widget shows a scrollable tree / list of clickable and selectable items.
-Items may contain text, an optional icon, a user pointer and a category
-string.
-Alternate font faces and colors can be set on a per-item basis.
+Items can display text and icons.
+Items include user-defined data fields (a signed integer
+.Va v ,
+an unsigned integer
+.Va u ,
+a user pointer
+.Va p1
+and a general-purpose category string
+.Va cat ) .
 .Pp
 For cases where the contents of the tree or list may change externally,
-a Polling Routine may be defined.
-The Polling Routine is expected to clear and repopulate the list entirely.
+a
+.Em polling routine
+may be defined.
+Such a routine is expected to clear and repopulate the list entirely.
 It may be run periodically at a specified interval, whenever user interaction
 events occur, or by explicit call to
 .Fn AG_TlistRefresh .
-To make Polling more efficient,
+To make polling more efficient (and to preserve per-item states such as
+selections across polling cycles),
 .Nm
-relies on the Compare function to re-use assets across polling cycles.
-These assets include allocated structures and rendered text surfaces.
+relies on a
+.Em compare function
+to test items for equivalence and reuse assets (including allocated structures
+and rendered text surfaces).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -94,9 +105,6 @@ These assets include allocated structures and rendered text surfaces.
 .Ft void
 .Fn AG_TlistSetChangedFn "AG_Tlist *tl" "AG_EventFn fn" "const char *fn_args" "..."
 .Pp
-.Ft void
-.Fn AG_TlistSetCompareFn "AG_Tlist *tl" "int (*fn)(const AG_TlistItem *a)(const AG_TlistItem *b)"
-.Pp
 .nr nS 0
 .Fn AG_TlistNew
 allocates, initializes, and attaches a
@@ -107,10 +115,10 @@ The
 .Fn AG_TlistNewPolled
 variant enables
 .Dv AG_TLIST_POLL
-and sets the specified Polling Routine
+and sets the specified polling routine
 .Fa eventFn
 to run periodically (or -1 = never).
-The Polling Routine is expected to clear and populate the
+The polling routine is expected to clear and populate the
 .Nm .
 The
 .Fn AG_TlistNewPolledMs
@@ -158,7 +166,7 @@ Shorthand for
 .El
 .Pp
 .Fn AG_TlistSetRefresh
-sets the rate at which the Polling Routine will be invoked in milliseconds
+sets the rate at which the polling routine will be invoked in milliseconds
 (default = 1s).
 A value of -1 disables automatic updates.
 When automatic updates are disabled, updates can be performed by calling
@@ -196,22 +204,84 @@ arranges for the callback
 to be invoked when the user selects or deselects an item.
 The arguments are respectively, a pointer to the item and an integer with a
 value of 0 to indicate deselection and 1 to indicate selection.
+.\" MANLINK(AG_TlistCompareFn)
+.Sh COMPARE FUNCTIONS
+.nr nS 1
+.Ft AG_TlistCompareFn
+.Fn AG_TlistSetCompareFn "AG_Tlist *tl" "AG_TlistCompareFn fn"
+.Pp
+.Ft int
+.Fn AG_TlistCompareInts "const AG_TlistItem *a, const AG_TlistItem *b)
+.Pp
+.Ft int
+.Fn AG_TlistCompareUints "const AG_TlistItem *a, const AG_TlistItem *b)
+.Pp
+.Ft int
+.Fn AG_TlistCompareStrings "const AG_TlistItem *a, const AG_TlistItem *b)
+.Pp
+.Ft int
+.Fn AG_TlistComparePtrs "const AG_TlistItem *a, const AG_TlistItem *b)
+.Pp
+.Ft int
+.Fn AG_TlistComparePtrsAndCats "const AG_TlistItem *a, const AG_TlistItem *b)
 .Pp
 In order for
 .Nm
-to maintain per-item states (selection flag, etc) through polling updates, items
-must be uniquely identifiable.
-By default, the
-.Va p1
-pointer is used.
+to be able to preserve per-item states (such as selections) through polling
+updates when using a polling function, it is necessary to be able to establish
+equivalence between items.
+The nature of this equivalence is application-defined and is determined by the
+.Em compare function
+selected.
+The
+.Fn AG_TlistUniq
+routine (see below) also relies on the compare function.
+.Pp
 .Fn AG_TlistSetCompareFn
-specifies an alternate comparison routine to use.
-The standard built-in routines
-.Fn AG_TlistCompareStrings ,
+sets the comparison function to use when testing between two
+.Ft AG_TlistItem
+for equivalence.
+It returns a pointer to the previously selected compare function.
+Compare functions are defined as:
+.Bd -literal
+.\" SYNTAX(c)
+typedef int (*AG_TlistCompareFn)(const AG_TlistItem *a,
+	                         const AG_TlistItem *b);
+.Ed
+.Pp
+It is expected to return 0 if the two items are equivalent and non-zero if
+the items are not.
+If the returned value if non-zero, it can be used to define the sorting
+order.
+Returning a positive value in the case where (a > b) should produce a sort
+in descending order.
+.Pp
+Some basic compare functions are provided:
+.Pp
+.Fn AG_TlistCompareInts
+compares the signed integer field
+.Va v1 .
+.Pp
+.Fn AG_TlistCompareUints
+compares the unsigned integer field
+.Va u .
+.Pp
+.Fn AG_TlistCompareStrings
+compares the
+.Va text
+strings lexicographically.
+The comparison is case-sensitive and ignores any locale collation.
+.Pp
 .Fn AG_TlistComparePtrs
-and
-.Fn AG_TlistComparePtrsAndClasses
-are provided.
+compares the pointer fields
+.Va p1 .
+This is the default compare function.
+.Pp
+.Fn AG_TlistComparePtrsAndCats
+compares both
+.Va p1
+and the category
+.Va cat .
 .\" MANLINK(AG_TlistItem)
 .Sh MANIPULATING ITEMS
 .nr nS 1
@@ -228,10 +298,16 @@ are provided.
 .Fn AG_TlistAddHeadS "AG_Tlist *tl" "const AG_Surface *icon" "const char *text"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistAddPtr "AG_Tlist *tlist" "const AG_Surface *icon" "const char *text" "const void *p1"
+.Fn AG_TlistAddPtr "AG_Tlist *tl" "const AG_Surface *icon" "const char *text" "const void *p1"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistAddPtrHead "AG_Tlist *tlist" "const AG_Surface *icon" "const char *text" "const void *p1"
+.Fn AG_TlistAddPtrHead "AG_Tlist *tl" "const AG_Surface *icon" "const char *text" "const void *p1"
+.Pp
+.Ft void
+.Fn AG_TlistMoveToHead "AG_Tlist *tl" "AG_TlistItem *item"
+.Pp
+.Ft void
+.Fn AG_TlistMoveToTail "AG_Tlist *tl" "AG_TlistItem *item"
 .Pp
 .Ft void
 .Fn AG_TlistSetIcon "AG_Tlist *tl" "AG_TlistItem *item" "const AG_Surface *icon"
@@ -240,139 +316,166 @@ are provided.
 .Fn AG_TlistSetColor "AG_Tlist *tl" "AG_TlistItem *item" "const AG_Color *color"
 .Pp
 .Ft void
-.Fn AG_TlistSetFont "AG_Tlist *tl" "AG_TlistItem *item" "AG_Font *font"
+.Fn AG_TlistSetFont "AG_Tlist *tl" "AG_TlistItem *item" "const char *face" "float scale" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_TlistDel "AG_Tlist *tlist" "AG_TlistItem *item"
+.Fn AG_TlistDel "AG_Tlist *tl" "AG_TlistItem *item"
+.Pp
+.Ft "void"
+.Fn AG_TlistSort "AG_Tlist *tl"
+.Pp
+.Ft "void"
+.Fn AG_TlistSortByInt "AG_Tlist *tl"
+.Pp
+.Ft "void"
+.Fn AG_TlistUniq "AG_Tlist *tl"
+.Pp
+.Ft "void"
+.Fn AG_TlistClear "AG_Tlist *tl"
+.Pp
+.Ft "void"
+.Fn AG_TlistBegin "AG_Tlist *tl"
+.Pp
+.Ft "void"
+.Fn AG_TlistEnd "AG_Tlist *tl"
 .Pp
 .Ft "int"
-.Fn AG_TlistSort "AG_Tlist *tlist"
+.Fn AG_TlistVisibleChildren "AG_Tlist *tl" "AG_TlistItem *item"
 .Pp
 .Ft "void"
-.Fn AG_TlistUniq "AG_Tlist *tlist"
+.Fn AG_TlistSelect "AG_Tlist *tl" "AG_TlistItem *item"
 .Pp
 .Ft "void"
-.Fn AG_TlistClear "AG_Tlist *tlist"
+.Fn AG_TlistSelectIdx "AG_Tlist *tl" "Uint index"
 .Pp
 .Ft "void"
-.Fn AG_TlistBegin "AG_Tlist *tlist"
+.Fn AG_TlistSelectAll "AG_Tlist *tl"
 .Pp
 .Ft "void"
-.Fn AG_TlistEnd "AG_Tlist *tlist"
-.Pp
-.Ft "int"
-.Fn AG_TlistVisibleChildren "AG_Tlist *tlist" "AG_TlistItem *item"
+.Fn AG_TlistDeselect "AG_Tlist *tl" "AG_TlistItem *item"
 .Pp
 .Ft "void"
-.Fn AG_TlistSelect "AG_Tlist *tlist" "AG_TlistItem *item"
+.Fn AG_TlistDeselectIdx "AG_Tlist *tl" "Uint index"
 .Pp
 .Ft "void"
-.Fn AG_TlistSelectIdx "AG_Tlist *tlist" "Uint index"
-.Pp
-.Ft "void"
-.Fn AG_TlistSelectAll "AG_Tlist *tlist"
-.Pp
-.Ft "void"
-.Fn AG_TlistDeselect "AG_Tlist *tlist" "AG_TlistItem *item"
-.Pp
-.Ft "void"
-.Fn AG_TlistDeselectIdx "AG_Tlist *tlist" "Uint index"
-.Pp
-.Ft "void"
-.Fn AG_TlistDeselectAll "AG_Tlist *tlist"
+.Fn AG_TlistDeselectAll "AG_Tlist *tl"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistSelectPtr "AG_Tlist *tlist" "void *ptr"
+.Fn AG_TlistSelectPtr "AG_Tlist *tl" "void *ptr"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistSelectText "AG_Tlist *tlist" "const char *text"
+.Fn AG_TlistSelectText "AG_Tlist *tl" "const char *text"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistFindByIndex "AG_Tlist *tlist" "int index"
+.Fn AG_TlistFindByIndex "AG_Tlist *tl" "int index"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistSelectedItem "AG_Tlist *tlist"
+.Fn AG_TlistSelectedItem "AG_Tlist *tl"
 .Pp
 .Ft "void *"
-.Fn AG_TlistSelectedItemPtr "AG_Tlist *tlist"
+.Fn AG_TlistSelectedItemPtr "AG_Tlist *tl"
 .Pp
 .Ft "void *"
 .Fn AG_TLIST_ITEM "idx"
 .Pp
 .Ft "int"
-.Fn AG_TlistFindPtr "AG_Tlist *tlist" "void **p"
+.Fn AG_TlistFindPtr "AG_Tlist *tl" "void **p"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistFindText "AG_Tlist *tlist" "const char *text"
+.Fn AG_TlistFindText "AG_Tlist *tl" "const char *text"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistFirstItem "AG_Tlist *tlist"
+.Fn AG_TlistFirstItem "AG_Tlist *tl"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistLastItem "AG_Tlist *tlist"
+.Fn AG_TlistLastItem "AG_Tlist *tl"
 .Pp
 .Ft "void"
-.Fn AG_TlistScrollToStart "AG_Tlist *tlist"
+.Fn AG_TlistScrollToStart "AG_Tlist *tl"
 .Pp
 .Ft "void"
-.Fn AG_TlistScrollToEnd "AG_Tlist *tlist"
+.Fn AG_TlistScrollToEnd "AG_Tlist *tl"
 .Pp
 .nr nS 0
 .Fn AG_TlistAdd
 inserts a newly-allocated item into the list and returns a pointer to it.
-The
+If
 .Fa icon
-argument, if not NULL, specifies a graphical
+is not NULL, it specifies an
 .Xr AG_Surface 3
-to display with the label.
-A scaled copy of the given surface will be used.
-.Fn AG_TlistAddHead
-places the item at the head of the list, as opposed to the tail.
-.Pp
-.Fn AG_TlistAddPtr
-is a variant of
-.Fn AG_TlistAdd
-which accepts an extra user-defined pointer
-.Fa p1 ,
-which will be associated with the item.
+to duplicate and display as an icon.
 .Pp
 The
+.Fn AG_TlistAddHead
+variant places the item at the head of the list.
+The
+.Fn AG_TlistAddPtr
+variant of
+.Fn AG_TlistAdd
+also sets the pointer field
+.Fa p1
+on initialization.
+.Pp
 .Fn AG_TlistAddPtrHead
-variant places the item at the head of the list, as opposed to the tail.
+places the item at the head of the list.
+.Pp
+.Fn AG_TlistMoveToHead
+moves an existing item
+.Fa item
+to the head of the list.
+.Fn AG_TlistMoveToTail
+moves an existing item
+.Fa item
+to the tail of the list.
 .Pp
 .Fn AG_TlistSetIcon
 sets the icon surface associated with
 .Fa item .
+A duplicate of the given surface will be used.
 .Pp
 .Fn AG_TlistSetColor
 sets an alternate text color for the specified item (or NULL to switch
 back to the default).
 .Pp
 .Fn AG_TlistSetFont
-sets an alternate font for the specified item (or NULL to switch back to the
-default font).
-This will increment the font object's reference count.
-See
-.Xr AG_FetchFont 3 .
+sets an alternate font for the specified item.
+If
+.Fa face
+is NULL, use the same font face as the tlist's font.
+.Fa scale
+sets the size of the font relative to the tlist's font.
+If
+.Fa scale
+is 1.0f then the same size will be used.
+The
+.Fa flags
+argument is the set of
+.Xr AG_Font 3
+style flags (such as
+.Dv AG_FONT_BOLD ) .
 .Pp
 The
 .Fn AG_TlistDel
 function detaches and frees
 .Fa item
 from its parent
-.Nm tlist .
+.Nm tl .
 .Pp
 The
 .Fn AG_TlistSort
-routine lexicographically sorts the items in the list.
-The function returns 0 on success or -1 if insufficient memory is
-available for the sort.
+routine lexicographically sorts the items in the list by text
+according to the current locale collation.
+.Pp
+.Fn AG_TlistSortByInt
+sorts items based on their integer values
+.Va v .
 .Pp
 .Fn AG_TlistUniq
-scans the list for duplicates (by comparing items using the current comparison
-routine as configured by
-.Fn AG_TlistSetCompareFn ) ,
-and removes all duplicate items.
+scans the list for duplicates and removes them.
+.Fn AG_TlistUniq
+uses the compare function to determine equivalence between items
+(see
+.Fn AG_TlistSetCompareFn ) .
 .Pp
 .Fn AG_TlistClear
 removes all items attached to the list.
@@ -380,7 +483,7 @@ removes all items attached to the list.
 The
 .Fn AG_TlistBegin
 function removes all items attached to
-.Fa tlist ,
+.Fa tl ,
 but remembers their selection and child item expansion states.
 .Fn AG_TlistEnd
 compares each item against the saved state and restores the selection and
@@ -388,7 +491,7 @@ child item expansion states accordingly.
 .Pp
 The
 .Fn AG_TlistVisibleChildren
-function is meant to be called from a Polling Routine.
+function is meant to be called from a polling routine.
 It tests whether a newly-created
 .Fa item
 should make its own child items visible based on the previously saved state.
@@ -416,7 +519,7 @@ by index rather than by pointer.
 .Fn AG_TlistSelectAll
 .Fn AG_TlistDeselectAll
 sets / clears the selection on all items attached to
-.Fa tlist .
+.Fa tl .
 .Pp
 The
 .Fn AG_TlistSelectPtr
@@ -464,7 +567,7 @@ returning 0 on success or -1 if there is no item selected.
 The
 .Fn AG_TlistFindText
 function searches
-.Fa tlist
+.Fa tl
 for an item containing the
 .Fa text
 string and returns NULL if there is no such item.
@@ -482,10 +585,10 @@ scrolls the display to the end of the list.
 .Sh POPUP MENUS
 .nr nS 1
 .Ft "AG_MenuItem *"
-.Fn AG_TlistSetPopupFn "AG_Tlist *tlist" "AG_EventFn fn" "const char *fn_args" "..."
+.Fn AG_TlistSetPopupFn "AG_Tlist *tl" "AG_EventFn fn" "const char *fn_args" "..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_TlistSetPopup "AG_Tlist *tlist" "const char *category"
+.Fn AG_TlistSetPopup "AG_Tlist *tl" "const char *category"
 .Pp
 .nr nS 0
 The
@@ -572,9 +675,13 @@ structure:
 .It Ft int selected
 Selection flag.
 .It Ft void *p1
-User pointer (application-specific usage).
+User pointer (application-defined).
+.It Ft int v
+User signed integer value (application-defined).
+.It Ft Uint u
+User unsigned integer value (application-defined).
 .It Ft const char *cat
-Category string (application-specific usage).
+Category string (application-defined).
 .It Ft char text[]
 Text label (up to
 .Dv AG_TLIST_LABEL_MAX
@@ -585,10 +692,8 @@ Depth in tree (0 = root).
 Item flags (see
 .Sx ITEM FLAGS
 section below).
-.It Ft Uint fontFlags
-Font style (see
-.Xr AG_FetchFont 3
-for available flags).
+.It Ft float scale
+Scaling factor for text display (default = 1.0).
 .El
 .Sh ITEM FLAGS
 .Bl -tag -compact -width "AG_TLIST_ITEM_UPPERCASE "
@@ -605,7 +710,7 @@ Disable popup menus (if any have been created).
 .El
 .Sh EXAMPLES
 The following code fragment displays an external tree structure using
-a recursive Polling Routine.
+a recursive polling routine.
 .Bd -literal -offset indent
 .\" SYNTAX(c)
 MyTreeNode *myTreeRoot;
@@ -656,10 +761,9 @@ The
 widget first appeared in Agar 1.0.
 .Fn AG_TlistSelectIdx ,
 .Fn AG_TlistDeselectIdx ,
-.Fn AG_TlistSetColor ,
+.Fn AG_TlistSetColor
+and
 .Fn AG_TlistSetFont
-and per-item
-.Va fontFlags
 appeared in Agar 1.6.0.
 Options
 .Dv AG_TLIST_EXPAND_NODES ,
@@ -668,4 +772,13 @@ and
 .Dv AG_TLIST_NO_KEYREPEAT
 and the per-item flag
 .Dv AG_TLIST_ITEM_DISABLED
+appeared in Agar 1.7.0.
+The
+.Va u
+and
+.Va v
+integer fields and
+.Fn AG_TlistCompareInts
+and
+.Fn AG_TlistCompareUints
 appeared in Agar 1.7.0.

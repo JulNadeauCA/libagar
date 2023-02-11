@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -247,13 +247,15 @@ OnDirectoryEvent(AG_EventSink *_Nonnull es, AG_Event *_Nonnull event)
 static void
 RefreshListing(AG_FileDlg *_Nonnull fd)
 {
+	AG_Tlist *tlDirs = fd->tlDirs;
+	AG_Tlist *tlFiles = fd->tlFiles;
 	AG_TlistItem *it;
 	AG_FileInfo info;
 	AG_Dir *dir;
 	char **dirs, **files;
 	Uint i, nDirs=0, nFiles=0;
 
-	if (fd->tlDirs == NULL /* || fd->tlFiles == NULL */) {
+	if (tlDirs == NULL /* || tlFiles == NULL */) {
 		return;
 	}
 	if (fd->openDir != NULL) {
@@ -282,8 +284,8 @@ RefreshListing(AG_FileDlg *_Nonnull fd)
 	dirs = Malloc(sizeof(char *));
 	files = Malloc(sizeof(char *));
 	
-	AG_ObjectLock(fd->tlDirs);
-	AG_ObjectLock(fd->tlFiles);
+	AG_ObjectLock(tlDirs);
+	AG_ObjectLock(tlFiles);
 
 	for (i = 0; i < dir->nents; i++) {
 		char *ent = dir->ents[i];
@@ -318,16 +320,17 @@ RefreshListing(AG_FileDlg *_Nonnull fd)
 			    FilterByExtension(fd, ent)) {
 				continue;
 			}
-			files = Realloc(files, (nFiles+1)*sizeof(char *));
+			files = Realloc(files, (nFiles + 1) * sizeof(char *));
 			entLen = strlen(ent);
-			s = files[nFiles] = Malloc(entLen+2);
+			s = files[nFiles] = Malloc(entLen + 2);
 			memcpy(s, ent, entLen);
 
-			/* Tack on a character to remember the perm mode. */
 			if (info.perms & AG_FILE_EXECUTABLE) {
 				s[entLen] = 'x';
 			} else if ((info.perms & AG_FILE_READABLE) == 0) {
 				s[entLen] = 'R';
+			} else if (ent[0] == '.') {
+				s[entLen] = 'r';
 			} else {
 				s[entLen] = '?';
 			}
@@ -335,15 +338,17 @@ RefreshListing(AG_FileDlg *_Nonnull fd)
 			nFiles++;
 		}
 	}
+
 	qsort(dirs, nDirs, sizeof(char *), AG_FilenameCompare);
 	qsort(files, nFiles, sizeof(char *), AG_FilenameCompare);
 
-	AG_TlistClear(fd->tlDirs);
-	AG_TlistClear(fd->tlFiles);
+	AG_TlistClear(tlDirs);
+	AG_TlistClear(tlFiles);
+
 	for (i = 0; i < nDirs; i++) {
 		char *s = dirs[i];
 
-		it = AG_TlistAddS(fd->tlDirs, agIconDirectory.s, s);
+		it = AG_TlistAddS(tlDirs, agIconDirectory.s, s);
 		it->cat = "dir";
 		it->p1 = it;
 		free(s);
@@ -353,15 +358,18 @@ RefreshListing(AG_FileDlg *_Nonnull fd)
 		char *pAttr = &s[strlen(s)-1], attr = *pAttr;
 
 		*pAttr = '\0';
-		it = AG_TlistAddS(fd->tlFiles, agIconDoc.s, s);
+		it = AG_TlistAddS(tlFiles, agIconDoc.s, s);
 		it->cat = "file";
 		it->p1 = it;
 		switch (attr) {
 		case 'x':
-			it->fontFlags |= AG_FONT_BOLD;
+			/* Display executables in bold. */
+			AG_TlistSetFont(tlFiles, it, NULL, 1.0f, AG_FONT_BOLD);
 			break;
 		case 'R':
-			it->fontFlags |= AG_FONT_ITALIC;
+		case 'r':
+			/* Display unreadable and normally hidden files in italic. */
+			AG_TlistSetFont(tlFiles, it, NULL, 1.0f, AG_FONT_ITALIC);
 			break;
 		}
 		free(s);
@@ -369,13 +377,13 @@ RefreshListing(AG_FileDlg *_Nonnull fd)
 
 	free(dirs);
 	free(files);
-	AG_TlistRestore(fd->tlDirs);
-	AG_TlistRestore(fd->tlFiles);
+	AG_TlistRestore(tlDirs);
+	AG_TlistRestore(tlFiles);
 
-	AG_TlistScrollToStart(fd->tlFiles);
+	AG_TlistScrollToStart(tlFiles);
 	
-	AG_ObjectUnlock(fd->tlFiles);
-	AG_ObjectUnlock(fd->tlDirs);
+	AG_ObjectUnlock(tlFiles);
+	AG_ObjectUnlock(tlDirs);
 }
 
 void
