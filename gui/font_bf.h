@@ -33,8 +33,6 @@ typedef struct ag_font_bf {
 #define AG_FONT_BF_VALID 0x01                     /* Font is open */
 	enum ag_font_bf_colorize_mode colorize;   /* Colorization mode */
 	char *_Nullable name;                     /* Display name */
-	int underlinePos;                         /* Underline position (px) */
-	int underlineThick;                       /* Underline thickness (px) */
 	AG_Char *_Nullable unicode;               /* Unicode mappings */
 	Uint              nUnicode;               /* Unicode mapping count */
 	Uint                 nGlyphs;             /* Glyph count */

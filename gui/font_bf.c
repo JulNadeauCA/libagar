@@ -27,13 +27,17 @@
  * Bitmap font (.agbf) module for the AG_Text(3) typography system.
  */
 
+#include <agar/config/have_freetype.h>
+
 #include <agar/core/core.h>
 #include <agar/core/config.h>
 #include <agar/gui/text.h>
 #include <agar/gui/font_bf.h>
+#include <agar/gui/font_ft.h>
 
 /* #define DEBUG_FONTS */
 /* #define DEBUG_FONTS_UNICODE */
+/* #define DEBUG_BITMAP_GLYPHS */
 
 /*
  * Create and load a bitmap font.
@@ -101,7 +105,7 @@ MapGlyph(AG_FontBf *fontBf, int x1, int x2, int y, int yRef, Uint nGlyph)
 	G->rs.w = (x2 - x1) - 2;
 	G->rs.h = height - 2;
 
-#ifdef DEBUG_FONTS
+#ifdef DEBUG_BITMAP_GLYPHS
 	Debug(fontBf,
 	    "New Glyph #%d: Ch=0x%lx ('%c') yOffs=%d (ref=%d) rs=[%d,%d %dx%d]\n",
 	    nGlyph, (Ulong)G->ch, (char)G->ch,
@@ -116,18 +120,18 @@ ScanImage(AG_FontBf *fontBf)
 {
 	AG_Surface *S = fontBf->S;
 	Uint8 *p, *pScanBegin;
-	Uint32 px, pxBB;
+	AG_Pixel px, pxBB;
 	Uint nGlyph=0, nRow=0;
 	int x = 0, y, yRef, yBeg, yEnd;
 
-	pxBB = AG_MapPixel32_RGBA8(&S->format, 0,0,0, 255);
+	pxBB = AG_MapPixel_RGBA8(&S->format, 0,0,0, 255);
 
 	/* Find the first pixel of the reference bounding box of this row. */
 	y = 0;
 	p = S->pixels;
 scan_row:
 	for (; y < S->h; y++) {
-		px = AG_SurfaceGet32_At(S,p);
+		px = AG_SurfaceGet_At(S,p);
 		if (px == pxBB) {
 			yBeg = y;
 			break;
@@ -144,7 +148,7 @@ scan_row:
 	p += S->pitch;
 	y++;
 	for (; y < S->h; y++) {
-		px = AG_SurfaceGet32_At(S, p);
+		px = AG_SurfaceGet_At(S, p);
 
 		if (px != pxBB) {
 			yEnd = y;
@@ -160,7 +164,7 @@ scan_row:
 	/* Measure the width of the bounding box. */
 	p += S->format.BytesPerPixel;
 	for (x = 1; x < S->w; x++) {
-		px = AG_SurfaceGet32_At(S, p);
+		px = AG_SurfaceGet_At(S, p);
 		if (px != pxBB) {
 			break;
 		}
@@ -192,7 +196,7 @@ scan_row:
 		for (y = yBeg, p = pScanBegin + (x * S->format.BytesPerPixel);
 		     y < yEnd;
 		     y++) {
-			px = AG_SurfaceGet32_At(S, p);
+			px = AG_SurfaceGet_At(S, p);
 			if (px == pxBB) {               /* BBox upper left? */
 				break;
 			}
@@ -205,7 +209,7 @@ scan_row:
 			for (xBox = x+1, p += S->format.BytesPerPixel;
 			     xBox < S->w;
 			     xBox++) {
-				px = AG_SurfaceGet32_At(S, p);
+				px = AG_SurfaceGet_At(S, p);
 				if (px != pxBB) {
 					break;
 				}
@@ -364,15 +368,30 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 						   file, AG_GetError());
 					continue;
 				}
-			} else if (strncmp(line,"underline-position ",18) == 0 && line[18] != '\0') {
-				fontBf->underlinePos = (int)strtoul(&line[18],NULL,10);
+			} else if (strncmp(line,"advance ",8) == 0 && line[8] != '\0') {
+				fontBf->advance = (int)strtoul(&line[7],NULL,10);
 #ifdef DEBUG_FONTS
-				Debug(fontBf, "Underline pos: %d\n", fontBf->underlinePos);
+				Debug(fontBf, "Advance: %d\n", fontBf->advance);
+#endif
+			} else if (strncmp(line,"ascent ",7) == 0 && line[7] != '\0') {
+				font->ascent = (int)strtoul(&line[7],NULL,10);
+#ifdef DEBUG_FONTS
+				Debug(fontBf, "Ascent: %d\n", font->ascent);
+#endif
+			} else if (strncmp(line,"lineskip ",9) == 0 && line[9] != '\0') {
+				font->lineskip = (int)strtoul(&line[9],NULL,10);
+#ifdef DEBUG_FONTS
+				Debug(fontBf, "Line skip: %d\n", font->ascent);
+#endif
+			} else if (strncmp(line,"underline-position ",18) == 0 && line[18] != '\0') {
+				font->underlinePos = (int)strtoul(&line[18],NULL,10);
+#ifdef DEBUG_FONTS
+				Debug(fontBf, "Underline position: %d\n", font->underlinePos);
 #endif
 			} else if (strncmp(line,"underline-thickness ",19) == 0 && line[19] != '\0') {
-				fontBf->underlineThick = (int)strtoul(&line[19],NULL,10);
+				font->underlineThk = (int)strtoul(&line[19],NULL,10);
 #ifdef DEBUG_FONTS
-				Debug(fontBf, "Underline thickness: %d\n", fontBf->underlineThick);
+				Debug(fontBf, "Underline thickness: %d\n", font->underlineThk);
 #endif
 			} else if (strcmp(line,"unicode") == 0) {
 				inUnicodeBlock = 1;
@@ -468,9 +487,7 @@ syntax_error:
 		goto fail;
 	}
 	font->height = fontBf->height;
-	font->ascent = font->height;
-	font->descent = 0;
-	font->lineskip = font->height;		/* TODO */
+	font->lineskip = font->height;
 
 	fontBf->flags |= AG_FONT_BF_VALID;
 	free(buf);
@@ -552,60 +569,151 @@ JustifyOffset(const AG_TextState *_Nonnull ts, int w, int wLine)
 	return (0);
 }
 
+/*
+ * Renderer with no colorization. We perform a simple blit from the
+ * font image surface (using the per-glyph source rectangles), to S.
+ */
 static void
 RenderColorizeNone(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
-    const AG_TextMetrics *_Nonnull Tm, AG_Font *_Nonnull font,
+    const AG_TextMetrics *_Nonnull Tm, AG_Font *_Nonnull fontOrig,
     const AG_Color *_Nonnull cBgOrig, const AG_Color *_Nonnull cFgOrig)
 {
-	AG_FontBf *fontBf = AGFONTBF(font);
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
-	const int lineskip = font->lineskip;
-	const AG_Char *c;
+	AG_Font *fontCur = fontOrig;
+	const int lineSkip = fontCur->lineskip;
+	const int wdRef = AGFONTBF(fontCur)->wdRef;
+	const AG_Char *ch;
+	AG_Color cBg = *cBgOrig;
+	AG_Color cFg = *cFgOrig;
 	AG_Rect rd;
 	int line;
 
-	AG_FillRect(S, NULL, cBgOrig);
+	S->guides[0] = (Uint16)(fontCur->height - fontCur->ascent);
 
-	/* TODO colorize mode */
-	(void)cFgOrig;
+	AG_FillRect(S, NULL, cBgOrig);
+	(void)cFgOrig;                                   /* Ignore FG color */
 
 	rd.x = (Tm->nLines > 1) ? JustifyOffset(ts, Tm->w, Tm->wLines[0]) : 0;
 	rd.y = 0;
 
-	for (c=&ucs[0], line=0; *c != '\0'; c++) {
-		AG_GlyphBf *Gbf;
-
-		if (*c == '\n') {
-			rd.y += lineskip;
+	for (ch = &ucs[0], line = 0; *ch != '\0'; ch++) {
+		switch (*ch) {
+		case '\n':
+			rd.y += lineSkip;
 			rd.x = JustifyOffset(ts, Tm->w, Tm->wLines[++line]);
 			continue;
-		}
-		if (*c == '\t') {
-			rd.x += ts->tabWd;
+		case '\r':
+			rd.x = 0;
 			continue;
+		case '\t':
+			rd.x += ts->tabWd;                          /* TODO */
+			continue;
+		default:
+			break;
 		}
-		if (*c == 0x1b &&
-		    c[1] >= 0x40 && c[1] <= 0x5f && c[2] != '\0') {
+		if (ch[0] == 0x1b &&
+		    ch[1] >= 0x40 && ch[1] <= 0x5f && ch[2] != '\0') {
 			AG_TextANSI ansi;
-			
-			if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0) {
-				c += ansi.len;
+
+			if (AG_TextParseANSI(ts, &ansi, &ch[1]) != 0) {
+			/* 	AG_Verbose("%s; ignoring\n", AG_GetError()); */
 				continue;
 			}
-		}
-		if ((Gbf = GetGlyph(fontBf, *c, 0)) == NULL) {
-#ifdef DEBUG_FONTS
-			Debug(fontBf, "Not found: `%c' (0x%x)\n", (char)*c, *c);
-#endif
-			rd.x += fontBf->wdRef;
+			if (ansi.ctrl != AG_ANSI_CSI_SGR) {
+				ch += ansi.len;
+				continue;
+			}
+			switch (ansi.sgr) {
+			case AG_SGR_RESET:
+			case AG_SGR_NO_FG_NO_BG:
+				fontCur = fontOrig;
+				cFg = *cFgOrig;
+				cBg = *cBgOrig;
+				break;
+			case AG_SGR_FG:
+				cFg = ansi.color;
+				break;
+			case AG_SGR_BG:
+				cBg = ansi.color;
+				break;
+			case AG_SGR_BOLD:
+				fontCur = AG_FetchFont(fontCur->name,
+				    fontCur->spec.size,
+				    fontCur->flags | AG_FONT_BOLD);
+				if (fontCur == NULL) { fontCur = fontOrig; }
+				break;
+			case AG_SGR_ITALIC:
+				fontCur = AG_FetchFont(fontCur->name,
+				    fontCur->spec.size,
+				    fontCur->flags | AG_FONT_ITALIC);
+				if (fontCur == NULL) { fontCur = fontOrig; }
+				break;
+			case AG_SGR_FAINT:
+				/* TODO */
+				break;
+			case AG_SGR_UNDERLINE:
+				/* TODO */
+				break;
+			case AG_SGR_PRI_FONT:
+			case AG_SGR_ALT_FONT_1:
+			case AG_SGR_ALT_FONT_2:
+			case AG_SGR_ALT_FONT_3:
+			case AG_SGR_ALT_FONT_4:
+			case AG_SGR_ALT_FONT_5:
+			case AG_SGR_ALT_FONT_6:
+			case AG_SGR_ALT_FONT_7:
+			case AG_SGR_ALT_FONT_8:
+			case AG_SGR_ALT_FONT_9:
+			case AG_SGR_FRAKTUR:
+				fontCur = AG_FetchFont(
+				    agCoreFonts[ansi.sgr - 10],
+				    fontCur->spec.size, fontCur->flags);
+				if (fontCur == NULL) { fontCur = fontOrig; }
+				break;
+			case AG_SGR_ALT_FONT_11:
+			case AG_SGR_ALT_FONT_12:
+			case AG_SGR_ALT_FONT_13:
+			case AG_SGR_ALT_FONT_14:
+			case AG_SGR_ALT_FONT_15:
+			case AG_SGR_ALT_FONT_16:
+			case AG_SGR_ALT_FONT_17:
+				fontCur = AG_FetchFont(
+				    agCoreFonts[11 + (ansi.sgr - 66)],
+				    fontCur->spec.size, fontCur->flags);
+				if (fontCur == NULL) { fontCur = fontOrig; }
+				break;
+			default:
+				break;
+			}
+			ch += ansi.len;
 			continue;
 		}
-		if (*c != ' ') {
-			AG_SurfaceBlit(fontBf->S, &Gbf->rs, S,
-			    rd.x,
-			    rd.y + Gbf->yOffset);
+		if (fontCur->spec.type == AG_FONT_BITMAP) {
+			AG_FontBf *fontBfCur = AGFONTBF(fontCur);
+			AG_GlyphBf *Gbf;
+
+			if ((Gbf = GetGlyph(fontBfCur, *ch, 0)) == NULL) {
+#ifdef DEBUG_FONTS
+				Debug(fontBfCur, "Not found: `%c' (0x%x)\n",
+				    (char)*ch, *ch);
+#endif
+				rd.x += fontBfCur->wdRef;
+				continue;
+			}
+			(void)cBg;
+			(void)cFg;
+			if (*ch != ' ') {
+				AG_SurfaceBlit(fontBfCur->S, &Gbf->rs, S,
+				    rd.x,
+				    rd.y + Gbf->yOffset);
+			}
+			rd.x += Gbf->rs.w + fontBfCur->advance;
+		} else if (fontCur->spec.type == AG_FONT_VECTOR) {
+			/*
+			 * XXX TODO
+			 */
+			rd.x += wdRef;
 		}
-		rd.x += Gbf->rs.w + fontBf->advance;
 	}
 }
 
@@ -652,59 +760,146 @@ Size(const AG_Font *_Nonnull font, const AG_Char *_Nonnull ucs,
     AG_TextMetrics *_Nonnull Tm, int extended)
 {
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
-	AG_FontBf *fontBf = AGFONTBF(font);
-	AG_GlyphBf *Gbf;
-	const AG_Char *c;
-	const int tabWd = ts->tabWd;
+	AG_Font *fontOrig = ts->font, *fontCur = fontOrig;
+	const AG_Char *ch;
 	const int lineskip = font->lineskip;
-	int wLine=0;
+	int xMin=0, xMax=0, yMin=0, yMax;
+	int xMinLine=0, xMaxLine=0;
+	int x, z;
 
-	for (c = &ucs[0]; *c != '\0'; c++) {
-		if (*c == '\n') {
+	/* Compute the sum of the bounding box of the characters. */
+	yMax = font->lineskip;
+	x = 0;
+	for (ch = &ucs[0]; *ch != '\0'; ch++) {
+		if (*ch == '\n') {
 			if (extended) {
 				Tm->wLines = Realloc(Tm->wLines,
-				    (Tm->nLines+2)*sizeof(Uint));
-				Tm->wLines[Tm->nLines++] = wLine;
-				wLine = 0;
+				    (Tm->nLines + 2)*sizeof(Uint));
+				Tm->wLines[Tm->nLines++] = (xMaxLine - xMinLine);
+				xMinLine = 0;
+				xMaxLine = 0;
 			}
-			Tm->h += lineskip;
+			yMax += lineskip;
+			x = 0;
 			continue;
 		}
-		if (*c == '\t') {
-			wLine += tabWd;
-			Tm->w += tabWd;
+		if (*ch == '\t') {
+			x += ts->tabWd;  /* XXX TODO */
 			continue;
 		}
-		if (*c == 0x1b &&
-		    c[1] >= 0x40 && c[1] <= 0x5f && c[2] != '\0') {
+		if (ch[0] == 0x1b &&
+		    ch[1] >= 0x40 && ch[1] <= 0x5f && ch[2] != '\0') {
 			AG_TextANSI ansi;
 			
-			if (AG_TextParseANSI(ts, &ansi, &c[1]) == 0) {
-				c += ansi.len;
+			if (AG_TextParseANSI(ts, &ansi, &ch[1]) == 0) {
 				continue;
 			}
+			if (ansi.ctrl != AG_ANSI_CSI_SGR) {
+				ch += ansi.len;
+				continue;
+			}
+			switch (ansi.sgr) {
+			case AG_SGR_RESET:
+			case AG_SGR_NO_FG_NO_BG:
+				fontCur = fontOrig;
+				break;
+			case AG_SGR_BOLD:
+				fontCur = AG_FetchFont(fontOrig->name,
+				    fontOrig->spec.size,
+				    fontOrig->flags | AG_FONT_BOLD);
+				if (fontCur == NULL) { fontCur = fontOrig; }
+				break;
+			case AG_SGR_ITALIC:
+				fontCur = AG_FetchFont(fontOrig->name,
+				    fontOrig->spec.size,
+				    fontOrig->flags | AG_FONT_ITALIC);
+				if (fontCur == NULL) { fontCur = fontOrig; }
+				break;
+			case AG_SGR_PRI_FONT:
+			case AG_SGR_ALT_FONT_1:
+			case AG_SGR_ALT_FONT_2:
+			case AG_SGR_ALT_FONT_3:
+			case AG_SGR_ALT_FONT_4:
+			case AG_SGR_ALT_FONT_5:
+			case AG_SGR_ALT_FONT_6:
+			case AG_SGR_ALT_FONT_7:
+			case AG_SGR_ALT_FONT_8:
+			case AG_SGR_ALT_FONT_9:
+			case AG_SGR_FRAKTUR:
+				fontCur = AG_FetchFont(
+				    agCoreFonts[ansi.sgr - 10],
+				    fontOrig->spec.size,
+				    fontOrig->flags);
+				if (fontCur == NULL) { fontCur = fontOrig; }
+				break;
+			case AG_SGR_ALT_FONT_11:
+			case AG_SGR_ALT_FONT_12:
+			case AG_SGR_ALT_FONT_13:
+			case AG_SGR_ALT_FONT_14:
+			case AG_SGR_ALT_FONT_15:
+			case AG_SGR_ALT_FONT_16:
+			case AG_SGR_ALT_FONT_17:
+				fontCur = AG_FetchFont(
+				    agCoreFonts[11 + (ansi.sgr - 66)],
+				    fontCur->spec.size, fontCur->flags);
+				if (fontCur == NULL) { fontCur = fontOrig; }
+				break;
+			default:
+				break;
+			}
+			ch += ansi.len;
+			continue;
 		}
 
-		if ((Gbf = GetGlyph(fontBf, *c, 0)) != NULL) {
-			const int advance = Gbf->rs.w + fontBf->advance;
+		if (fontCur->spec.type == AG_FONT_FREETYPE) {
+#ifdef HAVE_FREETYPE
+			AG_GlyphFt *Gft;
 
-			wLine += advance;
-			Tm->w += advance;
-			Tm->h = MAX(Tm->h, Gbf->rs.h);
-		} else {
-			wLine += fontBf->wdRef;
-			Tm->w += fontBf->wdRef;
-			Tm->h = MAX(Tm->h, fontBf->height);
+			Gft = AGFONT_OPS(fontCur)->get_glyph(fontCur, *ch,
+			    AG_GLYPH_FT_METRICS);
+
+			z = x + Gft->xMin;
+			if (xMin > z) { xMin = z; }
+			if (xMinLine > z) { xMinLine = z; }
+
+			z = x + MAX(Gft->advance, Gft->xMax);
+			if (xMax < z) { xMax = z; }
+			if (xMaxLine < z) { xMaxLine = z; }
+			x += Gft->advance;
+
+			if (Gft->yMin < yMin) { yMin = Gft->yMin; }
+			if (Gft->yMax > yMax) { yMax = Gft->yMax; }
+#endif /* HAVE_FREETYPE */
+		} else if (fontCur->spec.type == AG_FONT_BITMAP) {
+			AG_GlyphBf *Gbf;
+			int advance;
+
+			Gbf = AGFONT_OPS(fontCur)->get_glyph(fontCur, *ch, 0);
+			if (Gbf == NULL) {
+				x += AGFONTBF(fontCur)->wdRef;
+				continue;
+			}
+			if (xMin > x) { xMin = x; }
+			if (xMinLine > x) { xMinLine = x; }
+
+			advance = AGFONTBF(fontCur)->advance;
+			z = x + Gbf->rs.w + advance;
+			if (xMax < z) { xMax = z; }
+			if (xMaxLine < z) { xMaxLine = z; }
+
+			x += Gbf->rs.w + advance;
 		}
 	}
-	if (*c != '\n' && extended) {
+	if (*ch != '\n' && extended) {
 		if (Tm->nLines > 0) {
 			Tm->wLines = Realloc(Tm->wLines,
 			    (Tm->nLines + 2) * sizeof(Uint));
-			Tm->wLines[Tm->nLines] = wLine;
+			Tm->wLines[Tm->nLines] = (xMaxLine - xMinLine);
 		}
 		Tm->nLines++;
 	}
+	Tm->w = (xMax - xMin);
+	Tm->h = (yMax - yMin);
 }
 
 static void
@@ -716,8 +911,6 @@ Init(void *_Nonnull obj)
 	    sizeof(Uint) +                           /* flags */
 	    sizeof(enum ag_font_bf_colorize_mode) +  /* colorize */
 	    sizeof(char *) +                         /* name */
-	    sizeof(int) +                            /* underlinePos */
-	    sizeof(int) +                            /* underlineThick */
 	    sizeof(AG_Char *) +                      /* unicode */
 	    sizeof(Uint) +                           /* nUnicode */
 	    sizeof(Uint) +                           /* nGlyphs */
