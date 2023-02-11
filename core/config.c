@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -110,8 +110,13 @@ Init(void *_Nonnull obj)
 #endif
 	int i;
 	
-	for (i = 0; i < AG_CONFIG_PATH_LAST; i++)
+	for (i = 0; i < AG_CONFIG_PATH_LAST; i++) {
 		TAILQ_INIT(&cfg->paths[i]);
+	}
+	cfg->fontFace[0] = '\0';
+	cfg->fontSize = 0.0f;
+	cfg->fontFlags = 0;
+
 #ifdef AG_DEBUG
 	debugLvlSave = agDebugLvl;
 	agDebugLvl = 0;
@@ -179,11 +184,27 @@ Destroy(void *_Nonnull obj)
 }
 
 static int
+Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
+    const AG_Version *_Nonnull ver)
+{
+	AG_Config *cfg = obj;
+
+	AG_CopyString(cfg->fontFace, ds, sizeof(cfg->fontFace));
+	cfg->fontSize = AG_ReadFloat(ds);
+	cfg->fontFlags = (Uint)AG_ReadUint16(ds);
+	return (0);
+}
+
+static int
 Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 {
 	AG_Config *cfg = obj;
 	AG_Variable *V;
 	void *pInitialRun;
+
+	AG_WriteString(ds, cfg->fontFace);
+	AG_WriteFloat(ds, cfg->fontSize);
+	AG_WriteUint16(ds, cfg->fontFlags);
 
 	if ((V = AG_GetVariable(cfg, "initial-run", &pInitialRun)) != NULL) {
 		*(int *)pInitialRun = 0;
@@ -411,11 +432,11 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 AG_ObjectClass agConfigClass = {
 	"AG_Config",
 	sizeof(AG_Config),
-	{ 11, 0 },
+	{ 12, 0 },
 	Init,
 	NULL,		/* reset */
 	Destroy,
-	NULL,		/* load */
+	Load,
 	Save,
 	NULL		/* edit */
 };

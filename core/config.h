@@ -9,7 +9,7 @@
 #include <agar/core/begin.h>
 
 typedef enum ag_config_path_group {
-	AG_CONFIG_PATH_DATA,	/* Objects and data from */
+	AG_CONFIG_PATH_DATA,	/* Object and data files */
 	AG_CONFIG_PATH_FONTS,	/* Font files */
 	AG_CONFIG_PATH_TEMP,	/* Temporary files */
 	AG_CONFIG_PATH_LAST
@@ -23,8 +23,16 @@ typedef struct ag_config_path {
 typedef AG_TAILQ_HEAD(ag_config_pathq, ag_config_path) AG_ConfigPathQ;
 
 typedef struct ag_config {
-	struct ag_object _inherit;              /* AG_Object(3) -> AG_Config */
-	AG_ConfigPathQ paths[AG_CONFIG_PATH_LAST];  /* Configured load paths */
+	struct ag_object _inherit;             /* AG_Object(3) -> AG_Config */
+	AG_ConfigPathQ paths[AG_CONFIG_PATH_LAST]; /* Configured load paths */
+	char  fontFace[AG_OBJECT_NAME_MAX];            /* Default font face */
+#ifdef AG_HAVE_FLOAT
+	float fontSize;                                  /* Font size (pts) */
+#else
+	int   fontSize;                                   /* Font size (px) */
+#endif
+	Uint  fontFlags;                                /* Style attributes */
+	Uint32 _pad;
 } AG_Config;
 
 #define AGCONFIG(obj)            ((AG_Config *)(obj))
