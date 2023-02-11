@@ -1,5 +1,8 @@
 /*	Public domain	*/
 
+#ifndef _AGAR_CORE_TYPES_H_
+#define _AGAR_CORE_TYPES_H_
+
 /*
  * Agar memory model
  */
@@ -225,3 +228,5 @@
 #else
 # error "Invalid AG_MODEL"
 #endif
+
+#endif /* _AGAR_CORE_TYPES_H_ */
