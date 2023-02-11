@@ -165,27 +165,34 @@ AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 
 		AG_SeparatorNewHoriz(tab);
 
-		if (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL) {
-			AG_WidgetDisable(
-			    AG_CheckboxNewInt(tab, 0, _("Stereo vision"), &agStereo)
-			);
-		}
-		
-		AG_CheckboxNewInt(tab, 0,
-		    _("Enable " AGSI_COURIER "GL_DEBUG_OUTPUT" AGSI_RST),
-		    &agGLdebugOutput);
-
-		AG_CheckboxNewInt(tab, 0,
-		    _("NPOT (non power of two) textures"), &agGLuseNPOT);
-
-		if (AG_OfClass(drv, "AG_Driver:AG_DriverMw:AG_DriverGLX")) {
-			AG_WidgetDisable(
-			    AG_CheckboxNewInt(tab, 0, _("Synchronous X events"), &agXsync)
-			);
-		}
-
 		AG_CheckboxNewInt(tab, 0, _("Clipboard integration"),
 		                  &agClipboardIntegration);
+
+		if (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL) {
+			AG_CheckboxNewInt(tab, 0,
+			    _("Enable " AGSI_COURIER "GL_DEBUG_OUTPUT" AGSI_RST),
+			    &agGLdebugOutput);
+
+			AG_PushDisabledState(tab);
+			AG_CheckboxNewInt(tab, 0, _("Stereo vision"), &agStereo);
+			AG_PopDisabledState(tab);
+		}
+		
+#ifndef ENABLE_GL_NO_NPOT
+		AG_PushDisabledState(tab);
+#endif
+		AG_CheckboxNewInt(tab, 0, _("NPOT (non power of two) textures"),
+		    &agGLuseNPOT);
+#ifndef ENABLE_GL_NO_NPOT
+		AG_PopDisabledState(tab);
+#endif
+		if (AG_OfClass(drv, "AG_Driver:AG_DriverMw:AG_DriverGLX")) {
+			AG_PushDisabledState(tab);
+			AG_CheckboxNewInt(tab, 0, _("Synchronous X events"),
+			    &agXsync);
+			AG_PopDisabledState(tab);
+		}
+
 		AG_NumericalNewIntR(tab, numFl, "px", _("Tab width: "),
 		                    &agTextTabWidth, 0, 1000);
 		AG_NumericalNewIntR(tab, numFl, "ms", _("Cursor Blink Rate: "),

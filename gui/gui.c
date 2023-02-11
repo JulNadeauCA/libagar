@@ -201,7 +201,7 @@ int agTextComposition = 1;		/* Input character composition */
 int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
 int agGLdebugOutput = 0;		/* Enable GL_DEBUG_OUTPUT */
-int agGLuseNPOT = 0;			/* Use non-power-of-two textures */
+int agGLuseNPOT = 1;			/* Use non-power-of-two textures */
 
 double agZoomValues[AG_ZOOM_MAX] = {
 	55.0, 60.0, 65.00, 70.00, 75.00, 80.00, 90.00, 95.00,
@@ -216,7 +216,6 @@ double agZoomValues[AG_ZOOM_MAX] = {
 int
 AG_InitGUIGlobals(void)
 {
-	AG_Config *cfg;
 	void **cl;
 	AG_DriverClass **pd;
 	Uint i;
@@ -262,16 +261,16 @@ AG_InitGUIGlobals(void)
 
 	{
 #ifdef AG_DEBUG
-		const int dbgLvlSave = agDebugLvl;
-
+		const int dbgLvlSave = agDebugLvl;                  /* Mute */
 		agDebugLvl = 0;
 #endif
-		cfg = AG_ConfigObject();
 		for (i = 0; i < agGUIOptionCount; i++) {
-			AG_BindInt(cfg, agGUIOptions[i].key, agGUIOptions[i].p);
+			AG_BindInt(agConfig,
+			    agGUIOptions[i].key,
+			    agGUIOptions[i].p);
 		}
 #ifdef AG_DEBUG
-		agDebugLvl = dbgLvlSave;
+		agDebugLvl = dbgLvlSave;                          /* Unmute */
 #endif
 		if (AG_LoadStyleSheet(NULL, "_agStyleDefault") == NULL)
 			AG_Verbose("Error loading stylesheet: %s\n", AG_GetError());
@@ -295,13 +294,12 @@ AG_DestroyGUIGlobals(void)
 
 	AG_DestroyStyleSheet(&agDefaultCSS);
 	{
-		AG_Config *cfg = AG_ConfigObject();
 #ifdef AG_DEBUG
 		int debugLvlSave;
 #endif
 		Debug_Mute(debugLvlSave);
 		for (i = 0; i < agGUIOptionCount; i++) {
-			AG_Unset(cfg, agGUIOptions[i].key);
+			AG_Unset(agConfig, agGUIOptions[i].key);
 		}
 		Debug_Unmute(debugLvlSave);
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,12 @@
 
 /* Expensive debugging of GL context & resource management. */
 /* #define DEBUG_GL */
+
+/*
+ * Enable support for OpenGL implementations without NPOT support
+ * (must be enabled at build time).
+ */
+/* #define ENABLE_GL_NO_NPOT */
 
 #if defined(AG_DEBUG) && defined(HAVE_GLEXT) && defined(GL_DEBUG_OUTPUT)
 static void
@@ -397,13 +403,21 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *S, AG_TexCoord *tc)
 {
 	AG_Surface *GS;
 	GLuint texture;
-	const int isGLtexture = (S->flags & AG_SURFACE_GL_TEXTURE);
+#ifdef ENABLE_GL_NO_NPOT
 	const int w = (agGLuseNPOT) ? S->w : PowOf2i(S->w);
 	const int h = (agGLuseNPOT) ? S->h : PowOf2i(S->h);
-
+#else
+	const int w = S->w;
+	const int h = S->h;
+#endif
 	glGenTextures(1, &texture);
 
-	if (isGLtexture && (w == S->w) && (h == S->h)) {  /* POT & compatible */
+#ifdef ENABLE_GL_NO_NPOT
+	if ((S->flags & AG_SURFACE_GL_TEXTURE) &&
+	    (w == S->w) && (h == S->h)) {               /* POT & compatible */
+#else
+	if ((S->flags & AG_SURFACE_GL_TEXTURE)) {             /* Compatible */
+#endif
 		GS = S;
 #ifdef DEBUG_GL
 		Debug(obj, "GL upload (%dx%d) surface %p -> #%u (%dx%d)\n",
@@ -449,11 +463,20 @@ void
 AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *S, AG_TexCoord *tc)
 {
 	AG_Surface *GS;
-	const int isGLtexture = (S->flags & AG_SURFACE_GL_TEXTURE);
+#ifdef ENABLE_GL_NO_NPOT
 	const int w = (agGLuseNPOT) ? S->w : PowOf2i(S->w);
 	const int h = (agGLuseNPOT) ? S->h : PowOf2i(S->h);
+#else
+	const int w = S->w;
+	const int h = S->h;
+#endif
 
-	if (isGLtexture && (w == S->w) && (h == S->h)) {  /* POT & compatible */
+#ifdef ENABLE_GL_NO_NPOT
+	if ((S->flags & AG_SURFACE_GL_TEXTURE) &&
+	    (w == S->w) && (h == S->h)) {               /* POT & compatible */
+#else
+	if (S->flags & AG_SURFACE_GL_TEXTURE) {               /* Compatible */
+#endif
 		GS = S;
 #ifdef DEBUG_GL
 		Debug(obj, "GL update (%dx%d) surface %p -> #%u (%dx%d)\n",
