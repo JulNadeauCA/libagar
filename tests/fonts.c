@@ -11,9 +11,12 @@ SelectedFont(AG_Event *event)
 
 	if (myFont) {
 		AG_SetDefaultFont(myFont);
-		AG_SetString(agConfig, "font.face", AGOBJECT(agDefaultFont)->name);
-		AG_SetInt(agConfig, "font.size", agDefaultFont->spec.size);
-		AG_SetUint(agConfig, "font.flags", agDefaultFont->flags);
+		AG_Strlcpy(agConfig->fontFace,
+		    AGOBJECT(myFont)->name,
+		    sizeof(agConfig->fontFace));
+		agConfig->fontSize = myFont->spec.size;
+		agConfig->fontFlags = myFont->flags;
+
 		if (AG_ConfigSave() == 0) {
 			AG_TextTmsg(AG_MSG_INFO, 1000, "Default font has changed.");
 		} else {

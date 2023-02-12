@@ -355,6 +355,12 @@ TestGUI(void *obj, AG_Window *win)
 		    &AGWIDGET(win)->h);
 		AG_LabelSizeHint(lbl, 1, "<This [XXXX] Window is at 0000,0000 (0000 x 0000). >");
 		AG_SetStyle(lbl, "font-size", "110%");
+
+		/* Show an example of a bitmap font (agar-minimal.agbf) */
+		AG_LabelNew(div, AG_LABEL_HFILL,
+		    "Here is a bitmap font: " 
+		    AGSI_AGAR_MINIMAL "Agar Minimal Hello!" AGSI_RST
+		    " (12px)");
 	}
 
 	/*

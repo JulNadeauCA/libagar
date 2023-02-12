@@ -60,6 +60,24 @@ typedef struct ag_font_adjustment {
 	int ascent_offset[6];           /* Ascent tweak (size range specific) */
 } AG_FontAdjustment;
 
+/* Map alternate names to font names. */
+typedef struct ag_font_alias {
+	const char *from;     /* Originally named */
+	const char *to;       /* Renamed to */
+} AG_FontAlias;
+
+/* Map individual AG_Font flag bits to fontconfig FC_STYLE names. */
+typedef struct ag_font_style_name {
+	const char *name;     /* Fontconfig FC_STYLE name */
+	Uint flag;            /* Individual AG_Font(3) style bit */
+} AG_FontStyleName;
+
+/* Indicate sorting order for a given style, weight and width variant. */
+typedef struct ag_font_style_sort {
+	Uint16 flags;         /* AG_Font(3) style flags */
+	Sint16 key;           /* Sort key (-1 = last) */
+} AG_FontStyleSort;
+
 /*
  * Cached rendering of a glyph of a given font and BG/FG color. This cache is
  * used by widgets which require per-glyph metrics such as AG_Editable(3).
@@ -87,40 +105,50 @@ typedef struct ag_glyph_cache {
 /* Loaded font */
 typedef struct ag_font {
 	struct ag_object obj;           /* AG_Object -> AG_Font */
+
 	char name[AG_OBJECT_NAME_MAX];  /* Base font name (without any suffix) */
 	AG_FontSpec spec;               /* Generic font specification */
-	Uint flags;
-#define AG_FONT_THIN           0x00001  /* Wt#100 - Thin */
-#define AG_FONT_EXTRALIGHT     0x00002  /* Wt#200 - Extra Light ("Ultra Light") */
-#define AG_FONT_LIGHT          0x00004  /* Wt#300 - Light */
-#define AG_FONT_REGULAR        0x00008  /* Wt#400 - Regular ("Normal") */
-#define AG_FONT_SEMIBOLD       0x00010  /* Wt#600 - Semi Bold ("Demi Bold") */
-#define AG_FONT_BOLD           0x00020  /* Wt#700 - Bold */
-#define AG_FONT_EXTRABOLD      0x00040  /* Wt#800 - Extra Bold */
-#define AG_FONT_BLACK          0x00080  /* Wt#900 - Black ("Heavy") */
-#define AG_FONT_OBLIQUE        0x00100  /* Style - Oblique */
-#define AG_FONT_ITALIC         0x00200  /* Style - Italic */
-#define AG_FONT_UPRIGHT_ITALIC 0x00400  /* Style - Upright Italic */
-#define AG_FONT_MONOSPACE      0x00800  /* Family - Monospace preferred */
-#define AG_FONT_ULTRACONDENSED 0x01000  /* Wd(50%) - Ultra Condensed */
-#define AG_FONT_CONDENSED      0x04000  /* Wd(75%) - Condensed */
-#define AG_FONT_SEMICONDENSED  0x02000  /* Wd(87.5%) - Semi Condensed ("Demi Condensed") */
-#define AG_FONT_SEMIEXPANDED   0x08000  /* Wd(112.5%) - Semi Expanded ("Demi Expanded") */
-#define AG_FONT_EXPANDED       0x10000  /* Wd(125%) - Expanded */
-#define AG_FONT_ULTRAEXPANDED  0x20000  /* Wd(200%) - Ultra Expanded */
-#define AG_FONT_WEIGHTS      (AG_FONT_THIN | AG_FONT_EXTRALIGHT | AG_FONT_LIGHT | \
-                              AG_FONT_REGULAR | AG_FONT_SEMIBOLD | AG_FONT_BOLD | \
-                              AG_FONT_EXTRABOLD | AG_FONT_BLACK)
-#define AG_FONT_FAMILY_PREFS (AG_FONT_MONOSPACE)
-#define AG_FONT_STYLES       (AG_FONT_OBLIQUE | AG_FONT_ITALIC | AG_FONT_UPRIGHT_ITALIC)
-#define AG_FONT_WD_VARIANTS  (AG_FONT_ULTRACONDENSED | AG_FONT_CONDENSED | \
-                              AG_FONT_SEMICONDENSED | AG_FONT_SEMIEXPANDED | \
-                              AG_FONT_EXPANDED | AG_FONT_ULTRAEXPANDED)
 
+	Uint flags;                     /* Weight / Style / Width Variant */
+#define AG_FONT_THIN           0x0001   /* Wt#100 - Thin */
+#define AG_FONT_EXTRALIGHT     0x0002   /* Wt#200 - Extra Light ("Ultra Light") */
+#define AG_FONT_LIGHT          0x0004   /* Wt#300 - Light */
+                                        /* Wt#400 - Regular (the default) */
+#define AG_FONT_SEMIBOLD       0x0008   /* Wt#600 - Semi Bold ("Demi Bold") */
+#define AG_FONT_BOLD           0x0010   /* Wt#700 - Bold */
+#define AG_FONT_EXTRABOLD      0x0020   /* Wt#800 - Extra Bold */
+#define AG_FONT_BLACK          0x0040   /* Wt#900 - Black ("Heavy") */
+#define AG_FONT_OBLIQUE        0x0080   /* Style - Oblique */
+#define AG_FONT_ITALIC         0x0100   /* Style - Italic */
+#define AG_FONT_UPRIGHT_ITALIC 0x0200   /* Style - Upright Italic */
+#define AG_FONT_ULTRACONDENSED 0x0400   /* Wd(50%) - Ultra Condensed */
+#define AG_FONT_CONDENSED      0x0800   /* Wd(75%) - Condensed */
+#define AG_FONT_SEMICONDENSED  0x1000   /* Wd(87.5%) - Semi Condensed ("Demi Condensed") */
+#define AG_FONT_SEMIEXPANDED   0x2000   /* Wd(112.5%) - Semi Expanded ("Demi Expanded") */
+#define AG_FONT_EXPANDED       0x4000   /* Wd(125%) - Expanded */
+#define AG_FONT_ULTRAEXPANDED  0x8000   /* Wd(200%) - Ultra Expanded */
+
+#define AG_FONT_WEIGHTS (AG_FONT_THIN | AG_FONT_EXTRALIGHT | AG_FONT_LIGHT | \
+                         AG_FONT_SEMIBOLD | AG_FONT_BOLD | AG_FONT_EXTRABOLD | \
+                         AG_FONT_BLACK)
+
+#define AG_FONT_STYLES (AG_FONT_OBLIQUE | AG_FONT_ITALIC | \
+                        AG_FONT_UPRIGHT_ITALIC)
+
+#define AG_FONT_WD_VARIANTS (AG_FONT_ULTRACONDENSED | AG_FONT_CONDENSED | \
+                             AG_FONT_SEMICONDENSED | AG_FONT_SEMIEXPANDED | \
+                             AG_FONT_EXPANDED | AG_FONT_ULTRAEXPANDED)
+	Uint nFamilyStyles;
+	Uint *familyStyles;             /* Styles available in this font family */
+	Uint stateFlags;
+#define AG_FONT_FONTCONFIGED      0x01  /* Discovered via fontconfig */
+#define AG_FONT_FAMILY_FLAGS      0x02  /* Family flags are specified */
 	int height;                     /* Height (px) */
 	int ascent;                     /* Ascent (px) */
 	int descent;                    /* Descent (px) */
 	int lineskip;                   /* Multiline y-increment (px) */
+	int underlinePos;               /* Underline position */
+	int underlineThk;               /* Underline thickness */
 	Uint nRefs;                     /* Global reference count */
 	AG_TAILQ_ENTRY(ag_font) fonts;  /* Entry in global fonts list */
 } AG_Font;
@@ -165,12 +193,18 @@ typedef struct ag_font_class {
 __BEGIN_DECLS
 extern AG_FontClass agFontClass;
 extern const AG_FontAdjustment agFontAdjustments[];
+extern const AG_FontAlias agFontAliases[];
+extern const AG_FontStyleName agFontStyleNames[];
+extern const AG_FontStyleSort agFontStyleSort[];
 extern const char *agFontFileExts[];
 extern AG_StaticFont *_Nonnull agBuiltinFonts[];
 
 AG_Font	*_Nullable AG_FetchFont(const char *_Nullable, float, Uint)
                                _Warn_Unused_Result;
 void               AG_UnusedFont(AG_Font *_Nonnull);
+
+int     AG_FontGetFamilyStyles(AG_Font *_Nonnull);
+AG_Size AG_FontGetStyleName(char *_Nonnull, AG_Size, Uint);
 __END_DECLS
 
 #include <agar/gui/close.h>

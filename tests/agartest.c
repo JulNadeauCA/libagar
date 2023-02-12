@@ -841,6 +841,7 @@ main(int argc, char *argv[])
 	AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, ".");
 
 	(void)AG_ConfigLoad();
+	AG_SetDefaultFont(NULL);
 
 	if ((win = winMain = AG_WindowNew(AG_WINDOW_MAIN)) == NULL) {
 		return (1);

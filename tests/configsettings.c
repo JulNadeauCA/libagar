@@ -33,6 +33,7 @@ LoadConfig(AG_Event *event)
 		AG_TextMsgFromError();
 		TestMsg(ti, "AG_ConfigLoad: %s", AG_GetError());
 	}
+	AG_SetDefaultFont(NULL);
 
 	if (AG_Defined(cfg,"some-string")) {
 		AG_GetString(cfg, "some-string", someString, sizeof(someString));

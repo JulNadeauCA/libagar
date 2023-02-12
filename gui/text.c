@@ -71,18 +71,17 @@
 #define AG_DEFAULT_FT_FONT_FACE "_agFontAlgue"
 #endif
 #ifndef AG_DEFAULT_FT_FONT_SIZE
-#define AG_DEFAULT_FT_FONT_SIZE 14
+#define AG_DEFAULT_FT_FONT_SIZE 14.0f
 #endif
 #ifndef AG_DEFAULT_BF_FONT_FACE
 #define AG_DEFAULT_BF_FONT_FACE "agar-minimal.agbf"
 #endif
 #ifndef AG_DEFAULT_BF_FONT_SIZE
-#define AG_DEFAULT_BF_FONT_SIZE 12
+#define AG_DEFAULT_BF_FONT_SIZE 12.0f
 #endif
 
 int agTextFontHeight = 0;             /* Default font height (px) */
 int agTextFontAscent = 0;             /* Default font ascent (px) */
-int agTextFontDescent = 0;            /* Default font descent (px) */
 int agTextFontLineSkip = 0;           /* Default font line skip (px) */
 int agFontconfigInited = 0;           /* Initialized Fontconfig library */
 
@@ -136,17 +135,20 @@ AG_Color agTextColorANSI[] = {
 
 /* Core fonts provided with Agar */
 const char *agCoreFonts[] = {
-	"_agFontAlgue",    /* Algue (default font; built-in) */
-	"unialgue",        /* Unialgue (default font with extended Unicode) */
-	"cm-sans",         /* Computer Modern Sans */
-	"cm-serif",        /* Computer Modern Serif */
-	"monoalgue-sans",  /* Monoalgue Sans (a monospace sans-serif) */
-	"charter",         /* Bitstream Charter (a transitional serif) */
-	"monoalgue",       /* Monoalgue (a monospace serif optimized for code) */
-	"source-han-sans", /* Source Han Sans (a pan-CJK font) */
-	"league-spartan",  /* League Spartan (a bold geometric sans-serif) */
-	"league-gothic",   /* League Gothic (a condensable Gothic font) */
-	"fraktur",         /* Unifraktur Maguntia (a Fraktur font) */
+	"_agFontAlgue",      /* Algue (default font; built-in) */
+	"unialgue",          /* Unialgue (default font with extended Unicode) */
+	"cm-sans",           /* Computer Modern Sans */
+	"cm-serif",          /* Computer Modern Serif */
+	"monoalgue-sans",    /* Monoalgue Sans (a monospace sans-serif) */
+	"charter",           /* Bitstream Charter (a transitional serif) */
+	"monoalgue",         /* Monoalgue (a monospace serif optimized for code) */
+	"source-han-sans",   /* Source Han Sans (a pan-CJK font) */
+	"league-spartan",    /* League Spartan (a bold geometric sans-serif) */
+	"league-gothic",     /* League Gothic (a condensable Gothic font) */
+	"fraktur",           /* Unifraktur Maguntia (a Fraktur font) */
+	"agar-minimal",      /* Agar Minimal (a condensable bitmap font) */
+	"vera",              /* Bitstream Vera */
+	"vera-mono",         /* Bitstream Vera Mono */
 	NULL
 };
 
@@ -593,7 +595,6 @@ AG_TextInfo(const char *key, const char *fmt, ...)
 void
 AG_TextInfoS(const char *key, const char *s)
 {
-	AG_Config *cfg = AG_ConfigObject();
 	char disableSw[64];
 	AG_Variable *Vdisable;
 	AG_Window *win;
@@ -603,8 +604,9 @@ AG_TextInfoS(const char *key, const char *s)
 	if (key != NULL) {
 		Strlcpy(disableSw, "info.", sizeof(disableSw));
 		Strlcat(disableSw, key, sizeof(disableSw));
-		AG_ObjectLock(cfg);
-		if (AG_Defined(cfg,disableSw) && AG_GetInt(cfg,disableSw) == 1)
+		AG_ObjectLock(agConfig);
+		if (AG_Defined(agConfig, disableSw) &&
+		    AG_GetInt(agConfig, disableSw) == 1)
 			goto out;
 	}
 	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
@@ -626,13 +628,13 @@ AG_TextInfoS(const char *key, const char *s)
 	if (key != NULL) {
 		cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL,
 		    _("Don't tell me again"));
-		Vdisable = AG_SetInt(cfg, disableSw, 0);
+		Vdisable = AG_SetInt(agConfig, disableSw, 0);
 		AG_BindInt(cb, "state", &Vdisable->data.i);
 	}
 	AG_WindowShow(win);
 out:
 	if (key != NULL)
-		AG_ObjectUnlock(cfg);
+		AG_ObjectUnlock(agConfig);
 }
 
 /*
@@ -655,7 +657,6 @@ AG_TextWarning(const char *key, const char *fmt, ...)
 void
 AG_TextWarningS(const char *key, const char *s)
 {
-	AG_Config *cfg = AG_ConfigObject();
 	char disableSw[64];
 	AG_Variable *Vdisable;
 	AG_Window *win;
@@ -665,8 +666,9 @@ AG_TextWarningS(const char *key, const char *s)
 	if (key != NULL) {
 		Strlcpy(disableSw, "warn.", sizeof(disableSw));
 		Strlcat(disableSw, key, sizeof(disableSw));
-		AG_ObjectLock(cfg);
-		if (AG_Defined(cfg,disableSw) && AG_GetInt(cfg,disableSw) == 1)
+		AG_ObjectLock(agConfig);
+		if (AG_Defined(agConfig, disableSw) &&
+		    AG_GetInt(agConfig, disableSw) == 1)
 			goto out;
 	}
 	win = AG_WindowNew(AG_WINDOW_NORESIZE | AG_WINDOW_NOCLOSE |
@@ -689,14 +691,14 @@ AG_TextWarningS(const char *key, const char *s)
 	if (key != NULL) {
 		cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL,
 		    _("Don't tell me again"));
-		Vdisable = AG_SetInt(cfg, disableSw, 0);
+		Vdisable = AG_SetInt(agConfig, disableSw, 0);
 		AG_BindInt(cb, "state", &Vdisable->data.i);
 	}
 	AG_WindowShow(win);
 
 out:
 	if (key != NULL)
-		AG_ObjectUnlock(cfg);
+		AG_ObjectUnlock(agConfig);
 }
 
 /* Display an error message. */
@@ -1292,25 +1294,29 @@ AG_Font *
 AG_SetDefaultFont(AG_Font *font)
 {
 	AG_Font *prevDefaultFont;
-	AG_Config *cfg;
 
 	AG_MutexLock(&agTextLock);
 
 	prevDefaultFont = agDefaultFont;
-	agDefaultFont = font;
+
+	if (font != NULL) {
+		agDefaultFont = font;
+	} else {
+		agDefaultFont = font = AG_FetchFont(NULL, 0.0f, 0);
+	}
+
+	Debug(NULL, "SetDefaultFont(%s)\n", OBJECT(font)->name);
 
 	agTextFontHeight = font->height;
 	agTextFontAscent = font->ascent;
-	agTextFontDescent = font->descent;
 	agTextFontLineSkip = font->lineskip;
 
 	/* TODO apply to the entire stack. */
 	AG_TEXT_STATE_CUR()->font = font;
 
-	cfg = AG_ConfigObject();
-	AG_SetString(cfg, "font.face", OBJECT(font)->name);
-	AG_SetInt(cfg, "font.size", (int)font->spec.size);
-	AG_SetInt(cfg, "font.flags", font->flags);
+	Strlcpy(agConfig->fontFace, OBJECT(font)->name, sizeof(agConfig->fontFace));
+	agConfig->fontSize = font->spec.size;
+	agConfig->fontFlags = font->flags;
 
 	AG_MutexUnlock(&agTextLock);
 
@@ -1318,53 +1324,64 @@ AG_SetDefaultFont(AG_Font *font)
 }
 
 /*
- * Set the default font from a string "<Face>,<Size>,<Flags>".
- * Size is in points (integer). Flags may include:
+ * Set the default font from a string "<Face>,<Size>,<Style>".
  *
- *   'b'  =>  bold
- *   'i'  =>  italic
- *   'U'  =>  uppercase
- *   'I'  =>  upright italic
+ * Size is in points (fractional point sizes are allowed).
+ *
+ * Style is a space-separated list of style / weight / width variant
+ * attribute names (as returned by AG_FontGetStyleName(3)).
+ *
+ * Exceptionally, this call may be invoked before AG_InitGraphics()
+ * (in order to simplify setting the default font from command-line).
  */
 void
 AG_TextParseFontSpec(const char *spec)
 {
-	char buf[AG_TEXT_FONTSPEC_MAX];
-	AG_Config *cfg = AG_ConfigObject();
-	char *fs, *s, *c;
+	char fontspecBuf[AG_TEXT_FONTSPEC_MAX];
+	char *pFontspec, *s;
 
 	if (spec == NULL) {
-		buf[0] = '\0';
+		fontspecBuf[0] = '\0';
 	} else {
-		Strlcpy(buf, spec, sizeof(buf));
+		Strlcpy(fontspecBuf, spec, sizeof(fontspecBuf));
 	}
-	fs = &buf[0];
+	pFontspec = &fontspecBuf[0];
 
-	if ((s = AG_Strsep(&fs, ":,/")) != NULL && s[0] != '\0') {
-		AG_SetString(cfg, "font.face", s);
+	if ((s = AG_Strsep(&pFontspec, ":,/")) != NULL && s[0] != '\0') {
+		Strlcpy(agConfig->fontFace, s, sizeof(agConfig->fontFace));
+#ifdef DEBUG_FONTS
+		Debug(NULL, "Default font face = %s\n", agConfig->fontFace);
+#endif
 	}
-	if ((s = AG_Strsep(&fs, ":,/")) != NULL && s[0] != '\0') {
-		AG_SetInt(cfg, "font.size", atoi(s));
+	if ((s = AG_Strsep(&pFontspec, ":,/")) != NULL && s[0] != '\0') {
+		agConfig->fontSize = (float)strtod(s, NULL);
+#ifdef DEBUG_FONTS
+		Debug(NULL, "Default font size = %.2f pts\n", agConfig->fontSize);
+#endif
 	}
-	if ((s = AG_Strsep(&fs, ":,/")) != NULL && s[0] != '\0') {
+	if ((s = AG_Strsep(&pFontspec, ":,/")) != NULL && s[0] != '\0') {
+		char styleBuf[64], *pStyleBuf, *styleTok;
 		Uint flags = 0;
 
-		for (c = &s[0]; *c != '\0'; c++) {
-			switch (*c) {
-			case 'm': flags |= AG_FONT_MONOSPACE;      break;
-			case 'c': flags |= AG_FONT_SEMICONDENSED;  break;
-			case 'C': flags |= AG_FONT_CONDENSED;      break;
-			case 'L': flags |= AG_FONT_EXTRALIGHT;     break;
-			case 'l': flags |= AG_FONT_LIGHT;          break;
-			case 'r': flags |= AG_FONT_REGULAR;        break;
-			case 'b': flags |= AG_FONT_BOLD;           break;
-			case 's': flags |= AG_FONT_SEMIBOLD;       break;
-			case 'i': flags |= AG_FONT_ITALIC;         break;
-			case 'o': flags |= AG_FONT_OBLIQUE;        break;
-			case 'u': flags |= AG_FONT_UPRIGHT_ITALIC; break;
+		Strlcpy(styleBuf, s, sizeof(styleBuf));
+		pStyleBuf = styleBuf;
+		while ((styleTok = Strsep(&pStyleBuf, " ")) != NULL) {
+			const AG_FontStyleName *fsn;
+
+			for (fsn = &agFontStyleNames[0]; fsn->name != NULL;
+			     fsn++) {
+				if (Strcasecmp(fsn->name, styleTok) == 0) {
+					 flags |= fsn->flag;
+					 break;
+				}
 			}
+
 		}
-		AG_SetUint(cfg, "font.flags", flags);
+#ifdef DEBUG_FONTS
+		AG_FontGetStyleName(styleBuf, sizeof(styleBuf), flags);
+		Debug(NULL, "Default font style = %s\n", styleBuf);
+#endif
+		agConfig->fontFlags = flags;
 	}
 }
 
@@ -1372,7 +1389,6 @@ AG_TextParseFontSpec(const char *spec)
 int
 AG_InitTextSubsystem(void)
 {
-	AG_Config *cfg = AG_ConfigObject();
 	AG_User *sysUser;
 	AG_TextState *ts;
 
@@ -1383,7 +1399,7 @@ AG_InitTextSubsystem(void)
 	TAILQ_INIT(&agFontCache);
 
 	/* Set the default font search path. */
-	AG_ObjectLock(cfg);
+	AG_ObjectLock(agConfig);
 	sysUser = AG_GetRealUser();
 
 	if (strcmp(TTFDIR, "NONE") != 0)
@@ -1433,33 +1449,36 @@ AG_InitTextSubsystem(void)
 		int debugLvlSave = agDebugLvl;
 		agDebugLvl = 0;
 #endif
-
 #ifdef HAVE_FREETYPE
-		if (!AG_Defined(cfg,"font.face"))
-			AG_SetString(cfg, "font.face", AG_DEFAULT_FT_FONT_FACE);
-		if (!AG_Defined(cfg,"font.size"))
-			AG_SetInt(cfg, "font.size", 14);
+		if (agConfig->fontFace[0] == '\0') {
+			Strlcpy(agConfig->fontFace, AG_DEFAULT_FT_FONT_FACE,
+			    sizeof(agConfig->fontFace));
+		}
+		if (agConfig->fontSize == 0.0f)
+			agConfig->fontSize = AG_DEFAULT_FT_FONT_SIZE;
 #else
-		if (!AG_Defined(cfg,"font.face"))
-			AG_SetString(cfg, "font.face", AG_DEFAULT_BF_FONT_FACE);
-		if (!AG_Defined(cfg,"font.size"))
-			AG_SetInt(cfg, "font.size", 16);
+		if (agConfig->fontFace[0] == '\0') {
+			Strlcpy(agConfig->fontFace, AG_DEFAULT_BF_FONT_FACE,
+			    sizeof(agConfig->fontFace));
+		}
+		if (agConfig->fontSize == 0.0f)
+			agConfig->fontSize = AG_DEFAULT_BF_FONT_SIZE;
 #endif
-		if (!AG_Defined(cfg,"font.flags"))
-			AG_SetUint(cfg, "font.flags", 0);
 #ifdef AG_DEBUG
 		agDebugLvl = debugLvlSave;
 #endif
 	}
-	AG_ObjectUnlock(cfg);
+	AG_ObjectUnlock(agConfig);
 
 	/* Load the default font. */
-	if ((agDefaultFont = AG_FetchFont(NULL, 0.0f, 0)) == NULL) {
+	if ((agDefaultFont = AG_FetchFont(
+	    agConfig->fontFace,
+	    agConfig->fontSize,
+	    agConfig->fontFlags)) == NULL) {
 		return (-1);
 	}
 	agTextFontHeight = agDefaultFont->height;
 	agTextFontAscent = agDefaultFont->ascent;
-	agTextFontDescent = agDefaultFont->descent;
 	agTextFontLineSkip = agDefaultFont->lineskip;
 
 	/* Initialize the rendering state. */

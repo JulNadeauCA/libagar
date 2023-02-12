@@ -407,9 +407,11 @@ SelectedFont(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_WINDOW_PTR(1);
 
-	AG_SetString(agConfig, "font.face",  OBJECT(agDefaultFont)->name);
-	AG_SetInt(agConfig, "font.size", agDefaultFont->spec.size);
-	AG_SetUint(agConfig, "font.flags", agDefaultFont->flags);
+	Strlcpy(agConfig->fontFace, OBJECT(agDefaultFont)->name,
+	    sizeof(agConfig->fontFace));
+	agConfig->fontSize = agDefaultFont->spec.size;
+	agConfig->fontFlags = agDefaultFont->flags;
+
 	(void)AG_ConfigSave();
 
 	AG_TextWarning("default-font-changed",

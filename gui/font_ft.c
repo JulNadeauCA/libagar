@@ -58,6 +58,7 @@
 #include <agar/core/core.h>
 #include <agar/gui/text.h>
 #include <agar/gui/font_ft.h>
+#include <agar/gui/font_bf.h>
 
 /* Handy routines for converting from fixed point */
 #undef  FT_FLOOR
@@ -211,8 +212,8 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 		font->height  = font->ascent - font->descent + 1;
 		font->lineskip = FT_CEIL(FT_MulFix(face->height, scale));
 
-		fontFt->posUnderline = FT_FLOOR(FT_MulFix(face->underline_position, scale));
-		fontFt->thkUnderline = FT_FLOOR(FT_MulFix(face->underline_thickness, scale));
+		font->underlinePos = FT_FLOOR(FT_MulFix(face->underline_position, scale));
+		font->underlineThk = FT_FLOOR(FT_MulFix(face->underline_thickness, scale));
 
 		/* Apply size range specific ascent adjustment */
 		if      (spec->size <= 10.4f) { adjRange = 0; }
@@ -251,12 +252,11 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 	  	font->descent = 0;
 	  	font->height = face->available_sizes[fixedSize].height;
 	  	font->lineskip = font->height;
-
-	  	fontFt->posUnderline = FT_FLOOR(face->underline_position);
-	  	fontFt->thkUnderline = FT_FLOOR(face->underline_thickness);
+	  	font->underlinePos = FT_FLOOR(face->underline_position);
+	  	font->underlineThk = FT_FLOOR(face->underline_thickness);
 	}
-	if (fontFt->thkUnderline < 1) {
-		fontFt->thkUnderline = 1;  /* XXX TODO float */
+	if (font->underlineThk < 1) {
+		font->underlineThk = 1;
 	}
 	return (0);
 fail_face:
@@ -529,7 +529,7 @@ JustifyOffset(const AG_TextState *_Nonnull ts, int w, int wLine)
 
 static void
 Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
-    const AG_TextMetrics *_Nonnull tm, AG_Font *_Nonnull fontOrig,
+    const AG_TextMetrics *_Nonnull Tm, AG_Font *_Nonnull fontOrig,
     const AG_Color *_Nonnull cBgOrig, const AG_Color *_Nonnull cFgOrig)
 {
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
@@ -544,11 +544,13 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	const int BytesPerPixel = S->format.BytesPerPixel;
 	const int lineSkip = fontOrig->lineskip;
 	int xStart, yStart, line, x,y, w;
+	int ascentCur;
 
- 	xStart = (tm->nLines>1) ? JustifyOffset(ts, tm->w, tm->wLines[0]) : 0;
+ 	xStart = (Tm->nLines>1) ? JustifyOffset(ts, Tm->w, Tm->wLines[0]) : 0;
  	yStart = 0;
 
-	S->guides[0] = (Uint16)(fontCur->height - fontCur->ascent);
+	ascentCur = fontCur->ascent;
+	S->guides[0] = (Uint16)(fontCur->height - ascentCur);
 
 	for (ch = &ucs[0], line=0;
 	     *ch != '\0';
@@ -556,17 +558,16 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 		switch (*ch) {
 		case '\n':
 			yStart += lineSkip;
-			xStart = JustifyOffset(ts, tm->w, tm->wLines[++line]);
+			xStart = JustifyOffset(ts, Tm->w, Tm->wLines[++line]);
 			continue;
 		case '\r':
 			xStart = 0;
 			continue;
 		case '\t':
-			xStart += ts->tabWd;  /* XXX TODO */
+			xStart += ts->tabWd;                        /* TODO */
 			continue;
 		default:
 			break;
-			
 		}
 		if (ch[0] == 0x1b &&
 		    ch[1] >= 0x40 && ch[1] <= 0x5f && ch[2] != '\0') {
@@ -583,9 +584,8 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 			switch (ansi.sgr) {
 			case AG_SGR_RESET:
 			case AG_SGR_NO_FG_NO_BG:
-				if (fontCur != fontOrig) {
-					fontCur = fontOrig;
-				}
+				fontCur = fontOrig;
+				ascentCur = fontCur->ascent;
 				cFg = *cFgOrig;
 				cBg = *cBgOrig;
 				break;
@@ -599,15 +599,15 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 				fontCur = AG_FetchFont(fontCur->name,
 				    fontCur->spec.size,
 				    fontCur->flags | AG_FONT_BOLD);
-				if (fontCur == NULL)
-					fontCur = fontOrig;
+				if (fontCur == NULL) { fontCur = fontOrig; }
+				ascentCur = MAX(fontOrig->ascent, fontCur->ascent);
 				break;
 			case AG_SGR_ITALIC:
 				fontCur = AG_FetchFont(fontCur->name,
 				    fontCur->spec.size,
 				    fontCur->flags | AG_FONT_ITALIC);
-				if (fontCur == NULL)
-					fontCur = fontOrig;
+				if (fontCur == NULL) { fontCur = fontOrig; }
+				ascentCur = MAX(fontOrig->ascent, fontCur->ascent);
 				break;
 			case AG_SGR_FAINT:
 				/* TODO */
@@ -626,10 +626,24 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 			case AG_SGR_ALT_FONT_8:
 			case AG_SGR_ALT_FONT_9:
 			case AG_SGR_FRAKTUR:
-				fontCur = AG_FetchFont(agCoreFonts[ansi.sgr-10],
+				fontCur = AG_FetchFont(
+				    agCoreFonts[ansi.sgr - 10],
 				    fontCur->spec.size, fontCur->flags);
-				if (fontCur == NULL)
-					fontCur = fontOrig;
+				if (fontCur == NULL) { fontCur = fontOrig; }
+				ascentCur = MAX(fontOrig->ascent, fontCur->ascent);
+				break;
+			case AG_SGR_ALT_FONT_11:
+			case AG_SGR_ALT_FONT_12:
+			case AG_SGR_ALT_FONT_13:
+			case AG_SGR_ALT_FONT_14:
+			case AG_SGR_ALT_FONT_15:
+			case AG_SGR_ALT_FONT_16:
+			case AG_SGR_ALT_FONT_17:
+				fontCur = AG_FetchFont(
+				    agCoreFonts[11 + (ansi.sgr - 66)],
+				    fontOrig->spec.size, fontOrig->flags);
+				if (fontCur == NULL) { fontCur = fontOrig; }
+				ascentCur = MAX(fontOrig->ascent, fontCur->ascent);
 				break;
 			default:
 				break;
@@ -637,97 +651,129 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 			ch += ansi.len;
 			continue;
 		}
-#ifdef AG_DEBUG
-		if (fontCur->spec.type != AG_FONT_FREETYPE)
-			AG_FatalError("Unexpected Font class");
+		if (fontCur->spec.type == AG_FONT_FREETYPE) {
+			int yOffset;
+
+			fontFtCur = AGFONTFT(fontCur);
+
+			G = AGFONT_OPS(fontCur)->get_glyph(fontCur, *ch,
+			    AG_GLYPH_FT_METRICS | AG_GLYPH_FT_PIXMAP);
+
+			if (G == NULL) {
+				/* TODO render a blank box and continue */
+				return;
+			}
+			yOffset = ascentCur - G->yMax;
+
+			/*
+			 * Ensure the width of the pixmap is correct. On some cases,
+			 * freetype may report a larger pixmap than possible.
+			 */
+			if ((w = G->pixmap.width) > G->xMax - G->xMin)
+				w = G->xMax - G->xMin;
+
+			if (FT_HAS_KERNING(fontFtCur->face) && indexPrev &&
+			    G->index) {
+				FT_Vector delta; 
+	
+				FT_Get_Kerning(fontFtCur->face, indexPrev,
+				    G->index, FT_KERNING_DEFAULT, &delta);
+
+				xStart += delta.x >> 6;
+			}
+	
+			/* Prevent texture wrapping with first glyph. */
+			if ((ch == &ucs[0]) && (G->xMin < 0)) {
+				xStart -= G->xMin;
+			}
+			if ((xStart + G->xMin) < 0 ||
+			    (xStart + G->xMin) >= S->w) {
+				continue;
+			}
+			if (cBg.a == AG_TRANSPARENT) {
+				/*
+				 * Lower blit - Write on transparent BG.
+				 */
+				for (y = 0; y < G->pixmap.rows; y++) {
+					if ((yStart + y + yOffset) < 0 ||
+					    (yStart + y + yOffset) >= S->h)
+						continue;
+	
+					src = (Uint8 *)(G->pixmap.buffer +
+					                G->pixmap.pitch * y);
+					dst = S->pixels +
+					    (yStart + y + yOffset) * S->pitch +
+					    (xStart + G->xMin) * BytesPerPixel;
+	
+					for (x = 0; x < w; x++) {
+						if ((cFg.a = AG_8toH(*src++)) > 0) {
+							AG_SurfacePut_At(S, dst,
+							    AG_MapPixel(&S->format, &cFg));
+						}
+						dst += BytesPerPixel;
+					}
+				}
+			} else {
+				/*
+				 * Lower blit - Blend against colored BG.
+				 */
+				for (y = 0; y < G->pixmap.rows; y++) {
+					if (y + yOffset < 0 ||
+					    y + yOffset >= S->h)
+						continue;
+
+					src = (Uint8 *)(G->pixmap.buffer +
+					                G->pixmap.pitch * y);
+					dst = S->pixels +
+					    (yStart + y + yOffset) * S->pitch +
+					    (xStart + G->xMin) * BytesPerPixel;
+	
+					for (x = 0; x < w; x++) {
+						if ((cFg.a = AG_8toH(*src++)) > 0) {
+							AG_SurfaceBlend_At(S, dst, &cFg,
+							    AG_ALPHA_DST);
+						}
+						dst += BytesPerPixel;
+					}
+				}
+			}
+
+			xStart += G->advance;
+
+		} else if (fontCur->spec.type == AG_FONT_BITMAP) {
+			AG_FontBf *fontBfCur = AGFONTBF(fontCur);
+			AG_GlyphBf *Gbf;
+
+			Gbf = AGFONT_OPS(fontBfCur)->get_glyph(fontBfCur, *ch, 0);
+			if (Gbf == NULL) {
+#ifdef DEBUG_FONTS
+				Debug(fontBfCur, "Not found: `%c' (0x%x)\n",
+				    (char)*ch, *ch);
 #endif
-		fontFtCur = AGFONTFT(fontCur);
-		G = AGFONT_OPS(fontCur)->get_glyph(fontCur, *ch,
-		    AG_GLYPH_FT_METRICS | AG_GLYPH_FT_PIXMAP);
-
-		if (G == NULL) {
-			/* TODO render a blank box and continue */
-			return;
-		}
-
-		/*
-		 * Ensure the width of the pixmap is correct. On some cases,
-		 * freetype may report a larger pixmap than possible.
-		 */
-		if ((w = G->pixmap.width) > G->xMax - G->xMin)
-			w = G->xMax - G->xMin;
-
-		if (FT_HAS_KERNING(fontFtCur->face) && indexPrev && G->index) {
-			FT_Vector delta; 
-
-			FT_Get_Kerning(fontFtCur->face, indexPrev, G->index,
-			               FT_KERNING_DEFAULT,
-			               &delta);
-
-			xStart += delta.x >> 6;
-		}
-	
-		/* Prevent texture wrapping with first glyph. */
-		if ((ch == &ucs[0]) && (G->xMin < 0)) {
-			xStart -= G->xMin;
-		}
-		if ((xStart + G->xMin) < 0 ||
-		    (xStart + G->xMin) >= S->w) {
-			continue;
-		}
-		if (cBg.a == AG_TRANSPARENT) {       /* Put on transparent BG */
-			for (y = 0; y < G->pixmap.rows; y++) {
-				if ((yStart + y + G->yOffset) < 0 ||
-				    (yStart + y + G->yOffset) >= S->h)
-					continue;
-
-				src = (Uint8 *)(G->pixmap.buffer +
-				                G->pixmap.pitch * y);
-				dst = S->pixels +
-				    (yStart + y + G->yOffset) * S->pitch +
-				    (xStart + G->xMin) * BytesPerPixel;
-	
-				for (x = 0; x < w; x++) {
-					if ((cFg.a = AG_8toH(*src++)) > 0) {
-						AG_SurfacePut_At(S, dst,
-						    AG_MapPixel(&S->format, &cFg));
-					}
-					dst += BytesPerPixel;
-				}
+				xStart += fontBfCur->wdRef;
+				indexPrev = G->index;
+				continue;
 			}
-		} else {                            /* Blend against color BG */
-			for (y = 0; y < G->pixmap.rows; y++) {
-				if (y+G->yOffset < 0 || y+G->yOffset >= S->h)
-					continue;
-
-				src = (Uint8 *)(G->pixmap.buffer +
-				                G->pixmap.pitch * y);
-				dst = S->pixels +
-				    (yStart + y + G->yOffset) * S->pitch +
-				    (xStart + G->xMin) * BytesPerPixel;
-	
-				for (x = 0; x < w; x++) {
-					if ((cFg.a = AG_8toH(*src++)) > 0) {
-						AG_SurfaceBlend_At(S, dst, &cFg,
-						    AG_ALPHA_DST);
-					}
-					dst += BytesPerPixel;
-				}
+			(void)cBg;
+			(void)cFg;
+			if (*ch != ' ') {
+				AG_SurfaceBlit(fontBfCur->S, &Gbf->rs, S,
+				    xStart,
+				    yStart + ascentCur - Gbf->rs.h + Gbf->yOffset);
 			}
-		}
 
-		xStart += G->advance;
+			xStart += Gbf->rs.w + fontBfCur->advance;
+		}
 		indexPrev = G->index;
 	}
 }
 
 static void
 Size(const AG_Font *_Nonnull font, const AG_Char *_Nonnull ucs,
-    AG_TextMetrics *_Nonnull tm, int extended)
+    AG_TextMetrics *_Nonnull Tm, int extended)
 {
 	AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Font *fontOrig = ts->font, *fontCur = fontOrig;
-	AG_GlyphFt *G;
 	const AG_Char *ch;
 	const int lineskip = fontCur->lineskip;
 	int xMin=0, xMax=0, yMin=0, yMax;
@@ -740,9 +786,9 @@ Size(const AG_Font *_Nonnull font, const AG_Char *_Nonnull ucs,
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
 			if (extended) {
-				tm->wLines = Realloc(tm->wLines,
-				    (tm->nLines + 2) * sizeof(Uint));
-				tm->wLines[tm->nLines++] = (xMaxLine-xMinLine);
+				Tm->wLines = Realloc(Tm->wLines,
+				    (Tm->nLines + 2) * sizeof(Uint));
+				Tm->wLines[Tm->nLines++] = (xMaxLine - xMinLine);
 				xMinLine = 0;
 				xMaxLine = 0;
 			}
@@ -768,22 +814,19 @@ Size(const AG_Font *_Nonnull font, const AG_Char *_Nonnull ucs,
 			switch (ansi.sgr) {
 			case AG_SGR_RESET:
 			case AG_SGR_NO_FG_NO_BG:
-				if (fontCur != fontOrig)
-					fontCur = fontOrig;
+				fontCur = fontOrig;
 				break;
 			case AG_SGR_BOLD:
 				fontCur = AG_FetchFont(fontOrig->name,
 				    fontOrig->spec.size,
 				    fontOrig->flags | AG_FONT_BOLD);
-				if (fontCur == NULL)
-					fontCur = fontOrig;
+				if (fontCur == NULL) { fontCur = fontOrig; }
 				break;
 			case AG_SGR_ITALIC:
 				fontCur = AG_FetchFont(fontOrig->name,
 				    fontOrig->spec.size,
 				    fontOrig->flags | AG_FONT_ITALIC);
-				if (fontCur == NULL)
-					fontCur = fontOrig;
+				if (fontCur == NULL) { fontCur = fontOrig; }
 				break;
 			case AG_SGR_PRI_FONT:
 			case AG_SGR_ALT_FONT_1:
@@ -796,11 +839,22 @@ Size(const AG_Font *_Nonnull font, const AG_Char *_Nonnull ucs,
 			case AG_SGR_ALT_FONT_8:
 			case AG_SGR_ALT_FONT_9:
 			case AG_SGR_FRAKTUR:
-				fontCur = AG_FetchFont(agCoreFonts[ansi.sgr-10],
-				    fontOrig->spec.size,
-				    fontOrig->flags);
-				if (fontCur == NULL)
-					fontCur = fontOrig;
+				fontCur = AG_FetchFont(
+				    agCoreFonts[ansi.sgr - 10],
+				    fontCur->spec.size, fontCur->flags);
+				if (fontCur == NULL) { fontCur = fontOrig; }
+				break;
+			case AG_SGR_ALT_FONT_11:
+			case AG_SGR_ALT_FONT_12:
+			case AG_SGR_ALT_FONT_13:
+			case AG_SGR_ALT_FONT_14:
+			case AG_SGR_ALT_FONT_15:
+			case AG_SGR_ALT_FONT_16:
+			case AG_SGR_ALT_FONT_17:
+				fontCur = AG_FetchFont(
+				    agCoreFonts[11 + (ansi.sgr - 66)],
+				    fontCur->spec.size, fontCur->flags);
+				if (fontCur == NULL) { fontCur = fontOrig; }
 				break;
 			default:
 				break;
@@ -808,35 +862,53 @@ Size(const AG_Font *_Nonnull font, const AG_Char *_Nonnull ucs,
 			ch += ansi.len;
 			continue;
 		}
-#ifdef AG_DEBUG
-		if (fontCur->spec.type != AG_FONT_FREETYPE)
-			AG_FatalError("Unexpected Font class");
-#endif
-		G = AGFONT_OPS(fontCur)->get_glyph(fontCur, *ch,
-		    AG_GLYPH_FT_METRICS);
+		if (fontCur->spec.type == AG_FONT_FREETYPE) {
+			AG_GlyphFt *Gft;
 
-		z = x + G->xMin;
-		if (xMin > z) { xMin = z; }
-		if (xMinLine > z) { xMinLine = z; }
+			Gft = AGFONT_OPS(fontCur)->get_glyph(fontCur, *ch,
+			    AG_GLYPH_FT_METRICS);
 
-		z = x + MAX(G->advance, G->xMax);
-		if (xMax < z) { xMax = z; }
-		if (xMaxLine < z) { xMaxLine = z; }
-		x += G->advance;
+			z = x + Gft->xMin;
+			if (xMin > z) { xMin = z; }
+			if (xMinLine > z) { xMinLine = z; }
 
-		if (G->yMin < yMin) { yMin = G->yMin; }
-		if (G->yMax > yMax) { yMax = G->yMax; }
+			z = x + MAX(Gft->advance, Gft->xMax);
+			if (xMax < z) { xMax = z; }
+			if (xMaxLine < z) { xMaxLine = z; }
+			x += Gft->advance;
+
+			if (Gft->yMin < yMin) { yMin = Gft->yMin; }
+			if (Gft->yMax > yMax) { yMax = Gft->yMax; }
+		} else if (fontCur->spec.type == AG_FONT_BITMAP) {
+			AG_GlyphBf *Gbf;
+			int advance;
+
+			Gbf = AGFONT_OPS(fontCur)->get_glyph(fontCur, *ch, 0);
+			if (Gbf == NULL) {
+				x += AGFONTBF(fontCur)->wdRef;
+				continue;
+			}
+			if (xMin > x) { xMin = x; }
+			if (xMinLine > x) { xMinLine = x; }
+
+			advance = AGFONTBF(fontCur)->advance;
+			z = x + Gbf->rs.w + advance;
+			if (xMax < z) { xMax = z; }
+			if (xMaxLine < z) { xMaxLine = z; }
+
+			x += Gbf->rs.w + advance;
+		}
 	}
 	if (*ch != '\n' && extended) {
-		if (tm->nLines > 0) {
-			tm->wLines = Realloc(tm->wLines, (tm->nLines + 2) *
+		if (Tm->nLines > 0) {
+			Tm->wLines = Realloc(Tm->wLines, (Tm->nLines + 2) *
 			                                 sizeof(Uint));
-			tm->wLines[tm->nLines] = (xMaxLine-xMinLine);
+			Tm->wLines[Tm->nLines] = (xMaxLine - xMinLine);
 		}
-		tm->nLines++;
+		Tm->nLines++;
 	}
-	tm->w = (xMax-xMin);
-	tm->h = (yMax-yMin);
+	Tm->w = (xMax - xMin);
+	Tm->h = (yMax - yMin);
 }
 
 static void
@@ -844,12 +916,10 @@ Init(void *_Nonnull obj)
 {
 	AG_FontFt *font = obj;
 
-	memset(&font->posUnderline, 0, sizeof(int) +            /* posUnderline */
-	                               sizeof(int) +            /* thkUnderline */
-	                               sizeof(AG_GlyphFt *) +   /* current */
-	                               sizeof(AG_GlyphFt)*256 + /* cache */
-	                               sizeof(AG_GlyphFt) +     /* scratch */
-	                               sizeof(int));            /* fixedSize */
+	memset(&font->current, 0, sizeof(AG_GlyphFt *) +   /* current */
+	                          sizeof(AG_GlyphFt)*256 + /* cache */
+	                          sizeof(AG_GlyphFt) +     /* scratch */
+	                          sizeof(int));            /* fixedSize */
 }
 
 AG_FontClass agFontFtClass = {

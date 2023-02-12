@@ -33,8 +33,6 @@ typedef struct ag_glyph_ft {
 typedef struct ag_font_ft {
 	AG_Font _inherit;              /* AG_Font -> AG_FontFt */
 	_Nonnull FT_Face face;         /* Typographical font face handle */
-	int posUnderline;              /* Underline position (px) */
-	int thkUnderline;              /* Underline thickness (px) */
 	AG_GlyphFt *_Nonnull current;
 	AG_GlyphFt cache[256];         /* Transform cache */
 	AG_GlyphFt scratch;

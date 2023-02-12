@@ -161,13 +161,24 @@ enum ag_text_sgr_parameter {
 	AG_SGR_NOT_OVERLINED   = 55,	/* Not overlined */
 					/* (56-59 unused) */
 	AG_SGR_NO_FG_NO_BG     = 56,	/* Both NO_FG and NO_BG (internal) */
-	AG_SGR_IDEOGRAM_1      = 60,
-	AG_SGR_IDEOGRAM_2      = 61,
-	AG_SGR_IDEOGRAM_3      = 62,
-	AG_SGR_IDEOGRAM_4      = 63,
-	AG_SGR_IDEOGRAM_5      = 64,
-	AG_SGR_IDEOGRAM_6      = 65,
-					/* (66-89 unused) */
+	AG_SGR_IDEOGRAM_1      = 60,    /* Ideogram underline or right side line */
+	AG_SGR_IDEOGRAM_2      = 61,    /* Ideogram double underline, or
+	                                   double line on the right side */
+	AG_SGR_IDEOGRAM_3      = 62,    /* Ideogram overline or left side line */
+	AG_SGR_IDEOGRAM_4      = 63,    /* Ideogram double overline, or
+	                                   double line on the left side */
+	AG_SGR_IDEOGRAM_5      = 64,    /* Ideogram stress marking */
+	AG_SGR_IDEOGRAM_6      = 65,    /* No Ideogram attributes */
+	AG_SGR_ALT_FONT_11     = 66,    /* Switch to alt font #11 (Agar ext) */
+	AG_SGR_ALT_FONT_12     = 67,    /* Switch to alt font #12 (Agar ext) */
+	AG_SGR_ALT_FONT_13     = 68,    /* Switch to alt font #13 (Agar ext) */
+	AG_SGR_ALT_FONT_14     = 69,    /* Switch to alt font #14 (Agar ext) */
+	AG_SGR_ALT_FONT_15     = 70,    /* Switch to alt font #15 (Agar ext) */
+	AG_SGR_ALT_FONT_16     = 71,    /* Switch to alt font #16 (Agar ext) */
+	AG_SGR_ALT_FONT_17     = 72,    /* Switch to alt font #17 (Agar ext) */
+	AG_SGR_SUPERSCRIPT     = 73,    /* Superscript */
+	AG_SGR_SUBSCRIPT       = 74,    /* Subscript */
+	AG_SGR_NO_SUPSUBSCRIPT = 75,    /* No superscript or subscript */
 	AG_SGR_BRIGHT_FG_1     = 90,
 	AG_SGR_BRIGHT_FG_2     = 91,
 	AG_SGR_BRIGHT_FG_3     = 92,
@@ -233,7 +244,6 @@ __BEGIN_DECLS
 /* text.c */
 extern int agTextFontHeight;    /* Default font height (px) */
 extern int agTextFontAscent;    /* Default font ascent (px) */
-extern int agTextFontDescent;   /* Default font descent (px) */
 extern int agTextFontLineSkip;  /* Default font y-increment (px) */
 extern int agFontconfigInited;  /* Fontconfig library is initialized */
 
@@ -330,7 +340,7 @@ void AG_TextJustify(enum ag_text_justify);
 void AG_TextValign(enum ag_text_valign);
 void AG_TextTabWidth(int);
 
-AG_Font *AG_SetDefaultFont(AG_Font *_Nonnull);
+AG_Font *AG_SetDefaultFont(AG_Font *_Nullable);
 void AG_TextParseFontSpec(const char *_Nullable);
 
 int  AG_InitTextSubsystem(void);

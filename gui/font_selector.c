@@ -46,16 +46,18 @@
 extern int agFontconfigInited;		/* text.c */
 #endif
 
+/*
+ * Skip common fonts that do not usually include the ASCII range needed for
+ * our Preview. TODO: Preview in different languages.
+ */
 const char *agFontsToIgnore[] = {
 	"ClearlyU Alternate Glyphs",
 	"ClearlyU PUA",
 	"Cursor",
 	"DejaVu Math TeX Gyre",
-	"cursor.pcf",
-	"deccurs.pcf",
-	"decsess.pcf",
-	"micro.pcf",
-	"Newspaper",
+	"MUTT ClearlyU Alternate Glyphs Wide",
+	"MUTT ClearlyU PUA",
+	"Twitter Color Emoji",
 	NULL
 };
 
@@ -115,118 +117,56 @@ static void
 UpdateStyles(AG_FontSelector *_Nonnull fs, AG_Font *_Nonnull font)
 {
 	AG_Tlist *tl = fs->tlStyles;
-	AG_TlistItem *ti;
+	AG_TlistItem *ti, *tiRegular = NULL;
+	AG_TlistCompareFn cmpFnOrig;
+	int i, selectionFound = 0;
 
 	AG_TlistClear(tl);
 
-	ti = AG_TlistAdd(tl, NULL, _(AGSI_ITALIC AGSI_UNDERLINE
-	                             "Weights:"));
-	ti->flags |= AG_TLIST_NO_SELECT;
+	/* Find the style combinations available under this font family. */
+	AG_FontGetFamilyStyles(font);
 
-	ti = AG_TlistAdd(tl, NULL, _("Regular"));
-	ti->depth = 1;
-	if (font != NULL && ((font->flags == 0) ||
-	                     (font->flags & AG_FONT_REGULAR))) {
-		ti->selected++;
+	for (i = 0; i < font->nFamilyStyles; i++) {
+		char styleBuf[64];
+		const Uint famStyle = font->familyStyles[i];
+		const AG_FontStyleSort *fss;
+	
+		AG_FontGetStyleName(styleBuf, sizeof(styleBuf), famStyle);
+
+		ti = AG_TlistAddS(tl, NULL, styleBuf);
+		ti->depth = 1;
+		ti->u = famStyle;
+
+		/* Find the sort key for this style combination. */
+		for (fss = &agFontStyleSort[0]; fss->key != -1; fss++) {
+			if (famStyle == (Uint)fss->flags) {
+				ti->v = (int)fss->key;          /* Sort key */
+				Debug(font, "Sort key = %d (fl=0x%x)\n", ti->v,
+				    fss->flags);
+				break;
+			}
+		}
+
+		if (font != NULL && famStyle == font->flags) {
+			ti->selected++;
+			selectionFound++;
+		}
+		if (famStyle == 0)
+			tiRegular = ti;
 	}
 
-	ti = AG_TlistAdd(tl, NULL, _("Bold"));
-	ti->depth = 1;
-	if (font && font->flags == AG_FONT_BOLD) { ti->selected++; }
+	/* Remove duplicate entries of the same style. */
+	cmpFnOrig = AG_TlistSetCompareFn(tl, AG_TlistCompareStrings);
+	AG_TlistUniq(tl);
+	AG_TlistSetCompareFn(tl, cmpFnOrig);
 
-	ti = AG_TlistAdd(tl, NULL, _(AGSI_ITALIC AGSI_UNDERLINE
-	                             "Styles:"));
-	ti->flags |= AG_TLIST_NO_SELECT;
+	/* Sort according to the sort key (v). */
+	AG_TlistSortByInt(tl);
 
-	ti = AG_TlistAdd(tl, NULL, _("Italic"));
-	ti->depth = 1;
-	if (font && font->flags == AG_FONT_ITALIC) { ti->selected++; }
-#if 0
-	ti = AG_TlistAdd(tl, NULL, _("SemiBold"));
-	ti->depth = 1;
-	if (*pFont && (*pFont)->flags == AG_FONT_SEMIBOLD) { ti->selected++; }
-
-
-	ti = AG_TlistAdd(tl, NULL, _("Bold Italic"));
-	ti->depth = 1;
-	if (*pFont && ((*pFont)->flags & AG_FONT_BOLD &&
-	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _("SemiBold Italic"));
-	ti->depth = 1;
-	if (*pFont && ((*pFont)->flags & AG_FONT_SEMIBOLD &&
-	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _("Upright Italic"));
-	ti->depth = 1;
-	if (*pFont && (*pFont)->flags == AG_FONT_UPRIGHT_ITALIC) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _("Oblique"));
-	ti->depth = 1;
-	if (*pFont && (*pFont)->flags == AG_FONT_OBLIQUE) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _("Bold Oblique"));
-	ti->depth = 1;
-	if (*pFont && ((*pFont)->flags & AG_FONT_BOLD &&
-	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _("SemiBold Oblique"));
-	ti->depth = 1;
-	if (*pFont && ((*pFont)->flags & AG_FONT_SEMIBOLD &&
-	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _(AGSI_ITALIC AGSI_UNDERLINE
-	                                       "Width variants:"));
-	ti->flags |= AG_TLIST_NO_SELECT;
-
-	ti = AG_TlistAdd(tl, NULL, _("Condensed"));
-	ti->depth = 1;
-	if (*pFont && (*pFont)->flags == AG_FONT_CONDENSED) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _("Condensed Bold"));
-	ti->depth = 1;
-	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-	               (*pFont)->flags & AG_FONT_BOLD)) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _("Condensed SemiBold"));
-	ti->depth = 1;
-	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-	               (*pFont)->flags & AG_FONT_SEMIBOLD)) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _("Condensed Italic"));
-	ti->depth = 1;
-	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _("Condensed Bold Italic"));
-	ti->depth = 1;
-	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-	               (*pFont)->flags & AG_FONT_BOLD &&
-	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _("Condensed SemiBold Italic"));
-	ti->depth = 1;
-	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-	               (*pFont)->flags & AG_FONT_SEMIBOLD &&
-	               (*pFont)->flags & AG_FONT_ITALIC)) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _("Condensed Oblique"));
-	ti->depth = 1;
-	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _("Condensed Bold Oblique"));
-	ti->depth = 1;
-	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-	               (*pFont)->flags & AG_FONT_BOLD &&
-	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
-
-	ti = AG_TlistAdd(tl, NULL, _("Condensed SemiBold Oblique"));
-	ti->depth = 1;
-	if (*pFont && ((*pFont)->flags & AG_FONT_CONDENSED &&
-	               (*pFont)->flags & AG_FONT_SEMIBOLD &&
-	               (*pFont)->flags & AG_FONT_OBLIQUE)) { ti->selected++; }
-#endif
+	if (tiRegular != NULL) {
+		if (!selectionFound)
+			AG_TlistSelect(tl, tiRegular);
+	}
 }
 
 /* Update the list of standard sizes for a given font family. */
@@ -344,9 +284,11 @@ OnShow(AG_Event *_Nonnull event)
 	AG_Variable *Vfont;
 	AG_Font **pFont, *font;
 	AG_FontSelector *fs = AG_FONTSELECTOR_SELF();
-	AG_StaticFont **pbf;
+/*	AG_StaticFont **pbf; */
 	AG_TlistItem *ti;
 	AG_ConfigPath *fpath;
+	AG_Tlist *tlFaces = fs->tlFaces;
+	AG_TlistCompareFn cmpFnOrig;
 	int i;
 	
 	Vfont = AG_GetVariable(fs, "font", (void *)&pFont);
@@ -356,17 +298,18 @@ OnShow(AG_Event *_Nonnull event)
 
 	fs->flags &= ~(AG_FONTSELECTOR_UPDATE);
 
+#if 0
 	for (pbf = &agBuiltinFonts[0]; *pbf != NULL; pbf++) {
 		if (strchr((*pbf)->name, '_'))              /* Is a variant */
 			continue;
 
-		ti = AG_TlistAdd(fs->tlFaces, NULL, "%s", (*pbf)->name);
+		ti = AG_TlistAdd(tlFaces, NULL, "%s", (*pbf)->name);
 		ti->p1 = *pbf;
 
 		if (font != NULL && strcmp(ti->text, OBJECT(font)->name) == 0)
 			ti->selected++;
 	}
-
+#endif
 	/*
 	 * System fonts via fontconfig.
 	 */
@@ -382,26 +325,34 @@ OnShow(AG_Event *_Nonnull event)
 		if (fset != NULL) {
 			for (i = 0; i < fset->nfont; i++) {
 				FcPattern *fcfont = fset->fonts[i];
-				FcChar8 *fam;
 				const char **fignore;
+				const char *fext;
+				FcChar8 *pFam;
+				char *fam;
 
 				if (FcPatternGetString(fcfont, FC_FAMILY, 0,
-				    &fam) == FcResultMatch) {
-					for (fignore = &agFontsToIgnore[0];
-					    *fignore != NULL;
-					     fignore++) {
-						if (strcmp(*fignore, (char *)fam) == 0)
-							break;
-					}
-					if (*fignore != NULL)
-						continue;
-
-					ti = AG_TlistAddS(fs->tlFaces, NULL,
-					    (char *)fam);
-					if (font != NULL && strcmp((char *)fam,
-					    OBJECT(font)->name) == 0)
-						ti->selected++;
+				    &pFam) != FcResultMatch) {
+					continue;
 				}
+				fam = (char *)pFam;
+				fext = strrchr(fam, '.');
+				if (fext && strcmp(fext, ".pcf") == 0) {
+					continue;
+				}
+				for (fignore = &agFontsToIgnore[0];
+				    *fignore != NULL;
+				     fignore++) {
+					if (strcmp(*fignore, fam) == 0)
+						break;
+				}
+				if (*fignore != NULL)
+					continue;
+
+				ti = AG_TlistAddS(tlFaces, NULL, fam);
+
+				if (font != NULL &&
+				    strcmp(fam, OBJECT(font)->name) == 0)
+					ti->selected++;
 			}
 			FcFontSetDestroy(fset);
 		}
@@ -446,13 +397,26 @@ OnShow(AG_Event *_Nonnull event)
 			    info.type != AG_FILE_REGULAR) {
 				continue;
 			}
-			*pExt = '\0';
-			ti = AG_TlistAddS(fs->tlFaces, NULL, file);
+
+			/*
+			 * Style the item and show the file extension to
+			 * make sure there is no confusion with respect
+			 * to fontconfig-discovered fonts.
+			 */
+			/* *pExt = '\0'; */
+
+			ti = AG_TlistAddS(tlFaces, NULL, file);
+			AG_TlistSetFont(tlFaces, ti, "monoalgue", 1.0f, 0);
+
 			if (font && strcmp(file, OBJECT(font)->name) == 0)
 				ti->selected++;
 		}
 		AG_CloseDir(dir);
 	}
+
+	cmpFnOrig = AG_TlistSetCompareFn(tlFaces, AG_TlistCompareStrings);
+	AG_TlistUniq(fs->tlFaces);
+	AG_TlistSetCompareFn(tlFaces, cmpFnOrig);
 
 	AG_TlistSort(fs->tlFaces);
 
@@ -482,35 +446,9 @@ SelectedStyle(AG_Event *_Nonnull event)
 {
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
 	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
-	const char *s = it->text;
 	AG_Font *font;
-	Uint fl = 0;
 
-	/* XXX */
-
-	if (!strcmp(s, _("Bold"))) { fl |= AG_FONT_BOLD; }
-	else if (!strcmp(s, _("SemiBold"))) { fl |= AG_FONT_SEMIBOLD; }
-	else if (!strcmp(s, _("Italic"))) { fl |= AG_FONT_ITALIC; }
-	else if (!strcmp(s, _("Bold Italic"))) { fl |= (AG_FONT_BOLD | AG_FONT_ITALIC); }
-	else if (!strcmp(s, _("SemiBold Italic"))) { fl |= (AG_FONT_SEMIBOLD | AG_FONT_ITALIC); }
-	else if (!strcmp(s, _("Upright Italic"))) { fl |= AG_FONT_UPRIGHT_ITALIC; }
-#if 0
-	else if (!strcmp(s, _("Monospace"))) { fl |= AG_FONT_MONOSPACE; }
-#endif
-	else if (!strcmp(s, _("Condensed"))) { fl |= AG_FONT_CONDENSED; }
-	else if (!strcmp(s, _("Condensed Italic"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_ITALIC); }
-	else if (!strcmp(s, _("Condensed Bold"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_BOLD); }
-	else if (!strcmp(s, _("Condensed Bold Italic"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_BOLD | AG_FONT_ITALIC); }
-	else if (!strcmp(s, _("Condensed SemiBold"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_SEMIBOLD); }
-	else if (!strcmp(s, _("Condensed SemiBold Italic"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_SEMIBOLD | AG_FONT_ITALIC); }
-	else if (!strcmp(s, _("Oblique"))) { fl |= AG_FONT_OBLIQUE; }
-	else if (!strcmp(s, _("Bold Oblique"))) { fl |= (AG_FONT_BOLD | AG_FONT_OBLIQUE); }
-	else if (!strcmp(s, _("SemiBold Oblique"))) { fl |= (AG_FONT_SEMIBOLD | AG_FONT_OBLIQUE); }
-	else if (!strcmp(s, _("Condensed Oblique"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_OBLIQUE); }
-	else if (!strcmp(s, _("Condensed Bold Oblique"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_BOLD | AG_FONT_OBLIQUE); }
-	else if (!strcmp(s, _("Condensed SemiBold Oblique"))) { fl |= (AG_FONT_CONDENSED | AG_FONT_SEMIBOLD | AG_FONT_OBLIQUE); }
-
-	fs->curStyle = fl;
+	fs->curStyle = it->u;
 
 	if ((font = LoadFont(fs)) != NULL)
 		UpdatePreview(fs, font);
@@ -578,7 +516,7 @@ Init(void *_Nonnull obj)
 {
 	AG_FontSelector *fs = obj;
 	
-	fs->flags = AG_FONTSELECTOR_UPDATE | AG_FONTSELECTOR_BASELINE;
+	fs->flags = AG_FONTSELECTOR_UPDATE;
 	fs->curFace[0] = '\0';
 	fs->curStyle = 0;
 	fs->sPreview = -1;

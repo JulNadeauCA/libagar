@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,22 +48,21 @@ PollFonts(AG_Event *_Nonnull event)
 	AG_MutexLock(&agTextLock);
 	TAILQ_FOREACH(font, &agFontCache, fonts) {
 		char metrics[64];
-		char fl[64];
+		char style[64];
 
-		Snprintf(metrics, sizeof(metrics), "H=%d A=%d D=%d Ls=%d",
-		    font->height, font->ascent, font->descent, font->lineskip);
+		Snprintf(metrics, sizeof(metrics),
+		    "h(" AGSI_BOLD "%d" AGSI_RST ") "
+		    AGSI_UP_ARROW "(" AGSI_BOLD "%d" AGSI_RST ") "
+		    AGSI_DN_ARROW "(" AGSI_BOLD "%d" AGSI_RST ")",
+		    font->height, font->ascent, font->descent);
 
-		fl[0] = '\0';
-		if (font->flags & AG_FONT_CONDENSED) { Strlcat(fl, "Condensed ", sizeof(fl)); }
-		if (font->flags & AG_FONT_MONOSPACE) { Strlcat(fl, "Mono ", sizeof(fl)); }
-		if (font->flags & AG_FONT_BOLD) { Strlcat(fl, "Bold ", sizeof(fl)); }
-		if (font->flags & AG_FONT_ITALIC) { Strlcat(fl, "Italic ", sizeof(fl)); }
+		AG_FontGetStyleName(style, sizeof(style), font->flags);
 
 		AG_TableAddRow(tbl, "%s:%s:%f:%s:%u:%s",
 		    OBJECT(font)->name,
 		    fontTypeNames[font->spec.type],
 		    font->spec.size,
-		    fl,
+		    style,
 		    font->nRefs,
 		    metrics);
 	}
