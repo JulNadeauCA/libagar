@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarcore.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 January 12
+" Last Change:  2023 February 8
 
 source $VIMRUNTIME/syntax/c.vim
 
@@ -27,10 +27,12 @@ endif
 if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   " core/agsi.h (SGR attributes)
   syn keyword cConstant AGSI_RST AGSI_BOLD AGSI_FAINT AGSI_ITALIC AGSI_UNDERLINE
-  syn keyword cConstant AGSI_REVERSE AGSI_CROSSEDOUT AGSI_FONT1 AGSI_FONT2
+  syn keyword cConstant AGSI_REVERSE AGSI_CROSSEDOUT AGSI_SUP AGSI_SUB
+  syn keyword cConstant AGSI_FONT1 AGSI_FONT2
   syn keyword cConstant AGSI_FONT3 AGSI_FONT4 AGSI_FONT5 AGSI_FONT6 AGSI_FONT7
-  syn keyword cConstant AGSI_FONT8 AGSI_FONT9 AGSI_FONT10 AGSI_FONT11
-  syn keyword cConstant AGSI_FRAMED AGSI_ENCIRCLED AGSI_OVERLINED
+  syn keyword cConstant AGSI_FONT8 AGSI_FONT9 AGSI_FONT10 AGSI_FONT11 AGSI_FONT12
+  syn keyword cConstant AGSI_FONT13 AGSI_FONT14
+  syn keyword cConstant AGSI_FRAMED AGSI_ENCIRCLED AGSI_OVERLINED AGSI_NOTFRAMED
   syn keyword cConstant AGSI_BLK AGSI_RED AGSI_GRN AGSI_YEL AGSI_BLU AGSI_MAG
   syn keyword cConstant AGSI_CYAN AGSI_WHT AGSI_BR_BLK AGSI_GRAY AGSI_BR_RED
   syn keyword cConstant AGSI_BR_GRN AGSI_BR_YEL AGSI_BR_BLU AGSI_BR_MAG
@@ -46,7 +48,8 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_LEAGUE_GOTHIC AGSI_UNIFRAKTUR_MAGUNTIA
   syn keyword cConstant AGSI_MONOSPACE AGSI_UNI AGSI_CM_SANS AGSI_PATH
   syn keyword cConstant AGSI_CM_SERIF AGSI_CODE AGSI_COURIER AGSI_SOURCE_HAN 
-  syn keyword cConstant AGSI_CJK AGSI_FRAKTUR
+  syn keyword cConstant AGSI_CJK AGSI_FRAKTUR AGSI_AGAR_MINIMAL AGSI_VERA
+  syn keyword cConstant AGSI_VERA_MONO AGSI_BITSTREAM_VERA AGSI_BITSTREAM_VERA_MONO
   syn keyword cConstant AGSI_CMD AGSI_CMD_MOD
   " core/agsi.h (general punctuation)
   syn keyword cConstant AGSI_THIN_SPACE AGSI_HYPHEN AGSI_NON_BREAKING_HYPHEN

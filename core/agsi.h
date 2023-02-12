@@ -14,6 +14,8 @@
 # define AGSI_UNDERLINE	 "\x1b[4m"   /* underlined */
 # define AGSI_REVERSE  	 "\x1b[7m"   /* reverse video */
 # define AGSI_CROSSEDOUT "\x1b[9m"   /* crossed-out */
+# define AGSI_SUP        "\x1b[73m"  /* superscript */
+# define AGSI_SUB        "\x1b[74m"  /* subscript */
 
 # define AGSI_FONT1	 "\x1b[10m"  /* Algue */
 # define AGSI_FONT2	 "\x1b[11m"  /* Unialgue */
@@ -26,10 +28,14 @@
 # define AGSI_FONT9	 "\x1b[18m"  /* League Spartan */
 # define AGSI_FONT10	 "\x1b[19m"  /* League Gothic */
 # define AGSI_FONT11	 "\x1b[20m"  /* Unifraktur Maguntia */
+# define AGSI_FONT12	 "\x1b[66m"  /* Agar Minimal */
+# define AGSI_FONT13	 "\x1b[67m"  /* Bitstream Vera */
+# define AGSI_FONT14	 "\x1b[68m"  /* Bitstream Vera Mono */
 
-# define AGSI_FRAMED	 "\x1b[51m"  /* render frame */
-# define AGSI_ENCIRCLED  "\x1b[52m"  /* render encircled */
+# define AGSI_FRAMED	 "\x1b[51m"  /* framed */
+# define AGSI_ENCIRCLED  "\x1b[52m"  /* encircled */
 # define AGSI_OVERLINED  "\x1b[53m"  /* overlined */
+# define AGSI_NOTFRAMED  "\x1b[54m"  /* neither framed nor encircled */
 # define AGSI_BLK	 "\x1b[30m"  /* black */
 # define AGSI_RED	 "\x1b[31m"  /* red */
 # define AGSI_GRN	 "\x1b[32m"  /* green */
@@ -74,6 +80,8 @@
 # define AGSI_UNDERLINE	 ""
 # define AGSI_REVERSE  	 ""
 # define AGSI_CROSSEDOUT ""
+# define AGSI_SUP	 ""
+# define AGSI_SUB	 ""
 # define AGSI_FONT1	 ""
 # define AGSI_FONT2	 ""
 # define AGSI_FONT3	 ""
@@ -85,9 +93,13 @@
 # define AGSI_FONT9	 ""
 # define AGSI_FONT10	 ""
 # define AGSI_FONT11	 ""
+# define AGSI_FONT12	 ""
+# define AGSI_FONT13	 ""
+# define AGSI_FONT14	 ""
 # define AGSI_FRAMED	 ""
 # define AGSI_ENCIRCLED  ""
 # define AGSI_OVERLINED  ""
+# define AGSI_NOTFRAMED  ""
 # define AGSI_BLK	 ""
 # define AGSI_RED	 ""
 # define AGSI_GRN	 ""
@@ -139,6 +151,9 @@
 #define AGSI_LEAGUE_SPARTAN      AGSI_FONT9		/* League Spartan */
 #define AGSI_LEAGUE_GOTHIC       AGSI_FONT10		/* League Gothic */
 #define AGSI_UNIFRAKTUR_MAGUNTIA AGSI_FONT11		/* Unifraktur Maguntia */
+#define AGSI_AGAR_MINIMAL        AGSI_FONT12		/* Agar Minimal */
+#define AGSI_BITSTREAM_VERA      AGSI_FONT13		/* Bitstream Vera */
+#define AGSI_BITSTREAM_VERA_MONO AGSI_FONT14		/* Bitstream Vera Mono */
 
 #define AGSI_MONOSPACE     AGSI_MONOALGUE_SANS		/* A monospace font */
 #define AGSI_UNI           AGSI_UNIALGUE		/* A pan-unicode font */
@@ -150,6 +165,8 @@
 #define AGSI_SOURCE_HAN    AGSI_SOURCE_HAN_SANS		/* Source Han */
 #define AGSI_CJK           AGSI_SOURCE_HAN_SANS		/* A pan-CKJ font */
 #define AGSI_FRAKTUR       AGSI_UNIFRAKTUR_MAGUNTIA	/* A fraktur font */
+#define AGSI_VERA          AGSI_BITSTREAM_VERA          /* Bitstream Vera */
+#define AGSI_VERA_MONO     AGSI_BITSTREAM_VERA_MONO     /* Bitstream Vera Mono */
 
 /*
  * Map AGSI_CMD to the preferred modifier key for application-global commands.

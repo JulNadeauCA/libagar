@@ -30,7 +30,7 @@ syn match agbfValueNumber contained "[-+]\=\d\+\(\.\d*\)\=" contains=agbfUnitDec
 
 syn match agbfDirective "^unicode$"
 syn match agbfDirective "^.$"
-syn match agbfDirective "^\(name\|author\|license\|colorize\|file\|size\|flags\|underline-position\|underline-thickness\) "
+syn match agbfDirective "^\(name\|author\|license\|colorize\|file\|size\|flags\|ascent\|advance\|lineskip\|underline-position\|underline-thickness\) "
 syn keyword agbfColorizeMode all grays none
 
 " Comment

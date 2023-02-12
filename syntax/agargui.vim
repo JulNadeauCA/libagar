@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agargui.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 January 22
+" Last Change:  2023 February 8
 
 " Agar-GUI (https://libagar.org/)
 if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
@@ -193,8 +193,10 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_FONTSELECTOR_EXPAND AG_FONTSELECTOR_BASELINE
   syn keyword cConstant AG_FONTSELECTOR_BOUNDING_BOX AG_FONTSELECTOR_CORRECTIONS
   " gui/font.h
-  syn keyword cType AG_FontSpec AG_FontAdjustment AG_Glyph AG_GlyphCache
+  syn keyword cType AG_FontSpec AG_FontAdjustment AG_FontAlias AG_FontStyleName
+  syn keyword cType AG_FontStyleSort
   syn keyword cType AG_Font AG_FontQ AG_StaticFont AG_FontClass
+  syn keyword cType AG_Glyph AG_GlyphCache
   " gui/font_bf.h
   syn keyword cType AG_GlyphBf AG_FontBf
   syn keyword cConstant AG_FONT_BF_COLORIZE_NONE AG_FONT_BF_COLORIZE_GRAYS
@@ -591,7 +593,13 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_SGR_OVERLINED AG_SGR_NO_FRAMES AG_SGR_NOT_OVERLINED
   syn keyword cConstant AG_SGR_NO_FG_NO_BG AG_SGR_IDEOGRAM_1 AG_SGR_IDEOGRAM_2
   syn keyword cConstant AG_SGR_IDEOGRAM_3 AG_SGR_IDEOGRAM_4 AG_SGR_IDEOGRAM_5
-  syn keyword cConstant AG_SGR_IDEOGRAM_6 AG_SGR_BRIGHT_FG_1 AG_SGR_BRIGHT_FG_2
+  syn keyword cConstant AG_SGR_IDEOGRAM_6
+  syn keyword cConstant AG_SGR_ALT_FONT_11 AG_SGR_ALT_FONT_12 AG_SGR_ALT_FONT_13
+  syn keyword cConstant AG_SGR_ALT_FONT_14 AG_SGR_ALT_FONT_15 AG_SGR_ALT_FONT_16
+  syn keyword cConstant AG_SGR_ALT_FONT_17
+  syn keyword cConstant AG_SGR_SUPERSCRIPT AG_SGR_SUBSCRIPT AG_SGR_NO_SUPSUBSCRIPT
+  
+  syn keyword cConstant AG_SGR_BRIGHT_FG_1 AG_SGR_BRIGHT_FG_2
   syn keyword cConstant AG_SGR_BRIGHT_FG_3 AG_SGR_BRIGHT_FG_4 AG_SGR_BRIGHT_FG_5
   syn keyword cConstant AG_SGR_BRIGHT_FG_6 AG_SGR_BRIGHT_FG_7 AG_SGR_BRIGHT_FG_8
   syn keyword cConstant AG_SGR_BRIGHT_BG_1 AG_SGR_BRIGHT_BG_2 AG_SGR_BRIGHT_BG_3
@@ -634,6 +642,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_TLIST_EXPAND_NODES AG_TLIST_EXPAND AG_TLIST_NO_KEYREPEAT
   " gui/tlist.h
   syn keyword cType AG_TlistPopup AG_TlistItem AG_TlistItemQ AG_Tlist 
+  syn keyword cType AG_TlistCompareFn
   " gui/toolbar.h
   syn keyword cType AG_Toolbar 
   syn keyword cConstant AG_TOOLBAR_MAX_ROWS AG_TOOLBAR_HORIZ AG_TOOLBAR_VERT
