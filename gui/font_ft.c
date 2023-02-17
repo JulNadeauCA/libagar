@@ -251,7 +251,7 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 		}
 	  	font->descent = 0;
 	  	font->height = face->available_sizes[fixedSize].height;
-	  	font->lineskip = font->height;
+	  	font->lineskip = font->height + 4; /* XXX TODO */
 	  	font->underlinePos = FT_FLOOR(face->underline_position);
 	  	font->underlineThk = FT_FLOOR(face->underline_thickness);
 	}
@@ -542,7 +542,7 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	AG_Color cFg = *cFgOrig;
 	FT_UInt indexPrev = 0;
 	const int BytesPerPixel = S->format.BytesPerPixel;
-	const int lineSkip = fontOrig->lineskip;
+	const int lineskip = fontOrig->lineskip;
 	int xStart, yStart, line, x,y, w;
 	int ascentCur;
 
@@ -557,7 +557,7 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	     ch++) {
 		switch (*ch) {
 		case '\n':
-			yStart += lineSkip;
+			yStart += lineskip;
 			xStart = JustifyOffset(ts, Tm->w, Tm->wLines[++line]);
 			continue;
 		case '\r':
@@ -907,8 +907,8 @@ Size(const AG_Font *_Nonnull font, const AG_Char *_Nonnull ucs,
 		}
 		Tm->nLines++;
 	}
-	Tm->w = (xMax - xMin);
-	Tm->h = (yMax - yMin);
+	Tm->w = (xMax - xMin) + 1;
+	Tm->h = (yMax - yMin) + 1;
 }
 
 static void
