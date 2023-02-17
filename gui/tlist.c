@@ -2122,6 +2122,29 @@ AG_TlistScrollToEnd(AG_Tlist *tl)
 	AG_Redraw(tl);
 }
 
+/* Scroll to the first selected item (no-op if no selection). */
+void
+AG_TlistScrollToSelection(AG_Tlist *tl)
+{
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
+	AG_TlistItem *it;
+	int m = 0;
+
+	AG_ObjectLock(tl);
+
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (it->selected) {
+			tl->rOffs = m - (tl->nVisible << 1);
+			break;
+		}
+		m++;
+	}
+	if (it != NULL)
+		AG_Redraw(tl);
+
+	AG_ObjectUnlock(tl);
+}
+
 static int
 CompareText(const void *_Nonnull p1, const void *_Nonnull p2)
 {

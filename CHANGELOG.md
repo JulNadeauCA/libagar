@@ -42,6 +42,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Text**](https://libagar.org/man3/AG_Text): The surface returned by `AG_TextRender()` now includes Ascent information under `Guide 0`.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) and [**AG_Editable**](https://libagar.org/man3/AG_Editable): Implement Undo/Redo functionality.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Draw lines to express the relationship between tree items.
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New function `AG_TlistScrollToSelection()`.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_EXPAND_NODES`. Display nodes (items with children) initially in expanded state.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_NO_SCALE_ICON`. Disable icon scaling when the icon width exceeds the standard width.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_FIXED_HEIGHT`. Don't reset the item height on "font-changed".
@@ -76,6 +77,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Printf**](https://libagar.org/man3/AG_Printf): When formatting floating-point, handle positive and negative infinity.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Improved appearance and typography fixes. Improved performance of the renderer using state-dependent opaque labels to avoid the need for blending.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Now applies the "padding" attribute on a per-item basis.
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): `AG_TlistSetCompareFn()` now returns a pointer to the previous compare function.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): In `AG_WidgetSensitive()`, use the `window` pointer to avoid an unnecessary traversal of parent objects.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Prevent delivery of redundant "widget-shown" or "widget-hidden" events if `AG_WidgetShow()` and `AG_WidgetHide()` are called multiple times.
 - [**MAP**](https://libagar.org/man3/MAP): Performance improvements in threaded mode. Decoupled the memory allocation of nodes from the `MAP` thread in `MAP_AllocNodes()`. Removed redundant lock operations. Removed lock in `MAP_NodeCopy()`.

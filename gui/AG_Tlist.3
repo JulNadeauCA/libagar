@@ -396,6 +396,9 @@ and the category
 .Ft "void"
 .Fn AG_TlistScrollToEnd "AG_Tlist *tl"
 .Pp
+.Ft "void"
+.Fn AG_TlistScrollToSelection "AG_Tlist *tl"
+.Pp
 .nr nS 0
 .Fn AG_TlistAdd
 inserts a newly-allocated item into the list and returns a pointer to it.
@@ -579,9 +582,13 @@ and
 functions return the first and last items on the list.
 .Pp
 .Fn AG_TlistScrollToStart
-scrolls the display to the start of the list, and
+scrolls the display to the start and
 .Fn AG_TlistScrollToEnd
 scrolls the display to the end of the list.
+.Pp
+.Fn AG_TlistScrollToSelection
+scrolls to make the first selected item visible.
+It's a no-op if there are no selected items.
 .Sh POPUP MENUS
 .nr nS 1
 .Ft "AG_MenuItem *"

@@ -229,6 +229,7 @@ AG_TlistItem *_Nullable AG_TlistFindText(AG_Tlist *_Nonnull, const char *_Nonnul
 
 AG_MenuItem *_Nonnull AG_TlistSetPopup(AG_Tlist *_Nonnull, const char *_Nonnull);
 
+void AG_TlistScrollToSelection(AG_Tlist *_Nonnull);
 void AG_TlistScrollToStart(AG_Tlist *_Nonnull);
 void AG_TlistScrollToEnd(AG_Tlist *_Nonnull);
 
