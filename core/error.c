@@ -244,8 +244,8 @@ AG_GetErrorCode(void)
 }
 
 /*
- * Print a debug message on the error console. Optionally, prefix the
- * message with a label containing the name/address of an object.
+ * Print a debug message on the error console if agDebugLvl is >= 1.
+ * If pObj is not NULL, prepend the name/address of the object.
  */
 void
 AG_Debug(void *pObj, const char *fmt, ...)
@@ -364,6 +364,30 @@ AG_Debug(void *pObj, const char *fmt, ...)
 # endif /* !__CC65__ */
 #endif /* AG_DEBUG */
 }
+
+#ifndef __CC65__
+/*
+ * Print a debug message on the error console if agDebugLvl is >= 2.
+ * If pObj is not NULL, prepend the name/address of the object.
+ */
+void
+AG_Debug2(void *pObj, const char *fmt, ...)
+{
+	va_list args;
+	char *msg;
+
+	if (agDebugLvl < 2)
+		return;
+
+	va_start(args, fmt);
+	Vasprintf(&msg, fmt, args);
+	va_end(args);
+
+	AG_Debug(pObj, "%s", msg);
+
+	free(msg);
+}
+#endif /* !__CC65__ */
 
 /* Issue a verbose message. */
 void

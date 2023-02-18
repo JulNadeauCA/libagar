@@ -32,6 +32,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW): New driver for SDL 2.0 (multi-window; OpenGL mode).
 - [**AG_Driver**](https://libagar.org/man3/AG_Driver): New operation: `setMouseAutoCapture` (enable, disable or reset mouse auto-capture on button-down).
 - [**AG_DriverSw**](https://libagar.org/man3/AG_DriverSw): New option `clampOnResize` (clamp active Agar windows against new display size).
+- [**AG_Error**](https://libagar.org/man3/AG_Error): New function `AG_Debug2()` (output debug message when debug level is >= 2).
 - [**AG_FontBf**](https://libagar.org/man3/AG_FontBf): New bitmap font engine for the `.agbf` font format.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Implemented keyboard shortcuts. Added `AG_MENU_NO_BOOL_MSG` and `AG_MENU_FAST_BOOL_MSG` options.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Improved the performance of the `AG_MenuView` renderer by caching state-dependent opaque labels (embedding any icons), so blending is no longer required. Improved appearance of `AG_MenuView`.

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2007-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,7 +22,7 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd December 21, 2022
+.Dd February 17, 2023
 .Dt AG_ERROR 3
 .Os Agar 1.7
 .Sh NAME
@@ -41,13 +41,19 @@ all Agar libraries, and available to applications as well.
 .Fn AG_SetError "const char *fmt" "..."
 .Pp
 .Ft void
+.Fn AG_SetErrorS "const char *msg"
+.Pp
+.Ft void
 .Fn AG_SetErrorV "const char *code" "const char *msg"
 .Pp
 .Ft "const char *"
 .Fn AG_GetError "void"
 .Pp
 .Ft void
-.Fn AG_FatalError "const char *fmt" "..."
+.Fn AG_FatalError "const char *msg"
+.Pp
+.Ft void
+.Fn AG_FatalErrorF "const char *fmt" "..."
 .Pp
 .Ft void
 .Fn AG_FatalErrorV "const char *code" "const char *message"
@@ -60,29 +66,36 @@ all Agar libraries, and available to applications as well.
 .Pp
 .nr nS 0
 .Fn AG_SetError
-sets the global error message text from the given
+sets the error message from the
 .Xr printf 3
-like format string.
-The
+style format string
+.Fa fmt .
+.Fn AG_SetErrorS
+sets the error message from the string
+.Fa msg .
+.Pp
 .Fn AG_SetErrorV
-variant is a macro which expands to
+is a macro which sets the error message to either
 .Fa msg
 if Agar was built with
-.Dv AG_VERBOSITY ,
-otherwise it expands to the shortened code
-.Fa code .
+.Dv AG_VERBOSITY
+or the shortened code
+.Fa code
+if Agar was built without
+.Dv AG_VERBOSITY .
 .Pp
 .Fn AG_GetError
 returns the error message string last set by
 .Fn AG_SetError .
 .Pp
-Note: If Agar was compiled with THREADS support then the error message
-text buffer is contained in thread-local storage.
+Note: If Agar was compiled with THREADS support then the error code and error
+message are both contained in thread-local storage.
 .Pp
 The
 .Fn AG_FatalError
 function outputs the given error message to the user and causes abnormal
 termination of the program.
+.Pp
 The
 .Fn AG_FatalErrorV
 variant is a macro which expands to
@@ -116,42 +129,43 @@ value).
 .Fn AG_Debug "AG_Object *obj" "const char *fmt" "..."
 .Pp
 .Ft void
+.Fn AG_Debug2 "AG_Object *obj" "const char *fmt" "..."
+.Pp
+.Ft void
 .Fn AG_SetVerboseCallback "int (*fn)(const char *msg)"
 .Pp
 .Ft void
 .Fn AG_SetDebugCallback "int (*fn)(const char *msg)"
 .Pp
 .nr nS 0
-These functions output a string to the debugging console used by the
-application (usually
-.Xr stdio 3 ) .
-.Pp
+The
 .Fn AG_Verbose
-outputs a string if the global
+routine prints a message on the error console if
 .Va agVerbose
-variable is set.
+is non-zero.
 .Pp
 The
 .Fn AG_Debug
-function outputs a string on the debugging console of
-.Fa obj ,
-assuming the object either has the
-.Dv AG_OBJECT_DEBUG
-flag set, or the global
+routine outputs text to the debugging console if
 .Va agDebugLvl
 is >= 1.
-The name of the object is included in the message string.
-The
+.Fn AG_Debug2
+outputs text to the debugging console if
+.Va agDebugLvl
+is >= 2.
+If
 .Fa obj
-parameter can be NULL in which case the message is output on the debug
-console when
-.Va agDebugLvl
-is >= 1.
+is not NULL then the name (or pointer address) of
+.Fa obj
+is prepended to the message.
 .Pp
+The
 .Fn AG_SetVerboseCallback
 and
 .Fn AG_SetDebugCallback
-arrange for the specified function to be invoked by
+routines arrange for
+.Fa fn
+to be invoked by
 .Fn AG_Verbose
 and
 .Fn AG_Debug .
@@ -159,56 +173,96 @@ If the callback routine returns 1, the message will not be printed.
 .Sh ERROR WRAPPERS
 .nr nS 1
 .Ft "void *"
-.Fn AG_Malloc "AG_Size len"
+.Fn AG_Malloc "AG_Size size"
 .Pp
 .Ft "void *"
-.Fn AG_TryMalloc "AG_Size len"
+.Fn AG_TryMalloc "AG_Size size"
 .Pp
 .Ft "void *"
-.Fn AG_Realloc "void *p" "AG_Size len"
+.Fn AG_Realloc "void *ptr" "AG_Size size"
 .Pp
 .Ft "void *"
-.Fn AG_TryRealloc "void *p" "AG_Size len"
+.Fn AG_TryRealloc "void *ptr" "AG_Size size"
 .Pp
 .Ft void
-.Fn AG_Free "void *p"
+.Fn AG_Free "void *ptr"
 .Pp
 .nr nS 0
 The
 .Fn AG_Malloc
 function calls
 .Xr malloc 3
-and raises a fatal error if the memory cannot be allocated.
+to allocate
+.Fa size
+bytes of uninitialized memory for general-purpose storage of data and objects.
+If insufficient memory is available,
+.Fn AG_Malloc
+raises a fatal error.
+.Pp
 The
 .Fn AG_TryMalloc
-variant also calls
-.Xr malloc 3 ,
-but sets the standard error message and returns NULL if the memory cannot
-be allocated.
+function calls
+.Xr malloc 3
+to allocate
+.Fa size
+bytes of uninitialized memory for general-purpose storage of data / objects.
+If insufficient memory is available,
+.Fn AG_TryMalloc
+sets the error message to "Out of memory" (E0) and returns NULL.
 .Pp
+The
 .Fn AG_Realloc
-calls
+function calls
 .Xr realloc 3
-and raises a fatal error if the memory cannot be allocated.
+to change the size of the allocated memory area referenced by
+.Fa ptr
+from its current size to a new
+.Fa size 
+in bytes.
+On success, it returns a pointer to the newly reallocated memory area
+(which may be different than
+.Fa ptr ) .
+If insufficient memory is available,
+.Fn AG_Realloc
+raises a fatal error.
+.Pp
 The
 .Fn AG_TryRealloc
-variant sets the standard error message and returns NULL if the memory cannot
-be reallocated.
-If
-.Fa p
-is NULL,
-.Fn AG_Realloc
-and
+function calls
+.Xr realloc 3
+to change the size of the allocated memory area referenced by
+.Fa ptr
+from its current size to a new
+.Fa size 
+in bytes.
+On success, it returns a pointer to the newly reallocated memory area
+(which may be different than
+.Fa ptr ) .
+If insufficient memory is available,
 .Fn AG_TryRealloc
-simply invoke
-.Xr malloc 3 .
+sets the error message to "Out of memory" (E0) and returns NULL.
+.Pp
+Passing a
+.Fa ptr
+of NULL to
+.Fn AG_Realloc
+or
+.Fn AG_TryRealloc
+is equivalent to calling
+.Fn AG_Malloc
+or
+.Fn AG_TryMalloc .
 .Pp
 .Fn AG_Free
-calls
+causes the allocated memory referenced by
+.Fa ptr
+to be released (made available for future allocations) by calling
 .Xr free 3 .
 If
-.Fa p
-is NULL, it is a no-op.
+.Fa ptr
+is NULL then
+.Fn AG_Free
+is a no-op.
 .Sh EXAMPLES
 The following code print a message on the debugging console:
 .Bd -literal -offset indent
@@ -293,3 +347,5 @@ interface first appeared in Agar 1.0.
 and
 .Fn AG_FatalErrorV
 appeared in Agar 1.6.0.
+.Fn AG_Debug2
+appeared in Agar 1.7.0.

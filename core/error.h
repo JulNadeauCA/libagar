@@ -42,14 +42,17 @@ typedef enum ag_error_code {
 # endif
 
 # ifdef AG_DEBUG
-#  define Debug AG_Debug
+#  define Debug  AG_Debug
+#  define Debug2 AG_Debug2
 #  define Debug_Mute(x)   x=agDebugLvl; agDebugLvl=0
 #  define Debug_Unmute(x) agDebugLvl=x
 # else
 #  if defined(__GNUC__)
-#   define Debug(obj, arg...) ((void)0)
+#   define Debug(obj, arg...)  ((void)0)
+#   define Debug2(obj, arg...) ((void)0)
 #  else
-#   define Debug AG_Debug
+#   define Debug  AG_Debug
+#   define Debug2 AG_Debug2
 #  endif
 #  define Debug_Mute(x)
 #  define Debug_Unmute(x)
@@ -91,6 +94,8 @@ void AG_SetDebugCallback(int (*_Nullable)(const char *_Nonnull));
 
 void AG_Debug(void *_Nullable, const char *_Nonnull, ...)
              FORMAT_ATTRIBUTE(printf,2,3);
+void AG_Debug2(void *_Nullable, const char *_Nonnull, ...)
+              FORMAT_ATTRIBUTE(printf,2,3);
 
 void AG_Verbose(const char *_Nonnull, ...)
                FORMAT_ATTRIBUTE(printf,1,2);
