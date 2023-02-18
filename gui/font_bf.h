@@ -28,21 +28,21 @@ enum ag_font_bf_colorize_mode {
 
 /* Font in Agar Bitmap Font (.agbf) format. */
 typedef struct ag_font_bf {
-	AG_Font _inherit;                         /* AG_Font -> AG_FontBf */
+	AG_Font _inherit;                       /* AG_Font -> AG_FontBf */
 	Uint flags;
-#define AG_FONT_BF_VALID 0x01                     /* Font is open */
-	enum ag_font_bf_colorize_mode colorize;   /* Colorization mode */
-	char *_Nullable name;                     /* Display name */
-	AG_Char *_Nullable unicode;               /* Unicode mappings */
-	Uint              nUnicode;               /* Unicode mapping count */
-	Uint                 nGlyphs;             /* Glyph count */
-	AG_GlyphBf *_Nullable glyphs;             /* Glyph array */
-	AG_Surface *S;                            /* Source image surface */
-	int height;                               /* Reference bbox height (px) */
-	int wdRef;                                /* Reference bbox width (px) */
-	AG_Rect *_Nullable rects;                 /* Source image rectangles */
+#define AG_FONT_BF_VALID 0x01                   /* Font is open */
+	enum ag_font_bf_colorize_mode colorize; /* Colorization mode */
+	char *_Nullable name;                   /* Display name */
+	AG_Char *_Nullable unicode;             /* Unicode mappings */
+	Uint              nUnicode;             /* Unicode mapping count */
+	Uint                 nGlyphs;           /* Glyph count */
+	AG_GlyphBf *_Nullable glyphs;           /* Glyph array */
+	AG_Surface *S;                          /* Source image surface */
+	int height;                             /* Reference bbox height (px) */
+	int wdRef;                              /* Reference bbox width (px) */
+	AG_Rect *_Nullable rects;               /* Source image rectangles */
 	Uint              nRects;
-	int advance;                              /* Global advance */
+	int advance;                            /* Global advance */
 } AG_FontBf;
 
 #define AGFONTBF(font) ((AG_FontBf *)(font))

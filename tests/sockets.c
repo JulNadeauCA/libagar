@@ -91,13 +91,13 @@ TestGUI(void *obj, AG_Window *win)
 	}
 	
 	lbl = AG_LabelNew(NULL, 0, AGSI_LEAGUE_SPARTAN "Sockets" AGSI_RST);
-	AG_SetStyle(lbl, "text-color", "#ccc");
-	AG_SetStyle(lbl, "font-size", "200%");
+	AG_SetTextColor(lbl, "#ccc");
+	AG_SetFontSize(lbl, "200%");
 	AG_FixedPut(fx, lbl, 20, 32);
 
 	lbl = AG_LabelNew(NULL, 0, AGSI_LEAGUE_GOTHIC "( in an AG_Fixed )" AGSI_RST);
-	AG_SetStyle(lbl, "text-color", "#aaa");
-	AG_SetStyle(lbl, "font-size", "120%");
+	AG_SetTextColor(lbl, "#aaa");
+	AG_SetFontSize(lbl, "120%");
 	AG_FixedPut(fx, lbl, 20, 64);
 
 	/* Load some pixmaps */
@@ -165,15 +165,16 @@ TestGUI(void *obj, AG_Window *win)
 	AG_FixedSize(fx, sock, 32, 32);
 	AG_SocketInsertIcon(sock, axe);
 
-	AG_SetStyle(win, "padding", "0");
+	AG_SetPadding(win, "0");
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_BC, 642, 200);
 	return (0);
 }
 
 const AG_TestCase socketsTest = {
+	AGSI_IDEOGRAM AGSI_SWORD AGSI_RST,
 	"sockets",
 	N_("Test drag-and-drop with AG_Icon(3) and AG_Socket(3)"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */

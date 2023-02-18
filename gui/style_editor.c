@@ -250,7 +250,8 @@ InputAttribute(AG_Event *_Nonnull event)
 	while (isspace(*key)) { key++; }
 	while (isspace(*val)) { val++; }
 
-	AG_SetStyle(tgt, key, val[0] != '\0' ? val : NULL);
+	AG_SetStyle(tgt, key, (val[0] != '\0') ? val : NULL);
+
 	AG_WindowUpdate(AG_ParentWindow(tgt));
 /*	AG_TextboxClearString(tb); */
 
@@ -598,7 +599,7 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL |
 		                        AG_TEXTBOX_RETURN_BUTTON, "+ ");
-		AG_SetStyle(tb, "font-family", "monoalgue");
+		AG_SetFontFamily(tb, "monoalgue");
 
 		AG_TextboxAutocomplete(tb, CompleteAttribute, NULL);
 		AG_SetEvent(tb, "textbox-return",
@@ -606,7 +607,7 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
 		    PollAttributes, "%p", tgt);
-		AG_SetStyle(tlAttrs, "font-family", "monoalgue");
+		AG_SetFontFamily(tlAttrs, "monoalgue");
 
 		AG_SetEvent(tlAttrs, "tlist-selected",
 		    SelectedAttribute, "%p", tb);
@@ -618,8 +619,8 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		tl = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
 		                         PollVariables,"%p",tgt);
-		AG_SetStyle(tl, "font-family", "monoalgue");
-		AG_SetStyle(tl, "font-size", "120%");
+		AG_SetFontFamily(tl, "monoalgue");
+		AG_SetFontSize(tl, "120%");
 	}
 #endif
 	nt = AG_NotebookAdd(nb, _("Appearance"), AG_BOX_VERT);
@@ -636,7 +637,7 @@ TargetWidget(AG_Event *_Nonnull event)
 			Sx = S;
 #endif
 			lbl = AG_LabelNew(nt, 0, _("Size: %d x %d px"), S->w, S->h);
-			AG_SetStyle(lbl, "font-size", "70%");
+			AG_SetFontSize(lbl, "70%");
 
 			sv = AG_ScrollviewNew(nt, AG_SCROLLVIEW_EXPAND |
 	                                          AG_SCROLLVIEW_BY_MOUSE |
@@ -762,11 +763,11 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	    PollWidgets, NULL);
 
 	AG_TlistSizeHint(tl, "<XXXXX/XXXXX/XXXXX/XXXXX>", 25);
-	AG_SetStyle(tl, "font-size", "80%");
+	AG_SetFontSize(tl, "80%");
 	AG_SetEvent(tl, "tlist-selected", TargetWidget, NULL);
 
 	toolbar = AG_BoxNewHoriz(win, AG_BOX_HFILL);
-	AG_SetStyle(toolbar, "font-size", "150%");
+	AG_SetFontSize(toolbar, "150%");
 	{
 		AG_Button *btn;
 #if 0
@@ -774,19 +775,19 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 		btn = AG_ButtonNewFn(toolbar, AG_BUTTON_STICKY,
 		    "\xe2\x87\xb1",                             /* U+21F1 */
 		    SetPickStatus, "%p,%p", win, tl);
-		AG_SetStyle(btn, "padding", "0 5 3 5");
+		AG_SetPadding(btn, "0 5 3 5");
 #endif
 		/* Toggle VFS autorefresh */
 		btn = AG_ButtonNewFn(toolbar, AG_BUTTON_STICKY | AG_BUTTON_SET,
 		    "\xe2\xa5\x81",                             /* U+2941 */
 		    SetAutorefresh, "%p", tl);
-		AG_SetStyle(btn, "padding", "0 10 3 5");
+		AG_SetPadding(btn, "0 10 3 5");
 
 		/* Toggle appearance capture */
 		btn = AG_ButtonNewInt(toolbar, AG_BUTTON_STICKY,
 		    "\xe2\x96\xa6",                             /* U+2941 */
 		    &agStyleEditorCapture);
-		AG_SetStyle(btn, "padding", "0 7 0 5");
+		AG_SetPadding(btn, "0 7 0 5");
 	}
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);

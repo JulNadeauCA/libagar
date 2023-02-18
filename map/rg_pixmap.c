@@ -357,8 +357,8 @@ CreateBrushDlg(AG_Event *_Nonnull event)
 	AG_SetPointer(win, "cbOneShot", cbOneShot);
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_EXPAND);
-	AG_SetStyle(bo, "padding", "0");
-	AG_SetStyle(bo, "spacing", "0");
+	AG_SetPadding(bo, "0");
+	AG_SetSpacing(bo, "0");
 	{
 		AG_LabelNewS(bo, 0, _("Source pixmap:"));
 

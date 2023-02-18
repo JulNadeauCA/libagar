@@ -226,8 +226,8 @@ Init(void *obj)
 	AG_SetEvent(msb->btn[3], "button-pushed", Increment, "%p,%s,%i", msb, "xvalue", +1); /* RIGHT */
 
 	for (i = 0; i < 4; i++) {
-		AG_SetStyle(msb->btn[i], "padding", "0");
-		AG_SetStyle(msb->btn[i], "font-size", "70%");
+		AG_SetPadding(msb->btn[i], "0");
+		AG_SetFontSize(msb->btn[i], "70%");
 	}
 
 	AG_SetEvent(msb, "bound", Bound, NULL);

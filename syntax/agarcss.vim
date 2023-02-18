@@ -119,17 +119,19 @@ syn match cssColorProp contained "\<\(color\|background-color\|text-color\|line-
 syn match cssFontProp contained "\<\(font-family\|font-size\|font-stretch\|font-style\|font-weight\)\=\>"
 " font-family attributes (Agar core fonts)
 syn keyword cssFontAttr contained _agFontAlgue unialgue cm-sans cm-serif
-syn keyword cssFontAttr contained charter source-han-sans league-spartan
+syn keyword cssFontAttr contained charter league-spartan
 syn keyword cssFontAttr contained monoalgue monoalgue-sans
 syn keyword cssFontAttr contained league-gothic fraktur
+syn keyword cssFontAttr contained agar-minimal agar-ideograms
 
 " font-stretch attributes
-syn keyword cssFontAttr contained condensed
+syn keyword cssFontAttr contained ultracondensed condensed semicondensed
+syn keyword cssFontAttr contained semiexpanded expanded ultraexpanded
 " font-style attributes
-syn keyword cssFontAttr contained italic
-syn keyword cssFontAttr contained upright-italic
+syn keyword cssFontAttr contained italic oblique uprightitalic
 " font-weight attributes
-syn keyword cssFontAttr contained bold
+syn keyword cssFontAttr contained thin extralight light regular semibold bold
+syn keyword cssFontAttr contained extrabold black
 
 syn match cssBraces contained "[{}]"
 syn match cssError contained "{@<>"

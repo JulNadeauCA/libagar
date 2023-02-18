@@ -127,7 +127,7 @@ TestGUI(void *obj, AG_Window *win)
 	}
 
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
-	AG_SetStyle(box, "font-size", "80%");
+	AG_SetFontSize(box, "80%");
 	{
 		AG_ButtonNewFn(box, 0, "Clear",
 		    ClearLines, "%p", cons);
@@ -142,7 +142,7 @@ TestGUI(void *obj, AG_Window *win)
 	}
 #if !defined(__WIN32__)
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
-	AG_SetStyle(box, "font-size", "80%");
+	AG_SetFontSize(box, "80%");
 	{
 		const char *msglog = "/var/log/messages";
 
@@ -154,7 +154,7 @@ TestGUI(void *obj, AG_Window *win)
 		    CloseFile, "%p,%p,%s", cons, btn, msglog);
 	}
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
-	AG_SetStyle(box, "font-size", "80%");
+	AG_SetFontSize(box, "80%");
 	{
 		const char *utxlog = "/var/log/utx.log";
 
@@ -173,9 +173,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase consoleTest = {
+	AGSI_IDEOGRAM AGSI_CONSOLE AGSI_RST,
 	"console",
 	N_("Test the AG_Console(3) widget"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */

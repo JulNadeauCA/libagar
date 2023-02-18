@@ -202,7 +202,7 @@ CreateMoreCheckboxes(AG_Event *_Nonnull event)
 	AG_CheckboxNew(box, 0, "Wilbern Cobb");
 
 	AG_PaneMoveDivider(pane, pane->dx + 50);
-	AG_SetStyle(box, "font-size", "80%");
+	AG_SetFontSize(box, "80%");
 }
 
 static void
@@ -341,7 +341,7 @@ TestGUI(void *obj, AG_Window *win)
 		    AGSI_LEAGUE_SPARTAN AGSI_CYAN "%s" AGSI_RST ")",
 		    av.major, av.minor, av.patch,
 		    av.release ? av.release : "dev");
-		AG_SetStyle(lbl, "font-size", "120%");
+		AG_SetFontSize(lbl, "120%");
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 
 		/* A dynamically-updated label. */
@@ -354,7 +354,7 @@ TestGUI(void *obj, AG_Window *win)
 		    &AGWIDGET(win)->w,
 		    &AGWIDGET(win)->h);
 		AG_LabelSizeHint(lbl, 1, "<This [XXXX] Window is at 0000,0000 (0000 x 0000). >");
-		AG_SetStyle(lbl, "font-size", "110%");
+		AG_SetFontSize(lbl, "110%");
 
 		/* Show an example of a bitmap font (agar-minimal.agbf) */
 		AG_LabelNew(div, AG_LABEL_HFILL,
@@ -429,7 +429,7 @@ TestGUI(void *obj, AG_Window *win)
 			btn = AG_ButtonNewFn(vBox, 0, "Create More ...",
 			    CreateMoreCheckboxes, "%p,%p", vBox, vPane);
 
-			AG_SetStyle(btn, "padding", "2");
+			AG_SetPadding(btn, "2");
 		}
 	}
 
@@ -605,48 +605,83 @@ TestGUI(void *obj, AG_Window *win)
 		m = AG_MenuNode(menu->root, "File", NULL);
 		{
 			AG_MenuActionKb(m,
-			    AGSI_ALGUE AGSI_YEL AGSI_GEAR AGSI_RST
-			    " Agar Preferences...", NULL,
-			    AG_KEY_P, AG_KEYMOD_CTRL,
-			    Preferences, NULL);
-
-			AG_MenuActionKb(m,
-			    AGSI_ALGUE AGSI_YEL AGSI_CLOSE_X AGSI_RST
-			    " Close this test", NULL,
-			    AG_KEY_W, AG_KEYMOD_CTRL,
+			    AGSI_IDEOGRAM AGSI_CLOSE_X AGSI_RST
+			    " Close Test", NULL,
+			    AG_KEY_W, AGSI_WINCMD,
 			    AGWINCLOSE(win));
 		}
+
+		m = AG_MenuNode(menu->root, "Edit", NULL);
+		{
+			AG_MenuActionKb(m,
+			    AGSI_IDEOGRAM AGSI_GEAR AGSI_RST
+			    " Preferences...", NULL,
+			    AG_KEY_P, AGSI_WINCMD,
+			    Preferences, NULL);
+		}
+
 		m = AG_MenuNode(menu->root, "Test Menu", NULL);
 		{
-			/* A disabled menu item */
 			AG_MenuState(m, 0);
-			AG_MenuNode(m, "Disabled Submenu A", agIconMagnifier.s);
+			AG_MenuNode(m,
+			    AGSI_IDEOGRAM AGSI_DIP_CHIP AGSI_RST
+			    " Disabled Submenu",
+			    NULL);
 			AG_MenuState(m, 1);
 			AG_MenuSeparator(m);
 
 			/* Menu item with child entries */
-			mSub = AG_MenuNode(m, "Submenu B", agIconGear.s);
-			AG_MenuAction(mSub, "Submenu C", agIconLoad.s,
-			    TestMenuFn, "%s", "Submenu C selected!");
-			AG_MenuAction(mSub, "Submenu D", agIconSave.s,
-			    TestMenuFn, "%s", "Submenu D selected!");
-			AG_MenuAction(mSub, "Submenu E", agIconTrash.s,
-			    TestMenuFn, "%s", "Submenu E selected!");
-			AG_MenuIntBool(mSub, "Togglable Binding #1", agIconUp.s, &myInt[0], 0);
+			mSub = AG_MenuNode(m,
+			    AGSI_IDEOGRAM AGSI_GAME_CONTROLLER AGSI_RST
+			    " Try Me!",
+			    NULL);
+			AG_MenuAction(mSub,
+			    AGSI_IDEOGRAM AGSI_ALICE AGSI_RST
+			    " Alice",
+			    NULL,
+			    TestMenuFn, "%s", "Hi Alice!");
+
+			AG_MenuAction(mSub,
+			    AGSI_IDEOGRAM AGSI_BOB AGSI_RST
+			    " Bob", NULL,
+			    TestMenuFn, "%s", "Hi Bob!");
+
+			AG_MenuAction(mSub,
+			    AGSI_IDEOGRAM AGSI_PILE_OF_POO AGSI_RST
+			    " Pile of Poo", NULL,
+			    TestMenuFn, "%s", "Pile of Poo!");
+
+			AG_MenuIntBool(mSub, "Togglable Binding #1 ",
+			    NULL, &myInt[0], 0);
+			AG_MenuIntBool(mSub, "Inverted Binding #1 ",
+			    NULL, &myInt[0], 1);
 
 			AG_MenuSeparator(m);
-			AG_MenuSectionS(m, "Non-selectable text");
+			AG_MenuSectionS(m,
+			    AGSI_IDEOGRAM AGSI_VACUUM_TUBE AGSI_RST
+			    AGSI_ITALIC " Non Selectable Text");
 			AG_MenuSeparator(m);
 
-			AG_MenuIntBool(m, "Togglable Binding #1", agIconUp.s, &myInt[0], 0);
-			AG_MenuIntBool(m, "Togglable Binding #2", agIconDown.s, &myInt[1], 0);
-			AG_MenuIntBool(m, "Inverted Binding #2", agIconDown.s, &myInt[1], 1);
+			AG_MenuIntBool(m,
+			    "Togglable Binding #1\t"
+			    AGSI_IDEOGRAM AGSI_AGAR_AG AGSI_RST,
+			    NULL, &myInt[0], 0);
+			AG_MenuIntBool(m,
+			    "Togglable Binding #2\t"
+			    AGSI_IDEOGRAM AGSI_AGAR_AR AGSI_RST,
+			    NULL, &myInt[1], 0);
+
+			AG_MenuIntBool(m, "Inverted Binding #2", NULL,
+			    &myInt[1], 1);
 		}
 
 		nb = AG_NotebookNew(hPane->div[1], AG_NOTEBOOK_EXPAND);
 
 		nt = AG_NotebookAdd(nb,
-		    "Example Table\n" AGSI_ITALIC "sin" AGSI_RST "(x) and " AGSI_ITALIC "cos" AGSI_RST "(x)",
+		    "Example Table\n"
+		    AGSI_IDEOGRAM AGSI_MATH_X_EQUALS AGSI_RST
+		    AGSI_ITALIC "sin" AGSI_RST "(x), "
+		    AGSI_ITALIC "cos" AGSI_RST "(x)",
 		    AG_BOX_VERT);
 		{
 			float f;
@@ -663,8 +698,9 @@ TestGUI(void *obj, AG_Window *win)
 			AG_TableAddCol(table, "sin(x)", "33%", NULL);
 			AG_TableAddCol(table, "cos(x)", "33%", NULL);
 
-			AG_SetStyle(table, "font-family", "cm-sans");
-			AG_SetStyle(table, "font-size", "120%");
+			AG_SetFontFamily(table, "cm-serif");
+			AG_SetFontSize(table, "120%");
+			AG_SetColor(table, "#666");
 
 			for (f = 0.0f; f < 60.0f; f += 0.3f) {
 				/*
@@ -684,14 +720,15 @@ TestGUI(void *obj, AG_Window *win)
 				};
 				AG_Radio *rad;
 
-				rad = AG_RadioNewUint(nt, 0, selModes, (Uint *)&table->selMode);
+				rad = AG_RadioNewUint(nt, 0, selModes,
+				    (Uint *)&table->selMode);
 				AG_RadioSetDisposition(rad, AG_RADIO_HORIZ);
-				AG_SetStyle(rad, "font-size", "80%");
+				AG_SetFontSize(rad, "80%");
 			}
 			
 
 			vBox = AG_BoxNewVert(nt, 0);
-			AG_SetStyle(vBox, "font-size", "80%");
+			AG_SetFontSize(vBox, "80%");
 			{
 				AG_CheckboxNewFlag(vBox, 0, "Select multiple\n(with ctrl/shift)",
 				    &table->flags, AG_TABLE_MULTI);
@@ -767,14 +804,13 @@ TestGUI(void *obj, AG_Window *win)
 		}
 		AG_NotebookSelect(nb, nt);
 
-		nt = AG_NotebookAdd(nb,
-		    "Colors\n"
+		nt = AG_NotebookAdd(nb, "Colors\n"
 		    AGSI_RED AGSI_BOLD "R" AGSI_RST
 		    AGSI_GRN AGSI_BOLD "G" AGSI_RST
 		    AGSI_BLU AGSI_BOLD "B" AGSI_RST,
 		    AG_BOX_VERT);
 		AGBOX(nt)->flags |= AG_BOX_HOMOGENOUS;
-		AG_SetStyle(nt, "padding", "10");
+		AG_SetPadding(nt, "10");
 		{
 			AG_HSVPal *pal;
 			const Uint flags = AG_HSVPAL_HFILL | AG_HSVPAL_SHOW_RGB;
@@ -816,6 +852,7 @@ Destroy(void *obj)
 }
 
 const AG_TestCase widgetsTest = {
+	AGSI_IDEOGRAM AGSI_POPULATED_WINDOW AGSI_RST,
 	"widgets",
 	N_("Display various Agar-GUI widgets"),
 	"1.6.0",

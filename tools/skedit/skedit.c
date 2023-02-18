@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2010-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -127,10 +127,10 @@ main(int argc, char *argv[])
 	AG_BindStdGlobalKeys();
 #if defined(AG_DEBUG) && defined(AG_TIMERS)
 	AG_BindGlobalKey(AG_KEY_F7, AG_KEYMOD_ANY, DoDebugger);
-	AG_BindGlobalKey(AG_KEY_D,  AGSI_CMD_MOD,  DoDebugger);
+	AG_BindGlobalKey(AG_KEY_D,  AGSI_APPCMD,   DoDebugger);
 #endif
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_NONE, DoStyleEditor);
-	AG_BindGlobalKey(AG_KEY_C,  AGSI_CMD_MOD,   DoStyleEditor);
+	AG_BindGlobalKey(AG_KEY_C,  AGSI_APPCMD,    DoStyleEditor);
 
 	/* Initialize Agar-Math and Agar-SK */
 	M_InitSubsystem();

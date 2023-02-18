@@ -186,7 +186,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_FIXED_PLOTTER_XAXIS AG_FIXED_PLOTTER_HFILL
   syn keyword cConstant AG_FIXED_PLOTTER_VFILL AG_FIXED_PLOTTER_EXPAND
   " gui/font_selector.h
-  syn keyword cType AG_FontSelector
+  syn keyword cType AG_FontSelector AG_FontSelectorPreviewFn
   syn keyword cConstant AG_FONTSELECTOR_UPDATE AG_FONTSELECTOR_ALT_PHRASE
   syn keyword cConstant AG_FONTSELECTOR_SW_STYLES AG_FONTSELECTOR_OBLIQUE_STYLES
   syn keyword cConstant AG_FONTSELECTOR_HFILL AG_FONTSELECTOR_VFILL

@@ -509,7 +509,7 @@ AG_TextMsgS(enum ag_text_msg_title title, const char *s)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_BoxNewVert(win, 0);
-	AG_SetStyle(vb, "font-size", "120%");
+	AG_SetFontSize(vb, "120%");
 	AG_LabelNewS(vb, 0, s);
 
 	vb = AG_BoxNewVert(win, AG_BOX_HOMOGENOUS | AG_BOX_EXPAND);
@@ -568,7 +568,7 @@ AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_BoxNewVert(win, 0);
-	AG_SetStyle(vb, "font-size", "120%");
+	AG_SetFontSize(vb, "120%");
 	AG_LabelNewS(vb, 0, s);
 	AG_WindowShow(win);
 
@@ -623,7 +623,7 @@ AG_TextInfoS(const char *key, const char *s)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_BoxNewVert(win, 0);
-	AG_SetStyle(vb, "font-size", "120%");
+	AG_SetFontSize(vb, "120%");
 	AG_LabelNewS(vb, 0, s);
 
 	vb = AG_BoxNewVert(win, AG_BOX_HOMOGENOUS | AG_BOX_EXPAND);
@@ -685,7 +685,7 @@ AG_TextWarningS(const char *key, const char *s)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_BoxNewVert(win, 0);
-	AG_SetStyle(vb, "font-size", "120%");
+	AG_SetFontSize(vb, "120%");
 	AG_LabelNewS(vb, 0, s);
 
 	vb = AG_BoxNewVert(win, AG_BOX_HOMOGENOUS | AG_BOX_EXPAND);
@@ -734,7 +734,7 @@ AG_TextErrorS(const char *s)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_BoxNewVert(win, 0);
-	AG_SetStyle(vb, "font-size", "120%");
+	AG_SetFontSize(vb, "120%");
 	AG_LabelNewS(vb, 0, s);
 
 	vb = AG_BoxNewVert(win, AG_BOX_HOMOGENOUS | AG_BOX_EXPAND);

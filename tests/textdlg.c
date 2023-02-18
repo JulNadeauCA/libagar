@@ -25,9 +25,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase textdlgTest = {
+	AGSI_IDEOGRAM AGSI_CANNED_DIALOG AGSI_RST,
 	"textdlg",
 	N_("Test canned dialogs in AG_Text(3)"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */

@@ -102,6 +102,7 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase scrollbarTest = {
+	AGSI_IDEOGRAM AGSI_VERT_SCROLLBAR AGSI_RST,
 	"scrollbar",
 	N_("Test the AG_Scrollbar(3) widget"),
 	"1.6.0",

@@ -527,7 +527,7 @@ RunUnicodeBrowser(AG_Event *event)
 		return;
 	}
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_RIGHT, 1);
-	AG_SetStyle(win, "font-size", "150%");
+	AG_SetFontSize(win, "150%");
 	AG_WindowShow(win);
 }
 #endif
@@ -547,7 +547,7 @@ RunTimerInspector(AG_Event *event)
 	}
 	AG_WindowAttach(winMain, win);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 1);
-	AG_SetStyle(win, "font-size", "80%");
+	AG_SetFontSize(win, "80%");
 	AG_WindowShow(win);
 }
 
@@ -656,7 +656,7 @@ TestViewSource(AG_Event *event)
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
 	}
-	AG_SetStyle(win, "font-family", "monoalgue");
+	AG_SetFontFamily(win, "monoalgue");
 	tb = AG_TextboxNew(win, AG_TEXTBOX_MULTILINE | AG_TEXTBOX_EXPAND |
 	                        AG_TEXTBOX_READONLY, NULL);
 	fseek(f, 0, SEEK_END);
@@ -727,7 +727,7 @@ ZoomReset(AG_Event *event)
 }
 
 static void
-EditGuiPrefs(AG_Event *event)
+EditPreferences(AG_Event *event)
 {
 	AG_DEV_ConfigShow();
 }
@@ -828,10 +828,10 @@ main(int argc, char *argv[])
 	AG_BindStdGlobalKeys();
 #if defined(AG_DEBUG) && defined(AG_TIMERS)
 	AG_BindGlobalKey(AG_KEY_F7, AG_KEYMOD_NONE, DoDebugger);
-	AG_BindGlobalKey(AG_KEY_D,  AGSI_CMD_MOD,   DoDebugger);
+	AG_BindGlobalKey(AG_KEY_D,  AGSI_APPCMD,    DoDebugger);
 #endif
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_NONE, DoStyleEditor);
-	AG_BindGlobalKey(AG_KEY_C,  AGSI_CMD_MOD,   DoStyleEditor);
+	AG_BindGlobalKey(AG_KEY_C,  AGSI_APPCMD,    DoStyleEditor);
 
 	/* Check for data files in the agartest install directory. */
 #if !defined(_WIN32)
@@ -855,48 +855,48 @@ main(int argc, char *argv[])
 	mi = AG_MenuNode(menu->root, ("File"), NULL);
 	{
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL AGSI_CLOSE_X AGSI_RST " Quit"), NULL,
+		    _(AGSI_IDEOGRAM AGSI_CLOSE_X AGSI_RST " Quit"), NULL,
 		    AG_KEY_Q, AG_KEYMOD_CTRL, AGWINCLOSE(win));
 	}
 	mi = AG_MenuNode(menu->root, ("Edit"), NULL);
 	{
 		AG_MenuAction(mi,
-		    _(AGSI_YEL AGSI_GEAR AGSI_RST " GUI Preferences"), NULL,
-		    EditGuiPrefs, NULL);
+		    _(AGSI_IDEOGRAM AGSI_GEAR AGSI_RST " Preferences"), NULL,
+		    EditPreferences, NULL);
 	}
 	mi = AG_MenuNode(menu->root, ("Tools"), NULL);
 	{
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL AGSI_BLACK_NIB AGSI_RST " Style Editor"), NULL,
+		    _(AGSI_IDEOGRAM AGSI_LOWER_L_PENCIL AGSI_RST " Style Editor"), NULL,
 		    AG_KEY_F8, 0,
 		    RunStyleEditor, NULL);
 #if defined(AG_DEBUG) && defined(AG_TIMERS)
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL AGSI_ANT AGSI_RST " GUI Debugger"), NULL,
+		    _(AGSI_IDEOGRAM AGSI_DEBUGGER AGSI_RST " GUI Debugger"), NULL,
 		    AG_KEY_F7, 0,
 		    RunDebugger, NULL);
 #endif
 		AG_MenuSeparator(mi);
 #if defined(AG_TIMERS)
 		AG_MenuAction(mi,
-		    _(AGSI_YEL AGSI_WHEEL_OF_DHARMA AGSI_RST " Drivers"), NULL,
+		    _(AGSI_IDEOGRAM AGSI_SURFACE_MOUNT_CHIP AGSI_RST " Drivers"), NULL,
 		    RunDriversBrowser, NULL);
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL AGSI_BENZENE_RING AGSI_RST " Classes"), NULL,
+		    _(AGSI_IDEOGRAM AGSI_FILESYSTEM AGSI_RST " Classes"), NULL,
 		    AG_KEY_S, AG_KEYMOD_CTRL_SHIFT,
 		    RunClassInfo, NULL);
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL "\xCE\xB1" AGSI_RST " Fonts"), NULL,
+		    _(AGSI_IDEOGRAM AGSI_TYPOGRAPHY AGSI_RST " Fonts"), NULL,
 		    AG_KEY_F, AG_KEYMOD_CTRL_SHIFT,
 		    RunFontsInfo, NULL);
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL AGSI_STOPWATCH AGSI_RST " Timers"), NULL,
+		    _(AGSI_IDEOGRAM AGSI_STOPWATCH AGSI_RST " Timers"), NULL,
 		    AG_KEY_T, AG_KEYMOD_CTRL_SHIFT,
 		    RunTimerInspector, NULL);
 #endif
 #if defined(AG_UNICODE)
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL AGSI_ITALIC "U" AGSI_RST " Unicode"), NULL,
+		    _(AGSI_IDEOGRAM AGSI_CHARSETS AGSI_RST AGSI_RST " Unicode"), NULL,
 		    AG_KEY_U, AG_KEYMOD_CTRL_SHIFT,
 		    RunUnicodeBrowser, NULL);
 #endif
@@ -904,15 +904,15 @@ main(int argc, char *argv[])
 	mi = AG_MenuNode(menu->root, ("View"), NULL);
 	{
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL AGSI_CIRCLED_PLUS AGSI_RST " Zoom In"), NULL,
+		    _(AGSI_IDEOGRAM AGSI_ZOOM_IN AGSI_RST " Zoom In"), NULL,
 		    AG_KEY_PLUS, AG_KEYMOD_CTRL, ZoomIn, NULL);
 
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL AGSI_CIRCLED_MINUS AGSI_RST " Zoom Out"), NULL,
+		    _(AGSI_IDEOGRAM AGSI_ZOOM_OUT AGSI_RST " Zoom Out"), NULL,
 		    AG_KEY_MINUS, AG_KEYMOD_CTRL, ZoomOut, NULL);
 
 		AG_MenuActionKb(mi,
-		    _(AGSI_YEL AGSI_CIRCLED_DOT AGSI_RST " Zoom 1:1"), NULL,
+		    _(AGSI_IDEOGRAM AGSI_ZOOM_RESET AGSI_RST " Zoom 1:1"), NULL,
 		    AG_KEY_0, AG_KEYMOD_CTRL, ZoomReset, NULL);
 #ifdef AG_DEBUG
 		AG_MenuSeparator(mi);
@@ -930,7 +930,7 @@ main(int argc, char *argv[])
 	mi = AG_MenuNode(menu->root, ("Help"), NULL);
 	{
 		AG_MenuAction(mi,
-		    _(AGSI_YEL AGSI_BLACK_AGAR AGSI_RST " About Agar GUI"), NULL,
+		    _(AGSI_IDEOGRAM AGSI_AGAR_AG AGSI_RST " About Agar GUI"), NULL,
 		    AG_About, NULL);
 	}
 
@@ -938,23 +938,17 @@ main(int argc, char *argv[])
 
 	AG_LabelNewS(pane->div[0], 0, _("Available tests: "));
 	tl = AG_TlistNew(pane->div[0], AG_TLIST_EXPAND);
-	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXX>", 10);
+	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXX>", 10);
 	for (pTest = &testCases[0]; *pTest != NULL; pTest++) {
-#if 0
-		char path[AG_FILENAME_MAX];                    /* with icon */
-		AG_Surface *S;
+		AG_TlistItem *it;
 
-		Strlcpy(path, (*pTest)->name, sizeof(path));
-		Strlcat(path, ".png", sizeof(path));
-		if ((S = AG_SurfaceFromPNG(path)) != NULL) {
-			AG_TlistAddPtr(tl, S, (*pTest)->name, (void *)*pTest);
-			AG_SurfaceFree(S);
-		} else
-#endif
-		{
-			AG_TlistAddPtr(tl, agIconDoc.s, (*pTest)->name,
-			    (void *)*pTest);
+		if ((*pTest)->icon[0] != '\0') {
+			it = AG_TlistAdd(tl, NULL, "%s  %s", (*pTest)->icon,
+			    (*pTest)->name);
+		} else {
+			it = AG_TlistAddS(tl, NULL, (*pTest)->name);
 		}
+		it->p1 = (void *)*pTest;
 	}
 	AG_TlistSort(tl);
 
@@ -962,13 +956,12 @@ main(int argc, char *argv[])
 	                                    AG_BOX_NO_SPACING);
 	{
 		btnTest = AG_ButtonNew(hBox, AG_BUTTON_EXCL, _("Run"));
-		AG_SetStyle(btnTest, "font-size", "120%");
+		AG_SetFontSize(btnTest, "120%");
 		AG_WidgetDisable(btnTest);
 	}
 
 	console = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
-/*	AG_SetStyle(console, "font-family", "monoalgue"); */
-	AG_SetStyle(console, "text-color", "#ddd");
+	AG_SetTextColor(console, "#ddd");
 	{
 		AG_AgarVersion av;
 		AG_DriverClass **pd;

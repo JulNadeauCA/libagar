@@ -60,20 +60,25 @@ const char *agStyleAttributes[] = {
 	/*
 	 * Typography
 	 */
-	"font-family",      /* Font face or filename */
-	"font-size",        /* Font size (in pt, px or %) */
-	"font-weight",      /* Boldness (normal bold !parent) */
-	"font-style",       /* Style (normal italic upright-italic !parent) */
-	"font-stretch",     /* Width variant (normal condensed semi-condensed !parent) */
+	"font-family",  /* Font face or filename */
+	"font-size",    /* Font size (in pt, px or %) */
+	"font-weight",  /* Boldness (thin | extralight | light | normal |
+	                             semibold | bold | extrabold | black |
+	                             !parent) */
+	"font-style",   /* Style (normal | oblique | italic | upright-italic |
+	                          !parent) */
+	"font-stretch", /* Width variant (normal | ultracondensed | condensed |
+	                                  semicondensed semiexpanded expanded |
+	                                  ultraexpanded !parent) */
 	/*
 	 * Box Model
 	 */
-	"margin",           /* Margin (between border & outer bounding box) */
-	"padding",          /* Padding (px between content & border) */
+	"margin",        /* Margin (space between border & outer bounding box) */
+	"padding",       /* Padding (space between content & border) */
 	/*
 	 * Containers
 	 */
-	"spacing",          /* Spacing between elements (px) */
+	"spacing",       /* Spacing between elements (px) */
 	NULL
 };
 
@@ -2253,7 +2258,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	}
 
 	/*
-	 * Font style (normal, italic, upright-italic or !parent)
+	 * Font style (normal, oblique, italic, upright-italic or !parent)
 	 */
 	if ((V = AG_AccessVariable(wid, "font-style")) != NULL) {
 		Apply_Font_Style(&fontFlags, parentFontFlags, V->data.s);
@@ -2644,20 +2649,33 @@ AG_WidgetCopyStyle(void *objDst, void *objSrc)
 }
 
 /*
- * Inherit the font-related style attributes of the specified font.
+ * Generate per-widget style attributes from the style attributes of the
+ * given font (font-family, font-weight and font-stretch).
  */
 void
 AG_SetFont(void *obj, const AG_Font *font)
 {
+	char buf[64];
 	AG_Widget *wid = obj;
+	Uint flags;
 
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_OBJECT_ISA(font, "Font:*");
 
-	AG_SetString(wid, "font-family", OBJECT(font)->name);
-	AG_SetStringF(wid, "font-size", "%.2fpt", font->spec.size);
-	AG_SetString(wid, "font-weight", (font->flags & AG_FONT_BOLD) ? "bold" : "normal");
-	AG_SetString(wid, "font-style", (font->flags & AG_FONT_ITALIC) ? "italic" : "normal");
+	AG_SetString(wid, "font-family", font->name);
+
+	if ((flags = (font->flags & AG_FONT_WEIGHTS)) != 0) {
+		AG_FontGetStyleName(buf, sizeof(buf), flags);
+		AG_SetString(wid, "font-weight", buf);
+	}
+	if ((flags = (font->flags & AG_FONT_STYLES)) != 0) {
+		AG_FontGetStyleName(buf, sizeof(buf), flags);
+		AG_SetString(wid, "font-style", buf);
+	}
+	if ((flags = (font->flags & AG_FONT_WD_VARIANTS)) != 0) {
+		AG_FontGetStyleName(buf, sizeof(buf), flags);
+		AG_SetString(wid, "font-stretch", buf);
+	}
 
 	AG_WidgetCompileStyle(wid);
 	AG_Redraw(wid);

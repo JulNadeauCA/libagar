@@ -173,7 +173,7 @@ Edit(void *obj)
 	AG_WindowSetCaption(win, "Animal: %s", AGOBJECT(animal)->name);
 
 	lbl = AG_LabelNewS(win, AG_LABEL_HFILL, AGOBJECT(animal)->name);
-	AG_SetStyle(lbl, "font-size", "200%");
+	AG_SetFontSize(lbl, "200%");
 
 	AG_NumericalNewFlt(win, AG_NUMERICAL_HFILL, "sec", "Age: ", &animal->age);
 	AG_NumericalNewInt(win, AG_NUMERICAL_HFILL, NULL, "Cell count: ", &animal->cellCount);

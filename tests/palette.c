@@ -86,9 +86,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase paletteTest = {
+	AGSI_IDEOGRAM AGSI_ARTISTS_PALETTE AGSI_RST,
 	"palette",
 	N_("Test the color picker widget"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(MyTestInstance),
 	Init,

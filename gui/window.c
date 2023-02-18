@@ -338,7 +338,7 @@ Attach(AG_Event *_Nonnull event)
 
 		AG_IconSetSurface(icon, agIconWindow.s);
 		AG_IconSetBackgroundFill(icon, 1, &AGDRIVER_SW(drv)->bgColor);
-		AG_SetStyle(icon, "font-size", "80%");
+		AG_SetFontSize(icon, "80%");
 		AG_WidgetCompileStyle(icon);
 	}
 #endif /* AG_WIDGETS */
@@ -3155,11 +3155,11 @@ Edit(void *_Nonnull obj)
 	AG_NotebookTab *nt;
 
 	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
-	AG_SetStyle(box, "padding", "2 3 2 3");
+	AG_SetPadding(box, "2 3 2 3");
 
 	lbl = AG_LabelNew(box, 0, _("Window Structure " AGSI_YEL "%s" AGSI_RST),
 	    OBJECT(tgt)->name);
-	AG_SetStyle(lbl, "font-size", "130%");
+	AG_SetFontSize(lbl, "130%");
 
 	AG_LabelNewPolled(box, AG_LABEL_SLOW | AG_LABEL_HFILL,
 	    _("Visible=" AGSI_BOLD "%i" AGSI_RST ", "
@@ -3183,7 +3183,7 @@ Edit(void *_Nonnull obj)
 	}
 
 	nt = AG_NotebookAdd(nb, _("Properties"), AG_BOX_VERT);
-	AG_SetStyle(nt, "padding", "3 3 3 3");
+	AG_SetPadding(nt, "3");
 	{
 		AG_SpacerNewHoriz(nt);
 

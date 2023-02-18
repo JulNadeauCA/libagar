@@ -40,8 +40,9 @@ TestGUI(void *obj, AG_Window *win)
 
 	
 	lbl = AG_LabelNewS(win, AG_LABEL_HFILL, _("AG_User(3) test"));
-	AG_SetStyle(lbl, "font-size", "120%");
 	AG_LabelJustify(lbl, AG_TEXT_CENTER);
+	AG_SetFontSize(lbl, "120%");
+
 	lbl = AG_LabelNew(win, AG_LABEL_HFILL, _("Backend: %s"), agUserOps->name);
 	AG_LabelJustify(lbl, AG_TEXT_CENTER);
 	
@@ -64,6 +65,7 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase userTest = {
+	AGSI_IDEOGRAM AGSI_USER_ACCESS AGSI_RST,
 	"user",
 	N_("Test the AG_User(3) interface"),
 	"1.6.0",

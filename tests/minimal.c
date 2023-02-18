@@ -10,9 +10,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase minimalTest = {
+	AGSI_IDEOGRAM AGSI_SMALL_WINDOW AGSI_RST,
 	"minimal",
 	N_("Display a minimal AG_Window(3)"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */

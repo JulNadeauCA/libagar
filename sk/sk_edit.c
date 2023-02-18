@@ -318,7 +318,7 @@ CreateNewView(AG_Event *_Nonnull event)
 	}
 	AG_WindowSetCaptionS(win, OBJECT(sk)->name);
 
-	AG_SetStyle(win, "spacing", "0");
+	AG_SetSpacing(win, "0");
 	AG_SetStyleF(win, "padding", "0 %d %d %d",
 	    WIDGET(win)->paddingRight,
 	    WIDGET(win)->paddingBottom,
@@ -707,7 +707,7 @@ SK_Edit(void *p)
 	}
 	AG_WindowSetCaptionS(win, OBJECT(sk)->name);
 
-	AG_SetStyle(win, "spacing", "0");
+	AG_SetSpacing(win, "0");
 	AG_SetStyleF(win, "padding", "0 %d %d %d",
 	    WIDGET(win)->paddingRight,
 	    WIDGET(win)->paddingBottom,

@@ -1055,7 +1055,7 @@ AG_FileDlgSelectType(AG_FileDlg *fd, AG_FileType *ft)
 			break;
 		}
 	}
-	AG_SetStyle(fd->optsCtr, "font-size", "90%");
+	AG_SetFontSize(fd->optsCtr, "90%");
 
 	WIDGET(fd)->flags |= AG_WIDGET_UPDATE_WINDOW;
 	AG_Redraw(fd);
@@ -1410,10 +1410,10 @@ AG_FileDlgNew(void *parent, Uint flags)
 		AG_TextboxSizeHint(fd->textbox, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXX>");
 
 		fd->btnExpand = AG_ButtonNewS(fd, AG_BUTTON_NO_FOCUS, "...");
-		AG_SetStyle(fd->btnExpand, "padding", "1");
+		AG_SetPadding(fd->btnExpand, "1");
 
 		AG_SetEvent(fd->btnExpand, "button-pushed",
-		    CompactExpand, "%p", fd);
+		    CompactExpand,"%p",fd);
 
 		AG_ObjectAttach(parent, fd);
 		return (fd);
@@ -1466,13 +1466,13 @@ AG_FileDlgNew(void *parent, Uint flags)
 		    _("Mask files by extension"),
 		    &fd->flags, AG_FILEDLG_MASK_EXT);
 		AG_SetEvent(cb, "checkbox-changed", MaskOptionSelected,"%p",fd);
-		AG_SetStyle(cb, "font-size", "80%");
+		AG_SetFontSize(cb, "80%");
 	
 		fd->cbMaskHidden = cb = AG_CheckboxNewFlag(fd, AG_CHECKBOX_EXCL,
 		    _("Mask hidden files"),
 		    &fd->flags, AG_FILEDLG_MASK_HIDDEN);
 		AG_SetEvent(cb, "checkbox-changed", MaskOptionSelected,"%p",fd);
-		AG_SetStyle(cb, "font-size", "80%");
+		AG_SetFontSize(cb, "80%");
 	}
 
 	if (!(flags & AG_FILEDLG_NOBUTTONS)) {

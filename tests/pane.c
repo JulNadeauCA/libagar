@@ -72,9 +72,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase paneTest = {
+	AGSI_IDEOGRAM AGSI_WINDOW_PANE AGSI_RST,
 	"pane",
 	N_("Test the AG_Pane(3) container widget"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */

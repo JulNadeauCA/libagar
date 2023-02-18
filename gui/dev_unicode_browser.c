@@ -246,7 +246,7 @@ AG_DEV_UnicodeBrowser(void)
 	if ((win = AG_WindowNewNamedS(0, "DEV_UnicodeBrowser")) == NULL) {
 		return (NULL);
 	}
-	AG_SetStyle(win, "padding", "10 5 5 5");
+	AG_SetPadding(win, "10 5 5 5");
 	AG_WindowSetCaptionS(win, _("Unicode Browser"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
@@ -259,8 +259,8 @@ AG_DEV_UnicodeBrowser(void)
 	AG_TreetblAddCol(tt, 0, "<XXXXXXX>", _("Char"));
 	AG_TreetblAddCol(tt, 1, "<XXXXXXXXXXXXX>", _("Unicode"));
 	AG_TreetblAddCol(tt, 2, "<XXXXXXXXXXXXXXXXXXXXXXXXXXX>", _("UTF-8"));
-	AG_SetStyle(tt, "color", "rgb(20,20,20)");
-	AG_SetStyle(tt, "font-size", "120%");
+	AG_SetColor(tt, "rgb(20,20,20)");
+	AG_SetFontSize(tt, "120%");
 
 	AG_SetEvent(comRange, "combo-expanded", ExpandUnicodeRanges, NULL);
 	AG_SetEvent(comRange, "combo-selected", SelectUnicodeRange, "%p", tt);

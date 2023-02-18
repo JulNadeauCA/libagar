@@ -224,7 +224,15 @@ Draw(void *obj)
 				             &cHalf);
 			}
 
-			AG_WidgetDraw(lbl);
+			if (isSelected) {
+				const int yLblSave = WIDGET(lbl)->rView.y1;
+
+				WIDGET(lbl)->rView.y1++;
+				AG_WidgetDraw(lbl);
+				WIDGET(lbl)->rView.y1 = yLblSave;
+			} else {
+				AG_WidgetDraw(lbl);
+			}
 		}
 		x += r.w;
 
@@ -389,7 +397,7 @@ AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 
 	if (label && label[0] != '\0') {
 		tab->lbl = AG_LabelNew(nb, 0, " %s ", label);
-		AG_SetStyle(tab->lbl, "padding", "5 10 5 10");  /* TODO E>F */
+		AG_SetPadding(tab->lbl, "5 10 5 10");             /* TODO E>F */
 	} else {
 		tab->lbl = NULL;
 	}

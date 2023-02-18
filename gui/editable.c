@@ -1428,7 +1428,7 @@ AutocompleteTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	win->wmType = AG_WINDOW_WM_COMBO;
 	AG_WindowAttach(winParent, win);
 	AG_WindowSetCloseAction(win, AG_WINDOW_HIDE);
-	AG_SetStyle(win, "padding", "0");
+	AG_SetPadding(win, "0");
 
 	tl = AG_TlistNewPolledMs(win, AG_TLIST_EXPAND, agAutocompleteRate,
 	    AutocompletePoll,"%p",ed);
@@ -2680,49 +2680,59 @@ PopupMenu(AG_Editable *_Nonnull ed)
 	AG_Variable *vText;
 	AG_TextElement *txt;
 #endif
-#ifdef __APPLE__
-	const Uint keymodCmd = AG_KEYMOD_META;
-#else
-	const Uint keymodCmd = AG_KEYMOD_CTRL;
-#endif
 	if ((pm = AG_PopupNew(ed)) == NULL)
 		return (NULL);
 
 	AG_MenuSeparator(pm->root);
 
-	mi = AG_MenuActionKb(pm->root, _("Undo"), NULL, AG_KEY_Z, keymodCmd,
+	mi = AG_MenuActionKb(pm->root,
+	    _(AGSI_IDEOGRAM AGSI_UNDO AGSI_RST " Undo"), NULL,
+	    AG_KEY_Z, AGSI_WINCMD,
 	    MenuUndo,"%p",ed);
 	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuUndoActive,"%p",ed);
 
-	mi = AG_MenuActionKb(pm->root, _("Redo"), NULL, AG_KEY_Y, keymodCmd,
+	mi = AG_MenuActionKb(pm->root,
+	    _(AGSI_IDEOGRAM AGSI_REDO AGSI_RST " Redo"), NULL,
+	    AG_KEY_Y, AGSI_WINCMD,
 	    MenuRedo,"%p",ed);
 	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuRedoActive,"%p",ed);
 
 #ifdef AG_DEBUG
-	AG_MenuAction(pm->root, _("History Buffer..."), NULL,
+	AG_MenuAction(pm->root,
+	    _(AGSI_IDEOGRAM AGSI_CLIPBOARD AGSI_RST " History Buffer..."), NULL,
 	    MenuHistoryBuffer,"%p",ed);
 #endif
 	AG_MenuSeparator(pm->root);
 
-	mi = AG_MenuActionKb(pm->root, _("Cut"), NULL, AG_KEY_X, keymodCmd,
+	mi = AG_MenuActionKb(pm->root,
+	    _(AGSI_IDEOGRAM AGSI_CUT AGSI_RST " Cut"), NULL,
+	    AG_KEY_X, AGSI_WINCMD,
 	    MenuCut,"%p",ed);
 	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCutActive,"%p",ed);
 
-	mi = AG_MenuActionKb(pm->root, _("Copy"), NULL, AG_KEY_C, keymodCmd,
+	mi = AG_MenuActionKb(pm->root,
+	    _(AGSI_IDEOGRAM AGSI_COPY AGSI_RST " Copy"), NULL,
+	    AG_KEY_C, AGSI_WINCMD,
 	    MenuCopy,"%p",ed);
 	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCopyActive,"%p",ed);
 
-	mi = AG_MenuActionKb(pm->root, _("Paste"), NULL, AG_KEY_V, keymodCmd,
+	mi = AG_MenuActionKb(pm->root,
+	    _(AGSI_IDEOGRAM AGSI_PASTE AGSI_RST " Paste"), NULL,
+	    AG_KEY_V, AGSI_WINCMD,
 	    MenuPaste,"%p",ed);
 	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuPasteActive,"%p",ed);
 
-	mi = AG_MenuActionKb(pm->root, _("Delete"), NULL, AG_KEY_K, keymodCmd,
+	mi = AG_MenuActionKb(pm->root,
+	    _(AGSI_IDEOGRAM AGSI_CLOSE_X AGSI_RST " Delete"), NULL,
+	    AG_KEY_K, AGSI_WINCMD,
 	    MenuDelete,"%p",ed);
 	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuDeleteActive,"%p",ed);
 
 	AG_MenuSeparator(pm->root);
 
-	AG_MenuActionKb(pm->root, _("Select All"), NULL, AG_KEY_A, keymodCmd,
+	AG_MenuActionKb(pm->root,
+	    _(AGSI_IDEOGRAM AGSI_SELECT_ALL AGSI_RST " Select All"), NULL,
+	    AG_KEY_A, AGSI_WINCMD,
 	    MenuSelectAll,"%p",ed);
 
 #ifdef AG_UNICODE
@@ -3446,7 +3456,7 @@ Edit(void *_Nonnull obj)
 	AG_Box *box;
 
 	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
-	AG_SetStyle(box, "font-size", "80%");
+	AG_SetFontSize(box, "80%");
 
 	AG_LabelNewPolled(box, AG_LABEL_HFILL,
 	    _("Cursor: " AGSI_BOLD "%i" AGSI_RST " (@ %d,%d)"),

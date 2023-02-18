@@ -98,7 +98,7 @@ SG_GUI_PromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	}
 	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_SetStyle(win, "spacing", "8");
+	AG_SetSpacing(win, "8");
 
 	AG_LabelNewS(win, 0, text);
 	free(text);
@@ -468,13 +468,13 @@ SG_GUI_CreateNewDlg(AG_Event *event)
 		return;
 	}
 	AG_WindowSetCaptionS(win, "sgedit");
-	AG_SetStyle(win, "padding", "20");
+	AG_SetPadding(win, "20");
 
 	lbl = AG_LabelNewS(win, AG_LABEL_HFILL, "sgedit");
-	AG_SetStyle(lbl, "font-size", "250%");
-	AG_SetStyle(lbl, "text-color", "#aaeeff");
-	AG_SetStyle(lbl, "font-weight", "bold");
 	AG_LabelJustify(lbl, AG_TEXT_CENTER);
+	AG_SetFontSize(lbl, "250%");
+	AG_SetTextColor(lbl, "#aaeeff");
+	AG_SetFontWeight(lbl, "bold");
 
 	AG_LabelNewS(win, 0, _("Create New:"));
 

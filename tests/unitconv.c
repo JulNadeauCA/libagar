@@ -45,10 +45,10 @@ TestGUI(void *obj, AG_Window *win)
 	int i;
 	AG_Toolbar *tb;
 
-	AG_SetStyle(win, "padding", "10");
+	AG_SetPadding(win, "10");
 
-	tb = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 2, AG_TOOLBAR_HOMOGENOUS|
-	                                             AG_TOOLBAR_STICKY|
+	tb = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 2, AG_TOOLBAR_HOMOGENOUS |
+	                                             AG_TOOLBAR_STICKY |
 						     AG_TOOLBAR_HFILL);
 
 	for (i = 0; i < sizeof(units)/sizeof(units[0]); i++) {
@@ -73,9 +73,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase unitconvTest = {
+	AGSI_IDEOGRAM AGSI_UNIT_CONVERSION AGSI_RST,
 	"unitconv",
 	N_("Test AG_Units(3) conversion"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */

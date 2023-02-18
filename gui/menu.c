@@ -85,12 +85,12 @@ AG_MenuNewGlobal(Uint flags)
 	if (win == NULL) {
 		goto exists;
 	}
-	AG_SetStyle(win, "padding", "0");
+	AG_SetPadding(win, "0");
 	AG_WindowSetCaptionS(win, agProgName ? agProgName : "agarapp");
 
 	m = AG_MenuNew(win, flags);
 	m->style = AG_MENU_GLOBAL;
-/*	AG_SetStyleF(m, "padding", "4 0 4 0") */
+/*	AG_SetPadding(m, "4 0 4 0") */
 	WIDGET(m)->flags |= AG_WIDGET_HFILL;
 
 	agAppMenu = m;
@@ -316,7 +316,7 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	
 	Debug_Mute(debugLvlSave);
 
-	AG_SetStyle(win, "padding", "0");
+	AG_SetPadding(win, "0");
 
 #ifdef DEBUG_EXPAND
 	Debug(m, "Expand [%s] -> " AGSI_BR_RED "%s" AGSI_RST " (new)\n",
@@ -612,7 +612,7 @@ KeyDown_Item(AG_MenuItem *mi, AG_KeySym ksym, AG_KeyMod kmod)
 		if ((m->flags & AG_MENU_NO_BOOL_MSG) == 0) {
 			AG_TextTmsg(AG_MSG_INFO,
 			    (m->flags & AG_MENU_FAST_BOOL_MSG) ? 400 : 1000,
-			    "[%s] " AGSI_L_ARROW " %s",
+			    "[%s] " AGSI_ALGUE AGSI_L_ARROW " %s",
 			    mi->text, AG_MenuBoolGet(mi) ? _("True") : _("False"));
 		}
 		return (1);

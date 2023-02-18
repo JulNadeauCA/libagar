@@ -103,7 +103,8 @@ const char *agStyleDefault_Data =
 	"line-color#hover: rgb(200,200,180);\n"
 	"}\n"
 	"AG_Separator {\n"
-	"padding: 4;\n"
+	"line-color: #888;\n"
+	"padding: 8 10 8 10;\n"
 	"}\n"
 	"AG_Statusbar {\n"
 	"font-family: cm-serif;\n"
@@ -123,7 +124,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2219,
+	2245,
 	&agStyleDefault_Data,
 	NULL
 };

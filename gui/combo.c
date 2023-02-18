@@ -178,15 +178,17 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 		AG_ObjectSetName(win, "_combo%u", agComboCounter++);
 
 		/* TODO specific style attribute. */
-		AG_SetStyle(win, "padding", "0");
+		AG_SetPadding(win, "0");
 
 		com->panel = win;
 		com->list = tl = AG_TlistNew(win, AG_TLIST_EXPAND |
 		                                  AG_TLIST_NO_KEYREPEAT); 
+
 		bu = AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Cancel"),
 		    PanelCancelPressed, "%p", com);
-		AG_SetStyle(bu, "font-size", "80%");
-		AG_SetStyle(bu, "padding", "0 4 3 4");
+
+		AG_SetFontSize(bu, "80%");
+		AG_SetPadding(bu, "0 4 3 4");
 
 		if (com->flags & AG_COMBO_POLL) { tl->flags |= AG_TLIST_POLL; }
 		if (com->flags & AG_COMBO_SCROLLTOSEL) { tl->flags |= AG_TLIST_SCROLLTOSEL; }
@@ -336,6 +338,7 @@ Init(void *_Nonnull obj)
 {
 	AG_Combo *com = obj;
 	AG_Textbox *tb;
+	AG_Button *btn;
 
 	com->flags = 0;
 	com->wSaved = 0;
@@ -348,10 +351,10 @@ Init(void *_Nonnull obj)
 	AG_SetString(tb, "padding", "inherit");
 	AG_WidgetForwardFocus(com, tb);
 
-	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY |
-	                                 AG_BUTTON_NO_FOCUS, _(" ... "));
-	AG_SetStyle(com->button, "padding", "2");
-	AG_SetEvent(com->button, "button-pushed", ExpandButtonPushed, "%p", com);
+	btn = com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY |
+	                                       AG_BUTTON_NO_FOCUS, _(" ... "));
+	AG_SetPadding(btn, "2");
+	AG_SetEvent(btn, "button-pushed", ExpandButtonPushed,"%p",com);
 
 	com->list = NULL;
 	com->panel = NULL;

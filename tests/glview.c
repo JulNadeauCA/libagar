@@ -346,7 +346,7 @@ TestGUI(void *obj, AG_Window *win)
 			    AG_BOX_VERT);
 			AG_BoxSetHorizAlign(AGBOX(ntab), AG_BOX_CENTER); 
 			lbl = AG_LabelNewS(ntab, 0, "Ambient");
-			AG_SetStyle(lbl, "font-family", "league-spartan");
+			AG_SetFontFamily(lbl, "league-spartan");
 
 			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->ambient);
@@ -357,7 +357,7 @@ TestGUI(void *obj, AG_Window *win)
 			    AG_BOX_VERT);
 			AG_BoxSetHorizAlign(AGBOX(ntab), AG_BOX_CENTER); 
 			lbl = AG_LabelNewS(ntab, 0, "Diffuse");
-			AG_SetStyle(lbl, "font-family", "league-spartan");
+			AG_SetFontFamily(lbl, "league-spartan");
 
 			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->diffuse);
@@ -368,7 +368,7 @@ TestGUI(void *obj, AG_Window *win)
 			    AG_BOX_VERT);
 			AG_BoxSetHorizAlign(AGBOX(ntab), AG_BOX_CENTER); 
 			lbl = AG_LabelNewS(ntab, 0, "Specular");
-			AG_SetStyle(lbl, "font-family", "league-spartan");
+			AG_SetFontFamily(lbl, "league-spartan");
 
 			pal = AG_HSVPalNew(ntab, flags);
 			AG_BindFloat(pal, "RGBAv", ti->specular);
@@ -378,6 +378,7 @@ TestGUI(void *obj, AG_Window *win)
 	{
 		AG_Box *vb;
 		AG_Numerical *num;
+		AG_Editable *edNum;
 
 		AG_RadioNewInt(hb, 0, primitiveNames, (void *)&ti->primitive);
 
@@ -385,9 +386,10 @@ TestGUI(void *obj, AG_Window *win)
 
 		num = AG_NumericalNewIntR(hb, 0, NULL, "Sphere\nsubdiv: ",
 		    &ti->subdiv, 0,8);
-		AG_SetStyle(num->input->ed, "font-family", "cm-serif");
-		AG_SetStyle(num->input->ed, "font-size", "160%");
-		AG_SetStyle(num->input->ed, "font-weight", "bold");
+		edNum = num->input->ed;
+		AG_SetFontFamily(edNum, "cm-serif");
+		AG_SetFontSize(edNum, "160%");
+		AG_SetFontWeight(edNum, "bold");
 
 		AG_RadioNewInt(hb, 0, shadingNames, (void *)&ti->shading);
 		AG_SeparatorNewVert(hb);
@@ -403,9 +405,10 @@ TestGUI(void *obj, AG_Window *win)
 #endif /* HAVE_OPENGL */
 
 const AG_TestCase glviewTest = {
+	AGSI_IDEOGRAM AGSI_WIREFRAME_CUBE AGSI_RST,
 	"glview",
 	"Test the AG_GLView(3) widget (OpenGL required)",
-	"1.4.2",
+	"1.6.0",
 	AG_TEST_OPENGL,
 #ifdef HAVE_OPENGL
 	sizeof(MyTestInstance),

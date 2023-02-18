@@ -1863,7 +1863,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	AG_SetStyle(win, "spacing", "0");
+	AG_SetSpacing(win, "0");
 	AG_SetStyleF(win, "padding", "0 %d %d %d",
 	    WIDGET(win)->paddingRight,
 	    WIDGET(win)->paddingBottom,

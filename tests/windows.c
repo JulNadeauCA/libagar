@@ -148,7 +148,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_LabelNewS(win, 0, "Create test window with flags:");
 	
 	box = AG_BoxNewVert(win, AG_BOX_EXPAND);
-	AG_SetStyle(box, "font-family", "monoalgue");
+	AG_SetFontFamily(box, "monoalgue");
 	{
 		AG_CheckboxSetFromFlags(box, 0, &ti->testFlags, winFlags);
 	}
@@ -171,9 +171,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase windowsTest = {
+	AGSI_IDEOGRAM AGSI_TWO_WINDOWS AGSI_RST,
 	"windows",
 	N_("Test various AG_Window(3) placements and options"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(MyTestInstance),
 	NULL,		/* init */

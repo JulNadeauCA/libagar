@@ -504,7 +504,7 @@ TargetWidget(AG_Event *_Nonnull event)
 
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
 	nt = AG_NotebookAdd(nb, "AG_Widget", AG_BOX_VERT);
-	AG_SetStyle(nt, "padding", "3 4 3 4");
+	AG_SetPadding(nt, "3 4 3 4");
 	nt->id = 1;
 	{
 		static const AG_FlagDescr flagDescr[] = {
@@ -542,7 +542,7 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		lbl = AG_LabelNew(nt, 0, _("Widget Structure " AGSI_YEL "%s" AGSI_RST),
 		    OBJECT(tgt)->name);
-		AG_SetStyle(lbl, "font-size", "130%");
+		AG_SetFontSize(lbl, "130%");
 
 		AG_LabelNew(nt, AG_LABEL_HFILL,
 		    _("Class: <" AGSI_CYAN "%s" AGSI_RST ">"),
@@ -573,8 +573,8 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_SpacerNewHoriz(nt);
 
 		vbox = AG_BoxNewVert(nt, AG_BOX_HFILL);
-		AG_SetStyle(vbox, "padding", "4");
-		AG_SetStyle(vbox, "font-size", "110%");
+		AG_SetPadding(vbox, "4");
+		AG_SetFontSize(vbox, "110%");
 		{
 			msb = AG_MSpinbuttonNew(vbox, 0, "x", _("Size: "));
 			AG_BindInt(msb, "xvalue", &tgt->w);
@@ -605,7 +605,7 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		nt = AG_NotebookAdd(nb, OBJECT(tgt)->cls->name, AG_BOX_VERT);
 		nt->id = 2;
-		AG_SetStyle(nt, "padding", "3 3 3 3");
+		AG_SetPadding(nt, "3 3 3 3");
 
 		editRv = OBJECT_CLASS(tgt)->edit(tgt);
 		AG_ObjectAttach(nt, editRv);
@@ -644,7 +644,7 @@ TargetWidget(AG_Event *_Nonnull event)
 		px = AG_PixmapNew(paneTop, AG_PIXMAP_EXPAND, 320, 240);
 		lblInfo = AG_LabelNew(paneTop, AG_LABEL_HFILL, _("(No data)"));
 		AG_LabelSizeHint(lblInfo, 5, "<XXXXXXXXXXXXXXXXXXXXXXXXX>");
-		AG_SetStyle(lblInfo, "font-size", "90%");
+		AG_SetFontSize(lblInfo, "90%");
 
 		tl = AG_TlistNewPolled(paneBottom, AG_TLIST_EXPAND,
 		    PollSurfaces, NULL);
@@ -775,20 +775,20 @@ AG_GuiDebugger(AG_Window *_Nonnull tgt)
 	                    OBJECT(tgt)->name, AGWINDOW(tgt)->caption);
 
 	toolbar = AG_BoxNewHoriz(win, AG_BOX_HFILL);
-	AG_SetStyle(toolbar, "font-size", "150%");
+	AG_SetFontSize(toolbar, "150%");
 	{
 #if 0
 		/* Set pick mode */
 		btn = AG_ButtonNewFn(toolbar, AG_BUTTON_STICKY,
 		    "\xe2\x87\xb1",                             /* U+21F1 */
 		    SetPickStatus, "%p,%p", win, tl);
-		AG_SetStyle(btn, "padding", "0 5 3 5");
+		AG_SetPadding(btn, "0 5 3 5");
 #endif
 		/* Toggle VFS autorefresh */
 		buRefresh = AG_ButtonNewS(toolbar,
 		    AG_BUTTON_STICKY | AG_BUTTON_SET,
 		    "\xe2\xa5\x81");                             /* U+2941 */
-		AG_SetStyle(buRefresh, "padding", "0 10 3 5");
+		AG_SetPadding(buRefresh, "0 10 3 5");
 	}
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
@@ -801,7 +801,7 @@ AG_GuiDebugger(AG_Window *_Nonnull tgt)
 
 	lblStats = AG_LabelNewS(div, AG_LABEL_HFILL,
 	    _("XX windows, XX containers & XX leaves (t = XXXXXms)"));
-	AG_SetStyle(lblStats, "font-size", "80%");
+	AG_SetFontSize(lblStats, "80%");
 
 	tl = agDebuggerTlist = AG_TlistNewPolledMs(div,
 	    AG_TLIST_EXPAND, 125,

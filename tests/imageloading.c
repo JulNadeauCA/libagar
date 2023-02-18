@@ -302,6 +302,7 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase imageloadingTest = {
+	AGSI_IDEOGRAM AGSI_SAVE_IMAGE AGSI_RST,
 	"imageloading",
 	N_("Test image loader / exporter routines"),
 	"1.6.0",

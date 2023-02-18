@@ -1398,7 +1398,7 @@ Edit(void *_Nonnull p)
 	AG_WindowSetCaptionS(win, OBJECT(ts)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 1);
 
-	AG_SetStyle(win, "spacing", "0");
+	AG_SetSpacing(win, "0");
 	AG_SetStyleF(win, "padding", "0 %d %d %d",
 	    WIDGET(win)->paddingRight,
 	    WIDGET(win)->paddingBottom,
@@ -1418,7 +1418,7 @@ Edit(void *_Nonnull p)
 	for (i = 0; i < 3; i++) {
 		AG_TlistSetItemHeight(tl[i], 32);
 		AG_TlistSetIconWidth(tl[i], 32);
-		AG_SetStyle(tl[i], "font-size", "150%");
+		AG_SetFontSize(tl[i], "150%");
 	}
 
 	tlTileTbl = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_EXPAND);

@@ -594,9 +594,9 @@ CreateObjectDlg(AG_Event *_Nonnull event)
 
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
-	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
-	AG_SetStyle(bo, "padding", "0");
-	AG_SetStyle(bo, "spacing", "0");
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL | AG_BOX_VFILL);
+	AG_SetPadding(bo, "0");
+	AG_SetSpacing(bo, "0");
 	{
 		AG_LabelNewS(bo, 0, _("Parent object:"));
 
@@ -681,15 +681,16 @@ AG_DEV_QuitCallback(AG_Event *_Nonnull event)
 	}
 	AG_WindowSetCaptionS(win, _("Exit application?"));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_SetStyle(win, "spacing", "8");
+	AG_SetSpacing(win, "8");
 
 	AG_LabelNewS(win, 0, _("Unsaved objects have been modified. "
 	                       "Exit application?"));
 
 	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
 	{
-		AG_SetStyle(box, "padding", "0");
-		AG_SetStyle(box, "spacing", "0");
+		AG_SetPadding(box, "0");
+		AG_SetSpacing(box, "0");
+
 		AG_ButtonNewFn(box, 0, _("Quit"), AG_DEV_ConfirmQuit, NULL);
 
 		AG_WidgetFocus(
@@ -724,7 +725,7 @@ AG_DEV_Browser(void *vfsRoot)
 	}
 	AG_WindowSetCaptionS(win, OBJECT(vfsRoot)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_ML, 0);
-	AG_SetStyle(win, "font-size", "120%");
+	AG_SetFontSize(win, "120%");
 
 	menu = AG_MenuNew(win, AG_MENU_HFILL);
 

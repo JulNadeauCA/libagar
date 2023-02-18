@@ -12,6 +12,7 @@
 
 /* Test case definition */
 typedef struct ag_test_case {
+	const char *_Nonnull icon;		/* Graphical icon */
 	const char *_Nonnull name;		/* Test name */
 	const char *_Nonnull descr;		/* Short description */
 	const char *_Nullable minVer;		/* Minimum Agar version */

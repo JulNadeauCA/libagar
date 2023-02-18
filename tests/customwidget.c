@@ -31,6 +31,7 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase customwidgetTest = {
+	AGSI_IDEOGRAM AGSI_CUSTOM_WIDGET AGSI_RST,
 	"customwidget",
 	N_("Test registering a custom Agar widget"),
 	"1.5.0",

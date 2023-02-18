@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -96,25 +96,25 @@ AG_TitlebarNew(void *parent, Uint flags)
 	
 	if ((flags & AG_TITLEBAR_NO_MINIMIZE) == 0) {
 		btn = AG_ButtonNewS(tbar, btnFlags, " _ ");
-		AG_SetStyle(btn, "font-size", "80%");
+		AG_SetFontSize(btn, "80%");
 		AG_ObjectSetNameS(btn, "minimize");
 		AG_SetEvent(btn, "button-pushed", MinimizeWindow, "%Cp", tbar);
 	}
 	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0) {
 		btn = AG_ButtonNewS(tbar, btnFlags, "\xE2\x96\xA2"); /* U+25A2 */
-		AG_SetStyle(btn, "font-size", "80%");
+		AG_SetFontSize(btn, "80%");
 		AG_ObjectSetNameS(btn, "maximize");
 		AG_SetEvent(btn, "button-pushed", MaximizeWindow, "%Cp", tbar);
 	}
 	if ((flags & AG_TITLEBAR_NO_CLOSE) == 0) {
 		btn = AG_ButtonNewS(tbar, btnFlags, "\xE2\x9C\x95"); /* U+2715 */
-		AG_SetStyle(btn, "font-size", "80%");
+		AG_SetFontSize(btn, "80%");
 		AG_ObjectSetNameS(btn, "close");
 		AG_SetEvent(btn, "button-pushed", CloseWindow, "%Cp", tbar);
 	}
 
 	if ((flags & AG_TITLEBAR_NO_BUTTONS) == 0)
-		AG_SetStyle(tbar->label, "padding", "2 0 0 2");
+		AG_SetPadding(tbar->label, "2 0 0 2");
 
 	AG_ObjectUnlock(tbar);
 	return (tbar);

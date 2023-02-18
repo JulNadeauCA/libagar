@@ -276,9 +276,10 @@ TestGUI(void *obj, AG_Window *win)
 #endif /* AG_THREADS */
 
 const AG_TestCase threadsTest = {
+	AGSI_IDEOGRAM AGSI_THREADS AGSI_RST,
 	"threads",
 	N_("Test multithreaded widget creation"),
-	"1.4.2",
+	"1.6.0",
 	0,
 #ifdef AG_THREADS
 	sizeof(MyTestInstance),

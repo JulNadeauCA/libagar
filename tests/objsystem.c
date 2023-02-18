@@ -78,9 +78,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase objsystemTest = {
+	AGSI_IDEOGRAM AGSI_SMALL_SPHERE AGSI_RST,
 	"objsystem",
 	N_("Test basic AG_Object(3) VFS functions"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(MyTestInstance),
 	Init,

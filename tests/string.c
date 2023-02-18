@@ -80,9 +80,10 @@ Test(void *obj)
 }
 
 const AG_TestCase stringTest = {
+	AGSI_IDEOGRAM AGSI_NUL_TERMINATION AGSI_RST,
 	"string",
 	N_("Test the ag_core string functions"),
-	"1.5.0",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	Init,

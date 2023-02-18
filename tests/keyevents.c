@@ -57,15 +57,18 @@ TestGUI(void *obj, AG_Window *win)
 
 	lbl = AG_LabelNew(win, AG_LABEL_HFILL, "Keyboard Events");
 	AG_LabelJustify(lbl, AG_TEXT_CENTER);
-	AG_SetStyle(lbl, "font-family", "monoalgue");
-	AG_SetStyle(lbl, "font-weight", "bold");
-	AG_SetStyle(lbl, "font-size", "200%");
-	AG_SetStyle(lbl, "text-color", "AntiqueWhite");
+
+	AG_SetFontFamily(lbl, "monoalgue");
+	AG_SetFontWeight(lbl, "bold");
+	AG_SetFontSize(lbl, "200%");
+	AG_SetTextColor(lbl, "AntiqueWhite");
 
 	cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
-	AG_SetStyle(cons, "font-family", "monoalgue");
-	AG_SetStyle(cons, "background-color", "#333");
-	AG_SetStyle(cons, "text-color", "AntiqueWhite");
+
+	AG_SetFontFamily(cons, "monoalgue");
+	AG_SetBgColor(cons, "#333");
+	AG_SetTextColor(cons, "AntiqueWhite");
+
 	AG_ConsoleMsg(cons, "Press any key...");
 
 	/*
@@ -88,6 +91,7 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase keyeventsTest = {
+	AGSI_IDEOGRAM AGSI_KEYBOARD_KEY AGSI_RST,
 	"keyevents",
 	N_("Test low-level keyboard input"),
 	"1.6.0",

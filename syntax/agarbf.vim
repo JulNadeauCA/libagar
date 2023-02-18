@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarbf.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 January 27
+" Last Change:  2023 February 17
 
 " quit when a syntax file was already loaded
 if !exists("main_syntax")

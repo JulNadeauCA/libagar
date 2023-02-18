@@ -58,14 +58,15 @@ TestGUI(void *obj, AG_Window *win)
 		AG_SetEvent(sl, "slider-changed", Changed, "%p", win);
 	}
 	btn = AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Test AG_WINDOW_FADEIN", Fadein, NULL);
-	AG_SetStyle(btn, "font-size", "80%");
+	AG_SetFontSize(btn, "80%");
 	return (0);
 }
 
 const AG_TestCase compositingTest = {
+	AGSI_IDEOGRAM AGSI_WINDOW_GRADIENT AGSI_RST,
 	"compositing",
 	N_("Test features for compositing window managers"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */

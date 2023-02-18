@@ -281,10 +281,11 @@ CreateTableWithWidgets(AG_Event *event)
 		    (i % 2) == 0 ? AGSI_ALGUE AGSI_SML_FACE_W_OM :
 		                   AGSI_ALGUE AGSI_CAT_FACE,
 		    &MyTable[i]);
+
 		AG_TableAddRow(table, "%[W]:Example row #%d", button, i+1);
-		AG_SetStyle(button, "color", (i % 2) == 0 ? "#83b5b5" :
-		                                            "#d9b0de");
-		AG_SetStyle(button, "text-color", "#000");
+
+		AG_SetColor(button, (i % 2) == 0 ? "#83b5b5" : "#d9b0de");
+		AG_SetTextColor(button, "#000");
 	}
 	AG_TableEnd(table);
 
@@ -307,12 +308,11 @@ TestGUI(void *obj, AG_Window *win)
 {
 	AG_Label *lbl;
 
-	AG_SetStyle(win, "background-color", "#404045");
+	AG_SetBgColor(win, "#404045");
 
 	lbl = AG_LabelNewS(win, 0, _("Tests for AG_Table(3)"));
-	AG_SetStyle(lbl, "font-family", "cm-serif");
-	AG_SetStyle(lbl, "font-weight", "cm-bold");
-	AG_SetStyle(lbl, "font-size", "150%");
+	AG_SetFontFamily(lbl, "cm-serif");
+	AG_SetFontSize(lbl, "140%");
 
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL,
 	    "Create a " AGSI_BOLD "static" AGSI_RST " table",
@@ -334,9 +334,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase tableTest = {
+	AGSI_IDEOGRAM AGSI_TABLE AGSI_RST,
 	"table",
 	N_("Test the AG_Table(3) widget"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */

@@ -106,6 +106,7 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase audioTest = {
+	AGSI_IDEOGRAM AGSI_SPKR_W_3_SOUND_WAVES AGSI_RST,
 	"audio",
 	"Test the Agar audio library",
 	"1.6.0",

@@ -283,9 +283,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase plottingTest = {
+	AGSI_IDEOGRAM AGSI_SINE_WAVE AGSI_RST,
 	"plotting",
 	N_("Test the M_Plotter(3) widget"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(MyTestInstance),
 	Init,

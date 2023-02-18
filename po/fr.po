@@ -2445,7 +2445,7 @@ msgid "Sketch filled polygons."
 msgstr "Polygones remplis."
 
 #, c-format
-msgid "%ux%u nodes exceed %ux%u."
+msgid "%ux%u nodes exceed the limit of %ux%u."
 msgstr "%ux%u noeuds dépassent la limite de %ux%u."
 
 msgid "Camera 0"

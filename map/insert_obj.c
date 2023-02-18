@@ -102,7 +102,7 @@ EditPane(void *_Nonnull p, void *_Nonnull box)
 		}
 		lbl = AG_LabelNew(box, AG_LABEL_HFILL, "%s:",
 		    AGCLASS(clsMo)->name);
-		AG_SetStyle(lbl, "font-size", "80%");
+		AG_SetFontSize(lbl, "80%");
 		clsMo->edit(mo, box, TOOL(tool));
 		AG_SeparatorNewHoriz(box);
 	}

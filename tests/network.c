@@ -236,9 +236,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase networkTest = {
+	"",
 	"network",
 	N_("Test the AG_Net(3) interface"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(MyTestInstance),
 	Init,

@@ -66,8 +66,8 @@ AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nRows, Uint flags)
 		}
 		if (flags & AG_TOOLBAR_HFILL) { WIDGET(row)->flags |= AG_WIDGET_HFILL; }
 		if (flags & AG_TOOLBAR_VFILL) { WIDGET(row)->flags |= AG_WIDGET_VFILL; }
-		AG_SetStyle(row, "padding", "1");
-		AG_SetStyle(row, "spacing", "1");
+		AG_SetPadding(row, "1");
+		AG_SetSpacing(row, "1");
 		bar->nRows++;
 	}
 

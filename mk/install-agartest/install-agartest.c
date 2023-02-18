@@ -79,6 +79,8 @@ const char *dataFiles[] = {
 	SRC_GUI "license.txt:license.txt",
 	SRC_FONTS "agar-minimal-12.png:agar-minimal-12.png",
 	SRC_FONTS "agar-minimal.agbf:agar-minimal.agbf",
+	SRC_FONTS "agar-ideograms-12.png:agar-ideograms-12.png",
+	SRC_FONTS "agar-ideograms.agbf:agar-ideograms.agbf",
 	SRC_FONTS "algue-bold-italic.ttf:algue-bold-italic.ttf",
 	SRC_FONTS "algue-bold.ttf:algue-bold.ttf",
 	SRC_FONTS "algue-italic.ttf:algue-italic.ttf",
@@ -107,18 +109,7 @@ const char *dataFiles[] = {
 	SRC_FONTS "monoalgue-sans-bold.ttf:monoalgue-sans-bold.ttf",
 	SRC_FONTS "monoalgue-sans.ttf:monoalgue-sans.ttf",
 	SRC_FONTS "monoalgue.ttf:monoalgue.ttf",
-	SRC_FONTS "source-han-sans.otf:source-han-sans.otf",
 	SRC_FONTS "unialgue.ttf:unialgue.ttf",
-	SRC_FONTS "vera-bold-italic.ttf:vera-bold-italic.ttf",
-	SRC_FONTS "vera-bold.ttf:vera-bold.ttf",
-	SRC_FONTS "vera-italic.ttf:vera-italic.ttf",
-	SRC_FONTS "vera-mono-bold-italic.ttf:vera-mono-bold-italic.ttf",
-	SRC_FONTS "vera-mono-bold.ttf:vera-mono-bold.ttf",
-	SRC_FONTS "vera-mono-italic.ttf:vera-mono-italic.ttf",
-	SRC_FONTS "vera-mono.ttf:vera-mono.ttf",
-	SRC_FONTS "vera-serif-bold.ttf:vera-serif-bold.ttf",
-	SRC_FONTS "vera-serif.ttf:vera-serif.ttf",
-	SRC_FONTS "vera.ttf:vera.ttf",
 	NULL
 };
 

@@ -804,8 +804,8 @@ Edit(void *obj)
 	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
 	lbl = AG_LabelNewS(box, 0, AGINPUTDEV(kbd)->desc);
-	AG_SetStyle(lbl, "font-family", "cm-sans");
-	AG_SetStyle(lbl, "font-size", "130%");
+	AG_SetFontFamily(lbl, "cm-sans");
+	AG_SetFontSize(lbl, "130%");
 
 	lbl = AG_LabelNewPolledMT(box, AG_LABEL_HFILL, &OBJECT(kbd)->lock,
 	    _("Key Count: %u\n"
@@ -814,8 +814,8 @@ Edit(void *obj)
 	AG_RedrawOnTick(lbl, 120);
 
 	tl = AG_TlistNewPolled(box, AG_TLIST_EXPAND, PollKeyboardState,"%p", kbd);
-	AG_SetStyle(tl, "font-weight", "bold");
-	AG_SetStyle(tl, "font-size", "120%");
+	AG_SetFontWeight(tl, "bold");
+	AG_SetFontSize(tl, "120%");
 	AG_TlistSizeHint(tl, "<AG_KEY_THOUSANDS_SEPARATOR>", 10);
 	AG_TlistSetRefresh(tl, 120);
 

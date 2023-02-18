@@ -92,25 +92,33 @@ as high-level (e.g., "button-pushed") events.
 .Nm .
 .\" MANLINK(AG_WidgetClass)
 .Sh CLASS OPERATIONS
-Object operations specific to the
-.Nm
-class are defined as follows:
+Agar widget classes are described by the following structure:
 .Bd -literal
 .\" SYNTAX(c)
 typedef struct ag_widget_class {
-	struct ag_object_class _inherit;  /* [AG_Object] -> [AG_Widget] */
-	
+	struct ag_object_class _inherit;
+
 	void (*draw)(void *obj);
 	void (*size_request)(void *obj, AG_SizeReq *req);
 	int  (*size_allocate)(void *obj, const AG_SizeAlloc *alloc);
-	void (*mouse_button_down)(void *obj, AG_MouseButton btn, int x, int y);
-	void (*mouse_button_up)(void *obj, AG_MouseButton btn, int x, int y);
+
+	void (*mouse_button_down)(void *obj, AG_MouseButton btn,
+	                          int x, int y);
+	void (*mouse_button_up)(void *obj, AG_MouseButton btn,
+	                        int x, int y);
 	void (*mouse_motion)(void *obj, int x, int y, int dx, int dy);
-	void (*key_down)(void *obj, AG_KeySym ksym, AG_KeyMod kmod, AG_Char ch);
-	void (*key_up)(void *obj, AG_KeySym ksym, AG_KeyMod kmod, AG_Char ch);
-	void (*touch)(void *obj, void *inputDevice, const AG_DriverEvent *event);
-	void (*ctrl)(void *obj, void *inputDevice, const AG_DriverEvent *event);
-	void (*joy)(void *obj, void *inputDevice, const AG_DriverEvent *event);
+
+	void (*key_down)(void *obj, AG_KeySym ksym, AG_KeyMod kmod,
+	                 AG_Char ch);
+	void (*key_up)(void *obj, AG_KeySym ksym, AG_KeyMod kmod,
+	               AG_Char ch);
+
+	void (*touch)(void *obj, void *inputDevice,
+	              const AG_DriverEvent *event);
+	void (*ctrl)(void *obj, void *inputDevice,
+	             const AG_DriverEvent *event);
+	void (*joy)(void *obj, void *inputDevice,
+	            const AG_DriverEvent *event);
 } AG_WidgetClass;
 .Ed
 .Pp
@@ -121,10 +129,10 @@ or other methods).
 The code under
 .Fn draw
 is referred to as
-.Em Rendering Context .
+.Em rendering context .
 Widget primitives and operations such as
 .Fn AG_WidgetBlitSurface
-must be called from rendering context.
+must be called only from rendering context.
 .Pp
 .Fn size_request
 should return an initial, preferred geometry in pixels (without any guarantee
@@ -309,22 +317,154 @@ The widget and its parent VFS must be locked.
 .Fn AG_SetStyleF "AG_Widget *obj" "const char *attr" "const char *fmt" "..."
 .Pp
 .Ft "void"
+.Fn AG_SetFontFamily "AG_Widget *obj" "const char *family"
+.Pp
+.Ft "void"
+.Fn AG_SetFontSize "AG_Widget *obj" "const char *size"
+.Pp
+.Ft "void"
+.Fn AG_SetFontWeight "AG_Widget *obj" "const char *weight"
+.Pp
+.Ft "void"
+.Fn AG_SetFontStyle "AG_Widget *obj" "const char *style"
+.Pp
+.Ft "void"
+.Fn AG_SetFontStretch "AG_Widget *obj" "const char *stretch"
+.Pp
+.Ft "void"
 .Fn AG_SetFont "AG_Widget *obj" "const AG_Font *font"
 .Pp
+.Ft "void"
+.Fn AG_SetMargin "AG_Widget *obj" "const char *margin"
+.Pp
+.Ft "void"
+.Fn AG_SetPadding "AG_Widget *obj" "const char *padding"
+.Pp
+.\" MANLINK(AG_SetColor)
+.\" MANLINK(AG_SetColorDisabled)
+.\" MANLINK(AG_SetColorFocused)
+.\" MANLINK(AG_SetColorHover)
+.\" MANLINK(AG_SetBgColor)
+.\" MANLINK(AG_SetBgColorDisabled)
+.\" MANLINK(AG_SetBgColorFocused)
+.\" MANLINK(AG_SetBgColorHover)
+.\" MANLINK(AG_SetTextColor)
+.\" MANLINK(AG_SetTextColorDisabled)
+.\" MANLINK(AG_SetTextColorFocused)
+.\" MANLINK(AG_SetTextColorHover)
+.\" MANLINK(AG_SetLineColor)
+.\" MANLINK(AG_SetLineColorDisabled)
+.\" MANLINK(AG_SetLineColorFocused)
+.\" MANLINK(AG_SetLineColorHover)
+.\" MANLINK(AG_SetHighColor)
+.\" MANLINK(AG_SetHighColorDisabled)
+.\" MANLINK(AG_SetHighColorFocused)
+.\" MANLINK(AG_SetHighColorHover)
+.\" MANLINK(AG_SetSelColor)
+.\" MANLINK(AG_SetSelColorDisabled)
+.\" MANLINK(AG_SetSelColorFocused)
+.\" MANLINK(AG_SetSelColorHover)
+.Ft "void"
+.Fn AG_Set<Color> "AG_Widget *obj" "const char *color"
+.Pp
+.Ft "void"
+.Fn AG_Set<Color>Disabled "AG_Widget *obj" "const char *color"
+.Pp
+.Ft "void"
+.Fn AG_Set<Color>Focused "AG_Widget *obj" "const char *color"
+.Pp
+.Ft "void"
+.Fn AG_Set<Color>Hover "AG_Widget *obj" "const char *color"
+.Pp
 .nr nS 0
-The
 .Fn AG_SetStyle
-function sets the specified style attribute to the given value.
-Refer to
+sets the style attribute
+.Fa attr
+to the given
+.Fa value .
+.Pp
+See
 .Xr AG_StyleSheet 3
 for the list of available attributes.
 .Pp
-The
+The following routines are shorthand forms for
+.Fn AG_SetStyle .
+.Pp
+.Fn AG_SetFontFamily
+sets the "font-family" attribute, which can be either a font name or
+the name of a file located in one of the directories in the
+.Dv PATH_FONTS
+of
+.Xr AG_Config 3 .
+.Pp
+.Fn AG_SetFontSize
+sets the "font-size" attribute, which may contain the suffix "%" (relative
+size to the parent widget's font), the suffix "pt"
+(explicit size in vector-font points) or the suffix "px"
+(explicit size in bitmap-font pixels).
+.Pp
+Font sizes should normally be given in "%" so that the zoom function can
+work as expected (Agar's zoom works simply by increasing or decreasing the
+"font-size" of the target window).
+.Pp
+.Fn AG_SetFontWeight
+sets the "font-weight" attribute, which can be one of "Thin", "ExtraLight",
+"Light", "Regular" (default), "SemiBold", "Bold", "ExtraBold", "Black"
+or "!parent".
+.Pp
+.Fn AG_SetFontStyle
+sets the "font-style" attribute, which be one of "Normal" / "Regular",
+"Oblique", "Italic", "UprightItalic" or "!parent".
+.Pp
+.Fn AG_SetFontStretch
+sets the "font-stretch" attribute, which can be one of "Normal" / "Regular",
+"UltraCondensed", "Condensed", "SemiCondensed", "SemiExpanded", "Expanded"
+or "UltraExpanded".
+.Pp
 .Fn AG_SetFont
-routine inherits "font-family", "font-size", "font-weight" and
-"font-style" from an existing
-.Xr AG_Font 3
-object.
+sets (inherits) font style attributes "font-family", "font-weight" and
+"font-stretch" from those of the given
+.Fa font .
+.Pp
+.Fn AG_SetMargin
+sets the margin area around the widget.
+The argument can be of the form "<HORIZ> <VERT>" to set horizontal and
+vertical spacing in pixels, respectively.
+A single argument sets both horizontal and vertical spacings to the
+same value.
+.Pp
+.Fn AG_SetPadding
+sets the padding inside the widget area.
+The argument can be of the form "<TOP> <RIGHT> <BOTTOM> <LEFT>" to set
+each padding in pixels.
+A single argument sets all paddings to the same value.
+.Pp
+The following routines set color attributes.
+For the list of accepted formats for specifying colors, see
+.Xr AG_Color 3 .
+.Pp
+.Fn AG_SetColor
+sets the foreground primary ("color").
+.Fn AG_SetBgColor
+sets the background primary ("background-color").
+.Fn AG_SetTextColor
+sets the color for text and vector icons ("text-color").
+.Fn AG_SetLineColor
+sets the color for lines and filled shapes ("line-color").
+.Fn AG_SetHighColor
+sets the shading color for top and left 3D-style edges ("high-color").
+.Fn AG_SetLowColor
+sets the shading color for bottom and right 3D-style edges ("low-color").
+.Fn AG_SetSelColor
+sets the primary for indicating active selections ("selection-color").
+.Pp
+The following routines set state-dependent color attributes
+.Fn AG_Set<Color>Disabled
+sets the given color for the widget "#disabled" state.
+.Fn AG_Set<Color>Focused
+sets the given color for the "#focused" state.
+.Fn AG_Set<Color>Hover
+sets the given color for the "#hover" state.
 .Sh INPUT STATE
 .nr nS 1
 .Ft "void"

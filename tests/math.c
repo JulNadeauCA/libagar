@@ -364,6 +364,7 @@ Bench(void *obj)
 }
 
 const AG_TestCase mathTest = {
+	AGSI_IDEOGRAM AGSI_MATH_X_EQUALS AGSI_RST,
 	"math",
 	N_("Test the ag_math library"),
 	"1.6.0",

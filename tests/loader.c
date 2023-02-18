@@ -55,7 +55,7 @@ LoadImage(AG_Event *event)
 	}
 
 	box = AG_BoxNewVert(win, AG_BOX_HFILL);
-	AG_SetStyle(box, "font-size", "90%");
+	AG_SetFontSize(box, "90%");
 	{
 		AG_LabelNew(box, 0,
 		    AGSI_COURIER "%s" AGSI_RST " (%u x %u x %d bpp):",
@@ -135,7 +135,7 @@ TestGUI(void *obj, AG_Window *win)
 		 * widgets will be created here.
 		 */
 		box = AG_BoxNewVert(nt, AG_BOX_HFILL);
-		AG_SetStyle(box, "padding", "10");
+		AG_SetPadding(box, "10");
 		AG_FileDlgSetOptionContainer(fd, box);
 	}
 	nt = AG_NotebookAdd(nb, _("Select directory\n(a DirDlg)"), AG_BOX_VERT);
@@ -156,6 +156,7 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase loaderTest = {
+	AGSI_IDEOGRAM AGSI_LOAD_IMAGE AGSI_RST,
 	"loader",
 	N_("Test the AG_FileDlg(3) file selection widget"),
 	"1.6.0",

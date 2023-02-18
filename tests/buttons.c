@@ -18,7 +18,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	lbl = AG_LabelNewS(win, AG_LABEL_HFILL, "Buttons test");
 	AG_LabelJustify(lbl, AG_TEXT_CENTER);
-	AG_SetStyle(lbl, "font-size", "200%");
+	AG_SetFontSize(lbl, "200%");
 
 	AG_ButtonNewS(win, 0, "Unbounded button");
 	AG_SeparatorNewHoriz(win);
@@ -50,6 +50,7 @@ Init(void *obj)
 }
 
 const AG_TestCase buttonsTest = {
+	AGSI_IDEOGRAM AGSI_BUTTON AGSI_RST,
 	"buttons",
 	N_("Test multiple AG_Button(3) bound to a same variable"),
 	"1.6.0",

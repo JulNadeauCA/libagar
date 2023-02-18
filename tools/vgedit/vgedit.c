@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2019-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,12 +78,12 @@ CreateNewDlg(AG_Event *event)
 		return;
 	}
 	AG_WindowSetCaptionS(win, "vgedit");
-	AG_SetStyle(win, "padding", "20");
+	AG_SetPadding(win, "20");
 
 	lbl = AG_LabelNewS(win, AG_LABEL_HFILL, "vgedit");
-	AG_SetStyle(lbl, "font-size", "250%");
-	AG_SetStyle(lbl, "text-color", "#aaeeff");
-	AG_SetStyle(lbl, "font-weight", "bold");
+	AG_SetFontSize(lbl, "250%");
+	AG_SetTextColor(lbl, "#aaeeff");
+	AG_SetFontWeight(lbl, "bold");
 	AG_LabelJustify(lbl, AG_TEXT_CENTER);
 
 	AG_LabelNewS(win, 0, _("Create New:"));

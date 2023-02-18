@@ -12,7 +12,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_Table *table;
 	int i;
 
-	AG_SetStyle(win, "padding", "0");
+	AG_SetPadding(win, "0");
 
 	lbl = AG_LabelNew(win, AG_LABEL_HFILL, "Testing AG_WindowMaximize(3)");
 	AG_LabelJustify(lbl, AG_TEXT_CENTER);
@@ -31,9 +31,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase maximizedTest = {
+	AGSI_IDEOGRAM AGSI_V_MAXIMIZE AGSI_RST,
 	"maximized",
 	N_("Test AG_WindowMaximize(3)"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */

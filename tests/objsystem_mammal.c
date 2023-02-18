@@ -73,7 +73,7 @@ Edit(void *obj)
 	AG_WindowSetCaption(win, "Mammal: %s", AGOBJECT(mammal)->name);
 
 	lbl = AG_LabelNewS(win, AG_LABEL_HFILL, AGOBJECT(mammal)->name);
-	AG_SetStyle(lbl, "font-size", "200%");
+	AG_SetFontSize(lbl, "200%");
 
 	/* Get the name of this object instance. */
 	if ((s = AG_ObjectGetName(mammal)) != NULL) {

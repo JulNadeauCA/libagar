@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2019-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -506,7 +506,7 @@ CreateTargetDlg(AG_Event *event)
 		return;
 	}
 	AG_WindowSetCaption(win, _("New Target"));
-	AG_SetStyle(win, "padding", "5");
+	AG_SetPadding(win, "5");
 
 	AG_SpacerNewHoriz(win);
 
@@ -536,7 +536,7 @@ CreateTargetDlg(AG_Event *event)
 
 	/* Arguments to the program */
 	tbArgs = AG_TextboxNewS(win, AG_TEXTBOX_HFILL, _("Arguments: "));
-	AG_SetStyle(tbArgs, "font-style", "monoalgue");
+	AG_SetFontStyle(tbArgs, "monoalgue");
 	AG_SetPointer(win, "tbArgs", tbArgs);
 
 	AG_SeparatorNewHoriz(win);
@@ -802,8 +802,9 @@ Agardb::GUI::GUI()
 		PrintVersion();
 
 		box = AG_BoxNewHoriz(nt, AG_BOX_HFILL);
-		AG_SetStyle(box, "font-weight", "bold");
-		AG_SetStyle(box, "font-size", "120%");
+		AG_SetFontWeight(box, "bold");
+		AG_SetFontSize(box, "120%");
+
 		tb = g_textbox_prompt = AG_TextboxNew(box,
 		    AG_TEXTBOX_EXCL | AG_TEXTBOX_HFILL,
 		    "(lldb)");
@@ -844,8 +845,10 @@ Agardb::GUI::GUI()
 #endif
 	nt = AG_NotebookAdd(nb, _("About agardb"), AG_BOX_VERT);
 	{
-		AG_SetStyle(nt, "font-size", "150%");
+		AG_SetFontSize(nt, "150%");
+
 		AG_GetVersion(&av);
+
 		AG_LabelNew(nt, 0,
 		    "agardb version %s\n"
 		    "agar version %d.%d.%d (\"%s\")\n"

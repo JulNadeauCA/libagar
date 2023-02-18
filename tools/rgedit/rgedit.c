@@ -84,7 +84,7 @@ PromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	}
 	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_SetStyle(win, "spacing", "8");
+	AG_SetSpacing(win, "8");
 
 	AG_LabelNewS(win, 0, text);
 	free(text);

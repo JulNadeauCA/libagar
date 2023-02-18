@@ -39,40 +39,29 @@ TestGUI(void *obj, AG_Window *win)
 	TestMsg(obj,
 	    "Al-arabiyyah: "
 	    AGSI_UNI
-	    "\xD9\x8F\xD8\xA9\xD9\x91\xD9\x8E"
-	    "\xD9\x8A\xD9\x90\xD8\xA8\xD9\x8E"
-	    "\xD8\xB1\xD9\x8E\xD8\xB9\xD9\x92"
-	    "\xD9\x84\xD9\x8E\xD8\xA7"
+	    "\xD9\x8F" "\xD8\xA9" "\xD9\x91" "\xD9\x8E" "\xD9\x8A" "\xD9\x90"
+	    "\xD8\xA8" "\xD9\x8E" "\xD8\xB1" "\xD9\x8E" "\xD8\xB9" "\xD9\x92"
+	    "\xD9\x84" "\xD9\x8E" "\xD8\xA7"
 	    AGSI_RST);
 
 	TestMsg(obj,
 	    "Devanagari: "
 	    AGSI_UNI
-	    "\xE0\xA4\xA6 " /* U+0926 DA */
-	    "\xE0\xA4\xB5 " /* U+0926 VA */
-	    "\xE0\xA4\xA8 " /* U+0928 NA */
-	    "\xE0\xA4\x97 " /* U+0917 GA */
-	    "\xE0\xA4\xB0 " /* U+0917 RA */
+	    "\xE0\xA4\xA6" "\xE0\xA4\xB5" "\xE0\xA4\xA8" "\xE0\xA4\x97"
+	    "\xE0\xA4\xB0"
 	    AGSI_RST);
 
 	TestMsg(obj,
 	    "Ellinik\xC3\xA1: "
 	    AGSI_UNI
-	    "\xCE\xB5"
-	    "\xCE\xBB"
-	    "\xCE\xBB"
-	    "\xCE\xB7"
-	    "\xCE\xBD"
-	    "\xCE\xB9"
-	    "\xCE\xBA"
-	    "\xCE\xAC"
+	    "\xCE\xB5" "\xCE\xBB" "\xCE\xBB" "\xCE\xB7" "\xCE\xBD" "\xCE\xB9"
+	    "\xCE\xBA" "\xCE\xAC"
 	    AGSI_RST);
 
 	TestMsg(obj,
 	    "Gu\xC4\x81nhu\xC3\xA0: "
 	    AGSI_CJK
-	    "\xE5\xAE\x98" /* U+5b98 */
-	    "\xE8\xAF\x9D" /* U+8bdd */
+	    "\xE5\xAE\x98" "\xE8\xAF\x9D"
 	    AGSI_RST);
 
 	TestMsg(obj,
@@ -180,6 +169,20 @@ TestGUI(void *obj, AG_Window *win)
 		TestMsg(obj,
 		    "Core Font #%d (AGSI_FONT%d): \x1b[%dm%s\x1b[0m",
 		    i+1, i+1, 10+i, agCoreFonts[i]);
+	}
+	for (i = 11; i <= 16; i++) {
+		if (i == 12) {
+			TestMsg(obj,
+			    "Core Font #13 (AGSI_FONT13): "
+			    AGSI_IDEOGRAM AGSI_AGAR_AG AGSI_AGAR_AR AGSI_RST
+			    " ideograms ("
+			    AGSI_IDEOGRAM AGSI_PARCEL AGSI_ARTISTS_PALETTE
+			    AGSI_VACUUM_TUBE AGSI_ALICE AGSI_BOB AGSI_RST ")");
+		} else {
+			TestMsg(obj,
+			    "Core Font #%d (AGSI_FONT%d): \x1b[%dm%s\x1b[0m",
+			    i+1, i+1, 66+(i - 11), agCoreFonts[i]);
+		}
 	}
 	TestMsg(obj, "");
 
@@ -311,6 +314,7 @@ Bench(void *obj)
 #endif
 
 const AG_TestCase fontsTest = {
+	AGSI_IDEOGRAM AGSI_TYPOGRAPHY AGSI_RST,
 	"fonts",
 	N_("Test font engine and AG_FontSelector(3)"),
 	"1.6.0",

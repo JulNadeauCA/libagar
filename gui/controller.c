@@ -184,8 +184,8 @@ Edit(void *obj)
 	box = AG_BoxNewVert(NULL, AG_BOX_HFILL);
 
 	lbl = AG_LabelNewS(box, 0, AGINPUTDEV(ctrl)->desc);
-	AG_SetStyle(lbl, "font-family", "cm-sans");
-	AG_SetStyle(lbl, "font-size", "130%");
+	AG_SetFontFamily(lbl, "cm-sans");
+	AG_SetFontSize(lbl, "130%");
 
 	AG_LabelNew(box, AG_LABEL_HFILL,
 	    _("Controller Type: " AGSI_BOLD "%d" AGSI_RST "\n"),

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -84,7 +84,7 @@ PromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	}
 	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_SetStyle(win, "spacing", "8");
+	AG_SetSpacing(win, "8");
 
 	AG_LabelNewS(win, 0, text);
 	free(text);

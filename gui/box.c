@@ -79,8 +79,8 @@ AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
 	if (flags & AG_BOX_VFILL) { WIDGET(box)->flags |= AG_WIDGET_VFILL; }
 
 	if (flags & AG_BOX_NO_SPACING) {
-		AG_SetStyle(box, "spacing", "0");
-		AG_SetStyle(box, "padding", "0");
+		AG_SetSpacing(box, "0");
+		AG_SetPadding(box, "0");
 	}
 
 	AG_ObjectAttach(parent, box);
@@ -136,7 +136,7 @@ AG_BoxSetLabelS(AG_Box *box, const char *s)
 	if (s != NULL) {
 		if (box->lbl == NULL) {
 			box->lbl = AG_LabelNewS(box, 0, s);
-			AG_SetStyle(box->lbl, "font-size", "80%");
+			AG_SetFontSize(box->lbl, "80%");
 		} else {
 			AG_LabelTextS(box->lbl, s);
 		}

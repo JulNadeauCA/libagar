@@ -617,7 +617,7 @@ Init(void *_Nonnull obj)
 	tb = num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
 	AG_TextboxBindUTF8(tb, num->inTxt, sizeof(num->inTxt));
 	AG_TextboxSizeHint(tb, "8888.88");
-	AG_SetStyle(tb, "padding", "inherit");
+	AG_SetPadding(tb, "inherit");
 	AG_SetEvent(tb, "textbox-return",  UpdateFromText,"%p,%i",num,1);
 	AG_SetEvent(tb, "textbox-changed", UpdateFromText,"%p,%i",num,0);
 	AG_AddEvent(tb->ed, "widget-lostfocus", LostFocus,"%p",num);
@@ -629,16 +629,16 @@ Init(void *_Nonnull obj)
 	btn = num->incbu = AG_ButtonNewS(num,
 	    AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS,
 	    _("+"));
-	AG_SetStyle(btn, "padding", "0");
-	AG_SetStyle(btn, "font-size", "80%");
+	AG_SetPadding(btn, "0");
+	AG_SetFontSize(btn, "80%");
 	AG_SetEvent(btn, "button-pushed", ButtonIncrement, "%p,%i", num, 0);
 
 	/* Decrement button */
 	btn = num->decbu = AG_ButtonNewS(num,
 	    AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS,
 	    _("-"));
-	AG_SetStyle(btn, "padding", "0");
-	AG_SetStyle(btn, "font-size", "80%");
+	AG_SetPadding(btn, "0");
+	AG_SetFontSize(btn, "80%");
 	AG_SetEvent(btn, "button-pushed", ButtonIncrement, "%p,%i", num, 1);
 
 	AG_InitTimer(&num->toUpdate, "update", 0);

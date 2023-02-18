@@ -135,9 +135,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase timeoutsTest = {
+	AGSI_IDEOGRAM AGSI_EMPTY_HOURGLASS AGSI_RST,
 	"timeouts",
 	N_("Test AG_Timer(3) facility"),
-	"1.5.0",
+	"1.6.0",
 	0,
 	sizeof(MyTestInstance),
 	Init,

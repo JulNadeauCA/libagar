@@ -102,7 +102,8 @@ AG_Scrollbar {
 	line-color#hover: rgb(200,200,180);
 }
 AG_Separator {
-	padding: 4;
+	line-color: #888;
+	padding: 8 10 8 10;
 }
 AG_Statusbar {
 	font-family: cm-serif;

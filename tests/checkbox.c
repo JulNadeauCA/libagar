@@ -18,7 +18,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	lbl = AG_LabelNewS(win, AG_LABEL_HFILL, "Checkbox test");
 	AG_LabelJustify(lbl, AG_TEXT_CENTER);
-	AG_SetStyle(lbl, "font-size", "200%");
+	AG_SetFontSize(lbl, "200%");
 
 	AG_CheckboxNew(win, 0, "First unbounded checkbox");
 	AG_CheckboxNew(win, 0, "Second unbounded checkbox");
@@ -52,6 +52,7 @@ Init(void *obj)
 }
 
 const AG_TestCase checkboxTest = {
+	AGSI_IDEOGRAM AGSI_CHECKBOX AGSI_RST,
 	"checkbox",
 	N_("Test multiple AG_Checkbox(3) bound to a same variable"),
 	"1.6.0",

@@ -31,6 +31,7 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase bezierTest = {
+	AGSI_IDEOGRAM AGSI_BEZIER AGSI_RST,
 	"bezier",
 	N_("Test B\xc3\xa9zier curve drawing"),
 	"1.6.0",

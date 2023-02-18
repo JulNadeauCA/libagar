@@ -672,7 +672,7 @@ AG_About(AG_Event *event)
 			AG_Pixmap *px;
 
 			px = AG_PixmapFromFile(box, 0, path);
-			AG_SetStyle(px, "padding", "5");
+			AG_SetPadding(px, "5");
 		}
 
 		AG_GetVersion(&av);
@@ -697,22 +697,25 @@ AG_About(AG_Event *event)
 			    av.major, av.minor, av.patch,
 			    (av.release) ? av.release : "beta",
 			    cpu.arch, memModel);
-			AG_SetStyle(lbl, "font-size", "140%");
+
+			AG_SetFontSize(lbl, "140%");
 
 			lbl = AG_LabelNewS(vbox, AG_LABEL_HFILL,
 			    AGSI_BR_CYAN "https://www.libAgar.org/\n" AGSI_RST
 			    AGSI_BR_YEL "https://patreon.com/libAgar/");
-			AG_SetStyle(lbl, "font-family", "monoalgue-sans");
-			AG_SetStyle(lbl, "color", "darkblue");
-			AG_SetStyle(lbl, "padding", "3 5 3 0");
+
+			AG_SetFontFamily(lbl, "monoalgue-sans");
+			AG_SetColor(lbl, "darkblue");
+			AG_SetPadding(lbl, "3 5 3 0");
 			AG_LabelJustify(lbl, AG_TEXT_RIGHT);
 		}
 	}
 
 	tb = AG_TextboxNewS(win, AG_TEXTBOX_MULTILINE | AG_TEXTBOX_EXPAND |
 	                         AG_TEXTBOX_READONLY | AG_TEXTBOX_WORDWRAP, NULL);
-	AG_SetStyle(tb, "font-family", "vera-mono");
-	AG_TextboxSizeHintLines(tb, 20);
+	AG_SetFontFamily(tb, "monoalgue");
+	AG_TextboxSizeHintPixels(tb, 550, 0);
+	AG_TextboxSizeHintLines(tb, 22);
 
 	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "license.txt", path, sizeof(path)) == 0 &&
 	   (f = fopen(path, "r")) != NULL) {
@@ -742,8 +745,6 @@ AG_About(AG_Event *event)
 	}
 
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close"), AGWINCLOSE(win));
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 583, 665);
-	AG_WindowSetMinSize(win, 280, 140);
 	AG_WindowShow(win);
 }
 

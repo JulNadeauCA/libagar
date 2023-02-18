@@ -798,13 +798,13 @@ Init(void *_Nonnull obj)
 
 		nb = AG_NotebookNew(fs->hPane2->div[1], AG_NOTEBOOK_HFILL);
 		nt = AG_NotebookAdd(nb, _("Color"), AG_BOX_VERT);
-		AG_SetStyle(nt, "padding", "5");
+		AG_SetPadding(nt, "5");
 		{
 			AG_HSVPal *pal;
 			AG_Button *btnBG, *btnFG;
 
 			box = AG_BoxNewHoriz(nt, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
-			AG_SetStyle(box, "font-size", "80%");
+			AG_SetFontSize(box, "80%");
 
 			btnBG = AG_ButtonNewS(box, AG_BUTTON_STICKY, _("BG"));
 			btnFG = AG_ButtonNewS(box, AG_BUTTON_STICKY, _("FG"));
@@ -823,7 +823,7 @@ Init(void *_Nonnull obj)
 		}
 
 		nt = AG_NotebookAdd(nb, _("Metrics"), AG_BOX_VERT);
-		AG_SetStyle(nt, "padding", "5");
+		AG_SetPadding(nt, "5");
 		{
 			AG_CheckboxNewFlag(nt, 0, _("Adjusted Baseline"),
 			    &fs->flags, AG_FONTSELECTOR_BASELINE);

@@ -108,16 +108,16 @@ TestGUI(void *obj, AG_Window *win)
 
 	box = AG_BoxNewVert(win, AG_BOX_EXPAND);
 	AG_BoxSetLabelS(box, "AG_ConfigFind() search paths:");
-	AG_SetStyle(box, "font-size", "90%");
-	AG_SetStyle(box, "font-weight", "bold");
+	AG_SetFontSize(box, "90%");
+	AG_SetFontWeight(box, "bold");
 	{
 		AG_TAILQ_FOREACH(cp, &agConfig->paths[AG_CONFIG_PATH_DATA], paths) {
 			lbl = AG_LabelNew(box, 0, "Data: %s", cp->s);
-			AG_SetStyle(lbl, "font-family", "monoalgue");
+			AG_SetFontFamily(lbl, "monoalgue");
 		}
 		AG_TAILQ_FOREACH(cp, &agConfig->paths[AG_CONFIG_PATH_FONTS], paths) {
 			lbl = AG_LabelNew(box, 0, "Fonts: %s", cp->s);
-			AG_SetStyle(lbl, "font-family", "monoalgue");
+			AG_SetFontFamily(lbl, "monoalgue");
 		}
 	}
 
@@ -131,6 +131,7 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase configsettingsTest = {
+	AGSI_IDEOGRAM AGSI_GEAR AGSI_RST,
 	"configsettings",
 	N_("Test user-specified AG_Config(3) parameters"),
 	"1.4.2",

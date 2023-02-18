@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2010-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -132,25 +132,18 @@ main(int argc, char *argv[])
 		 * Allow AG_Delay() to work as expected when performing
 		 * multithreaded offline rendering.
 		 */
-		Verbose("Using agTimeOps_renderer\n");
+		Verbose("Using renderer-aware time ops\n");
 		AG_SetTimeOps(&agTimeOps_renderer);
 	}
 #endif
 	AG_ConfigLoad();
 
-#ifdef __APPLE__
-	AG_BindGlobalKeyEv(AG_KEY_Q,	AG_KEYMOD_META, Quit);
-	AG_BindGlobalKey(AG_KEY_EQUALS,	AG_KEYMOD_META,	AG_ZoomIn);
-	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_META,	AG_ZoomOut);
-	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_META,	AG_ZoomReset);
-	AG_BindGlobalKey(AG_KEY_P,	AG_KEYMOD_META, AG_ViewCapture);
-#else
-	AG_BindGlobalKeyEv(AG_KEY_ESCAPE, AG_KEYMOD_ANY, Quit);
-	AG_BindGlobalKey(AG_KEY_EQUALS,	AG_KEYMOD_CTRL,	AG_ZoomIn);
-	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_CTRL,	AG_ZoomOut);
-	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_CTRL,	AG_ZoomReset);
-	AG_BindGlobalKey(AG_KEY_F8,	AG_KEYMOD_ANY, AG_ViewCapture);
-#endif
+	AG_BindGlobalKeyEv(AG_KEY_Q,    AGSI_WINCMD,    Quit);
+	AG_BindGlobalKey(AG_KEY_EQUALS, AGSI_WINCMD,    AG_ZoomIn);
+	AG_BindGlobalKey(AG_KEY_MINUS,  AGSI_WINCMD,    AG_ZoomOut);
+	AG_BindGlobalKey(AG_KEY_0,      AGSI_WINCMD,    AG_ZoomReset);
+	AG_BindGlobalKey(AG_KEY_P,      AGSI_APPCMD,    AG_ViewCapture);
+	AG_BindGlobalKey(AG_KEY_F8,     AG_KEYMOD_NONE, AG_ViewCapture);
 
 	/* Initialize the subsystems. */
 	SG_InitSubsystem();

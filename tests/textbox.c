@@ -176,17 +176,17 @@ TestGUI(void *obj, AG_Window *win)
 
 		tb = AG_TextboxNew(nt, AG_TEXTBOX_HFILL, "Buffer: ");
 		tbBindFn(tb, bufferShd, sizeof(bufferShd));
-		AG_SetStyle(tb, "font-size", "120%");
-		AG_SetStyle(tb, "padding", "5");
+		AG_SetFontSize(tb, "120%");
+		AG_SetPadding(tb, "5");
 
 		AG_SpacerNewHoriz(nt);
 
 		tb2 = AG_TextboxNew(nt, AG_TEXTBOX_HFILL, "Buffer (again): ");
 		tbBindFn(tb2, bufferShd, sizeof(bufferShd));
-		AG_SetStyle(tb2, "font-family", "Monoalgue");
-		AG_SetStyle(tb2, "font-size", "120%");
-		AG_SetStyle(tb2, "text-color", "AntiqueWhite");
-		AG_SetStyle(tb2, "padding", "0");
+		AG_SetFontFamily(tb2, "monoalgue");
+		AG_SetFontSize(tb2, "120%");
+		AG_SetTextColor(tb2, "AntiqueWhite");
+		AG_SetPadding(tb2, "0");
 
 //		AG_TextboxSetCursorPos(tb, -1);		/* To end of string */
 		AG_WidgetFocus(tb);
@@ -295,6 +295,7 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase textboxTest = {
+	AGSI_IDEOGRAM AGSI_TEXTBOX AGSI_RST,
 	"textbox",
 	N_("Test the AG_Textbox(3) / AG_Editable(3) widget"),
 	"1.6.0",

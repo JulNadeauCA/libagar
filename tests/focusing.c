@@ -144,9 +144,10 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase focusingTest = {
+	AGSI_IDEOGRAM AGSI_WIDGET_FOCUS AGSI_RST,
 	"focusing",
 	N_("Test widget focus state control"),
-	"1.4.2",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */

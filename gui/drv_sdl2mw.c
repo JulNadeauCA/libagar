@@ -845,8 +845,8 @@ Edit(void *_Nonnull obj)
 	AG_WindowSetPosition(win, AG_WINDOW_BL, 0);
 
 	lbl = AG_LabelNew(win, 0, _("SDL2MW Driver: %s"), OBJECT(smw)->name);
-	AG_SetStyle(lbl, "font-family", "cm-sans");
-	AG_SetStyle(lbl, "font-size", "150%");
+	AG_SetFontFamily(lbl, "cm-sans");
+	AG_SetFontSize(lbl, "150%");
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
 
@@ -862,7 +862,7 @@ Edit(void *_Nonnull obj)
 	{
 		AG_LabelNewS(nt, 0, _("Pushed GL States:"));
 		tl = AG_TlistNewPolled(nt, AG_TLIST_EXPAND, PollGLContext,"%p",smw);
-		AG_SetStyle(tl, "font-size", "80%");
+		AG_SetFontSize(tl, "80%");
 		AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>", 4);
 	}
 #if 0

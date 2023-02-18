@@ -573,16 +573,29 @@ PopupMenu(AG_Event *_Nonnull event)
 		AG_PopupShowAt(cons->pm, x,y);
 		return;
 	}
-	if ((pm = cons->pm = AG_PopupNew(cons)) == NULL) {
+	if ((pm = cons->pm = AG_PopupNew(cons)) == NULL)
 		return;
-	}
+
 	AG_MenuSeparator(pm->root);
-	AG_MenuAction(pm->root, _("Select All"), NULL, MenuSelectAll, "%p", cons);
-	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy,"%p",cons);
+
+	AG_MenuAction(pm->root,
+	    _(AGSI_IDEOGRAM AGSI_SELECT_ALL AGSI_RST " Select All"), NULL,
+	    MenuSelectAll,"%p",cons);
+
+	mi = AG_MenuAction(pm->root,
+	    _(AGSI_IDEOGRAM AGSI_COPY AGSI_RST " Copy"), NULL,
+	    MenuCopy,"%p",cons);
+
 	mi->stateFn = AG_SetEvent(pm->menu, NULL, MenuCopyActive,"%Cp",cons);
-	AG_MenuAction(pm->root, _("Export to file..."), NULL, MenuExportDlg,"%Cp",cons);
+	AG_MenuAction(pm->root,
+	    _(AGSI_IDEOGRAM AGSI_EXPORT_DOCUMENT AGSI_RST " Export to file..."), NULL,
+	    MenuExportDlg,"%Cp",cons);
+
 	AG_MenuSeparator(pm->root);
-	AG_MenuAction(pm->root, _("Clear All"), NULL, MenuClear,"%p",cons);
+
+	AG_MenuAction(pm->root,
+	    _(AGSI_IDEOGRAM AGSI_CLEAR_ALL AGSI_RST " Clear All"), NULL,
+	    MenuClear,"%p",cons);
 
 	AG_PopupShowAt(pm, x,y);
 }

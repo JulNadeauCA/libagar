@@ -31,8 +31,8 @@ TestGUI(void *obj, AG_Window *win)
 
 		rad = AG_RadioNewUint(nt, AG_RADIO_HFILL | AG_RADIO_HOMOGENOUS,
 		    items, &ti->myValue);
-		AG_SetStyle(rad, "font-family", "league-gothic");
-
+		AG_SetPadding(rad, "10");
+		AG_SetFontFamily(rad, "league-gothic");
 		AG_RadioSetDisposition(rad, AG_RADIO_HORIZ);
 	}
 
@@ -56,7 +56,8 @@ TestGUI(void *obj, AG_Window *win)
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 		AG_LabelValign(lbl, AG_TEXT_TOP);
 		rad = AG_RadioNewUint(nt, 0, items, &ti->myValue);
-		AG_SetStyle(rad, "font-size", "80%");
+		AG_SetFontSize(rad, "80%");
+		AG_SetPadding(rad, "10");
 	}
 
 	return (0);
@@ -72,6 +73,7 @@ Init(void *obj)
 }
 
 const AG_TestCase radioTest = {
+	AGSI_IDEOGRAM AGSI_RADIO_BUTTON AGSI_RST,
 	"radio",
 	N_("Test AG_Radio(3) group"),
 	"1.6.0",

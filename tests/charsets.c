@@ -92,6 +92,7 @@ TestGUI(void *obj, AG_Window *win)
 }
 
 const AG_TestCase charsetsTest = {
+	AGSI_IDEOGRAM AGSI_CHARSETS AGSI_RST,
 	"charsets",
 	N_("Test AG_Editable(3) bound to buffers in different character sets"),
 	"1.5.0",
