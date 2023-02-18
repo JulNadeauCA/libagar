@@ -33,8 +33,9 @@ AG_Checkbox {
  * }
  */
 AG_Console {
-	font-family: Monoalgue;
+	font-family: monoalgue;
 	padding: 4;
+	spacing: 4;
 	background-color: rgb(0,0,0);
 	background-color#hover: rgb(0,0,30);
 	background-color#focused: rgb(5,5,5);
@@ -106,8 +107,7 @@ AG_Separator {
 	padding: 8 10 8 10;
 }
 AG_Statusbar {
-	font-family: cm-serif;
-	font-style: upright-italic;
+	font-family: charter;
 	padding: 2;
 	spacing: 1;
 }
