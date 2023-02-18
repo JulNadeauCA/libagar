@@ -43,6 +43,7 @@ PollFonts(AG_Event *_Nonnull event)
 	};
 	AG_Table *tbl = AG_TABLE_SELF();
 	AG_Font *font;
+	const Uint32 t = AG_GetTicks();
 
 	AG_TableBegin(tbl);
 	AG_MutexLock(&agTextLock);
@@ -58,12 +59,12 @@ PollFonts(AG_Event *_Nonnull event)
 
 		AG_FontGetStyleName(style, sizeof(style), font->flags);
 
-		AG_TableAddRow(tbl, "%s:%s:%f:%s:%u:%s",
+		AG_TableAddRow(tbl, "%s:%s:%f:%s:%.1f:%s",
 		    OBJECT(font)->name,
 		    fontTypeNames[font->spec.type],
 		    font->spec.size,
 		    style,
-		    font->nRefs,
+		    (float)((t - font->tAccess) / 1000.0f),
 		    metrics);
 	}
 	AG_MutexUnlock(&agTextLock);
@@ -83,12 +84,12 @@ AG_DEV_FontInfo(void)
 	AG_WindowSetPosition(win, AG_WINDOW_BL, 0);
 
 	tbl = AG_TableNewPolled(win, AG_TABLE_EXPAND, PollFonts, NULL);
-	AG_TableAddCol(tbl, _("Name"),       "<XXXXXXXXXXXXXXX>", NULL);
-	AG_TableAddCol(tbl, _("Class"),      "<XXXXX>",         NULL);
-	AG_TableAddCol(tbl, _("Size"),       "<XXXXXXXXXX>",    NULL);
-	AG_TableAddCol(tbl, _("Flags"),      "<XXXXXX>",       NULL);
-	AG_TableAddCol(tbl, _("References"), "<XXXXXX>",           NULL);
-	AG_TableAddCol(tbl, _("Metrics"),    NULL,                NULL);
+	AG_TableAddCol(tbl, _("Name"),    "<XXXXXXXXXXXXXXX>",   NULL);
+	AG_TableAddCol(tbl, _("Class"),   "<XXXXX>",             NULL);
+	AG_TableAddCol(tbl, _("Size"),    "<XXXXXXXXXX>",        NULL);
+	AG_TableAddCol(tbl, _("Flags"),   "<XXXXXX>",            NULL);
+	AG_TableAddCol(tbl, _("Time"),    "<XXXXXXX>",           NULL);
+	AG_TableAddCol(tbl, _("Metrics"), NULL,                  NULL);
 	AG_TableSizeHint(tbl, 700, 30);
 
 	AG_WindowShow(win);

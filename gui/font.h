@@ -53,11 +53,11 @@ typedef struct ag_font_spec {
 
 /* Scaling and metric adjustments to a font. */
 typedef struct ag_font_adjustment {
-	const char *face;               /* Font family */
-	Uint flags;			/* AG_FONT_BOLD = Regular is bold */
-	                                /* AG_FONT_ITALIC = Regular is italic */
-	float size_factor;              /* Scaling factor */
-	int ascent_offset[6];           /* Ascent tweak (size range specific) */
+	const char *face;       /* Font family */
+	float size_factor;      /* Scaling factor */
+	int ascent_offset[6];   /* Ascent tweak (size range specific) */
+	Uint regFlags;          /* Which styles to consider Regular or Normal */
+	Uint stateFlags;        /* Set these stateFlags when font is loaded */
 } AG_FontAdjustment;
 
 /* Map alternate names to font names. */
@@ -149,7 +149,7 @@ typedef struct ag_font {
 	int lineskip;                   /* Multiline y-increment (px) */
 	int underlinePos;               /* Underline position */
 	int underlineThk;               /* Underline thickness */
-	Uint nRefs;                     /* Global reference count */
+	Uint32 tAccess;                 /* Access time (debug mode only) */
 	AG_TAILQ_ENTRY(ag_font) fonts;  /* Entry in global fonts list */
 } AG_Font;
 
@@ -201,7 +201,8 @@ extern AG_StaticFont *_Nonnull agBuiltinFonts[];
 
 AG_Font	*_Nullable AG_FetchFont(const char *_Nullable, float, Uint)
                                _Warn_Unused_Result;
-void               AG_UnusedFont(AG_Font *_Nonnull);
+
+#define AG_UnusedFont(font) /* unused */
 
 int     AG_FontGetFamilyStyles(AG_Font *_Nonnull);
 AG_Size AG_FontGetStyleName(char *_Nonnull, AG_Size, Uint);

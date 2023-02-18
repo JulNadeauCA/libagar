@@ -76,8 +76,10 @@ New function [AG_UnusedFont()](https://libagar.org/man3/AG_UnusedFont) for decre
 - Build system updates so configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Those definitions are always available from `${DATADIR}/agar.mk`.
 - Don't install headers from disabled libraries.
 - [**AG_Color**](https://libagar.org/man3/AG_Color): Handle `rgb16()` format in [AG_ColorFromString()](https://libagar.org/man3/AG_ColorFromString).
+- [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): The preview function now includes text in different scripts. It is now possible to set a user-defined preview function.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): In `AG_ObjectGenName()`, convert the prefix (class name) to lowercase in its entirety.
 - [**AG_Printf**](https://libagar.org/man3/AG_Printf): When formatting floating-point, handle positive and negative infinity.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): The `agFontAdjustments[]` table has been updated and expanded to include common system fonts.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Improved appearance and typography fixes. Improved performance of the renderer using state-dependent opaque labels to avoid the need for blending.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Now applies the "padding" attribute on a per-item basis.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): `AG_TlistSetCompareFn()` now returns a pointer to the previous compare function.

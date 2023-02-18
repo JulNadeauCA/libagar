@@ -54,21 +54,61 @@
  * Option flags: AG_FONT_BOLD (bold style is also the Regular style).
  */
 const AG_FontAdjustment agFontAdjustments[] = {
-/*                                                 0.0 10.4 14.0 21.0 23.8 35.0 to- */
-/*                                                10.4 14.0 21.0 23.8 35.0 inf  pts */
-	{ "cm-sans",         0,            1.1f, { -4,  -4,  -6,  -7,  -9, -16 } },
-	{ "cm-serif",        0,            1.1f, { -1,  -2,   0,  -2,  -4,  -5 } },
-	{ "league-spartan",  0,            1.0f, { -2,  -2,  -2,  -3,  -5,  -6 } },
-	{ "league-gothic",   AG_FONT_BOLD, 1.1f, { -1,  -1,  -1,  -2,  -1,  -3 } },
-	{ "fraktur",         AG_FONT_BOLD, 1.1f, { +1,  +1,  +1,  +1,  +1,  +1 } },
-	{ "source-han-sans", 0,            1.0f, { -8, -12, -15, -20, -28, -35 } },
-	{ "unialgue",        0,            1.0f, { -3,  -4,  -5,  -7, -11, -12 } },
-	{ NULL,              0,            0.0f, {  0,   0,   0,   0,   0,   0 } }
+/*                                  Pts From:   0.0 10.4 14.0 21.0 23.8 35.0 */
+/*                                        To:  10.4 14.0 21.0 23.8 35.0 +inf */
+	{ "cm-sans",                     1.1f, { -4,  -4,  -6,  -7,  -9, -16 }, 0,0 },
+	{ "cm-sans.ttf",                 1.1f, { -2,  -3,  -4,  -6,  -3,  -9 }, 0,0 },
+	{ "cm-serif",                    1.1f, { -1,  -2,   0,  -2,  -4,  -5 }, 0,0 },
+	{ "courier",                     1.0f, {  0,   0,  +1,  +1,  +2,  +3 }, 0,0 },
+	{ "courier 10 pitch",            1.0f, {  0,   0,  +1,  +1,  +2,  +3 }, 0,0 },
+	{ "dejavu sans",                 1.0f, { -4,  -4,  -6,  -7,  -9, -16 }, 0,0 },
+	{ "dejavu sans mono",            1.0f, { -2,  -2,  -2,   0,   0,  -1 }, 0,0 },
+	{ "dejavu serif",                1.0f, { -2,  -3,  -3,  -4,  -5,  -7 }, 0,0 },
+	{ "droid sans arabic",           1.0f, {  0,   0,   0,   0,  +1,  +2 }, 0,0 },
+	{ "droid sans armenian",         1.0f, {  0,   0,   0,   0,  +1,  +3 }, 0,0 },
+	{ "droid sans japanese",         1.0f, {  0,   0,  +1,  +1,  +4,  +9 }, 0,0 },
+	{ "droid sans hebrew",           1.0f, {  0,   0,   0,  -1,  -2,  -4 }, 0,0 },
+	{ "droid sans mono",             1.0f, {  0,   0,  -1,  -2,  -4,  -5 }, 0,0 },
+	{ "gentium basic",               1.0f, { -2,  -3,  -3,  -4,  -5,  -7 }, 0,0 },
+	{ "gentium book basic",          1.0f, { -2,  -3,  -3,  -4,  -5,  -7 }, 0,0 },
+	{ "goha-tibeb zemen",            1.0f, { -3,  -3,  -5,  -7,  -8, -13 }, 0,0 },
+	{ "league-gothic",               1.1f, { -1,  -1,   0,  -1,  -1,  +1 }, AG_FONT_BOLD,0 },
+	{ "league gothic",               1.1f, { -1,  -1,   0,  -1,  -1,  +1 }, AG_FONT_BOLD,0 },
+/*                                  Pts From:   0.0 10.4 14.0 21.0 23.8 35.0 */
+/*                                        To:  10.4 14.0 21.0 23.8 35.0 +inf */
+	{ "league-gothic-"
+	  "condensed-italic.otf",        1.1f, { -1,  -1,   0,  -1,  -1,  +1 }, AG_FONT_BOLD,0 },
+	{ "league-gothic-condensed.otf", 1.1f, { -1,  -1,   0,  -1,  -1,  +1 }, AG_FONT_BOLD,0 },
+	{ "league-gothic-italic.otf",    1.1f, { -1,  -1,   0,  -1,  -1,  +1 }, AG_FONT_BOLD,0 },
+	{ "league-gothic.otf",           1.1f, { -1,  -1,   0,  -1,  -1,  +1 }, AG_FONT_BOLD,0 },
+	{ "league spartan",              1.0f, { -2,  -3,  -4,  -7,  -9, -17 }, 0,0 },
+	{ "fraktur",                     1.1f, { +1,  +1,  +1,  +1,  +1,  +1 }, AG_FONT_BOLD,0 },
+	{ "fraktur.ttf",                 1.1f, { +1,  +1,  +1,  +1,  +1,  +1 }, AG_FONT_BOLD,0 },
+	{ "noto sans cjk sc",            1.0f, { -6,  -8, -12, -14, -18, -40 }, 0,0 },
+	{ "noto serif sc",               1.0f, { -6,  -8, -12, -14, -18, -35 }, 0,0 },
+	{ "noto serif cjk sc",           1.0f, { -6,  -8, -12, -14, -19, -38 }, 0,0 },
+	{ "noto sans sc",                1.0f, { -6,  -8, -13, -15, -18, -38 }, 0,0 },
+	{ "noto sans symbols",           1.0f, {  0,   0,   0,   0,  -1,  -2 }, 0,0 },
+	{ "noto sans mono cjk sc",       1.0f, { -6,  -9, -11, -14, -20, -38 }, 0,0 },
+	{ "noto mono",                   1.0f, { -1,  -1,  -1,  -1,  -2,  -4 }, 0,0 },
+	{ "serto jerusalem",             1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+	{ "serto jerusalem outline",     1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+/*                                  Pts From:   0.0 10.4 14.0 21.0 23.8 35.0 */
+/*                                        To:  10.4 14.0 21.0 23.8 35.0 +inf */
+	{ "serto kharput",               1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+	{ "serto malankara",             1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+	{ "serto mardin",                1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+	{ "serto urhoy",                 1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+	{ "unialgue",                    1.0f, { -6,  -7,  -8, -10, -12, -15 }, 0,0 },
+	{ "unialgue.ttf",                1.0f, { -6,  -7,  -8, -10, -12, -15 }, 0,0 },
+	{ "utopia",                      1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+	{ NULL,                          0.0f, {  0,   0,   0,   0,   0,   0 }, 0,0 }
 };
 
 /* Alternate names for fonts. */
 const AG_FontAlias agFontAliases[] = {
 	{ "agar-minimal",          "agar-minimal.agbf" },
+	{ "agar-ideograms",        "agar-ideograms.agbf" },
 	{ "algue",                 "_agFontAlgue" },            /* Built-in */
 	{ "algue.ttf",             "_agFontAlgue" },
 	{ "algue-bold",            "_agFontAlgue_Bold" },
@@ -327,7 +367,7 @@ AG_StaticFont *agBuiltinFonts[] = {
 	/* Is this weight the Regular weight for this font? */                 \
 	for (fa = &agFontAdjustments[0]; fa->face != NULL; fa++) {             \
 		if (strcmp(name, fa->face) == 0 &&                             \
-		    (fa->flags & (weight)))                                    \
+		    (fa->regFlags & (weight)))                                 \
 			break;                                                 \
 	}                                                                      \
 	if (fa->face == NULL) {                                                \
@@ -753,35 +793,14 @@ open_font:
 
 	TAILQ_INSERT_HEAD(&agFontCache, font, fonts);
 out:
-	font->nRefs++;
+#ifdef AG_DEBUG
+	font->tAccess = AG_GetTicks();
+#endif
 	AG_MutexUnlock(&agTextLock);
 	return (font);
 fail:
 	AG_MutexUnlock(&agTextLock);
 	return (NULL);
-}
-
-/*
- * Decrement the reference count on a font. If it reaches 0, release the font.
- * The font must not be the default font (agDefaultFont).
- * agTextLock must be locked.
- */
-void
-AG_UnusedFont(AG_Font *font)
-{
-	AG_OBJECT_ISA(font, "AG_Font:*");
-
-	if (font->nRefs > 0)
-		font->nRefs--;
-
-	if (font->nRefs == 0) {
-#ifdef DEBUG_FONTS
-		Debug(font, "Finalizing font\n");
-#endif
-		AGFONT_OPS(font)->close(font);
-		AG_ObjectDestroy(font);
-	}
-
 }
 
 /*
@@ -933,7 +952,7 @@ Init(void *_Nonnull obj)
 	                       sizeof(int) +         /* lineskip */
 	                       sizeof(int) +         /* underlinePos */
 	                       sizeof(int) +         /* underlineThk */
-	                       sizeof(Uint));        /* nRefs */
+	                       sizeof(Uint));        /* tAccess */
 }
 
 static int
