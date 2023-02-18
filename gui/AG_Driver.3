@@ -34,7 +34,7 @@
 #include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
-.\" IMAGE(http://libagar.org/widgets/AG_DriverGLX.png, "The Xorg/glx driver")
+.\" IMAGE(/widgets/AG_DriverGLX.png, "The Xorg/glx driver")
 Agar implements low-level access to the graphics hardware, event processing
 and window management using a modular driver interface.
 The class registration interface allows Agar to be "ported" to new platforms,
@@ -55,7 +55,7 @@ subclass (for "single-window") is used by drivers that do not interface
 (at least not directly) with an underlying window system.
 For example, the "sdlfb" and "sdlgl" drivers use the SDL 1.x API, and are
 therefore limited to a single native window.
-Another example would be a dumb framebuffer in an embedded device, which
+Another example would be a simple framebuffer in an embedded device, which
 might also use
 .Ft AG_DriverSw .
 When a single-window driver is used, Agar provides an internal window manager.
@@ -333,9 +333,9 @@ The
 .Va type
 field should be set to
 .Dv AG_FRAMEBUFFER
-for dumb-framebuffer drawing, or
+if this driver renders directly to video memory or a framebuffer, or
 .Dv AG_VECTOR
-for vector-based drawing such as OpenGL.
+if this driver uses OpenGL for rendering.
 .Pp
 The
 .Va wm

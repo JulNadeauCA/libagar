@@ -58,25 +58,16 @@ and detached with
 Unattached widgets can be freed using
 .Xr AG_ObjectDestroy 3 .
 Agar handles garbage collection of windows (and attached widgets) internally.
-Destroying an active
+Attempting to destroy an active
 .Xr AG_Window 3
-or a widget which is still attached to a parent is an error which would
-trigger a fatal assertion in debug mode.
+or a widget which is still attached to a parent is an error
+(which would trigger a fatal assertion in debug mode).
 .Pp
 Unless renamed with
 .Xr AG_ObjectSetName 3 ,
 widget instances are given a generic name (e.g., "button0").
 .Xr AG_ObjectFind 3
 can be used to get a pointer to a widget by pathname (e.g., "box0/button0").
-.Pp
-Parentless widgets form the root of their own virtual filesystem.
-It is customary for high-level constructor routines (such as
-.Xr AG_ButtonNew 3 )
-to accept a NULL
-.Fa parent
-argument, allowing the caller to make an explicit
-.Xr AG_ObjectAttach 3
-call at a later time.
 .Pp
 The
 .Xr AG_Variable 3
@@ -85,8 +76,13 @@ table of
 is used to store bindings data, style properties and general user data.
 The
 .Xr AG_Event 3
-framework is used to handle both low-level (e.g., "mouse-button-down") as well
-as high-level (e.g., "button-pushed") events.
+table of
+.Ft AG_Object
+maps widget events (such as "button-pushed") to one or more event
+handlers (as registered by
+.Xr AG_SetEvent 3
+or
+.Xr AG_AddEvent 3 ) .
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
@@ -122,8 +118,9 @@ typedef struct ag_widget_class {
 } AG_WidgetClass;
 .Ed
 .Pp
+The
 .Fn draw
-renders the widget to the graphics display (e.g., using OpenGL,
+method renders the widget to the graphics display (using GL,
 .Xr AG_WidgetPrimitives 3
 or other methods).
 The code under
@@ -163,6 +160,54 @@ to work at all (in which case the
 flag will be set and
 .Fn draw
 will not run).
+.Pp
+The
+.Fn mouse_button_down
+method is invoked if the user presses a button while the cursor is located
+at coordinates
+.Fa x ,
+.Fa y
+inside the widget's local coordinates system.
+.Pp
+The
+.Fn mouse_button_up
+method is invoked if the user releases a mouse button while the cursor is
+located at coordinates
+.Fa x ,
+.Fa y
+relative to the widget's local coordinates system.
+The cursor must intersect the widget (or the widget hold an
+.Dv AG_WIDGET_UNFOCUSED_BUTTONUP
+grab).
+.Pp
+The
+.Fn mouse_motion
+method is invoked if the user moves the cursor to coordinates
+.Fa x ,
+.Fa y
+in the widget's local coordinate system.
+The widget must hold focus (or hold an
+.Dv AG_WIDGET_UNFOCUSED_MOTION
+grab).
+The
+.Fa dx
+and
+.Fa dy
+arguments provide the displacement (in px) relative to the last mouse motion
+event.
+.Pp
+The
+.Fn key_down
+and
+.Fn key_up
+methods are invoked whenever the user presses or releases a key on the
+keyboard.
+The widget must hold focus (or a
+.Dv AG_WIDGET_UNFOCUSED_KEYDOWN /
+.Dv AG_WIDGET_UNFOCUSED_KEYUP
+grab).
+.Pp
+
 .\" MANLINK(AG_SizeReq)
 .\" MANLINK(AG_SizeAlloc)
 .Sh SIZING
@@ -198,22 +243,28 @@ will not run).
 .Fn AG_WidgetUpdateCoords "AG_Widget *obj" "int x" "int y"
 .Pp
 .nr nS 0
+The
+.Dv AG_WIDGET_HFILL
+flag hints to vertically-packing containers that this widget wants to fill any
+remaining space along the horizontal axis.
+.Dv AG_WIDGET_VFILL
+flag hints to horizontally-packing containers that this widget wants to fill any
+remaining space along the horizontal axis.
+.Pp
+The
 .Fn AG_ExpandHoriz
 and
 .Fn AG_ExpandVert
-set the
+functions set
 .Dv AG_WIDGET_HFILL
 and
-.Dv AG_WIDGET_VFILL
-options, respectively.
+.Dv AG_WIDGET_VFILL ,
+respectively.
 .Fn AG_Expand
 is equivalent to calling both
 .Fn AG_ExpandHoriz
 and
 .Fn AG_ExpandVert .
-See
-.Sx FLAGS
-section.
 .Pp
 .Fn AG_WidgetSizeReq
 invokes the
@@ -239,12 +290,6 @@ and
 .Fn size_allocate
 functions of a container widget implementation, in order to
 size and position the child widgets attached to the container.
-.Pp
-To set widget geometries explicitely in pixels, it is still possible to use
-the
-.Xr AG_Fixed 3
-container, or preferably, derive or create your own container widget (which
-can be realized in very few lines of code).
 .Pp
 The
 .Ft AG_SizeReq
@@ -287,7 +332,7 @@ should be called following
 .Xr AG_ObjectAttach 3
 or
 .Xr AG_ObjectDetach 3
-calls made in event context, or manual modifications of the
+calls made in event context, or external modifications to the
 .Va x ,
 .Va y ,
 .Va w ,

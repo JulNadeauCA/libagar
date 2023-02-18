@@ -80,7 +80,7 @@ Agar - Perl interface to the Agar GUI library
 =head1 DESCRIPTION
 
 This is the Perl interface to Agar, a portable and device-independent
-graphical application toolkit (available from L<http://libagar.org/>).
+graphical application toolkit (available from L<https://libagar.org/>).
 
 This module provides the Agar initialization routines and globals.
 
@@ -249,6 +249,6 @@ L<Agar::PopupMenu(3)>, L<Agar::ProgressBar(3)>, L<Agar::Radio(3)>,
 L<Agar::Scrollbar(3)>, L<Agar::Scrollview(3)>, L<Agar::Separator(3)>,
 L<Agar::Slider(3)>, L<Agar::Surface(3)>, L<Agar::Text(3)>, L<Agar::Table(3)>,
 L<Agar::Textbox(3)>, L<Agar::Tlist(3)>, L<Agar::Toolbar(3)>, L<Agar::UCombo(3)>,
-L<Agar::Widget(3)>, L<Agar::Window(3)>, L<http://libagar.org/>
+L<Agar::Widget(3)>, L<Agar::Window(3)>, L<https://libagar.org/>
 
 =cut

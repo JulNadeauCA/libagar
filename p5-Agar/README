@@ -4,5 +4,5 @@ and its standard widgets. It also allows new widgets to be written in pure
 Perl.
 
 The Agar library must be installed on your system for this module to compile.
-You can download it from: http://libagar.org/.
+You can download it from: https://libagar.org/.
 

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2010-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2010-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,7 +22,7 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd December 21, 2022
+.Dd February 18, 2023
 .Dt AG_DRIVERMW 3
 .Os Agar 1.7
 .Sh NAME
@@ -34,7 +34,7 @@
 #include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
-.\" IMAGE(http://libagar.org/widgets/AG_DriverGLX.png, "The Xorg/glx driver")
+.\" IMAGE(/widgets/AG_DriverGLX.png, "The Xorg/glx driver")
 .Nm
 is a subclass of
 .Xr AG_Driver 3
@@ -57,40 +57,40 @@ and is defined as follows:
 typedef struct ag_driver_mw_class {
 	struct ag_driver_class _inherit;
 
-	/* Open/close native windows */
-	int  (*openWindow)(AG_Window *w, const AG_Rect *r, int bpp,
+	/* Create / destroy window */
+	int  (*openWindow)(AG_Window *win, const AG_Rect *r, int bpp,
 	                   Uint flags);
-	void (*closeWindow)(AG_Window *w);
+	void (*closeWindow)(AG_Window *win);
 
-	/* Show and hide window */
-	int (*mapWindow)(AG_Window *w);
-	int (*unmapWindow)(AG_Window *w);
+	/* Set window visibility */
+	int (*mapWindow)(AG_Window *win);
+	int (*unmapWindow)(AG_Window *win);
 
 	/* Configure stacking order and parenting */
-	int (*raiseWindow)(AG_Window *w);
-	int (*lowerWindow)(AG_Window *w);
-	int (*reparentWindow)(AG_Window *w, AG_Window *winParent,
+	int (*raiseWindow)(AG_Window *win);
+	int (*lowerWindow)(AG_Window *win);
+	int (*reparentWindow)(AG_Window *win, AG_Window *winParent,
 	                      int x, int y);
 
 	/* Change and query input focus state */
-	int (*getInputFocus)(AG_Window **w);
-	int (*setInputFocus)(AG_Window *w);
+	int (*getInputFocus)(AG_Window **win);
+	int (*setInputFocus)(AG_Window *win);
 
 	/* Move and resize windows */
-	int  (*moveWindow)(AG_Window *w, int x, int y);
-	int  (*resizeWindow)(AG_Window *w, Uint w, Uint h);
-	int  (*moveResizeWindow)(AG_Window *w, AG_SizeAlloc *a);
-	void (*preResizeCallback)(AG_Window *w);
-	void (*postResizeCallback)(AG_Window *w, AG_SizeAlloc *a);
+	int  (*moveWindow)(AG_Window *win, int x, int y);
+	int  (*resizeWindow)(AG_Window *win, Uint w, Uint h);
+	int  (*moveResizeWindow)(AG_Window *win, AG_SizeAlloc *a);
+	void (*preResizeCallback)(AG_Window *win);
+	void (*postResizeCallback)(AG_Window *win, AG_SizeAlloc *a);
 
 	/* Configure window parameters */
-	int  (*setBorderWidth)(AG_Window *w, Uint w);
-	int  (*setWindowCaption)(AG_Window *w, const char *s);
-	void (*setTransientFor)(AG_Window *w, AG_Window *winParent);
-	int  (*setOpacity)(AG_Window *w, float opacity);
-	void (*tweakAlignment)(AG_Window *w, AG_SizeAlloc *a);
-        void (*setWindowMinSize)(struct ag_window *win, int w, int h);
-        void (*setWindowMaxSize)(struct ag_window *win, int w, int h);
+	int  (*setBorderWidth)(AG_Window *win, Uint w);
+	int  (*setWindowCaption)(AG_Window *win, const char *s);
+	void (*setTransientFor)(AG_Window *win, AG_Window *winParent);
+	int  (*setOpacity)(AG_Window *win, float opacity);
+	void (*tweakAlignment)(AG_Window *win, AG_SizeAlloc *a);
+        void (*setWindowMinSize)(AG_Window *win, int w, int h);
+        void (*setWindowMaxSize)(AG_Window *win, int w, int h);
 } AG_DriverMwClass;
 .Ed
 .Pp

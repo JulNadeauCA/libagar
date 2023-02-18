@@ -479,7 +479,7 @@ package Agar.Object is
   --
   -- Register a new namespace and prefix. This is used for expanding inheritance
   -- hierarchy strings such as "Agar(Foo:Bar)" to "AG_Foo:AG_Bar".
-  -- For example, ("Agar", "AG_", "http://libagar.org/").
+  -- For example, ("Agar", "AG_", "https://libagar.org/").
   --
   procedure Register_Namespace
     (Name   : in String;

@@ -127,7 +127,7 @@ pre-package:
 		cat OFL.txt         |sed "s/$$/`echo -e \\\r`/" >OFL.txt; \
 		cat README.md       |sed "s/$$/`echo -e \\\r`/" >README.txt; \
 		cp -f mk/agar-logo.png Logo.png; \
-		echo '<meta http-equiv="refresh" content="1;url=http://libagar.org/docs/compile-msvc.html" />' > VisualC.html; \
+		echo '<meta http-equiv="refresh" content="1;url=https://libagar.org/docs/compile-msvc.html" />' > VisualC.html; \
 		echo "install-sdk.exe" >> ${PROJFILELIST}; \
 		echo "CHANGELOG.txt"   >> ${PROJFILELIST}; \
 		echo "INSTALL.txt"     >> ${PROJFILELIST}; \

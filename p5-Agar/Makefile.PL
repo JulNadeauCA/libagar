@@ -10,7 +10,7 @@ require 5.6.0;
 my $agar_version = `agar-config --version`;
 if ($? != 0) {
 	die 'Agar is not installed (agar-config not found). ' .
-	    'Get it from: http://libagar.org/';
+	    'Get it from: https://libagar.org/';
 }
 chomp($agar_version);
 if ($agar_version =~ /^(\d{1,2})\.(\d{1,2})\.(\d{1,2})$/) {
