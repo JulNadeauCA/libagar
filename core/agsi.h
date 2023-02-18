@@ -1,8 +1,9 @@
 /*	Public domain	*/
 
 /*
- * Common ANSI escape sequences.
- * https://en.wikipedia.org/wiki/ANSI_escape_code
+ * Agar Extended ANSI Escape Sequences.
+ *
+ * See: https://en.wikipedia.org/wiki/ANSI_escape_code
  */
 
 #ifdef AG_ANSI_COLOR
@@ -147,13 +148,12 @@
 #define AGSI_MONOALGUE_SANS      AGSI_FONT5		/* Monoalgue Sans */
 #define AGSI_CHARTER             AGSI_FONT6		/* Charter */
 #define AGSI_MONOALGUE           AGSI_FONT7		/* Monoalgue */
-#define AGSI_SOURCE_HAN_SANS     AGSI_FONT8		/* Source Han Sans */
+#define AGSI_CJK                 AGSI_FONT8		/* A pan-CJK font */
 #define AGSI_LEAGUE_SPARTAN      AGSI_FONT9		/* League Spartan */
 #define AGSI_LEAGUE_GOTHIC       AGSI_FONT10		/* League Gothic */
 #define AGSI_UNIFRAKTUR_MAGUNTIA AGSI_FONT11		/* Unifraktur Maguntia */
 #define AGSI_AGAR_MINIMAL        AGSI_FONT12		/* Agar Minimal */
-#define AGSI_BITSTREAM_VERA      AGSI_FONT13		/* Bitstream Vera */
-#define AGSI_BITSTREAM_VERA_MONO AGSI_FONT14		/* Bitstream Vera Mono */
+#define AGSI_AGAR_IDEOGRAMS      AGSI_FONT13		/* Agar Ideograms */
 
 #define AGSI_MONOSPACE     AGSI_MONOALGUE_SANS		/* A monospace font */
 #define AGSI_UNI           AGSI_UNIALGUE		/* A pan-unicode font */
@@ -162,25 +162,29 @@
 #define AGSI_CM_SERIF      AGSI_CMU_SERIF		/* CM Serif */
 #define AGSI_CODE          AGSI_MONOALGUE		/* A programming font */
 #define AGSI_COURIER       AGSI_MONOALGUE		/* A courier font */
-#define AGSI_SOURCE_HAN    AGSI_SOURCE_HAN_SANS		/* Source Han */
-#define AGSI_CJK           AGSI_SOURCE_HAN_SANS		/* A pan-CKJ font */
 #define AGSI_FRAKTUR       AGSI_UNIFRAKTUR_MAGUNTIA	/* A fraktur font */
-#define AGSI_VERA          AGSI_BITSTREAM_VERA          /* Bitstream Vera */
-#define AGSI_VERA_MONO     AGSI_BITSTREAM_VERA_MONO     /* Bitstream Vera Mono */
+#define AGSI_IDEOGRAM      AGSI_AGAR_IDEOGRAMS          /* A font with ideograms */
 
 /*
- * Map AGSI_CMD to the preferred modifier key for application-global commands.
+ * Map AGSI_APPCMD and AGSI_WINCMD to the preferred modifier keys for
+ * application-global and window-global commands, respectively.
  */
 #if defined(__APPLE2__) || defined(__BBC__) || defined(__PET__) || \
     defined(__VIC20__) || defined(__C64__) || defined(__C128__)
-# define AGSI_CMD    "Shift-"
-# define AGSI_CMD_MOD AG_KEYMOD_SHIFT
+# define AGSI_APPCMD      AG_KEYMOD_SHIFT
+# define AGSI_APPCMD_NAME "Shift-"
+# define AGSI_WINCMD      AG_KEYMOD_SHIFT
+# define AGSI_WINCMD_NAME "Shift-"
 #elif defined(__APPLE__)
-# define AGSI_CMD    "Command-"
-# define AGSI_CMD_MOD AG_KEYMOD_META
+# define AGSI_APPCMD      AG_KEYMOD_META
+# define AGSI_APPCMD_NAME "Command-"
+# define AGSI_WINCMD      AG_KEYMOD_META
+# define AGSI_WINCMD_NAME "Command-"
 #else
-# define AGSI_CMD    "Ctrl-Shift-"
-# define AGSI_CMD_MOD AG_KEYMOD_CTRL_SHIFT
+# define AGSI_APPCMD      AG_KEYMOD_CTRL_SHIFT
+# define AGSI_APPCMD_NAME "Ctrl-Shift-"
+# define AGSI_WINCMD      AG_KEYMOD_CTRL
+# define AGSI_WINCMD_NAME "Ctrl-"
 #endif
 
 /*
@@ -289,8 +293,8 @@
 #define AGSI_SUPERSCRIPT_PLUS        "\xE2\x81\xBA"	/* U+207A Superscript Plus Sign */
 #define AGSI_SUPERSCRIPT_MINUS       "\xE2\x81\xBB"	/* U+207B */
 #define AGSI_SUPERSCRIPT_EQUALS      "\xE2\x81\xBC"	/* U+207C Superscript Equals Sign */
-#define AGSI_SUPERSCRIPT_LEFT_PAREN  "\xE2\x81\xBD"	/* U+207D Superscript Left Parenthesis */
-#define AGSI_SUPERSCRIPT_RIGHT_PAREN "\xE2\x81\xBE"	/* U+207E Superscript Right Parenthesis */
+#define AGSI_SUPERSCRIPT_L_PAREN     "\xE2\x81\xBD"	/* U+207D Superscript Left Parenthesis */
+#define AGSI_SUPERSCRIPT_R_PAREN     "\xE2\x81\xBE"	/* U+207E Superscript Right Parenthesis */
 #define AGSI_SUPERSCRIPT_SMALL_N     "\xE2\x81\xBF"	/* U+207F Superscript Latin Small Letter N */
 #define AGSI_SUBSCRIPT_0             "\xE2\x82\x80"	/* U+2080 Subscript 0 */
 #define AGSI_SUBSCRIPT_1             "\xE2\x82\x81"	/* U+2081 Subscript 1 */
@@ -305,8 +309,8 @@
 #define AGSI_SUBSCRIPT_PLUS          "\xE2\x82\x8A"	/* U+208A Subscript Plus Sign */
 #define AGSI_SUBSCRIPT_MINUS         "\xE2\x82\x8B"	/* U+208B */
 #define AGSI_SUBSCRIPT_EQUALS        "\xE2\x82\x8C"	/* U+208C Subscript Equals Sign */
-#define AGSI_SUBSCRIPT_LEFT_PAREN    "\xE2\x82\x8D"	/* U+208D Subscript Left Parenthesis */
-#define AGSI_SUBSCRIPT_RIGHT_PAREN   "\xE2\x82\x8E"	/* U+208E Subscript Right Parenthesis */
+#define AGSI_SUBSCRIPT_L_PAREN       "\xE2\x82\x8D"	/* U+208D Subscript Left Parenthesis */
+#define AGSI_SUBSCRIPT_R_PAREN       "\xE2\x82\x8E"	/* U+208E Subscript Right Parenthesis */
 #define AGSI_SUBSCRIPT_SMALL_A       "\xE2\x82\x90"	/* U+2090 Latin Subscript Small Letter A */
 #define AGSI_SUBSCRIPT_SMALL_E       "\xE2\x82\x91"	/* U+2091 Latin Subscript Small Letter E */
 #define AGSI_SUBSCRIPT_SMALL_O       "\xE2\x82\x92"	/* U+2092 Latin Subscript Small Letter O */
@@ -831,8 +835,9 @@
 /*
  * Miscellaneous Symbols.
  */
-#define AGSI_WHEEL_OF_DHARMA  "\xE2\x98\xB8"       /* U+2638 */
-#define AGSI_GEAR             "\xE2\x9A\x99"       /* U+2699 */
+#define AGSI_WHEEL_OF_DHARMA   "\xE2\x98\xB8"       /* U+2638 */
+#define AGSI_GEAR              "\xE2\x9A\x99"       /* U+2699 */
+#define AGSI_WHEELCHAIR_SYMBOL "\xE2\x99\xBF"       /* U+267F */
 /*
  * Dingbats.
  */
@@ -849,7 +854,6 @@
 #define AGSI_HEAVY_MULTIPLICATION_X "\xE2\x9C\x96" /* U+2716 */
 #define AGSI_BALLOT_X               "\xE2\x9C\x97" /* U+2717 */
 #define AGSI_HEAVY_BALLOT_X         "\xE2\x9C\x98" /* U+2718 */
-#define AGSI_CLOSE_X AGSI_MULTIPLICATION_X
 #define AGSI_BLK_4_POINTED_STAR     "\xE2\x9C\xA6" /* U+2726 Black Four Pointed Star */
 #define AGSI_WHT_4_POINTED_STAR     "\xE2\x9C\xA7" /* U+2727 White Four Pointed Star */
 /*
@@ -863,12 +867,22 @@
 #define AGSI_WANING_GIBBOUS_MOON  "\xF0\x9F\x8C\x96" /* U+1F316 */
 #define AGSI_LAST_QUARTER_MOON    "\xF0\x9F\x8C\x97" /* U+1F317 */
 #define AGSI_WANING_CRESCENT_MOON "\xF0\x9F\x8C\x98" /* U+1F318 */
+#define AGSI_ARTISTS_PALETTE      "\xF0\x9F\x8E\xA8" /* U+1F3A8 */
 #define AGSI_ANT                  "\xF0\x9F\x90\x9C" /* U+1F41C */
 #define AGSI_MOUSE_FACE           "\xF0\x9F\x90\xAD" /* U+1F42D */
 #define AGSI_COW_FACE             "\xF0\x9F\x90\xAE" /* U+1F42E */
 #define AGSI_CAT_FACE             "\xF0\x9F\x90\xB1" /* U+1F431 */
 #define AGSI_MONKEY_FACE          "\xF0\x9F\x90\xB5" /* U+1F435 */
+#define AGSI_TEE_SHIRT            "\xF0\x9F\x91\x95" /* U+1F455 */
+#define AGSI_JEANS                "\xF0\x9F\x91\x96" /* U+1F456 */
 #define AGSI_PILE_OF_POO          "\xF0\x9F\x92\xA9" /* U+1F4A9 */
+#define AGSI_FLOPPY_DISK          "\xF0\x9F\x92\xBE" /* U+1F4BE */
+#define AGSI_DVD                  "\xF0\x9F\x93\x80" /* U+1F4C0 */
+#define AGSI_SPKR_W_3_SOUND_WAVES "\xF0\x9F\x94\x8A" /* U+1F50A Speaker With Three Sound Waves */
+#define AGSI_JOYSTICK             "\xF0\x9F\x95\xB9" /* U+1F579 */
+#define AGSI_LOWER_L_PENCIL       "\xF0\x9F\x96\x89" /* U+1F589 Lower Left Pencil */
+#define AGSI_TWO_BUTTON_MOUSE     "\xF0\x9F\x96\xB0" /* U+1F5B0 */
+
 /*
  * Emoticons ("SML" = "SMILING", "OM" = "OPEN_MOUTH").
  */
@@ -939,14 +953,98 @@
 #define AGSI_WEARY_CAT_FACE                   "\xF0\x9F\x99\x80" /* U+1F640 */
 #define AGSI_UPSIDE_DOWN_FACE                 "\xF0\x9F\x99\x83" /* U+1F643 */
 /*
- * Private Use Area.
+ * Ideograms (Agar Ideograms; Algue Private Use Area).
  */
-#define AGSI_BLACK_AGAR     "\xEE\x80\x80"  /* U+E000 Agar Logo Filled */
-#define AGSI_WHITE_AGAR     "\xEE\x80\x81"  /* U+E001 Agar Logo Outline */
-#define AGSI_MENUBOOL_TRUE  "\xEE\x80\x82"  /* U+E002 AG_Menu(3) Boolean True */
-#define AGSI_MENUBOOL_FALSE "\xEE\x80\x83"  /* U+E003 AG_Menu(3) Boolean False */
-#define AGSI_KEYMOD_HYPHEN  "\xEE\x80\x84"  /* U+E004 Keyboard-Modifier Hyphen */
-#define AGSI_MENU_EXPANDER  "\xEE\x80\x85"  /* U+E005 Menu Expansion Arrow */
-#define AGSI_BOX_VERT       "\xEE\x80\x90"  /* U+E010 Vertical AG_Box(3) */
-#define AGSI_BOX_HORIZ      "\xEE\x80\x91"  /* U+E011 Horizontal AG_Box(3) */
-#define AGSI_BUTTON         "\xEE\x80\x92"  /* U+E012 AG_Button(3) */
+#define AGSI_BLACK_AGAR           "\xEE\x80\x80"  /* U+E000 Logo Filled */
+#define AGSI_WHITE_AGAR           "\xEE\x80\x81"  /* U+E001 Logo Outline */
+#define AGSI_MENUBOOL_TRUE        "\xEE\x80\x82"  /* U+E002 Menu Boolean True */
+#define AGSI_MENUBOOL_FALSE       "\xEE\x80\x83"  /* U+E003 Menu Boolean False */
+#define AGSI_KEYMOD_HYPHEN        "\xEE\x80\x84"  /* U+E004 Keyboard-Modifier Hyphen */
+#define AGSI_MENU_EXPANDER        "\xEE\x80\x85"  /* U+E005 Menu Expansion Arrow */
+#define AGSI_REDO AGSI_MENU_EXPANDER
+#define AGSI_BOX_VERT             "\xEE\x80\x90"  /* U+E010 Vertically Packed Box */
+#define AGSI_BOX_HORIZ            "\xEE\x80\x91"  /* U+E011 Horizontally Packed Box */
+#define AGSI_BUTTON               "\xEE\x80\x92"  /* U+E012 GUI Button */
+#define AGSI_BEZIER               "\xEE\x80\x93"  /* U+E013 Bezier Curve */
+#define AGSI_CHARSETS             "\xEE\x80\x94"  /* U+E014 Character Sets */
+#define AGSI_CHECKBOX             "\xEE\x80\x95"  /* U+E015 Checkbox */
+#define AGSI_WINDOW_GRADIENT      "\xEE\x80\x96"  /* U+E016 Window Gradient */
+#define AGSI_CONSOLE              "\xEE\x80\x97"  /* U+E017 Console */
+#define AGSI_CUSTOM_WIDGET        "\xEE\x80\x98"  /* U+E018 Custom Widget */
+#define AGSI_FIXED_LAYOUT         "\xEE\x80\x99"  /* U+E019 Fixed Layout */
+#define AGSI_WIDGET_FOCUS         "\xEE\x80\x9A"  /* U+E01A Widget Focus */
+#define AGSI_TYPOGRAPHY           "\xEE\x80\x9B"  /* U+E01B Typography */
+#define AGSI_FILESYSTEM           "\xEE\x80\x9C"  /* U+E01C Filesystem */
+#define AGSI_WIREFRAME_CUBE       "\xEE\x80\x9D"  /* U+E01D Wireframe Cube */
+#define AGSI_LOAD_IMAGE           "\xEE\x80\x9E"  /* U+E01E Load Image */
+#define AGSI_SAVE_IMAGE           "\xEE\x80\x9F"  /* U+E01F Save Image */
+#define AGSI_KEYBOARD_KEY         "\xEE\x80\xA0"  /* U+E020 Key From a Keyboard */
+#define AGSI_MATH_X_EQUALS        "\xEE\x80\xA1"  /* U+E021 Mathematical "X =" */
+#define AGSI_V_MAXIMIZE           "\xEE\x80\xA2"  /* U+E022 Vertical Maximize */
+#define AGSI_H_MAXIMIZE           "\xEE\x80\xA3"  /* U+E023 Horizontal Maximize */
+#define AGSI_MEDIUM_WINDOW        "\xEE\x80\xA4"  /* U+E024 Medium Window */
+#define AGSI_SMALL_WINDOW         "\xEE\x80\xA5"  /* U+E025 Small Window */
+#define AGSI_SMALL_SPHERE         "\xEE\x80\xA6"  /* U+E026 Small Sphere */
+#define AGSI_LARGE_SPHERE         "\xEE\x80\xA7"  /* U+E027 Large Sphere */
+#define AGSI_WINDOW_PANE          "\xEE\x80\xA8"  /* U+E028 Window Pane */
+#define AGSI_RADIO_BUTTON         "\xEE\x80\xA9"  /* U+E029 Radio Button */
+#define AGSI_RENDER_TO_SURFACE    "\xEE\x80\xAA"  /* U+E02A Render To Surface */
+#define AGSI_HORIZ_SCROLLBAR      "\xEE\x80\xAB"  /* U+E02B Horizontal Scrollbar */
+#define AGSI_VERT_SCROLLBAR       "\xEE\x80\xAC"  /* U+E02C Vertical Scrollbar */
+#define AGSI_SCROLLVIEW           "\xEE\x80\xAD"  /* U+E02D Scrollview */
+#define AGSI_SWORD                "\xEE\x80\xAE"  /* U+E02E Sword */
+#define AGSI_NUL_TERMINATION      "\xEE\x80\xAF"  /* U+E02F NUL Termination */
+#define AGSI_TABLE                "\xEE\x80\xB0"  /* U+E030 Table */
+#define AGSI_TEXTBOX              "\xEE\x80\xB1"  /* U+E031 Textbox */
+#define AGSI_PROGRESS_BAR         "\xEE\x80\xB2"  /* U+E032 ProgressBar */
+#define AGSI_CANNED_DIALOG        "\xEE\x80\xB3"  /* U+E033 Canned Dialog */
+#define AGSI_THREADS              "\xEE\x80\xB4"  /* U+E034 Threads */
+#define AGSI_EMPTY_HOURGLASS      "\xEE\x80\xB5"  /* U+E035 Empty Hourglass */
+#define AGSI_UNIT_CONVERSION      "\xEE\x80\xB6"  /* U+E036 Unit Conversion */
+#define AGSI_USER_ACCESS          "\xEE\x80\xB7"  /* U+E037 User Access */
+#define AGSI_POPULATED_WINDOW     "\xEE\x80\xB8"  /* U+E038 Populated Window */
+#define AGSI_TWO_WINDOWS          "\xEE\x80\xB9"  /* U+E039 Two Windows */
+#define AGSI_ALICE                "\xEE\x80\xBA"  /* U+E03A Alice */
+#define AGSI_BOB                  "\xEE\x80\xBB"  /* U+E03B Bob */
+#define AGSI_USER_W_3_SOUND_WAVES "\xEE\x80\xBC"  /* U+E03C User With 3 Sound Waves */
+#define AGSI_FOLDED_DIAPER        "\xEE\x80\xBD"  /* U+E03D Folded Diaper */
+#define AGSI_UNFOLDED_DIAPER      "\xEE\x80\xBE"  /* U+E03E Unfolded Diaper */
+#define AGSI_PAPER_ROLL           "\xEE\x80\xBF"  /* U+E03F Paper Roll */
+#define AGSI_CONTAINER            "\xEE\x81\x80"  /* U+E040 Container */
+#define AGSI_PARCEL               "\xEE\x81\x81"  /* U+E041 Parcel */
+#define AGSI_SIZE_XS              "\xEE\x81\x82"  /* U+E042 Size X-Small */
+#define AGSI_SIZE_SM              "\xEE\x81\x83"  /* U+E043 Size Small */
+#define AGSI_SIZE_MD              "\xEE\x81\x84"  /* U+E044 Size Medium */
+#define AGSI_SIZE_LG              "\xEE\x81\x85"  /* U+E045 Size Large */
+#define AGSI_SIZE_XL              "\xEE\x81\x86"  /* U+E046 Size X-Large */
+#define AGSI_SIZE_2XL             "\xEE\x81\x87"  /* U+E047 Size 2XL */
+#define AGSI_SIZE_3XL             "\xEE\x81\x88"  /* U+E048 Size 3XL */
+#define AGSI_SIZE_4XL             "\xEE\x81\x89"  /* U+E049 Size 4XL */
+#define AGSI_CLOSE_X              "\xEE\x81\x8A"  /* U+E04A Close "X" */
+#define AGSI_EXPORT_DOCUMENT      "\xEE\x81\x8B"  /* U+E04B Export Document */
+#define AGSI_PAD                  "\xEE\x81\x8C"  /* U+E04C Pad */
+#define AGSI_DEBUGGER             "\xEE\x81\x8D"  /* U+E04D Debugger */
+#define AGSI_L_MENU_EXPANDER      "\xEE\x81\x8E"  /* U+E04E Leftwise Menu Expansion Arrow */
+#define AGSI_UNDO AGSI_L_MENU_EXPANDER
+#define AGSI_USB_STICK            "\xEE\x81\x8F"  /* U+E04F USB Stick */
+#define AGSI_VERTICAL_SPOOL       "\xEE\x81\x90"  /* U+E050 Vertical Spool */
+#define AGSI_HORIZONTAL_SPOOL     "\xEE\x81\x91"  /* U+E051 Horizontal Spool */
+#define AGSI_DIP_CHIP             "\xEE\x81\x92"  /* U+E052 Dual Inline Package Chip */
+#define AGSI_SURFACE_MOUNT_CHIP   "\xEE\x81\x93"  /* U+E053 Surface Mount Chip */
+#define AGSI_VACUUM_TUBE          "\xEE\x81\x94"  /* U+E054 Vacuum Tube */
+#define AGSI_ZOOM_IN              "\xEE\x81\x95"  /* U+E055 Zoom In */
+#define AGSI_ZOOM_OUT             "\xEE\x81\x96"  /* U+E056 Zoom Out */
+#define AGSI_ZOOM_RESET           "\xEE\x81\x97"  /* U+E057 Zoom Reset */
+#define AGSI_AGAR_AG              "\xEE\x81\x98"  /* U+E058 Agar "AG" */
+#define AGSI_AGAR_AR              "\xEE\x81\x99"  /* U+E059 Agar "AR" */
+#define AGSI_CUT                  "\xEE\x81\x9A"  /* U+E05A Cut */
+#define AGSI_COPY                 "\xEE\x81\x9B"  /* U+E05B Copy */
+#define AGSI_LH_COPY              "\xEE\x81\x9C"  /* U+E05C Left-Handed Copy */
+#define AGSI_CLIPBOARD            "\xEE\x81\x9D"  /* U+E05D Clipboard */
+#define AGSI_PASTE                "\xEE\x81\x9E"  /* U+E05E Paste */
+#define AGSI_LH_PASTE             "\xEE\x81\x9F"  /* U+E05F Left-Handed Paste */
+#define AGSI_SELECT_ALL           "\xEE\x81\xA0"  /* U+E060 Select All */
+#define AGSI_CLEAR_ALL            "\xEE\x81\xA1"  /* U+E061 Clear All */
+#define AGSI_GAME_CONTROLLER      "\xEE\x81\xA2"  /* U+E062 Game Controller */
+#define AGSI_TOUCHSCREEN          "\xEE\x81\xA3"  /* U+E063 Touchscreen */
+

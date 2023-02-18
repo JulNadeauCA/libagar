@@ -4,13 +4,14 @@ include ${TOP}/Makefile.config
 DATADIR=	${TTFDIR}
 DATAFILES_SRC=	OFL11.txt OFL-FAQ.txt \
 		Charter-LICENSE.txt \
-		Source-Han-LICENSE.txt \
 		Vera-Copyright.txt \
 		League-Gothic-LICENSE.md \
 		League-Spartan-LICENSE.md \
 		Mukta-OFL.txt \
 		agar-minimal.agbf \
 		agar-minimal-12.png \
+		agar-ideograms.agbf \
+		agar-ideograms-12.png \
 		algue.ttf \
 		algue-bold.ttf \
 		algue-italic.ttf \
@@ -28,7 +29,6 @@ DATAFILES_SRC=	OFL11.txt OFL-FAQ.txt \
 		cm-serif-italic.ttf \
 		cm-serif-upright-italic.ttf \
 		cm-serif.ttf \
-		cp437-16.bmp \
 		fraktur-LICENSE.txt \
 		fraktur.ttf \
 		league-gothic.otf \
@@ -44,17 +44,6 @@ DATAFILES_SRC=	OFL11.txt OFL-FAQ.txt \
 		monoalgue-sans-bold.ttf \
 		monoalgue-sans-italic.ttf \
 		monoalgue-sans-bold-italic.ttf \
-		source-han-sans.otf \
-		unialgue.ttf \
-		vera.ttf \
-		vera-bold-italic.ttf \
-		vera-bold.ttf \
-		vera-italic.ttf \
-		vera-mono-bold-italic.ttf \
-		vera-mono-bold.ttf \
-		vera-mono-italic.ttf \
-		vera-mono.ttf \
-		vera-serif-bold.ttf \
-		vera-serif.ttf
+		unialgue.ttf
 
 include ${TOP}/mk/build.prog.mk

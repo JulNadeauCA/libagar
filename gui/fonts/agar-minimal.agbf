@@ -1,8 +1,8 @@
 /*
- * Agar Bitmap Font file.
+ * Agar Minimal - Bitmap Font file.
  * vim:syntax=agarbf
  */
-name "Agar Minimal Bitmap"
+name "Agar Minimal"
 author "Julien Nadeau Carriere <vedge@csoft.net>"
 license "OFL11.txt"
 colorize grays
@@ -10,9 +10,9 @@ colorize grays
 size 0.0-64.0
 flags 0x0
 file "agar-minimal-12.png"
-ascent 10
+ascent 7
 advance 1
-lineskip 12
+lineskip 13
 underline-position -1
 underline-thickness 1
 unicode
