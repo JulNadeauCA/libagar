@@ -53,6 +53,9 @@ handles Agar bitmap font (.agbf) files.
 .Fn AG_TextRenderF "const char *fmt" "..."
 .Pp
 .Ft "AG_Surface *"
+.Fn AG_TextRenderRTL "const char *text"
+.Pp
+.Ft "AG_Surface *"
 .Fn AG_TextRenderInternal "const AG_Char *text" "const AG_Font *font" "const AG_Color *cBg" "const AG_Color *cFg"
 .Pp
 .Ft "AG_Glyph *"
@@ -87,6 +90,10 @@ The first guide (Guide 0) of the surface returned by
 contains
 .Em ascent
 information.
+.Pp
+The
+.Fn AG_TextRenderRTL
+variant renders text reversed (right to left).
 .Pp
 .Fn AG_TextRenderInternal
 renders onto a newly-allocated surface text in native
@@ -324,9 +331,6 @@ structure on demand only if a modification occurs).
 .Ft "AG_Font *"
 .Fn AG_FetchFont "const char *face" "float size" "Uint flags"
 .Pp
-.Ft void
-.Fn AG_UnusedFont "AG_Font *font"
-.Pp
 .Ft "AG_Font *"
 .Fn AG_SetDefaultFont "AG_Font *font"
 .Pp
@@ -413,11 +417,6 @@ defaults.
 .Fn AG_FetchFont
 returns a pointer to the font object and increments its reference count.
 If the font cannot be loaded, it returns NULL.
-.Pp
-The
-.Fn AG_UnusedFont
-function decrements the reference count on a font.
-If the font is no longer referenced, it is destroyed.
 .Pp
 .Fn AG_SetDefaultFont
 sets the specified font object as the default font.

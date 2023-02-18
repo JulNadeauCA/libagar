@@ -135,20 +135,23 @@ AG_Color agTextColorANSI[] = {
 
 /* Core fonts provided with Agar */
 const char *agCoreFonts[] = {
-	"_agFontAlgue",      /* Algue (default font; built-in) */
-	"unialgue",          /* Unialgue (default font with extended Unicode) */
-	"cm-sans",           /* Computer Modern Sans */
-	"cm-serif",          /* Computer Modern Serif */
-	"monoalgue-sans",    /* Monoalgue Sans (a monospace sans-serif) */
-	"charter",           /* Bitstream Charter (a transitional serif) */
-	"monoalgue",         /* Monoalgue (a monospace serif optimized for code) */
-	"source-han-sans",   /* Source Han Sans (a pan-CJK font) */
-	"league-spartan",    /* League Spartan (a bold geometric sans-serif) */
-	"league-gothic",     /* League Gothic (a condensable Gothic font) */
-	"fraktur",           /* Unifraktur Maguntia (a Fraktur font) */
-	"agar-minimal",      /* Agar Minimal (a condensable bitmap font) */
-	"vera",              /* Bitstream Vera */
-	"vera-mono",         /* Bitstream Vera Mono */
+	"_agFontAlgue",      /*  #1 Algue (default font; built-in) */
+	"unialgue",          /*  #2 Unialgue (default font with extended Unicode) */
+	"cm-sans",           /*  #3 Computer Modern Sans */
+	"cm-serif",          /*  #4 Computer Modern Serif */
+	"monoalgue-sans",    /*  #5 Monoalgue Sans (a monospace sans-serif) */
+	"charter",           /*  #6 Bitstream Charter (a transitional serif) */
+	"monoalgue",         /*  #7 Monoalgue (a monospace serif optimized for code) */
+	"Noto Sans CJK SC",  /*  #8 Noto Sans CJK SC (a pan-CJK font) */
+	"league-spartan",    /*  #9 League Spartan (a bold geometric sans-serif) */
+	"league-gothic",     /* #10 League Gothic (a condensable Gothic font) */
+	"fraktur",           /* #11 Unifraktur Maguntia (a Fraktur font) */
+	"agar-minimal",      /* #12 Agar Minimal (a condensable bitmap font) */
+	"agar-ideograms",    /* #13 Agar Ideograms (graphical icons) */
+	"_agFontAlgue",      /* #14 (unused slot) */
+	"_agFontAlgue",      /* #15 (unused slot) */
+	"_agFontAlgue",      /* #16 (unused slot) */
+	"_agFontAlgue",      /* #17 (unused slot) */
 	NULL
 };
 
@@ -790,7 +793,7 @@ AG_TextRenderF(const char *fmt, ...)
 }
 
 /*
- * Render text (UTF-8 encoded) onto a newly-allocated surface.
+ * Render text (UTF-8 encoded) left-to-right onto a newly-allocated surface.
  * Inherit font, FG and BG colors from current text state.
  */
 AG_Surface *
@@ -810,6 +813,44 @@ AG_TextRender(const char *text)
 	S = AG_TextRenderInternal((const Uint8 *)text, ts->font,
 	                          &ts->colorBG, &ts->color);
 #endif
+	return (S);
+}
+
+/*
+ * Render text (UTF-8 encoded) right-to-left onto a newly-allocated surface.
+ * Inherit font, FG and BG colors from current text state.
+ */
+AG_Surface *
+AG_TextRenderRTL(const char *text)
+{
+	AG_TextState *ts = AG_TEXT_STATE_CUR();
+	AG_Surface *S;
+#ifdef AG_UNICODE
+	AG_Char *us, *usReversed, *c, *cReversed;
+	AG_Size len;
+
+	if ((us = AG_ImportUnicode("UTF-8", text, NULL, NULL)) == NULL) {
+		AG_FatalError(NULL);
+	}
+	len = AG_LengthUCS4(us);
+	usReversed = Malloc((len + 1) * sizeof(Uint32));
+	for (c = &us[0], cReversed = &usReversed[len-1];
+	    *c != '\0';
+	     c++, --cReversed) {
+		*cReversed = *c;
+	}
+	usReversed[len] = '\0';
+
+	S = AG_TextRenderInternal(usReversed, ts->font,
+	                          &ts->colorBG, &ts->color);
+
+	free(usReversed);
+	free(us);
+#else
+	S = AG_TextRenderInternal((const Uint8 *)text, ts->font,
+	                          &ts->colorBG, &ts->color);
+#endif /* !AG_UNICODE */
+
 	return (S);
 }
 
@@ -1284,16 +1325,37 @@ AG_TextTabWidth(int px)
 	AG_TEXT_STATE_CUR()->tabWd = px;
 }
 
+static void
+SetDefaultFontAll(AG_Widget *wid, AG_Font *defaultFontPrev,
+    AG_Font *defaultFontNew)
+{
+	AG_Widget *chld;
+
+	if (wid->font == defaultFontPrev) {
+		wid->font = defaultFontNew;
+	}
+	AG_PostEvent(wid, "font-changed", NULL);
+	AG_Redraw(wid);
+
+	AGOBJECT_FOREACH_CHILD(chld, wid, ag_widget)
+		SetDefaultFontAll(chld, defaultFontPrev, defaultFontNew);
+}
+
+
 /*
- * Set the default font to the specified font.
+ * Set the default font to the specified font. Return a pointer to
+ * the previous default font.
  *
- * Return a pointer to the previous default font (the caller may or may
- * not wish to call AG_UnusedFont() on it).
+ * Updates the default font settings in AG_Config(3).
+ * Updates agDefaultFont and agDefaultFont{Height,Ascent,LineSkip}.
  */
 AG_Font *
 AG_SetDefaultFont(AG_Font *font)
 {
 	AG_Font *prevDefaultFont;
+	AG_Driver *drv;
+	AG_Window *win;
+	int i;
 
 	AG_MutexLock(&agTextLock);
 
@@ -1305,20 +1367,33 @@ AG_SetDefaultFont(AG_Font *font)
 		agDefaultFont = font = AG_FetchFont(NULL, 0.0f, 0);
 	}
 
-	Debug(NULL, "SetDefaultFont(%s)\n", OBJECT(font)->name);
-
 	agTextFontHeight = font->height;
 	agTextFontAscent = font->ascent;
 	agTextFontLineSkip = font->lineskip;
 
-	/* TODO apply to the entire stack. */
-	AG_TEXT_STATE_CUR()->font = font;
+	/* Update the rendering state. */
+	for (i = 0; i <= agTextStateCur; i++) {
+		AG_TextState *ts = &agTextStateStack[i];
 
+		if (ts->font == prevDefaultFont)
+			ts->font = font;
+	}
+
+	/* Update the AG_Config(3) font settings. */
 	Strlcpy(agConfig->fontFace, OBJECT(font)->name, sizeof(agConfig->fontFace));
 	agConfig->fontSize = font->spec.size;
 	agConfig->fontFlags = font->flags;
 
 	AG_MutexUnlock(&agTextLock);
+
+	/* Update all font references in the style engine. */
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		AG_FOREACH_WINDOW(win, drv) {
+			SetDefaultFontAll(WIDGET(win),
+			    prevDefaultFont, font);
+			AG_WindowUpdate(win);
+		}
+	}
 
 	return (prevDefaultFont);
 }
@@ -1327,7 +1402,6 @@ AG_SetDefaultFont(AG_Font *font)
  * Set the default font from a string "<Face>,<Size>,<Style>".
  *
  * Size is in points (fractional point sizes are allowed).
- *
  * Style is a space-separated list of style / weight / width variant
  * attribute names (as returned by AG_FontGetStyleName(3)).
  *
@@ -1398,13 +1472,15 @@ AG_InitTextSubsystem(void)
 	AG_MutexInitRecursive(&agTextLock);
 	TAILQ_INIT(&agFontCache);
 
-	/* Set the default font search path. */
 	AG_ObjectLock(agConfig);
-	sysUser = AG_GetRealUser();
 
+	/*
+	 * Configure PATH_FONTS (the search path for loading fonts).
+	 */
 	if (strcmp(TTFDIR, "NONE") != 0)
 		AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, TTFDIR);
 
+	sysUser = AG_GetRealUser();
 #if defined(__APPLE__)
 	if (sysUser != NULL &&
 	    sysUser->home != NULL) {
@@ -1438,43 +1514,38 @@ AG_InitTextSubsystem(void)
 		AG_UserFree(sysUser);
 
 #ifdef HAVE_FONTCONFIG
+	/* Set up fontconfig if available. */
 	if (FcInit()) {
 		agFontconfigInited = 1;
 	} else {
 		AG_Verbose("Failed to initialize fontconfig; ignoring\n");
 	}
 #endif
-	{
-#ifdef AG_DEBUG
-		int debugLvlSave = agDebugLvl;
-		agDebugLvl = 0;
-#endif
+
+	/* Set default font face and size according to FreeType availability. */
 #ifdef HAVE_FREETYPE
-		if (agConfig->fontFace[0] == '\0') {
-			Strlcpy(agConfig->fontFace, AG_DEFAULT_FT_FONT_FACE,
-			    sizeof(agConfig->fontFace));
-		}
-		if (agConfig->fontSize == 0.0f)
-			agConfig->fontSize = AG_DEFAULT_FT_FONT_SIZE;
-#else
-		if (agConfig->fontFace[0] == '\0') {
-			Strlcpy(agConfig->fontFace, AG_DEFAULT_BF_FONT_FACE,
-			    sizeof(agConfig->fontFace));
-		}
-		if (agConfig->fontSize == 0.0f)
-			agConfig->fontSize = AG_DEFAULT_BF_FONT_SIZE;
-#endif
-#ifdef AG_DEBUG
-		agDebugLvl = debugLvlSave;
-#endif
+	if (agConfig->fontFace[0] == '\0') {
+		Strlcpy(agConfig->fontFace, AG_DEFAULT_FT_FONT_FACE,
+		    sizeof(agConfig->fontFace));
 	}
+	if (agConfig->fontSize == 0.0f)
+		agConfig->fontSize = AG_DEFAULT_FT_FONT_SIZE;
+#else
+	if (agConfig->fontFace[0] == '\0') {
+		Strlcpy(agConfig->fontFace, AG_DEFAULT_BF_FONT_FACE,
+		    sizeof(agConfig->fontFace));
+	}
+	if (agConfig->fontSize == 0.0f)
+		agConfig->fontSize = AG_DEFAULT_BF_FONT_SIZE;
+#endif /* !HAVE_FREETYPE */
+
 	AG_ObjectUnlock(agConfig);
 
-	/* Load the default font. */
-	if ((agDefaultFont = AG_FetchFont(
-	    agConfig->fontFace,
-	    agConfig->fontSize,
-	    agConfig->fontFlags)) == NULL) {
+	/* Set the default font; see AG_SetDefaultFont(). */
+	agDefaultFont = AG_FetchFont(agConfig->fontFace,
+	                             agConfig->fontSize,
+	                             agConfig->fontFlags);
+	if (agDefaultFont == NULL) {
 		return (-1);
 	}
 	agTextFontHeight = agDefaultFont->height;

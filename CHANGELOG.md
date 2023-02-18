@@ -13,7 +13,6 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_StyleEditor**](https://libagar.org/man3/AG_StyleEditor): Edition of stylesheet rules.
 - [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): Gradients and border styles. New selector "Class > #id" for specific named instances of attached child widgets.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Filters. Stencil operations.
-- [**AG_Text**](https://libagar.org/man3/AG_Text): Provide a way to map core font names to known system fonts so porters have the option of adding dependencies to existing font packages in order to reduce the size of agar packages.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) & [**AG_Editable**](https://libagar.org/man3/AG_Editable): Extend SGR support. Syntax highlighting & rich-text editing methods.
 - [**AG_WidgetPrimitives**](https://libagar.org/man3/AG_WidgetPrimitives): Dithering. Shadow effects.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Provide a variation of the "zoom" feature to resize widgets individually.
@@ -40,6 +39,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Embed 4 general-purpose 16-bit guides. Guides are useful for typography, graphics and other applications.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): The surface returned by `AG_TextRender()` now includes Ascent information under `Guide 0`.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): New function `AG_TextRenderRTL()` for rendering text right-to-left.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) and [**AG_Editable**](https://libagar.org/man3/AG_Editable): Implement Undo/Redo functionality.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Draw lines to express the relationship between tree items.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New function `AG_TlistScrollToSelection()`.
@@ -67,7 +67,9 @@ All notable changes to Agar will be documented in this file. The format is based
 - Added Vim syntax files (under the `syntax/` directory) complete with all types and constants.
 
 ### Removed
-- [**MAP**](https://libagar.org/man3/MAP): Removed `MAP_Actor` interface (replaced by [**MAP_Object**](https://libagar.org/man3/MAP_Object) framework).
+- [**AG_Text**](https://libagar.org/man3/AG_Text): Removed `AG_UnusedFont()` and the reference counter in `AG_Font`.
+- 
+New function [AG_UnusedFont()](https://libagar.org/man3/AG_UnusedFont) for decrementing reference count on a font.
 
 ### Changed
 - Build system updates so configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Those definitions are always available from `${DATADIR}/agar.mk`.
@@ -92,6 +94,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - `install-sdk.exe` now installs include files in `include\x86` or `include\x64`.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Fixed styling errors. Honor the `#disabled` state.
 - [**AG_Table**](https://libagar.org/man3/AG_Table): Fixed an off-by-one which caused a missing cursor-change area for column resize.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): `AG_SetDefaultFont()` now takes effect immediately.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox), [**AG_Editable**](https://libagar.org/man3/AG_Editable) and [**AG_Console**](https://libagar.org/man3/AG_Console): Fix horizontal scrolling (Shift + Mouse Wheel) behavior.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Fixed non-delivery of `mouse-button-down` events to hidden and subsequently re-shown widgets (e.g., widgets under a Notebook). Thanks [Walter](https://github.com/WallyZambotti)!
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Deliver `widget-hidden` when detaching a widget from a visible window.
