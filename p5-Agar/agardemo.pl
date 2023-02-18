@@ -131,14 +131,14 @@ Agar::Separator->newHoriz($lbox);
 
 my $combo = Agar::Combo->new($lbox, 'Choose your foos', { hFill=>1 });
 $combo->sizeHint('blah', 3);
-$combo->list()->addItem('foo');
-$combo->list()->addItem('bar');
-$combo->list()->addItem('baz');
+#$combo->list()->addItem('foo');
+#$combo->list()->addItem('bar');
+#$combo->list()->addItem('baz');
 my $ucombo = Agar::UCombo->new($lbox, { hFill=>1 });
 $ucombo->sizeHint('blah', 3);
-$ucombo->list()->addItem('foo');
-$ucombo->list()->addItem('bar');
-$ucombo->list()->addItem('baz');
+#$ucombo->list()->addItem('foo');
+#$ucombo->list()->addItem('bar');
+#$ucombo->list()->addItem('baz');
 
 Agar::Separator->newHoriz($lbox);
 

@@ -194,7 +194,7 @@ setText(item, text)
 	Agar::TlistItem item
 	const char * text
 CODE:
-	strncpy(item->text, text, AG_TLIST_LABEL_MAX);
+	AG_Strlcpy(item->text, text, sizeof(item->text));
 
 int
 getDepth(item)

@@ -36,9 +36,17 @@ my %Makefile = (
 	'LIBS'		=> $agar_libs,
 	'DEFINE'	=> ' ',
 	'INC'		=> $agar_cflags.' -g',
+#	'CC'            => 'gcc12',
 	'CCFLAGS'	=> ''.
 	                   '-Wall -Wno-unused -Werror',
 	'OBJECT'	=> q/$(O_FILES)/,
         $CAPI ? ('CAPI' => 'TRUE') : (),
 );
 WriteMakefile(%Makefile);
+
+print STDERR "*\n";
+print STDERR "* NOTE: If you are getting compilation errors with clang,\n";
+print STDERR "* you may want to try again using gcc as there have been\n";
+print STDERR "* some issues with perl and clang12+.\n";
+print STDERR "*\n";
+

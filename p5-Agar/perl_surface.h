@@ -2,7 +2,6 @@
 
 static const AP_FlagNames apSurfaceFlagNames[] = {
 	{ "srcColorKey", AG_SURFACE_COLORKEY },
-	{ "srcAlpha",    AG_SURFACE_ALPHA },
 	{ "glTexture",   AG_SURFACE_GL_TEXTURE },
 	{ "mapped",      AG_SURFACE_MAPPED },
 	{ "static",      AG_SURFACE_STATIC },

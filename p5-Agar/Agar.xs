@@ -35,8 +35,6 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#include <agar/core.h>
-#include <agar/gui.h>
 #include "perl_agar.h"
 
 MODULE = Agar	PACKAGE = Agar		PREFIX = AG_

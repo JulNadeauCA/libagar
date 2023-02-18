@@ -1,5 +1,8 @@
 /*	Public domain	*/
 
+#include <agar/core.h>
+#include <agar/gui.h>
+
 #define Uint8 uint8_t
 #define Sint8 int8_t
 #define Uint16 uint16_t
