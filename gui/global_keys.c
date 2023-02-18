@@ -76,27 +76,22 @@ AG_BindGlobalKey(AG_KeySym keysym, AG_KeyMod keymod, void (*fn)(void))
 }
 
 /*
- * Set up some standard, platform-specific hotkey bindings for controlling
- * zoom or exiting the application.
+ * Bind the standard (recommended) application-global keys for zooming in
+ * and out and terminating the application. 
  */
 void
 AG_BindStdGlobalKeys(void)
 {
-#ifdef __APPLE__
-	AG_KeyMod mod = AG_KEYMOD_META;
-#else
-	AG_KeyMod mod = AG_KEYMOD_CTRL;
-#endif
-	/* Zoom in, zoom out and reset to 1:1 */
-	AG_BindGlobalKey(AG_KEY_EQUALS,	mod,			AG_ZoomIn);
-	AG_BindGlobalKey(AG_KEY_PLUS,   mod|AG_KEYMOD_SHIFT,	AG_ZoomIn);
-	AG_BindGlobalKey(AG_KEY_MINUS,	mod,			AG_ZoomOut);
-	AG_BindGlobalKey(AG_KEY_0,      mod,			AG_ZoomReset);
+	/* Zoom in, zoom out and zoom reset. */
+	AG_BindGlobalKey(AG_KEY_EQUALS,	AGSI_WINCMD,      AG_ZoomIn);
+	AG_BindGlobalKey(AG_KEY_PLUS,   AGSI_WINCMD |
+	                                AG_KEYMOD_SHIFT,  AG_ZoomIn);
+	AG_BindGlobalKey(AG_KEY_MINUS,	AGSI_WINCMD,      AG_ZoomOut);
+	AG_BindGlobalKey(AG_KEY_0,      AGSI_WINCMD,      AG_ZoomReset);
 #ifdef AG_EVENT_LOOP
-	/* Terminate the application immediately. */
-	AG_BindGlobalKey(AG_KEY_Q,      mod,			AG_QuitGUI);
+	/* Quit */
+	AG_BindGlobalKey(AG_KEY_Q,      AGSI_WINCMD,      AG_QuitGUI);
 #endif
-
 	/*
 	 * Close the active window and gracefully terminate the application
 	 * when there are no more windows.
