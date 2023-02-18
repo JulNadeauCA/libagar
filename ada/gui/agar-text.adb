@@ -319,33 +319,6 @@ package body Agar.Text is
   end;
 
   --
-  -- Calculate the X offset required to justify rendered text in an area.
-  --
-  function Text_Justify (W_Area, W_Text : in Natural) return Integer
-  is
-    Result : C.int;
-  begin
-    Result := AG_TextJustifyOffset
-      (W_Area => C.int(W_Area),
-       W_Text => C.int(W_Text));
-    return Integer(Result);
-  end;
-
-  --
-  -- Calculate the Y offset required to vertically align rendered text
-  -- in an area.
-  --
-  function Text_Valign (H_Area, H_Text : in Natural) return Integer
-  is
-    Result : C.int;
-  begin
-    Result := AG_TextValignOffset
-      (H_Area => C.int(H_Area),
-       H_Text => C.int(H_Text));
-    return Integer(Result);
-  end;
-
-  --
   -- Set State Attribute: Tab Width (in pixels).
   --
   procedure Text_Set_Tab_Width (Width : Natural) is

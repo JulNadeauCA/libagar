@@ -67,45 +67,6 @@ package Agar.Mouse is
   type Mouse_Device_Access is access all Mouse_Device with Convention => C;
   subtype Mouse_Device_not_null_Access is not null Mouse_Device_Access;
 
-  --
-  -- Return the current cursor position and button state.
-  --
-  procedure Get_Mouse_State
-    (Mouse   : in     Mouse_Device_not_null_Access;
-     Buttons :    out Interfaces.Unsigned_8;
-     X,Y     :    out Natural);
-
-  --
-  -- Update the internal mouse state following a motion event.
-  --
-  procedure Mouse_Motion_Update
-    (Mouse   : in Mouse_Device_not_null_Access;
-     X,Y     : in Natural);
-
-  --
-  -- Update the internal mouse state following a mouse button event.
-  --
-  procedure Mouse_Button_Update
-    (Mouse  : in Mouse_Device_not_null_Access;
-     Action : in Mouse_Button_Action;
-     Button : in Mouse_Button);
-
   private
 
-  function AG_MouseGetState
-    (Mouse : Mouse_Device_not_null_Access;
-     X,Y   : access C.int) return Interfaces.Unsigned_8
-    with Import, Convention => C, Link_Name => "AG_MouseGetState";
-
-  procedure AG_MouseMotionUpdate
-    (Mouse : Mouse_Device_not_null_Access;
-     X,Y   : C.int)
-    with Import, Convention => C, Link_Name => "AG_MouseMotionUpdate";
-
-  procedure AG_MouseButtonUpdate
-    (Mouse  : Mouse_Device_not_null_Access;
-     Action : Mouse_Button_Action;
-     Button : C.int)
-    with Import, Convention => C, Link_Name => "AG_MouseButtonUpdate";
-  
 end Agar.Mouse;

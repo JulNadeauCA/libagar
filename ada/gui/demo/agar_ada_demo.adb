@@ -287,7 +287,7 @@ elsif AG_MODEL = AG_MEDIUM
       Agar.Text.Text_Set_BG_Color_8(16#00ee00ff#);
       Agar.Text.Text_Set_Color_8(16#000000ff#);
       Agar.Text.Text_Set_Font
-        (Family => "courier-prime",
+        (Family => "monoalgue",
          Size   => Agar.Text.AG_Font_Points(18),
          Bold   => True);
       Hello_Label := Agar.Text.Text_Render("Hello, world!");

@@ -547,12 +547,6 @@ package Agar.Text is
      Valign         : in AG_Text_Valign)
     with Import, Convention => C, Link_Name => "AG_TextAlign";
 
-  function AG_TextJustifyOffset (W_Area, W_Text : in C.int) return C.int
-    with Import, Convention => C, Link_Name => "AG_TextJustifyOffset";
-
-  function AG_TextValignOffset (H_Area, H_Text : in C.int) return C.int
-    with Import, Convention => C, Link_Name => "AG_TextValignOffset";
-
   procedure AG_TextTabWidth (Pixels : in C.int)
     with Import, Convention => C, Link_Name => "AG_TextTabWidth";
 
