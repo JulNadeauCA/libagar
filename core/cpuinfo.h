@@ -5,7 +5,8 @@
 #include <agar/core/begin.h>
 
 typedef struct ag_cpuinfo {
-	const char *_Nonnull arch;	/* Architecture name */
+	const char *_Nonnull arch;	/* CPU architecture name */
+	const char *_Nonnull syst;	/* System name (or "") */
 	char vendorID[13];		/* CPU Vendor ID string */
 	char     _pad1[3];
 

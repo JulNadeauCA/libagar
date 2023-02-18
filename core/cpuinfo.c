@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -137,22 +137,44 @@ AG_GetCPUInfo(AG_CPUInfo *_Nonnull cpu)
 	struct cpuid_regs r, rExt;
 	Uint maxFns, maxExt;
 #endif
-
 	cpu->vendorID[0] = '\0';
 	cpu->ext = 0;
 
 #if defined(__CC65__)
 	cpu->arch = "6502";		/* Use getcpu() in <6502.h> */
-#elif defined(__alpha__)
+# if defined(__APPLE2ENH__)
+	cpu->syst = "apple2enh";
+# elif defined(__APPLE2__)
+	cpu->syst = "apple2";
+# elif defined(__C128__)
+	cpu->syst = "c128";
+# elif defined(__C64__)
+	cpu->syst = "c64";
+# elif defined(__GEOS_APPLE__)
+	cpu->syst = "geos-apple";
+# elif defined(__GEOS_CBM__)
+	cpu->syst = "geos-cbm";
+# elif defined(__GEOS__)
+	cpu->syst = "geos";
+# elif defined(__NES__)
+	cpu->syst = "nes";
+# elif defined(__SIM6502__)
+	cpu->syst = "sim6502";
+# elif defined(__SIM65C02__)
+	cpu->syst = "sim65C02";
+# endif
+#else /* __CC65__ */
+	cpu->syst = "";
+#endif
+
+#if defined(__alpha__)
 	cpu->arch = "alpha";
 #elif defined(__x86_64__) || defined(__amd64__) || defined(_M_X64)
 	cpu->arch = "amd64";
+#elif defined(__arm64__)
+	cpu->arch = "arm64";
 #elif defined(__arm__) || defined(__arm32__)
 	cpu->arch = "arm";
-#elif defined(__c64__)
-	cpu->arch = "c64";
-#elif defined(__c128__)
-	cpu->arch = "c128";
 #elif defined(__hppa64__)
 	cpu->arch = "hppa64";
 #elif defined(__hppa__)
@@ -169,12 +191,16 @@ AG_GetCPUInfo(AG_CPUInfo *_Nonnull cpu)
 	cpu->arch = "mips64";
 #elif defined(__mips__)
 	cpu->arch = "mips";
-#elif defined(__nes__)
-	cpu->arch = "nes";
 #elif defined(__ns32k__)
 	cpu->arch = "ns32k";
 #elif defined(__ppc__) || defined(__macppc__) || defined(__powerpc__)
 	cpu->arch = "powerpc";
+#elif defined(__riscv64__)
+	cpu->arch = "riscv64";
+#elif defined(__riscv32__)
+	cpu->arch = "riscv32";
+#elif defined(__riscv__)
+	cpu->arch = "riscv";
 #elif defined(__sh3__)
 	cpu->arch = "sh3";
 #elif defined(__sparc64__)
