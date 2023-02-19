@@ -5,7 +5,6 @@ PROJ=agar
 VER=`perl mk/get-version.pl`
 REL=`perl mk/get-release.pl`
 DISTNAME=${PROJ}-${VER}
-RHOST=resin
 MAKE=make
 
 if [ "$1" != "" ]; then
@@ -13,7 +12,6 @@ if [ "$1" != "" ]; then
 else
 	PHASE=stable
 fi
-REMOTEDIR=www/${PHASE}.hypertriton.com/${PROJ}
 
 cd ..
 
@@ -76,15 +74,6 @@ openssl sha256 ${DISTNAME}.zip >> ${DISTNAME}.zip.md5
 echo "* Updating signatures"
 gpg -ab ${DISTNAME}.tar.gz
 gpg -ab ${DISTNAME}.zip
-
-if [ "$NOUPLOAD" = "" ]; then
-	echo "* Upload to ${RHOST}?"
-	read FOO
-	if [ "$FOO" != "no" ]; then
-		ls -l ${DISTNAME}.*
-		scp ${DISTNAME}.* ${RHOST}:${REMOTEDIR}
-	fi
-fi
 
 if [ "$PHASE" = "stable" ]; then
 	echo "*********************************************************"

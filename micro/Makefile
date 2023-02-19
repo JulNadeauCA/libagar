@@ -5,7 +5,7 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 LIB=		ag_micro_gui
-LIB_CURRENT=	6
+LIB_CURRENT=	7
 LIB_REVISION=	0
 LIB_AGE=	0
 LIB_INSTALL=	Yes

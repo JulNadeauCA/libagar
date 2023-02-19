@@ -4,7 +4,7 @@ include ${TOP}/Makefile.config
 include ${TOP}/core/Makefile.inc
 
 LIB=		ag_core
-LIB_CURRENT=	6
+LIB_CURRENT=	7
 LIB_REVISION=	0
 LIB_AGE=	0
 LIB_INSTALL=	Yes

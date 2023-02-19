@@ -7,7 +7,7 @@ include ${TOP}/math/Makefile.inc
 include ${TOP}/sk/Makefile.inc
 
 LIB=		ag_sk
-LIB_CURRENT=	6
+LIB_CURRENT=	7
 LIB_REVISION=	0
 LIB_AGE=	0
 LIB_INSTALL=	Yes

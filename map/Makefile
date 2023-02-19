@@ -6,7 +6,7 @@ include ${TOP}/gui/Makefile.inc
 include ${TOP}/math/Makefile.inc
 
 LIB=		ag_map
-LIB_CURRENT=	6
+LIB_CURRENT=	7
 LIB_REVISION=	0
 LIB_AGE=	0
 LIB_INSTALL=	Yes
