@@ -58,7 +58,7 @@ AG_JPG_InitSource(j_decompress_ptr cinfo)
 {
 	/* no-op */
 }
-static int
+static boolean
 AG_JPG_FillInputBuffer(j_decompress_ptr cinfo)
 {
 	struct ag_jpg_sourcemgr *sm = (struct ag_jpg_sourcemgr *)cinfo->src;
@@ -254,7 +254,7 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 		    0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000
 #endif
 		);
-		Debug(NULL,
+		Debug2(NULL,
 		    "JPEG image (%ux%u RGBA) at 0x%lx (->%p) via libjpeg-%d\n",
 		    S->w, S->w, (Ulong)AG_Tell(ds), S, JPEG_LIB_VERSION);
 	} else {
@@ -270,7 +270,7 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 		    0x0000ff, 0x00ff00, 0xff0000
 #endif
 		);
-		Debug(NULL,
+		Debug2(NULL,
 		    "JPEG image (%ux%u RGB) at 0x%lx (->%p) via libjpeg-%d\n",
 		    S->w, S->w, (Ulong)AG_Tell(ds), S, JPEG_LIB_VERSION);
 	}

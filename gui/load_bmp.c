@@ -218,7 +218,7 @@ AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 		/* biPlanes = */ AG_ReadUint16(ds);
 		biBitCount = AG_ReadUint16(ds);
 		biCompression = BI_RGB;
-		Debug(NULL, "BMP: Old BITMAPCOREHEADER (%ux%ux%u; RGB)\n",
+		Debug2(NULL, "BMP: Old BITMAPCOREHEADER (%ux%ux%u; RGB)\n",
 		    biWidth, biHeight, biBitCount);
 	} else if (biSize >= 40) {        /* some version of BITMAPINFOHEADER */
 		Uint32 headerSize;
@@ -234,7 +234,7 @@ AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 		biClrUsed = AG_ReadUint32(ds);
  		/* biClrImportant = */ AG_ReadUint32(ds);
 		
-		Debug(NULL, "BMP: %d-byte BITMAPINFOHEADER (%ux%ux%u; %s)\n",
+		Debug2(NULL, "BMP: %d-byte BITMAPINFOHEADER (%ux%ux%u; %s)\n",
 		    biSize, biWidth, biHeight, biBitCount,
 		    (biCompression==0) ? "RGB" :
 		    (biCompression==1) ? "RLE8" :
@@ -377,20 +377,20 @@ AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 	case 4:
 	case 8:
 		S = AG_SurfaceIndexed(biWidth, biHeight, biBitCount, 0);
-		Debug(NULL, "BMP image (%ux%u; %u-bpp; INDEXED)\n",
+		Debug2(NULL, "BMP image (%ux%u; %u-bpp; INDEXED)\n",
 		    biWidth, biHeight, biBitCount);
 		break;
 	default:
 		S = AG_SurfaceRGBA(biWidth, biHeight, biBitCount, 0,
 		    Rmask, Gmask, Bmask, Amask);
 #if AG_MODEL == AG_LARGE
-		Debug(NULL, "BMP image (%ux%u; %u-bpp; "
+		Debug2(NULL, "BMP image (%ux%u; %u-bpp; "
 		            "RGBA %08lx,%08lx,%08lx,%08lx)\n",
 			    biWidth, biHeight, biBitCount,
 			    (Ulong)Rmask, (Ulong)Gmask, (Ulong)Bmask,
 			    (Ulong)Amask);
 #else
-		Debug(NULL, "BMP image (%ux%u; %u-bpp; "
+		Debug2(NULL, "BMP image (%ux%u; %u-bpp; "
 		            "RGBA %08x,%08x,%08x,%08x)\n",
 			    biWidth, biHeight, biBitCount,
 			    Rmask, Gmask, Bmask, Amask);
