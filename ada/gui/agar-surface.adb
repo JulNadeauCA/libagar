@@ -3,7 +3,7 @@
 --                         A G A R  . S U R F A C E                         --
 --                                 B o d y                                  --
 --                                                                          --
--- Copyright (c) 2018-2019 Julien Nadeau Carriere (vedge@csoft.net)         --
+-- Copyright (c) 2018-2023 Julien Nadeau Carriere (vedge@csoft.net)         --
 --                                                                          --
 -- Permission to use, copy, modify, and/or distribute this software for any --
 -- purpose with or without fee is hereby granted, provided that the above   --
@@ -54,10 +54,10 @@ package body Agar.Surface is
      A_Mask         : in AG_Pixel := 16#ffff000000000000#) is
 #else
      Bits_per_Pixel : in Positive := 32;
-     R_Mask         : in AG_Pixel := 16#000000ff#;
-     G_Mask         : in AG_Pixel := 16#0000ff00#;
-     B_Mask         : in AG_Pixel := 16#00ff0000#;
-     A_Mask         : in AG_Pixel := 16#ff000000#) is
+     R_Mask         : in Unsigned_32 := 16#000000ff#;
+     G_Mask         : in Unsigned_32 := 16#0000ff00#;
+     B_Mask         : in Unsigned_32 := 16#00ff0000#;
+     A_Mask         : in Unsigned_32 := 16#ff000000#) is
 #end if;
   begin
     AG_PixelFormatRGBA
@@ -236,19 +236,11 @@ package body Agar.Surface is
   --
   function New_Surface
     (W,H            : in Natural := 0;
-#if AG_MODEL = AG_LARGE
-     Bits_per_Pixel : in Positive := 64;
-     R_Mask         : in AG_Pixel := 16#000000000000ffff#;
-     G_Mask         : in AG_Pixel := 16#00000000ffff0000#;
-     B_Mask         : in AG_Pixel := 16#0000ffff00000000#;
-     A_Mask         : in AG_Pixel := 16#ffff000000000000#;
-#else
      Bits_per_Pixel : in Positive := 32;
      R_Mask         : in AG_Pixel := 16#000000ff#;
      G_Mask         : in AG_Pixel := 16#0000ff00#;
      B_Mask         : in AG_Pixel := 16#00ff0000#;
      A_Mask         : in AG_Pixel := 16#ff000000#;
-#end if;
      Src_Colorkey   : in Boolean := false;
      Src_Alpha      : in Boolean := false;
      GL_Texture     : in Boolean := false) return Surface_Access
@@ -288,19 +280,11 @@ package body Agar.Surface is
   function New_Surface
     (Pixels         : in Pixel_not_null_Access;
      W,H            : in Natural;
-#if AG_MODEL = AG_LARGE
-     Bits_per_Pixel : in Positive := 64;
-     R_Mask         : in AG_Pixel := 16#000000000000ffff#;
-     G_Mask         : in AG_Pixel := 16#00000000ffff0000#;
-     B_Mask         : in AG_Pixel := 16#0000ffff00000000#;
-     A_Mask         : in AG_Pixel := 16#ffff000000000000#;
-#else
      Bits_per_Pixel : in Positive := 32;
      R_Mask         : in AG_Pixel := 16#000000ff#;
      G_Mask         : in AG_Pixel := 16#0000ff00#;
      B_Mask         : in AG_Pixel := 16#00ff0000#;
      A_Mask         : in AG_Pixel := 16#ff000000#;
-#end if;
      Src_Colorkey   : in Boolean := false;
      Src_Alpha      : in Boolean := false;
      GL_Texture     : in Boolean := false) return Surface_Access

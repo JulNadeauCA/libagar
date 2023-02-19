@@ -3,7 +3,7 @@
 --                            A G A R  . T E X T                            --
 --                                  B o d y                                 --
 --                                                                          --
--- Copyright (c) 2019 Julien Nadeau Carriere (vedge@csoft.net)              --
+-- Copyright (c) 2023 Julien Nadeau Carriere (vedge@csoft.net)              --
 --                                                                          --
 -- Permission to use, copy, modify, and/or distribute this software for any --
 -- purpose with or without fee is hereby granted, provided that the above   --
@@ -51,29 +51,43 @@ package body Agar.Text is
   -- Load (or fetch from cache) a font.
   --
   function Fetch_Font
-    (Family         : in String         := "_agFontVera";
-     Size           : in AG_Font_Points := AG_Font_Points(12);
-     Bold           : in Boolean        := False;
-     Italic         : in Boolean        := False;
-     Underlined     : in Boolean        := False;
-     Uppercase      : in Boolean        := False;
-     Semibold       : in Boolean        := False;
-     Upright_Italic : in Boolean        := False;
-     Semicondensed  : in Boolean        := False;
-     Condensed      : in Boolean        := False) return Font_Access
+    (Family         : in String      := "algue";
+     Size           : in Font_Points := Font_Points(12);
+     Thin           : in Boolean     := False;
+     ExtraLight     : in Boolean     := False;
+     Light          : in Boolean     := False;
+     SemiBold       : in Boolean     := False;
+     Bold           : in Boolean     := False;
+     ExtraBold      : in Boolean     := False;
+     Black          : in Boolean     := False;
+     Oblique        : in Boolean     := False;
+     Italic         : in Boolean     := False;
+     UltraCondensed : in Boolean     := False;
+     Condensed      : in Boolean     := False;
+     SemiCondensed  : in Boolean     := False;
+     SemiExpanded   : in Boolean     := False;
+     Expanded       : in Boolean     := False;
+     UltraExpanded  : in Boolean     := False) return Font_Access
   is
     Ch_Family : aliased C.char_array := C.To_C(Family);
-    C_Size    : aliased AG_Font_Points := Size;
+    C_Size    : aliased Font_Points := Size;
     Flags     : aliased C.unsigned := 0;
   begin
+    if Thin           then Flags := Flags or FONT_THIN;           end if;
+    if ExtraLight     then Flags := Flags or FONT_EXTRALIGHT;     end if;
+    if Light          then Flags := Flags or FONT_LIGHT;          end if;
+    if SemiBold       then Flags := Flags or FONT_SEMIBOLD;       end if;
     if Bold           then Flags := Flags or FONT_BOLD;           end if;
+    if ExtraBold      then Flags := Flags or FONT_EXTRABOLD;      end if;
+    if Black          then Flags := Flags or FONT_BLACK;          end if;
     if Italic         then Flags := Flags or FONT_ITALIC;         end if;
-    if Underlined     then Flags := Flags or FONT_UNDERLINE;      end if;
-    if Uppercase      then Flags := Flags or FONT_UPPERCASE;      end if;
-    if Semibold       then Flags := Flags or FONT_SEMIBOLD;       end if;
-    if Upright_Italic then Flags := Flags or FONT_UPRIGHT_ITALIC; end if;
-    if Semicondensed  then Flags := Flags or FONT_SEMICONDENSED;  end if;
+    if Oblique        then Flags := Flags or FONT_OBLIQUE;        end if;
+    if UltraCondensed then Flags := Flags or FONT_ULTRACONDENSED; end if;
     if Condensed      then Flags := Flags or FONT_CONDENSED;      end if;
+    if SemiCondensed  then Flags := Flags or FONT_SEMICONDENSED;  end if;
+    if SemiExpanded   then Flags := Flags or FONT_SEMIEXPANDED;   end if;
+    if Expanded       then Flags := Flags or FONT_EXPANDED;       end if;
+    if UltraExpanded  then Flags := Flags or FONT_ULTRAEXPANDED;  end if;
 
     return AG_FetchFont
       (Family => CS.To_Chars_Ptr(Ch_Family'Unchecked_Access),
@@ -85,30 +99,44 @@ package body Agar.Text is
   -- Set the current font to the specified family+size+style (or just size).
   --
   procedure Text_Set_Font
-    (Family         : in String         := "_agFontVera";
-     Size           : in AG_Font_Points := AG_Font_Points(12);
-     Bold           : in Boolean        := False;
-     Italic         : in Boolean        := False;
-     Underlined     : in Boolean        := False;
-     Uppercase      : in Boolean        := False;
-     Semibold       : in Boolean        := False;
-     Upright_Italic : in Boolean        := False;
-     Semicondensed  : in Boolean        := False;
-     Condensed      : in Boolean        := False)
+    (Family         : in String      := "algue";
+     Size           : in Font_Points := Font_Points(12);
+     Thin           : in Boolean     := False;
+     ExtraLight     : in Boolean     := False;
+     Light          : in Boolean     := False;
+     SemiBold       : in Boolean     := False;
+     Bold           : in Boolean     := False;
+     ExtraBold      : in Boolean     := False;
+     Black          : in Boolean     := False;
+     Oblique        : in Boolean     := False;
+     Italic         : in Boolean     := False;
+     UltraCondensed : in Boolean     := False;
+     Condensed      : in Boolean     := False;
+     SemiCondensed  : in Boolean     := False;
+     SemiExpanded   : in Boolean     := False;
+     Expanded       : in Boolean     := False;
+     UltraExpanded  : in Boolean     := False)
   is
     Ch_Family : aliased C.char_array := C.To_C(Family);
-    C_Size    : aliased AG_Font_Points := Size;
+    C_Size    : aliased Font_Points := Size;
     Flags     : aliased C.unsigned := 0;
     Result    : aliased Font_Access;
   begin
+    if Thin           then Flags := Flags or FONT_THIN;           end if;
+    if ExtraLight     then Flags := Flags or FONT_EXTRALIGHT;     end if;
+    if Light          then Flags := Flags or FONT_LIGHT;          end if;
+    if SemiBold       then Flags := Flags or FONT_SEMIBOLD;       end if;
     if Bold           then Flags := Flags or FONT_BOLD;           end if;
+    if ExtraBold      then Flags := Flags or FONT_EXTRABOLD;      end if;
+    if Black          then Flags := Flags or FONT_BLACK;          end if;
     if Italic         then Flags := Flags or FONT_ITALIC;         end if;
-    if Underlined     then Flags := Flags or FONT_UNDERLINE;      end if;
-    if Uppercase      then Flags := Flags or FONT_UPPERCASE;      end if;
-    if Semibold       then Flags := Flags or FONT_SEMIBOLD;       end if;
-    if Upright_Italic then Flags := Flags or FONT_UPRIGHT_ITALIC; end if;
-    if Semicondensed  then Flags := Flags or FONT_SEMICONDENSED;  end if;
+    if Oblique        then Flags := Flags or FONT_OBLIQUE;        end if;
+    if UltraCondensed then Flags := Flags or FONT_ULTRACONDENSED; end if;
     if Condensed      then Flags := Flags or FONT_CONDENSED;      end if;
+    if SemiCondensed  then Flags := Flags or FONT_SEMICONDENSED;  end if;
+    if SemiExpanded   then Flags := Flags or FONT_SEMIEXPANDED;   end if;
+    if Expanded       then Flags := Flags or FONT_EXPANDED;       end if;
+    if UltraExpanded  then Flags := Flags or FONT_ULTRAEXPANDED;  end if;
 
     Result := AG_TextFontLookup
       (Family => CS.To_Chars_Ptr(Ch_Family'Unchecked_Access),
@@ -218,7 +246,7 @@ package body Agar.Text is
   -- Display an info, warning or error message.
   --
   procedure Text_Msg
-    (Title : in AG_Text_Message_Title := INFO;
+    (Title : in Text_Message_Title := INFO;
      Text  : in String)
   is
     Ch_Text : aliased C.char_array := C.To_C(Text);
@@ -233,7 +261,7 @@ package body Agar.Text is
   --
 #if AG_TIMERS
   procedure Text_Msg
-    (Title : in AG_Text_Message_Title := INFO;
+    (Title : in Text_Message_Title := INFO;
      Text  : in String;
      Time  : in Natural := 2000)
   is
@@ -294,8 +322,8 @@ package body Agar.Text is
      W_Text, H_Text : in     Natural;
      L_Pad, R_Pad   : in     Natural := 0;
      T_Pad, B_Pad   : in     Natural := 0;
-     Justify        : in     AG_Text_Justify := CENTER;
-     Valign         : in     AG_Text_Valign := MIDDLE;
+     Justify        : in     Text_Justify := CENTER;
+     Valign         : in     Text_Valign := MIDDLE;
      X,Y            :    out Integer)
   is
     C_X, C_Y : aliased C.int;
@@ -328,7 +356,7 @@ package body Agar.Text is
   end;
 
   --
-  -- Render text to a new surface (UTF-8).
+  -- Render text (left-to-right) to a new surface (UTF-8).
   --
   function Text_Render
     (Text : in String) return SU.Surface_not_null_Access
@@ -336,6 +364,18 @@ package body Agar.Text is
     Ch_Text : aliased C.char_array := C.To_C(Text);
   begin
     return AG_TextRender
+      (Text => CS.To_Chars_Ptr(Ch_Text'Unchecked_Access));
+  end;
+
+  --
+  -- Render text (right-to-left) to a new surface (UTF-8).
+  --
+  function Text_Render_RTL
+    (Text : in String) return SU.Surface_not_null_Access
+  is
+    Ch_Text : aliased C.char_array := C.To_C(Text);
+  begin
+    return AG_TextRenderRTL
       (Text => CS.To_Chars_Ptr(Ch_Text'Unchecked_Access));
   end;
 
@@ -368,16 +408,16 @@ package body Agar.Text is
      Surface : in SU.Surface_not_null_Access;
      X,Y     : in Natural := 0)
   is
-    Text_State  : aliased AG_Text_State;
+    TS       : aliased Text_State_Rec;
     Tmp_Surface : SU.Surface_Access;
   begin
-    Copy_Text_State(Text_State'Unchecked_Access);
+    Copy_Text_State(TS'Unchecked_Access);
 
     Tmp_Surface := Text_Render
       (Text     => Text,
-       Font     => Text_State.Font,
-       Color_BG => Text_State.Color_BG'Unchecked_Access,
-       Color    => Text_State.Color'Unchecked_Access);
+       Font     => TS.Font,
+       Color_BG => TS.Color_BG'Unchecked_Access,
+       Color    => TS.Color'Unchecked_Access);
 
     SU.Blit_Surface
       (Source => Tmp_Surface,

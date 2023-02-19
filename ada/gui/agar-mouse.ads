@@ -67,6 +67,4 @@ package Agar.Mouse is
   type Mouse_Device_Access is access all Mouse_Device with Convention => C;
   subtype Mouse_Device_not_null_Access is not null Mouse_Device_Access;
 
-  private
-
 end Agar.Mouse;

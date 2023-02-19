@@ -1,6 +1,8 @@
 ------------------------------------------
 -- agar_ada_demo.adb: Agar-GUI Ada demo --
 ------------------------------------------
+-- Public domain --
+-------------------
 with Agar.Init;
 with Agar.Error;
 with Agar.Data_Source;
@@ -100,15 +102,15 @@ elsif AG_MODEL = AG_MEDIUM
     Check_Sizeof("AG_TimerPvt",    Agar.Timer.Timer_Private'Size,     $SIZEOF_AG_TIMERPVT);
     Check_Sizeof("AG_Timer",       Agar.Timer.Timer'Size,             $SIZEOF_AG_TIMER);
     -- GUI --
-    Check_Sizeof("AG_Color",       Agar.Surface.AG_Color'Size,        $SIZEOF_AG_COLOR);
-    Check_Sizeof("AG_FontSpec",    Agar.Text.AG_Font_Spec'Size,       $SIZEOF_AG_FONTSPEC);
-    Check_Sizeof("AG_Font",        Agar.Text.AG_Font'Size,            $SIZEOF_AG_FONT);
-    Check_Sizeof("AG_Glyph",       Agar.Text.AG_Glyph'Size,           $SIZEOF_AG_GLYPH);
-    Check_Sizeof("AG_TextState",   Agar.Text.AG_Text_State'Size,      $SIZEOF_AG_TEXTSTATE);
-    Check_Sizeof("AG_TextMetrics", Agar.Text.AG_Text_Metrics'Size,    $SIZEOF_AG_TEXTMETRICS);
-    Check_Sizeof("AG_Rect",        Agar.Surface.AG_Rect'Size,         $SIZEOF_AG_RECT);
-    Check_Sizeof("AG_PixelFormat", Agar.Surface.Pixel_Format'Size,    $SIZEOF_AG_PIXELFORMAT);
-    Check_Sizeof("AG_Surface",     Agar.Surface.Surface'Size,         $SIZEOF_AG_SURFACE);
+    Check_Sizeof("AG_Color",       Agar.Surface.AG_Color'Size,     $SIZEOF_AG_COLOR);
+    Check_Sizeof("AG_FontSpec",    Agar.Text.Font_Spec'Size,       $SIZEOF_AG_FONTSPEC);
+    Check_Sizeof("AG_Font",        Agar.Text.Font'Size,            $SIZEOF_AG_FONT);
+    Check_Sizeof("AG_Glyph",       Agar.Text.Glyph'Size,           $SIZEOF_AG_GLYPH);
+    Check_Sizeof("AG_TextState",   Agar.Text.Text_State_Rec'Size,  $SIZEOF_AG_TEXTSTATE);
+    Check_Sizeof("AG_TextMetrics", Agar.Text.Text_Metrics'Size,    $SIZEOF_AG_TEXTMETRICS);
+    Check_Sizeof("AG_Rect",        Agar.Surface.AG_Rect'Size,      $SIZEOF_AG_RECT);
+    Check_Sizeof("AG_PixelFormat", Agar.Surface.Pixel_Format'Size, $SIZEOF_AG_PIXELFORMAT);
+    Check_Sizeof("AG_Surface",     Agar.Surface.Surface'Size,      $SIZEOF_AG_SURFACE);
   end;
 
   --
@@ -288,7 +290,7 @@ elsif AG_MODEL = AG_MEDIUM
       Agar.Text.Text_Set_Color_8(16#000000ff#);
       Agar.Text.Text_Set_Font
         (Family => "monoalgue",
-         Size   => Agar.Text.AG_Font_Points(18),
+         Size   => Agar.Text.Font_Points(18),
          Bold   => True);
       Hello_Label := Agar.Text.Text_Render("Hello, world!");
       Blit_Surface

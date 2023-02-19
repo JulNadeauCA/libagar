@@ -260,11 +260,24 @@ package Agar.Surface is
     with Convention => C;
   pragma Unchecked_Union (Anim_Frame);
 
+  type Anim_Frame_Access is access all Anim_Frame with Convention => C;
+  subtype Anim_Frame_not_null_Access is not null Anim_Frame_Access;
+
   -- Animation Frame Flags --
   ANIM_FRAME_USER_INPUT : constant C.unsigned := 16#01#; -- Dispose needs user input?
+
+  -----------------------------------
+  -- General-Purpose Surface Guide --
+  -----------------------------------
+  type Surface_Guide is
+    (TOP,          -- Top horizontal guide
+     RIGHT,        -- Right vertical guide
+     BOTTOM,       -- Bottom horizontal guide
+     LEFT);        -- Left vertical guide
+  for Surface_Guide'Size use C.int'Size;
  
   ----------------------
-  -- Surface Instance --
+  -- Graphics Surface --
   ----------------------
 #if AG_MODEL = AG_LARGE
   type Surface_Pad1 is array (1 .. 6) of aliased Interfaces.Unsigned_8;
@@ -280,9 +293,13 @@ package Agar.Surface is
     Pitch          : C.unsigned;           -- Scanline byte length
     Pixels         : Pixel_Access;         -- Raw pixel data
     Clip_Rect      : AG_Rect;              -- Destination clipping rectangle
-    Frames         : System.Address;       -- TODO animation frames
+    Frames         : Anim_Frame_Access;    -- Animation frames
     Frame_Count    : C.unsigned;           -- Animation frame count
     Padding        : C.unsigned;           -- Scanline end padding
+    Guide_1        : Unsigned_16;          -- General-purpose guides
+    Guide_2        : Unsigned_16;          -- General-purpose guides
+    Guide_3        : Unsigned_16;          -- General-purpose guides
+    Guide_4        : Unsigned_16;          -- General-purpose guides
     Colorkey       : AG_Pixel;             -- Color key pixel
     Alpha          : AG_Component;         -- Per-surface alpha
     C_Pad1         : Surface_Pad1;
@@ -418,19 +435,11 @@ package Agar.Surface is
   --
   function New_Surface
     (W,H            : in Natural := 0;
-#if AG_MODEL = AG_LARGE
-     Bits_per_Pixel : in Positive := 64;
-     R_Mask         : in AG_Pixel := 16#000000000000ffff#;
-     G_Mask         : in AG_Pixel := 16#00000000ffff0000#;
-     B_Mask         : in AG_Pixel := 16#0000ffff00000000#;
-     A_Mask         : in AG_Pixel := 16#ffff000000000000#;
-#else
      Bits_per_Pixel : in Positive := 32;
      R_Mask         : in AG_Pixel := 16#000000ff#;
      G_Mask         : in AG_Pixel := 16#0000ff00#;
      B_Mask         : in AG_Pixel := 16#00ff0000#;
      A_Mask         : in AG_Pixel := 16#ff000000#;
-#end if;
      Src_Colorkey   : in Boolean := false;
      Src_Alpha      : in Boolean := false;
      GL_Texture     : in Boolean := false) return Surface_Access;
@@ -442,19 +451,11 @@ package Agar.Surface is
   function New_Surface
     (Pixels         : in Pixel_not_null_Access;
      W,H            : in Natural;
-#if AG_MODEL = AG_LARGE
-     Bits_per_Pixel : in Positive := 64;
-     R_Mask         : in AG_Pixel := 16#000000000000ffff#;
-     G_Mask         : in AG_Pixel := 16#00000000ffff0000#;
-     B_Mask         : in AG_Pixel := 16#0000ffff00000000#;
-     A_Mask         : in AG_Pixel := 16#ffff000000000000#;
-#else
      Bits_per_Pixel : in Positive := 32;
      R_Mask         : in AG_Pixel := 16#000000ff#;
      G_Mask         : in AG_Pixel := 16#0000ff00#;
      B_Mask         : in AG_Pixel := 16#00ff0000#;
      A_Mask         : in AG_Pixel := 16#ff000000#;
-#end if;
      Src_Colorkey   : in Boolean := false;
      Src_Alpha      : in Boolean := false;
      GL_Texture     : in Boolean := false) return Surface_Access;
