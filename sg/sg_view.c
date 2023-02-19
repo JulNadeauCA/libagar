@@ -652,6 +652,8 @@ KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 		AG_AddTimer(sv, &sv->toRot, sv->rot[2].vMin,
 		    CamRotateTimeout, "%p,%f", &sv->rot[2], +1.0f);
 		break;
+	default:
+		break;
 	}
 	sv->lastKeyDown = ks;
 }
@@ -674,6 +676,8 @@ KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 			AG_DelTimer(sv, &sv->toRot);
 			AG_DelTimer(sv, &sv->toMove);
 		}
+		break;
+	default:
 		break;
 	}
 }
@@ -700,6 +704,8 @@ MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 		if ((AG_GetModState(sv) & AG_KEYMOD_CTRL) == 0) {
 			SelectByMouse(sv, x,y);
 		}
+		break;
+	default:
 		break;
 	}
 }

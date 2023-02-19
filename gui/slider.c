@@ -454,6 +454,8 @@ KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 		Increment(sl);
 		AG_AddTimer(sl, &sl->moveTo, agKbdDelay, MoveTimeout, "%i", +1);
 		break;
+	default:
+		break;
 	}
 }
 
@@ -468,6 +470,8 @@ KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
 		AG_DelTimer(sl, &sl->moveTo);
+		break;
+	default:
 		break;
 	}
 }

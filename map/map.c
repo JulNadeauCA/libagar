@@ -1116,10 +1116,13 @@ Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
 		AG_CopyString(name, ds, sizeof(name));
 		AG_CopyString(hier, ds, sizeof(hier));
 		skipSize = AG_ReadUint32(ds);
-
+#ifdef AG_DEBUG
 		Debug(map, "Loading object "
 		    AGSI_YEL "%s" AGSI_RST " (<%s>, %u bytes)\n",
 		    name, hier, (Uint)skipSize);
+#else
+		(void)skipSize;
+#endif
 
 		if ((C = AG_LoadClass(hier)) == NULL)
 			return (-1);
@@ -2345,14 +2348,16 @@ static void
 DetachObject(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_PTR(1);
-	MAP *map = MAP_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl)) != NULL &&
 	     strcmp(it->cat, "object") == 0) {
+#ifdef AG_DEBUG
+		MAP *map = MAP_PTR(2);
 		MAP_Object *mo = it->p1;
-	
+
 		Debug(map, "Detach map object %s...\n", OBJECT(mo)->name);
+#endif
 	}
 }
 

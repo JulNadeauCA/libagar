@@ -461,9 +461,12 @@ AG_ObjectAttach(void *parentp, void *pChld)
 #endif /* DEBUG_OBJECT */
 
 out:
+#ifdef AG_THREADS
 	AG_ObjectUnlock(chld);
 	AG_ObjectUnlock(parent);
 	AG_UnlockVFS(parent);
+#endif
+	return;
 }
 
 /* Detach a child object from its parent. */
@@ -495,6 +498,7 @@ AG_ObjectDetach(void *pChld)
 			ev->fn(ev);
 		}
 		goto out;
+
 	}
 #ifdef AG_TIMERS
 	/* Cancel any running timer associated with the object. */
@@ -528,6 +532,7 @@ out:
 	AG_ObjectUnlock(parent);
 	AG_UnlockVFS(root);
 #endif
+	return;
 }
 
 /*

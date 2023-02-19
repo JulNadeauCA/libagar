@@ -100,6 +100,8 @@ KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 		fpl->xoffs += 10;
 		AG_Redraw(fpl);
 		break;
+	default:
+		break;
 	}
 }
 

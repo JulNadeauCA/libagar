@@ -1728,6 +1728,8 @@ MouseButtonDown(void *obj, AG_MouseButton button, int mx, int my)
 		m = RowAtY(t, y);
 		CellRightClick(t, m, x,y);
 		break;
+	default:
+		break;
 	}
 }
 
@@ -1742,6 +1744,8 @@ MouseButtonUp(void *obj, AG_MouseButton button, int mx, int my)
 			t->nResizing = -1;
 			AG_Redraw(t);
 		}
+		break;
+	default:
 		break;
 	}
 }
@@ -1792,6 +1796,8 @@ KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 		t->mOffs = MAX(0, t->m - t->mVis);
 		AG_Redraw(t);
 		break;
+	default:
+		break;
 	}
 }
 
@@ -1826,6 +1832,8 @@ KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 	case AG_KEY_DOWN:
 	case AG_KEY_PAGEDOWN:
 		AG_DelTimer(t, &t->moveTo);
+		break;
+	default:
 		break;
 	}
 }

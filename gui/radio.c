@@ -756,6 +756,8 @@ KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 			AG_DelTimer(rad, &rad->moveTo);
 		}
 		break;
+	default:
+		break;
 	}
 }
 

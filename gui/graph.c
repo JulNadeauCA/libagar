@@ -80,6 +80,8 @@ KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 		gf->xOffs = 0;
 		gf->yOffs = 0;
 		break;
+	default:
+		break;
 	}
 	AG_Redraw(gf);
 }
@@ -161,6 +163,8 @@ MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 		break;
 	case AG_MOUSE_MIDDLE:
 		gf->flags &= ~(AG_GRAPH_PANNING);
+		break;
+	default:
 		break;
 	}
 }
@@ -464,6 +468,8 @@ MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 			}
 			break;
 		}
+	default:
+		break;
 	}
 }
 

@@ -184,6 +184,8 @@ MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 			sv->flags &= ~(AG_SCROLLVIEW_PANNING);
 		}
 		break;
+	default:
+		break;
 	}
 }
 
@@ -235,6 +237,8 @@ MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 		if ((sv->xOffs += AG_GetInt(sv,"x-scroll-amount")) > sv->xMax) {
 			sv->xOffs = sv->xMax;
 		}
+		break;
+	default:
 		break;
 	}
 

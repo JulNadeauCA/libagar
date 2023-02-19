@@ -656,6 +656,8 @@ MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 	case AG_MOUSE_RIGHT:
 		OpenMenu(pal, x,y);
 		break;
+	default:
+		break;
 	}
 }
 
@@ -806,6 +808,8 @@ KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 		AG_AddTimer(pal, toMove, 250, KeyMoveTimeout,"%i,%i",ks,kmod);
 		AG_ExecTimer(toMove);
 		break;
+	default:
+		break;
 	}
 
 }
@@ -821,6 +825,8 @@ KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 	case AG_KEY_LEFT:
 	case AG_KEY_RIGHT:
 		AG_DelTimer(pal, &pal->toMove[ks - AG_KEY_UP]);
+		break;
+	default:
 		break;
 	}
 }

@@ -808,6 +808,8 @@ AG_SDL2_KeySymFromScancode(const SDL_Scancode scancode)
 	case SDL_SCANCODE_RALT:			return AG_KEY_RALT;
 	case SDL_SCANCODE_RGUI:			return AG_KEY_RGUI;
 	case SDL_SCANCODE_MODE:			return AG_KEY_MODE;
+	default:
+						break;
 	}
 	return (AG_KEY_LAST);
 }

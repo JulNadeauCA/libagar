@@ -1324,6 +1324,8 @@ KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 			return;
 		}
 		break;
+	default:
+		break;
 	}
 
 	ed->flags |= AG_EDITABLE_BLINK_ON;
@@ -1576,6 +1578,8 @@ Ctrl(void *obj, void *inputDevice, const AG_DriverEvent *dev)
 			}
 
 		}
+		break;
+	default:
 		break;
 	}
 }
@@ -2839,6 +2843,8 @@ MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 				ed->y = MIN(ed->y, ed->yMax - ed->yVis);
 			}
 		}
+		break;
+	default:
 		break;
 	}
 out:

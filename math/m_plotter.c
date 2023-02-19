@@ -82,6 +82,8 @@ KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 		ptr->yScale -= 0.125;
 		AG_Redraw(ptr);
 		break;
+	default:
+		break;
 	}
 	if (ptr->yScale <= 0.125) { ptr->yScale = 0.125; }
 }
@@ -139,6 +141,8 @@ MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 		TAILQ_FOREACH(pl, &ptr->plots, plots) {
 			pl->flags &= ~M_PLOT_DRAGGING;
 		}
+		break;
+	default:
 		break;
 	}
 }
@@ -311,6 +315,8 @@ MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 			pl->yScale += 0.250;
 			AG_Redraw(ptr);
 		}
+		break;
+	default:
 		break;
 	}
 	if (ptr->xScale <= 0.0625) { ptr->xScale = 0.0625; }
@@ -806,6 +812,8 @@ M_PlotterUpdate(M_Plotter *ptr)
 		case M_PLOT_DERIVATIVE:
 			M_PlotDerivative(ptr, pl);
 			break;
+		default:
+			break;
 		}
 	}
 	if (ptr->flags & M_PLOTTER_SCROLL) {
@@ -895,6 +903,8 @@ M_PlotLabelReplace(M_Plot *pl, enum m_plot_label_type type, Uint x, Uint y,
 			plbl->x = x;
 			plbl->y = y;
 			break;
+		default:
+			break;
 		}
 	} else {
 		Uint nx = x;
@@ -916,6 +926,8 @@ reposition:
 			case M_LABEL_FREE:
 			case M_LABEL_OVERLAY:
 				nx += su->w;
+				break;
+			default:
 				break;
 			}
 			goto reposition;

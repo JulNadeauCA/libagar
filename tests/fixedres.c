@@ -47,6 +47,7 @@ TestGUI(void *obj, AG_Window *win)
 	                           "(in " AGSI_YEL "%s" AGSI_RST ")\n",
 	                           AGOBJECT(fx)->name);
 	AG_SetFontFamily(lb1, "monoalgue");
+	AG_SetFontSize(lb1, "12pt");
 	AG_FixedPut(fx, lb1, 20, 32);
 	AG_FixedSize(fx, lb1, 180, 64);
 
@@ -61,14 +62,18 @@ TestGUI(void *obj, AG_Window *win)
 	{
 		AG_Box *hBox;
 		AG_Button *btnNum;
+		AG_Label *lbl;
 		int i;
 
-		AG_LabelNewS(box, 0, "I'm in a normal box");
+		lbl = AG_LabelNewS(box, 0, "I'm in a normal box!\n"
+		                           "Fixed at 12pt");
+		AG_SetFontSize(lbl, "12pt");
+
 		hBox = AG_BoxNewHoriz(box, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
-		for (i = 0; i < 5; i++) {
-			btnNum = AG_ButtonNew(hBox, 0, "%c", '1'+i);
-			AG_SetPadding(btnNum, "5");
-			AG_SetColor(btnNum, "#233");
+		for (i = 0; i < 6; i++) {
+			btnNum = AG_ButtonNew(hBox, 0, "%c\n", '1'+i);
+			AG_SetColor(btnNum, "rgba(34,51,51,127)");
+			AG_SetFontSize(btnNum, "18pt");
 		}
 	}
 	AG_FixedPut(fx, box, 450, 35);
@@ -87,9 +92,10 @@ TestGUI(void *obj, AG_Window *win)
 	AG_FixedMove(fx, btn[3], 204+192, 48);
 	for (i = 0; i < 4; i++) {
 		AG_FixedSize(fx, btn[i], 32, 32);
-		AG_SetColor(btn[i], "black");
+		AG_SetColor(btn[i], "rgba(0,0,0,127)");
 		AG_SetHighColor(btn[i], "#775");
 		AG_SetLowColor(btn[i], "#333");
+		AG_SetFontSize(btn[i], "16pt");
 	}
 
 	/*

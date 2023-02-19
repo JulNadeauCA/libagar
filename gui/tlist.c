@@ -1574,6 +1574,8 @@ MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 		}
 		AG_Redraw(tl);
 		break;
+	default:
+		break;
 	}
 
 	if (x > WIDTH(tl) - WIDTH(tl->sbar))
@@ -1621,6 +1623,8 @@ MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 		SelectItem(tl, ti);
 
 		break;
+	default:
+		break;
 	}
 
 	switch (button) {
@@ -1660,6 +1664,8 @@ MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 					PopupMenu(tl, tp, x,y);
 			}
 		}
+	default:
+		break;
 	}
 }
 
@@ -1744,6 +1750,8 @@ KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 			AG_PostEvent(tl, "tlist-return", "%p", ti);
 		}
 		break;
+	default:
+		break;
 	}
 	tl->lastKeyDown = ks;
 }
@@ -1761,6 +1769,8 @@ KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 		if (ks == tl->lastKeyDown) {
 			AG_DelTimer(tl, &tl->moveTo);
 		}
+		break;
+	default:
 		break;
 	}
 }

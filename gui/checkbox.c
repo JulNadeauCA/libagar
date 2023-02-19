@@ -199,6 +199,8 @@ KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 	case AG_KEY_SPACE:
 		AG_CheckboxToggle(cb);
 		break;
+	default:
+		break;
 	}
 }
 

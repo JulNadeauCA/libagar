@@ -204,10 +204,12 @@ void                  AG_InitUint(AG_Variable *_Nonnull, Uint);
 AG_Variable *_Nonnull AG_SetUint(void *_Nonnull, const char *_Nonnull, Uint);
 AG_Variable *_Nonnull AG_BindUint(void *_Nonnull, const char *_Nonnull,
                                   Uint *_Nonnull);
-#ifdef AG_THREADS
+#if defined(AG_THREADS)
 AG_Variable *_Nonnull AG_BindUintMp(void *_Nonnull, const char *_Nonnull,
 				    Uint *_Nonnull,
 				    _Nonnull_Mutex AG_Mutex *_Nonnull);
+#else
+# define AG_BindUintMp(o,v,p,m) AG_BindUint((o),(v),(p))
 #endif
 /*
  * INT: Natural integer
@@ -224,6 +226,8 @@ AG_Variable *_Nonnull AG_BindInt(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindIntMp(void *_Nonnull, const char *_Nonnull,
                                    int *_Nonnull,
 				   _Nonnull_Mutex AG_Mutex *_Nonnull);
+#else
+# define AG_BindIntMp(o,v,p,m) AG_BindInt((o),(v),(p))
 #endif
 
 /*
@@ -248,6 +252,8 @@ AG_Variable *_Nonnull AG_BindUlong(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindUlongMp(void *_Nonnull, const char *_Nonnull,
                                      Ulong *_Nonnull,
 				     _Nonnull_Mutex AG_Mutex *_Nonnull);
+# else
+#  define AG_BindUlongMp(o,v,p,m) AG_BindUlong((o),(v),(p))
 # endif
 /*
  * LONG: Natural long integer.
@@ -262,8 +268,9 @@ AG_Variable *_Nonnull AG_BindLong(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindLongMp(void *_Nonnull, const char *_Nonnull,
                                     long *_Nonnull,
                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
+# else
+#  define AG_BindLongMp(o,v,p,m) AG_BindLong((o),(v),(p))
 # endif
-
 #endif /* !AG_SMALL */
 
 /*
@@ -281,6 +288,8 @@ AG_Variable *_Nonnull AG_BindUint8(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindUint8Mp(void *_Nonnull, const char *_Nonnull,
                                      Uint8 *_Nonnull,
                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
+#else
+# define AG_BindUint8Mp(o,v,p,m) AG_BindUint8((o),(v),(p))
 #endif
 /*
  * UINT8: Signed 8-bit integer
@@ -297,6 +306,8 @@ AG_Variable *_Nonnull AG_BindSint8(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindSint8Mp(void *_Nonnull, const char *_Nonnull,
                                      Sint8 *_Nonnull,
                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
+#else
+# define AG_BindSint8Mp(o,v,p,m) AG_BindSint8((o),(v),(p))
 #endif
 
 #if AG_MODEL != AG_SMALL
@@ -313,6 +324,8 @@ AG_Variable *_Nonnull AG_BindUint16(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindUint16Mp(void *_Nonnull, const char *_Nonnull,
                                       Uint16 *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
+# else
+#  define AG_BindUint16Mp(o,v,p,m) AG_BindUint16((o),(v),(p))
 # endif
 /*
  * SINT16: Signed 16-bit integer
@@ -327,6 +340,8 @@ AG_Variable *_Nonnull AG_BindSint16(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindSint16Mp(void *_Nonnull, const char *_Nonnull,
                                       Sint16 *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
+# else
+#  define AG_BindSint16Mp(o,v,p,m) AG_BindSint16((o),(v),(p))
 # endif
 
 /*
@@ -342,6 +357,8 @@ AG_Variable *_Nonnull AG_BindUint32(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindUint32Mp(void *_Nonnull, const char *_Nonnull,
                                       Uint32 *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
+# else
+#  define AG_BindUint32Mp(o,v,p,m) AG_BindUint32((o),(v),(p))
 # endif
 /*
  * SINT32: Signed 32-bit integer
@@ -356,7 +373,9 @@ AG_Variable *_Nonnull AG_BindSint32(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindSint32Mp(void *_Nonnull, const char *_Nonnull,
                                       Sint32 *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
-# endif /* AG_THREADS */
+# else
+#  define AG_BindSint32Mp(o,v,p,m) AG_BindSint32((o),(v),(p))
+# endif
 
 #endif /* !AG_SMALL */
 
@@ -374,6 +393,8 @@ AG_Variable *_Nonnull AG_BindUint64(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindUint64Mp(void *_Nonnull, const char *_Nonnull,
                                       Uint64 *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
+# else
+#  define AG_BindUint64Mp(o,v,p,m) AG_BindUint64((o),(v),(p))
 # endif
 /*
  * SINT64: Signed 64-bit integer
@@ -388,6 +409,8 @@ AG_Variable *_Nonnull AG_BindSint64(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindSint64Mp(void *_Nonnull, const char *_Nonnull,
                                       Sint64 *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
+# else
+#  define AG_BindSint64Mp(o,v,p,m) AG_BindSint64((o),(v),(p))
 # endif
 #endif /* AG_HAVE_64BIT */
 
@@ -405,6 +428,8 @@ AG_Variable *_Nonnull AG_BindFloat(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindFloatMp(void *_Nonnull, const char *_Nonnull,
                                      float *_Nonnull,
                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
+# else
+#  define AG_BindFloatMp(o,v,p,m) AG_BindFloat((o),(v),(p))
 # endif
 /*
  * DOUBLE: Double-precision IEEE float.
@@ -419,6 +444,8 @@ AG_Variable *_Nonnull AG_BindDouble(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindDoubleMp(void *_Nonnull, const char *_Nonnull,
                                       double *_Nonnull,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
+# else
+#  define AG_BindDoubleMp(o,v,p,m) AG_BindDouble((o),(v),(p))
 # endif
 #endif /* HAVE_FLOAT */
 
@@ -449,6 +476,8 @@ AG_Variable *_Nonnull AG_BindString(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindStringMp(void *_Nonnull, const char *_Nonnull,
                                       char *_Nonnull, AG_Size,
                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
+#else
+# define AG_BindStringMp(o,v,p,s,m) AG_BindString((o),(v),(p),(s))
 #endif
 
 /*
@@ -465,7 +494,10 @@ AG_Variable *_Nonnull AG_BindPointer(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindPointerMp(void *_Nonnull, const char *_Nonnull,
                                        void *_Nonnull *_Nullable,
 				       _Nonnull_Mutex AG_Mutex *_Nonnull);
+#else
+# define AG_BindPointerMp(o,v,p,m) AG_BindPointer((o),(v),(p))
 #endif
+
 #if AG_MODEL != AG_SMALL
 const void *_Nullable AG_GetConstPointer(void *_Nonnull, const char *_Nonnull)
                                         _Pure_Attribute_If_Unthreaded;
@@ -483,6 +515,8 @@ AG_Variable *_Nonnull AG_BindFlag(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindFlagMp(void *_Nonnull, const char *_Nonnull,
 				    Uint *_Nonnull, Uint,
 				    _Nonnull_Mutex AG_Mutex *_Nonnull);
+#else
+# define AG_BindFlagMp(o,v,p,b,m) AG_BindFlag((o),(v),(p),(b))
 #endif
 
 AG_Variable *_Nonnull AG_BindFlag8(void *_Nonnull, const char *_Nonnull,
@@ -503,6 +537,10 @@ AG_Variable *_Nonnull AG_BindFlag16Mp(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindFlag32Mp(void *_Nonnull, const char *_Nonnull,
 				      Uint32 *_Nonnull, Uint32,
 				      _Nonnull_Mutex AG_Mutex *_Nonnull);
+#else
+# define AG_BindFlag8Mp(o,v,p,b,m)  AG_BindFlag8((o),(v),(p),(b))
+# define AG_BindFlag16Mp(o,v,p,b,m) AG_BindFlag16((o),(v),(p),(b))
+# define AG_BindFlag32Mp(o,v,p,b,m) AG_BindFlag32((o),(v),(p),(b))
 #endif
 
 AG_Variable *_Nonnull AG_BindObject(void *_Nonnull, const char *_Nonnull,
