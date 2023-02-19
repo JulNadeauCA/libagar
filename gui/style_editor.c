@@ -323,10 +323,8 @@ CompleteFontWeight(const char *_Nonnull key, const char *_Nonnull val,
     AG_Tlist *_Nonnull tl)
 {
 	const char *values[] = {
-		"normal",
-		"bold",
-		"!parent",
-		NULL
+		"thin", "extralight", "light", "regular", "semibold", "bold",
+		"extrabold", "black", "!parent", NULL
 	}, **vp;
 
 	for (vp = values; *vp != NULL; vp++)
@@ -340,11 +338,7 @@ CompleteFontStyle(const char *_Nonnull key, const char *_Nonnull val,
     AG_Tlist *_Nonnull tl)
 {
 	const char *values[] = {
-		"normal",
-		"italic",
-		"upright-italic",
-		"!parent",
-		NULL
+		"normal", "italic", "oblique", "!parent", NULL
 	}, **vp;
 
 	for (vp = values; *vp != NULL; vp++)
@@ -358,9 +352,8 @@ CompleteFontStretch(const char *_Nonnull key, const char *_Nonnull val,
     AG_Tlist *_Nonnull tl)
 {
 	const char *values[] = {
-		"normal",
-		"condensed",
-		"semi-condensed",
+		"ultracondensed", "condensed", "semicondensed",
+		"normal", "semiexpanded", "expanded", "ultraexpanded",
 		"!parent",
 		NULL
 	}, **vp;

@@ -62,7 +62,7 @@ Fonts of GUI elements are normally expressed in "%".
 The font weight ("Thin", "ExtraLight", "Light", "Regular", "SemiBold",
 "Bold", "ExtraBold", "Black" or "!parent").
 .It Va font-style
-The font style ("Normal", "Italic", "Oblique", "UprightItalic" or "!parent").
+The font style ("Normal", "Italic", "Oblique" or "!parent").
 .It Va font-stretch
 Width variant ("Normal", "UltraCondensed", "Condensed", "SemiCondensed",
 "SemiExpanded", "Expanded", "UltraExpanded" or "!parent").
@@ -118,13 +118,11 @@ The
 .Va font-style
 attribute selects the style of the font:
 .Pp
-.Bl -tag -width "UprightItalic " -compact
+.Bl -tag -width "Oblique " -compact
 .It Italic
 Italic style (with Oblique fallback)
 .It Oblique
 Oblique style (with Italic fallback)
-.It UprightItalic
-Upright italic style
 .It !Parent
 (opposite of parent)
 .El

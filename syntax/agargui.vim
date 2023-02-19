@@ -608,12 +608,10 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_FONT_THIN AG_FONT_EXTRALIGHT AG_FONT_LIGHT 
   syn keyword cConstant AG_FONT_REGULAR AG_FONT_SEMIBOLD AG_FONT_BOLD
   syn keyword cConstant AG_FONT_EXTRABOLD AG_FONT_BLACK
-  syn keyword cConstant AG_FONT_OBLIQUE AG_FONT_ITALIC AG_FONT_UPRIGHT_ITALIC
-  syn keyword cConstant AG_FONT_MONOSPACE
+  syn keyword cConstant AG_FONT_OBLIQUE AG_FONT_ITALIC
   syn keyword cConstant AG_FONT_ULTRACONDENSED AG_FONT_CONDENSED AG_FONT_SEMICONDENSED 
   syn keyword cConstant AG_FONT_SEMIEXPANDED AG_FONT_EXPANDED AG_FONT_ULTRAEXPANDED
-  syn keyword cConstant AG_FONT_WEIGHTS AG_FONT_STYLES AG_FONT_FAMILY_PREFS
-  syn keyword cConstant AG_FONT_WD_VARIANTS
+  syn keyword cConstant AG_FONT_WEIGHTS AG_FONT_STYLES AG_FONT_WD_VARIANTS
   " gui/text_cache.h
   syn keyword cType AG_TextCache AG_CachedText AG_TextCacheBucket
   " gui/textbox.h

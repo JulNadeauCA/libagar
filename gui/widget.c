@@ -65,8 +65,7 @@ const char *agStyleAttributes[] = {
 	"font-weight",  /* Boldness (thin | extralight | light | normal |
 	                             semibold | bold | extrabold | black |
 	                             !parent) */
-	"font-style",   /* Style (normal | oblique | italic | upright-italic |
-	                          !parent) */
+	"font-style",   /* Style (normal | oblique | italic | !parent) */
 	"font-stretch", /* Width variant (normal | ultracondensed | condensed |
 	                                  semicondensed semiexpanded expanded |
 	                                  ultraexpanded !parent) */
@@ -2258,7 +2257,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	}
 
 	/*
-	 * Font style (normal, oblique, italic, upright-italic or !parent)
+	 * Font style (normal, oblique, italic or !parent).
 	 */
 	if ((V = AG_AccessVariable(wid, "font-style")) != NULL) {
 		Apply_Font_Style(&fontFlags, parentFontFlags, V->data.s);
@@ -2271,7 +2270,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	}
 
 	/*
-	 * Width variant (normal, semi-condensed, condensed or !parent)
+	 * Width variant (normal, semi-condensed, condensed or !parent).
 	 */
 	if ((V = AG_AccessVariable(wid, "font-stretch")) != NULL) {
 		Apply_Font_Stretch(&fontFlags, parentFontFlags, V->data.s);

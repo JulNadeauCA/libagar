@@ -189,39 +189,55 @@
  */
 #include <agar/config/ag_unicode.h>
 #ifdef AG_UNICODE
-# define AG_Char Uint32
-# define AG_CHAR_MAX 0x7fffffff
+# define AG_Char               Uint32
+# define AG_CHAR_MAX           0x7fffffff
 # define AG_CHAR_PADDING(name) Uint8 name[4]
+# define AG_CHAR_PADDING_BYTES 4
 #else
-# define AG_Char Uint8
-# define AG_CHAR_MAX 0x7f
+# define AG_Char               Uint8
+# define AG_CHAR_MAX           0x7f
 # define AG_CHAR_PADDING(name) Uint8 name[7]
+# define AG_CHAR_PADDING_BYTES 7
 #endif
 
 /*
  * Size and Offset Types
  */
 #if AG_MODEL == AG_SMALL
-# define AG_Size     Uint16
-# define AG_Offset   Sint16
-# define AG_SIZE_MAX 0xffff
-# define AG_OFFS_MAX 0x7fff
+
+# define AG_Size                 Uint16
+# define AG_Offset               Sint16
+# define AG_SIZE_MAX             0xffff
+# define AG_OFFS_MAX             0x7fff
 # define AG_SIZE_PADDING(name)   Uint8 name[6]
+# define AG_SIZE_PADDING_BYTES   6
 # define AG_OFFSET_PADDING(name) Uint8 name[6]
+# define AG_OFFSET_PADDING_BYTES 6
+
 #elif AG_MODEL == AG_MEDIUM
-# define AG_Size     Uint32
-# define AG_Offset   Sint32
-# define AG_SIZE_MAX 0xffffffff
-# define AG_OFFS_MAX 0x7fffffff
+
+# define AG_Size                 Uint32
+# define AG_Offset               Sint32
+# define AG_SIZE_MAX             0xffffffff
+# define AG_OFFS_MAX             0x7fffffff
 # define AG_SIZE_PADDING(name)   Uint32 name
+# define AG_SIZE_PADDING_BYTES   4
 # define AG_OFFSET_PADDING(name) Uint32 name
+# define AG_OFFSET_PADDING_BYTES 4
+
 #elif AG_MODEL == AG_LARGE
-# define AG_Size     Uint64
-# define AG_Offset   Sint64
-# define AG_SIZE_MAX 0xffffffffffffffff
-# define AG_OFFS_MAX 0x7fffffffffffffff
+
+# define AG_Size                 Uint64
+# define AG_Offset               Sint64
+# define AG_SIZE_MAX             0xffffffffffffffff
+# define AG_OFFS_MAX             0x7fffffffffffffff
 # define AG_SIZE_PADDING(name)   /* none */
+# define AG_SIZE_PADDING_BYTES   0
 # define AG_OFFSET_PADDING(name) /* none */
+# define AG_OFFSET_PADDING_BYTES 0
+
 #else
+
 # error "Invalid AG_MODEL"
+
 #endif

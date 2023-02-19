@@ -11,17 +11,17 @@ typedef enum ag_keyboard_action {
 } AG_KeyboardAction;
 
 typedef enum ag_key_category {
-	AG_KCAT_NONE,			/* No category */
-	AG_KCAT_CONTROL,		/* Control character */
-	AG_KCAT_SPACING,		/* Whitespace */
-	AG_KCAT_RETURN,			/* Return / Line feed */
-	AG_KCAT_PRINT,			/* Printable character (not alphanumerici) */
-	AG_KCAT_ALPHA,			/* Alphabetic character */
-	AG_KCAT_NUMBER,			/* Numerical character */
-	AG_KCAT_DIR,			/* Directional keys */
-	AG_KCAT_FUNCTION,		/* Function keys */
-	AG_KCAT_LOCK,			/* Num/caps/scroll lock */
-	AG_KCAT_MODIFIER,		/* Shift/ctrl/alt/meta/super/compose */
+	AG_KCAT_NONE,      /* No category */
+	AG_KCAT_CONTROL,   /* Control character */
+	AG_KCAT_SPACING,   /* Whitespace */
+	AG_KCAT_RETURN,    /* Return / Line feed */
+	AG_KCAT_PRINT,     /* Printable character (not alphanumeric) */
+	AG_KCAT_ALPHA,     /* Alphabetic character */
+	AG_KCAT_NUMBER,    /* Numerical character */
+	AG_KCAT_DIR,       /* Directional key */
+	AG_KCAT_FUNCTION,  /* Function key */
+	AG_KCAT_LOCK,      /* (Num|Caps|Scroll) lock key */
+	AG_KCAT_MODIFIER,  /* (Shift|Ctrl|Alt|Meta|Super|Compose) key */
 	AG_KCAT_LAST
 } AG_KeyCategory;
 

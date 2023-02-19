@@ -120,7 +120,7 @@ typedef struct ag_font {
 #define AG_FONT_BLACK          0x0040   /* Wt#900 - Black ("Heavy") */
 #define AG_FONT_OBLIQUE        0x0080   /* Style - Oblique */
 #define AG_FONT_ITALIC         0x0100   /* Style - Italic */
-#define AG_FONT_UPRIGHT_ITALIC 0x0200   /* Style - Upright Italic */
+                            /* 0x0200      (Unused) */
 #define AG_FONT_ULTRACONDENSED 0x0400   /* Wd(50%) - Ultra Condensed */
 #define AG_FONT_CONDENSED      0x0800   /* Wd(75%) - Condensed */
 #define AG_FONT_SEMICONDENSED  0x1000   /* Wd(87.5%) - Semi Condensed ("Demi Condensed") */
@@ -132,17 +132,19 @@ typedef struct ag_font {
                          AG_FONT_SEMIBOLD | AG_FONT_BOLD | AG_FONT_EXTRABOLD | \
                          AG_FONT_BLACK)
 
-#define AG_FONT_STYLES (AG_FONT_OBLIQUE | AG_FONT_ITALIC | \
-                        AG_FONT_UPRIGHT_ITALIC)
+#define AG_FONT_STYLES (AG_FONT_OBLIQUE | AG_FONT_ITALIC)
 
 #define AG_FONT_WD_VARIANTS (AG_FONT_ULTRACONDENSED | AG_FONT_CONDENSED | \
                              AG_FONT_SEMICONDENSED | AG_FONT_SEMIEXPANDED | \
                              AG_FONT_EXPANDED | AG_FONT_ULTRAEXPANDED)
-	Uint nFamilyStyles;
-	Uint *familyStyles;             /* Styles available in this font family */
+
+	Uint           nFamilyStyles;
+	Uint *_Nullable familyStyles;   /* Styles available in this font family */
+
 	Uint stateFlags;
 #define AG_FONT_FONTCONFIGED      0x01  /* Discovered via fontconfig */
 #define AG_FONT_FAMILY_FLAGS      0x02  /* Family flags are specified */
+
 	int height;                     /* Height (px) */
 	int ascent;                     /* Ascent (px) */
 	int descent;                    /* Descent (px) */

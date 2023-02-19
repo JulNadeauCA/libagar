@@ -510,7 +510,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 	const int altPhrase = (fs->flags & AG_FONTSELECTOR_ALT_PHRASE);
 	AG_Surface *S;
 
-	if (strcasestr(font->name, "Arabic")) {
+	if (AG_Strcasestr(font->name, "Arabic")) {
 		if (altPhrase) {
 			/*
 			 * Al-arabiyyah (Arabic).
@@ -530,7 +530,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xD9\x85" "\xD8\xB9" "\xD9\x84" "\xD9\x8A"
 			    "\xD9\x83" "\xD9\x85");
 		}
-	} else if (strcasestr(font->name, "Armenian")) {
+	} else if (AG_Strcasestr(font->name, "Armenian")) {
 		if (altPhrase) {
 			/*
 			 * Kpareik' indz het?
@@ -550,9 +550,9 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xD5\xA3" "\xD5\xA1" "\xD5\xAC" "\xD5\xB8"
 			    "\xD6\x82" "\xD5\xBD" "\xD5\xBF" AGSI_ALGUE " !");
 		}
-	} else if (strcasestr(font->name, "CJK SC") ||
-	           strcasestr(font->name, "Sans SC") ||
-	           strcasestr(font->name, "Serif SC")) {
+	} else if (AG_Strcasestr(font->name, "CJK SC") ||
+	           AG_Strcasestr(font->name, "Sans SC") ||
+	           AG_Strcasestr(font->name, "Serif SC")) {
 		if (altPhrase) {
 			/*
 			 * Zhongwen (Chinese)
@@ -570,8 +570,8 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xE6\x97\xA0" "\xE6\x83\x85" "\xE9\xA3\x9F"
 			    "\xE9\xA5\xAD" "\xE9\xA5\xA5" "\xE3\x80\x82");
 		}
-	} else if (strcasestr(font->name, "Estrangelo") ||
-	           strcasestr(font->name, "East Syriac")) {
+	} else if (AG_Strcasestr(font->name, "Estrangelo") ||
+	           AG_Strcasestr(font->name, "East Syriac")) {
 		if (altPhrase) {
 			/*
 			 * Lessana Suryaya (Syriac)
@@ -603,7 +603,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xDC\x97" "\xDC\xB5" "\xDC\x90" "\xDC\x82");
 		}
 
-	} else if (strcasestr(font->name, "Ethiopic")) {
+	} else if (AG_Strcasestr(font->name, "Ethiopic")) {
 		if (altPhrase) {
 			/*
 			 * Amarenna (Amharic)
@@ -625,7 +625,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xE1\x88\x8D");
 		}
 
-	} else if (strcasestr(font->name, "Georgian")) {
+	} else if (AG_Strcasestr(font->name, "Georgian")) {
 		if (altPhrase) {
 			/*
 			 * Kartuli ena (Georgian)
@@ -652,7 +652,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xE1\x83\x94" "\xE1\x83\x91"
 			    "\xE1\x83\x97" AGSI_ALGUE " !");
 		}
-	} else if (strcasestr(font->name, "Hebrew")) {
+	} else if (AG_Strcasestr(font->name, "Hebrew")) {
 		if (altPhrase) {
 			/*
 			 * Ivrit (Hebrew)
@@ -672,7 +672,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xD7\xAA" "\xD7\x95" "\xD7\xAA" "\xD7\x99"
 			    "\xD7\x9D");
 		}
-	} else if (strcasestr(font->name, "Japanese")) {
+	} else if (AG_Strcasestr(font->name, "Japanese")) {
 		if (altPhrase) {
 			/*
 			 * Nihongo (Japanese)
@@ -690,7 +690,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xE3\x80\x82");
 		}
 
-	} else if (strcasestr(font->name, "MUTT ClearlyU Alternate Glyphs Wide")) {
+	} else if (AG_Strcasestr(font->name, "MUTT ClearlyU Alternate Glyphs Wide")) {
 
 		S = AG_TextRender("\xC5\xA2"      "\xC4\xA3"     "\xC4\xBD"
 		   "\xC4\xBE"     "\xC5\x9E"      "\xC5\x9F"     "\xC5\xA2"
@@ -699,7 +699,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 		   "\xDB\x82"     "\xDB\x83"      "\xDB\xB4"     "\xDB\xB7"
 		   "\xE0\xA4\x96" "\xE1\x82\xA0"  "\xE1\x82\xA1" "\xE1\x82\xA2");
 
-	} else if (strcasestr(font->name, "MUTT ClearlyU PUA")) {
+	} else if (AG_Strcasestr(font->name, "MUTT ClearlyU PUA")) {
 
 		S = AG_TextRender( "\xEE\x84\xAE" "\xEE\x84\xAF" "\xEE\x87\xB0"
 		    "\xEE\x88\xB4" "\xEE\x89\x9F" "\xEE\xB7\xAD" "\xEE\xB7\xAE"

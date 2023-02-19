@@ -6,12 +6,14 @@
 
 #if AG_MODEL == AG_LARGE		/* LG (48-bit color + 16-bit alpha) */
 
-# define AG_COMPONENT_BITS 16
-# define AG_COLOR_LAST  0xffff
-# define AG_COLOR_LASTF 65535.0f
-# define AG_COLOR_LASTD 65535.0
-# define AG_COLOR_PADDING(name) /* none */
+# define AG_COMPONENT_BITS          16
+# define AG_COLOR_LAST              0xffff
+# define AG_COLOR_LASTF             65535.0f
+# define AG_COLOR_LASTD             65535.0
+# define AG_COLOR_PADDING(name)     /* none */
+# define AG_COLOR_PADDING_BYTES     0
 # define AG_COMPONENT_PADDING(name) Uint8 name[6]
+# define AG_COMPONENT_PADDING_BYTES 6
 
 typedef struct ag_color { Uint16 r,g,b,a; } AG_Color;
 typedef struct ag_grayscale { Uint32 v,a; } AG_Grayscale;
@@ -22,12 +24,14 @@ typedef Uint64 AG_Pixel;
 
 #elif AG_MODEL == AG_MEDIUM		/* MD (24-bit color + 8-bit alpha) */
 
-# define AG_COMPONENT_BITS 8
-# define AG_COLOR_LAST  0xff
-# define AG_COLOR_LASTF 255.0f
-# define AG_COLOR_LASTD 255.0
-# define AG_COLOR_PADDING(name) Uint32 name
+# define AG_COMPONENT_BITS          8
+# define AG_COLOR_LAST              0xff
+# define AG_COLOR_LASTF             255.0f
+# define AG_COLOR_LASTD             255.0
+# define AG_COLOR_PADDING(name)     Uint32 name
+# define AG_COLOR_PADDING_BYTES     4
 # define AG_COMPONENT_PADDING(name) Uint8 name[3]
+# define AG_COMPONENT_PADDING_BYTES 3
 
 typedef struct ag_color { Uint8 r,g,b,a; } AG_Color;
 typedef struct ag_grayscale { Uint16 v,a; } AG_Grayscale;
@@ -38,7 +42,7 @@ typedef Uint32 AG_Pixel;
 
 #elif AG_MODEL == AG_SMALL		/* SM (12-bit color + 4-bit alpha) */
 
-# error "SMALL mode requires micro-Agar (../micro/)"
+# error "SMALL mode requires micro-Agar"
 
 #endif
 

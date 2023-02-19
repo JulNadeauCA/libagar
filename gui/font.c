@@ -155,7 +155,6 @@ const AG_FontStyleName agFontStyleNames[] = {
 	/* Styles */
 	{ "Oblique",        AG_FONT_OBLIQUE },
 	{ "Italic",         AG_FONT_ITALIC },
-	{ "UprightItalic",  AG_FONT_UPRIGHT_ITALIC },
 	{ NULL,             0 }
 };
 
@@ -186,14 +185,6 @@ const AG_FontStyleSort agFontStyleSort[] = {
 	{ AG_FONT_BOLD       | AG_FONT_ITALIC,                           21 },
 	{ AG_FONT_EXTRABOLD  | AG_FONT_ITALIC,                           22 },
 	{ AG_FONT_BLACK      | AG_FONT_ITALIC,                           23 },
-	{ AG_FONT_UPRIGHT_ITALIC,                                        24 },
-	{ AG_FONT_THIN       | AG_FONT_UPRIGHT_ITALIC,                   25 },
-	{ AG_FONT_EXTRALIGHT | AG_FONT_UPRIGHT_ITALIC,                   26 },
-	{ AG_FONT_LIGHT      | AG_FONT_UPRIGHT_ITALIC,                   27 },
-	{ AG_FONT_SEMIBOLD   | AG_FONT_UPRIGHT_ITALIC,                   28 },
-	{ AG_FONT_BOLD       | AG_FONT_UPRIGHT_ITALIC,                   29 },
-	{ AG_FONT_EXTRABOLD  | AG_FONT_UPRIGHT_ITALIC,                   30 },
-	{ AG_FONT_BLACK      | AG_FONT_UPRIGHT_ITALIC,                   31 },
 
 	{ AG_FONT_ULTRACONDENSED,                                        32 },
 	{ AG_FONT_ULTRACONDENSED | AG_FONT_OBLIQUE,                      33 },
@@ -389,8 +380,6 @@ AG_StaticFont *agBuiltinFonts[] = {
 			Strlcat(path, suffix "-italic", sizeof(path));         \
 		} else if (flags & AG_FONT_OBLIQUE) {                          \
 			Strlcat(path, suffix "-oblique", sizeof(path));        \
-		} else if (flags & AG_FONT_UPRIGHT_ITALIC) {                   \
-			Strlcat(path, suffix "-upright-italic", sizeof(path)); \
 		} else {                                                       \
 			Strlcat(path, suffix, sizeof(path));                   \
 		}                                                              \
@@ -399,8 +388,6 @@ AG_StaticFont *agBuiltinFonts[] = {
 			Strlcat(path, "-italic", sizeof(path));                \
 		} else if (flags & AG_FONT_OBLIQUE) {                          \
 			Strlcat(path, "-oblique", sizeof(path));               \
-		} else if (flags & AG_FONT_UPRIGHT_ITALIC) {                   \
-			Strlcat(path, "-upright-italic", sizeof(path));        \
 		}                                                              \
 	}
 
@@ -582,8 +569,8 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 			/* Style suffix */
 			if (flags & AG_FONT_ITALIC) {
 				Strlcat(path, "-italic", sizeof(path));
-			} else if (flags & AG_FONT_UPRIGHT_ITALIC) {
-				Strlcat(path, "-upright-italic", sizeof(path));
+			} else if (flags & AG_FONT_OBLIQUE) {
+				Strlcat(path, "-oblique", sizeof(path));
 			}
 
 			/* File extension */

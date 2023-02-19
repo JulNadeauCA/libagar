@@ -1145,7 +1145,6 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		dev->ctrlSensor.instanceID = (int)ev->csensor.which;
 		dev->ctrlSensor.sensor = (int)ev->csensor.sensor;
 		memcpy(&dev->ctrlSensor.data, &ev->csensor.data, sizeof(float)*3);
-		dev->ctrlSensor.timestamp_us = ev->csensor.timestamp_us;
 		break;
 	case SDL_JOYAXISMOTION:
 		dev->type = AG_DRIVER_JOY_AXIS_MOTION;

@@ -322,7 +322,6 @@ typedef struct ag_driver_event {
 			int instanceID;            /* Joystick instance ID */
 			int sensor;                /* Sensor type ID */
 			float data[3];             /* Sensor values */
-			Uint64 timestamp_us;       /* Microsecond timestamp */
 		} ctrlSensor;
 	};
 } AG_DriverEvent;
