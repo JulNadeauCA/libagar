@@ -8,7 +8,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarcss.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 January 07
+" Last Change:  2023 February 18
 
 " quit when a syntax file was already loaded
 if !exists("main_syntax")
@@ -22,6 +22,8 @@ endif
 
 let s:cpo_save = &cpo
 set cpo&vim
+
+syn case match
 
 " Add dash to allowed keyword characters.
 syn iskeyword @,48-57,_,192-255,-
@@ -117,21 +119,27 @@ syn keyword cssBoxProp contained padding spacing margin
 syn match cssColorProp contained "\<\(color\|background-color\|text-color\|line-color\|high-color\|low-color\|selection-color\)\(#disabled\|#focused\|#hover\|\)\>"
 
 syn match cssFontProp contained "\<\(font-family\|font-size\|font-stretch\|font-style\|font-weight\)\=\>"
-" font-family attributes (Agar core fonts)
-syn keyword cssFontAttr contained _agFontAlgue unialgue cm-sans cm-serif
-syn keyword cssFontAttr contained charter league-spartan
-syn keyword cssFontAttr contained monoalgue monoalgue-sans
-syn keyword cssFontAttr contained league-gothic fraktur
+
+" font-family attributes (supported fonts)
+syn case ignore
+syn match cssFontAttr contained "\(Bitstream Charter\|Bitstream Vera\|Courier\|DejaVu Sans\|DejaVu Sans Mono\|DejaVu Serif\|Droid Sans \(Arabic\|Armenian\|Japanese\|Hebrew\|Mono\)\|Gentium Basic\|Gentium Book Basic\|Goha-Tibeb Zemen\|League Gothic\|League Spartan\|Noto Sans \(CJK SC\|SC\|Symbols\|Mono CJK SC\)\|Noto Mono\|Serto \(Jerusalem Outline\|Jerusalem\|Kharput\|Malankara\|Mardin\|Urhoy\)\|Utopia\)"
+
+" font-family attributes (core fonts)
+syn case match
+syn keyword cssFontAttr contained algue unialgue monoalgue charter
+syn keyword cssFontAttr contained league-spartan league-gothic fraktur
 syn keyword cssFontAttr contained agar-minimal agar-ideograms
 
 " font-stretch attributes
+syn case ignore
 syn keyword cssFontAttr contained ultracondensed condensed semicondensed
 syn keyword cssFontAttr contained semiexpanded expanded ultraexpanded
 " font-style attributes
-syn keyword cssFontAttr contained italic oblique uprightitalic
+syn keyword cssFontAttr contained normal italic oblique
 " font-weight attributes
 syn keyword cssFontAttr contained thin extralight light regular semibold bold
 syn keyword cssFontAttr contained extrabold black
+syn case match
 
 syn match cssBraces contained "[{}]"
 syn match cssError contained "{@<>"

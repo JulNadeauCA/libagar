@@ -20,15 +20,6 @@ DATAFILES_SRC=	OFL11.txt OFL-FAQ.txt \
 		charter-bold.otf \
 		charter-italic.otf \
 		charter.otf \
-		cm-LICENSE.txt \
-		cm-sans-bold.ttf \
-		cm-sans-condensed.ttf \
-		cm-sans.ttf \
-		cm-serif-bold-italic.ttf \
-		cm-serif-bold.ttf \
-		cm-serif-italic.ttf \
-		cm-serif-upright-italic.ttf \
-		cm-serif.ttf \
 		fraktur-LICENSE.txt \
 		fraktur.ttf \
 		league-gothic.otf \
@@ -40,10 +31,6 @@ DATAFILES_SRC=	OFL11.txt OFL-FAQ.txt \
 		monoalgue-bold.ttf \
 		monoalgue-italic.ttf \
 		monoalgue-bold-italic.ttf \
-		monoalgue-sans.ttf \
-		monoalgue-sans-bold.ttf \
-		monoalgue-sans-italic.ttf \
-		monoalgue-sans-bold-italic.ttf \
 		unialgue.ttf
 
 include ${TOP}/mk/build.prog.mk

@@ -166,23 +166,29 @@ TestGUI(void *obj, AG_Window *win)
 	TestMsg(obj, "");
 
 	for (i = 0; i <= 10; i++) {
-		TestMsg(obj,
-		    "Core Font #%d (AGSI_FONT%d): \x1b[%dm%s\x1b[0m",
-		    i+1, i+1, 10+i, agCoreFonts[i]);
-	}
-	for (i = 11; i <= 16; i++) {
-		if (i == 12) {
+		if (i == 3) {                             /* Agar Ideograms */
 			TestMsg(obj,
-			    "Core Font #13 (AGSI_FONT13): "
+			    "Core Font #4 (AGSI_FONT4): "
 			    AGSI_IDEOGRAM AGSI_AGAR_AG AGSI_AGAR_AR AGSI_RST
 			    " ideograms ("
 			    AGSI_IDEOGRAM AGSI_PARCEL AGSI_ARTISTS_PALETTE
 			    AGSI_VACUUM_TUBE AGSI_ALICE AGSI_BOB AGSI_RST ")");
+		} else if (i == 6 || i == 7) {
+			TestMsg(obj,
+			    "Core Font #%d (AGSI_FONT%d): \x1b[%dm%s (%s)\x1b[0m",
+			    i+1, i+1, 10+i,
+			    "\xE6\x97\xA5" "\xE6\x9C\xAC" "\xE8\xAA\x9E",
+			    agCoreFonts[i]);
 		} else {
 			TestMsg(obj,
 			    "Core Font #%d (AGSI_FONT%d): \x1b[%dm%s\x1b[0m",
-			    i+1, i+1, 66+(i - 11), agCoreFonts[i]);
+			    i+1, i+1, 10+i, agCoreFonts[i]);
 		}
+	}
+	for (i = 11; i <= 16; i++) {
+		TestMsg(obj,
+		    "Core Font #%d (AGSI_FONT%d): \x1b[%dm%s\x1b[0m",
+		    i+1, i+1, 66+(i - 11), agCoreFonts[i]);
 	}
 	TestMsg(obj, "");
 

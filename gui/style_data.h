@@ -36,7 +36,7 @@ const char *agStyleDefault_Data =
 	"AG_Console {\n"
 	"font-family: monoalgue;\n"
 	"padding: 4;\n"
-	"spacing: 4;\n"
+	"spacing: 3;\n"
 	"background-color: rgb(0,0,0);\n"
 	"background-color#hover: rgb(0,0,30);\n"
 	"background-color#focused: rgb(5,5,5);\n"

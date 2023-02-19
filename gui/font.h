@@ -202,10 +202,13 @@ extern AG_StaticFont *_Nonnull agBuiltinFonts[];
 AG_Font	*_Nullable AG_FetchFont(const char *_Nullable, float, Uint)
                                _Warn_Unused_Result;
 
-#define AG_UnusedFont(font) /* unused */
-
 int     AG_FontGetFamilyStyles(AG_Font *_Nonnull);
 AG_Size AG_FontGetStyleName(char *_Nonnull, AG_Size, Uint);
+Uint    AG_FontGetStyleByName(const char *_Nonnull);
+
+#ifdef AG_LEGACY
+#define AG_UnusedFont(font) /* unused */
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

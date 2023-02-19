@@ -1,4 +1,4 @@
-.\" Copyright (c) 2014-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2014-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,7 +22,7 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd December 21, 2022
+.Dd February 18, 2023
 .Dt AG_STYLESHEET 3
 .Os Agar 1.7
 .Sh NAME
@@ -48,50 +48,107 @@ compiler.
 The style compiler runs on demand when needed (e.g., when style properties
 are changed or a new stylesheet is loaded).
 .Sh TYPOGRAPHY
-Typographical style attributes include:
+Style attributes are case-insensitive.
+The following are available:
 .Pp
-.Bl -tag -compact -width "font-stretch "
+.Bl -tag -width "font-stretch "
 .It Va font-family
-"Courier", "DejaVu Sans", "foo.woff2", "my.bmp"
+The name of the font face or the exact filename of a font
+(e.g., "DejaVu Sans", "agar-ideograms.agbf", "foo.woff2").
 .It Va font-size
-"10pts", "10.5pts", "80%"
+The font size (e.g., "80%", "10pts", "10.5pts", "12px").
+Fonts of GUI elements are normally expressed in "%".
 .It Va font-weight
-"normal", "bold" or "!parent"
+The font weight ("Thin", "ExtraLight", "Light", "Regular", "SemiBold",
+"Bold", "ExtraBold", "Black" or "!parent").
 .It Va font-style
-"normal", "italic", "upright-italic" or "!parent"
+The font style ("Normal", "Italic", "Oblique", "UprightItalic" or "!parent").
 .It Va font-stretch
-"normal", "condensed", "semi-condensed" or "!parent"
+Width variant ("Normal", "UltraCondensed", "Condensed", "SemiCondensed",
+"SemiExpanded", "Expanded", "UltraExpanded" or "!parent").
 .El
 .Pp
 The
 .Va font-family
 attribute selects the type face.
-Agar will scan system fonts (via fontconfig), Agar core fonts as well as
-user-installed fonts (according to the FONT_PATH setting of
-.Xr AG_Config 3 ) .
-Matching is case-insensitive with fontconfig but case-sensitive with core
-and user fonts.
+Agar will look up system fonts (via fontconfig), Core Fonts as well as
+user-installed fonts (under
+.Xr AG_Config 3
+.Dv AG_CONFIG_PATH_FONTS ) .
+Matching is case-insensitive except for fonts which are referenced by filename.
 .Pp
+The
 .Va font-size
-sets the font size either in points ("10pts", "10.5pts") or in
-percentage of the parent font size ("80%").
-In general font sizes should be specified in "%" so that
+attribute sets the font size either in points ("10pts", "10.5pts") for vector
+fonts, pixels ("12px") for bitmap fonts, or in percentage of the parent widget
+font's size ("80%").
+Generally, the font sizes of GUI elements should be given in "%" so that the
+zoom function may work as expected (the
 .Xr AG_ZoomIn 3
 and
 .Xr AG_ZoomOut 3
-(which trivially sets "font-size" on the window) may work as expected.
+functions work by simply increasing or decreasing the target window's "font-size").
 .Pp
+The
 .Va font-weight
-sets the font weight to "normal", "bold" (bold variant)
-or "!parent" (opposite of parent's setting).
+attribute sets the weight of the font:
 .Pp
+.Bl -tag -width "ExtraLight " -compact
+.It Thin
+Wt#100 Thin
+.It ExtraLight
+Wt#200 Extra Light / Ultra Light
+.It Light
+Wt#300 Light
+.It Regular
+Wt#400 Regular / Normal
+.It SemiBold
+Wt#600 Semi Bold / Demi Bold
+.It Bold
+Wt#700 Bold
+.It ExtraBold
+Wt#800 Extra Bold
+.It Black
+Wt#900 Black / Heavy
+.It !Parent
+(opposite of parent)
+.El
+.Pp
+The
 .Va font-style
-sets the font style to "normal", "italic" (italic / oblique), "upright-italic"
-or "!parent" (opposite of parent's setting).
+attribute selects the style of the font:
 .Pp
+.Bl -tag -width "UprightItalic " -compact
+.It Italic
+Italic style (with Oblique fallback)
+.It Oblique
+Oblique style (with Italic fallback)
+.It UprightItalic
+Upright italic style
+.It !Parent
+(opposite of parent)
+.El
+.Pp
+The
 .Va font-stretch
-sets the width variant of the font to "normal", "semi-condensed", "condensed"
-or "!parent" (opposite of parent's setting).
+attribute selects the width variant:
+.Pp
+.Bl -tag -width "UltraCondensed " -compact
+.It UltraCondensed
+ 50.0% - Ultra Condensed
+.It Condensed
+ 75.0% - Condensed
+.It SemiCondensed
+ 87.5% - Semi Condensed / Demi Condensed
+.It SemiExpanded
+112.5% - Semi Expanded / Demi Expanded
+.It Expanded
+125.0% - Expanded
+.It UltraExpanded
+200.0% - Ultra Expanded
+.It !Parent
+(opposite of parent)
+.El
 .Sh COLORS
 Color-defining style attributes include:
 .Pp

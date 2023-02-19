@@ -41,6 +41,8 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Embed 4 general-purpose 16-bit guides. Guides are useful for typography, graphics and other applications.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): The surface returned by `AG_TextRender()` now includes Ascent information under `Guide 0`.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New function `AG_TextRenderRTL()` for rendering text right-to-left.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): New functions `AG_FontGetStyleName()` and `AG_FontGetStyleByName()`. Convert between the `Uint` and string representations of font styles (including styles, weights and width variants).
+- [**AG_Text**](https://libagar.org/man3/AG_Text): New function `AG_FontGetFamilyStyles()`. Return an array of `AG_Font` style flags describing every style, weight and width variant available in a given font's family.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) and [**AG_Editable**](https://libagar.org/man3/AG_Editable): Implement Undo/Redo functionality.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Draw lines to express the relationship between tree items.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New function `AG_TlistScrollToSelection()`.

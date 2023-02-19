@@ -311,7 +311,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SetBgColor(win, "#404045");
 
 	lbl = AG_LabelNewS(win, 0, _("Tests for AG_Table(3)"));
-	AG_SetFontFamily(lbl, "cm-serif");
+	AG_SetFontFamily(lbl, "charter");
 	AG_SetFontSize(lbl, "140%");
 
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL,

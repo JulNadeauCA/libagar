@@ -18,20 +18,23 @@
 # define AGSI_SUP        "\x1b[73m"  /* superscript */
 # define AGSI_SUB        "\x1b[74m"  /* subscript */
 
-# define AGSI_FONT1	 "\x1b[10m"  /* Algue */
-# define AGSI_FONT2	 "\x1b[11m"  /* Unialgue */
-# define AGSI_FONT3	 "\x1b[12m"  /* CMU Sans Serif */
-# define AGSI_FONT4	 "\x1b[13m"  /* CMU Serif */
-# define AGSI_FONT5	 "\x1b[14m"  /* CMU Typewriter */
-# define AGSI_FONT6	 "\x1b[15m"  /* Charter */
-# define AGSI_FONT7	 "\x1b[16m"  /* Courier Prime */
-# define AGSI_FONT8	 "\x1b[17m"  /* Source Han Sans */
-# define AGSI_FONT9	 "\x1b[18m"  /* League Spartan */
-# define AGSI_FONT10	 "\x1b[19m"  /* League Gothic */
-# define AGSI_FONT11	 "\x1b[20m"  /* Unifraktur Maguntia */
-# define AGSI_FONT12	 "\x1b[66m"  /* Agar Minimal */
-# define AGSI_FONT13	 "\x1b[67m"  /* Bitstream Vera */
-# define AGSI_FONT14	 "\x1b[68m"  /* Bitstream Vera Mono */
+# define AGSI_FONT1	 "\x1b[10m"  /* Core Font #1 */
+# define AGSI_FONT2	 "\x1b[11m"  /* Core Font #2 */ 
+# define AGSI_FONT3	 "\x1b[12m"  /* Core Font #3 */
+# define AGSI_FONT4	 "\x1b[13m"  /* Core Font #4 */
+# define AGSI_FONT5	 "\x1b[14m"  /* Core Font #5 */
+# define AGSI_FONT6	 "\x1b[15m"  /* Core Font #6 */
+# define AGSI_FONT7	 "\x1b[16m"  /* Core Font #7 */
+# define AGSI_FONT8	 "\x1b[17m"  /* Core Font #8 */
+# define AGSI_FONT9	 "\x1b[18m"  /* Core Font #9 */
+# define AGSI_FONT10	 "\x1b[19m"  /* Core Font #10 */
+# define AGSI_FONT11	 "\x1b[20m"  /* Core Font #11 */
+# define AGSI_FONT12	 "\x1b[66m"  /* Core Font #12 */
+# define AGSI_FONT13	 "\x1b[67m"  /* Core Font #13 */
+# define AGSI_FONT14	 "\x1b[68m"  /* Core Font #14 */
+# define AGSI_FONT15	 "\x1b[69m"  /* Core Font #15 */
+# define AGSI_FONT16	 "\x1b[70m"  /* Core Font #16 */
+# define AGSI_FONT17	 "\x1b[71m"  /* Core Font #17 */
 
 # define AGSI_FRAMED	 "\x1b[51m"  /* framed */
 # define AGSI_ENCIRCLED  "\x1b[52m"  /* encircled */
@@ -141,29 +144,34 @@
 /*
  * Map core font names to SGR sequences.
  */
-#define AGSI_ALGUE               AGSI_FONT1		/* Algue */
-#define AGSI_UNIALGUE            AGSI_FONT2		/* Unialgue */
-#define AGSI_CMU_SANS            AGSI_FONT3		/* CMU Sans Serif */
-#define AGSI_CMU_SERIF           AGSI_FONT4		/* CMU Serif */
-#define AGSI_MONOALGUE_SANS      AGSI_FONT5		/* Monoalgue Sans */
-#define AGSI_CHARTER             AGSI_FONT6		/* Charter */
-#define AGSI_MONOALGUE           AGSI_FONT7		/* Monoalgue */
-#define AGSI_CJK                 AGSI_FONT8		/* A pan-CJK font */
-#define AGSI_LEAGUE_SPARTAN      AGSI_FONT9		/* League Spartan */
-#define AGSI_LEAGUE_GOTHIC       AGSI_FONT10		/* League Gothic */
-#define AGSI_UNIFRAKTUR_MAGUNTIA AGSI_FONT11		/* Unifraktur Maguntia */
-#define AGSI_AGAR_MINIMAL        AGSI_FONT12		/* Agar Minimal */
-#define AGSI_AGAR_IDEOGRAMS      AGSI_FONT13		/* Agar Ideograms */
+#define AGSI_ALGUE               AGSI_FONT1     /* Algue */
+#define AGSI_UNIALGUE            AGSI_FONT2     /* Unialgue */
+#define AGSI_AGAR_MINIMAL        AGSI_FONT3     /* Agar Minimal */
+#define AGSI_AGAR_IDEOGRAMS      AGSI_FONT4     /* Agar Ideograms */
+#define AGSI_MONOALGUE           AGSI_FONT5     /* Monoalgue */
+#define AGSI_BITSTREAM_CHARTER   AGSI_FONT6     /* Bitstream Charter */
+#define AGSI_NOTO_SERIF          AGSI_FONT7     /* Noto Serif */
+#define AGSI_NOTO_SANS           AGSI_FONT8     /* Noto Sans */
+#define AGSI_LEAGUE_SPARTAN      AGSI_FONT9     /* League Spartan */
+#define AGSI_LEAGUE_GOTHIC       AGSI_FONT10    /* League Gothic */
+#define AGSI_UNIFRAKTUR_MAGUNTIA AGSI_FONT11    /* Unifraktur Maguntia */
+/* #define AGSI_UNUSED_FONT12    AGSI_FONT12 */
+/* #define AGSI_UNUSED_FONT13    AGSI_FONT13 */
+/* #define AGSI_UNUSED_FONT14    AGSI_FONT14 */
+/* #define AGSI_UNUSED_FONT15    AGSI_FONT15 */
+/* #define AGSI_UNUSED_FONT16    AGSI_FONT16 */
+/* #define AGSI_UNUSED_FONT17    AGSI_FONT17 */
 
-#define AGSI_MONOSPACE     AGSI_MONOALGUE_SANS		/* A monospace font */
-#define AGSI_UNI           AGSI_UNIALGUE		/* A pan-unicode font */
-#define AGSI_CM_SANS       AGSI_CMU_SANS 		/* CM Sans Serif */
-#define AGSI_PATH	   AGSI_MONOALGUE               /* A font for pathnames */
-#define AGSI_CM_SERIF      AGSI_CMU_SERIF		/* CM Serif */
-#define AGSI_CODE          AGSI_MONOALGUE		/* A programming font */
-#define AGSI_COURIER       AGSI_MONOALGUE		/* A courier font */
-#define AGSI_FRAKTUR       AGSI_UNIFRAKTUR_MAGUNTIA	/* A fraktur font */
-#define AGSI_IDEOGRAM      AGSI_AGAR_IDEOGRAMS          /* A font with ideograms */
+#define AGSI_MONOSPACE AGSI_MONOALGUE            /* A monospace font */
+#define AGSI_UNI       AGSI_UNIALGUE             /* An extended unicode font */
+#define AGSI_PATH      AGSI_MONOALGUE            /* A font for pathnames */
+#define AGSI_CODE      AGSI_MONOALGUE            /* A programming font */
+#define AGSI_COURIER   AGSI_MONOALGUE            /* A courier font */
+#define AGSI_FRAKTUR   AGSI_UNIFRAKTUR_MAGUNTIA  /* A fraktur font */
+#define AGSI_IDEOGRAM  AGSI_AGAR_IDEOGRAMS       /* A font with ideograms */
+#define AGSI_CHARTER   AGSI_BITSTREAM_CHARTER    /* Bitstream Charter */
+#define AGSI_NOTO      AGSI_NOTO_SANS            /* Noto Sans */
+#define AGSI_CJK       AGSI_NOTO_SANS            /* A pan-CJK font */
 
 /*
  * Map AGSI_APPCMD and AGSI_WINCMD to the preferred modifier keys for

@@ -324,9 +324,9 @@ ag_fetch_variable_of_type(void *obj, const char *name,
 	V = AG_FetchVariable(obj, name, type);
 	if (V->type != type) {
 #ifdef AG_DEBUG
-		AG_Debug(obj, "Mutate \"" AGSI_YEL "%s" AGSI_RST "\" from ("
-		              AGSI_CYAN "%s" AGSI_RST ") to ("
-			      AGSI_CYAN "%s" AGSI_RST ")\n",
+		AG_Debug2(obj, "Mutate \"" AGSI_YEL "%s" AGSI_RST "\" from ("
+		               AGSI_CYAN "%s" AGSI_RST ") to ("
+			       AGSI_CYAN "%s" AGSI_RST ")\n",
 		    name,
 		    agVariableTypes[V->type].name,
 		    agVariableTypes[type].name);
@@ -367,7 +367,7 @@ ag_access_variable(void *pObj, const char *name)
 	AG_LockVariable(V);
 	if (V->type == AG_VARIABLE_P_VARIABLE) {
 #if 0
-		AG_Debug(NULL, "Aliasing \"%s\" -> %s<%s>:\"%s\"\n", name,
+		AG_Debug2(NULL, "Aliasing \"%s\" -> %s<%s>:\"%s\"\n", name,
 		    AGOBJECT(V->data.p)->name,
 		    AGOBJECT_CLASS(V->data.p)->name,
 		    V->info.varName);

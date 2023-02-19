@@ -698,7 +698,7 @@ TestGUI(void *obj, AG_Window *win)
 			AG_TableAddCol(table, "sin(x)", "33%", NULL);
 			AG_TableAddCol(table, "cos(x)", "33%", NULL);
 
-			AG_SetFontFamily(table, "cm-serif");
+			AG_SetFontFamily(table, "charter");
 			AG_SetFontSize(table, "120%");
 			AG_SetColor(table, "#666");
 

@@ -55,9 +55,9 @@ TestGUI(void *obj, AG_Window *win)
 	 * be packed normally.
 	 */
 	box = AG_BoxNewVert(NULL, 0);
-	AG_SetFontFamily(box, "cm-serif");
-	AG_SetFontSize(box, "80%");
-	AG_SetFontStyle(box, "italic");
+	AG_SetFontFamily(box, "charter");
+	AG_SetFontWeight(box, "Bold");
+	AG_SetFontStyle(box, "Italic");
 	{
 		AG_Box *hBox;
 		AG_Button *btnNum;

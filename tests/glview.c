@@ -387,7 +387,7 @@ TestGUI(void *obj, AG_Window *win)
 		num = AG_NumericalNewIntR(hb, 0, NULL, "Sphere\nsubdiv: ",
 		    &ti->subdiv, 0,8);
 		edNum = num->input->ed;
-		AG_SetFontFamily(edNum, "cm-serif");
+		AG_SetFontFamily(edNum, "charter");
 		AG_SetFontSize(edNum, "160%");
 		AG_SetFontWeight(edNum, "bold");
 

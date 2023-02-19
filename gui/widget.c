@@ -2360,10 +2360,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		}
 		if (fontNew && wid->font != fontNew) {
 			AG_OBJECT_ISA(fontNew, "AG_Font:*");
-#if 0
-			if (wid->font)
-				AG_UnusedFont(wid->font);
-#endif
+
 			wid->font = fontNew;
 
 			AG_PushTextState();
@@ -2394,51 +2391,48 @@ Apply_Font_Size(float *fontSize, float parentFontSize, const char *spec)
 }
 
 static void
-Apply_Font_Weight(Uint *fontFlags, Uint parentFontFlags, const char *spec)
+Apply_Font_Weight(Uint *fontFlags, Uint parentFontFlags, const char *weight)
 {
-	if (AG_Strcasecmp(spec, "bold") == 0) {
-		*fontFlags |= AG_FONT_BOLD;
-	} else if (AG_Strcasecmp(spec, "!parent") == 0) {
-		if (parentFontFlags & AG_FONT_WEIGHTS) {
-			*fontFlags &= ~(AG_FONT_WEIGHTS);
-		} else {
-			*fontFlags |= AG_FONT_BOLD;
+	Uint flags;
+
+	if ((flags = AG_FontGetStyleByName(weight)) == 0) {
+		if (AG_Strcasecmp(weight, "!parent") == 0) {
+			if ((parentFontFlags & AG_FONT_WEIGHTS) == 0)
+				flags = AG_FONT_BOLD;
 		}
-	} else {				/* "normal" or "regular" */
-		*fontFlags &= ~(AG_FONT_WEIGHTS);
 	}
+	*fontFlags &= ~(AG_FONT_WEIGHTS);
+	*fontFlags |= flags;
 }
 	
 static void
-Apply_Font_Style(Uint *fontFlags, Uint parentFontFlags, const char *spec)
+Apply_Font_Style(Uint *fontFlags, Uint parentFontFlags, const char *style)
 {
-	*fontFlags &= ~(AG_FONT_STYLES);
+	Uint flags;
 
-	if (AG_Strcasecmp(spec, "italic") == 0) {
-		*fontFlags |= AG_FONT_ITALIC;
-	} else if (AG_Strcasecmp(spec, "upright-italic") == 0) {
-		*fontFlags |= AG_FONT_UPRIGHT_ITALIC;
-	} else if (AG_Strcasecmp(spec, "oblique") == 0) {
-		*fontFlags |= AG_FONT_OBLIQUE;
-	} else if (AG_Strcasecmp(spec, "!parent") == 0) {
-		if ((parentFontFlags & AG_FONT_STYLES) == 0)
-			*fontFlags |= AG_FONT_ITALIC;
+	if ((flags = AG_FontGetStyleByName(style)) == 0) {
+		if (AG_Strcasecmp(style, "!parent") == 0) {
+			if ((parentFontFlags & AG_FONT_STYLES) == 0)
+				flags = AG_FONT_ITALIC;
+		}
 	}
+	*fontFlags &= ~(AG_FONT_STYLES);
+	*fontFlags |= flags;
 }
 
 static void
-Apply_Font_Stretch(Uint *fontFlags, Uint parentFontFlags, const char *spec)
+Apply_Font_Stretch(Uint *fontFlags, Uint parentFontFlags, const char *wdVariant)
 {
-	*fontFlags &= ~(AG_FONT_WD_VARIANTS);
+	Uint flags;
 
-	if (AG_Strcasecmp(spec, "condensed") == 0) {
-		*fontFlags |= AG_FONT_CONDENSED;
-	} else if (AG_Strcasecmp(spec, "semi-condensed") == 0) {
-		*fontFlags |= AG_FONT_SEMICONDENSED;
-	} else if (AG_Strcasecmp(spec, "!parent") == 0) {
-		if ((parentFontFlags & AG_FONT_WD_VARIANTS) == 0)
-			*fontFlags |= AG_FONT_CONDENSED;
+	if ((flags = AG_FontGetStyleByName(wdVariant)) == 0) {
+		if (AG_Strcasecmp(wdVariant, "!parent") == 0) {
+			if ((parentFontFlags & AG_FONT_WD_VARIANTS) == 0)
+				flags = AG_FONT_CONDENSED;
+		}
 	}
+	*fontFlags &= ~(AG_FONT_WD_VARIANTS);
+	*fontFlags |= flags;
 }
 
 static void
@@ -2609,7 +2603,6 @@ AG_WidgetFreeStyle(void *obj)
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	if (wid->font) {
-/*		AG_UnusedFont(wid->font); */
 		wid->font = NULL;
 	}
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)

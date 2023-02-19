@@ -1,4 +1,4 @@
-.\" Copyright (c) 2010-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2010-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,7 +22,7 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd December 21, 2022
+.Dd February 18, 2023
 .Dt AG_INITGRAPHICS 3
 .Os Agar 1.7
 .Sh NAME
@@ -39,44 +39,47 @@ After having initialized the Agar-Core library with
 .Xr AG_InitCore 3 ,
 Agar-GUI applications must initialize the GUI system.
 .Sh AVAILABLE DRIVERS
-As of Agar-1.6.0, the drivers included in the distribution are:
+As of Agar 1.7.0, the standard drivers included in the distribution are:
 .Pp
-.Bl -tag -width "sdl2fb " -compact
-.It cocoa
-MacOS X Cocoa (GL, multi-window).
-See
-.Xr AG_DriverCocoa 3 .
-.It dummy
-A "no-op" driver which prints all low-level requests and arguments on the console.
-See
-.Xr AG_DriverDUMMY 3 .
-.It glx
-X Windows (GL, multi-window).
-See
-.Xr AG_DriverGLX 3 .
-.It sdlfb
-SDL1 (framebuffer, single-window).
-See
-.Xr AG_DriverSDLFB 3 .
-.It sdlgl
-SDL1 (GL, single-window).
-See
-.Xr AG_DriverSDLGL 3 .
-.It sdl2fb
-SDL2 (framebuffer, single-window).
-See
-.Xr AG_DriverSDL2FB 3 .
-.It sdl2gl
-SDL2 (GL, single-window).
-See
-.Xr AG_DriverSDL2GL 3 .
-.It sdl2mw
-SDL2 (GL, multi-window).
-See
-.Xr AG_DriverSDL2MW 3 .
-.It wgl
-Microsoft Windows (GL, multi-window); see
-.Xr AG_DriverWGL 3 .
+.Bl -tag -width "AG_DriverSDL2MW(3) " -compact
+.It Xr AG_DriverCocoa 3
+(-d "cocoa")
+MacOS X with OpenGL.
+Multi-window.
+.It Xr AG_DriverDUMMY 3
+(-d "dummy")
+No-op (prints to the debug console).
+.It Xr AG_DriverGLX 3
+(-d "glx")
+X Windows with OpenGL.
+Multi-window.
+.It Xr AG_DriverSDLFB 3
+(-d "sdlfb")
+SDL1 with framebuffer.
+Single-window.
+.It Xr AG_DriverSDLGL 3
+(-d "sdlgl")
+SDL1 with OpenGL.
+Single-window.
+.It Xr AG_DriverSDL2FB 3
+(-d "sdl2fb")
+SDL2 with framebuffer.
+Single-window.
+Game controllers and joysticks are supported.
+.It Xr AG_DriverSDL2GL 3
+(-d "sdl2gl")
+SDL2 with OpenGL.
+Single-window.
+Game controllers and joysticks are supported.
+.It Xr AG_DriverSDL2MW 3
+(-d "sdl2mw")
+SDL2 with OpenGL.
+Multi-window.
+Game controllers and joysticks are supported.
+.It Xr AG_DriverWGL 3
+(-d "wgl")
+MS Windows with OpenGL.
+Multi-window.
 .El
 .Sh INITIALIZATION
 .nr nS 1

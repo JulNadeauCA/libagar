@@ -704,7 +704,7 @@ AG_About(AG_Event *event)
 			    AGSI_BR_CYAN "https://www.libAgar.org/\n" AGSI_RST
 			    AGSI_BR_YEL "https://patreon.com/libAgar/");
 
-			AG_SetFontFamily(lbl, "monoalgue-sans");
+			AG_SetFontFamily(lbl, "monoalgue");
 			AG_SetColor(lbl, "darkblue");
 			AG_SetPadding(lbl, "3 5 3 0");
 			AG_LabelJustify(lbl, AG_TEXT_RIGHT);

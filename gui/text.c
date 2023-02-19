@@ -135,23 +135,23 @@ AG_Color agTextColorANSI[] = {
 
 /* Core fonts provided with Agar */
 const char *agCoreFonts[] = {
-	"_agFontAlgue",      /*  #1 Algue (default font; built-in) */
-	"unialgue",          /*  #2 Unialgue (default font with extended Unicode) */
-	"cm-sans",           /*  #3 Computer Modern Sans */
-	"cm-serif",          /*  #4 Computer Modern Serif */
-	"monoalgue-sans",    /*  #5 Monoalgue Sans (a monospace sans-serif) */
-	"charter",           /*  #6 Bitstream Charter (a transitional serif) */
-	"monoalgue",         /*  #7 Monoalgue (a monospace serif optimized for code) */
-	"Noto Sans CJK SC",  /*  #8 Noto Sans CJK SC (a pan-CJK font) */
+	"algue",             /*  #1 Algue (default font; built-in) */
+	"unialgue",          /*  #2 Unialgue (default font w/ extended Unicode) */
+	"agar-minimal",      /*  #3 Agar Minimal (our bitmap font) */
+	"agar-ideograms",    /*  #4 Agar Ideograms (our graphical icons) */
+	"monoalgue",         /*  #5 Monoalgue (a monospace sans font) */
+	"charter",           /*  #6 Bitstream Charter (a transitional serif font) */
+	"Noto Serif CJK SC", /*  #7 Noto Serif CJK SC (a pan-CJK serif font) */
+	"Noto Sans CJK SC",  /*  #8 Noto Sans CJK SC (a pan-CJK sans font) */
 	"league-spartan",    /*  #9 League Spartan (a bold geometric sans-serif) */
 	"league-gothic",     /* #10 League Gothic (a condensable Gothic font) */
 	"fraktur",           /* #11 Unifraktur Maguntia (a Fraktur font) */
-	"agar-minimal",      /* #12 Agar Minimal (a condensable bitmap font) */
-	"agar-ideograms",    /* #13 Agar Ideograms (graphical icons) */
-	"_agFontAlgue",      /* #14 (unused slot) */
-	"_agFontAlgue",      /* #15 (unused slot) */
-	"_agFontAlgue",      /* #16 (unused slot) */
-	"_agFontAlgue",      /* #17 (unused slot) */
+	"algue",             /* #12 (unused) */
+	"algue",             /* #13 (unused) */
+	"algue",             /* #14 (unused) */
+	"algue",             /* #15 (unused) */
+	"algue",             /* #16 (unused) */
+	"algue",             /* #17 (unused) */
 	NULL
 };
 

@@ -50,15 +50,14 @@
 /* #define DEBUG_FONTS */
 
 /*
- * Adjustments to the scaling and baselines of core fonts (relative to Algue).
- * Option flags: AG_FONT_BOLD (bold style is also the Regular style).
+ * Adjustments to the scaling and baselines of fonts relative to the
+ * default font (Algue). Also indicate when given styles of a font are also
+ * considered the Regular or Normal style of that font family.
  */
 const AG_FontAdjustment agFontAdjustments[] = {
 /*                                  Pts From:   0.0 10.4 14.0 21.0 23.8 35.0 */
 /*                                        To:  10.4 14.0 21.0 23.8 35.0 +inf */
-	{ "cm-sans",                     1.1f, { -4,  -4,  -6,  -7,  -9, -16 }, 0,0 },
-	{ "cm-sans.ttf",                 1.1f, { -2,  -3,  -4,  -6,  -3,  -9 }, 0,0 },
-	{ "cm-serif",                    1.1f, { -1,  -2,   0,  -2,  -4,  -5 }, 0,0 },
+	{ "charter.otf",                 1.1f, { -3,  -2,  -2,  -3,  -3,  -6 }, 0,0 },
 	{ "courier",                     1.0f, {  0,   0,  +1,  +1,  +2,  +3 }, 0,0 },
 	{ "courier 10 pitch",            1.0f, {  0,   0,  +1,  +1,  +2,  +3 }, 0,0 },
 	{ "dejavu sans",                 1.0f, { -4,  -4,  -6,  -7,  -9, -16 }, 0,0 },
@@ -72,21 +71,18 @@ const AG_FontAdjustment agFontAdjustments[] = {
 	{ "gentium basic",               1.0f, { -2,  -3,  -3,  -4,  -5,  -7 }, 0,0 },
 	{ "gentium book basic",          1.0f, { -2,  -3,  -3,  -4,  -5,  -7 }, 0,0 },
 	{ "goha-tibeb zemen",            1.0f, { -3,  -3,  -5,  -7,  -8, -13 }, 0,0 },
-	{ "league-gothic",               1.1f, { -1,  -1,   0,  -1,  -1,  +1 }, AG_FONT_BOLD,0 },
-	{ "league gothic",               1.1f, { -1,  -1,   0,  -1,  -1,  +1 }, AG_FONT_BOLD,0 },
 /*                                  Pts From:   0.0 10.4 14.0 21.0 23.8 35.0 */
 /*                                        To:  10.4 14.0 21.0 23.8 35.0 +inf */
 	{ "league-gothic-"
-	  "condensed-italic.otf",        1.1f, { -1,  -1,   0,  -1,  -1,  +1 }, AG_FONT_BOLD,0 },
-	{ "league-gothic-condensed.otf", 1.1f, { -1,  -1,   0,  -1,  -1,  +1 }, AG_FONT_BOLD,0 },
-	{ "league-gothic-italic.otf",    1.1f, { -1,  -1,   0,  -1,  -1,  +1 }, AG_FONT_BOLD,0 },
-	{ "league-gothic.otf",           1.1f, { -1,  -1,   0,  -1,  -1,  +1 }, AG_FONT_BOLD,0 },
-	{ "league spartan",              1.0f, { -2,  -3,  -4,  -7,  -9, -17 }, 0,0 },
-	{ "fraktur",                     1.1f, { +1,  +1,  +1,  +1,  +1,  +1 }, AG_FONT_BOLD,0 },
+	  "condensed-italic.otf",        1.1f, { -1,  -1,   0,  -1,  -2,  -4 }, AG_FONT_BOLD,0 },
+	{ "league-gothic-condensed.otf", 1.1f, { -1,  -1,   0,  -1,  -2,  -4 }, AG_FONT_BOLD,0 },
+	{ "league-gothic-italic.otf",    1.1f, { -1,  -1,   0,  -1,  -2,  -4 }, AG_FONT_BOLD,0 },
+	{ "league-gothic.otf",           1.1f, { -1,  -1,   0,  -1,  -2,  -4 }, AG_FONT_BOLD,0 },
+	{ "league-spartan.otf",          1.0f, { -3,  -3,  -4,  -5,  -7, -10 }, 0,0 },
 	{ "fraktur.ttf",                 1.1f, { +1,  +1,  +1,  +1,  +1,  +1 }, AG_FONT_BOLD,0 },
-	{ "noto sans cjk sc",            1.0f, { -6,  -8, -12, -14, -18, -40 }, 0,0 },
+	{ "noto sans cjk sc",            1.0f, { -9, -11, -15, -17, -21, -42 }, 0,0 },
 	{ "noto serif sc",               1.0f, { -6,  -8, -12, -14, -18, -35 }, 0,0 },
-	{ "noto serif cjk sc",           1.0f, { -6,  -8, -12, -14, -19, -38 }, 0,0 },
+	{ "noto serif cjk sc",           1.0f, {-10, -12, -16, -18, -23, -42 }, 0,0 },
 	{ "noto sans sc",                1.0f, { -6,  -8, -13, -15, -18, -38 }, 0,0 },
 	{ "noto sans symbols",           1.0f, {  0,   0,   0,   0,  -1,  -2 }, 0,0 },
 	{ "noto sans mono cjk sc",       1.0f, { -6,  -9, -11, -14, -20, -38 }, 0,0 },
@@ -99,25 +95,43 @@ const AG_FontAdjustment agFontAdjustments[] = {
 	{ "serto malankara",             1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
 	{ "serto mardin",                1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
 	{ "serto urhoy",                 1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
-	{ "unialgue",                    1.0f, { -6,  -7,  -8, -10, -12, -15 }, 0,0 },
-	{ "unialgue.ttf",                1.0f, { -6,  -7,  -8, -10, -12, -15 }, 0,0 },
+	{ "unialgue.ttf",                1.0f, { -6,  -7,  -7, -10, -12, -15 }, 0,0 },
 	{ "utopia",                      1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
 	{ NULL,                          0.0f, {  0,   0,   0,   0,   0,   0 }, 0,0 }
 };
 
-/* Alternate names for fonts. */
+/*
+ * Aliases for font names. This table exists for performance reasons.
+ * It prevents unnecessary loading of the built-in (algue) from its file copy.
+ * We also map core font names to their respective files so the loader will
+ * not have to cycle through (and test) every possible font file extension.
+ */
 const AG_FontAlias agFontAliases[] = {
-	{ "agar-minimal",          "agar-minimal.agbf" },
-	{ "agar-ideograms",        "agar-ideograms.agbf" },
-	{ "algue",                 "_agFontAlgue" },            /* Built-in */
-	{ "algue.ttf",             "_agFontAlgue" },
-	{ "algue-bold",            "_agFontAlgue_Bold" },
-	{ "algue-bold.ttf",        "_agFontAlgue_Bold" },
-	{ "algue-italic",          "_agFontAlgue_Italic" },
-	{ "algue-italic.ttf",      "_agFontAlgue_Italic" },
-	{ "algue-bold-italic",     "_agFontAlgue_BoldItalic" },
-	{ "algue-bold-italic.ttf", "_agFontAlgue_BoldItalic" },
-	{ NULL,                     NULL }
+	{ "algue",                          "_agFontAlgue" },
+	{ "algue.ttf",                      "_agFontAlgue" },
+	{ "algue-bold",                     "_agFontAlgue_Bold" },
+	{ "algue-bold.ttf",                 "_agFontAlgue_Bold" },
+	{ "algue-italic",                   "_agFontAlgue_Italic" },
+	{ "algue-italic.ttf",               "_agFontAlgue_Italic" },
+	{ "algue-bold-italic",              "_agFontAlgue_BoldItalic" },
+	{ "algue-bold-italic.ttf",          "_agFontAlgue_BoldItalic" },
+	{ "unialgue",                       "unialgue.ttf" },
+	{ "agar-minimal",                   "agar-minimal.agbf" },
+	{ "agar-ideograms",                 "agar-ideograms.agbf" },
+	{ "monoalgue",                      "monoalgue.ttf" },
+	{ "monoalgue-bold",                 "monoalgue-bold.ttf" },
+	{ "monoalgue-italic",               "monoalgue-italic.ttf" },
+	{ "monoalgue-bold-italic",          "monoalgue-bold-italic.ttf" },
+	{ "charter",                        "charter.otf" },
+	{ "charter-bold",                   "charter-bold.otf" },
+	{ "charter-italic",                 "charter-bold-italic.otf" },
+	{ "league-spartan",                 "league-spartan.otf" },
+	{ "league-gothic",                  "league-gothic.otf" },
+	{ "league-gothic-italic",           "league-gothic-italic.otf" },
+	{ "league-gothic-condensed",        "league-gothic-condensed.otf" },
+	{ "league-gothic-condensed-italic", "league-gothic-condensed-italic.otf" },
+	{ "fraktur",                        "fraktur.ttf" },
+	{ NULL,                             NULL }
 };
 
 /* Map fontconfig FC_STYLE names to AG_Font flags. */
@@ -902,10 +916,11 @@ AG_FontGetFamilyStyles(AG_Font *font)
 }
 
 /*
- * Write a (fontconfig FC_STYLE compatible) string representation of the
- * given AG_Font flags to a fixed-size buffer buf.
+ * Write a string representation of the given AG_Font style flags to a
+ * fixed-size buffer buf. The representation should be compatible with
+ * Fontconfig FC_STYLE.
  *
- * Return the number of bytes that would have been generated were bufSize
+ * Return the number of bytes that would have been written were bufSize
  * unlimited.
  */
 AG_Size
@@ -932,6 +947,25 @@ AG_FontGetStyleName(char *buf, AG_Size bufSize, Uint flags)
 		rv += Strlcpy(buf, "Regular", sizeof(buf));
 	}
 	return (rv);
+}
+
+/*
+ * Return the AG_Font style flags corresponding to the given string
+ * representation of a font style. The representation is case-insensitive
+ * and should be compatible with Fontconfig FC_STYLE.
+ *
+ * Return 0 if the string could not be parsed.
+ */
+Uint
+AG_FontGetStyleByName(const char *style)
+{
+	const AG_FontStyleName *fsn;
+
+	for (fsn = &agFontStyleNames[0]; fsn->name != NULL; fsn++) {
+		if (Strcasecmp(fsn->name, style) == 0)
+			return (fsn->flag);
+	}
+	return (0);
 }
 
 static void

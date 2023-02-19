@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarcore.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 February 16
+" Last Change:  2023 February 18
 
 source $VIMRUNTIME/syntax/c.vim
 
@@ -42,14 +42,14 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_BR_RED_BG AGSI_BR_GRN_BG AGSI_BR_YEL_BG AGSI_BR_BLU_BG 
   syn keyword cConstant AGSI_BR_MAG_BG AGSI_BR_CYAN_BG AGSI_BR_WHT_BG
   " core/agsi.h (core fonts)
-  syn keyword cConstant AGSI_ALGUE AGSI_UNIALGUE AGSI_CMU_SANS AGSI_CMU_SERIF
-  syn keyword cConstant AGSI_CHARTER AGSI_MONOALGUE_SANS AGSI_MONOALGUE
-  syn keyword cConstant AGSI_SOURCE_HAN_SANS AGSI_LEAGUE_SPARTAN
+  syn keyword cConstant AGSI_ALGUE AGSI_UNIALGUE AGSI_AGAR_MINIMAL 
+  syn keyword cConstant AGSI_AGAR_IDEOGRAMS AGSI_MONOALGUE AGSI_BITSTREAM_CHARTER
+  syn keyword cConstant AGSI_NOTO_SERIF AGSI_NOTO_SANS AGSI_LEAGUE_SPARTAN
   syn keyword cConstant AGSI_LEAGUE_GOTHIC AGSI_UNIFRAKTUR_MAGUNTIA
-  syn keyword cConstant AGSI_MONOSPACE AGSI_UNI AGSI_CM_SANS AGSI_PATH
-  syn keyword cConstant AGSI_CM_SERIF AGSI_CODE AGSI_COURIER AGSI_SOURCE_HAN 
-  syn keyword cConstant AGSI_CJK AGSI_FRAKTUR AGSI_AGAR_MINIMAL AGSI_AGAR_IDEOGRAMS
-  syn keyword cConstant AGSI_IDEOGRAM AGSI_APPCMD AGSI_WINCMD
+  syn keyword cConstant AGSI_MONOSPACE AGSI_UNI AGSI_PATH AGSI_CODE AGSI_COURIER 
+  syn keyword cConstant AGSI_FRAKTUR AGSI_IDEOGRAM AGSI_CHARTER AGSI_NOTO
+  syn keyword cConstant AGSI_CJK 
+  syn keyword cConstant AGSI_APPCMD AGSI_WINCMD AGSI_APPCMD_NAME AGSI_WINCMD_NAME
   " core/agsi.h (general punctuation)
   syn keyword cConstant AGSI_THIN_SPACE AGSI_HYPHEN AGSI_NON_BREAKING_HYPHEN
   syn keyword cConstant AGSI_FIGURE_DASH AGSI_EN_DASH AGSI_EM_DASH

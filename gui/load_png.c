@@ -170,10 +170,10 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 		colorkey = AG_MapPixel_RGB16(&S->format,
 		    tc->red, tc->green, tc->blue);
 #if AG_MODEL == AG_LARGE
-		Debug(NULL, "PNG transparent colorkey: 0x%llx\n",
+		Debug2(NULL, "PNG transparent colorkey: 0x%llx\n",
 		    (unsigned long long)colorkey);
 #else
-		Debug(NULL, "PNG transparent colorkey: 0x%x\n", colorkey);
+		Debug2(NULL, "PNG transparent colorkey: 0x%x\n", colorkey);
 #endif
 	        AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY, colorkey);
 	}
@@ -225,7 +225,7 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	for (row = 0; row < (int)height; row++)
 		pData[row] = (png_bytep)S->pixels + row*S->pitch;
 
-	Debug(NULL, "PNG image (%ux%u; %d-bpp (%d x %d-ch) %s at 0x%lx (->%p) via libpng (%s)\n",
+	Debug2(NULL, "PNG image (%ux%u; %d-bpp (%d x %d-ch) %s at 0x%lx (->%p) via libpng (%s)\n",
 	    width, height, depth*channels, depth, channels,
 	    agSurfaceModeNames[S->format.mode],
 	    (long)start, S, PNG_LIBPNG_VER_STRING);
@@ -378,7 +378,7 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 	case PNG_COLOR_TYPE_RGB_ALPHA:
 		BytesPerPixel = ((depth >> 3) << 2) * sizeof(png_byte);
 		SrcBytesPerPixel = S->format.BytesPerPixel;
-		Debug(NULL, "Saving %ux%u %dbpp surface <%p> to %s [RGBA%d]\n",
+		Debug2(NULL, "Saving %ux%u %dbpp surface <%p> to %s [RGBA%d]\n",
 		    w,h, S->format.BitsPerPixel, S, path, depth);
 		for (y=0, pSrc=S->pixels; y < h; y++) {
 			if ((row = png_malloc(png, w*BytesPerPixel)) == NULL) {
@@ -419,7 +419,7 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 	case PNG_COLOR_TYPE_RGB:
 		BytesPerPixel = 3 * (depth >> 3) * sizeof(png_byte);
 		SrcBytesPerPixel = S->format.BytesPerPixel;
-		Debug(NULL, "Saving %ux%u %dbpp surface <%p> to %s [RGB%d]\n",
+		Debug2(NULL, "Saving %ux%u %dbpp surface <%p> to %s [RGB%d]\n",
 		    w,h, S->format.BitsPerPixel, S, path, depth);
 		for (y=0, pSrc=S->pixels; y < h; y++) {
 			if ((row = png_malloc(png, w*BytesPerPixel)) == NULL) {
@@ -457,7 +457,7 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 		}
 		break;
 	case PNG_COLOR_TYPE_PALETTE:				/* Use PLTE */
-		Debug(NULL,
+		Debug2(NULL,
 		    "Saving %ux%u %dbpp surface %p to %s [%u-color PLTE]\n",
 		    w,h, S->format.BitsPerPixel, S, path, pal->nColors);
 		plte = (png_colorp)TryMalloc(pal->nColors * sizeof(png_color));

@@ -374,7 +374,6 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 				font->ascent = (int)strtoul(&line[7],NULL,10);
 			} else if (strncmp(line,"lineskip ",9) == 0 && line[9] != '\0') {
 				font->lineskip = (int)strtoul(&line[9],NULL,10);
-				Debug(font, "Parsed lineskip = %d\n", font->lineskip);
 			} else if (strncmp(line,"underline-position ",18) == 0 && line[18] != '\0') {
 				font->underlinePos = (int)strtoul(&line[18],NULL,10);
 			} else if (strncmp(line,"underline-thickness ",19) == 0 && line[19] != '\0') {
@@ -403,9 +402,6 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 			if ((fontBf->name = TryStrdup(name)) == NULL) {
 				goto fail;
 			}
-#ifdef DEBUG_FONTS
-			Debug(fontBf, "Name: `%s'\n", name);
-#endif
 		} else if (strncmp(line,"author",6) == 0 ||
 		           strncmp(line,"license",7) == 0) {
 			goto next_line;
@@ -423,9 +419,6 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 				fontBf->colorize = AG_FONT_BF_COLORIZE_NONE;
 				break;
 			}
-#ifdef DEBUG_FONTS
-			Debug(fontBf, "Colorization mode: %d\n", fontBf->colorize);
-#endif
 		} else if (strncmp(line,"size ",5) == 0 && line[5] != '\0') {
 			char *ep;
 			float sizeMin, sizeMax;
@@ -446,10 +439,6 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 
 			fontFlags = (Uint)strtoul(&line[8],NULL,16);
 			inMatchingFlags = (font->flags == fontFlags) ? 1 : 0;
-#ifdef DEBUG_FONTS
-			if (inMatchingFlags)
-				Debug(fontBf, "Matching flags: 0x%x\n", font->flags);
-#endif
 		}
 next_line:
 		nLine++;

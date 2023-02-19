@@ -59,7 +59,7 @@ PollFonts(AG_Event *_Nonnull event)
 
 		AG_FontGetStyleName(style, sizeof(style), font->flags);
 
-		AG_TableAddRow(tbl, "%s:%s:%f:%s:%.1f:%s",
+		AG_TableAddRow(tbl, "%s:%s:%.1f:%s:%.1f:%s",
 		    OBJECT(font)->name,
 		    fontTypeNames[font->spec.type],
 		    font->spec.size,
@@ -87,7 +87,7 @@ AG_DEV_FontInfo(void)
 	AG_TableAddCol(tbl, _("Name"),    "<XXXXXXXXXXXXXXX>",   NULL);
 	AG_TableAddCol(tbl, _("Class"),   "<XXXXX>",             NULL);
 	AG_TableAddCol(tbl, _("Size"),    "<XXXXXXXXXX>",        NULL);
-	AG_TableAddCol(tbl, _("Flags"),   "<XXXXXX>",            NULL);
+	AG_TableAddCol(tbl, _("Style"),   "<XXXXXX>",            NULL);
 	AG_TableAddCol(tbl, _("Time"),    "<XXXXXXX>",           NULL);
 	AG_TableAddCol(tbl, _("Metrics"), NULL,                  NULL);
 	AG_TableSizeHint(tbl, 700, 30);

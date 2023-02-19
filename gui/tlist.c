@@ -480,10 +480,7 @@ FreeItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 	}
 	if (it->color)
 		free(it->color);
-#if 0
-	if (it->font)
-		AG_UnusedFont(it->font);
-#endif
+
 	free(it);
 }
 
@@ -1321,10 +1318,7 @@ AG_TlistSetFont(AG_Tlist *tl, AG_TlistItem *it, const char *face, float scale,
 
 	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
-#if 0
-	if (it->font != NULL)
-		AG_UnusedFont(it->font);
-#endif
+
 	font = WIDGET(tl)->font;
 
 	if (face == NULL) {
