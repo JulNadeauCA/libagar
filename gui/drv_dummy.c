@@ -117,7 +117,15 @@ DUMMY_Open(void *_Nonnull obj, const char *_Nullable spec)
 	if (DUMMY_InitGlobals() == -1)
 		return (-1);
 
+	Verbose(
+	  _("/*\n"
+	    " * Running the " AGSI_BOLD" AG_DriverDUMMY" AGSI_RST "(3) pseudo-driver. If you are not\n"
+	    " * seeing any debug output, make sure that debugging is enabled\n"
+	    " * and that output is not being redirected to an " AGSI_BOLD "AG_Console" AGSI_RST "(3).\n"
+	    " */\n"));
+
 	nDrivers++;
+
 	Debug(drv, "Open (%s)\n", (spec) ? spec : "");
 	if ((drv->mouse = AG_MouseNew(dum, "Dummy mouse")) == NULL ||
 	    (drv->kbd = AG_KeyboardNew(dum, "Dummy keyboard")) == NULL)
