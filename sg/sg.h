@@ -9,11 +9,14 @@
 #include <agar/gui/surface.h>
 #include <agar/gui/opengl.h>
 
-#if defined(_AGAR_SG_INTERNAL) || defined(_USE_SG_GL)
-# if defined(__APPLE__)
-#  include <OpenGL/glu.h>
-# else
-#  include <GL/glu.h>
+#include <agar/config/have_glu.h>
+#ifdef HAVE_GLU
+# if defined(_AGAR_SG_INTERNAL) || defined(_USE_SG_GL)
+#  if defined(__APPLE__)
+#   include <OpenGL/glu.h>
+#  else
+#   include <GL/glu.h>
+#  endif
 # endif
 #endif
 

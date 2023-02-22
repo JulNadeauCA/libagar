@@ -64,8 +64,10 @@ void *sgStdClasses[] = {
 	&sgPolyboxClass,
 	/* Volumetric objects */
 	&sgVoxelClass,
+#ifdef HAVE_GLU
 	/* Thin objects */
 	&sgImageClass,
+#endif
 	NULL
 };
 

@@ -26,6 +26,9 @@
  * Image surface mapped onto flat complex polygon.
  */
 
+#include <agar/config/have_glu.h>
+#ifdef HAVE_GLU
+
 #include <agar/core/core.h>
 #include <agar/sg/sg.h>
 #include <agar/sg/sg_gui.h>
@@ -2017,3 +2020,5 @@ SG_NodeClass sgImageClass = {
 	EditorAction,
 	ScriptAction
 };
+
+#endif /* HAVE_GLU */
