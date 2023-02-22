@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarcore.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 February 18
+" Last Change:  2023 February 19
 
 source $VIMRUNTIME/syntax/c.vim
 
@@ -343,6 +343,7 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_MULTIPLICATION_X AGSI_HEAVY_MULTIPLICATION_X
   syn keyword cConstant AGSI_BALLOT_X AGSI_HEAVY_BALLOT_X
   syn keyword cConstant AGSI_BLK_4_POINTED_STAR AGSI_WHT_4_POINTED_STAR
+  syn keyword cConstant AGSI_CCW_CLOSED_CIRCLE_ARROW AGSI_CW_CLOSED_CIRCLE_ARROW
   " core/agsi.h (miscellaneous symbols and pictographs)
   syn keyword cConstant AGSI_NEW_MOON AGSI_WAXING_CRESCENT_MOON
   syn keyword cConstant AGSI_FIRST_QUARTER_MOON AGSI_WAXING_GIBBOUS_MOON
@@ -386,12 +387,11 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_SML_CAT_FACE_W_OM AGSI_SML_CAT_FACE_W_HEART_SHAPED_EYES
   syn keyword cConstant AGSI_CAT_FACE_W_WRY_SMILE AGSI_KISSING_CAT_FACE_W_CLOSED_EYES
   syn keyword cConstant AGSI_POUTING_CAT_FACE AGSI_CRYING_CAT_FACE AGSI_WEARY_CAT_FACE
-  syn keyword cConstant AGSI_UPSIDE_DOWN_FACE
+  syn keyword cConstant AGSI_UPSIDE_DOWN_FACE AGSI_CONSTRUCTION_SIGN
   "
   " core/agsi.h (in Algue; Agar Extensions - Private Use Area)
   syn keyword cConstant AGSI_BLACK_AGAR AGSI_WHITE_AGAR AGSI_MENUBOOL_TRUE
   syn keyword cConstant AGSI_MENUBOOL_FALSE AGSI_KEYMOD_HYPHEN AGSI_MENU_EXPANDER
-  syn keyword cConstant AGSI_REDO
   syn keyword cConstant AGSI_BOX_VERT AGSI_BOX_HORIZ AGSI_BUTTON AGSI_BEZIER
   syn keyword cConstant AGSI_CHARSETS AGSI_CHECKBOX AGSI_WINDOW_GRADIENT
   syn keyword cConstant AGSI_CONSOLE AGSI_CUSTOM_WIDGET AGSI_FIXED_LAYOUT
@@ -411,7 +411,7 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_CONTAINER AGSI_PARCEL AGSI_SIZE_XS AGSI_SIZE_SM 
   syn keyword cConstant AGSI_SIZE_MD AGSI_SIZE_LG AGSI_SIZE_XL AGSI_SIZE_2XL
   syn keyword cConstant AGSI_SIZE_3XL AGSI_SIZE_4XL AGSI_CLOSE_X AGSI_EXPORT_DOCUMENT
-  syn keyword cConstant AGSI_PAD AGSI_DEBUGGER AGSI_L_MENU_EXPANDER AGSI_UNDO
+  syn keyword cConstant AGSI_PAD AGSI_DEBUGGER AGSI_L_MENU_EXPANDER
   syn keyword cConstant AGSI_USB_STICK AGSI_VERTICAL_SPOOL AGSI_HORIZONTAL_SPOOL
   syn keyword cConstant AGSI_DIP_CHIP AGSI_SURFACE_MOUNT_CHIP AGSI_VACUUM_TUBE
   syn keyword cConstant AGSI_ELECTRON_TUBE AGSI_ZOOM_IN AGSI_ZOOM_OUT
@@ -419,6 +419,18 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_COPY AGSI_LH_COPY AGSI_CLIPBOARD AGSI_PASTE
   syn keyword cConstant AGSI_LH_PASTE AGSI_SELECT_ALL AGSI_CLEAR_ALL
   syn keyword cConstant AGSI_GAME_CONTROLLER AGSI_TOUCHSCREEN
+  syn keyword cConstant AGSI_TRI_CONSTRUCTION_SIGN AGSI_EDGAR_ALLAN_POE
+  syn keyword cConstant AGSI_AGARIAN AGSI_PAPIGROW AGSI_AGARIAN_WARRIOR
+  syn keyword cConstant AGSI_POWERFUL_AGAR AGSI_UNDO AGSI_REDO AGSI_ALPHA_ARCH
+  syn keyword cConstant AGSI_AMIGA_BALL AGSI_COMMODORE_LOGO AGSI_AMD_LOGO
+  syn keyword cConstant AGSI_6502_ARCH AGSI_AMIGA_LOGO AGSI_MOTOROLA_LOGO
+  syn keyword cConstant AGSI_MAMISMOKE AGSI_TGT_FG_COLOR AGSI_TGT_BG_COLOR
+  syn keyword cConstant AGSI_ARM_ARCH AGSI_DREAMCAST AGSI_GAMECUBE AGSI_SEGA
+  syn keyword cConstant AGSI_PA_RISC_ARCH AGSI_X86_ARCH AGSI_X64_ARCH
+  syn keyword cConstant AGSI_I386_ARCH AGSI_JSON AGSI_NES_CONTROLLER
+  syn keyword cConstant AGSI_MIPS32_ARCH AGSI_MIPS64_ARCH AGSI_N64_LOGO
+  syn keyword cConstant AGSI_IA64_ARCH AGSI_PPC32_ARCH AGSI_PPC64_ARCH
+  syn keyword cConstant AGSI_SNES_LOGO AGSI_RISCV_ARCH
 
   " core/agtime.h
   syn keyword cType AG_Timer AG_TimerFn AG_TimerPvt AG_TimeOps

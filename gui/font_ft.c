@@ -535,7 +535,6 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Font *fontCur = fontOrig;
 	AG_FontFt *fontFtCur;
-	AG_GlyphFt *G;
 	const AG_Char *ch;
 	Uint8 *src, *dst;
 	AG_Color cBg = *cBgOrig;
@@ -652,6 +651,7 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 			continue;
 		}
 		if (fontCur->spec.type == AG_FONT_FREETYPE) {
+			AG_GlyphFt *G;
 			int yOffset;
 
 			fontFtCur = AGFONTFT(fontCur);
@@ -739,6 +739,7 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 			}
 
 			xStart += G->advance;
+			indexPrev = G->index;
 
 		} else if (fontCur->spec.type == AG_FONT_BITMAP) {
 			AG_FontBf *fontBfCur = AGFONTBF(fontCur);
@@ -751,7 +752,6 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 				    (char)*ch, *ch);
 #endif
 				xStart += fontBfCur->wdRef;
-				indexPrev = G->index;
 				continue;
 			}
 			(void)cBg;
@@ -764,7 +764,6 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 
 			xStart += Gbf->rs.w + fontBfCur->advance;
 		}
-		indexPrev = G->index;
 	}
 }
 

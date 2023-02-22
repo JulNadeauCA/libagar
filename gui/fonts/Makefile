@@ -27,6 +27,12 @@ DATAFILES_SRC=	OFL11.txt OFL-FAQ.txt \
 		league-gothic-condensed.otf \
 		league-gothic-condensed-italic.otf \
 		league-spartan.otf \
+		league-spartan-black.otf \
+		league-spartan-bold.otf \
+		league-spartan-extrabold.otf \
+		league-spartan-extralight.otf \
+		league-spartan-light.otf \
+		league-spartan-semibold.otf \
 		monoalgue.ttf \
 		monoalgue-bold.ttf \
 		monoalgue-italic.ttf \

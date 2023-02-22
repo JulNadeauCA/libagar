@@ -849,21 +849,23 @@
 /*
  * Dingbats.
  */
-#define AGSI_VICTORY_HAND           "\xE2\x9C\x8C" /* U+270C */
-#define AGSI_WRITING_HAND           "\xE2\x9C\x8D" /* U+270D */
-#define AGSI_LOWER_R_PENCIL         "\xE2\x9C\x8E" /* U+270E Lower Right Pencil */
-#define AGSI_PENCIL                 "\xE2\x9C\x8F" /* U+270F */
-#define AGSI_UPPER_R_PENCIL         "\xE2\x9C\x90" /* U+2710 Upper Right Pencil */
-#define AGSI_WHITE_NIB              "\xE2\x9C\x91" /* U+2711 */
-#define AGSI_BLACK_NIB              "\xE2\x9C\x92" /* U+2712 */
-#define AGSI_CHECK_MARK             "\xE2\x9C\x93" /* U+2713 */
-#define AGSI_HEAVY_CHECK_MARK       "\xE2\x9C\x94" /* U+2714 */
-#define AGSI_MULTIPLICATION_X       "\xE2\x9C\x95" /* U+2715 */
-#define AGSI_HEAVY_MULTIPLICATION_X "\xE2\x9C\x96" /* U+2716 */
-#define AGSI_BALLOT_X               "\xE2\x9C\x97" /* U+2717 */
-#define AGSI_HEAVY_BALLOT_X         "\xE2\x9C\x98" /* U+2718 */
-#define AGSI_BLK_4_POINTED_STAR     "\xE2\x9C\xA6" /* U+2726 Black Four Pointed Star */
-#define AGSI_WHT_4_POINTED_STAR     "\xE2\x9C\xA7" /* U+2727 White Four Pointed Star */
+#define AGSI_VICTORY_HAND            "\xE2\x9C\x8C" /* U+270C */
+#define AGSI_WRITING_HAND            "\xE2\x9C\x8D" /* U+270D */
+#define AGSI_LOWER_R_PENCIL          "\xE2\x9C\x8E" /* U+270E Lower Right Pencil */
+#define AGSI_PENCIL                  "\xE2\x9C\x8F" /* U+270F */
+#define AGSI_UPPER_R_PENCIL          "\xE2\x9C\x90" /* U+2710 Upper Right Pencil */
+#define AGSI_WHITE_NIB               "\xE2\x9C\x91" /* U+2711 */
+#define AGSI_BLACK_NIB               "\xE2\x9C\x92" /* U+2712 */
+#define AGSI_CHECK_MARK              "\xE2\x9C\x93" /* U+2713 */
+#define AGSI_HEAVY_CHECK_MARK        "\xE2\x9C\x94" /* U+2714 */
+#define AGSI_MULTIPLICATION_X        "\xE2\x9C\x95" /* U+2715 */
+#define AGSI_HEAVY_MULTIPLICATION_X  "\xE2\x9C\x96" /* U+2716 */
+#define AGSI_BALLOT_X                "\xE2\x9C\x97" /* U+2717 */
+#define AGSI_HEAVY_BALLOT_X          "\xE2\x9C\x98" /* U+2718 */
+#define AGSI_BLK_4_POINTED_STAR      "\xE2\x9C\xA6" /* U+2726 Black Four Pointed Star */
+#define AGSI_WHT_4_POINTED_STAR      "\xE2\x9C\xA7" /* U+2727 White Four Pointed Star */
+#define AGSI_CCW_CLOSED_CIRCLE_ARROW "\xE2\xA5\x80" /* U+2940 Anticlockwise Closed Circle Arrow */
+#define AGSI_CW_CLOSED_CIRCLE_ARROW  "\xE2\xA5\x81" /* U+2941 Clockwise Closed Circle Arrow */
 /*
  * Miscellaneous Symbols and Pictographs.
  */
@@ -960,6 +962,7 @@
 #define AGSI_CRYING_CAT_FACE                  "\xF0\x9F\x98\xBF" /* U+1F63F */
 #define AGSI_WEARY_CAT_FACE                   "\xF0\x9F\x99\x80" /* U+1F640 */
 #define AGSI_UPSIDE_DOWN_FACE                 "\xF0\x9F\x99\x83" /* U+1F643 */
+#define AGSI_CONSTRUCTION_SIGN                "\xF0\x9F\x9A\xA7" /* U+1F6A7 */
 /*
  * Ideograms (Agar Ideograms; Algue Private Use Area).
  */
@@ -969,7 +972,6 @@
 #define AGSI_MENUBOOL_FALSE       "\xEE\x80\x83"  /* U+E003 Menu Boolean False */
 #define AGSI_KEYMOD_HYPHEN        "\xEE\x80\x84"  /* U+E004 Keyboard-Modifier Hyphen */
 #define AGSI_MENU_EXPANDER        "\xEE\x80\x85"  /* U+E005 Menu Expansion Arrow */
-#define AGSI_REDO AGSI_MENU_EXPANDER
 #define AGSI_BOX_VERT             "\xEE\x80\x90"  /* U+E010 Vertically Packed Box */
 #define AGSI_BOX_HORIZ            "\xEE\x80\x91"  /* U+E011 Horizontally Packed Box */
 #define AGSI_BUTTON               "\xEE\x80\x92"  /* U+E012 GUI Button */
@@ -1033,7 +1035,6 @@
 #define AGSI_PAD                  "\xEE\x81\x8C"  /* U+E04C Pad */
 #define AGSI_DEBUGGER             "\xEE\x81\x8D"  /* U+E04D Debugger */
 #define AGSI_L_MENU_EXPANDER      "\xEE\x81\x8E"  /* U+E04E Leftwise Menu Expansion Arrow */
-#define AGSI_UNDO AGSI_L_MENU_EXPANDER
 #define AGSI_USB_STICK            "\xEE\x81\x8F"  /* U+E04F USB Stick */
 #define AGSI_VERTICAL_SPOOL       "\xEE\x81\x90"  /* U+E050 Vertical Spool */
 #define AGSI_HORIZONTAL_SPOOL     "\xEE\x81\x91"  /* U+E051 Horizontal Spool */
@@ -1055,4 +1056,39 @@
 #define AGSI_CLEAR_ALL            "\xEE\x81\xA1"  /* U+E061 Clear All */
 #define AGSI_GAME_CONTROLLER      "\xEE\x81\xA2"  /* U+E062 Game Controller */
 #define AGSI_TOUCHSCREEN          "\xEE\x81\xA3"  /* U+E063 Touchscreen */
+#define AGSI_TRI_CONSTRUCTION_SIGN "\xEE\x81\xA4" /* U+E064 Triangular Construction Sign */
+#define AGSI_EDGAR_ALLAN_POE       "\xEE\x81\xA5" /* U+E065 Edgar Allan Poe */
+#define AGSI_AGARIAN               "\xEE\x81\xA6" /* U+E066 Agarian */
+#define AGSI_PAPIGROW              AGSI_AGARIAN
+#define AGSI_AGARIAN_WARRIOR       "\xEE\x81\xA7" /* U+E067 Agarian Warrior */
+#define AGSI_UNDO                  "\xEE\x81\xA8" /* U+E068 Undo */
+#define AGSI_REDO                  "\xEE\x81\xA9" /* U+E069 Redo */
+#define AGSI_ALPHA_ARCH            "\xEE\x81\xAA" /* U+E06A Alpha Architecture */
+#define AGSI_AMIGA_BALL            "\xEE\x81\xAB" /* U+E06B Amiga Ball */
+#define AGSI_COMMODORE_LOGO        "\xEE\x81\xAC" /* U+E06C Commodore Logo */
+#define AGSI_AMD_LOGO              "\xEE\x81\xAD" /* U+E06D AMD Logo */
+#define AGSI_6502_ARCH             "\xEE\x81\xAE" /* U+E06E 6502 Architecture */
+#define AGSI_AMIGA_LOGO            "\xEE\x81\xAF" /* U+E06F Amiga Logo */
+#define AGSI_MOTOROLA_LOGO         "\xEE\x81\xB0" /* U+E070 Motorola Logo */
+#define AGSI_MAMISMOKE             "\xEE\x81\xB1" /* U+E071 Old Lady Smoking a Joint */
+#define AGSI_TGT_FG_COLOR          "\xEE\x81\xB2" /* U+E072 Target Foreground Color */
+#define AGSI_TGT_BG_COLOR          "\xEE\x81\xB3" /* U+E073 Target Background Color */
+#define AGSI_ARM_ARCH              "\xEE\x81\xB4" /* U+E074 ARM Architecture */
+#define AGSI_DREAMCAST             "\xEE\x81\xB5" /* U+E075 Dreamcast Logo */
+#define AGSI_GAMECUBE              "\xEE\x81\xB6" /* U+E076 Gamecube Console Front */
+#define AGSI_SEGA                  "\xEE\x81\xB7" /* U+E077 SEGA Logo */
+#define AGSI_PA_RISC_ARCH          "\xEE\x81\xB8" /* U+E078 PA-RISC Architecture */
+#define AGSI_X86_ARCH              "\xEE\x81\xB9" /* U+E079 x86 Architecture */
+#define AGSI_X64_ARCH              "\xEE\x81\xBA" /* U+E07A x64 Architecture */
+#define AGSI_I386_ARCH             "\xEE\x81\xBB" /* U+E07B i386 Architecture */
+#define AGSI_JSON                  "\xEE\x81\xBC" /* U+E07C JSON Format */
+#define AGSI_NES_CONTROLLER        "\xEE\x81\xBD" /* U+E07D NES Controller */
+#define AGSI_MIPS32_ARCH           "\xEE\x81\xBE" /* U+E07E MIPS32 Architecture */
+#define AGSI_MIPS64_ARCH           "\xEE\x81\xBF" /* U+E07F MIPS64 Architecture */
+#define AGSI_N64_LOGO              "\xEE\x82\x80" /* U+E080 N64 Logo */
+#define AGSI_IA64_ARCH             "\xEE\x82\x81" /* U+E081 IA64 Architecture */
+#define AGSI_PPC32_ARCH            "\xEE\x82\x82" /* U+E082 PPC32 Architecture */
+#define AGSI_PPC64_ARCH            "\xEE\x82\x83" /* U+E083 PPC64 Architecture */
+#define AGSI_SNES_LOGO             "\xEE\x82\x84" /* U+E084 SNES Logo */
+#define AGSI_RISCV_ARCH            "\xEE\x82\x85" /* U+E085 RISCV Architecture */
 

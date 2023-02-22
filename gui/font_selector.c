@@ -156,16 +156,19 @@ UpdateStyles(AG_FontSelector *_Nonnull fs, AG_Font *_Nonnull font)
 static void
 UpdateSizes(AG_FontSelector *_Nonnull fs, AG_Font *_Nullable font)
 {
+	AG_Tlist *tl = fs->tlSizes;
 	const int stdSizes[] = { 4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
 	                         22,24,26,28,32,48,64 };
 	const int nStdSizes = sizeof(stdSizes) / sizeof(stdSizes[0]);
 	int i;
 
+	AG_TlistClear(tl);
+
 	/* XXX TODO */
 	for (i = 0; i < nStdSizes; i++) {
 		AG_TlistItem *ti;
 
-		ti = AG_TlistAdd(fs->tlSizes, NULL, "%d", stdSizes[i]);
+		ti = AG_TlistAdd(tl, NULL, "%d", stdSizes[i]);
 		if (font != NULL && stdSizes[i] == font->spec.size)
 			ti->selected++;
 	}
@@ -269,7 +272,7 @@ OnShow(AG_Event *_Nonnull event)
 	AG_ConfigPath *fpath;
 	AG_Tlist *tlFaces = fs->tlFaces;
 	AG_TlistCompareFn cmpFnOrig;
-	int i, selFound = 0;
+	int selFound = 0;
 	
 	Vfont = AG_GetVariable(fs, "font", (void *)&pFont);
 	font = *pFont;
@@ -303,6 +306,8 @@ OnShow(AG_Event *_Nonnull event)
 		os = FcObjectSetBuild(FC_FAMILY, (char *)0);
 		fset = FcFontList(NULL, pat, os);
 		if (fset != NULL) {
+			int i;
+
 			for (i = 0; i < fset->nfont; i++) {
 				FcPattern *fcfont = fset->fonts[i];
 				const char *fext;
@@ -709,7 +714,41 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 		    "\xEF\xA3\x97" "\xEF\xA3\x98" "\xEF\xA3\x99" "\xEF\xA3\x9A"
 		    "\xEF\xA3\x9B");
 
-	} else if (strcmp(font->name, "Twitter Color Emoji") == 0) {
+	} else if (Strcasecmp(font->name, "Noto Sans Linear B") == 0) {
+
+		if (altPhrase) {
+			/* Linear B Ideograms */
+			S = AG_TextRender(
+			    "\xF0\x90\x83\xA1" "\xF0\x90\x83\xA2" "\xF0\x90\x83\xA3" 
+			    "\xF0\x90\x83\xA4" "\xF0\x90\x83\xA5" "\xF0\x90\x83\xA6" 
+			    "\xF0\x90\x83\xA7" "\xF0\x90\x83\xA8" "\xF0\x90\x83\xA9" 
+			    "\xF0\x90\x83\xAA" "\xF0\x90\x83\xAB" "\xF0\x90\x83\xAC" 
+			    "\xF0\x90\x83\xAD" "\xF0\x90\x83\xAE" "\xF0\x90\x83\xAF"
+			    "\n"
+			    "\xF0\x90\x83\xB0" "\xF0\x90\x83\xB1" "\xF0\x90\x83\xB2"
+			    "\xF0\x90\x83\xB3" "\xF0\x90\x83\xB4" "\xF0\x90\x83\xB5"
+			    "\xF0\x90\x83\xB6" "\xF0\x90\x83\xB7" "\xF0\x90\x83\xB8"
+			    "\xF0\x90\x83\xBF" "\xF0\x90\x83\xC0" "\xF0\x90\x83\xC1");
+		} else {
+			/* Linear B Syllables */
+			S = AG_TextRender(
+			    "\xF0\x90\x80\x80" "\xF0\x90\x80\x81" "\xF0\x90\x80\x82"
+			    "\xF0\x90\x80\x83" "\xF0\x90\x80\x84" "\xF0\x90\x80\x85"
+			    "\xF0\x90\x80\x86" "\xF0\x90\x80\x87" "\xF0\x90\x80\x88"
+			    "\xF0\x90\x80\x8A" "\xF0\x90\x80\x8B" "\xF0\x90\x80\x8D"
+			    "\xF0\x90\x80\x8E" "\xF0\x90\x80\x8F" "\xF0\x90\x80\x90"
+			    "\xF0\x90\x80\x91" "\xF0\x90\x80\x92" "\n"
+			    "\xF0\x90\x80\x93" "\xF0\x90\x80\x94" "\xF0\x90\x80\x95" 
+			    "\xF0\x90\x80\x96" "\xF0\x90\x80\x97" "\xF0\x90\x80\x98" 
+			    "\xF0\x90\x80\x9F" "\xF0\x90\x80\xA0" "\xF0\x90\x80\xA1"
+			    "\xF0\x90\x80\xA2" "\xF0\x90\x80\xA3" "\xF0\x90\x80\xA4"
+			    "\xF0\x90\x80\xA5" "\xF0\x90\x80\xA6" "\xF0\x90\x80\xA7"
+			    "\xF0\x90\x80\xA8" "\xF0\x90\x80\xA9" "\xF0\x90\x80\xAA"
+			    );
+		}
+
+
+	} else if (Strcasecmp(font->name, "Twitter Color Emoji") == 0) {
 
 		S = AG_TextRender(
 		    "\xF0\x9F\x98\x80" "\xF0\x9F\x98\x81" "\xF0\x9F\x98\x82"
@@ -720,7 +759,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 	
 	} else if (strcmp(font->name, "agar-ideograms.agbf") == 0) {
 
-		/* 17 wide */
+		/* 34 wide */
 		S = AG_TextRender(
 		    AGSI_SPKR_W_3_SOUND_WAVES AGSI_BEZIER AGSI_BUTTON
 		    AGSI_CHARSETS AGSI_CHECKBOX AGSI_WINDOW_GRADIENT
@@ -728,7 +767,6 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 		    AGSI_WIDGET_FOCUS AGSI_TYPOGRAPHY AGSI_FILESYSTEM
 		    AGSI_WIREFRAME_CUBE AGSI_LOAD_IMAGE AGSI_SAVE_IMAGE
 		    AGSI_KEYBOARD_KEY AGSI_MATH_X_EQUALS
-		    "\n"
 		    AGSI_H_MAXIMIZE AGSI_V_MAXIMIZE AGSI_MEDIUM_WINDOW
 		    AGSI_SMALL_WINDOW AGSI_SMALL_SPHERE AGSI_LARGE_SPHERE
 		    AGSI_ARTISTS_PALETTE AGSI_WINDOW_PANE AGSI_SINE_WAVE
@@ -742,7 +780,6 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 		    AGSI_MENUBOOL_TRUE AGSI_MENUBOOL_FALSE AGSI_MENU_EXPANDER
 		    AGSI_BOX_VERT AGSI_BOX_HORIZ
 		    AGSI_ALICE AGSI_BOB AGSI_TEE_SHIRT
-		    "\n"
 		    AGSI_JEANS AGSI_USER_W_3_SOUND_WAVES AGSI_PILE_OF_POO
 		    AGSI_FOLDED_DIAPER AGSI_UNFOLDED_DIAPER AGSI_PAPER_ROLL
 		    AGSI_CONTAINER AGSI_PARCEL AGSI_SIZE_XS AGSI_SIZE_SM
@@ -754,12 +791,25 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 		    AGSI_VERTICAL_SPOOL AGSI_HORIZONTAL_SPOOL AGSI_WHEELCHAIR_SYMBOL
 		    AGSI_DIP_CHIP AGSI_SURFACE_MOUNT_CHIP AGSI_VACUUM_TUBE
 		    AGSI_STOPWATCH AGSI_ZOOM_IN AGSI_ZOOM_OUT
-		    "\n"
 		    AGSI_ZOOM_RESET AGSI_AGAR_AG AGSI_AGAR_AR AGSI_CUT AGSI_COPY
 		    AGSI_LH_COPY AGSI_CLIPBOARD AGSI_PASTE AGSI_LH_PASTE
 		    AGSI_SELECT_ALL AGSI_FLOPPY_DISK AGSI_DVD AGSI_CLEAR_ALL
 		    AGSI_JOYSTICK AGSI_GAME_CONTROLLER AGSI_TOUCHSCREEN
-		    AGSI_TWO_BUTTON_MOUSE);
+		    AGSI_TWO_BUTTON_MOUSE
+		    "\n"
+		    AGSI_TRI_CONSTRUCTION_SIGN AGSI_CONSTRUCTION_SIGN
+		    AGSI_EDGAR_ALLAN_POE AGSI_AGARIAN AGSI_AGARIAN_WARRIOR
+		    AGSI_UNDO AGSI_REDO AGSI_ALPHA_ARCH AGSI_AMIGA_BALL
+		    AGSI_COMMODORE_LOGO AGSI_AMD_LOGO AGSI_6502_ARCH
+		    AGSI_AMIGA_LOGO AGSI_MOTOROLA_LOGO AGSI_MAMISMOKE
+		    AGSI_TGT_FG_COLOR AGSI_TGT_BG_COLOR AGSI_ARM_ARCH
+		    AGSI_DREAMCAST AGSI_GAMECUBE AGSI_SEGA AGSI_PA_RISC_ARCH
+		    AGSI_X86_ARCH AGSI_X64_ARCH AGSI_I386_ARCH AGSI_JSON
+		    AGSI_NES_CONTROLLER AGSI_MIPS32_ARCH AGSI_MIPS64_ARCH
+		    AGSI_N64_LOGO AGSI_IA64_ARCH AGSI_PPC32_ARCH AGSI_PPC64_ARCH
+		    AGSI_SNES_LOGO
+		    "\n"
+		    AGSI_RISCV_ARCH);
 
 	} else {
 		if (altPhrase) {
@@ -778,6 +828,8 @@ static void
 Init(void *_Nonnull obj)
 {
 	AG_FontSelector *fs = obj;
+	AG_Notebook *nb;
+	AG_NotebookTab *nt;
 	
 	fs->flags = AG_FONTSELECTOR_UPDATE;
 	fs->curFace[0] = '\0';
@@ -786,61 +838,73 @@ Init(void *_Nonnull obj)
 	fs->curSize = 0.0f;
 
 	fs->hPane = AG_PaneNewHoriz(fs, AG_PANE_EXPAND);
+	fs->tlFaces = AG_TlistNew(fs->hPane->div[0], AG_TLIST_EXPAND);
+	fs->hPane2 = AG_PaneNewHoriz(fs->hPane->div[1], AG_PANE_EXPAND);
+	fs->tlStyles = AG_TlistNew(fs->hPane2->div[0], AG_TLIST_EXPAND);
+	fs->tlSizes = AG_TlistNew(fs->hPane2->div[1], AG_TLIST_EXPAND);
+
+	nb = AG_NotebookNew(fs->hPane2->div[1], AG_NOTEBOOK_HFILL);
+	AG_SetFontSize(nb, "80%");
+
+	nt = AG_NotebookAdd(nb, _("Color"), AG_BOX_VERT);
+	AG_SetPadding(nt, "2");
 	{
-		AG_Box *box;
-		AG_Notebook *nb;
-		AG_NotebookTab *nt;
+		AG_Box *boxHoriz, *boxColor;
+		AG_HSVPal *pal;
+		AG_Button *btnBG, *btnFG;
 
-		fs->tlFaces = AG_TlistNew(fs->hPane->div[0], AG_TLIST_EXPAND);
-		fs->hPane2 = AG_PaneNewHoriz(fs->hPane->div[1], AG_PANE_EXPAND);
-		fs->tlStyles = AG_TlistNew(fs->hPane2->div[0], AG_TLIST_EXPAND);
-		fs->tlSizes = AG_TlistNew(fs->hPane2->div[1], AG_TLIST_EXPAND);
+		boxHoriz = AG_BoxNewHoriz(nt, AG_BOX_EXPAND);
 
-		nb = AG_NotebookNew(fs->hPane2->div[1], AG_NOTEBOOK_HFILL);
-		nt = AG_NotebookAdd(nb, _("Color"), AG_BOX_VERT);
-		AG_SetPadding(nt, "5");
+		pal = fs->pal = AG_HSVPalNew(boxHoriz,
+		    AG_HSVPAL_NOPREVIEW | AG_HSVPAL_NOALPHA |
+		    AG_HSVPAL_HFILL);
+
+		AG_BindPointer(pal, "agcolor", (void *)&fs->cPreviewFG);
+		AG_SetEvent(pal, "h-changed", PreviewColorChanged,"%p",fs);
+		AG_SetEvent(pal, "sv-changed", PreviewColorChanged,"%p",fs);
+
+		boxColor = AG_BoxNewVert(boxHoriz, AG_BOX_VFILL |
+		                                   AG_BOX_HOMOGENOUS);
+		AG_SetFontSize(boxColor, "80%");
 		{
-			AG_HSVPal *pal;
-			AG_Button *btnBG, *btnFG;
+			btnFG = AG_ButtonNewS(boxColor,
+			    AG_BUTTON_STICKY | AG_BUTTON_HFILL,
+			    AGSI_IDEOGRAM AGSI_TGT_FG_COLOR AGSI_RST "\n\n"
+			    "FG");
+			btnBG = AG_ButtonNewS(boxColor,
+			    AG_BUTTON_STICKY | AG_BUTTON_HFILL,
+			    AGSI_IDEOGRAM AGSI_TGT_BG_COLOR AGSI_RST "\n\n"
+			    "BG");
 
-			box = AG_BoxNewHoriz(nt, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
-			AG_SetFontSize(box, "80%");
-
-			btnBG = AG_ButtonNewS(box, AG_BUTTON_STICKY, _("BG"));
-			btnFG = AG_ButtonNewS(box, AG_BUTTON_STICKY, _("FG"));
 			AG_ButtonSetState(btnFG, 1);
-			AG_SetEvent(btnBG, "button-pushed",
-			    EditBgFgColor,"%p,%p,%p", fs, &fs->cPreviewBG, btnFG);
+
+			AG_SetPadding(btnFG, "4");
+			AG_SetPadding(btnBG, "4");
+
 			AG_SetEvent(btnFG, "button-pushed",
 			    EditBgFgColor,"%p,%p,%p", fs, &fs->cPreviewFG, btnBG);
-
-			pal = fs->pal = AG_HSVPalNew(nt, AG_HSVPAL_NOPREVIEW |
-			                                 AG_HSVPAL_NOALPHA |
-		                                         AG_HSVPAL_HFILL);
-			AG_BindPointer(pal, "agcolor", (void *)&fs->cPreviewFG);
-			AG_SetEvent(pal, "h-changed", PreviewColorChanged,"%p",fs);
-			AG_SetEvent(pal, "sv-changed", PreviewColorChanged,"%p",fs);
+			AG_SetEvent(btnBG, "button-pushed",
+			    EditBgFgColor,"%p,%p,%p", fs, &fs->cPreviewBG, btnFG);
 		}
+	}
 
-		nt = AG_NotebookAdd(nb, _("Metrics"), AG_BOX_VERT);
-		AG_SetPadding(nt, "5");
-		{
-			AG_CheckboxNewFlag(nt, 0, _("Adjusted Baseline"),
-			    &fs->flags, AG_FONTSELECTOR_BASELINE);
-			AG_CheckboxNewFlag(nt, 0, _("Original Baseline"),
-			    &fs->flags, AG_FONTSELECTOR_CORRECTIONS);
-			AG_CheckboxNewFlag(nt, 0, _("Bounding Box"),
-			    &fs->flags, AG_FONTSELECTOR_BOUNDING_BOX);
+	nt = AG_NotebookAdd(nb, _("Metrics"), AG_BOX_VERT);
+	AG_SetPadding(nt, "5");
+	{
+		AG_CheckboxNewFlag(nt, 0, _("Adjusted Baseline"), &fs->flags,
+		    AG_FONTSELECTOR_BASELINE);
+		AG_CheckboxNewFlag(nt, 0, _("Original Baseline"), &fs->flags,
+		    AG_FONTSELECTOR_CORRECTIONS);
+		AG_CheckboxNewFlag(nt, 0, _("Bounding Box"), &fs->flags,
+		    AG_FONTSELECTOR_BOUNDING_BOX);
 
-			AG_SeparatorNewHoriz(nt);
+		AG_SeparatorNewHoriz(nt);
 
-			fs->lblMetrics = AG_LabelNewS(nt, AG_LABEL_EXPAND,
-			    _("No data."));
-		}
+		fs->lblMetrics = AG_LabelNewS(nt, AG_LABEL_EXPAND, _("No data."));
 	}
 	
 	fs->font = NULL;
-	fs->rPreview.x = 0;
+	fs->rPreview.x = 0;   /* TODO use pane */
 	fs->rPreview.y = 0;
 	fs->rPreview.w = 0;
 	fs->rPreview.h = 80;
@@ -848,9 +912,9 @@ Init(void *_Nonnull obj)
 	AG_ColorWhite(&fs->cPreviewFG);
 	fs->previewFn = PreviewDefault;
 
-	AG_TlistSizeHint(fs->tlFaces, "<New Century Schoolbook>", 15);
-	AG_TlistSizeHint(fs->tlStyles, "<Condensed Bold Oblique>", 15);
-	AG_TlistSizeHint(fs->tlSizes, "<XXXXXXX>", 10);
+	AG_TlistSizeHint(fs->tlFaces, "<Adobe New Century Schoolbook>", 10);
+	AG_TlistSizeHint(fs->tlStyles, "<Condensed Bold Oblique>", 8);
+	AG_TlistSizeHint(fs->tlSizes, "<XXXXXXX>", 8);
 	
 	/* Handle "font" binding programmatically */
 	AG_BindPointer(fs, "font", (void *)&fs->font);

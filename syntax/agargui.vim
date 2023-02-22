@@ -24,8 +24,10 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_BUTTON_NO_FOCUS AG_BUTTON_STICKY AG_BUTTON_PRESSING
   syn keyword cConstant AG_BUTTON_REPEAT AG_BUTTON_HFILL AG_BUTTON_VFILL
   syn keyword cConstant AG_BUTTON_INVERTED AG_BUTTON_KEYDOWN AG_BUTTON_EXCL
-  syn keyword cConstant AG_BUTTON_NOEXCL AG_BUTTON_SET AG_BUTTON_SLOW
-  syn keyword cConstant AG_BUTTON_EXPAND
+  syn keyword cConstant AG_BUTTON_NOEXCL AG_BUTTON_SET AG_BUTTON_EXPAND
+  syn keyword cConstant AG_BUTTON_ALIGN_CENTER AG_BUTTON_ALIGN_LEFT
+  syn keyword cConstant AG_BUTTON_ALIGN_RIGHT AG_BUTTON_VALIGN_TOP
+  syn keyword cConstant AG_BUTTON_VALIGN_MIDDLE AG_BUTTON_VALIGN_BOTTOM
   " gui/checkbox.h
   syn keyword cType AG_Checkbox
   syn keyword cConstant AG_CHECKBOX_HFILL AG_CHECKBOX_VFILL AG_CHECKBOX_SET
@@ -669,6 +671,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cType AG_Unit
   " gui/widget.h
   syn keyword cType AG_SizeReq AG_SizeAlloc AG_WidgetClass AG_SizeSpec AG_FlagDescr
+  syn keyword cType AG_FlagDescrRO
   syn keyword cType AG_ActionType AG_Action AG_ActionVec AG_ActionEventType
   syn keyword cType AG_ActionTie AG_RedrawTie AG_CursorArea AG_CursorAreaQ
   syn keyword cType AG_WidgetPalette AG_WidgetGL AG_WidgetPvt AG_Widget AG_WidgetVec

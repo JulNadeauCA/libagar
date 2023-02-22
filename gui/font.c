@@ -55,49 +55,58 @@
  * considered the Regular or Normal style of that font family.
  */
 const AG_FontAdjustment agFontAdjustments[] = {
-/*                                  Pts From:   0.0 10.4 14.0 21.0 23.8 35.0 */
-/*                                        To:  10.4 14.0 21.0 23.8 35.0 +inf */
-	{ "charter.otf",                 1.1f, { -3,  -2,  -2,  -3,  -3,  -6 }, 0,0 },
-	{ "courier",                     1.0f, {  0,   0,  +1,  +1,  +2,  +3 }, 0,0 },
-	{ "courier 10 pitch",            1.0f, {  0,   0,  +1,  +1,  +2,  +3 }, 0,0 },
-	{ "dejavu sans",                 1.0f, { -4,  -4,  -6,  -7,  -9, -16 }, 0,0 },
-	{ "dejavu sans mono",            1.0f, { -2,  -2,  -2,   0,   0,  -1 }, 0,0 },
-	{ "dejavu serif",                1.0f, { -2,  -3,  -3,  -4,  -5,  -7 }, 0,0 },
-	{ "droid sans arabic",           1.0f, {  0,   0,   0,   0,  +1,  +2 }, 0,0 },
-	{ "droid sans armenian",         1.0f, {  0,   0,   0,   0,  +1,  +3 }, 0,0 },
-	{ "droid sans japanese",         1.0f, {  0,   0,  +1,  +1,  +4,  +9 }, 0,0 },
-	{ "droid sans hebrew",           1.0f, {  0,   0,   0,  -1,  -2,  -4 }, 0,0 },
-	{ "droid sans mono",             1.0f, {  0,   0,  -1,  -2,  -4,  -5 }, 0,0 },
-	{ "gentium basic",               1.0f, { -2,  -3,  -3,  -4,  -5,  -7 }, 0,0 },
-	{ "gentium book basic",          1.0f, { -2,  -3,  -3,  -4,  -5,  -7 }, 0,0 },
-	{ "goha-tibeb zemen",            1.0f, { -3,  -3,  -5,  -7,  -8, -13 }, 0,0 },
+/*                                   Pts From:   0.0 10.4 14.0 21.0 23.8 35.0 */
+/*                                         To:  10.4 14.0 21.0 23.8 35.0 +inf */
+	{ "charter.otf",                  1.1f, { -3,  -2,  -2,  -3,  -3,  -6 }, 0,0 },
+	{ "courier",                      1.0f, {  0,   0,  +1,  +1,  +2,  +3 }, 0,0 },
+	{ "courier 10 pitch",             1.0f, {  0,   0,  +1,  +1,  +2,  +3 }, 0,0 },
+	{ "dejavu sans",                  1.0f, { -4,  -4,  -6,  -7,  -9, -16 }, 0,0 },
+	{ "dejavu sans mono",             1.0f, { -2,  -2,  -2,   0,   0,  -1 }, 0,0 },
+	{ "dejavu serif",                 1.0f, { -2,  -3,  -3,  -4,  -5,  -7 }, 0,0 },
+	{ "droid arabic kufi",            1.0f, {  0,   0,   0,  +1,  +2,  +3 }, 0,0 },
+	{ "droid arabic naskh",           1.0f, {  0,   0,   0,  +1,  +3, +10 }, 0,0 },
+	{ "droid sans",                   1.0f, {  0,  -1,  -1,  -1,  -2,  -4 }, 0,0 },
+	{ "droid sans arabic",            1.0f, {  0,   0,   0,   0,  +1,  +2 }, 0,0 },
+	{ "droid sans armenian",          1.0f, {  0,   0,   0,   0,  +1,  +3 }, 0,0 },
+	{ "droid sans japanese",          1.0f, {  0,   0,  +1,  +1,  +4,  +9 }, 0,0 },
+	{ "droid sans hebrew",            1.0f, {  0,   0,   0,  -1,  -2,  -4 }, 0,0 },
+	{ "droid sans mono",              1.0f, {  0,   0,  -1,  -2,  -4,  -5 }, 0,0 },
+	{ "gentium basic",                1.0f, { -2,  -3,  -3,  -4,  -5,  -7 }, 0,0 },
+	{ "gentium book basic",           1.0f, { -2,  -3,  -3,  -4,  -5,  -7 }, 0,0 },
+	{ "goha-tibeb zemen",             1.0f, { -3,  -3,  -5,  -7,  -8, -13 }, 0,0 },
 /*                                  Pts From:   0.0 10.4 14.0 21.0 23.8 35.0 */
 /*                                        To:  10.4 14.0 21.0 23.8 35.0 +inf */
 	{ "league-gothic-"
-	  "condensed-italic.otf",        1.1f, { -1,  -1,   0,  -1,  -2,  -4 }, AG_FONT_BOLD,0 },
-	{ "league-gothic-condensed.otf", 1.1f, { -1,  -1,   0,  -1,  -2,  -4 }, AG_FONT_BOLD,0 },
-	{ "league-gothic-italic.otf",    1.1f, { -1,  -1,   0,  -1,  -2,  -4 }, AG_FONT_BOLD,0 },
-	{ "league-gothic.otf",           1.1f, { -1,  -1,   0,  -1,  -2,  -4 }, AG_FONT_BOLD,0 },
-	{ "league-spartan.otf",          1.0f, { -3,  -3,  -4,  -5,  -7, -10 }, 0,0 },
-	{ "fraktur.ttf",                 1.1f, { +1,  +1,  +1,  +1,  +1,  +1 }, AG_FONT_BOLD,0 },
-	{ "noto sans cjk sc",            1.0f, { -9, -11, -15, -17, -21, -42 }, 0,0 },
-	{ "noto serif sc",               1.0f, { -6,  -8, -12, -14, -18, -35 }, 0,0 },
-	{ "noto serif cjk sc",           1.0f, {-10, -12, -16, -18, -23, -42 }, 0,0 },
-	{ "noto sans sc",                1.0f, { -6,  -8, -13, -15, -18, -38 }, 0,0 },
-	{ "noto sans symbols",           1.0f, {  0,   0,   0,   0,  -1,  -2 }, 0,0 },
-	{ "noto sans mono cjk sc",       1.0f, { -6,  -9, -11, -14, -20, -38 }, 0,0 },
-	{ "noto mono",                   1.0f, { -1,  -1,  -1,  -1,  -2,  -4 }, 0,0 },
-	{ "serto jerusalem",             1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
-	{ "serto jerusalem outline",     1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
-/*                                  Pts From:   0.0 10.4 14.0 21.0 23.8 35.0 */
-/*                                        To:  10.4 14.0 21.0 23.8 35.0 +inf */
-	{ "serto kharput",               1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
-	{ "serto malankara",             1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
-	{ "serto mardin",                1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
-	{ "serto urhoy",                 1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
-	{ "unialgue.ttf",                1.0f, { -6,  -7,  -7, -10, -12, -15 }, 0,0 },
-	{ "utopia",                      1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
-	{ NULL,                          0.0f, {  0,   0,   0,   0,   0,   0 }, 0,0 }
+	  "condensed-italic.otf",         1.1f, { -1,  -1,   0,  -1,  -2,  -4 }, AG_FONT_BOLD,0 },
+	{ "league-gothic-condensed.otf",  1.1f, { -1,  -1,   0,  -1,  -2,  -4 }, AG_FONT_BOLD,0 },
+	{ "league-gothic-italic.otf",     1.1f, { -1,  -1,   0,  -1,  -2,  -4 }, AG_FONT_BOLD,0 },
+	{ "league-gothic.otf",            1.1f, { -1,  -1,   0,  -1,  -2,  -4 }, AG_FONT_BOLD,0 },
+	{ "league-spartan.otf",           1.1f, { -3,  -3,  -4,  -5,  -7, -10 }, 0,0 },
+	{ "league-spartan-black.otf",     1.1f, { -3,  -3,  -4,  -5,  -7, -10 }, 0,0 },
+	{ "league-spartan-bold.otf",      1.1f, { -3,  -3,  -4,  -5,  -7, -10 }, 0,0 },
+	{ "league-spartan-extrabold.otf", 1.1f, { -3,  -3,  -4,  -5,  -7, -10 }, 0,0 },
+	{ "league-spartan-extralight.otf",1.1f, { -3,  -3,  -4,  -5,  -7, -10 }, 0,0 },
+	{ "league-spartan-light.otf",     1.1f, { -3,  -3,  -4,  -5,  -7, -10 }, 0,0 },
+	{ "league-spartan-semibold.otf",  1.1f, { -3,  -3,  -4,  -5,  -7, -10 }, 0,0 },
+	{ "fraktur.ttf",                  1.1f, { +1,  +1,  +1,  +1,  +1,  +1 }, AG_FONT_BOLD,0 },
+	{ "noto sans cjk sc",             1.0f, { -9, -11, -15, -17, -21, -42 }, 0,0 },
+	{ "noto serif sc",                1.0f, { -6,  -8, -12, -14, -18, -35 }, 0,0 },
+	{ "noto serif cjk sc",            1.0f, {-10, -12, -16, -18, -23, -42 }, 0,0 },
+	{ "noto sans sc",                 1.0f, { -6,  -8, -13, -15, -18, -38 }, 0,0 },
+	{ "noto sans symbols",            1.0f, {  0,   0,   0,   0,  -1,  -2 }, 0,0 },
+	{ "noto sans mono cjk sc",        1.0f, { -6,  -9, -11, -14, -20, -38 }, 0,0 },
+	{ "noto mono",                    1.0f, { -1,  -1,  -1,  -1,  -2,  -4 }, 0,0 },
+	{ "serto jerusalem",              1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+	{ "serto jerusalem outline",      1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+/*                                   Pts From:   0.0 10.4 14.0 21.0 23.8 35.0 */
+/*                                         To:  10.4 14.0 21.0 23.8 35.0 +inf */
+	{ "serto kharput",                1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+	{ "serto malankara",              1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+	{ "serto mardin",                 1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+	{ "serto urhoy",                  1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+	{ "unialgue.ttf",                 1.0f, { -6,  -7,  -7, -10, -12, -15 }, 0,0 },
+	{ "utopia",                       1.0f, {  0,   0,   0,   0,  +2,  +4 }, 0,0 },
+	{ NULL,                           0.0f, {  0,   0,   0,   0,   0,   0 }, 0,0 }
 };
 
 /*
@@ -756,6 +765,8 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 		FcPatternDestroy(fpat);
 		FcPatternDestroy(pattern);
 	}
+#else /* !HAVE_FONTCONFIG */
+	(void)isInFontPath;
 #endif /* HAVE_FONTCONFIG */
 
 open_font:
