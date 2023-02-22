@@ -1,31 +1,7 @@
 # Changelog
 All notable changes to Agar will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-- The Agar Interface Builder [**agarib**](https://libagar.org/man1/agarib).
-- The Agar Debugger [**agardb**](https://libagar.org/man1/agardb).
-- Ada: Add Widget classes to the new Ada bindings in `ada/gui/`.
-- New COBOL bindings: [GnuCOBOL](https://sourceforge.net/projects/open-cobol/) and [GuiCOBOL](http://www.opencobol.altervista.org).
-- [**AG_Console**](https://libagar.org/man3/AG_Console): Handle ansi cursor and terminal operations. Clipboard integration.
-- [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): Display only those styles that are available for a given font (as opposed to a static list of styles).
-- [**AG_Notebook**](https://libagar.org/man3/AG_Notebook): Fix padding issues. Add disposition modes Bottom, Left & Right.
-- [**AG_Pixmap**](https://libagar.org/man3/AG_Pixmap) & [**AG_Fixed**](https://libagar.org/man3/AG_Fixed): Zoom operations.
-- [**AG_StyleEditor**](https://libagar.org/man3/AG_StyleEditor): Edition of stylesheet rules.
-- [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): Gradients and border styles. New selector "Class > #id" for specific named instances of attached child widgets.
-- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Filters. Stencil operations.
-- [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) & [**AG_Editable**](https://libagar.org/man3/AG_Editable): Extend SGR support. Syntax highlighting & rich-text editing methods.
-- [**AG_WidgetPrimitives**](https://libagar.org/man3/AG_WidgetPrimitives): Dithering. Shadow effects.
-- [**AG_Widget**](https://libagar.org/man3/AG_Widget): Provide a variation of the "zoom" feature to resize widgets individually.
-- [**AG_Widget**](https://libagar.org/man3/AG_Widget): Threading optimizations. Cache the `VISIBLE` flag into an `int` so that culling / rendering and mouse-intersection tests can skip over invisible widgets without locking them.
-- [**AG_Window**](https://libagar.org/man3/AG_Window): MRU API to simplify the process of remembering geometries. New gravity methods for autoplacing.
-- [**cocoa**](https://libagar.org/man3/AG_DriverCocoa): Cursor operations. Clipboard integration.
-- [**glx**](https://libagar.org/man3/AG_DriverGLX): Make drag-and-drop (`sockets` test) work correctly (possibly using `AG_WindowMove()`).
-- [**wgl**](https://libagar.org/man3/AG_DriverWGL): Clipboard integration. Live resize.
-- Fix [**Style Editor**](https://libagar.org/man3/AG_StyleEditor) and [**GUI Debugger**](https://libagar.org/man3/AG_GuiDebugger) crashes which would occur when attempting to iterate over widgets (in keyrepeat mode).
-- Build system: Add [**CMake**](https://cmake.org) support.
-- A software framebuffer driver for X Windows.
-
-## [1.7.0] - 2022-10-
+## [Unreleased] - YYYY-MM-DD
 ### Added
 - [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB): New driver for SDL 2.0 (single-window; frame-buffer mode).
 - [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL): New driver for SDL 2.0 (single-window; OpenGL mode).
