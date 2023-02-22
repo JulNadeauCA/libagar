@@ -339,6 +339,7 @@ static int
 GLX_GetDisplaySize(Uint *_Nonnull w, Uint *_Nonnull h)
 {
 	AG_MutexLock(&agDisplayLock);
+
 #ifdef HAVE_XINERAMA
 	{
 		int event, error, nScreens;
@@ -349,13 +350,15 @@ GLX_GetDisplaySize(Uint *_Nonnull w, Uint *_Nonnull h)
 			*w = (Uint)xs[0].width;
 			*h = (Uint)xs[0].height;
 			XFree(xs);
-			goto out;
+			AG_MutexUnlock(&agDisplayLock);
+			return (0);
 		}
 	}
 #endif /* HAVE_XINERAMA */
+
 	*w = (Uint)DisplayWidth(agDisplay, agScreen);
 	*h = (Uint)DisplayHeight(agDisplay, agScreen);
-out:
+
 	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 }
@@ -2465,7 +2468,7 @@ Edit(void *_Nonnull obj)
 	AG_WindowSetPosition(win, AG_WINDOW_BL, 0);
 
 	lbl = AG_LabelNew(win, 0, _("GLX Driver: %s"), OBJECT(glx)->name);
-	AG_SetFontFamily(lbl, "charter");
+	AG_SetFontFamily(lbl, "league-spartan");
 	AG_SetFontSize(lbl, "150%");
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);

@@ -41,6 +41,10 @@ extern int agTextComposition, agTextTabWidth, agTextBlinkRate;
 extern int agGLdebugOutput, agGLuseNPOT;
 extern double agZoomValues[AG_ZOOM_MAX];
 
+#ifdef AG_WIDGETS
+extern AG_FlagDescrRO agArchExtnNames[];
+#endif
+
 #ifdef AG_EVENT_LOOP
 void  AG_QuitGUI(void);
 #endif
@@ -82,7 +86,6 @@ struct ag_window *_Nullable AG_DEV_TimerInspector(void);
 # ifdef AG_UNICODE
 struct ag_window *_Nullable AG_DEV_UnicodeBrowser(void);
 # endif
-struct ag_window *_Nullable AG_DEV_CPUInfo(void);
 #endif /* AG_WIDGETS */
 
 #ifdef AG_LEGACY

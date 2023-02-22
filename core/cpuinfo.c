@@ -139,17 +139,21 @@ AG_GetCPUInfo(AG_CPUInfo *_Nonnull cpu)
 #endif
 	cpu->vendorID[0] = '\0';
 	cpu->ext = 0;
+	cpu->icon = 0;
 
 #if defined(__CC65__)
 	cpu->arch = "6502";		/* Use getcpu() in <6502.h> */
+	cpu->icon = 0xE06E;
 # if defined(__APPLE2ENH__)
 	cpu->syst = "apple2enh";
 # elif defined(__APPLE2__)
 	cpu->syst = "apple2";
 # elif defined(__C128__)
 	cpu->syst = "c128";
+	cpu->icon = 0xE06C;
 # elif defined(__C64__)
 	cpu->syst = "c64";
+	cpu->icon = 0xE06C;
 # elif defined(__GEOS_APPLE__)
 	cpu->syst = "geos-apple";
 # elif defined(__GEOS_CBM__)
@@ -158,10 +162,13 @@ AG_GetCPUInfo(AG_CPUInfo *_Nonnull cpu)
 	cpu->syst = "geos";
 # elif defined(__NES__)
 	cpu->syst = "nes";
+	cpu->icon = 0xE07D;
 # elif defined(__SIM6502__)
 	cpu->syst = "sim6502";
+	cpu->icon = 0xE06E;
 # elif defined(__SIM65C02__)
 	cpu->syst = "sim65C02";
+	cpu->icon = 0xE06E;
 # endif
 #else /* __CC65__ */
 	cpu->syst = "";
@@ -169,38 +176,57 @@ AG_GetCPUInfo(AG_CPUInfo *_Nonnull cpu)
 
 #if defined(__alpha__)
 	cpu->arch = "alpha";
+	cpu->icon = 0xE06A;
 #elif defined(__x86_64__) || defined(__amd64__) || defined(_M_X64)
 	cpu->arch = "amd64";
+	cpu->icon = 0xE06D;
 #elif defined(__arm64__)
 	cpu->arch = "arm64";
+	cpu->icon = 0xE074;
 #elif defined(__arm__) || defined(__arm32__)
 	cpu->arch = "arm";
+	cpu->icon = 0xE074;
 #elif defined(__hppa64__)
 	cpu->arch = "hppa64";
+	cpu->icon = 0xE078;
 #elif defined(__hppa__)
 	cpu->arch = "hppa";
+	cpu->icon = 0xE078;
 #elif defined(__i386__) || defined(i386) || defined(_M_IX86)
 	cpu->arch = "i386";
+	cpu->icon = 0xE07B;
 #elif defined(__ia64__) || defined(ia64)
 	cpu->arch = "itanium";
+	cpu->icon = 0xE081;
 #elif defined(__m68010__)
 	cpu->arch = "m68010";
+	cpu->icon = 0xE070;
 #elif defined(__m68k__)
 	cpu->arch = "m68k";
+	cpu->icon = 0xE070;
 #elif defined(__mips64__)
 	cpu->arch = "mips64";
+	cpu->icon = 0xE07F;
 #elif defined(__mips__)
 	cpu->arch = "mips";
+	cpu->icon = 0xE07E;
 #elif defined(__ns32k__)
 	cpu->arch = "ns32k";
-#elif defined(__ppc__) || defined(__macppc__) || defined(__powerpc__)
+#elif defined(__ppc64__) || defined(__powerpc64__)
+	cpu->arch = "powerpc64";
+	cpu->icon = 0xE083;
+#elif defined(__ppc__) || defined(__powerpc__) || defined(__macppc__)
 	cpu->arch = "powerpc";
+	cpu->icon = 0xE082;
 #elif defined(__riscv64__)
 	cpu->arch = "riscv64";
+	cpu->icon = 0xE085;
 #elif defined(__riscv32__)
 	cpu->arch = "riscv32";
+	cpu->icon = 0xE085;
 #elif defined(__riscv__)
 	cpu->arch = "riscv";
+	cpu->icon = 0xE085;
 #elif defined(__sh3__)
 	cpu->arch = "sh3";
 #elif defined(__sparc64__)

@@ -42,7 +42,7 @@ typedef struct ag_cpuinfo {
 
 	/* TODO: AVX */
 
-	Uint32 _pad2;
+	Uint32 icon;                         /* Graphical Icon (Unicode) */
 } AG_CPUInfo;
 
 __BEGIN_DECLS

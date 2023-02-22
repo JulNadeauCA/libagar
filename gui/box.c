@@ -463,6 +463,7 @@ SizeAllocateHomogenousHoriz(AG_Box *_Nonnull box,
 	                          WIDGET(box)->paddingBottom;
 	const int wAvail = a->w - (WIDGET(box)->paddingLeft +
 	                           WIDGET(box)->paddingRight);
+	const int spacing = WIDGET(box)->spacingHoriz;
 	int wUsed = 0;
 
 	aChld.x = WIDGET(box)->paddingLeft;
@@ -479,10 +480,11 @@ SizeAllocateHomogenousHoriz(AG_Box *_Nonnull box,
 		if (OBJECT(chld) == TAILQ_LAST(&OBJECT(box)->children, ag_objectq)) {
 			chldLast = chld;
 		} else {
-			aChld.x += aChld.w + 1;
+			aChld.x += aChld.w + spacing;
 		}
-		wUsed += (aChld.w + 1);
+		wUsed += (aChld.w + spacing);
 	}
+
 	if (chldLast != NULL && wUsed < wAvail) {    /* Roundoff compensation */
 		aChld.w += wAvail - wUsed;
 		AG_WidgetSizeAlloc(chldLast, &aChld);
@@ -499,6 +501,7 @@ SizeAllocateHomogenousVert(AG_Box *_Nonnull box,
 	                             WIDGET(box)->paddingRight;
 	const int hAvail = a->h - (WIDGET(box)->paddingTop +
 	                           WIDGET(box)->paddingBottom);
+	const int spacing = WIDGET(box)->spacingVert;
 	int hUsed = 0;
 
 	aChld.x = WIDGET(box)->paddingLeft;
@@ -515,10 +518,11 @@ SizeAllocateHomogenousVert(AG_Box *_Nonnull box,
 		if (OBJECT(chld) == TAILQ_LAST(&OBJECT(box)->children, ag_objectq)) {
 			chldLast = chld;
 		} else {
-			aChld.y += aChld.h + 1;
+			aChld.y += aChld.h + spacing;
 		}
-		hUsed += (aChld.h + 1);
+		hUsed += (aChld.h + spacing);
 	}
+
 	if (chldLast != NULL && hUsed < hAvail) {    /* Roundoff compensation */
 		aChld.h += hAvail - hUsed;
 		AG_WidgetSizeAlloc(chldLast, &aChld);

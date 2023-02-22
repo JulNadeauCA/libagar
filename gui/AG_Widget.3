@@ -915,6 +915,9 @@ See also:
 .Fn AG_PushClipRect "AG_Widget *obj" "const AG_Rect *r"
 .Pp
 .Ft void
+.Fn AG_PushClipRectInner "AG_Widget *obj" "const AG_Rect *r"
+.Pp
+.Ft void
 .Fn AG_PopClipRect "AG_Widget *obj"
 .Pp
 .Ft void
@@ -960,6 +963,12 @@ pops the last entry from the clipping rectangle stack.
 The effective clipping rectangle will be the intersection of all rectangles
 on this stack.
 Both functions must be invoked in rendering context.
+.Pp
+The
+.Fn AG_PushClipRectInner
+variant of
+.Fn AG_PushClipRect
+offsets the width and height of the rectangle by -2px.
 .Pp
 .Fn AG_PushBlendingMode
 selects the source and destination functions for further pixel blending

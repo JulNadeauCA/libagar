@@ -171,6 +171,33 @@ typedef struct ag_variable {
 #define AG_VARIABLE_TYPE(V)      (agVariableTypes[(V)->type].typeTgt)
 #define AG_VARIABLE_TYPE_NAME(V) (agVariableTypes[(V)->type].name)
 
+/*
+ * Description of a bit in a word with writeability information (and
+ * optional user-defined flags).
+ */
+typedef struct ag_flag_descr {
+#ifdef AG_HAVE_64BIT
+	Uint64 bitmask;                 /* Bitmask */
+#else
+	Uint bitmask;                   /* Bitmask */
+#endif
+	const char *_Nonnull descr;     /* Description (UTF-8) */
+	int writeable;                  /* Bit is user-editable? */
+	Uint flags;                     /* User-defined flags */
+} AG_FlagDescr;
+
+/*
+ * Description of a bit in a word without writeability information.
+ */
+typedef struct ag_flag_descr_ro {
+#ifdef AG_HAVE_64BIT
+	Uint64 bitmask;			/* Bitmask */
+#else
+	Uint bitmask;			/* Bitmask */
+#endif
+	const char *_Nonnull descr;	/* Description (UTF-8) */
+} AG_FlagDescrRO;
+
 __BEGIN_DECLS
 extern const AG_VariableTypeInfo agVariableTypes[];
 
