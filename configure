@@ -12229,15 +12229,6 @@ echo '#undef HAVE_OPENGL' >$bb_incdir/have_opengl.h
 echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
 echo '#undef HAVE_GLEXT' >$bb_incdir/have_glext.h
 echo 'hdefs["HAVE_GLEXT"] = nil' >>configure.lua
-HAVE_GLU="no"
-GLU_CFLAGS=""
-GLU_LIBS=""
-echo '#undef HAVE_GLU' >$bb_incdir/have_glu.h
-echo 'hdefs["HAVE_GLU"] = nil' >>configure.lua
-echo '#undef GLU_CFLAGS' >$bb_incdir/glu_cflags.h
-echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
-echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
-echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
 HAVE_GLX="no"
 GLX_CFLAGS=""
 GLX_LIBS=""
@@ -15721,10 +15712,6 @@ GLU_CFLAGS=""
 GLU_LIBS=""
 echo '#undef HAVE_GLU' >$bb_incdir/have_glu.h
 echo 'hdefs["HAVE_GLU"] = nil' >>configure.lua
-echo '#undef GLU_CFLAGS' >$bb_incdir/glu_cflags.h
-echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
-echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
-echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
 fi
 # END glu
 		if [ "${HAVE_GLU}" = 'yes' ]
@@ -15744,10 +15731,6 @@ GLU_CFLAGS=""
 GLU_LIBS=""
 echo '#undef HAVE_GLU' >$bb_incdir/have_glu.h
 echo 'hdefs["HAVE_GLU"] = nil' >>configure.lua
-echo '#undef GLU_CFLAGS' >$bb_incdir/glu_cflags.h
-echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
-echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
-echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
 		fi
 	else
 HAVE_GLU="no"
@@ -15755,10 +15738,6 @@ GLU_CFLAGS=""
 GLU_LIBS=""
 echo '#undef HAVE_GLU' >$bb_incdir/have_glu.h
 echo 'hdefs["HAVE_GLU"] = nil' >>configure.lua
-echo '#undef GLU_CFLAGS' >$bb_incdir/glu_cflags.h
-echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
-echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
-echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
 	fi
 else
 echo '#undef ENABLE_SG' >$bb_incdir/enable_sg.h
@@ -15769,10 +15748,6 @@ GLU_CFLAGS=""
 GLU_LIBS=""
 echo '#undef HAVE_GLU' >$bb_incdir/have_glu.h
 echo 'hdefs["HAVE_GLU"] = nil' >>configure.lua
-echo '#undef GLU_CFLAGS' >$bb_incdir/glu_cflags.h
-echo 'hdefs["GLU_CFLAGS"] = nil' >>configure.lua
-echo '#undef GLU_LIBS' >$bb_incdir/glu_libs.h
-echo 'hdefs["GLU_LIBS"] = nil' >>configure.lua
 fi
 if [ "${enable_sk}" != 'no' -a "${enable_gui}" != 'no' -a "${enable_math}" != 'no' -a "${HAVE_OPENGL}" = 'yes' ]
  then

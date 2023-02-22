@@ -595,7 +595,6 @@ else
 	disable(xinerama)
 	disable(cocoa)
 	disable(opengl)
-	disable(glu)
 	disable(glx)
 	disable(wgl)
 	disable(freetype)
@@ -907,7 +906,7 @@ if [ "${enable_sg}" != 'no' -a "${enable_gui}" != 'no' \
 	hdefine(ENABLE_SG, "yes")
 	mdefine(SUBDIR_sg, "sg")
 
-	# Enable GLU if a GLU library is found.
+	# Enable GLU if found (used by the SG_Image(3) object class).
 	if [ "${with_glu}" != 'no' ]; then
 		check(glu, 0, ${prefix_glu})
 		if [ "${HAVE_GLU}" = 'yes' ]; then
