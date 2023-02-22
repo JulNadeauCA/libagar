@@ -141,6 +141,11 @@ AG_ButtonNewS(void *parent, Uint flags, const char *label)
 	if (flags & AG_BUTTON_NO_FOCUS) { SetFocusable(bu, 0); }
 	if (flags & AG_BUTTON_REPEAT) { AG_ButtonSetRepeatMode(bu, 1); }
 
+	if      (flags & AG_BUTTON_ALIGN_LEFT)    { bu->justify = AG_TEXT_LEFT; }
+	else if (flags & AG_BUTTON_ALIGN_RIGHT)   { bu->justify = AG_TEXT_RIGHT; }
+	if      (flags & AG_BUTTON_VALIGN_TOP)    { bu->valign = AG_TEXT_TOP; }
+	else if (flags & AG_BUTTON_VALIGN_BOTTOM) { bu->valign = AG_TEXT_BOTTOM; }
+
 	AG_ObjectAttach(parent, bu);
 	return (bu);
 }
@@ -565,9 +570,7 @@ Draw(void *_Nonnull p)
 		y = WIDGET(bu)->paddingTop;
 		break;
 	case AG_TEXT_MIDDLE:
-		y = (S->guides[0] >> 1) - (HEIGHT(bu) >> 1);    /* Baseline */
-		if (y < 0) { y = 0; }
-		y += WIDGET(bu)->paddingTop;
+		y = (HEIGHT(bu) >> 1) - (S->h >> 1);
 		break;
 	case AG_TEXT_BOTTOM:
 		y = HEIGHT(bu) - S->h - WIDGET(bu)->paddingBottom;
@@ -593,7 +596,7 @@ Draw(void *_Nonnull p)
 	}
 
 	if (WIDTH(bu) < bu->wReq || HEIGHT(bu) < bu->hReq) {
-		AG_PushClipRect(bu, &WIDGET(bu)->r);
+		AG_PushClipRectInner(bu, &WIDGET(bu)->r);
 		AG_WidgetBlitSurface(bu, surface, x,y);
 		AG_PopClipRect(bu);
 	} else {

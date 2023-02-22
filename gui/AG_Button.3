@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,7 +22,7 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd December 21, 2022
+.Dd February 20, 2023
 .Dt AG_BUTTON 3
 .Os Agar 1.7
 .Sh NAME
@@ -210,7 +210,7 @@ atomically toggles the state of the button and returns the new state.
 The following
 .Va flags
 are provided:
-.Bl -tag -width "AG_BUTTON_MOUSEOVER "
+.Bl -tag -width "AG_BUTTON_VALIGN_BOTTOM "
 .It AG_BUTTON_STICKY
 Prevent the button from springing back to its previous state following
 a click.
@@ -243,6 +243,18 @@ Shorthand for both
 .Dv AG_BUTTON_HFILL
 and
 .Dv AG_BUTTON_VFILL .
+.It AG_BUTTON_ALIGN_LEFT
+Align text horizontally to the left.
+.It AG_BUTTON_ALIGN_CENTER
+Center text horizontally (the default).
+.It AG_BUTTON_ALIGN_LEFT
+Align text horizontally to the right.
+.It AG_BUTTON_VALIGN_TOP
+Align text vertically to the top.
+.It AG_BUTTON_VALIGN_MIDDLE
+Align text vertically to the middle (the default).
+.It AG_BUTTON_VALIGN_BOTTOM
+Align text vertically to the bottom.
 .El
 .Sh EVENTS
 The

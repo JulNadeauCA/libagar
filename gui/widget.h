@@ -68,18 +68,6 @@ typedef enum ag_widget_sizespec {
 	AG_WIDGET_FILL         /* Expand to fill remaining space ("-") */
 } AG_SizeSpec;
 
-/* Bit flag description (used by AG_Checkbox(3) for example). */
-typedef struct ag_flag_descr {
-#ifdef AG_HAVE_64BIT
-	Uint64 bitmask;			/* Bitmask */
-#else
-	Uint bitmask;			/* Bitmask */
-#endif
-	const char *_Nonnull descr;	/* Description (UTF-8) */
-	int writeable;			/* User-editable */
-	Uint32 _pad;
-} AG_FlagDescr;
-
 /* 
  * High-level widget action.
  */
@@ -500,6 +488,7 @@ void ag_expand_horiz(void *_Nonnull);
 void ag_expand_vert(void *_Nonnull);
 void ag_widget_update(void *_Nonnull);
 void ag_push_clip_rect(void *_Nonnull, const AG_Rect *_Nonnull);
+void ag_push_clip_rect_inner(void *_Nonnull, const AG_Rect *_Nonnull);
 void ag_pop_clip_rect(void *_Nonnull);
 void ag_push_blending_mode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn);
 void ag_pop_blending_mode(void *_Nonnull);
@@ -524,6 +513,7 @@ void ag_set_mod_state(void *_Nonnull, Uint);
 # define AG_ExpandVert(o)                    ag_expand_vert(o)
 # define AG_WidgetUpdate(o)                  ag_widget_update(o)
 # define AG_PushClipRect(o,r)                ag_push_clip_rect((o),(r))
+# define AG_PushClipRectInner(o,r)           ag_push_clip_rect_inner((o),(r))
 # define AG_PopClipRect(o)                   ag_pop_clip_rect(o)
 # define AG_PushBlendingMode(o,fs,fd)        ag_push_blending_mode((o),(fs),(fd))
 # define AG_PopBlendingMode(o)               ag_pop_blending_mode(o)

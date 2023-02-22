@@ -1647,8 +1647,9 @@ void
 AG_WidgetUpdateCoords(void *obj, int x, int y)
 {
 	AG_Widget *wid = obj, *chld;
-	AG_Rect2 rPrev;
-
+#ifdef HAVE_OPENGL
+	const AG_Rect2 rPrev = wid->rView;
+#endif
 	wid->flags &= ~(AG_WIDGET_UPDATE_WINDOW);
 
 	if (wid->drv && AGDRIVER_MULTIPLE(wid->drv) &&
@@ -1656,7 +1657,6 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 		x = 0;
 		y = 0;
 	}
-	rPrev = wid->rView;
 	wid->rView.x1 = x;
 	wid->rView.y1 = y;
 	wid->rView.w = wid->w;

@@ -18,19 +18,24 @@ typedef struct ag_button {
 	struct ag_widget wid;           /* AG_Widget -> AG_Button */
 
 	Uint flags;
-#define AG_BUTTON_NO_FOCUS 0x0001       /* Make non-focusable */
-#define AG_BUTTON_STICKY   0x0002       /* Toggle state */
-#define AG_BUTTON_PRESSING 0x0004       /* Button press in progress */
-#define AG_BUTTON_REPEAT   0x0008       /* Trigger "button-pushed" repeatedly */
-#define AG_BUTTON_HFILL    0x0010       /* Fill available width */
-#define AG_BUTTON_VFILL    0x0020       /* Fill available height */
-#define AG_BUTTON_INVERTED 0x0400       /* Invert value of "state" binding */
-#define AG_BUTTON_KEYDOWN  0x0800       /* Got `key-down' before `key-up' */
-#define AG_BUTTON_EXCL     0x1000	/* Hint exclusive access to "state" */
-#define AG_BUTTON_NOEXCL   0x2000       /* For AG_ButtonNewFn() */
-#define AG_BUTTON_SET      0x4000       /* Initialize "state" to 1 */
-#define AG_BUTTON_SLOW     0x8000
-#define AG_BUTTON_EXPAND  (AG_BUTTON_HFILL | AG_BUTTON_VFILL)
+#define AG_BUTTON_NO_FOCUS      0x00001  /* Make non-focusable */
+#define AG_BUTTON_STICKY        0x00002  /* Toggle state */
+#define AG_BUTTON_PRESSING      0x00004  /* Button press in progress */
+#define AG_BUTTON_REPEAT        0x00008  /* Trigger "button-pushed" repeatedly */
+#define AG_BUTTON_HFILL         0x00010  /* Fill available width */
+#define AG_BUTTON_VFILL         0x00020  /* Fill available height */
+#define AG_BUTTON_ALIGN_CENTER  0        /* Center horizontally (default) */
+#define AG_BUTTON_ALIGN_LEFT    0x00040  /* Align to the left */
+#define AG_BUTTON_ALIGN_RIGHT   0x00080  /* Align to the right */
+#define AG_BUTTON_VALIGN_TOP    0x00100  /* Align vertically = top */
+#define AG_BUTTON_VALIGN_MIDDLE 0        /* Align vertically = middle (default) */
+#define AG_BUTTON_VALIGN_BOTTOM 0x00200  /* Align vertically = bottom */
+#define AG_BUTTON_INVERTED      0x00400  /* Invert value of "state" binding */
+#define AG_BUTTON_KEYDOWN       0x00800  /* Got `key-down' before `key-up' */
+#define AG_BUTTON_EXCL          0x01000	/* Hint exclusive access to "state" */
+#define AG_BUTTON_NOEXCL        0x02000  /* For AG_ButtonNewFn() */
+#define AG_BUTTON_SET           0x04000  /* Initialize "state" to 1 */
+#define AG_BUTTON_EXPAND      (AG_BUTTON_HFILL | AG_BUTTON_VFILL)
 
 	int state;                      /* Default state binding */
 	int surfaceLbl;                 /* Rendered text label (or -1) */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -249,6 +249,31 @@ ag_push_clip_rect(void *obj, const AG_Rect *_Nonnull pr)
 	r.y = wid->rView.y1 + pr->y;
 	r.w = pr->w;
 	r.h = pr->h;
+	wid->drvOps->pushClipRect(wid->drv, &r);
+}
+
+/*
+ * Push a rectangle (with width and height reduced by 2px) onto
+ * the stack of clipping rectangles.
+ * Must be invoked from GUI rendering context.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ void
+AG_PushClipRectInner(void *_Nonnull obj, const AG_Rect *_Nonnull pr)
+#else
+void
+ag_push_clip_rect_inner(void *obj, const AG_Rect *_Nonnull pr)
+#endif
+{
+	AG_Widget *wid = AGWIDGET(obj);
+	AG_Rect r;
+
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+
+	r.x = wid->rView.x1 + pr->x;
+	r.y = wid->rView.y1 + pr->y;
+	r.w = pr->w - 2;
+	r.h = pr->h - 2;
 	wid->drvOps->pushClipRect(wid->drv, &r);
 }
 
