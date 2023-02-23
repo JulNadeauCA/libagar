@@ -36,7 +36,7 @@ MAN3=	AG_AlphaFn.3 AG_Box.3 AG_Button.3 AG_Checkbox.3 AG_Color.3 AG_Combo.3 \
 
 SRCS=	${SRCS_GUI} box.c button.c checkbox.c colors.c combo.c console.c \
 	controller.c cursors.c debugger.c dev_browser.c dev_classinfo.c \
-	dev_config.c dev_cpuinfo.c dev_fonts.c dev_object_edit.c \
+	dev_config.c dev_fonts.c dev_object_edit.c \
 	dev_timer_inspector.c dev_unicode_browser.c dir_dlg.c \
 	drv.c drv_dummy.c drv_mw.c drv_sw.c \
 	editable.c file_dlg.c fixed.c fixed_plotter.c font_selector.c font.c \

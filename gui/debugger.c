@@ -503,109 +503,115 @@ TargetWidget(AG_Event *_Nonnull event)
 	AG_ObjectFreeChildren(box);
 
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
-	nt = AG_NotebookAdd(nb, "AG_Widget", AG_BOX_VERT);
+	nt = AG_NotebookAdd(nb,
+	    AGSI_IDEOGRAM AGSI_SMALL_WINDOW AGSI_RST " AG_Widget",
+	    AG_BOX_VERT);
 	AG_SetPadding(nt, "3 4 3 4");
 	nt->id = 1;
 	{
 		static const AG_FlagDescr flagDescr[] = {
-		    { AG_WIDGET_HIDE,			"HIDE",			1 },
-		    { AG_WIDGET_DISABLED,		"DISABLED",		1 },
-		    { AG_WIDGET_FOCUSABLE,		"FOCUSABLE",		1 },
-		    { AG_WIDGET_VISIBLE,		"VISIBLE",		0 },
-		    { AG_WIDGET_FOCUSED,		"FOCUSED",		0 },
-		    { AG_WIDGET_UNDERSIZE,		"UNDERSIZE",		0 },
-		    { AG_WIDGET_HFILL,			"HFILL",		0 },
-		    { AG_WIDGET_VFILL,			"VFILL",		0 },
-		    { AG_WIDGET_USE_MOUSEOVER,		"USE_MOUSEOVER",	1 },
-		    { AG_WIDGET_MOUSEOVER,		"MOUSEOVER",		0 },
-#if 0
-		    { AG_WIDGET_UPDATE_WINDOW,		"UPDATE_WINDOW",	1 },
-		    { AG_WIDGET_QUEUE_SURFACE_BACKUP,	"QUEUE_SURFACE_BACKUP",	1 },
-#endif
-		    { AG_WIDGET_USE_TEXT,		"USE_TEXT",		0 },
-		    { AG_WIDGET_USE_OPENGL,		"USE_OPENGL",		0 },
-#if 0
-		    { AG_WIDGET_CATCH_TAB,		"CATCH_TAB",		1 },
-		    { AG_WIDGET_CATCH_SHOULDER,		"CATCH_SHOULDER",		1 },
-		    { AG_WIDGET_NOSPACING,		"NOSPACING",		1 },
-		    { AG_WIDGET_UNFOCUSED_MOTION,	"UNFOCUSED_MOTION",	1 },
-		    { AG_WIDGET_UNFOCUSED_BUTTONUP,	"UNFOCUSED_BUTTONUP",	1 },
-		    { AG_WIDGET_UNFOCUSED_BUTTONDOWN,	"UNFOCUSED_BUTTONDOWN",	1 },
-		    { AG_WIDGET_UNFOCUSED_KEYDOWN,	"UNFOCUSED_KEYDOWN",	1 },
-		    { AG_WIDGET_UNFOCUSED_KEYUP,	"UNFOCUSED_KEYUP",	1 },
-#endif
-		    { 0,				NULL,0 }
+		    { AG_WIDGET_HIDE,          "HIDE",          1 },
+		    { AG_WIDGET_DISABLED,      "DISABLED",      1 },
+		    { AG_WIDGET_FOCUSABLE,     "FOCUSABLE",     1 },
+		    { AG_WIDGET_VISIBLE,       "VISIBLE",       0 },
+		    { AG_WIDGET_FOCUSED,       "FOCUSED",       0 },
+		    { AG_WIDGET_UNDERSIZE,     "UNDERSIZE",     0 },
+		    { AG_WIDGET_HFILL,         "HFILL",         0 },
+		    { AG_WIDGET_VFILL,         "VFILL",         0 },
+		    { AG_WIDGET_USE_MOUSEOVER, "USE_MOUSEOVER", 1 },
+		    { AG_WIDGET_MOUSEOVER,     "MOUSEOVER",     0 },
+		    { AG_WIDGET_USE_TEXT,      "USE_TEXT",      0 },
+		    { AG_WIDGET_USE_OPENGL,    "USE_OPENGL",    0 },
+		    { 0,                       NULL,            0 }
 		};
+		AG_Box *boxWide, *boxVert;
 		AG_MSpinbutton *msb;
-		AG_Box *vbox;
 		AG_Label *lbl;
 
-		lbl = AG_LabelNew(nt, 0, _("Widget Structure " AGSI_YEL "%s" AGSI_RST),
-		    OBJECT(tgt)->name);
+		lbl = AG_LabelNew(nt, AG_LABEL_HFILL,
+		    _("Widget Structure of " AGSI_BOLD "%s" AGSI_RST " "
+		      "(" AGSI_CYAN "%s" AGSI_RST ")"),
+		    OBJECT(tgt)->name, OBJECT(tgt)->cls->hier);
+		AG_LabelJustify(lbl, AG_TEXT_CENTER);
+		AG_SetFontFamily(lbl, "league-spartan");
 		AG_SetFontSize(lbl, "130%");
 
-		AG_LabelNew(nt, AG_LABEL_HFILL,
-		    _("Class: <" AGSI_CYAN "%s" AGSI_RST ">"),
-		    OBJECT(tgt)->cls->hier);
+		AG_SeparatorNewHoriz(nt);
 
 		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
 		    &OBJECT(tgt)->lock,
-		    _("Parent: " AGSI_YEL "%[objName]" AGSI_RST
-		      " @ (" AGSI_CYAN AGSI_COURIER "AG_Window" AGSI_RST AGSI_COURIER " *)%p"),
-		    &tgt->window, &tgt->window);
-
-		AG_LabelNewPolledMT(nt, AG_LABEL_SLOW | AG_LABEL_HFILL,
-		    &OBJECT(tgt)->lock,
-		    _("Parent driver: " AGSI_YEL "%[objName]" AGSI_RST
-		      " @ (" AGSI_CYAN AGSI_COURIER "AG_Driver" AGSI_RST AGSI_COURIER " *)%p"),
+		    _("Parent Window: %[objName]"
+		      " @ (" AGSI_CYAN AGSI_CODE "AG_Window" AGSI_RST " *)%p\n"
+		      "Parent Driver: %[objName]"
+		      " @ (" AGSI_CYAN AGSI_CODE "AG_Driver" AGSI_RST " *)%p\n"),
+		    &tgt->window, &tgt->window,
 		    &tgt->drv, &tgt->drv);
 
-		AG_SpacerNewHoriz(nt);
+		boxWide = AG_BoxNewHoriz(nt, AG_BOX_EXPAND);
+		boxVert = AG_BoxNewVert(boxWide, AG_BOX_HFILL);
+		AG_SetFontSize(boxVert, "110%");
+		AG_SetPadding(boxVert, "4");
 
-		tb = AG_TextboxNewS(nt, 0, _("Name: "));
+		tb = AG_TextboxNewS(boxVert, AG_TEXTBOX_HFILL, _("Name: "));
 #ifdef AG_UNICODE
 		AG_TextboxBindUTF8(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
 #else
 		AG_TextboxBindASCII(tb, OBJECT(tgt)->name, sizeof(OBJECT(tgt)->name));
 #endif
-		AG_TextboxSizeHint(tb, "<XXXXXXXXXXXXXXXXX>");
+		msb = AG_MSpinbuttonNew(boxVert, AG_MSPINBUTTON_HFILL,
+		    "x", _("Size: "));
+		AG_BindInt(msb, "xvalue", &tgt->w);
+		AG_BindInt(msb, "yvalue", &tgt->h);
 
-		AG_SpacerNewHoriz(nt);
+		msb = AG_MSpinbuttonNew(boxVert, AG_MSPINBUTTON_HFILL,
+		    ",", _("Position: "));
+		AG_BindInt(msb, "xvalue", &tgt->x);
+		AG_BindInt(msb, "yvalue", &tgt->y);
 
-		vbox = AG_BoxNewVert(nt, AG_BOX_HFILL);
-		AG_SetPadding(vbox, "4");
-		AG_SetFontSize(vbox, "110%");
-		{
-			msb = AG_MSpinbuttonNew(vbox, 0, "x", _("Size: "));
-			AG_BindInt(msb, "xvalue", &tgt->w);
-			AG_BindInt(msb, "yvalue", &tgt->h);
+		msb = AG_MSpinbuttonNew(boxVert, AG_MSPINBUTTON_HFILL,
+		    ",", _("View UL: "));
+		AG_BindInt(msb, "xvalue", &tgt->rView.x1);
+		AG_BindInt(msb, "yvalue", &tgt->rView.y1);
 
-			msb = AG_MSpinbuttonNew(vbox, 0, ",", _("Position: "));
-			AG_BindInt(msb, "xvalue", &tgt->x);
-			AG_BindInt(msb, "yvalue", &tgt->y);
+		msb = AG_MSpinbuttonNew(boxVert, AG_MSPINBUTTON_HFILL,
+		    ",", _("View LR: "));
+		AG_BindInt(msb, "xvalue", &tgt->rView.x2);
+		AG_BindInt(msb, "yvalue", &tgt->rView.y2);
 
-			msb = AG_MSpinbuttonNew(vbox, 0, ",", _("View UL: "));
-			AG_BindInt(msb, "xvalue", &tgt->rView.x1);
-			AG_BindInt(msb, "yvalue", &tgt->rView.y1);
-
-			msb = AG_MSpinbuttonNew(vbox, 0, ",", _("View LR: "));
-			AG_BindInt(msb, "xvalue", &tgt->rView.x2);
-			AG_BindInt(msb, "yvalue", &tgt->rView.y2);
-		}
-
-		AG_SpacerNewHoriz(nt);
-
-		vbox = AG_BoxNewVert(nt, AG_BOX_VFILL);
-		AG_CheckboxSetFromFlagsFn(vbox, 0, &tgt->flags, flagDescr,
-		    FlagChanged, "%p", tgt);
+		boxVert = AG_BoxNewVert(boxWide, AG_BOX_VFILL);
+		AG_CheckboxSetFromFlagsFn(boxVert, 0, &tgt->flags, flagDescr,
+		    FlagChanged,"%p",tgt);
 	}
 
 	if (OBJECT_CLASS(tgt)->edit != NULL) {
 		AG_Widget *editRv;
+		char label[64];
 
-		nt = AG_NotebookAdd(nb, OBJECT(tgt)->cls->name, AG_BOX_VERT);
+		if (AG_OfClass(tgt, "AG_Widget:AG_Scrollbar:*")) {
+			Strlcpy(label,
+			    AGSI_IDEOGRAM AGSI_HORIZ_SCROLLBAR AGSI_RST " ",
+			    sizeof(label));
+		} else if (AG_OfClass(tgt, "AG_Widget:AG_Box:*")) {
+			Strlcpy(label,
+			    AGSI_IDEOGRAM AGSI_BOX_VERT AGSI_RST " ",
+			    sizeof(label));
+		} else if (AG_OfClass(tgt, "AG_Widget:AG_Editable:*") ||
+		           AG_OfClass(tgt, "AG_Widget:AG_Textbox:*") ||
+		           AG_OfClass(tgt, "AG_Widget:AG_Label:*") ||
+		           AG_OfClass(tgt, "AG_Widget:AG_Numerical:*")) {
+			Strlcpy(label,
+			    AGSI_IDEOGRAM AGSI_TEXTBOX AGSI_RST " ",
+			    sizeof(label));
+		} else {
+			Strlcpy(label,
+			    AGSI_IDEOGRAM AGSI_SMALL_SPHERE AGSI_RST " ",
+			    sizeof(label));
+		}
+		Strlcat(label, OBJECT(tgt)->cls->name, sizeof(label));
+
+		nt = AG_NotebookAdd(nb, label, AG_BOX_VERT);
 		nt->id = 2;
-		AG_SetPadding(nt, "3 3 3 3");
+		AG_SetPadding(nt, "3");
 
 		editRv = OBJECT_CLASS(tgt)->edit(tgt);
 		AG_ObjectAttach(nt, editRv);
@@ -613,7 +619,9 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_Redraw(editRv);
 	}
 
-	nt = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
+	nt = AG_NotebookAdd(nb,
+	    _(AGSI_IDEOGRAM AGSI_MATH_X_EQUALS AGSI_RST " Variables"),
+	    AG_BOX_VERT);
 	nt->id = 3;
 	{
 		AG_Textbox *tb;
@@ -626,7 +634,9 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333, PollVariables, NULL);
 	}
 
-	nt = AG_NotebookAdd(nb, _("Surfaces"), AG_BOX_VERT);
+	nt = AG_NotebookAdd(nb,
+	    _(AGSI_IDEOGRAM AGSI_LOAD_IMAGE AGSI_RST " Surfaces"),
+	    AG_BOX_VERT);
 	nt->id = 4;
 	{
 		AG_Pane *pane;
@@ -647,13 +657,14 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_SetFontSize(lblInfo, "90%");
 
 		tl = AG_TlistNewPolled(paneBottom, AG_TLIST_EXPAND,
-		    PollSurfaces, NULL);
+		    PollSurfaces,NULL);
 
-		AG_SetEvent(tl, "tlist-selected", SelectedSurface,"%p,%p",px,lblInfo);
+		AG_SetEvent(tl, "tlist-selected",
+		    SelectedSurface,"%p,%p",px,lblInfo);
 
 		mi = AG_TlistSetPopup(tl, "surface");
 		AG_MenuAction(mi, _("Export to image file..."), agIconSave.s,
-		    ExportSurfaceDlg, "%Cp", px);
+		    ExportSurfaceDlg,"%Cp",px);
 
 		AG_PaneMoveDividerPct(pane, 50);
 	}
@@ -679,10 +690,10 @@ ContextualMenu(AG_Event *_Nonnull event)
 
 		if (win->visible) {
 			AG_MenuAction(mi, _("Hide window"), NULL,
-			    HideWindow, "%p", win);
+			    HideWindow,"%p",win);
 		} else {
 			AG_MenuAction(mi, _("Show window"), NULL,
-			    ShowWindow, "%p", win);
+			    ShowWindow,"%p",win);
 		}
 	}
 }
@@ -780,14 +791,14 @@ AG_GuiDebugger(AG_Window *_Nonnull tgt)
 #if 0
 		/* Set pick mode */
 		btn = AG_ButtonNewFn(toolbar, AG_BUTTON_STICKY,
-		    "\xe2\x87\xb1",                             /* U+21F1 */
+		    AGSI_ALGUE AGSI_NW_ARROW_TO_CORNER,
 		    SetPickStatus, "%p,%p", win, tl);
 		AG_SetPadding(btn, "0 5 3 5");
 #endif
 		/* Toggle VFS autorefresh */
 		buRefresh = AG_ButtonNewS(toolbar,
 		    AG_BUTTON_STICKY | AG_BUTTON_SET,
-		    "\xe2\xa5\x81");                             /* U+2941 */
+		    AGSI_BR_GRN AGSI_ALGUE AGSI_CCW_CLOSED_CIRCLE_ARROW);
 		AG_SetPadding(buRefresh, "0 10 3 5");
 	}
 

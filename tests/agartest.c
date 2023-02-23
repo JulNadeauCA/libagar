@@ -867,7 +867,7 @@ main(int argc, char *argv[])
 	mi = AG_MenuNode(menu->root, ("Tools"), NULL);
 	{
 		AG_MenuActionKb(mi,
-		    _(AGSI_IDEOGRAM AGSI_LOWER_L_PENCIL AGSI_RST " Style Editor"), NULL,
+		    _(AGSI_IDEOGRAM AGSI_ARTISTS_PALETTE AGSI_RST " Style Editor"), NULL,
 		    AG_KEY_F8, 0,
 		    RunStyleEditor, NULL);
 #if defined(AG_DEBUG) && defined(AG_TIMERS)

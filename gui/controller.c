@@ -184,7 +184,7 @@ Edit(void *obj)
 	box = AG_BoxNewVert(NULL, AG_BOX_HFILL);
 
 	lbl = AG_LabelNewS(box, 0, AGINPUTDEV(ctrl)->desc);
-	AG_SetFontFamily(lbl, "charter");
+	AG_SetFontFamily(lbl, "league-spartan");
 	AG_SetFontSize(lbl, "130%");
 
 	AG_LabelNew(box, AG_LABEL_HFILL,

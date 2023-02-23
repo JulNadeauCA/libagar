@@ -329,7 +329,7 @@ Edit(void *obj)
 	box = AG_BoxNewVert(NULL, AG_BOX_HFILL);
 
 	lbl = AG_LabelNewS(box, 0, AGINPUTDEV(mouse)->desc);
-	AG_SetFontFamily(lbl, "charter");
+	AG_SetFontFamily(lbl, "league-spartan");
 	AG_SetFontSize(lbl, "130%");
 
 	lbl = AG_LabelNewPolledMT(box,

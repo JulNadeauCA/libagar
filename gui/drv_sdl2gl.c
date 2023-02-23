@@ -643,7 +643,7 @@ Edit(void *_Nonnull obj)
 	AG_WindowSetPosition(win, AG_WINDOW_BL, 0);
 
 	lbl = AG_LabelNew(win, 0, _("SDL2GL Driver: %s"), OBJECT(sgl)->name);
-	AG_SetFontFamily(lbl, "charter");
+	AG_SetFontFamily(lbl, "league-spartan");
 	AG_SetFontSize(lbl, "150%");
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);

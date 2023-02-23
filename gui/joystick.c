@@ -183,14 +183,14 @@ Edit(void *obj)
 	box = AG_BoxNewVert(NULL, AG_BOX_HFILL);
 
 	lbl = AG_LabelNewS(box, 0, AGINPUTDEV(joy)->desc);
-	AG_SetFontFamily(lbl, "charter");
+	AG_SetFontFamily(lbl, "league-spartan");
 	AG_SetFontSize(lbl, "130%");
 
 	AG_LabelNew(box, AG_LABEL_HFILL,
 	    _("Name: " AGSI_BOLD "%s" AGSI_RST "\n"
-	      "Vendor: " AGSI_COURIER "0x%04x" AGSI_RST " | "
-	      "Product: " AGSI_COURIER "0x%04x" AGSI_RST "\n"
-	      "GUID: " AGSI_COURIER "%s" AGSI_RST "\n"
+	      "Vendor: " AGSI_CODE "0x%04x" AGSI_RST " | "
+	      "Product: " AGSI_CODE "0x%04x" AGSI_RST "\n"
+	      "GUID: " AGSI_CODE "%s" AGSI_RST "\n"
 	      "Device Index: %d | Player Index: %d\n"
 	      "Instance ID: %d\n\n"
 	      "Buttons: " AGSI_BOLD "%u" AGSI_RST " | "

@@ -204,7 +204,7 @@ SelectUnicodeRange(AG_Event *_Nonnull event)
 		Snprintf(numtext, sizeof(numtext), "U+%x", (Uint)uchar[0]);
         
 		/* prep column 1 */
-		Strlcpy(utf8seq, AGSI_COURIER, sizeof(utf8seq));
+		Strlcpy(utf8seq, AGSI_CODE, sizeof(utf8seq));
 		for (c = &utf8text[0]; *c != '\0'; c++) {
 			char s[16];
 			Snprintf(s, sizeof(s), "\\x%x", (unsigned char)*c);
@@ -228,7 +228,7 @@ ExpandUnicodeRanges(AG_Event *event)
 		AG_TlistItem *ti;
 
 		ti = AG_TlistAdd(tl, NULL,
-		    "(" AGSI_COURIER "0x%04lx" AGSI_RST ") %s",
+		    "(" AGSI_CODE "0x%04lx" AGSI_RST ") %s",
 		    (Ulong)unicodeRanges[i].start,
 		    unicodeRanges[i].name);
 		ti->p1 = (void *)&unicodeRanges[i];

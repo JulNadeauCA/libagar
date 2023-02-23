@@ -748,7 +748,8 @@ TestGUI(void *obj, AG_Window *win)
 		
 		nt = AG_NotebookAdd(nb,
 		    AGSI_WHT AGSI_ITALIC "\"Loss of Breath\"" AGSI_RST
-		    AGSI_LEAGUE_GOTHIC "\nBy Edgar Allan Poe" AGSI_RST,
+		    AGSI_LEAGUE_GOTHIC "\nBy Edgar Allan Poe  " AGSI_RST
+		    AGSI_IDEOGRAM AGSI_EDGAR_ALLAN_POE AGSI_RST,
 		    AG_BOX_VERT);
 		{
 			char path[AG_PATHNAME_MAX];

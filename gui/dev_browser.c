@@ -67,9 +67,8 @@ static const struct dev_tool_ent {
 	{ N_("Timer Inspector"),	AG_DEV_TimerInspector },
 #endif
 #ifdef AG_UNICODE
-	{ N_("Unicode Browser"),	AG_DEV_UnicodeBrowser },
+	{ N_("Unicode Browser"),	AG_DEV_UnicodeBrowser }
 #endif
-	{ N_("CPU Information"),	AG_DEV_CPUInfo },
 };
 
 static int agDevBrowserInited = 0;

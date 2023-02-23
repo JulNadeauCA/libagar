@@ -2,26 +2,20 @@
 
 #include "agartest.h"
 
-static AG_Font *myFont;
+static AG_Font *myFont = NULL;
 
 static void
 SelectedFont(AG_Event *event)
 {
-/*	AG_Window *win = AG_WINDOW_PTR(1); */
+	if (myFont == NULL) {
+		return;
+	}
+	AG_SetDefaultFont(myFont);
 
-	if (myFont) {
-		AG_SetDefaultFont(myFont);
-		AG_Strlcpy(agConfig->fontFace,
-		    AGOBJECT(myFont)->name,
-		    sizeof(agConfig->fontFace));
-		agConfig->fontSize = myFont->spec.size;
-		agConfig->fontFlags = myFont->flags;
-
-		if (AG_ConfigSave() == 0) {
-			AG_TextTmsg(AG_MSG_INFO, 1000, "Default font has changed.");
-		} else {
-			AG_TextMsgFromError();
-		}
+	if (AG_ConfigSave() == 0) {
+		AG_TextTmsg(AG_MSG_INFO, 1000, "Default font has changed.");
+	} else {
+		AG_TextMsgFromError();
 	}
 }
 
@@ -197,7 +191,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonNewFn(box, 0, _("Set as Default Font"), SelectedFont, "%p", win);
+		AG_ButtonNewFn(box, 0, _("Set as Default Font"), SelectedFont,NULL);
 		AG_ButtonNewFn(box, 0, _("Cancel"), AGWINCLOSE(win));
 	}
 	return (0);

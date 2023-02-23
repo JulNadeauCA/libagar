@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2019-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,14 +40,12 @@
 #include <agar/gui/label.h>
 #include <agar/gui/button.h>
 #include <agar/gui/numerical.h>
-#include <agar/gui/mspinbutton.h>
 #include <agar/gui/checkbox.h>
 #include <agar/gui/separator.h>
 #include <agar/gui/notebook.h>
 #include <agar/gui/pane.h>
 #include <agar/gui/scrollview.h>
 #include <agar/gui/pixmap.h>
-#include <agar/gui/file_dlg.h>
 #include <agar/gui/cursors.h>
 #include <agar/gui/icons.h>
 
@@ -61,18 +59,21 @@
 extern int agFontconfigInited;		/* text.c */
 #endif
 
+static char                 agStyleEditorFilter[AG_TLIST_LABEL_MAX];
 static AG_Window *_Nullable agStyleEditorWindow = NULL;
 static AG_Tlist  *_Nullable agStyleEditorTlist = NULL;
 static AG_Box    *_Nullable agStyleEditorBox = NULL;
 
-static int agStyleEditorCapture = 0;
+static int  agStyleEditorCapture = 0;          /* Capture graphics surfaces */
+static int  agStyleEdListChldWindows = 0;  /* Include sub-windows in list */
 
-static void
+static int
 FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
 {
 	char text[AG_TLIST_LABEL_MAX];
 	AG_TlistItem *it;
 	AG_Widget *widChld;
+	int matchingChld = 0;
 
 	Strlcpy(text, OBJECT(wid)->name, sizeof(text));
 	it = AG_TlistAddPtr(tl, NULL, text, wid);
@@ -83,10 +84,21 @@ FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
 	if (!TAILQ_EMPTY(&OBJECT(wid)->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 	}
-	if (AG_TlistVisibleChildren(tl, it)) {
-		OBJECT_FOREACH_CHILD(widChld, wid, ag_widget)
-			FindWidgets(widChld, tl, depth+1);
+	if (AG_TlistVisibleChildren(tl, it) || agStyleEditorFilter[0] != '\0') {
+		OBJECT_FOREACH_CHILD(widChld, wid, ag_widget) {
+			if (FindWidgets(widChld, tl, depth+1) == 1)
+				matchingChld++;
+		}
 	}
+
+	if (agStyleEditorFilter[0] != '\0' &&
+	    AG_Strcasestr(OBJECT(wid)->name, agStyleEditorFilter) == NULL) {
+		if (!matchingChld) {
+			AG_TlistDel(tl, it);
+		}
+		return (0);
+	}
+	return (1);
 }
 
 static void
@@ -97,9 +109,15 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 	AG_Widget *wChild;
 	AG_TlistItem *it;
 
-	if ((strncmp(name, "menu", 4) == 0 ||
-	     strncmp(name, "icon", 4) == 0) && isdigit(name[4]))
+	switch (win->wmType) {
+	case AG_WINDOW_WM_DROPDOWN_MENU:
+	case AG_WINDOW_WM_POPUP_MENU:
+	case AG_WINDOW_WM_TOOLTIP:
+	case AG_WINDOW_WM_COMBO:
 		return;
+	default:
+		break;
+	}
 
 	if (strncmp(name, "win", 3) == 0 && isdigit(name[4])) {
 		it = AG_TlistAddS(tl, NULL, win->caption[0] !='\0' ?
@@ -118,8 +136,9 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 	}
 	if (AG_TlistVisibleChildren(tl, it)) {
-		TAILQ_FOREACH(wSub, &win->pvt.subwins, pvt.swins)
-			FindWindows(tl, wSub, depth+1);
+		if (agStyleEdListChldWindows)
+			TAILQ_FOREACH(wSub, &win->pvt.subwins, pvt.swins)
+				FindWindows(tl, wSub, depth+1);
 
 		OBJECT_FOREACH_CHILD(wChild, win, ag_widget)
 			FindWidgets(wChild, tl, depth+1);
@@ -152,6 +171,12 @@ PollWidgets(AG_Event *_Nonnull event)
 		AG_LockVFS(&agDrivers);
 		AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 			AG_FOREACH_WINDOW(tgt, drv) {
+				if ((tgt->wmType == AG_WINDOW_WM_DROPDOWN_MENU) ||
+				    (tgt->wmType == AG_WINDOW_WM_POPUP_MENU) ||
+				    (tgt->wmType == AG_WINDOW_WM_TOOLTIP) ||
+				    (tgt->wmType == AG_WINDOW_WM_COMBO)) {
+					continue;
+				}
 				if (tgt == agStyleEditorWindow) {
 					continue;
 				}
@@ -179,57 +204,6 @@ HideWindow(AG_Event *_Nonnull event)
 
 	AG_WindowHide(win);
 }
-
-#if 0
-static void
-PollVariables(AG_Event *_Nonnull event)
-{
-	char val[AG_LABEL_MAX];
-	AG_Tlist *tl = AG_TLIST_SELF();
-	AG_Object *obj = AG_OBJECT_PTR(1);
-	AG_Variable *V;
-	Uint nVars=0;
-
-	AG_ObjectLock(obj);
-	AG_TlistBegin(tl);
-	TAILQ_FOREACH(V, &obj->vars, vars) {
-		if ((V->type == AG_VARIABLE_P_UINT ||
-		     V->type == AG_VARIABLE_P_INT) &&
-		     strcmp(V->name, "flags") == 0) {
-			Snprintf(val, sizeof(val), "0x%08x",
-			    *(Uint *)V->data.p);
-		} else {
-			AG_PrintVariable(val, sizeof(val), V);
-		}
-		switch (V->type) {
-		case AG_VARIABLE_P_FLAG:
-		case AG_VARIABLE_P_FLAG8:
-		case AG_VARIABLE_P_FLAG16:
-		case AG_VARIABLE_P_FLAG32:
-			AG_TlistAdd(tl, NULL, AGSI_CYAN "%s" AGSI_RST " "
-			                      AGSI_YEL "%s" AGSI_RST
-			                      " [mask "
-					      AGSI_RED "0x%x" AGSI_RST "] = "
-					      AGSI_BOLD "%s" AGSI_RST,
-			    agVariableTypes[V->type].name, V->name,
-			    V->info.bitmask.u, val);
-			break;
-		default:
-			AG_TlistAdd(tl, NULL, AGSI_CYAN "%s" AGSI_RST " "
-			                      AGSI_YEL "%s" AGSI_RST " = "
-			                      AGSI_BOLD "%s" AGSI_RST,
-			    agVariableTypes[V->type].name, V->name, val);
-			break;
-		}
-		nVars++;
-	}
-	if (nVars == 0) {
-		AG_TlistAddS(tl, NULL, AGSI_FAINT "(no variables)" AGSI_RST);
-	}
-	AG_TlistEnd(tl);
-	AG_ObjectUnlock(obj);
-}
-#endif
 
 static void TargetWidget(AG_Event *_Nonnull);
 
@@ -492,10 +466,11 @@ CompleteAttribute(AG_Event *_Nonnull event)
 	}, *dp;
 	AG_Editable *ed = AG_EDITABLE_SELF();
 	AG_Tlist *tl = AG_TLIST_PTR(1);
-	char *s = AG_EditableDupString(ed), *sp = s;
+	char *s, *sp;
 	const char *key, *val, **attr;
 
-	while (*sp == ' ' || *sp == '\t') {        /* Skip leading whitespace */
+	sp = s = AG_EditableDupString(ed);
+	while (*sp == ' ' || *sp == '\t') {  /* Skip any leading whitespace */
 		sp++;
 	}
 	key = AG_Strsep(&sp, ":=");
@@ -503,18 +478,18 @@ CompleteAttribute(AG_Event *_Nonnull event)
 
 	AG_TlistBegin(tl);
 
-	if (key == NULL || key[0] == '*' || key[0] == ' ') {      /* All keys */
+	if (key == NULL || key[0] == '*' || key[0] == ' ') {    /* All keys */
 		for (attr = agStyleAttributes; *attr != NULL; attr++)
 			AG_TlistAdd(tl, NULL, "%s: ", *attr);
 	} else {
-		if (val == NULL) {                             /* Partial key */
+		if (val == NULL) {                           /* Partial key */
 			for (attr = agStyleAttributes; *attr != NULL; attr++) {
 				if (Strncasecmp(*attr, key, strlen(key)) != 0) {
 					continue;
 				}
 				AG_TlistAdd(tl, NULL, "%s: ", *attr);
 			}
-		} else if (val[0] == '*' ||                     /* All values */
+		} else if (val[0] == '*' ||                   /* All values */
 		          (val[0] == ' ' && val[1] == '\0')) {
 			for (dp = &dict[0]; dp->key != NULL; dp++) {
 				if (Strcasecmp(key, dp->key) == 0) {
@@ -522,7 +497,7 @@ CompleteAttribute(AG_Event *_Nonnull event)
 					break;
 				}
 			}
-		} else {                       /* Partial (or complete) value */
+		} else {                     /* Partial (or complete) value */
 			while (*val == ' ' || *val == '\t') {
 				val++;
 			}
@@ -586,13 +561,14 @@ TargetWidget(AG_Event *_Nonnull event)
 	AG_ObjectFreeChildren(box);
 	
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
-	nt = AG_NotebookAdd(nb, _("Style Attributes"), AG_BOX_VERT);
+	nt = AG_NotebookAdd(nb, _("Attributes"), AG_BOX_VERT);
+	AG_SetFontFamily(nt, "monoalgue");
+	AG_SetFontSize(nt, "90%");
 	{
 		AG_Textbox *tb;
 
 		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL |
 		                        AG_TEXTBOX_RETURN_BUTTON, "+ ");
-		AG_SetFontFamily(tb, "monoalgue");
 
 		AG_TextboxAutocomplete(tb, CompleteAttribute, NULL);
 		AG_SetEvent(tb, "textbox-return",
@@ -600,23 +576,12 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
 		    PollAttributes, "%p", tgt);
-		AG_SetFontFamily(tlAttrs, "monoalgue");
 
 		AG_SetEvent(tlAttrs, "tlist-selected",
 		    SelectedAttribute, "%p", tb);
 	}
-#if 0
-	nt = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
-	{
-		AG_Tlist *tl;
 
-		tl = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
-		                         PollVariables,"%p",tgt);
-		AG_SetFontFamily(tl, "monoalgue");
-		AG_SetFontSize(tl, "120%");
-	}
-#endif
-	nt = AG_NotebookAdd(nb, _("Appearance"), AG_BOX_VERT);
+	nt = AG_NotebookAdd(nb, _("Capture"), AG_BOX_VERT);
 	if (agStyleEditorCapture) {
 		AG_Label *lbl;
 		AG_Surface *S;
@@ -650,7 +615,13 @@ TargetWidget(AG_Event *_Nonnull event)
 		}
 	} else {
 		AG_LabelNewS(nt, AG_LABEL_HFILL,
-		    _("* Capture is disabled. Click on \xe2\x96\xa6 (and refresh) to enable."));
+		    _("Surface capture is currently disabled.\n"
+		      "Use "
+		      "["
+		      AGSI_IDEOGRAM AGSI_CHECKBOX AGSI_RST
+		      AGSI_ITALIC "Enable Capture" AGSI_RST
+		      " ] "
+		      "below to enable."));
 	}
 	
 	AG_NotebookSelectByID(nb, savedTabID);		/* Restore active tab */
@@ -682,33 +653,19 @@ MenuForWindow(AG_Event *_Nonnull event)
 	}
 }
 
-#if 0
 static void
-SetPickStatus(AG_Event *_Nonnull event)
-{
-#ifdef AG_DEBUG
-	AG_Window *winSted = AG_WINDOW_PTR(1);
-/*	AG_Tlist *tl = AG_TLIST_PTR(2); */
-	const int enable = AG_INT(3);
-
-	if (enable)
-		Debug(winSted, "PickStatus(%d)\n", enable);
-#endif
-}
-#endif
-
-static void
-SetAutorefresh(AG_Event *_Nonnull event)
+PausePolling(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_PTR(1);
-	const int enable = AG_INT(2);
+	const int state = AG_INT(2);
 
-	AG_TlistSetRefresh(tl, enable ? 250 : -1);
+	AG_TlistSetRefresh(tl, state ? -1 : 250);
 }
 
 static void
 CloseStyleEditorWindow(AG_Event *_Nonnull event)
 {
+	agStyleEditorFilter[0] = '\0';
 	agStyleEditorWindow = NULL;
 	agStyleEditorTlist = NULL;
 	agStyleEditorBox = NULL;
@@ -724,8 +681,10 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	AG_Window *win;
 	AG_Pane *pane;
 	AG_MenuItem *mi;
-	AG_Box *toolbar;
+	AG_Box *box;
+	AG_Textbox *tb;
 	AG_Tlist *tl;
+	AG_Label *lbl;
 
 	if (tgt == NULL) {
 		AG_TextError(_("No window is focused.\n"
@@ -744,60 +703,67 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 		return (win);
 	}
 
-	if ((win = agStyleEditorWindow = AG_WindowNewNamedS(0, "_agSted")) == NULL)
+	agStyleEditorFilter[0] = '\0';
+
+	if ((win = agStyleEditorWindow = AG_WindowNewNamedS(0, "_agStyleEditor")) == NULL)
 		return (NULL);
 
 	agStyleEditorTgtWindow = tgt;
 
-	AG_WindowSetCaption(win, _("Agar Style Editor: <%s> (\"%s\")"),
+	AG_WindowSetCaption(win,
+	    _("Agar Style Editor: <%s> (\"%s\")"),
 	    AGOBJECT(tgt)->name, AGWINDOW(tgt)->caption);
-	
-	tl = agStyleEditorTlist = AG_TlistNewPolledMs(NULL, AG_TLIST_EXPAND, 80,
-	    PollWidgets, NULL);
 
-	AG_TlistSizeHint(tl, "<XXXXX/XXXXX/XXXXX/XXXXX>", 25);
-	AG_SetFontSize(tl, "80%");
+	lbl = AG_LabelNewS(win, AG_LABEL_HFILL,
+	    _(AGSI_IDEOGRAM AGSI_AGAR_AG AGSI_RST " Style Editor "
+	      AGSI_IDEOGRAM AGSI_AGAR_AR));
+	AG_SetFontFamily(lbl, "charter");
+	AG_SetFontSize(lbl, "150%");
+	AG_LabelJustify(lbl, AG_TEXT_CENTER);
+
+	tl = agStyleEditorTlist = AG_TlistNewPolledMs(NULL,
+	    AG_TLIST_EXPAND, 80,
+	    PollWidgets,NULL);
+
+	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXX>", 25);
+	AG_SetFontSize(tl, "90%");
 	AG_SetEvent(tl, "tlist-selected", TargetWidget, NULL);
-
-	toolbar = AG_BoxNewHoriz(win, AG_BOX_HFILL);
-	AG_SetFontSize(toolbar, "150%");
-	{
-		AG_Button *btn;
-#if 0
-		/* Set pick mode */
-		btn = AG_ButtonNewFn(toolbar, AG_BUTTON_STICKY,
-		    "\xe2\x87\xb1",                             /* U+21F1 */
-		    SetPickStatus, "%p,%p", win, tl);
-		AG_SetPadding(btn, "0 5 3 5");
-#endif
-		/* Toggle VFS autorefresh */
-		btn = AG_ButtonNewFn(toolbar, AG_BUTTON_STICKY | AG_BUTTON_SET,
-		    "\xe2\xa5\x81",                             /* U+2941 */
-		    SetAutorefresh, "%p", tl);
-		AG_SetPadding(btn, "0 10 3 5");
-
-		/* Toggle appearance capture */
-		btn = AG_ButtonNewInt(toolbar, AG_BUTTON_STICKY,
-		    "\xe2\x96\xa6",                             /* U+2941 */
-		    &agStyleEditorCapture);
-		AG_SetPadding(btn, "0 7 0 5");
-	}
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 	agStyleEditorBox = pane->div[1];
 	{
+		tb = AG_TextboxNewS(pane->div[0], AG_TEXTBOX_EXCL |
+		                                  AG_TEXTBOX_HFILL, NULL);
+		AG_TextboxSizeHint(tb, "<XXXXXXXXXXXXXXXXXX>");
+		AG_TextboxBindUTF8(tb, agStyleEditorFilter,
+		    sizeof(agStyleEditorFilter));
+		AG_TextboxSetPlaceholderS(tb, _("Filter widgets..."));
+
 		AG_ObjectAttach(pane->div[0], tl);
 
-		AG_LabelNewS(pane->div[1], AG_LABEL_HFILL,
-		    _("Select a widget on the left "
-		     "(or use \xe2\x87\xb1 to pick)."));
+		AG_LabelNewS(pane->div[1], 0, _("No widget selected."));
 
 		mi = AG_TlistSetPopup(tl, "window");
 		AG_MenuSetPollFn(mi, MenuForWindow, "%p", tl);
 	}
 
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
+	AG_SetFontSize(box, "80%");
+	AG_SetSpacing(box, "20 0");
+	{
+		AG_CheckboxNewInt(box, 0, _("Include Child Windows"),
+		    &agStyleEdListChldWindows);
+
+		AG_CheckboxNewFn(box, 0, _("Pause Polling"),
+		    PausePolling,"%p",tl);
+
+		AG_CheckboxNewInt(box, 0, _("Enable Capture"),
+		    &agStyleEditorCapture);
+	}
+
 	AG_AddEvent(win, "window-close", CloseStyleEditorWindow, NULL);
-	
+
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MR, 900, 500);
 	AG_WindowSetPosition(win, AG_WINDOW_BR, 1);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	AG_WidgetFocus(tl);
