@@ -416,8 +416,8 @@ AG_Font *
 AG_FetchFont(const char *face, float fontSize, Uint flags)
 {
 	char fontPath[AG_PATHNAME_MAX];
-	char name[AG_OBJECT_NAME_MAX];
-	char nameBase[AG_OBJECT_NAME_MAX];
+	char name[AG_FONT_NAME_MAX];
+	char nameBase[AG_FONT_NAME_MAX];
 	AG_FontSpec spec;
 	AG_Font *font;
 	const AG_FontAdjustment *fa;
@@ -788,7 +788,7 @@ open_font:
 		}
 		break;
 	case AG_FONT_DUMMY:
-		font = AG_ObjectNew(NULL, name, AGCLASS(&agFontClass));
+		font = AG_ObjectNew(NULL, name, AGOBJECTCLASS(&agFontClass));
 		if (font == NULL) {
 			goto fail;
 		}
@@ -1085,7 +1085,7 @@ AG_FontClass agFontClass = {
 	{
 		"AG_Font",
 		sizeof(AG_Font),
-		{ 0, 0 },
+		{ 1,0, AGC_FONT, 0xE01B },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

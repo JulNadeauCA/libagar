@@ -22,8 +22,11 @@ enum ag_font_spec_source {
 	AG_FONT_SOURCE_MEMORY			/* Read font from memory */
 };
 
-/* Epsilon for font point size comparisons. */
-#ifndef AG_FONT_PTS_EPSILON
+#ifndef AG_FONT_NAME_MAX                               /* Maximum font name */
+#define AG_FONT_NAME_MAX 48
+#endif
+
+#ifndef AG_FONT_PTS_EPSILON           /* Epsilon for point size comparisons */
 #define AG_FONT_PTS_EPSILON 0.01
 #endif
 
@@ -105,10 +108,8 @@ typedef struct ag_glyph_cache {
 /* Loaded font */
 typedef struct ag_font {
 	struct ag_object obj;           /* AG_Object -> AG_Font */
-
-	char name[AG_OBJECT_NAME_MAX];  /* Base font name (without any suffix) */
+	char name[AG_FONT_NAME_MAX];    /* Base font name (without any suffix) */
 	AG_FontSpec spec;               /* Generic font specification */
-
 	Uint flags;                     /* Weight / Style / Width Variant */
 #define AG_FONT_THIN           0x0001   /* Wt#100 - Thin */
 #define AG_FONT_EXTRALIGHT     0x0002   /* Wt#200 - Extra Light ("Ultra Light") */
@@ -127,24 +128,19 @@ typedef struct ag_font {
 #define AG_FONT_SEMIEXPANDED   0x2000   /* Wd(112.5%) - Semi Expanded ("Demi Expanded") */
 #define AG_FONT_EXPANDED       0x4000   /* Wd(125%) - Expanded */
 #define AG_FONT_ULTRAEXPANDED  0x8000   /* Wd(200%) - Ultra Expanded */
-
-#define AG_FONT_WEIGHTS (AG_FONT_THIN | AG_FONT_EXTRALIGHT | AG_FONT_LIGHT | \
-                         AG_FONT_SEMIBOLD | AG_FONT_BOLD | AG_FONT_EXTRABOLD | \
-                         AG_FONT_BLACK)
-
-#define AG_FONT_STYLES (AG_FONT_OBLIQUE | AG_FONT_ITALIC)
-
+#define AG_FONT_WEIGHTS     (AG_FONT_THIN | AG_FONT_EXTRALIGHT | AG_FONT_LIGHT | \
+                             AG_FONT_SEMIBOLD | AG_FONT_BOLD | AG_FONT_EXTRABOLD | \
+                             AG_FONT_BLACK)
+#define AG_FONT_STYLES      (AG_FONT_OBLIQUE | AG_FONT_ITALIC)
 #define AG_FONT_WD_VARIANTS (AG_FONT_ULTRACONDENSED | AG_FONT_CONDENSED | \
                              AG_FONT_SEMICONDENSED | AG_FONT_SEMIEXPANDED | \
                              AG_FONT_EXPANDED | AG_FONT_ULTRAEXPANDED)
 
 	Uint           nFamilyStyles;
 	Uint *_Nullable familyStyles;   /* Styles available in this font family */
-
 	Uint stateFlags;
-#define AG_FONT_FONTCONFIGED      0x01  /* Discovered via fontconfig */
-#define AG_FONT_FAMILY_FLAGS      0x02  /* Family flags are specified */
-
+#define AG_FONT_FONTCONFIGED 0x01       /* Discovered via fontconfig */
+#define AG_FONT_FAMILY_FLAGS 0x02       /* Family flags are specified */
 	int height;                     /* Height (px) */
 	int ascent;                     /* Ascent (px) */
 	int descent;                    /* Descent (px) */
@@ -189,8 +185,16 @@ typedef struct ag_font_class {
 	                                 struct ag_text_metrics *_Nonnull, int);
 } AG_FontClass;
 
-#define AGFONT(font)     ((AG_Font *)(font))
-#define AGFONT_OPS(font) ((AG_FontClass *)AGOBJECT(font)->cls)
+#define   AGFONT(o)        ((AG_Font *)(o))
+#define  AGcFONT(o)        ((const AG_Font *)(o))
+#define   AGFONT_OPS(o)    ((AG_FontClass *)AGOBJECT(o)->cls)
+#define  AG_FONT_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x07)
+#define  AG_FONT_SELF()    AGFONT(  AG_OBJECT(0,         "AG_Font:*") )
+#define  AG_FONT_PTR(n)    AGFONT(  AG_OBJECT((n),       "AG_Font:*") )
+#define  AG_FONT_NAMED(n)  AGFONT(  AG_OBJECT_NAMED((n), "AG_Font:*") )
+#define AG_cFONT_SELF()   AGcFONT( AG_cOBJECT(0,         "AG_Font:*") )
+#define AG_cFONT_PTR(n)   AGcFONT( AG_cOBJECT((n),       "AG_Font:*") )
+#define AG_cFONT_NAMED(n) AGcFONT( AG_cOBJECT_NAMED((n), "AG_Font:*") )
 
 __BEGIN_DECLS
 extern AG_FontClass agFontClass;
