@@ -1,4 +1,4 @@
-.\" Copyright (c) 2003-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2003-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -137,7 +137,7 @@ ComboExpanded(AG_Event *event)
 static void
 ComboSelected(AG_Event *event)
 {
-	AG_TlistItem *item = AG_TLIST_ITEM_PTR(1);
+	AG_TlistItem *item = AG_TLISTITEM_PTR(1);
 
 	AG_TextMsg(AG_MSG_INFO, "Selected item: %s", item->text);
 }
@@ -162,8 +162,8 @@ widget first appeared in Agar 1.0.
 "ucombo-expanded" and "ucombo-selected" appeared in Agar 1.7.0.
 The
 .Xr AG_Tlist 3
-was formerly pre-generated and attached to the window on expand, but for
-safety reasons as of Agar 1.7.0 the
+was formerly pre-generated and attached to the window on expansion, but
+as of Agar 1.7.0 the
 .Va list
 member is now initialized to NULL and the list must be generated on demand
-(typically from "ucombo-expanded").
+from "ucombo-expanded".

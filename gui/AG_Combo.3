@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -198,7 +198,7 @@ a selection event by displaying a text dialog:
 .Bd -literal -offset indent
 .\" SYNTAX(c)
 static void
-ComboExpanded(AG_Event *event)
+ExpandItems(AG_Event *event)
 {
 	AG_Combo *com = AG_COMBO_SELF();
 
@@ -207,9 +207,9 @@ ComboExpanded(AG_Event *event)
 }
 
 static void
-ComboSelected(AG_Event *event)
+SelectItem(AG_Event *event)
 {
-	AG_TlistItem *item = AG_TLIST_ITEM_PTR(1);
+	AG_TlistItem *item = AG_TLISTITEM_PTR(1);
 
 	AG_TextMsg(AG_MSG_INFO, "Selected item: %s", item->text);
 }
@@ -217,8 +217,34 @@ ComboSelected(AG_Event *event)
 AG_Combo *com;
 
 com = AG_ComboNew(NULL, 0);
-AG_SetEvent(com, "combo-expanded", ComboExpanded, NULL);
-AG_SetEvent(com, "combo-selected", ComboSelected, NULL);
+AG_SetEvent(com, "combo-expanded", ExpandItems, NULL);
+AG_SetEvent(com, "combo-selected", SelectItem, NULL);
+.Ed
+.Pp
+The following code fragment generates a drop-down menu displaying a tree:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+static void
+ExpandTreeItems(AG_Event *event)
+{
+	AG_Combo *com = AG_COMBO_SELF();
+	AG_TlistItem *it;
+
+	it = AG_TlistAdd(com, NULL, "Foo");
+	it->depth = 1;
+	it->flags |= AG_TLIST_HAS_CHILDREN;
+	{
+		it = AG_TlistAdd(com, NULL, "Bar");
+		it->depth = 2;
+		it = AG_TlistAdd(com, NULL, "Baz");
+		it->depth = 2;
+	}
+}
+
+AG_Combo *com;
+
+com = AG_ComboNew(NULL, 0);
+AG_SetEvent(com, "combo-expanded", ExpandTreeItems, NULL);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Button 3 ,
@@ -238,8 +264,8 @@ is a deprecated no-op.
 "combo-expanded" and "combo-selected" appeared in Agar 1.7.0.
 The
 .Xr AG_Tlist 3
-was formerly pre-generated and attached to the window on expand, but for
-safety reasons as of Agar 1.7.0 the
+was formerly pre-generated and attached to the window on expansion, but as of
+Agar 1.7.0 the
 .Va list
-member is now initialized to NULL and the list must be generated on demand
-(typically from "combo-expanded").
+member is now initialized to NULL and the list contents must be generated
+on demand from "combo-expanded".
