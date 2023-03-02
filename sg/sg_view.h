@@ -42,16 +42,17 @@ typedef struct sg_view {
 	Uint flags;
 #define SG_VIEW_HFILL		0x001
 #define SG_VIEW_VFILL		0x002
-#define SG_VIEW_EXPAND		(SG_VIEW_HFILL|SG_VIEW_VFILL)
+#define SG_VIEW_EXPAND		(SG_VIEW_HFILL | SG_VIEW_VFILL)
 #define SG_VIEW_NO_LIGHTING	0x004 /* Disable lighting */
 #define SG_VIEW_NO_DEPTH_TEST	0x008 /* Disable Z-buffering */
 #define SG_VIEW_UPDATE_PROJ	0x010 /* Update projection at next draw */
 #define SG_VIEW_PANNING		0x020 /* Mouse panning in progress */
 #define SG_VIEW_CAMERA_STATUS	0x040 /* Display camera status overlay */
 #define SG_VIEW_EDIT		0x080 /* Allow edition commands */
-#define SG_VIEW_EDIT_STATUS	0x080 /* Display edition status overlay */
-#define SG_VIEW_MOVING		0x100 /* Moving object */
-#define SG_VIEW_ROTATING	0x200 /* Rotating object */
+#define SG_VIEW_EDIT_STATUS	0x100 /* Display edition status overlay */
+#define SG_VIEW_MOVING		0x200 /* Moving object */
+#define SG_VIEW_ROTATING	0x400 /* Rotating object */
+#define SG_VIEW_GRABBED_MOUSE   0x800 /* Mouse grab is in effect */
 
 	Uint transFlags;
 #define SG_VIEW_TRANSFADE	0x01	/* Fade-out/fade-in */
@@ -90,14 +91,15 @@ typedef struct sg_view {
 	AG_Timer toRefresh;		/* View refresh timer */
 } SG_View;
 
-#define SGVIEW(obj)            ((SG_View *)(obj))
-#define SGCVIEW(obj)           ((const SG_View *)(obj))
-#define SG_VIEW_SELF()          SGVIEW( AG_OBJECT(0,"AG_Widget:SG_View:*") )
-#define SG_VIEW_PTR(n)          SGVIEW( AG_OBJECT((n),"AG_Widget:SG_View:*") )
-#define SG_VIEW_NAMED(n)        SGVIEW( AG_OBJECT_NAMED((n),"AG_Widget:SG_View:*") )
-#define SG_CONST_VIEW_SELF()   SGCVIEW( AG_CONST_OBJECT(0,"AG_Widget:SG_View:*") )
-#define SG_CONST_VIEW_PTR(n)   SGCVIEW( AG_CONST_OBJECT((n),"AG_Widget:SG_View:*") )
-#define SG_CONST_VIEW_NAMED(n) SGCVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:SG_View:*") )
+#define   SGVIEW(o)        ((SG_View *)(o))
+#define  SGcVIEW(o)        ((const SG_View *)(o))
+#define  SG_VIEW_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x34)
+#define  SG_VIEW_SELF()    SGVIEW(  AG_OBJECT(0,         "AG_Widget:SG_View:*") )
+#define  SG_VIEW_PTR(n)    SGVIEW(  AG_OBJECT((n),       "AG_Widget:SG_View:*") )
+#define  SG_VIEW_NAMED(n)  SGVIEW(  AG_OBJECT_NAMED((n), "AG_Widget:SG_View:*") )
+#define SG_cVIEW_SELF()   SGcVIEW( AG_cOBJECT(0,         "AG_Widget:SG_View:*") )
+#define SG_cVIEW_PTR(n)   SGcVIEW( AG_cOBJECT((n),       "AG_Widget:SG_View:*") )
+#define SG_cVIEW_NAMED(n) SGcVIEW( AG_cOBJECT_NAMED((n), "AG_Widget:SG_View:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass sgViewClass;

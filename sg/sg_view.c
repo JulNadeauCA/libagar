@@ -245,6 +245,7 @@ OnOverlayCameraStatus(SG_View *_Nonnull sv)
 	} else {
 		Strlcpy(text, _("No camera"), sizeof(text));
 	}
+	AG_TextBGColor(&WCOLOR(sv, FG_COLOR));
 	AG_TextColor(&WCOLOR(sv, TEXT_COLOR));
 	su = AG_TextRender(text);
 	AG_WidgetBlit(sv, su, 0, HEIGHT(sv) - su->h);
@@ -279,6 +280,7 @@ OnOverlay(AG_Event *_Nonnull event)
 	}
 	if (sv->flags & SG_VIEW_EDIT_STATUS &&
 	    sv->editStatus[0] != '\0') {
+		AG_TextBGColor(&WCOLOR(sv, FG_COLOR));
 		AG_TextColor(&WCOLOR(sv, TEXT_COLOR));
 		su = AG_TextRender(sv->editStatus);
 		AG_WidgetBlit(sv, su, 0, HEIGHT(sv) - su->h);
@@ -413,14 +415,14 @@ static void
 MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
 	SG_View *sv = obj;
-	const AG_MouseButton btnState = WIDGET(sv)->drv->mouse->btnState;
 
-	if (btnState & AG_MOUSE_LEFT) {
-		if (AG_GetModState(sv) & AG_KEYMOD_CTRL) {
-			SG_CameraRotMouse(sv->cam, sv, dx,dy);
-		} else {
-			SG_CameraMoveMouse(sv->cam, sv, dx,dy, 0);
-		}
+	if ((sv->flags & SG_VIEW_GRABBED_MOUSE) == 0) {
+		return;
+	}
+	if (AG_GetModState(sv) & AG_KEYMOD_CTRL) {
+		SG_CameraRotMouse(sv->cam, sv, dx,dy);
+	} else {
+		SG_CameraMoveMouse(sv->cam, sv, dx,dy, 0);
 	}
 }
 
@@ -701,9 +703,24 @@ MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 		PopupMenu(sv, x, y);
 		break;
 	case AG_MOUSE_LEFT:
+		sv->flags |= SG_VIEW_GRABBED_MOUSE;
 		if ((AG_GetModState(sv) & AG_KEYMOD_CTRL) == 0) {
 			SelectByMouse(sv, x,y);
 		}
+		break;
+	default:
+		break;
+	}
+}
+
+static void
+MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
+{
+	SG_View *sv = obj;
+
+	switch (button) {
+	case AG_MOUSE_LEFT:
+		sv->flags &= ~(SG_VIEW_GRABBED_MOUSE);
 		break;
 	default:
 		break;
@@ -768,7 +785,8 @@ Init(void *_Nonnull obj)
 	SG_View *sv = obj;
 	int i;
 
-	WIDGET(sv)->flags |= (AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_OPENGL);
+	WIDGET(sv)->flags |= (AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_OPENGL |
+	                      AG_WIDGET_USE_TEXT);
 
 	sv->flags = 0;
 	sv->transFlags = 0;
@@ -832,7 +850,7 @@ AG_WidgetClass sgViewClass = {
 	{
 		"AG_Widget:SG_View",
 		sizeof(SG_View),
-		{ 0,0 },
+		{ 0,0, AGC_SG_VIEW, 0xE02D },
 		Init,
 		NULL,		/* reset */
 		Destroy,
@@ -844,7 +862,7 @@ AG_WidgetClass sgViewClass = {
 	SizeRequest,
 	SizeAllocate,
 	MouseButtonDown,
-	NULL,			/* button_up */
+	MouseButtonUp,
 	MouseMotion,
 	KeyDown,
 	KeyUp,
